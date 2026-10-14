@@ -119,6 +119,8 @@ dialog {
 }
 dialog h2 { margin: 0 0 calc(var(--pas) * 2); font-size: 18px; font-weight: normal; letter-spacing: .06em; }
 dialog p { line-height: 1.5; }
+dialog .reglage { display: flex; gap: var(--pas); align-items: flex-start; min-height: var(--jeu-cible); max-width: 46ch; line-height: 1.4; }
+dialog .reglage input { width: 20px; height: 20px; margin: 0; flex: none; accent-color: var(--jeu-accent); }
 dialog hr { border: 0; border-top: 1px solid var(--jeu-ombre); margin: calc(var(--pas) * 2) 0; }
 .version { margin: 0; color: var(--jeu-accent); }
 details { margin: var(--pas) 0 calc(var(--pas) * 2); }

@@ -2,17 +2,17 @@
 // Chaque sujet utilise les mêmes modules que le jeu (terrain, apparence,
 // rendu three.js) : ce qu'on voit ici est ce que le jeu dessinera. Ajouter un
 // sujet ou une variante = ajouter une entrée dans GROUPES.
-import { mountLabo } from './lib/labo-shell.js?v=0.3.2';
-import { spriteCanvas, paletteToGPL, paletteToHex } from './lib/sprites.js?v=0.3.2';
-import { PALETTE, ROLES } from './palette.js?v=0.3.2';
-import { chargerContenu } from './design-store.js?v=0.3.2';
-import { tuile, ETAT } from './tuiles.js?v=0.3.2';
-import { creerTerrain, impact, hydroLignes } from './terrain.js?v=0.3.2';
-import { CALIBRES } from './data/calibres.js?v=0.3.2';
-import { METEO } from './data/meteo.js?v=0.3.2';
-import { nouvelleBataille, avancer, ordonnerMarche } from './bataille.js?v=0.3.2';
-import { creerRendu, ZOOMS } from './rendu3d.js?v=0.3.2';
-import { hash2 } from './lib/rng.js?v=0.3.2';
+import { mountLabo } from './lib/labo-shell.js?v=0.3.3';
+import { spriteCanvas, paletteToGPL, paletteToHex } from './lib/sprites.js?v=0.3.3';
+import { PALETTE, ROLES } from './palette.js?v=0.3.3';
+import { chargerContenu } from './design-store.js?v=0.3.3';
+import { tuile, ETAT } from './tuiles.js?v=0.3.3';
+import { creerTerrain, impact, hydroLignes } from './terrain.js?v=0.3.3';
+import { CALIBRES } from './data/calibres.js?v=0.3.3';
+import { METEO } from './data/meteo.js?v=0.3.3';
+import { nouvelleBataille, avancer, ordonnerMarche } from './bataille.js?v=0.3.3';
+import { creerRendu, ZOOMS } from './rendu3d.js?v=0.3.3';
+import { hash2 } from './lib/rng.js?v=0.3.3';
 
 document.documentElement.style.setProperty('--jeu-accent', ROLES.accent);
 const NOM = document.title.replace(/^Labo — /, ''); // le nom vient de la page (une apostrophe ne casse rien)

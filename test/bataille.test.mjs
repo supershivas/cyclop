@@ -27,6 +27,16 @@ test('le compteur de pertes est juste : morts + vivants = l\'effectif de départ
   assert.equal(B.armee.n, nous + eux);
   assert.ok(B.etat.pertes[0] + B.etat.pertes[1] > 0, 'des morts');
 });
+test('les morts restent où ils sont tombés : un corps par mort, gardé par la sauvegarde', () => {
+  const B = petite();
+  ordonnerBarrage(B, '220', ...P(100, 230)); ordonnerBarrage(B, '155', ...P(300, 70), 1);
+  for (let k = 0; k < 900; k++) avancer(B);
+  const C = B.etat.corps;
+  assert.equal(C.length, B.etat.pertes[0] + B.etat.pertes[1]);
+  const vivants = new Set(Array.from(B.armee.id.subarray(0, B.armee.n)));
+  for (const c of C) assert.ok(!vivants.has(c[4]), 'un corps est un homme qui n\'est plus dans la foule');
+  assert.deepEqual(restaurer(photo(B), R).etat.corps, C);
+});
 test('un ordre impossible se refuse, avec sa raison', () => {
   const B = petite();
   assert.match(ordonnerMarche(B, [], ...P(10, 10)).refus, /Aucun régiment/);

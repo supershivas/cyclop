@@ -41,8 +41,10 @@ la danse macabre, la catastrophe peinte avec calme. L'intention est dans `DESIGN
   sur un homme ouvre sa fiche (Jérôme, v0.3.0). De près (3 pixels par mètre et
   plus), le survol et le clic montrent un homme ; de loin, son régiment (hommes,
   blessés, morts, et la liste des officiers, des blessés et des morts, chaque nom
-  ouvrant la fiche de l'homme) (Jérôme, v0.3.2). Un mort n'est gardé nulle part :
-  c'est un numéro de son régiment qui n'est plus dans la foule.
+  ouvrant la fiche de l'homme) (Jérôme, v0.3.2). Les morts restent où ils sont
+  tombés (`etat.corps` : `[x×10, y×10, camp, jour, id]`, sauvegardé ; Jérôme,
+  v0.3.3) : un homme couché, au loin un pixel ; la couleur du camp le jour même,
+  la glaise ensuite. Survolé ou cliqué, sa fiche.
 - **Session** : un run = une bataille de 10 à 15 jours sur un secteur (le lot
   minimal : 3 jours). Progression permanente prévue (Mémorial, état-major,
   trophées) : pas encore construite.
@@ -96,7 +98,7 @@ le fond des boîtes de dialogue (`::backdrop` de `game.css`).
 |---|---|---|
 | Choisir un régiment | T (tous) | clic (Maj : ajouter), glisser (cadre) |
 | Voir un homme, un régiment | — | survol ; clic (de près : un homme ; de loin : son régiment) |
-| Marcher | — | clic droit |
+| Marcher | — | clic droit ; ou, réglage « tout au bouton gauche », clic sur le sol (Échap laisse les régiments choisis) |
 | Barrage de 75, 155, 220 | 1, 2, 3 (touche physique) puis clic | bouton de la batterie puis clic |
 | Arrêter le temps (pause active) | Espace | — |
 | Déplacer la vue | flèches, ZQSD / WASD (selon l'écran) | glisser avec la molette |
@@ -114,7 +116,8 @@ le fond des boîtes de dialogue (`::backdrop` de `game.css`).
   `scripts/sync-game-system.sh`) : app-update, debug, game.css, gamepad,
   gh-publish, keys, labo-shell, loop, pointer, rng, save, sprites. Outils dans
   `outils/`.
-- Données : `localStorage`, clés `cyclopeen:partie`, `cyclopeen:prefs` (le zoom),
+- Données : `localStorage`, clés `cyclopeen:partie`, `cyclopeen:prefs` (le zoom,
+  la caméra, `gauche` : tout au bouton gauche),
   `cyclopeen:atelier` (brouillon), `cyclopeen:gh-token` (jamais exporté). Export /
   import JSON dans les réglages.
 
@@ -282,5 +285,11 @@ node outils/stamp-version.mjs            # après chaque changement de version.j
   cachait des parois : abandonnée.
 - **Le brouillard** tramé sur tout l'écran rendait tout illisible : il s'épaissit
   seulement vers le haut de l'écran (le lointain).
+- **Le clic droit et les gestes de Firefox** (Jérôme, v0.3.3) : un clic droit glissé
+  déclenchait les gestes du navigateur (ou d'une extension). `main.js` empêche
+  `pointerdown` des boutons droit et du milieu sur le canvas (ce qui supprime
+  mousedown et mouseup) et arrête mousedown, mouseup, auxclick, contextmenu à la
+  capture. Une extension installée avant la page peut encore les lire : d'où le
+  réglage « tout au bouton gauche ».
 - Ordre des tirages : `nouvelleBataille` tire la météo (une branche du générateur),
   puis les positions de départ. Changer cet ordre change toutes les batailles.

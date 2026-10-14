@@ -1,19 +1,19 @@
 // Le cycle de vie : écran titre → bataille → nuit → fin ; pause active,
 // réglages, sauvegarde, mise à jour, debug. Les règles sont dans bataille.js
 // (pures), le dessin dans rendu3d.js (il ne modifie jamais l'état).
-import { createLoop } from './lib/loop.js?v=0.3.2';
-import { createKeys, stopTypeahead } from './lib/keys.js?v=0.3.2';
-import { createPointer, lockBrowserGestures } from './lib/pointer.js?v=0.3.2';
-import { createGamepad } from './lib/gamepad.js?v=0.3.2';
-import { createStore, autosave, pickJSONFile } from './lib/save.js?v=0.3.2';
-import { startUpdateCheck, loadVersion, loadChangelog, downloadJSON } from './lib/app-update.js?v=0.3.2';
-import { ROLES } from './palette.js?v=0.3.2';
-import { nouvelleBataille, avancer, aube, ordonnerMarche, ordonnerBarrage, horloge, effectifs, photo, restaurer, PAS, NOUS } from './bataille.js?v=0.3.2';
-import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.3.2';
-import { METEO } from './data/meteo.js?v=0.3.2';
-import { creerRendu } from './rendu3d.js?v=0.3.2';
-import { identite, etatEnMots } from './identite.js?v=0.3.2';
-import { chargerContenu } from './design-store.js?v=0.3.2';
+import { createLoop } from './lib/loop.js?v=0.3.3';
+import { createKeys, stopTypeahead } from './lib/keys.js?v=0.3.3';
+import { createPointer, lockBrowserGestures } from './lib/pointer.js?v=0.3.3';
+import { createGamepad } from './lib/gamepad.js?v=0.3.3';
+import { createStore, autosave, pickJSONFile } from './lib/save.js?v=0.3.3';
+import { startUpdateCheck, loadVersion, loadChangelog, downloadJSON } from './lib/app-update.js?v=0.3.3';
+import { ROLES } from './palette.js?v=0.3.3';
+import { nouvelleBataille, avancer, aube, ordonnerMarche, ordonnerBarrage, horloge, effectifs, photo, restaurer, PAS, NOUS } from './bataille.js?v=0.3.3';
+import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.3.3';
+import { METEO } from './data/meteo.js?v=0.3.3';
+import { creerRendu } from './rendu3d.js?v=0.3.3';
+import { identite, etatEnMots } from './identite.js?v=0.3.3';
+import { chargerContenu } from './design-store.js?v=0.3.3';
 
 const JEU = 'cyclopeen';
 const $ = id => document.getElementById(id);
@@ -29,7 +29,7 @@ const store = createStore({
   debug: DEBUG,
   entries: {
     partie: { version: 1 },
-    prefs: { version: 1, debugWrites: false, defaults: { zoom: 2, camera: null } },
+    prefs: { version: 1, debugWrites: false, defaults: { zoom: 2, camera: null, gauche: false } },
   },
   secret: ['gh-token'],
 });
@@ -106,6 +106,17 @@ $('quitter').onclick = () => { $('dialogue-pause').close(); sauvegarder(); montr
 $('pause-reglages').onclick = () => $('dialogue-reglages').showModal();
 $('ouvrir-reglages').onclick = () => $('dialogue-reglages').showModal();
 $('dialogue-reglages').addEventListener('close', reprendre);
+// tout au bouton gauche : pour un navigateur dont le clic droit glissé fait des gestes (Firefox et ses extensions)
+$('pref-gauche').checked = !!prefs.gauche;
+$('pref-gauche').onchange = e => { prefs.gauche = e.target.checked; store.save('prefs', prefs); };
+// le bouton droit et celui de la molette appartiennent au jeu : leurs événements de souris ne vont pas plus loin que
+// le canvas (empêcher le « pointerdown » supprime aussi mousedown et mouseup, que lisent les gestes)
+for (const t of ['pointerdown', 'mousedown', 'mouseup', 'auxclick', 'contextmenu']) {
+  window.addEventListener(t, e => {
+    if (e.target !== $('canvas') || (t !== 'contextmenu' && e.button === 0)) return;
+    e.preventDefault(); if (t !== 'pointerdown') e.stopImmediatePropagation();
+  }, { capture: true });
+}
 window.addEventListener('blur', pause);
 document.addEventListener('visibilitychange', () => { if (document.hidden) pause(); });
 
@@ -282,6 +293,16 @@ function soldatSous(x, y, r) {
   }
   return best;
 }
+// le corps le plus proche du point, à moins de r mètres : le numéro de l'homme
+function corpsSous(x, y, r) {
+  let best = -1, bd = r * r;
+  for (const c of B.etat.corps) {
+    const d = (c[0] / 10 - x) ** 2 + (c[1] / 10 - y) ** 2;
+    if (d < bd) { bd = d; best = c[4]; }
+  }
+  return best;
+}
+const tombe = id => { const c = B.etat.corps.find(c => c[4] === id); return c ? `Tombé le jour ${c[3]}.` : 'Mort.'; };
 // ce que compte un régiment : vivants, blessés, morts
 function bilan(reg) {
   const A = B.armee;
@@ -310,7 +331,7 @@ function majFiche() {
   const lien = $('fiche-regiment');
   lien.hidden = !reg0; lien.textContent = nomDe(reg0); lien.onclick = () => montrerRegiment(reg0.id);
   $('fiche-liste').replaceChildren(); listeVue = '';
-  const mots = i < 0 ? ['Mort.'] : etatEnMots(A.fatJ[i], A.fatB[i], A.peur[i], A.blessure[i]);
+  const mots = i < 0 ? [tombe(fiche.id)] : etatEnMots(A.fatJ[i], A.fatB[i], A.peur[i], A.blessure[i]);
   $('fiche-etat').replaceChildren(...mots.map(t => Object.assign(document.createElement('li'), { textContent: t })));
 }
 function majFicheRegiment() {
@@ -375,6 +396,12 @@ function majBulle() {
       const A = B.armee, { reg, qui } = quiEst(A.id[i]);
       lignes = [`${qui.prenom} ${qui.nom}`, `${majuscule(qui.grade)}, ${qui.age} ans · ${nomDe(reg)}`,
         etatEnMots(A.fatJ[i], A.fatB[i], A.peur[i], A.blessure[i]).join(', ')];
+    } else {
+      const mort = corpsSous(x, y, Math.max(0.8, prise(10)));
+      if (mort >= 0) {
+        const { reg, qui } = quiEst(mort);
+        lignes = [`${qui.prenom} ${qui.nom}`, `${majuscule(qui.grade)}, ${qui.age} ans · ${nomDe(reg)}`, tombe(mort)];
+      }
     }
   } else {
     const r = regimentSous(x, y, Math.max(4, prise(16)));
@@ -405,7 +432,12 @@ const keys = createKeys({
   },
   onAction: nom => {
     if (!enJeu()) return;
-    if (nom === 'menu') { if (modeBarrage) { modeBarrage = null; majHud(); } else if (fiche) fermerFiche(); else pause(); }
+    if (nom === 'menu') {
+      if (modeBarrage) { modeBarrage = null; majHud(); }
+      else if (fiche) fermerFiche();
+      else if (prefs.gauche && choisis.size) { choisis = new Set(); rendu.choisis = choisis; majHud(); }
+      else pause();
+    }
     else if (nom === 'pause') { pauseActive = !pauseActive; if (pauseActive) loop.pause(); else reprendre(); majHud(); }
     else if (nom === 'tout') choisirTout();
     else if (nom === 'plus') zoomer(1);
@@ -428,7 +460,8 @@ createPointer($('canvas'), {
     if (p.button === 0 && !modeBarrage) {
       if (dePres()) {
         const i = soldatSous(x, y, Math.max(0.8, prise(12)));
-        if (i >= 0) montrerFiche(i); else fermerFiche();
+        const mort = i < 0 ? corpsSous(x, y, Math.max(0.8, prise(10))) : -1;
+        if (i >= 0) montrerFiche(i); else if (mort >= 0) montrerSoldat(mort); else fermerFiche();
       } else {
         const r = regimentSous(x, y, Math.max(4, prise(16)));
         if (r >= 0) montrerRegiment(r); else fermerFiche();
@@ -444,6 +477,12 @@ createPointer($('canvas'), {
         if (dire(ordonnerBarrage(B, modeBarrage, x, y)).ok) { marque = { x, y, t: 2 }; modeBarrage = null; sauvegarder(); }
       } else {
         const r = regimentSous(x, y, dePres() ? 4 : Math.max(4, prise(16)), NOUS);
+        // tout au bouton gauche : un clic sur le sol (loin de nos régiments) fait marcher ceux qu'on a choisis
+        if (prefs.gauche && r < 0 && choisis.size && !p.event.shiftKey) {
+          fermerFiche();
+          if (dire(ordonnerMarche(B, [...choisis], x, y)).ok) { marque = { x, y, t: 2 }; sauvegarder(); }
+          return majHud();
+        }
         if (!p.event.shiftKey) choisis = new Set();
         if (r >= 0) { if (choisis.has(r) && p.event.shiftKey) choisis.delete(r); else choisis.add(r); }
         rendu.choisis = choisis;
@@ -550,7 +589,7 @@ startUpdateCheck({
 
 // ─── Mode debug (section 18) : chargé seulement avec ?debug=1 ──────────────
 if (DEBUG) {
-  const { installDebug, seedFromUrl } = await import('./lib/debug.js?v=0.3.2');
+  const { installDebug, seedFromUrl } = await import('./lib/debug.js?v=0.3.3');
   window.__seed = seedFromUrl() ?? undefined;
   installDebug({
     state: () => B && { ...horloge(B), effectifs: effectifs(B), pertes: B.etat.pertes, impacts: B.etat.impacts.length, enJeu: enJeu(), pause: loop.paused },

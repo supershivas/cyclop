@@ -1,5 +1,10 @@
 # Journal des versions
 
+## 0.3.3 — 2026-10-14
+
+- Les morts restent où ils sont tombés ; survolez-les, ils ont un nom
+- Le clic droit ne déclenche plus les gestes du navigateur ; un réglage met tout au bouton gauche
+
 ## 0.3.2 — 2026-10-14
 
 - Survolez un homme pour savoir qui il est ; de loin, un régiment pour ses pertes

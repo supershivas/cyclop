@@ -93,6 +93,10 @@ des obus et de ceux qui tombent à côté. On clique un homme : sa fiche dit qui
 il est et ce qu'il endure, sobrement. Mort, sa fiche le dit (le Mémorial, plus
 tard, les gardera tous). (Jérôme, v0.3.0)
 
+Les morts restent où ils sont tombés : un homme couché, de la couleur de son camp
+le jour où il tombe, de la couleur de la glaise dès le lendemain ; au loin, un
+pixel. Survolé, il a encore un nom. (Jérôme, v0.3.3)
+
 De près, on regarde des hommes : le survol dit qui il est. De loin, on regarde
 des régiments : le survol dit combien ils sont encore, combien sont blessés,
 combien sont morts ; un clic ouvre la fiche du régiment, d'où l'on va à celle de
@@ -115,7 +119,7 @@ feldgrau, plus pâles que le sol sombre.
 
 - Aucune glorification de la guerre : pas de médailles qui brillent, pas de
   victoire claironnée. Le compteur de morts n'est jamais une récompense.
-- Pas de gore explicite : les corps (plus tard) sont des entités d'un pixel.
+- Pas de gore explicite : un corps est un homme couché, d'un pixel au loin.
 - Pas de tutoriel bavard : les commandes sont dans les réglages, c'est tout.
 - Pas de loot.
 

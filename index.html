@@ -9,8 +9,8 @@
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta property="og:image" content="og.png">
-<link rel="stylesheet" href="js/lib/game.css?v=0.3.2">
-<link rel="stylesheet" href="css/style.css?v=0.3.2">
+<link rel="stylesheet" href="js/lib/game.css?v=0.3.3">
+<link rel="stylesheet" href="css/style.css?v=0.3.3">
 </head>
 <body>
 <div class="jeu-ecran" id="ecran">
@@ -96,13 +96,14 @@
 
 <dialog id="dialogue-reglages" aria-label="Réglages">
   <h2>Réglages</h2>
+  <label class="reglage"><input type="checkbox" id="pref-gauche"> <span>Tout au bouton gauche : un clic sur le sol fait marcher les régiments choisis, Échap les laisse (si le clic droit déclenche les gestes du navigateur)</span></label>
   <details>
     <summary>Commandes</summary>
     <dl class="commandes">
       <dt>Clic</dt><dd>choisir un régiment (Maj : en ajouter) et voir sa fiche ; de près, sur un homme, la sienne</dd>
       <dt>Survol</dt><dd>de près, qui est cet homme ; de loin, ce que compte son régiment</dd>
       <dt>Glisser</dt><dd>choisir au cadre</dd>
-      <dt>Clic droit</dt><dd>marcher jusque-là</dd>
+      <dt>Clic droit</dt><dd>marcher jusque-là (ou clic sur le sol, tout au bouton gauche)</dd>
       <dt>1, 2, 3</dt><dd>viser un barrage de 75, 155, 220, puis clic</dd>
       <dt>T</dt><dd>choisir tous nos régiments</dd>
       <dt>Espace</dt><dd>arrêter le temps (les ordres restent possibles)</dd>
@@ -135,6 +136,6 @@
 </dialog>
 
 <div class="jeu-toast" id="toast" role="status" hidden></div>
-<script type="module" src="js/main.js?v=0.3.2"></script>
+<script type="module" src="js/main.js?v=0.3.3"></script>
 </body>
 </html>

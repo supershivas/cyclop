@@ -20,12 +20,13 @@
      d'abord, avec un budget de quelques ms par image (la technique paintSome
      de Pierre).
    - Les soldats : instanciés (une boîte et son ombre) ; au zoom 1 et 2, un
-     point de 2 × 2 pixels (la couleur du camp sur son ombre). */
-import { loadThree } from './three-lib.js?v=0.3.2';
-import { PALETTE, ORDRE, INDICE } from './palette.js?v=0.3.2';
-import { OMBRE, couleursLigne } from './apparence.js?v=0.3.2';
-import { MORCEAU, hauteurVueQ as hauteurQ, hauteurVueM as hauteurM } from './terrain.js?v=0.3.2';
-import { horloge } from './bataille.js?v=0.3.2';
+     point de 2 × 2 pixels (la couleur du camp sur son ombre).
+   - Les corps : un homme couché (instancié) ; au zoom 1 et 2, un pixel. */
+import { loadThree } from './three-lib.js?v=0.3.3';
+import { PALETTE, ORDRE, INDICE } from './palette.js?v=0.3.3';
+import { OMBRE, couleursLigne } from './apparence.js?v=0.3.3';
+import { MORCEAU, hauteurVueQ as hauteurQ, hauteurVueM as hauteurM } from './terrain.js?v=0.3.3';
+import { horloge } from './bataille.js?v=0.3.3';
 
 export const CAMERA = { yaw: 0.15, tangage: 0.95, fov: 30 };   // au départ : tournée de 9°, plongée de 54°, angle de 30°
 // la caméra respire : un balancement très lent, 2° en 23 s (Jérôme, v0.3.1 : variante D du labo retenue)
@@ -268,6 +269,66 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
     scene.add(soldatsInst, soldatsPoints);
   }
 
+  // ─── Les corps : un homme couché (1,7 × 0,5 m, 0,3 de haut) ; au loin, un pixel.
+  // La couleur de son camp le jour où il tombe, la glaise dès le lendemain. ───
+  let capCorps = 0, cPos = null, cInfo = null, corpsInst = null, corpsPoints = null, attrsCI = null, attrsCP = null;
+  const corpsMat = new THREE.ShaderMaterial({
+    uniforms: { uNous: { value: col('n') }, uEux: { value: col('x') }, uVieux: { value: col('g') }, uFlanc: { value: col('s') } },
+    vertexShader: `
+      attribute vec3 aPos; attribute vec2 aInfo; attribute float aPart;
+      varying float vEtat; varying float vPart;
+      void main() {
+        vEtat = aInfo.x; vPart = aPart;
+        float c = cos(aInfo.y), s = sin(aInfo.y);
+        vec3 p = vec3(position.x * c - position.z * s, position.y, position.x * s + position.z * c);
+        gl_Position = projectionMatrix * viewMatrix * vec4(p + aPos, 1.0);
+      }`,
+    fragmentShader: `
+      uniform vec3 uNous; uniform vec3 uEux; uniform vec3 uVieux; uniform vec3 uFlanc;
+      varying float vEtat; varying float vPart;
+      void main() {
+        vec3 c = vEtat > 1.5 ? uVieux : (vEtat > 0.5 ? uEux : uNous);
+        gl_FragColor = vec4(vPart > 0.5 ? uFlanc : c, 1.0);
+      }`,
+    side: THREE.DoubleSide,
+  });
+  const corpsPointMat = new THREE.ShaderMaterial({
+    uniforms: corpsMat.uniforms,
+    vertexShader: `
+      attribute vec2 aInfo; varying float vEtat;
+      void main() { vEtat = aInfo.x; gl_Position = projectionMatrix * viewMatrix * vec4(position + vec3(0.0, 0.3, 0.0), 1.0); gl_PointSize = 1.0; }`,
+    fragmentShader: `
+      uniform vec3 uNous; uniform vec3 uEux; uniform vec3 uVieux; varying float vEtat;
+      void main() { gl_FragColor = vec4(vEtat > 1.5 ? uVieux : (vEtat > 0.5 ? uEux : uNous), 1.0); }`,
+  });
+  function preparerCorps(capacite) {
+    if (corpsInst) { scene.remove(corpsInst, corpsPoints); corpsInst.geometry.dispose(); corpsPoints.geometry.dispose(); }
+    capCorps = capacite;
+    cPos = new Float32Array(capCorps * 3); cInfo = new Float32Array(capCorps * 2);
+    const q = (a, b, c, d) => [...a, ...b, ...c, ...a, ...c, ...d];
+    const l = 0.85, w = 0.25, h = 0.3;
+    const dessus = q([-l, h, -w], [-l, h, w], [l, h, w], [l, h, -w]);
+    const flancs = [
+      ...q([-l, 0, w], [l, 0, w], [l, h, w], [-l, h, w]), ...q([-l, 0, -w], [l, 0, -w], [l, h, -w], [-l, h, -w]),
+      ...q([l, 0, -w], [l, 0, w], [l, h, w], [l, h, -w]), ...q([-l, 0, -w], [-l, 0, w], [-l, h, w], [-l, h, -w]),
+    ];
+    const gi = new THREE.InstancedBufferGeometry();
+    gi.setAttribute('position', new THREE.Float32BufferAttribute([...dessus, ...flancs], 3));
+    gi.setAttribute('aPart', new THREE.Float32BufferAttribute([...new Array(dessus.length / 3).fill(0), ...new Array(flancs.length / 3).fill(1)], 1));
+    attrsCI = [new THREE.InstancedBufferAttribute(cPos, 3), new THREE.InstancedBufferAttribute(cInfo, 2)];
+    attrsCI.forEach(a => a.setUsage(THREE.DynamicDrawUsage));
+    gi.setAttribute('aPos', attrsCI[0]); gi.setAttribute('aInfo', attrsCI[1]);
+    gi.instanceCount = 0;
+    corpsInst = new THREE.Mesh(gi, corpsMat); corpsInst.frustumCulled = false; corpsInst.renderOrder = 1;
+    const gp = new THREE.BufferGeometry();
+    attrsCP = [new THREE.BufferAttribute(cPos, 3), new THREE.BufferAttribute(cInfo, 2)];
+    attrsCP.forEach(a => a.setUsage(THREE.DynamicDrawUsage));
+    gp.setAttribute('position', attrsCP[0]); gp.setAttribute('aInfo', attrsCP[1]);
+    gp.setDrawRange(0, 0);
+    corpsPoints = new THREE.Points(gp, corpsPointMat); corpsPoints.frustumCulled = false; corpsPoints.renderOrder = 1;
+    scene.add(corpsInst, corpsPoints);
+  }
+
   // ─── Les arbres : un tronc, quelques branches nues ; abattus, une souche ───
   const arbresMesh = [];
   function geometrieArbre(v, abattu) {
@@ -438,6 +499,7 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
     for (const m of morceaux) refaire(m);
     majSol(true);
     preparerSoldats(B.armee.capacite);
+    preparerCorps(Math.max(1024, B.etat.corps.length * 2));
     preparerArbres(); arbresVus = '';
     vue.cx = T.W / 2; vue.cz = T.H * 0.62;
   }
@@ -566,6 +628,27 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
     soldatsPoints.geometry.setDrawRange(0, k);
     soldatsInst.geometry.instanceCount = k;
     vus = k;
+    majCorps(x0, x1, z0, z1, e, aPlat, points);
+  }
+  // les corps : ceux qu'on voit, comme les soldats (la liste ne fait que grandir)
+  function majCorps(x0, x1, z0, z1, e, aPlat, points) {
+    const C = B.etat.corps, jour = B.etat.jour;
+    if (C.length > capCorps) preparerCorps(C.length * 2);
+    let k = 0;
+    for (const c of C) {
+      const x = c[0] / 10, y = c[1] / 10;
+      if (x < x0 || x > x1 || y < z0 || y > z1) continue;
+      const cxp = e[0] * x + e[4] * SOL_Y + e[8] * y + e[12], cyp = e[1] * x + e[5] * SOL_Y + e[9] * y + e[13], cw = e[3] * x + e[7] * SOL_Y + e[11] * y + e[15];
+      if (cxp < -1.08 * cw || cxp > 1.08 * cw || cyp < -1.15 * cw || cyp > 1.15 * cw) continue;
+      cPos[k * 3] = x; cPos[k * 3 + 1] = aPlat ? SOL_Y : surface(x, y); cPos[k * 3 + 2] = y;
+      cInfo[k * 2] = c[3] < jour ? 2 : c[2];
+      cInfo[k * 2 + 1] = ((c[4] * 2654435761) >>> 0) % 628 / 100;     // couché dans un sens qui ne change pas
+      k++;
+    }
+    if (!vide) { corpsPoints.visible = points; corpsInst.visible = !points; }
+    for (const a of points ? attrsCP : attrsCI) { a.clearUpdateRanges(); a.addUpdateRange(0, k * a.itemSize); a.needsUpdate = true; }
+    corpsPoints.geometry.setDrawRange(0, k);
+    corpsInst.geometry.instanceCount = k;
   }
   let vus = 0;
 

@@ -14,14 +14,14 @@
    La sauvegarde (photo) garde la graine, la liste compacte des impacts, l'état
    de la foule et les petites couches de logique ; jamais le relief : il se
    rejoue depuis la graine et les impacts (rejouerTerrain). */
-import { createRng } from './lib/rng.js?v=0.3.2';
-import { creerTerrain, impact, hydroLignes } from './terrain.js?v=0.3.2';
-import { creerArmee, ajouterSoldat, construireGrille, pasArmee, tuerDans, effrayer, reposer, compacter, photoArmee, restaurerArmee, b64, deB64, DENSITE } from './army.js?v=0.3.2';
-import { calculerCouts, creerCacheChamps, dimensionsCouts, BLOC } from './champs.js?v=0.3.2';
-import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.3.2';
-import { METEO, TRANSITIONS, PREVISION_JUSTE } from './data/meteo.js?v=0.3.2';
-import { SECTEURS } from './data/secteur.js?v=0.3.2';
-import { REGIMENTS } from './data/lexique.js?v=0.3.2';
+import { createRng } from './lib/rng.js?v=0.3.3';
+import { creerTerrain, impact, hydroLignes } from './terrain.js?v=0.3.3';
+import { creerArmee, ajouterSoldat, construireGrille, pasArmee, tuerDans, effrayer, reposer, compacter, photoArmee, restaurerArmee, b64, deB64, DENSITE } from './army.js?v=0.3.3';
+import { calculerCouts, creerCacheChamps, dimensionsCouts, BLOC } from './champs.js?v=0.3.3';
+import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.3.3';
+import { METEO, TRANSITIONS, PREVISION_JUSTE } from './data/meteo.js?v=0.3.3';
+import { SECTEURS } from './data/secteur.js?v=0.3.3';
+import { REGIMENTS } from './data/lexique.js?v=0.3.3';
 
 export const PAS = 1 / 30;                 // s de jeu par pas
 export const NOUS = 0, EUX = 1;
@@ -66,6 +66,7 @@ export function nouvelleBataille(graine, R, opts = {}) {
     couts: { bande: 0, version: 1 },
     marges: { ...S.marges },            // le terrain déborde du secteur (zone())
     regiments: [], pertes: [0, 0], pertesJour: [[0, 0]], blesses: [0, 0],
+    corps: [],                  // les morts restent où ils sont tombés : [x×10, y×10, camp, jour, id]
     batteries: Object.fromEntries(NOMS_CALIBRES.map(c => [c, 0])),   // s de jeu (depuis l'aube du jour 1) où la batterie est prête
     barrages: [],
     ia: { barrage: R.ia.barrage * 0.5, offensive: R.ia.offensive },
@@ -222,6 +223,7 @@ export function avancer(B) {
       etat.pertes[A.camp[i]]++;
       etat.pertesJour[etat.jour - 1][A.camp[i]]++;
       morts.push(i);
+      etat.corps.push([Math.round(A.x[i] * 10), Math.round(A.y[i] * 10), A.camp[i], etat.jour, A.id[i]]);
       B.evenements.push({ type: 'mort', camp: A.camp[i], cause, x: A.x[i], y: A.y[i], id: A.id[i] });
     } else {
       const r = rng();
@@ -388,6 +390,7 @@ export function restaurer(p, R) {
     etat.couts = { bande: 0, version: (etat.couts?.version || 1) + 1 };
   }
   etat.blesses ??= [0, 0];
+  etat.corps ??= [];          // (avant la v0.3.3, les morts ne restaient pas)
   const B = monter(etat, R);
   rejouerTerrain(B);
   restaurerArmee(B.armee, armee);
