@@ -3,13 +3,14 @@
 //
 //   node scripts/trois-jours.mjs                      → 2 000 soldats, graine 7
 //   node scripts/trois-jours.mjs --soldats 8000 --graine 3 --sortie captures/trois-jours
+//   node scripts/trois-jours.mjs --sol facettes --rendu sprites --sortie captures/variantes   (les variantes du labo)
 //
 // Chaque soir : une capture du champ entier (un point par soldat) et deux de
 // près (zoom 4 et 8) là où les obus sont tombés. À la fin : les mesures.
 import { mkdir } from 'node:fs/promises';
 import { servir, lancerChromium, options } from '../outils/navigateur.mjs';
 
-const o = options(process.argv.slice(2), { soldats: '2000', graine: '7', sortie: 'captures/trois-jours' });
+const o = options(process.argv.slice(2), { soldats: '2000', graine: '7', sortie: 'captures/trois-jours', sol: 'cubes', rendu: 'boites' });
 await mkdir(o.sortie, { recursive: true });
 const srv = await servir('.');
 const nav = await lancerChromium();
@@ -17,7 +18,7 @@ const page = await (await nav.newContext({ viewport: { width: 1280, height: 800 
 const erreurs = [];
 page.on('pageerror', e => erreurs.push(e.message));
 page.on('console', m => { if (m.type() === 'error') erreurs.push(m.text()); });
-await page.goto(`${srv.base}index.html?debug=1&mesure=1&seed=${o.graine}&soldats=${o.soldats}`);
+await page.goto(`${srv.base}index.html?debug=1&mesure=1&seed=${o.graine}&soldats=${o.soldats}&sol=${o.sol}&soldats-rendu=${o.rendu}`);
 await page.waitForTimeout(600);
 await page.click('#nouvelle');
 await page.waitForTimeout(1200);

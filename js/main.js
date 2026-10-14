@@ -1,18 +1,18 @@
 // Le cycle de vie : écran titre → bataille → nuit → fin ; pause active,
 // réglages, sauvegarde, mise à jour, debug. Les règles sont dans bataille.js
 // (pures), le dessin dans rendu3d.js (il ne modifie jamais l'état).
-import { createLoop } from './lib/loop.js?v=0.1.0';
-import { createKeys, stopTypeahead } from './lib/keys.js?v=0.1.0';
-import { createPointer, lockBrowserGestures } from './lib/pointer.js?v=0.1.0';
-import { createGamepad } from './lib/gamepad.js?v=0.1.0';
-import { createStore, autosave, pickJSONFile } from './lib/save.js?v=0.1.0';
-import { startUpdateCheck, loadVersion, loadChangelog, downloadJSON } from './lib/app-update.js?v=0.1.0';
-import { ROLES } from './palette.js?v=0.1.0';
-import { nouvelleBataille, avancer, aube, ordonnerMarche, ordonnerBarrage, horloge, effectifs, photo, restaurer, PAS, NOUS } from './bataille.js?v=0.1.0';
-import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.1.0';
-import { METEO } from './data/meteo.js?v=0.1.0';
-import { creerRendu } from './rendu3d.js?v=0.1.0';
-import { chargerContenu } from './design-store.js?v=0.1.0';
+import { createLoop } from './lib/loop.js?v=0.1.1';
+import { createKeys, stopTypeahead } from './lib/keys.js?v=0.1.1';
+import { createPointer, lockBrowserGestures } from './lib/pointer.js?v=0.1.1';
+import { createGamepad } from './lib/gamepad.js?v=0.1.1';
+import { createStore, autosave, pickJSONFile } from './lib/save.js?v=0.1.1';
+import { startUpdateCheck, loadVersion, loadChangelog, downloadJSON } from './lib/app-update.js?v=0.1.1';
+import { ROLES } from './palette.js?v=0.1.1';
+import { nouvelleBataille, avancer, aube, ordonnerMarche, ordonnerBarrage, horloge, effectifs, photo, restaurer, PAS, NOUS } from './bataille.js?v=0.1.1';
+import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.1.1';
+import { METEO } from './data/meteo.js?v=0.1.1';
+import { creerRendu } from './rendu3d.js?v=0.1.1';
+import { chargerContenu } from './design-store.js?v=0.1.1';
 
 const JEU = 'cyclopeen';
 const $ = id => document.getElementById(id);
@@ -43,7 +43,8 @@ const perf = { sim: 0, pas: 0 };
 
 lockBrowserGestures($('ecran'));
 stopTypeahead();
-const rendu = await creerRendu($('canvas'), { mesure: MESURE });
+// les variantes du labo, à l'essai dans le jeu (mode debug seulement) : &sol=facettes&soldats=sprites
+const rendu = await creerRendu($('canvas'), { mesure: MESURE, ...(DEBUG ? { sol: params.get('sol') || undefined, soldats: params.get('soldats-rendu') || undefined } : {}) });
 rendu.redimensionner();
 addEventListener('resize', () => rendu.redimensionner());
 
@@ -372,7 +373,7 @@ startUpdateCheck({
 
 // ─── Mode debug (section 18) : chargé seulement avec ?debug=1 ──────────────
 if (DEBUG) {
-  const { installDebug, seedFromUrl } = await import('./lib/debug.js?v=0.1.0');
+  const { installDebug, seedFromUrl } = await import('./lib/debug.js?v=0.1.1');
   window.__seed = seedFromUrl() ?? undefined;
   installDebug({
     state: () => B && { ...horloge(B), effectifs: effectifs(B), pertes: B.etat.pertes, impacts: B.etat.impacts.length, enJeu: enJeu(), pause: loop.paused },

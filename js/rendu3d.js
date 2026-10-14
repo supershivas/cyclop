@@ -18,11 +18,12 @@
      de Pierre).
    - Les soldats : instanciés (une boîte et son ombre) ; au zoom 1 et 2, un
      point de 2 × 2 pixels (la couleur du camp sur son ombre). */
-import { loadThree } from './three-lib.js?v=0.1.0';
-import { PALETTE, ORDRE, INDICE } from './palette.js?v=0.1.0';
-import { OMBRE, couleursLigne } from './apparence.js?v=0.1.0';
-import { MORCEAU, hauteurVueQ as hauteurQ, hauteurVueM as hauteurM } from './terrain.js?v=0.1.0';
-import { horloge } from './bataille.js?v=0.1.0';
+import { loadThree } from './three-lib.js?v=0.1.1';
+import { PALETTE, ORDRE, INDICE } from './palette.js?v=0.1.1';
+import { OMBRE, couleursLigne } from './apparence.js?v=0.1.1';
+import { MORCEAU, hauteurVueQ as hauteurQ, hauteurVueM as hauteurM, hauteurQ as hauteurLogQ } from './terrain.js?v=0.1.1';
+import { horloge } from './bataille.js?v=0.1.1';
+import { SOLDATS, TAILLES, POSES } from './data/soldats.js?v=0.1.1';
 
 export const K_H = 0.5;                       // pixels d'écran remontés par mètre de hauteur, par pixel de sol
 export const ZOOMS = [1, 2, 3, 4, 6, 8];      // pixels (logiques) par mètre
@@ -32,7 +33,10 @@ const PLAT_JUSQUA = 2;                        // zoom où le sol devient une seu
 const PLUIE = 1600, ECLATS = 900;
 const SOCLE = -8;                             // m : le bas de la coupe du terrain (bord sud)
 
-export async function creerRendu(canvas, { budgetMs = 4, mesure = false } = {}) {
+/* Options (variantes du labo, Jérôme v0.1.1) : sol 'cubes' (le jeu) ou 'facettes' ;
+   soldats 'boites' (le jeu) ou 'sprites'. */
+export async function creerRendu(canvas, { budgetMs = 4, mesure = false, sol: modeSol = 'cubes', soldats: modeSoldats = 'boites' } = {}) {
+  const FACETTES = modeSol === 'facettes', SPRITES = modeSoldats === 'sprites';
   const THREE = await loadThree();
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: false, powerPreference: 'high-performance' });
   renderer.setPixelRatio(1);
@@ -153,6 +157,101 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false } = {}) 
     return g;
   }
 
+  /* ─── Le sol à facettes (variante) : un sommet à chaque coin de case, à la
+     hauteur moyenne des quatre cases qui le touchent (la hauteur logique, au
+     quart). Par carrés de FIN cases : fins (un quadrilatère par case) là où les
+     obus ont creusé, grossiers ailleurs (un seul quadrilatère) ; le bord d'un
+     carré fin qui touche un carré grossier suit la droite de celui-ci (pas de
+     fente). Chaque facette prend la couleur de sa case, ou celle de la paroi
+     si elle tourne le dos à la lumière (nord-ouest) : tout reste dans la palette. ─── */
+  const FIN = 5;
+  const solFacMat = new THREE.ShaderMaterial({
+    uniforms: { uSol: { value: null }, uTaille: { value: new THREE.Vector2(1, 1) } },
+    vertexShader: `
+      attribute float aParoi;
+      varying vec3 vW; varying float vParoi;
+      void main() { vW = position; vParoi = aParoi; gl_Position = projectionMatrix * vec4(position, 1.0); }`,
+    fragmentShader: `
+      uniform sampler2D uSol; uniform vec2 uTaille;
+      varying vec3 vW; varying float vParoi;
+      void main() {
+        vec3 n = normalize(cross(dFdx(vW), dFdy(vW)));
+        if (n.y < 0.0) n = -n;
+        float d = dot(n, normalize(vec3(-0.35, 0.85, -0.4)));
+        // à l'ombre sur une pente tournée vers le sud ; tramé (accroché au monde) dans l'entre-deux : une bosse de 8° se lit
+        bool ombre = vParoi > 0.5 || d < 0.7 || (d < 0.8 && mod(floor(vW.x * 2.0) + floor(vW.z * 2.0), 2.0) > 0.5);
+        vec2 cell = clamp(floor(vW.xz - (vParoi > 0.5 ? vec2(0.0, 0.5) : vec2(0.0))), vec2(0.0), uTaille - 1.0);
+        vec2 uv = vec2((cell.x + 0.5) / uTaille.x, ((cell.y + 0.5) / uTaille.y + (ombre ? 1.0 : 0.0)) * 0.5);
+        gl_FragColor = vec4(texture2D(uSol, uv).rgb, 1.0);
+      }`,
+    side: THREE.DoubleSide,
+  });
+  // la hauteur d'un coin (ci, cj), en mètres : la moyenne des cases qui le touchent
+  function coin(ci, cj) {
+    let s = 0, n = 0;
+    for (let dj = -1; dj <= 0; dj++) for (let di = -1; di <= 0; di++) {
+      const i = ci + di, j = cj + dj;
+      if (i < 0 || j < 0 || i >= T.W || j >= T.H) continue;
+      s += hauteurLogQ(T, j * T.W + i); n++;
+    }
+    return s / n * 0.25;
+  }
+  // un carré de FIN cases est fin si un obus y a touché une case
+  function fin(bx, by) {
+    if (bx < 0 || by < 0 || bx * FIN >= T.W || by * FIN >= T.H) return true;   // hors du champ : rien à raccorder
+    for (let j = by * FIN; j < Math.min(T.H, (by + 1) * FIN); j++) for (let i = bx * FIN; i < Math.min(T.W, (bx + 1) * FIN); i++) if (T.diff[j * T.W + i]) return true;
+    return false;
+  }
+  // la hauteur d'un sommet de carré fin, raccordée aux carrés grossiers voisins
+  function sommet(ci, cj) {
+    const bx = Math.floor(ci / FIN), by = Math.floor(cj / FIN), ox = ci - bx * FIN, oy = cj - by * FIN;
+    if (ox === 0 && oy !== 0 && !fin(bx - 1, by)) { const a = coin(ci, by * FIN), b = coin(ci, by * FIN + FIN); return a + (b - a) * oy / FIN; }
+    if (oy === 0 && ox !== 0 && !fin(bx, by - 1)) { const a = coin(bx * FIN, cj), b = coin(bx * FIN + FIN, cj); return a + (b - a) * ox / FIN; }
+    return coin(ci, cj);
+  }
+  function construireFacettes(mx, my) {
+    const i0 = mx * MORCEAU, j0 = my * MORCEAU, i1 = Math.min(T.W, i0 + MORCEAU), j1 = Math.min(T.H, j0 + MORCEAU);
+    const pos = [], paroi = [];
+    const quad = (x0, z0, x1, z1, h00, h10, h11, h01) => {
+      pos.push(x0, h00, z0, x0, h01, z1, x1, h11, z1, x0, h00, z0, x1, h11, z1, x1, h10, z0);
+      for (let k = 0; k < 6; k++) paroi.push(0);
+    };
+    for (let by = j0 / FIN; by < j1 / FIN; by++) for (let bx = i0 / FIN; bx < i1 / FIN; bx++) {
+      const X0 = bx * FIN, Z0 = by * FIN, X1 = Math.min(T.W, X0 + FIN), Z1 = Math.min(T.H, Z0 + FIN);
+      if (!fin(bx, by)) { quad(X0, Z0, X1, Z1, coin(X0, Z0), coin(X1, Z0), coin(X1, Z1), coin(X0, Z1)); continue; }
+      // dans un carré fin, ses bords droit et bas sont raccordés par les carrés voisins (sommet() regarde à gauche et en haut)
+      const h = (ci, cj) => {
+        const ox = ci - X0, oy = cj - Z0;
+        if (ox === FIN && oy % FIN && !fin(bx + 1, by)) { const a = coin(ci, Z0), b = coin(ci, Z0 + FIN); return a + (b - a) * oy / FIN; }
+        if (oy === FIN && ox % FIN && !fin(bx, by + 1)) { const a = coin(X0, cj), b = coin(X0 + FIN, cj); return a + (b - a) * ox / FIN; }
+        return sommet(ci, cj);
+      };
+      for (let j = Z0; j < Z1; j++) for (let i = X0; i < X1; i++) quad(i, j, i + 1, j + 1, h(i, j), h(i + 1, j), h(i + 1, j + 1), h(i, j + 1));
+    }
+    // la coupe au bord sud du champ
+    if (j1 === T.H) for (let i = i0; i < i1; i++) {
+      const a = coin(i, T.H), b = coin(i + 1, T.H);
+      pos.push(i, SOCLE, T.H, i + 1, SOCLE, T.H, i + 1, b, T.H, i, SOCLE, T.H, i + 1, b, T.H, i, a, T.H);
+      for (let k = 0; k < 6; k++) paroi.push(1);
+    }
+    const g = new THREE.BufferGeometry();
+    g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+    g.setAttribute('aParoi', new THREE.Float32BufferAttribute(paroi, 1));
+    g.boundingSphere = new THREE.Sphere(new THREE.Vector3((i0 + i1) / 2, 3, (j0 + j1) / 2), Math.hypot(i1 - i0, j1 - j0, 20) / 2);
+    return g;
+  }
+  // la hauteur de la surface dessinée en (x, z) : là où l'on pose soldats et arbres
+  function surface(x, z) {
+    const i = Math.max(0, Math.min(T.W - 1, x | 0)), j = Math.max(0, Math.min(T.H - 1, z | 0));
+    if (!FACETTES) return hauteurM(T, j * T.W + i);
+    const bx = Math.floor(i / FIN), by = Math.floor(j / FIN);
+    let x0, z0, d, a, b, c, e;
+    if (fin(bx, by)) { x0 = i; z0 = j; d = 1; a = sommet(i, j); b = sommet(i + 1, j); c = sommet(i, j + 1); e = sommet(i + 1, j + 1); }
+    else { x0 = bx * FIN; z0 = by * FIN; d = FIN; a = coin(x0, z0); b = coin(x0 + d, z0); c = coin(x0, z0 + d); e = coin(x0 + d, z0 + d); }
+    const u = Math.max(0, Math.min(1, (x - x0) / d)), v = Math.max(0, Math.min(1, (z - z0) / d));
+    return (a * (1 - u) + b * u) * (1 - v) + (c * (1 - u) + e * u) * v;
+  }
+
   // ─── Les soldats ───
   let cap = 0, posArr = null, campArr = null, soldatsInst = null, soldatsPoints = null, attrsI = null, attrsP = null;
   const soldatMat = new THREE.ShaderMaterial({
@@ -191,7 +290,62 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false } = {}) 
         gl_FragColor = vec4(sel ? uSel : (camp > 0.5 ? uEux : uNous), 1.0);
       }`,
   });
+  /* ─── Les soldats en sprites (variante) : un quadrilatère par soldat, de la
+     taille exacte du sprite en pixels de l'image, posé par son pied sur le sol
+     (le pied tombe sur un pixel entier : rien ne bave). L'atlas : un octet par
+     pixel (0 vide, la palette 1..N, 200 la couleur du camp, 201 le casque). ─── */
+  const atlas = (() => {
+    const rects = {}, liste = [];
+    let x = 0, H = 0;
+    for (const camp of ['nous', 'eux']) for (const taille of Object.keys(TAILLES)) for (const pose of POSES) {
+      const rows = SOLDATS[camp][taille][pose];
+      liste.push([`${camp}:${taille}:${pose}`, rows, x]);
+      x += rows[0].length + 1; H = Math.max(H, rows.length);
+    }
+    const W = x, data = new Uint8Array(W * H);
+    for (const [cle, rows, x0] of liste) {
+      rows.forEach((r, j) => [...r].forEach((ch, i) => {
+        data[j * W + x0 + i] = ch === '.' ? 0 : ch === 'c' ? 200 : ch === 'k' ? 201 : INDICE[ch] + 1;
+      }));
+      rects[cle] = [x0, 0, rows[0].length, rows.length];
+    }
+    const tex = new THREE.DataTexture(data, W, H, THREE.RedFormat, THREE.UnsignedByteType);
+    tex.magFilter = tex.minFilter = THREE.NearestFilter; tex.generateMipmaps = false; tex.unpackAlignment = 1; tex.needsUpdate = true;
+    return { tex, rects, W, H };
+  })();
+  const tailleDuZoom = p => Object.keys(TAILLES).find(t => TAILLES[t].includes(p)) || 'grand';
+  const spriteMat = new THREE.ShaderMaterial({
+    uniforms: { uAtlas: { value: atlas.tex }, uAtlasT: { value: new THREE.Vector2(atlas.W, atlas.H) }, uVue: { value: new THREE.Vector2(1, 1) },
+      uPal: { value: palTex }, uNP: { value: NP }, uNous: { value: col('n') }, uEux: { value: col('x') }, uSel: { value: col('o') } },
+    vertexShader: `
+      attribute vec3 aPos; attribute float aCamp; attribute vec4 aRect;
+      uniform vec2 uVue;
+      varying vec2 vTex; varying float vCamp;
+      void main() {
+        vec4 c = projectionMatrix * vec4(aPos, 1.0);
+        vec2 pied = floor((c.xy * 0.5 + 0.5) * uVue);
+        vec2 p = pied + vec2(-floor(aRect.z * 0.5), 0.0) + position.xy * aRect.zw;
+        gl_Position = vec4(p / uVue * 2.0 - 1.0, c.z, 1.0);
+        vTex = vec2(aRect.x + position.x * aRect.z, aRect.y + (1.0 - position.y) * aRect.w);
+        vCamp = aCamp;
+      }`,
+    fragmentShader: `
+      uniform sampler2D uAtlas; uniform vec2 uAtlasT; uniform sampler2D uPal; uniform float uNP;
+      uniform vec3 uNous; uniform vec3 uEux; uniform vec3 uSel;
+      varying vec2 vTex; varying float vCamp;
+      void main() {
+        float v = floor(texture2D(uAtlas, (floor(vTex) + 0.5) / uAtlasT).r * 255.0 + 0.5);
+        if (v < 0.5) discard;
+        bool sel = vCamp > 1.5;
+        vec3 camp = (sel ? vCamp - 2.0 : vCamp) > 0.5 ? uEux : uNous;
+        vec3 c = v > 199.5 ? ((v > 200.5 && sel) ? uSel : camp) : texture2D(uPal, vec2((v - 0.5) / uNP, 0.25)).rgb;
+        gl_FragColor = vec4(c, 1.0);
+      }`,
+  });
+  let rectArr = null, attrR = null, soldatsSprites = null;
+
   function preparerSoldats(capacite) {
+    if (soldatsSprites) { scene.remove(soldatsSprites); soldatsSprites.geometry.dispose(); soldatsSprites = null; }
     if (soldatsInst) { scene.remove(soldatsInst, soldatsPoints); soldatsInst.geometry.dispose(); soldatsPoints.geometry.dispose(); }
     cap = capacite;
     posArr = new Float32Array(cap * 3); campArr = new Float32Array(cap);
@@ -221,6 +375,16 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false } = {}) 
     gp.setDrawRange(0, 0);
     soldatsPoints = new THREE.Points(gp, pointMat); soldatsPoints.frustumCulled = false; soldatsPoints.renderOrder = 2;
     scene.add(soldatsInst, soldatsPoints);
+    if (SPRITES) {
+      rectArr = new Float32Array(cap * 4);
+      const gs = new THREE.InstancedBufferGeometry();
+      gs.setAttribute('position', new THREE.Float32BufferAttribute([0, 0, 0, 1, 0, 0, 1, 1, 0, 0, 0, 0, 1, 1, 0, 0, 1, 0], 3));
+      attrR = new THREE.InstancedBufferAttribute(rectArr, 4); attrR.setUsage(THREE.DynamicDrawUsage);
+      gs.setAttribute('aPos', attrsI[0]); gs.setAttribute('aCamp', attrsI[1]); gs.setAttribute('aRect', attrR);
+      gs.instanceCount = 0;
+      soldatsSprites = new THREE.Mesh(gs, spriteMat); soldatsSprites.frustumCulled = false; soldatsSprites.renderOrder = 2;
+      scene.add(soldatsSprites);
+    }
   }
 
   // ─── Les arbres : un tronc, quelques branches nues ; abattus, une souche ───
@@ -266,7 +430,7 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false } = {}) 
       let n = 0;
       for (const a of T.arbres) {
         if (a.abattu !== m.userData.abattu || a.v !== m.userData.v) continue;
-        m4.makeTranslation(a.i + 0.5, plat() ? 0 : hauteurM(T, a.j * T.W + a.i), a.j + 0.5);
+        m4.makeTranslation(a.i + 0.5, plat() ? 0 : surface(a.i + 0.5, a.j + 0.5), a.j + 0.5);
         m.setMatrixAt(n++, m4);
       }
       m.count = n; m.instanceMatrix.needsUpdate = true;
@@ -298,7 +462,7 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false } = {}) 
   const alea = () => { graine = (graine * 16807) % 2147483647; return graine / 2147483647; };   // l'aspect seulement, jamais la logique
   function eclater(x, y, cal) {
     const big = cal === '220' ? 3 : cal === '155' ? 2 : 1;
-    const h = T ? hauteurM(T, Math.min(T.H - 1, y | 0) * T.W + Math.min(T.W - 1, x | 0)) : 0;
+    const h = T ? surface(x, y) : 0;
     const n = 14 * big;
     for (let k = 0; k < n; k++) {
       const s = eclTete; eclTete = (eclTete + 1) % ECLATS;
@@ -374,6 +538,7 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false } = {}) 
     solTex = new THREE.DataTexture(solData, T.W, T.H * 2, THREE.RGBAFormat, THREE.UnsignedByteType);
     solTex.magFilter = solTex.minFilter = THREE.NearestFilter; solTex.generateMipmaps = false;
     solMat.uniforms.uSol.value = solTex; solMat.uniforms.uTaille.value.set(T.W, T.H);
+    solFacMat.uniforms.uSol.value = solTex; solFacMat.uniforms.uTaille.value.set(T.W, T.H);
     vuLigne = new Uint32Array(T.H).fill(0xffffffff); gelVu = null;
     sol = new THREE.Group(); scene.add(sol);
     // le niveau de détail lointain : tout le champ en deux triangles, à plat
@@ -384,7 +549,7 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false } = {}) 
     scene.add(solPlat);
     morceaux = [];
     for (let my = 0; my < T.mh; my++) for (let mx = 0; mx < T.mw; mx++) {
-      const m = new THREE.Mesh(new THREE.BufferGeometry(), solMat);
+      const m = new THREE.Mesh(new THREE.BufferGeometry(), FACETTES ? solFacMat : solMat);
       m.userData = { mx, my, version: -1 };
       morceaux.push(m); sol.add(m);
     }
@@ -395,11 +560,20 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false } = {}) 
     preparerArbres(); arbresVus = '';
     vue.cx = T.W / 2; vue.cz = T.H * 0.62;
   }
+  // un morceau dépend aussi de ses voisins (la paroi au sud, le raccord des facettes) : leurs versions comptent
+  function versionAutour(mx, my) {
+    let v = 0;
+    for (const [dx, dy] of [[0, 0], [1, 0], [-1, 0], [0, 1], [0, -1]]) {
+      const x = mx + dx, y = my + dy;
+      if (x >= 0 && y >= 0 && x < T.mw && y < T.mh) v += T.versionMorceau[y * T.mw + x] * (dx * 3 + dy * 7 + 11);
+    }
+    return v;
+  }
   function refaire(m) {
     const { mx, my } = m.userData;
     m.geometry.dispose();
-    m.geometry = construireMorceau(mx, my);
-    m.userData.version = T.versionMorceau[my * T.mw + mx];
+    m.geometry = FACETTES ? construireFacettes(mx, my) : construireMorceau(mx, my);
+    m.userData.version = versionAutour(mx, my);
   }
   // la texture du sol : les rangées dont la couleur a changé
   function majSol(tout = false, dt = 0) {
@@ -414,7 +588,7 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false } = {}) 
     for (let j = 0; j < T.H; j++) {
       // une rangée dépend aussi de sa voisine du sud (la marche entre elles)
       if (!tout && vuLigne[j] === T.versionLigne[j] && (j === T.H - 1 || vuLigne[j + 1] === T.versionLigne[j + 1])) continue;
-      couleursLigne(T, j, B.R, gel, solIdx);
+      couleursLigne(T, j, B.R, gel, solIdx, !FACETTES);
       for (let i = 0, c = j * W; i < W; i++, c++) {
         const a = PAL_RGB[solIdx[c]], b = PAROI_RGB[solIdx[c]], o = c * 4;
         const marche = j < T.H - 1 && hauteurQ(T, c) - hauteurQ(T, c + W) >= 4;     // l'alpha dit : une marche d'un mètre au sud
@@ -429,7 +603,7 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false } = {}) 
   // refaire les morceaux changés, les plus proches du centre d'abord, dans le budget
   function majMorceaux() {
     const t0 = performance.now();
-    const sales = morceaux.filter(m => m.userData.version !== T.versionMorceau[m.userData.my * T.mw + m.userData.mx]);
+    const sales = morceaux.filter(m => m.userData.version !== versionAutour(m.userData.mx, m.userData.my));
     if (!sales.length) return 0;
     const d = m => ((m.userData.mx + 0.5) * MORCEAU - vue.cx) ** 2 + ((m.userData.my + 0.5) * MORCEAU - vue.cz) ** 2;
     sales.sort((a, b) => d(a) - d(b));
@@ -446,7 +620,7 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false } = {}) 
 
   // ─── Les soldats : leurs positions dans les tampons ───
   function majSoldats() {
-    const A = B.armee, n = A.n, p = ZOOMS[vue.zoom], aPlat = plat();
+    const A = B.armee, n = A.n, p = ZOOMS[vue.zoom], aPlat = plat(), taille = tailleDuZoom(p);
     // seulement ceux qu'on voit (avec une marge pour la hauteur et l'ombre)
     const mx = vue.vw / 2 / p + 2, x0 = vue.cx - mx, x1 = vue.cx + mx;
     const z0 = vue.cz - vue.vh / 2 / p - 2, z1 = vue.cz + vue.vh / 2 / p + 8;
@@ -454,14 +628,21 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false } = {}) 
     for (let i = 0; i < n; i++) {
       const x = A.x[i], y = A.y[i];
       if (x < x0 || x > x1 || y < z0 || y > z1) continue;
-      const c = (y | 0) * T.W + (x | 0);
-      posArr[k * 3] = x; posArr[k * 3 + 1] = aPlat ? 0 : hauteurM(T, c); posArr[k * 3 + 2] = y;
+      posArr[k * 3] = x; posArr[k * 3 + 1] = aPlat ? 0 : surface(x, y); posArr[k * 3 + 2] = y;
       campArr[k] = A.camp[i] + (choisis.has(A.reg[i]) ? 2 : 0);
+      if (rectArr) {
+        // la pose : à l'arrêt, ou l'un des deux pas (selon le chemin parcouru)
+        const marche = A.vx[i] * A.vx[i] + A.vy[i] * A.vy[i] > 0.06;
+        const pose = marche ? (((x + y) * 1.6) & 1 ? 'marche2' : 'marche1') : 'arret';
+        const r = atlas.rects[`${A.camp[i] ? 'eux' : 'nous'}:${taille}:${pose}`];
+        rectArr[k * 4] = r[0]; rectArr[k * 4 + 1] = r[1]; rectArr[k * 4 + 2] = r[2]; rectArr[k * 4 + 3] = r[3];
+      }
       k++;
     }
     const points = p <= POINTS_JUSQUA;
-    if (!vide) { soldatsPoints.visible = points; soldatsInst.visible = !points; }
-    for (const a of points ? attrsP : attrsI) { a.clearUpdateRanges(); a.addUpdateRange(0, k * a.itemSize); a.needsUpdate = true; }
+    if (!vide) { soldatsPoints.visible = points; soldatsInst.visible = !points && !SPRITES; if (soldatsSprites) soldatsSprites.visible = !points; }
+    for (const a of points ? attrsP : SPRITES ? [...attrsI, attrR] : attrsI) { a.clearUpdateRanges(); a.addUpdateRange(0, k * a.itemSize); a.needsUpdate = true; }
+    if (soldatsSprites) soldatsSprites.geometry.instanceCount = k;
     soldatsPoints.geometry.setDrawRange(0, k);
     soldatsInst.geometry.instanceCount = k;
     vus = k;
@@ -489,8 +670,7 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false } = {}) 
     const x = vue.cx + sx / p;
     let z = vue.cz + sy / p;
     if (T) for (let k = 0; k < 4; k++) {
-      const c = Math.max(0, Math.min(T.H - 1, z | 0)) * T.W + Math.max(0, Math.min(T.W - 1, x | 0));
-      z = vue.cz + sy / p + (plat() ? 0 : K_H * hauteurM(T, c));
+      z = vue.cz + sy / p + (plat() ? 0 : K_H * surface(x, z));
     }
     return [x, z];
   }
@@ -498,7 +678,7 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false } = {}) 
   function versEcran(x, y, h = null) {
     const dpr = window.devicePixelRatio || 1, p = ZOOMS[vue.zoom];
     if (h === null && T && plat()) h = 0;
-    if (h === null && T) h = hauteurM(T, Math.max(0, Math.min(T.H - 1, y | 0)) * T.W + Math.max(0, Math.min(T.W - 1, x | 0)));
+    if (h === null && T) h = surface(x, y);
     const sx = (x - vue.cx) * p + vue.vw / 2, sy = ((y - vue.cz) - K_H * (h || 0)) * p + vue.vh / 2;
     return [sx * vue.facteur / dpr, sy * vue.facteur / dpr];
   }
@@ -527,6 +707,7 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false } = {}) 
     plMat.uniforms.uE.value.set(vue.vw / p + 20, vue.vh / p + 40);
     plMat.uniforms.uTaille.value = p >= 4 ? 2 : 1;
     brumeMat.uniforms.uH.value = vue.vh;
+    spriteMat.uniforms.uVue.value.set(vue.vw, vue.vh);
     eclMat.uniforms.uTaille.value = Math.max(1, Math.round(p / 2));
     renderer.render(scene, camera);
     const t2 = performance.now();

@@ -2,17 +2,18 @@
 // Chaque sujet utilise les mêmes modules que le jeu (terrain, apparence,
 // rendu three.js) : ce qu'on voit ici est ce que le jeu dessinera. Ajouter un
 // sujet ou une variante = ajouter une entrée dans GROUPES.
-import { mountLabo } from './lib/labo-shell.js?v=0.1.0';
-import { spriteCanvas, paletteToGPL, paletteToHex } from './lib/sprites.js?v=0.1.0';
-import { PALETTE, ROLES } from './palette.js?v=0.1.0';
-import { chargerContenu } from './design-store.js?v=0.1.0';
-import { tuile, ETAT } from './tuiles.js?v=0.1.0';
-import { creerTerrain, impact, hydroLignes } from './terrain.js?v=0.1.0';
-import { CALIBRES } from './data/calibres.js?v=0.1.0';
-import { METEO } from './data/meteo.js?v=0.1.0';
-import { nouvelleBataille, avancer, ordonnerMarche } from './bataille.js?v=0.1.0';
-import { creerRendu } from './rendu3d.js?v=0.1.0';
-import { hash2 } from './lib/rng.js?v=0.1.0';
+import { mountLabo } from './lib/labo-shell.js?v=0.1.1';
+import { spriteCanvas, paletteToGPL, paletteToHex } from './lib/sprites.js?v=0.1.1';
+import { PALETTE, ROLES } from './palette.js?v=0.1.1';
+import { chargerContenu } from './design-store.js?v=0.1.1';
+import { tuile, ETAT } from './tuiles.js?v=0.1.1';
+import { creerTerrain, impact, hydroLignes } from './terrain.js?v=0.1.1';
+import { CALIBRES } from './data/calibres.js?v=0.1.1';
+import { METEO } from './data/meteo.js?v=0.1.1';
+import { nouvelleBataille, avancer, ordonnerMarche } from './bataille.js?v=0.1.1';
+import { creerRendu, ZOOMS } from './rendu3d.js?v=0.1.1';
+import { SOLDATS } from './data/soldats.js?v=0.1.1';
+import { hash2 } from './lib/rng.js?v=0.1.1';
 
 document.documentElement.style.setProperty('--jeu-accent', ROLES.accent);
 const NOM = document.title.replace(/^Labo — /, ''); // le nom vient de la page (une apostrophe ne casse rien)
@@ -80,10 +81,13 @@ function tuiles(stage, gris = false) {
 }
 
 // ─── Le moteur, en direct : le rendu du jeu sur une petite bataille ───
-function moteur(stage, { zoom = 3, pluie = false, gel = false, soldats = 600 } = {}) {
+function moteur(stage, { zoom = 3, pluie = false, gel = false, soldats = 600, sol = 'cubes', rendu: modeSoldats = 'boites', cz = 185 } = {}) {
   const boite = el('div'); boite.style.cssText = 'position:relative;width:100%;height:min(70vh,560px);overflow:hidden';
   const canvas = el('canvas'); canvas.style.cssText = 'position:absolute;left:0;top:0;image-rendering:pixelated';
-  boite.append(canvas); stage.append(boite);
+  // le relevé : ce que coûte cette variante (le dessin attendu jusqu'au bout), et des zooms à essayer
+  const releve = el('p', { className: 'releve', textContent: '…' });
+  const zooms = el('p', {}, ...ZOOMS.map((z, i) => el('button', { className: 'essai', textContent: `Zoom ${z}`, onclick: () => { if (rendu) rendu.vue.zoom = i; } })));
+  boite.append(canvas); stage.append(boite, releve, zooms);
   let raf = 0, rendu = null, fini = false;
   (async () => {
     const B = nouvelleBataille(5, R, { soldats });
@@ -95,21 +99,41 @@ function moteur(stage, { zoom = 3, pluie = false, gel = false, soldats = 600 } =
       if (gel) B.etat.meteo[0] = 'gel'; else B.etat.meteo[0] = 'pluie';
     }
     ordonnerMarche(B, B.etat.regiments.filter(r => r.camp === 0).slice(2, 6).map(r => r.id), 200, 175);
-    rendu = await creerRendu(canvas);
+    rendu = await creerRendu(canvas, { sol, soldats: modeSoldats, mesure: true });
     if (fini) { rendu.detruire(); return; }
     rendu.redimensionner();
     rendu.attacher(B);
-    rendu.vue.zoom = zoom; rendu.vue.cx = 200; rendu.vue.cz = 185;
+    rendu.vue.zoom = zoom; rendu.vue.cx = 200; rendu.vue.cz = cz;
+    let tReleve = 0;
     let t = performance.now();
     const boucle = now => {
       const dt = Math.min(0.1, (now - t) / 1000); t = now;
       const ev = avancer(B);
       rendu.dessiner(dt, ev);
+      if ((tReleve -= dt) < 0) {
+        tReleve = 0.5;
+        const st = rendu.stats;
+        releve.textContent = `Dessin : ${st.ms.renduFini} ms (rendu logiciel ici, attendu jusqu'au bout) · ${st.trianglesDessines} triangles · ${st.soldatsVus} soldats dessinés`;
+      }
       raf = requestAnimationFrame(boucle);
     };
     raf = requestAnimationFrame(boucle);
   })();
   return () => { fini = true; cancelAnimationFrame(raf); rendu?.detruire(); };
+}
+
+// La planche des soldats en sprites : chaque taille, chaque pose, les deux camps
+function plancheSoldats(stage, facteur = 8) {
+  const p = el('div', { className: 'planche' });
+  for (const [camp, lettre] of [['nous', 'n'], ['eux', 'x']]) {
+    const pal = { ...PALETTE, c: PALETTE[lettre], k: PALETTE[lettre] };
+    for (const [taille, poses] of Object.entries(SOLDATS[camp])) {
+      for (const [pose, rows] of Object.entries(poses)) {
+        p.append(el('figure', {}, spriteCanvas(rows, pal, { scale: facteur }), el('figcaption', { textContent: `${camp === 'nous' ? 'nous' : 'en face'}, ${taille}, ${pose}` })));
+      }
+    }
+  }
+  stage.append(p, el('p', { textContent: 'La forme porte le camp : chez nous le casque à cimier, en face le casque qui descend sur les oreilles. Le fusil et l\'ombre en terre ; le casque d\'un régiment choisi passe en os. Petit : zooms 3 et 4 ; moyen : 6 ; grand : 8.' }));
 }
 
 const GROUPES = [
@@ -148,6 +172,16 @@ const GROUPES = [
       { title: 'Zoom 1', note: 'Tout le champ : chaque soldat n\'est plus qu\'un point (sa couleur sur son ombre), le sol est à plat.', render: s => moteur(s, { zoom: 0 }) },
       { title: 'Après un jour de pluie', note: 'Quatre-vingt-dix obus et vingt-quatre heures de pluie : la boue dans les creux, l\'eau dans les trous.', render: s => moteur(s, { zoom: 3, pluie: true }) },
       { title: 'Le gel', note: 'Le même champ, gelé : l\'eau devient de la glace, la boue porte.', render: s => moteur(s, { zoom: 3, gel: true }) },
+    ] },
+    { id: 'sol', title: 'Sol', variants: [
+      { title: 'Cubes', note: 'Le sol du jeu : des colonnes d\'un mètre, les bosses en marches, le creux d\'un cratère plus sombre, la lèvre plus claire. Un champ labouré après un jour de pluie.', status: 'actuelle', render: s => moteur(s, { zoom: 3, pluie: true }) },
+      { title: 'Facettes', note: 'Un sommet à chaque coin de case, à la hauteur moyenne des cases qui le touchent : des cuvettes et des pentes à pans. L\'ombre de chaque facette (tramée dans l\'entre-deux) dessine les trous et les bosses. Fin là où les obus ont creusé, grossier (5 m) ailleurs.', render: s => moteur(s, { zoom: 3, pluie: true, sol: 'facettes' }) },
+    ] },
+    { id: 'soldats', title: 'Soldats', variants: [
+      { title: 'Boîtes', note: 'Les soldats du jeu : une boîte (le dessus et la face sud) et son ombre.', status: 'actuelle', render: s => moteur(s, { zoom: 4, cz: 200 }) },
+      { title: 'Sprites', note: 'Un petit dessin en pixels par soldat, posé par le pied dans le monde 3D : trois tailles selon le zoom, deux pas de marche, le fusil, le casque de chaque camp.', render: s => moteur(s, { zoom: 4, cz: 200, rendu: 'sprites' }) },
+      { title: 'Sprites sur facettes', note: 'Les deux variantes ensemble.', render: s => moteur(s, { zoom: 4, cz: 200, rendu: 'sprites', sol: 'facettes', pluie: true }) },
+      { title: 'Planche des sprites', note: 'Tous les dessins, agrandis huit fois.', render: s => plancheSoldats(s) },
     ] },
     { id: 'calibres', title: 'Calibres', variants: Object.entries(CALIBRES).map(([cal, C], k) => ({
       title: cal, note: `Motif ${C.motif.length} × ${C.motif.length}, ${C.salve} obus par barrage, rayon mortel ${C.rayon} m, recharge ${C.recharge} s.`,

@@ -124,6 +124,9 @@ le fond des boîtes de dialogue (`::backdrop` de `game.css`).
   croisaient.
 - `js/apparence.js` — la couleur d'une case (partagée par le rendu, le labo,
   l'outil de lisibilité). `js/tuiles.js` — des tuiles d'essai peintes par elle.
+- `js/data/soldats.js` — les soldats en sprites (variante du labo, pas dans le
+  jeu) : matrices de lettres (`c` couleur du camp, `k` casque), trois tailles
+  selon le zoom, arrêt et deux pas ; le camp se lit à la forme du casque.
 - `js/data/` — `reglages.js` (tous les nombres, modifiables par l'atelier),
   `calibres.js` (motifs 3 × 3, 5 × 5, 7 × 7), `meteo.js` (états et chaîne de
   Markov, prévision juste 7 fois sur 10), `secteur.js`, `lexique.js` (noms de
@@ -139,7 +142,14 @@ le fond des boîtes de dialogue (`::backdrop` de `game.css`).
   instances (boîte et ombre) ou en points 2 × 2, seulement ceux qu'on voit ; arbres
   instanciés ; éclats et fumée d'obus ; pluie ; brouillard tramé (plus épais vers
   le haut de l'écran). `versTerrain` / `versEcran`. Le rendu ne modifie jamais
-  l'état.
+  l'état. Deux variantes en essai (options `sol: 'facettes'`, `soldats:
+  'sprites'`, labo et `?debug=1&sol=facettes&soldats-rendu=sprites`) : le sol à
+  facettes (un sommet par coin de case, à la moyenne des hauteurs logiques ;
+  carrés de 5 m grossiers, fins là où un obus a touché, raccordés sans fente ;
+  l'ombre des facettes dessine trous et bosses, la case n'assombrit plus le creux)
+  et les soldats en sprites (un quadrilatère par soldat, posé par le pied sur un
+  pixel entier, atlas d'octets). Un morceau du sol se refait aussi quand un de
+  ses voisins change (la paroi au sud, le raccord des facettes).
 - `js/main.js` — écran titre → bataille → nuit → fin ; HUD (horloge, prévision,
   morts des deux camps, batteries, régiments choisis, noms de nos régiments au-
   dessus d'eux) ; commandes ; sauvegarde ; mise à jour ; mode debug ;
@@ -147,7 +157,8 @@ le fond des boîtes de dialogue (`::backdrop` de `game.css`).
 - `index.html`, `css/style.css` — l'écran, le HUD et les dialogues (palette du jeu).
 - `labo.html`, `js/labo.js` — le labo : échelle, sols et cratères (couleur et
   gris), palette, le moteur en direct (zoom 4, zoom 1, après un jour de pluie,
-  gel), les calibres.
+  gel), le sol (cubes / facettes), les soldats (boîtes / sprites / les deux /
+  planche), les calibres. Les sujets du moteur affichent ce que coûte le dessin.
 - `atelier.html`, `js/atelier.js`, `js/design-store.js` — l'atelier : les réglages
   chiffrés, publiés dans `assets/design/reglages.json`.
 - `test/` — `node outils/test-run.mjs` (terrain, foule, bataille, sauvegarde, pureté).
@@ -174,6 +185,7 @@ node outils/audit-ecran.mjs --page index.html --page labo.html --page atelier.ht
 node outils/lisibilite.mjs               # contraste, tuiles en gris
 node scripts/mesure.mjs                  # 8 000 soldats : simulation et rendu
 node scripts/trois-jours.mjs             # trois jours de bataille, captures chaque soir
+# les deux : --sol facettes --rendu sprites (les variantes du labo)
 node outils/stamp-version.mjs            # après chaque changement de version.json
 ```
 
