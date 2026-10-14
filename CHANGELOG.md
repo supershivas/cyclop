@@ -1,5 +1,11 @@
 # Journal des versions
 
+## 0.4.0 — 2026-10-14
+
+- Les tranchées : quatre lignes par camp, des boyaux, des tronçons qu'on prend et qu'on perd
+- Un clic droit sur une tranchée l'occupe ; prise, elle protège à l'envers
+- En face monte à l'assaut de nos lignes
+
 ## 0.3.3 — 2026-10-14
 
 - Les morts restent où ils sont tombés ; survolez-les, ils ont un nom

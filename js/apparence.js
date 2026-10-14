@@ -5,8 +5,8 @@
    Les faces verticales (les parois tournées vers nous) d'au moins un demi-mètre
    prennent le ton plus sombre (OMBRE) ; une marche d'un quart garde la couleur
    du dessus (sinon chaque courbe de niveau des bosses se lit comme un trou). */
-import { INDICE } from './palette.js?v=0.3.3';
-import { ETAT, etat } from './terrain.js?v=0.3.3';
+import { INDICE } from './palette.js?v=0.4.0';
+import { ETAT, etat } from './terrain.js?v=0.4.0';
 
 const I = INDICE;
 // [terre jetée (plus claire), plat, creusé ou à l'ombre]

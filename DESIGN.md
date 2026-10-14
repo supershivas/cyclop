@@ -57,7 +57,7 @@ La tranche verticale du terrain, et seulement elle (Jérôme, v0.1.0) :
    nappe remplit les trous profonds, la vitesse des soldats baisse dans la boue.
 5. Un compteur de pertes.
 
-Rien d'autre : ni tranchées, ni moral, ni méta.
+Rien d'autre : ni tranchées, ni moral, ni méta (les tranchées sont venues ensuite, lot 1, v0.4.0).
 
 **Critère de validation** : 8 000 soldats (4 000 par camp), simulation et rendu
 chacun sous 8 ms dans Chromium sans carte graphique (`node scripts/mesure.mjs`) ;
@@ -84,6 +84,20 @@ encore, et l'obus s'y enfouit (il tue moins loin). Le gel durcit la boue.
 Chaque soldat a une place dans la formation de son régiment ; loin d'elle, il suit
 un champ de coûts qui contourne la boue et les marches de deux mètres. Il tire
 vers le carré d'ennemis le plus dense de son front ; un creux l'abrite.
+
+### Les tranchées
+
+Quatre lignes par camp, parallèles au front, en créneaux (des baies et des
+pare-éclats), à 20 m l'une de l'autre ; des boyaux en zigzag les relient ; 130 m
+de no man's land entre les premières. Au départ, la moitié des régiments tient la
+première ligne, l'autre moitié la deuxième. Chaque ligne est coupée en tronçons de
+25 m : un tronçon que l'autre camp occupe sans qu'un seul défenseur y reste change
+de main. Le parapet protège du tir qui vient de devant ; le parados, beaucoup
+moins, de celui qui vient de derrière : une tranchée prise sert à l'envers. Les
+obus la comblent comme le reste du sol (leur terre retombe dedans), la pluie la
+remplit de boue. On l'occupe d'un clic droit dessus. En face monte à l'assaut de
+notre ligne la plus proche qu'on tient encore ; un régiment trop éprouvé retourne
+dans sa tranchée. (Jérôme, v0.4.0 : le lot 1)
 
 ### Les hommes
 

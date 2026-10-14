@@ -25,8 +25,10 @@ Statuts : **à l'étude** · **validé** (Jérôme a tranché) · **en cours** �
 
 ## À l'étude (validé dans le principe par le prompt de départ, pas construit)
 
-- **Tranchées** : 4 lignes par camp (3 secteur calme, 5 fortifié), boyaux,
-  tronçons à points de vie ; prendre une ligne la donne à l'envers.
+- **Tranchées, la suite** (le lot 1, v0.4.0, a livré 4 lignes, les boyaux, les
+  tronçons qui se prennent, la protection à l'envers, les assauts d'en face) : 3
+  lignes en secteur calme, 5 en secteur fortifié ; les réparer la nuit (corvées) ;
+  les montrer tenues ou perdues sur le terrain lui-même ; abris profonds.
 - **La nuit** : corvées (abris, caillebotis, inhumation, relève, ravitaillement).
 - **Corps** : ils restent (v0.3.3) ; à venir : l'inhumation la nuit, leur poids
   sur le moral près des lignes.

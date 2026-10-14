@@ -1,6 +1,7 @@
 // La bataille : déterminisme, ordres refusés à voix haute, sauvegarde qui rejoue la même partie.
 import { readFileSync } from 'node:fs';
-import { nouvelleBataille, avancer, ordonnerMarche, ordonnerBarrage, aube, photo, restaurer, effectifs, horloge, zone } from '../js/bataille.js';
+import { nouvelleBataille, avancer, ordonnerMarche, ordonnerBarrage, aube, photo, restaurer, effectifs, horloge, zone, tronconsTenus } from '../js/bataille.js';
+import { ligneY } from '../js/tranchees.js';
 import { identite, etatEnMots } from '../js/identite.js';
 import { SECTEURS } from '../js/data/secteur.js';
 import { REGLAGES as R } from '../js/data/reglages.js';
@@ -19,7 +20,7 @@ test('même graine, mêmes ordres : même bataille', () => {
 });
 test('le compteur de pertes est juste : morts + vivants = l\'effectif de départ', () => {
   const B = petite();
-  ordonnerBarrage(B, '220', ...P(100, 230)); ordonnerBarrage(B, '155', ...P(300, 70), 1);
+  ordonnerBarrage(B, '220', ...P(100, 216)); ordonnerBarrage(B, '155', ...P(300, 84), 1);
   for (let k = 0; k < 900; k++) avancer(B);
   const [nous, eux] = effectifs(B);
   assert.equal(nous + B.etat.pertes[0], 200);
@@ -29,7 +30,7 @@ test('le compteur de pertes est juste : morts + vivants = l\'effectif de départ
 });
 test('les morts restent où ils sont tombés : un corps par mort, gardé par la sauvegarde', () => {
   const B = petite();
-  ordonnerBarrage(B, '220', ...P(100, 230)); ordonnerBarrage(B, '155', ...P(300, 70), 1);
+  ordonnerBarrage(B, '220', ...P(100, 216)); ordonnerBarrage(B, '155', ...P(300, 84), 1);
   for (let k = 0; k < 900; k++) avancer(B);
   const C = B.etat.corps;
   assert.equal(C.length, B.etat.pertes[0] + B.etat.pertes[1]);
@@ -106,7 +107,7 @@ test('les numéros des soldats restent les leurs après les morts', () => {
   const B = petite(8);
   const avant = new Map();
   for (let i = 0; i < B.armee.n; i++) avant.set(B.armee.id[i], B.armee.camp[i]);
-  ordonnerBarrage(B, '220', ...P(150, 230));
+  ordonnerBarrage(B, '220', ...P(150, 216));
   for (let k = 0; k < 600; k++) avancer(B);
   const vus = new Set();
   for (let i = 0; i < B.armee.n; i++) { const id = B.armee.id[i]; assert.ok(!vus.has(id)); vus.add(id); assert.equal(avant.get(id), B.armee.camp[i]); }
@@ -163,6 +164,57 @@ test('une sauvegarde d\'avant les marges (v0.2) se relit : tout glisse dans le s
 });
 
 group('pureté');
+group('tranchées');
+test('quatre lignes par camp, creusées d\'un mètre et demi, en tronçons de 25 m ; les régiments sont dedans', () => {
+  const B = petite(), T = B.terrain, S = SECTEURS.essai;
+  assert.equal(B.lignes.length, 8);
+  assert.equal(B.troncons.length, 8 * S.largeur / S.tranchees.troncon);
+  for (const L of B.lignes) for (const x of [M.x + 13, M.x + 200, M.x + 377]) {
+    const c = Math.round(ligneY(L, x + 0.5) - 0.5) * T.W + x;
+    assert.ok(T.diff[c] <= -S.tranchees.profondeur, 'la ligne est creusée');
+  }
+  assert.deepEqual(tronconsTenus(B), [64, 64]);
+  const A = B.armee;
+  let dedans = 0;
+  for (let i = 0; i < A.n; i++) if (T.troncon[(A.y[i] | 0) * T.W + (A.x[i] | 0)] >= 0) dedans++;
+  assert.ok(dedans > A.n * 0.8, `les hommes partent de leurs tranchées (${dedans} sur ${A.n})`);
+});
+test('un ordre sur une tranchée l\'occupe : les hommes se rangent le long du tracé', () => {
+  const B = petite();
+  const L = B.lignes.find(l => l.camp === 0 && l.rang === 2);
+  const x = M.x + 30, r = ordonnerMarche(B, [0], x, ligneY(L, x));
+  assert.ok(r.ok && r.tranchee);
+  for (let k = 0; k < 30 * 120; k++) avancer(B);
+  const A = B.armee, T = B.terrain;
+  let n = 0, dedans = 0;
+  for (let i = 0; i < A.n; i++) if (A.reg[i] === 0) { n++; if (T.troncon[(A.y[i] | 0) * T.W + (A.x[i] | 0)] >= 0 && Math.abs(A.y[i] - L.y0) < 6) dedans++; }
+  assert.ok(dedans > n * 0.8, `dans la troisième ligne (${dedans} sur ${n})`);
+});
+test('un tronçon vide de ses défenseurs, occupé par l\'autre camp, change de main ; la sauvegarde le garde', () => {
+  const B = petite(), A = B.armee, T = B.terrain;
+  // trois hommes d'en face dans un tronçon de notre quatrième ligne (vide)
+  const L = B.lignes.find(l => l.camp === 0 && l.rang === 3), k = B.lignes.indexOf(L);
+  const t = B.troncons.findIndex(tr => tr.ligne === k && tr.x0 === M.x + 200);
+  let mis = 0;
+  for (let i = 0; i < A.n && mis < 3; i++) if (A.camp[i] === 1) {
+    const x = M.x + 210 + mis * 2; A.x[i] = x + 0.5; A.y[i] = ligneY(L, x + 0.5); mis++;
+    assert.equal(T.troncon[(A.y[i] | 0) * T.W + (A.x[i] | 0)], t);
+  }
+  avancer(B);
+  for (let p = 1; p < 15; p++) avancer(B);
+  assert.equal(B.etat.troncons[t], 1, 'pris');
+  assert.deepEqual(tronconsTenus(B), [63, 65]);
+  assert.equal(B.etat.prises[0][1], 1);
+  assert.deepEqual(restaurer(photo(B), R).etat.troncons, B.etat.troncons);
+});
+test('en face monte à l\'assaut de nos tranchées', () => {
+  const B = petite();
+  for (let k = 0; k < 30 * 360; k++) avancer(B);
+  const vers = B.etat.regiments.filter(r => r.camp === 1 && r.ordre.trace && r.ordre.trace.ligne < 10);
+  const repli = B.etat.regiments.filter(r => r.camp === 1 && r.effectif < r.initial * 0.4);
+  assert.ok(vers.length + repli.length > 0, 'au moins un assaut dans la journée');
+});
+
 test('aucun hasard ni horloge dans les règles', () => {
   for (const f of ['bataille.js', 'terrain.js', 'army.js', 'champs.js', 'apparence.js', 'identite.js']) {
     const src = readFileSync(new URL(`../js/${f}`, import.meta.url), 'utf8');

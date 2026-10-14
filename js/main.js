@@ -1,19 +1,19 @@
 // Le cycle de vie : écran titre → bataille → nuit → fin ; pause active,
 // réglages, sauvegarde, mise à jour, debug. Les règles sont dans bataille.js
 // (pures), le dessin dans rendu3d.js (il ne modifie jamais l'état).
-import { createLoop } from './lib/loop.js?v=0.3.3';
-import { createKeys, stopTypeahead } from './lib/keys.js?v=0.3.3';
-import { createPointer, lockBrowserGestures } from './lib/pointer.js?v=0.3.3';
-import { createGamepad } from './lib/gamepad.js?v=0.3.3';
-import { createStore, autosave, pickJSONFile } from './lib/save.js?v=0.3.3';
-import { startUpdateCheck, loadVersion, loadChangelog, downloadJSON } from './lib/app-update.js?v=0.3.3';
-import { ROLES } from './palette.js?v=0.3.3';
-import { nouvelleBataille, avancer, aube, ordonnerMarche, ordonnerBarrage, horloge, effectifs, photo, restaurer, PAS, NOUS } from './bataille.js?v=0.3.3';
-import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.3.3';
-import { METEO } from './data/meteo.js?v=0.3.3';
-import { creerRendu } from './rendu3d.js?v=0.3.3';
-import { identite, etatEnMots } from './identite.js?v=0.3.3';
-import { chargerContenu } from './design-store.js?v=0.3.3';
+import { createLoop } from './lib/loop.js?v=0.4.0';
+import { createKeys, stopTypeahead } from './lib/keys.js?v=0.4.0';
+import { createPointer, lockBrowserGestures } from './lib/pointer.js?v=0.4.0';
+import { createGamepad } from './lib/gamepad.js?v=0.4.0';
+import { createStore, autosave, pickJSONFile } from './lib/save.js?v=0.4.0';
+import { startUpdateCheck, loadVersion, loadChangelog, downloadJSON } from './lib/app-update.js?v=0.4.0';
+import { ROLES } from './palette.js?v=0.4.0';
+import { nouvelleBataille, avancer, aube, ordonnerMarche, ordonnerBarrage, horloge, effectifs, tronconsTenus, photo, restaurer, PAS, NOUS } from './bataille.js?v=0.4.0';
+import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.4.0';
+import { METEO } from './data/meteo.js?v=0.4.0';
+import { creerRendu } from './rendu3d.js?v=0.4.0';
+import { identite, etatEnMots } from './identite.js?v=0.4.0';
+import { chargerContenu } from './design-store.js?v=0.4.0';
 
 const JEU = 'cyclopeen';
 const $ = id => document.getElementById(id);
@@ -122,11 +122,18 @@ document.addEventListener('visibilitychange', () => { if (document.hidden) pause
 
 // ─── La nuit, la fin ───────────────────────────────────────────────────────
 const nomJour = n => (n === 1 ? '1er' : `${n}e`);
+const tron = n => `${n} tronçon${n > 1 ? 's' : ''}`;
+// les tronçons gagnés et perdus dans la journée, et ce qu'ils ont coûté se lit juste au-dessus
+function enLignes([pris, perdus]) {
+  if (!pris && !perdus) return 'Les lignes n\'ont pas bougé.';
+  return [pris && `pris ${tron(pris)}`, perdus && `perdu ${tron(perdus)}`].filter(Boolean).join(', ').replace(/^./, c => c.toUpperCase()) + '.';
+}
 function montrerNuit() {
   loop.pause(); sauvegarder();
   const e = B.etat, j = e.jour, [nous, eux] = e.pertesJour[j - 1];
   $('nuit-titre').textContent = `Nuit du ${nomJour(j)} au ${nomJour(j + 1)} jour`;
   $('nuit-pertes').textContent = `Morts du jour : ${nous} des nôtres, ${eux} en face.`;
+  $('nuit-lignes').textContent = e.tranchees ? enLignes(e.prises[j - 1]) : '';
   $('nuit-demain').textContent = `Demain : ${METEO[e.previsions[j - 1]]?.prevision || '—'}.`;
   $('dialogue-nuit').showModal();
 }
@@ -137,6 +144,7 @@ function montrerFin() {
   const e = B.etat, [vNous, vEux] = effectifs(B);
   $('fin-titre').textContent = `${e.meteo.length} jours.`;
   $('fin-pertes').textContent = `${e.pertes[0]} des nôtres sont morts, ${e.pertes[1]} en face. Il en reste ${vNous} et ${vEux}.`;
+  $('fin-lignes').textContent = e.tranchees ? `Tronçons tenus : ${tronconsTenus(B)[0]} des nôtres, ${tronconsTenus(B)[1]} en face.` : '';
   $('dialogue-fin').showModal();
 }
 $('fin-nouvelle').onclick = () => { $('dialogue-fin').close(); store.clear('partie'); jouer(nouvelle(window.__seed ?? Date.now() % 100000)); };
@@ -182,6 +190,8 @@ function majHud() {
   $('morts-eux').textContent = e.pertes[1];
   $('blesses-nous').textContent = e.blesses[0];
   $('blesses-eux').textContent = e.blesses[1];
+  $('lignes').hidden = !e.tranchees;
+  if (e.tranchees) { const [a, b] = tronconsTenus(B); $('troncons-nous').textContent = a; $('troncons-eux').textContent = b; }
   majFiche();
   $('pause-active').hidden = !pauseActive;
   for (const b of $('batteries').children) {
@@ -540,6 +550,7 @@ const loop = createLoop({
     const ms = performance.now() - t0;
     perf.sim += (ms - perf.sim) * 0.05; perf.pas++;
     evenements.push(...ev);
+    for (const p of ev) if (p.type === 'prise') toast(p.camp === NOUS ? 'Un tronçon pris.' : 'Un tronçon perdu.');
     if (ev.some(e => e.type === 'nuit')) { montrerNuit(); }
     if (ev.some(e => e.type === 'fin')) { montrerFin(); }
   },
@@ -589,7 +600,7 @@ startUpdateCheck({
 
 // ─── Mode debug (section 18) : chargé seulement avec ?debug=1 ──────────────
 if (DEBUG) {
-  const { installDebug, seedFromUrl } = await import('./lib/debug.js?v=0.3.3');
+  const { installDebug, seedFromUrl } = await import('./lib/debug.js?v=0.4.0');
   window.__seed = seedFromUrl() ?? undefined;
   installDebug({
     state: () => B && { ...horloge(B), effectifs: effectifs(B), pertes: B.etat.pertes, impacts: B.etat.impacts.length, enJeu: enJeu(), pause: loop.paused },

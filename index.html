@@ -9,8 +9,8 @@
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta property="og:image" content="og.png">
-<link rel="stylesheet" href="js/lib/game.css?v=0.3.3">
-<link rel="stylesheet" href="css/style.css?v=0.3.3">
+<link rel="stylesheet" href="js/lib/game.css?v=0.4.0">
+<link rel="stylesheet" href="css/style.css?v=0.4.0">
 </head>
 <body>
 <div class="jeu-ecran" id="ecran">
@@ -48,6 +48,7 @@
         <p><span class="discret">Nos morts</span> <b id="morts-nous">0</b></p>
         <p><span class="discret">En face</span> <b id="morts-eux">0</b></p>
         <p class="discret">Blessés : <span id="blesses-nous">0</span> · <span id="blesses-eux">0</span></p>
+        <p class="discret" id="lignes" hidden>Tronçons : <span id="troncons-nous">0</span> · <span id="troncons-eux">0</span></p>
       </div>
       <div class="batteries" id="batteries" aria-label="Batteries"></div>
       <p class="plaque choix" id="choix"></p>
@@ -81,6 +82,7 @@
 <dialog id="dialogue-nuit" aria-label="La nuit">
   <h2 id="nuit-titre">Nuit</h2>
   <p id="nuit-pertes"></p>
+  <p id="nuit-lignes"></p>
   <p id="nuit-demain"></p>
   <div class="menu"><button class="bouton" id="aube">À l'aube</button></div>
 </dialog>
@@ -88,6 +90,7 @@
 <dialog id="dialogue-fin" aria-label="Fin de la bataille">
   <h2 id="fin-titre">Fin</h2>
   <p id="fin-pertes"></p>
+  <p id="fin-lignes"></p>
   <div class="menu">
     <button class="bouton" id="fin-nouvelle">Nouvelle partie</button>
     <button class="bouton" id="fin-titre-btn">Écran titre</button>
@@ -103,7 +106,7 @@
       <dt>Clic</dt><dd>choisir un régiment (Maj : en ajouter) et voir sa fiche ; de près, sur un homme, la sienne</dd>
       <dt>Survol</dt><dd>de près, qui est cet homme ; de loin, ce que compte son régiment</dd>
       <dt>Glisser</dt><dd>choisir au cadre</dd>
-      <dt>Clic droit</dt><dd>marcher jusque-là (ou clic sur le sol, tout au bouton gauche)</dd>
+      <dt>Clic droit</dt><dd>marcher jusque-là (ou clic sur le sol, tout au bouton gauche) ; sur une tranchée, l'occuper</dd>
       <dt>1, 2, 3</dt><dd>viser un barrage de 75, 155, 220, puis clic</dd>
       <dt>T</dt><dd>choisir tous nos régiments</dd>
       <dt>Espace</dt><dd>arrêter le temps (les ordres restent possibles)</dd>
@@ -136,6 +139,6 @@
 </dialog>
 
 <div class="jeu-toast" id="toast" role="status" hidden></div>
-<script type="module" src="js/main.js?v=0.3.3"></script>
+<script type="module" src="js/main.js?v=0.4.0"></script>
 </body>
 </html>

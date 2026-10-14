@@ -78,6 +78,13 @@ export const REGLAGES = {
     boue: 0.5,            // dans la boue, l'obus s'enfouit : rayon et lèvre multipliés par…
     abri: 0.6,            // un soldat dans un creux : chance multipliée par…
   },
+  tranchee: {
+    abriFace: 0.15,       // dans une tranchée, un tir qui vient de devant (le parapet) : chance multipliée par…
+    abriDos: 0.6,         // … et de derrière (le parados : une tranchée prise sert à l'envers)
+    espacement: 1.6,      // m entre deux hommes le long d'une tranchée occupée
+    prise: 3,             // hommes dans un tronçon vide de ses défenseurs : il est pris
+    assaut: 0.6,          // en face ne lance à l'assaut qu'un régiment qui a encore cette part de ses hommes
+  },
   jour: {
     duree: 360,           // s de jeu pour une journée (6 h → 18 h)
     heureDebut: 6,

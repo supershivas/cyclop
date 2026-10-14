@@ -25,7 +25,8 @@
      (rng.js), pour que la même graine rejoue la même bataille.
 
    Logique pure : aucun DOM. Le rendu lit les tableaux (rendu3d.js). */
-import { hauteurQ, etat, vitesseEtat } from './terrain.js?v=0.3.3';
+import { hauteurQ, etat, vitesseEtat } from './terrain.js?v=0.4.0';
+import { ligneY } from './tranchees.js?v=0.4.0';
 
 export const GRILLE = 2;           // m : cases de voisinage
 export const DENSITE = 8;          // m : carrés de densité (tir)
@@ -80,6 +81,14 @@ export function construireGrille(A) {
 /* La place d'un soldat dans la formation de son régiment. o : l'ordre
    { x, y, fx, fy, cols, esp } (fx, fy : le front, vers l'ennemi). */
 export function place(o, slot, out) {
+  // dans une tranchée : le long de son tracé, sur o.trace.rangs rangs (le premier contre le parapet)
+  const t = o.trace;
+  if (t) {
+    const col = Math.floor(slot / t.rangs), row = slot - col * t.rangs;
+    const x = t.x0 + (col + 0.5) * (t.x1 - t.x0) / o.cols;
+    out[0] = x; out[1] = ligneY(t, x) + (row - (t.rangs - 1) / 2) * 0.8 * -t.face;
+    return out;
+  }
   const col = slot % o.cols, row = (slot - col) / o.cols;
   const lx = (col - (o.cols - 1) / 2) * o.esp, ly = row * o.esp;
   out[0] = o.x - o.fy * lx - o.fx * ly;
@@ -228,9 +237,14 @@ function tirer(A, i, o, ctx) {
   }
   if (!cand.length) return;
   const v = cand[Math.floor(rng() * cand.length)];
-  // à l'abri dans un creux ?
+  // à l'abri dans un creux ? Dans une tranchée, le parapet protège du tir qui vient de devant, le parados
+  // beaucoup moins de celui qui vient de derrière (une tranchée prise sert à l'envers)
   const cv = (A.y[v] | 0) * T.W + (A.x[v] | 0);
-  if (T.diff[cv] <= -2 && rng() >= P.abri) return;
+  if (T.diff[cv] <= -2) {
+    const t = T.troncon ? T.troncon[cv] : -1;
+    const abri = t < 0 ? P.abri : (A.y[i] - A.y[v]) * ctx.faces[t] > 0 ? R.tranchee.abriFace : R.tranchee.abriDos;
+    if (rng() >= abri) return;
+  }
   frapper(v, 'tir', R.soldat.mortelTir);
 }
 

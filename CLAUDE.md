@@ -45,6 +45,8 @@ la danse macabre, la catastrophe peinte avec calme. L'intention est dans `DESIGN
   tombés (`etat.corps` : `[x×10, y×10, camp, jour, id]`, sauvegardé ; Jérôme,
   v0.3.3) : un homme couché, au loin un pixel ; la couleur du camp le jour même,
   la glaise ensuite. Survolé ou cliqué, sa fiche.
+- **Les tranchées** (lot 1, Jérôme, v0.4.0) : quatre lignes par camp, des boyaux,
+  des tronçons de 25 m qui changent de main ; voir `DESIGN.md`.
 - **Session** : un run = une bataille de 10 à 15 jours sur un secteur (le lot
   minimal : 3 jours). Progression permanente prévue (Mémorial, état-major,
   trophées) : pas encore construite.
@@ -98,7 +100,7 @@ le fond des boîtes de dialogue (`::backdrop` de `game.css`).
 |---|---|---|
 | Choisir un régiment | T (tous) | clic (Maj : ajouter), glisser (cadre) |
 | Voir un homme, un régiment | — | survol ; clic (de près : un homme ; de loin : son régiment) |
-| Marcher | — | clic droit ; ou, réglage « tout au bouton gauche », clic sur le sol (Échap laisse les régiments choisis) |
+| Marcher (sur une tranchée : l'occuper) | — | clic droit ; ou, réglage « tout au bouton gauche », clic sur le sol (Échap laisse les régiments choisis) |
 | Barrage de 75, 155, 220 | 1, 2, 3 (touche physique) puis clic | bouton de la batterie puis clic |
 | Arrêter le temps (pause active) | Espace | — |
 | Déplacer la vue | flèches, ZQSD / WASD (selon l'écran) | glisser avec la molette |
@@ -143,12 +145,18 @@ le fond des boîtes de dialogue (`::backdrop` de `game.css`).
   blessées : plus lent ; bras blessé : tire moitié moins ; terrifié : ne tire plus ;
   la nuit repose (`reposer`). Touché (`frapper` dans bataille.js) : tué ou blessé,
   et blessé deux fois, tué.
+- `js/tranchees.js` — les tranchées : `ligneY` (le tracé d'une ligne, une
+  fonction de x : créneaux de 10 m de part et d'autre, une ondulation lente),
+  `creuserTranchees` (creusées dans `diff` à 1,5 m, un parapet d'un quart du côté
+  de l'ennemi, des boyaux ; `T.troncon` : le tronçon de 25 m de chaque case de
+  ligne), `ligneSous`. Les données sont dans `secteur.js` (`tranchees`).
 - `js/champs.js` — les champs de coûts : le terrain résumé en carrés de 4 m
   (`couts`, un octet), Dial, une direction par carré ; cache par but et version.
 - `js/bataille.js` — l'état d'une partie et ses règles : `nouvelleBataille`,
   `avancer` (un pas de 1/30 s), ordres (`ordonnerMarche`, `ordonnerBarrage` :
   ils rendent `{ refus }`), en face (barrages sur nos hommes les plus serrés,
-  avances), jour / nuit / fin, `aube`, `horloge`, `photo` / `restaurer` /
+  assauts sur nos tranchées), les tronçons (`prises` toutes les 15 pas,
+  `tronconsTenus`, `etat.troncons` : qui tient chacun), jour / nuit / fin, `aube`, `horloge`, `photo` / `restaurer` /
   `rejouerTerrain`. À un nouvel ordre, les places sont données dans l'ordre où
   sont les hommes (le long du front, puis d'avant en arrière) : sinon ils se
   croisaient.
@@ -275,6 +283,20 @@ node outils/stamp-version.mjs            # après chaque changement de version.j
   triangles et 46 ms ; d'où les facettes de 5 m au-delà du point visé (24 000
   triangles, 20 ms). Les marges du terrain ont été mesurées pour elle : au zoom 1
   (640 × 400 pixels), le sol vu fait ~790 × 610 m.
+- **Les tranchées sont creusées dans `diff`** avant que les impacts ne soient
+  rejoués (`monter`) : la sauvegarde n'en garde rien. Une bataille d'avant la
+  v0.4.0 (`etat.tranchees` absent) se relit sans tranchées : les creuser sous des
+  hommes déjà placés aurait changé la partie. Elles changent toutes les batailles
+  (positions de départ), sans changer l'ordre des tirages.
+- **Une tranchée de 2 m** ne se quitterait qu'à force (`vitesse.mur` : 8 quarts) :
+  elle fait 1,5 m (6 quarts) plus un parapet d'un quart, une marche « raide »
+  qui ralentit seulement. La protection au tir dépend du côté d'où vient la balle
+  (`B.faces` : le côté de l'ennemi d'origine de chaque tronçon) ; contre les obus,
+  c'est la règle du creux.
+- **La mesure au zoom 4** (v0.4.0) : la vue tombe sur des hommes rangés dans leurs
+  tranchées (2 350 soldats vus au lieu de 591) : 46 ms jusqu'au bout du dessin, au
+  lieu de 17. Le sol coûte autant qu'avant (~16 000 triangles) : ce sont les
+  boîtes des soldats.
 - **Les sauvegardes d'avant les marges** (v0.2) se relisent : `restaurer` décale
   impacts, régiments, barrages et soldats de la largeur des marges et refait le
   résumé du terrain ; les soldats prennent leur numéro dans l'ordre (test).

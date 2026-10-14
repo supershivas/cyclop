@@ -1,8 +1,9 @@
 {
-  "version": "0.3.3",
+  "version": "0.4.0",
   "date": "2026-10-14",
   "changes": [
-    "Les morts restent où ils sont tombés ; survolez-les, ils ont un nom",
-    "Le clic droit ne déclenche plus les gestes du navigateur ; un réglage met tout au bouton gauche"
+    "Les tranchées : quatre lignes par camp, des boyaux, des tronçons qu'on prend et qu'on perd",
+    "Un clic droit sur une tranchée l'occupe ; prise, elle protège à l'envers",
+    "En face monte à l'assaut de nos lignes"
   ]
 }
