@@ -7,7 +7,8 @@ export const SECTEURS = {
     hauteur: 300,
     jours: 3,
     pluieAuMoins: 1,        // jours de pluie garantis dans la chaîne (lot minimal : la boue doit venir)
-    arbres: 70,             // dans le secteur (les marges en ont autant, à surface égale ; 40 avant la v0.7.0)
+    arbres: 150,            // dans le secteur (les marges en ont autant, à surface égale ; 40 avant la v0.7.0, 70 avant la v0.8.0)
+    bois: 3,                // des bois serrés (une trentaine d'arbres chacun), dans le secteur ; autant dans les marges, à surface égale
     haies: 5,               // des lignes de buissons, dans tout le terrain (v0.7.0)
     buissons: 160,          // des buissons épars, dans tout le terrain
     regiments: 6,           // par camp (8 avant la v0.7.0 : Jérôme en a retiré deux)

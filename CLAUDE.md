@@ -50,10 +50,17 @@ la danse macabre, la catastrophe peinte avec calme. L'intention est dans `DESIGN
   la graine ; les obus la soufflent, la boue la tue : rejouée par la sauvegarde),
   des taches dans la couleur du sol et des touffes de près qui ondulent ; des
   buissons en haies et en bosquets (`T.buissons`, arrachés par les obus) ; 70 arbres.
-- **Au labo, à trancher** (v0.7.0) : les soldats de près (`soldat` de creerRendu :
-  boite, detail, fusil, silhouette, marche) et les effets (`effets` : gerbe, onde,
-  chute, derive, feu, fusees, corbeaux). Le jeu garde la boîte et les éclats
-  d'avant (`SOLDAT`, `EFFETS` de rendu3d.js) tant que Jérôme n'a pas choisi.
+- **Les soldats de près et les effets** (Jérôme, v0.8.0) : la silhouette complète
+  (`SOLDAT` de rendu3d.js : jambes, vareuse, visage, casque, fusil, sac ; de près
+  seulement, à partir de 6 pixels par mètre) et tous les effets (`EFFETS` : gerbe,
+  onde, obus qui tombe, fumée qui dérive, feu qui se propage, fusées le soir,
+  corbeaux sur les morts) ; les autres variantes restent au labo.
+- **Le temps qui passe** (Jérôme, v0.8.0) : le soleil (`majSoleil` : les ombres des
+  soldats et des arbres tournent et s'allongent), le soir et la nuit (`obscurite` :
+  une trame de terre de 16 h à 18 h, épaisse la nuit), les lumières qui la trouent
+  (`majNuit` : lanternes le long des tranchées tenues, incendies, fusées).
+- **Plus d'arbres** (Jérôme, v0.8.0) : 150 dans le secteur et trois bois serrés (`bois`
+  de secteur.js), autant dans les marges.
 - **La nuit et ses corvées** (Jérôme, v0.6.0) : une corvée par régiment (repos,
   réparer, caillebotis, inhumer, évacuer) ; voir `DESIGN.md`.
 - **Le moral et l'expérience** (Jérôme, v0.5.0) : un moral par régiment (`moral`,
@@ -337,6 +344,18 @@ node outils/stamp-version.mjs            # après chaque changement de version.j
   marges : ~65 000). Ils sont triés à chaque image comme les soldats (`dansLaVue`). Tout dézoomé, tous les
   buissons du champ restaient dans la vue (59 600 triangles, 32 ms après trois jours) : ils
   ne sont plus dessinés quand le sol est à plat (15 900 triangles, 12 ms ; v0.7.1).
+- **La v0.8.0 coûte** (rendu logiciel, dessin attendu jusqu'au bout) : la silhouette
+  (~60 triangles par homme) n'est dessinée qu'à partir de 6 pixels par mètre (à 4,
+  138 000 triangles pour 2 000 hommes) ; de loin, les arbres ne sont plus qu'un tronc,
+  sans ombre. Restent les fumées et la trame du soir : 8 000 soldats au zoom 4, 66 ms
+  (47 en v0.7) ; trois jours de bataille, 26 ms tout dézoomé, 41 ms au zoom 4.
+- **La nuit sans couleur nouvelle** : la palette n'a pas de « nuit » ; le soir et la
+  nuit sont une trame (Bayer 4 × 4) de la couleur la plus sombre, trouée en douceur
+  autour des lumières, peintes chaque image dans une petite carte (un quart de la
+  résolution) : chercher 32 lumières pour chaque pixel coûtait plus que le reste du
+  dessin (rendu logiciel, tout dézoomé : 46 ms au lieu de 26). Les ombres
+  longues du matin étaient limitées à 3,5 fois la hauteur : à 5, celle d'un arbre
+  traversait 45 m de champ.
 - **L'herbe dans la couleur du sol** : en glaise sur le sol sec, comme le creux
   d'un cratère ; mais une tache seule, sans lèvre claire. En brume, elle se lisait
   comme du givre (essayé, v0.7.0). Éparse (une case sur 9 à 41) : un damier faisait

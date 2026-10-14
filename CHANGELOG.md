@@ -1,5 +1,11 @@
 # Journal des versions
 
+## 0.8.0 — 2026-10-14
+
+- Le temps passe : les ombres tournent et s'allongent, le soir tombe, la nuit s'éclaire de lanternes et d'incendies
+- Les soldats ont des jambes, un casque, un fusil et un sac ; les obus tombent, soulèvent la terre, enfument le champ
+- Plus d'arbres et des bois, que le feu gagne de proche en proche ; des fusées le soir, des corbeaux sur les morts
+
 ## 0.7.1 — 2026-10-14
 
 - Le champ vu de loin redevient fluide : les buissons n'y sont plus dessinés

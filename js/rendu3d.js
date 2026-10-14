@@ -22,16 +22,19 @@
    - Les soldats : instanciés (une boîte et son ombre) ; au zoom 1 et 2, un
      point de 2 × 2 pixels (la couleur du camp sur son ombre).
    - Les corps : un homme couché (instancié) ; au zoom 1 et 2, un pixel. */
-import { loadThree } from './three-lib.js?v=0.7.1';
-import { PALETTE, ORDRE, INDICE } from './palette.js?v=0.7.1';
-import { OMBRE, couleursLigne } from './apparence.js?v=0.7.1';
-import { MORCEAU, hauteurVueQ as hauteurQ, hauteurVueM as hauteurM } from './terrain.js?v=0.7.1';
-import { horloge } from './bataille.js?v=0.7.1';
+import { loadThree } from './three-lib.js?v=0.8.0';
+import { PALETTE, ORDRE, INDICE } from './palette.js?v=0.8.0';
+import { OMBRE, couleursLigne } from './apparence.js?v=0.8.0';
+import { MORCEAU, hauteurVueQ as hauteurQ, hauteurVueM as hauteurM } from './terrain.js?v=0.8.0';
+import { horloge } from './bataille.js?v=0.8.0';
+import { ligneY } from './tranchees.js?v=0.8.0';
 
 export const CAMERA = { yaw: 0.15, tangage: 0.95, fov: 30 };   // au départ : tournée de 9°, plongée de 54°, angle de 30°
 // la caméra respire : un balancement très lent, 2° en 23 s (Jérôme, v0.3.1 : variante D du labo retenue)
-export const EFFETS = {};                      // les effets proposés au labo (aucun n'est encore retenu pour le jeu)
-export const SOLDAT = 'boite';                 // le style des soldats de près (labo : boite, detail, fusil, silhouette, marche)
+// les effets du jeu (Jérôme, v0.8.0 : « tout ensemble ») : la gerbe de terre, l'onde, l'obus qui tombe, la fumée qui
+// reste, le feu, les fusées éclairantes le soir, les corbeaux au-dessus des morts
+export const EFFETS = { gerbe: true, onde: true, chute: true, derive: true, feu: true, fusees: true, corbeaux: true };
+export const SOLDAT = 'silhouette';            // le style des soldats de près (Jérôme, v0.8.0 : la silhouette complète ; labo : boite, detail, fusil, silhouette, marche)
 export const RESPIRATION = 0.035;
 export const YAW_MAX = 0.6, TANGAGE_MIN = 0.7, TANGAGE_MAX = 1.35;
 const SOL_Y = 3;                              // m : la hauteur moyenne du sol (le point visé, le sol à plat des zooms 1 et 2)
@@ -206,17 +209,24 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
   // Les parties : 0 la vareuse (la couleur du camp), 1 l'ombre, 2 le casque (l'os pour les choisis),
   // 3 les jambes (bandes molletières), 4 le fusil, 5 le sac, 6 le visage.
   let cap = 0, posArr = null, campArr = null, vitArr = null, soldatsInst = null, soldatsDetail = null, soldatsPoints = null, attrsI = null, attrsP = null;
-  const DETAIL_DES = 4;
+  const DETAIL_DES = 6;                    // (à 4 pixels par mètre, un homme en fait 7 de haut : la silhouette ne s'y voyait pas, et coûtait 138 000 triangles pour 2 000 hommes)
   const soldatMat = new THREE.ShaderMaterial({
     uniforms: { uNous: { value: col('n') }, uEux: { value: col('x') }, uOmbre: { value: col('t') }, uSel: { value: col('o') },
-      uJambes: { value: col('s') }, uFusil: { value: col('t') }, uSac: { value: col('g') }, uVisage: { value: col('h') }, uT: { value: 0 } },
+      uJambes: { value: col('s') }, uFusil: { value: col('t') }, uSac: { value: col('g') }, uVisage: { value: col('h') }, uT: { value: 0 },
+      uSoleil: { value: new THREE.Vector2(0.5, 0.6) } },
     vertexShader: `
       attribute vec3 aPos; attribute float aCamp; attribute float aPart; attribute float aJambe; attribute float aVit;
-      uniform float uT;
+      uniform float uT; uniform vec2 uSoleil;
       varying float vCamp; varying float vPart;
       void main() {
         vCamp = aCamp; vPart = aPart;
         vec3 p = position;
+        // l'ombre suit le soleil : elle part des pieds, longue le matin et le soir (uSoleil : son bout, par mètre de hauteur)
+        if (aPart > 0.5 && aPart < 1.5) {
+          vec2 d = length(uSoleil) > 0.05 ? normalize(uSoleil) : vec2(0.6, 0.8);
+          vec2 xz = vec2(-d.y, d.x) * position.x + (position.y > 0.5 ? uSoleil * 1.7 + d * 0.1 : -d * 0.05);
+          p = vec3(xz.x, 0.03, xz.y);
+        }
         // les jambes qui marchent : un balancement autour de la hanche (0,8 m), selon la vitesse
         if (aJambe != 0.0 && aVit > 0.15) {
           float a = sin(uT * 8.0 + aPos.x * 1.7 + aPos.z * 1.3) * 0.5 * min(1.0, aVit) * aJambe;
@@ -256,7 +266,8 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
   function geometrieSoldat(style) {
     const g = { p: [], k: [], j: [] };
     // l'ombre au sol vers le sud-est (la lumière vient du nord-ouest)
-    g.p.push(-0.05, 0.02, 0, -0.05, 0.02, 0.6, 0.65, 0.02, 0.6, -0.05, 0.02, 0, 0.65, 0.02, 0.6, 0.65, 0.02, 0); for (let n = 0; n < 6; n++) { g.k.push(1); g.j.push(0); }
+    // (y = 1 : le bout de l'ombre, déplacé par le shader selon le soleil)
+    g.p.push(-0.22, 0, 0, 0.22, 0, 0, 0.22, 1, 0, -0.22, 0, 0, 0.22, 1, 0, -0.22, 1, 0); for (let n = 0; n < 6; n++) { g.k.push(1); g.j.push(0); }
     const membres = style === 'detail' || style === 'silhouette' || style === 'marche';
     if (!membres) boiteVue(g, -0.25, 0.25, 0, 1.7, -0.175, 0.175, 0, 0, 2);          // la boîte ; son dessus, le casque
     else {
@@ -373,7 +384,7 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
 
   // ─── Les arbres : un tronc, quelques branches nues ; abattus, une souche ───
   const arbresMesh = [];
-  function geometrieArbre(v, abattu) {
+  function geometrieArbre(v, abattu, loin = false) {
     const parts = [];
     const boite = (w, h, d, x, y, z, rz = 0, rx = 0) => {
       const g = new THREE.BoxGeometry(w, h, d).toNonIndexed();
@@ -384,7 +395,8 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
     else {
       const H = 6 + v;
       boite(0.55, H, 0.55, 0, 0, 0);
-      for (let k = 0; k < 4; k++) {
+      // de loin (le sol à plat), le tronc seul : un arbre y fait quelques pixels (tout le champ : ~40 000 triangles de branches)
+      for (let k = 0; k < (loin ? 0 : 4); k++) {
         const y = H * (0.45 + k * 0.13), s = k % 2 ? 1 : -1, l = 2.2 - k * 0.35;
         boite(0.22, l, 0.22, 0, y, 0, s * (0.7 + v * 0.1), (k - 1.5) * 0.3);
       }
@@ -398,9 +410,9 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
   function preparerArbres() {
     arbresMesh.forEach(m => { scene.remove(m); m.geometry.dispose(); });
     arbresMesh.length = 0;
-    for (const abattu of [0, 1]) for (let v = 0; v < 4; v++) {
-      const m = new THREE.InstancedMesh(geometrieArbre(v, abattu), arbreMat, Math.max(1, T.arbres.length));
-      m.count = 0; m.frustumCulled = false; m.userData = { abattu, v };
+    for (const loin of [false, true]) for (const abattu of [0, 1]) for (let v = 0; v < 4; v++) {
+      const m = new THREE.InstancedMesh(geometrieArbre(v, abattu, loin), arbreMat, Math.max(1, T.arbres.length));
+      m.count = 0; m.frustumCulled = false; m.userData = { abattu, v, loin };
       arbresMesh.push(m); scene.add(m);
     }
   }
@@ -413,15 +425,21 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
   // les arbres et les buissons : seulement ceux qu'on voit (tous, ils coûtaient des dizaines de milliers de triangles)
   function majArbres(e, b) {
     const m4 = new THREE.Matrix4();
+    let o = 0;
     for (const m of arbresMesh) {
       let n = 0;
+      if (m.userData.loin !== plat()) { m.count = 0; continue; }
       for (const a of T.arbres) {
         if (a.abattu !== m.userData.abattu || a.v !== m.userData.v || !dansLaVue(a.i + 0.5, a.j + 0.5, e, b)) continue;
-        m4.makeTranslation(a.i + 0.5, plat() ? SOL_Y : surface(a.i + 0.5, a.j + 0.5), a.j + 0.5);
+        const y = plat() ? SOL_Y : surface(a.i + 0.5, a.j + 0.5);
+        m4.makeTranslation(a.i + 0.5, y, a.j + 0.5);
         m.setMatrixAt(n++, m4);
+        if (o < ARBRES_OMBRES) { aoPos[o * 4] = a.i + 0.5; aoPos[o * 4 + 1] = y; aoPos[o * 4 + 2] = a.j + 0.5; aoPos[o * 4 + 3] = a.abattu ? 1.2 : 6 + a.v; o++; }
       }
       m.count = n; m.instanceMatrix.needsUpdate = true;
     }
+    const at = aoGeo.attributes.aPos; at.clearUpdateRanges(); at.addUpdateRange(0, o * 4); at.needsUpdate = true;
+    aoGeo.instanceCount = soleil.lengthSq() > 0.01 && !plat() ? o : 0;     // (de loin, pas d'ombres d'arbres)
   }
 
   // ─── Les buissons : deux ou trois boîtes basses ; arrachés, il n'en reste rien ───
@@ -608,19 +626,37 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
   function guetterFeux() {
     if (!effets.feu || !T) return;
     if (!arbresEtat || arbresEtat.length !== T.arbres.length) { arbresEtat = T.arbres.map(a => a.abattu); buissonsEtat = T.buissons.map(b => b.detruit); return; }
-    T.arbres.forEach((a, k) => { if (a.abattu && !arbresEtat[k]) feux.push({ x: a.i + 0.5, z: a.j + 0.5, h: 1.2, fin: 25 + alea() * 25, t: 0, f: 0 }); arbresEtat[k] = a.abattu; });
+    T.arbres.forEach((a, k) => { if (a.abattu && !arbresEtat[k]) allumer(k, 1.2); arbresEtat[k] = a.abattu; });
     T.buissons.forEach((b, k) => { if (b.detruit && !buissonsEtat[k]) feux.push({ x: b.i + 0.5, z: b.j + 0.5, h: 0.5, fin: 10 + alea() * 15, t: 0, f: 0 }); buissonsEtat[k] = b.detruit; });
-    while (feux.length > 40) feux.shift();
+    while (feux.length > 60) feux.shift();
+  }
+  // un arbre prend feu (une fois) ; debout, il brûle par la couronne, plus longtemps
+  const brules = new Set();
+  function allumer(k, h) {
+    if (brules.has(k)) return;
+    brules.add(k);
+    const a = T.arbres[k];
+    feux.push({ x: a.i + 0.5, z: a.j + 0.5, h, fin: (h > 2 ? 35 : 25) + alea() * 25, t: 0, f: 0, arbre: k, prop: 1 + alea() });
   }
   function majFeux(dt) {
     for (let k = feux.length - 1; k >= 0; k--) {
       const f = feux[k];
       f.t += dt; f.f += dt;
       if (f.t > f.fin) { feux.splice(k, 1); continue; }
+      // le feu gagne les arbres voisins (à moins de 9 m), de temps en temps : un bois brûle de proche en proche
+      if (f.arbre !== undefined && (f.prop -= dt) < 0) {
+        f.prop = 1.5 + alea() * 2;
+        if (alea() < 0.35) {
+          const voisins = [];
+          T.arbres.forEach((a, n) => { if (!brules.has(n) && (a.i + 0.5 - f.x) ** 2 + (a.j + 0.5 - f.z) ** 2 < 81) voisins.push(n); });
+          if (voisins.length) { const n = voisins[Math.floor(alea() * voisins.length)]; allumer(n, T.arbres[n].abattu ? 1.2 : 3 + alea() * 3); }
+        }
+      }
       const y = surface(f.x, f.z) + f.h;
       while (f.f > 0.05) {
         f.f -= 0.05;
-        particule(5, f.x + (alea() - 0.5) * 0.8, y, f.z + (alea() - 0.5) * 0.8, (alea() - 0.5) * 0.4, 1.5 + alea() * 1.5, 0, 0.35 + alea() * 0.35, 1.5);
+        const large = f.h > 2 ? 2.4 : 0.8;          // une couronne qui brûle est plus large qu'une souche
+        particule(5, f.x + (alea() - 0.5) * large, y + (alea() - 0.5) * (f.h > 2 ? 2 : 0), f.z + (alea() - 0.5) * large, (alea() - 0.5) * 0.4, 1.5 + alea() * 1.5, 0, 0.35 + alea() * 0.35, 1.5);
         if (alea() < 0.25) fumee(f.x, y + 1, f.z, 1, true);
       }
     }
@@ -739,6 +775,147 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
   const brume = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), brumeMat); brume.frustumCulled = false; brume.renderOrder = 5;
   scene.add(brume);
 
+  // ─── Le temps qui passe (Jérôme, v0.8.0) : le soleil (les ombres tournent et s'allongent), le soir et la nuit
+  // (une trame de terre qui monte), les lumières (lanternes des tranchées, incendies, fusées) qui la trouent.
+  // Rien hors de la palette : la nuit est une trame de la couleur la plus sombre. ───
+  const soleil = soldatMat.uniforms.uSoleil.value;      // (partagé avec les ombres des arbres)
+  // le bout de l'ombre d'un mètre de hauteur, selon l'heure (0 la nuit)
+  function majSoleil(h) {
+    if (h.phase !== 'jour') { soleil.set(0, 0); return; }
+    const t = Math.max(0, Math.min(1, (h.heure + h.minute / 60 - 6) / 12));
+    const elev = Math.max(0.1, 0.95 * Math.sin(Math.PI * t));               // rad : bas le matin et le soir
+    const L = Math.min(3.5, 1 / Math.tan(elev));                            // (à 5, l'ombre d'un arbre traversait 45 m de champ)
+    soleil.set(-Math.cos(Math.PI * t) * L, -Math.sin(Math.PI * t) * L);       // le soleil à l'est, au sud, à l'ouest : l'ombre à l'opposé
+  }
+  // l'obscurité : 0 le jour, la trame monte de 16 h à 18 h, épaisse la nuit, et se lève à l'aube
+  function obscurite(h) {
+    if (h.phase === 'nuit') return 0.74;
+    const hf = h.heure + h.minute / 60;
+    if (hf < 7) return 0.4 * (7 - hf);
+    if (hf > 16) return Math.min(0.45, 0.45 * (hf - 16) / 2);
+    return 0;
+  }
+
+  // les ombres des arbres : une bande tramée, du pied vers l'opposé du soleil, aussi longue que l'arbre est haut
+  const ARBRES_OMBRES = 2000;
+  const aoPos = new Float32Array(ARBRES_OMBRES * 4);
+  const aoGeo = new THREE.InstancedBufferGeometry();
+  aoGeo.setAttribute('position', new THREE.Float32BufferAttribute([-0.4, 0, 0, 0.4, 0, 0, 0.15, 1, 0, -0.4, 0, 0, 0.15, 1, 0, -0.15, 1, 0], 3));
+  aoGeo.setAttribute('aPos', new THREE.InstancedBufferAttribute(aoPos, 4).setUsage(THREE.DynamicDrawUsage));
+  aoGeo.instanceCount = 0;
+  const aoMat = new THREE.ShaderMaterial({
+    uniforms: { uCol: { value: col('t') }, uSoleil: soldatMat.uniforms.uSoleil },
+    vertexShader: `attribute vec4 aPos; uniform vec2 uSoleil;
+      void main() {
+        vec2 d = length(uSoleil) > 0.05 ? normalize(uSoleil) : vec2(0.6, 0.8);
+        vec2 xz = vec2(-d.y, d.x) * position.x + (position.y > 0.5 ? uSoleil * aPos.w : vec2(0.0));
+        gl_Position = projectionMatrix * viewMatrix * vec4(aPos.x + xz.x, aPos.y + 0.04, aPos.z + xz.y, 1.0);
+      }`,
+    fragmentShader: `uniform vec3 uCol; void main() { if (mod(floor(gl_FragCoord.x) + floor(gl_FragCoord.y), 2.0) > 0.5) discard; gl_FragColor = vec4(uCol, 1.0); }`,
+    side: THREE.DoubleSide, depthWrite: false,
+    polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2,
+  });
+  const arbresOmbres = new THREE.Mesh(aoGeo, aoMat); arbresOmbres.frustumCulled = false; arbresOmbres.renderOrder = 1;
+  scene.add(arbresOmbres);
+
+  // les lanternes : de petites lumières le long des tranchées tenues, le soir et la nuit
+  const LANTERNES = 120;
+  const lnPos = new Float32Array(LANTERNES * 3), lnGeo = new THREE.BufferGeometry();
+  lnGeo.setAttribute('position', new THREE.BufferAttribute(lnPos, 3).setUsage(THREE.DynamicDrawUsage));
+  lnGeo.setDrawRange(0, 0);
+  const lnMat = new THREE.ShaderMaterial({
+    uniforms: { uO: { value: col('o') }, uH: { value: col('h') }, uT: { value: 0 } },
+    vertexShader: `uniform float uT; varying float vF; void main() { vF = sin(uT * 9.0 + position.x * 3.1 + position.z); gl_Position = projectionMatrix * viewMatrix * vec4(position, 1.0); gl_PointSize = 2.0; }`,
+    fragmentShader: `uniform vec3 uO; uniform vec3 uH; varying float vF; void main() { gl_FragColor = vec4(vF > -0.3 ? uO : uH, 1.0); }`,
+    depthWrite: false,
+  });
+  const lanternes = new THREE.Points(lnGeo, lnMat); lanternes.frustumCulled = false; lanternes.renderOrder = 6;
+  scene.add(lanternes);
+  const lanternesVues = [];
+  function majLanternes(nuit) {
+    lanternesVues.length = 0;
+    if (nuit < 0.12 || !B) { lnGeo.setDrawRange(0, 0); return; }
+    for (const reg of B.etat.regiments) {
+      const t = reg.ordre.trace;
+      if (!t || !reg.effectif) continue;
+      for (let x = t.x0 + 9; x < t.x1 && lanternesVues.length < LANTERNES; x += 26) {
+        const z = ligneY(t, x) + 0.4 * t.face;
+        lanternesVues.push([x, surface(x, z) + 0.9, z]);
+      }
+    }
+    lanternesVues.forEach(([x, y, z], k) => { lnPos[k * 3] = x; lnPos[k * 3 + 1] = y; lnPos[k * 3 + 2] = z; });
+    lnGeo.attributes.position.needsUpdate = true;
+    lnGeo.setDrawRange(0, lanternesVues.length);
+  }
+
+  // la nuit : une trame de terre, trouée autour des lumières. Les lumières sont peintes une fois par image dans une
+  // petite carte (un quart de la résolution, sur le processeur) : la trame n'y lit qu'une valeur par pixel. (Chercher
+  // 32 lumières pour chaque pixel coûtait plus que tout le reste du dessin, en rendu logiciel.)
+  const LUMIERES = 64, QUART = 4;
+  let lumW = 1, lumH = 1, lumData = new Uint8Array(1), lumTex = null;
+  function preparerLumieres() {
+    const w = Math.max(1, Math.ceil(vue.vw / QUART)), h = Math.max(1, Math.ceil(vue.vh / QUART));
+    if (lumTex && w === lumW && h === lumH) return;
+    lumW = w; lumH = h; lumData = new Uint8Array(w * h);
+    lumTex?.dispose();
+    lumTex = new THREE.DataTexture(lumData, w, h, THREE.RedFormat, THREE.UnsignedByteType);
+    lumTex.magFilter = lumTex.minFilter = THREE.LinearFilter; lumTex.generateMipmaps = false;
+    nuitMat.uniforms.uLum.value = lumTex;
+  }
+  const nuitMat = new THREE.ShaderMaterial({
+    uniforms: { uCol: { value: col('t') }, uD: { value: 0 }, uLum: { value: null }, uTaille: { value: new THREE.Vector2(640, 400) } },
+    vertexShader: `void main() { gl_Position = vec4(position.xy, -1.0, 1.0); }`,
+    fragmentShader: `uniform vec3 uCol; uniform float uD; uniform sampler2D uLum; uniform vec2 uTaille;
+      float bayer(vec2 p) {
+        vec2 a = mod(p, 2.0), b = mod(floor(p / 2.0), 2.0);
+        float m = a.x * 2.0 + a.y * 3.0 - a.x * a.y * 4.0;
+        float n = b.x * 2.0 + b.y * 3.0 - b.x * b.y * 4.0;
+        return (m * 4.0 + n + 0.5) / 16.0;
+      }
+      void main() {
+        float clair = texture2D(uLum, gl_FragCoord.xy / uTaille).r;
+        if (bayer(floor(gl_FragCoord.xy)) > uD * (1.0 - clair)) discard;
+        gl_FragColor = vec4(uCol, 1.0);
+      }`,
+    depthTest: false, depthWrite: false,
+  });
+  const nuitPlan = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), nuitMat); nuitPlan.frustumCulled = false; nuitPlan.renderOrder = 5.5;
+  scene.add(nuitPlan);
+  const vEcran = new THREE.Vector3(), vBord = new THREE.Vector3();
+  // une lumière (r mètres autour de x, y, z) peinte dans la carte des lumières
+  function lumiere(x, y, z, r) {
+    vEcran.set(x, y, z).project(camera); vBord.set(x + r, y, z).project(camera);
+    if (vEcran.z > 1) return false;
+    const px = (vEcran.x + 1) / 2 * lumW, py = (vEcran.y + 1) / 2 * lumH;
+    const rp = Math.max(1, Math.hypot((vBord.x - vEcran.x) / 2 * lumW, (vBord.y - vEcran.y) / 2 * lumH));
+    if (px < -rp || py < -rp || px > lumW + rp || py > lumH + rp) return false;
+    const i0 = Math.max(0, Math.floor(px - rp)), i1 = Math.min(lumW - 1, Math.ceil(px + rp));
+    const j0 = Math.max(0, Math.floor(py - rp)), j1 = Math.min(lumH - 1, Math.ceil(py + rp));
+    for (let j = j0; j <= j1; j++) for (let i = i0; i <= i1; i++) {
+      const d = Math.hypot(i + 0.5 - px, j + 0.5 - py) / rp;
+      if (d >= 1) continue;
+      const v = d < 0.35 ? 255 : Math.round(255 * (1 - (d - 0.35) / 0.65));
+      if (v > lumData[j * lumW + i]) lumData[j * lumW + i] = v;
+    }
+    return true;
+  }
+  function majNuit(h) {
+    const d = obscurite(h);
+    nuitMat.uniforms.uD.value = d;
+    if (!vide) nuitPlan.visible = d > 0;
+    majLanternes(d);
+    if (!d) return;
+    preparerLumieres();
+    nuitMat.uniforms.uTaille.value.set(vue.vw, vue.vh);
+    lumData.fill(0);
+    let n = 0;
+    // les fusées (elles éclairent large), les incendies, les lanternes
+    for (let s = 0; s < ECLATS && n < LUMIERES; s++) if (ecl.sorte[s] === 6 && ecl.age[s] < ecl.vie[s] && lumiere(ecl.x[s], ecl.y[s], ecl.z[s], 45)) n++;
+    for (const f of feux) if (n < LUMIERES && lumiere(f.x, surface(f.x, f.z) + f.h, f.z, f.h > 2 ? 16 : 10)) n++;
+    for (const [x, y, z] of lanternesVues) if (n < LUMIERES && lumiere(x, y, z, 7)) n++;
+    lumTex.needsUpdate = true;
+  }
+
   // ─── Brancher une bataille ───
   function attacher(bataille) {
     B = bataille; T = B.terrain;
@@ -771,6 +948,7 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
     preparerArbres();
     preparerBuissons();
     preparerHerbe();
+    feux.length = 0; brules.clear(); arbresEtat = null;   // (une autre bataille : ses arbres ne brûlent pas encore)
     vue.cx = T.W / 2; vue.cz = T.H * 0.62;
   }
   // un morceau dépend aussi de ses voisins (les parois au sud, à l'est, à l'ouest) : leurs versions comptent
@@ -994,10 +1172,12 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
     if (!plat()) { majMorceaux(); projeter(); choisirDetail(); }
     herbeMat.uniforms.uT.value = tAnim; soldatMat.uniforms.uT.value = tAnim;
     const t1 = performance.now();
+    majSoleil(horloge(B));
     majSoldats();
     tAnim += dt;
     majEclats(dt); majCorbeaux(dt, tAnim);
     const h = horloge(B);
+    majNuit(h); lnMat.uniforms.uT.value = tAnim;
     if (!vide) { pluie.visible = h.meteo === 'pluie' && h.phase === 'jour'; brume.visible = h.meteo === 'brouillard'; }
     const { cx, cz, p } = projeter();
     plMat.uniforms.uT.value = tAnim; plMat.uniforms.uC.value.set(cx, cz);

@@ -16,8 +16,8 @@
      nuit elle se fait en lot.
    - Les versions (`versionLigne`, `versionMorceau`) disent au rendu ce qui a
      changé ; le terrain ne connaît pas le rendu. */
-import { hash2 } from './lib/rng.js?v=0.7.1';
-import { CALIBRES } from './data/calibres.js?v=0.7.1';
+import { hash2 } from './lib/rng.js?v=0.8.0';
+import { CALIBRES } from './data/calibres.js?v=0.8.0';
 
 export const ETAT = { SEC: 0, HUMIDE: 1, BOUE: 2, EAU: 3, GLACE: 4 };
 export const MORCEAU = 25;             // cases : le côté d'un morceau de maillage (mesuré, rendu logiciel : à 100, la moitié du champ restait dessinée au zoom 4 ; à 25, 6 500 triangles au lieu de 15 600 au zoom 8)
@@ -66,6 +66,16 @@ export function creerTerrain(graine, secteur, R) {
     if (arbres.length && hash2(k, 3, g + 5) < 0.7 && !arbres.some(a => Math.abs(a.i - i) + Math.abs(a.j - j) < 18)) continue;
     if (arbres.some(a => Math.abs(a.i - i) + Math.abs(a.j - j) < 3)) continue;
     arbres.push({ i, j, v: Math.floor(hash2(k, 4, g + 5) * 4), abattu: 0 });
+  }
+  // Des bois : quelques taches d'arbres serrés (le feu y court ; v0.8.0)
+  for (let b = 0; b < (secteur.bois ?? 0); b++) {
+    const ci = 20 + hash2(b, 1, g + 14) * (W - 40), cj = 20 + hash2(b, 2, g + 14) * (H - 40), r = 14 + hash2(b, 3, g + 14) * 14;
+    for (let k = 0; k < 40; k++) {
+      const a = hash2(b, k * 2, g + 15) * Math.PI * 2, d = Math.sqrt(hash2(b, k * 2 + 1, g + 15)) * r;
+      const i = Math.round(ci + Math.cos(a) * d), j = Math.round(cj + Math.sin(a) * d * 0.8);
+      if (i < 3 || j < 3 || i >= W - 3 || j >= H - 3 || arbres.some(t => Math.abs(t.i - i) + Math.abs(t.j - j) < 3)) continue;
+      arbres.push({ i, j, v: Math.floor(hash2(i, j, g + 16) * 4), abattu: 0 });
+    }
   }
   // Des buissons : en haies (quelques lignes de buissons serrés) et en bosquets épars
   const buissons = [];

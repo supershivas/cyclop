@@ -65,6 +65,16 @@ une bataille de trois jours lisible, cratère, boue, eau et soldat distinguables
 
 ## Les systèmes
 
+### Le temps qui passe
+
+Le soleil se lève à l'est et se couche à l'ouest : les ombres des hommes et des
+arbres tournent avec lui, longues le matin et le soir, courtes à midi. De 16 h à
+18 h, le soir tombe (une trame de terre qui monte) ; la nuit, le champ n'est plus
+éclairé que par les lanternes des tranchées, les incendies et les fusées. Les
+obus tombent du ciel, soulèvent une gerbe de terre, laissent une fumée qui
+dérive ; un arbre touché brûle et le feu gagne ses voisins ; des corbeaux
+tournent au-dessus des morts. (Jérôme, v0.8.0)
+
 ### Le terrain
 
 De l'herbe par plaques, des buissons en haies et en bosquets, des arbres : le

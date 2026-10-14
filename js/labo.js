@@ -2,17 +2,17 @@
 // Chaque sujet utilise les mêmes modules que le jeu (terrain, apparence,
 // rendu three.js) : ce qu'on voit ici est ce que le jeu dessinera. Ajouter un
 // sujet ou une variante = ajouter une entrée dans GROUPES.
-import { mountLabo } from './lib/labo-shell.js?v=0.7.1';
-import { spriteCanvas, paletteToGPL, paletteToHex } from './lib/sprites.js?v=0.7.1';
-import { PALETTE, ROLES } from './palette.js?v=0.7.1';
-import { chargerContenu } from './design-store.js?v=0.7.1';
-import { tuile, ETAT } from './tuiles.js?v=0.7.1';
-import { creerTerrain, impact, hydroLignes } from './terrain.js?v=0.7.1';
-import { CALIBRES } from './data/calibres.js?v=0.7.1';
-import { METEO } from './data/meteo.js?v=0.7.1';
-import { nouvelleBataille, avancer, ordonnerMarche, ordonnerBarrage } from './bataille.js?v=0.7.1';
-import { creerRendu, ZOOMS } from './rendu3d.js?v=0.7.1';
-import { hash2 } from './lib/rng.js?v=0.7.1';
+import { mountLabo } from './lib/labo-shell.js?v=0.8.0';
+import { spriteCanvas, paletteToGPL, paletteToHex } from './lib/sprites.js?v=0.8.0';
+import { PALETTE, ROLES } from './palette.js?v=0.8.0';
+import { chargerContenu } from './design-store.js?v=0.8.0';
+import { tuile, ETAT } from './tuiles.js?v=0.8.0';
+import { creerTerrain, impact, hydroLignes } from './terrain.js?v=0.8.0';
+import { CALIBRES } from './data/calibres.js?v=0.8.0';
+import { METEO } from './data/meteo.js?v=0.8.0';
+import { nouvelleBataille, avancer, ordonnerMarche, ordonnerBarrage } from './bataille.js?v=0.8.0';
+import { creerRendu, ZOOMS } from './rendu3d.js?v=0.8.0';
+import { hash2 } from './lib/rng.js?v=0.8.0';
 
 document.documentElement.style.setProperty('--jeu-accent', ROLES.accent);
 const NOM = document.title.replace(/^Labo — /, ''); // le nom vient de la page (une apostrophe ne casse rien)
@@ -175,21 +175,21 @@ const GROUPES = [
       { title: 'Respiration marquée', note: 'Le balancement deux fois plus ample (4°).', render: s => moteur(s, { zoom: 3, pluie: true, respiration: 0.07 }) },
     ] },
     { id: 'soldats', title: 'Soldats de près', variants: [
-      { title: 'Une boîte', note: 'Le soldat du jeu : une boîte de la couleur de son camp, son dessus en guise de casque, et son ombre. Environ 10 triangles par homme.', status: 'actuelle', render: s => moteur(s, { zoom: 5, cz: 205, soldat: 'boite' }) },
-      { title: 'Jambes, tête et casque', note: 'Les bandes molletières sombres (deux jambes), la vareuse, le visage clair, le casque plus large que la tête. Environ 40 triangles, seulement de près (4 pixels par mètre et plus) ; de loin, la boîte, puis le point.', render: s => moteur(s, { zoom: 5, cz: 205, soldat: 'detail' }) },
-      { title: 'La boîte et un fusil', note: 'La boîte d\'aujourd\'hui, un fusil à l\'épaule (un trait de terre) : la silhouette du fantassin pour 8 triangles de plus.', render: s => moteur(s, { zoom: 5, cz: 205, soldat: 'fusil' }) },
-      { title: 'Silhouette complète', note: 'Jambes, vareuse, visage, casque, le fusil à l\'épaule et le sac au dos (la glaise). Environ 55 triangles par homme de près.', render: s => moteur(s, { zoom: 5, cz: 205, soldat: 'silhouette' }) },
+      { title: 'Silhouette complète', status: 'actuelle', note: 'Jambes, vareuse, visage, casque, le fusil à l\'épaule et le sac au dos (la glaise). Environ 55 triangles par homme de près.', render: s => moteur(s, { zoom: 5, cz: 205, soldat: 'silhouette' }) },
+      { title: 'Une boîte', note: 'Le soldat de la v0.7 : une boîte de la couleur de son camp, son dessus en guise de casque, et son ombre. Environ 10 triangles par homme.', status: 'ancienne', render: s => moteur(s, { zoom: 5, cz: 205, soldat: 'boite' }) },
+      { title: 'Jambes, tête et casque', note: 'Les bandes molletières sombres (deux jambes), la vareuse, le visage clair, le casque plus large que la tête. Environ 40 triangles, seulement de près (6 pixels par mètre et plus) ; de loin, la boîte, puis le point.', render: s => moteur(s, { zoom: 5, cz: 205, soldat: 'detail' }) },
+      { title: 'La boîte et un fusil', note: 'La boîte de la v0.7, un fusil à l\'épaule (un trait de terre) : la silhouette du fantassin pour 8 triangles de plus.', render: s => moteur(s, { zoom: 5, cz: 205, soldat: 'fusil' }) },
       { title: 'Silhouette qui marche', note: 'La silhouette complète, et les jambes qui se balancent quand il marche (calculé dans le shader, selon sa vitesse : rien de plus pour le processeur).', render: s => moteur(s, { zoom: 5, cz: 205, soldat: 'marche' }) },
     ] },
     { id: 'effets', title: 'Effets', variants: [
-      { title: 'Les effets d\'aujourd\'hui', note: 'L\'éclair, la terre jetée, une fumée tramée qui monte et se dissipe en quelques secondes.', status: 'actuelle', render: s => moteur(s, { zoom: 4, cz: 170, barrages: true }) },
+      { title: 'Tout ensemble', status: 'actuelle', note: 'Gerbe, onde, obus qui tombe, fumée qui reste, feu, fusées et corbeaux.', render: s => moteur(s, { zoom: 4, cz: 170, barrages: true, effets: { gerbe: true, onde: true, chute: true, derive: true, feu: true, fusees: 'toujours', corbeaux: 'toujours' } }) },
+      { title: 'Les effets de la v0.7', note: 'L\'éclair, la terre jetée, une fumée tramée qui monte et se dissipe en quelques secondes.', status: 'ancienne', render: s => moteur(s, { zoom: 4, cz: 170, barrages: true, effets: {} }) },
       { title: 'Gerbe de terre et onde', note: 'Une colonne de terre et de mottes, haute et serrée, qui retombe ; un anneau de poussière qui court au ras du sol.', render: s => moteur(s, { zoom: 4, cz: 170, barrages: true, effets: { gerbe: true, onde: true } }) },
       { title: 'L\'obus qui tombe', note: 'Un quart de seconde avant l\'explosion, une traînée claire descend du ciel jusqu\'au point de chute (avec la gerbe).', render: s => moteur(s, { zoom: 4, cz: 170, barrages: true, effets: { chute: true, gerbe: true } }) },
       { title: 'La fumée qui reste', note: 'Plus de fumée, qui dure huit à seize secondes et dérive avec le vent vers l\'est : après un barrage, le champ reste voilé un moment.', render: s => moteur(s, { zoom: 4, cz: 170, barrages: true, effets: { derive: true } }) },
       { title: 'Le feu', note: 'Un arbre abattu ou un buisson arraché brûle un moment : des flammes (l\'os et l\'herbe morte) et une fumée qui dérive.', render: s => moteur(s, { zoom: 4, cz: 170, barrages: true, effets: { feu: true, derive: true }, surLesArbres: true }) },
       { title: 'Fusées éclairantes', note: 'Le soir (après 16 h ; ici, toujours) : une fusée monte, s\'ouvre et descend lentement sous son parachute, une fumée derrière elle.', render: s => moteur(s, { zoom: 3, cz: 170, effets: { fusees: 'toujours' } }) },
       { title: 'Les corbeaux', note: 'Quelques points noirs qui tournent lentement au-dessus des morts (ici, au-dessus du champ).', render: s => moteur(s, { zoom: 4, cz: 170, effets: { corbeaux: 'toujours' } }) },
-      { title: 'Tout ensemble', note: 'Gerbe, onde, obus qui tombe, fumée qui reste, feu, fusées et corbeaux.', render: s => moteur(s, { zoom: 4, cz: 170, barrages: true, effets: { gerbe: true, onde: true, chute: true, derive: true, feu: true, fusees: 'toujours', corbeaux: 'toujours' } }) },
     ] },
     { id: 'calibres', title: 'Calibres', variants: Object.entries(CALIBRES).map(([cal, C], k) => ({
       title: cal, note: `Motif ${C.motif.length} × ${C.motif.length}, ${C.salve} obus par barrage, rayon mortel ${C.rayon} m, recharge ${C.recharge} s.`,
