@@ -1,18 +1,18 @@
 // Le cycle de vie : écran titre → bataille → nuit → fin ; pause active,
 // réglages, sauvegarde, mise à jour, debug. Les règles sont dans bataille.js
 // (pures), le dessin dans rendu3d.js (il ne modifie jamais l'état).
-import { createLoop } from './lib/loop.js?v=0.1.1';
-import { createKeys, stopTypeahead } from './lib/keys.js?v=0.1.1';
-import { createPointer, lockBrowserGestures } from './lib/pointer.js?v=0.1.1';
-import { createGamepad } from './lib/gamepad.js?v=0.1.1';
-import { createStore, autosave, pickJSONFile } from './lib/save.js?v=0.1.1';
-import { startUpdateCheck, loadVersion, loadChangelog, downloadJSON } from './lib/app-update.js?v=0.1.1';
-import { ROLES } from './palette.js?v=0.1.1';
-import { nouvelleBataille, avancer, aube, ordonnerMarche, ordonnerBarrage, horloge, effectifs, photo, restaurer, PAS, NOUS } from './bataille.js?v=0.1.1';
-import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.1.1';
-import { METEO } from './data/meteo.js?v=0.1.1';
-import { creerRendu } from './rendu3d.js?v=0.1.1';
-import { chargerContenu } from './design-store.js?v=0.1.1';
+import { createLoop } from './lib/loop.js?v=0.2.0';
+import { createKeys, stopTypeahead } from './lib/keys.js?v=0.2.0';
+import { createPointer, lockBrowserGestures } from './lib/pointer.js?v=0.2.0';
+import { createGamepad } from './lib/gamepad.js?v=0.2.0';
+import { createStore, autosave, pickJSONFile } from './lib/save.js?v=0.2.0';
+import { startUpdateCheck, loadVersion, loadChangelog, downloadJSON } from './lib/app-update.js?v=0.2.0';
+import { ROLES } from './palette.js?v=0.2.0';
+import { nouvelleBataille, avancer, aube, ordonnerMarche, ordonnerBarrage, horloge, effectifs, photo, restaurer, PAS, NOUS } from './bataille.js?v=0.2.0';
+import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.2.0';
+import { METEO } from './data/meteo.js?v=0.2.0';
+import { creerRendu } from './rendu3d.js?v=0.2.0';
+import { chargerContenu } from './design-store.js?v=0.2.0';
 
 const JEU = 'cyclopeen';
 const $ = id => document.getElementById(id);
@@ -28,7 +28,7 @@ const store = createStore({
   debug: DEBUG,
   entries: {
     partie: { version: 1 },
-    prefs: { version: 1, debugWrites: false, defaults: { zoom: 2 } },
+    prefs: { version: 1, debugWrites: false, defaults: { zoom: 2, camera: null } },
   },
   secret: ['gh-token'],
 });
@@ -43,8 +43,7 @@ const perf = { sim: 0, pas: 0 };
 
 lockBrowserGestures($('ecran'));
 stopTypeahead();
-// les variantes du labo, à l'essai dans le jeu (mode debug seulement) : &sol=facettes&soldats=sprites
-const rendu = await creerRendu($('canvas'), { mesure: MESURE, ...(DEBUG ? { sol: params.get('sol') || undefined, soldats: params.get('soldats-rendu') || undefined } : {}) });
+const rendu = await creerRendu($('canvas'), { mesure: MESURE });
 rendu.redimensionner();
 addEventListener('resize', () => rendu.redimensionner());
 
@@ -61,6 +60,7 @@ function jouer(bataille) {
   B = bataille;
   rendu.attacher(B);
   rendu.vue.zoom = prefs.zoom ?? 2;
+  if (prefs.camera) rendu.placerCamera(prefs.camera.yaw, prefs.camera.k);
   choisis = new Set(); rendu.choisis = choisis;
   modeBarrage = null; pauseActive = false;
   $('titre').hidden = true;
@@ -290,13 +290,20 @@ createPointer($('canvas'), {
     }
     majHud();
   },
-  onDragStart: p => { glisse = { bouton: p.button, x0: p.startX, y0: p.startY, cx: rendu.vue.cx, cz: rendu.vue.cz }; },
+  onDragStart: p => { glisse = { bouton: p.button, x0: p.startX, y0: p.startY, cx: rendu.vue.cx, cz: rendu.vue.cz, ddx: p.dx, ddy: p.dy }; },
   onDrag: p => {
     if (!glisse) return;
-    if (glisse.bouton === 1 || glisse.bouton === 2) {
-      // glisser avec la molette (ou le bouton droit) : déplacer la vue
+    if (glisse.bouton === 1) {
+      // glisser avec la molette : déplacer la vue (le terrain suit la souris)
       const k = (window.devicePixelRatio || 1) / rendu.vue.facteur / rendu.ppm;
-      rendu.vue.cx = glisse.cx - p.dx * k; rendu.vue.cz = glisse.cz - p.dy * k;
+      rendu.vue.cx = glisse.cx; rendu.vue.cz = glisse.cz;
+      rendu.deplacerEcran(-p.dx * k, -p.dy * k);
+      return;
+    }
+    if (glisse.bouton === 2) {
+      // glisser avec le bouton droit : tourner (de gauche à droite) et incliner (de haut en bas) la caméra, un peu
+      rendu.tourner((p.dx - glisse.ddx) * 0.004, (p.dy - glisse.ddy) * 0.002);
+      glisse.ddx = p.dx; glisse.ddy = p.dy;
       return;
     }
     const x = Math.min(p.startX, p.x), y = Math.min(p.startY, p.y);
@@ -305,6 +312,7 @@ createPointer($('canvas'), {
   },
   onDragEnd: p => {
     cadre.hidden = true;
+    if (glisse?.bouton === 2) { prefs.camera = { yaw: rendu.vue.cible.yaw, k: rendu.vue.cible.k }; store.save('prefs', prefs); }
     if (!glisse || glisse.bouton !== 0 || !enJeu()) { glisse = null; return; }
     glisse = null;
     // choisir au cadre : les régiments dont au moins un homme est dans le cadre (à l'écran)
@@ -343,7 +351,14 @@ const loop = createLoop({
     if (enJeu() && !document.querySelector('dialog[open]')) {
       const k = keys.axis(), m = pad.axis();
       const ax = k.x || m.x, ay = k.y || m.y;
-      if (ax || ay) rendu.deplacer(ax * dt * 260 / rendu.ppm, ay * dt * 260 / rendu.ppm);
+      if (ax || ay) rendu.deplacerEcran(ax * dt * 260 / rendu.ppm, ay * dt * 260 / rendu.ppm);
+      // tourner : A et E (Q et E en QWERTY), incliner : R et F — touches physiques, lues en continu
+      const tour = (keys.held('KeyE') ? 1 : 0) - (keys.held('KeyQ') ? 1 : 0), incl = (keys.held('KeyF') ? 1 : 0) - (keys.held('KeyR') ? 1 : 0);
+      if (tour || incl) {
+        rendu.tourner(tour * dt * 0.9, incl * dt * 0.5);
+        prefs.camera = { yaw: rendu.vue.cible.yaw, k: rendu.vue.cible.k };
+        clearTimeout(zoomer.t); zoomer.t = setTimeout(() => store.save('prefs', prefs), 400);
+      }
     }
     if (marque) marque.t -= dt;
     rendu.dessiner(dt, evenements.splice(0));
@@ -373,7 +388,7 @@ startUpdateCheck({
 
 // ─── Mode debug (section 18) : chargé seulement avec ?debug=1 ──────────────
 if (DEBUG) {
-  const { installDebug, seedFromUrl } = await import('./lib/debug.js?v=0.1.1');
+  const { installDebug, seedFromUrl } = await import('./lib/debug.js?v=0.2.0');
   window.__seed = seedFromUrl() ?? undefined;
   installDebug({
     state: () => B && { ...horloge(B), effectifs: effectifs(B), pertes: B.etat.pertes, impacts: B.etat.impacts.length, enJeu: enJeu(), pause: loop.paused },
@@ -399,6 +414,7 @@ if (DEBUG) {
       barrage: (cal, x, y, camp = 0) => ordonnerBarrage(B, cal, x, y, camp),
       marche: (ids, x, y) => ordonnerMarche(B, ids, x, y),
       zoom: z => { rendu.vue.zoom = z; },
+      camera: (yaw, k) => rendu.placerCamera(yaw, k),
       bataille: () => B,
       rendu: () => rendu,
       CALIBRES,

@@ -1,5 +1,11 @@
 # Journal des versions
 
+## 0.2.0 — 2026-10-14
+
+- La caméra a un léger angle : on sent la profondeur du champ
+- On la tourne et l'incline un peu (A et E, R et F, ou en glissant avec le bouton droit)
+- Le labo ne montre plus le sol à facettes ni les soldats en sprites (non retenus)
+
 ## 0.1.1 — 2026-10-14
 
 - Labo : un sol à facettes, plus organique, à comparer aux cubes

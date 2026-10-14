@@ -1,8 +1,8 @@
 {
-  "version": "0.1.1",
+  "version": "0.2.0",
   "date": "2026-10-14",
   "changes": [
-    "Labo : un sol à facettes, plus organique, à comparer aux cubes",
-    "Labo : les soldats en sprites (deux pas de marche, le casque de chaque camp)"
+    "La caméra a un léger angle : on sent la profondeur du champ",
+    "On la tourne et l'incline un peu (A et E, R et F, ou en glissant avec le bouton droit)"
   ]
 }

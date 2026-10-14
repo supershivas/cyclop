@@ -21,8 +21,11 @@ la danse macabre, la catastrophe peinte avec calme. L'intention est dans `DESIGN
   principale : la bataille de plusieurs jours (jour : ordres et barrages ; nuit :
   l'évolution du terrain en lot).
 - **Vue et rendu** : 3D low poly cubique, three.js, projection orthographique
-  oblique très plongée, zoom par facteurs entiers (1, 2, 3, 4, 6, 8 pixels par
-  mètre) ; aux zooms 1 et 2, chaque soldat est un point. Profil game-system :
+  oblique très plongée, avec un léger angle (11°) qu'on tourne (jusqu'à 34°) et
+  incline un peu, en douceur (Jérôme, v0.2.0 : « sentir la profondeur ») ; zoom
+  par facteurs entiers (1, 2, 3, 4, 6, 8 pixels par mètre) ; aux zooms 1 et 2,
+  chaque soldat est un point. Sol en cubes et soldats en boîtes (Jérôme, v0.2.0 :
+  les facettes et les sprites essayés au labo ne sont pas retenus). Profil game-system :
   `profils/pixel-3d-three.md`.
 - **Cible** : ordinateur uniquement (souris, sélection au cadre, raccourcis,
   pause). Pas d'interface tactile ni d'aperçu téléphone (Jérôme, v0.1.0) : sur un
@@ -68,8 +71,10 @@ le fond des boîtes de dialogue (`::backdrop` de `game.css`).
   face sud, plus son ombre). Arbre : 6 à 9 m.
 - Image : basse résolution (hauteur ≈ 400 pixels, facteur entier
   `round(hauteur / 400)`), agrandie sans lissage. À 1 280 × 800 : 640 × 400 ×2.
-- Projection : un mètre de hauteur remonte de `K_H` = 0,5 m à l'écran. Planche
-  d'échelle : sujet « Échelle » du labo.
+- Projection : le sol tourné de `yaw` autour du centre de la vue (0,2 rad au
+  départ, ±0,6 au plus), puis un mètre de hauteur remonte de `k` m à l'écran
+  (0,55 au départ, 0,32 à 0,85). De face (yaw = 0), le centre est posé sur la
+  grille de pixels. Planche d'échelle : sujet « Échelle » du labo.
 
 ### Commandes
 
@@ -79,7 +84,8 @@ le fond des boîtes de dialogue (`::backdrop` de `game.css`).
 | Marcher | — | clic droit |
 | Barrage de 75, 155, 220 | 1, 2, 3 (touche physique) puis clic | bouton de la batterie puis clic |
 | Arrêter le temps (pause active) | Espace | — |
-| Déplacer la vue | flèches, ZQSD / WASD | glisser avec la molette (ou le bouton droit) |
+| Déplacer la vue | flèches, ZQSD / WASD (selon l'écran) | glisser avec la molette |
+| Tourner, incliner la vue | A et E (Q et E en QWERTY), R et F (touches physiques, en continu) | glisser avec le bouton droit |
 | Zoom | + et − | molette |
 | Menu (pause) | Échap (annule d'abord un barrage visé) | bouton du HUD |
 
@@ -124,9 +130,6 @@ le fond des boîtes de dialogue (`::backdrop` de `game.css`).
   croisaient.
 - `js/apparence.js` — la couleur d'une case (partagée par le rendu, le labo,
   l'outil de lisibilité). `js/tuiles.js` — des tuiles d'essai peintes par elle.
-- `js/data/soldats.js` — les soldats en sprites (variante du labo, pas dans le
-  jeu) : matrices de lettres (`c` couleur du camp, `k` casque), trois tailles
-  selon le zoom, arrêt et deux pas ; le camp se lit à la forme du casque.
 - `js/data/` — `reglages.js` (tous les nombres, modifiables par l'atelier),
   `calibres.js` (motifs 3 × 3, 5 × 5, 7 × 7), `meteo.js` (états et chaîne de
   Markov, prévision juste 7 fois sur 10), `secteur.js`, `lexique.js` (noms de
@@ -142,23 +145,20 @@ le fond des boîtes de dialogue (`::backdrop` de `game.css`).
   instances (boîte et ombre) ou en points 2 × 2, seulement ceux qu'on voit ; arbres
   instanciés ; éclats et fumée d'obus ; pluie ; brouillard tramé (plus épais vers
   le haut de l'écran). `versTerrain` / `versEcran`. Le rendu ne modifie jamais
-  l'état. Deux variantes en essai (options `sol: 'facettes'`, `soldats:
-  'sprites'`, labo et `?debug=1&sol=facettes&soldats-rendu=sprites`) : le sol à
-  facettes (un sommet par coin de case, à la moyenne des hauteurs logiques ;
-  carrés de 5 m grossiers, fins là où un obus a touché, raccordés sans fente ;
-  l'ombre des facettes dessine trous et bosses, la case n'assombrit plus le creux)
-  et les soldats en sprites (un quadrilatère par soldat, posé par le pied sur un
-  pixel entier, atlas d'octets). Un morceau du sol se refait aussi quand un de
-  ses voisins change (la paroi au sud, le raccord des facettes).
-- `js/main.js` — écran titre → bataille → nuit → fin ; HUD (horloge, prévision,
+  l'état. Un morceau du sol se refait aussi quand un de ses voisins change (ses
+  parois sud, est et ouest en dépendent). Les parois est et ouest (et les bords
+  du champ, jusqu'au socle) existent pour la caméra tournée ; l'ouest, éclairé,
+  garde la couleur du dessus. `deplacerEcran`, `tourner`, `placerCamera`.
+- `js/main.js` — écran titre → bataille → nuit → fin ; le zoom et la caméra
+  gardés dans `cyclopeen:prefs` ; HUD (horloge, prévision,
   morts des deux camps, batteries, régiments choisis, noms de nos régiments au-
   dessus d'eux) ; commandes ; sauvegarde ; mise à jour ; mode debug ;
   `window.cyclopStats()`.
 - `index.html`, `css/style.css` — l'écran, le HUD et les dialogues (palette du jeu).
 - `labo.html`, `js/labo.js` — le labo : échelle, sols et cratères (couleur et
   gris), palette, le moteur en direct (zoom 4, zoom 1, après un jour de pluie,
-  gel), le sol (cubes / facettes), les soldats (boîtes / sprites / les deux /
-  planche), les calibres. Les sujets du moteur affichent ce que coûte le dessin.
+  gel), la caméra (un léger angle / de face / plus d'angle), les calibres. Les
+  sujets du moteur affichent ce que coûte le dessin et proposent les zooms.
 - `atelier.html`, `js/atelier.js`, `js/design-store.js` — l'atelier : les réglages
   chiffrés, publiés dans `assets/design/reglages.json`.
 - `test/` — `node outils/test-run.mjs` (terrain, foule, bataille, sauvegarde, pureté).
@@ -169,7 +169,7 @@ le fond des boîtes de dialogue (`::backdrop` de `game.css`).
 ## Mode debug et mesure
 
 - `?debug=1` : `window.__jeu` (`state`, `stats`, `avancer(n, passerNuits)`,
-  `barrage(cal, x, y, camp)`, `marche(ids, x, y)`, `zoom(i)`, `teleport`,
+  `barrage(cal, x, y, camp)`, `marche(ids, x, y)`, `zoom(i)`, `camera(yaw, k)`, `teleport`,
   `bataille()`, `rendu()`), `&seed=7`. F9 masque le panneau.
 - `?soldats=8000` : une bataille de 8 000 soldats (les deux camps).
 - `?mesure=1` : chaque image attend la fin du dessin (lecture d'un pixel) ;
@@ -185,7 +185,6 @@ node outils/audit-ecran.mjs --page index.html --page labo.html --page atelier.ht
 node outils/lisibilite.mjs               # contraste, tuiles en gris
 node scripts/mesure.mjs                  # 8 000 soldats : simulation et rendu
 node scripts/trois-jours.mjs             # trois jours de bataille, captures chaque soir
-# les deux : --sol facettes --rendu sprites (les variantes du labo)
 node outils/stamp-version.mjs            # après chaque changement de version.json
 ```
 
@@ -204,6 +203,7 @@ node outils/stamp-version.mjs            # après chaque changement de version.j
 | Quoi | Version | Pourquoi (ce que ça coûtait) |
 |---|---|---|
 | Ombrage du sol en damier selon la pente | 0.1.0 (avant livraison) | du bruit partout : chaque bosse se lisait comme un cratère |
+| Sol à facettes, soldats en sprites (labo) | 0.1.1 → 0.2.0 | non retenus par Jérôme ; facettes : +30 % de triangles sur un champ labouré, trame bruyante (`docs/archives/sol-facettes-et-soldats-sprites.md`) |
 
 ## Pièges connus
 
@@ -231,6 +231,14 @@ node outils/stamp-version.mjs            # après chaque changement de version.j
 - **Une marche d'un quart sur les bosses** : l'humidité glissait vers chaque case
   plus basse et dessinait une ligne sèche le long de chaque courbe de niveau ; elle
   ne glisse plus que vers une marche d'un demi-mètre (un trou).
+- **Vue de biais, des fentes** : deux rectangles fusionnés qui ne partagent pas
+  leurs sommets laissaient des fentes d'un pixel (le noir du fond) dès que la
+  caméra tourne ; chaque face déborde de 3 cm (`E`).
+- **La caméra tournée coûte** (rendu logiciel, zoom 4, dessin attendu jusqu'au
+  bout) : ~14,5 ms contre ~10,5 de face (parois est et ouest). Les soldats se
+  trient dans l'axe de l'écran : un carré autour de la vue en dessinait six fois
+  trop (28 ms). L'élimination des faces arrière ne gagnait presque rien et
+  cachait des parois : abandonnée.
 - **Le brouillard** tramé sur tout l'écran rendait tout illisible : il s'épaissit
   seulement vers le haut de l'écran (le lointain).
 - Ordre des tirages : `nouvelleBataille` tire la météo (une branche du générateur),

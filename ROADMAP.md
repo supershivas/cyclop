@@ -23,21 +23,6 @@ Statuts : **à l'étude** · **validé** (Jérôme a tranché) · **en cours** �
   1 tient 7 ms, les zooms 4 et 8 de 8 à 16 ms sur un champ labouré : à trancher
 - [x] Lisibilité : cratère, boue, eau, soldat distinguables en gris
 
-## À trancher (dans le labo, v0.1.1)
-
-### Sol à facettes
-**Statut** : à l'étude — labo, Moteur › Sol › B
-**Constat** : Jérôme veut des formes plus organiques que les cubes.
-**Proposition** : sommets aux coins des cases, l'ombre des facettes dessine les
-cuvettes et les pentes. Défait la décision « 3D low poly cubique ».
-**Mesure** : voir le relevé du labo et `scripts/mesure.mjs --sol facettes`.
-
-### Soldats en sprites
-**Statut** : à l'étude — labo, Moteur › Soldats › B
-**Proposition** : de petits dessins en pixels (poses, casque de chaque camp),
-plus expressifs que les boîtes. Ouvre la voie aux poses (couché, tir, chute, corps)
-et à un atelier de dessin des soldats.
-
 ## À l'étude (validé dans le principe par le prompt de départ, pas construit)
 
 - **Tranchées** : 4 lignes par camp (3 secteur calme, 5 fortifié), boyaux,
@@ -54,3 +39,4 @@ et à un atelier de dessin des soldats.
 - **Méta** : le Mémorial, l'état-major (doctrines), les trophées déclaratifs.
 - **Bataille de 10 à 15 jours** (le lot minimal en fait trois).
 - **Son**, police d'identité auto-hébergée.
+- **Soldats en sprites** (poses, atelier de dessin) : essayés en v0.1.1, non retenus pour l'instant (`docs/archives/`).

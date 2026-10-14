@@ -5,8 +5,8 @@
    Les faces verticales (les parois tournées vers nous) d'au moins un demi-mètre
    prennent le ton plus sombre (OMBRE) ; une marche d'un quart garde la couleur
    du dessus (sinon chaque courbe de niveau des bosses se lit comme un trou). */
-import { INDICE } from './palette.js?v=0.1.1';
-import { ETAT, etat } from './terrain.js?v=0.1.1';
+import { INDICE } from './palette.js?v=0.2.0';
+import { ETAT, etat } from './terrain.js?v=0.2.0';
 
 const I = INDICE;
 // [terre jetée (plus claire), plat, creusé ou à l'ombre]
@@ -20,7 +20,7 @@ export const TONS = {
 // la paroi sous une case de cette couleur
 export const OMBRE = { h: 'g', g: 'b', b: 's', s: 't', t: 't', e: 's', r: 'g', o: 'r', n: 'n', x: 'x' };
 
-export function couleurCase(T, i, j, R, gel = false, creux = true) {
+export function couleurCase(T, i, j, R, gel = false) {
   const c = j * T.W + i;
   const e = etat(T, c, R, gel);
   if (e === ETAT.EAU || e === ETAT.GLACE) {
@@ -30,12 +30,11 @@ export function couleurCase(T, i, j, R, gel = false, creux = true) {
   // un cratère se lit d'un coup d'œil : le creux plus sombre, la lèvre de terre jetée plus claire
   // (les bosses, elles, se lisent par leurs parois : une trame de pente faisait du bruit partout)
   const d = T.diff[c];
-  // creux = false : le sol à facettes dessine le creux par son ombre (une case sombre redessinait un carré)
-  return TONS[e][d > 0 ? 0 : d < 0 && creux ? 2 : 1];
+  return TONS[e][d > 0 ? 0 : d < 0 ? 2 : 1];
 }
 
 // Toute une rangée, dans un tableau d'octets (la texture du sol)
-export function couleursLigne(T, j, R, gel, out, creux = true) {
+export function couleursLigne(T, j, R, gel, out) {
   const o = j * T.W;
-  for (let i = 0; i < T.W; i++) out[o + i] = couleurCase(T, i, j, R, gel, creux);
+  for (let i = 0; i < T.W; i++) out[o + i] = couleurCase(T, i, j, R, gel);
 }

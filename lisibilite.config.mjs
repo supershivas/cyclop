@@ -5,16 +5,8 @@
 import { PALETTE } from './js/palette.js';
 import { REGLAGES as R } from './js/data/reglages.js';
 import { tuile as t, ETAT } from './js/tuiles.js';
-import { SOLDATS } from './js/data/soldats.js';
 
 const tuile = (e, o) => t(R, e, o);
-// les sprites de soldats (variante du labo) : la couleur du camp et le casque remplacés par leur lettre
-const peint = (rows, lettre) => rows.map(r => r.replace(/[ck]/g, lettre));
-const soldats = {};
-for (const taille of Object.keys(SOLDATS.nous)) for (const pose of ['arret', 'marche1']) {
-  soldats[`nous ${taille} ${pose}`] = peint(SOLDATS.nous[taille][pose], 'n');
-  soldats[`en face ${taille} ${pose}`] = peint(SOLDATS.eux[taille][pose], 'x');
-}
 
 export default {
   palette: PALETTE,
@@ -54,7 +46,6 @@ export default {
       'soldat dans la boue': tuile(ETAT.BOUE, { soldat: 'n' }),
       'soldat d\'en face dans la boue': tuile(ETAT.BOUE, { soldat: 'x' }),
     },
-    'soldats en sprites (labo)': soldats,
   },
   // le rendu agrandit l'image d'un facteur entier (rendu3d.js : facteur = hauteur / 400, arrondi)
   poses: [

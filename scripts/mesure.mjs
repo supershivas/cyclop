@@ -3,7 +3,6 @@
 //
 //   node scripts/mesure.mjs                 → 8 000 soldats (4 000 par camp)
 //   node scripts/mesure.mjs --soldats 2000 --secondes 20
-//   node scripts/mesure.mjs --sol facettes --rendu sprites     (les variantes du labo)
 //
 // Le rendu est mesuré avec ?mesure=1 : chaque image attend la fin du dessin
 // (gl.finish), sinon on ne mesure que l'envoi des commandes. Trois vues : tout
@@ -11,13 +10,13 @@
 // barrages en cours (le sol se refait).
 import { servir, lancerChromium, options } from '../outils/navigateur.mjs';
 
-const o = options(process.argv.slice(2), { soldats: '8000', secondes: '12', largeur: '1280', hauteur: '800', sol: 'cubes', rendu: 'boites' });
+const o = options(process.argv.slice(2), { soldats: '8000', secondes: '12', largeur: '1280', hauteur: '800' });
 const srv = await servir('.');
 const nav = await lancerChromium();
 const page = await (await nav.newContext({ viewport: { width: +o.largeur, height: +o.hauteur } })).newPage();
 const erreurs = [];
 page.on('pageerror', e => erreurs.push(e.message));
-await page.goto(`${srv.base}index.html?debug=1&mesure=1&seed=7&soldats=${o.soldats}&sol=${o.sol}&soldats-rendu=${o.rendu}`);
+await page.goto(`${srv.base}index.html?debug=1&mesure=1&seed=7&soldats=${o.soldats}`);
 await page.waitForTimeout(600);
 await page.click('#nouvelle');
 await page.waitForTimeout(1500);
