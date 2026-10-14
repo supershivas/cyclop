@@ -1,7 +1,7 @@
 {
-  "version": "0.8.1",
+  "version": "0.8.2",
   "date": "2026-10-14",
   "changes": [
-    "L'écran titre montre le champ de bataille : vue de près, au coucher du soleil, sous la fumée, rendu par le jeu"
+    "L'écran titre : la caméra au ras du sol, sous un ciel bas, et une image différente à chaque lancement"
   ]
 }

@@ -1,5 +1,9 @@
 # Journal des versions
 
+## 0.8.2 — 2026-10-14
+
+- L'écran titre : la caméra au ras du sol, sous un ciel bas, et une image différente à chaque lancement
+
 ## 0.8.1 — 2026-10-14
 
 - L'écran titre montre le champ de bataille : vue de près, au coucher du soleil, sous la fumée, rendu par le jeu

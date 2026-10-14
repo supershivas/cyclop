@@ -22,12 +22,12 @@
    - Les soldats : instanciés (une boîte et son ombre) ; au zoom 1 et 2, un
      point de 2 × 2 pixels (la couleur du camp sur son ombre).
    - Les corps : un homme couché (instancié) ; au zoom 1 et 2, un pixel. */
-import { loadThree } from './three-lib.js?v=0.8.1';
-import { PALETTE, ORDRE, INDICE } from './palette.js?v=0.8.1';
-import { OMBRE, couleursLigne } from './apparence.js?v=0.8.1';
-import { MORCEAU, hauteurVueQ as hauteurQ, hauteurVueM as hauteurM } from './terrain.js?v=0.8.1';
-import { horloge } from './bataille.js?v=0.8.1';
-import { ligneY } from './tranchees.js?v=0.8.1';
+import { loadThree } from './three-lib.js?v=0.8.2';
+import { PALETTE, ORDRE, INDICE } from './palette.js?v=0.8.2';
+import { OMBRE, couleursLigne } from './apparence.js?v=0.8.2';
+import { MORCEAU, hauteurVueQ as hauteurQ, hauteurVueM as hauteurM } from './terrain.js?v=0.8.2';
+import { horloge } from './bataille.js?v=0.8.2';
+import { ligneY } from './tranchees.js?v=0.8.2';
 
 export const CAMERA = { yaw: 0.15, tangage: 0.95, fov: 30 };   // au départ : tournée de 9°, plongée de 54°, angle de 30°
 // la caméra respire : un balancement très lent, 2° en 23 s (Jérôme, v0.3.1 : variante D du labo retenue)
@@ -73,7 +73,7 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
   function projeter() {
     const p = ZOOMS[vue.zoom], D = distance(vue.zoom), o = versCamera(yawVu(), tangageVu());
     camera.fov = vue.fov; camera.aspect = vue.vw / vue.vh;
-    camera.near = D * 0.15; camera.far = D * 5;
+    camera.near = D * 0.15; camera.far = D * (vue.libre ? 6 : 5);       // (au ras du sol, la vue porte plus loin ; au-delà, le ciel bas)
     camera.updateProjectionMatrix();
     camera.position.set(vue.cx + o[0] * D, SOL_Y + o[1] * D, vue.cz + o[2] * D);
     camera.lookAt(vue.cx, SOL_Y, vue.cz);
@@ -426,15 +426,17 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
   function majArbres(e, b) {
     const m4 = new THREE.Matrix4();
     let o = 0;
+    // de loin (le sol à plat, ou plus loin de la caméra que le point visé, de 30 %, et 160 m au moins), un arbre n'est qu'un tronc
+    const cp = camera.position, lim = Math.max(160, distance(vue.zoom) * 1.3) ** 2;
+    const loin = a => plat() || (a.i - cp.x) ** 2 + (SOL_Y - cp.y) ** 2 + (a.j - cp.z) ** 2 > lim;
     for (const m of arbresMesh) {
       let n = 0;
-      if (m.userData.loin !== plat()) { m.count = 0; continue; }
       for (const a of T.arbres) {
-        if (a.abattu !== m.userData.abattu || a.v !== m.userData.v || !dansLaVue(a.i + 0.5, a.j + 0.5, e, b)) continue;
+        if (a.abattu !== m.userData.abattu || a.v !== m.userData.v || loin(a) !== m.userData.loin || !dansLaVue(a.i + 0.5, a.j + 0.5, e, b)) continue;
         const y = plat() ? SOL_Y : surface(a.i + 0.5, a.j + 0.5);
         m4.makeTranslation(a.i + 0.5, y, a.j + 0.5);
         m.setMatrixAt(n++, m4);
-        if (o < ARBRES_OMBRES) { aoPos[o * 4] = a.i + 0.5; aoPos[o * 4 + 1] = y; aoPos[o * 4 + 2] = a.j + 0.5; aoPos[o * 4 + 3] = a.abattu ? 1.2 : 6 + a.v; o++; }
+        if (o < ARBRES_OMBRES && !m.userData.loin) { aoPos[o * 4] = a.i + 0.5; aoPos[o * 4 + 1] = y; aoPos[o * 4 + 2] = a.j + 0.5; aoPos[o * 4 + 3] = a.abattu ? 1.2 : 6 + a.v; o++; }
       }
       m.count = n; m.instanceMatrix.needsUpdate = true;
     }
@@ -534,9 +536,12 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
     if (!vide) herbeMesh.visible = true;
     let k = 0;
     const { x: X, z: Z, c: Cc } = touffes;
+    // (pas plus loin de la caméra que le point visé, de 25 % : au-delà, une touffe ne fait qu'un pixel ; au ras du sol,
+    // sans cette limite, il y en avait 3 000 jusqu'à l'horizon)
+    const cp = camera.position, lim = (distance(vue.zoom) * 1.25) ** 2;
     for (let n = 0; n < X.length && k < TOUFFES_MAX; n++) {
       const x = X[n], y = Z[n];
-      if (x < x0 || x > x1 || y < z0 || y > z1 || !T.herbe[Cc[n]]) continue;
+      if (x < x0 || x > x1 || y < z0 || y > z1 || !T.herbe[Cc[n]] || (x - cp.x) ** 2 + (SOL_Y - cp.y) ** 2 + (y - cp.z) ** 2 > lim) continue;
       const cxp = e[0] * x + e[4] * SOL_Y + e[8] * y + e[12], cyp = e[1] * x + e[5] * SOL_Y + e[9] * y + e[13], cw = e[3] * x + e[7] * SOL_Y + e[11] * y + e[15];
       if (cxp < -1.05 * cw || cxp > 1.05 * cw || cyp < -1.1 * cw || cyp > 1.1 * cw) continue;
       tPos[k * 3] = x; tPos[k * 3 + 1] = surface(x, y); tPos[k * 3 + 2] = y;
@@ -1055,7 +1060,8 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
     const A = B.armee, n = A.n, p = ZOOMS[vue.zoom], aPlat = plat();
     // seulement ceux qu'on voit : le sol vu est un trapèze ; on garde ceux de son rectangle englobant
     const cs = coinsSol(vue.zoom, yawVu(), tangageVu());
-    const x0 = vue.cx + cs.x0 - 6, x1 = vue.cx + cs.x1 + 6, z0 = vue.cz + cs.z0 - 6, z1 = vue.cz + cs.z1 + 12;
+    // (un coin de l'écran regarde le ciel : tout le terrain peut être vu, le vrai tri se fait à l'écran)
+    const x0 = cs.ok ? vue.cx + cs.x0 - 6 : 0, x1 = cs.ok ? vue.cx + cs.x1 + 6 : T.W, z0 = cs.ok ? vue.cz + cs.z0 - 6 : 0, z1 = cs.ok ? vue.cz + cs.z1 + 12 : T.H;
     // puis le vrai test : projeté, il tombe dans l'écran (le trapèze n'est pas son rectangle)
     projeter();
     mVP.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse);
@@ -1222,7 +1228,15 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
       vue.cible.yaw = Math.max(-YAW_MAX, Math.min(YAW_MAX, vue.cible.yaw + dYaw));
       vue.cible.tangage = Math.max(TANGAGE_MIN, Math.min(TANGAGE_MAX, vue.cible.tangage + dTangage));
     },
+    // la caméra libre (l'écran titre, Jérôme v0.8.2) : n'importe quelle direction, jusqu'au ras du sol, sans bornes ;
+    // le ciel prend la couleur de la brume (le ciel bas)
+    cameraLibre(yaw, tangage) {
+      vue.libre = true;
+      vue.cible.yaw = vue.yaw = yaw; vue.cible.tangage = vue.tangage = tangage;
+      renderer.setClearColor(new THREE.Color(PALETTE.r), 1);
+    },
     placerCamera(yaw, tangage) {
+      if (vue.libre) { vue.libre = false; renderer.setClearColor(new THREE.Color(PALETTE.t), 1); }
       vue.cible.yaw = vue.yaw = Math.max(-YAW_MAX, Math.min(YAW_MAX, yaw));
       vue.cible.tangage = vue.tangage = Math.max(TANGAGE_MIN, Math.min(TANGAGE_MAX, tangage));
     },
@@ -1261,7 +1275,7 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
     return c.ok && c.x1 - c.x0 <= T.W && c.z1 - c.z0 + HAUT <= T.H;
   }
   function borner() {
-    if (!T) return;
+    if (!T || vue.libre) return;              // la caméra libre (l'écran titre) n'a pas de bornes
     // trop loin pour cet écran, même de face : on se rapproche
     while (vue.zoom < ZOOMS.length - 1 && !tient(vue.zoom, 0)) vue.zoom++;
     // trop tourné pour ce zoom : l'angle se réduit (le plus grand qui tient)

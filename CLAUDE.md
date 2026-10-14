@@ -61,9 +61,12 @@ la danse macabre, la catastrophe peinte avec calme. L'intention est dans `DESIGN
   (`majNuit` : lanternes le long des tranchées tenues, incendies, fusées).
 - **L'écran titre** (Jérôme, v0.8.1) : derrière le titre, le moteur du jeu montre une
   bataille de décor (`decor` de main.js, jamais sauvegardée) : un no man's land
-  labouré et gorgé de pluie, des morts, la vue proche qui glisse, l'heure arrêtée à
-  17 h 20 (ombres longues, le soir qui tombe), des obus au loin, des colonnes de fumée
-  (`fumer` de rendu3d.js). Le titre, le menu et la roue sont sur des plaques opaques.
+  labouré et gorgé de pluie, des morts, l'heure arrêtée au coucher du soleil (ombres
+  longues, le soir qui tombe), des obus au loin, des colonnes de fumée (`fumer` de
+  rendu3d.js). La caméra au ras du sol (`cameraLibre` : sans bornes, le ciel de la
+  couleur de la brume) et une image différente à chaque lancement : graine, lieu,
+  direction, heure entre 17 h et 17 h 45 (Jérôme, v0.8.2). Le titre, le menu et la
+  roue sont sur des plaques opaques.
 - **Plus d'arbres** (Jérôme, v0.8.0) : 150 dans le secteur et trois bois serrés (`bois`
   de secteur.js), autant dans les marges.
 - **La nuit et ses corvées** (Jérôme, v0.6.0) : une corvée par régiment (repos,
@@ -354,6 +357,11 @@ node outils/stamp-version.mjs            # après chaque changement de version.j
   138 000 triangles pour 2 000 hommes) ; de loin, les arbres ne sont plus qu'un tronc,
   sans ombre. Restent les fumées et la trame du soir : 8 000 soldats au zoom 4, 66 ms
   (47 en v0.7) ; trois jours de bataille, 26 ms tout dézoomé, 41 ms au zoom 4.
+- **Au ras du sol, on voit jusqu'à l'horizon** (l'écran titre) : 3 000 touffes d'herbe
+  et tous les arbres avec leurs branches (78 000 triangles, 11 images/s en rendu
+  logiciel). Les touffes s'arrêtent à 1,25 fois la distance du point visé, et un arbre
+  plus loin que 1,3 fois (160 m au moins) n'est qu'un tronc : 18 à 27 images/s. Un seuil
+  fixe de 70 m coupait l'herbe du jeu, où la caméra est haute (essayé, v0.8.2).
 - **La nuit sans couleur nouvelle** : la palette n'a pas de « nuit » ; le soir et la
   nuit sont une trame (Bayer 4 × 4) de la couleur la plus sombre, trouée en douceur
   autour des lumières, peintes chaque image dans une petite carte (un quart de la

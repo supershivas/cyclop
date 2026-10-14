@@ -1,23 +1,23 @@
 // Le cycle de vie : écran titre → bataille → nuit → fin ; pause active,
 // réglages, sauvegarde, mise à jour, debug. Les règles sont dans bataille.js
 // (pures), le dessin dans rendu3d.js (il ne modifie jamais l'état).
-import { createLoop } from './lib/loop.js?v=0.8.1';
-import { createKeys, stopTypeahead } from './lib/keys.js?v=0.8.1';
-import { createPointer, lockBrowserGestures } from './lib/pointer.js?v=0.8.1';
-import { createGamepad } from './lib/gamepad.js?v=0.8.1';
-import { createStore, autosave, pickJSONFile } from './lib/save.js?v=0.8.1';
-import { startUpdateCheck, loadVersion, loadChangelog, downloadJSON } from './lib/app-update.js?v=0.8.1';
-import { ROLES } from './palette.js?v=0.8.1';
-import { nouvelleBataille, avancer, aube, ordonnerMarche, ordonnerBarrage, horloge, effectifs, tronconsTenus, moralEnMots, terrainSous, rangDe, photo, restaurer, PAS, NOUS } from './bataille.js?v=0.8.1';
-import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.8.1';
-import { METEO } from './data/meteo.js?v=0.8.1';
-import { impact, hydroLignes } from './terrain.js?v=0.8.1';
-import { hash2 } from './lib/rng.js?v=0.8.1';
-import { creerRendu, CAMERA } from './rendu3d.js?v=0.8.1';
-import { identite, etatEnMots, experienceEnMots } from './identite.js?v=0.8.1';
-import { CORVEES } from './data/corvees.js?v=0.8.1';
-import { refusCorvee } from './nuit.js?v=0.8.1';
-import { chargerContenu } from './design-store.js?v=0.8.1';
+import { createLoop } from './lib/loop.js?v=0.8.2';
+import { createKeys, stopTypeahead } from './lib/keys.js?v=0.8.2';
+import { createPointer, lockBrowserGestures } from './lib/pointer.js?v=0.8.2';
+import { createGamepad } from './lib/gamepad.js?v=0.8.2';
+import { createStore, autosave, pickJSONFile } from './lib/save.js?v=0.8.2';
+import { startUpdateCheck, loadVersion, loadChangelog, downloadJSON } from './lib/app-update.js?v=0.8.2';
+import { ROLES } from './palette.js?v=0.8.2';
+import { nouvelleBataille, avancer, aube, ordonnerMarche, ordonnerBarrage, horloge, effectifs, tronconsTenus, moralEnMots, terrainSous, rangDe, photo, restaurer, PAS, NOUS } from './bataille.js?v=0.8.2';
+import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.8.2';
+import { METEO } from './data/meteo.js?v=0.8.2';
+import { impact, hydroLignes } from './terrain.js?v=0.8.2';
+import { hash2 } from './lib/rng.js?v=0.8.2';
+import { creerRendu, CAMERA } from './rendu3d.js?v=0.8.2';
+import { identite, etatEnMots, experienceEnMots } from './identite.js?v=0.8.2';
+import { CORVEES } from './data/corvees.js?v=0.8.2';
+import { refusCorvee } from './nuit.js?v=0.8.2';
+import { chargerContenu } from './design-store.js?v=0.8.2';
 
 const JEU = 'cyclopeen';
 const $ = id => document.getElementById(id);
@@ -56,46 +56,59 @@ addEventListener('resize', () => rendu.redimensionner());
 const enJeu = () => !!B && $('titre').hidden;
 
 /* Derrière l'écran titre, le moteur du jeu (Jérôme, v0.8.1) : une bataille de décor, jamais sauvegardée. Un
-   no man's land labouré et gorgé de pluie, des morts, la vue proche qui glisse lentement, l'heure arrêtée au
-   coucher du soleil (ombres longues, le soir qui tombe), des obus au loin et une fumée dense. */
-let D = null, decorT = 0, decorObus = 0;
+   no man's land labouré et gorgé de pluie, des morts, l'heure arrêtée au coucher du soleil (ombres longues, le
+   soir qui tombe), des obus au loin et une fumée dense. La caméra au ras du sol, et une image différente à
+   chaque lancement : la graine, le lieu, la direction, l'heure (Jérôme, v0.8.2). L'aspect seulement : le
+   hasard d'ici n'entre dans aucune règle. */
+let D = null, decorT = 0, decorObus = 0, decorVue = null;
 function decor() {
   if (D) return D;
-  D = nouvelleBataille(1916, R, { soldats: 240 });
-  const T = D.terrain, m = D.etat.marges, cx = m.x + 200, cz = m.y + 150;
-  for (let k = 0; k < 160; k++) impact(T, cx - 120 + hash2(k, 1, 3) * 240, cz - 60 + hash2(k, 2, 3) * 120, NOMS_CALIBRES[k % 3], R, k);
+  const hasard = Math.random;
+  D = nouvelleBataille(Math.floor(hasard() * 100000), R, { soldats: 240 });
+  const T = D.terrain, m = D.etat.marges;
+  // le lieu (dans le secteur), la direction (n'importe laquelle), la hauteur (quelques mètres), l'heure (17 h à 17 h 45)
+  decorVue = {
+    cx: m.x + 80 + hasard() * 240, cz: m.y + 70 + hasard() * 160,
+    yaw: hasard() * Math.PI * 2, tangage: 0.045 + hasard() * 0.04,
+    sens: hasard() < 0.5 ? -1 : 1, heure: 17 + hasard() * 0.75,
+  };
+  const { cx, cz } = decorVue;
+  for (let k = 0; k < 220; k++) impact(T, cx - 150 + hasard() * 300, cz - 150 + hasard() * 300, NOMS_CALIBRES[k % 3], R, k);
   for (let h = 0; h < 18; h++) hydroLignes(T, 0, T.H, METEO.pluie, R);
-  for (let k = 0; k < 180; k++) D.etat.corps.push([Math.round((cx - 110 + hash2(k, 5, 3) * 220) * 10), Math.round((cz - 55 + hash2(k, 6, 3) * 110) * 10), k % 3 ? 0 : 1, 1, 900000 + k]);
-  D.etat.meteo[0] = 'brouillard';
+  for (let k = 0; k < 220; k++) D.etat.corps.push([Math.round((cx - 130 + hasard() * 260) * 10), Math.round((cz - 130 + hasard() * 260) * 10), k % 3 ? 0 : 1, 1, 900000 + k]);
+  D.etat.meteo[0] = hasard() < 0.6 ? 'brouillard' : 'sec';
   return D;
 }
-// l'heure du décor : 17 h 20, arrêtée
-const tickSoir = () => Math.round(R.jour.duree / PAS * (17.33 - R.jour.heureDebut) / (R.jour.heureFin - R.jour.heureDebut));
+// l'heure du décor, arrêtée
+const tickDecor = h => Math.round(R.jour.duree / PAS * (h - R.jour.heureDebut) / (R.jour.heureFin - R.jour.heureDebut));
 function decorPas(dt) {
-  const d = decor(), m = d.etat.marges;
+  const d = decor(), v = decorVue;
   decorT += dt;
-  d.etat.tickJour = tickSoir();
-  // des obus, au loin et un peu partout
+  d.etat.tickJour = tickDecor(v.heure);
+  // des obus, devant la caméra, au loin
   if ((decorObus -= dt) < 0) {
-    decorObus = 1.2 + hash2(Math.floor(decorT * 10), 7, 3) * 2;
-    const k = Math.floor(decorT * 7);
-    ordonnerBarrage(d, NOMS_CALIBRES[k % 3], rendu.vue.cx - 70 + hash2(k, 8, 3) * 140, rendu.vue.cz - 50 + hash2(k, 9, 3) * 60, 1);
+    decorObus = 1.2 + Math.random() * 2;
+    const loin = 60 + Math.random() * 160, cote = (Math.random() - 0.5) * 140;
+    const fx = -Math.sin(v.yaw), fz = -Math.cos(v.yaw);
+    ordonnerBarrage(d, NOMS_CALIBRES[Math.floor(Math.random() * 3)], rendu.vue.cx + fx * loin - fz * cote, rendu.vue.cz + fz * loin + fx * cote, 1);
   }
   const ev = avancer(d);
-  // la fumée dense : des colonnes qui montent de quelques trous (fixes) et dérivent avec le vent
-  for (let k = 0; k < 8; k++) {
+  // la fumée dense : des colonnes qui montent de quelques trous et dérivent avec le vent
+  for (let k = 0; k < 10; k++) {
     if (Math.random() > 0.35) continue;
-    rendu.fumer(m.x + 200 - 110 + hash2(k, 11, 3) * 220, m.y + 150 - 45 + hash2(k, 12, 3) * 80);
+    rendu.fumer(v.cx - 140 + hash2(k, 11, 3) * 280, v.cz - 140 + hash2(k, 12, 3) * 280);
   }
-  // la vue glisse lentement le long du front, et revient
-  rendu.vue.cx = m.x + 200 + Math.sin(decorT * 0.02) * 80;
-  rendu.vue.cz = m.y + 150 + Math.sin(decorT * 0.013) * 12;
+  // la vue glisse lentement de côté, et revient
+  const g = Math.sin(decorT * 0.03) * 40 * v.sens;
+  rendu.vue.cx = v.cx + Math.cos(v.yaw) * g;
+  rendu.vue.cz = v.cz - Math.sin(v.yaw) * g;
   return ev;
 }
 function montrerDecor() {
-  rendu.attacher(decor());
+  decor();
+  rendu.attacher(D);
   rendu.vue.zoom = 4;
-  rendu.placerCamera(0.25, 0.82);
+  rendu.cameraLibre(decorVue.yaw, decorVue.tangage);
   decorObus = 0.5;
 }
 function montrerTitre() {
@@ -743,7 +756,7 @@ startUpdateCheck({
 
 // ─── Mode debug (section 18) : chargé seulement avec ?debug=1 ──────────────
 if (DEBUG) {
-  const { installDebug, seedFromUrl } = await import('./lib/debug.js?v=0.8.1');
+  const { installDebug, seedFromUrl } = await import('./lib/debug.js?v=0.8.2');
   window.__seed = seedFromUrl() ?? undefined;
   installDebug({
     state: () => B && { ...horloge(B), effectifs: effectifs(B), pertes: B.etat.pertes, impacts: B.etat.impacts.length, enJeu: enJeu(), pause: loop.paused },
