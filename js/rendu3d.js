@@ -21,11 +21,11 @@
      de Pierre).
    - Les soldats : instanciés (une boîte et son ombre) ; au zoom 1 et 2, un
      point de 2 × 2 pixels (la couleur du camp sur son ombre). */
-import { loadThree } from './three-lib.js?v=0.3.1';
-import { PALETTE, ORDRE, INDICE } from './palette.js?v=0.3.1';
-import { OMBRE, couleursLigne } from './apparence.js?v=0.3.1';
-import { MORCEAU, hauteurVueQ as hauteurQ, hauteurVueM as hauteurM } from './terrain.js?v=0.3.1';
-import { horloge } from './bataille.js?v=0.3.1';
+import { loadThree } from './three-lib.js?v=0.3.2';
+import { PALETTE, ORDRE, INDICE } from './palette.js?v=0.3.2';
+import { OMBRE, couleursLigne } from './apparence.js?v=0.3.2';
+import { MORCEAU, hauteurVueQ as hauteurQ, hauteurVueM as hauteurM } from './terrain.js?v=0.3.2';
+import { horloge } from './bataille.js?v=0.3.2';
 
 export const CAMERA = { yaw: 0.15, tangage: 0.95, fov: 30 };   // au départ : tournée de 9°, plongée de 54°, angle de 30°
 // la caméra respire : un balancement très lent, 2° en 23 s (Jérôme, v0.3.1 : variante D du labo retenue)

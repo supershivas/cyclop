@@ -9,8 +9,8 @@
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta property="og:image" content="og.png">
-<link rel="stylesheet" href="js/lib/game.css?v=0.3.1">
-<link rel="stylesheet" href="css/style.css?v=0.3.1">
+<link rel="stylesheet" href="js/lib/game.css?v=0.3.2">
+<link rel="stylesheet" href="css/style.css?v=0.3.2">
 </head>
 <body>
 <div class="jeu-ecran" id="ecran">
@@ -19,6 +19,7 @@
   <div class="repere" id="repere" hidden aria-hidden="true"></div>
   <div class="repere-soldat" id="repere-soldat" hidden aria-hidden="true"></div>
   <div class="cadre" id="cadre" hidden aria-hidden="true"></div>
+  <div class="plaque bulle" id="bulle" hidden aria-hidden="true"></div>
 
   <!-- HUD : en DOM par-dessus le canvas, dans la palette du jeu -->
   <div class="hud" id="hud" hidden>
@@ -34,7 +35,9 @@
         </button>
         <h2 id="fiche-nom"></h2>
         <p class="discret" id="fiche-qui"></p>
+        <button class="lien" id="fiche-regiment" hidden></button>
         <ul id="fiche-etat"></ul>
+        <div class="fiche-liste" id="fiche-liste"></div>
       </section>
       <button class="icone plaque" id="pause" aria-label="Menu">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14M16 5v14"/></svg>
@@ -96,7 +99,8 @@
   <details>
     <summary>Commandes</summary>
     <dl class="commandes">
-      <dt>Clic</dt><dd>choisir un régiment (Maj : en ajouter) ; sur un homme, sa fiche</dd>
+      <dt>Clic</dt><dd>choisir un régiment (Maj : en ajouter) et voir sa fiche ; de près, sur un homme, la sienne</dd>
+      <dt>Survol</dt><dd>de près, qui est cet homme ; de loin, ce que compte son régiment</dd>
       <dt>Glisser</dt><dd>choisir au cadre</dd>
       <dt>Clic droit</dt><dd>marcher jusque-là</dd>
       <dt>1, 2, 3</dt><dd>viser un barrage de 75, 155, 220, puis clic</dd>
@@ -131,6 +135,6 @@
 </dialog>
 
 <div class="jeu-toast" id="toast" role="status" hidden></div>
-<script type="module" src="js/main.js?v=0.3.1"></script>
+<script type="module" src="js/main.js?v=0.3.2"></script>
 </body>
 </html>

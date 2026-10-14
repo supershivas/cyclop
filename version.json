@@ -1,7 +1,8 @@
 {
-  "version": "0.3.1",
+  "version": "0.3.2",
   "date": "2026-10-14",
   "changes": [
-    "La caméra respire : elle se balance d'elle-même, très lentement"
+    "Survolez un homme pour savoir qui il est ; de loin, un régiment pour ses pertes",
+    "La fiche d'un régiment : ses officiers, ses blessés, ses morts, et leurs fiches"
   ]
 }

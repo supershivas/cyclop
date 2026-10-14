@@ -70,6 +70,18 @@
 .fiche h2 { margin: 0 0 2px; font-size: 16px; font-weight: normal; }
 .fiche ul { margin: 6px 0 0; padding-left: 1.1em; }
 .fiche-fermer { position: absolute; top: 0; right: 0; }
+.fiche h3 { margin: var(--pas) 0 0; font-size: var(--texte); font-weight: normal; color: var(--jeu-accent); }
+.fiche-liste { max-height: 40dvh; overflow-y: auto; }
+.fiche-liste:empty { display: none; }
+.fiche-liste ul { list-style: none; padding: 0; margin: 2px 0 0; }
+.lien, .fiche-liste .nom {
+  display: block; width: 100%; min-height: 28px; padding: 2px 0; text-align: left;
+  background: none; border: 0; color: var(--jeu-encre); font: inherit; text-decoration: underline; text-underline-offset: 3px;
+}
+.lien { color: var(--jeu-nous); }
+.lien[hidden], .fiche ul:empty { display: none; }
+.bulle { position: absolute; left: 0; top: 0; max-width: 40ch; pointer-events: none; z-index: 2; }
+@media (hover: hover) { .lien:hover, .fiche-liste .nom:hover { color: var(--jeu-accent); } }
 .cadre { position: absolute; border: 1px solid var(--jeu-encre); pointer-events: none; }
 
 .icone { display: grid; place-items: center; width: var(--jeu-cible); height: var(--jeu-cible); padding: 0; background: none; border: 0; color: var(--jeu-encre); }

@@ -1,5 +1,10 @@
 # Journal des versions
 
+## 0.3.2 — 2026-10-14
+
+- Survolez un homme pour savoir qui il est ; de loin, un régiment pour ses pertes
+- La fiche d'un régiment : ses officiers, ses blessés, ses morts, et leurs fiches
+
 ## 0.3.1 — 2026-10-14
 
 - La caméra respire : elle se balance d'elle-même, très lentement

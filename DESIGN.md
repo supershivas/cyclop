@@ -93,6 +93,13 @@ des obus et de ceux qui tombent à côté. On clique un homme : sa fiche dit qui
 il est et ce qu'il endure, sobrement. Mort, sa fiche le dit (le Mémorial, plus
 tard, les gardera tous). (Jérôme, v0.3.0)
 
+De près, on regarde des hommes : le survol dit qui il est. De loin, on regarde
+des régiments : le survol dit combien ils sont encore, combien sont blessés,
+combien sont morts ; un clic ouvre la fiche du régiment, d'où l'on va à celle de
+chaque officier, de chaque blessé, de chaque mort. (Jérôme, v0.3.2)
+
+Plus tard, certains prendront de l'expérience (`[À VALIDER]` : voir `ROADMAP.md`).
+
 ### En face
 
 Des barrages sur nos hommes les plus serrés, des avances de temps en temps ; un

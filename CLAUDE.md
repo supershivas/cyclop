@@ -38,7 +38,11 @@ la danse macabre, la catastrophe peinte avec calme. L'intention est dans `DESIGN
   régiment : un capitaine, deux lieutenants, un adjudant, des sergents, des
   caporaux, des soldats de 1re et 2e classe ; les grades allemands en face) et un
   état : fatigue des jambes et des bras, blessure (bras, jambe, tête), peur. Un clic
-  sur un homme ouvre sa fiche (Jérôme, v0.3.0).
+  sur un homme ouvre sa fiche (Jérôme, v0.3.0). De près (3 pixels par mètre et
+  plus), le survol et le clic montrent un homme ; de loin, son régiment (hommes,
+  blessés, morts, et la liste des officiers, des blessés et des morts, chaque nom
+  ouvrant la fiche de l'homme) (Jérôme, v0.3.2). Un mort n'est gardé nulle part :
+  c'est un numéro de son régiment qui n'est plus dans la foule.
 - **Session** : un run = une bataille de 10 à 15 jours sur un secteur (le lot
   minimal : 3 jours). Progression permanente prévue (Mémorial, état-major,
   trophées) : pas encore construite.
@@ -91,6 +95,7 @@ le fond des boîtes de dialogue (`::backdrop` de `game.css`).
 | Action | Clavier | Souris |
 |---|---|---|
 | Choisir un régiment | T (tous) | clic (Maj : ajouter), glisser (cadre) |
+| Voir un homme, un régiment | — | survol ; clic (de près : un homme ; de loin : son régiment) |
 | Marcher | — | clic droit |
 | Barrage de 75, 155, 220 | 1, 2, 3 (touche physique) puis clic | bouton de la batterie puis clic |
 | Arrêter le temps (pause active) | Espace | — |
@@ -174,8 +179,8 @@ le fond des boîtes de dialogue (`::backdrop` de `game.css`).
   du champ, jusqu'au socle) existent pour la caméra tournée ; l'ouest, éclairé,
   garde la couleur du dessus. `deplacerEcran`, `tourner`, `placerCamera`.
 - `js/main.js` — écran titre → bataille → nuit → fin ; le zoom et la caméra
-  gardés dans `cyclopeen:prefs` ; la fiche d'un soldat (clic sur un homme, Échap
-  la ferme) et son repère ; HUD (horloge, prévision,
+  gardés dans `cyclopeen:prefs` ; les fiches (un homme, un régiment ; Échap
+  les ferme), le repère de l'homme et la bulle du survol (`majBulle`, chaque image) ; HUD (horloge, prévision,
   morts des deux camps, batteries, régiments choisis, noms de nos régiments au-
   dessus d'eux) ; commandes ; sauvegarde ; mise à jour ; mode debug ;
   `window.cyclopStats()`.
@@ -196,7 +201,7 @@ le fond des boîtes de dialogue (`::backdrop` de `game.css`).
 
 - `?debug=1` : `window.__jeu` (`state`, `stats`, `avancer(n, passerNuits)`,
   `barrage(cal, x, y, camp)`, `marche(ids, x, y)`, `zoom(i)`, `camera(yaw, k)`, `teleport`,
-  `bataille()`, `rendu()`, `fiche()`), `&seed=7`. F9 masque le panneau. Les
+  `bataille()`, `rendu()`, `fiche()`, `survol(x, y)`), `&seed=7`. F9 masque le panneau. Les
   coordonnées du mode debug sont celles du **secteur** (0..400, 0..300) : les marges
   s'ajoutent dans `main.js`.
 - `?soldats=8000` : une bataille de 8 000 soldats (les deux camps).
