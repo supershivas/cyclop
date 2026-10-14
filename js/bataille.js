@@ -14,14 +14,14 @@
    La sauvegarde (photo) garde la graine, la liste compacte des impacts, l'état
    de la foule et les petites couches de logique ; jamais le relief : il se
    rejoue depuis la graine et les impacts (rejouerTerrain). */
-import { createRng } from './lib/rng.js?v=0.3.0';
-import { creerTerrain, impact, hydroLignes } from './terrain.js?v=0.3.0';
-import { creerArmee, ajouterSoldat, construireGrille, pasArmee, tuerDans, effrayer, reposer, compacter, photoArmee, restaurerArmee, b64, deB64, DENSITE } from './army.js?v=0.3.0';
-import { calculerCouts, creerCacheChamps, dimensionsCouts, BLOC } from './champs.js?v=0.3.0';
-import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.3.0';
-import { METEO, TRANSITIONS, PREVISION_JUSTE } from './data/meteo.js?v=0.3.0';
-import { SECTEURS } from './data/secteur.js?v=0.3.0';
-import { REGIMENTS } from './data/lexique.js?v=0.3.0';
+import { createRng } from './lib/rng.js?v=0.3.1';
+import { creerTerrain, impact, hydroLignes } from './terrain.js?v=0.3.1';
+import { creerArmee, ajouterSoldat, construireGrille, pasArmee, tuerDans, effrayer, reposer, compacter, photoArmee, restaurerArmee, b64, deB64, DENSITE } from './army.js?v=0.3.1';
+import { calculerCouts, creerCacheChamps, dimensionsCouts, BLOC } from './champs.js?v=0.3.1';
+import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.3.1';
+import { METEO, TRANSITIONS, PREVISION_JUSTE } from './data/meteo.js?v=0.3.1';
+import { SECTEURS } from './data/secteur.js?v=0.3.1';
+import { REGIMENTS } from './data/lexique.js?v=0.3.1';
 
 export const PAS = 1 / 30;                 // s de jeu par pas
 export const NOUS = 0, EUX = 1;

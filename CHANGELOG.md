@@ -1,5 +1,9 @@
 # Journal des versions
 
+## 0.3.1 — 2026-10-14
+
+- La caméra respire : elle se balance d'elle-même, très lentement
+
 ## 0.3.0 — 2026-10-14
 
 - La caméra voit en perspective : les régiments lointains paraissent plus petits

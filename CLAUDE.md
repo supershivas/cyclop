@@ -23,7 +23,9 @@ la danse macabre, la catastrophe peinte avec calme. L'intention est dans `DESIGN
 - **Vue et rendu** : 3D low poly cubique, three.js, **perspective** à angle
   étroit (30°), plongée de 54°, tournée de 9° : les régiments lointains paraissent
   plus petits (Jérôme, v0.3.0 : c'est cela, « l'angle ») ; on la tourne (jusqu'à
-  34°) et l'incline un peu, en douceur ; elle ne sort jamais du terrain. Zoom par
+  34°) et l'incline un peu, en douceur ; elle respire (un balancement de 2° en
+  23 s, coupé si le système demande un mouvement réduit ; Jérôme, v0.3.1) ; elle
+  ne sort jamais du terrain. Zoom par
   facteurs entiers au point visé (1, 2, 3, 4, 6, 8 pixels par mètre) ; aux zooms
   1 et 2, chaque soldat est un point. Sol en cubes et soldats en boîtes (Jérôme, v0.2.0 :
   les facettes et les sprites essayés au labo ne sont pas retenus). Profil game-system :
@@ -165,7 +167,8 @@ le fond des boîtes de dialogue (`::backdrop` de `game.css`).
   instanciés ; éclats et fumée d'obus ; pluie ; brouillard tramé (plus épais vers
   le haut de l'écran). `versTerrain` (un rayon jusqu'au sol) / `versEcran`. Au
   loin (au-delà du point visé), un morceau n'est plus que des facettes de 5 m sans
-  parois (`construireGros`). Respiration (variante du labo, `respiration`). Le
+  parois (`construireGros`). La respiration (`RESPIRATION`) s'ajoute à l'angle
+  choisi (`souffle`), dans le dessin comme dans les conversions. Le
   rendu ne modifie jamais l'état. Un morceau du sol se refait aussi quand un de ses voisins change (ses
   parois sud, est et ouest en dépendent). Les parois est et ouest (et les bords
   du champ, jusqu'au socle) existent pour la caméra tournée ; l'ouest, éclairé,
@@ -179,8 +182,8 @@ le fond des boîtes de dialogue (`::backdrop` de `game.css`).
 - `index.html`, `css/style.css` — l'écran, le HUD et les dialogues (palette du jeu).
 - `labo.html`, `js/labo.js` — le labo : échelle, sols et cratères (couleur et
   gris), palette, le moteur en direct (zoom 4, zoom 1, après un jour de pluie,
-  gel), la caméra (perspective légère / sans perspective / plus de perspective /
-  respiration lente / marquée), les calibres. Les
+  gel), la caméra (perspective et respiration / immobile / sans perspective / plus
+  de perspective / respiration marquée), les calibres. Les
   sujets du moteur affichent ce que coûte le dessin et proposent les zooms.
 - `atelier.html`, `js/atelier.js`, `js/design-store.js` — l'atelier : les réglages
   chiffrés, publiés dans `assets/design/reglages.json`.

@@ -2,17 +2,17 @@
 // Chaque sujet utilise les mêmes modules que le jeu (terrain, apparence,
 // rendu three.js) : ce qu'on voit ici est ce que le jeu dessinera. Ajouter un
 // sujet ou une variante = ajouter une entrée dans GROUPES.
-import { mountLabo } from './lib/labo-shell.js?v=0.3.0';
-import { spriteCanvas, paletteToGPL, paletteToHex } from './lib/sprites.js?v=0.3.0';
-import { PALETTE, ROLES } from './palette.js?v=0.3.0';
-import { chargerContenu } from './design-store.js?v=0.3.0';
-import { tuile, ETAT } from './tuiles.js?v=0.3.0';
-import { creerTerrain, impact, hydroLignes } from './terrain.js?v=0.3.0';
-import { CALIBRES } from './data/calibres.js?v=0.3.0';
-import { METEO } from './data/meteo.js?v=0.3.0';
-import { nouvelleBataille, avancer, ordonnerMarche } from './bataille.js?v=0.3.0';
-import { creerRendu, ZOOMS } from './rendu3d.js?v=0.3.0';
-import { hash2 } from './lib/rng.js?v=0.3.0';
+import { mountLabo } from './lib/labo-shell.js?v=0.3.1';
+import { spriteCanvas, paletteToGPL, paletteToHex } from './lib/sprites.js?v=0.3.1';
+import { PALETTE, ROLES } from './palette.js?v=0.3.1';
+import { chargerContenu } from './design-store.js?v=0.3.1';
+import { tuile, ETAT } from './tuiles.js?v=0.3.1';
+import { creerTerrain, impact, hydroLignes } from './terrain.js?v=0.3.1';
+import { CALIBRES } from './data/calibres.js?v=0.3.1';
+import { METEO } from './data/meteo.js?v=0.3.1';
+import { nouvelleBataille, avancer, ordonnerMarche } from './bataille.js?v=0.3.1';
+import { creerRendu, ZOOMS } from './rendu3d.js?v=0.3.1';
+import { hash2 } from './lib/rng.js?v=0.3.1';
 
 document.documentElement.style.setProperty('--jeu-accent', ROLES.accent);
 const NOM = document.title.replace(/^Labo — /, ''); // le nom vient de la page (une apostrophe ne casse rien)
@@ -80,7 +80,7 @@ function tuiles(stage, gris = false) {
 }
 
 // ─── Le moteur, en direct : le rendu du jeu sur une petite bataille ───
-function moteur(stage, { zoom = 3, pluie = false, gel = false, soldats = 600, cz = 185, camera = null, respiration = 0 } = {}) {
+function moteur(stage, { zoom = 3, pluie = false, gel = false, soldats = 600, cz = 185, camera = null, respiration = undefined } = {}) {
   const boite = el('div'); boite.style.cssText = 'position:relative;width:100%;height:min(70vh,560px);overflow:hidden';
   const canvas = el('canvas'); canvas.style.cssText = 'position:absolute;left:0;top:0;image-rendering:pixelated';
   // le relevé : ce que coûte cette variante (le dessin attendu jusqu'au bout), et des zooms à essayer
@@ -159,11 +159,11 @@ const GROUPES = [
       { title: 'Le gel', note: 'Le même champ, gelé : l\'eau devient de la glace, la boue porte.', render: s => moteur(s, { zoom: 3, gel: true }) },
     ] },
     { id: 'camera', title: 'Caméra', variants: [
-      { title: 'Perspective légère', note: 'La caméra du jeu : un angle de 30°, plongée de 54°, tournée de 9° : les régiments lointains paraissent plus petits. On la tourne et l\'incline un peu (A et E, R et F, ou le bouton droit).', status: 'actuelle', render: s => moteur(s, { zoom: 3, pluie: true }) },
-      { title: 'Sans perspective', note: 'Presque l\'ancienne caméra (v0.2) : un angle de 4°, tout a la même taille de près comme de loin.', status: 'ancienne', render: s => moteur(s, { zoom: 3, pluie: true, camera: { fov: 4 } }) },
+      { title: 'Perspective et respiration', note: 'La caméra du jeu : un angle de 30°, plongée de 54°, tournée de 9° (les régiments lointains paraissent plus petits), et elle se balance d\'elle-même, très lentement (2° en 23 s) : le champ vit même quand rien ne bouge.', status: 'actuelle', render: s => moteur(s, { zoom: 3, pluie: true }) },
+      { title: 'Immobile', note: 'La même perspective, sans la respiration (v0.3.0).', status: 'ancienne', render: s => moteur(s, { zoom: 3, pluie: true, respiration: 0 }) },
+      { title: 'Sans perspective', note: 'Presque la caméra de la v0.2 : un angle de 4°, tout a la même taille de près comme de loin.', status: 'ancienne', render: s => moteur(s, { zoom: 3, pluie: true, camera: { fov: 4 }, respiration: 0 }) },
       { title: 'Plus de perspective', note: 'Un angle de 50° et une plongée de 45° : le lointain rapetisse vite, l\'horizon se rapproche.', render: s => moteur(s, { zoom: 3, pluie: true, camera: { fov: 50, tangage: 0.8 } }) },
-      { title: 'Respiration lente', note: 'La perspective du jeu, et la caméra qui se balance d\'elle-même, très lentement (2° en 23 s, un peu de plongée en 31 s) : le champ vit même quand rien ne bouge.', render: s => moteur(s, { zoom: 3, pluie: true, respiration: 0.035 }) },
-      { title: 'Respiration marquée', note: 'Le même balancement, deux fois plus ample (4°).', render: s => moteur(s, { zoom: 3, pluie: true, respiration: 0.07 }) },
+      { title: 'Respiration marquée', note: 'Le balancement deux fois plus ample (4°).', render: s => moteur(s, { zoom: 3, pluie: true, respiration: 0.07 }) },
     ] },
     { id: 'calibres', title: 'Calibres', variants: Object.entries(CALIBRES).map(([cal, C], k) => ({
       title: cal, note: `Motif ${C.motif.length} × ${C.motif.length}, ${C.salve} obus par barrage, rayon mortel ${C.rayon} m, recharge ${C.recharge} s.`,

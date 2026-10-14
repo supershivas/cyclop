@@ -21,13 +21,15 @@
      de Pierre).
    - Les soldats : instanciés (une boîte et son ombre) ; au zoom 1 et 2, un
      point de 2 × 2 pixels (la couleur du camp sur son ombre). */
-import { loadThree } from './three-lib.js?v=0.3.0';
-import { PALETTE, ORDRE, INDICE } from './palette.js?v=0.3.0';
-import { OMBRE, couleursLigne } from './apparence.js?v=0.3.0';
-import { MORCEAU, hauteurVueQ as hauteurQ, hauteurVueM as hauteurM } from './terrain.js?v=0.3.0';
-import { horloge } from './bataille.js?v=0.3.0';
+import { loadThree } from './three-lib.js?v=0.3.1';
+import { PALETTE, ORDRE, INDICE } from './palette.js?v=0.3.1';
+import { OMBRE, couleursLigne } from './apparence.js?v=0.3.1';
+import { MORCEAU, hauteurVueQ as hauteurQ, hauteurVueM as hauteurM } from './terrain.js?v=0.3.1';
+import { horloge } from './bataille.js?v=0.3.1';
 
 export const CAMERA = { yaw: 0.15, tangage: 0.95, fov: 30 };   // au départ : tournée de 9°, plongée de 54°, angle de 30°
+// la caméra respire : un balancement très lent, 2° en 23 s (Jérôme, v0.3.1 : variante D du labo retenue)
+export const RESPIRATION = 0.035;
 export const YAW_MAX = 0.6, TANGAGE_MIN = 0.7, TANGAGE_MAX = 1.35;
 const SOL_Y = 3;                              // m : la hauteur moyenne du sol (le point visé, le sol à plat des zooms 1 et 2)
 export const ZOOMS = [1, 2, 3, 4, 6, 8];      // pixels (logiques) par mètre
@@ -38,8 +40,10 @@ const PLUIE = 1600, ECLATS = 900;
 const HAUT = 8;                               // m : marge du bas de l'écran, où un sol en hauteur remonte (borner)
 const SOCLE = -8;                             // m : le bas de la coupe du terrain (bord sud)
 
-/* respiration : l'amplitude (rad) d'un lent balancement de la caméra (variante du labo ; 0 dans le jeu). */
-export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera: camDepart = null, respiration = 0 } = {}) {
+/* respiration : l'amplitude (rad) du lent balancement de la caméra (0 : immobile). */
+export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera: camDepart = null, respiration = RESPIRATION } = {}) {
+  // un mouvement réduit demandé par le système : la caméra ne bouge pas d'elle-même
+  if (typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches) respiration = 0;
   const THREE = await loadThree();
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: false, powerPreference: 'high-performance' });
   renderer.setPixelRatio(1);
