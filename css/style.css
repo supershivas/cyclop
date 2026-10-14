@@ -61,6 +61,15 @@
   position: absolute; left: 0; top: 0; width: 13px; height: 13px;
   border: 2px solid var(--jeu-encre); pointer-events: none;
 }
+.repere-soldat {
+  position: absolute; left: 0; top: 0; width: 9px; height: 5px;
+  border: 2px solid var(--jeu-encre); border-top: 0; pointer-events: none;
+  margin-top: -14px;
+}
+.fiche { margin-left: auto; position: relative; width: min(34ch, 60vw); padding-right: calc(var(--jeu-cible) + 4px); }
+.fiche h2 { margin: 0 0 2px; font-size: 16px; font-weight: normal; }
+.fiche ul { margin: 6px 0 0; padding-left: 1.1em; }
+.fiche-fermer { position: absolute; top: 0; right: 0; }
 .cadre { position: absolute; border: 1px solid var(--jeu-encre); pointer-events: none; }
 
 .icone { display: grid; place-items: center; width: var(--jeu-cible); height: var(--jeu-cible); padding: 0; background: none; border: 0; color: var(--jeu-encre); }

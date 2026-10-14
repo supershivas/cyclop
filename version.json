@@ -1,8 +1,9 @@
 {
-  "version": "0.2.0",
+  "version": "0.3.0",
   "date": "2026-10-14",
   "changes": [
-    "La caméra a un léger angle : on sent la profondeur du champ",
-    "On la tourne et l'incline un peu (A et E, R et F, ou en glissant avec le bouton droit)"
+    "La caméra voit en perspective : les régiments lointains paraissent plus petits",
+    "Chaque soldat a un nom, un âge, un grade et un état (fatigue, blessure, peur) : cliquez-le",
+    "Dézoomer garde toujours le terrain à l'écran : il déborde du secteur"
   ]
 }

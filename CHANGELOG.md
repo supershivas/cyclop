@@ -1,5 +1,13 @@
 # Journal des versions
 
+## 0.3.0 — 2026-10-14
+
+- La caméra voit en perspective : les régiments lointains paraissent plus petits
+- Chaque soldat a un nom, un âge, un grade et un état : cliquez-le
+- Les hommes se fatiguent, sont blessés (bras, jambe, tête), ont peur
+- Dézoomer garde toujours le terrain à l'écran : il déborde du secteur
+- Labo : la caméra qui respire, très lentement
+
 ## 0.2.0 — 2026-10-14
 
 - La caméra a un léger angle : on sent la profondeur du champ

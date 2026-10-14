@@ -85,6 +85,14 @@ Chaque soldat a une place dans la formation de son régiment ; loin d'elle, il s
 un champ de coûts qui contourne la boue et les marches de deux mètres. Il tire
 vers le carré d'ennemis le plus dense de son front ; un creux l'abrite.
 
+### Les hommes
+
+Chacun a un nom, un âge, un grade, et ce qu'il endure : des jambes lourdes
+d'avoir marché dans la boue, des bras las d'avoir tiré, une blessure, la peur
+des obus et de ceux qui tombent à côté. On clique un homme : sa fiche dit qui
+il est et ce qu'il endure, sobrement. Mort, sa fiche le dit (le Mémorial, plus
+tard, les gardera tous). (Jérôme, v0.3.0)
+
 ### En face
 
 Des barrages sur nos hommes les plus serrés, des avances de temps en temps ; un

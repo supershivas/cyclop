@@ -16,8 +16,8 @@
      nuit elle se fait en lot.
    - Les versions (`versionLigne`, `versionMorceau`) disent au rendu ce qui a
      changé ; le terrain ne connaît pas le rendu. */
-import { hash2 } from './lib/rng.js?v=0.2.0';
-import { CALIBRES } from './data/calibres.js?v=0.2.0';
+import { hash2 } from './lib/rng.js?v=0.3.0';
+import { CALIBRES } from './data/calibres.js?v=0.3.0';
 
 export const ETAT = { SEC: 0, HUMIDE: 1, BOUE: 2, EAU: 3, GLACE: 4 };
 export const MORCEAU = 25;             // cases : le côté d'un morceau de maillage (mesuré, rendu logiciel : à 100, la moitié du champ restait dessinée au zoom 4 ; à 25, 6 500 triangles au lieu de 15 600 au zoom 8)
@@ -36,22 +36,24 @@ function bruit(x, y, echelle, graine) {
 /* Le terrain d'un secteur, depuis une graine. Les arbres sont tirés ici
    (positions), leur état (abattu) vient des impacts. */
 export function creerTerrain(graine, secteur, R) {
-  const W = secteur.largeur, H = secteur.hauteur, N = W * H;
+  // ox, oy : où commence le secteur de bataille dans le terrain (les marges autour) ; le bruit est pris
+  // dans les coordonnées du secteur, pour que le relief de la bataille ne dépende pas des marges
+  const W = secteur.largeur, H = secteur.hauteur, N = W * H, ox = secteur.ox || 0, oy = secteur.oy || 0;
   const base = new Int16Array(N), diff = new Int8Array(N);
   const nappe = new Float32Array(N);            // m (absolu) : le niveau de la nappe sous chaque case
   const eau = new Float32Array(N), humid = new Float32Array(N);
   const g = graine | 0;
   const niveau = R.terrain.nappeMin + bruit(7, 3, 1, g + 99) * (R.terrain.nappeMax - R.terrain.nappeMin);
   for (let j = 0; j < H; j++) for (let i = 0; i < W; i++) {
-    const lent = bruit(i, j, 150, g + 1);                     // le relief lissé (la nappe le suit)
+    const c = j * W + i, x = i - ox, y = j - oy;
+    const lent = bruit(x, y, 150, g + 1);                     // le relief lissé (la nappe le suit)
     const h = (lent - 0.5) * 2 * R.terrain.bosses * 0.6
-      + (bruit(i, j, 46, g + 2) - 0.5) * 2 * R.terrain.bosses * 0.55
-      + (bruit(i, j, 15, g + 3) - 0.5) * 2 * R.terrain.ondulation
+      + (bruit(x, y, 46, g + 2) - 0.5) * 2 * R.terrain.bosses * 0.55
+      + (bruit(x, y, 15, g + 3) - 0.5) * 2 * R.terrain.ondulation
       + 3;                                                    // m au-dessus du zéro du secteur
-    const c = j * W + i;
     base[c] = Math.round(h * 4);
     nappe[c] = (lent - 0.5) * 2 * R.terrain.bosses * 0.6 + 3 - niveau;
-    humid[c] = R.hydro.humiditeDepart * (0.7 + 0.6 * bruit(i, j, 23, g + 4));
+    humid[c] = R.hydro.humiditeDepart * (0.7 + 0.6 * bruit(x, y, 23, g + 4));
   }
   // Quelques arbres, loin des bords
   const arbres = [];

@@ -47,6 +47,25 @@ export const REGLAGES = {
     champsMax: 10,        // champs gardés en cache
     champPeriode: 3,      // s : un champ périmé (terrain changé) est refait au plus tous les…
   },
+  soldat: {
+    // la fatigue (0 à 1) : les jambes se fatiguent à marcher (plus dans la boue), les bras à tirer
+    fatigueMarche: 0.01,  // par seconde de marche sur sol sec
+    fatigueBoue: 2.5,     // la marche dans la boue fatigue d'autant plus
+    reposJambes: 0.006,   // par seconde à l'arrêt
+    fatigueTir: 0.05,     // par coup tiré
+    reposBras: 0.004,     // par seconde
+    effetFatigue: 0.4,    // des jambes épuisées ralentissent de 40 %
+    nuitRepos: 0.7,       // une nuit efface 70 % de la fatigue et la moitié de la peur
+    // les blessures : une jambe ralentit, un bras fait tirer deux fois moins ; blessé deux fois, on meurt
+    mortelTir: 0.45,      // une balle tue 45 fois sur 100, sinon elle blesse
+    jambeBlessee: 0.45,   // vitesse d'un homme blessé à la jambe
+    brasBlesse: 2,        // le temps entre deux tirs, multiplié
+    // la peur (0 à 1) : les obus tout près, les morts à côté ; elle retombe lentement
+    peurObus: 0.6,        // au bord du cratère (moins à trois fois le rayon)
+    peurMort: 0.15,       // un homme qui tombe à moins de 4 m
+    peurDecroit: 0.02,    // par seconde
+    terreur: 0.85,        // au-delà, on ne tire plus
+  },
   tir: {
     portee: 70,           // m
     cone: 0.75,           // rad, de part et d'autre du front

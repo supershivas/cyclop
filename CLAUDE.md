@@ -20,17 +20,23 @@ la danse macabre, la catastrophe peinte avec calme. L'intention est dans `DESIGN
 - **Genre** : stratégie et gestion, temps réel avec pause active. Boucle
   principale : la bataille de plusieurs jours (jour : ordres et barrages ; nuit :
   l'évolution du terrain en lot).
-- **Vue et rendu** : 3D low poly cubique, three.js, projection orthographique
-  oblique très plongée, avec un léger angle (11°) qu'on tourne (jusqu'à 34°) et
-  incline un peu, en douceur (Jérôme, v0.2.0 : « sentir la profondeur ») ; zoom
-  par facteurs entiers (1, 2, 3, 4, 6, 8 pixels par mètre) ; aux zooms 1 et 2,
-  chaque soldat est un point. Sol en cubes et soldats en boîtes (Jérôme, v0.2.0 :
+- **Vue et rendu** : 3D low poly cubique, three.js, **perspective** à angle
+  étroit (30°), plongée de 54°, tournée de 9° : les régiments lointains paraissent
+  plus petits (Jérôme, v0.3.0 : c'est cela, « l'angle ») ; on la tourne (jusqu'à
+  34°) et l'incline un peu, en douceur ; elle ne sort jamais du terrain. Zoom par
+  facteurs entiers au point visé (1, 2, 3, 4, 6, 8 pixels par mètre) ; aux zooms
+  1 et 2, chaque soldat est un point. Sol en cubes et soldats en boîtes (Jérôme, v0.2.0 :
   les facettes et les sprites essayés au labo ne sont pas retenus). Profil game-system :
   `profils/pixel-3d-three.md`.
 - **Cible** : ordinateur uniquement (souris, sélection au cadre, raccourcis,
   pause). Pas d'interface tactile ni d'aperçu téléphone (Jérôme, v0.1.0) : sur un
   écran tactile, l'écran titre dit que le jeu se joue sur un ordinateur.
 - **Public** : joueur averti.
+- **Les soldats** : chacun a un nom, un âge, un grade (la hiérarchie d'un
+  régiment : un capitaine, deux lieutenants, un adjudant, des sergents, des
+  caporaux, des soldats de 1re et 2e classe ; les grades allemands en face) et un
+  état : fatigue des jambes et des bras, blessure (bras, jambe, tête), peur. Un clic
+  sur un homme ouvre sa fiche (Jérôme, v0.3.0).
 - **Session** : un run = une bataille de 10 à 15 jours sur un secteur (le lot
   minimal : 3 jours). Progression permanente prévue (Mémorial, état-major,
   trophées) : pas encore construite.
@@ -66,15 +72,17 @@ le fond des boîtes de dialogue (`::backdrop` de `game.css`).
 
 ### Échelle
 
-- Une case = 1 m. Hauteurs en quarts (25 cm). Champ du lot minimal : 400 × 300 cases.
+- Une case = 1 m. Hauteurs en quarts (25 cm). Secteur du lot minimal : 400 × 300
+  cases, au milieu d'un terrain de 840 × 640 (des marges de 220 et 170 m, sans
+  régiments, où les ordres ne vont pas) : tout dézoomé, la vue reste sur le
+  terrain (Jérôme, v0.3.0).
 - Soldat : 0,5 × 1,7 × 0,35 m (une boîte dont on ne dessine que le dessus et la
   face sud, plus son ombre). Arbre : 6 à 9 m.
 - Image : basse résolution (hauteur ≈ 400 pixels, facteur entier
   `round(hauteur / 400)`), agrandie sans lissage. À 1 280 × 800 : 640 × 400 ×2.
-- Projection : le sol tourné de `yaw` autour du centre de la vue (0,2 rad au
-  départ, ±0,6 au plus), puis un mètre de hauteur remonte de `k` m à l'écran
-  (0,55 au départ, 0,32 à 0,85). De face (yaw = 0), le centre est posé sur la
-  grille de pixels. Planche d'échelle : sujet « Échelle » du labo.
+- Caméra (`CAMERA` de rendu3d.js) : `fov` 30°, `tangage` 0,95 rad (0,7 à 1,35),
+  `yaw` 0,15 rad (±0,6) ; à la distance où un mètre du point visé fait `ppm`
+  pixels. Planche d'échelle : sujet « Échelle » du labo.
 
 ### Commandes
 
@@ -118,7 +126,13 @@ le fond des boîtes de dialogue (`::backdrop` de `game.css`).
   l'en-tête) : tableaux typés, grille de voisinage (2 m) par tri par comptage,
   séparation, place dans la formation du régiment, champ de coûts quand la place
   est loin, vitesse selon la case et la marche, tir par cône vers le carré
-  d'ennemis le plus dense (carrés de 8 m), obus (`tuerDans`), `compacter`.
+  d'ennemis le plus dense (carrés de 8 m), obus (`tuerDans`), `compacter`. Chaque
+  soldat a un numéro (`id`, stable), une fatigue des jambes (la marche, plus dans
+  la boue) et des bras (le tir), une blessure, une peur (`effrayer` : les obus
+  jusqu'à trois fois leur rayon, un homme qui tombe à côté) ; jambes lourdes ou
+  blessées : plus lent ; bras blessé : tire moitié moins ; terrifié : ne tire plus ;
+  la nuit repose (`reposer`). Touché (`frapper` dans bataille.js) : tué ou blessé,
+  et blessé deux fois, tué.
 - `js/champs.js` — les champs de coûts : le terrain résumé en carrés de 4 m
   (`couts`, un octet), Dial, une direction par carré ; cache par but et version.
 - `js/bataille.js` — l'état d'une partie et ses règles : `nouvelleBataille`,
@@ -130,34 +144,43 @@ le fond des boîtes de dialogue (`::backdrop` de `game.css`).
   croisaient.
 - `js/apparence.js` — la couleur d'une case (partagée par le rendu, le labo,
   l'outil de lisibilité). `js/tuiles.js` — des tuiles d'essai peintes par elle.
-- `js/data/` — `reglages.js` (tous les nombres, modifiables par l'atelier),
+- `js/identite.js` — le nom, l'âge, le grade d'un soldat (tirés de la graine et de
+  son numéro ; le grade, de son rang de création dans son régiment), son état en
+  mots. `js/data/noms.js` : prénoms, noms, grades de chaque camp.
+- `js/data/` — `reglages.js` (tous les nombres, modifiables par l'atelier ;
+  `soldat` : fatigue, blessures, peur),
   `calibres.js` (motifs 3 × 3, 5 × 5, 7 × 7), `meteo.js` (états et chaîne de
   Markov, prévision juste 7 fois sur 10), `secteur.js`, `lexique.js` (noms de
   nos régiments).
 
 **Rendu et cycle de vie**
 
-- `js/rendu3d.js` — three.js : caméra oblique (matrice de projection écrite à la
-  main), sol en morceaux de 25 × 25 cases (dessus fusionnés en rectangles de même
+- `js/rendu3d.js` — three.js : caméra en perspective (`PerspectiveCamera`,
+  `borner` la garde sur le terrain : les quatre coins de l'écran posés sur le sol),
+  sol en morceaux de 25 × 25 cases (dessus fusionnés en rectangles de même
   hauteur, parois sud seulement), une texture RVBA d'une couleur par case (et de
   sa paroi), refaite par rangées changées ; aux zooms 1 et 2, le sol est une seule
   image plate où une marche d'un mètre devient une courbe de niveau ; soldats en
   instances (boîte et ombre) ou en points 2 × 2, seulement ceux qu'on voit ; arbres
   instanciés ; éclats et fumée d'obus ; pluie ; brouillard tramé (plus épais vers
-  le haut de l'écran). `versTerrain` / `versEcran`. Le rendu ne modifie jamais
-  l'état. Un morceau du sol se refait aussi quand un de ses voisins change (ses
+  le haut de l'écran). `versTerrain` (un rayon jusqu'au sol) / `versEcran`. Au
+  loin (au-delà du point visé), un morceau n'est plus que des facettes de 5 m sans
+  parois (`construireGros`). Respiration (variante du labo, `respiration`). Le
+  rendu ne modifie jamais l'état. Un morceau du sol se refait aussi quand un de ses voisins change (ses
   parois sud, est et ouest en dépendent). Les parois est et ouest (et les bords
   du champ, jusqu'au socle) existent pour la caméra tournée ; l'ouest, éclairé,
   garde la couleur du dessus. `deplacerEcran`, `tourner`, `placerCamera`.
 - `js/main.js` — écran titre → bataille → nuit → fin ; le zoom et la caméra
-  gardés dans `cyclopeen:prefs` ; HUD (horloge, prévision,
+  gardés dans `cyclopeen:prefs` ; la fiche d'un soldat (clic sur un homme, Échap
+  la ferme) et son repère ; HUD (horloge, prévision,
   morts des deux camps, batteries, régiments choisis, noms de nos régiments au-
   dessus d'eux) ; commandes ; sauvegarde ; mise à jour ; mode debug ;
   `window.cyclopStats()`.
 - `index.html`, `css/style.css` — l'écran, le HUD et les dialogues (palette du jeu).
 - `labo.html`, `js/labo.js` — le labo : échelle, sols et cratères (couleur et
   gris), palette, le moteur en direct (zoom 4, zoom 1, après un jour de pluie,
-  gel), la caméra (un léger angle / de face / plus d'angle), les calibres. Les
+  gel), la caméra (perspective légère / sans perspective / plus de perspective /
+  respiration lente / marquée), les calibres. Les
   sujets du moteur affichent ce que coûte le dessin et proposent les zooms.
 - `atelier.html`, `js/atelier.js`, `js/design-store.js` — l'atelier : les réglages
   chiffrés, publiés dans `assets/design/reglages.json`.
@@ -170,7 +193,9 @@ le fond des boîtes de dialogue (`::backdrop` de `game.css`).
 
 - `?debug=1` : `window.__jeu` (`state`, `stats`, `avancer(n, passerNuits)`,
   `barrage(cal, x, y, camp)`, `marche(ids, x, y)`, `zoom(i)`, `camera(yaw, k)`, `teleport`,
-  `bataille()`, `rendu()`), `&seed=7`. F9 masque le panneau.
+  `bataille()`, `rendu()`, `fiche()`), `&seed=7`. F9 masque le panneau. Les
+  coordonnées du mode debug sont celles du **secteur** (0..400, 0..300) : les marges
+  s'ajoutent dans `main.js`.
 - `?soldats=8000` : une bataille de 8 000 soldats (les deux camps).
 - `?mesure=1` : chaque image attend la fin du dessin (lecture d'un pixel) ;
   `cyclopStats().ms.renduFini`. Sans lui, `rendu` est le temps côté jeu (comme
@@ -234,6 +259,14 @@ node outils/stamp-version.mjs            # après chaque changement de version.j
 - **Vue de biais, des fentes** : deux rectangles fusionnés qui ne partagent pas
   leurs sommets laissaient des fentes d'un pixel (le noir du fond) dès que la
   caméra tourne ; chaque face déborde de 3 cm (`E`).
+- **La perspective coûte** (rendu logiciel, après trois jours d'obus, zoom 4,
+  dessin attendu jusqu'au bout) : elle montre beaucoup de sol au loin, 54 000
+  triangles et 46 ms ; d'où les facettes de 5 m au-delà du point visé (24 000
+  triangles, 20 ms). Les marges du terrain ont été mesurées pour elle : au zoom 1
+  (640 × 400 pixels), le sol vu fait ~790 × 610 m.
+- **Les sauvegardes d'avant les marges** (v0.2) se relisent : `restaurer` décale
+  impacts, régiments, barrages et soldats de la largeur des marges et refait le
+  résumé du terrain ; les soldats prennent leur numéro dans l'ordre (test).
 - **La caméra tournée coûte** (rendu logiciel, zoom 4, dessin attendu jusqu'au
   bout) : ~14,5 ms contre ~10,5 de face (parois est et ouest). Les soldats se
   trient dans l'axe de l'écran : un carré autour de la vue en dessinait six fois

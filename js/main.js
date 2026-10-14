@@ -1,18 +1,19 @@
 // Le cycle de vie : écran titre → bataille → nuit → fin ; pause active,
 // réglages, sauvegarde, mise à jour, debug. Les règles sont dans bataille.js
 // (pures), le dessin dans rendu3d.js (il ne modifie jamais l'état).
-import { createLoop } from './lib/loop.js?v=0.2.0';
-import { createKeys, stopTypeahead } from './lib/keys.js?v=0.2.0';
-import { createPointer, lockBrowserGestures } from './lib/pointer.js?v=0.2.0';
-import { createGamepad } from './lib/gamepad.js?v=0.2.0';
-import { createStore, autosave, pickJSONFile } from './lib/save.js?v=0.2.0';
-import { startUpdateCheck, loadVersion, loadChangelog, downloadJSON } from './lib/app-update.js?v=0.2.0';
-import { ROLES } from './palette.js?v=0.2.0';
-import { nouvelleBataille, avancer, aube, ordonnerMarche, ordonnerBarrage, horloge, effectifs, photo, restaurer, PAS, NOUS } from './bataille.js?v=0.2.0';
-import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.2.0';
-import { METEO } from './data/meteo.js?v=0.2.0';
-import { creerRendu } from './rendu3d.js?v=0.2.0';
-import { chargerContenu } from './design-store.js?v=0.2.0';
+import { createLoop } from './lib/loop.js?v=0.3.0';
+import { createKeys, stopTypeahead } from './lib/keys.js?v=0.3.0';
+import { createPointer, lockBrowserGestures } from './lib/pointer.js?v=0.3.0';
+import { createGamepad } from './lib/gamepad.js?v=0.3.0';
+import { createStore, autosave, pickJSONFile } from './lib/save.js?v=0.3.0';
+import { startUpdateCheck, loadVersion, loadChangelog, downloadJSON } from './lib/app-update.js?v=0.3.0';
+import { ROLES } from './palette.js?v=0.3.0';
+import { nouvelleBataille, avancer, aube, ordonnerMarche, ordonnerBarrage, horloge, effectifs, photo, restaurer, PAS, NOUS } from './bataille.js?v=0.3.0';
+import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.3.0';
+import { METEO } from './data/meteo.js?v=0.3.0';
+import { creerRendu } from './rendu3d.js?v=0.3.0';
+import { identite, etatEnMots } from './identite.js?v=0.3.0';
+import { chargerContenu } from './design-store.js?v=0.3.0';
 
 const JEU = 'cyclopeen';
 const $ = id => document.getElementById(id);
@@ -60,9 +61,9 @@ function jouer(bataille) {
   B = bataille;
   rendu.attacher(B);
   rendu.vue.zoom = prefs.zoom ?? 2;
-  if (prefs.camera) rendu.placerCamera(prefs.camera.yaw, prefs.camera.k);
+  if (prefs.camera?.tangage) rendu.placerCamera(prefs.camera.yaw, prefs.camera.tangage);   // (un réglage de la v0.2, sans tangage, est ignoré)
   choisis = new Set(); rendu.choisis = choisis;
-  modeBarrage = null; pauseActive = false;
+  modeBarrage = null; pauseActive = false; fermerFiche();
   $('titre').hidden = true;
   $('hud').hidden = false;
   etiquettes();
@@ -168,6 +169,9 @@ function majHud() {
   $('demain').textContent = h.prevision ? `Demain : ${METEO[h.prevision].prevision}` : 'Dernier jour';
   $('morts-nous').textContent = e.pertes[0];
   $('morts-eux').textContent = e.pertes[1];
+  $('blesses-nous').textContent = e.blesses[0];
+  $('blesses-eux').textContent = e.blesses[1];
+  majFiche();
   $('pause-active').hidden = !pauseActive;
   for (const b of $('batteries').children) {
     const cal = b.dataset.cal, reste = Math.ceil(e.batteries[cal] - e.temps);
@@ -225,6 +229,11 @@ function majEtiquettes() {
     d.style.transform = `translate(${Math.round(sx)}px, ${Math.round(sy)}px) translate(-50%, -100%)`;
     d.classList.toggle('choisi', choisis.has(id));
   }
+  const rs = $('repere-soldat'), is = fiche ? indiceDe(fiche.id) : -1;
+  if (is >= 0) {
+    const [sx, sy] = rendu.versEcran(B.armee.x[is], B.armee.y[is]);
+    rs.hidden = false; rs.style.transform = `translate(${Math.round(sx)}px, ${Math.round(sy)}px) translate(-50%, -100%)`;
+  } else rs.hidden = true;
   const m = $('repere');
   if (marque && marque.t > 0) {
     const [sx, sy] = rendu.versEcran(marque.x, marque.y);
@@ -232,6 +241,49 @@ function majEtiquettes() {
   } else m.hidden = true;
 }
 let marque = null;
+
+// ─── La fiche d'un soldat : on clique un homme, il a un nom, un âge, un état ──
+let fiche = null;                 // { id, camp } : le soldat montré
+function indiceDe(id) {
+  const A = B.armee;
+  for (let i = 0; i < A.n; i++) if (A.id[i] === id) return i;
+  return -1;
+}
+// le soldat le plus proche du point, à moins de r mètres (les deux camps)
+function soldatSous(x, y, r) {
+  const A = B.armee;
+  let best = -1, bd = r * r;
+  for (let i = 0; i < A.n; i++) {
+    const d = (A.x[i] - x) ** 2 + (A.y[i] - y) ** 2;
+    if (d < bd) { bd = d; best = i; }
+  }
+  return best;
+}
+function montrerFiche(i) {
+  const A = B.armee;
+  fiche = { id: A.id[i], camp: A.camp[i] };
+  $('fiche').hidden = false;
+  majFiche();
+}
+function fermerFiche() { fiche = null; $('fiche').hidden = true; $('repere-soldat').hidden = true; }
+function majFiche() {
+  if (!fiche || !B) return;
+  const A = B.armee, i = indiceDe(fiche.id);
+  // son rang de création dans son régiment (les numéros se suivent, régiment après régiment) : son grade en découle
+  let premier = 0, reg0 = null;
+  for (const r of B.etat.regiments) { if (fiche.id < premier + r.initial) { reg0 = r; break; } premier += r.initial; }
+  const qui = identite(B.etat.graine, fiche.camp, fiche.id, fiche.id - premier, reg0?.initial ?? 125);
+  $('fiche-nom').textContent = `${qui.prenom} ${qui.nom}`;
+  if (i < 0) {
+    $('fiche-qui').textContent = `${qui.grade[0].toUpperCase() + qui.grade.slice(1)}, ${qui.age} ans`;
+    $('fiche-etat').replaceChildren(Object.assign(document.createElement('li'), { textContent: 'Mort.' }));
+    return;
+  }
+  const reg = B.etat.regiments[A.reg[i]];
+  $('fiche-qui').textContent = `${qui.grade[0].toUpperCase() + qui.grade.slice(1)}, ${qui.age} ans · ${reg.nom ? `régiment ${reg.nom}` : 'en face'}`;
+  $('fiche-etat').replaceChildren(...etatEnMots(A.fatJ[i], A.fatB[i], A.peur[i], A.blessure[i]).map(t => Object.assign(document.createElement('li'), { textContent: t })));
+}
+$('fiche-fermer').onclick = fermerFiche;
 
 // ─── Commandes : clavier, souris (section 8) ───────────────────────────────
 function choisirTout() {
@@ -245,7 +297,7 @@ const keys = createKeys({
   },
   onAction: nom => {
     if (!enJeu()) return;
-    if (nom === 'menu') { if (modeBarrage) { modeBarrage = null; majHud(); } else pause(); }
+    if (nom === 'menu') { if (modeBarrage) { modeBarrage = null; majHud(); } else if (fiche) fermerFiche(); else pause(); }
     else if (nom === 'pause') { pauseActive = !pauseActive; if (pauseActive) loop.pause(); else reprendre(); majHud(); }
     else if (nom === 'tout') choisirTout();
     else if (nom === 'plus') zoomer(1);
@@ -272,8 +324,15 @@ let glisse = null;
 createPointer($('canvas'), {
   threshold: 6,
   onTap: p => {
-    if (!enJeu() || B.etat.phase !== 'jour') return;
+    if (!enJeu()) return;
     const [x, y] = rendu.versTerrain(p.x, p.y);
+    // un clic sur un homme montre sa fiche (de jour comme de nuit, chez nous comme en face)
+    if (p.button === 0 && !modeBarrage) {
+      const r = Math.max(0.8, 12 * (window.devicePixelRatio || 1) / rendu.vue.facteur / rendu.ppm);
+      const i = soldatSous(x, y, r);
+      if (i >= 0) montrerFiche(i); else fermerFiche();
+    }
+    if (B.etat.phase !== 'jour') return;
     if (p.button === 2) {
       if (modeBarrage) { modeBarrage = null; majHud(); return; }
       if (!choisis.size) return toast('Aucun régiment choisi.');
@@ -302,7 +361,7 @@ createPointer($('canvas'), {
     }
     if (glisse.bouton === 2) {
       // glisser avec le bouton droit : tourner (de gauche à droite) et incliner (de haut en bas) la caméra, un peu
-      rendu.tourner((p.dx - glisse.ddx) * 0.004, (p.dy - glisse.ddy) * 0.002);
+      rendu.tourner((p.dx - glisse.ddx) * 0.004, -(p.dy - glisse.ddy) * 0.003);
       glisse.ddx = p.dx; glisse.ddy = p.dy;
       return;
     }
@@ -312,7 +371,7 @@ createPointer($('canvas'), {
   },
   onDragEnd: p => {
     cadre.hidden = true;
-    if (glisse?.bouton === 2) { prefs.camera = { yaw: rendu.vue.cible.yaw, k: rendu.vue.cible.k }; store.save('prefs', prefs); }
+    if (glisse?.bouton === 2) { prefs.camera = { yaw: rendu.vue.cible.yaw, tangage: rendu.vue.cible.tangage }; store.save('prefs', prefs); }
     if (!glisse || glisse.bouton !== 0 || !enJeu()) { glisse = null; return; }
     glisse = null;
     // choisir au cadre : les régiments dont au moins un homme est dans le cadre (à l'écran)
@@ -356,7 +415,7 @@ const loop = createLoop({
       const tour = (keys.held('KeyE') ? 1 : 0) - (keys.held('KeyQ') ? 1 : 0), incl = (keys.held('KeyF') ? 1 : 0) - (keys.held('KeyR') ? 1 : 0);
       if (tour || incl) {
         rendu.tourner(tour * dt * 0.9, incl * dt * 0.5);
-        prefs.camera = { yaw: rendu.vue.cible.yaw, k: rendu.vue.cible.k };
+        prefs.camera = { yaw: rendu.vue.cible.yaw, tangage: rendu.vue.cible.tangage };
         clearTimeout(zoomer.t); zoomer.t = setTimeout(() => store.save('prefs', prefs), 400);
       }
     }
@@ -388,12 +447,13 @@ startUpdateCheck({
 
 // ─── Mode debug (section 18) : chargé seulement avec ?debug=1 ──────────────
 if (DEBUG) {
-  const { installDebug, seedFromUrl } = await import('./lib/debug.js?v=0.2.0');
+  const { installDebug, seedFromUrl } = await import('./lib/debug.js?v=0.3.0');
   window.__seed = seedFromUrl() ?? undefined;
   installDebug({
     state: () => B && { ...horloge(B), effectifs: effectifs(B), pertes: B.etat.pertes, impacts: B.etat.impacts.length, enJeu: enJeu(), pause: loop.paused },
     places: { centre: { x: 200, y: 150 }, nous: { x: 200, y: 230 }, eux: { x: 200, y: 70 } },
-    teleport: ({ x, y }) => { rendu.vue.cx = x; rendu.vue.cz = y; },
+    // le mode debug parle en coordonnées du SECTEUR (0..400, 0..300) : les marges s'ajoutent ici
+    teleport: ({ x, y }) => { rendu.vue.cx = x + B.etat.marges.x; rendu.vue.cz = y + B.etat.marges.y; },
     setTimeScale: s => loop.setTimeScale(s),
     setSeed: n => jouer(nouvelle(n)),
     reset: () => { store.clear('partie'); B = null; montrerTitre(); },
@@ -411,10 +471,11 @@ if (DEBUG) {
         majHud();
         return horloge(B);
       },
-      barrage: (cal, x, y, camp = 0) => ordonnerBarrage(B, cal, x, y, camp),
-      marche: (ids, x, y) => ordonnerMarche(B, ids, x, y),
+      barrage: (cal, x, y, camp = 0) => ordonnerBarrage(B, cal, x + B.etat.marges.x, y + B.etat.marges.y, camp),
+      marche: (ids, x, y) => ordonnerMarche(B, ids, x + B.etat.marges.x, y + B.etat.marges.y),
       zoom: z => { rendu.vue.zoom = z; },
-      camera: (yaw, k) => rendu.placerCamera(yaw, k),
+      fiche: () => fiche && { ...fiche, nom: document.getElementById('fiche-nom').textContent, etat: document.getElementById('fiche-etat').textContent },
+      camera: (yaw, tangage) => rendu.placerCamera(yaw, tangage),
       bataille: () => B,
       rendu: () => rendu,
       CALIBRES,

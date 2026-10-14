@@ -1,21 +1,25 @@
 // La bataille : déterminisme, ordres refusés à voix haute, sauvegarde qui rejoue la même partie.
 import { readFileSync } from 'node:fs';
-import { nouvelleBataille, avancer, ordonnerMarche, ordonnerBarrage, aube, photo, restaurer, effectifs, horloge } from '../js/bataille.js';
+import { nouvelleBataille, avancer, ordonnerMarche, ordonnerBarrage, aube, photo, restaurer, effectifs, horloge, zone } from '../js/bataille.js';
+import { identite, etatEnMots } from '../js/identite.js';
+import { SECTEURS } from '../js/data/secteur.js';
 import { REGLAGES as R } from '../js/data/reglages.js';
 
 const petite = (graine = 3) => nouvelleBataille(graine, R, { soldats: 200 });
+// (x, y) dans le secteur → dans le terrain (les marges autour)
+const M = SECTEURS.essai.marges, P = (x, y) => [x + M.x, y + M.y];
 const empreinte = B => JSON.stringify(photo(B));
 
 group('bataille');
 test('même graine, mêmes ordres : même bataille', () => {
   const a = petite(), b = petite();
-  for (const B of [a, b]) { ordonnerMarche(B, [0, 1], 150, 150); ordonnerBarrage(B, '155', 200, 90); }
+  for (const B of [a, b]) { ordonnerMarche(B, [0, 1], ...P(150, 150)); ordonnerBarrage(B, '155', ...P(200, 90)); }
   for (let k = 0; k < 600; k++) { avancer(a); avancer(b); }
   assert.equal(empreinte(a), empreinte(b));
 });
 test('le compteur de pertes est juste : morts + vivants = l\'effectif de départ', () => {
   const B = petite();
-  ordonnerBarrage(B, '220', 100, 230); ordonnerBarrage(B, '155', 300, 70, 1);
+  ordonnerBarrage(B, '220', ...P(100, 230)); ordonnerBarrage(B, '155', ...P(300, 70), 1);
   for (let k = 0; k < 900; k++) avancer(B);
   const [nous, eux] = effectifs(B);
   assert.equal(nous + B.etat.pertes[0], 200);
@@ -25,11 +29,12 @@ test('le compteur de pertes est juste : morts + vivants = l\'effectif de départ
 });
 test('un ordre impossible se refuse, avec sa raison', () => {
   const B = petite();
-  assert.match(ordonnerMarche(B, [], 10, 10).refus, /Aucun régiment/);
+  assert.match(ordonnerMarche(B, [], ...P(10, 10)).refus, /Aucun régiment/);
   assert.match(ordonnerMarche(B, [0], -5, 10).refus, /Hors du secteur/);
-  assert.match(ordonnerMarche(B, [9], 10, 10).refus, /Aucun régiment/, 'un régiment d\'en face ne nous obéit pas');
-  assert.ok(ordonnerBarrage(B, '75', 200, 100).ok);
-  assert.match(ordonnerBarrage(B, '75', 200, 100).refus, /recharge/);
+  assert.match(ordonnerMarche(B, [0], ...P(-20, 10)).refus, /Hors du secteur/, 'les marges ne prennent pas d\'ordres');
+  assert.match(ordonnerMarche(B, [9], ...P(10, 10)).refus, /Aucun régiment/, 'un régiment d\'en face ne nous obéit pas');
+  assert.ok(ordonnerBarrage(B, '75', ...P(200, 100)).ok);
+  assert.match(ordonnerBarrage(B, '75', ...P(200, 100)).refus, /recharge/);
   assert.match(ordonnerBarrage(B, '420', 200, 100).refus, /Pas de batterie/);
 });
 test('la journée finit à 18 h, la nuit attend l\'aube, puis le dernier jour finit la bataille', () => {
@@ -39,7 +44,7 @@ test('la journée finit à 18 h, la nuit attend l\'aube, puis le dernier jour fi
   assert.equal(B.etat.phase, 'nuit');
   assert.equal(horloge(B).heure, 18);
   assert.equal(avancer(B).length, 0, 'rien ne bouge la nuit');
-  assert.match(ordonnerMarche(B, [0], 100, 100).refus, /aube/);
+  assert.match(ordonnerMarche(B, [0], ...P(100, 100)).refus, /aube/);
   assert.ok(aube(B).ok);
   assert.equal(B.etat.jour, 2);
   while (B.etat.phase !== 'fin') { if (B.etat.phase === 'nuit') aube(B); avancer(B); }
@@ -54,10 +59,53 @@ test('il pleut au moins un jour (le lot minimal doit voir venir la boue), jamais
   }
 });
 
+test('le secteur est entouré de marges, et les régiments sont dedans', () => {
+  const B = petite();
+  const Z = zone(B);
+  assert.equal(B.terrain.W, Z.x1 + M.x); assert.equal(B.terrain.H, Z.y1 + M.y);
+  for (let i = 0; i < B.armee.n; i++) assert.ok(B.armee.x[i] > Z.x0 && B.armee.x[i] < Z.x1 && B.armee.y[i] > Z.y0 && B.armee.y[i] < Z.y1);
+});
+test('touchés, certains meurent et d\'autres sont blessés ; blessé deux fois, on meurt', () => {
+  const B = petite(8);
+  for (let k = 0; k < 8; k++) ordonnerBarrage(B, '155', ...P(25 + k * 50, 233), 1);
+  for (let k = 0; k < 900; k++) avancer(B);
+  assert.ok(B.etat.blesses[0] > 0 && B.etat.pertes[0] > 0, `${B.etat.blesses[0]} blessés, ${B.etat.pertes[0]} morts`);
+  let blesses = 0;
+  for (let i = 0; i < B.armee.n; i++) if (B.armee.blessure[i]) blesses++;
+  assert.ok(blesses > 0 && blesses <= B.etat.blesses[0]);
+});
+test('chaque soldat a un nom, un âge, un grade : toujours les mêmes pour la même graine', () => {
+  const a = identite(5, 0, 17), b = identite(5, 0, 17), c = identite(5, 1, 17);
+  assert.deepEqual(a, b);
+  assert.ok(a.prenom && a.nom && a.age >= 19 && a.age <= 45 && a.grade);
+  // la hiérarchie d'un régiment de 125 : un capitaine, deux lieutenants, un adjudant, des sergents, des caporaux, des soldats
+  const grades = Array.from({ length: 125 }, (_, k) => identite(5, 0, k, k, 125).grade);
+  const n = g => grades.filter(x => x === g).length;
+  assert.equal(grades[0], 'capitaine'); assert.equal(n('capitaine'), 1);
+  assert.equal(n('lieutenant') + n('sous-lieutenant'), 2); assert.equal(n('adjudant'), 1);
+  assert.equal(n('sergent'), 10); assert.equal(n('caporal'), 21);
+  assert.ok(n('soldat de 1re classe') > 10 && n('soldat de 2e classe') > 50);
+  assert.equal(identite(5, 1, 0, 0, 125).grade, 'Hauptmann');
+  assert.notDeepEqual(a, c);
+  const noms = new Set(Array.from({ length: 200 }, (_, i) => { const x = identite(5, 0, i); return x.prenom + x.nom; }));
+  assert.ok(noms.size > 150, 'peu de doublons');
+  assert.deepEqual(etatEnMots(0, 0, 0, 0), ['reposé, calme']);
+  assert.deepEqual(etatEnMots(0.8, 0.5, 0.9, 2), ['blessé à la jambe', 'jambes épuisées', 'bras las', 'terrifié']);
+});
+test('les numéros des soldats restent les leurs après les morts', () => {
+  const B = petite(8);
+  const avant = new Map();
+  for (let i = 0; i < B.armee.n; i++) avant.set(B.armee.id[i], B.armee.camp[i]);
+  ordonnerBarrage(B, '220', ...P(150, 230));
+  for (let k = 0; k < 600; k++) avancer(B);
+  const vus = new Set();
+  for (let i = 0; i < B.armee.n; i++) { const id = B.armee.id[i]; assert.ok(!vus.has(id)); vus.add(id); assert.equal(avant.get(id), B.armee.camp[i]); }
+});
+
 group('sauvegarde');
 test('une bataille relue est la même, et se comporte pareil', () => {
   const A = petite(11);
-  ordonnerMarche(A, [0, 1, 2], 200, 160); ordonnerBarrage(A, '155', 180, 120);
+  ordonnerMarche(A, [0, 1, 2], ...P(200, 160)); ordonnerBarrage(A, '155', ...P(180, 120));
   for (let k = 0; k < 450; k++) avancer(A);
   const p = JSON.parse(JSON.stringify(photo(A)));
   const B = restaurer(p, R);
@@ -69,7 +117,7 @@ test('une bataille relue est la même, et se comporte pareil', () => {
 });
 test('relue après une nuit, la bataille rejoue aussi l\'eau de la nuit', () => {
   const A = petite(4);
-  ordonnerBarrage(A, '220', 200, 150);
+  ordonnerBarrage(A, '220', ...P(200, 150));
   while (A.etat.phase === 'jour') avancer(A);
   aube(A);
   for (let k = 0; k < 300; k++) avancer(A);
@@ -84,9 +132,29 @@ test('la sauvegarde ne contient pas le relief (graine et impacts seulement)', ()
   assert.ok(!('terrain' in p) && !('base' in p) && Array.isArray(p.impacts));
 });
 
+test('une sauvegarde d\'avant les marges (v0.2) se relit : tout glisse dans le secteur', () => {
+  const A = petite(4);
+  ordonnerBarrage(A, '155', ...P(200, 150));
+  for (let k = 0; k < 300; k++) avancer(A);
+  // la même partie, écrite comme en v0.2 : sans marges, sans numéros ni fatigue
+  const p = JSON.parse(JSON.stringify(photo(A)));
+  delete p.marges; delete p.blesses;
+  for (const imp of p.impacts) { imp[2] -= M.x * 10; imp[3] -= M.y * 10; }
+  for (const r of p.regiments) for (const o of [r.ordre, r.depart]) { o.x -= M.x; o.y -= M.y; }
+  for (const b of p.barrages) { b.x -= M.x; b.y -= M.y; }
+  const xs = Float32Array.from({ length: p.armee.n }, (_, i) => A.armee.x[i] - M.x);
+  p.armee.x = Buffer.from(xs.buffer).toString('base64');
+  for (const k of ['id', 'fatJ', 'fatB', 'peur', 'blessure']) delete p.armee[k];
+  const B = restaurer(p, R);
+  assert.deepEqual(B.terrain.diff, A.terrain.diff);
+  for (let i = 0; i < A.armee.n; i++) assert.ok(Math.abs(B.armee.x[i] - A.armee.x[i]) < 1e-3);
+  assert.equal(B.armee.id[5], 5);
+  for (let k = 0; k < 60; k++) avancer(B);
+});
+
 group('pureté');
 test('aucun hasard ni horloge dans les règles', () => {
-  for (const f of ['bataille.js', 'terrain.js', 'army.js', 'champs.js', 'apparence.js']) {
+  for (const f of ['bataille.js', 'terrain.js', 'army.js', 'champs.js', 'apparence.js', 'identite.js']) {
     const src = readFileSync(new URL(`../js/${f}`, import.meta.url), 'utf8');
     assert.ok(!/Math\.random|Date\.now|performance\.now|crypto\./.test(src), `${f} doit rester pur (section 10)`);
   }

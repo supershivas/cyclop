@@ -14,14 +14,14 @@
    La sauvegarde (photo) garde la graine, la liste compacte des impacts, l'état
    de la foule et les petites couches de logique ; jamais le relief : il se
    rejoue depuis la graine et les impacts (rejouerTerrain). */
-import { createRng } from './lib/rng.js?v=0.2.0';
-import { creerTerrain, impact, hydroLignes } from './terrain.js?v=0.2.0';
-import { creerArmee, ajouterSoldat, construireGrille, pasArmee, tuerDans, compacter, photoArmee, restaurerArmee, b64, deB64, DENSITE } from './army.js?v=0.2.0';
-import { calculerCouts, creerCacheChamps, dimensionsCouts, BLOC } from './champs.js?v=0.2.0';
-import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.2.0';
-import { METEO, TRANSITIONS, PREVISION_JUSTE } from './data/meteo.js?v=0.2.0';
-import { SECTEURS } from './data/secteur.js?v=0.2.0';
-import { REGIMENTS } from './data/lexique.js?v=0.2.0';
+import { createRng } from './lib/rng.js?v=0.3.0';
+import { creerTerrain, impact, hydroLignes } from './terrain.js?v=0.3.0';
+import { creerArmee, ajouterSoldat, construireGrille, pasArmee, tuerDans, effrayer, reposer, compacter, photoArmee, restaurerArmee, b64, deB64, DENSITE } from './army.js?v=0.3.0';
+import { calculerCouts, creerCacheChamps, dimensionsCouts, BLOC } from './champs.js?v=0.3.0';
+import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.3.0';
+import { METEO, TRANSITIONS, PREVISION_JUSTE } from './data/meteo.js?v=0.3.0';
+import { SECTEURS } from './data/secteur.js?v=0.3.0';
+import { REGIMENTS } from './data/lexique.js?v=0.3.0';
 
 export const PAS = 1 / 30;                 // s de jeu par pas
 export const NOUS = 0, EUX = 1;
@@ -64,7 +64,8 @@ export function nouvelleBataille(graine, R, opts = {}) {
     impacts: [],                        // [jour, tickJour, x×10, y×10, calibre] : de quoi rejouer le relief
     hydro: { passe: 0, ligne: 0 },
     couts: { bande: 0, version: 1 },
-    regiments: [], pertes: [0, 0], pertesJour: [[0, 0]],
+    marges: { ...S.marges },            // le terrain déborde du secteur (zone())
+    regiments: [], pertes: [0, 0], pertesJour: [[0, 0]], blesses: [0, 0],
     batteries: Object.fromEntries(NOMS_CALIBRES.map(c => [c, 0])),   // s de jeu (depuis l'aube du jour 1) où la batterie est prête
     barrages: [],
     ia: { barrage: R.ia.barrage * 0.5, offensive: R.ia.offensive },
@@ -73,9 +74,9 @@ export function nouvelleBataille(graine, R, opts = {}) {
   };
   const B = monter(etat, R);
   // Les régiments, côte à côte sur leur ligne
-  const nReg = S.regiments, largeurReg = S.largeur / nReg;
+  const nReg = S.regiments, largeurReg = S.largeur / nReg, Z = zone(B);
   for (const camp of [NOUS, EUX]) {
-    const ligne = camp === NOUS ? S.ligne.nous : S.ligne.eux;
+    const ligne = Z.y0 + (camp === NOUS ? S.ligne.nous : S.ligne.eux);
     const base = Math.floor(parCamp / nReg);
     for (let r = 0; r < nReg; r++) {
       const effectif = base + (r < parCamp - base * nReg ? 1 : 0);
@@ -85,12 +86,12 @@ export function nouvelleBataille(graine, R, opts = {}) {
         effectif, initial: effectif, pertes: 0,
         ordre: null, depart: null,
       };
-      reg.ordre = formation(reg, (r + 0.5) * largeurReg, ligne, largeurReg, R);
+      reg.ordre = formation(reg, Z.x0 + (r + 0.5) * largeurReg, ligne, largeurReg, R);
       reg.depart = { ...reg.ordre };
       etat.regiments.push(reg);
       for (let k = 0; k < effectif; k++) {
         const p = placeInitiale(reg.ordre, k);
-        ajouterSoldat(B.armee, p[0] + (rng() - 0.5) * 0.8, p[1] + (rng() - 0.5) * 0.8, camp, reg.id, k, rng());
+        ajouterSoldat(B.armee, p[0] + (rng() - 0.5) * 0.8, p[1] + (rng() - 0.5) * 0.8, camp, reg.id, k, rng(), B.armee.n);
       }
     }
   }
@@ -114,11 +115,21 @@ function formation(reg, x, y, largeurMax, R) {
   return { x, y, fx: 0, fy: reg.camp === NOUS ? -1 : 1, cols, esp };
 }
 
+/* Le secteur de bataille dans le terrain : { x0, y0, x1, y1 } (mètres). Autour,
+   des marges sans régiments : les ordres n'y vont pas. */
+export function zone(B) {
+  const S = SECTEURS[B.etat.secteur], m = B.etat.marges;
+  return { x0: m.x, y0: m.y, x1: m.x + S.largeur, y1: m.y + S.hauteur };
+}
+
 // L'état plus ce qui se refait (terrain, foule, champs)
 function monter(etat, R) {
-  const S = SECTEURS[etat.secteur];
-  const terrain = creerTerrain(etat.graine, S, R);
-  const armee = creerArmee({ capacite: etat.parCamp * 2 + 16, W: S.largeur, H: S.hauteur });
+  const S = SECTEURS[etat.secteur], m = etat.marges;
+  const W = S.largeur + 2 * m.x, H = S.hauteur + 2 * m.y;
+  // autant d'arbres dans les marges, à surface égale
+  const arbres = Math.round(S.arbres * W * H / (S.largeur * S.hauteur));
+  const terrain = creerTerrain(etat.graine, { largeur: W, hauteur: H, ox: m.x, oy: m.y, arbres }, R);
+  const armee = creerArmee({ capacite: etat.parCamp * 2 + 16, W, H });
   const { bw, bh } = dimensionsCouts(terrain);
   return {
     etat, R, terrain, armee,
@@ -137,14 +148,15 @@ export function ordonnerMarche(B, ids, x, y) {
   if (etat.phase !== 'jour') return { refus: 'La nuit, les ordres attendent l\'aube.' };
   const regs = ids.map(id => etat.regiments[id]).filter(r => r && r.camp === NOUS && r.effectif > 0);
   if (!regs.length) return { refus: 'Aucun régiment choisi.' };
-  if (x < 0 || y < 0 || x >= S.largeur || y >= S.hauteur) return { refus: 'Hors du secteur.' };
+  const Z = zone(B);
+  if (x < Z.x0 || y < Z.y0 || x >= Z.x1 || y >= Z.y1) return { refus: 'Hors du secteur.' };
   const largeurReg = S.largeur / S.regiments;
   regs.sort((a, b) => a.ordre.x - b.ordre.x);
   const largeurs = regs.map(r => formation(r, 0, 0, largeurReg, R).cols * R.foule.espacement + 6);
   const total = largeurs.reduce((s, w) => s + w, 0);
-  let cx = Math.max(total / 2, Math.min(S.largeur - total / 2, x)) - total / 2;
+  let cx = Math.max(Z.x0 + total / 2, Math.min(Z.x1 - total / 2, x)) - total / 2;
   regs.forEach((r, k) => {
-    r.ordre = formation(r, cx + largeurs[k] / 2, Math.max(4, Math.min(S.hauteur - 4, y)), largeurReg, R);
+    r.ordre = formation(r, cx + largeurs[k] / 2, Math.max(Z.y0 + 4, Math.min(Z.y1 - 4, y)), largeurReg, R);
     cx += largeurs[k];
     reattribuer(B, r);
   });
@@ -173,9 +185,11 @@ export function ordonnerBarrage(B, cal, x, y, camp = NOUS) {
   const { etat } = B;
   const S = SECTEURS[etat.secteur];
   const C = CALIBRES[cal];
+  void S;
   if (!C) return { refus: `Pas de batterie de ${cal}.` };
   if (etat.phase !== 'jour') return { refus: 'La nuit, les ordres attendent l\'aube.' };
-  if (x < 0 || y < 0 || x >= S.largeur || y >= S.hauteur) return { refus: 'Hors du secteur.' };
+  const Z = zone(B);
+  if (x < Z.x0 || y < Z.y0 || x >= Z.x1 || y >= Z.y1) return { refus: 'Hors du secteur.' };
   if (camp === NOUS) {
     const reste = etat.batteries[cal] - etat.temps;
     if (reste > 0) return { refus: `La batterie de ${cal} recharge : encore ${Math.ceil(reste)} s.` };
@@ -197,16 +211,26 @@ export function avancer(B) {
   const gel = !!METEO[etat.meteo[etat.jour - 1]].gel;
   etat.tickJour++; etat.ticks++;
   etat.temps = Math.round(etat.temps / PAS + 1) * PAS;
-  const tuer = (i, cause) => {
+  // touché : il meurt (chance : gravite, ou s'il était déjà blessé), sinon il est blessé (bras, jambe, tête)
+  const morts = [];
+  const frapper = (i, cause, gravite) => {
     if (A.mort[i]) return;
-    A.mort[i] = 1;
-    const reg = etat.regiments[A.reg[i]];
-    reg.pertes++; reg.effectif--;
-    etat.pertes[A.camp[i]]++;
-    etat.pertesJour[etat.jour - 1][A.camp[i]]++;
-    B.evenements.push({ type: 'mort', camp: A.camp[i], cause, x: A.x[i], y: A.y[i] });
+    if (A.blessure[i] || rng() < gravite) {
+      A.mort[i] = 1;
+      const reg = etat.regiments[A.reg[i]];
+      reg.pertes++; reg.effectif--;
+      etat.pertes[A.camp[i]]++;
+      etat.pertesJour[etat.jour - 1][A.camp[i]]++;
+      morts.push(i);
+      B.evenements.push({ type: 'mort', camp: A.camp[i], cause, x: A.x[i], y: A.y[i], id: A.id[i] });
+    } else {
+      const r = rng();
+      A.blessure[i] = r < 0.4 ? 1 : r < 0.8 ? 2 : 3;
+      etat.blesses[A.camp[i]]++;
+      B.evenements.push({ type: 'blesse', camp: A.camp[i], cause, id: A.id[i] });
+    }
   };
-  const ctx = { T, R, regiments: etat.regiments, rng, dt: PAS, gel, tuer, champDe: r => champDe(B, r) };
+  const ctx = { T, R, regiments: etat.regiments, rng, dt: PAS, gel, frapper, champDe: r => champDe(B, r) };
 
   construireGrille(A);
   // les obus
@@ -223,8 +247,9 @@ export function avancer(B) {
   etat.barrages = etat.barrages.filter(b => b.reste > 0);
   enFace(B, rng);
   pasArmee(A, ctx);
-  const morts = compacter(A);
-  if (morts) for (const reg of etat.regiments) if (reg.effectif <= 0) reg.effectif = 0;
+  // un homme qui tombe fait peur à ceux qui sont à côté
+  for (const i of morts) effrayer(A, A.x[i], A.y[i], 4, R.soldat.peurMort);
+  if (compacter(A)) for (const reg of etat.regiments) if (reg.effectif <= 0) reg.effectif = 0;
 
   // l'eau : la passe horaire avance de quelques rangées
   avancerEau(B, etat.tickJour);
@@ -302,7 +327,7 @@ function enFace(B, rng) {
     const leurs = etat.regiments.filter(r => r.camp === EUX && r.effectif > r.initial * 0.4);
     if (leurs.length) {
       const reg = rng.pick(leurs);
-      reg.ordre = { ...reg.ordre, y: Math.min(S.ligne.nous - 40, reg.ordre.y + R.ia.avance) };
+      reg.ordre = { ...reg.ordre, y: Math.min(zone(B).y0 + S.ligne.nous - 40, reg.ordre.y + R.ia.avance) };
       reattribuer(B, reg);
     }
   }
@@ -321,6 +346,7 @@ export function aube(B) {
   etat.jour++; etat.tickJour = 0; etat.phase = 'jour';
   etat.hydro = { passe: 0, ligne: 0 };
   etat.pertesJour.push([0, 0]);
+  reposer(B.armee, B.R);
   return { ok: true };
 }
 
@@ -352,11 +378,27 @@ export function photo(B) {
 export function restaurer(p, R) {
   const { armee, coutsActuels, coutsNeufs, ...reste } = structuredClone(p);
   const etat = reste;
+  // une sauvegarde d'avant les marges (v0.2) : tout glisse de la largeur des marges
+  const avantMarges = !etat.marges;
+  if (avantMarges) {
+    const m = etat.marges = { ...SECTEURS[etat.secteur].marges };
+    for (const imp of etat.impacts) { imp[2] += m.x * 10; imp[3] += m.y * 10; }
+    for (const r of etat.regiments) for (const o of [r.ordre, r.depart]) { o.x += m.x; o.y += m.y; }
+    for (const b of etat.barrages) { b.x += m.x; b.y += m.y; }
+    etat.couts = { bande: 0, version: (etat.couts?.version || 1) + 1 };
+  }
+  etat.blesses ??= [0, 0];
   const B = monter(etat, R);
   rejouerTerrain(B);
   restaurerArmee(B.armee, armee);
-  B.couts.set(deB64(coutsActuels, Uint8Array));
-  B.coutsNeufs.set(deB64(coutsNeufs, Uint8Array));
+  if (avantMarges) {
+    for (let i = 0; i < B.armee.n; i++) { B.armee.x[i] += etat.marges.x; B.armee.y[i] += etat.marges.y; }
+    calculerCouts(B.terrain, R, B.couts, false);
+    B.coutsNeufs.set(B.couts);
+  } else {
+    B.couts.set(deB64(coutsActuels, Uint8Array));
+    B.coutsNeufs.set(deB64(coutsNeufs, Uint8Array));
+  }
   return B;
 }
 

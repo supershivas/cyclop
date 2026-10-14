@@ -30,7 +30,8 @@ Statuts : **à l'étude** · **validé** (Jérôme a tranché) · **en cours** �
 - **La nuit** : corvées (abris, caillebotis, inhumation, relève, ravitaillement).
 - **Corps** : entités d'un pixel à quelques paliers de couleur, inhumation, poids
   sur le moral près des lignes.
-- **Moral et cohésion** par régiment, déroute.
+- **Moral et cohésion** par régiment, déroute (la peur de chaque homme existe déjà, v0.3.0 ; elle ne fait encore que l'empêcher de tirer).
+- **Évacuer les blessés** (la boue la ralentit), les soigner la nuit.
 - **Lignes de vue** (une crête cache), mêlées de tranchées rares.
 - **Hors de vue, les soldats comptés** au lieu d'être simulés un par un.
 - **Champs de coûts recalculés par morceaux** quand le terrain change (aujourd'hui :

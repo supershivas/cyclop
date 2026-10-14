@@ -1,12 +1,13 @@
 /* Le rendu, en three.js (profil pixel-3d-three de game-system). Il lit l'état
    de la bataille et ne le modifie jamais.
 
-   - Caméra : une projection oblique, orthographique et très plongée. Le dessus
-     des cases garde sa forme (un mètre = `ppm` pixels, un entier : le zoom va
-     par facteurs entiers) ; une hauteur h remonte de k × h à l'écran. Elle a un
-     léger angle (`yaw`) et se tourne ou s'incline un peu (bornes YAW_MAX,
-     K_MIN..K_MAX), en douceur : on sent la profondeur (Jérôme, v0.2.0). Seules
-     les parois tournées vers le sud, l'est et l'ouest peuvent se voir.
+   - Caméra : une vraie perspective, à angle étroit (`fov`, 30°), très plongée
+     (`tangage`, 54°) : ce qui est loin paraît plus petit, on sent la profondeur
+     (Jérôme, v0.3.0 : « les régiments lointains apparaissent plus petits »). Au
+     point visé, un mètre = `ppm` pixels (le zoom va par facteurs entiers). On la
+     tourne (`yaw`) et l'incline un peu, en douceur ; elle ne sort jamais du
+     terrain (borner). Seules les parois tournées vers le sud, l'est et l'ouest
+     peuvent se voir.
    - L'image est calculée en basse résolution puis agrandie d'un facteur entier
      sans lissage (`image-rendering: pixelated`).
    - Palette exacte : la gestion des couleurs de three.js est coupée (three-lib.js),
@@ -20,22 +21,25 @@
      de Pierre).
    - Les soldats : instanciés (une boîte et son ombre) ; au zoom 1 et 2, un
      point de 2 × 2 pixels (la couleur du camp sur son ombre). */
-import { loadThree } from './three-lib.js?v=0.2.0';
-import { PALETTE, ORDRE, INDICE } from './palette.js?v=0.2.0';
-import { OMBRE, couleursLigne } from './apparence.js?v=0.2.0';
-import { MORCEAU, hauteurVueQ as hauteurQ, hauteurVueM as hauteurM } from './terrain.js?v=0.2.0';
-import { horloge } from './bataille.js?v=0.2.0';
+import { loadThree } from './three-lib.js?v=0.3.0';
+import { PALETTE, ORDRE, INDICE } from './palette.js?v=0.3.0';
+import { OMBRE, couleursLigne } from './apparence.js?v=0.3.0';
+import { MORCEAU, hauteurVueQ as hauteurQ, hauteurVueM as hauteurM } from './terrain.js?v=0.3.0';
+import { horloge } from './bataille.js?v=0.3.0';
 
-export const CAMERA = { yaw: 0.2, k: 0.55 };  // au départ : un léger angle (rad), et k : l'écran remonte de k m par mètre de hauteur
-export const YAW_MAX = 0.6, K_MIN = 0.32, K_MAX = 0.85;
+export const CAMERA = { yaw: 0.15, tangage: 0.95, fov: 30 };   // au départ : tournée de 9°, plongée de 54°, angle de 30°
+export const YAW_MAX = 0.6, TANGAGE_MIN = 0.7, TANGAGE_MAX = 1.35;
+const SOL_Y = 3;                              // m : la hauteur moyenne du sol (le point visé, le sol à plat des zooms 1 et 2)
 export const ZOOMS = [1, 2, 3, 4, 6, 8];      // pixels (logiques) par mètre
 const POINTS_JUSQUA = 2;                      // zoom où un soldat n'est plus qu'un point
 const PLAT_JUSQUA = 2;                        // zoom où le sol devient une seule image plate (une marche d'un quart y fait un demi-pixel)
 const PLUIE = 1600, ECLATS = 900;
  const E = 0.03;                               // m : le débord des faces (pas de fente vue de biais)
+const HAUT = 8;                               // m : marge du bas de l'écran, où un sol en hauteur remonte (borner)
 const SOCLE = -8;                             // m : le bas de la coupe du terrain (bord sud)
 
-export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera: camDepart = null } = {}) {
+/* respiration : l'amplitude (rad) d'un lent balancement de la caméra (variante du labo ; 0 dans le jeu). */
+export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera: camDepart = null, respiration = 0 } = {}) {
   const THREE = await loadThree();
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: false, powerPreference: 'high-performance' });
   renderer.setPixelRatio(1);
@@ -44,30 +48,27 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
   const gl = renderer.getContext();
   const scene = new THREE.Scene();
 
-  // ─── La caméra oblique ───
-  const camera = new THREE.Camera();
-  camera.matrixAutoUpdate = false;
+  // ─── La caméra : une perspective à angle étroit ───
   const depart = { ...CAMERA, ...(camDepart || {}) };
-  // yaw, k : la caméra vue ; cible : là où elle va (elle y glisse en douceur)
-  const vue = { cx: 200, cz: 150, zoom: 2, vw: 320, vh: 200, facteur: 2, yaw: depart.yaw, k: depart.k, cible: { yaw: depart.yaw, k: depart.k } };
-  /* La projection : le sol tourné de yaw autour du centre de la vue, puis une
-     hauteur h remonte de k × h. Elle est parallèle à D = (sin yaw · k, 1, cos yaw · k) :
-     le plus proche de la caméra est le plus grand selon D. */
+  const camera = new THREE.PerspectiveCamera(depart.fov, 1, 1, 1000);
+  // yaw, tangage : la caméra vue ; cible : là où elle va (elle y glisse en douceur)
+  const vue = { cx: 200, cz: 150, zoom: 2, vw: 320, vh: 200, facteur: 2, fov: depart.fov, yaw: depart.yaw, tangage: depart.tangage, cible: { yaw: depart.yaw, tangage: depart.tangage } };
+  // le souffle de la caméra (respiration) s'ajoute à l'angle choisi : yawVu, tangageVu servent au dessin et aux conversions
+  const souffle = { t: 0, yaw: 0, tangage: 0 };
+  const yawVu = () => vue.yaw + souffle.yaw, tangageVu = () => vue.tangage + souffle.tangage;
+  // la distance de la caméra au point visé : un mètre là-bas = ppm pixels
+  const distance = zoom => (vue.vh / 2) / (Math.tan(vue.fov * Math.PI / 360) * ZOOMS[zoom]);
+  // d'où regarde la caméra, par rapport au point visé (au sud quand yaw = 0, en hauteur)
+  const versCamera = (yaw, tg) => [Math.sin(yaw) * Math.cos(tg), Math.sin(tg), Math.cos(yaw) * Math.cos(tg)];
   function projeter() {
-    const p = ZOOMS[vue.zoom], c = Math.cos(vue.yaw), s = Math.sin(vue.yaw), K = vue.k;
-    // de face, le centre posé sur la grille de pixels : les bords des cases tombent sur des pixels entiers
-    const droit = Math.abs(vue.yaw) < 1e-3;
-    const cx = droit ? Math.round(vue.cx * p) / p : vue.cx, cz = droit ? Math.round(vue.cz * p) / p : vue.cz;
-    const a = 2 * p / vue.vw, b = 2 * p / vue.vh;
-    const dmin = -10 - 400 * K, Rg = 30 + 1100 * K;
-    camera.projectionMatrix.set(
-      a * c, 0, -a * s, -a * (c * cx - s * cz),
-      -b * s, b * K, -b * c, b * (s * cx + c * cz),
-      -2 * s * K / Rg, -2 / Rg, -2 * c * K / Rg, 1 + 2 * dmin / Rg,
-      0, 0, 0, 1,
-    );
-    camera.projectionMatrixInverse.copy(camera.projectionMatrix).invert();
-    return { cx, cz, p };
+    const p = ZOOMS[vue.zoom], D = distance(vue.zoom), o = versCamera(yawVu(), tangageVu());
+    camera.fov = vue.fov; camera.aspect = vue.vw / vue.vh;
+    camera.near = D * 0.15; camera.far = D * 5;
+    camera.updateProjectionMatrix();
+    camera.position.set(vue.cx + o[0] * D, SOL_Y + o[1] * D, vue.cz + o[2] * D);
+    camera.lookAt(vue.cx, SOL_Y, vue.cz);
+    camera.updateMatrixWorld();
+    return { cx: vue.cx, cz: vue.cz, p };
   }
 
   // ─── La palette : 10 × 2 (la couleur, la couleur de la paroi) ───
@@ -99,7 +100,7 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
         // une paroi prend la couleur de la case au-dessus d'elle (aDecal : vers elle), en plus sombre (la moitié basse de la texture)
         vec2 xz = position.xz + aDecal;
         vUV = vec2(xz.x / uTaille.x, (xz.y / uTaille.y + (aParoi > 0.5 ? 1.0 : 0.0)) * 0.5);
-        gl_Position = projectionMatrix * vec4(position, 1.0);
+        gl_Position = projectionMatrix * viewMatrix * vec4(position, 1.0);
       }`,
     fragmentShader: `
       uniform sampler2D uSol; uniform float uPlat;
@@ -201,7 +202,7 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
       varying float vCamp; varying float vPart; varying float vHaut;
       void main() {
         vCamp = aCamp; vPart = aPart; vHaut = position.y;
-        gl_Position = projectionMatrix * vec4(position + aPos, 1.0);
+        gl_Position = projectionMatrix * viewMatrix * vec4(position + aPos, 1.0);
       }`,
     fragmentShader: `
       uniform vec3 uNous; uniform vec3 uEux; uniform vec3 uOmbre; uniform vec3 uSel;
@@ -220,7 +221,7 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
     uniforms: { uNous: { value: col('n') }, uEux: { value: col('x') }, uOmbre: { value: col('t') }, uSel: { value: col('o') } },
     vertexShader: `
       attribute float aCamp; varying float vCamp;
-      void main() { vCamp = aCamp; gl_Position = projectionMatrix * vec4(position + vec3(0.0, 1.2, 0.0), 1.0); gl_PointSize = 2.0; }`,
+      void main() { vCamp = aCamp; gl_Position = projectionMatrix * viewMatrix * vec4(position + vec3(0.0, 1.2, 0.0), 1.0); gl_PointSize = 2.0; }`,
     fragmentShader: `
       uniform vec3 uNous; uniform vec3 uEux; uniform vec3 uOmbre; uniform vec3 uSel; varying float vCamp;
       void main() {
@@ -306,7 +307,7 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
       let n = 0;
       for (const a of T.arbres) {
         if (a.abattu !== m.userData.abattu || a.v !== m.userData.v) continue;
-        m4.makeTranslation(a.i + 0.5, plat() ? 0 : surface(a.i + 0.5, a.j + 0.5), a.j + 0.5);
+        m4.makeTranslation(a.i + 0.5, plat() ? SOL_Y : surface(a.i + 0.5, a.j + 0.5), a.j + 0.5);
         m.setMatrixAt(n++, m4);
       }
       m.count = n; m.instanceMatrix.needsUpdate = true;
@@ -323,7 +324,7 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
   const eclMat = new THREE.ShaderMaterial({
     uniforms: { uPal: { value: palTex }, uNP: { value: NP }, uTaille: { value: 2 } },
     vertexShader: `attribute float aTon; varying float vTon; uniform float uTaille;
-      void main() { vTon = aTon; gl_Position = projectionMatrix * vec4(position, 1.0); gl_PointSize = aTon < 0.0 ? 0.0 : uTaille; if (aTon < 0.0) gl_Position = vec4(2.0); }`,
+      void main() { vTon = aTon; gl_Position = projectionMatrix * viewMatrix * vec4(position, 1.0); gl_PointSize = aTon < 0.0 ? 0.0 : uTaille; if (aTon < 0.0) gl_Position = vec4(2.0); }`,
     fragmentShader: `uniform sampler2D uPal; uniform float uNP; varying float vTon;
       void main() {
         float t = floor(vTon + 0.5);
@@ -376,7 +377,7 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
         p.y = 30.0 - mod(uT * aVit + position.y, 40.0);
         p.x = uC.x - uE.x * 0.5 + mod(p.x - uC.x + uE.x * 0.5 - uT * 2.0, uE.x);
         p.z = uC.y - uE.y * 0.5 + mod(p.z - uC.y + uE.y * 0.5, uE.y);
-        gl_Position = projectionMatrix * vec4(p, 1.0);
+        gl_Position = projectionMatrix * viewMatrix * vec4(p, 1.0);
         gl_PointSize = uTaille;
       }`,
     fragmentShader: `uniform vec3 uCol; void main() { if (gl_PointCoord.x > 0.5) discard; gl_FragColor = vec4(uCol, 1.0); }`,
@@ -408,7 +409,7 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
   // ─── Brancher une bataille ───
   function attacher(bataille) {
     B = bataille; T = B.terrain;
-    if (sol) { scene.remove(sol); sol.children.forEach(m => m.geometry.dispose()); solTex.dispose(); }
+    if (sol) { scene.remove(sol); sol.children.forEach(m => { m.userData.fin?.dispose(); m.userData.gros?.dispose(); }); solTex.dispose(); }
     solIdx = new Uint8Array(T.W * T.H);
     solData = new Uint8Array(T.W * T.H * 2 * 4);
     solTex = new THREE.DataTexture(solData, T.W, T.H * 2, THREE.RGBAFormat, THREE.UnsignedByteType);
@@ -418,7 +419,7 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
     sol = new THREE.Group(); scene.add(sol);
     // le niveau de détail lointain : tout le champ en deux triangles, à plat
     if (solPlat) { scene.remove(solPlat); solPlat.geometry.dispose(); }
-    const gp = new THREE.PlaneGeometry(T.W, T.H); gp.rotateX(-Math.PI / 2); gp.translate(T.W / 2, 0, T.H / 2);
+    const gp = new THREE.PlaneGeometry(T.W, T.H); gp.rotateX(-Math.PI / 2); gp.translate(T.W / 2, SOL_Y, T.H / 2);
     gp.setAttribute('aParoi', new THREE.Float32BufferAttribute(new Float32Array(gp.attributes.position.count), 1));
     gp.setAttribute('aDecal', new THREE.Float32BufferAttribute(new Float32Array(gp.attributes.position.count * 2), 2));
     solPlat = new THREE.Mesh(gp, solMat); solPlat.frustumCulled = false;
@@ -447,9 +448,50 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
   }
   function refaire(m) {
     const { mx, my } = m.userData;
-    m.geometry.dispose();
-    m.geometry = construireMorceau(mx, my);
+    m.userData.fin?.dispose(); m.userData.gros?.dispose();
+    m.userData.fin = construireMorceau(mx, my);
+    m.userData.gros = construireGros(mx, my);
+    m.geometry = m.userData.fin;
     m.userData.version = versionAutour(mx, my);
+  }
+  /* Le niveau de détail lointain (la perspective montre beaucoup de sol au loin :
+     après trois jours d'obus, 54 000 triangles au zoom 4) : un morceau loin de la
+     caméra n'est plus que des facettes de LOIN m, sans parois ; les cubes restent
+     de près. La couleur reste celle de chaque case (la texture). */
+  const LOIN = 5;
+  function construireGros(mx, my) {
+    const i0 = mx * MORCEAU, j0 = my * MORCEAU, i1 = Math.min(T.W, i0 + MORCEAU), j1 = Math.min(T.H, j0 + MORCEAU);
+    const coin = (ci, cj) => {
+      let s2 = 0, n = 0;
+      for (let dj = -1; dj <= 0; dj++) for (let di = -1; di <= 0; di++) {
+        const i = Math.min(T.W - 1, Math.max(0, ci + di)), j = Math.min(T.H - 1, Math.max(0, cj + dj));
+        s2 += hauteurQ(T, j * T.W + i); n++;
+      }
+      return s2 / n * 0.25;
+    };
+    const pos = [];
+    for (let z = j0; z < j1; z += LOIN) for (let x = i0; x < i1; x += LOIN) {
+      const x1 = Math.min(i1, x + LOIN), z1 = Math.min(j1, z + LOIN);
+      const a = coin(x, z), b = coin(x1, z), c = coin(x1, z1), d = coin(x, z1);
+      pos.push(x, a, z, x, d, z1, x1, c, z1, x, a, z, x1, c, z1, x1, b, z);
+    }
+    const g = new THREE.BufferGeometry();
+    g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+    g.setAttribute('aParoi', new THREE.Float32BufferAttribute(new Float32Array(pos.length / 3), 1));
+    g.setAttribute('aDecal', new THREE.Float32BufferAttribute(new Float32Array(pos.length / 3 * 2), 2));
+    g.boundingSphere = new THREE.Sphere(new THREE.Vector3((i0 + i1) / 2, 3, (j0 + j1) / 2), Math.hypot(i1 - i0, j1 - j0, 20) / 2);
+    return g;
+  }
+  // chaque morceau : les cubes de près, les facettes au loin
+  function choisirDetail() {
+    const seuil = distance(vue.zoom) * 1.05, c = camera.position;      // (au-delà du point visé)
+    for (const m of morceaux) {
+      const { mx, my, fin, gros } = m.userData;
+      if (!fin) continue;
+      const d = Math.hypot((mx + 0.5) * MORCEAU - c.x, SOL_Y - c.y, (my + 0.5) * MORCEAU - c.z);
+      const g = d > seuil ? gros : fin;
+      if (m.geometry !== g) m.geometry = g;
+    }
   }
   // la texture du sol : les rangées dont la couleur a changé
   function majSol(tout = false, dt = 0) {
@@ -497,17 +539,20 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
   // ─── Les soldats : leurs positions dans les tampons ───
   function majSoldats() {
     const A = B.armee, n = A.n, p = ZOOMS[vue.zoom], aPlat = plat();
-    // seulement ceux qu'on voit (avec une marge pour la hauteur et l'ombre)
-    // seulement ceux qu'on voit : le test se fait dans l'axe de l'écran (la vue tourne)
-    const co = Math.cos(vue.yaw), si = Math.sin(vue.yaw), mx = vue.vw / 2 / p + 1.5, my = vue.vh / 2 / p;
+    // seulement ceux qu'on voit : le sol vu est un trapèze ; on garde ceux de son rectangle englobant
+    const cs = coinsSol(vue.zoom, yawVu(), tangageVu());
+    const x0 = vue.cx + cs.x0 - 6, x1 = vue.cx + cs.x1 + 6, z0 = vue.cz + cs.z0 - 6, z1 = vue.cz + cs.z1 + 12;
+    // puis le vrai test : projeté, il tombe dans l'écran (le trapèze n'est pas son rectangle)
+    projeter();
+    mVP.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse);
+    const e = mVP.elements;
     let k = 0;
     for (let i = 0; i < n; i++) {
       const x = A.x[i], y = A.y[i];
-      const dx = x - vue.cx, dz = y - vue.cz, X = co * dx - si * dz;
-      if (X < -mx || X > mx) continue;
-      const Z = si * dx + co * dz;
-      if (Z < -my - 1 || Z > my + 6) continue;          // (marge : un soldat en hauteur remonte à l'écran)
-      posArr[k * 3] = x; posArr[k * 3 + 1] = aPlat ? 0 : surface(x, y); posArr[k * 3 + 2] = y;
+      if (x < x0 || x > x1 || y < z0 || y > z1) continue;
+      const cxp = e[0] * x + e[4] * SOL_Y + e[8] * y + e[12], cyp = e[1] * x + e[5] * SOL_Y + e[9] * y + e[13], cw = e[3] * x + e[7] * SOL_Y + e[11] * y + e[15];
+      if (cxp < -1.08 * cw || cxp > 1.08 * cw || cyp < -1.15 * cw || cyp > 1.15 * cw) continue;
+      posArr[k * 3] = x; posArr[k * 3 + 1] = aPlat ? SOL_Y : surface(x, y); posArr[k * 3 + 2] = y;
       campArr[k] = A.camp[i] + (choisis.has(A.reg[i]) ? 2 : 0);
       k++;
     }
@@ -531,31 +576,36 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
     renderer.setSize(vue.vw, vue.vh, false);
     canvas.style.width = (vue.vw * vue.facteur / dpr) + 'px';
     canvas.style.height = (vue.vh * vue.facteur / dpr) + 'px';
+    borner();
   }
 
   // ─── Coordonnées ───
   // pixels CSS dans le canvas → [x, y] du terrain (mètres), en tenant compte du relief
+  const mVP = new THREE.Matrix4();
+  const rayon = new THREE.Raycaster(), ndc = new THREE.Vector2(), v3 = new THREE.Vector3();
   function versTerrain(px, py) {
-    const dpr = window.devicePixelRatio || 1, p = ZOOMS[vue.zoom];
-    const sx = px * dpr / vue.facteur - vue.vw / 2, sy = py * dpr / vue.facteur - vue.vh / 2;
-    const c = Math.cos(vue.yaw), s = Math.sin(vue.yaw), X = sx / p;
-    let x = vue.cx, z = vue.cz, h = 0;
-    for (let k = 0; k < 5; k++) {
-      const Z = sy / p + vue.k * h;
-      x = vue.cx + c * X + s * Z; z = vue.cz - s * X + c * Z;
+    const w = canvas.clientWidth || 1, h = canvas.clientHeight || 1;
+    ndc.set(px / w * 2 - 1, -(py / h) * 2 + 1);
+    rayon.setFromCamera(ndc, camera);
+    const o = rayon.ray.origin, d = rayon.ray.direction;
+    // le sol à la hauteur où le rayon le touche (quelques allers-retours sur le relief)
+    let hy = SOL_Y, x = vue.cx, z = vue.cz;
+    for (let k = 0; k < 6; k++) {
+      if (d.y > -1e-4) break;
+      const t = (hy - o.y) / d.y;
+      x = o.x + d.x * t; z = o.z + d.z * t;
       if (!T || plat()) break;
-      h = surface(x, z);
+      hy = surface(x, z);
     }
     return [x, z];
   }
   // [x, y] du terrain (et une hauteur) → pixels CSS
   function versEcran(x, y, h = null) {
-    const dpr = window.devicePixelRatio || 1, p = ZOOMS[vue.zoom];
-    if (h === null && T && plat()) h = 0;
+    if (h === null && T && plat()) h = SOL_Y;
     if (h === null && T) h = surface(x, y);
-    const c = Math.cos(vue.yaw), s = Math.sin(vue.yaw), dx = x - vue.cx, dz = y - vue.cz;
-    const sx = (c * dx - s * dz) * p + vue.vw / 2, sy = (s * dx + c * dz - vue.k * (h || 0)) * p + vue.vh / 2;
-    return [sx * vue.facteur / dpr, sy * vue.facteur / dpr];
+    v3.set(x, h ?? SOL_Y, y).project(camera);
+    const w = canvas.clientWidth || 1, hh = canvas.clientHeight || 1;
+    return [(v3.x + 1) / 2 * w, (1 - v3.y) / 2 * hh];
   }
 
   // ─── Une image ───
@@ -568,11 +618,18 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
     for (const e of evenements) if (e.type === 'impact') eclater(e.x, e.y, e.cal);
     // la caméra glisse vers sa cible : un mouvement doux plutôt qu'un saut
     const lisse = 1 - Math.exp(-dt * 7);
-    vue.yaw += (vue.cible.yaw - vue.yaw) * lisse; vue.k += (vue.cible.k - vue.k) * lisse;
+    vue.yaw += (vue.cible.yaw - vue.yaw) * lisse; vue.tangage += (vue.cible.tangage - vue.tangage) * lisse;
+    if (respiration) {
+      // un balancement très lent, comme une respiration (deux périodes qui ne tombent jamais juste ensemble)
+      souffle.t += dt;
+      souffle.yaw = respiration * Math.sin(souffle.t * 2 * Math.PI / 23);
+      souffle.tangage = respiration * 0.6 * Math.sin(souffle.t * 2 * Math.PI / 31 + 1);
+    }
+    borner();
     majSol(false, dt);
     if (!vide) { sol.visible = !plat(); solPlat.visible = plat(); }
     solMat.uniforms.uPlat.value = plat() ? 1 : 0;
-    if (!plat()) majMorceaux();
+    if (!plat()) { majMorceaux(); projeter(); choisirDetail(); }
     majArbres();
     const t1 = performance.now();
     majSoldats();
@@ -603,7 +660,9 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
     set vide(v) { vide = v; scene.children.forEach(o => { o.visible = !v; }); },
     zoomer(d, ancre = null) {
       const avant = ancre ? versTerrain(...ancre) : null;
-      vue.zoom = Math.max(0, Math.min(ZOOMS.length - 1, vue.zoom + d));
+      const z = Math.max(0, Math.min(ZOOMS.length - 1, vue.zoom + d));
+      if (T && !tient(z, 0)) return;                 // plus loin, la vue sortirait du terrain
+      vue.zoom = z;
       if (avant) {
         const apres = versTerrain(...ancre);
         vue.cx += avant[0] - apres[0]; vue.cz += avant[1] - apres[1];
@@ -617,11 +676,14 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
       vue.cx += c * sx + s * sy; vue.cz += -s * sx + c * sy; borner();
     },
     // tourner (rad) et incliner (k) la caméra, dans ses bornes
-    tourner(dYaw, dK = 0) {
+    tourner(dYaw, dTangage = 0) {
       vue.cible.yaw = Math.max(-YAW_MAX, Math.min(YAW_MAX, vue.cible.yaw + dYaw));
-      vue.cible.k = Math.max(K_MIN, Math.min(K_MAX, vue.cible.k + dK));
+      vue.cible.tangage = Math.max(TANGAGE_MIN, Math.min(TANGAGE_MAX, vue.cible.tangage + dTangage));
     },
-    placerCamera(yaw, k) { vue.cible.yaw = vue.yaw = yaw; vue.cible.k = vue.k = k; },
+    placerCamera(yaw, tangage) {
+      vue.cible.yaw = vue.yaw = Math.max(-YAW_MAX, Math.min(YAW_MAX, yaw));
+      vue.cible.tangage = vue.tangage = Math.max(TANGAGE_MIN, Math.min(TANGAGE_MAX, tangage));
+    },
     get ppm() { return ZOOMS[vue.zoom]; },
     get stats() {
       let tri = 0;
@@ -630,9 +692,42 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
     },
     detruire() { renderer.dispose(); },
   };
+  /* La vue ne sort jamais du terrain (Jérôme, v0.3.0). coinsSol : où les quatre
+     coins de l'écran touchent le sol (à SOL_Y), par rapport au point visé ; ça ne
+     dépend que du zoom et des angles. HAUT : la marge du bas, où un sol en
+     hauteur remonte. */
+  function coinsSol(zoom, yaw, tg) {
+    const D = distance(zoom), o = versCamera(yaw, tg);
+    const f = [-o[0], -o[1], -o[2]];                                   // vers le point visé
+    let r = [f[2], 0, -f[0]]; const lr = Math.hypot(r[0], r[2]) || 1; r = [r[0] / lr, 0, r[2] / lr];   // à droite (horizontal)
+    // f × r donnerait le bas : u, le haut de l'écran
+    const u = [r[1] * f[2] - r[2] * f[1], r[2] * f[0] - r[0] * f[2], r[0] * f[1] - r[1] * f[0]];
+    const ty = Math.tan(vue.fov * Math.PI / 360), tx = ty * vue.vw / vue.vh;
+    const out = { x0: Infinity, x1: -Infinity, z0: Infinity, z1: -Infinity, ok: true };
+    for (const [a, b] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) {
+      const d = [f[0] + r[0] * a * tx + u[0] * b * ty, f[1] + r[1] * a * tx + u[1] * b * ty, f[2] + r[2] * a * tx + u[2] * b * ty];
+      if (d[1] >= -1e-3) { out.ok = false; continue; }                // ce coin regarde au-dessus de l'horizon
+      const t = -o[1] * D / d[1], x = o[0] * D + d[0] * t, z = o[2] * D + d[2] * t;
+      out.x0 = Math.min(out.x0, x); out.x1 = Math.max(out.x1, x); out.z0 = Math.min(out.z0, z); out.z1 = Math.max(out.z1, z);
+    }
+    return out;
+  }
+  function tient(zoom, yaw) {
+    const c = coinsSol(zoom, yaw, tangageVu());
+    return c.ok && c.x1 - c.x0 <= T.W && c.z1 - c.z0 + HAUT <= T.H;
+  }
   function borner() {
     if (!T) return;
-    vue.cx = Math.max(0, Math.min(T.W, vue.cx));
-    vue.cz = Math.max(0, Math.min(T.H, vue.cz));
+    // trop loin pour cet écran, même de face : on se rapproche
+    while (vue.zoom < ZOOMS.length - 1 && !tient(vue.zoom, 0)) vue.zoom++;
+    // trop tourné pour ce zoom : l'angle se réduit (le plus grand qui tient)
+    const ymax = yaw => { let lo = 0, hi = Math.abs(yaw); if (tient(vue.zoom, hi)) return hi; for (let k = 0; k < 12; k++) { const m = (lo + hi) / 2; if (tient(vue.zoom, m)) lo = m; else hi = m; } return lo; };
+    const lim = ymax(Math.max(Math.abs(vue.cible.yaw), Math.abs(yawVu())) + 1e-9);
+    vue.cible.yaw = Math.sign(vue.cible.yaw) * Math.min(Math.abs(vue.cible.yaw), lim);
+    vue.yaw = Math.sign(vue.yaw) * Math.min(Math.abs(vue.yaw), Math.max(0, lim - Math.abs(souffle.yaw)));
+    const c = coinsSol(vue.zoom, yawVu(), tangageVu());
+    if (!c.ok) return;
+    vue.cx = Math.max(-c.x0, Math.min(T.W - c.x1, vue.cx));
+    vue.cz = Math.max(-c.z0, Math.min(T.H - HAUT - c.z1, vue.cz));
   }
 }
