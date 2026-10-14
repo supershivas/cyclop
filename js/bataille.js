@@ -14,17 +14,17 @@
    La sauvegarde (photo) garde la graine, la liste compacte des impacts, l'état
    de la foule et les petites couches de logique ; jamais le relief : il se
    rejoue depuis la graine et les impacts (rejouerTerrain). */
-import { createRng } from './lib/rng.js?v=0.6.0';
-import { creerTerrain, impact, hydroLignes, etat as etatCase, vitesseEtat, ETAT } from './terrain.js?v=0.6.0';
-import { creerArmee, ajouterSoldat, construireGrille, pasArmee, tuerDans, effrayer, compacter, photoArmee, restaurerArmee, b64, deB64, DENSITE, place } from './army.js?v=0.6.0';
-import { creuserTranchees, ligneSous } from './tranchees.js?v=0.6.0';
-import { calculerCouts, creerCacheChamps, dimensionsCouts, BLOC } from './champs.js?v=0.6.0';
-import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.6.0';
-import { METEO, TRANSITIONS, PREVISION_JUSTE } from './data/meteo.js?v=0.6.0';
-import { SECTEURS } from './data/secteur.js?v=0.6.0';
-import { REGIMENTS } from './data/lexique.js?v=0.6.0';
-import { grade } from './identite.js?v=0.6.0';
-import { corvees, rejouerTravaux } from './nuit.js?v=0.6.0';
+import { createRng } from './lib/rng.js?v=0.7.0';
+import { creerTerrain, impact, hydroLignes, etat as etatCase, vitesseEtat, ETAT } from './terrain.js?v=0.7.0';
+import { creerArmee, ajouterSoldat, construireGrille, pasArmee, tuerDans, effrayer, compacter, photoArmee, restaurerArmee, b64, deB64, DENSITE, place } from './army.js?v=0.7.0';
+import { creuserTranchees, ligneSous } from './tranchees.js?v=0.7.0';
+import { calculerCouts, creerCacheChamps, dimensionsCouts, BLOC } from './champs.js?v=0.7.0';
+import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.7.0';
+import { METEO, TRANSITIONS, PREVISION_JUSTE } from './data/meteo.js?v=0.7.0';
+import { SECTEURS } from './data/secteur.js?v=0.7.0';
+import { REGIMENTS } from './data/lexique.js?v=0.7.0';
+import { grade } from './identite.js?v=0.7.0';
+import { corvees, rejouerTravaux } from './nuit.js?v=0.7.0';
 
 export const PAS = 1 / 30;                 // s de jeu par pas
 export const NOUS = 0, EUX = 1;
@@ -154,7 +154,7 @@ function monter(etat, R) {
   const W = S.largeur + 2 * m.x, H = S.hauteur + 2 * m.y;
   // autant d'arbres dans les marges, à surface égale
   const arbres = Math.round(S.arbres * W * H / (S.largeur * S.hauteur));
-  const terrain = creerTerrain(etat.graine, { largeur: W, hauteur: H, ox: m.x, oy: m.y, arbres }, R);
+  const terrain = creerTerrain(etat.graine, { largeur: W, hauteur: H, ox: m.x, oy: m.y, arbres, haies: Math.round((S.haies ?? 0) * W * H / (S.largeur * S.hauteur)), buissons: Math.round((S.buissons ?? 0) * W * H / (S.largeur * S.hauteur)) }, R);
   const { lignes, troncons } = etat.tranchees ? creuserTranchees(terrain, S, m.x, m.y, etat.graine) : { lignes: [], troncons: [] };
   const faces = Int8Array.from(troncons, t => lignes[t.ligne].face);
   const armee = creerArmee({ capacite: etat.parCamp * 2 + 16, W, H });
@@ -479,6 +479,9 @@ export function terrainSous(B, x, y) {
   lignes.push(e === ETAT.EAU ? `Eau, ${Math.round(T.eau[c] * 100)} cm` : NOMS_ETAT[e]);
   const arbre = T.arbres.find(a => a.i === i && a.j === j);
   if (arbre) lignes.push(arbre.abattu ? 'Un arbre abattu' : 'Un arbre');
+  const buisson = T.buissons.find(b => Math.abs(b.i - i) <= 1 && Math.abs(b.j - j) <= 1);
+  if (buisson) lignes.push(buisson.detruit ? 'Un buisson arraché' : 'Un buisson');
+  if (T.herbe[c] && e !== ETAT.EAU) lignes.push(['', 'Herbe rare', 'Herbe', 'Herbe haute'][T.herbe[c]]);
   lignes.push(`On y marche à ${Math.round(vitesseEtat(e, R) * 100)} %`);
   if (d <= -2) lignes.push(t >= 0 ? 'À l\'abri des éclats ; le parapet protège de face' : 'À l\'abri des éclats');
   return lignes;

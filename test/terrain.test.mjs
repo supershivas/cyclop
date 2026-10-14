@@ -101,3 +101,24 @@ test('hauteurQ = sol généré + différence', () => {
   impact(T, 10.5, 10.5, '75', R);
   assert.equal(hauteurQ(T, 10 * T.W + 10), 16);
 });
+
+group('terrain — végétation');
+test('de l\'herbe, des buissons en haies ; un obus souffle l\'herbe et arrache les buissons autour de lui', () => {
+  const T = creerTerrain(5, { largeur: 200, hauteur: 150, arbres: 10, haies: 3, buissons: 40 }, R);
+  let herbe = 0; for (let c = 0; c < T.W * T.H; c++) if (T.herbe[c]) herbe++;
+  assert.ok(herbe > T.W * T.H * 0.3, `de l'herbe (${herbe} cases)`);
+  assert.ok(T.buissons.length > 40, 'des buissons');
+  const b = T.buissons[0];
+  impact(T, b.i + 0.5, b.j + 0.5, '220', R);
+  assert.equal(b.detruit, 1, 'arraché');
+  for (let dj = -3; dj <= 3; dj++) for (let di = -3; di <= 3; di++) {
+    const i = b.i + di, j = b.j + dj;
+    if (i >= 0 && j >= 0 && i < T.W && j < T.H) assert.equal(T.herbe[j * T.W + i], 0);
+  }
+});
+test('la boue et l\'eau tuent l\'herbe, heure après heure', () => {
+  const T = creerTerrain(5, { largeur: 60, hauteur: 40, arbres: 0 }, R);
+  T.herbe.fill(3); T.humid.fill(0.95);
+  for (let h = 0; h < 4; h++) hydroLignes(T, 0, T.H, METEO.pluie, R);
+  assert.ok(T.herbe.every(v => v === 0));
+});

@@ -5,8 +5,8 @@
    Les faces verticales (les parois tournées vers nous) d'au moins un demi-mètre
    prennent le ton plus sombre (OMBRE) ; une marche d'un quart garde la couleur
    du dessus (sinon chaque courbe de niveau des bosses se lit comme un trou). */
-import { INDICE } from './palette.js?v=0.6.0';
-import { ETAT, etat } from './terrain.js?v=0.6.0';
+import { INDICE } from './palette.js?v=0.7.0';
+import { ETAT, etat } from './terrain.js?v=0.7.0';
 
 const I = INDICE;
 // [terre jetée (plus claire), plat, creusé ou à l'ombre]
@@ -32,6 +32,13 @@ export function couleurCase(T, i, j, R, gel = false) {
   // un cratère se lit d'un coup d'œil : le creux plus sombre, la lèvre de terre jetée plus claire
   // (les bosses, elles, se lisent par leurs parois : une trame de pente faisait du bruit partout)
   const d = T.diff[c];
+  // l'herbe : des taches éparses (d'autant plus que l'herbe est drue), sur le sol plat, sec ou humide ;
+  // éparses à dessein : un damier sur tout le sol faisait du bruit partout (v0.1.0)
+  const hb = T.herbe ? T.herbe[c] : 0;
+  if (hb && d === 0 && e <= ETAT.HUMIDE) {
+    const hsh = ((i * 2654435761) ^ (j * 40503)) >>> 0;
+    if (hsh % [0, 41, 19, 9][hb] === 0) return e === ETAT.SEC ? I.g : I.h;     // une tache seule, sans lèvre : un cratère a la sienne, plus claire
+  }
   return TONS[e][d > 0 ? 0 : d < 0 ? 2 : 1];
 }
 

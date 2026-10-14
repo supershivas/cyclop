@@ -22,27 +22,29 @@
    - Les soldats : instanciés (une boîte et son ombre) ; au zoom 1 et 2, un
      point de 2 × 2 pixels (la couleur du camp sur son ombre).
    - Les corps : un homme couché (instancié) ; au zoom 1 et 2, un pixel. */
-import { loadThree } from './three-lib.js?v=0.6.0';
-import { PALETTE, ORDRE, INDICE } from './palette.js?v=0.6.0';
-import { OMBRE, couleursLigne } from './apparence.js?v=0.6.0';
-import { MORCEAU, hauteurVueQ as hauteurQ, hauteurVueM as hauteurM } from './terrain.js?v=0.6.0';
-import { horloge } from './bataille.js?v=0.6.0';
+import { loadThree } from './three-lib.js?v=0.7.0';
+import { PALETTE, ORDRE, INDICE } from './palette.js?v=0.7.0';
+import { OMBRE, couleursLigne } from './apparence.js?v=0.7.0';
+import { MORCEAU, hauteurVueQ as hauteurQ, hauteurVueM as hauteurM } from './terrain.js?v=0.7.0';
+import { horloge } from './bataille.js?v=0.7.0';
 
 export const CAMERA = { yaw: 0.15, tangage: 0.95, fov: 30 };   // au départ : tournée de 9°, plongée de 54°, angle de 30°
 // la caméra respire : un balancement très lent, 2° en 23 s (Jérôme, v0.3.1 : variante D du labo retenue)
+export const EFFETS = {};                      // les effets proposés au labo (aucun n'est encore retenu pour le jeu)
+export const SOLDAT = 'boite';                 // le style des soldats de près (labo : boite, detail, fusil, silhouette, marche)
 export const RESPIRATION = 0.035;
 export const YAW_MAX = 0.6, TANGAGE_MIN = 0.7, TANGAGE_MAX = 1.35;
 const SOL_Y = 3;                              // m : la hauteur moyenne du sol (le point visé, le sol à plat des zooms 1 et 2)
 export const ZOOMS = [1, 2, 3, 4, 6, 8];      // pixels (logiques) par mètre
 const POINTS_JUSQUA = 2;                      // zoom où un soldat n'est plus qu'un point
 const PLAT_JUSQUA = 2;                        // zoom où le sol devient une seule image plate (une marche d'un quart y fait un demi-pixel)
-const PLUIE = 1600, ECLATS = 900;
+const PLUIE = 1600, ECLATS = 2400;
  const E = 0.03;                               // m : le débord des faces (pas de fente vue de biais)
 const HAUT = 8;                               // m : marge du bas de l'écran, où un sol en hauteur remonte (borner)
 const SOCLE = -8;                             // m : le bas de la coupe du terrain (bord sud)
 
 /* respiration : l'amplitude (rad) du lent balancement de la caméra (0 : immobile). */
-export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera: camDepart = null, respiration = RESPIRATION } = {}) {
+export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera: camDepart = null, respiration = RESPIRATION, soldat: styleSoldat = SOLDAT, effets = EFFETS } = {}) {
   // un mouvement réduit demandé par le système : la caméra ne bouge pas d'elle-même
   if (typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches) respiration = 0;
   const THREE = await loadThree();
@@ -199,29 +201,81 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
 
 
   // ─── Les soldats ───
-  let cap = 0, posArr = null, campArr = null, soldatsInst = null, soldatsPoints = null, attrsI = null, attrsP = null;
+  // Une boîte de 0,5 × 1,7 × 0,35 m et son ombre ; de près (DETAIL_DES pixels par mètre), selon le style
+  // (`soldat` de creerRendu, comparé au labo) : jambes, tête, casque, fusil, sac, et les jambes qui marchent.
+  // Les parties : 0 la vareuse (la couleur du camp), 1 l'ombre, 2 le casque (l'os pour les choisis),
+  // 3 les jambes (bandes molletières), 4 le fusil, 5 le sac, 6 le visage.
+  let cap = 0, posArr = null, campArr = null, vitArr = null, soldatsInst = null, soldatsDetail = null, soldatsPoints = null, attrsI = null, attrsP = null;
+  const DETAIL_DES = 4;
   const soldatMat = new THREE.ShaderMaterial({
-    uniforms: { uNous: { value: col('n') }, uEux: { value: col('x') }, uOmbre: { value: col('t') }, uSel: { value: col('o') } },
+    uniforms: { uNous: { value: col('n') }, uEux: { value: col('x') }, uOmbre: { value: col('t') }, uSel: { value: col('o') },
+      uJambes: { value: col('s') }, uFusil: { value: col('t') }, uSac: { value: col('g') }, uVisage: { value: col('h') }, uT: { value: 0 } },
     vertexShader: `
-      attribute vec3 aPos; attribute float aCamp; attribute float aPart;
-      varying float vCamp; varying float vPart; varying float vHaut;
+      attribute vec3 aPos; attribute float aCamp; attribute float aPart; attribute float aJambe; attribute float aVit;
+      uniform float uT;
+      varying float vCamp; varying float vPart;
       void main() {
-        vCamp = aCamp; vPart = aPart; vHaut = position.y;
-        gl_Position = projectionMatrix * viewMatrix * vec4(position + aPos, 1.0);
+        vCamp = aCamp; vPart = aPart;
+        vec3 p = position;
+        // les jambes qui marchent : un balancement autour de la hanche (0,8 m), selon la vitesse
+        if (aJambe != 0.0 && aVit > 0.15) {
+          float a = sin(uT * 8.0 + aPos.x * 1.7 + aPos.z * 1.3) * 0.5 * min(1.0, aVit) * aJambe;
+          float y = p.y - 0.8;
+          p.z = p.z * cos(a) - y * sin(a);
+          p.y = 0.8 + p.z * sin(a) + y * cos(a);
+        }
+        gl_Position = projectionMatrix * viewMatrix * vec4(p + aPos, 1.0);
       }`,
     fragmentShader: `
       uniform vec3 uNous; uniform vec3 uEux; uniform vec3 uOmbre; uniform vec3 uSel;
-      varying float vCamp; varying float vPart; varying float vHaut;
+      uniform vec3 uJambes; uniform vec3 uFusil; uniform vec3 uSac; uniform vec3 uVisage;
+      varying float vCamp; varying float vPart;
       void main() {
-        if (vPart > 0.5) { gl_FragColor = vec4(uOmbre, 1.0); return; }
+        float k = floor(vPart + 0.5);
         bool sel = vCamp > 1.5;
         float camp = sel ? vCamp - 2.0 : vCamp;
         vec3 c = camp > 0.5 ? uEux : uNous;
-        if (sel && vHaut > 1.45) c = uSel;            // le casque des choisis
+        if (k == 1.0) c = uOmbre;
+        else if (k == 2.0 && sel) c = uSel;           // le casque des choisis
+        else if (k == 3.0) c = uJambes;
+        else if (k == 4.0) c = uFusil;
+        else if (k == 5.0) c = uSac;
+        else if (k == 6.0) c = uVisage;
         gl_FragColor = vec4(c, 1.0);
       }`,
     side: THREE.DoubleSide,
   });
+  // les faces d'une boîte qu'on voit d'ici : le dessus, le sud, l'est et l'ouest (jamais le nord ni le dessous)
+  function boiteVue(out, x0, x1, y0, y1, z0, z1, part, jambe = 0, dessusPart = part) {
+    const q = (a, b, c, d, k) => { out.p.push(...a, ...b, ...c, ...a, ...c, ...d); for (let n = 0; n < 6; n++) { out.k.push(k); out.j.push(jambe); } };
+    q([x0, y1, z0], [x0, y1, z1], [x1, y1, z1], [x1, y1, z0], dessusPart);
+    q([x0, y0, z1], [x1, y0, z1], [x1, y1, z1], [x0, y1, z1], part);
+    q([x1, y0, z1], [x1, y0, z0], [x1, y1, z0], [x1, y1, z1], part);
+    q([x0, y0, z0], [x0, y0, z1], [x0, y1, z1], [x0, y1, z0], part);
+  }
+  function geometrieSoldat(style) {
+    const g = { p: [], k: [], j: [] };
+    // l'ombre au sol vers le sud-est (la lumière vient du nord-ouest)
+    g.p.push(-0.05, 0.02, 0, -0.05, 0.02, 0.6, 0.65, 0.02, 0.6, -0.05, 0.02, 0, 0.65, 0.02, 0.6, 0.65, 0.02, 0); for (let n = 0; n < 6; n++) { g.k.push(1); g.j.push(0); }
+    const membres = style === 'detail' || style === 'silhouette' || style === 'marche';
+    if (!membres) boiteVue(g, -0.25, 0.25, 0, 1.7, -0.175, 0.175, 0, 0, 2);          // la boîte ; son dessus, le casque
+    else {
+      boiteVue(g, -0.2, -0.03, 0, 0.82, -0.09, 0.09, 3, 1);                          // les jambes
+      boiteVue(g, 0.03, 0.2, 0, 0.82, -0.09, 0.09, 3, -1);
+      boiteVue(g, -0.24, 0.24, 0.8, 1.42, -0.15, 0.15, 0);                           // la vareuse
+      boiteVue(g, -0.1, 0.1, 1.4, 1.6, -0.1, 0.1, 6);                                // le visage
+      boiteVue(g, -0.16, 0.16, 1.57, 1.7, -0.16, 0.16, 2);                           // le casque, plus large que la tête
+    }
+    if (style === 'fusil' || style === 'silhouette' || style === 'marche') boiteVue(g, 0.26, 0.31, 0.55, 1.95, -0.03, 0.03, 4);   // le fusil, à l'épaule
+    if (style === 'silhouette' || style === 'marche') boiteVue(g, -0.19, 0.19, 0.95, 1.38, -0.32, -0.15, 5);                       // le sac, dans le dos
+    const gi = new THREE.InstancedBufferGeometry();
+    gi.setAttribute('position', new THREE.Float32BufferAttribute(g.p, 3));
+    gi.setAttribute('aPart', new THREE.Float32BufferAttribute(g.k, 1));
+    gi.setAttribute('aJambe', new THREE.Float32BufferAttribute(g.j, 1));
+    gi.setAttribute('aPos', attrsI[0]); gi.setAttribute('aCamp', attrsI[1]); gi.setAttribute('aVit', attrsI[2]);
+    gi.instanceCount = 0;
+    return gi;
+  }
   const pointMat = new THREE.ShaderMaterial({
     uniforms: { uNous: { value: col('n') }, uEux: { value: col('x') }, uOmbre: { value: col('t') }, uSel: { value: col('o') } },
     vertexShader: `
@@ -237,29 +291,17 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
       }`,
   });
   function preparerSoldats(capacite) {
-    if (soldatsInst) { scene.remove(soldatsInst, soldatsPoints); soldatsInst.geometry.dispose(); soldatsPoints.geometry.dispose(); }
+    if (soldatsInst) {
+      scene.remove(soldatsInst, soldatsPoints); soldatsInst.geometry.dispose(); soldatsPoints.geometry.dispose();
+      if (soldatsDetail) { scene.remove(soldatsDetail); soldatsDetail.geometry.dispose(); }
+    }
     cap = capacite;
-    posArr = new Float32Array(cap * 3); campArr = new Float32Array(cap);
-    // un soldat de 0,5 × 1,7 × 0,35 m : dans cette vue, la face nord ne se voit jamais (une boîte sans elle) ; et son ombre au sol vers le sud-est (la lumière vient du nord-ouest)
-    const q = (a, b, c, d) => [...a, ...b, ...c, ...a, ...c, ...d];
-    const w = 0.25, dz = 0.175, H = 1.7;
-    const corps = [
-      ...q([-w, H, -dz], [-w, H, dz], [w, H, dz], [w, H, -dz]),        // le dessus (casque)
-      ...q([-w, 0, dz], [w, 0, dz], [w, H, dz], [-w, H, dz]),          // la face sud
-      ...q([w, 0, dz], [w, 0, -dz], [w, H, -dz], [w, H, dz]),          // l'est et l'ouest, quand la caméra tourne
-      ...q([-w, 0, -dz], [-w, 0, dz], [-w, H, dz], [-w, H, -dz]),
-    ];
-    const ombre = q([-0.05, 0.02, 0], [-0.05, 0.02, 0.6], [0.65, 0.02, 0.6], [0.65, 0.02, 0]);
-    const p = [...ombre, ...corps];
-    const part = [...new Array(ombre.length / 3).fill(1), ...new Array(corps.length / 3).fill(0)];
-    const gi = new THREE.InstancedBufferGeometry();
-    gi.setAttribute('position', new THREE.Float32BufferAttribute(p, 3));
-    gi.setAttribute('aPart', new THREE.Float32BufferAttribute(part, 1));
-    attrsI = [new THREE.InstancedBufferAttribute(posArr, 3), new THREE.InstancedBufferAttribute(campArr, 1)];
+    posArr = new Float32Array(cap * 3); campArr = new Float32Array(cap); vitArr = new Float32Array(cap);
+    attrsI = [new THREE.InstancedBufferAttribute(posArr, 3), new THREE.InstancedBufferAttribute(campArr, 1), new THREE.InstancedBufferAttribute(vitArr, 1)];
     attrsI.forEach(a => a.setUsage(THREE.DynamicDrawUsage));
-    gi.setAttribute('aPos', attrsI[0]); gi.setAttribute('aCamp', attrsI[1]);
-    gi.instanceCount = 0;
-    soldatsInst = new THREE.Mesh(gi, soldatMat); soldatsInst.frustumCulled = false; soldatsInst.renderOrder = 2;
+    soldatsInst = new THREE.Mesh(geometrieSoldat('boite'), soldatMat); soldatsInst.frustumCulled = false; soldatsInst.renderOrder = 2;
+    soldatsDetail = styleSoldat === 'boite' ? null : new THREE.Mesh(geometrieSoldat(styleSoldat), soldatMat);
+    if (soldatsDetail) { soldatsDetail.frustumCulled = false; soldatsDetail.renderOrder = 2; scene.add(soldatsDetail); }
     const gp = new THREE.BufferGeometry();
     attrsP = [new THREE.BufferAttribute(posArr, 3), new THREE.BufferAttribute(campArr, 1)];
     attrsP.forEach(a => a.setUsage(THREE.DynamicDrawUsage));
@@ -362,16 +404,19 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
       arbresMesh.push(m); scene.add(m);
     }
   }
-  let arbresVus = '';
-  function majArbres() {
-    const cle = T.arbres.map(a => a.abattu).join('') + plat();
-    if (cle === arbresVus) return;
-    arbresVus = cle;
+  // un objet posé en (x, z) tombe-t-il dans l'écran (avec une marge pour sa hauteur) ?
+  const dansLaVue = (x, z, e, b) => {
+    if (x < b[0] || x > b[1] || z < b[2] || z > b[3]) return false;
+    const cxp = e[0] * x + e[4] * SOL_Y + e[8] * z + e[12], cyp = e[1] * x + e[5] * SOL_Y + e[9] * z + e[13], cw = e[3] * x + e[7] * SOL_Y + e[11] * z + e[15];
+    return cxp > -1.15 * cw && cxp < 1.15 * cw && cyp > -1.3 * cw && cyp < 1.3 * cw;
+  };
+  // les arbres et les buissons : seulement ceux qu'on voit (tous, ils coûtaient des dizaines de milliers de triangles)
+  function majArbres(e, b) {
     const m4 = new THREE.Matrix4();
     for (const m of arbresMesh) {
       let n = 0;
       for (const a of T.arbres) {
-        if (a.abattu !== m.userData.abattu || a.v !== m.userData.v) continue;
+        if (a.abattu !== m.userData.abattu || a.v !== m.userData.v || !dansLaVue(a.i + 0.5, a.j + 0.5, e, b)) continue;
         m4.makeTranslation(a.i + 0.5, plat() ? SOL_Y : surface(a.i + 0.5, a.j + 0.5), a.j + 0.5);
         m.setMatrixAt(n++, m4);
       }
@@ -379,17 +424,125 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
     }
   }
 
-  // ─── Les éclats : l'éclair, la terre jetée, la fumée (des points) ───
-  const ecl = { x: new Float32Array(ECLATS), y: new Float32Array(ECLATS), z: new Float32Array(ECLATS), vx: new Float32Array(ECLATS), vy: new Float32Array(ECLATS), vz: new Float32Array(ECLATS), age: new Float32Array(ECLATS).fill(99), vie: new Float32Array(ECLATS), sorte: new Uint8Array(ECLATS) };
+  // ─── Les buissons : deux ou trois boîtes basses ; arrachés, il n'en reste rien ───
+  // le dessus du feuillage plus clair (la glaise), les flancs sombres (la boue)
+  const buissonsMesh = [];
+  const buissonMat = new THREE.MeshBasicMaterial({ vertexColors: true, side: THREE.DoubleSide });
+  function geometrieBuisson(v) {
+    const parts = [];
+    const boite = (w, h, d, x, z) => { const g = new THREE.BoxGeometry(w, h, d).toNonIndexed(); g.translate(x, h / 2, z); parts.push(g); };
+    boite(1.3 + v * 0.25, 1 + v * 0.2, 1.1, 0, 0);
+    boite(0.9, 0.7, 0.8, 0.9, 0.35 - v * 0.25);
+    if (v > 0) boite(0.8, 0.6, 0.7, -0.85, -0.3);
+    const pos = parts.flatMap(g => [...g.attributes.position.array]);
+    const nor = parts.flatMap(g => [...g.attributes.normal.array]);
+    const dessus = col('g'), flanc = col('b'), couleurs = [];
+    for (let k = 0; k < nor.length; k += 3) { const c = nor[k + 1] > 0.5 ? dessus : flanc; couleurs.push(c.r, c.g, c.b); }
+    const out = new THREE.BufferGeometry();
+    out.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+    out.setAttribute('color', new THREE.Float32BufferAttribute(couleurs, 3));
+    return out;
+  }
+  function preparerBuissons() {
+    buissonsMesh.forEach(m => { scene.remove(m); m.geometry.dispose(); });
+    buissonsMesh.length = 0;
+    for (let v = 0; v < 3; v++) {
+      const m = new THREE.InstancedMesh(geometrieBuisson(v), buissonMat, Math.max(1, T.buissons.length));
+      m.count = 0; m.frustumCulled = false; m.userData = { v };
+      buissonsMesh.push(m); scene.add(m);
+    }
+  }
+  function majBuissons(e, bornes) {
+    const m4 = new THREE.Matrix4();
+    for (const m of buissonsMesh) {
+      let n = 0;
+      for (const b of T.buissons) {
+        if (b.detruit || b.v !== m.userData.v || !dansLaVue(b.i + 0.5, b.j + 0.5, e, bornes)) continue;
+        m4.makeTranslation(b.i + 0.5, plat() ? SOL_Y : surface(b.i + 0.5, b.j + 0.5), b.j + 0.5);
+        m.setMatrixAt(n++, m4);
+      }
+      m.count = n; m.instanceMatrix.needsUpdate = true;
+    }
+  }
+
+  // ─── L'herbe : des touffes de cinq brins (seulement de près), qui ondulent au vent ;
+  // une touffe disparaît quand l'herbe de sa case meurt (obus, boue) ───
+  let touffes = null;                 // { x, z, c } : les touffes possibles (tirées une fois, l'aspect seulement)
+  const TOUFFES_MAX = 6000;
+  const tPos = new Float32Array(TOUFFES_MAX * 3);
+  const herbeGeo = new THREE.InstancedBufferGeometry();
+  {
+    const p = [], h = [];
+    for (const [x, l, ht] of [[-0.34, -0.2, 0.5], [-0.15, -0.06, 0.75], [0.02, 0.04, 0.9], [0.2, 0.12, 0.7], [0.36, 0.22, 0.45]]) {
+      p.push(x - 0.07, 0, 0, x + 0.07, 0, 0, x + l, ht, 0); h.push(0, 0, 1);
+    }
+    herbeGeo.setAttribute('position', new THREE.Float32BufferAttribute(p, 3));
+    herbeGeo.setAttribute('aHaut', new THREE.Float32BufferAttribute(h, 1));
+    herbeGeo.setAttribute('aPos', new THREE.InstancedBufferAttribute(tPos, 3).setUsage(THREE.DynamicDrawUsage));
+    herbeGeo.instanceCount = 0;
+  }
+  const herbeMat = new THREE.ShaderMaterial({
+    uniforms: { uT: { value: 0 }, uBas: { value: col('g') }, uHaut: { value: col('h') } },
+    vertexShader: `
+      attribute vec3 aPos; attribute float aHaut; uniform float uT; varying float vHaut;
+      void main() {
+        vHaut = aHaut;
+        vec3 p = position;
+        p.x += sin(uT * 1.6 + aPos.x * 0.37 + aPos.z * 0.21) * 0.07 * aHaut;        // le vent
+        gl_Position = projectionMatrix * viewMatrix * vec4(p + aPos, 1.0);
+      }`,
+    fragmentShader: `uniform vec3 uBas; uniform vec3 uHaut; varying float vHaut;
+      void main() { gl_FragColor = vec4(vHaut > 0.6 ? uHaut : uBas, 1.0); }`,
+    side: THREE.DoubleSide,
+  });
+  const herbeMesh = new THREE.Mesh(herbeGeo, herbeMat); herbeMesh.frustumCulled = false; herbeMesh.renderOrder = 1;
+  scene.add(herbeMesh);
+  function preparerHerbe() {
+    // une touffe pour ~10 m² d'herbe drue (moins pour l'herbe rare), placée par un hachage de la case
+    const xs = [], zs = [], cs = [];
+    for (let j = 0; j < T.H; j++) for (let i = 0; i < T.W; i++) {
+      const c = j * T.W + i, d = T.herbe[c];
+      if (!d) continue;
+      const hsh = ((i * 73856093) ^ (j * 19349663)) >>> 0;
+      if ((hsh % 1000) / 1000 >= d * 0.035) continue;
+      xs.push(i + ((hsh >>> 10) % 100) / 100); zs.push(j + ((hsh >>> 17) % 100) / 100); cs.push(c);
+    }
+    touffes = { x: Float32Array.from(xs), z: Float32Array.from(zs), c: Int32Array.from(cs) };
+  }
+  function majHerbe(x0, x1, z0, z1, e, aPlat) {
+    if (aPlat || !touffes) { herbeMesh.visible = false; vuesHerbe = 0; return; }
+    if (!vide) herbeMesh.visible = true;
+    let k = 0;
+    const { x: X, z: Z, c: Cc } = touffes;
+    for (let n = 0; n < X.length && k < TOUFFES_MAX; n++) {
+      const x = X[n], y = Z[n];
+      if (x < x0 || x > x1 || y < z0 || y > z1 || !T.herbe[Cc[n]]) continue;
+      const cxp = e[0] * x + e[4] * SOL_Y + e[8] * y + e[12], cyp = e[1] * x + e[5] * SOL_Y + e[9] * y + e[13], cw = e[3] * x + e[7] * SOL_Y + e[11] * y + e[15];
+      if (cxp < -1.05 * cw || cxp > 1.05 * cw || cyp < -1.1 * cw || cyp > 1.1 * cw) continue;
+      tPos[k * 3] = x; tPos[k * 3 + 1] = surface(x, y); tPos[k * 3 + 2] = y;
+      k++;
+    }
+    const a = herbeGeo.attributes.aPos; a.clearUpdateRanges(); a.addUpdateRange(0, k * 3); a.needsUpdate = true;
+    herbeGeo.instanceCount = k;
+    vuesHerbe = k;
+  }
+  let vuesHerbe = 0;
+
+  // ─── Les éclats : l'éclair, la terre jetée, la fumée (des points) ; et les effets proposés au labo
+  // (`effets` de creerRendu, éteints dans le jeu tant que Jérôme n'en a pas retenu) : la gerbe de terre,
+  // l'onde au sol, l'obus qui tombe, la fumée qui dérive et reste, le feu, les fusées éclairantes, les corbeaux.
+  // Sortes : 0 éclair, 1 terre, 2 fumée, 3 traînée de l'obus, 4 onde, 5 flamme, 6 fusée, 8 motte. ───
+  const ecl = { x: new Float32Array(ECLATS), y: new Float32Array(ECLATS), z: new Float32Array(ECLATS), vx: new Float32Array(ECLATS), vy: new Float32Array(ECLATS), vz: new Float32Array(ECLATS), age: new Float32Array(ECLATS).fill(99), vie: new Float32Array(ECLATS), sorte: new Uint8Array(ECLATS), taille: new Float32Array(ECLATS).fill(1) };
   let eclTete = 0;
-  const eclPos = new Float32Array(ECLATS * 3), eclTon = new Float32Array(ECLATS);
+  const eclPos = new Float32Array(ECLATS * 3), eclTon = new Float32Array(ECLATS), eclTaille = new Float32Array(ECLATS).fill(1);
   const eclGeo = new THREE.BufferGeometry();
   eclGeo.setAttribute('position', new THREE.BufferAttribute(eclPos, 3).setUsage(THREE.DynamicDrawUsage));
   eclGeo.setAttribute('aTon', new THREE.BufferAttribute(eclTon, 1).setUsage(THREE.DynamicDrawUsage));
+  eclGeo.setAttribute('aTaille', new THREE.BufferAttribute(eclTaille, 1).setUsage(THREE.DynamicDrawUsage));
   const eclMat = new THREE.ShaderMaterial({
     uniforms: { uPal: { value: palTex }, uNP: { value: NP }, uTaille: { value: 2 } },
-    vertexShader: `attribute float aTon; varying float vTon; uniform float uTaille;
-      void main() { vTon = aTon; gl_Position = projectionMatrix * viewMatrix * vec4(position, 1.0); gl_PointSize = aTon < 0.0 ? 0.0 : uTaille; if (aTon < 0.0) gl_Position = vec4(2.0); }`,
+    vertexShader: `attribute float aTon; attribute float aTaille; varying float vTon; uniform float uTaille;
+      void main() { vTon = aTon; gl_Position = projectionMatrix * viewMatrix * vec4(position, 1.0); gl_PointSize = aTon < 0.0 ? 0.0 : max(1.0, floor(uTaille * aTaille + 0.5)); if (aTon < 0.0) gl_Position = vec4(2.0); }`,
     fragmentShader: `uniform sampler2D uPal; uniform float uNP; varying float vTon;
       void main() {
         float t = floor(vTon + 0.5);
@@ -402,30 +555,143 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
   scene.add(eclats);
   let graine = 1;
   const alea = () => { graine = (graine * 16807) % 2147483647; return graine / 2147483647; };   // l'aspect seulement, jamais la logique
+  function particule(sorte, x, y, z, vx, vy, vz, vie, taille = 1) {
+    const s = eclTete; eclTete = (eclTete + 1) % ECLATS;
+    ecl.x[s] = x; ecl.y[s] = y; ecl.z[s] = z; ecl.vx[s] = vx; ecl.vy[s] = vy; ecl.vz[s] = vz;
+    ecl.age[s] = 0; ecl.vie[s] = vie; ecl.sorte[s] = sorte; ecl.taille[s] = taille;
+  }
+  const VENT = 1.3;                                 // m/s vers l'est : la fumée qui dérive
+  function fumee(x, y, z, big, longue) {
+    const a = alea() * Math.PI * 2, v = 1.5 * (0.4 + alea()) * big;
+    particule(2, x, y, z, Math.cos(a) * v + (longue ? VENT : 0), longue ? 0.5 + alea() * 0.6 : 1.2 + alea(), Math.sin(a) * v * 0.7,
+      longue ? 8 + alea() * 8 : 2.5 + alea() * 2, longue ? 2 + alea() * 1.5 : 1);
+  }
+  const attente = [];                               // les explosions qui attendent que l'obus touche le sol (l'obus qui tombe)
+  function impactVu(x, y, cal) {
+    if (!effets.chute) return eclater(x, y, cal);
+    // l'obus qui tombe : une traînée claire, du ciel au point de chute, puis l'explosion
+    const h = T ? surface(x, y) : 0, chute = 0.25, v = 160;
+    for (let k = 0; k < 7; k++) particule(3, x - 4 + k * 0.3, h + v * chute + k * 1.6, y, 16, -v, 0, chute, k ? 1 : 1.5);
+    attente.push({ x, y, cal, t: chute });
+  }
   function eclater(x, y, cal) {
     const big = cal === '220' ? 3 : cal === '155' ? 2 : 1;
     const h = T ? surface(x, y) : 0;
     const n = 14 * big;
     for (let k = 0; k < n; k++) {
-      const s = eclTete; eclTete = (eclTete + 1) % ECLATS;
       const sorte = k < 3 * big ? 0 : k < 9 * big ? 1 : 2;           // éclair, terre, fumée
+      const px = x + (alea() - 0.5) * big, pz = y + (alea() - 0.5) * big;
+      if (sorte === 2) { fumee(px, h + 0.3, pz, big, effets.derive); continue; }
       const a = alea() * Math.PI * 2, v = (sorte === 1 ? 6 : 1.5) * (0.4 + alea()) * big;
-      ecl.x[s] = x + (alea() - 0.5) * big; ecl.z[s] = y + (alea() - 0.5) * big; ecl.y[s] = h + 0.3;
-      ecl.vx[s] = Math.cos(a) * v; ecl.vz[s] = Math.sin(a) * v * 0.7; ecl.vy[s] = sorte === 1 ? 5 + alea() * 6 * big : sorte === 2 ? 1.2 + alea() : 0;
-      ecl.age[s] = 0; ecl.vie[s] = sorte === 0 ? 0.12 : sorte === 1 ? 0.9 : 2.5 + alea() * 2; ecl.sorte[s] = sorte;
+      particule(sorte, px, h + 0.3, pz, Math.cos(a) * v, sorte === 1 ? 5 + alea() * 6 * big : 0, Math.sin(a) * v * 0.7, sorte === 0 ? 0.12 : 0.9, sorte === 0 && big > 1 ? 1.5 : 1);
+    }
+    if (effets.gerbe) {
+      // la gerbe : une colonne de terre et de mottes, haute et serrée, qui retombe
+      for (let k = 0; k < 34 * big; k++) {
+        const a = alea() * Math.PI * 2, v = (0.6 + alea() * 1.6) * big;
+        particule(k % 3 ? 1 : 8, x + (alea() - 0.5), h + 0.3, y + (alea() - 0.5), Math.cos(a) * v, 9 + alea() * 10 * Math.sqrt(big), Math.sin(a) * v, 1.6 + alea() * 0.8, k % 3 ? 1.5 : 2.5);
+      }
+    }
+    if (effets.onde) {
+      // l'onde : un anneau de poussière qui court au ras du sol
+      const m = 18 + 10 * big;
+      for (let k = 0; k < m; k++) { const a = (k / m) * Math.PI * 2; particule(4, x, h + 0.25, y, Math.cos(a) * 22 * Math.sqrt(big), 0, Math.sin(a) * 22 * Math.sqrt(big), 0.18 + 0.06 * big); }
+    }
+    if (effets.derive) for (let k = 0; k < 4 * big; k++) fumee(x + (alea() - 0.5) * 2 * big, h + 0.5, y + (alea() - 0.5) * 2 * big, big, true);
+  }
+
+  // le feu : un arbre abattu ou un buisson arraché brûle un moment (flammes et fumée)
+  const feux = [];
+  let arbresEtat = null, buissonsEtat = null;
+  function guetterFeux() {
+    if (!effets.feu || !T) return;
+    if (!arbresEtat || arbresEtat.length !== T.arbres.length) { arbresEtat = T.arbres.map(a => a.abattu); buissonsEtat = T.buissons.map(b => b.detruit); return; }
+    T.arbres.forEach((a, k) => { if (a.abattu && !arbresEtat[k]) feux.push({ x: a.i + 0.5, z: a.j + 0.5, h: 1.2, fin: 25 + alea() * 25, t: 0, f: 0 }); arbresEtat[k] = a.abattu; });
+    T.buissons.forEach((b, k) => { if (b.detruit && !buissonsEtat[k]) feux.push({ x: b.i + 0.5, z: b.j + 0.5, h: 0.5, fin: 10 + alea() * 15, t: 0, f: 0 }); buissonsEtat[k] = b.detruit; });
+    while (feux.length > 40) feux.shift();
+  }
+  function majFeux(dt) {
+    for (let k = feux.length - 1; k >= 0; k--) {
+      const f = feux[k];
+      f.t += dt; f.f += dt;
+      if (f.t > f.fin) { feux.splice(k, 1); continue; }
+      const y = surface(f.x, f.z) + f.h;
+      while (f.f > 0.05) {
+        f.f -= 0.05;
+        particule(5, f.x + (alea() - 0.5) * 0.8, y, f.z + (alea() - 0.5) * 0.8, (alea() - 0.5) * 0.4, 1.5 + alea() * 1.5, 0, 0.35 + alea() * 0.35, 1.5);
+        if (alea() < 0.25) fumee(f.x, y + 1, f.z, 1, true);
+      }
     }
   }
+  // les fusées éclairantes : montent, s'ouvrent, descendent lentement sous leur parachute (le soir, ou toujours au labo)
+  let prochaineFusee = 3;
+  function majFusees(dt) {
+    if (!effets.fusees || !T) return;
+    const h = horloge(B);
+    if (effets.fusees !== 'toujours' && h.heure < 16) return;
+    if ((prochaineFusee -= dt) > 0) return;
+    prochaineFusee = 5 + alea() * 7;
+    const x = vue.cx + (alea() - 0.5) * 80, z = vue.cz - 5 - alea() * 35;
+    particule(6, x, surface(x, z) + 1, z, (alea() - 0.5) * 2, 22, 0, 14, 2.5);
+  }
+  // les corbeaux : quelques points noirs qui tournent au-dessus des morts (ou au-dessus du centre de la vue, au labo)
+  const CORBEAUX = 9;
+  const crPos = new Float32Array(CORBEAUX * 3), crGeo = new THREE.BufferGeometry();
+  crGeo.setAttribute('position', new THREE.BufferAttribute(crPos, 3).setUsage(THREE.DynamicDrawUsage));
+  const crMat = new THREE.ShaderMaterial({
+    uniforms: { uCol: { value: col('t') }, uT: { value: 0 } },
+    vertexShader: `uniform float uT; void main() { gl_Position = projectionMatrix * viewMatrix * vec4(position, 1.0); gl_PointSize = mod(floor(uT * 6.0 + position.x), 2.0) > 0.5 ? 3.0 : 2.0; }`,
+    fragmentShader: `uniform vec3 uCol; void main() { gl_FragColor = vec4(uCol, 1.0); }`,
+  });
+  const corbeaux = new THREE.Points(crGeo, crMat); corbeaux.frustumCulled = false; corbeaux.renderOrder = 4; corbeaux.visible = false;
+  scene.add(corbeaux);
+  let nid = null, nidT = 0;
+  function majCorbeaux(dt, t) {
+    if (!effets.corbeaux || !B) { corbeaux.visible = false; return; }
+    if ((nidT -= dt) <= 0) {
+      nidT = 10;
+      // au-dessus du corps le plus proche du centre de la vue (s'il y a des morts), sinon du centre
+      let best = null, bd = 150 * 150;
+      for (const c of B.etat.corps) { const d = (c[0] / 10 - vue.cx) ** 2 + (c[1] / 10 - vue.cz) ** 2; if (d < bd) { bd = d; best = c; } }
+      nid = best ? { x: best[0] / 10, z: best[1] / 10 } : (effets.corbeaux === 'toujours' ? { x: vue.cx, z: vue.cz } : null);
+    }
+    if (!nid) { corbeaux.visible = false; return; }
+    if (!vide) corbeaux.visible = true;
+    const h0 = surface(nid.x, nid.z);
+    for (let k = 0; k < CORBEAUX; k++) {
+      const r = 8 + (k * 37 % 11), w = 0.35 + (k % 3) * 0.08, a = t * w * (k % 2 ? 1 : -1) + k * 2.1;
+      crPos[k * 3] = nid.x + Math.cos(a) * r; crPos[k * 3 + 1] = h0 + 12 + (k % 4) * 2 + Math.sin(t * 1.3 + k) * 0.8; crPos[k * 3 + 2] = nid.z + Math.sin(a) * r * 0.8;
+    }
+    crGeo.attributes.position.needsUpdate = true;
+    crMat.uniforms.uT.value = t;
+  }
+
   function majEclats(dt) {
+    for (let k = attente.length - 1; k >= 0; k--) if ((attente[k].t -= dt) <= 0) { const a = attente.splice(k, 1)[0]; eclater(a.x, a.y, a.cal); }
+    guetterFeux(); majFeux(dt); majFusees(dt);
     for (let s = 0; s < ECLATS; s++) {
       if (ecl.age[s] > ecl.vie[s]) { eclTon[s] = -1; continue; }
       ecl.age[s] += dt;
-      if (ecl.sorte[s] === 1) ecl.vy[s] -= 18 * dt;
-      if (ecl.sorte[s] === 2) { ecl.vx[s] *= 0.97; ecl.vz[s] *= 0.97; }
+      const so = ecl.sorte[s], f = ecl.age[s] / ecl.vie[s];
+      if (so === 1 || so === 8) ecl.vy[s] -= 18 * dt;
+      if (so === 2) { ecl.vx[s] *= 0.97; ecl.vz[s] *= 0.97; if (effets.derive) ecl.vx[s] += (VENT - ecl.vx[s]) * dt * 0.5; }
+      if (so === 6) {
+        // la fusée : elle monte, freine, puis descend lentement sous son parachute ; une fumée derrière elle
+        if (ecl.vy[s] > -1.2) ecl.vy[s] -= 14 * dt; else ecl.vy[s] = -1.2;
+        if (alea() < dt * 6) particule(2, ecl.x[s], ecl.y[s], ecl.z[s], 0, 0.2, 0, 3, 1);
+      }
       ecl.x[s] += ecl.vx[s] * dt; ecl.y[s] += ecl.vy[s] * dt; ecl.z[s] += ecl.vz[s] * dt;
+      // la terre retombe au sol et s'y arrête
+      if ((so === 1 || so === 8) && T && ecl.y[s] < surface(ecl.x[s], ecl.z[s])) ecl.age[s] = 99;
       eclPos[s * 3] = ecl.x[s]; eclPos[s * 3 + 1] = ecl.y[s]; eclPos[s * 3 + 2] = ecl.z[s];
-      eclTon[s] = ecl.sorte[s] === 0 ? INDICE.o : ecl.sorte[s] === 1 ? INDICE.b : 100 + (ecl.age[s] / ecl.vie[s] < 0.3 ? INDICE.r : INDICE.g);
+      eclTaille[s] = so === 2 ? ecl.taille[s] * (1 + f * 0.8) : ecl.taille[s];
+      eclTon[s] = so === 0 || so === 6 ? INDICE.o
+        : so === 1 ? INDICE.b : so === 8 ? INDICE.s
+        : so === 3 || so === 4 ? INDICE.r
+        : so === 5 ? (alea() < 0.5 ? INDICE.o : INDICE.h)
+        : 100 + (f < 0.3 ? INDICE.r : INDICE.g);
     }
-    eclGeo.attributes.position.needsUpdate = true; eclGeo.attributes.aTon.needsUpdate = true;
+    eclGeo.attributes.position.needsUpdate = true; eclGeo.attributes.aTon.needsUpdate = true; eclGeo.attributes.aTaille.needsUpdate = true;
   }
 
   // ─── La pluie : des traits qui tombent, autour du centre de la vue ───
@@ -500,7 +766,9 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
     majSol(true);
     preparerSoldats(B.armee.capacite);
     preparerCorps(Math.max(1024, B.etat.corps.length * 2));
-    preparerArbres(); arbresVus = '';
+    preparerArbres();
+    preparerBuissons();
+    preparerHerbe();
     vue.cx = T.W / 2; vue.cz = T.H * 0.62;
   }
   // un morceau dépend aussi de ses voisins (les parois au sud, à l'est, à l'ouest) : leurs versions comptent
@@ -620,15 +888,20 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
       if (cxp < -1.08 * cw || cxp > 1.08 * cw || cyp < -1.15 * cw || cyp > 1.15 * cw) continue;
       posArr[k * 3] = x; posArr[k * 3 + 1] = aPlat ? SOL_Y : surface(x, y); posArr[k * 3 + 2] = y;
       campArr[k] = A.camp[i] + (choisis.has(A.reg[i]) ? 2 : 0);
+      vitArr[k] = Math.hypot(A.vx[i], A.vy[i]);
       k++;
     }
-    const points = p <= POINTS_JUSQUA;
-    if (!vide) { soldatsPoints.visible = points; soldatsInst.visible = !points; }
+    const points = p <= POINTS_JUSQUA, detail = !points && soldatsDetail && p >= DETAIL_DES;
+    if (!vide) { soldatsPoints.visible = points; soldatsInst.visible = !points && !detail; if (soldatsDetail) soldatsDetail.visible = !!detail; }
+    if (soldatsDetail) soldatsDetail.geometry.instanceCount = k;
     for (const a of points ? attrsP : attrsI) { a.clearUpdateRanges(); a.addUpdateRange(0, k * a.itemSize); a.needsUpdate = true; }
     soldatsPoints.geometry.setDrawRange(0, k);
     soldatsInst.geometry.instanceCount = k;
     vus = k;
     majCorps(x0, x1, z0, z1, e, aPlat, points);
+    majHerbe(x0, x1, z0, z1, e, aPlat);
+    const bornes = [x0 - 6, x1 + 6, z0 - 6, z1 + 10];
+    majArbres(e, bornes); majBuissons(e, bornes);
   }
   // les corps : ceux qu'on voit, comme les soldats (la liste ne fait que grandir)
   function majCorps(x0, x1, z0, z1, e, aPlat, points) {
@@ -702,7 +975,7 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
   function dessiner(dt, evenements = []) {
     if (!B) return;
     const t0 = performance.now();
-    for (const e of evenements) if (e.type === 'impact') eclater(e.x, e.y, e.cal);
+    for (const e of evenements) if (e.type === 'impact') impactVu(e.x, e.y, e.cal);
     // la caméra glisse vers sa cible : un mouvement doux plutôt qu'un saut
     const lisse = 1 - Math.exp(-dt * 7);
     vue.yaw += (vue.cible.yaw - vue.yaw) * lisse; vue.tangage += (vue.cible.tangage - vue.tangage) * lisse;
@@ -717,11 +990,11 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
     if (!vide) { sol.visible = !plat(); solPlat.visible = plat(); }
     solMat.uniforms.uPlat.value = plat() ? 1 : 0;
     if (!plat()) { majMorceaux(); projeter(); choisirDetail(); }
-    majArbres();
+    herbeMat.uniforms.uT.value = tAnim; soldatMat.uniforms.uT.value = tAnim;
     const t1 = performance.now();
     majSoldats();
     tAnim += dt;
-    majEclats(dt);
+    majEclats(dt); majCorbeaux(dt, tAnim);
     const h = horloge(B);
     if (!vide) { pluie.visible = h.meteo === 'pluie' && h.phase === 'jour'; brume.visible = h.meteo === 'brouillard'; }
     const { cx, cz, p } = projeter();
@@ -775,7 +1048,7 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
     get stats() {
       let tri = 0;
       for (const m of morceaux) tri += (m.geometry.attributes.position?.count || 0) / 3;
-      return { ms: { sol: +perf.sol.toFixed(2), rendu: +perf.rendu.toFixed(2), renduFini: +perf.fini.toFixed(2) }, triangles: tri, trianglesDessines: renderer.info.render.triangles, soldatsVus: vus, appels: renderer.info.render.calls, rangees: coutRangees };
+      return { ms: { sol: +perf.sol.toFixed(2), rendu: +perf.rendu.toFixed(2), renduFini: +perf.fini.toFixed(2) }, triangles: tri, trianglesDessines: renderer.info.render.triangles, soldatsVus: vus, touffesVues: vuesHerbe, appels: renderer.info.render.calls, rangees: coutRangees };
     },
     detruire() { renderer.dispose(); },
   };

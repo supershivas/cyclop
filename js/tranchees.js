@@ -11,7 +11,7 @@
      d'occuper une tranchée s'en servent pour poser les hommes dedans.
    - Un tronçon protège du tir qui vient de devant (le parapet), beaucoup moins
      de celui qui vient de derrière (le parados) : pris, il sert à l'envers. */
-import { hash2 } from './lib/rng.js?v=0.6.0';
+import { hash2 } from './lib/rng.js?v=0.7.0';
 
 /* Le tracé d'une ligne : t = { y0, amp, baie, phase } (mètres, coordonnées du
    terrain). Les baies alternent d'un côté et de l'autre (les créneaux), et la
@@ -43,7 +43,7 @@ export function creuserTranchees(T, S, ox, oy, graine) {
   const lignes = lignesDu(S, ox, oy, graine);
   const troncon = new Int16Array(W * H).fill(-1);
   const troncons = [];
-  const creuser = c => { if (T.diff[c] > -prof) T.diff[c] = -prof; };
+  const creuser = c => { if (T.diff[c] > -prof) T.diff[c] = -prof; T.herbe[c] = 0; };
   lignes.forEach((L, l) => {
     // les tronçons de la ligne, dans le secteur seulement (au-delà, la tranchée continue sans enjeu)
     const premier = troncons.length;

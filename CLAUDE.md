@@ -45,6 +45,15 @@ la danse macabre, la catastrophe peinte avec calme. L'intention est dans `DESIGN
   tombés (`etat.corps` : `[x×10, y×10, camp, jour, id]`, sauvegardé ; Jérôme,
   v0.3.3) : un homme couché, au loin un pixel ; la couleur du camp le jour même,
   la glaise ensuite. Survolé ou cliqué, sa fiche.
+- **Six régiments par camp** (Jérôme, v0.7.0 ; huit avant), 750 hommes.
+- **La végétation** (Jérôme, v0.7.0) : l'herbe (`T.herbe`, 0 à 3 par case, tirée de
+  la graine ; les obus la soufflent, la boue la tue : rejouée par la sauvegarde),
+  des taches dans la couleur du sol et des touffes de près qui ondulent ; des
+  buissons en haies et en bosquets (`T.buissons`, arrachés par les obus) ; 70 arbres.
+- **Au labo, à trancher** (v0.7.0) : les soldats de près (`soldat` de creerRendu :
+  boite, detail, fusil, silhouette, marche) et les effets (`effets` : gerbe, onde,
+  chute, derive, feu, fusees, corbeaux). Le jeu garde la boîte et les éclats
+  d'avant (`SOLDAT`, `EFFETS` de rendu3d.js) tant que Jérôme n'a pas choisi.
 - **La nuit et ses corvées** (Jérôme, v0.6.0) : une corvée par régiment (repos,
   réparer, caillebotis, inhumer, évacuer) ; voir `DESIGN.md`.
 - **Le moral et l'expérience** (Jérôme, v0.5.0) : un moral par régiment (`moral`,
@@ -323,6 +332,13 @@ node outils/stamp-version.mjs            # après chaque changement de version.j
   cachait des parois : abandonnée.
 - **Le brouillard** tramé sur tout l'écran rendait tout illisible : il s'épaissit
   seulement vers le haut de l'écran (le lointain).
+- **Les arbres et les buissons dessinés partout** : instanciés sans tri, ils
+  coûtaient des dizaines de milliers de triangles hors de la vue (les buissons des
+  marges : ~65 000). Ils sont triés à chaque image comme les soldats (`dansLaVue`).
+- **L'herbe dans la couleur du sol** : en glaise sur le sol sec, comme le creux
+  d'un cratère ; mais une tache seule, sans lèvre claire. En brume, elle se lisait
+  comme du givre (essayé, v0.7.0). Éparse (une case sur 9 à 41) : un damier faisait
+  du bruit partout (v0.1.0).
 - **Les travaux de la nuit changent le terrain** : ils sont notés dans
   `etat.travaux` et rejoués par `rejouerTerrain` après l'eau de la nuit (l'aube
   vient après elle) ; le test « réparer … relue » le vérifie. Une mort de la nuit

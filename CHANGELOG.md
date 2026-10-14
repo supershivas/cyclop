@@ -1,5 +1,11 @@
 # Journal des versions
 
+## 0.7.0 — 2026-10-14
+
+- Six régiments par camp au lieu de huit
+- De l'herbe, des buissons en haies, plus d'arbres : les obus et la boue les font disparaître
+- Au labo : des soldats plus détaillés et des effets d'explosion et d'ambiance à comparer
+
 ## 0.6.0 — 2026-10-14
 
 - La nuit, une corvée par régiment : repos, réparer la tranchée, caillebotis, inhumer les morts, évacuer les blessés

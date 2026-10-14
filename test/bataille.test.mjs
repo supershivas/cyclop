@@ -220,6 +220,7 @@ test('en face monte à l\'assaut de nos tranchées', () => {
 group('moral et expérience');
 test('les morts font tomber le moral ; en déroute, un régiment refuse les ordres et reflue ; ébranlé, il ne sort pas', () => {
   const B = petite(), reg = B.etat.regiments[0];
+  reg.moral = 0.45;                                   // (un régiment déjà ébranlé : de 34 hommes, étalés dans leur tranchée, il tiendrait longtemps)
   const avant = reg.moral;
   let deroute = false;
   for (let k = 0; k < 30 * 300 && !deroute; k++) {
@@ -291,7 +292,7 @@ test('évacuer : les blessés du régiment quittent le front vivants ; ce ne son
   for (const id of blesses) assert.ok(!restants.includes(id), 'parti');
   assert.equal(r.bilan[0].evacues + r.bilan[0].mortsCorvee, blesses.length, 'chacun évacué, ou tombé en route');
   assert.equal(B.etat.pertes[0], pertes + r.bilan[0].mortsCorvee + r.bilan[0].mortsBlesses);
-  assert.equal(B.etat.evacues.length, r.bilan[0].evacues);
+  assert.equal(B.etat.evacues.length, r.bilan[0].evacues + r.bilan[1].evacues, 'en face évacue aussi les siens');
 });
 test('réparer : les tronçons comblés sont recreusés ; la partie relue rejoue la réparation', () => {
   const B = petite(); jusquALaNuit(B);
@@ -324,7 +325,8 @@ test('un blessé laissé au front peut mourir dans la nuit', () => {
   let blesses = 0; for (let i = 0; i < A.n; i++) if (A.blessure[i]) blesses++;
   assert.ok(blesses > 0);
   const r = aube(B, {});
-  assert.equal(r.bilan[0].mortsBlesses + r.bilan[1].mortsBlesses, blesses);
+  // (sauf ceux qu'en face évacue)
+  assert.equal(r.bilan[0].mortsBlesses + r.bilan[1].mortsBlesses + r.bilan[1].evacues + r.bilan[1].mortsCorvee, blesses);
   for (let i = 0; i < A.n; i++) assert.equal(A.blessure[i], 0);
 });
 

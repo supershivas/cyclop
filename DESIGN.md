@@ -49,7 +49,7 @@ La tranche verticale du terrain, et seulement elle (Jérôme, v0.1.0) :
 
 1. Un champ de 400 × 300 cases de 1 m généré depuis une graine (bosses, quelques
    arbres).
-2. 2 000 soldats en deux camps (huit régiments chacun), par `army.js`.
+2. 2 000 soldats en deux camps (huit régiments chacun ; six depuis la v0.7.0, Jérôme), par `army.js`.
 3. Des obus qui creusent des cratères : 75 (3 × 3), 155 (5 × 5), 220 (7 × 7),
    dureté croissante, plancher à −6 m, lèvre de terre jetée.
 4. Pluie et boue sur trois jours simulés : l'humidité monte dans les creux, la
@@ -66,6 +66,12 @@ une bataille de trois jours lisible, cratère, boue, eau et soldat distinguables
 ## Les systèmes
 
 ### Le terrain
+
+De l'herbe par plaques, des buissons en haies et en bosquets, des arbres : le
+champ est vivant au premier matin. Les obus soufflent l'herbe et arrachent les
+buissons, la boue tue l'herbe heure après heure : au fil des jours, le vert
+disparaît. (Jérôme, v0.7.0)
+
 
 Un champ de hauteurs (pas de voxels pleins), cube de 1 m, quantifié au quart. Un
 octet par case : la différence avec le sol généré. La sauvegarde garde la graine

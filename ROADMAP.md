@@ -23,6 +23,13 @@ Statuts : **à l'étude** · **validé** (Jérôme a tranché) · **en cours** �
   1 tient 7 ms, les zooms 4 et 8 de 8 à 16 ms sur un champ labouré : à trancher
 - [x] Lisibilité : cratère, boue, eau, soldat distinguables en gris
 
+## À trancher au labo (v0.7.0)
+
+- **Les soldats de près** : une boîte, jambes-tête-casque, un fusil, la silhouette
+  complète, la silhouette qui marche.
+- **Les effets** : gerbe de terre et onde, l'obus qui tombe, la fumée qui reste,
+  le feu, les fusées éclairantes, les corbeaux.
+
 ## À l'étude (validé dans le principe par le prompt de départ, pas construit)
 
 - **Tranchées, la suite** (le lot 1, v0.4.0, a livré 4 lignes, les boyaux, les

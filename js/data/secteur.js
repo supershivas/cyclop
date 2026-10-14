@@ -7,9 +7,11 @@ export const SECTEURS = {
     hauteur: 300,
     jours: 3,
     pluieAuMoins: 1,        // jours de pluie garantis dans la chaîne (lot minimal : la boue doit venir)
-    arbres: 40,             // dans le secteur (les marges en ont autant, à surface égale)
-    regiments: 8,           // par camp
-    soldats: 1000,          // par camp (la mesure en charge 4 000 : ?soldats=8000)
+    arbres: 70,             // dans le secteur (les marges en ont autant, à surface égale ; 40 avant la v0.7.0)
+    haies: 5,               // des lignes de buissons, dans tout le terrain (v0.7.0)
+    buissons: 160,          // des buissons épars, dans tout le terrain
+    regiments: 6,           // par camp (8 avant la v0.7.0 : Jérôme en a retiré deux)
+    soldats: 750,           // par camp (six régiments de 125) (la mesure en charge 4 000 : ?soldats=8000)
     ligne: { eux: 70, nous: 230 },   // rangée de cases où chaque camp se tient au départ (dans le secteur)
     // le terrain déborde du secteur : des marges sans régiments, pour que la vue reste toujours sur le
     // terrain, même tout dézoomée (Jérôme, v0.3.0). En perspective (30°, plongée de 54°), le zoom 1 d'une
