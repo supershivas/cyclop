@@ -1,0 +1,112 @@
+/* L'habillage du jeu. Les couleurs viennent de js/palette.js (posées en
+   variables --jeu-* par main.js au lancement) : aucune valeur de couleur ici.
+   Les plaques du HUD sont opaques (une plaque, jamais une ombre portée : un
+   libellé sur un fond qui bouge doit rester lisible, LECONS.md). */
+
+:root {
+  --jeu-cible: 44px;
+  --jeu-police: ui-monospace, 'DejaVu Sans Mono', Menlo, Consolas, monospace;
+  --pas: 8px;                                          /* l'échelle d'espacement : multiples de --pas */
+  --texte: 14px;
+  --texte-grand: 20px;
+}
+
+.hud { position: absolute; inset: 0; pointer-events: none; }
+.hud[hidden] { display: none; }
+.hud-haut, .hud-bas {
+  position: absolute; left: 0; right: 0;
+  display: flex; justify-content: space-between; align-items: flex-start; gap: var(--pas);
+  padding: var(--pas);
+}
+.hud-haut { top: 0; }
+.hud-bas { bottom: 0; align-items: flex-end; }
+.hud button, .hud .plaque { pointer-events: auto; }
+.plaque {
+  margin: 0; padding: 6px 10px;
+  background: var(--jeu-fond); color: var(--jeu-encre);
+  border: 1px solid var(--jeu-ombre);
+  font-size: var(--texte); line-height: 1.4;
+}
+.plaque p { margin: 0; }
+.discret { color: var(--jeu-accent); }
+.pause-active { align-self: center; letter-spacing: .12em; text-transform: uppercase; }
+.morts b { font-size: var(--texte-grand); font-weight: normal; }
+.choix:empty { display: none; }
+.choix { max-width: 34ch; }
+
+.batteries { display: flex; gap: var(--pas); pointer-events: auto; }
+.batterie {
+  display: grid; justify-items: center; align-content: center;
+  min-width: 64px; padding: 4px 10px;
+  background: var(--jeu-fond); color: var(--jeu-encre);
+  border: 1px solid var(--jeu-ombre);
+  font-size: var(--texte);
+}
+.batterie b { font-weight: normal; font-size: var(--texte-grand); }
+.batterie span { color: var(--jeu-accent); }
+.batterie.recharge { color: var(--jeu-accent); }
+.batterie.vise { background: var(--jeu-encre); color: var(--jeu-fond); }
+.batterie.vise span { color: var(--jeu-fond); }
+.vise .jeu-canvas { cursor: crosshair; }
+
+.etiquettes { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+.etiquette {
+  position: absolute; left: 0; top: 0;
+  padding: 1px 5px;
+  background: var(--jeu-fond); color: var(--jeu-nous);
+  font-size: 12px; white-space: nowrap;
+}
+.etiquette.choisi { background: var(--jeu-encre); color: var(--jeu-fond); }
+.repere {
+  position: absolute; left: 0; top: 0; width: 13px; height: 13px;
+  border: 2px solid var(--jeu-encre); pointer-events: none;
+}
+.cadre { position: absolute; border: 1px solid var(--jeu-encre); pointer-events: none; }
+
+.icone { display: grid; place-items: center; width: var(--jeu-cible); height: var(--jeu-cible); padding: 0; background: none; border: 0; color: var(--jeu-encre); }
+.icone.plaque { background: var(--jeu-fond); border: 1px solid var(--jeu-ombre); }
+.icone svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+.titre {
+  position: absolute; inset: 0;
+  display: grid; place-content: center; justify-items: center; gap: calc(var(--pas) * 5);
+  background: var(--jeu-fond);
+}
+.titre[hidden] { display: none; }
+.titre h1 { margin: 0; font-size: clamp(28px, 8vmin, 72px); font-weight: normal; letter-spacing: .3em; text-transform: uppercase; color: var(--jeu-encre); text-align: center; padding-left: .3em; }
+.titre-menu, .menu { display: grid; gap: var(--pas); min-width: min(260px, 80vw); }
+.pour-ordinateur { display: none; margin: 0; max-width: 30ch; text-align: center; font-size: var(--texte); color: var(--jeu-accent); }
+@media (pointer: coarse) { .pour-ordinateur { display: block; } }
+.titre-reglages { position: absolute; top: calc(var(--pas) + env(safe-area-inset-top, 0px)); right: var(--pas); }
+
+.bouton {
+  padding: 0 calc(var(--pas) * 2);
+  background: var(--jeu-encre); color: var(--jeu-fond);
+  border: 0; border-bottom: 4px solid var(--jeu-accent);
+  font-size: 16px;
+}
+.bouton:focus-visible, .icone:focus-visible, .batterie:focus-visible { outline: 2px solid var(--jeu-nous); outline-offset: 2px; }
+@media (hover: hover) {
+  .bouton:hover { background: var(--jeu-accent); color: var(--jeu-encre); }
+  .batterie:hover { border-color: var(--jeu-encre); }
+}
+
+dialog {
+  background: var(--jeu-fond); color: var(--jeu-encre);
+  border: 1px solid var(--jeu-accent); padding: calc(var(--pas) * 3);
+  font-size: var(--texte);
+}
+dialog h2 { margin: 0 0 calc(var(--pas) * 2); font-size: 18px; font-weight: normal; letter-spacing: .06em; }
+dialog p { line-height: 1.5; }
+dialog hr { border: 0; border-top: 1px solid var(--jeu-ombre); margin: calc(var(--pas) * 2) 0; }
+.version { margin: 0; color: var(--jeu-accent); }
+details { margin: var(--pas) 0 calc(var(--pas) * 2); }
+summary { min-height: var(--jeu-cible); display: flex; align-items: center; cursor: pointer; }
+#changelog h3 { font-size: 14px; font-weight: normal; margin: var(--pas) 0 0; }
+#changelog ul { margin: 4px 0; padding-left: 1.2em; font-size: 14px; }
+.commandes { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 4px 12px; margin: 0; }
+.commandes dt { color: var(--jeu-nous); }
+.commandes dd { margin: 0; }
+.liens { font-size: 14px; }
+.liens a { color: inherit; display: inline-block; min-height: var(--jeu-cible); line-height: var(--jeu-cible); }
+dialog form { margin-top: calc(var(--pas) * 2); }
