@@ -49,7 +49,7 @@ la danse macabre, la catastrophe peinte avec calme. L'intention est dans `DESIGN
 - **La végétation** (Jérôme, v0.7.0) : l'herbe (`T.herbe`, 0 à 3 par case, tirée de
   la graine ; les obus la soufflent, la boue la tue : rejouée par la sauvegarde),
   des taches dans la couleur du sol et des touffes de près qui ondulent ; des
-  buissons en haies et en bosquets (`T.buissons`, arrachés par les obus) ; 70 arbres.
+  buissons en haies et en bosquets (`T.buissons`, arrachés par les obus).
 - **Les soldats de près et les effets** (Jérôme, v0.8.0) : la silhouette complète
   (`SOLDAT` de rendu3d.js : jambes, vareuse, visage, casque, fusil, sac ; de près
   seulement, à partir de 6 pixels par mètre) et tous les effets (`EFFETS` : gerbe,
