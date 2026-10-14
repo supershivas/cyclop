@@ -1,5 +1,9 @@
 # Journal des versions
 
+## 0.8.1 — 2026-10-14
+
+- L'écran titre montre le champ de bataille : vue de près, au coucher du soleil, sous la fumée, rendu par le jeu
+
 ## 0.8.0 — 2026-10-14
 
 - Le temps passe : les ombres tournent et s'allongent, le soir tombe, la nuit s'éclaire de lanternes et d'incendies

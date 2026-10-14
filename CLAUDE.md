@@ -59,6 +59,11 @@ la danse macabre, la catastrophe peinte avec calme. L'intention est dans `DESIGN
   soldats et des arbres tournent et s'allongent), le soir et la nuit (`obscurite` :
   une trame de terre de 16 h à 18 h, épaisse la nuit), les lumières qui la trouent
   (`majNuit` : lanternes le long des tranchées tenues, incendies, fusées).
+- **L'écran titre** (Jérôme, v0.8.1) : derrière le titre, le moteur du jeu montre une
+  bataille de décor (`decor` de main.js, jamais sauvegardée) : un no man's land
+  labouré et gorgé de pluie, des morts, la vue proche qui glisse, l'heure arrêtée à
+  17 h 20 (ombres longues, le soir qui tombe), des obus au loin, des colonnes de fumée
+  (`fumer` de rendu3d.js). Le titre, le menu et la roue sont sur des plaques opaques.
 - **Plus d'arbres** (Jérôme, v0.8.0) : 150 dans le secteur et trois bois serrés (`bois`
   de secteur.js), autant dans les marges.
 - **La nuit et ses corvées** (Jérôme, v0.6.0) : une corvée par régiment (repos,

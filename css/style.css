@@ -94,14 +94,14 @@
 .titre {
   position: absolute; inset: 0;
   display: grid; place-content: center; justify-items: center; gap: calc(var(--pas) * 5);
-  background: var(--jeu-fond);
+  background: none;                       /* derrière : le champ de bataille, rendu par le moteur du jeu (v0.8.1) */
 }
 .titre[hidden] { display: none; }
-.titre h1 { margin: 0; font-size: clamp(28px, 8vmin, 72px); font-weight: normal; letter-spacing: .3em; text-transform: uppercase; color: var(--jeu-encre); text-align: center; padding-left: .3em; }
+.titre h1 { background: var(--jeu-fond); padding: calc(var(--pas) * 1.5) calc(var(--pas) * 3) calc(var(--pas) * 1.5) calc(var(--pas) * 3 + .3em); border: 1px solid var(--jeu-ombre); margin: 0; font-size: clamp(28px, 8vmin, 72px); font-weight: normal; letter-spacing: .3em; text-transform: uppercase; color: var(--jeu-encre); text-align: center; }
 .titre-menu, .menu { display: grid; gap: var(--pas); min-width: min(260px, 80vw); }
-.pour-ordinateur { display: none; margin: 0; max-width: 30ch; text-align: center; font-size: var(--texte); color: var(--jeu-accent); }
+.pour-ordinateur { display: none; margin: 0; padding: 4px 8px; background: var(--jeu-fond); max-width: 30ch; text-align: center; font-size: var(--texte); color: var(--jeu-accent); }
 @media (pointer: coarse) { .pour-ordinateur { display: block; } }
-.titre-reglages { position: absolute; top: calc(var(--pas) + env(safe-area-inset-top, 0px)); right: var(--pas); }
+.titre-reglages { background: var(--jeu-fond); border: 1px solid var(--jeu-ombre); position: absolute; top: calc(var(--pas) + env(safe-area-inset-top, 0px)); right: var(--pas); }
 
 .bouton {
   padding: 0 calc(var(--pas) * 2);

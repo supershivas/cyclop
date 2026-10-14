@@ -1,21 +1,23 @@
 // Le cycle de vie : écran titre → bataille → nuit → fin ; pause active,
 // réglages, sauvegarde, mise à jour, debug. Les règles sont dans bataille.js
 // (pures), le dessin dans rendu3d.js (il ne modifie jamais l'état).
-import { createLoop } from './lib/loop.js?v=0.8.0';
-import { createKeys, stopTypeahead } from './lib/keys.js?v=0.8.0';
-import { createPointer, lockBrowserGestures } from './lib/pointer.js?v=0.8.0';
-import { createGamepad } from './lib/gamepad.js?v=0.8.0';
-import { createStore, autosave, pickJSONFile } from './lib/save.js?v=0.8.0';
-import { startUpdateCheck, loadVersion, loadChangelog, downloadJSON } from './lib/app-update.js?v=0.8.0';
-import { ROLES } from './palette.js?v=0.8.0';
-import { nouvelleBataille, avancer, aube, ordonnerMarche, ordonnerBarrage, horloge, effectifs, tronconsTenus, moralEnMots, terrainSous, rangDe, photo, restaurer, PAS, NOUS } from './bataille.js?v=0.8.0';
-import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.8.0';
-import { METEO } from './data/meteo.js?v=0.8.0';
-import { creerRendu } from './rendu3d.js?v=0.8.0';
-import { identite, etatEnMots, experienceEnMots } from './identite.js?v=0.8.0';
-import { CORVEES } from './data/corvees.js?v=0.8.0';
-import { refusCorvee } from './nuit.js?v=0.8.0';
-import { chargerContenu } from './design-store.js?v=0.8.0';
+import { createLoop } from './lib/loop.js?v=0.8.1';
+import { createKeys, stopTypeahead } from './lib/keys.js?v=0.8.1';
+import { createPointer, lockBrowserGestures } from './lib/pointer.js?v=0.8.1';
+import { createGamepad } from './lib/gamepad.js?v=0.8.1';
+import { createStore, autosave, pickJSONFile } from './lib/save.js?v=0.8.1';
+import { startUpdateCheck, loadVersion, loadChangelog, downloadJSON } from './lib/app-update.js?v=0.8.1';
+import { ROLES } from './palette.js?v=0.8.1';
+import { nouvelleBataille, avancer, aube, ordonnerMarche, ordonnerBarrage, horloge, effectifs, tronconsTenus, moralEnMots, terrainSous, rangDe, photo, restaurer, PAS, NOUS } from './bataille.js?v=0.8.1';
+import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.8.1';
+import { METEO } from './data/meteo.js?v=0.8.1';
+import { impact, hydroLignes } from './terrain.js?v=0.8.1';
+import { hash2 } from './lib/rng.js?v=0.8.1';
+import { creerRendu, CAMERA } from './rendu3d.js?v=0.8.1';
+import { identite, etatEnMots, experienceEnMots } from './identite.js?v=0.8.1';
+import { CORVEES } from './data/corvees.js?v=0.8.1';
+import { refusCorvee } from './nuit.js?v=0.8.1';
+import { chargerContenu } from './design-store.js?v=0.8.1';
 
 const JEU = 'cyclopeen';
 const $ = id => document.getElementById(id);
@@ -52,8 +54,53 @@ addEventListener('resize', () => rendu.redimensionner());
 
 // ─── Écrans ────────────────────────────────────────────────────────────────
 const enJeu = () => !!B && $('titre').hidden;
+
+/* Derrière l'écran titre, le moteur du jeu (Jérôme, v0.8.1) : une bataille de décor, jamais sauvegardée. Un
+   no man's land labouré et gorgé de pluie, des morts, la vue proche qui glisse lentement, l'heure arrêtée au
+   coucher du soleil (ombres longues, le soir qui tombe), des obus au loin et une fumée dense. */
+let D = null, decorT = 0, decorObus = 0;
+function decor() {
+  if (D) return D;
+  D = nouvelleBataille(1916, R, { soldats: 240 });
+  const T = D.terrain, m = D.etat.marges, cx = m.x + 200, cz = m.y + 150;
+  for (let k = 0; k < 160; k++) impact(T, cx - 120 + hash2(k, 1, 3) * 240, cz - 60 + hash2(k, 2, 3) * 120, NOMS_CALIBRES[k % 3], R, k);
+  for (let h = 0; h < 18; h++) hydroLignes(T, 0, T.H, METEO.pluie, R);
+  for (let k = 0; k < 180; k++) D.etat.corps.push([Math.round((cx - 110 + hash2(k, 5, 3) * 220) * 10), Math.round((cz - 55 + hash2(k, 6, 3) * 110) * 10), k % 3 ? 0 : 1, 1, 900000 + k]);
+  D.etat.meteo[0] = 'brouillard';
+  return D;
+}
+// l'heure du décor : 17 h 20, arrêtée
+const tickSoir = () => Math.round(R.jour.duree / PAS * (17.33 - R.jour.heureDebut) / (R.jour.heureFin - R.jour.heureDebut));
+function decorPas(dt) {
+  const d = decor(), m = d.etat.marges;
+  decorT += dt;
+  d.etat.tickJour = tickSoir();
+  // des obus, au loin et un peu partout
+  if ((decorObus -= dt) < 0) {
+    decorObus = 1.2 + hash2(Math.floor(decorT * 10), 7, 3) * 2;
+    const k = Math.floor(decorT * 7);
+    ordonnerBarrage(d, NOMS_CALIBRES[k % 3], rendu.vue.cx - 70 + hash2(k, 8, 3) * 140, rendu.vue.cz - 50 + hash2(k, 9, 3) * 60, 1);
+  }
+  const ev = avancer(d);
+  // la fumée dense : des colonnes qui montent de quelques trous (fixes) et dérivent avec le vent
+  for (let k = 0; k < 8; k++) {
+    if (Math.random() > 0.35) continue;
+    rendu.fumer(m.x + 200 - 110 + hash2(k, 11, 3) * 220, m.y + 150 - 45 + hash2(k, 12, 3) * 80);
+  }
+  // la vue glisse lentement le long du front, et revient
+  rendu.vue.cx = m.x + 200 + Math.sin(decorT * 0.02) * 80;
+  rendu.vue.cz = m.y + 150 + Math.sin(decorT * 0.013) * 12;
+  return ev;
+}
+function montrerDecor() {
+  rendu.attacher(decor());
+  rendu.vue.zoom = 4;
+  rendu.placerCamera(0.25, 0.82);
+  decorObus = 0.5;
+}
 function montrerTitre() {
   loop.pause();
+  montrerDecor();
   $('titre').hidden = false;
   $('hud').hidden = true;
   $('continuer').hidden = !store.has('partie');
@@ -63,7 +110,8 @@ function jouer(bataille) {
   B = bataille;
   rendu.attacher(B);
   rendu.vue.zoom = prefs.zoom ?? 2;
-  if (prefs.camera?.tangage) rendu.placerCamera(prefs.camera.yaw, prefs.camera.tangage);   // (un réglage de la v0.2, sans tangage, est ignoré)
+  // la caméra du joueur (ou celle de départ : l'écran titre a la sienne) ; un réglage de la v0.2, sans tangage, est ignoré
+  if (prefs.camera?.tangage) rendu.placerCamera(prefs.camera.yaw, prefs.camera.tangage); else rendu.placerCamera(CAMERA.yaw, CAMERA.tangage);
   choisis = new Set(); rendu.choisis = choisis;
   modeBarrage = null; pauseActive = false; fermerFiche();
   $('titre').hidden = true;
@@ -651,6 +699,7 @@ const loop = createLoop({
   render() {
     const now = performance.now(), dt = Math.min(0.1, (now - derniere) / 1000);
     derniere = now;
+    if (!$('titre').hidden) { rendu.dessiner(dt, decorPas(dt)); return; }      // l'écran titre : le décor
     if (!B) return;
     pad.poll();
     if (enJeu() && !document.querySelector('dialog[open]')) {
@@ -694,7 +743,7 @@ startUpdateCheck({
 
 // ─── Mode debug (section 18) : chargé seulement avec ?debug=1 ──────────────
 if (DEBUG) {
-  const { installDebug, seedFromUrl } = await import('./lib/debug.js?v=0.8.0');
+  const { installDebug, seedFromUrl } = await import('./lib/debug.js?v=0.8.1');
   window.__seed = seedFromUrl() ?? undefined;
   installDebug({
     state: () => B && { ...horloge(B), effectifs: effectifs(B), pertes: B.etat.pertes, impacts: B.etat.impacts.length, enJeu: enJeu(), pause: loop.paused },

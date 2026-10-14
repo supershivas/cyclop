@@ -11,8 +11,8 @@
      n'évacue pas peut mourir dans la nuit ; les corps laissés autour d'un
      régiment pèsent sur son moral au matin.
    - En face fait ses corvées aussi (`choixEnFace`). */
-import { toucher } from './terrain.js?v=0.8.0';
-import { CORVEES } from './data/corvees.js?v=0.8.0';
+import { toucher } from './terrain.js?v=0.8.1';
+import { CORVEES } from './data/corvees.js?v=0.8.1';
 
 export const SORTES = ['reparer', 'caillebotis'];          // les travaux de terrain, par leur numéro dans etat.travaux
 export const corvee = id => CORVEES.find(c => c.id === id);

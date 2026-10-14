@@ -22,12 +22,12 @@
    - Les soldats : instanciés (une boîte et son ombre) ; au zoom 1 et 2, un
      point de 2 × 2 pixels (la couleur du camp sur son ombre).
    - Les corps : un homme couché (instancié) ; au zoom 1 et 2, un pixel. */
-import { loadThree } from './three-lib.js?v=0.8.0';
-import { PALETTE, ORDRE, INDICE } from './palette.js?v=0.8.0';
-import { OMBRE, couleursLigne } from './apparence.js?v=0.8.0';
-import { MORCEAU, hauteurVueQ as hauteurQ, hauteurVueM as hauteurM } from './terrain.js?v=0.8.0';
-import { horloge } from './bataille.js?v=0.8.0';
-import { ligneY } from './tranchees.js?v=0.8.0';
+import { loadThree } from './three-lib.js?v=0.8.1';
+import { PALETTE, ORDRE, INDICE } from './palette.js?v=0.8.1';
+import { OMBRE, couleursLigne } from './apparence.js?v=0.8.1';
+import { MORCEAU, hauteurVueQ as hauteurQ, hauteurVueM as hauteurM } from './terrain.js?v=0.8.1';
+import { horloge } from './bataille.js?v=0.8.1';
+import { ligneY } from './tranchees.js?v=0.8.1';
 
 export const CAMERA = { yaw: 0.15, tangage: 0.95, fov: 30 };   // au départ : tournée de 9°, plongée de 54°, angle de 30°
 // la caméra respire : un balancement très lent, 2° en 23 s (Jérôme, v0.3.1 : variante D du labo retenue)
@@ -1227,6 +1227,8 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
       vue.cible.tangage = vue.tangage = Math.max(TANGAGE_MIN, Math.min(TANGAGE_MAX, tangage));
     },
     get ppm() { return ZOOMS[vue.zoom]; },
+    // une fumée qui dérive, posée en (x, z) (l'écran titre en épaissit le champ)
+    fumer(x, z) { if (T) fumee(x + (alea() - 0.5) * 3, surface(x, z) + 0.5, z + (alea() - 0.5) * 3, 2, true); },
     get stats() {
       let tri = 0;
       for (const m of morceaux) tri += (m.geometry.attributes.position?.count || 0) / 3;
