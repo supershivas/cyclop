@@ -1,5 +1,11 @@
 # Journal des versions
 
+## 0.5.0 — 2026-10-14
+
+- Le moral : un régiment éprouvé est ébranlé, refuse de sortir, puis part en déroute ; la nuit le reprend
+- L'expérience : ceux qui survivent au feu s'aguerrissent ; un gradé tombé est remplacé
+- Survolez le terrain : un coin dit ce qu'il est (boue, tranchée, cratère…)
+
 ## 0.4.0 — 2026-10-14
 
 - Les tranchées : quatre lignes par camp, des boyaux, des tronçons qu'on prend et qu'on perd

@@ -9,8 +9,8 @@
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta property="og:image" content="og.png">
-<link rel="stylesheet" href="js/lib/game.css?v=0.4.0">
-<link rel="stylesheet" href="css/style.css?v=0.4.0">
+<link rel="stylesheet" href="js/lib/game.css?v=0.5.0">
+<link rel="stylesheet" href="css/style.css?v=0.5.0">
 </head>
 <body>
 <div class="jeu-ecran" id="ecran">
@@ -24,9 +24,12 @@
   <!-- HUD : en DOM par-dessus le canvas, dans la palette du jeu -->
   <div class="hud" id="hud" hidden>
     <div class="hud-haut">
-      <div class="plaque">
-        <p id="horloge">Jour 1</p>
-        <p class="discret" id="demain"></p>
+      <div class="coin">
+        <div class="plaque">
+          <p id="horloge">Jour 1</p>
+          <p class="discret" id="demain"></p>
+        </div>
+        <div class="plaque terrain" id="terrain" hidden aria-live="off"></div>
       </div>
       <p class="plaque pause-active" id="pause-active" hidden>Temps arrêté</p>
       <section class="plaque fiche" id="fiche" hidden aria-live="polite">
@@ -139,6 +142,6 @@
 </dialog>
 
 <div class="jeu-toast" id="toast" role="status" hidden></div>
-<script type="module" src="js/main.js?v=0.4.0"></script>
+<script type="module" src="js/main.js?v=0.5.0"></script>
 </body>
 </html>

@@ -25,8 +25,8 @@
      (rng.js), pour que la même graine rejoue la même bataille.
 
    Logique pure : aucun DOM. Le rendu lit les tableaux (rendu3d.js). */
-import { hauteurQ, etat, vitesseEtat } from './terrain.js?v=0.4.0';
-import { ligneY } from './tranchees.js?v=0.4.0';
+import { hauteurQ, etat, vitesseEtat } from './terrain.js?v=0.5.0';
+import { ligneY } from './tranchees.js?v=0.5.0';
 
 export const GRILLE = 2;           // m : cases de voisinage
 export const DENSITE = 8;          // m : carrés de densité (tir)
@@ -41,7 +41,7 @@ export function creerArmee({ capacite, W, H }) {
     camp: new Uint8Array(capacite), reg: new Uint16Array(capacite), slot: new Uint16Array(capacite),
     mort: new Uint8Array(capacite),
     // qui il est et ce qu'il endure (0 à 1 ; blessure : 0 aucune, 1 bras, 2 jambe, 3 tête)
-    id: new Uint32Array(capacite), fatJ: f32(), fatB: f32(), peur: f32(), blessure: new Uint8Array(capacite),
+    id: new Uint32Array(capacite), fatJ: f32(), fatB: f32(), peur: f32(), blessure: new Uint8Array(capacite), exp: f32(),
     // la grille de voisinage (tri par comptage)
     gw, gh, cellCount: new Int32Array(gw * gh), cellStart: new Int32Array(gw * gh + 1),
     sorted: new Int32Array(capacite), cellOf: new Int32Array(capacite),
@@ -53,7 +53,7 @@ export function creerArmee({ capacite, W, H }) {
 export function ajouterSoldat(A, x, y, camp, reg, slot, r, id = A.n) {
   if (A.n >= A.capacite) return -1;
   const i = A.n++;
-  A.id[i] = id; A.fatJ[i] = 0; A.fatB[i] = 0; A.peur[i] = 0; A.blessure[i] = 0;
+  A.id[i] = id; A.fatJ[i] = 0; A.fatB[i] = 0; A.peur[i] = 0; A.blessure[i] = 0; A.exp[i] = 0;
   A.x[i] = x; A.y[i] = y; A.vx[i] = 0; A.vy[i] = 0;
   A.camp[i] = camp; A.reg[i] = reg; A.slot[i] = slot; A.mort[i] = 0;
   A.rnd[i] = r; A.tirT[i] = 1 + r * 4; A.coince[i] = 0;
@@ -191,13 +191,19 @@ export function pasArmee(A, ctx) {
     // ─ Le tir (pas quand la terreur le tient) ─
     tirT[i] -= dt;
     if (tirT[i] <= 0) {
-      tirT[i] = R.tir.periode * (0.5 + rng()) * (blessure[i] === 1 ? Sd.brasBlesse : 1);
-      if (peur[i] < Sd.terreur) { fatB[i] = Math.min(1, fatB[i] + Sd.fatigueTir); tirer(A, i, o, ctx); }
+      const ebranle = r.moral !== undefined && r.moral < R.moral.ebranle;
+      tirT[i] = R.tir.periode * (0.5 + rng()) * (blessure[i] === 1 ? Sd.brasBlesse : 1) * (ebranle ? R.moral.tirEbranle : 1);
+      // la terreur, ou la déroute : on ne tire plus
+      // (sans ennemi à portée, il ne tire pas : ni fatigue ni expérience)
+      if (peur[i] < Sd.terreur && !r.deroute && tirer(A, i, o, ctx)) {
+        fatB[i] = Math.min(1, fatB[i] + Sd.fatigueTir);
+        A.exp[i] = Math.min(1, A.exp[i] + R.experience.tir);
+      }
     }
   }
 }
 
-/* Un tir : le carré le plus dense d'ennemis dans le cône du front, à portée ;
+/* Un tir (rend false s'il n'y avait personne à viser) : le carré le plus dense d'ennemis dans le cône du front, à portée ;
    la chance de toucher croît avec la densité et baisse si la cible est dans
    un creux. La victime est prise dans la grille fine. */
 function tirer(A, i, o, ctx) {
@@ -220,9 +226,9 @@ function tirer(A, i, o, ctx) {
       best = b; bestN = m;
     }
   }
-  if (best < 0) return;
-  const chance = P.precision * Math.min(1, bestN / P.densite);
-  if (rng() >= chance) return;
+  if (best < 0) return false;
+  const chance = P.precision * Math.min(1, bestN / P.densite) * (1 + R.experience.adresse * A.exp[i]);
+  if (rng() >= chance) return true;
   // la victime : un ennemi du carré, au hasard
   const xx = best % dw, yy = (best - xx) / dw;
   const k = DENSITE / GRILLE, cand = [];
@@ -235,7 +241,7 @@ function tirer(A, i, o, ctx) {
       }
     }
   }
-  if (!cand.length) return;
+  if (!cand.length) return true;
   const v = cand[Math.floor(rng() * cand.length)];
   // à l'abri dans un creux ? Dans une tranchée, le parapet protège du tir qui vient de devant, le parados
   // beaucoup moins de celui qui vient de derrière (une tranchée prise sert à l'envers)
@@ -243,9 +249,10 @@ function tirer(A, i, o, ctx) {
   if (T.diff[cv] <= -2) {
     const t = T.troncon ? T.troncon[cv] : -1;
     const abri = t < 0 ? P.abri : (A.y[i] - A.y[v]) * ctx.faces[t] > 0 ? R.tranchee.abriFace : R.tranchee.abriDos;
-    if (rng() >= abri) return;
+    if (rng() >= abri) return true;
   }
   frapper(v, 'tir', R.soldat.mortelTir);
+  return true;
 }
 
 /* Un obus tombe : chaque soldat dans le rayon est touché avec une chance qui
@@ -255,7 +262,7 @@ function tirer(A, i, o, ctx) {
 export function tuerDans(A, x0, y0, rayon, ctx) {
   const { R, rng, T, frapper } = ctx;
   if (rayon <= 0) return;
-  effrayer(A, x0, y0, rayon * 3, R.soldat.peurObus);
+  effrayer(A, x0, y0, rayon * 3, R.soldat.peurObus, R.experience);
   const g0x = Math.max(0, ((x0 - rayon) / GRILLE) | 0), g1x = Math.min(A.gw - 1, ((x0 + rayon) / GRILLE) | 0);
   const g0y = Math.max(0, ((y0 - rayon) / GRILLE) | 0), g1y = Math.min(A.gh - 1, ((y0 + rayon) / GRILLE) | 0);
   for (let gy = g0y; gy <= g1y; gy++) for (let gx = g0x; gx <= g1x; gx++) {
@@ -273,8 +280,10 @@ export function tuerDans(A, x0, y0, rayon, ctx) {
   }
 }
 
-// La peur gagne les vivants autour de (x0, y0), d'autant plus qu'ils sont près
-export function effrayer(A, x0, y0, rayon, quantite) {
+/* La peur gagne les vivants autour de (x0, y0), d'autant plus qu'ils sont près,
+   et moins ceux qui ont l'habitude ; ceux qui en réchappent prennent de
+   l'expérience (Ex : R.experience, ou rien). */
+export function effrayer(A, x0, y0, rayon, quantite, Ex = null) {
   const g0x = Math.max(0, ((x0 - rayon) / GRILLE) | 0), g1x = Math.min(A.gw - 1, ((x0 + rayon) / GRILLE) | 0);
   const g0y = Math.max(0, ((y0 - rayon) / GRILLE) | 0), g1y = Math.min(A.gh - 1, ((y0 + rayon) / GRILLE) | 0);
   for (let gy = g0y; gy <= g1y; gy++) for (let gx = g0x; gx <= g1x; gx++) {
@@ -283,7 +292,10 @@ export function effrayer(A, x0, y0, rayon, quantite) {
       const i = A.sorted[s];
       if (A.mort[i]) continue;
       const d = Math.hypot(A.x[i] - x0, A.y[i] - y0);
-      if (d < rayon) A.peur[i] = Math.min(1, A.peur[i] + quantite * (1 - d / rayon));
+      if (d >= rayon) continue;
+      const pres = 1 - d / rayon;
+      A.peur[i] = Math.min(1, A.peur[i] + quantite * pres * (Ex ? 1 - Ex.calme * A.exp[i] : 1));
+      if (Ex) A.exp[i] = Math.min(1, A.exp[i] + Ex.feu * pres);
     }
   }
 }
@@ -291,13 +303,13 @@ export function effrayer(A, x0, y0, rayon, quantite) {
 // La nuit repose : la fatigue et la peur retombent
 export function reposer(A, R) {
   const k = 1 - R.soldat.nuitRepos;
-  for (let i = 0; i < A.n; i++) { A.fatJ[i] *= k; A.fatB[i] *= k; A.peur[i] *= 0.5; }
+  for (let i = 0; i < A.n; i++) { A.fatJ[i] *= k; A.fatB[i] *= k; A.peur[i] *= 0.5; A.exp[i] = Math.min(1, A.exp[i] + R.experience.nuit); }
 }
 
 // Retire les morts (on garde l'ordre des vivants : la même partie, rejouée, garde les mêmes indices)
 export function compacter(A) {
   let w = 0;
-  const keys = ['x', 'y', 'vx', 'vy', 'rnd', 'tirT', 'coince', 'camp', 'reg', 'slot', 'id', 'fatJ', 'fatB', 'peur', 'blessure'];
+  const keys = ['x', 'y', 'vx', 'vy', 'rnd', 'tirT', 'coince', 'camp', 'reg', 'slot', 'id', 'fatJ', 'fatB', 'peur', 'blessure', 'exp'];
   for (let r = 0; r < A.n; r++) {
     if (A.mort[r]) continue;
     if (w !== r) for (const k of keys) A[k][w] = A[k][r];
@@ -312,7 +324,7 @@ export function compacter(A) {
 
 // ─── Sauvegarde : les tableaux, exacts (base64 des octets) ───
 const CHAMPS = { x: Float32Array, y: Float32Array, vx: Float32Array, vy: Float32Array, rnd: Float32Array, tirT: Float32Array, coince: Float32Array, camp: Uint8Array, reg: Uint16Array, slot: Uint16Array,
-  id: Uint32Array, fatJ: Float32Array, fatB: Float32Array, peur: Float32Array, blessure: Uint8Array };
+  id: Uint32Array, fatJ: Float32Array, fatB: Float32Array, peur: Float32Array, blessure: Uint8Array, exp: Float32Array };
 function b64(typed) {
   const u8 = new Uint8Array(typed.buffer, typed.byteOffset, typed.byteLength);
   let s = '';

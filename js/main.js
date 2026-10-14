@@ -1,19 +1,19 @@
 // Le cycle de vie : écran titre → bataille → nuit → fin ; pause active,
 // réglages, sauvegarde, mise à jour, debug. Les règles sont dans bataille.js
 // (pures), le dessin dans rendu3d.js (il ne modifie jamais l'état).
-import { createLoop } from './lib/loop.js?v=0.4.0';
-import { createKeys, stopTypeahead } from './lib/keys.js?v=0.4.0';
-import { createPointer, lockBrowserGestures } from './lib/pointer.js?v=0.4.0';
-import { createGamepad } from './lib/gamepad.js?v=0.4.0';
-import { createStore, autosave, pickJSONFile } from './lib/save.js?v=0.4.0';
-import { startUpdateCheck, loadVersion, loadChangelog, downloadJSON } from './lib/app-update.js?v=0.4.0';
-import { ROLES } from './palette.js?v=0.4.0';
-import { nouvelleBataille, avancer, aube, ordonnerMarche, ordonnerBarrage, horloge, effectifs, tronconsTenus, photo, restaurer, PAS, NOUS } from './bataille.js?v=0.4.0';
-import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.4.0';
-import { METEO } from './data/meteo.js?v=0.4.0';
-import { creerRendu } from './rendu3d.js?v=0.4.0';
-import { identite, etatEnMots } from './identite.js?v=0.4.0';
-import { chargerContenu } from './design-store.js?v=0.4.0';
+import { createLoop } from './lib/loop.js?v=0.5.0';
+import { createKeys, stopTypeahead } from './lib/keys.js?v=0.5.0';
+import { createPointer, lockBrowserGestures } from './lib/pointer.js?v=0.5.0';
+import { createGamepad } from './lib/gamepad.js?v=0.5.0';
+import { createStore, autosave, pickJSONFile } from './lib/save.js?v=0.5.0';
+import { startUpdateCheck, loadVersion, loadChangelog, downloadJSON } from './lib/app-update.js?v=0.5.0';
+import { ROLES } from './palette.js?v=0.5.0';
+import { nouvelleBataille, avancer, aube, ordonnerMarche, ordonnerBarrage, horloge, effectifs, tronconsTenus, moralEnMots, terrainSous, rangDe, photo, restaurer, PAS, NOUS } from './bataille.js?v=0.5.0';
+import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.5.0';
+import { METEO } from './data/meteo.js?v=0.5.0';
+import { creerRendu } from './rendu3d.js?v=0.5.0';
+import { identite, etatEnMots, experienceEnMots } from './identite.js?v=0.5.0';
+import { chargerContenu } from './design-store.js?v=0.5.0';
 
 const JEU = 'cyclopeen';
 const $ = id => document.getElementById(id);
@@ -201,7 +201,8 @@ function majHud() {
     b.classList.toggle('recharge', reste > 0);
   }
   const regs = [...choisis].map(id => e.regiments[id]).filter(Boolean);
-  $('choix').textContent = regs.length ? regs.map(r => `${r.nom} ${r.effectif}`).join(' · ') : '';
+  const humeur = r => { const m = moralEnMots(r, R); return m.startsWith('tient') ? '' : ` (${m})`; };
+  $('choix').textContent = regs.length ? regs.map(r => `${r.nom} ${r.effectif}${humeur(r)}`).join(' · ') : '';
   $('ecran').classList.toggle('vise', !!modeBarrage);
 }
 $('batteries').append(...NOMS_CALIBRES.map((cal, k) => {
@@ -249,6 +250,8 @@ function majEtiquettes() {
     if (d.hidden) continue;
     d.style.transform = `translate(${Math.round(sx)}px, ${Math.round(sy)}px) translate(-50%, -100%)`;
     d.classList.toggle('choisi', choisis.has(id));
+    const reg = B.etat.regiments[id], m = moralEnMots(reg, R), texte = m.startsWith('tient') ? reg.nom : `${reg.nom} · ${m}`;
+    if (d.textContent !== texte) d.textContent = texte;
   }
   const rs = $('repere-soldat'), is = fiche ? indiceDe(fiche.id) : -1;
   if (is >= 0) {
@@ -284,7 +287,7 @@ function premierDe(regId) {
 function quiEst(id) {
   let p = 0;
   for (const r of B.etat.regiments) {
-    if (id < p + r.initial) return { reg: r, qui: identite(B.etat.graine, r.camp, id, id - p, r.initial) };
+    if (id < p + r.initial) return { reg: r, qui: identite(B.etat.graine, r.camp, id, id - p, r.initial, B.etat.grades[id]?.[0] ?? -1) };
     p += r.initial;
   }
   return { reg: null, qui: identite(B.etat.graine, NOUS, id) };
@@ -341,7 +344,11 @@ function majFiche() {
   const lien = $('fiche-regiment');
   lien.hidden = !reg0; lien.textContent = nomDe(reg0); lien.onclick = () => montrerRegiment(reg0.id);
   $('fiche-liste').replaceChildren(); listeVue = '';
-  const mots = i < 0 ? [tombe(fiche.id)] : etatEnMots(A.fatJ[i], A.fatB[i], A.peur[i], A.blessure[i]);
+  const promu = B.etat.grades[fiche.id];
+  const mots = [
+    ...(i < 0 ? [tombe(fiche.id)] : [...etatEnMots(A.fatJ[i], A.fatB[i], A.peur[i], A.blessure[i]), experienceEnMots(A.exp[i])]),
+    promu ? `promu ${qui.grade} le jour ${promu[1]}` : '',
+  ].filter(Boolean);
   $('fiche-etat').replaceChildren(...mots.map(t => Object.assign(document.createElement('li'), { textContent: t })));
 }
 function majFicheRegiment() {
@@ -349,8 +356,8 @@ function majFicheRegiment() {
   $('fiche-nom').textContent = nomDe(reg);
   $('fiche-qui').textContent = enMots(b);
   $('fiche-regiment').hidden = true;
-  $('fiche-etat').replaceChildren();
-  const sig = `${reg.id}:${b.vivants}:${b.blesses}:${b.morts}`;
+  $('fiche-etat').replaceChildren(Object.assign(document.createElement('li'), { textContent: majuscule(moralEnMots(reg, R)) }));
+  const sig = `${reg.id}:${b.vivants}:${b.blesses}:${b.morts}:${Object.keys(B.etat.grades).length}`;
   if (sig === listeVue) return;
   listeVue = sig;
   // les officiers vivants, les blessés, les morts : chaque nom ouvre la fiche de l'homme
@@ -358,11 +365,12 @@ function majFicheRegiment() {
   for (let i = 0; i < A.n; i++) if (A.reg[i] === reg.id) vivants.set(A.id[i], i);
   const groupes = [['Officiers', []], ['Blessés', []], ['Morts', []]];
   for (let id = p0; id < p0 + reg.initial; id++) {
-    const i = vivants.get(id), k = id - p0;
+    const i = vivants.get(id);
     if (i === undefined) groupes[2][1].push(id);
     else if (A.blessure[i]) groupes[1][1].push(id);
-    else if (k <= 3) groupes[0][1].push(id);
+    else if (rangDe(B, id, reg.id) <= 3) groupes[0][1].push(id);   // les officiers et l'adjudant d'aujourd'hui (les promus compris)
   }
+  groupes[0][1].sort((a, b) => rangDe(B, a, reg.id) - rangDe(B, b, reg.id));
   const els = [];
   for (const [titre, ids] of groupes) {
     if (!ids.length) continue;
@@ -395,17 +403,29 @@ function regimentSous(x, y, r = 4, camp = -1) {
   }
   return best;
 }
+// le terrain sous la souris, dans un coin (refait seulement quand la case ou ce qu'elle est change)
+function majTerrain(x, y) {
+  const p = $('terrain'), lignes = x === null ? null : terrainSous(B, x, y);
+  if (!lignes) { p.hidden = true; return; }
+  const cle = lignes.join('\n');
+  if (p.dataset.cle !== cle) {
+    p.dataset.cle = cle;
+    p.replaceChildren(...lignes.map((t, k) => Object.assign(document.createElement('p'), { textContent: t, className: k ? 'discret' : '' })));
+  }
+  p.hidden = false;
+}
 function majBulle() {
   const bulle = $('bulle');
-  if (!souris || !enJeu() || glisse || document.querySelector('dialog[open]')) { bulle.hidden = true; return; }
+  if (!souris || !enJeu() || glisse || document.querySelector('dialog[open]')) { bulle.hidden = true; majTerrain(null); return; }
   const [x, y] = rendu.versTerrain(souris.x, souris.y);
+  majTerrain(x, y);
   let lignes = null;
   if (dePres()) {
     const i = soldatSous(x, y, Math.max(0.8, prise(12)));
     if (i >= 0) {
       const A = B.armee, { reg, qui } = quiEst(A.id[i]);
       lignes = [`${qui.prenom} ${qui.nom}`, `${majuscule(qui.grade)}, ${qui.age} ans · ${nomDe(reg)}`,
-        etatEnMots(A.fatJ[i], A.fatB[i], A.peur[i], A.blessure[i]).join(', ')];
+        [...etatEnMots(A.fatJ[i], A.fatB[i], A.peur[i], A.blessure[i]), experienceEnMots(A.exp[i])].filter(Boolean).join(', ')];
     } else {
       const mort = corpsSous(x, y, Math.max(0.8, prise(10)));
       if (mort >= 0) {
@@ -415,7 +435,7 @@ function majBulle() {
     }
   } else {
     const r = regimentSous(x, y, Math.max(4, prise(16)));
-    if (r >= 0) { const reg = B.etat.regiments[r]; lignes = [nomDe(reg), enMots(bilan(reg))]; }
+    if (r >= 0) { const reg = B.etat.regiments[r]; lignes = [nomDe(reg), enMots(bilan(reg)), majuscule(moralEnMots(reg, R))]; }
   }
   if (!lignes) { bulle.hidden = true; return; }
   const cle = lignes.join('\n');
@@ -550,7 +570,13 @@ const loop = createLoop({
     const ms = performance.now() - t0;
     perf.sim += (ms - perf.sim) * 0.05; perf.pas++;
     evenements.push(...ev);
-    for (const p of ev) if (p.type === 'prise') toast(p.camp === NOUS ? 'Un tronçon pris.' : 'Un tronçon perdu.');
+    for (const p of ev) {
+      if (p.type === 'prise') toast(p.camp === NOUS ? 'Un tronçon pris.' : 'Un tronçon perdu.');
+      else if (p.camp !== NOUS) continue;
+      else if (p.type === 'deroute') toast(`${B.etat.regiments[p.reg].nom} est en déroute.`);
+      else if (p.type === 'ralliement') toast(`${B.etat.regiments[p.reg].nom} se rallie.`);
+      else if (p.type === 'promu' && p.rang === 0) { const { qui } = quiEst(p.id); toast(`${qui.prenom} ${qui.nom} prend le commandement de ${B.etat.regiments[p.reg].nom}.`); }
+    }
     if (ev.some(e => e.type === 'nuit')) { montrerNuit(); }
     if (ev.some(e => e.type === 'fin')) { montrerFin(); }
   },
@@ -600,7 +626,7 @@ startUpdateCheck({
 
 // ─── Mode debug (section 18) : chargé seulement avec ?debug=1 ──────────────
 if (DEBUG) {
-  const { installDebug, seedFromUrl } = await import('./lib/debug.js?v=0.4.0');
+  const { installDebug, seedFromUrl } = await import('./lib/debug.js?v=0.5.0');
   window.__seed = seedFromUrl() ?? undefined;
   installDebug({
     state: () => B && { ...horloge(B), effectifs: effectifs(B), pertes: B.etat.pertes, impacts: B.etat.impacts.length, enJeu: enJeu(), pause: loop.paused },

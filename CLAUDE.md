@@ -45,6 +45,11 @@ la danse macabre, la catastrophe peinte avec calme. L'intention est dans `DESIGN
   tombés (`etat.corps` : `[x×10, y×10, camp, jour, id]`, sauvegardé ; Jérôme,
   v0.3.3) : un homme couché, au loin un pixel ; la couleur du camp le jour même,
   la glaise ensuite. Survolé ou cliqué, sa fiche.
+- **Le moral et l'expérience** (Jérôme, v0.5.0) : un moral par régiment (`moral`,
+  `deroute` dans l'état), l'expérience de chaque homme (`exp` dans la foule), les
+  promotions (`etat.grades`) ; voir `DESIGN.md`.
+- **Le terrain au survol** (Jérôme, v0.5.0) : une plaque sous l'horloge dit ce qu'est
+  la case sous la souris (`terrainSous` de bataille.js).
 - **Les tranchées** (lot 1, Jérôme, v0.4.0) : quatre lignes par camp, des boyaux,
   des tronçons de 25 m qui changent de main ; voir `DESIGN.md`.
 - **Session** : un run = une bataille de 10 à 15 jours sur un secteur (le lot
@@ -103,7 +108,7 @@ le fond des boîtes de dialogue (`::backdrop` de `game.css`).
 | Marcher (sur une tranchée : l'occuper) | — | clic droit ; ou, réglage « tout au bouton gauche », clic sur le sol (Échap laisse les régiments choisis) |
 | Barrage de 75, 155, 220 | 1, 2, 3 (touche physique) puis clic | bouton de la batterie puis clic |
 | Arrêter le temps (pause active) | Espace | — |
-| Déplacer la vue | flèches, ZQSD / WASD (selon l'écran) | glisser avec la molette |
+| Déplacer la vue | flèches, ZQSD / WASD (selon l'écran) | glisser avec le bouton du milieu (la molette) |
 | Tourner, incliner la vue | A et E (Q et E en QWERTY), R et F (touches physiques, en continu) | glisser avec le bouton droit |
 | Zoom | + et − | molette |
 | Menu (pause) | Échap (annule d'abord un barrage visé) | bouton du HUD |
@@ -143,7 +148,9 @@ le fond des boîtes de dialogue (`::backdrop` de `game.css`).
   la boue) et des bras (le tir), une blessure, une peur (`effrayer` : les obus
   jusqu'à trois fois leur rayon, un homme qui tombe à côté) ; jambes lourdes ou
   blessées : plus lent ; bras blessé : tire moitié moins ; terrifié : ne tire plus ;
-  la nuit repose (`reposer`). Touché (`frapper` dans bataille.js) : tué ou blessé,
+  la nuit repose (`reposer`). L'expérience (`exp`) : le feu survécu (`effrayer`
+  avec `R.experience`), les tirs, les prises, les nuits ; elle calme la peur et
+  assure le tir. Un régiment ébranlé tire moins ; en déroute, il ne tire plus. Touché (`frapper` dans bataille.js) : tué ou blessé,
   et blessé deux fois, tué.
 - `js/tranchees.js` — les tranchées : `ligneY` (le tracé d'une ligne, une
   fonction de x : créneaux de 10 m de part et d'autre, une ondulation lente),
@@ -156,15 +163,17 @@ le fond des boîtes de dialogue (`::backdrop` de `game.css`).
   `avancer` (un pas de 1/30 s), ordres (`ordonnerMarche`, `ordonnerBarrage` :
   ils rendent `{ refus }`), en face (barrages sur nos hommes les plus serrés,
   assauts sur nos tranchées), les tronçons (`prises` toutes les 15 pas,
-  `tronconsTenus`, `etat.troncons` : qui tient chacun), jour / nuit / fin, `aube`, `horloge`, `photo` / `restaurer` /
+  `tronconsTenus`, `etat.troncons` : qui tient chacun), le moral (`moral` chaque
+  seconde, `moralEnMots`, la déroute, les refus d'ordres), les grades (`rangDe`,
+  `promouvoir`), `terrainSous`, jour / nuit / fin, `aube`, `horloge`, `photo` / `restaurer` /
   `rejouerTerrain`. À un nouvel ordre, les places sont données dans l'ordre où
   sont les hommes (le long du front, puis d'avant en arrière) : sinon ils se
   croisaient.
 - `js/apparence.js` — la couleur d'une case (partagée par le rendu, le labo,
   l'outil de lisibilité). `js/tuiles.js` — des tuiles d'essai peintes par elle.
 - `js/identite.js` — le nom, l'âge, le grade d'un soldat (tirés de la graine et de
-  son numéro ; le grade, de son rang de création dans son régiment), son état en
-  mots. `js/data/noms.js` : prénoms, noms, grades de chaque camp.
+  son numéro ; le grade, de son rang de création dans son régiment, ou de sa
+  promotion), son état et son expérience en mots. `js/data/noms.js` : prénoms, noms, grades de chaque camp.
 - `js/data/` — `reglages.js` (tous les nombres, modifiables par l'atelier ;
   `soldat` : fatigue, blessures, peur),
   `calibres.js` (motifs 3 × 3, 5 × 5, 7 × 7), `meteo.js` (états et chaîne de
@@ -307,6 +316,12 @@ node outils/stamp-version.mjs            # après chaque changement de version.j
   cachait des parois : abandonnée.
 - **Le brouillard** tramé sur tout l'écran rendait tout illisible : il s'épaissit
   seulement vers le haut de l'écran (le lointain).
+- **Un tir sans cible** comptait pour la fatigue des bras (et l'aurait fait pour
+  l'expérience) : des hommes « bras morts de fatigue » sans avoir vu l'ennemi. `tirer`
+  rend false quand personne n'est à portée (v0.5.0).
+- **Le moral trop vif** : à 0,03 par seconde de peur, un seul barrage mettait un
+  régiment en déroute en 30 s, et il se ralliait aussi vite ; à 0,006 (et un retour
+  de 0,0015), une déroute dure le reste du jour (mesuré, 1 000 hommes par camp).
 - **Le clic droit et les gestes de Firefox** (Jérôme, v0.3.3) : un clic droit glissé
   déclenchait les gestes du navigateur (ou d'une extension). `main.js` empêche
   `pointerdown` des boutons droit et du milieu sur le canvas (ce qui supprime

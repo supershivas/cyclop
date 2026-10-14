@@ -11,7 +11,7 @@
      d'occuper une tranchée s'en servent pour poser les hommes dedans.
    - Un tronçon protège du tir qui vient de devant (le parapet), beaucoup moins
      de celui qui vient de derrière (le parados) : pris, il sert à l'envers. */
-import { hash2 } from './lib/rng.js?v=0.4.0';
+import { hash2 } from './lib/rng.js?v=0.5.0';
 
 /* Le tracé d'une ligne : t = { y0, amp, baie, phase } (mètres, coordonnées du
    terrain). Les baies alternent d'un côté et de l'autre (les créneaux), et la
@@ -35,7 +35,7 @@ export function lignesDu(S, ox, oy, graine) {
 }
 
 /* Creuse les tranchées dans le terrain. Rend { lignes, troncons } et pose
-   T.troncon (Int16Array : le tronçon d'une case de ligne, −1 ailleurs).
+   T.troncon (Int16Array : le tronçon d'une case de ligne, −2 un boyau, −1 ailleurs).
    troncons : [{ camp, ligne, x0, x1, n }] (n : ses cases). */
 export function creuserTranchees(T, S, ox, oy, graine) {
   const C = S.tranchees, W = T.W, H = T.H;
@@ -72,7 +72,7 @@ export function creuserTranchees(T, S, ox, oy, graine) {
       for (let j = Math.max(0, Math.floor(ya)); j < Math.min(H, Math.ceil(yb)); j++) {
         const xb = X + ((Math.floor(j / 6) & 1) ? 1.5 : -1.5), xp = X + ((Math.floor((j - 1) / 6) & 1) ? 1.5 : -1.5);
         const i0 = Math.round(Math.min(xb, xp) - 1), i1 = Math.round(Math.max(xb, xp) + 1);
-        for (let i = Math.max(0, i0); i < Math.min(W, i1); i++) creuser(j * W + i);
+        for (let i = Math.max(0, i0); i < Math.min(W, i1); i++) { const c = j * W + i; creuser(c); if (troncon[c] === -1) troncon[c] = -2; }
       }
     }
   }

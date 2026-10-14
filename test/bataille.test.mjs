@@ -1,6 +1,6 @@
 // La bataille : déterminisme, ordres refusés à voix haute, sauvegarde qui rejoue la même partie.
 import { readFileSync } from 'node:fs';
-import { nouvelleBataille, avancer, ordonnerMarche, ordonnerBarrage, aube, photo, restaurer, effectifs, horloge, zone, tronconsTenus } from '../js/bataille.js';
+import { nouvelleBataille, avancer, ordonnerMarche, ordonnerBarrage, aube, photo, restaurer, effectifs, horloge, zone, tronconsTenus, rangDe, moralEnMots } from '../js/bataille.js';
 import { ligneY } from '../js/tranchees.js';
 import { identite, etatEnMots } from '../js/identite.js';
 import { SECTEURS } from '../js/data/secteur.js';
@@ -180,7 +180,8 @@ test('quatre lignes par camp, creusées d\'un mètre et demi, en tronçons de 25
   assert.ok(dedans > A.n * 0.8, `les hommes partent de leurs tranchées (${dedans} sur ${A.n})`);
 });
 test('un ordre sur une tranchée l\'occupe : les hommes se rangent le long du tracé', () => {
-  const B = petite();
+  // (sans déroute : un petit régiment pris sous un barrage en chemin refluerait)
+  const B = nouvelleBataille(3, { ...R, moral: { ...R.moral, deroute: -1 } }, { soldats: 200 });
   const L = B.lignes.find(l => l.camp === 0 && l.rang === 2);
   const x = M.x + 30, r = ordonnerMarche(B, [0], x, ligneY(L, x));
   assert.ok(r.ok && r.tranchee);
@@ -213,6 +214,58 @@ test('en face monte à l\'assaut de nos tranchées', () => {
   const vers = B.etat.regiments.filter(r => r.camp === 1 && r.ordre.trace && r.ordre.trace.ligne < 10);
   const repli = B.etat.regiments.filter(r => r.camp === 1 && r.effectif < r.initial * 0.4);
   assert.ok(vers.length + repli.length > 0, 'au moins un assaut dans la journée');
+});
+
+group('moral et expérience');
+test('les morts font tomber le moral ; en déroute, un régiment refuse les ordres et reflue ; ébranlé, il ne sort pas', () => {
+  const B = petite(), reg = B.etat.regiments[0];
+  const avant = reg.moral;
+  let deroute = false;
+  for (let k = 0; k < 30 * 300 && !deroute; k++) {
+    if (k % 240 === 0) ordonnerBarrage(B, '220', reg.ordre.x, reg.ordre.y, 1);
+    for (const e of avancer(B)) if (e.type === 'deroute' && e.reg === 0) deroute = true;
+  }
+  assert.ok(reg.moral < avant, 'le moral a baissé');
+  assert.ok(deroute && reg.deroute, 'la déroute');
+  assert.equal(moralEnMots(reg, R), 'en déroute');
+  assert.deepEqual(reg.ordre, reg.depart, 'il reflue vers sa tranchée de départ');
+  const r = ordonnerMarche(B, [0], reg.ordre.x, reg.ordre.y + 30);
+  assert.ok(r.refus && /déroute/.test(r.refus), r.refus);
+  // ébranlé (mais pas en déroute) : reculer, oui ; sortir vers l'ennemi, non
+  reg.deroute = false; reg.moral = 0.4;
+  assert.ok(ordonnerMarche(B, [0], reg.ordre.x, reg.ordre.y + 20).ok);
+  assert.match(ordonnerMarche(B, [0], reg.ordre.x, reg.ordre.y - 60).refus, /ne sortira pas/);
+});
+test('la nuit rend une part du moral, jamais au-dessus de ce que les pertes laissent', () => {
+  const B = petite(), reg = B.etat.regiments[0];
+  reg.moral = 0.1; reg.pertes = 10;
+  B.etat.phase = 'nuit'; aube(B);
+  const plafond = 1 - R.moral.cicatrice * 10 / reg.initial;
+  assert.ok(reg.moral > 0.1 && reg.moral < plafond);
+});
+test('un capitaine tombé est remplacé par un lieutenant ; ce dernier par un sous-lieutenant…', () => {
+  const B = petite(), A = B.armee;
+  const cap = [...A.id.subarray(0, A.n)].findIndex((id, i) => A.reg[i] === 0 && rangDe(B, id, 0) === 0);
+  assert.ok(cap >= 0);
+  // un barrage exactement sur lui jusqu'à ce qu'il tombe
+  for (let k = 0; k < 30 * 200 && !A.mort[cap] && A.id[cap] === 0; k++) {
+    if (k % 300 === 0) ordonnerBarrage(B, '220', A.x[cap], A.y[cap], 1);
+    avancer(B);
+  }
+  const vivants = [...A.id.subarray(0, A.n)];
+  assert.ok(!vivants.includes(0), 'le capitaine est mort');
+  const capitaines = vivants.filter((id, i) => A.reg[i] === 0 && rangDe(B, id, 0) === 0);
+  assert.equal(capitaines.length, 1, 'un nouveau capitaine');
+  assert.ok(B.etat.grades[capitaines[0]], 'promu');
+});
+test('ceux qui survivent au feu prennent de l\'expérience ; elle se sauvegarde', () => {
+  const B = petite(), A = B.armee;
+  ordonnerBarrage(B, '155', ...P(100, 216));
+  for (let k = 0; k < 30 * 60; k++) avancer(B);
+  let max = 0; for (let i = 0; i < A.n; i++) max = Math.max(max, A.exp[i]);
+  assert.ok(max > 0.1, `aguerris (${max.toFixed(2)})`);
+  const C = restaurer(photo(B), R).armee;
+  assert.deepEqual(Array.from(C.exp.subarray(0, C.n)), Array.from(A.exp.subarray(0, A.n)));
 });
 
 test('aucun hasard ni horloge dans les règles', () => {

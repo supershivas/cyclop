@@ -29,6 +29,9 @@
 }
 .plaque p { margin: 0; }
 .discret { color: var(--jeu-accent); }
+.coin { display: grid; gap: var(--pas); align-content: start; justify-items: start; }
+.terrain { pointer-events: none !important; }
+.terrain[hidden] { display: none; }
 .pause-active { align-self: center; letter-spacing: .12em; text-transform: uppercase; }
 .morts b { font-size: var(--texte-grand); font-weight: normal; }
 .choix:empty { display: none; }

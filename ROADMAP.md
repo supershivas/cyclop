@@ -32,11 +32,11 @@ Statuts : **à l'étude** · **validé** (Jérôme a tranché) · **en cours** �
 - **La nuit** : corvées (abris, caillebotis, inhumation, relève, ravitaillement).
 - **Corps** : ils restent (v0.3.3) ; à venir : l'inhumation la nuit, leur poids
   sur le moral près des lignes.
-- **Moral et cohésion** par régiment, déroute (la peur de chaque homme existe déjà, v0.3.0 ; elle ne fait encore que l'empêcher de tirer).
-- **L'expérience** (demandé par Jérôme, v0.3.2) : certains hommes en prennent
-  (avoir tenu sous un barrage, tiré, survécu à une nuit), et elle se voit sur leur
-  fiche ; elle pourrait changer la peur, le tir, la fatigue, et les grades
-  (un caporal tué remplacé par un soldat aguerri). À dessiner avec le moral.
+- **Moral et expérience, la suite** (v0.5.0 a livré le moral par régiment, la
+  déroute, l'expérience, les promotions) : la fuite feinte (les Horaces et les
+  Curiaces), la contagion de la déroute aux voisins, le Discours de la servitude
+  volontaire (un régiment qui refuse tout un jour), les corps près des lignes qui
+  pèsent sur le moral, l'expérience gardée d'une bataille à l'autre (le Mémorial).
 - **Évacuer les blessés** (la boue la ralentit), les soigner la nuit.
 - **Lignes de vue** (une crête cache), mêlées de tranchées rares.
 - **Hors de vue, les soldats comptés** au lieu d'être simulés un par un.

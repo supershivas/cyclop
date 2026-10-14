@@ -85,6 +85,35 @@ export const REGLAGES = {
     prise: 3,             // hommes dans un tronçon vide de ses défenseurs : il est pris
     assaut: 0.6,          // en face ne lance à l'assaut qu'un régiment qui a encore cette part de ses hommes
   },
+  // le moral d'un régiment (0 à 1) : les morts et la peur le font baisser, le calme, l'encadrement et
+  // l'expérience le font remonter, la nuit plus encore (Jérôme, v0.5.0)
+  moral: {
+    depart: 0.85,
+    mort: 0.0045,         // par mort, pour un régiment de 125 hommes (plus pour un plus petit)
+    officier: 0.06,       // en plus, quand tombe un officier ou l'adjudant
+    blesse: 0.0015,       // par blessé
+    peur: 0.006,          // par seconde, multiplié par la peur moyenne des hommes
+    retour: 0.0015,       // par seconde au calme (moins sans officiers, plus avec des hommes aguerris)
+    prise: 0.06,          // un tronçon pris
+    perte: 0.05,          // un tronçon perdu (pour ceux qui y étaient)
+    nuit: 0.35,           // la nuit rend cette part de ce qui manque…
+    cicatrice: 0.5,       // … mais jamais au-dessus de 1 − cicatrice × la part des hommes perdus
+    ebranle: 0.5,         // en dessous : tire moins, refuse de sortir vers l'ennemi
+    tirEbranle: 1.4,      // le temps entre deux tirs, multiplié
+    deroute: 0.2,         // en dessous : la déroute (il reflue vers sa tranchée de départ, ne tire plus)
+    ralliement: 0.4,      // au-dessus, un régiment en déroute se rallie
+    avance: 10,           // m : un ordre qui rapproche de l'ennemi de plus que cela est une sortie
+  },
+  // l'expérience d'un homme (0 à 1) : le feu qu'il a vu et survécu ; elle calme sa peur, assure son tir,
+  // et le fait choisir quand il faut remplacer un gradé tombé
+  experience: {
+    feu: 0.08,            // un obus ou un mort tout près, survécu (moins plus loin)
+    tir: 0.002,           // chaque tir
+    prise: 0.1,           // un tronçon pris, pour ceux qui y sont
+    nuit: 0.02,           // une nuit passée au front
+    calme: 0.5,           // la peur qui le gagne, multipliée par 1 − calme × expérience
+    adresse: 0.6,         // sa chance de toucher, multipliée par 1 + adresse × expérience
+  },
   jour: {
     duree: 360,           // s de jeu pour une journée (6 h → 18 h)
     heureDebut: 6,

@@ -99,6 +99,24 @@ remplit de boue. On l'occupe d'un clic droit dessus. En face monte à l'assaut d
 notre ligne la plus proche qu'on tient encore ; un régiment trop éprouvé retourne
 dans sa tranchée. (Jérôme, v0.4.0 : le lot 1)
 
+### Le moral et l'expérience
+
+Chaque régiment a un moral. Les morts le font baisser (un officier plus encore),
+la peur de ses hommes aussi ; au calme il remonte, plus vite s'il a encore ses
+officiers et des hommes aguerris ; un tronçon pris le relève, un tronçon perdu
+l'abat. La nuit en rend une part, jamais tout : les pertes laissent leur marque.
+Ébranlé, un régiment tire moins et refuse de sortir vers l'ennemi ; trop bas, il
+part en déroute : il ne tire plus, reflue vers sa tranchée de départ et n'obéit
+plus, jusqu'à ce qu'il se rallie. On le refuse à voix haute (« Céruléen est
+ébranlé : il ne sortira pas »). En face obéit aux mêmes règles : ses assauts se
+brisent sur le moral avant de se briser sur les pertes.
+
+Chaque homme prend de l'expérience à survivre au feu : un obus, un camarade qui
+tombe à côté, ses tirs, un tronçon pris, une nuit au front. Aguerri, il a moins
+peur et tire mieux. Quand un gradé tombe, le plus proche en dessous de lui (le plus
+aguerri à rang égal) prend sa place, et ainsi de suite jusqu'aux caporaux ; un
+nouveau capitaine s'annonce. (Jérôme, v0.5.0)
+
 ### Les hommes
 
 Chacun a un nom, un âge, un grade, et ce qu'il endure : des jambes lourdes

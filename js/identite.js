@@ -2,8 +2,8 @@
    bataille et de son numéro (il garde les mêmes d'une partie relue à l'autre).
    Et ce qu'il endure : la fatigue (jambes, bras), une blessure, la peur, dits en
    mots. Logique pure (aucun DOM), testée dans Node. */
-import { hash2 } from './lib/rng.js?v=0.4.0';
-import { NOMS } from './data/noms.js?v=0.4.0';
+import { hash2 } from './lib/rng.js?v=0.5.0';
+import { NOMS } from './data/noms.js?v=0.5.0';
 
 export const PARTIES = ['', 'bras', 'jambe', 'tête'];
 
@@ -19,16 +19,21 @@ export function grade(k, n) {
   if (k < 4 + Math.round(n / 12) + Math.round(n / 6)) return 5;
   return 6;
 }
-export function identite(graine, camp, id, k = 99, n = 125) {
+export function identite(graine, camp, id, k = 99, n = 125, promu = -1) {
   const L = NOMS[camp ? 'eux' : 'nous'];
   const h = q => hash2(id, q, (graine | 0) + camp * 7919);
   const prenom = L.prenoms[Math.floor(h(1) * L.prenoms.length)];
   const nom = L.noms[Math.floor(h(2) * L.noms.length)];
-  let g = grade(k, n);
+  let g = promu >= 0 ? promu : grade(k, n);      // promu : le rang qu'on lui a donné (un gradé tombé)
   if (g === 6 && h(6) >= 0.25) g = 7;                         // 2e classe
   // l'âge : surtout entre 20 et 30 ans, les réservistes jusqu'à 42 ; les officiers plus vieux
   const age = g <= 3 ? 26 + Math.floor(h(3) * 18) : 19 + Math.floor(h(3) * h(4) * 23 + h(5) * 4);
   return { prenom, nom, age, grade: L.grades[g], rang: g };
+}
+
+// Ce qu'il a vu du feu, en quelques mots (ou rien, s'il n'a encore rien vu)
+export function experienceEnMots(exp) {
+  return exp >= 0.6 ? 'aguerri' : exp >= 0.25 ? 'a vu le feu' : exp >= 0.08 ? 'a reçu le baptême du feu' : '';
 }
 
 // L'état d'un soldat en quelques mots : [« blessé au bras », « jambes lourdes », « a peur »…]

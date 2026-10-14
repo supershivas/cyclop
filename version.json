@@ -1,9 +1,9 @@
 {
-  "version": "0.4.0",
+  "version": "0.5.0",
   "date": "2026-10-14",
   "changes": [
-    "Les tranchées : quatre lignes par camp, des boyaux, des tronçons qu'on prend et qu'on perd",
-    "Un clic droit sur une tranchée l'occupe ; prise, elle protège à l'envers",
-    "En face monte à l'assaut de nos lignes"
+    "Le moral : un régiment éprouvé est ébranlé, refuse de sortir, puis part en déroute ; la nuit le reprend",
+    "L'expérience : ceux qui survivent au feu s'aguerrissent ; un gradé tombé est remplacé",
+    "Survolez le terrain : un coin dit ce qu'il est (boue, tranchée, cratère…)"
   ]
 }
