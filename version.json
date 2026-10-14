@@ -1,9 +1,9 @@
 {
-  "version": "0.5.0",
+  "version": "0.6.0",
   "date": "2026-10-14",
   "changes": [
-    "Le moral : un régiment éprouvé est ébranlé, refuse de sortir, puis part en déroute ; la nuit le reprend",
-    "L'expérience : ceux qui survivent au feu s'aguerrissent ; un gradé tombé est remplacé",
-    "Survolez le terrain : un coin dit ce qu'il est (boue, tranchée, cratère…)"
+    "La nuit, une corvée par régiment : repos, réparer la tranchée, caillebotis, inhumer les morts, évacuer les blessés",
+    "Un blessé laissé au front peut mourir dans la nuit ; les corps laissés pèsent sur le moral",
+    "À l'aube, le bilan de la nuit"
   ]
 }

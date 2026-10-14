@@ -29,7 +29,9 @@ Statuts : **à l'étude** · **validé** (Jérôme a tranché) · **en cours** �
   tronçons qui se prennent, la protection à l'envers, les assauts d'en face) : 3
   lignes en secteur calme, 5 en secteur fortifié ; les réparer la nuit (corvées) ;
   les montrer tenues ou perdues sur le terrain lui-même ; abris profonds.
-- **La nuit** : corvées (abris, caillebotis, inhumation, relève, ravitaillement).
+- **La nuit, la suite** (v0.6.0 a livré repos, réparer, caillebotis, inhumer,
+  évacuer) : les abris profonds, la relève (des régiments de réserve), le
+  ravitaillement, les coups de main de nuit, les tombes dessinées sur le terrain.
 - **Corps** : ils restent (v0.3.3) ; à venir : l'inhumation la nuit, leur poids
   sur le moral près des lignes.
 - **Moral et expérience, la suite** (v0.5.0 a livré le moral par régiment, la
@@ -37,7 +39,7 @@ Statuts : **à l'étude** · **validé** (Jérôme a tranché) · **en cours** �
   Curiaces), la contagion de la déroute aux voisins, le Discours de la servitude
   volontaire (un régiment qui refuse tout un jour), les corps près des lignes qui
   pèsent sur le moral, l'expérience gardée d'une bataille à l'autre (le Mémorial).
-- **Évacuer les blessés** (la boue la ralentit), les soigner la nuit.
+- **Évacuer les blessés, la suite** : de jour, sous le feu ; la boue qui ralentit les brancardiers.
 - **Lignes de vue** (une crête cache), mêlées de tranchées rares.
 - **Hors de vue, les soldats comptés** au lieu d'être simulés un par un.
 - **Champs de coûts recalculés par morceaux** quand le terrain change (aujourd'hui :

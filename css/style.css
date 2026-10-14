@@ -124,6 +124,18 @@ dialog h2 { margin: 0 0 calc(var(--pas) * 2); font-size: 18px; font-weight: norm
 dialog p { line-height: 1.5; }
 dialog .reglage { display: flex; gap: var(--pas); align-items: flex-start; min-height: var(--jeu-cible); max-width: 46ch; line-height: 1.4; }
 dialog .reglage input { width: 20px; height: 20px; margin: 0; flex: none; accent-color: var(--jeu-accent); }
+#dialogue-nuit { max-width: min(92vw, 640px); }
+.corvees-titre { margin: calc(var(--pas) * 2) 0 var(--pas); font-size: var(--texte); font-weight: normal; color: var(--jeu-accent); letter-spacing: .06em; }
+.corvees { display: grid; gap: var(--pas); margin-bottom: calc(var(--pas) * 2); }
+.corvee { display: grid; grid-template-columns: 1fr auto; gap: 2px var(--pas); align-items: center; }
+.corvee p { margin: 0; }
+.corvee b { font-weight: normal; }
+.corvee-dit { grid-column: 1 / -1; font-size: 12px; }
+.corvee select {
+  min-height: var(--jeu-cible); padding: 0 var(--pas);
+  background: var(--jeu-fond); color: var(--jeu-encre); border: 1px solid var(--jeu-accent);
+  font: inherit;
+}
 dialog hr { border: 0; border-top: 1px solid var(--jeu-ombre); margin: calc(var(--pas) * 2) 0; }
 .version { margin: 0; color: var(--jeu-accent); }
 details { margin: var(--pas) 0 calc(var(--pas) * 2); }

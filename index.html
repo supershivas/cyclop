@@ -9,8 +9,8 @@
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta property="og:image" content="og.png">
-<link rel="stylesheet" href="js/lib/game.css?v=0.5.0">
-<link rel="stylesheet" href="css/style.css?v=0.5.0">
+<link rel="stylesheet" href="js/lib/game.css?v=0.6.0">
+<link rel="stylesheet" href="css/style.css?v=0.6.0">
 </head>
 <body>
 <div class="jeu-ecran" id="ecran">
@@ -87,7 +87,15 @@
   <p id="nuit-pertes"></p>
   <p id="nuit-lignes"></p>
   <p id="nuit-demain"></p>
+  <h3 class="corvees-titre">Les corvées de la nuit</h3>
+  <div class="corvees" id="corvees"></div>
   <div class="menu"><button class="bouton" id="aube">À l'aube</button></div>
+</dialog>
+
+<dialog id="dialogue-aube" aria-label="L'aube">
+  <h2 id="aube-titre">L'aube</h2>
+  <div id="aube-bilan"></div>
+  <div class="menu"><button class="bouton" id="jour-se-leve">Le jour se lève</button></div>
 </dialog>
 
 <dialog id="dialogue-fin" aria-label="Fin de la bataille">
@@ -142,6 +150,6 @@
 </dialog>
 
 <div class="jeu-toast" id="toast" role="status" hidden></div>
-<script type="module" src="js/main.js?v=0.5.0"></script>
+<script type="module" src="js/main.js?v=0.6.0"></script>
 </body>
 </html>

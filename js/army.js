@@ -25,8 +25,8 @@
      (rng.js), pour que la même graine rejoue la même bataille.
 
    Logique pure : aucun DOM. Le rendu lit les tableaux (rendu3d.js). */
-import { hauteurQ, etat, vitesseEtat } from './terrain.js?v=0.5.0';
-import { ligneY } from './tranchees.js?v=0.5.0';
+import { hauteurQ, etat, vitesseEtat } from './terrain.js?v=0.6.0';
+import { ligneY } from './tranchees.js?v=0.6.0';
 
 export const GRILLE = 2;           // m : cases de voisinage
 export const DENSITE = 8;          // m : carrés de densité (tir)
@@ -150,6 +150,7 @@ export function pasArmee(A, ctx) {
     // ─ La case, la marche devant ─
     const ci = xi | 0, cj = yi | 0, cc = cj * W + ci;
     let terrain = vitesseEtat(etat(T, cc, R, gel), R);
+    if (T.caille[cc] && terrain < V.humide) terrain = V.humide;          // sur des caillebotis, la boue ne retient plus
     if (voulu > 0) {
       const ai = (xi + gx * 0.7) | 0, aj = (yi + gy * 0.7) | 0;
       if (ai >= 0 && aj >= 0 && ai < W && aj < H && (ai !== ci || aj !== cj)) {

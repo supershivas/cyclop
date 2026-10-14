@@ -114,6 +114,20 @@ export const REGLAGES = {
     calme: 0.5,           // la peur qui le gagne, multipliée par 1 − calme × expérience
     adresse: 0.6,         // sa chance de toucher, multipliée par 1 + adresse × expérience
   },
+  // la nuit et ses corvées (Jérôme, v0.6.0)
+  nuit: {
+    reposTravail: 0.4,    // un régiment à la corvée ne se repose que de cette part
+    moralRepos: 0.15,     // le repos rend en plus cette part de ce qui manque au moral
+    mortBlesse: 0.12,     // un blessé laissé au front meurt dans la nuit (à la tête : deux fois plus)
+    rayonInhumer: 60,     // m autour du régiment
+    inhumerParHomme: 1,   // corps qu'un homme peut porter en terre dans la nuit
+    risqueDehors: 0.03,   // chance de tomber, par homme, pour une corvée au-delà de nos lignes (balles perdues, fusées)
+    risqueBoyau: 0.005,   // … et pour porter les blessés par les boyaux
+    rayonCorps: 40,       // m : les corps laissés autour d'un régiment…
+    moralCorps: 0.003,    // … lui pèsent, chacun, au matin…
+    moralCorpsMax: 0.15,  // … jusqu'à cette part de son moral
+    moralEvacuer: 0.03,   // on s'occupe des blessés : le moral remonte un peu
+  },
   jour: {
     duree: 360,           // s de jeu pour une journée (6 h → 18 h)
     heureDebut: 6,

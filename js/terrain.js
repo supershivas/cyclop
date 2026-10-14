@@ -16,8 +16,8 @@
      nuit elle se fait en lot.
    - Les versions (`versionLigne`, `versionMorceau`) disent au rendu ce qui a
      changé ; le terrain ne connaît pas le rendu. */
-import { hash2 } from './lib/rng.js?v=0.5.0';
-import { CALIBRES } from './data/calibres.js?v=0.5.0';
+import { hash2 } from './lib/rng.js?v=0.6.0';
+import { CALIBRES } from './data/calibres.js?v=0.6.0';
 
 export const ETAT = { SEC: 0, HUMIDE: 1, BOUE: 2, EAU: 3, GLACE: 4 };
 export const MORCEAU = 25;             // cases : le côté d'un morceau de maillage (mesuré, rendu logiciel : à 100, la moitié du champ restait dessinée au zoom 4 ; à 25, 6 500 triangles au lieu de 15 600 au zoom 8)
@@ -67,6 +67,7 @@ export function creerTerrain(graine, secteur, R) {
   const mw = Math.ceil(W / MORCEAU), mh = Math.ceil(H / MORCEAU);
   return {
     W, H, base, diff, nappe, eau, humid, arbres,
+    caille: new Uint8Array(N),                  // 1 : des caillebotis posés (la nuit, une corvée)
     versionLigne: new Uint32Array(H),           // couleur d'une rangée changée (rendu)
     versionMorceau: new Uint32Array(mw * mh),   // hauteurs d'un morceau changées (rendu)
     mw, mh, version: 1,                         // version : relief changé (champs de coûts)
@@ -94,7 +95,7 @@ export function etat(T, c, R, gel = false) {
 const VITESSE_ETAT = ['sec', 'humide', 'boue', 'eau', 'glace'];
 export function vitesseEtat(e, R) { return R.vitesse[VITESSE_ETAT[e]]; }
 
-function toucher(T, i, j) {
+export function toucher(T, i, j) {
   T.versionLigne[j]++;
   T.versionMorceau[Math.floor(j / MORCEAU) * T.mw + Math.floor(i / MORCEAU)]++;
 }

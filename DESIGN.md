@@ -37,8 +37,7 @@ moteur de foule de « Pierre et les rats ».
 - **Minute** : un jour dure 5 à 8 minutes (6 en v0.1.0) : offensives, barrages,
   contre-attaques. On regarde la boue gagner.
 - **Partie** : 10 à 15 jours sur un secteur ; chaque nuit, le terrain évolue en
-  lot (et, plus tard, les corvées : abris, caillebotis, inhumation, relève,
-  ravitaillement).
+  lot, et chaque régiment fait sa corvée (v0.6.0).
 - **Entre deux parties** : le Mémorial (chaque unité perdue garde un nom), l'état-
   major (doctrines débloquées, chacune avec un coût), les trophées déclaratifs,
   sobres (« tenir un secteur sans offensive », « gagner un mètre pour moins de
@@ -98,6 +97,18 @@ obus la comblent comme le reste du sol (leur terre retombe dedans), la pluie la
 remplit de boue. On l'occupe d'un clic droit dessus. En face monte à l'assaut de
 notre ligne la plus proche qu'on tient encore ; un régiment trop éprouvé retourne
 dans sa tranchée. (Jérôme, v0.4.0 : le lot 1)
+
+### La nuit et ses corvées
+
+La nuit, chaque régiment reçoit une corvée : le repos (la fatigue et la peur
+tombent, le moral remonte un peu plus), réparer sa tranchée (les tronçons comblés
+par les obus sont recreusés), y poser des caillebotis (la boue ne retient plus),
+inhumer les morts autour de lui (ils partent en terre, leur fiche le dit ; au-delà
+de nos lignes, des hommes y restent), évacuer ses blessés (ils quittent le front,
+vivants). Un régiment qui travaille se repose moins. Un blessé laissé au front peut
+mourir dans la nuit ; les corps laissés autour d'un régiment pèsent sur son moral au
+matin. En face fait ses corvées lui aussi. À l'aube, le bilan de la nuit, en deux
+lignes. (Jérôme, v0.6.0)
 
 ### Le moral et l'expérience
 

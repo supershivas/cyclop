@@ -1,5 +1,11 @@
 # Journal des versions
 
+## 0.6.0 — 2026-10-14
+
+- La nuit, une corvée par régiment : repos, réparer la tranchée, caillebotis, inhumer les morts, évacuer les blessés
+- Un blessé laissé au front peut mourir dans la nuit ; les corps laissés pèsent sur le moral
+- À l'aube, le bilan de la nuit
+
 ## 0.5.0 — 2026-10-14
 
 - Le moral : un régiment éprouvé est ébranlé, refuse de sortir, puis part en déroute ; la nuit le reprend

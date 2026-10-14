@@ -45,6 +45,8 @@ la danse macabre, la catastrophe peinte avec calme. L'intention est dans `DESIGN
   tombés (`etat.corps` : `[x×10, y×10, camp, jour, id]`, sauvegardé ; Jérôme,
   v0.3.3) : un homme couché, au loin un pixel ; la couleur du camp le jour même,
   la glaise ensuite. Survolé ou cliqué, sa fiche.
+- **La nuit et ses corvées** (Jérôme, v0.6.0) : une corvée par régiment (repos,
+  réparer, caillebotis, inhumer, évacuer) ; voir `DESIGN.md`.
 - **Le moral et l'expérience** (Jérôme, v0.5.0) : un moral par régiment (`moral`,
   `deroute` dans l'état), l'expérience de chaque homme (`exp` dans la foule), les
   promotions (`etat.grades`) ; voir `DESIGN.md`.
@@ -157,6 +159,11 @@ le fond des boîtes de dialogue (`::backdrop` de `game.css`).
   `creuserTranchees` (creusées dans `diff` à 1,5 m, un parapet d'un quart du côté
   de l'ennemi, des boyaux ; `T.troncon` : le tronçon de 25 m de chaque case de
   ligne), `ligneSous`. Les données sont dans `secteur.js` (`tranchees`).
+- `js/nuit.js` — les corvées de la nuit (`corvees`, appelée par `aube(B, choix)`) :
+  `tronconsDe` (la tranchée d'un régiment), `refusCorvee`, `travail` (réparer,
+  caillebotis : `T.caille`), `choixEnFace`, `rejouerTravaux`. Les textes sont dans
+  `data/corvees.js`, les nombres dans `reglages.js` (`nuit`). L'état garde
+  `travaux`, `tombes`, `evacues`, `nuits`.
 - `js/champs.js` — les champs de coûts : le terrain résumé en carrés de 4 m
   (`couts`, un octet), Dial, une direction par carré ; cache par but et version.
 - `js/bataille.js` — l'état d'une partie et ses règles : `nouvelleBataille`,
@@ -221,7 +228,7 @@ le fond des boîtes de dialogue (`::backdrop` de `game.css`).
 
 - `?debug=1` : `window.__jeu` (`state`, `stats`, `avancer(n, passerNuits)`,
   `barrage(cal, x, y, camp)`, `marche(ids, x, y)`, `zoom(i)`, `camera(yaw, k)`, `teleport`,
-  `bataille()`, `rendu()`, `fiche()`, `survol(x, y)`), `&seed=7`. F9 masque le panneau. Les
+  `bataille()`, `rendu()`, `fiche()`, `survol(x, y)`, `nuit()` : ouvre la nuit), `&seed=7`. F9 masque le panneau. Les
   coordonnées du mode debug sont celles du **secteur** (0..400, 0..300) : les marges
   s'ajoutent dans `main.js`.
 - `?soldats=8000` : une bataille de 8 000 soldats (les deux camps).
@@ -316,6 +323,10 @@ node outils/stamp-version.mjs            # après chaque changement de version.j
   cachait des parois : abandonnée.
 - **Le brouillard** tramé sur tout l'écran rendait tout illisible : il s'épaissit
   seulement vers le haut de l'écran (le lointain).
+- **Les travaux de la nuit changent le terrain** : ils sont notés dans
+  `etat.travaux` et rejoués par `rejouerTerrain` après l'eau de la nuit (l'aube
+  vient après elle) ; le test « réparer … relue » le vérifie. Une mort de la nuit
+  passe par `mourir` (pertes, moral, promotions, corps), comme de jour.
 - **Un tir sans cible** comptait pour la fatigue des bras (et l'aurait fait pour
   l'expérience) : des hommes « bras morts de fatigue » sans avoir vu l'ennemi. `tirer`
   rend false quand personne n'est à portée (v0.5.0).

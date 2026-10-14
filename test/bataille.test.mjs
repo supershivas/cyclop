@@ -2,6 +2,7 @@
 import { readFileSync } from 'node:fs';
 import { nouvelleBataille, avancer, ordonnerMarche, ordonnerBarrage, aube, photo, restaurer, effectifs, horloge, zone, tronconsTenus, rangDe, moralEnMots } from '../js/bataille.js';
 import { ligneY } from '../js/tranchees.js';
+import { tronconsDe, refusCorvee } from '../js/nuit.js';
 import { identite, etatEnMots } from '../js/identite.js';
 import { SECTEURS } from '../js/data/secteur.js';
 import { REGLAGES as R } from '../js/data/reglages.js';
@@ -266,6 +267,65 @@ test('ceux qui survivent au feu prennent de l\'expérience ; elle se sauvegarde'
   assert.ok(max > 0.1, `aguerris (${max.toFixed(2)})`);
   const C = restaurer(photo(B), R).armee;
   assert.deepEqual(Array.from(C.exp.subarray(0, C.n)), Array.from(A.exp.subarray(0, A.n)));
+});
+
+group('la nuit et ses corvées');
+// une journée sous les obus, jusqu'à la nuit
+function jusquALaNuit(B) {
+  const reg = B.etat.regiments[0];
+  for (let k = 0; B.etat.phase === 'jour'; k++) {
+    if (k % 600 === 0) ordonnerBarrage(B, '220', reg.ordre.x, reg.ordre.y, 1);
+    avancer(B);
+  }
+}
+test('évacuer : les blessés du régiment quittent le front vivants ; ce ne sont pas des morts', () => {
+  const B = petite(); jusquALaNuit(B);
+  const A = B.armee, nb = new Map();
+  for (let i = 0; i < A.n; i++) if (A.camp[i] === 0 && A.blessure[i]) nb.set(A.reg[i], (nb.get(A.reg[i]) || 0) + 1);
+  const g = [...nb.entries()].sort((a, b) => b[1] - a[1] || a[0] - b[0])[0]?.[0];
+  assert.ok(g !== undefined, 'des blessés');
+  const blesses = [...A.id.subarray(0, A.n)].filter((id, i) => A.reg[i] === g && A.blessure[i]);
+  const pertes = B.etat.pertes[0], r = aube(B, { [g]: 'evacuer' });
+  assert.ok(r.ok);
+  const restants = [...A.id.subarray(0, A.n)];
+  for (const id of blesses) assert.ok(!restants.includes(id), 'parti');
+  assert.equal(r.bilan[0].evacues + r.bilan[0].mortsCorvee, blesses.length, 'chacun évacué, ou tombé en route');
+  assert.equal(B.etat.pertes[0], pertes + r.bilan[0].mortsCorvee + r.bilan[0].mortsBlesses);
+  assert.equal(B.etat.evacues.length, r.bilan[0].evacues);
+});
+test('réparer : les tronçons comblés sont recreusés ; la partie relue rejoue la réparation', () => {
+  const B = petite(); jusquALaNuit(B);
+  const T = B.terrain, reg = B.etat.regiments[0], ks = new Set(tronconsDe(B, reg));
+  const combles = () => { let n = 0; for (let c = 0; c < T.W * T.H; c++) if (ks.has(T.troncon[c]) && T.diff[c] > -B.profondeur) n++; return n; };
+  assert.ok(combles() > 0, 'les obus en ont comblé');
+  const r = aube(B, { 0: 'reparer' });
+  assert.equal(combles(), 0);
+  assert.ok(r.bilan[0].repares > 0);
+  for (let k = 0; k < 300; k++) avancer(B);
+  const C = restaurer(photo(B), R);
+  assert.deepEqual(Array.from(C.terrain.diff), Array.from(T.diff));
+});
+test('inhumer : les corps proches partent en terre ; les caillebotis se posent ; pas de tranchée, pas de caillebotis', () => {
+  const B = petite(); jusquALaNuit(B);
+  const corps = B.etat.corps.length;
+  assert.ok(corps > 0);
+  const r = aube(B, { 0: 'inhumer', 1: 'caillebotis' });
+  assert.ok(r.bilan[0].inhumes > 0);
+  assert.equal(B.etat.tombes.length, r.bilan[0].inhumes);
+  assert.equal(B.etat.corps.length, corps - r.bilan[0].inhumes + r.bilan[0].mortsCorvee + r.bilan[0].mortsBlesses);
+  assert.ok(r.bilan[0].caillebotis > 0 && B.terrain.caille.some(v => v));
+  const reg = B.etat.regiments[2]; reg.ordre = { ...reg.ordre, trace: undefined };
+  assert.match(refusCorvee(B, reg, 'caillebotis'), /ne tient pas de tranchée/);
+});
+test('un blessé laissé au front peut mourir dans la nuit', () => {
+  const B = nouvelleBataille(3, { ...R, nuit: { ...R.nuit, mortBlesse: 1 } }, { soldats: 200 });
+  jusquALaNuit(B);
+  const A = B.armee;
+  let blesses = 0; for (let i = 0; i < A.n; i++) if (A.blessure[i]) blesses++;
+  assert.ok(blesses > 0);
+  const r = aube(B, {});
+  assert.equal(r.bilan[0].mortsBlesses + r.bilan[1].mortsBlesses, blesses);
+  for (let i = 0; i < A.n; i++) assert.equal(A.blessure[i], 0);
 });
 
 test('aucun hasard ni horloge dans les règles', () => {
