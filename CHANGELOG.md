@@ -1,5 +1,9 @@
 # Journal des versions
 
+## 0.7.1 — 2026-10-14
+
+- Le champ vu de loin redevient fluide : les buissons n'y sont plus dessinés
+
 ## 0.7.0 — 2026-10-14
 
 - Six régiments par camp au lieu de huit

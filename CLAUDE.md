@@ -334,7 +334,9 @@ node outils/stamp-version.mjs            # après chaque changement de version.j
   seulement vers le haut de l'écran (le lointain).
 - **Les arbres et les buissons dessinés partout** : instanciés sans tri, ils
   coûtaient des dizaines de milliers de triangles hors de la vue (les buissons des
-  marges : ~65 000). Ils sont triés à chaque image comme les soldats (`dansLaVue`).
+  marges : ~65 000). Ils sont triés à chaque image comme les soldats (`dansLaVue`). Tout dézoomé, tous les
+  buissons du champ restaient dans la vue (59 600 triangles, 32 ms après trois jours) : ils
+  ne sont plus dessinés quand le sol est à plat (15 900 triangles, 12 ms ; v0.7.1).
 - **L'herbe dans la couleur du sol** : en glaise sur le sol sec, comme le creux
   d'un cratère ; mais une tache seule, sans lèvre claire. En brume, elle se lisait
   comme du givre (essayé, v0.7.0). Éparse (une case sur 9 à 41) : un damier faisait
