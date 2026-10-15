@@ -13,6 +13,7 @@ import { METEO } from './data/meteo.js?v=0.9.1';
 import { nouvelleBataille, avancer, ordonnerMarche, ordonnerBarrage } from './bataille.js?v=0.9.1';
 import { creerRendu, ZOOMS } from './rendu3d.js?v=0.9.1';
 import { hash2 } from './lib/rng.js?v=0.9.1';
+import { maquetteAssaut } from './labo-assaut.js?v=0.9.1';
 
 document.documentElement.style.setProperty('--jeu-accent', ROLES.accent);
 const NOM = document.title.replace(/^Labo — /, ''); // le nom vient de la page (une apostrophe ne casse rien)
@@ -158,6 +159,14 @@ const GROUPES = [
         for (const a of ks) t.append(el('tr', {}, el('th', { textContent: a }), ...ks.map(b => el('td', { textContent: a === b ? '—' : contraste(PALETTE[a], PALETTE[b]).toFixed(1) }))));
         s.append(t);
       } },
+    ] },
+  ] },
+  { id: 'interface', title: 'Interface', topics: [
+    { id: 'assaut', title: 'Attaque d\'une tranchée', variants: [
+      { title: 'Le compteur', status: 'actuelle', note: 'Ce que voit le joueur aujourd\'hui : « Tronçons : 12 · 11 » et, une fois le tronçon perdu, « Un tronçon perdu. » Rien avant.', render: s => maquetteAssaut(s, 'actuelle') },
+      { title: 'Une jauge par tronçon', note: 'Sous chaque tronçon : les défenseurs (carrés), les assaillants dans la case (triangles), le seuil de prise. Le trait dit qui tient : plein, tireté s\'il est disputé, double s\'il est pris.', render: s => maquetteAssaut(s, 'jauges') },
+      { title: 'Les temps de l\'assaut', note: 'La jauge, plus quatre temps en haut (préparation, sortie, contact, tronçon perdu) et un journal de trois lignes : la raison de chaque changement, relisible en pause active.', render: s => maquetteAssaut(s, 'phases') },
+      { title: 'Avec la carte des lignes', note: 'Le tout, et une carte des huit lignes en coin : qui tient quoi, et où l\'on se bat. Pour savoir, à l\'échelle du secteur, ce que l\'assaut change.', render: s => maquetteAssaut(s, 'carte') },
     ] },
   ] },
   { id: 'moteur', title: 'Moteur', topics: [
