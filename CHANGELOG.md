@@ -1,5 +1,9 @@
 # Journal des versions
 
+## 0.9.2 — 2026-10-15
+- Le feu se voit : un éclair et un trait clair à chaque tir, les hommes terrifiés se tapissent
+- Chaque tronçon de tranchée porte un fanion à la couleur de celui qui le tient : déchiré quand l'autre camp y entre, amené puis hissé quand il tombe
+
 ## 0.9.1 — 2026-10-15
 - La vue se tourne et s'incline avec le bouton du milieu, ou avec un petit cadran en bas à droite : plus de gêne avec les gestes de souris de Firefox
 - Maj + bouton du milieu déplace la vue

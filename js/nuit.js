@@ -11,10 +11,10 @@
      n'évacue pas peut mourir dans la nuit ; les corps laissés autour d'un
      régiment pèsent sur son moral au matin.
    - En face fait ses corvées aussi (`choixEnFace`). */
-import { toucher } from './terrain.js?v=0.9.1';
-import { CORVEES } from './data/corvees.js?v=0.9.1';
-import { REGIMENTS } from './data/lexique.js?v=0.9.1';
-import { ajouterSoldat } from './army.js?v=0.9.1';
+import { toucher } from './terrain.js?v=0.9.2';
+import { CORVEES } from './data/corvees.js?v=0.9.2';
+import { REGIMENTS } from './data/lexique.js?v=0.9.2';
+import { ajouterSoldat } from './army.js?v=0.9.2';
 
 export const SORTES = ['reparer', 'caillebotis'];          // les travaux de terrain, par leur numéro dans etat.travaux
 export const corvee = id => CORVEES.find(c => c.id === id);

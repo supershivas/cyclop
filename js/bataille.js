@@ -14,17 +14,17 @@
    La sauvegarde (photo) garde la graine, la liste compacte des impacts, l'état
    de la foule et les petites couches de logique ; jamais le relief : il se
    rejoue depuis la graine et les impacts (rejouerTerrain). */
-import { createRng, hash2 } from './lib/rng.js?v=0.9.1';
-import { creerTerrain, impact, hydroLignes, etat as etatCase, vitesseEtat, ETAT } from './terrain.js?v=0.9.1';
-import { creerArmee, ajouterSoldat, construireGrille, pasArmee, tuerDans, effrayer, compacter, photoArmee, restaurerArmee, b64, deB64, DENSITE, place } from './army.js?v=0.9.1';
-import { creuserTranchees, ligneSous } from './tranchees.js?v=0.9.1';
-import { calculerCouts, creerCacheChamps, dimensionsCouts, BLOC } from './champs.js?v=0.9.1';
-import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.9.1';
-import { METEO, TRANSITIONS, PREVISION_JUSTE } from './data/meteo.js?v=0.9.1';
-import { SECTEURS } from './data/secteur.js?v=0.9.1';
-import { REGIMENTS } from './data/lexique.js?v=0.9.1';
-import { grade } from './identite.js?v=0.9.1';
-import { corvees, rejouerTravaux } from './nuit.js?v=0.9.1';
+import { createRng, hash2 } from './lib/rng.js?v=0.9.2';
+import { creerTerrain, impact, hydroLignes, etat as etatCase, vitesseEtat, ETAT } from './terrain.js?v=0.9.2';
+import { creerArmee, ajouterSoldat, construireGrille, pasArmee, tuerDans, effrayer, compacter, photoArmee, restaurerArmee, b64, deB64, DENSITE, place } from './army.js?v=0.9.2';
+import { creuserTranchees, ligneSous } from './tranchees.js?v=0.9.2';
+import { calculerCouts, creerCacheChamps, dimensionsCouts, BLOC } from './champs.js?v=0.9.2';
+import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.9.2';
+import { METEO, TRANSITIONS, PREVISION_JUSTE } from './data/meteo.js?v=0.9.2';
+import { SECTEURS } from './data/secteur.js?v=0.9.2';
+import { REGIMENTS } from './data/lexique.js?v=0.9.2';
+import { grade } from './identite.js?v=0.9.2';
+import { corvees, rejouerTravaux } from './nuit.js?v=0.9.2';
 
 export const PAS = 1 / 30;                 // s de jeu par pas
 export const NOUS = 0, EUX = 1;
@@ -173,6 +173,8 @@ function monter(etat, R) {
     champs: creerCacheChamps(terrain, R),
     lignes, troncons, faces, profondeur: S.tranchees?.profondeur ?? 6,
     evenements: [],
+    tirs: [],                   // le dessin seulement : les tirs du pas [x, y, cible x, cible y, camp]…, vidés par le rendu (jamais sauvegardés)
+    disputes: new Uint8Array(troncons.length),   // le dessin seulement : un tronçon où l'autre camp est entré (rafraîchi par `prises`)
   };
 }
 
@@ -296,7 +298,8 @@ export function avancer(B) {
       B.evenements.push({ type: 'blesse', camp: A.camp[i], cause, id: A.id[i] });
     }
   };
-  const ctx = { T, R, regiments: etat.regiments, rng, dt: PAS, gel, frapper, champDe: r => champDe(B, r), faces: B.faces };
+  const tir = (i, tx, ty) => { if (B.tirs.length < 2000) B.tirs.push(A.x[i], A.y[i], tx, ty, A.camp[i]); };
+  const ctx = { T, R, regiments: etat.regiments, rng, dt: PAS, gel, frapper, champDe: r => champDe(B, r), faces: B.faces, tir };
 
   construireGrille(A);
   // les obus
@@ -404,6 +407,7 @@ function prises(B) {
   }
   for (let t = 0; t < n; t++) {
     const tient = etat.troncons[t], autre = 1 - tient;
+    B.disputes[t] = compte[t * 2 + autre] > 0 ? 1 : 0;
     if (compte[t * 2 + tient] === 0 && compte[t * 2 + autre] >= R.tranchee.prise) {
       etat.troncons[t] = autre;
       etat.prises[etat.jour - 1][autre]++;

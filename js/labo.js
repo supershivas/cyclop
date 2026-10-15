@@ -2,18 +2,18 @@
 // Chaque sujet utilise les mêmes modules que le jeu (terrain, apparence,
 // rendu three.js) : ce qu'on voit ici est ce que le jeu dessinera. Ajouter un
 // sujet ou une variante = ajouter une entrée dans GROUPES.
-import { mountLabo } from './lib/labo-shell.js?v=0.9.1';
-import { spriteCanvas, paletteToGPL, paletteToHex } from './lib/sprites.js?v=0.9.1';
-import { PALETTE, ROLES } from './palette.js?v=0.9.1';
-import { chargerContenu } from './design-store.js?v=0.9.1';
-import { tuile, ETAT } from './tuiles.js?v=0.9.1';
-import { creerTerrain, impact, hydroLignes } from './terrain.js?v=0.9.1';
-import { CALIBRES } from './data/calibres.js?v=0.9.1';
-import { METEO } from './data/meteo.js?v=0.9.1';
-import { nouvelleBataille, avancer, ordonnerMarche, ordonnerBarrage } from './bataille.js?v=0.9.1';
-import { creerRendu, ZOOMS } from './rendu3d.js?v=0.9.1';
-import { hash2 } from './lib/rng.js?v=0.9.1';
-import { maquetteAssaut } from './labo-assaut.js?v=0.9.1';
+import { mountLabo } from './lib/labo-shell.js?v=0.9.2';
+import { spriteCanvas, paletteToGPL, paletteToHex } from './lib/sprites.js?v=0.9.2';
+import { PALETTE, ROLES } from './palette.js?v=0.9.2';
+import { chargerContenu } from './design-store.js?v=0.9.2';
+import { tuile, ETAT } from './tuiles.js?v=0.9.2';
+import { creerTerrain, impact, hydroLignes } from './terrain.js?v=0.9.2';
+import { CALIBRES } from './data/calibres.js?v=0.9.2';
+import { METEO } from './data/meteo.js?v=0.9.2';
+import { nouvelleBataille, avancer, ordonnerMarche, ordonnerBarrage } from './bataille.js?v=0.9.2';
+import { creerRendu, ZOOMS } from './rendu3d.js?v=0.9.2';
+import { hash2 } from './lib/rng.js?v=0.9.2';
+import { maquetteAssaut } from './labo-assaut.js?v=0.9.2';
 
 document.documentElement.style.setProperty('--jeu-accent', ROLES.accent);
 const NOM = document.title.replace(/^Labo — /, ''); // le nom vient de la page (une apostrophe ne casse rien)
@@ -163,9 +163,9 @@ const GROUPES = [
   ] },
   { id: 'interface', title: 'Interface', topics: [
     { id: 'assaut', title: 'Attaque d\'une tranchée', variants: [
-      { title: 'Le compteur', status: 'actuelle', note: 'Ce que voit le joueur aujourd\'hui : des hommes en boîtes, des obus, et « Tronçons : 12 · 11 » en coin. Rien ne dit qu\'un tronçon est disputé, ni que le dernier défenseur va tomber. Allez à « Contact » avec la frise.', render: s => maquetteAssaut(s, 'actuelle') },
-      { title: 'Le feu se voit', note: 'Les hommes disent ce qu\'ils font : ceux qu\'on bombarde se tapissent et ne tirent plus, les autres tirent (éclair, traceur), un homme touché tombe et reste là. On lit à qui appartient la force sans un chiffre.', render: s => maquetteAssaut(s, 'feu') },
-      { title: 'Le tronçon se lit', note: 'Le monde porte l\'état : des traverses découpent la tranchée en tronçons, un fanion flotte, se déchire, est amené puis remplacé par celui d\'en face ; le fil de fer est coupé ; le parapet est bouleversé ; les sacs sont retournés quand le tronçon est pris.', render: s => maquetteAssaut(s, 'marques') },
+      { title: 'Le compteur', status: 'ancienne', note: 'Ce que voyait le joueur avant la v0.9.2 : des hommes en boîtes, des obus, et « Tronçons : 12 · 11 » en coin. Rien ne dit qu\'un tronçon est disputé, ni que le dernier défenseur va tomber. Allez à « Contact » avec la frise.', render: s => maquetteAssaut(s, 'actuelle') },
+      { title: 'Le feu se voit', status: 'retenue', note: 'Les hommes disent ce qu\'ils font : ceux qu\'on bombarde se tapissent et ne tirent plus, les autres tirent (éclair, traceur), un homme touché tombe et reste là. On lit à qui appartient la force sans un chiffre.', render: s => maquetteAssaut(s, 'feu') },
+      { title: 'Le tronçon se lit', status: 'retenue', note: 'Le monde porte l\'état : des traverses découpent la tranchée en tronçons, un fanion flotte, se déchire, est amené puis remplacé par celui d\'en face ; le fil de fer est coupé ; le parapet est bouleversé ; les sacs sont retournés quand le tronçon est pris.', render: s => maquetteAssaut(s, 'marques') },
       { title: 'Les fusées', note: 'L\'avant-dernier acte : une fusée d\'appel quand la sortie commence, deux fusées quand il ne reste qu\'un homme (le tronçon va basculer), et celle d\'en face, d\'une autre couleur, quand il est pris. Un signal lisible de loin, au zoom 1.', render: s => maquetteAssaut(s, 'fusees') },
       { title: 'Tout ensemble', note: 'Le feu, les marques du tronçon et les fusées. Pour juger si le tout reste lisible, ou s\'il faut en retirer.', render: s => maquetteAssaut(s, 'tout') },
     ] },

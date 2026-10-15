@@ -45,6 +45,16 @@ la danse macabre, la catastrophe peinte avec calme. L'intention est dans `DESIGN
   tombés (`etat.corps` : `[x×10, y×10, camp, jour, id]`, sauvegardé ; Jérôme,
   v0.3.3) : un homme couché, au loin un pixel ; la couleur du camp le jour même,
   la glaise ensuite. Survolé ou cliqué, sa fiche.
+- **Le feu se voit, le tronçon se lit** (Jérôme, v0.9.2 ; maquettes B et C du sujet
+  « Attaque d'une tranchée » du labo, sur la frise du temps de `js/lib/labo-timeline.js`) :
+  les informations sont dans le monde, pas dans des plaques. Un éclair à la bouche du
+  fusil et un traceur pour chaque tir (`majTirs` de rendu3d.js, de `B.tirs`, que la
+  logique remplit sans rien changer à la partie), un homme qui a très peur se tapit
+  (`TAPI`) ; un fanion sur le parapet de chaque tronçon, à la couleur de celui qui le
+  tient (`majFanions`), déchiré quand l'autre camp y est entré (`B.disputes`), amené puis
+  hissé quand il change de main. Pas encore dessinés (au labo : traverses, fil de fer coupé,
+  sacs retournés quand le tronçon est pris) ; les fusées (variante D) et le tout ensemble
+  (E) n'ont pas été retenus.
 - **Six régiments par camp** (Jérôme, v0.7.0 ; huit avant), 750 hommes.
 - **La végétation** (Jérôme, v0.7.0) : l'herbe (`T.herbe`, 0 à 3 par case, tirée de
   la graine ; les obus la soufflent, la boue la tue : rejouée par la sauvegarde),
@@ -194,7 +204,7 @@ le fond des boîtes de dialogue (`::backdrop` de `game.css`).
   `travaux`, `tombes`, `evacues`, `nuits`.
 - `js/champs.js` — les champs de coûts : le terrain résumé en carrés de 4 m
   (`couts`, un octet), Dial, une direction par carré ; cache par but et version.
-- `js/bataille.js` — l'état d'une partie et ses règles : `nouvelleBataille`,
+- `js/bataille.js` — l'état d'une partie et ses règles (`tirs`, `disputes` : pour le dessin seulement, jamais sauvegardés) : `nouvelleBataille`,
   `avancer` (un pas de 1/30 s), ordres (`ordonnerMarche`, `ordonnerBarrage` :
   ils rendent `{ refus }`), en face (barrages sur nos hommes les plus serrés,
   assauts sur nos tranchées), les tronçons (`prises` toutes les 15 pas,
@@ -395,6 +405,10 @@ node outils/stamp-version.mjs            # après chaque changement de version.j
 - **Le moral trop vif** : à 0,03 par seconde de peur, un seul barrage mettait un
   régiment en déroute en 30 s, et il se ralliait aussi vite ; à 0,006 (et un retour
   de 0,0015), une déroute dure le reste du jour (mesuré, 1 000 hommes par camp).
+- **Les fanions et les tirs coûtent** (rendu logiciel, 8 000 soldats) : des boîtes de
+  12 triangles pour 128 tronçons ajoutaient 3 000 triangles et ~10 ms tout dézoomé ; des
+  plans de 2 triangles ne coûtent presque rien (v0.9.2). Les tirs sont vidés à chaque image
+  et plafonnés à 160 points : tout dézoomé, il y en aurait des milliers.
 - **Le clic droit et les gestes de Firefox** (Jérôme, v0.3.3) : un clic droit glissé
   déclenchait les gestes du navigateur (ou d'une extension). `main.js` empêche
   `pointerdown` des boutons droit et du milieu sur le canvas (ce qui supprime
