@@ -1,9 +1,8 @@
 {
-  "version": "0.9.3",
+  "version": "0.10.0",
   "date": "2026-10-15",
   "changes": [
-    "Le sol se nuance de vert, discrètement",
-    "La nuit sans trame : un voile continu, des halos chauds autour des lanternes, des feux et des fusées",
-    "On peut zoomer tout près des soldats (12 et 16 pixels par mètre)"
+    "L'interface devient des papiers de campagne : une montre, des feuilles de situation par régiment choisi, un râtelier d'obus, des croix au crayon pour les morts",
+    "Un carnet de bord note les événements marquants à l'heure où ils arrivent (tronçon pris ou perdu, assaut, déroute)"
   ]
 }

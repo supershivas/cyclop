@@ -1,5 +1,9 @@
 # Journal des versions
 
+## 0.10.0 — 2026-10-15
+- L'interface devient des papiers de campagne : une montre, des feuilles de situation par régiment choisi, un râtelier d'obus, des croix au crayon pour les morts
+- Un carnet de bord note les événements marquants à l'heure où ils arrivent (tronçon pris ou perdu, assaut, déroute)
+
 ## 0.9.3 — 2026-10-15
 - Le sol se nuance de vert, discrètement
 - La nuit sans trame : un voile continu, des halos chauds autour des lanternes, des feux et des fusées

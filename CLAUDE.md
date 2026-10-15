@@ -55,6 +55,15 @@ la danse macabre, la catastrophe peinte avec calme. L'intention est dans `DESIGN
   hissé quand il change de main. Pas encore dessinés (au labo : traverses, fil de fer coupé,
   sacs retournés quand le tronçon est pris) ; les fusées (variante D) et le tout ensemble
   (E) n'ont pas été retenus.
+- **Des papiers de campagne** (Jérôme, v0.10.0 ; variantes C et D du sujet « Plaques et journal » du labo) : le HUD est
+  fait de ce qu'un officier a sur lui, pas de plaques toutes pareilles. `.papier` (l'os, l'encre de terre, une ombre d'un
+  cran) : la montre de gousset et son billet (heure, météo, mission), une feuille de situation par régiment choisi
+  (`majFeuilles` de main.js : barre debout / blessés / tombés, l'ordre en mots, un tampon si le moral baisse ; un clic ouvre la
+  fiche), un râtelier d'obus (debout : prêt ; couché : se recharge), des croix au crayon pour les morts (douze, puis un nombre),
+  la fiche en papier, et le **carnet de bord** (`noter`, `raconter` : tronçon pris ou perdu, l'autre camp entré chez nous
+  (`dispute`), assaut et préparation d'en face (`assaut`, `preparation`, de `bataille.js`), déroute, ralliement, nouveau
+  commandant ; quatre lignes à l'écran, la dernière surlignée ; il remplace les bulles d'avant, et n'est pas sauvegardé : il
+  repart à zéro quand on relit une partie). `nomTroncon(B, t)` dit « tronçon 3 de la 1re ligne ».
 - **Six régiments par camp** (Jérôme, v0.7.0 ; huit avant), 750 hommes.
 - **La végétation** (Jérôme, v0.7.0) : l'herbe (`T.herbe`, 0 à 3 par case, tirée de
   la graine ; les obus la soufflent, la boue la tue : rejouée par la sauvegarde),
@@ -247,9 +256,8 @@ nuit (le voile continu et ses halos mélangent la terre, le sol et l'os : des co
   garde la couleur du dessus. `deplacerEcran`, `tourner`, `placerCamera`.
 - `js/main.js` — écran titre → bataille → nuit → fin ; le zoom et la caméra
   gardés dans `cyclopeen:prefs` ; les fiches (un homme, un régiment ; Échap
-  les ferme), le repère de l'homme et la bulle du survol (`majBulle`, chaque image) ; HUD (horloge, prévision,
-  morts des deux camps, batteries, régiments choisis, noms de nos régiments au-
-  dessus d'eux) ; commandes ; sauvegarde ; mise à jour ; mode debug ;
+  les ferme), le repère de l'homme et la bulle du survol (`majBulle`, chaque image) ; HUD en papiers de campagne (montre, feuilles de situation, carnet de bord,
+  croix des morts, râtelier d'obus, noms de nos régiments au-dessus d'eux) ; commandes ; sauvegarde ; mise à jour ; mode debug ;
   `window.cyclopStats()`.
 - `index.html`, `css/style.css` — l'écran, le HUD et les dialogues (palette du jeu).
 - `labo.html`, `js/labo.js` — le labo : échelle, sols et cratères (couleur et

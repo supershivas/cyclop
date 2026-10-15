@@ -9,8 +9,8 @@
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta property="og:image" content="og.png">
-<link rel="stylesheet" href="js/lib/game.css?v=0.9.3">
-<link rel="stylesheet" href="css/style.css?v=0.9.3">
+<link rel="stylesheet" href="js/lib/game.css?v=0.10.0">
+<link rel="stylesheet" href="css/style.css?v=0.10.0">
 </head>
 <body>
 <div class="jeu-ecran" id="ecran">
@@ -25,15 +25,22 @@
   <div class="hud" id="hud" hidden>
     <div class="hud-haut">
       <div class="coin">
-        <div class="plaque">
-          <p id="horloge">Jour 1</p>
-          <p class="discret" id="demain"></p>
-          <p class="discret" id="mission" hidden></p>
+        <div class="montre-bloc">
+          <svg class="montre" viewBox="0 0 64 64" aria-hidden="true">
+            <circle cx="32" cy="32" r="29"/>
+            <path d="M32 6v4M58 32h-4M32 58v-4M6 32h4M45 9.5l-2 3.5M54.5 19l-3.5 2M54.5 45l-3.5-2M45 54.5l-2-3.5M19 54.5l2-3.5M9.5 45l3.5-2M9.5 19l3.5 2M19 9.5l2 3.5"/>
+            <line id="montre-m" x1="32" y1="32" x2="32" y2="14"/><line id="montre-h" class="gros" x1="32" y1="32" x2="32" y2="21"/>
+          </svg>
+          <div class="papier">
+            <p id="horloge">Jour 1</p>
+            <p class="discret" id="demain"></p>
+            <p class="discret" id="mission" hidden></p>
+          </div>
         </div>
-        <div class="plaque terrain" id="terrain" hidden aria-live="off"></div>
+        <div class="papier terrain" id="terrain" hidden aria-live="off"></div>
       </div>
-      <p class="plaque pause-active" id="pause-active" hidden>Temps arrêté</p>
-      <section class="plaque fiche" id="fiche" hidden aria-live="polite">
+      <p class="papier pause-active" id="pause-active" hidden>Temps arrêté</p>
+      <section class="papier fiche" id="fiche" hidden aria-live="polite">
         <button class="icone fiche-fermer" id="fiche-fermer" aria-label="Fermer la fiche">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
         </button>
@@ -48,20 +55,30 @@
       </button>
     </div>
     <div class="hud-bas">
-      <div class="plaque morts">
-        <p><span class="discret">Nos morts</span> <b id="morts-nous">0</b></p>
-        <p><span class="discret">En face</span> <b id="morts-eux">0</b></p>
-        <p class="discret">Blessés : <span id="blesses-nous">0</span> · <span id="blesses-eux">0</span></p>
-        <p class="discret" id="lignes" hidden>Tronçons : <span id="troncons-nous">0</span> · <span id="troncons-eux">0</span></p>
+      <div class="gauche">
+        <div class="papier carnet" id="carnet" hidden>
+          <p class="entete">Carnet de bord</p>
+          <ol id="carnet-liste"></ol>
+        </div>
+        <div class="papier morts">
+          <p class="discret">Nos morts <b id="morts-nous">0</b></p>
+          <p class="croix" id="croix-nous" aria-hidden="true"></p>
+          <p class="discret">En face <b id="morts-eux">0</b></p>
+          <p class="croix eux" id="croix-eux" aria-hidden="true"></p>
+          <p class="discret">Blessés : <span id="blesses-nous">0</span> · <span id="blesses-eux">0</span></p>
+          <p class="discret" id="lignes" hidden>Tronçons : <span id="troncons-nous">0</span> · <span id="troncons-eux">0</span></p>
+        </div>
       </div>
       <div class="batteries" id="batteries" aria-label="Batteries"></div>
-      <p class="plaque choix" id="choix"></p>
-      <div class="plaque cadran" id="cadran" role="group" aria-label="La vue">
-        <button class="icone" data-incl="-1" aria-label="Incliner vers le haut (R)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 15l6-6 6 6"/></svg></button>
-        <button class="icone" data-tour="-1" aria-label="Tourner à gauche (A)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg></button>
-        <button class="icone" id="cadran-centre" aria-label="Recentrer la vue"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3"/></svg></button>
-        <button class="icone" data-tour="1" aria-label="Tourner à droite (E)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></button>
-        <button class="icone" data-incl="1" aria-label="Incliner vers le bas (F)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button>
+      <div class="droite">
+        <div class="feuilles" id="feuilles"></div>
+        <div class="plaque cadran" id="cadran" role="group" aria-label="La vue">
+          <button class="icone" data-incl="-1" aria-label="Incliner vers le haut (R)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 15l6-6 6 6"/></svg></button>
+          <button class="icone" data-tour="-1" aria-label="Tourner à gauche (A)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg></button>
+          <button class="icone" id="cadran-centre" aria-label="Recentrer la vue"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3"/></svg></button>
+          <button class="icone" data-tour="1" aria-label="Tourner à droite (E)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></button>
+          <button class="icone" data-incl="1" aria-label="Incliner vers le bas (F)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button>
+        </div>
       </div>
     </div>
   </div>
@@ -169,6 +186,6 @@
 </dialog>
 
 <div class="jeu-toast" id="toast" role="status" hidden></div>
-<script type="module" src="js/main.js?v=0.9.3"></script>
+<script type="module" src="js/main.js?v=0.10.0"></script>
 </body>
 </html>

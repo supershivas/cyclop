@@ -20,7 +20,7 @@
 }
 .hud-haut { top: 0; }
 .hud-bas { bottom: 0; align-items: flex-end; }
-.hud button, .hud .plaque { pointer-events: auto; }
+.hud button, .hud .plaque, .hud .papier { pointer-events: auto; }
 .plaque {
   margin: 0; padding: 6px 10px;
   background: var(--jeu-fond); color: var(--jeu-encre);
@@ -34,23 +34,76 @@
 .terrain[hidden] { display: none; }
 .pause-active { align-self: center; letter-spacing: .12em; text-transform: uppercase; }
 .morts b { font-size: var(--texte-grand); font-weight: normal; }
-.choix:empty { display: none; }
-.choix { max-width: 34ch; }
+
+/* Des papiers de campagne (Jérôme, v0.10.0 ; labo « Plaques et journal », variantes C et D) : l'interface est faite de ce qu'un
+   officier a sur lui : une montre, des feuilles de situation, un râtelier d'obus, un carnet de bord. Du papier (l'os), de l'encre
+   (la terre), un tampon ; une ombre portée d'un cran, jamais de dégradé. */
+.papier {
+  margin: 0; padding: 6px 10px;
+  background: var(--jeu-encre); color: var(--jeu-fond);
+  box-shadow: 3px 3px 0 var(--jeu-fond);
+  font-size: var(--texte); line-height: 1.4;
+}
+.papier p { margin: 0; }
+.papier .discret { color: var(--jeu-accent); }
+.montre-bloc { display: flex; gap: var(--pas); align-items: center; }
+.montre { width: 64px; height: 64px; flex: none; }
+.montre circle { fill: var(--jeu-encre); stroke: var(--jeu-fond); stroke-width: 3; }
+.montre path, .montre line { stroke: var(--jeu-fond); stroke-width: 2; fill: none; stroke-linecap: square; }
+.montre line.gros { stroke-width: 4; }
+.terrain.papier { padding: 3px 8px; }
+.gauche, .droite { display: grid; gap: var(--pas); align-content: end; justify-items: start; }
+.droite { justify-items: end; }
+.morts .croix { letter-spacing: .18em; min-height: 1.4em; white-space: nowrap; }
+.morts .croix.eux { color: var(--jeu-eux); }
+.morts b { color: var(--jeu-fond); }
+.carnet { width: 30ch; max-width: 36vw; font-size: 12px; }
+.carnet[hidden] { display: none; }
+.carnet .entete { letter-spacing: .14em; text-transform: uppercase; border-bottom: 1px solid var(--jeu-accent); padding-bottom: 2px; }
+.carnet ol { margin: 0; padding: 0; list-style: none; }
+.carnet li { border-bottom: 1px solid var(--jeu-accent); padding: 2px 0; }
+.carnet li b { font-weight: normal; color: var(--jeu-accent); margin-right: .6em; }
+.carnet li.recent { background: var(--jeu-accent); color: var(--jeu-encre); }
+.carnet li.recent b { color: var(--jeu-encre); }
+.feuilles { display: grid; gap: var(--pas); justify-items: end; }
+.feuille {
+  display: block; width: 32ch; max-width: 40vw; text-align: left; min-height: var(--jeu-cible); border: 0; font: inherit;
+  background: var(--jeu-encre); color: var(--jeu-fond); box-shadow: 3px 3px 0 var(--jeu-fond); padding: 6px 10px;
+}
+.feuille .tete { display: flex; justify-content: space-between; gap: var(--pas); border-bottom: 1px solid var(--jeu-accent); padding-bottom: 2px; font-size: 15px; }
+.feuille .tete span { color: var(--jeu-accent); font-size: 11px; letter-spacing: .1em; text-transform: uppercase; align-self: center; }
+.feuille .barre { display: flex; height: 8px; margin: 5px 0 3px; background: var(--jeu-accent); }
+.feuille .barre i { display: block; height: 100%; }
+.feuille .barre .debout { background: var(--jeu-nous); }
+.feuille .barre .blesses { background: var(--jeu-accent); outline: 1px solid var(--jeu-fond); }
+.feuille .barre .tombes { background: var(--jeu-fond); }
+.feuille .compte, .feuille .ordre { color: var(--jeu-accent); font-size: 12px; }
+.feuille .tampon {
+  display: inline-block; margin-top: 3px; padding: 0 6px; border: 2px solid var(--jeu-eux); color: var(--jeu-eux);
+  transform: rotate(-5deg); letter-spacing: .12em; text-transform: uppercase; font-size: 12px;
+}
+.feuille.reste { width: auto; min-height: 0; padding: 2px 8px; font-size: 12px; }
+@media (hover: hover) { .feuille:hover { background: var(--jeu-accent); color: var(--jeu-encre); } .feuille:hover .compte, .feuille:hover .ordre, .feuille:hover .tete span { color: var(--jeu-encre); } }
 
 .cadran { display: grid; grid-template-columns: repeat(5, var(--jeu-cible)); padding: 0; }
 .cadran .icone:active { background: var(--jeu-encre); color: var(--jeu-fond); }
-.batteries { display: flex; gap: var(--pas); pointer-events: auto; }
+.batteries { display: flex; gap: 14px; align-items: flex-end; pointer-events: auto; padding: 4px 12px 2px; background: var(--jeu-fond); border-top: 3px solid var(--jeu-accent); }
 .batterie {
-  display: grid; justify-items: center; align-content: center;
-  min-width: 64px; padding: 4px 10px;
-  background: var(--jeu-fond); color: var(--jeu-encre);
-  border: 1px solid var(--jeu-ombre);
+  display: grid; justify-items: center; align-content: end; gap: 1px;
+  min-width: 56px; min-height: 68px; padding: 2px 6px;
+  background: none; color: var(--jeu-encre);
+  border: 0;
   font-size: var(--texte);
 }
-.batterie b { font-weight: normal; font-size: var(--texte-grand); }
-.batterie span { color: var(--jeu-accent); }
+.batterie svg { height: 54px; width: auto; transform-origin: 50% 100%; fill: var(--jeu-encre); stroke: var(--jeu-fond); stroke-width: 2; }
+.batterie svg .ceinture { fill: var(--jeu-fond); stroke: none; }
+.batterie b { font-weight: normal; font-size: var(--texte-grand); line-height: 1; }
+.batterie span { color: var(--jeu-accent); line-height: 1; }
 .batterie.recharge { color: var(--jeu-accent); }
+.batterie.recharge svg { fill: var(--jeu-accent); transform: rotate(-90deg) scale(.8) translate(-10px, 14px); }
 .batterie.vise { background: var(--jeu-encre); color: var(--jeu-fond); }
+.batterie.vise svg { fill: var(--jeu-fond); stroke: var(--jeu-encre); }
+.batterie.vise svg .ceinture { fill: var(--jeu-encre); }
 .batterie.vise span { color: var(--jeu-fond); }
 .vise .jeu-canvas { cursor: crosshair; }
 
@@ -71,11 +124,13 @@
   border: 2px solid var(--jeu-encre); border-top: 0; pointer-events: none;
   margin-top: -14px;
 }
-.fiche { margin-left: auto; position: relative; width: min(34ch, 60vw); padding-right: calc(var(--jeu-cible) + 4px); }
+.fiche { margin-left: auto; position: relative; color: var(--jeu-fond); width: min(34ch, 60vw); padding-right: calc(var(--jeu-cible) + 4px); }
 .fiche h2 { margin: 0 0 2px; font-size: 16px; font-weight: normal; }
 .fiche ul { margin: 6px 0 0; padding-left: 1.1em; }
 .fiche-fermer { position: absolute; top: 0; right: 0; }
 .fiche h3 { margin: var(--pas) 0 0; font-size: var(--texte); font-weight: normal; color: var(--jeu-accent); }
+.fiche .icone { color: var(--jeu-fond); }
+.fiche .lien, .fiche-liste .nom { color: var(--jeu-fond); text-decoration: underline; }
 .fiche-liste { max-height: 40dvh; overflow-y: auto; }
 .fiche-liste:empty { display: none; }
 .fiche-liste ul { list-style: none; padding: 0; margin: 2px 0 0; }
