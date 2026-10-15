@@ -1,23 +1,23 @@
 // Le cycle de vie : écran titre → bataille → nuit → fin ; pause active,
 // réglages, sauvegarde, mise à jour, debug. Les règles sont dans bataille.js
 // (pures), le dessin dans rendu3d.js (il ne modifie jamais l'état).
-import { createLoop } from './lib/loop.js?v=0.9.0';
-import { createKeys, stopTypeahead } from './lib/keys.js?v=0.9.0';
-import { createPointer, lockBrowserGestures } from './lib/pointer.js?v=0.9.0';
-import { createGamepad } from './lib/gamepad.js?v=0.9.0';
-import { createStore, autosave, pickJSONFile } from './lib/save.js?v=0.9.0';
-import { startUpdateCheck, loadVersion, loadChangelog, downloadJSON } from './lib/app-update.js?v=0.9.0';
-import { ROLES } from './palette.js?v=0.9.0';
-import { MISSIONS, nouvelleBataille, avancer, aube, ordonnerMarche, ordonnerBarrage, horloge, effectifs, tronconsTenus, moralEnMots, terrainSous, rangDe, photo, restaurer, PAS, NOUS } from './bataille.js?v=0.9.0';
-import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.9.0';
-import { METEO } from './data/meteo.js?v=0.9.0';
-import { impact, hydroLignes } from './terrain.js?v=0.9.0';
-import { hash2 } from './lib/rng.js?v=0.9.0';
-import { creerRendu, CAMERA } from './rendu3d.js?v=0.9.0';
-import { identite, etatEnMots, experienceEnMots } from './identite.js?v=0.9.0';
-import { CORVEES } from './data/corvees.js?v=0.9.0';
-import { refusCorvee } from './nuit.js?v=0.9.0';
-import { chargerContenu } from './design-store.js?v=0.9.0';
+import { createLoop } from './lib/loop.js?v=0.10.0';
+import { createKeys, stopTypeahead } from './lib/keys.js?v=0.10.0';
+import { createPointer, lockBrowserGestures } from './lib/pointer.js?v=0.10.0';
+import { createGamepad } from './lib/gamepad.js?v=0.10.0';
+import { createStore, autosave, pickJSONFile } from './lib/save.js?v=0.10.0';
+import { startUpdateCheck, loadVersion, loadChangelog, downloadJSON } from './lib/app-update.js?v=0.10.0';
+import { ROLES } from './palette.js?v=0.10.0';
+import { MISSIONS, nouvelleBataille, avancer, aube, ordonnerMarche, ordonnerBarrage, horloge, effectifs, tronconsTenus, moralEnMots, terrainSous, rangDe, photo, restaurer, PAS, NOUS } from './bataille.js?v=0.10.0';
+import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.10.0';
+import { METEO } from './data/meteo.js?v=0.10.0';
+import { impact, hydroLignes } from './terrain.js?v=0.10.0';
+import { hash2 } from './lib/rng.js?v=0.10.0';
+import { creerRendu, CAMERA } from './rendu3d.js?v=0.10.0';
+import { identite, etatEnMots, experienceEnMots } from './identite.js?v=0.10.0';
+import { CORVEES } from './data/corvees.js?v=0.10.0';
+import { refusCorvee } from './nuit.js?v=0.10.0';
+import { chargerContenu } from './design-store.js?v=0.10.0';
 
 const JEU = 'cyclopeen';
 const $ = id => document.getElementById(id);
@@ -226,7 +226,8 @@ function montrerCorvees() {
     const qui = document.createElement('p');
     qui.innerHTML = `<b></b> <span class="discret"></span>`;
     qui.firstChild.textContent = reg.nom;
-    qui.lastChild.textContent = `${reg.effectif} hommes, ${blesses.get(reg.id) || 0} blessés · ${moralEnMots(reg, R)}`;
+    const v = reg.vivres ?? R.nuit.vivres;
+    qui.lastChild.textContent = `${reg.effectif} hommes, ${blesses.get(reg.id) || 0} blessés · ${moralEnMots(reg, R)} · ${v > 1 ? `des vivres pour ${v} nuits` : v === 1 ? 'des vivres pour cette nuit' : 'plus de vivres'}`;
     const choix = document.createElement('select');
     choix.dataset.reg = reg.id; choix.setAttribute('aria-label', `La corvée de ${reg.nom}`);
     for (const c of CORVEES) {
@@ -250,15 +251,22 @@ function bilanEnMots(b) {
     b.repares && `${pl(b.repares, 'tronçon réparé', 'tronçons réparés')}`,
     b.caillebotis && `des caillebotis dans ${pl(b.caillebotis, 'tronçon', 'tronçons')}`,
     b.releves && `${pl(b.releves, 'régiment relevé', 'régiments relevés')}`,
+    b.abris && `des abris creusés sous ${pl(b.abris, 'tronçon', 'tronçons')}`,
+    b.ravitailles && `${pl(b.ravitailles, 'régiment ravitaillé', 'régiments ravitaillés')}`,
+    b.coups && `${pl(b.coups, 'coup de main', 'coups de main')} : ${b.prisonniers ? pl(b.prisonniers, 'prisonnier ramené', 'prisonniers ramenés') : 'personne ramené'}`,
   ].filter(Boolean);
   const morts = [
     b.mortsCorvee && `${b.mortsCorvee} aux corvées`,
     b.mortsBlesses && `${b.mortsBlesses} de leurs blessures`,
   ].filter(Boolean);
+  const regs = B.etat.regiments;
   return [
     faits.length ? `Cette nuit : ${faits.join(', ')}.` : 'Une nuit de repos.',
     morts.length ? `Morts dans la nuit : ${morts.join(', ')}.` : 'Personne n\'est mort cette nuit.',
-  ];
+    b.pris && `En face nous a pris ${pl(b.pris, 'homme', 'hommes')} : un coup de main.`,
+    b.affames && `${pl(b.affames, 'régiment n\'a', 'régiments n\'ont')} plus de vivres : la faim.`,
+    ...(b.refus || []).map(id => `${regs[id].nom} refuse de monter aujourd'hui : il tiendra sa tranchée, rien de plus.`),
+  ].filter(Boolean);
 }
 function passerLaNuit() {
   if (B?.etat.phase !== 'nuit') return;
@@ -461,6 +469,8 @@ function corpsSous(x, y, r) {
 const tombe = id => {
   const ev = B.etat.evacues.find(e => e[0] === id);
   if (ev) return `Évacué blessé le jour ${ev[1]}.`;
+  const pr = B.etat.prisonniers?.find(e => e[0] === id);
+  if (pr) return `Fait prisonnier la nuit du ${pr[1]}.`;
   const c = B.etat.corps.find(c => c[4] === id);
   if (c) return `Tombé le jour ${c[3]}.`;
   const t = B.etat.tombes.find(c => c[4] === id);
@@ -469,16 +479,17 @@ const tombe = id => {
   return reg?.releve ? `Relevé avec son régiment, la nuit du ${reg.releve}.` : 'Mort.';
 };
 // ce que compte un régiment : vivants, blessés, morts
+const refuseAujourdhui = reg => reg.refus === B.etat.jour && 'Refuse de monter aujourd\'hui';
 function bilan(reg) {
   const A = B.armee;
   let blesses = 0;
   for (let i = 0; i < A.n; i++) if (A.reg[i] === reg.id && A.blessure[i]) blesses++;
-  const releves = reg.releves || 0, evacues = reg.initial - reg.effectif - reg.pertes - releves;
-  return { vivants: reg.effectif, initial: reg.initial, blesses, morts: reg.pertes, evacues, releves };
+  const releves = reg.releves || 0, prisonniers = reg.prisonniers || 0, evacues = reg.initial - reg.effectif - reg.pertes - releves - prisonniers;
+  return { vivants: reg.effectif, initial: reg.initial, blesses, morts: reg.pertes, evacues, releves, prisonniers };
 }
 const enMots = b => b.releves
   ? `relevé : ${b.releves} hommes sur ${b.initial} en sont revenus · ${b.morts} morts`
-  : `${b.vivants} hommes sur ${b.initial} · ${b.blesses} blessés · ${b.morts} morts${b.evacues ? ` · ${b.evacues} évacués` : ''}`;
+  : `${b.vivants} hommes sur ${b.initial} · ${b.blesses} blessés · ${b.morts} morts${b.evacues ? ` · ${b.evacues} évacués` : ''}${b.prisonniers ? ` · ${b.prisonniers} prisonniers` : ''}`;
 
 function montrerFiche(i) {
   fiche = { id: B.armee.id[i], camp: B.armee.camp[i] };
@@ -511,7 +522,7 @@ function majFicheRegiment() {
   $('fiche-nom').textContent = nomDe(reg);
   $('fiche-qui').textContent = enMots(b);
   $('fiche-regiment').hidden = true;
-  $('fiche-etat').replaceChildren(Object.assign(document.createElement('li'), { textContent: majuscule(moralEnMots(reg, R)) }));
+  $('fiche-etat').replaceChildren(...[majuscule(moralEnMots(reg, R)), refuseAujourdhui(reg)].filter(Boolean).map(t => Object.assign(document.createElement('li'), { textContent: t })));
   const sig = `${reg.id}:${b.vivants}:${b.blesses}:${b.morts}:${b.evacues}:${Object.keys(B.etat.grades).length}`;
   if (sig === listeVue) return;
   listeVue = sig;
@@ -591,7 +602,7 @@ function majBulle() {
     }
   } else {
     const r = regimentSous(x, y, Math.max(4, prise(16)));
-    if (r >= 0) { const reg = B.etat.regiments[r]; lignes = [nomDe(reg), enMots(bilan(reg)), majuscule(moralEnMots(reg, R))]; }
+    if (r >= 0) { const reg = B.etat.regiments[r]; lignes = [nomDe(reg), enMots(bilan(reg)), majuscule(moralEnMots(reg, R)), refuseAujourdhui(reg)].filter(Boolean); }
   }
   if (!lignes) { bulle.hidden = true; return; }
   const cle = lignes.join('\n');
@@ -731,6 +742,7 @@ const loop = createLoop({
       else if (p.camp !== NOUS) continue;
       else if (p.type === 'deroute') toast(`${B.etat.regiments[p.reg].nom} est en déroute.`);
       else if (p.type === 'ralliement') toast(`${B.etat.regiments[p.reg].nom} se rallie.`);
+      else if (p.type === 'poursuite') toast('En face poursuit : il monte sur la ligne suivante.');
       else if (p.type === 'promu' && p.rang === 0) { const { qui } = quiEst(p.id); toast(`${qui.prenom} ${qui.nom} prend le commandement de ${B.etat.regiments[p.reg].nom}.`); }
     }
     if (ev.some(e => e.type === 'nuit')) { montrerNuit(); }
@@ -783,7 +795,7 @@ startUpdateCheck({
 
 // ─── Mode debug (section 18) : chargé seulement avec ?debug=1 ──────────────
 if (DEBUG) {
-  const { installDebug, seedFromUrl } = await import('./lib/debug.js?v=0.9.0');
+  const { installDebug, seedFromUrl } = await import('./lib/debug.js?v=0.10.0');
   window.__seed = seedFromUrl() ?? undefined;
   installDebug({
     state: () => B && { ...horloge(B), effectifs: effectifs(B), pertes: B.etat.pertes, impacts: B.etat.impacts.length, enJeu: enJeu(), pause: loop.paused },

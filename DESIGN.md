@@ -138,6 +138,16 @@ mourir dans la nuit ; les corps laissés autour d'un régiment pèsent sur son m
 matin. En face fait ses corvées lui aussi. À l'aube, le bilan de la nuit, en deux
 lignes. (Jérôme, v0.6.0)
 
+Puis (v0.10.0) : creuser des abris profonds sous sa tranchée (une nuit par niveau,
+trois niveaux : les obus y tuent de moins en moins ; un 220 tombé dans le tronçon en
+crève un ; un tronçon pris garde ses abris, pour l'autre camp) ; ravitailler (des
+vivres pour trois nuits : sans eux, la nuit repose moins et le moral baisse) ; le
+coup de main (les plus aguerris vont chercher des prisonniers dans la tranchée d'en
+face : certains n'en reviennent pas ; ceux qui reviennent ont appris ; des
+prisonniers ramenés relèvent le moral, et l'abattent en face). En face fait tout
+cela aussi. Les morts inhumés ont une tombe là où ils sont tombés : un tertre de
+glaise et une croix pâle, qui restent jusqu'à la fin.
+
 ### Le moral et l'expérience
 
 Chaque régiment a un moral. Les morts le font baisser (un officier plus encore),
@@ -149,6 +159,14 @@ part en déroute : il ne tire plus, reflue vers sa tranchée de départ et n'ob�
 plus, jusqu'à ce qu'il se rallie. On le refuse à voix haute (« Céruléen est
 ébranlé : il ne sortira pas »). En face obéit aux mêmes règles : ses assauts se
 brisent sur le moral avant de se briser sur les pertes.
+
+Puis (v0.10.0) : une déroute gagne les voisins (le moral des régiments du même
+camp autour de lui tombe, d'autant plus qu'ils sont près). Un régiment brisé le soir
+(moral au plus bas, plus d'un tiers de ses hommes perdus) peut refuser de monter de
+toute la journée suivante : il tient sa tranchée, rien de plus — le Discours de la
+servitude volontaire : il suffit de ne plus servir. En face, après une prise, un
+régiment encore frais poursuit sur notre ligne suivante : c'est la leçon des Horaces
+et des Curiaces à l'envers (la fuite qui disperse le poursuivant reste à faire).
 
 Chaque homme prend de l'expérience à survivre au feu : un obus, un camarade qui
 tombe à côté, ses tirs, un tronçon pris, une nuit au front. Aguerri, il a moins

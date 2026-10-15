@@ -1,6 +1,6 @@
 // La bataille : déterminisme, ordres refusés à voix haute, sauvegarde qui rejoue la même partie.
 import { readFileSync } from 'node:fs';
-import { nouvelleBataille, avancer, ordonnerMarche, ordonnerBarrage, aube, photo, restaurer, effectifs, horloge, zone, tronconsTenus, rangDe, moralEnMots } from '../js/bataille.js';
+import { nouvelleBataille, avancer, ordonnerMarche, ordonnerBarrage, aube, photo, restaurer, effectifs, horloge, zone, tronconsTenus, rangDe, moralEnMots, abriDe } from '../js/bataille.js';
 import { ligneY } from '../js/tranchees.js';
 import { tronconsDe, refusCorvee } from '../js/nuit.js';
 import { SECTEURS as SECT } from '../js/data/secteur.js';
@@ -247,6 +247,26 @@ test('les morts font tomber le moral ; en déroute, un régiment refuse les ordr
   assert.ok(ordonnerMarche(B, [0], reg.ordre.x, reg.ordre.y + 20).ok);
   assert.match(ordonnerMarche(B, [0], reg.ordre.x, reg.ordre.y - 60).refus, /ne sortira pas/);
 });
+test('une déroute gagne les voisins (moins les plus loin) ; un régiment brisé refuse de monter de toute la journée', () => {
+  const B = petite(), regs = B.etat.regiments.filter(r => r.camp === 0);
+  const a = regs[0], d = r => Math.hypot(r.ordre.x - a.ordre.x, r.ordre.y - a.ordre.y);
+  const b = regs.slice(1).sort((u, v) => d(u) - d(v))[0];
+  for (const r of regs) r.moral = 0.5;
+  a.moral = 0.19;
+  for (let k = 0; k < 30; k++) avancer(B);
+  assert.ok(a.deroute, 'la déroute');
+  assert.ok(b.moral < 0.5 - 0.02, `le voisin s'en ressent (${b.moral.toFixed(3)})`);
+  // brisé : à l'aube, il refuse (refusChance : 1), tout le jour ; il tient sa tranchée
+  const C = nouvelleBataille(3, { ...R, moral: { ...R.moral, refusChance: 1 } }, { soldats: 200, jours: 3 });
+  const reg = C.etat.regiments[0];
+  reg.moral = 0.05; reg.pertes = Math.ceil(reg.initial * 0.5);
+  C.etat.phase = 'nuit';
+  const r = aube(C);
+  assert.deepEqual(r.bilan[0].refus, [0]);
+  assert.equal(reg.refus, C.etat.jour);
+  assert.match(ordonnerMarche(C, [0], reg.ordre.x, reg.ordre.y + 20).refus, /refuse de monter/);
+  assert.ok(ordonnerMarche(C, [1], C.etat.regiments[1].ordre.x, C.etat.regiments[1].ordre.y + 20).ok, 'les autres obéissent');
+});
 test('la nuit rend une part du moral, jamais au-dessus de ce que les pertes laissent', () => {
   const B = petite(), reg = B.etat.regiments[0];
   reg.moral = 0.1; reg.pertes = 10;
@@ -322,13 +342,61 @@ test('inhumer : les corps proches partent en terre ; les caillebotis se posent ;
   const r = aube(B, { 0: 'inhumer', 1: 'caillebotis' });
   assert.ok(r.bilan[0].inhumes > 0);
   assert.equal(B.etat.tombes.length, r.bilan[0].inhumes);
-  assert.equal(B.etat.corps.length, corps - r.bilan[0].inhumes + r.bilan[0].mortsCorvee + r.bilan[0].mortsBlesses);
+  // (les morts de la nuit, des deux camps : en face fait parfois un coup de main)
+  assert.equal(B.etat.corps.length, corps - r.bilan[0].inhumes + r.bilan[0].mortsCorvee + r.bilan[0].mortsBlesses + r.bilan[1].mortsCorvee + r.bilan[1].mortsBlesses);
   assert.ok(r.bilan[0].caillebotis > 0 && B.terrain.caille.some(v => v));
   const reg = B.etat.regiments[2]; reg.ordre = { ...reg.ordre, trace: undefined };
   assert.match(refusCorvee(B, reg, 'caillebotis'), /ne tient pas de tranchée/);
 });
+test('les abris : un niveau par nuit, trois au plus ; les obus y tuent moins ; un 220 en crève un ; relu', () => {
+  const B = nouvelleBataille(3, R, { soldats: 200, jours: 6 });
+  const reg = B.etat.regiments[0], ks = tronconsDe(B, reg);
+  for (let n = 0; n < 4; n++) { B.etat.phase = 'nuit'; aube(B, { 0: 'abri' }); }
+  for (const k of ks) assert.equal(B.etat.abris[k], R.nuit.abriMax);
+  assert.match(refusCorvee(B, reg, 'abri'), /aussi profonds/);
+  // dans le tronçon, un obus ne fait plus que 40 % de ce qu'il faisait (le calcul est dans army.test : tuerDans)
+  const T = B.terrain;
+  const c = T.troncon.findIndex(k => k === ks[0]);
+  assert.ok(c >= 0 && Math.abs(abriDe(B, c) - (1 - R.nuit.abriParNiveau * R.nuit.abriMax)) < 1e-9);
+  assert.equal(abriDe(B, T.troncon.findIndex(k => k === -1)), 1);
+  const C = restaurer(photo(B), R);
+  ordonnerBarrage(C, '220', reg.ordre.x, reg.ordre.y, 1);
+  for (let k = 0; k < 30 * 40; k++) avancer(C);
+  assert.ok(ks.some(k => (C.etat.abris[k] || 0) < R.nuit.abriMax), 'crevé');
+  assert.deepEqual(restaurer(photo(C), R).etat.abris, C.etat.abris);
+});
+test('les vivres : trois nuits ; sans eux, la nuit repose moins et le moral baisse ; ravitailler les rend', () => {
+  const B = petite();
+  const [a, b] = B.etat.regiments;
+  let r;
+  for (let n = 0; n < 3; n++) { B.etat.phase = 'nuit'; r = aube(B, { 1: 'ravitailler' }); }
+  assert.equal(a.vivres, 0);
+  assert.equal(b.vivres, R.nuit.vivres);
+  assert.ok(r.bilan[0].affames >= 1);
+  const m = a.moral, mb = b.moral;
+  B.etat.phase = 'nuit'; aube(B, { 1: 'ravitailler' });
+  assert.ok(a.moral < m || a.moral < b.moral, 'la faim pèse');
+  B.etat.phase = 'nuit'; aube(B, { 0: 'ravitailler' });
+  assert.equal(a.vivres, R.nuit.vivres);
+});
+test('un coup de main ramène des prisonniers (ni morts ni évacués) ; le moral en face baisse ; relu', () => {
+  const B = nouvelleBataille(3, { ...R, nuit: { ...R.nuit, coupPrise: 1, coupMort: 0 } }, { soldats: 400, jours: 3 });
+  const reg = B.etat.regiments[0], A = B.armee;
+  B.etat.phase = 'nuit';
+  const pertes = B.etat.pertes[1];
+  const r = aube(B, { 0: 'coup' });
+  assert.equal(r.bilan[0].coups, 1);
+  assert.ok(r.bilan[0].prisonniers > 0);
+  assert.equal(B.etat.pertes[1], pertes + r.bilan[1].mortsCorvee + r.bilan[1].mortsBlesses, 'pas des morts');
+  assert.ok(B.etat.prisonniers.length >= r.bilan[0].prisonniers);
+  const pris = new Set(B.etat.prisonniers.map(p => p[0]));
+  for (let i = 0; i < A.n; i++) assert.ok(!pris.has(A.id[i]), 'parti');
+  const C = restaurer(photo(B), R);
+  assert.deepEqual(C.etat.prisonniers, B.etat.prisonniers);
+  assert.ok(reg.moral > 0);
+});
 test('un blessé laissé au front peut mourir dans la nuit', () => {
-  const B = nouvelleBataille(3, { ...R, nuit: { ...R.nuit, mortBlesse: 1 } }, { soldats: 200 });
+  const B = nouvelleBataille(3, { ...R, nuit: { ...R.nuit, mortBlesse: 1, coupMort: 0, coupPrise: 0 } }, { soldats: 200 });
   jusquALaNuit(B);
   const A = B.armee;
   let blesses = 0; for (let i = 0; i < A.n; i++) if (A.blessure[i]) blesses++;

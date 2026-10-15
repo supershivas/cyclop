@@ -1,5 +1,10 @@
 # Journal des versions
 
+## 0.10.0 — 2026-10-15
+- La nuit : creuser des abris, ravitailler, tenter un coup de main ; les morts inhumés ont une tombe
+- Une déroute gagne les voisins ; un régiment brisé refuse de monter un jour ; en face poursuit après une prise
+- Des ombres plus douces, posées sur le sol ; les cratères et les tranchées plus profonds à l'œil
+
 ## 0.9.0 — 2026-10-15
 
 - La bataille entière : de 10 à 15 jours, une mission (tenir le secteur, ou prendre leur première ligne) jugée à la fin

@@ -70,10 +70,18 @@ la danse macabre, la catastrophe peinte avec calme. L'intention est dans `DESIGN
 - **Plus d'arbres** (Jérôme, v0.8.0) : 150 dans le secteur et trois bois serrés (`bois`
   de secteur.js), autant dans les marges.
 - **La nuit et ses corvées** (Jérôme, v0.6.0) : une corvée par régiment (repos,
-  réparer, caillebotis, inhumer, évacuer) ; voir `DESIGN.md`.
+  réparer, caillebotis, inhumer, évacuer) ; puis (Jérôme, v0.10.0) les abris profonds
+  (`etat.abris`), les vivres (`reg.vivres`), le coup de main (`etat.prisonniers`) et
+  les tombes dessinées (`etat.tombes`) ; voir `DESIGN.md`.
 - **Le moral et l'expérience** (Jérôme, v0.5.0) : un moral par régiment (`moral`,
   `deroute` dans l'état), l'expérience de chaque homme (`exp` dans la foule), les
-  promotions (`etat.grades`) ; voir `DESIGN.md`.
+  promotions (`etat.grades`) ; puis (Jérôme, v0.10.0) la contagion de la déroute, le
+  refus d'un jour (`reg.refus` : le jour refusé), la poursuite d'en face après une
+  prise ; voir `DESIGN.md`.
+- **Les ombres et la profondeur** (Jérôme, v0.10.0) : l'ombre d'un soldat ou d'un arbre
+  est le sol un ton plus sombre (la couleur de paroi de la case), tramée de plus en
+  plus claire vers son bout ; le fond d'un creux s'assombrit d'un ton à 1 m, d'un
+  autre à 2,5 m, et d'un encore quand il est entouré de parois (`couleurCase`).
 - **Le terrain au survol** (Jérôme, v0.5.0) : une plaque sous l'horloge dit ce qu'est
   la case sous la souris (`terrainSous` de bataille.js).
 - **Les tranchées** (lot 1, Jérôme, v0.4.0) : quatre lignes par camp, des boyaux,
@@ -191,7 +199,10 @@ le fond des boîtes de dialogue (`::backdrop` de `game.css`).
   `tronconsDe` (la tranchée d'un régiment), `refusCorvee`, `travail` (réparer,
   caillebotis : `T.caille`), `choixEnFace`, `rejouerTravaux`. Les textes sont dans
   `data/corvees.js`, les nombres dans `reglages.js` (`nuit`). L'état garde
-  `travaux`, `tombes`, `evacues`, `nuits`.
+  `travaux`, `tombes`, `evacues`, `nuits`, `abris` ({ tronçon : niveau } ; lu par
+  `abriDe` de bataille.js dans `tuerDans`), `prisonniers` ; chaque régiment, ses
+  `vivres` (en nuits). `coupDeMain`, `cibleDuCoup` (le régiment ennemi le plus proche,
+  à `coupPortee`).
 - `js/champs.js` — les champs de coûts : le terrain résumé en carrés de 4 m
   (`couts`, un octet), Dial, une direction par carré ; cache par but et version.
 - `js/bataille.js` — l'état d'une partie et ses règles : `nouvelleBataille`,
@@ -390,6 +401,17 @@ node outils/stamp-version.mjs            # après chaque changement de version.j
   là où il a 1,6 attaquant par défenseur (`tranchee.rapport`) ; sinon il prépare au
   220 sur ce tronçon : une semaine de pilonnage, puis des assauts où nos lignes ont
   faibli (~300 morts chez nous, ~700 en face, sur 11 et 15 jours).
+- **Le refus d'un jour se juge sur le moral du soir** (avant que la nuit n'en rende une
+  part) : jugé à l'aube, il ne venait presque jamais (il fallait un moral de 0,02 le
+  soir). La contagion porte à 150 m : deux régiments côte à côte sont à ~130 m l'un de
+  l'autre, et à 80 m seul celui de derrière s'en ressentait (v0.10.0).
+- **Les abris ne changent pas le terrain** (ils sont dans l'état, pas dans `diff`) : la
+  sauvegarde n'a rien à rejouer ; un 220 qui les crève le fait pendant le jour, dans
+  `tomber`, et l'état sauvegardé le garde.
+- **Une ombre opaque d'une seule couleur** (`t`) se lisait comme un trou (Jérôme,
+  v0.10.0) : elle prend la couleur du sol un ton plus sombre, tramée vers son bout
+  (une lecture de texture de plus par pixel d'ombre : 77 ms au lieu de 73 au zoom 4,
+  8 000 soldats, dessin attendu jusqu'au bout ; de l'ordre du bruit de la mesure).
 - **Les petites batailles des tests durent trois jours** (`jours: 3` de `petite`) :
   quinze jours de 200 hommes, c'était une minute de plus par test.
 - **Le moral trop vif** : à 0,03 par seconde de peur, un seul barrage mettait un

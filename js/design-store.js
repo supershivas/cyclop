@@ -1,7 +1,7 @@
 // Le contenu modifiable par l'Atelier (section 17) : les réglages chiffrés
 // publiés dans le dépôt (assets/design/reglages.json), plus les retouches de
 // ce navigateur pas encore publiées. Le jeu l'appelle au lancement.
-import { REGLAGES } from './data/reglages.js?v=0.9.0';
+import { REGLAGES } from './data/reglages.js?v=0.10.0';
 
 const BROUILLON = 'cyclopeen:atelier';
 

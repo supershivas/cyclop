@@ -104,6 +104,12 @@ export const REGLAGES = {
     deroute: 0.2,         // en dessous : la déroute (il reflue vers sa tranchée de départ, ne tire plus)
     ralliement: 0.4,      // au-dessus, un régiment en déroute se rallie
     avance: 10,           // m : un ordre qui rapproche de l'ennemi de plus que cela est une sortie
+    contagion: 0.15,      // une déroute abat le moral des voisins (à moins de contagionRayon m) de cette part, au plus
+    contagionRayon: 150,  // (deux régiments côte à côte sont à ~130 m l'un de l'autre)
+    refusSous: 0.3,       // à l'aube, un régiment au moral si bas, qui a perdu plus de refusPertes de ses hommes…
+    refusPertes: 0.35,
+    refusChance: 0.5,     // … refuse de monter de toute la journée, une fois sur deux (le Discours de la servitude volontaire)
+    poursuite: 0.6,       // en face, un régiment qui a ce moral (et la moitié de ses hommes) poursuit après une prise
   },
   // l'expérience d'un homme (0 à 1) : le feu qu'il a vu et survécu ; elle calme sa peur, assure son tir,
   // et le fait choisir quand il faut remplacer un gradé tombé
@@ -128,6 +134,21 @@ export const REGLAGES = {
     moralCorps: 0.003,    // … lui pèsent, chacun, au matin…
     moralCorpsMax: 0.15,  // … jusqu'à cette part de son moral
     moralEvacuer: 0.03,   // on s'occupe des blessés : le moral remonte un peu
+    // les abris profonds (v0.10.0) : creusés nuit après nuit sous un tronçon
+    abriMax: 3,           // niveaux (une nuit de travail chacun)
+    abriParNiveau: 0.2,   // un obus tue d'autant moins (par niveau) ceux qui sont dans le tronçon
+    abriDetruit: '220',   // le calibre qui crève un abri (un niveau par obus tombé dans le tronçon)
+    // le ravitaillement : des vivres pour quelques jours, apportés de nuit par les boyaux
+    vivres: 3,            // nuits de vivres d'un régiment ravitaillé
+    faimRepos: 0.5,       // sans vivres, la nuit ne repose que de cette part…
+    faimMoral: 0.06,      // … et le moral perd cela chaque nuit
+    // le coup de main : quelques volontaires vont chercher des prisonniers dans la tranchée d'en face
+    coupHommes: 20,       // volontaires au plus (et un sur cinq du régiment au plus)
+    coupMort: 0.15,       // chance pour chacun d'y rester (moins s'il a de l'expérience)
+    coupPrise: 0.2,       // prisonniers ramenés par volontaire (plus avec l'expérience, moins si l'autre veille)
+    coupMoral: 0.06,      // le moral gagné (des prisonniers ramenés), ou perdu en face
+    coupExp: 0.15,        // l'expérience des volontaires qui reviennent
+    coupPortee: 200,      // m : jusqu'où ils vont chercher
   },
   jour: {
     duree: 360,           // s de jeu pour une journée (6 h → 18 h)

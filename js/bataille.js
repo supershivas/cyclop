@@ -14,17 +14,17 @@
    La sauvegarde (photo) garde la graine, la liste compacte des impacts, l'état
    de la foule et les petites couches de logique ; jamais le relief : il se
    rejoue depuis la graine et les impacts (rejouerTerrain). */
-import { createRng, hash2 } from './lib/rng.js?v=0.9.0';
-import { creerTerrain, impact, hydroLignes, etat as etatCase, vitesseEtat, ETAT } from './terrain.js?v=0.9.0';
-import { creerArmee, ajouterSoldat, construireGrille, pasArmee, tuerDans, effrayer, compacter, photoArmee, restaurerArmee, b64, deB64, DENSITE, place } from './army.js?v=0.9.0';
-import { creuserTranchees, ligneSous } from './tranchees.js?v=0.9.0';
-import { calculerCouts, creerCacheChamps, dimensionsCouts, BLOC } from './champs.js?v=0.9.0';
-import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.9.0';
-import { METEO, TRANSITIONS, PREVISION_JUSTE } from './data/meteo.js?v=0.9.0';
-import { SECTEURS } from './data/secteur.js?v=0.9.0';
-import { REGIMENTS } from './data/lexique.js?v=0.9.0';
-import { grade } from './identite.js?v=0.9.0';
-import { corvees, rejouerTravaux } from './nuit.js?v=0.9.0';
+import { createRng, hash2 } from './lib/rng.js?v=0.10.0';
+import { creerTerrain, impact, hydroLignes, etat as etatCase, vitesseEtat, ETAT } from './terrain.js?v=0.10.0';
+import { creerArmee, ajouterSoldat, construireGrille, pasArmee, tuerDans, effrayer, compacter, photoArmee, restaurerArmee, b64, deB64, DENSITE, place } from './army.js?v=0.10.0';
+import { creuserTranchees, ligneSous } from './tranchees.js?v=0.10.0';
+import { calculerCouts, creerCacheChamps, dimensionsCouts, BLOC } from './champs.js?v=0.10.0';
+import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.10.0';
+import { METEO, TRANSITIONS, PREVISION_JUSTE } from './data/meteo.js?v=0.10.0';
+import { SECTEURS } from './data/secteur.js?v=0.10.0';
+import { REGIMENTS } from './data/lexique.js?v=0.10.0';
+import { grade } from './identite.js?v=0.10.0';
+import { corvees, rejouerTravaux } from './nuit.js?v=0.10.0';
 
 export const PAS = 1 / 30;                 // s de jeu par pas
 export const NOUS = 0, EUX = 1;
@@ -82,6 +82,8 @@ export function nouvelleBataille(graine, R, opts = {}) {
     prises: [[0, 0]],           // tronçons pris par chaque camp, jour par jour
     travaux: [],                // les travaux de la nuit : [jour, sorte, tronçons…] (nuit.js ; rejoués par la sauvegarde)
     tombes: [],                 // les morts inhumés : [x×10, y×10, camp, jour, id, jour de l'inhumation]
+    abris: {},                  // les abris profonds : { tronçon : niveau } (nuit.js ; un 220 en crève un)
+    prisonniers: [],            // les hommes pris par un coup de main : [id, jour]
     evacues: [],                // les blessés évacués : [id, jour]
     nuits: [],                  // ce que chaque nuit a vu : { jour, choix, bilan }
     grades: {},                 // les promus : { numéro: [rang, jour] } (le grade de départ vient du rang de création)
@@ -104,7 +106,7 @@ export function nouvelleBataille(graine, R, opts = {}) {
         id: etat.regiments.length, camp,
         nom: camp === NOUS ? REGIMENTS[r % REGIMENTS.length] : null,
         effectif, initial: effectif, pertes: 0,
-        moral: R.moral.depart, deroute: false,
+        moral: R.moral.depart, deroute: false, vivres: R.nuit.vivres,
         ordre: null, depart: null,
       };
       if (etat.tranchees) {
@@ -188,10 +190,11 @@ export function ordonnerMarche(B, ids, x, y) {
   const Z = zone(B);
   if (x < Z.x0 || y < Z.y0 || x >= Z.x1 || y >= Z.y1) return { refus: 'Hors du secteur.' };
   // le moral : un régiment en déroute n'obéit plus ; ébranlé, il ne sort pas vers l'ennemi
-  const refuse = regs.filter(r => r.deroute || (r.moral < R.moral.ebranle && y < r.ordre.y - R.moral.avance));
+  // et un régiment qui refuse de monter (aujourd'hui) n'obéit à rien
+  const refuse = regs.filter(r => r.deroute || r.refus === etat.jour || (r.moral < R.moral.ebranle && y < r.ordre.y - R.moral.avance));
   if (refuse.length) {
     regs = regs.filter(r => !refuse.includes(r));
-    const raison = refuse.map(r => `${r.nom} ${r.deroute ? 'est en déroute' : 'est ébranlé : il ne sortira pas'}`).join(' ; ') + '.';
+    const raison = refuse.map(r => `${r.nom} ${r.deroute ? 'est en déroute' : r.refus === etat.jour ? 'refuse de monter : il tiendra sa tranchée, rien de plus' : 'est ébranlé : il ne sortira pas'}`).join(' ; ') + '.';
     if (!regs.length) return { refus: raison };
     const res = ordonnerMarche(B, regs.map(r => r.id), x, y);
     return { ...res, refus: raison };
@@ -296,7 +299,7 @@ export function avancer(B) {
       B.evenements.push({ type: 'blesse', camp: A.camp[i], cause, id: A.id[i] });
     }
   };
-  const ctx = { T, R, regiments: etat.regiments, rng, dt: PAS, gel, frapper, champDe: r => champDe(B, r), faces: B.faces };
+  const ctx = { T, R, regiments: etat.regiments, rng, dt: PAS, gel, frapper, champDe: r => champDe(B, r), faces: B.faces, abri: c => abriDe(B, c) };
 
   construireGrille(A);
   // les obus
@@ -392,6 +395,18 @@ export function mourir(B, i, cause, ou = null) {
   B.evenements.push({ type: 'mort', camp: A.camp[i], cause, x, y, id: A.id[i] });
 }
 
+// Un homme pris par l'ennemi (un coup de main) : il quitte le front, vivant ; un gradé est remplacé
+export function capturer(B, i) {
+  const { etat, armee: A } = B;
+  if (A.mort[i]) return;
+  A.mort[i] = 1;
+  const reg = etat.regiments[A.reg[i]];
+  reg.effectif--; reg.prisonniers = (reg.prisonniers || 0) + 1;
+  etat.prisonniers.push([A.id[i], etat.jour]);
+  const rang = rangDe(B, A.id[i], A.reg[i]);
+  if (rang <= 5) promouvoir(B, A.reg[i], rang);
+}
+
 /* Qui tient chaque tronçon : celui qui y est seul. Un tronçon tenu par un camp
    que l'autre occupe (au moins `prise` hommes) sans qu'un seul défenseur y
    reste change de main. */
@@ -416,6 +431,14 @@ function prises(B) {
       }
       for (const reg of etat.regiments) {
         if (gagnants.has(reg.id)) reg.moral = Math.min(1, reg.moral + R.moral.prise);
+        // la poursuite : en face, un régiment encore frais qui vient de prendre pousse jusqu'à notre ligne suivante
+        // (il s'étire : c'est ce qui ouvre la fuite feinte, les Horaces et les Curiaces)
+        if (gagnants.has(reg.id) && reg.camp === EUX && reg.ordre.trace && reg.ordre.trace.ligne < 10 && !reg.deroute
+          && reg.moral >= R.moral.poursuite && reg.effectif >= reg.initial * 0.5) {
+          const L = B.lignes[tr.ligne], suivante = B.lignes.find(M => M.camp === L.camp && M.rang === L.rang + 1);
+          const t = reg.ordre.trace;
+          if (suivante && t.ligne === L.camp * 10 + L.rang) { reg.ordre = formationTranchee(reg, suivante, t.x0, t.x1, R); reattribuer(B, reg); B.evenements.push({ type: 'poursuite', camp: EUX, reg: reg.id }); }
+        }
         const o = reg.ordre.trace;
         if (reg.camp === tient && o && o.ligne === B.lignes[tr.ligne].camp * 10 + B.lignes[tr.ligne].rang && o.x1 > tr.x0 && o.x0 < tr.x1) reg.moral = Math.max(0, reg.moral - R.moral.perte);
       }
@@ -467,9 +490,10 @@ function moral(B, dt) {
   const { etat, R, armee: A } = B;
   const M = R.moral, n = etat.regiments.length;
   const peur = new Float32Array(n), exp = new Float32Array(n), off = new Uint8Array(n), nb = new Uint16Array(n);
+  const cx = new Float32Array(n), cy = new Float32Array(n);
   for (let i = 0; i < A.n; i++) {
     const r = A.reg[i];
-    peur[r] += A.peur[i]; exp[r] += A.exp[i]; nb[r]++;
+    peur[r] += A.peur[i]; exp[r] += A.exp[i]; nb[r]++; cx[r] += A.x[i]; cy[r] += A.y[i];
     if (rangDe(B, A.id[i], r) <= 3) off[r]++;
   }
   for (const reg of etat.regiments) {
@@ -482,6 +506,12 @@ function moral(B, dt) {
       reg.deroute = true;
       reg.ordre = structuredClone(reg.depart); reattribuer(B, reg);
       B.evenements.push({ type: 'deroute', camp: reg.camp, reg: k });
+      // la contagion : les régiments voisins (du même camp, à moins de M.contagionRayon m) voient fuir les leurs
+      for (const v of etat.regiments) {
+        if (v === reg || v.camp !== reg.camp || !nb[v.id] || v.deroute) continue;
+        const d = Math.hypot(cx[v.id] / nb[v.id] - cx[k] / nb[k], cy[v.id] / nb[v.id] - cy[k] / nb[k]);
+        if (d < M.contagionRayon) v.moral = Math.max(0, v.moral - M.contagion * (1 - d / M.contagionRayon));
+      }
     } else if (reg.deroute && reg.moral >= M.ralliement) {
       reg.deroute = false;
       B.evenements.push({ type: 'ralliement', camp: reg.camp, reg: k });
@@ -524,6 +554,8 @@ export function terrainSous(B, x, y) {
   if (T.herbe[c] && e !== ETAT.EAU) lignes.push(['', 'Herbe rare', 'Herbe', 'Herbe haute'][T.herbe[c]]);
   lignes.push(`On y marche à ${Math.round(vitesseEtat(e, R) * 100)} %`);
   if (d <= -2) lignes.push(t >= 0 ? 'À l\'abri des éclats ; le parapet protège de face' : 'À l\'abri des éclats');
+  if (t >= 0 && etat.abris[t]) lignes.push(`Des abris profonds (${['', 'commencés', 'à moitié creusés', 'achevés'][Math.min(3, etat.abris[t])]})`);
+  if (etat.tombes.some(c => Math.abs(c[0] / 10 - x) < 1 && Math.abs(c[1] / 10 - y) < 1)) lignes.push('Une tombe');
   return lignes;
 }
 
@@ -534,12 +566,21 @@ export function tronconsTenus(B) {
   return n;
 }
 
+// Ce qui reste d'un coup d'obus pour un homme dans la case c (les abris de son tronçon)
+export function abriDe(B, c) {
+  const k = B.terrain.troncon ? B.terrain.troncon[c] : -1, n = k >= 0 ? B.etat.abris[k] : 0;
+  return n ? 1 - B.R.nuit.abriParNiveau * n : 1;
+}
+
 function tomber(B, x, y, cal, ctx, gel) {
   const { etat, terrain: T, R } = B;
   const n = etat.impacts.length;
   etat.impacts.push([etat.jour, etat.tickJour, Math.round(x * 10), Math.round(y * 10), NOMS_CALIBRES.indexOf(cal)]);
   const { rayon } = impact(T, x, y, cal, R, n, gel);
   tuerDans(B.armee, x, y, rayon, ctx);
+  // un gros obus tombé dans un tronçon crève un de ses abris
+  const k = T.troncon ? T.troncon[(y | 0) * T.W + (x | 0)] : -1;
+  if (k >= 0 && cal === R.nuit.abriDetruit && etat.abris[k]) { if (--etat.abris[k] <= 0) delete etat.abris[k]; }
   B.evenements.push({ type: 'impact', x, y, cal });
 }
 
@@ -589,7 +630,7 @@ function enFace(B, rng) {
     etat.ia.offensive = etat.temps + R.ia.offensive * (0.7 + rng() * 0.6);
     if (etat.tranchees) {
       // l'assaut : un régiment encore fort, dans ses tranchées, sort et va prendre notre ligne la plus proche, en face de lui
-      const leurs = etat.regiments.filter(r => r.camp === EUX && r.effectif > r.initial * R.tranchee.assaut && r.ordre.trace?.ligne >= 10 && !r.deroute && r.moral >= R.moral.ebranle + 0.1);
+      const leurs = etat.regiments.filter(r => r.camp === EUX && r.effectif > r.initial * R.tranchee.assaut && r.ordre.trace?.ligne >= 10 && !r.deroute && r.refus !== etat.jour && r.moral >= R.moral.ebranle + 0.1);
       if (leurs.length) {
         const nos = B.lignes.filter(L => L.camp === NOUS).sort((a, b) => a.y0 - b.y0);
         // pour chaque régiment, la première de nos lignes qu'on tient encore en face de lui, et combien la défendent
@@ -627,11 +668,20 @@ function enFace(B, rng) {
 /* L'aube : les corvées de la nuit (choix : { id de nos régiments : corvée },
    nuit.js), puis le jour suivant commence. Rend le bilan de la nuit. */
 export function aube(B, choix = {}) {
-  const { etat } = B;
+  const { etat, R } = B;
   if (etat.phase !== 'nuit') return { refus: 'Ce n\'est pas la nuit.' };
   const rng = createRng(etat.graine); rng.setState(etat.rng);
   B.evenements = [];
-  const bilan = corvees(B, choix, { rng, mourir: (i, cause, ou) => mourir(B, i, cause, ou) });
+  const soir = etat.regiments.map(r => r.moral);      // le moral du soir (la nuit en rend une part)
+  const bilan = corvees(B, choix, { rng, mourir: (i, cause, ou) => mourir(B, i, cause, ou), capturer: i => capturer(B, i) });
+  // le refus d'un jour : un régiment brisé (moral au plus bas, saigné) refuse de monter de toute la journée ;
+  // il tient sa tranchée et rien de plus (le Discours de la servitude volontaire : il suffit de ne plus servir)
+  const M = R.moral;
+  for (const reg of etat.regiments) {
+    if (!reg.effectif || (soir[reg.id] ?? 1) >= M.refusSous || reg.pertes < reg.initial * M.refusPertes || rng() >= M.refusChance) continue;
+    reg.refus = etat.jour + 1;
+    (bilan[reg.camp].refus ??= []).push(reg.id);
+  }
   compacter(B.armee);
   etat.rng = rng.state;
   etat.jour++; etat.tickJour = 0; etat.phase = 'jour';
@@ -684,7 +734,8 @@ export function restaurer(p, R) {
   etat.reserves ??= [0, 0]; etat.mission ??= null; etat.issue ??= null;   // (avant la v0.9.0 : ni mission ni réserves)
   etat.parRegiment ??= Math.floor(etat.parCamp / SECTEURS[etat.secteur].regiments);
   etat.travaux ??= []; etat.tombes ??= []; etat.evacues ??= []; etat.nuits ??= [];   // (avant la v0.6.0 : pas de corvées)
-  for (const reg of etat.regiments) { reg.moral ??= R.moral.depart; reg.deroute ??= false; }   // (avant la v0.5.0 : pas de moral)
+  for (const reg of etat.regiments) { reg.moral ??= R.moral.depart; reg.deroute ??= false; reg.vivres ??= R.nuit.vivres; }
+  etat.abris ??= {}; etat.prisonniers ??= [];   // (avant la v0.10.0 : ni abris ni coups de main)   // (avant la v0.5.0 : pas de moral)
   etat.troncons ??= []; etat.prises ??= etat.pertesJour.map(() => [0, 0]);   // (avant la v0.4.0 : pas de tranchées)
   const B = monter(etat, R);
   rejouerTerrain(B);

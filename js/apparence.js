@@ -5,8 +5,8 @@
    Les faces verticales (les parois tournées vers nous) d'au moins un demi-mètre
    prennent le ton plus sombre (OMBRE) ; une marche d'un quart garde la couleur
    du dessus (sinon chaque courbe de niveau des bosses se lit comme un trou). */
-import { INDICE } from './palette.js?v=0.9.0';
-import { ETAT, etat } from './terrain.js?v=0.9.0';
+import { INDICE, ORDRE } from './palette.js?v=0.10.0';
+import { ETAT, etat, hauteurQ } from './terrain.js?v=0.10.0';
 
 const I = INDICE;
 // [terre jetée (plus claire), plat, creusé ou à l'ombre]
@@ -39,8 +39,23 @@ export function couleurCase(T, i, j, R, gel = false) {
     const hsh = ((i * 2654435761) ^ (j * 40503)) >>> 0;
     if (hsh % [0, 41, 19, 9][hb] === 0) return e === ETAT.SEC ? I.g : I.h;     // une tache seule, sans lèvre : un cratère a la sienne, plus claire
   }
-  return TONS[e][d > 0 ? 0 : d < 0 ? 2 : 1];
+  if (d >= 0) return TONS[e][d > 0 ? 0 : 1];
+  // un trou : le creux un ton plus sombre ; plus profond, plus sombre encore (un mètre, puis deux et demi) ; et un ton
+  // de plus au pied des parois (une case entourée de plus haut d'un mètre, sur trois côtés) : sans cela, un cratère
+  // ou une tranchée se lisaient comme une tache, sans profondeur (Jérôme, v0.9.1)
+  let k = (d <= -4 ? 1 : 0) + (d <= -10 ? 1 : 0);
+  const h = hauteurQ(T, c) + 4;
+  let hauts = 0;
+  if (i > 0 && hauteurQ(T, c - 1) >= h) hauts++;
+  if (i < T.W - 1 && hauteurQ(T, c + 1) >= h) hauts++;
+  if (j > 0 && hauteurQ(T, c - T.W) >= h) hauts++;
+  if (j < T.H - 1 && hauteurQ(T, c + T.W) >= h) hauts++;
+  if (hauts >= 3) k++;
+  return plusSombre(TONS[e][2], k);
 }
+// la couleur n tons plus sombre (la suite des parois : herbe morte → glaise → boue → boue sombre → terre)
+const SOMBRE = ORDRE.map(l => INDICE[OMBRE[l]]);
+function plusSombre(idx, n) { for (let k = 0; k < n; k++) idx = SOMBRE[idx]; return idx; }
 
 // Toute une rangée, dans un tableau d'octets (la texture du sol)
 export function couleursLigne(T, j, R, gel, out) {

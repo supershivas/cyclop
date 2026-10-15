@@ -59,6 +59,21 @@ test('un obus tue près de lui, et les morts sont retirés', () => {
   assert.equal(compacter(A), morts);
   assert.equal(A.n, 50 - morts);
 });
+test('dans un abri, un obus tue moins (ctx.abri : ce qui reste du coup)', () => {
+  const T = monde();
+  const compte = abri => {
+    let n = 0;
+    for (let g = 1; g <= 20; g++) {
+      const A = creerArmee({ capacite: 100, W: T.W, H: T.H });
+      for (let k = 0; k < 50; k++) ajouterSoldat(A, 10 + (k % 10), 5 + Math.floor(k / 10), 0, 0, k, 0.5);
+      construireGrille(A);
+      tuerDans(A, 14, 7, 6, { R, rng: createRng(g), T, frapper: () => { n++; }, abri: () => abri });
+    }
+    return n;
+  };
+  const sans = compte(1), avec = compte(0.4);
+  assert.ok(avec < sans * 0.6, `${avec} touchés à l'abri, ${sans} sans`);
+});
 test('marcher fatigue les jambes, plus dans la boue ; des jambes lourdes ralentissent', () => {
   const sec = marcher(monde(), 5.5, 10.5, 55.5, 10.5, 10);
   const T = monde(); T.humid.fill(0.95);

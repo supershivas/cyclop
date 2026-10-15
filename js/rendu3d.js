@@ -22,12 +22,12 @@
    - Les soldats : instanciés (une boîte et son ombre) ; au zoom 1 et 2, un
      point de 2 × 2 pixels (la couleur du camp sur son ombre).
    - Les corps : un homme couché (instancié) ; au zoom 1 et 2, un pixel. */
-import { loadThree } from './three-lib.js?v=0.9.0';
-import { PALETTE, ORDRE, INDICE } from './palette.js?v=0.9.0';
-import { OMBRE, couleursLigne } from './apparence.js?v=0.9.0';
-import { MORCEAU, hauteurVueQ as hauteurQ, hauteurVueM as hauteurM } from './terrain.js?v=0.9.0';
-import { horloge } from './bataille.js?v=0.9.0';
-import { ligneY } from './tranchees.js?v=0.9.0';
+import { loadThree } from './three-lib.js?v=0.10.0';
+import { PALETTE, ORDRE, INDICE } from './palette.js?v=0.10.0';
+import { OMBRE, couleursLigne } from './apparence.js?v=0.10.0';
+import { MORCEAU, hauteurVueQ as hauteurQ, hauteurVueM as hauteurM } from './terrain.js?v=0.10.0';
+import { horloge } from './bataille.js?v=0.10.0';
+import { ligneY } from './tranchees.js?v=0.10.0';
 
 export const CAMERA = { yaw: 0.15, tangage: 0.95, fov: 30 };   // au départ : tournée de 9°, plongée de 54°, angle de 30°
 // la caméra respire : un balancement très lent, 2° en 23 s (Jérôme, v0.3.1 : variante D du labo retenue)
@@ -213,13 +213,14 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
   const soldatMat = new THREE.ShaderMaterial({
     uniforms: { uNous: { value: col('n') }, uEux: { value: col('x') }, uOmbre: { value: col('t') }, uSel: { value: col('o') },
       uJambes: { value: col('s') }, uFusil: { value: col('t') }, uSac: { value: col('g') }, uVisage: { value: col('h') }, uT: { value: 0 },
+      uSol: solMat.uniforms.uSol, uTaille: solMat.uniforms.uTaille,
       uSoleil: { value: new THREE.Vector2(0.5, 0.6) } },
     vertexShader: `
       attribute vec3 aPos; attribute float aCamp; attribute float aPart; attribute float aJambe; attribute float aVit;
       uniform float uT; uniform vec2 uSoleil;
-      varying float vCamp; varying float vPart;
+      varying float vCamp; varying float vPart; varying vec2 vXZ; varying float vLong;
       void main() {
-        vCamp = aCamp; vPart = aPart;
+        vCamp = aCamp; vPart = aPart; vLong = position.y;
         vec3 p = position;
         // l'ombre suit le soleil : elle part des pieds, longue le matin et le soir (uSoleil : son bout, par mètre de hauteur)
         if (aPart > 0.5 && aPart < 1.5) {
@@ -227,6 +228,7 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
           vec2 xz = vec2(-d.y, d.x) * position.x + (position.y > 0.5 ? uSoleil * 1.7 + d * 0.1 : -d * 0.05);
           p = vec3(xz.x, 0.03, xz.y);
         }
+        vXZ = (p + aPos).xz;
         // les jambes qui marchent : un balancement autour de la hanche (0,8 m), selon la vitesse
         if (aJambe != 0.0 && aVit > 0.15) {
           float a = sin(uT * 8.0 + aPos.x * 1.7 + aPos.z * 1.3) * 0.5 * min(1.0, aVit) * aJambe;
@@ -239,9 +241,23 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
     fragmentShader: `
       uniform vec3 uNous; uniform vec3 uEux; uniform vec3 uOmbre; uniform vec3 uSel;
       uniform vec3 uJambes; uniform vec3 uFusil; uniform vec3 uSac; uniform vec3 uVisage;
-      varying float vCamp; varying float vPart;
+      uniform sampler2D uSol; uniform vec2 uTaille;
+      varying float vCamp; varying float vPart; varying vec2 vXZ; varying float vLong;
+      float bayer4(vec2 p) {
+        vec2 a = mod(p, 2.0), b = mod(floor(p / 2.0), 2.0);
+        float m = a.x * 2.0 + a.y * 3.0 - a.x * a.y * 4.0;
+        float n = b.x * 2.0 + b.y * 3.0 - b.x * b.y * 4.0;
+        return (m * 4.0 + n + 0.5) / 16.0;
+      }
       void main() {
         float k = floor(vPart + 0.5);
+        // l'ombre : le sol qu'elle couvre, un ton plus sombre (la couleur de ses parois), tramée de plus en plus
+        // claire vers son bout (une ombre noire et pleine se lisait comme une tache)
+        if (k == 1.0) {
+          if (bayer4(floor(gl_FragCoord.xy)) > 0.95 - 0.6 * vLong) discard;
+          gl_FragColor = vec4(texture2D(uSol, vec2(vXZ.x / uTaille.x, (vXZ.y / uTaille.y + 1.0) * 0.5)).rgb, 1.0);
+          return;
+        }
         bool sel = vCamp > 1.5;
         float camp = sel ? vCamp - 2.0 : vCamp;
         vec3 c = camp > 0.5 ? uEux : uNous;
@@ -320,6 +336,57 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
     gp.setDrawRange(0, 0);
     soldatsPoints = new THREE.Points(gp, pointMat); soldatsPoints.frustumCulled = false; soldatsPoints.renderOrder = 2;
     scene.add(soldatsInst, soldatsPoints);
+  }
+
+  // ─── Les tombes (v0.10.0) : là où l'homme est tombé, un tertre de terre fraîche (glaise) et une croix de bois pâle,
+  // toutes tournées vers le nord (on enterre en rangs, même au milieu du champ) ; au loin, un pixel. ───
+  let capTombes = 0, tbPos = null, tombesInst = null, tombesPoints = null, attrsTI = null, attrsTP = null;
+  const tombeMat = new THREE.ShaderMaterial({
+    uniforms: { uTertre: { value: col('g') }, uFlanc: { value: col('s') }, uCroix: { value: col('r') } },
+    vertexShader: `
+      attribute vec3 aPos; attribute float aPart; varying float vPart;
+      void main() { vPart = aPart; gl_Position = projectionMatrix * viewMatrix * vec4(position + aPos, 1.0); }`,
+    fragmentShader: `
+      uniform vec3 uTertre; uniform vec3 uFlanc; uniform vec3 uCroix; varying float vPart;
+      void main() { gl_FragColor = vec4(vPart > 1.5 ? uCroix : (vPart > 0.5 ? uFlanc : uTertre), 1.0); }`,
+    side: THREE.DoubleSide,
+  });
+  const tombePointMat = new THREE.ShaderMaterial({
+    uniforms: tombeMat.uniforms,
+    vertexShader: `void main() { gl_Position = projectionMatrix * viewMatrix * vec4(position + vec3(0.0, 0.3, 0.0), 1.0); gl_PointSize = 1.0; }`,
+    fragmentShader: `uniform vec3 uTertre; void main() { gl_FragColor = vec4(uTertre, 1.0); }`,
+  });
+  function preparerTombes(capacite) {
+    if (tombesInst) { scene.remove(tombesInst, tombesPoints); tombesInst.geometry.dispose(); tombesPoints.geometry.dispose(); }
+    capTombes = capacite;
+    tbPos = new Float32Array(capTombes * 3);
+    const q = (a, b, c, d) => [...a, ...b, ...c, ...a, ...c, ...d];
+    // une boîte : [dessus, flancs]
+    const boite = (x0, x1, y0, y1, z0, z1) => [
+      q([x0, y1, z0], [x0, y1, z1], [x1, y1, z1], [x1, y1, z0]),
+      [...q([x0, y0, z1], [x1, y0, z1], [x1, y1, z1], [x0, y1, z1]), ...q([x0, y0, z0], [x1, y0, z0], [x1, y1, z0], [x0, y1, z0]),
+       ...q([x1, y0, z0], [x1, y0, z1], [x1, y1, z1], [x1, y1, z0]), ...q([x0, y0, z0], [x0, y0, z1], [x0, y1, z1], [x0, y1, z0])],
+    ];
+    const pos = [], part = [];
+    const mettre = (tris, k) => { pos.push(...tris); part.push(...new Array(tris.length / 3).fill(k)); };
+    const [tD, tF] = boite(-0.35, 0.35, 0, 0.22, -0.85, 0.85);              // le tertre
+    mettre(tD, 0); mettre(tF, 1);
+    for (const b of [boite(-0.08, 0.08, 0, 1.2, -1.05, -0.9), boite(-0.36, 0.36, 0.8, 0.95, -1.05, -0.9)]) { mettre(b[0], 2); mettre(b[1], 2); }   // la croix, à la tête
+    const gi = new THREE.InstancedBufferGeometry();
+    gi.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+    gi.setAttribute('aPart', new THREE.Float32BufferAttribute(part, 1));
+    attrsTI = [new THREE.InstancedBufferAttribute(tbPos, 3)];
+    attrsTI[0].setUsage(THREE.DynamicDrawUsage);
+    gi.setAttribute('aPos', attrsTI[0]);
+    gi.instanceCount = 0;
+    tombesInst = new THREE.Mesh(gi, tombeMat); tombesInst.frustumCulled = false; tombesInst.renderOrder = 1;
+    const gp = new THREE.BufferGeometry();
+    attrsTP = [new THREE.BufferAttribute(tbPos, 3)];
+    attrsTP[0].setUsage(THREE.DynamicDrawUsage);
+    gp.setAttribute('position', attrsTP[0]);
+    gp.setDrawRange(0, 0);
+    tombesPoints = new THREE.Points(gp, tombePointMat); tombesPoints.frustumCulled = false; tombesPoints.renderOrder = 1;
+    scene.add(tombesInst, tombesPoints);
   }
 
   // ─── Les corps : un homme couché (1,7 × 0,5 m, 0,3 de haut) ; au loin, un pixel.
@@ -809,14 +876,26 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
   aoGeo.setAttribute('aPos', new THREE.InstancedBufferAttribute(aoPos, 4).setUsage(THREE.DynamicDrawUsage));
   aoGeo.instanceCount = 0;
   const aoMat = new THREE.ShaderMaterial({
-    uniforms: { uCol: { value: col('t') }, uSoleil: soldatMat.uniforms.uSoleil },
-    vertexShader: `attribute vec4 aPos; uniform vec2 uSoleil;
+    uniforms: { uSoleil: soldatMat.uniforms.uSoleil, uSol: solMat.uniforms.uSol, uTaille: solMat.uniforms.uTaille },
+    vertexShader: `attribute vec4 aPos; uniform vec2 uSoleil; varying vec2 vXZ; varying float vLong;
       void main() {
         vec2 d = length(uSoleil) > 0.05 ? normalize(uSoleil) : vec2(0.6, 0.8);
         vec2 xz = vec2(-d.y, d.x) * position.x + (position.y > 0.5 ? uSoleil * aPos.w : vec2(0.0));
+        vXZ = vec2(aPos.x + xz.x, aPos.z + xz.y); vLong = position.y;
         gl_Position = projectionMatrix * viewMatrix * vec4(aPos.x + xz.x, aPos.y + 0.04, aPos.z + xz.y, 1.0);
       }`,
-    fragmentShader: `uniform vec3 uCol; void main() { if (mod(floor(gl_FragCoord.x) + floor(gl_FragCoord.y), 2.0) > 0.5) discard; gl_FragColor = vec4(uCol, 1.0); }`,
+    // le sol un ton plus sombre, tramé : dense au pied, presque rien au bout (les branches nues laissent passer le jour)
+    fragmentShader: `uniform sampler2D uSol; uniform vec2 uTaille; varying vec2 vXZ; varying float vLong;
+      float bayer4(vec2 p) {
+        vec2 a = mod(p, 2.0), b = mod(floor(p / 2.0), 2.0);
+        float m = a.x * 2.0 + a.y * 3.0 - a.x * a.y * 4.0;
+        float n = b.x * 2.0 + b.y * 3.0 - b.x * b.y * 4.0;
+        return (m * 4.0 + n + 0.5) / 16.0;
+      }
+      void main() {
+        if (bayer4(floor(gl_FragCoord.xy)) > 0.7 - 0.55 * vLong) discard;
+        gl_FragColor = vec4(texture2D(uSol, vec2(vXZ.x / uTaille.x, (vXZ.y / uTaille.y + 1.0) * 0.5)).rgb, 1.0);
+      }`,
     side: THREE.DoubleSide, depthWrite: false,
     polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2,
   });
@@ -950,6 +1029,7 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
     majSol(true);
     preparerSoldats(B.armee.capacite);
     preparerCorps(Math.max(1024, B.etat.corps.length * 2));
+    preparerTombes(Math.max(256, (B.etat.tombes?.length || 0) * 2));
     preparerArbres();
     preparerBuissons();
     preparerHerbe();
@@ -1085,6 +1165,7 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
     soldatsInst.geometry.instanceCount = k;
     vus = k;
     majCorps(x0, x1, z0, z1, e, aPlat, points);
+    majTombes(x0, x1, z0, z1, e, aPlat, points);
     majHerbe(x0, x1, z0, z1, e, aPlat);
     const bornes = [x0 - 6, x1 + 6, z0 - 6, z1 + 10];
     majArbres(e, bornes); majBuissons(e, bornes);
@@ -1108,6 +1189,23 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
     for (const a of points ? attrsCP : attrsCI) { a.clearUpdateRanges(); a.addUpdateRange(0, k * a.itemSize); a.needsUpdate = true; }
     corpsPoints.geometry.setDrawRange(0, k);
     corpsInst.geometry.instanceCount = k;
+  }
+  function majTombes(x0, x1, z0, z1, e, aPlat, points) {
+    const C = B.etat.tombes || [];
+    if (C.length > capTombes) preparerTombes(C.length * 2);
+    let k = 0;
+    for (const c of C) {
+      const x = c[0] / 10, y = c[1] / 10;
+      if (x < x0 || x > x1 || y < z0 || y > z1) continue;
+      const cxp = e[0] * x + e[4] * SOL_Y + e[8] * y + e[12], cyp = e[1] * x + e[5] * SOL_Y + e[9] * y + e[13], cw = e[3] * x + e[7] * SOL_Y + e[11] * y + e[15];
+      if (cxp < -1.08 * cw || cxp > 1.08 * cw || cyp < -1.15 * cw || cyp > 1.15 * cw) continue;
+      tbPos[k * 3] = x; tbPos[k * 3 + 1] = aPlat ? SOL_Y : surface(x, y); tbPos[k * 3 + 2] = y;
+      k++;
+    }
+    if (!vide) { tombesPoints.visible = points; tombesInst.visible = !points; }
+    for (const a of points ? attrsTP : attrsTI) { a.clearUpdateRanges(); a.addUpdateRange(0, k * a.itemSize); a.needsUpdate = true; }
+    tombesPoints.geometry.setDrawRange(0, k);
+    tombesInst.geometry.instanceCount = k;
   }
   let vus = 0;
 

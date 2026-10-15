@@ -26,14 +26,14 @@ Statuts : **à l'étude** · **validé** (Jérôme a tranché) · **en cours** �
 ## À l'étude (validé dans le principe par le prompt de départ, pas construit)
 
 - **Tranchées, la suite** : 3 lignes en secteur calme, 5 en secteur fortifié ; les
-  montrer tenues ou perdues sur le terrain lui-même ; abris profonds.
-- **La nuit, la suite** : les abris profonds, le ravitaillement, les coups de main
-  de nuit, les tombes dessinées sur le terrain.
-- **Moral et expérience, la suite** (v0.5.0 a livré le moral par régiment, la
-  déroute, l'expérience, les promotions) : la fuite feinte (les Horaces et les
-  Curiaces), la contagion de la déroute aux voisins, le Discours de la servitude
-  volontaire (un régiment qui refuse tout un jour), l'expérience gardée d'une
-  bataille à l'autre (le Mémorial).
+  montrer tenues ou perdues sur le terrain lui-même ; les abris dessinés (leur
+  entrée dans la paroi).
+- **La nuit, la suite** (v0.10.0 : abris, vivres, coups de main, tombes) : des
+  prisonniers qui parlent (le renseignement : où en face prépare son assaut).
+- **Moral et expérience, la suite** (v0.10.0 : contagion, refus d'un jour,
+  poursuite) : la fuite feinte jouée par le joueur (un régiment qui recule exprès
+  pour disperser le poursuivant), l'expérience gardée d'une bataille à l'autre
+  (le Mémorial).
 - **Évacuer les blessés, la suite** : de jour, sous le feu ; la boue qui ralentit les brancardiers.
 - **Lignes de vue** (une crête cache), mêlées de tranchées rares.
 - **Hors de vue, les soldats comptés** au lieu d'être simulés un par un.
