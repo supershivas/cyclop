@@ -894,10 +894,14 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
     lumTex.magFilter = lumTex.minFilter = THREE.LinearFilter; lumTex.generateMipmaps = false;
     nuitMat.uniforms.uLum.value = lumTex;
   }
+  // Le style de la nuit (le labo compare, Jérôme v0.9.3) : 0 la trame (le jeu : un pixel sur deux de la couleur la plus sombre,
+  // aucune couleur de plus), 1 « doux » (la même terre, mais en voile continu : le noir monte sans trame, les lumières le percent
+  // en dégradé : des couleurs qui n'existent pas dans la palette), 2 « halos » (comme doux, et la lumière peint en plus une lueur
+  // chaude : os et herbe sèche).
   const nuitMat = new THREE.ShaderMaterial({
-    uniforms: { uCol: { value: col('t') }, uD: { value: 0 }, uLum: { value: null }, uTaille: { value: new THREE.Vector2(640, 400) } },
+    uniforms: { uCol: { value: col('t') }, uLueur: { value: col('o') }, uD: { value: 0 }, uMode: { value: 0 }, uLum: { value: null }, uTaille: { value: new THREE.Vector2(640, 400) } },
     vertexShader: `void main() { gl_Position = vec4(position.xy, -1.0, 1.0); }`,
-    fragmentShader: `uniform vec3 uCol; uniform float uD; uniform sampler2D uLum; uniform vec2 uTaille;
+    fragmentShader: `uniform vec3 uCol; uniform vec3 uLueur; uniform float uD; uniform float uMode; uniform sampler2D uLum; uniform vec2 uTaille;
       float bayer(vec2 p) {
         vec2 a = mod(p, 2.0), b = mod(floor(p / 2.0), 2.0);
         float m = a.x * 2.0 + a.y * 3.0 - a.x * a.y * 4.0;
@@ -906,8 +910,15 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
       }
       void main() {
         float clair = texture2D(uLum, gl_FragCoord.xy / uTaille).r;
-        if (bayer(floor(gl_FragCoord.xy)) > uD * (1.0 - clair)) discard;
-        gl_FragColor = vec4(uCol, 1.0);
+        if (uMode < 0.5) {
+          if (bayer(floor(gl_FragCoord.xy)) > uD * (1.0 - clair)) discard;
+          gl_FragColor = vec4(uCol, 1.0);
+        } else if (uMode < 1.5) {
+          gl_FragColor = vec4(uCol, uD * (1.0 - clair));
+        } else {
+          float halo = clair * clair * 0.38 * min(1.0, uD * 1.6);
+          gl_FragColor = vec4(mix(uCol, uLueur, halo / max(0.001, halo + uD * (1.0 - clair))), min(1.0, uD * (1.0 - clair) + halo));
+        }
       }`,
     depthTest: false, depthWrite: false,
   });
@@ -1281,6 +1292,8 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
   return {
     attacher, dessiner, redimensionner, versTerrain, versEcran, vue, renderer, scene,
     set choisis(s) { choisis = s; },
+    // le style de la nuit : 'trame' (le jeu), 'doux', 'halos' (essais du labo)
+    set styleNuit(m) { const k = { trame: 0, doux: 1, halos: 2 }[m] ?? 0; nuitMat.uniforms.uMode.value = k; nuitMat.transparent = k > 0; nuitMat.needsUpdate = true; },
     set vide(v) { vide = v; scene.children.forEach(o => { o.visible = !v; }); },
     zoomer(d, ancre = null) {
       const avant = ancre ? versTerrain(...ancre) : null;

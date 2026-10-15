@@ -118,6 +118,8 @@ gris) et les deux camps (proposés `#6f86a6` et `#5b5d48`, invisibles sur la bou
 | `o` | `#e4dfd0` | os — le texte, l'éclair d'un obus, le casque des choisis |
 | `n` | `#a9bad0` | bleu horizon — nous |
 | `x` | `#8f9374` | feldgrau — en face |
+| `v` | `#68803f` | vert mousse — **proposé** (labo, sujet « Le sol vert », v0.9.3), pas encore dans le jeu |
+| `w` | `#46592f` | vert sombre — **proposé**, idem |
 
 Un soldat se lit par sa couleur sur un sol sombre, par son ombre (`t`) sur un sol
 clair. Un cratère : le creux un ton plus sombre, la lèvre de terre jetée un ton
@@ -252,7 +254,7 @@ le fond des boîtes de dialogue (`::backdrop` de `game.css`).
 - `index.html`, `css/style.css` — l'écran, le HUD et les dialogues (palette du jeu).
 - `labo.html`, `js/labo.js` — le labo : échelle, sols et cratères (couleur et
   gris), palette, le moteur en direct (zoom 4, zoom 1, après un jour de pluie,
-  gel), la caméra (perspective et respiration / immobile / sans perspective / plus
+  gel), le sol vert (`verdure` d'apparence.js : taches, plaques, prairie ; essai, Jérôme n'a pas encore choisi), la nuit sans trame (`styleNuit` de rendu3d.js : trame, voile continu, voile et halos ; essai), les plaques et le journal de l'interface, l'attaque d'une tranchée (frise du temps), la caméra (perspective et respiration / immobile / sans perspective / plus
   de perspective / respiration marquée), les calibres. Les
   sujets du moteur affichent ce que coûte le dessin et proposent les zooms.
 - `atelier.html`, `js/atelier.js`, `js/design-store.js` — l'atelier : les réglages
@@ -376,6 +378,7 @@ node outils/stamp-version.mjs            # après chaque changement de version.j
   logiciel). Les touffes s'arrêtent à 1,25 fois la distance du point visé, et un arbre
   plus loin que 1,3 fois (160 m au moins) n'est qu'un tronc : 18 à 27 images/s. Un seuil
   fixe de 70 m coupait l'herbe du jeu, où la caméra est haute (essayé, v0.8.2).
+- **La nuit sans trame, mesurée** (labo, v0.9.3 ; 2 000 soldats, rendu logiciel, dessin attendu jusqu'au bout) : tout dézoomé, jour 54 ms, trame 63, voile continu 59, voile et halos 61 ; au zoom 4, jour 60, trame 71, voile 63, halos 65. Le voile continu n'est pas plus cher que la trame (le plan plein écran fait la même lecture de texture, sans le test de trame) ; il crée des couleurs hors palette. Pas adopté : en attente de Jérôme.
 - **La nuit sans couleur nouvelle** : la palette n'a pas de « nuit » ; le soir et la
   nuit sont une trame (Bayer 4 × 4) de la couleur la plus sombre, trouée en douceur
   autour des lumières, peintes chaque image dans une petite carte (un quart de la

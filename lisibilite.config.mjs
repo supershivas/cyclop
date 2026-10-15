@@ -30,6 +30,10 @@ export default {
     { avant: 't', fond: 'h', role: 'signe', ou: 'ombre d\'un soldat sur sol sec' },
     { avant: 't', fond: 'g', role: 'signe', ou: 'ombre d\'un soldat sur sol humide' },
     { avant: 't', fond: 'e', role: 'signe', ou: 'ombre d\'un soldat dans l\'eau' },
+    // les verts proposés au labo (sujet « Le sol vert », pas encore dans le jeu) : un soldat s'y lit-il ?
+    { avant: 'n', fond: 'v', seuil: 2, role: 'signe', ou: 'nous sur le vert mousse (proposé)' },
+    { avant: 'x', fond: 'w', seuil: 1.5, role: 'signe', ou: 'en face sur le vert sombre (proposé)' },
+    { avant: 't', fond: 'v', role: 'signe', ou: 'ombre d\'un soldat sur le vert mousse (proposé)' },
     // les deux camps entre eux (en gris, ils ne se confondent pas)
     { avant: 'n', fond: 'x', seuil: 1.5, role: 'signe', ou: 'nous et en face côte à côte' },
   ],
