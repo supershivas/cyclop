@@ -18,10 +18,14 @@ export const PALETTE = {
   o: '#e4dfd0', // os — le texte, l'éclair
   n: '#a9bad0', // bleu horizon — nous
   x: '#8f9374', // feldgrau — en face
+  // Deux verts discrets (Jérôme, v0.9.3 : « le vert est intégré dans le design et ne fait pas de grandes différences ») : de la
+  // même clarté que l'herbe morte et la glaise, un peu plus verts ; le sol en est nuancé (apparence.js, `verdure`)
+  v: '#6f8147', // vert mousse — l'herbe qui reprend, par plaques
+  w: '#5c6e3c', // vert sombre — l'herbe dans l'humide
 };
 
 // L'ordre des couleurs dans les textures d'indices (le shader lit la palette
-// dans une texture de 10 × 1) : ne jamais le changer sans refaire les textures.
+// dans une texture de 12 × 1) : ne jamais le changer sans refaire les textures.
 export const ORDRE = Object.keys(PALETTE);
 export const INDICE = Object.fromEntries(ORDRE.map((k, i) => [k, i]));
 

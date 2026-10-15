@@ -22,12 +22,12 @@
    - Les soldats : instanciés (une boîte et son ombre) ; au zoom 1 et 2, un
      point de 2 × 2 pixels (la couleur du camp sur son ombre).
    - Les corps : un homme couché (instancié) ; au zoom 1 et 2, un pixel. */
-import { loadThree } from './three-lib.js?v=0.10.0';
-import { PALETTE, ORDRE, INDICE } from './palette.js?v=0.10.0';
-import { OMBRE, couleursLigne } from './apparence.js?v=0.10.0';
-import { MORCEAU, hauteurVueQ as hauteurQ, hauteurVueM as hauteurM } from './terrain.js?v=0.10.0';
-import { horloge } from './bataille.js?v=0.10.0';
-import { ligneY } from './tranchees.js?v=0.10.0';
+import { loadThree } from './three-lib.js?v=0.11.0';
+import { PALETTE, ORDRE, INDICE } from './palette.js?v=0.11.0';
+import { OMBRE, couleursLigne } from './apparence.js?v=0.11.0';
+import { MORCEAU, hauteurVueQ as hauteurQ, hauteurVueM as hauteurM } from './terrain.js?v=0.11.0';
+import { horloge } from './bataille.js?v=0.11.0';
+import { ligneY } from './tranchees.js?v=0.11.0';
 
 export const CAMERA = { yaw: 0.15, tangage: 0.95, fov: 30 };   // au départ : tournée de 9°, plongée de 54°, angle de 30°
 // la caméra respire : un balancement très lent, 2° en 23 s (Jérôme, v0.3.1 : variante D du labo retenue)
@@ -38,7 +38,7 @@ export const SOLDAT = 'silhouette';            // le style des soldats de près 
 export const RESPIRATION = 0.035;
 export const YAW_MAX = 0.6, TANGAGE_MIN = 0.7, TANGAGE_MAX = 1.35;
 const SOL_Y = 3;                              // m : la hauteur moyenne du sol (le point visé, le sol à plat des zooms 1 et 2)
-export const ZOOMS = [1, 2, 3, 4, 6, 8];      // pixels (logiques) par mètre
+export const ZOOMS = [1, 2, 3, 4, 6, 8, 12, 16];   // pixels (logiques) par mètre (12 et 16 : tout près des hommes, Jérôme v0.9.3)
 const POINTS_JUSQUA = 2;                      // zoom où un soldat n'est plus qu'un point
 const PLAT_JUSQUA = 2;                        // zoom où le sol devient une seule image plate (une marche d'un quart y fait un demi-pixel)
 const PLUIE = 1600, ECLATS = 2400;
@@ -209,6 +209,7 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
   // Les parties : 0 la vareuse (la couleur du camp), 1 l'ombre, 2 le casque (l'os pour les choisis),
   // 3 les jambes (bandes molletières), 4 le fusil, 5 le sac, 6 le visage.
   let cap = 0, posArr = null, campArr = null, vitArr = null, soldatsInst = null, soldatsDetail = null, soldatsPoints = null, attrsI = null, attrsP = null;
+  const TAPI = 0.5;                        // la peur au-delà de laquelle un homme se tapit (le dessin seulement ; on ne tire plus à 0,85)
   const DETAIL_DES = 6;                    // (à 4 pixels par mètre, un homme en fait 7 de haut : la silhouette ne s'y voyait pas, et coûtait 138 000 triangles pour 2 000 hommes)
   const soldatMat = new THREE.ShaderMaterial({
     uniforms: { uNous: { value: col('n') }, uEux: { value: col('x') }, uOmbre: { value: col('t') }, uSel: { value: col('o') },
@@ -222,6 +223,10 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
       void main() {
         vCamp = aCamp; vPart = aPart; vLong = position.y;
         vec3 p = position;
+        // la peur : un homme se tapit (aVit < 0 : −1 − sa vitesse), sauf son ombre
+        bool tapi = aVit < 0.0;
+        float vit = tapi ? 0.0 : aVit;
+        if (tapi && (aPart < 0.5 || aPart > 1.5)) p.y *= 0.6;
         // l'ombre suit le soleil : elle part des pieds, longue le matin et le soir (uSoleil : son bout, par mètre de hauteur)
         if (aPart > 0.5 && aPart < 1.5) {
           vec2 d = length(uSoleil) > 0.05 ? normalize(uSoleil) : vec2(0.6, 0.8);
@@ -230,8 +235,8 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
         }
         vXZ = (p + aPos).xz;
         // les jambes qui marchent : un balancement autour de la hanche (0,8 m), selon la vitesse
-        if (aJambe != 0.0 && aVit > 0.15) {
-          float a = sin(uT * 8.0 + aPos.x * 1.7 + aPos.z * 1.3) * 0.5 * min(1.0, aVit) * aJambe;
+        if (aJambe != 0.0 && vit > 0.15) {
+          float a = sin(uT * 8.0 + aPos.x * 1.7 + aPos.z * 1.3) * 0.5 * min(1.0, vit) * aJambe;
           float y = p.y - 0.8;
           p.z = p.z * cos(a) - y * sin(a);
           p.y = 0.8 + p.z * sin(a) + y * cos(a);
@@ -338,7 +343,7 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
     scene.add(soldatsInst, soldatsPoints);
   }
 
-  // ─── Les tombes (v0.10.0) : là où l'homme est tombé, un tertre de terre fraîche (glaise) et une croix de bois pâle,
+  // ─── Les tombes (v0.11.0) : là où l'homme est tombé, un tertre de terre fraîche (glaise) et une croix de bois pâle,
   // toutes tournées vers le nord (on enterre en rangs, même au milieu du champ) ; au loin, un pixel. ───
   let capTombes = 0, tbPos = null, tombesInst = null, tombesPoints = null, attrsTI = null, attrsTP = null;
   const tombeMat = new THREE.ShaderMaterial({
@@ -776,6 +781,28 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
     crMat.uniforms.uT.value = t;
   }
 
+  // ─── Le feu se voit (Jérôme, v0.9.2) : un éclair à la bouche du fusil et un trait clair vers la cible, pour chaque
+  // tir de la bataille (Sortes : 0 éclair, 9 traceur). Le dessin seulement : la logique les range dans B.tirs, vidés ici.
+  // On ne dessine que ceux qu'on voit, et pas plus de 160 par image (tout dézoomé, ce serait des milliers de points). ───
+  function majTirs() {
+    const L = B.tirs;
+    if (!L.length) return;
+    const { cx, cz, p } = projeter();
+    const e = Math.hypot(vue.vw, vue.vh) / p + 20;
+    const pas = Math.max(1, Math.floor(L.length / 5 / 160));
+    for (let k = 0; k < L.length; k += 5 * pas) {
+      const x = L[k], y = L[k + 1];
+      if (Math.abs(x - cx) > e || Math.abs(y - cz) > e) continue;
+      const tx = L[k + 2] + (alea() - 0.5) * 6, ty = L[k + 3] + (alea() - 0.5) * 6;
+      const dx = tx - x, dy = ty - y, d = Math.hypot(dx, dy) || 1, ux = dx / d, uy = dy / d;
+      const h = aPlat0() ? SOL_Y : surface(x, y);
+      particule(0, x + ux * 0.6, h + 1.3, y + uy * 0.6, 0, 0, 0, 0.07, 1.4);
+      particule(9, x + ux * 1.5, h + 1.3, y + uy * 1.5, ux * 110, 0, uy * 110, 0.12 + alea() * 0.06, 1);
+    }
+    L.length = 0;
+  }
+  const aPlat0 = () => plat();
+
   function majEclats(dt) {
     for (let k = attente.length - 1; k >= 0; k--) if ((attente[k].t -= dt) <= 0) { const a = attente.splice(k, 1)[0]; eclater(a.x, a.y, a.cal); }
     guetterFeux(); majFeux(dt); majFusees(dt);
@@ -795,7 +822,7 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
       if ((so === 1 || so === 8) && T && ecl.y[s] < surface(ecl.x[s], ecl.z[s])) ecl.age[s] = 99;
       eclPos[s * 3] = ecl.x[s]; eclPos[s * 3 + 1] = ecl.y[s]; eclPos[s * 3 + 2] = ecl.z[s];
       eclTaille[s] = so === 2 ? ecl.taille[s] * (1 + f * 0.8) : ecl.taille[s];
-      eclTon[s] = so === 0 || so === 6 ? INDICE.o
+      eclTon[s] = so === 0 || so === 6 || so === 9 ? INDICE.o
         : so === 1 ? INDICE.b : so === 8 ? INDICE.s
         : so === 3 || so === 4 ? INDICE.r
         : so === 5 ? (alea() < 0.5 ? INDICE.o : INDICE.h)
@@ -946,10 +973,14 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
     lumTex.magFilter = lumTex.minFilter = THREE.LinearFilter; lumTex.generateMipmaps = false;
     nuitMat.uniforms.uLum.value = lumTex;
   }
+  // Le style de la nuit (le labo a comparé ; Jérôme a retenu « voile et halos », v0.9.3) : 0 la trame (celle de la v0.8 : un pixel sur deux de la couleur la plus sombre,
+  // aucune couleur de plus), 1 « doux » (la même terre, mais en voile continu : le noir monte sans trame, les lumières le percent
+  // en dégradé : des couleurs qui n'existent pas dans la palette), 2 « halos » (comme doux, et la lumière peint en plus une lueur
+  // chaude : os et herbe sèche).
   const nuitMat = new THREE.ShaderMaterial({
-    uniforms: { uCol: { value: col('t') }, uD: { value: 0 }, uLum: { value: null }, uTaille: { value: new THREE.Vector2(640, 400) } },
+    uniforms: { uCol: { value: col('t') }, uLueur: { value: col('o') }, uD: { value: 0 }, uMode: { value: 2 }, uLum: { value: null }, uTaille: { value: new THREE.Vector2(640, 400) } },
     vertexShader: `void main() { gl_Position = vec4(position.xy, -1.0, 1.0); }`,
-    fragmentShader: `uniform vec3 uCol; uniform float uD; uniform sampler2D uLum; uniform vec2 uTaille;
+    fragmentShader: `uniform vec3 uCol; uniform vec3 uLueur; uniform float uD; uniform float uMode; uniform sampler2D uLum; uniform vec2 uTaille;
       float bayer(vec2 p) {
         vec2 a = mod(p, 2.0), b = mod(floor(p / 2.0), 2.0);
         float m = a.x * 2.0 + a.y * 3.0 - a.x * a.y * 4.0;
@@ -958,10 +989,17 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
       }
       void main() {
         float clair = texture2D(uLum, gl_FragCoord.xy / uTaille).r;
-        if (bayer(floor(gl_FragCoord.xy)) > uD * (1.0 - clair)) discard;
-        gl_FragColor = vec4(uCol, 1.0);
+        if (uMode < 0.5) {
+          if (bayer(floor(gl_FragCoord.xy)) > uD * (1.0 - clair)) discard;
+          gl_FragColor = vec4(uCol, 1.0);
+        } else if (uMode < 1.5) {
+          gl_FragColor = vec4(uCol, uD * (1.0 - clair));
+        } else {
+          float halo = clair * clair * 0.38 * min(1.0, uD * 1.6);
+          gl_FragColor = vec4(mix(uCol, uLueur, halo / max(0.001, halo + uD * (1.0 - clair))), min(1.0, uD * (1.0 - clair) + halo));
+        }
       }`,
-    depthTest: false, depthWrite: false,
+    transparent: true, depthTest: false, depthWrite: false,
   });
   const nuitPlan = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), nuitMat); nuitPlan.frustumCulled = false; nuitPlan.renderOrder = 5.5;
   scene.add(nuitPlan);
@@ -1000,6 +1038,53 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
     lumTex.needsUpdate = true;
   }
 
+  // ─── Les fanions des tronçons (Jérôme, v0.9.2) : un fanion sur le parapet de chaque tronçon, à la couleur de celui qui
+  // le tient. Déchiré quand l'autre camp y est entré ; quand le tronçon change de main, le nôtre descend, celui d'en
+  // face monte. Rien n'est écrit : on lit la ligne, tronçon par tronçon, même de loin (un point de couleur). ───
+  let fanP = null, fanF = null, fanEtat = [];
+  const fanMat = new THREE.Matrix4(), fanQ = new THREE.Quaternion(), fanE = new THREE.Euler(), fanS = new THREE.Vector3(), fanV = new THREE.Vector3();
+  const fanCol = { 0: new THREE.Color(PALETTE.n), 1: new THREE.Color(PALETTE.x) };
+  function preparerFanions() {
+    for (const m of [fanP, fanF]) if (m) { scene.remove(m); m.dispose(); }
+    fanP = fanF = null; fanEtat = [];
+    const n = B.troncons?.length || 0;
+    if (!n) return;
+    const plan = new THREE.PlaneGeometry(1, 1);          // deux triangles : 128 fanions ne doivent presque rien coûter (des boîtes : +3 000 triangles, +10 ms tout dézoomé)
+    fanP = new THREE.InstancedMesh(plan, new THREE.MeshBasicMaterial({ color: new THREE.Color(PALETTE.t), side: THREE.DoubleSide }), n);
+    fanF = new THREE.InstancedMesh(plan, new THREE.MeshBasicMaterial({ color: 0xffffff, side: THREE.DoubleSide }), n);
+    for (const m of [fanP, fanF]) { m.frustumCulled = false; m.renderOrder = 2; scene.add(m); }
+    B.troncons.forEach((tr, k) => {
+      const L = B.lignes[tr.ligne], x = (tr.x0 + tr.x1) / 2, z = ligneY(L, x) + L.face * 1.2;
+      fanEtat.push({ x, z, tient: B.etat.troncons[k], ancien: B.etat.troncons[k], t: 99 });   // t : depuis combien de temps il a changé de main
+    });
+  }
+  function majFanions(dt) {
+    if (!fanP) return;
+    const aPlat = plat(), p = ZOOMS[vue.zoom];
+    for (let k = 0; k < fanEtat.length; k++) {
+      const f = fanEtat[k], tient = B.etat.troncons[k];
+      if (tient !== f.tient) { f.ancien = f.tient; f.tient = tient; f.t = 0; }
+      f.t += dt;
+      const dechire = B.disputes[k] === 1 && f.t > 3;
+      // monté : 0 (en bas) à 1 (en haut) ; le changement de main : l'ancien descend en 1,2 s, le nouveau monte en 2,5 s
+      let monte = 1, camp = f.tient;
+      if (f.t < 1.2) { camp = f.ancien; monte = 1 - f.t / 1.2; } else if (f.t < 3.7) monte = (f.t - 1.2) / 2.5;
+      const y0 = (aPlat ? SOL_Y : surface(f.x, f.z));
+      const gros = Math.max(1, 3 / Math.max(p, 1));              // de loin, un fanion doit encore faire un pixel
+      // la hampe (3 m) et le drapeau (1,3 × 0,8 m), qui flotte un peu
+      fanS.set(0.12 * gros, 3, 1); fanV.set(f.x, y0 + 1.5, f.z);
+      fanMat.compose(fanV, fanQ.identity(), fanS); fanP.setMatrixAt(k, fanMat);
+      const vent = Math.sin(tAnim * 4 + k) * 0.08, w = (dechire ? 0.6 : 1.3) * gros, h = (dechire ? 0.5 : 0.8) * gros;
+      fanE.set(0, 0, dechire ? -0.35 : vent); fanQ.setFromEuler(fanE);
+      fanS.set(w, h, 1); fanV.set(f.x + w / 2, y0 + 0.4 + 2.5 * monte - (dechire ? 0.2 : 0), f.z);
+      fanMat.compose(fanV, fanQ, fanS); fanF.setMatrixAt(k, fanMat);
+      fanF.setColorAt(k, fanCol[camp]);
+    }
+    fanP.instanceMatrix.needsUpdate = fanF.instanceMatrix.needsUpdate = true;
+    if (fanF.instanceColor) fanF.instanceColor.needsUpdate = true;
+    fanP.visible = fanF.visible = !vide;
+  }
+
   // ─── Brancher une bataille ───
   function attacher(bataille) {
     B = bataille; T = B.terrain;
@@ -1033,6 +1118,7 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
     preparerArbres();
     preparerBuissons();
     preparerHerbe();
+    preparerFanions();
     feux.length = 0; brules.clear(); arbresEtat = null;   // (une autre bataille : ses arbres ne brûlent pas encore)
     vue.cx = T.W / 2; vue.cz = T.H * 0.62;
   }
@@ -1154,7 +1240,7 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
       if (cxp < -1.08 * cw || cxp > 1.08 * cw || cyp < -1.15 * cw || cyp > 1.15 * cw) continue;
       posArr[k * 3] = x; posArr[k * 3 + 1] = aPlat ? SOL_Y : surface(x, y); posArr[k * 3 + 2] = y;
       campArr[k] = A.camp[i] + (choisis.has(A.reg[i]) ? 2 : 0);
-      vitArr[k] = Math.hypot(A.vx[i], A.vy[i]);
+      vitArr[k] = A.peur[i] >= TAPI ? -1 : Math.hypot(A.vx[i], A.vy[i]);
       k++;
     }
     const points = p <= POINTS_JUSQUA, detail = !points && soldatsDetail && p >= DETAIL_DES;
@@ -1260,6 +1346,7 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
     if (!B) return;
     const t0 = performance.now();
     for (const e of evenements) if (e.type === 'impact') impactVu(e.x, e.y, e.cal);
+    majTirs();
     // la caméra glisse vers sa cible : un mouvement doux plutôt qu'un saut
     const lisse = 1 - Math.exp(-dt * 7);
     vue.yaw += (vue.cible.yaw - vue.yaw) * lisse; vue.tangage += (vue.cible.tangage - vue.tangage) * lisse;
@@ -1279,7 +1366,7 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
     majSoleil(horloge(B));
     majSoldats();
     tAnim += dt;
-    majEclats(dt); majCorbeaux(dt, tAnim);
+    majEclats(dt); majCorbeaux(dt, tAnim); majFanions(dt);
     const h = horloge(B);
     majNuit(h); lnMat.uniforms.uT.value = tAnim;
     if (!vide) { pluie.visible = h.meteo === 'pluie' && h.phase === 'jour'; brume.visible = h.meteo === 'brouillard'; }
@@ -1303,6 +1390,8 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
   return {
     attacher, dessiner, redimensionner, versTerrain, versEcran, vue, renderer, scene,
     set choisis(s) { choisis = s; },
+    // le style de la nuit : 'halos' (le jeu), 'doux', 'trame' (l'ancienne, gardée au labo)
+    set styleNuit(m) { const k = { trame: 0, doux: 1, halos: 2 }[m] ?? 0; nuitMat.uniforms.uMode.value = k; nuitMat.transparent = k > 0; nuitMat.needsUpdate = true; },
     set vide(v) { vide = v; scene.children.forEach(o => { o.visible = !v; }); },
     zoomer(d, ancre = null) {
       const avant = ancre ? versTerrain(...ancre) : null;

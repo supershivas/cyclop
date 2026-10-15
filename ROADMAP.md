@@ -28,9 +28,9 @@ Statuts : **à l'étude** · **validé** (Jérôme a tranché) · **en cours** �
 - **Tranchées, la suite** : 3 lignes en secteur calme, 5 en secteur fortifié ; les
   montrer tenues ou perdues sur le terrain lui-même ; les abris dessinés (leur
   entrée dans la paroi).
-- **La nuit, la suite** (v0.10.0 : abris, vivres, coups de main, tombes) : des
+- **La nuit, la suite** (v0.11.0 : abris, vivres, coups de main, tombes) : des
   prisonniers qui parlent (le renseignement : où en face prépare son assaut).
-- **Moral et expérience, la suite** (v0.10.0 : contagion, refus d'un jour,
+- **Moral et expérience, la suite** (v0.11.0 : contagion, refus d'un jour,
   poursuite) : la fuite feinte jouée par le joueur (un régiment qui recule exprès
   pour disperser le poursuivant), l'expérience gardée d'une bataille à l'autre
   (le Mémorial).

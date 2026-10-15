@@ -134,7 +134,7 @@ export const REGLAGES = {
     moralCorps: 0.003,    // … lui pèsent, chacun, au matin…
     moralCorpsMax: 0.15,  // … jusqu'à cette part de son moral
     moralEvacuer: 0.03,   // on s'occupe des blessés : le moral remonte un peu
-    // les abris profonds (v0.10.0) : creusés nuit après nuit sous un tronçon
+    // les abris profonds (v0.11.0) : creusés nuit après nuit sous un tronçon
     abriMax: 3,           // niveaux (une nuit de travail chacun)
     abriParNiveau: 0.2,   // un obus tue d'autant moins (par niveau) ceux qui sont dans le tronçon
     abriDetruit: '220',   // le calibre qui crève un abri (un niveau par obus tombé dans le tronçon)

@@ -26,7 +26,7 @@ la danse macabre, la catastrophe peinte avec calme. L'intention est dans `DESIGN
   34°) et l'incline un peu, en douceur ; elle respire (un balancement de 2° en
   23 s, coupé si le système demande un mouvement réduit ; Jérôme, v0.3.1) ; elle
   ne sort jamais du terrain. Zoom par
-  facteurs entiers au point visé (1, 2, 3, 4, 6, 8 pixels par mètre) ; aux zooms
+  facteurs entiers au point visé (1, 2, 3, 4, 6, 8, 12, 16 pixels par mètre ; Jérôme, v0.9.3 : tout près des soldats) ; aux zooms
   1 et 2, chaque soldat est un point. Sol en cubes et soldats en boîtes (Jérôme, v0.2.0 :
   les facettes et les sprites essayés au labo ne sont pas retenus). Profil game-system :
   `profils/pixel-3d-three.md`.
@@ -45,6 +45,25 @@ la danse macabre, la catastrophe peinte avec calme. L'intention est dans `DESIGN
   tombés (`etat.corps` : `[x×10, y×10, camp, jour, id]`, sauvegardé ; Jérôme,
   v0.3.3) : un homme couché, au loin un pixel ; la couleur du camp le jour même,
   la glaise ensuite. Survolé ou cliqué, sa fiche.
+- **Le feu se voit, le tronçon se lit** (Jérôme, v0.9.2 ; maquettes B et C du sujet
+  « Attaque d'une tranchée » du labo, sur la frise du temps de `js/lib/labo-timeline.js`) :
+  les informations sont dans le monde, pas dans des plaques. Un éclair à la bouche du
+  fusil et un traceur pour chaque tir (`majTirs` de rendu3d.js, de `B.tirs`, que la
+  logique remplit sans rien changer à la partie), un homme qui a très peur se tapit
+  (`TAPI`) ; un fanion sur le parapet de chaque tronçon, à la couleur de celui qui le
+  tient (`majFanions`), déchiré quand l'autre camp y est entré (`B.disputes`), amené puis
+  hissé quand il change de main. Pas encore dessinés (au labo : traverses, fil de fer coupé,
+  sacs retournés quand le tronçon est pris) ; les fusées (variante D) et le tout ensemble
+  (E) n'ont pas été retenus.
+- **Des papiers de campagne** (Jérôme, v0.10.0 ; variantes C et D du sujet « Plaques et journal » du labo) : le HUD est
+  fait de ce qu'un officier a sur lui, pas de plaques toutes pareilles. `.papier` (l'os, l'encre de terre, une ombre d'un
+  cran) : la montre de gousset et son billet (heure, météo, mission), une feuille de situation par régiment choisi
+  (`majFeuilles` de main.js : barre debout / blessés / tombés, l'ordre en mots, un tampon si le moral baisse ; un clic ouvre la
+  fiche), un râtelier d'obus (debout : prêt ; couché : se recharge), des croix au crayon pour les morts (douze, puis un nombre),
+  la fiche en papier, et le **carnet de bord** (`noter`, `raconter` : tronçon pris ou perdu, l'autre camp entré chez nous
+  (`dispute`), assaut et préparation d'en face (`assaut`, `preparation`, de `bataille.js`), déroute, ralliement, nouveau
+  commandant ; quatre lignes à l'écran, la dernière surlignée ; il remplace les bulles d'avant, et n'est pas sauvegardé : il
+  repart à zéro quand on relit une partie). `nomTroncon(B, t)` dit « tronçon 3 de la 1re ligne ».
 - **Six régiments par camp** (Jérôme, v0.7.0 ; huit avant), 750 hommes.
 - **La végétation** (Jérôme, v0.7.0) : l'herbe (`T.herbe`, 0 à 3 par case, tirée de
   la graine ; les obus la soufflent, la boue la tue : rejouée par la sauvegarde),
@@ -57,7 +76,7 @@ la danse macabre, la catastrophe peinte avec calme. L'intention est dans `DESIGN
   corbeaux sur les morts) ; les autres variantes restent au labo.
 - **Le temps qui passe** (Jérôme, v0.8.0) : le soleil (`majSoleil` : les ombres des
   soldats et des arbres tournent et s'allongent), le soir et la nuit (`obscurite` :
-  une trame de terre de 16 h à 18 h, épaisse la nuit), les lumières qui la trouent
+  un voile de terre de 16 h à 18 h, épais la nuit, sans trame depuis la v0.9.3 : `styleNuit`), les lumières qui la trouent
   (`majNuit` : lanternes le long des tranchées tenues, incendies, fusées).
 - **L'écran titre** (Jérôme, v0.8.1) : derrière le titre, le moteur du jeu montre une
   bataille de décor (`decor` de main.js, jamais sauvegardée) : un no man's land
@@ -70,15 +89,15 @@ la danse macabre, la catastrophe peinte avec calme. L'intention est dans `DESIGN
 - **Plus d'arbres** (Jérôme, v0.8.0) : 150 dans le secteur et trois bois serrés (`bois`
   de secteur.js), autant dans les marges.
 - **La nuit et ses corvées** (Jérôme, v0.6.0) : une corvée par régiment (repos,
-  réparer, caillebotis, inhumer, évacuer) ; puis (Jérôme, v0.10.0) les abris profonds
+  réparer, caillebotis, inhumer, évacuer) ; puis (Jérôme, v0.11.0) les abris profonds
   (`etat.abris`), les vivres (`reg.vivres`), le coup de main (`etat.prisonniers`) et
   les tombes dessinées (`etat.tombes`) ; voir `DESIGN.md`.
 - **Le moral et l'expérience** (Jérôme, v0.5.0) : un moral par régiment (`moral`,
   `deroute` dans l'état), l'expérience de chaque homme (`exp` dans la foule), les
-  promotions (`etat.grades`) ; puis (Jérôme, v0.10.0) la contagion de la déroute, le
+  promotions (`etat.grades`) ; puis (Jérôme, v0.11.0) la contagion de la déroute, le
   refus d'un jour (`reg.refus` : le jour refusé), la poursuite d'en face après une
   prise ; voir `DESIGN.md`.
-- **Les ombres et la profondeur** (Jérôme, v0.10.0) : l'ombre d'un soldat ou d'un arbre
+- **Les ombres et la profondeur** (Jérôme, v0.11.0) : l'ombre d'un soldat ou d'un arbre
   est le sol un ton plus sombre (la couleur de paroi de la case), tramée de plus en
   plus claire vers son bout ; le fond d'un creux s'assombrit d'un ton à 1 m, d'un
   autre à 2,5 m, et d'un encore quand il est entouré de parois (`couleurCase`).
@@ -116,12 +135,14 @@ gris) et les deux camps (proposés `#6f86a6` et `#5b5d48`, invisibles sur la bou
 | `o` | `#e4dfd0` | os — le texte, l'éclair d'un obus, le casque des choisis |
 | `n` | `#a9bad0` | bleu horizon — nous |
 | `x` | `#8f9374` | feldgrau — en face |
+| `v` | `#6f8147` | vert mousse — l'herbe qui reprend, par plaques (Jérôme, v0.9.3 : « intégré dans le design, sans grandes différences ») |
+| `w` | `#5c6e3c` | vert sombre — l'herbe dans l'humide |
 
 Un soldat se lit par sa couleur sur un sol sombre, par son ombre (`t`) sur un sol
 clair. Un cratère : le creux un ton plus sombre, la lèvre de terre jetée un ton
 plus clair (sans la lèvre, un cratère dans la boue ne se distinguait pas de la
-boue en gris : échec mesuré). Aucune autre couleur dans le jeu ; seule exception :
-le fond des boîtes de dialogue (`::backdrop` de `game.css`).
+boue en gris : échec mesuré). Aucune autre couleur dans le jeu ; exceptions : le fond des boîtes de dialogue (`::backdrop` de `game.css`) et la
+nuit (le voile continu et ses halos mélangent la terre, le sol et l'os : des couleurs qui ne sont pas dans la palette ; Jérôme, v0.9.3).
 
 ### Échelle
 
@@ -146,8 +167,8 @@ le fond des boîtes de dialogue (`::backdrop` de `game.css`).
 | Marcher (sur une tranchée : l'occuper) | — | clic droit ; ou, réglage « tout au bouton gauche », clic sur le sol (Échap laisse les régiments choisis) |
 | Barrage de 75, 155, 220 | 1, 2, 3 (touche physique) puis clic | bouton de la batterie puis clic |
 | Arrêter le temps (pause active) | Espace | — |
-| Déplacer la vue | flèches, ZQSD / WASD (selon l'écran) | glisser avec le bouton du milieu (la molette) |
-| Tourner, incliner la vue | A et E (Q et E en QWERTY), R et F (touches physiques, en continu) | glisser avec le bouton droit |
+| Déplacer la vue | flèches, ZQSD / WASD (selon l'écran) | Maj + glisser avec le bouton du milieu (la molette) |
+| Tourner, incliner la vue | A et E (Q et E en QWERTY), R et F (touches physiques, en continu) | glisser avec le bouton du milieu (ou le droit) ; le cadran en bas à droite (Jérôme, v0.9.1) |
 | Zoom | + et − | molette |
 | Menu (pause) | Échap (annule d'abord un barrage visé) | bouton du HUD |
 
@@ -205,7 +226,7 @@ le fond des boîtes de dialogue (`::backdrop` de `game.css`).
   à `coupPortee`).
 - `js/champs.js` — les champs de coûts : le terrain résumé en carrés de 4 m
   (`couts`, un octet), Dial, une direction par carré ; cache par but et version.
-- `js/bataille.js` — l'état d'une partie et ses règles : `nouvelleBataille`,
+- `js/bataille.js` — l'état d'une partie et ses règles (`tirs`, `disputes` : pour le dessin seulement, jamais sauvegardés) : `nouvelleBataille`,
   `avancer` (un pas de 1/30 s), ordres (`ordonnerMarche`, `ordonnerBarrage` :
   ils rendent `{ refus }`), en face (barrages sur nos hommes les plus serrés,
   assauts sur nos tranchées), les tronçons (`prises` toutes les 15 pas,
@@ -246,14 +267,13 @@ le fond des boîtes de dialogue (`::backdrop` de `game.css`).
   garde la couleur du dessus. `deplacerEcran`, `tourner`, `placerCamera`.
 - `js/main.js` — écran titre → bataille → nuit → fin ; le zoom et la caméra
   gardés dans `cyclopeen:prefs` ; les fiches (un homme, un régiment ; Échap
-  les ferme), le repère de l'homme et la bulle du survol (`majBulle`, chaque image) ; HUD (horloge, prévision,
-  morts des deux camps, batteries, régiments choisis, noms de nos régiments au-
-  dessus d'eux) ; commandes ; sauvegarde ; mise à jour ; mode debug ;
+  les ferme), le repère de l'homme et la bulle du survol (`majBulle`, chaque image) ; HUD en papiers de campagne (montre, feuilles de situation, carnet de bord,
+  croix des morts, râtelier d'obus, noms de nos régiments au-dessus d'eux) ; commandes ; sauvegarde ; mise à jour ; mode debug ;
   `window.cyclopStats()`.
 - `index.html`, `css/style.css` — l'écran, le HUD et les dialogues (palette du jeu).
 - `labo.html`, `js/labo.js` — le labo : échelle, sols et cratères (couleur et
   gris), palette, le moteur en direct (zoom 4, zoom 1, après un jour de pluie,
-  gel), la caméra (perspective et respiration / immobile / sans perspective / plus
+  gel), le sol vert (`verdure` d'apparence.js : taches, plaques, prairie ; retenu : les plaques), la nuit sans trame (`styleNuit` de rendu3d.js : trame, voile continu, voile et halos ; retenu : voile et halos), les plaques et le journal de l'interface, l'attaque d'une tranchée (frise du temps), la caméra (perspective et respiration / immobile / sans perspective / plus
   de perspective / respiration marquée), les calibres. Les
   sujets du moteur affichent ce que coûte le dessin et proposent les zooms.
 - `atelier.html`, `js/atelier.js`, `js/design-store.js` — l'atelier : les réglages
@@ -377,6 +397,7 @@ node outils/stamp-version.mjs            # après chaque changement de version.j
   logiciel). Les touffes s'arrêtent à 1,25 fois la distance du point visé, et un arbre
   plus loin que 1,3 fois (160 m au moins) n'est qu'un tronc : 18 à 27 images/s. Un seuil
   fixe de 70 m coupait l'herbe du jeu, où la caméra est haute (essayé, v0.8.2).
+- **La nuit sans trame, mesurée** (labo, v0.9.3 ; 2 000 soldats, rendu logiciel, dessin attendu jusqu'au bout) : tout dézoomé, jour 54 ms, trame 63, voile continu 59, voile et halos 61 ; au zoom 4, jour 60, trame 71, voile 63, halos 65. Le voile continu n'est pas plus cher que la trame (le plan plein écran fait la même lecture de texture, sans le test de trame) ; il crée des couleurs hors palette. Adopté (voile et halos).
 - **La nuit sans couleur nouvelle** : la palette n'a pas de « nuit » ; le soir et la
   nuit sont une trame (Bayer 4 × 4) de la couleur la plus sombre, trouée en douceur
   autour des lumières, peintes chaque image dans une petite carte (un quart de la
@@ -404,12 +425,12 @@ node outils/stamp-version.mjs            # après chaque changement de version.j
 - **Le refus d'un jour se juge sur le moral du soir** (avant que la nuit n'en rende une
   part) : jugé à l'aube, il ne venait presque jamais (il fallait un moral de 0,02 le
   soir). La contagion porte à 150 m : deux régiments côte à côte sont à ~130 m l'un de
-  l'autre, et à 80 m seul celui de derrière s'en ressentait (v0.10.0).
+  l'autre, et à 80 m seul celui de derrière s'en ressentait (v0.11.0).
 - **Les abris ne changent pas le terrain** (ils sont dans l'état, pas dans `diff`) : la
   sauvegarde n'a rien à rejouer ; un 220 qui les crève le fait pendant le jour, dans
   `tomber`, et l'état sauvegardé le garde.
 - **Une ombre opaque d'une seule couleur** (`t`) se lisait comme un trou (Jérôme,
-  v0.10.0) : elle prend la couleur du sol un ton plus sombre, tramée vers son bout
+  v0.11.0) : elle prend la couleur du sol un ton plus sombre, tramée vers son bout
   (une lecture de texture de plus par pixel d'ombre : 77 ms au lieu de 73 au zoom 4,
   8 000 soldats, dessin attendu jusqu'au bout ; de l'ordre du bruit de la mesure).
 - **Les petites batailles des tests durent trois jours** (`jours: 3` de `petite`) :
@@ -417,11 +438,15 @@ node outils/stamp-version.mjs            # après chaque changement de version.j
 - **Le moral trop vif** : à 0,03 par seconde de peur, un seul barrage mettait un
   régiment en déroute en 30 s, et il se ralliait aussi vite ; à 0,006 (et un retour
   de 0,0015), une déroute dure le reste du jour (mesuré, 1 000 hommes par camp).
+- **Les fanions et les tirs coûtent** (rendu logiciel, 8 000 soldats) : des boîtes de
+  12 triangles pour 128 tronçons ajoutaient 3 000 triangles et ~10 ms tout dézoomé ; des
+  plans de 2 triangles ne coûtent presque rien (v0.9.2). Les tirs sont vidés à chaque image
+  et plafonnés à 160 points : tout dézoomé, il y en aurait des milliers.
 - **Le clic droit et les gestes de Firefox** (Jérôme, v0.3.3) : un clic droit glissé
   déclenchait les gestes du navigateur (ou d'une extension). `main.js` empêche
   `pointerdown` des boutons droit et du milieu sur le canvas (ce qui supprime
   mousedown et mouseup) et arrête mousedown, mouseup, auxclick, contextmenu à la
   capture. Une extension installée avant la page peut encore les lire : d'où le
-  réglage « tout au bouton gauche ».
+  réglage « tout au bouton gauche » et, pour la caméra, le bouton du milieu et le cadran à l'écran (v0.9.1 : tourner au clic droit restait gêné par les gestes de souris de Firefox).
 - Ordre des tirages : `nouvelleBataille` tire la météo (une branche du générateur),
   puis les positions de départ. Changer cet ordre change toutes les batailles.

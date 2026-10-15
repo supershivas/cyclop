@@ -1,9 +1,26 @@
 # Journal des versions
 
-## 0.10.0 — 2026-10-15
+## 0.11.0 — 2026-10-15
 - La nuit : creuser des abris, ravitailler, tenter un coup de main ; les morts inhumés ont une tombe
 - Une déroute gagne les voisins ; un régiment brisé refuse de monter un jour ; en face poursuit après une prise
 - Des ombres plus douces, posées sur le sol ; les cratères et les tranchées plus profonds à l'œil
+
+## 0.10.0 — 2026-10-15
+- L'interface devient des papiers de campagne : une montre, des feuilles de situation par régiment choisi, un râtelier d'obus, des croix au crayon pour les morts
+- Un carnet de bord note les événements marquants à l'heure où ils arrivent (tronçon pris ou perdu, assaut, déroute)
+
+## 0.9.3 — 2026-10-15
+- Le sol se nuance de vert, discrètement
+- La nuit sans trame : un voile continu, des halos chauds autour des lanternes, des feux et des fusées
+- On peut zoomer tout près des soldats (12 et 16 pixels par mètre)
+
+## 0.9.2 — 2026-10-15
+- Le feu se voit : un éclair et un trait clair à chaque tir, les hommes terrifiés se tapissent
+- Chaque tronçon de tranchée porte un fanion à la couleur de celui qui le tient : déchiré quand l'autre camp y entre, amené puis hissé quand il tombe
+
+## 0.9.1 — 2026-10-15
+- La vue se tourne et s'incline avec le bouton du milieu, ou avec un petit cadran en bas à droite : plus de gêne avec les gestes de souris de Firefox
+- Maj + bouton du milieu déplace la vue
 
 ## 0.9.0 — 2026-10-15
 

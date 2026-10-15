@@ -138,7 +138,7 @@ mourir dans la nuit ; les corps laissés autour d'un régiment pèsent sur son m
 matin. En face fait ses corvées lui aussi. À l'aube, le bilan de la nuit, en deux
 lignes. (Jérôme, v0.6.0)
 
-Puis (v0.10.0) : creuser des abris profonds sous sa tranchée (une nuit par niveau,
+Puis (v0.11.0) : creuser des abris profonds sous sa tranchée (une nuit par niveau,
 trois niveaux : les obus y tuent de moins en moins ; un 220 tombé dans le tronçon en
 crève un ; un tronçon pris garde ses abris, pour l'autre camp) ; ravitailler (des
 vivres pour trois nuits : sans eux, la nuit repose moins et le moral baisse) ; le
@@ -160,7 +160,7 @@ plus, jusqu'à ce qu'il se rallie. On le refuse à voix haute (« Céruléen est
 ébranlé : il ne sortira pas »). En face obéit aux mêmes règles : ses assauts se
 brisent sur le moral avant de se briser sur les pertes.
 
-Puis (v0.10.0) : une déroute gagne les voisins (le moral des régiments du même
+Puis (v0.11.0) : une déroute gagne les voisins (le moral des régiments du même
 camp autour de lui tombe, d'autant plus qu'ils sont près). Un régiment brisé le soir
 (moral au plus bas, plus d'un tiers de ses hommes perdus) peut refuser de monter de
 toute la journée suivante : il tient sa tranchée, rien de plus — le Discours de la

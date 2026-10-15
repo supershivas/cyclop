@@ -1,23 +1,23 @@
 // Le cycle de vie : écran titre → bataille → nuit → fin ; pause active,
 // réglages, sauvegarde, mise à jour, debug. Les règles sont dans bataille.js
 // (pures), le dessin dans rendu3d.js (il ne modifie jamais l'état).
-import { createLoop } from './lib/loop.js?v=0.10.0';
-import { createKeys, stopTypeahead } from './lib/keys.js?v=0.10.0';
-import { createPointer, lockBrowserGestures } from './lib/pointer.js?v=0.10.0';
-import { createGamepad } from './lib/gamepad.js?v=0.10.0';
-import { createStore, autosave, pickJSONFile } from './lib/save.js?v=0.10.0';
-import { startUpdateCheck, loadVersion, loadChangelog, downloadJSON } from './lib/app-update.js?v=0.10.0';
-import { ROLES } from './palette.js?v=0.10.0';
-import { MISSIONS, nouvelleBataille, avancer, aube, ordonnerMarche, ordonnerBarrage, horloge, effectifs, tronconsTenus, moralEnMots, terrainSous, rangDe, photo, restaurer, PAS, NOUS } from './bataille.js?v=0.10.0';
-import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.10.0';
-import { METEO } from './data/meteo.js?v=0.10.0';
-import { impact, hydroLignes } from './terrain.js?v=0.10.0';
-import { hash2 } from './lib/rng.js?v=0.10.0';
-import { creerRendu, CAMERA } from './rendu3d.js?v=0.10.0';
-import { identite, etatEnMots, experienceEnMots } from './identite.js?v=0.10.0';
-import { CORVEES } from './data/corvees.js?v=0.10.0';
-import { refusCorvee } from './nuit.js?v=0.10.0';
-import { chargerContenu } from './design-store.js?v=0.10.0';
+import { createLoop } from './lib/loop.js?v=0.11.0';
+import { createKeys, stopTypeahead } from './lib/keys.js?v=0.11.0';
+import { createPointer, lockBrowserGestures } from './lib/pointer.js?v=0.11.0';
+import { createGamepad } from './lib/gamepad.js?v=0.11.0';
+import { createStore, autosave, pickJSONFile } from './lib/save.js?v=0.11.0';
+import { startUpdateCheck, loadVersion, loadChangelog, downloadJSON } from './lib/app-update.js?v=0.11.0';
+import { ROLES } from './palette.js?v=0.11.0';
+import { MISSIONS, nouvelleBataille, avancer, aube, ordonnerMarche, ordonnerBarrage, horloge, effectifs, tronconsTenus, moralEnMots, terrainSous, rangDe, nomTroncon, photo, restaurer, PAS, NOUS } from './bataille.js?v=0.11.0';
+import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.11.0';
+import { METEO } from './data/meteo.js?v=0.11.0';
+import { impact, hydroLignes } from './terrain.js?v=0.11.0';
+import { hash2 } from './lib/rng.js?v=0.11.0';
+import { creerRendu, CAMERA } from './rendu3d.js?v=0.11.0';
+import { identite, etatEnMots, experienceEnMots } from './identite.js?v=0.11.0';
+import { CORVEES } from './data/corvees.js?v=0.11.0';
+import { refusCorvee } from './nuit.js?v=0.11.0';
+import { chargerContenu } from './design-store.js?v=0.11.0';
 
 const JEU = 'cyclopeen';
 const $ = id => document.getElementById(id);
@@ -127,6 +127,7 @@ function jouer(bataille) {
   if (prefs.camera?.tangage) rendu.placerCamera(prefs.camera.yaw, prefs.camera.tangage); else rendu.placerCamera(CAMERA.yaw, CAMERA.tangage);
   choisis = new Set(); rendu.choisis = choisis;
   modeBarrage = null; pauseActive = false; fermerFiche();
+  journal.length = 0; majCarnet(); feuillesVues = '';
   $('titre').hidden = true;
   $('hud').hidden = false;
   etiquettes();
@@ -327,6 +328,72 @@ function dire(r) { if (r?.refus) toast(r.refus); return r; }
 
 // ─── Le HUD ────────────────────────────────────────────────────────────────
 const deux = n => String(n).padStart(2, '0');
+// Une croix au crayon par mort (douze au plus, le reste en nombre)
+const croix = n => n <= 12 ? '✕'.repeat(n) : `${'✕'.repeat(12)} +${n - 12}`;
+const ligneEnMots = rang => rang === 0 ? '1re ligne' : `${rang + 1}e ligne`;
+const ordreEnMots = r => r.deroute ? 'en déroute' : r.ordre.trace ? `tient la ${ligneEnMots(r.ordre.trace.ligne % 10)}` : 'en marche';
+
+// Les feuilles de situation : une par régiment choisi (trois au plus) ; un clic ouvre la fiche
+let feuillesVues = '';
+function majFeuilles() {
+  const e = B.etat, regs = [...choisis].map(id => e.regiments[id]).filter(Boolean);
+  const cle = regs.map(r => `${r.id}:${r.effectif}:${r.pertes}:${r.deroute ? 1 : 0}:${moralEnMots(r, R)}:${r.ordre.trace ? r.ordre.trace.ligne : 'm'}:${B.armee.n}`).join('|');
+  if (cle === feuillesVues) return;
+  feuillesVues = cle;
+  const A = B.armee;
+  const els = regs.slice(0, 3).map(r => {
+    let blesses = 0;
+    for (let i = 0; i < A.n; i++) if (A.reg[i] === r.id && A.blessure[i]) blesses++;
+    const debout = Math.max(0, r.effectif - blesses), pc = n => `${(n / r.initial * 100).toFixed(1)}%`;
+    const humeur = moralEnMots(r, R), tampon = humeur.startsWith('tient') ? '' : humeur;
+    const b = document.createElement('button');
+    b.className = 'feuille'; b.setAttribute('aria-label', `${r.nom} : ${debout} debout, ${blesses} blessés, ${r.pertes} tombés, ${ordreEnMots(r)}${tampon ? `, ${tampon}` : ''}`);
+    b.innerHTML = `<div class="tete">${r.nom}<span>situation</span></div>
+      <div class="barre"><i class="debout" style="width:${pc(debout)}"></i><i class="blesses" style="width:${pc(blesses)}"></i><i class="tombes" style="width:${pc(r.pertes)}"></i></div>
+      <div class="compte">${debout} debout · ${blesses} blessés · ${r.pertes} tombés</div>
+      <div class="ordre">${ordreEnMots(r)}</div>${tampon ? `<span class="tampon">${tampon}</span>` : ''}`;
+    b.onclick = () => montrerRegiment(r.id);
+    return b;
+  });
+  if (regs.length > 3) { const b = document.createElement('div'); b.className = 'papier feuille reste'; b.textContent = `+ ${regs.length - 3} autres régiments`; els.push(b); }
+  $('feuilles').replaceChildren(...els);
+}
+
+// Les événements de la bataille, racontés au carnet de bord (la boucle et le mode debug)
+function raconter(ev) {
+    for (const p of ev) {
+      const reg = p.reg !== undefined ? B.etat.regiments[p.reg] : null;
+      if (p.type === 'prise') noter(`${p.camp === NOUS ? 'Pris' : 'Perdu'} : ${nomTroncon(B, p.troncon)}.`);
+      else if (p.type === 'dispute') noter(`Ceux d'en face sont dans le ${nomTroncon(B, p.troncon)}.`);
+      else if (p.type === 'preparation') noter(`En face prépare au 220 sur le ${nomTroncon(B, p.troncon)}.`);
+      else if (p.type === 'poursuite') noter(`${reg.nom ? `${reg.nom} d'en face` : 'Un régiment d\'en face'} poursuit sur notre ligne suivante.`);
+      else if (p.type === 'assaut') noter(`${reg.nom ? `${reg.nom} d'en face` : 'Un régiment d\'en face'} sort de ses tranchées${p.troncon >= 0 ? ` : ${nomTroncon(B, p.troncon)}` : ''}.`);
+      else if (p.camp !== NOUS) continue;
+      else if (p.type === 'deroute') noter(`${reg.nom} est en déroute.`);
+      else if (p.type === 'ralliement') noter(`${reg.nom} se rallie.`);
+      else if (p.type === 'promu' && p.rang === 0) { const { qui } = quiEst(p.id); noter(`${qui.prenom} ${qui.nom} commande ${reg.nom}.`); }
+    }
+}
+// Le carnet de bord : les événements marquants, à l'heure où ils arrivent (la mémoire de la pause active)
+const journal = [];
+function noter(texte) {
+  const h = horloge(B);
+  journal.push([`${h.heure} h ${deux(h.minute)}`, texte]);
+  if (journal.length > 40) journal.shift();
+  majCarnet();
+}
+function majCarnet() {
+  const L = journal.slice(-4);
+  $('carnet').hidden = !L.length;
+  $('carnet-liste').replaceChildren(...L.map(([t, texte], k) => {
+    const li = document.createElement('li');
+    if (k === L.length - 1) li.className = 'recent';
+    const b = document.createElement('b'); b.textContent = t;
+    li.append(b, texte);
+    return li;
+  }));
+}
+
 function majHud() {
   if (!B) return;
   const h = horloge(B), e = B.etat;
@@ -334,8 +401,11 @@ function majHud() {
   $('demain').textContent = h.prevision ? `Demain : ${METEO[h.prevision].prevision}` : 'Dernier jour';
   $('mission').hidden = !e.mission;
   if (e.mission) $('mission').textContent = `${e.mission === 'tenir' ? 'Tenir le secteur' : 'Prendre leur première ligne'} · réserve : ${e.reserves[NOUS]}`;
+  $('montre-m').style.transform = `rotate(${h.minute * 6}deg)`; $('montre-m').style.transformOrigin = '32px 32px';
+  $('montre-h').style.transform = `rotate(${((h.heure % 12) + h.minute / 60) * 30}deg)`; $('montre-h').style.transformOrigin = '32px 32px';
   $('morts-nous').textContent = e.pertes[0];
   $('morts-eux').textContent = e.pertes[1];
+  $('croix-nous').textContent = croix(e.pertes[0]); $('croix-eux').textContent = croix(e.pertes[1]);
   $('blesses-nous').textContent = e.blesses[0];
   $('blesses-eux').textContent = e.blesses[1];
   $('lignes').hidden = !e.tranchees;
@@ -348,16 +418,15 @@ function majHud() {
     b.classList.toggle('vise', modeBarrage === cal);
     b.classList.toggle('recharge', reste > 0);
   }
-  const regs = [...choisis].map(id => e.regiments[id]).filter(Boolean);
-  const humeur = r => { const m = moralEnMots(r, R); return m.startsWith('tient') ? '' : ` (${m})`; };
-  $('choix').textContent = regs.length ? regs.map(r => `${r.nom} ${r.effectif}${humeur(r)}`).join(' · ') : '';
+  majFeuilles();
   $('ecran').classList.toggle('vise', !!modeBarrage);
 }
 $('batteries').append(...NOMS_CALIBRES.map((cal, k) => {
   const b = document.createElement('button');
   b.className = 'batterie'; b.dataset.cal = cal;
   b.setAttribute('aria-label', `Barrage de ${cal} (touche ${k + 1})`);
-  b.innerHTML = `<b>${cal}</b><span>prête</span>`;
+  const H = { 75: 34, 155: 44, 220: 54 }[cal] || 40, W = { 75: 12, 155: 16, 220: 20 }[cal] || 14;
+  b.innerHTML = `<svg viewBox="0 0 ${W + 4} ${H + 4}" aria-hidden="true"><path d="M2 ${H + 2}V${Math.round(H * 0.45)}Q${2 + W / 2} 1 ${2 + W} ${Math.round(H * 0.45)}V${H + 2}Z"/><rect class="ceinture" x="2" y="${H - 8}" width="${W}" height="3"/></svg><b>${cal}</b><span>prête</span>`;
   b.onclick = () => viser(cal);
   return b;
 }));
@@ -647,6 +716,20 @@ function zoomer(d, ancre) { rendu.zoomer(d, ancre); prefs.zoom = rendu.vue.zoom;
 
 const cadre = $('cadre');
 let glisse = null;
+
+// Le cadran de la vue (à l'écran) : tourner et incliner sans souris à gestes, un bouton tenu enfoncé est lu en continu
+const cadran = { tour: 0, incl: 0 };
+for (const b of $('cadran').querySelectorAll('button')) {
+  const dir = { tour: Number(b.dataset.tour || 0), incl: Number(b.dataset.incl || 0) };
+  const lacher = () => { cadran.tour = 0; cadran.incl = 0; };
+  b.onpointerdown = e => { if (e.button) return; e.preventDefault(); cadran.tour = dir.tour; cadran.incl = dir.incl; };
+  b.onclick = e => { if (e.detail === 0 && dir.tour + dir.incl) rendu.tourner(dir.tour * 0.1, dir.incl * 0.06); };   // au clavier : un cran
+  b.onpointerup = b.onpointerleave = b.onpointercancel = lacher;
+}
+$('cadran-centre').onclick = () => {
+  rendu.placerCamera(CAMERA.yaw, CAMERA.tangage);
+  prefs.camera = null; store.save('prefs', prefs);
+};
 createPointer($('canvas'), {
   threshold: 6,
   onTap: p => {
@@ -690,15 +773,15 @@ createPointer($('canvas'), {
   onDragStart: p => { glisse = { bouton: p.button, x0: p.startX, y0: p.startY, cx: rendu.vue.cx, cz: rendu.vue.cz, ddx: p.dx, ddy: p.dy }; },
   onDrag: p => {
     if (!glisse) return;
-    if (glisse.bouton === 1) {
-      // glisser avec la molette : déplacer la vue (le terrain suit la souris)
+    if (glisse.bouton === 1 && p.event.shiftKey) {
+      // Maj + glisser avec la molette : déplacer la vue (le terrain suit la souris)
       const k = (window.devicePixelRatio || 1) / rendu.vue.facteur / rendu.ppm;
       rendu.vue.cx = glisse.cx; rendu.vue.cz = glisse.cz;
       rendu.deplacerEcran(-p.dx * k, -p.dy * k);
       return;
     }
-    if (glisse.bouton === 2) {
-      // glisser avec le bouton droit : tourner (de gauche à droite) et incliner (de haut en bas) la caméra, un peu
+    if (glisse.bouton === 1 || glisse.bouton === 2) {
+      // glisser avec la molette (ou le bouton droit) : tourner (de gauche à droite) et incliner (de haut en bas) la caméra, un peu
       rendu.tourner((p.dx - glisse.ddx) * 0.004, -(p.dy - glisse.ddy) * 0.003);
       glisse.ddx = p.dx; glisse.ddy = p.dy;
       return;
@@ -709,7 +792,7 @@ createPointer($('canvas'), {
   },
   onDragEnd: p => {
     cadre.hidden = true;
-    if (glisse?.bouton === 2) { prefs.camera = { yaw: rendu.vue.cible.yaw, tangage: rendu.vue.cible.tangage }; store.save('prefs', prefs); }
+    if (glisse?.bouton === 1 || glisse?.bouton === 2) { prefs.camera = { yaw: rendu.vue.cible.yaw, tangage: rendu.vue.cible.tangage }; store.save('prefs', prefs); }
     if (!glisse || glisse.bouton !== 0 || !enJeu()) { glisse = null; return; }
     glisse = null;
     // choisir au cadre : les régiments dont au moins un homme est dans le cadre (à l'écran)
@@ -737,14 +820,7 @@ const loop = createLoop({
     const ms = performance.now() - t0;
     perf.sim += (ms - perf.sim) * 0.05; perf.pas++;
     evenements.push(...ev);
-    for (const p of ev) {
-      if (p.type === 'prise') toast(p.camp === NOUS ? 'Un tronçon pris.' : 'Un tronçon perdu.');
-      else if (p.camp !== NOUS) continue;
-      else if (p.type === 'deroute') toast(`${B.etat.regiments[p.reg].nom} est en déroute.`);
-      else if (p.type === 'ralliement') toast(`${B.etat.regiments[p.reg].nom} se rallie.`);
-      else if (p.type === 'poursuite') toast('En face poursuit : il monte sur la ligne suivante.');
-      else if (p.type === 'promu' && p.rang === 0) { const { qui } = quiEst(p.id); toast(`${qui.prenom} ${qui.nom} prend le commandement de ${B.etat.regiments[p.reg].nom}.`); }
-    }
+    raconter(ev);
     if (ev.some(e => e.type === 'nuit')) { montrerNuit(); }
     if (ev.some(e => e.type === 'fin')) { montrerFin(); }
   },
@@ -759,7 +835,7 @@ const loop = createLoop({
       const ax = k.x || m.x, ay = k.y || m.y;
       if (ax || ay) rendu.deplacerEcran(ax * dt * 260 / rendu.ppm, ay * dt * 260 / rendu.ppm);
       // tourner : A et E (Q et E en QWERTY), incliner : R et F — touches physiques, lues en continu
-      const tour = (keys.held('KeyE') ? 1 : 0) - (keys.held('KeyQ') ? 1 : 0), incl = (keys.held('KeyF') ? 1 : 0) - (keys.held('KeyR') ? 1 : 0);
+      const tour = (keys.held('KeyE') ? 1 : 0) - (keys.held('KeyQ') ? 1 : 0) + cadran.tour, incl = (keys.held('KeyF') ? 1 : 0) - (keys.held('KeyR') ? 1 : 0) + cadran.incl;
       if (tour || incl) {
         rendu.tourner(tour * dt * 0.9, incl * dt * 0.5);
         prefs.camera = { yaw: rendu.vue.cible.yaw, tangage: rendu.vue.cible.tangage };
@@ -795,7 +871,7 @@ startUpdateCheck({
 
 // ─── Mode debug (section 18) : chargé seulement avec ?debug=1 ──────────────
 if (DEBUG) {
-  const { installDebug, seedFromUrl } = await import('./lib/debug.js?v=0.10.0');
+  const { installDebug, seedFromUrl } = await import('./lib/debug.js?v=0.11.0');
   window.__seed = seedFromUrl() ?? undefined;
   installDebug({
     state: () => B && { ...horloge(B), effectifs: effectifs(B), pertes: B.etat.pertes, impacts: B.etat.impacts.length, enJeu: enJeu(), pause: loop.paused },
@@ -815,7 +891,8 @@ if (DEBUG) {
             if ($('dialogue-nuit').open) $('dialogue-nuit').close(); else aube(B);
             if ($('dialogue-aube').open) $('dialogue-aube').close();
           }
-          evenements.push(...avancer(B));
+          const ev = avancer(B);
+          evenements.push(...ev); raconter(ev);
         }
         majHud();
         return horloge(B);

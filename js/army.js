@@ -25,8 +25,8 @@
      (rng.js), pour que la même graine rejoue la même bataille.
 
    Logique pure : aucun DOM. Le rendu lit les tableaux (rendu3d.js). */
-import { hauteurQ, etat, vitesseEtat } from './terrain.js?v=0.10.0';
-import { ligneY } from './tranchees.js?v=0.10.0';
+import { hauteurQ, etat, vitesseEtat } from './terrain.js?v=0.11.0';
+import { ligneY } from './tranchees.js?v=0.11.0';
 
 export const GRILLE = 2;           // m : cases de voisinage
 export const DENSITE = 8;          // m : carrés de densité (tir)
@@ -228,6 +228,7 @@ function tirer(A, i, o, ctx) {
     }
   }
   if (best < 0) return false;
+  if (ctx.tir) { const bxx = best % dw; ctx.tir(i, (bxx + 0.5) * DENSITE, ((best - bxx) / dw + 0.5) * DENSITE); }   // pour le dessin : un tir part (jamais l'état)
   const chance = P.precision * Math.min(1, bestN / P.densite) * (1 + R.experience.adresse * A.exp[i]);
   if (rng() >= chance) return true;
   // la victime : un ennemi du carré, au hasard
