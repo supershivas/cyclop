@@ -1,23 +1,23 @@
 // Le cycle de vie : écran titre → bataille → nuit → fin ; pause active,
 // réglages, sauvegarde, mise à jour, debug. Les règles sont dans bataille.js
 // (pures), le dessin dans rendu3d.js (il ne modifie jamais l'état).
-import { createLoop } from './lib/loop.js?v=0.12.1';
-import { createKeys, stopTypeahead } from './lib/keys.js?v=0.12.1';
-import { createPointer, lockBrowserGestures } from './lib/pointer.js?v=0.12.1';
-import { createGamepad } from './lib/gamepad.js?v=0.12.1';
-import { createStore, autosave, pickJSONFile } from './lib/save.js?v=0.12.1';
-import { startUpdateCheck, loadVersion, loadChangelog, downloadJSON } from './lib/app-update.js?v=0.12.1';
-import { ROLES } from './palette.js?v=0.12.1';
-import { MISSIONS, nouvelleBataille, avancer, aube, ordonnerMarche, ordonnerBarrage, horloge, effectifs, tronconsTenus, moralEnMots, terrainSous, rangDe, nomTroncon, photo, restaurer, PAS, NOUS } from './bataille.js?v=0.12.1';
-import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.12.1';
-import { METEO } from './data/meteo.js?v=0.12.1';
-import { impact, hydroLignes } from './terrain.js?v=0.12.1';
-import { hash2 } from './lib/rng.js?v=0.12.1';
-import { creerRendu, CAMERA } from './rendu3d.js?v=0.12.1';
-import { identite, etatEnMots, experienceEnMots } from './identite.js?v=0.12.1';
-import { CORVEES } from './data/corvees.js?v=0.12.1';
-import { refusCorvee } from './nuit.js?v=0.12.1';
-import { chargerContenu } from './design-store.js?v=0.12.1';
+import { createLoop } from './lib/loop.js?v=0.13.0';
+import { createKeys, stopTypeahead } from './lib/keys.js?v=0.13.0';
+import { createPointer, lockBrowserGestures } from './lib/pointer.js?v=0.13.0';
+import { createGamepad } from './lib/gamepad.js?v=0.13.0';
+import { createStore, autosave, pickJSONFile } from './lib/save.js?v=0.13.0';
+import { startUpdateCheck, loadVersion, loadChangelog, downloadJSON } from './lib/app-update.js?v=0.13.0';
+import { ROLES } from './palette.js?v=0.13.0';
+import { MISSIONS, nouvelleBataille, avancer, aube, ordonnerMarche, ordonnerBarrage, horloge, effectifs, tronconsTenus, moralEnMots, terrainSous, rangDe, nomTroncon, photo, restaurer, PAS, NOUS } from './bataille.js?v=0.13.0';
+import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.13.0';
+import { METEO } from './data/meteo.js?v=0.13.0';
+import { impact, hydroLignes } from './terrain.js?v=0.13.0';
+import { hash2 } from './lib/rng.js?v=0.13.0';
+import { creerRendu, CAMERA } from './rendu3d.js?v=0.13.0';
+import { identite, etatEnMots, experienceEnMots } from './identite.js?v=0.13.0';
+import { CORVEES } from './data/corvees.js?v=0.13.0';
+import { refusCorvee } from './nuit.js?v=0.13.0';
+import { chargerContenu } from './design-store.js?v=0.13.0';
 
 const JEU = 'cyclopeen';
 const $ = id => document.getElementById(id);
@@ -126,7 +126,7 @@ function jouer(bataille) {
   // la caméra du joueur (ou celle de départ : l'écran titre a la sienne) ; un réglage de la v0.2, sans tangage, est ignoré
   if (prefs.camera?.tangage) rendu.placerCamera(prefs.camera.yaw, prefs.camera.tangage); else rendu.placerCamera(CAMERA.yaw, CAMERA.tangage);
   choisis = new Set(); rendu.choisis = choisis;
-  modeBarrage = null; pauseActive = false; fermerFiche();
+  modeBarrage = null; pauseActive = false; fermerFiche(); fermerNuit();
   journal.length = 0; majCarnet(); feuillesVues = '';
   $('titre').hidden = true;
   $('hud').hidden = false;
@@ -145,7 +145,7 @@ function pause() {
   $('dialogue-pause').showModal();
 }
 function reprendre() {
-  if (!enJeu() || pauseActive || B.etat.phase !== 'jour' || document.querySelector('dialog[open]')) return;
+  if (!enJeu() || pauseActive || nuitEtat || B.etat.phase !== 'jour' || document.querySelector('dialog[open]')) return;
   loop.resume();
 }
 
@@ -206,42 +206,67 @@ function enLignes([pris, perdus]) {
   if (!pris && !perdus) return 'Les lignes n\'ont pas bougé.';
   return [pris && `pris ${tron(pris)}`, perdus && `perdu ${tron(perdus)}`].filter(Boolean).join(', ').replace(/^./, c => c.toUpperCase()) + '.';
 }
+// Le papier de la nuit : un état (choix des corvées, puis le bilan de l'aube), jamais une boîte de dialogue : le champ reste
+// là, on choisit des régiments (clic, cadre, T) et on leur donne une corvée (Jérôme, v0.13.0)
+let nuitEtat = null;                 // 'choix' | 'aube' | null
+let corveesNuit = {};                // la corvée de chacun de nos régiments cette nuit (id → corvée)
+const corveeDe = id => CORVEES.find(c => c.id === id)?.nom || '';
+const nosRegiments = () => B.etat.regiments.filter(r => r.camp === NOUS && r.effectif);
 function montrerNuit() {
   loop.pause(); sauvegarder();
-  const e = B.etat, j = e.jour, [nous, eux] = e.pertesJour[j - 1];
+  const e = B.etat, j = e.jour, [nous, eux] = e.pertesJour[j - 1], avant = e.nuits.at(-1)?.choix || {};
   $('nuit-titre').textContent = `Nuit du ${nomJour(j)} au ${nomJour(j + 1)} jour`;
   $('nuit-pertes').textContent = `Morts du jour : ${nous} des nôtres, ${eux} en face.`;
   $('nuit-lignes').textContent = e.tranchees ? enLignes(e.prises[j - 1]) : '';
   $('nuit-demain').textContent = `Demain : ${METEO[e.previsions[j - 1]]?.prevision || '—'}.`;
   $('nuit-reserves').textContent = e.mission ? `En réserve : ${pluriel(e.reserves[NOUS], 'régiment frais', 'régiments frais')}.` : '';
-  montrerCorvees();
-  $('dialogue-nuit').showModal();
-}
-// Une corvée par régiment : la dernière donnée, si elle est encore possible, sinon le repos
-function montrerCorvees() {
-  const e = B.etat, A = B.armee, avant = e.nuits.at(-1)?.choix || {};
-  const blesses = new Map();
-  for (let i = 0; i < A.n; i++) if (A.blessure[i]) blesses.set(A.reg[i], (blesses.get(A.reg[i]) || 0) + 1);
-  $('corvees').replaceChildren(...e.regiments.filter(r => r.camp === NOUS && r.effectif).map(reg => {
-    const ligne = document.createElement('div'); ligne.className = 'corvee';
-    const qui = document.createElement('p');
-    qui.innerHTML = `<b></b> <span class="discret"></span>`;
-    qui.firstChild.textContent = reg.nom;
-    const v = reg.vivres ?? R.nuit.vivres;
-    qui.lastChild.textContent = `${reg.effectif} hommes, ${blesses.get(reg.id) || 0} blessés · ${moralEnMots(reg, R)} · ${v > 1 ? `des vivres pour ${v} nuits` : v === 1 ? 'des vivres pour cette nuit' : 'plus de vivres'}`;
-    const choix = document.createElement('select');
-    choix.dataset.reg = reg.id; choix.setAttribute('aria-label', `La corvée de ${reg.nom}`);
-    for (const c of CORVEES) {
-      const refus = refusCorvee(B, reg, c.id);
-      choix.append(Object.assign(document.createElement('option'), { value: c.id, textContent: c.nom, disabled: !!refus, title: refus || c.dit }));
-    }
-    choix.value = avant[reg.id] && !refusCorvee(B, reg, avant[reg.id]) ? avant[reg.id] : 'repos';
-    const dit = document.createElement('p'); dit.className = 'discret corvee-dit';
-    const majDit = () => { dit.textContent = CORVEES.find(c => c.id === choix.value).dit; };
-    choix.onchange = majDit; majDit();
-    ligne.append(qui, choix, dit);
-    return ligne;
+  // la dernière corvée donnée, si elle est encore possible, sinon le repos
+  corveesNuit = Object.fromEntries(nosRegiments().map(r => [r.id, avant[r.id] && !refusCorvee(B, r, avant[r.id]) ? avant[r.id] : 'repos']));
+  nuitEtat = 'choix';
+  $('nuit-corps').hidden = false; $('aube-bilan').hidden = true; $('aube').textContent = 'À l\'aube';
+  $('corvees').replaceChildren(...CORVEES.map(c => {
+    const b = document.createElement('button'); b.dataset.corvee = c.id; b.textContent = c.nom; b.title = c.dit;
+    b.onclick = () => donnerCorvee(c.id);
+    return b;
   }));
+  $('nuit').hidden = false;
+  feuillesVues = ''; nuitVue = '';
+  majHud();
+}
+// une corvée aux régiments choisis (ceux qui la refusent le disent à voix haute)
+function donnerCorvee(id) {
+  const regs = [...choisis].map(i => B.etat.regiments[i]).filter(r => r && r.camp === NOUS && r.effectif);
+  if (!regs.length) return toast('Choisissez d\'abord un régiment (clic, cadre, T pour tous).');
+  const refus = [];
+  for (const r of regs) { const m = refusCorvee(B, r, id); if (m) refus.push(`${r.nom} : ${m}`); else corveesNuit[r.id] = id; }
+  if (refus.length) toast(refus[0]);
+  feuillesVues = ''; nuitVue = ''; majHud();
+}
+// la liste des régiments et leur corvée, et les boutons de corvée (surlignée : celle des régiments choisis, quand c'est la même)
+let nuitVue = '';
+function majNuit() {
+  if (nuitEtat !== 'choix') return;
+  const regs = nosRegiments(), cle = regs.map(r => `${r.id}${choisis.has(r.id) ? '*' : ''}${corveesNuit[r.id]}`).join('|');
+  if (cle === nuitVue) return;
+  nuitVue = cle;
+  const A = B.armee, blesses = new Map();
+  for (let i = 0; i < A.n; i++) if (A.blessure[i] && A.camp[i] === NOUS) blesses.set(A.reg[i], (blesses.get(A.reg[i]) || 0) + 1);
+  $('nuit-liste').replaceChildren(...regs.map(r => {
+    const li = document.createElement('li'), b = document.createElement('button');
+    b.className = choisis.has(r.id) ? 'choisi' : '';
+    const v = r.vivres ?? R.nuit.vivres;
+    b.title = `${r.effectif} hommes, ${blesses.get(r.id) || 0} blessés · ${moralEnMots(r, R)} · ${v > 1 ? `des vivres pour ${v} nuits` : v === 1 ? 'des vivres pour cette nuit' : 'plus de vivres'}`;
+    b.innerHTML = '<span></span><span class="discret"></span>';
+    b.firstChild.textContent = r.nom; b.lastChild.textContent = corveeDe(corveesNuit[r.id]);
+    b.onclick = e => {
+      if (!e.shiftKey) choisis = new Set();
+      if (choisis.has(r.id) && e.shiftKey) choisis.delete(r.id); else choisis.add(r.id);
+      rendu.choisis = choisis; majHud();
+    };
+    li.append(b); return li;
+  }));
+  const sel = [...choisis].filter(i => corveesNuit[i]), communes = new Set(sel.map(i => corveesNuit[i]));
+  for (const b of $('corvees').children) b.classList.toggle('actif', communes.size === 1 && communes.has(b.dataset.corvee));
 }
 // le bilan de la nuit en quelques lignes (rien de ce qui n'a pas eu lieu)
 function bilanEnMots(b) {
@@ -271,18 +296,18 @@ function bilanEnMots(b) {
 }
 function passerLaNuit() {
   if (B?.etat.phase !== 'nuit') return;
-  const choix = Object.fromEntries([...$('corvees').querySelectorAll('select')].map(s => [s.dataset.reg, s.value]));
-  const r = aube(B, choix);
+  const r = aube(B, corveesNuit);
   if (!r.ok) return dire(r);
   sauvegarder(); majHud();
-  $('aube-titre').textContent = `L'aube du ${nomJour(B.etat.jour)} jour`;
+  nuitEtat = 'aube';
+  $('nuit-titre').textContent = `L'aube du ${nomJour(B.etat.jour)} jour`;
+  $('nuit-corps').hidden = true;
   $('aube-bilan').replaceChildren(...bilanEnMots(r.bilan[NOUS]).map(t => Object.assign(document.createElement('p'), { textContent: t })));
-  $('dialogue-aube').showModal();
+  $('aube-bilan').hidden = false; $('aube').textContent = 'Le jour se lève';
+  feuillesVues = '';
 }
-$('aube').onclick = () => { $('dialogue-nuit').close(); };
-$('dialogue-nuit').addEventListener('close', () => { passerLaNuit(); if (!$('dialogue-aube').open) reprendre(); });
-$('jour-se-leve').onclick = () => { $('dialogue-aube').close(); };
-$('dialogue-aube').addEventListener('close', reprendre);
+function fermerNuit() { nuitEtat = null; $('nuit').hidden = true; feuillesVues = ''; }
+$('aube').onclick = () => { if (nuitEtat === 'choix') passerLaNuit(); else { fermerNuit(); reprendre(); } };
 function montrerFin() {
   loop.pause(); sauvegarder();
   const e = B.etat, [vNous, vEux] = effectifs(B);
@@ -331,13 +356,13 @@ const deux = n => String(n).padStart(2, '0');
 // Une croix au crayon par mort (douze au plus, le reste en nombre)
 const croix = n => n <= 12 ? '✕'.repeat(n) : `${'✕'.repeat(12)} +${n - 12}`;
 const ligneEnMots = rang => rang === 0 ? '1re ligne' : `${rang + 1}e ligne`;
-const ordreEnMots = r => r.deroute ? 'en déroute' : r.ordre.trace ? `tient la ${ligneEnMots(r.ordre.trace.ligne % 10)}` : 'en marche';
+const ordreEnMots = r => nuitEtat === 'choix' && corveesNuit[r.id] ? `cette nuit : ${corveeDe(corveesNuit[r.id]).toLowerCase()}` : r.deroute ? 'en déroute' : r.ordre.trace ? `tient la ${ligneEnMots(r.ordre.trace.ligne % 10)}` : 'en marche';
 
 // Les feuilles de situation : une par régiment choisi (trois au plus) ; un clic ouvre la fiche
 let feuillesVues = '';
 function majFeuilles() {
   const e = B.etat, regs = [...choisis].map(id => e.regiments[id]).filter(Boolean);
-  const cle = regs.map(r => `${r.id}:${r.effectif}:${r.pertes}:${r.deroute ? 1 : 0}:${moralEnMots(r, R)}:${r.ordre.trace ? r.ordre.trace.ligne : 'm'}:${B.armee.n}`).join('|');
+  const cle = regs.map(r => `${r.id}:${r.effectif}:${r.pertes}:${r.deroute ? 1 : 0}:${moralEnMots(r, R)}:${r.ordre.trace ? r.ordre.trace.ligne : 'm'}:${B.armee.n}:${nuitEtat === 'choix' ? corveesNuit[r.id] : ''}`).join('|');
   if (cle === feuillesVues) return;
   feuillesVues = cle;
   const A = B.armee;
@@ -418,7 +443,8 @@ function majHud() {
     b.classList.toggle('vise', modeBarrage === cal);
     b.classList.toggle('recharge', reste > 0);
   }
-  majFeuilles();
+  majFeuilles(); majNuit();
+  $('batteries').hidden = nuitEtat === 'choix';    // la nuit, pas de barrage
   $('ecran').classList.toggle('vise', !!modeBarrage);
 }
 $('batteries').append(...NOMS_CALIBRES.map((cal, k) => {
@@ -432,6 +458,7 @@ $('batteries').append(...NOMS_CALIBRES.map((cal, k) => {
 }));
 function viser(cal) {
   if (!B) return;
+  if (B.etat.phase !== 'jour') return dire({ refus: 'Pas de barrage la nuit.' });
   modeBarrage = modeBarrage === cal ? null : cal;
   majHud();
 }
@@ -463,6 +490,8 @@ function majEtiquettes() {
   for (const [id, d] of etiq) {
     const c = centres.get(id);
     if (!c) { d.hidden = true; continue; }
+    const nom = B.etat.regiments[id].nom, t = nuitEtat === 'choix' && corveesNuit[id] ? `${nom} · ${corveeDe(corveesNuit[id])}` : nom;
+    if (d.textContent !== t) d.textContent = t;
     const [sx, sy] = rendu.versEcran(c.x / c.n, c.ymin - 2);
     // hors de l'écran : caché (sinon il dépasse, et l'audit d'écran le voit amputé)
     d.hidden = sx < 30 || sy < 20 || sx > innerWidth - 30 || sy > innerHeight;
@@ -747,7 +776,17 @@ createPointer($('canvas'), {
         if (r >= 0) montrerRegiment(r); else fermerFiche();
       }
     }
-    if (B.etat.phase !== 'jour') return;
+    if (B.etat.phase !== 'jour') {
+      // la nuit, on ne marche ni ne tire : on choisit des régiments pour leur donner une corvée
+      if (p.button === 2) toast('La nuit, pas de marche : choisissez des régiments, puis une corvée.');
+      else if (p.button === 0 && !modeBarrage) {
+        const r = regimentSous(x, y, dePres() ? 4 : Math.max(4, prise(16)), NOUS);
+        if (!p.event.shiftKey) choisis = new Set();
+        if (r >= 0) { if (choisis.has(r) && p.event.shiftKey) choisis.delete(r); else choisis.add(r); }
+        rendu.choisis = choisis; majHud();
+      }
+      return;
+    }
     if (p.button === 2) {
       if (modeBarrage) { modeBarrage = null; majHud(); return; }
       if (!choisis.size) return toast('Aucun régiment choisi.');
@@ -871,7 +910,7 @@ startUpdateCheck({
 
 // ─── Mode debug (section 18) : chargé seulement avec ?debug=1 ──────────────
 if (DEBUG) {
-  const { installDebug, seedFromUrl } = await import('./lib/debug.js?v=0.12.1');
+  const { installDebug, seedFromUrl } = await import('./lib/debug.js?v=0.13.0');
   window.__seed = seedFromUrl() ?? undefined;
   installDebug({
     state: () => B && { ...horloge(B), effectifs: effectifs(B), pertes: B.etat.pertes, impacts: B.etat.impacts.length, enJeu: enJeu(), pause: loop.paused },
@@ -888,8 +927,7 @@ if (DEBUG) {
         for (let k = 0; k < n && B.etat.phase !== 'fin'; k++) {
           if (B.etat.phase === 'nuit') {
             if (!passerNuits) break;
-            if ($('dialogue-nuit').open) $('dialogue-nuit').close(); else aube(B);
-            if ($('dialogue-aube').open) $('dialogue-aube').close();
+            aube(B, nuitEtat === 'choix' ? corveesNuit : {}); fermerNuit();
           }
           const ev = avancer(B);
           evenements.push(...ev); raconter(ev);

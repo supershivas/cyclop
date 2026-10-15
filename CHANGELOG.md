@@ -1,5 +1,9 @@
 # Journal des versions
 
+## 0.13.0 — 2026-10-15
+- La nuit se joue sur le champ de bataille : on choisit des régiments, puis leur corvée, sans boîte de dialogue
+- Les soldats ont des bras : ils épaulent le fusil, se tournent vers l'ennemi et tirent
+
 ## 0.12.1 — 2026-10-15
 - Les noms de la liste de la fiche d'un régiment se lisent de nouveau
 - Les balles sont de fins traits, les obus des ogives à leur taille

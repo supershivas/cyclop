@@ -88,6 +88,14 @@ la danse macabre, la catastrophe peinte avec calme. L'intention est dans `DESIGN
   roue sont sur des plaques opaques.
 - **Plus d'arbres** (Jérôme, v0.8.0) : 150 dans le secteur et trois bois serrés (`bois`
   de secteur.js), autant dans les marges.
+- **La nuit sur le champ** (Jérôme, v0.13.0) : plus de boîte de dialogue la nuit ni à l'aube. Le champ reste (assombri, ses
+  lumières), un papier (`#nuit`, `nuitEtat` de main.js : `choix` puis `aube`) donne le bilan du jour ; on choisit des régiments (clic
+  sur eux ou dans la liste, cadre, T) puis une corvée (`donnerCorvee`, `corveesNuit`), écrite sur leur feuille et sous leur nom ;
+  « À l'aube » lance `aube(B, corveesNuit)`, le bilan s'affiche sur le même papier, « Le jour se lève » reprend. Pas de marche ni de
+  barrage la nuit (dit à voix haute) ; les batteries sont cachées.
+- **Des soldats qui épaulent** (Jérôme, v0.13.0) : à partir de 6 pixels par mètre (la silhouette), des bras le long du corps ; un
+  homme qui tire (`B.tirs` : le 6e nombre est son indice) lève les bras et le fusil devant lui et se tourne vers sa cible, un
+  instant (`aTir`, `tirVal` de `majTirs` : le dessin seulement). Les boîtes de loin ne tirent pas.
 - **La nuit et ses corvées** (Jérôme, v0.6.0) : une corvée par régiment (repos,
   réparer, caillebotis, inhumer, évacuer) ; puis (Jérôme, v0.11.0) les abris profonds
   (`etat.abris`), les vivres (`reg.vivres`), le coup de main (`etat.prisonniers`) et
@@ -267,7 +275,7 @@ nuit (le voile continu et ses halos mélangent la terre, le sol et l'os : des co
   les ferme), le repère de l'homme et la bulle du survol (`majBulle`, chaque image) ; HUD en papiers de campagne (montre, feuilles de situation, carnet de bord,
   croix des morts, râtelier d'obus, noms de nos régiments au-dessus d'eux) ; commandes ; sauvegarde ; mise à jour ; mode debug ;
   `window.cyclopStats()`.
-- `index.html`, `css/style.css` — l'écran, le HUD et les dialogues (palette du jeu).
+- `index.html`, `css/style.css` — l'écran, le HUD (dont le papier de la nuit) et les dialogues (palette du jeu).
 - `labo.html`, `js/labo.js` — le labo : échelle, sols et cratères (couleur et
   gris), palette, le moteur en direct (zoom 4, zoom 1, après un jour de pluie,
   gel), le sol vert (`verdure` d'apparence.js : taches, plaques, prairie ; retenu : les plaques), la nuit sans trame (`styleNuit` de rendu3d.js : trame, voile continu, voile et halos ; retenu : voile et halos), les plaques et le journal de l'interface, l'attaque d'une tranchée (frise du temps), la caméra (perspective et respiration / immobile / sans perspective / plus

@@ -1,9 +1,8 @@
 {
-  "version": "0.12.1",
+  "version": "0.13.0",
   "date": "2026-10-15",
   "changes": [
-    "Les noms de la liste de la fiche d'un régiment se lisent de nouveau",
-    "Les balles sont de fins traits, les obus des ogives à leur taille",
-    "Plus de tramage : le brouillard, les ombres et la fumée sont des fondus continus"
+    "La nuit se joue sur le champ de bataille : on choisit des régiments, puis leur corvée, sans boîte de dialogue",
+    "Les soldats ont des bras : ils épaulent le fusil, se tournent vers l'ennemi et tirent"
   ]
 }

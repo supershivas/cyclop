@@ -9,8 +9,8 @@
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta property="og:image" content="og.png">
-<link rel="stylesheet" href="js/lib/game.css?v=0.12.1">
-<link rel="stylesheet" href="css/style.css?v=0.12.1">
+<link rel="stylesheet" href="js/lib/game.css?v=0.13.0">
+<link rel="stylesheet" href="css/style.css?v=0.13.0">
 </head>
 <body>
 <div class="jeu-ecran" id="ecran">
@@ -40,6 +40,22 @@
         <div class="papier terrain" id="terrain" hidden aria-live="off"></div>
       </div>
       <p class="papier pause-active" id="pause-active" hidden>Temps arrêté</p>
+      <!-- La nuit : le champ de bataille reste, ce papier s'y pose (pas de boîte de dialogue) ; on choisit des régiments, puis leur corvée -->
+      <section class="papier nuit" id="nuit" hidden aria-live="polite">
+        <h2 id="nuit-titre">Nuit</h2>
+        <div id="nuit-corps">
+          <p id="nuit-pertes"></p>
+          <p id="nuit-lignes"></p>
+          <p class="discret" id="nuit-demain"></p>
+          <p class="discret" id="nuit-reserves"></p>
+          <h3 class="corvees-titre">Les corvées de la nuit</h3>
+          <p class="discret" id="nuit-aide">Choisissez des régiments (un clic sur eux ou sur la liste, un cadre, T pour tous), puis une corvée.</p>
+          <div class="corvees" id="corvees" role="group" aria-label="Corvées"></div>
+          <ul class="nuit-liste" id="nuit-liste"></ul>
+        </div>
+        <div id="aube-bilan" hidden></div>
+        <button class="bouton" id="aube">À l'aube</button>
+      </section>
       <section class="papier fiche" id="fiche" hidden aria-live="polite">
         <button class="icone fiche-fermer" id="fiche-fermer" aria-label="Fermer la fiche">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
@@ -107,23 +123,6 @@
   </div>
 </dialog>
 
-<dialog id="dialogue-nuit" aria-label="La nuit">
-  <h2 id="nuit-titre">Nuit</h2>
-  <p id="nuit-pertes"></p>
-  <p id="nuit-lignes"></p>
-  <p id="nuit-demain"></p>
-  <p class="discret" id="nuit-reserves"></p>
-  <h3 class="corvees-titre">Les corvées de la nuit</h3>
-  <div class="corvees" id="corvees"></div>
-  <div class="menu"><button class="bouton" id="aube">À l'aube</button></div>
-</dialog>
-
-<dialog id="dialogue-aube" aria-label="L'aube">
-  <h2 id="aube-titre">L'aube</h2>
-  <div id="aube-bilan"></div>
-  <div class="menu"><button class="bouton" id="jour-se-leve">Le jour se lève</button></div>
-</dialog>
-
 <dialog id="dialogue-ordre" aria-label="L'ordre">
   <h2>Ordre</h2>
   <p id="ordre-mission"></p>
@@ -186,6 +185,6 @@
 </dialog>
 
 <div class="jeu-toast" id="toast" role="status" hidden></div>
-<script type="module" src="js/main.js?v=0.12.1"></script>
+<script type="module" src="js/main.js?v=0.13.0"></script>
 </body>
 </html>

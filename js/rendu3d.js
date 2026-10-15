@@ -22,12 +22,12 @@
    - Les soldats : instanciés (une boîte et son ombre) ; au zoom 1 et 2, un
      point de 2 × 2 pixels (la couleur du camp sur son ombre).
    - Les corps : un homme couché (instancié) ; au zoom 1 et 2, un pixel. */
-import { loadThree } from './three-lib.js?v=0.12.1';
-import { PALETTE, ORDRE, INDICE } from './palette.js?v=0.12.1';
-import { OMBRE, couleursLigne } from './apparence.js?v=0.12.1';
-import { MORCEAU, hauteurVueQ as hauteurQ, hauteurVueM as hauteurM } from './terrain.js?v=0.12.1';
-import { horloge } from './bataille.js?v=0.12.1';
-import { ligneY } from './tranchees.js?v=0.12.1';
+import { loadThree } from './three-lib.js?v=0.13.0';
+import { PALETTE, ORDRE, INDICE } from './palette.js?v=0.13.0';
+import { OMBRE, couleursLigne } from './apparence.js?v=0.13.0';
+import { MORCEAU, hauteurVueQ as hauteurQ, hauteurVueM as hauteurM } from './terrain.js?v=0.13.0';
+import { horloge } from './bataille.js?v=0.13.0';
+import { ligneY } from './tranchees.js?v=0.13.0';
 
 export const CAMERA = { yaw: 0.15, tangage: 0.95, fov: 30 };   // au départ : tournée de 9°, plongée de 54°, angle de 30°
 // la caméra respire : un balancement très lent, 2° en 23 s (Jérôme, v0.3.1 : variante D du labo retenue)
@@ -206,7 +206,7 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
   // (`soldat` de creerRendu, comparé au labo) : jambes, tête, casque, fusil, sac, et les jambes qui marchent.
   // Les parties : 0 la vareuse (la couleur du camp), 1 l'ombre, 2 le casque (l'os pour les choisis),
   // 3 les jambes (bandes molletières), 4 le fusil, 5 le sac, 6 le visage.
-  let cap = 0, posArr = null, campArr = null, vitArr = null, soldatsInst = null, soldatsDetail = null, soldatsPoints = null, attrsI = null, attrsP = null;
+  let cap = 0, posArr = null, campArr = null, vitArr = null, tirArr = null, soldatsInst = null, soldatsDetail = null, soldatsPoints = null, attrsI = null, attrsP = null;
   const TAPI = 0.5;                        // la peur au-delà de laquelle un homme se tapit (le dessin seulement ; on ne tire plus à 0,85)
   const DETAIL_DES = 6;                    // (à 4 pixels par mètre, un homme en fait 7 de haut : la silhouette ne s'y voyait pas, et coûtait 138 000 triangles pour 2 000 hommes)
   const soldatMat = new THREE.ShaderMaterial({
@@ -215,7 +215,7 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
       uSol: solMat.uniforms.uSol, uTaille: solMat.uniforms.uTaille,
       uSoleil: { value: new THREE.Vector2(0.5, 0.6) } },
     vertexShader: `
-      attribute vec3 aPos; attribute float aCamp; attribute float aPart; attribute float aJambe; attribute float aVit;
+      attribute vec3 aPos; attribute float aCamp; attribute float aPart; attribute float aJambe; attribute float aVit; attribute float aBras; attribute vec2 aTir;
       uniform float uT; uniform vec2 uSoleil;
       varying float vCamp; varying float vPart; varying vec2 vXZ; varying float vLong;
       void main() {
@@ -238,6 +238,20 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
           float y = p.y - 0.8;
           p.z = p.z * cos(a) - y * sin(a);
           p.y = 0.8 + p.z * sin(a) + y * cos(a);
+        }
+        // il tire (aTir : x la pose, 1 quand il épaule, y le cap vers sa cible) : les bras et le fusil se lèvent devant lui
+        // (autour de l'épaule, à 1,3 m), et il se tourne vers l'ennemi ; sa pose seulement, jamais la partie
+        float tir = clamp(aTir.x * 2.5, 0.0, 1.0);
+        if (tir > 0.0 && !(aPart > 0.5 && aPart < 1.5)) {
+          if (aBras != 0.0) {
+            if (aBras > 1.5) p.x -= 0.28 * tir;
+            float a = -1.45 * tir;
+            vec3 d = p - vec3(0.0, 1.3, 0.0);
+            p.y = 1.3 + d.y * cos(a) - d.z * sin(a);
+            p.z = d.y * sin(a) + d.z * cos(a);
+          }
+          float c = cos(aTir.y), s = sin(aTir.y);
+          p.xz = vec2(p.x * c + p.z * s, -p.x * s + p.z * c);
         }
         gl_Position = projectionMatrix * viewMatrix * vec4(p + aPos, 1.0);
       }`,
@@ -268,34 +282,40 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
     side: THREE.DoubleSide, transparent: true,
   });
   // les faces d'une boîte qu'on voit d'ici : le dessus, le sud, l'est et l'ouest (jamais le nord ni le dessous)
-  function boiteVue(out, x0, x1, y0, y1, z0, z1, part, jambe = 0, dessusPart = part) {
-    const q = (a, b, c, d, k) => { out.p.push(...a, ...b, ...c, ...a, ...c, ...d); for (let n = 0; n < 6; n++) { out.k.push(k); out.j.push(jambe); } };
+  function boiteVue(out, x0, x1, y0, y1, z0, z1, part, jambe = 0, dessusPart = part, bras = 0) {
+    const q = (a, b, c, d, k) => { out.p.push(...a, ...b, ...c, ...a, ...c, ...d); for (let n = 0; n < 6; n++) { out.k.push(k); out.j.push(jambe); out.b.push(bras); } };
     q([x0, y1, z0], [x0, y1, z1], [x1, y1, z1], [x1, y1, z0], dessusPart);
     q([x0, y0, z1], [x1, y0, z1], [x1, y1, z1], [x0, y1, z1], part);
     q([x1, y0, z1], [x1, y0, z0], [x1, y1, z0], [x1, y1, z1], part);
     q([x0, y0, z0], [x0, y0, z1], [x0, y1, z1], [x0, y1, z0], part);
   }
   function geometrieSoldat(style) {
-    const g = { p: [], k: [], j: [] };
+    const g = { p: [], k: [], j: [], b: [] };
     // l'ombre au sol vers le sud-est (la lumière vient du nord-ouest)
     // (y = 1 : le bout de l'ombre, déplacé par le shader selon le soleil)
-    g.p.push(-0.22, 0, 0, 0.22, 0, 0, 0.22, 1, 0, -0.22, 0, 0, 0.22, 1, 0, -0.22, 1, 0); for (let n = 0; n < 6; n++) { g.k.push(1); g.j.push(0); }
+    g.p.push(-0.22, 0, 0, 0.22, 0, 0, 0.22, 1, 0, -0.22, 0, 0, 0.22, 1, 0, -0.22, 1, 0); for (let n = 0; n < 6; n++) { g.k.push(1); g.j.push(0); g.b.push(0); }
     const membres = style === 'detail' || style === 'silhouette' || style === 'marche';
     if (!membres) boiteVue(g, -0.25, 0.25, 0, 1.7, -0.175, 0.175, 0, 0, 2);          // la boîte ; son dessus, le casque
     else {
       boiteVue(g, -0.2, -0.03, 0, 0.82, -0.09, 0.09, 3, 1);                          // les jambes
       boiteVue(g, 0.03, 0.2, 0, 0.82, -0.09, 0.09, 3, -1);
       boiteVue(g, -0.24, 0.24, 0.8, 1.42, -0.15, 0.15, 0);                           // la vareuse
+      if (style === 'silhouette') {                                                  // les bras : le long du corps, ils se lèvent pour tirer
+        boiteVue(g, -0.35, -0.24, 0.82, 1.4, -0.07, 0.07, 0, 0, 0, -1);
+        boiteVue(g, 0.24, 0.35, 0.82, 1.4, -0.07, 0.07, 0, 0, 0, 1);
+      }
       boiteVue(g, -0.1, 0.1, 1.4, 1.6, -0.1, 0.1, 6);                                // le visage
       boiteVue(g, -0.16, 0.16, 1.57, 1.7, -0.16, 0.16, 2);                           // le casque, plus large que la tête
     }
-    if (style === 'fusil' || style === 'silhouette' || style === 'marche') boiteVue(g, 0.26, 0.31, 0.55, 1.95, -0.03, 0.03, 4);   // le fusil, à l'épaule
+    if (style === 'fusil' || style === 'silhouette' || style === 'marche') boiteVue(g, style === 'silhouette' ? 0.37 : 0.26, style === 'silhouette' ? 0.42 : 0.31, 0.55, 1.95, -0.03, 0.03, 4, 0, 4, style === 'silhouette' ? 2 : 0);   // le fusil, en bandoulière ; à l'épaule quand il tire
     if (style === 'silhouette' || style === 'marche') boiteVue(g, -0.19, 0.19, 0.95, 1.38, -0.32, -0.15, 5);                       // le sac, dans le dos
     const gi = new THREE.InstancedBufferGeometry();
     gi.setAttribute('position', new THREE.Float32BufferAttribute(g.p, 3));
     gi.setAttribute('aPart', new THREE.Float32BufferAttribute(g.k, 1));
     gi.setAttribute('aJambe', new THREE.Float32BufferAttribute(g.j, 1));
+    gi.setAttribute('aBras', new THREE.Float32BufferAttribute(g.b, 1));
     gi.setAttribute('aPos', attrsI[0]); gi.setAttribute('aCamp', attrsI[1]); gi.setAttribute('aVit', attrsI[2]);
+    if (style === 'silhouette') gi.setAttribute('aTir', attrsI[3]);   // (la boîte ne tire pas : l'attribut absent vaut 0)
     gi.instanceCount = 0;
     return gi;
   }
@@ -319,8 +339,8 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
       if (soldatsDetail) { scene.remove(soldatsDetail); soldatsDetail.geometry.dispose(); }
     }
     cap = capacite;
-    posArr = new Float32Array(cap * 3); campArr = new Float32Array(cap); vitArr = new Float32Array(cap);
-    attrsI = [new THREE.InstancedBufferAttribute(posArr, 3), new THREE.InstancedBufferAttribute(campArr, 1), new THREE.InstancedBufferAttribute(vitArr, 1)];
+    posArr = new Float32Array(cap * 3); campArr = new Float32Array(cap); vitArr = new Float32Array(cap); tirArr = new Float32Array(cap * 2);
+    attrsI = [new THREE.InstancedBufferAttribute(posArr, 3), new THREE.InstancedBufferAttribute(campArr, 1), new THREE.InstancedBufferAttribute(vitArr, 1), new THREE.InstancedBufferAttribute(tirArr, 2)];
     attrsI.forEach(a => a.setUsage(THREE.DynamicDrawUsage));
     soldatsInst = new THREE.Mesh(geometrieSoldat('boite'), soldatMat); soldatsInst.frustumCulled = false; soldatsInst.renderOrder = 2;
     soldatsDetail = styleSoldat === 'boite' ? null : new THREE.Mesh(geometrieSoldat(styleSoldat), soldatMat);
@@ -810,13 +830,18 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
   // ─── Le feu se voit (Jérôme, v0.9.2) : un éclair à la bouche du fusil et un trait clair vers la cible, pour chaque
   // tir de la bataille (un éclair d'un pixel, et une balle : un trait fin). Le dessin seulement : la logique les range dans B.tirs, vidés ici.
   // On ne dessine que ceux qu'on voit, et pas plus de 160 par image (tout dézoomé, ce serait des milliers de points). ───
-  function majTirs() {
-    const L = B.tirs;
+  // Chaque tireur épaule son fusil : la pose (tirVal, 1 puis qui retombe) et le cap vers sa cible, pour tous les tirs.
+  let tirVal = new Float32Array(0), tirAng = new Float32Array(0);
+  function majTirs(dt) {
+    const L = B.tirs, n = B.armee.n;
+    if (tirVal.length < n) { tirVal = new Float32Array(n * 2); tirAng = new Float32Array(n * 2); }
+    for (let i = 0; i < n; i++) if (tirVal[i] > 0) tirVal[i] = Math.max(0, tirVal[i] - dt * 1.6);
+    for (let k = 0; k < L.length; k += 6) { const i = L[k + 5]; if (i < tirVal.length) { tirVal[i] = 1; tirAng[i] = Math.atan2(L[k + 2] - L[k], L[k + 3] - L[k + 1]); } }
     if (!L.length) return;
     const { cx, cz, p } = projeter();
     const e = Math.hypot(vue.vw, vue.vh) / p + 20;
-    const pas = Math.max(1, Math.floor(L.length / 5 / 160));
-    for (let k = 0; k < L.length; k += 5 * pas) {
+    const pas = Math.max(1, Math.floor(L.length / 6 / 160));
+    for (let k = 0; k < L.length; k += 6 * pas) {
       const x = L[k], y = L[k + 1];
       if (Math.abs(x - cx) > e || Math.abs(y - cz) > e) continue;
       const tx = L[k + 2] + (alea() - 0.5) * 6, ty = L[k + 3] + (alea() - 0.5) * 6;
@@ -1211,6 +1236,7 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
       posArr[k * 3] = x; posArr[k * 3 + 1] = surface(x, y); posArr[k * 3 + 2] = y;
       campArr[k] = A.camp[i] + (choisis.has(A.reg[i]) ? 2 : 0);
       vitArr[k] = A.peur[i] >= TAPI ? -1 : Math.hypot(A.vx[i], A.vy[i]);
+      tirArr[k * 2] = i < tirVal.length ? tirVal[i] : 0; tirArr[k * 2 + 1] = i < tirVal.length ? tirAng[i] : 0;
       k++;
     }
     const points = p <= POINTS_JUSQUA, detail = !points && soldatsDetail && p >= DETAIL_DES;
@@ -1315,7 +1341,7 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
     if (!B) return;
     const t0 = performance.now();
     for (const e of evenements) if (e.type === 'impact') impactVu(e.x, e.y, e.cal);
-    majTirs();
+    majTirs(dt);
     // la caméra glisse vers sa cible : un mouvement doux plutôt qu'un saut
     const lisse = 1 - Math.exp(-dt * 7);
     vue.yaw += (vue.cible.yaw - vue.yaw) * lisse; vue.tangage += (vue.cible.tangage - vue.tangage) * lisse;
