@@ -1,5 +1,9 @@
 # Journal des versions
 
+## 0.12.0 — 2026-10-15
+- Le terrain garde le même relief à tous les zooms, même tout dézoomé (un peu plus lourd à dessiner)
+- L'armée d'en face est rouge : on la distingue d'un coup d'œil sur le champ de bataille
+
 ## 0.11.0 — 2026-10-15
 - La nuit : creuser des abris, ravitailler, tenter un coup de main ; les morts inhumés ont une tombe
 - Une déroute gagne les voisins ; un régiment brisé refuse de monter un jour ; en face poursuit après une prise

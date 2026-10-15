@@ -27,7 +27,7 @@ la danse macabre, la catastrophe peinte avec calme. L'intention est dans `DESIGN
   23 s, coupé si le système demande un mouvement réduit ; Jérôme, v0.3.1) ; elle
   ne sort jamais du terrain. Zoom par
   facteurs entiers au point visé (1, 2, 3, 4, 6, 8, 12, 16 pixels par mètre ; Jérôme, v0.9.3 : tout près des soldats) ; aux zooms
-  1 et 2, chaque soldat est un point. Sol en cubes et soldats en boîtes (Jérôme, v0.2.0 :
+  1 et 2, chaque soldat est un point (le sol, lui, garde le même relief à tous les zooms ; Jérôme, v0.12.0) ; en face est rouge (palette `x`). Sol en cubes et soldats en boîtes (Jérôme, v0.2.0 :
   les facettes et les sprites essayés au labo ne sont pas retenus). Profil game-system :
   `profils/pixel-3d-three.md`.
 - **Cible** : ordinateur uniquement (souris, sélection au cadre, raccourcis,
@@ -134,7 +134,7 @@ gris) et les deux camps (proposés `#6f86a6` et `#5b5d48`, invisibles sur la bou
 | `r` | `#a9a89a` | brume — pluie, fumée, glace, rides de l'eau |
 | `o` | `#e4dfd0` | os — le texte, l'éclair d'un obus, le casque des choisis |
 | `n` | `#a9bad0` | bleu horizon — nous |
-| `x` | `#8f9374` | feldgrau — en face |
+| `x` | `#e0604f` | rouge — en face (Jérôme, v0.12.0 : se distingue d'un coup d'œil dans le champ) |
 | `v` | `#6f8147` | vert mousse — l'herbe qui reprend, par plaques (Jérôme, v0.9.3 : « intégré dans le design, sans grandes différences ») |
 | `w` | `#5c6e3c` | vert sombre — l'herbe dans l'humide |
 
@@ -253,13 +253,10 @@ nuit (le voile continu et ses halos mélangent la terre, le sol et l'os : des co
   `borner` la garde sur le terrain : les quatre coins de l'écran posés sur le sol),
   sol en morceaux de 25 × 25 cases (dessus fusionnés en rectangles de même
   hauteur, parois sud seulement), une texture RVBA d'une couleur par case (et de
-  sa paroi), refaite par rangées changées ; aux zooms 1 et 2, le sol est une seule
-  image plate où une marche d'un mètre devient une courbe de niveau ; soldats en
+  sa paroi), refaite par rangées changées ; le même relief à tous les zooms (Jérôme, v0.12.0) ; soldats en
   instances (boîte et ombre) ou en points 2 × 2, seulement ceux qu'on voit ; arbres
   instanciés ; éclats et fumée d'obus ; pluie ; brouillard tramé (plus épais vers
-  le haut de l'écran). `versTerrain` (un rayon jusqu'au sol) / `versEcran`. Au
-  loin (au-delà du point visé), un morceau n'est plus que des facettes de 5 m sans
-  parois (`construireGros`). La respiration (`RESPIRATION`) s'ajoute à l'angle
+  le haut de l'écran). `versTerrain` (un rayon jusqu'au sol) / `versEcran`. La respiration (`RESPIRATION`) s'ajoute à l'angle
   choisi (`souffle`), dans le dessin comme dans les conversions. Le
   rendu ne modifie jamais l'état. Un morceau du sol se refait aussi quand un de ses voisins change (ses
   parois sud, est et ouest en dépendent). Les parois est et ouest (et les bords
@@ -322,6 +319,7 @@ node outils/stamp-version.mjs            # après chaque changement de version.j
 | Quoi | Version | Pourquoi (ce que ça coûtait) |
 |---|---|---|
 | Ombrage du sol en damier selon la pente | 0.1.0 (avant livraison) | du bruit partout : chaque bosse se lisait comme un cratère |
+| Le sol plat des zooms 1 et 2, les facettes de 5 m au loin | 0.12.0 | Jérôme veut la même résolution du terrain à tous les zooms ; coût : tout dézoomé, 8 000 soldats, rendu logiciel, 49 → 88 ms (12 800 → 88 000 triangles) ; zooms 4 et 8 inchangés |
 | Sol à facettes, soldats en sprites (labo) | 0.1.1 → 0.2.0 | non retenus par Jérôme ; facettes : +30 % de triangles sur un champ labouré, trame bruyante (`docs/archives/sol-facettes-et-soldats-sprites.md`) |
 
 ## Pièges connus
@@ -356,7 +354,7 @@ node outils/stamp-version.mjs            # après chaque changement de version.j
 - **La perspective coûte** (rendu logiciel, après trois jours d'obus, zoom 4,
   dessin attendu jusqu'au bout) : elle montre beaucoup de sol au loin, 54 000
   triangles et 46 ms ; d'où les facettes de 5 m au-delà du point visé (24 000
-  triangles, 20 ms). Les marges du terrain ont été mesurées pour elle : au zoom 1
+  triangles, 20 ms). Les facettes lointaines et le sol plat sont retirés depuis la v0.12.0 (voir « Ce qui a été retiré »). Les marges du terrain ont été mesurées pour elle : au zoom 1
   (640 × 400 pixels), le sol vu fait ~790 × 610 m.
 - **Les tranchées sont creusées dans `diff`** avant que les impacts ne soient
   rejoués (`monter`) : la sauvegarde n'en garde rien. Une bataille d'avant la

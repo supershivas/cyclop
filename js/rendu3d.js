@@ -22,12 +22,12 @@
    - Les soldats : instanciés (une boîte et son ombre) ; au zoom 1 et 2, un
      point de 2 × 2 pixels (la couleur du camp sur son ombre).
    - Les corps : un homme couché (instancié) ; au zoom 1 et 2, un pixel. */
-import { loadThree } from './three-lib.js?v=0.11.0';
-import { PALETTE, ORDRE, INDICE } from './palette.js?v=0.11.0';
-import { OMBRE, couleursLigne } from './apparence.js?v=0.11.0';
-import { MORCEAU, hauteurVueQ as hauteurQ, hauteurVueM as hauteurM } from './terrain.js?v=0.11.0';
-import { horloge } from './bataille.js?v=0.11.0';
-import { ligneY } from './tranchees.js?v=0.11.0';
+import { loadThree } from './three-lib.js?v=0.12.0';
+import { PALETTE, ORDRE, INDICE } from './palette.js?v=0.12.0';
+import { OMBRE, couleursLigne } from './apparence.js?v=0.12.0';
+import { MORCEAU, hauteurVueQ as hauteurQ, hauteurVueM as hauteurM } from './terrain.js?v=0.12.0';
+import { horloge } from './bataille.js?v=0.12.0';
+import { ligneY } from './tranchees.js?v=0.12.0';
 
 export const CAMERA = { yaw: 0.15, tangage: 0.95, fov: 30 };   // au départ : tournée de 9°, plongée de 54°, angle de 30°
 // la caméra respire : un balancement très lent, 2° en 23 s (Jérôme, v0.3.1 : variante D du labo retenue)
@@ -37,10 +37,9 @@ export const EFFETS = { gerbe: true, onde: true, chute: true, derive: true, feu:
 export const SOLDAT = 'silhouette';            // le style des soldats de près (Jérôme, v0.8.0 : la silhouette complète ; labo : boite, detail, fusil, silhouette, marche)
 export const RESPIRATION = 0.035;
 export const YAW_MAX = 0.6, TANGAGE_MIN = 0.7, TANGAGE_MAX = 1.35;
-const SOL_Y = 3;                              // m : la hauteur moyenne du sol (le point visé, le sol à plat des zooms 1 et 2)
+const SOL_Y = 3;                              // m : la hauteur moyenne du sol (le point visé)
 export const ZOOMS = [1, 2, 3, 4, 6, 8, 12, 16];   // pixels (logiques) par mètre (12 et 16 : tout près des hommes, Jérôme v0.9.3)
 const POINTS_JUSQUA = 2;                      // zoom où un soldat n'est plus qu'un point
-const PLAT_JUSQUA = 2;                        // zoom où le sol devient une seule image plate (une marche d'un quart y fait un demi-pixel)
 const PLUIE = 1600, ECLATS = 2400;
  const E = 0.03;                               // m : le débord des faces (pas de fente vue de biais)
 const HAUT = 8;                               // m : marge du bas de l'écran, où un sol en hauteur remonte (borner)
@@ -93,15 +92,16 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
   palTex.magFilter = palTex.minFilter = THREE.NearestFilter; palTex.generateMipmaps = false; palTex.needsUpdate = true;
   const col = k => new THREE.Color(PALETTE[k]);
 
-  let B = null, T = null, solPlat = null;
-  const plat = () => ZOOMS[vue.zoom] <= PLAT_JUSQUA;
+  let B = null, T = null;
+  // Le sol a le même relief à tous les zooms (Jérôme, v0.12.0) ; seuls les petits décors (arbres, buissons, herbe) s'effacent de loin
+  const petit = () => ZOOMS[vue.zoom] <= POINTS_JUSQUA;
   let sol = null, solTex = null, solData = null, solIdx = null, solAttente = 0, morceaux = [], vuLigne = null, gelVu = null, coutRangees = 0;
   /* La texture du sol : une couleur par case (RVBA, déjà prise dans la palette),
      et en dessous, la couleur de la paroi de chaque case : une seule lecture de
      texture par pixel (mesuré : la lecture de l'indice puis de la palette coûtait
      un tiers du rendu logiciel). */
   const solMat = new THREE.ShaderMaterial({
-    uniforms: { uSol: { value: null }, uTaille: { value: new THREE.Vector2(1, 1) }, uPlat: { value: 0 } },
+    uniforms: { uSol: { value: null }, uTaille: { value: new THREE.Vector2(1, 1) } },
     vertexShader: `
       attribute float aParoi; attribute vec2 aDecal;
       varying vec2 vUV;
@@ -113,12 +113,10 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
         gl_Position = projectionMatrix * viewMatrix * vec4(position, 1.0);
       }`,
     fragmentShader: `
-      uniform sampler2D uSol; uniform float uPlat;
+      uniform sampler2D uSol;
       varying vec2 vUV;
       void main() {
         vec4 c = texture2D(uSol, vUV);
-        // à plat (zooms 1 et 2), une marche d'un mètre devient une courbe de niveau : la couleur de sa paroi
-        if (uPlat > 0.5 && c.a < 0.5) c = texture2D(uSol, vUV + vec2(0.0, 0.5));
         gl_FragColor = vec4(c.rgb, 1.0);
       }`,
     side: THREE.DoubleSide,
@@ -500,12 +498,12 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
     let o = 0;
     // de loin (le sol à plat, ou plus loin de la caméra que le point visé, de 30 %, et 160 m au moins), un arbre n'est qu'un tronc
     const cp = camera.position, lim = Math.max(160, distance(vue.zoom) * 1.3) ** 2;
-    const loin = a => plat() || (a.i - cp.x) ** 2 + (SOL_Y - cp.y) ** 2 + (a.j - cp.z) ** 2 > lim;
+    const loin = a => petit() || (a.i - cp.x) ** 2 + (SOL_Y - cp.y) ** 2 + (a.j - cp.z) ** 2 > lim;
     for (const m of arbresMesh) {
       let n = 0;
       for (const a of T.arbres) {
         if (a.abattu !== m.userData.abattu || a.v !== m.userData.v || loin(a) !== m.userData.loin || !dansLaVue(a.i + 0.5, a.j + 0.5, e, b)) continue;
-        const y = plat() ? SOL_Y : surface(a.i + 0.5, a.j + 0.5);
+        const y = surface(a.i + 0.5, a.j + 0.5);
         m4.makeTranslation(a.i + 0.5, y, a.j + 0.5);
         m.setMatrixAt(n++, m4);
         if (o < ARBRES_OMBRES && !m.userData.loin) { aoPos[o * 4] = a.i + 0.5; aoPos[o * 4 + 1] = y; aoPos[o * 4 + 2] = a.j + 0.5; aoPos[o * 4 + 3] = a.abattu ? 1.2 : 6 + a.v; o++; }
@@ -513,7 +511,7 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
       m.count = n; m.instanceMatrix.needsUpdate = true;
     }
     const at = aoGeo.attributes.aPos; at.clearUpdateRanges(); at.addUpdateRange(0, o * 4); at.needsUpdate = true;
-    aoGeo.instanceCount = soleil.lengthSq() > 0.01 && !plat() ? o : 0;     // (de loin, pas d'ombres d'arbres)
+    aoGeo.instanceCount = soleil.lengthSq() > 0.01 && !petit() ? o : 0;     // (de loin, pas d'ombres d'arbres)
   }
 
   // ─── Les buissons : deux ou trois boîtes basses ; arrachés, il n'en reste rien ───
@@ -546,13 +544,13 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
   }
   function majBuissons(e, bornes) {
     // de loin (le sol à plat), un buisson ne fait que deux pixels : on ne les dessine pas (tout le champ : ~25 000 triangles)
-    if (plat()) { for (const m of buissonsMesh) m.count = 0; return; }
+    if (petit()) { for (const m of buissonsMesh) m.count = 0; return; }
     const m4 = new THREE.Matrix4();
     for (const m of buissonsMesh) {
       let n = 0;
       for (const b of T.buissons) {
         if (b.detruit || b.v !== m.userData.v || !dansLaVue(b.i + 0.5, b.j + 0.5, e, bornes)) continue;
-        m4.makeTranslation(b.i + 0.5, plat() ? SOL_Y : surface(b.i + 0.5, b.j + 0.5), b.j + 0.5);
+        m4.makeTranslation(b.i + 0.5, surface(b.i + 0.5, b.j + 0.5), b.j + 0.5);
         m.setMatrixAt(n++, m4);
       }
       m.count = n; m.instanceMatrix.needsUpdate = true;
@@ -603,8 +601,8 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
     }
     touffes = { x: Float32Array.from(xs), z: Float32Array.from(zs), c: Int32Array.from(cs) };
   }
-  function majHerbe(x0, x1, z0, z1, e, aPlat) {
-    if (aPlat || !touffes) { herbeMesh.visible = false; vuesHerbe = 0; return; }
+  function majHerbe(x0, x1, z0, z1, e, masquee) {
+    if (masquee || !touffes) { herbeMesh.visible = false; vuesHerbe = 0; return; }
     if (!vide) herbeMesh.visible = true;
     let k = 0;
     const { x: X, z: Z, c: Cc } = touffes;
@@ -795,13 +793,12 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
       if (Math.abs(x - cx) > e || Math.abs(y - cz) > e) continue;
       const tx = L[k + 2] + (alea() - 0.5) * 6, ty = L[k + 3] + (alea() - 0.5) * 6;
       const dx = tx - x, dy = ty - y, d = Math.hypot(dx, dy) || 1, ux = dx / d, uy = dy / d;
-      const h = aPlat0() ? SOL_Y : surface(x, y);
+      const h = surface(x, y);
       particule(0, x + ux * 0.6, h + 1.3, y + uy * 0.6, 0, 0, 0, 0.07, 1.4);
       particule(9, x + ux * 1.5, h + 1.3, y + uy * 1.5, ux * 110, 0, uy * 110, 0.12 + alea() * 0.06, 1);
     }
     L.length = 0;
   }
-  const aPlat0 = () => plat();
 
   function majEclats(dt) {
     for (let k = attente.length - 1; k >= 0; k--) if ((attente[k].t -= dt) <= 0) { const a = attente.splice(k, 1)[0]; eclater(a.x, a.y, a.cal); }
@@ -1060,7 +1057,7 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
   }
   function majFanions(dt) {
     if (!fanP) return;
-    const aPlat = plat(), p = ZOOMS[vue.zoom];
+    const p = ZOOMS[vue.zoom];
     for (let k = 0; k < fanEtat.length; k++) {
       const f = fanEtat[k], tient = B.etat.troncons[k];
       if (tient !== f.tient) { f.ancien = f.tient; f.tient = tient; f.t = 0; }
@@ -1069,7 +1066,7 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
       // monté : 0 (en bas) à 1 (en haut) ; le changement de main : l'ancien descend en 1,2 s, le nouveau monte en 2,5 s
       let monte = 1, camp = f.tient;
       if (f.t < 1.2) { camp = f.ancien; monte = 1 - f.t / 1.2; } else if (f.t < 3.7) monte = (f.t - 1.2) / 2.5;
-      const y0 = (aPlat ? SOL_Y : surface(f.x, f.z));
+      const y0 = surface(f.x, f.z);
       const gros = Math.max(1, 3 / Math.max(p, 1));              // de loin, un fanion doit encore faire un pixel
       // la hampe (3 m) et le drapeau (1,3 × 0,8 m), qui flotte un peu
       fanS.set(0.12 * gros, 3, 1); fanV.set(f.x, y0 + 1.5, f.z);
@@ -1088,7 +1085,7 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
   // ─── Brancher une bataille ───
   function attacher(bataille) {
     B = bataille; T = B.terrain;
-    if (sol) { scene.remove(sol); sol.children.forEach(m => { m.userData.fin?.dispose(); m.userData.gros?.dispose(); }); solTex.dispose(); }
+    if (sol) { scene.remove(sol); sol.children.forEach(m => m.userData.fin?.dispose()); solTex.dispose(); }
     solIdx = new Uint8Array(T.W * T.H);
     solData = new Uint8Array(T.W * T.H * 2 * 4);
     solTex = new THREE.DataTexture(solData, T.W, T.H * 2, THREE.RGBAFormat, THREE.UnsignedByteType);
@@ -1096,13 +1093,6 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
     solMat.uniforms.uSol.value = solTex; solMat.uniforms.uTaille.value.set(T.W, T.H);
     vuLigne = new Uint32Array(T.H).fill(0xffffffff); gelVu = null;
     sol = new THREE.Group(); scene.add(sol);
-    // le niveau de détail lointain : tout le champ en deux triangles, à plat
-    if (solPlat) { scene.remove(solPlat); solPlat.geometry.dispose(); }
-    const gp = new THREE.PlaneGeometry(T.W, T.H); gp.rotateX(-Math.PI / 2); gp.translate(T.W / 2, SOL_Y, T.H / 2);
-    gp.setAttribute('aParoi', new THREE.Float32BufferAttribute(new Float32Array(gp.attributes.position.count), 1));
-    gp.setAttribute('aDecal', new THREE.Float32BufferAttribute(new Float32Array(gp.attributes.position.count * 2), 2));
-    solPlat = new THREE.Mesh(gp, solMat); solPlat.frustumCulled = false;
-    scene.add(solPlat);
     morceaux = [];
     for (let my = 0; my < T.mh; my++) for (let mx = 0; mx < T.mw; mx++) {
       const m = new THREE.Mesh(new THREE.BufferGeometry(), solMat);
@@ -1133,50 +1123,10 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
   }
   function refaire(m) {
     const { mx, my } = m.userData;
-    m.userData.fin?.dispose(); m.userData.gros?.dispose();
+    m.userData.fin?.dispose();
     m.userData.fin = construireMorceau(mx, my);
-    m.userData.gros = construireGros(mx, my);
     m.geometry = m.userData.fin;
     m.userData.version = versionAutour(mx, my);
-  }
-  /* Le niveau de détail lointain (la perspective montre beaucoup de sol au loin :
-     après trois jours d'obus, 54 000 triangles au zoom 4) : un morceau loin de la
-     caméra n'est plus que des facettes de LOIN m, sans parois ; les cubes restent
-     de près. La couleur reste celle de chaque case (la texture). */
-  const LOIN = 5;
-  function construireGros(mx, my) {
-    const i0 = mx * MORCEAU, j0 = my * MORCEAU, i1 = Math.min(T.W, i0 + MORCEAU), j1 = Math.min(T.H, j0 + MORCEAU);
-    const coin = (ci, cj) => {
-      let s2 = 0, n = 0;
-      for (let dj = -1; dj <= 0; dj++) for (let di = -1; di <= 0; di++) {
-        const i = Math.min(T.W - 1, Math.max(0, ci + di)), j = Math.min(T.H - 1, Math.max(0, cj + dj));
-        s2 += hauteurQ(T, j * T.W + i); n++;
-      }
-      return s2 / n * 0.25;
-    };
-    const pos = [];
-    for (let z = j0; z < j1; z += LOIN) for (let x = i0; x < i1; x += LOIN) {
-      const x1 = Math.min(i1, x + LOIN), z1 = Math.min(j1, z + LOIN);
-      const a = coin(x, z), b = coin(x1, z), c = coin(x1, z1), d = coin(x, z1);
-      pos.push(x, a, z, x, d, z1, x1, c, z1, x, a, z, x1, c, z1, x1, b, z);
-    }
-    const g = new THREE.BufferGeometry();
-    g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
-    g.setAttribute('aParoi', new THREE.Float32BufferAttribute(new Float32Array(pos.length / 3), 1));
-    g.setAttribute('aDecal', new THREE.Float32BufferAttribute(new Float32Array(pos.length / 3 * 2), 2));
-    g.boundingSphere = new THREE.Sphere(new THREE.Vector3((i0 + i1) / 2, 3, (j0 + j1) / 2), Math.hypot(i1 - i0, j1 - j0, 20) / 2);
-    return g;
-  }
-  // chaque morceau : les cubes de près, les facettes au loin
-  function choisirDetail() {
-    const seuil = distance(vue.zoom) * 1.05, c = camera.position;      // (au-delà du point visé)
-    for (const m of morceaux) {
-      const { mx, my, fin, gros } = m.userData;
-      if (!fin) continue;
-      const d = Math.hypot((mx + 0.5) * MORCEAU - c.x, SOL_Y - c.y, (my + 0.5) * MORCEAU - c.z);
-      const g = d > seuil ? gros : fin;
-      if (m.geometry !== g) m.geometry = g;
-    }
   }
   // la texture du sol : les rangées dont la couleur a changé
   function majSol(tout = false, dt = 0) {
@@ -1223,7 +1173,7 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
 
   // ─── Les soldats : leurs positions dans les tampons ───
   function majSoldats() {
-    const A = B.armee, n = A.n, p = ZOOMS[vue.zoom], aPlat = plat();
+    const A = B.armee, n = A.n, p = ZOOMS[vue.zoom];
     // seulement ceux qu'on voit : le sol vu est un trapèze ; on garde ceux de son rectangle englobant
     const cs = coinsSol(vue.zoom, yawVu(), tangageVu());
     // (un coin de l'écran regarde le ciel : tout le terrain peut être vu, le vrai tri se fait à l'écran)
@@ -1238,7 +1188,7 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
       if (x < x0 || x > x1 || y < z0 || y > z1) continue;
       const cxp = e[0] * x + e[4] * SOL_Y + e[8] * y + e[12], cyp = e[1] * x + e[5] * SOL_Y + e[9] * y + e[13], cw = e[3] * x + e[7] * SOL_Y + e[11] * y + e[15];
       if (cxp < -1.08 * cw || cxp > 1.08 * cw || cyp < -1.15 * cw || cyp > 1.15 * cw) continue;
-      posArr[k * 3] = x; posArr[k * 3 + 1] = aPlat ? SOL_Y : surface(x, y); posArr[k * 3 + 2] = y;
+      posArr[k * 3] = x; posArr[k * 3 + 1] = surface(x, y); posArr[k * 3 + 2] = y;
       campArr[k] = A.camp[i] + (choisis.has(A.reg[i]) ? 2 : 0);
       vitArr[k] = A.peur[i] >= TAPI ? -1 : Math.hypot(A.vx[i], A.vy[i]);
       k++;
@@ -1250,14 +1200,14 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
     soldatsPoints.geometry.setDrawRange(0, k);
     soldatsInst.geometry.instanceCount = k;
     vus = k;
-    majCorps(x0, x1, z0, z1, e, aPlat, points);
-    majTombes(x0, x1, z0, z1, e, aPlat, points);
-    majHerbe(x0, x1, z0, z1, e, aPlat);
+    majCorps(x0, x1, z0, z1, e, points);
+    majTombes(x0, x1, z0, z1, e, points);
+    majHerbe(x0, x1, z0, z1, e, petit());
     const bornes = [x0 - 6, x1 + 6, z0 - 6, z1 + 10];
     majArbres(e, bornes); majBuissons(e, bornes);
   }
   // les corps : ceux qu'on voit, comme les soldats (la liste ne fait que grandir)
-  function majCorps(x0, x1, z0, z1, e, aPlat, points) {
+  function majCorps(x0, x1, z0, z1, e, points) {
     const C = B.etat.corps, jour = B.etat.jour;
     if (C.length > capCorps) preparerCorps(C.length * 2);
     let k = 0;
@@ -1266,7 +1216,7 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
       if (x < x0 || x > x1 || y < z0 || y > z1) continue;
       const cxp = e[0] * x + e[4] * SOL_Y + e[8] * y + e[12], cyp = e[1] * x + e[5] * SOL_Y + e[9] * y + e[13], cw = e[3] * x + e[7] * SOL_Y + e[11] * y + e[15];
       if (cxp < -1.08 * cw || cxp > 1.08 * cw || cyp < -1.15 * cw || cyp > 1.15 * cw) continue;
-      cPos[k * 3] = x; cPos[k * 3 + 1] = aPlat ? SOL_Y : surface(x, y); cPos[k * 3 + 2] = y;
+      cPos[k * 3] = x; cPos[k * 3 + 1] = surface(x, y); cPos[k * 3 + 2] = y;
       cInfo[k * 2] = c[3] < jour ? 2 : c[2];
       cInfo[k * 2 + 1] = ((c[4] * 2654435761) >>> 0) % 628 / 100;     // couché dans un sens qui ne change pas
       k++;
@@ -1276,7 +1226,7 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
     corpsPoints.geometry.setDrawRange(0, k);
     corpsInst.geometry.instanceCount = k;
   }
-  function majTombes(x0, x1, z0, z1, e, aPlat, points) {
+  function majTombes(x0, x1, z0, z1, e, points) {
     const C = B.etat.tombes || [];
     if (C.length > capTombes) preparerTombes(C.length * 2);
     let k = 0;
@@ -1285,7 +1235,7 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
       if (x < x0 || x > x1 || y < z0 || y > z1) continue;
       const cxp = e[0] * x + e[4] * SOL_Y + e[8] * y + e[12], cyp = e[1] * x + e[5] * SOL_Y + e[9] * y + e[13], cw = e[3] * x + e[7] * SOL_Y + e[11] * y + e[15];
       if (cxp < -1.08 * cw || cxp > 1.08 * cw || cyp < -1.15 * cw || cyp > 1.15 * cw) continue;
-      tbPos[k * 3] = x; tbPos[k * 3 + 1] = aPlat ? SOL_Y : surface(x, y); tbPos[k * 3 + 2] = y;
+      tbPos[k * 3] = x; tbPos[k * 3 + 1] = surface(x, y); tbPos[k * 3 + 2] = y;
       k++;
     }
     if (!vide) { tombesPoints.visible = points; tombesInst.visible = !points; }
@@ -1324,14 +1274,13 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
       if (d.y > -1e-4) break;
       const t = (hy - o.y) / d.y;
       x = o.x + d.x * t; z = o.z + d.z * t;
-      if (!T || plat()) break;
+      if (!T) break;
       hy = surface(x, z);
     }
     return [x, z];
   }
   // [x, y] du terrain (et une hauteur) → pixels CSS
   function versEcran(x, y, h = null) {
-    if (h === null && T && plat()) h = SOL_Y;
     if (h === null && T) h = surface(x, y);
     v3.set(x, h ?? SOL_Y, y).project(camera);
     const w = canvas.clientWidth || 1, hh = canvas.clientHeight || 1;
@@ -1358,9 +1307,8 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
     }
     borner();
     majSol(false, dt);
-    if (!vide) { sol.visible = !plat(); solPlat.visible = plat(); }
-    solMat.uniforms.uPlat.value = plat() ? 1 : 0;
-    if (!plat()) { majMorceaux(); projeter(); choisirDetail(); }
+    if (!vide) sol.visible = true;
+    majMorceaux(); projeter();
     herbeMat.uniforms.uT.value = tAnim; soldatMat.uniforms.uT.value = tAnim;
     const t1 = performance.now();
     majSoleil(horloge(B));
