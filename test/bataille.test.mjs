@@ -219,7 +219,8 @@ test('en face prépare au 220 là où nous tenons ; il monte à l\'assaut là o�
   assert.ok(B.etat.impacts.some(i => i[4] === 2), 'il prépare au 220');
   // notre première ligne vidée : il sort
   const C = petite(), A = C.armee;
-  const premiers = new Set(C.etat.regiments.filter(r => r.camp === 0 && r.ordre.trace?.ligne === 0).map(r => r.id));
+  // (la moitié de notre première ligne : si tous tombaient, la bataille finirait)
+  const premiers = new Set(C.etat.regiments.filter(r => r.camp === 0 && r.ordre.trace?.ligne === 0).map(r => r.id).slice(0, 4));
   for (let i = 0; i < A.n; i++) if (premiers.has(A.reg[i])) A.mort[i] = 1;
   for (const r of C.etat.regiments) if (premiers.has(r.id)) r.effectif = 0;
   for (let k = 0; k < 30 * 175; k++) avancer(C);
@@ -360,7 +361,7 @@ test('les abris : un niveau par nuit, trois au plus ; les obus y tuent moins ; u
   assert.ok(c >= 0 && Math.abs(abriDe(B, c) - (1 - R.nuit.abriParNiveau * R.nuit.abriMax)) < 1e-9);
   assert.equal(abriDe(B, T.troncon.findIndex(k => k === -1)), 1);
   const C = restaurer(photo(B), R);
-  ordonnerBarrage(C, '220', reg.ordre.x, reg.ordre.y, 1);
+  for (let n = 0; n < 6; n++) ordonnerBarrage(C, '220', reg.ordre.x + (n - 3) * 6, reg.ordre.y, 1);   // (le secteur n'a que deux tronçons : plusieurs salves)
   for (let k = 0; k < 30 * 40; k++) avancer(C);
   assert.ok(ks.some(k => (C.etat.abris[k] || 0) < R.nuit.abriMax), 'crevé');
   assert.deepEqual(restaurer(photo(C), R).etat.abris, C.etat.abris);

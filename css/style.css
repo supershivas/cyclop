@@ -57,6 +57,25 @@
 .morts .croix { letter-spacing: .18em; min-height: 1.4em; white-space: nowrap; }
 .morts .croix.eux { color: var(--jeu-eux); }
 .morts b { color: var(--jeu-fond); }
+.carte { width: min(40ch, 32vw); }
+.carte .entete { letter-spacing: .14em; text-transform: uppercase; border-bottom: 1px solid var(--jeu-accent); padding-bottom: 2px; font-size: 12px; margin-bottom: 4px; }
+.carte-grille { display: grid; gap: 2px; align-items: stretch; }
+.carte-grille .lib { font-size: 11px; align-self: center; color: var(--jeu-accent); }
+.carte-grille .lib.premiere, .carte-grille .cel.apres-front { margin-top: 8px; }
+.carte-grille button { font: inherit; padding: 0; border: 0; min-height: 0; cursor: pointer; }
+.carte-grille .sect { background: var(--jeu-fond); color: var(--jeu-encre); min-height: 22px; font-size: 12px; }
+.carte-grille .cel { position: relative; display: flex; height: 22px; background: var(--jeu-accent); }
+.carte-grille .cel i { flex: 1; display: block; margin: 1px; background: var(--jeu-accent); }
+.carte-grille .cel i.nous { background: var(--jeu-nous); }
+.carte-grille .cel i.eux { background: var(--jeu-eux); }
+.carte-grille .cel i.dispute { outline: 2px solid var(--jeu-fond); outline-offset: -2px; }
+.carte-grille .cel b { position: absolute; inset: 0; display: grid; place-items: center; font-size: 11px; font-weight: normal; color: var(--jeu-fond); pointer-events: none; }
+.carte-grille .cel.choisi { outline: 2px solid var(--jeu-fond); outline-offset: 1px; }
+.carte-grille .cel.clign { animation: clign .5s steps(1) 6; }
+@keyframes clign { 0% { outline: 3px solid var(--jeu-fond); outline-offset: 1px; } 50% { outline: 3px solid transparent; } }
+@media (hover: hover) { .carte-grille .cel:hover { outline: 2px solid var(--jeu-accent); outline-offset: 1px; } }
+.carte-aide { font-size: 11px; margin-top: 4px; }
+.carte-bascule { font: inherit; font-size: 12px; border: 0; cursor: pointer; color: var(--jeu-fond); min-height: 28px; }
 .carnet { width: 30ch; max-width: 36vw; font-size: 12px; }
 .carnet[hidden] { display: none; }
 .carnet .entete { letter-spacing: .14em; text-transform: uppercase; border-bottom: 1px solid var(--jeu-accent); padding-bottom: 2px; }

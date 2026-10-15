@@ -1,5 +1,9 @@
 # Journal des versions
 
+## 0.14.0 — 2026-10-15
+- Huit secteurs numérotés, un régiment chacun : une carte (touche M) montre qui tient chaque tranchée (S3·N1, S3·F2)
+- Un ordre sur une tranchée la fait clignoter, et la feuille du régiment dit ce qu'il fait : tient S3·N1, attaque S3·F1…
+
 ## 0.13.0 — 2026-10-15
 - La nuit se joue sur le champ de bataille : on choisit des régiments, puis leur corvée, sans boîte de dialogue
 - Les soldats ont des bras : ils épaulent le fusil, se tournent vers l'ennemi et tirent

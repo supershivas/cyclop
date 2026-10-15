@@ -14,8 +14,8 @@ export const SECTEURS = {
     bois: 3,                // des bois serrés (une trentaine d'arbres chacun), dans le secteur ; autant dans les marges, à surface égale
     haies: 5,               // des lignes de buissons, dans tout le terrain (v0.7.0)
     buissons: 160,          // des buissons épars, dans tout le terrain
-    regiments: 6,           // par camp (8 avant la v0.7.0 : Jérôme en a retiré deux)
-    soldats: 750,           // par camp (six régiments de 125) (la mesure en charge 4 000 : ?soldats=8000)
+    regiments: 8,           // par camp : un régiment par secteur de 50 m (Jérôme, v0.14.0 ; six avant, huit avant la v0.7.0)
+    soldats: 750,           // par camp (huit régiments de 94) (la mesure en charge 4 000 : ?soldats=8000)
     ligne: { eux: 70, nous: 230 },   // rangée de cases où chaque camp se tient au départ (dans le secteur)
     // le terrain déborde du secteur : des marges sans régiments, pour que la vue reste toujours sur le
     // terrain, même tout dézoomée (Jérôme, v0.3.0). En perspective (30°, plongée de 54°), le zoom 1 d'une
@@ -31,8 +31,8 @@ export const SECTEURS = {
       baie: 10,             // m : la longueur d'une baie
       troncon: 25,          // m : un tronçon, ce qui se prend et se perd
       boyaux: 4,            // par camp
-      // au départ : les régiments, la moitié dans la première ligne, la moitié dans la deuxième
-      depart: [0, 1],
+      // au départ : les rangs de lignes où se tiennent les régiments (de gauche à droite, autant par rang)
+      depart: [0],          // les huit régiments tiennent la 1re ligne, chacun son secteur (50 m) ; les autres lignes sont vides (v0.14.0)
     },
   },
 };

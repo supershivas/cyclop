@@ -1,23 +1,24 @@
 // Le cycle de vie : écran titre → bataille → nuit → fin ; pause active,
 // réglages, sauvegarde, mise à jour, debug. Les règles sont dans bataille.js
 // (pures), le dessin dans rendu3d.js (il ne modifie jamais l'état).
-import { createLoop } from './lib/loop.js?v=0.13.0';
-import { createKeys, stopTypeahead } from './lib/keys.js?v=0.13.0';
-import { createPointer, lockBrowserGestures } from './lib/pointer.js?v=0.13.0';
-import { createGamepad } from './lib/gamepad.js?v=0.13.0';
-import { createStore, autosave, pickJSONFile } from './lib/save.js?v=0.13.0';
-import { startUpdateCheck, loadVersion, loadChangelog, downloadJSON } from './lib/app-update.js?v=0.13.0';
-import { ROLES } from './palette.js?v=0.13.0';
-import { MISSIONS, nouvelleBataille, avancer, aube, ordonnerMarche, ordonnerBarrage, horloge, effectifs, tronconsTenus, moralEnMots, terrainSous, rangDe, nomTroncon, photo, restaurer, PAS, NOUS } from './bataille.js?v=0.13.0';
-import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.13.0';
-import { METEO } from './data/meteo.js?v=0.13.0';
-import { impact, hydroLignes } from './terrain.js?v=0.13.0';
-import { hash2 } from './lib/rng.js?v=0.13.0';
-import { creerRendu, CAMERA } from './rendu3d.js?v=0.13.0';
-import { identite, etatEnMots, experienceEnMots } from './identite.js?v=0.13.0';
-import { CORVEES } from './data/corvees.js?v=0.13.0';
-import { refusCorvee } from './nuit.js?v=0.13.0';
-import { chargerContenu } from './design-store.js?v=0.13.0';
+import { createLoop } from './lib/loop.js?v=0.14.0';
+import { createKeys, stopTypeahead } from './lib/keys.js?v=0.14.0';
+import { createPointer, lockBrowserGestures } from './lib/pointer.js?v=0.14.0';
+import { createGamepad } from './lib/gamepad.js?v=0.14.0';
+import { createStore, autosave, pickJSONFile } from './lib/save.js?v=0.14.0';
+import { startUpdateCheck, loadVersion, loadChangelog, downloadJSON } from './lib/app-update.js?v=0.14.0';
+import { ROLES } from './palette.js?v=0.14.0';
+import { MISSIONS, nouvelleBataille, avancer, aube, ordonnerMarche, ordonnerBarrage, horloge, effectifs, tronconsTenus, moralEnMots, terrainSous, rangDe, nomTroncon, actionDe, secteurDe, tronconsDeLigne, largeurSecteur, nombreSecteurs, codeLigne, zone, photo, restaurer, PAS, NOUS, EUX } from './bataille.js?v=0.14.0';
+import { ligneY } from './tranchees.js?v=0.14.0';
+import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.14.0';
+import { METEO } from './data/meteo.js?v=0.14.0';
+import { impact, hydroLignes } from './terrain.js?v=0.14.0';
+import { hash2 } from './lib/rng.js?v=0.14.0';
+import { creerRendu, CAMERA } from './rendu3d.js?v=0.14.0';
+import { identite, etatEnMots, experienceEnMots } from './identite.js?v=0.14.0';
+import { CORVEES } from './data/corvees.js?v=0.14.0';
+import { refusCorvee } from './nuit.js?v=0.14.0';
+import { chargerContenu } from './design-store.js?v=0.14.0';
 
 const JEU = 'cyclopeen';
 const $ = id => document.getElementById(id);
@@ -33,7 +34,7 @@ const store = createStore({
   debug: DEBUG,
   entries: {
     partie: { version: 1 },
-    prefs: { version: 1, debugWrites: false, defaults: { zoom: 2, camera: null, gauche: false } },
+    prefs: { version: 1, debugWrites: false, defaults: { zoom: 2, camera: null, gauche: false, carte: true } },
   },
   secret: ['gh-token'],
 });
@@ -128,6 +129,7 @@ function jouer(bataille) {
   choisis = new Set(); rendu.choisis = choisis;
   modeBarrage = null; pauseActive = false; fermerFiche(); fermerNuit();
   journal.length = 0; majCarnet(); feuillesVues = '';
+  construireCarte();
   $('titre').hidden = true;
   $('hud').hidden = false;
   etiquettes();
@@ -355,14 +357,13 @@ function dire(r) { if (r?.refus) toast(r.refus); return r; }
 const deux = n => String(n).padStart(2, '0');
 // Une croix au crayon par mort (douze au plus, le reste en nombre)
 const croix = n => n <= 12 ? '✕'.repeat(n) : `${'✕'.repeat(12)} +${n - 12}`;
-const ligneEnMots = rang => rang === 0 ? '1re ligne' : `${rang + 1}e ligne`;
-const ordreEnMots = r => nuitEtat === 'choix' && corveesNuit[r.id] ? `cette nuit : ${corveeDe(corveesNuit[r.id]).toLowerCase()}` : r.deroute ? 'en déroute' : r.ordre.trace ? `tient la ${ligneEnMots(r.ordre.trace.ligne % 10)}` : 'en marche';
+const ordreEnMots = r => nuitEtat === 'choix' && corveesNuit[r.id] ? `cette nuit : ${corveeDe(corveesNuit[r.id]).toLowerCase()}` : actionDe(B, r);
 
 // Les feuilles de situation : une par régiment choisi (trois au plus) ; un clic ouvre la fiche
 let feuillesVues = '';
 function majFeuilles() {
   const e = B.etat, regs = [...choisis].map(id => e.regiments[id]).filter(Boolean);
-  const cle = regs.map(r => `${r.id}:${r.effectif}:${r.pertes}:${r.deroute ? 1 : 0}:${moralEnMots(r, R)}:${r.ordre.trace ? r.ordre.trace.ligne : 'm'}:${B.armee.n}:${nuitEtat === 'choix' ? corveesNuit[r.id] : ''}`).join('|');
+  const cle = regs.map(r => `${r.id}:${r.effectif}:${r.pertes}:${r.deroute ? 1 : 0}:${moralEnMots(r, R)}:${actionDe(B, r)}:${B.armee.n}:${nuitEtat === 'choix' ? corveesNuit[r.id] : ''}`).join('|');
   if (cle === feuillesVues) return;
   feuillesVues = cle;
   const A = B.armee;
@@ -382,6 +383,99 @@ function majFeuilles() {
   });
   if (regs.length > 3) { const b = document.createElement('div'); b.className = 'papier feuille reste'; b.textContent = `+ ${regs.length - 3} autres régiments`; els.push(b); }
   $('feuilles').replaceChildren(...els);
+}
+
+// ─── La carte du secteur (Jérôme, v0.14.0) : huit secteurs numérotés de l'ouest à l'est, les quatre lignes de chaque camp (en
+// face au nord, en haut), chaque case en deux tronçons de 25 m, à la couleur de celui qui les tient. Un numéro choisit le
+// régiment du secteur ; une case envoie les régiments choisis dans cette tranchée (et la fait clignoter, ici et sur le terrain).
+let carteCases = [], carteVue = '';
+function construireCarte() {
+  const g = $('carte-grille'), n = nombreSecteurs(B);
+  carteCases = []; carteVue = '';
+  if (!B.etat.tranchees) { g.replaceChildren(); return majCarteBascule(); }
+  g.style.gridTemplateColumns = `2.4em repeat(${n}, minmax(0, 1fr))`;
+  const kids = [document.createElement('span')];
+  for (let s = 1; s <= n; s++) {
+    const b = document.createElement('button');
+    b.className = 'sect'; b.textContent = s; b.title = `Choisir le régiment du secteur ${s}`; b.setAttribute('aria-label', `Choisir le régiment du secteur ${s}`);
+    b.onclick = e => choisirSecteur(s, e.shiftKey);
+    kids.push(b);
+  }
+  [[EUX, 3], [EUX, 2], [EUX, 1], [EUX, 0], [NOUS, 0], [NOUS, 1], [NOUS, 2], [NOUS, 3]].forEach(([camp, rang], k) => {
+    const idx = B.lignes.findIndex(L => L.camp === camp && L.rang === rang);
+    if (idx < 0) return;
+    const lib = document.createElement('span'); lib.className = `lib${k === 4 ? ' premiere' : ''}`; lib.textContent = codeLigne(B.lignes[idx]);
+    kids.push(lib);
+    for (let s = 1; s <= n; s++) {
+      const c = document.createElement('button'), nom = `S${s}·${codeLigne(B.lignes[idx])}`;
+      c.className = `cel${k === 4 ? ' apres-front' : ''}`; c.innerHTML = '<i></i><i></i><b></b>';
+      c.title = `Envoyer les régiments choisis dans ${nom}`; c.setAttribute('aria-label', `Envoyer les régiments choisis dans ${nom}`);
+      c.onclick = () => ordreCase(idx, s);
+      kids.push(c); carteCases.push({ idx, s, el: c, moities: c.querySelectorAll('i'), marque: c.querySelector('b') });
+    }
+  });
+  g.replaceChildren(...kids);
+  $('carte').hidden = prefs.carte === false;
+  majCarteBascule();
+}
+function majCarteBascule() {
+  const b = $('carte-bascule');
+  b.hidden = !B?.etat.tranchees;
+  b.textContent = $('carte').hidden ? 'Carte (M)' : 'Masquer la carte (M)';
+}
+function basculerCarte() {
+  if (!B?.etat.tranchees) return;
+  $('carte').hidden = !$('carte').hidden;
+  prefs.carte = !$('carte').hidden; store.save('prefs', prefs);
+  carteVue = ''; majCarteBascule(); majHud();
+}
+$('carte-bascule').onclick = basculerCarte;
+function majCarte() {
+  if (!B.etat.tranchees || $('carte').hidden) return;
+  const e = B.etat, Z = zone(B), w = largeurSecteur(B), marques = new Map();
+  for (const r of e.regiments) {
+    const t = r.ordre.trace;
+    if (!r.effectif || !t) continue;
+    const idx = B.lignes.findIndex(L => L.camp * 10 + L.rang === t.ligne), k = `${idx}:${secteurDe(B, (t.x0 + t.x1) / 2)}`;
+    (marques.get(k) || marques.set(k, []).get(k)).push(r);
+  }
+  const cle = [e.troncons.join(''), [...B.disputes].join(''), [...choisis].join(','), [...marques].map(([k, v]) => `${k}=${v.map(r => r.id)}`).join(';')].join('|');
+  if (cle === carteVue) return;
+  carteVue = cle;
+  for (const c of carteCases) {
+    const ks = tronconsDeLigne(B, c.idx, Z.x0 + (c.s - 1) * w, Z.x0 + c.s * w), rs = marques.get(`${c.idx}:${c.s}`) || [];
+    c.moities.forEach((m, k) => { const t = ks[k]; m.className = t === undefined ? '' : `${e.troncons[t] === NOUS ? 'nous' : 'eux'}${B.disputes[t] ? ' dispute' : ''}`; });
+    c.marque.textContent = rs.map(r => r.camp === NOUS ? r.nom.slice(0, 2) : '•').join(' ');
+    c.el.classList.toggle('choisi', rs.some(r => choisis.has(r.id)));
+  }
+}
+function choisirSecteur(s, ajout) {
+  const regs = B.etat.regiments.filter(r => r.camp === NOUS && r.effectif && secteurDe(B, r.depart.x) === s);
+  if (!regs.length) return toast(`Plus personne dans le secteur ${s}.`);
+  if (!ajout) choisis = new Set();
+  for (const r of regs) { if (ajout && choisis.has(r.id)) choisis.delete(r.id); else choisis.add(r.id); }
+  rendu.choisis = choisis; majHud();
+}
+function ordreCase(idx, s) {
+  if (B.etat.phase !== 'jour') return toast('La nuit, pas de marche : choisissez des régiments, puis une corvée.');
+  if (!choisis.size) return toast('Choisissez d\'abord un régiment (clic, cadre, T, ou le numéro d\'un secteur).');
+  const Z = zone(B), x = Z.x0 + (s - 0.5) * largeurSecteur(B), y = ligneY(B.lignes[idx], x);
+  const r = dire(ordonnerMarche(B, [...choisis], x, y));
+  if (r.ok) { marque = { x, y, t: 2 }; sauvegarder(); ordreDonne(r); }
+}
+// Un ordre pris : les tronçons visés clignotent (sur le terrain et sur la carte, trois secondes) et le carnet dit ce que chacun va faire
+function ordreDonne(r) {
+  if (!r?.ok) return;
+  if (r.tranchee && r.troncons?.length) {
+    rendu.clignoter(r.troncons);
+    const Z = zone(B), w = largeurSecteur(B), vises = new Set(r.troncons), els = [];
+    for (const c of carteCases) if (c.idx === r.ligne && tronconsDeLigne(B, c.idx, Z.x0 + (c.s - 1) * w, Z.x0 + c.s * w).some(k => vises.has(k))) els.push(c.el);
+    for (const el of els) { el.classList.remove('clign'); void el.offsetWidth; el.classList.add('clign'); }
+    setTimeout(() => { for (const el of els) el.classList.remove('clign'); }, 3200);
+  }
+  const regs = r.regiments.map(id => B.etat.regiments[id]);
+  noter(regs.length > 2 ? `${regs.length} régiments en marche.` : regs.map(g => `${g.nom} : ${actionDe(B, g)}`).join(' ; ') + '.');
+  feuillesVues = ''; majHud();
 }
 
 // Les événements de la bataille, racontés au carnet de bord (la boucle et le mode debug)
@@ -443,7 +537,7 @@ function majHud() {
     b.classList.toggle('vise', modeBarrage === cal);
     b.classList.toggle('recharge', reste > 0);
   }
-  majFeuilles(); majNuit();
+  majFeuilles(); majNuit(); majCarte();
   $('batteries').hidden = nuitEtat === 'choix';    // la nuit, pas de barrage
   $('ecran').classList.toggle('vise', !!modeBarrage);
 }
@@ -490,15 +584,16 @@ function majEtiquettes() {
   for (const [id, d] of etiq) {
     const c = centres.get(id);
     if (!c) { d.hidden = true; continue; }
-    const nom = B.etat.regiments[id].nom, t = nuitEtat === 'choix' && corveesNuit[id] ? `${nom} · ${corveeDe(corveesNuit[id])}` : nom;
-    if (d.textContent !== t) d.textContent = t;
     const [sx, sy] = rendu.versEcran(c.x / c.n, c.ymin - 2);
     // hors de l'écran : caché (sinon il dépasse, et l'audit d'écran le voit amputé)
     d.hidden = sx < 30 || sy < 20 || sx > innerWidth - 30 || sy > innerHeight;
     if (d.hidden) continue;
     d.style.transform = `translate(${Math.round(sx)}px, ${Math.round(sy)}px) translate(-50%, -100%)`;
     d.classList.toggle('choisi', choisis.has(id));
-    const reg = B.etat.regiments[id], m = moralEnMots(reg, R), texte = m.startsWith('tient') ? reg.nom : `${reg.nom} · ${m}`;
+    // « S3 · Viride », puis la corvée de la nuit, ou le moral quand il baisse
+    const reg = B.etat.regiments[id], m = moralEnMots(reg, R), base = `S${secteurDe(B, reg.depart.x)} · ${reg.nom}`;
+    const suite = nuitEtat === 'choix' && corveesNuit[id] ? corveeDe(corveesNuit[id]) : m.startsWith('tient') ? '' : m;
+    const texte = suite ? `${base} · ${suite}` : base;
     if (d.textContent !== texte) d.textContent = texte;
   }
   const rs = $('repere-soldat'), is = fiche ? indiceDe(fiche.id) : -1;
@@ -722,7 +817,7 @@ function choisirTout() {
 }
 const keys = createKeys({
   actions: {
-    menu: 'Escape', pause: ' ', tout: 't', plus: ['+', '=', 'NumpadAdd'], moins: ['-', 'NumpadSubtract'],
+    menu: 'Escape', pause: ' ', tout: 't', carte: 'm', plus: ['+', '=', 'NumpadAdd'], moins: ['-', 'NumpadSubtract'],
     b1: 'Digit1', b2: 'Digit2', b3: 'Digit3',
   },
   onAction: nom => {
@@ -735,6 +830,7 @@ const keys = createKeys({
     }
     else if (nom === 'pause') { pauseActive = !pauseActive; if (pauseActive) loop.pause(); else reprendre(); majHud(); }
     else if (nom === 'tout') choisirTout();
+    else if (nom === 'carte') basculerCarte();
     else if (nom === 'plus') zoomer(1);
     else if (nom === 'moins') zoomer(-1);
     else if (nom[0] === 'b') viser(NOMS_CALIBRES[Number(nom[1]) - 1]);
@@ -790,7 +886,8 @@ createPointer($('canvas'), {
     if (p.button === 2) {
       if (modeBarrage) { modeBarrage = null; majHud(); return; }
       if (!choisis.size) return toast('Aucun régiment choisi.');
-      if (dire(ordonnerMarche(B, [...choisis], x, y)).ok) { marque = { x, y, t: 2 }; sauvegarder(); }
+      const r = dire(ordonnerMarche(B, [...choisis], x, y));
+      if (r.ok) { marque = { x, y, t: 2 }; sauvegarder(); ordreDonne(r); }
     } else if (p.button === 0) {
       if (modeBarrage) {
         if (dire(ordonnerBarrage(B, modeBarrage, x, y)).ok) { marque = { x, y, t: 2 }; modeBarrage = null; sauvegarder(); }
@@ -799,7 +896,8 @@ createPointer($('canvas'), {
         // tout au bouton gauche : un clic sur le sol (loin de nos régiments) fait marcher ceux qu'on a choisis
         if (prefs.gauche && r < 0 && choisis.size && !p.event.shiftKey) {
           fermerFiche();
-          if (dire(ordonnerMarche(B, [...choisis], x, y)).ok) { marque = { x, y, t: 2 }; sauvegarder(); }
+          const r = dire(ordonnerMarche(B, [...choisis], x, y));
+          if (r.ok) { marque = { x, y, t: 2 }; sauvegarder(); ordreDonne(r); }
           return majHud();
         }
         if (!p.event.shiftKey) choisis = new Set();
@@ -910,7 +1008,7 @@ startUpdateCheck({
 
 // ─── Mode debug (section 18) : chargé seulement avec ?debug=1 ──────────────
 if (DEBUG) {
-  const { installDebug, seedFromUrl } = await import('./lib/debug.js?v=0.13.0');
+  const { installDebug, seedFromUrl } = await import('./lib/debug.js?v=0.14.0');
   window.__seed = seedFromUrl() ?? undefined;
   installDebug({
     state: () => B && { ...horloge(B), effectifs: effectifs(B), pertes: B.etat.pertes, impacts: B.etat.impacts.length, enJeu: enJeu(), pause: loop.paused },

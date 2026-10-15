@@ -64,7 +64,16 @@ la danse macabre, la catastrophe peinte avec calme. L'intention est dans `DESIGN
   (`dispute`), assaut et préparation d'en face (`assaut`, `preparation`, de `bataille.js`), déroute, ralliement, nouveau
   commandant ; quatre lignes à l'écran, la dernière surlignée ; il remplace les bulles d'avant, et n'est pas sauvegardé : il
   repart à zéro quand on relit une partie). `nomTroncon(B, t)` dit « tronçon 3 de la 1re ligne ».
-- **Six régiments par camp** (Jérôme, v0.7.0 ; huit avant), 750 hommes.
+- **Huit régiments par camp, un par secteur** (Jérôme, v0.14.0 ; six avant, huit avant la v0.7.0), 750 hommes (94 chacun). Le front
+  est coupé en 8 secteurs de 50 m, numérotés de l'ouest à l'est (`secteurDe` de bataille.js) ; une tranchée se dit « S3·N1 » (secteur 3,
+  notre 1re ligne) ou « S3·F2 » (leur 2e ligne, F : en face ; `nomTranchee`, `codeLigne` ; `nomTroncon` : « S3·N1 ouest »). Tous les
+  régiments partent dans leur secteur de la 1re ligne (`depart: [0]` de secteur.js) : les autres lignes sont vides au départ. La **carte**
+  (`#carte`, touche M, `construireCarte` / `majCarte` de main.js) montre les 8 secteurs × 4 lignes de chaque camp, chaque case en deux
+  tronçons à la couleur de celui qui les tient ; un numéro choisit le régiment du secteur, une case l'envoie dans cette tranchée
+  (`ordreCase`). Tout ordre sur une tranchée (carte ou clic droit) fait clignoter les tronçons visés trois secondes, sur le terrain
+  (`rendu.clignoter`) et sur la carte, et le carnet dit ce que chacun va faire (`ordreDonne`) ; `actionDe(B, reg)` le dit en mots
+  (« tient S3·N1 », « attaque S3·F1 », « marche à l'attaque de S3·F1 ») sur la feuille de situation. Les forces en présence et la règle
+  de prise (partie 2 de ce lot) ne sont pas encore faites.
 - **La végétation** (Jérôme, v0.7.0) : l'herbe (`T.herbe`, 0 à 3 par case, tirée de
   la graine ; les obus la soufflent, la boue la tue : rejouée par la sauvegarde),
   des taches dans la couleur du sol et des touffes de près qui ondulent ; des
@@ -440,6 +449,11 @@ node outils/stamp-version.mjs            # après chaque changement de version.j
   v0.11.0) : elle prend la couleur du sol un ton plus sombre, fondue vers son bout (trame jusqu'à la v0.12.0)
   (une lecture de texture de plus par pixel d'ombre : 77 ms au lieu de 73 au zoom 4,
   8 000 soldats, dessin attendu jusqu'au bout ; de l'ordre du bruit de la mesure).
+- **Un régiment, un secteur** (v0.14.0) : un ordre sur une tranchée étale le régiment sur 46 m au plus (`largeurSecteur` − 4), plus
+  serré s'il le faut ; à 94 hommes, la longueur de deux rangs faisait ~66 m, et « S3 » devenait « S2-4 ». Les tests : un assaut de
+  l'ennemi se teste en vidant quatre régiments seulement (tous vidés, la bataille finit), et un 220 sur un secteur (deux tronçons)
+  se tire en plusieurs salves. L'équilibre (huit régiments sur la 1re ligne seule : deux fois plus d'hommes au mètre) n'est pas
+  encore mesuré.
 - **Les petites batailles des tests durent trois jours** (`jours: 3` de `petite`) :
   quinze jours de 200 hommes, c'était une minute de plus par test.
 - **Le moral trop vif** : à 0,03 par seconde de peur, un seul barrage mettait un

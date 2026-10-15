@@ -9,8 +9,8 @@
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta property="og:image" content="og.png">
-<link rel="stylesheet" href="js/lib/game.css?v=0.13.0">
-<link rel="stylesheet" href="css/style.css?v=0.13.0">
+<link rel="stylesheet" href="js/lib/game.css?v=0.14.0">
+<link rel="stylesheet" href="css/style.css?v=0.14.0">
 </head>
 <body>
 <div class="jeu-ecran" id="ecran">
@@ -38,6 +38,12 @@
           </div>
         </div>
         <div class="papier terrain" id="terrain" hidden aria-live="off"></div>
+        <section class="papier carte" id="carte" aria-label="Carte du secteur" hidden>
+          <p class="entete">Le secteur · <span class="discret">en face au nord</span></p>
+          <div class="carte-grille" id="carte-grille"></div>
+          <p class="discret carte-aide">Un numéro choisit le régiment du secteur ; une case l'envoie dans cette tranchée.</p>
+        </section>
+        <button class="papier carte-bascule" id="carte-bascule" hidden></button>
       </div>
       <p class="papier pause-active" id="pause-active" hidden>Temps arrêté</p>
       <!-- La nuit : le champ de bataille reste, ce papier s'y pose (pas de boîte de dialogue) ; on choisit des régiments, puis leur corvée -->
@@ -185,6 +191,6 @@
 </dialog>
 
 <div class="jeu-toast" id="toast" role="status" hidden></div>
-<script type="module" src="js/main.js?v=0.13.0"></script>
+<script type="module" src="js/main.js?v=0.14.0"></script>
 </body>
 </html>

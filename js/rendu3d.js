@@ -22,12 +22,12 @@
    - Les soldats : instanciés (une boîte et son ombre) ; au zoom 1 et 2, un
      point de 2 × 2 pixels (la couleur du camp sur son ombre).
    - Les corps : un homme couché (instancié) ; au zoom 1 et 2, un pixel. */
-import { loadThree } from './three-lib.js?v=0.13.0';
-import { PALETTE, ORDRE, INDICE } from './palette.js?v=0.13.0';
-import { OMBRE, couleursLigne } from './apparence.js?v=0.13.0';
-import { MORCEAU, hauteurVueQ as hauteurQ, hauteurVueM as hauteurM } from './terrain.js?v=0.13.0';
-import { horloge } from './bataille.js?v=0.13.0';
-import { ligneY } from './tranchees.js?v=0.13.0';
+import { loadThree } from './three-lib.js?v=0.14.0';
+import { PALETTE, ORDRE, INDICE } from './palette.js?v=0.14.0';
+import { OMBRE, couleursLigne } from './apparence.js?v=0.14.0';
+import { MORCEAU, hauteurVueQ as hauteurQ, hauteurVueM as hauteurM } from './terrain.js?v=0.14.0';
+import { horloge } from './bataille.js?v=0.14.0';
+import { ligneY } from './tranchees.js?v=0.14.0';
 
 export const CAMERA = { yaw: 0.15, tangage: 0.95, fov: 30 };   // au départ : tournée de 9°, plongée de 54°, angle de 30°
 // la caméra respire : un balancement très lent, 2° en 23 s (Jérôme, v0.3.1 : variante D du labo retenue)
@@ -1100,6 +1100,32 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
       fanEtat.push({ x, z, tient: B.etat.troncons[k], ancien: B.etat.troncons[k], t: 99 });   // t : depuis combien de temps il a changé de main
     });
   }
+  // ─── Un ordre validé (Jérôme, v0.14.0) : les tronçons visés clignotent quelques secondes, trois traits fins le long de
+  // la tranchée (au parapet, au milieu, au parados), os sur le sol, sans rien changer à la partie. ───
+  const CLIGN_MAX = 3000, clX = new Float32Array(CLIGN_MAX * 3), clignotes = [];
+  const clGeo = new THREE.BufferGeometry();
+  clGeo.setAttribute('position', new THREE.BufferAttribute(clX, 3).setUsage(THREE.DynamicDrawUsage));
+  clGeo.setDrawRange(0, 0);
+  const clMat = new THREE.LineBasicMaterial({ color: col('o'), depthTest: false, depthWrite: false });
+  const clignotants = new THREE.LineSegments(clGeo, clMat); clignotants.frustumCulled = false; clignotants.renderOrder = 7; scene.add(clignotants);
+  function clignoter(troncons, duree = 3) { clignotes.push({ troncons: [...troncons], duree, t: duree }); while (clignotes.length > 6) clignotes.shift(); }
+  function majClignotants(dt) {
+    let v = 0;
+    for (let k = clignotes.length - 1; k >= 0; k--) {
+      const f = clignotes[k];
+      if ((f.t -= dt) <= 0) { clignotes.splice(k, 1); continue; }
+      if (Math.floor((f.duree - f.t) * 4) % 2) continue;                       // quatre fois par seconde : allumé, éteint
+      for (const t of f.troncons) {
+        const tr = B.troncons[t], L = B.lignes[tr?.ligne];
+        if (!L) continue;
+        for (const dz of [-1.4, 0, 1.4]) for (let x = tr.x0; x < tr.x1 && v + 2 <= CLIGN_MAX; x += 1.5) {
+          for (const xx of [x, Math.min(tr.x1, x + 1.5)]) { const z = ligneY(L, xx) + dz; clX[v * 3] = xx; clX[v * 3 + 1] = surface(xx, z) + 0.15; clX[v * 3 + 2] = z; v++; }
+        }
+      }
+    }
+    clGeo.attributes.position.needsUpdate = true; clGeo.setDrawRange(0, v);
+  }
+
   function majFanions(dt) {
     if (!fanP) return;
     const p = ZOOMS[vue.zoom];
@@ -1360,7 +1386,7 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
     majSoleil(horloge(B));
     majSoldats();
     tAnim += dt;
-    majEclats(dt); majCorbeaux(dt, tAnim); majFanions(dt);
+    majEclats(dt); majCorbeaux(dt, tAnim); majFanions(dt); majClignotants(dt);
     const h = horloge(B);
     majNuit(h); lnMat.uniforms.uT.value = tAnim;
     if (!vide) { pluie.visible = h.meteo === 'pluie' && h.phase === 'jour'; brume.visible = h.meteo === 'brouillard'; }
@@ -1423,6 +1449,7 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
     },
     get ppm() { return ZOOMS[vue.zoom]; },
     // une fumée qui dérive, posée en (x, z) (l'écran titre en épaissit le champ)
+    clignoter,
     fumer(x, z) { if (T) fumee(x + (alea() - 0.5) * 3, surface(x, z) + 0.5, z + (alea() - 0.5) * 3, 2, true); },
     get stats() {
       let tri = 0;
