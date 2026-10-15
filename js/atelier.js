@@ -3,8 +3,8 @@
 // visible dans le jeu de ce navigateur, puis publiée d'un geste dans le dépôt
 // (un commit sur main, par l'API de GitHub) : assets/design/reglages.json.
 // Un seul outil pour l'instant : les réglages chiffrés (Jérôme, v0.1.0).
-import { createPublisher, TOKEN_URL } from './lib/gh-publish.js?v=0.12.0';
-import { chargerContenu, lireBrouillon, ecrireBrouillon } from './design-store.js?v=0.12.0';
+import { createPublisher, TOKEN_URL } from './lib/gh-publish.js?v=0.12.1';
+import { chargerContenu, lireBrouillon, ecrireBrouillon } from './design-store.js?v=0.12.1';
 
 const REPO = 'supershivas/cyclop';
 const $ = id => document.getElementById(id);

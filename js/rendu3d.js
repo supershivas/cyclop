@@ -22,12 +22,12 @@
    - Les soldats : instanciés (une boîte et son ombre) ; au zoom 1 et 2, un
      point de 2 × 2 pixels (la couleur du camp sur son ombre).
    - Les corps : un homme couché (instancié) ; au zoom 1 et 2, un pixel. */
-import { loadThree } from './three-lib.js?v=0.12.0';
-import { PALETTE, ORDRE, INDICE } from './palette.js?v=0.12.0';
-import { OMBRE, couleursLigne } from './apparence.js?v=0.12.0';
-import { MORCEAU, hauteurVueQ as hauteurQ, hauteurVueM as hauteurM } from './terrain.js?v=0.12.0';
-import { horloge } from './bataille.js?v=0.12.0';
-import { ligneY } from './tranchees.js?v=0.12.0';
+import { loadThree } from './three-lib.js?v=0.12.1';
+import { PALETTE, ORDRE, INDICE } from './palette.js?v=0.12.1';
+import { OMBRE, couleursLigne } from './apparence.js?v=0.12.1';
+import { MORCEAU, hauteurVueQ as hauteurQ, hauteurVueM as hauteurM } from './terrain.js?v=0.12.1';
+import { horloge } from './bataille.js?v=0.12.1';
+import { ligneY } from './tranchees.js?v=0.12.1';
 
 export const CAMERA = { yaw: 0.15, tangage: 0.95, fov: 30 };   // au départ : tournée de 9°, plongée de 54°, angle de 30°
 // la caméra respire : un balancement très lent, 2° en 23 s (Jérôme, v0.3.1 : variante D du labo retenue)
@@ -246,19 +246,12 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
       uniform vec3 uJambes; uniform vec3 uFusil; uniform vec3 uSac; uniform vec3 uVisage;
       uniform sampler2D uSol; uniform vec2 uTaille;
       varying float vCamp; varying float vPart; varying vec2 vXZ; varying float vLong;
-      float bayer4(vec2 p) {
-        vec2 a = mod(p, 2.0), b = mod(floor(p / 2.0), 2.0);
-        float m = a.x * 2.0 + a.y * 3.0 - a.x * a.y * 4.0;
-        float n = b.x * 2.0 + b.y * 3.0 - b.x * b.y * 4.0;
-        return (m * 4.0 + n + 0.5) / 16.0;
-      }
       void main() {
         float k = floor(vPart + 0.5);
-        // l'ombre : le sol qu'elle couvre, un ton plus sombre (la couleur de ses parois), tramée de plus en plus
-        // claire vers son bout (une ombre noire et pleine se lisait comme une tache)
+        // l'ombre : le sol qu'elle couvre, un ton plus sombre (la couleur de ses parois), fondue de plus en plus
+        // vers son bout, sans trame (une ombre noire et pleine se lisait comme une tache ; Jérôme, v0.12.1 : plus de tramage)
         if (k == 1.0) {
-          if (bayer4(floor(gl_FragCoord.xy)) > 0.95 - 0.6 * vLong) discard;
-          gl_FragColor = vec4(texture2D(uSol, vec2(vXZ.x / uTaille.x, (vXZ.y / uTaille.y + 1.0) * 0.5)).rgb, 1.0);
+          gl_FragColor = vec4(texture2D(uSol, vec2(vXZ.x / uTaille.x, (vXZ.y / uTaille.y + 1.0) * 0.5)).rgb, 0.95 - 0.6 * vLong);
           return;
         }
         bool sel = vCamp > 1.5;
@@ -272,7 +265,7 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
         else if (k == 6.0) c = uVisage;
         gl_FragColor = vec4(c, 1.0);
       }`,
-    side: THREE.DoubleSide,
+    side: THREE.DoubleSide, transparent: true,
   });
   // les faces d'une boîte qu'on voit d'ici : le dessus, le sud, l'est et l'ouest (jamais le nord ni le dessous)
   function boiteVue(out, x0, x1, y0, y1, z0, z1, part, jambe = 0, dessusPart = part) {
@@ -641,13 +634,46 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
     fragmentShader: `uniform sampler2D uPal; uniform float uNP; varying float vTon;
       void main() {
         float t = floor(vTon + 0.5);
-        if (t > 50.0) { if (mod(floor(gl_FragCoord.x) + floor(gl_FragCoord.y), 2.0) > 0.5) discard; t -= 100.0; }   // la fumée, tramée
-        gl_FragColor = vec4(texture2D(uPal, vec2((t + 0.5) / uNP, 0.25)).rgb, 1.0);
+        float a = 1.0;
+        if (t > 50.0) { a = 0.6; t -= 100.0; }   // la fumée, fondue (plus de trame ; v0.12.1)
+        gl_FragColor = vec4(texture2D(uPal, vec2((t + 0.5) / uNP, 0.25)).rgb, a);
       }`,
-    depthTest: true, depthWrite: false,
+    depthTest: true, depthWrite: false, transparent: true,
   });
   const eclats = new THREE.Points(eclGeo, eclMat); eclats.frustumCulled = false; eclats.renderOrder = 3;
   scene.add(eclats);
+  // Les balles et les obus en vol, à leur échelle (Jérôme, v0.12.1 : pas de gros pixel). Une balle est un trait d'un pixel
+  // (un segment, jamais plus large qu'un pixel) de quelques mètres, le long de sa course ; un obus, une ogive de sa vraie taille
+  // (le diamètre du calibre, quatre fois plus long), grossie deux fois pour qu'on la voie.
+  const BALLES = 200, balX = new Float32Array(BALLES * 6), bal = { v: new Float32Array(BALLES * 3), age: new Float32Array(BALLES).fill(99), vie: new Float32Array(BALLES) };
+  const balGeo = new THREE.BufferGeometry();
+  balGeo.setAttribute('position', new THREE.BufferAttribute(balX, 3).setUsage(THREE.DynamicDrawUsage));
+  const balles = new THREE.LineSegments(balGeo, new THREE.LineBasicMaterial({ color: col('o'), depthWrite: false }));
+  balles.frustumCulled = false; balles.renderOrder = 3; scene.add(balles);
+  let balTete = 0;
+  const balPos = new Float32Array(BALLES * 3);       // la tête de chaque balle
+  function balle(x, y, z, vx, vy, vz, vie) {
+    const s = balTete; balTete = (balTete + 1) % BALLES;
+    balPos[s * 3] = x; balPos[s * 3 + 1] = y; balPos[s * 3 + 2] = z;
+    bal.v[s * 3] = vx; bal.v[s * 3 + 1] = vy; bal.v[s * 3 + 2] = vz; bal.age[s] = 0; bal.vie[s] = vie;
+  }
+  function majBalles(dt) {
+    for (let s = 0; s < BALLES; s++) {
+      const o = s * 6;
+      if (bal.age[s] > bal.vie[s]) { balX[o] = balX[o + 1] = balX[o + 2] = balX[o + 3] = balX[o + 4] = balX[o + 5] = 0; continue; }
+      bal.age[s] += dt;
+      for (let a = 0; a < 3; a++) balPos[s * 3 + a] += bal.v[s * 3 + a] * dt;
+      const vx = bal.v[s * 3], vz = bal.v[s * 3 + 2], d = Math.hypot(vx, vz) || 1;
+      balX[o] = balPos[s * 3]; balX[o + 1] = balPos[s * 3 + 1]; balX[o + 2] = balPos[s * 3 + 2];
+      balX[o + 3] = balX[o] - vx / d * 3; balX[o + 4] = balX[o + 1]; balX[o + 5] = balX[o + 2] - vz / d * 3;
+    }
+    balGeo.attributes.position.needsUpdate = true;
+  }
+  const OBUS_VUS = 16, obusLibres = [];
+  const ogive = new THREE.LatheGeometry([[0, 0], [0.5, 0], [0.5, 2.6], [0.38, 3.3], [0.18, 3.8], [0, 4]].map(([r, y]) => new THREE.Vector2(r, y)), 6);
+  const obusMat = new THREE.MeshBasicMaterial({ color: col('r') });
+  for (let k = 0; k < OBUS_VUS; k++) { const m = new THREE.Mesh(ogive, obusMat); m.visible = false; m.frustumCulled = false; m.renderOrder = 3; scene.add(m); obusLibres.push(m); }
+  const VERS_LE_HAUT = new THREE.Vector3(0, 1, 0), dirObus = new THREE.Vector3();
   let graine = 1;
   const alea = () => { graine = (graine * 16807) % 2147483647; return graine / 2147483647; };   // l'aspect seulement, jamais la logique
   function particule(sorte, x, y, z, vx, vy, vz, vie, taille = 1) {
@@ -666,8 +692,10 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
     if (!effets.chute) return eclater(x, y, cal);
     // l'obus qui tombe : une traînée claire, du ciel au point de chute, puis l'explosion
     const h = T ? surface(x, y) : 0, chute = 0.25, v = 160;
-    for (let k = 0; k < 7; k++) particule(3, x - 4 + k * 0.3, h + v * chute + k * 1.6, y, 16, -v, 0, chute, k ? 1 : 1.5);
-    attente.push({ x, y, cal, t: chute });
+    for (let k = 1; k < 6; k++) particule(3, x - 4 + k * 0.3, h + v * chute + k * 1.4, y, 16, -v, 0, chute, 0.5);   // la traînée : des points d'un pixel
+    const mesh = obusLibres.pop() || null;
+    if (mesh) { const d = { '75': 0.075, '155': 0.155, '220': 0.22 }[cal] * 2; mesh.scale.setScalar(d); dirObus.set(16, -v, 0).normalize(); mesh.quaternion.setFromUnitVectors(VERS_LE_HAUT, dirObus); mesh.visible = true; }
+    attente.push({ x, y, cal, t: chute, h, mesh });
   }
   function eclater(x, y, cal) {
     const big = cal === '220' ? 3 : cal === '155' ? 2 : 1;
@@ -780,7 +808,7 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
   }
 
   // ─── Le feu se voit (Jérôme, v0.9.2) : un éclair à la bouche du fusil et un trait clair vers la cible, pour chaque
-  // tir de la bataille (Sortes : 0 éclair, 9 traceur). Le dessin seulement : la logique les range dans B.tirs, vidés ici.
+  // tir de la bataille (un éclair d'un pixel, et une balle : un trait fin). Le dessin seulement : la logique les range dans B.tirs, vidés ici.
   // On ne dessine que ceux qu'on voit, et pas plus de 160 par image (tout dézoomé, ce serait des milliers de points). ───
   function majTirs() {
     const L = B.tirs;
@@ -794,14 +822,19 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
       const tx = L[k + 2] + (alea() - 0.5) * 6, ty = L[k + 3] + (alea() - 0.5) * 6;
       const dx = tx - x, dy = ty - y, d = Math.hypot(dx, dy) || 1, ux = dx / d, uy = dy / d;
       const h = surface(x, y);
-      particule(0, x + ux * 0.6, h + 1.3, y + uy * 0.6, 0, 0, 0, 0.07, 1.4);
-      particule(9, x + ux * 1.5, h + 1.3, y + uy * 1.5, ux * 110, 0, uy * 110, 0.12 + alea() * 0.06, 1);
+      particule(0, x + ux * 0.6, h + 1.3, y + uy * 0.6, 0, 0, 0, 0.07, 0.5);
+      balle(x + ux * 1.5, h + 1.3, y + uy * 1.5, ux * 110, 0, uy * 110, 0.12 + alea() * 0.06);
     }
     L.length = 0;
   }
 
   function majEclats(dt) {
-    for (let k = attente.length - 1; k >= 0; k--) if ((attente[k].t -= dt) <= 0) { const a = attente.splice(k, 1)[0]; eclater(a.x, a.y, a.cal); }
+    majBalles(dt);
+    for (let k = attente.length - 1; k >= 0; k--) {
+      const a = attente[k];
+      if ((a.t -= dt) <= 0) { attente.splice(k, 1); if (a.mesh) { a.mesh.visible = false; obusLibres.push(a.mesh); } eclater(a.x, a.y, a.cal); }
+      else if (a.mesh) a.mesh.position.set(a.x - 16 * a.t, a.h + 160 * a.t, a.y);
+    }
     guetterFeux(); majFeux(dt); majFusees(dt);
     for (let s = 0; s < ECLATS; s++) {
       if (ecl.age[s] > ecl.vie[s]) { eclTon[s] = -1; continue; }
@@ -850,22 +883,16 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
   });
   const pluie = new THREE.Points(plGeo, plMat); pluie.frustumCulled = false; pluie.renderOrder = 4;
   scene.add(pluie);
-  // le brouillard : une trame de brume (Bayer 4 × 4) qui s'épaissit vers le haut de l'écran (le lointain)
+  // le brouillard : un voile de brume continu qui s'épaissit vers le haut de l'écran (le lointain) ; plus de trame (Jérôme, v0.12.1)
   const brumeMat = new THREE.ShaderMaterial({
     uniforms: { uCol: { value: col('r') }, uH: { value: 400 } },
     vertexShader: `void main() { gl_Position = vec4(position.xy, -1.0, 1.0); }`,
     fragmentShader: `uniform vec3 uCol; uniform float uH;
-      float bayer(vec2 p) {
-        vec2 a = mod(p, 2.0), b = mod(floor(p / 2.0), 2.0);
-        float m = a.x * 2.0 + a.y * 3.0 - a.x * a.y * 4.0;      // 0 2 3 1
-        float n = b.x * 2.0 + b.y * 3.0 - b.x * b.y * 4.0;
-        return (m * 4.0 + n + 0.5) / 16.0;
-      }
       void main() {
         float loin = gl_FragCoord.y / uH;                          // 0 en bas, 1 en haut
-        if (bayer(floor(gl_FragCoord.xy)) > 0.2 * max(0.0, loin - 0.45) / 0.55) discard;
-        gl_FragColor = vec4(uCol, 1.0);
+        gl_FragColor = vec4(uCol, 0.2 * max(0.0, loin - 0.45) / 0.55);
       }`,
+    transparent: true,
     depthTest: false, depthWrite: false,
   });
   const brume = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), brumeMat); brume.frustumCulled = false; brume.renderOrder = 5;
@@ -908,19 +935,12 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
         vXZ = vec2(aPos.x + xz.x, aPos.z + xz.y); vLong = position.y;
         gl_Position = projectionMatrix * viewMatrix * vec4(aPos.x + xz.x, aPos.y + 0.04, aPos.z + xz.y, 1.0);
       }`,
-    // le sol un ton plus sombre, tramé : dense au pied, presque rien au bout (les branches nues laissent passer le jour)
+    // le sol un ton plus sombre, fondu : dense au pied, presque rien au bout (les branches nues laissent passer le jour)
     fragmentShader: `uniform sampler2D uSol; uniform vec2 uTaille; varying vec2 vXZ; varying float vLong;
-      float bayer4(vec2 p) {
-        vec2 a = mod(p, 2.0), b = mod(floor(p / 2.0), 2.0);
-        float m = a.x * 2.0 + a.y * 3.0 - a.x * a.y * 4.0;
-        float n = b.x * 2.0 + b.y * 3.0 - b.x * b.y * 4.0;
-        return (m * 4.0 + n + 0.5) / 16.0;
-      }
       void main() {
-        if (bayer4(floor(gl_FragCoord.xy)) > 0.7 - 0.55 * vLong) discard;
-        gl_FragColor = vec4(texture2D(uSol, vec2(vXZ.x / uTaille.x, (vXZ.y / uTaille.y + 1.0) * 0.5)).rgb, 1.0);
+        gl_FragColor = vec4(texture2D(uSol, vec2(vXZ.x / uTaille.x, (vXZ.y / uTaille.y + 1.0) * 0.5)).rgb, 0.7 - 0.55 * vLong);
       }`,
-    side: THREE.DoubleSide, depthWrite: false,
+    side: THREE.DoubleSide, depthWrite: false, transparent: true,
     polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2,
   });
   const arbresOmbres = new THREE.Mesh(aoGeo, aoMat); arbresOmbres.frustumCulled = false; arbresOmbres.renderOrder = 1;

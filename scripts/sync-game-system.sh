@@ -34,7 +34,7 @@ fetch() {
 
 fetch CONVENTIONS.md .claude/conventions-jeu.md
 
-MODULES="app-update.js keys.js pointer.js loop.js pixel-canvas.js rng.js save.js debug.js sprites.js audio.js gamepad.js i18n.js gh-publish.js labo-shell.js labo-shell.css pixel-editor.js game.css"
+MODULES="app-update.js keys.js pointer.js loop.js pixel-canvas.js rng.js save.js debug.js sprites.js audio.js gamepad.js i18n.js gh-publish.js labo-shell.js labo-shell.css labo-timeline.js pixel-editor.js game.css"
 for file in $MODULES; do
   for dir in js/lib src/lib lib; do
     [ -f "$dir/$file" ] && fetch "modules/$file" "$dir/$file"

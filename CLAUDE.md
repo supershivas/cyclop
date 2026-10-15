@@ -98,8 +98,8 @@ la danse macabre, la catastrophe peinte avec calme. L'intention est dans `DESIGN
   refus d'un jour (`reg.refus` : le jour refusé), la poursuite d'en face après une
   prise ; voir `DESIGN.md`.
 - **Les ombres et la profondeur** (Jérôme, v0.11.0) : l'ombre d'un soldat ou d'un arbre
-  est le sol un ton plus sombre (la couleur de paroi de la case), tramée de plus en
-  plus claire vers son bout ; le fond d'un creux s'assombrit d'un ton à 1 m, d'un
+  est le sol un ton plus sombre (la couleur de paroi de la case), fondue (transparence continue, plus de
+  trame depuis la v0.12.1) de plus en plus claire vers son bout ; le fond d'un creux s'assombrit d'un ton à 1 m, d'un
   autre à 2,5 m, et d'un encore quand il est entouré de parois (`couleurCase`).
 - **Le terrain au survol** (Jérôme, v0.5.0) : une plaque sous l'horloge dit ce qu'est
   la case sous la souris (`terrainSous` de bataille.js).
@@ -141,7 +141,7 @@ gris) et les deux camps (proposés `#6f86a6` et `#5b5d48`, invisibles sur la bou
 Un soldat se lit par sa couleur sur un sol sombre, par son ombre (`t`) sur un sol
 clair. Un cratère : le creux un ton plus sombre, la lèvre de terre jetée un ton
 plus clair (sans la lèvre, un cratère dans la boue ne se distinguait pas de la
-boue en gris : échec mesuré). Aucune autre couleur dans le jeu ; exceptions : le fond des boîtes de dialogue (`::backdrop` de `game.css`) et la
+boue en gris : échec mesuré). Aucune autre couleur dans le jeu ; exceptions : les fondus continus (brouillard, bout des ombres et de la fumée : des mélanges d'une couleur de palette avec ce qu'elle recouvre ; Jérôme, v0.12.1),  le fond des boîtes de dialogue (`::backdrop` de `game.css`) et la
 nuit (le voile continu et ses halos mélangent la terre, le sol et l'os : des couleurs qui ne sont pas dans la palette ; Jérôme, v0.9.3).
 
 ### Échelle
@@ -255,8 +255,8 @@ nuit (le voile continu et ses halos mélangent la terre, le sol et l'os : des co
   hauteur, parois sud seulement), une texture RVBA d'une couleur par case (et de
   sa paroi), refaite par rangées changées ; le même relief à tous les zooms (Jérôme, v0.12.0) ; soldats en
   instances (boîte et ombre) ou en points 2 × 2, seulement ceux qu'on voit ; arbres
-  instanciés ; éclats et fumée d'obus ; pluie ; brouillard tramé (plus épais vers
-  le haut de l'écran). `versTerrain` (un rayon jusqu'au sol) / `versEcran`. La respiration (`RESPIRATION`) s'ajoute à l'angle
+  instanciés ; éclats et fumée d'obus ; pluie ; brouillard (un voile continu, plus épais vers
+  le haut de l'écran) ; balles (traits d'un pixel, `balle`) et obus en vol (ogives de la taille du calibre, grossies deux fois). `versTerrain` (un rayon jusqu'au sol) / `versEcran`. La respiration (`RESPIRATION`) s'ajoute à l'angle
   choisi (`souffle`), dans le dessin comme dans les conversions. Le
   rendu ne modifie jamais l'état. Un morceau du sol se refait aussi quand un de ses voisins change (ses
   parois sud, est et ouest en dépendent). Les parois est et ouest (et les bords
@@ -378,8 +378,9 @@ node outils/stamp-version.mjs            # après chaque changement de version.j
   trient dans l'axe de l'écran : un carré autour de la vue en dessinait six fois
   trop (28 ms). L'élimination des faces arrière ne gagnait presque rien et
   cachait des parois : abandonnée.
-- **Le brouillard** tramé sur tout l'écran rendait tout illisible : il s'épaissit
-  seulement vers le haut de l'écran (le lointain).
+- **Le brouillard** sur tout l'écran rendait tout illisible : il s'épaissit
+  seulement vers le haut de l'écran (le lointain). Il était tramé (Bayer) jusqu'à la v0.12.0 ; Jérôme (v0.12.1) ne veut plus de tramage : voile continu, ombres et fumée fondues.
+- **Des balles et des obus à l'échelle** (Jérôme, v0.12.1) : une particule (point) a toujours au moins un pixel de côté, deux avec le facteur du zoom ; une balle, un trait d'un pixel (`LineSegments`) ; un obus, une ogive de 4 fois son diamètre, grossie deux fois (un 155 : 0,6 m de long, 1,2 avec le facteur, donc quelques pixels à 4 par mètre).
 - **Les arbres et les buissons dessinés partout** : instanciés sans tri, ils
   coûtaient des dizaines de milliers de triangles hors de la vue (les buissons des
   marges : ~65 000). Ils sont triés à chaque image comme les soldats (`dansLaVue`). Tout dézoomé, tous les
@@ -428,7 +429,7 @@ node outils/stamp-version.mjs            # après chaque changement de version.j
   sauvegarde n'a rien à rejouer ; un 220 qui les crève le fait pendant le jour, dans
   `tomber`, et l'état sauvegardé le garde.
 - **Une ombre opaque d'une seule couleur** (`t`) se lisait comme un trou (Jérôme,
-  v0.11.0) : elle prend la couleur du sol un ton plus sombre, tramée vers son bout
+  v0.11.0) : elle prend la couleur du sol un ton plus sombre, fondue vers son bout (trame jusqu'à la v0.12.0)
   (une lecture de texture de plus par pixel d'ombre : 77 ms au lieu de 73 au zoom 4,
   8 000 soldats, dessin attendu jusqu'au bout ; de l'ordre du bruit de la mesure).
 - **Les petites batailles des tests durent trois jours** (`jours: 3` de `petite`) :
