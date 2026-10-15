@@ -9,8 +9,8 @@
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta property="og:image" content="og.png">
-<link rel="stylesheet" href="js/lib/game.css?v=0.9.0">
-<link rel="stylesheet" href="css/style.css?v=0.9.0">
+<link rel="stylesheet" href="js/lib/game.css?v=0.9.1">
+<link rel="stylesheet" href="css/style.css?v=0.9.1">
 </head>
 <body>
 <div class="jeu-ecran" id="ecran">
@@ -56,6 +56,13 @@
       </div>
       <div class="batteries" id="batteries" aria-label="Batteries"></div>
       <p class="plaque choix" id="choix"></p>
+      <div class="plaque cadran" id="cadran" role="group" aria-label="La vue">
+        <button class="icone" data-incl="-1" aria-label="Incliner vers le haut (R)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 15l6-6 6 6"/></svg></button>
+        <button class="icone" data-tour="-1" aria-label="Tourner à gauche (A)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg></button>
+        <button class="icone" id="cadran-centre" aria-label="Recentrer la vue"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3"/></svg></button>
+        <button class="icone" data-tour="1" aria-label="Tourner à droite (E)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></button>
+        <button class="icone" data-incl="1" aria-label="Incliner vers le bas (F)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button>
+      </div>
     </div>
   </div>
 
@@ -133,8 +140,8 @@
       <dt>1, 2, 3</dt><dd>viser un barrage de 75, 155, 220, puis clic</dd>
       <dt>T</dt><dd>choisir tous nos régiments</dd>
       <dt>Espace</dt><dd>arrêter le temps (les ordres restent possibles)</dd>
-      <dt>Flèches, ZQSD</dt><dd>déplacer la vue (ou glisser avec la molette)</dd>
-      <dt>A et E, R et F</dt><dd>tourner et incliner un peu la caméra (Q et E en QWERTY ; ou glisser avec le bouton droit)</dd>
+      <dt>Flèches, ZQSD</dt><dd>déplacer la vue (ou Maj + glisser avec la molette)</dd>
+      <dt>A et E, R et F</dt><dd>tourner et incliner un peu la caméra (Q et E en QWERTY ; ou glisser avec la molette ou le bouton droit ; ou le cadran en bas à droite)</dd>
       <dt>Molette, + et −</dt><dd>zoom</dd>
       <dt>Échap</dt><dd>menu</dd>
     </dl>
@@ -162,6 +169,6 @@
 </dialog>
 
 <div class="jeu-toast" id="toast" role="status" hidden></div>
-<script type="module" src="js/main.js?v=0.9.0"></script>
+<script type="module" src="js/main.js?v=0.9.1"></script>
 </body>
 </html>

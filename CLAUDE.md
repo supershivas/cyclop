@@ -138,8 +138,8 @@ le fond des boîtes de dialogue (`::backdrop` de `game.css`).
 | Marcher (sur une tranchée : l'occuper) | — | clic droit ; ou, réglage « tout au bouton gauche », clic sur le sol (Échap laisse les régiments choisis) |
 | Barrage de 75, 155, 220 | 1, 2, 3 (touche physique) puis clic | bouton de la batterie puis clic |
 | Arrêter le temps (pause active) | Espace | — |
-| Déplacer la vue | flèches, ZQSD / WASD (selon l'écran) | glisser avec le bouton du milieu (la molette) |
-| Tourner, incliner la vue | A et E (Q et E en QWERTY), R et F (touches physiques, en continu) | glisser avec le bouton droit |
+| Déplacer la vue | flèches, ZQSD / WASD (selon l'écran) | Maj + glisser avec le bouton du milieu (la molette) |
+| Tourner, incliner la vue | A et E (Q et E en QWERTY), R et F (touches physiques, en continu) | glisser avec le bouton du milieu (ou le droit) ; le cadran en bas à droite (Jérôme, v0.9.1) |
 | Zoom | + et − | molette |
 | Menu (pause) | Échap (annule d'abord un barrage visé) | bouton du HUD |
 
@@ -400,6 +400,6 @@ node outils/stamp-version.mjs            # après chaque changement de version.j
   `pointerdown` des boutons droit et du milieu sur le canvas (ce qui supprime
   mousedown et mouseup) et arrête mousedown, mouseup, auxclick, contextmenu à la
   capture. Une extension installée avant la page peut encore les lire : d'où le
-  réglage « tout au bouton gauche ».
+  réglage « tout au bouton gauche » et, pour la caméra, le bouton du milieu et le cadran à l'écran (v0.9.1 : tourner au clic droit restait gêné par les gestes de souris de Firefox).
 - Ordre des tirages : `nouvelleBataille` tire la météo (une branche du générateur),
   puis les positions de départ. Changer cet ordre change toutes les batailles.

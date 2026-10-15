@@ -37,6 +37,8 @@
 .choix:empty { display: none; }
 .choix { max-width: 34ch; }
 
+.cadran { display: grid; grid-template-columns: repeat(5, var(--jeu-cible)); padding: 0; }
+.cadran .icone:active { background: var(--jeu-encre); color: var(--jeu-fond); }
 .batteries { display: flex; gap: var(--pas); pointer-events: auto; }
 .batterie {
   display: grid; justify-items: center; align-content: center;

@@ -1,5 +1,9 @@
 # Journal des versions
 
+## 0.9.1 — 2026-10-15
+- La vue se tourne et s'incline avec le bouton du milieu, ou avec un petit cadran en bas à droite : plus de gêne avec les gestes de souris de Firefox
+- Maj + bouton du milieu déplace la vue
+
 ## 0.9.0 — 2026-10-15
 
 - La bataille entière : de 10 à 15 jours, une mission (tenir le secteur, ou prendre leur première ligne) jugée à la fin
