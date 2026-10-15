@@ -23,16 +23,22 @@ Statuts : **à l'étude** · **validé** (Jérôme a tranché) · **en cours** �
   1 tient 7 ms, les zooms 4 et 8 de 8 à 16 ms sur un champ labouré : à trancher
 - [x] Lisibilité : cratère, boue, eau, soldat distinguables en gris
 
-## À trancher (issu des mesures de la v0.15.0 et v0.16.0)
+## Validé par Jérôme, pas encore construit (tranché le 2026-10-15)
 
-- **Le coût de l'assaut frontal** : tous les régiments envoyés dans la 1re ligne d'en face perdent ~570 hommes sur 750 le premier
-  jour (130 m à découvert). Voulu (la guerre de 14) ou à adoucir ? Un réglage à part, pas touché. Voir « Pièges » de `CLAUDE.md`.
-- **L'équilibre des huit régiments sur la 1re ligne seule** (v0.14.0) : deux fois plus d'hommes au mètre qu'avec six régiments sur
-  deux lignes ; une seule bataille jouée sans ordres (graine 7), pas de mesure sur plusieurs graines.
+- **Adoucir l'assaut frontal** (~570 hommes perdus sur 750 le premier jour) : réduire un peu la létalité à découvert (tir ou peur)
+  pour qu'un assaut préparé par l'artillerie reste jouable ; mesure sur deux graines avant et après.
+- **Huit régiments : moitié en 2e ligne** : quatre en 1re ligne, quatre en 2e (au lieu de huit sur la 1re), sans mesure préalable ;
+  un régiment par secteur reste vrai (la 2e ligne est derrière le même secteur).
+- **Détail des soldats dès 4 pixels par mètre, silhouette allégée** (tête, corps, bras, fusil ; sans jambes articulées ni sac) : à
+  mesurer (rendu logiciel) ; la silhouette complète reste à partir de 6.
+- **Tranchées, la suite** (voir plus bas) : traverses, fil de fer coupé, sacs retournés quand un tronçon est pris, abris dessinés.
+- **Évacuer les blessés : ils donnent de nouveaux hommes frais** (idée de Jérôme à préciser : les blessés évacués guérissent et
+  reviennent en renfort, en nombre limité et après quelques nuits).
+
+## À trancher
+
 - **Le souffle des obus** (v0.16.0) : pas mesuré sur l'équilibre ; les régiments jetés hors de leur tranchée par un 220 reviennent
   à leur place en marchant.
-- **Le seuil du détail des soldats** (6 pixels par mètre) : à 4, la silhouette coûterait ~138 000 triangles pour 2 000 hommes ; les bras
-  et le tir ne se voient donc qu'à partir de 6.
 - **Le rendu sous la pluie** : le bleu de nos soldats a été changé (v0.16.0) sans capture sous la pluie ; à regarder.
 
 ## À l'étude (validé dans le principe par le prompt de départ, pas construit)
