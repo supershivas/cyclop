@@ -5,8 +5,8 @@
    Les faces verticales (les parois tournées vers nous) d'au moins un demi-mètre
    prennent le ton plus sombre (OMBRE) ; une marche d'un quart garde la couleur
    du dessus (sinon chaque courbe de niveau des bosses se lit comme un trou). */
-import { INDICE } from './palette.js?v=0.9.2';
-import { ETAT, etat } from './terrain.js?v=0.9.2';
+import { INDICE } from './palette.js?v=0.9.3';
+import { ETAT, etat } from './terrain.js?v=0.9.3';
 
 const I = INDICE;
 // [terre jetée (plus claire), plat, creusé ou à l'ombre]
@@ -20,11 +20,12 @@ export const TONS = {
 // la paroi sous une case de cette couleur
 export const OMBRE = { h: 'g', g: 'b', b: 's', s: 't', t: 't', e: 's', r: 'g', o: 'r', n: 'n', x: 'x', v: 'w', w: 's' };
 
-/* Le sol vert (le labo compare, Jérôme v0.9.3) : 0 le jeu (aucun vert), 1 « taches » (l'herbe éparse est verte au lieu de glaise),
+/* Le sol vert (le labo compare, Jérôme v0.9.3) : 0 aucun vert (la v0.9.2), 1 « taches » (l'herbe éparse est verte au lieu de glaise),
    2 « nuances » (de grandes plaques d'une dizaine de mètres, vertes dans le sec et l'humide), 3 « prairie » (le plus du sec est vert, le brun
    n'est plus que des plaques). Le dessin seulement : le terrain ne change pas. */
-let VERDURE = 0;
-export const reglerVerdure = m => { VERDURE = m; };
+const VERDURE_DEFAUT = 2;                  // le jeu : des plaques de vert discrètes (Jérôme, v0.9.3)
+let VERDURE = VERDURE_DEFAUT;
+export const reglerVerdure = (m = VERDURE_DEFAUT) => { VERDURE = m; };
 const bruit = (i, j, k) => (((Math.imul(i, 73856093) ^ Math.imul(j, 19349663) ^ Math.imul(k, 83492791)) >>> 0) % 1000) / 1000;
 // un bruit doux (valeur interpolée) : des plaques aux bords arrondis, pas des carrés ; échelle en mètres
 const lisse = (x, y, echelle, k) => {

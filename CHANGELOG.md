@@ -1,5 +1,10 @@
 # Journal des versions
 
+## 0.9.3 — 2026-10-15
+- Le sol se nuance de vert, discrètement
+- La nuit sans trame : un voile continu, des halos chauds autour des lanternes, des feux et des fusées
+- On peut zoomer tout près des soldats (12 et 16 pixels par mètre)
+
 ## 0.9.2 — 2026-10-15
 - Le feu se voit : un éclair et un trait clair à chaque tir, les hommes terrifiés se tapissent
 - Chaque tronçon de tranchée porte un fanion à la couleur de celui qui le tient : déchiré quand l'autre camp y entre, amené puis hissé quand il tombe

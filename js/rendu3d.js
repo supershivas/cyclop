@@ -22,12 +22,12 @@
    - Les soldats : instanciés (une boîte et son ombre) ; au zoom 1 et 2, un
      point de 2 × 2 pixels (la couleur du camp sur son ombre).
    - Les corps : un homme couché (instancié) ; au zoom 1 et 2, un pixel. */
-import { loadThree } from './three-lib.js?v=0.9.2';
-import { PALETTE, ORDRE, INDICE } from './palette.js?v=0.9.2';
-import { OMBRE, couleursLigne } from './apparence.js?v=0.9.2';
-import { MORCEAU, hauteurVueQ as hauteurQ, hauteurVueM as hauteurM } from './terrain.js?v=0.9.2';
-import { horloge } from './bataille.js?v=0.9.2';
-import { ligneY } from './tranchees.js?v=0.9.2';
+import { loadThree } from './three-lib.js?v=0.9.3';
+import { PALETTE, ORDRE, INDICE } from './palette.js?v=0.9.3';
+import { OMBRE, couleursLigne } from './apparence.js?v=0.9.3';
+import { MORCEAU, hauteurVueQ as hauteurQ, hauteurVueM as hauteurM } from './terrain.js?v=0.9.3';
+import { horloge } from './bataille.js?v=0.9.3';
+import { ligneY } from './tranchees.js?v=0.9.3';
 
 export const CAMERA = { yaw: 0.15, tangage: 0.95, fov: 30 };   // au départ : tournée de 9°, plongée de 54°, angle de 30°
 // la caméra respire : un balancement très lent, 2° en 23 s (Jérôme, v0.3.1 : variante D du labo retenue)
@@ -38,7 +38,7 @@ export const SOLDAT = 'silhouette';            // le style des soldats de près 
 export const RESPIRATION = 0.035;
 export const YAW_MAX = 0.6, TANGAGE_MIN = 0.7, TANGAGE_MAX = 1.35;
 const SOL_Y = 3;                              // m : la hauteur moyenne du sol (le point visé, le sol à plat des zooms 1 et 2)
-export const ZOOMS = [1, 2, 3, 4, 6, 8];      // pixels (logiques) par mètre
+export const ZOOMS = [1, 2, 3, 4, 6, 8, 12, 16];   // pixels (logiques) par mètre (12 et 16 : tout près des hommes, Jérôme v0.9.3)
 const POINTS_JUSQUA = 2;                      // zoom où un soldat n'est plus qu'un point
 const PLAT_JUSQUA = 2;                        // zoom où le sol devient une seule image plate (une marche d'un quart y fait un demi-pixel)
 const PLUIE = 1600, ECLATS = 2400;
@@ -894,12 +894,12 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
     lumTex.magFilter = lumTex.minFilter = THREE.LinearFilter; lumTex.generateMipmaps = false;
     nuitMat.uniforms.uLum.value = lumTex;
   }
-  // Le style de la nuit (le labo compare, Jérôme v0.9.3) : 0 la trame (le jeu : un pixel sur deux de la couleur la plus sombre,
+  // Le style de la nuit (le labo a comparé ; Jérôme a retenu « voile et halos », v0.9.3) : 0 la trame (celle de la v0.8 : un pixel sur deux de la couleur la plus sombre,
   // aucune couleur de plus), 1 « doux » (la même terre, mais en voile continu : le noir monte sans trame, les lumières le percent
   // en dégradé : des couleurs qui n'existent pas dans la palette), 2 « halos » (comme doux, et la lumière peint en plus une lueur
   // chaude : os et herbe sèche).
   const nuitMat = new THREE.ShaderMaterial({
-    uniforms: { uCol: { value: col('t') }, uLueur: { value: col('o') }, uD: { value: 0 }, uMode: { value: 0 }, uLum: { value: null }, uTaille: { value: new THREE.Vector2(640, 400) } },
+    uniforms: { uCol: { value: col('t') }, uLueur: { value: col('o') }, uD: { value: 0 }, uMode: { value: 2 }, uLum: { value: null }, uTaille: { value: new THREE.Vector2(640, 400) } },
     vertexShader: `void main() { gl_Position = vec4(position.xy, -1.0, 1.0); }`,
     fragmentShader: `uniform vec3 uCol; uniform vec3 uLueur; uniform float uD; uniform float uMode; uniform sampler2D uLum; uniform vec2 uTaille;
       float bayer(vec2 p) {
@@ -920,7 +920,7 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
           gl_FragColor = vec4(mix(uCol, uLueur, halo / max(0.001, halo + uD * (1.0 - clair))), min(1.0, uD * (1.0 - clair) + halo));
         }
       }`,
-    depthTest: false, depthWrite: false,
+    transparent: true, depthTest: false, depthWrite: false,
   });
   const nuitPlan = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), nuitMat); nuitPlan.frustumCulled = false; nuitPlan.renderOrder = 5.5;
   scene.add(nuitPlan);
@@ -1292,7 +1292,7 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
   return {
     attacher, dessiner, redimensionner, versTerrain, versEcran, vue, renderer, scene,
     set choisis(s) { choisis = s; },
-    // le style de la nuit : 'trame' (le jeu), 'doux', 'halos' (essais du labo)
+    // le style de la nuit : 'halos' (le jeu), 'doux', 'trame' (l'ancienne, gardée au labo)
     set styleNuit(m) { const k = { trame: 0, doux: 1, halos: 2 }[m] ?? 0; nuitMat.uniforms.uMode.value = k; nuitMat.transparent = k > 0; nuitMat.needsUpdate = true; },
     set vide(v) { vide = v; scene.children.forEach(o => { o.visible = !v; }); },
     zoomer(d, ancre = null) {

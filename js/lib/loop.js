@@ -7,7 +7,7 @@
    boucle s'emballe (Factokid).
 
    Module ES sans dépendance :
-     import { createLoop } from './lib/loop.js?v=0.9.2'
+     import { createLoop } from './lib/loop.js?v=0.9.3'
      const loop = createLoop({
        update: dt => {},          // pas fixe, en secondes (1/60 par défaut)
        render: (alpha, fps) => {}, // alpha : fraction du pas suivant (0..1), pour interpoler

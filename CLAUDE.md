@@ -26,7 +26,7 @@ la danse macabre, la catastrophe peinte avec calme. L'intention est dans `DESIGN
   34°) et l'incline un peu, en douceur ; elle respire (un balancement de 2° en
   23 s, coupé si le système demande un mouvement réduit ; Jérôme, v0.3.1) ; elle
   ne sort jamais du terrain. Zoom par
-  facteurs entiers au point visé (1, 2, 3, 4, 6, 8 pixels par mètre) ; aux zooms
+  facteurs entiers au point visé (1, 2, 3, 4, 6, 8, 12, 16 pixels par mètre ; Jérôme, v0.9.3 : tout près des soldats) ; aux zooms
   1 et 2, chaque soldat est un point. Sol en cubes et soldats en boîtes (Jérôme, v0.2.0 :
   les facettes et les sprites essayés au labo ne sont pas retenus). Profil game-system :
   `profils/pixel-3d-three.md`.
@@ -67,7 +67,7 @@ la danse macabre, la catastrophe peinte avec calme. L'intention est dans `DESIGN
   corbeaux sur les morts) ; les autres variantes restent au labo.
 - **Le temps qui passe** (Jérôme, v0.8.0) : le soleil (`majSoleil` : les ombres des
   soldats et des arbres tournent et s'allongent), le soir et la nuit (`obscurite` :
-  une trame de terre de 16 h à 18 h, épaisse la nuit), les lumières qui la trouent
+  un voile de terre de 16 h à 18 h, épais la nuit, sans trame depuis la v0.9.3 : `styleNuit`), les lumières qui la trouent
   (`majNuit` : lanternes le long des tranchées tenues, incendies, fusées).
 - **L'écran titre** (Jérôme, v0.8.1) : derrière le titre, le moteur du jeu montre une
   bataille de décor (`decor` de main.js, jamais sauvegardée) : un no man's land
@@ -118,14 +118,14 @@ gris) et les deux camps (proposés `#6f86a6` et `#5b5d48`, invisibles sur la bou
 | `o` | `#e4dfd0` | os — le texte, l'éclair d'un obus, le casque des choisis |
 | `n` | `#a9bad0` | bleu horizon — nous |
 | `x` | `#8f9374` | feldgrau — en face |
-| `v` | `#68803f` | vert mousse — **proposé** (labo, sujet « Le sol vert », v0.9.3), pas encore dans le jeu |
-| `w` | `#46592f` | vert sombre — **proposé**, idem |
+| `v` | `#7b8d4f` | vert mousse — l'herbe qui reprend, par plaques (Jérôme, v0.9.3 : « intégré dans le design, sans grandes différences ») |
+| `w` | `#5c6e3c` | vert sombre — l'herbe dans l'humide |
 
 Un soldat se lit par sa couleur sur un sol sombre, par son ombre (`t`) sur un sol
 clair. Un cratère : le creux un ton plus sombre, la lèvre de terre jetée un ton
 plus clair (sans la lèvre, un cratère dans la boue ne se distinguait pas de la
-boue en gris : échec mesuré). Aucune autre couleur dans le jeu ; seule exception :
-le fond des boîtes de dialogue (`::backdrop` de `game.css`).
+boue en gris : échec mesuré). Aucune autre couleur dans le jeu ; exceptions : le fond des boîtes de dialogue (`::backdrop` de `game.css`) et la
+nuit (le voile continu et ses halos mélangent la terre, le sol et l'os : des couleurs qui ne sont pas dans la palette ; Jérôme, v0.9.3).
 
 ### Échelle
 
@@ -254,7 +254,7 @@ le fond des boîtes de dialogue (`::backdrop` de `game.css`).
 - `index.html`, `css/style.css` — l'écran, le HUD et les dialogues (palette du jeu).
 - `labo.html`, `js/labo.js` — le labo : échelle, sols et cratères (couleur et
   gris), palette, le moteur en direct (zoom 4, zoom 1, après un jour de pluie,
-  gel), le sol vert (`verdure` d'apparence.js : taches, plaques, prairie ; essai, Jérôme n'a pas encore choisi), la nuit sans trame (`styleNuit` de rendu3d.js : trame, voile continu, voile et halos ; essai), les plaques et le journal de l'interface, l'attaque d'une tranchée (frise du temps), la caméra (perspective et respiration / immobile / sans perspective / plus
+  gel), le sol vert (`verdure` d'apparence.js : taches, plaques, prairie ; retenu : les plaques), la nuit sans trame (`styleNuit` de rendu3d.js : trame, voile continu, voile et halos ; retenu : voile et halos), les plaques et le journal de l'interface, l'attaque d'une tranchée (frise du temps), la caméra (perspective et respiration / immobile / sans perspective / plus
   de perspective / respiration marquée), les calibres. Les
   sujets du moteur affichent ce que coûte le dessin et proposent les zooms.
 - `atelier.html`, `js/atelier.js`, `js/design-store.js` — l'atelier : les réglages
@@ -378,7 +378,7 @@ node outils/stamp-version.mjs            # après chaque changement de version.j
   logiciel). Les touffes s'arrêtent à 1,25 fois la distance du point visé, et un arbre
   plus loin que 1,3 fois (160 m au moins) n'est qu'un tronc : 18 à 27 images/s. Un seuil
   fixe de 70 m coupait l'herbe du jeu, où la caméra est haute (essayé, v0.8.2).
-- **La nuit sans trame, mesurée** (labo, v0.9.3 ; 2 000 soldats, rendu logiciel, dessin attendu jusqu'au bout) : tout dézoomé, jour 54 ms, trame 63, voile continu 59, voile et halos 61 ; au zoom 4, jour 60, trame 71, voile 63, halos 65. Le voile continu n'est pas plus cher que la trame (le plan plein écran fait la même lecture de texture, sans le test de trame) ; il crée des couleurs hors palette. Pas adopté : en attente de Jérôme.
+- **La nuit sans trame, mesurée** (labo, v0.9.3 ; 2 000 soldats, rendu logiciel, dessin attendu jusqu'au bout) : tout dézoomé, jour 54 ms, trame 63, voile continu 59, voile et halos 61 ; au zoom 4, jour 60, trame 71, voile 63, halos 65. Le voile continu n'est pas plus cher que la trame (le plan plein écran fait la même lecture de texture, sans le test de trame) ; il crée des couleurs hors palette. Adopté (voile et halos).
 - **La nuit sans couleur nouvelle** : la palette n'a pas de « nuit » ; le soir et la
   nuit sont une trame (Bayer 4 × 4) de la couleur la plus sombre, trouée en douceur
   autour des lumières, peintes chaque image dans une petite carte (un quart de la

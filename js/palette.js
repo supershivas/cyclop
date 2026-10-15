@@ -18,10 +18,10 @@ export const PALETTE = {
   o: '#e4dfd0', // os — le texte, l'éclair
   n: '#a9bad0', // bleu horizon — nous
   x: '#8f9374', // feldgrau — en face
-  // Deux verts proposés au labo (sujet « Le sol vert », v0.9.3) : pas encore adoptés par Jérôme, le jeu ne s'en sert pas
-  // tant que `verdure` (apparence.js) est à 0.
-  v: '#68803f', // vert mousse — l'herbe qui reprend
-  w: '#46592f', // vert sombre — l'herbe dans l'humide, à l'ombre
+  // Deux verts discrets (Jérôme, v0.9.3 : « le vert est intégré dans le design et ne fait pas de grandes différences ») : de la
+  // même clarté que l'herbe morte et la glaise, un peu plus verts ; le sol en est nuancé (apparence.js, `verdure`)
+  v: '#7b8d4f', // vert mousse — l'herbe qui reprend, par plaques
+  w: '#5c6e3c', // vert sombre — l'herbe dans l'humide
 };
 
 // L'ordre des couleurs dans les textures d'indices (le shader lit la palette
