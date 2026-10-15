@@ -1,5 +1,10 @@
 # Journal des versions
 
+## 0.16.0 — 2026-10-15
+- Notre armée est d'un bleu plus franc : on la distingue sous la pluie et dans la brume
+- Les soldats ne sautent plus au bord des cratères
+- Les explosions jettent les survivants proches
+
 ## 0.15.0 — 2026-10-15
 - Une tranchée attaquée par beaucoup d'hommes contre quelques-uns tombe en quelques secondes (la mêlée)
 - La feuille du régiment et la carte disent les forces en présence : « attaque S3·F1 : 38 contre 5 »

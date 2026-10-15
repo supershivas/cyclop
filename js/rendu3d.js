@@ -22,12 +22,12 @@
    - Les soldats : instanciés (une boîte et son ombre) ; au zoom 1 et 2, un
      point de 2 × 2 pixels (la couleur du camp sur son ombre).
    - Les corps : un homme couché (instancié) ; au zoom 1 et 2, un pixel. */
-import { loadThree } from './three-lib.js?v=0.15.0';
-import { PALETTE, ORDRE, INDICE } from './palette.js?v=0.15.0';
-import { OMBRE, couleursLigne } from './apparence.js?v=0.15.0';
-import { MORCEAU, hauteurVueQ as hauteurQ, hauteurVueM as hauteurM } from './terrain.js?v=0.15.0';
-import { horloge } from './bataille.js?v=0.15.0';
-import { ligneY } from './tranchees.js?v=0.15.0';
+import { loadThree } from './three-lib.js?v=0.16.0';
+import { PALETTE, ORDRE, INDICE } from './palette.js?v=0.16.0';
+import { OMBRE, couleursLigne } from './apparence.js?v=0.16.0';
+import { MORCEAU, hauteurVueQ as hauteurQ, hauteurVueM as hauteurM } from './terrain.js?v=0.16.0';
+import { horloge } from './bataille.js?v=0.16.0';
+import { ligneY } from './tranchees.js?v=0.16.0';
 
 export const CAMERA = { yaw: 0.15, tangage: 0.95, fov: 30 };   // au départ : tournée de 9°, plongée de 54°, angle de 30°
 // la caméra respire : un balancement très lent, 2° en 23 s (Jérôme, v0.3.1 : variante D du labo retenue)
@@ -200,6 +200,14 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
     return hauteurM(T, j * T.W + i);
   }
 
+
+  // La hauteur lissée entre les centres des cases voisines : un soldat qui passe d'une marche d'un demi-mètre à l'autre (le bord d'un
+  // cratère) glisse au lieu de sauter, et ne scintille plus quand il se tient à cheval sur deux cases (Jérôme, v0.16.0).
+  function surfaceLisse(x, z) {
+    const fx = x - 0.5, fz = z - 0.5, i = Math.floor(fx), j = Math.floor(fz), tx = fx - i, tz = fz - j;
+    const h = (a, b) => surface(a + 0.5, b + 0.5);
+    return (h(i, j) * (1 - tx) + h(i + 1, j) * tx) * (1 - tz) + (h(i, j + 1) * (1 - tx) + h(i + 1, j + 1) * tx) * tz;
+  }
 
   // ─── Les soldats ───
   // Une boîte de 0,5 × 1,7 × 0,35 m et son ombre ; de près (DETAIL_DES pixels par mètre), selon le style
@@ -709,6 +717,7 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
   }
   const attente = [];                               // les explosions qui attendent que l'obus touche le sol (l'obus qui tombe)
   function impactVu(x, y, cal) {
+    if (B) souffler(x, y, cal);
     if (!effets.chute) return eclater(x, y, cal);
     // l'obus qui tombe : une traînée claire, du ciel au point de chute, puis l'explosion
     const h = T ? surface(x, y) : 0, chute = 0.25, v = 160;
@@ -832,10 +841,26 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
   // On ne dessine que ceux qu'on voit, et pas plus de 160 par image (tout dézoomé, ce serait des milliers de points). ───
   // Chaque tireur épaule son fusil : la pose (tirVal, 1 puis qui retombe) et le cap vers sa cible, pour tous les tirs.
   let tirVal = new Float32Array(0), tirAng = new Float32Array(0);
+  // Le souffle (Jérôme, v0.16.0) : la logique jette les survivants à l'opposé du point de chute ; le dessin les fait sauter, un
+  // bond d'autant plus haut qu'ils étaient près (volT : le temps qui reste, volH : la hauteur du bond).
+  const VOL = 0.6;
+  let volT = new Float32Array(0), volH = new Float32Array(0);
+  function reserverSoldats(n) {
+    if (tirVal.length >= n) return;
+    tirVal = new Float32Array(n * 2); tirAng = new Float32Array(n * 2); volT = new Float32Array(n * 2); volH = new Float32Array(n * 2);
+  }
+  function souffler(x, y, cal) {
+    const A = B.armee, n = A.n, zone = ({ '75': 4, '155': 7, '220': 10 }[cal] || 4) * (B.R.obus.souffleZone || 1.8);
+    reserverSoldats(n);
+    for (let i = 0; i < n; i++) {
+      const d = Math.hypot(A.x[i] - x, A.y[i] - y);
+      if (d < zone) { volT[i] = VOL; volH[i] = 0.5 + 1.5 * (1 - d / zone); }
+    }
+  }
   function majTirs(dt) {
     const L = B.tirs, n = B.armee.n;
-    if (tirVal.length < n) { tirVal = new Float32Array(n * 2); tirAng = new Float32Array(n * 2); }
-    for (let i = 0; i < n; i++) if (tirVal[i] > 0) tirVal[i] = Math.max(0, tirVal[i] - dt * 1.6);
+    reserverSoldats(n);
+    for (let i = 0; i < n; i++) { if (tirVal[i] > 0) tirVal[i] = Math.max(0, tirVal[i] - dt * 1.6); if (volT[i] > 0) volT[i] = Math.max(0, volT[i] - dt); }
     for (let k = 0; k < L.length; k += 6) { const i = L[k + 5]; if (i < tirVal.length) { tirVal[i] = 1; tirAng[i] = Math.atan2(L[k + 2] - L[k], L[k + 3] - L[k + 1]); } }
     if (!L.length) return;
     const { cx, cz, p } = projeter();
@@ -1259,7 +1284,7 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
       if (x < x0 || x > x1 || y < z0 || y > z1) continue;
       const cxp = e[0] * x + e[4] * SOL_Y + e[8] * y + e[12], cyp = e[1] * x + e[5] * SOL_Y + e[9] * y + e[13], cw = e[3] * x + e[7] * SOL_Y + e[11] * y + e[15];
       if (cxp < -1.08 * cw || cxp > 1.08 * cw || cyp < -1.15 * cw || cyp > 1.15 * cw) continue;
-      posArr[k * 3] = x; posArr[k * 3 + 1] = surface(x, y); posArr[k * 3 + 2] = y;
+      posArr[k * 3] = x; posArr[k * 3 + 1] = surfaceLisse(x, y) + (i < volT.length && volT[i] > 0 ? volH[i] * Math.sin(Math.PI * (1 - volT[i] / VOL)) : 0); posArr[k * 3 + 2] = y;
       campArr[k] = A.camp[i] + (choisis.has(A.reg[i]) ? 2 : 0);
       vitArr[k] = A.peur[i] >= TAPI ? -1 : Math.hypot(A.vx[i], A.vy[i]);
       tirArr[k * 2] = i < tirVal.length ? tirVal[i] : 0; tirArr[k * 2 + 1] = i < tirVal.length ? tirAng[i] : 0;

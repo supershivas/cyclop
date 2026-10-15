@@ -25,8 +25,8 @@
      (rng.js), pour que la même graine rejoue la même bataille.
 
    Logique pure : aucun DOM. Le rendu lit les tableaux (rendu3d.js). */
-import { hauteurQ, etat, vitesseEtat } from './terrain.js?v=0.15.0';
-import { ligneY } from './tranchees.js?v=0.15.0';
+import { hauteurQ, etat, vitesseEtat } from './terrain.js?v=0.16.0';
+import { ligneY } from './tranchees.js?v=0.16.0';
 
 export const GRILLE = 2;           // m : cases de voisinage
 export const DENSITE = 8;          // m : carrés de densité (tir)
@@ -279,6 +279,22 @@ export function tuerDans(A, x0, y0, rayon, ctx) {
       if (T.diff[ci] <= -2) p *= R.obus.abri;
       if (ctx.abri) p *= ctx.abri(ci);
       if (rng() < p) frapper(i, 'obus', 0.5 + 0.5 * (1 - d / rayon));
+    }
+  }
+  // le souffle : les survivants, plus loin que les morts (jusqu'à `souffleZone` rayons), sont jetés à l'opposé du point de chute ;
+  // une vitesse qui retombe d'elle-même (la marche la reprend), un pas dans le même ordre pour tous : même partie, même résultat
+  const zone = rayon * R.obus.souffleZone, vs = R.obus.souffle;
+  const z0x = Math.max(0, ((x0 - zone) / GRILLE) | 0), z1x = Math.min(A.gw - 1, ((x0 + zone) / GRILLE) | 0);
+  const z0y = Math.max(0, ((y0 - zone) / GRILLE) | 0), z1y = Math.min(A.gh - 1, ((y0 + zone) / GRILLE) | 0);
+  for (let gy = z0y; gy <= z1y; gy++) for (let gx = z0x; gx <= z1x; gx++) {
+    const c = gy * A.gw + gx;
+    for (let s = A.cellStart[c], e = A.cellStart[c + 1]; s < e; s++) {
+      const i = A.sorted[s];
+      if (A.mort[i]) continue;
+      const dx = A.x[i] - x0, dy = A.y[i] - y0, d = Math.hypot(dx, dy);
+      if (d >= zone) continue;
+      const u = (1 - d / zone) * vs;
+      A.vx[i] += (d > 0.05 ? dx / d : 1) * u; A.vy[i] += (d > 0.05 ? dy / d : 0) * u;
     }
   }
 }

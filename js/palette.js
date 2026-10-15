@@ -16,7 +16,7 @@ export const PALETTE = {
   e: '#8a9799', // eau — reflète le ciel
   r: '#a9a89a', // brume — pluie, fumée, eau gelée
   o: '#e4dfd0', // os — le texte, l'éclair
-  n: '#a9bad0', // bleu horizon — nous
+  n: '#8cb6ff', // bleu horizon — nous
   x: '#e0604f', // rouge — en face (Jérôme, v0.12.0 : l'armée d'en face se distingue d'un coup d'œil)
   // Deux verts discrets (Jérôme, v0.9.3 : « le vert est intégré dans le design et ne fait pas de grandes différences ») : de la
   // même clarté que l'herbe morte et la glaise, un peu plus verts ; le sol en est nuancé (apparence.js, `verdure`)

@@ -59,6 +59,19 @@ test('un obus tue près de lui, et les morts sont retirés', () => {
   assert.equal(compacter(A), morts);
   assert.equal(A.n, 50 - morts);
 });
+test('le souffle jette les survivants à l\'opposé du point de chute, d\'autant plus fort qu\'ils sont près ; hors de la zone, rien', () => {
+  const T = monde();
+  const A = creerArmee({ capacite: 10, W: T.W, H: T.H });
+  ajouterSoldat(A, 20, 7, 0, 0, 0, 0.5);       // à l'est, juste hors de la mort (rayon 4)
+  ajouterSoldat(A, 9, 7, 0, 0, 1, 0.5);        // à l'ouest, plus près (5 m ; la zone va à 7,2 m)
+  ajouterSoldat(A, 14, 30, 0, 0, 2, 0.5);      // loin
+  construireGrille(A);
+  tuerDans(A, 14, 7, 4, { R, rng: createRng(1), T, frapper: () => {} });
+  assert.ok(A.vx[0] > 0 && Math.abs(A.vy[0]) < 1e-9, 'jeté vers l\'est');
+  assert.ok(A.vx[1] < 0, 'jeté vers l\'ouest');
+  assert.ok(-A.vx[1] > A.vx[0], 'le plus proche est jeté plus fort');
+  assert.equal(A.vx[2] + A.vy[2], 0, 'hors de la zone, rien');
+});
 test('dans un abri, un obus tue moins (ctx.abri : ce qui reste du coup)', () => {
   const T = monde();
   const compte = abri => {

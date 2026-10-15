@@ -151,7 +151,7 @@ gris) et les deux camps (proposés `#6f86a6` et `#5b5d48`, invisibles sur la bou
 | `e` | `#8a9799` | eau — reflète le ciel |
 | `r` | `#a9a89a` | brume — pluie, fumée, glace, rides de l'eau |
 | `o` | `#e4dfd0` | os — le texte, l'éclair d'un obus, le casque des choisis |
-| `n` | `#a9bad0` | bleu horizon — nous |
+| `n` | `#8cb6ff` | bleu horizon — nous (Jérôme, v0.16.0 : l'ancien `#a9bad0` avait la couleur de la pluie et de la brume, `r` : sous la pluie, notre armée se perdait ; plus saturé, il passe toutes les paires de `lisibilite.mjs`) |
 | `x` | `#e0604f` | rouge — en face (Jérôme, v0.12.0 : se distingue d'un coup d'œil dans le champ) |
 | `v` | `#6f8147` | vert mousse — l'herbe qui reprend, par plaques (Jérôme, v0.9.3 : « intégré dans le design, sans grandes différences ») |
 | `w` | `#5c6e3c` | vert sombre — l'herbe dans l'humide |
@@ -463,6 +463,13 @@ node outils/stamp-version.mjs            # après chaque changement de version.j
   l'ennemi se teste en vidant quatre régiments seulement (tous vidés, la bataille finit), et un 220 sur un secteur (deux tronçons)
   se tire en plusieurs salves. L'équilibre (huit régiments sur la 1re ligne seule : deux fois plus d'hommes au mètre) n'est pas
   encore mesuré.
+- **Le souffle des obus** (Jérôme, v0.16.0) : `tuerDans` (army.js) jette les survivants jusqu'à `obus.souffleZone` (1,8) rayons du
+  point de chute, à l'opposé, d'une vitesse qui tombe à zéro au bord (`obus.souffle`, 16 m/s au centre ; la vitesse retombe d'elle-même,
+  ~3 m parcourus, puis la marche les ramène à leur place) ; sans hasard, donc la partie relue est la même. Le dessin les fait sauter
+  (`souffler`, `volT` de rendu3d.js ; un bond de 0,6 s, jusqu'à 2 m pour qui était collé au point de chute).
+- **Les soldats scintillaient dans les cratères** (v0.16.0) : leur hauteur était celle de la case, en marches d'un demi-mètre
+  (`hauteurVueQ`) : un homme à cheval sur deux cases changeait de hauteur à chaque pas. `surfaceLisse` (rendu3d.js) interpole entre
+  les centres des quatre cases voisines : il glisse sur les bords des trous.
 - **Les petites batailles des tests durent trois jours** (`jours: 3` de `petite`) :
   quinze jours de 200 hommes, c'était une minute de plus par test.
 - **Le moral trop vif** : à 0,03 par seconde de peur, un seul barrage mettait un
