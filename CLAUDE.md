@@ -118,7 +118,7 @@ gris) et les deux camps (proposés `#6f86a6` et `#5b5d48`, invisibles sur la bou
 | `o` | `#e4dfd0` | os — le texte, l'éclair d'un obus, le casque des choisis |
 | `n` | `#a9bad0` | bleu horizon — nous |
 | `x` | `#8f9374` | feldgrau — en face |
-| `v` | `#7b8d4f` | vert mousse — l'herbe qui reprend, par plaques (Jérôme, v0.9.3 : « intégré dans le design, sans grandes différences ») |
+| `v` | `#6f8147` | vert mousse — l'herbe qui reprend, par plaques (Jérôme, v0.9.3 : « intégré dans le design, sans grandes différences ») |
 | `w` | `#5c6e3c` | vert sombre — l'herbe dans l'humide |
 
 Un soldat se lit par sa couleur sur un sol sombre, par son ombre (`t`) sur un sol

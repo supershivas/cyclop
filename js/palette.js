@@ -20,7 +20,7 @@ export const PALETTE = {
   x: '#8f9374', // feldgrau — en face
   // Deux verts discrets (Jérôme, v0.9.3 : « le vert est intégré dans le design et ne fait pas de grandes différences ») : de la
   // même clarté que l'herbe morte et la glaise, un peu plus verts ; le sol en est nuancé (apparence.js, `verdure`)
-  v: '#7b8d4f', // vert mousse — l'herbe qui reprend, par plaques
+  v: '#6f8147', // vert mousse — l'herbe qui reprend, par plaques
   w: '#5c6e3c', // vert sombre — l'herbe dans l'humide
 };
 
