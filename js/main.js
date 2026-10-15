@@ -1,24 +1,24 @@
 // Le cycle de vie : écran titre → bataille → nuit → fin ; pause active,
 // réglages, sauvegarde, mise à jour, debug. Les règles sont dans bataille.js
 // (pures), le dessin dans rendu3d.js (il ne modifie jamais l'état).
-import { createLoop } from './lib/loop.js?v=0.16.0';
-import { createKeys, stopTypeahead } from './lib/keys.js?v=0.16.0';
-import { createPointer, lockBrowserGestures } from './lib/pointer.js?v=0.16.0';
-import { createGamepad } from './lib/gamepad.js?v=0.16.0';
-import { createStore, autosave, pickJSONFile } from './lib/save.js?v=0.16.0';
-import { startUpdateCheck, loadVersion, loadChangelog, downloadJSON } from './lib/app-update.js?v=0.16.0';
-import { ROLES } from './palette.js?v=0.16.0';
-import { MISSIONS, nouvelleBataille, avancer, aube, ordonnerMarche, ordonnerBarrage, horloge, effectifs, tronconsTenus, moralEnMots, terrainSous, rangDe, nomTroncon, actionDe, forcesTroncons, secteurDe, tronconsDeLigne, largeurSecteur, nombreSecteurs, codeLigne, zone, photo, restaurer, PAS, NOUS, EUX } from './bataille.js?v=0.16.0';
-import { ligneY } from './tranchees.js?v=0.16.0';
-import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.16.0';
-import { METEO } from './data/meteo.js?v=0.16.0';
-import { impact, hydroLignes } from './terrain.js?v=0.16.0';
-import { hash2 } from './lib/rng.js?v=0.16.0';
-import { creerRendu, CAMERA } from './rendu3d.js?v=0.16.0';
-import { identite, etatEnMots, experienceEnMots } from './identite.js?v=0.16.0';
-import { CORVEES } from './data/corvees.js?v=0.16.0';
-import { refusCorvee } from './nuit.js?v=0.16.0';
-import { chargerContenu } from './design-store.js?v=0.16.0';
+import { createLoop } from './lib/loop.js?v=0.17.0';
+import { createKeys, stopTypeahead } from './lib/keys.js?v=0.17.0';
+import { createPointer, lockBrowserGestures } from './lib/pointer.js?v=0.17.0';
+import { createGamepad } from './lib/gamepad.js?v=0.17.0';
+import { createStore, autosave, pickJSONFile } from './lib/save.js?v=0.17.0';
+import { startUpdateCheck, loadVersion, loadChangelog, downloadJSON } from './lib/app-update.js?v=0.17.0';
+import { ROLES } from './palette.js?v=0.17.0';
+import { MISSIONS, nouvelleBataille, avancer, aube, ordonnerMarche, ordonnerBarrage, horloge, effectifs, tronconsTenus, moralEnMots, terrainSous, rangDe, nomTroncon, actionDe, forcesTroncons, secteurDe, secteursDe, etendueSecteurs, tronconsDeLigne, largeurSecteur, nombreSecteurs, codeLigne, zone, photo, restaurer, PAS, NOUS, EUX } from './bataille.js?v=0.17.0';
+import { ligneY } from './tranchees.js?v=0.17.0';
+import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.17.0';
+import { METEO } from './data/meteo.js?v=0.17.0';
+import { impact, hydroLignes } from './terrain.js?v=0.17.0';
+import { hash2 } from './lib/rng.js?v=0.17.0';
+import { creerRendu, CAMERA } from './rendu3d.js?v=0.17.0';
+import { identite, etatEnMots, experienceEnMots } from './identite.js?v=0.17.0';
+import { CORVEES } from './data/corvees.js?v=0.17.0';
+import { refusCorvee } from './nuit.js?v=0.17.0';
+import { chargerContenu } from './design-store.js?v=0.17.0';
 
 const JEU = 'cyclopeen';
 const $ = id => document.getElementById(id);
@@ -397,7 +397,7 @@ function construireCarte() {
   const kids = [document.createElement('span')];
   for (let s = 1; s <= n; s++) {
     const b = document.createElement('button');
-    b.className = 'sect'; b.textContent = s; b.title = `Choisir le régiment du secteur ${s}`; b.setAttribute('aria-label', `Choisir le régiment du secteur ${s}`);
+    b.className = 'sect'; b.textContent = s; b.title = `Choisir les régiments du secteur ${s}`; b.setAttribute('aria-label', `Choisir les régiments du secteur ${s}`);
     b.onclick = e => choisirSecteur(s, e.shiftKey);
     kids.push(b);
   }
@@ -436,8 +436,8 @@ function majCarte() {
   for (const r of e.regiments) {
     const t = r.ordre.trace;
     if (!r.effectif || !t) continue;
-    const idx = B.lignes.findIndex(L => L.camp * 10 + L.rang === t.ligne), k = `${idx}:${secteurDe(B, (t.x0 + t.x1) / 2)}`;
-    (marques.get(k) || marques.set(k, []).get(k)).push(r);
+    const idx = B.lignes.findIndex(L => L.camp * 10 + L.rang === t.ligne), [a, b] = etendueSecteurs(B, r.ordre);
+    for (let sct = a; sct <= b; sct++) { const k = `${idx}:${sct}`; (marques.get(k) || marques.set(k, []).get(k)).push(r); }
   }
   const f = forcesTroncons(B);
   const cle = [e.troncons.join(''), f.join(','), [...B.disputes].join(''), [...choisis].join(','), [...marques].map(([k, v]) => `${k}=${v.map(r => r.id)}`).join(';')].join('|');
@@ -455,7 +455,7 @@ function majCarte() {
   }
 }
 function choisirSecteur(s, ajout) {
-  const regs = B.etat.regiments.filter(r => r.camp === NOUS && r.effectif && secteurDe(B, r.depart.x) === s);
+  const regs = B.etat.regiments.filter(r => { const [a, b] = etendueSecteurs(B, r.depart); return r.camp === NOUS && r.effectif && s >= a && s <= b; });
   if (!regs.length) return toast(`Plus personne dans le secteur ${s}.`);
   if (!ajout) choisis = new Set();
   for (const r of regs) { if (ajout && choisis.has(r.id)) choisis.delete(r.id); else choisis.add(r.id); }
@@ -596,7 +596,7 @@ function majEtiquettes() {
     d.style.transform = `translate(${Math.round(sx)}px, ${Math.round(sy)}px) translate(-50%, -100%)`;
     d.classList.toggle('choisi', choisis.has(id));
     // « S3 · Viride », puis la corvée de la nuit, ou le moral quand il baisse
-    const reg = B.etat.regiments[id], m = moralEnMots(reg, R), base = `S${secteurDe(B, reg.depart.x)} · ${reg.nom}`;
+    const reg = B.etat.regiments[id], m = moralEnMots(reg, R), base = `${secteursDe(B, reg)} · ${reg.nom}`;
     const suite = nuitEtat === 'choix' && corveesNuit[id] ? corveeDe(corveesNuit[id]) : m.startsWith('tient') ? '' : m;
     const texte = suite ? `${base} · ${suite}` : base;
     if (d.textContent !== texte) d.textContent = texte;
@@ -1013,7 +1013,7 @@ startUpdateCheck({
 
 // ─── Mode debug (section 18) : chargé seulement avec ?debug=1 ──────────────
 if (DEBUG) {
-  const { installDebug, seedFromUrl } = await import('./lib/debug.js?v=0.16.0');
+  const { installDebug, seedFromUrl } = await import('./lib/debug.js?v=0.17.0');
   window.__seed = seedFromUrl() ?? undefined;
   installDebug({
     state: () => B && { ...horloge(B), effectifs: effectifs(B), pertes: B.etat.pertes, impacts: B.etat.impacts.length, enJeu: enJeu(), pause: loop.paused },

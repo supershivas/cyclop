@@ -66,8 +66,10 @@ la danse macabre, la catastrophe peinte avec calme. L'intention est dans `DESIGN
   repart à zéro quand on relit une partie). `nomTroncon(B, t)` dit « tronçon 3 de la 1re ligne ».
 - **Huit régiments par camp, un par secteur** (Jérôme, v0.14.0 ; six avant, huit avant la v0.7.0), 750 hommes (94 chacun). Le front
   est coupé en 8 secteurs de 50 m, numérotés de l'ouest à l'est (`secteurDe` de bataille.js) ; une tranchée se dit « S3·N1 » (secteur 3,
-  notre 1re ligne) ou « S3·F2 » (leur 2e ligne, F : en face ; `nomTranchee`, `codeLigne` ; `nomTroncon` : « S3·N1 ouest »). Tous les
-  régiments partent dans leur secteur de la 1re ligne (`depart: [0]` de secteur.js) : les autres lignes sont vides au départ. La **carte**
+  notre 1re ligne) ou « S3·F2 » (leur 2e ligne, F : en face ; `nomTranchee`, `codeLigne` ; `nomTroncon` : « S3·N1 ouest »). Quatre
+  régiments partent en 1re ligne, quatre en 2e (`depart: [0, 1]` de secteur.js ; Jérôme, v0.17.0), chacun sur 100 m, soit deux secteurs
+  (« S1-2 · Porphyre » : `secteursDe`, `etendueSecteurs`) ; un numéro de la carte choisit les régiments qui couvrent ce secteur, et un
+  ordre sur une tranchée étale encore un régiment sur un secteur. La **carte**
   (`#carte`, touche M, `construireCarte` / `majCarte` de main.js) montre les 8 secteurs × 4 lignes de chaque camp, chaque case en deux
   tronçons à la couleur de celui qui les tient ; un numéro choisit le régiment du secteur, une case l'envoie dans cette tranchée
   (`ordreCase`). Tout ordre sur une tranchée (carte ou clic droit) fait clignoter les tronçons visés trois secondes, sur le terrain
@@ -81,7 +83,8 @@ la danse macabre, la catastrophe peinte avec calme. L'intention est dans `DESIGN
   buissons en haies et en bosquets (`T.buissons`, arrachés par les obus).
 - **Les soldats de près et les effets** (Jérôme, v0.8.0) : la silhouette complète
   (`SOLDAT` de rendu3d.js : jambes, vareuse, visage, casque, fusil, sac ; de près
-  seulement, à partir de 6 pixels par mètre) et tous les effets (`EFFETS` : gerbe,
+  seulement, à partir de 6 pixels par mètre ; dès 4 pixels par mètre, une silhouette allégée, `legere` : jambes d'un bloc, corps, bras,
+  tête, fusil, sans sac ; Jérôme, v0.17.0 : à 900 hommes vus au zoom 4, ~66 ms contre ~67 pour les boîtes, dans le bruit) et tous les effets (`EFFETS` : gerbe,
   onde, obus qui tombe, fumée qui dérive, feu qui se propage, fusées le soir,
   corbeaux sur les morts) ; les autres variantes restent au labo.
 - **Le temps qui passe** (Jérôme, v0.8.0) : le soleil (`majSoleil` : les ombres des
@@ -463,6 +466,12 @@ node outils/stamp-version.mjs            # après chaque changement de version.j
   l'ennemi se teste en vidant quatre régiments seulement (tous vidés, la bataille finit), et un 220 sur un secteur (deux tronçons)
   se tire en plusieurs salves. L'équilibre (huit régiments sur la 1re ligne seule : deux fois plus d'hommes au mètre) n'est pas
   encore mesuré.
+- **L'assaut frontal coûtait trop** (v0.17.0 ; Jérôme : « adoucir ») : tous les régiments envoyés dans la 1re ligne d'en face perdaient
+  570 à 665 hommes sur 750 le premier jour (mesuré, graines 7 et 8 : presque tout par le tir à découvert, 540 à 627, très peu par les obus).
+  `tir.mouvement` (0,75 : un homme qui marche à pleine vitesse échappe au coup avec cette chance) et `tir.precision` (0,05 → 0,035) les
+  ramènent à 382-390 (graines 7 et 8) ; `mouvement` seul (0,5 ou 0,75) n'en ôtait que 70 à 130 : l'essentiel des morts tombe quand les
+  attaquants s'arrêtent et se serrent devant la tranchée. Une bataille sans ordres devient plus calme (graine 7, 4 jours : 121 des nôtres
+  et 16 en face, contre 223 et 151 avant) : en face attaque moins.
 - **Le souffle des obus** (Jérôme, v0.16.0) : `tuerDans` (army.js) jette les survivants jusqu'à `obus.souffleZone` (1,8) rayons du
   point de chute, à l'opposé, d'une vitesse qui tombe à zéro au bord (`obus.souffle`, 16 m/s au centre ; la vitesse retombe d'elle-même,
   ~3 m parcourus, puis la marche les ramène à leur place) ; sans hasard, donc la partie relue est la même. Le dessin les fait sauter

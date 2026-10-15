@@ -25,12 +25,6 @@ Statuts : **à l'étude** · **validé** (Jérôme a tranché) · **en cours** �
 
 ## Validé par Jérôme, pas encore construit (tranché le 2026-10-15)
 
-- **Adoucir l'assaut frontal** (~570 hommes perdus sur 750 le premier jour) : réduire un peu la létalité à découvert (tir ou peur)
-  pour qu'un assaut préparé par l'artillerie reste jouable ; mesure sur deux graines avant et après.
-- **Huit régiments : moitié en 2e ligne** : quatre en 1re ligne, quatre en 2e (au lieu de huit sur la 1re), sans mesure préalable ;
-  un régiment par secteur reste vrai (la 2e ligne est derrière le même secteur).
-- **Détail des soldats dès 4 pixels par mètre, silhouette allégée** (tête, corps, bras, fusil ; sans jambes articulées ni sac) : à
-  mesurer (rendu logiciel) ; la silhouette complète reste à partir de 6.
 - **Tranchées, la suite** (voir plus bas) : traverses, fil de fer coupé, sacs retournés quand un tronçon est pris, abris dessinés.
 - **Évacuer les blessés : ils donnent de nouveaux hommes frais** (idée de Jérôme à préciser : les blessés évacués guérissent et
   reviennent en renfort, en nombre limité et après quelques nuits).

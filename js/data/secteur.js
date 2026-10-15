@@ -32,7 +32,7 @@ export const SECTEURS = {
       troncon: 25,          // m : un tronçon, ce qui se prend et se perd
       boyaux: 4,            // par camp
       // au départ : les rangs de lignes où se tiennent les régiments (de gauche à droite, autant par rang)
-      depart: [0],          // les huit régiments tiennent la 1re ligne, chacun son secteur (50 m) ; les autres lignes sont vides (v0.14.0)
+      depart: [0, 1],       // la moitié des régiments en 1re ligne, la moitié en 2e (Jérôme, v0.17.0 ; les huit sur la 1re ligne en v0.14.0)
     },
   },
 };

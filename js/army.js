@@ -25,8 +25,8 @@
      (rng.js), pour que la même graine rejoue la même bataille.
 
    Logique pure : aucun DOM. Le rendu lit les tableaux (rendu3d.js). */
-import { hauteurQ, etat, vitesseEtat } from './terrain.js?v=0.16.0';
-import { ligneY } from './tranchees.js?v=0.16.0';
+import { hauteurQ, etat, vitesseEtat } from './terrain.js?v=0.17.0';
+import { ligneY } from './tranchees.js?v=0.17.0';
 
 export const GRILLE = 2;           // m : cases de voisinage
 export const DENSITE = 8;          // m : carrés de densité (tir)
@@ -245,6 +245,9 @@ function tirer(A, i, o, ctx) {
   }
   if (!cand.length) return true;
   const v = cand[Math.floor(rng() * cand.length)];
+  // une cible qui court est plus dure à toucher (un assaut qui traverse le no man's land, v0.17.0)
+  const vit = Math.hypot(A.vx[v], A.vy[v]);
+  if (vit > 0.3 && rng() < P.mouvement * Math.min(1, vit / R.vitesse.marche)) return true;
   // à l'abri dans un creux ? Dans une tranchée, le parapet protège du tir qui vient de devant, le parados
   // beaucoup moins de celui qui vient de derrière (une tranchée prise sert à l'envers)
   const cv = (A.y[v] | 0) * T.W + (A.x[v] | 0);

@@ -1,5 +1,10 @@
 # Journal des versions
 
+## 0.17.0 — 2026-10-15
+- Un assaut à découvert coûte moins d'hommes : une cible qui court est plus dure à toucher, et le tir est un peu moins précis
+- La moitié des régiments part en 2e ligne ; la carte et les noms (S1-2 · Porphyre) suivent
+- Les soldats ont des bras et un fusil épaulé dès 4 pixels par mètre (silhouette allégée)
+
 ## 0.16.0 — 2026-10-15
 - Notre armée est d'un bleu plus franc : on la distingue sous la pluie et dans la brume
 - Les soldats ne sautent plus au bord des cratères
