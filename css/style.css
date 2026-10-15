@@ -136,6 +136,7 @@ dialog .reglage input { width: 20px; height: 20px; margin: 0; flex: none; accent
   background: var(--jeu-fond); color: var(--jeu-encre); border: 1px solid var(--jeu-accent);
   font: inherit;
 }
+.fin-jours { margin: var(--pas) 0; padding-left: 0; list-style: none; columns: 2; font-size: 13px; color: var(--jeu-accent); }
 dialog hr { border: 0; border-top: 1px solid var(--jeu-ombre); margin: calc(var(--pas) * 2) 0; }
 .version { margin: 0; color: var(--jeu-accent); }
 details { margin: var(--pas) 0 calc(var(--pas) * 2); }

@@ -1,5 +1,11 @@
 # Journal des versions
 
+## 0.9.0 — 2026-10-15
+
+- La bataille entière : de 10 à 15 jours, une mission (tenir le secteur, ou prendre leur première ligne) jugée à la fin
+- La relève : la nuit, un régiment usé cède sa place à un régiment frais de la réserve
+- En face prépare ses assauts au 220 et ne sort que là où nos lignes ont faibli
+
 ## 0.8.2 — 2026-10-14
 
 - L'écran titre : la caméra au ras du sol, sous un ciel bas, et une image différente à chaque lancement

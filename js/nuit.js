@@ -11,8 +11,10 @@
      n'évacue pas peut mourir dans la nuit ; les corps laissés autour d'un
      régiment pèsent sur son moral au matin.
    - En face fait ses corvées aussi (`choixEnFace`). */
-import { toucher } from './terrain.js?v=0.8.2';
-import { CORVEES } from './data/corvees.js?v=0.8.2';
+import { toucher } from './terrain.js?v=0.9.0';
+import { CORVEES } from './data/corvees.js?v=0.9.0';
+import { REGIMENTS } from './data/lexique.js?v=0.9.0';
+import { ajouterSoldat } from './army.js?v=0.9.0';
 
 export const SORTES = ['reparer', 'caillebotis'];          // les travaux de terrain, par leur numéro dans etat.travaux
 export const corvee = id => CORVEES.find(c => c.id === id);
@@ -34,6 +36,7 @@ export function refusCorvee(B, reg, id) {
   const c = corvee(id);
   if (!c) return 'Pas de telle corvée.';
   if (c.tranchee && !tronconsDe(B, reg).length) return `${reg.nom || 'Ce régiment'} ne tient pas de tranchée.`;
+  if (id === 'releve' && !(B.etat.reserves?.[reg.camp] > 0)) return 'Plus un régiment en réserve.';
   return null;
 }
 
@@ -78,9 +81,11 @@ export function choixEnFace(B) {
     for (let i = 0; i < A.n; i++) if (A.reg[i] === reg.id && A.blessure[i]) blesses++;
     out[reg.id] = blesses >= 5 ? 'evacuer' : combles(B, reg) >= 10 ? 'reparer' : 'repos';
   }
+  // la relève : le régiment le plus éprouvé (moins de la moitié de ses hommes), un par nuit, tant qu'il en reste en réserve
+  const eprouves = B.etat.regiments.filter(r => r.camp === 1 && r.effectif && r.effectif < r.initial * 0.5).sort((a, b) => a.effectif / a.initial - b.effectif / b.initial || a.id - b.id);
+  if (eprouves.length && B.etat.reserves?.[1] > 0) out[eprouves[0].id] = 'releve';
   return out;
 }
-
 /* Les corvées de la nuit. choix : { id du régiment : corvée } (nos régiments ;
    ceux d'en face choisissent seuls ; sans choix, le repos). ctx : { rng,
    mourir(i, cause, ou) }. Rend le bilan de la nuit pour chaque camp. */
@@ -89,7 +94,7 @@ export function corvees(B, choix, ctx) {
   const N = R.nuit, { rng, mourir } = ctx;
   const tous = { ...choixEnFace(B), ...choix };
   const bilan = [0, 1].map(() => ({ inhumes: 0, evacues: 0, repares: 0, caillebotis: 0, mortsCorvee: 0, mortsBlesses: 0 }));
-  const faite = {};
+  const faite = {}, releves = [];
   // le centre de chaque régiment (là où sont ses hommes)
   const centres = etat.regiments.map(() => ({ x: 0, y: 0, n: 0 }));
   for (let i = 0; i < A.n; i++) { const c = centres[A.reg[i]]; c.x += A.x[i]; c.y += A.y[i]; c.n++; }
@@ -132,6 +137,12 @@ export function corvees(B, choix, ctx) {
           mourir(i, 'corvée', [c[0] / 10, c[1] / 10]); b.mortsCorvee++;
         }
       }
+    } else if (id === 'releve') {
+      // il quitte le front (blessés compris) ; son remplaçant entre à l'aube, après les autres corvées
+      for (let i = 0; i < A.n; i++) if (A.reg[i] === reg.id && !A.mort[i]) A.mort[i] = 1;
+      reg.releve = etat.jour; reg.releves = reg.effectif; reg.effectif = 0;
+      etat.reserves[reg.camp]--;
+      releves.push(reg); b.releves = (b.releves || 0) + 1;
     } else if (id === 'evacuer') {
       for (let i = 0; i < A.n; i++) {
         if (A.reg[i] !== reg.id || A.mort[i] || !A.blessure[i]) continue;
@@ -167,8 +178,36 @@ export function corvees(B, choix, ctx) {
     for (const c of etat.corps) if ((c[0] / 10 - ctr.x) ** 2 + (c[1] / 10 - ctr.y) ** 2 < r2) n++;
     reg.moral = Math.max(0, reg.moral - Math.min(N.moralCorpsMax, n * N.moralCorps));
   }
+  // la relève entre : un régiment frais à la place de chaque régiment relevé, qui arrive de l'arrière
+  for (const vieux of releves) relever(B, vieux, rng);
   etat.nuits.push({ jour: etat.jour, choix: faite, bilan });
   return bilan;
+}
+
+/* Un régiment frais (la réserve) prend la place d'un régiment relevé : même ordre
+   (sa tranchée), des hommes neufs qui arrivent par l'arrière. Ses numéros suivent
+   ceux de tous les régiments déjà là (les noms et les grades en découlent). */
+function relever(B, vieux, rng) {
+  const { etat, R, armee: A } = B;
+  const n = etat.parRegiment || vieux.initial;
+  let premier = 0;
+  for (const r of etat.regiments) premier += r.initial;
+  const deNous = etat.regiments.filter(r => r.camp === 0).length;
+  const reg = {
+    id: etat.regiments.length, camp: vieux.camp,
+    nom: vieux.camp === 0 ? REGIMENTS[deNous % REGIMENTS.length] : null,
+    effectif: n, initial: n, pertes: 0, moral: R.moral.depart, deroute: false,
+    ordre: structuredClone(vieux.ordre), depart: structuredClone(vieux.depart), arrive: etat.jour + 1,
+  };
+  etat.regiments.push(reg);
+  // ils montent par les boyaux : à 12 m derrière la place qu'ils prennent (chez nous l'ennemi est au nord, l'arrière
+  // au sud, les y plus grands ; en face, l'inverse). De 40 m derrière la dernière ligne, il leur fallait des minutes.
+  const derriere = reg.ordre.y + (reg.camp === 0 ? 12 : -12);
+  const t = reg.ordre.trace, x0 = t ? t.x0 : reg.ordre.x - 40, x1 = t ? t.x1 : reg.ordre.x + 40;
+  for (let k = 0; k < n; k++) {
+    const x = x0 + (k + 0.5) * (x1 - x0) / n;
+    ajouterSoldat(A, x + (rng() - 0.5) * 2, Math.max(1, Math.min(B.terrain.H - 2, derriere + (rng() - 0.5) * 6)), reg.camp, reg.id, k, rng(), premier + k);
+  }
 }
 
 // La sauvegarde : rejoue les travaux de terrain de la nuit du jour donné

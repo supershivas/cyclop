@@ -84,6 +84,7 @@ export const REGLAGES = {
     espacement: 1.6,      // m entre deux hommes le long d'une tranchée occupée
     prise: 3,             // hommes dans un tronçon vide de ses défenseurs : il est pris
     assaut: 0.6,          // en face ne lance à l'assaut qu'un régiment qui a encore cette part de ses hommes
+    rapport: 1.6,         // … et seulement là où il a au moins autant d'attaquants par défenseur (sinon, il prépare au 220)
   },
   // le moral d'un régiment (0 à 1) : les morts et la peur le font baisser, le calme, l'encadrement et
   // l'expérience le font remonter, la nuit plus encore (Jérôme, v0.5.0)

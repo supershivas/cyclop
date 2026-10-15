@@ -3,11 +3,12 @@ import { readFileSync } from 'node:fs';
 import { nouvelleBataille, avancer, ordonnerMarche, ordonnerBarrage, aube, photo, restaurer, effectifs, horloge, zone, tronconsTenus, rangDe, moralEnMots } from '../js/bataille.js';
 import { ligneY } from '../js/tranchees.js';
 import { tronconsDe, refusCorvee } from '../js/nuit.js';
+import { SECTEURS as SECT } from '../js/data/secteur.js';
 import { identite, etatEnMots } from '../js/identite.js';
 import { SECTEURS } from '../js/data/secteur.js';
 import { REGLAGES as R } from '../js/data/reglages.js';
 
-const petite = (graine = 3) => nouvelleBataille(graine, R, { soldats: 200 });
+const petite = (graine = 3) => nouvelleBataille(graine, R, { soldats: 200, jours: 3 });
 // (x, y) dans le secteur → dans le terrain (les marges autour)
 const M = SECTEURS.essai.marges, P = (x, y) => [x + M.x, y + M.y];
 const empreinte = B => JSON.stringify(photo(B));
@@ -209,12 +210,20 @@ test('un tronçon vide de ses défenseurs, occupé par l\'autre camp, change de 
   assert.equal(B.etat.prises[0][1], 1);
   assert.deepEqual(restaurer(photo(B), R).etat.troncons, B.etat.troncons);
 });
-test('en face monte à l\'assaut de nos tranchées', () => {
+test('en face prépare au 220 là où nous tenons ; il monte à l\'assaut là où nos lignes se sont vidées', () => {
+  // nos lignes tenues : pas d'assaut au premier coup, mais un barrage de préparation
   const B = petite();
-  for (let k = 0; k < 30 * 360; k++) avancer(B);
-  const vers = B.etat.regiments.filter(r => r.camp === 1 && r.ordre.trace && r.ordre.trace.ligne < 10);
-  const repli = B.etat.regiments.filter(r => r.camp === 1 && r.effectif < r.initial * 0.4);
-  assert.ok(vers.length + repli.length > 0, 'au moins un assaut dans la journée');
+  for (let k = 0; k < 30 * 175; k++) avancer(B);
+  const sortis = B => B.etat.regiments.filter(r => r.camp === 1 && r.ordre.trace && r.ordre.trace.ligne < 10);
+  assert.equal(sortis(B).length, 0, 'il ne sort pas contre une ligne tenue');
+  assert.ok(B.etat.impacts.some(i => i[4] === 2), 'il prépare au 220');
+  // notre première ligne vidée : il sort
+  const C = petite(), A = C.armee;
+  const premiers = new Set(C.etat.regiments.filter(r => r.camp === 0 && r.ordre.trace?.ligne === 0).map(r => r.id));
+  for (let i = 0; i < A.n; i++) if (premiers.has(A.reg[i])) A.mort[i] = 1;
+  for (const r of C.etat.regiments) if (premiers.has(r.id)) r.effectif = 0;
+  for (let k = 0; k < 30 * 175; k++) avancer(C);
+  assert.ok(sortis(C).length > 0, 'un assaut');
 });
 
 group('moral et expérience');
@@ -328,6 +337,55 @@ test('un blessé laissé au front peut mourir dans la nuit', () => {
   // (sauf ceux qu'en face évacue)
   assert.equal(r.bilan[0].mortsBlesses + r.bilan[1].mortsBlesses + r.bilan[1].evacues + r.bilan[1].mortsCorvee, blesses);
   for (let i = 0; i < A.n; i++) assert.equal(A.blessure[i], 0);
+});
+
+group('la bataille entière');
+test('elle dure de 10 à 15 jours, et sa mission est tirée de la graine (toujours la même pour la même graine)', () => {
+  const vus = new Set();
+  for (let g = 1; g <= 12; g++) {
+    const B = nouvelleBataille(g, R, { soldats: 60 });
+    assert.ok(B.etat.meteo.length >= 10 && B.etat.meteo.length <= 15, `${B.etat.meteo.length} jours`);
+    assert.ok(SECT.essai.missions.includes(B.etat.mission));
+    vus.add(B.etat.meteo.length);
+    assert.equal(nouvelleBataille(g, R, { soldats: 60 }).etat.meteo.length, B.etat.meteo.length);
+  }
+  assert.ok(vus.size > 1, 'des durées différentes');
+});
+test('à la fin, la mission est jugée ; le secteur qui tombe finit la bataille avant son terme', () => {
+  const B = petite();
+  while (B.etat.phase !== 'fin') { if (B.etat.phase === 'nuit') aube(B); avancer(B); }
+  assert.ok(B.etat.issue && typeof B.etat.issue.texte === 'string');
+  // plus un homme des nôtres dans le secteur
+  const C = petite(), A = C.armee;
+  for (let i = 0; i < A.n; i++) if (A.camp[i] === 0) A.mort[i] = 1;
+  for (const r of C.etat.regiments) if (r.camp === 0) r.effectif = 0;
+  for (let k = 0; k < 31 && C.etat.phase === 'jour'; k++) avancer(C);
+  assert.equal(C.etat.phase, 'fin');
+  assert.equal(C.etat.issue.reussie, false);
+  assert.match(C.etat.issue.texte, /plus un homme/);
+});
+test('la relève : un régiment frais prend la place du régiment relevé ; la réserve s\'épuise ; la sauvegarde le garde', () => {
+  const B = petite(); jusquALaNuit(B);
+  const avant = B.etat.reserves[0], n = B.etat.regiments.length, vieux = B.etat.regiments[1];
+  const r = aube(B, { 1: 'releve' });
+  assert.ok(r.ok);
+  assert.equal(vieux.effectif, 0); assert.equal(vieux.releve, 1);
+  assert.equal(B.etat.reserves[0], avant - 1);
+  const neuf = B.etat.regiments.find(g => g.id >= n && g.camp === 0);
+  assert.ok(neuf && neuf.nom && neuf.effectif === B.etat.parRegiment, 'un régiment frais, nommé');
+  const A = B.armee, ids = new Set();
+  for (let i = 0; i < A.n; i++) { assert.ok(!ids.has(A.id[i]), 'des numéros neufs'); ids.add(A.id[i]); }
+  // ses hommes rejoignent la tranchée du régiment relevé
+  for (let k = 0; k < 30 * 120; k++) avancer(B);
+  let dedans = 0, tous = 0;
+  for (let i = 0; i < A.n; i++) if (A.reg[i] === neuf.id) { tous++; if (B.terrain.troncon[(A.y[i] | 0) * B.terrain.W + (A.x[i] | 0)] >= 0) dedans++; }
+  assert.ok(dedans > tous * 0.6, `dans la tranchée (${dedans} sur ${tous})`);
+  const C = restaurer(photo(B), R);
+  assert.equal(C.etat.regiments.length, B.etat.regiments.length);
+  assert.equal(empreinte(C), empreinte(B));
+  // plus de réserve : la relève se refuse
+  B.etat.reserves[0] = 0;
+  assert.match(refusCorvee(B, B.etat.regiments[0], 'releve'), /réserve/);
 });
 
 test('aucun hasard ni horloge dans les règles', () => {

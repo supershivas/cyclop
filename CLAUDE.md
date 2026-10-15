@@ -78,9 +78,13 @@ la danse macabre, la catastrophe peinte avec calme. L'intention est dans `DESIGN
   la case sous la souris (`terrainSous` de bataille.js).
 - **Les tranchées** (lot 1, Jérôme, v0.4.0) : quatre lignes par camp, des boyaux,
   des tronçons de 25 m qui changent de main ; voir `DESIGN.md`.
-- **Session** : un run = une bataille de 10 à 15 jours sur un secteur (le lot
-  minimal : 3 jours). Progression permanente prévue (Mémorial, état-major,
-  trophées) : pas encore construite.
+- **Session** : un run = une bataille de 10 à 15 jours sur un secteur (Jérôme, v0.9.0 ;
+  trois avant), avec une mission (`etat.mission` : tenir, prendre ; `juger` à la fin,
+  ou avant si le secteur tombe ; `etat.issue`) et une réserve de régiments frais pour
+  la relève (`etat.reserves`, corvée `releve` de nuit.js : le régiment frais monte à
+  12 m derrière la place qu'il prend). L'ordre de mission s'affiche au premier matin
+  (pas en mode debug, que les scripts pilotent). Progression permanente prévue
+  (Mémorial, état-major, trophées) : pas encore construite.
 - **Steam** : porte ouverte (section 22). Manette : seulement le menu pour
   l'instant (`gamepad.js`).
 - **Langue** : français seulement. **Son** : aucun en v0 (Jérôme, v0.1.0).
@@ -252,7 +256,7 @@ le fond des boîtes de dialogue (`::backdrop` de `game.css`).
 
 - `?debug=1` : `window.__jeu` (`state`, `stats`, `avancer(n, passerNuits)`,
   `barrage(cal, x, y, camp)`, `marche(ids, x, y)`, `zoom(i)`, `camera(yaw, k)`, `teleport`,
-  `bataille()`, `rendu()`, `fiche()`, `survol(x, y)`, `nuit()` : ouvre la nuit), `&seed=7`. F9 masque le panneau. Les
+  `bataille()`, `rendu()`, `fiche()`, `survol(x, y)`, `nuit()` : ouvre la nuit, `fin()` : la fin), `&seed=7`. F9 masque le panneau. Les
   coordonnées du mode debug sont celles du **secteur** (0..400, 0..300) : les marges
   s'ajoutent dans `main.js`.
 - `?soldats=8000` : une bataille de 8 000 soldats (les deux camps).
@@ -380,6 +384,14 @@ node outils/stamp-version.mjs            # après chaque changement de version.j
 - **Un tir sans cible** comptait pour la fatigue des bras (et l'aurait fait pour
   l'expérience) : des hommes « bras morts de fatigue » sans avoir vu l'ennemi. `tirer`
   rend false quand personne n'est à portée (v0.5.0).
+- **En face se saignait à blanc** (v0.9.0, sur une bataille entière jouée sans
+  ordres) : un assaut toutes les 160 s, n'importe où, de 130 m à découvert : plus de
+  1 000 morts en cinq jours, et plus personne en face au sixième. Il ne sort plus que
+  là où il a 1,6 attaquant par défenseur (`tranchee.rapport`) ; sinon il prépare au
+  220 sur ce tronçon : une semaine de pilonnage, puis des assauts où nos lignes ont
+  faibli (~300 morts chez nous, ~700 en face, sur 11 et 15 jours).
+- **Les petites batailles des tests durent trois jours** (`jours: 3` de `petite`) :
+  quinze jours de 200 hommes, c'était une minute de plus par test.
 - **Le moral trop vif** : à 0,03 par seconde de peur, un seul barrage mettait un
   régiment en déroute en 30 s, et il se ralliait aussi vite ; à 0,006 (et un retour
   de 0,0015), une déroute dure le reste du jour (mesuré, 1 000 hommes par camp).

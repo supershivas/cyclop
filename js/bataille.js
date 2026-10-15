@@ -14,17 +14,17 @@
    La sauvegarde (photo) garde la graine, la liste compacte des impacts, l'état
    de la foule et les petites couches de logique ; jamais le relief : il se
    rejoue depuis la graine et les impacts (rejouerTerrain). */
-import { createRng } from './lib/rng.js?v=0.8.2';
-import { creerTerrain, impact, hydroLignes, etat as etatCase, vitesseEtat, ETAT } from './terrain.js?v=0.8.2';
-import { creerArmee, ajouterSoldat, construireGrille, pasArmee, tuerDans, effrayer, compacter, photoArmee, restaurerArmee, b64, deB64, DENSITE, place } from './army.js?v=0.8.2';
-import { creuserTranchees, ligneSous } from './tranchees.js?v=0.8.2';
-import { calculerCouts, creerCacheChamps, dimensionsCouts, BLOC } from './champs.js?v=0.8.2';
-import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.8.2';
-import { METEO, TRANSITIONS, PREVISION_JUSTE } from './data/meteo.js?v=0.8.2';
-import { SECTEURS } from './data/secteur.js?v=0.8.2';
-import { REGIMENTS } from './data/lexique.js?v=0.8.2';
-import { grade } from './identite.js?v=0.8.2';
-import { corvees, rejouerTravaux } from './nuit.js?v=0.8.2';
+import { createRng, hash2 } from './lib/rng.js?v=0.9.0';
+import { creerTerrain, impact, hydroLignes, etat as etatCase, vitesseEtat, ETAT } from './terrain.js?v=0.9.0';
+import { creerArmee, ajouterSoldat, construireGrille, pasArmee, tuerDans, effrayer, compacter, photoArmee, restaurerArmee, b64, deB64, DENSITE, place } from './army.js?v=0.9.0';
+import { creuserTranchees, ligneSous } from './tranchees.js?v=0.9.0';
+import { calculerCouts, creerCacheChamps, dimensionsCouts, BLOC } from './champs.js?v=0.9.0';
+import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.9.0';
+import { METEO, TRANSITIONS, PREVISION_JUSTE } from './data/meteo.js?v=0.9.0';
+import { SECTEURS } from './data/secteur.js?v=0.9.0';
+import { REGIMENTS } from './data/lexique.js?v=0.9.0';
+import { grade } from './identite.js?v=0.9.0';
+import { corvees, rejouerTravaux } from './nuit.js?v=0.9.0';
 
 export const PAS = 1 / 30;                 // s de jeu par pas
 export const NOUS = 0, EUX = 1;
@@ -53,15 +53,22 @@ function chaineMeteo(rng, jours, pluieAuMoins) {
   return { chaine, previsions };
 }
 
-/* Une nouvelle bataille. opts : { secteur: 'essai', soldats: par camp } */
+/* Une nouvelle bataille. opts : { secteur: 'essai', soldats: par camp, jours, mission } (jours et mission :
+   tirés de la graine par un hachage, sans toucher au générateur : l'ordre des tirages ne change pas). */
 export function nouvelleBataille(graine, R, opts = {}) {
   const idSecteur = opts.secteur || 'essai';
   const S = SECTEURS[idSecteur];
   const parCamp = opts.soldats || S.soldats;
   const rng = createRng(graine);
-  const { chaine, previsions } = chaineMeteo(rng.fork('meteo'), S.jours, S.pluieAuMoins);
+  const J = typeof S.jours === 'number' ? { min: S.jours, max: S.jours } : S.jours;
+  const jours = opts.jours || J.min + Math.floor(hash2(graine | 0, 41, 7) * (J.max - J.min + 1));
+  const mission = opts.mission || (S.missions ? S.missions[Math.floor(hash2(graine | 0, 43, 7) * S.missions.length)] : null);
+  const { chaine, previsions } = chaineMeteo(rng.fork('meteo'), jours, S.pluieAuMoins);
   const etat = {
     v: VERSION, graine, secteur: idSecteur, parCamp,
+    mission, issue: null,               // la mission (tenir, prendre) et, à la fin, ce qu'il en est
+    reserves: [S.reserves ?? 0, S.reserves ?? 0],   // régiments frais en réserve, par camp (la relève)
+    parRegiment: Math.floor(parCamp / S.regiments),
     jour: 1, tickJour: 0, ticks: 0, phase: 'jour',
     meteo: chaine, previsions,
     impacts: [],                        // [jour, tickJour, x×10, y×10, calibre] : de quoi rejouer le relief
@@ -157,7 +164,8 @@ function monter(etat, R) {
   const terrain = creerTerrain(etat.graine, { largeur: W, hauteur: H, ox: m.x, oy: m.y, arbres, haies: Math.round((S.haies ?? 0) * W * H / (S.largeur * S.hauteur)), bois: Math.round((S.bois ?? 0) * W * H / (S.largeur * S.hauteur)), buissons: Math.round((S.buissons ?? 0) * W * H / (S.largeur * S.hauteur)) }, R);
   const { lignes, troncons } = etat.tranchees ? creuserTranchees(terrain, S, m.x, m.y, etat.graine) : { lignes: [], troncons: [] };
   const faces = Int8Array.from(troncons, t => lignes[t.ligne].face);
-  const armee = creerArmee({ capacite: etat.parCamp * 2 + 16, W, H });
+  // (de la place pour les régiments de réserve : la relève les fait entrer)
+  const armee = creerArmee({ capacite: (etat.parCamp + (etat.reserves?.[0] ?? 0) * (etat.parRegiment ?? 0)) * 2 + 16, W, H });
   const { bw, bh } = dimensionsCouts(terrain);
   return {
     etat, R, terrain, armee,
@@ -328,10 +336,42 @@ export function avancer(B) {
   if (etat.tickJour >= ticksParJour(R)) {
     for (let p = 0; p < 12; p++) hydroLignes(T, 0, T.H, METEO[etat.meteo[etat.jour - 1]], R);
     etat.phase = etat.jour >= etat.meteo.length ? 'fin' : 'nuit';
+    if (etat.phase === 'fin') etat.issue = juger(B, false);
     B.evenements.push({ type: etat.phase });
+  } else if (etat.mission && etat.tickJour % 30 === 0) {
+    // le secteur tombe : la bataille finit avant son terme
+    const issue = juger(B, true);
+    if (issue) { etat.issue = issue; etat.phase = 'fin'; B.evenements.push({ type: 'fin' }); }
   }
   return B.evenements;
 }
+
+/* La mission, jugée : à la fin (avant) ou à tout moment (le secteur tombe : nos
+   lignes à moins de 40 %, ou plus un homme). Rend { reussie, texte } ou null. */
+function juger(B, enCours) {
+  const { etat } = B;
+  if (!etat.mission) return enCours ? null : { reussie: null, texte: '' };
+  const nos = [0, 0], leur1 = [0, 0];                 // [tenus, en tout]
+  B.troncons.forEach((tr, k) => {
+    const L = B.lignes[tr.ligne];
+    if (L.camp === NOUS) { nos[1]++; if (etat.troncons[k] === NOUS) nos[0]++; }
+    else if (L.rang === 0) { leur1[1]++; if (etat.troncons[k] === NOUS) leur1[0]++; }
+  });
+  const vivants = etat.regiments.some(r => r.camp === NOUS && r.effectif > 0);
+  const tombe = !vivants || (nos[1] && nos[0] < nos[1] * 0.4);
+  if (enCours) return tombe ? { reussie: false, texte: !vivants ? 'Il ne reste plus un homme dans le secteur.' : 'Le secteur est tombé.' } : null;
+  if (tombe) return { reussie: false, texte: 'Le secteur est tombé.' };
+  if (etat.mission === 'tenir') {
+    const ok = nos[0] >= nos[1] * 0.9;
+    return { reussie: ok, texte: ok ? 'Le secteur est tenu.' : `Le secteur n'est plus tenu : ${nos[1] - nos[0]} tronçons perdus.` };
+  }
+  const ok = leur1[0] >= leur1[1] * 0.75;
+  return { reussie: ok, texte: ok ? `La première ligne d'en face est prise : ${leur1[0]} tronçons sur ${leur1[1]}.` : `La première ligne d'en face n'est pas prise : ${leur1[0]} tronçons sur ${leur1[1]}.` };
+}
+export const MISSIONS = {
+  tenir: 'Tenir le secteur : à la fin, nos lignes doivent être à nous.',
+  prendre: 'Prendre la première ligne d\'en face et la tenir jusqu\'à la fin.',
+};
 
 /* Un homme meurt (marqué : compacter() le retire) : les pertes, le moral de son
    régiment (plus encore pour un officier), un gradé remplacé, son corps là où il
@@ -551,12 +591,20 @@ function enFace(B, rng) {
       // l'assaut : un régiment encore fort, dans ses tranchées, sort et va prendre notre ligne la plus proche, en face de lui
       const leurs = etat.regiments.filter(r => r.camp === EUX && r.effectif > r.initial * R.tranchee.assaut && r.ordre.trace?.ligne >= 10 && !r.deroute && r.moral >= R.moral.ebranle + 0.1);
       if (leurs.length) {
-        const reg = rng.pick(leurs), t = reg.ordre.trace;
         const nos = B.lignes.filter(L => L.camp === NOUS).sort((a, b) => a.y0 - b.y0);
-        // la première de nos lignes qu'on tient encore à cet endroit (sinon la suivante)
-        const tenue = L => B.troncons.some((tr, k) => tr.ligne === B.lignes.indexOf(L) && etat.troncons[k] === NOUS && tr.x1 > t.x0 && tr.x0 < t.x1);
-        const cible = nos.find(tenue);
-        if (cible) { reg.ordre = formationTranchee(reg, cible, t.x0, t.x1, R); reattribuer(B, reg); }
+        // pour chaque régiment, la première de nos lignes qu'on tient encore en face de lui, et combien la défendent
+        const options = leurs.map(reg => {
+          const t = reg.ordre.trace;
+          const cible = nos.find(L => B.troncons.some((tr, k) => tr.ligne === B.lignes.indexOf(L) && etat.troncons[k] === NOUS && tr.x1 > t.x0 && tr.x0 < t.x1));
+          let def = 0;
+          if (cible) for (let i = 0; i < A.n; i++) if (A.camp[i] === NOUS && A.x[i] > t.x0 - 10 && A.x[i] < t.x1 + 10 && Math.abs(A.y[i] - cible.y0) < 8) def++;
+          return { reg, cible, def, rapport: reg.effectif / Math.max(1, def) };
+        }).filter(o => o.cible).sort((a, b) => b.rapport - a.rapport || a.reg.id - b.reg.id);
+        const o = options[0];
+        // il ne sort que là où il est le plus fort (au moins R.tranchee.rapport attaquants par défenseur) ;
+        // sinon il prépare : un barrage lourd sur ce tronçon (des assauts partout, n'importe où, le saignaient à blanc)
+        if (o && o.rapport >= R.tranchee.rapport) { o.reg.ordre = formationTranchee(o.reg, o.cible, o.reg.ordre.trace.x0, o.reg.ordre.trace.x1, R); reattribuer(B, o.reg); }
+        else if (o) { const t = o.reg.ordre.trace; ordonnerBarrage(B, '220', (t.x0 + t.x1) / 2 + (rng() - 0.5) * 30, o.cible.y0, EUX); }
       }
     } else {
       const leurs = etat.regiments.filter(r => r.camp === EUX && r.effectif > r.initial * 0.4);
@@ -633,6 +681,8 @@ export function restaurer(p, R) {
   etat.blesses ??= [0, 0];
   etat.corps ??= [];          // (avant la v0.3.3, les morts ne restaient pas)
   etat.grades ??= {};
+  etat.reserves ??= [0, 0]; etat.mission ??= null; etat.issue ??= null;   // (avant la v0.9.0 : ni mission ni réserves)
+  etat.parRegiment ??= Math.floor(etat.parCamp / SECTEURS[etat.secteur].regiments);
   etat.travaux ??= []; etat.tombes ??= []; etat.evacues ??= []; etat.nuits ??= [];   // (avant la v0.6.0 : pas de corvées)
   for (const reg of etat.regiments) { reg.moral ??= R.moral.depart; reg.deroute ??= false; }   // (avant la v0.5.0 : pas de moral)
   etat.troncons ??= []; etat.prises ??= etat.pertesJour.map(() => [0, 0]);   // (avant la v0.4.0 : pas de tranchées)

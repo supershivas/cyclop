@@ -9,8 +9,8 @@
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta property="og:image" content="og.png">
-<link rel="stylesheet" href="js/lib/game.css?v=0.8.2">
-<link rel="stylesheet" href="css/style.css?v=0.8.2">
+<link rel="stylesheet" href="js/lib/game.css?v=0.9.0">
+<link rel="stylesheet" href="css/style.css?v=0.9.0">
 </head>
 <body>
 <div class="jeu-ecran" id="ecran">
@@ -28,6 +28,7 @@
         <div class="plaque">
           <p id="horloge">Jour 1</p>
           <p class="discret" id="demain"></p>
+          <p class="discret" id="mission" hidden></p>
         </div>
         <div class="plaque terrain" id="terrain" hidden aria-live="off"></div>
       </div>
@@ -87,6 +88,7 @@
   <p id="nuit-pertes"></p>
   <p id="nuit-lignes"></p>
   <p id="nuit-demain"></p>
+  <p class="discret" id="nuit-reserves"></p>
   <h3 class="corvees-titre">Les corvées de la nuit</h3>
   <div class="corvees" id="corvees"></div>
   <div class="menu"><button class="bouton" id="aube">À l'aube</button></div>
@@ -98,10 +100,20 @@
   <div class="menu"><button class="bouton" id="jour-se-leve">Le jour se lève</button></div>
 </dialog>
 
+<dialog id="dialogue-ordre" aria-label="L'ordre">
+  <h2>Ordre</h2>
+  <p id="ordre-mission"></p>
+  <p id="ordre-duree"></p>
+  <p class="discret" id="ordre-reserves"></p>
+  <div class="menu"><button class="bouton" id="ordre-compris">Compris</button></div>
+</dialog>
+
 <dialog id="dialogue-fin" aria-label="Fin de la bataille">
   <h2 id="fin-titre">Fin</h2>
+  <p id="fin-issue"></p>
   <p id="fin-pertes"></p>
   <p id="fin-lignes"></p>
+  <ol class="fin-jours" id="fin-jours"></ol>
   <div class="menu">
     <button class="bouton" id="fin-nouvelle">Nouvelle partie</button>
     <button class="bouton" id="fin-titre-btn">Écran titre</button>
@@ -150,6 +162,6 @@
 </dialog>
 
 <div class="jeu-toast" id="toast" role="status" hidden></div>
-<script type="module" src="js/main.js?v=0.8.2"></script>
+<script type="module" src="js/main.js?v=0.9.0"></script>
 </body>
 </html>

@@ -7,4 +7,5 @@ export const CORVEES = [
   { id: 'caillebotis', nom: 'Poser des caillebotis', dit: 'dans sa tranchée, la boue ne retient plus', tranchee: true },
   { id: 'inhumer', nom: 'Inhumer les morts', dit: 'les corps autour de lui ; dangereux au-delà de nos lignes' },
   { id: 'evacuer', nom: 'Évacuer les blessés', dit: 'ils quittent le front, vivants ; un blessé laissé peut mourir dans la nuit' },
+  { id: 'releve', nom: 'La relève', dit: 'un régiment frais, pris dans la réserve, prend sa place à l\'aube ; celui-ci part au repos' },
 ];

@@ -25,20 +25,15 @@ Statuts : **à l'étude** · **validé** (Jérôme a tranché) · **en cours** �
 
 ## À l'étude (validé dans le principe par le prompt de départ, pas construit)
 
-- **Tranchées, la suite** (le lot 1, v0.4.0, a livré 4 lignes, les boyaux, les
-  tronçons qui se prennent, la protection à l'envers, les assauts d'en face) : 3
-  lignes en secteur calme, 5 en secteur fortifié ; les réparer la nuit (corvées) ;
-  les montrer tenues ou perdues sur le terrain lui-même ; abris profonds.
-- **La nuit, la suite** (v0.6.0 a livré repos, réparer, caillebotis, inhumer,
-  évacuer) : les abris profonds, la relève (des régiments de réserve), le
-  ravitaillement, les coups de main de nuit, les tombes dessinées sur le terrain.
-- **Corps** : ils restent (v0.3.3) ; à venir : l'inhumation la nuit, leur poids
-  sur le moral près des lignes.
+- **Tranchées, la suite** : 3 lignes en secteur calme, 5 en secteur fortifié ; les
+  montrer tenues ou perdues sur le terrain lui-même ; abris profonds.
+- **La nuit, la suite** : les abris profonds, le ravitaillement, les coups de main
+  de nuit, les tombes dessinées sur le terrain.
 - **Moral et expérience, la suite** (v0.5.0 a livré le moral par régiment, la
   déroute, l'expérience, les promotions) : la fuite feinte (les Horaces et les
   Curiaces), la contagion de la déroute aux voisins, le Discours de la servitude
-  volontaire (un régiment qui refuse tout un jour), les corps près des lignes qui
-  pèsent sur le moral, l'expérience gardée d'une bataille à l'autre (le Mémorial).
+  volontaire (un régiment qui refuse tout un jour), l'expérience gardée d'une
+  bataille à l'autre (le Mémorial).
 - **Évacuer les blessés, la suite** : de jour, sous le feu ; la boue qui ralentit les brancardiers.
 - **Lignes de vue** (une crête cache), mêlées de tranchées rares.
 - **Hors de vue, les soldats comptés** au lieu d'être simulés un par un.
@@ -46,6 +41,6 @@ Statuts : **à l'étude** · **validé** (Jérôme a tranché) · **en cours** �
   le résumé du terrain est refait en entier toutes les 3 s, par bandes).
 - **Mines** de 1916-17 : un événement rare, −10 m, un champ à part.
 - **Méta** : le Mémorial, l'état-major (doctrines), les trophées déclaratifs.
-- **Bataille de 10 à 15 jours** (le lot minimal en fait trois).
+- **D'autres secteurs et d'autres missions** (un seul secteur, deux missions en v0.9.0).
 - **Son**, police d'identité auto-hébergée.
 - **Soldats en sprites** (poses, atelier de dessin) : essayés en v0.1.1, non retenus pour l'instant (`docs/archives/`).

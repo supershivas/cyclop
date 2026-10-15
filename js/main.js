@@ -1,23 +1,23 @@
 // Le cycle de vie : écran titre → bataille → nuit → fin ; pause active,
 // réglages, sauvegarde, mise à jour, debug. Les règles sont dans bataille.js
 // (pures), le dessin dans rendu3d.js (il ne modifie jamais l'état).
-import { createLoop } from './lib/loop.js?v=0.8.2';
-import { createKeys, stopTypeahead } from './lib/keys.js?v=0.8.2';
-import { createPointer, lockBrowserGestures } from './lib/pointer.js?v=0.8.2';
-import { createGamepad } from './lib/gamepad.js?v=0.8.2';
-import { createStore, autosave, pickJSONFile } from './lib/save.js?v=0.8.2';
-import { startUpdateCheck, loadVersion, loadChangelog, downloadJSON } from './lib/app-update.js?v=0.8.2';
-import { ROLES } from './palette.js?v=0.8.2';
-import { nouvelleBataille, avancer, aube, ordonnerMarche, ordonnerBarrage, horloge, effectifs, tronconsTenus, moralEnMots, terrainSous, rangDe, photo, restaurer, PAS, NOUS } from './bataille.js?v=0.8.2';
-import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.8.2';
-import { METEO } from './data/meteo.js?v=0.8.2';
-import { impact, hydroLignes } from './terrain.js?v=0.8.2';
-import { hash2 } from './lib/rng.js?v=0.8.2';
-import { creerRendu, CAMERA } from './rendu3d.js?v=0.8.2';
-import { identite, etatEnMots, experienceEnMots } from './identite.js?v=0.8.2';
-import { CORVEES } from './data/corvees.js?v=0.8.2';
-import { refusCorvee } from './nuit.js?v=0.8.2';
-import { chargerContenu } from './design-store.js?v=0.8.2';
+import { createLoop } from './lib/loop.js?v=0.9.0';
+import { createKeys, stopTypeahead } from './lib/keys.js?v=0.9.0';
+import { createPointer, lockBrowserGestures } from './lib/pointer.js?v=0.9.0';
+import { createGamepad } from './lib/gamepad.js?v=0.9.0';
+import { createStore, autosave, pickJSONFile } from './lib/save.js?v=0.9.0';
+import { startUpdateCheck, loadVersion, loadChangelog, downloadJSON } from './lib/app-update.js?v=0.9.0';
+import { ROLES } from './palette.js?v=0.9.0';
+import { MISSIONS, nouvelleBataille, avancer, aube, ordonnerMarche, ordonnerBarrage, horloge, effectifs, tronconsTenus, moralEnMots, terrainSous, rangDe, photo, restaurer, PAS, NOUS } from './bataille.js?v=0.9.0';
+import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.9.0';
+import { METEO } from './data/meteo.js?v=0.9.0';
+import { impact, hydroLignes } from './terrain.js?v=0.9.0';
+import { hash2 } from './lib/rng.js?v=0.9.0';
+import { creerRendu, CAMERA } from './rendu3d.js?v=0.9.0';
+import { identite, etatEnMots, experienceEnMots } from './identite.js?v=0.9.0';
+import { CORVEES } from './data/corvees.js?v=0.9.0';
+import { refusCorvee } from './nuit.js?v=0.9.0';
+import { chargerContenu } from './design-store.js?v=0.9.0';
 
 const JEU = 'cyclopeen';
 const $ = id => document.getElementById(id);
@@ -155,11 +155,25 @@ $('continuer').onclick = () => {
   const p = store.load('partie');
   try { jouer(p ? restaurer(p, R) : nouvelle(1)); } catch (e) { console.error(e); toast('Sauvegarde illisible : nouvelle bataille.'); jouer(nouvelle(1)); }
 };
+// une nouvelle bataille, et son ordre (la mission, la durée, la réserve) ; pas en mode debug, que les scripts pilotent
+function commencer(graine) {
+  jouer(nouvelle(graine));
+  if (DEBUG || !B.etat.mission) return;
+  loop.pause();
+  const e = B.etat;
+  $('ordre-mission').textContent = MISSIONS[e.mission];
+  $('ordre-duree').textContent = `La bataille durera ${e.meteo.length} jours.`;
+  $('ordre-reserves').textContent = `En réserve : ${pluriel(e.reserves[NOUS], 'régiment frais', 'régiments frais')}, pour la relève, la nuit.`;
+  $('dialogue-ordre').showModal();
+}
+$('ordre-compris').onclick = () => $('dialogue-ordre').close();
+$('dialogue-ordre').addEventListener('close', reprendre);
+const pluriel = (n, un, des) => `${n} ${n > 1 ? des : un}`;
 $('nouvelle').onclick = () => {
   const graine = window.__seed ?? Date.now() % 100000;      // la graine elle-même peut venir de l'horloge
-  if (!store.has('partie')) return jouer(nouvelle(graine));
+  if (!store.has('partie')) return commencer(graine);
   const d = $('dialogue-confirmer');
-  d.onclose = () => { if (d.returnValue === 'oui') jouer(nouvelle(graine)); };
+  d.onclose = () => { if (d.returnValue === 'oui') commencer(graine); };
   d.showModal();
 };
 $('pause').onclick = pause;
@@ -198,6 +212,7 @@ function montrerNuit() {
   $('nuit-pertes').textContent = `Morts du jour : ${nous} des nôtres, ${eux} en face.`;
   $('nuit-lignes').textContent = e.tranchees ? enLignes(e.prises[j - 1]) : '';
   $('nuit-demain').textContent = `Demain : ${METEO[e.previsions[j - 1]]?.prevision || '—'}.`;
+  $('nuit-reserves').textContent = e.mission ? `En réserve : ${pluriel(e.reserves[NOUS], 'régiment frais', 'régiments frais')}.` : '';
   montrerCorvees();
   $('dialogue-nuit').showModal();
 }
@@ -234,6 +249,7 @@ function bilanEnMots(b) {
     b.evacues && `${pl(b.evacues, 'blessé évacué', 'blessés évacués')}`,
     b.repares && `${pl(b.repares, 'tronçon réparé', 'tronçons réparés')}`,
     b.caillebotis && `des caillebotis dans ${pl(b.caillebotis, 'tronçon', 'tronçons')}`,
+    b.releves && `${pl(b.releves, 'régiment relevé', 'régiments relevés')}`,
   ].filter(Boolean);
   const morts = [
     b.mortsCorvee && `${b.mortsCorvee} aux corvées`,
@@ -261,12 +277,15 @@ $('dialogue-aube').addEventListener('close', reprendre);
 function montrerFin() {
   loop.pause(); sauvegarder();
   const e = B.etat, [vNous, vEux] = effectifs(B);
-  $('fin-titre').textContent = `${e.meteo.length} jours.`;
+  $('fin-titre').textContent = `${e.jour} jours.`;
+  $('fin-issue').textContent = e.issue?.texte || '';
+  // jour après jour : ce qu'il a coûté, sans un mot de plus
+  $('fin-jours').replaceChildren(...e.pertesJour.slice(0, e.jour).map(([n, x], k) => Object.assign(document.createElement('li'), { textContent: `Jour ${k + 1} : ${n} des nôtres, ${x} en face.` })));
   $('fin-pertes').textContent = `${e.pertes[0]} des nôtres sont morts, ${e.pertes[1]} en face. Il en reste ${vNous} et ${vEux}.`;
   $('fin-lignes').textContent = e.tranchees ? `Tronçons tenus : ${tronconsTenus(B)[0]} des nôtres, ${tronconsTenus(B)[1]} en face.` : '';
   $('dialogue-fin').showModal();
 }
-$('fin-nouvelle').onclick = () => { $('dialogue-fin').close(); store.clear('partie'); jouer(nouvelle(window.__seed ?? Date.now() % 100000)); };
+$('fin-nouvelle').onclick = () => { $('dialogue-fin').close(); store.clear('partie'); commencer(window.__seed ?? Date.now() % 100000); };
 $('fin-titre-btn').onclick = () => { $('dialogue-fin').close(); montrerTitre(); };
 
 // ─── Réglages ──────────────────────────────────────────────────────────────
@@ -305,6 +324,8 @@ function majHud() {
   const h = horloge(B), e = B.etat;
   $('horloge').textContent = `Jour ${h.jour} sur ${h.jours} · ${h.heure} h ${deux(h.minute)} · ${METEO[h.meteo].nom}`;
   $('demain').textContent = h.prevision ? `Demain : ${METEO[h.prevision].prevision}` : 'Dernier jour';
+  $('mission').hidden = !e.mission;
+  if (e.mission) $('mission').textContent = `${e.mission === 'tenir' ? 'Tenir le secteur' : 'Prendre leur première ligne'} · réserve : ${e.reserves[NOUS]}`;
   $('morts-nous').textContent = e.pertes[0];
   $('morts-eux').textContent = e.pertes[1];
   $('blesses-nous').textContent = e.blesses[0];
@@ -353,6 +374,8 @@ function etiquettes() {
 const centres = new Map();
 function majEtiquettes() {
   const A = B.armee;
+  // (un régiment frais est arrivé à l'aube : son nom au-dessus de lui aussi)
+  if (etiq.size !== B.etat.regiments.filter(r => r.camp === NOUS).length) etiquettes();
   centres.clear();
   for (let i = 0; i < A.n; i++) {
     if (A.camp[i] !== NOUS) continue;
@@ -441,17 +464,21 @@ const tombe = id => {
   const c = B.etat.corps.find(c => c[4] === id);
   if (c) return `Tombé le jour ${c[3]}.`;
   const t = B.etat.tombes.find(c => c[4] === id);
-  return t ? `Tombé le jour ${t[3]}, inhumé la nuit du ${t[5]}.` : 'Mort.';
+  if (t) return `Tombé le jour ${t[3]}, inhumé la nuit du ${t[5]}.`;
+  const reg = quiEst(id).reg;
+  return reg?.releve ? `Relevé avec son régiment, la nuit du ${reg.releve}.` : 'Mort.';
 };
 // ce que compte un régiment : vivants, blessés, morts
 function bilan(reg) {
   const A = B.armee;
   let blesses = 0;
   for (let i = 0; i < A.n; i++) if (A.reg[i] === reg.id && A.blessure[i]) blesses++;
-  const evacues = reg.initial - reg.effectif - reg.pertes;
-  return { vivants: reg.effectif, initial: reg.initial, blesses, morts: reg.pertes, evacues };
+  const releves = reg.releves || 0, evacues = reg.initial - reg.effectif - reg.pertes - releves;
+  return { vivants: reg.effectif, initial: reg.initial, blesses, morts: reg.pertes, evacues, releves };
 }
-const enMots = b => `${b.vivants} hommes sur ${b.initial} · ${b.blesses} blessés · ${b.morts} morts${b.evacues ? ` · ${b.evacues} évacués` : ''}`;
+const enMots = b => b.releves
+  ? `relevé : ${b.releves} hommes sur ${b.initial} en sont revenus · ${b.morts} morts`
+  : `${b.vivants} hommes sur ${b.initial} · ${b.blesses} blessés · ${b.morts} morts${b.evacues ? ` · ${b.evacues} évacués` : ''}`;
 
 function montrerFiche(i) {
   fiche = { id: B.armee.id[i], camp: B.armee.camp[i] };
@@ -756,7 +783,7 @@ startUpdateCheck({
 
 // ─── Mode debug (section 18) : chargé seulement avec ?debug=1 ──────────────
 if (DEBUG) {
-  const { installDebug, seedFromUrl } = await import('./lib/debug.js?v=0.8.2');
+  const { installDebug, seedFromUrl } = await import('./lib/debug.js?v=0.9.0');
   window.__seed = seedFromUrl() ?? undefined;
   installDebug({
     state: () => B && { ...horloge(B), effectifs: effectifs(B), pertes: B.etat.pertes, impacts: B.etat.impacts.length, enJeu: enJeu(), pause: loop.paused },
@@ -788,6 +815,7 @@ if (DEBUG) {
       survol: (x, y) => { souris = { x, y }; majBulle(); return $('bulle').hidden ? null : $('bulle').textContent; },
       camera: (yaw, tangage) => rendu.placerCamera(yaw, tangage),
       nuit: () => montrerNuit(),
+      fin: () => montrerFin(),
       bataille: () => B,
       rendu: () => rendu,
       CALIBRES,

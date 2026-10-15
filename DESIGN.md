@@ -36,8 +36,8 @@ moteur de foule de « Pierre et les rats ».
   arrêter le temps pour réfléchir (pause active).
 - **Minute** : un jour dure 5 à 8 minutes (6 en v0.1.0) : offensives, barrages,
   contre-attaques. On regarde la boue gagner.
-- **Partie** : 10 à 15 jours sur un secteur ; chaque nuit, le terrain évolue en
-  lot, et chaque régiment fait sa corvée (v0.6.0).
+- **Partie** : 10 à 15 jours sur un secteur, une mission ; chaque nuit, le terrain
+  évolue en lot, et chaque régiment fait sa corvée (v0.6.0), ou est relevé (v0.9.0).
 - **Entre deux parties** : le Mémorial (chaque unité perdue garde un nom), l'état-
   major (doctrines débloquées, chacune avec un coût), les trophées déclaratifs,
   sobres (« tenir un secteur sans offensive », « gagner un mètre pour moins de
@@ -64,6 +64,18 @@ une bataille de trois jours lisible, cratère, boue, eau et soldat distinguables
 (`node outils/lisibilite.mjs`, captures de `node scripts/trois-jours.mjs`).
 
 ## Les systèmes
+
+### La bataille entière
+
+Une bataille dure de dix à quinze jours (tirés de la graine) et porte une mission,
+donnée en un ordre sobre au premier matin : tenir le secteur (nos lignes doivent
+être à nous à la fin), ou prendre la première ligne d'en face et la tenir. Elle est
+jugée à la fin, en une phrase, suivie des morts de chaque jour : rien d'autre. Le
+secteur peut tomber avant (nos lignes à moins de 40 %, ou plus un homme) : la
+bataille finit là. Quatre régiments frais attendent en réserve : la nuit, la relève
+en fait monter un par les boyaux, à la place d'un régiment usé qui part au repos ;
+la réserve ne revient pas. En face fait de même, prépare ses assauts au 220 et ne
+sort que là où nos lignes ont faibli. (Jérôme, v0.9.0)
 
 ### Le temps qui passe
 

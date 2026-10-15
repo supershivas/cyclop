@@ -5,8 +5,11 @@ export const SECTEURS = {
     nom: 'Secteur d\'essai',
     largeur: 400,           // cases de 1 m
     hauteur: 300,
-    jours: 3,
-    pluieAuMoins: 1,        // jours de pluie garantis dans la chaîne (lot minimal : la boue doit venir)
+    jours: { min: 10, max: 15 },   // la durée de la bataille, tirée de la graine (trois jours avant la v0.9.0)
+    reserves: 4,            // régiments frais en réserve, par camp : la relève (v0.9.0)
+    // la mission, tirée de la graine, jugée à la fin (v0.9.0)
+    missions: ['tenir', 'prendre'],
+    pluieAuMoins: 2,        // jours de pluie garantis dans la chaîne (la boue doit venir)
     arbres: 150,            // dans le secteur (les marges en ont autant, à surface égale ; 40 avant la v0.7.0, 70 avant la v0.8.0)
     bois: 3,                // des bois serrés (une trentaine d'arbres chacun), dans le secteur ; autant dans les marges, à surface égale
     haies: 5,               // des lignes de buissons, dans tout le terrain (v0.7.0)
