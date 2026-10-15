@@ -1,5 +1,9 @@
 # Journal des versions
 
+## 0.15.0 — 2026-10-15
+- Une tranchée attaquée par beaucoup d'hommes contre quelques-uns tombe en quelques secondes (la mêlée)
+- La feuille du régiment et la carte disent les forces en présence : « attaque S3·F1 : 38 contre 5 »
+
 ## 0.14.0 — 2026-10-15
 - Huit secteurs numérotés, un régiment chacun : une carte (touche M) montre qui tient chaque tranchée (S3·N1, S3·F2)
 - Un ordre sur une tranchée la fait clignoter, et la feuille du régiment dit ce qu'il fait : tient S3·N1, attaque S3·F1…

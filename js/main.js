@@ -1,24 +1,24 @@
 // Le cycle de vie : écran titre → bataille → nuit → fin ; pause active,
 // réglages, sauvegarde, mise à jour, debug. Les règles sont dans bataille.js
 // (pures), le dessin dans rendu3d.js (il ne modifie jamais l'état).
-import { createLoop } from './lib/loop.js?v=0.14.0';
-import { createKeys, stopTypeahead } from './lib/keys.js?v=0.14.0';
-import { createPointer, lockBrowserGestures } from './lib/pointer.js?v=0.14.0';
-import { createGamepad } from './lib/gamepad.js?v=0.14.0';
-import { createStore, autosave, pickJSONFile } from './lib/save.js?v=0.14.0';
-import { startUpdateCheck, loadVersion, loadChangelog, downloadJSON } from './lib/app-update.js?v=0.14.0';
-import { ROLES } from './palette.js?v=0.14.0';
-import { MISSIONS, nouvelleBataille, avancer, aube, ordonnerMarche, ordonnerBarrage, horloge, effectifs, tronconsTenus, moralEnMots, terrainSous, rangDe, nomTroncon, actionDe, secteurDe, tronconsDeLigne, largeurSecteur, nombreSecteurs, codeLigne, zone, photo, restaurer, PAS, NOUS, EUX } from './bataille.js?v=0.14.0';
-import { ligneY } from './tranchees.js?v=0.14.0';
-import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.14.0';
-import { METEO } from './data/meteo.js?v=0.14.0';
-import { impact, hydroLignes } from './terrain.js?v=0.14.0';
-import { hash2 } from './lib/rng.js?v=0.14.0';
-import { creerRendu, CAMERA } from './rendu3d.js?v=0.14.0';
-import { identite, etatEnMots, experienceEnMots } from './identite.js?v=0.14.0';
-import { CORVEES } from './data/corvees.js?v=0.14.0';
-import { refusCorvee } from './nuit.js?v=0.14.0';
-import { chargerContenu } from './design-store.js?v=0.14.0';
+import { createLoop } from './lib/loop.js?v=0.15.0';
+import { createKeys, stopTypeahead } from './lib/keys.js?v=0.15.0';
+import { createPointer, lockBrowserGestures } from './lib/pointer.js?v=0.15.0';
+import { createGamepad } from './lib/gamepad.js?v=0.15.0';
+import { createStore, autosave, pickJSONFile } from './lib/save.js?v=0.15.0';
+import { startUpdateCheck, loadVersion, loadChangelog, downloadJSON } from './lib/app-update.js?v=0.15.0';
+import { ROLES } from './palette.js?v=0.15.0';
+import { MISSIONS, nouvelleBataille, avancer, aube, ordonnerMarche, ordonnerBarrage, horloge, effectifs, tronconsTenus, moralEnMots, terrainSous, rangDe, nomTroncon, actionDe, forcesTroncons, secteurDe, tronconsDeLigne, largeurSecteur, nombreSecteurs, codeLigne, zone, photo, restaurer, PAS, NOUS, EUX } from './bataille.js?v=0.15.0';
+import { ligneY } from './tranchees.js?v=0.15.0';
+import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.15.0';
+import { METEO } from './data/meteo.js?v=0.15.0';
+import { impact, hydroLignes } from './terrain.js?v=0.15.0';
+import { hash2 } from './lib/rng.js?v=0.15.0';
+import { creerRendu, CAMERA } from './rendu3d.js?v=0.15.0';
+import { identite, etatEnMots, experienceEnMots } from './identite.js?v=0.15.0';
+import { CORVEES } from './data/corvees.js?v=0.15.0';
+import { refusCorvee } from './nuit.js?v=0.15.0';
+import { chargerContenu } from './design-store.js?v=0.15.0';
 
 const JEU = 'cyclopeen';
 const $ = id => document.getElementById(id);
@@ -411,7 +411,7 @@ function construireCarte() {
       c.className = `cel${k === 4 ? ' apres-front' : ''}`; c.innerHTML = '<i></i><i></i><b></b>';
       c.title = `Envoyer les régiments choisis dans ${nom}`; c.setAttribute('aria-label', `Envoyer les régiments choisis dans ${nom}`);
       c.onclick = () => ordreCase(idx, s);
-      kids.push(c); carteCases.push({ idx, s, el: c, moities: c.querySelectorAll('i'), marque: c.querySelector('b') });
+      kids.push(c); carteCases.push({ idx, s, nom, el: c, moities: c.querySelectorAll('i'), marque: c.querySelector('b') });
     }
   });
   g.replaceChildren(...kids);
@@ -439,13 +439,18 @@ function majCarte() {
     const idx = B.lignes.findIndex(L => L.camp * 10 + L.rang === t.ligne), k = `${idx}:${secteurDe(B, (t.x0 + t.x1) / 2)}`;
     (marques.get(k) || marques.set(k, []).get(k)).push(r);
   }
-  const cle = [e.troncons.join(''), [...B.disputes].join(''), [...choisis].join(','), [...marques].map(([k, v]) => `${k}=${v.map(r => r.id)}`).join(';')].join('|');
+  const f = forcesTroncons(B);
+  const cle = [e.troncons.join(''), f.join(','), [...B.disputes].join(''), [...choisis].join(','), [...marques].map(([k, v]) => `${k}=${v.map(r => r.id)}`).join(';')].join('|');
   if (cle === carteVue) return;
   carteVue = cle;
   for (const c of carteCases) {
     const ks = tronconsDeLigne(B, c.idx, Z.x0 + (c.s - 1) * w, Z.x0 + c.s * w), rs = marques.get(`${c.idx}:${c.s}`) || [];
     c.moities.forEach((m, k) => { const t = ks[k]; m.className = t === undefined ? '' : `${e.troncons[t] === NOUS ? 'nous' : 'eux'}${B.disputes[t] ? ' dispute' : ''}`; });
-    c.marque.textContent = rs.map(r => r.camp === NOUS ? r.nom.slice(0, 2) : '•').join(' ');
+    // des attaquants dans la case : ce qu'ils sont contre les défenseurs (la mêlée) ; sinon les régiments qui y sont
+    let att = 0, def = 0;
+    for (const k of ks) { const h = e.troncons[k]; att += f[k * 2 + 1 - h]; def += f[k * 2 + h]; }
+    c.marque.textContent = att ? `${att}·${def}` : rs.map(r => r.camp === NOUS ? r.nom.slice(0, 2) : '•').join(' ');
+    c.el.title = `Envoyer les régiments choisis dans ${c.nom}${att ? ` : ${att} attaquants contre ${def} défenseurs` : ''}`;
     c.el.classList.toggle('choisi', rs.some(r => choisis.has(r.id)));
   }
 }
@@ -1008,7 +1013,7 @@ startUpdateCheck({
 
 // ─── Mode debug (section 18) : chargé seulement avec ?debug=1 ──────────────
 if (DEBUG) {
-  const { installDebug, seedFromUrl } = await import('./lib/debug.js?v=0.14.0');
+  const { installDebug, seedFromUrl } = await import('./lib/debug.js?v=0.15.0');
   window.__seed = seedFromUrl() ?? undefined;
   installDebug({
     state: () => B && { ...horloge(B), effectifs: effectifs(B), pertes: B.etat.pertes, impacts: B.etat.impacts.length, enJeu: enJeu(), pause: loop.paused },

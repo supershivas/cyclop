@@ -83,6 +83,8 @@ export const REGLAGES = {
     abriDos: 0.6,         // … et de derrière (le parados : une tranchée prise sert à l'envers)
     espacement: 1.6,      // m entre deux hommes le long d'une tranchée occupée
     prise: 3,             // hommes dans un tronçon vide de ses défenseurs : il est pris
+    melee: 2,             // un tronçon encore défendu est pris quand les attaquants y sont au moins autant de fois plus nombreux que les défenseurs (et au moins `prise`) …
+    tenue: 6,             // … pendant ce nombre de secondes (la mêlée : `etat.melee`, par tronçon ; 1e9 : la règle d'avant la v0.15.0, un tronçon n'est pris que vide)
     assaut: 0.6,          // en face ne lance à l'assaut qu'un régiment qui a encore cette part de ses hommes
     rapport: 1.6,         // … et seulement là où il a au moins autant d'attaquants par défenseur (sinon, il prépare au 220)
   },

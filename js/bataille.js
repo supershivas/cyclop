@@ -14,17 +14,17 @@
    La sauvegarde (photo) garde la graine, la liste compacte des impacts, l'état
    de la foule et les petites couches de logique ; jamais le relief : il se
    rejoue depuis la graine et les impacts (rejouerTerrain). */
-import { createRng, hash2 } from './lib/rng.js?v=0.14.0';
-import { creerTerrain, impact, hydroLignes, etat as etatCase, vitesseEtat, ETAT } from './terrain.js?v=0.14.0';
-import { creerArmee, ajouterSoldat, construireGrille, pasArmee, tuerDans, effrayer, compacter, photoArmee, restaurerArmee, b64, deB64, DENSITE, place } from './army.js?v=0.14.0';
-import { creuserTranchees, ligneSous } from './tranchees.js?v=0.14.0';
-import { calculerCouts, creerCacheChamps, dimensionsCouts, BLOC } from './champs.js?v=0.14.0';
-import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.14.0';
-import { METEO, TRANSITIONS, PREVISION_JUSTE } from './data/meteo.js?v=0.14.0';
-import { SECTEURS } from './data/secteur.js?v=0.14.0';
-import { REGIMENTS } from './data/lexique.js?v=0.14.0';
-import { grade } from './identite.js?v=0.14.0';
-import { corvees, rejouerTravaux } from './nuit.js?v=0.14.0';
+import { createRng, hash2 } from './lib/rng.js?v=0.15.0';
+import { creerTerrain, impact, hydroLignes, etat as etatCase, vitesseEtat, ETAT } from './terrain.js?v=0.15.0';
+import { creerArmee, ajouterSoldat, construireGrille, pasArmee, tuerDans, effrayer, compacter, photoArmee, restaurerArmee, b64, deB64, DENSITE, place } from './army.js?v=0.15.0';
+import { creuserTranchees, ligneSous } from './tranchees.js?v=0.15.0';
+import { calculerCouts, creerCacheChamps, dimensionsCouts, BLOC } from './champs.js?v=0.15.0';
+import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.15.0';
+import { METEO, TRANSITIONS, PREVISION_JUSTE } from './data/meteo.js?v=0.15.0';
+import { SECTEURS } from './data/secteur.js?v=0.15.0';
+import { REGIMENTS } from './data/lexique.js?v=0.15.0';
+import { grade } from './identite.js?v=0.15.0';
+import { corvees, rejouerTravaux } from './nuit.js?v=0.15.0';
 
 export const PAS = 1 / 30;                 // s de jeu par pas
 export const NOUS = 0, EUX = 1;
@@ -80,6 +80,7 @@ export function nouvelleBataille(graine, R, opts = {}) {
     tranchees: !!S.tranchees,   // (les batailles d'avant la v0.4.0 n'en ont pas)
     troncons: [],               // qui tient chaque tronçon (0 nous, 1 en face)
     prises: [[0, 0]],           // tronçons pris par chaque camp, jour par jour
+    melee: [],                  // par tronçon, les secondes où les attaquants y sont écrasants (la prise d'un tronçon défendu ; v0.15.0)
     travaux: [],                // les travaux de la nuit : [jour, sorte, tronçons…] (nuit.js ; rejoués par la sauvegarde)
     tombes: [],                 // les morts inhumés : [x×10, y×10, camp, jour, id, jour de l'inhumation]
     abris: {},                  // les abris profonds : { tronçon : niveau } (nuit.js ; un 220 en crève un)
@@ -95,6 +96,7 @@ export function nouvelleBataille(graine, R, opts = {}) {
   };
   const B = monter(etat, R);
   etat.troncons = B.troncons.map(t => t.camp);
+  etat.melee = B.troncons.map(() => 0);
   // Les régiments, côte à côte sur leur ligne ; dans les tranchées, la moitié dans la première, la moitié dans la deuxième
   const nReg = S.regiments, largeurReg = S.largeur / nReg, Z = zone(B);
   for (const camp of [NOUS, EUX]) {
@@ -415,22 +417,39 @@ export function capturer(B, i) {
   if (rang <= 5) promouvoir(B, A.reg[i], rang);
 }
 
-/* Qui tient chaque tronçon : celui qui y est seul. Un tronçon tenu par un camp
-   que l'autre occupe (au moins `prise` hommes) sans qu'un seul défenseur y
-   reste change de main. */
-function prises(B) {
-  const { etat, R, terrain: T, armee: A } = B;
-  const n = etat.troncons.length, compte = new Int32Array(n * 2);
+/* Les hommes de chaque camp dans chaque tronçon : [nous, en face] par tronçon. Refait tel quel pour `prises` ; pour
+   le dessin et les mots (`actionDe`, la carte), le dernier compte (au plus une demi-seconde de retard). */
+function compteTroncons(B) {
+  const { etat, terrain: T, armee: A } = B, n = etat.troncons.length, compte = new Int32Array(n * 2);
   for (let i = 0; i < A.n; i++) {
     const t = T.troncon[(A.y[i] | 0) * T.W + (A.x[i] | 0)];
     if (t >= 0) compte[t * 2 + A.camp[i]]++;
   }
+  B._forces = { tick: etat.ticks, compte };
+  return compte;
+}
+export function forcesTroncons(B) {
+  const f = B._forces;
+  return f && Math.abs(B.etat.ticks - f.tick) < 15 ? f.compte : compteTroncons(B);
+}
+
+/* Qui tient chaque tronçon. Un tronçon vide de ses défenseurs, où l'autre camp est au moins `prise`, change de main. Un
+   tronçon encore défendu aussi, quand les attaquants y sont `melee` fois plus nombreux que les défenseurs (et au moins
+   `prise`) pendant `tenue` secondes : la mêlée (`etat.melee`), qui retombe dès que le rapport ne tient plus (v0.15.0 :
+   avant, un seul défenseur debout, même blessé, gardait le tronçon contre un régiment entier). */
+function prises(B) {
+  const { etat, R, terrain: T, armee: A } = B;
+  const n = etat.troncons.length, compte = compteTroncons(B), C = R.tranchee;
   for (let t = 0; t < n; t++) {
     const tient = etat.troncons[t], autre = 1 - tient;
     const avantDispute = B.disputes[t];
     B.disputes[t] = compte[t * 2 + autre] > 0 ? 1 : 0;
     if (!avantDispute && B.disputes[t] && tient === NOUS) B.evenements.push({ type: 'dispute', camp: tient, troncon: t });   // le carnet : l'autre camp est entré chez nous
-    if (compte[t * 2 + tient] === 0 && compte[t * 2 + autre] >= R.tranchee.prise) {
+    const def = compte[t * 2 + tient], att = compte[t * 2 + autre];
+    const ecrase = att >= C.prise && (def === 0 || att >= C.melee * def);
+    etat.melee[t] = ecrase ? etat.melee[t] + 15 * PAS : Math.max(0, etat.melee[t] - 30 * PAS);
+    if (ecrase && (def === 0 || etat.melee[t] >= C.tenue)) {
+      etat.melee[t] = 0;
       etat.troncons[t] = autre;
       etat.prises[etat.jour - 1][autre]++;
       const tr = B.troncons[t], gagnants = new Set();
@@ -613,8 +632,14 @@ export function actionDe(B, reg) {
   for (let i = 0; i < A.n; i++) if (A.reg[i] === reg.id) { n++; somme += A.y[i]; }
   const ks = tronconsDeLigne(B, ligne, t.x0, t.x1);
   const adverse = ks.some(k => B.etat.troncons[k] !== reg.camp), conteste = ks.some(k => B.disputes[k]);
-  if (n && Math.abs(somme / n - t.y0) > 14) return adverse ? `marche à l'attaque de ${nom}` : `marche vers ${nom}`;
-  return `${adverse ? 'attaque' : 'tient'} ${nom}${conteste && !adverse ? ' : l\'ennemi y est entré' : ''}`;
+  // les forces en présence dans ces tronçons (les nôtres, les leurs) et la mêlée en cours
+  const f = forcesTroncons(B);
+  let mine = 0, theirs = 0, melee = 0;
+  for (const k of ks) { mine += f[k * 2 + reg.camp]; theirs += f[k * 2 + 1 - reg.camp]; melee = Math.max(melee, B.etat.melee?.[k] || 0); }
+  const forces = `${mine} contre ${theirs}`, tour = melee > 0 ? `, mêlée ${Math.ceil(melee)}/${B.R.tranchee.tenue} s` : '';
+  if (n && Math.abs(somme / n - t.y0) > 14) return adverse ? `marche à l'attaque de ${nom} (${theirs} en face)` : `marche vers ${nom}`;
+  if (adverse) return `attaque ${nom} : ${forces}${tour}`;
+  return `tient ${nom}${conteste ? ` : l'ennemi y est entré, ${forces}` : ''}`;
 }
 export function tronconsTenus(B) {
   const n = [0, 0];
@@ -794,7 +819,7 @@ export function restaurer(p, R) {
   etat.travaux ??= []; etat.tombes ??= []; etat.evacues ??= []; etat.nuits ??= [];   // (avant la v0.6.0 : pas de corvées)
   for (const reg of etat.regiments) { reg.moral ??= R.moral.depart; reg.deroute ??= false; reg.vivres ??= R.nuit.vivres; }   // (avant la v0.5.0 : pas de moral)
   etat.abris ??= {}; etat.prisonniers ??= [];   // (avant la v0.11.0 : ni abris ni coups de main ; ni vivres)
-  etat.troncons ??= []; etat.prises ??= etat.pertesJour.map(() => [0, 0]);   // (avant la v0.4.0 : pas de tranchées)
+  etat.troncons ??= []; etat.melee ??= etat.troncons.map(() => 0); etat.prises ??= etat.pertesJour.map(() => [0, 0]);   // (avant la v0.4.0 : pas de tranchées)
   const B = monter(etat, R);
   rejouerTerrain(B);
   restaurerArmee(B.armee, armee);

@@ -463,3 +463,27 @@ test('aucun hasard ni horloge dans les règles', () => {
     assert.ok(!/Math\.random|Date\.now|performance\.now|crypto\./.test(src), `${f} doit rester pur (section 10)`);
   }
 });
+
+group('la mêlée');
+test('trois défenseurs contre vingt attaquants ne tiennent que quelques secondes ; sans la mêlée (tenue infinie) ils tenaient indéfiniment', () => {
+  const issue = tenue => {
+    const B = nouvelleBataille(3, { ...R, tranchee: { ...R.tranchee, tenue } }, { soldats: 200, jours: 3 });
+    const k = B.troncons.findIndex((t, i) => t.camp === 1 && B.lignes[t.ligne].rang === 0), A = B.armee, T = B.terrain;
+    const cases = [];
+    for (let c = 0; c < T.troncon.length && cases.length < 40; c++) if (T.troncon[c] === k) cases.push(c);
+    const pos = c => [c % T.W + 0.5, Math.floor(c / T.W) + 0.5];
+    // trois défenseurs (les autres d'en face, plus loin vers l'arrière), vingt attaquants des nôtres, tous épinglés dans le tronçon
+    const dans = i => T.troncon[(A.y[i] | 0) * T.W + (A.x[i] | 0)] === k;
+    let def = 0; const defs = [], atts = [];
+    for (let i = 0; i < A.n; i++) if (A.camp[i] === 1 && dans(i)) { if (def++ < 3) defs.push(i); else A.y[i] -= 30; }
+    for (let i = 0; i < A.n && atts.length < 20; i++) if (A.camp[i] === 0) atts.push(i);
+    const epingler = () => {
+      defs.forEach((i, n) => { const [x, y] = pos(cases[n * 3]); A.x[i] = x; A.y[i] = y; A.mort[i] = 0; });
+      atts.forEach((i, n) => { const [x, y] = pos(cases[(n * 2) % cases.length]); A.x[i] = x; A.y[i] = y; A.mort[i] = 0; });
+    };
+    for (let s = 0; s < 30 * 12; s++) { epingler(); avancer(B); }
+    return B.etat.troncons[k];
+  };
+  assert.equal(issue(R.tranchee.tenue), 0, 'pris par les nôtres');
+  assert.equal(issue(1e9), 1, 'avant la mêlée, trois défenseurs gardaient le tronçon');
+});

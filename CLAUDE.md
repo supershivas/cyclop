@@ -72,8 +72,9 @@ la danse macabre, la catastrophe peinte avec calme. L'intention est dans `DESIGN
   tronçons à la couleur de celui qui les tient ; un numéro choisit le régiment du secteur, une case l'envoie dans cette tranchée
   (`ordreCase`). Tout ordre sur une tranchée (carte ou clic droit) fait clignoter les tronçons visés trois secondes, sur le terrain
   (`rendu.clignoter`) et sur la carte, et le carnet dit ce que chacun va faire (`ordreDonne`) ; `actionDe(B, reg)` le dit en mots
-  (« tient S3·N1 », « attaque S3·F1 », « marche à l'attaque de S3·F1 ») sur la feuille de situation. Les forces en présence et la règle
-  de prise (partie 2 de ce lot) ne sont pas encore faites.
+  (« tient S3·N1 », « attaque S3·F1 », « marche à l'attaque de S3·F1 ») sur la feuille de situation, avec les forces en présence dans la
+  tranchée visée (« attaque S3·F1 : 38 contre 5, mêlée 4/6 s » ; `forcesTroncons`, au plus une demi-seconde de retard) ; sur la carte,
+  une case où l'autre camp est entré montre « attaquants·défenseurs ».
 - **La végétation** (Jérôme, v0.7.0) : l'herbe (`T.herbe`, 0 à 3 par case, tirée de
   la graine ; les obus la soufflent, la boue la tue : rejouée par la sauvegarde),
   des taches dans la couleur du sol et des touffes de près qui ondulent ; des
@@ -449,6 +450,14 @@ node outils/stamp-version.mjs            # après chaque changement de version.j
   v0.11.0) : elle prend la couleur du sol un ton plus sombre, fondue vers son bout (trame jusqu'à la v0.12.0)
   (une lecture de texture de plus par pixel d'ombre : 77 ms au lieu de 73 au zoom 4,
   8 000 soldats, dessin attendu jusqu'au bout ; de l'ordre du bruit de la mesure).
+- **Un seul défenseur gardait un tronçon contre un régiment entier** (v0.15.0) : un tronçon ne changeait de main que vide de ses
+  défenseurs, et un blessé debout suffisait ; deux ou trois hommes résistaient des minutes à des dizaines d'attaquants. Désormais
+  (`prises`, `R.tranchee.melee` et `tenue`) un tronçon est pris quand les attaquants y sont au moins 2 fois plus nombreux (et au moins 3)
+  pendant 6 s : la mêlée (`etat.melee`, par tronçon, sauvegardée ; elle retombe deux fois plus vite qu'elle ne monte). Mesuré
+  (graines 7 et 8, tous les régiments envoyés dans la 1re ligne d'en face, 3 jours) : la règle change peu le cours d'une attaque
+  frontale (graine 7, au soir du jour 2 : nous tenons 46 tronçons avec la mêlée, 41 sans ; 623 morts chez nous, 644 sans ; et dès le premier jour, 570 des nôtres sur 750), car les attaquants meurent à
+  découvert avant d'y entrer ; elle joue sur une brèche (test « la mêlée » : trois défenseurs, vingt attaquants). `tenue: 1e9`
+  redonne l'ancienne règle.
 - **Un régiment, un secteur** (v0.14.0) : un ordre sur une tranchée étale le régiment sur 46 m au plus (`largeurSecteur` − 4), plus
   serré s'il le faut ; à 94 hommes, la longueur de deux rangs faisait ~66 m, et « S3 » devenait « S2-4 ». Les tests : un assaut de
   l'ennemi se teste en vidant quatre régiments seulement (tous vidés, la bataille finit), et un 220 sur un secteur (deux tronçons)
