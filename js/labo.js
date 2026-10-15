@@ -163,10 +163,11 @@ const GROUPES = [
   ] },
   { id: 'interface', title: 'Interface', topics: [
     { id: 'assaut', title: 'Attaque d\'une tranchée', variants: [
-      { title: 'Le compteur', status: 'actuelle', note: 'Ce que voit le joueur aujourd\'hui : « Tronçons : 12 · 11 » et, une fois le tronçon perdu, « Un tronçon perdu. » Rien avant.', render: s => maquetteAssaut(s, 'actuelle') },
-      { title: 'Une jauge par tronçon', note: 'Sous chaque tronçon : les défenseurs (carrés), les assaillants dans la case (triangles), le seuil de prise. Le trait dit qui tient : plein, tireté s\'il est disputé, double s\'il est pris.', render: s => maquetteAssaut(s, 'jauges') },
-      { title: 'Les temps de l\'assaut', note: 'La jauge, plus quatre temps en haut (préparation, sortie, contact, tronçon perdu) et un journal de trois lignes : la raison de chaque changement, relisible en pause active.', render: s => maquetteAssaut(s, 'phases') },
-      { title: 'Avec la carte des lignes', note: 'Le tout, et une carte des huit lignes en coin : qui tient quoi, et où l\'on se bat. Pour savoir, à l\'échelle du secteur, ce que l\'assaut change.', render: s => maquetteAssaut(s, 'carte') },
+      { title: 'Le compteur', status: 'actuelle', note: 'Ce que voit le joueur aujourd\'hui : des hommes en boîtes, des obus, et « Tronçons : 12 · 11 » en coin. Rien ne dit qu\'un tronçon est disputé, ni que le dernier défenseur va tomber. Allez à « Contact » avec la frise.', render: s => maquetteAssaut(s, 'actuelle') },
+      { title: 'Le feu se voit', note: 'Les hommes disent ce qu\'ils font : ceux qu\'on bombarde se tapissent et ne tirent plus, les autres tirent (éclair, traceur), un homme touché tombe et reste là. On lit à qui appartient la force sans un chiffre.', render: s => maquetteAssaut(s, 'feu') },
+      { title: 'Le tronçon se lit', note: 'Le monde porte l\'état : des traverses découpent la tranchée en tronçons, un fanion flotte, se déchire, est amené puis remplacé par celui d\'en face ; le fil de fer est coupé ; le parapet est bouleversé ; les sacs sont retournés quand le tronçon est pris.', render: s => maquetteAssaut(s, 'marques') },
+      { title: 'Les fusées', note: 'L\'avant-dernier acte : une fusée d\'appel quand la sortie commence, deux fusées quand il ne reste qu\'un homme (le tronçon va basculer), et celle d\'en face, d\'une autre couleur, quand il est pris. Un signal lisible de loin, au zoom 1.', render: s => maquetteAssaut(s, 'fusees') },
+      { title: 'Tout ensemble', note: 'Le feu, les marques du tronçon et les fusées. Pour juger si le tout reste lisible, ou s\'il faut en retirer.', render: s => maquetteAssaut(s, 'tout') },
     ] },
   ] },
   { id: 'moteur', title: 'Moteur', topics: [
