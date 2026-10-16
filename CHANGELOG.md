@@ -1,5 +1,9 @@
 # Journal des versions
 
+## 0.18.0 — 2026-10-16
+- Les tranchées ont des traverses, des sacs de terre sur le parapet (à l'envers quand le tronçon est pris), du fil de fer coupé là où l'ennemi a passé, des portes d'abri
+- Les blessés évacués reviennent une fois sur deux, après 1 nuit (bras), 2 (jambe) ou 3 (tête)
+
 ## 0.17.0 — 2026-10-15
 - Un assaut à découvert coûte moins d'hommes : une cible qui court est plus dure à toucher, et le tir est un peu moins précis
 - La moitié des régiments part en 2e ligne ; la carte et les noms (S1-2 · Porphyre) suivent

@@ -15,11 +15,11 @@
      de travail chacun) ; les vivres (`reg.vivres`, en nuits : sans eux, la nuit
      repose moins et le moral baisse) ; le coup de main (des volontaires ramènent
      des prisonniers de la tranchée d'en face, s'ils reviennent). */
-import { toucher } from './terrain.js?v=0.17.0';
-import { hash2 } from './lib/rng.js?v=0.17.0';
-import { CORVEES } from './data/corvees.js?v=0.17.0';
-import { REGIMENTS } from './data/lexique.js?v=0.17.0';
-import { ajouterSoldat } from './army.js?v=0.17.0';
+import { toucher } from './terrain.js?v=0.18.0';
+import { hash2 } from './lib/rng.js?v=0.18.0';
+import { CORVEES } from './data/corvees.js?v=0.18.0';
+import { REGIMENTS } from './data/lexique.js?v=0.18.0';
+import { ajouterSoldat } from './army.js?v=0.18.0';
 
 export const SORTES = ['reparer', 'caillebotis'];          // les travaux de terrain, par leur numéro dans etat.travaux
 export const corvee = id => CORVEES.find(c => c.id === id);
@@ -126,7 +126,7 @@ export function corvees(B, choix, ctx) {
   const { etat, R, armee: A } = B;
   const N = R.nuit, { rng, mourir } = ctx;
   const tous = { ...choixEnFace(B), ...choix };
-  const bilan = [0, 1].map(() => ({ inhumes: 0, evacues: 0, repares: 0, caillebotis: 0, abris: 0, ravitailles: 0, coups: 0, prisonniers: 0, pris: 0, mortsCorvee: 0, mortsBlesses: 0, affames: 0 }));
+  const bilan = [0, 1].map(() => ({ inhumes: 0, evacues: 0, repares: 0, caillebotis: 0, abris: 0, ravitailles: 0, coups: 0, prisonniers: 0, pris: 0, mortsCorvee: 0, mortsBlesses: 0, affames: 0, retours: 0 }));
   const faite = {}, releves = [];
   // le centre de chaque régiment (là où sont ses hommes)
   const centres = etat.regiments.map(() => ({ x: 0, y: 0, n: 0 }));
@@ -194,7 +194,8 @@ export function corvees(B, choix, ctx) {
         if (A.reg[i] !== reg.id || A.mort[i] || !A.blessure[i]) continue;
         if (rng() < N.risqueBoyau) { mourir(i, 'corvée'); b.mortsCorvee++; continue; }
         A.mort[i] = 1; reg.effectif--;                 // il quitte le front, vivant
-        etat.evacues.push([A.id[i], etat.jour]); b.evacues++;
+        // [numéro, jour, blessure, nuit du retour (0 : pas encore, -1 : ne reviendra pas), régiment, expérience]
+        etat.evacues.push([A.id[i], etat.jour, A.blessure[i], 0, reg.id, Math.round(A.exp[i] * 100) / 100]); b.evacues++;
       }
       reg.moral = Math.min(1, reg.moral + N.moralEvacuer);
     }
@@ -233,8 +234,32 @@ export function corvees(B, choix, ctx) {
   }
   // la relève entre : un régiment frais à la place de chaque régiment relevé, qui arrive de l'arrière
   for (const vieux of releves) relever(B, vieux, rng);
+  retours(B, rng, bilan);
   etat.nuits.push({ jour: etat.jour, choix: faite, bilan });
   return bilan;
+}
+
+/* Les blessés évacués qui reviennent (Jérôme, v0.18.0) : une chance sur deux (`nuit.retourChance`), après autant de nuits que la
+   blessure en demande (`nuit.retourNuits` : un bras 1, une jambe 2, la tête 3). Ils reprennent leur place (même numéro, même
+   expérience) dans leur régiment, par l'arrière, comme la relève ; un régiment relevé ou disparu ne les reprend pas. Le tirage
+   vient d'un hachage (graine, numéro, jour) : il ne dépend pas de l'ordre des corvées. */
+function retours(B, rng, bilan) {
+  const { etat, R, armee: A } = B, N = R.nuit;
+  for (const e of etat.evacues) {
+    if (e.length < 6 || e[3] !== 0) continue;                     // (avant la v0.18.0 : ni blessure ni régiment, ils ne reviennent pas)
+    if (etat.jour - e[1] < (N.retourNuits[e[2]] ?? 1)) continue;
+    const reg = etat.regiments[e[4]];
+    if (hash2(etat.graine | 0, e[0], 97 + e[1]) >= N.retourChance || !reg || reg.effectif <= 0) { e[3] = -1; continue; }
+    // il remonte par les boyaux : à 12 m derrière la place de son régiment
+    const t = reg.ordre.trace, x0 = t ? t.x0 : reg.ordre.x - 40, x1 = t ? t.x1 : reg.ordre.x + 40;
+    let slot = 0;
+    for (let i = 0; i < A.n; i++) if (A.reg[i] === reg.id) slot = Math.max(slot, A.slot[i] + 1);
+    const derriere = reg.ordre.y + (reg.camp === 0 ? 12 : -12);
+    const i = ajouterSoldat(A, x0 + rng() * (x1 - x0), Math.max(1, Math.min(B.terrain.H - 2, derriere + (rng() - 0.5) * 6)), reg.camp, reg.id, slot, rng(), e[0]);
+    if (i < 0) continue;
+    A.exp[i] = e[5];
+    reg.effectif++; e[3] = etat.jour; bilan[reg.camp].retours++;
+  }
 }
 
 /* Un coup de main : les volontaires (les plus aguerris, valides) vont dans la

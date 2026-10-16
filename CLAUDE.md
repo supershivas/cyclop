@@ -52,9 +52,11 @@ la danse macabre, la catastrophe peinte avec calme. L'intention est dans `DESIGN
   logique remplit sans rien changer à la partie), un homme qui a très peur se tapit
   (`TAPI`) ; un fanion sur le parapet de chaque tronçon, à la couleur de celui qui le
   tient (`majFanions`), déchiré quand l'autre camp y est entré (`B.disputes`), amené puis
-  hissé quand il change de main. Pas encore dessinés (au labo : traverses, fil de fer coupé,
-  sacs retournés quand le tronçon est pris) ; les fusées (variante D) et le tout ensemble
-  (E) n'ont pas été retenus.
+  hissé quand il change de main. Les ouvrages (Jérôme, v0.18.0 ; `majOuvrages` de rendu3d.js) : deux traverses par
+  tronçon, des sacs de terre sur le parapet (à l'envers quand le tronçon est pris : le parapet devient le parados), du fil de fer
+  devant les premières lignes (coupé, à terre, là où l'autre camp est entré ou a pris), une porte dans la paroi arrière par niveau
+  d'abri (`etat.abris`) ; tout se lit de l'état, rien n'en est sauvegardé ; à partir de 3 pixels par mètre, refait deux fois par
+  seconde, seulement ce qu'on voit. Les fusées (variante D) et le tout ensemble (E) n'ont pas été retenus.
 - **Des papiers de campagne** (Jérôme, v0.10.0 ; variantes C et D du sujet « Plaques et journal » du labo) : le HUD est
   fait de ce qu'un officier a sur lui, pas de plaques toutes pareilles. `.papier` (l'os, l'encre de terre, une ombre d'un
   cran) : la montre de gousset et son billet (heure, météo, mission), une feuille de situation par régiment choisi
@@ -109,6 +111,11 @@ la danse macabre, la catastrophe peinte avec calme. L'intention est dans `DESIGN
 - **Des soldats qui épaulent** (Jérôme, v0.13.0) : à partir de 6 pixels par mètre (la silhouette), des bras le long du corps ; un
   homme qui tire (`B.tirs` : le 6e nombre est son indice) lève les bras et le fusil devant lui et se tourne vers sa cible, un
   instant (`aTir`, `tirVal` de `majTirs` : le dessin seulement). Les boîtes de loin ne tirent pas.
+- **Les blessés reviennent** (Jérôme, v0.18.0) : un blessé évacué (corvée `evacuer`) revient avec une chance sur deux
+  (`nuit.retourChance`) après autant de nuits que sa blessure en demande (`nuit.retourNuits` : un bras 1, une jambe 2, la tête 3), dans
+  son régiment, avec son numéro et son expérience, par l'arrière (`retours` de nuit.js ; le tirage est un hachage graine-numéro-jour, pas
+  le générateur de la bataille). `etat.evacues` : `[numéro, jour, blessure, nuit du retour (0 : pas encore, −1 : non), régiment,
+  expérience]` ; les évacués d'avant la v0.18.0 (deux nombres) ne reviennent pas. Le bilan de l'aube le dit.
 - **La nuit et ses corvées** (Jérôme, v0.6.0) : une corvée par régiment (repos,
   réparer, caillebotis, inhumer, évacuer) ; puis (Jérôme, v0.11.0) les abris profonds
   (`etat.abris`), les vivres (`reg.vivres`), le coup de main (`etat.prisonniers`) et

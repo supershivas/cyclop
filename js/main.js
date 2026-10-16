@@ -1,24 +1,24 @@
 // Le cycle de vie : écran titre → bataille → nuit → fin ; pause active,
 // réglages, sauvegarde, mise à jour, debug. Les règles sont dans bataille.js
 // (pures), le dessin dans rendu3d.js (il ne modifie jamais l'état).
-import { createLoop } from './lib/loop.js?v=0.17.0';
-import { createKeys, stopTypeahead } from './lib/keys.js?v=0.17.0';
-import { createPointer, lockBrowserGestures } from './lib/pointer.js?v=0.17.0';
-import { createGamepad } from './lib/gamepad.js?v=0.17.0';
-import { createStore, autosave, pickJSONFile } from './lib/save.js?v=0.17.0';
-import { startUpdateCheck, loadVersion, loadChangelog, downloadJSON } from './lib/app-update.js?v=0.17.0';
-import { ROLES } from './palette.js?v=0.17.0';
-import { MISSIONS, nouvelleBataille, avancer, aube, ordonnerMarche, ordonnerBarrage, horloge, effectifs, tronconsTenus, moralEnMots, terrainSous, rangDe, nomTroncon, actionDe, forcesTroncons, secteurDe, secteursDe, etendueSecteurs, tronconsDeLigne, largeurSecteur, nombreSecteurs, codeLigne, zone, photo, restaurer, PAS, NOUS, EUX } from './bataille.js?v=0.17.0';
-import { ligneY } from './tranchees.js?v=0.17.0';
-import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.17.0';
-import { METEO } from './data/meteo.js?v=0.17.0';
-import { impact, hydroLignes } from './terrain.js?v=0.17.0';
-import { hash2 } from './lib/rng.js?v=0.17.0';
-import { creerRendu, CAMERA } from './rendu3d.js?v=0.17.0';
-import { identite, etatEnMots, experienceEnMots } from './identite.js?v=0.17.0';
-import { CORVEES } from './data/corvees.js?v=0.17.0';
-import { refusCorvee } from './nuit.js?v=0.17.0';
-import { chargerContenu } from './design-store.js?v=0.17.0';
+import { createLoop } from './lib/loop.js?v=0.18.0';
+import { createKeys, stopTypeahead } from './lib/keys.js?v=0.18.0';
+import { createPointer, lockBrowserGestures } from './lib/pointer.js?v=0.18.0';
+import { createGamepad } from './lib/gamepad.js?v=0.18.0';
+import { createStore, autosave, pickJSONFile } from './lib/save.js?v=0.18.0';
+import { startUpdateCheck, loadVersion, loadChangelog, downloadJSON } from './lib/app-update.js?v=0.18.0';
+import { ROLES } from './palette.js?v=0.18.0';
+import { MISSIONS, nouvelleBataille, avancer, aube, ordonnerMarche, ordonnerBarrage, horloge, effectifs, tronconsTenus, moralEnMots, terrainSous, rangDe, nomTroncon, actionDe, forcesTroncons, secteurDe, secteursDe, etendueSecteurs, tronconsDeLigne, largeurSecteur, nombreSecteurs, codeLigne, zone, photo, restaurer, PAS, NOUS, EUX } from './bataille.js?v=0.18.0';
+import { ligneY } from './tranchees.js?v=0.18.0';
+import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.18.0';
+import { METEO } from './data/meteo.js?v=0.18.0';
+import { impact, hydroLignes } from './terrain.js?v=0.18.0';
+import { hash2 } from './lib/rng.js?v=0.18.0';
+import { creerRendu, CAMERA } from './rendu3d.js?v=0.18.0';
+import { identite, etatEnMots, experienceEnMots } from './identite.js?v=0.18.0';
+import { CORVEES } from './data/corvees.js?v=0.18.0';
+import { refusCorvee } from './nuit.js?v=0.18.0';
+import { chargerContenu } from './design-store.js?v=0.18.0';
 
 const JEU = 'cyclopeen';
 const $ = id => document.getElementById(id);
@@ -276,6 +276,7 @@ function bilanEnMots(b) {
   const faits = [
     b.inhumes && `${pl(b.inhumes, 'mort inhumé', 'morts inhumés')}`,
     b.evacues && `${pl(b.evacues, 'blessé évacué', 'blessés évacués')}`,
+    b.retours && `${pl(b.retours, 'blessé guéri revenu', 'blessés guéris revenus')} au front`,
     b.repares && `${pl(b.repares, 'tronçon réparé', 'tronçons réparés')}`,
     b.caillebotis && `des caillebotis dans ${pl(b.caillebotis, 'tronçon', 'tronçons')}`,
     b.releves && `${pl(b.releves, 'régiment relevé', 'régiments relevés')}`,
@@ -1013,7 +1014,7 @@ startUpdateCheck({
 
 // ─── Mode debug (section 18) : chargé seulement avec ?debug=1 ──────────────
 if (DEBUG) {
-  const { installDebug, seedFromUrl } = await import('./lib/debug.js?v=0.17.0');
+  const { installDebug, seedFromUrl } = await import('./lib/debug.js?v=0.18.0');
   window.__seed = seedFromUrl() ?? undefined;
   installDebug({
     state: () => B && { ...horloge(B), effectifs: effectifs(B), pertes: B.etat.pertes, impacts: B.etat.impacts.length, enJeu: enJeu(), pause: loop.paused },

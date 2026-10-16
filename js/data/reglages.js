@@ -128,6 +128,8 @@ export const REGLAGES = {
   },
   // la nuit et ses corvées (Jérôme, v0.6.0)
   nuit: {
+    retourChance: 0.5,    // un blessé évacué revient au front avec cette chance (Jérôme, v0.18.0) …
+    retourNuits: [0, 1, 2, 3],   // … après autant de nuits que sa blessure en demande : un bras 1, une jambe 2, la tête 3 (l'indice : la blessure)
     reposTravail: 0.4,    // un régiment à la corvée ne se repose que de cette part
     moralRepos: 0.15,     // le repos rend en plus cette part de ce qui manque au moral
     mortBlesse: 0.12,     // un blessé laissé au front meurt dans la nuit (à la tête : deux fois plus)

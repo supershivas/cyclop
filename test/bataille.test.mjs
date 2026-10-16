@@ -487,3 +487,26 @@ test('trois défenseurs contre vingt attaquants ne tiennent que quelques seconde
   assert.equal(issue(R.tranchee.tenue), 0, 'pris par les nôtres');
   assert.equal(issue(1e9), 1, 'avant la mêlée, trois défenseurs gardaient le tronçon');
 });
+
+group('les blessés qui reviennent');
+test('un blessé évacué revient une fois sur deux, après 1 nuit (bras), 2 (jambe) ou 3 (tête) ; même numéro ; la partie relue le garde', () => {
+  const B = nouvelleBataille(3, R, { soldats: 400, jours: 8 });
+  const A = B.armee, reg = B.etat.regiments[0];
+  let n = 0;
+  for (let i = 0; i < A.n && n < 36; i++) if (A.reg[i] === reg.id) { A.blessure[i] = 1 + (n % 3); n++; }
+  B.etat.phase = 'nuit'; aube(B, { [reg.id]: 'evacuer' });
+  const evac = B.etat.evacues.filter(e => e.length >= 6);
+  assert.ok(evac.length >= 10, `${evac.length} évacués`);
+  assert.ok(evac.every(e => e[3] === 0 || e[3] === -1 && false), 'aucun retour la nuit même');
+  const avant = reg.effectif;
+  for (let nuit = 0; nuit < 4; nuit++) { B.etat.phase = 'nuit'; aube(B, {}); }
+  const revenus = evac.filter(e => e[3] > 0), non = evac.filter(e => e[3] === -1);
+  assert.ok(revenus.length >= 1 && non.length >= 1, `${revenus.length} revenus, ${non.length} non`);
+  for (const e of revenus) assert.ok(e[3] - e[1] >= R.nuit.retourNuits[e[2]], 'jamais avant son délai');
+  assert.equal(reg.effectif, avant + revenus.length);
+  // même numéro, dans le même régiment
+  for (const e of revenus) { const i = Array.from({ length: A.n }, (_, k) => k).find(k => A.id[k] === e[0] && !A.mort[k]); assert.ok(i !== undefined && A.reg[i] === reg.id, 'dans son régiment'); }
+  const C = restaurer(photo(B), R);
+  assert.deepEqual(C.etat.evacues, B.etat.evacues);
+  assert.equal(C.etat.regiments[0].effectif, reg.effectif);
+});

@@ -22,12 +22,12 @@
    - Les soldats : instanciés (une boîte et son ombre) ; au zoom 1 et 2, un
      point de 2 × 2 pixels (la couleur du camp sur son ombre).
    - Les corps : un homme couché (instancié) ; au zoom 1 et 2, un pixel. */
-import { loadThree } from './three-lib.js?v=0.17.0';
-import { PALETTE, ORDRE, INDICE } from './palette.js?v=0.17.0';
-import { OMBRE, couleursLigne } from './apparence.js?v=0.17.0';
-import { MORCEAU, hauteurVueQ as hauteurQ, hauteurVueM as hauteurM } from './terrain.js?v=0.17.0';
-import { horloge } from './bataille.js?v=0.17.0';
-import { ligneY } from './tranchees.js?v=0.17.0';
+import { loadThree } from './three-lib.js?v=0.18.0';
+import { PALETTE, ORDRE, INDICE } from './palette.js?v=0.18.0';
+import { OMBRE, couleursLigne } from './apparence.js?v=0.18.0';
+import { MORCEAU, hauteurVueQ as hauteurQ, hauteurVueM as hauteurM } from './terrain.js?v=0.18.0';
+import { horloge } from './bataille.js?v=0.18.0';
+import { ligneY } from './tranchees.js?v=0.18.0';
 
 export const CAMERA = { yaw: 0.15, tangage: 0.95, fov: 30 };   // au départ : tournée de 9°, plongée de 54°, angle de 30°
 // la caméra respire : un balancement très lent, 2° en 23 s (Jérôme, v0.3.1 : variante D du labo retenue)
@@ -1162,6 +1162,69 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
     clGeo.attributes.position.needsUpdate = true; clGeo.setDrawRange(0, v);
   }
 
+  // ─── Les ouvrages des tranchées (Jérôme, v0.18.0) : des traverses en travers de la tranchée, des sacs de terre sur le parapet (à l'envers
+  // quand le tronçon est pris : le parapet devient le parados), du fil de fer devant les premières lignes (coupé là où l'autre camp
+  // est entré ou a pris), l'entrée des abris dans la paroi arrière (une porte par niveau). Le dessin seulement : rien n'en est sauvegardé,
+  // tout se lit de l'état ; refait deux fois par seconde, et seulement ce qu'on voit, à partir de 3 pixels par mètre. ───
+  const OUV_BOITES = 2400, ouvPos = new Float32Array(OUV_BOITES * 30 * 3), ouvCol = new Float32Array(OUV_BOITES * 30 * 3);
+  const ouvGeo = new THREE.BufferGeometry();
+  ouvGeo.setAttribute('position', new THREE.BufferAttribute(ouvPos, 3).setUsage(THREE.DynamicDrawUsage));
+  ouvGeo.setAttribute('color', new THREE.BufferAttribute(ouvCol, 3).setUsage(THREE.DynamicDrawUsage));
+  ouvGeo.setDrawRange(0, 0);
+  const ouvMesh = new THREE.Mesh(ouvGeo, new THREE.MeshBasicMaterial({ vertexColors: true, side: THREE.DoubleSide })); ouvMesh.frustumCulled = false; ouvMesh.renderOrder = 1; scene.add(ouvMesh);
+  const FIL_MAX = 5000, filPos = new Float32Array(FIL_MAX * 3), filGeo = new THREE.BufferGeometry();
+  filGeo.setAttribute('position', new THREE.BufferAttribute(filPos, 3).setUsage(THREE.DynamicDrawUsage));
+  filGeo.setDrawRange(0, 0);
+  const filLignes = new THREE.LineSegments(filGeo, new THREE.LineBasicMaterial({ color: col('r') })); filLignes.frustumCulled = false; filLignes.renderOrder = 1; scene.add(filLignes);
+  const cSacH = col('g'), cSacB = col('b'), cTravH = col('g'), cTravB = col('s'), cPorteH = col('g'), cPorteB = col('t');
+  let ouvT = 0;
+  function majOuvrages(dt) {
+    ouvT -= dt;
+    const { cx, cz, p } = projeter();
+    const voir = !!B && B.etat.tranchees && p >= 3;
+    ouvMesh.visible = filLignes.visible = voir;
+    if (!voir || ouvT > 0) return;
+    ouvT = 0.5;
+    const e = Math.hypot(vue.vw, vue.vh) / p + 30, et = B.etat;
+    let nv = 0, nf = 0;
+    const sommet = (x, y, z, c) => { ouvPos[nv * 3] = x; ouvPos[nv * 3 + 1] = y; ouvPos[nv * 3 + 2] = z; ouvCol[nv * 3] = c.r; ouvCol[nv * 3 + 1] = c.g; ouvCol[nv * 3 + 2] = c.b; nv++; };
+    const quad = (a, b, c, d, k) => { sommet(...a, k); sommet(...b, k); sommet(...c, k); sommet(...a, k); sommet(...c, k); sommet(...d, k); };
+    const boite = (x0, x1, y0, y1, z0, z1, haut, flanc) => {
+      if (nv + 30 > OUV_BOITES * 30) return;
+      quad([x0, y1, z0], [x0, y1, z1], [x1, y1, z1], [x1, y1, z0], haut);
+      quad([x0, y0, z1], [x1, y0, z1], [x1, y1, z1], [x0, y1, z1], flanc);
+      quad([x1, y0, z1], [x1, y0, z0], [x1, y1, z0], [x1, y1, z1], flanc);
+      quad([x0, y0, z0], [x0, y0, z1], [x0, y1, z1], [x0, y1, z0], flanc);
+      quad([x1, y0, z0], [x0, y0, z0], [x0, y1, z0], [x1, y1, z0], flanc);
+    };
+    const trait = (x0, y0, z0, x1, y1, z1) => { if (nf + 2 > FIL_MAX) return; filPos.set([x0, y0, z0, x1, y1, z1], nf * 3); nf += 2; };
+    B.troncons.forEach((tr, t) => {
+      const L = B.lignes[tr.ligne], xm = (tr.x0 + tr.x1) / 2, zc = ligneY(L, xm);
+      if (Math.abs(xm - cx) > e || Math.abs(zc - cz) > e) return;
+      const pris = et.troncons[t] !== L.camp, f = L.face;
+      // les traverses : deux par tronçon, en travers de la tranchée
+      for (const x of [tr.x0 + 6, tr.x0 + 18]) { const z = ligneY(L, x), h = surface(x, z); boite(x - 0.25, x + 0.25, h, h + 1.2, z - 1.5, z + 1.5, cTravH, cTravB); }
+      // les sacs de terre : sur le parapet, du côté de l'ennemi ; à l'envers quand le tronçon est pris
+      const cote = (pris ? -1 : 1) * f * (L.amp + 2.1);
+      for (let x = tr.x0; x < tr.x1; x += 2.5) { const xx = x + 1.2, z = ligneY(L, xx) + cote, h = surface(xx, z); boite(x, x + 2.3, h, h + 0.35, z - 0.25, z + 0.25, cSacH, cSacB); }
+      // le fil de fer : devant les premières lignes ; coupé, il ne reste que des bouts, à terre
+      if (L.rang === 0) {
+        const coupe = pris || B.disputes[t], dz = f * (L.amp + 7);
+        for (let x = tr.x0, n = 0; x < tr.x1; x += 1.5, n++) {
+          if (coupe && n % 5 > 1) continue;
+          const xa = x, xb = Math.min(tr.x1, x + 1.5), za = ligneY(L, xa) + dz, zb = ligneY(L, xb) + dz, ha = surface(xa, za), hb = surface(xb, zb), k = coupe ? 0.3 : 1;
+          trait(xa, ha + 0.45 * k, za, xb, hb + 0.45 * k, zb); trait(xa, ha + 0.9 * k, za, xb, hb + 0.9 * k, zb);
+          if (n % 3 === 0 && !coupe) trait(xa, ha, za, xa, ha + 1, za);          // un piquet
+        }
+      }
+      // les abris : une porte dans la paroi arrière par niveau creusé
+      const niveau = et.abris[t] || 0;
+      for (let d = 0; d < niveau; d++) { const x = xm - (niveau - 1) * 2 + d * 4, z = ligneY(L, x) - f * (L.amp + 1.4), h = surface(x, ligneY(L, x)); boite(x - 0.7, x + 0.7, h, h + 1.3, z - 0.2, z + 0.2, cPorteH, cPorteB); }
+    });
+    ouvGeo.attributes.position.needsUpdate = true; ouvGeo.attributes.color.needsUpdate = true; ouvGeo.setDrawRange(0, nv);
+    filGeo.attributes.position.needsUpdate = true; filGeo.setDrawRange(0, nf);
+  }
+
   function majFanions(dt) {
     if (!fanP) return;
     const p = ZOOMS[vue.zoom];
@@ -1423,7 +1486,7 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
     majSoleil(horloge(B));
     majSoldats();
     tAnim += dt;
-    majEclats(dt); majCorbeaux(dt, tAnim); majFanions(dt); majClignotants(dt);
+    majEclats(dt); majCorbeaux(dt, tAnim); majFanions(dt); majClignotants(dt); majOuvrages(dt);
     const h = horloge(B);
     majNuit(h); lnMat.uniforms.uT.value = tAnim;
     if (!vide) { pluie.visible = h.meteo === 'pluie' && h.phase === 'jour'; brume.visible = h.meteo === 'brouillard'; }

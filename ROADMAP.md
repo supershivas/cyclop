@@ -23,12 +23,6 @@ Statuts : **à l'étude** · **validé** (Jérôme a tranché) · **en cours** �
   1 tient 7 ms, les zooms 4 et 8 de 8 à 16 ms sur un champ labouré : à trancher
 - [x] Lisibilité : cratère, boue, eau, soldat distinguables en gris
 
-## Validé par Jérôme, pas encore construit (tranché le 2026-10-15)
-
-- **Tranchées, la suite** (voir plus bas) : traverses, fil de fer coupé, sacs retournés quand un tronçon est pris, abris dessinés.
-- **Évacuer les blessés : ils donnent de nouveaux hommes frais** (idée de Jérôme à préciser : les blessés évacués guérissent et
-  reviennent en renfort, en nombre limité et après quelques nuits).
-
 ## À trancher
 
 - **Le souffle des obus** (v0.16.0) : pas mesuré sur l'équilibre ; les régiments jetés hors de leur tranchée par un 220 reviennent
@@ -40,16 +34,15 @@ Statuts : **à l'étude** · **validé** (Jérôme a tranché) · **en cours** �
 - **Carte et ordres, la suite** (v0.14.0 et 0.15.0 : secteurs, carte, mêlée) : un ordre « tenir S3·N2 » depuis la carte (reculer d'une
   ligne), des ordres par secteur voisin, la mêlée dessinée sur le terrain (le nombre d'attaquants au-dessus du tronçon).
 
-- **Tranchées, la suite** : 3 lignes en secteur calme, 5 en secteur fortifié ; les
-  montrer tenues ou perdues sur le terrain lui-même ; les abris dessinés (leur
-  entrée dans la paroi).
+- **Tranchées, la suite** (v0.18.0 : traverses, sacs, fil de fer, abris dessinés) : 3 lignes en secteur calme, 5 en secteur fortifié ;
+  les ouvrages au labo (variantes) ; le fil de fer qu'on coupe à la pince la nuit.
 - **La nuit, la suite** (v0.11.0 : abris, vivres, coups de main, tombes) : des
   prisonniers qui parlent (le renseignement : où en face prépare son assaut).
 - **Moral et expérience, la suite** (v0.11.0 : contagion, refus d'un jour,
   poursuite) : la fuite feinte jouée par le joueur (un régiment qui recule exprès
   pour disperser le poursuivant), l'expérience gardée d'une bataille à l'autre
   (le Mémorial).
-- **Évacuer les blessés, la suite** : de jour, sous le feu ; la boue qui ralentit les brancardiers.
+- **Évacuer les blessés, la suite** (v0.18.0 : ils reviennent, une fois sur deux) : de jour, sous le feu ; la boue qui ralentit les brancardiers.
 - **Lignes de vue** (une crête cache), mêlées de tranchées rares.
 - **Hors de vue, les soldats comptés** au lieu d'être simulés un par un.
 - **Champs de coûts recalculés par morceaux** quand le terrain change (aujourd'hui :
