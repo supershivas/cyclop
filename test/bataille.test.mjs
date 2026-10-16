@@ -1,6 +1,6 @@
 // La bataille : déterminisme, ordres refusés à voix haute, sauvegarde qui rejoue la même partie.
 import { readFileSync } from 'node:fs';
-import { nouvelleBataille, avancer, ordonnerMarche, ordonnerBarrage, aube, photo, restaurer, effectifs, horloge, zone, tronconsTenus, rangDe, moralEnMots, abriDe } from '../js/bataille.js';
+import { nouvelleBataille, avancer, ordonnerMarche, ordonnerBarrage, aube, photo, restaurer, effectifs, horloge, zone, tronconsTenus, rangDe, moralEnMots, abriDe, terrainSous, terrainResume } from '../js/bataille.js';
 import { ligneY } from '../js/tranchees.js';
 import { tronconsDe, refusCorvee } from '../js/nuit.js';
 import { SECTEURS as SECT } from '../js/data/secteur.js';
@@ -39,6 +39,12 @@ test('les morts restent où ils sont tombés : un corps par mort, gardé par la 
   const vivants = new Set(Array.from(B.armee.id.subarray(0, B.armee.n)));
   for (const c of C) assert.ok(!vivants.has(c[4]), 'un corps est un homme qui n\'est plus dans la foule');
   assert.deepEqual(restaurer(photo(B), R).etat.corps, C);
+});
+test('le terrain sous la souris : un résumé sans la vitesse, et la vitesse en nombre', () => {
+  const B = petite(), [x, y] = P(150, 150), long = terrainSous(B, x, y), court = terrainResume(B, x, y);
+  assert.ok(court.lignes.length >= 1 && !court.lignes.some(l => l.startsWith('On y marche')));
+  assert.ok(long.some(l => l.startsWith('On y marche')) && court.vitesse > 0 && court.vitesse <= 1);
+  assert.equal(terrainResume(B, -5, -5), null);
 });
 test('un ordre impossible se refuse, avec sa raison', () => {
   const B = petite();

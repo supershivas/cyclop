@@ -72,7 +72,7 @@ la danse macabre, la catastrophe peinte avec calme. L'intention est dans `DESIGN
   régiments partent en 1re ligne, quatre en 2e (`depart: [0, 1]` de secteur.js ; Jérôme, v0.17.0), chacun sur 100 m, soit deux secteurs
   (« S1-2 · Porphyre » : `secteursDe`, `etendueSecteurs`) ; un numéro de la carte choisit les régiments qui couvrent ce secteur, et un
   ordre sur une tranchée étale encore un régiment sur un secteur. La **carte**
-  (`#carte`, touche M, `construireCarte` / `majCarte` de main.js) montre les 8 secteurs × 4 lignes de chaque camp, chaque case en deux
+  (`#carte`, toujours visible en haut à droite depuis la v0.19.0 : plus de touche M ; `construireCarte` / `majCarte` / `majRondes` de main.js) montre les 8 secteurs × 4 lignes de chaque camp, chaque case en deux
   tronçons à la couleur de celui qui les tient ; un numéro choisit le régiment du secteur, une case l'envoie dans cette tranchée
   (`ordreCase`). Tout ordre sur une tranchée (carte ou clic droit) fait clignoter les tronçons visés trois secondes, sur le terrain
   (`rendu.clignoter`) et sur la carte, et le carnet dit ce que chacun va faire (`ordreDonne`) ; `actionDe(B, reg)` le dit en mots
@@ -129,8 +129,14 @@ la danse macabre, la catastrophe peinte avec calme. L'intention est dans `DESIGN
   est le sol un ton plus sombre (la couleur de paroi de la case), fondue (transparence continue, plus de
   trame depuis la v0.12.1) de plus en plus claire vers son bout ; le fond d'un creux s'assombrit d'un ton à 1 m, d'un
   autre à 2,5 m, et d'un encore quand il est entouré de parois (`couleurCase`).
-- **Le terrain au survol** (Jérôme, v0.5.0) : une plaque sous l'horloge dit ce qu'est
-  la case sous la souris (`terrainSous` de bataille.js).
+- **Le terrain au survol** (Jérôme, v0.5.0 ; v0.19.0) : un papier dit ce qu'est la case sous la souris, en deux lignes et une barre
+  de marche (`terrainResume` de bataille.js, qui garde les deux premières lignes de `terrainSous` ; le reste n'est plus montré).
+- **Le haut de l'écran** (Jérôme, v0.19.0 ; `docs/ui-cible.md`) : à gauche le menu, les réglages et le carnet de bord (la fiche et le
+  papier de la nuit y attendent leur place définitive) ; au centre les pertes des deux armées (`majPertes`, en feuille de situation) ;
+  à droite la carte, le temps (arrêter, ×1, ×2, ×4 : `setTimeScale` plafonné par `perf.sim` sous ~20 ms, un assaut / une prise / une
+  déroute ramène à ×1 ; la partie est la même, seul le nombre de pas par image change), la montre, la météo (clic : aujourd'hui et la
+  prévision de demain, il n'y a pas de météo dans la journée) et le terrain. La carte est en proportions (lignes à 20 m, un no man's land
+  resserré à 64 px) et les régiments y sont des cercles numérotés (`numeroDe`, l'ordre dans le camp ; un clic les choisit).
 - **Les tranchées** (lot 1, Jérôme, v0.4.0) : quatre lignes par camp, des boyaux,
   des tronçons de 25 m qui changent de main ; voir `DESIGN.md`.
 - **Session** : un run = une bataille de 10 à 15 jours sur un secteur (Jérôme, v0.9.0 ;

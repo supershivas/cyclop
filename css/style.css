@@ -29,11 +29,9 @@
 }
 .plaque p { margin: 0; }
 .discret { color: var(--jeu-accent); }
-.coin { display: grid; gap: var(--pas); align-content: start; justify-items: start; }
 .terrain { pointer-events: none !important; }
 .terrain[hidden] { display: none; }
-.pause-active { align-self: center; letter-spacing: .12em; text-transform: uppercase; }
-.morts b { font-size: var(--texte-grand); font-weight: normal; }
+.pause-active { letter-spacing: .12em; text-transform: uppercase; text-align: center; }
 
 /* Des papiers de campagne (Jérôme, v0.10.0 ; labo « Plaques et journal », variantes C et D) : l'interface est faite de ce qu'un
    officier a sur lui : une montre, des feuilles de situation, un râtelier d'obus, un carnet de bord. Du papier (l'os), de l'encre
@@ -52,16 +50,12 @@
 .montre path, .montre line { stroke: var(--jeu-fond); stroke-width: 2; fill: none; stroke-linecap: square; }
 .montre line.gros { stroke-width: 4; }
 .terrain.papier { padding: 3px 8px; }
-.gauche, .droite { display: grid; gap: var(--pas); align-content: end; justify-items: start; }
+.gauche, .droite { display: grid; gap: var(--pas); align-content: end; justify-items: start; flex: 1; min-width: 0; }
 .droite { justify-items: end; }
-.morts .croix { letter-spacing: .18em; min-height: 1.4em; white-space: nowrap; }
-.morts .croix.eux { color: var(--jeu-eux); }
-.morts b { color: var(--jeu-fond); }
-.carte { width: min(40ch, 32vw); }
+.carte { width: min(38ch, 30vw); }
 .carte .entete { letter-spacing: .14em; text-transform: uppercase; border-bottom: 1px solid var(--jeu-accent); padding-bottom: 2px; font-size: 12px; margin-bottom: 4px; }
-.carte-grille { display: grid; gap: 2px; align-items: stretch; }
+.carte-grille { position: relative; display: grid; gap: 2px; align-items: stretch; }
 .carte-grille .lib { font-size: 11px; align-self: center; color: var(--jeu-accent); }
-.carte-grille .lib.premiere, .carte-grille .cel.apres-front { margin-top: 8px; }
 .carte-grille button { font: inherit; padding: 0; border: 0; min-height: 0; cursor: pointer; }
 .carte-grille .sect { background: var(--jeu-fond); color: var(--jeu-encre); min-height: 22px; font-size: 12px; }
 .carte-grille .cel { position: relative; display: flex; height: 22px; background: var(--jeu-accent); }
@@ -74,8 +68,6 @@
 .carte-grille .cel.clign { animation: clign .5s steps(1) 6; }
 @keyframes clign { 0% { outline: 3px solid var(--jeu-fond); outline-offset: 1px; } 50% { outline: 3px solid transparent; } }
 @media (hover: hover) { .carte-grille .cel:hover { outline: 2px solid var(--jeu-accent); outline-offset: 1px; } }
-.carte-aide { font-size: 11px; margin-top: 4px; }
-.carte-bascule { font: inherit; font-size: 12px; border: 0; cursor: pointer; color: var(--jeu-fond); min-height: 28px; }
 .carnet { width: 30ch; max-width: 36vw; font-size: 12px; }
 .carnet[hidden] { display: none; }
 .carnet .entete { letter-spacing: .14em; text-transform: uppercase; border-bottom: 1px solid var(--jeu-accent); padding-bottom: 2px; }
@@ -232,3 +224,44 @@ summary { min-height: var(--jeu-cible); display: flex; align-items: center; curs
 .liens { font-size: 14px; }
 .liens a { color: inherit; display: inline-block; min-height: var(--jeu-cible); line-height: var(--jeu-cible); }
 dialog form { margin-top: calc(var(--pas) * 2); }
+
+/* Le haut de l'écran (Jérôme, v0.19.0 ; docs/ui-cible.md) : à gauche les boutons et le carnet, au centre les pertes des deux armées,
+   à droite la carte (toujours visible), le temps, la montre et la météo, le terrain sous la souris. */
+.haut-gauche, .haut-centre, .haut-droite { display: grid; gap: var(--pas); align-content: start; min-width: 0; }
+.haut-gauche { justify-items: start; flex: 1; }
+.haut-gauche .fiche, .haut-gauche .nuit { margin: 0; }
+.haut-gauche .boutons { display: flex; gap: var(--pas); }
+.haut-centre { justify-items: center; flex: none; }
+.haut-droite { justify-items: end; flex: 1; }
+.pertes { display: grid; grid-template-columns: repeat(2, 24ch); gap: var(--pas) calc(var(--pas) * 2); }
+.pertes .lignes { grid-column: 1 / -1; font-size: 12px; }
+.pertes .tete { display: flex; justify-content: space-between; gap: var(--pas); border-bottom: 1px solid var(--jeu-accent); padding-bottom: 2px; font-size: 15px; }
+.pertes .tete span { color: var(--jeu-accent); font-size: 11px; letter-spacing: .1em; text-transform: uppercase; align-self: center; }
+.pertes .barre { display: flex; height: 8px; margin: 5px 0 3px; background: var(--jeu-accent); }
+.pertes .barre i { display: block; height: 100%; }
+.pertes .barre .debout { background: var(--jeu-nous); }
+.pertes .eux .barre .debout { background: var(--jeu-eux); }
+.pertes .barre .blesses { background: var(--jeu-accent); outline: 1px solid var(--jeu-fond); }
+.pertes .barre .tombes { background: var(--jeu-fond); }
+.pertes .compte { color: var(--jeu-accent); font-size: 12px; }
+.pertes .croix { letter-spacing: .18em; min-height: 1.4em; white-space: nowrap; overflow: hidden; font-size: 12px; }
+.pertes .eux .croix { color: var(--jeu-eux); }
+.temps { display: flex; gap: 4px; padding: 4px; }
+.temps button { display: grid; place-items: center; min-width: var(--jeu-cible); height: 36px; padding: 0 6px; font: inherit; color: var(--jeu-fond); background: none; border: 1px solid var(--jeu-accent); cursor: pointer; }
+.temps button svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; }
+.temps button.actif { background: var(--jeu-fond); color: var(--jeu-encre); border-color: var(--jeu-fond); }
+#meteo { width: var(--jeu-cible); height: var(--jeu-cible); padding: 0; color: var(--jeu-fond); border: 0; cursor: pointer; }
+.montre-bloc { align-items: stretch; max-width: 100%; }
+.montre-bloc > .papier:not(#meteo) { flex: 1; min-width: 0; max-width: 34ch; }
+.terrain .vit { display: flex; align-items: center; gap: var(--pas); font-size: 12px; color: var(--jeu-accent); }
+.terrain .vit .plein { flex: 1; height: 6px; min-width: 8ch; background: var(--jeu-accent); }
+.terrain .vit b { display: block; height: 100%; background: var(--jeu-fond); }
+.carte-grille .trou { grid-column: 1 / -1; display: grid; place-items: center; font-size: 10px; color: var(--jeu-accent); border-top: 1px dashed var(--jeu-accent); border-bottom: 1px dashed var(--jeu-accent); }
+.carte-regs { position: absolute; inset: 0; pointer-events: none; }
+.carte-ronde {
+  position: absolute; box-sizing: border-box; width: 18px; height: 18px; min-width: 0; margin: -9px 0 0 -9px; padding: 0; min-height: 0; border-radius: 50%;
+  border: 2px solid var(--jeu-nous); background: var(--jeu-fond); color: var(--jeu-encre); font: inherit; font-size: 10px; line-height: 14px; text-align: center; cursor: pointer;
+}
+.carte-ronde.eux { border-color: var(--jeu-eux); }
+.carte-ronde.choisi { background: var(--jeu-encre); color: var(--jeu-fond); outline: 2px solid var(--jeu-fond); outline-offset: 1px; }
+.carte-ronde[hidden] { display: none; }

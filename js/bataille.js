@@ -14,17 +14,17 @@
    La sauvegarde (photo) garde la graine, la liste compacte des impacts, l'état
    de la foule et les petites couches de logique ; jamais le relief : il se
    rejoue depuis la graine et les impacts (rejouerTerrain). */
-import { createRng, hash2 } from './lib/rng.js?v=0.18.1';
-import { creerTerrain, impact, hydroLignes, etat as etatCase, vitesseEtat, ETAT } from './terrain.js?v=0.18.1';
-import { creerArmee, ajouterSoldat, construireGrille, pasArmee, tuerDans, effrayer, compacter, photoArmee, restaurerArmee, b64, deB64, DENSITE, place } from './army.js?v=0.18.1';
-import { creuserTranchees, ligneSous } from './tranchees.js?v=0.18.1';
-import { calculerCouts, creerCacheChamps, dimensionsCouts, BLOC } from './champs.js?v=0.18.1';
-import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.18.1';
-import { METEO, TRANSITIONS, PREVISION_JUSTE } from './data/meteo.js?v=0.18.1';
-import { SECTEURS } from './data/secteur.js?v=0.18.1';
-import { REGIMENTS } from './data/lexique.js?v=0.18.1';
-import { grade } from './identite.js?v=0.18.1';
-import { corvees, rejouerTravaux } from './nuit.js?v=0.18.1';
+import { createRng, hash2 } from './lib/rng.js?v=0.19.0';
+import { creerTerrain, impact, hydroLignes, etat as etatCase, vitesseEtat, ETAT } from './terrain.js?v=0.19.0';
+import { creerArmee, ajouterSoldat, construireGrille, pasArmee, tuerDans, effrayer, compacter, photoArmee, restaurerArmee, b64, deB64, DENSITE, place } from './army.js?v=0.19.0';
+import { creuserTranchees, ligneSous } from './tranchees.js?v=0.19.0';
+import { calculerCouts, creerCacheChamps, dimensionsCouts, BLOC } from './champs.js?v=0.19.0';
+import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.19.0';
+import { METEO, TRANSITIONS, PREVISION_JUSTE } from './data/meteo.js?v=0.19.0';
+import { SECTEURS } from './data/secteur.js?v=0.19.0';
+import { REGIMENTS } from './data/lexique.js?v=0.19.0';
+import { grade } from './identite.js?v=0.19.0';
+import { corvees, rejouerTravaux } from './nuit.js?v=0.19.0';
 
 export const PAS = 1 / 30;                 // s de jeu par pas
 export const NOUS = 0, EUX = 1;
@@ -587,6 +587,15 @@ export function terrainSous(B, x, y) {
   if (t >= 0 && etat.abris[t]) lignes.push(`Des abris profonds (${['', 'commencés', 'à moitié creusés', 'achevés'][Math.min(3, etat.abris[t])]})`);
   if (etat.tombes.some(c => Math.abs(c[0] / 10 - x) < 1 && Math.abs(c[1] / 10 - y) < 1)) lignes.push('Une tombe');
   return lignes;
+}
+
+/* Le terrain sous la souris en peu de mots (le coin de l'écran, v0.19.0) : ses lignes, sans la vitesse, et la vitesse de marche
+   (0 à 1, 1 : le sol sec) pour une barre. */
+export function terrainResume(B, x, y) {
+  const lignes = terrainSous(B, x, y);
+  if (!lignes) return null;
+  const { terrain: T, R, etat } = B, gel = !!METEO[etat.meteo[etat.jour - 1]].gel;
+  return { lignes: lignes.filter(l => !l.startsWith('On y marche')), vitesse: vitesseEtat(etatCase(T, Math.floor(y) * T.W + Math.floor(x), R, gel), R) };
 }
 
 // Les tronçons tenus par chaque camp : [nous, en face]

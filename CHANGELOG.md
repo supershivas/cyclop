@@ -1,5 +1,9 @@
 # Journal des versions
 
+## 0.19.0 — 2026-10-16
+- Le haut de l'écran se réorganise : les pertes des deux armées au centre, la carte du secteur toujours visible à droite (ses régiments en cercles numérotés ; la touche M disparaît), le carnet à gauche
+- Le temps : arrêter, ×1, ×2, ×4 (un assaut ramène à ×1) ; la montre, la météo (clic : le temps d'aujourd'hui et la prévision) et le terrain sous la souris en deux lignes et une barre de marche
+
 ## 0.18.1 — 2026-10-16
 - Le râtelier : trois boutons en papier de campagne, 75, 155 et 220, avec leur touche (1, 2, 3) ; couché quand il se recharge
 

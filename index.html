@@ -9,8 +9,8 @@
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta property="og:image" content="og.png">
-<link rel="stylesheet" href="js/lib/game.css?v=0.18.1">
-<link rel="stylesheet" href="css/style.css?v=0.18.1">
+<link rel="stylesheet" href="js/lib/game.css?v=0.19.0">
+<link rel="stylesheet" href="css/style.css?v=0.19.0">
 </head>
 <body>
 <div class="jeu-ecran" id="ecran">
@@ -24,28 +24,20 @@
   <!-- HUD : en DOM par-dessus le canvas, dans la palette du jeu -->
   <div class="hud" id="hud" hidden>
     <div class="hud-haut">
-      <div class="coin">
-        <div class="montre-bloc">
-          <svg class="montre" viewBox="0 0 64 64" aria-hidden="true">
-            <circle cx="32" cy="32" r="29"/>
-            <path d="M32 6v4M58 32h-4M32 58v-4M6 32h4M45 9.5l-2 3.5M54.5 19l-3.5 2M54.5 45l-3.5-2M45 54.5l-2-3.5M19 54.5l2-3.5M9.5 45l3.5-2M9.5 19l3.5 2M19 9.5l2 3.5"/>
-            <line id="montre-m" x1="32" y1="32" x2="32" y2="14"/><line id="montre-h" class="gros" x1="32" y1="32" x2="32" y2="21"/>
-          </svg>
-          <div class="papier">
-            <p id="horloge">Jour 1</p>
-            <p class="discret" id="demain"></p>
-            <p class="discret" id="mission" hidden></p>
-          </div>
+      <!-- En haut à gauche : le menu, les réglages, le carnet de bord (la fiche et le papier de la nuit y attendent leur place définitive) -->
+      <div class="haut-gauche">
+        <div class="boutons">
+          <button class="icone plaque" id="pause" aria-label="Menu">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14M16 5v14"/></svg>
+          </button>
+          <button class="icone plaque" id="hud-reglages" aria-label="Réglages">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10.3 4.3c.4-1.8 2.9-1.8 3.4 0a1.7 1.7 0 0 0 2.6 1.1c1.5-.9 3.3.8 2.4 2.4a1.7 1.7 0 0 0 1 2.5c1.8.5 1.8 3 0 3.4a1.7 1.7 0 0 0-1 2.6c.9 1.5-.9 3.3-2.4 2.4a1.7 1.7 0 0 0-2.6 1c-.5 1.8-3 1.8-3.4 0a1.7 1.7 0 0 0-2.5-1c-1.6.9-3.3-.9-2.4-2.4a1.7 1.7 0 0 0-1.1-2.6c-1.8-.4-1.8-2.9 0-3.4a1.7 1.7 0 0 0 1.1-2.5c-.9-1.6.8-3.3 2.4-2.4 1 .6 2.3.1 2.5-1.1z"/><circle cx="12" cy="12" r="3"/></svg>
+          </button>
         </div>
-        <div class="papier terrain" id="terrain" hidden aria-live="off"></div>
-        <section class="papier carte" id="carte" aria-label="Carte du secteur" hidden>
-          <p class="entete">Le secteur · <span class="discret">en face au nord</span></p>
-          <div class="carte-grille" id="carte-grille"></div>
-          <p class="discret carte-aide">Un numéro choisit les régiments du secteur ; une case les envoie dans cette tranchée.</p>
-        </section>
-        <button class="papier carte-bascule" id="carte-bascule" hidden></button>
-      </div>
-      <p class="papier pause-active" id="pause-active" hidden>Temps arrêté</p>
+        <div class="papier carnet" id="carnet" hidden>
+          <p class="entete">Carnet de bord</p>
+          <ol id="carnet-liste"></ol>
+        </div>
       <!-- La nuit : le champ de bataille reste, ce papier s'y pose (pas de boîte de dialogue) ; on choisit des régiments, puis leur corvée -->
       <section class="papier nuit" id="nuit" hidden aria-live="polite">
         <h2 id="nuit-titre">Nuit</h2>
@@ -72,25 +64,46 @@
         <ul id="fiche-etat"></ul>
         <div class="fiche-liste" id="fiche-liste"></div>
       </section>
-      <button class="icone plaque" id="pause" aria-label="Menu">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14M16 5v14"/></svg>
-      </button>
+      </div>
+      <!-- En haut au centre : les pertes des deux armées -->
+      <div class="haut-centre">
+        <p class="papier pause-active" id="pause-active" hidden>Temps arrêté</p>
+        <section class="papier pertes" id="pertes" aria-label="Les pertes des deux armées">
+          <div class="armee" id="pertes-nous"></div>
+          <div class="armee eux" id="pertes-eux"></div>
+          <p class="discret lignes" id="lignes" hidden>Tronçons tenus : <span id="troncons-nous">0</span> · <span id="troncons-eux">0</span></p>
+        </section>
+      </div>
+      <!-- En haut à droite : la carte, le temps, la montre et la météo, le terrain sous la souris -->
+      <div class="haut-droite">
+        <section class="papier carte" id="carte" aria-label="Carte du secteur" hidden>
+          <p class="entete">Le secteur · <span class="discret">en face au nord</span></p>
+          <div class="carte-grille" id="carte-grille"></div>
+        </section>
+        <div class="papier temps" id="temps" role="group" aria-label="Le temps">
+          <button id="temps-pause" aria-label="Arrêter le temps (Espace)" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14M16 5v14"/></svg></button>
+          <button data-vitesse="1" aria-label="Vitesse normale">×1</button>
+          <button data-vitesse="2" aria-label="Deux fois plus vite">×2</button>
+          <button data-vitesse="4" aria-label="Quatre fois plus vite">×4</button>
+        </div>
+        <div class="montre-bloc">
+          <svg class="montre" viewBox="0 0 64 64" aria-hidden="true">
+            <circle cx="32" cy="32" r="29"/>
+            <path d="M32 6v4M58 32h-4M32 58v-4M6 32h4M45 9.5l-2 3.5M54.5 19l-3.5 2M54.5 45l-3.5-2M45 54.5l-2-3.5M19 54.5l2-3.5M9.5 45l3.5-2M9.5 19l3.5 2M19 9.5l2 3.5"/>
+            <line id="montre-m" x1="32" y1="32" x2="32" y2="14"/><line id="montre-h" class="gros" x1="32" y1="32" x2="32" y2="21"/>
+          </svg>
+          <div class="papier">
+            <p id="horloge">Jour 1</p>
+            <p class="discret" id="demain"></p>
+            <p class="discret" id="mission" hidden></p>
+          </div>
+          <button class="icone papier" id="meteo" aria-label="Le temps qu'il fait et les prévisions"><svg id="meteo-icone" viewBox="0 0 24 24" aria-hidden="true"></svg></button>
+        </div>
+        <div class="papier terrain" id="terrain" hidden aria-live="off"></div>
+      </div>
     </div>
     <div class="hud-bas">
-      <div class="gauche">
-        <div class="papier carnet" id="carnet" hidden>
-          <p class="entete">Carnet de bord</p>
-          <ol id="carnet-liste"></ol>
-        </div>
-        <div class="papier morts">
-          <p class="discret">Nos morts <b id="morts-nous">0</b></p>
-          <p class="croix" id="croix-nous" aria-hidden="true"></p>
-          <p class="discret">En face <b id="morts-eux">0</b></p>
-          <p class="croix eux" id="croix-eux" aria-hidden="true"></p>
-          <p class="discret">Blessés : <span id="blesses-nous">0</span> · <span id="blesses-eux">0</span></p>
-          <p class="discret" id="lignes" hidden>Tronçons : <span id="troncons-nous">0</span> · <span id="troncons-eux">0</span></p>
-        </div>
-      </div>
+      <div class="gauche"></div>
       <div class="batteries" id="batteries" aria-label="Batteries"></div>
       <div class="droite">
         <div class="feuilles" id="feuilles"></div>
@@ -135,6 +148,13 @@
   <p id="ordre-duree"></p>
   <p class="discret" id="ordre-reserves"></p>
   <div class="menu"><button class="bouton" id="ordre-compris">Compris</button></div>
+</dialog>
+
+<dialog id="dialogue-meteo" aria-label="Le temps">
+  <h2>Le temps</h2>
+  <p id="meteo-aujourdhui"></p>
+  <p class="discret" id="meteo-demain"></p>
+  <form method="dialog" class="menu"><button class="bouton">Fermer</button></form>
 </dialog>
 
 <dialog id="dialogue-fin" aria-label="Fin de la bataille">
@@ -191,6 +211,6 @@
 </dialog>
 
 <div class="jeu-toast" id="toast" role="status" hidden></div>
-<script type="module" src="js/main.js?v=0.18.1"></script>
+<script type="module" src="js/main.js?v=0.19.0"></script>
 </body>
 </html>
