@@ -66,19 +66,21 @@ la danse macabre, la catastrophe peinte avec calme. L'intention est dans `DESIGN
   (`dispute`), assaut et préparation d'en face (`assaut`, `preparation`, de `bataille.js`), déroute, ralliement, nouveau
   commandant ; quatre lignes à l'écran, la dernière surlignée ; il remplace les bulles d'avant, et n'est pas sauvegardé : il
   repart à zéro quand on relit une partie). `nomTroncon(B, t)` dit « tronçon 3 de la 1re ligne ».
-- **Huit régiments par camp, un par secteur** (Jérôme, v0.14.0 ; six avant, huit avant la v0.7.0), 750 hommes (94 chacun). Le front
-  est coupé en 8 secteurs de 50 m, numérotés de l'ouest à l'est (`secteurDe` de bataille.js) ; une tranchée se dit « S3·N1 » (secteur 3,
-  notre 1re ligne) ou « S3·F2 » (leur 2e ligne, F : en face ; `nomTranchee`, `codeLigne` ; `nomTroncon` : « S3·N1 ouest »). Quatre
-  régiments partent en 1re ligne, quatre en 2e (`depart: [0, 1]` de secteur.js ; Jérôme, v0.17.0), chacun sur 100 m, soit deux secteurs
-  (« S1-2 · Porphyre » : `secteursDe`, `etendueSecteurs`) ; un numéro de la carte choisit les régiments qui couvrent ce secteur, et un
-  ordre sur une tranchée étale encore un régiment sur un secteur. La **carte**
-  (`#carte`, toujours visible en haut à droite depuis la v0.19.0 : plus de touche M ; `construireCarte` / `majCarte` / `majRondes` de main.js) montre les 8 secteurs × 4 lignes de chaque camp, chaque case en deux
-  tronçons à la couleur de celui qui les tient ; un numéro choisit le régiment du secteur, une case l'envoie dans cette tranchée
-  (`ordreCase`). Tout ordre sur une tranchée (carte ou clic gauche) fait clignoter les tronçons visés trois secondes, sur le terrain
-  (`rendu.clignoter`) et sur la carte, et le carnet dit ce que chacun va faire (`ordreDonne`) ; `actionDe(B, reg)` le dit en mots
-  (« tient S3·N1 », « attaque S3·F1 », « marche à l'attaque de S3·F1 ») sur la feuille de situation, avec les forces en présence dans la
-  tranchée visée (« attaque S3·F1 : 38 contre 5, mêlée 4/6 s » ; `forcesTroncons`, au plus une demi-seconde de retard) ; sur la carte,
-  une case où l'autre camp est entré montre « attaquants·défenseurs ».
+- **Huit régiments par camp, quatre secteurs** (Jérôme, v0.14.0 ; v0.21.3 : plus simple), 750 hommes (94 chacun). Le front est vu en quatre
+  secteurs de 100 m, A à D de l'ouest à l'est (`nombreZones`, `zoneDe`, `lettreZone` de bataille.js ; la logique garde des colonnes de
+  50 m, `secteurDe`, `largeurSecteur`) : un régiment de départ occupe exactement un secteur, sans chevaucher le voisin. Chaque camp a
+  quatre lignes, numérotées de 1 (la plus avancée) à 4 ; une tranchée se dit « B1 » (secteur B, notre 1re ligne), « B1–C1 » si elle court
+  sur deux secteurs, « B2 en face » chez l'autre camp (`nomTranchee`, `codeLigne` ; `nomTroncon` : « B1, tronçon 3 »). Quatre régiments
+  partent en 1re ligne, quatre en 2e (`depart: [0, 1]` de secteur.js ; Jérôme, v0.17.0) ; une lettre de la carte choisit les régiments qui
+  couvrent ce secteur (`etendueZones`), et un ordre sur une tranchée étale un régiment sur 46 m au plus. La **carte**
+  (`#carte`, toujours visible en haut à droite depuis la v0.19.0 : plus de touche M ; `construireCarte` / `majCarte` / `majRondes` de
+  main.js) montre les 4 secteurs × 4 lignes de chaque camp (les lignes d'en face en rouge, leur numéro aussi), chaque case en quatre
+  tronçons à la couleur de celui qui les tient ; une case envoie les régiments choisis dans cette tranchée (`ordreCase`) ; les régiments y
+  sont des cercles numérotés. Tout ordre sur une tranchée (carte ou clic gauche) fait clignoter les tronçons visés trois secondes, sur le
+  terrain (`rendu.clignoter`) et sur la carte, et le carnet dit ce que chacun va faire (`ordreDonne`) ; `actionDe(B, reg)` le dit en mots
+  (« tient B1 », « attaque B1 en face », « marche à l'attaque de B1 en face ») sur la carte du régiment, avec les forces en présence dans
+  la tranchée visée (« attaque B1 en face : 38 contre 5, mêlée 4/6 s » ; `forcesTroncons`, au plus une demi-seconde de retard) ; sur la
+  carte, une case où l'autre camp est entré montre « attaquants·défenseurs ».
 - **La végétation** (Jérôme, v0.7.0) : l'herbe (`T.herbe`, 0 à 3 par case, tirée de
   la graine ; les obus la soufflent, la boue la tue : rejouée par la sauvegarde),
   des taches dans la couleur du sol et des touffes de près qui ondulent ; des
@@ -492,7 +494,7 @@ node outils/stamp-version.mjs            # après chaque changement de version.j
   découvert avant d'y entrer ; elle joue sur une brèche (test « la mêlée » : trois défenseurs, vingt attaquants). `tenue: 1e9`
   redonne l'ancienne règle.
 - **Un régiment, un secteur** (v0.14.0) : un ordre sur une tranchée étale le régiment sur 46 m au plus (`largeurSecteur` − 4), plus
-  serré s'il le faut ; à 94 hommes, la longueur de deux rangs faisait ~66 m, et « S3 » devenait « S2-4 ». Les tests : un assaut de
+  serré s'il le faut ; à 94 hommes, la longueur de deux rangs faisait ~66 m, et « un secteur » en couvrait trois. Les tests : un assaut de
   l'ennemi se teste en vidant quatre régiments seulement (tous vidés, la bataille finit), et un 220 sur un secteur (deux tronçons)
   se tire en plusieurs salves. L'équilibre (huit régiments sur la 1re ligne seule : deux fois plus d'hommes au mètre) n'est pas
   encore mesuré.

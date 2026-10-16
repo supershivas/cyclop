@@ -1,24 +1,24 @@
 // Le cycle de vie : écran titre → bataille → nuit → fin ; pause active,
 // réglages, sauvegarde, mise à jour, debug. Les règles sont dans bataille.js
 // (pures), le dessin dans rendu3d.js (il ne modifie jamais l'état).
-import { createLoop } from './lib/loop.js?v=0.21.2';
-import { createKeys, stopTypeahead } from './lib/keys.js?v=0.21.2';
-import { createPointer, lockBrowserGestures } from './lib/pointer.js?v=0.21.2';
-import { createGamepad } from './lib/gamepad.js?v=0.21.2';
-import { createStore, autosave, pickJSONFile } from './lib/save.js?v=0.21.2';
-import { startUpdateCheck, loadVersion, loadChangelog, downloadJSON } from './lib/app-update.js?v=0.21.2';
-import { ROLES } from './palette.js?v=0.21.2';
-import { MISSIONS, nouvelleBataille, avancer, aube, ordonnerMarche, peutOrdonner, ordonnerBarrage, horloge, effectifs, tronconsTenus, moralEnMots, terrainSous, terrainResume, rangDe, nomTroncon, actionDe, forcesTroncons, secteurDe, secteursDe, etendueSecteurs, tronconsDeLigne, largeurSecteur, nombreSecteurs, codeLigne, zone, photo, restaurer, PAS, NOUS, EUX } from './bataille.js?v=0.21.2';
-import { ligneY } from './tranchees.js?v=0.21.2';
-import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.21.2';
-import { METEO } from './data/meteo.js?v=0.21.2';
-import { impact, hydroLignes } from './terrain.js?v=0.21.2';
-import { hash2 } from './lib/rng.js?v=0.21.2';
-import { creerRendu, CAMERA } from './rendu3d.js?v=0.21.2';
-import { identite, etatEnMots, experienceEnMots, chevrons } from './identite.js?v=0.21.2';
-import { CORVEES } from './data/corvees.js?v=0.21.2';
-import { refusCorvee } from './nuit.js?v=0.21.2';
-import { chargerContenu } from './design-store.js?v=0.21.2';
+import { createLoop } from './lib/loop.js?v=0.21.3';
+import { createKeys, stopTypeahead } from './lib/keys.js?v=0.21.3';
+import { createPointer, lockBrowserGestures } from './lib/pointer.js?v=0.21.3';
+import { createGamepad } from './lib/gamepad.js?v=0.21.3';
+import { createStore, autosave, pickJSONFile } from './lib/save.js?v=0.21.3';
+import { startUpdateCheck, loadVersion, loadChangelog, downloadJSON } from './lib/app-update.js?v=0.21.3';
+import { ROLES } from './palette.js?v=0.21.3';
+import { MISSIONS, nouvelleBataille, avancer, aube, ordonnerMarche, peutOrdonner, ordonnerBarrage, horloge, effectifs, tronconsTenus, moralEnMots, terrainSous, terrainResume, nombreZones, largeurZone, lettreZone, etendueZones, rangDe, nomTroncon, actionDe, forcesTroncons, secteurDe, secteursDe, etendueSecteurs, tronconsDeLigne, largeurSecteur, nombreSecteurs, codeLigne, zone, photo, restaurer, PAS, NOUS, EUX } from './bataille.js?v=0.21.3';
+import { ligneY } from './tranchees.js?v=0.21.3';
+import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.21.3';
+import { METEO } from './data/meteo.js?v=0.21.3';
+import { impact, hydroLignes } from './terrain.js?v=0.21.3';
+import { hash2 } from './lib/rng.js?v=0.21.3';
+import { creerRendu, CAMERA } from './rendu3d.js?v=0.21.3';
+import { identite, etatEnMots, experienceEnMots, chevrons } from './identite.js?v=0.21.3';
+import { CORVEES } from './data/corvees.js?v=0.21.3';
+import { refusCorvee } from './nuit.js?v=0.21.3';
+import { chargerContenu } from './design-store.js?v=0.21.3';
 
 const JEU = 'cyclopeen';
 const $ = id => document.getElementById(id);
@@ -404,7 +404,8 @@ function majRegiments() {
     <div class="actions">${jour ? `<button data-act="marche" class="${modeMarche ? 'actif' : ''}" aria-pressed="${modeMarche}">Marcher</button><button data-act="depart">Regagner sa tranchée</button>` : ''}<button data-act="fiche">Fiche</button></div>`;
   pan.hidden = false;
   const carte = $('reg-rang').children[ia - regDebut], zone = $('regiments');
-  pan.style.left = `${Math.max(0, Math.min(carte.offsetLeft + $('reg-rang').offsetLeft, zone.clientWidth - pan.offsetWidth))}px`;
+  // centrée sur sa carte (offsetLeft est déjà celui de la rangée entière : la carte a #regiments pour parent de position)
+  pan.style.left = `${Math.round(Math.max(0, Math.min(carte.offsetLeft + carte.offsetWidth / 2 - pan.offsetWidth / 2, zone.clientWidth - pan.offsetWidth)))}px`;
 }
 $('reg-rang').onclick = e => {
   const c = e.target.closest('.reg-carte');
@@ -446,7 +447,7 @@ const CASE_H = 22, CASE_ECART = 2, TROU = 64;
 const hautLigne = k => 2 * CASE_H + CASE_ECART + (k < 4 ? k * (CASE_H + CASE_ECART) : 4 * (CASE_H + CASE_ECART) + TROU + CASE_ECART + (k - 4) * (CASE_H + CASE_ECART)) - CASE_H;
 const numeroDe = r => B.etat.regiments.filter(g => g.camp === r.camp).indexOf(r) + 1;     // le numéro d'ordre : « 3 · Viride »
 function construireCarte() {
-  const g = $('carte-grille'), n = nombreSecteurs(B);
+  const g = $('carte-grille'), n = nombreZones(B);
   carteCases = []; carteVue = ''; carteReperes = []; rondes = new Map();
   if (!B.etat.tranchees) { g.replaceChildren(); $('carte').hidden = true; return; }
   g.style.gridTemplateColumns = `2.4em repeat(${n}, minmax(0, 1fr))`;
@@ -454,7 +455,7 @@ function construireCarte() {
   const kids = [document.createElement('span')];
   for (let s = 1; s <= n; s++) {
     const b = document.createElement('button');
-    b.className = 'sect'; b.textContent = s; b.title = `Choisir les régiments du secteur ${s}`; b.setAttribute('aria-label', `Choisir les régiments du secteur ${s}`);
+    b.className = 'sect'; b.textContent = lettreZone(s); b.title = `Choisir les régiments du secteur ${lettreZone(s)}`; b.setAttribute('aria-label', `Choisir les régiments du secteur ${lettreZone(s)}`);
     b.onclick = e => choisirSecteur(s, e.shiftKey);
     kids.push(b);
   }
@@ -468,11 +469,11 @@ function construireCarte() {
       kids.push(t);
     }
     carteReperes.push({ y: ligneY(B.lignes[idx], xc), c: hautLigne(k) + CASE_H / 2 });
-    const lib = document.createElement('span'); lib.className = 'lib'; lib.textContent = codeLigne(B.lignes[idx]);
+    const lib = document.createElement('span'); lib.className = `lib${camp === EUX ? ' eux' : ''}`; lib.textContent = codeLigne(B.lignes[idx]);
     kids.push(lib);
     for (let s = 1; s <= n; s++) {
-      const c = document.createElement('button'), nom = `S${s}·${codeLigne(B.lignes[idx])}`;
-      c.className = 'cel'; c.innerHTML = '<i></i><i></i><b></b>';
+      const c = document.createElement('button'), nom = `${lettreZone(s)}${codeLigne(B.lignes[idx])}${camp === EUX ? ' en face' : ''}`;
+      c.className = 'cel'; c.innerHTML = `${'<i></i>'.repeat(Math.max(1, tronconsDeLigne(B, idx, Z.x0 + (s - 1) * largeurZone(B), Z.x0 + s * largeurZone(B)).length))}<b></b>`;
       c.title = `Envoyer les régiments choisis dans ${nom}`; c.setAttribute('aria-label', `Envoyer les régiments choisis dans ${nom}`);
       c.onclick = () => ordreCase(idx, s);
       kids.push(c); carteCases.push({ idx, s, nom, el: c, moities: c.querySelectorAll('i'), marque: c.querySelector('b') });
@@ -530,11 +531,11 @@ function choisirRegiment(id, ajout) {
 function majCarte() {
   if (!B.etat.tranchees) return;
   majRondes();
-  const e = B.etat, Z = zone(B), w = largeurSecteur(B), marques = new Map();
+  const e = B.etat, Z = zone(B), w = largeurZone(B), marques = new Map();
   for (const r of e.regiments) {
     const t = r.ordre.trace;
     if (!r.effectif || !t) continue;
-    const idx = B.lignes.findIndex(L => L.camp * 10 + L.rang === t.ligne), [a, b] = etendueSecteurs(B, r.ordre);
+    const idx = B.lignes.findIndex(L => L.camp * 10 + L.rang === t.ligne), [a, b] = etendueZones(B, r.ordre);
     for (let sct = a; sct <= b; sct++) { const k = `${idx}:${sct}`; (marques.get(k) || marques.set(k, []).get(k)).push(r); }
   }
   const f = forcesTroncons(B);
@@ -547,22 +548,22 @@ function majCarte() {
     // des attaquants dans la case : ce qu'ils sont contre les défenseurs (la mêlée) ; sinon les régiments qui y sont
     let att = 0, def = 0;
     for (const k of ks) { const h = e.troncons[k]; att += f[k * 2 + 1 - h]; def += f[k * 2 + h]; }
-    c.marque.textContent = att ? `${att}·${def}` : rs.map(r => r.camp === NOUS ? numeroDe(r) : '•').join(' ');
+    c.marque.textContent = att ? `${att}·${def}` : '';
     c.el.title = `Envoyer les régiments choisis dans ${c.nom}${att ? ` : ${att} attaquants contre ${def} défenseurs` : ''}`;
     c.el.classList.toggle('choisi', rs.some(r => choisis.has(r.id)));
   }
 }
 function choisirSecteur(s, ajout) {
-  const regs = B.etat.regiments.filter(r => { const [a, b] = etendueSecteurs(B, r.depart); return r.camp === NOUS && r.effectif && s >= a && s <= b; });
-  if (!regs.length) return toast(`Plus personne dans le secteur ${s}.`);
+  const regs = B.etat.regiments.filter(r => { const [a, b] = etendueZones(B, r.depart); return r.camp === NOUS && r.effectif && s >= a && s <= b; });
+  if (!regs.length) return toast(`Plus personne dans le secteur ${lettreZone(s)}.`);
   if (!ajout) choisis = new Set();
   for (const r of regs) { if (ajout && choisis.has(r.id)) choisis.delete(r.id); else choisis.add(r.id); }
   rendu.choisis = choisis; majHud();
 }
 function ordreCase(idx, s) {
   if (B.etat.phase !== 'jour') return toast('La nuit, pas de marche : choisissez des régiments, puis une corvée.');
-  if (!choisis.size) return toast('Choisissez d\'abord un régiment (clic, cadre, T, ou le numéro d\'un secteur).');
-  const Z = zone(B), x = Z.x0 + (s - 0.5) * largeurSecteur(B), y = ligneY(B.lignes[idx], x);
+  if (!choisis.size) return toast('Choisissez d\'abord un régiment (clic, cadre, T, ou la lettre d\'un secteur).');
+  const Z = zone(B), x = Z.x0 + (s - 0.5) * largeurZone(B), y = ligneY(B.lignes[idx], x);
   const r = dire(ordonnerMarche(B, [...choisis], x, y));
   if (r.ok) { marque = { x, y, t: 2 }; sauvegarder(); ordreDonne(r); }
 }
@@ -571,7 +572,7 @@ function ordreDonne(r) {
   if (!r?.ok) return;
   if (r.tranchee && r.troncons?.length) {
     rendu.clignoter(r.troncons);
-    const Z = zone(B), w = largeurSecteur(B), vises = new Set(r.troncons), els = [];
+    const Z = zone(B), w = largeurZone(B), vises = new Set(r.troncons), els = [];
     for (const c of carteCases) if (c.idx === r.ligne && tronconsDeLigne(B, c.idx, Z.x0 + (c.s - 1) * w, Z.x0 + c.s * w).some(k => vises.has(k))) els.push(c.el);
     for (const el of els) { el.classList.remove('clign'); void el.offsetWidth; el.classList.add('clign'); }
     setTimeout(() => { for (const el of els) el.classList.remove('clign'); }, 3200);
@@ -587,8 +588,8 @@ function raconter(ev) {
     for (const p of ev) {
       const reg = p.reg !== undefined ? B.etat.regiments[p.reg] : null;
       if (p.type === 'prise') noter(`${p.camp === NOUS ? 'Pris' : 'Perdu'} : ${nomTroncon(B, p.troncon)}.`);
-      else if (p.type === 'dispute') noter(`Ceux d'en face sont dans le ${nomTroncon(B, p.troncon)}.`);
-      else if (p.type === 'preparation') noter(`En face prépare au 220 sur le ${nomTroncon(B, p.troncon)}.`);
+      else if (p.type === 'dispute') noter(`Ceux d'en face sont dans ${nomTroncon(B, p.troncon)}.`);
+      else if (p.type === 'preparation') noter(`En face prépare au 220 sur ${nomTroncon(B, p.troncon)}.`);
       else if (p.type === 'poursuite') noter(`${reg.nom ? `${reg.nom} d'en face` : 'Un régiment d\'en face'} poursuit sur notre ligne suivante.`);
       else if (p.type === 'assaut') noter(`${reg.nom ? `${reg.nom} d'en face` : 'Un régiment d\'en face'} sort de ses tranchées${p.troncon >= 0 ? ` : ${nomTroncon(B, p.troncon)}` : ''}.`);
       else if (p.camp !== NOUS) continue;
@@ -1183,7 +1184,7 @@ startUpdateCheck({
 
 // ─── Mode debug (section 18) : chargé seulement avec ?debug=1 ──────────────
 if (DEBUG) {
-  const { installDebug, seedFromUrl } = await import('./lib/debug.js?v=0.21.2');
+  const { installDebug, seedFromUrl } = await import('./lib/debug.js?v=0.21.3');
   window.__seed = seedFromUrl() ?? undefined;
   installDebug({
     state: () => B && { ...horloge(B), effectifs: effectifs(B), pertes: B.etat.pertes, impacts: B.etat.impacts.length, enJeu: enJeu(), pause: loop.paused },

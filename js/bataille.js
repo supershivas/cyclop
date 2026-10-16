@@ -14,17 +14,17 @@
    La sauvegarde (photo) garde la graine, la liste compacte des impacts, l'état
    de la foule et les petites couches de logique ; jamais le relief : il se
    rejoue depuis la graine et les impacts (rejouerTerrain). */
-import { createRng, hash2 } from './lib/rng.js?v=0.21.2';
-import { creerTerrain, impact, hydroLignes, etat as etatCase, vitesseEtat, ETAT } from './terrain.js?v=0.21.2';
-import { creerArmee, ajouterSoldat, construireGrille, pasArmee, tuerDans, effrayer, compacter, photoArmee, restaurerArmee, b64, deB64, DENSITE, place } from './army.js?v=0.21.2';
-import { creuserTranchees, ligneSous } from './tranchees.js?v=0.21.2';
-import { calculerCouts, creerCacheChamps, dimensionsCouts, BLOC } from './champs.js?v=0.21.2';
-import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.21.2';
-import { METEO, TRANSITIONS, PREVISION_JUSTE } from './data/meteo.js?v=0.21.2';
-import { SECTEURS } from './data/secteur.js?v=0.21.2';
-import { REGIMENTS } from './data/lexique.js?v=0.21.2';
-import { grade } from './identite.js?v=0.21.2';
-import { corvees, rejouerTravaux } from './nuit.js?v=0.21.2';
+import { createRng, hash2 } from './lib/rng.js?v=0.21.3';
+import { creerTerrain, impact, hydroLignes, etat as etatCase, vitesseEtat, ETAT } from './terrain.js?v=0.21.3';
+import { creerArmee, ajouterSoldat, construireGrille, pasArmee, tuerDans, effrayer, compacter, photoArmee, restaurerArmee, b64, deB64, DENSITE, place } from './army.js?v=0.21.3';
+import { creuserTranchees, ligneSous } from './tranchees.js?v=0.21.3';
+import { calculerCouts, creerCacheChamps, dimensionsCouts, BLOC } from './champs.js?v=0.21.3';
+import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.21.3';
+import { METEO, TRANSITIONS, PREVISION_JUSTE } from './data/meteo.js?v=0.21.3';
+import { SECTEURS } from './data/secteur.js?v=0.21.3';
+import { REGIMENTS } from './data/lexique.js?v=0.21.3';
+import { grade } from './identite.js?v=0.21.3';
+import { corvees, rejouerTravaux } from './nuit.js?v=0.21.3';
 
 export const PAS = 1 / 30;                 // s de jeu par pas
 export const NOUS = 0, EUX = 1;
@@ -617,37 +617,49 @@ export function terrainResume(B, x, y) {
 }
 
 // Les tronçons tenus par chaque camp : [nous, en face]
-/* Le nom d'un tronçon, en mots (le carnet de bord) : « tronçon 3 de la 1re ligne ». */
+/* Le nom d'un tronçon, en mots (le carnet de bord) : « B1, tronçon 3 » (le 3e, en comptant de l'ouest, de la tranchée B1). */
 export function nomTroncon(B, t) {
   const tr = B.troncons[t];
   if (!tr) return 'un tronçon';
-  const Z = zone(B), w = largeurSecteur(B), xm = (tr.x0 + tr.x1) / 2;
-  return `${nomTranchee(B, tr.ligne, xm, xm)} ${((xm - Z.x0) % w) < w / 2 ? 'ouest' : 'est'}`;
+  const Z = zone(B), w = largeurZone(B), xm = (tr.x0 + tr.x1) / 2;
+  return `${nomTranchee(B, tr.ligne, xm, xm)}, tronçon ${Math.floor(((xm - Z.x0) % w) / Math.max(1, tr.x1 - tr.x0)) + 1}`;
 }
 
-/* ─── Les secteurs et les noms des tranchées (Jérôme, v0.14.0) ───
-   Le front est coupé en secteurs (une colonne de 50 m, numérotée de l'ouest à l'est : un régiment par secteur) ;
-   une tranchée se dit « S3·N1 » (secteur 3, notre 1re ligne) ou « S3·F2 » (leur 2e ligne : F, en face). */
+/* ─── Les secteurs et les noms des tranchées (Jérôme, v0.14.0 ; v0.21.3 : plus simples) ───
+   La logique coupe le front en colonnes de 50 m (`secteurDe`, numérotées de l'ouest à l'est). Le joueur voit quatre secteurs de 100 m,
+   A à D de l'ouest à l'est (un régiment de départ en occupe un, sans chevaucher le voisin) et quatre lignes par camp, numérotées de la
+   plus avancée : une tranchée se dit « B1 » (secteur B, notre 1re ligne), « B2 en face » (leur 2e ligne). */
 export const nombreSecteurs = B => SECTEURS[B.etat.secteur].regiments;
 export const largeurSecteur = B => SECTEURS[B.etat.secteur].largeur / SECTEURS[B.etat.secteur].regiments;
 export function secteurDe(B, x) {
   const n = SECTEURS[B.etat.secteur].regiments;
   return Math.max(1, Math.min(n, Math.floor((x - zone(B).x0) / largeurSecteur(B)) + 1));
 }
-// les secteurs qu'un régiment couvre (de a à b) : sa tranchée de départ, ou celle de son ordre ; deux secteurs pour un régiment de 100 m
+export const nombreZones = B => Math.ceil(nombreSecteurs(B) / 2);
+export const largeurZone = B => largeurSecteur(B) * 2;
+export const zoneDe = (B, x) => Math.ceil(secteurDe(B, x) / 2);
+export const lettreZone = z => String.fromCharCode(64 + z);
+// les colonnes de 50 m qu'un régiment couvre (de a à b) : sa tranchée de départ, ou celle de son ordre
 export function etendueSecteurs(B, o) {
   const t = o.trace;
   return t ? [secteurDe(B, t.x0 + 0.01), secteurDe(B, t.x1 - 0.01)] : [secteurDe(B, o.x), secteurDe(B, o.x)];
 }
-export function secteursDe(B, reg) {
-  const [a, b] = etendueSecteurs(B, reg.depart);
-  return a === b ? `S${a}` : `S${a}-${b}`;
+// les secteurs (A à D) qu'un régiment couvre (de a à b)
+export function etendueZones(B, o) {
+  const [a, b] = etendueSecteurs(B, o);
+  return [Math.ceil(a / 2), Math.ceil(b / 2)];
 }
-export const codeLigne = L => `${L.camp === NOUS ? 'N' : 'F'}${L.rang + 1}`;
-// la tranchée d'une ligne entre deux abscisses : « S3·N1 », ou « S3-4·N1 » si elle court sur deux secteurs
+// le secteur d'un régiment de départ : « A » (« A-B » s'il en couvrait deux)
+export function secteursDe(B, reg) {
+  const [a, b] = etendueZones(B, reg.depart);
+  return a === b ? lettreZone(a) : `${lettreZone(a)}-${lettreZone(b)}`;
+}
+export const codeLigne = L => String(L.rang + 1);
+// la tranchée d'une ligne entre deux abscisses : « B1 » (« B1–C1 » si elle court sur deux secteurs), « B1 en face » chez l'autre camp
 export function nomTranchee(B, ligne, x0, x1) {
-  const a = secteurDe(B, x0 + 0.01), b = secteurDe(B, x1 - 0.01);
-  return `S${a === b ? a : `${a}-${b}`}·${codeLigne(B.lignes[ligne])}`;
+  const L = B.lignes[ligne], a = zoneDe(B, x0 + 0.01), b = zoneDe(B, x1 - 0.01), n = codeLigne(L);
+  const nom = a === b ? `${lettreZone(a)}${n}` : `${lettreZone(a)}${n}–${lettreZone(b)}${n}`;
+  return L.camp === NOUS ? nom : `${nom} en face`;
 }
 // les tronçons d'une ligne qui touchent [x0, x1]
 export function tronconsDeLigne(B, ligne, x0, x1) {
@@ -655,13 +667,13 @@ export function tronconsDeLigne(B, ligne, x0, x1) {
   B.troncons.forEach((tr, k) => { if (tr.ligne === ligne && tr.x1 > x0 && tr.x0 < x1) out.push(k); });
   return out;
 }
-/* Ce que fait un régiment, en mots (la feuille de situation, le carnet) : « tient S3·N1 », « attaque S3·F1 », « marche à
-   l'attaque de S3·F1 », « en terrain libre, secteur 4 ». Il attaque une tranchée dont l'autre camp tient encore un tronçon. */
+/* Ce que fait un régiment, en mots (la feuille de situation, le carnet) : « tient B1 », « attaque B1 en face », « marche à
+   l'attaque de B1 en face », « en terrain libre, secteur B ». Il attaque une tranchée dont l'autre camp tient encore un tronçon. */
 export function actionDe(B, reg) {
   if (!reg.effectif) return 'plus personne';
   if (reg.deroute) return 'en déroute';
   const o = reg.ordre, t = o.trace;
-  if (!t) return `en terrain libre, secteur ${secteurDe(B, o.x)}`;
+  if (!t) return `en terrain libre, secteur ${lettreZone(zoneDe(B, o.x))}`;
   const ligne = B.lignes.findIndex(L => L.camp * 10 + L.rang === t.ligne);
   const nom = nomTranchee(B, ligne, t.x0, t.x1), A = B.armee;
   let n = 0, somme = 0;

@@ -289,3 +289,5 @@ dialog form { margin-top: calc(var(--pas) * 2); }
 .visee .encre { stroke: var(--jeu-encre); stroke-width: 2; stroke-dasharray: 6 5; }
 .visee .croix .encre { stroke-dasharray: none; }
 .visee.refus .croix .encre { stroke: var(--jeu-eux); }
+.carte-grille .lib.eux { color: var(--jeu-eux); }
+.carte-grille .lib { font-size: 12px; text-align: center; }

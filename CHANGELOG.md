@@ -1,5 +1,9 @@
 # Journal des versions
 
+## 0.21.3 — 2026-10-16
+- La carte se simplifie : quatre secteurs A à D (un régiment de départ n'en occupe plus deux), des lignes numérotées de 1 à 4 de chaque côté ; une tranchée se dit B1, ou B1 en face
+- La fiche d'un régiment s'ouvre juste au-dessus de sa carte, centrée sur elle
+
 ## 0.21.2 — 2026-10-16
 - Le clic gauche choisit puis ordonne : un clic sur un de nos régiments le choisit, un clic sur le sol y envoie les régiments choisis, qui restent choisis
 - Le clic droit (ou Échap) annule : le barrage visé, la fiche, puis les régiments choisis ; le réglage « tout au bouton gauche » disparaît
