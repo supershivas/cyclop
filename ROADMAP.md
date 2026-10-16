@@ -22,7 +22,7 @@ cercles-régiments par-dessus) et la touche M disparaît (carte toujours visible
   fixe en haut à droite ; montre, lecture / pause / avance rapide (×1, ×2, ×4 par `setTimeScale`, plafonnée par `perf.sim`, retour à ×1
   sur un assaut, une déroute, un tronçon pris), météo (aujourd'hui et lendemain, `etat.previsions` : pas de météo dans la journée) ;
   terrain sous la souris réduit à 2 lignes et une barre de vitesse (v0.19.0)
-- [ ] Lot 3 — la rangée des 8 régiments : cartes compactes (numéro + nom, chevrons, barre debout / blessés / tombés en encres papier :
+- [x] Lot 3 — la rangée des 8 régiments : cartes compactes (numéro + nom, chevrons, barre debout / blessés / tombés en encres papier :
   plein / hachuré / vide + ✕, pas de vert-orange-rouge), flèches si l'écran est étroit ; la carte choisie s'ouvre vers le haut
   (`actionDe`, actions) (v0.20.0)
 - [ ] Lot 4 — la sélection sur le terrain : contour des soldats choisis (halo aux zooms 1 et 2), ligne du centre du régiment au curseur

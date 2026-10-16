@@ -2,20 +2,20 @@
 // Chaque sujet utilise les mêmes modules que le jeu (terrain, apparence,
 // rendu three.js) : ce qu'on voit ici est ce que le jeu dessinera. Ajouter un
 // sujet ou une variante = ajouter une entrée dans GROUPES.
-import { mountLabo } from './lib/labo-shell.js?v=0.19.0';
-import { spriteCanvas, paletteToGPL, paletteToHex } from './lib/sprites.js?v=0.19.0';
-import { PALETTE, ROLES } from './palette.js?v=0.19.0';
-import { chargerContenu } from './design-store.js?v=0.19.0';
-import { tuile, ETAT } from './tuiles.js?v=0.19.0';
-import { creerTerrain, impact, hydroLignes } from './terrain.js?v=0.19.0';
-import { CALIBRES } from './data/calibres.js?v=0.19.0';
-import { METEO } from './data/meteo.js?v=0.19.0';
-import { nouvelleBataille, avancer, ordonnerMarche, ordonnerBarrage } from './bataille.js?v=0.19.0';
-import { creerRendu, ZOOMS } from './rendu3d.js?v=0.19.0';
-import { hash2 } from './lib/rng.js?v=0.19.0';
-import { reglerVerdure } from './apparence.js?v=0.19.0';
-import { maquetteAssaut } from './labo-assaut.js?v=0.19.0';
-import { calquePlaques } from './labo-plaques.js?v=0.19.0';
+import { mountLabo } from './lib/labo-shell.js?v=0.20.0';
+import { spriteCanvas, paletteToGPL, paletteToHex } from './lib/sprites.js?v=0.20.0';
+import { PALETTE, ROLES } from './palette.js?v=0.20.0';
+import { chargerContenu } from './design-store.js?v=0.20.0';
+import { tuile, ETAT } from './tuiles.js?v=0.20.0';
+import { creerTerrain, impact, hydroLignes } from './terrain.js?v=0.20.0';
+import { CALIBRES } from './data/calibres.js?v=0.20.0';
+import { METEO } from './data/meteo.js?v=0.20.0';
+import { nouvelleBataille, avancer, ordonnerMarche, ordonnerBarrage } from './bataille.js?v=0.20.0';
+import { creerRendu, ZOOMS } from './rendu3d.js?v=0.20.0';
+import { hash2 } from './lib/rng.js?v=0.20.0';
+import { reglerVerdure } from './apparence.js?v=0.20.0';
+import { maquetteAssaut } from './labo-assaut.js?v=0.20.0';
+import { calquePlaques } from './labo-plaques.js?v=0.20.0';
 
 document.documentElement.style.setProperty('--jeu-accent', ROLES.accent);
 const NOM = document.title.replace(/^Labo — /, ''); // le nom vient de la page (une apostrophe ne casse rien)

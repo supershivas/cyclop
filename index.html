@@ -9,8 +9,8 @@
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta property="og:image" content="og.png">
-<link rel="stylesheet" href="js/lib/game.css?v=0.19.0">
-<link rel="stylesheet" href="css/style.css?v=0.19.0">
+<link rel="stylesheet" href="js/lib/game.css?v=0.20.0">
+<link rel="stylesheet" href="css/style.css?v=0.20.0">
 </head>
 <body>
 <div class="jeu-ecran" id="ecran">
@@ -103,10 +103,16 @@
       </div>
     </div>
     <div class="hud-bas">
-      <div class="gauche"></div>
-      <div class="batteries" id="batteries" aria-label="Batteries"></div>
+      <!-- Au centre du bas : nos régiments, une rangée de cartes ; celle qu'on a choisie s'ouvre vers le haut -->
+      <div class="regiments" id="regiments" aria-label="Nos régiments">
+        <button class="fleche papier" id="reg-prec" aria-label="Régiments précédents" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg></button>
+        <div class="rang" id="reg-rang"></div>
+        <button class="fleche papier" id="reg-suiv" aria-label="Régiments suivants" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></button>
+        <div class="papier reg-ouvert" id="reg-ouvert" hidden></div>
+      </div>
+      <!-- En bas à droite : le râtelier d'obus, et le cadran de la vue -->
       <div class="droite">
-        <div class="feuilles" id="feuilles"></div>
+        <div class="batteries" id="batteries" aria-label="Batteries"></div>
         <div class="plaque cadran" id="cadran" role="group" aria-label="La vue">
           <button class="icone" data-incl="-1" aria-label="Incliner vers le haut (R)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 15l6-6 6 6"/></svg></button>
           <button class="icone" data-tour="-1" aria-label="Tourner à gauche (A)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg></button>
@@ -211,6 +217,6 @@
 </dialog>
 
 <div class="jeu-toast" id="toast" role="status" hidden></div>
-<script type="module" src="js/main.js?v=0.19.0"></script>
+<script type="module" src="js/main.js?v=0.20.0"></script>
 </body>
 </html>

@@ -59,9 +59,9 @@ la danse macabre, la catastrophe peinte avec calme. L'intention est dans `DESIGN
   seconde, seulement ce qu'on voit. Les fusées (variante D) et le tout ensemble (E) n'ont pas été retenus.
 - **Des papiers de campagne** (Jérôme, v0.10.0 ; variantes C et D du sujet « Plaques et journal » du labo) : le HUD est
   fait de ce qu'un officier a sur lui, pas de plaques toutes pareilles. `.papier` (l'os, l'encre de terre, une ombre d'un
-  cran) : la montre de gousset et son billet (heure, météo, mission), une feuille de situation par régiment choisi
-  (`majFeuilles` de main.js : barre debout / blessés / tombés, l'ordre en mots, un tampon si le moral baisse ; un clic ouvre la
-  fiche), un râtelier d'obus (debout : prêt ; couché : se recharge), des croix au crayon pour les morts (douze, puis un nombre),
+  cran) : la montre de gousset et son billet (heure, météo, mission), une rangée de cartes de régiment (v0.20.0 ;
+  `majRegiments` de main.js : numéro et nom, chevrons d'expérience, barre debout / blessés / tombés ; la carte choisie s'ouvre vers le haut :
+  l'ordre en mots, un tampon si le moral baisse, « Marcher » (le prochain clic sur le sol), « Regagner sa tranchée », « Fiche »), un râtelier d'obus (debout : prêt ; couché : se recharge), des croix au crayon pour les morts (douze, puis un nombre),
   la fiche en papier, et le **carnet de bord** (`noter`, `raconter` : tronçon pris ou perdu, l'autre camp entré chez nous
   (`dispute`), assaut et préparation d'en face (`assaut`, `preparation`, de `bataille.js`), déroute, ralliement, nouveau
   commandant ; quatre lignes à l'écran, la dernière surlignée ; il remplace les bulles d'avant, et n'est pas sauvegardé : il
@@ -131,6 +131,12 @@ la danse macabre, la catastrophe peinte avec calme. L'intention est dans `DESIGN
   autre à 2,5 m, et d'un encore quand il est entouré de parois (`couleurCase`).
 - **Le terrain au survol** (Jérôme, v0.5.0 ; v0.19.0) : un papier dit ce qu'est la case sous la souris, en deux lignes et une barre
   de marche (`terrainResume` de bataille.js, qui garde les deux premières lignes de `terrainSous` ; le reste n'est plus montré).
+- **La rangée des régiments** (Jérôme, v0.20.0 ; `docs/ui-cible.md`) : au centre du bas, une carte par régiment de chez nous encore en vie
+  (112 px ; trop étroit : des flèches font défiler la rangée). Le nom est « 3 · Viride » (`numeroDe`, l'ordre dans le camp ; le même numéro
+  est dans les cercles de la carte et au-dessus des régiments). Les chevrons (0 à 3, `chevrons` de identite.js) sont l'expérience moyenne
+  des hommes, aux seuils des mots (0,08, 0,25, 0,6) : rien n'est compté de ce qu'on a tué (DESIGN.md : le compteur de morts n'est jamais
+  une récompense). La barre : plein = debout, hachuré = blessés, vide = tombés (la forme porte l'information). S'ouvre le régiment choisi en
+  dernier. Pas encore d'action de tir ni de barrage par régiment : le jeu n'en a pas (le barrage est celui des batteries).
 - **Le haut de l'écran** (Jérôme, v0.19.0 ; `docs/ui-cible.md`) : à gauche le menu, les réglages et le carnet de bord (la fiche et le
   papier de la nuit y attendent leur place définitive) ; au centre les pertes des deux armées (`majPertes`, en feuille de situation) ;
   à droite la carte, le temps (arrêter, ×1, ×2, ×4 : `setTimeScale` plafonné par `perf.sim` sous ~20 ms, un assaut / une prise / une
@@ -298,7 +304,7 @@ nuit (le voile continu et ses halos mélangent la terre, le sol et l'os : des co
   garde la couleur du dessus. `deplacerEcran`, `tourner`, `placerCamera`.
 - `js/main.js` — écran titre → bataille → nuit → fin ; le zoom et la caméra
   gardés dans `cyclopeen:prefs` ; les fiches (un homme, un régiment ; Échap
-  les ferme), le repère de l'homme et la bulle du survol (`majBulle`, chaque image) ; HUD en papiers de campagne (montre, feuilles de situation, carnet de bord,
+  les ferme), le repère de l'homme et la bulle du survol (`majBulle`, chaque image) ; HUD en papiers de campagne (montre, cartes de régiment, carnet de bord,
   croix des morts, râtelier d'obus, noms de nos régiments au-dessus d'eux) ; commandes ; sauvegarde ; mise à jour ; mode debug ;
   `window.cyclopStats()`.
 - `index.html`, `css/style.css` — l'écran, le HUD (dont le papier de la nuit) et les dialogues (palette du jeu).

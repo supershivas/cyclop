@@ -1,8 +1,8 @@
 {
-  "version": "0.19.0",
+  "version": "0.20.0",
   "date": "2026-10-16",
   "changes": [
-    "Le haut de l'écran se réorganise : les pertes des deux armées au centre, la carte du secteur toujours visible à droite (ses régiments en cercles numérotés ; la touche M disparaît), le carnet à gauche",
-    "Le temps : arrêter, ×1, ×2, ×4 (un assaut ramène à ×1) ; la montre, la météo (clic : le temps d'aujourd'hui et la prévision) et le terrain sous la souris en deux lignes et une barre de marche"
+    "Nos régiments en bas de l'écran : une carte par régiment (numéro et nom, chevrons d'expérience, barre debout / blessés / tombés) ; la carte choisie s'ouvre vers le haut, avec son ordre et ses actions (Marcher, Regagner sa tranchée, Fiche)",
+    "Le râtelier passe en bas à droite ; les feuilles de situation disparaissent"
   ]
 }

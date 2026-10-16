@@ -50,8 +50,7 @@
 .montre path, .montre line { stroke: var(--jeu-fond); stroke-width: 2; fill: none; stroke-linecap: square; }
 .montre line.gros { stroke-width: 4; }
 .terrain.papier { padding: 3px 8px; }
-.gauche, .droite { display: grid; gap: var(--pas); align-content: end; justify-items: start; flex: 1; min-width: 0; }
-.droite { justify-items: end; }
+.droite { display: grid; gap: var(--pas); align-content: end; justify-items: end; flex: none; }
 .carte { width: min(38ch, 30vw); }
 .carte .entete { letter-spacing: .14em; text-transform: uppercase; border-bottom: 1px solid var(--jeu-accent); padding-bottom: 2px; font-size: 12px; margin-bottom: 4px; }
 .carte-grille { position: relative; display: grid; gap: 2px; align-items: stretch; }
@@ -76,25 +75,6 @@
 .carnet li b { font-weight: normal; color: var(--jeu-accent); margin-right: .6em; }
 .carnet li.recent { background: var(--jeu-accent); color: var(--jeu-encre); }
 .carnet li.recent b { color: var(--jeu-encre); }
-.feuilles { display: grid; gap: var(--pas); justify-items: end; }
-.feuille {
-  display: block; width: 32ch; max-width: 40vw; text-align: left; min-height: var(--jeu-cible); border: 0; font: inherit;
-  background: var(--jeu-encre); color: var(--jeu-fond); box-shadow: 3px 3px 0 var(--jeu-fond); padding: 6px 10px;
-}
-.feuille .tete { display: flex; justify-content: space-between; gap: var(--pas); border-bottom: 1px solid var(--jeu-accent); padding-bottom: 2px; font-size: 15px; }
-.feuille .tete span { color: var(--jeu-accent); font-size: 11px; letter-spacing: .1em; text-transform: uppercase; align-self: center; }
-.feuille .barre { display: flex; height: 8px; margin: 5px 0 3px; background: var(--jeu-accent); }
-.feuille .barre i { display: block; height: 100%; }
-.feuille .barre .debout { background: var(--jeu-nous); }
-.feuille .barre .blesses { background: var(--jeu-accent); outline: 1px solid var(--jeu-fond); }
-.feuille .barre .tombes { background: var(--jeu-fond); }
-.feuille .compte, .feuille .ordre { color: var(--jeu-accent); font-size: 12px; }
-.feuille .tampon {
-  display: inline-block; margin-top: 3px; padding: 0 6px; border: 2px solid var(--jeu-eux); color: var(--jeu-eux);
-  transform: rotate(-5deg); letter-spacing: .12em; text-transform: uppercase; font-size: 12px;
-}
-.feuille.reste { width: auto; min-height: 0; padding: 2px 8px; font-size: 12px; }
-@media (hover: hover) { .feuille:hover { background: var(--jeu-accent); color: var(--jeu-encre); } .feuille:hover .compte, .feuille:hover .ordre, .feuille:hover .tete span { color: var(--jeu-encre); } }
 
 .cadran { display: grid; grid-template-columns: repeat(5, var(--jeu-cible)); padding: 0; }
 .cadran .icone:active { background: var(--jeu-encre); color: var(--jeu-fond); }
@@ -265,3 +245,37 @@ dialog form { margin-top: calc(var(--pas) * 2); }
 .carte-ronde.eux { border-color: var(--jeu-eux); }
 .carte-ronde.choisi { background: var(--jeu-encre); color: var(--jeu-fond); outline: 2px solid var(--jeu-fond); outline-offset: 1px; }
 .carte-ronde[hidden] { display: none; }
+
+/* Nos régiments (Jérôme, v0.20.0) : une rangée de cartes compactes en papier de campagne ; la carte choisie s'ouvre vers le haut */
+.regiments { position: relative; flex: 1; min-width: 0; display: flex; justify-content: center; align-items: flex-end; gap: var(--pas); pointer-events: none; }
+.regiments .rang { display: flex; gap: var(--pas); }
+.reg-carte {
+  --enc: var(--jeu-fond); --pap: var(--jeu-encre);
+  display: grid; gap: 3px; align-content: start; width: 112px; min-height: 62px; padding: 4px 8px 6px; text-align: left; cursor: pointer;
+  font: inherit; font-size: 12px; background: var(--pap); color: var(--enc); border: 0; border-top: 3px solid var(--jeu-nous); box-shadow: 3px 3px 0 var(--jeu-fond);
+}
+.reg-carte.choisi { --enc: var(--jeu-encre); --pap: var(--jeu-fond); outline: 2px solid var(--jeu-encre); outline-offset: -5px; }
+.reg-carte .l1 { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.reg-carte .l1 b { font-weight: normal; font-size: var(--texte-grand); line-height: 1; margin-right: 2px; }
+.reg-carte .alerte { float: right; font-style: normal; font-size: 10px; line-height: 1; padding: 1px 3px; border: 1px solid var(--jeu-eux); color: var(--jeu-eux); transform: rotate(-5deg); }
+.reg-carte .chevrons { display: flex; gap: 2px; height: 8px; }
+.chev { width: 12px; height: 8px; fill: none; stroke: var(--enc); stroke-width: 2; stroke-linecap: square; }
+.chev.vide { stroke: var(--jeu-accent); }
+.reg-carte .barre, .reg-ouvert .barre { display: flex; height: 8px; box-sizing: border-box; border: 1px solid var(--enc); }
+.reg-carte .barre i { display: block; height: 100%; }
+.reg-carte .barre .debout { background: var(--enc); }
+.reg-carte .barre .blesses { background: repeating-linear-gradient(135deg, var(--enc) 0 2px, transparent 2px 4px); }
+.reg-carte .barre .tombes { background: none; }
+.fleche { display: grid; place-items: center; width: 40px; height: 62px; padding: 0; border: 0; cursor: pointer; color: var(--jeu-fond); pointer-events: auto; }
+.fleche[hidden] { display: none; }
+.fleche svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.reg-ouvert { position: absolute; bottom: calc(100% + var(--pas)); width: 36ch; max-width: 90vw; pointer-events: auto; display: grid; gap: 3px; }
+.reg-ouvert[hidden] { display: none; }
+.reg-ouvert .tete { display: flex; justify-content: space-between; gap: var(--pas); border-bottom: 1px solid var(--jeu-accent); padding-bottom: 2px; font-size: 15px; }
+.reg-ouvert .tete b { font-weight: normal; }
+.reg-ouvert .tete span, .reg-ouvert .compte, .reg-ouvert .ordre { color: var(--jeu-accent); font-size: 12px; }
+.reg-ouvert .tampon { justify-self: start; padding: 0 6px; border: 2px solid var(--jeu-eux); color: var(--jeu-eux); transform: rotate(-4deg); letter-spacing: .12em; text-transform: uppercase; font-size: 12px; }
+.reg-ouvert .actions { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 3px; }
+.reg-ouvert .actions button { height: 32px; padding: 0 var(--pas); font: inherit; font-size: 13px; color: var(--jeu-fond); background: none; border: 1px solid var(--jeu-accent); cursor: pointer; }
+.reg-ouvert .actions button.actif { background: var(--jeu-fond); color: var(--jeu-encre); border-color: var(--jeu-fond); }
+@media (hover: hover) { .reg-carte:hover:not(.choisi) { --pap: var(--jeu-accent); } .reg-ouvert .actions button:hover { background: var(--jeu-accent); color: var(--jeu-fond); } }

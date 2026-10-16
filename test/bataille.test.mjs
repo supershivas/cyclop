@@ -4,7 +4,7 @@ import { nouvelleBataille, avancer, ordonnerMarche, ordonnerBarrage, aube, photo
 import { ligneY } from '../js/tranchees.js';
 import { tronconsDe, refusCorvee } from '../js/nuit.js';
 import { SECTEURS as SECT } from '../js/data/secteur.js';
-import { identite, etatEnMots } from '../js/identite.js';
+import { identite, etatEnMots, chevrons } from '../js/identite.js';
 import { SECTEURS } from '../js/data/secteur.js';
 import { REGLAGES as R } from '../js/data/reglages.js';
 
@@ -45,6 +45,9 @@ test('le terrain sous la souris : un résumé sans la vitesse, et la vitesse en 
   assert.ok(court.lignes.length >= 1 && !court.lignes.some(l => l.startsWith('On y marche')));
   assert.ok(long.some(l => l.startsWith('On y marche')) && court.vitesse > 0 && court.vitesse <= 1);
   assert.equal(terrainResume(B, -5, -5), null);
+});
+test('les chevrons suivent les mots de l\'expérience, sans compter ce qu\'on a tué', () => {
+  assert.deepEqual([0, 0.07, 0.08, 0.3, 0.6, 5].map(chevrons), [0, 0, 1, 2, 3, 3]);
 });
 test('un ordre impossible se refuse, avec sa raison', () => {
   const B = petite();

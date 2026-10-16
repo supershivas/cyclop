@@ -2,8 +2,8 @@
    bataille et de son numéro (il garde les mêmes d'une partie relue à l'autre).
    Et ce qu'il endure : la fatigue (jambes, bras), une blessure, la peur, dits en
    mots. Logique pure (aucun DOM), testée dans Node. */
-import { hash2 } from './lib/rng.js?v=0.19.0';
-import { NOMS } from './data/noms.js?v=0.19.0';
+import { hash2 } from './lib/rng.js?v=0.20.0';
+import { NOMS } from './data/noms.js?v=0.20.0';
 
 export const PARTIES = ['', 'bras', 'jambe', 'tête'];
 
@@ -32,6 +32,8 @@ export function identite(graine, camp, id, k = 99, n = 125, promu = -1) {
 }
 
 // Ce qu'il a vu du feu, en quelques mots (ou rien, s'il n'a encore rien vu)
+// Les chevrons d'un régiment (0 à 3) selon l'expérience moyenne de ses hommes : les mêmes seuils que les mots (v0.20.0)
+export const chevrons = exp => exp >= 0.6 ? 3 : exp >= 0.25 ? 2 : exp >= 0.08 ? 1 : 0;
 export function experienceEnMots(exp) {
   return exp >= 0.6 ? 'aguerri' : exp >= 0.25 ? 'a vu le feu' : exp >= 0.08 ? 'a reçu le baptême du feu' : '';
 }
