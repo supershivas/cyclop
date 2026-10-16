@@ -44,6 +44,30 @@ cercles-régiments par-dessus) et la touche M disparaît (carte toujours visible
 - **Explosions de près** : éclats à l'échelle du zoom, le pool `ECLATS` sature en salve.
 - **Corbeaux** : paliers comme les soldats (point, trait, silhouette), posés sur les morts.
 
+### Jeu à deux sur le même réseau
+
+**Statut** : à l'étude — rien de construit ; la décision de lancer est à Jérôme
+
+Un joueur par armée (nous en bleu, l'autre en rouge), chacun sur son ordinateur. Aujourd'hui « en face » est l'IA de `bataille.js` et
+l'interface ne parle que de « nous » ; le jeu est statique (GitHub Pages), sans serveur.
+
+Piste : le **lockstep**. La simulation est pure, à pas fixe (1/30 s) et à graine : deux machines qui reçoivent les mêmes ordres aux mêmes
+pas calculent la même bataille ; on n'échange que les ordres. La liaison : WebRTC entre deux navigateurs (code à copier-coller pour
+s'appairer, sans serveur de jeu).
+
+- [ ] **D'abord, le test de déterminisme** entre Chrome et Firefox : la même graine et les mêmes ordres donnent-ils la même bataille
+  (fonctions comme `Math.sin`, ordre des tirages) ? Une somme de contrôle de l'état toutes les N secondes pour voir la dérive. Si cela
+  échoue, la piste tombe ou demande un état autoritaire d'un côté
+- [ ] Un second commandant : les ordres du camp rouge viennent d'un joueur, pas de `bataille.js` (l'IA reste pour le jeu seul) ; une
+  interface qui sait quel camp elle joue (carte, palette, cartes de régiment, carnet inversés)
+- [ ] Une horloge partagée : pause active, ×2 / ×4 (`setTimeScale`, aujourd'hui plafonnée par `perf.sim`) et retour à ×1 décidés à deux
+  (qui peut arrêter le temps ?) ; un pas de simulation qui ne dépend pas de la machine
+- [ ] La nuit à deux : chacun choisit ses corvées, l'aube part quand les deux sont prêts
+- [ ] Mission et fin (`juger`) : un attaquant et un défenseur humains ; équilibre des forces à mesurer (skill `equilibrage`)
+- [ ] À trancher dans `DESIGN.md` : brouillard de guerre ou carte ouverte, durée d'une partie à deux, reconnexion
+- Étape intermédiaire possible : le **tour à tour sur le même écran** (chacun donne ses ordres pendant la pause), sans réseau, pour
+  essayer l'équilibre à deux avant d'investir
+
 ### Lot minimal : la tranche verticale du terrain
 
 **Statut** : à mesurer (v0.1.0) — attend la décision de Jérôme pour la v1.0.0
