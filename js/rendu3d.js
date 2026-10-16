@@ -22,12 +22,12 @@
    - Les soldats : instanciés (une boîte et son ombre) ; au zoom 1 et 2, un
      point de 2 × 2 pixels (la couleur du camp sur son ombre).
    - Les corps : un homme couché (instancié) ; au zoom 1 et 2, un pixel. */
-import { loadThree } from './three-lib.js?v=0.21.0';
-import { PALETTE, ORDRE, INDICE } from './palette.js?v=0.21.0';
-import { OMBRE, couleursLigne } from './apparence.js?v=0.21.0';
-import { MORCEAU, hauteurVueQ as hauteurQ, hauteurVueM as hauteurM } from './terrain.js?v=0.21.0';
-import { horloge } from './bataille.js?v=0.21.0';
-import { ligneY } from './tranchees.js?v=0.21.0';
+import { loadThree } from './three-lib.js?v=0.21.1';
+import { PALETTE, ORDRE, INDICE } from './palette.js?v=0.21.1';
+import { OMBRE, couleursLigne } from './apparence.js?v=0.21.1';
+import { MORCEAU, hauteurVueQ as hauteurQ, hauteurVueM as hauteurM } from './terrain.js?v=0.21.1';
+import { horloge } from './bataille.js?v=0.21.1';
+import { ligneY } from './tranchees.js?v=0.21.1';
 
 export const CAMERA = { yaw: 0.15, tangage: 0.95, fov: 30 };   // au départ : tournée de 9°, plongée de 54°, angle de 30°
 // la caméra respire : un balancement très lent, 2° en 23 s (Jérôme, v0.3.1 : variante D du labo retenue)
@@ -352,11 +352,13 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
   });
   // Le contour des régiments choisis (Jérôme, v0.21.0) : un anneau d'os, liseré de terre, au pied de chaque homme, à tous les zooms
   // (aux zooms 1 et 2, où un homme n'est qu'un point, c'est lui qui le montre) ; sous les soldats, sans test de profondeur.
-  let anGeo = null, anneaux = null;
+  // Le survol (v0.21.1) : le régiment sous la souris (ou sous un bouton du HUD), tous ses hommes, d'un anneau à la couleur de son camp (celui des choisis est d'os).
+  let anGeo = null, anneaux = null, survolReg = -1, survolTroncons = [];
   const anMat = new THREE.ShaderMaterial({
-    uniforms: { uOs: { value: col('o') }, uTerre: { value: col('t') }, uTaille: { value: 6 } },
-    vertexShader: `uniform float uTaille; void main() { gl_Position = projectionMatrix * viewMatrix * vec4(position + vec3(0.0, 0.05, 0.0), 1.0); gl_PointSize = uTaille; }`,
-    fragmentShader: `uniform vec3 uOs; uniform vec3 uTerre; void main() { float r = length(gl_PointCoord - 0.5) * 2.0; if (r > 1.0 || r < 0.58) discard; gl_FragColor = vec4(r > 0.82 ? uTerre : uOs, 1.0); }`,
+    uniforms: { uOs: { value: col('o') }, uTerre: { value: col('t') }, uNous: { value: col('n') }, uEux: { value: col('x') }, uTaille: { value: 6 } },
+    vertexShader: `uniform float uTaille; attribute float aTon; varying float vTon; void main() { vTon = aTon; gl_Position = projectionMatrix * viewMatrix * vec4(position + vec3(0.0, 0.05, 0.0), 1.0); gl_PointSize = uTaille; }`,
+    fragmentShader: `uniform vec3 uOs; uniform vec3 uTerre; uniform vec3 uNous; uniform vec3 uEux; varying float vTon;
+      void main() { float r = length(gl_PointCoord - 0.5) * 2.0; if (r > 1.0 || r < 0.58) discard; vec3 c = vTon < 0.5 ? uOs : (vTon < 1.5 ? uNous : uEux); gl_FragColor = vec4(r > 0.82 ? uTerre : c, 1.0); }`,
     depthTest: false, depthWrite: false, transparent: true,
   });
   function preparerSoldats(capacite) {
@@ -382,6 +384,7 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
     soldatsPoints = new THREE.Points(gp, pointMat); soldatsPoints.frustumCulled = false; soldatsPoints.renderOrder = 2;
     scene.add(soldatsInst, soldatsPoints);
     anGeo = new THREE.BufferGeometry(); anGeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(cap * 3), 3).setUsage(THREE.DynamicDrawUsage)); anGeo.setDrawRange(0, 0);
+    anGeo.setAttribute('aTon', new THREE.BufferAttribute(new Float32Array(cap), 1).setUsage(THREE.DynamicDrawUsage));
     anneaux = new THREE.Points(anGeo, anMat); anneaux.frustumCulled = false; anneaux.renderOrder = 1.5; anneaux.visible = false;
     scene.add(anneaux);
   }
@@ -1181,6 +1184,7 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
       for (const t of f.troncons) troncon(t);
     }
     for (const t of surbrillance.troncons) troncon(t);
+    for (const t of survolTroncons) troncon(t);
     for (const r of surbrillance.rects) { const x0 = r.x - r.l / 2, x1 = r.x + r.l / 2, z0 = r.y - r.p / 2, z1 = r.y + r.p / 2; seg(x0, z0, x1, z0); seg(x1, z0, x1, z1); seg(x1, z1, x0, z1); seg(x0, z1, x0, z0); }
     clGeo.attributes.position.needsUpdate = true; clGeo.setDrawRange(0, v);
   }
@@ -1376,7 +1380,7 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
     mVP.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse);
     const e = mVP.elements;
     let k = 0, ka = 0;
-    const an = anGeo.attributes.position.array;
+    const an = anGeo.attributes.position.array, anTon = anGeo.attributes.aTon.array;
     for (let i = 0; i < n; i++) {
       const x = A.x[i], y = A.y[i];
       if (x < x0 || x > x1 || y < z0 || y > z1) continue;
@@ -1385,12 +1389,12 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
       posArr[k * 3] = x; posArr[k * 3 + 1] = surfaceLisse(x, y) + (i < volT.length && volT[i] > 0 ? volH[i] * Math.sin(Math.PI * (1 - volT[i] / VOL)) : 0); posArr[k * 3 + 2] = y;
       const sel = choisis.has(A.reg[i]);
       campArr[k] = A.camp[i] + (sel ? 2 : 0);
-      if (sel) { an[ka * 3] = x; an[ka * 3 + 1] = posArr[k * 3 + 1]; an[ka * 3 + 2] = y; ka++; }
+      if (sel || A.reg[i] === survolReg) { an[ka * 3] = x; an[ka * 3 + 1] = posArr[k * 3 + 1]; an[ka * 3 + 2] = y; anTon[ka] = sel ? 0 : 1 + A.camp[i]; ka++; }
       vitArr[k] = A.peur[i] >= TAPI ? -1 : Math.hypot(A.vx[i], A.vy[i]);
       tirArr[k * 2] = i < tirVal.length ? tirVal[i] : 0; tirArr[k * 2 + 1] = i < tirVal.length ? tirAng[i] : 0;
       k++;
     }
-    anGeo.setDrawRange(0, ka); anGeo.attributes.position.needsUpdate = true; anMat.uniforms.uTaille.value = Math.max(5, Math.round(p * 1.5));
+    anGeo.setDrawRange(0, ka); anGeo.attributes.position.needsUpdate = true; anGeo.attributes.aTon.needsUpdate = true; anMat.uniforms.uTaille.value = Math.max(5, Math.round(p * 1.5));
     if (!vide) anneaux.visible = ka > 0;
     const points = p <= POINTS_JUSQUA, detail = !points && soldatsDetail && p >= DETAIL_DES, leger = !points && !detail && legerActif && p >= LEGER_DES;
     if (!vide) { soldatsPoints.visible = points; soldatsInst.visible = !points && !detail && !leger; if (soldatsDetail) soldatsDetail.visible = !!detail; soldatsLeger.visible = !!leger; }
@@ -1578,6 +1582,7 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
     get ppm() { return ZOOMS[vue.zoom]; },
     // une fumée qui dérive, posée en (x, z) (l'écran titre en épaissit le champ)
     clignoter,
+    survoler(reg, troncons) { survolReg = reg; survolTroncons = troncons; },
     surligner(s) { surbrillance = s || { troncons: [], rects: [] }; },
     get legere() { return legerActif; }, set legere(v) { legerActif = !!v; },
     fumer(x, z) { if (T) fumee(x + (alea() - 0.5) * 3, surface(x, z) + 0.5, z + (alea() - 0.5) * 3, 2, true); },

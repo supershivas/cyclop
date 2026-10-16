@@ -1,5 +1,9 @@
 # Journal des versions
 
+## 0.21.1 — 2026-10-16
+- Le survol allume l'élément entier : un régiment avec tous ses hommes (les nôtres en bleu, ceux d'en face en rouge), et, sur une tranchée vide, le tronçon
+- Survoler la carte d'un régiment ou son cercle sur la carte allume aussi ses hommes sur le terrain
+
 ## 0.21.0 — 2026-10-16
 - Un régiment choisi se voit : un anneau au pied de chacun de ses hommes, à tous les zooms
 - Avant de donner un ordre, une ligne va du régiment au curseur, terminée par une croix, et ce que l'ordre occuperait s'allume (les tronçons visés, ou la place des régiments en terrain libre) ; la croix est rouge quand l'ordre ne partirait pas

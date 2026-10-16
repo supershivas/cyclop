@@ -143,6 +143,10 @@ la danse macabre, la catastrophe peinte avec calme. L'intention est dans `DESIGN
   ligne de chaque régiment choisi au curseur, une croix au bout, rouge si l'ordre ne partirait pas ; `rendu.surligner` allume ce que l'ordre
   occuperait (les tronçons, ou une emprise par régiment en terrain libre, mêmes traits que le clignotement). `peutOrdonner` (bataille.js) est
   l'ordre à sec : `ordonnerMarche` et lui partent du même `planMarche`, rien n'est changé avant le clic. Le clic droit valide (ou « Marcher »).
+- **Le survol global** (Jérôme, v0.21.1) : le régiment sous la souris (un homme de près, le régiment de loin, des deux camps), ou sous une carte
+  ou un cercle de la carte, s'allume avec tous ses hommes : les anneaux de la sélection, à la couleur de son camp (ceux des choisis restent
+  d'os) ; sans régiment, le tronçon sous la souris, mêmes traits que le clignotement, sauf si la visée d'un ordre le montre déjà
+  (`appliquerSurvol` de main.js, `rendu.survoler`). Le dessin seulement.
 - **Le haut de l'écran** (Jérôme, v0.19.0 ; `docs/ui-cible.md`) : à gauche le menu, les réglages et le carnet de bord (la fiche et le
   papier de la nuit y attendent leur place définitive) ; au centre les pertes des deux armées (`majPertes`, en feuille de situation) ;
   à droite la carte, le temps (arrêter, ×1, ×2, ×4 : `setTimeScale` plafonné par `perf.sim` sous ~20 ms, un assaut / une prise / une

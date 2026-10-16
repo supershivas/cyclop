@@ -28,7 +28,7 @@ cercles-régiments par-dessus) et la touche M disparaît (carte toujours visible
 - [x] Lot 4 — la sélection sur le terrain : contour des soldats choisis (halo aux zooms 1 et 2), ligne du centre du régiment au curseur
   terminée par une croix (DOM), destinations en surbrillance (`peutOrdonner` : l'ordre à sec, extrait de `ordonnerMarche`), clic droit ;
   mesure du rendu (v0.21.0)
-- [ ] Lot 5 — le survol global : un régiment (les deux camps) et un tronçon en surbrillance (v0.21.1)
+- [x] Lot 5 — le survol global : un régiment (les deux camps) et un tronçon en surbrillance (v0.21.1)
 - [ ] Lot 6 — les formations (ligne, par deux, colonne) : `ordre.forme`, lue avec `??=` ; `formation`, `reattribuer`, `place` (v0.22.0)
 - [ ] Plus tard : où vont le cadran de vue, la fiche et le papier de la nuit (en attendant, ils restent où ils sont)
 

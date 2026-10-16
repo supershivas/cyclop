@@ -11,7 +11,7 @@
      d'occuper une tranchée s'en servent pour poser les hommes dedans.
    - Un tronçon protège du tir qui vient de devant (le parapet), beaucoup moins
      de celui qui vient de derrière (le parados) : pris, il sert à l'envers. */
-import { hash2 } from './lib/rng.js?v=0.21.0';
+import { hash2 } from './lib/rng.js?v=0.21.1';
 
 /* Le tracé d'une ligne : t = { y0, amp, baie, phase } (mètres, coordonnées du
    terrain). Les baies alternent d'un côté et de l'autre (les créneaux), et la

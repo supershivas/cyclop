@@ -1,24 +1,24 @@
 // Le cycle de vie : écran titre → bataille → nuit → fin ; pause active,
 // réglages, sauvegarde, mise à jour, debug. Les règles sont dans bataille.js
 // (pures), le dessin dans rendu3d.js (il ne modifie jamais l'état).
-import { createLoop } from './lib/loop.js?v=0.21.0';
-import { createKeys, stopTypeahead } from './lib/keys.js?v=0.21.0';
-import { createPointer, lockBrowserGestures } from './lib/pointer.js?v=0.21.0';
-import { createGamepad } from './lib/gamepad.js?v=0.21.0';
-import { createStore, autosave, pickJSONFile } from './lib/save.js?v=0.21.0';
-import { startUpdateCheck, loadVersion, loadChangelog, downloadJSON } from './lib/app-update.js?v=0.21.0';
-import { ROLES } from './palette.js?v=0.21.0';
-import { MISSIONS, nouvelleBataille, avancer, aube, ordonnerMarche, peutOrdonner, ordonnerBarrage, horloge, effectifs, tronconsTenus, moralEnMots, terrainSous, terrainResume, rangDe, nomTroncon, actionDe, forcesTroncons, secteurDe, secteursDe, etendueSecteurs, tronconsDeLigne, largeurSecteur, nombreSecteurs, codeLigne, zone, photo, restaurer, PAS, NOUS, EUX } from './bataille.js?v=0.21.0';
-import { ligneY } from './tranchees.js?v=0.21.0';
-import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.21.0';
-import { METEO } from './data/meteo.js?v=0.21.0';
-import { impact, hydroLignes } from './terrain.js?v=0.21.0';
-import { hash2 } from './lib/rng.js?v=0.21.0';
-import { creerRendu, CAMERA } from './rendu3d.js?v=0.21.0';
-import { identite, etatEnMots, experienceEnMots, chevrons } from './identite.js?v=0.21.0';
-import { CORVEES } from './data/corvees.js?v=0.21.0';
-import { refusCorvee } from './nuit.js?v=0.21.0';
-import { chargerContenu } from './design-store.js?v=0.21.0';
+import { createLoop } from './lib/loop.js?v=0.21.1';
+import { createKeys, stopTypeahead } from './lib/keys.js?v=0.21.1';
+import { createPointer, lockBrowserGestures } from './lib/pointer.js?v=0.21.1';
+import { createGamepad } from './lib/gamepad.js?v=0.21.1';
+import { createStore, autosave, pickJSONFile } from './lib/save.js?v=0.21.1';
+import { startUpdateCheck, loadVersion, loadChangelog, downloadJSON } from './lib/app-update.js?v=0.21.1';
+import { ROLES } from './palette.js?v=0.21.1';
+import { MISSIONS, nouvelleBataille, avancer, aube, ordonnerMarche, peutOrdonner, ordonnerBarrage, horloge, effectifs, tronconsTenus, moralEnMots, terrainSous, terrainResume, rangDe, nomTroncon, actionDe, forcesTroncons, secteurDe, secteursDe, etendueSecteurs, tronconsDeLigne, largeurSecteur, nombreSecteurs, codeLigne, zone, photo, restaurer, PAS, NOUS, EUX } from './bataille.js?v=0.21.1';
+import { ligneY } from './tranchees.js?v=0.21.1';
+import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.21.1';
+import { METEO } from './data/meteo.js?v=0.21.1';
+import { impact, hydroLignes } from './terrain.js?v=0.21.1';
+import { hash2 } from './lib/rng.js?v=0.21.1';
+import { creerRendu, CAMERA } from './rendu3d.js?v=0.21.1';
+import { identite, etatEnMots, experienceEnMots, chevrons } from './identite.js?v=0.21.1';
+import { CORVEES } from './data/corvees.js?v=0.21.1';
+import { refusCorvee } from './nuit.js?v=0.21.1';
+import { chargerContenu } from './design-store.js?v=0.21.1';
 
 const JEU = 'cyclopeen';
 const $ = id => document.getElementById(id);
@@ -511,7 +511,7 @@ function majRondes() {
     if (!c || !r.effectif) { if (el) el.hidden = true; continue; }
     if (!el) {
       el = document.createElement('button');
-      el.className = `carte-ronde${r.camp === NOUS ? '' : ' eux'}`; el.textContent = numeroDe(r);
+      el.className = `carte-ronde${r.camp === NOUS ? '' : ' eux'}`; el.dataset.reg = r.id; el.textContent = numeroDe(r);
       const nom = r.camp === NOUS ? `${numeroDe(r)} · ${r.nom}` : `Régiment ${numeroDe(r)} d'en face`;
       el.title = nom; el.setAttribute('aria-label', r.camp === NOUS ? `Choisir le régiment ${nom}` : `Voir le ${nom}`);
       el.onclick = e => r.camp === NOUS ? choisirRegiment(r.id, e.shiftKey) : montrerRegiment(r.id);
@@ -932,16 +932,27 @@ function majTerrain(x, y) {
   }
   p.hidden = false;
 }
+// Le survol global (Jérôme, v0.21.1) : le régiment sous la souris, ou sous une carte ou un cercle du HUD, s'allume avec tous ses hommes ; sinon le
+// tronçon sous la souris (sauf quand la visée d'un ordre le montre déjà). Le dessin seulement.
+let survolHud = -1;
+function appliquerSurvol(reg, tr) {
+  const vise = choisis.size && B.etat.phase === 'jour' && !nuitEtat && souris;
+  rendu.survoler(survolHud >= 0 ? survolHud : reg, tr >= 0 && !vise && survolHud < 0 ? [tr] : []);
+}
+for (const [id, sel] of [['reg-rang', '.reg-carte'], ['carte-grille', '.carte-ronde']]) {
+  $(id).addEventListener('pointerover', e => { const c = e.target.closest(sel); if (c) survolHud = c.dataset.id !== undefined ? +c.dataset.id : +c.dataset.reg; });
+  $(id).addEventListener('pointerout', e => { if (e.target.closest(sel)) survolHud = -1; });
+}
 function majBulle() {
   const bulle = $('bulle');
-  if (!souris || !enJeu() || glisse || document.querySelector('dialog[open]')) { bulle.hidden = true; majTerrain(null); return; }
+  if (!souris || !enJeu() || glisse || document.querySelector('dialog[open]')) { bulle.hidden = true; majTerrain(null); appliquerSurvol(-1, -1); return; }
   const [x, y] = rendu.versTerrain(souris.x, souris.y);
   majTerrain(x, y);
-  let lignes = null;
+  let lignes = null, regSous = -1;
   if (dePres()) {
     const i = soldatSous(x, y, Math.max(0.8, prise(12)));
     if (i >= 0) {
-      const A = B.armee, { reg, qui } = quiEst(A.id[i]);
+      const A = B.armee, { reg, qui } = quiEst(A.id[i]); regSous = A.reg[i];
       lignes = [`${qui.prenom} ${qui.nom}`, `${majuscule(qui.grade)}, ${qui.age} ans · ${nomDe(reg)}`,
         [...etatEnMots(A.fatJ[i], A.fatB[i], A.peur[i], A.blessure[i]), experienceEnMots(A.exp[i])].filter(Boolean).join(', ')];
     } else {
@@ -953,8 +964,10 @@ function majBulle() {
     }
   } else {
     const r = regimentSous(x, y, Math.max(4, prise(16)));
-    if (r >= 0) { const reg = B.etat.regiments[r]; lignes = [nomDe(reg), enMots(bilan(reg)), majuscule(moralEnMots(reg, R)), refuseAujourdhui(reg)].filter(Boolean); }
+    if (r >= 0) { regSous = r; const reg = B.etat.regiments[r]; lignes = [nomDe(reg), enMots(bilan(reg)), majuscule(moralEnMots(reg, R)), refuseAujourdhui(reg)].filter(Boolean); }
   }
+  const T = B.terrain, cc = Math.floor(y) * T.W + Math.floor(x);
+  appliquerSurvol(regSous, x >= 0 && y >= 0 && x < T.W && y < T.H && T.troncon ? T.troncon[cc] : -1);
   if (!lignes) { bulle.hidden = true; return; }
   const cle = lignes.join('\n');
   if (bulle.dataset.cle !== cle) {
@@ -1188,7 +1201,7 @@ startUpdateCheck({
 
 // ─── Mode debug (section 18) : chargé seulement avec ?debug=1 ──────────────
 if (DEBUG) {
-  const { installDebug, seedFromUrl } = await import('./lib/debug.js?v=0.21.0');
+  const { installDebug, seedFromUrl } = await import('./lib/debug.js?v=0.21.1');
   window.__seed = seedFromUrl() ?? undefined;
   installDebug({
     state: () => B && { ...horloge(B), effectifs: effectifs(B), pertes: B.etat.pertes, impacts: B.etat.impacts.length, enJeu: enJeu(), pause: loop.paused },
