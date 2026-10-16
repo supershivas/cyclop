@@ -74,7 +74,7 @@ la danse macabre, la catastrophe peinte avec calme. L'intention est dans `DESIGN
   ordre sur une tranchée étale encore un régiment sur un secteur. La **carte**
   (`#carte`, toujours visible en haut à droite depuis la v0.19.0 : plus de touche M ; `construireCarte` / `majCarte` / `majRondes` de main.js) montre les 8 secteurs × 4 lignes de chaque camp, chaque case en deux
   tronçons à la couleur de celui qui les tient ; un numéro choisit le régiment du secteur, une case l'envoie dans cette tranchée
-  (`ordreCase`). Tout ordre sur une tranchée (carte ou clic droit) fait clignoter les tronçons visés trois secondes, sur le terrain
+  (`ordreCase`). Tout ordre sur une tranchée (carte ou clic gauche) fait clignoter les tronçons visés trois secondes, sur le terrain
   (`rendu.clignoter`) et sur la carte, et le carnet dit ce que chacun va faire (`ordreDonne`) ; `actionDe(B, reg)` le dit en mots
   (« tient S3·N1 », « attaque S3·F1 », « marche à l'attaque de S3·F1 ») sur la feuille de situation, avec les forces en présence dans la
   tranchée visée (« attaque S3·F1 : 38 contre 5, mêlée 4/6 s » ; `forcesTroncons`, au plus une demi-seconde de retard) ; sur la carte,
@@ -142,7 +142,7 @@ la danse macabre, la catastrophe peinte avec calme. L'intention est dans `DESIGN
   soldats, rendu logiciel : +0,3 à 0,7 ms côté jeu, +2 à 7 ms dessin attendu, dans le bruit de la mesure). La visée (`majVisee`, un SVG) : une
   ligne de chaque régiment choisi au curseur, une croix au bout, rouge si l'ordre ne partirait pas ; `rendu.surligner` allume ce que l'ordre
   occuperait (les tronçons, ou une emprise par régiment en terrain libre, mêmes traits que le clignotement). `peutOrdonner` (bataille.js) est
-  l'ordre à sec : `ordonnerMarche` et lui partent du même `planMarche`, rien n'est changé avant le clic. Le clic droit valide (ou « Marcher »).
+  l'ordre à sec : `ordonnerMarche` et lui partent du même `planMarche`, rien n'est changé avant le clic. Le clic gauche valide (v0.21.2 : choisir puis ordonner ; le clic droit annule).
 - **Le survol global** (Jérôme, v0.21.1) : le régiment sous la souris (un homme de près, le régiment de loin, des deux camps), ou sous une carte
   ou un cercle de la carte, s'allume avec tous ses hommes : les anneaux de la sélection, à la couleur de son camp (ceux des choisis restent
   d'os) ; sans régiment, le tronçon sous la souris, mêmes traits que le clignotement, sauf si la visée d'un ordre le montre déjà
@@ -212,15 +212,16 @@ nuit (le voile continu et ses halos mélangent la terre, le sol et l'os : des co
 
 | Action | Clavier | Souris |
 |---|---|---|
-| Choisir un régiment | T (tous) | clic (Maj : ajouter), glisser (cadre) |
-| Voir un homme, un régiment | — | survol ; clic (de près : un homme ; de loin : son régiment) |
-| Marcher (sur une tranchée : l'occuper) | — | clic droit ; ou, réglage « tout au bouton gauche », clic sur le sol (Échap laisse les régiments choisis) |
+| Choisir un régiment | T (tous) | clic sur lui, sur sa carte ou son cercle (Maj : ajouter), glisser (cadre) |
+| Voir un homme, un régiment | — | survol ; clic sur ceux d'en face ou sur un mort (sans régiment choisi) ; pour les nôtres, le bouton « Fiche » de leur carte |
+| Marcher (sur une tranchée : l'occuper) | — | clic gauche sur le sol, les régiments choisis restent choisis (v0.21.2) |
+| Annuler | Échap | clic droit : le barrage visé, « Marcher », la fiche, puis les régiments choisis |
 | Barrage de 75, 155, 220 | 1, 2, 3 (touche physique) puis clic | bouton de la batterie puis clic |
 | Arrêter le temps (pause active) | Espace | — |
 | Déplacer la vue | flèches, ZQSD / WASD (selon l'écran) | Maj + glisser avec le bouton du milieu (la molette) |
 | Tourner, incliner la vue | A et E (Q et E en QWERTY), R et F (touches physiques, en continu) | glisser avec le bouton du milieu (ou le droit) ; le cadran en bas à droite (Jérôme, v0.9.1) |
 | Zoom | + et − | molette |
-| Menu (pause) | Échap (annule d'abord un barrage visé) | bouton du HUD |
+| Menu (pause) | Échap (quand rien n'est à annuler) | bouton du HUD |
 
 ## Stack
 
@@ -233,7 +234,7 @@ nuit (le voile continu et ses halos mélangent la terre, le sol et l'os : des co
   gh-publish, keys, labo-shell, loop, pointer, rng, save, sprites. Outils dans
   `outils/`.
 - Données : `localStorage`, clés `cyclopeen:partie`, `cyclopeen:prefs` (le zoom,
-  la caméra, `gauche` : tout au bouton gauche),
+  la caméra),
   `cyclopeen:atelier` (brouillon), `cyclopeen:gh-token` (jamais exporté). Export /
   import JSON dans les réglages.
 
@@ -521,7 +522,6 @@ node outils/stamp-version.mjs            # après chaque changement de version.j
   déclenchait les gestes du navigateur (ou d'une extension). `main.js` empêche
   `pointerdown` des boutons droit et du milieu sur le canvas (ce qui supprime
   mousedown et mouseup) et arrête mousedown, mouseup, auxclick, contextmenu à la
-  capture. Une extension installée avant la page peut encore les lire : d'où le
-  réglage « tout au bouton gauche » et, pour la caméra, le bouton du milieu et le cadran à l'écran (v0.9.1 : tourner au clic droit restait gêné par les gestes de souris de Firefox).
+  capture. Une extension installée avant la page peut encore les lire : d'où (v0.21.2) le clic gauche pour choisir et ordonner (le clic droit n'annule que) et, pour la caméra, le bouton du milieu et le cadran à l'écran (v0.9.1 : tourner au clic droit restait gêné par les gestes de souris de Firefox).
 - Ordre des tirages : `nouvelleBataille` tire la météo (une branche du générateur),
   puis les positions de départ. Changer cet ordre change toutes les batailles.

@@ -1,24 +1,24 @@
 // Le cycle de vie : écran titre → bataille → nuit → fin ; pause active,
 // réglages, sauvegarde, mise à jour, debug. Les règles sont dans bataille.js
 // (pures), le dessin dans rendu3d.js (il ne modifie jamais l'état).
-import { createLoop } from './lib/loop.js?v=0.21.1';
-import { createKeys, stopTypeahead } from './lib/keys.js?v=0.21.1';
-import { createPointer, lockBrowserGestures } from './lib/pointer.js?v=0.21.1';
-import { createGamepad } from './lib/gamepad.js?v=0.21.1';
-import { createStore, autosave, pickJSONFile } from './lib/save.js?v=0.21.1';
-import { startUpdateCheck, loadVersion, loadChangelog, downloadJSON } from './lib/app-update.js?v=0.21.1';
-import { ROLES } from './palette.js?v=0.21.1';
-import { MISSIONS, nouvelleBataille, avancer, aube, ordonnerMarche, peutOrdonner, ordonnerBarrage, horloge, effectifs, tronconsTenus, moralEnMots, terrainSous, terrainResume, rangDe, nomTroncon, actionDe, forcesTroncons, secteurDe, secteursDe, etendueSecteurs, tronconsDeLigne, largeurSecteur, nombreSecteurs, codeLigne, zone, photo, restaurer, PAS, NOUS, EUX } from './bataille.js?v=0.21.1';
-import { ligneY } from './tranchees.js?v=0.21.1';
-import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.21.1';
-import { METEO } from './data/meteo.js?v=0.21.1';
-import { impact, hydroLignes } from './terrain.js?v=0.21.1';
-import { hash2 } from './lib/rng.js?v=0.21.1';
-import { creerRendu, CAMERA } from './rendu3d.js?v=0.21.1';
-import { identite, etatEnMots, experienceEnMots, chevrons } from './identite.js?v=0.21.1';
-import { CORVEES } from './data/corvees.js?v=0.21.1';
-import { refusCorvee } from './nuit.js?v=0.21.1';
-import { chargerContenu } from './design-store.js?v=0.21.1';
+import { createLoop } from './lib/loop.js?v=0.21.2';
+import { createKeys, stopTypeahead } from './lib/keys.js?v=0.21.2';
+import { createPointer, lockBrowserGestures } from './lib/pointer.js?v=0.21.2';
+import { createGamepad } from './lib/gamepad.js?v=0.21.2';
+import { createStore, autosave, pickJSONFile } from './lib/save.js?v=0.21.2';
+import { startUpdateCheck, loadVersion, loadChangelog, downloadJSON } from './lib/app-update.js?v=0.21.2';
+import { ROLES } from './palette.js?v=0.21.2';
+import { MISSIONS, nouvelleBataille, avancer, aube, ordonnerMarche, peutOrdonner, ordonnerBarrage, horloge, effectifs, tronconsTenus, moralEnMots, terrainSous, terrainResume, rangDe, nomTroncon, actionDe, forcesTroncons, secteurDe, secteursDe, etendueSecteurs, tronconsDeLigne, largeurSecteur, nombreSecteurs, codeLigne, zone, photo, restaurer, PAS, NOUS, EUX } from './bataille.js?v=0.21.2';
+import { ligneY } from './tranchees.js?v=0.21.2';
+import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.21.2';
+import { METEO } from './data/meteo.js?v=0.21.2';
+import { impact, hydroLignes } from './terrain.js?v=0.21.2';
+import { hash2 } from './lib/rng.js?v=0.21.2';
+import { creerRendu, CAMERA } from './rendu3d.js?v=0.21.2';
+import { identite, etatEnMots, experienceEnMots, chevrons } from './identite.js?v=0.21.2';
+import { CORVEES } from './data/corvees.js?v=0.21.2';
+import { refusCorvee } from './nuit.js?v=0.21.2';
+import { chargerContenu } from './design-store.js?v=0.21.2';
 
 const JEU = 'cyclopeen';
 const $ = id => document.getElementById(id);
@@ -34,7 +34,7 @@ const store = createStore({
   debug: DEBUG,
   entries: {
     partie: { version: 1 },
-    prefs: { version: 1, debugWrites: false, defaults: { zoom: 2, camera: null, gauche: false, carte: true } },
+    prefs: { version: 1, debugWrites: false, defaults: { zoom: 2, camera: null, carte: true } },
   },
   secret: ['gh-token'],
 });
@@ -188,9 +188,6 @@ $('quitter').onclick = () => { $('dialogue-pause').close(); sauvegarder(); montr
 $('pause-reglages').onclick = () => $('dialogue-reglages').showModal();
 $('ouvrir-reglages').onclick = () => $('dialogue-reglages').showModal();
 $('dialogue-reglages').addEventListener('close', reprendre);
-// tout au bouton gauche : pour un navigateur dont le clic droit glissé fait des gestes (Firefox et ses extensions)
-$('pref-gauche').checked = !!prefs.gauche;
-$('pref-gauche').onchange = e => { prefs.gauche = e.target.checked; store.save('prefs', prefs); };
 // le bouton droit et celui de la molette appartiennent au jeu : leurs événements de souris ne vont pas plus loin que
 // le canvas (empêcher le « pointerdown » supprime aussi mousedown et mouseup, que lisent les gestes)
 for (const t of ['pointerdown', 'mousedown', 'mouseup', 'auxclick', 'contextmenu']) {
@@ -981,6 +978,20 @@ function majBulle() {
   bulle.style.transform = `translate(${Math.round(bx)}px, ${Math.round(by)}px)`;
 }
 
+// Donner l'ordre de marche aux régiments choisis, là où l'on a cliqué
+function ordreMarche(x, y) {
+  const r = dire(ordonnerMarche(B, [...choisis], x, y));
+  if (r.ok) { marque = { x, y, t: 2 }; sauvegarder(); ordreDonne(r); }
+}
+// Annuler, du plus récent au plus ancien : le barrage visé, « Marcher », la fiche, les régiments choisis (clic droit, Échap)
+function annuler() {
+  if (modeBarrage) modeBarrage = null;
+  else if (modeMarche) modeMarche = false;
+  else if (fiche) fermerFiche();
+  else if (choisis.size) { choisis = new Set(); rendu.choisis = choisis; }
+  majHud();
+}
+
 // ─── Commandes : clavier, souris (section 8) ───────────────────────────────
 function choisirTout() {
   choisis = new Set(B.etat.regiments.filter(r => r.camp === NOUS && r.effectif).map(r => r.id));
@@ -994,11 +1005,7 @@ const keys = createKeys({
   onAction: nom => {
     if (!enJeu()) return;
     if (nom === 'menu') {
-      if (modeBarrage) { modeBarrage = null; majHud(); }
-      else if (modeMarche) { modeMarche = false; majHud(); }
-      else if (fiche) fermerFiche();
-      else if (prefs.gauche && choisis.size) { choisis = new Set(); rendu.choisis = choisis; majHud(); }
-      else pause();
+      if (modeBarrage || modeMarche || fiche || choisis.size) annuler(); else pause();
     }
     else if (nom === 'pause') basculerPause();
     else if (nom === 'tout') choisirTout();
@@ -1031,57 +1038,32 @@ createPointer($('canvas'), {
   onTap: p => {
     if (!enJeu()) return;
     const [x, y] = rendu.versTerrain(p.x, p.y);
-    // un clic sur un homme montre sa fiche (de jour comme de nuit, chez nous comme en face)
-    // de près, sur un homme sa fiche ; de loin, sur un régiment la sienne
-    if (p.button === 0 && !modeBarrage && !modeMarche) {
-      if (dePres()) {
-        const i = soldatSous(x, y, Math.max(0.8, prise(12)));
-        const mort = i < 0 ? corpsSous(x, y, Math.max(0.8, prise(10))) : -1;
-        if (i >= 0) montrerFiche(i); else if (mort >= 0) montrerSoldat(mort); else fermerFiche();
-      } else {
-        const r = regimentSous(x, y, Math.max(4, prise(16)));
-        if (r >= 0) montrerRegiment(r); else fermerFiche();
-      }
+    // Le clic droit annule (Jérôme, v0.21.2) : le barrage visé, « Marcher », la fiche, puis les régiments choisis ; il ne donne plus d'ordre.
+    if (p.button === 2) return annuler();
+    if (p.button !== 0) return;
+    if (modeBarrage) {
+      if (dire(ordonnerBarrage(B, modeBarrage, x, y)).ok) { marque = { x, y, t: 2 }; modeBarrage = null; sauvegarder(); }
+      return majHud();
     }
-    if (B.etat.phase !== 'jour') {
-      // la nuit, on ne marche ni ne tire : on choisit des régiments pour leur donner une corvée
-      if (p.button === 2) toast('La nuit, pas de marche : choisissez des régiments, puis une corvée.');
-      else if (p.button === 0 && !modeBarrage) {
-        const r = regimentSous(x, y, dePres() ? 4 : Math.max(4, prise(16)), NOUS);
-        if (!p.event.shiftKey) choisis = new Set();
-        if (r >= 0) { if (choisis.has(r) && p.event.shiftKey) choisis.delete(r); else choisis.add(r); }
-        rendu.choisis = choisis; majHud();
-      }
-      return;
+    const jour = B.etat.phase === 'jour';
+    if (modeMarche && jour) { modeMarche = false; ordreMarche(x, y); return majHud(); }
+    // Le clic gauche choisit, puis ordonne : sur un de nos régiments (Maj : en ajouter ou en retirer), il le choisit ; ailleurs, avec des
+    // régiments choisis, ils y marchent (sur une tranchée : l'occupent) et restent choisis. La nuit, on ne marche pas : on choisit pour les corvées.
+    const rNous = regimentSous(x, y, dePres() ? 4 : Math.max(4, prise(16)), NOUS);
+    if (rNous >= 0) {
+      if (!p.event.shiftKey) choisis = new Set();
+      if (choisis.has(rNous) && p.event.shiftKey) choisis.delete(rNous); else choisis.add(rNous);
+      rendu.choisis = choisis;
+      return majHud();
     }
-    if (p.button === 2) {
-      if (modeBarrage) { modeBarrage = null; majHud(); return; }
-      if (!choisis.size) return toast('Aucun régiment choisi.');
-      modeMarche = false;
-      const r = dire(ordonnerMarche(B, [...choisis], x, y));
-      if (r.ok) { marque = { x, y, t: 2 }; sauvegarder(); ordreDonne(r); }
-    } else if (p.button === 0) {
-      if (modeMarche) {
-        modeMarche = false;
-        const r = dire(ordonnerMarche(B, [...choisis], x, y));
-        if (r.ok) { marque = { x, y, t: 2 }; sauvegarder(); ordreDonne(r); }
-        return majHud();
-      }
-      if (modeBarrage) {
-        if (dire(ordonnerBarrage(B, modeBarrage, x, y)).ok) { marque = { x, y, t: 2 }; modeBarrage = null; sauvegarder(); }
-      } else {
-        const r = regimentSous(x, y, dePres() ? 4 : Math.max(4, prise(16)), NOUS);
-        // tout au bouton gauche : un clic sur le sol (loin de nos régiments) fait marcher ceux qu'on a choisis
-        if (prefs.gauche && r < 0 && choisis.size && !p.event.shiftKey) {
-          fermerFiche();
-          const r = dire(ordonnerMarche(B, [...choisis], x, y));
-          if (r.ok) { marque = { x, y, t: 2 }; sauvegarder(); ordreDonne(r); }
-          return majHud();
-        }
-        if (!p.event.shiftKey) choisis = new Set();
-        if (r >= 0) { if (choisis.has(r) && p.event.shiftKey) choisis.delete(r); else choisis.add(r); }
-        rendu.choisis = choisis;
-      }
+    if (jour && choisis.size && !p.event.shiftKey) { fermerFiche(); ordreMarche(x, y); return majHud(); }
+    // sans régiment choisi : la fiche de ce qu'on touche, chez l'autre camp ou parmi les morts
+    if (dePres()) {
+      const i = soldatSous(x, y, Math.max(0.8, prise(12))), mort = i < 0 ? corpsSous(x, y, Math.max(0.8, prise(10))) : -1;
+      if (i >= 0) montrerFiche(i); else if (mort >= 0) montrerSoldat(mort);
+    } else {
+      const r = regimentSous(x, y, Math.max(4, prise(16)));
+      if (r >= 0) montrerRegiment(r);
     }
     majHud();
   },
@@ -1201,7 +1183,7 @@ startUpdateCheck({
 
 // ─── Mode debug (section 18) : chargé seulement avec ?debug=1 ──────────────
 if (DEBUG) {
-  const { installDebug, seedFromUrl } = await import('./lib/debug.js?v=0.21.1');
+  const { installDebug, seedFromUrl } = await import('./lib/debug.js?v=0.21.2');
   window.__seed = seedFromUrl() ?? undefined;
   installDebug({
     state: () => B && { ...horloge(B), effectifs: effectifs(B), pertes: B.etat.pertes, impacts: B.etat.impacts.length, enJeu: enJeu(), pause: loop.paused },
