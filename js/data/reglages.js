@@ -46,6 +46,8 @@ export const REGLAGES = {
     champ: 22,            // m : plus loin de sa place, on suit le champ de coûts
     champsMax: 10,        // champs gardés en cache
     champPeriode: 3,      // s : un champ périmé (terrain changé) est refait au plus tous les…
+    abri: 0.5,            // le coût d'un carré de 4 m où passe une tranchée intacte, multiplié par… : on préfère l'abri à découvert, même plus long (v0.21.4 ; 1 : plus de préférence)
+    abriPart: 0.15,       // … dès que cette part du carré est en tranchée ou en boyau (2 : jamais)
   },
   soldat: {
     // la fatigue (0 à 1) : les jambes se fatiguent à marcher (plus dans la boue), les bras à tirer

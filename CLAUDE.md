@@ -377,6 +377,12 @@ node outils/stamp-version.mjs            # après chaque changement de version.j
 
 ## Pièges connus
 
+- **Longer la tranchée à découvert** (Jérôme, v0.21.4) : un carré de 4 m où passait une tranchée comptait +8 de relief (ses parois) : le champ
+  de coûts contournait la tranchée par le sol nu à côté. Un carré dont 15 % au moins est en tranchée ou en boyau encore creusés
+  (`T.troncon` et `diff` ≤ −2) coûte désormais la moitié (`foule.abri`, `abriPart`) et ne compte plus de relief : un régiment qui
+  marche le long de son front reste dans la tranchée (graines 3, 5, 7, 30 s : 50-57 % des hommes en tranchée, contre 12-31 %), sans
+  arriver plus tard (140 m restants contre 143). Les cratères ne comptent pas (les descendre ralentit). Une tranchée comblée par les obus ne
+  protège plus : son carré redevient ordinaire à la prochaine mise à jour des coûts. `calculerCoutsBande` donne aussi la vue de `troncon`.
 - **Déterminisme et cache** : un champ de coûts calculé « quand le cache le veut »
   aurait rendu une partie relue différente. Les champs ne dépendent que de `couts`,
   un résumé du terrain qui fait partie de l'état (sauvegardé) et n'est refait qu'à

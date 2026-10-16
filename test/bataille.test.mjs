@@ -2,6 +2,7 @@
 import { readFileSync } from 'node:fs';
 import { nouvelleBataille, avancer, ordonnerMarche, ordonnerBarrage, aube, photo, restaurer, effectifs, horloge, zone, tronconsTenus, rangDe, moralEnMots, abriDe, terrainSous, terrainResume, peutOrdonner } from '../js/bataille.js';
 import { ligneY } from '../js/tranchees.js';
+import { calculerCouts, dimensionsCouts, BLOC } from '../js/champs.js';
 import { tronconsDe, refusCorvee } from '../js/nuit.js';
 import { SECTEURS as SECT } from '../js/data/secteur.js';
 import { identite, etatEnMots, chevrons } from '../js/identite.js';
@@ -59,6 +60,16 @@ test('l\'ordre à sec ne change rien, et dit ce que l\'ordre fera', () => {
   const tr = peutOrdonner(C, [0], M.x + 150, yl), vrai = ordonnerMarche(C, [0], M.x + 150, yl);
   assert.equal(tr.tranchee, true); assert.deepEqual(tr.troncons, vrai.troncons);
   assert.equal(peutOrdonner(C, [0], -5, -5).refus, 'Hors du secteur.');
+});
+test('à l\'abri : un carré où passe une tranchée coûte moins qu\'un carré à découvert, et rien d\'autre ne change', () => {
+  const B = petite(), T = B.terrain, { bw, bh } = dimensionsCouts(T), avec = new Uint8Array(bw * bh), sans = new Uint8Array(bw * bh);
+  const R2 = structuredClone(R); R2.foule.abri = 1; R2.foule.abriPart = 2;      // l'ancienne règle
+  calculerCouts(T, R, avec); calculerCouts(T, R2, sans);
+  let moins = 0, pareil = 0, plus = 0;
+  for (let c = 0; c < avec.length; c++) { if (!sans[c]) { assert.equal(avec[c], 0); continue; } if (avec[c] < sans[c]) moins++; else if (avec[c] === sans[c]) pareil++; else plus++; }
+  assert.ok(moins > 20, `des carrés de tranchée moins chers (${moins})`);
+  assert.equal(plus, 0);
+  assert.ok(pareil > moins, 'le reste du terrain ne change pas');
 });
 test('un ordre impossible se refuse, avec sa raison', () => {
   const B = petite();

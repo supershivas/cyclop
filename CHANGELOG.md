@@ -1,5 +1,8 @@
 # Journal des versions
 
+## 0.21.4 — 2026-10-16
+- Un régiment qui se déplace préfère l'abri : il suit la tranchée plutôt que de longer à découvert, même si c'est un peu plus long
+
 ## 0.21.3 — 2026-10-16
 - La carte se simplifie : quatre secteurs A à D (un régiment de départ n'en occupe plus deux), des lignes numérotées de 1 à 4 de chaque côté ; une tranchée se dit B1, ou B1 en face
 - La fiche d'un régiment s'ouvre juste au-dessus de sa carte, centrée sur elle

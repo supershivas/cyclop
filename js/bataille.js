@@ -14,17 +14,17 @@
    La sauvegarde (photo) garde la graine, la liste compacte des impacts, l'état
    de la foule et les petites couches de logique ; jamais le relief : il se
    rejoue depuis la graine et les impacts (rejouerTerrain). */
-import { createRng, hash2 } from './lib/rng.js?v=0.21.3';
-import { creerTerrain, impact, hydroLignes, etat as etatCase, vitesseEtat, ETAT } from './terrain.js?v=0.21.3';
-import { creerArmee, ajouterSoldat, construireGrille, pasArmee, tuerDans, effrayer, compacter, photoArmee, restaurerArmee, b64, deB64, DENSITE, place } from './army.js?v=0.21.3';
-import { creuserTranchees, ligneSous } from './tranchees.js?v=0.21.3';
-import { calculerCouts, creerCacheChamps, dimensionsCouts, BLOC } from './champs.js?v=0.21.3';
-import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.21.3';
-import { METEO, TRANSITIONS, PREVISION_JUSTE } from './data/meteo.js?v=0.21.3';
-import { SECTEURS } from './data/secteur.js?v=0.21.3';
-import { REGIMENTS } from './data/lexique.js?v=0.21.3';
-import { grade } from './identite.js?v=0.21.3';
-import { corvees, rejouerTravaux } from './nuit.js?v=0.21.3';
+import { createRng, hash2 } from './lib/rng.js?v=0.21.4';
+import { creerTerrain, impact, hydroLignes, etat as etatCase, vitesseEtat, ETAT } from './terrain.js?v=0.21.4';
+import { creerArmee, ajouterSoldat, construireGrille, pasArmee, tuerDans, effrayer, compacter, photoArmee, restaurerArmee, b64, deB64, DENSITE, place } from './army.js?v=0.21.4';
+import { creuserTranchees, ligneSous } from './tranchees.js?v=0.21.4';
+import { calculerCouts, creerCacheChamps, dimensionsCouts, BLOC } from './champs.js?v=0.21.4';
+import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.21.4';
+import { METEO, TRANSITIONS, PREVISION_JUSTE } from './data/meteo.js?v=0.21.4';
+import { SECTEURS } from './data/secteur.js?v=0.21.4';
+import { REGIMENTS } from './data/lexique.js?v=0.21.4';
+import { grade } from './identite.js?v=0.21.4';
+import { corvees, rejouerTravaux } from './nuit.js?v=0.21.4';
 
 export const PAS = 1 / 30;                 // s de jeu par pas
 export const NOUS = 0, EUX = 1;
@@ -730,7 +730,7 @@ function calculerCoutsBande(B, b0, b1, gel) {
   // calculerCouts travaille sur tout le terrain : on lui passe une vue des rangées de la bande
   const { bw } = dimensionsCouts(T);
   const H = Math.min(T.H, b1 * BLOC) - b0 * BLOC;
-  const vue = { ...T, H, base: T.base.subarray(b0 * BLOC * T.W), diff: T.diff.subarray(b0 * BLOC * T.W), eau: T.eau.subarray(b0 * BLOC * T.W), humid: T.humid.subarray(b0 * BLOC * T.W) };
+  const vue = { ...T, H, base: T.base.subarray(b0 * BLOC * T.W), diff: T.diff.subarray(b0 * BLOC * T.W), eau: T.eau.subarray(b0 * BLOC * T.W), humid: T.humid.subarray(b0 * BLOC * T.W), troncon: T.troncon ? T.troncon.subarray(b0 * BLOC * T.W) : null };
   calculerCouts(vue, R, B.coutsNeufs.subarray(b0 * bw, b1 * bw), gel);
 }
 
