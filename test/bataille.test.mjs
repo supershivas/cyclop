@@ -1,6 +1,6 @@
 // La bataille : déterminisme, ordres refusés à voix haute, sauvegarde qui rejoue la même partie.
 import { readFileSync } from 'node:fs';
-import { nouvelleBataille, avancer, ordonnerMarche, ordonnerBarrage, aube, photo, restaurer, effectifs, horloge, zone, tronconsTenus, rangDe, moralEnMots, abriDe, terrainSous, terrainResume } from '../js/bataille.js';
+import { nouvelleBataille, avancer, ordonnerMarche, ordonnerBarrage, aube, photo, restaurer, effectifs, horloge, zone, tronconsTenus, rangDe, moralEnMots, abriDe, terrainSous, terrainResume, peutOrdonner } from '../js/bataille.js';
 import { ligneY } from '../js/tranchees.js';
 import { tronconsDe, refusCorvee } from '../js/nuit.js';
 import { SECTEURS as SECT } from '../js/data/secteur.js';
@@ -48,6 +48,17 @@ test('le terrain sous la souris : un résumé sans la vitesse, et la vitesse en 
 });
 test('les chevrons suivent les mots de l\'expérience, sans compter ce qu\'on a tué', () => {
   assert.deepEqual([0, 0.07, 0.08, 0.3, 0.6, 5].map(chevrons), [0, 0, 1, 2, 3, 3]);
+});
+test('l\'ordre à sec ne change rien, et dit ce que l\'ordre fera', () => {
+  const B = petite(), avant = empreinte(B), [x, y] = P(150, 150);
+  const libre = peutOrdonner(B, [0, 1], x, y);
+  assert.equal(empreinte(B), avant);
+  assert.equal(libre.ok, true); assert.equal(libre.tranchee, false); assert.equal(libre.emprises.length, 2);
+  assert.deepEqual(ordonnerMarche(B, [0, 1], x, y).regiments, libre.regiments);
+  const L = B.lignes.find(l => l.camp === 0 && l.rang === 0), yl = ligneY(L, M.x + 150), C = petite();
+  const tr = peutOrdonner(C, [0], M.x + 150, yl), vrai = ordonnerMarche(C, [0], M.x + 150, yl);
+  assert.equal(tr.tranchee, true); assert.deepEqual(tr.troncons, vrai.troncons);
+  assert.equal(peutOrdonner(C, [0], -5, -5).refus, 'Hors du secteur.');
 });
 test('un ordre impossible se refuse, avec sa raison', () => {
   const B = petite();

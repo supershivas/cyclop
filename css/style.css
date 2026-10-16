@@ -279,3 +279,13 @@ dialog form { margin-top: calc(var(--pas) * 2); }
 .reg-ouvert .actions button { height: 32px; padding: 0 var(--pas); font: inherit; font-size: 13px; color: var(--jeu-fond); background: none; border: 1px solid var(--jeu-accent); cursor: pointer; }
 .reg-ouvert .actions button.actif { background: var(--jeu-fond); color: var(--jeu-encre); border-color: var(--jeu-fond); }
 @media (hover: hover) { .reg-carte:hover:not(.choisi) { --pap: var(--jeu-accent); } .reg-ouvert .actions button:hover { background: var(--jeu-accent); color: var(--jeu-fond); } }
+
+/* La visée d'un ordre (Jérôme, v0.21.0) : une ligne du centre de chaque régiment choisi au curseur, terminée par une croix ; rouge quand l'ordre
+   ne partirait pas (la raison est dite au clic). Sur le terrain, la surbrillance montre ce que l'ordre occuperait. */
+.visee { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+.visee[hidden] { display: none; }
+.visee line { stroke-linecap: round; }
+.visee .fond { stroke: var(--jeu-fond); stroke-width: 4; }
+.visee .encre { stroke: var(--jeu-encre); stroke-width: 2; stroke-dasharray: 6 5; }
+.visee .croix .encre { stroke-dasharray: none; }
+.visee.refus .croix .encre { stroke: var(--jeu-eux); }

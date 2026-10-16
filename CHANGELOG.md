@@ -1,5 +1,9 @@
 # Journal des versions
 
+## 0.21.0 — 2026-10-16
+- Un régiment choisi se voit : un anneau au pied de chacun de ses hommes, à tous les zooms
+- Avant de donner un ordre, une ligne va du régiment au curseur, terminée par une croix, et ce que l'ordre occuperait s'allume (les tronçons visés, ou la place des régiments en terrain libre) ; la croix est rouge quand l'ordre ne partirait pas
+
 ## 0.20.0 — 2026-10-16
 - Nos régiments en bas de l'écran : une carte par régiment (numéro et nom, chevrons d'expérience, barre debout / blessés / tombés) ; la carte choisie s'ouvre vers le haut, avec son ordre et ses actions (Marcher, Regagner sa tranchée, Fiche)
 - Le râtelier passe en bas à droite ; les feuilles de situation disparaissent

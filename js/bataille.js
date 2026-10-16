@@ -14,17 +14,17 @@
    La sauvegarde (photo) garde la graine, la liste compacte des impacts, l'état
    de la foule et les petites couches de logique ; jamais le relief : il se
    rejoue depuis la graine et les impacts (rejouerTerrain). */
-import { createRng, hash2 } from './lib/rng.js?v=0.20.0';
-import { creerTerrain, impact, hydroLignes, etat as etatCase, vitesseEtat, ETAT } from './terrain.js?v=0.20.0';
-import { creerArmee, ajouterSoldat, construireGrille, pasArmee, tuerDans, effrayer, compacter, photoArmee, restaurerArmee, b64, deB64, DENSITE, place } from './army.js?v=0.20.0';
-import { creuserTranchees, ligneSous } from './tranchees.js?v=0.20.0';
-import { calculerCouts, creerCacheChamps, dimensionsCouts, BLOC } from './champs.js?v=0.20.0';
-import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.20.0';
-import { METEO, TRANSITIONS, PREVISION_JUSTE } from './data/meteo.js?v=0.20.0';
-import { SECTEURS } from './data/secteur.js?v=0.20.0';
-import { REGIMENTS } from './data/lexique.js?v=0.20.0';
-import { grade } from './identite.js?v=0.20.0';
-import { corvees, rejouerTravaux } from './nuit.js?v=0.20.0';
+import { createRng, hash2 } from './lib/rng.js?v=0.21.0';
+import { creerTerrain, impact, hydroLignes, etat as etatCase, vitesseEtat, ETAT } from './terrain.js?v=0.21.0';
+import { creerArmee, ajouterSoldat, construireGrille, pasArmee, tuerDans, effrayer, compacter, photoArmee, restaurerArmee, b64, deB64, DENSITE, place } from './army.js?v=0.21.0';
+import { creuserTranchees, ligneSous } from './tranchees.js?v=0.21.0';
+import { calculerCouts, creerCacheChamps, dimensionsCouts, BLOC } from './champs.js?v=0.21.0';
+import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.21.0';
+import { METEO, TRANSITIONS, PREVISION_JUSTE } from './data/meteo.js?v=0.21.0';
+import { SECTEURS } from './data/secteur.js?v=0.21.0';
+import { REGIMENTS } from './data/lexique.js?v=0.21.0';
+import { grade } from './identite.js?v=0.21.0';
+import { corvees, rejouerTravaux } from './nuit.js?v=0.21.0';
 
 export const PAS = 1 / 30;                 // s de jeu par pas
 export const NOUS = 0, EUX = 1;
@@ -184,8 +184,9 @@ function monter(etat, R) {
 
 // ─── Les ordres (le joueur) : ils rendent une raison quand ils sont refusés ──
 
-/* Marcher : les régiments choisis prennent place côte à côte autour de (x, y). */
-export function ordonnerMarche(B, ids, x, y) {
+/* Marcher : les régiments choisis prennent place côte à côte autour de (x, y). L'ordre se prépare à sec (`planMarche` : rien n'est
+   changé, c'est ce que le dessin montre avant le clic, v0.21.0), puis `ordonnerMarche` l'applique. */
+function planMarche(B, ids, x, y) {
   const { etat, R } = B;
   const S = SECTEURS[etat.secteur];
   if (etat.phase !== 'jour') return { refus: 'La nuit, les ordres attendent l\'aube.' };
@@ -196,15 +197,15 @@ export function ordonnerMarche(B, ids, x, y) {
   // le moral : un régiment en déroute n'obéit plus ; ébranlé, il ne sort pas vers l'ennemi
   // et un régiment qui refuse de monter (aujourd'hui) n'obéit à rien
   const refuse = regs.filter(r => r.deroute || r.refus === etat.jour || (r.moral < R.moral.ebranle && y < r.ordre.y - R.moral.avance));
+  let raison = null;
   if (refuse.length) {
     regs = regs.filter(r => !refuse.includes(r));
-    const raison = refuse.map(r => `${r.nom} ${r.deroute ? 'est en déroute' : r.refus === etat.jour ? 'refuse de monter : il tiendra sa tranchée, rien de plus' : 'est ébranlé : il ne sortira pas'}`).join(' ; ') + '.';
+    raison = refuse.map(r => `${r.nom} ${r.deroute ? 'est en déroute' : r.refus === etat.jour ? 'refuse de monter : il tiendra sa tranchée, rien de plus' : 'est ébranlé : il ne sortira pas'}`).join(' ; ') + '.';
     if (!regs.length) return { refus: raison };
-    const res = ordonnerMarche(B, regs.map(r => r.id), x, y);
-    return { ...res, refus: raison };
   }
   const largeurReg = S.largeur / S.regiments;
   regs.sort((a, b) => a.ordre.x - b.ordre.x);
+  const items = [];
   // sur une tranchée : l'occuper, côte à côte le long de son tracé
   const L = ligneSous(B.lignes, x, y);
   if (L) {
@@ -214,24 +215,41 @@ export function ordonnerMarche(B, ids, x, y) {
     const total = longueurs.reduce((s, w) => s + w + 4, -4);
     let x0 = Math.max(Z.x0 + 1, Math.min(Z.x1 - 1 - total, x - total / 2)), debut = x0, fin = x0;
     regs.forEach((r, k) => {
-      r.ordre = formationTranchee(r, L, x0, Math.min(Z.x1 - 1, x0 + longueurs[k]), R);
+      items.push({ r, ordre: formationTranchee(r, L, x0, Math.min(Z.x1 - 1, x0 + longueurs[k]), R) });
       fin = Math.min(Z.x1 - 1, x0 + longueurs[k]);
       x0 += longueurs[k] + 4;
-      reattribuer(B, r);
     });
     // (la ligne et les tronçons visés : l'ordre clignote, le carnet le dit)
     const ligne = B.lignes.indexOf(L);
-    return { ok: true, regiments: regs.map(r => r.id), tranchee: true, ligne, troncons: tronconsDeLigne(B, ligne, debut, fin) };
+    return { regs, raison, items, tranchee: true, ligne, troncons: tronconsDeLigne(B, ligne, debut, fin) };
   }
   const largeurs = regs.map(r => formation(r, 0, 0, largeurReg, R).cols * R.foule.espacement + 6);
   const total = largeurs.reduce((s, w) => s + w, 0);
   let cx = Math.max(Z.x0 + total / 2, Math.min(Z.x1 - total / 2, x)) - total / 2;
   regs.forEach((r, k) => {
-    r.ordre = formation(r, cx + largeurs[k] / 2, Math.max(Z.y0 + 4, Math.min(Z.y1 - 4, y)), largeurReg, R);
+    items.push({ r, ordre: formation(r, cx + largeurs[k] / 2, Math.max(Z.y0 + 4, Math.min(Z.y1 - 4, y)), largeurReg, R) });
     cx += largeurs[k];
-    reattribuer(B, r);
   });
-  return { ok: true, regiments: regs.map(r => r.id) };
+  return { regs, raison, items, tranchee: false };
+}
+export function ordonnerMarche(B, ids, x, y) {
+  const p = planMarche(B, ids, x, y);
+  if (p.refus) return { refus: p.refus };
+  for (const { r, ordre } of p.items) { r.ordre = ordre; reattribuer(B, r); }
+  const res = p.tranchee ? { ok: true, regiments: p.regs.map(r => r.id), tranchee: true, ligne: p.ligne, troncons: p.troncons } : { ok: true, regiments: p.regs.map(r => r.id) };
+  return p.raison ? { ...res, refus: p.raison } : res;
+}
+/* L'ordre à sec : ce que `ordonnerMarche` ferait, sans rien changer. { refus } si rien ne partirait ; sinon { ok, tranchee, troncons },
+   ou, en terrain libre, les emprises (un rectangle par régiment : x, y le centre, l la largeur, p la profondeur, en mètres) ;
+   `refus` aussi quand certains seulement n'obéiraient pas. */
+export function peutOrdonner(B, ids, x, y) {
+  const p = planMarche(B, ids, x, y);
+  if (p.refus) return { refus: p.refus };
+  const out = { ok: true, regiments: p.regs.map(r => r.id), tranchee: p.tranchee };
+  if (p.raison) out.refus = p.raison;
+  if (p.tranchee) out.troncons = p.troncons;
+  else out.emprises = p.items.map(({ r, ordre }) => ({ x: ordre.x, y: ordre.y, l: ordre.cols * ordre.esp, p: Math.ceil(Math.max(1, r.effectif) / ordre.cols) * ordre.esp }));
+  return out;
 }
 
 /* Les places de la nouvelle formation aux vivants du régiment, sans qu'ils se

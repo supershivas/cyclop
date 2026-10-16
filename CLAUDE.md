@@ -137,6 +137,12 @@ la danse macabre, la catastrophe peinte avec calme. L'intention est dans `DESIGN
   des hommes, aux seuils des mots (0,08, 0,25, 0,6) : rien n'est compté de ce qu'on a tué (DESIGN.md : le compteur de morts n'est jamais
   une récompense). La barre : plein = debout, hachuré = blessés, vide = tombés (la forme porte l'information). S'ouvre le régiment choisi en
   dernier. Pas encore d'action de tir ni de barrage par régiment : le jeu n'en a pas (le barrage est celui des batteries).
+- **La sélection sur le terrain** (Jérôme, v0.21.0) : un anneau d'os (liseré de terre) au pied de chaque homme des régiments choisis, à tous les
+  zooms (`anneaux` de rendu3d.js, des points sans test de profondeur sous les soldats ; coût mesuré, tous les régiments choisis, 8 000
+  soldats, rendu logiciel : +0,3 à 0,7 ms côté jeu, +2 à 7 ms dessin attendu, dans le bruit de la mesure). La visée (`majVisee`, un SVG) : une
+  ligne de chaque régiment choisi au curseur, une croix au bout, rouge si l'ordre ne partirait pas ; `rendu.surligner` allume ce que l'ordre
+  occuperait (les tronçons, ou une emprise par régiment en terrain libre, mêmes traits que le clignotement). `peutOrdonner` (bataille.js) est
+  l'ordre à sec : `ordonnerMarche` et lui partent du même `planMarche`, rien n'est changé avant le clic. Le clic droit valide (ou « Marcher »).
 - **Le haut de l'écran** (Jérôme, v0.19.0 ; `docs/ui-cible.md`) : à gauche le menu, les réglages et le carnet de bord (la fiche et le
   papier de la nuit y attendent leur place définitive) ; au centre les pertes des deux armées (`majPertes`, en feuille de situation) ;
   à droite la carte, le temps (arrêter, ×1, ×2, ×4 : `setTimeScale` plafonné par `perf.sim` sous ~20 ms, un assaut / une prise / une

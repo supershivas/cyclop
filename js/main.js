@@ -1,24 +1,24 @@
 // Le cycle de vie : écran titre → bataille → nuit → fin ; pause active,
 // réglages, sauvegarde, mise à jour, debug. Les règles sont dans bataille.js
 // (pures), le dessin dans rendu3d.js (il ne modifie jamais l'état).
-import { createLoop } from './lib/loop.js?v=0.20.0';
-import { createKeys, stopTypeahead } from './lib/keys.js?v=0.20.0';
-import { createPointer, lockBrowserGestures } from './lib/pointer.js?v=0.20.0';
-import { createGamepad } from './lib/gamepad.js?v=0.20.0';
-import { createStore, autosave, pickJSONFile } from './lib/save.js?v=0.20.0';
-import { startUpdateCheck, loadVersion, loadChangelog, downloadJSON } from './lib/app-update.js?v=0.20.0';
-import { ROLES } from './palette.js?v=0.20.0';
-import { MISSIONS, nouvelleBataille, avancer, aube, ordonnerMarche, ordonnerBarrage, horloge, effectifs, tronconsTenus, moralEnMots, terrainSous, terrainResume, rangDe, nomTroncon, actionDe, forcesTroncons, secteurDe, secteursDe, etendueSecteurs, tronconsDeLigne, largeurSecteur, nombreSecteurs, codeLigne, zone, photo, restaurer, PAS, NOUS, EUX } from './bataille.js?v=0.20.0';
-import { ligneY } from './tranchees.js?v=0.20.0';
-import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.20.0';
-import { METEO } from './data/meteo.js?v=0.20.0';
-import { impact, hydroLignes } from './terrain.js?v=0.20.0';
-import { hash2 } from './lib/rng.js?v=0.20.0';
-import { creerRendu, CAMERA } from './rendu3d.js?v=0.20.0';
-import { identite, etatEnMots, experienceEnMots, chevrons } from './identite.js?v=0.20.0';
-import { CORVEES } from './data/corvees.js?v=0.20.0';
-import { refusCorvee } from './nuit.js?v=0.20.0';
-import { chargerContenu } from './design-store.js?v=0.20.0';
+import { createLoop } from './lib/loop.js?v=0.21.0';
+import { createKeys, stopTypeahead } from './lib/keys.js?v=0.21.0';
+import { createPointer, lockBrowserGestures } from './lib/pointer.js?v=0.21.0';
+import { createGamepad } from './lib/gamepad.js?v=0.21.0';
+import { createStore, autosave, pickJSONFile } from './lib/save.js?v=0.21.0';
+import { startUpdateCheck, loadVersion, loadChangelog, downloadJSON } from './lib/app-update.js?v=0.21.0';
+import { ROLES } from './palette.js?v=0.21.0';
+import { MISSIONS, nouvelleBataille, avancer, aube, ordonnerMarche, peutOrdonner, ordonnerBarrage, horloge, effectifs, tronconsTenus, moralEnMots, terrainSous, terrainResume, rangDe, nomTroncon, actionDe, forcesTroncons, secteurDe, secteursDe, etendueSecteurs, tronconsDeLigne, largeurSecteur, nombreSecteurs, codeLigne, zone, photo, restaurer, PAS, NOUS, EUX } from './bataille.js?v=0.21.0';
+import { ligneY } from './tranchees.js?v=0.21.0';
+import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.21.0';
+import { METEO } from './data/meteo.js?v=0.21.0';
+import { impact, hydroLignes } from './terrain.js?v=0.21.0';
+import { hash2 } from './lib/rng.js?v=0.21.0';
+import { creerRendu, CAMERA } from './rendu3d.js?v=0.21.0';
+import { identite, etatEnMots, experienceEnMots, chevrons } from './identite.js?v=0.21.0';
+import { CORVEES } from './data/corvees.js?v=0.21.0';
+import { refusCorvee } from './nuit.js?v=0.21.0';
+import { chargerContenu } from './design-store.js?v=0.21.0';
 
 const JEU = 'cyclopeen';
 const $ = id => document.getElementById(id);
@@ -748,6 +748,22 @@ function majEtiquettes() {
   } else m.hidden = true;
 }
 let marque = null;
+// La visée (v0.21.0) : de chaque régiment choisi au curseur une ligne, une croix au bout ; l'ordre à sec (`peutOrdonner`) dit ce qu'il occuperait
+function majVisee() {
+  const svg = $('visee');
+  if (!(enJeu() && B.etat.phase === 'jour' && !nuitEtat && choisis.size && souris && !glisse && !modeBarrage && !document.querySelector('dialog[open]'))) {
+    if (!svg.hasAttribute('hidden')) { svg.setAttribute('hidden', ''); rendu.surligner(null); }
+    return;
+  }
+  const [x, y] = rendu.versTerrain(souris.x, souris.y), plan = peutOrdonner(B, [...choisis], x, y);
+  rendu.surligner(plan.ok ? { troncons: plan.troncons || [], rects: plan.emprises || [] } : null);
+  const trait = (x1, y1, x2, y2) => `<line class="fond" x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}"/><line class="encre" x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}"/>`;
+  let d = '';
+  for (const id of choisis) { const c = centres.get(id); if (c) { const [sx, sy] = rendu.versEcran(c.x / c.n, c.y / c.n); d += trait(Math.round(sx), Math.round(sy), souris.x, souris.y); } }
+  d += `<g class="croix">${trait(souris.x - 7, souris.y - 7, souris.x + 7, souris.y + 7)}${trait(souris.x - 7, souris.y + 7, souris.x + 7, souris.y - 7)}</g>`;
+  svg.classList.toggle('refus', !plan.ok);
+  svg.innerHTML = d; svg.removeAttribute('hidden');
+}
 
 // ─── Les fiches : un homme (son nom, son âge, son grade, ce qu'il endure) ou un
 // régiment (ses hommes, ses blessés, ses morts, et leurs fiches). De près, on
@@ -1131,6 +1147,7 @@ const loop = createLoop({
     if (marque) marque.t -= dt;
     rendu.dessiner(dt, evenements.splice(0));
     majEtiquettes();
+    majVisee();
     majBulle();
     if ((hudT -= dt) <= 0) { hudT = 0.25; majHud(); }
   },
@@ -1171,7 +1188,7 @@ startUpdateCheck({
 
 // ─── Mode debug (section 18) : chargé seulement avec ?debug=1 ──────────────
 if (DEBUG) {
-  const { installDebug, seedFromUrl } = await import('./lib/debug.js?v=0.20.0');
+  const { installDebug, seedFromUrl } = await import('./lib/debug.js?v=0.21.0');
   window.__seed = seedFromUrl() ?? undefined;
   installDebug({
     state: () => B && { ...horloge(B), effectifs: effectifs(B), pertes: B.etat.pertes, impacts: B.etat.impacts.length, enJeu: enJeu(), pause: loop.paused },
