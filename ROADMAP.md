@@ -9,6 +9,41 @@ Statuts : **à l'étude** · **validé** (Jérôme a tranché) · **en cours** �
 
 ## En cours
 
+### Refonte UX/UI (docs/ui-cible.md)
+
+**Statut** : validé (Jérôme, v0.18.1) — un lot par session, chacun livrable seul ; on se concentre sur l'UX/UI
+
+Décisions : étoiles = chevrons d'expérience (`A.exp`, aucun nouvel état) ; nom d'un régiment = numéro d'ordre + nom du lexique
+(« 3 · Viride », jamais de vrais numéros de régiment) ; carte en option C (la grille et ses cases d'ordre, de vraies proportions, des
+cercles-régiments par-dessus) et la touche M disparaît (carte toujours visible) ; toujours sur `main`.
+
+- [x] Lot 1 — le râtelier : trois boutons papier 75 / 155 / 220, touches 1 2 3 (v0.18.1)
+- [ ] Lot 2 — haut de l'écran : réglages et carnet en haut à gauche ; pertes des deux armées en feuille de situation, au centre ; carte
+  fixe en haut à droite ; montre, lecture / pause / avance rapide (×1, ×2, ×4 par `setTimeScale`, plafonnée par `perf.sim`, retour à ×1
+  sur un assaut, une déroute, un tronçon pris), météo (aujourd'hui et lendemain, `etat.previsions` : pas de météo dans la journée) ;
+  terrain sous la souris réduit à 2 lignes et une barre de vitesse (v0.19.0)
+- [ ] Lot 3 — la rangée des 8 régiments : cartes compactes (numéro + nom, chevrons, barre debout / blessés / tombés en encres papier :
+  plein / hachuré / vide + ✕, pas de vert-orange-rouge), flèches si l'écran est étroit ; la carte choisie s'ouvre vers le haut
+  (`actionDe`, actions) (v0.20.0)
+- [ ] Lot 4 — la sélection sur le terrain : contour des soldats choisis (halo aux zooms 1 et 2), ligne du centre du régiment au curseur
+  terminée par une croix (DOM), destinations en surbrillance (`peutOrdonner` : l'ordre à sec, extrait de `ordonnerMarche`), clic droit ;
+  mesure du rendu (v0.21.0)
+- [ ] Lot 5 — le survol global : un régiment (les deux camps) et un tronçon en surbrillance (v0.21.1)
+- [ ] Lot 6 — les formations (ligne, par deux, colonne) : `ordre.forme`, lue avec `??=` ; `formation`, `reattribuer`, `place` (v0.22.0)
+- [ ] Plus tard : où vont le cadran de vue, la fiche et le papier de la nuit (en attendant, ils restent où ils sont)
+
+### Visuels et effets (après l'UX/UI)
+
+**Statut** : à l'étude — chacun d'abord au labo
+
+- **Projection des corps** (logique directe, Jérôme) : le souffle jette ~3 m et le dessin fait un bond sur place (un dôme de bonds, parti
+  avant l'explosion visible). Attendu : 5 à 15 m, dans la logique (une phase de vol, sans `rng()`), les morts projetés
+  (`etat.corps`) ; à remesurer sur l'équilibre.
+- **Balles** : le tampon `BALLES` (200) est plus petit que le plafond (160 par image) et la course est de 13 à 20 m pour 70 m de portée.
+- **Obus de loin** : teinte sombre (mesurer le contraste sur la boue), allongés selon la trajectoire.
+- **Explosions de près** : éclats à l'échelle du zoom, le pool `ECLATS` sature en salve.
+- **Corbeaux** : paliers comme les soldats (point, trait, silhouette), posés sur les morts.
+
 ### Lot minimal : la tranche verticale du terrain
 
 **Statut** : à mesurer (v0.1.0) — attend la décision de Jérôme pour la v1.0.0

@@ -1,24 +1,24 @@
 // Le cycle de vie : écran titre → bataille → nuit → fin ; pause active,
 // réglages, sauvegarde, mise à jour, debug. Les règles sont dans bataille.js
 // (pures), le dessin dans rendu3d.js (il ne modifie jamais l'état).
-import { createLoop } from './lib/loop.js?v=0.18.0';
-import { createKeys, stopTypeahead } from './lib/keys.js?v=0.18.0';
-import { createPointer, lockBrowserGestures } from './lib/pointer.js?v=0.18.0';
-import { createGamepad } from './lib/gamepad.js?v=0.18.0';
-import { createStore, autosave, pickJSONFile } from './lib/save.js?v=0.18.0';
-import { startUpdateCheck, loadVersion, loadChangelog, downloadJSON } from './lib/app-update.js?v=0.18.0';
-import { ROLES } from './palette.js?v=0.18.0';
-import { MISSIONS, nouvelleBataille, avancer, aube, ordonnerMarche, ordonnerBarrage, horloge, effectifs, tronconsTenus, moralEnMots, terrainSous, rangDe, nomTroncon, actionDe, forcesTroncons, secteurDe, secteursDe, etendueSecteurs, tronconsDeLigne, largeurSecteur, nombreSecteurs, codeLigne, zone, photo, restaurer, PAS, NOUS, EUX } from './bataille.js?v=0.18.0';
-import { ligneY } from './tranchees.js?v=0.18.0';
-import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.18.0';
-import { METEO } from './data/meteo.js?v=0.18.0';
-import { impact, hydroLignes } from './terrain.js?v=0.18.0';
-import { hash2 } from './lib/rng.js?v=0.18.0';
-import { creerRendu, CAMERA } from './rendu3d.js?v=0.18.0';
-import { identite, etatEnMots, experienceEnMots } from './identite.js?v=0.18.0';
-import { CORVEES } from './data/corvees.js?v=0.18.0';
-import { refusCorvee } from './nuit.js?v=0.18.0';
-import { chargerContenu } from './design-store.js?v=0.18.0';
+import { createLoop } from './lib/loop.js?v=0.18.1';
+import { createKeys, stopTypeahead } from './lib/keys.js?v=0.18.1';
+import { createPointer, lockBrowserGestures } from './lib/pointer.js?v=0.18.1';
+import { createGamepad } from './lib/gamepad.js?v=0.18.1';
+import { createStore, autosave, pickJSONFile } from './lib/save.js?v=0.18.1';
+import { startUpdateCheck, loadVersion, loadChangelog, downloadJSON } from './lib/app-update.js?v=0.18.1';
+import { ROLES } from './palette.js?v=0.18.1';
+import { MISSIONS, nouvelleBataille, avancer, aube, ordonnerMarche, ordonnerBarrage, horloge, effectifs, tronconsTenus, moralEnMots, terrainSous, rangDe, nomTroncon, actionDe, forcesTroncons, secteurDe, secteursDe, etendueSecteurs, tronconsDeLigne, largeurSecteur, nombreSecteurs, codeLigne, zone, photo, restaurer, PAS, NOUS, EUX } from './bataille.js?v=0.18.1';
+import { ligneY } from './tranchees.js?v=0.18.1';
+import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.18.1';
+import { METEO } from './data/meteo.js?v=0.18.1';
+import { impact, hydroLignes } from './terrain.js?v=0.18.1';
+import { hash2 } from './lib/rng.js?v=0.18.1';
+import { creerRendu, CAMERA } from './rendu3d.js?v=0.18.1';
+import { identite, etatEnMots, experienceEnMots } from './identite.js?v=0.18.1';
+import { CORVEES } from './data/corvees.js?v=0.18.1';
+import { refusCorvee } from './nuit.js?v=0.18.1';
+import { chargerContenu } from './design-store.js?v=0.18.1';
 
 const JEU = 'cyclopeen';
 const $ = id => document.getElementById(id);
@@ -552,7 +552,7 @@ $('batteries').append(...NOMS_CALIBRES.map((cal, k) => {
   b.className = 'batterie'; b.dataset.cal = cal;
   b.setAttribute('aria-label', `Barrage de ${cal} (touche ${k + 1})`);
   const H = { 75: 34, 155: 44, 220: 54 }[cal] || 40, W = { 75: 12, 155: 16, 220: 20 }[cal] || 14;
-  b.innerHTML = `<svg viewBox="0 0 ${W + 4} ${H + 4}" aria-hidden="true"><path d="M2 ${H + 2}V${Math.round(H * 0.45)}Q${2 + W / 2} 1 ${2 + W} ${Math.round(H * 0.45)}V${H + 2}Z"/><rect class="ceinture" x="2" y="${H - 8}" width="${W}" height="3"/></svg><b>${cal}</b><span>prête</span>`;
+  b.innerHTML = `<svg viewBox="0 0 ${W + 4} ${H + 4}" aria-hidden="true"><path d="M2 ${H + 2}V${Math.round(H * 0.45)}Q${2 + W / 2} 1 ${2 + W} ${Math.round(H * 0.45)}V${H + 2}Z"/><rect class="ceinture" x="2" y="${H - 8}" width="${W}" height="3"/></svg><b>${cal}</b><i class="touche" aria-hidden="true">${k + 1}</i><span>prête</span>`;
   b.onclick = () => viser(cal);
   return b;
 }));
@@ -1014,7 +1014,7 @@ startUpdateCheck({
 
 // ─── Mode debug (section 18) : chargé seulement avec ?debug=1 ──────────────
 if (DEBUG) {
-  const { installDebug, seedFromUrl } = await import('./lib/debug.js?v=0.18.0');
+  const { installDebug, seedFromUrl } = await import('./lib/debug.js?v=0.18.1');
   window.__seed = seedFromUrl() ?? undefined;
   installDebug({
     state: () => B && { ...horloge(B), effectifs: effectifs(B), pertes: B.etat.pertes, impacts: B.etat.impacts.length, enJeu: enJeu(), pause: loop.paused },

@@ -1,5 +1,8 @@
 # Journal des versions
 
+## 0.18.1 — 2026-10-16
+- Le râtelier : trois boutons en papier de campagne, 75, 155 et 220, avec leur touche (1, 2, 3) ; couché quand il se recharge
+
 ## 0.18.0 — 2026-10-16
 - Les tranchées ont des traverses, des sacs de terre sur le parapet (à l'envers quand le tronçon est pris), du fil de fer coupé là où l'ennemi a passé, des portes d'abri
 - Les blessés évacués reviennent une fois sur deux, après 1 nuit (bras), 2 (jambe) ou 3 (tête)
