@@ -157,6 +157,7 @@ export const REGLAGES = {
     coupPrise: 0.2,       // prisonniers ramenés par volontaire (plus avec l'expérience, moins si l'autre veille)
     coupMoral: 0.06,      // le moral gagné (des prisonniers ramenés), ou perdu en face
     coupExp: 0.15,        // l'expérience des volontaires qui reviennent
+    calme: 60,            // m : dans une tranchée d'en face, un régiment d'en face à moins de cela : ni évacuer ni ravitailler (v0.22.0)
     coupPortee: 200,      // m : jusqu'où ils vont chercher
   },
   jour: {

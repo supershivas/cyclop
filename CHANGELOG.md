@@ -1,5 +1,9 @@
 # Journal des versions
 
+## 0.22.0 — 2026-10-16
+- La nuit, les corvées de chaque régiment s'ouvrent au-dessus de sa carte, comme les actions du jour ; chaque carte dit la corvée prévue ; le papier de la nuit ne garde que le bilan
+- Dans une tranchée d'en face, on n'évacue pas les blessés et on ne ravitaille pas, sauf si la tranchée est toute à nous et qu'aucun régiment d'en face n'est tout près
+
 ## 0.21.4 — 2026-10-16
 - Un régiment qui se déplace préfère l'abri : il suit la tranchée plutôt que de longer à découvert, même si c'est un peu plus long
 

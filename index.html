@@ -9,8 +9,8 @@
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta property="og:image" content="og.png">
-<link rel="stylesheet" href="js/lib/game.css?v=0.21.4">
-<link rel="stylesheet" href="css/style.css?v=0.21.4">
+<link rel="stylesheet" href="js/lib/game.css?v=0.22.0">
+<link rel="stylesheet" href="css/style.css?v=0.22.0">
 </head>
 <body>
 <div class="jeu-ecran" id="ecran">
@@ -47,10 +47,7 @@
           <p id="nuit-lignes"></p>
           <p class="discret" id="nuit-demain"></p>
           <p class="discret" id="nuit-reserves"></p>
-          <h3 class="corvees-titre">Les corvées de la nuit</h3>
-          <p class="discret" id="nuit-aide">Choisissez des régiments (un clic sur eux ou sur la liste, un cadre, T pour tous), puis une corvée.</p>
-          <div class="corvees" id="corvees" role="group" aria-label="Corvées"></div>
-          <ul class="nuit-liste" id="nuit-liste"></ul>
+          <p class="discret" id="nuit-aide">Choisissez des régiments (un clic sur eux ou sur leur carte, un cadre, T pour tous) : leurs corvées s'ouvrent au-dessus de la carte.</p>
         </div>
         <div id="aube-bilan" hidden></div>
         <button class="bouton" id="aube">À l'aube</button>
@@ -217,6 +214,6 @@
 </dialog>
 
 <div class="jeu-toast" id="toast" role="status" hidden></div>
-<script type="module" src="js/main.js?v=0.21.4"></script>
+<script type="module" src="js/main.js?v=0.22.0"></script>
 </body>
 </html>

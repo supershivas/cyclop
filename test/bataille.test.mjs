@@ -3,7 +3,7 @@ import { readFileSync } from 'node:fs';
 import { nouvelleBataille, avancer, ordonnerMarche, ordonnerBarrage, aube, photo, restaurer, effectifs, horloge, zone, tronconsTenus, rangDe, moralEnMots, abriDe, terrainSous, terrainResume, peutOrdonner } from '../js/bataille.js';
 import { ligneY } from '../js/tranchees.js';
 import { calculerCouts, dimensionsCouts, BLOC } from '../js/champs.js';
-import { tronconsDe, refusCorvee } from '../js/nuit.js';
+import { tronconsDe, refusCorvee, chezLEnnemi } from '../js/nuit.js';
 import { SECTEURS as SECT } from '../js/data/secteur.js';
 import { identite, etatEnMots, chevrons } from '../js/identite.js';
 import { SECTEURS } from '../js/data/secteur.js';
@@ -70,6 +70,22 @@ test('à l\'abri : un carré où passe une tranchée coûte moins qu\'un carré 
   assert.ok(moins > 20, `des carrés de tranchée moins chers (${moins})`);
   assert.equal(plus, 0);
   assert.ok(pareil > moins, 'le reste du terrain ne change pas');
+});
+test('chez l\'ennemi, on n\'évacue ni ne ravitaille, sauf tranchée toute à nous et personne tout près', () => {
+  const R2 = structuredClone(R); R2.nuit.calme = 0;                                  // (personne n'est « trop près »)
+  const B = nouvelleBataille(3, R2, { soldats: 200, jours: 3 }), reg = B.etat.regiments.find(r => r.camp === 0);
+  assert.equal(chezLEnnemi(B, reg), false);
+  assert.equal(refusCorvee(B, reg, 'evacuer'), null);                                   // chez nous : possible
+  const L = B.lignes.find(l => l.camp === 1 && l.rang === 0), x = M.x + 150;
+  assert.ok(ordonnerMarche(B, [reg.id], x, ligneY(L, x)).ok);
+  assert.equal(chezLEnnemi(B, reg), true);
+  assert.match(refusCorvee(B, reg, 'evacuer'), /ne passent pas.*pas toute à nous/);     // la tranchée est à eux
+  assert.match(refusCorvee(B, reg, 'ravitailler'), /la soupe ne passe pas/);
+  assert.equal(refusCorvee(B, reg, 'repos'), null); assert.equal(refusCorvee(B, reg, 'reparer'), null); assert.equal(refusCorvee(B, reg, 'inhumer'), null);
+  for (const k of tronconsDe(B, reg)) B.etat.troncons[k] = 0;                           // la tranchée est toute à nous
+  assert.equal(refusCorvee(B, reg, 'evacuer'), null); assert.equal(refusCorvee(B, reg, 'ravitailler'), null);
+  B.R.nuit.calme = 1e6;                                                                  // … mais un régiment d'en face est tout près
+  assert.match(refusCorvee(B, reg, 'evacuer'), /trop près/);
 });
 test('un ordre impossible se refuse, avec sa raison', () => {
   const B = petite();

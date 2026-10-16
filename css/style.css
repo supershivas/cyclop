@@ -180,16 +180,9 @@ dialog .reglage input { width: 20px; height: 20px; margin: 0; flex: none; accent
 #nuit-corps, #aube-bilan { overflow-y: auto; min-height: 0; }
 .nuit h2 { margin: 0 0 4px; font-size: 16px; font-weight: normal; letter-spacing: .06em; }
 .nuit p { margin: 2px 0; }
-.corvees-titre { margin: var(--pas) 0 2px; font-size: var(--texte); font-weight: normal; color: var(--jeu-accent); letter-spacing: .06em; }
-.corvees { display: flex; flex-wrap: wrap; gap: 4px; margin: 4px 0; }
 .nuit button { font: inherit; font-size: 13px; color: var(--jeu-fond); background: none; border: 1px solid var(--jeu-fond); min-height: 36px; padding: 0 var(--pas); text-align: left; }
 .nuit button:disabled { color: var(--jeu-accent); border-color: var(--jeu-accent); }
 .nuit button.actif { background: var(--jeu-fond); color: var(--jeu-encre); }
-.nuit-liste { list-style: none; margin: var(--pas) 0 0; padding: 0; }
-.nuit-liste button { display: flex; justify-content: space-between; gap: var(--pas); width: 100%; min-height: 32px; border: 0; border-bottom: 1px solid var(--jeu-accent); padding: 2px 4px; }
-.nuit-liste button .discret { color: var(--jeu-accent); }
-.nuit-liste button.choisi { background: var(--jeu-fond); color: var(--jeu-encre); }
-.nuit-liste button.choisi .discret { color: var(--jeu-encre); }
 #aube { flex: none; width: 100%; min-height: var(--jeu-cible); margin-top: var(--pas); text-align: center; background: var(--jeu-fond); color: var(--jeu-encre); }
 .fin-jours { margin: var(--pas) 0; padding-left: 0; list-style: none; columns: 2; font-size: 13px; color: var(--jeu-accent); }
 dialog hr { border: 0; border-top: 1px solid var(--jeu-ombre); margin: calc(var(--pas) * 2) 0; }
@@ -291,3 +284,7 @@ dialog form { margin-top: calc(var(--pas) * 2); }
 .visee.refus .croix .encre { stroke: var(--jeu-eux); }
 .carte-grille .lib.eux { color: var(--jeu-eux); }
 .carte-grille .lib { font-size: 12px; text-align: center; }
+
+/* La nuit : les corvées sont au-dessus de la carte du régiment choisi, comme les actions du jour (Jérôme, v0.22.0) */
+.reg-ouvert .actions button.refus { color: var(--jeu-accent); border-style: dashed; }
+.reg-carte .corvee { font-size: 11px; line-height: 8px; color: var(--enc); }

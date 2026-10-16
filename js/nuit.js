@@ -15,11 +15,11 @@
      de travail chacun) ; les vivres (`reg.vivres`, en nuits : sans eux, la nuit
      repose moins et le moral baisse) ; le coup de main (des volontaires ramènent
      des prisonniers de la tranchée d'en face, s'ils reviennent). */
-import { toucher } from './terrain.js?v=0.21.4';
-import { hash2 } from './lib/rng.js?v=0.21.4';
-import { CORVEES } from './data/corvees.js?v=0.21.4';
-import { REGIMENTS } from './data/lexique.js?v=0.21.4';
-import { ajouterSoldat } from './army.js?v=0.21.4';
+import { toucher } from './terrain.js?v=0.22.0';
+import { hash2 } from './lib/rng.js?v=0.22.0';
+import { CORVEES } from './data/corvees.js?v=0.22.0';
+import { REGIMENTS } from './data/lexique.js?v=0.22.0';
+import { ajouterSoldat } from './army.js?v=0.22.0';
 
 export const SORTES = ['reparer', 'caillebotis'];          // les travaux de terrain, par leur numéro dans etat.travaux
 export const corvee = id => CORVEES.find(c => c.id === id);
@@ -36,10 +36,33 @@ export function tronconsDe(B, reg) {
   return out;
 }
 
+/* Un régiment est-il dans une tranchée de l'autre camp ? (sa tranchée d'ordre est une ligne de l'autre camp). Il est loin de l'arrière : cent
+   trente mètres à découvert le séparent de ses boyaux (Jérôme, v0.22.0). */
+export function chezLEnnemi(B, reg) {
+  const t = reg.ordre.trace;
+  const L = t && B.lignes.find(l => l.camp * 10 + l.rang === t.ligne);
+  return !!L && L.camp !== reg.camp;
+}
+// Ce qui lui manque pour qu'on lui amène ou qu'on lui reprenne quelque chose : la tranchée toute à lui, et personne d'en face tout près
+function isolement(B, reg) {
+  if (!tronconsDe(B, reg).every(k => B.etat.troncons[k] === reg.camp)) return 'la tranchée n\'est pas toute à nous';
+  const c = centreDe(B, reg);
+  if (c) for (const r of B.etat.regiments) {
+    if (r.camp === reg.camp || !r.effectif) continue;
+    const e = centreDe(B, r);
+    if (e && Math.hypot(e.x - c.x, e.y - c.y) < B.R.nuit.calme) return 'un régiment d\'en face est trop près';
+  }
+  return null;
+}
+
 // Un régiment peut-il faire cette corvée ? Rend la raison du refus, ou null.
 export function refusCorvee(B, reg, id) {
   const c = corvee(id);
   if (!c) return 'Pas de telle corvée.';
+  if ((id === 'evacuer' || id === 'ravitailler') && chezLEnnemi(B, reg)) {
+    const m = isolement(B, reg);
+    if (m) return `Chez l'ennemi, ${id === 'evacuer' ? 'les blessés ne passent pas' : 'la soupe ne passe pas'} : ${m}.`;
+  }
   if (c.tranchee && !tronconsDe(B, reg).length) return `${reg.nom || 'Ce régiment'} ne tient pas de tranchée.`;
   if (id === 'releve' && !(B.etat.reserves?.[reg.camp] > 0)) return 'Plus un régiment en réserve.';
   if (id === 'abri' && tronconsDe(B, reg).every(k => (B.etat.abris[k] || 0) >= B.R.nuit.abriMax)) return 'Ses abris sont aussi profonds qu\'on peut les creuser.';

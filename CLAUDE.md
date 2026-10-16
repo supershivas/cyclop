@@ -107,7 +107,8 @@ la danse macabre, la catastrophe peinte avec calme. L'intention est dans `DESIGN
   de secteur.js), autant dans les marges.
 - **La nuit sur le champ** (Jérôme, v0.13.0) : plus de boîte de dialogue la nuit ni à l'aube. Le champ reste (assombri, ses
   lumières), un papier (`#nuit`, `nuitEtat` de main.js : `choix` puis `aube`) donne le bilan du jour ; on choisit des régiments (clic
-  sur eux ou dans la liste, cadre, T) puis une corvée (`donnerCorvee`, `corveesNuit`), écrite sur leur feuille et sous leur nom ;
+  sur eux ou sur leur carte, cadre, T) puis une corvée parmi celles qui s'ouvrent au-dessus de la carte du dernier choisi (v0.22.0 : plus de
+  liste dans le papier ; `donnerCorvee`, `corveesNuit`, `majRegiments`), dite sur chaque carte (`court` de data/corvees.js) et sous leur nom ;
   « À l'aube » lance `aube(B, corveesNuit)`, le bilan s'affiche sur le même papier, « Le jour se lève » reprend. Pas de marche ni de
   barrage la nuit (dit à voix haute) ; les batteries sont cachées.
 - **Des soldats qui épaulent** (Jérôme, v0.13.0) : à partir de 6 pixels par mètre (la silhouette), des bras le long du corps ; un
@@ -118,6 +119,11 @@ la danse macabre, la catastrophe peinte avec calme. L'intention est dans `DESIGN
   son régiment, avec son numéro et son expérience, par l'arrière (`retours` de nuit.js ; le tirage est un hachage graine-numéro-jour, pas
   le générateur de la bataille). `etat.evacues` : `[numéro, jour, blessure, nuit du retour (0 : pas encore, −1 : non), régiment,
   expérience]` ; les évacués d'avant la v0.18.0 (deux nombres) ne reviennent pas. Le bilan de l'aube le dit.
+- **Chez l'ennemi, ni évacuer ni ravitailler** (Jérôme, v0.22.0) : un régiment dont la tranchée d'ordre est une ligne de l'autre camp
+  (`chezLEnnemi` de nuit.js) a 130 m à découvert entre lui et ses boyaux : `refusCorvee` refuse « évacuer » et « ravitailler » (« Chez l'ennemi,
+  la soupe ne passe pas : … »), sauf si la tranchée est toute à lui (`etat.troncons`) et qu'aucun régiment de l'autre camp n'est à moins de
+  `nuit.calme` (60 m). Réparer, caillebotis, abris, inhumer, coup de main, relève restent possibles ; la règle vaut aussi pour en face
+  (`choixEnFace` retombe au repos). Un grisé par corvée au-dessus de la carte dit pourquoi au clic.
 - **La nuit et ses corvées** (Jérôme, v0.6.0) : une corvée par régiment (repos,
   réparer, caillebotis, inhumer, évacuer) ; puis (Jérôme, v0.11.0) les abris profonds
   (`etat.abris`), les vivres (`reg.vivres`), le coup de main (`etat.prisonniers`) et
