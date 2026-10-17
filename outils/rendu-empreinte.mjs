@@ -88,6 +88,10 @@ await page.evaluate(() => { __jeu.camera(0.15, 0.95); __jeu.zoom(3); __jeu.telep
 await etape('soir', 4);
 await etape('soir-z1', 3, () => { __jeu.zoom(0); });
 await etape('nuit', 4, () => { __jeu.zoom(3); const B = __jeu.bataille(); while (B.etat.phase === 'jour') __jeu.avancer(30, false); __jeu.nuit(); });
+// les trois styles de nuit que le labo compare (la trame, le voile continu, le voile et ses halos : le jeu garde les halos)
+await etape('nuit-trame', 2, () => { __jeu.rendu().styleNuit = 'trame'; });
+await etape('nuit-doux', 2, () => { __jeu.rendu().styleNuit = 'doux'; });
+await etape('nuit-halos', 2, () => { __jeu.rendu().styleNuit = 'halos'; });
 // le temps qu'il fait : de la pluie, du brouillard, du gel (un jour de plus, pour tout reprendre au matin)
 await etape('matin', 4, () => { document.getElementById('aube').click(); document.getElementById('aube').click(); });
 for (const m of ['pluie', 'brouillard', 'gel']) {

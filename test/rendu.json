@@ -17,11 +17,14 @@
  "soir": "1e9346163e8dd27b9d1ba8df",
  "soir-z1": "4c7bd5dc87c3436319d33500",
  "nuit": "ff6be156b5ce8ea9feef44d4",
- "matin": "e9279ad47cb5c880f23fa7fe",
- "meteo-pluie": "8b9a58612267b75a8979cd17",
- "meteo-pluie-z1": "55d018ea60d2c9d0e61697c2",
- "meteo-brouillard": "a9ead32400ab72708ecfdeed",
- "meteo-brouillard-z1": "e2888617fb182b53386c1956",
- "meteo-gel": "34d212e8fe3737a7f6e3cd6c",
- "meteo-gel-z1": "f287b5d0d3b9c677a40f8661"
+ "nuit-trame": "1c3150a7f49375a05992df7c",
+ "nuit-doux": "c6ab13e3f6c680971a012a7a",
+ "nuit-halos": "057adf4e75e16077d6592982",
+ "matin": "e47bb12d6ca10e8b738bfb11",
+ "meteo-pluie": "f4fccf03aba9314821c49456",
+ "meteo-pluie-z1": "c433b608e997207946b30151",
+ "meteo-brouillard": "f375660bda2133c536640338",
+ "meteo-brouillard-z1": "f692acd17c588844ee6a296d",
+ "meteo-gel": "6acf4e1a18d0f4f6d76c2852",
+ "meteo-gel-z1": "7a378f185bf0796623103d16"
 }
