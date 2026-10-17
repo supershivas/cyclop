@@ -8,17 +8,19 @@ import { createGamepad } from './lib/gamepad.js?v=0.22.0';
 import { createStore, autosave, pickJSONFile } from './lib/save.js?v=0.22.0';
 import { startUpdateCheck, loadVersion, loadChangelog, downloadJSON } from './lib/app-update.js?v=0.22.0';
 import { ROLES } from './palette.js?v=0.22.0';
-import { MISSIONS, nouvelleBataille, avancer, aube, ordonnerMarche, peutOrdonner, ordonnerBarrage, horloge, effectifs, tronconsTenus, moralEnMots, terrainSous, terrainResume, nombreZones, largeurZone, lettreZone, etendueZones, rangDe, nomTroncon, actionDe, forcesTroncons, secteurDe, secteursDe, etendueSecteurs, tronconsDeLigne, largeurSecteur, nombreSecteurs, codeLigne, zone, photo, restaurer, PAS, NOUS, EUX } from './bataille.js?v=0.22.0';
+import { MISSIONS, nouvelleBataille, avancer, aube, ordonnerMarche, peutOrdonner, ordonnerBarrage, horloge, effectifs, tronconsTenus, moralEnMots, terrainSous, terrainResume, nombreZones, largeurZone, lettreZone, etendueZones, nomTroncon, actionDe, forcesTroncons, secteurDe, secteursDe, etendueSecteurs, tronconsDeLigne, largeurSecteur, nombreSecteurs, codeLigne, zone, photo, restaurer, PAS, NOUS, EUX } from './bataille.js?v=0.22.0';
 import { ligneY } from './tranchees.js?v=0.22.0';
 import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.22.0';
 import { METEO } from './data/meteo.js?v=0.22.0';
 import { impact, hydroLignes } from './terrain.js?v=0.22.0';
 import { hash2 } from './lib/rng.js?v=0.22.0';
 import { creerRendu, CAMERA } from './rendu3d.js?v=0.22.0';
-import { identite, etatEnMots, experienceEnMots, chevrons } from './identite.js?v=0.22.0';
+import { etatEnMots, experienceEnMots, chevrons } from './identite.js?v=0.22.0';
 import { CORVEES } from './data/corvees.js?v=0.22.0';
 import { refusCorvee } from './nuit.js?v=0.22.0';
 import { chargerContenu } from './design-store.js?v=0.22.0';
+import * as lecture from './hud/lecture.js?v=0.22.0';
+import { creerFiche } from './hud/fiche.js?v=0.22.0';
 
 const JEU = 'cyclopeen';
 const $ = id => document.getElementById(id);
@@ -48,6 +50,14 @@ let modeMarche = false;        // le bouton « Marcher » d'une carte : le proch
 let modeBarrage = null;       // un calibre : le prochain clic gauche vise
 let choisis = new Set();      // les régiments choisis (ids)
 const perf = { sim: 0, pas: 0 };
+
+// Lire la bataille en mots (hud/lecture.js) et les fiches (hud/fiche.js) : la bataille en cours leur est donnée à chaque appel
+const { majuscule, nomDe, enMots } = lecture;
+const indiceDe = id => lecture.indiceDe(B, id), quiEst = id => lecture.quiEst(B, id), tombe = id => lecture.tombe(B, id);
+const soldatSous = (x, y, r) => lecture.soldatSous(B, x, y, r), corpsSous = (x, y, r) => lecture.corpsSous(B, x, y, r);
+const bilan = reg => lecture.bilan(B, reg), refuseAujourdhui = reg => lecture.refuseAujourdhui(B, reg);
+const laFiche = creerFiche({ $, R, bataille: () => B });
+const { montrerFiche, montrerSoldat, montrerRegiment, fermer: fermerFiche, maj: majFiche } = laFiche;
 
 lockBrowserGestures($('ecran'));
 stopTypeahead();
@@ -711,7 +721,7 @@ function majEtiquettes() {
     const texte = suite ? `${base} · ${suite}` : base;
     if (d.textContent !== texte) d.textContent = texte;
   }
-  const rs = $('repere-soldat'), is = fiche ? indiceDe(fiche.id) : -1;
+  const rs = $('repere-soldat'), is = laFiche.ouverte ? indiceDe(laFiche.ouverte.id) : -1;
   if (is >= 0) {
     const [sx, sy] = rendu.versEcran(B.armee.x[is], B.armee.y[is]);
     rs.hidden = false; rs.style.transform = `translate(${Math.round(sx)}px, ${Math.round(sy)}px) translate(-50%, -100%)`;
@@ -740,144 +750,11 @@ function majVisee() {
   svg.innerHTML = d; svg.removeAttribute('hidden');
 }
 
-// ─── Les fiches : un homme (son nom, son âge, son grade, ce qu'il endure) ou un
-// régiment (ses hommes, ses blessés, ses morts, et leurs fiches). De près, on
-// regarde des hommes ; de loin, des régiments (Jérôme, v0.3.2).
-let fiche = null;                 // { id, camp } : un soldat ; { reg } : un régiment
+// ─── Les fiches et le survol : voir hud/fiche.js et hud/lecture.js ─────────────────────────────────────
 const DE_PRES = 3;                // à partir de 3 pixels par mètre, on survole et clique des hommes
 const dePres = () => rendu.ppm >= DE_PRES;
-function indiceDe(id) {
-  const A = B.armee;
-  for (let i = 0; i < A.n; i++) if (A.id[i] === id) return i;
-  return -1;
-}
-// les numéros se suivent, régiment après régiment : le premier numéro d'un régiment
-function premierDe(regId) {
-  let p = 0;
-  for (const r of B.etat.regiments) { if (r.id === regId) return p; p += r.initial; }
-  return p;
-}
-// qui est le soldat n° id (vivant ou mort) : son régiment, son identité
-function quiEst(id) {
-  let p = 0;
-  for (const r of B.etat.regiments) {
-    if (id < p + r.initial) return { reg: r, qui: identite(B.etat.graine, r.camp, id, id - p, r.initial, B.etat.grades[id]?.[0] ?? -1) };
-    p += r.initial;
-  }
-  return { reg: null, qui: identite(B.etat.graine, NOUS, id) };
-}
-const majuscule = s => s[0].toUpperCase() + s.slice(1);
-const nomDe = reg => reg?.nom ? `Régiment ${reg.nom}` : 'En face';
 // le rayon de prise du pointeur, en mètres : une douzaine de pixels d'écran
 const prise = px => px * (window.devicePixelRatio || 1) / rendu.vue.facteur / rendu.ppm;
-// le soldat le plus proche du point, à moins de r mètres (les deux camps)
-function soldatSous(x, y, r) {
-  const A = B.armee;
-  let best = -1, bd = r * r;
-  for (let i = 0; i < A.n; i++) {
-    const d = (A.x[i] - x) ** 2 + (A.y[i] - y) ** 2;
-    if (d < bd) { bd = d; best = i; }
-  }
-  return best;
-}
-// le corps le plus proche du point, à moins de r mètres : le numéro de l'homme
-function corpsSous(x, y, r) {
-  let best = -1, bd = r * r;
-  for (const c of B.etat.corps) {
-    const d = (c[0] / 10 - x) ** 2 + (c[1] / 10 - y) ** 2;
-    if (d < bd) { bd = d; best = c[4]; }
-  }
-  return best;
-}
-// un homme qui n'est plus dans la foule : tombé (et peut-être inhumé), ou évacué
-const tombe = id => {
-  const ev = B.etat.evacues.find(e => e[0] === id);
-  if (ev) return `Évacué blessé le jour ${ev[1]}.`;
-  const pr = B.etat.prisonniers?.find(e => e[0] === id);
-  if (pr) return `Fait prisonnier la nuit du ${pr[1]}.`;
-  const c = B.etat.corps.find(c => c[4] === id);
-  if (c) return `Tombé le jour ${c[3]}.`;
-  const t = B.etat.tombes.find(c => c[4] === id);
-  if (t) return `Tombé le jour ${t[3]}, inhumé la nuit du ${t[5]}.`;
-  const reg = quiEst(id).reg;
-  return reg?.releve ? `Relevé avec son régiment, la nuit du ${reg.releve}.` : 'Mort.';
-};
-// ce que compte un régiment : vivants, blessés, morts
-const refuseAujourdhui = reg => reg.refus === B.etat.jour && 'Refuse de monter aujourd\'hui';
-function bilan(reg) {
-  const A = B.armee;
-  let blesses = 0;
-  for (let i = 0; i < A.n; i++) if (A.reg[i] === reg.id && A.blessure[i]) blesses++;
-  const releves = reg.releves || 0, prisonniers = reg.prisonniers || 0, evacues = reg.initial - reg.effectif - reg.pertes - releves - prisonniers;
-  return { vivants: reg.effectif, initial: reg.initial, blesses, morts: reg.pertes, evacues, releves, prisonniers };
-}
-const enMots = b => b.releves
-  ? `relevé : ${b.releves} hommes sur ${b.initial} en sont revenus · ${b.morts} morts`
-  : `${b.vivants} hommes sur ${b.initial} · ${b.blesses} blessés · ${b.morts} morts${b.evacues ? ` · ${b.evacues} évacués` : ''}${b.prisonniers ? ` · ${b.prisonniers} prisonniers` : ''}`;
-
-function montrerFiche(i) {
-  fiche = { id: B.armee.id[i], camp: B.armee.camp[i] };
-  ouvrirFiche();
-}
-function montrerSoldat(id) { fiche = { id, camp: quiEst(id).reg?.camp ?? NOUS }; ouvrirFiche(); }
-function montrerRegiment(regId) { fiche = { reg: regId }; ouvrirFiche(); }
-function ouvrirFiche() { $('fiche').hidden = false; listeVue = ''; majFiche(); }
-function fermerFiche() { fiche = null; $('fiche').hidden = true; $('repere-soldat').hidden = true; }
-
-let listeVue = '';                // ce que montre la liste du régiment (refaite seulement quand ça change)
-function majFiche() {
-  if (!fiche || !B) return;
-  if ('reg' in fiche) return majFicheRegiment();
-  const A = B.armee, i = indiceDe(fiche.id), { reg: reg0, qui } = quiEst(fiche.id);
-  $('fiche-nom').textContent = `${qui.prenom} ${qui.nom}`;
-  $('fiche-qui').textContent = `${majuscule(qui.grade)}, ${qui.age} ans`;
-  const lien = $('fiche-regiment');
-  lien.hidden = !reg0; lien.textContent = nomDe(reg0); lien.onclick = () => montrerRegiment(reg0.id);
-  $('fiche-liste').replaceChildren(); listeVue = '';
-  const promu = B.etat.grades[fiche.id];
-  const mots = [
-    ...(i < 0 ? [tombe(fiche.id)] : [...etatEnMots(A.fatJ[i], A.fatB[i], A.peur[i], A.blessure[i]), experienceEnMots(A.exp[i])]),
-    promu ? `promu ${qui.grade} le jour ${promu[1]}` : '',
-  ].filter(Boolean);
-  $('fiche-etat').replaceChildren(...mots.map(t => Object.assign(document.createElement('li'), { textContent: t })));
-}
-function majFicheRegiment() {
-  const reg = B.etat.regiments[fiche.reg], A = B.armee, b = bilan(reg);
-  $('fiche-nom').textContent = nomDe(reg);
-  $('fiche-qui').textContent = enMots(b);
-  $('fiche-regiment').hidden = true;
-  $('fiche-etat').replaceChildren(...[majuscule(moralEnMots(reg, R)), refuseAujourdhui(reg)].filter(Boolean).map(t => Object.assign(document.createElement('li'), { textContent: t })));
-  const sig = `${reg.id}:${b.vivants}:${b.blesses}:${b.morts}:${b.evacues}:${Object.keys(B.etat.grades).length}`;
-  if (sig === listeVue) return;
-  listeVue = sig;
-  // les officiers vivants, les blessés, les morts : chaque nom ouvre la fiche de l'homme
-  const p0 = premierDe(reg.id), vivants = new Map();
-  for (let i = 0; i < A.n; i++) if (A.reg[i] === reg.id) vivants.set(A.id[i], i);
-  const groupes = [['Officiers', []], ['Blessés', []], ['Morts', []], ['Évacués', []]];
-  const evacues = new Set(B.etat.evacues.map(e => e[0]));
-  for (let id = p0; id < p0 + reg.initial; id++) {
-    const i = vivants.get(id);
-    if (i === undefined) groupes[evacues.has(id) ? 3 : 2][1].push(id);
-    else if (A.blessure[i]) groupes[1][1].push(id);
-    else if (rangDe(B, id, reg.id) <= 3) groupes[0][1].push(id);   // les officiers et l'adjudant d'aujourd'hui (les promus compris)
-  }
-  groupes[0][1].sort((a, b) => rangDe(B, a, reg.id) - rangDe(B, b, reg.id));
-  const els = [];
-  for (const [titre, ids] of groupes) {
-    if (!ids.length) continue;
-    els.push(Object.assign(document.createElement('h3'), { textContent: `${titre} (${ids.length})` }));
-    const ul = document.createElement('ul');
-    for (const id of ids) {
-      const { qui } = quiEst(id), li = document.createElement('li'), bt = document.createElement('button');
-      bt.className = 'nom'; bt.textContent = `${qui.prenom} ${qui.nom}, ${qui.grade}`;
-      bt.onclick = () => montrerSoldat(id);
-      li.append(bt); ul.append(li);
-    }
-    els.push(ul);
-  }
-  $('fiche-liste').replaceChildren(...els);
-}
-$('fiche-fermer').onclick = fermerFiche;
 
 // ─── Le survol : de près un homme, de loin un régiment ─────────────────────
 let souris = null;                // la position du pointeur sur le canvas (souris seulement)
@@ -965,7 +842,7 @@ function ordreMarche(x, y) {
 function annuler() {
   if (modeBarrage) modeBarrage = null;
   else if (modeMarche) modeMarche = false;
-  else if (fiche) fermerFiche();
+  else if (laFiche.ouverte) fermerFiche();
   else if (choisis.size) { choisis = new Set(); rendu.choisis = choisis; }
   majHud();
 }
@@ -983,7 +860,7 @@ const keys = createKeys({
   onAction: nom => {
     if (!enJeu()) return;
     if (nom === 'menu') {
-      if (modeBarrage || modeMarche || fiche || choisis.size) annuler(); else pause();
+      if (modeBarrage || modeMarche || laFiche.ouverte || choisis.size) annuler(); else pause();
     }
     else if (nom === 'pause') basculerPause();
     else if (nom === 'tout') choisirTout();
@@ -1189,7 +1066,7 @@ if (DEBUG) {
       barrage: (cal, x, y, camp = 0) => ordonnerBarrage(B, cal, x + B.etat.marges.x, y + B.etat.marges.y, camp),
       marche: (ids, x, y) => ordonnerMarche(B, ids, x + B.etat.marges.x, y + B.etat.marges.y),
       zoom: z => { rendu.vue.zoom = z; },
-      fiche: () => fiche && { ...fiche, nom: $('fiche-nom').textContent, qui: $('fiche-qui').textContent, etat: $('fiche-etat').textContent, liste: $('fiche-liste').textContent },
+      fiche: () => laFiche.ouverte && { ...laFiche.ouverte, nom: $('fiche-nom').textContent, qui: $('fiche-qui').textContent, etat: $('fiche-etat').textContent, liste: $('fiche-liste').textContent },
       survol: (x, y) => { souris = { x, y }; majBulle(); return $('bulle').hidden ? null : $('bulle').textContent; },
       camera: (yaw, tangage) => rendu.placerCamera(yaw, tangage),
       nuit: () => montrerNuit(),

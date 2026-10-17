@@ -54,8 +54,13 @@ await etape('apres-barrages');
 await page.mouse.move(600, 380);
 await page.mouse.click(600, 380, { button: 'right' });     // le clic droit annule
 await etape('annule');
-await jeu('() => __jeu.fiche?.()');
-await etape('fiche');
+// la fiche d'un régiment (la carte du régiment choisi, son bouton « Fiche »), puis celle d'un officier
+await page.evaluate(() => document.querySelector('.reg-carte').click());
+await page.waitForTimeout(250);
+await page.evaluate(() => document.querySelector('[data-act="fiche"]').click());
+await etape('fiche-regiment');
+await page.evaluate(() => document.querySelector('#fiche-liste button.nom').click());
+await etape('fiche-homme');
 await page.evaluate(() => document.getElementById('fiche-fermer').click());
 await jeu('() => { const B = __jeu.bataille(); while (B.etat.phase === "jour") __jeu.avancer(300, false); }');
 await etape('soir');
@@ -74,7 +79,7 @@ if (o.ecrire) {
   await writeFile(o.ref, JSON.stringify(etapes, null, 1));
   console.log(`✓ empreinte de référence écrite : ${o.ref} (${Object.keys(etapes).length} étapes)`);
 } else {
-  const ref = JSON.parse(await readFile(o.ref, 'utf8')); if (o.debogue) await writeFile('/tmp/claude-0/-home-user-cyclop/79566b1c-cf28-5087-ac2b-1bc052aae6df/scratchpad/now.json', JSON.stringify(etapes, null, 1));
+  const ref = JSON.parse(await readFile(o.ref, 'utf8'));
   for (const [nom, vue] of Object.entries(etapes)) {
     const r = ref[nom] || {};
     const ecarts = [...new Set([...Object.keys(vue), ...Object.keys(r)])].filter(k => vue[k] !== r[k]);
