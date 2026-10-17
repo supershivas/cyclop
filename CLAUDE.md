@@ -363,6 +363,7 @@ nuit (le voile continu et ses halos mélangent la terre, le sol et l'os : des co
 
 ```bash
 node outils/test-run.mjs                 # règles, sauvegarde, pureté
+node outils/rendu-empreinte.mjs           # le dessin : 22 images à horloge et hasard truqués, hachées au pixel près (test/rendu.json)
 node outils/fumee.mjs                    # le jeu dans le navigateur : un scénario fixe, aucune erreur console, l'empreinte du HUD (test/fumee.json)
 node outils/captures.mjs --page index.html --page labo.html --page atelier.html
 node outils/audit-ecran.mjs --page index.html --page labo.html --page atelier.html
@@ -404,6 +405,12 @@ node outils/stamp-version.mjs            # après chaque changement de version.j
   même instant) ; un clic à l'écran vise un point qui dépend de la respiration de la caméra, donc de l'horloge (d'où les ordres par `__jeu`) ; un ordre
   fait clignoter trois secondes d'horloge (d'où l'attente). Et à la découpe de `rendu3d.js` : `geometrieSoldat` lisait `attrsI`, un état du rendu, sans le dire ;
   seul un essai qui compare les formes avant et après (`creerGeometries` contre l'ancien code) l'a vu.
+- **L'empreinte du dessin** (`outils/rendu-empreinte.mjs`, `test/rendu.json`) : 22 images (tous les zooms, obus en vol puis fumée, mêlée, vue tournée, soir, nuit,
+  pluie, brouillard, gel) dont les pixels ne doivent pas bouger quand on découpe `rendu3d.js`. Elle truque `performance.now` et `requestAnimationFrame` (une image =
+  1/30 s = un pas de la simulation) et `Math.random` (graine fixe) : sans cela la respiration de la caméra, la pluie et les éclats changent à chaque lancement. Le budget de ms
+  du sol ne coupe plus rien (le temps ne passe pas dans une image). Les pixels sont lus dans le même instant que le dessin (`drawImage` du canvas WebGL : après, il serait vide).
+  Mesurée : deux lancements identiques ; un changement de 0,0001 de la respiration change les 22 images. Un changement voulu du dessin demande de réécrire la référence (`--ecrire`) ;
+  une autre machine peut donner d'autres pixels (rendu logiciel) : réécrire alors la référence sur l'ancien code avant de découper.
 - **Déterminisme et cache** : un champ de coûts calculé « quand le cache le veut »
   aurait rendu une partie relue différente. Les champs ne dépendent que de `couts`,
   un résumé du terrain qui fait partie de l'état (sauvegardé) et n'est refait qu'à

@@ -1,6 +1,6 @@
 # Découper `rendu3d.js` — le plan
 
-Statut : proposé (à valider). Aucun changement pour le joueur ; un commit par étape, l'empreinte du dessin ne doit pas bouger.
+Statut : en cours — l'étape 0 est faite (`outils/rendu-empreinte.mjs`, 22 images, stable sur deux lancements) ; les suivantes attendent. Aucun changement pour le joueur ; un commit par étape, l'empreinte du dessin ne doit pas bouger.
 
 ## Pourquoi
 `creerRendu` est une seule fermeture de ~1 300 lignes (221 déclarations). Mesuré par section : 120 d'entre elles sont lues dans plus d'une
