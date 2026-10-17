@@ -1,0 +1,85 @@
+// Test de fumée du jeu dans le navigateur : joue un scénario fixe (graine 7, temps arrêté, pas
+// de hasard hors de la graine), n'accepte aucune erreur de console, et relève l'empreinte du HUD
+// (texte et attributs des éléments de l'écran) à chaque étape.
+//
+//   node outils/fumee.mjs --ecrire    → écrit l'empreinte de référence (test/fumee.json)
+//   node outils/fumee.mjs             → compare à la référence ; code 1 au moindre écart ou à la moindre erreur
+//
+// Sert surtout aux refontes sans changement visible (découper main.js, rendu3d.js) : l'empreinte ne
+// doit pas bouger. Une règle ou un texte qui change exprès demande de réécrire la référence.
+import { readFile, writeFile } from 'node:fs/promises';
+import { servir, lancerChromium, options } from './navigateur.mjs';
+
+const o = options(process.argv.slice(2), { graine: '7', ref: 'test/fumee.json' });
+const srv = await servir('.');
+const nav = await lancerChromium();
+const page = await (await nav.newContext({ viewport: { width: 1280, height: 800 } })).newPage();
+const erreurs = [];
+page.on('pageerror', e => erreurs.push(`exception : ${e.message}`));
+page.on('console', m => { if (m.type() === 'error') erreurs.push(`console : ${m.text()}`); });
+
+// L'empreinte d'un instant : le HTML de chaque élément à id du HUD et des papiers (sans l'écran
+// titre, le canvas ni ce qui change à chaque image comme les étiquettes et la bulle).
+const ignorer = ['canvas', 'etiquettes', 'repere', 'repere-soldat', 'bulle', 'visee', 'version', 'changelog'];
+const empreinte = ignorer => page.evaluate(ignorer => {
+  const sortie = {};
+  for (const e of document.querySelectorAll('[id]')) {
+    if (ignorer.includes(e.id) || e.closest('dialog:not([open])')) continue;
+    sortie[e.id] = `${e.hidden ? 'H|' : ''}${e.className}|${e.innerHTML.length > 4000 ? e.innerHTML.length : e.innerHTML}`;
+  }
+  return sortie;
+}, ignorer);
+
+const etapes = {};
+async function etape(nom) { await page.waitForTimeout(250); etapes[nom] = await empreinte(ignorer); }
+const jeu = (f, ...a) => page.evaluate(([f, a]) => new Function('a', `return (${f})(...a)`)(a), [f, a]);
+
+await page.goto(`${srv.base}index.html?debug=1&seed=${o.graine}`);
+await page.waitForTimeout(600);
+await page.click('#nouvelle');
+await page.waitForTimeout(1200);
+await page.keyboard.press('F9');
+// Le temps s'arrête dans le même instant que la partie (re)commence : la boucle n'a pas le temps d'avancer d'un pas,
+// sinon le nombre de pas joués avant l'arrêt dépend de la vitesse de la machine.
+await page.evaluate(() => { __jeu.setSeed(7); document.getElementById('temps-pause').click(); });
+await etape('debut');
+
+await page.keyboard.press('t');                            // tous les régiments
+await etape('tous-choisis');
+await jeu('() => __jeu.marche([2, 3, 4, 5], 200, 170)');   // un ordre de marche (un clic à l\'écran dépend de la respiration de la caméra, donc de l\'horloge)
+await jeu('() => __jeu.avancer(60, false)');
+await etape('apres-ordre');
+await jeu('() => { for (const c of [75, 155, 220]) __jeu.barrage(String(c), 150 + c / 3, 100); __jeu.avancer(300, false); }');
+await etape('apres-barrages');
+await page.mouse.move(600, 380);
+await page.mouse.click(600, 380, { button: 'right' });     // le clic droit annule
+await etape('annule');
+await jeu('() => __jeu.fiche?.()');
+await etape('fiche');
+await page.evaluate(() => document.getElementById('fiche-fermer').click());
+await jeu('() => { const B = __jeu.bataille(); while (B.etat.phase === "jour") __jeu.avancer(300, false); }');
+await etape('soir');
+await jeu('() => __jeu.nuit?.()');
+await etape('nuit');
+await page.keyboard.press('t');
+await etape('nuit-choisis');
+await jeu('() => __jeu.fin?.()');
+await etape('fin');
+
+await nav.close(); await srv.close();
+
+let code = 0;
+if (erreurs.length) { console.log('✗ erreurs :', [...new Set(erreurs)].slice(0, 5)); code = 1; }
+if (o.ecrire) {
+  await writeFile(o.ref, JSON.stringify(etapes, null, 1));
+  console.log(`✓ empreinte de référence écrite : ${o.ref} (${Object.keys(etapes).length} étapes)`);
+} else {
+  const ref = JSON.parse(await readFile(o.ref, 'utf8')); if (o.debogue) await writeFile('/tmp/claude-0/-home-user-cyclop/79566b1c-cf28-5087-ac2b-1bc052aae6df/scratchpad/now.json', JSON.stringify(etapes, null, 1));
+  for (const [nom, vue] of Object.entries(etapes)) {
+    const r = ref[nom] || {};
+    const ecarts = [...new Set([...Object.keys(vue), ...Object.keys(r)])].filter(k => vue[k] !== r[k]);
+    if (ecarts.length) { code = 1; console.log(`✗ ${nom} : ${ecarts.length} écart(s) — ${ecarts.slice(0, 8).join(', ')}`); }
+    else console.log(`✓ ${nom}`);
+  }
+}
+process.exit(code);
