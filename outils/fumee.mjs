@@ -46,6 +46,10 @@ await etape('debut');
 
 await page.keyboard.press('t');                            // tous les régiments
 await etape('tous-choisis');
+await page.evaluate(() => document.querySelectorAll('#carte-grille .cel')[17].click());   // un ordre depuis la carte (notre 1re ligne, secteur B)
+await etape('ordre-carte');
+await page.evaluate(() => document.querySelector('#carte-grille .sect').click());          // la lettre d'un secteur choisit ses régiments
+await etape('secteur-A');
 await jeu('() => __jeu.marche([2, 3, 4, 5], 200, 170)');   // un ordre de marche (un clic à l\'écran dépend de la respiration de la caméra, donc de l\'horloge)
 await jeu('() => __jeu.avancer(60, false)');
 await etape('apres-ordre');

@@ -70,3 +70,6 @@ export function bilan(B, reg) {
 export const enMots = b => b.releves
   ? `relevé : ${b.releves} hommes sur ${b.initial} en sont revenus · ${b.morts} morts`
   : `${b.vivants} hommes sur ${b.initial} · ${b.blesses} blessés · ${b.morts} morts${b.evacues ? ` · ${b.evacues} évacués` : ''}${b.prisonniers ? ` · ${b.prisonniers} prisonniers` : ''}`;
+
+// le numéro d'ordre d'un régiment dans son camp : « 3 · Viride »
+export const numeroDe = (B, r) => B.etat.regiments.filter(g => g.camp === r.camp).indexOf(r) + 1;
