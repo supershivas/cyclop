@@ -30,7 +30,7 @@ cercles-régiments par-dessus) et la touche M disparaît (carte toujours visible
   mesure du rendu (v0.21.0)
 - [x] Lot 5 — le survol global : un régiment (les deux camps) et un tronçon en surbrillance (v0.21.1)
 - [x] Hors lots — le clic gauche choisit puis ordonne (v0.21.2), la carte en quatre secteurs A à D (v0.21.3), la marche le long de la tranchée (v0.21.4), les corvées au-dessus des cartes et pas d'évacuation chez l'ennemi (v0.22.0)
-- [ ] Lot 6 — les formations (ligne, par deux, colonne) : `ordre.forme`, lue avec `??=` ; `formation`, `reattribuer`, `place`
+- [x] Lot 6 — les formations (bloc, ligne, par deux, colonne) : `ordre.forme` (`foule.formes` de reglages.js, `formation` de bataille.js), choisie par quatre boutons de la carte ouverte pour le prochain ordre en terrain libre ; sur une tranchée, le tracé décide (v0.23.0)
 - [ ] Plus tard : où vont le cadran de vue, la fiche et le papier de la nuit (en attendant, ils restent où ils sont)
 
 ### Découper `rendu3d.js` (docs/refonte-rendu3d.md)

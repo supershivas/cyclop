@@ -61,7 +61,7 @@ la danse macabre, la catastrophe peinte avec calme. L'intention est dans `DESIGN
   fait de ce qu'un officier a sur lui, pas de plaques toutes pareilles. `.papier` (l'os, l'encre de terre, une ombre d'un
   cran) : la montre de gousset et son billet (heure, météo, mission), une rangée de cartes de régiment (v0.20.0 ;
   `majRegiments` de main.js : numéro et nom, chevrons d'expérience, barre debout / blessés / tombés ; la carte choisie s'ouvre vers le haut :
-  l'ordre en mots, un tampon si le moral baisse, « Marcher » (le prochain clic sur le sol), « Regagner sa tranchée », « Fiche »), un râtelier d'obus (debout : prêt ; couché : se recharge), des croix au crayon pour les morts (douze, puis un nombre),
+  l'ordre en mots, un tampon si le moral baisse, « Marcher » (le prochain clic sur le sol), « Regagner sa tranchée », « Fiche » ; v0.23.0 : quatre formes pour le prochain ordre en terrain libre, bloc / ligne / par deux / colonne, `foule.formes`, `ordre.forme`, `formation` de bataille.js ; sur une tranchée, le tracé décide), un râtelier d'obus (debout : prêt ; couché : se recharge), des croix au crayon pour les morts (douze, puis un nombre),
   la fiche en papier, et le **carnet de bord** (`noter`, `raconter` : tronçon pris ou perdu, l'autre camp entré chez nous
   (`dispute`), assaut et préparation d'en face (`assaut`, `preparation`, de `bataille.js`), déroute, ralliement, nouveau
   commandant ; quatre lignes à l'écran, la dernière surlignée ; il remplace les bulles d'avant, et n'est pas sauvegardé : il

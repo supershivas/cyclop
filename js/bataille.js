@@ -14,17 +14,17 @@
    La sauvegarde (photo) garde la graine, la liste compacte des impacts, l'état
    de la foule et les petites couches de logique ; jamais le relief : il se
    rejoue depuis la graine et les impacts (rejouerTerrain). */
-import { createRng, hash2 } from './lib/rng.js?v=0.22.0';
-import { creerTerrain, impact, hydroLignes, etat as etatCase, vitesseEtat, ETAT } from './terrain.js?v=0.22.0';
-import { creerArmee, ajouterSoldat, construireGrille, pasArmee, tuerDans, effrayer, compacter, photoArmee, restaurerArmee, b64, deB64, DENSITE, place } from './army.js?v=0.22.0';
-import { creuserTranchees, ligneSous } from './tranchees.js?v=0.22.0';
-import { calculerCouts, creerCacheChamps, dimensionsCouts, BLOC } from './champs.js?v=0.22.0';
-import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.22.0';
-import { METEO, TRANSITIONS, PREVISION_JUSTE } from './data/meteo.js?v=0.22.0';
-import { SECTEURS } from './data/secteur.js?v=0.22.0';
-import { REGIMENTS } from './data/lexique.js?v=0.22.0';
-import { grade } from './identite.js?v=0.22.0';
-import { corvees, rejouerTravaux } from './nuit.js?v=0.22.0';
+import { createRng, hash2 } from './lib/rng.js?v=0.23.0';
+import { creerTerrain, impact, hydroLignes, etat as etatCase, vitesseEtat, ETAT } from './terrain.js?v=0.23.0';
+import { creerArmee, ajouterSoldat, construireGrille, pasArmee, tuerDans, effrayer, compacter, photoArmee, restaurerArmee, b64, deB64, DENSITE, place } from './army.js?v=0.23.0';
+import { creuserTranchees, ligneSous } from './tranchees.js?v=0.23.0';
+import { calculerCouts, creerCacheChamps, dimensionsCouts, BLOC } from './champs.js?v=0.23.0';
+import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.23.0';
+import { METEO, TRANSITIONS, PREVISION_JUSTE } from './data/meteo.js?v=0.23.0';
+import { SECTEURS } from './data/secteur.js?v=0.23.0';
+import { REGIMENTS } from './data/lexique.js?v=0.23.0';
+import { grade } from './identite.js?v=0.23.0';
+import { corvees, rejouerTravaux } from './nuit.js?v=0.23.0';
 
 export const PAS = 1 / 30;                 // s de jeu par pas
 export const NOUS = 0, EUX = 1;
@@ -145,11 +145,12 @@ function formationTranchee(reg, L, x0, x1, R) {
 const B_LIGNE = L => L.camp * 10 + L.rang;      // la ligne d'un ordre : 0..3 chez nous, 10..13 en face
 
 // L'ordre d'un régiment : un point, un front (vers l'ennemi), une largeur
-function formation(reg, x, y, largeurMax, R) {
+function formation(reg, x, y, largeurMax, R, forme = 'bloc') {
   const esp = R.foule.espacement;
   const n = Math.max(1, reg.effectif);
-  const cols = Math.max(1, Math.min(Math.ceil(Math.sqrt(n * R.foule.largeur)), Math.floor(largeurMax / esp)));
-  return { x, y, fx: 0, fy: reg.camp === NOUS ? -1 : 1, cols, esp };
+  const F = R.foule.formes[forme] ?? R.foule.formes.bloc;
+  const cols = Math.max(1, Math.min(F.cols ?? Math.ceil(Math.sqrt(n * F.largeur)), Math.floor(largeurMax / esp)));
+  return { x, y, fx: 0, fy: reg.camp === NOUS ? -1 : 1, cols, esp, forme };
 }
 
 /* Le secteur de bataille dans le terrain : { x0, y0, x1, y1 } (mètres). Autour,
@@ -186,7 +187,7 @@ function monter(etat, R) {
 
 /* Marcher : les régiments choisis prennent place côte à côte autour de (x, y). L'ordre se prépare à sec (`planMarche` : rien n'est
    changé, c'est ce que le dessin montre avant le clic, v0.21.0), puis `ordonnerMarche` l'applique. */
-function planMarche(B, ids, x, y) {
+function planMarche(B, ids, x, y, forme = 'bloc') {
   const { etat, R } = B;
   const S = SECTEURS[etat.secteur];
   if (etat.phase !== 'jour') return { refus: 'La nuit, les ordres attendent l\'aube.' };
@@ -223,17 +224,17 @@ function planMarche(B, ids, x, y) {
     const ligne = B.lignes.indexOf(L);
     return { regs, raison, items, tranchee: true, ligne, troncons: tronconsDeLigne(B, ligne, debut, fin) };
   }
-  const largeurs = regs.map(r => formation(r, 0, 0, largeurReg, R).cols * R.foule.espacement + 6);
+  const largeurs = regs.map(r => formation(r, 0, 0, largeurReg, R, forme).cols * R.foule.espacement + 6);
   const total = largeurs.reduce((s, w) => s + w, 0);
   let cx = Math.max(Z.x0 + total / 2, Math.min(Z.x1 - total / 2, x)) - total / 2;
   regs.forEach((r, k) => {
-    items.push({ r, ordre: formation(r, cx + largeurs[k] / 2, Math.max(Z.y0 + 4, Math.min(Z.y1 - 4, y)), largeurReg, R) });
+    items.push({ r, ordre: formation(r, cx + largeurs[k] / 2, Math.max(Z.y0 + 4, Math.min(Z.y1 - 4, y)), largeurReg, R, forme) });
     cx += largeurs[k];
   });
   return { regs, raison, items, tranchee: false };
 }
-export function ordonnerMarche(B, ids, x, y) {
-  const p = planMarche(B, ids, x, y);
+export function ordonnerMarche(B, ids, x, y, forme) {
+  const p = planMarche(B, ids, x, y, forme);
   if (p.refus) return { refus: p.refus };
   for (const { r, ordre } of p.items) { r.ordre = ordre; reattribuer(B, r); }
   const res = p.tranchee ? { ok: true, regiments: p.regs.map(r => r.id), tranchee: true, ligne: p.ligne, troncons: p.troncons } : { ok: true, regiments: p.regs.map(r => r.id) };
@@ -242,8 +243,8 @@ export function ordonnerMarche(B, ids, x, y) {
 /* L'ordre à sec : ce que `ordonnerMarche` ferait, sans rien changer. { refus } si rien ne partirait ; sinon { ok, tranchee, troncons },
    ou, en terrain libre, les emprises (un rectangle par régiment : x, y le centre, l la largeur, p la profondeur, en mètres) ;
    `refus` aussi quand certains seulement n'obéiraient pas. */
-export function peutOrdonner(B, ids, x, y) {
-  const p = planMarche(B, ids, x, y);
+export function peutOrdonner(B, ids, x, y, forme) {
+  const p = planMarche(B, ids, x, y, forme);
   if (p.refus) return { refus: p.refus };
   const out = { ok: true, regiments: p.regs.map(r => r.id), tranchee: p.tranchee };
   if (p.raison) out.refus = p.raison;
@@ -673,7 +674,7 @@ export function actionDe(B, reg) {
   if (!reg.effectif) return 'plus personne';
   if (reg.deroute) return 'en déroute';
   const o = reg.ordre, t = o.trace;
-  if (!t) return `en terrain libre, secteur ${lettreZone(zoneDe(B, o.x))}`;
+  if (!t) return `en terrain libre, secteur ${lettreZone(zoneDe(B, o.x))}${o.forme && o.forme !== 'bloc' ? `, en ${B.R.foule.formes[o.forme]?.nom.toLowerCase() ?? o.forme}` : ''}`;
   const ligne = B.lignes.findIndex(L => L.camp * 10 + L.rang === t.ligne);
   const nom = nomTranchee(B, ligne, t.x0, t.x1), A = B.armee;
   let n = 0, somme = 0;

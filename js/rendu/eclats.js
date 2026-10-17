@@ -2,9 +2,9 @@
 // et « le feu se voit » (Jérôme, v0.9.2 : l'éclair à la bouche du fusil et le trait vers la cible de chaque tir de `B.tirs`, la pose des tireurs, le bond de ceux que
 // le souffle jette). Une seule fabrique : tous tirent dans le même générateur de l'aspect (`alea`, une suite à graine : l'ordre des tirages fait l'image) et
 // dans les mêmes tampons de particules. Le dessin seulement : jamais la logique, jamais la partie.
-import * as SH from './shaders.js?v=0.22.0';
-import { INDICE } from '../palette.js?v=0.22.0';
-import { horloge } from '../bataille.js?v=0.22.0';
+import * as SH from './shaders.js?v=0.23.0';
+import { INDICE } from '../palette.js?v=0.23.0';
+import { horloge } from '../bataille.js?v=0.23.0';
 
 const ECLATS = 2400;
 export const VOL = 0.6;       // la durée d'un bond (s)

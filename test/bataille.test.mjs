@@ -87,6 +87,13 @@ test('chez l\'ennemi, on n\'évacue ni ne ravitaille, sauf tranchée toute à no
   B.R.nuit.calme = 1e6;                                                                  // … mais un régiment d'en face est tout près
   assert.match(refusCorvee(B, reg, 'evacuer'), /trop près/);
 });
+test('les formations : la ligne est large, la colonne étroite, la forme est dans l\'ordre', () => {
+  const [x, y] = P(150, 150), cols = f => { const B = petite(); const r = peutOrdonner(B, [0], x, y, f); assert.equal(r.ok, true); ordonnerMarche(B, [0], x, y, f); return [B.etat.regiments[0].ordre.cols, B.etat.regiments[0].ordre.forme, r.emprises[0].l]; };
+  const [bloc, ligne, deux, colonne] = ['bloc', 'ligne', 'deux', 'colonne'].map(cols);
+  assert.equal(bloc[1], 'bloc'); assert.equal(deux[0], 2); assert.ok(colonne[0] > deux[0] && colonne[0] < bloc[0] && bloc[0] < ligne[0]);
+  assert.ok(ligne[2] > bloc[2] && colonne[2] < bloc[2]); assert.equal(colonne[1], 'colonne');
+  assert.deepEqual(cols(undefined), bloc);
+});
 test('un ordre impossible se refuse, avec sa raison', () => {
   const B = petite();
   assert.match(ordonnerMarche(B, [], ...P(10, 10)).refus, /Aucun régiment/);

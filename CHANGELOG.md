@@ -1,5 +1,8 @@
 # Journal des versions
 
+## 0.23.0 — 2026-10-17
+- Un régiment en terrain libre se range en bloc, en ligne, par deux ou en colonne : quatre boutons sur sa carte ouverte, pour le prochain ordre de marche (la visée montre la place prise ; sur une tranchée, les hommes suivent le tracé)
+
 ## 0.22.0 — 2026-10-16
 - La nuit, les corvées de chaque régiment s'ouvrent au-dessus de sa carte, comme les actions du jour ; chaque carte dit la corvée prévue ; le papier de la nuit ne garde que le bilan
 - Dans une tranchée d'en face, on n'évacue pas les blessés et on ne ravitaille pas, sauf si la tranchée est toute à nous et qu'aucun régiment d'en face n'est tout près

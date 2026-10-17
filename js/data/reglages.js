@@ -42,6 +42,12 @@ export const REGLAGES = {
     separation: 0.75,     // m
     espacement: 2.4,      // m entre deux places d'une formation
     largeur: 5,           // une formation est cinq fois plus large que profonde
+    formes: {             // (v0.23.0) la forme d'un régiment en terrain libre : `largeur` = rapport largeur / profondeur (le nombre de colonnes en sort), ou `cols` fixe
+      bloc:    { nom: 'Bloc', largeur: 5 },
+      ligne:   { nom: 'Ligne', largeur: 40 },        // large (au plus un secteur) et mince : tous tirent, tous sont exposés
+      deux:    { nom: 'Par deux', cols: 2 },          // deux hommes de front
+      colonne: { nom: 'Colonne', cols: 4 },           // quatre de front : étroite et longue, pour passer vite
+    },
     voisins: 6,           // voisins regardés au plus
     champ: 22,            // m : plus loin de sa place, on suit le champ de coûts
     champsMax: 10,        // champs gardés en cache

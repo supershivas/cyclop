@@ -1,30 +1,30 @@
 // Le cycle de vie : écran titre → bataille → nuit → fin ; pause active,
 // réglages, sauvegarde, mise à jour, debug. Les règles sont dans bataille.js
 // (pures), le dessin dans rendu3d.js (il ne modifie jamais l'état).
-import { createLoop } from './lib/loop.js?v=0.22.0';
-import { createKeys, stopTypeahead } from './lib/keys.js?v=0.22.0';
-import { createPointer, lockBrowserGestures } from './lib/pointer.js?v=0.22.0';
-import { createGamepad } from './lib/gamepad.js?v=0.22.0';
-import { createStore, autosave, pickJSONFile } from './lib/save.js?v=0.22.0';
-import { startUpdateCheck, loadVersion, loadChangelog, downloadJSON } from './lib/app-update.js?v=0.22.0';
-import { ROLES } from './palette.js?v=0.22.0';
-import { MISSIONS, nouvelleBataille, avancer, aube, ordonnerMarche, peutOrdonner, ordonnerBarrage, horloge, effectifs, tronconsTenus, moralEnMots, terrainResume, largeurZone, lettreZone, etendueZones, nomTroncon, actionDe, secteursDe, tronconsDeLigne, zone, photo, restaurer, PAS, NOUS } from './bataille.js?v=0.22.0';
-import { ligneY } from './tranchees.js?v=0.22.0';
-import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.22.0';
-import { METEO } from './data/meteo.js?v=0.22.0';
-import { impact, hydroLignes } from './terrain.js?v=0.22.0';
-import { hash2 } from './lib/rng.js?v=0.22.0';
-import { creerRendu, CAMERA } from './rendu3d.js?v=0.22.0';
-import { etatEnMots, experienceEnMots, chevrons } from './identite.js?v=0.22.0';
-import { CORVEES } from './data/corvees.js?v=0.22.0';
-import { refusCorvee } from './nuit.js?v=0.22.0';
-import { chargerContenu } from './design-store.js?v=0.22.0';
-import * as lecture from './hud/lecture.js?v=0.22.0';
-import { creerFiche } from './hud/fiche.js?v=0.22.0';
-import { creerNuit, corveeDe, corveeCourte } from './hud/nuit.js?v=0.22.0';
-import { creerCarnet, deux } from './hud/carnet.js?v=0.22.0';
-import { creerCarte } from './hud/carte.js?v=0.22.0';
-import { creerPertes } from './hud/pertes.js?v=0.22.0';
+import { createLoop } from './lib/loop.js?v=0.23.0';
+import { createKeys, stopTypeahead } from './lib/keys.js?v=0.23.0';
+import { createPointer, lockBrowserGestures } from './lib/pointer.js?v=0.23.0';
+import { createGamepad } from './lib/gamepad.js?v=0.23.0';
+import { createStore, autosave, pickJSONFile } from './lib/save.js?v=0.23.0';
+import { startUpdateCheck, loadVersion, loadChangelog, downloadJSON } from './lib/app-update.js?v=0.23.0';
+import { ROLES } from './palette.js?v=0.23.0';
+import { MISSIONS, nouvelleBataille, avancer, aube, ordonnerMarche, peutOrdonner, ordonnerBarrage, horloge, effectifs, tronconsTenus, moralEnMots, terrainResume, largeurZone, lettreZone, etendueZones, nomTroncon, actionDe, secteursDe, tronconsDeLigne, zone, photo, restaurer, PAS, NOUS } from './bataille.js?v=0.23.0';
+import { ligneY } from './tranchees.js?v=0.23.0';
+import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.23.0';
+import { METEO } from './data/meteo.js?v=0.23.0';
+import { impact, hydroLignes } from './terrain.js?v=0.23.0';
+import { hash2 } from './lib/rng.js?v=0.23.0';
+import { creerRendu, CAMERA } from './rendu3d.js?v=0.23.0';
+import { etatEnMots, experienceEnMots, chevrons } from './identite.js?v=0.23.0';
+import { CORVEES } from './data/corvees.js?v=0.23.0';
+import { refusCorvee } from './nuit.js?v=0.23.0';
+import { chargerContenu } from './design-store.js?v=0.23.0';
+import * as lecture from './hud/lecture.js?v=0.23.0';
+import { creerFiche } from './hud/fiche.js?v=0.23.0';
+import { creerNuit, corveeDe, corveeCourte } from './hud/nuit.js?v=0.23.0';
+import { creerCarnet, deux } from './hud/carnet.js?v=0.23.0';
+import { creerCarte } from './hud/carte.js?v=0.23.0';
+import { creerPertes } from './hud/pertes.js?v=0.23.0';
 
 const JEU = 'cyclopeen';
 const $ = id => document.getElementById(id);
@@ -50,6 +50,7 @@ const { reglages: R } = await chargerContenu();
 let B = null;                 // la bataille en cours
 let vitesse = 1;              // ×1, ×2, ×4 : la vitesse du temps (plafonnée par le coût de la simulation)
 let pauseActive = false;      // Espace : le temps s'arrête, les ordres restent possibles
+let forme = 'bloc';            // la forme des prochains ordres en terrain libre (bloc, ligne, par deux, colonne) ; sur une tranchée, les hommes suivent le tracé
 let modeMarche = false;        // le bouton « Marcher » d'une carte : le prochain clic sur le sol envoie les régiments choisis
 let modeBarrage = null;       // un calibre : le prochain clic gauche vise
 let choisis = new Set();      // les régiments choisis (ids)
@@ -288,7 +289,7 @@ function majRegiments() {
   regActifVu = ia;
   regDebut = Math.max(0, Math.min(regDebut, regs.length - visibles));
   const cle = regs.map(r => `${r.id}:${r.effectif}:${r.pertes}:${bl[r.id]}:${chevrons(ex[r.id] / Math.max(1, vivants[r.id]))}:${r.deroute ? 1 : 0}:${moralEnMots(r, R)}:${choisis.has(r.id) ? 1 : 0}:${nuit.etat === 'choix' ? nuit.corvees[r.id] : ''}`).join('|')
-    + `#${regDebut}/${visibles}#${actif ? `${actif.id}:${ordreEnMots(actif)}:${choisis.size}:${modeMarche}:${e.phase}` : ''}`;
+    + `#${regDebut}/${visibles}#${actif ? `${actif.id}:${ordreEnMots(actif)}:${choisis.size}:${modeMarche}:${forme}:${e.phase}` : ''}`;
   if (cle === regimentsVus) return;
   regimentsVus = cle;
   const pc = (n, r) => `${(n / r.initial * 100).toFixed(1)}%`;
@@ -313,6 +314,7 @@ function majRegiments() {
     <div class="compte">${debout} debout · ${bles} blessés · ${actif.pertes} tombés</div>
     <div class="ordre">${ordreEnMots(actif)}</div>${tampon ? `<span class="tampon">${tampon}</span>` : ''}
     ${choisis.size > 1 ? `<p class="discret">+ ${choisis.size - 1} autre${choisis.size > 2 ? 's' : ''} choisi${choisis.size > 2 ? 's' : ''}</p>` : ''}
+    ${jour ? `<div class="actions formes" role="group" aria-label="Forme en terrain libre">${Object.entries(R.foule.formes).map(([k, f]) => `<button data-forme="${k}" class="${forme === k ? 'actif' : ''}" aria-pressed="${forme === k}">${f.nom}</button>`).join('')}</div>` : ''}
     <div class="actions">${jour ? `<button data-act="marche" class="${modeMarche ? 'actif' : ''}" aria-pressed="${modeMarche}">Marcher</button><button data-act="depart">Regagner sa tranchée</button>` : nuit.etat === 'choix' ? CORVEES.map(c => {
       const m = refusCorvee(B, actif, c.id), toutes = [...choisis].every(i => nuit.corvees[i] === c.id);
       return `<button data-corvee="${c.id}" class="${toutes ? 'actif' : ''}${m ? ' refus' : ''}" aria-disabled="${!!m}" title="${(m || c.dit).replace(/"/g, '&quot;')}">${c.nom}</button>`;
@@ -334,9 +336,10 @@ $('reg-rang').onclick = e => {
 $('reg-ouvert').onclick = e => {
   const co = e.target.closest('button[data-corvee]');
   if (co && B) { co.blur(); return nuit.donner(co.dataset.corvee); }
-  const b = e.target.closest('button[data-act]');
+  const b = e.target.closest('button[data-act], button[data-forme]');
   if (!b || !B) return;
   b.blur();
+  if (b.dataset.forme) { forme = b.dataset.forme; regimentsVus = ''; return majHud(); }
   if (b.dataset.act === 'fiche') return montrerRegiment(+$('reg-ouvert').dataset.id);
   if (b.dataset.act === 'marche') { modeMarche = !modeMarche; if (modeMarche) modeBarrage = null; return majHud(); }
   if (b.dataset.act === 'depart') {
@@ -375,7 +378,7 @@ function ordreCase(idx, s) {
   if (B.etat.phase !== 'jour') return toast('La nuit, pas de marche : choisissez des régiments, puis une corvée.');
   if (!choisis.size) return toast('Choisissez d\'abord un régiment (clic, cadre, T, ou la lettre d\'un secteur).');
   const Z = zone(B), x = Z.x0 + (s - 0.5) * largeurZone(B), y = ligneY(B.lignes[idx], x);
-  const r = dire(ordonnerMarche(B, [...choisis], x, y));
+  const r = dire(ordonnerMarche(B, [...choisis], x, y, forme));
   if (r.ok) { marque = { x, y, t: 2 }; sauvegarder(); ordreDonne(r); }
 }
 // Un ordre pris : les tronçons visés clignotent (sur le terrain et sur la carte, trois secondes) et le carnet dit ce que chacun va faire
@@ -526,7 +529,7 @@ function majVisee() {
     if (!svg.hasAttribute('hidden')) { svg.setAttribute('hidden', ''); rendu.surligner(null); }
     return;
   }
-  const [x, y] = rendu.versTerrain(souris.x, souris.y), plan = peutOrdonner(B, [...choisis], x, y);
+  const [x, y] = rendu.versTerrain(souris.x, souris.y), plan = peutOrdonner(B, [...choisis], x, y, forme);
   rendu.surligner(plan.ok ? { troncons: plan.troncons || [], rects: plan.emprises || [] } : null);
   const trait = (x1, y1, x2, y2) => `<line class="fond" x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}"/><line class="encre" x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}"/>`;
   let d = '';
@@ -621,7 +624,7 @@ function majBulle() {
 
 // Donner l'ordre de marche aux régiments choisis, là où l'on a cliqué
 function ordreMarche(x, y) {
-  const r = dire(ordonnerMarche(B, [...choisis], x, y));
+  const r = dire(ordonnerMarche(B, [...choisis], x, y, forme));
   if (r.ok) { marque = { x, y, t: 2 }; sauvegarder(); ordreDonne(r); }
 }
 // Annuler, du plus récent au plus ancien : le barrage visé, « Marcher », la fiche, les régiments choisis (clic droit, Échap)
@@ -824,7 +827,7 @@ startUpdateCheck({
 
 // ─── Mode debug (section 18) : chargé seulement avec ?debug=1 ──────────────
 if (DEBUG) {
-  const { installDebug, seedFromUrl } = await import('./lib/debug.js?v=0.22.0');
+  const { installDebug, seedFromUrl } = await import('./lib/debug.js?v=0.23.0');
   window.__seed = seedFromUrl() ?? undefined;
   installDebug({
     state: () => B && { ...horloge(B), effectifs: effectifs(B), pertes: B.etat.pertes, impacts: B.etat.impacts.length, enJeu: enJeu(), pause: loop.paused },
