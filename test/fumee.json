@@ -236,9 +236,9 @@
   "toast": "H|jeu-toast|"
  },
  "apres-ordre": {
-  "ecran": "jeu-ecran|28543",
+  "ecran": "jeu-ecran|28529",
   "cadre": "H|cadre|",
-  "hud": "hud|26164",
+  "hud": "hud|26140",
   "pause": "icone plaque|\n            <svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M8 5v14M16 5v14\"></path></svg>\n          ",
   "hud-reglages": "icone plaque|\n            <svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M10.3 4.3c.4-1.8 2.9-1.8 3.4 0a1.7 1.7 0 0 0 2.6 1.1c1.5-.9 3.3.8 2.4 2.4a1.7 1.7 0 0 0 1 2.5c1.8.5 1.8 3 0 3.4a1.7 1.7 0 0 0-1 2.6c.9 1.5-.9 3.3-2.4 2.4a1.7 1.7 0 0 0-2.6 1c-.5 1.8-3 1.8-3.4 0a1.7 1.7 0 0 0-2.5-1c-1.6.9-3.3-.9-2.4-2.4a1.7 1.7 0 0 0-1.1-2.6c-1.8-.4-1.8-2.9 0-3.4a1.7 1.7 0 0 0 1.1-2.5c-.9-1.6.8-3.3 2.4-2.4 1 .6 2.3.1 2.5-1.1z\"></path><circle cx=\"12\" cy=\"12\" r=\"3\"></circle></svg>\n          ",
   "carnet": "papier carnet|\n          <p class=\"entete\">Carnet de bord</p>\n          <ol id=\"carnet-liste\"><li class=\"recent\"><b>6 h 00</b>8 régiments en marche.</li></ol>\n        ",
@@ -267,8 +267,8 @@
   "lignes": "discret lignes|Tronçons tenus : <span id=\"troncons-nous\">64</span> · <span id=\"troncons-eux\">64</span>",
   "troncons-nous": "|64",
   "troncons-eux": "|64",
-  "carte": "papier carte|10874",
-  "carte-grille": "carte-grille|10585",
+  "carte": "papier carte|10850",
+  "carte-grille": "carte-grille|10561",
   "carte-regs": "carte-regs|<button class=\"carte-ronde choisi\" data-reg=\"0\" title=\"1 · Porphyre\" aria-label=\"Choisir le régiment 1 · Porphyre\" style=\"left: calc(12.1% + 2.1096em); top: 197px;\">1</button><button class=\"carte-ronde\" data-reg=\"1\" title=\"2 · Protogyne\" aria-label=\"Choisir le régiment 2 · Protogyne\" style=\"left: calc(37.1% + 1.5096em); top: 196px;\">2</button><button class=\"carte-ronde\" data-reg=\"2\" title=\"3 · Céruléen\" aria-label=\"Choisir le régiment 3 · Céruléen\" style=\"left: calc(62.3% + 0.9048em); top: 198px;\">3</button><button class=\"carte-ronde\" data-reg=\"3\" title=\"4 · Viride\" aria-label=\"Choisir le régiment 4 · Viride\" style=\"left: calc(87.1% + 0.3096em); top: 195px;\">4</button><button class=\"carte-ronde choisi\" data-reg=\"4\" title=\"5 · Syzygie\" aria-label=\"Choisir le régiment 5 · Syzygie\" style=\"left: calc(12.8% + 2.0928em); top: 218px;\">5</button><button class=\"carte-ronde\" data-reg=\"5\" title=\"6 · Murmuration\" aria-label=\"Choisir le régiment 6 · Murmuration\" style=\"left: calc(37.6% + 1.4976em); top: 219px;\">6</button><button class=\"carte-ronde\" data-reg=\"6\" title=\"7 · Hapax\" aria-label=\"Choisir le régiment 7 · Hapax\" style=\"left: calc(62.7% + 0.8952em); top: 221px;\">7</button><button class=\"carte-ronde\" data-reg=\"7\" title=\"8 · Sinople\" aria-label=\"Choisir le régiment 8 · Sinople\" style=\"left: calc(87.7% + 0.2952em); top: 217px;\">8</button><button class=\"carte-ronde eux\" data-reg=\"8\" title=\"Régiment 1 d'en face\" aria-label=\"Voir le Régiment 1 d'en face\" style=\"left: calc(12.5% + 2.1em); top: 104px;\">1</button><button class=\"carte-ronde eux\" data-reg=\"9\" title=\"Régiment 2 d'en face\" aria-label=\"Voir le Régiment 2 d'en face\" style=\"left: calc(37.5% + 1.5em); top: 108px;\">2</button><button class=\"carte-ronde eux\" data-reg=\"10\" title=\"Régiment 3 d'en face\" aria-label=\"Voir le Régiment 3 d'en face\" style=\"left: calc(62.5% + 0.9em); top: 106px;\">3</button><button class=\"carte-ronde eux\" data-reg=\"11\" title=\"Régiment 4 d'en face\" aria-label=\"Voir le Régiment 4 d'en face\" style=\"left: calc(87.5% + 0.3em); top: 106px;\">4</button><button class=\"carte-ronde eux\" data-reg=\"12\" title=\"Régiment 5 d'en face\" aria-label=\"Voir le Régiment 5 d'en face\" style=\"left: calc(12.5% + 2.1em); top: 80px;\">5</button><button class=\"carte-ronde eux\" data-reg=\"13\" title=\"Régiment 6 d'en face\" aria-label=\"Voir le Régiment 6 d'en face\" style=\"left: calc(37.5% + 1.5em); top: 83px;\">6</button><button class=\"carte-ronde eux\" data-reg=\"14\" title=\"Régiment 7 d'en face\" aria-label=\"Voir le Régiment 7 d'en face\" style=\"left: calc(62.4% + 0.9024em); top: 83px;\">7</button><button class=\"carte-ronde eux\" data-reg=\"15\" title=\"Régiment 8 d'en face\" aria-label=\"Voir le Régiment 8 d'en face\" style=\"left: calc(87.4% + 0.3024em); top: 80px;\">8</button>",
   "temps": "papier temps|\n          <button id=\"temps-pause\" aria-label=\"Arrêter le temps (Espace)\" aria-pressed=\"true\" class=\"actif\"><svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M8 5v14M16 5v14\"></path></svg></button>\n          <button data-vitesse=\"1\" aria-label=\"Vitesse normale\" class=\"actif\">×1</button>\n          <button data-vitesse=\"2\" aria-label=\"Deux fois plus vite\">×2</button>\n          <button data-vitesse=\"4\" aria-label=\"Quatre fois plus vite\">×4</button>\n        ",
   "temps-pause": "actif|<svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M8 5v14M16 5v14\"></path></svg>",
@@ -295,9 +295,9 @@
   "toast": "H|jeu-toast|"
  },
  "apres-barrages": {
-  "ecran": "jeu-ecran|28574",
+  "ecran": "jeu-ecran|28560",
   "cadre": "H|cadre|",
-  "hud": "hud|26195",
+  "hud": "hud|26171",
   "pause": "icone plaque|\n            <svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M8 5v14M16 5v14\"></path></svg>\n          ",
   "hud-reglages": "icone plaque|\n            <svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M10.3 4.3c.4-1.8 2.9-1.8 3.4 0a1.7 1.7 0 0 0 2.6 1.1c1.5-.9 3.3.8 2.4 2.4a1.7 1.7 0 0 0 1 2.5c1.8.5 1.8 3 0 3.4a1.7 1.7 0 0 0-1 2.6c.9 1.5-.9 3.3-2.4 2.4a1.7 1.7 0 0 0-2.6 1c-.5 1.8-3 1.8-3.4 0a1.7 1.7 0 0 0-2.5-1c-1.6.9-3.3-.9-2.4-2.4a1.7 1.7 0 0 0-1.1-2.6c-1.8-.4-1.8-2.9 0-3.4a1.7 1.7 0 0 0 1.1-2.5c-.9-1.6.8-3.3 2.4-2.4 1 .6 2.3.1 2.5-1.1z\"></path><circle cx=\"12\" cy=\"12\" r=\"3\"></circle></svg>\n          ",
   "carnet": "papier carnet|\n          <p class=\"entete\">Carnet de bord</p>\n          <ol id=\"carnet-liste\"><li class=\"recent\"><b>6 h 00</b>8 régiments en marche.</li></ol>\n        ",
@@ -326,8 +326,8 @@
   "lignes": "discret lignes|Tronçons tenus : <span id=\"troncons-nous\">64</span> · <span id=\"troncons-eux\">64</span>",
   "troncons-nous": "|64",
   "troncons-eux": "|64",
-  "carte": "papier carte|10879",
-  "carte-grille": "carte-grille|10590",
+  "carte": "papier carte|10855",
+  "carte-grille": "carte-grille|10566",
   "carte-regs": "carte-regs|<button class=\"carte-ronde choisi\" data-reg=\"0\" title=\"1 · Porphyre\" aria-label=\"Choisir le régiment 1 · Porphyre\" style=\"left: calc(10.2% + 2.1552em); top: 197px;\">1</button><button class=\"carte-ronde\" data-reg=\"1\" title=\"2 · Protogyne\" aria-label=\"Choisir le régiment 2 · Protogyne\" style=\"left: calc(35.1% + 1.5576em); top: 196px;\">2</button><button class=\"carte-ronde\" data-reg=\"2\" title=\"3 · Céruléen\" aria-label=\"Choisir le régiment 3 · Céruléen\" style=\"left: calc(61.4% + 0.9264em); top: 193px;\">3</button><button class=\"carte-ronde\" data-reg=\"3\" title=\"4 · Viride\" aria-label=\"Choisir le régiment 4 · Viride\" style=\"left: calc(84.8% + 0.3648em); top: 196px;\">4</button><button class=\"carte-ronde choisi\" data-reg=\"4\" title=\"5 · Syzygie\" aria-label=\"Choisir le régiment 5 · Syzygie\" style=\"left: calc(14.2% + 2.0592em); top: 212px;\">5</button><button class=\"carte-ronde\" data-reg=\"5\" title=\"6 · Murmuration\" aria-label=\"Choisir le régiment 6 · Murmuration\" style=\"left: calc(38.5% + 1.476em); top: 212px;\">6</button><button class=\"carte-ronde\" data-reg=\"6\" title=\"7 · Hapax\" aria-label=\"Choisir le régiment 7 · Hapax\" style=\"left: calc(64.2% + 0.8592em); top: 217px;\">7</button><button class=\"carte-ronde\" data-reg=\"7\" title=\"8 · Sinople\" aria-label=\"Choisir le régiment 8 · Sinople\" style=\"left: calc(89.2% + 0.2592em); top: 211px;\">8</button><button class=\"carte-ronde eux\" data-reg=\"8\" title=\"Régiment 1 d'en face\" aria-label=\"Voir le Régiment 1 d'en face\" style=\"left: calc(12.5% + 2.1em); top: 104px;\">1</button><button class=\"carte-ronde eux\" data-reg=\"9\" title=\"Régiment 2 d'en face\" aria-label=\"Voir le Régiment 2 d'en face\" style=\"left: calc(37.4% + 1.5024em); top: 108px;\">2</button><button class=\"carte-ronde eux\" data-reg=\"10\" title=\"Régiment 3 d'en face\" aria-label=\"Voir le Régiment 3 d'en face\" style=\"left: calc(62.6% + 0.8976em); top: 106px;\">3</button><button class=\"carte-ronde eux\" data-reg=\"11\" title=\"Régiment 4 d'en face\" aria-label=\"Voir le Régiment 4 d'en face\" style=\"left: calc(87.5% + 0.3em); top: 106px;\">4</button><button class=\"carte-ronde eux\" data-reg=\"12\" title=\"Régiment 5 d'en face\" aria-label=\"Voir le Régiment 5 d'en face\" style=\"left: calc(12.5% + 2.1em); top: 80px;\">5</button><button class=\"carte-ronde eux\" data-reg=\"13\" title=\"Régiment 6 d'en face\" aria-label=\"Voir le Régiment 6 d'en face\" style=\"left: calc(37.5% + 1.5em); top: 83px;\">6</button><button class=\"carte-ronde eux\" data-reg=\"14\" title=\"Régiment 7 d'en face\" aria-label=\"Voir le Régiment 7 d'en face\" style=\"left: calc(62.4% + 0.9024em); top: 83px;\">7</button><button class=\"carte-ronde eux\" data-reg=\"15\" title=\"Régiment 8 d'en face\" aria-label=\"Voir le Régiment 8 d'en face\" style=\"left: calc(87.4% + 0.3024em); top: 80px;\">8</button>",
   "temps": "papier temps|\n          <button id=\"temps-pause\" aria-label=\"Arrêter le temps (Espace)\" aria-pressed=\"true\" class=\"actif\"><svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M8 5v14M16 5v14\"></path></svg></button>\n          <button data-vitesse=\"1\" aria-label=\"Vitesse normale\" class=\"actif\">×1</button>\n          <button data-vitesse=\"2\" aria-label=\"Deux fois plus vite\">×2</button>\n          <button data-vitesse=\"4\" aria-label=\"Quatre fois plus vite\">×4</button>\n        ",
   "temps-pause": "actif|<svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M8 5v14M16 5v14\"></path></svg>",
@@ -354,9 +354,9 @@
   "toast": "H|jeu-toast|"
  },
  "annule": {
-  "ecran": "jeu-ecran|29485",
+  "ecran": "jeu-ecran|29471",
   "cadre": "H|cadre|",
-  "hud": "hud|26313",
+  "hud": "hud|26289",
   "pause": "icone plaque|\n            <svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M8 5v14M16 5v14\"></path></svg>\n          ",
   "hud-reglages": "icone plaque|\n            <svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M10.3 4.3c.4-1.8 2.9-1.8 3.4 0a1.7 1.7 0 0 0 2.6 1.1c1.5-.9 3.3.8 2.4 2.4a1.7 1.7 0 0 0 1 2.5c1.8.5 1.8 3 0 3.4a1.7 1.7 0 0 0-1 2.6c.9 1.5-.9 3.3-2.4 2.4a1.7 1.7 0 0 0-2.6 1c-.5 1.8-3 1.8-3.4 0a1.7 1.7 0 0 0-2.5-1c-1.6.9-3.3-.9-2.4-2.4a1.7 1.7 0 0 0-1.1-2.6c-1.8-.4-1.8-2.9 0-3.4a1.7 1.7 0 0 0 1.1-2.5c-.9-1.6.8-3.3 2.4-2.4 1 .6 2.3.1 2.5-1.1z\"></path><circle cx=\"12\" cy=\"12\" r=\"3\"></circle></svg>\n          ",
   "carnet": "papier carnet|\n          <p class=\"entete\">Carnet de bord</p>\n          <ol id=\"carnet-liste\"><li class=\"recent\"><b>6 h 00</b>8 régiments en marche.</li></ol>\n        ",
@@ -385,8 +385,8 @@
   "lignes": "discret lignes|Tronçons tenus : <span id=\"troncons-nous\">64</span> · <span id=\"troncons-eux\">64</span>",
   "troncons-nous": "|64",
   "troncons-eux": "|64",
-  "carte": "papier carte|10858",
-  "carte-grille": "carte-grille|10569",
+  "carte": "papier carte|10834",
+  "carte-grille": "carte-grille|10545",
   "carte-regs": "carte-regs|<button class=\"carte-ronde\" data-reg=\"0\" title=\"1 · Porphyre\" aria-label=\"Choisir le régiment 1 · Porphyre\" style=\"left: calc(10.2% + 2.1552em); top: 197px;\">1</button><button class=\"carte-ronde\" data-reg=\"1\" title=\"2 · Protogyne\" aria-label=\"Choisir le régiment 2 · Protogyne\" style=\"left: calc(35.1% + 1.5576em); top: 196px;\">2</button><button class=\"carte-ronde\" data-reg=\"2\" title=\"3 · Céruléen\" aria-label=\"Choisir le régiment 3 · Céruléen\" style=\"left: calc(61.4% + 0.9264em); top: 193px;\">3</button><button class=\"carte-ronde\" data-reg=\"3\" title=\"4 · Viride\" aria-label=\"Choisir le régiment 4 · Viride\" style=\"left: calc(84.8% + 0.3648em); top: 196px;\">4</button><button class=\"carte-ronde\" data-reg=\"4\" title=\"5 · Syzygie\" aria-label=\"Choisir le régiment 5 · Syzygie\" style=\"left: calc(14.2% + 2.0592em); top: 212px;\">5</button><button class=\"carte-ronde\" data-reg=\"5\" title=\"6 · Murmuration\" aria-label=\"Choisir le régiment 6 · Murmuration\" style=\"left: calc(38.5% + 1.476em); top: 212px;\">6</button><button class=\"carte-ronde\" data-reg=\"6\" title=\"7 · Hapax\" aria-label=\"Choisir le régiment 7 · Hapax\" style=\"left: calc(64.2% + 0.8592em); top: 217px;\">7</button><button class=\"carte-ronde\" data-reg=\"7\" title=\"8 · Sinople\" aria-label=\"Choisir le régiment 8 · Sinople\" style=\"left: calc(89.2% + 0.2592em); top: 211px;\">8</button><button class=\"carte-ronde eux\" data-reg=\"8\" title=\"Régiment 1 d'en face\" aria-label=\"Voir le Régiment 1 d'en face\" style=\"left: calc(12.5% + 2.1em); top: 104px;\">1</button><button class=\"carte-ronde eux\" data-reg=\"9\" title=\"Régiment 2 d'en face\" aria-label=\"Voir le Régiment 2 d'en face\" style=\"left: calc(37.4% + 1.5024em); top: 108px;\">2</button><button class=\"carte-ronde eux\" data-reg=\"10\" title=\"Régiment 3 d'en face\" aria-label=\"Voir le Régiment 3 d'en face\" style=\"left: calc(62.6% + 0.8976em); top: 106px;\">3</button><button class=\"carte-ronde eux\" data-reg=\"11\" title=\"Régiment 4 d'en face\" aria-label=\"Voir le Régiment 4 d'en face\" style=\"left: calc(87.5% + 0.3em); top: 106px;\">4</button><button class=\"carte-ronde eux\" data-reg=\"12\" title=\"Régiment 5 d'en face\" aria-label=\"Voir le Régiment 5 d'en face\" style=\"left: calc(12.5% + 2.1em); top: 80px;\">5</button><button class=\"carte-ronde eux\" data-reg=\"13\" title=\"Régiment 6 d'en face\" aria-label=\"Voir le Régiment 6 d'en face\" style=\"left: calc(37.5% + 1.5em); top: 83px;\">6</button><button class=\"carte-ronde eux\" data-reg=\"14\" title=\"Régiment 7 d'en face\" aria-label=\"Voir le Régiment 7 d'en face\" style=\"left: calc(62.4% + 0.9024em); top: 83px;\">7</button><button class=\"carte-ronde eux\" data-reg=\"15\" title=\"Régiment 8 d'en face\" aria-label=\"Voir le Régiment 8 d'en face\" style=\"left: calc(87.4% + 0.3024em); top: 80px;\">8</button>",
   "temps": "papier temps|\n          <button id=\"temps-pause\" aria-label=\"Arrêter le temps (Espace)\" aria-pressed=\"true\" class=\"actif\"><svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M8 5v14M16 5v14\"></path></svg></button>\n          <button data-vitesse=\"1\" aria-label=\"Vitesse normale\" class=\"actif\">×1</button>\n          <button data-vitesse=\"2\" aria-label=\"Deux fois plus vite\">×2</button>\n          <button data-vitesse=\"4\" aria-label=\"Quatre fois plus vite\">×4</button>\n        ",
   "temps-pause": "actif|<svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M8 5v14M16 5v14\"></path></svg>",
@@ -531,7 +531,7 @@
   "toast": "H|jeu-toast|"
  },
  "soir": {
-  "ecran": "jeu-ecran|29559",
+  "ecran": "jeu-ecran|29560",
   "cadre": "H|cadre|",
   "hud": "hud|26295",
   "pause": "icone plaque|\n            <svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M8 5v14M16 5v14\"></path></svg>\n          ",
@@ -590,7 +590,7 @@
   "toast": "H|jeu-toast|"
  },
  "nuit": {
-  "ecran": "jeu-ecran|29219",
+  "ecran": "jeu-ecran|29220",
   "cadre": "H|cadre|",
   "hud": "hud|25907",
   "pause": "icone plaque|\n            <svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M8 5v14M16 5v14\"></path></svg>\n          ",
@@ -649,7 +649,7 @@
   "toast": "H|jeu-toast|"
  },
  "nuit-choisis": {
-  "ecran": "jeu-ecran|29416",
+  "ecran": "jeu-ecran|29417",
   "cadre": "H|cadre|",
   "hud": "hud|26062",
   "pause": "icone plaque|\n            <svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M8 5v14M16 5v14\"></path></svg>\n          ",
@@ -708,7 +708,7 @@
   "toast": "H|jeu-toast|"
  },
  "fin": {
-  "ecran": "jeu-ecran|29426",
+  "ecran": "jeu-ecran|29427",
   "cadre": "H|cadre|",
   "hud": "hud|26072",
   "pause": "icone plaque|\n            <svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M8 5v14M16 5v14\"></path></svg>\n          ",

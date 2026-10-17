@@ -21,6 +21,7 @@ import { refusCorvee } from './nuit.js?v=0.22.0';
 import { chargerContenu } from './design-store.js?v=0.22.0';
 import * as lecture from './hud/lecture.js?v=0.22.0';
 import { creerFiche } from './hud/fiche.js?v=0.22.0';
+import { creerNuit, corveeDe, corveeCourte } from './hud/nuit.js?v=0.22.0';
 import { creerCarnet, deux } from './hud/carnet.js?v=0.22.0';
 import { creerCarte } from './hud/carte.js?v=0.22.0';
 import { creerPertes } from './hud/pertes.js?v=0.22.0';
@@ -55,7 +56,7 @@ let choisis = new Set();      // les régiments choisis (ids)
 const perf = { sim: 0, pas: 0 };
 
 // Lire la bataille en mots (hud/lecture.js) et les fiches (hud/fiche.js) : la bataille en cours leur est donnée à chaque appel
-const { majuscule, nomDe, enMots } = lecture;
+const { majuscule, nomDe, enMots, pluriel } = lecture;
 const indiceDe = id => lecture.indiceDe(B, id), quiEst = id => lecture.quiEst(B, id), tombe = id => lecture.tombe(B, id);
 const soldatSous = (x, y, r) => lecture.soldatSous(B, x, y, r), corpsSous = (x, y, r) => lecture.corpsSous(B, x, y, r);
 const numeroDe = r => lecture.numeroDe(B, r);     // le numéro d'ordre : « 3 · Viride »
@@ -66,6 +67,10 @@ const laCarte = creerCarte({
   $, bataille: () => B, choisis: () => choisis,
   surSecteur: (s, ajout) => choisirSecteur(s, ajout), surCase: (idx, s) => ordreCase(idx, s),
   surRonde: (r, ajout) => r.camp === NOUS ? choisirRegiment(r.id, ajout) : montrerRegiment(r.id),
+});
+const nuit = creerNuit({
+  $, bataille: () => B, choisis: () => choisis, pauser: () => loop.pause(), reprendre: () => reprendre(),
+  sauvegarder: () => sauvegarder(), majHud: () => majHud(), toast: t => toast(t), dire: r => dire(r), invalider: () => { regimentsVus = ''; },
 });
 const laFiche = creerFiche({ $, R, bataille: () => B });
 const { montrerFiche, montrerSoldat, montrerRegiment, fermer: fermerFiche, maj: majFiche } = laFiche;
@@ -150,7 +155,7 @@ function jouer(bataille) {
   // la caméra du joueur (ou celle de départ : l'écran titre a la sienne) ; un réglage de la v0.2, sans tangage, est ignoré
   if (prefs.camera?.tangage) rendu.placerCamera(prefs.camera.yaw, prefs.camera.tangage); else rendu.placerCamera(CAMERA.yaw, CAMERA.tangage);
   choisis = new Set(); rendu.choisis = choisis;
-  modeBarrage = null; modeMarche = false; pauseActive = false; vitesse = 1; loop.setTimeScale(1); fermerFiche(); fermerNuit();
+  modeBarrage = null; modeMarche = false; pauseActive = false; vitesse = 1; loop.setTimeScale(1); fermerFiche(); nuit.fermer();
   viderCarnet(); regimentsVus = '';
   laCarte.construire();
   $('titre').hidden = true;
@@ -158,7 +163,7 @@ function jouer(bataille) {
   etiquettes();
   majHud();
   sauvegarder();
-  if (B.etat.phase === 'nuit') montrerNuit();
+  if (B.etat.phase === 'nuit') nuit.montrer();
   else if (B.etat.phase === 'fin') montrerFin();
   else loop.resume();
 }
@@ -170,7 +175,7 @@ function pause() {
   $('dialogue-pause').showModal();
 }
 function reprendre() {
-  if (!enJeu() || pauseActive || nuitEtat || B.etat.phase !== 'jour' || document.querySelector('dialog[open]')) return;
+  if (!enJeu() || pauseActive || nuit.etat || B.etat.phase !== 'jour' || document.querySelector('dialog[open]')) return;
   loop.resume();
 }
 
@@ -194,7 +199,6 @@ function commencer(graine) {
 }
 $('ordre-compris').onclick = () => $('dialogue-ordre').close();
 $('dialogue-ordre').addEventListener('close', reprendre);
-const pluriel = (n, un, des) => `${n} ${n > 1 ? des : un}`;
 $('nouvelle').onclick = () => {
   const graine = window.__seed ?? Date.now() % 100000;      // la graine elle-même peut venir de l'horloge
   if (!store.has('partie')) return commencer(graine);
@@ -221,88 +225,6 @@ window.addEventListener('blur', pause);
 document.addEventListener('visibilitychange', () => { if (document.hidden) pause(); });
 
 // ─── La nuit, la fin ───────────────────────────────────────────────────────
-const nomJour = n => (n === 1 ? '1er' : `${n}e`);
-const tron = n => `${n} tronçon${n > 1 ? 's' : ''}`;
-// les tronçons gagnés et perdus dans la journée, et ce qu'ils ont coûté se lit juste au-dessus
-function enLignes([pris, perdus]) {
-  if (!pris && !perdus) return 'Les lignes n\'ont pas bougé.';
-  return [pris && `pris ${tron(pris)}`, perdus && `perdu ${tron(perdus)}`].filter(Boolean).join(', ').replace(/^./, c => c.toUpperCase()) + '.';
-}
-// Le papier de la nuit : un état (choix des corvées, puis le bilan de l'aube), jamais une boîte de dialogue : le champ reste
-// là, on choisit des régiments (clic, cadre, T) et on leur donne une corvée (Jérôme, v0.13.0)
-let nuitEtat = null;                 // 'choix' | 'aube' | null
-let corveesNuit = {};                // la corvée de chacun de nos régiments cette nuit (id → corvée)
-const corveeDe = id => CORVEES.find(c => c.id === id)?.nom || '';
-const corveeCourte = id => CORVEES.find(c => c.id === id)?.court || '';
-const nosRegiments = () => B.etat.regiments.filter(r => r.camp === NOUS && r.effectif);
-function montrerNuit() {
-  loop.pause(); sauvegarder();
-  const e = B.etat, j = e.jour, [nous, eux] = e.pertesJour[j - 1], avant = e.nuits.at(-1)?.choix || {};
-  $('nuit-titre').textContent = `Nuit du ${nomJour(j)} au ${nomJour(j + 1)} jour`;
-  $('nuit-pertes').textContent = `Morts du jour : ${nous} des nôtres, ${eux} en face.`;
-  $('nuit-lignes').textContent = e.tranchees ? enLignes(e.prises[j - 1]) : '';
-  $('nuit-demain').textContent = `Demain : ${METEO[e.previsions[j - 1]]?.prevision || '—'}.`;
-  $('nuit-reserves').textContent = e.mission ? `En réserve : ${pluriel(e.reserves[NOUS], 'régiment frais', 'régiments frais')}.` : '';
-  // la dernière corvée donnée, si elle est encore possible, sinon le repos
-  corveesNuit = Object.fromEntries(nosRegiments().map(r => [r.id, avant[r.id] && !refusCorvee(B, r, avant[r.id]) ? avant[r.id] : 'repos']));
-  nuitEtat = 'choix';
-  $('nuit-corps').hidden = false; $('aube-bilan').hidden = true; $('aube').textContent = 'À l\'aube';
-  $('nuit').hidden = false;
-  regimentsVus = ''; nuitVue = '';
-  majHud();
-}
-// une corvée aux régiments choisis (ceux qui la refusent le disent à voix haute)
-function donnerCorvee(id) {
-  const regs = [...choisis].map(i => B.etat.regiments[i]).filter(r => r && r.camp === NOUS && r.effectif);
-  if (!regs.length) return toast('Choisissez d\'abord un régiment (clic, cadre, T pour tous).');
-  const refus = [];
-  for (const r of regs) { const m = refusCorvee(B, r, id); if (m) refus.push(`${r.nom} : ${m}`); else corveesNuit[r.id] = id; }
-  if (refus.length) toast(refus[0]);
-  regimentsVus = ''; nuitVue = ''; majHud();
-}
-// (la nuit, les corvées sont au-dessus de la carte du régiment choisi : `majRegiments`)
-let nuitVue = '';
-// le bilan de la nuit en quelques lignes (rien de ce qui n'a pas eu lieu)
-function bilanEnMots(b) {
-  const pl = (n, un, des) => `${n} ${n > 1 ? des : un}`;
-  const faits = [
-    b.inhumes && `${pl(b.inhumes, 'mort inhumé', 'morts inhumés')}`,
-    b.evacues && `${pl(b.evacues, 'blessé évacué', 'blessés évacués')}`,
-    b.retours && `${pl(b.retours, 'blessé guéri revenu', 'blessés guéris revenus')} au front`,
-    b.repares && `${pl(b.repares, 'tronçon réparé', 'tronçons réparés')}`,
-    b.caillebotis && `des caillebotis dans ${pl(b.caillebotis, 'tronçon', 'tronçons')}`,
-    b.releves && `${pl(b.releves, 'régiment relevé', 'régiments relevés')}`,
-    b.abris && `des abris creusés sous ${pl(b.abris, 'tronçon', 'tronçons')}`,
-    b.ravitailles && `${pl(b.ravitailles, 'régiment ravitaillé', 'régiments ravitaillés')}`,
-    b.coups && `${pl(b.coups, 'coup de main', 'coups de main')} : ${b.prisonniers ? pl(b.prisonniers, 'prisonnier ramené', 'prisonniers ramenés') : 'personne ramené'}`,
-  ].filter(Boolean);
-  const morts = [
-    b.mortsCorvee && `${b.mortsCorvee} aux corvées`,
-    b.mortsBlesses && `${b.mortsBlesses} de leurs blessures`,
-  ].filter(Boolean);
-  const regs = B.etat.regiments;
-  return [
-    faits.length ? `Cette nuit : ${faits.join(', ')}.` : 'Une nuit de repos.',
-    morts.length ? `Morts dans la nuit : ${morts.join(', ')}.` : 'Personne n\'est mort cette nuit.',
-    b.pris && `En face nous a pris ${pl(b.pris, 'homme', 'hommes')} : un coup de main.`,
-    b.affames && `${pl(b.affames, 'régiment n\'a', 'régiments n\'ont')} plus de vivres : la faim.`,
-    ...(b.refus || []).map(id => `${regs[id].nom} refuse de monter aujourd'hui : il tiendra sa tranchée, rien de plus.`),
-  ].filter(Boolean);
-}
-function passerLaNuit() {
-  if (B?.etat.phase !== 'nuit') return;
-  const r = aube(B, corveesNuit);
-  if (!r.ok) return dire(r);
-  sauvegarder(); majHud();
-  nuitEtat = 'aube';
-  $('nuit-titre').textContent = `L'aube du ${nomJour(B.etat.jour)} jour`;
-  $('nuit-corps').hidden = true;
-  $('aube-bilan').replaceChildren(...bilanEnMots(r.bilan[NOUS]).map(t => Object.assign(document.createElement('p'), { textContent: t })));
-  $('aube-bilan').hidden = false; $('aube').textContent = 'Le jour se lève';
-  regimentsVus = '';
-}
-function fermerNuit() { nuitEtat = null; $('nuit').hidden = true; regimentsVus = ''; }
-$('aube').onclick = () => { if (nuitEtat === 'choix') passerLaNuit(); else { fermerNuit(); reprendre(); } };
 function montrerFin() {
   loop.pause(); sauvegarder();
   const e = B.etat, [vNous, vEux] = effectifs(B);
@@ -347,7 +269,7 @@ function toast(texte) {
 function dire(r) { if (r?.refus) toast(r.refus); return r; }
 
 // ─── Le HUD ────────────────────────────────────────────────────────────────
-const ordreEnMots = r => nuitEtat === 'choix' && corveesNuit[r.id] ? `cette nuit : ${corveeDe(corveesNuit[r.id]).toLowerCase()}` : actionDe(B, r);
+const ordreEnMots = r => nuit.etat === 'choix' && nuit.corvees[r.id] ? `cette nuit : ${corveeDe(nuit.corvees[r.id]).toLowerCase()}` : actionDe(B, r);
 
 // Nos régiments (Jérôme, v0.20.0 ; docs/ui-cible.md) : une rangée de cartes compactes (numéro et nom, chevrons d'expérience, la barre
 // debout / blessés / tombés : plein, hachuré, vide) ; la carte choisie s'ouvre vers le haut (l'ordre en mots, les actions) sans pousser
@@ -365,7 +287,7 @@ function majRegiments() {
   if (ia >= 0 && ia !== regActifVu && (ia < regDebut || ia >= regDebut + visibles)) regDebut = Math.min(Math.max(0, regs.length - visibles), Math.max(0, ia - Math.floor(visibles / 2)));
   regActifVu = ia;
   regDebut = Math.max(0, Math.min(regDebut, regs.length - visibles));
-  const cle = regs.map(r => `${r.id}:${r.effectif}:${r.pertes}:${bl[r.id]}:${chevrons(ex[r.id] / Math.max(1, vivants[r.id]))}:${r.deroute ? 1 : 0}:${moralEnMots(r, R)}:${choisis.has(r.id) ? 1 : 0}:${nuitEtat === 'choix' ? corveesNuit[r.id] : ''}`).join('|')
+  const cle = regs.map(r => `${r.id}:${r.effectif}:${r.pertes}:${bl[r.id]}:${chevrons(ex[r.id] / Math.max(1, vivants[r.id]))}:${r.deroute ? 1 : 0}:${moralEnMots(r, R)}:${choisis.has(r.id) ? 1 : 0}:${nuit.etat === 'choix' ? nuit.corvees[r.id] : ''}`).join('|')
     + `#${regDebut}/${visibles}#${actif ? `${actif.id}:${ordreEnMots(actif)}:${choisis.size}:${modeMarche}:${e.phase}` : ''}`;
   if (cle === regimentsVus) return;
   regimentsVus = cle;
@@ -377,7 +299,7 @@ function majRegiments() {
     b.setAttribute('aria-pressed', String(choisis.has(r.id)));
     b.setAttribute('aria-label', `${numeroDe(r)} · ${r.nom} : ${debout} debout, ${bles} blessés, ${r.pertes} tombés, ${'chevron '.repeat(nb).trim() || 'aucun chevron'}${humeur.startsWith('tient') ? '' : `, ${humeur}`}`);
     b.innerHTML = `<span class="l1"><b>${numeroDe(r)}</b> ${r.nom}${humeur.startsWith('tient') ? '' : '<i class="alerte" aria-hidden="true">!</i>'}</span>
-      <span class="chevrons" aria-hidden="true">${nuitEtat === 'choix' ? `<span class="corvee">${corveeCourte(corveesNuit[r.id])}</span>` : [0, 1, 2].map(k => k < nb ? CHEVRON : CHEVRON.replace('class="chev"', 'class="chev vide"')).join('')}</span>
+      <span class="chevrons" aria-hidden="true">${nuit.etat === 'choix' ? `<span class="corvee">${corveeCourte(nuit.corvees[r.id])}</span>` : [0, 1, 2].map(k => k < nb ? CHEVRON : CHEVRON.replace('class="chev"', 'class="chev vide"')).join('')}</span>
       <span class="barre" title="plein : debout (${debout}) · hachuré : blessés (${bles}) · vide : tombés (${r.pertes})"><i class="debout" style="width:${pc(debout, r)}"></i><i class="blesses" style="width:${pc(bles, r)}"></i><i class="tombes" style="width:${pc(r.pertes, r)}"></i></span>`;
     return b;
   });
@@ -385,14 +307,14 @@ function majRegiments() {
   $('reg-prec').hidden = regDebut <= 0; $('reg-suiv').hidden = regDebut + visibles >= regs.length;
   const pan = $('reg-ouvert');
   if (!actif || ia < regDebut || ia >= regDebut + visibles) { pan.hidden = true; return; }
-  const bles = bl[actif.id], debout = Math.max(0, actif.effectif - bles), humeur = moralEnMots(actif, R), tampon = humeur.startsWith('tient') ? '' : humeur, jour = e.phase === 'jour' && !nuitEtat;
+  const bles = bl[actif.id], debout = Math.max(0, actif.effectif - bles), humeur = moralEnMots(actif, R), tampon = humeur.startsWith('tient') ? '' : humeur, jour = e.phase === 'jour' && !nuit.etat;
   pan.dataset.id = actif.id;
   pan.innerHTML = `<div class="tete"><b>${numeroDe(actif)} · ${actif.nom}</b><span>${secteursDe(B, actif)}</span></div>
     <div class="compte">${debout} debout · ${bles} blessés · ${actif.pertes} tombés</div>
     <div class="ordre">${ordreEnMots(actif)}</div>${tampon ? `<span class="tampon">${tampon}</span>` : ''}
     ${choisis.size > 1 ? `<p class="discret">+ ${choisis.size - 1} autre${choisis.size > 2 ? 's' : ''} choisi${choisis.size > 2 ? 's' : ''}</p>` : ''}
-    <div class="actions">${jour ? `<button data-act="marche" class="${modeMarche ? 'actif' : ''}" aria-pressed="${modeMarche}">Marcher</button><button data-act="depart">Regagner sa tranchée</button>` : nuitEtat === 'choix' ? CORVEES.map(c => {
-      const m = refusCorvee(B, actif, c.id), toutes = [...choisis].every(i => corveesNuit[i] === c.id);
+    <div class="actions">${jour ? `<button data-act="marche" class="${modeMarche ? 'actif' : ''}" aria-pressed="${modeMarche}">Marcher</button><button data-act="depart">Regagner sa tranchée</button>` : nuit.etat === 'choix' ? CORVEES.map(c => {
+      const m = refusCorvee(B, actif, c.id), toutes = [...choisis].every(i => nuit.corvees[i] === c.id);
       return `<button data-corvee="${c.id}" class="${toutes ? 'actif' : ''}${m ? ' refus' : ''}" aria-disabled="${!!m}" title="${(m || c.dit).replace(/"/g, '&quot;')}">${c.nom}</button>`;
     }).join('') : ''}<button data-act="fiche">Fiche</button></div>`;
   pan.hidden = false;
@@ -411,7 +333,7 @@ $('reg-rang').onclick = e => {
 };
 $('reg-ouvert').onclick = e => {
   const co = e.target.closest('button[data-corvee]');
-  if (co && B) { co.blur(); return donnerCorvee(co.dataset.corvee); }
+  if (co && B) { co.blur(); return nuit.donner(co.dataset.corvee); }
   const b = e.target.closest('button[data-act]');
   if (!b || !B) return;
   b.blur();
@@ -527,7 +449,7 @@ function majHud() {
     b.classList.toggle('recharge', reste > 0);
   }
   majRegiments(); laCarte.maj();
-  $('batteries').hidden = nuitEtat === 'choix';    // la nuit, pas de barrage
+  $('batteries').hidden = nuit.etat === 'choix';    // la nuit, pas de barrage
   $('ecran').classList.toggle('vise', !!modeBarrage || modeMarche);
 }
 $('batteries').append(...NOMS_CALIBRES.map((cal, k) => {
@@ -581,7 +503,7 @@ function majEtiquettes() {
     d.classList.toggle('choisi', choisis.has(id));
     // « S3 · Viride », puis la corvée de la nuit, ou le moral quand il baisse
     const reg = B.etat.regiments[id], m = moralEnMots(reg, R), base = `${numeroDe(reg)} · ${reg.nom} · ${secteursDe(B, reg)}`;
-    const suite = nuitEtat === 'choix' && corveesNuit[id] ? corveeDe(corveesNuit[id]) : m.startsWith('tient') ? '' : m;
+    const suite = nuit.etat === 'choix' && nuit.corvees[id] ? corveeDe(nuit.corvees[id]) : m.startsWith('tient') ? '' : m;
     const texte = suite ? `${base} · ${suite}` : base;
     if (d.textContent !== texte) d.textContent = texte;
   }
@@ -600,7 +522,7 @@ let marque = null;
 // La visée (v0.21.0) : de chaque régiment choisi au curseur une ligne, une croix au bout ; l'ordre à sec (`peutOrdonner`) dit ce qu'il occuperait
 function majVisee() {
   const svg = $('visee');
-  if (!(enJeu() && B.etat.phase === 'jour' && !nuitEtat && choisis.size && souris && !glisse && !modeBarrage && !document.querySelector('dialog[open]'))) {
+  if (!(enJeu() && B.etat.phase === 'jour' && !nuit.etat && choisis.size && souris && !glisse && !modeBarrage && !document.querySelector('dialog[open]'))) {
     if (!svg.hasAttribute('hidden')) { svg.setAttribute('hidden', ''); rendu.surligner(null); }
     return;
   }
@@ -652,7 +574,7 @@ function majTerrain(x, y) {
 // tronçon sous la souris (sauf quand la visée d'un ordre le montre déjà). Le dessin seulement.
 let survolHud = -1;
 function appliquerSurvol(reg, tr) {
-  const vise = choisis.size && B.etat.phase === 'jour' && !nuitEtat && souris;
+  const vise = choisis.size && B.etat.phase === 'jour' && !nuit.etat && souris;
   rendu.survoler(survolHud >= 0 ? survolHud : reg, tr >= 0 && !vise && survolHud < 0 ? [tr] : []);
 }
 for (const [id, sel] of [['reg-rang', '.reg-carte'], ['carte-grille', '.carte-ronde']]) {
@@ -837,7 +759,7 @@ const loop = createLoop({
     perf.sim += (ms - perf.sim) * 0.05; perf.pas++;
     evenements.push(...ev);
     raconter(ev);
-    if (ev.some(e => e.type === 'nuit')) { montrerNuit(); }
+    if (ev.some(e => e.type === 'nuit')) { nuit.montrer(); }
     if (ev.some(e => e.type === 'fin')) { montrerFin(); }
   },
   render() {
@@ -919,7 +841,7 @@ if (DEBUG) {
         for (let k = 0; k < n && B.etat.phase !== 'fin'; k++) {
           if (B.etat.phase === 'nuit') {
             if (!passerNuits) break;
-            aube(B, nuitEtat === 'choix' ? corveesNuit : {}); fermerNuit();
+            aube(B, nuit.etat === 'choix' ? nuit.corvees : {}); nuit.fermer();
           }
           const ev = avancer(B);
           evenements.push(...ev); raconter(ev);
@@ -933,7 +855,7 @@ if (DEBUG) {
       fiche: () => laFiche.ouverte && { ...laFiche.ouverte, nom: $('fiche-nom').textContent, qui: $('fiche-qui').textContent, etat: $('fiche-etat').textContent, liste: $('fiche-liste').textContent },
       survol: (x, y) => { souris = { x, y }; majBulle(); return $('bulle').hidden ? null : $('bulle').textContent; },
       camera: (yaw, tangage) => rendu.placerCamera(yaw, tangage),
-      nuit: () => montrerNuit(),
+      nuit: () => nuit.montrer(),
       fin: () => montrerFin(),
       bataille: () => B,
       rendu: () => rendu,

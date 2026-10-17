@@ -73,3 +73,4 @@ export const enMots = b => b.releves
 
 // le numéro d'ordre d'un régiment dans son camp : « 3 · Viride »
 export const numeroDe = (B, r) => B.etat.regiments.filter(g => g.camp === r.camp).indexOf(r) + 1;
+export const pluriel = (n, un, des) => `${n} ${n > 1 ? des : un}`;
