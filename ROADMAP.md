@@ -32,6 +32,11 @@ cercles-régiments par-dessus) et la touche M disparaît (carte toujours visible
 - [ ] Lot 6 — les formations (ligne, par deux, colonne) : `ordre.forme`, lue avec `??=` ; `formation`, `reattribuer`, `place` (v0.22.0)
 - [ ] Plus tard : où vont le cadran de vue, la fiche et le papier de la nuit (en attendant, ils restent où ils sont)
 
+### Découper `rendu3d.js` (docs/refonte-rendu3d.md)
+
+**Statut** : à l'étude — le plan est écrit, rien n'est touché ; d'abord un test du dessin (l'empreinte du canvas), puis un morceau par commit. Sorti
+déjà (v0.22.0, sans effet pour le joueur) : le GLSL (`js/rendu/shaders.js`) et les formes (`js/rendu/geometries.js`) ; `main.js` : `js/hud/`.
+
 ### Visuels et effets (après l'UX/UI)
 
 **Statut** : à l'étude — chacun d'abord au labo
