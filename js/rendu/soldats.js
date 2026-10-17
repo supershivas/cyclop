@@ -1,9 +1,9 @@
 // Les hommes : les soldats (une boîte et son ombre ; de près la silhouette, plus loin une silhouette allégée ; aux zooms 1 et 2 un point), les anneaux des
 // régiments choisis ou survolés, les corps (un homme couché) et les tombes (un tertre et une croix). Tout est instancié et ne reçoit que ce qu'on voit.
 // Le dessin seulement. Les formes viennent de geometries.js, le GLSL de shaders.js.
-import * as SH from './shaders.js?v=0.23.0';
-import { creerGeometries } from './geometries.js?v=0.23.0';
-import { VOL } from './eclats.js?v=0.23.0';
+import * as SH from './shaders.js?v=0.24.0';
+import { creerGeometries } from './geometries.js?v=0.24.0';
+import { VOL } from './eclats.js?v=0.24.0';
 
 // `THREE`, `scene`, `col`, `solUniforms` (`uSol`, `uTaille` : la texture du sol, que l'ombre d'un soldat reprend), `styleSoldat` (le style de près, comparé au labo),
 // `surface(x, z)` et `surfaceLisse(x, z)` (la hauteur du sol, lissée pour qui marche), `solY` (la hauteur moyenne du sol) et `POINTS_JUSQUA` (le zoom où un soldat n'est
@@ -168,12 +168,20 @@ export function creerSoldats({ THREE, scene, col, solUniforms, styleSoldat, surf
     const C = B.etat.corps, jour = B.etat.jour;
     if (C.length > capCorps) preparerCorps(C.length * 2);
     let k = 0;
-    for (const c of C) {
-      const x = c[0] / 10, y = c[1] / 10;
+    // (un mort d'obus vole de là où il est tombé jusqu'à son corps : `B.volants`, vieilli par la logique, v0.24.0)
+    const P = B.R.obus.projection, vol = B.volants.length ? new Map(B.volants.map(v => [v[0], v])) : null;
+    for (let ic = 0; ic < C.length; ic++) {
+      const c = C[ic];
+      let x = c[0] / 10, y = c[1] / 10, haut = 0;
+      const v = vol && vol.get(ic);
+      if (v) {
+        const f = Math.min(1, v[3] / P.duree), d = Math.hypot(x - v[1], y - v[2]);
+        x = v[1] + (x - v[1]) * f; y = v[2] + (y - v[2]) * f; haut = 4 * f * (1 - f) * d * P.haut;
+      }
       if (x < x0 || x > x1 || y < z0 || y > z1) continue;
       const cxp = e[0] * x + e[4] * SOL_Y + e[8] * y + e[12], cyp = e[1] * x + e[5] * SOL_Y + e[9] * y + e[13], cw = e[3] * x + e[7] * SOL_Y + e[11] * y + e[15];
       if (cxp < -1.08 * cw || cxp > 1.08 * cw || cyp < -1.15 * cw || cyp > 1.15 * cw) continue;
-      cPos[k * 3] = x; cPos[k * 3 + 1] = surface(x, y); cPos[k * 3 + 2] = y;
+      cPos[k * 3] = x; cPos[k * 3 + 1] = surface(x, y) + haut; cPos[k * 3 + 2] = y;
       cInfo[k * 2] = c[3] < jour ? 2 : c[2];
       cInfo[k * 2 + 1] = ((c[4] * 2654435761) >>> 0) % 628 / 100;     // couché dans un sens qui ne change pas
       k++;

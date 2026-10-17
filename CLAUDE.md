@@ -546,6 +546,10 @@ node outils/stamp-version.mjs            # après chaque changement de version.j
   point de chute, à l'opposé, d'une vitesse qui tombe à zéro au bord (`obus.souffle`, 16 m/s au centre ; la vitesse retombe d'elle-même,
   ~3 m parcourus, puis la marche les ramène à leur place) ; sans hasard, donc la partie relue est la même. Le dessin les fait sauter
   (`souffler`, `volT` de rendu3d.js ; un bond de 0,6 s, jusqu'à 2 m pour qui était collé au point de chute).
+- **Les morts d'obus sont projetés** (Jérôme, v0.24.0) : `projeter` (bataille.js, appelé par `frapper` avec le choc `{ x0, y0, d, rayon }` que `tuerDans` donne) jette le corps à
+  l'opposé du point de chute, de `obus.projection.min` à `max` m (8 à 15 pour un rayon de 10, en proportion du rayon : un 75 jette de 3 à 6 m, un 220 de 8 à 15), sans hasard (collé au point de chute : un côté
+  fixé par le numéro) ; `etat.corps` garde le point d'arrivée (rien de neuf dans la sauvegarde). `B.volants` (`[indice du corps, x, y du départ, âge]`, vieilli par `avancer`, jamais sauvegardé) : le dessin
+  (`majCorps`) fait voler le corps de là où l'homme est tombé, sur une flèche de `projection.haut` fois la distance, pendant `projection.duree` s. Les morts de la nuit ne volent pas.
 - **Les soldats scintillaient dans les cratères** (v0.16.0) : leur hauteur était celle de la case, en marches d'un demi-mètre
   (`hauteurVueQ`) : un homme à cheval sur deux cases changeait de hauteur à chaque pas. `surfaceLisse` (rendu3d.js) interpole entre
   les centres des quatre cases voisines : il glisse sur les bords des trous.

@@ -43,9 +43,6 @@ recommandé : le laisser tant qu'aucun besoin n'apparaît. Plus tard, côté `ma
 
 **Statut** : à l'étude — chacun d'abord au labo
 
-- **Projection des corps** (logique directe, Jérôme) : le souffle jette ~3 m et le dessin fait un bond sur place (un dôme de bonds, parti
-  avant l'explosion visible). Attendu : 5 à 15 m, dans la logique (une phase de vol, sans `rng()`), les morts projetés
-  (`etat.corps`) ; à remesurer sur l'équilibre.
 - **Balles** : le tampon `BALLES` (200) est plus petit que le plafond (160 par image) et la course est de 13 à 20 m pour 70 m de portée.
 - **Obus de loin** : teinte sombre (mesurer le contraste sur la boue), allongés selon la trajectoire.
 - **Explosions de près** : éclats à l'échelle du zoom, le pool `ECLATS` sature en salve.

@@ -94,6 +94,18 @@ test('les formations : la ligne est large, la colonne étroite, la forme est dan
   assert.ok(ligne[2] > bloc[2] && colonne[2] < bloc[2]); assert.equal(colonne[1], 'colonne');
   assert.deepEqual(cols(undefined), bloc);
 });
+test('un mort d\'obus est jeté à l\'opposé du point de chute, de 3 à 15 m, et son corps reste là où il tombe', () => {
+  const B = petite(5), r = B.etat.regiments.find(g => g.camp === 0), o = r.ordre;
+  const vus = [];
+  for (let k = 0; k < 6; k++) ordonnerBarrage(B, '155', o.x, o.y), B.etat.batteries['155'] = 0;
+  for (let t = 0; t < 600; t++) { avancer(B); for (const v of B.volants) if (!vus.some(w => w[0] === v[0])) vus.push([...v]); }
+  assert.ok(vus.length > 0, 'des morts d\'obus');
+  for (const [ic, x0, y0] of vus) {
+    const c = B.etat.corps[ic], d = Math.hypot(c[0] / 10 - x0, c[1] / 10 - y0);
+    assert.ok(d >= 3 && d <= 15.5, `projeté de ${d.toFixed(1)} m`);
+  }
+  assert.equal(B.volants.length, 0, 'plus rien ne vole après la durée du vol');
+});
 test('un ordre impossible se refuse, avec sa raison', () => {
   const B = petite();
   assert.match(ordonnerMarche(B, [], ...P(10, 10)).refus, /Aucun régiment/);

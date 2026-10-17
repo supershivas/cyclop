@@ -25,8 +25,8 @@
      (rng.js), pour que la même graine rejoue la même bataille.
 
    Logique pure : aucun DOM. Le rendu lit les tableaux (rendu3d.js). */
-import { hauteurQ, etat, vitesseEtat } from './terrain.js?v=0.23.0';
-import { ligneY } from './tranchees.js?v=0.23.0';
+import { hauteurQ, etat, vitesseEtat } from './terrain.js?v=0.24.0';
+import { ligneY } from './tranchees.js?v=0.24.0';
 
 export const GRILLE = 2;           // m : cases de voisinage
 export const DENSITE = 8;          // m : carrés de densité (tir)
@@ -281,7 +281,7 @@ export function tuerDans(A, x0, y0, rayon, ctx) {
       const ci = (A.y[i] | 0) * T.W + (A.x[i] | 0);
       if (T.diff[ci] <= -2) p *= R.obus.abri;
       if (ctx.abri) p *= ctx.abri(ci);
-      if (rng() < p) frapper(i, 'obus', 0.5 + 0.5 * (1 - d / rayon));
+      if (rng() < p) frapper(i, 'obus', 0.5 + 0.5 * (1 - d / rayon), { x0, y0, d, rayon });
     }
   }
   // le souffle : les survivants, plus loin que les morts (jusqu'à `souffleZone` rayons), sont jetés à l'opposé du point de chute ;

@@ -14,17 +14,17 @@
    La sauvegarde (photo) garde la graine, la liste compacte des impacts, l'état
    de la foule et les petites couches de logique ; jamais le relief : il se
    rejoue depuis la graine et les impacts (rejouerTerrain). */
-import { createRng, hash2 } from './lib/rng.js?v=0.23.0';
-import { creerTerrain, impact, hydroLignes, etat as etatCase, vitesseEtat, ETAT } from './terrain.js?v=0.23.0';
-import { creerArmee, ajouterSoldat, construireGrille, pasArmee, tuerDans, effrayer, compacter, photoArmee, restaurerArmee, b64, deB64, DENSITE, place } from './army.js?v=0.23.0';
-import { creuserTranchees, ligneSous } from './tranchees.js?v=0.23.0';
-import { calculerCouts, creerCacheChamps, dimensionsCouts, BLOC } from './champs.js?v=0.23.0';
-import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.23.0';
-import { METEO, TRANSITIONS, PREVISION_JUSTE } from './data/meteo.js?v=0.23.0';
-import { SECTEURS } from './data/secteur.js?v=0.23.0';
-import { REGIMENTS } from './data/lexique.js?v=0.23.0';
-import { grade } from './identite.js?v=0.23.0';
-import { corvees, rejouerTravaux } from './nuit.js?v=0.23.0';
+import { createRng, hash2 } from './lib/rng.js?v=0.24.0';
+import { creerTerrain, impact, hydroLignes, etat as etatCase, vitesseEtat, ETAT } from './terrain.js?v=0.24.0';
+import { creerArmee, ajouterSoldat, construireGrille, pasArmee, tuerDans, effrayer, compacter, photoArmee, restaurerArmee, b64, deB64, DENSITE, place } from './army.js?v=0.24.0';
+import { creuserTranchees, ligneSous } from './tranchees.js?v=0.24.0';
+import { calculerCouts, creerCacheChamps, dimensionsCouts, BLOC } from './champs.js?v=0.24.0';
+import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.24.0';
+import { METEO, TRANSITIONS, PREVISION_JUSTE } from './data/meteo.js?v=0.24.0';
+import { SECTEURS } from './data/secteur.js?v=0.24.0';
+import { REGIMENTS } from './data/lexique.js?v=0.24.0';
+import { grade } from './identite.js?v=0.24.0';
+import { corvees, rejouerTravaux } from './nuit.js?v=0.24.0';
 
 export const PAS = 1 / 30;                 // s de jeu par pas
 export const NOUS = 0, EUX = 1;
@@ -178,6 +178,7 @@ function monter(etat, R) {
     champs: creerCacheChamps(terrain, R),
     lignes, troncons, faces, profondeur: S.tranchees?.profondeur ?? 6,
     evenements: [],
+    volants: [],                // le dessin seulement : les corps en vol [indice dans etat.corps, x, y du départ, âge en s], jamais sauvegardés (vieillis par `avancer`, retirés après `projection.duree`)
     tirs: [],                   // le dessin seulement : les tirs du pas [x, y, cible x, cible y, camp]…, vidés par le rendu (jamais sauvegardés)
     disputes: new Uint8Array(troncons.length),   // le dessin seulement : un tronçon où l'autre camp est entré (rafraîchi par `prises`)
   };
@@ -307,16 +308,17 @@ export function avancer(B) {
   const { etat, R, terrain: T, armee: A } = B;
   B.evenements = [];
   if (etat.phase !== 'jour') return B.evenements;
+  if (B.volants.length) { for (const v of B.volants) v[3] += PAS; B.volants = B.volants.filter(v => v[3] < R.obus.projection.duree); }
   const rng = createRng(etat.graine); rng.setState(etat.rng);
   const gel = !!METEO[etat.meteo[etat.jour - 1]].gel;
   etat.tickJour++; etat.ticks++;
   etat.temps = Math.round(etat.temps / PAS + 1) * PAS;
   // touché : il meurt (chance : gravite, ou s'il était déjà blessé), sinon il est blessé (bras, jambe, tête)
   const morts = [];
-  const frapper = (i, cause, gravite) => {
+  const frapper = (i, cause, gravite, choc = null) => {
     if (A.mort[i]) return;
     if (A.blessure[i] || rng() < gravite) {
-      mourir(B, i, cause);
+      mourir(B, i, cause, choc && projeter(B, i, choc));
       morts.push(i);
     } else {
       const r = rng();
@@ -408,6 +410,17 @@ export const MISSIONS = {
 /* Un homme meurt (marqué : compacter() le retire) : les pertes, le moral de son
    régiment (plus encore pour un officier), un gradé remplacé, son corps là où il
    tombe (ou en ou : [x, y]). */
+/* Le corps d'un mort d'obus est jeté à l'opposé du point de chute (v0.24.0) : plus loin s'il était près, plus loin pour un gros calibre ;
+   sans hasard (un homme collé au point de chute part d'un côté fixé par son numéro). Rend où il tombe, dans le terrain. */
+function projeter(B, i, { x0, y0, d, rayon }) {
+  const P = B.R.obus.projection, A = B.armee, T = B.terrain;
+  if (!P) return null;
+  const dx = A.x[i] - x0, dy = A.y[i] - y0;
+  const ux = d > 0.05 ? dx / d : (A.id[i] & 1 ? 1 : -1), uy = d > 0.05 ? dy / d : 0;
+  const m = (P.min + (P.max - P.min) * (1 - d / rayon)) * rayon / P.rayonRef;
+  return [Math.max(0.5, Math.min(T.W - 0.5, A.x[i] + ux * m)), Math.max(0.5, Math.min(T.H - 0.5, A.y[i] + uy * m))];
+}
+
 export function mourir(B, i, cause, ou = null) {
   const { etat, R, armee: A } = B;
   if (A.mort[i]) return;
@@ -421,6 +434,7 @@ export function mourir(B, i, cause, ou = null) {
   if (rang <= 5) promouvoir(B, A.reg[i], rang);
   const [x, y] = ou || [A.x[i], A.y[i]];
   etat.corps.push([Math.round(x * 10), Math.round(y * 10), A.camp[i], etat.jour, A.id[i]]);
+  if (ou && cause === 'obus') B.volants.push([etat.corps.length - 1, A.x[i], A.y[i], 0]);       // le dessin le fait voler (de là où il est tombé)
   B.evenements.push({ type: 'mort', camp: A.camp[i], cause, x, y, id: A.id[i] });
 }
 

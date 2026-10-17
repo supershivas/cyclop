@@ -87,6 +87,7 @@ export const REGLAGES = {
     boue: 0.5,            // dans la boue, l'obus s'enfouit : rayon et lèvre multipliés par…
     abri: 0.6,            // un soldat dans un creux : chance multipliée par…
     souffle: 16,          // m/s : la vitesse dont le souffle jette un survivant collé au point de chute (elle tombe à zéro au bord de la zone ; il parcourt ~0,2 s × cette vitesse : 3 m) (v0.16.0)
+    projection: { min: 8, max: 15, rayonRef: 10, duree: 0.9, haut: 0.25 },   // (v0.24.0) un mort d'obus est jeté à l'opposé : de `min` (au bord du rayon) à `max` m (collé au point de chute) pour un rayon de `rayonRef`, en proportion du rayon de l'obus ; le vol dure `duree` s, `haut` : sa flèche, en part de la distance
     souffleZone: 1.8,     // la zone du souffle, en rayons de l'obus (les morts sont dans un rayon)
   },
   tranchee: {

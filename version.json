@@ -1,7 +1,7 @@
 {
-  "version": "0.23.0",
+  "version": "0.24.0",
   "date": "2026-10-17",
   "changes": [
-    "Un régiment en terrain libre se range en bloc, en ligne, par deux ou en colonne : quatre boutons sur sa carte, pour le prochain ordre de marche"
+    "Un homme tué par un obus est projeté loin du point de chute (de 3 à 15 m selon le calibre et la distance) : on le voit voler, son corps reste où il retombe"
   ]
 }

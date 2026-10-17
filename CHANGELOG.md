@@ -1,5 +1,8 @@
 # Journal des versions
 
+## 0.24.0 — 2026-10-17
+- Un homme tué par un obus est projeté loin du point de chute (3 à 15 m selon le calibre et sa distance) : on le voit voler, et son corps reste où il retombe
+
 ## 0.23.0 — 2026-10-17
 - Un régiment en terrain libre se range en bloc, en ligne, par deux ou en colonne : quatre boutons sur sa carte ouverte, pour le prochain ordre de marche (la visée montre la place prise ; sur une tranchée, les hommes suivent le tracé)
 
