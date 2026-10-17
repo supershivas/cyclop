@@ -557,6 +557,12 @@ node outils/stamp-version.mjs            # après chaque changement de version.j
   20 m pour 70 de portée) : le tampon `BALLES` passe à 1 500 (160 tirs par image × la durée de vie). L'obus en vol est en os (`o`), pas en brume : contraste mesuré sur herbe, eau et vert, brume 1,3 à 1,8, os 2,3 à
   8,5, terre sombre 1,3 à 1,6 sur la boue ; il est allongé selon sa trajectoire de loin (au moins 6 pixels). Les corbeaux : trois nids de six au plus près de la vue, la moitié posée sur un corps, trois paliers (point
   aux zooms 1-2, trait 3-4 pixels par mètre, silhouette dès 6) ; aucun tirage de `alea`. Mesuré (8 000 soldats, rendu logiciel, dessin attendu) : zoom 4, 88 → 96 ms, dans le bruit.
+- **Fumées** (Jérôme, v0.27.0 ; `eclats.js`) : un coup de fusil laisse un petit nuage clair (`particule(2…)`, 1 coup sur 5 des tirs dessinés : à 160 tirs par image et 1 à 2 s de vie, le tampon `ECLATS` y suffit) ; la fumée d'un
+  obus est noire (sorte 10, terre puis boue sombre, plus haute et plus large) avec la chance `FUMEE[calibre].noire` (75 : 12 %, 155 : 35 %, 220 : 60 %) et une colonne de 3 × `big` éclats reste 40 à 90 s (`reste` : 15, 30, 50 %), qui se dissipe sur
+  le dernier quart de sa vie. Tout le dessin : aucun effet sur la partie.
+- **Propositions du labo, pas encore retenues** (v0.27.0) : le soldat équipé (`equipe`, `equipe-marche` dans `geometries.js` : bottes, capote, ceinturon, cartouchières, gourde, couverture, mains, baïonnette, casque et moustache de chaque camp ;
+  les parties 10-19 ne se dessinent que pour nous, 20-29 que pour en face, `cache` du nuanceur ; `uBalance` : les bras balancent) et les cadavres qui sont les soldats couchés (`cadavre: 'couche' | 'poses'` de `creerRendu`,
+  `corpsSoldatMat` : sur le dos, le ventre ou le côté, membres écartés selon le numéro ; la silhouette allégée dès 4 pixels par mètre, celle du style dès 6). Par défaut rien ne change (`planche`, `silhouette`). Pour adopter : `SOLDAT` et `cadavre` dans rendu3d.js.
 - **Les soldats scintillaient dans les cratères** (v0.16.0) : leur hauteur était celle de la case, en marches d'un demi-mètre
   (`hauteurVueQ`) : un homme à cheval sur deux cases changeait de hauteur à chaque pas. `surfaceLisse` (rendu3d.js) interpole entre
   les centres des quatre cases voisines : il glisse sur les bords des trous.

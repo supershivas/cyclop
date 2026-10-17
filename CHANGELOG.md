@@ -1,5 +1,10 @@
 # Journal des versions
 
+## 0.27.0 — 2026-10-17
+- Les fusils fument : un petit nuage clair à chaque coup, qui dérive avec le vent
+- La fumée des bombardements reste parfois (40 à 90 s) et vire au noir parfois, d'autant plus souvent que le calibre est gros (75 : 12 % noire, 155 : 35 %, 220 : 60 %)
+- Au labo, à choisir : des soldats plus détaillés (équipement, casque de chaque camp, bras qui balancent) et des cadavres qui sont les soldats couchés (sujet « Cadavres »)
+
 ## 0.26.0 — 2026-10-17
 - Le papier de la nuit prend la place des pertes, au centre du haut de l'écran ; la fiche s'ouvre à gauche, sous le carnet
 - Le cadran de vue disparaît de l'écran : la touche C recentre la caméra (tourner et incliner restent à A, E, R, F et à la molette)

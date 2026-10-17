@@ -1,5 +1,5 @@
 // Les pertes des deux armées, en feuille de situation : debout, blessés, tombés, et les croix au crayon.
-import { effectifs, tronconsTenus, NOUS, EUX } from '../bataille.js?v=0.26.0';
+import { effectifs, tronconsTenus, NOUS, EUX } from '../bataille.js?v=0.27.0';
 
 // Une croix au crayon par mort (douze au plus, le reste en nombre)
 export const croix = n => n <= 12 ? '✕'.repeat(n) : `${'✕'.repeat(12)} +${n - 12}`;

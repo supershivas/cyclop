@@ -22,19 +22,19 @@
    - Les soldats : instanciés (une boîte et son ombre) ; au zoom 1 et 2, un
      point de 2 × 2 pixels (la couleur du camp sur son ombre).
    - Les corps : un homme couché (instancié) ; au zoom 1 et 2, un pixel. */
-import { loadThree } from './three-lib.js?v=0.26.0';
-import * as SH from './rendu/shaders.js?v=0.26.0';
-import { creerSoldats } from './rendu/soldats.js?v=0.26.0';
-import { creerMeteo } from './rendu/meteo.js?v=0.26.0';
-import { creerTroncons } from './rendu/troncons.js?v=0.26.0';
-import { creerVegetation } from './rendu/vegetation.js?v=0.26.0';
-import { creerTemps } from './rendu/temps.js?v=0.26.0';
-import { creerEclats } from './rendu/eclats.js?v=0.26.0';
-import { PALETTE, ORDRE, INDICE } from './palette.js?v=0.26.0';
-import { OMBRE, couleursLigne } from './apparence.js?v=0.26.0';
-import { MORCEAU, hauteurVueQ as hauteurQ, hauteurVueM as hauteurM } from './terrain.js?v=0.26.0';
-import { horloge } from './bataille.js?v=0.26.0';
-import { ligneY } from './tranchees.js?v=0.26.0';
+import { loadThree } from './three-lib.js?v=0.27.0';
+import * as SH from './rendu/shaders.js?v=0.27.0';
+import { creerSoldats } from './rendu/soldats.js?v=0.27.0';
+import { creerMeteo } from './rendu/meteo.js?v=0.27.0';
+import { creerTroncons } from './rendu/troncons.js?v=0.27.0';
+import { creerVegetation } from './rendu/vegetation.js?v=0.27.0';
+import { creerTemps } from './rendu/temps.js?v=0.27.0';
+import { creerEclats } from './rendu/eclats.js?v=0.27.0';
+import { PALETTE, ORDRE, INDICE } from './palette.js?v=0.27.0';
+import { OMBRE, couleursLigne } from './apparence.js?v=0.27.0';
+import { MORCEAU, hauteurVueQ as hauteurQ, hauteurVueM as hauteurM } from './terrain.js?v=0.27.0';
+import { horloge } from './bataille.js?v=0.27.0';
+import { ligneY } from './tranchees.js?v=0.27.0';
 
 export const CAMERA = { yaw: 0.15, tangage: 0.95, fov: 30 };   // au départ : tournée de 9°, plongée de 54°, angle de 30°
 // la caméra respire : un balancement très lent, 2° en 23 s (Jérôme, v0.3.1 : variante D du labo retenue)
@@ -52,7 +52,7 @@ const HAUT = 8;                               // m : marge du bas de l'écran, o
 const SOCLE = -8;                             // m : le bas de la coupe du terrain (bord sud)
 
 /* respiration : l'amplitude (rad) du lent balancement de la caméra (0 : immobile). */
-export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera: camDepart = null, respiration = RESPIRATION, soldat: styleSoldat = SOLDAT, effets = EFFETS } = {}) {
+export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera: camDepart = null, respiration = RESPIRATION, soldat: styleSoldat = SOLDAT, cadavre = 'planche', effets = EFFETS } = {}) {
   // un mouvement réduit demandé par le système : la caméra ne bouge pas d'elle-même
   if (typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches) respiration = 0;
   const THREE = await loadThree();
@@ -201,7 +201,7 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
   }
 
   const soldats = creerSoldats({
-    THREE, scene, col, solUniforms: solMat.uniforms, styleSoldat, surface, surfaceLisse, solY: SOL_Y, POINTS_JUSQUA,
+    THREE, scene, col, solUniforms: solMat.uniforms, styleSoldat, cadavre, surface, surfaceLisse, solY: SOL_Y, POINTS_JUSQUA,
     bataille: () => B, vide: () => vide, tirs: () => eclats.tirs(),
   });
 

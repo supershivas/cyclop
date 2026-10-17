@@ -23,17 +23,21 @@ export const solMat = {
 export const soldatMat = {
   v: `
       attribute vec3 aPos; attribute float aCamp; attribute float aPart; attribute float aJambe; attribute float aVit; attribute float aBras; attribute vec2 aTir;
-      uniform float uT; uniform vec2 uSoleil;
+      uniform float uT; uniform vec2 uSoleil; uniform float uBalance;
       varying float vCamp; varying float vPart; varying vec2 vXZ; varying float vLong;
       void main() {
-        vCamp = aCamp; vPart = aPart; vLong = position.y;
+        // une partie de 10 à 19 n'est dessinée que pour nous, de 20 à 29 que pour en face (casque, moustache : v0.27.0, au labo)
+        float cp = aCamp > 1.5 ? aCamp - 2.0 : aCamp, kp = aPart;
+        bool cache = false;
+        if (kp >= 20.0) { kp -= 20.0; cache = cp < 0.5; } else if (kp >= 10.0) { kp -= 10.0; cache = cp > 0.5; }
+        vCamp = aCamp; vPart = kp; vLong = position.y;
         vec3 p = position;
         // la peur : un homme se tapit (aVit < 0 : −1 − sa vitesse), sauf son ombre
         bool tapi = aVit < 0.0;
         float vit = tapi ? 0.0 : aVit;
-        if (tapi && (aPart < 0.5 || aPart > 1.5)) p.y *= 0.6;
+        if (tapi && (kp < 0.5 || kp > 1.5)) p.y *= 0.6;
         // l'ombre suit le soleil : elle part des pieds, longue le matin et le soir (uSoleil : son bout, par mètre de hauteur)
-        if (aPart > 0.5 && aPart < 1.5) {
+        if (kp > 0.5 && kp < 1.5) {
           vec2 d = length(uSoleil) > 0.05 ? normalize(uSoleil) : vec2(0.6, 0.8);
           vec2 xz = vec2(-d.y, d.x) * position.x + (position.y > 0.5 ? uSoleil * 1.7 + d * 0.1 : -d * 0.05);
           p = vec3(xz.x, 0.03, xz.y);
@@ -45,6 +49,13 @@ export const soldatMat = {
           float y = p.y - 0.8;
           p.z = p.z * cos(a) - y * sin(a);
           p.y = 0.8 + p.z * sin(a) + y * cos(a);
+        }
+        // les bras balancent à la marche, à l'opposé des jambes (le style equipe-marche seulement : uBalance)
+        if (uBalance > 0.5 && vit > 0.15 && abs(aBras) > 0.5 && abs(aBras) < 1.5 && aTir.x < 0.01) {
+          float b = -sin(uT * 8.0 + aPos.x * 1.7 + aPos.z * 1.3) * 0.45 * min(1.0, vit) * aBras;
+          vec3 d = p - vec3(0.0, 1.35, 0.0);
+          p.y = 1.35 + d.y * cos(b) - d.z * sin(b);
+          p.z = d.y * sin(b) + d.z * cos(b);
         }
         // il tire (aTir : x la pose, 1 quand il épaule, y le cap vers sa cible) : les bras et le fusil se lèvent devant lui
         // (autour de l'épaule, à 1,3 m), et il se tourne vers l'ennemi ; sa pose seulement, jamais la partie
@@ -60,11 +71,12 @@ export const soldatMat = {
           float c = cos(aTir.y), s = sin(aTir.y);
           p.xz = vec2(p.x * c + p.z * s, -p.x * s + p.z * c);
         }
+        if (cache) p = vec3(0.0);
         gl_Position = projectionMatrix * viewMatrix * vec4(p + aPos, 1.0);
       }`,
   f: `
       uniform vec3 uNous; uniform vec3 uEux; uniform vec3 uOmbre; uniform vec3 uSel;
-      uniform vec3 uJambes; uniform vec3 uFusil; uniform vec3 uSac; uniform vec3 uVisage;
+      uniform vec3 uJambes; uniform vec3 uFusil; uniform vec3 uSac; uniform vec3 uVisage; uniform vec3 uCuir; uniform vec3 uBotte;
       uniform sampler2D uSol; uniform vec2 uTaille;
       varying float vCamp; varying float vPart; varying vec2 vXZ; varying float vLong;
       void main() {
@@ -83,7 +95,9 @@ export const soldatMat = {
         else if (k == 3.0) c = uJambes;
         else if (k == 4.0) c = uFusil;
         else if (k == 5.0) c = uSac;
-        else if (k == 6.0) c = uVisage;
+        else if (k == 6.0 || k == 9.0) c = uVisage;
+        else if (k == 7.0) c = uCuir;
+        else if (k == 8.0) c = uBotte;
         gl_FragColor = vec4(c, 1.0);
       }`,
 };
@@ -138,6 +152,46 @@ export const corpsMat = {
       void main() {
         vec3 c = vEtat > 1.5 ? uVieux : (vEtat > 0.5 ? uEux : uNous);
         gl_FragColor = vec4(vPart > 0.5 ? uFlanc : c, 1.0);
+      }`,
+};
+
+// Un soldat couché (v0.27.0, au labo) : la même forme que le soldat debout (`geometrieSoldat`), posée à plat ; sur le dos, sur le ventre ou sur le côté, les membres
+// écartés, selon son numéro (aInfo.y, l'angle qu'il garde) quand uPoses vaut 1. aInfo.x : 0 nous, 1 eux, 2 la glaise (le lendemain) ; aCamp : toujours son camp.
+export const corpsSoldatMat = {
+  v: `
+      attribute vec3 aPos; attribute vec2 aInfo; attribute float aCamp; attribute float aPart; attribute float aJambe; attribute float aBras;
+      uniform float uPoses;
+      varying float vEtat; varying float vPart; varying float vCamp;
+      void main() {
+        float kp = aPart;
+        bool cache = false;
+        if (kp >= 20.0) { kp -= 20.0; cache = aCamp < 0.5; } else if (kp >= 10.0) { kp -= 10.0; cache = aCamp > 0.5; }
+        if (kp > 0.5 && kp < 1.5) cache = true;                       // pas d'ombre : il est couché
+        vEtat = aInfo.x; vPart = kp; vCamp = aCamp;
+        float h = fract(sin(aInfo.y * 91.7) * 43758.5453), h2 = fract(h * 7.31), h3 = fract(h * 13.17);
+        vec3 p = position;
+        if (uPoses > 0.5) {
+          if (aJambe != 0.0) { float a = aJambe * (0.06 + 0.4 * h2); float y = p.y - 0.8; float x = p.x; p.x = x * cos(a) - y * sin(a); p.y = 0.8 + x * sin(a) + y * cos(a); }
+          if (abs(aBras) > 0.5 && abs(aBras) < 1.5) { float a = aBras * (0.15 + 1.0 * h3); vec3 d = p - vec3(0.0, 1.35, 0.0); p.x = d.x * cos(a) - d.y * sin(a); p.y = 1.35 + d.x * sin(a) + d.y * cos(a); }
+        }
+        float pose = uPoses > 0.5 ? h : 0.0;
+        vec3 q;
+        if (pose < 0.55) q = vec3(p.x, p.z + 0.34, -p.y + 0.85);                                  // sur le dos : la face en l'air
+        else if (pose < 0.8) q = vec3(-p.x, -p.z + 0.34, p.y - 0.85);                             // sur le ventre
+        else q = vec3((h2 < 0.5 ? 1.0 : -1.0) * p.z, -(h2 < 0.5 ? 1.0 : -1.0) * p.x + 0.38, -p.y + 0.85);   // sur le côté
+        float c = cos(aInfo.y), s = sin(aInfo.y);
+        q = vec3(q.x * c - q.z * s, q.y, q.x * s + q.z * c);
+        if (cache) q = vec3(0.0);
+        gl_Position = projectionMatrix * viewMatrix * vec4(q + aPos, 1.0);
+      }`,
+  f: `
+      uniform vec3 uNous; uniform vec3 uEux; uniform vec3 uVieux; uniform vec3 uJambes; uniform vec3 uFusil; uniform vec3 uSac; uniform vec3 uVisage; uniform vec3 uCuir; uniform vec3 uBotte;
+      varying float vEtat; varying float vPart; varying float vCamp;
+      void main() {
+        float k = floor(vPart + 0.5);
+        vec3 c = vEtat > 1.5 ? uVieux : (vCamp > 0.5 ? uEux : uNous);
+        if (k == 3.0) c = uJambes; else if (k == 4.0) c = uFusil; else if (k == 5.0) c = uSac; else if (k == 6.0 || k == 9.0) c = uVisage; else if (k == 7.0) c = uCuir; else if (k == 8.0) c = uBotte;
+        gl_FragColor = vec4(c, 1.0);
       }`,
 };
 

@@ -14,7 +14,11 @@ export function creerGeometries(THREE, col) {
     // l'ombre au sol vers le sud-est (la lumière vient du nord-ouest)
     // (y = 1 : le bout de l'ombre, déplacé par le shader selon le soleil)
     g.p.push(-0.22, 0, 0, 0.22, 0, 0, 0.22, 1, 0, -0.22, 0, 0, 0.22, 1, 0, -0.22, 1, 0); for (let n = 0; n < 6; n++) { g.k.push(1); g.j.push(0); g.b.push(0); }
-    const membres = style === 'detail' || style === 'silhouette' || style === 'marche';
+    // (v0.27.0, au labo) `equipe` : la silhouette et son équipement (bottes, capote, ceinturon, cartouchières, gourde, mains, couverture roulée, baïonnette ; un casque et une moustache
+    // par camp) ; `equipe-marche` : la même, dont les bras balancent à la marche (le nuanceur, `uBalance`). Les parties 7 (le cuir), 8 (les bottes) et 9 (les mains) sont nouvelles ;
+    // une partie de 10 à 19 n'est dessinée que pour nous, de 20 à 29 que pour en face (le nuanceur la retire à l'autre camp).
+    const eq = style === 'equipe' || style === 'equipe-marche', sil = style === 'silhouette' || eq;
+    const membres = style === 'detail' || sil || style === 'marche';
     if (style === 'legere') {
       boiteVue(g, -0.2, 0.2, 0, 0.82, -0.12, 0.12, 3);                                // les jambes, d'un bloc (elles ne marchent pas)
       boiteVue(g, -0.24, 0.24, 0.8, 1.42, -0.15, 0.15, 0);                           // la vareuse
@@ -24,25 +28,49 @@ export function creerGeometries(THREE, col) {
       boiteVue(g, 0.37, 0.42, 0.55, 1.95, -0.03, 0.03, 4, 0, 4, 2);                  // le fusil
     } else if (!membres) boiteVue(g, -0.25, 0.25, 0, 1.7, -0.175, 0.175, 0, 0, 2);          // la boîte ; son dessus, le casque
     else if (style !== 'legere') {
-      boiteVue(g, -0.2, -0.03, 0, 0.82, -0.09, 0.09, 3, 1);                          // les jambes
-      boiteVue(g, 0.03, 0.2, 0, 0.82, -0.09, 0.09, 3, -1);
+      if (eq) {
+        boiteVue(g, -0.2, -0.03, 0.12, 0.82, -0.09, 0.09, 3, 1);                     // les bandes molletières
+        boiteVue(g, 0.03, 0.2, 0.12, 0.82, -0.09, 0.09, 3, -1);
+        boiteVue(g, -0.21, -0.02, 0, 0.12, -0.1, 0.2, 8, 1);                         // les bottes, longues vers l'avant
+        boiteVue(g, 0.02, 0.21, 0, 0.12, -0.1, 0.2, 8, -1);
+        boiteVue(g, -0.27, 0.27, 0.56, 0.84, -0.17, 0.17, 0);                        // la capote, ses basques rabattues
+      } else {
+        boiteVue(g, -0.2, -0.03, 0, 0.82, -0.09, 0.09, 3, 1);                        // les jambes
+        boiteVue(g, 0.03, 0.2, 0, 0.82, -0.09, 0.09, 3, -1);
+      }
       boiteVue(g, -0.24, 0.24, 0.8, 1.42, -0.15, 0.15, 0);                           // la vareuse
-      if (style === 'silhouette') {                                                  // les bras : le long du corps, ils se lèvent pour tirer
+      if (eq) {
+        boiteVue(g, -0.255, 0.255, 0.77, 0.86, -0.16, 0.16, 7);                      // le ceinturon
+        for (const x of [-0.17, -0.02, 0.13]) boiteVue(g, x, x + 0.1, 0.84, 0.97, 0.15, 0.2, 7);   // les cartouchières
+        boiteVue(g, -0.3, -0.2, 0.55, 0.82, -0.2, -0.06, 5);                         // la gourde, à la hanche
+        boiteVue(g, -0.22, 0.22, 1.35, 1.46, -0.2, 0.2, 5);                          // la couverture roulée, sur l'épaule
+        boiteVue(g, -0.09, 0.09, 1.38, 1.43, 0.1, 0.16, 7);                          // le col
+      }
+      if (sil) {                                                  // les bras : le long du corps, ils se lèvent pour tirer
         boiteVue(g, -0.35, -0.24, 0.82, 1.4, -0.07, 0.07, 0, 0, 0, -1);
         boiteVue(g, 0.24, 0.35, 0.82, 1.4, -0.07, 0.07, 0, 0, 0, 1);
+        if (eq) { boiteVue(g, -0.35, -0.24, 0.74, 0.84, -0.06, 0.06, 9, 0, 9, -1); boiteVue(g, 0.24, 0.35, 0.74, 0.84, -0.06, 0.06, 9, 0, 9, 1); }   // les mains, au bout des bras
       }
       boiteVue(g, -0.1, 0.1, 1.4, 1.6, -0.1, 0.1, 6);                                // le visage
       boiteVue(g, -0.16, 0.16, 1.57, 1.7, -0.16, 0.16, 2);                           // le casque, plus large que la tête
+      if (eq) {
+        boiteVue(g, -0.02, 0.02, 1.7, 1.79, -0.14, 0.14, 12, 0, 12);                 // nous : le cimier du casque Adrian
+        boiteVue(g, -0.15, 0.15, 1.6, 1.64, 0.15, 0.22, 12, 0, 12);                  // … et sa visière
+        boiteVue(g, -0.07, 0.07, 1.47, 1.51, 0.1, 0.14, 13);                         // … la moustache du poilu
+        boiteVue(g, -0.015, 0.015, 1.7, 1.84, -0.015, 0.015, 22, 0, 22);             // en face : la pointe du casque à pointe
+        boiteVue(g, -0.15, 0.15, 1.6, 1.64, -0.22, -0.15, 22, 0, 22);                // … et son couvre-nuque
+      }
     }
-    if (style !== 'legere' && (style === 'fusil' || style === 'silhouette' || style === 'marche')) boiteVue(g, style === 'silhouette' ? 0.37 : 0.26, style === 'silhouette' ? 0.42 : 0.31, 0.55, 1.95, -0.03, 0.03, 4, 0, 4, style === 'silhouette' ? 2 : 0);   // le fusil, en bandoulière ; à l'épaule quand il tire
-    if (style === 'silhouette' || style === 'marche') boiteVue(g, -0.19, 0.19, 0.95, 1.38, -0.32, -0.15, 5);                       // le sac, dans le dos
+    if (style !== 'legere' && (style === 'fusil' || sil || style === 'marche')) boiteVue(g, sil ? 0.37 : 0.26, sil ? 0.42 : 0.31, 0.55, 1.95, -0.03, 0.03, 4, 0, 4, sil ? 2 : 0);   // le fusil, en bandoulière ; à l'épaule quand il tire
+    if (eq) boiteVue(g, 0.385, 0.405, 1.95, 2.2, -0.012, 0.012, 4, 0, 4, 2);       // la baïonnette
+    if (sil || style === 'marche') boiteVue(g, -0.19, 0.19, 0.95, 1.38, -0.32, -0.15, 5);                       // le sac, dans le dos
     const gi = new THREE.InstancedBufferGeometry();
     gi.setAttribute('position', new THREE.Float32BufferAttribute(g.p, 3));
     gi.setAttribute('aPart', new THREE.Float32BufferAttribute(g.k, 1));
     gi.setAttribute('aJambe', new THREE.Float32BufferAttribute(g.j, 1));
     gi.setAttribute('aBras', new THREE.Float32BufferAttribute(g.b, 1));
     gi.setAttribute('aPos', attrsI[0]); gi.setAttribute('aCamp', attrsI[1]); gi.setAttribute('aVit', attrsI[2]);
-    if (style === 'silhouette' || style === 'legere') gi.setAttribute('aTir', attrsI[3]);   // (la boîte ne tire pas : l'attribut absent vaut 0)
+    if ((sil || style === 'legere') && attrsI[3]) gi.setAttribute('aTir', attrsI[3]);   // (la boîte ne tire pas : l'attribut absent vaut 0)
     gi.instanceCount = 0;
     return gi;
   }

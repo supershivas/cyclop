@@ -2,20 +2,20 @@
 // Chaque sujet utilise les mêmes modules que le jeu (terrain, apparence,
 // rendu three.js) : ce qu'on voit ici est ce que le jeu dessinera. Ajouter un
 // sujet ou une variante = ajouter une entrée dans GROUPES.
-import { mountLabo } from './lib/labo-shell.js?v=0.26.0';
-import { spriteCanvas, paletteToGPL, paletteToHex } from './lib/sprites.js?v=0.26.0';
-import { PALETTE, ROLES } from './palette.js?v=0.26.0';
-import { chargerContenu } from './design-store.js?v=0.26.0';
-import { tuile, ETAT } from './tuiles.js?v=0.26.0';
-import { creerTerrain, impact, hydroLignes } from './terrain.js?v=0.26.0';
-import { CALIBRES } from './data/calibres.js?v=0.26.0';
-import { METEO } from './data/meteo.js?v=0.26.0';
-import { nouvelleBataille, avancer, ordonnerMarche, ordonnerBarrage } from './bataille.js?v=0.26.0';
-import { creerRendu, ZOOMS } from './rendu3d.js?v=0.26.0';
-import { hash2 } from './lib/rng.js?v=0.26.0';
-import { reglerVerdure } from './apparence.js?v=0.26.0';
-import { maquetteAssaut } from './labo-assaut.js?v=0.26.0';
-import { calquePlaques } from './labo-plaques.js?v=0.26.0';
+import { mountLabo } from './lib/labo-shell.js?v=0.27.0';
+import { spriteCanvas, paletteToGPL, paletteToHex } from './lib/sprites.js?v=0.27.0';
+import { PALETTE, ROLES } from './palette.js?v=0.27.0';
+import { chargerContenu } from './design-store.js?v=0.27.0';
+import { tuile, ETAT } from './tuiles.js?v=0.27.0';
+import { creerTerrain, impact, hydroLignes } from './terrain.js?v=0.27.0';
+import { CALIBRES } from './data/calibres.js?v=0.27.0';
+import { METEO } from './data/meteo.js?v=0.27.0';
+import { nouvelleBataille, avancer, ordonnerMarche, ordonnerBarrage, mourir } from './bataille.js?v=0.27.0';
+import { creerRendu, ZOOMS } from './rendu3d.js?v=0.27.0';
+import { hash2 } from './lib/rng.js?v=0.27.0';
+import { reglerVerdure } from './apparence.js?v=0.27.0';
+import { maquetteAssaut } from './labo-assaut.js?v=0.27.0';
+import { calquePlaques } from './labo-plaques.js?v=0.27.0';
 
 document.documentElement.style.setProperty('--jeu-accent', ROLES.accent);
 const NOM = document.title.replace(/^Labo — /, ''); // le nom vient de la page (une apostrophe ne casse rien)
@@ -83,7 +83,7 @@ function tuiles(stage, gris = false) {
 }
 
 // ─── Le moteur, en direct : le rendu du jeu sur une petite bataille ───
-function moteur(stage, { zoom = 3, pluie = false, gel = false, soldats = 600, cz = 185, camera = null, respiration = undefined, soldat = undefined, effets = undefined, barrages = false, surLesArbres = false, verdure = undefined, nuit = null, tombee = false, calque = null } = {}) {
+function moteur(stage, { zoom = 3, pluie = false, gel = false, soldats = 600, cz = 185, camera = null, respiration = undefined, soldat = undefined, cadavre = undefined, morts = 0, effets = undefined, barrages = false, surLesArbres = false, verdure = undefined, nuit = null, tombee = false, calque = null } = {}) {
   reglerVerdure(verdure);                                   // le sol vert (apparence.js) : avant que le sol ne se peigne
   const boite = el('div'); boite.style.cssText = 'position:relative;width:100%;height:min(70vh,560px);overflow:hidden';
   const canvas = el('canvas'); canvas.style.cssText = 'position:absolute;left:0;top:0;image-rendering:pixelated';
@@ -102,8 +102,14 @@ function moteur(stage, { zoom = 3, pluie = false, gel = false, soldats = 600, cz
       for (let h = 0; h < 24; h++) hydroLignes(T, 0, T.H, METEO.pluie, R);
       if (gel) B.etat.meteo[0] = 'gel'; else B.etat.meteo[0] = 'pluie';
     }
+    if (morts) {
+      // des morts de la veille (la glaise) et du jour (la couleur de leur camp), tombés en rangs là où l'on regarde
+      const A = B.armee;
+      for (let i = 0; i < A.n; i++) if (hash2(i, 5, 9) < morts && Math.abs(A.x[i] - B.etat.marges.x - 200) < 70 && Math.abs(A.y[i] - B.etat.marges.y - cz) < 45) mourir(B, i, 'tir');
+      B.etat.corps.forEach((c, k) => { if (k % 2) c[3] = B.etat.jour - 1; });
+    }
     ordonnerMarche(B, B.etat.regiments.filter(r => r.camp === 0).slice(2, 6).map(r => r.id), B.etat.marges.x + 200, B.etat.marges.y + 175);
-    rendu = await creerRendu(canvas, { mesure: true, camera, respiration, soldat, effets });
+    rendu = await creerRendu(canvas, { mesure: true, camera, respiration, soldat, cadavre, effets });
     if (fini) { rendu.detruire(); return; }
     if (nuit) rendu.styleNuit = nuit;
     rendu.redimensionner();
@@ -213,7 +219,16 @@ const GROUPES = [
       { title: 'Une boîte', note: 'Le soldat de la v0.7 : une boîte de la couleur de son camp, son dessus en guise de casque, et son ombre. Environ 10 triangles par homme.', status: 'ancienne', render: s => moteur(s, { zoom: 5, cz: 205, soldat: 'boite' }) },
       { title: 'Jambes, tête et casque', note: 'Les bandes molletières sombres (deux jambes), la vareuse, le visage clair, le casque plus large que la tête. Environ 40 triangles, seulement de près (6 pixels par mètre et plus) ; de loin, la boîte, puis le point.', render: s => moteur(s, { zoom: 5, cz: 205, soldat: 'detail' }) },
       { title: 'La boîte et un fusil', note: 'La boîte de la v0.7, un fusil à l\'épaule (un trait de terre) : la silhouette du fantassin pour 8 triangles de plus.', render: s => moteur(s, { zoom: 5, cz: 205, soldat: 'fusil' }) },
+      { title: 'Équipé', note: 'Proposition (v0.27.0) : la silhouette et son équipement. Bottes, bandes molletières, capote aux basques rabattues, ceinturon, trois cartouchières, gourde, couverture roulée, mains, baïonnette ; chez nous le casque Adrian (cimier, visière) et la moustache du poilu, en face le casque à pointe et son couvre-nuque. Environ 190 triangles par homme, de 6 pixels par mètre et plus.', render: s => moteur(s, { zoom: 6, cz: 205, soldat: 'equipe' }) },
+      { title: 'Équipé, bras qui balancent', note: 'Le même, dont les bras balancent à l\'opposé des jambes quand il marche (calculé dans le nuanceur, rien de plus pour le processeur).', render: s => moteur(s, { zoom: 6, cz: 205, soldat: 'equipe-marche' }) },
+      { title: 'Équipé, vu de moins près', note: 'Le même équipé à 8 pixels par mètre : ce qu\'il en reste quand on regarde un régiment entier.', render: s => moteur(s, { zoom: 5, cz: 205, soldat: 'equipe' }) },
       { title: 'Silhouette qui marche', note: 'La silhouette complète, et les jambes qui se balancent quand il marche (calculé dans le shader, selon sa vitesse : rien de plus pour le processeur).', render: s => moteur(s, { zoom: 5, cz: 205, soldat: 'marche' }) },
+    ] },
+    { id: 'cadavres', title: 'Cadavres', variants: [
+      { title: 'La planche', status: 'actuelle', note: 'Aujourd\'hui : une boîte couchée de 1,7 m, la couleur du camp le jour même, la glaise le lendemain. Rien ne dit que c\'était un soldat.', render: s => moteur(s, { zoom: 5, cz: 205, soldat: 'silhouette', morts: 0.3 }) },
+      { title: 'Le soldat couché', note: 'Proposition (v0.27.0) : le soldat lui-même, couché sur le dos, vareuse, bandes molletières, casque, fusil et sac comme debout ; de 4 pixels par mètre la silhouette allégée, dès 6 celle du style choisi. La glaise le lendemain.', render: s => moteur(s, { zoom: 5, cz: 205, soldat: 'silhouette', cadavre: 'couche', morts: 0.3 }) },
+      { title: 'Poses variées', note: 'Le même soldat, tombé comme il est tombé : sur le dos, sur le ventre ou sur le côté, les bras et les jambes écartés selon son numéro (il reste ainsi d\'une image à l\'autre).', render: s => moteur(s, { zoom: 5, cz: 205, soldat: 'silhouette', cadavre: 'poses', morts: 0.3 }) },
+      { title: 'Poses variées, équipés', note: 'Les poses variées, avec le soldat équipé (bottes, ceinturon, cartouchières, gourde, couverture, casque de son camp) : les morts sont les hommes qu\'on voyait debout, avec tout ce qu\'ils portaient.', render: s => moteur(s, { zoom: 6, cz: 205, soldat: 'equipe', cadavre: 'poses', morts: 0.3 }) },
     ] },
     { id: 'effets', title: 'Effets', variants: [
       { title: 'Tout ensemble', status: 'actuelle', note: 'Gerbe, onde, obus qui tombe, fumée qui reste, feu, fusées et corbeaux.', render: s => moteur(s, { zoom: 4, cz: 170, barrages: true, effets: { gerbe: true, onde: true, chute: true, derive: true, feu: true, fusees: 'toujours', corbeaux: 'toujours' } }) },

@@ -1,14 +1,14 @@
 // Les hommes : les soldats (une boîte et son ombre ; de près la silhouette, plus loin une silhouette allégée ; aux zooms 1 et 2 un point), les anneaux des
 // régiments choisis ou survolés, les corps (un homme couché) et les tombes (un tertre et une croix). Tout est instancié et ne reçoit que ce qu'on voit.
 // Le dessin seulement. Les formes viennent de geometries.js, le GLSL de shaders.js.
-import * as SH from './shaders.js?v=0.26.0';
-import { creerGeometries } from './geometries.js?v=0.26.0';
-import { VOL } from './eclats.js?v=0.26.0';
+import * as SH from './shaders.js?v=0.27.0';
+import { creerGeometries } from './geometries.js?v=0.27.0';
+import { VOL } from './eclats.js?v=0.27.0';
 
 // `THREE`, `scene`, `col`, `solUniforms` (`uSol`, `uTaille` : la texture du sol, que l'ombre d'un soldat reprend), `styleSoldat` (le style de près, comparé au labo),
 // `surface(x, z)` et `surfaceLisse(x, z)` (la hauteur du sol, lissée pour qui marche), `solY` (la hauteur moyenne du sol) et `POINTS_JUSQUA` (le zoom où un soldat n'est
 // plus qu'un point) viennent de creerRendu ; `bataille()` et `vide()` changent ; `tirs()` rend la pose des tireurs et le bond des soufflés (eclats.js).
-export function creerSoldats({ THREE, scene, col, solUniforms, styleSoldat, surface, surfaceLisse, solY: SOL_Y, POINTS_JUSQUA, bataille, vide, tirs }) {
+export function creerSoldats({ THREE, scene, col, solUniforms, styleSoldat, cadavre = 'planche', surface, surfaceLisse, solY: SOL_Y, POINTS_JUSQUA, bataille, vide, tirs }) {
   // ─── Les soldats ───
   // Une boîte de 0,5 × 1,7 × 0,35 m et son ombre ; de près (DETAIL_DES pixels par mètre), selon le style
   // (`soldat` de creerRendu, comparé au labo) : jambes, tête, casque, fusil, sac, et les jambes qui marchent.
@@ -23,7 +23,8 @@ export function creerSoldats({ THREE, scene, col, solUniforms, styleSoldat, surf
   const DETAIL_DES = 6;                    // (à 4 pixels par mètre, un homme en fait 7 de haut : la silhouette ne s'y voyait pas, et coûtait 138 000 triangles pour 2 000 hommes)
   const soldatMat = new THREE.ShaderMaterial({
     uniforms: { uNous: { value: col('n') }, uEux: { value: col('x') }, uOmbre: { value: col('t') }, uSel: { value: col('o') },
-      uJambes: { value: col('s') }, uFusil: { value: col('t') }, uSac: { value: col('g') }, uVisage: { value: col('h') }, uT: { value: 0 },
+      uJambes: { value: col('s') }, uFusil: { value: col('t') }, uSac: { value: col('g') }, uVisage: { value: col('h') }, uCuir: { value: col('b') }, uBotte: { value: col('t') }, uT: { value: 0 },
+      uBalance: { value: styleSoldat === 'equipe-marche' ? 1 : 0 },
       uSol: solUniforms.uSol, uTaille: solUniforms.uTaille,
       uSoleil: { value: new THREE.Vector2(0.5, 0.6) } },
     vertexShader: SH.soldatMat.v,
@@ -122,11 +123,20 @@ export function creerSoldats({ THREE, scene, col, solUniforms, styleSoldat, surf
 
   // ─── Les corps : un homme couché (1,7 × 0,5 m, 0,3 de haut) ; au loin, un pixel.
   // La couleur de son camp le jour où il tombe, la glaise dès le lendemain. ───
-  let capCorps = 0, cPos = null, cInfo = null, corpsInst = null, corpsPoints = null, attrsCI = null, attrsCP = null;
+  // `cadavre` (le labo, v0.27.0) : 'planche' (la boîte couchée d'aujourd'hui) ; 'couche' (le soldat lui-même, couché sur le dos : de 4 pixels par mètre la silhouette allégée, dès 6 celle du style choisi) ;
+  // 'poses' (de même, sur le dos, le ventre ou le côté, les membres écartés selon son numéro).
+  let capCorps = 0, cPos = null, cInfo = null, cCamp = null, corpsInst = null, corpsLeger = null, corpsDetail = null, corpsPoints = null, attrsCI = null, attrsCP = null;
   const corpsMat = new THREE.ShaderMaterial({
     uniforms: { uNous: { value: col('n') }, uEux: { value: col('x') }, uVieux: { value: col('g') }, uFlanc: { value: col('s') } },
     vertexShader: SH.corpsMat.v,
     fragmentShader: SH.corpsMat.f,
+    side: THREE.DoubleSide,
+  });
+  const soldatCouche = cadavre === 'planche' ? null : new THREE.ShaderMaterial({
+    uniforms: { uNous: soldatMat.uniforms.uNous, uEux: soldatMat.uniforms.uEux, uVieux: { value: col('g') }, uJambes: soldatMat.uniforms.uJambes, uFusil: soldatMat.uniforms.uFusil, uSac: soldatMat.uniforms.uSac,
+      uVisage: soldatMat.uniforms.uVisage, uCuir: soldatMat.uniforms.uCuir, uBotte: soldatMat.uniforms.uBotte, uPoses: { value: cadavre === 'poses' ? 1 : 0 } },
+    vertexShader: SH.corpsSoldatMat.v,
+    fragmentShader: SH.corpsSoldatMat.f,
     side: THREE.DoubleSide,
   });
   const corpsPointMat = new THREE.ShaderMaterial({
@@ -136,8 +146,9 @@ export function creerSoldats({ THREE, scene, col, solUniforms, styleSoldat, surf
   });
   function preparerCorps(capacite) {
     if (corpsInst) { scene.remove(corpsInst, corpsPoints); corpsInst.geometry.dispose(); corpsPoints.geometry.dispose(); }
+    if (corpsLeger) { scene.remove(corpsLeger, corpsDetail); corpsLeger.geometry.dispose(); corpsDetail.geometry.dispose(); corpsLeger = corpsDetail = null; }
     capCorps = capacite;
-    cPos = new Float32Array(capCorps * 3); cInfo = new Float32Array(capCorps * 2);
+    cPos = new Float32Array(capCorps * 3); cInfo = new Float32Array(capCorps * 2); cCamp = new Float32Array(capCorps);
     const q = (a, b, c, d) => [...a, ...b, ...c, ...a, ...c, ...d];
     const l = 0.85, w = 0.25, h = 0.3;
     const dessus = q([-l, h, -w], [-l, h, w], [l, h, w], [l, h, -w]);
@@ -153,6 +164,12 @@ export function creerSoldats({ THREE, scene, col, solUniforms, styleSoldat, surf
     gi.setAttribute('aPos', attrsCI[0]); gi.setAttribute('aInfo', attrsCI[1]);
     gi.instanceCount = 0;
     corpsInst = new THREE.Mesh(gi, corpsMat); corpsInst.frustumCulled = false; corpsInst.renderOrder = 1;
+    if (soldatCouche) {
+      // le soldat couché : les mêmes boîtes que debout (`formeSoldat`), les attributs d'instance sont ceux du corps (position, camp, [état, angle])
+      attrsCI.push(new THREE.InstancedBufferAttribute(cCamp, 1).setUsage(THREE.DynamicDrawUsage));
+      const lie = style => { const g = formeSoldat(style, [attrsCI[0], attrsCI[2], attrsCI[1]]); g.setAttribute('aInfo', g.getAttribute('aVit')); g.deleteAttribute('aVit'); const m = new THREE.Mesh(g, soldatCouche); m.frustumCulled = false; m.renderOrder = 1; scene.add(m); return m; };
+      corpsLeger = lie('legere'); corpsDetail = lie(styleSoldat === 'boite' ? 'silhouette' : styleSoldat);
+    }
     const gp = new THREE.BufferGeometry();
     attrsCP = [new THREE.BufferAttribute(cPos, 3), new THREE.BufferAttribute(cInfo, 2)];
     attrsCP.forEach(a => a.setUsage(THREE.DynamicDrawUsage));
@@ -163,7 +180,7 @@ export function creerSoldats({ THREE, scene, col, solUniforms, styleSoldat, surf
   }
 
   // les corps : ceux qu'on voit, comme les soldats (la liste ne fait que grandir)
-  function majCorps(x0, x1, z0, z1, e, points) {
+  function majCorps(x0, x1, z0, z1, e, points, p) {
     const B = bataille();
     const C = B.etat.corps, jour = B.etat.jour;
     if (C.length > capCorps) preparerCorps(C.length * 2);
@@ -182,11 +199,14 @@ export function creerSoldats({ THREE, scene, col, solUniforms, styleSoldat, surf
       const cxp = e[0] * x + e[4] * SOL_Y + e[8] * y + e[12], cyp = e[1] * x + e[5] * SOL_Y + e[9] * y + e[13], cw = e[3] * x + e[7] * SOL_Y + e[11] * y + e[15];
       if (cxp < -1.08 * cw || cxp > 1.08 * cw || cyp < -1.15 * cw || cyp > 1.15 * cw) continue;
       cPos[k * 3] = x; cPos[k * 3 + 1] = surface(x, y) + haut; cPos[k * 3 + 2] = y;
-      cInfo[k * 2] = c[3] < jour ? 2 : c[2];
+      cInfo[k * 2] = c[3] < jour ? 2 : c[2]; cCamp[k] = c[2];
       cInfo[k * 2 + 1] = ((c[4] * 2654435761) >>> 0) % 628 / 100;     // couché dans un sens qui ne change pas
       k++;
     }
-    if (!vide()) { corpsPoints.visible = points; corpsInst.visible = !points; }
+    // (le soldat couché à partir de 4 pixels par mètre, la planche en deçà ; le même seuil que les soldats debout)
+    const leger = !!corpsLeger && !points && p >= LEGER_DES && p < DETAIL_DES, detail = !!corpsDetail && !points && p >= DETAIL_DES;
+    if (!vide()) { corpsPoints.visible = points; corpsInst.visible = !points && !leger && !detail; if (corpsLeger) { corpsLeger.visible = leger; corpsDetail.visible = detail; } }
+    if (corpsLeger) { corpsLeger.geometry.instanceCount = k; corpsDetail.geometry.instanceCount = k; }
     for (const a of points ? attrsCP : attrsCI) { a.clearUpdateRanges(); a.addUpdateRange(0, k * a.itemSize); a.needsUpdate = true; }
     corpsPoints.geometry.setDrawRange(0, k);
     corpsInst.geometry.instanceCount = k;
@@ -239,7 +259,7 @@ export function creerSoldats({ THREE, scene, col, solUniforms, styleSoldat, surf
     soldatsPoints.geometry.setDrawRange(0, k);
     soldatsInst.geometry.instanceCount = k;
     vus = k;
-    majCorps(x0, x1, z0, z1, e, points);
+    majCorps(x0, x1, z0, z1, e, points, p);
     majTombes(x0, x1, z0, z1, e, points);
   }
   let vus = 0;
