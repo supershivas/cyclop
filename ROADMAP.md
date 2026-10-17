@@ -77,12 +77,6 @@ s'appairer, sans serveur de jeu).
   1 tient 7 ms, les zooms 4 et 8 de 8 à 16 ms sur un champ labouré : à trancher
 - [x] Lisibilité : cratère, boue, eau, soldat distinguables en gris
 
-## À trancher
-
-- **Le souffle des obus** (v0.16.0) : pas mesuré sur l'équilibre ; les régiments jetés hors de leur tranchée par un 220 reviennent
-  à leur place en marchant.
-- **Le rendu sous la pluie** : le bleu de nos soldats a été changé (v0.16.0) sans capture sous la pluie ; à regarder.
-
 ## À l'étude (validé dans le principe par le prompt de départ, pas construit)
 
 - **Carte et ordres, la suite** (v0.14.0 et 0.15.0 : secteurs, carte, mêlée) : un ordre « tenir S3·N2 » depuis la carte (reculer d'une

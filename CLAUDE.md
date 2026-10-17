@@ -546,6 +546,8 @@ node outils/stamp-version.mjs            # après chaque changement de version.j
   point de chute, à l'opposé, d'une vitesse qui tombe à zéro au bord (`obus.souffle`, 16 m/s au centre ; la vitesse retombe d'elle-même,
   ~3 m parcourus, puis la marche les ramène à leur place) ; sans hasard, donc la partie relue est la même. Le dessin les fait sauter
   (`souffler`, `volT` de rendu3d.js ; un bond de 0,6 s, jusqu'à 2 m pour qui était collé au point de chute).
+  **Mesuré sur l'équilibre** (`scripts/mesure-souffle.mjs`, v0.26.0 : 4 salves de 220 sur un régiment en tranchée, graines 3, 5, 7, 11) : le souffle sort 6 à 9 hommes de leur place (à plus de 2 m) et ils sont revenus en 1 s ; les morts
+  ne bougent pas au-delà du bruit (5-15 avec, 9-16 sans). Rien à régler. Le bleu de nos soldats (v0.16.0) se lit sous la pluie (capture du zoom 4, jour 1 sous pluie) : rien à régler non plus.
 - **Les morts d'obus sont projetés** (Jérôme, v0.24.0) : `projeter` (bataille.js, appelé par `frapper` avec le choc `{ x0, y0, d, rayon }` que `tuerDans` donne) jette le corps à
   l'opposé du point de chute, de `obus.projection.min` à `max` m (8 à 15 pour un rayon de 10, en proportion du rayon : un 75 jette de 3 à 6 m, un 220 de 8 à 15), sans hasard (collé au point de chute : un côté
   fixé par le numéro) ; `etat.corps` garde le point d'arrivée (rien de neuf dans la sauvegarde). `B.volants` (`[indice du corps, x, y du départ, âge]`, vieilli par `avancer`, jamais sauvegardé) : le dessin
