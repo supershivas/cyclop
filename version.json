@@ -1,8 +1,8 @@
 {
-  "version": "0.25.0",
+  "version": "0.26.0",
   "date": "2026-10-17",
   "changes": [
-    "Les balles courent jusqu'à leur cible, les obus se voient de loin (allongés, couleur d'os), les salves ne mangent plus les éclats en vol",
-    "Les corbeaux se posent sur les morts, par nids, et se dessinent selon le zoom : un point, un trait, puis une silhouette aux ailes qui battent"
+    "Le papier de la nuit prend la place des pertes, au centre du haut de l'écran ; la fiche s'ouvre à gauche, sous le carnet",
+    "Le cadran de vue disparaît de l'écran : la touche C recentre la caméra"
   ]
 }

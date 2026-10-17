@@ -76,8 +76,6 @@
 .carnet li.recent { background: var(--jeu-accent); color: var(--jeu-encre); }
 .carnet li.recent b { color: var(--jeu-encre); }
 
-.cadran { display: grid; grid-template-columns: repeat(5, var(--jeu-cible)); padding: 0; }
-.cadran .icone:active { background: var(--jeu-encre); color: var(--jeu-fond); }
 /* Le râtelier : trois obus en papier de campagne, un par calibre ; debout : prêt, couché : se recharge (v0.18.1) */
 .batteries { display: flex; gap: var(--pas); align-items: flex-end; pointer-events: auto; }
 .batterie {
@@ -202,7 +200,8 @@ dialog form { margin-top: calc(var(--pas) * 2); }
    à droite la carte (toujours visible), le temps, la montre et la météo, le terrain sous la souris. */
 .haut-gauche, .haut-centre, .haut-droite { display: grid; gap: var(--pas); align-content: start; min-width: 0; }
 .haut-gauche { justify-items: start; flex: 1; }
-.haut-gauche .fiche, .haut-gauche .nuit { margin: 0; }
+.haut-gauche .fiche, .haut-centre .nuit { margin: 0; }
+.haut-centre:has(.nuit:not([hidden])) .pertes { display: none; }   /* la nuit prend la place des pertes (Jérôme, v0.26.0) */
 .haut-gauche .boutons { display: flex; gap: var(--pas); }
 .haut-centre { justify-items: center; flex: none; }
 .haut-droite { justify-items: end; flex: 1; }

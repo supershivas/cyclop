@@ -1,30 +1,30 @@
 // Le cycle de vie : écran titre → bataille → nuit → fin ; pause active,
 // réglages, sauvegarde, mise à jour, debug. Les règles sont dans bataille.js
 // (pures), le dessin dans rendu3d.js (il ne modifie jamais l'état).
-import { createLoop } from './lib/loop.js?v=0.25.0';
-import { createKeys, stopTypeahead } from './lib/keys.js?v=0.25.0';
-import { createPointer, lockBrowserGestures } from './lib/pointer.js?v=0.25.0';
-import { createGamepad } from './lib/gamepad.js?v=0.25.0';
-import { createStore, autosave, pickJSONFile } from './lib/save.js?v=0.25.0';
-import { startUpdateCheck, loadVersion, loadChangelog, downloadJSON } from './lib/app-update.js?v=0.25.0';
-import { ROLES } from './palette.js?v=0.25.0';
-import { MISSIONS, nouvelleBataille, avancer, aube, ordonnerMarche, peutOrdonner, ordonnerBarrage, horloge, effectifs, tronconsTenus, moralEnMots, terrainResume, largeurZone, lettreZone, etendueZones, nomTroncon, actionDe, secteursDe, tronconsDeLigne, zone, photo, restaurer, PAS, NOUS } from './bataille.js?v=0.25.0';
-import { ligneY } from './tranchees.js?v=0.25.0';
-import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.25.0';
-import { METEO } from './data/meteo.js?v=0.25.0';
-import { impact, hydroLignes } from './terrain.js?v=0.25.0';
-import { hash2 } from './lib/rng.js?v=0.25.0';
-import { creerRendu, CAMERA } from './rendu3d.js?v=0.25.0';
-import { etatEnMots, experienceEnMots, chevrons } from './identite.js?v=0.25.0';
-import { CORVEES } from './data/corvees.js?v=0.25.0';
-import { refusCorvee } from './nuit.js?v=0.25.0';
-import { chargerContenu } from './design-store.js?v=0.25.0';
-import * as lecture from './hud/lecture.js?v=0.25.0';
-import { creerFiche } from './hud/fiche.js?v=0.25.0';
-import { creerNuit, corveeDe, corveeCourte } from './hud/nuit.js?v=0.25.0';
-import { creerCarnet, deux } from './hud/carnet.js?v=0.25.0';
-import { creerCarte } from './hud/carte.js?v=0.25.0';
-import { creerPertes } from './hud/pertes.js?v=0.25.0';
+import { createLoop } from './lib/loop.js?v=0.26.0';
+import { createKeys, stopTypeahead } from './lib/keys.js?v=0.26.0';
+import { createPointer, lockBrowserGestures } from './lib/pointer.js?v=0.26.0';
+import { createGamepad } from './lib/gamepad.js?v=0.26.0';
+import { createStore, autosave, pickJSONFile } from './lib/save.js?v=0.26.0';
+import { startUpdateCheck, loadVersion, loadChangelog, downloadJSON } from './lib/app-update.js?v=0.26.0';
+import { ROLES } from './palette.js?v=0.26.0';
+import { MISSIONS, nouvelleBataille, avancer, aube, ordonnerMarche, peutOrdonner, ordonnerBarrage, horloge, effectifs, tronconsTenus, moralEnMots, terrainResume, largeurZone, lettreZone, etendueZones, nomTroncon, actionDe, secteursDe, tronconsDeLigne, zone, photo, restaurer, PAS, NOUS } from './bataille.js?v=0.26.0';
+import { ligneY } from './tranchees.js?v=0.26.0';
+import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.26.0';
+import { METEO } from './data/meteo.js?v=0.26.0';
+import { impact, hydroLignes } from './terrain.js?v=0.26.0';
+import { hash2 } from './lib/rng.js?v=0.26.0';
+import { creerRendu, CAMERA } from './rendu3d.js?v=0.26.0';
+import { etatEnMots, experienceEnMots, chevrons } from './identite.js?v=0.26.0';
+import { CORVEES } from './data/corvees.js?v=0.26.0';
+import { refusCorvee } from './nuit.js?v=0.26.0';
+import { chargerContenu } from './design-store.js?v=0.26.0';
+import * as lecture from './hud/lecture.js?v=0.26.0';
+import { creerFiche } from './hud/fiche.js?v=0.26.0';
+import { creerNuit, corveeDe, corveeCourte } from './hud/nuit.js?v=0.26.0';
+import { creerCarnet, deux } from './hud/carnet.js?v=0.26.0';
+import { creerCarte } from './hud/carte.js?v=0.26.0';
+import { creerPertes } from './hud/pertes.js?v=0.26.0';
 
 const JEU = 'cyclopeen';
 const $ = id => document.getElementById(id);
@@ -643,7 +643,7 @@ function choisirTout() {
 }
 const keys = createKeys({
   actions: {
-    menu: 'Escape', pause: ' ', tout: 't', plus: ['+', '=', 'NumpadAdd'], moins: ['-', 'NumpadSubtract'],
+    menu: 'Escape', pause: ' ', tout: 't', centrer: 'c', plus: ['+', '=', 'NumpadAdd'], moins: ['-', 'NumpadSubtract'],
     b1: 'Digit1', b2: 'Digit2', b3: 'Digit3',
   },
   onAction: nom => {
@@ -653,6 +653,7 @@ const keys = createKeys({
     }
     else if (nom === 'pause') basculerPause();
     else if (nom === 'tout') choisirTout();
+    else if (nom === 'centrer') { rendu.placerCamera(CAMERA.yaw, CAMERA.tangage); prefs.camera = null; store.save('prefs', prefs); }
     else if (nom === 'plus') zoomer(1);
     else if (nom === 'moins') zoomer(-1);
     else if (nom[0] === 'b') viser(NOMS_CALIBRES[Number(nom[1]) - 1]);
@@ -664,19 +665,6 @@ function zoomer(d, ancre) { rendu.zoomer(d, ancre); prefs.zoom = rendu.vue.zoom;
 const cadre = $('cadre');
 let glisse = null;
 
-// Le cadran de la vue (à l'écran) : tourner et incliner sans souris à gestes, un bouton tenu enfoncé est lu en continu
-const cadran = { tour: 0, incl: 0 };
-for (const b of $('cadran').querySelectorAll('button')) {
-  const dir = { tour: Number(b.dataset.tour || 0), incl: Number(b.dataset.incl || 0) };
-  const lacher = () => { cadran.tour = 0; cadran.incl = 0; };
-  b.onpointerdown = e => { if (e.button) return; e.preventDefault(); cadran.tour = dir.tour; cadran.incl = dir.incl; };
-  b.onclick = e => { if (e.detail === 0 && dir.tour + dir.incl) rendu.tourner(dir.tour * 0.1, dir.incl * 0.06); };   // au clavier : un cran
-  b.onpointerup = b.onpointerleave = b.onpointercancel = lacher;
-}
-$('cadran-centre').onclick = () => {
-  rendu.placerCamera(CAMERA.yaw, CAMERA.tangage);
-  prefs.camera = null; store.save('prefs', prefs);
-};
 createPointer($('canvas'), {
   threshold: 6,
   onTap: p => {
@@ -776,7 +764,7 @@ const loop = createLoop({
       const ax = k.x || m.x, ay = k.y || m.y;
       if (ax || ay) rendu.deplacerEcran(ax * dt * 260 / rendu.ppm, ay * dt * 260 / rendu.ppm);
       // tourner : A et E (Q et E en QWERTY), incliner : R et F — touches physiques, lues en continu
-      const tour = (keys.held('KeyE') ? 1 : 0) - (keys.held('KeyQ') ? 1 : 0) + cadran.tour, incl = (keys.held('KeyF') ? 1 : 0) - (keys.held('KeyR') ? 1 : 0) + cadran.incl;
+      const tour = (keys.held('KeyE') ? 1 : 0) - (keys.held('KeyQ') ? 1 : 0), incl = (keys.held('KeyF') ? 1 : 0) - (keys.held('KeyR') ? 1 : 0);
       if (tour || incl) {
         rendu.tourner(tour * dt * 0.9, incl * dt * 0.5);
         prefs.camera = { yaw: rendu.vue.cible.yaw, tangage: rendu.vue.cible.tangage };
@@ -827,7 +815,7 @@ startUpdateCheck({
 
 // ─── Mode debug (section 18) : chargé seulement avec ?debug=1 ──────────────
 if (DEBUG) {
-  const { installDebug, seedFromUrl } = await import('./lib/debug.js?v=0.25.0');
+  const { installDebug, seedFromUrl } = await import('./lib/debug.js?v=0.26.0');
   window.__seed = seedFromUrl() ?? undefined;
   installDebug({
     state: () => B && { ...horloge(B), effectifs: effectifs(B), pertes: B.etat.pertes, impacts: B.etat.impacts.length, enJeu: enJeu(), pause: loop.paused },

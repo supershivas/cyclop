@@ -1,5 +1,9 @@
 # Journal des versions
 
+## 0.26.0 — 2026-10-17
+- Le papier de la nuit prend la place des pertes, au centre du haut de l'écran ; la fiche s'ouvre à gauche, sous le carnet
+- Le cadran de vue disparaît de l'écran : la touche C recentre la caméra (tourner et incliner restent à A, E, R, F et à la molette)
+
 ## 0.25.0 — 2026-10-17
 - Les balles courent jusqu'à leur cible (jusqu'à 70 m, au lieu de 13 à 20 m) ; les obus se voient de loin : allongés selon leur trajectoire, couleur d'os
 - Les salves ne mangent plus les éclats encore en vol (le tampon passe de 2 400 à 6 000)

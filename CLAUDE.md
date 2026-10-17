@@ -155,8 +155,7 @@ la danse macabre, la catastrophe peinte avec calme. L'intention est dans `DESIGN
   ou un cercle de la carte, s'allume avec tous ses hommes : les anneaux de la sélection, à la couleur de son camp (ceux des choisis restent
   d'os) ; sans régiment, le tronçon sous la souris, mêmes traits que le clignotement, sauf si la visée d'un ordre le montre déjà
   (`appliquerSurvol` de main.js, `rendu.survoler`). Le dessin seulement.
-- **Le haut de l'écran** (Jérôme, v0.19.0 ; `docs/ui-cible.md`) : à gauche le menu, les réglages et le carnet de bord (la fiche et le
-  papier de la nuit y attendent leur place définitive) ; au centre les pertes des deux armées (`majPertes`, en feuille de situation) ;
+- **Le haut de l'écran** (Jérôme, v0.19.0 ; `docs/ui-cible.md`) : à gauche le menu, les réglages et le carnet de bord (la fiche s'ouvre dessous, v0.26.0) ; au centre les pertes des deux armées (`majPertes`, en feuille de situation), que le papier de la nuit remplace la nuit (v0.26.0, Jérôme : `.haut-centre:has(.nuit:not([hidden]))`) ;
   à droite la carte, le temps (arrêter, ×1, ×2, ×4 : `setTimeScale` plafonné par `perf.sim` sous ~20 ms, un assaut / une prise / une
   déroute ramène à ×1 ; la partie est la même, seul le nombre de pas par image change), la montre, la météo (clic : aujourd'hui et la
   prévision de demain, il n'y a pas de météo dans la journée) et le terrain. La carte est en proportions (lignes à 20 m, un no man's land
@@ -227,7 +226,8 @@ nuit (le voile continu et ses halos mélangent la terre, le sol et l'os : des co
 | Barrage de 75, 155, 220 | 1, 2, 3 (touche physique) puis clic | bouton de la batterie puis clic |
 | Arrêter le temps (pause active) | Espace | — |
 | Déplacer la vue | flèches, ZQSD / WASD (selon l'écran) | Maj + glisser avec le bouton du milieu (la molette) |
-| Tourner, incliner la vue | A et E (Q et E en QWERTY), R et F (touches physiques, en continu) | glisser avec le bouton du milieu (ou le droit) ; le cadran en bas à droite (Jérôme, v0.9.1) |
+| Tourner, incliner la vue | A et E (Q et E en QWERTY), R et F (touches physiques, en continu) | glisser avec le bouton du milieu (ou le droit) ; le cadran à l'écran (v0.9.1) est retiré en v0.26.0 (Jérôme) |
+| Recentrer la vue | C (l'angle d'origine) | — |
 | Zoom | + et − | molette |
 | Menu (pause) | Échap (quand rien n'est à annuler) | bouton du HUD |
 

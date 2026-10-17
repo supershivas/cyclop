@@ -9,8 +9,8 @@
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta property="og:image" content="og.png">
-<link rel="stylesheet" href="js/lib/game.css?v=0.25.0">
-<link rel="stylesheet" href="css/style.css?v=0.25.0">
+<link rel="stylesheet" href="js/lib/game.css?v=0.26.0">
+<link rel="stylesheet" href="css/style.css?v=0.26.0">
 </head>
 <body>
 <div class="jeu-ecran" id="ecran">
@@ -39,6 +39,19 @@
           <p class="entete">Carnet de bord</p>
           <ol id="carnet-liste"></ol>
         </div>
+      <section class="papier fiche" id="fiche" hidden aria-live="polite">
+        <button class="icone fiche-fermer" id="fiche-fermer" aria-label="Fermer la fiche">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+        </button>
+        <h2 id="fiche-nom"></h2>
+        <p class="discret" id="fiche-qui"></p>
+        <button class="lien" id="fiche-regiment" hidden></button>
+        <ul id="fiche-etat"></ul>
+        <div class="fiche-liste" id="fiche-liste"></div>
+      </section>
+      </div>
+      <!-- En haut au centre : les pertes des deux armées, et la nuit, le papier qui les remplace (v0.26.0) -->
+      <div class="haut-centre">
       <!-- La nuit : le champ de bataille reste, ce papier s'y pose (pas de boîte de dialogue) ; on choisit des régiments, puis leur corvée -->
       <section class="papier nuit" id="nuit" hidden aria-live="polite">
         <h2 id="nuit-titre">Nuit</h2>
@@ -52,19 +65,6 @@
         <div id="aube-bilan" hidden></div>
         <button class="bouton" id="aube">À l'aube</button>
       </section>
-      <section class="papier fiche" id="fiche" hidden aria-live="polite">
-        <button class="icone fiche-fermer" id="fiche-fermer" aria-label="Fermer la fiche">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
-        </button>
-        <h2 id="fiche-nom"></h2>
-        <p class="discret" id="fiche-qui"></p>
-        <button class="lien" id="fiche-regiment" hidden></button>
-        <ul id="fiche-etat"></ul>
-        <div class="fiche-liste" id="fiche-liste"></div>
-      </section>
-      </div>
-      <!-- En haut au centre : les pertes des deux armées -->
-      <div class="haut-centre">
         <p class="papier pause-active" id="pause-active" hidden>Temps arrêté</p>
         <section class="papier pertes" id="pertes" aria-label="Les pertes des deux armées">
           <div class="armee" id="pertes-nous"></div>
@@ -108,16 +108,9 @@
         <button class="fleche papier" id="reg-suiv" aria-label="Régiments suivants" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></button>
         <div class="papier reg-ouvert" id="reg-ouvert" hidden></div>
       </div>
-      <!-- En bas à droite : le râtelier d'obus, et le cadran de la vue -->
+      <!-- En bas à droite : le râtelier d'obus -->
       <div class="droite">
         <div class="batteries" id="batteries" aria-label="Batteries"></div>
-        <div class="plaque cadran" id="cadran" role="group" aria-label="La vue">
-          <button class="icone" data-incl="-1" aria-label="Incliner vers le haut (R)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 15l6-6 6 6"/></svg></button>
-          <button class="icone" data-tour="-1" aria-label="Tourner à gauche (A)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg></button>
-          <button class="icone" id="cadran-centre" aria-label="Recentrer la vue"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3"/></svg></button>
-          <button class="icone" data-tour="1" aria-label="Tourner à droite (E)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></button>
-          <button class="icone" data-incl="1" aria-label="Incliner vers le bas (F)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button>
-        </div>
       </div>
     </div>
   </div>
@@ -186,7 +179,8 @@
       <dt>T</dt><dd>choisir tous nos régiments</dd>
       <dt>Espace</dt><dd>arrêter le temps (les ordres restent possibles)</dd>
       <dt>Flèches, ZQSD</dt><dd>déplacer la vue (ou Maj + glisser avec la molette)</dd>
-      <dt>A et E, R et F</dt><dd>tourner et incliner un peu la caméra (Q et E en QWERTY ; ou glisser avec la molette ou le bouton droit ; ou le cadran en bas à droite)</dd>
+      <dt>A et E, R et F</dt><dd>tourner et incliner un peu la caméra (Q et E en QWERTY ; ou glisser avec la molette ou le bouton droit)</dd>
+      <dt>C</dt><dd>recentrer la caméra (l'angle d'origine)</dd>
       <dt>Molette, + et −</dt><dd>zoom</dd>
       <dt>Échap</dt><dd>annuler, comme le clic droit ; sinon le menu</dd>
     </dl>
@@ -214,6 +208,6 @@
 </dialog>
 
 <div class="jeu-toast" id="toast" role="status" hidden></div>
-<script type="module" src="js/main.js?v=0.25.0"></script>
+<script type="module" src="js/main.js?v=0.26.0"></script>
 </body>
 </html>
