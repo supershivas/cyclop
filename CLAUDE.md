@@ -328,7 +328,8 @@ nuit (le voile continu et ses halos mélangent la terre, le sol et l'os : des co
   Restent dans main.js : la rangée des régiments (`majRegiments`, lié aux ordres), le survol et la visée, les commandes, la boucle.
 - `js/rendu/` — ce que `rendu3d.js` ne garde plus : `shaders.js` (tout le GLSL, du texte), `geometries.js` (soldat, arbre, buisson : `creerGeometries(THREE, col)` ;
   la forme du soldat prend les attributs d'instance en paramètre). `meteo.js` (la pluie et le brouillard : `creerMeteo({ THREE, scene, col })`, `afficher`, `maj`), `troncons.js` (fanions, clignotement et surbrillance d'un ordre, ouvrages des tranchées :
-  `creerTroncons({ THREE, scene, col, surface, projeter, vue, zooms, bataille, tAnim, vide, survolTroncons })` ; les quatre derniers sont des fonctions, car ils changent) ; un morceau
+  `creerTroncons({ THREE, scene, col, surface, projeter, vue, zooms, bataille, tAnim, vide, survolTroncons })` ; les quatre derniers sont des fonctions, car ils changent) ), `vegetation.js` (arbres, buissons, herbe, triés à chaque image :
+  `creerVegetation({ …, terrain, vide, ombres })` ; `ombres()` rend le tampon des ombres d'arbres et le soleil, restés dans `rendu3d.js` jusqu'à l'étape 4) ; un morceau
   par commit, dans l'ordre de `docs/refonte-rendu3d.md`. Le reste de `rendu3d.js` est une seule fermeture (la scène, les tampons, la caméra) :
   la découper demande d'abord de décider comment ses morceaux se partagent cet état.
 - `js/main.js` — écran titre → bataille → nuit → fin ; le zoom et la caméra

@@ -19,7 +19,7 @@ qu'aujourd'hui (l'ordre compte : tampons, `needsUpdate`, budgets). Pas de classe
 | 0 | **Un test de dessin** (`outils/rendu-empreinte.mjs`) | rien ne se découpe sans lui (voir plus bas) |
 | 1 | ✔ Pluie et brume (`js/rendu/meteo.js`) — empreinte identique, coût dans le bruit (8 000 soldats : 77-90 ms contre 81-93) | lues seulement par leur section et `dessiner` |
 | 2 | ✔ Fanions, clignotants, ouvrages (`js/rendu/troncons.js`) — 25 images identiques, perf dans le bruit | un seul bloc cohérent ; besoin de `projeter` et `tient` |
-| 3 | Arbres, buissons, herbe + `dansLaVue` | partagent `dansLaVue` et le soleil (`ARBRES_OMBRES`) |
+| 3 | ✔ Arbres, buissons, herbe + `dansLaVue` (`js/rendu/vegetation.js`) — 25 images identiques ; le tampon des ombres et le soleil restent à `rendu3d.js` jusqu'à l'étape 4 | partagent `dansLaVue` et le soleil (`ARBRES_OMBRES`) |
 | 4 | Le temps qui passe (soleil, obscurité, lumières, nuit) | `soleil` est lu par les arbres : après l'étape 3 |
 | 5 | Éclats, balles, fumée, feux, corbeaux (`ecl*`, `particule`, `feux`) | lié à `arbresEtat` / `brules` et au tir : à faire après 3 |
 | 6 | Soldats, tombes, corps, anneaux, tirs (`attrs*`, `tirVal`, `volT`) | le plus gros bloc ; le tir (« Le feu se voit ») et le souffle y sont mêlés |
