@@ -1,8 +1,8 @@
 // Les fiches : un homme (son nom, son âge, son grade, ce qu'il endure) ou un régiment (ses hommes, ses
 // blessés, ses morts, et leurs fiches). De près, on regarde des hommes ; de loin, des régiments (Jérôme, v0.3.2).
-import { NOUS, moralEnMots, rangDe } from '../bataille.js?v=0.24.0';
-import { etatEnMots, experienceEnMots } from '../identite.js?v=0.24.0';
-import { majuscule, nomDe, indiceDe, premierDe, quiEst, tombe, bilan, enMots, refuseAujourdhui } from './lecture.js?v=0.24.0';
+import { NOUS, moralEnMots, rangDe } from '../bataille.js?v=0.25.0';
+import { etatEnMots, experienceEnMots } from '../identite.js?v=0.25.0';
+import { majuscule, nomDe, indiceDe, premierDe, quiEst, tombe, bilan, enMots, refuseAujourdhui } from './lecture.js?v=0.25.0';
 
 // `$` : l'accès aux éléments ; `R` : les réglages ; `bataille()` : la bataille en cours
 export function creerFiche({ $, R, bataille }) {

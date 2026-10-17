@@ -2,11 +2,11 @@
 // et « le feu se voit » (Jérôme, v0.9.2 : l'éclair à la bouche du fusil et le trait vers la cible de chaque tir de `B.tirs`, la pose des tireurs, le bond de ceux que
 // le souffle jette). Une seule fabrique : tous tirent dans le même générateur de l'aspect (`alea`, une suite à graine : l'ordre des tirages fait l'image) et
 // dans les mêmes tampons de particules. Le dessin seulement : jamais la logique, jamais la partie.
-import * as SH from './shaders.js?v=0.24.0';
-import { INDICE } from '../palette.js?v=0.24.0';
-import { horloge } from '../bataille.js?v=0.24.0';
+import * as SH from './shaders.js?v=0.25.0';
+import { INDICE } from '../palette.js?v=0.25.0';
+import { horloge } from '../bataille.js?v=0.25.0';
 
-const ECLATS = 2400;
+const ECLATS = 6000;     // (v0.24.0 ; 2 400 avant : une salve de 220 — ~200 éclats chacun, dont de la fumée de 8 à 16 s — faisait le tour du tampon et effaçait les éclats encore en vol)
 export const VOL = 0.6;       // la durée d'un bond (s)
 
 // `THREE`, `scene`, `col`, `palTex` et `NP` (la texture de la palette, pour la couleur d'un éclat), `effets` (ceux que le jeu garde), `surface(x, z)`, `projeter()` et `vue`
@@ -34,7 +34,7 @@ export function creerEclats({ THREE, scene, col, palTex, NP, effets, surface, pr
   // Les balles et les obus en vol, à leur échelle (Jérôme, v0.12.1 : pas de gros pixel). Une balle est un trait d'un pixel
   // (un segment, jamais plus large qu'un pixel) de quelques mètres, le long de sa course ; un obus, une ogive de sa vraie taille
   // (le diamètre du calibre, quatre fois plus long), grossie deux fois pour qu'on la voie.
-  const BALLES = 200, balX = new Float32Array(BALLES * 6), bal = { v: new Float32Array(BALLES * 3), age: new Float32Array(BALLES).fill(99), vie: new Float32Array(BALLES) };
+  const BALLES = 1500, balX = new Float32Array(BALLES * 6), bal = { v: new Float32Array(BALLES * 3), age: new Float32Array(BALLES).fill(99), vie: new Float32Array(BALLES) };
   const balGeo = new THREE.BufferGeometry();
   balGeo.setAttribute('position', new THREE.BufferAttribute(balX, 3).setUsage(THREE.DynamicDrawUsage));
   const balles = new THREE.LineSegments(balGeo, new THREE.LineBasicMaterial({ color: col('o'), depthWrite: false }));
@@ -60,13 +60,16 @@ export function creerEclats({ THREE, scene, col, palTex, NP, effets, surface, pr
   }
   const OBUS_VUS = 16, obusLibres = [];
   const ogive = new THREE.LatheGeometry([[0, 0], [0.5, 0], [0.5, 2.6], [0.38, 3.3], [0.18, 3.8], [0, 4]].map(([r, y]) => new THREE.Vector2(r, y)), 6);
-  const obusMat = new THREE.MeshBasicMaterial({ color: col('r') });
+  const obusMat = new THREE.MeshBasicMaterial({ color: col('o') });     // (os : la brume se perdait sur l'herbe et l'eau, 1,3 à 1,8 ; l'os tient 2,3 à 8,5 sur toutes les cases ; mesuré, v0.24.0)
   for (let k = 0; k < OBUS_VUS; k++) { const m = new THREE.Mesh(ogive, obusMat); m.visible = false; m.frustumCulled = false; m.renderOrder = 3; scene.add(m); obusLibres.push(m); }
   const VERS_LE_HAUT = new THREE.Vector3(0, 1, 0), dirObus = new THREE.Vector3();
   let graine = 1;
   const alea = () => { graine = (graine * 16807) % 2147483647; return graine / 2147483647; };   // l'aspect seulement, jamais la logique
   function particule(sorte, x, y, z, vx, vy, vz, vie, taille = 1) {
-    const s = eclTete; eclTete = (eclTete + 1) % ECLATS;
+    // le prochain emplacement libre (un éclat fini), parmi les 24 suivants ; sinon, le plus ancien du tour prend la place
+    let s = eclTete;
+    for (let essai = 0; essai < 24 && ecl.age[s] <= ecl.vie[s]; essai++) s = (s + 1) % ECLATS;
+    eclTete = (s + 1) % ECLATS;
     ecl.x[s] = x; ecl.y[s] = y; ecl.z[s] = z; ecl.vx[s] = vx; ecl.vy[s] = vy; ecl.vz[s] = vz;
     ecl.age[s] = 0; ecl.vie[s] = vie; ecl.sorte[s] = sorte; ecl.taille[s] = taille;
   }
@@ -84,8 +87,9 @@ export function creerEclats({ THREE, scene, col, palTex, NP, effets, surface, pr
     // l'obus qui tombe : une traînée claire, du ciel au point de chute, puis l'explosion
     const h = T ? surface(x, y) : 0, chute = 0.25, v = 160;
     for (let k = 1; k < 6; k++) particule(3, x - 4 + k * 0.3, h + v * chute + k * 1.4, y, 16, -v, 0, chute, 0.5);   // la traînée : des points d'un pixel
+    // (de loin, l'obus est allongé selon sa trajectoire : au moins 6 pixels de long)
     const mesh = obusLibres.pop() || null;
-    if (mesh) { const d = { '75': 0.075, '155': 0.155, '220': 0.22 }[cal] * 2; mesh.scale.setScalar(d); dirObus.set(16, -v, 0).normalize(); mesh.quaternion.setFromUnitVectors(VERS_LE_HAUT, dirObus); mesh.visible = true; }
+    if (mesh) { const d = { '75': 0.075, '155': 0.155, '220': 0.22 }[cal] * 2, etir = Math.min(12, Math.max(1, 6 / (4 * d * projeter().p / 2))); mesh.scale.set(d, d * etir, d); dirObus.set(16, -v, 0).normalize(); mesh.quaternion.setFromUnitVectors(VERS_LE_HAUT, dirObus); mesh.visible = true; }
     attente.push({ x, y, cal, t: chute, h, mesh });
   }
   function eclater(x, y, cal) {
@@ -171,8 +175,10 @@ export function creerEclats({ THREE, scene, col, palTex, NP, effets, surface, pr
     const x = vue.cx + (alea() - 0.5) * 80, z = vue.cz - 5 - alea() * 35;
     particule(6, x, surface(x, z) + 1, z, (alea() - 0.5) * 2, 22, 0, 14, 2.5);
   }
-  // les corbeaux : quelques points noirs qui tournent au-dessus des morts (ou au-dessus du centre de la vue, au labo)
-  const CORBEAUX = 9;
+  // Les corbeaux (v0.24.0) : des nids de six au-dessus des morts les plus proches de la vue (trois au plus, à 25 m l'un de l'autre) : la moitié tourne, l'autre est
+  // posée sur un corps. Trois paliers comme les soldats : un point (zoom 1 et 2), un trait (3 et 4 pixels par mètre), une silhouette (corps et deux ailes qui battent,
+  // dès 6 pixels par mètre). Le dessin seulement, sans aucun tirage de `alea` : tout vient du numéro du corbeau.
+  const NIDS = 3, PAR_NID = 6, CORBEAUX = NIDS * PAR_NID;
   const crPos = new Float32Array(CORBEAUX * 3), crGeo = new THREE.BufferGeometry();
   crGeo.setAttribute('position', new THREE.BufferAttribute(crPos, 3).setUsage(THREE.DynamicDrawUsage));
   const crMat = new THREE.ShaderMaterial({
@@ -182,26 +188,73 @@ export function creerEclats({ THREE, scene, col, palTex, NP, effets, surface, pr
   });
   const corbeaux = new THREE.Points(crGeo, crMat); corbeaux.frustumCulled = false; corbeaux.renderOrder = 4; corbeaux.visible = false;
   scene.add(corbeaux);
-  let nid = null, nidT = 0;
+  const crTrait = new Float32Array(CORBEAUX * 6), crTraitGeo = new THREE.BufferGeometry();
+  crTraitGeo.setAttribute('position', new THREE.BufferAttribute(crTrait, 3).setUsage(THREE.DynamicDrawUsage));
+  const traits = new THREE.LineSegments(crTraitGeo, new THREE.LineBasicMaterial({ color: col('t'), depthWrite: false }));
+  traits.frustumCulled = false; traits.renderOrder = 4; traits.visible = false; scene.add(traits);
+  const crCorps = new THREE.BoxGeometry(0.5, 0.2, 0.2), crAile = new THREE.BoxGeometry(0.1, 0.03, 0.6);
+  const silh = new THREE.InstancedMesh(crCorps, new THREE.MeshBasicMaterial({ color: col('t') }), CORBEAUX * 3);
+  silh.frustumCulled = false; silh.renderOrder = 4; silh.visible = false; silh.count = 0; scene.add(silh);
+  const mat4 = new THREE.Object3D(), aileObj = new THREE.Object3D(), mat4Corps = new THREE.Matrix4();
+  let nids = [], nidT = 0;
+  // les nids : des corps (les plus près du centre de la vue), chacun avec les corps voisins où se poser (à 12 m au plus)
+  function chercherNids(B) {
+    const proches = [];
+    for (const c of B.etat.corps) { const d = (c[0] / 10 - vue.cx) ** 2 + (c[1] / 10 - vue.cz) ** 2; if (d < 150 * 150) proches.push([d, c[0] / 10, c[1] / 10]); }
+    proches.sort((a, b) => a[0] - b[0]);
+    const n = [];
+    for (const [, x, z] of proches) {
+      if (n.length >= NIDS) break;
+      if (n.every(m => (m.x - x) ** 2 + (m.z - z) ** 2 > 625)) n.push({ x, z, posés: [] });
+    }
+    for (const m of n) for (const [, x, z] of proches) if ((m.x - x) ** 2 + (m.z - z) ** 2 < 144 && m.posés.length < PAR_NID / 2) m.posés.push([x, z]);
+    return n;
+  }
   function majCorbeaux(dt, t) {
     const B = bataille();
-    if (!effets.corbeaux || !B) { corbeaux.visible = false; return; }
+    if (!effets.corbeaux || !B) { corbeaux.visible = traits.visible = silh.visible = false; return; }
     if ((nidT -= dt) <= 0) {
       nidT = 10;
-      // au-dessus du corps le plus proche du centre de la vue (s'il y a des morts), sinon du centre
-      let best = null, bd = 150 * 150;
-      for (const c of B.etat.corps) { const d = (c[0] / 10 - vue.cx) ** 2 + (c[1] / 10 - vue.cz) ** 2; if (d < bd) { bd = d; best = c; } }
-      nid = best ? { x: best[0] / 10, z: best[1] / 10 } : (effets.corbeaux === 'toujours' ? { x: vue.cx, z: vue.cz } : null);
+      nids = chercherNids(B);
+      if (!nids.length && effets.corbeaux === 'toujours') nids = [{ x: vue.cx, z: vue.cz, posés: [] }];
     }
-    if (!nid) { corbeaux.visible = false; return; }
-    if (!vide()) corbeaux.visible = true;
-    const h0 = surface(nid.x, nid.z);
-    for (let k = 0; k < CORBEAUX; k++) {
-      const r = 8 + (k * 37 % 11), w = 0.35 + (k % 3) * 0.08, a = t * w * (k % 2 ? 1 : -1) + k * 2.1;
-      crPos[k * 3] = nid.x + Math.cos(a) * r; crPos[k * 3 + 1] = h0 + 12 + (k % 4) * 2 + Math.sin(t * 1.3 + k) * 0.8; crPos[k * 3 + 2] = nid.z + Math.sin(a) * r * 0.8;
+    if (!nids.length) { corbeaux.visible = traits.visible = silh.visible = false; return; }
+    // chaque corbeau : où il est (x, y, z), son cap et son battement d'ailes (0 : posé, ailes repliées)
+    const palier = vue.zoom <= 1 ? 0 : vue.zoom <= 3 ? 1 : 2;
+    let n = 0;
+    const oiseaux = [];
+    nids.forEach((m, q) => {
+      const h0 = surface(m.x, m.z);
+      for (let k = 0; k < PAR_NID; k++) {
+        const j = q * PAR_NID + k, pose = k % 2 === 1 && m.posés.length ? m.posés[(k >> 1) % m.posés.length] : null;
+        if (pose) { oiseaux.push([pose[0], surface(pose[0], pose[1]) + 0.3, pose[1], j * 2.1, 0]); continue; }
+        const r = 8 + (j * 37 % 11), w = 0.35 + (j % 3) * 0.08, sens = j % 2 ? 1 : -1, a = t * w * sens + j * 2.1;
+        oiseaux.push([m.x + Math.cos(a) * r, h0 + 12 + (j % 4) * 2 + Math.sin(t * 1.3 + j) * 0.8, m.z + Math.sin(a) * r * 0.8, Math.atan2(Math.cos(a) * sens * 0.8, -Math.sin(a) * sens), 1]);
+      }
+    });
+    if (!vide()) { corbeaux.visible = palier === 0; traits.visible = palier === 1; silh.visible = palier === 2; }
+    if (palier === 0) {
+      for (const o of oiseaux) { crPos[n * 3] = o[0]; crPos[n * 3 + 1] = o[1]; crPos[n * 3 + 2] = o[2]; n++; }
+      crGeo.setDrawRange(0, n); crGeo.attributes.position.needsUpdate = true; crMat.uniforms.uT.value = t;
+    } else if (palier === 1) {
+      for (const o of oiseaux) {
+        const dx = Math.cos(o[3]) * 0.6, dz = Math.sin(o[3]) * 0.6;
+        crTrait.set([o[0] - dx, o[1], o[2] - dz, o[0] + dx, o[1], o[2] + dz], n * 6); n++;
+      }
+      crTraitGeo.setDrawRange(0, n * 2); crTraitGeo.attributes.position.needsUpdate = true;
+    } else {
+      let m = 0;
+      for (const o of oiseaux) {
+        const bat = o[4] ? Math.sin(t * 9 + o[3] * 3) * 0.7 : -0.5;
+        mat4.position.set(o[0], o[1], o[2]); mat4.rotation.set(0, -o[3], 0); mat4.scale.set(1, 1, 1); mat4.updateMatrix(); silh.setMatrixAt(m++, mat4.matrix);
+        for (const cote of [-1, 1]) {
+          // une aile : une planche sur le flanc du corps, qui bat autour de l'axe du corps ; repliée, elle retombe le long du flanc
+          aileObj.position.set(0, 0.05, cote * 0.3 * (o[4] ? 1 : 0.4)); aileObj.rotation.set(cote * bat, 0, 0); aileObj.scale.set(0.4, 0.15, o[4] ? 3 : 1.5); aileObj.updateMatrix();
+          silh.setMatrixAt(m++, mat4Corps.copy(mat4.matrix).multiply(aileObj.matrix));
+        }
+      }
+      silh.count = m; silh.instanceMatrix.needsUpdate = true;
     }
-    crGeo.attributes.position.needsUpdate = true;
-    crMat.uniforms.uT.value = t;
   }
 
   // ─── Le feu se voit (Jérôme, v0.9.2) : un éclair à la bouche du fusil et un trait clair vers la cible, pour chaque
@@ -242,7 +295,7 @@ export function creerEclats({ THREE, scene, col, palTex, NP, effets, surface, pr
       const dx = tx - x, dy = ty - y, d = Math.hypot(dx, dy) || 1, ux = dx / d, uy = dy / d;
       const h = surface(x, y);
       particule(0, x + ux * 0.6, h + 1.3, y + uy * 0.6, 0, 0, 0, 0.07, 0.5);
-      balle(x + ux * 1.5, h + 1.3, y + uy * 1.5, ux * 110, 0, uy * 110, 0.12 + alea() * 0.06);
+      balle(x + ux * 1.5, h + 1.3, y + uy * 1.5, ux * 110, 0, uy * 110, Math.max(0.12, (d - 1.5) / 110) + alea() * 0.04);   // elle court jusqu'à sa cible (la portée : 70 m), 0,12 s au moins
     }
     L.length = 0;
   }

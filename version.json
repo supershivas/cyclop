@@ -1,7 +1,8 @@
 {
-  "version": "0.24.0",
+  "version": "0.25.0",
   "date": "2026-10-17",
   "changes": [
-    "Un homme tué par un obus est projeté loin du point de chute (de 3 à 15 m selon le calibre et la distance) : on le voit voler, son corps reste où il retombe"
+    "Les balles courent jusqu'à leur cible, les obus se voient de loin (allongés, couleur d'os), les salves ne mangent plus les éclats en vol",
+    "Les corbeaux se posent sur les morts, par nids, et se dessinent selon le zoom : un point, un trait, puis une silhouette aux ailes qui battent"
   ]
 }

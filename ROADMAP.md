@@ -39,15 +39,6 @@ cercles-régiments par-dessus) et la touche M disparaît (carte toujours visible
 `main.js` 1 204 → 867 (`js/hud/`) ; filets : `outils/fumee.mjs` (le HUD) et `outils/rendu-empreinte.mjs` (34 images du canvas). Reste à décider : sortir le sol (`sol.js`) ou le laisser ;
 recommandé : le laisser tant qu'aucun besoin n'apparaît. Plus tard, côté `main.js` : la rangée des régiments, le survol et la visée.
 
-### Visuels et effets (après l'UX/UI)
-
-**Statut** : à l'étude — chacun d'abord au labo
-
-- **Balles** : le tampon `BALLES` (200) est plus petit que le plafond (160 par image) et la course est de 13 à 20 m pour 70 m de portée.
-- **Obus de loin** : teinte sombre (mesurer le contraste sur la boue), allongés selon la trajectoire.
-- **Explosions de près** : éclats à l'échelle du zoom, le pool `ECLATS` sature en salve.
-- **Corbeaux** : paliers comme les soldats (point, trait, silhouette), posés sur les morts.
-
 ### Jeu à deux sur le même réseau
 
 **Statut** : à l'étude — rien de construit ; la décision de lancer est à Jérôme

@@ -1,5 +1,10 @@
 # Journal des versions
 
+## 0.25.0 — 2026-10-17
+- Les balles courent jusqu'à leur cible (jusqu'à 70 m, au lieu de 13 à 20 m) ; les obus se voient de loin : allongés selon leur trajectoire, couleur d'os
+- Les salves ne mangent plus les éclats encore en vol (le tampon passe de 2 400 à 6 000)
+- Les corbeaux se posent sur les morts (trois nids de six) et se dessinent selon le zoom : un point, un trait, puis une silhouette aux ailes qui battent
+
 ## 0.24.0 — 2026-10-17
 - Un homme tué par un obus est projeté loin du point de chute (3 à 15 m selon le calibre et sa distance) : on le voit voler, et son corps reste où il retombe
 

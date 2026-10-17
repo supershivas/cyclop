@@ -550,6 +550,11 @@ node outils/stamp-version.mjs            # après chaque changement de version.j
   l'opposé du point de chute, de `obus.projection.min` à `max` m (8 à 15 pour un rayon de 10, en proportion du rayon : un 75 jette de 3 à 6 m, un 220 de 8 à 15), sans hasard (collé au point de chute : un côté
   fixé par le numéro) ; `etat.corps` garde le point d'arrivée (rien de neuf dans la sauvegarde). `B.volants` (`[indice du corps, x, y du départ, âge]`, vieilli par `avancer`, jamais sauvegardé) : le dessin
   (`majCorps`) fait voler le corps de là où l'homme est tombé, sur une flèche de `projection.haut` fois la distance, pendant `projection.duree` s. Les morts de la nuit ne volent pas.
+- **Salves, balles, obus, corbeaux** (Jérôme, v0.25.0 ; `eclats.js`) : le tampon `ECLATS` (2 400) faisait le tour dans une salve de 220 (~200 éclats chacun, dont de la fumée de 8 à 16 s) et effaçait les
+  éclats en vol : 6 000, et `particule` prend le premier emplacement libre parmi 24 avant d'écraser. Une balle court jusqu'à sa cible (`(distance − 1,5) / 110` s, 0,12 au moins ; elle ne faisait que 13 à
+  20 m pour 70 de portée) : le tampon `BALLES` passe à 1 500 (160 tirs par image × la durée de vie). L'obus en vol est en os (`o`), pas en brume : contraste mesuré sur herbe, eau et vert, brume 1,3 à 1,8, os 2,3 à
+  8,5, terre sombre 1,3 à 1,6 sur la boue ; il est allongé selon sa trajectoire de loin (au moins 6 pixels). Les corbeaux : trois nids de six au plus près de la vue, la moitié posée sur un corps, trois paliers (point
+  aux zooms 1-2, trait 3-4 pixels par mètre, silhouette dès 6) ; aucun tirage de `alea`. Mesuré (8 000 soldats, rendu logiciel, dessin attendu) : zoom 4, 88 → 96 ms, dans le bruit.
 - **Les soldats scintillaient dans les cratères** (v0.16.0) : leur hauteur était celle de la case, en marches d'un demi-mètre
   (`hauteurVueQ`) : un homme à cheval sur deux cases changeait de hauteur à chaque pas. `surfaceLisse` (rendu3d.js) interpole entre
   les centres des quatre cases voisines : il glisse sur les bords des trous.
