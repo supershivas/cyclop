@@ -25,6 +25,7 @@
 import { loadThree } from './three-lib.js?v=0.22.0';
 import * as SH from './rendu/shaders.js?v=0.22.0';
 import { creerGeometries } from './rendu/geometries.js?v=0.22.0';
+import { creerMeteo } from './rendu/meteo.js?v=0.22.0';
 import { PALETTE, ORDRE, INDICE } from './palette.js?v=0.22.0';
 import { OMBRE, couleursLigne } from './apparence.js?v=0.22.0';
 import { MORCEAU, hauteurVueQ as hauteurQ, hauteurVueM as hauteurM } from './terrain.js?v=0.22.0';
@@ -42,7 +43,7 @@ export const YAW_MAX = 0.6, TANGAGE_MIN = 0.7, TANGAGE_MAX = 1.35;
 const SOL_Y = 3;                              // m : la hauteur moyenne du sol (le point visé)
 export const ZOOMS = [1, 2, 3, 4, 6, 8, 12, 16];   // pixels (logiques) par mètre (12 et 16 : tout près des hommes, Jérôme v0.9.3)
 const POINTS_JUSQUA = 2;                      // zoom où un soldat n'est plus qu'un point
-const PLUIE = 1600, ECLATS = 2400;
+const ECLATS = 2400;
  const E = 0.03;                               // m : le débord des faces (pas de fente vue de biais)
 const HAUT = 8;                               // m : marge du bas de l'écran, où un sol en hauteur remonte (borner)
 const SOCLE = -8;                             // m : le bas de la coupe du terrain (bord sud)
@@ -735,30 +736,7 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
     eclGeo.attributes.position.needsUpdate = true; eclGeo.attributes.aTon.needsUpdate = true; eclGeo.attributes.aTaille.needsUpdate = true;
   }
 
-  // ─── La pluie : des traits qui tombent, autour du centre de la vue ───
-  const plPos = new Float32Array(PLUIE * 3), plVit = new Float32Array(PLUIE);
-  for (let k = 0; k < PLUIE; k++) { plPos[k * 3] = Math.random() * 400; plPos[k * 3 + 1] = Math.random() * 40; plPos[k * 3 + 2] = Math.random() * 300; plVit[k] = 18 + Math.random() * 10; }
-  const plGeo = new THREE.BufferGeometry();
-  plGeo.setAttribute('position', new THREE.BufferAttribute(plPos, 3));
-  plGeo.setAttribute('aVit', new THREE.BufferAttribute(plVit, 1));
-  const plMat = new THREE.ShaderMaterial({
-    uniforms: { uT: { value: 0 }, uC: { value: new THREE.Vector2() }, uE: { value: new THREE.Vector2(400, 300) }, uCol: { value: col('r') }, uTaille: { value: 1 } },
-    vertexShader: SH.plMat.v,
-    fragmentShader: SH.plMat.f,
-    depthTest: false, depthWrite: false,
-  });
-  const pluie = new THREE.Points(plGeo, plMat); pluie.frustumCulled = false; pluie.renderOrder = 4;
-  scene.add(pluie);
-  // le brouillard : un voile de brume continu qui s'épaissit vers le haut de l'écran (le lointain) ; plus de trame (Jérôme, v0.12.1)
-  const brumeMat = new THREE.ShaderMaterial({
-    uniforms: { uCol: { value: col('r') }, uH: { value: 400 } },
-    vertexShader: SH.brumeMat.v,
-    fragmentShader: SH.brumeMat.f,
-    transparent: true,
-    depthTest: false, depthWrite: false,
-  });
-  const brume = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), brumeMat); brume.frustumCulled = false; brume.renderOrder = 5;
-  scene.add(brume);
+  const meteo = creerMeteo({ THREE, scene, col });
 
   // ─── Le temps qui passe (Jérôme, v0.8.0) : le soleil (les ombres tournent et s'allongent), le soir et la nuit
   // (une trame de terre qui monte), les lumières (lanternes des tranchées, incendies, fusées) qui la trouent.
@@ -1279,12 +1257,9 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
     majEclats(dt); majCorbeaux(dt, tAnim); majFanions(dt); majClignotants(dt); majOuvrages(dt);
     const h = horloge(B);
     majNuit(h); lnMat.uniforms.uT.value = tAnim;
-    if (!vide) { pluie.visible = h.meteo === 'pluie' && h.phase === 'jour'; brume.visible = h.meteo === 'brouillard'; }
+    meteo.afficher(h, vide);
     const { cx, cz, p } = projeter();
-    plMat.uniforms.uT.value = tAnim; plMat.uniforms.uC.value.set(cx, cz);
-    { const e = Math.hypot(vue.vw, vue.vh) / p + 40; plMat.uniforms.uE.value.set(e, e); }
-    plMat.uniforms.uTaille.value = p >= 4 ? 2 : 1;
-    brumeMat.uniforms.uH.value = vue.vh;
+    meteo.maj(tAnim, cx, cz, p, vue);
     eclMat.uniforms.uTaille.value = Math.max(1, Math.round(p / 2));
     renderer.render(scene, camera);
     const t2 = performance.now();

@@ -327,7 +327,8 @@ nuit (le voile continu et ses halos mélangent la terre, le sol et l'os : des co
   `pertes.js`, `carte.js` (le dessin de la carte ; `surSecteur`, `surCase`, `surRonde` sont à main.js), `nuit.js` (le papier de la nuit : `etat`, `corvees`).
   Restent dans main.js : la rangée des régiments (`majRegiments`, lié aux ordres), le survol et la visée, les commandes, la boucle.
 - `js/rendu/` — ce que `rendu3d.js` ne garde plus : `shaders.js` (tout le GLSL, du texte), `geometries.js` (soldat, arbre, buisson : `creerGeometries(THREE, col)` ;
-  la forme du soldat prend les attributs d'instance en paramètre). Le reste de `rendu3d.js` est une seule fermeture (la scène, les tampons, la caméra) :
+  la forme du soldat prend les attributs d'instance en paramètre). `meteo.js` (la pluie et le brouillard : `creerMeteo({ THREE, scene, col })`, `afficher`, `maj` ; un morceau
+  par commit, dans l'ordre de `docs/refonte-rendu3d.md`). Le reste de `rendu3d.js` est une seule fermeture (la scène, les tampons, la caméra) :
   la découper demande d'abord de décider comment ses morceaux se partagent cet état.
 - `js/main.js` — écran titre → bataille → nuit → fin ; le zoom et la caméra
   gardés dans `cyclopeen:prefs` ; les fiches (un homme, un régiment ; Échap
