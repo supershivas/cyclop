@@ -327,8 +327,9 @@ nuit (le voile continu et ses halos mélangent la terre, le sol et l'os : des co
   `pertes.js`, `carte.js` (le dessin de la carte ; `surSecteur`, `surCase`, `surRonde` sont à main.js), `nuit.js` (le papier de la nuit : `etat`, `corvees`).
   Restent dans main.js : la rangée des régiments (`majRegiments`, lié aux ordres), le survol et la visée, les commandes, la boucle.
 - `js/rendu/` — ce que `rendu3d.js` ne garde plus : `shaders.js` (tout le GLSL, du texte), `geometries.js` (soldat, arbre, buisson : `creerGeometries(THREE, col)` ;
-  la forme du soldat prend les attributs d'instance en paramètre). `meteo.js` (la pluie et le brouillard : `creerMeteo({ THREE, scene, col })`, `afficher`, `maj` ; un morceau
-  par commit, dans l'ordre de `docs/refonte-rendu3d.md`). Le reste de `rendu3d.js` est une seule fermeture (la scène, les tampons, la caméra) :
+  la forme du soldat prend les attributs d'instance en paramètre). `meteo.js` (la pluie et le brouillard : `creerMeteo({ THREE, scene, col })`, `afficher`, `maj`), `troncons.js` (fanions, clignotement et surbrillance d'un ordre, ouvrages des tranchées :
+  `creerTroncons({ THREE, scene, col, surface, projeter, vue, zooms, bataille, tAnim, vide, survolTroncons })` ; les quatre derniers sont des fonctions, car ils changent) ; un morceau
+  par commit, dans l'ordre de `docs/refonte-rendu3d.md`. Le reste de `rendu3d.js` est une seule fermeture (la scène, les tampons, la caméra) :
   la découper demande d'abord de décider comment ses morceaux se partagent cet état.
 - `js/main.js` — écran titre → bataille → nuit → fin ; le zoom et la caméra
   gardés dans `cyclopeen:prefs` ; les fiches (un homme, un régiment ; Échap
@@ -364,7 +365,7 @@ nuit (le voile continu et ses halos mélangent la terre, le sol et l'os : des co
 
 ```bash
 node outils/test-run.mjs                 # règles, sauvegarde, pureté
-node outils/rendu-empreinte.mjs           # le dessin : 22 images à horloge et hasard truqués, hachées au pixel près (test/rendu.json)
+node outils/rendu-empreinte.mjs           # le dessin : 25 images à horloge et hasard truqués, hachées au pixel près (test/rendu.json)
 node outils/fumee.mjs                    # le jeu dans le navigateur : un scénario fixe, aucune erreur console, l'empreinte du HUD (test/fumee.json)
 node outils/captures.mjs --page index.html --page labo.html --page atelier.html
 node outils/audit-ecran.mjs --page index.html --page labo.html --page atelier.html
@@ -406,7 +407,7 @@ node outils/stamp-version.mjs            # après chaque changement de version.j
   même instant) ; un clic à l'écran vise un point qui dépend de la respiration de la caméra, donc de l'horloge (d'où les ordres par `__jeu`) ; un ordre
   fait clignoter trois secondes d'horloge (d'où l'attente). Et à la découpe de `rendu3d.js` : `geometrieSoldat` lisait `attrsI`, un état du rendu, sans le dire ;
   seul un essai qui compare les formes avant et après (`creerGeometries` contre l'ancien code) l'a vu.
-- **L'empreinte du dessin** (`outils/rendu-empreinte.mjs`, `test/rendu.json`) : 22 images (tous les zooms, obus en vol puis fumée, mêlée, vue tournée, soir, nuit,
+- **L'empreinte du dessin** (`outils/rendu-empreinte.mjs`, `test/rendu.json`) : 22 images (tous les zooms, obus en vol puis fumée, mêlée, ordre qui clignote et surbrillance de la visée, vue tournée, soir, nuit,
   pluie, brouillard, gel) dont les pixels ne doivent pas bouger quand on découpe `rendu3d.js`. Elle truque `performance.now` et `requestAnimationFrame` (une image =
   1/30 s = un pas de la simulation) et `Math.random` (graine fixe) : sans cela la respiration de la caméra, la pluie et les éclats changent à chaque lancement. Le budget de ms
   du sol ne coupe plus rien (le temps ne passe pas dans une image). Les pixels sont lus dans le même instant que le dessin (`drawImage` du canvas WebGL : après, il serait vide).

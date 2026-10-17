@@ -77,6 +77,10 @@ await etape('obus-fumee', 80);
 // la bataille elle-même : des tirs, des balles, des blessés
 await etape('melee', 400, () => { __jeu.marche([0, 1, 2, 3], 200, 120); });
 await etape('melee-z6', 3, () => { __jeu.zoom(4); __jeu.teleport({ x: 200, y: 150 }); });
+// ce que l'interface fait allumer sur le terrain : un ordre qui clignote, la visée (tronçons et emprise), le survol d'un tronçon
+await etape('clignote', 2, () => { __jeu.zoom(3); __jeu.teleport({ x: 200, y: 215 }); __jeu.rendu().clignoter([20, 21, 22]); });
+await etape('surbrillance', 2, () => { __jeu.rendu().surligner({ troncons: [30, 31], rects: [{ x: 190, y: 200, l: 40, p: 20 }] }); __jeu.rendu().survoler(-1, [40, 41]); });
+await etape('surbrillance-fin', 2, () => { __jeu.rendu().surligner(null); __jeu.rendu().survoler(-1, []); });
 await etape('rotation', 10, () => { __jeu.zoom(3); __jeu.camera(0.5, 1.1); });
 await etape('rotation-z1', 3, () => { __jeu.zoom(0); __jeu.camera(-0.45, 0.8); });
 // la fin du jour : le soleil bas, puis la nuit et ses lumières
