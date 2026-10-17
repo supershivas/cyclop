@@ -22,7 +22,7 @@ qu'aujourd'hui (l'ordre compte : tampons, `needsUpdate`, budgets). Pas de classe
 | 3 | ✔ Arbres, buissons, herbe + `dansLaVue` (`js/rendu/vegetation.js`) — 25 images identiques ; le tampon des ombres et le soleil restent à `rendu3d.js` jusqu'à l'étape 4 | partagent `dansLaVue` et le soleil (`ARBRES_OMBRES`) |
 | 4 | ✔ Le temps qui passe (`js/rendu/temps.js`, avec le tampon des ombres d'arbres) — 28 images identiques, perf dans le bruit | `soleil` est lu par les arbres : après l'étape 3 |
 | 5 | ✔ Éclats, balles, fumée, feux, corbeaux **et tirs** (`js/rendu/eclats.js`) — un seul module : `majTirs` et `souffler` partagent `alea`, `particule` et `balle` avec les éclats ; 31 images identiques |
-| 6 | Soldats, tombes, corps, anneaux, tirs (`attrs*`, `tirVal`, `volT`) | le plus gros bloc ; le tir (« Le feu se voit ») et le souffle y sont mêlés |
+| 6 | ✔ Soldats, tombes, corps, anneaux (`js/rendu/soldats.js`) — le tir et le souffle étaient déjà partis avec les éclats (étape 5) ; 34 images identiques |
 | 7 | Le sol (`morceaux`, `construireMorceau`, `surface`) | le cœur : `surface` sort en dernier, quand tous ses lecteurs ont `ctx` |
 
 Les étapes 1 à 4 enlèvent à peu près 500 lignes sans toucher un tampon partagé. L'étape 6 est la seule où je m'attends à un vrai arbitrage (le tir est dessiné par

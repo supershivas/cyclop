@@ -24,12 +24,12 @@
    - Les corps : un homme couché (instancié) ; au zoom 1 et 2, un pixel. */
 import { loadThree } from './three-lib.js?v=0.22.0';
 import * as SH from './rendu/shaders.js?v=0.22.0';
-import { creerGeometries } from './rendu/geometries.js?v=0.22.0';
+import { creerSoldats } from './rendu/soldats.js?v=0.22.0';
 import { creerMeteo } from './rendu/meteo.js?v=0.22.0';
 import { creerTroncons } from './rendu/troncons.js?v=0.22.0';
 import { creerVegetation } from './rendu/vegetation.js?v=0.22.0';
 import { creerTemps } from './rendu/temps.js?v=0.22.0';
-import { creerEclats, VOL } from './rendu/eclats.js?v=0.22.0';
+import { creerEclats } from './rendu/eclats.js?v=0.22.0';
 import { PALETTE, ORDRE, INDICE } from './palette.js?v=0.22.0';
 import { OMBRE, couleursLigne } from './apparence.js?v=0.22.0';
 import { MORCEAU, hauteurVueQ as hauteurQ, hauteurVueM as hauteurM } from './terrain.js?v=0.22.0';
@@ -97,8 +97,6 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
   const palTex = new THREE.DataTexture(palData, NP, 2, THREE.RGBAFormat, THREE.UnsignedByteType);
   palTex.magFilter = palTex.minFilter = THREE.NearestFilter; palTex.generateMipmaps = false; palTex.needsUpdate = true;
   const col = k => new THREE.Color(PALETTE[k]);
-  const { geometrieSoldat: formeSoldat } = creerGeometries(THREE, col);
-  const geometrieSoldat = style => formeSoldat(style, attrsI);
 
   let B = null, T = null;
   // Le sol a le même relief à tous les zooms (Jérôme, v0.12.0) ; seuls les petits décors (arbres, buissons, herbe) s'effacent de loin
@@ -202,156 +200,10 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
     return (h(i, j) * (1 - tx) + h(i + 1, j) * tx) * (1 - tz) + (h(i, j + 1) * (1 - tx) + h(i + 1, j + 1) * tx) * tz;
   }
 
-  // ─── Les soldats ───
-  // Une boîte de 0,5 × 1,7 × 0,35 m et son ombre ; de près (DETAIL_DES pixels par mètre), selon le style
-  // (`soldat` de creerRendu, comparé au labo) : jambes, tête, casque, fusil, sac, et les jambes qui marchent.
-  // Les parties : 0 la vareuse (la couleur du camp), 1 l'ombre, 2 le casque (l'os pour les choisis),
-  // 3 les jambes (bandes molletières), 4 le fusil, 5 le sac, 6 le visage.
-  let cap = 0, posArr = null, campArr = null, vitArr = null, tirArr = null, soldatsInst = null, soldatsDetail = null, soldatsLeger = null, soldatsPoints = null, attrsI = null, attrsP = null;
-  const TAPI = 0.5;                        // la peur au-delà de laquelle un homme se tapit (le dessin seulement ; on ne tire plus à 0,85)
-  const LEGER_DES = 4;                     // dès 4 pixels par mètre : la silhouette allégée (corps, tête, bras, fusil : ~50 triangles au lieu de ~74 ; Jérôme, v0.17.0)
-  let legerActif = true;                   // (la mesure du coût l'éteint)
-  const DETAIL_DES = 6;                    // (à 4 pixels par mètre, un homme en fait 7 de haut : la silhouette ne s'y voyait pas, et coûtait 138 000 triangles pour 2 000 hommes)
-  const soldatMat = new THREE.ShaderMaterial({
-    uniforms: { uNous: { value: col('n') }, uEux: { value: col('x') }, uOmbre: { value: col('t') }, uSel: { value: col('o') },
-      uJambes: { value: col('s') }, uFusil: { value: col('t') }, uSac: { value: col('g') }, uVisage: { value: col('h') }, uT: { value: 0 },
-      uSol: solMat.uniforms.uSol, uTaille: solMat.uniforms.uTaille,
-      uSoleil: { value: new THREE.Vector2(0.5, 0.6) } },
-    vertexShader: SH.soldatMat.v,
-    fragmentShader: SH.soldatMat.f,
-    side: THREE.DoubleSide, transparent: true,
+  const soldats = creerSoldats({
+    THREE, scene, col, solUniforms: solMat.uniforms, styleSoldat, surface, surfaceLisse, solY: SOL_Y, POINTS_JUSQUA,
+    bataille: () => B, vide: () => vide, tirs: () => eclats.tirs(),
   });
-  const pointMat = new THREE.ShaderMaterial({
-    uniforms: { uNous: { value: col('n') }, uEux: { value: col('x') }, uOmbre: { value: col('t') }, uSel: { value: col('o') } },
-    vertexShader: SH.pointMat.v,
-    fragmentShader: SH.pointMat.f,
-  });
-  // Le contour des régiments choisis (Jérôme, v0.21.0) : un anneau d'os, liseré de terre, au pied de chaque homme, à tous les zooms
-  // (aux zooms 1 et 2, où un homme n'est qu'un point, c'est lui qui le montre) ; sous les soldats, sans test de profondeur.
-  // Le survol (v0.21.1) : le régiment sous la souris (ou sous un bouton du HUD), tous ses hommes, d'un anneau à la couleur de son camp (celui des choisis est d'os).
-  let anGeo = null, anneaux = null, survolReg = -1, survolTroncons = [];
-  const anMat = new THREE.ShaderMaterial({
-    uniforms: { uOs: { value: col('o') }, uTerre: { value: col('t') }, uNous: { value: col('n') }, uEux: { value: col('x') }, uTaille: { value: 6 } },
-    vertexShader: SH.anMat.v,
-    fragmentShader: SH.anMat.f,
-    depthTest: false, depthWrite: false, transparent: true,
-  });
-  function preparerSoldats(capacite) {
-    if (anneaux) { scene.remove(anneaux); anGeo.dispose(); }
-    if (soldatsInst) {
-      scene.remove(soldatsInst, soldatsPoints); soldatsInst.geometry.dispose(); soldatsPoints.geometry.dispose();
-      if (soldatsDetail) { scene.remove(soldatsDetail); soldatsDetail.geometry.dispose(); }
-      if (soldatsLeger) { scene.remove(soldatsLeger); soldatsLeger.geometry.dispose(); }
-    }
-    cap = capacite;
-    posArr = new Float32Array(cap * 3); campArr = new Float32Array(cap); vitArr = new Float32Array(cap); tirArr = new Float32Array(cap * 2);
-    attrsI = [new THREE.InstancedBufferAttribute(posArr, 3), new THREE.InstancedBufferAttribute(campArr, 1), new THREE.InstancedBufferAttribute(vitArr, 1), new THREE.InstancedBufferAttribute(tirArr, 2)];
-    attrsI.forEach(a => a.setUsage(THREE.DynamicDrawUsage));
-    soldatsInst = new THREE.Mesh(geometrieSoldat('boite'), soldatMat); soldatsInst.frustumCulled = false; soldatsInst.renderOrder = 2;
-    soldatsDetail = styleSoldat === 'boite' ? null : new THREE.Mesh(geometrieSoldat(styleSoldat), soldatMat);
-    if (soldatsDetail) { soldatsDetail.frustumCulled = false; soldatsDetail.renderOrder = 2; scene.add(soldatsDetail); }
-    soldatsLeger = new THREE.Mesh(geometrieSoldat('legere'), soldatMat); soldatsLeger.frustumCulled = false; soldatsLeger.renderOrder = 2; scene.add(soldatsLeger);
-    const gp = new THREE.BufferGeometry();
-    attrsP = [new THREE.BufferAttribute(posArr, 3), new THREE.BufferAttribute(campArr, 1)];
-    attrsP.forEach(a => a.setUsage(THREE.DynamicDrawUsage));
-    gp.setAttribute('position', attrsP[0]); gp.setAttribute('aCamp', attrsP[1]);
-    gp.setDrawRange(0, 0);
-    soldatsPoints = new THREE.Points(gp, pointMat); soldatsPoints.frustumCulled = false; soldatsPoints.renderOrder = 2;
-    scene.add(soldatsInst, soldatsPoints);
-    anGeo = new THREE.BufferGeometry(); anGeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(cap * 3), 3).setUsage(THREE.DynamicDrawUsage)); anGeo.setDrawRange(0, 0);
-    anGeo.setAttribute('aTon', new THREE.BufferAttribute(new Float32Array(cap), 1).setUsage(THREE.DynamicDrawUsage));
-    anneaux = new THREE.Points(anGeo, anMat); anneaux.frustumCulled = false; anneaux.renderOrder = 1.5; anneaux.visible = false;
-    scene.add(anneaux);
-  }
-
-  // ─── Les tombes (v0.11.0) : là où l'homme est tombé, un tertre de terre fraîche (glaise) et une croix de bois pâle,
-  // toutes tournées vers le nord (on enterre en rangs, même au milieu du champ) ; au loin, un pixel. ───
-  let capTombes = 0, tbPos = null, tombesInst = null, tombesPoints = null, attrsTI = null, attrsTP = null;
-  const tombeMat = new THREE.ShaderMaterial({
-    uniforms: { uTertre: { value: col('g') }, uFlanc: { value: col('s') }, uCroix: { value: col('r') } },
-    vertexShader: SH.tombeMat.v,
-    fragmentShader: SH.tombeMat.f,
-    side: THREE.DoubleSide,
-  });
-  const tombePointMat = new THREE.ShaderMaterial({
-    uniforms: tombeMat.uniforms,
-    vertexShader: SH.tombePointMat.v,
-    fragmentShader: SH.tombePointMat.f,
-  });
-  function preparerTombes(capacite) {
-    if (tombesInst) { scene.remove(tombesInst, tombesPoints); tombesInst.geometry.dispose(); tombesPoints.geometry.dispose(); }
-    capTombes = capacite;
-    tbPos = new Float32Array(capTombes * 3);
-    const q = (a, b, c, d) => [...a, ...b, ...c, ...a, ...c, ...d];
-    // une boîte : [dessus, flancs]
-    const boite = (x0, x1, y0, y1, z0, z1) => [
-      q([x0, y1, z0], [x0, y1, z1], [x1, y1, z1], [x1, y1, z0]),
-      [...q([x0, y0, z1], [x1, y0, z1], [x1, y1, z1], [x0, y1, z1]), ...q([x0, y0, z0], [x1, y0, z0], [x1, y1, z0], [x0, y1, z0]),
-       ...q([x1, y0, z0], [x1, y0, z1], [x1, y1, z1], [x1, y1, z0]), ...q([x0, y0, z0], [x0, y0, z1], [x0, y1, z1], [x0, y1, z0])],
-    ];
-    const pos = [], part = [];
-    const mettre = (tris, k) => { pos.push(...tris); part.push(...new Array(tris.length / 3).fill(k)); };
-    const [tD, tF] = boite(-0.35, 0.35, 0, 0.22, -0.85, 0.85);              // le tertre
-    mettre(tD, 0); mettre(tF, 1);
-    for (const b of [boite(-0.08, 0.08, 0, 1.2, -1.05, -0.9), boite(-0.36, 0.36, 0.8, 0.95, -1.05, -0.9)]) { mettre(b[0], 2); mettre(b[1], 2); }   // la croix, à la tête
-    const gi = new THREE.InstancedBufferGeometry();
-    gi.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
-    gi.setAttribute('aPart', new THREE.Float32BufferAttribute(part, 1));
-    attrsTI = [new THREE.InstancedBufferAttribute(tbPos, 3)];
-    attrsTI[0].setUsage(THREE.DynamicDrawUsage);
-    gi.setAttribute('aPos', attrsTI[0]);
-    gi.instanceCount = 0;
-    tombesInst = new THREE.Mesh(gi, tombeMat); tombesInst.frustumCulled = false; tombesInst.renderOrder = 1;
-    const gp = new THREE.BufferGeometry();
-    attrsTP = [new THREE.BufferAttribute(tbPos, 3)];
-    attrsTP[0].setUsage(THREE.DynamicDrawUsage);
-    gp.setAttribute('position', attrsTP[0]);
-    gp.setDrawRange(0, 0);
-    tombesPoints = new THREE.Points(gp, tombePointMat); tombesPoints.frustumCulled = false; tombesPoints.renderOrder = 1;
-    scene.add(tombesInst, tombesPoints);
-  }
-
-  // ─── Les corps : un homme couché (1,7 × 0,5 m, 0,3 de haut) ; au loin, un pixel.
-  // La couleur de son camp le jour où il tombe, la glaise dès le lendemain. ───
-  let capCorps = 0, cPos = null, cInfo = null, corpsInst = null, corpsPoints = null, attrsCI = null, attrsCP = null;
-  const corpsMat = new THREE.ShaderMaterial({
-    uniforms: { uNous: { value: col('n') }, uEux: { value: col('x') }, uVieux: { value: col('g') }, uFlanc: { value: col('s') } },
-    vertexShader: SH.corpsMat.v,
-    fragmentShader: SH.corpsMat.f,
-    side: THREE.DoubleSide,
-  });
-  const corpsPointMat = new THREE.ShaderMaterial({
-    uniforms: corpsMat.uniforms,
-    vertexShader: SH.corpsPointMat.v,
-    fragmentShader: SH.corpsPointMat.f,
-  });
-  function preparerCorps(capacite) {
-    if (corpsInst) { scene.remove(corpsInst, corpsPoints); corpsInst.geometry.dispose(); corpsPoints.geometry.dispose(); }
-    capCorps = capacite;
-    cPos = new Float32Array(capCorps * 3); cInfo = new Float32Array(capCorps * 2);
-    const q = (a, b, c, d) => [...a, ...b, ...c, ...a, ...c, ...d];
-    const l = 0.85, w = 0.25, h = 0.3;
-    const dessus = q([-l, h, -w], [-l, h, w], [l, h, w], [l, h, -w]);
-    const flancs = [
-      ...q([-l, 0, w], [l, 0, w], [l, h, w], [-l, h, w]), ...q([-l, 0, -w], [l, 0, -w], [l, h, -w], [-l, h, -w]),
-      ...q([l, 0, -w], [l, 0, w], [l, h, w], [l, h, -w]), ...q([-l, 0, -w], [-l, 0, w], [-l, h, w], [-l, h, -w]),
-    ];
-    const gi = new THREE.InstancedBufferGeometry();
-    gi.setAttribute('position', new THREE.Float32BufferAttribute([...dessus, ...flancs], 3));
-    gi.setAttribute('aPart', new THREE.Float32BufferAttribute([...new Array(dessus.length / 3).fill(0), ...new Array(flancs.length / 3).fill(1)], 1));
-    attrsCI = [new THREE.InstancedBufferAttribute(cPos, 3), new THREE.InstancedBufferAttribute(cInfo, 2)];
-    attrsCI.forEach(a => a.setUsage(THREE.DynamicDrawUsage));
-    gi.setAttribute('aPos', attrsCI[0]); gi.setAttribute('aInfo', attrsCI[1]);
-    gi.instanceCount = 0;
-    corpsInst = new THREE.Mesh(gi, corpsMat); corpsInst.frustumCulled = false; corpsInst.renderOrder = 1;
-    const gp = new THREE.BufferGeometry();
-    attrsCP = [new THREE.BufferAttribute(cPos, 3), new THREE.BufferAttribute(cInfo, 2)];
-    attrsCP.forEach(a => a.setUsage(THREE.DynamicDrawUsage));
-    gp.setAttribute('position', attrsCP[0]); gp.setAttribute('aInfo', attrsCP[1]);
-    gp.setDrawRange(0, 0);
-    corpsPoints = new THREE.Points(gp, corpsPointMat); corpsPoints.frustumCulled = false; corpsPoints.renderOrder = 1;
-    scene.add(corpsInst, corpsPoints);
-  }
 
   const vegetation = creerVegetation({
     THREE, scene, col, camera, vue, solY: SOL_Y, distance, surface, petit,
@@ -367,7 +219,7 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
 
   const temps = creerTemps({
     THREE, scene, col, camera, vue, surface, bataille: () => B, vide: () => vide,
-    soleilUniform: soldatMat.uniforms.uSoleil, solUniforms: solMat.uniforms, ecl: eclats.ecl, feux: eclats.feux, ECLATS: eclats.ECLATS,
+    soleilUniform: soldats.soleilUniform, solUniforms: solMat.uniforms, ecl: eclats.ecl, feux: eclats.feux, ECLATS: eclats.ECLATS,
   });
 
   const troncons = creerTroncons({
@@ -395,9 +247,7 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
     // tout construire tout de suite (le premier écran doit être juste)
     for (const m of morceaux) refaire(m);
     majSol(true);
-    preparerSoldats(B.armee.capacite);
-    preparerCorps(Math.max(1024, B.etat.corps.length * 2));
-    preparerTombes(Math.max(256, (B.etat.tombes?.length || 0) * 2));
+    soldats.preparer(B);
     vegetation.preparer();
     troncons.preparer();
     eclats.reinitialiser();   // (une autre bataille : ses arbres ne brûlent pas encore)
@@ -459,12 +309,14 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
     return n;
   }
 
+  let survolTroncons = [];       // les tronçons que le survol allume (lus par troncons.js)
+
   // ─── Le choix (les régiments choisis) ───
   let choisis = new Set();
 
   // ─── Les soldats : leurs positions dans les tampons ───
   function majSoldats() {
-    const A = B.armee, n = A.n, p = ZOOMS[vue.zoom];
+    const p = ZOOMS[vue.zoom];
     // seulement ceux qu'on voit : le sol vu est un trapèze ; on garde ceux de son rectangle englobant
     const cs = coinsSol(vue.zoom, yawVu(), tangageVu());
     // (un coin de l'écran regarde le ciel : tout le terrain peut être vu, le vrai tri se fait à l'écran)
@@ -473,76 +325,11 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
     projeter();
     mVP.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse);
     const e = mVP.elements;
-    let k = 0, ka = 0;
-    const an = anGeo.attributes.position.array, anTon = anGeo.attributes.aTon.array;
-    const { tirVal, tirAng, volT, volH } = eclats.tirs();
-    for (let i = 0; i < n; i++) {
-      const x = A.x[i], y = A.y[i];
-      if (x < x0 || x > x1 || y < z0 || y > z1) continue;
-      const cxp = e[0] * x + e[4] * SOL_Y + e[8] * y + e[12], cyp = e[1] * x + e[5] * SOL_Y + e[9] * y + e[13], cw = e[3] * x + e[7] * SOL_Y + e[11] * y + e[15];
-      if (cxp < -1.08 * cw || cxp > 1.08 * cw || cyp < -1.15 * cw || cyp > 1.15 * cw) continue;
-      posArr[k * 3] = x; posArr[k * 3 + 1] = surfaceLisse(x, y) + (i < volT.length && volT[i] > 0 ? volH[i] * Math.sin(Math.PI * (1 - volT[i] / VOL)) : 0); posArr[k * 3 + 2] = y;
-      const sel = choisis.has(A.reg[i]);
-      campArr[k] = A.camp[i] + (sel ? 2 : 0);
-      if (sel || A.reg[i] === survolReg) { an[ka * 3] = x; an[ka * 3 + 1] = posArr[k * 3 + 1]; an[ka * 3 + 2] = y; anTon[ka] = sel ? 0 : 1 + A.camp[i]; ka++; }
-      vitArr[k] = A.peur[i] >= TAPI ? -1 : Math.hypot(A.vx[i], A.vy[i]);
-      tirArr[k * 2] = i < tirVal.length ? tirVal[i] : 0; tirArr[k * 2 + 1] = i < tirVal.length ? tirAng[i] : 0;
-      k++;
-    }
-    anGeo.setDrawRange(0, ka); anGeo.attributes.position.needsUpdate = true; anGeo.attributes.aTon.needsUpdate = true; anMat.uniforms.uTaille.value = Math.max(5, Math.round(p * 1.5));
-    if (!vide) anneaux.visible = ka > 0;
-    const points = p <= POINTS_JUSQUA, detail = !points && soldatsDetail && p >= DETAIL_DES, leger = !points && !detail && legerActif && p >= LEGER_DES;
-    if (!vide) { soldatsPoints.visible = points; soldatsInst.visible = !points && !detail && !leger; if (soldatsDetail) soldatsDetail.visible = !!detail; soldatsLeger.visible = !!leger; }
-    if (soldatsDetail) soldatsDetail.geometry.instanceCount = k;
-    soldatsLeger.geometry.instanceCount = k;
-    for (const a of points ? attrsP : attrsI) { a.clearUpdateRanges(); a.addUpdateRange(0, k * a.itemSize); a.needsUpdate = true; }
-    soldatsPoints.geometry.setDrawRange(0, k);
-    soldatsInst.geometry.instanceCount = k;
-    vus = k;
-    majCorps(x0, x1, z0, z1, e, points);
-    majTombes(x0, x1, z0, z1, e, points);
+    soldats.maj({ x0, x1, z0, z1, e, p, choisis });      // les soldats, leurs anneaux, les corps et les tombes
     vegetation.majHerbe(x0, x1, z0, z1, e, petit());
     const bornes = [x0 - 6, x1 + 6, z0 - 6, z1 + 10];
     vegetation.majArbres(e, bornes); vegetation.majBuissons(e, bornes);
   }
-  // les corps : ceux qu'on voit, comme les soldats (la liste ne fait que grandir)
-  function majCorps(x0, x1, z0, z1, e, points) {
-    const C = B.etat.corps, jour = B.etat.jour;
-    if (C.length > capCorps) preparerCorps(C.length * 2);
-    let k = 0;
-    for (const c of C) {
-      const x = c[0] / 10, y = c[1] / 10;
-      if (x < x0 || x > x1 || y < z0 || y > z1) continue;
-      const cxp = e[0] * x + e[4] * SOL_Y + e[8] * y + e[12], cyp = e[1] * x + e[5] * SOL_Y + e[9] * y + e[13], cw = e[3] * x + e[7] * SOL_Y + e[11] * y + e[15];
-      if (cxp < -1.08 * cw || cxp > 1.08 * cw || cyp < -1.15 * cw || cyp > 1.15 * cw) continue;
-      cPos[k * 3] = x; cPos[k * 3 + 1] = surface(x, y); cPos[k * 3 + 2] = y;
-      cInfo[k * 2] = c[3] < jour ? 2 : c[2];
-      cInfo[k * 2 + 1] = ((c[4] * 2654435761) >>> 0) % 628 / 100;     // couché dans un sens qui ne change pas
-      k++;
-    }
-    if (!vide) { corpsPoints.visible = points; corpsInst.visible = !points; }
-    for (const a of points ? attrsCP : attrsCI) { a.clearUpdateRanges(); a.addUpdateRange(0, k * a.itemSize); a.needsUpdate = true; }
-    corpsPoints.geometry.setDrawRange(0, k);
-    corpsInst.geometry.instanceCount = k;
-  }
-  function majTombes(x0, x1, z0, z1, e, points) {
-    const C = B.etat.tombes || [];
-    if (C.length > capTombes) preparerTombes(C.length * 2);
-    let k = 0;
-    for (const c of C) {
-      const x = c[0] / 10, y = c[1] / 10;
-      if (x < x0 || x > x1 || y < z0 || y > z1) continue;
-      const cxp = e[0] * x + e[4] * SOL_Y + e[8] * y + e[12], cyp = e[1] * x + e[5] * SOL_Y + e[9] * y + e[13], cw = e[3] * x + e[7] * SOL_Y + e[11] * y + e[15];
-      if (cxp < -1.08 * cw || cxp > 1.08 * cw || cyp < -1.15 * cw || cyp > 1.15 * cw) continue;
-      tbPos[k * 3] = x; tbPos[k * 3 + 1] = surface(x, y); tbPos[k * 3 + 2] = y;
-      k++;
-    }
-    if (!vide) { tombesPoints.visible = points; tombesInst.visible = !points; }
-    for (const a of points ? attrsTP : attrsTI) { a.clearUpdateRanges(); a.addUpdateRange(0, k * a.itemSize); a.needsUpdate = true; }
-    tombesPoints.geometry.setDrawRange(0, k);
-    tombesInst.geometry.instanceCount = k;
-  }
-  let vus = 0;
 
   // ─── Taille de l'écran ───
   function redimensionner() {
@@ -608,7 +395,7 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
     majSol(false, dt);
     if (!vide) sol.visible = true;
     majMorceaux(); projeter();
-    vegetation.setTemps(tAnim); soldatMat.uniforms.uT.value = tAnim;
+    vegetation.setTemps(tAnim); soldats.setTemps(tAnim);
     const t1 = performance.now();
     temps.majSoleil(horloge(B));
     majSoldats();
@@ -674,14 +461,14 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
     get ppm() { return ZOOMS[vue.zoom]; },
     // une fumée qui dérive, posée en (x, z) (l'écran titre en épaissit le champ)
     clignoter: troncons.clignoter,
-    survoler(reg, troncons) { survolReg = reg; survolTroncons = troncons; },
+    survoler(reg, troncons) { soldats.survoler(reg); survolTroncons = troncons; },
     surligner(s) { troncons.surligner(s); },
-    get legere() { return legerActif; }, set legere(v) { legerActif = !!v; },
+    get legere() { return soldats.legere; }, set legere(v) { soldats.legere = v; },
     fumer(x, z) { eclats.fumer(x, z); },
     get stats() {
       let tri = 0;
       for (const m of morceaux) tri += (m.geometry.attributes.position?.count || 0) / 3;
-      return { ms: { sol: +perf.sol.toFixed(2), rendu: +perf.rendu.toFixed(2), renduFini: +perf.fini.toFixed(2) }, triangles: tri, trianglesDessines: renderer.info.render.triangles, soldatsVus: vus, touffesVues: vegetation.vuesHerbe, appels: renderer.info.render.calls, rangees: coutRangees };
+      return { ms: { sol: +perf.sol.toFixed(2), rendu: +perf.rendu.toFixed(2), renduFini: +perf.fini.toFixed(2) }, triangles: tri, trianglesDessines: renderer.info.render.triangles, soldatsVus: soldats.vus, touffesVues: vegetation.vuesHerbe, appels: renderer.info.render.calls, rangees: coutRangees };
     },
     detruire() { renderer.dispose(); },
   };

@@ -85,6 +85,10 @@ await etape('surbrillance-fin', 2, () => { __jeu.rendu().surligner(null); __jeu.
 // le souffle : un 155 sur nos propres hommes à qui il faut voir sauter, tirer, se tapir
 await etape('souffle', 6, () => { __jeu.zoom(4); __jeu.teleport({ x: 200, y: 215 }); __jeu.barrage('155', 200, 215); });
 await etape('souffle-bond', 4);
+// les régiments choisis (leurs anneaux d'os), un régiment survolé (l'anneau à la couleur de son camp), des tombes ; de près, puis tout dézoomé (des points)
+await etape('choix-z4', 3, () => { const B = __jeu.bataille(); B.etat.tombes.push([1950, 2140, 0, 1, 1, 1], [2010, 2150, 0, 1, 2, 1], [2060, 2160, 1, 1, 3, 1]); __jeu.rendu().choisis = new Set([2, 3]); __jeu.rendu().survoler(5, []); __jeu.zoom(3); __jeu.teleport({ x: 200, y: 215 }); });
+await etape('choix-z1', 3, () => { __jeu.zoom(0); });
+await etape('choix-fin', 2, () => { __jeu.rendu().choisis = new Set(); __jeu.rendu().survoler(-1, []); __jeu.zoom(3); });
 await etape('rotation', 10, () => { __jeu.zoom(3); __jeu.camera(0.5, 1.1); });
 await etape('rotation-z1', 3, () => { __jeu.zoom(0); __jeu.camera(-0.45, 0.8); });
 // la fin du jour : le soleil bas, puis la nuit et ses lumières
