@@ -29,13 +29,15 @@ cercles-régiments par-dessus) et la touche M disparaît (carte toujours visible
   terminée par une croix (DOM), destinations en surbrillance (`peutOrdonner` : l'ordre à sec, extrait de `ordonnerMarche`), clic droit ;
   mesure du rendu (v0.21.0)
 - [x] Lot 5 — le survol global : un régiment (les deux camps) et un tronçon en surbrillance (v0.21.1)
-- [ ] Lot 6 — les formations (ligne, par deux, colonne) : `ordre.forme`, lue avec `??=` ; `formation`, `reattribuer`, `place` (v0.22.0)
+- [x] Hors lots — le clic gauche choisit puis ordonne (v0.21.2), la carte en quatre secteurs A à D (v0.21.3), la marche le long de la tranchée (v0.21.4), les corvées au-dessus des cartes et pas d'évacuation chez l'ennemi (v0.22.0)
+- [ ] Lot 6 — les formations (ligne, par deux, colonne) : `ordre.forme`, lue avec `??=` ; `formation`, `reattribuer`, `place`
 - [ ] Plus tard : où vont le cadran de vue, la fiche et le papier de la nuit (en attendant, ils restent où ils sont)
 
 ### Découper `rendu3d.js` (docs/refonte-rendu3d.md)
 
-**Statut** : à l'étude — le plan est écrit, rien n'est touché ; d'abord un test du dessin (l'empreinte du canvas), puis un morceau par commit. Sorti
-déjà (v0.22.0, sans effet pour le joueur) : le GLSL (`js/rendu/shaders.js`) et les formes (`js/rendu/geometries.js`) ; `main.js` : `js/hud/`.
+**Statut** : fait jusqu'à l'étape 6 (v0.22.0, sans effet pour le joueur) — `rendu3d.js` 1 634 → 513 lignes (`js/rendu/` : shaders, formes, météo, tronçons, végétation, temps, éclats, soldats),
+`main.js` 1 204 → 867 (`js/hud/`) ; filets : `outils/fumee.mjs` (le HUD) et `outils/rendu-empreinte.mjs` (34 images du canvas). Reste à décider : sortir le sol (`sol.js`) ou le laisser ;
+recommandé : le laisser tant qu'aucun besoin n'apparaît. Plus tard, côté `main.js` : la rangée des régiments, le survol et la visée.
 
 ### Visuels et effets (après l'UX/UI)
 

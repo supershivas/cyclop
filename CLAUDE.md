@@ -308,33 +308,28 @@ nuit (le voile continu et ses halos mélangent la terre, le sol et l'os : des co
 
 **Rendu et cycle de vie**
 
-- `js/rendu3d.js` — three.js : caméra en perspective (`PerspectiveCamera`,
-  `borner` la garde sur le terrain : les quatre coins de l'écran posés sur le sol),
-  sol en morceaux de 25 × 25 cases (dessus fusionnés en rectangles de même
-  hauteur, parois sud seulement), une texture RVBA d'une couleur par case (et de
-  sa paroi), refaite par rangées changées ; le même relief à tous les zooms (Jérôme, v0.12.0) ; soldats en
-  instances (boîte et ombre) ou en points 2 × 2, seulement ceux qu'on voit ; arbres
-  instanciés ; éclats et fumée d'obus ; pluie ; brouillard (un voile continu, plus épais vers
-  le haut de l'écran) ; balles (traits d'un pixel, `balle`) et obus en vol (ogives de la taille du calibre, grossies deux fois). `versTerrain` (un rayon jusqu'au sol) / `versEcran`. La respiration (`RESPIRATION`) s'ajoute à l'angle
-  choisi (`souffle`), dans le dessin comme dans les conversions. Le
-  rendu ne modifie jamais l'état. Un morceau du sol se refait aussi quand un de ses voisins change (ses
-  parois sud, est et ouest en dépendent). Les parois est et ouest (et les bords
-  du champ, jusqu'au socle) existent pour la caméra tournée ; l'ouest, éclairé,
-  garde la couleur du dessus. `deplacerEcran`, `tourner`, `placerCamera`.
+- `js/rendu3d.js` (513 lignes) — three.js, ce qui ne se découpe pas encore : la caméra en perspective (`PerspectiveCamera`, `projeter`, `borner` la garde sur le terrain : les
+  quatre coins de l'écran posés sur le sol ; `deplacerEcran`, `tourner`, `placerCamera`), la palette (une texture 10 × 2 : la couleur et celle de la paroi), le sol (morceaux de
+  25 × 25 cases, dessus fusionnés en rectangles de même hauteur, parois sud, est et ouest seulement ; une texture RVBA d'une couleur par case et de sa paroi, refaite par
+  rangées changées ; le même relief à tous les zooms, Jérôme, v0.12.0 ; `surface` et `surfaceLisse`, la hauteur lue par tous les modules), `versTerrain` (un rayon jusqu'au sol) /
+  `versEcran`, la vue de ce qu'on voit (`majSoldats` : le rectangle englobant et la matrice écran, donnés aux soldats et à la végétation), `attacher` (brancher une bataille) et
+  `dessiner` (l'ordre des appels compte : tampons, `needsUpdate`, budgets), et l'API publique. La respiration (`RESPIRATION`) s'ajoute à l'angle choisi (`souffle`), dans le dessin
+  comme dans les conversions. Le rendu ne modifie jamais l'état. Un morceau du sol se refait aussi quand un de ses voisins change (ses parois sud, est et ouest en dépendent) ; les
+  parois est et ouest (et les bords du champ, jusqu'au socle) existent pour la caméra tournée ; l'ouest, éclairé, garde la couleur du dessus.
 - `js/hud/` — le HUD, sorti de `main.js` (v0.22.0, sans changement pour le joueur) : des fabriques `creer…({ $, bataille: () => B, … })` qui gardent
   leur propre état et reçoivent la bataille en cours à chaque appel (jamais `B` lui-même : main.js le remplace à chaque partie), et les actions
   (choisir, ordonner) en rappels. `lecture.js` (qui est un homme, ce que compte un régiment : des fonctions de `B`, sans DOM), `fiche.js`, `carnet.js`,
   `pertes.js`, `carte.js` (le dessin de la carte ; `surSecteur`, `surCase`, `surRonde` sont à main.js), `nuit.js` (le papier de la nuit : `etat`, `corvees`).
-  Restent dans main.js : la rangée des régiments (`majRegiments`, lié aux ordres), le survol et la visée, les commandes, la boucle.
-- `js/rendu/` — ce que `rendu3d.js` ne garde plus : `shaders.js` (tout le GLSL, du texte), `geometries.js` (soldat, arbre, buisson : `creerGeometries(THREE, col)` ;
-  la forme du soldat prend les attributs d'instance en paramètre). `meteo.js` (la pluie et le brouillard : `creerMeteo({ THREE, scene, col })`, `afficher`, `maj`), `troncons.js` (fanions, clignotement et surbrillance d'un ordre, ouvrages des tranchées :
-  `creerTroncons({ THREE, scene, col, surface, projeter, vue, zooms, bataille, tAnim, vide, survolTroncons })` ; les quatre derniers sont des fonctions, car ils changent) ), `vegetation.js` (arbres, buissons, herbe, triés à chaque image :
-  `creerVegetation({ …, terrain, vide, ombres })` ; `ombres()` rend le tampon des ombres d'arbres et le soleil, que possède `temps.js`), `temps.js` (le soleil, l'obscurité,
-  les lanternes, la carte des lumières et le voile de la nuit : `creerTemps({ …, soleilUniform, solUniforms, ecl, feux, ECLATS })` ; `ecl` et `feux` sont lus pour éclairer fusées et
-  incendies, `styleNuit` du labo passe par `setStyleNuit`), `eclats.js` (éclats, balles, obus en vol, fumée, feux, fusées, corbeaux **et** les tirs et le souffle : une seule
-  fabrique `creerEclats`, car tout tire dans le même générateur de l'aspect `alea` — l'ordre des tirages fait l'image — et les mêmes tampons ; `tirs()` rend la pose des tireurs et le bond des soufflés, relus à chaque image par les soldats) ), `soldats.js` (les soldats, leurs anneaux, les corps et les tombes : `creerSoldats({ …, solUniforms, styleSoldat, surfaceLisse, tirs })` ; `maj({ x0, x1, z0, z1, e, p, choisis })` reçoit la vue calculée par `rendu3d.js`,
-  qui garde l'orchestration de la vue et le sol) ; un morceau par commit, dans l'ordre de `docs/refonte-rendu3d.md`. Le reste de `rendu3d.js` est une seule fermeture (la scène, les tampons, la caméra) :
-  la découper demande d'abord de décider comment ses morceaux se partagent cet état.
+  Restent dans main.js (867 lignes) : la rangée des régiments (`majRegiments`, lié aux ordres), le survol et la visée, les commandes, la boucle, l'écran titre et son décor.
+- `js/rendu/` — ce que `rendu3d.js` a donné (v0.22.0, sans changement pour le joueur ; `docs/refonte-rendu3d.md`). Chaque morceau est une fabrique `creerX({ THREE, scene, col, … })` qui garde
+  son état et se lit à chaque image ; ce qui change d'une partie ou d'une image à l'autre (la bataille `B`, le terrain `T`, `tAnim`, `vide`) est passé **en fonction**, jamais en valeur. L'ordre d'ajout
+  à la scène et des tirages de `Math.random` est celui d'avant la découpe : le créer au même endroit de `creerRendu`. `shaders.js` (tout le GLSL, du texte), `geometries.js` (soldat, arbre, buisson :
+  `creerGeometries(THREE, col)` ; la forme du soldat prend les attributs d'instance en paramètre), `meteo.js` (la pluie et le brouillard), `troncons.js` (fanions, clignotement et surbrillance d'un ordre,
+  ouvrages des tranchées), `vegetation.js` (arbres, buissons, herbe, triés à chaque image ; `ombres()` rend le tampon des ombres d'arbres et le soleil, que possède `temps.js`), `temps.js` (le soleil,
+  l'obscurité, les lanternes, la carte des lumières et le voile de la nuit ; `ecl` et `feux` sont lus pour éclairer fusées et incendies ; `styleNuit` du labo passe par `setStyleNuit`), `eclats.js` (éclats,
+  balles, obus en vol, fumée, feux, fusées, corbeaux **et** les tirs et le souffle : une seule fabrique, car tout tire dans le même générateur de l'aspect `alea` — l'ordre des tirages fait l'image — et les
+  mêmes tampons ; `tirs()` rend la pose des tireurs et le bond des soufflés, relus à chaque image par les soldats), `soldats.js` (les soldats, leurs anneaux, les corps et les tombes ; `maj({ x0, x1, z0, z1, e, p,
+  choisis })` reçoit la vue calculée par `rendu3d.js`). Reste à décider : sortir le sol (`sol.js`) ou le laisser (voir `docs/refonte-rendu3d.md`).
 - `js/main.js` — écran titre → bataille → nuit → fin ; le zoom et la caméra
   gardés dans `cyclopeen:prefs` ; les fiches (un homme, un régiment ; Échap
   les ferme), le repère de l'homme et la bulle du survol (`majBulle`, chaque image) ; HUD en papiers de campagne (montre, cartes de régiment, carnet de bord,
@@ -348,7 +343,7 @@ nuit (le voile continu et ses halos mélangent la terre, le sol et l'os : des co
   sujets du moteur affichent ce que coûte le dessin et proposent les zooms.
 - `atelier.html`, `js/atelier.js`, `js/design-store.js` — l'atelier : les réglages
   chiffrés, publiés dans `assets/design/reglages.json`.
-- `test/` — `node outils/test-run.mjs` (terrain, foule, bataille, sauvegarde, pureté).
+- `test/` — `node outils/test-run.mjs` (terrain, foule, bataille, sauvegarde, pureté). `test/fumee.json` (l'empreinte du HUD, `outils/fumee.mjs`) et `test/rendu.json` (celle du dessin, `outils/rendu-empreinte.mjs`) : des références, pas des tests de règles.
 - `scripts/mesure.mjs`, `scripts/trois-jours.mjs` — la mesure du critère et la
   bataille de trois jours jouée sans les mains (captures dans `captures/`).
 - `lisibilite.config.mjs` — paires de couleurs et tuiles mesurées.
@@ -411,12 +406,15 @@ node outils/stamp-version.mjs            # après chaque changement de version.j
   même instant) ; un clic à l'écran vise un point qui dépend de la respiration de la caméra, donc de l'horloge (d'où les ordres par `__jeu`) ; un ordre
   fait clignoter trois secondes d'horloge (d'où l'attente). Et à la découpe de `rendu3d.js` : `geometrieSoldat` lisait `attrsI`, un état du rendu, sans le dire ;
   seul un essai qui compare les formes avant et après (`creerGeometries` contre l'ancien code) l'a vu.
-- **L'empreinte du dessin** (`outils/rendu-empreinte.mjs`, `test/rendu.json`) : 22 images (l'écran titre, tous les zooms, obus en vol puis fumée, mêlée, souffle d'un 155, régiments choisis et survolés, tombes, ordre qui clignote et surbrillance de la visée, vue tournée, soir, nuit en trois styles,
+- **L'empreinte du dessin** (`outils/rendu-empreinte.mjs`, `test/rendu.json`) : 34 images (l'écran titre, tous les zooms, obus en vol puis fumée, mêlée, souffle d'un 155, régiments choisis et survolés, tombes, ordre qui clignote et surbrillance de la visée, vue tournée, soir, nuit en trois styles,
   pluie, brouillard, gel) dont les pixels ne doivent pas bouger quand on découpe `rendu3d.js`. Elle truque `performance.now` et `requestAnimationFrame` (une image =
   1/30 s = un pas de la simulation) et `Math.random` (graine fixe) : sans cela la respiration de la caméra, la pluie et les éclats changent à chaque lancement. Le budget de ms
   du sol ne coupe plus rien (le temps ne passe pas dans une image). Les pixels sont lus dans le même instant que le dessin (`drawImage` du canvas WebGL : après, il serait vide).
   Mesurée : deux lancements identiques ; un changement de 0,0001 de la respiration change toutes les images. Un changement voulu du dessin demande de réécrire la référence (`--ecrire`) ;
   une autre machine peut donner d'autres pixels (rendu logiciel) : réécrire alors la référence sur l'ancien code avant de découper.
+  **Ce que la découpe a appris** : une image que l'empreinte ne dessine pas n'est pas protégée (l'écran titre, le souffle, les anneaux de sélection, les tombes, le clignotement d'un ordre, les trois styles
+  de nuit du labo n'y étaient pas : chacun a été ajouté **avant** de découper son morceau, la référence réécrite sur l'ancien code) ; régénérer la référence sans toucher le code fautif prouve le reste
+  (`git stash push -- js/rendu3d.js`, `--ecrire`, `stash pop`) ; remplacer dans un fichier un texte qu'on a déjà modifié ne trouve rien (extraire le texte d'origine, le garder, puis le transformer à part).
 - **Déterminisme et cache** : un champ de coûts calculé « quand le cache le veut »
   aurait rendu une partie relue différente. Les champs ne dépendent que de `couts`,
   un résumé du terrain qui fait partie de l'état (sauvegardé) et n'est refait qu'à
