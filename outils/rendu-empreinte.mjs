@@ -61,6 +61,7 @@ async function etape(nom, images = 3, avant = null, arg = null) {
 
 await page.goto(`${srv.base}index.html?debug=1&seed=7`);
 await page.waitForTimeout(800);
+await etape('titre', 8);                                       // l'écran titre : le décor, ses obus et ses colonnes de fumée
 await page.evaluate(() => { document.getElementById('nouvelle').click(); });
 await page.waitForTimeout(500);
 await page.evaluate(() => { window.__images(2); });             // la partie commence
@@ -81,6 +82,9 @@ await etape('melee-z6', 3, () => { __jeu.zoom(4); __jeu.teleport({ x: 200, y: 15
 await etape('clignote', 2, () => { __jeu.zoom(3); __jeu.teleport({ x: 200, y: 215 }); __jeu.rendu().clignoter([20, 21, 22]); });
 await etape('surbrillance', 2, () => { __jeu.rendu().surligner({ troncons: [30, 31], rects: [{ x: 190, y: 200, l: 40, p: 20 }] }); __jeu.rendu().survoler(-1, [40, 41]); });
 await etape('surbrillance-fin', 2, () => { __jeu.rendu().surligner(null); __jeu.rendu().survoler(-1, []); });
+// le souffle : un 155 sur nos propres hommes à qui il faut voir sauter, tirer, se tapir
+await etape('souffle', 6, () => { __jeu.zoom(4); __jeu.teleport({ x: 200, y: 215 }); __jeu.barrage('155', 200, 215); });
+await etape('souffle-bond', 4);
 await etape('rotation', 10, () => { __jeu.zoom(3); __jeu.camera(0.5, 1.1); });
 await etape('rotation-z1', 3, () => { __jeu.zoom(0); __jeu.camera(-0.45, 0.8); });
 // la fin du jour : le soleil bas, puis la nuit et ses lumières
