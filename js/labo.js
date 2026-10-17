@@ -2,20 +2,20 @@
 // Chaque sujet utilise les mêmes modules que le jeu (terrain, apparence,
 // rendu three.js) : ce qu'on voit ici est ce que le jeu dessinera. Ajouter un
 // sujet ou une variante = ajouter une entrée dans GROUPES.
-import { mountLabo } from './lib/labo-shell.js?v=0.27.0';
-import { spriteCanvas, paletteToGPL, paletteToHex } from './lib/sprites.js?v=0.27.0';
-import { PALETTE, ROLES } from './palette.js?v=0.27.0';
-import { chargerContenu } from './design-store.js?v=0.27.0';
-import { tuile, ETAT } from './tuiles.js?v=0.27.0';
-import { creerTerrain, impact, hydroLignes } from './terrain.js?v=0.27.0';
-import { CALIBRES } from './data/calibres.js?v=0.27.0';
-import { METEO } from './data/meteo.js?v=0.27.0';
-import { nouvelleBataille, avancer, ordonnerMarche, ordonnerBarrage, mourir } from './bataille.js?v=0.27.0';
-import { creerRendu, ZOOMS } from './rendu3d.js?v=0.27.0';
-import { hash2 } from './lib/rng.js?v=0.27.0';
-import { reglerVerdure } from './apparence.js?v=0.27.0';
-import { maquetteAssaut } from './labo-assaut.js?v=0.27.0';
-import { calquePlaques } from './labo-plaques.js?v=0.27.0';
+import { mountLabo } from './lib/labo-shell.js?v=0.28.0';
+import { spriteCanvas, paletteToGPL, paletteToHex } from './lib/sprites.js?v=0.28.0';
+import { PALETTE, ROLES } from './palette.js?v=0.28.0';
+import { chargerContenu } from './design-store.js?v=0.28.0';
+import { tuile, ETAT } from './tuiles.js?v=0.28.0';
+import { creerTerrain, impact, hydroLignes } from './terrain.js?v=0.28.0';
+import { CALIBRES } from './data/calibres.js?v=0.28.0';
+import { METEO } from './data/meteo.js?v=0.28.0';
+import { nouvelleBataille, avancer, ordonnerMarche, ordonnerBarrage, mourir } from './bataille.js?v=0.28.0';
+import { creerRendu, ZOOMS } from './rendu3d.js?v=0.28.0';
+import { hash2 } from './lib/rng.js?v=0.28.0';
+import { reglerVerdure } from './apparence.js?v=0.28.0';
+import { maquetteAssaut } from './labo-assaut.js?v=0.28.0';
+import { calquePlaques } from './labo-plaques.js?v=0.28.0';
 
 document.documentElement.style.setProperty('--jeu-accent', ROLES.accent);
 const NOM = document.title.replace(/^Labo — /, ''); // le nom vient de la page (une apostrophe ne casse rien)
@@ -215,20 +215,20 @@ const GROUPES = [
       { title: 'Respiration marquée', note: 'Le balancement deux fois plus ample (4°).', render: s => moteur(s, { zoom: 3, pluie: true, respiration: 0.07 }) },
     ] },
     { id: 'soldats', title: 'Soldats de près', variants: [
-      { title: 'Silhouette complète', status: 'actuelle', note: 'Jambes, vareuse, visage, casque, le fusil à l\'épaule et le sac au dos (la glaise). Environ 55 triangles par homme de près.', render: s => moteur(s, { zoom: 5, cz: 205, soldat: 'silhouette' }) },
+      { title: 'Silhouette complète', status: 'ancienne', note: 'Jambes, vareuse, visage, casque, le fusil à l\'épaule et le sac au dos (la glaise). Environ 55 triangles par homme de près.', render: s => moteur(s, { zoom: 5, cz: 205, soldat: 'silhouette' }) },
       { title: 'Une boîte', note: 'Le soldat de la v0.7 : une boîte de la couleur de son camp, son dessus en guise de casque, et son ombre. Environ 10 triangles par homme.', status: 'ancienne', render: s => moteur(s, { zoom: 5, cz: 205, soldat: 'boite' }) },
       { title: 'Jambes, tête et casque', note: 'Les bandes molletières sombres (deux jambes), la vareuse, le visage clair, le casque plus large que la tête. Environ 40 triangles, seulement de près (6 pixels par mètre et plus) ; de loin, la boîte, puis le point.', render: s => moteur(s, { zoom: 5, cz: 205, soldat: 'detail' }) },
       { title: 'La boîte et un fusil', note: 'La boîte de la v0.7, un fusil à l\'épaule (un trait de terre) : la silhouette du fantassin pour 8 triangles de plus.', render: s => moteur(s, { zoom: 5, cz: 205, soldat: 'fusil' }) },
       { title: 'Équipé', note: 'Proposition (v0.27.0) : la silhouette et son équipement. Bottes, bandes molletières, capote aux basques rabattues, ceinturon, trois cartouchières, gourde, couverture roulée, mains, baïonnette ; chez nous le casque Adrian (cimier, visière) et la moustache du poilu, en face le casque à pointe et son couvre-nuque. Environ 190 triangles par homme, de 6 pixels par mètre et plus.', render: s => moteur(s, { zoom: 6, cz: 205, soldat: 'equipe' }) },
-      { title: 'Équipé, bras qui balancent', note: 'Le même, dont les bras balancent à l\'opposé des jambes quand il marche (calculé dans le nuanceur, rien de plus pour le processeur).', render: s => moteur(s, { zoom: 6, cz: 205, soldat: 'equipe-marche' }) },
+      { title: 'Équipé, bras qui balancent', status: 'retenue', note: 'Le même, dont les bras balancent à l\'opposé des jambes quand il marche (calculé dans le nuanceur, rien de plus pour le processeur).', render: s => moteur(s, { zoom: 6, cz: 205, soldat: 'equipe-marche' }) },
       { title: 'Équipé, vu de moins près', note: 'Le même équipé à 8 pixels par mètre : ce qu\'il en reste quand on regarde un régiment entier.', render: s => moteur(s, { zoom: 5, cz: 205, soldat: 'equipe' }) },
       { title: 'Silhouette qui marche', note: 'La silhouette complète, et les jambes qui se balancent quand il marche (calculé dans le shader, selon sa vitesse : rien de plus pour le processeur).', render: s => moteur(s, { zoom: 5, cz: 205, soldat: 'marche' }) },
     ] },
     { id: 'cadavres', title: 'Cadavres', variants: [
-      { title: 'La planche', status: 'actuelle', note: 'Aujourd\'hui : une boîte couchée de 1,7 m, la couleur du camp le jour même, la glaise le lendemain. Rien ne dit que c\'était un soldat.', render: s => moteur(s, { zoom: 5, cz: 205, soldat: 'silhouette', morts: 0.3 }) },
+      { title: 'La planche', status: 'ancienne', note: 'Aujourd\'hui : une boîte couchée de 1,7 m, la couleur du camp le jour même, la glaise le lendemain. Rien ne dit que c\'était un soldat.', render: s => moteur(s, { zoom: 5, cz: 205, soldat: 'silhouette', cadavre: 'planche', morts: 0.3 }) },
       { title: 'Le soldat couché', note: 'Proposition (v0.27.0) : le soldat lui-même, couché sur le dos, vareuse, bandes molletières, casque, fusil et sac comme debout ; de 4 pixels par mètre la silhouette allégée, dès 6 celle du style choisi. La glaise le lendemain.', render: s => moteur(s, { zoom: 5, cz: 205, soldat: 'silhouette', cadavre: 'couche', morts: 0.3 }) },
       { title: 'Poses variées', note: 'Le même soldat, tombé comme il est tombé : sur le dos, sur le ventre ou sur le côté, les bras et les jambes écartés selon son numéro (il reste ainsi d\'une image à l\'autre).', render: s => moteur(s, { zoom: 5, cz: 205, soldat: 'silhouette', cadavre: 'poses', morts: 0.3 }) },
-      { title: 'Poses variées, équipés', note: 'Les poses variées, avec le soldat équipé (bottes, ceinturon, cartouchières, gourde, couverture, casque de son camp) : les morts sont les hommes qu\'on voyait debout, avec tout ce qu\'ils portaient.', render: s => moteur(s, { zoom: 6, cz: 205, soldat: 'equipe', cadavre: 'poses', morts: 0.3 }) },
+      { title: 'Poses variées, équipés', status: 'retenue', note: 'Les poses variées, avec le soldat équipé (bottes, ceinturon, cartouchières, gourde, couverture, casque de son camp) : les morts sont les hommes qu\'on voyait debout, avec tout ce qu\'ils portaient.', render: s => moteur(s, { zoom: 6, cz: 205, soldat: 'equipe', cadavre: 'poses', morts: 0.3 }) },
     ] },
     { id: 'effets', title: 'Effets', variants: [
       { title: 'Tout ensemble', status: 'actuelle', note: 'Gerbe, onde, obus qui tombe, fumée qui reste, feu, fusées et corbeaux.', render: s => moteur(s, { zoom: 4, cz: 170, barrages: true, effets: { gerbe: true, onde: true, chute: true, derive: true, feu: true, fusees: 'toujours', corbeaux: 'toujours' } }) },

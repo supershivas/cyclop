@@ -14,17 +14,17 @@
    La sauvegarde (photo) garde la graine, la liste compacte des impacts, l'état
    de la foule et les petites couches de logique ; jamais le relief : il se
    rejoue depuis la graine et les impacts (rejouerTerrain). */
-import { createRng, hash2 } from './lib/rng.js?v=0.27.0';
-import { creerTerrain, impact, hydroLignes, etat as etatCase, vitesseEtat, ETAT } from './terrain.js?v=0.27.0';
-import { creerArmee, ajouterSoldat, construireGrille, pasArmee, tuerDans, effrayer, compacter, photoArmee, restaurerArmee, b64, deB64, DENSITE, place } from './army.js?v=0.27.0';
-import { creuserTranchees, ligneSous } from './tranchees.js?v=0.27.0';
-import { calculerCouts, creerCacheChamps, dimensionsCouts, BLOC } from './champs.js?v=0.27.0';
-import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.27.0';
-import { METEO, TRANSITIONS, PREVISION_JUSTE } from './data/meteo.js?v=0.27.0';
-import { SECTEURS } from './data/secteur.js?v=0.27.0';
-import { REGIMENTS } from './data/lexique.js?v=0.27.0';
-import { grade } from './identite.js?v=0.27.0';
-import { corvees, rejouerTravaux } from './nuit.js?v=0.27.0';
+import { createRng, hash2 } from './lib/rng.js?v=0.28.0';
+import { creerTerrain, impact, hydroLignes, etat as etatCase, vitesseEtat, ETAT } from './terrain.js?v=0.28.0';
+import { creerArmee, ajouterSoldat, construireGrille, pasArmee, tuerDans, effrayer, compacter, photoArmee, restaurerArmee, b64, deB64, DENSITE, place } from './army.js?v=0.28.0';
+import { creuserTranchees, ligneSous } from './tranchees.js?v=0.28.0';
+import { calculerCouts, creerCacheChamps, dimensionsCouts, BLOC } from './champs.js?v=0.28.0';
+import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.28.0';
+import { METEO, TRANSITIONS, PREVISION_JUSTE } from './data/meteo.js?v=0.28.0';
+import { SECTEURS } from './data/secteur.js?v=0.28.0';
+import { REGIMENTS } from './data/lexique.js?v=0.28.0';
+import { grade } from './identite.js?v=0.28.0';
+import { corvees, rejouerTravaux } from './nuit.js?v=0.28.0';
 
 export const PAS = 1 / 30;                 // s de jeu par pas
 export const NOUS = 0, EUX = 1;
@@ -862,7 +862,14 @@ export function photo(B) {
   };
 }
 
+/* Relire une partie en étapes (v0.28.0 : la barre de chargement) : un générateur qui rend `[part faite, ce qu'on fait]` entre deux morceaux de travail,
+   et la bataille à la fin (`restaurer` le vide d'un coup : mêmes pas, même partie). */
 export function restaurer(p, R) {
+  const g = etapesRestaurer(p, R);
+  for (;;) { const s = g.next(); if (s.done) return s.value; }
+}
+export function* etapesRestaurer(p, R) {
+  yield [0, 'La sauvegarde'];
   const { armee, coutsActuels, coutsNeufs, ...reste } = structuredClone(p);
   const etat = reste;
   // une sauvegarde d'avant les marges (v0.2) : tout glisse de la largeur des marges
@@ -883,8 +890,11 @@ export function restaurer(p, R) {
   for (const reg of etat.regiments) { reg.moral ??= R.moral.depart; reg.deroute ??= false; reg.vivres ??= R.nuit.vivres; }   // (avant la v0.5.0 : pas de moral)
   etat.abris ??= {}; etat.prisonniers ??= [];   // (avant la v0.11.0 : ni abris ni coups de main ; ni vivres)
   etat.troncons ??= []; etat.melee ??= etat.troncons.map(() => 0); etat.prises ??= etat.pertesJour.map(() => [0, 0]);   // (avant la v0.4.0 : pas de tranchées)
+  yield [0.1, 'Le terrain'];
   const B = monter(etat, R);
-  rejouerTerrain(B);
+  yield [0.25, 'Les obus et la pluie'];
+  for (const f of etapesRejouer(B)) yield [0.25 + f * 0.65, 'Les obus et la pluie'];
+  yield [0.92, 'Les hommes'];
   restaurerArmee(B.armee, armee);
   if (avantMarges) {
     for (let i = 0; i < B.armee.n; i++) { B.armee.x[i] += etat.marges.x; B.armee.y[i] += etat.marges.y; }
@@ -900,10 +910,12 @@ export function restaurer(p, R) {
 /* Refait le relief, l'eau et les arbres depuis la graine et les impacts, pas
    à pas, dans le même ordre que la partie : impacts du pas, puis l'eau ; la
    nuit en lot. */
-export function rejouerTerrain(B) {
+export function rejouerTerrain(B) { for (const _ of etapesRejouer(B)); }
+export function* etapesRejouer(B) {
   const { etat, R, terrain: T } = B;
   const tpj = ticksParJour(R);
-  let k = 0;
+  let k = 0, fait = 0;
+  const total = Math.max(1, (etat.jour - 1) * tpj + etat.tickJour);      // (les pas à rejouer : la part faite se lit dessus)
   const imp = etat.impacts;
   for (let jour = 1; jour <= etat.jour; jour++) {
     const fin = jour < etat.jour ? tpj : etat.tickJour;
@@ -917,6 +929,7 @@ export function rejouerTerrain(B) {
         k++;
       }
       avancerEau(B, t);
+      if (++fait % 300 === 0) yield fait / total;
     }
     etat.jour = sauve.jour; etat.hydro = sauve.hydro;
     if (jour < etat.jour || etat.phase !== 'jour') for (let p = 0; p < 12; p++) hydroLignes(T, 0, T.H, m, R);

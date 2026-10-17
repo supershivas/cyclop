@@ -202,7 +202,7 @@ régiment trop éprouvé retourne à son départ.
 
 Voir `CLAUDE.md`. « Boue et ciel bas » : la terre, la boue, la glaise, l'herbe
 morte, l'eau qui reflète le ciel bas, la brume, l'os ; le bleu horizon et le
-rouge, plus pâles que le sol sombre.
+vert kaki clair d'en face, plus pâles que le sol sombre.
 
 ## Ce que le jeu refuse
 

@@ -35,7 +35,7 @@ export default {
     { avant: 'x', fond: 'w', seuil: 1.5, role: 'signe', ou: 'en face sur le vert sombre (proposé)' },
     { avant: 't', fond: 'v', role: 'signe', ou: 'ombre d\'un soldat sur le vert mousse (proposé)' },
     // les deux camps entre eux (en gris, ils ne se confondent pas)
-    { avant: 'n', fond: 'x', seuil: 1.5, role: 'signe', ou: 'nous et en face côte à côte' },
+    { avant: 'n', fond: 'x', seuil: 1.4, role: 'signe', ou: 'nous et en face côte à côte' },
   ],
   groupes: {
     sols: {

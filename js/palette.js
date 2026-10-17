@@ -17,7 +17,7 @@ export const PALETTE = {
   r: '#a9a89a', // brume — pluie, fumée, eau gelée
   o: '#e4dfd0', // os — le texte, l'éclair
   n: '#8cb6ff', // bleu horizon — nous
-  x: '#e0604f', // rouge — en face (Jérôme, v0.12.0 : l'armée d'en face se distingue d'un coup d'œil)
+  x: '#dde874', // vert kaki clair — en face (Jérôme, v0.28.0 ; rouge #e0604f avant : un kaki pâle et jaune, plus clair que tout le sol, vert compris, pour s'en détacher ; la forme du casque, à pointe, aide)
   // Deux verts discrets (Jérôme, v0.9.3 : « le vert est intégré dans le design et ne fait pas de grandes différences ») : de la
   // même clarté que l'herbe morte et la glaise, un peu plus verts ; le sol en est nuancé (apparence.js, `verdure`)
   v: '#6f8147', // vert mousse — l'herbe qui reprend, par plaques

@@ -249,7 +249,7 @@ dialog form { margin-top: calc(var(--pas) * 2); }
 .reg-carte.choisi { --enc: var(--jeu-encre); --pap: var(--jeu-fond); outline: 2px solid var(--jeu-encre); outline-offset: -5px; }
 .reg-carte .l1 { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .reg-carte .l1 b { font-weight: normal; font-size: var(--texte-grand); line-height: 1; margin-right: 2px; }
-.reg-carte .alerte { float: right; font-style: normal; font-size: 10px; line-height: 1; padding: 1px 3px; border: 1px solid var(--jeu-eux); color: var(--jeu-eux); transform: rotate(-5deg); }
+.reg-carte .alerte { float: right; font-style: normal; font-size: 10px; line-height: 1; padding: 1px 3px; border: 1px double var(--jeu-encre); color: var(--jeu-encre); transform: rotate(-5deg); }
 .reg-carte .chevrons { display: flex; gap: 2px; height: 8px; }
 .chev { width: 12px; height: 8px; fill: none; stroke: var(--enc); stroke-width: 2; stroke-linecap: square; }
 .chev.vide { stroke: var(--jeu-accent); }
@@ -266,13 +266,13 @@ dialog form { margin-top: calc(var(--pas) * 2); }
 .reg-ouvert .tete { display: flex; justify-content: space-between; gap: var(--pas); border-bottom: 1px solid var(--jeu-accent); padding-bottom: 2px; font-size: 15px; }
 .reg-ouvert .tete b { font-weight: normal; }
 .reg-ouvert .tete span, .reg-ouvert .compte, .reg-ouvert .ordre { color: var(--jeu-accent); font-size: 12px; }
-.reg-ouvert .tampon { justify-self: start; padding: 0 6px; border: 2px solid var(--jeu-eux); color: var(--jeu-eux); transform: rotate(-4deg); letter-spacing: .12em; text-transform: uppercase; font-size: 12px; }
+.reg-ouvert .tampon { justify-self: start; padding: 0 6px; border: 3px double var(--jeu-encre); color: var(--jeu-encre); transform: rotate(-4deg); letter-spacing: .12em; text-transform: uppercase; font-size: 12px; }
 .reg-ouvert .actions { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 3px; }
 .reg-ouvert .actions button { height: 32px; padding: 0 var(--pas); font: inherit; font-size: 13px; color: var(--jeu-fond); background: none; border: 1px solid var(--jeu-accent); cursor: pointer; }
 .reg-ouvert .actions button.actif { background: var(--jeu-fond); color: var(--jeu-encre); border-color: var(--jeu-fond); }
 @media (hover: hover) { .reg-carte:hover:not(.choisi) { --pap: var(--jeu-accent); } .reg-ouvert .actions button:hover { background: var(--jeu-accent); color: var(--jeu-fond); } }
 
-/* La visée d'un ordre (Jérôme, v0.21.0) : une ligne du centre de chaque régiment choisi au curseur, terminée par une croix ; rouge quand l'ordre
+/* La visée d'un ordre (Jérôme, v0.21.0) : une ligne du centre de chaque régiment choisi au curseur, terminée par une croix ; glaise quand l'ordre
    ne partirait pas (la raison est dite au clic). Sur le terrain, la surbrillance montre ce que l'ordre occuperait. */
 .visee { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
 .visee[hidden] { display: none; }
@@ -280,10 +280,20 @@ dialog form { margin-top: calc(var(--pas) * 2); }
 .visee .fond { stroke: var(--jeu-fond); stroke-width: 4; }
 .visee .encre { stroke: var(--jeu-encre); stroke-width: 2; stroke-dasharray: 6 5; }
 .visee .croix .encre { stroke-dasharray: none; }
-.visee.refus .croix .encre { stroke: var(--jeu-eux); }
+.visee.refus .encre { stroke: var(--jeu-accent); }   /* (refusé : la ligne et la croix passent à la glaise ; l'ennemi est vert, plus de rouge dans le jeu) */
 .carte-grille .lib.eux { color: var(--jeu-eux); }
 .carte-grille .lib { font-size: 12px; text-align: center; }
 
 /* La nuit : les corvées sont au-dessus de la carte du régiment choisi, comme les actions du jour (Jérôme, v0.22.0) */
 .reg-ouvert .actions button.refus { color: var(--jeu-accent); border-style: dashed; }
 .reg-carte .corvee { font-size: 11px; line-height: 8px; color: var(--enc); }
+
+/* La barre de chargement (Jérôme, v0.28.0) : un papier sur la terre, une barre d'encre ; au lancement et quand on relit ou commence une partie */
+.chargement { position: fixed; inset: 0; z-index: 50; display: grid; place-items: center; background: var(--jeu-fond); transition: opacity .25s; }
+.chargement[hidden] { display: none; }
+.chargement.fondu { opacity: 0; pointer-events: none; }
+.chargement .papier { width: min(34ch, 80vw); display: grid; gap: var(--pas); }
+.chargement p { margin: 0; letter-spacing: .1em; text-transform: uppercase; font-size: 14px; }
+.chargement .discret { font-size: 12px; letter-spacing: 0; text-transform: none; min-height: 1.3em; }
+.chargement-piste { height: 10px; border: 2px solid var(--jeu-fond); }
+.chargement-piste i { display: block; height: 100%; background: var(--jeu-fond); transition: width .12s linear; }

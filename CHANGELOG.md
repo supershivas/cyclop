@@ -1,5 +1,11 @@
 # Journal des versions
 
+## 0.28.0 — 2026-10-17
+- Les soldats sont équipés (bottes, capote, ceinturon, cartouchières, gourde, couverture, baïonnette, casque et moustache chez nous, casque à pointe en face) et leurs bras balancent à la marche ; les morts sont ces mêmes soldats couchés, sur le dos, le ventre ou le côté
+- L'armée d'en face est vert kaki clair (elle était rouge), plus claire que tout le sol ; le rouge disparaît du jeu (un ordre refusé passe à la glaise)
+- La caméra est libre : toutes les directions, de l'horizon au zénith, le ciel de la couleur de la brume comme à l'accueil ; seul le sol la bloque ; C recentre
+- Des barres de chargement au lancement du jeu et quand on relit ou commence une partie
+
 ## 0.27.0 — 2026-10-17
 - Les fusils fument : un petit nuage clair à chaque coup, qui dérive avec le vent
 - La fumée des bombardements reste parfois (40 à 90 s) et vire au noir parfois, d'autant plus souvent que le calibre est gros (75 : 12 % noire, 155 : 35 %, 220 : 60 %)

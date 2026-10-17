@@ -9,10 +9,18 @@
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta property="og:image" content="og.png">
-<link rel="stylesheet" href="js/lib/game.css?v=0.27.0">
-<link rel="stylesheet" href="css/style.css?v=0.27.0">
+<link rel="stylesheet" href="js/lib/game.css?v=0.28.0">
+<link rel="stylesheet" href="css/style.css?v=0.28.0">
 </head>
 <body>
+<!-- La barre de chargement (v0.28.0) : là avant tout script ; main.js la remplit, puis la retire -->
+<div class="chargement" id="chargement" role="progressbar" aria-label="Chargement" aria-valuemin="0" aria-valuemax="100" aria-valuenow="5">
+  <div class="papier">
+    <p id="chargement-titre">Cyclopéen</p>
+    <div class="chargement-piste"><i id="chargement-barre" style="width:5%"></i></div>
+    <p class="discret" id="chargement-etape">Le jeu</p>
+  </div>
+</div>
 <div class="jeu-ecran" id="ecran">
   <canvas class="jeu-canvas" id="canvas" aria-label="Le champ de bataille"></canvas>
   <div class="etiquettes" id="etiquettes" aria-hidden="true"></div>
@@ -208,6 +216,6 @@
 </dialog>
 
 <div class="jeu-toast" id="toast" role="status" hidden></div>
-<script type="module" src="js/main.js?v=0.27.0"></script>
+<script type="module" src="js/main.js?v=0.28.0"></script>
 </body>
 </html>

@@ -1,9 +1,9 @@
 {
-  "version": "0.27.0",
+  "version": "0.28.0",
   "date": "2026-10-17",
   "changes": [
-    "Les fusils fument : un petit nuage clair à chaque coup, qui dérive avec le vent",
-    "La fumée des bombardements reste parfois (40 à 90 s) et vire au noir parfois, d'autant plus souvent que le calibre est gros (75 : 12 % noire, 155 : 35 %, 220 : 60 %)",
-    "Au labo : des soldats plus détaillés (équipement, casque par camp, bras qui balancent) et des cadavres qui sont les soldats couchés (sujet « Cadavres ») à choisir"
+    "Les soldats sont équipés (bottes, capote, ceinturon, cartouchières, gourde, casque de chaque camp, bras qui balancent) et les morts sont ces mêmes soldats couchés, dans des poses variées",
+    "L'armée d'en face est vert kaki clair, plus claire que tout le sol ; la caméra est libre : toutes les directions, de l'horizon au zénith, le ciel en vue, bloquée seulement par le sol",
+    "Des barres de chargement au lancement du jeu et quand on relit ou commence une partie"
   ]
 }

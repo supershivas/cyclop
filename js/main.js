@@ -1,30 +1,31 @@
 // Le cycle de vie : écran titre → bataille → nuit → fin ; pause active,
 // réglages, sauvegarde, mise à jour, debug. Les règles sont dans bataille.js
 // (pures), le dessin dans rendu3d.js (il ne modifie jamais l'état).
-import { createLoop } from './lib/loop.js?v=0.27.0';
-import { createKeys, stopTypeahead } from './lib/keys.js?v=0.27.0';
-import { createPointer, lockBrowserGestures } from './lib/pointer.js?v=0.27.0';
-import { createGamepad } from './lib/gamepad.js?v=0.27.0';
-import { createStore, autosave, pickJSONFile } from './lib/save.js?v=0.27.0';
-import { startUpdateCheck, loadVersion, loadChangelog, downloadJSON } from './lib/app-update.js?v=0.27.0';
-import { ROLES } from './palette.js?v=0.27.0';
-import { MISSIONS, nouvelleBataille, avancer, aube, ordonnerMarche, peutOrdonner, ordonnerBarrage, horloge, effectifs, tronconsTenus, moralEnMots, terrainResume, largeurZone, lettreZone, etendueZones, nomTroncon, actionDe, secteursDe, tronconsDeLigne, zone, photo, restaurer, PAS, NOUS } from './bataille.js?v=0.27.0';
-import { ligneY } from './tranchees.js?v=0.27.0';
-import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.27.0';
-import { METEO } from './data/meteo.js?v=0.27.0';
-import { impact, hydroLignes } from './terrain.js?v=0.27.0';
-import { hash2 } from './lib/rng.js?v=0.27.0';
-import { creerRendu, CAMERA } from './rendu3d.js?v=0.27.0';
-import { etatEnMots, experienceEnMots, chevrons } from './identite.js?v=0.27.0';
-import { CORVEES } from './data/corvees.js?v=0.27.0';
-import { refusCorvee } from './nuit.js?v=0.27.0';
-import { chargerContenu } from './design-store.js?v=0.27.0';
-import * as lecture from './hud/lecture.js?v=0.27.0';
-import { creerFiche } from './hud/fiche.js?v=0.27.0';
-import { creerNuit, corveeDe, corveeCourte } from './hud/nuit.js?v=0.27.0';
-import { creerCarnet, deux } from './hud/carnet.js?v=0.27.0';
-import { creerCarte } from './hud/carte.js?v=0.27.0';
-import { creerPertes } from './hud/pertes.js?v=0.27.0';
+import { createLoop } from './lib/loop.js?v=0.28.0';
+import { createKeys, stopTypeahead } from './lib/keys.js?v=0.28.0';
+import { createPointer, lockBrowserGestures } from './lib/pointer.js?v=0.28.0';
+import { createGamepad } from './lib/gamepad.js?v=0.28.0';
+import { createStore, autosave, pickJSONFile } from './lib/save.js?v=0.28.0';
+import { startUpdateCheck, loadVersion, loadChangelog, downloadJSON } from './lib/app-update.js?v=0.28.0';
+import { ROLES } from './palette.js?v=0.28.0';
+import { MISSIONS, nouvelleBataille, etapesRestaurer, avancer, aube, ordonnerMarche, peutOrdonner, ordonnerBarrage, horloge, effectifs, tronconsTenus, moralEnMots, terrainResume, largeurZone, lettreZone, etendueZones, nomTroncon, actionDe, secteursDe, tronconsDeLigne, zone, photo, restaurer, PAS, NOUS } from './bataille.js?v=0.28.0';
+import { ligneY } from './tranchees.js?v=0.28.0';
+import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.28.0';
+import { METEO } from './data/meteo.js?v=0.28.0';
+import { impact, hydroLignes } from './terrain.js?v=0.28.0';
+import { hash2 } from './lib/rng.js?v=0.28.0';
+import { creerRendu, CAMERA } from './rendu3d.js?v=0.28.0';
+import { etatEnMots, experienceEnMots, chevrons } from './identite.js?v=0.28.0';
+import { CORVEES } from './data/corvees.js?v=0.28.0';
+import { refusCorvee } from './nuit.js?v=0.28.0';
+import { chargerContenu } from './design-store.js?v=0.28.0';
+import * as lecture from './hud/lecture.js?v=0.28.0';
+import { creerFiche } from './hud/fiche.js?v=0.28.0';
+import { creerNuit, corveeDe, corveeCourte } from './hud/nuit.js?v=0.28.0';
+import { creerCarnet, deux } from './hud/carnet.js?v=0.28.0';
+import { creerCarte } from './hud/carte.js?v=0.28.0';
+import { creerPertes } from './hud/pertes.js?v=0.28.0';
+import { creerChargement } from './hud/chargement.js?v=0.28.0';
 
 const JEU = 'cyclopeen';
 const $ = id => document.getElementById(id);
@@ -44,8 +45,11 @@ const store = createStore({
   },
   secret: ['gh-token'],
 });
+const chargement = creerChargement({ $, instantane: DEBUG });
+chargement.progres(0.3, 'Le jeu');
 const prefs = store.load('prefs');
 const { reglages: R } = await chargerContenu();
+chargement.progres(0.45, 'Les réglages');
 
 let B = null;                 // la bataille en cours
 let vitesse = 1;              // ×1, ×2, ×4 : la vitesse du temps (plafonnée par le coût de la simulation)
@@ -78,7 +82,9 @@ const { montrerFiche, montrerSoldat, montrerRegiment, fermer: fermerFiche, maj: 
 
 lockBrowserGestures($('ecran'));
 stopTypeahead();
+chargement.progres(0.5, 'Le moteur de rendu');
 const rendu = await creerRendu($('canvas'), { mesure: MESURE });
+chargement.progres(0.75, 'Le champ de bataille');
 rendu.redimensionner();
 addEventListener('resize', () => rendu.redimensionner());
 
@@ -183,13 +189,25 @@ function reprendre() {
 function nouvelle(graine) {
   return nouvelleBataille(graine, R, SOLDATS ? { soldats: Math.floor(SOLDATS / 2) } : {});
 }
-$('continuer').onclick = () => {
+// (v0.28.0 : sous une barre de chargement ; la relecture se fait par étapes, `etapesRestaurer`)
+$('continuer').onclick = async () => {
   const p = store.load('partie');
-  try { jouer(p ? restaurer(p, R) : nouvelle(1)); } catch (e) { console.error(e); toast('Sauvegarde illisible : nouvelle bataille.'); jouer(nouvelle(1)); }
+  try { jouer(p ? await sousBarre('Relecture de la partie', etapesRestaurer(p, R)) : nouvelle(1)); }
+  catch (e) { console.error(e); toast('Sauvegarde illisible : nouvelle bataille.'); jouer(nouvelle(1)); }
+  chargement.cacher();
 };
+// Un travail en étapes sous la barre ; puis `jouer` (brancher la bataille au rendu : la fin de la barre)
+async function sousBarre(titre, gen) { return chargement.executer(titre, gen); }
+function* etapesNouvelle(graine) {
+  yield [0.1, 'Le terrain et les régiments'];
+  const b = nouvelle(graine);
+  yield [0.9, 'La mise en place'];
+  return b;
+}
 // une nouvelle bataille, et son ordre (la mission, la durée, la réserve) ; pas en mode debug, que les scripts pilotent
-function commencer(graine) {
-  jouer(nouvelle(graine));
+async function commencer(graine) {
+  jouer(await sousBarre('Nouvelle partie', etapesNouvelle(graine)));
+  chargement.cacher();
   if (DEBUG || !B.etat.mission) return;
   loop.pause();
   const e = B.etat;
@@ -815,7 +833,7 @@ startUpdateCheck({
 
 // ─── Mode debug (section 18) : chargé seulement avec ?debug=1 ──────────────
 if (DEBUG) {
-  const { installDebug, seedFromUrl } = await import('./lib/debug.js?v=0.27.0');
+  const { installDebug, seedFromUrl } = await import('./lib/debug.js?v=0.28.0');
   window.__seed = seedFromUrl() ?? undefined;
   installDebug({
     state: () => B && { ...horloge(B), effectifs: effectifs(B), pertes: B.etat.pertes, impacts: B.etat.impacts.length, enJeu: enJeu(), pause: loop.paused },
@@ -855,4 +873,7 @@ if (DEBUG) {
   });
 }
 
+await chargement.frame();
 montrerTitre();
+chargement.progres(1, '');
+chargement.cacher();

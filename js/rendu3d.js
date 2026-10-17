@@ -22,28 +22,30 @@
    - Les soldats : instanciés (une boîte et son ombre) ; au zoom 1 et 2, un
      point de 2 × 2 pixels (la couleur du camp sur son ombre).
    - Les corps : un homme couché (instancié) ; au zoom 1 et 2, un pixel. */
-import { loadThree } from './three-lib.js?v=0.27.0';
-import * as SH from './rendu/shaders.js?v=0.27.0';
-import { creerSoldats } from './rendu/soldats.js?v=0.27.0';
-import { creerMeteo } from './rendu/meteo.js?v=0.27.0';
-import { creerTroncons } from './rendu/troncons.js?v=0.27.0';
-import { creerVegetation } from './rendu/vegetation.js?v=0.27.0';
-import { creerTemps } from './rendu/temps.js?v=0.27.0';
-import { creerEclats } from './rendu/eclats.js?v=0.27.0';
-import { PALETTE, ORDRE, INDICE } from './palette.js?v=0.27.0';
-import { OMBRE, couleursLigne } from './apparence.js?v=0.27.0';
-import { MORCEAU, hauteurVueQ as hauteurQ, hauteurVueM as hauteurM } from './terrain.js?v=0.27.0';
-import { horloge } from './bataille.js?v=0.27.0';
-import { ligneY } from './tranchees.js?v=0.27.0';
+import { loadThree } from './three-lib.js?v=0.28.0';
+import * as SH from './rendu/shaders.js?v=0.28.0';
+import { creerSoldats } from './rendu/soldats.js?v=0.28.0';
+import { creerMeteo } from './rendu/meteo.js?v=0.28.0';
+import { creerTroncons } from './rendu/troncons.js?v=0.28.0';
+import { creerVegetation } from './rendu/vegetation.js?v=0.28.0';
+import { creerTemps } from './rendu/temps.js?v=0.28.0';
+import { creerEclats } from './rendu/eclats.js?v=0.28.0';
+import { PALETTE, ORDRE, INDICE } from './palette.js?v=0.28.0';
+import { OMBRE, couleursLigne } from './apparence.js?v=0.28.0';
+import { MORCEAU, hauteurVueQ as hauteurQ, hauteurVueM as hauteurM } from './terrain.js?v=0.28.0';
+import { horloge } from './bataille.js?v=0.28.0';
+import { ligneY } from './tranchees.js?v=0.28.0';
 
 export const CAMERA = { yaw: 0.15, tangage: 0.95, fov: 30 };   // au départ : tournée de 9°, plongée de 54°, angle de 30°
 // la caméra respire : un balancement très lent, 2° en 23 s (Jérôme, v0.3.1 : variante D du labo retenue)
 // les effets du jeu (Jérôme, v0.8.0 : « tout ensemble ») : la gerbe de terre, l'onde, l'obus qui tombe, la fumée qui
 // reste, le feu, les fusées éclairantes le soir, les corbeaux au-dessus des morts
 export const EFFETS = { gerbe: true, onde: true, chute: true, derive: true, feu: true, fusees: true, corbeaux: true };
-export const SOLDAT = 'silhouette';            // le style des soldats de près (Jérôme, v0.8.0 : la silhouette complète ; labo : boite, detail, fusil, silhouette, marche)
+export const SOLDAT = 'equipe-marche';            // le style des soldats de près (Jérôme, v0.8.0 : la silhouette complète ; labo : boite, detail, fusil, silhouette, marche)
 export const RESPIRATION = 0.035;
 export const YAW_MAX = 0.6, TANGAGE_MIN = 0.7, TANGAGE_MAX = 1.35;
+const TG_CIEL_MIN = 0.02, TG_CIEL_MAX = 1.55;     // la caméra libre : de l'horizon presque au zénith (le sol la relève : `borner`)
+const GARDE_SOL = 1.5;                            // m : la caméra libre ne passe jamais plus bas que le sol, moins cette garde
 const SOL_Y = 3;                              // m : la hauteur moyenne du sol (le point visé)
 export const ZOOMS = [1, 2, 3, 4, 6, 8, 12, 16];   // pixels (logiques) par mètre (12 et 16 : tout près des hommes, Jérôme v0.9.3)
 const POINTS_JUSQUA = 2;                      // zoom où un soldat n'est plus qu'un point
@@ -52,7 +54,7 @@ const HAUT = 8;                               // m : marge du bas de l'écran, o
 const SOCLE = -8;                             // m : le bas de la coupe du terrain (bord sud)
 
 /* respiration : l'amplitude (rad) du lent balancement de la caméra (0 : immobile). */
-export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera: camDepart = null, respiration = RESPIRATION, soldat: styleSoldat = SOLDAT, cadavre = 'planche', effets = EFFETS } = {}) {
+export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera: camDepart = null, respiration = RESPIRATION, soldat: styleSoldat = SOLDAT, cadavre = 'poses', effets = EFFETS } = {}) {
   // un mouvement réduit demandé par le système : la caméra ne bouge pas d'elle-même
   if (typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches) respiration = 0;
   const THREE = await loadThree();
@@ -78,7 +80,7 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
   function projeter() {
     const p = ZOOMS[vue.zoom], D = distance(vue.zoom), o = versCamera(yawVu(), tangageVu());
     camera.fov = vue.fov; camera.aspect = vue.vw / vue.vh;
-    camera.near = D * 0.15; camera.far = D * (vue.libre ? 6 : 5);       // (au ras du sol, la vue porte plus loin ; au-delà, le ciel bas)
+    camera.near = vue.ciel ? 0.5 : D * 0.15;      // (la caméra libre rase le sol : un plan proche à 14 m coupait le sol du bas de l'écran) camera.far = D * (vue.libre || vue.ciel ? 6 : 5);       // (au ras du sol, la vue porte plus loin ; au-delà, le ciel bas)
     camera.updateProjectionMatrix();
     camera.position.set(vue.cx + o[0] * D, SOL_Y + o[1] * D, vue.cz + o[2] * D);
     camera.lookAt(vue.cx, SOL_Y, vue.cz);
@@ -356,6 +358,7 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
     const o = rayon.ray.origin, d = rayon.ray.direction;
     // le sol à la hauteur où le rayon le touche (quelques allers-retours sur le relief)
     let hy = SOL_Y, x = vue.cx, z = vue.cz;
+    if (d.y > -1e-4) return [-1e5, -1e5];                 // le rayon regarde le ciel : hors de tout secteur (les ordres le refusent)
     for (let k = 0; k < 6; k++) {
       if (d.y > -1e-4) break;
       const t = (hy - o.y) / d.y;
@@ -368,7 +371,9 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
   // [x, y] du terrain (et une hauteur) → pixels CSS
   function versEcran(x, y, h = null) {
     if (h === null && T) h = surface(x, y);
-    v3.set(x, h ?? SOL_Y, y).project(camera);
+    v3.set(x, h ?? SOL_Y, y);
+    if (v3.clone().applyMatrix4(camera.matrixWorldInverse).z >= 0) return [-1e5, -1e5];     // derrière la caméra (elle tourne librement)
+    v3.project(camera);
     const w = canvas.clientWidth || 1, hh = canvas.clientHeight || 1;
     return [(v3.x + 1) / 2 * w, (1 - v3.y) / 2 * hh];
   }
@@ -427,7 +432,7 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
     zoomer(d, ancre = null) {
       const avant = ancre ? versTerrain(...ancre) : null;
       const z = Math.max(0, Math.min(ZOOMS.length - 1, vue.zoom + d));
-      if (T && !tient(z, 0)) return;                 // plus loin, la vue sortirait du terrain
+      if (T && !vue.ciel && !tient(z, 0)) return;                 // plus loin, la vue sortirait du terrain (la caméra libre : rien ne la borne que le sol)
       vue.zoom = z;
       if (avant) {
         const apres = versTerrain(...ancre);
@@ -443,20 +448,22 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
     },
     // tourner (rad) et incliner (k) la caméra, dans ses bornes
     tourner(dYaw, dTangage = 0) {
+      if (vue.ciel) { vue.cible.yaw += dYaw; vue.cible.tangage = Math.max(TG_CIEL_MIN, Math.min(TG_CIEL_MAX, vue.cible.tangage + dTangage)); return; }     // libre : n'importe quelle direction, de l'horizon au zénith
       vue.cible.yaw = Math.max(-YAW_MAX, Math.min(YAW_MAX, vue.cible.yaw + dYaw));
       vue.cible.tangage = Math.max(TANGAGE_MIN, Math.min(TANGAGE_MAX, vue.cible.tangage + dTangage));
     },
     // la caméra libre (l'écran titre, Jérôme v0.8.2) : n'importe quelle direction, jusqu'au ras du sol, sans bornes ;
     // le ciel prend la couleur de la brume (le ciel bas)
     cameraLibre(yaw, tangage) {
-      vue.libre = true;
+      vue.libre = true; vue.ciel = false;
       vue.cible.yaw = vue.yaw = yaw; vue.cible.tangage = vue.tangage = tangage;
       renderer.setClearColor(new THREE.Color(PALETTE.r), 1);
     },
     placerCamera(yaw, tangage) {
-      if (vue.libre) { vue.libre = false; renderer.setClearColor(new THREE.Color(PALETTE.t), 1); }
-      vue.cible.yaw = vue.yaw = Math.max(-YAW_MAX, Math.min(YAW_MAX, yaw));
-      vue.cible.tangage = vue.tangage = Math.max(TANGAGE_MIN, Math.min(TANGAGE_MAX, tangage));
+      // (la caméra du jeu est libre depuis la v0.28.0 : le ciel est de la couleur de la brume, comme à l'écran titre)
+      vue.libre = false; vue.ciel = true; renderer.setClearColor(new THREE.Color(PALETTE.r), 1);
+      vue.cible.yaw = vue.yaw = yaw;
+      vue.cible.tangage = vue.tangage = Math.max(TG_CIEL_MIN, Math.min(TG_CIEL_MAX, tangage));
     },
     get ppm() { return ZOOMS[vue.zoom]; },
     // une fumée qui dérive, posée en (x, z) (l'écran titre en épaissit le champ)
@@ -498,6 +505,24 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
   }
   function borner() {
     if (!T || vue.libre) return;              // la caméra libre (l'écran titre) n'a pas de bornes
+    if (vue.ciel) {
+      // la caméra libre du jeu : le point visé reste sur le terrain, la caméra ne passe pas sous le sol (elle se relève au besoin)
+      vue.cx = Math.max(0, Math.min(T.W, vue.cx)); vue.cz = Math.max(0, Math.min(T.H, vue.cz));
+      const D = distance(vue.zoom);
+      for (const cle of ['cible', 'vue']) {
+        const o = cle === 'cible' ? vue.cible : vue;
+        let tg = Math.max(TG_CIEL_MIN, Math.min(TG_CIEL_MAX, o.tangage));
+        const yaw = cle === 'cible' ? vue.cible.yaw : yawVu();
+        for (let k = 0; k < 5; k++) {
+          const v = versCamera(yaw, tg), h = surface(vue.cx + v[0] * D, vue.cz + v[2] * D) + GARDE_SOL;
+          const need = Math.asin(Math.max(-1, Math.min(1, (h - SOL_Y) / D)));
+          if (need <= tg) break;
+          tg = Math.min(TG_CIEL_MAX, need);
+        }
+        o.tangage = tg;
+      }
+      return;
+    }
     // trop loin pour cet écran, même de face : on se rapproche
     while (vue.zoom < ZOOMS.length - 1 && !tient(vue.zoom, 0)) vue.zoom++;
     // trop tourné pour ce zoom : l'angle se réduit (le plus grand qui tient)

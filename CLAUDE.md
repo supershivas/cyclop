@@ -27,7 +27,7 @@ la danse macabre, la catastrophe peinte avec calme. L'intention est dans `DESIGN
   23 s, coupé si le système demande un mouvement réduit ; Jérôme, v0.3.1) ; elle
   ne sort jamais du terrain. Zoom par
   facteurs entiers au point visé (1, 2, 3, 4, 6, 8, 12, 16 pixels par mètre ; Jérôme, v0.9.3 : tout près des soldats) ; aux zooms
-  1 et 2, chaque soldat est un point (le sol, lui, garde le même relief à tous les zooms ; Jérôme, v0.12.0) ; en face est rouge (palette `x`). Sol en cubes et soldats en boîtes (Jérôme, v0.2.0 :
+  1 et 2, chaque soldat est un point (le sol, lui, garde le même relief à tous les zooms ; Jérôme, v0.12.0) ; en face est vert kaki clair (palette `x`). Sol en cubes et soldats en boîtes (Jérôme, v0.2.0 :
   les facettes et les sprites essayés au labo ne sont pas retenus). Profil game-system :
   `profils/pixel-3d-three.md`.
 - **Cible** : ordinateur uniquement (souris, sélection au cadre, raccourcis,
@@ -74,7 +74,7 @@ la danse macabre, la catastrophe peinte avec calme. L'intention est dans `DESIGN
   partent en 1re ligne, quatre en 2e (`depart: [0, 1]` de secteur.js ; Jérôme, v0.17.0) ; une lettre de la carte choisit les régiments qui
   couvrent ce secteur (`etendueZones`), et un ordre sur une tranchée étale un régiment sur 46 m au plus. La **carte**
   (`#carte`, toujours visible en haut à droite depuis la v0.19.0 : plus de touche M ; `construireCarte` / `majCarte` / `majRondes` de
-  main.js) montre les 4 secteurs × 4 lignes de chaque camp (les lignes d'en face en rouge, leur numéro aussi), chaque case en quatre
+  main.js) montre les 4 secteurs × 4 lignes de chaque camp (les lignes d'en face en vert kaki, leur numéro aussi), chaque case en quatre
   tronçons à la couleur de celui qui les tient ; une case envoie les régiments choisis dans cette tranchée (`ordreCase`) ; les régiments y
   sont des cercles numérotés. Tout ordre sur une tranchée (carte ou clic gauche) fait clignoter les tronçons visés trois secondes, sur le
   terrain (`rendu.clignoter`) et sur la carte, et le carnet dit ce que chacun va faire (`ordreDonne`) ; `actionDe(B, reg)` le dit en mots
@@ -148,7 +148,7 @@ la danse macabre, la catastrophe peinte avec calme. L'intention est dans `DESIGN
 - **La sélection sur le terrain** (Jérôme, v0.21.0) : un anneau d'os (liseré de terre) au pied de chaque homme des régiments choisis, à tous les
   zooms (`anneaux` de rendu3d.js, des points sans test de profondeur sous les soldats ; coût mesuré, tous les régiments choisis, 8 000
   soldats, rendu logiciel : +0,3 à 0,7 ms côté jeu, +2 à 7 ms dessin attendu, dans le bruit de la mesure). La visée (`majVisee`, un SVG) : une
-  ligne de chaque régiment choisi au curseur, une croix au bout, rouge si l'ordre ne partirait pas ; `rendu.surligner` allume ce que l'ordre
+  ligne de chaque régiment choisi au curseur, une croix au bout, glaise si l'ordre ne partirait pas ; `rendu.surligner` allume ce que l'ordre
   occuperait (les tronçons, ou une emprise par régiment en terrain libre, mêmes traits que le clignotement). `peutOrdonner` (bataille.js) est
   l'ordre à sec : `ordonnerMarche` et lui partent du même `planMarche`, rien n'est changé avant le clic. Le clic gauche valide (v0.21.2 : choisir puis ordonner ; le clic droit annule).
 - **Le survol global** (Jérôme, v0.21.1) : le régiment sous la souris (un homme de près, le régiment de loin, des deux camps), ou sous une carte
@@ -191,7 +191,7 @@ gris) et les deux camps (proposés `#6f86a6` et `#5b5d48`, invisibles sur la bou
 | `r` | `#a9a89a` | brume — pluie, fumée, glace, rides de l'eau |
 | `o` | `#e4dfd0` | os — le texte, l'éclair d'un obus, le casque des choisis |
 | `n` | `#8cb6ff` | bleu horizon — nous (Jérôme, v0.16.0 : l'ancien `#a9bad0` avait la couleur de la pluie et de la brume, `r` : sous la pluie, notre armée se perdait ; plus saturé, il passe toutes les paires de `lisibilite.mjs`) |
-| `x` | `#e0604f` | rouge — en face (Jérôme, v0.12.0 : se distingue d'un coup d'œil dans le champ) |
+| `x` | `#dde874` | vert kaki clair — en face (Jérôme, v0.28.0 ; rouge `#e0604f` avant : un kaki pâle et jaune, plus clair que tout le sol, vert compris, sinon il se perdait dans l'herbe ; ΔE ≥ 45 de chaque sol, contraste ≥ 1,7 ; le casque à pointe de l'équipé aide) |
 | `v` | `#6f8147` | vert mousse — l'herbe qui reprend, par plaques (Jérôme, v0.9.3 : « intégré dans le design, sans grandes différences ») |
 | `w` | `#5c6e3c` | vert sombre — l'herbe dans l'humide |
 
@@ -560,9 +560,17 @@ node outils/stamp-version.mjs            # après chaque changement de version.j
 - **Fumées** (Jérôme, v0.27.0 ; `eclats.js`) : un coup de fusil laisse un petit nuage clair (`particule(2…)`, 1 coup sur 5 des tirs dessinés : à 160 tirs par image et 1 à 2 s de vie, le tampon `ECLATS` y suffit) ; la fumée d'un
   obus est noire (sorte 10, terre puis boue sombre, plus haute et plus large) avec la chance `FUMEE[calibre].noire` (75 : 12 %, 155 : 35 %, 220 : 60 %) et une colonne de 3 × `big` éclats reste 40 à 90 s (`reste` : 15, 30, 50 %), qui se dissipe sur
   le dernier quart de sa vie. Tout le dessin : aucun effet sur la partie.
-- **Propositions du labo, pas encore retenues** (v0.27.0) : le soldat équipé (`equipe`, `equipe-marche` dans `geometries.js` : bottes, capote, ceinturon, cartouchières, gourde, couverture, mains, baïonnette, casque et moustache de chaque camp ;
+- **Le soldat équipé et les morts couchés, retenus** (Jérôme, v0.28.0 : « D pour les cadavres, détails maximum pour les soldats » ; `SOLDAT = 'equipe-marche'`, `cadavre = 'poses'` de rendu3d.js). Proposés en v0.27.0 : le soldat équipé (`equipe`, `equipe-marche` dans `geometries.js` : bottes, capote, ceinturon, cartouchières, gourde, couverture, mains, baïonnette, casque et moustache de chaque camp ;
   les parties 10-19 ne se dessinent que pour nous, 20-29 que pour en face, `cache` du nuanceur ; `uBalance` : les bras balancent) et les cadavres qui sont les soldats couchés (`cadavre: 'couche' | 'poses'` de `creerRendu`,
-  `corpsSoldatMat` : sur le dos, le ventre ou le côté, membres écartés selon le numéro ; la silhouette allégée dès 4 pixels par mètre, celle du style dès 6). Par défaut rien ne change (`planche`, `silhouette`). Pour adopter : `SOLDAT` et `cadavre` dans rendu3d.js.
+  `corpsSoldatMat` : sur le dos, le ventre ou le côté, membres écartés selon le numéro ; la silhouette allégée dès 4 pixels par mètre, celle du style dès 6). Les autres variantes (`silhouette`, `planche`, `couche`) restent au labo.
+  Mesuré (v0.28.0, 8 000 soldats, rendu logiciel, dessin attendu) : le soldat équipé coûte au zoom 8 138 000 triangles et 61 ms, contre 57 000 et 43-45 ms avec la silhouette ; zoom 4 inchangé (la silhouette allégée), ~100 ms.
+- **La caméra libre** (Jérôme, v0.28.0 ; `vue.ciel` de rendu3d.js) : n'importe quelle direction (le lacet n'est plus borné), de l'horizon (`TG_CIEL_MIN` 0,02) presque au zénith (1,55), tous les zooms, le ciel de la couleur de la
+  brume comme à l'écran titre ; le point visé reste sur le terrain et `borner` relève la caméra pour qu'elle reste à `GARDE_SOL` (1,5 m) au-dessus du sol sous elle (cinq itérations : la hauteur sous la caméra dépend de l'angle). Le plan proche passe de
+  `D × 0,15` (14 m au zoom 4) à 0,5 m : sinon le sol du bas de l'écran, à moins de 14 m, était coupé et laissait voir le ciel sous les pieds. `versTerrain` rend `[-1e5, -1e5]` pour un rayon qui regarde le ciel (les ordres le refusent : « Hors du
+  secteur »), `versEcran` rend `[-1e5, -1e5]` derrière la caméra (les étiquettes et la visée ne se mirent plus). Pas de limite de distance de dessin : tout dézoomé, vers l'horizon, les soldats d'un champ entier sont dans le cône ; non mesuré.
+- **La barre de chargement** (Jérôme, v0.28.0 ; `hud/chargement.js`, `#chargement` d'index.html) : le HTML la porte avant tout script (5 %), main.js la remplit (le jeu, les réglages, le moteur, le décor) puis la retire ; relire une partie passe par `etapesRestaurer`
+  (bataille.js, un générateur : `[part, étape]` entre deux morceaux, `restaurer` le vide d'un coup, même partie) et une partie neuve par `etapesNouvelle` ; la barre reste jusqu'à ce que `jouer` ait branché la bataille au rendu. Le mode debug ne s'arrête jamais pour peindre
+  (`instantane`) : les scripts gardent leurs minutages.
 - **Les soldats scintillaient dans les cratères** (v0.16.0) : leur hauteur était celle de la case, en marches d'un demi-mètre
   (`hauteurVueQ`) : un homme à cheval sur deux cases changeait de hauteur à chaque pas. `surfaceLisse` (rendu3d.js) interpole entre
   les centres des quatre cases voisines : il glisse sur les bords des trous.
