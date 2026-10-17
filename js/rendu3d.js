@@ -23,6 +23,8 @@
      point de 2 × 2 pixels (la couleur du camp sur son ombre).
    - Les corps : un homme couché (instancié) ; au zoom 1 et 2, un pixel. */
 import { loadThree } from './three-lib.js?v=0.22.0';
+import * as SH from './rendu/shaders.js?v=0.22.0';
+import { creerGeometries } from './rendu/geometries.js?v=0.22.0';
 import { PALETTE, ORDRE, INDICE } from './palette.js?v=0.22.0';
 import { OMBRE, couleursLigne } from './apparence.js?v=0.22.0';
 import { MORCEAU, hauteurVueQ as hauteurQ, hauteurVueM as hauteurM } from './terrain.js?v=0.22.0';
@@ -91,6 +93,8 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
   const palTex = new THREE.DataTexture(palData, NP, 2, THREE.RGBAFormat, THREE.UnsignedByteType);
   palTex.magFilter = palTex.minFilter = THREE.NearestFilter; palTex.generateMipmaps = false; palTex.needsUpdate = true;
   const col = k => new THREE.Color(PALETTE[k]);
+  const { geometrieSoldat: formeSoldat, geometrieArbre, geometrieBuisson } = creerGeometries(THREE, col);
+  const geometrieSoldat = style => formeSoldat(style, attrsI);
 
   let B = null, T = null;
   // Le sol a le même relief à tous les zooms (Jérôme, v0.12.0) ; seuls les petits décors (arbres, buissons, herbe) s'effacent de loin
@@ -102,23 +106,8 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
      un tiers du rendu logiciel). */
   const solMat = new THREE.ShaderMaterial({
     uniforms: { uSol: { value: null }, uTaille: { value: new THREE.Vector2(1, 1) } },
-    vertexShader: `
-      attribute float aParoi; attribute vec2 aDecal;
-      varying vec2 vUV;
-      uniform vec2 uTaille;
-      void main() {
-        // une paroi prend la couleur de la case au-dessus d'elle (aDecal : vers elle), en plus sombre (la moitié basse de la texture)
-        vec2 xz = position.xz + aDecal;
-        vUV = vec2(xz.x / uTaille.x, (xz.y / uTaille.y + (aParoi > 0.5 ? 1.0 : 0.0)) * 0.5);
-        gl_Position = projectionMatrix * viewMatrix * vec4(position, 1.0);
-      }`,
-    fragmentShader: `
-      uniform sampler2D uSol;
-      varying vec2 vUV;
-      void main() {
-        vec4 c = texture2D(uSol, vUV);
-        gl_FragColor = vec4(c.rgb, 1.0);
-      }`,
+    vertexShader: SH.solMat.v,
+    fragmentShader: SH.solMat.f,
     side: THREE.DoubleSide,
   });
   const PAL_RGB = ORDRE.map(k => rgb(PALETTE[k]));
@@ -224,131 +213,14 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
       uJambes: { value: col('s') }, uFusil: { value: col('t') }, uSac: { value: col('g') }, uVisage: { value: col('h') }, uT: { value: 0 },
       uSol: solMat.uniforms.uSol, uTaille: solMat.uniforms.uTaille,
       uSoleil: { value: new THREE.Vector2(0.5, 0.6) } },
-    vertexShader: `
-      attribute vec3 aPos; attribute float aCamp; attribute float aPart; attribute float aJambe; attribute float aVit; attribute float aBras; attribute vec2 aTir;
-      uniform float uT; uniform vec2 uSoleil;
-      varying float vCamp; varying float vPart; varying vec2 vXZ; varying float vLong;
-      void main() {
-        vCamp = aCamp; vPart = aPart; vLong = position.y;
-        vec3 p = position;
-        // la peur : un homme se tapit (aVit < 0 : −1 − sa vitesse), sauf son ombre
-        bool tapi = aVit < 0.0;
-        float vit = tapi ? 0.0 : aVit;
-        if (tapi && (aPart < 0.5 || aPart > 1.5)) p.y *= 0.6;
-        // l'ombre suit le soleil : elle part des pieds, longue le matin et le soir (uSoleil : son bout, par mètre de hauteur)
-        if (aPart > 0.5 && aPart < 1.5) {
-          vec2 d = length(uSoleil) > 0.05 ? normalize(uSoleil) : vec2(0.6, 0.8);
-          vec2 xz = vec2(-d.y, d.x) * position.x + (position.y > 0.5 ? uSoleil * 1.7 + d * 0.1 : -d * 0.05);
-          p = vec3(xz.x, 0.03, xz.y);
-        }
-        vXZ = (p + aPos).xz;
-        // les jambes qui marchent : un balancement autour de la hanche (0,8 m), selon la vitesse
-        if (aJambe != 0.0 && vit > 0.15) {
-          float a = sin(uT * 8.0 + aPos.x * 1.7 + aPos.z * 1.3) * 0.5 * min(1.0, vit) * aJambe;
-          float y = p.y - 0.8;
-          p.z = p.z * cos(a) - y * sin(a);
-          p.y = 0.8 + p.z * sin(a) + y * cos(a);
-        }
-        // il tire (aTir : x la pose, 1 quand il épaule, y le cap vers sa cible) : les bras et le fusil se lèvent devant lui
-        // (autour de l'épaule, à 1,3 m), et il se tourne vers l'ennemi ; sa pose seulement, jamais la partie
-        float tir = clamp(aTir.x * 2.5, 0.0, 1.0);
-        if (tir > 0.0 && !(aPart > 0.5 && aPart < 1.5)) {
-          if (aBras != 0.0) {
-            if (aBras > 1.5) p.x -= 0.28 * tir;
-            float a = -1.45 * tir;
-            vec3 d = p - vec3(0.0, 1.3, 0.0);
-            p.y = 1.3 + d.y * cos(a) - d.z * sin(a);
-            p.z = d.y * sin(a) + d.z * cos(a);
-          }
-          float c = cos(aTir.y), s = sin(aTir.y);
-          p.xz = vec2(p.x * c + p.z * s, -p.x * s + p.z * c);
-        }
-        gl_Position = projectionMatrix * viewMatrix * vec4(p + aPos, 1.0);
-      }`,
-    fragmentShader: `
-      uniform vec3 uNous; uniform vec3 uEux; uniform vec3 uOmbre; uniform vec3 uSel;
-      uniform vec3 uJambes; uniform vec3 uFusil; uniform vec3 uSac; uniform vec3 uVisage;
-      uniform sampler2D uSol; uniform vec2 uTaille;
-      varying float vCamp; varying float vPart; varying vec2 vXZ; varying float vLong;
-      void main() {
-        float k = floor(vPart + 0.5);
-        // l'ombre : le sol qu'elle couvre, un ton plus sombre (la couleur de ses parois), fondue de plus en plus
-        // vers son bout, sans trame (une ombre noire et pleine se lisait comme une tache ; Jérôme, v0.12.1 : plus de tramage)
-        if (k == 1.0) {
-          gl_FragColor = vec4(texture2D(uSol, vec2(vXZ.x / uTaille.x, (vXZ.y / uTaille.y + 1.0) * 0.5)).rgb, 0.95 - 0.6 * vLong);
-          return;
-        }
-        bool sel = vCamp > 1.5;
-        float camp = sel ? vCamp - 2.0 : vCamp;
-        vec3 c = camp > 0.5 ? uEux : uNous;
-        if (k == 1.0) c = uOmbre;
-        else if (k == 2.0 && sel) c = uSel;           // le casque des choisis
-        else if (k == 3.0) c = uJambes;
-        else if (k == 4.0) c = uFusil;
-        else if (k == 5.0) c = uSac;
-        else if (k == 6.0) c = uVisage;
-        gl_FragColor = vec4(c, 1.0);
-      }`,
+    vertexShader: SH.soldatMat.v,
+    fragmentShader: SH.soldatMat.f,
     side: THREE.DoubleSide, transparent: true,
   });
-  // les faces d'une boîte qu'on voit d'ici : le dessus, le sud, l'est et l'ouest (jamais le nord ni le dessous)
-  function boiteVue(out, x0, x1, y0, y1, z0, z1, part, jambe = 0, dessusPart = part, bras = 0) {
-    const q = (a, b, c, d, k) => { out.p.push(...a, ...b, ...c, ...a, ...c, ...d); for (let n = 0; n < 6; n++) { out.k.push(k); out.j.push(jambe); out.b.push(bras); } };
-    q([x0, y1, z0], [x0, y1, z1], [x1, y1, z1], [x1, y1, z0], dessusPart);
-    q([x0, y0, z1], [x1, y0, z1], [x1, y1, z1], [x0, y1, z1], part);
-    q([x1, y0, z1], [x1, y0, z0], [x1, y1, z0], [x1, y1, z1], part);
-    q([x0, y0, z0], [x0, y0, z1], [x0, y1, z1], [x0, y1, z0], part);
-  }
-  function geometrieSoldat(style) {
-    const g = { p: [], k: [], j: [], b: [] };
-    // l'ombre au sol vers le sud-est (la lumière vient du nord-ouest)
-    // (y = 1 : le bout de l'ombre, déplacé par le shader selon le soleil)
-    g.p.push(-0.22, 0, 0, 0.22, 0, 0, 0.22, 1, 0, -0.22, 0, 0, 0.22, 1, 0, -0.22, 1, 0); for (let n = 0; n < 6; n++) { g.k.push(1); g.j.push(0); g.b.push(0); }
-    const membres = style === 'detail' || style === 'silhouette' || style === 'marche';
-    if (style === 'legere') {
-      boiteVue(g, -0.2, 0.2, 0, 0.82, -0.12, 0.12, 3);                                // les jambes, d'un bloc (elles ne marchent pas)
-      boiteVue(g, -0.24, 0.24, 0.8, 1.42, -0.15, 0.15, 0);                           // la vareuse
-      boiteVue(g, -0.35, -0.24, 0.82, 1.4, -0.07, 0.07, 0, 0, 0, -1);                // les bras
-      boiteVue(g, 0.24, 0.35, 0.82, 1.4, -0.07, 0.07, 0, 0, 0, 1);
-      boiteVue(g, -0.16, 0.16, 1.4, 1.7, -0.14, 0.14, 6, 0, 2);                      // la tête, son dessus est le casque
-      boiteVue(g, 0.37, 0.42, 0.55, 1.95, -0.03, 0.03, 4, 0, 4, 2);                  // le fusil
-    } else if (!membres) boiteVue(g, -0.25, 0.25, 0, 1.7, -0.175, 0.175, 0, 0, 2);          // la boîte ; son dessus, le casque
-    else if (style !== 'legere') {
-      boiteVue(g, -0.2, -0.03, 0, 0.82, -0.09, 0.09, 3, 1);                          // les jambes
-      boiteVue(g, 0.03, 0.2, 0, 0.82, -0.09, 0.09, 3, -1);
-      boiteVue(g, -0.24, 0.24, 0.8, 1.42, -0.15, 0.15, 0);                           // la vareuse
-      if (style === 'silhouette') {                                                  // les bras : le long du corps, ils se lèvent pour tirer
-        boiteVue(g, -0.35, -0.24, 0.82, 1.4, -0.07, 0.07, 0, 0, 0, -1);
-        boiteVue(g, 0.24, 0.35, 0.82, 1.4, -0.07, 0.07, 0, 0, 0, 1);
-      }
-      boiteVue(g, -0.1, 0.1, 1.4, 1.6, -0.1, 0.1, 6);                                // le visage
-      boiteVue(g, -0.16, 0.16, 1.57, 1.7, -0.16, 0.16, 2);                           // le casque, plus large que la tête
-    }
-    if (style !== 'legere' && (style === 'fusil' || style === 'silhouette' || style === 'marche')) boiteVue(g, style === 'silhouette' ? 0.37 : 0.26, style === 'silhouette' ? 0.42 : 0.31, 0.55, 1.95, -0.03, 0.03, 4, 0, 4, style === 'silhouette' ? 2 : 0);   // le fusil, en bandoulière ; à l'épaule quand il tire
-    if (style === 'silhouette' || style === 'marche') boiteVue(g, -0.19, 0.19, 0.95, 1.38, -0.32, -0.15, 5);                       // le sac, dans le dos
-    const gi = new THREE.InstancedBufferGeometry();
-    gi.setAttribute('position', new THREE.Float32BufferAttribute(g.p, 3));
-    gi.setAttribute('aPart', new THREE.Float32BufferAttribute(g.k, 1));
-    gi.setAttribute('aJambe', new THREE.Float32BufferAttribute(g.j, 1));
-    gi.setAttribute('aBras', new THREE.Float32BufferAttribute(g.b, 1));
-    gi.setAttribute('aPos', attrsI[0]); gi.setAttribute('aCamp', attrsI[1]); gi.setAttribute('aVit', attrsI[2]);
-    if (style === 'silhouette' || style === 'legere') gi.setAttribute('aTir', attrsI[3]);   // (la boîte ne tire pas : l'attribut absent vaut 0)
-    gi.instanceCount = 0;
-    return gi;
-  }
   const pointMat = new THREE.ShaderMaterial({
     uniforms: { uNous: { value: col('n') }, uEux: { value: col('x') }, uOmbre: { value: col('t') }, uSel: { value: col('o') } },
-    vertexShader: `
-      attribute float aCamp; varying float vCamp;
-      void main() { vCamp = aCamp; gl_Position = projectionMatrix * viewMatrix * vec4(position + vec3(0.0, 1.2, 0.0), 1.0); gl_PointSize = 2.0; }`,
-    fragmentShader: `
-      uniform vec3 uNous; uniform vec3 uEux; uniform vec3 uOmbre; uniform vec3 uSel; varying float vCamp;
-      void main() {
-        if (gl_PointCoord.y > 0.5) { gl_FragColor = vec4(uOmbre, 1.0); return; }
-        bool sel = vCamp > 1.5;
-        float camp = sel ? vCamp - 2.0 : vCamp;
-        gl_FragColor = vec4(sel ? uSel : (camp > 0.5 ? uEux : uNous), 1.0);
-      }`,
+    vertexShader: SH.pointMat.v,
+    fragmentShader: SH.pointMat.f,
   });
   // Le contour des régiments choisis (Jérôme, v0.21.0) : un anneau d'os, liseré de terre, au pied de chaque homme, à tous les zooms
   // (aux zooms 1 et 2, où un homme n'est qu'un point, c'est lui qui le montre) ; sous les soldats, sans test de profondeur.
@@ -356,9 +228,8 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
   let anGeo = null, anneaux = null, survolReg = -1, survolTroncons = [];
   const anMat = new THREE.ShaderMaterial({
     uniforms: { uOs: { value: col('o') }, uTerre: { value: col('t') }, uNous: { value: col('n') }, uEux: { value: col('x') }, uTaille: { value: 6 } },
-    vertexShader: `uniform float uTaille; attribute float aTon; varying float vTon; void main() { vTon = aTon; gl_Position = projectionMatrix * viewMatrix * vec4(position + vec3(0.0, 0.05, 0.0), 1.0); gl_PointSize = uTaille; }`,
-    fragmentShader: `uniform vec3 uOs; uniform vec3 uTerre; uniform vec3 uNous; uniform vec3 uEux; varying float vTon;
-      void main() { float r = length(gl_PointCoord - 0.5) * 2.0; if (r > 1.0 || r < 0.58) discard; vec3 c = vTon < 0.5 ? uOs : (vTon < 1.5 ? uNous : uEux); gl_FragColor = vec4(r > 0.82 ? uTerre : c, 1.0); }`,
+    vertexShader: SH.anMat.v,
+    fragmentShader: SH.anMat.f,
     depthTest: false, depthWrite: false, transparent: true,
   });
   function preparerSoldats(capacite) {
@@ -394,18 +265,14 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
   let capTombes = 0, tbPos = null, tombesInst = null, tombesPoints = null, attrsTI = null, attrsTP = null;
   const tombeMat = new THREE.ShaderMaterial({
     uniforms: { uTertre: { value: col('g') }, uFlanc: { value: col('s') }, uCroix: { value: col('r') } },
-    vertexShader: `
-      attribute vec3 aPos; attribute float aPart; varying float vPart;
-      void main() { vPart = aPart; gl_Position = projectionMatrix * viewMatrix * vec4(position + aPos, 1.0); }`,
-    fragmentShader: `
-      uniform vec3 uTertre; uniform vec3 uFlanc; uniform vec3 uCroix; varying float vPart;
-      void main() { gl_FragColor = vec4(vPart > 1.5 ? uCroix : (vPart > 0.5 ? uFlanc : uTertre), 1.0); }`,
+    vertexShader: SH.tombeMat.v,
+    fragmentShader: SH.tombeMat.f,
     side: THREE.DoubleSide,
   });
   const tombePointMat = new THREE.ShaderMaterial({
     uniforms: tombeMat.uniforms,
-    vertexShader: `void main() { gl_Position = projectionMatrix * viewMatrix * vec4(position + vec3(0.0, 0.3, 0.0), 1.0); gl_PointSize = 1.0; }`,
-    fragmentShader: `uniform vec3 uTertre; void main() { gl_FragColor = vec4(uTertre, 1.0); }`,
+    vertexShader: SH.tombePointMat.v,
+    fragmentShader: SH.tombePointMat.f,
   });
   function preparerTombes(capacite) {
     if (tombesInst) { scene.remove(tombesInst, tombesPoints); tombesInst.geometry.dispose(); tombesPoints.geometry.dispose(); }
@@ -445,32 +312,14 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
   let capCorps = 0, cPos = null, cInfo = null, corpsInst = null, corpsPoints = null, attrsCI = null, attrsCP = null;
   const corpsMat = new THREE.ShaderMaterial({
     uniforms: { uNous: { value: col('n') }, uEux: { value: col('x') }, uVieux: { value: col('g') }, uFlanc: { value: col('s') } },
-    vertexShader: `
-      attribute vec3 aPos; attribute vec2 aInfo; attribute float aPart;
-      varying float vEtat; varying float vPart;
-      void main() {
-        vEtat = aInfo.x; vPart = aPart;
-        float c = cos(aInfo.y), s = sin(aInfo.y);
-        vec3 p = vec3(position.x * c - position.z * s, position.y, position.x * s + position.z * c);
-        gl_Position = projectionMatrix * viewMatrix * vec4(p + aPos, 1.0);
-      }`,
-    fragmentShader: `
-      uniform vec3 uNous; uniform vec3 uEux; uniform vec3 uVieux; uniform vec3 uFlanc;
-      varying float vEtat; varying float vPart;
-      void main() {
-        vec3 c = vEtat > 1.5 ? uVieux : (vEtat > 0.5 ? uEux : uNous);
-        gl_FragColor = vec4(vPart > 0.5 ? uFlanc : c, 1.0);
-      }`,
+    vertexShader: SH.corpsMat.v,
+    fragmentShader: SH.corpsMat.f,
     side: THREE.DoubleSide,
   });
   const corpsPointMat = new THREE.ShaderMaterial({
     uniforms: corpsMat.uniforms,
-    vertexShader: `
-      attribute vec2 aInfo; varying float vEtat;
-      void main() { vEtat = aInfo.x; gl_Position = projectionMatrix * viewMatrix * vec4(position + vec3(0.0, 0.3, 0.0), 1.0); gl_PointSize = 1.0; }`,
-    fragmentShader: `
-      uniform vec3 uNous; uniform vec3 uEux; uniform vec3 uVieux; varying float vEtat;
-      void main() { gl_FragColor = vec4(vEtat > 1.5 ? uVieux : (vEtat > 0.5 ? uEux : uNous), 1.0); }`,
+    vertexShader: SH.corpsPointMat.v,
+    fragmentShader: SH.corpsPointMat.f,
   });
   function preparerCorps(capacite) {
     if (corpsInst) { scene.remove(corpsInst, corpsPoints); corpsInst.geometry.dispose(); corpsPoints.geometry.dispose(); }
@@ -502,28 +351,6 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
 
   // ─── Les arbres : un tronc, quelques branches nues ; abattus, une souche ───
   const arbresMesh = [];
-  function geometrieArbre(v, abattu, loin = false) {
-    const parts = [];
-    const boite = (w, h, d, x, y, z, rz = 0, rx = 0) => {
-      const g = new THREE.BoxGeometry(w, h, d).toNonIndexed();
-      g.translate(0, h / 2, 0); g.rotateZ(rz); g.rotateX(rx); g.translate(x, y, z);
-      parts.push(g);
-    };
-    if (abattu) { boite(0.6, 1.1, 0.6, 0, 0, 0); boite(0.25, 1.6, 0.25, 0.1, 0.6, 0, 1.1); }
-    else {
-      const H = 6 + v;
-      boite(0.55, H, 0.55, 0, 0, 0);
-      // de loin (le sol à plat), le tronc seul : un arbre y fait quelques pixels (tout le champ : ~40 000 triangles de branches)
-      for (let k = 0; k < (loin ? 0 : 4); k++) {
-        const y = H * (0.45 + k * 0.13), s = k % 2 ? 1 : -1, l = 2.2 - k * 0.35;
-        boite(0.22, l, 0.22, 0, y, 0, s * (0.7 + v * 0.1), (k - 1.5) * 0.3);
-      }
-    }
-    const pos = parts.flatMap(g => [...g.attributes.position.array]);
-    const out = new THREE.BufferGeometry();
-    out.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
-    return out;
-  }
   const arbreMat = new THREE.MeshBasicMaterial({ color: col('s'), side: THREE.DoubleSide });
   function preparerArbres() {
     arbresMesh.forEach(m => { scene.remove(m); m.geometry.dispose(); });
@@ -566,21 +393,6 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
   // le dessus du feuillage plus clair (la glaise), les flancs sombres (la boue)
   const buissonsMesh = [];
   const buissonMat = new THREE.MeshBasicMaterial({ vertexColors: true, side: THREE.DoubleSide });
-  function geometrieBuisson(v) {
-    const parts = [];
-    const boite = (w, h, d, x, z) => { const g = new THREE.BoxGeometry(w, h, d).toNonIndexed(); g.translate(x, h / 2, z); parts.push(g); };
-    boite(1.3 + v * 0.25, 1 + v * 0.2, 1.1, 0, 0);
-    boite(0.9, 0.7, 0.8, 0.9, 0.35 - v * 0.25);
-    if (v > 0) boite(0.8, 0.6, 0.7, -0.85, -0.3);
-    const pos = parts.flatMap(g => [...g.attributes.position.array]);
-    const nor = parts.flatMap(g => [...g.attributes.normal.array]);
-    const dessus = col('g'), flanc = col('b'), couleurs = [];
-    for (let k = 0; k < nor.length; k += 3) { const c = nor[k + 1] > 0.5 ? dessus : flanc; couleurs.push(c.r, c.g, c.b); }
-    const out = new THREE.BufferGeometry();
-    out.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
-    out.setAttribute('color', new THREE.Float32BufferAttribute(couleurs, 3));
-    return out;
-  }
   function preparerBuissons() {
     buissonsMesh.forEach(m => { scene.remove(m); m.geometry.dispose(); });
     buissonsMesh.length = 0;
@@ -623,16 +435,8 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
   }
   const herbeMat = new THREE.ShaderMaterial({
     uniforms: { uT: { value: 0 }, uBas: { value: col('g') }, uHaut: { value: col('h') } },
-    vertexShader: `
-      attribute vec3 aPos; attribute float aHaut; uniform float uT; varying float vHaut;
-      void main() {
-        vHaut = aHaut;
-        vec3 p = position;
-        p.x += sin(uT * 1.6 + aPos.x * 0.37 + aPos.z * 0.21) * 0.07 * aHaut;        // le vent
-        gl_Position = projectionMatrix * viewMatrix * vec4(p + aPos, 1.0);
-      }`,
-    fragmentShader: `uniform vec3 uBas; uniform vec3 uHaut; varying float vHaut;
-      void main() { gl_FragColor = vec4(vHaut > 0.6 ? uHaut : uBas, 1.0); }`,
+    vertexShader: SH.herbeMat.v,
+    fragmentShader: SH.herbeMat.f,
     side: THREE.DoubleSide,
   });
   const herbeMesh = new THREE.Mesh(herbeGeo, herbeMat); herbeMesh.frustumCulled = false; herbeMesh.renderOrder = 1;
@@ -684,15 +488,8 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
   eclGeo.setAttribute('aTaille', new THREE.BufferAttribute(eclTaille, 1).setUsage(THREE.DynamicDrawUsage));
   const eclMat = new THREE.ShaderMaterial({
     uniforms: { uPal: { value: palTex }, uNP: { value: NP }, uTaille: { value: 2 } },
-    vertexShader: `attribute float aTon; attribute float aTaille; varying float vTon; uniform float uTaille;
-      void main() { vTon = aTon; gl_Position = projectionMatrix * viewMatrix * vec4(position, 1.0); gl_PointSize = aTon < 0.0 ? 0.0 : max(1.0, floor(uTaille * aTaille + 0.5)); if (aTon < 0.0) gl_Position = vec4(2.0); }`,
-    fragmentShader: `uniform sampler2D uPal; uniform float uNP; varying float vTon;
-      void main() {
-        float t = floor(vTon + 0.5);
-        float a = 1.0;
-        if (t > 50.0) { a = 0.6; t -= 100.0; }   // la fumée, fondue (plus de trame ; v0.12.1)
-        gl_FragColor = vec4(texture2D(uPal, vec2((t + 0.5) / uNP, 0.25)).rgb, a);
-      }`,
+    vertexShader: SH.eclMat.v,
+    fragmentShader: SH.eclMat.f,
     depthTest: true, depthWrite: false, transparent: true,
   });
   const eclats = new THREE.Points(eclGeo, eclMat); eclats.frustumCulled = false; eclats.renderOrder = 3;
@@ -837,8 +634,8 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
   crGeo.setAttribute('position', new THREE.BufferAttribute(crPos, 3).setUsage(THREE.DynamicDrawUsage));
   const crMat = new THREE.ShaderMaterial({
     uniforms: { uCol: { value: col('t') }, uT: { value: 0 } },
-    vertexShader: `uniform float uT; void main() { gl_Position = projectionMatrix * viewMatrix * vec4(position, 1.0); gl_PointSize = mod(floor(uT * 6.0 + position.x), 2.0) > 0.5 ? 3.0 : 2.0; }`,
-    fragmentShader: `uniform vec3 uCol; void main() { gl_FragColor = vec4(uCol, 1.0); }`,
+    vertexShader: SH.crMat.v,
+    fragmentShader: SH.crMat.f,
   });
   const corbeaux = new THREE.Points(crGeo, crMat); corbeaux.frustumCulled = false; corbeaux.renderOrder = 4; corbeaux.visible = false;
   scene.add(corbeaux);
@@ -946,16 +743,8 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
   plGeo.setAttribute('aVit', new THREE.BufferAttribute(plVit, 1));
   const plMat = new THREE.ShaderMaterial({
     uniforms: { uT: { value: 0 }, uC: { value: new THREE.Vector2() }, uE: { value: new THREE.Vector2(400, 300) }, uCol: { value: col('r') }, uTaille: { value: 1 } },
-    vertexShader: `attribute float aVit; uniform float uT; uniform vec2 uC; uniform vec2 uE; uniform float uTaille;
-      void main() {
-        vec3 p = position;
-        p.y = 30.0 - mod(uT * aVit + position.y, 40.0);
-        p.x = uC.x - uE.x * 0.5 + mod(p.x - uC.x + uE.x * 0.5 - uT * 2.0, uE.x);
-        p.z = uC.y - uE.y * 0.5 + mod(p.z - uC.y + uE.y * 0.5, uE.y);
-        gl_Position = projectionMatrix * viewMatrix * vec4(p, 1.0);
-        gl_PointSize = uTaille;
-      }`,
-    fragmentShader: `uniform vec3 uCol; void main() { if (gl_PointCoord.x > 0.5) discard; gl_FragColor = vec4(uCol, 1.0); }`,
+    vertexShader: SH.plMat.v,
+    fragmentShader: SH.plMat.f,
     depthTest: false, depthWrite: false,
   });
   const pluie = new THREE.Points(plGeo, plMat); pluie.frustumCulled = false; pluie.renderOrder = 4;
@@ -963,12 +752,8 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
   // le brouillard : un voile de brume continu qui s'épaissit vers le haut de l'écran (le lointain) ; plus de trame (Jérôme, v0.12.1)
   const brumeMat = new THREE.ShaderMaterial({
     uniforms: { uCol: { value: col('r') }, uH: { value: 400 } },
-    vertexShader: `void main() { gl_Position = vec4(position.xy, -1.0, 1.0); }`,
-    fragmentShader: `uniform vec3 uCol; uniform float uH;
-      void main() {
-        float loin = gl_FragCoord.y / uH;                          // 0 en bas, 1 en haut
-        gl_FragColor = vec4(uCol, 0.2 * max(0.0, loin - 0.45) / 0.55);
-      }`,
+    vertexShader: SH.brumeMat.v,
+    fragmentShader: SH.brumeMat.f,
     transparent: true,
     depthTest: false, depthWrite: false,
   });
@@ -1005,18 +790,9 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
   aoGeo.instanceCount = 0;
   const aoMat = new THREE.ShaderMaterial({
     uniforms: { uSoleil: soldatMat.uniforms.uSoleil, uSol: solMat.uniforms.uSol, uTaille: solMat.uniforms.uTaille },
-    vertexShader: `attribute vec4 aPos; uniform vec2 uSoleil; varying vec2 vXZ; varying float vLong;
-      void main() {
-        vec2 d = length(uSoleil) > 0.05 ? normalize(uSoleil) : vec2(0.6, 0.8);
-        vec2 xz = vec2(-d.y, d.x) * position.x + (position.y > 0.5 ? uSoleil * aPos.w : vec2(0.0));
-        vXZ = vec2(aPos.x + xz.x, aPos.z + xz.y); vLong = position.y;
-        gl_Position = projectionMatrix * viewMatrix * vec4(aPos.x + xz.x, aPos.y + 0.04, aPos.z + xz.y, 1.0);
-      }`,
+    vertexShader: SH.aoMat.v,
     // le sol un ton plus sombre, fondu : dense au pied, presque rien au bout (les branches nues laissent passer le jour)
-    fragmentShader: `uniform sampler2D uSol; uniform vec2 uTaille; varying vec2 vXZ; varying float vLong;
-      void main() {
-        gl_FragColor = vec4(texture2D(uSol, vec2(vXZ.x / uTaille.x, (vXZ.y / uTaille.y + 1.0) * 0.5)).rgb, 0.7 - 0.55 * vLong);
-      }`,
+    fragmentShader: SH.aoMat.f,
     side: THREE.DoubleSide, depthWrite: false, transparent: true,
     polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2,
   });
@@ -1030,8 +806,8 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
   lnGeo.setDrawRange(0, 0);
   const lnMat = new THREE.ShaderMaterial({
     uniforms: { uO: { value: col('o') }, uH: { value: col('h') }, uT: { value: 0 } },
-    vertexShader: `uniform float uT; varying float vF; void main() { vF = sin(uT * 9.0 + position.x * 3.1 + position.z); gl_Position = projectionMatrix * viewMatrix * vec4(position, 1.0); gl_PointSize = 2.0; }`,
-    fragmentShader: `uniform vec3 uO; uniform vec3 uH; varying float vF; void main() { gl_FragColor = vec4(vF > -0.3 ? uO : uH, 1.0); }`,
+    vertexShader: SH.lnMat.v,
+    fragmentShader: SH.lnMat.f,
     depthWrite: false,
   });
   const lanternes = new THREE.Points(lnGeo, lnMat); lanternes.frustumCulled = false; lanternes.renderOrder = 6;
@@ -1073,26 +849,8 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
   // chaude : os et herbe sèche).
   const nuitMat = new THREE.ShaderMaterial({
     uniforms: { uCol: { value: col('t') }, uLueur: { value: col('o') }, uD: { value: 0 }, uMode: { value: 2 }, uLum: { value: null }, uTaille: { value: new THREE.Vector2(640, 400) } },
-    vertexShader: `void main() { gl_Position = vec4(position.xy, -1.0, 1.0); }`,
-    fragmentShader: `uniform vec3 uCol; uniform vec3 uLueur; uniform float uD; uniform float uMode; uniform sampler2D uLum; uniform vec2 uTaille;
-      float bayer(vec2 p) {
-        vec2 a = mod(p, 2.0), b = mod(floor(p / 2.0), 2.0);
-        float m = a.x * 2.0 + a.y * 3.0 - a.x * a.y * 4.0;
-        float n = b.x * 2.0 + b.y * 3.0 - b.x * b.y * 4.0;
-        return (m * 4.0 + n + 0.5) / 16.0;
-      }
-      void main() {
-        float clair = texture2D(uLum, gl_FragCoord.xy / uTaille).r;
-        if (uMode < 0.5) {
-          if (bayer(floor(gl_FragCoord.xy)) > uD * (1.0 - clair)) discard;
-          gl_FragColor = vec4(uCol, 1.0);
-        } else if (uMode < 1.5) {
-          gl_FragColor = vec4(uCol, uD * (1.0 - clair));
-        } else {
-          float halo = clair * clair * 0.38 * min(1.0, uD * 1.6);
-          gl_FragColor = vec4(mix(uCol, uLueur, halo / max(0.001, halo + uD * (1.0 - clair))), min(1.0, uD * (1.0 - clair) + halo));
-        }
-      }`,
+    vertexShader: SH.nuitMat.v,
+    fragmentShader: SH.nuitMat.f,
     transparent: true, depthTest: false, depthWrite: false,
   });
   const nuitPlan = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), nuitMat); nuitPlan.frustumCulled = false; nuitPlan.renderOrder = 5.5;

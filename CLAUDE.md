@@ -321,6 +321,14 @@ nuit (le voile continu et ses halos mélangent la terre, le sol et l'os : des co
   parois sud, est et ouest en dépendent). Les parois est et ouest (et les bords
   du champ, jusqu'au socle) existent pour la caméra tournée ; l'ouest, éclairé,
   garde la couleur du dessus. `deplacerEcran`, `tourner`, `placerCamera`.
+- `js/hud/` — le HUD, sorti de `main.js` (v0.22.0, sans changement pour le joueur) : des fabriques `creer…({ $, bataille: () => B, … })` qui gardent
+  leur propre état et reçoivent la bataille en cours à chaque appel (jamais `B` lui-même : main.js le remplace à chaque partie), et les actions
+  (choisir, ordonner) en rappels. `lecture.js` (qui est un homme, ce que compte un régiment : des fonctions de `B`, sans DOM), `fiche.js`, `carnet.js`,
+  `pertes.js`, `carte.js` (le dessin de la carte ; `surSecteur`, `surCase`, `surRonde` sont à main.js), `nuit.js` (le papier de la nuit : `etat`, `corvees`).
+  Restent dans main.js : la rangée des régiments (`majRegiments`, lié aux ordres), le survol et la visée, les commandes, la boucle.
+- `js/rendu/` — ce que `rendu3d.js` ne garde plus : `shaders.js` (tout le GLSL, du texte), `geometries.js` (soldat, arbre, buisson : `creerGeometries(THREE, col)` ;
+  la forme du soldat prend les attributs d'instance en paramètre). Le reste de `rendu3d.js` est une seule fermeture (la scène, les tampons, la caméra) :
+  la découper demande d'abord de décider comment ses morceaux se partagent cet état.
 - `js/main.js` — écran titre → bataille → nuit → fin ; le zoom et la caméra
   gardés dans `cyclopeen:prefs` ; les fiches (un homme, un régiment ; Échap
   les ferme), le repère de l'homme et la bulle du survol (`majBulle`, chaque image) ; HUD en papiers de campagne (montre, cartes de régiment, carnet de bord,
@@ -355,6 +363,7 @@ nuit (le voile continu et ses halos mélangent la terre, le sol et l'os : des co
 
 ```bash
 node outils/test-run.mjs                 # règles, sauvegarde, pureté
+node outils/fumee.mjs                    # le jeu dans le navigateur : un scénario fixe, aucune erreur console, l'empreinte du HUD (test/fumee.json)
 node outils/captures.mjs --page index.html --page labo.html --page atelier.html
 node outils/audit-ecran.mjs --page index.html --page labo.html --page atelier.html
 node outils/lisibilite.mjs               # contraste, tuiles en gris
@@ -389,6 +398,12 @@ node outils/stamp-version.mjs            # après chaque changement de version.j
   marche le long de son front reste dans la tranchée (graines 3, 5, 7, 30 s : 50-57 % des hommes en tranchée, contre 12-31 %), sans
   arriver plus tard (140 m restants contre 143). Les cratères ne comptent pas (les descendre ralentit). Une tranchée comblée par les obus ne
   protège plus : son carré redevient ordinaire à la prochaine mise à jour des coûts. `calculerCoutsBande` donne aussi la vue de `troncon`.
+- **Le test de fumée est un test de refonte** (`outils/fumee.mjs`) : l'empreinte du HUD à 13 étapes (`test/fumee.json`) ne doit pas bouger quand on découpe
+  du code sans rien changer ; une règle ou un texte qui change exprès demande de la réécrire (`--ecrire`, sur l'ancien code d'abord pour prouver le reste).
+  Pièges rencontrés en l'écrivant : la boucle avance d'un nombre de pas qui dépend de la machine avant qu'on l'arrête (d'où `setSeed` et la pause dans le
+  même instant) ; un clic à l'écran vise un point qui dépend de la respiration de la caméra, donc de l'horloge (d'où les ordres par `__jeu`) ; un ordre
+  fait clignoter trois secondes d'horloge (d'où l'attente). Et à la découpe de `rendu3d.js` : `geometrieSoldat` lisait `attrsI`, un état du rendu, sans le dire ;
+  seul un essai qui compare les formes avant et après (`creerGeometries` contre l'ancien code) l'a vu.
 - **Déterminisme et cache** : un champ de coûts calculé « quand le cache le veut »
   aurait rendu une partie relue différente. Les champs ne dépendent que de `couts`,
   un résumé du terrain qui fait partie de l'état (sauvegardé) et n'est refait qu'à
