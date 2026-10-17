@@ -50,9 +50,9 @@ Piste : le **lockstep**. La simulation est pure, à pas fixe (1/30 s) et à grai
 pas calculent la même bataille ; on n'échange que les ordres. La liaison : WebRTC entre deux navigateurs (code à copier-coller pour
 s'appairer, sans serveur de jeu).
 
-- [ ] **D'abord, le test de déterminisme** entre Chrome et Firefox : la même graine et les mêmes ordres donnent-ils la même bataille
-  (fonctions comme `Math.sin`, ordre des tirages) ? Une somme de contrôle de l'état toutes les N secondes pour voir la dérive. Si cela
-  échoue, la piste tombe ou demande un état autoritaire d'un côté
+- [x] **Le test de déterminisme** (outil fait : `js/determinisme.js`, `outils/determinisme.mjs` Node contre Chromium, `determinisme.html` à ouvrir dans chaque navigateur) : Node 22 et Chromium donnent le même état
+  jusqu'à 900 s de jeu (graines 3 et 7), mais `Math.sin`, `Math.cos` et `x ** 1,5` diffèrent déjà au dernier bit entre les deux (hypot, sqrt : identiques). Reste : lancer `determinisme.html` dans Firefox (pas dans le conteneur) ; puis
+  décider de remplacer sin, cos et `** 1,5` de la logique (army.js, terrain.js, tranchees.js) par des opérations exactes
 - [ ] Un second commandant : les ordres du camp rouge viennent d'un joueur, pas de `bataille.js` (l'IA reste pour le jeu seul) ; une
   interface qui sait quel camp elle joue (carte, palette, cartes de régiment, carnet inversés)
 - [ ] Une horloge partagée : pause active, ×2 / ×4 (`setTimeScale`, aujourd'hui plafonnée par `perf.sim`) et retour à ×1 décidés à deux
