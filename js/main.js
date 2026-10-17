@@ -21,6 +21,8 @@ import { refusCorvee } from './nuit.js?v=0.22.0';
 import { chargerContenu } from './design-store.js?v=0.22.0';
 import * as lecture from './hud/lecture.js?v=0.22.0';
 import { creerFiche } from './hud/fiche.js?v=0.22.0';
+import { creerCarnet, deux } from './hud/carnet.js?v=0.22.0';
+import { creerPertes } from './hud/pertes.js?v=0.22.0';
 
 const JEU = 'cyclopeen';
 const $ = id => document.getElementById(id);
@@ -56,6 +58,8 @@ const { majuscule, nomDe, enMots } = lecture;
 const indiceDe = id => lecture.indiceDe(B, id), quiEst = id => lecture.quiEst(B, id), tombe = id => lecture.tombe(B, id);
 const soldatSous = (x, y, r) => lecture.soldatSous(B, x, y, r), corpsSous = (x, y, r) => lecture.corpsSous(B, x, y, r);
 const bilan = reg => lecture.bilan(B, reg), refuseAujourdhui = reg => lecture.refuseAujourdhui(B, reg);
+const { noter, vider: viderCarnet } = creerCarnet({ $, bataille: () => B });
+const majPertes = creerPertes({ $ });
 const laFiche = creerFiche({ $, R, bataille: () => B });
 const { montrerFiche, montrerSoldat, montrerRegiment, fermer: fermerFiche, maj: majFiche } = laFiche;
 
@@ -140,7 +144,7 @@ function jouer(bataille) {
   if (prefs.camera?.tangage) rendu.placerCamera(prefs.camera.yaw, prefs.camera.tangage); else rendu.placerCamera(CAMERA.yaw, CAMERA.tangage);
   choisis = new Set(); rendu.choisis = choisis;
   modeBarrage = null; modeMarche = false; pauseActive = false; vitesse = 1; loop.setTimeScale(1); fermerFiche(); fermerNuit();
-  journal.length = 0; majCarnet(); regimentsVus = '';
+  viderCarnet(); regimentsVus = '';
   construireCarte();
   $('titre').hidden = true;
   $('hud').hidden = false;
@@ -336,9 +340,6 @@ function toast(texte) {
 function dire(r) { if (r?.refus) toast(r.refus); return r; }
 
 // ─── Le HUD ────────────────────────────────────────────────────────────────
-const deux = n => String(n).padStart(2, '0');
-// Une croix au crayon par mort (douze au plus, le reste en nombre)
-const croix = n => n <= 12 ? '✕'.repeat(n) : `${'✕'.repeat(12)} +${n - 12}`;
 const ordreEnMots = r => nuitEtat === 'choix' && corveesNuit[r.id] ? `cette nuit : ${corveeDe(corveesNuit[r.id]).toLowerCase()}` : actionDe(B, r);
 
 // Nos régiments (Jérôme, v0.20.0 ; docs/ui-cible.md) : une rangée de cartes compactes (numéro et nom, chevrons d'expérience, la barre
@@ -585,44 +586,6 @@ function raconter(ev) {
       else if (p.type === 'promu' && p.rang === 0) { const { qui } = quiEst(p.id); noter(`${qui.prenom} ${qui.nom} commande ${reg.nom}.`); }
     }
 }
-// Le carnet de bord : les événements marquants, à l'heure où ils arrivent (la mémoire de la pause active)
-const journal = [];
-function noter(texte) {
-  const h = horloge(B);
-  journal.push([`${h.heure} h ${deux(h.minute)}`, texte]);
-  if (journal.length > 40) journal.shift();
-  majCarnet();
-}
-function majCarnet() {
-  const L = journal.slice(-4);
-  $('carnet').hidden = !L.length;
-  $('carnet-liste').replaceChildren(...L.map(([t, texte], k) => {
-    const li = document.createElement('li');
-    if (k === L.length - 1) li.className = 'recent';
-    const b = document.createElement('b'); b.textContent = t;
-    li.append(b, texte);
-    return li;
-  }));
-}
-
-// Les pertes des deux armées, en feuille de situation : debout, blessés, tombés, et les croix au crayon
-let pertesVues = '';
-function majPertes() {
-  const e = B.etat, eff = effectifs(B), bl = e.blesses, cle = `${eff}|${bl}|${e.pertes}`;
-  if (cle !== pertesVues) {
-    pertesVues = cle;
-    [[NOUS, 'pertes-nous', 'Nous'], [EUX, 'pertes-eux', 'En face']].forEach(([c, id, nom]) => {
-      const debout = Math.max(0, eff[c] - bl[c]), tombes = e.pertes[c], total = Math.max(1, debout + bl[c] + tombes), pc = n => `${(n / total * 100).toFixed(1)}%`;
-      $(id).innerHTML = `<div class="tete">${nom}<span>${debout + bl[c]} en vie</span></div>
-        <div class="barre"><i class="debout" style="width:${pc(debout)}"></i><i class="blesses" style="width:${pc(bl[c])}"></i><i class="tombes" style="width:${pc(tombes)}"></i></div>
-        <div class="compte">${debout} debout · ${bl[c]} blessés · ${tombes} tombés</div>
-        <p class="croix" aria-hidden="true">${croix(tombes)}</p>`;
-    });
-  }
-  $('lignes').hidden = !e.tranchees;
-  if (e.tranchees) { const [a, b] = tronconsTenus(B); $('troncons-nous').textContent = a; $('troncons-eux').textContent = b; }
-}
-
 // Le temps (Jérôme, v0.19.0) : arrêter, ×1, ×2, ×4. Le pas de la simulation ne change pas (la partie est la même) : on en fait plus par
 // image, tant que la simulation tient (`perf.sim` × la vitesse sous ~20 ms) ; un assaut, une déroute, un tronçon pris ramènent à ×1.
 const ICONES_METEO = {
@@ -653,7 +616,7 @@ function majHud() {
   if (e.mission) $('mission').textContent = `${e.mission === 'tenir' ? 'Tenir le secteur' : 'Prendre leur première ligne'} · réserve : ${e.reserves[NOUS]}`;
   $('montre-m').style.transform = `rotate(${h.minute * 6}deg)`; $('montre-m').style.transformOrigin = '32px 32px';
   $('montre-h').style.transform = `rotate(${((h.heure % 12) + h.minute / 60) * 30}deg)`; $('montre-h').style.transformOrigin = '32px 32px';
-  majPertes(); majTemps(h);
+  majPertes(B); majTemps(h);
   majFiche();
   $('pause-active').hidden = !pauseActive;
   for (const b of $('batteries').children) {
