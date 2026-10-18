@@ -1,34 +1,34 @@
 // Le cycle de vie : écran titre → bataille → nuit → fin ; pause active,
 // réglages, sauvegarde, mise à jour, debug. Les règles sont dans bataille.js
 // (pures), le dessin dans rendu3d.js (il ne modifie jamais l'état).
-import { createLoop } from './lib/loop.js?v=0.31.0';
-import { createKeys, stopTypeahead } from './lib/keys.js?v=0.31.0';
-import { createPointer, lockBrowserGestures } from './lib/pointer.js?v=0.31.0';
-import { createGamepad } from './lib/gamepad.js?v=0.31.0';
-import { createStore, autosave, pickJSONFile } from './lib/save.js?v=0.31.0';
-import { startUpdateCheck, loadVersion, loadChangelog, downloadJSON } from './lib/app-update.js?v=0.31.0';
-import { ROLES } from './palette.js?v=0.31.0';
-import { MISSIONS, EUX, nouvelleBataille, etapesRestaurer, avancer, aube, ordonnerMarche, peutOrdonner, ordonnerBarrage, peutBarrage, horloge, effectifs, tronconsTenus, moralEnMots, terrainResume, largeurZone, lettreZone, etendueZones, nomTroncon, actionDe, secteursDe, tronconsDeLigne, zone, photo, restaurer, PAS, NOUS } from './bataille.js?v=0.31.0';
-import { ligneY } from './tranchees.js?v=0.31.0';
-import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.31.0';
-import { METEO } from './data/meteo.js?v=0.31.0';
-import { impact, hydroLignes } from './terrain.js?v=0.31.0';
-import { hash2 } from './lib/rng.js?v=0.31.0';
-import { creerRendu, CAMERA } from './rendu3d.js?v=0.31.0';
-import { etatEnMots, experienceEnMots, chevrons } from './identite.js?v=0.31.0';
-import { CORVEES } from './data/corvees.js?v=0.31.0';
-import { refusCorvee } from './nuit.js?v=0.31.0';
-import { chargerContenu } from './design-store.js?v=0.31.0';
-import * as lecture from './hud/lecture.js?v=0.31.0';
-import { creerFiche } from './hud/fiche.js?v=0.31.0';
-import { creerNuit, corveeDe, corveeCourte } from './hud/nuit.js?v=0.31.0';
-import { creerCarnet, deux } from './hud/carnet.js?v=0.31.0';
-import { creerCarte } from './hud/carte.js?v=0.31.0';
-import { creerPertes } from './hud/pertes.js?v=0.31.0';
-import { creerChargement } from './hud/chargement.js?v=0.31.0';
-import { SECTEURS } from './data/secteur.js?v=0.31.0';
-import { creerLockstep, empreinteEtat } from './reseau/lockstep.js?v=0.31.0';
-import { creerHote, creerInvite } from './reseau/lien.js?v=0.31.0';
+import { createLoop } from './lib/loop.js?v=0.31.1';
+import { createKeys, stopTypeahead } from './lib/keys.js?v=0.31.1';
+import { createPointer, lockBrowserGestures } from './lib/pointer.js?v=0.31.1';
+import { createGamepad } from './lib/gamepad.js?v=0.31.1';
+import { createStore, autosave, pickJSONFile } from './lib/save.js?v=0.31.1';
+import { startUpdateCheck, loadVersion, loadChangelog, downloadJSON } from './lib/app-update.js?v=0.31.1';
+import { ROLES } from './palette.js?v=0.31.1';
+import { MISSIONS, EUX, nouvelleBataille, etapesRestaurer, avancer, aube, ordonnerMarche, peutOrdonner, ordonnerBarrage, peutBarrage, horloge, effectifs, tronconsTenus, moralEnMots, terrainResume, largeurZone, lettreZone, etendueZones, nomTroncon, actionDe, secteursDe, tronconsDeLigne, zone, photo, restaurer, PAS, NOUS } from './bataille.js?v=0.31.1';
+import { ligneY } from './tranchees.js?v=0.31.1';
+import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.31.1';
+import { METEO } from './data/meteo.js?v=0.31.1';
+import { impact, hydroLignes } from './terrain.js?v=0.31.1';
+import { hash2 } from './lib/rng.js?v=0.31.1';
+import { creerRendu, CAMERA } from './rendu3d.js?v=0.31.1';
+import { etatEnMots, experienceEnMots, chevrons } from './identite.js?v=0.31.1';
+import { CORVEES } from './data/corvees.js?v=0.31.1';
+import { refusCorvee } from './nuit.js?v=0.31.1';
+import { chargerContenu } from './design-store.js?v=0.31.1';
+import * as lecture from './hud/lecture.js?v=0.31.1';
+import { creerFiche } from './hud/fiche.js?v=0.31.1';
+import { creerNuit, corveeDe, corveeCourte } from './hud/nuit.js?v=0.31.1';
+import { creerCarnet, deux } from './hud/carnet.js?v=0.31.1';
+import { creerCarte } from './hud/carte.js?v=0.31.1';
+import { creerPertes } from './hud/pertes.js?v=0.31.1';
+import { creerChargement } from './hud/chargement.js?v=0.31.1';
+import { SECTEURS } from './data/secteur.js?v=0.31.1';
+import { creerLockstep, empreinteEtat } from './reseau/lockstep.js?v=0.31.1';
+import { creerHote, creerInvite } from './reseau/lien.js?v=0.31.1';
 
 const JEU = 'cyclopeen';
 const $ = id => document.getElementById(id);
@@ -993,7 +993,7 @@ startUpdateCheck({
 
 // ─── Mode debug (section 18) : chargé seulement avec ?debug=1 ──────────────
 if (DEBUG) {
-  const { installDebug, seedFromUrl } = await import('./lib/debug.js?v=0.31.0');
+  const { installDebug, seedFromUrl } = await import('./lib/debug.js?v=0.31.1');
   window.__seed = seedFromUrl() ?? undefined;
   installDebug({
     state: () => B && { ...horloge(B), effectifs: effectifs(B), pertes: B.etat.pertes, impacts: B.etat.impacts.length, enJeu: enJeu(), pause: loop.paused },

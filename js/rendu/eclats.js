@@ -2,9 +2,9 @@
 // et « le feu se voit » (Jérôme, v0.9.2 : l'éclair à la bouche du fusil et le trait vers la cible de chaque tir de `B.tirs`, la pose des tireurs, le bond de ceux que
 // le souffle jette). Une seule fabrique : tous tirent dans le même générateur de l'aspect (`alea`, une suite à graine : l'ordre des tirages fait l'image) et
 // dans les mêmes tampons de particules. Le dessin seulement : jamais la logique, jamais la partie.
-import * as SH from './shaders.js?v=0.31.0';
-import { INDICE } from '../palette.js?v=0.31.0';
-import { horloge } from '../bataille.js?v=0.31.0';
+import * as SH from './shaders.js?v=0.31.1';
+import { INDICE } from '../palette.js?v=0.31.1';
+import { horloge } from '../bataille.js?v=0.31.1';
 
 const ECLATS = 6000;     // (v0.24.0 ; 2 400 avant : une salve de 220 — ~200 éclats chacun, dont de la fumée de 8 à 16 s — faisait le tour du tampon et effaçait les éclats encore en vol)
 export const VOL = 0.6;       // la durée d'un bond (s)
@@ -345,7 +345,17 @@ export function creerEclats({ THREE, scene, col, palTex, NP, effets, surface, pr
     ecl, feux, ECLATS,                                           // lus par temps.js : les fusées et les incendies éclairent la nuit
     impactVu, majTirs, majEclats, majCorbeaux,
     setTaille(n) { eclMat.uniforms.uTaille.value = n; },          // la taille d'un point d'éclat, selon le zoom
-    reinitialiser() { feux.length = 0; brules.clear(); arbresEtat = null; },   // une autre bataille : ses arbres ne brûlent pas encore
+    // une autre bataille : ses arbres ne brûlent pas encore, et rien de la précédente ne reste dans l'air (fumées, éclats, balles, obus en vol, tireurs, bonds, corbeaux)
+    reinitialiser() {
+      feux.length = 0; brules.clear(); arbresEtat = null;
+      ecl.age.fill(99); eclTon.fill(-1); eclTete = 0;
+      bal.age.fill(99); balX.fill(0); balTete = 0; balGeo.attributes.position.needsUpdate = true;
+      for (const a of attente) if (a.mesh) { a.mesh.visible = false; obusLibres.push(a.mesh); }
+      attente.length = 0;
+      tirVal.fill(0); volT.fill(0); volH.fill(0);
+      nids = []; nidT = 0; prochaineFusee = 3;
+      eclGeo.attributes.position.needsUpdate = true; eclGeo.attributes.aTon.needsUpdate = true;
+    },
     fumer(x, z) { const T = terrain(); if (T) fumee(x + (alea() - 0.5) * 3, surface(x, z) + 0.5, z + (alea() - 0.5) * 3, 2, true); },   // une colonne de fumée (l'écran titre)
     tirs() { return { tirVal, tirAng, volT, volH }; },           // la pose des tireurs et le bond des soufflés, lus par les soldats (réservés à chaque image : relire)
   };

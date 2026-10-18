@@ -1,5 +1,8 @@
 # Journal des versions
 
+## 0.31.1 — 2026-10-18
+- Une nouvelle partie (ou le passage de l'écran titre au jeu) part d'un champ propre : plus de fumées, d'éclats, de balles ni d'obus en vol restés de la scène d'avant
+
 ## 0.31.0 — 2026-10-18
 - Le champ gagne de la place sur un petit écran : le temps à côté des réglages, les pertes sur une ligne par camp, la carte repliable, un billet sans montre dessinée (en haut à gauche, sous le temps), des batteries à jauge de recharge ; le bouton de prévision disparaît
 - Au labo, « La barre du temps » : cinq mises en page d'une frise de la bataille (jours, nuits, repère, changements de météo)
