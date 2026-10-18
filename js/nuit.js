@@ -138,14 +138,14 @@ export function choixEnFace(B) {
     if (reg.camp !== 1 || !reg.effectif) continue;
     const blesses = blessesDe(B, reg);
     const n = B.R.nuit, h = hash2(reg.id, B.etat.jour, (B.etat.graine | 0) + 59);
-    out[reg.id] = (reg.vivres ?? n.vivres) <= 1 ? 'ravitailler'
-      : blesses >= 5 ? 'evacuer' : combles(B, reg) >= 10 ? 'reparer'
-      : reg.moral >= 0.6 && h < 0.15 ? 'coup'
-      : tronconsDe(B, reg).length && h > 0.75 && !refusCorvee(B, reg, 'abri') ? 'abri' : 'repos';
+    out[reg.id] = (reg.vivres ?? n.vivres) <= n.faceVivres ? 'ravitailler'
+      : blesses >= n.faceBlesses ? 'evacuer' : combles(B, reg) >= n.faceCombles ? 'reparer'
+      : reg.moral >= n.faceCoupMoral && h < n.faceCoup ? 'coup'
+      : tronconsDe(B, reg).length && h > n.faceAbri && !refusCorvee(B, reg, 'abri') ? 'abri' : 'repos';
     if (refusCorvee(B, reg, out[reg.id])) out[reg.id] = 'repos';
   }
   // la relève : le régiment le plus éprouvé (moins de la moitié de ses hommes), un par nuit, tant qu'il en reste en réserve
-  const eprouves = B.etat.regiments.filter(r => r.camp === 1 && r.effectif && r.effectif < r.initial * 0.5).sort((a, b) => a.effectif / a.initial - b.effectif / b.initial || a.id - b.id);
+  const eprouves = B.etat.regiments.filter(r => r.camp === 1 && r.effectif && r.effectif < r.initial * B.R.nuit.faceReleve).sort((a, b) => a.effectif / a.initial - b.effectif / b.initial || a.id - b.id);
   if (eprouves.length && B.etat.reserves?.[1] > 0) out[eprouves[0].id] = 'releve';
   return out;
 }
@@ -204,7 +204,7 @@ export function corvees(B, choix, ctx) {
   // les blessés laissés au front : certains ne passent pas la nuit
   for (let i = 0; i < A.n; i++) {
     if (A.mort[i] || !A.blessure[i]) continue;
-    if (rng() < N.mortBlesse * (A.blessure[i] === 3 ? 2 : 1)) { mourir(i, 'blessure'); bilan[A.camp[i]].mortsBlesses++; }
+    if (rng() < N.mortBlesse * (A.blessure[i] === 3 ? N.mortTete : 1)) { mourir(i, 'blessure'); bilan[A.camp[i]].mortsBlesses++; }
   }
   // les vivres : une nuit de moins ; qui n'en a plus a faim
   const faim = new Set();
@@ -218,7 +218,7 @@ export function corvees(B, choix, ctx) {
     if (A.mort[i]) continue;
     const repos = faite[A.reg[i]] === 'repos';
     const k = 1 - R.soldat.nuitRepos * (repos ? 1 : N.reposTravail) * (faim.has(A.reg[i]) ? N.faimRepos : 1);
-    A.fatJ[i] *= k; A.fatB[i] *= k; A.peur[i] *= repos ? 0.5 : 0.7;
+    A.fatJ[i] *= k; A.fatB[i] *= k; A.peur[i] *= repos ? N.peurRepos : N.peurTravail;
     A.exp[i] = Math.min(1, A.exp[i] + R.experience.nuit);
   }
   // le moral : la nuit en rend une part (le repos un peu plus), jamais tout ; la faim pèse
@@ -251,8 +251,8 @@ function retours(B, rng, bilan) {
     const t = reg.ordre.trace, x0 = t ? t.x0 : reg.ordre.x - 40, x1 = t ? t.x1 : reg.ordre.x + 40;
     let slot = 0;
     for (let i = 0; i < A.n; i++) if (A.reg[i] === reg.id) slot = Math.max(slot, A.slot[i] + 1);
-    const derriere = reg.ordre.y + (reg.camp === 0 ? 12 : -12);
-    const i = ajouterSoldat(A, x0 + rng() * (x1 - x0), Math.max(1, Math.min(B.terrain.H - 2, derriere + (rng() - 0.5) * 6)), reg.camp, reg.id, slot, rng(), e[0]);
+    const derriere = reg.ordre.y + (reg.camp === 0 ? N.arriere : -N.arriere);
+    const i = ajouterSoldat(A, x0 + rng() * (x1 - x0), Math.max(1, Math.min(B.terrain.H - 2, derriere + (rng() - 0.5) * N.arrivee)), reg.camp, reg.id, slot, rng(), e[0]);
     if (i < 0) continue;
     A.exp[i] = e[5];
     reg.effectif++; e[3] = etat.jour; bilan[reg.camp].retours++;
@@ -271,13 +271,13 @@ function coupDeMain(B, reg, ctx, bilan) {
   const vol = [];
   for (let i = 0; i < A.n; i++) if (A.reg[i] === reg.id && !A.mort[i] && !A.blessure[i]) vol.push(i);
   vol.sort((a, b) => A.exp[b] - A.exp[a] || a - b);
-  vol.length = Math.min(vol.length, N.coupHommes, Math.ceil(reg.effectif / 5));
+  vol.length = Math.min(vol.length, N.coupHommes, Math.ceil(reg.effectif / N.coupUnSur));
   if (!vol.length) return;
-  const ou = centreDe(B, cible), veille = 0.5 + cible.moral;
+  const ou = centreDe(B, cible), veille = N.veilleBase + cible.moral;
   let prise = 0, exp = 0;
   for (const i of vol) {
     exp += A.exp[i];
-    if (rng() < N.coupMort * (1 - 0.5 * A.exp[i]) * veille) { mourir(i, 'corvée', [ou.x + (rng() - 0.5) * 10, ou.y + (rng() - 0.5) * 4]); bilan[reg.camp].mortsCorvee++; continue; }
+    if (rng() < N.coupMort * (1 - N.coupExpMort * A.exp[i]) * veille) { mourir(i, 'corvée', [ou.x + (rng() - 0.5) * N.coupEtalement[0], ou.y + (rng() - 0.5) * N.coupEtalement[1]]); bilan[reg.camp].mortsCorvee++; continue; }
     A.exp[i] = Math.min(1, A.exp[i] + N.coupExp);
     prise += N.coupPrise * (1 + A.exp[i]) / veille;
   }
@@ -300,6 +300,7 @@ function coupDeMain(B, reg, ctx, bilan) {
    ceux de tous les régiments déjà là (les noms et les grades en découlent). */
 function relever(B, vieux, rng) {
   const { etat, R, armee: A } = B;
+  const N = R.nuit;
   const n = etat.parRegiment || vieux.initial;
   let premier = 0;
   for (const r of etat.regiments) premier += r.initial;
@@ -313,11 +314,11 @@ function relever(B, vieux, rng) {
   etat.regiments.push(reg);
   // ils montent par les boyaux : à 12 m derrière la place qu'ils prennent (chez nous l'ennemi est au nord, l'arrière
   // au sud, les y plus grands ; en face, l'inverse). De 40 m derrière la dernière ligne, il leur fallait des minutes.
-  const derriere = reg.ordre.y + (reg.camp === 0 ? 12 : -12);
+  const derriere = reg.ordre.y + (reg.camp === 0 ? N.arriere : -N.arriere);
   const t = reg.ordre.trace, x0 = t ? t.x0 : reg.ordre.x - 40, x1 = t ? t.x1 : reg.ordre.x + 40;
   for (let k = 0; k < n; k++) {
     const x = x0 + (k + 0.5) * (x1 - x0) / n;
-    ajouterSoldat(A, x + (rng() - 0.5) * 2, Math.max(1, Math.min(B.terrain.H - 2, derriere + (rng() - 0.5) * 6)), reg.camp, reg.id, k, rng(), premier + k);
+    ajouterSoldat(A, x + (rng() - 0.5) * 2, Math.max(1, Math.min(B.terrain.H - 2, derriere + (rng() - 0.5) * N.arrivee)), reg.camp, reg.id, k, rng(), premier + k);
   }
 }
 

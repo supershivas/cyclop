@@ -155,13 +155,31 @@ export const REGLAGES = {
     faimRepos: 0.5,       // sans vivres, la nuit ne repose que de cette part…
     faimMoral: 0.06,      // … et le moral perd cela chaque nuit
     // le coup de main : quelques volontaires vont chercher des prisonniers dans la tranchée d'en face
-    coupHommes: 20,       // volontaires au plus (et un sur cinq du régiment au plus)
+    coupHommes: 20,       // volontaires au plus (et un sur `coupUnSur` du régiment au plus)
     coupMort: 0.15,       // chance pour chacun d'y rester (moins s'il a de l'expérience)
     coupPrise: 0.2,       // prisonniers ramenés par volontaire (plus avec l'expérience, moins si l'autre veille)
     coupMoral: 0.06,      // le moral gagné (des prisonniers ramenés), ou perdu en face
     coupExp: 0.15,        // l'expérience des volontaires qui reviennent
     calme: 60,            // m : dans une tranchée d'en face, un régiment d'en face à moins de cela : ni évacuer ni ravitailler (v0.22.0)
     coupPortee: 200,      // m : jusqu'où ils vont chercher
+    coupUnSur: 5,         // coup de main : au plus un homme sur tant du régiment
+    coupExpMort: 0.5,     // coup de main : l'expérience, au mieux, enlève cette part à leur chance d'y rester
+    veilleBase: 0.5,      // coup de main : l'autre camp veille de ce fond plus son moral (0 à 1)
+    coupEtalement: [10, 4],  // coup de main, m : où tombent ceux qui n'en reviennent pas, autour de la tranchée visitée (en x, en y)
+    // le repos et les arrivées de l'arrière
+    peurRepos: 0.5,       // la peur de chacun tombe à cette part de ce qu'elle était : au repos…
+    peurTravail: 0.7,    // … et à la corvée
+    mortTete: 2,          // un blessé à la tête laissé au front meurt cette fois plus souvent
+    arriere: 12,          // m : derrière la place qu'il prend, où montent un régiment relevé ou un blessé qui revient
+    arrivee: 6,           // m : d'étalement, en y, de ceux qui arrivent
+    // les corvées d'en face (`choixEnFace`)
+    faceVivres: 1,        // ravitaille à ce nombre de nuits de vivres ou moins
+    faceBlesses: 5,       // évacue à ce nombre de blessés ou plus
+    faceCombles: 10,      // répare à ce nombre de cases comblées ou plus
+    faceCoupMoral: 0.6,   // tente un coup de main si son moral est au moins de cela…
+    faceCoup: 0.15,       // … avec cette chance (un tirage par régiment et par nuit)
+    faceAbri: 0.75,       // creuse un abri au-dessus de ce tirage
+    faceReleve: 0.5,      // relève le régiment qui n'a plus que cette part de ses hommes
   },
   jour: {
     duree: 360,           // s de jeu pour une journée (6 h → 18 h)
