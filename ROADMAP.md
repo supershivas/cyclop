@@ -32,6 +32,8 @@ cercles-régiments par-dessus) et la touche M disparaît (carte toujours visible
 - [x] Hors lots — le clic gauche choisit puis ordonne (v0.21.2), la carte en quatre secteurs A à D (v0.21.3), la marche le long de la tranchée (v0.21.4), les corvées au-dessus des cartes et pas d'évacuation chez l'ennemi (v0.22.0)
 - [x] Lot 6 — les formations (bloc, ligne, par deux, colonne) : `ordre.forme` (`foule.formes` de reglages.js, `formation` de bataille.js), choisie par quatre boutons de la carte ouverte pour le prochain ordre en terrain libre ; sur une tranchée, le tracé décide (v0.23.0)
 - [x] Plus tard : la fiche à gauche sous le carnet, le papier de la nuit au centre à la place des pertes, le cadran de vue retiré (touche C pour recentrer) (v0.26.0)
+- [x] Haut de l'écran allégé, barre du temps, pertes en barres de vie, équerres au clic sur un régiment, visée d'un barrage, design system en variables (v0.30.0 à v0.33.0)
+- [x] La fenêtre d'ordres : variante C « Le rabat », au-dessus de la carte du régiment choisi (v0.34.6 ; la variante près des hommes, v0.34.0, essayée puis remplacée)
 
 ### Découper `rendu3d.js` (docs/refonte-rendu3d.md)
 
@@ -41,10 +43,10 @@ recommandé : le laisser tant qu'aucun besoin n'apparaît. Plus tard, côté `ma
 
 ### Jeu à deux sur le même réseau
 
-**Statut** : en cours — premier lot livré (v0.30.0), à jouer pour de vrai sur deux machines
+**Statut** : en cours — livré et connecté (v0.34.1 : code court de 6 signes), joué entre deux Mac en Chrome ; Firefox ne se connecte pas
 
 Un joueur par armée (le bleu invite et joue nous, le kaki rejoint et joue en face), chacun sur son ordinateur, sans serveur : le **lockstep** (`js/reseau/lockstep.js` :
-les deux machines calculent la même bataille, on n'échange que les ordres) sur un canal WebRTC appairé à la main (`js/reseau/lien.js` : une invitation, une réponse à se passer par un message).
+les deux machines calculent la même bataille, on n'échange que les ordres) sur un canal WebRTC (`js/reseau/lien.js`) appairé par un code de 6 signes qui passe par le relais public ntfy.sh (`js/reseau/relais.js`, v0.34.1), ou à la main (une invitation, une réponse), avec un STUN pour les adresses (v0.33.1).
 
 - [x] Le test de déterminisme (`js/determinisme.js`, `outils/determinisme.mjs`, `determinisme.html`) : Node 22 et Chromium donnent le même état ; `Math.sin`, `Math.cos` et `x ** 1,5` diffèrent déjà au dernier bit entre les deux (hypot, sqrt : identiques)
 - [x] Un second commandant : `planMarche` / `ordonnerMarche` / `peutOrdonner` / `ordonnerBarrage` / `peutBarrage` prennent un camp, `etat.deux` fait taire l'IA d'en face, ses batteries (`etat.batteriesEux`) rechargent comme les nôtres ; l'interface sait quel camp elle joue (`MOI` de main.js : cartes, carte tournée, pertes, nuit, couleurs)
@@ -52,8 +54,10 @@ les deux machines calculent la même bataille, on n'échange que les ordres) sur
 - [x] La nuit à deux : chacun ses corvées, l'aube part quand les deux sont prêts (`corvee`, `pret`)
 - [x] Mission et fin : l'objectif du kaki est l'inverse de celui du bleu ; la fin dit qui l'emporte (`juger` reste du point de vue du bleu)
 - [x] Un test de bout en bout : `outils/deux.mjs` (deux pages s'appairent, jouent, aucune désynchronisation) ; `test/lockstep.test.mjs` (réseau factice qui retarde)
-- [ ] **Lancer `determinisme.html` dans Firefox** (pas dans le conteneur) et jouer une partie Chrome contre Firefox ; si `sin`, `cos` ou `** 1,5` y divergent : les remplacer dans la logique (army.js, terrain.js, tranchees.js) par des opérations exactes
-- [ ] Jouer sur deux vraies machines : les adresses WebRTC d'un navigateur sont parfois masquées (mDNS) ; si l'appairage échoue sur un réseau, ajouter un serveur STUN ou un relais
+- [x] Deux vrais Mac sur le même Wi-Fi : Chrome se connecte (STUN v0.33.1, code court v0.34.1) ; l'écran d'échec conseille Chrome (v0.34.3)
+- [ ] **Firefox ne se connecte pas** (`failed`, cause non trouvée) : pister la permission « Réseau local » de macOS, les adresses `.local` de Firefox, `media.peerconnection.ice.obfuscate_host_addresses`
+- [ ] **Lancer `determinisme.html` dans Firefox** (pas dans le conteneur) et jouer une partie Chrome contre Firefox une fois la connexion possible ; si `sin`, `cos` ou `** 1,5` y divergent : les remplacer dans la logique (army.js, terrain.js, tranchees.js) par des opérations exactes
+- [ ] Pas testé : Windows, un réseau avec isolation des clients, un réseau lent (le délai de 6 cadres tient jusqu'à ~150 ms d'aller-retour)
 - [ ] À mesurer : l'équilibre à deux (attaquant et défenseur humains, skill `equilibrage`), la durée d'une partie
 - [ ] Reconnexion (aujourd'hui, une coupure ramène à l'écran titre) ; une partie à deux qui se sauvegarde ; les réglages de l'atelier doivent être les mêmes (sinon refus à l'appairage)
 - [ ] À trancher dans `DESIGN.md` : brouillard de guerre ou carte ouverte (carte ouverte aujourd'hui)
@@ -74,6 +78,12 @@ les deux machines calculent la même bataille, on n'échange que les ordres) sur
 - [x] Lisibilité : cratère, boue, eau, soldat distinguables en gris
 
 ## À l'étude (validé dans le principe par le prompt de départ, pas construit)
+
+- **Le pas de fin de journée** (v0.34.4 : les saccades en pleine bataille sont réglées) : il reste un pas de 300 à 500 ms quand l'écran passe à la nuit
+  (les douze heures d'eau, `hydroLignes`, sur 537 000 cases d'un coup) ; l'étaler demande de découper en rangées dans le même ordre, avec la
+  progression dans l'état et dans `etapesRejouer`. Et un pas de 100 ms quand huit régiments partent vers huit buts différents.
+- **Équilibre des obus** (v0.34.5 : le 155 et le 220 plus meurtriers que le 75) : à mesurer sur une bataille entière avant de toucher à `precision` ou à `rapport`.
+- **Ralentir plutôt que jeter** (v0.32.3) : le jeu ne ralentit personne dans l'anneau du souffle ; à décider d'après les variantes B à D du sujet « Projections » du labo.
 
 - **Carte et ordres, la suite** (v0.14.0 et 0.15.0 : secteurs, carte, mêlée) : un ordre « tenir S3·N2 » depuis la carte (reculer d'une
   ligne), des ordres par secteur voisin, la mêlée dessinée sur le terrain (le nombre d'attaquants au-dessus du tronçon).

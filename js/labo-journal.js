@@ -2,6 +2,12 @@
 // Une entrée par version qui touche au labo, la plus récente en haut. `ref` : « sujet-Lettre » (la lettre est celle de la variante,
 // A étant l'actuelle). À chaque changement du labo : une entrée ici, avec `depuis` sur les variantes ajoutées ou changées (labo.js).
 export const JOURNAL = [
+  { version: '0.34.6', date: '2026-10-18', items: [
+    { genre: 'mis-a-jour', texte: 'La fenêtre d\'ordres « Le rabat » est retenue : posée au-dessus de la carte du régiment, elle se relève d\'un coup ; « Au régiment » passe en « ancienne »', ref: 'fenetre-ordres-A' },
+  ] },
+  { version: '0.34.1', date: '2026-10-18', items: [
+    { genre: 'mis-a-jour', texte: 'La fenêtre d\'ordres se pose juste au-dessus de la boîte du nom du régiment, au plus près de lui', ref: 'fenetre-ordres-A' },
+  ] },
   { version: '0.34.0', date: '2026-10-18', items: [
     { genre: 'mis-a-jour', texte: 'La fenêtre d\'ordres « Au régiment » est retenue et passe en jeu (A) ; elle apparaissait d\'un coup au-dessus de la carte (ancienne)', ref: 'fenetre-ordres-A' },
   ] },

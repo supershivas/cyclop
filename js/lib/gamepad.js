@@ -5,7 +5,7 @@
    de l'API Gamepad : Xbox, PlayStation, Switch Pro, Steam Deck).
 
    Module ES sans dépendance :
-     import { createGamepad } from './lib/gamepad.js?v=0.34.6'
+     import { createGamepad } from './lib/gamepad.js?v=0.35.0'
      const pad = createGamepad({
        actions: { action: 'a', retour: 'b', carte: 'y', pause: 'start' },
        onAction: (nom) => {},      // une fois par appui
