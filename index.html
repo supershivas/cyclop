@@ -9,8 +9,8 @@
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta property="og:image" content="og.png">
-<link rel="stylesheet" href="js/lib/game.css?v=0.28.0">
-<link rel="stylesheet" href="css/style.css?v=0.28.0">
+<link rel="stylesheet" href="js/lib/game.css?v=0.29.0">
+<link rel="stylesheet" href="css/style.css?v=0.29.0">
 </head>
 <body>
 <!-- La barre de chargement (v0.28.0) : là avant tout script ; main.js la remplit, puis la retire -->
@@ -207,6 +207,12 @@
   <form method="dialog"><button class="bouton">Fermer</button></form>
 </dialog>
 
+<dialog id="dialogue-carte" aria-label="Choisir le secteur">
+  <h2>Quel secteur ?</h2>
+  <div class="cartes-choix" id="cartes-choix"></div>
+  <form method="dialog" class="menu"><button class="bouton" value="annuler">Annuler</button></form>
+</dialog>
+
 <dialog id="dialogue-confirmer" aria-label="Confirmer">
   <p>Une bataille est en cours. La remplacer ?</p>
   <form method="dialog" class="menu">
@@ -216,6 +222,6 @@
 </dialog>
 
 <div class="jeu-toast" id="toast" role="status" hidden></div>
-<script type="module" src="js/main.js?v=0.28.0"></script>
+<script type="module" src="js/main.js?v=0.29.0"></script>
 </body>
 </html>

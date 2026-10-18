@@ -297,3 +297,19 @@ dialog form { margin-top: calc(var(--pas) * 2); }
 .chargement .discret { font-size: 12px; letter-spacing: 0; text-transform: none; min-height: 1.3em; }
 .chargement-piste { height: 10px; border: 2px solid var(--jeu-fond); }
 .chargement-piste i { display: block; height: 100%; background: var(--jeu-fond); transition: width .12s linear; }
+
+/* Le choix du secteur (Jérôme, v0.29.0) : trois cartes, une coupe du sol de chacune, deux phrases */
+#dialogue-carte { width: min(92vw, 62rem); }
+#dialogue-carte h2 { margin: 0 0 var(--pas); font-size: 18px; font-weight: normal; letter-spacing: .1em; text-transform: uppercase; }
+.cartes-choix { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--pas); }
+.carte-choix { display: grid; gap: 6px; align-content: start; text-align: left; font: inherit; padding: var(--pas); cursor: pointer; color: var(--jeu-fond); background: var(--jeu-encre); border: 2px solid var(--jeu-encre); }
+.carte-choix:focus-visible, .carte-choix:hover { border-color: var(--jeu-nous); }
+.carte-choix b { font-weight: normal; font-size: 16px; letter-spacing: .06em; text-transform: uppercase; }
+.carte-choix .touche { float: right; color: var(--jeu-accent); }
+.carte-choix p { margin: 0; font-size: 13px; line-height: 1.35; }
+.carte-choix svg { width: 100%; height: 64px; background: var(--jeu-fond); }
+.carte-choix .sol { fill: none; stroke: var(--jeu-encre); stroke-width: 2; }
+.carte-choix .remplissage { fill: var(--jeu-accent); opacity: .5; stroke: none; }
+.carte-choix .ligne-nous { stroke: var(--jeu-nous); stroke-width: 3; }
+.carte-choix .ligne-eux { stroke: var(--jeu-eux); stroke-width: 3; }
+@media (max-width: 760px) { .cartes-choix { grid-template-columns: 1fr; } }

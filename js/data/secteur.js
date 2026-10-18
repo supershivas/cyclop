@@ -1,8 +1,10 @@
-// Les secteurs du front. Le lot minimal n'en a qu'un : un champ de bosses,
-// quelques arbres, deux camps face à face, trois jours.
-export const SECTEURS = {
-  essai: {
-    nom: 'Secteur d\'essai',
+// Les secteurs du front : trois cartes à choisir en début de partie (v0.29.0). Même taille, mêmes lignes (400 × 300 m, quatre lignes par camp) : ce qui change
+// est le sol, l'eau et ce qui pousse. `resume` et `profil` (une coupe nord-sud du sol, de la 4e ligne d'en face à la nôtre, 0 bas, 1 haut) disent
+// la carte au joueur ; `relief` est lu par creerTerrain (bosses et ondulation : des facteurs, `crete`, `nappe` : m de plus ou de moins sous le sol).
+const ESSAI = {
+    nom: 'Les labours',
+    resume: 'Un champ ouvert aux bosses douces, quelques bosquets : le front tel qu\'on l\'imagine. La boue vient avec la pluie.',
+    profil: [0.50, 0.55, 0.50, 0.46, 0.52, 0.56, 0.50, 0.47, 0.52, 0.50, 0.46, 0.50],
     largeur: 400,           // cases de 1 m
     hauteur: 300,
     jours: { min: 10, max: 15 },   // la durée de la bataille, tirée de la graine (trois jours avant la v0.9.0)
@@ -34,5 +36,26 @@ export const SECTEURS = {
       // au départ : les rangs de lignes où se tiennent les régiments (de gauche à droite, autant par rang)
       depart: [0, 1],       // la moitié des régiments en 1re ligne, la moitié en 2e (Jérôme, v0.17.0 ; les huit sur la 1re ligne en v0.14.0)
     },
+};
+
+export const SECTEURS = {
+  essai: ESSAI,
+  // Une crête tenue par l'ennemi : il faut monter. Du relief, peu d'arbres, des haies, peu d'eau.
+  crete: {
+    ...ESSAI,
+    nom: 'La crête',
+    resume: 'Une crête haute de 7 m court devant leurs lignes : ils la tiennent, il faut la monter. Des bosses fortes, des haies, peu de bois, un sol qui boit.',
+    profil: [0.50, 0.78, 0.98, 0.84, 0.52, 0.34, 0.30, 0.26, 0.30, 0.24, 0.26, 0.22],
+    relief: { bosses: 1.6, ondulation: 1.2, crete: { y: 62, hauteur: 7, largeur: 42 }, nappe: 0.8 },
+    pluieAuMoins: 1, arbres: 60, bois: 2, haies: 9, buissons: 230,
+  },
+  // Un fond de vallée : plat, la nappe affleure, la pluie noie vite les trous.
+  marais: {
+    ...ESSAI,
+    nom: 'Le marais',
+    resume: 'Un fond plat où la nappe affleure : le moindre trou se remplit, la boue vient dès le deuxième jour. Peu de relief, des saules, des haies basses.',
+    profil: [0.30, 0.28, 0.30, 0.27, 0.29, 0.28, 0.30, 0.27, 0.29, 0.28, 0.30, 0.28],
+    relief: { bosses: 0.45, ondulation: 0.55, nappe: -1.4 },
+    pluieAuMoins: 4, arbres: 90, bois: 1, haies: 3, buissons: 320,
   },
 };

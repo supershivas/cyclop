@@ -16,8 +16,8 @@
      nuit elle se fait en lot.
    - Les versions (`versionLigne`, `versionMorceau`) disent au rendu ce qui a
      changé ; le terrain ne connaît pas le rendu. */
-import { hash2 } from './lib/rng.js?v=0.28.0';
-import { CALIBRES } from './data/calibres.js?v=0.28.0';
+import { hash2 } from './lib/rng.js?v=0.29.0';
+import { CALIBRES } from './data/calibres.js?v=0.29.0';
 
 export const ETAT = { SEC: 0, HUMIDE: 1, BOUE: 2, EAU: 3, GLACE: 4 };
 export const MORCEAU = 25;             // cases : le côté d'un morceau de maillage (mesuré, rendu logiciel : à 100, la moitié du champ restait dessinée au zoom 4 ; à 25, 6 500 triangles au lieu de 15 600 au zoom 8)
@@ -44,16 +44,19 @@ export function creerTerrain(graine, secteur, R) {
   const eau = new Float32Array(N), humid = new Float32Array(N);
   const herbe = new Uint8Array(N);              // 0 à 3 : l'herbe (les obus la soufflent, la boue la tue)
   const g = graine | 0;
-  const niveau = R.terrain.nappeMin + bruit(7, 3, 1, g + 99) * (R.terrain.nappeMax - R.terrain.nappeMin);
+  // le caractère de la carte (v0.29.0) : `bosses` et `ondulation` sont des facteurs, `crete` une bosse allongée d'est en ouest, `nappe` des m de plus ou de moins sous le sol
+  const Rf = secteur.relief || {}, fB = Rf.bosses ?? 1, fO = Rf.ondulation ?? 1, cr = Rf.crete;
+  const niveau = R.terrain.nappeMin + bruit(7, 3, 1, g + 99) * (R.terrain.nappeMax - R.terrain.nappeMin) + (Rf.nappe ?? 0);
   for (let j = 0; j < H; j++) for (let i = 0; i < W; i++) {
     const c = j * W + i, x = i - ox, y = j - oy;
     const lent = bruit(x, y, 150, g + 1);                     // le relief lissé (la nappe le suit)
-    const h = (lent - 0.5) * 2 * R.terrain.bosses * 0.6
-      + (bruit(x, y, 46, g + 2) - 0.5) * 2 * R.terrain.bosses * 0.55
-      + (bruit(x, y, 15, g + 3) - 0.5) * 2 * R.terrain.ondulation
+    const h = (lent - 0.5) * 2 * R.terrain.bosses * 0.6 * fB
+      + (bruit(x, y, 46, g + 2) - 0.5) * 2 * R.terrain.bosses * 0.55 * fB
+      + (bruit(x, y, 15, g + 3) - 0.5) * 2 * R.terrain.ondulation * fO
+      + (cr ? cr.hauteur * Math.exp(-(((y - cr.y - (bruit(x, 0, 120, g + 21) - 0.5) * 30) / cr.largeur) ** 2)) : 0)       // la crête : une bosse qui serpente
       + 3;                                                    // m au-dessus du zéro du secteur
     base[c] = Math.round(h * 4);
-    nappe[c] = (lent - 0.5) * 2 * R.terrain.bosses * 0.6 + 3 - niveau;
+    nappe[c] = (lent - 0.5) * 2 * R.terrain.bosses * 0.6 * fB + 3 - niveau;
     humid[c] = R.hydro.humiditeDepart * (0.7 + 0.6 * bruit(x, y, 23, g + 4));
     // l'herbe : par plaques, plus drue dans les creux du relief lissé
     herbe[c] = Math.max(0, Math.min(3, Math.floor((bruit(x, y, 11, g + 6) * 0.8 + bruit(x, y, 37, g + 8) * 0.6 - lent * 0.3) * 4 - 1)));

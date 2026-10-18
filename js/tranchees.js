@@ -11,15 +11,23 @@
      d'occuper une tranchée s'en servent pour poser les hommes dedans.
    - Un tronçon protège du tir qui vient de devant (le parapet), beaucoup moins
      de celui qui vient de derrière (le parados) : pris, il sert à l'envers. */
-import { hash2 } from './lib/rng.js?v=0.28.0';
+import { hash2 } from './lib/rng.js?v=0.29.0';
 
-/* Le tracé d'une ligne : t = { y0, amp, baie, phase } (mètres, coordonnées du
-   terrain). Les baies alternent d'un côté et de l'autre (les créneaux), et la
-   ligne ondule doucement (creusée à la main, en suivant le terrain). */
-export function ligneY(t, x) {
-  const b = Math.floor(x / t.baie);
-  return t.y0 + ((b & 1) ? t.amp : -t.amp) + 2.5 * Math.sin(x / 41 + t.phase);
+// Un bruit de valeurs lissé à une dimension (0..1) : le tracé d'une tranchée creusée à la main, jamais deux fois pareil (v0.29.0)
+const lisse = u => u * u * (3 - 2 * u);
+function bruit1(x, longueur, graine) {
+  const f = x / longueur, i = Math.floor(f), u = lisse(f - i);
+  return hash2(i, 5, graine) * (1 - u) + hash2(i + 1, 5, graine) * u;
 }
+/* Le tracé d'une ligne : t = { y0, amp, phase } (mètres, coordonnées du terrain ; `baie` n'est plus lu). Depuis la v0.29.0 (Jérôme : « tranchées moins
+   géométriques ») : trois ondulations de longueurs 70, 28 et 11 m, de ±3,2, ±1,8 et ±0,9 m (à l'échelle de `amp` / 1,5), tirées de la phase de la ligne : un
+   tracé qui serpente, des coudes irréguliers, plus les créneaux en carré d'avant. Reste une fonction de x seule. */
+export function ligneY(t, x) {
+  const g = Math.round(t.phase * 1000), k = (t.amp || 1.5) / 1.5;
+  return t.y0 + k * ((bruit1(x, 70, g) - 0.5) * 6.4 + (bruit1(x, 28, g + 1) - 0.5) * 3.6 + (bruit1(x, 11, g + 2) - 0.5) * 1.8);
+}
+/* La demi-largeur de la tranchée en x : 1 à 1,5 m (deux cases au moins) : tantôt étroite, tantôt une niche. */
+export const demiLargeur = (t, x) => 1 + 0.5 * bruit1(x, 17, Math.round(t.phase * 1000) + 3);
 
 /* Les lignes d'un secteur (coordonnées du terrain) : [{ camp, rang, y0, amp,
    baie, phase, face }] ; face : le côté de l'ennemi (−1 : vers le nord). */
@@ -49,9 +57,9 @@ export function creuserTranchees(T, S, ox, oy, graine) {
     const premier = troncons.length;
     for (let x = 0; x < S.largeur; x += C.troncon) troncons.push({ camp: L.camp, ligne: l, x0: ox + x, x1: ox + Math.min(S.largeur, x + C.troncon), n: 0 });
     for (let i = 0; i < W; i++) {
-      // la case de la colonne et le pas avec la colonne d'avant (un pare-éclats) : tout est creusé
-      const a = ligneY(L, i + 0.5), b = ligneY(L, i - 0.5);
-      const j0 = Math.round(Math.min(a, b) - 1), j1 = Math.round(Math.max(a, b) + 1);
+      // les cases de la colonne : autour du tracé, sur sa largeur du moment (deux cases au moins, et le tracé ne bouge que de 0,3 case par colonne : rien ne se coupe)
+      const yc = ligneY(L, i + 0.5), hw = demiLargeur(L, i + 0.5);
+      const j0 = Math.round(yc - hw), j1 = Math.max(j0 + 2, Math.round(yc + hw));
       const k = i >= ox && i < ox + S.largeur ? premier + Math.floor((i - ox) / C.troncon) : -1;
       for (let j = Math.max(0, j0); j < Math.min(H, j1); j++) {
         const c = j * W + i;
@@ -70,8 +78,9 @@ export function creuserTranchees(T, S, ox, oy, graine) {
     for (let k = 0; k < C.boyaux; k++) {
       const X = ox + (k + 0.5) * S.largeur / C.boyaux + (hash2(camp, k, (graine | 0) + 23) - 0.5) * S.largeur / C.boyaux * 0.5;
       for (let j = Math.max(0, Math.floor(ya)); j < Math.min(H, Math.ceil(yb)); j++) {
-        const xb = X + ((Math.floor(j / 6) & 1) ? 1.5 : -1.5), xp = X + ((Math.floor((j - 1) / 6) & 1) ? 1.5 : -1.5);
-        const i0 = Math.round(Math.min(xb, xp) - 1), i1 = Math.round(Math.max(xb, xp) + 1);
+        // (un boyau qui serpente, plus le zigzag en carré d'avant la v0.29.0)
+        const ph = hash2(camp, k, (graine | 0) + 29) * 6.283, xb = X + 3.2 * Math.sin(j / 11 + ph) + 1.4 * Math.sin(j / 4.3 + ph * 2);
+        const i0 = Math.round(xb - 1), i1 = Math.max(i0 + 2, Math.round(xb + 1));
         for (let i = Math.max(0, i0); i < Math.min(W, i1); i++) { const c = j * W + i; creuser(c); if (troncon[c] === -1) troncon[c] = -2; }
       }
     }

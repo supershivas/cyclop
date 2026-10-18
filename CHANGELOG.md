@@ -1,5 +1,9 @@
 # Journal des versions
 
+## 0.29.0 — 2026-10-18
+- Trois secteurs à choisir en début de partie (touches 1, 2, 3) : Les labours, La crête (une crête de 7 m que l'ennemi tient : il faut la monter), Le marais (un fond plat où la nappe affleure, quatre jours de pluie au moins)
+- Les tranchées serpentent : un tracé irrégulier, une largeur qui varie, des boyaux sinueux, plus de créneaux en carré (une partie déjà commencée garde ses hommes mais retrouve ses tranchées au nouveau tracé)
+
 ## 0.28.0 — 2026-10-17
 - Les soldats sont équipés (bottes, capote, ceinturon, cartouchières, gourde, couverture, baïonnette, casque et moustache chez nous, casque à pointe en face) et leurs bras balancent à la marche ; les morts sont ces mêmes soldats couchés, sur le dos, le ventre ou le côté
 - L'armée d'en face est vert kaki clair (elle était rouge), plus claire que tout le sol ; le rouge disparaît du jeu (un ordre refusé passe à la glaise)

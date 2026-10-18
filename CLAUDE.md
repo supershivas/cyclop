@@ -271,7 +271,7 @@ nuit (le voile continu et ses halos mélangent la terre, le sol et l'os : des co
   assure le tir. Un régiment ébranlé tire moins ; en déroute, il ne tire plus. Touché (`frapper` dans bataille.js) : tué ou blessé,
   et blessé deux fois, tué.
 - `js/tranchees.js` — les tranchées : `ligneY` (le tracé d'une ligne, une
-  fonction de x : créneaux de 10 m de part et d'autre, une ondulation lente),
+  fonction de x : trois ondulations de 70, 28 et 11 m tirées de la phase de la ligne, `demiLargeur` 1 à 1,5 m ; v0.29.0 : plus de créneaux en carré),
   `creuserTranchees` (creusées dans `diff` à 1,5 m, un parapet d'un quart du côté
   de l'ennemi, des boyaux ; `T.troncon` : le tronçon de 25 m de chaque case de
   ligne), `ligneSous`. Les données sont dans `secteur.js` (`tranchees`).
@@ -394,6 +394,12 @@ node outils/stamp-version.mjs            # après chaque changement de version.j
 
 ## Pièges connus
 
+- **Trois secteurs** (Jérôme, v0.29.0 : « 3 cartes différentes à choisir en début de partie » ; `data/secteur.js`, `demanderSecteur` de main.js, touches 1 2 3) : `essai` (« Les labours » : l'ancien secteur, rien n'a changé pour lui hors les tranchées), `crete` (une bosse
+  de 7 m de haut, large de 42, à 62 m du haut du secteur, qui serpente de ±15 m : leurs lignes la tiennent ; bosses ×1,6, nappe 0,8 m plus profonde, peu de bois, des haies, un jour de pluie au moins) et `marais` (bosses ×0,45, nappe 1,4 m plus
+  haute : les creux se remplissent, quatre jours de pluie au moins, 320 buissons, 90 arbres). Même taille, mêmes lignes (400 × 300 m) : ce qui change est dans `relief` (lu par `creerTerrain`), les nombres d'arbres et la pluie ; `profil` et `resume` font la carte
+  du choix. L'id du secteur est dans l'état (`etat.secteur`) : une partie d'avant relit `essai`. En mode debug, `?secteur=crete` sans demander. Test « trois secteurs » : relief, crête, tranchées continues.
+- **Des tranchées qui serpentent** (Jérôme, v0.29.0 : « moins géométriques ») : les créneaux en carré (±1,5 m tous les 10 m) et le zigzag des boyaux faisaient un dessin au cordeau. Le tracé est une somme de bruits lissés (`ligneY`), sa pente reste sous 0,3 case par colonne (la tranchée se suit
+  sans se couper : deux cases de large au moins), les boyaux sont des sinusoïdes ; `L.baie` n'est plus lu. Cela change la forme des tranchées d'une partie sauvegardée avant (le terrain est refait de la graine) : ses hommes gardent leur place, les ordres se recalculent.
 - **Longer la tranchée à découvert** (Jérôme, v0.21.4) : un carré de 4 m où passait une tranchée comptait +8 de relief (ses parois) : le champ
   de coûts contournait la tranchée par le sol nu à côté. Un carré dont 15 % au moins est en tranchée ou en boyau encore creusés
   (`T.troncon` et `diff` ≤ −2) coûte désormais la moitié (`foule.abri`, `abriPart`) et ne compte plus de relief : un régiment qui

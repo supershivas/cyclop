@@ -1,31 +1,32 @@
 // Le cycle de vie : écran titre → bataille → nuit → fin ; pause active,
 // réglages, sauvegarde, mise à jour, debug. Les règles sont dans bataille.js
 // (pures), le dessin dans rendu3d.js (il ne modifie jamais l'état).
-import { createLoop } from './lib/loop.js?v=0.28.0';
-import { createKeys, stopTypeahead } from './lib/keys.js?v=0.28.0';
-import { createPointer, lockBrowserGestures } from './lib/pointer.js?v=0.28.0';
-import { createGamepad } from './lib/gamepad.js?v=0.28.0';
-import { createStore, autosave, pickJSONFile } from './lib/save.js?v=0.28.0';
-import { startUpdateCheck, loadVersion, loadChangelog, downloadJSON } from './lib/app-update.js?v=0.28.0';
-import { ROLES } from './palette.js?v=0.28.0';
-import { MISSIONS, nouvelleBataille, etapesRestaurer, avancer, aube, ordonnerMarche, peutOrdonner, ordonnerBarrage, horloge, effectifs, tronconsTenus, moralEnMots, terrainResume, largeurZone, lettreZone, etendueZones, nomTroncon, actionDe, secteursDe, tronconsDeLigne, zone, photo, restaurer, PAS, NOUS } from './bataille.js?v=0.28.0';
-import { ligneY } from './tranchees.js?v=0.28.0';
-import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.28.0';
-import { METEO } from './data/meteo.js?v=0.28.0';
-import { impact, hydroLignes } from './terrain.js?v=0.28.0';
-import { hash2 } from './lib/rng.js?v=0.28.0';
-import { creerRendu, CAMERA } from './rendu3d.js?v=0.28.0';
-import { etatEnMots, experienceEnMots, chevrons } from './identite.js?v=0.28.0';
-import { CORVEES } from './data/corvees.js?v=0.28.0';
-import { refusCorvee } from './nuit.js?v=0.28.0';
-import { chargerContenu } from './design-store.js?v=0.28.0';
-import * as lecture from './hud/lecture.js?v=0.28.0';
-import { creerFiche } from './hud/fiche.js?v=0.28.0';
-import { creerNuit, corveeDe, corveeCourte } from './hud/nuit.js?v=0.28.0';
-import { creerCarnet, deux } from './hud/carnet.js?v=0.28.0';
-import { creerCarte } from './hud/carte.js?v=0.28.0';
-import { creerPertes } from './hud/pertes.js?v=0.28.0';
-import { creerChargement } from './hud/chargement.js?v=0.28.0';
+import { createLoop } from './lib/loop.js?v=0.29.0';
+import { createKeys, stopTypeahead } from './lib/keys.js?v=0.29.0';
+import { createPointer, lockBrowserGestures } from './lib/pointer.js?v=0.29.0';
+import { createGamepad } from './lib/gamepad.js?v=0.29.0';
+import { createStore, autosave, pickJSONFile } from './lib/save.js?v=0.29.0';
+import { startUpdateCheck, loadVersion, loadChangelog, downloadJSON } from './lib/app-update.js?v=0.29.0';
+import { ROLES } from './palette.js?v=0.29.0';
+import { MISSIONS, nouvelleBataille, etapesRestaurer, avancer, aube, ordonnerMarche, peutOrdonner, ordonnerBarrage, horloge, effectifs, tronconsTenus, moralEnMots, terrainResume, largeurZone, lettreZone, etendueZones, nomTroncon, actionDe, secteursDe, tronconsDeLigne, zone, photo, restaurer, PAS, NOUS } from './bataille.js?v=0.29.0';
+import { ligneY } from './tranchees.js?v=0.29.0';
+import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.29.0';
+import { METEO } from './data/meteo.js?v=0.29.0';
+import { impact, hydroLignes } from './terrain.js?v=0.29.0';
+import { hash2 } from './lib/rng.js?v=0.29.0';
+import { creerRendu, CAMERA } from './rendu3d.js?v=0.29.0';
+import { etatEnMots, experienceEnMots, chevrons } from './identite.js?v=0.29.0';
+import { CORVEES } from './data/corvees.js?v=0.29.0';
+import { refusCorvee } from './nuit.js?v=0.29.0';
+import { chargerContenu } from './design-store.js?v=0.29.0';
+import * as lecture from './hud/lecture.js?v=0.29.0';
+import { creerFiche } from './hud/fiche.js?v=0.29.0';
+import { creerNuit, corveeDe, corveeCourte } from './hud/nuit.js?v=0.29.0';
+import { creerCarnet, deux } from './hud/carnet.js?v=0.29.0';
+import { creerCarte } from './hud/carte.js?v=0.29.0';
+import { creerPertes } from './hud/pertes.js?v=0.29.0';
+import { creerChargement } from './hud/chargement.js?v=0.29.0';
+import { SECTEURS } from './data/secteur.js?v=0.29.0';
 
 const JEU = 'cyclopeen';
 const $ = id => document.getElementById(id);
@@ -186,8 +187,8 @@ function reprendre() {
   loop.resume();
 }
 
-function nouvelle(graine) {
-  return nouvelleBataille(graine, R, SOLDATS ? { soldats: Math.floor(SOLDATS / 2) } : {});
+function nouvelle(graine, secteur = 'essai') {
+  return nouvelleBataille(graine, R, { secteur, ...(SOLDATS ? { soldats: Math.floor(SOLDATS / 2) } : {}) });
 }
 // (v0.28.0 : sous une barre de chargement ; la relecture se fait par étapes, `etapesRestaurer`)
 $('continuer').onclick = async () => {
@@ -198,15 +199,15 @@ $('continuer').onclick = async () => {
 };
 // Un travail en étapes sous la barre ; puis `jouer` (brancher la bataille au rendu : la fin de la barre)
 async function sousBarre(titre, gen) { return chargement.executer(titre, gen); }
-function* etapesNouvelle(graine) {
+function* etapesNouvelle(graine, secteur) {
   yield [0.1, 'Le terrain et les régiments'];
-  const b = nouvelle(graine);
+  const b = nouvelle(graine, secteur);
   yield [0.9, 'La mise en place'];
   return b;
 }
 // une nouvelle bataille, et son ordre (la mission, la durée, la réserve) ; pas en mode debug, que les scripts pilotent
-async function commencer(graine) {
-  jouer(await sousBarre('Nouvelle partie', etapesNouvelle(graine)));
+async function commencer(graine, secteur) {
+  jouer(await sousBarre('Nouvelle partie', etapesNouvelle(graine, secteur)));
   chargement.cacher();
   if (DEBUG || !B.etat.mission) return;
   loop.pause();
@@ -218,12 +219,37 @@ async function commencer(graine) {
 }
 $('ordre-compris').onclick = () => $('dialogue-ordre').close();
 $('dialogue-ordre').addEventListener('close', reprendre);
-$('nouvelle').onclick = () => {
+// Le choix du secteur (v0.29.0) : trois cartes (`SECTEURS` de data/secteur.js), une coupe du sol de chacune ; en mode debug, celui de l'adresse (?secteur=crete) sans demander
+function demanderSecteur() {
+  const d = $('dialogue-carte');
+  if (DEBUG) return Promise.resolve(SECTEURS[params.get('secteur')] ? params.get('secteur') : 'essai');
+  const liste = $('cartes-choix');
+  liste.replaceChildren(...Object.entries(SECTEURS).map(([id, S], k) => {
+    const b = document.createElement('button'); b.className = 'carte-choix'; b.dataset.id = id; b.type = 'button';
+    // la coupe nord-sud : le sol, rempli dessous ; leurs lignes (rouge d'avant : vert kaki) en haut, les nôtres en bas
+    const pts = S.profil.map((v, i) => `${(i / (S.profil.length - 1) * 100).toFixed(1)},${(52 - v * 40).toFixed(1)}`).join(' ');
+    b.innerHTML = `<svg viewBox="0 0 100 64" preserveAspectRatio="none" aria-hidden="true"><polygon class="remplissage" points="0,64 ${pts} 100,64"/><polyline class="sol" points="${pts}"/><line class="ligne-eux" x1="4" y1="6" x2="30" y2="6"/><line class="ligne-nous" x1="70" y1="6" x2="96" y2="6"/></svg>
+      <b>${S.nom}<span class="touche">${k + 1}</span></b><p>${S.resume}</p>`;
+    return b;
+  }));
+  return new Promise(ok => {
+    const fin = id => { d.onclose = null; if (d.open) d.close(); ok(id); };
+    liste.onclick = e => { const b = e.target.closest('.carte-choix'); if (b) fin(b.dataset.id); };
+    d.onkeydown = e => { const id = Object.keys(SECTEURS)[Number(e.key) - 1]; if (id) { e.preventDefault(); fin(id); } };
+    d.onclose = () => ok(null);                       // annulé (Échap ou le bouton)
+    d.showModal();
+    liste.firstElementChild?.focus();
+  });
+}
+$('nouvelle').onclick = async () => {
   const graine = window.__seed ?? Date.now() % 100000;      // la graine elle-même peut venir de l'horloge
-  if (!store.has('partie')) return commencer(graine);
-  const d = $('dialogue-confirmer');
-  d.onclose = () => { if (d.returnValue === 'oui') commencer(graine); };
-  d.showModal();
+  if (store.has('partie')) {
+    const d = $('dialogue-confirmer');
+    const oui = await new Promise(ok => { d.onclose = () => ok(d.returnValue === 'oui'); d.showModal(); });
+    if (!oui) return;
+  }
+  const secteur = await demanderSecteur();
+  if (secteur) commencer(graine, secteur);
 };
 $('pause').onclick = pause;
 $('reprendre').onclick = () => $('dialogue-pause').close();
@@ -255,7 +281,7 @@ function montrerFin() {
   $('fin-lignes').textContent = e.tranchees ? `Tronçons tenus : ${tronconsTenus(B)[0]} des nôtres, ${tronconsTenus(B)[1]} en face.` : '';
   $('dialogue-fin').showModal();
 }
-$('fin-nouvelle').onclick = () => { $('dialogue-fin').close(); store.clear('partie'); commencer(window.__seed ?? Date.now() % 100000); };
+$('fin-nouvelle').onclick = async () => { $('dialogue-fin').close(); const secteur = await demanderSecteur(); if (!secteur) return montrerTitre(); store.clear('partie'); commencer(window.__seed ?? Date.now() % 100000, secteur); };
 $('fin-titre-btn').onclick = () => { $('dialogue-fin').close(); montrerTitre(); };
 
 // ─── Réglages ──────────────────────────────────────────────────────────────
@@ -833,7 +859,7 @@ startUpdateCheck({
 
 // ─── Mode debug (section 18) : chargé seulement avec ?debug=1 ──────────────
 if (DEBUG) {
-  const { installDebug, seedFromUrl } = await import('./lib/debug.js?v=0.28.0');
+  const { installDebug, seedFromUrl } = await import('./lib/debug.js?v=0.29.0');
   window.__seed = seedFromUrl() ?? undefined;
   installDebug({
     state: () => B && { ...horloge(B), effectifs: effectifs(B), pertes: B.etat.pertes, impacts: B.etat.impacts.length, enJeu: enJeu(), pause: loop.paused },

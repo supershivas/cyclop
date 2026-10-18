@@ -106,6 +106,24 @@ test('un mort d\'obus est jeté à l\'opposé du point de chute, de 3 à 15 m, e
   }
   assert.equal(B.volants.length, 0, 'plus rien ne vole après la durée du vol');
 });
+test('trois secteurs : la crête est haute devant leurs lignes, le marais est plat et mouillé, et leurs tranchées serpentent sans se couper', () => {
+  const faire = id => nouvelleBataille(3, R, { secteur: id, soldats: 200, jours: 3 });
+  const [lab, cre, mar] = ['essai', 'crete', 'marais'].map(faire);
+  const moy = (B, j0, j1) => { const T = B.terrain; let s = 0, n = 0; for (let j = j0; j < j1; j++) for (let i = 100; i < 700; i++) { s += T.base[j * T.W + i]; n++; } return s / n / 4; };
+  const m = SECTEURS.essai.marges;
+  assert.ok(moy(cre, m.y + 45, m.y + 80) > moy(cre, m.y + 220, m.y + 260) + 3, 'une crête devant leurs lignes');
+  assert.ok(moy(cre, m.y + 45, m.y + 80) > moy(lab, m.y + 45, m.y + 80) + 2);
+  const relief = B => { const T = B.terrain; let mn = 1e9, mx = -1e9; for (let c = 0; c < T.base.length; c += 7) { mn = Math.min(mn, T.base[c]); mx = Math.max(mx, T.base[c]); } return (mx - mn) / 4; };
+  assert.ok(relief(mar) < relief(lab) && relief(lab) < relief(cre), `relief : marais ${relief(mar)}, labours ${relief(lab)}, crête ${relief(cre)}`);
+  for (const B of [lab, cre, mar]) {
+    assert.equal(B.lignes.length, 8);
+    // chaque colonne d'une ligne a ses cases creusées, et d'une colonne à la suivante le tracé ne saute pas de plus d'une case : la tranchée se suit
+    for (const L of B.lignes) for (let x = M.x; x < M.x + 399; x += 3) assert.ok(Math.abs(ligneY(L, x + 0.5) - ligneY(L, x + 1.5)) < 1, 'la ligne ne saute pas');
+    const L = B.lignes[0], T = B.terrain; let creuses = 0;
+    for (let x = M.x; x < M.x + 400; x++) for (let j = Math.round(ligneY(L, x + 0.5)) - 2; j <= Math.round(ligneY(L, x + 0.5)) + 1; j++) if (T.diff[j * T.W + x] <= -2) creuses++;
+    assert.ok(creuses >= 800, `tranchée creusée : ${creuses}`);
+  }
+});
 test('un ordre impossible se refuse, avec sa raison', () => {
   const B = petite();
   assert.match(ordonnerMarche(B, [], ...P(10, 10)).refus, /Aucun régiment/);

@@ -1,9 +1,8 @@
 {
-  "version": "0.28.0",
-  "date": "2026-10-17",
+  "version": "0.29.0",
+  "date": "2026-10-18",
   "changes": [
-    "Les soldats sont équipés (bottes, capote, ceinturon, cartouchières, gourde, casque de chaque camp, bras qui balancent) et les morts sont ces mêmes soldats couchés, dans des poses variées",
-    "L'armée d'en face est vert kaki clair, plus claire que tout le sol ; la caméra est libre : toutes les directions, de l'horizon au zénith, le ciel en vue, bloquée seulement par le sol",
-    "Des barres de chargement au lancement du jeu et quand on relit ou commence une partie"
+    "Trois secteurs à choisir en début de partie : Les labours (champ ouvert), La crête (une crête de 7 m que l'ennemi tient), Le marais (fond plat où la nappe affleure)",
+    "Les tranchées serpentent : un tracé irrégulier, une largeur qui varie, des boyaux sinueux, plus de créneaux en carré (une partie sauvegardée avant garde ses hommes mais retrouve des tranchées au nouveau tracé)"
   ]
 }
