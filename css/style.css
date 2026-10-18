@@ -232,9 +232,9 @@ dialog form { margin-top: calc(var(--pas) * 2); }
 .pertes .croix { letter-spacing: .18em; min-height: 1.4em; white-space: nowrap; overflow: hidden; font-size: var(--texte-petit); }
 .pertes .eux .croix { color: var(--jeu-eux); }
 .temps { display: flex; gap: var(--e1); padding: var(--e1); }
-.temps button { display: grid; place-items: center; min-width: var(--jeu-cible); height: 36px; padding: 0 var(--pas); font: inherit; color: var(--jeu-fond); background: none; border: 1px solid var(--jeu-accent); cursor: pointer; }
+.temps button { display: grid; place-items: center; min-width: var(--jeu-cible); height: 36px; padding: 0 var(--pas); font: inherit; color: var(--jeu-fond); background: none; border: 0; cursor: pointer; }
 .temps button svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; }
-.temps button.actif { background: var(--jeu-fond); color: var(--jeu-encre); border-color: var(--jeu-fond); }
+.temps button.actif { background: var(--jeu-fond); color: var(--jeu-encre); }
 .terrain .vit { display: flex; align-items: center; gap: var(--pas); font-size: var(--texte-petit); color: var(--jeu-accent); }
 .terrain .vit .plein { flex: 1; height: 6px; min-width: 8ch; background: var(--jeu-accent); }
 .terrain .vit b { display: block; height: 100%; background: var(--jeu-fond); }

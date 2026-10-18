@@ -1,8 +1,7 @@
 {
-  "version": "0.31.3",
+  "version": "0.31.4",
   "date": "2026-10-18",
   "changes": [
-    "Un seul style de titres, des textes et des espacements pris dans une échelle (quelques pixels bougent)",
-    "Menu, Réglages et le temps ont le même habillage, en papier"
+    "Les boutons de vitesse n'ont plus de liseré (il était coupé)"
   ]
 }

@@ -1,5 +1,8 @@
 # Journal des versions
 
+## 0.31.4 — 2026-10-18
+- Les boutons de vitesse n'ont plus de liseré (il était coupé)
+
 ## 0.31.3 — 2026-10-18
 - Un seul style de titres, des textes et des espacements pris dans une échelle (quelques pixels bougent)
 - Menu, Réglages et le temps ont le même habillage, en papier

@@ -3,9 +3,9 @@
 // (sombre), un repère dit où l'on est, et dessous les changements de météo. La météo des jours à venir ne se montre pas (le jeu ne la
 // connaît qu'à moitié) : le jour même est sûr, demain est une prévision (au trait, juste sept fois sur dix), le reste est vide.
 // Rien ici ne lit ni ne modifie le jeu : des données d'exemple, la palette du jeu (js/palette.js), aucune couleur de plus.
-import { PALETTE as P } from './palette.js?v=0.31.3';
-import { ICONES_METEO } from './hud/meteo-icones.js?v=0.31.3';
-import { METEO } from './data/meteo.js?v=0.31.3';
+import { PALETTE as P } from './palette.js?v=0.31.4';
+import { ICONES_METEO } from './hud/meteo-icones.js?v=0.31.4';
+import { METEO } from './data/meteo.js?v=0.31.4';
 
 const el = (tag, css = '', ...kids) => { const e = document.createElement(tag); if (css) e.style.cssText = css; e.append(...kids.flat().filter(k => k != null)); return e; };
 const MONO = 'font:13px/1.4 ui-monospace,monospace;';
@@ -45,7 +45,7 @@ const ligneTexte = (css = '') => el('div', css, `Jour ${S.jour} sur ${S.jours} �
 // le contexte : les boutons de menu et de vitesse (maquette, comme dans le jeu), sous lesquels vient la barre
 function contexte(b) {
   const bouton = (t, w = 44) => el('div', `width:${w}px;height:44px;display:grid;place-items:center;background:${P.t};color:${P.o};${MONO}`, t);
-  const vit = el('div', `display:flex;gap:3px;padding:3px;height:44px;box-sizing:border-box;${PAPIER}`, ['II', '×1', '×2', '×4'].map((t, k) => el('div', `width:36px;display:grid;place-items:center;border:1px solid ${P.g};${k === 1 ? `background:${P.t};color:${P.o}` : ''}`, t)));
+  const vit = el('div', `display:flex;gap:3px;padding:3px;height:44px;box-sizing:border-box;${PAPIER}`, ['II', '×1', '×2', '×4'].map((t, k) => el('div', `width:36px;display:grid;place-items:center;${k === 1 ? `background:${P.t};color:${P.o}` : ''}`, t)));
   b.append(el('div', 'position:absolute;left:8px;top:8px;display:flex;gap:8px;align-items:flex-start', bouton('II'), bouton('⚙'), vit));
 }
 const poser = (b, css, ...kids) => { const e = el('div', `position:absolute;left:8px;top:60px;${css}`, kids); b.append(e); return e; };
