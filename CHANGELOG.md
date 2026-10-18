@@ -1,5 +1,8 @@
 # Journal des versions
 
+## 0.34.6 — 2026-10-18
+- La fenêtre d'ordres revient au-dessus de la carte du régiment choisi et se relève d'un coup, comme un rabat
+
 ## 0.34.5 — 2026-10-18
 - Les obus de 155 et de 220 sont plus meurtriers : ils fauchent davantage d'hommes dans leur rayon, le 75 reste précis mais tue moins
 
