@@ -318,10 +318,31 @@ dialog form { margin-top: calc(var(--pas) * 2); }
 .carte.replie .entete i { border-top: 5px solid transparent; border-bottom: 5px solid transparent; border-left-color: currentColor; border-right: 0; }
 .carte.replie .carte-grille { display: none; }
 .carte.replie .entete { border-bottom: 0; padding-bottom: 0; margin-bottom: 0; }
-.haut-gauche .boutons { align-items: flex-start; }
-.haut-gauche .temps { padding: 2px; gap: 2px; }
-.haut-gauche .temps button { min-width: 30px; height: 32px; padding: 0 4px; }
-.haut-gauche .temps button svg { width: 16px; height: 16px; }
+.haut-bloc { display: grid; gap: var(--pas); justify-items: stretch; width: max-content; max-width: 100%; }
+/* les boutons du haut ont tous la même hauteur (--jeu-cible) ; la barre du temps, dessous, a la largeur de leur rangée (contain : sa propre largeur ne compte pas) */
+.haut-bloc .boutons { align-items: stretch; }
+.haut-bloc .boutons > * { height: var(--jeu-cible); box-sizing: border-box; }
+.haut-bloc .temps { padding: 3px; gap: 3px; align-items: stretch; }
+.haut-bloc .temps button { height: auto; min-width: 36px; padding: 0 6px; }
+.haut-bloc .temps button svg { width: 16px; height: 16px; }
+.billet { contain: inline-size; padding: 6px 8px 8px; display: grid; grid-template-columns: minmax(0, 1fr); gap: 4px; }
+.billet .discret, .billet .terrain { font-size: 12px; }
+.frise { position: relative; padding-top: 22px; --c-jour: var(--jeu-encre); --c-passe: var(--jeu-accent); }
+.frise-drapeau { position: absolute; top: 0; left: 0; white-space: nowrap; font-size: 12px; line-height: 18px; }
+.frise-meteo, .frise-nuit { display: flex; }
+.frise-meteo { height: 16px; outline: 1px solid var(--jeu-fond); background: var(--jeu-encre); }
+.frise-meteo i { flex: 1; display: block; border-left: 1px solid var(--jeu-fond); }
+.frise-meteo i:first-child { border-left: 0; }
+.frise-meteo i.prevu { background-image: repeating-linear-gradient(135deg, var(--jeu-encre) 0 3px, transparent 3px 6px); }
+.frise-nuit { height: 6px; margin-top: 2px; background: var(--jeu-fond); }
+.frise-nuit i { flex: 1; display: block; background: linear-gradient(90deg, var(--c-jour) 50%, transparent 50%); }
+.frise-nuit i.passe { background: linear-gradient(90deg, var(--c-passe) 50%, transparent 50%); }
+.frise-repere { position: absolute; left: calc(var(--ici, 0) * 100% - 1px); top: 18px; width: 2px; height: 28px; background: var(--jeu-nous); outline: 1px solid var(--jeu-fond); }
+.frise-chg { position: relative; display: flex; height: 18px; margin-top: 3px; }
+.frise-chg .frise-icone { flex: 1; min-width: 0; }
+.frise-chg .frise-icone[hidden] { display: block; visibility: hidden; }
+.frise-icone svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.frise-icone.prevu svg { stroke-dasharray: 2.5 3; }
 .pertes { grid-template-columns: 1fr; gap: 2px; padding: 4px 8px; }
 .pertes .armee { display: grid; grid-template-columns: 8ch 16ch auto auto auto; gap: 0 var(--pas); align-items: center; font-size: 13px; }
 .pertes .nom { font-size: 14px; }
@@ -329,7 +350,7 @@ dialog form { margin-top: calc(var(--pas) * 2); }
 .pertes .armee .compte, .pertes .armee .tr { color: var(--jeu-accent); font-size: 12px; white-space: nowrap; }
 .pertes .armee .croix { min-height: 0; max-width: 14ch; letter-spacing: .1em; }
 .pertes .armee .tr[hidden] { display: none; }
-.terrain { display: flex; align-items: center; gap: var(--pas); font-size: 12px; color: var(--jeu-accent); white-space: nowrap; min-height: 1.4em; }
+.terrain { display: flex; flex-wrap: wrap; align-items: center; gap: 0 var(--pas); font-size: 12px; color: var(--jeu-accent); min-height: 1.4em; }
 .terrain .vit { display: flex; align-items: center; gap: 4px; }
 .terrain .vit .plein { flex: none; width: 6ch; min-width: 0; height: 6px; background: var(--jeu-accent); }
 .montre-bloc { max-width: 100%; }

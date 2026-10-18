@@ -2,23 +2,23 @@
 // Chaque sujet utilise les mêmes modules que le jeu (terrain, apparence,
 // rendu three.js) : ce qu'on voit ici est ce que le jeu dessinera. Ajouter un
 // sujet ou une variante = ajouter une entrée dans GROUPES.
-import { mountLabo } from './lib/labo-shell.js?v=0.31.1';
-import { spriteCanvas, paletteToGPL, paletteToHex } from './lib/sprites.js?v=0.31.1';
-import { PALETTE, ROLES } from './palette.js?v=0.31.1';
-import { chargerContenu } from './design-store.js?v=0.31.1';
-import { tuile, ETAT } from './tuiles.js?v=0.31.1';
-import { creerTerrain, impact, hydroLignes } from './terrain.js?v=0.31.1';
-import { CALIBRES } from './data/calibres.js?v=0.31.1';
-import { METEO } from './data/meteo.js?v=0.31.1';
-import { nouvelleBataille, avancer, ordonnerMarche, ordonnerBarrage, mourir } from './bataille.js?v=0.31.1';
-import { creerRendu, ZOOMS } from './rendu3d.js?v=0.31.1';
-import { hash2 } from './lib/rng.js?v=0.31.1';
-import { reglerVerdure } from './apparence.js?v=0.31.1';
-import { maquetteAssaut } from './labo-assaut.js?v=0.31.1';
-import { calquePlaques } from './labo-plaques.js?v=0.31.1';
-import { calqueBarre } from './labo-barre-temps.js?v=0.31.1';
-import { JOURNAL } from './labo-journal.js?v=0.31.1';
-import { loadVersion } from './lib/app-update.js?v=0.31.1';
+import { mountLabo } from './lib/labo-shell.js?v=0.31.2';
+import { spriteCanvas, paletteToGPL, paletteToHex } from './lib/sprites.js?v=0.31.2';
+import { PALETTE, ROLES } from './palette.js?v=0.31.2';
+import { chargerContenu } from './design-store.js?v=0.31.2';
+import { tuile, ETAT } from './tuiles.js?v=0.31.2';
+import { creerTerrain, impact, hydroLignes } from './terrain.js?v=0.31.2';
+import { CALIBRES } from './data/calibres.js?v=0.31.2';
+import { METEO } from './data/meteo.js?v=0.31.2';
+import { nouvelleBataille, avancer, ordonnerMarche, ordonnerBarrage, mourir } from './bataille.js?v=0.31.2';
+import { creerRendu, ZOOMS } from './rendu3d.js?v=0.31.2';
+import { hash2 } from './lib/rng.js?v=0.31.2';
+import { reglerVerdure } from './apparence.js?v=0.31.2';
+import { maquetteAssaut } from './labo-assaut.js?v=0.31.2';
+import { calquePlaques } from './labo-plaques.js?v=0.31.2';
+import { calqueBarre } from './labo-barre-temps.js?v=0.31.2';
+import { JOURNAL } from './labo-journal.js?v=0.31.2';
+import { loadVersion } from './lib/app-update.js?v=0.31.2';
 
 document.documentElement.style.setProperty('--jeu-accent', ROLES.accent);
 const NOM = document.title.replace(/^Labo — /, ''); // le nom vient de la page (une apostrophe ne casse rien)
@@ -186,10 +186,10 @@ const GROUPES = [
       { title: 'Avec le carnet de bord', status: 'ancienne', note: 'Retenu en v0.10.0, la mise en page a changé depuis (v0.19.0, v0.20.0, v0.30.0). Les papiers de campagne, et un carnet de bord : les événements marquants à l\'heure où ils arrivent (la préparation d\'en face, la sortie, le dernier défenseur, le tronçon perdu), la ligne la plus récente surlignée. La mémoire de la pause active.', render: s => moteur(s, { zoom: 3, cz: 185, soldats: 400, calque: calquePlaques('carnet') }) },
     ] },
     { id: 'barre-temps', title: 'La barre du temps', variants: [
-      { title: 'Quatre lignes de texte', status: 'actuelle', note: 'Le billet d\'aujourd\'hui, sous les boutons de vitesse : le jour, l\'heure et le temps, la prévision de demain, la mission, le terrain sous la souris. Rien ne montre où l\'on en est de la bataille.', render: s => moteur(s, { zoom: 3, cz: 185, soldats: 400, calque: calqueBarre('actuelle') }) },
+      { title: 'La bande de météo', status: 'actuelle', depuis: '0.31.2', note: 'La frise est elle-même la météo : chaque jour a la couleur de son temps (sec, pluie, brouillard, gel), demain hachuré, le reste en blanc ; la nuit est une barre sombre dessous ; le texte suit le repère au lieu d\'avoir sa ligne. Le plus dense, et le plus lisible en un coup d\'œil. En jeu depuis la v0.31.2 : de la largeur des boutons du haut, avec dessous la mission et le terrain sous la souris.', render: s => moteur(s, { zoom: 3, cz: 185, soldats: 400, calque: calqueBarre('bande') }) },
+      { title: 'Quatre lignes de texte', status: 'ancienne', note: 'Le billet d\'aujourd\'hui, sous les boutons de vitesse : le jour, l\'heure et le temps, la prévision de demain, la mission, le terrain sous la souris. Rien ne montre où l\'on en est de la bataille.', render: s => moteur(s, { zoom: 3, cz: 185, soldats: 400, calque: calqueBarre('actuelle') }) },
       { title: 'La frise continue', note: 'Une ligne de texte, puis une frise de toute la bataille : chaque jour est un jour (clair) suivi de sa nuit (sombre), un trait bleu dit où l\'on est, et dessous, les seuls changements de météo (demain au trait pointillé : c\'est une prévision). Les jours d\'avant sont un ton plus bas.', render: s => moteur(s, { zoom: 3, cz: 185, soldats: 400, calque: calqueBarre('continue') }) },
       { title: 'Les jours en cases', note: 'Une case par jour, numérotée ; la case du jour s\'ouvre sur ses heures (jour puis nuit) avec le trait bleu ; la météo ne se dit qu\'au changement, un point sinon. Se lit comme un calendrier : « troisième jour sur onze ».', render: s => moteur(s, { zoom: 3, cz: 185, soldats: 400, calque: calqueBarre('cases') }) },
-      { title: 'La bande de météo', note: 'La frise est elle-même la météo : chaque jour a la couleur de son temps (sec, pluie, brouillard, gel), demain hachuré, le reste en blanc ; la nuit est une barre sombre dessous ; le texte suit le repère au lieu d\'avoir sa ligne. Le plus dense, et le plus lisible en un coup d\'œil.', render: s => moteur(s, { zoom: 3, cz: 185, soldats: 400, calque: calqueBarre('bande') }) },
       { title: 'Une seule ligne', note: 'Le jour, l\'heure, le temps d\'aujourd\'hui et celui de demain à côté des boutons de vitesse ; une règle de cinq pixels dessous, jours et nuits, le trait bleu. La mission et le terrain quittent ce papier. Presque rien à l\'écran.', render: s => moteur(s, { zoom: 3, cz: 185, soldats: 400, calque: calqueBarre('ligne') }) },
     ] },
     { id: 'assaut', title: 'Attaque d\'une tranchée', variants: [

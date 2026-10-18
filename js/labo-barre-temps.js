@@ -3,9 +3,9 @@
 // (sombre), un repère dit où l'on est, et dessous les changements de météo. La météo des jours à venir ne se montre pas (le jeu ne la
 // connaît qu'à moitié) : le jour même est sûr, demain est une prévision (au trait, juste sept fois sur dix), le reste est vide.
 // Rien ici ne lit ni ne modifie le jeu : des données d'exemple, la palette du jeu (js/palette.js), aucune couleur de plus.
-import { PALETTE as P } from './palette.js?v=0.31.1';
-import { ICONES_METEO } from './hud/meteo-icones.js?v=0.31.1';
-import { METEO } from './data/meteo.js?v=0.31.1';
+import { PALETTE as P } from './palette.js?v=0.31.2';
+import { ICONES_METEO } from './hud/meteo-icones.js?v=0.31.2';
+import { METEO } from './data/meteo.js?v=0.31.2';
 
 const el = (tag, css = '', ...kids) => { const e = document.createElement(tag); if (css) e.style.cssText = css; e.append(...kids.flat().filter(k => k != null)); return e; };
 const MONO = 'font:13px/1.4 ui-monospace,monospace;';
@@ -45,7 +45,7 @@ const ligneTexte = (css = '') => el('div', css, `Jour ${S.jour} sur ${S.jours} �
 // le contexte : les boutons de menu et de vitesse (maquette, comme dans le jeu), sous lesquels vient la barre
 function contexte(b) {
   const bouton = (t, w = 44) => el('div', `width:${w}px;height:44px;display:grid;place-items:center;background:${P.t};color:${P.o};${MONO}`, t);
-  const vit = el('div', `display:flex;gap:2px;padding:2px;${PAPIER}`, ['II', '×1', '×2', '×4'].map((t, k) => el('div', `width:30px;height:32px;display:grid;place-items:center;border:1px solid ${P.g};${k === 1 ? `background:${P.t};color:${P.o}` : ''}`, t)));
+  const vit = el('div', `display:flex;gap:3px;padding:3px;height:44px;box-sizing:border-box;${PAPIER}`, ['II', '×1', '×2', '×4'].map((t, k) => el('div', `width:36px;display:grid;place-items:center;border:1px solid ${P.g};${k === 1 ? `background:${P.t};color:${P.o}` : ''}`, t)));
   b.append(el('div', 'position:absolute;left:8px;top:8px;display:flex;gap:8px;align-items:flex-start', bouton('II'), bouton('⚙'), vit));
 }
 const poser = (b, css, ...kids) => { const e = el('div', `position:absolute;left:8px;top:60px;${css}`, kids); b.append(e); return e; };
@@ -85,7 +85,7 @@ function cases(b) {
 // D · la bande météo : la frise est elle-même colorée par le temps de chaque jour ; la nuit est une barre sombre dessous ; le texte suit le repère
 function bande(b) {
   contexte(b);
-  const L = 300, p = poser(b, `${PAPIER}padding:6px 10px 8px`);
+  const L = 247, p = poser(b, `${PAPIER}padding:6px 8px 8px;width:263px;box-sizing:border-box`);
   const haut = el('div', `position:relative;width:${L}px;height:20px;margin-bottom:2px`);
   haut.append(el('div', `position:absolute;left:${Math.min(Math.max(ici * L - 56, 0), L - 112)}px;top:0;width:112px;text-align:center;white-space:nowrap`, `J${S.jour}/${S.jours} · ${hh}`));
   const meteo = el('div', `position:relative;display:flex;width:${L}px;height:16px;outline:1px solid ${P.t}`);
@@ -98,13 +98,13 @@ function bande(b) {
   nuit.append(el('i', `position:absolute;left:${ici * L - 1}px;top:-24px;width:2px;height:${24 + 6 + 2}px;background:${P.n};outline:1px solid ${P.t}`));
   const ch = el('div', `position:relative;width:${L}px;height:20px;margin-top:3px`);
   for (let k = 0; k < S.jours; k++) if (change(k)) { const g = icone(S.meteo[k], 16, P.t, grise(savoir(k))); g.style.cssText += `;position:absolute;left:${k / S.jours * L + 1}px;top:0`; ch.append(g); }
-  p.append(haut, meteo, nuit, ch);
+  p.append(haut, meteo, nuit, ch, el('div', `color:${P.g};font-size:12px;margin-top:2px`, 'Prendre leur première ligne · réserve : 4'), el('div', `color:${P.g};font-size:12px`, 'Sol sec ▬▬ 100 %'));
 }
 
 // E · une seule ligne : le jour et l'heure à côté des boutons de vitesse, une règle de deux pixels dessous ; presque rien à l'écran
 function ligne(b) {
   contexte(b);
-  const L = 228, e = el('div', `position:absolute;left:258px;top:8px;height:44px;box-sizing:border-box;padding:5px 10px 0;${PAPIER}`);
+  const L = 228, e = el('div', `position:absolute;left:268px;top:8px;height:44px;box-sizing:border-box;padding:5px 10px 0;${PAPIER}`);
   const t = el('div', 'display:flex;gap:8px;align-items:center;white-space:nowrap', `J${S.jour}/${S.jours} · ${hh}`, icone(S.meteo[S.jour - 1], 16), el('span', `color:${P.g}`, '→'), icone('brouillard', 16, P.t, true));
   const r = el('div', `position:relative;width:${L}px;height:6px;margin-top:5px`, frise(L, 5), repere(L, 5));
   r.firstChild.style.outline = 'none';

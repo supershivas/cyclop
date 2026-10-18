@@ -1,5 +1,9 @@
 # Journal des versions
 
+## 0.31.2 — 2026-10-18
+- La barre du temps, variante D : une frise de la bataille (la météo de chaque jour, la nuit, un trait bleu pour où l'on est, les changements de météo en pictogrammes), de la largeur des boutons du haut ; la mission et le terrain sous la souris restent dessous
+- Les boutons du haut ont tous la même hauteur
+
 ## 0.31.1 — 2026-10-18
 - Le labo a une page d'accueil : ce qui a changé version par version, avec un lien vers le bon sujet, ce qui est nouveau depuis votre dernière visite, ce qui reste à trancher
 - Au labo, les visuels périmés sont refaits ou marqués « ancienne » : l'écran d'aujourd'hui, la caméra libre, les notes du champ ; dans chaque sujet, la variante en jeu est la A

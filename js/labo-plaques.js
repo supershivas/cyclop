@@ -1,7 +1,8 @@
 // Le sujet « Plaques et journal » du labo : des maquettes de l'interface posées sur le champ de bataille en direct (le moteur du jeu),
 // pour décider de ce que sont les « fenêtres » : aujourd'hui, toutes la même plaque. Rien ici ne lit ni ne modifie le jeu : des
 // données d'exemple, la palette du jeu (js/palette.js), aucune couleur de plus.
-import { PALETTE as P } from './palette.js?v=0.31.1';
+import { PALETTE as P } from './palette.js?v=0.31.2';
+import { calqueBarre } from './labo-barre-temps.js?v=0.31.2';
 
 const el = (tag, css = '', ...kids) => { const e = document.createElement(tag); if (css) e.style.cssText = css; e.append(...kids.flat().filter(k => k != null)); return e; };
 const txt = (s, css = '') => el('span', css, s);
@@ -98,13 +99,8 @@ function papiers(b, avecCarnet = false) {
 
 // ── l'écran d'aujourd'hui (v0.31) : le billet sous les boutons du temps, les pertes au centre, la carte, les cartes de régiment, les batteries, le carnet ──
 function aujourdhui(b) {
-  const bouton = (t, w = 44) => el('div', `width:${w}px;height:44px;display:grid;place-items:center;background:${P.t};color:${P.o};${MONO}`, t);
-  const vit = el('div', `display:flex;gap:2px;padding:2px;background:${P.o};color:${P.t};${MONO}box-shadow:3px 3px 0 ${P.t}`, ['II', '×1', '×2', '×4'].map((t, k) => el('div', `width:30px;height:32px;display:grid;place-items:center;border:1px solid ${P.g};${k === 1 ? `background:${P.t};color:${P.o}` : ''}`, t)));
-  b.append(el('div', 'position:absolute;left:8px;top:8px;display:flex;gap:8px;align-items:flex-start', bouton('II'), bouton('⚙'), vit));
+  calqueBarre('bande')(b);      // les boutons du temps et la barre du temps (le billet), telle qu'elle est en jeu
   const papier = (css, ...kids) => el('div', `position:absolute;background:${P.o};color:${P.t};${MONO}box-shadow:3px 3px 0 ${P.t};${css}`, ...kids);
-  // le billet : le jour, la prévision, la mission, le terrain sous la souris
-  b.append(papier('left:8px;top:60px;padding:6px 10px;max-width:40ch', el('div', '', `Jour ${S.jour} sur ${S.jours} · ${S.heure} · ${S.meteo}`),
-    txt(`Demain : ${S.demain}, dit-on`, `color:${P.g};display:block`), txt(`${S.mission} · réserve : ${S.reserve}`, `color:${P.g};display:block`), txt('Sol sec ▬▬ 100 %', `color:${P.g};display:block`)));
   // les pertes : une ligne par camp (nom, barre, debout · blessés · tombés)
   const ligne = (nom, c, n) => el('div', 'display:flex;gap:10px;align-items:center', el('span', 'width:64px', nom), el('i', `display:block;width:130px;height:8px;background:${P.s}`, el('i', `display:block;height:8px;width:${n / 750 * 100}%;background:${c}`)), txt(`${n} · ${S.blesses[0]} bl. · ${S.morts[0]} t.`));
   b.append(papier('left:50%;top:8px;transform:translateX(-50%);padding:6px 10px', ligne('Nous', P.n, 712), ligne('En face', P.x, 730)));

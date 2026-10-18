@@ -9,8 +9,8 @@
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta property="og:image" content="og.png">
-<link rel="stylesheet" href="js/lib/game.css?v=0.31.1">
-<link rel="stylesheet" href="css/style.css?v=0.31.1">
+<link rel="stylesheet" href="js/lib/game.css?v=0.31.2">
+<link rel="stylesheet" href="css/style.css?v=0.31.2">
 </head>
 <body>
 <!-- La barre de chargement (v0.28.0) : là avant tout script ; main.js la remplit, puis la retire -->
@@ -35,6 +35,7 @@
     <div class="hud-haut">
       <!-- En haut à gauche : le menu, les réglages, le temps, le billet, le carnet de bord (la fiche et le papier de la nuit y attendent leur place définitive) -->
       <div class="haut-gauche">
+        <div class="haut-bloc">
         <div class="boutons">
           <button class="icone plaque" id="pause" aria-label="Menu">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14M16 5v14"/></svg>
@@ -49,13 +50,11 @@
             <button data-vitesse="4" aria-label="Quatre fois plus vite">×4</button>
           </div>
         </div>
-        <div class="montre-bloc">
-          <div class="papier">
-            <p id="horloge">Jour 1</p>
-            <p class="discret" id="demain"></p>
-            <p class="discret" id="mission" hidden></p>
-            <div class="terrain" id="terrain" hidden aria-live="off"></div>
-          </div>
+        <div class="papier billet">
+          <div class="frise" id="frise" role="img" aria-label="La bataille, jour par jour"></div>
+          <p class="discret" id="mission" hidden></p>
+          <div class="terrain" id="terrain" hidden aria-live="off"></div>
+        </div>
         </div>
         <div class="papier carnet" id="carnet" hidden>
           <p class="entete">Carnet de bord</p>
@@ -237,6 +236,6 @@
 </dialog>
 
 <div class="jeu-toast" id="toast" role="status" hidden></div>
-<script type="module" src="js/main.js?v=0.31.1"></script>
+<script type="module" src="js/main.js?v=0.31.2"></script>
 </body>
 </html>
