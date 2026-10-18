@@ -50,7 +50,7 @@ export const REGLAGES = {
     },
     voisins: 6,           // voisins regardés au plus
     champ: 22,            // m : plus loin de sa place, on suit le champ de coûts
-    champsMax: 10,        // champs gardés en cache
+    champsMax: 40,        // champs gardés en cache : au moins un par régiment (16) et leurs versions encore chaudes ; à 10, onze buts différents se chassaient du cache et chaque pas refaisait des champs (1,4 → 49 ms par pas, v0.34.2)
     champPeriode: 3,      // s : un champ périmé (terrain changé) est refait au plus tous les…
     abri: 0.5,            // le coût d'un carré de 4 m où passe une tranchée intacte, multiplié par… : on préfère l'abri à découvert, même plus long (v0.21.4 ; 1 : plus de préférence)
     abriPart: 0.15,       // … dès que cette part du carré est en tranchée ou en boyau (2 : jamais)

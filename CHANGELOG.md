@@ -1,5 +1,8 @@
 # Journal des versions
 
+## 0.34.2 — 2026-10-18
+- Plus de ralentissement brutal en pleine bataille quand beaucoup de régiments marchent vers des endroits différents
+
 ## 0.34.1 — 2026-10-18
 - Jouer à deux : un code de 6 signes suffit, plus de copier-coller (il reste en secours, replié)
 

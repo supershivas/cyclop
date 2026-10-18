@@ -1,7 +1,7 @@
 {
-  "version": "0.34.1",
+  "version": "0.34.2",
   "date": "2026-10-18",
   "changes": [
-    "Jouer à deux : un code de 6 signes suffit, plus de copier-coller (il reste en secours, replié)"
+    "Plus de ralentissement brutal en pleine bataille quand beaucoup de régiments marchent vers des endroits différents"
   ]
 }
