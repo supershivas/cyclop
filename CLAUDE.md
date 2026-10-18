@@ -123,7 +123,7 @@ la danse macabre, la catastrophe peinte avec calme. L'intention est dans `DESIGN
   (`chezLEnnemi` de nuit.js) a 130 m à découvert entre lui et ses boyaux : `refusCorvee` refuse « évacuer » et « ravitailler » (« Chez l'ennemi,
   la soupe ne passe pas : … »), sauf si la tranchée est toute à lui (`etat.troncons`) et qu'aucun régiment de l'autre camp n'est à moins de
   `nuit.calme` (60 m). Réparer, abris, coup de main, relève restent possibles ; la règle vaut aussi pour en face
-  (`choixEnFace` retombe au repos). Un grisé par corvée au-dessus de la carte dit pourquoi au clic.
+  (`choixEnFace` retombe au repos). Un grisé par corvée au-dessus de la carte dit pourquoi au clic ; v0.34.6 : il refuse aussi « évacuer » sans blessé et « réparer » sans tranchée comblée (« Pas un blessé à évacuer. », « Sa tranchée n'a rien à réparer. » ; `blessesDe`, `combles` de nuit.js), comme il refusait déjà abris, coup de main et relève sans objet.
 - **La nuit et ses corvées** (Jérôme, v0.6.0) : une corvée par régiment (repos,
   réparer, évacuer ; Jérôme, v0.34.5 : inhumer et caillebotis retirés, voir « Ce qui a été retiré ») ; puis (Jérôme, v0.11.0) les abris profonds
   (`etat.abris`), les vivres (`reg.vivres`), le coup de main (`etat.prisonniers`) et

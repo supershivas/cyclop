@@ -12,11 +12,11 @@
      de travail chacun) ; les vivres (`reg.vivres`, en nuits : sans eux, la nuit
      repose moins et le moral baisse) ; le coup de main (des volontaires ramènent
      des prisonniers de la tranchée d'en face, s'ils reviennent). */
-import { toucher } from './terrain.js?v=0.34.5';
-import { hash2 } from './lib/rng.js?v=0.34.5';
-import { CORVEES } from './data/corvees.js?v=0.34.5';
-import { REGIMENTS } from './data/lexique.js?v=0.34.5';
-import { ajouterSoldat } from './army.js?v=0.34.5';
+import { toucher } from './terrain.js?v=0.34.6';
+import { hash2 } from './lib/rng.js?v=0.34.6';
+import { CORVEES } from './data/corvees.js?v=0.34.6';
+import { REGIMENTS } from './data/lexique.js?v=0.34.6';
+import { ajouterSoldat } from './army.js?v=0.34.6';
 
 // les travaux de terrain, par leur numéro dans etat.travaux ; 'caillebotis' n'est plus une corvée (v0.34.5) mais reste ici : une partie sauvegardée avant la rejoue
 export const SORTES = ['reparer', 'caillebotis'];
@@ -62,6 +62,8 @@ export function refusCorvee(B, reg, id) {
     if (m) return `Chez l'ennemi, ${id === 'evacuer' ? 'les blessés ne passent pas' : 'la soupe ne passe pas'} : ${m}.`;
   }
   if (c.tranchee && !tronconsDe(B, reg).length) return `${reg.nom || 'Ce régiment'} ne tient pas de tranchée.`;
+  if (id === 'evacuer' && !blessesDe(B, reg)) return 'Pas un blessé à évacuer.';
+  if (id === 'reparer' && !combles(B, reg, 0)) return 'Sa tranchée n\'a rien à réparer.';
   if (id === 'releve' && !(B.etat.reserves?.[reg.camp] > 0)) return 'Plus un régiment en réserve.';
   if (id === 'abri' && tronconsDe(B, reg).every(k => (B.etat.abris[k] || 0) >= B.R.nuit.abriMax)) return 'Ses abris sont aussi profonds qu\'on peut les creuser.';
   if (id === 'coup' && !cibleDuCoup(B, reg)) return 'Personne en face à portée d\'un coup de main.';
@@ -88,15 +90,23 @@ export function travail(B, sorte, ks) {
   return n;
 }
 
-// Les cases comblées de la tranchée d'un régiment (pour savoir s'il y a à réparer)
-function combles(B, reg) {
+// Les cases comblées de la tranchée d'un régiment (pour savoir s'il y a à réparer) ; `marge` : de combien de quarts elles doivent manquer de plus que d'un seul
+function combles(B, reg, marge = 1) {
   const T = B.terrain, prof = B.profondeur, ks = new Set(tronconsDe(B, reg));
   let n = 0;
   for (const k of ks) {
     const tr = B.troncons[k], L = B.lignes[tr.ligne];
     for (let j = Math.max(0, Math.floor(L.y0 - 8)); j < Math.min(T.H, Math.ceil(L.y0 + 8)); j++)
-      for (let i = Math.floor(tr.x0); i < Math.ceil(tr.x1); i++) { const c = j * T.W + i; if (ks.has(T.troncon[c]) && T.diff[c] > -prof + 1) n++; }
+      for (let i = Math.floor(tr.x0); i < Math.ceil(tr.x1); i++) { const c = j * T.W + i; if (ks.has(T.troncon[c]) && T.diff[c] > -prof + marge) n++; }
   }
+  return n;
+}
+
+// Les blessés encore au front d'un régiment (ceux qu'on évacue)
+function blessesDe(B, reg) {
+  const A = B.armee;
+  let n = 0;
+  for (let i = 0; i < A.n; i++) if (A.reg[i] === reg.id && !A.mort[i] && A.blessure[i]) n++;
   return n;
 }
 
@@ -123,11 +133,10 @@ export function cibleDuCoup(B, reg) {
 
 // Les corvées d'en face : évacuer s'il a des blessés, réparer si sa tranchée est comblée, sinon le repos
 export function choixEnFace(B) {
-  const A = B.armee, out = {};
+  const out = {};
   for (const reg of B.etat.regiments) {
     if (reg.camp !== 1 || !reg.effectif) continue;
-    let blesses = 0;
-    for (let i = 0; i < A.n; i++) if (A.reg[i] === reg.id && A.blessure[i]) blesses++;
+    const blesses = blessesDe(B, reg);
     const n = B.R.nuit, h = hash2(reg.id, B.etat.jour, (B.etat.graine | 0) + 59);
     out[reg.id] = (reg.vivres ?? n.vivres) <= 1 ? 'ravitailler'
       : blesses >= 5 ? 'evacuer' : combles(B, reg) >= 10 ? 'reparer'

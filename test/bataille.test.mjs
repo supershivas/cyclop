@@ -75,13 +75,14 @@ test('chez l\'ennemi, on n\'évacue ni ne ravitaille, sauf tranchée toute à no
   const R2 = structuredClone(R); R2.nuit.calme = 0;                                  // (personne n'est « trop près »)
   const B = nouvelleBataille(3, R2, { soldats: 200, jours: 3 }), reg = B.etat.regiments.find(r => r.camp === 0);
   assert.equal(chezLEnnemi(B, reg), false);
+  B.armee.blessure[B.armee.reg.findIndex(r => r === reg.id)] = 1;                       // (un blessé, sinon il n'y a rien à évacuer)
   assert.equal(refusCorvee(B, reg, 'evacuer'), null);                                   // chez nous : possible
   const L = B.lignes.find(l => l.camp === 1 && l.rang === 0), x = M.x + 150;
   assert.ok(ordonnerMarche(B, [reg.id], x, ligneY(L, x)).ok);
   assert.equal(chezLEnnemi(B, reg), true);
   assert.match(refusCorvee(B, reg, 'evacuer'), /ne passent pas.*pas toute à nous/);     // la tranchée est à eux
   assert.match(refusCorvee(B, reg, 'ravitailler'), /la soupe ne passe pas/);
-  assert.equal(refusCorvee(B, reg, 'repos'), null); assert.equal(refusCorvee(B, reg, 'reparer'), null);
+  assert.equal(refusCorvee(B, reg, 'repos'), null);
   for (const k of tronconsDe(B, reg)) B.etat.troncons[k] = 0;                           // la tranchée est toute à nous
   assert.equal(refusCorvee(B, reg, 'evacuer'), null); assert.equal(refusCorvee(B, reg, 'ravitailler'), null);
   B.R.nuit.calme = 1e6;                                                                  // … mais un régiment d'en face est tout près
@@ -461,6 +462,22 @@ test('inhumer et caillebotis ne sont plus des corvées : refusées, et la nuit r
   assert.equal(B.etat.nuits.at(-1).choix[0], 'repos');
   assert.ok(B.etat.corps.length >= corps);
   assert.ok(!B.terrain.caille.some(v => v));
+});
+test('une corvée sans effet se refuse à voix haute : rien à évacuer, rien à réparer', () => {
+  const B = petite(); jusquALaNuit(B);
+  const reg = B.etat.regiments[0], A = B.armee;
+  for (let i = 0; i < A.n; i++) if (A.reg[i] === reg.id) A.blessure[i] = 0;
+  assert.match(refusCorvee(B, reg, 'evacuer'), /blessé à évacuer/);
+  const i = Array.from({ length: A.n }, (_, k) => k).find(k => A.reg[k] === reg.id && !A.mort[k]);
+  A.blessure[i] = 1;
+  assert.equal(refusCorvee(B, reg, 'evacuer'), null);
+  const T = B.terrain, ks = new Set(tronconsDe(B, reg));
+  for (let c = 0; c < T.diff.length; c++) if (ks.has(T.troncon[c]) && T.diff[c] > -B.profondeur) T.diff[c] = -B.profondeur;
+  assert.match(refusCorvee(B, reg, 'reparer'), /rien à réparer/);
+  for (let c = 0; c < T.diff.length; c++) if (ks.has(T.troncon[c])) { T.diff[c] = 0; break; }
+  assert.equal(refusCorvee(B, reg, 'reparer'), null);
+  const r = aube(B, { [reg.id]: 'evacuer' });
+  assert.ok(r.bilan[0].evacues + r.bilan[0].mortsCorvee >= 1);
 });
 test('une partie d\'avant la v0.34.5 relue : ses caillebotis sont rejoués', () => {
   const B = petite(); jusquALaNuit(B);

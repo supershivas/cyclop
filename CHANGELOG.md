@@ -1,5 +1,8 @@
 # Journal des versions
 
+## 0.34.6 — 2026-10-18
+- Une corvée de la nuit qui ne servirait à rien (évacuer sans blessé, réparer une tranchée intacte) est grisée et dit pourquoi
+
 ## 0.34.5 — 2026-10-18
 - Plus d'inhumer ni de caillebotis parmi les corvées de la nuit, et les morts ne pèsent plus sur le moral
 

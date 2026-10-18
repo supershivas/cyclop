@@ -1,7 +1,7 @@
 {
-  "version": "0.34.5",
+  "version": "0.34.6",
   "date": "2026-10-18",
   "changes": [
-    "Plus d'inhumer ni de caillebotis parmi les corvées de la nuit, et les morts ne pèsent plus sur le moral"
+    "Une corvée de la nuit qui ne servirait à rien (évacuer sans blessé, réparer une tranchée intacte) est grisée et dit pourquoi"
   ]
 }

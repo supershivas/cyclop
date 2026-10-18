@@ -2,26 +2,26 @@
 // Chaque sujet utilise les mêmes modules que le jeu (terrain, apparence,
 // rendu three.js) : ce qu'on voit ici est ce que le jeu dessinera. Ajouter un
 // sujet ou une variante = ajouter une entrée dans GROUPES.
-import { mountLabo } from './lib/labo-shell.js?v=0.34.5';
-import { spriteCanvas, paletteToGPL, paletteToHex } from './lib/sprites.js?v=0.34.5';
-import { PALETTE, ROLES } from './palette.js?v=0.34.5';
-import { chargerContenu } from './design-store.js?v=0.34.5';
-import { tuile, ETAT } from './tuiles.js?v=0.34.5';
-import { creerTerrain, impact, hydroLignes } from './terrain.js?v=0.34.5';
-import { CALIBRES } from './data/calibres.js?v=0.34.5';
-import { METEO } from './data/meteo.js?v=0.34.5';
-import { nouvelleBataille, avancer, ordonnerMarche, ordonnerBarrage, mourir } from './bataille.js?v=0.34.5';
-import { creerRendu, ZOOMS } from './rendu3d.js?v=0.34.5';
-import { hash2 } from './lib/rng.js?v=0.34.5';
-import { reglerVerdure } from './apparence.js?v=0.34.5';
-import { maquetteAssaut } from './labo-assaut.js?v=0.34.5';
-import { calquePlaques } from './labo-plaques.js?v=0.34.5';
-import { calqueBarre } from './labo-barre-temps.js?v=0.34.5';
-import { maquetteProjections, maquetteVisee } from './labo-projections.js?v=0.34.5';
-import { calqueBarreVie } from './labo-barre-vie.js?v=0.34.5';
-import { calqueClic } from './labo-clic-regiment.js?v=0.34.5';
-import { JOURNAL } from './labo-journal.js?v=0.34.5';
-import { loadVersion } from './lib/app-update.js?v=0.34.5';
+import { mountLabo } from './lib/labo-shell.js?v=0.34.6';
+import { spriteCanvas, paletteToGPL, paletteToHex } from './lib/sprites.js?v=0.34.6';
+import { PALETTE, ROLES } from './palette.js?v=0.34.6';
+import { chargerContenu } from './design-store.js?v=0.34.6';
+import { tuile, ETAT } from './tuiles.js?v=0.34.6';
+import { creerTerrain, impact, hydroLignes } from './terrain.js?v=0.34.6';
+import { CALIBRES } from './data/calibres.js?v=0.34.6';
+import { METEO } from './data/meteo.js?v=0.34.6';
+import { nouvelleBataille, avancer, ordonnerMarche, ordonnerBarrage, mourir } from './bataille.js?v=0.34.6';
+import { creerRendu, ZOOMS } from './rendu3d.js?v=0.34.6';
+import { hash2 } from './lib/rng.js?v=0.34.6';
+import { reglerVerdure } from './apparence.js?v=0.34.6';
+import { maquetteAssaut } from './labo-assaut.js?v=0.34.6';
+import { calquePlaques } from './labo-plaques.js?v=0.34.6';
+import { calqueBarre } from './labo-barre-temps.js?v=0.34.6';
+import { maquetteProjections, maquetteVisee } from './labo-projections.js?v=0.34.6';
+import { calqueBarreVie } from './labo-barre-vie.js?v=0.34.6';
+import { calqueClic } from './labo-clic-regiment.js?v=0.34.6';
+import { JOURNAL } from './labo-journal.js?v=0.34.6';
+import { loadVersion } from './lib/app-update.js?v=0.34.6';
 
 document.documentElement.style.setProperty('--jeu-accent', ROLES.accent);
 const NOM = document.title.replace(/^Labo — /, ''); // le nom vient de la page (une apostrophe ne casse rien)
