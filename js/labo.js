@@ -2,26 +2,26 @@
 // Chaque sujet utilise les mêmes modules que le jeu (terrain, apparence,
 // rendu three.js) : ce qu'on voit ici est ce que le jeu dessinera. Ajouter un
 // sujet ou une variante = ajouter une entrée dans GROUPES.
-import { mountLabo } from './lib/labo-shell.js?v=0.32.3';
-import { spriteCanvas, paletteToGPL, paletteToHex } from './lib/sprites.js?v=0.32.3';
-import { PALETTE, ROLES } from './palette.js?v=0.32.3';
-import { chargerContenu } from './design-store.js?v=0.32.3';
-import { tuile, ETAT } from './tuiles.js?v=0.32.3';
-import { creerTerrain, impact, hydroLignes } from './terrain.js?v=0.32.3';
-import { CALIBRES } from './data/calibres.js?v=0.32.3';
-import { METEO } from './data/meteo.js?v=0.32.3';
-import { nouvelleBataille, avancer, ordonnerMarche, ordonnerBarrage, mourir } from './bataille.js?v=0.32.3';
-import { creerRendu, ZOOMS } from './rendu3d.js?v=0.32.3';
-import { hash2 } from './lib/rng.js?v=0.32.3';
-import { reglerVerdure } from './apparence.js?v=0.32.3';
-import { maquetteAssaut } from './labo-assaut.js?v=0.32.3';
-import { calquePlaques } from './labo-plaques.js?v=0.32.3';
-import { calqueBarre } from './labo-barre-temps.js?v=0.32.3';
-import { maquetteProjections, maquetteVisee } from './labo-projections.js?v=0.32.3';
-import { calqueBarreVie } from './labo-barre-vie.js?v=0.32.3';
-import { calqueClic } from './labo-clic-regiment.js?v=0.32.3';
-import { JOURNAL } from './labo-journal.js?v=0.32.3';
-import { loadVersion } from './lib/app-update.js?v=0.32.3';
+import { mountLabo } from './lib/labo-shell.js?v=0.33.0';
+import { spriteCanvas, paletteToGPL, paletteToHex } from './lib/sprites.js?v=0.33.0';
+import { PALETTE, ROLES } from './palette.js?v=0.33.0';
+import { chargerContenu } from './design-store.js?v=0.33.0';
+import { tuile, ETAT } from './tuiles.js?v=0.33.0';
+import { creerTerrain, impact, hydroLignes } from './terrain.js?v=0.33.0';
+import { CALIBRES } from './data/calibres.js?v=0.33.0';
+import { METEO } from './data/meteo.js?v=0.33.0';
+import { nouvelleBataille, avancer, ordonnerMarche, ordonnerBarrage, mourir } from './bataille.js?v=0.33.0';
+import { creerRendu, ZOOMS } from './rendu3d.js?v=0.33.0';
+import { hash2 } from './lib/rng.js?v=0.33.0';
+import { reglerVerdure } from './apparence.js?v=0.33.0';
+import { maquetteAssaut } from './labo-assaut.js?v=0.33.0';
+import { calquePlaques } from './labo-plaques.js?v=0.33.0';
+import { calqueBarre } from './labo-barre-temps.js?v=0.33.0';
+import { maquetteProjections, maquetteVisee } from './labo-projections.js?v=0.33.0';
+import { calqueBarreVie } from './labo-barre-vie.js?v=0.33.0';
+import { calqueClic } from './labo-clic-regiment.js?v=0.33.0';
+import { JOURNAL } from './labo-journal.js?v=0.33.0';
+import { loadVersion } from './lib/app-update.js?v=0.33.0';
 
 document.documentElement.style.setProperty('--jeu-accent', ROLES.accent);
 const NOM = document.title.replace(/^Labo — /, ''); // le nom vient de la page (une apostrophe ne casse rien)
@@ -191,25 +191,33 @@ const GROUPES = [
       { title: 'Avec le carnet de bord', status: 'ancienne', note: 'Retenu en v0.10.0, la mise en page a changé depuis (v0.19.0, v0.20.0, v0.30.0). Les papiers de campagne, et un carnet de bord : les événements marquants à l\'heure où ils arrivent (la préparation d\'en face, la sortie, le dernier défenseur, le tronçon perdu), la ligne la plus récente surlignée. La mémoire de la pause active.', render: s => moteur(s, { zoom: 3, cz: 185, soldats: 400, calque: calquePlaques('carnet') }) },
     ] },
     { id: 'barre-vie', title: 'La barre de vie', variants: [
-      { title: 'Le papier des pertes', status: 'actuelle', depuis: '0.32.2', note: 'Aujourd\'hui : un papier à deux lignes, une par camp (le nom, une barre, « debout · blessés · tombés », les tronçons tenus en chiffres). Tout est en chiffres : il faut lire pour savoir qui gagne.', render: s => moteur(s, { zoom: 3, cz: 185, soldats: 400, calque: calqueBarreVie('actuelle') }) },
-      { title: 'Le duel', depuis: '0.32.2', note: 'Un jeu de combat en un contre un : une barre de chaque côté d\'un médaillon (le jour), la vie collée au centre, ce qu\'on a perdu qui se vide vers le bord. Aucun chiffre : passez la souris sur un segment (debout, blessés hachuré, tombés). Dessous, les tronçons tenus : soixante-quatre graduations d\'os (tenus) ou de terre (perdus), sans couleur de camp.', render: s => moteur(s, { zoom: 3, cz: 185, soldats: 400, calque: calqueBarreVie('duel') }) },
+      { title: 'Le duel', status: 'actuelle', depuis: '0.33.0', note: 'Retenue (v0.33.0), en jeu. Un jeu de combat en un contre un : une barre de chaque côté d\'un médaillon (le jour), la vie collée au centre, ce qu\'on a perdu qui se vide vers le bord. Aucun chiffre : passez la souris sur un segment (debout, blessés hachuré, tombés). Dessous, les tronçons tenus : soixante-quatre graduations d\'os (tenus) ou de terre (perdus), sans couleur de camp.', render: s => moteur(s, { zoom: 3, cz: 185, soldats: 400, calque: calqueBarreVie('duel') }) },
       { title: 'Les biseaux', depuis: '0.32.2', note: 'Des barres penchées, épaisses, avec un liseré d\'os, le nom du camp collé au bord extérieur et un losange (la bataille, 2 sur 11) au centre. Les tronçons en quatre groupes, un par secteur.', render: s => moteur(s, { zoom: 3, cz: 185, soldats: 400, calque: calqueBarreVie('biseaux') }) },
       { title: 'Le fil du haut', depuis: '0.32.2', note: 'Des barres fines collées au bord de l\'écran, chacune une moitié de la largeur ; le jour pend au centre comme une languette. Presque rien : le champ reste grand (le souci d\'un écran de 13 pouces, v0.30.0).', render: s => moteur(s, { zoom: 3, cz: 185, soldats: 400, calque: calqueBarreVie('fil') }) },
       { title: 'Un segment par régiment', depuis: '0.32.2', note: 'Chaque barre est faite de huit segments, les huit régiments d\'un camp : on voit lequel tient et lequel fond. Au survol d\'un segment, le régiment (« 3 · Viride : 38 debout · 6 blessés · 12 tombés »). Les tronçons en quatre groupes dessous.', render: s => moteur(s, { zoom: 3, cz: 185, soldats: 400, calque: calqueBarreVie('segmentee') }) },
+      { title: 'Le papier des pertes', status: 'ancienne', note: 'Jusqu\'à la v0.32 : un papier à deux lignes, une par camp (le nom, une barre, « debout · blessés · tombés », les tronçons tenus en chiffres). Tout est en chiffres : il faut lire pour savoir qui gagne.', render: s => moteur(s, { zoom: 3, cz: 185, soldats: 400, calque: calqueBarreVie('actuelle') }) },
     ] },
     { id: 'clic-regiment', title: 'Le clic sur un régiment', variants: [
-      { title: 'Le sonar', status: 'actuelle', depuis: '0.32.2', note: 'En jeu depuis la v0.32.2 : un clic sur la carte d\'un régiment, la caméra glisse sur lui (0,6 s) ; deux anneaux d\'os se resserrent autour de lui, la carte s\'enfonce d\'un cran. Cliquez une carte du bas.', render: s => moteur(s, { zoom: 3, cz: 185, soldats: 400, calque: calqueClic('sonar') }) },
-      { title: 'Les équerres', depuis: '0.32.2', note: 'Quatre coins d\'os se referment sur l\'emprise du régiment, comme un cadre de sélection qui se dessine ; la carte s\'allume un instant.', render: s => moteur(s, { zoom: 3, cz: 185, soldats: 400, calque: calqueClic('equerres') }) },
+      { title: 'Les équerres', status: 'actuelle', depuis: '0.33.0', note: 'Retenues (v0.33.0), en jeu : la caméra glisse aussi sur le régiment (0,6 s). Quatre coins d\'os se referment sur l\'emprise du régiment, comme un cadre de sélection qui se dessine ; la carte s\'allume un instant.', render: s => moteur(s, { zoom: 3, cz: 185, soldats: 400, calque: calqueClic('equerres') }) },
       { title: 'Le fanion', depuis: '0.32.2', note: 'Un pin numéroté, à la couleur de l\'armée, tombe du ciel au-dessus du régiment et rebondit ; la carte se soulève et retombe.', render: s => moteur(s, { zoom: 3, cz: 185, soldats: 400, calque: calqueClic('fanion') }) },
       { title: 'Le fil', depuis: '0.32.2', note: 'Un trait pointillé se déroule de la carte jusqu\'au régiment, où un anneau bat deux fois ; on voit d\'où l\'on vient et où l\'on va.', render: s => moteur(s, { zoom: 3, cz: 185, soldats: 400, calque: calqueClic('fil') }) },
+      { title: 'Le sonar', status: 'ancienne', note: 'En jeu en v0.32.2, remplacé par les équerres en v0.33.0 : un clic sur la carte d\'un régiment, la caméra glisse sur lui (0,6 s) ; deux anneaux d\'os se resserrent autour de lui, la carte s\'enfonce d\'un cran. Cliquez une carte du bas.', render: s => moteur(s, { zoom: 3, cz: 185, soldats: 400, calque: calqueClic('sonar') }) },
+    ] },
+    { id: 'fenetre-ordres', title: 'La fenêtre d\'ordres', variants: [
+      { title: 'Elle apparaît d\'un coup', status: 'actuelle', depuis: '0.33.0', note: 'Aujourd\'hui : un clic sur la carte, et le papier des ordres (le régiment, ce qu\'il fait, les formes, Marcher, Regagner, Fiche) est là, posé au-dessus de la carte, sans lien avec elle. Cliquez une carte du bas.', render: s => moteur(s, { zoom: 3, cz: 185, soldats: 400, calque: calqueClic('equerres', 'sec') }) },
+      { title: 'Le tiroir', depuis: '0.33.0', note: 'Le papier sort de la carte : il se déplie vers le haut, ancré à elle, en un quart de seconde. On voit d\'où il vient.', render: s => moteur(s, { zoom: 3, cz: 185, soldats: 400, calque: calqueClic('equerres', 'tiroir') }) },
+      { title: 'Le rabat', depuis: '0.33.0', note: 'Le papier est un rabat de carte qui se relève d\'un coup, charnière en bas, sur la carte : comme on ouvre un porte-cartes.', render: s => moteur(s, { zoom: 3, cz: 185, soldats: 400, calque: calqueClic('equerres', 'rabat') }) },
+      { title: 'Une seule feuille', depuis: '0.33.0', note: 'La carte et la fenêtre ne font plus qu\'une feuille : la carte s\'efface dans le papier de la fenêtre, collée à elle, sans ombre entre les deux, et la feuille se déroule vers le haut. Plus de papier qui flotte.', render: s => moteur(s, { zoom: 3, cz: 185, soldats: 400, calque: calqueClic('equerres', 'feuille') }) },
+      { title: 'Au régiment', depuis: '0.33.0', note: 'La fenêtre quitte le bas de l\'écran : elle vient près des hommes, au-dessus des équerres, reliée à eux par une pointe, et les suit quand ils marchent. Elle fait un petit bond en arrivant.', render: s => moteur(s, { zoom: 3, cz: 185, soldats: 400, calque: calqueClic('equerres', 'bulle') }) },
+      { title: 'Ligne à ligne', depuis: '0.33.0', note: 'Le papier est posé d\'un coup mais s\'écrit : le titre, puis chaque ligne et chaque bouton apparaissent l\'un après l\'autre, à quelques centièmes d\'écart, comme un ordre qu\'on rédige.', render: s => moteur(s, { zoom: 3, cz: 185, soldats: 400, calque: calqueClic('equerres', 'lignes') }) },
     ] },
     { id: 'bord-carte', title: 'Le bord de la carte', variants: [
-      { title: 'Coupé net', status: 'actuelle', depuis: '0.32.2', note: 'Aujourd\'hui : le terrain s\'arrête sur une ligne droite, devant le ciel de brume. Vue ici à plat, tournée de 40°, vers le bord nord.', render: s => moteur(s, { zoom: 1, soldats: 100, centre: [300, 80], vue: { tangage: 0.4, yaw: 0.7 } }) },
+      { title: 'Faux terrain dans la nuit', status: 'actuelle', depuis: '0.33.0', note: 'Retenu (v0.33.0), en jeu (pas à l\'écran titre, qui garde sa brume). Le champ se prolonge, mais qui s\'éteint dans le noir au lieu de la brume : le champ se prolonge, puis la nuit le mange. Entre « Faux terrain » et « Brouillard noir ».', render: s => moteur(s, { zoom: 1, soldats: 100, centre: [300, 80], vue: { tangage: 0.4, yaw: 0.7 }, bord: 'faux-noir' }) },
       { title: 'Brouillard noir', depuis: '0.32.2', note: 'Soixante mètres avant le bord, le sol s\'enfonce dans la terre noire (`t`) ; le fond est noir : on ne voit pas la fin, on voit la nuit qui la mange. (Les arbres des marges restent debout dans le noir : à régler si retenu.)', render: s => moteur(s, { zoom: 1, soldats: 100, centre: [300, 80], vue: { tangage: 0.4, yaw: 0.7 }, bord: 'noir' }) },
       { title: 'Brume épaisse', depuis: '0.32.2', note: 'Cent mètres avant le bord, le sol se perd dans la brume (`r`), le même gris que le ciel : l\'horizon se dissout, plus de ligne. Le plus calme, et le plus proche de l\'écran titre.', render: s => moteur(s, { zoom: 1, soldats: 100, centre: [300, 80], vue: { tangage: 0.4, yaw: 0.7 }, bord: 'brume' }) },
       { title: 'Faux terrain', depuis: '0.32.2', note: 'Le champ continue : un plan immense, des plaques de kaki, de vert et de glaise de la couleur du sol, qui se perdent dans la brume à cinq cents mètres. On ne sait plus où finit la carte, mais on peut croire qu\'elle est plus grande qu\'elle n\'est.', render: s => moteur(s, { zoom: 1, soldats: 100, centre: [300, 80], vue: { tangage: 0.4, yaw: 0.7 }, bord: 'faux' }) },
-      { title: 'Faux terrain dans la nuit', depuis: '0.32.2', note: 'Le même, mais qui s\'éteint dans le noir au lieu de la brume : le champ se prolonge, puis la nuit le mange. Entre « Faux terrain » et « Brouillard noir ».', render: s => moteur(s, { zoom: 1, soldats: 100, centre: [300, 80], vue: { tangage: 0.4, yaw: 0.7 }, bord: 'faux-noir' }) },
       { title: 'Le papier de la carte', depuis: '0.32.2', note: 'Le sol s\'efface dans l\'os (`o`) : le champ est un dessin sur une feuille, comme les papiers de campagne du HUD. Le jeu devient une carte d\'état-major.', render: s => moteur(s, { zoom: 1, soldats: 100, centre: [300, 80], vue: { tangage: 0.4, yaw: 0.7 }, bord: 'papier' }) },
+      { title: 'Coupé net', status: 'ancienne', note: 'Jusqu\'à la v0.32 : le terrain s\'arrête sur une ligne droite, devant le ciel de brume. Vue ici à plat, tournée de 40°, vers le bord nord.', render: s => moteur(s, { zoom: 1, soldats: 100, centre: [300, 80], vue: { tangage: 0.4, yaw: 0.7 } }) },
     ] },
     { id: 'barre-temps', title: 'La barre du temps', variants: [
       { title: 'La bande de météo', status: 'actuelle', depuis: '0.31.2', note: 'La frise est elle-même la météo : chaque jour a la couleur de son temps (sec, pluie, brouillard, gel), demain hachuré, le reste en blanc ; la nuit est une barre sombre dessous ; le texte suit le repère au lieu d\'avoir sa ligne. Le plus dense, et le plus lisible en un coup d\'œil. En jeu depuis la v0.31.2 : de la largeur des boutons du haut, avec dessous la mission et le terrain sous la souris.', render: s => moteur(s, { zoom: 3, cz: 185, soldats: 400, calque: calqueBarre('bande') }) },

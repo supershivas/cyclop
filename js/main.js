@@ -1,35 +1,35 @@
 // Le cycle de vie : écran titre → bataille → nuit → fin ; pause active,
 // réglages, sauvegarde, mise à jour, debug. Les règles sont dans bataille.js
 // (pures), le dessin dans rendu3d.js (il ne modifie jamais l'état).
-import { createLoop } from './lib/loop.js?v=0.32.3';
-import { createKeys, stopTypeahead } from './lib/keys.js?v=0.32.3';
-import { createPointer, lockBrowserGestures } from './lib/pointer.js?v=0.32.3';
-import { createGamepad } from './lib/gamepad.js?v=0.32.3';
-import { createStore, autosave, pickJSONFile } from './lib/save.js?v=0.32.3';
-import { startUpdateCheck, loadVersion, loadChangelog, downloadJSON } from './lib/app-update.js?v=0.32.3';
-import { ROLES } from './palette.js?v=0.32.3';
-import { MISSIONS, EUX, nouvelleBataille, etapesRestaurer, avancer, aube, ordonnerMarche, peutOrdonner, ordonnerBarrage, peutBarrage, horloge, effectifs, tronconsTenus, moralEnMots, terrainResume, forcesTroncons, largeurZone, lettreZone, etendueZones, nomTroncon, actionDe, secteursDe, tronconsDeLigne, zone, photo, restaurer, PAS, NOUS } from './bataille.js?v=0.32.3';
-import { ligneY } from './tranchees.js?v=0.32.3';
-import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.32.3';
-import { METEO } from './data/meteo.js?v=0.32.3';
-import { impact, hydroLignes } from './terrain.js?v=0.32.3';
-import { hash2 } from './lib/rng.js?v=0.32.3';
-import { creerRendu, CAMERA } from './rendu3d.js?v=0.32.3';
-import { etatEnMots, experienceEnMots, chevrons } from './identite.js?v=0.32.3';
-import { CORVEES } from './data/corvees.js?v=0.32.3';
-import { refusCorvee } from './nuit.js?v=0.32.3';
-import { chargerContenu } from './design-store.js?v=0.32.3';
-import * as lecture from './hud/lecture.js?v=0.32.3';
-import { creerFiche } from './hud/fiche.js?v=0.32.3';
-import { creerNuit, corveeDe, corveeCourte } from './hud/nuit.js?v=0.32.3';
-import { creerCarnet, deux } from './hud/carnet.js?v=0.32.3';
-import { creerCarte } from './hud/carte.js?v=0.32.3';
-import { creerPertes } from './hud/pertes.js?v=0.32.3';
-import { creerBarreTemps } from './hud/temps.js?v=0.32.3';
-import { creerChargement } from './hud/chargement.js?v=0.32.3';
-import { SECTEURS } from './data/secteur.js?v=0.32.3';
-import { creerLockstep, empreinteEtat } from './reseau/lockstep.js?v=0.32.3';
-import { creerHote, creerInvite } from './reseau/lien.js?v=0.32.3';
+import { createLoop } from './lib/loop.js?v=0.33.0';
+import { createKeys, stopTypeahead } from './lib/keys.js?v=0.33.0';
+import { createPointer, lockBrowserGestures } from './lib/pointer.js?v=0.33.0';
+import { createGamepad } from './lib/gamepad.js?v=0.33.0';
+import { createStore, autosave, pickJSONFile } from './lib/save.js?v=0.33.0';
+import { startUpdateCheck, loadVersion, loadChangelog, downloadJSON } from './lib/app-update.js?v=0.33.0';
+import { ROLES } from './palette.js?v=0.33.0';
+import { MISSIONS, EUX, nouvelleBataille, etapesRestaurer, avancer, aube, ordonnerMarche, peutOrdonner, ordonnerBarrage, peutBarrage, horloge, effectifs, tronconsTenus, moralEnMots, terrainResume, forcesTroncons, largeurZone, lettreZone, etendueZones, nomTroncon, actionDe, secteursDe, tronconsDeLigne, zone, photo, restaurer, PAS, NOUS } from './bataille.js?v=0.33.0';
+import { ligneY } from './tranchees.js?v=0.33.0';
+import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.33.0';
+import { METEO } from './data/meteo.js?v=0.33.0';
+import { impact, hydroLignes } from './terrain.js?v=0.33.0';
+import { hash2 } from './lib/rng.js?v=0.33.0';
+import { creerRendu, CAMERA } from './rendu3d.js?v=0.33.0';
+import { etatEnMots, experienceEnMots, chevrons } from './identite.js?v=0.33.0';
+import { CORVEES } from './data/corvees.js?v=0.33.0';
+import { refusCorvee } from './nuit.js?v=0.33.0';
+import { chargerContenu } from './design-store.js?v=0.33.0';
+import * as lecture from './hud/lecture.js?v=0.33.0';
+import { creerFiche } from './hud/fiche.js?v=0.33.0';
+import { creerNuit, corveeDe, corveeCourte } from './hud/nuit.js?v=0.33.0';
+import { creerCarnet, deux } from './hud/carnet.js?v=0.33.0';
+import { creerCarte } from './hud/carte.js?v=0.33.0';
+import { creerPertes } from './hud/pertes.js?v=0.33.0';
+import { creerBarreTemps } from './hud/temps.js?v=0.33.0';
+import { creerChargement } from './hud/chargement.js?v=0.33.0';
+import { SECTEURS } from './data/secteur.js?v=0.33.0';
+import { creerLockstep, empreinteEtat } from './reseau/lockstep.js?v=0.33.0';
+import { creerHote, creerInvite } from './reseau/lien.js?v=0.33.0';
 
 const JEU = 'cyclopeen';
 const $ = id => document.getElementById(id);
@@ -160,6 +160,7 @@ function decorPas(dt) {
 }
 function montrerDecor() {
   decor();
+  rendu.bord = null;                               // l'écran titre garde le ciel de brume
   rendu.attacher(D);
   rendu.vue.zoom = 4;
   rendu.cameraLibre(decorVue.yaw, decorVue.tangage);
@@ -185,6 +186,7 @@ function reglerCamp(camp) {
 function jouer(bataille) {
   B = bataille;
   if (!reseau) reglerCamp(NOUS);
+  rendu.bord = 'faux-noir';                        // le champ se prolonge, puis la nuit le mange (v0.33.0)
   rendu.attacher(B);
   rendu.vue.zoom = prefs.zoom ?? 2;
   // la caméra du joueur (ou celle de départ : l'écran titre a la sienne) ; un réglage de la v0.2, sans tangage, est ignoré
@@ -651,21 +653,31 @@ function viser(cal) {
   majHud();
 }
 
-// Le clic sur la carte d'un régiment (Jérôme, v0.32.2 ; labo « Le clic sur un régiment », A) : la caméra glisse jusqu'à lui (0,6 s, zoom et angle
-// inchangés), un sonar d'os se resserre autour de lui. Le dessin seulement ; un déplacement de la vue à la main coupe le glissement.
-let centrage = null, sonar = null;
+// Le clic sur la carte d'un régiment (Jérôme, v0.32.2 ; v0.33.0 : les équerres, variante B du sujet « Le clic sur un régiment » du labo) : la caméra glisse
+// jusqu'à lui (0,6 s, zoom et angle inchangés), quatre coins d'os se referment sur l'emprise de ses hommes et s'effacent, la carte s'allume un instant.
+// Le dessin seulement ; un déplacement de la vue à la main coupe le glissement.
+let centrage = null, equerres = null;
 const mouvementReduit = matchMedia('(prefers-reduced-motion: reduce)').matches;
 function centreDe(id) {
   const A = B.armee; let x = 0, y = 0, n = 0;
   for (let i = 0; i < A.n; i++) if (A.reg[i] === id) { x += A.x[i]; y += A.y[i]; n++; }
   return n ? { x: x / n, y: y / n } : null;
 }
+// le centre et l'emprise (en pixels) d'un régiment
+function empriseDe(id) {
+  const A = B.armee; let n = 0, x0 = 1e9, x1 = -1e9, y0 = 1e9, y1 = -1e9;
+  for (let i = 0; i < A.n; i++) if (A.reg[i] === id) {
+    const [sx, sy] = rendu.versEcran(A.x[i], A.y[i]);
+    x0 = Math.min(x0, sx); x1 = Math.max(x1, sx); y0 = Math.min(y0, sy); y1 = Math.max(y1, sy); n++;
+  }
+  return n ? { x0, x1, y0, y1 } : null;
+}
 function centrerSur(id) {
   const c = centreDe(id);
   if (!c) return;
   centrage = { x0: rendu.vue.cx, z0: rendu.vue.cz, x1: c.x, z1: c.y, t: mouvementReduit ? 1 : 0 };
-  sonar = { id, t: 0 };
-  const s = $('sonar'); s.hidden = false; s.replaceChildren(...[0, 1].map(() => document.createElement('i')));
+  equerres = { id, t: 0 };
+  const s = $('equerres'); s.hidden = false; s.replaceChildren(...[0, 1, 2, 3].map(() => document.createElement('i')));
 }
 function majCentrage(dt) {
   if (centrage) {
@@ -675,11 +687,17 @@ function majCentrage(dt) {
     rendu.deplacer(0, 0);
     if (centrage.t >= 1) centrage = null;
   }
-  if (sonar) {
-    const c = centreDe(sonar.id), s = $('sonar');
-    if (!c || (sonar.t += dt) > 1.2) { s.hidden = true; sonar = null; return; }
-    const [sx, sy] = rendu.versEcran(c.x, c.y);
-    s.style.transform = `translate(${Math.round(sx)}px, ${Math.round(sy)}px)`;
+  if (equerres) {
+    const e = $('equerres'), c = empriseDe(equerres.id);
+    if (!c || (equerres.t += dt) > 1.4) { e.hidden = true; equerres = null; return; }
+    const t = mouvementReduit ? 0.5 : equerres.t, u = 1 - (1 - Math.min(1, t / 0.5)) ** 3, k = 1 + 1.4 * (1 - u);
+    const w = Math.max(46, c.x1 - c.x0) / 2 + 12, h = Math.max(30, c.y1 - c.y0) / 2 + 12, mx = (c.x0 + c.x1) / 2, my = (c.y0 + c.y1) / 2;
+    const o = equerres.t < 1 ? 1 : Math.max(0, 1 - (equerres.t - 1) / 0.4);
+    [...e.children].forEach((i, n) => {
+      const a = n % 2 ? 1 : -1, b = n < 2 ? -1 : 1;
+      i.style.opacity = o * Math.min(1, t * 6);
+      i.style.transform = `translate(${Math.round(mx + a * w * k - (a > 0 ? 16 : 0))}px, ${Math.round(my + b * h * k - (b > 0 ? 16 : 0))}px)`;
+    });
   }
 }
 
@@ -1050,7 +1068,7 @@ startUpdateCheck({
 
 // ─── Mode debug (section 18) : chargé seulement avec ?debug=1 ──────────────
 if (DEBUG) {
-  const { installDebug, seedFromUrl } = await import('./lib/debug.js?v=0.32.3');
+  const { installDebug, seedFromUrl } = await import('./lib/debug.js?v=0.33.0');
   window.__seed = seedFromUrl() ?? undefined;
   installDebug({
     state: () => B && { ...horloge(B), effectifs: effectifs(B), pertes: B.etat.pertes, impacts: B.etat.impacts.length, enJeu: enJeu(), pause: loop.paused },

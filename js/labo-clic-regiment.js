@@ -1,7 +1,7 @@
 // Le sujet « Le clic sur un régiment » du labo (Jérôme, v0.32.2) : on clique le bouton d'un régiment, dans la rangée du bas ; la caméra glisse
 // sur lui (0,6 s, le zoom et l'angle ne changent pas) et quelque chose dit « c'est celui-là » : sur la carte et sur le champ. Posé sur le moteur en direct,
 // avec les vrais hommes qui marchent : cliquez une carte. Quatre animations ; la A est celle du jeu. Le dessin seulement : rien ici ne modifie une partie.
-import { PALETTE as P } from './palette.js?v=0.32.3';
+import { PALETTE as P } from './palette.js?v=0.33.0';
 
 const el = (tag, css = '', ...kids) => { const e = document.createElement(tag); if (css) e.style.cssText = css; e.append(...kids.flat().filter(k => k != null)); return e; };
 const MONO = 'font:12px/1.3 ui-monospace,monospace;';
@@ -91,7 +91,23 @@ function fil(scene, ctx, id, carte) {
 
 const ANIMS = { sonar, equerres, fanion, fil };
 
-export function calqueClic(nom) {
+// La fenêtre d'ordres (sujet « La fenêtre d'ordres ») : le papier du jeu (le régiment, ce qu'il fait, les formes, les actions) et sa façon d'apparaître
+const papierOrdres = (num, nom) => {
+  const bouton = (t, actif = false) => el('span', `display:inline-block;height:28px;line-height:28px;padding:0 8px;border:1px solid ${actif ? P.t : P.g};${actif ? `background:${P.t};color:${P.o}` : ''}`, t);
+  const p = el('div', `position:absolute;width:290px;box-sizing:border-box;padding:6px 10px 10px;background:${P.o};color:${P.t};${MONO}box-shadow:3px 3px 0 ${P.t};pointer-events:auto`);
+  const lignes = [
+    el('div', `display:flex;justify-content:space-between;border-bottom:1px solid ${P.g};padding-bottom:2px;font-size:15px`, el('b', 'font-weight:normal', `${num} · ${nom}`), el('span', `color:${P.g};font-size:12px`, 'D')),
+    el('div', `color:${P.g};margin-top:3px`, '94 debout · 0 blessés · 0 tombés'),
+    el('div', `color:${P.g}`, 'tient D1'),
+    el('div', 'display:flex;gap:4px;margin-top:5px', bouton('Bloc', true), bouton('Ligne'), bouton('Par deux'), bouton('Colonne')),
+    el('div', 'display:flex;gap:4px;margin-top:4px;flex-wrap:wrap', bouton('Marcher'), bouton('Regagner sa tranchée'), bouton('Fiche')),
+  ];
+  p.append(...lignes);
+  return { p, lignes };
+};
+const jouer = (e, keyframes, duree, opts = {}) => e.animate(keyframes, { duration: duree, easing: 'cubic-bezier(.2,.8,.3,1)', fill: 'backwards', ...opts });
+
+export function calqueClic(nom, fen = null) {
   return (boite, ctx) => {
     const fabrique = ANIMS[nom];
     const scene = el('div', 'position:absolute;inset:0;pointer-events:none;overflow:hidden');
@@ -108,7 +124,7 @@ export function calqueClic(nom) {
     const aide = el('div', `position:absolute;left:50%;top:10px;transform:translateX(-50%);padding:3px 8px;background:${P.o};color:${P.t};${MONO}box-shadow:3px 3px 0 ${P.t};pointer-events:none`, 'Cliquez la carte d\'un régiment');
     boite.append(scene, aide, rang);
 
-    let choisi = -1, centrage = null, anim = null, raf = 0, t = 0, dernier = performance.now(), partie = true;
+    let choisi = -1, centrage = null, anim = null, raf = 0, t = 0, dernier = performance.now(), partie = true, fenetre = null;
     function choisir(i) {
       const regs = ctx.B?.etat.regiments.filter(r => r.camp === 0);
       if (!regs?.[i]) return;
@@ -119,6 +135,25 @@ export function calqueClic(nom) {
       centrage = { x0: ctx.rendu.vue.cx, z0: ctx.rendu.vue.cz, x1: c.x, z1: c.y, t: 0 };
       scene.replaceChildren();
       anim = { ...fabrique(scene, ctx, regs[i].id, cartes[i]), id: regs[i].id, i, t: 0 };
+      if (fen) ouvrir(i, regs[i].id);
+    }
+    // la fenêtre d'ordres au-dessus de la carte choisie (ou, pour « bulle », près des hommes) ; chaque variante a sa façon d'apparaître
+    function ouvrir(i, id) {
+      fenetre?.p.remove();
+      const { p, lignes } = papierOrdres(i + 1, NOMS[i]);
+      fenetre = { p, id, i, fen };
+      cartes.forEach(c => { c.style.borderTopColor = P.n; });
+      boite.append(p);
+      const b = boite.getBoundingClientRect(), r = cartes[i].getBoundingClientRect();
+      const gauche = Math.max(8, Math.min(r.left - b.left + r.width / 2 - 145, b.width - 298));
+      p.style.left = `${gauche}px`; p.style.bottom = `${b.bottom - r.top + (fen === 'feuille' ? 0 : 8)}px`;
+      if (fen === 'feuille') { cartes[i].style.background = P.o; cartes[i].style.color = P.t; cartes[i].style.outline = 'none'; cartes[i].style.boxShadow = 'none'; cartes[i].style.borderTopColor = P.o; p.style.boxShadow = `3px 0 0 ${P.t}`; }
+      if (fen === 'tiroir') { p.style.transformOrigin = 'bottom center'; jouer(p, [{ transform: 'scaleY(.05)', opacity: 0 }, { transform: 'scaleY(1)', opacity: 1 }], 260); }
+      else if (fen === 'rabat') { p.style.transformOrigin = 'bottom center'; jouer(p, [{ transform: 'perspective(500px) rotateX(88deg)', opacity: .4 }, { transform: 'perspective(500px) rotateX(0)', opacity: 1 }], 340); }
+      else if (fen === 'feuille') { jouer(p, [{ clipPath: 'inset(100% 0 0 0)' }, { clipPath: 'inset(0 0 0 0)' }], 320); }
+      else if (fen === 'bulle') { p.style.transformOrigin = 'bottom center'; jouer(p, [{ transform: 'scale(.5)', opacity: 0 }, { transform: 'scale(1.06)', opacity: 1, offset: .65 }, { transform: 'scale(1)', opacity: 1 }], 380, { easing: 'ease-out' });
+        const pointe = el('i', `position:absolute;left:50%;bottom:-10px;margin-left:-8px;border:8px solid transparent;border-top:10px solid ${P.o};border-bottom:0`); p.append(pointe); }
+      else if (fen === 'lignes') lignes.forEach((l, k) => jouer(l, [{ opacity: 0, transform: 'translateY(5px)' }, { opacity: 1, transform: 'none' }], 200, { delay: 60 + k * 90 }));
     }
     function boucle(now) {
       const dt = Math.min(0.1, (now - dernier) / 1000); dernier = now;
@@ -133,12 +168,16 @@ export function calqueClic(nom) {
         if (anim) {
           anim.t += dt;
           const carte = cartes[anim.i], c = lire(ctx, anim.id);
-          if (anim.t > anim.duree || !c) { scene.replaceChildren(); carte.style.transform = ''; carte.style.background = P.t; carte.style.color = P.o; anim = null; }
+          if (anim.t > anim.duree || !c) { scene.replaceChildren(); carte.style.transform = ''; if (fen !== 'feuille') { carte.style.background = P.t; carte.style.color = P.o; } anim = null; }
           else {
             carte.style.transform = anim.carte(anim.t);
-            if (anim.carteInversee) { const inv = anim.carteInversee(anim.t); carte.style.background = inv ? P.o : P.t; carte.style.color = inv ? P.t : P.o; }
+            if (anim.carteInversee && fen !== 'feuille') { const inv = anim.carteInversee(anim.t); carte.style.background = inv ? P.o : P.t; carte.style.color = inv ? P.t : P.o; }
             anim.maj(anim.t, c, { boite });
           }
+        }
+        if (fenetre?.fen === 'bulle') {
+          const c = lire(ctx, fenetre.id), w = 290, h = fenetre.p.offsetHeight, bw = boite.clientWidth;
+          if (c) { fenetre.p.style.bottom = 'auto'; fenetre.p.style.left = `${Math.max(8, Math.min(c.sx - w / 2, bw - w - 8))}px`; fenetre.p.style.top = `${Math.max(8, c.y0 - h - 36)}px`; }
         }
       }
       if (partie) raf = requestAnimationFrame(boucle);

@@ -1,8 +1,10 @@
 {
-  "version": "0.32.3",
+  "version": "0.33.0",
   "date": "2026-10-18",
   "changes": [
-    "Quand on vise un barrage, le cercle du souffle du calibre se pose sur le champ : une zone assombrie et deux anneaux, plus serrés vers le centre",
-    "Les hommes qui survivent au souffle d'un obus ne sautent plus : soit projetés, soit ralentis, jamais de saut"
+    "Les pertes en barres de vie, comme un duel : nous à gauche, en face à droite, le jour au milieu, les tronçons tenus dessous ; les chiffres au survol d'un segment",
+    "Un clic sur la carte d'un régiment referme quatre équerres sur ses hommes en plus de centrer la caméra",
+    "Le champ se prolonge au-delà du bord de la carte, puis la nuit le mange (plus de bord coupé net)",
+    "Au labo : cinq façons d'ouvrir la fenêtre d'ordres"
   ]
 }

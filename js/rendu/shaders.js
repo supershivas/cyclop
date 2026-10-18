@@ -34,6 +34,8 @@ export const fauxMat = {
       varying vec2 vXZ;
       float h(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
       void main() {
+        vec2 d0 = abs(vXZ - uCentre) - uDemi;
+        if (d0.x < 0.0 && d0.y < 0.0) discard;                       // sous le terrain : rien (le plan cachait les tranchées et les creux)
         vec3 c = uKaki;
         float grand = h(floor(vXZ / 22.0)), petit = h(floor(vXZ / 2.0));
         if (grand > 0.6) c = uVert; else if (grand < 0.1) c = uGlaise;

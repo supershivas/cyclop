@@ -119,16 +119,18 @@
   font-size: var(--texte-petit); white-space: nowrap;
 }
 .etiquette.choisi { background: var(--jeu-encre); color: var(--jeu-fond); }
-/* Le clic sur une carte de régiment (Jérôme, v0.32.2 ; labo « Le clic sur un régiment ») : la caméra glisse sur lui, un sonar d'os se resserre autour de lui,
-   la carte s'enfonce d'un cran */
-.sonar { position: absolute; left: 0; top: 0; width: 0; height: 0; pointer-events: none; }
-.sonar[hidden] { display: none; }
-.sonar i { position: absolute; left: -90px; top: -90px; width: 180px; height: 180px; box-sizing: border-box; border: 2px solid var(--jeu-encre); border-radius: 50%; opacity: 0; animation: sonar .9s ease-in forwards; }
-.sonar i:nth-child(2) { animation-delay: .18s; }
-@keyframes sonar { 0% { transform: scale(1.6); opacity: 0; } 25% { opacity: 1; } 100% { transform: scale(.25); opacity: 0; } }
-.reg-carte.clic { animation: carte-clic .32s ease-out; }
-@keyframes carte-clic { 0% { transform: translateY(0); box-shadow: 3px 3px 0 var(--jeu-fond); } 35% { transform: translate(3px, 3px); box-shadow: 0 0 0 var(--jeu-fond); } 100% { transform: translateY(0); box-shadow: 3px 3px 0 var(--jeu-fond); } }
-@media (prefers-reduced-motion: reduce) { .sonar i, .reg-carte.clic { animation: none; } .sonar i { opacity: 1; transform: scale(.5); } }
+/* Le clic sur une carte de régiment (Jérôme, v0.32.2 ; v0.33.0 : les équerres ; labo « Le clic sur un régiment ») : la caméra glisse sur lui, quatre coins d'os se
+   referment sur ses hommes, la carte s'allume un instant (inversée) */
+.equerres { position: absolute; left: 0; top: 0; width: 0; height: 0; pointer-events: none; }
+.equerres[hidden] { display: none; }
+.equerres i { position: absolute; left: 0; top: 0; width: 16px; height: 16px; box-sizing: border-box; border: 0 solid var(--jeu-encre); filter: drop-shadow(1px 1px 0 var(--jeu-fond)) drop-shadow(-1px -1px 0 var(--jeu-fond)); }
+.equerres i:nth-child(1) { border-left-width: 3px; border-top-width: 3px; }
+.equerres i:nth-child(2) { border-right-width: 3px; border-top-width: 3px; }
+.equerres i:nth-child(3) { border-left-width: 3px; border-bottom-width: 3px; }
+.equerres i:nth-child(4) { border-right-width: 3px; border-bottom-width: 3px; }
+.reg-carte.clic { animation: carte-clic .3s linear; }
+@keyframes carte-clic { 0%, 80% { --pap: var(--jeu-encre); --enc: var(--jeu-fond); transform: translateY(-2px); } }
+@media (prefers-reduced-motion: reduce) { .reg-carte.clic { animation: none; } }
 .repere {
   position: absolute; left: 0; top: 0; width: 13px; height: 13px;
   border: 2px solid var(--jeu-encre); pointer-events: none;
@@ -228,19 +230,6 @@ dialog form { margin-top: calc(var(--pas) * 2); }
 .haut-gauche .boutons { display: flex; gap: var(--pas); }
 .haut-centre { justify-items: center; flex: none; }
 .haut-droite { justify-items: end; flex: 1; }
-.pertes { display: grid; grid-template-columns: repeat(2, 24ch); gap: var(--pas) calc(var(--pas) * 2); }
-.pertes .lignes { grid-column: 1 / -1; font-size: var(--texte-petit); }
-.pertes .tete { display: flex; justify-content: space-between; gap: var(--pas); border-bottom: 1px solid var(--jeu-accent); padding-bottom: var(--e0); font-size: var(--texte-moyen); }
-.pertes .tete span { color: var(--jeu-accent); font-size: var(--texte-petit); letter-spacing: .1em; text-transform: uppercase; align-self: center; }
-.pertes .barre { display: flex; height: 8px; margin: var(--e1) 0 var(--e1); background: var(--jeu-accent); }
-.pertes .barre i { display: block; height: 100%; }
-.pertes .barre .debout { background: var(--jeu-nous); }
-.pertes .eux .barre .debout { background: var(--jeu-eux); }
-.pertes .barre .blesses { background: var(--jeu-accent); outline: 1px solid var(--jeu-fond); }
-.pertes .barre .tombes { background: var(--jeu-fond); }
-.pertes .compte { color: var(--jeu-accent); font-size: var(--texte-petit); }
-.pertes .croix { letter-spacing: .18em; min-height: 1.4em; white-space: nowrap; overflow: hidden; font-size: var(--texte-petit); }
-.pertes .eux .croix { color: var(--jeu-eux); }
 .temps { display: flex; gap: var(--e1); padding: var(--e1); }
 .temps button { display: grid; place-items: center; min-width: var(--jeu-cible); height: 36px; padding: 0 var(--pas); font: inherit; color: var(--jeu-fond); background: none; border: 0; cursor: pointer; }
 .temps button svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; }
@@ -370,13 +359,6 @@ dialog form { margin-top: calc(var(--pas) * 2); }
 .frise-chg .frise-icone[hidden] { display: block; visibility: hidden; }
 .frise-icone svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 .frise-icone.prevu svg { stroke-dasharray: 2.5 3; }
-.pertes { grid-template-columns: 1fr; gap: var(--e0); padding: var(--e1) var(--pas); }
-.pertes .armee { display: grid; grid-template-columns: 9ch 16ch auto auto auto; gap: 0 var(--pas); align-items: center; font-size: var(--texte-petit); }
-.pertes .nom { font-size: var(--texte); white-space: nowrap; }
-.pertes .armee .barre { display: flex; height: 8px; margin: 0; background: var(--jeu-accent); }
-.pertes .armee .compte, .pertes .armee .tr { color: var(--jeu-accent); font-size: var(--texte-petit); white-space: nowrap; }
-.pertes .armee .croix { min-height: 0; max-width: 14ch; letter-spacing: .1em; }
-.pertes .armee .tr[hidden] { display: none; }
 .terrain { display: flex; flex-wrap: nowrap; overflow: hidden; align-items: center; gap: 0 var(--pas); font-size: var(--texte-petit); color: var(--jeu-accent); min-height: 1.4em; }
 .terrain .vit { display: flex; align-items: center; gap: var(--e1); }
 .terrain .vit .plein { flex: none; width: 6ch; min-width: 0; height: 6px; background: var(--jeu-accent); }
@@ -402,3 +384,29 @@ h2 { font-weight: normal; letter-spacing: var(--titre-lettres); }
 .terrain .vit { flex: none; margin-left: auto; white-space: nowrap; }
 .terrain .vie .plein { display: flex; width: 10ch; background: var(--jeu-accent); }
 .terrain .vie .plein b { display: block; height: 100%; }
+
+/* Les pertes (Jérôme, v0.33.0 ; « La barre de vie », variante B) : un duel, une barre de chaque côté du jour ; la vie collée au centre, la perte vers le bord */
+.pertes { display: flex; gap: var(--pas); align-items: flex-start; width: min(560px, 42vw); }
+.pertes .armee { flex: 1; min-width: 0; display: grid; gap: 3px; }
+.pertes .nom { font-size: var(--texte-petit); letter-spacing: .12em; text-transform: uppercase; color: var(--jeu-nous); background: var(--jeu-fond); justify-self: start; padding: 0 var(--e1); }
+.pertes .eux .nom { color: var(--jeu-eux); justify-self: end; }
+.pertes .vie { display: flex; flex-direction: row-reverse; height: 20px; box-sizing: border-box; border: 2px solid var(--jeu-fond); background: var(--jeu-fond); }
+.pertes .eux .vie { flex-direction: row; }
+.pertes .vie i { display: block; height: 100%; position: relative; }
+.pertes .vie .debout { background: var(--jeu-nous); }
+.pertes .eux .vie .debout { background: var(--jeu-eux); }
+.pertes .vie .blesses { background: repeating-linear-gradient(135deg, var(--jeu-nous) 0 2px, var(--jeu-fond) 2px 4px); }
+.pertes .eux .vie .blesses { background: repeating-linear-gradient(135deg, var(--jeu-eux) 0 2px, var(--jeu-fond) 2px 4px); }
+.pertes .vie .tombes { background: var(--jeu-accent); opacity: .25; }
+.pertes .troncons { display: flex; flex-direction: row-reverse; gap: 1px; height: 5px; position: relative; background: var(--jeu-fond); outline: 1px solid var(--jeu-fond); }
+.pertes .eux .troncons { flex-direction: row; }
+.pertes .troncons i { flex: 1; display: block; background: var(--jeu-accent); opacity: .45; }
+.pertes .troncons i.tenu { background: var(--jeu-encre); opacity: 1; }
+.pertes-jour { flex: none; margin-top: 14px; padding: 3px 10px; text-align: center; display: grid; line-height: 1.2; }
+.pertes-jour b { font-weight: normal; font-size: var(--texte-grand); }
+.pertes-jour span { color: var(--jeu-accent); font-size: var(--texte-petit); white-space: nowrap; }
+/* le chiffre n'est dit qu'au survol d'un segment (ordinateur seulement) */
+@media (hover: hover) {
+  .pertes [data-tip]:hover::after { content: attr(data-tip); position: absolute; left: 50%; top: calc(100% + 6px); transform: translateX(-50%); z-index: 5; padding: 2px var(--pas); white-space: nowrap; background: var(--jeu-encre); color: var(--jeu-fond); font-size: var(--texte-petit); box-shadow: 2px 2px 0 var(--jeu-fond); pointer-events: none; }
+  .pertes .vie, .pertes .troncons { cursor: default; }
+}
