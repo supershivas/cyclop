@@ -1,35 +1,35 @@
 // Le cycle de vie : écran titre → bataille → nuit → fin ; pause active,
 // réglages, sauvegarde, mise à jour, debug. Les règles sont dans bataille.js
 // (pures), le dessin dans rendu3d.js (il ne modifie jamais l'état).
-import { createLoop } from './lib/loop.js?v=0.31.4';
-import { createKeys, stopTypeahead } from './lib/keys.js?v=0.31.4';
-import { createPointer, lockBrowserGestures } from './lib/pointer.js?v=0.31.4';
-import { createGamepad } from './lib/gamepad.js?v=0.31.4';
-import { createStore, autosave, pickJSONFile } from './lib/save.js?v=0.31.4';
-import { startUpdateCheck, loadVersion, loadChangelog, downloadJSON } from './lib/app-update.js?v=0.31.4';
-import { ROLES } from './palette.js?v=0.31.4';
-import { MISSIONS, EUX, nouvelleBataille, etapesRestaurer, avancer, aube, ordonnerMarche, peutOrdonner, ordonnerBarrage, peutBarrage, horloge, effectifs, tronconsTenus, moralEnMots, terrainResume, largeurZone, lettreZone, etendueZones, nomTroncon, actionDe, secteursDe, tronconsDeLigne, zone, photo, restaurer, PAS, NOUS } from './bataille.js?v=0.31.4';
-import { ligneY } from './tranchees.js?v=0.31.4';
-import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.31.4';
-import { METEO } from './data/meteo.js?v=0.31.4';
-import { impact, hydroLignes } from './terrain.js?v=0.31.4';
-import { hash2 } from './lib/rng.js?v=0.31.4';
-import { creerRendu, CAMERA } from './rendu3d.js?v=0.31.4';
-import { etatEnMots, experienceEnMots, chevrons } from './identite.js?v=0.31.4';
-import { CORVEES } from './data/corvees.js?v=0.31.4';
-import { refusCorvee } from './nuit.js?v=0.31.4';
-import { chargerContenu } from './design-store.js?v=0.31.4';
-import * as lecture from './hud/lecture.js?v=0.31.4';
-import { creerFiche } from './hud/fiche.js?v=0.31.4';
-import { creerNuit, corveeDe, corveeCourte } from './hud/nuit.js?v=0.31.4';
-import { creerCarnet, deux } from './hud/carnet.js?v=0.31.4';
-import { creerCarte } from './hud/carte.js?v=0.31.4';
-import { creerPertes } from './hud/pertes.js?v=0.31.4';
-import { creerBarreTemps } from './hud/temps.js?v=0.31.4';
-import { creerChargement } from './hud/chargement.js?v=0.31.4';
-import { SECTEURS } from './data/secteur.js?v=0.31.4';
-import { creerLockstep, empreinteEtat } from './reseau/lockstep.js?v=0.31.4';
-import { creerHote, creerInvite } from './reseau/lien.js?v=0.31.4';
+import { createLoop } from './lib/loop.js?v=0.31.5';
+import { createKeys, stopTypeahead } from './lib/keys.js?v=0.31.5';
+import { createPointer, lockBrowserGestures } from './lib/pointer.js?v=0.31.5';
+import { createGamepad } from './lib/gamepad.js?v=0.31.5';
+import { createStore, autosave, pickJSONFile } from './lib/save.js?v=0.31.5';
+import { startUpdateCheck, loadVersion, loadChangelog, downloadJSON } from './lib/app-update.js?v=0.31.5';
+import { ROLES } from './palette.js?v=0.31.5';
+import { MISSIONS, EUX, nouvelleBataille, etapesRestaurer, avancer, aube, ordonnerMarche, peutOrdonner, ordonnerBarrage, peutBarrage, horloge, effectifs, tronconsTenus, moralEnMots, terrainResume, forcesTroncons, largeurZone, lettreZone, etendueZones, nomTroncon, actionDe, secteursDe, tronconsDeLigne, zone, photo, restaurer, PAS, NOUS } from './bataille.js?v=0.31.5';
+import { ligneY } from './tranchees.js?v=0.31.5';
+import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.31.5';
+import { METEO } from './data/meteo.js?v=0.31.5';
+import { impact, hydroLignes } from './terrain.js?v=0.31.5';
+import { hash2 } from './lib/rng.js?v=0.31.5';
+import { creerRendu, CAMERA } from './rendu3d.js?v=0.31.5';
+import { etatEnMots, experienceEnMots, chevrons } from './identite.js?v=0.31.5';
+import { CORVEES } from './data/corvees.js?v=0.31.5';
+import { refusCorvee } from './nuit.js?v=0.31.5';
+import { chargerContenu } from './design-store.js?v=0.31.5';
+import * as lecture from './hud/lecture.js?v=0.31.5';
+import { creerFiche } from './hud/fiche.js?v=0.31.5';
+import { creerNuit, corveeDe, corveeCourte } from './hud/nuit.js?v=0.31.5';
+import { creerCarnet, deux } from './hud/carnet.js?v=0.31.5';
+import { creerCarte } from './hud/carte.js?v=0.31.5';
+import { creerPertes } from './hud/pertes.js?v=0.31.5';
+import { creerBarreTemps } from './hud/temps.js?v=0.31.5';
+import { creerChargement } from './hud/chargement.js?v=0.31.5';
+import { SECTEURS } from './data/secteur.js?v=0.31.5';
+import { creerLockstep, empreinteEtat } from './reseau/lockstep.js?v=0.31.5';
+import { creerHote, creerInvite } from './reseau/lien.js?v=0.31.5';
 
 const JEU = 'cyclopeen';
 const $ = id => document.getElementById(id);
@@ -744,13 +744,22 @@ function regimentSous(x, y, r = 4, camp = -1) {
 function majTerrain(x, y) {
   const p = $('terrain'), r = x === null ? null : terrainResume(B, x, y);
   if (!r) { p.hidden = true; return; }
-  const cle = `${r.lignes.slice(0, 2).join('\n')}|${r.vitesse}`;
-  if (p.dataset.cle !== cle) {
-    p.dataset.cle = cle;
-    const pc = Math.round(r.vitesse * 100);
-    p.replaceChildren(Object.assign(document.createElement('span'), { textContent: r.lignes.slice(0, 2).join(' · ') }),
-      Object.assign(document.createElement('span'), { className: 'vit', innerHTML: `<i class="plein"><b style="width:${pc}%"></b></i><span>${pc} %</span>` }));
+  // une seule ligne, toujours : le sol et la marche ; sur une tranchée, son nom puis sa ligne de vie, aux couleurs des deux armées (les hommes de chacune dans le tronçon, de gauche à droite : nous, en face)
+  let cle, rendu;
+  if (r.troncon >= 0) {
+    const f = forcesTroncons(B), a = f[r.troncon * 2 + MOI], b = f[r.troncon * 2 + 1 - MOI], tot = a + b;
+    cle = `T|${r.tranchee}|${a}|${b}`;
+    rendu = () => p.replaceChildren(Object.assign(document.createElement('span'), { className: 'nom', textContent: `Tranchée ${r.tranchee}` }),
+      Object.assign(document.createElement('span'), { className: 'vit vie', innerHTML: `<span>${a}</span><i class="plein"><b style="width:${tot ? a / tot * 100 : 0}%;background:var(--jeu-nous)"></b><b style="width:${tot ? b / tot * 100 : 0}%;background:var(--jeu-eux)"></b></i><span>${b}</span>` }));
+  } else {
+    cle = `${r.lignes.slice(0, 2).join('\n')}|${r.vitesse}`;
+    rendu = () => {
+      const pc = Math.round(r.vitesse * 100);
+      p.replaceChildren(Object.assign(document.createElement('span'), { className: 'nom', textContent: r.lignes.slice(0, 2).join(' · ') }),
+        Object.assign(document.createElement('span'), { className: 'vit', innerHTML: `<i class="plein"><b style="width:${pc}%"></b></i><span>${pc} %</span>` }));
+    };
   }
+  if (p.dataset.cle !== cle) { p.dataset.cle = cle; rendu(); }
   p.hidden = false;
 }
 // Le survol global (Jérôme, v0.21.1) : le régiment sous la souris, ou sous une carte ou un cercle du HUD, s'allume avec tous ses hommes ; sinon le
@@ -994,7 +1003,7 @@ startUpdateCheck({
 
 // ─── Mode debug (section 18) : chargé seulement avec ?debug=1 ──────────────
 if (DEBUG) {
-  const { installDebug, seedFromUrl } = await import('./lib/debug.js?v=0.31.4');
+  const { installDebug, seedFromUrl } = await import('./lib/debug.js?v=0.31.5');
   window.__seed = seedFromUrl() ?? undefined;
   installDebug({
     state: () => B && { ...horloge(B), effectifs: effectifs(B), pertes: B.etat.pertes, impacts: B.etat.impacts.length, enJeu: enJeu(), pause: loop.paused },

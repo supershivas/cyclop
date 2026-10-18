@@ -1,5 +1,8 @@
 # Journal des versions
 
+## 0.31.5 — 2026-10-18
+- Le terrain sous la souris tient sur une seule ligne ; sur une tranchée : « Tranchée B1 » puis sa ligne de vie, aux couleurs des deux armées (les hommes de chacune dans le tronçon)
+
 ## 0.31.4 — 2026-10-18
 - Les boutons de vitesse n'ont plus de liseré (il était coupé)
 

@@ -362,7 +362,7 @@ dialog form { margin-top: calc(var(--pas) * 2); }
 .pertes .armee .compte, .pertes .armee .tr { color: var(--jeu-accent); font-size: var(--texte-petit); white-space: nowrap; }
 .pertes .armee .croix { min-height: 0; max-width: 14ch; letter-spacing: .1em; }
 .pertes .armee .tr[hidden] { display: none; }
-.terrain { display: flex; flex-wrap: wrap; align-items: center; gap: 0 var(--pas); font-size: var(--texte-petit); color: var(--jeu-accent); min-height: 1.4em; }
+.terrain { display: flex; flex-wrap: nowrap; overflow: hidden; align-items: center; gap: 0 var(--pas); font-size: var(--texte-petit); color: var(--jeu-accent); min-height: 1.4em; }
 .terrain .vit { display: flex; align-items: center; gap: var(--e1); }
 .terrain .vit .plein { flex: none; width: 6ch; min-width: 0; height: 6px; background: var(--jeu-accent); }
 .montre-bloc { max-width: 100%; }
@@ -381,3 +381,9 @@ h2 { font-weight: normal; letter-spacing: var(--titre-lettres); }
 .fiche h2, .nuit h2 { font-size: var(--texte-moyen); }
 /* Les boutons du haut ont tous le même habillage : du papier (l'os, l'ombre d'un cran), comme le billet et la carte (Jérôme, v0.31.3) */
 .haut-bloc .boutons > .icone { background: var(--jeu-encre); color: var(--jeu-fond); border: 0; box-shadow: var(--ombre-papier); }
+
+/* Le terrain sous la souris tient sur une seule ligne (Jérôme, v0.31.5) : le nom (coupé par des points de suspension s'il le faut), puis la marche ou, sur une tranchée, la ligne de vie : nous à gauche, en face à droite, aux couleurs des deux armées */
+.terrain .nom { flex: 0 1 auto; min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.terrain .vit { flex: none; margin-left: auto; white-space: nowrap; }
+.terrain .vie .plein { display: flex; width: 10ch; background: var(--jeu-accent); }
+.terrain .vie .plein b { display: block; height: 100%; }
