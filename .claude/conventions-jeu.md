@@ -14,8 +14,15 @@ applique la règle du jeu et signale-moi le conflit.
 **Cadre** : des jeux faits seul, joués dans le navigateur (GitHub Pages), et
 qui doivent pouvoir partir un jour sur Steam sans être réécrits (section 22).
 
+**Questions** : toute question qui m'est destinée (une décision à trancher, un
+choix, une confirmation, une précision) passe par l'outil `AskUserQuestion`, en
+questions à choix avec une option recommandée en premier, jamais en texte libre
+au milieu d'une réponse. Une question qui n'attend pas de réponse n'est pas une
+question : tranche avec une valeur par défaut raisonnable et dis-le.
+
 **Socle — tous les jeux**
 
+- Toute question pour moi passe par `AskUserQuestion` (en tête de ce fichier).
 - Version, changelog, mise à jour automatique sans perte de partie (2, 4).
 - Écran titre sans sous-titre, réglages derrière une roue crantée (3).
 - Palette restreinte déclarée, échelle entière pour le pixel art (5, 7).
