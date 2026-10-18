@@ -1,12 +1,12 @@
 # Journal des versions
 
-## 0.30.1 — 2026-10-18
-- Le billet (jour, heure, temps, mission) passe en haut à gauche, sous les boutons de vitesse ; le bouton de prévision, qui doublait ce billet, disparaît
+## 0.31.0 — 2026-10-18
+- Le champ gagne de la place sur un petit écran : le temps à côté des réglages, les pertes sur une ligne par camp, la carte repliable, un billet sans montre dessinée (en haut à gauche, sous le temps), des batteries à jauge de recharge ; le bouton de prévision disparaît
 - Au labo, « La barre du temps » : cinq mises en page d'une frise de la bataille (jours, nuits, repère, changements de météo)
 
 ## 0.30.0 — 2026-10-18
-- Le champ gagne de la place sur un petit écran : le temps (pause, ×1, ×2, ×4) passe à côté des réglages, les pertes tiennent sur une ligne par camp, la montre dessinée est retirée, la carte se replie d'un clic
-- Le terrain sous la souris est une ligne du billet en haut à droite ; les batteries montrent leur obus, leur calibre et une jauge de recharge
+- Jouer à deux (bouton de l'écran titre) : deux ordinateurs sur le même réseau, sans serveur. L'un invite (le bleu), l'autre rejoint (le kaki) en se passant deux textes ; les deux commandent leur armée dans la même bataille, en même temps : ordres, barrages, pause partagée, ×2 et ×4, nuit et aube (chacun ses corvées, l'aube vient quand les deux sont prêts)
+- Le kaki voit la carte et la caméra tournées d'un demi-tour (ses lignes en bas) et les couleurs de l'interface à sa main ; la partie à deux ne se sauvegarde pas
 
 ## 0.29.0 — 2026-10-18
 - Trois secteurs à choisir en début de partie (touches 1, 2, 3) : Les labours, La crête (une crête de 7 m que l'ennemi tient : il faut la monter), Le marais (un fond plat où la nappe affleure, quatre jours de pluie au moins)

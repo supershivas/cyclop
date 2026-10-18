@@ -9,8 +9,8 @@
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta property="og:image" content="og.png">
-<link rel="stylesheet" href="js/lib/game.css?v=0.30.0">
-<link rel="stylesheet" href="css/style.css?v=0.30.0">
+<link rel="stylesheet" href="js/lib/game.css?v=0.31.0">
+<link rel="stylesheet" href="css/style.css?v=0.31.0">
 </head>
 <body>
 <!-- La barre de chargement (v0.28.0) : là avant tout script ; main.js la remplit, puis la retire -->
@@ -122,6 +122,7 @@
     <nav class="titre-menu">
       <button class="bouton" id="continuer" hidden>Continuer</button>
       <button class="bouton" id="nouvelle">Nouvelle partie</button>
+      <button class="bouton" id="jouer-deux">Jouer à deux</button>
     </nav>
     <p class="pour-ordinateur">Cyclopéen se joue sur un ordinateur, à la souris et au clavier.</p>
     <button class="icone titre-reglages" id="ouvrir-reglages" aria-label="Réglages">
@@ -194,6 +195,33 @@
   <form method="dialog"><button class="bouton">Fermer</button></form>
 </dialog>
 
+<dialog id="dialogue-deux" aria-label="Jouer à deux">
+  <h2>Jouer à deux</h2>
+  <p class="discret">Deux ordinateurs sur le même réseau, sans serveur. Chacun commande une armée : le bleu (celui qui invite) et le kaki (celui qui rejoint). Les deux jouent la même bataille, en même temps.</p>
+  <div id="deux-choix" class="menu">
+    <button class="bouton" id="deux-inviter" type="button">Inviter (je suis le bleu)</button>
+    <button class="bouton" id="deux-rejoindre" type="button">Rejoindre (je suis le kaki)</button>
+  </div>
+  <section id="deux-hote" hidden>
+    <p>1. Envoyez ce texte à l'autre joueur (un message, un papier) :</p>
+    <textarea id="deux-invitation" readonly rows="4" aria-label="Invitation"></textarea>
+    <button class="bouton" id="deux-copier-invitation" type="button">Copier</button>
+    <p>2. Collez ici sa réponse :</p>
+    <textarea id="deux-reponse" rows="4" aria-label="Réponse"></textarea>
+    <button class="bouton" id="deux-connecter" type="button">Connecter</button>
+  </section>
+  <section id="deux-invite" hidden>
+    <p>1. Collez l'invitation reçue :</p>
+    <textarea id="deux-invitation-recue" rows="4" aria-label="Invitation reçue"></textarea>
+    <button class="bouton" id="deux-repondre" type="button">Répondre</button>
+    <p>2. Renvoyez ce texte à celui qui vous invite :</p>
+    <textarea id="deux-ma-reponse" readonly rows="4" aria-label="Ma réponse"></textarea>
+    <button class="bouton" id="deux-copier-reponse" type="button">Copier</button>
+  </section>
+  <p id="deux-statut" role="status" class="discret"></p>
+  <form method="dialog" class="menu"><button class="bouton" value="annuler">Annuler</button></form>
+</dialog>
+
 <dialog id="dialogue-carte" aria-label="Choisir le secteur">
   <h2>Quel secteur ?</h2>
   <div class="cartes-choix" id="cartes-choix"></div>
@@ -209,6 +237,6 @@
 </dialog>
 
 <div class="jeu-toast" id="toast" role="status" hidden></div>
-<script type="module" src="js/main.js?v=0.30.0"></script>
+<script type="module" src="js/main.js?v=0.31.0"></script>
 </body>
 </html>

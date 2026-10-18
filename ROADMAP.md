@@ -41,27 +41,23 @@ recommandé : le laisser tant qu'aucun besoin n'apparaît. Plus tard, côté `ma
 
 ### Jeu à deux sur le même réseau
 
-**Statut** : à l'étude — rien de construit ; la décision de lancer est à Jérôme
+**Statut** : en cours — premier lot livré (v0.30.0), à jouer pour de vrai sur deux machines
 
-Un joueur par armée (nous en bleu, l'autre en rouge), chacun sur son ordinateur. Aujourd'hui « en face » est l'IA de `bataille.js` et
-l'interface ne parle que de « nous » ; le jeu est statique (GitHub Pages), sans serveur.
+Un joueur par armée (le bleu invite et joue nous, le kaki rejoint et joue en face), chacun sur son ordinateur, sans serveur : le **lockstep** (`js/reseau/lockstep.js` :
+les deux machines calculent la même bataille, on n'échange que les ordres) sur un canal WebRTC appairé à la main (`js/reseau/lien.js` : une invitation, une réponse à se passer par un message).
 
-Piste : le **lockstep**. La simulation est pure, à pas fixe (1/30 s) et à graine : deux machines qui reçoivent les mêmes ordres aux mêmes
-pas calculent la même bataille ; on n'échange que les ordres. La liaison : WebRTC entre deux navigateurs (code à copier-coller pour
-s'appairer, sans serveur de jeu).
-
-- [x] **Le test de déterminisme** (outil fait : `js/determinisme.js`, `outils/determinisme.mjs` Node contre Chromium, `determinisme.html` à ouvrir dans chaque navigateur) : Node 22 et Chromium donnent le même état
-  jusqu'à 900 s de jeu (graines 3 et 7), mais `Math.sin`, `Math.cos` et `x ** 1,5` diffèrent déjà au dernier bit entre les deux (hypot, sqrt : identiques). Reste : lancer `determinisme.html` dans Firefox (pas dans le conteneur) ; puis
-  décider de remplacer sin, cos et `** 1,5` de la logique (army.js, terrain.js, tranchees.js) par des opérations exactes
-- [ ] Un second commandant : les ordres du camp rouge viennent d'un joueur, pas de `bataille.js` (l'IA reste pour le jeu seul) ; une
-  interface qui sait quel camp elle joue (carte, palette, cartes de régiment, carnet inversés)
-- [ ] Une horloge partagée : pause active, ×2 / ×4 (`setTimeScale`, aujourd'hui plafonnée par `perf.sim`) et retour à ×1 décidés à deux
-  (qui peut arrêter le temps ?) ; un pas de simulation qui ne dépend pas de la machine
-- [ ] La nuit à deux : chacun choisit ses corvées, l'aube part quand les deux sont prêts
-- [ ] Mission et fin (`juger`) : un attaquant et un défenseur humains ; équilibre des forces à mesurer (skill `equilibrage`)
-- [ ] À trancher dans `DESIGN.md` : brouillard de guerre ou carte ouverte, durée d'une partie à deux, reconnexion
-- Étape intermédiaire possible : le **tour à tour sur le même écran** (chacun donne ses ordres pendant la pause), sans réseau, pour
-  essayer l'équilibre à deux avant d'investir
+- [x] Le test de déterminisme (`js/determinisme.js`, `outils/determinisme.mjs`, `determinisme.html`) : Node 22 et Chromium donnent le même état ; `Math.sin`, `Math.cos` et `x ** 1,5` diffèrent déjà au dernier bit entre les deux (hypot, sqrt : identiques)
+- [x] Un second commandant : `planMarche` / `ordonnerMarche` / `peutOrdonner` / `ordonnerBarrage` / `peutBarrage` prennent un camp, `etat.deux` fait taire l'IA d'en face, ses batteries (`etat.batteriesEux`) rechargent comme les nôtres ; l'interface sait quel camp elle joue (`MOI` de main.js : cartes, carte tournée, pertes, nuit, couleurs)
+- [x] Une horloge partagée : pause (Espace, le menu), ×2 / ×4 : des ordres du lockstep, appliqués au même cadre chez les deux
+- [x] La nuit à deux : chacun ses corvées, l'aube part quand les deux sont prêts (`corvee`, `pret`)
+- [x] Mission et fin : l'objectif du kaki est l'inverse de celui du bleu ; la fin dit qui l'emporte (`juger` reste du point de vue du bleu)
+- [x] Un test de bout en bout : `outils/deux.mjs` (deux pages s'appairent, jouent, aucune désynchronisation) ; `test/lockstep.test.mjs` (réseau factice qui retarde)
+- [ ] **Lancer `determinisme.html` dans Firefox** (pas dans le conteneur) et jouer une partie Chrome contre Firefox ; si `sin`, `cos` ou `** 1,5` y divergent : les remplacer dans la logique (army.js, terrain.js, tranchees.js) par des opérations exactes
+- [ ] Jouer sur deux vraies machines : les adresses WebRTC d'un navigateur sont parfois masquées (mDNS) ; si l'appairage échoue sur un réseau, ajouter un serveur STUN ou un relais
+- [ ] À mesurer : l'équilibre à deux (attaquant et défenseur humains, skill `equilibrage`), la durée d'une partie
+- [ ] Reconnexion (aujourd'hui, une coupure ramène à l'écran titre) ; une partie à deux qui se sauvegarde ; les réglages de l'atelier doivent être les mêmes (sinon refus à l'appairage)
+- [ ] À trancher dans `DESIGN.md` : brouillard de guerre ou carte ouverte (carte ouverte aujourd'hui)
+- Plus tard : le tour à tour sur le même écran (sans réseau)
 
 ### Lot minimal : la tranche verticale du terrain
 

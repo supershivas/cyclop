@@ -300,7 +300,8 @@ dialog form { margin-top: calc(var(--pas) * 2); }
 #dialogue-carte h2 { margin: 0 0 var(--pas); font-size: 18px; font-weight: normal; letter-spacing: .1em; text-transform: uppercase; }
 .cartes-choix { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--pas); }
 .carte-choix { display: grid; gap: 6px; align-content: start; text-align: left; font: inherit; padding: var(--pas); cursor: pointer; color: var(--jeu-fond); background: var(--jeu-encre); border: 2px solid var(--jeu-encre); }
-.carte-choix:focus-visible, .carte-choix:hover { border-color: var(--jeu-nous); }
+.carte-choix:focus-visible { border-color: var(--jeu-nous); }
+@media (hover: hover) { .carte-choix:hover { border-color: var(--jeu-nous); } }
 .carte-choix b { font-weight: normal; font-size: 16px; letter-spacing: .06em; text-transform: uppercase; }
 .carte-choix .touche { float: right; color: var(--jeu-accent); }
 .carte-choix p { margin: 0; font-size: 13px; line-height: 1.35; }
@@ -333,3 +334,12 @@ dialog form { margin-top: calc(var(--pas) * 2); }
 .terrain .vit .plein { flex: none; width: 6ch; min-width: 0; height: 6px; background: var(--jeu-accent); }
 .montre-bloc { max-width: 100%; }
 .montre-bloc > .papier { max-width: 40ch; }
+
+/* Jouer à deux (Jérôme, v0.30.0) */
+#dialogue-deux { width: min(92vw, 44rem); }
+#dialogue-deux h2 { margin: 0 0 var(--pas); font-size: 18px; font-weight: normal; letter-spacing: .1em; text-transform: uppercase; }
+#dialogue-deux section { display: grid; gap: var(--pas); margin: var(--pas) 0; }
+#dialogue-deux section[hidden] { display: none; }
+#dialogue-deux p { margin: 0; }
+#dialogue-deux textarea { width: 100%; box-sizing: border-box; font: 12px/1.3 var(--jeu-police, monospace); word-break: break-all; padding: 6px; color: var(--jeu-fond); background: var(--jeu-encre); border: 2px solid var(--jeu-accent); resize: vertical; }
+#deux-statut { min-height: 1.4em; }

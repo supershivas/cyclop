@@ -124,6 +124,22 @@ test('trois secteurs : la crête est haute devant leurs lignes, le marais est pl
     assert.ok(creuses >= 800, `tranchée creusée : ${creuses}`);
   }
 });
+test('à deux : l\'IA d\'en face se tait, le second joueur marche et tire avec ses batteries', () => {
+  const B = nouvelleBataille(3, R, { soldats: 200, jours: 3, deux: true });
+  const eux = B.etat.regiments.filter(r => r.camp === 1), nos = B.etat.regiments.filter(r => r.camp === 0);
+  assert.ok(eux.every(r => r.nom), 'des noms en face');
+  const avant = eux.map(r => JSON.stringify(r.ordre));
+  for (let t = 0; t < 30 * 200; t++) avancer(B);       // 200 s sans un ordre : rien ne part d'en face
+  assert.equal(B.etat.barrages.length, 0); assert.deepEqual(eux.map(r => JSON.stringify(r.ordre)), avant);
+  assert.match(ordonnerMarche(B, [nos[0].id], ...P(100, 100), 'bloc', 1).refus, /Aucun régiment/, 'un joueur ne commande que son camp');
+  const [x, y] = P(200, 110), r = ordonnerMarche(B, [eux[0].id], x, y, 'ligne', 1);
+  assert.equal(r.ok, true); assert.equal(eux[0].ordre.forme, 'ligne'); assert.equal(eux[0].ordre.fy, 1);
+  assert.equal(ordonnerBarrage(B, '155', x, y, 1).ok, true);
+  assert.match(ordonnerBarrage(B, '155', x, y, 1).refus, /recharge/);       // sa batterie à lui
+  assert.equal(ordonnerBarrage(B, '155', x, y, 0).ok, true);                // la nôtre est prête
+  // la partie à deux se sauve et se relit
+  const C = restaurer(photo(B), R); assert.equal(C.etat.deux, true); assert.equal(empreinte(C), empreinte(B));
+});
 test('un ordre impossible se refuse, avec sa raison', () => {
   const B = petite();
   assert.match(ordonnerMarche(B, [], ...P(10, 10)).refus, /Aucun régiment/);

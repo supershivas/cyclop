@@ -284,6 +284,11 @@ nuit (le voile continu et ses halos mélangent la terre, le sol et l'os : des co
   `abriDe` de bataille.js dans `tuerDans`), `prisonniers` ; chaque régiment, ses
   `vivres` (en nuits). `coupDeMain`, `cibleDuCoup` (le régiment ennemi le plus proche,
   à `coupPortee`).
+- `js/reseau/` — le jeu à deux, sur le réseau (Jérôme, v0.30.0 : « le jeu à deux en local » = deux ordinateurs sur le même réseau). `lockstep.js` (pure, testée dans Node) : `creerLockstep({ B, moi, envoyer, executer })` ;
+  un cadre = un pas de la simulation (ou d'attente : pause, nuit), les ordres donnés au cadre F partent pour F + 6 (200 ms), un cadre ne se joue que quand on a les ordres, même vides, des deux joueurs (`cadre_()` rend false sinon : on attend),
+  ceux de l'hôte s'exécutent avant ceux de l'invité, et toutes les 90 cadres une empreinte de l'état (`empreinteEtat` : temps, hommes, régiments, tronçons, hasard) est comparée : un écart est dit à voix haute (`surEcart`).
+  `lien.js` : un canal de données WebRTC fiable et ordonné, sans serveur ni STUN (`iceServers: []` : les adresses de la machine) ; l'invitation et la réponse sont deux textes en base64 (~830 signes) qu'on se passe par un message.
+  La poignée de main (main.js) : l'hôte envoie `init` (version du jeu, empreinte des réglages, graine, secteur), l'invité refuse si la version ou les réglages diffèrent (`refus`), sinon `ok` : les deux créent la même bataille (`deux: true`).
 - `js/champs.js` — les champs de coûts : le terrain résumé en carrés de 4 m
   (`couts`, un octet), Dial, une direction par carré ; cache par but et version.
 - `js/bataille.js` — l'état d'une partie et ses règles (`tirs`, `disputes` : pour le dessin seulement, jamais sauvegardés) : `nouvelleBataille`,
@@ -370,6 +375,7 @@ node outils/fumee.mjs                    # le jeu dans le navigateur : un scéna
 node outils/captures.mjs --page index.html --page labo.html --page atelier.html
 node outils/audit-ecran.mjs --page index.html --page labo.html --page atelier.html
 node outils/lisibilite.mjs               # contraste, tuiles en gris
+node outils/deux.mjs                     # le jeu à deux : deux pages s'appairent, jouent, aucune désynchronisation (~30 s)
 node scripts/mesure.mjs                  # 8 000 soldats : simulation et rendu
 node scripts/trois-jours.mjs             # trois jours de bataille, captures chaque soir
 node outils/stamp-version.mjs            # après chaque changement de version.json
@@ -395,6 +401,13 @@ node outils/stamp-version.mjs            # après chaque changement de version.j
 
 ## Pièges connus
 
+- **Le jeu à deux** (Jérôme, v0.30.0 ; `js/reseau/`, `lancerMarche`, `lancerBarrage`, `executerCmd`, `demarrerReseau` de main.js) : l'hôte est le bleu (NOUS), l'invité le kaki (EUX). Un ordre du joueur ne change rien tout de suite : l'ordre à sec (`peutOrdonner`, `peutBarrage`, avec le camp)
+  dit le refus à voix haute, puis `commander` l'envoie aux deux machines, qui l'exécutent au même cadre (`executerCmd` : marche, barrage, pause, vitesse, corvée, prêt). Les commandes : `marche`, `barrage`, `pause`, `vitesse`, `corvee`, `pret`.
+  Le jeu à deux **n'arrête jamais la boucle** (`loop.pause()` n'est pas appelé : les cadres vides font passer les ordres, la pause est un ordre partagé, `lockstep.etat.pause`) ; perdre le focus ou ouvrir le menu envoie la pause aux deux, la fermer la lève (`pauseParMoi`).
+  L'interface joue `MOI` : au kaki, la caméra est tournée d'un demi-tour (`placerCamera(π + yaw)`), la carte aussi (ses lignes en bas, A à D de droite à gauche : `creerCarte({ moi })`, y miroir), les variables `--jeu-nous` / `--jeu-eux` sont échangées (ses cartes en kaki, celles d'en face en bleu :
+  `reglerCamp`), les pertes et la nuit lisent son camp ; son objectif est l'inverse de celui du bleu (`objectif()`). La partie à deux ne s'écrit pas dans `cyclopeen:partie`, ni la caméra dans les préférences. Le mode debug : `__jeu.reseau()` (cadre, écart, empreinte), `__jeu.marche` / `barrage` passent par le lockstep ;
+  **n'y pas appeler `avancer(n)` ni `nuit()` en partie à deux** (ils changent une machine seulement : désynchronisation). `outils/deux.mjs` joue deux pages de Chromium l'une contre l'autre (`--disable-features=WebRtcHideLocalIpsWithMdns` : sans lui, Chromium masque ses adresses locales).
+  Mesuré (deux pages, ×4, un jour, une nuit, une aube, 12 000 cadres) : aucun écart. **Pas testé** : Firefox, deux vraies machines (mDNS), un réseau lent (le délai de 6 cadres tient jusqu'à ~150 ms d'aller-retour ; au-delà, la partie attend l'autre : elle ralentit, elle ne diverge pas).
 - **Trois secteurs** (Jérôme, v0.29.0 : « 3 cartes différentes à choisir en début de partie » ; `data/secteur.js`, `demanderSecteur` de main.js, touches 1 2 3) : `essai` (« Les labours » : l'ancien secteur, rien n'a changé pour lui hors les tranchées), `crete` (une bosse
   de 7 m de haut, large de 42, à 62 m du haut du secteur, qui serpente de ±15 m : leurs lignes la tiennent ; bosses ×1,6, nappe 0,8 m plus profonde, peu de bois, des haies, un jour de pluie au moins) et `marais` (bosses ×0,45, nappe 1,4 m plus
   haute : les creux se remplissent, quatre jours de pluie au moins, 320 buissons, 90 arbres). Même taille, mêmes lignes (400 × 300 m) : ce qui change est dans `relief` (lu par `creerTerrain`), les nombres d'arbres et la pluie ; `profil` et `resume` font la carte
