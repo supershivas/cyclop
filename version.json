@@ -1,7 +1,7 @@
 {
-  "version": "0.34.2",
+  "version": "0.34.3",
   "date": "2026-10-18",
   "changes": [
-    "Plus de ralentissement brutal en pleine bataille quand beaucoup de régiments marchent vers des endroits différents"
+    "Jouer à deux : si la connexion échoue sous Firefox, l'écran conseille Chrome (Firefox ne se connecte pas entre deux Mac, Chrome oui)"
   ]
 }

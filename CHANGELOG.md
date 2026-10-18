@@ -1,5 +1,8 @@
 # Journal des versions
 
+## 0.34.3 — 2026-10-18
+- Jouer à deux : si la connexion échoue sous Firefox, l'écran conseille Chrome (Firefox ne se connecte pas entre deux Mac, Chrome oui)
+
 ## 0.34.2 — 2026-10-18
 - Plus de ralentissement brutal en pleine bataille quand beaucoup de régiments marchent vers des endroits différents
 
