@@ -1,5 +1,8 @@
 # Journal des versions
 
+## 0.31.2 — 2026-10-18
+- Les impacts en attente de la partie d'avant ne fument plus dans la nouvelle
+
 ## 0.31.1 — 2026-10-18
 - Une nouvelle partie (ou le passage de l'écran titre au jeu) part d'un champ propre : plus de fumées, d'éclats, de balles ni d'obus en vol restés de la scène d'avant
 
