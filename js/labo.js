@@ -2,24 +2,26 @@
 // Chaque sujet utilise les mêmes modules que le jeu (terrain, apparence,
 // rendu three.js) : ce qu'on voit ici est ce que le jeu dessinera. Ajouter un
 // sujet ou une variante = ajouter une entrée dans GROUPES.
-import { mountLabo } from './lib/labo-shell.js?v=0.32.1';
-import { spriteCanvas, paletteToGPL, paletteToHex } from './lib/sprites.js?v=0.32.1';
-import { PALETTE, ROLES } from './palette.js?v=0.32.1';
-import { chargerContenu } from './design-store.js?v=0.32.1';
-import { tuile, ETAT } from './tuiles.js?v=0.32.1';
-import { creerTerrain, impact, hydroLignes } from './terrain.js?v=0.32.1';
-import { CALIBRES } from './data/calibres.js?v=0.32.1';
-import { METEO } from './data/meteo.js?v=0.32.1';
-import { nouvelleBataille, avancer, ordonnerMarche, ordonnerBarrage, mourir } from './bataille.js?v=0.32.1';
-import { creerRendu, ZOOMS } from './rendu3d.js?v=0.32.1';
-import { hash2 } from './lib/rng.js?v=0.32.1';
-import { reglerVerdure } from './apparence.js?v=0.32.1';
-import { maquetteAssaut } from './labo-assaut.js?v=0.32.1';
-import { calquePlaques } from './labo-plaques.js?v=0.32.1';
-import { calqueBarre } from './labo-barre-temps.js?v=0.32.1';
-import { maquetteProjections, maquetteVisee } from './labo-projections.js?v=0.32.1';
-import { JOURNAL } from './labo-journal.js?v=0.32.1';
-import { loadVersion } from './lib/app-update.js?v=0.32.1';
+import { mountLabo } from './lib/labo-shell.js?v=0.32.2';
+import { spriteCanvas, paletteToGPL, paletteToHex } from './lib/sprites.js?v=0.32.2';
+import { PALETTE, ROLES } from './palette.js?v=0.32.2';
+import { chargerContenu } from './design-store.js?v=0.32.2';
+import { tuile, ETAT } from './tuiles.js?v=0.32.2';
+import { creerTerrain, impact, hydroLignes } from './terrain.js?v=0.32.2';
+import { CALIBRES } from './data/calibres.js?v=0.32.2';
+import { METEO } from './data/meteo.js?v=0.32.2';
+import { nouvelleBataille, avancer, ordonnerMarche, ordonnerBarrage, mourir } from './bataille.js?v=0.32.2';
+import { creerRendu, ZOOMS } from './rendu3d.js?v=0.32.2';
+import { hash2 } from './lib/rng.js?v=0.32.2';
+import { reglerVerdure } from './apparence.js?v=0.32.2';
+import { maquetteAssaut } from './labo-assaut.js?v=0.32.2';
+import { calquePlaques } from './labo-plaques.js?v=0.32.2';
+import { calqueBarre } from './labo-barre-temps.js?v=0.32.2';
+import { maquetteProjections, maquetteVisee } from './labo-projections.js?v=0.32.2';
+import { calqueBarreVie } from './labo-barre-vie.js?v=0.32.2';
+import { calqueClic } from './labo-clic-regiment.js?v=0.32.2';
+import { JOURNAL } from './labo-journal.js?v=0.32.2';
+import { loadVersion } from './lib/app-update.js?v=0.32.2';
 
 document.documentElement.style.setProperty('--jeu-accent', ROLES.accent);
 const NOM = document.title.replace(/^Labo — /, ''); // le nom vient de la page (une apostrophe ne casse rien)
@@ -88,14 +90,15 @@ function tuiles(stage, gris = false) {
 }
 
 // ─── Le moteur, en direct : le rendu du jeu sur une petite bataille ───
-function moteur(stage, { zoom = 3, pluie = false, gel = false, soldats = 600, cz = 185, camera = null, respiration = undefined, soldat = undefined, cadavre = undefined, morts = 0, effets = undefined, barrages = false, surLesArbres = false, vue = null, verdure = undefined, nuit = null, tombee = false, calque = null } = {}) {
+function moteur(stage, { zoom = 3, pluie = false, gel = false, soldats = 600, cz = 185, camera = null, respiration = undefined, soldat = undefined, cadavre = undefined, morts = 0, effets = undefined, barrages = false, surLesArbres = false, vue = null, verdure = undefined, nuit = null, tombee = false, calque = null, bord = null, centre = null } = {}) {
   reglerVerdure(verdure);                                   // le sol vert (apparence.js) : avant que le sol ne se peigne
   const boite = el('div'); boite.style.cssText = 'position:relative;width:100%;height:min(70vh,560px);overflow:hidden';
   const canvas = el('canvas'); canvas.style.cssText = 'position:absolute;left:0;top:0;image-rendering:pixelated';
   // le relevé : ce que coûte cette variante (le dessin attendu jusqu'au bout), et des zooms à essayer
   const releve = el('p', { className: 'releve', textContent: '…' });
   const zooms = el('p', {}, ...ZOOMS.map((z, i) => el('button', { className: 'essai', textContent: `Zoom ${z}`, onclick: () => { if (rendu) rendu.vue.zoom = i; } })));
-  boite.append(canvas); calque?.(boite); stage.append(boite, releve, zooms);
+  const ctx = { rendu: null, B: null };                      // ce que le calque peut lire du moteur, une fois lancé
+  boite.append(canvas); const finCalque = calque?.(boite, ctx); stage.append(boite, releve, zooms);
   let raf = 0, rendu = null, fini = false;
   (async () => {
     const B = nouvelleBataille(5, R, { soldats });
@@ -114,13 +117,14 @@ function moteur(stage, { zoom = 3, pluie = false, gel = false, soldats = 600, cz
       B.etat.corps.forEach((c, k) => { if (k % 2) c[3] = B.etat.jour - 1; });
     }
     ordonnerMarche(B, B.etat.regiments.filter(r => r.camp === 0).slice(2, 6).map(r => r.id), B.etat.marges.x + 200, B.etat.marges.y + 175);
-    rendu = await creerRendu(canvas, { mesure: true, camera, respiration, soldat, cadavre, effets });
+    rendu = await creerRendu(canvas, { mesure: true, camera, respiration, soldat, cadavre, effets, bord });
     if (fini) { rendu.detruire(); return; }
     if (nuit) rendu.styleNuit = nuit;
     rendu.redimensionner();
     rendu.attacher(B);
     if (vue) rendu.placerCamera(vue.yaw, vue.tangage);       // la caméra libre du jeu
-    rendu.vue.zoom = zoom; rendu.vue.cx = B.etat.marges.x + 200; rendu.vue.cz = B.etat.marges.y + cz;   // (coordonnées du secteur, plus les marges)
+    rendu.vue.zoom = zoom; rendu.vue.cx = centre ? centre[0] : B.etat.marges.x + 200; rendu.vue.cz = centre ? centre[1] : B.etat.marges.y + cz;   // (coordonnées du secteur, plus les marges ; `centre` : celles du terrain)
+    ctx.rendu = rendu; ctx.B = B;
     let tReleve = 0, tBarrage = 0.3, kBarrage = 0;
     let t = performance.now();
     const boucle = now => {
@@ -145,7 +149,7 @@ function moteur(stage, { zoom = 3, pluie = false, gel = false, soldats = 600, cz
     };
     raf = requestAnimationFrame(boucle);
   })();
-  return () => { fini = true; cancelAnimationFrame(raf); rendu?.detruire(); reglerVerdure(0); };
+  return () => { fini = true; finCalque?.(); cancelAnimationFrame(raf); rendu?.detruire(); reglerVerdure(0); };
 }
 
 const GROUPES = [
@@ -185,6 +189,27 @@ const GROUPES = [
       { title: 'Trois familles', status: 'ancienne', note: 'Non retenu (v0.10.0). Un bandeau d\'instruments en haut (le temps, la mission, les morts : permanent, sans cadre) ; des cartes de régiment à liseré bleu et une barre d\'effectif (les ordres) ; une fiche encadrée à en-tête plein (ce qu\'on ouvre). On distingue l\'état de l\'action sans lire.', render: s => moteur(s, { zoom: 3, cz: 185, soldats: 400, calque: calquePlaques('familles') }) },
       { title: 'Des papiers de campagne', status: 'ancienne', note: 'Retenu en v0.10.0, remplacé : la montre de gousset est retirée depuis la v0.30.0 (l\'heure est dans le billet). Plus intradiégétique : une montre de gousset pour l\'heure, une feuille de situation (papier, lignes, tampon « ébranlé », barre debout / blessés / tombés) pour le régiment, un râtelier d\'obus (debout : prêt ; couché : se recharge), des croix au crayon pour les morts.', render: s => moteur(s, { zoom: 3, cz: 185, soldats: 400, calque: calquePlaques('papiers') }) },
       { title: 'Avec le carnet de bord', status: 'ancienne', note: 'Retenu en v0.10.0, la mise en page a changé depuis (v0.19.0, v0.20.0, v0.30.0). Les papiers de campagne, et un carnet de bord : les événements marquants à l\'heure où ils arrivent (la préparation d\'en face, la sortie, le dernier défenseur, le tronçon perdu), la ligne la plus récente surlignée. La mémoire de la pause active.', render: s => moteur(s, { zoom: 3, cz: 185, soldats: 400, calque: calquePlaques('carnet') }) },
+    ] },
+    { id: 'barre-vie', title: 'La barre de vie', variants: [
+      { title: 'Le papier des pertes', status: 'actuelle', depuis: '0.32.2', note: 'Aujourd\'hui : un papier à deux lignes, une par camp (le nom, une barre, « debout · blessés · tombés », les tronçons tenus en chiffres). Tout est en chiffres : il faut lire pour savoir qui gagne.', render: s => moteur(s, { zoom: 3, cz: 185, soldats: 400, calque: calqueBarreVie('actuelle') }) },
+      { title: 'Le duel', depuis: '0.32.2', note: 'Un jeu de combat en un contre un : une barre de chaque côté d\'un médaillon (le jour), la vie collée au centre, ce qu\'on a perdu qui se vide vers le bord. Aucun chiffre : passez la souris sur un segment (debout, blessés hachuré, tombés). Dessous, les tronçons tenus : soixante-quatre graduations d\'os (tenus) ou de terre (perdus), sans couleur de camp.', render: s => moteur(s, { zoom: 3, cz: 185, soldats: 400, calque: calqueBarreVie('duel') }) },
+      { title: 'Les biseaux', depuis: '0.32.2', note: 'Des barres penchées, épaisses, avec un liseré d\'os, le nom du camp collé au bord extérieur et un losange (la bataille, 2 sur 11) au centre. Les tronçons en quatre groupes, un par secteur.', render: s => moteur(s, { zoom: 3, cz: 185, soldats: 400, calque: calqueBarreVie('biseaux') }) },
+      { title: 'Le fil du haut', depuis: '0.32.2', note: 'Des barres fines collées au bord de l\'écran, chacune une moitié de la largeur ; le jour pend au centre comme une languette. Presque rien : le champ reste grand (le souci d\'un écran de 13 pouces, v0.30.0).', render: s => moteur(s, { zoom: 3, cz: 185, soldats: 400, calque: calqueBarreVie('fil') }) },
+      { title: 'Un segment par régiment', depuis: '0.32.2', note: 'Chaque barre est faite de huit segments, les huit régiments d\'un camp : on voit lequel tient et lequel fond. Au survol d\'un segment, le régiment (« 3 · Viride : 38 debout · 6 blessés · 12 tombés »). Les tronçons en quatre groupes dessous.', render: s => moteur(s, { zoom: 3, cz: 185, soldats: 400, calque: calqueBarreVie('segmentee') }) },
+    ] },
+    { id: 'clic-regiment', title: 'Le clic sur un régiment', variants: [
+      { title: 'Le sonar', status: 'actuelle', depuis: '0.32.2', note: 'En jeu depuis la v0.32.2 : un clic sur la carte d\'un régiment, la caméra glisse sur lui (0,6 s) ; deux anneaux d\'os se resserrent autour de lui, la carte s\'enfonce d\'un cran. Cliquez une carte du bas.', render: s => moteur(s, { zoom: 3, cz: 185, soldats: 400, calque: calqueClic('sonar') }) },
+      { title: 'Les équerres', depuis: '0.32.2', note: 'Quatre coins d\'os se referment sur l\'emprise du régiment, comme un cadre de sélection qui se dessine ; la carte s\'allume un instant.', render: s => moteur(s, { zoom: 3, cz: 185, soldats: 400, calque: calqueClic('equerres') }) },
+      { title: 'Le fanion', depuis: '0.32.2', note: 'Un pin numéroté, à la couleur de l\'armée, tombe du ciel au-dessus du régiment et rebondit ; la carte se soulève et retombe.', render: s => moteur(s, { zoom: 3, cz: 185, soldats: 400, calque: calqueClic('fanion') }) },
+      { title: 'Le fil', depuis: '0.32.2', note: 'Un trait pointillé se déroule de la carte jusqu\'au régiment, où un anneau bat deux fois ; on voit d\'où l\'on vient et où l\'on va.', render: s => moteur(s, { zoom: 3, cz: 185, soldats: 400, calque: calqueClic('fil') }) },
+    ] },
+    { id: 'bord-carte', title: 'Le bord de la carte', variants: [
+      { title: 'Coupé net', status: 'actuelle', depuis: '0.32.2', note: 'Aujourd\'hui : le terrain s\'arrête sur une ligne droite, devant le ciel de brume. Vue ici à plat, tournée de 40°, vers le bord nord.', render: s => moteur(s, { zoom: 1, soldats: 100, centre: [300, 80], vue: { tangage: 0.4, yaw: 0.7 } }) },
+      { title: 'Brouillard noir', depuis: '0.32.2', note: 'Soixante mètres avant le bord, le sol s\'enfonce dans la terre noire (`t`) ; le fond est noir : on ne voit pas la fin, on voit la nuit qui la mange. (Les arbres des marges restent debout dans le noir : à régler si retenu.)', render: s => moteur(s, { zoom: 1, soldats: 100, centre: [300, 80], vue: { tangage: 0.4, yaw: 0.7 }, bord: 'noir' }) },
+      { title: 'Brume épaisse', depuis: '0.32.2', note: 'Cent mètres avant le bord, le sol se perd dans la brume (`r`), le même gris que le ciel : l\'horizon se dissout, plus de ligne. Le plus calme, et le plus proche de l\'écran titre.', render: s => moteur(s, { zoom: 1, soldats: 100, centre: [300, 80], vue: { tangage: 0.4, yaw: 0.7 }, bord: 'brume' }) },
+      { title: 'Faux terrain', depuis: '0.32.2', note: 'Le champ continue : un plan immense, des plaques de kaki, de vert et de glaise de la couleur du sol, qui se perdent dans la brume à cinq cents mètres. On ne sait plus où finit la carte, mais on peut croire qu\'elle est plus grande qu\'elle n\'est.', render: s => moteur(s, { zoom: 1, soldats: 100, centre: [300, 80], vue: { tangage: 0.4, yaw: 0.7 }, bord: 'faux' }) },
+      { title: 'Faux terrain dans la nuit', depuis: '0.32.2', note: 'Le même, mais qui s\'éteint dans le noir au lieu de la brume : le champ se prolonge, puis la nuit le mange. Entre « Faux terrain » et « Brouillard noir ».', render: s => moteur(s, { zoom: 1, soldats: 100, centre: [300, 80], vue: { tangage: 0.4, yaw: 0.7 }, bord: 'faux-noir' }) },
+      { title: 'Le papier de la carte', depuis: '0.32.2', note: 'Le sol s\'efface dans l\'os (`o`) : le champ est un dessin sur une feuille, comme les papiers de campagne du HUD. Le jeu devient une carte d\'état-major.', render: s => moteur(s, { zoom: 1, soldats: 100, centre: [300, 80], vue: { tangage: 0.4, yaw: 0.7 }, bord: 'papier' }) },
     ] },
     { id: 'barre-temps', title: 'La barre du temps', variants: [
       { title: 'La bande de météo', status: 'actuelle', depuis: '0.31.2', note: 'La frise est elle-même la météo : chaque jour a la couleur de son temps (sec, pluie, brouillard, gel), demain hachuré, le reste en blanc ; la nuit est une barre sombre dessous ; le texte suit le repère au lieu d\'avoir sa ligne. Le plus dense, et le plus lisible en un coup d\'œil. En jeu depuis la v0.31.2 : de la largeur des boutons du haut, avec dessous la mission et le terrain sous la souris.', render: s => moteur(s, { zoom: 3, cz: 185, soldats: 400, calque: calqueBarre('bande') }) },
@@ -257,16 +282,16 @@ const GROUPES = [
     ] },
     { id: 'projections', title: 'Projections', variants: [
       { title: 'Le jeu tel qu\'il est', status: 'actuelle', note: 'Un vrai obus de la logique sur un régiment en marche (zoom 8 pixels par mètre, choisissez le calibre, « Tirer un obus »). Les morts sont jetés à l\'opposé (v0.24.0), les survivants du souffle reçoivent une poussée et un bond (v0.16.0) : rien ne ralentit ceux qui sont près. Le cercle plein est le rayon mortel, le pointillé la zone du souffle (1,8 rayon).', render: s => maquetteProjections(s, R, 'A') },
-      { title: 'Projetés en arc', depuis: '0.32.0', note: 'Tous ceux du souffle (le rayon du calibre) partent en l\'air à l\'opposé du point de chute, en arc, aussi loin qu\'ils étaient près ; en retombant, les plus proches sont tués, les autres blessés (ils restent tapis). Ceux de l\'anneau (jusqu\'à 1,8 rayon) sont ralentis au même instant, plus ou moins selon la distance, puis reprennent leur pas tous ensemble en deux secondes et demie : pas de vague.', render: s => maquetteProjections(s, R, 'B') },
-      { title: 'Fauchés au ras du sol', depuis: '0.32.0', note: 'Le souffle est un peu plus large et rase la terre : un vol bas, rapide, plus long (une demi-seconde). Ceux de l\'anneau sont sonnés : ils s\'arrêtent net, se tapissent un instant (d\'autant plus longtemps qu\'ils sont près), puis repartent. Le plus brutal, le plus lisible de loin.', render: s => maquetteProjections(s, R, 'C') },
-      { title: 'Soulevés, retombent près', depuis: '0.32.0', note: 'Le souffle les soulève presque à la verticale (un vol de plus d\'une seconde, très haut) et ils retombent près d\'où ils étaient, à peine plus loin. Ceux de l\'anneau marchent au ralenti, d\'un pas égal pendant deux secondes et demie, puis le reprennent d\'un coup : la poussière, la terre qui retombe.', render: s => maquetteProjections(s, R, 'D') },
+      { title: 'Projetés en arc', depuis: '0.32.2', note: 'Tous ceux du souffle (le rayon du calibre) partent en l\'air à l\'opposé du point de chute, en arc, aussi loin qu\'ils étaient près ; en retombant, les plus proches sont tués, les autres blessés (ils restent tapis). Ceux de l\'anneau (jusqu\'à 1,8 rayon) sont ralentis au même instant, plus ou moins selon la distance, puis reprennent leur pas tous ensemble en deux secondes et demie : pas de vague.', render: s => maquetteProjections(s, R, 'B') },
+      { title: 'Fauchés au ras du sol', depuis: '0.32.2', note: 'Le souffle est un peu plus large et rase la terre : un vol bas, rapide, plus long (une demi-seconde). Ceux de l\'anneau sont sonnés : ils s\'arrêtent net, se tapissent un instant (d\'autant plus longtemps qu\'ils sont près), puis repartent. Le plus brutal, le plus lisible de loin.', render: s => maquetteProjections(s, R, 'C') },
+      { title: 'Soulevés, retombent près', depuis: '0.32.2', note: 'Le souffle les soulève presque à la verticale (un vol de plus d\'une seconde, très haut) et ils retombent près d\'où ils étaient, à peine plus loin. Ceux de l\'anneau marchent au ralenti, d\'un pas égal pendant deux secondes et demie, puis le reprennent d\'un coup : la poussière, la terre qui retombe.', render: s => maquetteProjections(s, R, 'D') },
     ] },
     { id: 'visee', title: 'Visée d\'un obus', variants: [
       { title: 'Le carré du jeu', status: 'actuelle', note: 'Aujourd\'hui : le curseur en croix, puis un petit carré à l\'endroit visé pendant deux secondes. Rien ne dit le rayon de l\'obus. Les trois cercles de cette vue sont donc des carrés, un par calibre (75, 155, 220 mm).', render: s => maquetteVisee(s, R, 'A') },
-      { title: 'Un trait', depuis: '0.32.0', note: 'Un cercle plein d\'un trait d\'os (ombré de terre pour se lire sur l\'herbe comme sur la boue), du rayon du souffle de chaque calibre, un point au centre. Le plus sobre. Passez le pointeur sur le champ : un quatrième cercle le suit, du calibre choisi.', render: s => maquetteVisee(s, R, 'B') },
-      { title: 'Des tirets qui tournent', depuis: '0.32.0', note: 'Le même cercle en tirets, qui tournent doucement : on voit tout de suite que c\'est une visée, pas un tracé du terrain.', render: s => maquetteVisee(s, R, 'C') },
-      { title: 'Des cibles concentriques', depuis: '0.32.0', note: 'Le souffle en zone assombrie (un mélange de terre et de sol, hors palette comme les ombres), deux anneaux pointillés à deux tiers et à un tiers du rayon : plus on est près du centre, plus on tue. Dit l\'étendue ET la gravité.', render: s => maquetteVisee(s, R, 'D') },
-      { title: 'Des repères au bord', depuis: '0.32.0', note: 'Un cercle fin, quatre repères au bord (nord, est, sud, ouest) et le rayon écrit en mètres sous le cercle : on lit la taille sans comparer aux hommes.', render: s => maquetteVisee(s, R, 'E') },
+      { title: 'Un trait', depuis: '0.32.2', note: 'Un cercle plein d\'un trait d\'os (ombré de terre pour se lire sur l\'herbe comme sur la boue), du rayon du souffle de chaque calibre, un point au centre. Le plus sobre. Passez le pointeur sur le champ : un quatrième cercle le suit, du calibre choisi.', render: s => maquetteVisee(s, R, 'B') },
+      { title: 'Des tirets qui tournent', depuis: '0.32.2', note: 'Le même cercle en tirets, qui tournent doucement : on voit tout de suite que c\'est une visée, pas un tracé du terrain.', render: s => maquetteVisee(s, R, 'C') },
+      { title: 'Des cibles concentriques', depuis: '0.32.2', note: 'Le souffle en zone assombrie (un mélange de terre et de sol, hors palette comme les ombres), deux anneaux pointillés à deux tiers et à un tiers du rayon : plus on est près du centre, plus on tue. Dit l\'étendue ET la gravité.', render: s => maquetteVisee(s, R, 'D') },
+      { title: 'Des repères au bord', depuis: '0.32.2', note: 'Un cercle fin, quatre repères au bord (nord, est, sud, ouest) et le rayon écrit en mètres sous le cercle : on lit la taille sans comparer aux hommes.', render: s => maquetteVisee(s, R, 'E') },
     ] },
     { id: 'calibres', title: 'Calibres', variants: Object.entries(CALIBRES).map(([cal, C], k) => ({
       title: cal, note: `Motif ${C.motif.length} × ${C.motif.length}, ${C.salve} obus par barrage, rayon mortel ${C.rayon} m, recharge ${C.recharge} s.`,

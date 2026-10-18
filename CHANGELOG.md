@@ -1,5 +1,10 @@
 # Journal des versions
 
+## 0.32.2 — 2026-10-18
+- Les marqueurs de régiment sur la carte ont la couleur de leur armée (bleu pour nous, vert kaki en face) et un liseré sombre
+- Un clic sur la carte d'un régiment centre la caméra sur lui, avec un sonar qui se resserre autour de ses hommes
+- Au labo : la barre de vie (quatre propositions), le clic sur un régiment (quatre animations) et le bord de la carte (cinq propositions)
+
 ## 0.32.1 — 2026-10-18
 - Le terrain sous la souris tient sur une seule ligne ; sur une tranchée : « Tranchée B1 » puis sa ligne de vie, aux couleurs des deux armées (les hommes de chacune dans le tronçon)
 

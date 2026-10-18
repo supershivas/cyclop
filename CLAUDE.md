@@ -151,6 +151,9 @@ la danse macabre, la catastrophe peinte avec calme. L'intention est dans `DESIGN
   ligne de chaque régiment choisi au curseur, une croix au bout, glaise si l'ordre ne partirait pas ; `rendu.surligner` allume ce que l'ordre
   occuperait (les tronçons, ou une emprise par régiment en terrain libre, mêmes traits que le clignotement). `peutOrdonner` (bataille.js) est
   l'ordre à sec : `ordonnerMarche` et lui partent du même `planMarche`, rien n'est changé avant le clic. Le clic gauche valide (v0.21.2 : choisir puis ordonner ; le clic droit annule).
+- **Le clic sur une carte de régiment** (Jérôme, v0.32.2 ; sujet « Le clic sur un régiment » du labo, variante A retenue) : la caméra glisse jusqu'au centre des hommes du régiment en 0,6 s (`centrerSur`, `majCentrage` de main.js ; zoom et angle inchangés,
+  coupée par un déplacement à la main, instantanée si le système demande un mouvement réduit) et un sonar d'os (`#sonar`, deux anneaux CSS) se resserre autour de lui pendant 0,9 s ; la carte s'enfonce d'un cran (`.clic`, posée à la construction de la carte : la rangée est refaite à chaque
+  changement, l'animation ne rejoue pas). Pas au Maj-clic (ajouter à la sélection), pas au clic qui désélectionne, pas au clic sur un cercle de la carte. Le dessin seulement. Les pins de la carte (`.carte-ronde`) sont pleins de la couleur de leur armée (bleu, vert kaki), cerclés de terre : le choisi garde sa couleur et prend un anneau d'os.
 - **Le survol global** (Jérôme, v0.21.1) : le régiment sous la souris (un homme de près, le régiment de loin, des deux camps), ou sous une carte
   ou un cercle de la carte, s'allume avec tous ses hommes : les anneaux de la sélection, à la couleur de son camp (ceux des choisis restent
   d'os) ; sans régiment, le tronçon sous la souris, mêmes traits que le clignotement, sauf si la visée d'un ordre le montre déjà
@@ -314,7 +317,7 @@ nuit (le voile continu et ses halos mélangent la terre, le sol et l'os : des co
 
 **Rendu et cycle de vie**
 
-- `js/rendu3d.js` (513 lignes) — three.js, ce qui ne se découpe pas encore : la caméra en perspective (`PerspectiveCamera`, `projeter`, `borner` la garde sur le terrain : les
+- `js/rendu3d.js` (≈ 530 lignes ; l'option `bord` de `creerRendu`, v0.32.2 : `null` dans le jeu, le terrain coupé net sur le ciel de brume ; au labo « Le bord de la carte », `noir`, `brume`, `papier` (le sol se fond sur `fondu` mètres dans la couleur du fond, dans `solMat`), `faux`, `faux-noir` (un plan immense de plaques, `fauxMat`) ; rien de retenu : le labo attend le choix de Jérôme, les arbres des marges ne se fondent pas) — three.js, ce qui ne se découpe pas encore : la caméra en perspective (`PerspectiveCamera`, `projeter`, `borner` la garde sur le terrain : les
   quatre coins de l'écran posés sur le sol ; `deplacerEcran`, `tourner`, `placerCamera`), la palette (une texture 10 × 2 : la couleur et celle de la paroi), le sol (morceaux de
   25 × 25 cases, dessus fusionnés en rectangles de même hauteur, parois sud, est et ouest seulement ; une texture RVBA d'une couleur par case et de sa paroi, refaite par
   rangées changées ; le même relief à tous les zooms, Jérôme, v0.12.0 ; `surface` et `surfaceLisse`, la hauteur lue par tous les modules), `versTerrain` (un rayon jusqu'au sol) /

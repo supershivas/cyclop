@@ -2,6 +2,11 @@
 // Une entrée par version qui touche au labo, la plus récente en haut. `ref` : « sujet-Lettre » (la lettre est celle de la variante,
 // A étant l'actuelle). À chaque changement du labo : une entrée ici, avec `depuis` sur les variantes ajoutées ou changées (labo.js).
 export const JOURNAL = [
+  { version: '0.32.2', date: '2026-10-18', items: [
+    { genre: 'nouveau', texte: 'La barre de vie : quatre façons de dire les pertes comme un jeu de combat, une barre de chaque côté, sans chiffre (au survol d\'un segment), et la barre des tronçons tenus dessous', ref: 'barre-vie-B' },
+    { genre: 'nouveau', texte: 'Le clic sur un régiment : quatre animations ; le sonar est en jeu, avec la caméra qui glisse sur le régiment', ref: 'clic-regiment-A' },
+    { genre: 'nouveau', texte: 'Le bord de la carte : cinq façons d\'éviter le terrain coupé net (brouillard noir, brume, faux terrain, faux terrain dans la nuit, papier)', ref: 'bord-carte-B' },
+  ] },
   { version: '0.32.0', date: '2026-10-18', items: [
     { genre: 'nouveau', texte: 'Projections : un obus sur un régiment en marche ; les hommes du souffle sont jetés puis tués ou blessés, ceux de l\'anneau sont ralentis puis repartent ensemble (trois propositions)', ref: 'projections-B' },
     { genre: 'nouveau', texte: 'Visée d\'un obus : le cercle du souffle posé sur le champ, quatre types, pour les trois calibres', ref: 'visee-B' },
