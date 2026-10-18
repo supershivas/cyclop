@@ -3,20 +3,44 @@
 export const solMat = {
   v: `
       attribute float aParoi; attribute vec2 aDecal;
-      varying vec2 vUV;
+      varying vec2 vUV; varying vec2 vXZ;
       uniform vec2 uTaille;
       void main() {
         // une paroi prend la couleur de la case au-dessus d'elle (aDecal : vers elle), en plus sombre (la moitié basse de la texture)
         vec2 xz = position.xz + aDecal;
         vUV = vec2(xz.x / uTaille.x, (xz.y / uTaille.y + (aParoi > 0.5 ? 1.0 : 0.0)) * 0.5);
+        vXZ = xz;
         gl_Position = projectionMatrix * viewMatrix * vec4(position, 1.0);
       }`,
   f: `
-      uniform sampler2D uSol;
-      varying vec2 vUV;
+      uniform sampler2D uSol; uniform vec2 uTaille; uniform float uBord; uniform vec3 uBordCoul;
+      varying vec2 vUV; varying vec2 vXZ;
       void main() {
         vec4 c = texture2D(uSol, vUV);
-        gl_FragColor = vec4(c.rgb, 1.0);
+        vec3 rgb = c.rgb;
+        // le bord du terrain (v0.32.0, labo « Le bord de la carte ») : le sol se fond dans une couleur sur uBord mètres (0 : coupé net)
+        if (uBord > 0.0) {
+          float d = min(min(vXZ.x, uTaille.x - vXZ.x), min(vXZ.y, uTaille.y - vXZ.y));
+          rgb = mix(uBordCoul, rgb, smoothstep(0.0, uBord, d));
+        }
+        gl_FragColor = vec4(rgb, 1.0);
+      }`,
+};
+
+// Le faux terrain au-delà du bord : un plan immense, des plaques de la couleur du sol, qui se perd dans la brume
+export const fauxMat = {
+  v: `varying vec2 vXZ; void main() { vXZ = position.xz; gl_Position = projectionMatrix * viewMatrix * vec4(position, 1.0); }`,
+  f: `uniform vec3 uKaki, uVert, uGlaise, uBrume; uniform vec2 uCentre, uDemi; uniform float uPortee;
+      varying vec2 vXZ;
+      float h(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+      void main() {
+        vec3 c = uKaki;
+        float grand = h(floor(vXZ / 22.0)), petit = h(floor(vXZ / 2.0));
+        if (grand > 0.6) c = uVert; else if (grand < 0.1) c = uGlaise;
+        if (petit > 0.94) c = uGlaise;
+        vec2 q = max(abs(vXZ - uCentre) - uDemi, 0.0);
+        c = mix(c, uBrume, smoothstep(30.0, uPortee, length(q)));
+        gl_FragColor = vec4(c, 1.0);
       }`,
 };
 

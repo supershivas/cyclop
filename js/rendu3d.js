@@ -22,19 +22,19 @@
    - Les soldats : instanciés (une boîte et son ombre) ; au zoom 1 et 2, un
      point de 2 × 2 pixels (la couleur du camp sur son ombre).
    - Les corps : un homme couché (instancié) ; au zoom 1 et 2, un pixel. */
-import { loadThree } from './three-lib.js?v=0.32.2';
-import * as SH from './rendu/shaders.js?v=0.32.2';
-import { creerSoldats } from './rendu/soldats.js?v=0.32.2';
-import { creerMeteo } from './rendu/meteo.js?v=0.32.2';
-import { creerTroncons } from './rendu/troncons.js?v=0.32.2';
-import { creerVegetation } from './rendu/vegetation.js?v=0.32.2';
-import { creerTemps } from './rendu/temps.js?v=0.32.2';
-import { creerEclats } from './rendu/eclats.js?v=0.32.2';
-import { PALETTE, ORDRE, INDICE } from './palette.js?v=0.32.2';
-import { OMBRE, couleursLigne } from './apparence.js?v=0.32.2';
-import { MORCEAU, hauteurVueQ as hauteurQ, hauteurVueM as hauteurM } from './terrain.js?v=0.32.2';
-import { horloge } from './bataille.js?v=0.32.2';
-import { ligneY } from './tranchees.js?v=0.32.2';
+import { loadThree } from './three-lib.js?v=0.32.3';
+import * as SH from './rendu/shaders.js?v=0.32.3';
+import { creerSoldats } from './rendu/soldats.js?v=0.32.3';
+import { creerMeteo } from './rendu/meteo.js?v=0.32.3';
+import { creerTroncons } from './rendu/troncons.js?v=0.32.3';
+import { creerVegetation } from './rendu/vegetation.js?v=0.32.3';
+import { creerTemps } from './rendu/temps.js?v=0.32.3';
+import { creerEclats } from './rendu/eclats.js?v=0.32.3';
+import { PALETTE, ORDRE, INDICE } from './palette.js?v=0.32.3';
+import { OMBRE, couleursLigne } from './apparence.js?v=0.32.3';
+import { MORCEAU, hauteurVueQ as hauteurQ, hauteurVueM as hauteurM } from './terrain.js?v=0.32.3';
+import { horloge } from './bataille.js?v=0.32.3';
+import { ligneY } from './tranchees.js?v=0.32.3';
 
 export const CAMERA = { yaw: 0.15, tangage: 0.95, fov: 30 };   // au départ : tournée de 9°, plongée de 54°, angle de 30°
 // la caméra respire : un balancement très lent, 2° en 23 s (Jérôme, v0.3.1 : variante D du labo retenue)
@@ -54,7 +54,7 @@ const HAUT = 8;                               // m : marge du bas de l'écran, o
 const SOCLE = -8;                             // m : le bas de la coupe du terrain (bord sud)
 
 /* respiration : l'amplitude (rad) du lent balancement de la caméra (0 : immobile). */
-export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera: camDepart = null, respiration = RESPIRATION, soldat: styleSoldat = SOLDAT, cadavre = 'poses', effets = EFFETS } = {}) {
+export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera: camDepart = null, respiration = RESPIRATION, soldat: styleSoldat = SOLDAT, cadavre = 'poses', effets = EFFETS, bord = null } = {}) {
   // un mouvement réduit demandé par le système : la caméra ne bouge pas d'elle-même
   if (typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches) respiration = 0;
   const THREE = await loadThree();
@@ -99,8 +99,12 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
   const palTex = new THREE.DataTexture(palData, NP, 2, THREE.RGBAFormat, THREE.UnsignedByteType);
   palTex.magFilter = palTex.minFilter = THREE.NearestFilter; palTex.generateMipmaps = false; palTex.needsUpdate = true;
   const col = k => new THREE.Color(PALETTE[k]);
+  // Le bord du terrain (v0.32.0, labo « Le bord de la carte ») : coupé net sur le ciel de brume (null, le jeu), ou se fondant dans une couleur
+  // (`ciel` : la couleur du fond, `fondu` : mètres), ou prolongé par un faux terrain qui se perd dans la brume (`faux`)
+  const BORDS = { noir: { ciel: 't', fondu: 60 }, brume: { ciel: 'r', fondu: 100 }, papier: { ciel: 'o', fondu: 45 }, faux: { ciel: 'r', fondu: 0, faux: 1 }, 'faux-noir': { ciel: 't', fondu: 0, faux: 1, brume: 't' } };
+  const leBord = BORDS[bord] || null, cielCoul = () => col(leBord ? leBord.ciel : 'r');
 
-  let B = null, T = null;
+  let B = null, T = null, faux = null;
   // Le sol a le même relief à tous les zooms (Jérôme, v0.12.0) ; seuls les petits décors (arbres, buissons, herbe) s'effacent de loin
   const petit = () => ZOOMS[vue.zoom] <= POINTS_JUSQUA;
   let sol = null, solTex = null, solData = null, solIdx = null, solAttente = 0, morceaux = [], vuLigne = null, gelVu = null, coutRangees = 0;
@@ -109,7 +113,7 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
      texture par pixel (mesuré : la lecture de l'indice puis de la palette coûtait
      un tiers du rendu logiciel). */
   const solMat = new THREE.ShaderMaterial({
-    uniforms: { uSol: { value: null }, uTaille: { value: new THREE.Vector2(1, 1) } },
+    uniforms: { uSol: { value: null }, uTaille: { value: new THREE.Vector2(1, 1) }, uBord: { value: leBord ? leBord.fondu : 0 }, uBordCoul: { value: leBord ? col(leBord.ciel) : new THREE.Color(0) } },
     vertexShader: SH.solMat.v,
     fragmentShader: SH.solMat.f,
     side: THREE.DoubleSide,
@@ -254,6 +258,12 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
     troncons.preparer();
     eclats.reinitialiser();   // (une autre bataille : ses arbres ne brûlent pas encore)
     vue.cx = T.W / 2; vue.cz = T.H * 0.62;
+    if (leBord?.faux) {
+      if (faux) { scene.remove(faux); faux.geometry.dispose(); }
+      const u = { uKaki: { value: col('h') }, uVert: { value: col('v') }, uGlaise: { value: col('g') }, uBrume: { value: col(leBord.brume || 'r') }, uCentre: { value: new THREE.Vector2(T.W / 2, T.H / 2) }, uDemi: { value: new THREE.Vector2(T.W / 2, T.H / 2) }, uPortee: { value: 500 } };
+      faux = new THREE.Mesh(new THREE.PlaneGeometry(6000, 6000).rotateX(-Math.PI / 2).translate(T.W / 2, SOL_Y - 0.15, T.H / 2), new THREE.ShaderMaterial({ uniforms: u, vertexShader: SH.fauxMat.v, fragmentShader: SH.fauxMat.f }));
+      faux.frustumCulled = false; scene.add(faux);
+    }
   }
   // un morceau dépend aussi de ses voisins (les parois au sud, à l'est, à l'ouest) : leurs versions comptent
   function versionAutour(mx, my) {
@@ -457,11 +467,11 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
     cameraLibre(yaw, tangage) {
       vue.libre = true; vue.ciel = false;
       vue.cible.yaw = vue.yaw = yaw; vue.cible.tangage = vue.tangage = tangage;
-      renderer.setClearColor(new THREE.Color(PALETTE.r), 1);
+      renderer.setClearColor(cielCoul(), 1);
     },
     placerCamera(yaw, tangage) {
       // (la caméra du jeu est libre depuis la v0.28.0 : le ciel est de la couleur de la brume, comme à l'écran titre)
-      vue.libre = false; vue.ciel = true; renderer.setClearColor(new THREE.Color(PALETTE.r), 1);
+      vue.libre = false; vue.ciel = true; renderer.setClearColor(cielCoul(), 1);
       vue.cible.yaw = vue.yaw = yaw;
       vue.cible.tangage = vue.tangage = Math.max(TG_CIEL_MIN, Math.min(TG_CIEL_MAX, tangage));
     },

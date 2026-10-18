@@ -119,6 +119,16 @@
   font-size: var(--texte-petit); white-space: nowrap;
 }
 .etiquette.choisi { background: var(--jeu-encre); color: var(--jeu-fond); }
+/* Le clic sur une carte de régiment (Jérôme, v0.32.2 ; labo « Le clic sur un régiment ») : la caméra glisse sur lui, un sonar d'os se resserre autour de lui,
+   la carte s'enfonce d'un cran */
+.sonar { position: absolute; left: 0; top: 0; width: 0; height: 0; pointer-events: none; }
+.sonar[hidden] { display: none; }
+.sonar i { position: absolute; left: -90px; top: -90px; width: 180px; height: 180px; box-sizing: border-box; border: 2px solid var(--jeu-encre); border-radius: 50%; opacity: 0; animation: sonar .9s ease-in forwards; }
+.sonar i:nth-child(2) { animation-delay: .18s; }
+@keyframes sonar { 0% { transform: scale(1.6); opacity: 0; } 25% { opacity: 1; } 100% { transform: scale(.25); opacity: 0; } }
+.reg-carte.clic { animation: carte-clic .32s ease-out; }
+@keyframes carte-clic { 0% { transform: translateY(0); box-shadow: 3px 3px 0 var(--jeu-fond); } 35% { transform: translate(3px, 3px); box-shadow: 0 0 0 var(--jeu-fond); } 100% { transform: translateY(0); box-shadow: 3px 3px 0 var(--jeu-fond); } }
+@media (prefers-reduced-motion: reduce) { .sonar i, .reg-carte.clic { animation: none; } .sonar i { opacity: 1; transform: scale(.5); } }
 .repere {
   position: absolute; left: 0; top: 0; width: 13px; height: 13px;
   border: 2px solid var(--jeu-encre); pointer-events: none;
@@ -240,12 +250,13 @@ dialog form { margin-top: calc(var(--pas) * 2); }
 .terrain .vit b { display: block; height: 100%; background: var(--jeu-fond); }
 .carte-grille .trou { grid-column: 1 / -1; display: grid; place-items: center; font-size: var(--texte-petit); color: var(--jeu-accent); border-top: 1px dashed var(--jeu-accent); border-bottom: 1px dashed var(--jeu-accent); }
 .carte-regs { position: absolute; inset: 0; pointer-events: none; }
-.carte-ronde {
+.carte-grille .carte-ronde {
   position: absolute; box-sizing: border-box; width: 18px; height: 18px; min-width: 0; margin: -9px 0 0 -9px; padding: 0; min-height: 0; border-radius: 50%;
-  border: 2px solid var(--jeu-nous); background: var(--jeu-fond); color: var(--jeu-encre); font: inherit; font-size: var(--texte-petit); line-height: 14px; text-align: center; cursor: pointer;
+  border: 2px solid var(--jeu-fond); background: var(--jeu-nous); color: var(--jeu-fond); font: inherit; font-size: var(--texte-petit); line-height: 14px; text-align: center; cursor: pointer;
 }
-.carte-ronde.eux { border-color: var(--jeu-eux); }
-.carte-ronde.choisi { background: var(--jeu-encre); color: var(--jeu-fond); outline: 2px solid var(--jeu-fond); outline-offset: 1px; }
+/* la couleur de l'armée remplit le pin (v0.32.2 ; `.carte-grille button { border: 0 }` effaçait son liseré : d'où le sélecteur plus fort) : bleu pour nous, vert kaki en face ; le choisi garde sa couleur et prend un anneau d'os */
+.carte-grille .carte-ronde.eux { background: var(--jeu-eux); }
+.carte-grille .carte-ronde.choisi { outline: 2px solid var(--jeu-encre); outline-offset: 1px; }
 .carte-ronde[hidden] { display: none; }
 
 /* Nos régiments (Jérôme, v0.20.0) : une rangée de cartes compactes en papier de campagne ; la carte choisie s'ouvre vers le haut */

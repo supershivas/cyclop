@@ -1,35 +1,35 @@
 // Le cycle de vie : écran titre → bataille → nuit → fin ; pause active,
 // réglages, sauvegarde, mise à jour, debug. Les règles sont dans bataille.js
 // (pures), le dessin dans rendu3d.js (il ne modifie jamais l'état).
-import { createLoop } from './lib/loop.js?v=0.32.2';
-import { createKeys, stopTypeahead } from './lib/keys.js?v=0.32.2';
-import { createPointer, lockBrowserGestures } from './lib/pointer.js?v=0.32.2';
-import { createGamepad } from './lib/gamepad.js?v=0.32.2';
-import { createStore, autosave, pickJSONFile } from './lib/save.js?v=0.32.2';
-import { startUpdateCheck, loadVersion, loadChangelog, downloadJSON } from './lib/app-update.js?v=0.32.2';
-import { ROLES } from './palette.js?v=0.32.2';
-import { MISSIONS, EUX, nouvelleBataille, etapesRestaurer, avancer, aube, ordonnerMarche, peutOrdonner, ordonnerBarrage, peutBarrage, horloge, effectifs, tronconsTenus, moralEnMots, terrainResume, forcesTroncons, largeurZone, lettreZone, etendueZones, nomTroncon, actionDe, secteursDe, tronconsDeLigne, zone, photo, restaurer, PAS, NOUS } from './bataille.js?v=0.32.2';
-import { ligneY } from './tranchees.js?v=0.32.2';
-import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.32.2';
-import { METEO } from './data/meteo.js?v=0.32.2';
-import { impact, hydroLignes } from './terrain.js?v=0.32.2';
-import { hash2 } from './lib/rng.js?v=0.32.2';
-import { creerRendu, CAMERA } from './rendu3d.js?v=0.32.2';
-import { etatEnMots, experienceEnMots, chevrons } from './identite.js?v=0.32.2';
-import { CORVEES } from './data/corvees.js?v=0.32.2';
-import { refusCorvee } from './nuit.js?v=0.32.2';
-import { chargerContenu } from './design-store.js?v=0.32.2';
-import * as lecture from './hud/lecture.js?v=0.32.2';
-import { creerFiche } from './hud/fiche.js?v=0.32.2';
-import { creerNuit, corveeDe, corveeCourte } from './hud/nuit.js?v=0.32.2';
-import { creerCarnet, deux } from './hud/carnet.js?v=0.32.2';
-import { creerCarte } from './hud/carte.js?v=0.32.2';
-import { creerPertes } from './hud/pertes.js?v=0.32.2';
-import { creerBarreTemps } from './hud/temps.js?v=0.32.2';
-import { creerChargement } from './hud/chargement.js?v=0.32.2';
-import { SECTEURS } from './data/secteur.js?v=0.32.2';
-import { creerLockstep, empreinteEtat } from './reseau/lockstep.js?v=0.32.2';
-import { creerHote, creerInvite } from './reseau/lien.js?v=0.32.2';
+import { createLoop } from './lib/loop.js?v=0.32.3';
+import { createKeys, stopTypeahead } from './lib/keys.js?v=0.32.3';
+import { createPointer, lockBrowserGestures } from './lib/pointer.js?v=0.32.3';
+import { createGamepad } from './lib/gamepad.js?v=0.32.3';
+import { createStore, autosave, pickJSONFile } from './lib/save.js?v=0.32.3';
+import { startUpdateCheck, loadVersion, loadChangelog, downloadJSON } from './lib/app-update.js?v=0.32.3';
+import { ROLES } from './palette.js?v=0.32.3';
+import { MISSIONS, EUX, nouvelleBataille, etapesRestaurer, avancer, aube, ordonnerMarche, peutOrdonner, ordonnerBarrage, peutBarrage, horloge, effectifs, tronconsTenus, moralEnMots, terrainResume, forcesTroncons, largeurZone, lettreZone, etendueZones, nomTroncon, actionDe, secteursDe, tronconsDeLigne, zone, photo, restaurer, PAS, NOUS } from './bataille.js?v=0.32.3';
+import { ligneY } from './tranchees.js?v=0.32.3';
+import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.32.3';
+import { METEO } from './data/meteo.js?v=0.32.3';
+import { impact, hydroLignes } from './terrain.js?v=0.32.3';
+import { hash2 } from './lib/rng.js?v=0.32.3';
+import { creerRendu, CAMERA } from './rendu3d.js?v=0.32.3';
+import { etatEnMots, experienceEnMots, chevrons } from './identite.js?v=0.32.3';
+import { CORVEES } from './data/corvees.js?v=0.32.3';
+import { refusCorvee } from './nuit.js?v=0.32.3';
+import { chargerContenu } from './design-store.js?v=0.32.3';
+import * as lecture from './hud/lecture.js?v=0.32.3';
+import { creerFiche } from './hud/fiche.js?v=0.32.3';
+import { creerNuit, corveeDe, corveeCourte } from './hud/nuit.js?v=0.32.3';
+import { creerCarnet, deux } from './hud/carnet.js?v=0.32.3';
+import { creerCarte } from './hud/carte.js?v=0.32.3';
+import { creerPertes } from './hud/pertes.js?v=0.32.3';
+import { creerBarreTemps } from './hud/temps.js?v=0.32.3';
+import { creerChargement } from './hud/chargement.js?v=0.32.3';
+import { SECTEURS } from './data/secteur.js?v=0.32.3';
+import { creerLockstep, empreinteEtat } from './reseau/lockstep.js?v=0.32.3';
+import { creerHote, creerInvite } from './reseau/lien.js?v=0.32.3';
 
 const JEU = 'cyclopeen';
 const $ = id => document.getElementById(id);
@@ -460,7 +460,7 @@ const ordreEnMots = r => nuit.etat === 'choix' && nuit.corvees[r.id] ? `cette nu
 // Nos régiments (Jérôme, v0.20.0 ; docs/ui-cible.md) : une rangée de cartes compactes (numéro et nom, chevrons d'expérience, la barre
 // debout / blessés / tombés : plein, hachuré, vide) ; la carte choisie s'ouvre vers le haut (l'ordre en mots, les actions) sans pousser
 // les autres. Plusieurs régiments choisis : s'ouvre celui qu'on a choisi en dernier. Trop étroit : des flèches font défiler la rangée.
-let regimentsVus = '', regDebut = 0, regActifVu = -1;
+let regimentsVus = '', regDebut = 0, regActifVu = -1, clicCarte = -1;
 const CARTE_L = 112, CARTE_ECART = 8;
 const CHEVRON = '<svg class="chev" viewBox="0 0 12 8" aria-hidden="true"><path d="M1 7l5-5 5 5"/></svg>';
 function majRegiments() {
@@ -481,7 +481,7 @@ function majRegiments() {
   const cartes = regs.slice(regDebut, regDebut + visibles).map(r => {
     const bles = bl[r.id], debout = Math.max(0, r.effectif - bles), nb = chevrons(ex[r.id] / Math.max(1, vivants[r.id])), humeur = moralEnMots(r, R);
     const b = document.createElement('button');
-    b.className = `reg-carte${choisis.has(r.id) ? ' choisi' : ''}`; b.dataset.id = r.id;
+    b.className = `reg-carte${choisis.has(r.id) ? ' choisi' : ''}${r.id === clicCarte ? ' clic' : ''}`; b.dataset.id = r.id;
     b.setAttribute('aria-pressed', String(choisis.has(r.id)));
     b.setAttribute('aria-label', `${numeroDe(r)} · ${r.nom} : ${debout} debout, ${bles} blessés, ${r.pertes} tombés, ${'chevron '.repeat(nb).trim() || 'aucun chevron'}${humeur.startsWith('tient') ? '' : `, ${humeur}`}`);
     b.innerHTML = `<span class="l1"><b>${numeroDe(r)}</b> ${r.nom}${humeur.startsWith('tient') ? '' : '<i class="alerte" aria-hidden="true">!</i>'}</span>
@@ -515,7 +515,7 @@ $('reg-rang').onclick = e => {
   const id = +c.dataset.id;
   if (e.shiftKey) choisirRegiment(id, true);
   else if (choisis.size === 1 && choisis.has(id)) { choisis = new Set(); rendu.choisis = choisis; modeMarche = false; majHud(); }
-  else choisirRegiment(id, false);
+  else { clicCarte = id; choisirRegiment(id, false); clicCarte = -1; centrerSur(id); }
   c.blur();
 };
 $('reg-ouvert').onclick = e => {
@@ -651,6 +651,38 @@ function viser(cal) {
   majHud();
 }
 
+// Le clic sur la carte d'un régiment (Jérôme, v0.32.2 ; labo « Le clic sur un régiment », A) : la caméra glisse jusqu'à lui (0,6 s, zoom et angle
+// inchangés), un sonar d'os se resserre autour de lui. Le dessin seulement ; un déplacement de la vue à la main coupe le glissement.
+let centrage = null, sonar = null;
+const mouvementReduit = matchMedia('(prefers-reduced-motion: reduce)').matches;
+function centreDe(id) {
+  const A = B.armee; let x = 0, y = 0, n = 0;
+  for (let i = 0; i < A.n; i++) if (A.reg[i] === id) { x += A.x[i]; y += A.y[i]; n++; }
+  return n ? { x: x / n, y: y / n } : null;
+}
+function centrerSur(id) {
+  const c = centreDe(id);
+  if (!c) return;
+  centrage = { x0: rendu.vue.cx, z0: rendu.vue.cz, x1: c.x, z1: c.y, t: mouvementReduit ? 1 : 0 };
+  sonar = { id, t: 0 };
+  const s = $('sonar'); s.hidden = false; s.replaceChildren(...[0, 1].map(() => document.createElement('i')));
+}
+function majCentrage(dt) {
+  if (centrage) {
+    centrage.t = Math.min(1, centrage.t + dt / 0.6);
+    const k = 1 - (1 - centrage.t) ** 3;           // ralentit en arrivant
+    rendu.vue.cx = centrage.x0 + (centrage.x1 - centrage.x0) * k; rendu.vue.cz = centrage.z0 + (centrage.z1 - centrage.z0) * k;
+    rendu.deplacer(0, 0);
+    if (centrage.t >= 1) centrage = null;
+  }
+  if (sonar) {
+    const c = centreDe(sonar.id), s = $('sonar');
+    if (!c || (sonar.t += dt) > 1.2) { s.hidden = true; sonar = null; return; }
+    const [sx, sy] = rendu.versEcran(c.x, c.y);
+    s.style.transform = `translate(${Math.round(sx)}px, ${Math.round(sy)}px)`;
+  }
+}
+
 // Les noms de nos régiments, au-dessus d'eux
 const etiq = new Map();
 function etiquettes() {
@@ -711,7 +743,7 @@ function viseeObus(x, y, r) {
 // La visée (v0.21.0) : de chaque régiment choisi au curseur une ligne, une croix au bout ; l'ordre à sec (`peutOrdonner`) dit ce qu'il occuperait
 function majVisee() {
   const svg = $('visee');
-  // Le barrage qu'on vise : le cercle du souffle du calibre, posé sur le sol (Jérôme, v0.32.2 : la variante D, « cibles concentriques », du sujet « Visée d'un obus » du labo)
+  // Le barrage qu'on vise : le cercle du souffle du calibre, posé sur le sol (Jérôme, v0.32.3 : la variante D, « cibles concentriques », du sujet « Visée d'un obus » du labo)
   if (modeBarrage && enJeu() && B.etat.phase === 'jour' && !nuit.etat && souris && !glisse && !document.querySelector('dialog[open]')) {
     const [x, y] = rendu.versTerrain(souris.x, souris.y);
     rendu.surligner(null); svg.classList.remove('refus');
@@ -901,7 +933,7 @@ createPointer($('canvas'), {
     }
     majHud();
   },
-  onDragStart: p => { glisse = { bouton: p.button, x0: p.startX, y0: p.startY, cx: rendu.vue.cx, cz: rendu.vue.cz, ddx: p.dx, ddy: p.dy }; },
+  onDragStart: p => { centrage = null; glisse = { bouton: p.button, x0: p.startX, y0: p.startY, cx: rendu.vue.cx, cz: rendu.vue.cz, ddx: p.dx, ddy: p.dy }; },
   onDrag: p => {
     if (!glisse) return;
     if (glisse.bouton === 1 && p.event.shiftKey) {
@@ -969,6 +1001,7 @@ const loop = createLoop({
     if (enJeu() && !document.querySelector('dialog[open]')) {
       const k = keys.axis(), m = pad.axis();
       const ax = k.x || m.x, ay = k.y || m.y;
+      if (ax || ay) centrage = null;
       if (ax || ay) rendu.deplacerEcran(ax * dt * 260 / rendu.ppm, ay * dt * 260 / rendu.ppm);
       // tourner : A et E (Q et E en QWERTY), incliner : R et F — touches physiques, lues en continu
       const tour = (keys.held('KeyE') ? 1 : 0) - (keys.held('KeyQ') ? 1 : 0), incl = (keys.held('KeyF') ? 1 : 0) - (keys.held('KeyR') ? 1 : 0);
@@ -979,6 +1012,7 @@ const loop = createLoop({
       }
     }
     if (marque) marque.t -= dt;
+    majCentrage(dt);
     rendu.dessiner(dt, evenements.splice(0));
     majEtiquettes();
     majVisee();
@@ -1016,7 +1050,7 @@ startUpdateCheck({
 
 // ─── Mode debug (section 18) : chargé seulement avec ?debug=1 ──────────────
 if (DEBUG) {
-  const { installDebug, seedFromUrl } = await import('./lib/debug.js?v=0.32.2');
+  const { installDebug, seedFromUrl } = await import('./lib/debug.js?v=0.32.3');
   window.__seed = seedFromUrl() ?? undefined;
   installDebug({
     state: () => B && { ...horloge(B), effectifs: effectifs(B), pertes: B.etat.pertes, impacts: B.etat.impacts.length, enJeu: enJeu(), pause: loop.paused },
