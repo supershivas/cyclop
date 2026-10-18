@@ -1,10 +1,10 @@
 // Le papier de la nuit (Jérôme, v0.13.0) : un état (choix des corvées, puis le bilan de l'aube), jamais une boîte de
 // dialogue : le champ reste là, on choisit des régiments (clic, cadre, T) et on leur donne une corvée, dite sur leur carte.
-import { NOUS, aube } from '../bataille.js?v=0.34.4';
-import { METEO } from '../data/meteo.js?v=0.34.4';
-import { CORVEES } from '../data/corvees.js?v=0.34.4';
-import { refusCorvee } from '../nuit.js?v=0.34.4';
-import { pluriel } from './lecture.js?v=0.34.4';
+import { NOUS, aube } from '../bataille.js?v=0.34.5';
+import { METEO } from '../data/meteo.js?v=0.34.5';
+import { CORVEES } from '../data/corvees.js?v=0.34.5';
+import { refusCorvee } from '../nuit.js?v=0.34.5';
+import { pluriel } from './lecture.js?v=0.34.5';
 
 export const corveeDe = id => CORVEES.find(c => c.id === id)?.nom || '';
 export const corveeCourte = id => CORVEES.find(c => c.id === id)?.court || '';
@@ -19,11 +19,9 @@ function enLignes([pris, perdus]) {
 function bilanEnMots(B, b) {
   const pl = (n, un, des) => `${n} ${n > 1 ? des : un}`;
   const faits = [
-    b.inhumes && `${pl(b.inhumes, 'mort inhumé', 'morts inhumés')}`,
     b.evacues && `${pl(b.evacues, 'blessé évacué', 'blessés évacués')}`,
     b.retours && `${pl(b.retours, 'blessé guéri revenu', 'blessés guéris revenus')} au front`,
     b.repares && `${pl(b.repares, 'tronçon réparé', 'tronçons réparés')}`,
-    b.caillebotis && `des caillebotis dans ${pl(b.caillebotis, 'tronçon', 'tronçons')}`,
     b.releves && `${pl(b.releves, 'régiment relevé', 'régiments relevés')}`,
     b.abris && `des abris creusés sous ${pl(b.abris, 'tronçon', 'tronçons')}`,
     b.ravitailles && `${pl(b.ravitailles, 'régiment ravitaillé', 'régiments ravitaillés')}`,

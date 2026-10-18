@@ -4,8 +4,6 @@
 export const CORVEES = [
   { id: 'repos', court: 'Repos', nom: 'Repos', dit: 'la fatigue et la peur tombent, le moral remonte un peu plus' },
   { id: 'reparer', court: 'Réparer', nom: 'Réparer la tranchée', dit: 'les tronçons que les obus ont comblés sont recreusés', tranchee: true },
-  { id: 'caillebotis', court: 'Caillebotis', nom: 'Poser des caillebotis', dit: 'dans sa tranchée, la boue ne retient plus', tranchee: true },
-  { id: 'inhumer', court: 'Inhumer', nom: 'Inhumer les morts', dit: 'les corps autour de lui ; dangereux au-delà de nos lignes' },
   { id: 'evacuer', court: 'Évacuer', nom: 'Évacuer les blessés', dit: 'ils quittent le front, vivants ; un blessé laissé peut mourir dans la nuit' },
   { id: 'abri', court: 'Abris', nom: 'Creuser des abris', dit: 'sous sa tranchée, à six mètres : les obus y tuent moins (trois nuits pour les finir ; un 220 les crève)', tranchee: true },
   { id: 'ravitailler', court: 'Vivres', nom: 'Ravitailler', dit: 'la soupe et le pain montent par les boyaux : des vivres pour trois nuits' },

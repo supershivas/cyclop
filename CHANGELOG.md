@@ -1,5 +1,8 @@
 # Journal des versions
 
+## 0.34.5 — 2026-10-18
+- Plus d'inhumer ni de caillebotis parmi les corvées de la nuit, et les morts ne pèsent plus sur le moral
+
 ## 0.34.4 — 2026-10-18
 - Plus de saccade toutes les trois secondes en pleine bataille : les régiments ne recalculent plus leur chemin tous ensemble
 

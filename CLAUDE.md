@@ -122,12 +122,12 @@ la danse macabre, la catastrophe peinte avec calme. L'intention est dans `DESIGN
 - **Chez l'ennemi, ni évacuer ni ravitailler** (Jérôme, v0.22.0) : un régiment dont la tranchée d'ordre est une ligne de l'autre camp
   (`chezLEnnemi` de nuit.js) a 130 m à découvert entre lui et ses boyaux : `refusCorvee` refuse « évacuer » et « ravitailler » (« Chez l'ennemi,
   la soupe ne passe pas : … »), sauf si la tranchée est toute à lui (`etat.troncons`) et qu'aucun régiment de l'autre camp n'est à moins de
-  `nuit.calme` (60 m). Réparer, caillebotis, abris, inhumer, coup de main, relève restent possibles ; la règle vaut aussi pour en face
+  `nuit.calme` (60 m). Réparer, abris, coup de main, relève restent possibles ; la règle vaut aussi pour en face
   (`choixEnFace` retombe au repos). Un grisé par corvée au-dessus de la carte dit pourquoi au clic.
 - **La nuit et ses corvées** (Jérôme, v0.6.0) : une corvée par régiment (repos,
-  réparer, caillebotis, inhumer, évacuer) ; puis (Jérôme, v0.11.0) les abris profonds
+  réparer, évacuer ; Jérôme, v0.34.5 : inhumer et caillebotis retirés, voir « Ce qui a été retiré ») ; puis (Jérôme, v0.11.0) les abris profonds
   (`etat.abris`), les vivres (`reg.vivres`), le coup de main (`etat.prisonniers`) et
-  les tombes dessinées (`etat.tombes`) ; voir `DESIGN.md`.
+  voir `DESIGN.md` (les tombes dessinées, `etat.tombes`, ne viennent plus que des parties d'avant la v0.34.5).
 - **Le moral et l'expérience** (Jérôme, v0.5.0) : un moral par régiment (`moral`,
   `deroute` dans l'état), l'expérience de chaque homme (`exp` dans la foule), les
   promotions (`etat.grades`) ; puis (Jérôme, v0.11.0) la contagion de la déroute, le
@@ -281,7 +281,7 @@ nuit (le voile continu et ses halos mélangent la terre, le sol et l'os : des co
   ligne), `ligneSous`. Les données sont dans `secteur.js` (`tranchees`).
 - `js/nuit.js` — les corvées de la nuit (`corvees`, appelée par `aube(B, choix)`) :
   `tronconsDe` (la tranchée d'un régiment), `refusCorvee`, `travail` (réparer,
-  caillebotis : `T.caille`), `choixEnFace`, `rejouerTravaux`. Les textes sont dans
+  `T.caille` n'est plus posé que par le rejeu d'une partie d'avant la v0.34.5), `choixEnFace`, `rejouerTravaux`. Les textes sont dans
   `data/corvees.js`, les nombres dans `reglages.js` (`nuit`). L'état garde
   `travaux`, `tombes`, `evacues`, `nuits`, `abris` ({ tronçon : niveau } ; lu par
   `abriDe` de bataille.js dans `tuerDans`), `prisonniers` ; chaque régiment, ses
@@ -400,6 +400,7 @@ node outils/stamp-version.mjs            # après chaque changement de version.j
 |---|---|---|
 | Ombrage du sol en damier selon la pente | 0.1.0 (avant livraison) | du bruit partout : chaque bosse se lisait comme un cratère |
 | Le sol plat des zooms 1 et 2, les facettes de 5 m au loin | 0.12.0 | Jérôme veut la même résolution du terrain à tous les zooms ; coût : tout dézoomé, 8 000 soldats, rendu logiciel, 49 → 88 ms (12 800 → 88 000 triangles) ; zooms 4 et 8 inchangés |
+| Corvées « inhumer » et « caillebotis » | 0.34.5 | Jérôme : inutiles. Inhumer ne servait qu'à ôter le poids des corps sur le moral (`moralCorps`, retiré avec elle : les morts ne pèsent plus) et à poser des tombes ; les caillebotis, un état sans usure, plus rien à choisir une fois posés. Restent : `SORTES`, `travail('caillebotis')`, `T.caille`, `etat.tombes` et leur dessin, pour relire une partie d'avant (test « une partie d'avant la v0.34.5 ») |
 | Sol à facettes, soldats en sprites (labo) | 0.1.1 → 0.2.0 | non retenus par Jérôme ; facettes : +30 % de triangles sur un champ labouré, trame bruyante (`docs/archives/sol-facettes-et-soldats-sprites.md`) |
 
 ## Pièges connus
