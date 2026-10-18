@@ -9,8 +9,8 @@
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta property="og:image" content="og.png">
-<link rel="stylesheet" href="js/lib/game.css?v=0.29.0">
-<link rel="stylesheet" href="css/style.css?v=0.29.0">
+<link rel="stylesheet" href="js/lib/game.css?v=0.30.0">
+<link rel="stylesheet" href="css/style.css?v=0.30.0">
 </head>
 <body>
 <!-- La barre de chargement (v0.28.0) : là avant tout script ; main.js la remplit, puis la retire -->
@@ -42,6 +42,12 @@
           <button class="icone plaque" id="hud-reglages" aria-label="Réglages">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10.3 4.3c.4-1.8 2.9-1.8 3.4 0a1.7 1.7 0 0 0 2.6 1.1c1.5-.9 3.3.8 2.4 2.4a1.7 1.7 0 0 0 1 2.5c1.8.5 1.8 3 0 3.4a1.7 1.7 0 0 0-1 2.6c.9 1.5-.9 3.3-2.4 2.4a1.7 1.7 0 0 0-2.6 1c-.5 1.8-3 1.8-3.4 0a1.7 1.7 0 0 0-2.5-1c-1.6.9-3.3-.9-2.4-2.4a1.7 1.7 0 0 0-1.1-2.6c-1.8-.4-1.8-2.9 0-3.4a1.7 1.7 0 0 0 1.1-2.5c-.9-1.6.8-3.3 2.4-2.4 1 .6 2.3.1 2.5-1.1z"/><circle cx="12" cy="12" r="3"/></svg>
           </button>
+          <div class="papier temps" id="temps" role="group" aria-label="Le temps">
+            <button id="temps-pause" aria-label="Arrêter le temps (Espace)" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14M16 5v14"/></svg></button>
+            <button data-vitesse="1" aria-label="Vitesse normale">×1</button>
+            <button data-vitesse="2" aria-label="Deux fois plus vite">×2</button>
+            <button data-vitesse="4" aria-label="Quatre fois plus vite">×4</button>
+          </div>
         </div>
         <div class="papier carnet" id="carnet" hidden>
           <p class="entete">Carnet de bord</p>
@@ -77,35 +83,23 @@
         <section class="papier pertes" id="pertes" aria-label="Les pertes des deux armées">
           <div class="armee" id="pertes-nous"></div>
           <div class="armee eux" id="pertes-eux"></div>
-          <p class="discret lignes" id="lignes" hidden>Tronçons tenus : <span id="troncons-nous">0</span> · <span id="troncons-eux">0</span></p>
         </section>
       </div>
-      <!-- En haut à droite : la carte, le temps, la montre et la météo, le terrain sous la souris -->
+      <!-- En haut à droite : la carte (repliable), le billet (heure, météo, mission, terrain sous la souris) -->
       <div class="haut-droite">
         <section class="papier carte" id="carte" aria-label="Carte du secteur" hidden>
-          <p class="entete">Le secteur · <span class="discret">en face au nord</span></p>
+          <button class="entete" id="carte-bascule" aria-expanded="true" aria-label="Replier la carte du secteur">Le secteur · <span class="discret">en face au nord</span><i aria-hidden="true"></i></button>
           <div class="carte-grille" id="carte-grille"></div>
         </section>
-        <div class="papier temps" id="temps" role="group" aria-label="Le temps">
-          <button id="temps-pause" aria-label="Arrêter le temps (Espace)" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14M16 5v14"/></svg></button>
-          <button data-vitesse="1" aria-label="Vitesse normale">×1</button>
-          <button data-vitesse="2" aria-label="Deux fois plus vite">×2</button>
-          <button data-vitesse="4" aria-label="Quatre fois plus vite">×4</button>
-        </div>
         <div class="montre-bloc">
-          <svg class="montre" viewBox="0 0 64 64" aria-hidden="true">
-            <circle cx="32" cy="32" r="29"/>
-            <path d="M32 6v4M58 32h-4M32 58v-4M6 32h4M45 9.5l-2 3.5M54.5 19l-3.5 2M54.5 45l-3.5-2M45 54.5l-2-3.5M19 54.5l2-3.5M9.5 45l3.5-2M9.5 19l3.5 2M19 9.5l2 3.5"/>
-            <line id="montre-m" x1="32" y1="32" x2="32" y2="14"/><line id="montre-h" class="gros" x1="32" y1="32" x2="32" y2="21"/>
-          </svg>
           <div class="papier">
             <p id="horloge">Jour 1</p>
             <p class="discret" id="demain"></p>
             <p class="discret" id="mission" hidden></p>
+            <div class="terrain" id="terrain" hidden aria-live="off"></div>
           </div>
           <button class="icone papier" id="meteo" aria-label="Le temps qu'il fait et les prévisions"><svg id="meteo-icone" viewBox="0 0 24 24" aria-hidden="true"></svg></button>
         </div>
-        <div class="papier terrain" id="terrain" hidden aria-live="off"></div>
       </div>
     </div>
     <div class="hud-bas">
@@ -222,6 +216,6 @@
 </dialog>
 
 <div class="jeu-toast" id="toast" role="status" hidden></div>
-<script type="module" src="js/main.js?v=0.29.0"></script>
+<script type="module" src="js/main.js?v=0.30.0"></script>
 </body>
 </html>

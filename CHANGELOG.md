@@ -1,5 +1,9 @@
 # Journal des versions
 
+## 0.30.0 — 2026-10-18
+- Le champ gagne de la place sur un petit écran : le temps (pause, ×1, ×2, ×4) passe à côté des réglages, les pertes tiennent sur une ligne par camp, la montre dessinée est retirée, la carte se replie d'un clic
+- Le terrain sous la souris est une ligne du billet en haut à droite ; les batteries montrent leur obus, leur calibre et une jauge de recharge
+
 ## 0.29.0 — 2026-10-18
 - Trois secteurs à choisir en début de partie (touches 1, 2, 3) : Les labours, La crête (une crête de 7 m que l'ennemi tient : il faut la monter), Le marais (un fond plat où la nappe affleure, quatre jours de pluie au moins)
 - Les tranchées serpentent : un tracé irrégulier, une largeur qui varie, des boyaux sinueux, plus de créneaux en carré (une partie déjà commencée garde ses hommes mais retrouve ses tranchées au nouveau tracé)

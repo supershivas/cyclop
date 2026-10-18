@@ -59,7 +59,7 @@ la danse macabre, la catastrophe peinte avec calme. L'intention est dans `DESIGN
   seconde, seulement ce qu'on voit. Les fusées (variante D) et le tout ensemble (E) n'ont pas été retenus.
 - **Des papiers de campagne** (Jérôme, v0.10.0 ; variantes C et D du sujet « Plaques et journal » du labo) : le HUD est
   fait de ce qu'un officier a sur lui, pas de plaques toutes pareilles. `.papier` (l'os, l'encre de terre, une ombre d'un
-  cran) : la montre de gousset et son billet (heure, météo, mission), une rangée de cartes de régiment (v0.20.0 ;
+  cran) : le billet de la montre (heure, météo, mission, terrain sous la souris ; la montre dessinée est retirée en v0.30.0 : l'heure est dans le texte), une rangée de cartes de régiment (v0.20.0 ;
   `majRegiments` de main.js : numéro et nom, chevrons d'expérience, barre debout / blessés / tombés ; la carte choisie s'ouvre vers le haut :
   l'ordre en mots, un tampon si le moral baisse, « Marcher » (le prochain clic sur le sol), « Regagner sa tranchée », « Fiche » ; v0.23.0 : quatre formes pour le prochain ordre en terrain libre, bloc / ligne / par deux / colonne, `foule.formes`, `ordre.forme`, `formation` de bataille.js ; sur une tranchée, le tracé décide), un râtelier d'obus (debout : prêt ; couché : se recharge), des croix au crayon pour les morts (douze, puis un nombre),
   la fiche en papier, et le **carnet de bord** (`noter`, `raconter` : tronçon pris ou perdu, l'autre camp entré chez nous
@@ -155,6 +155,7 @@ la danse macabre, la catastrophe peinte avec calme. L'intention est dans `DESIGN
   ou un cercle de la carte, s'allume avec tous ses hommes : les anneaux de la sélection, à la couleur de son camp (ceux des choisis restent
   d'os) ; sans régiment, le tronçon sous la souris, mêmes traits que le clignotement, sauf si la visée d'un ordre le montre déjà
   (`appliquerSurvol` de main.js, `rendu.survoler`). Le dessin seulement.
+- **Le haut de l'écran allégé** (Jérôme, v0.30.0 : sur un 13 pouces, le champ était trop petit) : le temps (arrêter, ×1, ×2, ×4) est à côté des réglages, en petit ; les pertes tiennent sur une ligne par camp (nom, barre, debout · blessés · tombés, croix, tronçons tenus) ; la carte se replie sur son en-tête (`#carte-bascule`, `prefs.carte`) ; le terrain sous la souris est la dernière ligne du billet (elle garde sa place : le billet ne saute pas) ; les batteries : l'obus debout, le calibre, une jauge de recharge. Non fait : décaler le point visé vers le milieu de la zone libre (le haut et le bas pèsent maintenant à peu près autant : gain de quelques pixels, qui demanderait de réécrire `test/rendu.json`).
 - **Le haut de l'écran** (Jérôme, v0.19.0 ; `docs/ui-cible.md`) : à gauche le menu, les réglages et le carnet de bord (la fiche s'ouvre dessous, v0.26.0) ; au centre les pertes des deux armées (`majPertes`, en feuille de situation), que le papier de la nuit remplace la nuit (v0.26.0, Jérôme : `.haut-centre:has(.nuit:not([hidden]))`) ;
   à droite la carte, le temps (arrêter, ×1, ×2, ×4 : `setTimeScale` plafonné par `perf.sim` sous ~20 ms, un assaut / une prise / une
   déroute ramène à ×1 ; la partie est la même, seul le nombre de pas par image change), la montre, la météo (clic : aujourd'hui et la

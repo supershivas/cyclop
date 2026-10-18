@@ -1,32 +1,32 @@
 // Le cycle de vie : écran titre → bataille → nuit → fin ; pause active,
 // réglages, sauvegarde, mise à jour, debug. Les règles sont dans bataille.js
 // (pures), le dessin dans rendu3d.js (il ne modifie jamais l'état).
-import { createLoop } from './lib/loop.js?v=0.29.0';
-import { createKeys, stopTypeahead } from './lib/keys.js?v=0.29.0';
-import { createPointer, lockBrowserGestures } from './lib/pointer.js?v=0.29.0';
-import { createGamepad } from './lib/gamepad.js?v=0.29.0';
-import { createStore, autosave, pickJSONFile } from './lib/save.js?v=0.29.0';
-import { startUpdateCheck, loadVersion, loadChangelog, downloadJSON } from './lib/app-update.js?v=0.29.0';
-import { ROLES } from './palette.js?v=0.29.0';
-import { MISSIONS, nouvelleBataille, etapesRestaurer, avancer, aube, ordonnerMarche, peutOrdonner, ordonnerBarrage, horloge, effectifs, tronconsTenus, moralEnMots, terrainResume, largeurZone, lettreZone, etendueZones, nomTroncon, actionDe, secteursDe, tronconsDeLigne, zone, photo, restaurer, PAS, NOUS } from './bataille.js?v=0.29.0';
-import { ligneY } from './tranchees.js?v=0.29.0';
-import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.29.0';
-import { METEO } from './data/meteo.js?v=0.29.0';
-import { impact, hydroLignes } from './terrain.js?v=0.29.0';
-import { hash2 } from './lib/rng.js?v=0.29.0';
-import { creerRendu, CAMERA } from './rendu3d.js?v=0.29.0';
-import { etatEnMots, experienceEnMots, chevrons } from './identite.js?v=0.29.0';
-import { CORVEES } from './data/corvees.js?v=0.29.0';
-import { refusCorvee } from './nuit.js?v=0.29.0';
-import { chargerContenu } from './design-store.js?v=0.29.0';
-import * as lecture from './hud/lecture.js?v=0.29.0';
-import { creerFiche } from './hud/fiche.js?v=0.29.0';
-import { creerNuit, corveeDe, corveeCourte } from './hud/nuit.js?v=0.29.0';
-import { creerCarnet, deux } from './hud/carnet.js?v=0.29.0';
-import { creerCarte } from './hud/carte.js?v=0.29.0';
-import { creerPertes } from './hud/pertes.js?v=0.29.0';
-import { creerChargement } from './hud/chargement.js?v=0.29.0';
-import { SECTEURS } from './data/secteur.js?v=0.29.0';
+import { createLoop } from './lib/loop.js?v=0.30.0';
+import { createKeys, stopTypeahead } from './lib/keys.js?v=0.30.0';
+import { createPointer, lockBrowserGestures } from './lib/pointer.js?v=0.30.0';
+import { createGamepad } from './lib/gamepad.js?v=0.30.0';
+import { createStore, autosave, pickJSONFile } from './lib/save.js?v=0.30.0';
+import { startUpdateCheck, loadVersion, loadChangelog, downloadJSON } from './lib/app-update.js?v=0.30.0';
+import { ROLES } from './palette.js?v=0.30.0';
+import { MISSIONS, nouvelleBataille, etapesRestaurer, avancer, aube, ordonnerMarche, peutOrdonner, ordonnerBarrage, horloge, effectifs, tronconsTenus, moralEnMots, terrainResume, largeurZone, lettreZone, etendueZones, nomTroncon, actionDe, secteursDe, tronconsDeLigne, zone, photo, restaurer, PAS, NOUS } from './bataille.js?v=0.30.0';
+import { ligneY } from './tranchees.js?v=0.30.0';
+import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.30.0';
+import { METEO } from './data/meteo.js?v=0.30.0';
+import { impact, hydroLignes } from './terrain.js?v=0.30.0';
+import { hash2 } from './lib/rng.js?v=0.30.0';
+import { creerRendu, CAMERA } from './rendu3d.js?v=0.30.0';
+import { etatEnMots, experienceEnMots, chevrons } from './identite.js?v=0.30.0';
+import { CORVEES } from './data/corvees.js?v=0.30.0';
+import { refusCorvee } from './nuit.js?v=0.30.0';
+import { chargerContenu } from './design-store.js?v=0.30.0';
+import * as lecture from './hud/lecture.js?v=0.30.0';
+import { creerFiche } from './hud/fiche.js?v=0.30.0';
+import { creerNuit, corveeDe, corveeCourte } from './hud/nuit.js?v=0.30.0';
+import { creerCarnet, deux } from './hud/carnet.js?v=0.30.0';
+import { creerCarte } from './hud/carte.js?v=0.30.0';
+import { creerPertes } from './hud/pertes.js?v=0.30.0';
+import { creerChargement } from './hud/chargement.js?v=0.30.0';
+import { SECTEURS } from './data/secteur.js?v=0.30.0';
 
 const JEU = 'cyclopeen';
 const $ = id => document.getElementById(id);
@@ -49,6 +49,14 @@ const store = createStore({
 const chargement = creerChargement({ $, instantane: DEBUG });
 chargement.progres(0.3, 'Le jeu');
 const prefs = store.load('prefs');
+// La carte se replie sur son en-tête (Jérôme, v0.30.0) : le champ gagne ~440 px de haut sur un petit écran ; l'état est retenu
+function replierCarte(replie) {
+  $('carte').classList.toggle('replie', replie);
+  $('carte-bascule').setAttribute('aria-expanded', String(!replie));
+  $('carte-bascule').setAttribute('aria-label', replie ? 'Déplier la carte du secteur' : 'Replier la carte du secteur');
+}
+replierCarte(prefs.carte === false);
+$('carte-bascule').onclick = e => { const r = !$('carte').classList.contains('replie'); replierCarte(r); prefs.carte = !r; store.save('prefs', prefs); e.currentTarget.blur(); };
 const { reglages: R } = await chargerContenu();
 chargement.progres(0.45, 'Les réglages');
 
@@ -484,14 +492,13 @@ function majHud() {
   $('demain').textContent = h.prevision ? `Demain : ${METEO[h.prevision].prevision}` : 'Dernier jour';
   $('mission').hidden = !e.mission;
   if (e.mission) $('mission').textContent = `${e.mission === 'tenir' ? 'Tenir le secteur' : 'Prendre leur première ligne'} · réserve : ${e.reserves[NOUS]}`;
-  $('montre-m').style.transform = `rotate(${h.minute * 6}deg)`; $('montre-m').style.transformOrigin = '32px 32px';
-  $('montre-h').style.transform = `rotate(${((h.heure % 12) + h.minute / 60) * 30}deg)`; $('montre-h').style.transformOrigin = '32px 32px';
   majPertes(B); majTemps(h);
   majFiche();
   $('pause-active').hidden = !pauseActive;
   for (const b of $('batteries').children) {
     const cal = b.dataset.cal, reste = Math.ceil(e.batteries[cal] - e.temps);
     b.querySelector('span').textContent = reste > 0 ? `${reste} s` : 'prête';
+    b.querySelector('s').style.width = `${Math.round(100 * (1 - Math.max(0, Math.min(1, (e.batteries[cal] - e.temps) / CALIBRES[cal].recharge))))}%`;
     b.classList.toggle('vise', modeBarrage === cal);
     b.classList.toggle('recharge', reste > 0);
   }
@@ -503,8 +510,9 @@ $('batteries').append(...NOMS_CALIBRES.map((cal, k) => {
   const b = document.createElement('button');
   b.className = 'batterie'; b.dataset.cal = cal;
   b.setAttribute('aria-label', `Barrage de ${cal} (touche ${k + 1})`);
-  const H = { 75: 34, 155: 44, 220: 54 }[cal] || 40, W = { 75: 12, 155: 16, 220: 20 }[cal] || 14;
-  b.innerHTML = `<svg viewBox="0 0 ${W + 4} ${H + 4}" aria-hidden="true"><path d="M2 ${H + 2}V${Math.round(H * 0.45)}Q${2 + W / 2} 1 ${2 + W} ${Math.round(H * 0.45)}V${H + 2}Z"/><rect class="ceinture" x="2" y="${H - 8}" width="${W}" height="3"/></svg><b>${cal}</b><i class="touche" aria-hidden="true">${k + 1}</i><span>prête</span>`;
+  // l'obus debout à gauche (sa taille dit le calibre), le calibre et l'état à droite, une jauge de recharge dessous (v0.30.0)
+  const H = { 75: 22, 155: 30, 220: 38 }[cal] || 28, W = { 75: 8, 155: 11, 220: 14 }[cal] || 10;
+  b.innerHTML = `<svg viewBox="0 0 ${W + 4} ${H + 4}" aria-hidden="true"><path d="M2 ${H + 2}V${Math.round(H * 0.45)}Q${2 + W / 2} 1 ${2 + W} ${Math.round(H * 0.45)}V${H + 2}Z"/><rect class="ceinture" x="2" y="${H - 6}" width="${W}" height="2.5"/></svg><b>${cal}</b><span>prête</span><i class="touche" aria-hidden="true">${k + 1}</i><u><s></s></u>`;
   b.onclick = () => viser(cal);
   return b;
 }));
@@ -612,8 +620,8 @@ function majTerrain(x, y) {
   if (p.dataset.cle !== cle) {
     p.dataset.cle = cle;
     const pc = Math.round(r.vitesse * 100);
-    p.replaceChildren(...r.lignes.slice(0, 2).map((t, k) => Object.assign(document.createElement('p'), { textContent: t, className: k ? 'discret' : '' })),
-      Object.assign(document.createElement('div'), { className: 'vit', innerHTML: `<span>marche</span><i class="plein"><b style="width:${pc}%"></b></i><span>${pc} %</span>` }));
+    p.replaceChildren(Object.assign(document.createElement('span'), { textContent: r.lignes.slice(0, 2).join(' · ') }),
+      Object.assign(document.createElement('span'), { className: 'vit', innerHTML: `<i class="plein"><b style="width:${pc}%"></b></i><span>${pc} %</span>` }));
   }
   p.hidden = false;
 }
@@ -859,7 +867,7 @@ startUpdateCheck({
 
 // ─── Mode debug (section 18) : chargé seulement avec ?debug=1 ──────────────
 if (DEBUG) {
-  const { installDebug, seedFromUrl } = await import('./lib/debug.js?v=0.29.0');
+  const { installDebug, seedFromUrl } = await import('./lib/debug.js?v=0.30.0');
   window.__seed = seedFromUrl() ?? undefined;
   installDebug({
     state: () => B && { ...horloge(B), effectifs: effectifs(B), pertes: B.etat.pertes, impacts: B.etat.impacts.length, enJeu: enJeu(), pause: loop.paused },

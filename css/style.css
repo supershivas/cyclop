@@ -30,7 +30,7 @@
 .plaque p { margin: 0; }
 .discret { color: var(--jeu-accent); }
 .terrain { pointer-events: none !important; }
-.terrain[hidden] { display: none; }
+.terrain[hidden] { display: flex; visibility: hidden; }   /* la ligne garde sa place : le billet ne saute pas */
 .pause-active { letter-spacing: .12em; text-transform: uppercase; text-align: center; }
 
 /* Des papiers de campagne (Jérôme, v0.10.0 ; labo « Plaques et journal », variantes C et D) : l'interface est faite de ce qu'un
@@ -45,14 +45,9 @@
 .papier p { margin: 0; }
 .papier .discret { color: var(--jeu-accent); }
 .montre-bloc { display: flex; gap: var(--pas); align-items: center; }
-.montre { width: 64px; height: 64px; flex: none; }
-.montre circle { fill: var(--jeu-encre); stroke: var(--jeu-fond); stroke-width: 3; }
-.montre path, .montre line { stroke: var(--jeu-fond); stroke-width: 2; fill: none; stroke-linecap: square; }
-.montre line.gros { stroke-width: 4; }
-.terrain.papier { padding: 3px 8px; }
 .droite { display: grid; gap: var(--pas); align-content: end; justify-items: end; flex: none; }
 .carte { width: min(38ch, 30vw); }
-.carte .entete { letter-spacing: .14em; text-transform: uppercase; border-bottom: 1px solid var(--jeu-accent); padding-bottom: 2px; font-size: 12px; margin-bottom: 4px; }
+.carte .entete { display: flex; align-items: center; gap: 6px; width: 100%; font: inherit; color: inherit; background: none; border: 0; border-bottom: 1px solid var(--jeu-accent); text-align: left; cursor: pointer; letter-spacing: .14em; text-transform: uppercase; border-bottom: 1px solid var(--jeu-accent); padding-bottom: 2px; font-size: 12px; margin-bottom: 4px; }
 .carte-grille { position: relative; display: grid; gap: 2px; align-items: stretch; }
 .carte-grille .lib { font-size: 11px; align-self: center; color: var(--jeu-accent); }
 .carte-grille button { font: inherit; padding: 0; border: 0; min-height: 0; cursor: pointer; }
@@ -79,18 +74,23 @@
 /* Le râtelier : trois obus en papier de campagne, un par calibre ; debout : prêt, couché : se recharge (v0.18.1) */
 .batteries { display: flex; gap: var(--pas); align-items: flex-end; pointer-events: auto; }
 .batterie {
-  position: relative; display: grid; justify-items: center; align-content: end; gap: 2px;
-  min-width: 64px; min-height: 84px; padding: 6px 10px 4px;
+  position: relative; display: grid; grid-template-columns: auto 1fr; grid-template-rows: auto auto auto; column-gap: 8px; align-items: center; text-align: left;
+  min-width: 96px; padding: 6px 10px 6px 8px;
   background: var(--jeu-encre); color: var(--jeu-fond); box-shadow: 3px 3px 0 var(--jeu-fond);
   border: 0; font: inherit; font-size: var(--texte); cursor: pointer;
 }
-.batterie svg { height: 54px; width: auto; transform-origin: 50% 100%; fill: var(--jeu-fond); stroke: var(--jeu-encre); stroke-width: 2; }
+.batterie svg { grid-row: 1 / 3; align-self: end; height: 42px; width: auto; max-width: 22px; }
+.batterie b { align-self: end; }
+.batterie u { grid-column: 1 / -1; display: block; height: 4px; margin-top: 4px; background: var(--jeu-accent); text-decoration: none; }
+.batterie u s { display: block; height: 100%; background: var(--jeu-fond); text-decoration: none; }
+.batterie.vise u { background: var(--jeu-accent); } .batterie.vise u s { background: var(--jeu-encre); }
+.batterie svg { fill: var(--jeu-fond); stroke: var(--jeu-encre); stroke-width: 1.5; }
 .batterie svg .ceinture { fill: var(--jeu-encre); stroke: none; }
 .batterie b { font-weight: normal; font-size: var(--texte-grand); line-height: 1; }
-.batterie .touche { position: absolute; top: 2px; left: 4px; font-style: normal; font-size: 11px; line-height: 1; padding: 1px 4px; border: 1px solid var(--jeu-accent); color: var(--jeu-accent); }
+.batterie .touche { position: absolute; top: 3px; right: 4px; font-style: normal; font-size: 11px; line-height: 1; padding: 1px 4px; border: 1px solid var(--jeu-accent); color: var(--jeu-accent); }
 .batterie span { color: var(--jeu-accent); line-height: 1; font-size: 12px; }
 .batterie.recharge { color: var(--jeu-accent); }
-.batterie.recharge svg { fill: var(--jeu-accent); transform: rotate(-90deg) scale(.8) translate(-10px, 14px); }
+.batterie.recharge svg { fill: var(--jeu-accent); }
 .batterie.vise { background: var(--jeu-fond); color: var(--jeu-encre); box-shadow: 3px 3px 0 var(--jeu-accent); outline: 2px solid var(--jeu-encre); outline-offset: -4px; }
 .batterie.vise svg { fill: var(--jeu-encre); stroke: var(--jeu-fond); }
 .batterie.vise svg .ceinture { fill: var(--jeu-fond); }
@@ -313,3 +313,25 @@ dialog form { margin-top: calc(var(--pas) * 2); }
 .carte-choix .ligne-nous { stroke: var(--jeu-nous); stroke-width: 3; }
 .carte-choix .ligne-eux { stroke: var(--jeu-eux); stroke-width: 3; }
 @media (max-width: 760px) { .cartes-choix { grid-template-columns: 1fr; } }
+
+/* Le haut de l'écran allégé pour un petit écran (Jérôme, v0.30.0 : 13 pouces, le champ était trop petit) : le temps à côté des réglages, les
+   pertes sur une ligne par camp, la carte repliable, un billet sans montre dessinée (l'heure est dans le texte), le terrain sous la souris dans le billet. */
+.carte .entete i { margin-left: auto; width: 0; height: 0; border: 5px solid transparent; border-top-color: currentColor; border-bottom: 0; }
+.carte.replie .entete i { border-top: 5px solid transparent; border-bottom: 5px solid transparent; border-left-color: currentColor; border-right: 0; }
+.carte.replie .carte-grille { display: none; }
+.carte.replie .entete { border-bottom: 0; padding-bottom: 0; margin-bottom: 0; }
+.haut-gauche .boutons { align-items: flex-start; }
+.haut-gauche .temps { padding: 2px; gap: 2px; }
+.haut-gauche .temps button { min-width: 30px; height: 32px; padding: 0 4px; }
+.haut-gauche .temps button svg { width: 16px; height: 16px; }
+.pertes { grid-template-columns: 1fr; gap: 2px; padding: 4px 8px; }
+.pertes .armee { display: grid; grid-template-columns: 8ch 16ch auto auto auto; gap: 0 var(--pas); align-items: center; font-size: 13px; }
+.pertes .nom { font-size: 14px; }
+.pertes .armee .barre { display: flex; height: 8px; margin: 0; background: var(--jeu-accent); }
+.pertes .armee .compte, .pertes .armee .tr { color: var(--jeu-accent); font-size: 12px; white-space: nowrap; }
+.pertes .armee .croix { min-height: 0; max-width: 14ch; letter-spacing: .1em; }
+.pertes .armee .tr[hidden] { display: none; }
+.terrain { display: flex; align-items: center; gap: var(--pas); font-size: 12px; color: var(--jeu-accent); white-space: nowrap; min-height: 1.4em; }
+.terrain .vit { display: flex; align-items: center; gap: 4px; }
+.terrain .vit .plein { flex: none; width: 6ch; min-width: 0; height: 6px; background: var(--jeu-accent); }
+.montre-bloc > .papier:not(#meteo) { max-width: 40ch; }
