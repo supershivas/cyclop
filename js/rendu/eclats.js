@@ -2,9 +2,9 @@
 // et « le feu se voit » (Jérôme, v0.9.2 : l'éclair à la bouche du fusil et le trait vers la cible de chaque tir de `B.tirs`, la pose des tireurs, le bond de ceux que
 // le souffle jette). Une seule fabrique : tous tirent dans le même générateur de l'aspect (`alea`, une suite à graine : l'ordre des tirages fait l'image) et
 // dans les mêmes tampons de particules. Le dessin seulement : jamais la logique, jamais la partie.
-import * as SH from './shaders.js?v=0.31.4';
-import { INDICE } from '../palette.js?v=0.31.4';
-import { horloge } from '../bataille.js?v=0.31.4';
+import * as SH from './shaders.js?v=0.32.0';
+import { INDICE } from '../palette.js?v=0.32.0';
+import { horloge } from '../bataille.js?v=0.32.0';
 
 const ECLATS = 6000;     // (v0.24.0 ; 2 400 avant : une salve de 220 — ~200 éclats chacun, dont de la fumée de 8 à 16 s — faisait le tour du tampon et effaçait les éclats encore en vol)
 export const VOL = 0.6;       // la durée d'un bond (s)
@@ -85,7 +85,7 @@ export function creerEclats({ THREE, scene, col, palTex, NP, effets, surface, pr
   const attente = [];                               // les explosions qui attendent que l'obus touche le sol (l'obus qui tombe)
   function impactVu(x, y, cal) {
     const B = bataille(); const T = terrain();
-    if (B) souffler(x, y, cal);
+    if (B && !sansSouffle) souffler(x, y, cal);
     if (!effets.chute) return eclater(x, y, cal);
     // l'obus qui tombe : une traînée claire, du ciel au point de chute, puis l'explosion
     const h = T ? surface(x, y) : 0, chute = 0.25, v = 160;
@@ -269,10 +269,11 @@ export function creerEclats({ THREE, scene, col, palTex, NP, effets, surface, pr
   let tirVal = new Float32Array(0), tirAng = new Float32Array(0);
   // Le souffle (Jérôme, v0.16.0) : la logique jette les survivants à l'opposé du point de chute ; le dessin les fait sauter, un
   // bond d'autant plus haut qu'ils étaient près (volT : le temps qui reste, volH : la hauteur du bond).
-  let volT = new Float32Array(0), volH = new Float32Array(0);
+  let volT = new Float32Array(0), volH = new Float32Array(0), volD = new Float32Array(0);   // volD : la durée de son bond (VOL, ou celle que le labo impose, `lancer`)
+  let sansSouffle = false;                                      // le labo (« Projections ») jette les hommes lui-même : le souffle d'origine se tait
   function reserverSoldats(n) {
     if (tirVal.length >= n) return;
-    tirVal = new Float32Array(n * 2); tirAng = new Float32Array(n * 2); volT = new Float32Array(n * 2); volH = new Float32Array(n * 2);
+    tirVal = new Float32Array(n * 2); tirAng = new Float32Array(n * 2); volT = new Float32Array(n * 2); volH = new Float32Array(n * 2); volD = new Float32Array(n * 2);
   }
   function souffler(x, y, cal) {
     const B = bataille();
@@ -280,7 +281,7 @@ export function creerEclats({ THREE, scene, col, palTex, NP, effets, surface, pr
     reserverSoldats(n);
     for (let i = 0; i < n; i++) {
       const d = Math.hypot(A.x[i] - x, A.y[i] - y);
-      if (d < zone) { volT[i] = VOL; volH[i] = 0.5 + 1.5 * (1 - d / zone); }
+      if (d < zone) { volT[i] = VOL; volD[i] = VOL; volH[i] = 0.5 + 1.5 * (1 - d / zone); }
     }
   }
   function majTirs(dt) {
@@ -347,6 +348,8 @@ export function creerEclats({ THREE, scene, col, palTex, NP, effets, surface, pr
     setTaille(n) { eclMat.uniforms.uTaille.value = n; },          // la taille d'un point d'éclat, selon le zoom
     reinitialiser() { feux.length = 0; brules.clear(); arbresEtat = null; },   // une autre bataille : ses arbres ne brûlent pas encore
     fumer(x, z) { const T = terrain(); if (T) fumee(x + (alea() - 0.5) * 3, surface(x, z) + 0.5, z + (alea() - 0.5) * 3, 2, true); },   // une colonne de fumée (l'écran titre)
-    tirs() { return { tirVal, tirAng, volT, volH }; },           // la pose des tireurs et le bond des soufflés, lus par les soldats (réservés à chaque image : relire)
+    lancers(liste) { reserverSoldats(bataille().armee.n); volT.fill(0); for (const [i, duree, haut, reste] of liste) { volT[i] = reste; volD[i] = duree; volH[i] = haut; } },   // des hommes jetés : [indice, durée du bond (s), hauteur (m), temps qui reste] ; les autres retombent (le labo)
+    set sansSouffle(v) { sansSouffle = !!v; },
+    tirs() { return { tirVal, tirAng, volT, volH, volD }; },           // la pose des tireurs et le bond des soufflés, lus par les soldats (réservés à chaque image : relire)
   };
 }
