@@ -16,6 +16,7 @@ import { hash2 } from './lib/rng.js?v=0.30.0';
 import { reglerVerdure } from './apparence.js?v=0.30.0';
 import { maquetteAssaut } from './labo-assaut.js?v=0.30.0';
 import { calquePlaques } from './labo-plaques.js?v=0.30.0';
+import { calqueBarre } from './labo-barre-temps.js?v=0.30.0';
 
 document.documentElement.style.setProperty('--jeu-accent', ROLES.accent);
 const NOM = document.title.replace(/^Labo — /, ''); // le nom vient de la page (une apostrophe ne casse rien)
@@ -178,6 +179,13 @@ const GROUPES = [
       { title: 'Trois familles', note: 'Un bandeau d\'instruments en haut (le temps, la mission, les morts : permanent, sans cadre) ; des cartes de régiment à liseré bleu et une barre d\'effectif (les ordres) ; une fiche encadrée à en-tête plein (ce qu\'on ouvre). On distingue l\'état de l\'action sans lire.', render: s => moteur(s, { zoom: 3, cz: 185, soldats: 400, calque: calquePlaques('familles') }) },
       { title: 'Des papiers de campagne', status: 'retenue', note: 'Plus intradiégétique : une montre de gousset pour l\'heure, une feuille de situation (papier, lignes, tampon « ébranlé », barre debout / blessés / tombés) pour le régiment, un râtelier d\'obus (debout : prêt ; couché : se recharge), des croix au crayon pour les morts.', render: s => moteur(s, { zoom: 3, cz: 185, soldats: 400, calque: calquePlaques('papiers') }) },
       { title: 'Avec le carnet de bord', status: 'retenue', note: 'Les papiers de campagne, et un carnet de bord : les événements marquants à l\'heure où ils arrivent (la préparation d\'en face, la sortie, le dernier défenseur, le tronçon perdu), la ligne la plus récente surlignée. La mémoire de la pause active.', render: s => moteur(s, { zoom: 3, cz: 185, soldats: 400, calque: calquePlaques('carnet') }) },
+    ] },
+    { id: 'barre-temps', title: 'La barre du temps', variants: [
+      { title: 'Quatre lignes de texte', status: 'actuelle', note: 'Le billet d\'aujourd\'hui, sous les boutons de vitesse : le jour, l\'heure et le temps, la prévision de demain, la mission, le terrain sous la souris. Rien ne montre où l\'on en est de la bataille.', render: s => moteur(s, { zoom: 3, cz: 185, soldats: 400, calque: calqueBarre('actuelle') }) },
+      { title: 'La frise continue', note: 'Une ligne de texte, puis une frise de toute la bataille : chaque jour est un jour (clair) suivi de sa nuit (sombre), un trait bleu dit où l\'on est, et dessous, les seuls changements de météo (demain au trait pointillé : c\'est une prévision). Les jours d\'avant sont un ton plus bas.', render: s => moteur(s, { zoom: 3, cz: 185, soldats: 400, calque: calqueBarre('continue') }) },
+      { title: 'Les jours en cases', note: 'Une case par jour, numérotée ; la case du jour s\'ouvre sur ses heures (jour puis nuit) avec le trait bleu ; la météo ne se dit qu\'au changement, un point sinon. Se lit comme un calendrier : « troisième jour sur onze ».', render: s => moteur(s, { zoom: 3, cz: 185, soldats: 400, calque: calqueBarre('cases') }) },
+      { title: 'La bande de météo', note: 'La frise est elle-même la météo : chaque jour a la couleur de son temps (sec, pluie, brouillard, gel), demain hachuré, le reste en blanc ; la nuit est une barre sombre dessous ; le texte suit le repère au lieu d\'avoir sa ligne. Le plus dense, et le plus lisible en un coup d\'œil.', render: s => moteur(s, { zoom: 3, cz: 185, soldats: 400, calque: calqueBarre('bande') }) },
+      { title: 'Une seule ligne', note: 'Le jour, l\'heure, le temps d\'aujourd\'hui et celui de demain à côté des boutons de vitesse ; une règle de cinq pixels dessous, jours et nuits, le trait bleu. La mission et le terrain quittent ce papier. Presque rien à l\'écran.', render: s => moteur(s, { zoom: 3, cz: 185, soldats: 400, calque: calqueBarre('ligne') }) },
     ] },
     { id: 'assaut', title: 'Attaque d\'une tranchée', variants: [
       { title: 'Le compteur', status: 'ancienne', note: 'Ce que voyait le joueur avant la v0.9.2 : des hommes en boîtes, des obus, et « Tronçons : 12 · 11 » en coin. Rien ne dit qu\'un tronçon est disputé, ni que le dernier défenseur va tomber. Allez à « Contact » avec la frise.', render: s => maquetteAssaut(s, 'actuelle') },

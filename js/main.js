@@ -466,12 +466,6 @@ function raconter(ev) {
 }
 // Le temps (Jérôme, v0.19.0) : arrêter, ×1, ×2, ×4. Le pas de la simulation ne change pas (la partie est la même) : on en fait plus par
 // image, tant que la simulation tient (`perf.sim` × la vitesse sous ~20 ms) ; un assaut, une déroute, un tronçon pris ramènent à ×1.
-const ICONES_METEO = {
-  sec: '<circle cx="12" cy="12" r="4"/><path d="M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6L7 7M17 17l1.4 1.4M5.6 18.4L7 17M17 7l1.4-1.4"/>',
-  pluie: '<path d="M7 15a4 4 0 0 1 .5-8 5 5 0 0 1 9.5 1.5A3.3 3.3 0 0 1 17 15z"/><path d="M8 18l-1 2M12 18l-1 2M16 18l-1 2"/>',
-  brouillard: '<path d="M4 9h16M3 13h14M6 17h14"/>',
-  gel: '<path d="M12 3v18M4.2 7.5l15.6 9M19.8 7.5l-15.6 9"/>',
-};
 function appliquerVitesse() {
   const plafond = perf.sim > 0 ? Math.max(1, Math.floor(20 / perf.sim)) : 4;
   loop.setTimeScale(Math.min(vitesse, plafond));
@@ -481,8 +475,6 @@ function majTemps(h) {
   appliquerVitesse();
   $('temps-pause').classList.toggle('actif', pauseActive); $('temps-pause').setAttribute('aria-pressed', String(pauseActive));
   for (const b of document.querySelectorAll('[data-vitesse]')) b.classList.toggle('actif', +b.dataset.vitesse === vitesse);
-  const m = $('meteo');
-  if (m.dataset.m !== h.meteo) { m.dataset.m = h.meteo; $('meteo-icone').innerHTML = ICONES_METEO[h.meteo] || ''; m.setAttribute('aria-label', `Le temps : ${METEO[h.meteo].nom}. Les prévisions.`); }
 }
 
 function majHud() {
@@ -839,14 +831,6 @@ for (const b of document.querySelectorAll('[data-vitesse]')) b.onclick = () => {
   vitesse = +b.dataset.vitesse; b.blur();
   if (pauseActive) basculerPause(); else majHud();
 };
-$('meteo').onclick = e => {
-  e.currentTarget.blur();
-  const h = horloge(B);
-  $('meteo-aujourdhui').textContent = `Aujourd'hui, jusqu'au soir : ${METEO[h.meteo].nom}.`;
-  $('meteo-demain').textContent = h.prevision ? `Demain : ${METEO[h.prevision].prevision}.` : 'C\'est le dernier jour.';
-  loop.pause(); $('dialogue-meteo').showModal();
-};
-$('dialogue-meteo').addEventListener('close', reprendre);
 $('hud-reglages').onclick = e => { e.currentTarget.blur(); loop.pause(); $('dialogue-reglages').showModal(); };
 autosave(sauvegarder, { everyMs: 10000 });
 

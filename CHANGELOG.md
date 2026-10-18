@@ -1,5 +1,9 @@
 # Journal des versions
 
+## 0.30.1 — 2026-10-18
+- Le billet (jour, heure, temps, mission) passe en haut à gauche, sous les boutons de vitesse ; le bouton de prévision, qui doublait ce billet, disparaît
+- Au labo, « La barre du temps » : cinq mises en page d'une frise de la bataille (jours, nuits, repère, changements de météo)
+
 ## 0.30.0 — 2026-10-18
 - Le champ gagne de la place sur un petit écran : le temps (pause, ×1, ×2, ×4) passe à côté des réglages, les pertes tiennent sur une ligne par camp, la montre dessinée est retirée, la carte se replie d'un clic
 - Le terrain sous la souris est une ligne du billet en haut à droite ; les batteries montrent leur obus, leur calibre et une jauge de recharge
