@@ -1,5 +1,9 @@
 # Journal des versions
 
+## 0.31.3 — 2026-10-18
+- Un seul style de titres, des textes et des espacements pris dans une échelle (quelques pixels bougent)
+- Menu, Réglages et le temps ont le même habillage, en papier
+
 ## 0.31.2 — 2026-10-18
 - La barre du temps, variante D : une frise de la bataille (la météo de chaque jour, la nuit, un trait bleu pour où l'on est, les changements de météo en pictogrammes), de la largeur des boutons du haut ; la mission et le terrain sous la souris restent dessous
 - Les boutons du haut ont tous la même hauteur

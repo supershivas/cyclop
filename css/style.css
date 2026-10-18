@@ -4,11 +4,24 @@
    libellé sur un fond qui bouge doit rester lisible, LECONS.md). */
 
 :root {
-  --jeu-cible: 44px;
+  /* LE DESIGN SYSTEM (docs/design-system.md) : tout ce qui suit est une valeur de ces échelles, jamais un nombre au cas par cas */
   --jeu-police: ui-monospace, 'DejaVu Sans Mono', Menlo, Consolas, monospace;
-  --pas: 8px;                                          /* l'échelle d'espacement : multiples de --pas */
-  --texte: 14px;
-  --texte-grand: 20px;
+  /* le texte : quatre tailles */
+  --texte-petit: 12px;      /* libellés, notes, compteurs */
+  --texte: 14px;            /* le texte courant */
+  --texte-moyen: 16px;      /* titres de papier (fiche, nuit) */
+  --texte-grand: 20px;      /* titres de dialogue, calibre des batteries, numéro des cartes */
+  /* l'espacement : des multiples de 4 ; --pas (8) est le pas du jeu */
+  --e0: 2px;                /* le filet : entre deux cases d'une grille */
+  --e1: 4px;
+  --pas: 8px;
+  --e3: 12px;
+  --e4: 16px;
+  /* les hauteurs, les traits */
+  --jeu-cible: 44px;        /* tout bouton du HUD : cette hauteur au moins */
+  --trait: 1px;
+  --ombre-papier: 3px 3px 0 var(--jeu-fond);   /* l'ombre portée d'un cran, la seule */
+  --titre-lettres: .08em;   /* l'espacement des titres */
 }
 
 .hud { position: absolute; inset: 0; pointer-events: none; }
@@ -22,7 +35,7 @@
 .hud-bas { bottom: 0; align-items: flex-end; }
 .hud button, .hud .plaque, .hud .papier { pointer-events: auto; }
 .plaque {
-  margin: 0; padding: 6px 10px;
+  margin: 0; padding: var(--pas) var(--e3);
   background: var(--jeu-fond); color: var(--jeu-encre);
   border: 1px solid var(--jeu-ombre);
   font-size: var(--texte); line-height: 1.4;
@@ -37,9 +50,9 @@
    officier a sur lui : une montre, des feuilles de situation, un râtelier d'obus, un carnet de bord. Du papier (l'os), de l'encre
    (la terre), un tampon ; une ombre portée d'un cran, jamais de dégradé. */
 .papier {
-  margin: 0; padding: 6px 10px;
+  margin: 0; padding: var(--pas) var(--e3);
   background: var(--jeu-encre); color: var(--jeu-fond);
-  box-shadow: 3px 3px 0 var(--jeu-fond);
+  box-shadow: var(--ombre-papier);
   font-size: var(--texte); line-height: 1.4;
 }
 .papier p { margin: 0; }
@@ -47,26 +60,26 @@
 .montre-bloc { display: flex; gap: var(--pas); align-items: center; }
 .droite { display: grid; gap: var(--pas); align-content: end; justify-items: end; flex: none; }
 .carte { width: min(38ch, 30vw); }
-.carte .entete { display: flex; align-items: center; gap: 6px; width: 100%; font: inherit; color: inherit; background: none; border: 0; border-bottom: 1px solid var(--jeu-accent); text-align: left; cursor: pointer; letter-spacing: .14em; text-transform: uppercase; border-bottom: 1px solid var(--jeu-accent); padding-bottom: 2px; font-size: 12px; margin-bottom: 4px; }
-.carte-grille { position: relative; display: grid; gap: 2px; align-items: stretch; }
-.carte-grille .lib { font-size: 11px; align-self: center; color: var(--jeu-accent); }
+.carte .entete { display: flex; align-items: center; gap: var(--pas); width: 100%; font: inherit; color: inherit; background: none; border: 0; border-bottom: 1px solid var(--jeu-accent); text-align: left; cursor: pointer; letter-spacing: .14em; text-transform: uppercase; border-bottom: 1px solid var(--jeu-accent); padding-bottom: var(--e0); font-size: var(--texte-petit); margin-bottom: var(--e1); }
+.carte-grille { position: relative; display: grid; gap: var(--e0); align-items: stretch; }
+.carte-grille .lib { font-size: var(--texte-petit); align-self: center; color: var(--jeu-accent); }
 .carte-grille button { font: inherit; padding: 0; border: 0; min-height: 0; cursor: pointer; }
-.carte-grille .sect { background: var(--jeu-fond); color: var(--jeu-encre); min-height: 22px; font-size: 12px; }
+.carte-grille .sect { background: var(--jeu-fond); color: var(--jeu-encre); min-height: 22px; font-size: var(--texte-petit); }
 .carte-grille .cel { position: relative; display: flex; height: 22px; background: var(--jeu-accent); }
 .carte-grille .cel i { flex: 1; display: block; margin: 1px; background: var(--jeu-accent); }
 .carte-grille .cel i.nous { background: var(--jeu-nous); }
 .carte-grille .cel i.eux { background: var(--jeu-eux); }
 .carte-grille .cel i.dispute { outline: 2px solid var(--jeu-fond); outline-offset: -2px; }
-.carte-grille .cel b { position: absolute; inset: 0; display: grid; place-items: center; font-size: 11px; font-weight: normal; color: var(--jeu-fond); pointer-events: none; }
+.carte-grille .cel b { position: absolute; inset: 0; display: grid; place-items: center; font-size: var(--texte-petit); font-weight: normal; color: var(--jeu-fond); pointer-events: none; }
 .carte-grille .cel.choisi { outline: 2px solid var(--jeu-fond); outline-offset: 1px; }
 .carte-grille .cel.clign { animation: clign .5s steps(1) 6; }
 @keyframes clign { 0% { outline: 3px solid var(--jeu-fond); outline-offset: 1px; } 50% { outline: 3px solid transparent; } }
 @media (hover: hover) { .carte-grille .cel:hover { outline: 2px solid var(--jeu-accent); outline-offset: 1px; } }
-.carnet { width: 30ch; max-width: 36vw; font-size: 12px; }
+.carnet { width: 30ch; max-width: 36vw; font-size: var(--texte-petit); }
 .carnet[hidden] { display: none; }
-.carnet .entete { letter-spacing: .14em; text-transform: uppercase; border-bottom: 1px solid var(--jeu-accent); padding-bottom: 2px; }
+.carnet .entete { letter-spacing: .14em; text-transform: uppercase; border-bottom: 1px solid var(--jeu-accent); padding-bottom: var(--e0); }
 .carnet ol { margin: 0; padding: 0; list-style: none; }
-.carnet li { border-bottom: 1px solid var(--jeu-accent); padding: 2px 0; }
+.carnet li { border-bottom: 1px solid var(--jeu-accent); padding: var(--e0) 0; }
 .carnet li b { font-weight: normal; color: var(--jeu-accent); margin-right: .6em; }
 .carnet li.recent { background: var(--jeu-accent); color: var(--jeu-encre); }
 .carnet li.recent b { color: var(--jeu-encre); }
@@ -74,21 +87,21 @@
 /* Le râtelier : trois obus en papier de campagne, un par calibre ; debout : prêt, couché : se recharge (v0.18.1) */
 .batteries { display: flex; gap: var(--pas); align-items: flex-end; pointer-events: auto; }
 .batterie {
-  position: relative; display: grid; grid-template-columns: auto 1fr; grid-template-rows: auto auto auto; column-gap: 8px; align-items: center; text-align: left;
-  min-width: 96px; padding: 6px 10px 6px 8px;
-  background: var(--jeu-encre); color: var(--jeu-fond); box-shadow: 3px 3px 0 var(--jeu-fond);
+  position: relative; display: grid; grid-template-columns: auto 1fr; grid-template-rows: auto auto auto; column-gap: var(--pas); align-items: center; text-align: left;
+  min-width: 96px; padding: var(--pas) var(--e3) var(--pas) var(--pas);
+  background: var(--jeu-encre); color: var(--jeu-fond); box-shadow: var(--ombre-papier);
   border: 0; font: inherit; font-size: var(--texte); cursor: pointer;
 }
 .batterie svg { grid-row: 1 / 3; align-self: end; height: 42px; width: auto; max-width: 22px; }
 .batterie b { align-self: end; }
-.batterie u { grid-column: 1 / -1; display: block; height: 4px; margin-top: 4px; background: var(--jeu-accent); text-decoration: none; }
+.batterie u { grid-column: 1 / -1; display: block; height: 4px; margin-top: var(--e1); background: var(--jeu-accent); text-decoration: none; }
 .batterie u s { display: block; height: 100%; background: var(--jeu-fond); text-decoration: none; }
 .batterie.vise u { background: var(--jeu-accent); } .batterie.vise u s { background: var(--jeu-encre); }
 .batterie svg { fill: var(--jeu-fond); stroke: var(--jeu-encre); stroke-width: 1.5; }
 .batterie svg .ceinture { fill: var(--jeu-encre); stroke: none; }
 .batterie b { font-weight: normal; font-size: var(--texte-grand); line-height: 1; }
-.batterie .touche { position: absolute; top: 3px; right: 4px; font-style: normal; font-size: 11px; line-height: 1; padding: 1px 4px; border: 1px solid var(--jeu-accent); color: var(--jeu-accent); }
-.batterie span { color: var(--jeu-accent); line-height: 1; font-size: 12px; }
+.batterie .touche { position: absolute; top: 3px; right: 4px; font-style: normal; font-size: var(--texte-petit); line-height: 1; padding: 1px var(--e1); border: 1px solid var(--jeu-accent); color: var(--jeu-accent); }
+.batterie span { color: var(--jeu-accent); line-height: 1; font-size: var(--texte-petit); }
 .batterie.recharge { color: var(--jeu-accent); }
 .batterie.recharge svg { fill: var(--jeu-accent); }
 .batterie.vise { background: var(--jeu-fond); color: var(--jeu-encre); box-shadow: 3px 3px 0 var(--jeu-accent); outline: 2px solid var(--jeu-encre); outline-offset: -4px; }
@@ -101,9 +114,9 @@
 .etiquettes { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
 .etiquette {
   position: absolute; left: 0; top: 0;
-  padding: 1px 5px;
+  padding: 1px var(--e1);
   background: var(--jeu-fond); color: var(--jeu-nous);
-  font-size: 12px; white-space: nowrap;
+  font-size: var(--texte-petit); white-space: nowrap;
 }
 .etiquette.choisi { background: var(--jeu-encre); color: var(--jeu-fond); }
 .repere {
@@ -115,18 +128,18 @@
   border: 2px solid var(--jeu-encre); border-top: 0; pointer-events: none;
   margin-top: -14px;
 }
-.fiche { margin-left: auto; position: relative; color: var(--jeu-fond); width: min(34ch, 60vw); padding-right: calc(var(--jeu-cible) + 4px); }
-.fiche h2 { margin: 0 0 2px; font-size: 16px; font-weight: normal; }
-.fiche ul { margin: 6px 0 0; padding-left: 1.1em; }
+.fiche { margin-left: auto; position: relative; color: var(--jeu-fond); width: min(34ch, 60vw); padding-right: calc(var(--jeu-cible) + var(--e1)); }
+.fiche h2 { margin: 0 0 var(--e0); }
+.fiche ul { margin: var(--pas) 0 0; padding-left: 1.1em; }
 .fiche-fermer { position: absolute; top: 0; right: 0; }
 .fiche h3 { margin: var(--pas) 0 0; font-size: var(--texte); font-weight: normal; color: var(--jeu-accent); }
 .fiche .icone { color: var(--jeu-fond); }
 .fiche .lien, .fiche .fiche-liste .nom { color: var(--jeu-fond); text-decoration: underline; }   /* (plus spécifique que .lien plus bas : les noms de la liste étaient os sur os) */
 .fiche-liste { max-height: 40dvh; overflow-y: auto; }
 .fiche-liste:empty { display: none; }
-.fiche-liste ul { list-style: none; padding: 0; margin: 2px 0 0; }
+.fiche-liste ul { list-style: none; padding: 0; margin: var(--e0) 0 0; }
 .lien, .fiche-liste .nom {
-  display: block; width: 100%; min-height: 28px; padding: 2px 0; text-align: left;
+  display: block; width: 100%; min-height: 28px; padding: var(--e0) 0; text-align: left;
   background: none; border: 0; color: var(--jeu-encre); font: inherit; text-decoration: underline; text-underline-offset: 3px;
 }
 .lien { color: var(--jeu-nous); }
@@ -147,7 +160,7 @@
 .titre[hidden] { display: none; }
 .titre h1 { background: var(--jeu-fond); padding: calc(var(--pas) * 1.5) calc(var(--pas) * 3) calc(var(--pas) * 1.5) calc(var(--pas) * 3 + .3em); border: 1px solid var(--jeu-ombre); margin: 0; font-size: clamp(28px, 8vmin, 72px); font-weight: normal; letter-spacing: .3em; text-transform: uppercase; color: var(--jeu-encre); text-align: center; }
 .titre-menu, .menu { display: grid; gap: var(--pas); min-width: min(260px, 80vw); }
-.pour-ordinateur { display: none; margin: 0; padding: 4px 8px; background: var(--jeu-fond); max-width: 30ch; text-align: center; font-size: var(--texte); color: var(--jeu-accent); }
+.pour-ordinateur { display: none; margin: 0; padding: var(--e1) var(--pas); background: var(--jeu-fond); max-width: 30ch; text-align: center; font-size: var(--texte); color: var(--jeu-accent); }
 @media (pointer: coarse) { .pour-ordinateur { display: block; } }
 .titre-reglages { background: var(--jeu-fond); border: 1px solid var(--jeu-ombre); position: absolute; top: calc(var(--pas) + env(safe-area-inset-top, 0px)); right: var(--pas); }
 
@@ -155,7 +168,7 @@
   padding: 0 calc(var(--pas) * 2);
   background: var(--jeu-encre); color: var(--jeu-fond);
   border: 0; border-bottom: 4px solid var(--jeu-accent);
-  font-size: 16px;
+  font-size: var(--texte-moyen);
 }
 .bouton:focus-visible, .icone:focus-visible, .batterie:focus-visible { outline: 2px solid var(--jeu-nous); outline-offset: 2px; }
 @media (hover: hover) {
@@ -168,7 +181,7 @@ dialog {
   border: 1px solid var(--jeu-accent); padding: calc(var(--pas) * 3);
   font-size: var(--texte);
 }
-dialog h2 { margin: 0 0 calc(var(--pas) * 2); font-size: 18px; font-weight: normal; letter-spacing: .06em; }
+dialog h2 { margin: 0 0 var(--e4); font-size: var(--texte-grand); text-transform: uppercase; }
 dialog p { line-height: 1.5; }
 dialog .reglage { display: flex; gap: var(--pas); align-items: flex-start; min-height: var(--jeu-cible); max-width: 46ch; line-height: 1.4; }
 dialog .reglage input { width: 20px; height: 20px; margin: 0; flex: none; accent-color: var(--jeu-accent); }
@@ -176,23 +189,23 @@ dialog .reglage input { width: 20px; height: 20px; margin: 0; flex: none; accent
 .nuit { width: min(42ch, 34vw); max-height: calc(100dvh - 24px); display: flex; flex-direction: column; margin: 0 auto 0 0; }
 .nuit[hidden] { display: none; }
 #nuit-corps, #aube-bilan { overflow-y: auto; min-height: 0; }
-.nuit h2 { margin: 0 0 4px; font-size: 16px; font-weight: normal; letter-spacing: .06em; }
-.nuit p { margin: 2px 0; }
-.nuit button { font: inherit; font-size: 13px; color: var(--jeu-fond); background: none; border: 1px solid var(--jeu-fond); min-height: 36px; padding: 0 var(--pas); text-align: left; }
+.nuit h2 { margin: 0 0 var(--e1); }
+.nuit p { margin: var(--e0) 0; }
+.nuit button { font: inherit; font-size: var(--texte-petit); color: var(--jeu-fond); background: none; border: 1px solid var(--jeu-fond); min-height: 36px; padding: 0 var(--pas); text-align: left; }
 .nuit button:disabled { color: var(--jeu-accent); border-color: var(--jeu-accent); }
 .nuit button.actif { background: var(--jeu-fond); color: var(--jeu-encre); }
 #aube { flex: none; width: 100%; min-height: var(--jeu-cible); margin-top: var(--pas); text-align: center; background: var(--jeu-fond); color: var(--jeu-encre); }
-.fin-jours { margin: var(--pas) 0; padding-left: 0; list-style: none; columns: 2; font-size: 13px; color: var(--jeu-accent); }
+.fin-jours { margin: var(--pas) 0; padding-left: 0; list-style: none; columns: 2; font-size: var(--texte-petit); color: var(--jeu-accent); }
 dialog hr { border: 0; border-top: 1px solid var(--jeu-ombre); margin: calc(var(--pas) * 2) 0; }
 .version { margin: 0; color: var(--jeu-accent); }
 details { margin: var(--pas) 0 calc(var(--pas) * 2); }
 summary { min-height: var(--jeu-cible); display: flex; align-items: center; cursor: pointer; }
-#changelog h3 { font-size: 14px; font-weight: normal; margin: var(--pas) 0 0; }
-#changelog ul { margin: 4px 0; padding-left: 1.2em; font-size: 14px; }
-.commandes { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 4px 12px; margin: 0; }
+#changelog h3 { font-size: var(--texte); font-weight: normal; margin: var(--pas) 0 0; }
+#changelog ul { margin: var(--e1) 0; padding-left: 1.2em; font-size: var(--texte); }
+.commandes { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: var(--e1) var(--e3); margin: 0; }
 .commandes dt { color: var(--jeu-nous); }
 .commandes dd { margin: 0; }
-.liens { font-size: 14px; }
+.liens { font-size: var(--texte); }
 .liens a { color: inherit; display: inline-block; min-height: var(--jeu-cible); line-height: var(--jeu-cible); }
 dialog form { margin-top: calc(var(--pas) * 2); }
 
@@ -206,30 +219,30 @@ dialog form { margin-top: calc(var(--pas) * 2); }
 .haut-centre { justify-items: center; flex: none; }
 .haut-droite { justify-items: end; flex: 1; }
 .pertes { display: grid; grid-template-columns: repeat(2, 24ch); gap: var(--pas) calc(var(--pas) * 2); }
-.pertes .lignes { grid-column: 1 / -1; font-size: 12px; }
-.pertes .tete { display: flex; justify-content: space-between; gap: var(--pas); border-bottom: 1px solid var(--jeu-accent); padding-bottom: 2px; font-size: 15px; }
-.pertes .tete span { color: var(--jeu-accent); font-size: 11px; letter-spacing: .1em; text-transform: uppercase; align-self: center; }
-.pertes .barre { display: flex; height: 8px; margin: 5px 0 3px; background: var(--jeu-accent); }
+.pertes .lignes { grid-column: 1 / -1; font-size: var(--texte-petit); }
+.pertes .tete { display: flex; justify-content: space-between; gap: var(--pas); border-bottom: 1px solid var(--jeu-accent); padding-bottom: var(--e0); font-size: var(--texte-moyen); }
+.pertes .tete span { color: var(--jeu-accent); font-size: var(--texte-petit); letter-spacing: .1em; text-transform: uppercase; align-self: center; }
+.pertes .barre { display: flex; height: 8px; margin: var(--e1) 0 var(--e1); background: var(--jeu-accent); }
 .pertes .barre i { display: block; height: 100%; }
 .pertes .barre .debout { background: var(--jeu-nous); }
 .pertes .eux .barre .debout { background: var(--jeu-eux); }
 .pertes .barre .blesses { background: var(--jeu-accent); outline: 1px solid var(--jeu-fond); }
 .pertes .barre .tombes { background: var(--jeu-fond); }
-.pertes .compte { color: var(--jeu-accent); font-size: 12px; }
-.pertes .croix { letter-spacing: .18em; min-height: 1.4em; white-space: nowrap; overflow: hidden; font-size: 12px; }
+.pertes .compte { color: var(--jeu-accent); font-size: var(--texte-petit); }
+.pertes .croix { letter-spacing: .18em; min-height: 1.4em; white-space: nowrap; overflow: hidden; font-size: var(--texte-petit); }
 .pertes .eux .croix { color: var(--jeu-eux); }
-.temps { display: flex; gap: 4px; padding: 4px; }
-.temps button { display: grid; place-items: center; min-width: var(--jeu-cible); height: 36px; padding: 0 6px; font: inherit; color: var(--jeu-fond); background: none; border: 1px solid var(--jeu-accent); cursor: pointer; }
+.temps { display: flex; gap: var(--e1); padding: var(--e1); }
+.temps button { display: grid; place-items: center; min-width: var(--jeu-cible); height: 36px; padding: 0 var(--pas); font: inherit; color: var(--jeu-fond); background: none; border: 1px solid var(--jeu-accent); cursor: pointer; }
 .temps button svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; }
 .temps button.actif { background: var(--jeu-fond); color: var(--jeu-encre); border-color: var(--jeu-fond); }
-.terrain .vit { display: flex; align-items: center; gap: var(--pas); font-size: 12px; color: var(--jeu-accent); }
+.terrain .vit { display: flex; align-items: center; gap: var(--pas); font-size: var(--texte-petit); color: var(--jeu-accent); }
 .terrain .vit .plein { flex: 1; height: 6px; min-width: 8ch; background: var(--jeu-accent); }
 .terrain .vit b { display: block; height: 100%; background: var(--jeu-fond); }
-.carte-grille .trou { grid-column: 1 / -1; display: grid; place-items: center; font-size: 10px; color: var(--jeu-accent); border-top: 1px dashed var(--jeu-accent); border-bottom: 1px dashed var(--jeu-accent); }
+.carte-grille .trou { grid-column: 1 / -1; display: grid; place-items: center; font-size: var(--texte-petit); color: var(--jeu-accent); border-top: 1px dashed var(--jeu-accent); border-bottom: 1px dashed var(--jeu-accent); }
 .carte-regs { position: absolute; inset: 0; pointer-events: none; }
 .carte-ronde {
   position: absolute; box-sizing: border-box; width: 18px; height: 18px; min-width: 0; margin: -9px 0 0 -9px; padding: 0; min-height: 0; border-radius: 50%;
-  border: 2px solid var(--jeu-nous); background: var(--jeu-fond); color: var(--jeu-encre); font: inherit; font-size: 10px; line-height: 14px; text-align: center; cursor: pointer;
+  border: 2px solid var(--jeu-nous); background: var(--jeu-fond); color: var(--jeu-encre); font: inherit; font-size: var(--texte-petit); line-height: 14px; text-align: center; cursor: pointer;
 }
 .carte-ronde.eux { border-color: var(--jeu-eux); }
 .carte-ronde.choisi { background: var(--jeu-encre); color: var(--jeu-fond); outline: 2px solid var(--jeu-fond); outline-offset: 1px; }
@@ -240,14 +253,14 @@ dialog form { margin-top: calc(var(--pas) * 2); }
 .regiments .rang { display: flex; gap: var(--pas); }
 .reg-carte {
   --enc: var(--jeu-fond); --pap: var(--jeu-encre);
-  display: grid; gap: 3px; align-content: start; width: 112px; min-height: 62px; padding: 4px 8px 6px; text-align: left; cursor: pointer;
-  font: inherit; font-size: 12px; background: var(--pap); color: var(--enc); border: 0; border-top: 3px solid var(--jeu-nous); box-shadow: 3px 3px 0 var(--jeu-fond);
+  display: grid; gap: var(--e1); align-content: start; width: 112px; min-height: 62px; padding: var(--e1) var(--pas) var(--pas); text-align: left; cursor: pointer;
+  font: inherit; font-size: var(--texte-petit); background: var(--pap); color: var(--enc); border: 0; border-top: 3px solid var(--jeu-nous); box-shadow: var(--ombre-papier);
 }
 .reg-carte.choisi { --enc: var(--jeu-encre); --pap: var(--jeu-fond); outline: 2px solid var(--jeu-encre); outline-offset: -5px; }
 .reg-carte .l1 { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.reg-carte .l1 b { font-weight: normal; font-size: var(--texte-grand); line-height: 1; margin-right: 2px; }
-.reg-carte .alerte { float: right; font-style: normal; font-size: 10px; line-height: 1; padding: 1px 3px; border: 1px double var(--jeu-encre); color: var(--jeu-encre); transform: rotate(-5deg); }
-.reg-carte .chevrons { display: flex; gap: 2px; height: 8px; }
+.reg-carte .l1 b { font-weight: normal; font-size: var(--texte-grand); line-height: 1; margin-right: var(--e0); }
+.reg-carte .alerte { float: right; font-style: normal; font-size: var(--texte-petit); line-height: 1; padding: 1px var(--e1); border: 1px double var(--jeu-encre); color: var(--jeu-encre); transform: rotate(-5deg); }
+.reg-carte .chevrons { display: flex; gap: var(--e0); height: 8px; }
 .chev { width: 12px; height: 8px; fill: none; stroke: var(--enc); stroke-width: 2; stroke-linecap: square; }
 .chev.vide { stroke: var(--jeu-accent); }
 .reg-carte .barre, .reg-ouvert .barre { display: flex; height: 8px; box-sizing: border-box; border: 1px solid var(--enc); }
@@ -258,14 +271,14 @@ dialog form { margin-top: calc(var(--pas) * 2); }
 .fleche { display: grid; place-items: center; width: 40px; height: 62px; padding: 0; border: 0; cursor: pointer; color: var(--jeu-fond); pointer-events: auto; }
 .fleche[hidden] { display: none; }
 .fleche svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
-.reg-ouvert { position: absolute; bottom: calc(100% + var(--pas)); width: 36ch; max-width: 90vw; pointer-events: auto; display: grid; gap: 3px; }
+.reg-ouvert { position: absolute; bottom: calc(100% + var(--pas)); width: 36ch; max-width: 90vw; pointer-events: auto; display: grid; gap: var(--e1); }
 .reg-ouvert[hidden] { display: none; }
-.reg-ouvert .tete { display: flex; justify-content: space-between; gap: var(--pas); border-bottom: 1px solid var(--jeu-accent); padding-bottom: 2px; font-size: 15px; }
+.reg-ouvert .tete { display: flex; justify-content: space-between; gap: var(--pas); border-bottom: 1px solid var(--jeu-accent); padding-bottom: var(--e0); font-size: var(--texte-moyen); }
 .reg-ouvert .tete b { font-weight: normal; }
-.reg-ouvert .tete span, .reg-ouvert .compte, .reg-ouvert .ordre { color: var(--jeu-accent); font-size: 12px; }
-.reg-ouvert .tampon { justify-self: start; padding: 0 6px; border: 3px double var(--jeu-encre); color: var(--jeu-encre); transform: rotate(-4deg); letter-spacing: .12em; text-transform: uppercase; font-size: 12px; }
-.reg-ouvert .actions { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 3px; }
-.reg-ouvert .actions button { height: 32px; padding: 0 var(--pas); font: inherit; font-size: 13px; color: var(--jeu-fond); background: none; border: 1px solid var(--jeu-accent); cursor: pointer; }
+.reg-ouvert .tete span, .reg-ouvert .compte, .reg-ouvert .ordre { color: var(--jeu-accent); font-size: var(--texte-petit); }
+.reg-ouvert .tampon { justify-self: start; padding: 0 var(--pas); border: 3px double var(--jeu-encre); color: var(--jeu-encre); transform: rotate(-4deg); letter-spacing: .12em; text-transform: uppercase; font-size: var(--texte-petit); }
+.reg-ouvert .actions { display: flex; flex-wrap: wrap; gap: var(--e1); margin-top: var(--e1); }
+.reg-ouvert .actions button { height: 32px; padding: 0 var(--pas); font: inherit; font-size: var(--texte-petit); color: var(--jeu-fond); background: none; border: 1px solid var(--jeu-accent); cursor: pointer; }
 .reg-ouvert .actions button.actif { background: var(--jeu-fond); color: var(--jeu-encre); border-color: var(--jeu-fond); }
 @media (hover: hover) { .reg-carte:hover:not(.choisi) { --pap: var(--jeu-accent); } .reg-ouvert .actions button:hover { background: var(--jeu-accent); color: var(--jeu-fond); } }
 
@@ -279,32 +292,31 @@ dialog form { margin-top: calc(var(--pas) * 2); }
 .visee .croix .encre { stroke-dasharray: none; }
 .visee.refus .encre { stroke: var(--jeu-accent); }   /* (refusé : la ligne et la croix passent à la glaise ; l'ennemi est vert, plus de rouge dans le jeu) */
 .carte-grille .lib.eux { color: var(--jeu-eux); }
-.carte-grille .lib { font-size: 12px; text-align: center; }
+.carte-grille .lib { font-size: var(--texte-petit); text-align: center; }
 
 /* La nuit : les corvées sont au-dessus de la carte du régiment choisi, comme les actions du jour (Jérôme, v0.22.0) */
 .reg-ouvert .actions button.refus { color: var(--jeu-accent); border-style: dashed; }
-.reg-carte .corvee { font-size: 11px; line-height: 8px; color: var(--enc); }
+.reg-carte .corvee { font-size: var(--texte-petit); line-height: 8px; color: var(--enc); }
 
 /* La barre de chargement (Jérôme, v0.28.0) : un papier sur la terre, une barre d'encre ; au lancement et quand on relit ou commence une partie */
 .chargement { position: fixed; inset: 0; z-index: 50; display: grid; place-items: center; background: var(--jeu-fond); transition: opacity .25s; }
 .chargement[hidden] { display: none; }
 .chargement.fondu { opacity: 0; pointer-events: none; }
 .chargement .papier { width: min(34ch, 80vw); display: grid; gap: var(--pas); }
-.chargement p { margin: 0; letter-spacing: .1em; text-transform: uppercase; font-size: 14px; }
-.chargement .discret { font-size: 12px; letter-spacing: 0; text-transform: none; min-height: 1.3em; }
+.chargement p { margin: 0; letter-spacing: .1em; text-transform: uppercase; font-size: var(--texte); }
+.chargement .discret { font-size: var(--texte-petit); letter-spacing: 0; text-transform: none; min-height: 1.3em; }
 .chargement-piste { height: 10px; border: 2px solid var(--jeu-fond); }
 .chargement-piste i { display: block; height: 100%; background: var(--jeu-fond); transition: width .12s linear; }
 
 /* Le choix du secteur (Jérôme, v0.29.0) : trois cartes, une coupe du sol de chacune, deux phrases */
 #dialogue-carte { width: min(92vw, 62rem); }
-#dialogue-carte h2 { margin: 0 0 var(--pas); font-size: 18px; font-weight: normal; letter-spacing: .1em; text-transform: uppercase; }
 .cartes-choix { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--pas); }
-.carte-choix { display: grid; gap: 6px; align-content: start; text-align: left; font: inherit; padding: var(--pas); cursor: pointer; color: var(--jeu-fond); background: var(--jeu-encre); border: 2px solid var(--jeu-encre); }
+.carte-choix { display: grid; gap: var(--pas); align-content: start; text-align: left; font: inherit; padding: var(--pas); cursor: pointer; color: var(--jeu-fond); background: var(--jeu-encre); border: 2px solid var(--jeu-encre); }
 .carte-choix:focus-visible { border-color: var(--jeu-nous); }
 @media (hover: hover) { .carte-choix:hover { border-color: var(--jeu-nous); } }
-.carte-choix b { font-weight: normal; font-size: 16px; letter-spacing: .06em; text-transform: uppercase; }
+.carte-choix b { font-weight: normal; font-size: var(--texte-moyen); letter-spacing: .06em; text-transform: uppercase; }
 .carte-choix .touche { float: right; color: var(--jeu-accent); }
-.carte-choix p { margin: 0; font-size: 13px; line-height: 1.35; }
+.carte-choix p { margin: 0; font-size: var(--texte-petit); line-height: 1.35; }
 .carte-choix svg { width: 100%; height: 64px; background: var(--jeu-fond); }
 .carte-choix .sol { fill: none; stroke: var(--jeu-encre); stroke-width: 2; }
 .carte-choix .remplissage { fill: var(--jeu-accent); opacity: .5; stroke: none; }
@@ -322,45 +334,50 @@ dialog form { margin-top: calc(var(--pas) * 2); }
 /* les boutons du haut ont tous la même hauteur (--jeu-cible) ; la barre du temps, dessous, a la largeur de leur rangée (contain : sa propre largeur ne compte pas) */
 .haut-bloc .boutons { align-items: stretch; }
 .haut-bloc .boutons > * { height: var(--jeu-cible); box-sizing: border-box; }
-.haut-bloc .temps { padding: 3px; gap: 3px; align-items: stretch; }
-.haut-bloc .temps button { height: auto; min-width: 36px; padding: 0 6px; }
+.haut-bloc .temps { padding: var(--e1); gap: var(--e1); align-items: stretch; }
+.haut-bloc .temps button { height: auto; min-width: 36px; padding: 0 var(--pas); }
 .haut-bloc .temps button svg { width: 16px; height: 16px; }
-.billet { contain: inline-size; padding: 6px 8px 8px; display: grid; grid-template-columns: minmax(0, 1fr); gap: 4px; }
-.billet .discret, .billet .terrain { font-size: 12px; }
+.billet { contain: inline-size; padding: var(--pas) var(--pas) var(--pas); display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--e1); }
+.billet .discret, .billet .terrain { font-size: var(--texte-petit); }
 .frise { position: relative; padding-top: 22px; --c-jour: var(--jeu-encre); --c-passe: var(--jeu-accent); }
-.frise-drapeau { position: absolute; top: 0; left: 0; white-space: nowrap; font-size: 12px; line-height: 18px; }
+.frise-drapeau { position: absolute; top: 0; left: 0; white-space: nowrap; font-size: var(--texte-petit); line-height: 18px; }
 .frise-meteo, .frise-nuit { display: flex; }
 .frise-meteo { height: 16px; outline: 1px solid var(--jeu-fond); background: var(--jeu-encre); }
 .frise-meteo i { flex: 1; display: block; border-left: 1px solid var(--jeu-fond); }
 .frise-meteo i:first-child { border-left: 0; }
 .frise-meteo i.prevu { background-image: repeating-linear-gradient(135deg, var(--jeu-encre) 0 3px, transparent 3px 6px); }
-.frise-nuit { height: 6px; margin-top: 2px; background: var(--jeu-fond); }
+.frise-nuit { height: 6px; margin-top: var(--e0); background: var(--jeu-fond); }
 .frise-nuit i { flex: 1; display: block; background: linear-gradient(90deg, var(--c-jour) 50%, transparent 50%); }
 .frise-nuit i.passe { background: linear-gradient(90deg, var(--c-passe) 50%, transparent 50%); }
 .frise-repere { position: absolute; left: calc(var(--ici, 0) * 100% - 1px); top: 18px; width: 2px; height: 28px; background: var(--jeu-nous); outline: 1px solid var(--jeu-fond); }
-.frise-chg { position: relative; display: flex; height: 18px; margin-top: 3px; }
+.frise-chg { position: relative; display: flex; height: 18px; margin-top: var(--e1); }
 .frise-chg .frise-icone { flex: 1; min-width: 0; }
 .frise-chg .frise-icone[hidden] { display: block; visibility: hidden; }
 .frise-icone svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 .frise-icone.prevu svg { stroke-dasharray: 2.5 3; }
-.pertes { grid-template-columns: 1fr; gap: 2px; padding: 4px 8px; }
-.pertes .armee { display: grid; grid-template-columns: 8ch 16ch auto auto auto; gap: 0 var(--pas); align-items: center; font-size: 13px; }
-.pertes .nom { font-size: 14px; }
+.pertes { grid-template-columns: 1fr; gap: var(--e0); padding: var(--e1) var(--pas); }
+.pertes .armee { display: grid; grid-template-columns: 9ch 16ch auto auto auto; gap: 0 var(--pas); align-items: center; font-size: var(--texte-petit); }
+.pertes .nom { font-size: var(--texte); white-space: nowrap; }
 .pertes .armee .barre { display: flex; height: 8px; margin: 0; background: var(--jeu-accent); }
-.pertes .armee .compte, .pertes .armee .tr { color: var(--jeu-accent); font-size: 12px; white-space: nowrap; }
+.pertes .armee .compte, .pertes .armee .tr { color: var(--jeu-accent); font-size: var(--texte-petit); white-space: nowrap; }
 .pertes .armee .croix { min-height: 0; max-width: 14ch; letter-spacing: .1em; }
 .pertes .armee .tr[hidden] { display: none; }
-.terrain { display: flex; flex-wrap: wrap; align-items: center; gap: 0 var(--pas); font-size: 12px; color: var(--jeu-accent); min-height: 1.4em; }
-.terrain .vit { display: flex; align-items: center; gap: 4px; }
+.terrain { display: flex; flex-wrap: wrap; align-items: center; gap: 0 var(--pas); font-size: var(--texte-petit); color: var(--jeu-accent); min-height: 1.4em; }
+.terrain .vit { display: flex; align-items: center; gap: var(--e1); }
 .terrain .vit .plein { flex: none; width: 6ch; min-width: 0; height: 6px; background: var(--jeu-accent); }
 .montre-bloc { max-width: 100%; }
 .montre-bloc > .papier { max-width: 40ch; }
 
 /* Jouer à deux (Jérôme, v0.30.0) */
 #dialogue-deux { width: min(92vw, 44rem); }
-#dialogue-deux h2 { margin: 0 0 var(--pas); font-size: 18px; font-weight: normal; letter-spacing: .1em; text-transform: uppercase; }
 #dialogue-deux section { display: grid; gap: var(--pas); margin: var(--pas) 0; }
 #dialogue-deux section[hidden] { display: none; }
 #dialogue-deux p { margin: 0; }
-#dialogue-deux textarea { width: 100%; box-sizing: border-box; font: 12px/1.3 var(--jeu-police, monospace); word-break: break-all; padding: 6px; color: var(--jeu-fond); background: var(--jeu-encre); border: 2px solid var(--jeu-accent); resize: vertical; }
+#dialogue-deux textarea { width: 100%; box-sizing: border-box; font: 12px/1.3 var(--jeu-police, monospace); word-break: break-all; padding: var(--pas); color: var(--jeu-fond); background: var(--jeu-encre); border: 2px solid var(--jeu-accent); resize: vertical; }
 #deux-statut { min-height: 1.4em; }
+
+/* Les titres (v0.32.0) : un seul style, deux tailles : le titre d'un papier (fiche, nuit), le titre d'un dialogue */
+h2 { font-weight: normal; letter-spacing: var(--titre-lettres); }
+.fiche h2, .nuit h2 { font-size: var(--texte-moyen); }
+/* Les boutons du haut ont tous le même habillage : du papier (l'os, l'ombre d'un cran), comme le billet et la carte (Jérôme, v0.31.3) */
+.haut-bloc .boutons > .icone { background: var(--jeu-encre); color: var(--jeu-fond); border: 0; box-shadow: var(--ombre-papier); }
