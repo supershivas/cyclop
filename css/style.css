@@ -290,6 +290,10 @@ dialog form { margin-top: calc(var(--pas) * 2); }
 .visee .fond { stroke: var(--jeu-fond); stroke-width: 4; }
 .visee .encre { stroke: var(--jeu-encre); stroke-width: 2; stroke-dasharray: 6 5; }
 .visee .croix .encre { stroke-dasharray: none; }
+.visee .ombre { fill: none; stroke: var(--jeu-fond); stroke-width: 4; opacity: .55; }
+.visee .zone { fill: var(--jeu-fond); fill-opacity: .3; stroke: var(--jeu-encre); stroke-width: 2; }   /* (le fondu : un mélange du fond et du sol, hors palette comme les ombres) */
+.visee .anneau { fill: none; stroke: var(--jeu-encre); stroke-width: 1.5; stroke-dasharray: 3 4; }
+.visee .pt { fill: var(--jeu-encre); }
 .visee.refus .encre { stroke: var(--jeu-accent); }   /* (refusé : la ligne et la croix passent à la glaise ; l'ennemi est vert, plus de rouge dans le jeu) */
 .carte-grille .lib.eux { color: var(--jeu-eux); }
 .carte-grille .lib { font-size: var(--texte-petit); text-align: center; }

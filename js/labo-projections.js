@@ -4,19 +4,19 @@
 //  - les hommes dans le souffle sont jetés en l'air (à l'opposé du point de chute), puis tués ou blessés ;
 //  - ceux qui sont hors du souffle, mais près, sont ralentis puis reprennent leur marche ; pas de vague : tous sont ralentis
 //    au même instant, et repartent ensemble (le temps ne dépend pas de la distance, seule la force du coup en dépend).
-// La variante A est le jeu tel qu'il est (le souffle de la v0.16.0, la projection des morts de la v0.24.0, aucun ralentissement) : un vrai
+// La variante A est le jeu tel qu'il est (la poussée de la v0.16.0, sans le bond retiré en v0.32.1, la projection des morts de la v0.24.0, aucun ralentissement) : un vrai
 // obus de la logique. B à D sont des maquettes : le labo jette lui-même les hommes (`rendu.lancer`, `mourir` avec le point d'arrivée) et
 // ralentit ceux de l'anneau en retenant leur pas (la logique du jeu ne sait pas ralentir). Rien n'est sauvegardé, rien ne change dans le jeu.
 //
 // « Visée d'un obus » : le cercle qui dit où l'obus tombera, sur le champ de bataille, pour chaque calibre. Un SVG posé sur la vue,
 // dont chaque point du cercle est projeté sur le sol (`versEcran`) : le cercle suit le relief et la perspective.
-import { PALETTE } from './palette.js?v=0.32.0';
-import { nouvelleBataille, avancer, ordonnerMarche, mourir, PAS } from './bataille.js?v=0.32.0';
-import { compacter } from './army.js?v=0.32.0';
-import { impact } from './terrain.js?v=0.32.0';
-import { creerRendu } from './rendu3d.js?v=0.32.0';
-import { CALIBRES } from './data/calibres.js?v=0.32.0';
-import { hash2 } from './lib/rng.js?v=0.32.0';
+import { PALETTE } from './palette.js?v=0.32.1';
+import { nouvelleBataille, avancer, ordonnerMarche, mourir, PAS } from './bataille.js?v=0.32.1';
+import { compacter } from './army.js?v=0.32.1';
+import { impact } from './terrain.js?v=0.32.1';
+import { creerRendu } from './rendu3d.js?v=0.32.1';
+import { CALIBRES } from './data/calibres.js?v=0.32.1';
+import { hash2 } from './lib/rng.js?v=0.32.1';
 
 const el = (tag, props = {}, ...kids) => { const e = Object.assign(document.createElement(tag), props); e.append(...kids); return e; };
 const svgEl = (tag, attrs = {}) => { const e = document.createElementNS('http://www.w3.org/2000/svg', tag); for (const [k, v] of Object.entries(attrs)) e.setAttribute(k, v); return e; };
@@ -252,7 +252,7 @@ export function maquetteProjections(stage, R, lettre) {
     dehors = monter(stage, R, {
       tick: { pas(dt, ctx) { return tick.pas(dt, ctx); }, image: (dt, ctx) => tick.image(dt, ctx) },
       echelle: () => ralenti.querySelector('input').checked ? 0.2 : 1,
-      apres: ctx => { ctx.evts = []; courant = ctx; if (M) ctx.rendu.sansSouffle = true; setTimeout(() => { if (!pendant) tirer(); }, 4000); },
+      apres: ctx => { ctx.evts = []; courant = ctx; setTimeout(() => { if (!pendant) tirer(); }, 4000); },
     });
   }
   demarrer();
@@ -261,10 +261,10 @@ export function maquetteProjections(stage, R, lettre) {
 
 /* ─── « Visée d'un obus » ─── */
 const TYPES = {
-  B: 'trait', C: 'tirets', D: 'cibles', E: 'bord',
+  A: 'cibles', B: 'trait', C: 'tirets', D: 'bord',        // E : l'ancien carré du jeu (aucun cercle)
 };
 export function maquetteVisee(stage, R, lettre) {
-  const type = TYPES[lettre] || null;                 // A : le jeu (un curseur en croix, puis un petit carré)
+  const type = TYPES[lettre] || null;                 // E : l'ancien carré du jeu (un curseur en croix, puis un petit carré)
   let cal = '155', souris = null;
   const haut = el('p', {});
   const boutonsCal = CALS.map(c => el('button', { className: 'essai', textContent: `${c} mm`, onclick: () => { cal = c; maj(); } }));
@@ -302,7 +302,7 @@ export function maquetteVisee(stage, R, lettre) {
   return dehors;
 }
 
-// Un cercle de visée, du rayon du calibre (le souffle : CALIBRES[cal].rayon), de quatre types ; A n'en dessine pas.
+// Un cercle de visée, du rayon du calibre (le souffle : CALIBRES[cal].rayon), de quatre types ; E (l'ancien carré) n'en dessine pas.
 function cercle(svg, rendu, x, y, cal, type, t, suit = false) {
   const r = CALIBRES[cal].rayon, [sx, sy] = rendu.versEcran(x, y);
   const trace = (attrs, rr = r) => svg.append(svgEl('path', { d: chemin(pointsCercle(rendu, x, y, rr)), fill: 'none', ...attrs }));

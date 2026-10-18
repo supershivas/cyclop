@@ -2,12 +2,11 @@
 // et « le feu se voit » (Jérôme, v0.9.2 : l'éclair à la bouche du fusil et le trait vers la cible de chaque tir de `B.tirs`, la pose des tireurs, le bond de ceux que
 // le souffle jette). Une seule fabrique : tous tirent dans le même générateur de l'aspect (`alea`, une suite à graine : l'ordre des tirages fait l'image) et
 // dans les mêmes tampons de particules. Le dessin seulement : jamais la logique, jamais la partie.
-import * as SH from './shaders.js?v=0.32.0';
-import { INDICE } from '../palette.js?v=0.32.0';
-import { horloge } from '../bataille.js?v=0.32.0';
+import * as SH from './shaders.js?v=0.32.1';
+import { INDICE } from '../palette.js?v=0.32.1';
+import { horloge } from '../bataille.js?v=0.32.1';
 
 const ECLATS = 6000;     // (v0.24.0 ; 2 400 avant : une salve de 220 — ~200 éclats chacun, dont de la fumée de 8 à 16 s — faisait le tour du tampon et effaçait les éclats encore en vol)
-export const VOL = 0.6;       // la durée d'un bond (s)
 
 // `THREE`, `scene`, `col`, `palTex` et `NP` (la texture de la palette, pour la couleur d'un éclat), `effets` (ceux que le jeu garde), `surface(x, z)`, `projeter()` et `vue`
 // viennent de creerRendu ; `bataille()`, `terrain()` et `vide()` changent, donc ce sont des fonctions. L'ordre d'ajout à la scène est celui d'avant la découpe.
@@ -84,8 +83,7 @@ export function creerEclats({ THREE, scene, col, palTex, NP, effets, surface, pr
   const FUMEE = { '75': { noire: 0.12, reste: 0.15 }, '155': { noire: 0.35, reste: 0.3 }, '220': { noire: 0.6, reste: 0.5 } };
   const attente = [];                               // les explosions qui attendent que l'obus touche le sol (l'obus qui tombe)
   function impactVu(x, y, cal) {
-    const B = bataille(); const T = terrain();
-    if (B && !sansSouffle) souffler(x, y, cal);
+    const T = terrain();
     if (!effets.chute) return eclater(x, y, cal);
     // l'obus qui tombe : une traînée claire, du ciel au point de chute, puis l'explosion
     const h = T ? surface(x, y) : 0, chute = 0.25, v = 160;
@@ -267,22 +265,12 @@ export function creerEclats({ THREE, scene, col, palTex, NP, effets, surface, pr
   // On ne dessine que ceux qu'on voit, et pas plus de 160 par image (tout dézoomé, ce serait des milliers de points). ───
   // Chaque tireur épaule son fusil : la pose (tirVal, 1 puis qui retombe) et le cap vers sa cible, pour tous les tirs.
   let tirVal = new Float32Array(0), tirAng = new Float32Array(0);
-  // Le souffle (Jérôme, v0.16.0) : la logique jette les survivants à l'opposé du point de chute ; le dessin les fait sauter, un
-  // bond d'autant plus haut qu'ils étaient près (volT : le temps qui reste, volH : la hauteur du bond).
-  let volT = new Float32Array(0), volH = new Float32Array(0), volD = new Float32Array(0);   // volD : la durée de son bond (VOL, ou celle que le labo impose, `lancer`)
-  let sansSouffle = false;                                      // le labo (« Projections ») jette les hommes lui-même : le souffle d'origine se tait
+  // Le bond d'un homme jeté (le labo « Projections », `lancers`) : volT le temps qui reste, volD la durée, volH la hauteur. Le jeu n'en pose plus : depuis la
+  // v0.32.1 (Jérôme : « soit projection, soit ralentissement, pas de saut ») les survivants du souffle ne sautent plus (le bond de la v0.16.0 est retiré).
+  let volT = new Float32Array(0), volH = new Float32Array(0), volD = new Float32Array(0);
   function reserverSoldats(n) {
     if (tirVal.length >= n) return;
     tirVal = new Float32Array(n * 2); tirAng = new Float32Array(n * 2); volT = new Float32Array(n * 2); volH = new Float32Array(n * 2); volD = new Float32Array(n * 2);
-  }
-  function souffler(x, y, cal) {
-    const B = bataille();
-    const A = B.armee, n = A.n, zone = ({ '75': 4, '155': 7, '220': 10 }[cal] || 4) * (B.R.obus.souffleZone || 1.8);
-    reserverSoldats(n);
-    for (let i = 0; i < n; i++) {
-      const d = Math.hypot(A.x[i] - x, A.y[i] - y);
-      if (d < zone) { volT[i] = VOL; volD[i] = VOL; volH[i] = 0.5 + 1.5 * (1 - d / zone); }
-    }
   }
   function majTirs(dt) {
     const B = bataille();
@@ -349,7 +337,6 @@ export function creerEclats({ THREE, scene, col, palTex, NP, effets, surface, pr
     reinitialiser() { feux.length = 0; brules.clear(); arbresEtat = null; },   // une autre bataille : ses arbres ne brûlent pas encore
     fumer(x, z) { const T = terrain(); if (T) fumee(x + (alea() - 0.5) * 3, surface(x, z) + 0.5, z + (alea() - 0.5) * 3, 2, true); },   // une colonne de fumée (l'écran titre)
     lancers(liste) { reserverSoldats(bataille().armee.n); volT.fill(0); for (const [i, duree, haut, reste] of liste) { volT[i] = reste; volD[i] = duree; volH[i] = haut; } },   // des hommes jetés : [indice, durée du bond (s), hauteur (m), temps qui reste] ; les autres retombent (le labo)
-    set sansSouffle(v) { sansSouffle = !!v; },
     tirs() { return { tirVal, tirAng, volT, volH, volD }; },           // la pose des tireurs et le bond des soufflés, lus par les soldats (réservés à chaque image : relire)
   };
 }

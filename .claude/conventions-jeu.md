@@ -312,6 +312,14 @@ une. Il **montre** ; il ne modifie jamais le contenu du jeu (c'est l'Atelier).
 - **Adresse** : elle garde le sujet et la lettre (`#loups-C`).
 - **Chaque variante** a un titre et une phrase qui dit ce qu'elle change ;
   « actuelle », « retenue » (branchée dans le jeu), « ancienne ».
+- **Page d'accueil** : un onglet « Accueil » (`#accueil`, la page d'ouverture)
+  pour suivre les modifications : le journal du labo version par version, chaque
+  ligne avec un lien vers le bon sujet et la bonne variante (`#sujet-Lettre`),
+  ce qui est nouveau depuis la dernière visite de ce navigateur, les sujets à
+  trancher et l'index de tous les sujets. Le journal est une donnée du jeu
+  (`js/labo-journal.js`), tenue à jour à chaque changement du labo ; une
+  maquette que le jeu a dépassée est refaite ou passée en « ancienne », pas
+  laissée telle quelle.
 - **Le labo utilise les mêmes modules que le jeu** (rendu, sprites, son) : ce
   qu'on y voit est ce que le jeu affichera. Il ne lit ni n'écrit la sauvegarde.
 - Sujets utiles : la planche d'échelle, chaque animation, la palette, les
