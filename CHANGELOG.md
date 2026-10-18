@@ -1,5 +1,9 @@
 # Journal des versions
 
+## 0.30.0 — 2026-10-18
+- Jouer à deux (bouton de l'écran titre) : deux ordinateurs sur le même réseau, sans serveur. L'un invite (le bleu), l'autre rejoint (le kaki) en se passant deux textes ; les deux commandent leur armée dans la même bataille, en même temps : ordres, barrages, pause partagée, ×2 et ×4, nuit et aube (chacun ses corvées, l'aube vient quand les deux sont prêts)
+- Le kaki voit la carte et la caméra tournées d'un demi-tour (ses lignes en bas) et les couleurs de l'interface à sa main ; la partie à deux ne se sauvegarde pas
+
 ## 0.29.0 — 2026-10-18
 - Trois secteurs à choisir en début de partie (touches 1, 2, 3) : Les labours, La crête (une crête de 7 m que l'ennemi tient : il faut la monter), Le marais (un fond plat où la nappe affleure, quatre jours de pluie au moins)
 - Les tranchées serpentent : un tracé irrégulier, une largeur qui varie, des boyaux sinueux, plus de créneaux en carré (une partie déjà commencée garde ses hommes mais retrouve ses tranchées au nouveau tracé)

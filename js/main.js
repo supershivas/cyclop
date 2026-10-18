@@ -1,32 +1,34 @@
 // Le cycle de vie : écran titre → bataille → nuit → fin ; pause active,
 // réglages, sauvegarde, mise à jour, debug. Les règles sont dans bataille.js
 // (pures), le dessin dans rendu3d.js (il ne modifie jamais l'état).
-import { createLoop } from './lib/loop.js?v=0.29.0';
-import { createKeys, stopTypeahead } from './lib/keys.js?v=0.29.0';
-import { createPointer, lockBrowserGestures } from './lib/pointer.js?v=0.29.0';
-import { createGamepad } from './lib/gamepad.js?v=0.29.0';
-import { createStore, autosave, pickJSONFile } from './lib/save.js?v=0.29.0';
-import { startUpdateCheck, loadVersion, loadChangelog, downloadJSON } from './lib/app-update.js?v=0.29.0';
-import { ROLES } from './palette.js?v=0.29.0';
-import { MISSIONS, nouvelleBataille, etapesRestaurer, avancer, aube, ordonnerMarche, peutOrdonner, ordonnerBarrage, horloge, effectifs, tronconsTenus, moralEnMots, terrainResume, largeurZone, lettreZone, etendueZones, nomTroncon, actionDe, secteursDe, tronconsDeLigne, zone, photo, restaurer, PAS, NOUS } from './bataille.js?v=0.29.0';
-import { ligneY } from './tranchees.js?v=0.29.0';
-import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.29.0';
-import { METEO } from './data/meteo.js?v=0.29.0';
-import { impact, hydroLignes } from './terrain.js?v=0.29.0';
-import { hash2 } from './lib/rng.js?v=0.29.0';
-import { creerRendu, CAMERA } from './rendu3d.js?v=0.29.0';
-import { etatEnMots, experienceEnMots, chevrons } from './identite.js?v=0.29.0';
-import { CORVEES } from './data/corvees.js?v=0.29.0';
-import { refusCorvee } from './nuit.js?v=0.29.0';
-import { chargerContenu } from './design-store.js?v=0.29.0';
-import * as lecture from './hud/lecture.js?v=0.29.0';
-import { creerFiche } from './hud/fiche.js?v=0.29.0';
-import { creerNuit, corveeDe, corveeCourte } from './hud/nuit.js?v=0.29.0';
-import { creerCarnet, deux } from './hud/carnet.js?v=0.29.0';
-import { creerCarte } from './hud/carte.js?v=0.29.0';
-import { creerPertes } from './hud/pertes.js?v=0.29.0';
-import { creerChargement } from './hud/chargement.js?v=0.29.0';
-import { SECTEURS } from './data/secteur.js?v=0.29.0';
+import { createLoop } from './lib/loop.js?v=0.30.0';
+import { createKeys, stopTypeahead } from './lib/keys.js?v=0.30.0';
+import { createPointer, lockBrowserGestures } from './lib/pointer.js?v=0.30.0';
+import { createGamepad } from './lib/gamepad.js?v=0.30.0';
+import { createStore, autosave, pickJSONFile } from './lib/save.js?v=0.30.0';
+import { startUpdateCheck, loadVersion, loadChangelog, downloadJSON } from './lib/app-update.js?v=0.30.0';
+import { ROLES } from './palette.js?v=0.30.0';
+import { MISSIONS, EUX, nouvelleBataille, etapesRestaurer, avancer, aube, ordonnerMarche, peutOrdonner, ordonnerBarrage, peutBarrage, horloge, effectifs, tronconsTenus, moralEnMots, terrainResume, largeurZone, lettreZone, etendueZones, nomTroncon, actionDe, secteursDe, tronconsDeLigne, zone, photo, restaurer, PAS, NOUS } from './bataille.js?v=0.30.0';
+import { ligneY } from './tranchees.js?v=0.30.0';
+import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.30.0';
+import { METEO } from './data/meteo.js?v=0.30.0';
+import { impact, hydroLignes } from './terrain.js?v=0.30.0';
+import { hash2 } from './lib/rng.js?v=0.30.0';
+import { creerRendu, CAMERA } from './rendu3d.js?v=0.30.0';
+import { etatEnMots, experienceEnMots, chevrons } from './identite.js?v=0.30.0';
+import { CORVEES } from './data/corvees.js?v=0.30.0';
+import { refusCorvee } from './nuit.js?v=0.30.0';
+import { chargerContenu } from './design-store.js?v=0.30.0';
+import * as lecture from './hud/lecture.js?v=0.30.0';
+import { creerFiche } from './hud/fiche.js?v=0.30.0';
+import { creerNuit, corveeDe, corveeCourte } from './hud/nuit.js?v=0.30.0';
+import { creerCarnet, deux } from './hud/carnet.js?v=0.30.0';
+import { creerCarte } from './hud/carte.js?v=0.30.0';
+import { creerPertes } from './hud/pertes.js?v=0.30.0';
+import { creerChargement } from './hud/chargement.js?v=0.30.0';
+import { SECTEURS } from './data/secteur.js?v=0.30.0';
+import { creerLockstep, empreinteEtat } from './reseau/lockstep.js?v=0.30.0';
+import { creerHote, creerInvite } from './reseau/lien.js?v=0.30.0';
 
 const JEU = 'cyclopeen';
 const $ = id => document.getElementById(id);
@@ -58,6 +60,8 @@ let pauseActive = false;      // Espace : le temps s'arrête, les ordres restent
 let forme = 'bloc';            // la forme des prochains ordres en terrain libre (bloc, ligne, par deux, colonne) ; sur une tranchée, les hommes suivent le tracé
 let modeMarche = false;        // le bouton « Marcher » d'une carte : le prochain clic sur le sol envoie les régiments choisis
 let modeBarrage = null;       // un calibre : le prochain clic gauche vise
+let MOI = NOUS;               // le camp qu'on joue : le nôtre (bleu), ou le kaki quand on est l'invité d'une partie à deux (v0.30.0)
+let reseau = null;            // une partie à deux sur le réseau : { moi, lien, ls, nuit : { corvees, pret } } ; sinon null
 let choisis = new Set();      // les régiments choisis (ids)
 const perf = { sim: 0, pas: 0 };
 
@@ -68,15 +72,18 @@ const soldatSous = (x, y, r) => lecture.soldatSous(B, x, y, r), corpsSous = (x, 
 const numeroDe = r => lecture.numeroDe(B, r);     // le numéro d'ordre : « 3 · Viride »
 const bilan = reg => lecture.bilan(B, reg), refuseAujourdhui = reg => lecture.refuseAujourdhui(B, reg);
 const { noter, vider: viderCarnet } = creerCarnet({ $, bataille: () => B });
-const majPertes = creerPertes({ $ });
+const majPertes = creerPertes({ $, moi: () => MOI });
 const laCarte = creerCarte({
   $, bataille: () => B, choisis: () => choisis,
   surSecteur: (s, ajout) => choisirSecteur(s, ajout), surCase: (idx, s) => ordreCase(idx, s),
-  surRonde: (r, ajout) => r.camp === NOUS ? choisirRegiment(r.id, ajout) : montrerRegiment(r.id),
+  surRonde: (r, ajout) => r.camp === MOI ? choisirRegiment(r.id, ajout) : montrerRegiment(r.id),
+  moi: () => MOI,
 });
 const nuit = creerNuit({
-  $, bataille: () => B, choisis: () => choisis, pauser: () => loop.pause(), reprendre: () => reprendre(),
+  $, bataille: () => B, choisis: () => choisis, pauser: () => { if (!reseau) loop.pause(); }, reprendre: () => reprendre(),
   sauvegarder: () => sauvegarder(), majHud: () => majHud(), toast: t => toast(t), dire: r => dire(r), invalider: () => { regimentsVus = ''; },
+  moi: () => MOI, enReseau: () => !!reseau,
+  surChoix: (reg, id) => reseau.ls.commander({ t: 'corvee', reg, id }), surPret: () => reseau.ls.commander({ t: 'pret' }),
 });
 const laFiche = creerFiche({ $, R, bataille: () => B });
 const { montrerFiche, montrerSoldat, montrerRegiment, fermer: fermerFiche, maj: majFiche } = laFiche;
@@ -149,6 +156,7 @@ function montrerDecor() {
   decorObus = 0.5;
 }
 function montrerTitre() {
+  if (reseau) return quitterReseau();
   loop.pause();
   montrerDecor();
   $('titre').hidden = false;
@@ -156,12 +164,22 @@ function montrerTitre() {
   $('continuer').hidden = !store.has('partie');
   ($('continuer').hidden ? $('nouvelle') : $('continuer')).focus();
 }
+// L'objectif de celui qui joue : la mission est celle des nôtres ; à deux, en face a l'objectif inverse (tenir ce qu'on attaque, prendre ce qu'on tient)
+const objectif = () => (MOI === NOUS) === (B.etat.mission === 'tenir') ? 'tenir' : 'prendre';
+function reglerCamp(camp) {
+  MOI = camp;
+  // l'interface parle de « nous » en bleu et « eux » en face : à l'invité, le kaki est « nous »
+  document.documentElement.style.setProperty('--jeu-nous', camp === NOUS ? ROLES.nous : ROLES.eux);
+  document.documentElement.style.setProperty('--jeu-eux', camp === NOUS ? ROLES.eux : ROLES.nous);
+}
 function jouer(bataille) {
   B = bataille;
+  if (!reseau) reglerCamp(NOUS);
   rendu.attacher(B);
   rendu.vue.zoom = prefs.zoom ?? 2;
   // la caméra du joueur (ou celle de départ : l'écran titre a la sienne) ; un réglage de la v0.2, sans tangage, est ignoré
   if (prefs.camera?.tangage) rendu.placerCamera(prefs.camera.yaw, prefs.camera.tangage); else rendu.placerCamera(CAMERA.yaw, CAMERA.tangage);
+  if (MOI === EUX) rendu.placerCamera(Math.PI + CAMERA.yaw, CAMERA.tangage);      // l'invité regarde vers le sud : ses lignes sont en bas
   choisis = new Set(); rendu.choisis = choisis;
   modeBarrage = null; modeMarche = false; pauseActive = false; vitesse = 1; loop.setTimeScale(1); fermerFiche(); nuit.fermer();
   viderCarnet(); regimentsVus = '';
@@ -175,14 +193,16 @@ function jouer(bataille) {
   else if (B.etat.phase === 'fin') montrerFin();
   else loop.resume();
 }
-function sauvegarder() { if (B) store.save('partie', photo(B)); }
+function sauvegarder() { if (B && !reseau) store.save('partie', photo(B)); }       // (une partie à deux ne se sauvegarde pas : l'autre machine n'y est plus)
 function pause() {
   if (!enJeu() || $('dialogue-pause').open) return;
-  loop.pause();
+  if (reseau) { if (!reseau.ls.etat.pause) { reseau.ls.commander({ t: 'pause' }); reseau.pauseParMoi = true; } }      // à deux, la pause est celle des deux joueurs : le temps s'arrête pour tous
+  else loop.pause();
   sauvegarder();
   $('dialogue-pause').showModal();
 }
 function reprendre() {
+  if (reseau) { if (reseau.pauseParMoi && reseau.ls.etat.pause && !document.querySelector('dialog[open]')) { reseau.pauseParMoi = false; reseau.ls.commander({ t: 'pause' }); } return; }
   if (!enJeu() || pauseActive || nuit.etat || B.etat.phase !== 'jour' || document.querySelector('dialog[open]')) return;
   loop.resume();
 }
@@ -212,9 +232,9 @@ async function commencer(graine, secteur) {
   if (DEBUG || !B.etat.mission) return;
   loop.pause();
   const e = B.etat;
-  $('ordre-mission').textContent = MISSIONS[e.mission];
+  $('ordre-mission').textContent = MISSIONS[objectif()];
   $('ordre-duree').textContent = `La bataille durera ${e.meteo.length} jours.`;
-  $('ordre-reserves').textContent = `En réserve : ${pluriel(e.reserves[NOUS], 'régiment frais', 'régiments frais')}, pour la relève, la nuit.`;
+  $('ordre-reserves').textContent = `En réserve : ${pluriel(e.reserves[MOI], 'régiment frais', 'régiments frais')}, pour la relève, la nuit.`;
   $('dialogue-ordre').showModal();
 }
 $('ordre-compris').onclick = () => $('dialogue-ordre').close();
@@ -240,6 +260,116 @@ function demanderSecteur() {
     d.showModal();
     liste.firstElementChild?.focus();
   });
+}
+// ─── Le jeu à deux, sur le réseau (Jérôme, v0.30.0) ───────────────────────────────────────────────────────────────
+// Deux machines, la même bataille (lockstep : reseau/lockstep.js) ; on n'échange que les ordres, sur un canal WebRTC appairé à la main (reseau/lien.js). L'hôte joue le bleu, l'invité le kaki.
+// Chaque ordre part pour les deux machines, et s'exécute au même cadre chez les deux ; le refus, lui, se dit tout de suite (l'ordre à sec).
+let versionJeu = '';
+loadVersion().then(v => { versionJeu = v || ''; });
+const empreinteReglages = () => { const t = JSON.stringify(R); let h = 2166136261; for (let i = 0; i < t.length; i++) { h ^= t.charCodeAt(i); h = Math.imul(h, 16777619) >>> 0; } return h.toString(16); };
+function lancerMarche(ids, x, y) {
+  if (!reseau) return ordonnerMarche(B, ids, x, y, forme);
+  const p = peutOrdonner(B, ids, x, y, forme, MOI);
+  if (p.ok) reseau.ls.commander({ t: 'marche', ids: p.regiments, x, y, forme });
+  return p;
+}
+function lancerBarrage(cal, x, y) {
+  if (!reseau) return ordonnerBarrage(B, cal, x, y);
+  const p = peutBarrage(B, cal, x, y, MOI);
+  if (p.ok) reseau.ls.commander({ t: 'barrage', cal, x, y });
+  return p;
+}
+// Ce que fait un ordre, le même chez les deux (`camp` : celui qui l'a donné)
+function executerCmd(c, camp, b, st) {
+  if (c.t === 'marche') { const r = ordonnerMarche(b, c.ids, c.x, c.y, c.forme, camp); if (camp === MOI && r.ok) { marque = { x: c.x, y: c.y, t: 2 }; ordreDonne(r); } }
+  else if (c.t === 'barrage') { const r = ordonnerBarrage(b, c.cal, c.x, c.y, camp); if (camp === MOI && r.ok) marque = { x: c.x, y: c.y, t: 2 }; }
+  else if (c.t === 'pause') st.pause = !st.pause;
+  else if (c.t === 'vitesse') st.vitesse = [1, 2, 4].includes(c.v) ? c.v : 1;
+  else if (c.t === 'corvee') { const reg = b.etat.regiments[c.reg]; if (reg && reg.camp === camp && !refusCorvee(b, reg, c.id)) reseau.corvees[c.reg] = c.id; }
+  else if (c.t === 'pret') {
+    reseau.pret[camp] = true;
+    if (reseau.pret[0] && reseau.pret[1] && b.etat.phase === 'nuit') {       // les deux sont prêts : l'aube, avec les corvées des deux
+      const r = aube(b, reseau.corvees);
+      reseau.corvees = {}; reseau.pret = [false, false];
+      if (r.ok) nuit.apresAube(b, r);
+    }
+  }
+}
+function demarrerReseau({ moi, lien, graine, secteur }) {
+  for (const d of document.querySelectorAll('dialog[open]')) d.close();
+  reseau = { moi, lien, ls: null, corvees: {}, pret: [false, false], pauseParMoi: false };
+  reglerCamp(moi);
+  const b = nouvelleBataille(graine, R, { secteur, deux: true });
+  reseau.ls = creerLockstep({
+    B: b, moi, envoyer: m => lien.envoyer(m), executer: executerCmd,
+    surEcart: (cadre) => { noter('Désynchronisation : les deux parties ne sont plus les mêmes.'); toast('Désynchronisation : les deux parties ont divergé.'); console.error('désynchronisation au cadre', cadre); },
+  });
+  lien.surMessage = m => { if (m.t === 'cmds' || m.t === 'hash') reseau.ls.recevoir(m); else if (m.t === 'quitte') quitterReseau('L\'autre commandant a quitté la partie.'); };
+  lien.surFermeture = () => { if (reseau) quitterReseau('La connexion est perdue.'); };
+  jouer(b);
+  noter(`Vous êtes le ${moi === NOUS ? 'bleu' : 'kaki'}. ${MISSIONS[objectif()]}`);
+  toast(`Vous êtes le ${moi === NOUS ? 'bleu' : 'kaki'}. Espace : pause pour les deux.`);
+}
+function quitterReseau(message) {
+  const r = reseau; if (!r) return;
+  reseau = null; reglerCamp(NOUS);
+  try { r.lien.envoyer({ t: 'quitte' }); r.lien.fermer(); } catch { /* déjà fermé */ }
+  if (message) toast(message);
+  loop.resume(); montrerTitre();
+}
+// la poignée de main : la version du jeu et ses réglages doivent être les mêmes (les deux machines calculent avec le même code et les mêmes nombres)
+function poigneeHote(lien, graine, secteur) {
+  lien.surOuvert = () => lien.envoyer({ t: 'init', version: versionJeu, reglages: empreinteReglages(), graine, secteur });
+  lien.surMessage = m => {
+    if (m.t === 'ok') demarrerReseau({ moi: NOUS, lien, graine, secteur });
+    else if (m.t === 'refus') { $('deux-statut').textContent = `L'autre machine refuse : ${m.raison}`; lien.fermer(); }
+  };
+}
+function poigneeInvite(lien) {
+  lien.surMessage = m => {
+    if (m.t !== 'init') return;
+    const raison = m.version !== versionJeu ? `elle joue la v${m.version}, vous la v${versionJeu} : rechargez la page` : m.reglages !== empreinteReglages() ? 'les réglages (l\'atelier) ne sont pas les mêmes' : !SECTEURS[m.secteur] ? 'secteur inconnu' : null;
+    if (raison) { lien.envoyer({ t: 'refus', raison }); $('deux-statut').textContent = `Impossible de jouer ensemble : ${raison}.`; return; }
+    lien.envoyer({ t: 'ok' });
+    demarrerReseau({ moi: EUX, lien, graine: m.graine, secteur: m.secteur });
+  };
+}
+{
+  const dlg = $('dialogue-deux'), statut = t => { $('deux-statut').textContent = t; };
+  const copier = async id => { const a = $(id); a.select(); try { await navigator.clipboard.writeText(a.value); statut('Copié.'); } catch { statut('Sélectionné : copiez-le à la main.'); } };
+  let lien = null;
+  $('jouer-deux').onclick = () => {
+    $('deux-choix').hidden = false; $('deux-hote').hidden = true; $('deux-invite').hidden = true; statut('');
+    for (const id of ['deux-invitation', 'deux-reponse', 'deux-invitation-recue', 'deux-ma-reponse']) $(id).value = '';
+    dlg.showModal();
+  };
+  dlg.addEventListener('close', () => { if (!reseau && lien) { lien.fermer(); lien = null; } });
+  $('deux-inviter').onclick = async () => {
+    const secteur = await demanderSecteur();
+    if (!secteur) return;
+    const graine = window.__seed ?? Date.now() % 100000;
+    $('deux-choix').hidden = true; $('deux-hote').hidden = false; statut('Préparation de l\'invitation…');
+    try {
+      lien = creerHote(); poigneeHote(lien, graine, secteur);
+      $('deux-invitation').value = await lien.inviter();
+      statut(`Secteur : ${SECTEURS[secteur].nom}. En attente de la réponse de l'autre joueur.`);
+    } catch (e) { console.error(e); statut(`Impossible : ${e.message}`); }
+  };
+  $('deux-connecter').onclick = async () => {
+    try { statut('Connexion…'); await lien.accepter($('deux-reponse').value); statut('Connexion en cours… (les deux machines doivent être sur le même réseau)'); }
+    catch (e) { statut(`Réponse illisible : ${e.message}`); }
+  };
+  $('deux-rejoindre').onclick = () => { $('deux-choix').hidden = true; $('deux-invite').hidden = false; statut(''); };
+  $('deux-repondre').onclick = async () => {
+    try {
+      statut('Préparation de la réponse…');
+      lien = creerInvite(); poigneeInvite(lien);
+      $('deux-ma-reponse').value = await lien.repondre($('deux-invitation-recue').value);
+      statut('Renvoyez ce texte à celui qui vous invite : la partie commence quand il l\'aura collé.');
+    } catch (e) { console.error(e); statut(`Invitation illisible : ${e.message}`); }
+  };
+  $('deux-copier-invitation').onclick = () => copier('deux-invitation');
+  $('deux-copier-reponse').onclick = () => copier('deux-ma-reponse');
 }
 $('nouvelle').onclick = async () => {
   const graine = window.__seed ?? Date.now() % 100000;      // la graine elle-même peut venir de l'horloge
@@ -274,7 +404,8 @@ function montrerFin() {
   loop.pause(); sauvegarder();
   const e = B.etat, [vNous, vEux] = effectifs(B);
   $('fin-titre').textContent = `${e.jour} jours.`;
-  $('fin-issue').textContent = e.issue?.texte || '';
+  $('fin-issue').textContent = reseau ? `${e.issue?.reussie ? 'Le bleu' : 'Le kaki'} l'emporte. ${e.issue?.texte || ''}` : (e.issue?.texte || '');
+  $('fin-nouvelle').hidden = !!reseau;
   // jour après jour : ce qu'il a coûté, sans un mot de plus
   $('fin-jours').replaceChildren(...e.pertesJour.slice(0, e.jour).map(([n, x], k) => Object.assign(document.createElement('li'), { textContent: `Jour ${k + 1} : ${n} des nôtres, ${x} en face.` })));
   $('fin-pertes').textContent = `${e.pertes[0]} des nôtres sont morts, ${e.pertes[1]} en face. Il en reste ${vNous} et ${vEux}.`;
@@ -323,11 +454,11 @@ let regimentsVus = '', regDebut = 0, regActifVu = -1;
 const CARTE_L = 112, CARTE_ECART = 8;
 const CHEVRON = '<svg class="chev" viewBox="0 0 12 8" aria-hidden="true"><path d="M1 7l5-5 5 5"/></svg>';
 function majRegiments() {
-  const e = B.etat, A = B.armee, regs = e.regiments.filter(r => r.camp === NOUS && r.effectif);
+  const e = B.etat, A = B.armee, regs = e.regiments.filter(r => r.camp === MOI && r.effectif);
   const bl = new Int32Array(e.regiments.length), ex = new Float32Array(e.regiments.length), vivants = new Int32Array(e.regiments.length);
-  for (let i = 0; i < A.n; i++) if (A.camp[i] === NOUS) { const g = A.reg[i]; vivants[g]++; ex[g] += A.exp[i]; if (A.blessure[i]) bl[g]++; }
+  for (let i = 0; i < A.n; i++) if (A.camp[i] === MOI) { const g = A.reg[i]; vivants[g]++; ex[g] += A.exp[i]; if (A.blessure[i]) bl[g]++; }
   const place = Math.max(0, $('regiments').clientWidth - 2 * 40), visibles = place ? Math.max(1, Math.min(regs.length, Math.floor((place + CARTE_ECART) / (CARTE_L + CARTE_ECART)))) : regs.length;
-  const actif = [...choisis].reverse().map(id => e.regiments[id]).find(r => r && r.camp === NOUS && r.effectif) || null;
+  const actif = [...choisis].reverse().map(id => e.regiments[id]).find(r => r && r.camp === MOI && r.effectif) || null;
   const ia = actif ? regs.indexOf(actif) : -1;
   if (ia >= 0 && ia !== regActifVu && (ia < regDebut || ia >= regDebut + visibles)) regDebut = Math.min(Math.max(0, regs.length - visibles), Math.max(0, ia - Math.floor(visibles / 2)));
   regActifVu = ia;
@@ -392,7 +523,7 @@ $('reg-ouvert').onclick = e => {
       if (!d) continue;
       let x = d.x, y = d.y;
       if (d.trace) { const L = B.lignes.find(l => l.camp * 10 + l.rang === d.trace.ligne); x = (d.trace.x0 + d.trace.x1) / 2; y = L ? ligneY(L, x) : d.y; }
-      const r = dire(ordonnerMarche(B, [id], x, y));
+      const r = dire(lancerMarche([id], x, y));
       if (r.ok) { marque = { x, y, t: 2 }; ordreDonne(r); }
     }
     sauvegarder(); majHud();
@@ -412,7 +543,7 @@ function choisirRegiment(id, ajout) {
   rendu.choisis = choisis; majHud();
 }
 function choisirSecteur(s, ajout) {
-  const regs = B.etat.regiments.filter(r => { const [a, b] = etendueZones(B, r.depart); return r.camp === NOUS && r.effectif && s >= a && s <= b; });
+  const regs = B.etat.regiments.filter(r => { const [a, b] = etendueZones(B, r.depart); return r.camp === MOI && r.effectif && s >= a && s <= b; });
   if (!regs.length) return toast(`Plus personne dans le secteur ${lettreZone(s)}.`);
   if (!ajout) choisis = new Set();
   for (const r of regs) { if (ajout && choisis.has(r.id)) choisis.delete(r.id); else choisis.add(r.id); }
@@ -422,7 +553,7 @@ function ordreCase(idx, s) {
   if (B.etat.phase !== 'jour') return toast('La nuit, pas de marche : choisissez des régiments, puis une corvée.');
   if (!choisis.size) return toast('Choisissez d\'abord un régiment (clic, cadre, T, ou la lettre d\'un secteur).');
   const Z = zone(B), x = Z.x0 + (s - 0.5) * largeurZone(B), y = ligneY(B.lignes[idx], x);
-  const r = dire(ordonnerMarche(B, [...choisis], x, y, forme));
+  const r = dire(lancerMarche([...choisis], x, y));
   if (r.ok) { marque = { x, y, t: 2 }; sauvegarder(); ordreDonne(r); }
 }
 // Un ordre pris : les tronçons visés clignotent (sur le terrain et sur la carte, trois secondes) et le carnet dit ce que chacun va faire
@@ -442,15 +573,15 @@ function ordreDonne(r) {
 
 // Les événements de la bataille, racontés au carnet de bord (la boucle et le mode debug)
 function raconter(ev) {
-    if (vitesse > 1 && ev.some(p => p.type === 'prise' || p.type === 'dispute' || p.type === 'assaut' || (p.type === 'deroute' && p.camp === NOUS))) { vitesse = 1; appliquerVitesse(); }
+    if (!reseau && vitesse > 1 && ev.some(p => p.type === 'prise' || p.type === 'dispute' || p.type === 'assaut' || (p.type === 'deroute' && p.camp === MOI))) { vitesse = 1; appliquerVitesse(); }
     for (const p of ev) {
       const reg = p.reg !== undefined ? B.etat.regiments[p.reg] : null;
-      if (p.type === 'prise') noter(`${p.camp === NOUS ? 'Pris' : 'Perdu'} : ${nomTroncon(B, p.troncon)}.`);
+      if (p.type === 'prise') noter(`${p.camp === MOI ? 'Pris' : 'Perdu'} : ${nomTroncon(B, p.troncon)}.`);
       else if (p.type === 'dispute') noter(`Ceux d'en face sont dans ${nomTroncon(B, p.troncon)}.`);
       else if (p.type === 'preparation') noter(`En face prépare au 220 sur ${nomTroncon(B, p.troncon)}.`);
       else if (p.type === 'poursuite') noter(`${reg.nom ? `${reg.nom} d'en face` : 'Un régiment d\'en face'} poursuit sur notre ligne suivante.`);
       else if (p.type === 'assaut') noter(`${reg.nom ? `${reg.nom} d'en face` : 'Un régiment d\'en face'} sort de ses tranchées${p.troncon >= 0 ? ` : ${nomTroncon(B, p.troncon)}` : ''}.`);
-      else if (p.camp !== NOUS) continue;
+      else if (p.camp !== MOI) continue;
       else if (p.type === 'deroute') noter(`${reg.nom} est en déroute.`);
       else if (p.type === 'ralliement') noter(`${reg.nom} se rallie.`);
       else if (p.type === 'promu' && p.rang === 0) { const { qui } = quiEst(p.id); noter(`${qui.prenom} ${qui.nom} commande ${reg.nom}.`); }
@@ -468,8 +599,12 @@ function appliquerVitesse() {
   const plafond = perf.sim > 0 ? Math.max(1, Math.floor(20 / perf.sim)) : 4;
   loop.setTimeScale(Math.min(vitesse, plafond));
 }
-function basculerPause() { pauseActive = !pauseActive; if (pauseActive) loop.pause(); else reprendre(); majHud(); }
+function basculerPause() {
+  if (reseau) { reseau.pauseParMoi = false; return reseau.ls.commander({ t: 'pause' }); }
+  pauseActive = !pauseActive; if (pauseActive) loop.pause(); else reprendre(); majHud();
+}
 function majTemps(h) {
+  if (reseau) { pauseActive = reseau.ls.etat.pause; vitesse = reseau.ls.etat.vitesse; }
   appliquerVitesse();
   $('temps-pause').classList.toggle('actif', pauseActive); $('temps-pause').setAttribute('aria-pressed', String(pauseActive));
   for (const b of document.querySelectorAll('[data-vitesse]')) b.classList.toggle('actif', +b.dataset.vitesse === vitesse);
@@ -483,14 +618,14 @@ function majHud() {
   $('horloge').textContent = `Jour ${h.jour} sur ${h.jours} · ${h.heure} h ${deux(h.minute)} · ${METEO[h.meteo].nom}`;
   $('demain').textContent = h.prevision ? `Demain : ${METEO[h.prevision].prevision}` : 'Dernier jour';
   $('mission').hidden = !e.mission;
-  if (e.mission) $('mission').textContent = `${e.mission === 'tenir' ? 'Tenir le secteur' : 'Prendre leur première ligne'} · réserve : ${e.reserves[NOUS]}`;
+  if (e.mission) $('mission').textContent = `${objectif() === 'tenir' ? 'Tenir le secteur' : 'Prendre leur première ligne'} · réserve : ${e.reserves[MOI]}`;
   $('montre-m').style.transform = `rotate(${h.minute * 6}deg)`; $('montre-m').style.transformOrigin = '32px 32px';
   $('montre-h').style.transform = `rotate(${((h.heure % 12) + h.minute / 60) * 30}deg)`; $('montre-h').style.transformOrigin = '32px 32px';
   majPertes(B); majTemps(h);
   majFiche();
   $('pause-active').hidden = !pauseActive;
   for (const b of $('batteries').children) {
-    const cal = b.dataset.cal, reste = Math.ceil(e.batteries[cal] - e.temps);
+    const cal = b.dataset.cal, reste = Math.ceil((MOI === NOUS ? e.batteries : e.batteriesEux)[cal] - e.temps);
     b.querySelector('span').textContent = reste > 0 ? `${reste} s` : 'prête';
     b.classList.toggle('vise', modeBarrage === cal);
     b.classList.toggle('recharge', reste > 0);
@@ -521,7 +656,7 @@ function etiquettes() {
   $('etiquettes').replaceChildren();
   etiq.clear();
   for (const r of B.etat.regiments) {
-    if (r.camp !== NOUS) continue;
+    if (r.camp !== MOI) continue;
     const d = document.createElement('div');
     d.className = 'etiquette'; d.textContent = r.nom;
     $('etiquettes').append(d); etiq.set(r.id, d);
@@ -531,10 +666,10 @@ const centres = new Map();
 function majEtiquettes() {
   const A = B.armee;
   // (un régiment frais est arrivé à l'aube : son nom au-dessus de lui aussi)
-  if (etiq.size !== B.etat.regiments.filter(r => r.camp === NOUS).length) etiquettes();
+  if (etiq.size !== B.etat.regiments.filter(r => r.camp === MOI).length) etiquettes();
   centres.clear();
   for (let i = 0; i < A.n; i++) {
-    if (A.camp[i] !== NOUS) continue;
+    if (A.camp[i] !== MOI) continue;
     let c = centres.get(A.reg[i]);
     if (!c) centres.set(A.reg[i], c = { x: 0, y: 0, n: 0, ymin: 1e9 });
     c.x += A.x[i]; c.y += A.y[i]; c.n++; if (A.y[i] < c.ymin) c.ymin = A.y[i];
@@ -573,7 +708,7 @@ function majVisee() {
     if (!svg.hasAttribute('hidden')) { svg.setAttribute('hidden', ''); rendu.surligner(null); }
     return;
   }
-  const [x, y] = rendu.versTerrain(souris.x, souris.y), plan = peutOrdonner(B, [...choisis], x, y, forme);
+  const [x, y] = rendu.versTerrain(souris.x, souris.y), plan = peutOrdonner(B, [...choisis], x, y, forme, MOI);
   rendu.surligner(plan.ok ? { troncons: plan.troncons || [], rects: plan.emprises || [] } : null);
   const trait = (x1, y1, x2, y2) => `<line class="fond" x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}"/><line class="encre" x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}"/>`;
   let d = '';
@@ -668,7 +803,7 @@ function majBulle() {
 
 // Donner l'ordre de marche aux régiments choisis, là où l'on a cliqué
 function ordreMarche(x, y) {
-  const r = dire(ordonnerMarche(B, [...choisis], x, y, forme));
+  const r = dire(lancerMarche([...choisis], x, y));
   if (r.ok) { marque = { x, y, t: 2 }; sauvegarder(); ordreDonne(r); }
 }
 // Annuler, du plus récent au plus ancien : le barrage visé, « Marcher », la fiche, les régiments choisis (clic droit, Échap)
@@ -682,7 +817,7 @@ function annuler() {
 
 // ─── Commandes : clavier, souris (section 8) ───────────────────────────────
 function choisirTout() {
-  choisis = new Set(B.etat.regiments.filter(r => r.camp === NOUS && r.effectif).map(r => r.id));
+  choisis = new Set(B.etat.regiments.filter(r => r.camp === MOI && r.effectif).map(r => r.id));
   rendu.choisis = choisis; majHud();
 }
 const keys = createKeys({
@@ -697,7 +832,7 @@ const keys = createKeys({
     }
     else if (nom === 'pause') basculerPause();
     else if (nom === 'tout') choisirTout();
-    else if (nom === 'centrer') { rendu.placerCamera(CAMERA.yaw, CAMERA.tangage); prefs.camera = null; store.save('prefs', prefs); }
+    else if (nom === 'centrer') { rendu.placerCamera(MOI === EUX ? Math.PI + CAMERA.yaw : CAMERA.yaw, CAMERA.tangage); if (!reseau) { prefs.camera = null; store.save('prefs', prefs); } }
     else if (nom === 'plus') zoomer(1);
     else if (nom === 'moins') zoomer(-1);
     else if (nom[0] === 'b') viser(NOMS_CALIBRES[Number(nom[1]) - 1]);
@@ -718,14 +853,14 @@ createPointer($('canvas'), {
     if (p.button === 2) return annuler();
     if (p.button !== 0) return;
     if (modeBarrage) {
-      if (dire(ordonnerBarrage(B, modeBarrage, x, y)).ok) { marque = { x, y, t: 2 }; modeBarrage = null; sauvegarder(); }
+      if (dire(lancerBarrage(modeBarrage, x, y)).ok) { marque = { x, y, t: 2 }; modeBarrage = null; sauvegarder(); }
       return majHud();
     }
     const jour = B.etat.phase === 'jour';
     if (modeMarche && jour) { modeMarche = false; ordreMarche(x, y); return majHud(); }
     // Le clic gauche choisit, puis ordonne : sur un de nos régiments (Maj : en ajouter ou en retirer), il le choisit ; ailleurs, avec des
     // régiments choisis, ils y marchent (sur une tranchée : l'occupent) et restent choisis. La nuit, on ne marche pas : on choisit pour les corvées.
-    const rNous = regimentSous(x, y, dePres() ? 4 : Math.max(4, prise(16)), NOUS);
+    const rNous = regimentSous(x, y, dePres() ? 4 : Math.max(4, prise(16)), MOI);
     if (rNous >= 0) {
       if (!p.event.shiftKey) choisis = new Set();
       if (choisis.has(rNous) && p.event.shiftKey) choisis.delete(rNous); else choisis.add(rNous);
@@ -765,7 +900,7 @@ createPointer($('canvas'), {
   },
   onDragEnd: p => {
     cadre.hidden = true;
-    if (glisse?.bouton === 1 || glisse?.bouton === 2) { prefs.camera = { yaw: rendu.vue.cible.yaw, tangage: rendu.vue.cible.tangage }; store.save('prefs', prefs); }
+    if (glisse?.bouton === 1 || glisse?.bouton === 2) { if (!reseau) { prefs.camera = { yaw: rendu.vue.cible.yaw, tangage: rendu.vue.cible.tangage }; store.save('prefs', prefs); } }
     if (!glisse || glisse.bouton !== 0 || !enJeu()) { glisse = null; return; }
     glisse = null;
     // choisir au cadre : les régiments dont au moins un homme est dans le cadre (à l'écran)
@@ -773,7 +908,7 @@ createPointer($('canvas'), {
     if (!p.event.shiftKey) choisis = new Set();
     const A = B.armee;
     for (let i = 0; i < A.n; i++) {
-      if (A.camp[i] !== NOUS || choisis.has(A.reg[i])) continue;
+      if (A.camp[i] !== MOI || choisis.has(A.reg[i])) continue;
       const [sx, sy] = rendu.versEcran(A.x[i], A.y[i]);
       if (sx >= x0 && sx <= x1 && sy >= y0 && sy <= y1) choisis.add(A.reg[i]);
     }
@@ -789,12 +924,17 @@ const loop = createLoop({
   update() {
     if (!B) return;
     const t0 = performance.now();
-    const ev = avancer(B);
+    let ev;
+    if (reseau) { const joue = reseau.ls.cadre_(); ev = joue ? B.evenements : []; }       // à deux : un cadre du lockstep (rien si l'autre n'a pas parlé)
+    else ev = avancer(B);
     const ms = performance.now() - t0;
     perf.sim += (ms - perf.sim) * 0.05; perf.pas++;
     evenements.push(...ev);
     raconter(ev);
-    if (ev.some(e => e.type === 'nuit')) { nuit.montrer(); }
+    if (ev.some(e => e.type === 'nuit')) {
+      nuit.montrer();
+      if (reseau) { reseau.corvees = {}; reseau.pret = [false, false]; for (const [reg, id] of Object.entries(nuit.corvees)) if (id !== 'repos') reseau.ls.commander({ t: 'corvee', reg: +reg, id }); }     // (ses choix de départ : ceux d'hier, s'ils sont encore possibles)
+    }
     if (ev.some(e => e.type === 'fin')) { montrerFin(); }
   },
   render() {
@@ -811,7 +951,7 @@ const loop = createLoop({
       const tour = (keys.held('KeyE') ? 1 : 0) - (keys.held('KeyQ') ? 1 : 0), incl = (keys.held('KeyF') ? 1 : 0) - (keys.held('KeyR') ? 1 : 0);
       if (tour || incl) {
         rendu.tourner(tour * dt * 0.9, incl * dt * 0.5);
-        prefs.camera = { yaw: rendu.vue.cible.yaw, tangage: rendu.vue.cible.tangage };
+        if (!reseau) prefs.camera = { yaw: rendu.vue.cible.yaw, tangage: rendu.vue.cible.tangage };
         clearTimeout(zoomer.t); zoomer.t = setTimeout(() => store.save('prefs', prefs), 400);
       }
     }
@@ -828,7 +968,9 @@ let hudT = 0;
 loop.start();
 $('temps-pause').onclick = e => { basculerPause(); e.currentTarget.blur(); };
 for (const b of document.querySelectorAll('[data-vitesse]')) b.onclick = () => {
-  vitesse = +b.dataset.vitesse; b.blur();
+  b.blur();
+  if (reseau) { reseau.ls.commander({ t: 'vitesse', v: +b.dataset.vitesse }); if (pauseActive) basculerPause(); return; }
+  vitesse = +b.dataset.vitesse;
   if (pauseActive) basculerPause(); else majHud();
 };
 $('meteo').onclick = e => {
@@ -859,7 +1001,7 @@ startUpdateCheck({
 
 // ─── Mode debug (section 18) : chargé seulement avec ?debug=1 ──────────────
 if (DEBUG) {
-  const { installDebug, seedFromUrl } = await import('./lib/debug.js?v=0.29.0');
+  const { installDebug, seedFromUrl } = await import('./lib/debug.js?v=0.30.0');
   window.__seed = seedFromUrl() ?? undefined;
   installDebug({
     state: () => B && { ...horloge(B), effectifs: effectifs(B), pertes: B.etat.pertes, impacts: B.etat.impacts.length, enJeu: enJeu(), pause: loop.paused },
@@ -884,8 +1026,9 @@ if (DEBUG) {
         majHud();
         return horloge(B);
       },
-      barrage: (cal, x, y, camp = 0) => ordonnerBarrage(B, cal, x + B.etat.marges.x, y + B.etat.marges.y, camp),
-      marche: (ids, x, y) => ordonnerMarche(B, ids, x + B.etat.marges.x, y + B.etat.marges.y),
+      barrage: (cal, x, y, camp = 0) => reseau ? lancerBarrage(cal, x + B.etat.marges.x, y + B.etat.marges.y) : ordonnerBarrage(B, cal, x + B.etat.marges.x, y + B.etat.marges.y, camp),
+      marche: (ids, x, y) => reseau ? lancerMarche(ids, x + B.etat.marges.x, y + B.etat.marges.y) : ordonnerMarche(B, ids, x + B.etat.marges.x, y + B.etat.marges.y),
+      reseau: () => reseau ? { moi: reseau.moi, cadre: reseau.ls.cadre, pause: reseau.ls.etat.pause, vitesse: reseau.ls.etat.vitesse, ecart: reseau.ls.ecart, empreinte: empreinteEtat(B), ticks: B.etat.ticks } : null,
       zoom: z => { rendu.vue.zoom = z; },
       fiche: () => laFiche.ouverte && { ...laFiche.ouverte, nom: $('fiche-nom').textContent, qui: $('fiche-qui').textContent, etat: $('fiche-etat').textContent, liste: $('fiche-liste').textContent },
       survol: (x, y) => { souris = { x, y }; majBulle(); return $('bulle').hidden ? null : $('bulle').textContent; },

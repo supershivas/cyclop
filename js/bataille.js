@@ -14,17 +14,17 @@
    La sauvegarde (photo) garde la graine, la liste compacte des impacts, l'état
    de la foule et les petites couches de logique ; jamais le relief : il se
    rejoue depuis la graine et les impacts (rejouerTerrain). */
-import { createRng, hash2 } from './lib/rng.js?v=0.29.0';
-import { creerTerrain, impact, hydroLignes, etat as etatCase, vitesseEtat, ETAT } from './terrain.js?v=0.29.0';
-import { creerArmee, ajouterSoldat, construireGrille, pasArmee, tuerDans, effrayer, compacter, photoArmee, restaurerArmee, b64, deB64, DENSITE, place } from './army.js?v=0.29.0';
-import { creuserTranchees, ligneSous } from './tranchees.js?v=0.29.0';
-import { calculerCouts, creerCacheChamps, dimensionsCouts, BLOC } from './champs.js?v=0.29.0';
-import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.29.0';
-import { METEO, TRANSITIONS, PREVISION_JUSTE } from './data/meteo.js?v=0.29.0';
-import { SECTEURS } from './data/secteur.js?v=0.29.0';
-import { REGIMENTS } from './data/lexique.js?v=0.29.0';
-import { grade } from './identite.js?v=0.29.0';
-import { corvees, rejouerTravaux } from './nuit.js?v=0.29.0';
+import { createRng, hash2 } from './lib/rng.js?v=0.30.0';
+import { creerTerrain, impact, hydroLignes, etat as etatCase, vitesseEtat, ETAT } from './terrain.js?v=0.30.0';
+import { creerArmee, ajouterSoldat, construireGrille, pasArmee, tuerDans, effrayer, compacter, photoArmee, restaurerArmee, b64, deB64, DENSITE, place } from './army.js?v=0.30.0';
+import { creuserTranchees, ligneSous } from './tranchees.js?v=0.30.0';
+import { calculerCouts, creerCacheChamps, dimensionsCouts, BLOC } from './champs.js?v=0.30.0';
+import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.30.0';
+import { METEO, TRANSITIONS, PREVISION_JUSTE } from './data/meteo.js?v=0.30.0';
+import { SECTEURS } from './data/secteur.js?v=0.30.0';
+import { REGIMENTS } from './data/lexique.js?v=0.30.0';
+import { grade } from './identite.js?v=0.30.0';
+import { corvees, rejouerTravaux } from './nuit.js?v=0.30.0';
 
 export const PAS = 1 / 30;                 // s de jeu par pas
 export const NOUS = 0, EUX = 1;
@@ -89,6 +89,8 @@ export function nouvelleBataille(graine, R, opts = {}) {
     nuits: [],                  // ce que chaque nuit a vu : { jour, choix, bilan }
     grades: {},                 // les promus : { numéro: [rang, jour] } (le grade de départ vient du rang de création)
     batteries: Object.fromEntries(NOMS_CALIBRES.map(c => [c, 0])),   // s de jeu (depuis l'aube du jour 1) où la batterie est prête
+    deux: !!opts.deux,                  // un second joueur commande en face (v0.30.0) : l'IA d'en face se tait, ses batteries rechargent comme les nôtres
+    batteriesEux: Object.fromEntries(NOMS_CALIBRES.map(c => [c, 0])),
     barrages: [],
     ia: { barrage: R.ia.barrage * 0.5, offensive: R.ia.offensive },
     temps: 0,                           // s de jeu écoulées, nuits non comptées
@@ -106,7 +108,7 @@ export function nouvelleBataille(graine, R, opts = {}) {
       const effectif = base + (r < parCamp - base * nReg ? 1 : 0);
       const reg = {
         id: etat.regiments.length, camp,
-        nom: camp === NOUS ? REGIMENTS[r % REGIMENTS.length] : null,
+        nom: camp === NOUS ? REGIMENTS[r % REGIMENTS.length] : opts.deux ? REGIMENTS[(r + nReg) % REGIMENTS.length] : null,
         effectif, initial: effectif, pertes: 0,
         moral: R.moral.depart, deroute: false, vivres: R.nuit.vivres,
         ordre: null, depart: null,
@@ -188,17 +190,17 @@ function monter(etat, R) {
 
 /* Marcher : les régiments choisis prennent place côte à côte autour de (x, y). L'ordre se prépare à sec (`planMarche` : rien n'est
    changé, c'est ce que le dessin montre avant le clic, v0.21.0), puis `ordonnerMarche` l'applique. */
-function planMarche(B, ids, x, y, forme = 'bloc') {
+function planMarche(B, ids, x, y, forme = 'bloc', camp = NOUS) {
   const { etat, R } = B;
   const S = SECTEURS[etat.secteur];
   if (etat.phase !== 'jour') return { refus: 'La nuit, les ordres attendent l\'aube.' };
-  let regs = ids.map(id => etat.regiments[id]).filter(r => r && r.camp === NOUS && r.effectif > 0);
+  let regs = ids.map(id => etat.regiments[id]).filter(r => r && r.camp === camp && r.effectif > 0);
   if (!regs.length) return { refus: 'Aucun régiment choisi.' };
   const Z = zone(B);
   if (x < Z.x0 || y < Z.y0 || x >= Z.x1 || y >= Z.y1) return { refus: 'Hors du secteur.' };
   // le moral : un régiment en déroute n'obéit plus ; ébranlé, il ne sort pas vers l'ennemi
   // et un régiment qui refuse de monter (aujourd'hui) n'obéit à rien
-  const refuse = regs.filter(r => r.deroute || r.refus === etat.jour || (r.moral < R.moral.ebranle && y < r.ordre.y - R.moral.avance));
+  const refuse = regs.filter(r => r.deroute || r.refus === etat.jour || (r.moral < R.moral.ebranle && (camp === NOUS ? y < r.ordre.y - R.moral.avance : y > r.ordre.y + R.moral.avance)));
   let raison = null;
   if (refuse.length) {
     regs = regs.filter(r => !refuse.includes(r));
@@ -234,8 +236,8 @@ function planMarche(B, ids, x, y, forme = 'bloc') {
   });
   return { regs, raison, items, tranchee: false };
 }
-export function ordonnerMarche(B, ids, x, y, forme) {
-  const p = planMarche(B, ids, x, y, forme);
+export function ordonnerMarche(B, ids, x, y, forme, camp = NOUS) {
+  const p = planMarche(B, ids, x, y, forme, camp);
   if (p.refus) return { refus: p.refus };
   for (const { r, ordre } of p.items) { r.ordre = ordre; reattribuer(B, r); }
   const res = p.tranchee ? { ok: true, regiments: p.regs.map(r => r.id), tranchee: true, ligne: p.ligne, troncons: p.troncons } : { ok: true, regiments: p.regs.map(r => r.id) };
@@ -244,12 +246,12 @@ export function ordonnerMarche(B, ids, x, y, forme) {
 /* L'ordre à sec : ce que `ordonnerMarche` ferait, sans rien changer. { refus } si rien ne partirait ; sinon { ok, tranchee, troncons },
    ou, en terrain libre, les emprises (un rectangle par régiment : x, y le centre, l la largeur, p la profondeur, en mètres) ;
    `refus` aussi quand certains seulement n'obéiraient pas. */
-export function peutOrdonner(B, ids, x, y, forme) {
-  const p = planMarche(B, ids, x, y, forme);
+export function peutOrdonner(B, ids, x, y, forme, camp = NOUS) {
+  const p = planMarche(B, ids, x, y, forme, camp);
   if (p.refus) return { refus: p.refus };
   const out = { ok: true, regiments: p.regs.map(r => r.id), tranchee: p.tranchee };
   if (p.raison) out.refus = p.raison;
-  if (p.tranchee) out.troncons = p.troncons;
+  if (p.tranchee) { out.troncons = p.troncons; out.ligne = p.ligne; }
   else out.emprises = p.items.map(({ r, ordre }) => ({ x: ordre.x, y: ordre.y, l: ordre.cols * ordre.esp, p: Math.ceil(Math.max(1, r.effectif) / ordre.cols) * ordre.esp }));
   return out;
 }
@@ -281,6 +283,19 @@ function reattribuer(B, reg) {
   }
 }
 
+/* Le barrage à sec : { ok } ou { refus }, sans rien changer (à deux, on dit le refus tout de suite, l'ordre part ensuite pour les deux machines). */
+export function peutBarrage(B, cal, x, y, camp = NOUS) {
+  const { etat } = B, C = CALIBRES[cal];
+  if (!C) return { refus: `Pas de batterie de ${cal}.` };
+  if (etat.phase !== 'jour') return { refus: 'La nuit, les ordres attendent l\'aube.' };
+  const Z = zone(B);
+  if (x < Z.x0 || y < Z.y0 || x >= Z.x1 || y >= Z.y1) return { refus: 'Hors du secteur.' };
+  if (camp === NOUS || etat.deux) {
+    const reste = (camp === NOUS ? etat.batteries : etat.batteriesEux)[cal] - etat.temps;
+    if (reste > 0) return { refus: `La batterie de ${cal} recharge : encore ${Math.ceil(reste)} s.` };
+  }
+  return { ok: true };
+}
 /* Un barrage d'artillerie autour de (x, y). */
 export function ordonnerBarrage(B, cal, x, y, camp = NOUS) {
   const { etat } = B;
@@ -291,10 +306,11 @@ export function ordonnerBarrage(B, cal, x, y, camp = NOUS) {
   if (etat.phase !== 'jour') return { refus: 'La nuit, les ordres attendent l\'aube.' };
   const Z = zone(B);
   if (x < Z.x0 || y < Z.y0 || x >= Z.x1 || y >= Z.y1) return { refus: 'Hors du secteur.' };
-  if (camp === NOUS) {
-    const reste = etat.batteries[cal] - etat.temps;
+  if (camp === NOUS || etat.deux) {        // (en face, l'IA tire sans attendre ; un second joueur recharge comme nous)
+    const bat = camp === NOUS ? etat.batteries : (etat.batteriesEux ??= Object.fromEntries(NOMS_CALIBRES.map(c => [c, 0])));
+    const reste = bat[cal] - etat.temps;
     if (reste > 0) return { refus: `La batterie de ${cal} recharge : encore ${Math.ceil(reste)} s.` };
-    etat.batteries[cal] = etat.temps + C.recharge;
+    bat[cal] = etat.temps + C.recharge;
   }
   etat.barrages.push({ camp, cal, x, y, reste: C.salve, prochain: etat.temps + 1.5 });
   return { ok: true };
@@ -758,6 +774,7 @@ function champDe(B, reg) {
 // ─── En face : des barrages sur nos hommes les plus serrés, et des avances ──
 function enFace(B, rng) {
   const { etat, R, armee: A } = B;
+  if (etat.deux) return;                     // un joueur commande en face : pas d'IA
   const S = SECTEURS[etat.secteur];
   if (etat.temps >= etat.ia.barrage) {
     etat.ia.barrage = etat.temps + R.ia.barrage * (0.6 + rng() * 0.8);
@@ -888,6 +905,7 @@ export function* etapesRestaurer(p, R) {
   etat.parRegiment ??= Math.floor(etat.parCamp / SECTEURS[etat.secteur].regiments);
   etat.travaux ??= []; etat.tombes ??= []; etat.evacues ??= []; etat.nuits ??= [];   // (avant la v0.6.0 : pas de corvées)
   for (const reg of etat.regiments) { reg.moral ??= R.moral.depart; reg.deroute ??= false; reg.vivres ??= R.nuit.vivres; }   // (avant la v0.5.0 : pas de moral)
+  etat.deux ??= false; etat.batteriesEux ??= Object.fromEntries(NOMS_CALIBRES.map(c => [c, 0]));
   etat.abris ??= {}; etat.prisonniers ??= [];   // (avant la v0.11.0 : ni abris ni coups de main ; ni vivres)
   etat.troncons ??= []; etat.melee ??= etat.troncons.map(() => 0); etat.prises ??= etat.pertesJour.map(() => [0, 0]);   // (avant la v0.4.0 : pas de tranchées)
   yield [0.1, 'Le terrain'];

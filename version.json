@@ -1,8 +1,8 @@
 {
-  "version": "0.29.0",
+  "version": "0.30.0",
   "date": "2026-10-18",
   "changes": [
-    "Trois secteurs à choisir en début de partie : Les labours (champ ouvert), La crête (une crête de 7 m que l'ennemi tient), Le marais (fond plat où la nappe affleure)",
-    "Les tranchées serpentent : un tracé irrégulier, une largeur qui varie, des boyaux sinueux, plus de créneaux en carré (une partie sauvegardée avant garde ses hommes mais retrouve des tranchées au nouveau tracé)"
+    "Jouer à deux : deux ordinateurs sur le même réseau, sans serveur. L'un invite (le bleu), l'autre rejoint (le kaki) en se passant deux textes ; les deux commandent leur armée dans la même bataille, en même temps, avec pause partagée, ×2 et ×4, nuit et aube à deux",
+    "Le kaki voit la carte et la caméra tournées d'un demi-tour, ses lignes en bas"
   ]
 }
