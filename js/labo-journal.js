@@ -2,6 +2,9 @@
 // Une entrée par version qui touche au labo, la plus récente en haut. `ref` : « sujet-Lettre » (la lettre est celle de la variante,
 // A étant l'actuelle). À chaque changement du labo : une entrée ici, avec `depuis` sur les variantes ajoutées ou changées (labo.js).
 export const JOURNAL = [
+  { version: '0.34.0', date: '2026-10-18', items: [
+    { genre: 'mis-a-jour', texte: 'La fenêtre d\'ordres « Au régiment » est retenue et passe en jeu (A) ; elle apparaissait d\'un coup au-dessus de la carte (ancienne)', ref: 'fenetre-ordres-A' },
+  ] },
   { version: '0.33.0', date: '2026-10-18', items: [
     { genre: 'mis-a-jour', texte: 'La barre de vie « Le duel », les équerres au clic sur un régiment et le faux terrain dans la nuit sont retenus et passent en jeu (A) ; les anciens (papier des pertes, sonar, bord coupé net) passent en « ancienne »', ref: 'barre-vie-A' },
     { genre: 'nouveau', texte: 'La fenêtre d\'ordres : cinq façons de l\'ouvrir quand on clique un régiment (tiroir, rabat, une seule feuille, au régiment, ligne à ligne)', ref: 'fenetre-ordres-B' },

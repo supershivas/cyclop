@@ -9,8 +9,8 @@
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta property="og:image" content="og.png">
-<link rel="stylesheet" href="js/lib/game.css?v=0.33.1">
-<link rel="stylesheet" href="css/style.css?v=0.33.1">
+<link rel="stylesheet" href="js/lib/game.css?v=0.34.0">
+<link rel="stylesheet" href="css/style.css?v=0.34.0">
 </head>
 <body>
 <!-- La barre de chargement (v0.28.0) : là avant tout script ; main.js la remplit, puis la retire -->
@@ -25,6 +25,7 @@
   <canvas class="jeu-canvas" id="canvas" aria-label="Le champ de bataille"></canvas>
   <div class="etiquettes" id="etiquettes" aria-hidden="true"></div>
   <div class="equerres" id="equerres" hidden aria-hidden="true"></div>
+  <div class="papier reg-ouvert" id="reg-ouvert" hidden></div>
   <div class="repere" id="repere" hidden aria-hidden="true"></div>
   <div class="repere-soldat" id="repere-soldat" hidden aria-hidden="true"></div>
   <div class="cadre" id="cadre" hidden aria-hidden="true"></div>
@@ -108,7 +109,6 @@
         <button class="fleche papier" id="reg-prec" aria-label="Régiments précédents" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg></button>
         <div class="rang" id="reg-rang"></div>
         <button class="fleche papier" id="reg-suiv" aria-label="Régiments suivants" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></button>
-        <div class="papier reg-ouvert" id="reg-ouvert" hidden></div>
       </div>
       <!-- En bas à droite : le râtelier d'obus -->
       <div class="droite">
@@ -238,6 +238,6 @@
 </dialog>
 
 <div class="jeu-toast" id="toast" role="status" hidden></div>
-<script type="module" src="js/main.js?v=0.33.1"></script>
+<script type="module" src="js/main.js?v=0.34.0"></script>
 </body>
 </html>

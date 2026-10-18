@@ -2,26 +2,26 @@
 // Chaque sujet utilise les mêmes modules que le jeu (terrain, apparence,
 // rendu three.js) : ce qu'on voit ici est ce que le jeu dessinera. Ajouter un
 // sujet ou une variante = ajouter une entrée dans GROUPES.
-import { mountLabo } from './lib/labo-shell.js?v=0.33.1';
-import { spriteCanvas, paletteToGPL, paletteToHex } from './lib/sprites.js?v=0.33.1';
-import { PALETTE, ROLES } from './palette.js?v=0.33.1';
-import { chargerContenu } from './design-store.js?v=0.33.1';
-import { tuile, ETAT } from './tuiles.js?v=0.33.1';
-import { creerTerrain, impact, hydroLignes } from './terrain.js?v=0.33.1';
-import { CALIBRES } from './data/calibres.js?v=0.33.1';
-import { METEO } from './data/meteo.js?v=0.33.1';
-import { nouvelleBataille, avancer, ordonnerMarche, ordonnerBarrage, mourir } from './bataille.js?v=0.33.1';
-import { creerRendu, ZOOMS } from './rendu3d.js?v=0.33.1';
-import { hash2 } from './lib/rng.js?v=0.33.1';
-import { reglerVerdure } from './apparence.js?v=0.33.1';
-import { maquetteAssaut } from './labo-assaut.js?v=0.33.1';
-import { calquePlaques } from './labo-plaques.js?v=0.33.1';
-import { calqueBarre } from './labo-barre-temps.js?v=0.33.1';
-import { maquetteProjections, maquetteVisee } from './labo-projections.js?v=0.33.1';
-import { calqueBarreVie } from './labo-barre-vie.js?v=0.33.1';
-import { calqueClic } from './labo-clic-regiment.js?v=0.33.1';
-import { JOURNAL } from './labo-journal.js?v=0.33.1';
-import { loadVersion } from './lib/app-update.js?v=0.33.1';
+import { mountLabo } from './lib/labo-shell.js?v=0.34.0';
+import { spriteCanvas, paletteToGPL, paletteToHex } from './lib/sprites.js?v=0.34.0';
+import { PALETTE, ROLES } from './palette.js?v=0.34.0';
+import { chargerContenu } from './design-store.js?v=0.34.0';
+import { tuile, ETAT } from './tuiles.js?v=0.34.0';
+import { creerTerrain, impact, hydroLignes } from './terrain.js?v=0.34.0';
+import { CALIBRES } from './data/calibres.js?v=0.34.0';
+import { METEO } from './data/meteo.js?v=0.34.0';
+import { nouvelleBataille, avancer, ordonnerMarche, ordonnerBarrage, mourir } from './bataille.js?v=0.34.0';
+import { creerRendu, ZOOMS } from './rendu3d.js?v=0.34.0';
+import { hash2 } from './lib/rng.js?v=0.34.0';
+import { reglerVerdure } from './apparence.js?v=0.34.0';
+import { maquetteAssaut } from './labo-assaut.js?v=0.34.0';
+import { calquePlaques } from './labo-plaques.js?v=0.34.0';
+import { calqueBarre } from './labo-barre-temps.js?v=0.34.0';
+import { maquetteProjections, maquetteVisee } from './labo-projections.js?v=0.34.0';
+import { calqueBarreVie } from './labo-barre-vie.js?v=0.34.0';
+import { calqueClic } from './labo-clic-regiment.js?v=0.34.0';
+import { JOURNAL } from './labo-journal.js?v=0.34.0';
+import { loadVersion } from './lib/app-update.js?v=0.34.0';
 
 document.documentElement.style.setProperty('--jeu-accent', ROLES.accent);
 const NOM = document.title.replace(/^Labo — /, ''); // le nom vient de la page (une apostrophe ne casse rien)
@@ -204,12 +204,12 @@ const GROUPES = [
       { title: 'Le sonar', status: 'ancienne', note: 'En jeu en v0.32.2, remplacé par les équerres en v0.33.0 : un clic sur la carte d\'un régiment, la caméra glisse sur lui (0,6 s) ; deux anneaux d\'os se resserrent autour de lui, la carte s\'enfonce d\'un cran. Cliquez une carte du bas.', render: s => moteur(s, { zoom: 3, cz: 185, soldats: 400, calque: calqueClic('sonar') }) },
     ] },
     { id: 'fenetre-ordres', title: 'La fenêtre d\'ordres', variants: [
-      { title: 'Elle apparaît d\'un coup', status: 'actuelle', depuis: '0.33.0', note: 'Aujourd\'hui : un clic sur la carte, et le papier des ordres (le régiment, ce qu\'il fait, les formes, Marcher, Regagner, Fiche) est là, posé au-dessus de la carte, sans lien avec elle. Cliquez une carte du bas.', render: s => moteur(s, { zoom: 3, cz: 185, soldats: 400, calque: calqueClic('equerres', 'sec') }) },
+      { title: 'Au régiment', status: 'actuelle', depuis: '0.34.0', note: 'Retenue (v0.34.0), en jeu. La fenêtre quitte le bas de l\'écran : elle vient près des hommes, au-dessus des équerres, reliée à eux par une pointe, et les suit quand ils marchent. Elle fait un petit bond en arrivant.', render: s => moteur(s, { zoom: 3, cz: 185, soldats: 400, calque: calqueClic('equerres', 'bulle') }) },
       { title: 'Le tiroir', depuis: '0.33.0', note: 'Le papier sort de la carte : il se déplie vers le haut, ancré à elle, en un quart de seconde. On voit d\'où il vient.', render: s => moteur(s, { zoom: 3, cz: 185, soldats: 400, calque: calqueClic('equerres', 'tiroir') }) },
       { title: 'Le rabat', depuis: '0.33.0', note: 'Le papier est un rabat de carte qui se relève d\'un coup, charnière en bas, sur la carte : comme on ouvre un porte-cartes.', render: s => moteur(s, { zoom: 3, cz: 185, soldats: 400, calque: calqueClic('equerres', 'rabat') }) },
       { title: 'Une seule feuille', depuis: '0.33.0', note: 'La carte et la fenêtre ne font plus qu\'une feuille : la carte s\'efface dans le papier de la fenêtre, collée à elle, sans ombre entre les deux, et la feuille se déroule vers le haut. Plus de papier qui flotte.', render: s => moteur(s, { zoom: 3, cz: 185, soldats: 400, calque: calqueClic('equerres', 'feuille') }) },
-      { title: 'Au régiment', depuis: '0.33.0', note: 'La fenêtre quitte le bas de l\'écran : elle vient près des hommes, au-dessus des équerres, reliée à eux par une pointe, et les suit quand ils marchent. Elle fait un petit bond en arrivant.', render: s => moteur(s, { zoom: 3, cz: 185, soldats: 400, calque: calqueClic('equerres', 'bulle') }) },
       { title: 'Ligne à ligne', depuis: '0.33.0', note: 'Le papier est posé d\'un coup mais s\'écrit : le titre, puis chaque ligne et chaque bouton apparaissent l\'un après l\'autre, à quelques centièmes d\'écart, comme un ordre qu\'on rédige.', render: s => moteur(s, { zoom: 3, cz: 185, soldats: 400, calque: calqueClic('equerres', 'lignes') }) },
+      { title: 'Elle apparaît d\'un coup', status: 'ancienne', note: 'Jusqu\'à la v0.33 : un clic sur la carte, et le papier des ordres (le régiment, ce qu\'il fait, les formes, Marcher, Regagner, Fiche) est là, posé au-dessus de la carte, sans lien avec elle. Cliquez une carte du bas.', render: s => moteur(s, { zoom: 3, cz: 185, soldats: 400, calque: calqueClic('equerres', 'sec') }) },
     ] },
     { id: 'bord-carte', title: 'Le bord de la carte', variants: [
       { title: 'Faux terrain dans la nuit', status: 'actuelle', depuis: '0.33.0', note: 'Retenu (v0.33.0), en jeu (pas à l\'écran titre, qui garde sa brume). Le champ se prolonge, mais qui s\'éteint dans le noir au lieu de la brume : le champ se prolonge, puis la nuit le mange. Entre « Faux terrain » et « Brouillard noir ».', render: s => moteur(s, { zoom: 1, soldats: 100, centre: [300, 80], vue: { tangage: 0.4, yaw: 0.7 }, bord: 'faux-noir' }) },

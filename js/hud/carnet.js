@@ -1,6 +1,6 @@
 // Le carnet de bord : les événements marquants, à l'heure où ils arrivent (la mémoire de la pause active).
 // Quatre lignes à l'écran, la dernière surlignée ; il n'est pas sauvegardé.
-import { horloge } from '../bataille.js?v=0.33.1';
+import { horloge } from '../bataille.js?v=0.34.0';
 
 export const deux = n => String(n).padStart(2, '0');
 

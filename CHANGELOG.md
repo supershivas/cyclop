@@ -1,5 +1,8 @@
 # Journal des versions
 
+## 0.34.0 — 2026-10-18
+- La fenêtre d'ordres s'ouvre près des hommes du régiment choisi, d'un petit bond, reliée à eux par une pointe, et les suit quand ils marchent
+
 ## 0.33.1 — 2026-10-18
 - Le jeu à deux se connecte entre deux ordinateurs : les adresses sont complétées, et l'écran dit pourquoi une connexion échoue
 
