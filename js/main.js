@@ -1,35 +1,36 @@
 // Le cycle de vie : écran titre → bataille → nuit → fin ; pause active,
 // réglages, sauvegarde, mise à jour, debug. Les règles sont dans bataille.js
 // (pures), le dessin dans rendu3d.js (il ne modifie jamais l'état).
-import { createLoop } from './lib/loop.js?v=0.34.0';
-import { createKeys, stopTypeahead } from './lib/keys.js?v=0.34.0';
-import { createPointer, lockBrowserGestures } from './lib/pointer.js?v=0.34.0';
-import { createGamepad } from './lib/gamepad.js?v=0.34.0';
-import { createStore, autosave, pickJSONFile } from './lib/save.js?v=0.34.0';
-import { startUpdateCheck, loadVersion, loadChangelog, downloadJSON } from './lib/app-update.js?v=0.34.0';
-import { ROLES } from './palette.js?v=0.34.0';
-import { MISSIONS, EUX, nouvelleBataille, etapesRestaurer, avancer, aube, ordonnerMarche, peutOrdonner, ordonnerBarrage, peutBarrage, horloge, effectifs, tronconsTenus, moralEnMots, terrainResume, forcesTroncons, largeurZone, lettreZone, etendueZones, nomTroncon, actionDe, secteursDe, tronconsDeLigne, zone, photo, restaurer, PAS, NOUS } from './bataille.js?v=0.34.0';
-import { ligneY } from './tranchees.js?v=0.34.0';
-import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.34.0';
-import { METEO } from './data/meteo.js?v=0.34.0';
-import { impact, hydroLignes } from './terrain.js?v=0.34.0';
-import { hash2 } from './lib/rng.js?v=0.34.0';
-import { creerRendu, CAMERA } from './rendu3d.js?v=0.34.0';
-import { etatEnMots, experienceEnMots, chevrons } from './identite.js?v=0.34.0';
-import { CORVEES } from './data/corvees.js?v=0.34.0';
-import { refusCorvee } from './nuit.js?v=0.34.0';
-import { chargerContenu } from './design-store.js?v=0.34.0';
-import * as lecture from './hud/lecture.js?v=0.34.0';
-import { creerFiche } from './hud/fiche.js?v=0.34.0';
-import { creerNuit, corveeDe, corveeCourte } from './hud/nuit.js?v=0.34.0';
-import { creerCarnet, deux } from './hud/carnet.js?v=0.34.0';
-import { creerCarte } from './hud/carte.js?v=0.34.0';
-import { creerPertes } from './hud/pertes.js?v=0.34.0';
-import { creerBarreTemps } from './hud/temps.js?v=0.34.0';
-import { creerChargement } from './hud/chargement.js?v=0.34.0';
-import { SECTEURS } from './data/secteur.js?v=0.34.0';
-import { creerLockstep, empreinteEtat } from './reseau/lockstep.js?v=0.34.0';
-import { creerHote, creerInvite } from './reseau/lien.js?v=0.34.0';
+import { createLoop } from './lib/loop.js?v=0.34.1';
+import { createKeys, stopTypeahead } from './lib/keys.js?v=0.34.1';
+import { createPointer, lockBrowserGestures } from './lib/pointer.js?v=0.34.1';
+import { createGamepad } from './lib/gamepad.js?v=0.34.1';
+import { createStore, autosave, pickJSONFile } from './lib/save.js?v=0.34.1';
+import { startUpdateCheck, loadVersion, loadChangelog, downloadJSON } from './lib/app-update.js?v=0.34.1';
+import { ROLES } from './palette.js?v=0.34.1';
+import { MISSIONS, EUX, nouvelleBataille, etapesRestaurer, avancer, aube, ordonnerMarche, peutOrdonner, ordonnerBarrage, peutBarrage, horloge, effectifs, tronconsTenus, moralEnMots, terrainResume, forcesTroncons, largeurZone, lettreZone, etendueZones, nomTroncon, actionDe, secteursDe, tronconsDeLigne, zone, photo, restaurer, PAS, NOUS } from './bataille.js?v=0.34.1';
+import { ligneY } from './tranchees.js?v=0.34.1';
+import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.34.1';
+import { METEO } from './data/meteo.js?v=0.34.1';
+import { impact, hydroLignes } from './terrain.js?v=0.34.1';
+import { hash2 } from './lib/rng.js?v=0.34.1';
+import { creerRendu, CAMERA } from './rendu3d.js?v=0.34.1';
+import { etatEnMots, experienceEnMots, chevrons } from './identite.js?v=0.34.1';
+import { CORVEES } from './data/corvees.js?v=0.34.1';
+import { refusCorvee } from './nuit.js?v=0.34.1';
+import { chargerContenu } from './design-store.js?v=0.34.1';
+import * as lecture from './hud/lecture.js?v=0.34.1';
+import { creerFiche } from './hud/fiche.js?v=0.34.1';
+import { creerNuit, corveeDe, corveeCourte } from './hud/nuit.js?v=0.34.1';
+import { creerCarnet, deux } from './hud/carnet.js?v=0.34.1';
+import { creerCarte } from './hud/carte.js?v=0.34.1';
+import { creerPertes } from './hud/pertes.js?v=0.34.1';
+import { creerBarreTemps } from './hud/temps.js?v=0.34.1';
+import { creerChargement } from './hud/chargement.js?v=0.34.1';
+import { SECTEURS } from './data/secteur.js?v=0.34.1';
+import { creerLockstep, empreinteEtat } from './reseau/lockstep.js?v=0.34.1';
+import { nouveauCode, codeValide, publier, ecouter } from './reseau/relais.js?v=0.34.1';
+import { creerHote, creerInvite } from './reseau/lien.js?v=0.34.1';
 
 const JEU = 'cyclopeen';
 const $ = id => document.getElementById(id);
@@ -349,7 +350,7 @@ function poigneeInvite(lien) {
 {
   const dlg = $('dialogue-deux'), statut = t => { $('deux-statut').textContent = t; };
   const copier = async id => { const a = $(id); a.select(); try { await navigator.clipboard.writeText(a.value); statut('Copié.'); } catch { statut('Sélectionné : copiez-le à la main.'); } };
-  let lien = null;
+  let lien = null, arreterRelais = null;
   // dit à voix haute où en est la connexion, et pourquoi elle échoue
   const suivreEtat = l => {
     l.surEtat = e => {
@@ -363,7 +364,7 @@ function poigneeInvite(lien) {
     for (const id of ['deux-invitation', 'deux-reponse', 'deux-invitation-recue', 'deux-ma-reponse']) $(id).value = '';
     dlg.showModal();
   };
-  dlg.addEventListener('close', () => { if (!reseau && lien) { lien.fermer(); lien = null; } });
+  dlg.addEventListener('close', () => { arreterRelais?.(); arreterRelais = null; if (!reseau && lien) { lien.fermer(); lien = null; } });
   $('deux-inviter').onclick = async () => {
     const secteur = await demanderSecteur();
     if (!secteur) return;
@@ -372,7 +373,14 @@ function poigneeInvite(lien) {
     try {
       lien = creerHote(); poigneeHote(lien, graine, secteur); suivreEtat(lien);
       $('deux-invitation').value = await lien.inviter();
-      statut(`Secteur : ${SECTEURS[secteur].nom}. En attente de la réponse de l'autre joueur.`);
+      const code = nouveauCode(); $('deux-code').textContent = code;
+      const hors = () => statut('Relais injoignable : utilisez le copier-coller ci-dessous.');
+      arreterRelais = ecouter(code, async m => {
+        if (m.t !== 'reponse' || !lien || lien.pc.remoteDescription) return;
+        try { statut('Connexion en cours…'); await lien.accepter(m.texte); } catch (e) { statut(`Réponse illisible : ${e.message}`); }
+      }, hors);
+      await publier(code, { t: 'invitation', texte: $('deux-invitation').value }).catch(e => { console.error(e); hors(); });
+      statut(`Secteur : ${SECTEURS[secteur].nom}. En attente de l'autre joueur.`);
     } catch (e) { console.error(e); statut(`Impossible : ${e.message}`); }
   };
   $('deux-connecter').onclick = async () => {
@@ -387,6 +395,21 @@ function poigneeInvite(lien) {
       $('deux-ma-reponse').value = await lien.repondre($('deux-invitation-recue').value);
       statut('Renvoyez ce texte à celui qui vous invite : la partie commence quand il l\'aura collé.');
     } catch (e) { console.error(e); statut(`Invitation illisible : ${e.message}`); }
+  };
+  $('deux-rejoindre-code').onclick = () => {
+    const code = $('deux-code-saisi').value;
+    if (!codeValide(code)) return statut('Le code a 6 signes (lettres et chiffres).');
+    arreterRelais?.(); statut('Recherche de l\'invitation…');
+    let repondu = false;
+    arreterRelais = ecouter(code, async m => {
+      if (m.t !== 'invitation' || repondu) return;
+      repondu = true;
+      try {
+        lien = creerInvite(); poigneeInvite(lien); suivreEtat(lien);
+        await publier(code, { t: 'reponse', texte: await lien.repondre(m.texte) });
+        statut('Réponse envoyée : la partie commence dans un instant…');
+      } catch (e) { console.error(e); repondu = false; statut(`Impossible : ${e.message}`); }
+    }, () => statut('Relais injoignable : utilisez le copier-coller ci-dessous.'));
   };
   $('deux-copier-invitation').onclick = () => copier('deux-invitation');
   $('deux-copier-reponse').onclick = () => copier('deux-ma-reponse');
@@ -1091,7 +1114,7 @@ startUpdateCheck({
 
 // ─── Mode debug (section 18) : chargé seulement avec ?debug=1 ──────────────
 if (DEBUG) {
-  const { installDebug, seedFromUrl } = await import('./lib/debug.js?v=0.34.0');
+  const { installDebug, seedFromUrl } = await import('./lib/debug.js?v=0.34.1');
   window.__seed = seedFromUrl() ?? undefined;
   installDebug({
     state: () => B && { ...horloge(B), effectifs: effectifs(B), pertes: B.etat.pertes, impacts: B.etat.impacts.length, enJeu: enJeu(), pause: loop.paused },

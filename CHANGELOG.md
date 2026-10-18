@@ -1,5 +1,8 @@
 # Journal des versions
 
+## 0.34.1 — 2026-10-18
+- Jouer à deux : un code de 6 signes suffit, plus de copier-coller (il reste en secours, replié)
+
 ## 0.34.0 — 2026-10-18
 - La fenêtre d'ordres s'ouvre près des hommes du régiment choisi, d'un petit bond, reliée à eux par une pointe, et les suit quand ils marchent
 

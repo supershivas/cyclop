@@ -373,6 +373,9 @@ dialog form { margin-top: calc(var(--pas) * 2); }
 #dialogue-deux section[hidden] { display: none; }
 #dialogue-deux p { margin: 0; }
 #dialogue-deux textarea { width: 100%; box-sizing: border-box; font: 12px/1.3 var(--jeu-police, monospace); word-break: break-all; padding: var(--pas); color: var(--jeu-fond); background: var(--jeu-encre); border: 2px solid var(--jeu-accent); resize: vertical; }
+#dialogue-deux details { display: grid; gap: var(--pas); }
+#dialogue-deux summary { cursor: pointer; color: var(--jeu-accent); }
+.deux-code { font: var(--texte-grand)/1.4 var(--jeu-police, monospace); letter-spacing: .3em; text-align: center; text-transform: uppercase; padding: var(--pas); color: var(--jeu-encre); background: transparent; border: 2px solid var(--jeu-accent); }
 #deux-statut { min-height: 1.4em; }
 
 /* Les titres (v0.32.0) : un seul style, deux tailles : le titre d'un papier (fiche, nuit), le titre d'un dialogue */
