@@ -1,9 +1,8 @@
 // Les hommes : les soldats (une boîte et son ombre ; de près la silhouette, plus loin une silhouette allégée ; aux zooms 1 et 2 un point), les anneaux des
 // régiments choisis ou survolés, les corps (un homme couché) et les tombes (un tertre et une croix). Tout est instancié et ne reçoit que ce qu'on voit.
 // Le dessin seulement. Les formes viennent de geometries.js, le GLSL de shaders.js.
-import * as SH from './shaders.js?v=0.32.0';
-import { creerGeometries } from './geometries.js?v=0.32.0';
-import { VOL } from './eclats.js?v=0.32.0';
+import * as SH from './shaders.js?v=0.32.1';
+import { creerGeometries } from './geometries.js?v=0.32.1';
 
 // `THREE`, `scene`, `col`, `solUniforms` (`uSol`, `uTaille` : la texture du sol, que l'ombre d'un soldat reprend), `styleSoldat` (le style de près, comparé au labo),
 // `surface(x, z)` et `surfaceLisse(x, z)` (la hauteur du sol, lissée pour qui marche), `solY` (la hauteur moyenne du sol) et `POINTS_JUSQUA` (le zoom où un soldat n'est
@@ -235,13 +234,13 @@ export function creerSoldats({ THREE, scene, col, solUniforms, styleSoldat, cada
     const A = B.armee, n = A.n;
     let k = 0, ka = 0;
     const an = anGeo.attributes.position.array, anTon = anGeo.attributes.aTon.array;
-    const { tirVal, tirAng, volT, volH } = tirs();
+    const { tirVal, tirAng, volT, volH, volD } = tirs();
     for (let i = 0; i < n; i++) {
       const x = A.x[i], y = A.y[i];
       if (x < x0 || x > x1 || y < z0 || y > z1) continue;
       const cxp = e[0] * x + e[4] * SOL_Y + e[8] * y + e[12], cyp = e[1] * x + e[5] * SOL_Y + e[9] * y + e[13], cw = e[3] * x + e[7] * SOL_Y + e[11] * y + e[15];
       if (cxp < -1.08 * cw || cxp > 1.08 * cw || cyp < -1.15 * cw || cyp > 1.15 * cw) continue;
-      posArr[k * 3] = x; posArr[k * 3 + 1] = surfaceLisse(x, y) + (i < volT.length && volT[i] > 0 ? volH[i] * Math.sin(Math.PI * (1 - volT[i] / VOL)) : 0); posArr[k * 3 + 2] = y;
+      posArr[k * 3] = x; posArr[k * 3 + 1] = surfaceLisse(x, y) + (i < volT.length && volT[i] > 0 ? volH[i] * Math.sin(Math.PI * (1 - volT[i] / volD[i])) : 0); posArr[k * 3 + 2] = y;
       const sel = choisis.has(A.reg[i]);
       campArr[k] = A.camp[i] + (sel ? 2 : 0);
       if (sel || A.reg[i] === survolReg) { an[ka * 3] = x; an[ka * 3 + 1] = posArr[k * 3 + 1]; an[ka * 3 + 2] = y; anTon[ka] = sel ? 0 : 1 + A.camp[i]; ka++; }
