@@ -1,5 +1,8 @@
 # Journal des versions
 
+## 0.34.4 — 2026-10-18
+- Plus de saccade toutes les trois secondes en pleine bataille : les régiments ne recalculent plus leur chemin tous ensemble
+
 ## 0.34.3 — 2026-10-18
 - Jouer à deux : si la connexion échoue sous Firefox, l'écran conseille Chrome (Firefox ne se connecte pas entre deux Mac, Chrome oui)
 

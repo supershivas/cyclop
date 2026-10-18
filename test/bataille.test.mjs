@@ -228,6 +228,20 @@ test('une bataille relue est la même, et se comporte pareil', () => {
   for (let k = 0; k < 600; k++) { avancer(A); avancer(B); }
   assert.equal(empreinte(B), empreinte(A));
 });
+test('relue au milieu de l\'étalement des champs (v0.34.4), la bataille suit les mêmes champs', () => {
+  const A = petite(12);
+  ordonnerMarche(A, [0, 1, 2, 3], ...P(150, 150)); ordonnerMarche(A, [4, 5, 6, 7], ...P(260, 120));
+  for (let k = 0; k < 90; k++) { if (k % 15 === 0) ordonnerBarrage(A, '155', ...P(120 + k, 140)); avancer(A); }
+  // on avance jusqu'à 1 s après un changement de version : les régiments n'ont pas tous passé à la nouvelle
+  const v = A.etat.couts.version;
+  while (A.etat.couts.version === v) avancer(A);
+  for (let k = 0; k < 30; k++) avancer(A);
+  assert.ok(A.etat.temps - A.etat.couts.depuis < R.foule.champGroupes * R.foule.champRetard, 'au milieu de l\'étalement');
+  const B = restaurer(JSON.parse(JSON.stringify(photo(A))), R);
+  assert.equal(empreinte(B), empreinte(A));
+  for (let k = 0; k < 400; k++) { avancer(A); avancer(B); }
+  assert.equal(empreinte(B), empreinte(A));
+});
 test('relue après une nuit, la bataille rejoue aussi l\'eau de la nuit', () => {
   const A = petite(4);
   ordonnerBarrage(A, '220', ...P(200, 150));

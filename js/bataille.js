@@ -14,17 +14,17 @@
    La sauvegarde (photo) garde la graine, la liste compacte des impacts, l'état
    de la foule et les petites couches de logique ; jamais le relief : il se
    rejoue depuis la graine et les impacts (rejouerTerrain). */
-import { createRng, hash2 } from './lib/rng.js?v=0.34.3';
-import { creerTerrain, impact, hydroLignes, etat as etatCase, vitesseEtat, ETAT } from './terrain.js?v=0.34.3';
-import { creerArmee, ajouterSoldat, construireGrille, pasArmee, tuerDans, effrayer, compacter, photoArmee, restaurerArmee, b64, deB64, DENSITE, place } from './army.js?v=0.34.3';
-import { creuserTranchees, ligneSous } from './tranchees.js?v=0.34.3';
-import { calculerCouts, creerCacheChamps, dimensionsCouts, BLOC } from './champs.js?v=0.34.3';
-import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.34.3';
-import { METEO, TRANSITIONS, PREVISION_JUSTE } from './data/meteo.js?v=0.34.3';
-import { SECTEURS } from './data/secteur.js?v=0.34.3';
-import { REGIMENTS } from './data/lexique.js?v=0.34.3';
-import { grade } from './identite.js?v=0.34.3';
-import { corvees, rejouerTravaux } from './nuit.js?v=0.34.3';
+import { createRng, hash2 } from './lib/rng.js?v=0.34.4';
+import { creerTerrain, impact, hydroLignes, etat as etatCase, vitesseEtat, ETAT } from './terrain.js?v=0.34.4';
+import { creerArmee, ajouterSoldat, construireGrille, pasArmee, tuerDans, effrayer, compacter, photoArmee, restaurerArmee, b64, deB64, DENSITE, place } from './army.js?v=0.34.4';
+import { creuserTranchees, ligneSous } from './tranchees.js?v=0.34.4';
+import { calculerCouts, creerCacheChamps, dimensionsCouts, BLOC } from './champs.js?v=0.34.4';
+import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.34.4';
+import { METEO, TRANSITIONS, PREVISION_JUSTE } from './data/meteo.js?v=0.34.4';
+import { SECTEURS } from './data/secteur.js?v=0.34.4';
+import { REGIMENTS } from './data/lexique.js?v=0.34.4';
+import { grade } from './identite.js?v=0.34.4';
+import { corvees, rejouerTravaux } from './nuit.js?v=0.34.4';
 
 export const PAS = 1 / 30;                 // s de jeu par pas
 export const NOUS = 0, EUX = 1;
@@ -73,7 +73,7 @@ export function nouvelleBataille(graine, R, opts = {}) {
     meteo: chaine, previsions,
     impacts: [],                        // [jour, tickJour, x×10, y×10, calibre] : de quoi rejouer le relief
     hydro: { passe: 0, ligne: 0 },
-    couts: { bande: 0, version: 1 },
+    couts: { bande: 0, version: 1, depuis: -1e9 },   // (depuis : le temps de la dernière version ; sert à étaler les champs, voir champDe)
     marges: { ...S.marges },            // le terrain déborde du secteur (zone())
     regiments: [], pertes: [0, 0], pertesJour: [[0, 0]], blesses: [0, 0],
     corps: [],                  // les morts restent où ils sont tombés : [x×10, y×10, camp, jour, id]
@@ -129,7 +129,7 @@ export function nouvelleBataille(graine, R, opts = {}) {
   }
   etat.rng = rng.state;
   calculerCouts(B.terrain, R, B.couts, false);
-  B.coutsNeufs.set(B.couts);
+  B.coutsNeufs.set(B.couts); B.coutsPrec.set(B.couts);
   return B;
 }
 
@@ -176,7 +176,7 @@ function monter(etat, R) {
   const { bw, bh } = dimensionsCouts(terrain);
   return {
     etat, R, terrain, armee,
-    couts: new Uint8Array(bw * bh), coutsNeufs: new Uint8Array(bw * bh),
+    couts: new Uint8Array(bw * bh), coutsNeufs: new Uint8Array(bw * bh), coutsPrec: new Uint8Array(bw * bh),
     champs: creerCacheChamps(terrain, R),
     lignes, troncons, faces, profondeur: S.tranchees?.profondeur ?? 6,
     evenements: [],
@@ -379,7 +379,7 @@ export function avancer(B) {
   const b0 = etat.couts.bande, b1 = Math.min(bh, b0 + parPas);
   calculerCoutsBande(B, b0, b1, gel);
   etat.couts.bande = b1;
-  if (b1 >= bh) { B.couts.set(B.coutsNeufs); etat.couts.version++; etat.couts.bande = 0; }
+  if (b1 >= bh) { B.coutsPrec.set(B.couts); B.couts.set(B.coutsNeufs); etat.couts.version++; etat.couts.depuis = etat.temps; etat.couts.bande = 0; }
 
   etat.rng = rng.state;
   // la fin du jour
@@ -768,9 +768,14 @@ function calculerCoutsBande(B, b0, b1, gel) {
 }
 
 // Le champ de l'ordre d'un régiment (ou null : tout près, pas besoin)
+/* Quand les coûts changent, tous les régiments redemandaient leur champ dans le même pas (5 ms chacun : 55 à 100 ms d'un coup, toutes les 2,7 s ; v0.34.4).
+   Chacun garde donc l'ancienne version (`coutsPrec`, sauvegardée) un délai à lui, puis passe à la nouvelle : un champ par intervalle au lieu de seize d'un coup.
+   Le délai ne vient que de l'état (le numéro du régiment, le temps de la version) : la partie relue suit les mêmes champs. */
 function champDe(B, reg) {
   if (!reg.effectif) return null;
-  return B.champs.champ(B.couts, B.etat.couts.version, reg.ordre.x, reg.ordre.y);
+  const { couts: c } = B.etat, F = B.R.foule;
+  const neuf = B.etat.temps - c.depuis >= (reg.id % F.champGroupes) * F.champRetard;
+  return B.champs.champ(neuf ? B.couts : B.coutsPrec, neuf ? c.version : c.version - 1, reg.ordre.x, reg.ordre.y);
 }
 
 // ─── En face : des barrages sur nos hommes les plus serrés, et des avances ──
@@ -877,7 +882,7 @@ export function photo(B) {
   return {
     ...structuredClone(B.etat),
     armee: photoArmee(B.armee),
-    coutsActuels: b64(B.couts), coutsNeufs: b64(B.coutsNeufs),
+    coutsActuels: b64(B.couts), coutsNeufs: b64(B.coutsNeufs), coutsPrec: b64(B.coutsPrec),
   };
 }
 
@@ -889,7 +894,7 @@ export function restaurer(p, R) {
 }
 export function* etapesRestaurer(p, R) {
   yield [0, 'La sauvegarde'];
-  const { armee, coutsActuels, coutsNeufs, ...reste } = structuredClone(p);
+  const { armee, coutsActuels, coutsNeufs, coutsPrec, ...reste } = structuredClone(p);
   const etat = reste;
   // une sauvegarde d'avant les marges (v0.2) : tout glisse de la largeur des marges
   const avantMarges = !etat.marges;
@@ -919,11 +924,13 @@ export function* etapesRestaurer(p, R) {
   if (avantMarges) {
     for (let i = 0; i < B.armee.n; i++) { B.armee.x[i] += etat.marges.x; B.armee.y[i] += etat.marges.y; }
     calculerCouts(B.terrain, R, B.couts, false);
-    B.coutsNeufs.set(B.couts);
+    B.coutsNeufs.set(B.couts); B.coutsPrec.set(B.couts);
   } else {
     B.couts.set(deB64(coutsActuels, Uint8Array));
     B.coutsNeufs.set(deB64(coutsNeufs, Uint8Array));
+    B.coutsPrec.set(coutsPrec ? deB64(coutsPrec, Uint8Array) : B.couts);   // (avant la v0.34.4 : pas de version précédente, tous suivent la nouvelle)
   }
+  etat.couts.depuis ??= -1e9;
   return B;
 }
 
