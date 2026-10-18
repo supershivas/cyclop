@@ -1,8 +1,8 @@
 // Le sujet « Plaques et journal » du labo : des maquettes de l'interface posées sur le champ de bataille en direct (le moteur du jeu),
 // pour décider de ce que sont les « fenêtres » : aujourd'hui, toutes la même plaque. Rien ici ne lit ni ne modifie le jeu : des
 // données d'exemple, la palette du jeu (js/palette.js), aucune couleur de plus.
-import { PALETTE as P } from './palette.js?v=0.33.0';
-import { calqueBarre } from './labo-barre-temps.js?v=0.33.0';
+import { PALETTE as P } from './palette.js?v=0.33.1';
+import { calqueBarre } from './labo-barre-temps.js?v=0.33.1';
 
 const el = (tag, css = '', ...kids) => { const e = document.createElement(tag); if (css) e.style.cssText = css; e.append(...kids.flat().filter(k => k != null)); return e; };
 const txt = (s, css = '') => el('span', css, s);

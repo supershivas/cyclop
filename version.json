@@ -1,10 +1,7 @@
 {
-  "version": "0.33.0",
+  "version": "0.33.1",
   "date": "2026-10-18",
   "changes": [
-    "Les pertes en barres de vie, comme un duel : nous à gauche, en face à droite, le jour au milieu, les tronçons tenus dessous ; les chiffres au survol d'un segment",
-    "Un clic sur la carte d'un régiment referme quatre équerres sur ses hommes en plus de centrer la caméra",
-    "Le champ se prolonge au-delà du bord de la carte, puis la nuit le mange (plus de bord coupé net)",
-    "Au labo : cinq façons d'ouvrir la fenêtre d'ordres"
+    "Le jeu à deux se connecte entre deux ordinateurs : les adresses sont complétées, et l'écran dit pourquoi une connexion échoue"
   ]
 }
