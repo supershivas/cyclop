@@ -1,5 +1,8 @@
 # Journal des versions
 
+## 0.33.1 — 2026-10-18
+- Le jeu à deux se connecte entre deux ordinateurs : les adresses sont complétées, et l'écran dit pourquoi une connexion échoue
+
 ## 0.33.0 — 2026-10-18
 - Les pertes en barres de vie, comme un duel : nous à gauche, en face à droite, le jour au milieu, les tronçons tenus dessous ; les chiffres au survol d'un segment
 - Un clic sur la carte d'un régiment referme quatre équerres sur ses hommes en plus de centrer la caméra

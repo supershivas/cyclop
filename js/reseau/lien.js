@@ -4,7 +4,9 @@
 // L'hôte : `const h = creerHote(); const invitation = await h.inviter(); … h.accepter(reponse)`.
 // L'invité : `const i = creerInvite(); const reponse = await i.repondre(invitation)`.
 // Puis, des deux côtés, `lien.canal` s'ouvre : `lien.envoyer(objet)`, `lien.surMessage = obj => …`, `lien.surOuvert`, `lien.surFermeture`.
-const ICE = { iceServers: [] };           // (le réseau local : les adresses de la machine ; aucune ressource distante, section 21-22 des conventions)
+// Deux machines : les navigateurs cachent leurs adresses locales derrière un nom mDNS (« abc.local ») que l'autre machine ne sait souvent pas résoudre (pare-feu, Windows, Wi-Fi invité) ;
+// les adresses publiques que donne un serveur STUN complètent l'invitation (v0.33.1). Il n'est contacté qu'au moment d'inviter ou de répondre, jamais au lancement du jeu, et ne voit pas la partie.
+const ICE = { iceServers: [{ urls: ['stun:stun.l.google.com:19302', 'stun:stun.cloudflare.com:3478'] }] };
 
 const encoder = obj => btoa(unescape(encodeURIComponent(JSON.stringify(obj)))).replace(/=+$/, '');
 const decoder = txt => JSON.parse(decodeURIComponent(escape(atob(txt.trim().replace(/\s+/g, '')))));
@@ -29,12 +31,13 @@ function lierCanal(lien, canal) {
 function nouveau() {
   const pc = new RTCPeerConnection(ICE);
   const lien = {
-    pc, canal: null, surMessage: null, surOuvert: null, surFermeture: null,
+    pc, canal: null, surEtat: null, surMessage: null, surOuvert: null, surFermeture: null,
     envoyer(obj) { if (lien.canal?.readyState === 'open') lien.canal.send(JSON.stringify(obj)); },
     get ouvert() { return lien.canal?.readyState === 'open'; },
     fermer() { try { lien.canal?.close(); pc.close(); } catch { /* déjà fermé */ } },
   };
-  pc.onconnectionstatechange = () => { if (['failed', 'disconnected', 'closed'].includes(pc.connectionState)) lien.surFermeture?.(); };
+  // 'disconnected' se rétablit souvent de lui-même : seuls 'failed' et 'closed' ferment
+  pc.onconnectionstatechange = () => { lien.surEtat?.(pc.connectionState); if (['failed', 'closed'].includes(pc.connectionState)) lien.surFermeture?.(); };
   return lien;
 }
 
