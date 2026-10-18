@@ -65,3 +65,22 @@
   .labo-chip.is-on { background: var(--labo-encre); color: #fff; }
   .labo-game { max-width: 30vw; overflow: hidden; text-overflow: ellipsis; }
 }
+
+/* Accueil : le journal des changements, les sujets à trancher, l'index */
+.labo.is-home .labo-body { grid-template-columns: 1fr; }
+.labo.is-home .labo-side, .labo.is-home .labo-chips, .labo.is-home .labo-bar { display: none; }
+.labo-stage .labo-bloc { max-width: 760px; margin: 0 0 24px; }
+.labo-stage h2 { font-size: 15px; margin: 0 0 8px; letter-spacing: .04em; text-transform: uppercase; opacity: .7; }
+.labo-stage h3 { font-size: 15px; margin: 12px 0 4px; display: flex; gap: 8px; align-items: baseline; }
+.labo-stage h3 small { font-weight: 400; opacity: .6; }
+.labo-stage ul { margin: 0; padding-left: 18px; }
+.labo-stage li { display: flex; flex-wrap: wrap; align-items: center; column-gap: 8px; user-select: text; }
+.labo-aide { opacity: .7; margin: 0 0 12px; }
+.labo-lien { color: var(--labo-accent); text-decoration: underline; text-underline-offset: 2px; display: inline-flex; align-items: center; min-height: 44px; min-width: 44px; }
+.labo-lien.is-casse { color: #b00020; text-decoration: none; }
+.labo-genre, .labo-new { font: 11px ui-monospace, monospace; letter-spacing: .08em; text-transform: uppercase; padding: 1px 6px; border: 1px solid var(--labo-trait); border-radius: 4px; }
+.labo-new { margin: 0; border-color: var(--labo-accent); color: var(--labo-accent); }
+.labo-genre.is-nouveau { border-color: var(--labo-accent); color: var(--labo-accent); }
+.labo-genre.is-retire { text-decoration: line-through; opacity: .7; }
+.labo-version.is-new { border-left: 3px solid var(--labo-accent); padding-left: 12px; }
+.labo-index { margin-bottom: 8px; }

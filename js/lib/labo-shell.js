@@ -8,7 +8,7 @@
    et la lettre (#loups-C).
 
    Module ES sans dépendance :
-     import { mountLabo } from './lib/labo-shell.js?v=0.31.0'
+     import { mountLabo } from './lib/labo-shell.js?v=0.31.1'
      mountLabo(document.getElementById('labo'), {
        game: 'Kingvi',               // nom affiché dans l'en-tête
        home: './',                   // lien de retour vers le jeu
@@ -56,11 +56,24 @@ const icon = name => {
   return s;
 };
 
-export function mountLabo(root, { game = 'Jeu', home = './', atelier, groups = [] } = {}) {
+// « 1.10.0 » > « 1.9.3 » : comparaison numérique, pas alphabétique
+const versionNum = v => String(v || '0').split('.').map(n => parseInt(n, 10) || 0);
+const plusRecente = (a, b) => {
+  const x = versionNum(a), y = versionNum(b);
+  for (let i = 0; i < 3; i++) if ((x[i] || 0) !== (y[i] || 0)) return (x[i] || 0) > (y[i] || 0);
+  return false;
+};
+const GENRES = { nouveau: 'nouveau', 'mis-a-jour': 'mis à jour', retire: 'retiré' };
+
+export function mountLabo(root, { game = 'Jeu', home = './', atelier, groups = [], accueil = null } = {}) {
   document.title = `Labo — ${game}`;
   root.classList.add('labo');
   let cleanup = null;
   let current = { g: 0, t: 0, v: 0 };
+  let onHome = false;
+  const cleVue = `labo:${game}:vu`;
+  const lireVu = () => { try { return localStorage.getItem(cleVue) || ''; } catch { return ''; } };
+  const ecrireVu = v => { try { localStorage.setItem(cleVue, v); } catch { /* rien */ } };
 
   const header = h('header', { class: 'labo-head safe-top' },
     h('a', { class: 'labo-back', href: home }, h('span', { class: 'labo-game' }, game), h('span', { class: 'labo-badge' }, 'LABO')),
@@ -89,6 +102,7 @@ export function mountLabo(root, { game = 'Jeu', home = './', atelier, groups = [
     const vars = topics[t]?.variants || [];
     v = (v + vars.length) % Math.max(1, vars.length);
     current = { g, t, v };
+    onHome = false;
     if (push && topics[t]) history.replaceState(null, '', `#${topics[t].id}-${LETTERS[v]}`);
     draw();
   }
@@ -102,12 +116,77 @@ export function mountLabo(root, { game = 'Jeu', home = './', atelier, groups = [
     }, LETTERS[i]));
   }
 
+  function allerAccueil(push = true) {
+    onHome = true;
+    if (push) history.replaceState(null, '', '#accueil');
+    draw();
+  }
+
+  // l'accueil : ce qui a changé, ce qui reste à trancher, tous les sujets
+  function drawHome() {
+    root.classList.add('is-home');
+    if (typeof cleanup === 'function') { try { cleanup(); } catch { /* rien */ } }
+    cleanup = null;
+    const vu = lireVu();
+    const journal = accueil.journal || [];
+    const lien = (ref, contenu, cls = '') => {
+      if (ref === 'accueil') return h('a', { class: `labo-lien ${cls}`, href: '#accueil' }, contenu);
+      const m = String(ref || '').match(/^(.*?)(?:-([A-Z]))?$/);
+      const at = m && find(m[1]);
+      const ok = at && (!m[2] || LETTERS.indexOf(m[2]) < (topicsOf(at.g)[at.t].variants.length));
+      return ok ? h('a', { class: `labo-lien ${cls}`, href: `#${ref}` }, contenu)
+        : h('span', { class: 'labo-lien is-casse', title: `Lien cassé : #${ref}` }, '⚠ ', contenu);
+    };
+    const nouveautes = journal.filter(e => !vu || plusRecente(e.version, vu));
+    info.replaceChildren(
+      h('h1', {}, 'Accueil', h('span', { class: 'labo-status' }, `v${accueil.version}`)),
+      accueil.intro ? h('p', {}, accueil.intro) : null,
+    );
+    const entree = (e, neuf) => h('section', { class: `labo-version ${neuf ? 'is-new' : ''}` },
+      h('h3', {}, `v${e.version}`, e.date ? h('small', {}, ` · ${e.date}`) : null, neuf ? h('span', { class: 'labo-new' }, 'nouveau') : null),
+      h('ul', {}, (e.items || []).map(it => h('li', {},
+        it.genre ? h('span', { class: `labo-genre is-${it.genre}` }, GENRES[it.genre] || it.genre) : null,
+        it.ref ? lien(it.ref, it.texte) : it.texte))));
+    const atrancher = [];
+    groups.forEach(gr => gr.topics.forEach(tp => {
+      if (!tp.variants.some(x => x.status === 'actuelle' || x.status === 'retenue')) atrancher.push(tp);
+    }));
+    const sections = [];
+    if (vu && nouveautes.length) sections.push(h('div', { class: 'labo-bloc' },
+      h('h2', {}, `Depuis votre dernière visite (v${vu})`), nouveautes.map(e => entree(e, true))));
+    else if (!vu && journal.length) sections.push(h('p', { class: 'labo-aide' }, 'Première visite : tout le journal est ci-dessous. Les prochaines fois, ce qui est arrivé depuis votre dernier passage sera en tête.'));
+    else if (vu) sections.push(h('p', { class: 'labo-aide' }, `Rien de nouveau depuis votre dernière visite (v${vu}).`));
+    if (atrancher.length) sections.push(h('div', { class: 'labo-bloc' },
+      h('h2', {}, 'À trancher'), h('p', { class: 'labo-aide' }, 'Des sujets où aucune variante n\'est encore en jeu.'),
+      h('ul', {}, atrancher.map(tp => h('li', {}, lien(tp.id, tp.title), h('small', {}, ` · ${tp.variants.length} variantes`))))));
+    sections.push(h('div', { class: 'labo-bloc' }, h('h2', {}, 'Tous les sujets'),
+      groups.map(gr => h('div', { class: 'labo-index' }, h('h3', {}, gr.title),
+        h('ul', {}, gr.topics.map(tp => {
+          const k = tp.variants.findIndex(x => x.status === 'retenue' || x.status === 'actuelle');
+          const nv = tp.variants.findIndex(x => accueil.version && x.depuis === accueil.version);
+          return h('li', {}, lien(k >= 0 ? `${tp.id}-${LETTERS[k]}` : tp.id, tp.title),
+            h('small', {}, k >= 0 ? ` · en jeu : ${LETTERS[k]}` : ' · à trancher', ` · ${tp.variants.length} variante${tp.variants.length > 1 ? 's' : ''}`),
+            nv >= 0 ? h('span', { class: 'labo-new' }, 'nouveau') : null);
+        }))))));
+    sections.push(h('div', { class: 'labo-bloc' }, h('h2', {}, 'Tout le journal'),
+      journal.map(e => entree(e, false))));
+    stage.replaceChildren(...sections);
+    stage.scrollTop = 0;
+    bar.replaceChildren();
+    side.replaceChildren();
+    chips.replaceChildren();
+    ecrireVu(accueil.version);
+  }
+
   function draw() {
     const { g, t, v } = current;
+    root.classList.toggle('is-home', onHome);
+    header.querySelector('.labo-groups').replaceChildren(
+      ...(accueil ? [h('button', { class: `labo-group ${onHome ? 'is-on' : ''}`, onclick: () => allerAccueil() }, 'Accueil')] : []),
+      ...groups.map((gr, i) => h('button', { class: `labo-group ${!onHome && i === g ? 'is-on' : ''}`, onclick: () => go(i, 0, 0) }, gr.title)));
+    if (onHome) { drawHome(); return; }
     const topics = topicsOf(g);
     const topic = topics[t];
-    header.querySelector('.labo-groups').replaceChildren(...groups.map((gr, i) =>
-      h('button', { class: `labo-group ${i === g ? 'is-on' : ''}`, onclick: () => go(i, 0, 0) }, gr.title)));
     side.replaceChildren(...topics.map((tp, i) => h('div', { class: `labo-topic ${i === t ? 'is-open' : ''}` },
       h('button', { class: 'labo-topic-btn', onclick: () => go(g, i, 0) }, h('span', {}, tp.title), h('small', {}, String(tp.variants.length))),
       i === t ? h('div', { class: 'labo-variants' }, tp.variants.map((variant, j) =>
@@ -117,7 +196,8 @@ export function mountLabo(root, { game = 'Jeu', home = './', atelier, groups = [
     if (!topic) { info.replaceChildren(); stage.replaceChildren(); bar.replaceChildren(); return; }
     const variant = topic.variants[v];
     info.replaceChildren(
-      h('h1', {}, `${LETTERS[v]} — ${variant.title}`, variant.status ? h('span', { class: `labo-status is-${variant.status}` }, variant.status) : null),
+      h('h1', {}, `${LETTERS[v]} — ${variant.title}`, variant.status ? h('span', { class: `labo-status is-${variant.status}` }, variant.status) : null,
+        variant.depuis ? h('span', { class: 'labo-status' }, `depuis v${variant.depuis}`) : null),
       variant.note ? h('p', {}, variant.note) : null,
     );
     bar.replaceChildren(
@@ -135,6 +215,7 @@ export function mountLabo(root, { game = 'Jeu', home = './', atelier, groups = [
 
   window.addEventListener('keydown', e => {
     if (e.target.closest?.('input, textarea, select')) return;
+    if (onHome) return;
     if (e.key === 'ArrowRight') { e.preventDefault(); go(current.g, current.t, current.v + 1); }
     if (e.key === 'ArrowLeft') { e.preventDefault(); go(current.g, current.t, current.v - 1); }
     if (e.key === 'ArrowDown') { e.preventDefault(); go(current.g, current.t + 1, 0); }
@@ -152,10 +233,13 @@ export function mountLabo(root, { game = 'Jeu', home = './', atelier, groups = [
 
   function fromHash() {
     const m = location.hash.slice(1).match(/^(.*)-([A-Z])$/);
-    const at = m && find(m[1]);
-    if (at) go(at.g, at.t, LETTERS.indexOf(m[2]), false); else go(0, 0, 0, false);
+    const seul = !m && find(location.hash.slice(1));   // « #sujet » sans lettre : la variante A
+    const at = (m && find(m[1])) || seul;
+    if (at) go(at.g, at.t, m && find(m[1]) ? LETTERS.indexOf(m[2]) : 0, false);
+    else if (accueil) allerAccueil(false);
+    else go(0, 0, 0, false);
   }
   window.addEventListener('hashchange', fromHash);
   fromHash();
-  return { go, get current() { return { ...current }; } };
+  return { go, accueil: () => allerAccueil(), get current() { return { ...current, accueil: onHome }; } };
 }

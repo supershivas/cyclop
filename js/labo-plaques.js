@@ -1,7 +1,7 @@
 // Le sujet « Plaques et journal » du labo : des maquettes de l'interface posées sur le champ de bataille en direct (le moteur du jeu),
 // pour décider de ce que sont les « fenêtres » : aujourd'hui, toutes la même plaque. Rien ici ne lit ni ne modifie le jeu : des
 // données d'exemple, la palette du jeu (js/palette.js), aucune couleur de plus.
-import { PALETTE as P } from './palette.js?v=0.31.0';
+import { PALETTE as P } from './palette.js?v=0.31.1';
 
 const el = (tag, css = '', ...kids) => { const e = document.createElement(tag); if (css) e.style.cssText = css; e.append(...kids.flat().filter(k => k != null)); return e; };
 const txt = (s, css = '') => el('span', css, s);
@@ -96,5 +96,39 @@ function papiers(b, avecCarnet = false) {
   }
 }
 
-const VARIANTES = { actuelle, familles, papiers: b => papiers(b), carnet: b => papiers(b, true) };
+// ── l'écran d'aujourd'hui (v0.31) : le billet sous les boutons du temps, les pertes au centre, la carte, les cartes de régiment, les batteries, le carnet ──
+function aujourdhui(b) {
+  const bouton = (t, w = 44) => el('div', `width:${w}px;height:44px;display:grid;place-items:center;background:${P.t};color:${P.o};${MONO}`, t);
+  const vit = el('div', `display:flex;gap:2px;padding:2px;background:${P.o};color:${P.t};${MONO}box-shadow:3px 3px 0 ${P.t}`, ['II', '×1', '×2', '×4'].map((t, k) => el('div', `width:30px;height:32px;display:grid;place-items:center;border:1px solid ${P.g};${k === 1 ? `background:${P.t};color:${P.o}` : ''}`, t)));
+  b.append(el('div', 'position:absolute;left:8px;top:8px;display:flex;gap:8px;align-items:flex-start', bouton('II'), bouton('⚙'), vit));
+  const papier = (css, ...kids) => el('div', `position:absolute;background:${P.o};color:${P.t};${MONO}box-shadow:3px 3px 0 ${P.t};${css}`, ...kids);
+  // le billet : le jour, la prévision, la mission, le terrain sous la souris
+  b.append(papier('left:8px;top:60px;padding:6px 10px;max-width:40ch', el('div', '', `Jour ${S.jour} sur ${S.jours} · ${S.heure} · ${S.meteo}`),
+    txt(`Demain : ${S.demain}, dit-on`, `color:${P.g};display:block`), txt(`${S.mission} · réserve : ${S.reserve}`, `color:${P.g};display:block`), txt('Sol sec ▬▬ 100 %', `color:${P.g};display:block`)));
+  // les pertes : une ligne par camp (nom, barre, debout · blessés · tombés)
+  const ligne = (nom, c, n) => el('div', 'display:flex;gap:10px;align-items:center', el('span', 'width:64px', nom), el('i', `display:block;width:130px;height:8px;background:${P.s}`, el('i', `display:block;height:8px;width:${n / 750 * 100}%;background:${c}`)), txt(`${n} · ${S.blesses[0]} bl. · ${S.morts[0]} t.`));
+  b.append(papier('left:50%;top:8px;transform:translateX(-50%);padding:6px 10px', ligne('Nous', P.n, 712), ligne('En face', P.x, 730)));
+  // la carte : quatre secteurs, quatre lignes de chaque camp, les régiments en cercles
+  const case_ = c => el('i', `display:block;height:10px;background:${c};border:1px solid ${P.t}`);
+  const grille = c => el('div', 'display:grid;grid-template-columns:repeat(4,1fr);gap:2px', Array.from({ length: 8 }, () => case_(c)));
+  b.append(papier('right:8px;top:8px;width:240px;padding:6px 8px', el('div', `letter-spacing:.1em;text-transform:uppercase;color:${P.g}`, 'Le secteur · en face au nord'), grille(P.x), el('div', `height:14px;text-align:center;color:${P.g};font-size:11px`, '135 m'), grille(P.n)));
+  // le carnet de bord, au-dessus des cartes
+  const regl = (css = '') => `border-bottom:1px solid ${P.r};padding:2px 0;${css}`;
+  b.append(papier('left:8px;bottom:84px;width:236px;padding:8px 10px;font-size:12px', el('div', `${regl()};letter-spacing:.14em;text-transform:uppercase`, 'Carnet de bord'),
+    S.journal.map(([t, l], k) => el('div', regl(k === S.journal.length - 1 ? `background:${P.h}` : ''), el('b', `font-weight:normal;color:${P.g}`, t + '  '), l))));
+  // la rangée des régiments : numéro et nom, chevrons, barre ; la carte choisie s'ouvre vers le haut
+  const carte = (n, nom, choisi) => el('div', `width:112px;padding:4px 7px;background:${P.t};color:${P.o};${MONO}border-top:3px solid ${choisi ? P.n : P.s}`,
+    el('div', '', `${n} · ${nom}`), txt('^^^', `color:${P.g};display:block;line-height:1`), el('div', `height:6px;margin-top:3px;background:${P.s}`, el('div', `height:6px;width:${choisi ? 70 : 92}%;background:${P.n}`)));
+  b.append(el('div', 'position:absolute;left:50%;bottom:8px;transform:translateX(-50%);display:flex;gap:8px', carte(2, 'Protogyne', true), carte(3, 'Céruléen'), carte(4, 'Viride'), carte(5, 'Syzygie')));
+  b.append(papier(`left:50%;bottom:76px;margin-left:-210px;width:260px;padding:8px 10px`, el('div', `${regl()};font-size:15px`, `2 · ${S.reg.nom}`),
+    el('div', regl(`color:${P.g}`), `${S.reg.effectif} debout · ${S.reg.blesses} blessés · ${S.reg.morts} tombés`), el('div', regl(), `${S.reg.ordre}`),
+    el('div', 'display:flex;gap:4px;margin-top:6px', ['Bloc', 'Ligne', 'Par deux', 'Colonne'].map((t, k) => el('span', `padding:3px 6px;border:1px solid ${P.t};${k === 0 ? `background:${P.t};color:${P.o}` : ''}`, t))),
+    el('div', `margin-top:8px;display:inline-block;border:2px solid ${P.t};padding:1px 8px;transform:rotate(-6deg);letter-spacing:.14em;text-transform:uppercase`, S.reg.moral)));
+  // les batteries : l'obus debout, le calibre, une jauge de recharge
+  const batterie = ([c, r], k) => el('div', `width:84px;padding:4px 8px;background:${P.o};color:${P.t};${MONO}box-shadow:3px 3px 0 ${P.t}`, el('div', 'display:flex;justify-content:space-between', el('b', 'font-weight:normal;font-size:16px', c), txt(String(k + 1), `color:${P.g}`)),
+    txt(r, `color:${P.g};display:block`), el('div', `height:4px;background:${P.s}`, el('div', `height:4px;width:${r === 'prête' ? 100 : 40}%;background:${P.t}`)));
+  b.append(el('div', 'position:absolute;right:8px;bottom:8px;display:flex;gap:6px', S.batteries.map(batterie)));
+}
+
+const VARIANTES = { aujourdhui, actuelle, familles, papiers: b => papiers(b), carnet: b => papiers(b, true) };
 export const calquePlaques = v => VARIANTES[v];

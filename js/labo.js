@@ -2,25 +2,28 @@
 // Chaque sujet utilise les mêmes modules que le jeu (terrain, apparence,
 // rendu three.js) : ce qu'on voit ici est ce que le jeu dessinera. Ajouter un
 // sujet ou une variante = ajouter une entrée dans GROUPES.
-import { mountLabo } from './lib/labo-shell.js?v=0.31.0';
-import { spriteCanvas, paletteToGPL, paletteToHex } from './lib/sprites.js?v=0.31.0';
-import { PALETTE, ROLES } from './palette.js?v=0.31.0';
-import { chargerContenu } from './design-store.js?v=0.31.0';
-import { tuile, ETAT } from './tuiles.js?v=0.31.0';
-import { creerTerrain, impact, hydroLignes } from './terrain.js?v=0.31.0';
-import { CALIBRES } from './data/calibres.js?v=0.31.0';
-import { METEO } from './data/meteo.js?v=0.31.0';
-import { nouvelleBataille, avancer, ordonnerMarche, ordonnerBarrage, mourir } from './bataille.js?v=0.31.0';
-import { creerRendu, ZOOMS } from './rendu3d.js?v=0.31.0';
-import { hash2 } from './lib/rng.js?v=0.31.0';
-import { reglerVerdure } from './apparence.js?v=0.31.0';
-import { maquetteAssaut } from './labo-assaut.js?v=0.31.0';
-import { calquePlaques } from './labo-plaques.js?v=0.31.0';
-import { calqueBarre } from './labo-barre-temps.js?v=0.31.0';
+import { mountLabo } from './lib/labo-shell.js?v=0.31.1';
+import { spriteCanvas, paletteToGPL, paletteToHex } from './lib/sprites.js?v=0.31.1';
+import { PALETTE, ROLES } from './palette.js?v=0.31.1';
+import { chargerContenu } from './design-store.js?v=0.31.1';
+import { tuile, ETAT } from './tuiles.js?v=0.31.1';
+import { creerTerrain, impact, hydroLignes } from './terrain.js?v=0.31.1';
+import { CALIBRES } from './data/calibres.js?v=0.31.1';
+import { METEO } from './data/meteo.js?v=0.31.1';
+import { nouvelleBataille, avancer, ordonnerMarche, ordonnerBarrage, mourir } from './bataille.js?v=0.31.1';
+import { creerRendu, ZOOMS } from './rendu3d.js?v=0.31.1';
+import { hash2 } from './lib/rng.js?v=0.31.1';
+import { reglerVerdure } from './apparence.js?v=0.31.1';
+import { maquetteAssaut } from './labo-assaut.js?v=0.31.1';
+import { calquePlaques } from './labo-plaques.js?v=0.31.1';
+import { calqueBarre } from './labo-barre-temps.js?v=0.31.1';
+import { JOURNAL } from './labo-journal.js?v=0.31.1';
+import { loadVersion } from './lib/app-update.js?v=0.31.1';
 
 document.documentElement.style.setProperty('--jeu-accent', ROLES.accent);
 const NOM = document.title.replace(/^Labo — /, ''); // le nom vient de la page (une apostrophe ne casse rien)
 const { reglages: R } = await chargerContenu();
+const VERSION = (await loadVersion()) || '';
 
 const el = (tag, props = {}, ...kids) => {
   const e = Object.assign(document.createElement(tag), props);
@@ -84,7 +87,7 @@ function tuiles(stage, gris = false) {
 }
 
 // ─── Le moteur, en direct : le rendu du jeu sur une petite bataille ───
-function moteur(stage, { zoom = 3, pluie = false, gel = false, soldats = 600, cz = 185, camera = null, respiration = undefined, soldat = undefined, cadavre = undefined, morts = 0, effets = undefined, barrages = false, surLesArbres = false, verdure = undefined, nuit = null, tombee = false, calque = null } = {}) {
+function moteur(stage, { zoom = 3, pluie = false, gel = false, soldats = 600, cz = 185, camera = null, respiration = undefined, soldat = undefined, cadavre = undefined, morts = 0, effets = undefined, barrages = false, surLesArbres = false, vue = null, verdure = undefined, nuit = null, tombee = false, calque = null } = {}) {
   reglerVerdure(verdure);                                   // le sol vert (apparence.js) : avant que le sol ne se peigne
   const boite = el('div'); boite.style.cssText = 'position:relative;width:100%;height:min(70vh,560px);overflow:hidden';
   const canvas = el('canvas'); canvas.style.cssText = 'position:absolute;left:0;top:0;image-rendering:pixelated';
@@ -115,6 +118,7 @@ function moteur(stage, { zoom = 3, pluie = false, gel = false, soldats = 600, cz
     if (nuit) rendu.styleNuit = nuit;
     rendu.redimensionner();
     rendu.attacher(B);
+    if (vue) rendu.placerCamera(vue.yaw, vue.tangage);       // la caméra libre du jeu
     rendu.vue.zoom = zoom; rendu.vue.cx = B.etat.marges.x + 200; rendu.vue.cz = B.etat.marges.y + cz;   // (coordonnées du secteur, plus les marges)
     let tReleve = 0, tBarrage = 0.3, kBarrage = 0;
     let t = performance.now();
@@ -154,7 +158,7 @@ const GROUPES = [
       { title: 'En niveaux de gris', note: 'La même chose sans la couleur.', render: s => tuiles(s, true) },
     ] },
     { id: 'palette', title: 'Palette', variants: [
-      { title: 'Nuancier', note: '« Boue et ciel bas » : dix tons, et rien d\'autre.', status: 'actuelle', render: s => {
+      { title: 'Nuancier', note: `« Boue et ciel bas » : ${Object.keys(PALETTE).length} tons, et rien d\'autre (le vert kaki clair d\'en face depuis la v0.28.0).`, status: 'actuelle', render: s => {
         s.append(el('div', { className: 'nuancier' }, ...Object.entries(PALETTE).map(([k, hex]) => {
           const d = el('div', { textContent: `${k} ${hex}` });
           d.style.background = hex;
@@ -175,10 +179,11 @@ const GROUPES = [
   ] },
   { id: 'interface', title: 'Interface', topics: [
     { id: 'plaques', title: 'Plaques et journal', variants: [
-      { title: 'Toutes la même plaque', status: 'ancienne', note: 'L\'interface d\'aujourd\'hui sur le champ en direct : l\'horloge, la fiche, les morts, les batteries, les régiments choisis sont des plaques identiques (terre, liseré de boue). Rien ne dit ce qui est permanent, ce qui est un ordre, ce qui est une fiche.', render: s => moteur(s, { zoom: 3, cz: 185, soldats: 400, calque: calquePlaques('actuelle') }) },
-      { title: 'Trois familles', note: 'Un bandeau d\'instruments en haut (le temps, la mission, les morts : permanent, sans cadre) ; des cartes de régiment à liseré bleu et une barre d\'effectif (les ordres) ; une fiche encadrée à en-tête plein (ce qu\'on ouvre). On distingue l\'état de l\'action sans lire.', render: s => moteur(s, { zoom: 3, cz: 185, soldats: 400, calque: calquePlaques('familles') }) },
-      { title: 'Des papiers de campagne', status: 'retenue', note: 'Plus intradiégétique : une montre de gousset pour l\'heure, une feuille de situation (papier, lignes, tampon « ébranlé », barre debout / blessés / tombés) pour le régiment, un râtelier d\'obus (debout : prêt ; couché : se recharge), des croix au crayon pour les morts.', render: s => moteur(s, { zoom: 3, cz: 185, soldats: 400, calque: calquePlaques('papiers') }) },
-      { title: 'Avec le carnet de bord', status: 'retenue', note: 'Les papiers de campagne, et un carnet de bord : les événements marquants à l\'heure où ils arrivent (la préparation d\'en face, la sortie, le dernier défenseur, le tronçon perdu), la ligne la plus récente surlignée. La mémoire de la pause active.', render: s => moteur(s, { zoom: 3, cz: 185, soldats: 400, calque: calquePlaques('carnet') }) },
+      { title: 'Les papiers d\'aujourd\'hui', status: 'actuelle', depuis: '0.31.1', note: 'L\'écran de la v0.31 : les boutons du temps et le billet en haut à gauche (sans montre dessinée), les pertes de chaque camp sur une ligne au centre, la carte repliable en haut à droite, une carte par régiment en bas (chevrons d\'expérience, barre debout / blessés / tombés) dont la choisie s\'ouvre vers le haut, les batteries à jauge de recharge, le carnet de bord au-dessus des cartes. Une maquette peinte à la main, sur le champ en direct.', render: s => moteur(s, { zoom: 3, cz: 185, soldats: 400, calque: calquePlaques('aujourdhui') }) },
+      { title: 'Toutes la même plaque', status: 'ancienne', note: 'L\'interface d\'avant la v0.10.0 sur le champ en direct : l\'horloge, la fiche, les morts, les batteries, les régiments choisis sont des plaques identiques (terre, liseré de boue). Rien ne dit ce qui est permanent, ce qui est un ordre, ce qui est une fiche.', render: s => moteur(s, { zoom: 3, cz: 185, soldats: 400, calque: calquePlaques('actuelle') }) },
+      { title: 'Trois familles', status: 'ancienne', note: 'Non retenu (v0.10.0). Un bandeau d\'instruments en haut (le temps, la mission, les morts : permanent, sans cadre) ; des cartes de régiment à liseré bleu et une barre d\'effectif (les ordres) ; une fiche encadrée à en-tête plein (ce qu\'on ouvre). On distingue l\'état de l\'action sans lire.', render: s => moteur(s, { zoom: 3, cz: 185, soldats: 400, calque: calquePlaques('familles') }) },
+      { title: 'Des papiers de campagne', status: 'ancienne', note: 'Retenu en v0.10.0, remplacé : la montre de gousset est retirée depuis la v0.30.0 (l\'heure est dans le billet). Plus intradiégétique : une montre de gousset pour l\'heure, une feuille de situation (papier, lignes, tampon « ébranlé », barre debout / blessés / tombés) pour le régiment, un râtelier d\'obus (debout : prêt ; couché : se recharge), des croix au crayon pour les morts.', render: s => moteur(s, { zoom: 3, cz: 185, soldats: 400, calque: calquePlaques('papiers') }) },
+      { title: 'Avec le carnet de bord', status: 'ancienne', note: 'Retenu en v0.10.0, la mise en page a changé depuis (v0.19.0, v0.20.0, v0.30.0). Les papiers de campagne, et un carnet de bord : les événements marquants à l\'heure où ils arrivent (la préparation d\'en face, la sortie, le dernier défenseur, le tronçon perdu), la ligne la plus récente surlignée. La mémoire de la pause active.', render: s => moteur(s, { zoom: 3, cz: 185, soldats: 400, calque: calquePlaques('carnet') }) },
     ] },
     { id: 'barre-temps', title: 'La barre du temps', variants: [
       { title: 'Quatre lignes de texte', status: 'actuelle', note: 'Le billet d\'aujourd\'hui, sous les boutons de vitesse : le jour, l\'heure et le temps, la prévision de demain, la mission, le terrain sous la souris. Rien ne montre où l\'on en est de la bataille.', render: s => moteur(s, { zoom: 3, cz: 185, soldats: 400, calque: calqueBarre('actuelle') }) },
@@ -188,58 +193,59 @@ const GROUPES = [
       { title: 'Une seule ligne', note: 'Le jour, l\'heure, le temps d\'aujourd\'hui et celui de demain à côté des boutons de vitesse ; une règle de cinq pixels dessous, jours et nuits, le trait bleu. La mission et le terrain quittent ce papier. Presque rien à l\'écran.', render: s => moteur(s, { zoom: 3, cz: 185, soldats: 400, calque: calqueBarre('ligne') }) },
     ] },
     { id: 'assaut', title: 'Attaque d\'une tranchée', variants: [
+      { title: 'Le feu se voit', status: 'actuelle', depuis: '0.9.2', note: 'Les hommes disent ce qu\'ils font : ceux qu\'on bombarde se tapissent et ne tirent plus, les autres tirent (éclair, traceur), un homme touché tombe et reste là. On lit à qui appartient la force sans un chiffre.', render: s => maquetteAssaut(s, 'feu') },
+      { title: 'Le tronçon se lit', status: 'actuelle', depuis: '0.9.2', note: 'Le monde porte l\'état : des traverses découpent la tranchée en tronçons, un fanion flotte, se déchire, est amené puis remplacé par celui d\'en face ; le fil de fer est coupé ; le parapet est bouleversé ; les sacs sont retournés quand le tronçon est pris. Depuis la v0.18.0 : deux traverses par tronçon, du fil de fer devant les premières lignes, une porte d\'abri par niveau.', render: s => maquetteAssaut(s, 'marques') },
       { title: 'Le compteur', status: 'ancienne', note: 'Ce que voyait le joueur avant la v0.9.2 : des hommes en boîtes, des obus, et « Tronçons : 12 · 11 » en coin. Rien ne dit qu\'un tronçon est disputé, ni que le dernier défenseur va tomber. Allez à « Contact » avec la frise.', render: s => maquetteAssaut(s, 'actuelle') },
-      { title: 'Le feu se voit', status: 'retenue', note: 'Les hommes disent ce qu\'ils font : ceux qu\'on bombarde se tapissent et ne tirent plus, les autres tirent (éclair, traceur), un homme touché tombe et reste là. On lit à qui appartient la force sans un chiffre.', render: s => maquetteAssaut(s, 'feu') },
-      { title: 'Le tronçon se lit', status: 'retenue', note: 'Le monde porte l\'état : des traverses découpent la tranchée en tronçons, un fanion flotte, se déchire, est amené puis remplacé par celui d\'en face ; le fil de fer est coupé ; le parapet est bouleversé ; les sacs sont retournés quand le tronçon est pris.', render: s => maquetteAssaut(s, 'marques') },
-      { title: 'Les fusées', note: 'L\'avant-dernier acte : une fusée d\'appel quand la sortie commence, deux fusées quand il ne reste qu\'un homme (le tronçon va basculer), et celle d\'en face, d\'une autre couleur, quand il est pris. Un signal lisible de loin, au zoom 1.', render: s => maquetteAssaut(s, 'fusees') },
-      { title: 'Tout ensemble', note: 'Le feu, les marques du tronçon et les fusées. Pour juger si le tout reste lisible, ou s\'il faut en retirer.', render: s => maquetteAssaut(s, 'tout') },
+      { title: 'Les fusées', note: 'Non retenu (v0.9.2). L\'avant-dernier acte : une fusée d\'appel quand la sortie commence, deux fusées quand il ne reste qu\'un homme (le tronçon va basculer), et celle d\'en face, d\'une autre couleur, quand il est pris. Un signal lisible de loin, au zoom 1.', render: s => maquetteAssaut(s, 'fusees') },
+      { title: 'Tout ensemble', note: 'Non retenu (v0.9.2). Le feu, les marques du tronçon et les fusées. Pour juger si le tout reste lisible, ou s\'il faut en retirer.', render: s => maquetteAssaut(s, 'tout') },
     ] },
   ] },
   { id: 'moteur', title: 'Moteur', topics: [
     { id: 'champ', title: 'Champ de bataille', variants: [
-      { title: 'Zoom 4', note: 'Le rendu du jeu : quatre de nos régiments avancent, chaque soldat est une boîte et son ombre.', status: 'actuelle', render: s => moteur(s, { zoom: 3 }) },
-      { title: 'Zoom 1', note: 'Tout le champ : chaque soldat n\'est plus qu\'un point (sa couleur sur son ombre), le sol est à plat.', render: s => moteur(s, { zoom: 0 }) },
+      { title: 'Zoom 4', note: 'Le rendu du jeu : quatre de nos régiments avancent ; à 4 pixels par mètre, chaque soldat est une silhouette allégée (jambes, corps, bras, tête, fusil) et son ombre ; l\'équipement n\'apparaît qu\'à partir de 6.', status: 'actuelle', render: s => moteur(s, { zoom: 3 }) },
+      { title: 'Zoom 1', note: 'Tout le champ : chaque soldat n\'est plus qu\'un point (sa couleur sur son ombre) ; le sol garde le même relief qu\'au zoom 4 (depuis la v0.12.0).', render: s => moteur(s, { zoom: 0 }) },
       { title: 'Après un jour de pluie', note: 'Quatre-vingt-dix obus et vingt-quatre heures de pluie : la boue dans les creux, l\'eau dans les trous.', render: s => moteur(s, { zoom: 3, pluie: true }) },
       { title: 'Le gel', note: 'Le même champ, gelé : l\'eau devient de la glace, la boue porte.', render: s => moteur(s, { zoom: 3, gel: true }) },
     ] },
     { id: 'sol-vert', title: 'Le sol vert', variants: [
+      { title: 'Des plaques de vert', status: 'actuelle', depuis: '0.9.3', note: 'Des plaques d\'une dizaine de mètres, vertes dans le sec et l\'humide, en plus des taches : le champ vire par endroits, comme une prairie qui reprend. Le kaki reste le fond.', render: s => moteur(s, { zoom: 2, cz: 150, soldats: 300, verdure: 2 }) },
       { title: 'Sans vert', status: 'ancienne', note: 'Le sol d\'avant la v0.9.3 : l\'herbe morte (kaki), la glaise, la boue. L\'herbe éparse est dans la couleur de la glaise.', render: s => moteur(s, { zoom: 2, cz: 150, soldats: 300, verdure: 0 }) },
       { title: 'Des taches vertes', note: 'Même sol ; l\'herbe éparse (une case sur 9 à 41) est verte (mousse) au lieu de glaise, vert sombre dans l\'humide. Presque rien ne change, sauf des touches de vert vivant.', render: s => moteur(s, { zoom: 2, cz: 150, soldats: 300, verdure: 1 }) },
-      { title: 'Des plaques de vert', status: 'retenue', note: 'Des plaques d\'une dizaine de mètres, vertes dans le sec et l\'humide, en plus des taches : le champ vire par endroits, comme une prairie qui reprend. Le kaki reste le fond.', render: s => moteur(s, { zoom: 2, cz: 150, soldats: 300, verdure: 2 }) },
       { title: 'Une prairie', note: 'Presque tout le sec est vert, le kaki n\'est plus que des plaques. Le cratère (lèvre claire, creux sombre) et la boue gardent leurs couleurs : à vous de dire si le vert écrase le ton « catastrophe peinte avec calme ».', render: s => moteur(s, { zoom: 2, cz: 150, soldats: 300, verdure: 3 }) },
       { title: 'Une prairie, après trois jours', note: 'La prairie après quatre-vingt-dix obus et une journée de pluie : on voit où le vert tient et où il est retourné.', render: s => moteur(s, { zoom: 3, soldats: 300, verdure: 3, pluie: true }) },
     ] },
     { id: 'nuit', title: 'La nuit sans trame', variants: [
+      { title: 'Voile et halos', status: 'actuelle', depuis: '0.9.3', note: 'Le voile, et la lumière peint en plus une lueur chaude (os et herbe sèche) autour des lanternes, des feux et des fusées.', render: s => moteur(s, { zoom: 3, cz: 170, tombee: true, barrages: true, nuit: 'halos', effets: { feu: true, derive: true, fusees: 'toujours' }, surLesArbres: true }) },
       { title: 'La trame', status: 'ancienne', note: 'La nuit d\'avant la v0.9.3 : un pixel sur deux de la terre (Bayer 4 × 4), trouée autour des lumières. Aucune couleur de plus ; coût mesuré dans le rendu logiciel (voir « Dessin » ci-dessous).', render: s => moteur(s, { zoom: 3, cz: 170, tombee: true, barrages: true, nuit: 'trame', effets: { feu: true, derive: true, fusees: 'toujours' }, surLesArbres: true }) },
       { title: 'Un voile continu', note: 'Le même noir, sans trame : il monte en dégradé, les lumières le percent en douceur. Des couleurs qui n\'existent pas dans la palette (un mélange continu entre la terre et le sol).', render: s => moteur(s, { zoom: 3, cz: 170, tombee: true, barrages: true, nuit: 'doux', effets: { feu: true, derive: true, fusees: 'toujours' }, surLesArbres: true }) },
-      { title: 'Voile et halos', status: 'retenue', note: 'Le voile, et la lumière peint en plus une lueur chaude (os et herbe sèche) autour des lanternes, des feux et des fusées.', render: s => moteur(s, { zoom: 3, cz: 170, tombee: true, barrages: true, nuit: 'halos', effets: { feu: true, derive: true, fusees: 'toujours' }, surLesArbres: true }) },
       { title: 'Halos, tout dézoomé', note: 'Les halos au zoom 1 : le champ entier, les lanternes le long des lignes.', render: s => moteur(s, { zoom: 0, cz: 150, soldats: 600, tombee: true, nuit: 'halos', effets: { feu: true, derive: true, fusees: 'toujours' } }) },
     ] },
     { id: 'camera', title: 'Caméra', variants: [
-      { title: 'Perspective et respiration', note: 'La caméra du jeu : un angle de 30°, plongée de 54°, tournée de 9° (les régiments lointains paraissent plus petits), et elle se balance d\'elle-même, très lentement (2° en 23 s) : le champ vit même quand rien ne bouge.', status: 'actuelle', render: s => moteur(s, { zoom: 3, pluie: true }) },
+      { title: 'Libre, vers l\'horizon', status: 'actuelle', depuis: '0.28.0', note: 'La caméra du jeu depuis la v0.28.0 n\'est plus bornée : n\'importe quelle direction, de l\'horizon presque au zénith, le ciel de la couleur de la brume ; seul le sol la relève. Ici, à plat, tournée de 40°. (Touches : A, E, R, F et la molette ; C recentre.)', render: s => moteur(s, { zoom: 3, pluie: true, vue: { tangage: 0.22, yaw: 0.7 } }) },
+      { title: 'Perspective et respiration', note: 'La caméra d\'avant la v0.28.0 (bornée : tournée de 34° au plus, inclinée de 40° à 77°) : un angle de 30°, plongée de 54°, tournée de 9° (les régiments lointains paraissent plus petits), et elle se balance d\'elle-même, très lentement (2° en 23 s) : le champ vit même quand rien ne bouge. La perspective et la respiration sont restées dans la caméra libre.', status: 'ancienne', depuis: '0.3.1', render: s => moteur(s, { zoom: 3, pluie: true }) },
       { title: 'Immobile', note: 'La même perspective, sans la respiration (v0.3.0).', status: 'ancienne', render: s => moteur(s, { zoom: 3, pluie: true, respiration: 0 }) },
       { title: 'Sans perspective', note: 'Presque la caméra de la v0.2 : un angle de 4°, tout a la même taille de près comme de loin.', status: 'ancienne', render: s => moteur(s, { zoom: 3, pluie: true, camera: { fov: 4 }, respiration: 0 }) },
       { title: 'Plus de perspective', note: 'Un angle de 50° et une plongée de 45° : le lointain rapetisse vite, l\'horizon se rapproche.', render: s => moteur(s, { zoom: 3, pluie: true, camera: { fov: 50, tangage: 0.8 } }) },
       { title: 'Respiration marquée', note: 'Le balancement deux fois plus ample (4°).', render: s => moteur(s, { zoom: 3, pluie: true, respiration: 0.07 }) },
     ] },
     { id: 'soldats', title: 'Soldats de près', variants: [
+      { title: 'Équipé, bras qui balancent', status: 'actuelle', depuis: '0.28.0', note: 'Le même, dont les bras balancent à l\'opposé des jambes quand il marche (calculé dans le nuanceur, rien de plus pour le processeur).', render: s => moteur(s, { zoom: 6, cz: 205, soldat: 'equipe-marche' }) },
       { title: 'Silhouette complète', status: 'ancienne', note: 'Jambes, vareuse, visage, casque, le fusil à l\'épaule et le sac au dos (la glaise). Environ 55 triangles par homme de près.', render: s => moteur(s, { zoom: 5, cz: 205, soldat: 'silhouette' }) },
       { title: 'Une boîte', note: 'Le soldat de la v0.7 : une boîte de la couleur de son camp, son dessus en guise de casque, et son ombre. Environ 10 triangles par homme.', status: 'ancienne', render: s => moteur(s, { zoom: 5, cz: 205, soldat: 'boite' }) },
       { title: 'Jambes, tête et casque', note: 'Les bandes molletières sombres (deux jambes), la vareuse, le visage clair, le casque plus large que la tête. Environ 40 triangles, seulement de près (6 pixels par mètre et plus) ; de loin, la boîte, puis le point.', render: s => moteur(s, { zoom: 5, cz: 205, soldat: 'detail' }) },
       { title: 'La boîte et un fusil', note: 'La boîte de la v0.7, un fusil à l\'épaule (un trait de terre) : la silhouette du fantassin pour 8 triangles de plus.', render: s => moteur(s, { zoom: 5, cz: 205, soldat: 'fusil' }) },
-      { title: 'Équipé', note: 'Proposition (v0.27.0) : la silhouette et son équipement. Bottes, bandes molletières, capote aux basques rabattues, ceinturon, trois cartouchières, gourde, couverture roulée, mains, baïonnette ; chez nous le casque Adrian (cimier, visière) et la moustache du poilu, en face le casque à pointe et son couvre-nuque. Environ 190 triangles par homme, de 6 pixels par mètre et plus.', render: s => moteur(s, { zoom: 6, cz: 205, soldat: 'equipe' }) },
-      { title: 'Équipé, bras qui balancent', status: 'retenue', note: 'Le même, dont les bras balancent à l\'opposé des jambes quand il marche (calculé dans le nuanceur, rien de plus pour le processeur).', render: s => moteur(s, { zoom: 6, cz: 205, soldat: 'equipe-marche' }) },
+      { title: 'Équipé', note: 'Étape (v0.27.0, avant les bras qui balancent) : la silhouette et son équipement. Bottes, bandes molletières, capote aux basques rabattues, ceinturon, trois cartouchières, gourde, couverture roulée, mains, baïonnette ; chez nous le casque Adrian (cimier, visière) et la moustache du poilu, en face le casque à pointe et son couvre-nuque. Environ 190 triangles par homme, de 6 pixels par mètre et plus.', render: s => moteur(s, { zoom: 6, cz: 205, soldat: 'equipe' }) },
       { title: 'Équipé, vu de moins près', note: 'Le même équipé à 8 pixels par mètre : ce qu\'il en reste quand on regarde un régiment entier.', render: s => moteur(s, { zoom: 5, cz: 205, soldat: 'equipe' }) },
       { title: 'Silhouette qui marche', note: 'La silhouette complète, et les jambes qui se balancent quand il marche (calculé dans le shader, selon sa vitesse : rien de plus pour le processeur).', render: s => moteur(s, { zoom: 5, cz: 205, soldat: 'marche' }) },
     ] },
     { id: 'cadavres', title: 'Cadavres', variants: [
+      { title: 'Poses variées, équipés', status: 'actuelle', depuis: '0.28.0', note: 'Les poses variées, avec le soldat équipé (bottes, ceinturon, cartouchières, gourde, couverture, casque de son camp) : les morts sont les hommes qu\'on voyait debout, avec tout ce qu\'ils portaient.', render: s => moteur(s, { zoom: 6, cz: 205, soldat: 'equipe', cadavre: 'poses', morts: 0.3 }) },
       { title: 'La planche', status: 'ancienne', note: 'Aujourd\'hui : une boîte couchée de 1,7 m, la couleur du camp le jour même, la glaise le lendemain. Rien ne dit que c\'était un soldat.', render: s => moteur(s, { zoom: 5, cz: 205, soldat: 'silhouette', cadavre: 'planche', morts: 0.3 }) },
-      { title: 'Le soldat couché', note: 'Proposition (v0.27.0) : le soldat lui-même, couché sur le dos, vareuse, bandes molletières, casque, fusil et sac comme debout ; de 4 pixels par mètre la silhouette allégée, dès 6 celle du style choisi. La glaise le lendemain.', render: s => moteur(s, { zoom: 5, cz: 205, soldat: 'silhouette', cadavre: 'couche', morts: 0.3 }) },
+      { title: 'Le soldat couché', note: 'Étape (v0.27.0) : le soldat lui-même, couché sur le dos, vareuse, bandes molletières, casque, fusil et sac comme debout ; de 4 pixels par mètre la silhouette allégée, dès 6 celle du style choisi. La glaise le lendemain.', render: s => moteur(s, { zoom: 5, cz: 205, soldat: 'silhouette', cadavre: 'couche', morts: 0.3 }) },
       { title: 'Poses variées', note: 'Le même soldat, tombé comme il est tombé : sur le dos, sur le ventre ou sur le côté, les bras et les jambes écartés selon son numéro (il reste ainsi d\'une image à l\'autre).', render: s => moteur(s, { zoom: 5, cz: 205, soldat: 'silhouette', cadavre: 'poses', morts: 0.3 }) },
-      { title: 'Poses variées, équipés', status: 'retenue', note: 'Les poses variées, avec le soldat équipé (bottes, ceinturon, cartouchières, gourde, couverture, casque de son camp) : les morts sont les hommes qu\'on voyait debout, avec tout ce qu\'ils portaient.', render: s => moteur(s, { zoom: 6, cz: 205, soldat: 'equipe', cadavre: 'poses', morts: 0.3 }) },
     ] },
     { id: 'effets', title: 'Effets', variants: [
-      { title: 'Tout ensemble', status: 'actuelle', note: 'Gerbe, onde, obus qui tombe, fumée qui reste, feu, fusées et corbeaux.', render: s => moteur(s, { zoom: 4, cz: 170, barrages: true, effets: { gerbe: true, onde: true, chute: true, derive: true, feu: true, fusees: 'toujours', corbeaux: 'toujours' } }) },
+      { title: 'Tout ensemble', status: 'actuelle', note: 'Gerbe, onde, obus qui tombe, feu, fusées et corbeaux ; la fumée des obus reste 40 à 90 s et vire parfois au noir selon le calibre (v0.27.0) ; les fusils fument aussi (un petit nuage à chaque coup).', render: s => moteur(s, { zoom: 4, cz: 170, barrages: true, effets: { gerbe: true, onde: true, chute: true, derive: true, feu: true, fusees: 'toujours', corbeaux: 'toujours' } }) },
       { title: 'Les effets de la v0.7', note: 'L\'éclair, la terre jetée, une fumée tramée qui monte et se dissipe en quelques secondes.', status: 'ancienne', render: s => moteur(s, { zoom: 4, cz: 170, barrages: true, effets: {} }) },
       { title: 'Gerbe de terre et onde', note: 'Une colonne de terre et de mottes, haute et serrée, qui retombe ; un anneau de poussière qui court au ras du sol.', render: s => moteur(s, { zoom: 4, cz: 170, barrages: true, effets: { gerbe: true, onde: true } }) },
       { title: 'L\'obus qui tombe', note: 'Un quart de seconde avant l\'explosion, une traînée claire descend du ciel jusqu\'au point de chute (avec la gerbe).', render: s => moteur(s, { zoom: 4, cz: 170, barrages: true, effets: { chute: true, gerbe: true } }) },
@@ -270,4 +276,7 @@ function lum(hex) {
 }
 function contraste(a, b) { const [x, y] = [lum(a), lum(b)].sort((p, q) => q - p); return (x + 0.05) / (y + 0.05); }
 
-mountLabo(document.getElementById('labo'), { game: NOM, home: './', atelier: 'atelier.html', groups: GROUPES });
+mountLabo(document.getElementById('labo'), {
+  game: NOM, home: './', atelier: 'atelier.html', groups: GROUPES,
+  accueil: { version: VERSION, intro: 'Ce qui a changé au labo, et où le voir. A est toujours la variante en jeu ; le point plein marque la retenue.', journal: JOURNAL },
+});

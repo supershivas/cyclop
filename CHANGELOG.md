@@ -1,5 +1,9 @@
 # Journal des versions
 
+## 0.31.1 — 2026-10-18
+- Le labo a une page d'accueil : ce qui a changé version par version, avec un lien vers le bon sujet, ce qui est nouveau depuis votre dernière visite, ce qui reste à trancher
+- Au labo, les visuels périmés sont refaits ou marqués « ancienne » : l'écran d'aujourd'hui, la caméra libre, les notes du champ ; dans chaque sujet, la variante en jeu est la A
+
 ## 0.31.0 — 2026-10-18
 - Le champ gagne de la place sur un petit écran : le temps à côté des réglages, les pertes sur une ligne par camp, la carte repliable, un billet sans montre dessinée (en haut à gauche, sous le temps), des batteries à jauge de recharge ; le bouton de prévision disparaît
 - Au labo, « La barre du temps » : cinq mises en page d'une frise de la bataille (jours, nuits, repère, changements de météo)
