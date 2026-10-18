@@ -14,17 +14,17 @@
    La sauvegarde (photo) garde la graine, la liste compacte des impacts, l'état
    de la foule et les petites couches de logique ; jamais le relief : il se
    rejoue depuis la graine et les impacts (rejouerTerrain). */
-import { createRng, hash2 } from './lib/rng.js?v=0.34.3';
-import { creerTerrain, impact, hydroLignes, etat as etatCase, vitesseEtat, ETAT } from './terrain.js?v=0.34.3';
-import { creerArmee, ajouterSoldat, construireGrille, pasArmee, tuerDans, effrayer, compacter, photoArmee, restaurerArmee, b64, deB64, DENSITE, place } from './army.js?v=0.34.3';
-import { creuserTranchees, ligneSous } from './tranchees.js?v=0.34.3';
-import { calculerCouts, creerCacheChamps, dimensionsCouts, BLOC } from './champs.js?v=0.34.3';
-import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.34.3';
-import { METEO, TRANSITIONS, PREVISION_JUSTE } from './data/meteo.js?v=0.34.3';
-import { SECTEURS } from './data/secteur.js?v=0.34.3';
-import { REGIMENTS } from './data/lexique.js?v=0.34.3';
-import { grade } from './identite.js?v=0.34.3';
-import { corvees, rejouerTravaux } from './nuit.js?v=0.34.3';
+import { createRng, hash2 } from './lib/rng.js?v=0.34.4';
+import { creerTerrain, impact, hydroLignes, etat as etatCase, vitesseEtat, ETAT } from './terrain.js?v=0.34.4';
+import { creerArmee, ajouterSoldat, construireGrille, pasArmee, tuerDans, effrayer, compacter, photoArmee, restaurerArmee, b64, deB64, DENSITE, place } from './army.js?v=0.34.4';
+import { creuserTranchees, ligneSous } from './tranchees.js?v=0.34.4';
+import { calculerCouts, creerCacheChamps, dimensionsCouts, BLOC } from './champs.js?v=0.34.4';
+import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.34.4';
+import { METEO, TRANSITIONS, PREVISION_JUSTE } from './data/meteo.js?v=0.34.4';
+import { SECTEURS } from './data/secteur.js?v=0.34.4';
+import { REGIMENTS } from './data/lexique.js?v=0.34.4';
+import { grade } from './identite.js?v=0.34.4';
+import { corvees, rejouerTravaux } from './nuit.js?v=0.34.4';
 
 export const PAS = 1 / 30;                 // s de jeu par pas
 export const NOUS = 0, EUX = 1;
@@ -739,7 +739,7 @@ function tomber(B, x, y, cal, ctx, gel) {
   const n = etat.impacts.length;
   etat.impacts.push([etat.jour, etat.tickJour, Math.round(x * 10), Math.round(y * 10), NOMS_CALIBRES.indexOf(cal)]);
   const { rayon } = impact(T, x, y, cal, R, n, gel);
-  tuerDans(B.armee, x, y, rayon, ctx);
+  tuerDans(B.armee, x, y, rayon, ctx, CALIBRES[cal].letal);
   // un gros obus tombé dans un tronçon crève un de ses abris
   const k = T.troncon ? T.troncon[(y | 0) * T.W + (x | 0)] : -1;
   if (k >= 0 && cal === R.nuit.abriDetruit && etat.abris[k]) { if (--etat.abris[k] <= 0) delete etat.abris[k]; }

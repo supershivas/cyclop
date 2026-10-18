@@ -1,5 +1,8 @@
 # Journal des versions
 
+## 0.34.4 — 2026-10-18
+- Les obus de 155 et de 220 sont plus meurtriers : ils fauchent davantage d'hommes dans leur rayon, le 75 reste précis mais tue moins
+
 ## 0.34.3 — 2026-10-18
 - Jouer à deux : si la connexion échoue sous Firefox, l'écran conseille Chrome (Firefox ne se connecte pas entre deux Mac, Chrome oui)
 

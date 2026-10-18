@@ -566,6 +566,7 @@ node outils/stamp-version.mjs            # après chaque changement de version.j
   ramènent à 382-390 (graines 7 et 8) ; `mouvement` seul (0,5 ou 0,75) n'en ôtait que 70 à 130 : l'essentiel des morts tombe quand les
   attaquants s'arrêtent et se serrent devant la tranchée. Une bataille sans ordres devient plus calme (graine 7, 4 jours : 121 des nôtres
   et 16 en face, contre 223 et 151 avant) : en face attaque moins.
+- **Le 75 est le plus précis, pas le plus meurtrier** (Jérôme, v0.34.4) : la chance de toucher un homme dans le rayon (`tuerDans`, 0,7 × (1 − d/r)^1,5) est multipliée par `letal` du calibre (`calibres.js` : 75 → 1, 155 → 1,5, 220 → 2 ; plafonnée à 0,95). Hommes touchés attendus par obus sur une troupe de 0,2 homme/m² : ~1,6, ~7,4, ~20 (avant : 1,6, ~4,9, ~10) ; par salve complète, 39, 89, 120 (avant : 39, 59, 60), avant dispersion et abris. Mesuré sur un régiment de 400 hommes, une salve : bruité (graines 3, 5, 7), à refaire sur une bataille entière avant de toucher à `precision` ou à `rapport`. Le dessin a changé (13 images de `test/rendu.json`, plus de morts sous les obus).
 - **Le souffle des obus** (Jérôme, v0.16.0) : `tuerDans` (army.js) jette les survivants jusqu'à `obus.souffleZone` (1,8) rayons du
   point de chute, à l'opposé, d'une vitesse qui tombe à zéro au bord (`obus.souffle`, 16 m/s au centre ; la vitesse retombe d'elle-même,
   ~3 m parcourus, puis la marche les ramène à leur place) ; sans hasard, donc la partie relue est la même. Le dessin les faisait sauter

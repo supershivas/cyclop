@@ -25,8 +25,8 @@
      (rng.js), pour que la même graine rejoue la même bataille.
 
    Logique pure : aucun DOM. Le rendu lit les tableaux (rendu3d.js). */
-import { hauteurQ, etat, vitesseEtat } from './terrain.js?v=0.34.3';
-import { ligneY } from './tranchees.js?v=0.34.3';
+import { hauteurQ, etat, vitesseEtat } from './terrain.js?v=0.34.4';
+import { ligneY } from './tranchees.js?v=0.34.4';
 
 export const GRILLE = 2;           // m : cases de voisinage
 export const DENSITE = 8;          // m : carrés de densité (tir)
@@ -264,7 +264,7 @@ function tirer(A, i, o, ctx) {
    baisse avec la distance, et encore dans un creux ; touché près du centre, il
    meurt plus souvent qu'il n'est blessé. Jusqu'à trois fois le rayon, les
    vivants ont peur. */
-export function tuerDans(A, x0, y0, rayon, ctx) {
+export function tuerDans(A, x0, y0, rayon, ctx, letal = 1) {
   const { R, rng, T, frapper } = ctx;
   if (rayon <= 0) return;
   effrayer(A, x0, y0, rayon * 3, R.soldat.peurObus, R.experience);
@@ -277,7 +277,7 @@ export function tuerDans(A, x0, y0, rayon, ctx) {
       if (A.mort[i]) continue;
       const d = Math.hypot(A.x[i] - x0, A.y[i] - y0);
       if (d >= rayon) continue;
-      let p = 0.7 * (1 - d / rayon) ** 1.5;
+      let p = Math.min(0.95, 0.7 * letal * (1 - d / rayon) ** 1.5);
       const ci = (A.y[i] | 0) * T.W + (A.x[i] | 0);
       if (T.diff[ci] <= -2) p *= R.obus.abri;
       if (ctx.abri) p *= ctx.abri(ci);
