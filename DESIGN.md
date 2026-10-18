@@ -191,6 +191,15 @@ des régiments : le survol dit combien ils sont encore, combien sont blessés,
 combien sont morts ; un clic ouvre la fiche du régiment, d'où l'on va à celle de
 chaque officier, de chaque blessé, de chaque mort. (Jérôme, v0.3.2)
 
+Un blessé qui peut encore marcher (un bras, ou une jambe légère) ne reste pas dans
+la tranchée : il regagne l'arrière, sans tirer ; les autres restent à terre
+jusqu'à la nuit. (Jérôme, v0.35.0) Sa fiche montre sa peur, la fatigue de ses
+jambes et de ses bras, son expérience, son corps avec la blessure, ses jours au
+front, ce qu'il fait, son prochain grade, et les hommes qu'il a abattus (Jérôme,
+v0.35.0 : un fait de sa fiche, ni une récompense ni de l'expérience ; il ne
+compte que les coups de fusil, pas les obus). Un régiment montre les mêmes
+jauges, en moyenne.
+
 Plus tard, certains prendront de l'expérience (`[À VALIDER]` : voir `ROADMAP.md`).
 
 ### En face

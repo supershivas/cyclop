@@ -9,8 +9,8 @@
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta property="og:image" content="og.png">
-<link rel="stylesheet" href="js/lib/game.css?v=0.34.5">
-<link rel="stylesheet" href="css/style.css?v=0.34.5">
+<link rel="stylesheet" href="js/lib/game.css?v=0.35.0">
+<link rel="stylesheet" href="css/style.css?v=0.35.0">
 </head>
 <body>
 <!-- La barre de chargement (v0.28.0) : là avant tout script ; main.js la remplit, puis la retire -->
@@ -69,6 +69,7 @@
         <h2 id="fiche-nom"></h2>
         <p class="discret" id="fiche-qui"></p>
         <button class="lien" id="fiche-regiment" hidden></button>
+        <div class="fiche-stats" id="fiche-stats" hidden><div class="fiche-corps" id="fiche-corps"></div><div class="jauges" id="fiche-barres"></div></div>
         <ul id="fiche-etat"></ul>
         <div class="fiche-liste" id="fiche-liste"></div>
       </section>
@@ -168,7 +169,7 @@
   <details>
     <summary>Commandes</summary>
     <dl class="commandes">
-      <dt>Clic</dt><dd>choisir un régiment (Maj : en ajouter) ; puis un clic sur le sol l'y envoie (sur une tranchée : il l'occupe) et il reste choisi ; chez l'autre camp, voir la fiche</dd>
+      <dt>Clic</dt><dd>choisir un régiment (Maj : en ajouter) ; puis un clic sur le sol l'y envoie (sur une tranchée : il l'occupe, même si un de nos régiments s'y tient) et il reste choisi ; pour changer de choix : sa carte, le cadre, T ou Maj-clic ; chez l'autre camp, voir la fiche</dd>
       <dt>Survol</dt><dd>de près, qui est cet homme ; de loin, ce que compte son régiment</dd>
       <dt>Glisser</dt><dd>choisir au cadre</dd>
       <dt>Clic droit</dt><dd>annuler : le barrage visé, puis la fiche, puis les régiments choisis</dd>
@@ -249,6 +250,6 @@
 </dialog>
 
 <div class="jeu-toast" id="toast" role="status" hidden></div>
-<script type="module" src="js/main.js?v=0.34.5"></script>
+<script type="module" src="js/main.js?v=0.35.0"></script>
 </body>
 </html>

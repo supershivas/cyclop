@@ -1,7 +1,8 @@
 // Lire la bataille en mots : qui est un homme, ce qu'il est devenu, ce que compte un régiment. Des fonctions
 // qui prennent la bataille `B` et ne changent rien (aucun DOM) ; main.js et la fiche s'en servent.
-import { NOUS } from '../bataille.js?v=0.34.5';
-import { identite } from '../identite.js?v=0.34.5';
+import { NOUS, arriereDe } from '../bataille.js?v=0.35.0';
+import { legere } from '../army.js?v=0.35.0';
+import { identite, prochainGrade } from '../identite.js?v=0.35.0';
 
 export const majuscule = s => s[0].toUpperCase() + s.slice(1);
 export const nomDe = reg => reg?.nom ? `Régiment ${reg.nom}` : 'En face';
@@ -74,3 +75,33 @@ export const enMots = b => b.releves
 // le numéro d'ordre d'un régiment dans son camp : « 3 · Viride »
 export const numeroDe = (B, r) => B.etat.regiments.filter(g => g.camp === r.camp).indexOf(r) + 1;
 export const pluriel = (n, un, des) => `${n} ${n > 1 ? des : un}`;
+
+// Ce que fait un homme (v0.35.0), dit de son état : en déroute, blessé qui regagne l'arrière ou reste à terre, tapi, en marche, à sa place
+export function actionEnMots(B, i) {
+  const A = B.armee, R = B.R, reg = B.etat.regiments[A.reg[i]], b = A.blessure[i];
+  if (B.etat.phase !== 'jour') return 'au repos';
+  if (reg?.deroute) return 'en déroute';
+  if (b) {
+    if (b === 1 || (b === 2 && legere(A.id[i], R.soldat.jambeLegere))) {
+      const ar = arriereDe(B);
+      return !ar || Math.abs(A.y[i] - ar[A.camp[i]]) < 1.5 ? 'à l\'arrière, blessé' : 'regagne l\'arrière, blessé';
+    }
+    return 'reste à terre, blessé';
+  }
+  if (A.peur[i] >= R.soldat.terreur) return 'tapi, terrifié';
+  if (Math.hypot(A.vx[i], A.vy[i]) > 0.5) return 'marche';
+  return 'tient sa place';
+}
+// depuis quand un homme est au front : le jour 1, ou la nuit de son retour s'il était évacué (v0.35.0)
+export function auFront(B, id) {
+  const ev = B.etat.evacues.find(e => e[0] === id && e[3] > 0);
+  return ev ? ev[3] : 1;
+}
+// les moyennes d'un régiment : la peur, la fatigue des jambes et des bras, l'expérience de ses hommes (v0.35.0)
+export function moyennes(B, regId) {
+  const A = B.armee;
+  let n = 0, peur = 0, fatJ = 0, fatB = 0, exp = 0;
+  for (let i = 0; i < A.n; i++) if (A.reg[i] === regId) { n++; peur += A.peur[i]; fatJ += A.fatJ[i]; fatB += A.fatB[i]; exp += A.exp[i]; }
+  return n ? { n, peur: peur / n, fatJ: fatJ / n, fatB: fatB / n, exp: exp / n } : { n: 0, peur: 0, fatJ: 0, fatB: 0, exp: 0 };
+}
+export { prochainGrade };

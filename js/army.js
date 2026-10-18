@@ -25,8 +25,8 @@
      (rng.js), pour que la même graine rejoue la même bataille.
 
    Logique pure : aucun DOM. Le rendu lit les tableaux (rendu3d.js). */
-import { hauteurQ, etat, vitesseEtat } from './terrain.js?v=0.34.5';
-import { ligneY } from './tranchees.js?v=0.34.5';
+import { hauteurQ, etat, vitesseEtat } from './terrain.js?v=0.35.0';
+import { ligneY } from './tranchees.js?v=0.35.0';
 
 export const GRILLE = 2;           // m : cases de voisinage
 export const DENSITE = 8;          // m : carrés de densité (tir)
@@ -41,7 +41,7 @@ export function creerArmee({ capacite, W, H }) {
     camp: new Uint8Array(capacite), reg: new Uint16Array(capacite), slot: new Uint16Array(capacite),
     mort: new Uint8Array(capacite),
     // qui il est et ce qu'il endure (0 à 1 ; blessure : 0 aucune, 1 bras, 2 jambe, 3 tête)
-    id: new Uint32Array(capacite), fatJ: f32(), fatB: f32(), peur: f32(), blessure: new Uint8Array(capacite), exp: f32(),
+    id: new Uint32Array(capacite), fatJ: f32(), fatB: f32(), peur: f32(), blessure: new Uint8Array(capacite), exp: f32(), victimes: new Uint16Array(capacite),
     // la grille de voisinage (tri par comptage)
     gw, gh, cellCount: new Int32Array(gw * gh), cellStart: new Int32Array(gw * gh + 1),
     sorted: new Int32Array(capacite), cellOf: new Int32Array(capacite),
@@ -53,7 +53,7 @@ export function creerArmee({ capacite, W, H }) {
 export function ajouterSoldat(A, x, y, camp, reg, slot, r, id = A.n) {
   if (A.n >= A.capacite) return -1;
   const i = A.n++;
-  A.id[i] = id; A.fatJ[i] = 0; A.fatB[i] = 0; A.peur[i] = 0; A.blessure[i] = 0; A.exp[i] = 0;
+  A.id[i] = id; A.fatJ[i] = 0; A.fatB[i] = 0; A.peur[i] = 0; A.blessure[i] = 0; A.exp[i] = 0; A.victimes[i] = 0;
   A.x[i] = x; A.y[i] = y; A.vx[i] = 0; A.vy[i] = 0;
   A.camp[i] = camp; A.reg[i] = reg; A.slot[i] = slot; A.mort[i] = 0;
   A.rnd[i] = r; A.tirT[i] = 1 + r * 4; A.coince[i] = 0;
@@ -102,6 +102,8 @@ const pl = [0, 0];
    rng, dt, gel, frapper(i, cause, gravite) }. frapper blesse ou tue (gravite :
    la chance d'être tué) ; les morts du pas sont marqués (A.mort) et retirés par
    compacter(). */
+// une blessure à la jambe est légère pour une part des hommes (`soldat.jambeLegere`) : un hachage de leur numéro, sans hasard ni état
+export const legere = (id, part) => (Math.imul(id + 1, 2654435761) >>> 0) / 4294967296 < part;
 export function pasArmee(A, ctx) {
   const { T, R, regiments, champDe, rng, dt, gel } = ctx;
   const { n, x, y, vx, vy, rnd, camp, reg, slot, mort, gw, gh, cellStart, sorted, cellOf, tirT, coince, fatJ, fatB, peur, blessure } = A;
@@ -134,11 +136,14 @@ export function pasArmee(A, ctx) {
     }
     // ─ But : sa place, ou le champ de l'ordre quand elle est loin ─
     const r = regiments[reg[i]], o = r.ordre;
-    place(o, slot[i], pl);
+    // un blessé qui peut marcher (un bras, une jambe légère) quitte sa place et regagne l'arrière, droit devant lui (Jérôme, v0.35.0)
+    const retrait = ctx.arriere && blessure[i] && blessure[i] <= 2 && (blessure[i] === 1 || legere(A.id[i], Sd.jambeLegere));
+    if (retrait) { pl[0] = xi; pl[1] = camp[i] === 0 ? Math.max(yi, ctx.arriere[0]) : Math.min(yi, ctx.arriere[1]); }
+    else place(o, slot[i], pl);
     const dx = pl[0] - xi, dy = pl[1] - yi, d = Math.hypot(dx, dy);
     let gx = 0, gy = 0, voulu = 1;
     let ch = null;
-    if (d > F.champ) { ch = champs[reg[i]]; if (ch === undefined) ch = champs[reg[i]] = champDe(r); }
+    if (!retrait && d > F.champ) { ch = champs[reg[i]]; if (ch === undefined) ch = champs[reg[i]] = champDe(r); }
     if (ch) {
       const b = ch.dirA(xi, yi);
       if (b) { gx = b[0]; gy = b[1]; } else { gx = dx / d; gy = dy / d; }
@@ -196,7 +201,7 @@ export function pasArmee(A, ctx) {
       tirT[i] = R.tir.periode * (0.5 + rng()) * (blessure[i] === 1 ? Sd.brasBlesse : 1) * (ebranle ? R.moral.tirEbranle : 1);
       // la terreur, ou la déroute : on ne tire plus
       // (sans ennemi à portée, il ne tire pas : ni fatigue ni expérience)
-      if (peur[i] < Sd.terreur && !r.deroute && tirer(A, i, o, ctx)) {
+      if (!retrait && peur[i] < Sd.terreur && !r.deroute && tirer(A, i, o, ctx)) {
         fatB[i] = Math.min(1, fatB[i] + Sd.fatigueTir);
         A.exp[i] = Math.min(1, A.exp[i] + R.experience.tir);
       }
@@ -256,7 +261,7 @@ function tirer(A, i, o, ctx) {
     const abri = t < 0 ? P.abri : (A.y[i] - A.y[v]) * ctx.faces[t] > 0 ? R.tranchee.abriFace : R.tranchee.abriDos;
     if (rng() >= abri) return true;
   }
-  frapper(v, 'tir', R.soldat.mortelTir);
+  frapper(v, 'tir', R.soldat.mortelTir, null, i);
   return true;
 }
 
@@ -331,7 +336,7 @@ export function reposer(A, R) {
 // Retire les morts (on garde l'ordre des vivants : la même partie, rejouée, garde les mêmes indices)
 export function compacter(A) {
   let w = 0;
-  const keys = ['x', 'y', 'vx', 'vy', 'rnd', 'tirT', 'coince', 'camp', 'reg', 'slot', 'id', 'fatJ', 'fatB', 'peur', 'blessure', 'exp'];
+  const keys = ['x', 'y', 'vx', 'vy', 'rnd', 'tirT', 'coince', 'camp', 'reg', 'slot', 'id', 'fatJ', 'fatB', 'peur', 'blessure', 'exp', 'victimes'];
   for (let r = 0; r < A.n; r++) {
     if (A.mort[r]) continue;
     if (w !== r) for (const k of keys) A[k][w] = A[k][r];
@@ -346,7 +351,7 @@ export function compacter(A) {
 
 // ─── Sauvegarde : les tableaux, exacts (base64 des octets) ───
 const CHAMPS = { x: Float32Array, y: Float32Array, vx: Float32Array, vy: Float32Array, rnd: Float32Array, tirT: Float32Array, coince: Float32Array, camp: Uint8Array, reg: Uint16Array, slot: Uint16Array,
-  id: Uint32Array, fatJ: Float32Array, fatB: Float32Array, peur: Float32Array, blessure: Uint8Array, exp: Float32Array };
+  id: Uint32Array, fatJ: Float32Array, fatB: Float32Array, peur: Float32Array, blessure: Uint8Array, exp: Float32Array, victimes: Uint16Array };
 function b64(typed) {
   const u8 = new Uint8Array(typed.buffer, typed.byteOffset, typed.byteLength);
   let s = '';

@@ -1,13 +1,22 @@
 // Les fiches : un homme (son nom, son âge, son grade, ce qu'il endure) ou un régiment (ses hommes, ses
 // blessés, ses morts, et leurs fiches). De près, on regarde des hommes ; de loin, des régiments (Jérôme, v0.3.2).
-import { NOUS, moralEnMots, rangDe } from '../bataille.js?v=0.34.5';
-import { etatEnMots, experienceEnMots } from '../identite.js?v=0.34.5';
-import { majuscule, nomDe, indiceDe, premierDe, quiEst, tombe, bilan, enMots, refuseAujourdhui } from './lecture.js?v=0.34.5';
+import { NOUS, moralEnMots, rangDe } from '../bataille.js?v=0.35.0';
+import { experienceEnMots, chevrons, peurEnMots, fatigueEnMots } from '../identite.js?v=0.35.0';
+import { majuscule, nomDe, indiceDe, premierDe, quiEst, tombe, bilan, enMots, refuseAujourdhui, actionEnMots, auFront, moyennes, prochainGrade } from './lecture.js?v=0.35.0';
+import { jauge, corps, chevronsHtml, REPERES } from './barres.js?v=0.35.0';
 
 // `$` : l'accès aux éléments ; `R` : les réglages ; `bataille()` : la bataille en cours
 export function creerFiche({ $, R, bataille }) {
   let fiche = null;                 // { id, camp } : un soldat ; { reg } : un régiment
   let listeVue = '';                // ce que montre la liste du régiment (refaite seulement quand ça change)
+  let statsVues = '';               // les jauges et le corps, refaits seulement quand ils changent
+  // les jauges et le corps de la fiche : refaits quand une valeur change d'un point (pas à chaque image)
+  function montrerStats(sig, jauges, corpsHtml) {
+    $('fiche-stats').hidden = !jauges;
+    if (sig === statsVues) return;
+    statsVues = sig;
+    $('fiche-barres').innerHTML = jauges; $('fiche-corps').innerHTML = corpsHtml;
+  }
 
   function montrerFiche(i) {
     const B = bataille();
@@ -16,8 +25,8 @@ export function creerFiche({ $, R, bataille }) {
   }
   function montrerSoldat(id) { fiche = { id, camp: quiEst(bataille(), id).reg?.camp ?? NOUS }; ouvrirFiche(); }
   function montrerRegiment(regId) { fiche = { reg: regId }; ouvrirFiche(); }
-  function ouvrirFiche() { $('fiche').hidden = false; listeVue = ''; majFiche(); }
-  function fermerFiche() { fiche = null; $('fiche').hidden = true; $('repere-soldat').hidden = true; }
+  function ouvrirFiche() { $('fiche').hidden = false; listeVue = ''; statsVues = ''; majFiche(); }
+  function fermerFiche() { fiche = null; statsVues = ''; $('fiche').hidden = true; $('repere-soldat').hidden = true; }
 
   function majFiche() {
     const B = bataille();
@@ -30,17 +39,38 @@ export function creerFiche({ $, R, bataille }) {
     lien.hidden = !reg0; lien.textContent = nomDe(reg0); lien.onclick = () => montrerRegiment(reg0.id);
     $('fiche-liste').replaceChildren(); listeVue = '';
     const promu = B.etat.grades[fiche.id];
-    const mots = [
-      ...(i < 0 ? [tombe(B, fiche.id)] : [...etatEnMots(A.fatJ[i], A.fatB[i], A.peur[i], A.blessure[i]), experienceEnMots(A.exp[i])]),
-      promu ? `promu ${qui.grade} le jour ${promu[1]}` : '',
-    ].filter(Boolean);
-    $('fiche-etat').replaceChildren(...mots.map(t => Object.assign(document.createElement('li'), { textContent: t })));
+    const lignes = [promu ? `promu ${qui.grade} le jour ${promu[1]}` : ''];
+    if (i < 0) { montrerStats('', '', ''); lignes.unshift(tombe(B, fiche.id)); }
+    else {
+      const exp = A.exp[i], nb = chevrons(exp), peur = A.peur[i], fj = A.fatJ[i], fb = A.fatB[i];
+      const sig = `${fiche.id}:${A.blessure[i]}:${[peur, fj, fb, exp].map(v => Math.round(v * 100)).join(',')}`;
+      montrerStats(sig, [
+        jauge({ nom: 'Peur', val: peur, reperes: REPERES.peur, mot: peurEnMots(peur) }),
+        jauge({ nom: 'Jambes', val: fj, reperes: REPERES.fatigue, mot: fatigueEnMots(fj), titre: 'Fatigue des jambes (la marche, plus dans la boue)' }),
+        jauge({ nom: 'Bras', val: fb, reperes: REPERES.fatigue, mot: fatigueEnMots(fb), titre: 'Fatigue des bras (le tir)' }),
+        jauge({ nom: 'Expérience', val: exp, reperes: REPERES.exp, html: nb ? chevronsHtml(nb) : 'novice', titre: `Expérience : ${experienceEnMots(exp) || 'rien vu du feu'}` }),
+      ].join(''), corps(A.blessure[i], fiche.id));
+      const depuis = auFront(B, fiche.id), nuits = Math.max(0, B.etat.jour - depuis), vict = A.victimes[i], suivant = prochainGrade(A.camp[i], qui.rang);
+      lignes.unshift(majuscule(actionEnMots(B, i)), `Au front depuis le jour ${depuis}${nuits ? ` · ${nuits} nuit${nuits > 1 ? 's' : ''}` : ''}`);
+      if (vict) lignes.push(`A abattu ${vict} homme${vict > 1 ? 's' : ''}`);
+      if (suivant) lignes.push(`Prochain grade : ${suivant}, si un supérieur tombe`);
+    }
+    $('fiche-etat').replaceChildren(...lignes.filter(Boolean).map(t => Object.assign(document.createElement('li'), { textContent: t })));
   }
   function majFicheRegiment(B) {
     const reg = B.etat.regiments[fiche.reg], A = B.armee, b = bilan(B, reg);
     $('fiche-nom').textContent = nomDe(reg);
     $('fiche-qui').textContent = enMots(b);
     $('fiche-regiment').hidden = true;
+    const m = moyennes(B, reg.id), nb = chevrons(m.exp), vivres = reg.vivres ?? R.nuit.vivres;
+    montrerStats(`r${reg.id}:${[m.peur, m.fatJ, m.fatB, m.exp, reg.moral].map(v => Math.round(v * 100)).join(',')}:${vivres}:${reg.deroute ? 1 : 0}`, [
+      jauge({ nom: 'Peur', val: m.peur, reperes: REPERES.peur, mot: peurEnMots(m.peur), titre: 'Peur moyenne de ses hommes' }),
+      jauge({ nom: 'Jambes', val: m.fatJ, reperes: REPERES.fatigue, mot: fatigueEnMots(m.fatJ), titre: 'Fatigue moyenne des jambes' }),
+      jauge({ nom: 'Bras', val: m.fatB, reperes: REPERES.fatigue, mot: fatigueEnMots(m.fatB), titre: 'Fatigue moyenne des bras' }),
+      jauge({ nom: 'Expérience', val: m.exp, reperes: REPERES.exp, html: nb ? chevronsHtml(nb) : 'novice', titre: 'Expérience moyenne de ses hommes' }),
+      jauge({ nom: 'Moral', val: reg.moral, reperes: [R.moral.deroute, R.moral.ebranle, 0.75], mot: moralEnMots(reg, R), titre: 'Moral du régiment : sous le premier repère, la déroute' }),
+      jauge({ nom: 'Vivres', val: Math.min(1, vivres / R.nuit.vivres), mot: `${vivres} nuit${vivres > 1 ? 's' : ''}`, titre: 'Nuits de vivres restantes' }),
+    ].join(''), '');
     $('fiche-etat').replaceChildren(...[majuscule(moralEnMots(reg, R)), refuseAujourdhui(B, reg)].filter(Boolean).map(t => Object.assign(document.createElement('li'), { textContent: t })));
     const sig = `${reg.id}:${b.vivants}:${b.blesses}:${b.morts}:${b.evacues}:${Object.keys(B.etat.grades).length}`;
     if (sig === listeVue) return;

@@ -15,11 +15,11 @@
      de travail chacun) ; les vivres (`reg.vivres`, en nuits : sans eux, la nuit
      repose moins et le moral baisse) ; le coup de main (des volontaires ramènent
      des prisonniers de la tranchée d'en face, s'ils reviennent). */
-import { toucher } from './terrain.js?v=0.34.5';
-import { hash2 } from './lib/rng.js?v=0.34.5';
-import { CORVEES } from './data/corvees.js?v=0.34.5';
-import { REGIMENTS } from './data/lexique.js?v=0.34.5';
-import { ajouterSoldat } from './army.js?v=0.34.5';
+import { toucher } from './terrain.js?v=0.35.0';
+import { hash2 } from './lib/rng.js?v=0.35.0';
+import { CORVEES } from './data/corvees.js?v=0.35.0';
+import { REGIMENTS } from './data/lexique.js?v=0.35.0';
+import { ajouterSoldat } from './army.js?v=0.35.0';
 
 export const SORTES = ['reparer', 'caillebotis'];          // les travaux de terrain, par leur numéro dans etat.travaux
 export const corvee = id => CORVEES.find(c => c.id === id);
@@ -217,8 +217,8 @@ export function corvees(B, choix, ctx) {
         if (A.reg[i] !== reg.id || A.mort[i] || !A.blessure[i]) continue;
         if (rng() < N.risqueBoyau) { mourir(i, 'corvée'); b.mortsCorvee++; continue; }
         A.mort[i] = 1; reg.effectif--;                 // il quitte le front, vivant
-        // [numéro, jour, blessure, nuit du retour (0 : pas encore, -1 : ne reviendra pas), régiment, expérience]
-        etat.evacues.push([A.id[i], etat.jour, A.blessure[i], 0, reg.id, Math.round(A.exp[i] * 100) / 100]); b.evacues++;
+        // [numéro, jour, blessure, nuit du retour (0 : pas encore, -1 : ne reviendra pas), régiment, expérience, victimes]
+        etat.evacues.push([A.id[i], etat.jour, A.blessure[i], 0, reg.id, Math.round(A.exp[i] * 100) / 100, A.victimes[i]]); b.evacues++;
       }
       reg.moral = Math.min(1, reg.moral + N.moralEvacuer);
     }
@@ -280,7 +280,7 @@ function retours(B, rng, bilan) {
     const derriere = reg.ordre.y + (reg.camp === 0 ? 12 : -12);
     const i = ajouterSoldat(A, x0 + rng() * (x1 - x0), Math.max(1, Math.min(B.terrain.H - 2, derriere + (rng() - 0.5) * 6)), reg.camp, reg.id, slot, rng(), e[0]);
     if (i < 0) continue;
-    A.exp[i] = e[5];
+    A.exp[i] = e[5]; A.victimes[i] = e[6] ?? 0;
     reg.effectif++; e[3] = etat.jour; bilan[reg.camp].retours++;
   }
 }

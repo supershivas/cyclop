@@ -22,19 +22,19 @@
    - Les soldats : instanciés (une boîte et son ombre) ; au zoom 1 et 2, un
      point de 2 × 2 pixels (la couleur du camp sur son ombre).
    - Les corps : un homme couché (instancié) ; au zoom 1 et 2, un pixel. */
-import { loadThree } from './three-lib.js?v=0.34.5';
-import * as SH from './rendu/shaders.js?v=0.34.5';
-import { creerSoldats } from './rendu/soldats.js?v=0.34.5';
-import { creerMeteo } from './rendu/meteo.js?v=0.34.5';
-import { creerTroncons } from './rendu/troncons.js?v=0.34.5';
-import { creerVegetation } from './rendu/vegetation.js?v=0.34.5';
-import { creerTemps } from './rendu/temps.js?v=0.34.5';
-import { creerEclats } from './rendu/eclats.js?v=0.34.5';
-import { PALETTE, ORDRE, INDICE } from './palette.js?v=0.34.5';
-import { OMBRE, couleursLigne } from './apparence.js?v=0.34.5';
-import { MORCEAU, hauteurVueQ as hauteurQ, hauteurVueM as hauteurM } from './terrain.js?v=0.34.5';
-import { horloge } from './bataille.js?v=0.34.5';
-import { ligneY } from './tranchees.js?v=0.34.5';
+import { loadThree } from './three-lib.js?v=0.35.0';
+import * as SH from './rendu/shaders.js?v=0.35.0';
+import { creerSoldats } from './rendu/soldats.js?v=0.35.0';
+import { creerMeteo } from './rendu/meteo.js?v=0.35.0';
+import { creerTroncons } from './rendu/troncons.js?v=0.35.0';
+import { creerVegetation } from './rendu/vegetation.js?v=0.35.0';
+import { creerTemps } from './rendu/temps.js?v=0.35.0';
+import { creerEclats } from './rendu/eclats.js?v=0.35.0';
+import { PALETTE, ORDRE, INDICE } from './palette.js?v=0.35.0';
+import { OMBRE, couleursLigne } from './apparence.js?v=0.35.0';
+import { MORCEAU, hauteurVueQ as hauteurQ, hauteurVueM as hauteurM } from './terrain.js?v=0.35.0';
+import { horloge } from './bataille.js?v=0.35.0';
+import { ligneY } from './tranchees.js?v=0.35.0';
 
 export const CAMERA = { yaw: 0.15, tangage: 0.95, fov: 30 };   // au départ : tournée de 9°, plongée de 54°, angle de 30°
 // la caméra respire : un balancement très lent, 2° en 23 s (Jérôme, v0.3.1 : variante D du labo retenue)
@@ -439,6 +439,7 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
 
   return {
     attacher, dessiner, redimensionner, versTerrain, versEcran, vue, renderer, scene,
+    hauteurSol: (x, y) => surfaceLisse(x, y),      // la hauteur où l'on pose un homme (m), pour viser son corps entier (v0.35.0)
     set choisis(s) { choisis = s; },
     // le style de la nuit : 'halos' (le jeu), 'doux', 'trame' (l'ancienne, gardée au labo)
     set styleNuit(m) { temps.setStyleNuit(m); },

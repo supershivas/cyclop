@@ -140,13 +140,29 @@
   border: 2px solid var(--jeu-encre); border-top: 0; pointer-events: none;
   margin-top: -14px;
 }
-.fiche { margin-left: auto; position: relative; color: var(--jeu-fond); width: min(34ch, 60vw); padding-right: calc(var(--jeu-cible) + var(--e1)); }
+.fiche { margin-left: auto; position: relative; color: var(--jeu-fond); width: min(40ch, 70vw); padding-right: calc(var(--jeu-cible) + var(--e1)); }
 .fiche h2 { margin: 0 0 var(--e0); }
 .fiche ul { margin: var(--pas) 0 0; padding-left: 1.1em; }
 .fiche-fermer { position: absolute; top: 0; right: 0; }
 .fiche h3 { margin: var(--pas) 0 0; font-size: var(--texte); font-weight: normal; color: var(--jeu-accent); }
 .fiche .icone { color: var(--jeu-fond); }
 .fiche .lien, .fiche .fiche-liste .nom { color: var(--jeu-fond); text-decoration: underline; }   /* (plus spécifique que .lien plus bas : les noms de la liste étaient os sur os) */
+/* Les jauges et le corps de la fiche (Jérôme, v0.35.0) : une barre par chose qu'un homme (ou un régiment, en moyenne) endure, avec des repères aux
+   seuils des mots ; plus la barre est longue, plus c'est fort (la peur, la fatigue) ; la forme dit le niveau, aucune couleur d'alerte. Le corps :
+   la partie blessée est pleine et barrée. */
+.fiche-stats { display: flex; gap: var(--pas); align-items: flex-start; margin-top: var(--pas); }
+.fiche-stats[hidden], .fiche-corps:empty { display: none; }
+.corps { display: block; width: 36px; height: 84px; fill: none; stroke: var(--jeu-fond); stroke-width: 1.5; }
+.corps .touche { fill: var(--jeu-fond); }
+.corps .croix { stroke: var(--jeu-encre); stroke-width: 2; stroke-linecap: square; }
+.jauges { flex: 1; min-width: 0; display: grid; gap: var(--e1); }
+.jauge { display: grid; grid-template-columns: 1fr auto; grid-template-areas: "nom mot" "piste piste"; gap: var(--e0) var(--pas); font-size: var(--texte-petit); line-height: 1.2; }
+.j-nom { grid-area: nom; color: var(--jeu-accent); }
+.j-mot { grid-area: mot; display: flex; align-items: center; gap: var(--e0); text-align: right; }
+.j-piste { grid-area: piste; position: relative; display: block; height: 8px; box-sizing: border-box; border: var(--trait) solid var(--jeu-fond); }
+.j-piste i { display: block; height: 100%; background: var(--jeu-fond); }
+.j-piste b { position: absolute; top: -3px; bottom: -3px; width: var(--trait); background: var(--jeu-fond); box-shadow: var(--trait) 0 0 var(--jeu-encre); }   /* (le repère se lit aussi sur la partie pleine : un liseré de papier) */
+.j-mot .chev { stroke: var(--jeu-fond); }
 .fiche-liste { max-height: 40dvh; overflow-y: auto; }
 .fiche-liste:empty { display: none; }
 .fiche-liste ul { list-style: none; padding: 0; margin: var(--e0) 0 0; }

@@ -1,5 +1,10 @@
 # Journal des versions
 
+## 0.35.0 — 2026-10-18
+- Un blessé qui peut marcher (le bras, une jambe légère) regagne l'arrière au lieu de rester dans la tranchée ; les autres restent à terre
+- Avec des régiments choisis, un clic sur un régiment à nous leur donne l'ordre au lieu de le choisir ; le survol et le clic prennent le corps entier d'un homme
+- La fiche d'un homme (et d'un régiment) montre la peur, la fatigue, l'expérience, le corps blessé, ses jours au front, ses victimes et son prochain grade ; les chevrons n'apparaissent qu'avec l'expérience
+
 ## 0.34.5 — 2026-10-18
 - Les obus de 155 et de 220 sont plus meurtriers : ils fauchent davantage d'hommes dans leur rayon, le 75 reste précis mais tue moins
 

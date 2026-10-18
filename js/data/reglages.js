@@ -70,6 +70,8 @@ export const REGLAGES = {
     mortelTir: 0.45,      // une balle tue 45 fois sur 100, sinon elle blesse
     jambeBlessee: 0.45,   // vitesse d'un homme blessé à la jambe
     brasBlesse: 2,        // le temps entre deux tirs, multiplié
+    jambeLegere: 0.5,     // la part des blessés à la jambe qui peuvent encore marcher : avec ceux du bras, ils regagnent l'arrière et ne tirent plus (Jérôme, v0.35.0) ; la tête et les autres restent à terre
+    arriere: 12,          // m : l'arrière, derrière la dernière ligne de leur camp, où les blessés qui marchent s'arrêtent
     // la peur (0 à 1) : les obus tout près, les morts à côté ; elle retombe lentement
     peurObus: 0.6,        // au bord du cratère (moins à trois fois le rayon)
     peurMort: 0.15,       // un homme qui tombe à moins de 4 m

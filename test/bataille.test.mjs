@@ -5,7 +5,9 @@ import { ligneY } from '../js/tranchees.js';
 import { calculerCouts, dimensionsCouts, BLOC } from '../js/champs.js';
 import { tronconsDe, refusCorvee, chezLEnnemi } from '../js/nuit.js';
 import { SECTEURS as SECT } from '../js/data/secteur.js';
-import { identite, etatEnMots, chevrons } from '../js/identite.js';
+import { identite, etatEnMots, chevrons, prochainGrade } from '../js/identite.js';
+import { legere } from '../js/army.js';
+import { arriereDe } from '../js/bataille.js';
 import { SECTEURS } from '../js/data/secteur.js';
 import { REGLAGES as R } from '../js/data/reglages.js';
 
@@ -623,4 +625,42 @@ test('un blessé évacué revient une fois sur deux, après 1 nuit (bras), 2 (ja
   const C = restaurer(photo(B), R);
   assert.deepEqual(C.etat.evacues, B.etat.evacues);
   assert.equal(C.etat.regiments[0].effectif, reg.effectif);
+});
+
+group('les blessés qui marchent');
+test('un blessé au bras ou à la jambe légère regagne l\'arrière ; la tête et la jambe lourde restent à terre', () => {
+  const B = petite(5), A = B.armee, ar = arriereDe(B);
+  assert.ok(ar && ar[0] > ar[1], 'l\'arrière de chaque camp');
+  const nos = []; for (let i = 0; i < A.n; i++) if (A.camp[i] === 0 && A.reg[i] === 0) nos.push(i);
+  const legers = nos.filter(i => legere(A.id[i], R.soldat.jambeLegere)), lourds = nos.filter(i => !legere(A.id[i], R.soldat.jambeLegere));
+  assert.ok(legers.length && lourds.length, 'des jambes légères et lourdes');
+  const autres = [nos[0], nos[1]], quoi = { bras: [nos[0], 1], tete: [nos[1], 3], legere: [legers.find(i => !autres.includes(i)), 2], lourde: [lourds.find(i => !autres.includes(i)), 2] };
+  const id = {}, y0 = {};
+  for (const [k, [i, b]] of Object.entries(quoi)) { A.blessure[i] = b; id[k] = A.id[i]; y0[k] = A.y[i]; }
+  for (let k = 0; k < 1800; k++) avancer(B);       // une minute
+  const y = k => { for (let i = 0; i < A.n; i++) if (A.id[i] === id[k]) return A.y[i]; return null; };
+  for (const k of ['bras', 'legere']) { if (y(k) === null) continue; assert.ok(y(k) > y0[k] + 8, `${k} recule : ${y0[k]} → ${y(k)}`); }
+  for (const k of ['lourde', 'tete']) { if (y(k) === null) continue; assert.ok(Math.abs(y(k) - y0[k]) < 8, `${k} reste sur place : ${y0[k]} → ${y(k)}`); }
+});
+test('l\'arrière des deux camps : derrière leur dernière ligne', () => {
+  const B = petite(), ar = arriereDe(B), L = SECTEURS.essai.tranchees.lignes, y0 = B.etat.marges.y;
+  assert.equal(ar[0], y0 + Math.max(...L.nous) + R.soldat.arriere);
+  assert.equal(ar[1], y0 + Math.min(...L.eux) - R.soldat.arriere);
+});
+test('un tireur qui abat un homme le compte parmi ses victimes ; la partie relue le garde', () => {
+  const B = nouvelleBataille(7, R, { soldats: 300, jours: 3 });
+  ordonnerMarche(B, [0, 1, 2], ...P(200, 120));
+  for (let k = 0; k < 2400; k++) avancer(B);
+  const A = B.armee;
+  let total = 0; for (let i = 0; i < A.n; i++) total += A.victimes[i];
+  assert.ok(total > 0, 'des victimes attribuées');
+  const C = restaurer(photo(B), R);
+  assert.deepEqual(Array.from(C.armee.victimes.subarray(0, C.armee.n)), Array.from(A.victimes.subarray(0, A.n)));
+});
+test('le prochain grade : celui du rang au-dessus, rien pour un capitaine', () => {
+  assert.equal(prochainGrade(0, 0), '');
+  assert.equal(prochainGrade(0, 5), 'sergent');
+  assert.equal(prochainGrade(0, 6), 'caporal');
+  assert.equal(prochainGrade(0, 7), 'soldat de 1re classe');
+  assert.equal(prochainGrade(1, 7), '');      // en face, les deux classes sont des Musketier
 });

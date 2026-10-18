@@ -14,17 +14,17 @@
    La sauvegarde (photo) garde la graine, la liste compacte des impacts, l'état
    de la foule et les petites couches de logique ; jamais le relief : il se
    rejoue depuis la graine et les impacts (rejouerTerrain). */
-import { createRng, hash2 } from './lib/rng.js?v=0.34.5';
-import { creerTerrain, impact, hydroLignes, etat as etatCase, vitesseEtat, ETAT } from './terrain.js?v=0.34.5';
-import { creerArmee, ajouterSoldat, construireGrille, pasArmee, tuerDans, effrayer, compacter, photoArmee, restaurerArmee, b64, deB64, DENSITE, place } from './army.js?v=0.34.5';
-import { creuserTranchees, ligneSous } from './tranchees.js?v=0.34.5';
-import { calculerCouts, creerCacheChamps, dimensionsCouts, BLOC } from './champs.js?v=0.34.5';
-import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.34.5';
-import { METEO, TRANSITIONS, PREVISION_JUSTE } from './data/meteo.js?v=0.34.5';
-import { SECTEURS } from './data/secteur.js?v=0.34.5';
-import { REGIMENTS } from './data/lexique.js?v=0.34.5';
-import { grade } from './identite.js?v=0.34.5';
-import { corvees, rejouerTravaux } from './nuit.js?v=0.34.5';
+import { createRng, hash2 } from './lib/rng.js?v=0.35.0';
+import { creerTerrain, impact, hydroLignes, etat as etatCase, vitesseEtat, ETAT } from './terrain.js?v=0.35.0';
+import { creerArmee, ajouterSoldat, construireGrille, pasArmee, tuerDans, effrayer, compacter, photoArmee, restaurerArmee, b64, deB64, DENSITE, place } from './army.js?v=0.35.0';
+import { creuserTranchees, ligneSous } from './tranchees.js?v=0.35.0';
+import { calculerCouts, creerCacheChamps, dimensionsCouts, BLOC } from './champs.js?v=0.35.0';
+import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.35.0';
+import { METEO, TRANSITIONS, PREVISION_JUSTE } from './data/meteo.js?v=0.35.0';
+import { SECTEURS } from './data/secteur.js?v=0.35.0';
+import { REGIMENTS } from './data/lexique.js?v=0.35.0';
+import { grade } from './identite.js?v=0.35.0';
+import { corvees, rejouerTravaux } from './nuit.js?v=0.35.0';
 
 export const PAS = 1 / 30;                 // s de jeu par pas
 export const NOUS = 0, EUX = 1;
@@ -316,6 +316,12 @@ export function ordonnerBarrage(B, cal, x, y, camp = NOUS) {
   return { ok: true };
 }
 
+/* L'arrière de chaque camp [nous, en face] : la rangée derrière sa dernière ligne, où les blessés qui marchent s'arrêtent (Jérôme, v0.35.0) */
+export function arriereDe(B) {
+  const { etat, R } = B, Ld = SECTEURS[etat.secteur].tranchees?.lignes, y0 = etat.marges.y;
+  return Ld ? [y0 + Math.max(...Ld.nous) + R.soldat.arriere, y0 + Math.min(...Ld.eux) - R.soldat.arriere] : null;
+}
+
 // ─── Un pas ──────────────────────────────────────────────────────────────
 
 /* Avance d'un pas. Rend la liste des événements du pas (impacts, morts) pour
@@ -331,11 +337,12 @@ export function avancer(B) {
   etat.temps = Math.round(etat.temps / PAS + 1) * PAS;
   // touché : il meurt (chance : gravite, ou s'il était déjà blessé), sinon il est blessé (bras, jambe, tête)
   const morts = [];
-  const frapper = (i, cause, gravite, choc = null) => {
+  const frapper = (i, cause, gravite, choc = null, par = -1) => {
     if (A.mort[i]) return;
     if (A.blessure[i] || rng() < gravite) {
       mourir(B, i, cause, choc && projeter(B, i, choc));
       morts.push(i);
+      if (par >= 0 && A.victimes[par] < 65535) A.victimes[par]++;       // le tireur qui l'a abattu (la fiche le dit ; ni récompense ni expérience)
     } else {
       const r = rng();
       A.blessure[i] = r < 0.4 ? 1 : r < 0.8 ? 2 : 3;
@@ -346,7 +353,7 @@ export function avancer(B) {
     }
   };
   const tir = (i, tx, ty) => { if (B.tirs.length < 2000) B.tirs.push(A.x[i], A.y[i], tx, ty, A.camp[i], i); };   // (le tireur en dernier : le dessin lui fait épauler son fusil
-  const ctx = { T, R, regiments: etat.regiments, rng, dt: PAS, gel, frapper, champDe: r => champDe(B, r), faces: B.faces, tir, abri: c => abriDe(B, c) };
+  const ctx = { T, R, arriere: arriereDe(B), regiments: etat.regiments, rng, dt: PAS, gel, frapper, champDe: r => champDe(B, r), faces: B.faces, tir, abri: c => abriDe(B, c) };
 
   construireGrille(A);
   // les obus

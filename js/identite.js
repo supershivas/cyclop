@@ -2,8 +2,8 @@
    bataille et de son numéro (il garde les mêmes d'une partie relue à l'autre).
    Et ce qu'il endure : la fatigue (jambes, bras), une blessure, la peur, dits en
    mots. Logique pure (aucun DOM), testée dans Node. */
-import { hash2 } from './lib/rng.js?v=0.34.5';
-import { NOMS } from './data/noms.js?v=0.34.5';
+import { hash2 } from './lib/rng.js?v=0.35.0';
+import { NOMS } from './data/noms.js?v=0.35.0';
 
 export const PARTIES = ['', 'bras', 'jambe', 'tête'];
 
@@ -47,3 +47,15 @@ export function etatEnMots(fatJ, fatB, peur, blessure) {
   if (peur > 0.85) mots.push('terrifié'); else if (peur > 0.55) mots.push('a peur'); else if (peur > 0.25) mots.push('inquiet');
   return mots.length ? mots : ['reposé, calme'];
 }
+
+// Le prochain grade d'un homme (v0.35.0) : celui du rang juste au-dessus, pris quand un supérieur tombe (`promouvoir` de bataille.js). Rien
+// pour un capitaine ; un soldat de 2e classe n'a qu'une classe à gagner chez nous (en face, les deux sont des Musketier).
+export function prochainGrade(camp, rang) {
+  if (rang <= 0) return '';
+  const G = NOMS[camp ? 'eux' : 'nous'].grades, suivant = G[rang - 1];
+  return suivant === G[rang] ? '' : suivant;
+}
+
+// Les mots des jauges de la fiche (v0.35.0), aux mêmes seuils que `etatEnMots`
+export const peurEnMots = p => p > 0.85 ? 'terrifié' : p > 0.55 ? 'a peur' : p > 0.25 ? 'inquiet' : 'calme';
+export const fatigueEnMots = f => f > 0.75 ? 'épuisé' : f > 0.4 ? 'lourd' : 'frais';
