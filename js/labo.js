@@ -2,24 +2,24 @@
 // Chaque sujet utilise les mêmes modules que le jeu (terrain, apparence,
 // rendu three.js) : ce qu'on voit ici est ce que le jeu dessinera. Ajouter un
 // sujet ou une variante = ajouter une entrée dans GROUPES.
-import { mountLabo } from './lib/labo-shell.js?v=0.32.1';
-import { spriteCanvas, paletteToGPL, paletteToHex } from './lib/sprites.js?v=0.32.1';
-import { PALETTE, ROLES } from './palette.js?v=0.32.1';
-import { chargerContenu } from './design-store.js?v=0.32.1';
-import { tuile, ETAT } from './tuiles.js?v=0.32.1';
-import { creerTerrain, impact, hydroLignes } from './terrain.js?v=0.32.1';
-import { CALIBRES } from './data/calibres.js?v=0.32.1';
-import { METEO } from './data/meteo.js?v=0.32.1';
-import { nouvelleBataille, avancer, ordonnerMarche, ordonnerBarrage, mourir } from './bataille.js?v=0.32.1';
-import { creerRendu, ZOOMS } from './rendu3d.js?v=0.32.1';
-import { hash2 } from './lib/rng.js?v=0.32.1';
-import { reglerVerdure } from './apparence.js?v=0.32.1';
-import { maquetteAssaut } from './labo-assaut.js?v=0.32.1';
-import { calquePlaques } from './labo-plaques.js?v=0.32.1';
-import { calqueBarre } from './labo-barre-temps.js?v=0.32.1';
-import { maquetteProjections, maquetteVisee } from './labo-projections.js?v=0.32.1';
-import { JOURNAL } from './labo-journal.js?v=0.32.1';
-import { loadVersion } from './lib/app-update.js?v=0.32.1';
+import { mountLabo } from './lib/labo-shell.js?v=0.32.2';
+import { spriteCanvas, paletteToGPL, paletteToHex } from './lib/sprites.js?v=0.32.2';
+import { PALETTE, ROLES } from './palette.js?v=0.32.2';
+import { chargerContenu } from './design-store.js?v=0.32.2';
+import { tuile, ETAT } from './tuiles.js?v=0.32.2';
+import { creerTerrain, impact, hydroLignes } from './terrain.js?v=0.32.2';
+import { CALIBRES } from './data/calibres.js?v=0.32.2';
+import { METEO } from './data/meteo.js?v=0.32.2';
+import { nouvelleBataille, avancer, ordonnerMarche, ordonnerBarrage, mourir } from './bataille.js?v=0.32.2';
+import { creerRendu, ZOOMS } from './rendu3d.js?v=0.32.2';
+import { hash2 } from './lib/rng.js?v=0.32.2';
+import { reglerVerdure } from './apparence.js?v=0.32.2';
+import { maquetteAssaut } from './labo-assaut.js?v=0.32.2';
+import { calquePlaques } from './labo-plaques.js?v=0.32.2';
+import { calqueBarre } from './labo-barre-temps.js?v=0.32.2';
+import { maquetteProjections, maquetteVisee } from './labo-projections.js?v=0.32.2';
+import { JOURNAL } from './labo-journal.js?v=0.32.2';
+import { loadVersion } from './lib/app-update.js?v=0.32.2';
 
 document.documentElement.style.setProperty('--jeu-accent', ROLES.accent);
 const NOM = document.title.replace(/^Labo — /, ''); // le nom vient de la page (une apostrophe ne casse rien)
@@ -256,17 +256,17 @@ const GROUPES = [
       { title: 'Les corbeaux', note: 'Quelques points noirs qui tournent lentement au-dessus des morts (ici, au-dessus du champ).', render: s => moteur(s, { zoom: 4, cz: 170, effets: { corbeaux: 'toujours' } }) },
     ] },
     { id: 'projections', title: 'Projections', variants: [
-      { title: 'Le jeu tel qu\'il est', status: 'actuelle', depuis: '0.32.1', note: 'Un vrai obus de la logique sur un régiment en marche (zoom 8 pixels par mètre, choisissez le calibre, « Tirer un obus »). Les morts sont jetés à l\'opposé (v0.24.0), les survivants du souffle reçoivent une poussée (v0.16.0) mais ne sautent plus (retiré en v0.32.1 : soit projection, soit ralentissement, pas de saut) : rien ne ralentit ceux qui sont près. Le cercle plein est le rayon mortel, le pointillé la zone du souffle (1,8 rayon).', render: s => maquetteProjections(s, R, 'A') },
+      { title: 'Le jeu tel qu\'il est', status: 'actuelle', depuis: '0.32.2', note: 'Un vrai obus de la logique sur un régiment en marche (zoom 8 pixels par mètre, choisissez le calibre, « Tirer un obus »). Les morts sont jetés à l\'opposé (v0.24.0), les survivants du souffle reçoivent une poussée (v0.16.0) mais ne sautent plus (retiré en v0.32.2 : soit projection, soit ralentissement, pas de saut) : rien ne ralentit ceux qui sont près. Le cercle plein est le rayon mortel, le pointillé la zone du souffle (1,8 rayon).', render: s => maquetteProjections(s, R, 'A') },
       { title: 'Projetés en arc', depuis: '0.32.0', note: 'Tous ceux du souffle (le rayon du calibre) partent en l\'air à l\'opposé du point de chute, en arc, aussi loin qu\'ils étaient près ; en retombant, les plus proches sont tués, les autres blessés (ils restent tapis). Ceux de l\'anneau (jusqu\'à 1,8 rayon) sont ralentis au même instant, plus ou moins selon la distance, puis reprennent leur pas tous ensemble en deux secondes et demie : pas de vague.', render: s => maquetteProjections(s, R, 'B') },
       { title: 'Fauchés au ras du sol', depuis: '0.32.0', note: 'Le souffle est un peu plus large et rase la terre : un vol bas, rapide, plus long (une demi-seconde). Ceux de l\'anneau sont sonnés : ils s\'arrêtent net, se tapissent un instant (d\'autant plus longtemps qu\'ils sont près), puis repartent. Le plus brutal, le plus lisible de loin.', render: s => maquetteProjections(s, R, 'C') },
       { title: 'Soulevés, retombent près', depuis: '0.32.0', note: 'Le souffle les soulève presque à la verticale (un vol de plus d\'une seconde, très haut) et ils retombent près d\'où ils étaient, à peine plus loin. Ceux de l\'anneau marchent au ralenti, d\'un pas égal pendant deux secondes et demie, puis le reprennent d\'un coup : la poussière, la terre qui retombe.', render: s => maquetteProjections(s, R, 'D') },
     ] },
     { id: 'visee', title: 'Visée d\'un obus', variants: [
-      { title: 'Des cibles concentriques', status: 'retenue', depuis: '0.32.1', note: 'En jeu depuis la v0.32.1 (Jérôme : « D ») : quand on vise un barrage, le souffle du calibre est une zone assombrie (un mélange de terre et de sol, hors palette comme les ombres), avec deux anneaux pointillés à deux tiers et à un tiers du rayon : plus on est près du centre, plus on tue. Dit l\'étendue ET la gravité. Passez le pointeur sur le champ : un quatrième cercle le suit, du calibre choisi.', render: s => maquetteVisee(s, R, 'A') },
+      { title: 'Des cibles concentriques', status: 'retenue', depuis: '0.32.2', note: 'En jeu depuis la v0.32.2 (Jérôme : « D ») : quand on vise un barrage, le souffle du calibre est une zone assombrie (un mélange de terre et de sol, hors palette comme les ombres), avec deux anneaux pointillés à deux tiers et à un tiers du rayon : plus on est près du centre, plus on tue. Dit l\'étendue ET la gravité. Passez le pointeur sur le champ : un quatrième cercle le suit, du calibre choisi.', render: s => maquetteVisee(s, R, 'A') },
       { title: 'Un trait', depuis: '0.32.0', note: 'Un cercle plein d\'un trait d\'os (ombré de terre pour se lire sur l\'herbe comme sur la boue), du rayon du souffle de chaque calibre, un point au centre. Le plus sobre.', render: s => maquetteVisee(s, R, 'B') },
       { title: 'Des tirets qui tournent', depuis: '0.32.0', note: 'Le même cercle en tirets, qui tournent doucement : on voit tout de suite que c\'est une visée, pas un tracé du terrain.', render: s => maquetteVisee(s, R, 'C') },
       { title: 'Des repères au bord', depuis: '0.32.0', note: 'Un cercle fin, quatre repères au bord (nord, est, sud, ouest) et le rayon écrit en mètres sous le cercle : on lit la taille sans comparer aux hommes.', render: s => maquetteVisee(s, R, 'D') },
-      { title: 'Le carré du jeu', status: 'ancienne', depuis: '0.32.1', note: 'Avant la v0.32.1 : le curseur en croix, puis un petit carré à l\'endroit visé pendant deux secondes. Rien ne disait le rayon de l\'obus. Les trois cercles de cette vue sont donc des carrés, un par calibre (75, 155, 220 mm).', render: s => maquetteVisee(s, R, 'E') },
+      { title: 'Le carré du jeu', status: 'ancienne', depuis: '0.32.2', note: 'Avant la v0.32.2 : le curseur en croix, puis un petit carré à l\'endroit visé pendant deux secondes. Rien ne disait le rayon de l\'obus. Les trois cercles de cette vue sont donc des carrés, un par calibre (75, 155, 220 mm).', render: s => maquetteVisee(s, R, 'E') },
     ] },
     { id: 'calibres', title: 'Calibres', variants: Object.entries(CALIBRES).map(([cal, C], k) => ({
       title: cal, note: `Motif ${C.motif.length} × ${C.motif.length}, ${C.salve} obus par barrage, rayon mortel ${C.rayon} m, recharge ${C.recharge} s.`,

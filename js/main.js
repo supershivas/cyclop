@@ -1,35 +1,35 @@
 // Le cycle de vie : écran titre → bataille → nuit → fin ; pause active,
 // réglages, sauvegarde, mise à jour, debug. Les règles sont dans bataille.js
 // (pures), le dessin dans rendu3d.js (il ne modifie jamais l'état).
-import { createLoop } from './lib/loop.js?v=0.32.1';
-import { createKeys, stopTypeahead } from './lib/keys.js?v=0.32.1';
-import { createPointer, lockBrowserGestures } from './lib/pointer.js?v=0.32.1';
-import { createGamepad } from './lib/gamepad.js?v=0.32.1';
-import { createStore, autosave, pickJSONFile } from './lib/save.js?v=0.32.1';
-import { startUpdateCheck, loadVersion, loadChangelog, downloadJSON } from './lib/app-update.js?v=0.32.1';
-import { ROLES } from './palette.js?v=0.32.1';
-import { MISSIONS, EUX, nouvelleBataille, etapesRestaurer, avancer, aube, ordonnerMarche, peutOrdonner, ordonnerBarrage, peutBarrage, horloge, effectifs, tronconsTenus, moralEnMots, terrainResume, largeurZone, lettreZone, etendueZones, nomTroncon, actionDe, secteursDe, tronconsDeLigne, zone, photo, restaurer, PAS, NOUS } from './bataille.js?v=0.32.1';
-import { ligneY } from './tranchees.js?v=0.32.1';
-import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.32.1';
-import { METEO } from './data/meteo.js?v=0.32.1';
-import { impact, hydroLignes } from './terrain.js?v=0.32.1';
-import { hash2 } from './lib/rng.js?v=0.32.1';
-import { creerRendu, CAMERA } from './rendu3d.js?v=0.32.1';
-import { etatEnMots, experienceEnMots, chevrons } from './identite.js?v=0.32.1';
-import { CORVEES } from './data/corvees.js?v=0.32.1';
-import { refusCorvee } from './nuit.js?v=0.32.1';
-import { chargerContenu } from './design-store.js?v=0.32.1';
-import * as lecture from './hud/lecture.js?v=0.32.1';
-import { creerFiche } from './hud/fiche.js?v=0.32.1';
-import { creerNuit, corveeDe, corveeCourte } from './hud/nuit.js?v=0.32.1';
-import { creerCarnet, deux } from './hud/carnet.js?v=0.32.1';
-import { creerCarte } from './hud/carte.js?v=0.32.1';
-import { creerPertes } from './hud/pertes.js?v=0.32.1';
-import { creerBarreTemps } from './hud/temps.js?v=0.32.1';
-import { creerChargement } from './hud/chargement.js?v=0.32.1';
-import { SECTEURS } from './data/secteur.js?v=0.32.1';
-import { creerLockstep, empreinteEtat } from './reseau/lockstep.js?v=0.32.1';
-import { creerHote, creerInvite } from './reseau/lien.js?v=0.32.1';
+import { createLoop } from './lib/loop.js?v=0.32.2';
+import { createKeys, stopTypeahead } from './lib/keys.js?v=0.32.2';
+import { createPointer, lockBrowserGestures } from './lib/pointer.js?v=0.32.2';
+import { createGamepad } from './lib/gamepad.js?v=0.32.2';
+import { createStore, autosave, pickJSONFile } from './lib/save.js?v=0.32.2';
+import { startUpdateCheck, loadVersion, loadChangelog, downloadJSON } from './lib/app-update.js?v=0.32.2';
+import { ROLES } from './palette.js?v=0.32.2';
+import { MISSIONS, EUX, nouvelleBataille, etapesRestaurer, avancer, aube, ordonnerMarche, peutOrdonner, ordonnerBarrage, peutBarrage, horloge, effectifs, tronconsTenus, moralEnMots, terrainResume, forcesTroncons, largeurZone, lettreZone, etendueZones, nomTroncon, actionDe, secteursDe, tronconsDeLigne, zone, photo, restaurer, PAS, NOUS } from './bataille.js?v=0.32.2';
+import { ligneY } from './tranchees.js?v=0.32.2';
+import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.32.2';
+import { METEO } from './data/meteo.js?v=0.32.2';
+import { impact, hydroLignes } from './terrain.js?v=0.32.2';
+import { hash2 } from './lib/rng.js?v=0.32.2';
+import { creerRendu, CAMERA } from './rendu3d.js?v=0.32.2';
+import { etatEnMots, experienceEnMots, chevrons } from './identite.js?v=0.32.2';
+import { CORVEES } from './data/corvees.js?v=0.32.2';
+import { refusCorvee } from './nuit.js?v=0.32.2';
+import { chargerContenu } from './design-store.js?v=0.32.2';
+import * as lecture from './hud/lecture.js?v=0.32.2';
+import { creerFiche } from './hud/fiche.js?v=0.32.2';
+import { creerNuit, corveeDe, corveeCourte } from './hud/nuit.js?v=0.32.2';
+import { creerCarnet, deux } from './hud/carnet.js?v=0.32.2';
+import { creerCarte } from './hud/carte.js?v=0.32.2';
+import { creerPertes } from './hud/pertes.js?v=0.32.2';
+import { creerBarreTemps } from './hud/temps.js?v=0.32.2';
+import { creerChargement } from './hud/chargement.js?v=0.32.2';
+import { SECTEURS } from './data/secteur.js?v=0.32.2';
+import { creerLockstep, empreinteEtat } from './reseau/lockstep.js?v=0.32.2';
+import { creerHote, creerInvite } from './reseau/lien.js?v=0.32.2';
 
 const JEU = 'cyclopeen';
 const $ = id => document.getElementById(id);
@@ -711,7 +711,7 @@ function viseeObus(x, y, r) {
 // La visée (v0.21.0) : de chaque régiment choisi au curseur une ligne, une croix au bout ; l'ordre à sec (`peutOrdonner`) dit ce qu'il occuperait
 function majVisee() {
   const svg = $('visee');
-  // Le barrage qu'on vise : le cercle du souffle du calibre, posé sur le sol (Jérôme, v0.32.1 : la variante D, « cibles concentriques », du sujet « Visée d'un obus » du labo)
+  // Le barrage qu'on vise : le cercle du souffle du calibre, posé sur le sol (Jérôme, v0.32.2 : la variante D, « cibles concentriques », du sujet « Visée d'un obus » du labo)
   if (modeBarrage && enJeu() && B.etat.phase === 'jour' && !nuit.etat && souris && !glisse && !document.querySelector('dialog[open]')) {
     const [x, y] = rendu.versTerrain(souris.x, souris.y);
     rendu.surligner(null); svg.classList.remove('refus');
@@ -757,13 +757,22 @@ function regimentSous(x, y, r = 4, camp = -1) {
 function majTerrain(x, y) {
   const p = $('terrain'), r = x === null ? null : terrainResume(B, x, y);
   if (!r) { p.hidden = true; return; }
-  const cle = `${r.lignes.slice(0, 2).join('\n')}|${r.vitesse}`;
-  if (p.dataset.cle !== cle) {
-    p.dataset.cle = cle;
-    const pc = Math.round(r.vitesse * 100);
-    p.replaceChildren(Object.assign(document.createElement('span'), { textContent: r.lignes.slice(0, 2).join(' · ') }),
-      Object.assign(document.createElement('span'), { className: 'vit', innerHTML: `<i class="plein"><b style="width:${pc}%"></b></i><span>${pc} %</span>` }));
+  // une seule ligne, toujours : le sol et la marche ; sur une tranchée, son nom puis sa ligne de vie, aux couleurs des deux armées (les hommes de chacune dans le tronçon, de gauche à droite : nous, en face)
+  let cle, rendu;
+  if (r.troncon >= 0) {
+    const f = forcesTroncons(B), a = f[r.troncon * 2 + MOI], b = f[r.troncon * 2 + 1 - MOI], tot = a + b;
+    cle = `T|${r.tranchee}|${a}|${b}`;
+    rendu = () => p.replaceChildren(Object.assign(document.createElement('span'), { className: 'nom', textContent: `Tranchée ${r.tranchee}` }),
+      Object.assign(document.createElement('span'), { className: 'vit vie', innerHTML: `<span>${a}</span><i class="plein"><b style="width:${tot ? a / tot * 100 : 0}%;background:var(--jeu-nous)"></b><b style="width:${tot ? b / tot * 100 : 0}%;background:var(--jeu-eux)"></b></i><span>${b}</span>` }));
+  } else {
+    cle = `${r.lignes.slice(0, 2).join('\n')}|${r.vitesse}`;
+    rendu = () => {
+      const pc = Math.round(r.vitesse * 100);
+      p.replaceChildren(Object.assign(document.createElement('span'), { className: 'nom', textContent: r.lignes.slice(0, 2).join(' · ') }),
+        Object.assign(document.createElement('span'), { className: 'vit', innerHTML: `<i class="plein"><b style="width:${pc}%"></b></i><span>${pc} %</span>` }));
+    };
   }
+  if (p.dataset.cle !== cle) { p.dataset.cle = cle; rendu(); }
   p.hidden = false;
 }
 // Le survol global (Jérôme, v0.21.1) : le régiment sous la souris, ou sous une carte ou un cercle du HUD, s'allume avec tous ses hommes ; sinon le
@@ -1007,7 +1016,7 @@ startUpdateCheck({
 
 // ─── Mode debug (section 18) : chargé seulement avec ?debug=1 ──────────────
 if (DEBUG) {
-  const { installDebug, seedFromUrl } = await import('./lib/debug.js?v=0.32.1');
+  const { installDebug, seedFromUrl } = await import('./lib/debug.js?v=0.32.2');
   window.__seed = seedFromUrl() ?? undefined;
   installDebug({
     state: () => B && { ...horloge(B), effectifs: effectifs(B), pertes: B.etat.pertes, impacts: B.etat.impacts.length, enJeu: enJeu(), pause: loop.paused },

@@ -2,7 +2,7 @@
 // Une entrée par version qui touche au labo, la plus récente en haut. `ref` : « sujet-Lettre » (la lettre est celle de la variante,
 // A étant l'actuelle). À chaque changement du labo : une entrée ici, avec `depuis` sur les variantes ajoutées ou changées (labo.js).
 export const JOURNAL = [
-  { version: '0.32.1', date: '2026-10-18', items: [
+  { version: '0.32.2', date: '2026-10-18', items: [
     { genre: 'mis-a-jour', texte: 'La visée d\'un obus « cibles concentriques » est retenue et passe en jeu ; l\'ancien carré est en « ancienne »', ref: 'visee-A' },
     { genre: 'mis-a-jour', texte: 'Projections : le jeu ne fait plus sauter les survivants du souffle (soit projetés, soit ralentis, jamais de saut)', ref: 'projections-A' },
   ] },

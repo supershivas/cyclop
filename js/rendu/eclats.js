@@ -2,9 +2,9 @@
 // et « le feu se voit » (Jérôme, v0.9.2 : l'éclair à la bouche du fusil et le trait vers la cible de chaque tir de `B.tirs`, la pose des tireurs, le bond de ceux que
 // le souffle jette). Une seule fabrique : tous tirent dans le même générateur de l'aspect (`alea`, une suite à graine : l'ordre des tirages fait l'image) et
 // dans les mêmes tampons de particules. Le dessin seulement : jamais la logique, jamais la partie.
-import * as SH from './shaders.js?v=0.32.1';
-import { INDICE } from '../palette.js?v=0.32.1';
-import { horloge } from '../bataille.js?v=0.32.1';
+import * as SH from './shaders.js?v=0.32.2';
+import { INDICE } from '../palette.js?v=0.32.2';
+import { horloge } from '../bataille.js?v=0.32.2';
 
 const ECLATS = 6000;     // (v0.24.0 ; 2 400 avant : une salve de 220 — ~200 éclats chacun, dont de la fumée de 8 à 16 s — faisait le tour du tampon et effaçait les éclats encore en vol)
 
@@ -266,7 +266,7 @@ export function creerEclats({ THREE, scene, col, palTex, NP, effets, surface, pr
   // Chaque tireur épaule son fusil : la pose (tirVal, 1 puis qui retombe) et le cap vers sa cible, pour tous les tirs.
   let tirVal = new Float32Array(0), tirAng = new Float32Array(0);
   // Le bond d'un homme jeté (le labo « Projections », `lancers`) : volT le temps qui reste, volD la durée, volH la hauteur. Le jeu n'en pose plus : depuis la
-  // v0.32.1 (Jérôme : « soit projection, soit ralentissement, pas de saut ») les survivants du souffle ne sautent plus (le bond de la v0.16.0 est retiré).
+  // v0.32.2 (Jérôme : « soit projection, soit ralentissement, pas de saut ») les survivants du souffle ne sautent plus (le bond de la v0.16.0 est retiré).
   let volT = new Float32Array(0), volH = new Float32Array(0), volD = new Float32Array(0);
   function reserverSoldats(n) {
     if (tirVal.length >= n) return;

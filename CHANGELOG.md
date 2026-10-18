@@ -1,8 +1,11 @@
 # Journal des versions
 
-## 0.32.1 — 2026-10-18
+## 0.32.2 — 2026-10-18
 - Quand on vise un barrage, le cercle du souffle du calibre se pose sur le champ : une zone assombrie et deux anneaux, plus serrés vers le centre
 - Les hommes qui survivent au souffle d'un obus ne sautent plus : soit projetés, soit ralentis, jamais de saut
+
+## 0.32.1 — 2026-10-18
+- Le terrain sous la souris tient sur une seule ligne ; sur une tranchée : « Tranchée B1 » puis sa ligne de vie, aux couleurs des deux armées (les hommes de chacune dans le tronçon)
 
 ## 0.32.0 — 2026-10-18
 - Au labo, deux nouveaux sujets : « Projections » (un obus sur un régiment en marche : les hommes du souffle sont jetés puis tués ou blessés, ceux d'à côté ralentis puis repartent ensemble) et « Visée d'un obus » (le cercle du rayon, quatre types, pour chaque calibre)
