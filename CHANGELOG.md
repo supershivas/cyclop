@@ -1,5 +1,8 @@
 # Journal des versions
 
+## 0.37.1 — 2026-10-19
+- Un régiment qui porte des marques de survie et de temps (blessés revenus, jours de pluie, nuits de gel au front) retrouve un peu plus vite son moral : moins de déroutes, autant de morts
+
 ## 0.37.0 — 2026-10-19
 - Les hommes portent des marques sur leur fiche : trente-cinq mentions de livret en icônes (blessure dont on est revenu, jours de pluie au front, grade de circonstance, tronçon pris, hommes abattus…), le texte au survol
 - Le carnet de bord dit les plus rares : entré le premier, a tenu seul, cité à l'ordre du régiment

@@ -188,7 +188,7 @@ export const REGLAGES = {
     souffle: 8,           // « Secoué par le souffle » : vitesse du souffle (m/s) qui le jette
     proche: 10,           // « Baptisé du feu » : m d'un obus qu'il survit
     aguerri: 3,           // un homme est « aguerri » à ce nombre de marques de survie et de temps (4-7, 9-12) ; en dessous, au prorata
-    moral: 0.2,           // le léger effet (v0.37.1) : le retour du moral d'un régiment est multiplié par 1 + moral × aguerri (0 : aucun effet) ; scripts/mesure-moral.mjs
+    moral: 0.2,           // le léger effet (v0.37.1) : le retour du moral d'un régiment est multiplié par 1 + moral × aguerri (0 : aucun effet) ; scripts/mesure-moral.mjs : 4 jours d'assauts, IA, 6 graines : 0 → 0,2, moral final 0,70 → 0,76, déroutes chez nous 1,8 → 0,8, morts inchangés (Jérôme : 0,2 gardé)
     visibles: 6,          // la rangée de la fiche : au plus tant d'icônes, puis « +N »
   },
   jour: {

@@ -2,8 +2,8 @@
 // famille (rond, arche, carré, écusson, losange, stèle, octogone : lisible en niveaux de gris) ; le texte vient au survol ET au focus (tabindex,
 // aria-label : le survol seul irait contre les conventions, §7). Aucun emplacement vide, aucun « 12/31 » : seules les marques gagnées.
 // Des fonctions de HTML qui ne lisent que ce qu'on leur donne (la liste de `marquesDe`) ; fiche.js s'en sert.
-import { FAMILLES } from '../data/marques.js?v=0.37.0';
-import { ICONES, SIGLES } from '../data/marques-icones.js?v=0.37.0';
+import { FAMILLES } from '../data/marques.js?v=0.37.1';
+import { ICONES, SIGLES } from '../data/marques-icones.js?v=0.37.1';
 
 const esc = t => String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
 
