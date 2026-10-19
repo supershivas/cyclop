@@ -34,7 +34,8 @@ for (const g of [3, 7, 8]) {
 test('« retenu » réglé comme « volonté » ne change rien : le filtre n\'ajoute aucun tirage', () => {
   const Rn = structuredClone(R); Rn.stance.retenu = { ...Rn.stance.volonte };
   const B = assaut(3, Rn, b => ordonnerStance(b, b.etat.regiments.filter(r => r.camp === 0).map(r => r.id), 'retenu'));
-  assert.deepEqual(bilan(B), REFERENCE[3]);
+  const { emp, ...sansEmpreinte } = REFERENCE[3], { emp: _, ...b } = bilan(B);      // (l'empreinte porte la posture : elle diffère)
+  assert.deepEqual(b, sansEmpreinte);
   assert.equal(B.etat.regiments[0].stance, 'retenu');
 });
 
