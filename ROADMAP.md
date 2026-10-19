@@ -9,6 +9,17 @@ Statuts : **à l'étude** · **validé** (Jérôme a tranché) · **en cours** �
 
 ## En cours
 
+### L'éditeur de carte de l'atelier
+
+**Statut** : en cours (Jérôme : lots 0 à 2, format « retouches sur la génération »)
+
+Principe : un secteur garde sa graine et son bruit (`creerTerrain`) ; l'éditeur ajoute des retouches déclaratives (formes de relief, objets), jamais une carte de hauteurs entière (fichier lourd, diffs illisibles, déterminisme perdu).
+
+- [x] Lot 0 — l'onglet « Carte » de l'atelier, en lecture seule (`atelier-carte.js`, `secteur-terrain.js`)
+- [ ] Lot 1 — curseurs de `relief`, d'arbres, de bois, de haies, de buissons, de pluie ; brouillon `secteurs`, publication dans `assets/design/secteurs.json`, fusion dans `design-store.js`. À trancher : la partie garde-t-elle une copie des retouches dans `etat` (proposé : oui, seules les retouches)
+- [ ] Lot 2 — retouches de relief (bosse, creux, crête, plateau), pinceau, annuler / rétablir, appliquées dans `creerTerrain` après le bruit sans changer l'ordre des tirages ; test « partie relue = même terrain »
+- [ ] Plus tard (non décidé) — objets posés, lignes de tranchées, « Essayer dans le jeu », export / import JSON
+
 ### Refonte UX/UI (docs/ui-cible.md)
 
 **Statut** : validé (Jérôme, v0.18.1) — un lot par session, chacun livrable seul ; on se concentre sur l'UX/UI

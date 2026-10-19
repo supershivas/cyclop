@@ -2,8 +2,9 @@
 // Chaque modification est gardée tout de suite dans ce navigateur (brouillon),
 // visible dans le jeu de ce navigateur, puis publiée d'un geste dans le dépôt
 // (un commit sur main, par l'API de GitHub) : assets/design/reglages.json.
-// Un seul outil pour l'instant : les réglages chiffrés (Jérôme, v0.1.0).
+// Les outils : les réglages chiffrés (Jérôme, v0.1.0) et la carte, en lecture seule pour l'instant (`atelier-carte.js`).
 import { createPublisher, TOKEN_URL } from './lib/gh-publish.js?v=0.36.2';
+import { ongletCarte } from './atelier-carte.js?v=0.36.2';
 import { chargerContenu, lireBrouillon, ecrireBrouillon } from './design-store.js?v=0.36.2';
 
 const REPO = 'supershivas/cyclop';
@@ -77,7 +78,7 @@ function ongletPublier(zone) {
   }
 }
 
-const ONGLETS = { Réglages: ongletReglages, Publier: ongletPublier };
+const ONGLETS = { Réglages: ongletReglages, Carte: zone => ongletCarte(zone, { el, R: contenu.reglages }), Publier: ongletPublier };
 function ouvrir(nom) {
   for (const b of $('onglets').children) b.classList.toggle('is-on', b.textContent === nom);
   ONGLETS[nom]($('travail'));

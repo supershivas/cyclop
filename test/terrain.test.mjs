@@ -122,3 +122,15 @@ test('la boue et l\'eau tuent l\'herbe, heure après heure', () => {
   for (let h = 0; h < 4; h++) hydroLignes(T, 0, T.H, METEO.pluie, R);
   assert.ok(T.herbe.every(v => v === 0));
 });
+
+group('terrain — le secteur de départ (l\'Atelier le montre)');
+test('terrainDuSecteur monte les marges et creuse les tranchées ; deux fois la même graine, le même sol', async () => {
+  const { terrainDuSecteur } = await import('../js/secteur-terrain.js');
+  const S = SECTEURS.essai, a = terrainDuSecteur(S, S.marges, 7, R), b = terrainDuSecteur(S, S.marges, 7, R), c = terrainDuSecteur(S, S.marges, 8, R);
+  assert.equal(a.terrain.W, S.largeur + 2 * S.marges.x);
+  assert.equal(a.terrain.H, S.hauteur + 2 * S.marges.y);
+  assert.equal(a.lignes.length, 8);
+  assert.deepEqual(a.terrain.base, b.terrain.base);
+  assert.notDeepEqual(a.terrain.base, c.terrain.base);
+  assert.equal(terrainDuSecteur(S, S.marges, 7, R, { tranchees: false }).lignes.length, 0);
+});

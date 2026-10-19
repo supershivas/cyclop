@@ -362,6 +362,8 @@ nuit (le voile continu et ses halos mélangent la terre, le sol et l'os : des co
   sujets du moteur affichent ce que coûte le dessin et proposent les zooms.
 - `atelier.html`, `js/atelier.js`, `js/design-store.js` — l'atelier : les réglages
   chiffrés, publiés dans `assets/design/reglages.json`.
+  **L'onglet « Carte »** (Jérôme, lot 0 de l'éditeur de carte ; `js/atelier-carte.js`) : le terrain d'un secteur vu de dessus, **en lecture seule** (secteur et graine au choix, courbes de niveau au mètre, arbres et buissons, tranchées des deux
+  camps, secteurs A à D, une ligne de lecture au survol). Il monte le sol par `terrainDuSecteur` (`js/secteur-terrain.js`, logique pure, extrait de `monter` de bataille.js : le jeu et l'atelier montent le même terrain) et le peint par `couleurCase` : ce qu'on y voit est le départ de la bataille. Rien n'est écrit (ni brouillon ni publication). Suite prévue (`ROADMAP.md`) : réglages du relief et des objets d'un secteur (lot 1), retouches de relief par formes (lot 2).
 - `test/` — `node outils/test-run.mjs` (terrain, foule, bataille, sauvegarde, pureté). `test/fumee.json` (l'empreinte du HUD, `outils/fumee.mjs`) et `test/rendu.json` (celle du dessin, `outils/rendu-empreinte.mjs`) : des références, pas des tests de règles.
 - `scripts/mesure.mjs`, `scripts/trois-jours.mjs` — la mesure du critère et la
   bataille de trois jours jouée sans les mains (captures dans `captures/`).

@@ -15,9 +15,10 @@
    de la foule et les petites couches de logique ; jamais le relief : il se
    rejoue depuis la graine et les impacts (rejouerTerrain). */
 import { createRng, hash2 } from './lib/rng.js?v=0.36.2';
-import { creerTerrain, impact, hydroLignes, etat as etatCase, vitesseEtat, ETAT } from './terrain.js?v=0.36.2';
+import { impact, hydroLignes, etat as etatCase, vitesseEtat, ETAT } from './terrain.js?v=0.36.2';
 import { creerArmee, ajouterSoldat, construireGrille, pasArmee, tuerDans, effrayer, compacter, photoArmee, restaurerArmee, b64, deB64, DENSITE, place } from './army.js?v=0.36.2';
-import { creuserTranchees, ligneSous } from './tranchees.js?v=0.36.2';
+import { ligneSous } from './tranchees.js?v=0.36.2';
+import { terrainDuSecteur } from './secteur-terrain.js?v=0.36.2';
 import { calculerCouts, creerCacheChamps, dimensionsCouts, BLOC } from './champs.js?v=0.36.2';
 import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.36.2';
 import { METEO, TRANSITIONS, PREVISION_JUSTE } from './data/meteo.js?v=0.36.2';
@@ -167,10 +168,7 @@ export function zone(B) {
 function monter(etat, R) {
   const S = SECTEURS[etat.secteur], m = etat.marges;
   const W = S.largeur + 2 * m.x, H = S.hauteur + 2 * m.y;
-  // autant d'arbres dans les marges, à surface égale
-  const arbres = Math.round(S.arbres * W * H / (S.largeur * S.hauteur));
-  const terrain = creerTerrain(etat.graine, { largeur: W, hauteur: H, ox: m.x, oy: m.y, relief: S.relief, arbres, haies: Math.round((S.haies ?? 0) * W * H / (S.largeur * S.hauteur)), bois: Math.round((S.bois ?? 0) * W * H / (S.largeur * S.hauteur)), buissons: Math.round((S.buissons ?? 0) * W * H / (S.largeur * S.hauteur)) }, R);
-  const { lignes, troncons } = etat.tranchees ? creuserTranchees(terrain, S, m.x, m.y, etat.graine) : { lignes: [], troncons: [] };
+  const { terrain, lignes, troncons } = terrainDuSecteur(S, m, etat.graine, R, { tranchees: !!etat.tranchees });
   const faces = Int8Array.from(troncons, t => lignes[t.ligne].face);
   // (de la place pour les régiments de réserve : la relève les fait entrer)
   const armee = creerArmee({ capacite: (etat.parCamp + (etat.reserves?.[0] ?? 0) * (etat.parRegiment ?? 0)) * 2 + 16, W, H });
