@@ -811,9 +811,21 @@ function champDe(B, reg) {
 }
 
 // ─── En face : des barrages sur nos hommes les plus serrés, et des avances ──
+/* La posture d'en face (v0.36.3, `ia.stance`) : un régiment qui tient sa propre tranchée prend la posture du réglage ; celui qui est parti vers l'une de nos
+   lignes, ou qui est en déroute, tire à volonté. Lue de l'ordre, sans hasard : la partie relue est la même. */
+function postureIA(B) {
+  const { etat, R } = B;
+  if (!STANCES[R.ia.stance]) return;
+  for (const reg of etat.regiments) {
+    if (reg.camp !== EUX || !reg.effectif) continue;
+    const t = reg.ordre.trace;
+    reg.stance = t && t.ligne >= 10 && !reg.deroute ? R.ia.stance : STANCE_DEFAUT;
+  }
+}
 function enFace(B, rng) {
   const { etat, R, armee: A } = B;
   if (etat.deux) return;                     // un joueur commande en face : pas d'IA
+  if (R.ia.stance) postureIA(B);
   const S = SECTEURS[etat.secteur];
   if (etat.temps >= etat.ia.barrage) {
     etat.ia.barrage = etat.temps + R.ia.barrage * (0.6 + rng() * 0.8);

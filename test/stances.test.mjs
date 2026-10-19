@@ -160,3 +160,30 @@ test('la posture est dans les mots de l\'ordre, sauf la posture ordinaire', () =
   r.deroute = true;
   assert.equal(actionDe(B, r), 'en déroute', 'un régiment en déroute ne dit que cela');
 });
+
+group('stances — l\'IA d\'en face');
+test('réglage éteint (par défaut) : l\'IA reste à volonté', () => {
+  assert.equal(R.ia.stance, '');
+  const B = nouvelleBataille(3, R, { soldats: 200, jours: 3 });
+  for (let k = 0; k < 40; k++) avancer(B);
+  assert.ok(B.etat.regiments.every(r => r.stance === 'volonte'));
+});
+test('réglage allumé : en face tient en retenu sa tranchée, et sort à volonté', () => {
+  const Ri = structuredClone(R); Ri.ia.stance = 'retenu';
+  const B = nouvelleBataille(3, Ri, { soldats: 200, jours: 3 });
+  avancer(B);
+  const eux = B.etat.regiments.filter(r => r.camp === 1), nous = B.etat.regiments.filter(r => r.camp === 0);
+  assert.ok(eux.every(r => r.stance === 'retenu'), 'dans leurs tranchées');
+  assert.ok(nous.every(r => r.stance === 'volonte'), 'jamais les nôtres');
+  eux[0].ordre.trace.ligne = 3;                       // (il est parti prendre l\'une de nos lignes)
+  avancer(B);
+  assert.equal(eux[0].stance, 'volonte'); assert.equal(eux[1].stance, 'retenu');
+  eux[1].deroute = true; avancer(B);
+  assert.equal(eux[1].stance, 'volonte', 'en déroute, plus de consigne');
+});
+test('à deux, personne ne commande les postures d\'en face à la place du joueur', () => {
+  const Ri = structuredClone(R); Ri.ia.stance = 'retenu';
+  const B = nouvelleBataille(3, Ri, { soldats: 200, jours: 3, deux: true });
+  for (let k = 0; k < 10; k++) avancer(B);
+  assert.ok(B.etat.regiments.every(r => r.stance === 'volonte'));
+});

@@ -182,7 +182,7 @@ touches (**boutons dans le rabat seulement, puis Maj+chiffre**) ; une posture su
 2. ✅ **Fait (v0.36.0).** *Commande* (`ordonnerStance` / `peutStance` existent déjà, lot 1) : refus à voix haute (déroute, nuit) ; commande `stance` de `executerCmd` ; `empreinteEtat` ; test lockstep.
 3. ✅ **Fait (v0.36.1).** *HUD* : boutons dans le rabat, mot de la posture dans `actionDe` et sous le nom de la carte, ligne du carnet ; `test/fumee.json` réécrit ; grisé et raison au clic.
 4. ✅ **Fait (v0.36.2, `retenu` seulement : `couvert` n'existe pas).** *Dessin* : `couvert` = hommes tapis (`TAPI`), `retenu` = fusil bas, pas d'éclair hors portée (le dessin seulement) ; image ajoutée à `test/rendu.json` avant.
-5. *IA et équilibre* : `enFace` choisit sa posture ; mesure (`scripts/mesure.mjs`, graines 3, 7, 8, 9 000 pas) : morts, mêlées, durée d'un assaut, pour chaque posture contre chaque autre.
+5. ✅ **Fait (v0.36.3, sans version : rien de visible).** *IA et équilibre* : `ia.stance` (éteint, `postureIA`), mesure avec appui d'artillerie (`scripts/mesure-stances.mjs --appui 60 [--ia on|off]`, détail dans le `CLAUDE.md`). Jérôme : `retenu` garde 35 m et ×1,5 ; l'IA n'en use pas.
 
 <details><summary>Plans de développement et coût</summary>
 

@@ -185,5 +185,6 @@ export const REGLAGES = {
     barrage: 60,          // s entre deux barrages d'en face (en moyenne)
     offensive: 160,       // s entre deux avances d'en face
     avance: 45,           // m gagnés par une avance d'en face
+    stance: '',           // la posture qu'en face prend dans ses tranchées (`retenu`) ; '' : aucune, il tire à volonté (v0.36.3, à décider d'après scripts/mesure-stances.mjs --ia)
   },
 };
