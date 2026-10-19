@@ -76,3 +76,10 @@ body { font: 15px/1.45 system-ui, -apple-system, 'Segoe UI', sans-serif; color: 
 .ed-3d { position: relative; }
 .ed-3d-sur { position: absolute; pointer-events: none; }
 .ed-3d.pose { cursor: crosshair; }
+/* cibles de 44 px au moins (audit-ecran) : curseurs, cases à cocher, titre repliable */
+.at-champ input[type=range] { min-height: 44px; }
+.at-coche input[type=checkbox] { width: 18px; height: 18px; }
+.at-coche { min-height: 44px; }
+.ed-bloc > summary { min-height: 44px; display: flex; align-items: center; }
+.at-coche input[type=checkbox] { appearance: none; -webkit-appearance: none; width: 44px; height: 44px; min-height: 44px; margin: 0 -8px 0 -10px; border: 0; background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect x='2' y='2' width='20' height='20' rx='4' fill='white' stroke='%231c1c1e' stroke-width='2'/%3E%3C/svg%3E") center / 22px no-repeat; cursor: pointer; }
+.at-coche input[type=checkbox]:checked { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect x='2' y='2' width='20' height='20' rx='4' fill='%231c1c1e' stroke='%231c1c1e' stroke-width='2'/%3E%3Cpath d='M6 12.5l4 4 8-9' fill='none' stroke='white' stroke-width='2.5'/%3E%3C/svg%3E"); }

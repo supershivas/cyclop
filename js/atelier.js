@@ -91,13 +91,15 @@ function ongletPublier(zone) {
   }
 }
 
-const ONGLETS = { Réglages: ongletReglages, Carte: zone => ongletCarte(zone, { el, R: contenu.reglages, publie: contenu.publie.secteurs, aPublier }), Publier: ongletPublier };
+// l'éditeur de carte est le premier onglet et celui qui s'ouvre : c'est le plus visuel ; les nombres du jeu viennent après
+const ONGLETS = { Carte: zone => ongletCarte(zone, { el, R: contenu.reglages, publie: contenu.publie.secteurs, aPublier }), Réglages: ongletReglages, Publier: ongletPublier };
+const LIBELLES = { Carte: 'Éditeur de carte', Réglages: 'Réglages chiffrés', Publier: 'Publier' };
 function ouvrir(nom) {
-  for (const b of $('onglets').children) b.classList.toggle('is-on', b.textContent === nom);
+  for (const b of $('onglets').children) b.classList.toggle('is-on', b.dataset.onglet === nom);
   $('travail').classList.remove('at-plein');       // l'éditeur de carte prend toute la place (il le remet)
   ONGLETS[nom]($('travail'));
   history.replaceState(null, '', `#${nom}`);
 }
-$('onglets').append(...Object.keys(ONGLETS).map(nom => el('button', { textContent: nom, onclick: () => ouvrir(nom) })));
-ouvrir(ONGLETS[decodeURIComponent(location.hash.slice(1))] ? decodeURIComponent(location.hash.slice(1)) : 'Réglages');
+$('onglets').append(...Object.keys(ONGLETS).map(nom => { const b = el('button', { textContent: LIBELLES[nom], onclick: () => ouvrir(nom) }); b.dataset.onglet = nom; return b; }));
+ouvrir(ONGLETS[decodeURIComponent(location.hash.slice(1))] ? decodeURIComponent(location.hash.slice(1)) : 'Carte');
 aPublier();
