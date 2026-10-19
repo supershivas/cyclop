@@ -468,6 +468,107 @@ Tests d'abord : déterminisme (Node contre Chromium via outils/determinisme.mjs)
 
 ---
 
+---
+
+### 6. Les marques d'un homme (mentions du livret, sur la fiche)
+
+**Statut** : à l'étude. Idée de Jérôme : des médailles / hauts faits / statuts que chaque soldat gagne, en icône sur la fiche, le texte au survol.
+
+**Intention** : donner un poids à chaque homme nommé (ce qu'il a subi, fait, été), sans gloire. `DESIGN.md` refuse « les médailles qui brillent » et dit que le compteur de morts n'est jamais une récompense :
+ce sont donc des **mentions d'un livret militaire**, à l'encre sur papier. Même esprit que les chevrons d'expérience (v0.35.0 : « sans emplacement vide ») et que le compteur de victimes de la fiche (« ne donne ni expérience ni avantage »).
+
+**Garde-fous** : aucune marque ne vient d'un nombre de tués ; aucun effet de jeu par défaut ; pas d'emplacement vide, pas de « 12/31 », pas de fanfare (le carnet de bord n'en dit que les plus rares) ; des marques ambiguës exprès (« A tremblé », « Du jour refusé »).
+
+**Ancrage** : `hud/fiche.js` et `hud/lecture.js` (`auFront`, `prochainGrade`), `hud/barres.js` ; `A.exp`, `A.victimes`, `etat.grades`, `etat.evacues` (retours), `etat.corps`, `etat.tombes`, `etat.nuits`, `reg.refus` ;
+`effrayer`, `tuerDans`, `prises`, `mourir` pour les événements ; `photoArmee` / `restaurerArmee` ; sprites en matrices de lettres (`js/lib/sprites.js`, conventions §12) ; le carnet (`noter`).
+
+**Le catalogue (31 marques, 5 familles)** — **L** : se lit de l'état existant ; **C** : demande un événement compté (`A.marques`, bits, sauvegardé). Sources à vérifier au cadrage.
+
+| # | Famille (cadre) | Nom | Icône | Condition | Src |
+|---|---|---|---|---|---|
+| 1 | Marques (rond) | Baptisé du feu | flamme basse | survit à son premier obus à moins de 10 m | C |
+| 2 | | Secoué par le souffle | trait courbe qui rejette | projeté par un obus, remis debout | C |
+| 3 | | Déterré | pelle dans un monticule | dans un abri crevé par un 220, sorti vivant | C |
+| 4 | | Marqué au bras | bras barré | blessé au bras, revenu | L |
+| 5 | | Marqué à la jambe | jambe barrée | idem à la jambe | L |
+| 6 | | Marqué à la tête | casque fendu | idem à la tête | L |
+| 7 | | Deux fois revenu | deux flèches de retour | évacué et revenu deux fois | L |
+| 8 | | A regagné l'arrière à pied | un pas vers le bas | blessé léger, arrivé en marchant (v0.35.0) | C |
+| 9 | Le temps (rond, un trait) | Du premier jour | trait vertical | au front depuis le jour 1 | L |
+| 10 | | Cinq jours de suite | cinq crans | cinq jours au front sans relève ni repos | L (à vérifier) |
+| 11 | | Sous trois pluies | trois gouttes | trois jours de pluie au front | L |
+| 12 | | Nuit de gel | cristal | une nuit de gel en tranchée | L |
+| 13 | | Au dernier jour | aube | debout à la fin de la bataille | C |
+| 14 | Services (carré) | Pelle et pioche | pelle | trois nuits de corvée de travaux | L (corvée du régiment) |
+| 15 | | Brancardier | brancard | une nuit d'évacuation | L (idem) |
+| 16 | | Porteur de terre | croix et pelle | a inhumé les morts de sa tranchée | L (idem) |
+| 17 | | La soupe par les boyaux | gamelle | a ravitaillé | L (idem) |
+| 18 | | Coup de main | fil coupé | revenu d'un coup de main | C |
+| 19 | | Entré le premier | porte ouverte | premier homme dans un tronçon pris | C |
+| 20 | | A tenu seul | homme seul entre deux traverses | dernier défenseur d'un tronçon avant renfort ou chute | C |
+| 21 | | Tronçon repris | tronçon à l'endroit | présent à la reprise d'un tronçon perdu | C |
+| 22 | Commandement (carré, chevron) | Gradé de circonstance | galon neuf | promu parce qu'un supérieur est tombé | L |
+| 23 | | A pris le régiment | fanion | devenu commandant du régiment | L (carnet) |
+| 24 | | Cité à l'ordre du régiment | feuille pliée | le plus aguerri des entrés dans un tronçon pris ce jour-là (un par régiment et par jour) | C |
+| 25 | Statuts (losange, peuvent s'effacer) | A tremblé | main qui tremble | sa peur a dépassé la terreur une fois | C |
+| 26 | | N'a pas reflué | pied planté | resté à son poste pendant la déroute du régiment | C |
+| 27 | | Rallié | retour en arc | a reflué avec le régiment, puis est revenu | C |
+| 28 | | Du jour refusé | fusil à terre | dans un régiment qui a refusé de monter | L |
+| 29 | | Parmi les douze derniers | douze points | son régiment n'a plus que douze hommes debout | L |
+| 30 | Fin (fiche d'un mort, Mémorial) | Enterré par les siens | croix au crayon | inhumé (`etat.tombes`) | L |
+| 31 | | Resté dans l'entonnoir | creux sans croix | corps non inhumé après trois nuits | L |
+
+**Affichage** : une rangée d'icônes sous le nom (sprites d'environ 11 px, encre `t` / `s` sur le papier, aucune couleur neuve) ; **la forme du cadre porte la famille** (rond, carré, losange : la forme porte l'information, `lisibilite.mjs`) ;
+texte au survol **et au focus clavier** (`tabindex`, `aria-label` : le survol seul va contre conventions §7) ; six icônes au plus, les plus récentes d'abord, puis « +N ».
+
+**Décisions à trancher** (défaut en gras) : effet de jeu (**aucun**) ; marques d'en face (**non, les nôtres seulement**) ; « Cité à l'ordre du régiment » (**générique, sans la Croix de guerre réelle**) ; les statuts s'effacent (**après une nuit**) ; le carnet en dit (**les rares : 19, 20, 23, 24**).
+
+**Plan fin (lots)**
+
+1. *Moteur de lecture* : `js/marques.js` pur (`marquesDe(B, id)` → liste ordonnée), `js/data/marques.js` (id, famille, icône en matrice, nom, dit), seuils dans `reglages.js` (`marques`) ; **15 marques lues de l'état** (4-7, 9-12, 22, 23, 28-31 + corvées si l'état retient l'homme). Aucune sauvegarde changée. Tests : une partie d'avant donne ses marques lisibles.
+2. *Fiche* : rangée d'icônes dans `hud/fiche.js`, survol et focus, `aria-label`, `test/fumee.json` réécrit, `lisibilite.mjs` sur les cadres ; sujet « Les marques » au labo (variantes d'icônes) avec entrée de `labo-journal.js`.
+3. *Événements* : `A.marques` (`Uint32Array`, `??= 0` à la relecture, `photoArmee`) ; bits posés dans `effrayer`, `tuerDans`, `prises`, `mourir`, `coupDeMain`, la déroute ; **aucun tirage de hasard ajouté** ; `empreinteEtat` si la marque peut changer une règle (par défaut non : pas d'effet de jeu).
+4. *Carnet et régiment* : une ligne de carnet pour les marques rares ; la fenêtre du régiment les compte sans les classer.
+5. *Campagne et Mémorial* : les marques entrent dans le registre de campagne (identité d'un vétéran) et deviennent l'épitaphe sobre au Mémorial ; un blessé évacué garde les siennes (`etat.evacues[7]`).
+
+<details><summary>Plans de développement et coût</summary>
+
+| Plan | Contenu | Coût | Risque |
+|---|---|---|---|
+| **A — Les marques lues** | lots 1-2 : 15 marques sans nouvel état, rangée sur la fiche | **2-3 sessions** | faible : tout se lit, la sauvegarde ne bouge pas |
+| **B — Les marques comptées** | + lots 3-4 : les 16 autres, `A.marques`, carnet | **5-6 sessions** | moyen : événements dans `tuerDans` / `prises`, relecture des parties |
+| **C — Portées par la campagne** | + lot 5 : vétérans, épitaphes, régiments dissous | **8+ sessions** (après les pistes 3 et 4) | moyen : identité portable |
+
+Recommandé : A, puis juger sur pièces avant de compter quoi que ce soit.
+</details>
+
+**Dettes anticipées** : aucune marque ne doit donner envie de tuer ou de sacrifier (relire chaque condition contre `DESIGN.md`) ; la rangée s'ajoute à `fiche.js` sans alourdir `main.js` ; les corvées sont notées par régiment (`etat.nuits`), pas par homme — « Pelle et pioche » dit alors « son régiment » à moins de marquer l'homme (lot 3) ;
+`A.marques` à 32 bits suffit pour 31 marques mais pas pour davantage (prévoir un second champ) ; les icônes sont des matrices de lettres de la palette : tout `test/rendu.json` reste intact (la fiche est du DOM) ; textes en données, clés stables.
+
+<details><summary>Prompts</summary>
+
+```text
+Cadrage « marques d'un homme ». Lis ROADMAP.md §6 (le catalogue de 31 marques), DESIGN.md (« Ce que le jeu refuse »), CLAUDE.md (la fiche en jauges, les chevrons, A.victimes), js/hud/fiche.js, hud/lecture.js, etat.evacues, etat.nuits, etat.grades.
+Pour chacune des 15 marques marquées L, vérifie dans le code qu'elle se lit vraiment de l'état et dis-moi lesquelles ne le peuvent pas (avec la ligne qui manque). Puis UNE AskUserQuestion (4 questions max, recommandé en premier) :
+effet de jeu, marques d'en face, effacement des statuts, lignes de carnet. Plan du lot 1 avec fichiers, tests et dettes. Pas de code avant ma réponse.
+```
+
+```text
+Lot 1 « marques » (lecture). js/marques.js pur et testé dans Node, js/data/marques.js (icône en matrice de lettres de la palette, nom, dit), seuils dans reglages.js. Aucune sauvegarde changée : une partie d'avant doit donner ses marques.
+Tests d'abord, par marque : une bataille minimale qui la fait naître et une qui ne la fait pas. Aucune condition qui récompense un nombre de tués. Puis le prompt de clôture commun.
+```
+
+```text
+Lot 2 « marques » (fiche). Rangée d'icônes dans hud/fiche.js : cadre rond / carré / losange selon la famille, texte au survol ET au focus (tabindex, aria-label), six au plus puis « +N », aucun emplacement vide.
+Montre-moi DEUX variantes d'icônes au labo (sujet « Les marques », entrée dans labo-journal.js) avant d'en brancher une ; lisibilité en gris (outils/lisibilite.mjs) et audit-ecran. Réécris test/fumee.json en prouvant que le reste n'a pas bougé.
+```
+
+```text
+Lot 3 « marques » (événements). A.marques en Uint32Array avec `??= 0`, dans photoArmee / restaurerArmee ; bits posés là où l'événement a lieu. Aucun tirage de hasard ajouté, aucun ordre de tirage déplacé : prouve-le par une bataille de 9 000 pas
+identique avant / après (graines 3, 7, 8). Test « relue au milieu », et outils/deux.mjs si un bit peut changer une règle. Puis le prompt de clôture commun.
+```
+</details>
+
 ### Annexe : comparatif des coûts (plan recommandé de chaque piste)
 
 | Piste | Plan recommandé | Sessions | Dépend de |
@@ -477,3 +578,4 @@ Tests d'abord : déterminisme (Node contre Chromium via outils/determinisme.mjs)
 | 3. Mémorial | A | 2 | — (prépare 4) |
 | 4. Campagne | A | 5-6 | 3, identité portable |
 | 5. Gaz | rien avant décision de ton | 6-8 | décision de ton, eau de la nuit étalée, maquette au labo |
+| 6. Marques d'un homme | A | 2-3 | — (la campagne et le Mémorial les prolongent) |
