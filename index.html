@@ -9,8 +9,8 @@
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta property="og:image" content="og.png">
-<link rel="stylesheet" href="js/lib/game.css?v=0.36.5">
-<link rel="stylesheet" href="css/style.css?v=0.36.5">
+<link rel="stylesheet" href="js/lib/game.css?v=0.36.6">
+<link rel="stylesheet" href="css/style.css?v=0.36.6">
 </head>
 <body>
 <!-- La barre de chargement (v0.28.0) : là avant tout script ; main.js la remplit, puis la retire -->
@@ -125,7 +125,9 @@
     <h1>Cyclopéen</h1>
     <nav class="titre-menu">
       <button class="bouton" id="continuer" hidden>Continuer</button>
+      <button class="bouton" id="continuer-campagne" hidden>Continuer la campagne</button>
       <button class="bouton" id="nouvelle">Nouvelle partie</button>
+      <button class="bouton" id="nouvelle-campagne">Nouvelle campagne</button>
       <button class="bouton" id="jouer-deux">Jouer à deux</button>
     </nav>
     <p class="pour-ordinateur">Cyclopéen se joue sur un ordinateur, à la souris et au clavier.</p>
@@ -244,14 +246,14 @@
 </dialog>
 
 <dialog id="dialogue-confirmer" aria-label="Confirmer">
-  <p>Une bataille est en cours. La remplacer ?</p>
+  <p id="confirmer-texte">Une bataille est en cours. La remplacer ?</p>
   <form method="dialog" class="menu">
-    <button class="bouton" value="oui">Nouvelle partie</button>
+    <button class="bouton" id="confirmer-oui" value="oui">Nouvelle partie</button>
     <button class="bouton" value="non">Annuler</button>
   </form>
 </dialog>
 
 <div class="jeu-toast" id="toast" role="status" hidden></div>
-<script type="module" src="js/main.js?v=0.36.5"></script>
+<script type="module" src="js/main.js?v=0.36.6"></script>
 </body>
 </html>

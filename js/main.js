@@ -1,40 +1,40 @@
 // Le cycle de vie : écran titre → bataille → nuit → fin ; pause active,
 // réglages, sauvegarde, mise à jour, debug. Les règles sont dans bataille.js
 // (pures), le dessin dans rendu3d.js (il ne modifie jamais l'état).
-import { createLoop } from './lib/loop.js?v=0.36.5';
-import { createKeys, stopTypeahead } from './lib/keys.js?v=0.36.5';
-import { createPointer, lockBrowserGestures } from './lib/pointer.js?v=0.36.5';
-import { createGamepad } from './lib/gamepad.js?v=0.36.5';
-import { createStore, autosave, pickJSONFile } from './lib/save.js?v=0.36.5';
-import { startUpdateCheck, loadVersion, loadChangelog, downloadJSON } from './lib/app-update.js?v=0.36.5';
-import { ROLES } from './palette.js?v=0.36.5';
-import { VERSION_CAMPAGNE, CLE as CLE_CAMPAGNE, cloturerDansLeStore, nouvelleCampagne, suivante, passage, bilan as bilanCampagne } from './campagne.js?v=0.36.5';
-import { MISSIONS, EUX, nouvelleBataille, etapesRestaurer, avancer, aube, ordonnerMarche, peutOrdonner, ordonnerBarrage, peutBarrage, ordonnerStance, peutStance, horloge, effectifs, tronconsTenus, moralEnMots, terrainResume, forcesTroncons, largeurZone, lettreZone, etendueZones, nomTroncon, actionDe, secteursDe, tronconsDeLigne, zone, photo, restaurer, PAS, NOUS } from './bataille.js?v=0.36.5';
-import { ligneY } from './tranchees.js?v=0.36.5';
-import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.36.5';
-import { STANCES, STANCE_DEFAUT } from './data/stances.js?v=0.36.5';
-import { METEO } from './data/meteo.js?v=0.36.5';
-import { impact, hydroLignes } from './terrain.js?v=0.36.5';
-import { hash2 } from './lib/rng.js?v=0.36.5';
-import { creerRendu, CAMERA } from './rendu3d.js?v=0.36.5';
-import { etatEnMots, experienceEnMots, chevrons } from './identite.js?v=0.36.5';
-import { CORVEES } from './data/corvees.js?v=0.36.5';
-import { refusCorvee } from './nuit.js?v=0.36.5';
-import { chargerContenu } from './design-store.js?v=0.36.5';
-import * as lecture from './hud/lecture.js?v=0.36.5';
-import { creerFiche } from './hud/fiche.js?v=0.36.5';
-import { chevronsHtml } from './hud/barres.js?v=0.36.5';
-import { creerNuit, corveeDe, corveeCourte } from './hud/nuit.js?v=0.36.5';
-import { creerCampagne } from './hud/campagne.js?v=0.36.5';
-import { creerCarnet, deux } from './hud/carnet.js?v=0.36.5';
-import { creerCarte } from './hud/carte.js?v=0.36.5';
-import { creerPertes } from './hud/pertes.js?v=0.36.5';
-import { creerBarreTemps } from './hud/temps.js?v=0.36.5';
-import { creerChargement } from './hud/chargement.js?v=0.36.5';
-import { SECTEURS } from './data/secteur.js?v=0.36.5';
-import { creerLockstep, empreinteEtat } from './reseau/lockstep.js?v=0.36.5';
-import { nouveauCode, codeValide, publier, ecouter } from './reseau/relais.js?v=0.36.5';
-import { creerHote, creerInvite } from './reseau/lien.js?v=0.36.5';
+import { createLoop } from './lib/loop.js?v=0.36.6';
+import { createKeys, stopTypeahead } from './lib/keys.js?v=0.36.6';
+import { createPointer, lockBrowserGestures } from './lib/pointer.js?v=0.36.6';
+import { createGamepad } from './lib/gamepad.js?v=0.36.6';
+import { createStore, autosave, pickJSONFile } from './lib/save.js?v=0.36.6';
+import { startUpdateCheck, loadVersion, loadChangelog, downloadJSON } from './lib/app-update.js?v=0.36.6';
+import { ROLES } from './palette.js?v=0.36.6';
+import { VERSION_CAMPAGNE, CLE as CLE_CAMPAGNE, cloturerDansLeStore, nouvelleCampagne, suivante, passage, bilan as bilanCampagne } from './campagne.js?v=0.36.6';
+import { MISSIONS, EUX, nouvelleBataille, etapesRestaurer, avancer, aube, ordonnerMarche, peutOrdonner, ordonnerBarrage, peutBarrage, ordonnerStance, peutStance, horloge, effectifs, tronconsTenus, moralEnMots, terrainResume, forcesTroncons, largeurZone, lettreZone, etendueZones, nomTroncon, actionDe, secteursDe, tronconsDeLigne, zone, photo, restaurer, PAS, NOUS } from './bataille.js?v=0.36.6';
+import { ligneY } from './tranchees.js?v=0.36.6';
+import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.36.6';
+import { STANCES, STANCE_DEFAUT } from './data/stances.js?v=0.36.6';
+import { METEO } from './data/meteo.js?v=0.36.6';
+import { impact, hydroLignes } from './terrain.js?v=0.36.6';
+import { hash2 } from './lib/rng.js?v=0.36.6';
+import { creerRendu, CAMERA } from './rendu3d.js?v=0.36.6';
+import { etatEnMots, experienceEnMots, chevrons } from './identite.js?v=0.36.6';
+import { CORVEES } from './data/corvees.js?v=0.36.6';
+import { refusCorvee } from './nuit.js?v=0.36.6';
+import { chargerContenu } from './design-store.js?v=0.36.6';
+import * as lecture from './hud/lecture.js?v=0.36.6';
+import { creerFiche } from './hud/fiche.js?v=0.36.6';
+import { chevronsHtml } from './hud/barres.js?v=0.36.6';
+import { creerNuit, corveeDe, corveeCourte } from './hud/nuit.js?v=0.36.6';
+import { creerCampagne } from './hud/campagne.js?v=0.36.6';
+import { creerCarnet, deux } from './hud/carnet.js?v=0.36.6';
+import { creerCarte } from './hud/carte.js?v=0.36.6';
+import { creerPertes } from './hud/pertes.js?v=0.36.6';
+import { creerBarreTemps } from './hud/temps.js?v=0.36.6';
+import { creerChargement } from './hud/chargement.js?v=0.36.6';
+import { SECTEURS } from './data/secteur.js?v=0.36.6';
+import { creerLockstep, empreinteEtat } from './reseau/lockstep.js?v=0.36.6';
+import { nouveauCode, codeValide, publier, ecouter } from './reseau/relais.js?v=0.36.6';
+import { creerHote, creerInvite } from './reseau/lien.js?v=0.36.6';
 
 const JEU = 'cyclopeen';
 const $ = id => document.getElementById(id);
@@ -180,7 +180,20 @@ function montrerTitre() {
   $('titre').hidden = false;
   $('hud').hidden = true;
   $('continuer').hidden = !store.has('partie');
-  ($('continuer').hidden ? $('nouvelle') : $('continuer')).focus();
+  // La campagne (lot 7) : « Continuer » reprend la bataille de la campagne si c'est elle qu'on a laissée ; si on l'a remplacée par une autre partie, « Continuer la campagne » repart de la bataille qui suit
+  const partie = $('continuer').hidden ? null : store.load('partie'), c = campagneEnCours();
+  const laSienne = !!partie?.campagne && partie.campagne.id === c?.id;
+  $('continuer').textContent = partie?.campagne ? 'Continuer la campagne' : 'Continuer';
+  $('continuer-campagne').hidden = !c || laSienne;
+  ($('continuer').hidden ? ($('continuer-campagne').hidden ? $('nouvelle') : $('continuer-campagne')) : $('continuer')).focus();
+}
+// la campagne laissée en cours (le registre `cyclopeen:campagne`), ou rien
+function campagneEnCours() { const c = store.load(CLE_CAMPAGNE); return c?.statut === 'en cours' ? c : null; }
+// une question à deux issues, dans la boîte de confirmation : vrai si le joueur répond oui
+function confirmer(texte, oui) {
+  const d = $('dialogue-confirmer');
+  $('confirmer-texte').textContent = texte; $('confirmer-oui').textContent = oui;
+  return new Promise(ok => { d.onclose = () => ok(d.returnValue === 'oui'); d.showModal(); });
 }
 // L'objectif de celui qui joue : la mission est celle des nôtres ; à deux, en face a l'objectif inverse (tenir ce qu'on attaque, prendre ce qu'on tient)
 const objectif = () => (MOI === NOUS) === (B.etat.mission === 'tenir') ? 'tenir' : 'prendre';
@@ -449,12 +462,25 @@ function poigneeInvite(lien) {
 $('nouvelle').onclick = async () => {
   const graine = window.__seed ?? Date.now() % 100000;      // la graine elle-même peut venir de l'horloge
   if (store.has('partie')) {
-    const d = $('dialogue-confirmer');
-    const oui = await new Promise(ok => { d.onclose = () => ok(d.returnValue === 'oui'); d.showModal(); });
-    if (!oui) return;
+    const deCampagne = !!store.load('partie')?.campagne;
+    if (!await confirmer(deCampagne ? 'Une bataille de campagne est en cours. La remplacer ? La campagne reprendra à cette bataille avec « Continuer la campagne ».' : 'Une bataille est en cours. La remplacer ?', 'Nouvelle partie')) return;
   }
   const secteur = await demanderSecteur();
   if (secteur) commencer(graine, secteur);
+};
+// La campagne depuis l'écran titre (lot 7) : une neuve efface le registre ; « Continuer la campagne » repart de la bataille qui suit la dernière close
+$('nouvelle-campagne').onclick = async () => {
+  const c = campagneEnCours();
+  if (c || store.has('partie')) {
+    if (!await confirmer(c ? `Une campagne est en cours${c.batailles.length ? ` (${c.batailles.length} bataille${c.batailles.length > 1 ? 's' : ''} close${c.batailles.length > 1 ? 's' : ''})` : ''}. La remplacer ?` : 'Une bataille est en cours. La remplacer ?', 'Nouvelle campagne')) return;
+  }
+  demarrerCampagne(window.__seed ?? Date.now() % 100000);
+};
+$('continuer-campagne').onclick = async () => {
+  const c = campagneEnCours();
+  if (!c) return montrerTitre();
+  if (store.has('partie') && !await confirmer('Une autre bataille est en cours. La remplacer par la suite de la campagne ?', 'Continuer la campagne')) return;
+  lancerCampagne(c);
 };
 $('pause').onclick = pause;
 $('reprendre').onclick = () => $('dialogue-pause').close();
@@ -1196,7 +1222,7 @@ startUpdateCheck({
 
 // ─── Mode debug (section 18) : chargé seulement avec ?debug=1 ──────────────
 if (DEBUG) {
-  const { installDebug, seedFromUrl } = await import('./lib/debug.js?v=0.36.5');
+  const { installDebug, seedFromUrl } = await import('./lib/debug.js?v=0.36.6');
   window.__seed = seedFromUrl() ?? undefined;
   installDebug({
     state: () => B && { ...horloge(B), effectifs: effectifs(B), pertes: B.etat.pertes, impacts: B.etat.impacts.length, enJeu: enJeu(), pause: loop.paused },

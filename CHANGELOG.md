@@ -1,5 +1,8 @@
 # Journal des versions
 
+## 0.36.6 — 2026-10-19
+- L'écran titre propose « Nouvelle campagne » (trois batailles, vos survivants d'une bataille à l'autre) et « Continuer la campagne » ; la campagne est dans l'export et l'import de la sauvegarde
+
 ## 0.36.5 — 2026-10-19
 - À la fin d'une campagne, un papier sobre dit chaque bataille, puis les noms de ceux qui sont tombés et de ceux qui sont restés (la campagne n'est pas encore jouable depuis l'écran titre)
 

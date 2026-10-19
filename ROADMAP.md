@@ -374,7 +374,7 @@ Dépendance : `parCamp` est une valeur unique pour les deux camps (`nouvelleBata
 4. ~~*Entre deux batailles*~~ **livré** : `passage` (régiments, vétérans et recrues, blessés de retour, fusions ; « voir et valider », Jérôme), quatre variantes au labo dont A branchée au lot 5. **Reste** : le carnet de campagne (quatre lignes, comme celui de bataille), les noms des dissous au Mémorial.
 5. ~~*Le secteur suivant*~~ **livré** (v0.36.4) : l'ordre des secteurs est fixe (pas de choix, Jérôme) ; la mission suit l'issue (réussie → prendre, manquée → tenir) ; le papier de campagne « Le registre » (variante A du labo) est branché à la fin de chaque bataille de campagne, Entrée pour partir ; `outils/campagne.mjs` le joue dans le navigateur. Atteignable par le mode debug seulement (`__jeu.campagne`) jusqu'au lot 7.
 6. ~~*Fin de campagne*~~ **livré** (v0.36.5) : un papier sobre (une ligne par bataille, deux listes de noms repliées, « Écran titre »), `bilan(c)` donne les noms comme des chaînes pour le Mémorial. **Reste** : le Mémorial lui-même (§3), qui les reprendra ; le grade d'un tombé n'est pas gardé.
-7. *Écran titre et menus* : « Continuer la campagne », export / import JSON, clé autre en debug.
+7. ~~*Écran titre et menus*~~ **livré** (v0.36.6) : « Nouvelle campagne », « Continuer la campagne », confirmations, export / import (le registre est dans `store.exportAll`), clé autre en debug ; `outils/campagne-titre.mjs`.
 8. *Suite (plan C)* : état-major (doctrines débloquées, chacune avec un coût), saisons, trophées déclaratifs sobres (`DESIGN.md`).
 
 <details><summary>Plans de développement et coût</summary>
