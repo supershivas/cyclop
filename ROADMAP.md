@@ -21,8 +21,8 @@ Principe : un secteur garde sa graine et son bruit (`creerTerrain`) ; l'éditeur
 - [x] Lot 3 — objets posés (arbre, buisson, bois, haie, dégager), lignes de tranchées au curseur, contrôle à voix haute (`validerSecteur`) qui refuse la publication d'un secteur invalide ; la partie garde aussi ses tranchées et ses objets (`secteurDuJeu`)
 - [x] Lot 4 — « Essayer dans le jeu » : `?essai=<secteur>&graine=<n>`, une bataille d'essai sans sauvegarde avec le brouillon de ce navigateur ; coût de la simulation mesuré sur quatre cartes retouchées : inchangé
 - [x] Éditeur visuel (Jérôme : chiffres nommés et décrits, outils de construction) — boîte à outils à icônes, scène large, inspecteur ; Sélectionner (déplacer, redimensionner, supprimer) ; chaque champ avec son nom, son unité et sa description
-- [x] Vue 3D dans l'atelier (le moteur du jeu, lecture seule, lumière au choix)
-- [ ] Plus tard (non décidé) — export / import JSON d'un secteur, un nom et un résumé modifiables, copier-coller d'une forme, construire directement dans la vue 3D
+- [x] Vue 3D dans l'atelier (le moteur du jeu, lumière au choix) ; on y pose des formes et des objets d'un clic
+- [ ] Plus tard (non décidé) — export / import JSON d'un secteur, un nom et un résumé modifiables, copier-coller d'une forme, déplacer et redimensionner à la souris dans la vue 3D
 
 ### Refonte UX/UI (docs/ui-cible.md)
 

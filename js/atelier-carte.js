@@ -62,7 +62,7 @@ export function ongletCarte(zone, { el, R = REGLAGES, publie = {}, aPublier = ()
   const zoom = el('select', { ariaLabel: 'Zoom', title: 'Taille de la carte à l’écran' }, ...[['0', 'Ajusté à l’écran'], ['1', 'Zoom × 1'], ['2', 'Zoom × 2'], ['3', 'Zoom × 3'], ['4', 'Zoom × 4']].map(([v, t]) => el('option', { value: v, textContent: t })));
   // Plan (2D, où l'on construit) ou 3D (le moteur du jeu, en lecture seule)
   const vuePlan = el('button', { textContent: 'Plan', className: 'is-on', title: 'Le terrain vu de dessus : c\u2019est là qu\u2019on construit.', onclick: () => basculer('plan') });
-  const vue3d = el('button', { textContent: '3D', title: 'Le terrain tel que le jeu le montre : sol en cubes, tranchées, arbres, soldats. On le regarde (tourner, déplacer, zoomer) ; les outils agissent sur le plan.', onclick: () => basculer('3d') });
+  const vue3d = el('button', { textContent: '3D', title: 'Le terrain tel que le jeu le montre : sol en cubes, tranchées, arbres, soldats. On y construit aussi : un clic pose avec l\u2019outil choisi, glisser tourne la vue.', onclick: () => basculer('3d') });
   const [cSoldats, lSoldats] = coche('Soldats (3D)', 'Montre les régiments à leur place de départ, pour juger de l\u2019échelle.', true);
   cSoldats.onchange = () => { perimee3D = true; if (mode === '3d') majVue3D(); };
   // la lumière de la vue 3D : l'heure et le temps qu'il fait (le jeu change de lumière toute la journée, et de temps d'un jour à l'autre)
@@ -94,6 +94,7 @@ export function ongletCarte(zone, { el, R = REGLAGES, publie = {}, aPublier = ()
 
   // ─── Les retouches : des formes de relief et des objets, une seule histoire pour annuler et rétablir (en mémoire : elle ne survit pas à la page) ───
   let outil = 'selection', trace = null, curseurCarte = null, choix = null, edition = null, glisse = null;
+  let trace3d = null, curseur3d = null;                          // dans la vue 3D : le premier clic d'un trait (crête, haie), et le point sous la souris (mètres du secteur)
   const reglagesOutil = { bosse: { r: 20, h: 3 }, creux: { r: 20, h: 3 }, crete: { r: 20, h: 3 }, plateau: { r: 20, h: 3 }, bois: { r: 20 }, degager: { r: 20 } };
   const histoire = [], futur = [];
   const cleDe = F => (F.f ? 'retouches' : 'objets');
@@ -169,7 +170,7 @@ export function ongletCarte(zone, { el, R = REGLAGES, publie = {}, aPublier = ()
   // ─── La boîte à outils (à gauche) ───
   function panneauBoite() {
     const bouton = id => {
-      const d = OUTILS[id], b = el('button', { className: `ed-outil${id === outil ? ' is-on' : ''}`, title: `${d.nom} — ${d.aide}`, ariaPressed: String(id === outil), onclick: () => { outil = id; trace = null; if (id !== 'selection') choix = null; tout(); canvas.style.cursor = id === 'selection' ? 'default' : 'crosshair'; } });
+      const d = OUTILS[id], b = el('button', { className: `ed-outil${id === outil ? ' is-on' : ''}`, title: `${d.nom} — ${d.aide}`, ariaPressed: String(id === outil), onclick: () => { outil = id; trace = null; trace3d = null; hote3d.classList.toggle('pose', id !== 'selection'); if (id !== 'selection') choix = null; tout(); canvas.style.cursor = id === 'selection' ? 'default' : 'crosshair'; } });
       b.innerHTML = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="${d.icone}"/></svg><span>${d.nom}</span>`;
       return b;
     };
@@ -249,11 +250,14 @@ export function ongletCarte(zone, { el, R = REGLAGES, publie = {}, aPublier = ()
     if (!v3d) {
       etatBarre.textContent = 'Chargement de la vue 3D…';
       v3d = creerVue3D3(); v3d = await v3d;
+      v3d.surClic = p => clic3D(secteurDe3D(p));
+      v3d.surSurvol = p => { curseur3d = secteurDe3D(p); };
+      v3d.surcouche = surcouche3D;
     }
     if (mode !== '3d') return;
     if (perimee3D || !v3d.bataille) { { const [, h, m] = AMBIANCES[ambiance.value]; v3d.regler(h, m); } v3d.monter(sel.value, effectif(), Number(graine.value) | 0, { soldats: cSoldats.checked }); perimee3D = false; }
     v3d.activer(true);
-    etatBarre.textContent = 'Vue 3D : glisser pour tourner et incliner · clic droit (ou Maj) + glisser pour déplacer · molette pour zoomer. Les outils agissent sur le plan.';
+    etatBarre.textContent = 'Vue 3D : un clic pose avec l\u2019outil choisi (crête et haie : deux clics) · glisser tourne et incline · clic droit (ou Maj) + glisser déplace · molette zoome.';
   }
   const creerVue3D3 = async () => { const { creerVue3D } = await import('./atelier-3d.js?v=0.36.2'); return creerVue3D({ R, hote: hote3d }); };
   function basculer(m) {
@@ -261,7 +265,7 @@ export function ongletCarte(zone, { el, R = REGLAGES, publie = {}, aPublier = ()
     mode = m;
     vuePlan.className = m === 'plan' ? 'is-on' : ''; vue3d.className = m === '3d' ? 'is-on' : '';
     canvas.hidden = m === '3d'; scene.hidden = m === '3d'; hote3d.hidden = m !== '3d';
-    boite.inert = m === '3d'; boite.style.opacity = m === '3d' ? '.45' : '';
+    trace3d = null; curseur3d = null;
     if (m === '3d') majVue3D(); else { v3d?.activer(false); majPlan(); }
   }
   const echelle = () => Number(zoom.value) || Math.max(1, Math.min(4, Math.ceil((scene.clientWidth || 840) / (C ? C.T.W : 840))));
@@ -340,12 +344,50 @@ export function ongletCarte(zone, { el, R = REGLAGES, publie = {}, aPublier = ()
     ctx.textAlign = 'start'; ctx.setLineDash([]);
   }
 
+  // ─── Construire dans la vue 3D : un clic sur le sol (les traits en deux clics : le glissé tourne la vue) ───
+  const marges = () => SECTEURS[sel.value].marges;
+  const secteurDe3D = p => (p ? [arrondi(p[0] - marges().x), arrondi(p[1] - marges().y)] : null);
+  function gommerEn(p) { const c = pres(...p); if (c) { const l = listes()[c.cle]; l.splice(c.i, 1); if (choix) choix = null; poserListe(c.cle, l); } }
+  function clic3D(p) {
+    if (!p) return;
+    const def = OUTILS[outil];
+    if (outil === 'gomme') return gommerEn(p);
+    if (outil === 'selection') { choix = pres(...p); tout(); return; }
+    if (def.segment) {
+      if (!trace3d) { trace3d = { x: p[0], y: p[1], x2: p[0], y2: p[1] }; return; }
+      const T = trace3d; trace3d = null;
+      if (Math.hypot(p[0] - T.x, p[1] - T.y) >= 4) poserForme({ ...nouvelleForme(def, T.x, T.y), x2: p[0], y2: p[1] });
+      return;
+    }
+    poserForme(nouvelleForme(def, ...p));
+  }
+  // les formes posées, un anneau et un signe projetés sur le sol de la vue 3D (elles suivent le relief et la perspective)
+  function surcouche3D(ctx, proj) {
+    const m = marges(), l = affichees(), def = OUTILS[outil];
+    const pt = (x, y) => { const q = proj(m.x + x, m.y + y); return q[0] < -1e4 ? null : q; };
+    const ligne = pts => { ctx.beginPath(); let debut = true; for (const q of pts) { if (!q) { debut = true; continue; } if (debut) ctx.moveTo(q[0], q[1]); else ctx.lineTo(q[0], q[1]); debut = false; } ctx.stroke(); };
+    const anneau = (x, y, r) => ligne(Array.from({ length: 49 }, (_, k) => pt(x + Math.cos(k / 48 * 6.2832) * r, y + Math.sin(k / 48 * 6.2832) * r)));
+    const dessiner = (F, enCours, choisie) => {
+      const [x2, y2] = extremite(F), genre = genreDe(F), segment = OUTILS[genre].segment;
+      ctx.strokeStyle = ctx.fillStyle = PALETTE.o; ctx.lineWidth = choisie ? 3.5 : 2;
+      ctx.setLineDash(genre === 'creux' || genre === 'degager' ? [6, 5] : enCours || genre === 'bois' ? [3, 4] : []);
+      if (segment) ligne([pt(F.x, F.y), pt(x2, y2)]);
+      if (F.r && genre !== 'haie') for (const [qx, qy] of genre === 'crete' ? [[F.x, F.y], [x2, y2]] : [[F.x, F.y]]) anneau(qx, qy, F.r);
+      ctx.setLineDash([]);
+      const c = pt((F.x + x2) / 2, (F.y + y2) / 2);
+      if (c) { if (F.r || segment) { ctx.font = '700 15px ui-monospace, monospace'; ctx.textAlign = 'center'; ctx.fillText(glyphe[genre] || '', c[0], c[1] + 5); } else { ctx.beginPath(); ctx.arc(c[0], c[1], choisie ? 7 : 5, 0, 6.2832); ctx.stroke(); } }
+    };
+    if (cFormes.checked) for (const cle of ['retouches', 'objets']) l[cle].forEach((F, i) => dessiner(F, false, choix?.cle === cle && choix.i === i));
+    if (def.genre && !trace3d && curseur3d && !def.segment) dessiner({ [def.type === 'relief' ? 'f' : 'o']: def.genre, x: curseur3d[0], y: curseur3d[1], ...(def.champs.includes('r') ? { r: reglagesOutil[def.genre].r } : {}) }, true);
+    if (trace3d) dessiner({ [def.type === 'relief' ? 'f' : 'o']: def.genre, x: trace3d.x, y: trace3d.y, x2: curseur3d?.[0] ?? trace3d.x2, y2: curseur3d?.[1] ?? trace3d.y2, ...(def.champs.includes('r') ? { r: reglagesOutil[def.genre].r } : {}) }, true);
+  }
+
   // ─── La souris sur la carte ───
   const enMetres = e => { const r = canvas.getBoundingClientRect(); return [arrondi((e.clientX - r.left) / r.width * C.T.W - C.marges.x), arrondi((e.clientY - r.top) / r.height * C.T.H - C.marges.y)]; };
   canvas.onpointerdown = e => {
     if (!C || e.button !== 0) return;
     const p = enMetres(e), def = OUTILS[outil];
-    if (outil === 'gomme') { const c = pres(...p); if (c) { const l = listes()[c.cle]; l.splice(c.i, 1); if (choix) choix = null; poserListe(c.cle, l); } return; }
+    if (outil === 'gomme') return gommerEn(p);
     if (outil === 'selection') {
       const tol = 9 / (pxParM() || 1);
       let mode = null, cible = choix && listes()[choix.cle][choix.i] ? choix : null;
@@ -387,7 +429,7 @@ export function ongletCarte(zone, { el, R = REGLAGES, publie = {}, aPublier = ()
   document.addEventListener('keydown', e => {
     if (!canvas.isConnected || /INPUT|SELECT|TEXTAREA/.test(document.activeElement?.tagName || '')) return;
     if (e.key === 'Delete' || e.key === 'Backspace') { if (choix) { e.preventDefault(); supprimerChoix(); } }
-    else if (e.key === 'Escape') { choix = null; trace = null; glisse = null; edition = null; tout(); }
+    else if (e.key === 'Escape') { choix = null; trace = null; trace3d = null; glisse = null; edition = null; tout(); }
   });
   sel.onchange = () => { histoire.length = futur.length = 0; trace = null; choix = null; tout(); refaire(); };
   graine.onchange = refaire; zoom.onchange = redessiner;

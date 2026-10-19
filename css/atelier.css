@@ -73,3 +73,6 @@ body { font: 15px/1.45 system-ui, -apple-system, 'Segoe UI', sans-serif; color: 
 .at-work .ed-vues button:last-child { border-radius: 0 6px 6px 0; margin-left: -1px; }
 .at-work .ed-vues button.is-on { background: #1c1c1e; color: #fff; border-color: #1c1c1e; }
 @media (max-width: 1000px) { .ed-3d { height: 60vh; } }
+.ed-3d { position: relative; }
+.ed-3d-sur { position: absolute; pointer-events: none; }
+.ed-3d.pose { cursor: crosshair; }
