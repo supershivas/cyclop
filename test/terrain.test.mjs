@@ -252,3 +252,34 @@ test('regarderAu règle l\'heure et le temps du premier jour sans toucher au res
   assert.equal(B.etat.meteo.slice(1).join(), avant, 'les autres jours ne changent pas');
   regarderAu(B, 17.5, 'sec'); assert.deepEqual([horloge(B).heure, horloge(B).minute], [17, 30]);
 });
+
+group('atelier — les cartes à vous');
+test('une carte neuve (copie ou vierge) a un id tiré de son nom, passe le contrôle, se joue, et s\'ajoute à la liste sans toucher les secteurs d\'origine', async () => {
+  const { idCarte, nouvelleCarte, appliquerCartes } = await import('../js/design-store.js');
+  const { VIERGE } = await import('../js/data/secteur.js');
+  const { validerSecteur } = await import('../js/tranchees.js');
+  const { terrainDuSecteur, profilDe } = await import('../js/secteur-terrain.js');
+  assert.equal(idCarte('Les collines de l’Argonne !', new Set()), 'carte-les-collines-de-l-argonn');
+  assert.equal(idCarte('Éléphant', new Set(['carte-elephant'])), 'carte-elephant-2');
+  assert.equal(idCarte('   ', new Set()), 'carte-carte');
+  const copie = nouvelleCarte(SECTEURS.crete, 'Ma crête'), vierge = nouvelleCarte(VIERGE, 'Du neuf');
+  assert.equal(copie.nom, 'Ma crête'); assert.deepEqual(copie.relief, SECTEURS.crete.relief); assert.equal(SECTEURS.crete.nom, 'La crête', 'le modèle n\'est pas touché');
+  assert.deepEqual(validerSecteur(copie), []); assert.deepEqual(validerSecteur(vierge), []);
+  // le profil d'une crête monte, celui d'un champ vierge est presque plat
+  const pc = profilDe(terrainDuSecteur(copie, copie.marges, 3, R).terrain, copie), pv = profilDe(terrainDuSecteur(vierge, vierge.marges, 3, R).terrain, vierge);
+  assert.equal(pc.length, 12); assert.ok(Math.max(...pc) - Math.min(...pc) > 0.25, 'la crête se voit'); assert.ok(Math.max(...pv) - Math.min(...pv) < 0.2, 'le vierge est presque plat');
+  // l'ajout à la liste : après les secteurs d'origine, jamais par-dessus l'un d'eux
+  const liste = { essai: SECTEURS.essai, crete: SECTEURS.crete };
+  appliquerCartes(liste, { 'carte-ma-crete': copie, essai: { ...copie, nom: 'usurpateur' } });
+  assert.deepEqual(Object.keys(liste), ['essai', 'crete', 'carte-ma-crete']);
+  assert.equal(liste.essai.nom, 'Les labours'); assert.equal(liste['carte-ma-crete'].perso, true);
+  // elle se joue : une bataille sur son id, et une partie relue la retrouve
+  const { version } = JSON.parse(readFileSync(new URL('../version.json', import.meta.url)));
+  const dedans = (await import(`../js/data/secteur.js?v=${version}`)).SECTEURS;
+  const { nouvelleBataille, photo, restaurer } = await import('../js/bataille.js');
+  dedans['carte-ma-crete'] = copie;
+  let B; try { B = nouvelleBataille(4, R, { secteur: 'carte-ma-crete', soldats: 100, jours: 3 }); } finally { delete dedans['carte-ma-crete']; }
+  assert.equal(B.etat.secteur, 'carte-ma-crete');
+  const C = restaurer(JSON.parse(JSON.stringify(photo(B))), R);       // la carte n'est plus dans la liste (supprimée) : la partie garde son sol et retombe sur un secteur d'origine pour le reste
+  assert.deepEqual(C.terrain.base, B.terrain.base);
+});

@@ -38,6 +38,12 @@ const ESSAI = {
     },
 };
 
+// Le modèle d'une carte « from scratch » de l'atelier (v0.38.0) : un champ presque plat, sans arbre, haie ni buisson, les mêmes lignes de tranchées. Un modèle, pas un secteur : il n'est pas dans la liste des parties.
+export const VIERGE = {
+  ...ESSAI, nom: 'Nouvelle carte', resume: '', profil: Array(12).fill(0.5),
+  relief: { bosses: 0, ondulation: 0.4, nappe: 0 }, pluieAuMoins: 0, arbres: 0, bois: 0, haies: 0, buissons: 0,
+};
+
 export const SECTEURS = {
   essai: ESSAI,
   // Une crête tenue par l'ennemi : il faut monter. Du relief, peu d'arbres, des haies, peu d'eau.

@@ -3,11 +3,12 @@
 // visible dans le jeu de ce navigateur, puis publiée d'un geste dans le dépôt
 // (un commit sur main, par l'API de GitHub) : assets/design/reglages.json.
 // Les outils : les réglages chiffrés (Jérôme, v0.1.0) et la carte, un éditeur visuel (`atelier-carte.js`).
-import { createPublisher, TOKEN_URL } from './lib/gh-publish.js?v=0.37.1';
-import { validerSecteur } from './tranchees.js?v=0.37.1';
-import { SECTEURS } from './data/secteur.js?v=0.37.1';
-import { ongletCarte } from './atelier-carte.js?v=0.37.1';
-import { chargerContenu, lireBrouillon, ecrireBrouillon, compterBrouillon, deplier, secteurEffectif } from './design-store.js?v=0.37.1';
+import { createPublisher, TOKEN_URL } from './lib/gh-publish.js?v=0.38.0';
+import { validerSecteur } from './tranchees.js?v=0.38.0';
+import { terrainDuSecteur, profilDe } from './secteur-terrain.js?v=0.38.0';
+import { SECTEURS } from './data/secteur.js?v=0.38.0';
+import { ongletCarte } from './atelier-carte.js?v=0.38.0';
+import { chargerContenu, lireBrouillon, ecrireBrouillon, compterBrouillon, deplier, secteurEffectif } from './design-store.js?v=0.38.0';
 
 const REPO = 'supershivas/cyclop';
 const $ = id => document.getElementById(id);
@@ -66,23 +67,41 @@ function ongletPublier(zone) {
   async function publier() {
     try {
       const b = lireBrouillon();
+      contenu = await chargerContenu();          // (le brouillon a pu changer depuis l'ouverture de la page : une carte créée depuis n'y serait pas)
       const fichiers = [];
       if (b.reglages && Object.keys(b.reglages).length) {
         const enLigne = (await pub.readJSON('assets/design/reglages.json')) || {};
         for (const [g, v] of Object.entries(b.reglages)) enLigne[g] = { ...(enLigne[g] || {}), ...v };
         fichiers.push({ path: 'assets/design/reglages.json', json: enLigne });
       }
-      if (b.secteurs && Object.keys(b.secteurs).length) {
-        // un secteur retouché est contrôlé avant d'être écrit (tranchées dans l'ordre, tracé qui ne se coupe pas…) : on refuse à voix haute
-        for (const id of Object.keys(b.secteurs)) {
+      // les secteurs d'origine : des retouches (secteurs.json), contrôlées avant d'être écrites (tranchées dans l'ordre, tracé qui ne se coupe pas…) : on refuse à voix haute
+      const retouches = Object.keys(b.secteurs || {}).filter(id => SECTEURS[id]);
+      if (retouches.length) {
+        for (const id of retouches) {
           const pb = validerSecteur(secteurEffectif(SECTEURS[id], contenu.publie.secteurs[id], deplier(b.secteurs[id])));
           if (pb.length) throw new Error(`Secteur « ${SECTEURS[id].nom} » refusé : ${pb.join(' ; ')}. Corrigez-le dans l'onglet Carte.`);
         }
         const enLigne = (await pub.readJSON('assets/design/secteurs.json')) || {};
-        for (const [id, plat] of Object.entries(b.secteurs)) enLigne[id] = fusionner(enLigne[id] || {}, deplier(plat));
+        for (const id of retouches) enLigne[id] = fusionner(enLigne[id] || {}, deplier(b.secteurs[id]));
         fichiers.push({ path: 'assets/design/secteurs.json', json: enLigne });
       }
-      await pub.publish(fichiers, { message: "Publie les retouches de l'atelier", progress: t => { statut.textContent = t; } });
+      // les cartes à vous : des secteurs entiers (cartes.json), qui s'ajoutent à la liste des nouvelles parties ; une carte supprimée en sort
+      const aEcrire = [...new Set([...Object.keys(b.cartes || {}), ...Object.keys(b.secteurs || {}).filter(id => id in contenu.publie.cartes)])].filter(id => contenu.cartes[id]);
+      if (aEcrire.length || (b.supprimees || []).length) {
+        const enLigne = (await pub.readJSON('assets/design/cartes.json')) || {};
+        for (const id of aEcrire) {
+          const def = secteurEffectif(contenu.cartes[id], deplier(b.secteurs?.[id]));
+          if (!String(def.nom || '').trim()) throw new Error(`Une carte n'a pas de nom (${id}) : donnez-lui un nom dans l'onglet Carte.`);
+          const pb = validerSecteur(def);
+          if (pb.length) throw new Error(`Carte « ${def.nom} » refusée : ${pb.join(' ; ')}. Corrigez-la dans l'onglet Carte.`);
+          delete def.perso;
+          def.profil = profilDe(terrainDuSecteur(def, { ...def.marges }, 1, contenu.reglages).terrain, def);      // la coupe nord-sud que la liste des parties dessine
+          enLigne[id] = def;
+        }
+        for (const id of b.supprimees || []) delete enLigne[id];
+        fichiers.push({ path: 'assets/design/cartes.json', json: enLigne });
+      }
+      await pub.publish(fichiers, { message: "Publie les cartes et les retouches de l'atelier", progress: t => { statut.textContent = t; } });
       ecrireBrouillon({});
       contenu = await chargerContenu();
       toast('Publié');
@@ -92,7 +111,7 @@ function ongletPublier(zone) {
 }
 
 // l'éditeur de carte est le premier onglet et celui qui s'ouvre : c'est le plus visuel ; les nombres du jeu viennent après
-const ONGLETS = { Carte: zone => ongletCarte(zone, { el, R: contenu.reglages, publie: contenu.publie.secteurs, aPublier }), Réglages: ongletReglages, Publier: ongletPublier };
+const ONGLETS = { Carte: zone => ongletCarte(zone, { el, R: contenu.reglages, publie: contenu.publie.secteurs, publieCartes: contenu.publie.cartes, aPublier }), Réglages: ongletReglages, Publier: ongletPublier };
 const LIBELLES = { Carte: 'Éditeur de carte', Réglages: 'Réglages chiffrés', Publier: 'Publier' };
 function ouvrir(nom) {
   for (const b of $('onglets').children) b.classList.toggle('is-on', b.dataset.onglet === nom);

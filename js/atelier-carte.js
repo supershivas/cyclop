@@ -3,18 +3,18 @@
 // la scène (la carte, large), l'inspecteur (l'outil ou la forme choisie, puis les réglages du secteur). Chaque chiffre porte un nom et une description (`data/carte-outils.js`,
 // `data/secteur-params.js`). Chaque retouche va dans le brouillon (`secteurs` de `cyclopeen:atelier`, à plat : « relief.bosses ») et se publie dans assets/design/secteurs.json ;
 // le jeu les pose sur `SECTEURS` au lancement (`appliquerSecteurs`).
-import { REGLAGES } from './data/reglages.js?v=0.37.1';
-import { SECTEURS } from './data/secteur.js?v=0.37.1';
-import { PALETTE, ORDRE } from './palette.js?v=0.37.1';
-import { terrainDuSecteur } from './secteur-terrain.js?v=0.37.1';
-import { couleurCase } from './apparence.js?v=0.37.1';
-import { etat as etatCase, hauteurQ } from './terrain.js?v=0.37.1';
-import { ligneY } from './tranchees.js?v=0.37.1';
-import { PARAMS } from './data/secteur-params.js?v=0.37.1';
-import { OUTILS, GROUPES_OUTILS, champ, HERBE, SOLS } from './data/carte-outils.js?v=0.37.1';
-import { distanceForme, extremite } from './formes.js?v=0.37.1';
-import { validerSecteur } from './tranchees.js?v=0.37.1';
-import { lireBrouillon, ecrireBrouillon, lireChemin, deplier, secteurEffectif } from './design-store.js?v=0.37.1';
+import { REGLAGES } from './data/reglages.js?v=0.38.0';
+import { SECTEURS, VIERGE } from './data/secteur.js?v=0.38.0';
+import { PALETTE, ORDRE } from './palette.js?v=0.38.0';
+import { terrainDuSecteur, profilDe } from './secteur-terrain.js?v=0.38.0';
+import { couleurCase } from './apparence.js?v=0.38.0';
+import { etat as etatCase, hauteurQ } from './terrain.js?v=0.38.0';
+import { ligneY } from './tranchees.js?v=0.38.0';
+import { PARAMS } from './data/secteur-params.js?v=0.38.0';
+import { OUTILS, GROUPES_OUTILS, champ, HERBE, SOLS } from './data/carte-outils.js?v=0.38.0';
+import { distanceForme, extremite } from './formes.js?v=0.38.0';
+import { validerSecteur } from './tranchees.js?v=0.38.0';
+import { lireBrouillon, ecrireBrouillon, lireChemin, deplier, secteurEffectif, idCarte, nouvelleCarte } from './design-store.js?v=0.38.0';
 
 const rgb = hex => [1, 3, 5].map(k => parseInt(hex.slice(k, k + 2), 16));
 const COULEURS = ORDRE.map(k => rgb(PALETTE[k]));
@@ -43,9 +43,21 @@ function peindreSol(T, R, courbes) {
   return img;
 }
 
-export function ongletCarte(zone, { el, R = REGLAGES, publie = {}, aPublier = () => {} } = {}) {
+export function ongletCarte(zone, { el, R = REGLAGES, publie = {}, publieCartes = {}, aPublier = () => {} } = {}) {
+  // ─── Les cartes : celles d'origine, celles à vous déjà publiées (cartes.json), celles de ce navigateur pas encore publiées (le brouillon) ───
+  const construireCatalogue = () => {
+    const b = lireBrouillon(), out = { ...SECTEURS, ...structuredClone(publieCartes), ...structuredClone(b.cartes || {}) };
+    for (const id of b.supprimees || []) delete out[id];
+    return out;
+  };
+  let catalogue = construireCatalogue();
+  const estPerso = id => !(id in SECTEURS);
   // ─── Les pièces de l'écran ───
-  const sel = el('select', { ariaLabel: 'Secteur' }, ...Object.entries(SECTEURS).map(([id, s]) => el('option', { value: id, textContent: s.nom })));
+  const sel = el('select', { ariaLabel: 'Secteur' });
+  // le nom d'une carte : celui du brouillon, sinon le publié, sinon celui de sa donnée
+  const nomDe = id => lireBrouillon().secteurs?.[id]?.nom ?? publie[id]?.nom ?? catalogue[id].nom;
+  const remplirSelecteur = () => { const v = sel.value; sel.replaceChildren(...Object.keys(catalogue).map(id => el('option', { value: id, textContent: nomDe(id) + (estPerso(id) ? ' · à vous' : '') }))); if (catalogue[v]) sel.value = v; };
+  remplirSelecteur();
   const graine = el('input', { type: 'number', value: 1, step: 1, ariaLabel: 'Graine du hasard', title: 'La graine tire les bosses, les arbres et la boue de la carte : la même graine redonne la même carte. Elle ne change pas ce que vous posez.' });
   const nouvelle = el('button', { textContent: 'Autre graine', title: 'Tire une autre graine : le sol de départ change, vos retouches restent.', onclick: () => { graine.value = Math.floor(Math.random() * 99999) + 1; refaire(); } });
   // lance une bataille d'essai dans un autre onglet : le jeu lit déjà les retouches de ce navigateur (le brouillon), rien n'est publié ni sauvegardé
@@ -80,8 +92,8 @@ export function ongletCarte(zone, { el, R = REGLAGES, publie = {}, aPublier = ()
   let C = null, sol = null, minuterie = 0;
 
   // le secteur tel que le jeu le lira : sa donnée, les retouches publiées, celles de ce navigateur (le brouillon)
-  const effectif = () => secteurEffectif(SECTEURS[sel.value], publie[sel.value], deplier(lireBrouillon().secteurs?.[sel.value]));
-  const valeurPubliee = (cle, param) => lireChemin(secteurEffectif(SECTEURS[sel.value], publie[sel.value]), cle) ?? param.defaut;
+  const effectif = () => secteurEffectif(catalogue[sel.value], publie[sel.value], deplier(lireBrouillon().secteurs?.[sel.value]));
+  const valeurPubliee = (cle, param) => lireChemin(secteurEffectif(catalogue[sel.value], publie[sel.value]), cle) ?? param.defaut;
   // écrit une valeur dans le brouillon, ou l'en retire si elle est celle du publié
   function noter(cle, v, pub) {
     const br = lireBrouillon(); br.secteurs = br.secteurs || {}; const g = br.secteurs[sel.value] = br.secteurs[sel.value] || {};
@@ -100,7 +112,7 @@ export function ongletCarte(zone, { el, R = REGLAGES, publie = {}, aPublier = ()
   const cleDe = F => (F.f ? 'retouches' : 'objets');
   const genreDe = F => F.f || F.o;
   const listes = () => { const S = effectif(); return { retouches: structuredClone(S.retouches || []), objets: structuredClone(S.objets || []) }; };
-  const publiees = () => { const S = secteurEffectif(SECTEURS[sel.value], publie[sel.value]); return { retouches: S.retouches || [], objets: S.objets || [] }; };
+  const publiees = () => { const S = secteurEffectif(catalogue[sel.value], publie[sel.value]); return { retouches: S.retouches || [], objets: S.objets || [] }; };
   // ce qu'on dessine : les listes, avec la forme en cours de glissé à la place de l'ancienne
   const affichees = () => { const l = listes(); if (edition) l[edition.cle][edition.i] = edition.F; return l; };
   function ecrireListes(l) { const pub = publiees(); for (const cle of ['retouches', 'objets']) noter(cle, l[cle], pub[cle]); tout(); plusTard(); }
@@ -208,7 +220,7 @@ export function ongletCarte(zone, { el, R = REGLAGES, publie = {}, aPublier = ()
   }
   function panneauSecteur() {
     const base = effectif(), b = lireBrouillon().secteurs?.[sel.value] || {};
-    const lignes = PARAMS.filter(p => !p.si || lireChemin(SECTEURS[sel.value], p.si)).map(p => {
+    const lignes = PARAMS.filter(p => !p.si || lireChemin(catalogue[sel.value], p.si)).map(p => {
       const v0 = lireChemin(base, p.cle) ?? p.defaut, pub = valeurPubliee(p.cle, p);
       let nomEl;
       const retour = el('button', { textContent: '↺', title: `Revenir à la valeur publiée (${pub})`, ariaLabel: `Revenir à la valeur publiée de ${p.nom}`, onclick: () => { poserParam(p, pub); panneauInspecteur(); } });
@@ -221,9 +233,24 @@ export function ongletCarte(zone, { el, R = REGLAGES, publie = {}, aPublier = ()
       const br = lireBrouillon(); if (br.secteurs) { delete br.secteurs[sel.value]; if (!Object.keys(br.secteurs).length) delete br.secteurs; }
       ecrireBrouillon(br); aPublier(); histoire.length = futur.length = 0; choix = null; tout(); refaire();
     } });
-    return el('details', { className: 'ed-bloc', open: true }, el('summary', { textContent: `Le secteur : ${SECTEURS[sel.value].nom}` }),
-      el('p', { className: 'at-note', textContent: `${SECTEURS[sel.value].resume} En rouge : retouché dans ce navigateur, pas encore publié. Le jeu de ce navigateur l’utilise déjà, à la prochaine bataille.` }),
-      ...lignes.flatMap((r, k) => r.dataset.groupe && r.dataset.groupe !== lignes[k - 1]?.dataset.groupe ? [el('h4', { textContent: r.dataset.groupe }), r] : [r]), el('div', { className: 'at-row' }, remise));
+    // le nom et le résumé : ce que la liste des nouvelles parties montre de la carte
+    const id = sel.value, S = effectif(), perso = estPerso(id);
+    const texte = (cle, nom, desc, long) => {
+      const pub = lireChemin(secteurEffectif(catalogue[id], publie[id]), cle) ?? '';
+      const e = long ? el('textarea', { rows: 4, ariaLabel: nom }) : el('input', { type: 'text', maxLength: 60, ariaLabel: nom });
+      e.value = S[cle] ?? '';
+      e.onchange = () => { noter(cle, e.value.trim(), pub); remplirSelecteur(); verifier(); majAlerte(); };
+      return el('div', { className: 'at-champ' }, el('div', { className: 'at-champ-tete' }, el('span', { className: `at-champ-nom${e.value.trim() !== pub ? ' at-modifie' : ''}`, textContent: nom })), el('p', { className: 'at-champ-desc', textContent: desc }), e);
+    };
+    const enBrouillon = id in (lireBrouillon().cartes || {});
+    const etat = perso ? el('p', { className: 'at-note', textContent: enBrouillon ? 'Carte à vous, pas encore publiée : elle s\u2019ajoutera à la liste des nouvelles parties quand vous publierez (onglet Publier).' : 'Carte à vous, publiée : elle est dans la liste des nouvelles parties.' }) : null;
+    const supprimer = perso ? el('button', { textContent: 'Supprimer cette carte', title: 'La retire de la liste des nouvelles parties à la prochaine publication', onclick: () => supprimerCarte(id) }) : null;
+    return el('details', { className: 'ed-bloc', open: true }, el('summary', { textContent: `Le secteur : ${S.nom}` }),
+      ...(etat ? [etat] : []),
+      texte('nom', 'Nom de la carte', 'Le titre dans la liste des nouvelles parties.', false),
+      texte('resume', 'Résumé', 'Deux phrases qui disent le caractère de la carte au joueur : le sol, l\u2019eau, la végétation, ce qu\u2019elle demande.', true),
+      el('p', { className: 'at-note', textContent: 'En rouge : retouché dans ce navigateur, pas encore publié. Le jeu de ce navigateur l\u2019utilise déjà, à la prochaine bataille.' }),
+      ...lignes.flatMap((r, k) => r.dataset.groupe && r.dataset.groupe !== lignes[k - 1]?.dataset.groupe ? [el('h4', { textContent: r.dataset.groupe }), r] : [r]), el('div', { className: 'at-row' }, remise, ...(supprimer ? [supprimer] : [])));
   }
   function poserParam(p, v) { noter(p.cle, v, valeurPubliee(p.cle, p)); verifier(); plusTard(); majAlerte(); }
   // (le contrôle bouge pendant un glissé de curseur : on ne refait que son bloc)
@@ -232,6 +259,41 @@ export function ongletCarte(zone, { el, R = REGLAGES, publie = {}, aPublier = ()
     if (!problemes.length) { ancien?.remove(); return; }
     const neuf = el('div', { className: 'ed-alerte' }, el('p', { className: 'at-modifie', textContent: 'Ce secteur ne peut pas être publié :' }), el('ul', null, ...problemes.map(t => el('li', { textContent: t }))));
     if (ancien) ancien.replaceWith(neuf); else insp.prepend(neuf);
+  }
+
+  // ─── Créer une carte : une copie d'une carte (la vôtre, ou d'origine), ou un champ vierge ; elle vit dans le brouillon (`cartes`) jusqu'à la publication ───
+  const dlg = el('dialog', { className: 'at-dialogue', ariaLabel: 'Nouvelle carte' });
+  function ouvrirNouvelleCarte() {
+    const nom = el('input', { type: 'text', maxLength: 40, placeholder: 'Les collines de l\u2019Argonne', ariaLabel: 'Nom de la carte' });
+    const modele = el('select', { ariaLabel: 'Partir de' }, el('option', { value: '', textContent: 'Un champ vierge (from scratch)' }),
+      ...Object.keys(catalogue).map(id => el('option', { value: id, textContent: `Une copie de : ${nomDe(id)}` })));
+    modele.value = sel.value;
+    const msg = el('p', { className: 'at-modifie' });
+    const creer = el('button', { textContent: 'Créer la carte', className: 'primaire', onclick: () => {
+      const n = nom.value.trim();
+      if (!n) { msg.textContent = 'Donnez un nom à la carte.'; nom.focus(); return; }
+      const depart = modele.value ? secteurEffectif(catalogue[modele.value], publie[modele.value], deplier(lireBrouillon().secteurs?.[modele.value])) : VIERGE;
+      const def = nouvelleCarte(depart, n), id = idCarte(n, new Set(Object.keys(catalogue)));
+      def.profil = profilDe(terrainDuSecteur(def, { ...def.marges }, 1, R).terrain, def);
+      const br = lireBrouillon(); br.cartes = { ...(br.cartes || {}), [id]: def }; ecrireBrouillon(br);
+      catalogue = construireCatalogue(); aPublier(); dlg.close();
+      remplirSelecteur(); sel.value = id; sel.onchange();
+    } });
+    dlg.replaceChildren(el('h3', { textContent: 'Nouvelle carte' }),
+      el('p', { className: 'at-note', textContent: 'Une copie reprend le relief, les arbres, les tranchées et tout ce que vous avez posé. Elle devient une carte à vous : une fois publiée, elle s\u2019ajoute à la liste des nouvelles parties.' }),
+      el('label', { className: 'at-champ' }, el('span', { className: 'at-champ-nom', textContent: 'Nom' }), nom),
+      el('label', { className: 'at-champ' }, el('span', { className: 'at-champ-nom', textContent: 'Partir de' }), modele), msg,
+      el('div', { className: 'at-row' }, creer, el('button', { textContent: 'Annuler', onclick: () => dlg.close() })));
+    if (!dlg.isConnected) document.body.append(dlg);          // (conventions, section 17 : les dialogues sont rattachés au body)
+    dlg.showModal(); nom.focus();
+  }
+  function supprimerCarte(id) {
+    if (!confirm(`Supprimer la carte « ${nomDe(id)} » ?`)) return;
+    const br = lireBrouillon();
+    if (br.cartes?.[id]) { delete br.cartes[id]; if (!Object.keys(br.cartes).length) delete br.cartes; } else br.supprimees = [...new Set([...(br.supprimees || []), id])];
+    if (br.secteurs) { delete br.secteurs[id]; if (!Object.keys(br.secteurs).length) delete br.secteurs; }
+    ecrireBrouillon(br); catalogue = construireCatalogue(); aPublier();
+    histoire.length = futur.length = 0; choix = null; remplirSelecteur(); sel.value = Object.keys(catalogue)[0]; sel.onchange();
   }
 
   // ─── La carte ───
@@ -259,7 +321,7 @@ export function ongletCarte(zone, { el, R = REGLAGES, publie = {}, aPublier = ()
     v3d.activer(true);
     etatBarre.textContent = 'Vue 3D : un clic pose avec l\u2019outil choisi (crête et haie : deux clics) · glisser tourne et incline · clic droit (ou Maj) + glisser déplace · molette zoome.';
   }
-  const creerVue3D3 = async () => { const { creerVue3D } = await import('./apercu-3d.js?v=0.37.1'); return creerVue3D({ R, hote: hote3d }); };
+  const creerVue3D3 = async () => { const { creerVue3D } = await import('./apercu-3d.js?v=0.38.0'); return creerVue3D({ R, hote: hote3d }); };
   function basculer(m) {
     if (m === mode) return;
     mode = m;
@@ -345,7 +407,7 @@ export function ongletCarte(zone, { el, R = REGLAGES, publie = {}, aPublier = ()
   }
 
   // ─── Construire dans la vue 3D : un clic sur le sol (les traits en deux clics : le glissé tourne la vue) ───
-  const marges = () => SECTEURS[sel.value].marges;
+  const marges = () => catalogue[sel.value].marges;
   const secteurDe3D = p => (p ? [arrondi(p[0] - marges().x), arrondi(p[1] - marges().y)] : null);
   function gommerEn(p) { const c = pres(...p); if (c) { const l = listes()[c.cle]; l.splice(c.i, 1); if (choix) choix = null; poserListe(c.cle, l); } }
   function clic3D(p) {
@@ -438,7 +500,7 @@ export function ongletCarte(zone, { el, R = REGLAGES, publie = {}, aPublier = ()
   zone.classList.add('at-plein');
   zone.replaceChildren(el('div', { className: 'ed' },
     el('div', { className: 'ed-haut' },
-      el('span', { className: 'ed-vues', role: 'group', ariaLabel: 'Vue' }, vuePlan, vue3d), el('label', { className: 'at-coche' }, 'Secteur ', sel), el('label', { className: 'at-coche', title: graine.title }, 'Graine ', graine), nouvelle, zoom,
+      el('span', { className: 'ed-vues', role: 'group', ariaLabel: 'Vue' }, vuePlan, vue3d), el('label', { className: 'at-coche' }, 'Secteur ', sel), el('button', { textContent: 'Nouvelle carte…', title: 'Crée une carte à vous : une copie d\u2019une carte existante, ou un champ vierge', onclick: ouvrirNouvelleCarte }), el('label', { className: 'at-coche', title: graine.title }, 'Graine ', graine), nouvelle, zoom,
       el('span', { className: 'ed-calques' }, lCourbes, lArbres, lLignes, lFormes, lReperes, lSoldats, el('label', { className: 'at-coche', title: ambiance.title }, 'Lumière (3D) ', ambiance)), essayer),
     boite, scene, hote3d, etatBarre, insp));
   canvas.style.cursor = 'default';

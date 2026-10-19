@@ -2,9 +2,9 @@
 // (`nouvelleBataille`) : ce qu'on y voit est ce que le joueur verra (sol en cubes, tranchées, arbres, soldats, lumière du jour). En lecture seule : on la regarde
 // (tourner, déplacer, zoomer) et l'on y construit : un clic sur le sol est rendu à l'éditeur (`surClic`, `surSurvol`, en mètres du terrain), qui dessine ses formes par-dessus
 // (`surcouche`, projetées par `versEcran` : elles suivent le relief et la perspective). Chargée à la demande (three.js ne se charge qu'au premier passage en 3D).
-import { creerRendu, CAMERA } from './rendu3d.js?v=0.37.1';
-import { nouvelleBataille, regarderAu } from './bataille.js?v=0.37.1';
-import { SECTEURS } from './data/secteur.js?v=0.37.1';
+import { creerRendu, CAMERA } from './rendu3d.js?v=0.38.0';
+import { nouvelleBataille, regarderAu } from './bataille.js?v=0.38.0';
+import { SECTEURS } from './data/secteur.js?v=0.38.0';
 
 export async function creerVue3D({ R, hote, rotation = 0 }) {       // rotation : rad/s, la caméra tourne seule (le choix d'un secteur) ; l'atelier la laisse immobile
   const canvas = document.createElement('canvas');
@@ -20,7 +20,7 @@ export async function creerVue3D({ R, hote, rotation = 0 }) {       // rotation 
   function monter(id, S, graine, { soldats = true, cadrer = false } = {}) {
     const avant = SECTEURS[id], v = rendu.vue, garde = vu && { cx: v.cx, cz: v.cz, zoom: v.zoom, yaw: v.cible.yaw, tangage: v.cible.tangage };
     SECTEURS[id] = S;
-    try { B = nouvelleBataille(graine, R, { secteur: id, jours: 3, ...(soldats ? {} : { soldats: 16 }) }); } finally { SECTEURS[id] = avant; }
+    try { B = nouvelleBataille(graine, R, { secteur: id, jours: 3, ...(soldats ? {} : { soldats: 16 }) }); } finally { if (avant === undefined) delete SECTEURS[id]; else SECTEURS[id] = avant; }
     regarderAu(B, ...ambiance);
     rendu.attacher(B);
     rendu.redimensionner();

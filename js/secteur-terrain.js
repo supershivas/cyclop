@@ -1,8 +1,8 @@
 // Le terrain d'un secteur, tel que la bataille le monte au départ : le sol de la graine, ses marges, les tranchées creusées.
 // Partagé par la bataille (`monter` de bataille.js) et l'Atelier (la carte) : ce qu'on y voit est ce que le jeu monte.
 // Logique pure : aucun DOM, aucune horloge, aucun hasard hors de la graine.
-import { creerTerrain } from './terrain.js?v=0.37.1';
-import { creuserTranchees } from './tranchees.js?v=0.37.1';
+import { creerTerrain, hauteurQ } from './terrain.js?v=0.38.0';
+import { creuserTranchees } from './tranchees.js?v=0.38.0';
 
 // → { terrain, lignes, troncons } ; `tranchees: false` : le sol seul (une bataille d'avant la v0.4.0 se relit sans tranchées)
 export function terrainDuSecteur(S, marges, graine, R, { tranchees = true } = {}) {
@@ -15,4 +15,16 @@ export function terrainDuSecteur(S, marges, graine, R, { tranchees = true } = {}
   }, R);
   const { lignes, troncons } = tranchees ? creuserTranchees(terrain, S, m.x, m.y, graine) : { lignes: [], troncons: [] };
   return { terrain, lignes, troncons };
+}
+
+/* La coupe nord-sud d'un secteur (12 valeurs de 0 à 1, du haut, côté d'en face, au bas, chez nous) : ce que l'écran de choix des parties dessine d'une carte. Une carte de l'atelier la calcule sur son terrain. */
+export function profilDe(T, S, n = 12) {
+  const m = S.marges, out = [];
+  for (let k = 0; k < n; k++) {
+    const j0 = m.y + Math.floor(k * S.hauteur / n), j1 = m.y + Math.floor((k + 1) * S.hauteur / n);
+    let somme = 0, nb = 0;
+    for (let j = j0; j < j1; j++) for (let i = m.x; i < m.x + S.largeur; i += 4) { somme += hauteurQ(T, j * T.W + i) / 4; nb++; }
+    out.push(+Math.max(0.05, Math.min(1, 0.5 + (somme / nb - 3) / 14)).toFixed(2));
+  }
+  return out;
 }

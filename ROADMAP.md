@@ -22,8 +22,8 @@ Principe : un secteur garde sa graine et son bruit (`creerTerrain`) ; l'éditeur
 - [x] Lot 4 — « Essayer dans le jeu » : `?essai=<secteur>&graine=<n>`, une bataille d'essai sans sauvegarde avec le brouillon de ce navigateur ; coût de la simulation mesuré sur quatre cartes retouchées : inchangé
 - [x] Éditeur visuel (Jérôme : chiffres nommés et décrits, outils de construction) — boîte à outils à icônes, scène large, inspecteur ; Sélectionner (déplacer, redimensionner, supprimer) ; chaque champ avec son nom, son unité et sa description
 - [x] Vue 3D dans l'atelier (le moteur du jeu, lumière au choix) ; on y pose des formes et des objets d'un clic
-- [ ] **Créer et dupliquer un secteur** (Jérôme, v0.37.1 : « pour la campagne, il faudra revoir les cartes dans l'éditeur ») : aujourd'hui l'éditeur retouche les trois secteurs d'origine (`essai`, `crete`, `marais`) mais n'en crée pas ; la campagne (`data/campagne.js` : `CAMPAGNE.batailles`) joue un secteur par bataille, aujourd'hui les trois dans l'ordre labours, crête, marais : une campagne aux cartes à elle demande de dupliquer un secteur sous un nouvel id, de lui donner un nom et un résumé, et de l'ajouter à la liste du choix (ou de le garder réservé à la campagne)
-- [ ] Plus tard (non décidé) — export / import JSON d'un secteur, un nom et un résumé modifiables, copier-coller d'une forme, déplacer et redimensionner à la souris dans la vue 3D
+- [x] **Créer et dupliquer une carte** (Jérôme, v0.38.0) : « Nouvelle carte… » (copie ou vierge), nom et résumé, suppression, publiée dans `cartes.json` et ajoutée à la liste des nouvelles parties. Reste : donner une carte à la campagne (`data/campagne.js` ne joue que les trois d'origine), choisir la taille d'une carte (400 × 300 partout)
+- [ ] Plus tard (non décidé) — export / import JSON d'un secteur, copier-coller d'une forme, déplacer et redimensionner à la souris dans la vue 3D
 
 ### Refonte UX/UI (docs/ui-cible.md)
 

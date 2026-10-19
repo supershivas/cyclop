@@ -4,7 +4,10 @@
 import { servir, lancerChromium } from './navigateur.mjs';
 
 const srv = await servir('.'), nav = await lancerChromium();
-const page = await (await nav.newContext({ viewport: { width: 1280, height: 800 } })).newPage();
+const contexte = await nav.newContext({ viewport: { width: 1280, height: 800 } });
+// les contenus publiés par l'atelier (assets/design : réglages, retouches et cartes) ne comptent pas ici : la référence est celle du jeu d'origine (sinon chaque publication de l'atelier la ferait bouger)
+await contexte.route('**/assets/design/*.json', r => r.fulfill({ status: 200, contentType: 'application/json', body: '{}' }));
+const page = await contexte.newPage();
 const erreurs = [];
 page.on('pageerror', e => erreurs.push(`exception : ${e.message}`));
 page.on('console', m => { if (m.type() === 'error') erreurs.push(`console : ${m.text()}`); });

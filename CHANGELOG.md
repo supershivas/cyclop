@@ -1,5 +1,9 @@
 # Journal des versions
 
+## 0.38.0 — 2026-10-19
+- Dans l'atelier, on crée une nouvelle carte, à partir d'une carte existante ou d'un champ vierge, avec son nom et son résumé
+- Une carte publiée s'ajoute à la liste des cartes d'une nouvelle partie
+
 ## 0.37.1 — 2026-10-19
 - Le choix du secteur à la nouvelle partie a deux colonnes : la liste des secteurs à gauche, le secteur choisi en 3D à droite, qui tourne
 - Le terrain montré est celui qu'on jouera ; « Autre terrain » en tire un autre

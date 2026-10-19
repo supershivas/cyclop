@@ -83,3 +83,10 @@ body { font: 15px/1.45 system-ui, -apple-system, 'Segoe UI', sans-serif; color: 
 .ed-bloc > summary { min-height: 44px; display: flex; align-items: center; }
 .at-coche input[type=checkbox] { appearance: none; -webkit-appearance: none; width: 44px; height: 44px; min-height: 44px; margin: 0 -8px 0 -10px; border: 0; background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect x='2' y='2' width='20' height='20' rx='4' fill='white' stroke='%231c1c1e' stroke-width='2'/%3E%3C/svg%3E") center / 22px no-repeat; cursor: pointer; }
 .at-coche input[type=checkbox]:checked { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect x='2' y='2' width='20' height='20' rx='4' fill='%231c1c1e' stroke='%231c1c1e' stroke-width='2'/%3E%3Cpath d='M6 12.5l4 4 8-9' fill='none' stroke='white' stroke-width='2.5'/%3E%3C/svg%3E"); }
+/* la boîte « Nouvelle carte » (dialogue natif, rattaché au body) */
+.at-dialogue { border: 1px solid rgba(0,0,0,.3); border-radius: 8px; padding: 16px; width: min(92vw, 28rem); }
+.at-dialogue h3 { margin: 0 0 8px; }
+.at-dialogue label.at-champ { display: grid; gap: 4px; }
+.at-dialogue input[type=text], .at-dialogue select, .ed-bloc textarea { width: 100%; }
+.ed-bloc textarea { font: inherit; font-size: 14px; padding: 8px 10px; border: 1px solid rgba(0,0,0,.25); border-radius: 6px; resize: vertical; }
+.ed-bloc .at-champ input[type=text] { width: 100%; }
