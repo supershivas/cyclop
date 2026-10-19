@@ -24,3 +24,55 @@ body { font: 15px/1.45 system-ui, -apple-system, 'Segoe UI', sans-serif; color: 
 .at-note { font-size: 13px; opacity: .7; max-width: 640px; }
 .at-modifie { color: #b3261e; font-weight: 600; }
 .at-toast { position: fixed; left: 50%; bottom: 16px; transform: translateX(-50%); background: #1c1c1e; color: #fff; padding: 10px 16px; border-radius: 8px; }
+.at-coche { display: inline-flex; gap: 6px; align-items: center; min-height: 44px; }
+.at-coche input[type=checkbox] { min-height: 0; width: 18px; height: 18px; }
+.at-lecture { min-height: 1.45em; font-family: ui-monospace, monospace; }
+.at-carte { display: block; image-rendering: pixelated; touch-action: none; }
+.at-unite { font-size: 13px; opacity: .7; }
+.at-champ { margin-bottom: 14px; }
+.at-champ-tete { display: grid; grid-template-columns: minmax(0, 1fr) 5.5em 2em 44px; gap: 0 8px; align-items: center; }
+.at-champ-tete > :first-child { grid-column: 1; }
+.at-champ-nom { font-weight: 600; font-size: 14px; }
+.at-champ-tete input[type=number] { width: 100%; }
+.at-champ-tete button { padding: 0; }
+.at-champ-desc { margin: 2px 0 4px; font-size: 12.5px; line-height: 1.35; opacity: .72; }
+.at-champ input[type=range] { width: 100%; min-height: 28px; margin: 0; }
+/* l'éditeur visuel : la boîte à outils, la scène, l'inspecteur */
+.at-work.at-plein { padding: 0; overflow: hidden; }
+.ed { display: grid; grid-template-columns: 176px minmax(0, 1fr) 360px; grid-template-rows: auto minmax(0, 1fr) auto; grid-template-areas: "haut haut haut" "boite scene insp" "boite etat insp"; height: 100%; min-height: 0; }
+.ed-haut { grid-area: haut; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 16px; padding: 4px 12px; background: #fff; border-bottom: 1px solid rgba(0,0,0,.15); }
+.ed-calques { display: inline-flex; flex-wrap: wrap; gap: 0 12px; }
+.ed-haut > .primaire { margin-left: auto; }
+.ed-boite { grid-area: boite; overflow: auto; padding: 8px; background: #fff; border-right: 1px solid rgba(0,0,0,.15); }
+.ed-scene { grid-area: scene; overflow: auto; background: #16130f; min-width: 0; min-height: 0; }
+.ed-etat { grid-area: etat; padding: 6px 12px; font: 12.5px/1.4 ui-monospace, monospace; background: #fff; border-top: 1px solid rgba(0,0,0,.15); min-height: 2.4em; }
+.ed-insp { grid-area: insp; overflow: auto; padding: 12px; background: #fff; border-left: 1px solid rgba(0,0,0,.15); }
+.ed-histo { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; margin-bottom: 4px; }
+.ed-groupe { font-size: 12px; margin: 12px 0 4px; opacity: .7; text-transform: uppercase; letter-spacing: .08em; }
+.at-work .ed-outil { display: flex; align-items: center; gap: 8px; width: 100%; justify-content: flex-start; margin-bottom: 4px; text-align: left; }
+.at-work .ed-outil svg { width: 22px; height: 22px; flex: none; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.at-work .ed-outil.is-on { background: #1c1c1e; color: #fff; border-color: #1c1c1e; }
+.ed-bloc { margin-bottom: 20px; }
+.ed-bloc h3, .ed-bloc > summary { font-size: 15px; font-weight: 700; margin: 0 0 6px; cursor: default; }
+.ed-bloc h4 { font-size: 14px; margin: 16px 0 8px; }
+.ed-alerte { margin-bottom: 16px; padding: 8px 12px; border: 1px solid #b3261e; border-radius: 6px; background: #fdf0ee; }
+.ed-alerte ul { margin: 0; padding-left: 20px; font-size: 13px; }
+@media (max-width: 1000px) {
+  .at-work.at-plein { overflow: auto; }
+  .ed { grid-template-columns: minmax(0, 1fr); grid-template-rows: none; grid-template-areas: "haut" "boite" "scene" "etat" "insp"; height: auto; }
+  .ed-scene { height: 60vh; }
+  .ed-boite { border-right: 0; }
+}
+.at-work .ed-histo button { padding: 0 4px; font-size: 13px; }
+.ed-3d { grid-area: scene; min-width: 0; min-height: 0; overflow: hidden; background: #16130f; display: flex; align-items: center; justify-content: center; cursor: grab; touch-action: none; }
+.ed-3d[hidden], .ed-scene[hidden] { display: none; }
+.ed-3d canvas { display: block; image-rendering: pixelated; }
+.ed-vues { display: inline-flex; }
+.at-work .ed-vues button { border-radius: 0; min-width: 64px; }
+.at-work .ed-vues button:first-child { border-radius: 6px 0 0 6px; }
+.at-work .ed-vues button:last-child { border-radius: 0 6px 6px 0; margin-left: -1px; }
+.at-work .ed-vues button.is-on { background: #1c1c1e; color: #fff; border-color: #1c1c1e; }
+@media (max-width: 1000px) { .ed-3d { height: 60vh; } }
+.ed-3d { position: relative; }
+.ed-3d-sur { position: absolute; pointer-events: none; }
+.ed-3d.pose { cursor: crosshair; }

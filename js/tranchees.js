@@ -100,3 +100,27 @@ export function ligneSous(lignes, x, y) {
   }
   return best;
 }
+
+/* Le contrôle d'un secteur retouché (l'atelier le fait à voix haute, et refuse de publier un secteur qui en échoue) : les lignes dans l'ordre et à 10 m l'une
+   de l'autre, loin du bord (6 m), 60 m de no man's land entre les premières lignes, et un tracé qui ne se coupe jamais (deux cases de large au moins, d'une colonne à l'autre,
+   pour huit graines : la phase du tracé en dépend). Rend la liste des problèmes, vide si tout va. */
+export function validerSecteur(S) {
+  const T = S.tranchees, pb = [];
+  if (!T) return pb;
+  const { nous, eux } = T.lignes;
+  for (const [camp, ys, sens] of [['nous', nous, 1], ['en face', eux, -1]]) ys.forEach((y, k) => {
+    if (y < 6 || y > S.hauteur - 6) pb.push(`${camp}, ligne ${k + 1} : à ${y} m, trop près du bord du secteur (6 m au moins)`);
+    if (k && (y - ys[k - 1]) * sens < 10) pb.push(`${camp}, lignes ${k} et ${k + 1} : à moins de 10 m l'une de l'autre, ou dans le désordre`);
+  });
+  if (nous[0] - eux[0] < 60) pb.push(`no man's land de ${Math.round(nous[0] - eux[0])} m entre les premières lignes : 60 m au moins`);
+  if (!(T.boyaux >= 1)) pb.push('au moins un boyau par camp');
+  coupe: for (let g = 1; g <= 8; g++) for (const L of lignesDu(S, 0, 0, g)) {
+    let prec = null;
+    for (let i = 0; i <= S.largeur; i++) {
+      const yc = ligneY(L, i + 0.5), hw = demiLargeur(L, i + 0.5), a = Math.round(yc - hw), b = Math.max(a + 2, Math.round(yc + hw));
+      if (prec && !(a < prec[1] && prec[0] < b)) { pb.push(`le tracé d'une ligne se coupe à x = ${i} m (graine ${g}) : amplitude trop forte`); break coupe; }
+      prec = [a, b];
+    }
+  }
+  return pb;
+}

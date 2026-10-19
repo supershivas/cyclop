@@ -18,6 +18,8 @@
      changé ; le terrain ne connaît pas le rendu. */
 import { hash2 } from './lib/rng.js?v=0.36.8';
 import { CALIBRES } from './data/calibres.js?v=0.36.8';
+import { appliquerFormes } from './formes.js?v=0.36.8';
+import { poserObjets } from './objets.js?v=0.36.8';
 
 export const ETAT = { SEC: 0, HUMIDE: 1, BOUE: 2, EAU: 3, GLACE: 4 };
 export const MORCEAU = 25;             // cases : le côté d'un morceau de maillage (mesuré, rendu logiciel : à 100, la moitié du champ restait dessinée au zoom 4 ; à 25, 6 500 triangles au lieu de 15 600 au zoom 8)
@@ -61,6 +63,7 @@ export function creerTerrain(graine, secteur, R) {
     // l'herbe : par plaques, plus drue dans les creux du relief lissé
     herbe[c] = Math.max(0, Math.min(3, Math.floor((bruit(x, y, 11, g + 6) * 0.8 + bruit(x, y, 37, g + 8) * 0.6 - lent * 0.3) * 4 - 1)));
   }
+  appliquerFormes(base, W, H, ox, oy, secteur.retouches);     // les retouches de l'atelier (formes.js), avant les tranchées
   // Quelques arbres, loin des bords
   const arbres = [];
   for (let k = 0; arbres.length < secteur.arbres && k < secteur.arbres * 40; k++) {
@@ -96,6 +99,7 @@ export function creerTerrain(graine, secteur, R) {
     const i = 3 + Math.floor(hash2(k, 5, g + 13) * (W - 6)), j = 3 + Math.floor(hash2(k, 6, g + 13) * (H - 6));
     buissons.push({ i, j, v: Math.floor(hash2(k, 7, g + 13) * 3), detruit: 0 });
   }
+  poserObjets({ arbres, buissons, W, H, ox, oy, g }, secteur.objets);       // les objets de l'atelier (objets.js) : après ce que la graine a planté
   const mw = Math.ceil(W / MORCEAU), mh = Math.ceil(H / MORCEAU);
   return {
     W, H, base, diff, nappe, eau, humid, arbres, herbe, buissons,

@@ -9,6 +9,21 @@ Statuts : **à l'étude** · **validé** (Jérôme a tranché) · **en cours** �
 
 ## En cours
 
+### L'éditeur de carte de l'atelier
+
+**Statut** : lots 0 à 3 faits (Jérôme : format « retouches sur la génération ») ; reste à mesurer sur une vraie carte retouchée et publiée
+
+Principe : un secteur garde sa graine et son bruit (`creerTerrain`) ; l'éditeur ajoute des retouches déclaratives (formes de relief, objets), jamais une carte de hauteurs entière (fichier lourd, diffs illisibles, déterminisme perdu).
+
+- [x] Lot 0 — l'onglet « Carte » de l'atelier, en lecture seule (`atelier-carte.js`, `secteur-terrain.js`)
+- [x] Lot 1 — curseurs de `relief`, d'arbres, de bois, de haies, de buissons, de pluie ; brouillon `secteurs`, publication dans `assets/design/secteurs.json`, fusion au lancement (`appliquerSecteurs`). Reste, avec le lot 2 : garder les retouches dans `etat` pour qu'une partie sauvegardée refasse son sol, pas celui d'une carte republiée
+- [x] Lot 2 — retouches de relief (bosse, creux, crête, plateau, gomme), annuler / rétablir, appliquées dans `creerTerrain` (`formes.js`) ; la partie garde son sol dans `etat.sol`
+- [x] Lot 3 — objets posés (arbre, buisson, bois, haie, dégager), lignes de tranchées au curseur, contrôle à voix haute (`validerSecteur`) qui refuse la publication d'un secteur invalide ; la partie garde aussi ses tranchées et ses objets (`secteurDuJeu`)
+- [x] Lot 4 — « Essayer dans le jeu » : `?essai=<secteur>&graine=<n>`, une bataille d'essai sans sauvegarde avec le brouillon de ce navigateur ; coût de la simulation mesuré sur quatre cartes retouchées : inchangé
+- [x] Éditeur visuel (Jérôme : chiffres nommés et décrits, outils de construction) — boîte à outils à icônes, scène large, inspecteur ; Sélectionner (déplacer, redimensionner, supprimer) ; chaque champ avec son nom, son unité et sa description
+- [x] Vue 3D dans l'atelier (le moteur du jeu, lumière au choix) ; on y pose des formes et des objets d'un clic
+- [ ] Plus tard (non décidé) — export / import JSON d'un secteur, un nom et un résumé modifiables, copier-coller d'une forme, déplacer et redimensionner à la souris dans la vue 3D
+
 ### Refonte UX/UI (docs/ui-cible.md)
 
 **Statut** : validé (Jérôme, v0.18.1) — un lot par session, chacun livrable seul ; on se concentre sur l'UX/UI

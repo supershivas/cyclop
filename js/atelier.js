@@ -2,9 +2,12 @@
 // Chaque modification est gardée tout de suite dans ce navigateur (brouillon),
 // visible dans le jeu de ce navigateur, puis publiée d'un geste dans le dépôt
 // (un commit sur main, par l'API de GitHub) : assets/design/reglages.json.
-// Un seul outil pour l'instant : les réglages chiffrés (Jérôme, v0.1.0).
+// Les outils : les réglages chiffrés (Jérôme, v0.1.0) et la carte, un éditeur visuel (`atelier-carte.js`).
 import { createPublisher, TOKEN_URL } from './lib/gh-publish.js?v=0.36.8';
-import { chargerContenu, lireBrouillon, ecrireBrouillon } from './design-store.js?v=0.36.8';
+import { validerSecteur } from './tranchees.js?v=0.36.8';
+import { SECTEURS } from './data/secteur.js?v=0.36.8';
+import { ongletCarte } from './atelier-carte.js?v=0.36.8';
+import { chargerContenu, lireBrouillon, ecrireBrouillon, compterBrouillon, deplier, secteurEffectif } from './design-store.js?v=0.36.8';
 
 const REPO = 'supershivas/cyclop';
 const $ = id => document.getElementById(id);
@@ -14,10 +17,11 @@ let contenu = await chargerContenu();
 
 function aPublier() {
   const b = lireBrouillon();
-  const n = Object.values(b.reglages || {}).reduce((s, g) => s + Object.keys(g).length, 0);
+  const n = compterBrouillon(b);
   $('a-publier').textContent = n ? `${n} à publier` : '';
   return n;
 }
+const fusionner = (a, b) => { for (const [k, v] of Object.entries(b)) a[k] = v && typeof v === 'object' && a[k] && typeof a[k] === 'object' ? fusionner(a[k], v) : v; return a; };
 function toast(t) { const e = $('toast'); e.textContent = t; e.hidden = false; clearTimeout(toast.t); toast.t = setTimeout(() => { e.hidden = true; }, 3000); }
 
 // ─── Réglages chiffrés ─────────────────────────────────────────────────────
@@ -68,6 +72,16 @@ function ongletPublier(zone) {
         for (const [g, v] of Object.entries(b.reglages)) enLigne[g] = { ...(enLigne[g] || {}), ...v };
         fichiers.push({ path: 'assets/design/reglages.json', json: enLigne });
       }
+      if (b.secteurs && Object.keys(b.secteurs).length) {
+        // un secteur retouché est contrôlé avant d'être écrit (tranchées dans l'ordre, tracé qui ne se coupe pas…) : on refuse à voix haute
+        for (const id of Object.keys(b.secteurs)) {
+          const pb = validerSecteur(secteurEffectif(SECTEURS[id], contenu.publie.secteurs[id], deplier(b.secteurs[id])));
+          if (pb.length) throw new Error(`Secteur « ${SECTEURS[id].nom} » refusé : ${pb.join(' ; ')}. Corrigez-le dans l'onglet Carte.`);
+        }
+        const enLigne = (await pub.readJSON('assets/design/secteurs.json')) || {};
+        for (const [id, plat] of Object.entries(b.secteurs)) enLigne[id] = fusionner(enLigne[id] || {}, deplier(plat));
+        fichiers.push({ path: 'assets/design/secteurs.json', json: enLigne });
+      }
       await pub.publish(fichiers, { message: "Publie les retouches de l'atelier", progress: t => { statut.textContent = t; } });
       ecrireBrouillon({});
       contenu = await chargerContenu();
@@ -77,9 +91,10 @@ function ongletPublier(zone) {
   }
 }
 
-const ONGLETS = { Réglages: ongletReglages, Publier: ongletPublier };
+const ONGLETS = { Réglages: ongletReglages, Carte: zone => ongletCarte(zone, { el, R: contenu.reglages, publie: contenu.publie.secteurs, aPublier }), Publier: ongletPublier };
 function ouvrir(nom) {
   for (const b of $('onglets').children) b.classList.toggle('is-on', b.textContent === nom);
+  $('travail').classList.remove('at-plein');       // l'éditeur de carte prend toute la place (il le remet)
   ONGLETS[nom]($('travail'));
   history.replaceState(null, '', `#${nom}`);
 }

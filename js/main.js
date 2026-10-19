@@ -20,7 +20,7 @@ import { creerRendu, CAMERA } from './rendu3d.js?v=0.36.8';
 import { etatEnMots, experienceEnMots, chevrons } from './identite.js?v=0.36.8';
 import { CORVEES } from './data/corvees.js?v=0.36.8';
 import { refusCorvee } from './nuit.js?v=0.36.8';
-import { chargerContenu } from './design-store.js?v=0.36.8';
+import { chargerContenu, appliquerSecteurs } from './design-store.js?v=0.36.8';
 import * as lecture from './hud/lecture.js?v=0.36.8';
 import { creerFiche } from './hud/fiche.js?v=0.36.8';
 import { chevronsHtml } from './hud/barres.js?v=0.36.8';
@@ -40,6 +40,7 @@ const JEU = 'cyclopeen';
 const $ = id => document.getElementById(id);
 const params = new URLSearchParams(location.search);
 const DEBUG = params.has('debug');
+const ESSAI = params.get('essai');                         // ?essai=crete&graine=5 : l'atelier lance une bataille d'essai sur ce secteur (avec ses retouches de ce navigateur), sans écran titre ni sauvegarde
 const SOLDATS = Number(params.get('soldats')) || 0;      // essai de charge : ?soldats=8000 (les deux camps)
 const MESURE = params.has('mesure');                      // le rendu attend la fin du dessin (mesure honnête, plus lente)
 
@@ -66,7 +67,8 @@ function replierCarte(replie) {
 }
 replierCarte(prefs.carte === false);
 $('carte-bascule').onclick = e => { const r = !$('carte').classList.contains('replie'); replierCarte(r); prefs.carte = !r; store.save('prefs', prefs); e.currentTarget.blur(); };
-const { reglages: R } = await chargerContenu();
+const { reglages: R, secteurs: retouchesSecteurs } = await chargerContenu();
+appliquerSecteurs(SECTEURS, retouchesSecteurs);       // les retouches de l'atelier (publiées, puis celles de ce navigateur) : le terrain de départ des secteurs
 chargement.progres(0.45, 'Les réglages');
 
 let B = null;                 // la bataille en cours
@@ -225,7 +227,7 @@ function jouer(bataille) {
   else if (B.etat.phase === 'fin') montrerFin();
   else loop.resume();
 }
-function sauvegarder() { if (B && !reseau) store.save('partie', photo(B)); }       // (une partie à deux ne se sauvegarde pas : l'autre machine n'y est plus)
+function sauvegarder() { if (B && !reseau && !ESSAI) store.save('partie', photo(B)); }       // (une partie à deux ne se sauvegarde pas : l'autre machine n'y est plus)
 function pause() {
   if (!enJeu() || $('dialogue-pause').open) return;
   if (reseau) { if (!reseau.ls.etat.pause) { reseau.ls.commander({ t: 'pause' }); reseau.pauseParMoi = true; } }      // à deux, la pause est celle des deux joueurs : le temps s'arrête pour tous
@@ -317,7 +319,7 @@ function demanderSecteur() {
 // Chaque ordre part pour les deux machines, et s'exécute au même cadre chez les deux ; le refus, lui, se dit tout de suite (l'ordre à sec).
 let versionJeu = '';
 loadVersion().then(v => { versionJeu = v || ''; });
-const empreinteReglages = () => { const t = JSON.stringify(R); let h = 2166136261; for (let i = 0; i < t.length; i++) { h ^= t.charCodeAt(i); h = Math.imul(h, 16777619) >>> 0; } return h.toString(16); };
+const empreinteReglages = () => { const t = JSON.stringify([R, retouchesSecteurs]); let h = 2166136261; for (let i = 0; i < t.length; i++) { h ^= t.charCodeAt(i); h = Math.imul(h, 16777619) >>> 0; } return h.toString(16); };
 function lancerMarche(ids, x, y) {
   if (!reseau) return ordonnerMarche(B, ids, x, y, forme);
   const p = peutOrdonner(B, ids, x, y, forme, MOI);
@@ -520,7 +522,7 @@ function montrerFin() {
   $('fin-lignes').textContent = e.tranchees ? `Tronçons tenus : ${tronconsTenus(B)[0]} des nôtres, ${tronconsTenus(B)[1]} en face.` : '';
   $('dialogue-fin').showModal();
 }
-$('fin-nouvelle').onclick = async () => { $('dialogue-fin').close(); const secteur = await demanderSecteur(); if (!secteur) return montrerTitre(); store.clear('partie'); commencer(window.__seed ?? Date.now() % 100000, secteur); };
+$('fin-nouvelle').onclick = async () => { $('dialogue-fin').close(); const secteur = await demanderSecteur(); if (!secteur) return montrerTitre(); if (!ESSAI) store.clear('partie'); commencer(window.__seed ?? Date.now() % 100000, secteur); };
 $('fin-titre-btn').onclick = () => { $('dialogue-fin').close(); montrerTitre(); };
 
 // ─── Réglages ──────────────────────────────────────────────────────────────
@@ -1270,3 +1272,8 @@ await chargement.frame();
 montrerTitre();
 chargement.progres(1, '');
 chargement.cacher();
+// Une bataille d'essai lancée depuis l'atelier (lot 4 de l'éditeur de carte) : le secteur retouché de ce navigateur, rien n'est sauvegardé (la partie en cours reste intacte)
+if (ESSAI && SECTEURS[ESSAI]) {
+  await commencer(Number(params.get('graine')) || Date.now() % 100000, ESSAI);
+  toast('Partie d\u2019essai : rien n\u2019est sauvegardé');
+}
