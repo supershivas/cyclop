@@ -27,12 +27,15 @@ await A.waitForTimeout(3000);
 const etat = async p => p.evaluate(() => window.__jeu.reseau());
 console.log('A', JSON.stringify(await etat(A))); console.log('B', JSON.stringify(await etat(Bp)));
 // des ordres des deux côtés
-await A.evaluate(() => { const B = window.__jeu.bataille(); window.__jeu.marche(B.etat.regiments.filter(r => r.camp === 0).slice(0, 2).map(r => r.id), 150, 150); window.__jeu.barrage('155', 200, 150); });
-await Bp.evaluate(() => { const B = window.__jeu.bataille(); window.__jeu.marche(B.etat.regiments.filter(r => r.camp === 1).slice(0, 2).map(r => r.id), 250, 140); window.__jeu.barrage('75', 120, 170); });
+await A.evaluate(() => { const B = window.__jeu.bataille(); window.__jeu.marche(B.etat.regiments.filter(r => r.camp === 0).slice(0, 2).map(r => r.id), 150, 150); window.__jeu.barrage('155', 200, 150); window.__jeu.stance(B.etat.regiments.filter(r => r.camp === 0).slice(2, 4).map(r => r.id), 'retenu'); });
+await Bp.evaluate(() => { const B = window.__jeu.bataille(); window.__jeu.marche(B.etat.regiments.filter(r => r.camp === 1).slice(0, 2).map(r => r.id), 250, 140); window.__jeu.barrage('75', 120, 170); window.__jeu.stance(B.etat.regiments.filter(r => r.camp === 1).slice(4, 6).map(r => r.id), 'retenu'); });
 await A.waitForTimeout(12000);
 const a = await etat(A), b = await etat(Bp);
 console.log('A', JSON.stringify(a)); console.log('B', JSON.stringify(b));
+const postures = async p => p.evaluate(() => window.__jeu.bataille().etat.regiments.map(r => r.stance).join());
+const pa = await postures(A), pb = await postures(Bp);
+console.log('postures', pa);
 await nav.close(); await s.close();
-const ok = errs.length === 0 && a.ecart === null && b.ecart === null && a.cadre > 300 && b.cadre > 300;
+const ok = pa === pb && pa.includes('retenu') && errs.length === 0 && a.ecart === null && b.ecart === null && a.cadre > 300 && b.cadre > 300;
 console.log(ok ? '✓ deux machines, aucune désynchronisation' : `✗ ${errs.slice(0, 4).join(' | ')} écarts : ${JSON.stringify([a.ecart, b.ecart])}`);
 process.exit(ok ? 0 : 1);

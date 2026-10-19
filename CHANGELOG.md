@@ -1,5 +1,8 @@
 # Journal des versions
 
+## 0.36.0 — 2026-10-19
+- Maj+1 et Maj+2 donnent aux régiments choisis la posture « à volonté » ou « feu retenu » (il n'ouvre le feu que de près et vise mieux) ; le carnet de bord le dit, et le jeu à deux le partage
+
 ## 0.35.0 — 2026-10-18
 - Un blessé qui peut marcher (le bras, une jambe légère) regagne l'arrière au lieu de rester dans la tranchée ; les autres restent à terre
 - Avec des régiments choisis, un clic sur un régiment à nous leur donne l'ordre au lieu de le choisir ; le survol et le clic prennent le corps entier d'un homme

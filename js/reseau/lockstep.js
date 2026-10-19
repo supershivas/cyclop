@@ -6,20 +6,20 @@
 // traîne, on attend. Toutes les `periode` cadres, on compare une empreinte de l'état : un écart, c'est une désynchronisation (dite à voix haute).
 //
 // Logique pure : ni DOM, ni horloge, ni réseau (`envoyer` est donné). Testée dans Node avec un réseau factice (test/lockstep.test.mjs).
-import { avancer, photo } from '../bataille.js?v=0.35.0';
+import { avancer, photo } from '../bataille.js?v=0.36.0';
 
 const fnv = (h, n) => Math.imul(h ^ (n | 0), 16777619) >>> 0;
 const tampon = new DataView(new ArrayBuffer(8));
 const bitsF = x => { tampon.setFloat64(0, x); return tampon.getUint32(0) ^ tampon.getUint32(4); };
 
-/* L'empreinte de l'état : le temps, les hommes (position, vitesse, peur, blessure), les pertes, le moral, les tronçons, le hasard. Assez fine pour voir une dérive,
+/* L'empreinte de l'état : le temps, les hommes (position, vitesse, peur, blessure), les pertes, le moral, la posture, les tronçons, le hasard. Assez fine pour voir une dérive,
    assez légère pour se faire tous les 90 cadres. */
 export function empreinteEtat(B) {
   const e = B.etat, A = B.armee;
   let h = 2166136261;
   for (const v of [e.ticks, e.tickJour, e.jour, e.rng, e.pertes[0], e.pertes[1], e.corps.length, e.barrages.length, e.impacts.length, A.n]) h = fnv(h, bitsF(v));
   for (let i = 0; i < A.n; i++) { h = fnv(h, bitsF(A.x[i])); h = fnv(h, bitsF(A.y[i])); h = fnv(h, A.blessure[i]); h = fnv(h, bitsF(A.peur[i])); }
-  for (const r of e.regiments) { h = fnv(h, r.effectif); h = fnv(h, bitsF(r.moral)); h = fnv(h, bitsF(r.ordre.x)); h = fnv(h, bitsF(r.ordre.y)); }
+  for (const r of e.regiments) { h = fnv(h, r.effectif); h = fnv(h, bitsF(r.moral)); h = fnv(h, bitsF(r.ordre.x)); h = fnv(h, bitsF(r.ordre.y)); for (const c of r.stance ?? 'volonte') h = fnv(h, c.charCodeAt(0)); }
   for (const t of e.troncons) h = fnv(h, t);
   return h.toString(16);
 }
