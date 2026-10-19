@@ -10,4 +10,5 @@ export const CAMPAGNE = {
     { secteur: 'marais', mission: 'tenir', forces: 0.77, ia: { barrage: 0.7, offensive: 0.7 } },      // le marais : la boue, et ils sont plus nombreux
   ],
   regimentsMin: 4,                              // sous quatre régiments encore debout, la campagne finit (repli, pas de victoire claironnée)
+  hommesMin: 20,                                // un régiment est « debout » à vingt survivants au moins (un cinquième de 94) : avec un seul homme, le nom n'est plus qu'un nom
 };

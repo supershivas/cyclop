@@ -18,7 +18,7 @@ const graineDe = (graineIdentite, n) => Math.floor(hash2(graineIdentite | 0, 100
 /* Une campagne neuve. `graineIdentite` fait aussi son numéro : deux campagnes de même graine sont la même. */
 export function nouvelleCampagne(graineIdentite, plan = CAMPAGNE) {
   return {
-    id: graineIdentite, graineIdentite, longueur: plan.longueur, regimentsMin: plan.regimentsMin,
+    id: graineIdentite, graineIdentite, longueur: plan.longueur, regimentsMin: plan.regimentsMin, hommesMin: plan.hommesMin,
     batailles: [],            // une entrée par bataille close (voir `cloturer`)
     prochainNumero: 0,        // le prochain numéro de campagne à donner à une recrue (les numéros ne servent jamais deux fois)
     statut: 'en cours',       // 'en cours' | 'terminee' | 'effondree'
@@ -90,7 +90,7 @@ export function cloturer(c, B) {
     issue: etat.issue ? { reussie: etat.issue.reussie, texte: etat.issue.texte } : null,
     pertes: [...etat.pertes], regiments,
   };
-  const debout = regiments.filter(r => r.survivants.length).length;
+  const debout = regiments.filter(r => r.survivants.length >= (c.hommesMin ?? 1)).length;
   // le compteur de campagne passe devant tous les numéros que nos hommes ont portés dans cette bataille (vivants ou morts)
   let prochainNumero = c.prochainNumero ?? 0, p = 0;
   for (const r of etat.regiments) { if (r.camp === NOUS) for (let id = p; id < p + r.initial; id++) prochainNumero = Math.max(prochainNumero, numeroCampagne(etat, id) + 1); p += r.initial; }

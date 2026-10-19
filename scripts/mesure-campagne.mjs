@@ -1,6 +1,8 @@
 // L'attrition d'une campagne entière (lot 3, v0.36.3) : trois batailles de suite, jouées sans les mains, le registre reporté de l'une à l'autre.
 //   node scripts/mesure-campagne.mjs                       → campagne 11, un joueur qui tient ou qui attaque selon la mission
 //   node scripts/mesure-campagne.mjs --campagnes 11,12,13  → plusieurs campagnes (la moyenne est en bas)
+//   --assauts 2    → la mission « prendre » n'attaque que les 2 premiers jours (à partir du 2e), puis tient (défaut : tous les jours, le plancher)
+//   --plan 2:forces=1.25,3:forces=0.9   → essayer un réglage de data/campagne.js (bataille:clé=valeur ; ia.offensive=… aussi) sans toucher au fichier
 //   --releve non   → ne relève jamais ; --sans-ordres oui → aucun ordre (nos régiments restent dans leurs tranchées)
 // Le joueur de la mesure : « tenir » = rien (les barrages de nos batteries seulement) ; « prendre » = chaque matin, 60 s de barrages sur la 1re ligne d'en face, puis
 // tous nos régiments à l'assaut ; la nuit, il relève un régiment tombé sous 40 % de son effectif tant qu'il reste de la réserve. Le but n'est pas de bien jouer : c'est un plancher
@@ -9,9 +11,15 @@ import { nouvelleBataille, avancer, aube, ordonnerMarche, ordonnerBarrage, zone,
 import { ligneY } from '../js/tranchees.js';
 import { REGLAGES as R } from '../js/data/reglages.js';
 import { nouvelleCampagne, suivante, cloturer } from '../js/campagne.js';
+import { CAMPAGNE } from '../js/data/campagne.js';
 
 const arg = (nom, defaut) => { const k = process.argv.indexOf(`--${nom}`); return k > 0 ? process.argv[k + 1] : defaut; };
 const campagnes = arg('campagnes', '11').split(',').map(Number), releve = arg('releve', 'oui') !== 'non', sansOrdres = arg('sans-ordres', 'non') === 'oui';
+const assauts = +arg('assauts', 99), plan = structuredClone(CAMPAGNE);
+for (const kv of arg('plan', '').split(',').filter(Boolean)) {
+  const [n, reste] = kv.split(':'), [chemin, v] = reste.split('='), cles = chemin.split('.');
+  let o = plan.batailles[n - 1]; for (const k of cles.slice(0, -1)) o = o[k]; o[cles.at(-1)] = +v;
+}
 const NOUS = 0, EUX = 1, jeu = (nom, n, d) => `${nom} ${String(n).padStart(d)}`;
 
 function matin(B, mission) {
@@ -19,7 +27,7 @@ function matin(B, mission) {
   if (sansOrdres) return null;
   const L = B.lignes.find(l => l.camp === EUX && l.rang === 0), x = zone(B).x0 + 200;
   const ids = e.regiments.filter(r => r.camp === NOUS && r.effectif > 0).map(r => r.id);
-  if (mission === 'prendre' && e.jour >= 2) return { L, x, ids, appui: Math.round(60 / PAS) };
+  if (mission === 'prendre' && e.jour >= 2 && e.jour < 2 + assauts) return { L, x, ids, appui: Math.round(60 / PAS) };
   return null;
 }
 function jouer(B, mission) {
@@ -45,10 +53,10 @@ function jouer(B, mission) {
 
 const total = [];
 for (const g of campagnes) {
-  let c = nouvelleCampagne(g);
+  let c = nouvelleCampagne(g, plan);
   console.log(`\n══ Campagne ${g} ══`);
   while (c.statut === 'en cours') {
-    const s = suivante(c), B = nouvelleBataille(s.graine, R, s.opts), e = B.etat;
+    const s = suivante(c, plan), B = nouvelleBataille(s.graine, R, s.opts), e = B.etat;
     const debut = B.armee.exp.subarray(0, B.armee.n);
     let vet = 0, nous = 0; for (let i = 0; i < B.armee.n; i++) if (B.armee.camp[i] === NOUS) { nous++; if (debut[i] >= 0.08) vet++; }
     const [nEux] = [B.etat.regiments.filter(r => r.camp === EUX).reduce((t, r) => t + r.initial, 0)];

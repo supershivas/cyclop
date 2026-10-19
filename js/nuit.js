@@ -332,7 +332,7 @@ function relever(B, vieux, rng) {
   const deNous = etat.regiments.filter(r => r.camp === 0).length;
   const reg = {
     id: etat.regiments.length, camp: vieux.camp,
-    nom: vieux.camp === 0 ? REGIMENTS[deNous % REGIMENTS.length] : null,
+    nom: vieux.camp === 0 ? (REGIMENTS.find(n => !etat.regiments.some(r => r.nom === n)) ?? REGIMENTS[deNous % REGIMENTS.length]) : null,   // le premier nom du lexique encore libre (en campagne, les noms de départ ne sont plus les huit premiers)
     effectif: n, initial: n, pertes: 0, moral: R.moral.depart, deroute: false, vivres: R.nuit.vivres, stance: 'volonte',
     ordre: structuredClone(vieux.ordre), depart: structuredClone(vieux.depart), arrive: etat.jour + 1,
   };

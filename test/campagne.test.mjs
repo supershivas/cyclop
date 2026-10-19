@@ -167,12 +167,15 @@ test('la suite : une défaite ne ferme pas la campagne ; elle finit après trois
   const trois = cloturer(deux, { ...B, etat: { ...B.etat, campagne: { id: 11, n: 3 } } });
   assert.equal(trois.statut, 'terminee'); assert.equal(suivante(trois), null);
   // sous le plancher de régiments encore debout, elle s'effondre, même à la première bataille
-  const debout = apres.batailles[0].regiments.filter(r => r.survivants.length).length;
+  const debout = apres.batailles[0].regiments.filter(r => r.survivants.length >= c.hommesMin).length;
   assert.ok(debout >= CAMPAGNE.regimentsMin, `la partie d'essai garde ${debout} régiments`);
   const exigeante = cloturer({ ...c, regimentsMin: debout + 1 }, B);
   assert.equal(exigeante.statut, 'effondree'); assert.equal(suivante(exigeante), null);
   assert.equal(cloturer({ ...c, regimentsMin: debout }, B).statut, 'en cours');
-  assert.equal(CAMPAGNE.longueur, 3); assert.equal(CAMPAGNE.regimentsMin, 4);
+  assert.equal(CAMPAGNE.longueur, 3); assert.equal(CAMPAGNE.regimentsMin, 4); assert.equal(c.hommesMin, 20);
+  // un régiment réduit à quelques hommes n'est plus « debout »
+  const miettes = { ...c, regimentsMin: 1, hommesMin: 1000 };
+  assert.equal(cloturer(miettes, B).statut, 'effondree');
 });
 test('campagne.js reste pur : ni hasard, ni horloge, ni DOM', () => {
   for (const f of ['campagne.js', 'data/campagne.js']) {
@@ -256,6 +259,8 @@ test('en bataille, les recrues de la relève reçoivent des numéros neufs, jama
   B.etat.phase = 'nuit'; aube(B, { 0: 'releve' });
   const tous = []; for (let i = 0; i < B.armee.n; i++) if (B.armee.camp[i] === 0 && !B.armee.mort[i]) tous.push(numeroCampagne(B.etat, B.armee.id[i]));
   assert.equal(new Set(tous).size, tous.length, 'aucun numéro en double');
+  const noms = B.etat.regiments.filter(r => r.camp === 0).map(r => r.nom);
+  assert.equal(new Set(noms).size, noms.length, `aucun nom de régiment en double : ${noms}`);
   const neufs = tous.filter(n => n > avant);
   assert.equal(neufs.length, 93, 'le régiment relevé est remplacé par des recrues'); assert.ok(Math.min(...neufs) >= c1.prochainNumero);
   const quelqun = B.armee.id.find((id, i) => i < B.armee.n && B.armee.camp[i] === 0 && numeroCampagne(B.etat, id) > avant);
