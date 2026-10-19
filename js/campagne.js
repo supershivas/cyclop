@@ -5,7 +5,8 @@
    Il est écrit à la fin de chaque bataille, avant l'écran de fin (`cloturerDansLeStore`), et `cloturer` est idempotente : relire une
    partie arrêtée à la fin, ou clore deux fois, donne le même registre. Rien n'est reporté de la fatigue, de la peur ni du moral. */
 import { hash2 } from './lib/rng.js?v=0.36.2';
-import { NOUS, rangDe } from './bataille.js?v=0.36.2';
+import { NOUS, rangDe, numeroCampagne } from './bataille.js?v=0.36.2';
+import { SECTEURS } from './data/secteur.js?v=0.36.2';
 import { CAMPAGNE } from './data/campagne.js?v=0.36.2';
 
 export const CLE = 'campagne';        // l'entrée de js/lib/save.js (cyclopeen:campagne)
@@ -19,17 +20,41 @@ export function nouvelleCampagne(graineIdentite, plan = CAMPAGNE) {
   return {
     id: graineIdentite, graineIdentite, longueur: plan.longueur, regimentsMin: plan.regimentsMin,
     batailles: [],            // une entrée par bataille close (voir `cloturer`)
+    prochainNumero: 0,        // le prochain numéro de campagne à donner à une recrue (les numéros ne servent jamais deux fois)
     statut: 'en cours',       // 'en cours' | 'terminee' | 'effondree'
   };
 }
 
-/* La prochaine bataille à jouer : { n, graine, graineIdentite, secteur, mission, campagne }, prête pour `nouvelleBataille(graine, R,
-   { secteur, mission, graineIdentite, campagne })`. Rien si la campagne est finie. */
+/* Nos régiments pour la bataille suivante, au nombre de `nReg` : les plus fournis reprennent leur place, les autres versent leurs hommes
+   (les plus aguerris d'abord) aux places vides du régiment le plus clairsemé ; ce qui ne tient pas nulle part est perdu. Ce « fusionner »
+   automatique est celui du lot 3 ; le papier de réorganisation (lot 4) le remplacera par un choix. Déterministe : à égalité, l'ordre du registre. */
+export function reconstituer(regiments, nReg, parRegiment) {
+  const ordre = regiments.map((r, i) => ({ r, i })).sort((a, b) => b.r.survivants.length - a.r.survivants.length || a.i - b.i);
+  const gardes = ordre.slice(0, nReg).sort((a, b) => a.i - b.i).map(({ r }) => ({ nom: r.nom, survivants: [...r.survivants] }));
+  const reste = ordre.slice(nReg).flatMap(({ r }) => r.survivants).sort((a, b) => b[2] - a[2] || a[0] - b[0]);
+  for (const h of reste) {
+    let cible = null;
+    for (const g of gardes) if (g.survivants.length < parRegiment && (!cible || g.survivants.length < cible.survivants.length)) cible = g;
+    if (!cible) break;
+    cible.survivants.push(h);
+  }
+  return gardes;
+}
+
+/* La prochaine bataille à jouer : { n, graine, graineIdentite, secteur, mission, campagne, opts }, où `opts` se donne tel quel à
+   `nouvelleBataille(graine, R, opts)` (avec `jours`, `soldats` s'il faut). Rien si la campagne est finie. */
 export function suivante(c, plan = CAMPAGNE) {
   if (c.statut !== 'en cours') return null;
   const n = c.batailles.length + 1, P = plan.batailles[n - 1];
   if (!P) return null;
-  return { n, graine: graineDe(c.graineIdentite, n), graineIdentite: c.graineIdentite, secteur: P.secteur, mission: P.mission, campagne: { id: c.id, n } };
+  const S = SECTEURS[P.secteur], graine = graineDe(c.graineIdentite, n), campagne = { id: c.id, n };
+  const derniere = c.batailles[n - 2];
+  const troupes = derniere ? { regiments: reconstituer(derniere.regiments, S.regiments, Math.floor(S.soldats / S.regiments)), prochainNumero: c.prochainNumero } : null;
+  const opts = {
+    secteur: P.secteur, mission: P.mission, graineIdentite: c.graineIdentite, campagne, troupes,
+    soldatsEux: Math.round(S.soldats / (P.forces ?? 1)), iaRythme: P.ia ?? null,
+  };
+  return { n, graine, graineIdentite: c.graineIdentite, secteur: P.secteur, mission: P.mission, campagne, opts };
 }
 
 /* Ceux de chez nous qui ont survécu à la bataille, par régiment : [[numéro, rang, expérience, victimes], …]. Les vivants (blessés compris :
@@ -38,9 +63,9 @@ export function suivante(c, plan = CAMPAGNE) {
 function survivants(B) {
   const { etat, armee: A } = B;
   const out = new Map(etat.regiments.filter(r => r.camp === NOUS).map(r => [r.id, new Map()]));
-  const ajouter = (reg, id, exp, victimes) => {
-    const m = out.get(reg);
-    if (m && !m.has(id)) m.set(id, [id, rangDe(B, id, reg), exp, victimes]);
+  const ajouter = (reg, id, exp, victimes) => {            // id : le numéro de bataille ; le registre garde le numéro de campagne
+    const m = out.get(reg), numero = numeroCampagne(etat, id);
+    if (m && !m.has(numero)) m.set(numero, [numero, rangDe(B, id, reg), exp, victimes]);
   };
   for (let i = 0; i < A.n; i++) if (A.camp[i] === NOUS && !A.mort[i]) ajouter(A.reg[i], A.id[i], A.exp[i], A.victimes[i]);
   for (const e of etat.evacues) if (e.length >= 6 && e[3] === 0) ajouter(e[4], e[0], e[5], e[6] ?? 0);
@@ -66,8 +91,11 @@ export function cloturer(c, B) {
     pertes: [...etat.pertes], regiments,
   };
   const debout = regiments.filter(r => r.survivants.length).length;
+  // le compteur de campagne passe devant tous les numéros que nos hommes ont portés dans cette bataille (vivants ou morts)
+  let prochainNumero = c.prochainNumero ?? 0, p = 0;
+  for (const r of etat.regiments) { if (r.camp === NOUS) for (let id = p; id < p + r.initial; id++) prochainNumero = Math.max(prochainNumero, numeroCampagne(etat, id) + 1); p += r.initial; }
   const statut = debout < c.regimentsMin ? 'effondree' : ref.n >= c.longueur ? 'terminee' : 'en cours';
-  return { ...c, batailles: [...c.batailles, entree], statut };
+  return { ...c, batailles: [...c.batailles, entree], statut, prochainNumero };
 }
 
 /* Le chemin du jeu : à la fin d'une bataille de campagne, lit le registre, clôt, écrit. `store` est celui de js/lib/save.js. Rend la

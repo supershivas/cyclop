@@ -1,6 +1,6 @@
 // La campagne, lot 1 : l'identité portable. Deux batailles d'une même campagne (graines de terrain différentes) donnent
 // les mêmes noms à nos hommes ; la graine de la bataille n'en décide plus. Hors campagne, rien ne change.
-import { nouvelleBataille, avancer, ordonnerMarche, photo, restaurer, zone } from '../js/bataille.js';
+import { nouvelleBataille, avancer, ordonnerMarche, photo, restaurer, zone, effectifs } from '../js/bataille.js';
 import { quiEst } from '../js/hud/lecture.js';
 import { empreinteEtat } from '../js/reseau/lockstep.js';
 import { REGLAGES as R } from '../js/data/reglages.js';
@@ -82,14 +82,14 @@ test('une campagne neuve : trois batailles, labours puis crête puis marais, mê
   assert.equal(n1.n, 1); assert.equal(n1.secteur, 'essai'); assert.equal(n1.mission, 'tenir');
   assert.deepEqual(n1.campagne, { id: 11, n: 1 });
   // les graines des trois batailles diffèrent (et ne sont pas celle de l'identité par hasard)
-  const graines = [1, 2, 3].map(n => suivante({ ...a, batailles: Array(n - 1).fill({}) }).graine);
+  const graines = [1, 2, 3].map(n => suivante({ ...a, batailles: Array(n - 1).fill({ regiments: [] }) }).graine);
   assert.equal(new Set(graines).size, 3);
   assert.notDeepEqual(nouvelleCampagne(12), a); assert.notEqual(suivante(nouvelleCampagne(12)).graine, n1.graine);
 });
 test('la bataille d\'une campagne le sait, et la partie n\'en change pas ; relue, elle le sait encore', () => {
   const a = jouer(bat(3)), b = jouer(bat(3, { campagne: { id: 11, n: 2 } }));
   assert.deepEqual(b.etat.campagne, { id: 11, n: 2 }); assert.equal(a.etat.campagne, null);
-  const sans = B => { const p = photo(B); delete p.campagne; return JSON.stringify(p); };
+  const sans = B => { const p = photo(B); delete p.campagne; delete p.numeros; return JSON.stringify(p); };
   assert.equal(sans(a), sans(b));
   assert.deepEqual(restaurer(JSON.parse(JSON.stringify(photo(b))), R).etat.campagne, { id: 11, n: 2 });
 });
@@ -111,12 +111,12 @@ test('clore une bataille : ce qui est gardé est le survivant (numéro, rang, ex
   assert.equal(new Set(ids).size, ids.length, 'un numéro, un homme');
   // les vivants de chez nous sont tous au registre, avec leur expérience et leurs victimes
   for (let i = 0; i < A.n; i++) if (A.camp[i] === 0 && !A.mort[i]) {
-    const s = tous.find(x => x[0] === A.id[i]);
+    const s = tous.find(x => x[0] === numeroCampagne(B.etat, A.id[i]));
     assert.ok(s, `n° ${A.id[i]} vivant mais absent`);
     assert.equal(s[2], A.exp[i]); assert.equal(s[3], A.victimes[i]);
   }
   // les morts n'y sont pas
-  for (const m of B.etat.corps) if (m[2] === 0) assert.ok(!ids.includes(m[4]), `n° ${m[4]} est mort`);
+  for (const m of B.etat.corps) if (m[2] === 0) assert.ok(!ids.includes(numeroCampagne(B.etat, m[4])), `n° ${m[4]} est mort`);
   // le rang : celui de la fiche (promus compris)
   for (const r of e.regiments) for (const s of r.survivants) assert.ok(Number.isInteger(s[1]) && s[1] >= 0 && s[1] <= 7);
   assert.equal(tous.every(s => s.length === 4 && s.every(Number.isFinite)), true);
@@ -124,12 +124,12 @@ test('clore une bataille : ce qui est gardé est le survivant (numéro, rang, ex
   assert.ok(!/prenom|fatJ|fatB|peur|moral|blessure/.test(JSON.stringify(e)));
 });
 test('les évacués en route et les hommes d\'un régiment relevé sont au registre ; les morts d\'un régiment relevé n\'y sont pas', () => {
-  const { B, apres } = unePartie(), tous = apres.batailles[0].regiments.flatMap(r => r.survivants).map(s => s[0]);
+  const { B, apres } = unePartie(), tous = apres.batailles[0].regiments.flatMap(r => r.survivants).map(s => s[0]), N = id => numeroCampagne(B.etat, id);
   const rel = B.etat.releves;
   assert.ok(rel.length > 0, 'la relève a eu lieu');
-  for (const [id] of rel) if (!B.etat.corps.some(m => m[4] === id)) assert.ok(tous.includes(id), `relevé n° ${id}`);
-  for (const e of B.etat.evacues) if (e.length >= 6 && e[3] === 0) assert.ok(tous.includes(e[0]), `évacué n° ${e[0]}`);
-  for (const e of B.etat.evacues) if (e[3] === -1 && !B.etat.corps.some(m => m[4] === e[0])) assert.ok(!tous.includes(e[0]), `disparu n° ${e[0]}`);
+  for (const [id] of rel) if (!B.etat.corps.some(m => m[4] === id)) assert.ok(tous.includes(N(id)), `relevé n° ${id}`);
+  for (const e of B.etat.evacues) if (e.length >= 6 && e[3] === 0) assert.ok(tous.includes(N(e[0])), `évacué n° ${e[0]}`);
+  for (const e of B.etat.evacues) if (e[3] === -1 && !B.etat.corps.some(m => m[4] === e[0])) assert.ok(!tous.includes(N(e[0])), `disparu n° ${e[0]}`);
 });
 test('clore deux fois, ou relire la partie arrêtée à la fin, donne le même registre', () => {
   const { c, B, apres } = unePartie();
@@ -179,4 +179,129 @@ test('campagne.js reste pur : ni hasard, ni horloge, ni DOM', () => {
     const src = readFileSync(new URL(`../js/${f}`, import.meta.url), 'utf8');
     assert.ok(!/Math\.random|Date\.now|performance\.now|crypto\.|document\.|window\./.test(src), `${f} doit rester pur (section 10)`);
   }
+});
+
+// ─── Lot 3 : reconstituer ─────────────────────────────────────────────────────────────────────────────────────────────────────────────
+import { numeroCampagne } from '../js/bataille.js';
+import { reconstituer } from '../js/campagne.js';
+import { grade } from '../js/identite.js';
+
+// Une bataille de campagne de pleine taille (750 par camp), « finie » sans être jouée : des morts, de l'expérience, des victimes données à la main.
+function pleine(c, tuer = i => i % 7 === 0) {
+  const s = suivante(c), B = nouvelleBataille(s.graine, R, { jours: 3, ...s.opts });
+  const A = B.armee;
+  for (let i = 0; i < A.n; i++) if (A.camp[i] === 0) { A.exp[i] = ((A.id[i] * 7) % 10) / 10; A.victimes[i] = A.id[i] % 4; if (tuer(i)) A.mort[i] = 1; }
+  B.etat.phase = 'fin'; B.etat.issue = { reussie: true, texte: 'Le secteur est tenu.' };
+  return B;
+}
+const vivantsNous = B => { const out = []; for (let i = 0; i < B.armee.n; i++) if (B.armee.camp[i] === 0 && !B.armee.mort[i]) out.push(i); return out; };
+const numerosNous = B => vivantsNous(B).map(i => numeroCampagne(B.etat, B.armee.id[i]));
+
+group('campagne — reconstituer');
+test('750 hommes : les survivants gardent leur numéro, leur nom, leur expérience, leurs victimes ; des recrues complètent, sans expérience', () => {
+  const c0 = nouvelleCampagne(11), B1 = pleine(c0), c1 = cloturer(c0, B1);
+  const s = suivante(c1), B2 = nouvelleBataille(s.graine, R, { jours: 3, ...s.opts }), A2 = B2.armee, A1 = B1.armee;
+  assert.equal(s.n, 2); assert.equal(s.secteur, 'crete');
+  assert.equal(B2.etat.parCamp, 750);
+  const nous2 = []; for (let i = 0; i < A2.n; i++) if (A2.camp[i] === 0) nous2.push(i);
+  assert.equal(nous2.length, 750, 'chaque régiment est reconstitué à plein');
+  const n1 = new Map(vivantsNous(B1).map(i => [A1.id[i], i]));           // numéro (= numéro de bataille en bataille 1) → indice
+  const numeros = nous2.map(i => numeroCampagne(B2.etat, A2.id[i]));
+  assert.equal(new Set(numeros).size, 750, 'un numéro, un homme');
+  let veterans = 0;
+  for (const i of nous2) {
+    const num = numeroCampagne(B2.etat, A2.id[i]);
+    if (n1.has(num)) {
+      veterans++;
+      const j = n1.get(num);
+      assert.equal(A2.exp[i], A1.exp[j], `expérience de n° ${num}`); assert.equal(A2.victimes[i], A1.victimes[j]);
+      const a = quiEst(B1, A1.id[j]).qui, b = quiEst(B2, A2.id[i]).qui;
+      assert.equal(`${b.prenom} ${b.nom}`, `${a.prenom} ${a.nom}`, `nom de n° ${num}`);
+      assert.equal(quiEst(B2, A2.id[i]).reg.nom, quiEst(B1, A1.id[j]).reg.nom, 'dans son régiment');
+      assert.ok(quiEst(B2, A2.id[i]).qui.rang <= a.rang, 'jamais rétrogradé');
+    } else {
+      assert.equal(A2.exp[i], 0); assert.equal(A2.victimes[i], 0); assert.ok(num >= c1.prochainNumero, `recrue n° ${num}`);
+    }
+  }
+  assert.equal(veterans, vivantsNous(B1).length);
+  assert.ok(veterans > 600 && veterans < 750);
+  // la hiérarchie est celle d'un régiment à plein : un capitaine, des lieutenants… par la place, comme avant
+  for (const r of B2.etat.regiments.filter(r => r.camp === 0)) {
+    const ids = []; for (let i = 0; i < A2.n; i++) if (A2.reg[i] === r.id) ids.push(i);
+    ids.sort((x, y) => A2.slot[x] - A2.slot[y]);
+    ids.forEach((i, k) => { const g = grade(k, r.initial), rang = quiEst(B2, A2.id[i]).qui.rang; assert.ok(rang === g || (g === 6 && rang === 7), `place ${k} de ${r.nom} : ${rang} au lieu de ${g}`); });
+  }
+});
+test('les vétérans prennent les premières places : le capitaine tombé est remplacé par le gradé survivant le plus haut', () => {
+  const c0 = nouvelleCampagne(11), B1 = pleine(c0, () => false), A = B1.armee;
+  assert.equal(quiEst(B1, 0).qui.rang, 0); assert.equal(quiEst(B1, 1).qui.rang, 1);            // le n° 0 est le capitaine du 1er régiment, le n° 1 son 1er lieutenant
+  A.mort[0] = 1;
+  const s = suivante(cloturer(c0, B1)), B2 = nouvelleBataille(s.graine, R, { jours: 3, ...s.opts });
+  const tete = B2.armee.id.findIndex((_, i) => B2.armee.reg[i] === 0 && B2.armee.slot[i] === 0);
+  assert.equal(numeroCampagne(B2.etat, B2.armee.id[tete]), 1, 'le 1er lieutenant devient capitaine');
+  assert.equal(quiEst(B2, B2.armee.id[tete]).qui.rang, 0);
+  const numeros = []; for (let i = 0; i < B2.armee.n; i++) if (B2.armee.camp[i] === 0) numeros.push(numeroCampagne(B2.etat, B2.armee.id[i]));
+  assert.ok(!numeros.includes(0), 'le mort ne revient pas');
+});
+test('la reconstitution ne change que les hommes : même terrain, mêmes places, mêmes tirages', () => {
+  const c0 = nouvelleCampagne(11), B1 = pleine(c0), c1 = cloturer(c0, B1), s = suivante(c1);
+  const a = nouvelleBataille(s.graine, R, { jours: 3, ...s.opts }), b = nouvelleBataille(s.graine, R, { jours: 3, ...s.opts, troupes: null });
+  assert.equal(a.etat.rng, b.etat.rng);
+  assert.deepEqual(a.etat.meteo, b.etat.meteo); assert.deepEqual(Array.from(a.armee.x.subarray(0, a.armee.n)), Array.from(b.armee.x.subarray(0, b.armee.n)));
+  assert.deepEqual(Array.from(a.armee.slot.subarray(0, a.armee.n)), Array.from(b.armee.slot.subarray(0, b.armee.n)));
+});
+test('en bataille, les recrues de la relève reçoivent des numéros neufs, jamais ceux d\'un vétéran, et le registre suit', () => {
+  const c0 = nouvelleCampagne(11), c1 = cloturer(c0, pleine(c0)), s = suivante(c1);
+  const B = nouvelleBataille(s.graine, R, { jours: 3, ...s.opts }), avant = Math.max(...numerosNous(B));
+  B.etat.phase = 'nuit'; aube(B, { 0: 'releve' });
+  const tous = []; for (let i = 0; i < B.armee.n; i++) if (B.armee.camp[i] === 0 && !B.armee.mort[i]) tous.push(numeroCampagne(B.etat, B.armee.id[i]));
+  assert.equal(new Set(tous).size, tous.length, 'aucun numéro en double');
+  const neufs = tous.filter(n => n > avant);
+  assert.equal(neufs.length, 93, 'le régiment relevé est remplacé par des recrues'); assert.ok(Math.min(...neufs) >= c1.prochainNumero);
+  const quelqun = B.armee.id.find((id, i) => i < B.armee.n && B.armee.camp[i] === 0 && numeroCampagne(B.etat, id) > avant);
+  assert.ok(quiEst(B, quelqun).qui.nom);
+  B.etat.phase = 'fin'; B.etat.issue = { reussie: true, texte: '' };
+  const c2 = cloturer(c1, B), ids = c2.batailles[1].regiments.flatMap(r => r.survivants).map(x => x[0]);
+  assert.ok(c2.prochainNumero > Math.max(...tous), 'le compteur de campagne passe devant');
+  assert.equal(new Set(ids).size, ids.length);
+  assert.ok(ids.some(n => n > avant), 'les recrues de la relève sont au registre');
+});
+test('relue au milieu, une bataille de campagne garde ses numéros, ses noms et son compteur', () => {
+  const c0 = nouvelleCampagne(11), c1 = cloturer(c0, pleine(c0)), s = suivante(c1);
+  const B = nouvelleBataille(s.graine, R, { jours: 3, ...s.opts });
+  for (let k = 0; k < 60; k++) avancer(B);
+  const C = restaurer(JSON.parse(JSON.stringify(photo(B))), R);
+  assert.deepEqual(C.etat.numeros, B.etat.numeros); assert.equal(C.etat.prochainNumero, B.etat.prochainNumero);
+  for (let i = 0; i < B.armee.n; i++) assert.deepEqual(quiEst(C, B.armee.id[i]).qui, quiEst(B, B.armee.id[i]).qui);
+  B.etat.phase = 'nuit'; C.etat.phase = 'nuit'; aube(B, { 0: 'releve' }); aube(C, { 0: 'releve' });
+  assert.equal(JSON.stringify(photo(B)), JSON.stringify(photo(C)));
+});
+test('plus de régiments au registre que de places : les plus fournis restent, les autres versent leurs hommes aux places vides', () => {
+  const reg = (nom, n, base) => ({ nom, depart: 94, survivants: Array.from({ length: n }, (_, k) => [base + k, 6, k / 100, 0]) });
+  const regs = [reg('A', 90, 0), reg('B', 20, 100), reg('C', 80, 200), reg('D', 10, 300), reg('E', 85, 400), reg('F', 70, 500), reg('G', 60, 600), reg('H', 50, 700), reg('I', 40, 800), reg('J', 5, 900)];
+  const t = reconstituer(regs, 8, 94);
+  assert.deepEqual(t.map(r => r.nom), ['A', 'C', 'E', 'F', 'G', 'H', 'I', 'B'].sort((a, b) => 'ABCDEFGHIJ'.indexOf(a) - 'ABCDEFGHIJ'.indexOf(b)));
+  assert.ok(t.every(r => r.survivants.length <= 94));
+  const sorti = t.flatMap(r => r.survivants.map(s => s[0])), entre = regs.flatMap(r => r.survivants.map(s => s[0]));
+  assert.equal(new Set(sorti).size, sorti.length);
+  assert.equal(sorti.length, entre.length, 'aucun vétéran perdu tant qu\'il y a de la place');
+  assert.equal(JSON.stringify(reconstituer(regs, 8, 94)), JSON.stringify(t), 'déterministe');
+});
+test('des forces inégales : un effectif par camp, la relève y est fidèle', () => {
+  const B = nouvelleBataille(5, R, { jours: 3, soldats: 400, soldatsEux: 320 });
+  assert.deepEqual(effectifs(B), [400, 320]);
+  assert.equal(B.etat.parCampEux, 320);
+  B.etat.phase = 'nuit';
+  const eux = B.etat.regiments.find(r => r.camp === 1);
+  aube(B, { [eux.id]: 'releve' });
+  const frais = B.etat.regiments.filter(r => r.camp === 1 && r.arrive).pop();
+  assert.equal(frais.initial, 40);                                       // 320 / 8
+  assert.equal(B.etat.regiments.filter(r => r.camp === 0 && r.arrive).length, 0);
+});
+test('la difficulté monte : surnombre chez nous au début, chez eux à la fin', () => {
+  const faible = (n, plan) => suivante({ ...nouvelleCampagne(11), batailles: Array(n - 1).fill({ regiments: [{ nom: 'X', depart: 94, survivants: [] }] }), prochainNumero: 750 }).opts;
+  const [o1, o2, o3] = [1, 2, 3].map(n => faible(n));
+  assert.ok(o1.soldatsEux < 750 && o2.soldatsEux === 750 && o3.soldatsEux > 750, `${o1.soldatsEux} ${o2.soldatsEux} ${o3.soldatsEux}`);
+  assert.ok(o1.iaRythme.offensive > o2.iaRythme.offensive && o2.iaRythme.offensive > o3.iaRythme.offensive);
+  assert.equal(o1.troupes, null);
 });

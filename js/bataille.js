@@ -29,7 +29,7 @@ import { corvees, rejouerTravaux } from './nuit.js?v=0.36.2';
 
 export const PAS = 1 / 30;                 // s de jeu par pas
 export const NOUS = 0, EUX = 1;
-const VERSION = 3;   // 2 : la graine d'identité ; 3 : la campagne et les relevés (campagne, lots 1 et 2)
+const VERSION = 4;   // 2 : la graine d'identité ; 3 : la campagne et les relevés ; 4 : les numéros de campagne, un effectif par camp, le rythme de l'IA (campagne, lots 1 à 3)
 
 const ticksParHeure = R => Math.max(1, Math.round(R.jour.duree / (R.jour.heureFin - R.jour.heureDebut) / PAS));
 const ticksParJour = R => ticksParHeure(R) * (R.jour.heureFin - R.jour.heureDebut);
@@ -59,21 +59,29 @@ function chaineMeteo(rng, jours, pluieAuMoins) {
    graineIdentite : d'où viennent les noms, âges et grades de NOS hommes (identite.js) ; elle ne sert qu'à cela. Une campagne la garde
    d'une bataille à l'autre pendant que la graine (terrain, météo, tirages) change ; hors campagne elle vaut la graine. En face, les
    hommes viennent toujours de la graine de la bataille : ce sont d'autres hommes à chaque fois.
-   campagne : { id, n } si la bataille est la n-ième d'une campagne (js/campagne.js) ; elle ne change rien à la partie. */
+   campagne : { id, n } si la bataille est la n-ième d'une campagne (js/campagne.js) ; elle ne change rien à la partie.
+   troupes : { regiments: [{ nom, survivants: [[numéro, rang, expérience, victimes], …] }], prochainNumero } : nos régiments reconstitués
+   (lot 3) ; chacun reprend ses survivants (par le rang, puis l'expérience), complétés par des recrues sans expérience. Les numéros de
+   bataille (`id`, contigus par régiment) ne sont pas ceux de la campagne (`numero`, stables) : `etat.numeros` dit lequel est lequel.
+   soldatsEux : l'effectif d'en face, s'il diffère du nôtre (`soldats`). iaRythme : { barrage, offensive }, facteurs de la durée entre deux
+   actions de l'IA d'en face (moins de 1 : plus souvent). */
 export function nouvelleBataille(graine, R, opts = {}) {
   const idSecteur = opts.secteur || 'essai';
   const S = SECTEURS[idSecteur];
-  const parCamp = opts.soldats || S.soldats;
+  const parCamp = opts.soldats || S.soldats, parCampEux = opts.soldatsEux || parCamp;
   const rng = createRng(graine);
   const J = typeof S.jours === 'number' ? { min: S.jours, max: S.jours } : S.jours;
   const jours = opts.jours || J.min + Math.floor(hash2(graine | 0, 41, 7) * (J.max - J.min + 1));
   const mission = opts.mission || (S.missions ? S.missions[Math.floor(hash2(graine | 0, 43, 7) * S.missions.length)] : null);
   const { chaine, previsions } = chaineMeteo(rng.fork('meteo'), jours, S.pluieAuMoins);
   const etat = {
-    v: VERSION, graine, graineIdentite: opts.graineIdentite ?? graine, campagne: opts.campagne ?? null, secteur: idSecteur, parCamp,
+    v: VERSION, graine, graineIdentite: opts.graineIdentite ?? graine, campagne: opts.campagne ?? null, secteur: idSecteur, parCamp, parCampEux,
     mission, issue: null,               // la mission (tenir, prendre) et, à la fin, ce qu'il en est
     reserves: [S.reserves ?? 0, S.reserves ?? 0],   // régiments frais en réserve, par camp (la relève)
-    parRegiment: Math.floor(parCamp / S.regiments),
+    parRegiment: Math.floor(parCamp / S.regiments), parRegimentEux: Math.floor(parCampEux / S.regiments),
+    // la campagne : le numéro de campagne de nos hommes quand il n'est pas leur numéro de bataille ({ numéro de bataille : numéro }) et le prochain à donner
+    numeros: opts.campagne || opts.troupes ? {} : null, prochainNumero: opts.troupes ? opts.troupes.prochainNumero : parCamp,
+    iaRythme: { barrage: opts.iaRythme?.barrage ?? 1, offensive: opts.iaRythme?.offensive ?? 1 },
     jour: 1, tickJour: 0, ticks: 0, phase: 'jour',
     meteo: chaine, previsions,
     impacts: [],                        // [jour, tickJour, x×10, y×10, calibre] : de quoi rejouer le relief
@@ -109,12 +117,12 @@ export function nouvelleBataille(graine, R, opts = {}) {
   const nReg = S.regiments, largeurReg = S.largeur / nReg, Z = zone(B);
   for (const camp of [NOUS, EUX]) {
     const ligne = Z.y0 + (camp === NOUS ? S.ligne.nous : S.ligne.eux);
-    const base = Math.floor(parCamp / nReg);
+    const parC = camp === NOUS ? parCamp : parCampEux, base = Math.floor(parC / nReg);
     for (let r = 0; r < nReg; r++) {
-      const effectif = base + (r < parCamp - base * nReg ? 1 : 0);
+      const effectif = base + (r < parC - base * nReg ? 1 : 0), T = camp === NOUS ? opts.troupes?.regiments[r] : null;
       const reg = {
         id: etat.regiments.length, camp,
-        nom: camp === NOUS ? REGIMENTS[r % REGIMENTS.length] : opts.deux ? REGIMENTS[(r + nReg) % REGIMENTS.length] : null,
+        nom: T ? T.nom : camp === NOUS ? REGIMENTS[r % REGIMENTS.length] : opts.deux ? REGIMENTS[(r + nReg) % REGIMENTS.length] : null,
         effectif, initial: effectif, pertes: 0,
         moral: R.moral.depart, deroute: false, vivres: R.nuit.vivres, stance: STANCE_DEFAUT,
         ordre: null, depart: null,
@@ -127,9 +135,17 @@ export function nouvelleBataille(graine, R, opts = {}) {
       reg.depart = structuredClone(reg.ordre);
       etat.regiments.push(reg);
       const jeu = etat.tranchees ? 0.3 : 0.8, p = [0, 0];
+      // les survivants d'abord (les plus gradés, puis les plus aguerris, aux premières places : la hiérarchie du régiment est celle de ses places),
+      // puis des recrues sans expérience ; chacun garde son numéro de campagne
+      const vieux = T ? [...T.survivants].sort((a, b) => a[1] - b[1] || b[2] - a[2] || a[0] - b[0]).slice(0, effectif) : [];
       for (let k = 0; k < effectif; k++) {
         place(reg.ordre, k, p);
-        ajouterSoldat(B.armee, p[0] + (rng() - 0.5) * jeu, p[1] + (rng() - 0.5) * jeu, camp, reg.id, k, rng(), B.armee.n);
+        const i = ajouterSoldat(B.armee, p[0] + (rng() - 0.5) * jeu, p[1] + (rng() - 0.5) * jeu, camp, reg.id, k, rng(), B.armee.n);
+        if (T) {
+          const v = vieux[k], id = B.armee.id[i];
+          etat.numeros[id] = v ? v[0] : etat.prochainNumero++;
+          if (v) { B.armee.exp[i] = v[2]; B.armee.victimes[i] = v[3]; }
+        }
       }
     }
   }
@@ -178,7 +194,7 @@ function monter(etat, R) {
   const { lignes, troncons } = etat.tranchees ? creuserTranchees(terrain, S, m.x, m.y, etat.graine) : { lignes: [], troncons: [] };
   const faces = Int8Array.from(troncons, t => lignes[t.ligne].face);
   // (de la place pour les régiments de réserve : la relève les fait entrer)
-  const armee = creerArmee({ capacite: (etat.parCamp + (etat.reserves?.[0] ?? 0) * (etat.parRegiment ?? 0)) * 2 + 16, W, H });
+  const armee = creerArmee({ capacite: etat.parCamp + (etat.parCampEux ?? etat.parCamp) + (etat.reserves?.[0] ?? 0) * ((etat.parRegiment ?? 0) + (etat.parRegimentEux ?? etat.parRegiment ?? 0)) + 16, W, H });
   const { bw, bh } = dimensionsCouts(terrain);
   return {
     etat, R, terrain, armee,
@@ -570,6 +586,8 @@ function premiers(B) {
 }
 /* Le rang d'un homme (0 capitaine … 6 soldat, identite.js) : celui de sa
    création dans son régiment, ou celui de sa promotion. */
+/* Le numéro de campagne d'un de nos hommes (son nom en dépend) : le numéro de bataille quand la campagne n'en a pas donné d'autre. */
+export const numeroCampagne = (etat, id) => etat.numeros?.[id] ?? id;
 export function rangDe(B, id, reg) {
   const g = B.etat.grades[id];
   if (g !== undefined) return g[0];
@@ -833,7 +851,7 @@ function enFace(B, rng) {
   if (R.ia.stance) postureIA(B);
   const S = SECTEURS[etat.secteur];
   if (etat.temps >= etat.ia.barrage) {
-    etat.ia.barrage = etat.temps + R.ia.barrage * (0.6 + rng() * 0.8);
+    etat.ia.barrage = etat.temps + R.ia.barrage * (etat.iaRythme?.barrage ?? 1) * (0.6 + rng() * 0.8);
     const d = A.dens[NOUS];
     let best = -1, bn = 0;
     for (let b = 0; b < d.length; b++) if (d[b] > bn) { bn = d[b]; best = b; }
@@ -844,7 +862,7 @@ function enFace(B, rng) {
     }
   }
   if (etat.temps >= etat.ia.offensive) {
-    etat.ia.offensive = etat.temps + R.ia.offensive * (0.7 + rng() * 0.6);
+    etat.ia.offensive = etat.temps + R.ia.offensive * (etat.iaRythme?.offensive ?? 1) * (0.7 + rng() * 0.6);
     if (etat.tranchees) {
       // l'assaut : un régiment encore fort, dans ses tranchées, sort et va prendre notre ligne la plus proche, en face de lui
       const leurs = etat.regiments.filter(r => r.camp === EUX && r.effectif > r.initial * R.tranchee.assaut && r.ordre.trace?.ligne >= 10 && !r.deroute && r.refus !== etat.jour && r.moral >= R.moral.ebranle + 0.1);

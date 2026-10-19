@@ -326,7 +326,7 @@ function coupDeMain(B, reg, ctx, bilan) {
    ceux de tous les régiments déjà là (les noms et les grades en découlent). */
 function relever(B, vieux, rng) {
   const { etat, R, armee: A } = B;
-  const n = etat.parRegiment || vieux.initial;
+  const n = (vieux.camp === 0 ? etat.parRegiment : etat.parRegimentEux ?? etat.parRegiment) || vieux.initial;
   let premier = 0;
   for (const r of etat.regiments) premier += r.initial;
   const deNous = etat.regiments.filter(r => r.camp === 0).length;
@@ -344,6 +344,7 @@ function relever(B, vieux, rng) {
   for (let k = 0; k < n; k++) {
     const x = x0 + (k + 0.5) * (x1 - x0) / n;
     ajouterSoldat(A, x + (rng() - 0.5) * 2, Math.max(1, Math.min(B.terrain.H - 2, derriere + (rng() - 0.5) * 6)), reg.camp, reg.id, k, rng(), premier + k);
+    if (etat.numeros && reg.camp === 0) etat.numeros[premier + k] = etat.prochainNumero++;     // (campagne : un numéro neuf, jamais celui d'un vétéran)
   }
 }
 
