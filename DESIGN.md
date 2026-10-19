@@ -216,7 +216,9 @@ vert kaki clair d'en face, plus pâles que le sol sombre.
 ## Ce que le jeu refuse
 
 - Aucune glorification de la guerre : pas de médailles qui brillent, pas de
-  victoire claironnée. Le compteur de morts n'est jamais une récompense.
+  victoire claironnée. Le compteur de morts n'est jamais une récompense
+  de jeu (ni expérience, ni avantage) : le nombre d'hommes qu'un soldat a abattus est un fait
+  de sa fiche et de ses marques (Jérôme, v0.35.0).
 - Pas de gore explicite : un corps est un homme couché, d'un pixel au loin.
 - Pas de tutoriel bavard : les commandes sont dans les réglages, c'est tout.
 - Pas de loot.
