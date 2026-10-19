@@ -53,7 +53,7 @@ if (o.tout === 'oui') {
     const p2 = await page.evaluate(() => __jeu.papierCampagne());
     if (etat === 'en cours') { verifier(/Partir pour la bataille/.test(p2.texte), `bataille ${n} finie, le registre propose la suivante`); await page.keyboard.press('Enter'); await page.waitForTimeout(2500); }
     else {
-      verifier(true, `la campagne s'arrête après la bataille ${n - 1} (${etat})`);
+      verifier(true, `la campagne s'arrête après la bataille ${n} (${etat})`);
       break;
     }
     if (n === 3) await jouerJusquaLaFin();
