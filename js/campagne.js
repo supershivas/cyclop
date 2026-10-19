@@ -4,10 +4,11 @@
    identité à re-dériver : un homme est son numéro, son rang, son expérience et ses victimes ; son nom vient de `graineIdentite`.
    Il est écrit à la fin de chaque bataille, avant l'écran de fin (`cloturerDansLeStore`), et `cloturer` est idempotente : relire une
    partie arrêtée à la fin, ou clore deux fois, donne le même registre. Rien n'est reporté de la fatigue, de la peur ni du moral. */
-import { hash2 } from './lib/rng.js?v=0.36.2';
-import { NOUS, rangDe, numeroCampagne } from './bataille.js?v=0.36.2';
-import { SECTEURS } from './data/secteur.js?v=0.36.2';
-import { CAMPAGNE } from './data/campagne.js?v=0.36.2';
+import { hash2 } from './lib/rng.js?v=0.36.3';
+import { NOUS, rangDe, numeroCampagne } from './bataille.js?v=0.36.3';
+import { SECTEURS } from './data/secteur.js?v=0.36.3';
+import { identite, chevrons } from './identite.js?v=0.36.3';
+import { CAMPAGNE } from './data/campagne.js?v=0.36.3';
 
 export const CLE = 'campagne';        // l'entrée de js/lib/save.js (cyclopeen:campagne)
 export const VERSION_CAMPAGNE = 1;
@@ -28,16 +29,19 @@ export function nouvelleCampagne(graineIdentite, plan = CAMPAGNE) {
 /* Nos régiments pour la bataille suivante, au nombre de `nReg` : les plus fournis reprennent leur place, les autres versent leurs hommes
    (les plus aguerris d'abord) aux places vides du régiment le plus clairsemé ; ce qui ne tient pas nulle part est perdu. Ce « fusionner »
    automatique est celui du lot 3 ; le papier de réorganisation (lot 4) le remplacera par un choix. Déterministe : à égalité, l'ordre du registre. */
-export function reconstituer(regiments, nReg, parRegiment) {
+export function reconstituer(regiments, nReg, parRegiment, journal = null) {
   const ordre = regiments.map((r, i) => ({ r, i })).sort((a, b) => b.r.survivants.length - a.r.survivants.length || a.i - b.i);
   const gardes = ordre.slice(0, nReg).sort((a, b) => a.i - b.i).map(({ r }) => ({ nom: r.nom, survivants: [...r.survivants] }));
+  const donneur = new Map(ordre.slice(nReg).flatMap(({ r }) => r.survivants.map(h => [h[0], r.nom])));       // d'où vient chacun (pour le journal)
   const reste = ordre.slice(nReg).flatMap(({ r }) => r.survivants).sort((a, b) => b[2] - a[2] || a[0] - b[0]);
   for (const h of reste) {
     let cible = null;
     for (const g of gardes) if (g.survivants.length < parRegiment && (!cible || g.survivants.length < cible.survivants.length)) cible = g;
-    if (!cible) break;
+    if (!cible) { if (journal) journal.perdus++; continue; }
     cible.survivants.push(h);
+    if (journal) { const de = donneur.get(h[0]); const f = journal.fusions.find(x => x.de === de && x.vers === cible.nom); if (f) f.hommes++; else journal.fusions.push({ de, vers: cible.nom, hommes: 1 }); }
   }
+  if (journal) journal.dissous = ordre.slice(nReg).map(({ r }) => r.nom);
   return gardes;
 }
 
@@ -69,10 +73,11 @@ function survivants(B) {
     if (m && !m.has(numero)) m.set(numero, [numero, rangDe(B, id, reg), exp, victimes]);
   };
   for (let i = 0; i < A.n; i++) if (A.camp[i] === NOUS && !A.mort[i]) ajouter(A.reg[i], A.id[i], A.exp[i], A.victimes[i]);
-  for (const e of etat.evacues) if (e.length >= 6 && e[3] === 0) ajouter(e[4], e[0], e[5], e[6] ?? 0);
+  const enRoute = new Map();                                // par régiment : combien reviennent encore du poste de secours
+  for (const e of etat.evacues) if (e.length >= 6 && e[3] === 0) { ajouter(e[4], e[0], e[5], e[6] ?? 0); enRoute.set(e[4], (enRoute.get(e[4]) ?? 0) + 1); }
   for (const e of etat.releves ?? []) ajouter(e[1], e[0], e[2], e[3]);
   return etat.regiments.filter(r => r.camp === NOUS).map(r => ({
-    nom: r.nom, depart: r.initial, survivants: [...out.get(r.id).values()].sort((a, b) => a[0] - b[0]),
+    nom: r.nom, depart: r.initial, enRoute: enRoute.get(r.id) ?? 0, survivants: [...out.get(r.id).values()].sort((a, b) => a[0] - b[0]),
   }));
 }
 
@@ -109,4 +114,33 @@ export function cloturerDansLeStore(store, B) {
   const suite = cloturer(c, B);
   if (suite !== c) store.save(CLE, suite);
   return suite;
+}
+
+/* Ce que le papier de campagne montre entre deux batailles (lot 4 : « voir et valider », Jérôme) : la bataille qui vient de finir, puis,
+   pour la suivante, chaque régiment tel que la reconstitution le fera (vétérans, recrues, expérience, qui le commande), les fusions
+   (de qui vers qui), les régiments dissous et ce qui ne tient nulle part. Aucune décision à prendre : la règle de `reconstituer` s'applique,
+   le joueur lit et lance. Rien si la campagne est finie. */
+export function passage(c, plan = CAMPAGNE) {
+  const s = suivante(c, plan), derniere = c.batailles.at(-1);
+  if (!s || !derniere) return null;
+  const S = SECTEURS[s.secteur], parRegiment = Math.floor(S.soldats / S.regiments), effectif = r => parRegiment + (r < S.soldats - parRegiment * S.regiments ? 1 : 0);   // (les premiers régiments ont un homme de plus)
+  const journal = { fusions: [], dissous: [], perdus: 0 };
+  const troupes = reconstituer(derniere.regiments, S.regiments, parRegiment, journal);
+  const enRoute = new Map(derniere.regiments.map(r => [r.nom, r.enRoute ?? 0]));
+  const recus = new Map();
+  for (const f of journal.fusions) recus.set(f.vers, (recus.get(f.vers) ?? 0) + f.hommes);
+  const regiments = troupes.map((t, r) => {
+    const plein = effectif(r), vieux = [...t.survivants].sort((a, b) => a[1] - b[1] || b[2] - a[2] || a[0] - b[0]).slice(0, plein), chef = vieux[0];
+    const exp = vieux.reduce((x, h) => x + h[2], 0) / plein;
+    return {
+      nom: t.nom, veterans: vieux.length, recrues: plein - vieux.length, exp, chevrons: chevrons(exp),
+      enRoute: enRoute.get(t.nom) ?? 0, fusionnes: recus.get(t.nom) ?? 0, neuf: vieux.length === 0,
+      commandant: chef ? { ...(({ prenom, nom, age }) => ({ prenom, nom, age }))(identite(c.graineIdentite, NOUS, chef[0], 0, parRegiment)), ancien: identite(c.graineIdentite, NOUS, chef[0], 99, parRegiment, chef[1]).grade, promu: chef[1] > 0, numero: chef[0] } : null,
+    };
+  });
+  return {
+    n: s.n, secteur: s.secteur, mission: s.mission, jours: s.opts.jours ?? null, forces: [S.soldats, s.opts.soldatsEux],
+    derniere: { n: derniere.n, secteur: derniere.secteur, jours: derniere.jours, issue: derniere.issue, pertes: derniere.pertes },
+    regiments, fusions: journal.fusions, dissous: journal.dissous, perdus: journal.perdus, parRegiment,
+  };
 }

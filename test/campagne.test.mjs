@@ -310,3 +310,64 @@ test('la difficulté monte : surnombre chez nous au début, chez eux à la fin',
   assert.ok(o1.iaRythme.offensive > o2.iaRythme.offensive && o2.iaRythme.offensive > o3.iaRythme.offensive);
   assert.equal(o1.troupes, null);
 });
+
+// ─── Lot 4 : le papier de campagne (voir et valider) ─────────────────────────────────────────────────────────────────────────────────────
+import { passage } from '../js/campagne.js';
+
+group('campagne — le passage entre deux batailles');
+test('sept jours par bataille (Jérôme, v0.36.3), le rapport de forces de la crête reste la parité', () => {
+  assert.deepEqual(CAMPAGNE.batailles.map(b => b.jours), [7, 7, 7]);
+  assert.equal(CAMPAGNE.batailles[1].forces, 1);
+  const c = nouvelleCampagne(11);
+  assert.equal(suivante(c).opts.jours, 7);
+  assert.equal(nouvelleBataille(5, R, suivante(c).opts).etat.meteo.length, 7);
+});
+test('rien à montrer avant la première bataille, ni après la dernière', () => {
+  assert.equal(passage(nouvelleCampagne(11)), null);
+  const { apres } = unePartie();
+  assert.equal(passage({ ...apres, statut: 'terminee' }), null);
+});
+test('le papier dit, régiment par régiment, vétérans + recrues = effectif plein, et qui le commande', () => {
+  const { apres } = unePartie(), p = passage(apres);
+  assert.equal(p.n, 2); assert.equal(p.secteur, 'crete'); assert.equal(p.jours, 7);
+  assert.equal(p.derniere.n, 1); assert.deepEqual(p.derniere.pertes, apres.batailles[0].pertes);
+  assert.equal(p.regiments.length, 8);
+  assert.equal(p.regiments.reduce((t, r) => t + r.veterans + r.recrues, 0), 750);
+  for (const r of p.regiments) {
+    assert.ok(r.veterans >= 0 && r.recrues >= 0 && r.chevrons >= 0 && r.chevrons <= 3);
+    assert.equal(r.neuf, r.veterans === 0); assert.equal(r.commandant === null, r.veterans === 0);
+    if (r.commandant) { assert.ok(r.commandant.prenom && r.commandant.nom); assert.equal(typeof r.commandant.promu, 'boolean'); }
+  }
+  // c'est bien ce que la reconstitution fera : le commandant du papier est le capitaine de la bataille suivante
+  const s = suivante(apres), B2 = nouvelleBataille(s.graine, R, s.opts);
+  p.regiments.forEach((r, k) => {
+    if (!r.commandant) return;
+    const tete = B2.armee.id.findIndex((_, i) => B2.armee.reg[i] === k && B2.armee.slot[i] === 0), q = quiEst(B2, B2.armee.id[tete]);
+    assert.equal(`${q.qui.prenom} ${q.qui.nom}`, `${r.commandant.prenom} ${r.commandant.nom}`, r.nom);
+    assert.equal(q.qui.grade, 'capitaine'); assert.equal(q.reg.nom, r.nom);
+    const vet = B2.armee.exp.reduce((n, e, i) => n + (i < B2.armee.n && B2.armee.reg[i] === k && e > 0 ? 1 : 0), 0);
+    assert.ok(vet <= r.veterans);
+  });
+});
+test('les fusions : d\'où viennent les hommes ajoutés, quels régiments sont dissous, et rien ne se perd sans être dit', () => {
+  const reg = (nom, n, base, enRoute = 0) => ({ nom, depart: 94, enRoute, survivants: Array.from({ length: n }, (_, k) => [base + k, 6, k / 100, 0]) });
+  const noms = 'ABCDEFGHIJKL'.split('');
+  const comptes = [90, 20, 80, 10, 85, 70, 60, 50, 40, 5, 3, 2];
+  const regiments = noms.map((n, k) => reg(n, comptes[k], k * 100, k === 2 ? 4 : 0));
+  const c = { ...nouvelleCampagne(11), batailles: [{ n: 1, graine: 1, secteur: 'essai', mission: 'tenir', jours: 7, issue: { reussie: true, texte: '' }, pertes: [100, 80], regiments }], prochainNumero: 1200 };
+  const p = passage(c);
+  assert.equal(p.regiments.length, 8);
+  assert.deepEqual(p.dissous.sort(), ['B', 'D', 'J', 'K', 'L'].sort().filter(x => p.dissous.includes(x)));
+  const vers = new Set(p.regiments.map(r => r.nom)), tousDissous = new Set(noms.filter(n => !vers.has(n)));
+  assert.deepEqual([...tousDissous].sort(), [...p.dissous].sort());
+  assert.ok(p.fusions.every(f => tousDissous.has(f.de) && vers.has(f.vers) && f.hommes > 0));
+  const entres = comptes.reduce((a, b) => a + b, 0), gardes = p.regiments.reduce((t, r) => t + r.veterans, 0);
+  assert.equal(gardes + p.perdus, entres, 'chaque survivant est placé ou compté perdu');
+  assert.equal(p.fusions.reduce((t, f) => t + f.hommes, 0), p.regiments.reduce((t, r) => t + r.fusionnes, 0));
+  assert.equal(p.regiments.find(r => r.nom === 'C').enRoute, 4);
+});
+test('les blessés qui reviennent sont au registre, par régiment', () => {
+  const { B, apres } = unePartie(), attendu = B.etat.evacues.filter(e => e.length >= 6 && e[3] === 0).length;
+  assert.equal(apres.batailles[0].regiments.reduce((t, r) => t + r.enRoute, 0), attendu);
+  assert.ok(attendu > 0);
+});

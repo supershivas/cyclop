@@ -1,5 +1,8 @@
 # Journal des versions
 
+## 0.36.3 — 2026-10-19
+- Le labo propose quatre façons de dire, entre deux batailles de campagne, ce qui reste de la bataille finie et ce que sera chaque régiment (la campagne n'est pas encore jouable)
+
 ## 0.36.2 — 2026-10-19
 - Un régiment en feu retenu porte son fusil baissé devant lui, la baïonnette ne dépasse plus de sa tête, et ne le lève que pour tirer
 
