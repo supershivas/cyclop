@@ -101,8 +101,376 @@ les deux machines calculent la même bataille, on n'échange que les ordres) sur
 - **Hors de vue, les soldats comptés** au lieu d'être simulés un par un.
 - **Champs de coûts recalculés par morceaux** quand le terrain change (aujourd'hui :
   le résumé du terrain est refait en entier toutes les 3 s, par bandes).
-- **Mines** de 1916-17 : un événement rare, −10 m, un champ à part.
-- **Méta** : le Mémorial, l'état-major (doctrines), les trophées déclaratifs.
+- **Mines** de 1916-17 : un événement rare, −10 m, un champ à part (voir aussi les gaz, « Pistes avancées »).
+- **Méta** : le Mémorial, la campagne, l'état-major (doctrines), les trophées déclaratifs (voir « Pistes avancées » : Mémorial et campagne sont développés).
 - **D'autres secteurs et d'autres missions** (un seul secteur, deux missions en v0.9.0).
 - **Son**, police d'identité auto-hébergée.
 - **Soldats en sprites** (poses, atelier de dessin) : essayés en v0.1.1, non retenus pour l'instant (`docs/archives/`).
+
+## Pistes avancées (brainstorming v0.35.0)
+
+**Statut** : à l'étude — rien n'est construit, rien n'est tranché. Inspirations : Total War (stances, moral de position, campagne), *Hearts of Iron*
+et *Order of Battle* (planification, transmissions), *Close Combat* (brouillard, moral). Chaque piste respecte `DESIGN.md` : pas de gloire, pas
+de gore, **le compteur de morts n'est jamais une récompense**, pas de couleur hors palette.
+
+**Barème** : 1 *session* = un lot livrable seul (logique + tests + mesure + `CLAUDE.md` + version), comme les lots de la refonte UX/UI. Les chiffres
+sont des ordres de grandeur d'avant lecture fine du code, à réviser au cadrage.
+
+**Ordre conseillé** : 1. Stances → 2. Plan de nuit → 3. Mémorial (registre) → 4. Campagne → 5. Gaz. Les stances sont petites et affinent l'équilibre ;
+le plan de nuit change le rythme sans nouvelle donnée persistante ; le Mémorial (registre seul) prépare la campagne ; la campagne porte la
+méta ; les gaz sont la plus grosse prise de risque (ton, rendu, nuit) et demandent d'abord d'étaler l'eau de la nuit (voir « À l'étude »).
+
+### Dettes communes à anticiper (valent pour les cinq pistes)
+
+- **`main.js` fait 1 188 lignes** (le `CLAUDE.md` en annonce encore 867) : stances, plan, Mémorial y ajouteraient du HUD. Sortir d'abord la rangée des
+  régiments (`majRegiments`, `placerFenetre`), le survol et la visée vers `js/hud/`, et mettre le `CLAUDE.md` à jour.
+- **Sauvegarde** : l'état de bataille est relu par des `??=` dans `etapesRestaurer` (`VERSION = 1`, bataille.js:31) ; tout champ neuf y reçoit sa valeur
+  d'avant. Un état hors bataille (campagne, Mémorial) a sa **propre clé** `cyclopeen:…` et passe par `js/lib/save.js` (versions, migrations ; conventions §11),
+  entre dans l'export / import JSON (jamais le jeton), et prend une autre clé en mode debug.
+- **Jeu à deux** : toute action neuve est une commande de `executerCmd` (main.js:297), toute donnée neuve entre dans `empreinteEtat`, et `outils/deux.mjs`
+  + `test/lockstep.test.mjs` s'étendent avec elle. Les réglages sont comparés à l'appairage (`empreinte des réglages`) : un nombre neuf dans `reglages.js`
+  oblige les deux machines à la même version.
+- **Déterminisme** : pas de `Math.sin`, `Math.cos`, `** 1,5` dans la logique neuve (écart Node / Chromium au dernier bit, Firefox non testé) ; **ne pas déplacer l'ordre
+  des tirages** (météo puis positions de départ) : un hasard neuf vient d'un hachage graine-jour-numéro (comme `retours` de nuit.js) ou d'une branche à part.
+- **Filets de refonte** : `test/fumee.json` (HUD) et `test/rendu.json` (34 images) bougent dès qu'on touche au texte d'une carte ou au dessin. Ajouter l'image
+  **avant** de coder, réécrire la référence sur l'ancien code, puis comparer (méthode du `CLAUDE.md`, « L'empreinte du dessin »).
+- **Les nombres** vont dans `js/data/reglages.js` (atelier), **les textes** dans `js/data/*.js` avec clé stable, rien en dur dans la logique (conventions §12-13).
+- **Les touches** : déjà prises, A E R F (vue), C, T, Espace, Échap, 1 2 3 (barrages), + − et les flèches. Toute commande clavier neuve se tranche au cadrage
+  (conventions §8 : tout est possible au clavier et à la souris).
+
+### Prompt de clôture commun (à coller à la fin de chaque lot)
+
+```text
+Clôture du lot : (1) `node --input-type=module --check < f.js` sur chaque module touché ; (2) `node outils/test-run.mjs` ; (3) `node outils/fumee.mjs` et
+`node outils/rendu-empreinte.mjs` : si l'écart est voulu, dis pourquoi puis réécris la référence (`--ecrire`) ; (4) `node outils/deux.mjs` si une commande,
+une règle ou un état partagé a changé ; (5) `node outils/captures.mjs` + `outils/audit-ecran.mjs` + `outils/lisibilite.mjs` si l'écran ou une couleur a changé,
+et regarde les captures ; (6) version.json (correctif / mineur), CHANGELOG.md, `node outils/stamp-version.mjs` ; (7) mets à jour CLAUDE.md (le jeu actuel,
+le piège rencontré avec son coût mesuré) et ROADMAP.md (coche le lot) ; (8) commit en français qui dit ce que le joueur verra, push sur main ; donne-moi
+les deux URL. Préviens-moi AVANT de pousser si une sauvegarde existante ne se relit plus. Si une règle vaut pour tous les jeux : « Proposition pour CONVENTIONS.md ».
+```
+
+---
+
+### 1. Les stances (feu à volonté, feu retenu, à couvert)
+
+**Statut** : à l'étude. Inspiration : Total War (« tenir la position », « feu à volonté / retenu »). Aujourd'hui un régiment tire quand il a un ennemi dans son
+cône et que la peur le permet (`tirer`, army.js:215) ; la carte du régiment note « pas encore d'action de tir par régiment ».
+
+**Intention** : un contrôle fin du *comment* un régiment tient, sans micro-gestion : on choisit une posture, pas des tirs. Chaque posture a un prix, sinon elle est
+dominée.
+
+**Ancrage** : `tirer(A, i, o, ctx)` (portée `R.tir.portee`, cône, `precision`, `abri`, `mouvement`) ; la cadence `tirT` dans `pasArmee` ; l'ordre `reg.ordre`
+(`fx`, `fy`, `trace`) ; `reg.refus` et `reg.vivres` comme modèle d'état par régiment ; `TAPI` (le dessin d'un homme tapi) ; `prises` / `R.tranchee.melee` pour le décompte
+des défenseurs ; la fenêtre du rabat (`actionDe`, `majRegiments`) ; `enFace(B, rng)` pour l'IA.
+
+**Postures proposées** (valeurs à mesurer, jamais à l'œil) :
+
+| Id | Nom | Effet | Prix |
+|---|---|---|---|
+| `volonte` | À volonté | comme aujourd'hui | — |
+| `retenu` | Feu retenu | n'ouvre le feu qu'à `retenu.portee` (≈ 35 m), précision ×1,5, fatigue des bras ÷2 | laisse l'assaut approcher ; ne harcèle plus |
+| `couvert` | À couvert | ne tire pas, se tapit ; l'ennemi touche ×0,6 ; la peur retombe plus vite | compte pour moitié dans la défense d'un tronçon (la mêlée le prend) |
+| `baionnette` *(plan C)* | Baïonnette | ne tire pas en marchant, pèse ×1,5 dans la mêlée | jambes plus lasses ; expose à découvert |
+
+**Décisions à trancher au cadrage** (défaut en gras) : combien de postures (**2 : volonté / retenu**) ; l'IA d'en face s'en sert-elle (**oui, retenu sur ses tronçons défendus**) ;
+touches (**boutons dans le rabat seulement, puis Maj+chiffre**) ; une posture survit-elle à un ordre de marche (**elle revient à `volonte` en marchant, `retenu` se reprend à l'arrivée**).
+
+**Plan fin (lots)**
+
+1. *Logique* : `reglages.js` (`stance`), `data/stances.js` (id, nom, court, dit), `reg.stance` (`??= 'volonte'` à la relecture), filtre dans `tirer` (portée) et facteurs de précision / cadence ;
+   ordre des tirages inchangé en `volonte` (test : une bataille sans stance donne les mêmes morts qu'avant, graines 3, 7, 8).
+2. *Commande* : `ordonnerStance(B, ids, stance, camp)` + `peutStance`, refus à voix haute (déroute, nuit) ; commande `stance` de `executerCmd` ; `empreinteEtat` ; test lockstep.
+3. *HUD* : boutons dans le rabat, mot de la posture dans `actionDe` et sous le nom de la carte, ligne du carnet ; `test/fumee.json` réécrit ; grisé et raison au clic.
+4. *Dessin* : `couvert` = hommes tapis (`TAPI`), `retenu` = fusil bas, pas d'éclair hors portée (le dessin seulement) ; image ajoutée à `test/rendu.json` avant.
+5. *IA et équilibre* : `enFace` choisit sa posture ; mesure (`scripts/mesure.mjs`, graines 3, 7, 8, 9 000 pas) : morts, mêlées, durée d'un assaut, pour chaque posture contre chaque autre.
+
+<details><summary>Plans de développement et coût</summary>
+
+| Plan | Contenu | Coût | Risque |
+|---|---|---|---|
+| **A — Deux postures** | volonté / retenu, lots 1-3, sans IA | **2 sessions** | faible : une règle de portée |
+| **B — Trois postures + IA** | + `couvert`, + lots 4-5 | **3-4 sessions** | moyen : l'équilibre de la défense (la mêlée compte la posture) |
+| **C — Postures de mouvement** | + `baionnette`, allure (marche prudente / course : `ordre.allure`) | **5-6 sessions** | élevé : encourage l'assaut frontal déjà coûteux (v0.17.0) |
+
+Recommandé : A, mesurer, puis B.
+</details>
+
+**Dettes anticipées** : touches (voir plus haut) ; sans munitions, `retenu` n'a pas de vrai coût (le prix est la portée et la cadence : à mesurer, et à relier aux vivres si on ajoute des
+cartouches un jour) ; `couvert` change `prises` (la mêlée) : test « la mêlée » à étendre ; l'IA ne doit pas devenir invulnérable en `couvert` ; deux : la posture est une commande.
+
+<details><summary>Prompts</summary>
+
+```text
+Cadrage « stances ». Lis ROADMAP.md §1, CLAUDE.md (tirer, moral, mêlée, deux), DESIGN.md. Avant tout code, pose-moi UNE AskUserQuestion (4 questions max, option
+recommandée en premier) : nombre de postures, rôle de l'IA, commandes (boutons / touches), effet d'un ordre de marche sur la posture. Puis écris le plan du lot 1 avec les
+fichiers touchés, les tests à écrire (dont « sans stance, mêmes morts qu'avant » sur les graines 3, 7, 8) et les dettes que tu vois. N'écris pas de code avant ma réponse.
+```
+
+```text
+Lot 1 « stances » (logique). Applique le plan validé. reg.stance avec `??=` à la relecture ; paramètres dans reglages.js ; textes dans data/stances.js ; aucun Math.random,
+aucun tirage déplacé. Écris les tests (portée, précision, sauvegarde relue, lockstep) AVANT le code qui les fait passer. Mesure avec scripts/mesure.mjs sur les graines 3, 7, 8
+et donne un tableau morts / blessés / durée par posture. Puis le prompt de clôture commun.
+```
+
+```text
+Équilibre des stances. Rejoue 3 graines × (volonté, retenu, couvert) × (attaque, défense), 9 000 pas, et dis laquelle domine. Si l'une domine, propose DEUX réglages
+(nombres + effet attendu), mesure-les, ne change rien sans mon accord (AskUserQuestion).
+```
+</details>
+
+---
+
+### 2. Le plan de nuit (ordres différés)
+
+**Statut** : à l'étude. Inspiration : la planification de *Hearts of Iron*, les ordres de bataille de Total War.
+
+**Intention** : la nuit, on prépare le jour : « à 6 h, barrage de 155 sur B2 ; à 6 h 20, B1 attaque ». Le jour exécute, la pause active corrige. Le plan ne voit pas l'avenir :
+l'ennemi bouge, la pluie tombe, la batterie recharge.
+
+**Ancrage** : le papier de la nuit (`#nuit`, `nuitEtat` : `choix` puis `aube`) ; `ordonnerMarche` / `peutOrdonner` / `planMarche` et `ordonnerBarrage` / `peutBarrage`
+(bataille.js:249-300 ; **`peutBarrage` refuse la nuit**, à ouvrir pour un ordre planifié) ; `avancer` et `etat.tickJour`, `ticksParJour(R)`, `horloge` ; la prévision météo (`etat.previsions`, juste 7 fois sur 10) ;
+`noter` / le carnet de bord ; la barre du temps (`hud/temps.js`) et la frise de `js/lib/labo-timeline.js` ; `executerCmd` ; l'état `etat.batteries` (instant de fin de recharge, `etat.temps`).
+
+**Modèle** : `etat.plan = [{ id, t, camp, type: 'marche' | 'barrage', ids | cal, x, y, forme }]`, trié par `t` puis par `id` (l'hôte avant l'invité, comme le lockstep) ; chaque ordre est
+validé à sec à la pose **et** revalidé à l'heure (le terrain, le moral, la recharge ont pu changer) ; un refus à l'heure est dit au carnet, jamais en silence (conventions §12).
+
+**Décisions à trancher** (défaut en gras) : nombre d'ordres par régiment (**4**) ; un ordre manuel du jour annule-t-il les ordres planifiés de ce régiment (**non, bouton « Annuler le plan »**) ;
+à deux, le plan de l'autre est-il visible (**oui, carte ouverte comme aujourd'hui ; un engagement par hachage puis révélation à l'aube est la suite**) ; planifier les corvées de la nuit suivante (**non**).
+
+**Plan fin (lots)**
+
+1. *Modèle et exécution* : `etat.plan` (`??= []`), `poserPlan` / `retirerPlan` (refus à voix haute), exécution dans `avancer` au pas `t` via les mêmes `ordonner…` (donc mêmes règles, même lockstep), purge à la fin du jour ;
+   `peutBarrage(…, { planifie: true })`. Tests : plan relu, plan exécuté au bon pas, ordre refusé à l'heure, déterminisme à deux.
+2. *Commande* : `plan` dans `executerCmd`, `empreinteEtat`, `pret` attend les plans des deux ; `outils/deux.mjs` joue une nuit avec plan.
+3. *HUD simple* : liste dans le papier de la nuit (« 6 h 20 · Viride · attaque B1 en face »), heure choisie par pas de 10 min, suppression ; module `js/hud/plan.js` (pas dans main.js).
+4. *Frise et visée fantôme* : les ordres sur la frise du jour (réutilise `labo-timeline.js`), la visée de la nuit montre l'emprise de l'ordre planifié (`rendu.surligner`), le clignotement à l'exécution ; sujet « Le plan de nuit » au labo (variantes liste / frise / carte).
+5. *Carnet et lecture* : « 6 h 20 : Viride part à l'attaque de B1 en face », « le barrage de 6 h n'a pas pu partir : la batterie recharge » ; fiche du jour dans le bilan du soir (ce qui a été joué du plan).
+6. *Suite (plan C)* : déclencheurs (« si un tronçon est perdu », « à la première pluie »), délai de transmission.
+
+<details><summary>Plans de développement et coût</summary>
+
+| Plan | Contenu | Coût | Risque |
+|---|---|---|---|
+| **A — Le minuteur** | lots 1-3 : ordres de marche et de barrage à heure fixe, liste textuelle | **3-4 sessions** | faible : tout passe par les ordres existants |
+| **B — Sur la frise** | + lots 4-5, + gestion à deux (engagement / révélation à l'aube) | **6-8 sessions** | moyen : UI de la frise, tension de design |
+| **C — Plan conditionnel** | + déclencheurs, + transmissions (coureur, fil coupé) | **10-14 sessions** | élevé : lié au brouillard de guerre, jamais tranché |
+
+Recommandé : A, jouer deux batailles, puis B.
+</details>
+
+**Dettes anticipées** : **tension de design** — « la bataille est un terrain qui se transforme » : un plan trop riche rend le jour spectateur ; plafonner les ordres et garder la pause active comme moment fort ;
+`etat.temps` la nuit (la recharge des batteries compte-t-elle la nuit ? **à vérifier avant le lot 1**) ; `nuitEtat` vit dans main.js (extraire avant d'ajouter) ; `test/fumee.json` à réécrire ; clavier (liste navigable) ;
+une partie relue au matin avec un plan en cours (test « relue au milieu du plan ») ; l'IA d'en face n'a pas de plan (son `enFace` reste réactif).
+
+<details><summary>Prompts</summary>
+
+```text
+Cadrage « plan de nuit ». Lis ROADMAP.md §2, CLAUDE.md (la nuit sur le champ, nuitEtat, ordres, deux), bataille.js (peutBarrage, avancer, aube). Vérifie D'ABORD si etat.temps
+avance la nuit (recharge des batteries) et dis-moi ce que ça change. Puis UNE AskUserQuestion (4 questions max, recommandé en premier) : ordres par régiment, ordre manuel vs plan,
+visibilité à deux, types d'ordres du lot 1. Sors le plan du lot 1 avec fichiers, tests, dettes. Pas de code avant ma réponse.
+```
+
+```text
+Lot 1 « plan de nuit ». etat.plan avec `??= []`, exécution dans avancer par les mêmes ordonnerMarche / ordonnerBarrage (aucune règle dupliquée), refus à l'heure dits au carnet.
+Tests d'abord : relu au milieu, exécuté au bon pas, refusé à l'heure (batterie, déroute, hors secteur), déterminisme (outils/deux.mjs avec un plan). Ne touche pas à l'ordre des
+tirages. Puis le prompt de clôture commun.
+```
+
+```text
+Lot « plan de nuit » : interface. Crée js/hud/plan.js (fabrique creerPlan({ $, bataille: () => B, … }), état propre, jamais B lui-même), pas de code dans main.js sauf le branchement.
+Montre-moi 3 variantes au labo (liste, frise, carte) avec depuis: 'X.Y.Z' et une entrée de labo-journal.js avant d'en brancher une. Tout au clavier ET à la souris.
+```
+</details>
+
+---
+
+### 3. Le Mémorial
+
+**Statut** : à l'étude (« À VALIDER » dans `DESIGN.md`). Inspiration : *Darkest Dungeon* (le cimetière), mais sobre : la danse macabre, pas le trophée.
+
+**Intention** : chaque homme tombé garde son nom. Après la bataille, un lieu où on les relit. Aucune récompense : pas de classement, pas de totaux mis en avant.
+
+**Ancrage** : `etat.corps` (`[x×10, y×10, camp, jour, id]`, sauvegardé) ; `mourir(B, i, cause, ou)` ; `identite.js` (nom, âge, grade **tirés de la graine et du numéro**) ; `A.victimes` ; `etat.evacues` ;
+`juger` / `etat.issue` ; l'écran titre et son décor (`decor`, `cameraLibre`, `fumer`) ; la fiche (`hud/fiche.js`) ; `nomTroncon` ; `js/lib/save.js`.
+
+**Point dur** : l'identité dépend de la graine de la bataille. Le Mémorial **stocke des chaînes** (nom, âge, grade, régiment, jour, lieu, cause), jamais un numéro à re-dériver.
+
+**Décisions à trancher** (défaut en gras) : les morts des deux camps (**oui, deux listes, mêmes caractères**) ; les victimes d'un homme sur sa ligne (**non : seulement sur la fiche, v0.35.0**) ; des totaux (**aucun en tête ; le détail seul**) ;
+un bouton sur l'écran titre (**oui, discret, sous Continuer / Nouvelle partie ; conventions §3**) ; les blessés évacués qui ne reviennent jamais (**« disparus du front »**).
+
+**Plan fin (lots)**
+
+1. *Collecte* : module pur `js/memorial.js` (`recueillir(B)` : des enregistrements compacts `[nom, âge, grade, régiment, camp, jour, cause, lieu]`), écrit en fin de bataille dans `cyclopeen:memorial` (versionné, `save.js`),
+   idempotent (clé = graine + date), plafonné et compact (quota de `localStorage`) ; export / import ; clé autre en mode debug. Tests : même bataille, même registre ; relue au milieu, même registre.
+2. *L'écran* : un papier (`.papier`) par bataille puis par régiment, noms en liste, recherche au clavier, flèches, Échap ; épitaphes sobres (`data/epitaphes.js` : « tombé le 3ᵉ jour, tronçon 2 de B1, d'un obus ») ; aucun chiffre en gras.
+3. *Dans le monde* : le décor de l'écran titre devient un champ de croix à l'heure arrêtée ; survol d'une croix = le nom (la capsule de `hommeSous`) ; plafond de croix dessinées (rendu logiciel) ; image ajoutée à `test/rendu.json` avant.
+4. *Régiments dissous et survivants* : « le Viride n'est plus », « 12 hommes ont survécu à trois batailles » (nécessite la campagne).
+
+<details><summary>Plans de développement et coût</summary>
+
+| Plan | Contenu | Coût | Risque |
+|---|---|---|---|
+| **A — Le registre** | lots 1-2 | **2 sessions** | faible |
+| **B — Le champ de croix** | + lot 3, réutilise le décor du titre | **4-5 sessions** | moyen : budget de rendu, ton |
+| **C — Mémorial de campagne** | + lot 4, épitaphes par bataille, régiments dissous | **7+ sessions** (après la campagne) | moyen : dépend de l'identité portable (piste 4) |
+</details>
+
+**Dettes anticipées** : quota `localStorage` (≈ 1 500 morts × 20 batailles : compact ou IndexedDB) ; écran titre (conventions §3 : l'ordre Continuer / Nouvelle partie / roue ne bouge pas) ; une fin de bataille quittée avant le bilan
+(écrire à la mort de la dernière journée, pas seulement à l'écran de fin ?) ; deux : le registre est celui de chaque machine ; textes en français seulement mais en données ; `DESIGN.md` : retirer « À VALIDER » une fois livré.
+
+<details><summary>Prompts</summary>
+
+```text
+Cadrage « Mémorial ». Lis ROADMAP.md §3, DESIGN.md (« Ce que le jeu refuse », l'entre-deux-parties), identite.js, mourir, juger. Une AskUserQuestion (4 questions max, recommandé en premier) :
+deux camps ou un, ce qu'une ligne montre (jamais un compteur récompense), place sur l'écran titre, sort des évacués. Puis le plan du lot 1 : format compact d'un enregistrement, estimation
+de taille pour 20 batailles, tests, et comment tu t'assures qu'on ne re-dérive jamais une identité depuis une autre graine.
+```
+
+```text
+Lot 1 « Mémorial » (collecte). js/memorial.js pur et testé dans Node, clé cyclopeen:memorial via js/lib/save.js (version, migration vide), idempotent, plafonné. Écris le test « même bataille,
+même registre » et « relue au milieu » avant le code. Rien dans l'état de bataille. Puis le prompt de clôture commun.
+```
+
+```text
+Lot « Mémorial » : l'écran. Un papier sobre, au clavier et à la souris, sans gras sur les nombres, épitaphes dans data/epitaphes.js. Montre-moi DEUX variantes au labo (liste par régiment / par jour)
+avant de brancher. Vérifie lisibilité (outils/lisibilite.mjs) et audit-ecran. Aucune couleur hors palette.
+```
+</details>
+
+---
+
+### 4. La campagne
+
+**Statut** : à l'étude. Inspiration : la campagne de Total War, réduite à ce que ce jeu sait faire : relier des batailles par des hommes nommés.
+
+**Intention** : ce qu'on fait dans une bataille pèse dans la suivante : les régiments décimés, les vétérans, les gradés promus. Le Mémorial en est la mémoire. Pas de victoire claironnée : « le secteur suivant ».
+
+**Ancrage** : `etat.mission` / `juger` / `etat.issue` ; `etat.reserves` et la relève ; `etat.grades`, `A.exp`, `A.victimes`, `etat.evacues` (retours) ; `nouvelleBataille` (options, ordre des tirages) ; `data/secteur.js` (trois secteurs) ;
+`data/lexique.js` (noms de régiments) ; `identite.js` ; l'écran titre (`demanderSecteur`) ; `js/lib/save.js`.
+
+**Point dur** : l'identité d'un homme (nom, âge) vient de `graine` + numéro. Une campagne a donc deux graines : une **`graineIdentite`** stable pour toute la campagne (les noms ne changent pas d'une bataille à l'autre) et la graine de chaque bataille
+(terrain, météo). Hors campagne, `graineIdentite = graine` : les parties d'avant sont inchangées.
+
+**Décisions à trancher** (défaut en gras) : longueur (**3 batailles**) ; ce qui passe (**effectifs, expérience, grades, victimes ; pas la fatigue ni la peur**) ; renforts (**recrues sans expérience**) ; défaite (**repli : la campagne continue, finit sous quatre régiments**) ;
+à deux (**non, la campagne est solo**) ; le choix du secteur (**un seul au début, puis choisi**).
+
+**Plan fin (lots)**
+
+1. *Identité portable* : `graineIdentite` dans `nouvelleBataille` (par défaut = `graine`), test « mêmes noms avant / après » ; aucun changement de partie.
+2. *Registre de campagne* : `js/campagne.js` pur (`nouvelleCampagne`, `cloturer(B)`, `suivante`) ; clé `cyclopeen:campagne` (versionnée, migrations) ; écrit à la fin de bataille, avant l'écran de fin (une coupure ne perd rien).
+3. *Reconstituer* : `nouvelleBataille(…, { troupes })` : les vétérans prennent leur place dans leur régiment, complétés par des recrues ; `A.exp`, `etat.grades`, victimes relus. Test : 750 hommes, mêmes numéros, mêmes noms.
+4. *Entre deux batailles* : un papier de campagne (régiments, effectifs, blessés qui reviennent, fusion des régiments décimés), sobre, au clavier ; le carnet de campagne (quatre lignes, comme celui de bataille).
+5. *Le secteur suivant* : mission selon l'issue, choix entre deux secteurs (les trois existants, puis d'autres).
+6. *Fin de campagne* : sans fanfare ; lien au Mémorial (les noms des trois batailles).
+7. *Écran titre et menus* : « Continuer la campagne », export / import JSON, clé autre en debug.
+8. *Suite (plan C)* : état-major (doctrines débloquées, chacune avec un coût), saisons, trophées déclaratifs sobres (`DESIGN.md`).
+
+<details><summary>Plans de développement et coût</summary>
+
+| Plan | Contenu | Coût | Risque |
+|---|---|---|---|
+| **A — La chaîne de trois** | lots 1, 2, 3, 6, 7 : trois batailles de suite, vétérans reportés, sans écran de réorganisation | **5-6 sessions** | moyen : l'identité portable, l'équilibre d'attrition |
+| **B — Réorganiser et choisir** | + lots 4-5 : papier de campagne, fusion, choix du secteur | **9-11 sessions** | moyen : UI, durée d'une partie (3 × 60-90 min) |
+| **C — État-major et saisons** | + lot 8, météo de saison, doctrines | **15+ sessions** | élevé : beaucoup de contenu, équilibre long |
+
+Recommandé : A, car il prouve le principe (des hommes qui survivent à une bataille) avant d'y ajouter de l'interface.
+</details>
+
+**Dettes anticipées** : l'identité (ci-dessus) ; l'ordre des tirages de `nouvelleBataille` (les troupes se posent *après* les tirages d'avant) ; `numeroDe`, `etat.regiments` et les ids de régiment ; une bataille de 10 à 15 jours dure 1 h à 1 h 30 : la sauvegarde en cours existe, mais la
+campagne doit survivre à un onglet fermé entre deux batailles ; mesure d'attrition (3 batailles jouées sans les mains, `scripts/trois-jours.mjs` étendu) ; les nuits du bilan de campagne (`etat.evacues` : tous ceux qui devaient revenir reviennent ?) ;
+le Mémorial doit être là d'abord ou en même temps.
+
+<details><summary>Prompts</summary>
+
+```text
+Cadrage « campagne ». Lis ROADMAP.md §4, CLAUDE.md (identite, nouvelleBataille, mission, réserves, retours, sauvegarde), DESIGN.md (entre deux parties). Montre-moi d'abord, en 10 lignes, où une
+graineIdentite devrait passer et ce que ça casserait. Puis UNE AskUserQuestion (4 questions max, recommandé en premier) : longueur, ce qui passe d'une bataille à l'autre, renforts,
+défaite. Plan du lot 1 avec tests. Pas de code avant ma réponse.
+```
+
+```text
+Lot 1 « campagne » (identité portable). `graineIdentite` optionnelle dans nouvelleBataille, égale à `graine` par défaut ; identite.js la lit. Aucun tirage déplacé, aucune sauvegarde changée.
+Tests : une partie d'avant se relit avec les mêmes noms ; deux batailles d'une même campagne donnent le même nom au même numéro. Puis le prompt de clôture commun.
+```
+
+```text
+Lots 2-3 « campagne » (registre, reconstitution). js/campagne.js pur, testé dans Node, clé cyclopeen:campagne via js/lib/save.js, écrite AVANT l'écran de fin. Test de bout en bout : trois
+batailles jouées sans les mains (scripts/trois-jours.mjs étendu), vétérans reportés, rapport d'attrition par régiment. Dis-moi si la partie est jouable (durée, effectifs) ; si non, AskUserQuestion
+avec deux réglages mesurés.
+```
+</details>
+
+---
+
+### 5. Les gaz
+
+**Statut** : à l'étude, **à valider sur le ton avant tout** (aucune mention dans `DESIGN.md`). Inspiration : la météo et le relief de *Total War* (vent, pluie), les nappes de *Company of Heroes*.
+
+**Intention** : un ennemi qui ne se voit presque pas, qui obéit au terrain : il dérive avec le vent, descend dans les creux, stagne dans les tranchées, la pluie le lave. Le jeu y gagne un usage du relief et de la météo qu'il n'avait pas. Le joueur le **subit** d'abord ; l'employer
+est une décision de ton séparée.
+
+**Garde-fous proposés** : pas de description de blessure ; pas de gloire à gazer ; le carnet dit sobrement (« des obus qui font peu de bruit ») ; pas de compteur de gazés mis en avant.
+
+**Ancrage** : `hydroLignes` (l'humidité qui glisse vers la case la plus basse : même idée, 4 m de maille comme les champs de coûts) ; `meteo.js` (**pas de vent aujourd'hui**) ; `calibres.js` et `NOMS_CALIBRES` (les impacts sauvegardés gardent l'**indice** du calibre : n'en ajouter qu'à la fin) ;
+`effrayer`, `reposer`, `mourir` ; `enFace` ; `rendu/eclats.js` (`fumer`), `rendu/temps.js` (voile continu) ; `hud/carte.js` ; les corvées (`data/corvees.js`) ; `photo` / `restaurer` (les champs en b64, comme `coutsActuels`).
+
+**Modèle** : `etat.gaz` = grille d'octets (≈ 210 × 160 cases de 4 m, ~34 ko), évoluée chaque seconde : advection selon `vent` en huit directions avec reste fractionnaire (**pas de trigonométrie**), glissement vers le bas, diffusion, lavage par la pluie et le vent fort. Sauvegardée en b64 (rien à rejouer, contrairement à l'eau),
+dans `empreinteEtat`. `A.gaz[i]` : la dose d'un homme (sauvegardée avec la foule). Le vent d'un jour vient d'un hachage graine-jour (aucun tirage déplacé) ; la prévision le dit 7 fois sur 10 comme la météo. Une partie d'avant n'a ni vent ni gaz (`etat.gaz ??= null` : en face n'en lance pas).
+
+**Décisions à trancher** (défaut en gras) : on le veut (**à décider avant tout**) ; qui l'emploie (**en face seulement d'abord**) ; effet (**peur, toux : tir ×, mort dans la nuit comme un blessé laissé, `mortBlesse`**) ; protection (**masques : un état par régiment, une corvée de nuit, un coût de cadence**) ; les abris profonds
+(**piégeux : le gaz y descend**, plan C).
+
+**Plan fin (lots)**
+
+1. *Le vent* : `vent` (direction en huit, force 0-2) par jour, hachage graine-jour, affiché dans la barre du temps et dans la prévision (pictogramme dans `hud/meteo-icones.js`), sans effet encore. Tests : même vent à la relecture.
+2. *Le champ* : `js/gaz.js` pur (advection, glissement, diffusion, dissipation), pas à pas fixe, b64 dans la sauvegarde, `empreinteEtat` ; test de déterminisme (Node / Chromium) et « relue au milieu d'un nuage ».
+3. *Les hommes* : dose, peur, toux (cadence), mort dans la nuit ; `reg.masques` (0 à 1) qui divise la dose, au prix de la cadence ; corvée « Masques » de nuit, ordre « Masques » de jour ; `R.gaz` dans reglages.js.
+4. *L'obus à gaz de l'ennemi* : un calibre ajouté **à la fin** de `NOMS_CALIBRES`, sans cratère (la branche `impact` saute) ; `enFace` le tire sur nos tronçons quand le vent est bon, seulement sous condition (**aucun tirage de plus quand il n'y en a pas**) ; carnet.
+5. *Le dessin* : une nappe (texture de la grille, couleur `v` fondue, déclarée comme exception dans `CLAUDE.md` au même titre que le voile), sur la carte aussi ; sujet « Les gaz » au labo (nappe lisse / volutes en particules / cases) ; mesure en rendu logiciel, 8 000 soldats, tous zooms.
+6. *Les réponses du joueur* : marcher vers les hauteurs (le champ de coûts peut éviter le gaz : option), aérer, évacuer la nuit, inhumer sous gaz = dangereux.
+7. *Notre gaz* (plan B) : une batterie, le vent change (retour de nappe).
+
+<details><summary>Plans de développement et coût</summary>
+
+| Plan | Contenu | Coût | Risque |
+|---|---|---|---|
+| **A — La menace** | lots 1-5 (en face seulement) | **6-8 sessions** | moyen-élevé : rendu, nuit, ton |
+| **B — Les deux camps** | + lot 7, IA, équilibre | **10-12 sessions** | élevé : retour de nappe, éthique du jeu |
+| **C — Gaz et terrain** | + lot 6, abris piégeux, champ de coûts évitant le gaz, mines | **14+ sessions** | élevé : interaction avec tout le moteur |
+
+Recommandé : **ne rien commencer** avant (a) ma décision de ton, (b) l'eau de la nuit étalée (« À l'étude »), (c) la mesure de rendu d'une nappe au labo (variantes seules, sans règle).
+</details>
+
+**Dettes anticipées** : l'évolution de la nuit en lot (le pas de 300 à 500 ms de fin de journée existe déjà ; un champ de 34 000 cases coûte peu, mais l'ordre « eau puis gaz » se rejoue) ; `NOMS_CALIBRES` (ajout à la fin seulement) ; `Math.sin` / `cos` interdits (l'advection en huit directions ne s'en sert pas) ;
+`hauteurQ` rejoue le relief, pas le gaz (sauvegardé) ; `enFace` : le hasard conditionné ; `test/rendu.json` : image ajoutée avant ; palette : aucune couleur nouvelle (`v` fondu) ; la quantité de texte du carnet reste de quatre lignes.
+
+<details><summary>Prompts</summary>
+
+```text
+Cadrage « gaz ». Lis ROADMAP.md §5, DESIGN.md (« Ce que le jeu refuse »), CLAUDE.md (météo, nuit, calibres, hydroLignes, rendu/temps.js). AVANT tout le reste, AskUserQuestion (4 questions max, recommandé en premier) sur le ton :
+le gaz est-il dans le jeu, qui l'emploie, comment il est dit au joueur, ce qui est montré. Si je réponds « non » ou « plus tard », arrête-toi et écris-le dans ROADMAP.md (idée écartée → docs/archives/ avec la raison).
+Sinon, plan du lot 1 (vent) avec fichiers, tests et dettes.
+```
+
+```text
+Maquette « gaz » au labo, sans règle. Sujet « Les gaz » : trois variantes de dessin d'une nappe sur un secteur après trois jours d'obus (lisse, volutes, cases). Utilise le moteur du jeu (mêmes modules), un champ de test qui dérive et descend dans les creux, aucune
+couleur hors palette. Donne le coût mesuré (rendu logiciel, 8 000 soldats, zooms 1, 4, 8, dessin attendu : ?mesure=1) et ajoute l'entrée de labo-journal.js. Je choisis la variante avant tout lot de règle.
+```
+
+```text
+Lot 2 « gaz » (le champ). js/gaz.js pur, sans trigonométrie, advection en huit directions avec reste, glissement vers le bas par hauteurQ, dissipation par la pluie / le vent ; b64 dans photo / restaurer ; empreinteEtat.
+Tests d'abord : déterminisme (Node contre Chromium via outils/determinisme.mjs), relu au milieu d'un nuage, conservation de la masse à la dissipation près. Puis le prompt de clôture commun.
+```
+</details>
+
+---
+
+### Annexe : comparatif des coûts (plan recommandé de chaque piste)
+
+| Piste | Plan recommandé | Sessions | Dépend de |
+|---|---|---|---|
+| 1. Stances | A puis B | 2 → 4 | `main.js` allégé (HUD) |
+| 2. Plan de nuit | A puis B | 3-4 → 6-8 | vérifier `etat.temps` la nuit |
+| 3. Mémorial | A | 2 | — (prépare 4) |
+| 4. Campagne | A | 5-6 | 3, identité portable |
+| 5. Gaz | rien avant décision de ton | 6-8 | décision de ton, eau de la nuit étalée, maquette au labo |
