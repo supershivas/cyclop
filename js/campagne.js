@@ -4,11 +4,11 @@
    identité à re-dériver : un homme est son numéro, son rang, son expérience et ses victimes ; son nom vient de `graineIdentite`.
    Il est écrit à la fin de chaque bataille, avant l'écran de fin (`cloturerDansLeStore`), et `cloturer` est idempotente : relire une
    partie arrêtée à la fin, ou clore deux fois, donne le même registre. Rien n'est reporté de la fatigue, de la peur ni du moral. */
-import { hash2 } from './lib/rng.js?v=0.36.4';
-import { NOUS, rangDe, numeroCampagne } from './bataille.js?v=0.36.4';
-import { SECTEURS } from './data/secteur.js?v=0.36.4';
-import { identite, chevrons } from './identite.js?v=0.36.4';
-import { CAMPAGNE } from './data/campagne.js?v=0.36.4';
+import { hash2 } from './lib/rng.js?v=0.36.5';
+import { NOUS, rangDe, numeroCampagne } from './bataille.js?v=0.36.5';
+import { SECTEURS } from './data/secteur.js?v=0.36.5';
+import { identite, chevrons } from './identite.js?v=0.36.5';
+import { CAMPAGNE, TEXTES } from './data/campagne.js?v=0.36.5';
 
 export const CLE = 'campagne';        // l'entrée de js/lib/save.js (cyclopeen:campagne)
 export const VERSION_CAMPAGNE = 1;
@@ -82,6 +82,14 @@ function survivants(B) {
   }));
 }
 
+/* Nos morts de la bataille, du premier au dernier : [numéro de campagne, jour, nom du régiment]. Le régiment se retrouve comme `quiEst` : les numéros de bataille sont
+   contigus, régiment après régiment. Un prisonnier n'est pas un mort (il quitte la campagne vivant : ni mort, ni survivant). */
+function tombes(B) {
+  const { etat } = B, bornes = []; let p = 0;
+  for (const r of etat.regiments) { bornes.push([p += r.initial, r]); }
+  return etat.corps.filter(m => m[2] === NOUS).map(m => [numeroCampagne(etat, m[4]), m[3], bornes.find(([fin]) => m[4] < fin)?.[1].nom ?? null]);
+}
+
 /* Clôt la bataille n de la campagne : rend la campagne avec cette bataille au registre, et son nouveau statut. Idempotente (même
    bataille déjà au registre : la campagne est rendue telle quelle). Une bataille qui n'est pas finie, ou d'une autre campagne, est
    une erreur de programmation, pas un ordre du joueur. */
@@ -96,6 +104,7 @@ export function cloturer(c, B) {
     n: ref.n, graine: etat.graine, secteur: etat.secteur, mission: etat.mission, jours: etat.jour,
     issue: etat.issue ? { reussie: etat.issue.reussie, texte: etat.issue.texte } : null,
     pertes: [...etat.pertes], regiments,
+    tombes: tombes(B),                         // nos morts : [numéro de campagne, jour, régiment] (les noms se refont de la graine d'identité : `memorial`)
   };
   const debout = regiments.filter(r => r.survivants.length >= (c.hommesMin ?? 1)).length;
   // le compteur de campagne passe devant tous les numéros que nos hommes ont portés dans cette bataille (vivants ou morts)
@@ -144,4 +153,20 @@ export function passage(c, plan = CAMPAGNE) {
     derniere: { n: derniere.n, secteur: derniere.secteur, jours: derniere.jours, issue: derniere.issue, pertes: derniere.pertes },
     regiments, fusions: journal.fusions, dissous: journal.dissous, perdus: journal.perdus, parRegiment,
   };
+}
+
+/* La fin de la campagne, en faits (lot 6 : sans fanfare) : bataille par bataille ce qu'elle a coûté, les noms de ceux qui sont tombés et de ceux qui sont restés. Les noms
+   sont tirés de la graine d'identité de la campagne, comme dans la bataille : ce sont des chaînes ici, qu'un Mémorial gardera telles quelles. Rien n'est compté en tête : aucun
+   total, aucun classement. */
+export function bilan(c) {
+  const nom = numero => { const q = identite(c.graineIdentite, NOUS, numero); return { prenom: q.prenom, nom: q.nom }; };
+  const batailles = c.batailles.map(b => ({
+    n: b.n, secteur: b.secteur, jours: b.jours, issue: b.issue, tombes: b.tombes.length,
+    survivants: b.regiments.reduce((t, r) => t + r.survivants.length, 0),
+  }));
+  const tombesNoms = c.batailles.flatMap(b => b.tombes.map(([numero, jour, regiment]) => ({ ...nom(numero), numero, regiment, jour, bataille: b.n, secteur: b.secteur })));
+  // restés : les survivants de la dernière bataille qui l'étaient de toutes les autres (ils y étaient donc depuis le début)
+  const dernier = c.batailles.at(-1), vus = c.batailles.slice(0, -1).map(b => new Set(b.regiments.flatMap(r => r.survivants.map(s => s[0]))));
+  const restes = dernier ? dernier.regiments.flatMap(r => r.survivants.filter(s => vus.every(v => v.has(s[0]))).map(s => ({ ...nom(s[0]), numero: s[0], regiment: r.nom, grade: identite(c.graineIdentite, NOUS, s[0], 99, 125, s[1]).grade }))) : [];
+  return { statut: c.statut, texte: TEXTES.fin[c.statut === 'terminee' ? 'terminee' : 'effondree'], batailles, tombes: tombesNoms, restes };
 }

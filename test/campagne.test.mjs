@@ -390,3 +390,45 @@ test('l\'ordre des secteurs est fixe, la mission suit l\'issue : victoire, on pr
   assert.equal(suivante(g).opts.soldatsEux, suivante(p).opts.soldatsEux);
   assert.equal(passage(g).mission, 'prendre'); assert.equal(passage(p).mission, 'tenir');
 });
+
+// ─── Lot 6 : la fin de campagne, sans fanfare ───────────────────────────────────────────────────────────────────────────────────────────
+import { bilan } from '../js/campagne.js';
+import { TEXTES } from '../js/data/campagne.js';
+
+group('campagne — la fin');
+test('le registre garde nos morts, et eux seuls : numéro de campagne, jour, régiment', () => {
+  const { B, apres } = unePartie(), t = apres.batailles[0].tombes, nos = B.etat.corps.filter(m => m[2] === 0);
+  assert.equal(t.length, nos.length); assert.ok(t.length > 0);
+  assert.equal(t.length, B.etat.pertes[0], 'chaque mort compté a son corps, donc son nom');
+  const num = t.map(x => x[0]);
+  assert.equal(new Set(num).size, num.length, 'un mort, une fois');
+  const vivants = new Set(apres.batailles[0].regiments.flatMap(r => r.survivants.map(s => s[0])));
+  assert.ok(num.every(n => !vivants.has(n)), 'un mort n\'est pas un survivant');
+  // le régiment et le jour sont ceux de la mort
+  const noms = new Set(B.etat.regiments.filter(r => r.camp === 0).map(r => r.nom));
+  assert.ok(t.every(([, jour, reg]) => jour >= 1 && jour <= B.etat.jour && noms.has(reg)));
+});
+test('le bilan : bataille par bataille, les noms de ceux qui sont tombés et de ceux qui sont restés ; rien en tête', () => {
+  const { c, B, apres } = unePartie();
+  // une campagne de deux batailles : la 2e rejoue la même (mêmes survivants), pour que « restés » ait un sens
+  const deux = { ...apres, statut: 'terminee', batailles: [apres.batailles[0], { ...apres.batailles[0], n: 2, secteur: 'crete' }] };
+  const b = bilan(deux);
+  assert.equal(b.statut, 'terminee'); assert.equal(b.texte, TEXTES.fin.terminee);
+  assert.deepEqual(b.batailles.map(x => x.n), [1, 2]);
+  assert.equal(b.batailles[0].tombes, apres.batailles[0].tombes.length);
+  assert.equal(b.tombes.length, 2 * apres.batailles[0].tombes.length);
+  // les noms sont ceux de la bataille (même graine d'identité, même numéro)
+  const t = apres.batailles[0].tombes[0], q = quiEst(B, B.etat.corps.find(m => numeroCampagne(B.etat, m[4]) === t[0])[4]).qui;
+  const m = b.tombes.find(x => x.numero === t[0]);
+  assert.equal(`${m.prenom} ${m.nom}`, `${q.prenom} ${q.nom}`);
+  assert.ok(m.regiment && m.jour >= 1 && m.bataille === 1);
+  // restés : ceux qui étaient là à toutes les batailles (ici : tous les survivants)
+  assert.equal(b.restes.length, apres.batailles[0].regiments.reduce((n, r) => n + r.survivants.length, 0));
+  assert.ok(b.restes.every(r => r.prenom && r.nom && r.grade && r.regiment));
+  // un homme qui manque à une bataille n'est pas « resté »
+  const manque = { ...deux, batailles: [{ ...deux.batailles[0], regiments: deux.batailles[0].regiments.map((r, k) => k ? r : { ...r, survivants: r.survivants.slice(1) }) }, deux.batailles[1]] };
+  assert.equal(bilan(manque).restes.length, b.restes.length - 1, 'le premier survivant du 1er régiment manquait à la 1re bataille');
+  // pas de fanfare : aucun mot de victoire, de gloire ni de score
+  assert.ok(!/victoire|gloire|bravo|score|record|médaille|!/i.test(JSON.stringify(TEXTES)));
+  assert.equal(bilan({ ...c, statut: 'effondree', batailles: deux.batailles }).texte, TEXTES.fin.effondree);
+});

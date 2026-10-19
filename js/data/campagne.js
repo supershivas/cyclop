@@ -16,3 +16,12 @@ export const CAMPAGNE = {
   regimentsMin: 4,                              // sous quatre régiments encore debout, la campagne finit (repli, pas de victoire claironnée)
   hommesMin: 20,                                // un régiment est « debout » à vingt survivants au moins (un cinquième de 94) : avec un seul homme, le nom n'est plus qu'un nom
 };
+
+// Les mots de la fin (Jérôme, cadrage v0.36.3 : « le secteur suivant », pas de victoire claironnée ; DESIGN.md : aucune glorification, le compteur de morts n'est jamais une récompense).
+// Pas de total en tête, pas de mot de victoire : le détail seul, bataille par bataille, puis les noms.
+export const TEXTES = {
+  fin: { terminee: 'La campagne est finie.', effondree: 'Il ne reste plus de quoi tenir : la campagne est finie.' },
+  issue: { reussie: 'tenue', manquee: 'manquée' },          // dite après le nom du secteur : « Les labours : tenue »
+  tombes: 'Les tombés', jusquauBout: 'Ceux qui sont restés', retour: 'Écran titre',
+  vide: 'Personne.',
+};

@@ -1,10 +1,11 @@
 // Le papier de campagne (Jérôme, v0.36.4 ; variante A « Le registre » du sujet « Le papier de campagne » du labo) : entre deux batailles, un papier posé sur le champ
 // (jamais une boîte de dialogue, comme celui de la nuit). Il ne décide rien : il dit ce que `passage` de campagne.js a calculé (la bataille qui finit, chaque régiment tel
 // que la reconstitution le fera, les fusions) et un seul geste, partir pour la suivante (Entrée : le bouton prend le focus). Il ne lit ni ne modifie la partie.
-import { MISSIONS } from '../bataille.js?v=0.36.4';
-import { SECTEURS } from '../data/secteur.js?v=0.36.4';
-import { chevronsHtml } from './barres.js?v=0.36.4';
-import { pluriel } from './lecture.js?v=0.36.4';
+import { MISSIONS } from '../bataille.js?v=0.36.5';
+import { SECTEURS } from '../data/secteur.js?v=0.36.5';
+import { chevronsHtml } from './barres.js?v=0.36.5';
+import { pluriel } from './lecture.js?v=0.36.5';
+import { TEXTES } from '../data/campagne.js?v=0.36.5';
 
 const el = (tag, classe, ...kids) => { const e = document.createElement(tag); if (classe) e.className = classe; e.append(...kids.filter(k => k != null && k !== false)); return e; };
 const voyelle = n => /^[AEIOUYÉ]/.test(n);
@@ -43,6 +44,25 @@ export function creerCampagne({ $ }) {
     racine.hidden = false;
     bouton.focus();
   }
+  /* La fin de la campagne (lot 6, sans fanfare) : `b` est le `bilan` de campagne.js. Une ligne par bataille, puis deux listes de noms, repliées (rien n'est mis en tête :
+     DESIGN.md, ni victoire claironnée ni compteur de morts en récompense) ; un seul geste, l'écran titre. */
+  function montrerFin(b, retour) {
+    const liste = (titre, noms, ligne) => {
+      const d = el('details', 'noms', el('summary', '', `${titre} (${noms.length})`));
+      d.append(noms.length ? el('ul', '', ...noms.map(n => el('li', '', ligne(n)))) : el('p', 'discret', TEXTES.vide));
+      return d;
+    };
+    const bouton = el('button', 'bouton', TEXTES.retour);
+    bouton.onclick = () => { cacher(); retour(); };
+    racine.replaceChildren(
+      el('h2', '', b.texte),
+      el('div', 'registre', ...b.batailles.map(x => el('p', 'ligne-bataille', `Bataille ${x.n} · ${SECTEURS[x.secteur].nom} · ${pluriel(x.jours, 'jour', 'jours')} : ${x.issue?.reussie ? TEXTES.issue.reussie : TEXTES.issue.manquee}`, el('span', 'discret', ` · ${pluriel(x.tombes, 'tombé', 'tombés')}`)))),
+      liste(TEXTES.tombes, b.tombes, n => `${n.prenom} ${n.nom}, ${n.regiment ?? 'sans régiment'}, ${n.jour === 1 ? '1er' : `${n.jour}e`} jour de la bataille ${n.bataille}`),
+      liste(TEXTES.jusquauBout, b.restes, n => `${n.prenom} ${n.nom}, ${n.grade}, ${n.regiment}`),
+      bouton);
+    racine.hidden = false;
+    bouton.focus();
+  }
   function cacher() { racine.hidden = true; racine.replaceChildren(); }
-  return { montrer, cacher, get ouvert() { return !racine.hidden; } };
+  return { montrer, montrerFin, cacher, get ouvert() { return !racine.hidden; } };
 }

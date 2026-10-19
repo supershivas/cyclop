@@ -14,18 +14,18 @@
    La sauvegarde (photo) garde la graine, la liste compacte des impacts, l'état
    de la foule et les petites couches de logique ; jamais le relief : il se
    rejoue depuis la graine et les impacts (rejouerTerrain). */
-import { createRng, hash2 } from './lib/rng.js?v=0.36.4';
-import { creerTerrain, impact, hydroLignes, etat as etatCase, vitesseEtat, ETAT } from './terrain.js?v=0.36.4';
-import { creerArmee, ajouterSoldat, construireGrille, pasArmee, tuerDans, effrayer, compacter, photoArmee, restaurerArmee, b64, deB64, DENSITE, place } from './army.js?v=0.36.4';
-import { creuserTranchees, ligneSous } from './tranchees.js?v=0.36.4';
-import { calculerCouts, creerCacheChamps, dimensionsCouts, BLOC } from './champs.js?v=0.36.4';
-import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.36.4';
-import { METEO, TRANSITIONS, PREVISION_JUSTE } from './data/meteo.js?v=0.36.4';
-import { SECTEURS } from './data/secteur.js?v=0.36.4';
-import { REGIMENTS } from './data/lexique.js?v=0.36.4';
-import { STANCES, STANCE_DEFAUT } from './data/stances.js?v=0.36.4';
-import { grade } from './identite.js?v=0.36.4';
-import { corvees, rejouerTravaux } from './nuit.js?v=0.36.4';
+import { createRng, hash2 } from './lib/rng.js?v=0.36.5';
+import { creerTerrain, impact, hydroLignes, etat as etatCase, vitesseEtat, ETAT } from './terrain.js?v=0.36.5';
+import { creerArmee, ajouterSoldat, construireGrille, pasArmee, tuerDans, effrayer, compacter, photoArmee, restaurerArmee, b64, deB64, DENSITE, place } from './army.js?v=0.36.5';
+import { creuserTranchees, ligneSous } from './tranchees.js?v=0.36.5';
+import { calculerCouts, creerCacheChamps, dimensionsCouts, BLOC } from './champs.js?v=0.36.5';
+import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.36.5';
+import { METEO, TRANSITIONS, PREVISION_JUSTE } from './data/meteo.js?v=0.36.5';
+import { SECTEURS } from './data/secteur.js?v=0.36.5';
+import { REGIMENTS } from './data/lexique.js?v=0.36.5';
+import { STANCES, STANCE_DEFAUT } from './data/stances.js?v=0.36.5';
+import { grade } from './identite.js?v=0.36.5';
+import { corvees, rejouerTravaux } from './nuit.js?v=0.36.5';
 
 export const PAS = 1 / 30;                 // s de jeu par pas
 export const NOUS = 0, EUX = 1;

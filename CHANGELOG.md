@@ -1,5 +1,8 @@
 # Journal des versions
 
+## 0.36.5 — 2026-10-19
+- À la fin d'une campagne, un papier sobre dit chaque bataille, puis les noms de ceux qui sont tombés et de ceux qui sont restés (la campagne n'est pas encore jouable depuis l'écran titre)
+
 ## 0.36.4 — 2026-10-19
 - Entre deux batailles de campagne, un registre dit ce que sera chaque régiment ; la mission de la bataille suivante suit l'issue de la précédente (la campagne n'est pas encore jouable depuis l'écran titre)
 

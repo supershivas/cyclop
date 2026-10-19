@@ -227,6 +227,10 @@ dialog .reglage input { width: 20px; height: 20px; margin: 0; flex: none; accent
 .campagne .barre .debout { background: var(--jeu-fond); }
 .campagne .barre .neuf { background: repeating-linear-gradient(135deg, var(--jeu-fond) 0 2px, transparent 2px 4px); }
 .campagne .bouton { justify-self: end; }
+.campagne .ligne-bataille { margin: 0; padding: var(--e1) 0; border-bottom: 1px solid var(--jeu-accent); }
+.campagne .noms summary { cursor: pointer; padding: var(--e1) 0; }
+.campagne .noms ul { margin: 0; padding: 0 0 0 var(--pas); list-style: none; max-height: 30dvh; overflow-y: auto; font-size: var(--texte-petit); }
+.campagne .noms li { padding: var(--e0) 0; }
 @media (max-width: 720px) { .campagne .ligne { grid-template-columns: 9ch 40px 1fr; } .campagne .ligne > span:last-child { grid-column: 1 / -1; } }
 /* La nuit : un papier posé sur le champ (les mêmes papiers que le jour), jamais une boîte de dialogue */
 .nuit { width: min(42ch, 34vw); max-height: calc(100dvh - 24px); display: flex; flex-direction: column; margin: 0 auto 0 0; }
