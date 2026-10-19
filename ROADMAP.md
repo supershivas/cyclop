@@ -20,7 +20,8 @@ Principe : un secteur garde sa graine et son bruit (`creerTerrain`) ; l'éditeur
 - [x] Lot 2 — retouches de relief (bosse, creux, crête, plateau, gomme), annuler / rétablir, appliquées dans `creerTerrain` (`formes.js`) ; la partie garde son sol dans `etat.sol`
 - [x] Lot 3 — objets posés (arbre, buisson, bois, haie, dégager), lignes de tranchées au curseur, contrôle à voix haute (`validerSecteur`) qui refuse la publication d'un secteur invalide ; la partie garde aussi ses tranchées et ses objets (`secteurDuJeu`)
 - [x] Lot 4 — « Essayer dans le jeu » : `?essai=<secteur>&graine=<n>`, une bataille d'essai sans sauvegarde avec le brouillon de ce navigateur ; coût de la simulation mesuré sur quatre cartes retouchées : inchangé
-- [ ] Plus tard (non décidé) — export / import JSON d'un secteur, déplacer un objet à la souris, un nom et un résumé modifiables
+- [x] Éditeur visuel (Jérôme : chiffres nommés et décrits, outils de construction) — boîte à outils à icônes, scène large, inspecteur ; Sélectionner (déplacer, redimensionner, supprimer) ; chaque champ avec son nom, son unité et sa description
+- [ ] Plus tard (non décidé) — export / import JSON d'un secteur, un nom et un résumé modifiables, copier-coller d'une forme, une vue 3D dans l'atelier
 
 ### Refonte UX/UI (docs/ui-cible.md)
 
