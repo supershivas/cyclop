@@ -1,7 +1,7 @@
 // Les jauges et le corps de la fiche (Jérôme, v0.35.0) : une barre par chose qu'un homme endure (la peur, les jambes, les bras,
 // l'expérience), des repères aux seuils des mots de `identite.js` (la forme dit le niveau, pas seulement la longueur), et le corps
 // entier avec la blessure. Des fonctions de DOM qui ne lisent que ce qu'on leur donne ; fiche.js et main.js s'en servent.
-import { PARTIES } from '../identite.js?v=0.36.0';
+import { PARTIES } from '../identite.js?v=0.36.1';
 
 export const CHEVRON = '<svg class="chev" viewBox="0 0 12 8" aria-hidden="true"><path d="M1 7l5-5 5 5"/></svg>';
 export const chevronsHtml = n => CHEVRON.repeat(n);

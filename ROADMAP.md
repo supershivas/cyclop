@@ -180,7 +180,7 @@ touches (**boutons dans le rabat seulement, puis Maj+chiffre**) ; une posture su
 1. ✅ **Fait (cadrage v0.36.0, sans version : aucun effet visible).** *Logique* : `reglages.js` (`stance`), `data/stances.js` (id, nom, court, dit), `reg.stance` (`??= 'volonte'` à la relecture), filtre dans `tirer` (portée) et facteurs de précision / cadence ;
    ordre des tirages inchangé en `volonte` (test : une bataille sans stance donne les mêmes morts qu'avant, graines 3, 7, 8).
 2. ✅ **Fait (v0.36.0).** *Commande* (`ordonnerStance` / `peutStance` existent déjà, lot 1) : refus à voix haute (déroute, nuit) ; commande `stance` de `executerCmd` ; `empreinteEtat` ; test lockstep.
-3. *HUD* : boutons dans le rabat, mot de la posture dans `actionDe` et sous le nom de la carte, ligne du carnet ; `test/fumee.json` réécrit ; grisé et raison au clic.
+3. ✅ **Fait (v0.36.1).** *HUD* : boutons dans le rabat, mot de la posture dans `actionDe` et sous le nom de la carte, ligne du carnet ; `test/fumee.json` réécrit ; grisé et raison au clic.
 4. *Dessin* : `couvert` = hommes tapis (`TAPI`), `retenu` = fusil bas, pas d'éclair hors portée (le dessin seulement) ; image ajoutée à `test/rendu.json` avant.
 5. *IA et équilibre* : `enFace` choisit sa posture ; mesure (`scripts/mesure.mjs`, graines 3, 7, 8, 9 000 pas) : morts, mêlées, durée d'un assaut, pour chaque posture contre chaque autre.
 

@@ -1,6 +1,6 @@
 // Les stances (lot 1, logique) : une posture par régiment, qui change la portée, la précision et la cadence du tir.
 // La référence « sans stance » a été relevée sur le code d'avant le lot : l'ordre des tirages n'a pas bougé.
-import { nouvelleBataille, avancer, ordonnerMarche, photo, restaurer, zone, peutStance, ordonnerStance } from '../js/bataille.js';
+import { nouvelleBataille, avancer, ordonnerMarche, photo, restaurer, zone, peutStance, ordonnerStance, actionDe } from '../js/bataille.js';
 import { ligneY } from '../js/tranchees.js';
 import { empreinteEtat } from '../js/reseau/lockstep.js';
 import { creerTerrain } from '../js/terrain.js';
@@ -148,4 +148,15 @@ test('une partie d\'avant les stances se relit à volonté', () => {
   const B = restaurer(p, R);
   assert.ok(B.etat.regiments.every(r => r.stance === 'volonte'));
   assert.equal(empreinteEtat(B), empreinteEtat(A));
+});
+
+group('stances — dites en mots');
+test('la posture est dans les mots de l\'ordre, sauf la posture ordinaire', () => {
+  const B = petite(), r = B.etat.regiments[0];
+  const avant = actionDe(B, r);
+  assert.ok(!/feu retenu/.test(avant));
+  ordonnerStance(B, [0], 'retenu');
+  assert.equal(actionDe(B, r), `${avant}, feu retenu`);
+  r.deroute = true;
+  assert.equal(actionDe(B, r), 'en déroute', 'un régiment en déroute ne dit que cela');
 });

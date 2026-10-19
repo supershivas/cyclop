@@ -1,8 +1,8 @@
 // Lire la bataille en mots : qui est un homme, ce qu'il est devenu, ce que compte un régiment. Des fonctions
 // qui prennent la bataille `B` et ne changent rien (aucun DOM) ; main.js et la fiche s'en servent.
-import { NOUS, arriereDe } from '../bataille.js?v=0.36.0';
-import { legere } from '../army.js?v=0.36.0';
-import { identite, prochainGrade } from '../identite.js?v=0.36.0';
+import { NOUS, arriereDe } from '../bataille.js?v=0.36.1';
+import { legere } from '../army.js?v=0.36.1';
+import { identite, prochainGrade } from '../identite.js?v=0.36.1';
 
 export const majuscule = s => s[0].toUpperCase() + s.slice(1);
 export const nomDe = reg => reg?.nom ? `Régiment ${reg.nom}` : 'En face';

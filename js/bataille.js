@@ -14,18 +14,18 @@
    La sauvegarde (photo) garde la graine, la liste compacte des impacts, l'état
    de la foule et les petites couches de logique ; jamais le relief : il se
    rejoue depuis la graine et les impacts (rejouerTerrain). */
-import { createRng, hash2 } from './lib/rng.js?v=0.36.0';
-import { creerTerrain, impact, hydroLignes, etat as etatCase, vitesseEtat, ETAT } from './terrain.js?v=0.36.0';
-import { creerArmee, ajouterSoldat, construireGrille, pasArmee, tuerDans, effrayer, compacter, photoArmee, restaurerArmee, b64, deB64, DENSITE, place } from './army.js?v=0.36.0';
-import { creuserTranchees, ligneSous } from './tranchees.js?v=0.36.0';
-import { calculerCouts, creerCacheChamps, dimensionsCouts, BLOC } from './champs.js?v=0.36.0';
-import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.36.0';
-import { METEO, TRANSITIONS, PREVISION_JUSTE } from './data/meteo.js?v=0.36.0';
-import { SECTEURS } from './data/secteur.js?v=0.36.0';
-import { REGIMENTS } from './data/lexique.js?v=0.36.0';
-import { STANCES, STANCE_DEFAUT } from './data/stances.js?v=0.36.0';
-import { grade } from './identite.js?v=0.36.0';
-import { corvees, rejouerTravaux } from './nuit.js?v=0.36.0';
+import { createRng, hash2 } from './lib/rng.js?v=0.36.1';
+import { creerTerrain, impact, hydroLignes, etat as etatCase, vitesseEtat, ETAT } from './terrain.js?v=0.36.1';
+import { creerArmee, ajouterSoldat, construireGrille, pasArmee, tuerDans, effrayer, compacter, photoArmee, restaurerArmee, b64, deB64, DENSITE, place } from './army.js?v=0.36.1';
+import { creuserTranchees, ligneSous } from './tranchees.js?v=0.36.1';
+import { calculerCouts, creerCacheChamps, dimensionsCouts, BLOC } from './champs.js?v=0.36.1';
+import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.36.1';
+import { METEO, TRANSITIONS, PREVISION_JUSTE } from './data/meteo.js?v=0.36.1';
+import { SECTEURS } from './data/secteur.js?v=0.36.1';
+import { REGIMENTS } from './data/lexique.js?v=0.36.1';
+import { STANCES, STANCE_DEFAUT } from './data/stances.js?v=0.36.1';
+import { grade } from './identite.js?v=0.36.1';
+import { corvees, rejouerTravaux } from './nuit.js?v=0.36.1';
 
 export const PAS = 1 / 30;                 // s de jeu par pas
 export const NOUS = 0, EUX = 1;
@@ -731,6 +731,10 @@ export function tronconsDeLigne(B, ligne, x0, x1) {
 /* Ce que fait un régiment, en mots (la feuille de situation, le carnet) : « tient B1 », « attaque B1 en face », « marche à
    l'attaque de B1 en face », « en terrain libre, secteur B ». Il attaque une tranchée dont l'autre camp tient encore un tronçon. */
 export function actionDe(B, reg) {
+  const mot = reg.stance && reg.stance !== STANCE_DEFAUT ? `, ${STANCES[reg.stance].court}` : '';       // (la posture, quand ce n'est pas l'ordinaire)
+  return actionSansPosture(B, reg) + (reg.effectif && !reg.deroute ? mot : '');
+}
+function actionSansPosture(B, reg) {
   if (!reg.effectif) return 'plus personne';
   if (reg.deroute) return 'en déroute';
   const o = reg.ordre, t = o.trace;

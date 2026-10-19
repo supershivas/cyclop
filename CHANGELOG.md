@@ -1,5 +1,8 @@
 # Journal des versions
 
+## 0.36.1 — 2026-10-19
+- Les boutons « À volonté » et « Feu retenu » sont dans la fenêtre du régiment choisi ; la carte du régiment et le carnet disent la posture, et un régiment en déroute dit pourquoi il ne l'accepte pas
+
 ## 0.36.0 — 2026-10-19
 - Maj+1 et Maj+2 donnent aux régiments choisis la posture « à volonté » ou « feu retenu » (il n'ouvre le feu que de près et vise mieux) ; le carnet de bord le dit, et le jeu à deux le partage
 

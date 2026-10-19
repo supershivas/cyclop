@@ -277,6 +277,7 @@ dialog form { margin-top: calc(var(--pas) * 2); }
 .reg-carte .l1 b { font-weight: normal; font-size: var(--texte-grand); line-height: 1; margin-right: var(--e0); }
 .reg-carte .alerte { float: right; font-style: normal; font-size: var(--texte-petit); line-height: 1; padding: 1px var(--e1); border: 1px double var(--jeu-encre); color: var(--jeu-encre); transform: rotate(-5deg); }
 .reg-carte .chevrons { display: flex; gap: var(--e0); height: 8px; }
+.reg-carte .posture { margin-left: auto; font-size: var(--texte-petit); line-height: 8px; color: var(--enc); }
 .chev { width: 12px; height: 8px; fill: none; stroke: var(--enc); stroke-width: 2; stroke-linecap: square; }
 .chev.vide { stroke: var(--jeu-accent); }
 .reg-carte .barre, .reg-ouvert .barre { display: flex; height: 8px; box-sizing: border-box; border: 1px solid var(--enc); }

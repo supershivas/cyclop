@@ -59,6 +59,13 @@ await etape('apres-barrages');
 await page.mouse.move(600, 380);
 await page.mouse.click(600, 380, { button: 'right' });     // le clic droit annule
 await etape('annule');
+// la posture : un régiment choisi, le bouton « Feu retenu » de son rabat, puis la marche qui la remet à volonté
+await page.evaluate(() => document.querySelectorAll('.reg-carte')[1].click());
+await page.waitForTimeout(250);
+await page.evaluate(() => document.querySelector('[data-stance="retenu"]').click());
+await etape('posture');
+await jeu('() => __jeu.marche([1], 200, 190)');
+await etape('posture-marche');
 // la fiche d'un régiment (la carte du régiment choisi, son bouton « Fiche »), puis celle d'un officier
 await page.evaluate(() => document.querySelector('.reg-carte').click());
 await page.waitForTimeout(250);
