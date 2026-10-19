@@ -79,6 +79,7 @@ export function nouvelleBataille(graine, R, opts = {}) {
     marges: { ...S.marges },            // le terrain déborde du secteur (zone())
     regiments: [], pertes: [0, 0], pertesJour: [[0, 0]], blesses: [0, 0],
     corps: [],                  // les morts restent où ils sont tombés : [x×10, y×10, camp, jour, id]
+    sol: Object.fromEntries(['relief', 'arbres', 'bois', 'haies', 'buissons', 'retouches'].filter(k => S[k] !== undefined).map(k => [k, structuredClone(S[k])])),   // ce qui fait le sol du secteur, copié : les retouches de l'atelier (lots 1 et 2) ne changent pas une partie en cours
     tranchees: !!S.tranchees,   // (les batailles d'avant la v0.4.0 n'en ont pas)
     troncons: [],               // qui tient chaque tronçon (0 nous, 1 en face)
     prises: [[0, 0]],           // tronçons pris par chaque camp, jour par jour
@@ -166,7 +167,8 @@ export function zone(B) {
 
 // L'état plus ce qui se refait (terrain, foule, champs)
 function monter(etat, R) {
-  const S = SECTEURS[etat.secteur], m = etat.marges;
+  // le sol que la partie a reçu au départ (`etat.sol`), pas celui que l'atelier a republié depuis ; une partie d'avant lit le secteur
+  const S = { ...SECTEURS[etat.secteur], ...etat.sol }, m = etat.marges;
   const W = S.largeur + 2 * m.x, H = S.hauteur + 2 * m.y;
   const { terrain, lignes, troncons } = terrainDuSecteur(S, m, etat.graine, R, { tranchees: !!etat.tranchees });
   const faces = Int8Array.from(troncons, t => lignes[t.ligne].face);

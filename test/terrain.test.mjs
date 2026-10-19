@@ -1,4 +1,5 @@
 // Le terrain : les cratères, la dureté, le plancher, la lèvre, l'eau.
+import { readFileSync } from 'node:fs';
 import { creerTerrain, impact, hydroLignes, etat, hauteurQ, ETAT } from '../js/terrain.js';
 import { REGLAGES as R } from '../js/data/reglages.js';
 import { SECTEURS } from '../js/data/secteur.js';
@@ -152,4 +153,38 @@ test('les retouches à plat se déplient, se posent sur le secteur sans toucher 
   appliquerSecteurs(copie, { essai: { arbres: 7 }, inconnu: { arbres: 1 } });
   assert.equal(copie.essai.arbres, 7);
   assert.equal(SECTEURS.essai.arbres, 150);
+});
+
+group('terrain — les formes de l\'atelier (lot 2)');
+test('une bosse monte, un creux descend, une crête suit son segment, un plateau aplanit ; sans formes, rien ne bouge', async () => {
+  const { appliquerFormes, distanceForme } = await import('../js/formes.js');
+  const faire = formes => { const b = new Int16Array(100 * 100).fill(20); appliquerFormes(b, 100, 100, 0, 0, formes); return b; };
+  const au = (b, x, y) => b[y * 100 + x];
+  assert.equal(au(faire([]), 50, 50), 20);
+  assert.equal(au(faire([{ f: 'bosse', x: 50.5, y: 50.5, r: 10, h: 3 }]), 50, 50), 32, '3 m = 12 quarts au centre');
+  assert.equal(au(faire([{ f: 'bosse', x: 50.5, y: 50.5, r: 10, h: 3 }]), 50, 65), 20, 'rien au-delà du rayon');
+  assert.equal(au(faire([{ f: 'creux', x: 50.5, y: 50.5, r: 10, h: 2 }]), 50, 50), 12);
+  const c = faire([{ f: 'crete', x: 20.5, y: 50.5, x2: 80.5, y2: 50.5, r: 6, h: 2 }]);
+  assert.equal(au(c, 50, 50), 28, 'le long du segment'); assert.equal(au(c, 20, 50), 28); assert.equal(au(c, 50, 70), 20);
+  const p = faire([{ f: 'plateau', x: 50.5, y: 50.5, r: 20, h: 10 }]);
+  assert.equal(au(p, 50, 50), 40); assert.equal(au(p, 55, 50), 40, 'plein jusqu\'à 0,6 r'); assert.ok(au(p, 68, 50) > 20 && au(p, 68, 50) < 40, 'fondu au bord');
+  assert.equal(Math.round(distanceForme({ f: 'crete', x: 0, y: 0, x2: 10, y2: 0, r: 1, h: 1 }, 5, 3)), 3);
+});
+test('les formes d\'un secteur changent le sol, tranchées comprises ; la partie en garde une copie et la relit pareille après republication', async () => {
+  const { terrainDuSecteur } = await import('../js/secteur-terrain.js');
+  const { nouvelleBataille, photo, restaurer } = await import('../js/bataille.js');
+  const S = SECTEURS.essai, formes = [{ f: 'bosse', x: 200, y: 150, r: 30, h: 4 }];
+  const a = terrainDuSecteur(S, S.marges, 5, R).terrain, b = terrainDuSecteur({ ...S, retouches: formes }, S.marges, 5, R).terrain;
+  const c = (S.marges.y + 150) * a.W + S.marges.x + 200;
+  assert.equal(b.base[c] - a.base[c], 16);
+  assert.equal(a.base[0], b.base[0], 'loin de la forme, le sol est le même');
+  // les modules du jeu s'importent avec ?v=version : c'est une autre instance de `secteur.js` que celle du test
+  const { version } = JSON.parse(readFileSync(new URL('../version.json', import.meta.url)));
+  const dedans = (await import(`../js/data/secteur.js?v=${version}`)).SECTEURS;
+  dedans.essai = { ...S, retouches: formes };
+  let B; try { B = nouvelleBataille(5, R, { soldats: 100, jours: 3 }); } finally { dedans.essai = S; }
+  assert.deepEqual(B.etat.sol.retouches, formes);
+  assert.equal(B.terrain.base[c], b.base[c]);
+  const C = restaurer(JSON.parse(JSON.stringify(photo(B))), R);          // le secteur republié depuis n'a plus de formes : la partie a gardé les siennes
+  assert.deepEqual(C.terrain.base, B.terrain.base);
 });

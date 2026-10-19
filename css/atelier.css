@@ -39,3 +39,9 @@ body { font: 15px/1.45 system-ui, -apple-system, 'Segoe UI', sans-serif; color: 
 .at-reglage .at-unite { grid-area: unite; font-size: 13px; opacity: .7; }
 .at-reglage button { grid-area: ret; padding: 0; }
 @media (max-width: 900px) { .at-carte-zone { grid-template-columns: minmax(0, 1fr); } }
+.at-formes { margin-bottom: 16px; }
+.at-formes h3 { font-size: 15px; margin: 0 0 8px; }
+.at-outils { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 8px; }
+.at-work .at-outils button.is-on { background: #1c1c1e; color: #fff; border-color: #1c1c1e; }
+.at-glisseur { display: grid; gap: 0; margin-bottom: 8px; font-size: 14px; }
+.at-glisseur input[type=range] { width: 100%; min-height: 32px; margin: 0; }

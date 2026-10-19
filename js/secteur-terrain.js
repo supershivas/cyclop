@@ -9,7 +9,7 @@ export function terrainDuSecteur(S, marges, graine, R, { tranchees = true } = {}
   const m = marges, W = S.largeur + 2 * m.x, H = S.hauteur + 2 * m.y, aire = W * H / (S.largeur * S.hauteur);
   // autant d'arbres, de haies, de bois et de buissons dans les marges, à surface égale
   const terrain = creerTerrain(graine, {
-    largeur: W, hauteur: H, ox: m.x, oy: m.y, relief: S.relief,
+    largeur: W, hauteur: H, ox: m.x, oy: m.y, relief: S.relief, retouches: S.retouches,
     arbres: Math.round(S.arbres * aire), haies: Math.round((S.haies ?? 0) * aire),
     bois: Math.round((S.bois ?? 0) * aire), buissons: Math.round((S.buissons ?? 0) * aire),
   }, R);
