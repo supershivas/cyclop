@@ -19,7 +19,7 @@ import { creerRendu, CAMERA } from './rendu3d.js?v=0.36.2';
 import { etatEnMots, experienceEnMots, chevrons } from './identite.js?v=0.36.2';
 import { CORVEES } from './data/corvees.js?v=0.36.2';
 import { refusCorvee } from './nuit.js?v=0.36.2';
-import { chargerContenu } from './design-store.js?v=0.36.2';
+import { chargerContenu, appliquerSecteurs } from './design-store.js?v=0.36.2';
 import * as lecture from './hud/lecture.js?v=0.36.2';
 import { creerFiche } from './hud/fiche.js?v=0.36.2';
 import { chevronsHtml } from './hud/barres.js?v=0.36.2';
@@ -63,7 +63,8 @@ function replierCarte(replie) {
 }
 replierCarte(prefs.carte === false);
 $('carte-bascule').onclick = e => { const r = !$('carte').classList.contains('replie'); replierCarte(r); prefs.carte = !r; store.save('prefs', prefs); e.currentTarget.blur(); };
-const { reglages: R } = await chargerContenu();
+const { reglages: R, secteurs: retouchesSecteurs } = await chargerContenu();
+appliquerSecteurs(SECTEURS, retouchesSecteurs);       // les retouches de l'atelier (publiées, puis celles de ce navigateur) : le terrain de départ des secteurs
 chargement.progres(0.45, 'Les réglages');
 
 let B = null;                 // la bataille en cours
@@ -281,7 +282,7 @@ function demanderSecteur() {
 // Chaque ordre part pour les deux machines, et s'exécute au même cadre chez les deux ; le refus, lui, se dit tout de suite (l'ordre à sec).
 let versionJeu = '';
 loadVersion().then(v => { versionJeu = v || ''; });
-const empreinteReglages = () => { const t = JSON.stringify(R); let h = 2166136261; for (let i = 0; i < t.length; i++) { h ^= t.charCodeAt(i); h = Math.imul(h, 16777619) >>> 0; } return h.toString(16); };
+const empreinteReglages = () => { const t = JSON.stringify([R, retouchesSecteurs]); let h = 2166136261; for (let i = 0; i < t.length; i++) { h ^= t.charCodeAt(i); h = Math.imul(h, 16777619) >>> 0; } return h.toString(16); };
 function lancerMarche(ids, x, y) {
   if (!reseau) return ordonnerMarche(B, ids, x, y, forme);
   const p = peutOrdonner(B, ids, x, y, forme, MOI);

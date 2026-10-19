@@ -5,7 +5,7 @@
 // Les outils : les réglages chiffrés (Jérôme, v0.1.0) et la carte, en lecture seule pour l'instant (`atelier-carte.js`).
 import { createPublisher, TOKEN_URL } from './lib/gh-publish.js?v=0.36.2';
 import { ongletCarte } from './atelier-carte.js?v=0.36.2';
-import { chargerContenu, lireBrouillon, ecrireBrouillon } from './design-store.js?v=0.36.2';
+import { chargerContenu, lireBrouillon, ecrireBrouillon, compterBrouillon, deplier } from './design-store.js?v=0.36.2';
 
 const REPO = 'supershivas/cyclop';
 const $ = id => document.getElementById(id);
@@ -15,10 +15,11 @@ let contenu = await chargerContenu();
 
 function aPublier() {
   const b = lireBrouillon();
-  const n = Object.values(b.reglages || {}).reduce((s, g) => s + Object.keys(g).length, 0);
+  const n = compterBrouillon(b);
   $('a-publier').textContent = n ? `${n} à publier` : '';
   return n;
 }
+const fusionner = (a, b) => { for (const [k, v] of Object.entries(b)) a[k] = v && typeof v === 'object' && a[k] && typeof a[k] === 'object' ? fusionner(a[k], v) : v; return a; };
 function toast(t) { const e = $('toast'); e.textContent = t; e.hidden = false; clearTimeout(toast.t); toast.t = setTimeout(() => { e.hidden = true; }, 3000); }
 
 // ─── Réglages chiffrés ─────────────────────────────────────────────────────
@@ -69,6 +70,11 @@ function ongletPublier(zone) {
         for (const [g, v] of Object.entries(b.reglages)) enLigne[g] = { ...(enLigne[g] || {}), ...v };
         fichiers.push({ path: 'assets/design/reglages.json', json: enLigne });
       }
+      if (b.secteurs && Object.keys(b.secteurs).length) {
+        const enLigne = (await pub.readJSON('assets/design/secteurs.json')) || {};
+        for (const [id, plat] of Object.entries(b.secteurs)) enLigne[id] = fusionner(enLigne[id] || {}, deplier(plat));
+        fichiers.push({ path: 'assets/design/secteurs.json', json: enLigne });
+      }
       await pub.publish(fichiers, { message: "Publie les retouches de l'atelier", progress: t => { statut.textContent = t; } });
       ecrireBrouillon({});
       contenu = await chargerContenu();
@@ -78,7 +84,7 @@ function ongletPublier(zone) {
   }
 }
 
-const ONGLETS = { Réglages: ongletReglages, Carte: zone => ongletCarte(zone, { el, R: contenu.reglages }), Publier: ongletPublier };
+const ONGLETS = { Réglages: ongletReglages, Carte: zone => ongletCarte(zone, { el, R: contenu.reglages, publie: contenu.publie.secteurs, aPublier }), Publier: ongletPublier };
 function ouvrir(nom) {
   for (const b of $('onglets').children) b.classList.toggle('is-on', b.textContent === nom);
   ONGLETS[nom]($('travail'));

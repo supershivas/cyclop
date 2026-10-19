@@ -29,3 +29,13 @@ body { font: 15px/1.45 system-ui, -apple-system, 'Segoe UI', sans-serif; color: 
 .at-lecture { min-height: 1.45em; font-family: ui-monospace, monospace; }
 .at-carte-boite { overflow: auto; max-width: 100%; border: 1px solid rgba(0,0,0,.25); background: #16130f; }
 .at-carte { display: block; image-rendering: pixelated; touch-action: none; }
+.at-carte-zone { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 360px); gap: 16px; align-items: start; }
+.at-carte-vue { min-width: 0; }
+.at-reglages h3 { font-size: 15px; margin: 0 0 8px; }
+.at-reglage { display: grid; grid-template-columns: minmax(0, 1fr) 5.5em 2em 44px; grid-template-areas: "nom nb unite ret" "cur cur cur cur"; gap: 0 8px; align-items: center; margin-bottom: 8px; }
+.at-reglage > span:first-child { grid-area: nom; }
+.at-reglage input[type=range] { grid-area: cur; width: 100%; min-height: 32px; margin: 0; }
+.at-reglage input[type=number] { grid-area: nb; width: 100%; }
+.at-reglage .at-unite { grid-area: unite; font-size: 13px; opacity: .7; }
+.at-reglage button { grid-area: ret; padding: 0; }
+@media (max-width: 900px) { .at-carte-zone { grid-template-columns: minmax(0, 1fr); } }

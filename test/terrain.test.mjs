@@ -134,3 +134,22 @@ test('terrainDuSecteur monte les marges et creuse les tranchées ; deux fois la 
   assert.notDeepEqual(a.terrain.base, c.terrain.base);
   assert.equal(terrainDuSecteur(S, S.marges, 7, R, { tranchees: false }).lignes.length, 0);
 });
+
+group('atelier — les retouches d\'un secteur');
+test('les retouches à plat se déplient, se posent sur le secteur sans toucher sa donnée, et changent le terrain', async () => {
+  const { deplier, secteurEffectif, appliquerSecteurs, lireChemin } = await import('../js/design-store.js');
+  const { terrainDuSecteur } = await import('../js/secteur-terrain.js');
+  assert.deepEqual(deplier({ 'relief.bosses': 2, arbres: 10, 'relief.crete.hauteur': 3 }), { relief: { bosses: 2, crete: { hauteur: 3 } }, arbres: 10 });
+  const base = SECTEURS.crete, r = deplier({ 'relief.bosses': 2.5, 'relief.crete.hauteur': 3, arbres: 20 });
+  const S = secteurEffectif(base, r);
+  assert.equal(lireChemin(S, 'relief.bosses'), 2.5);
+  assert.equal(lireChemin(S, 'relief.crete.largeur'), base.relief.crete.largeur, 'le reste de la crête est gardé');
+  assert.equal(base.relief.bosses, 1.6, 'la donnée n\'est pas modifiée');
+  const a = terrainDuSecteur(base, base.marges, 3, R).terrain, b = terrainDuSecteur(S, S.marges, 3, R).terrain;
+  assert.notDeepEqual(a.base, b.base);
+  assert.ok(b.arbres.length < a.arbres.length, 'moins d\'arbres : 20 contre 60 dans le secteur');
+  const copie = { essai: SECTEURS.essai };
+  appliquerSecteurs(copie, { essai: { arbres: 7 }, inconnu: { arbres: 1 } });
+  assert.equal(copie.essai.arbres, 7);
+  assert.equal(SECTEURS.essai.arbres, 150);
+});

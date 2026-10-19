@@ -27,11 +27,32 @@ const fusion = (base, plus) => {
   return out;
 };
 
-// → { reglages, publie: { reglages }, aPublier: n }
+// Les chemins d'un secteur (« relief.bosses ») : le brouillon les garde à plat, le fichier publié en objets
+export const lireChemin = (o, cle) => cle.split('.').reduce((x, k) => x?.[k], o);
+export function deplier(plat) {
+  const out = {};
+  for (const [cle, v] of Object.entries(plat || {})) {
+    const ks = cle.split('.'); let o = out;
+    for (const k of ks.slice(0, -1)) o = o[k] = o[k] || {};
+    o[ks.at(-1)] = v;
+  }
+  return out;
+}
+// Le secteur tel que le jeu le lit : sa donnée, les retouches publiées, puis celles de ce navigateur
+export const secteurEffectif = (base, ...retouches) => retouches.reduce((S, r) => fusion(S, r || {}), base);
+export function appliquerSecteurs(SECTEURS, parId) {
+  for (const [id, r] of Object.entries(parId || {})) if (SECTEURS[id]) SECTEURS[id] = fusion(SECTEURS[id], r);
+}
+// Combien de réglages et de retouches de secteur attendent d'être publiés
+export const compterBrouillon = b => Object.values(b.reglages || {}).reduce((s, g) => s + Object.keys(g).length, 0)
+  + Object.values(b.secteurs || {}).reduce((s, g) => s + Object.keys(g).length, 0);
+
+// → { reglages, secteurs, publie: { reglages, secteurs }, aPublier } ; secteurs : { id: retouches } en objets, à poser sur SECTEURS (`appliquerSecteurs`)
 export async function chargerContenu() {
-  const reglages = await lireJSON('assets/design/reglages.json');
-  const publie = { reglages: fusion(REGLAGES, reglages) };
+  const [reglages, secteursPublies] = await Promise.all([lireJSON('assets/design/reglages.json'), lireJSON('assets/design/secteurs.json')]);
+  const publie = { reglages: fusion(REGLAGES, reglages), secteurs: secteursPublies || {} };
   const b = lireBrouillon();
-  const aPublier = Object.values(b.reglages || {}).reduce((s, g) => s + Object.keys(g).length, 0);
-  return { reglages: fusion(publie.reglages, b.reglages), publie, aPublier };
+  const secteurs = {};
+  for (const id of new Set([...Object.keys(publie.secteurs), ...Object.keys(b.secteurs || {})])) secteurs[id] = fusion(publie.secteurs[id] || {}, deplier(b.secteurs?.[id]));
+  return { reglages: fusion(publie.reglages, b.reglages), secteurs, publie, aPublier: compterBrouillon(b) };
 }
