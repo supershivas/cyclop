@@ -1,8 +1,8 @@
 // Le temps qui passe (Jérôme, v0.8.0) : le soleil (les ombres des soldats et des arbres tournent et s'allongent), le soir et la nuit (un voile de
 // terre qui monte), les lumières (lanternes des tranchées, incendies, fusées) qui le trouent. Rien hors de la palette, sauf les fondus du voile
 // (CLAUDE.md, palette). Le dessin seulement : tout se lit de l'heure (`horloge`) et de l'état.
-import * as SH from './shaders.js?v=0.38.0';
-import { ligneY } from '../tranchees.js?v=0.38.0';
+import * as SH from './shaders.js?v=0.38.1';
+import { ligneY } from '../tranchees.js?v=0.38.1';
 
 // `THREE`, `scene`, `col`, `camera`, `vue`, `surface(x, z)` viennent de creerRendu ; `soleilUniform` (le bout de l'ombre d'un mètre de hauteur, lu aussi par le nuanceur
 // des soldats) et `solUniforms` (`uSol`, `uTaille` : la texture du sol, que l'ombre d'un arbre reprend) sont les uniformes partagés ; `ecl` (les éclats : les fusées) et
@@ -106,7 +106,20 @@ export function creerTemps({ THREE, scene, col, camera, vue, surface, bataille, 
   scene.add(nuitPlan);
   const vEcran = new THREE.Vector3(), vBord = new THREE.Vector3();
   // une lumière (r mètres autour de x, y, z) peinte dans la carte des lumières
+  // cachée par le relief : le rayon de la caméra à la lumière passe sous le sol (sauf tout près d'elle, où c'est son propre terrain) ;
+  // sans ce test, la lueur d'un feu derrière une crête se peignait à l'écran par-dessus elle (Jérôme, v0.38.1)
+  const cp = camera.position;
+  function cachee(x, y, z) {
+    const dx = x - cp.x, dy = y - cp.y, dz = z - cp.z, L = Math.hypot(dx, dy, dz);
+    const n = Math.min(48, Math.ceil(L / 3)), garde = 1 - Math.min(0.5, 6 / L);
+    for (let k = 1; k < n; k++) {
+      const u = k / n * garde;
+      if (cp.y + dy * u < surface(cp.x + dx * u, cp.z + dz * u) + 0.2) return true;
+    }
+    return false;
+  }
   function lumiere(x, y, z, r) {
+    if (cachee(x, y, z)) return false;
     vEcran.set(x, y, z).project(camera); vBord.set(x + r, y, z).project(camera);
     if (vEcran.z > 1) return false;
     const px = (vEcran.x + 1) / 2 * lumW, py = (vEcran.y + 1) / 2 * lumH;

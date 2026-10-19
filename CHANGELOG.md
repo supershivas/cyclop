@@ -1,5 +1,8 @@
 # Journal des versions
 
+## 0.38.1 — 2026-10-19
+- Les lueurs des feux et des lanternes ne traversent plus les collines
+
 ## 0.38.0 — 2026-10-19
 - Dans l'atelier, on crée une nouvelle carte, à partir d'une carte existante ou d'un champ vierge, avec son nom et son résumé
 - Une carte publiée s'ajoute à la liste des cartes d'une nouvelle partie
