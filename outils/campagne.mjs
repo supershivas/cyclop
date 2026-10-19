@@ -65,6 +65,7 @@ if (o.tout === 'oui') {
   verifier(fin.details === 2 && fin.noms > 0, `les noms : ${fin.noms} lignes dans 2 listes repliées`);
   await page.click('#campagne details summary');           // « Les tombés » s'ouvre au clavier ou à la souris
   await page.screenshot({ path: o['capture-fin'] });
+  await page.focus('#campagne .bouton');                  // (le clic sur la liste a pris le focus : Entrée y ouvrirait la liste)
   await page.keyboard.press('Enter');
   await page.waitForTimeout(500);
   verifier(await page.evaluate(() => !document.getElementById('titre').hidden && document.getElementById('campagne').hidden), 'Entrée ramène à l\'écran titre');
