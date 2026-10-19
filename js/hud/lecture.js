@@ -3,6 +3,7 @@
 import { NOUS, arriereDe } from '../bataille.js?v=0.36.2';
 import { legere } from '../army.js?v=0.36.2';
 import { identite, prochainGrade } from '../identite.js?v=0.36.2';
+import { sejours } from '../marques.js?v=0.36.2';
 
 export const majuscule = s => s[0].toUpperCase() + s.slice(1);
 export const nomDe = reg => reg?.nom ? `Régiment ${reg.nom}` : 'En face';
@@ -55,7 +56,7 @@ export function tombe(B, id) {
   const c = B.etat.corps.find(c => c[4] === id);
   if (c) return `Tombé le jour ${c[3]}.`;
   const t = B.etat.tombes.find(c => c[4] === id);
-  if (t) return `Tombé le jour ${t[3]}, inhumé la nuit du ${t[5]}.`;
+  if (t) return `Tombé le jour ${t[3]}, inhumé la nuit du ${t[7]}.`;
   const reg = quiEst(B, id).reg;
   return reg?.releve ? `Relevé avec son régiment, la nuit du ${reg.releve}.` : 'Mort.';
 }
@@ -92,10 +93,10 @@ export function actionEnMots(B, i) {
   if (Math.hypot(A.vx[i], A.vy[i]) > 0.5) return 'marche';
   return 'tient sa place';
 }
-// depuis quand un homme est au front : le jour 1, ou la nuit de son retour s'il était évacué (v0.35.0)
+// depuis quand un homme est au front : le premier jour de son séjour d'aujourd'hui (le jour 1, le jour de son régiment relevé, le lendemain de la nuit de son retour ; v0.37.0 : avant, une relève et un deuxième retour comptaient faux)
 export function auFront(B, id) {
-  const ev = B.etat.evacues.find(e => e[0] === id && e[3] > 0);
-  return ev ? ev[3] : 1;
+  const s = sejours(B, id);
+  return s.length ? s[s.length - 1][0] : 1;
 }
 // les moyennes d'un régiment : la peur, la fatigue des jambes et des bras, l'expérience de ses hommes (v0.35.0)
 export function moyennes(B, regId) {

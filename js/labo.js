@@ -20,6 +20,7 @@ import { calqueBarre } from './labo-barre-temps.js?v=0.36.2';
 import { maquetteProjections, maquetteVisee } from './labo-projections.js?v=0.36.2';
 import { calqueBarreVie } from './labo-barre-vie.js?v=0.36.2';
 import { calqueClic } from './labo-clic-regiment.js?v=0.36.2';
+import { maquetteMarques } from './labo-marques.js?v=0.36.2';
 import { JOURNAL } from './labo-journal.js?v=0.36.2';
 import { loadVersion } from './lib/app-update.js?v=0.36.2';
 
@@ -218,6 +219,10 @@ const GROUPES = [
       { title: 'Faux terrain', depuis: '0.32.2', note: 'Le champ continue : un plan immense, des plaques de kaki, de vert et de glaise de la couleur du sol, qui se perdent dans la brume à cinq cents mètres. On ne sait plus où finit la carte, mais on peut croire qu\'elle est plus grande qu\'elle n\'est.', render: s => moteur(s, { zoom: 1, soldats: 100, centre: [300, 80], vue: { tangage: 0.4, yaw: 0.7 }, bord: 'faux' }) },
       { title: 'Le papier de la carte', depuis: '0.32.2', note: 'Le sol s\'efface dans l\'os (`o`) : le champ est un dessin sur une feuille, comme les papiers de campagne du HUD. Le jeu devient une carte d\'état-major.', render: s => moteur(s, { zoom: 1, soldats: 100, centre: [300, 80], vue: { tangage: 0.4, yaw: 0.7 }, bord: 'papier' }) },
       { title: 'Coupé net', status: 'ancienne', note: 'Jusqu\'à la v0.32 : le terrain s\'arrête sur une ligne droite, devant le ciel de brume. Vue ici à plat, tournée de 40°, vers le bord nord.', render: s => moteur(s, { zoom: 1, soldats: 100, centre: [300, 80], vue: { tangage: 0.4, yaw: 0.7 } }) },
+    ] },
+    { id: 'marques', title: 'Les marques d\'un homme', variants: [
+      { title: 'Pictogrammes', status: 'actuelle', depuis: '0.37.0', note: 'En jeu (v0.37.0), sur la fiche d\'un homme : des mentions de livret à l\'encre, un dessin de 9 × 9 cases dans un cadre dont la forme est la famille (rond : marques, arche : le temps, carré : services, écusson : commandement, losange : statuts qui s\'effacent, stèle : la fin, octogone : le fusil). Six au plus, les plus récentes d\'abord, puis « +N » ; le texte au survol et au focus. Aucun effet de jeu.', render: s => s.append(maquetteMarques('pictos')) },
+      { title: 'Sigles', depuis: '0.37.0', note: 'Les mêmes cadres, mais deux lettres au lieu du dessin (« Bf » baptisé du feu, « 3p » sous trois pluies). Plus lisible de loin, moins parlant de près ; non retenu pour l\'instant : si le dessin déçoit à 26 px, c\'est la variante de repli.', render: s => s.append(maquetteMarques('sigles')) },
     ] },
     { id: 'barre-temps', title: 'La barre du temps', variants: [
       { title: 'La bande de météo', status: 'actuelle', depuis: '0.31.2', note: 'La frise est elle-même la météo : chaque jour a la couleur de son temps (sec, pluie, brouillard, gel), demain hachuré, le reste en blanc ; la nuit est une barre sombre dessous ; le texte suit le repère au lieu d\'avoir sa ligne. Le plus dense, et le plus lisible en un coup d\'œil. En jeu depuis la v0.31.2 : de la largeur des boutons du haut, avec dessous la mission et le terrain sous la souris.', render: s => moteur(s, { zoom: 3, cz: 185, soldats: 400, calque: calqueBarre('bande') }) },

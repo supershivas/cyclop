@@ -15,6 +15,7 @@ Une échelle déclarée une fois, dans `:root` de `css/style.css` : tout le rest
 | Grand espace | `--e4` | 16 px | sous un titre de dialogue |
 | Hauteur d'un bouton | `--jeu-cible` | 44 px | **tout** bouton du HUD, au moins |
 | Trait | `--trait` | 1 px | liserés |
+| Une marque | `--marque` | 30 px | l'icône d'une marque de la fiche (v0.37.0) : 15 unités de 2 px |
 | Ombre | `--ombre-papier` | `3px 3px 0` terre | l'ombre portée d'un cran, la seule |
 | Titres | `--titre-lettres` | .08 em | tous les `h2` |
 

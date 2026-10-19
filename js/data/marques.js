@@ -1,0 +1,51 @@
+// Les marques d'un homme (Jérôme, v0.37.0) : des mentions de livret militaire, à l'encre. Un fait, jamais un éloge : DESIGN.md refuse les
+// médailles qui brillent, et le compteur de morts n'est ni expérience ni avantage. `n` : le numéro du catalogue (ROADMAP §6) ;
+// `id` : la clé stable (textes, tests, icônes) ; `famille` : le cadre de l'icône ; `dit` : la phrase du survol.
+export const FAMILLES = {
+  marques:      { nom: 'Marques',       cadre: 'rond' },
+  temps:        { nom: 'Le temps',      cadre: 'arche' },
+  services:     { nom: 'Services',      cadre: 'carre' },
+  commandement: { nom: 'Commandement',  cadre: 'chevron' },
+  statuts:      { nom: 'Statuts',       cadre: 'losange' },
+  fin:          { nom: 'Fin',           cadre: 'stele' },
+  fusil:        { nom: 'Le fusil',      cadre: 'octogone' },
+};
+
+export const MARQUES = [
+  { n: 1,  id: 'bapteme',       famille: 'marques',      nom: 'Baptisé du feu',            dit: 'A survécu à son premier obus tombé tout près.' },
+  { n: 2,  id: 'souffle',       famille: 'marques',      nom: 'Secoué par le souffle',     dit: 'Un obus l\'a jeté à terre. Il s\'est relevé.' },
+  { n: 3,  id: 'deterre',       famille: 'marques',      nom: 'Déterré',                   dit: 'Son abri a été crevé par un 220. Il en est sorti vivant.' },
+  { n: 4,  id: 'bras',          famille: 'marques',      nom: 'Marqué au bras',            dit: 'Blessé au bras, évacué, revenu au front.' },
+  { n: 5,  id: 'jambe',         famille: 'marques',      nom: 'Marqué à la jambe',         dit: 'Blessé à la jambe, évacué, revenu au front.' },
+  { n: 6,  id: 'tete',          famille: 'marques',      nom: 'Marqué à la tête',          dit: 'Blessé à la tête, évacué, revenu au front.' },
+  { n: 7,  id: 'revenu-deux',   famille: 'marques',      nom: 'Deux fois revenu',          dit: 'Évacué blessé, revenu au front, deux fois.' },
+  { n: 8,  id: 'a-pied',        famille: 'marques',      nom: 'A regagné l\'arrière à pied', dit: 'Blessé, il est arrivé à l\'arrière en marchant.' },
+  { n: 9,  id: 'premier-jour',  famille: 'temps',        nom: 'Du premier jour',           dit: 'Au front depuis le premier jour de la bataille.' },
+  { n: 10, id: 'cinq-jours',    famille: 'temps',        nom: 'Cinq jours de suite',       dit: 'Cinq jours au front sans une nuit de repos.' },
+  { n: 11, id: 'pluies',        famille: 'temps',        nom: 'Sous trois pluies',         dit: 'Trois jours de pluie passés au front.' },
+  { n: 12, id: 'gel',           famille: 'temps',        nom: 'Nuit de gel',               dit: 'A passé une nuit de gel au front.' },
+  { n: 13, id: 'dernier-jour',  famille: 'temps',        nom: 'Au dernier jour',           dit: 'Debout à la fin de la bataille.' },
+  { n: 14, id: 'pelle',         famille: 'services',     nom: 'Pelle et pioche',           dit: 'Trois nuits de travaux, valide, avec son régiment.' },
+  { n: 15, id: 'brancard',      famille: 'services',     nom: 'Brancardier',               dit: 'A porté les blessés de son régiment par les boyaux.' },
+  { n: 16, id: 'porteur',       famille: 'services',     nom: 'Porteur de terre',          dit: 'A mis en terre les morts de sa tranchée.' },
+  { n: 17, id: 'soupe',         famille: 'services',     nom: 'La soupe par les boyaux',   dit: 'A monté la soupe jusqu\'à la tranchée.' },
+  { n: 18, id: 'coup-de-main',  famille: 'services',     nom: 'Coup de main',              dit: 'Revenu d\'un coup de main chez l\'ennemi.' },
+  { n: 19, id: 'entre-premier', famille: 'services',     nom: 'Entré le premier',          dit: 'Le plus avancé des hommes entrés dans un tronçon pris.' },
+  { n: 20, id: 'tenu-seul',     famille: 'services',     nom: 'A tenu seul',               dit: 'Dernier défenseur d\'un tronçon, quand il est tombé.' },
+  { n: 21, id: 'repris',        famille: 'services',     nom: 'Tronçon repris',            dit: 'Présent à la reprise d\'un tronçon perdu.' },
+  { n: 22, id: 'circonstance',  famille: 'commandement', nom: 'Gradé de circonstance',     dit: 'Promu parce qu\'un supérieur est tombé.' },
+  { n: 23, id: 'regiment',      famille: 'commandement', nom: 'A pris le régiment',        dit: 'Devenu commandant de son régiment.' },
+  { n: 24, id: 'cite',          famille: 'commandement', nom: 'Cité à l\'ordre du régiment', dit: 'Le plus aguerri des hommes entrés dans un tronçon pris ce jour-là.' },
+  { n: 25, id: 'tremble',       famille: 'statuts',      nom: 'A tremblé',                 dit: 'Sa peur a dépassé la terreur.' },
+  { n: 26, id: 'pas-reflue',    famille: 'statuts',      nom: 'N\'a pas reflué',           dit: 'Resté immobile pendant la déroute de son régiment.' },
+  { n: 27, id: 'rallie',        famille: 'statuts',      nom: 'Rallié',                    dit: 'A reflué avec son régiment, puis est revenu.' },
+  { n: 28, id: 'jour-refuse',   famille: 'statuts',      nom: 'Du jour refusé',            dit: 'Son régiment a refusé de monter aujourd\'hui.' },
+  { n: 29, id: 'douze',         famille: 'statuts',      nom: 'Parmi les douze derniers',  dit: 'Son régiment n\'a plus que douze hommes debout.' },
+  { n: 30, id: 'enterre',       famille: 'fin',          nom: 'Enterré par les siens',     dit: 'Mis en terre, une croix au crayon.' },
+  { n: 31, id: 'entonnoir',     famille: 'fin',          nom: 'Resté dans l\'entonnoir',   dit: 'Son corps n\'a pas été relevé après trois nuits.' },
+  { n: 32, id: 'fusil-1',       famille: 'fusil',        nom: 'Un à son compte',           dit: 'A abattu un homme au fusil.' },
+  { n: 33, id: 'fusil-5',       famille: 'fusil',        nom: 'Cinq à son compte',         dit: 'A abattu cinq hommes au fusil.' },
+  { n: 34, id: 'fusil-10',      famille: 'fusil',        nom: 'Dix à son compte',          dit: 'A abattu dix hommes au fusil.' },
+  { n: 35, id: 'grade-abattu',  famille: 'fusil',        nom: 'A abattu un gradé',         dit: 'Une de ses victimes était officier ou adjudant.' },
+];
+export const MARQUE = Object.fromEntries(MARQUES.map(m => [m.id, m]));

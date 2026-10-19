@@ -4,18 +4,29 @@ import { NOUS, moralEnMots, rangDe } from '../bataille.js?v=0.36.2';
 import { experienceEnMots, chevrons, peurEnMots, fatigueEnMots } from '../identite.js?v=0.36.2';
 import { majuscule, nomDe, indiceDe, premierDe, quiEst, tombe, bilan, enMots, refuseAujourdhui, actionEnMots, auFront, moyennes, prochainGrade } from './lecture.js?v=0.36.2';
 import { jauge, corps, chevronsHtml, REPERES } from './barres.js?v=0.36.2';
+import { marquesDe } from '../marques.js?v=0.36.2';
+import { rangeeHtml } from './marques.js?v=0.36.2';
 
 // `$` : l'accès aux éléments ; `R` : les réglages ; `bataille()` : la bataille en cours
 export function creerFiche({ $, R, bataille }) {
   let fiche = null;                 // { id, camp } : un soldat ; { reg } : un régiment
   let listeVue = '';                // ce que montre la liste du régiment (refaite seulement quand ça change)
   let statsVues = '';               // les jauges et le corps, refaits seulement quand ils changent
+  let marquesVues = null;           // la rangée des marques (v0.37.0), refaite seulement quand la liste change
   // les jauges et le corps de la fiche : refaits quand une valeur change d'un point (pas à chaque image)
   function montrerStats(sig, jauges, corpsHtml) {
     $('fiche-stats').hidden = !jauges;
     if (sig === statsVues) return;
     statsVues = sig;
     $('fiche-barres').innerHTML = jauges; $('fiche-corps').innerHTML = corpsHtml;
+  }
+
+  // les marques de l'homme (v0.37.0) : sous son nom, les plus récentes d'abord, six au plus ; rien pour un régiment
+  function montrerMarques(B, id) {
+    const liste = id === null ? [] : marquesDe(B, id), sig = liste.map(m => m.id).join();
+    if (sig === marquesVues) return;
+    marquesVues = sig;
+    $('fiche-marques').innerHTML = rangeeHtml(liste, B.R.marques.visibles);
   }
 
   function montrerFiche(i) {
@@ -25,8 +36,8 @@ export function creerFiche({ $, R, bataille }) {
   }
   function montrerSoldat(id) { fiche = { id, camp: quiEst(bataille(), id).reg?.camp ?? NOUS }; ouvrirFiche(); }
   function montrerRegiment(regId) { fiche = { reg: regId }; ouvrirFiche(); }
-  function ouvrirFiche() { $('fiche').hidden = false; listeVue = ''; statsVues = ''; majFiche(); }
-  function fermerFiche() { fiche = null; statsVues = ''; $('fiche').hidden = true; $('repere-soldat').hidden = true; }
+  function ouvrirFiche() { $('fiche').hidden = false; listeVue = ''; statsVues = ''; marquesVues = null; majFiche(); }
+  function fermerFiche() { fiche = null; statsVues = ''; marquesVues = null; $('fiche').hidden = true; $('repere-soldat').hidden = true; }
 
   function majFiche() {
     const B = bataille();
@@ -37,6 +48,7 @@ export function creerFiche({ $, R, bataille }) {
     $('fiche-qui').textContent = `${majuscule(qui.grade)}, ${qui.age} ans`;
     const lien = $('fiche-regiment');
     lien.hidden = !reg0; lien.textContent = nomDe(reg0); lien.onclick = () => montrerRegiment(reg0.id);
+    montrerMarques(B, fiche.id);
     $('fiche-liste').replaceChildren(); listeVue = '';
     const promu = B.etat.grades[fiche.id];
     const lignes = [promu ? `promu ${qui.grade} le jour ${promu[1]}` : ''];
@@ -62,6 +74,7 @@ export function creerFiche({ $, R, bataille }) {
     $('fiche-nom').textContent = nomDe(reg);
     $('fiche-qui').textContent = enMots(b);
     $('fiche-regiment').hidden = true;
+    montrerMarques(B, null);
     const m = moyennes(B, reg.id), nb = chevrons(m.exp), vivres = reg.vivres ?? R.nuit.vivres;
     montrerStats(`r${reg.id}:${[m.peur, m.fatJ, m.fatB, m.exp, reg.moral].map(v => Math.round(v * 100)).join(',')}:${vivres}:${reg.deroute ? 1 : 0}`, [
       jauge({ nom: 'Peur', val: m.peur, reperes: REPERES.peur, mot: peurEnMots(m.peur), titre: 'Peur moyenne de ses hommes' }),

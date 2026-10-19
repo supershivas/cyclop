@@ -29,7 +29,7 @@ import { corvees, rejouerTravaux } from './nuit.js?v=0.36.2';
 
 export const PAS = 1 / 30;                 // s de jeu par pas
 export const NOUS = 0, EUX = 1;
-const VERSION = 1;
+const VERSION = 2;               // 2 : les corps, les tombes et les prisonniers gardent les victimes de l'homme (les marques, v0.37.0)
 
 const ticksParHeure = R => Math.max(1, Math.round(R.jour.duree / (R.jour.heureFin - R.jour.heureDebut) / PAS));
 const ticksParJour = R => ticksParHeure(R) * (R.jour.heureFin - R.jour.heureDebut);
@@ -77,16 +77,16 @@ export function nouvelleBataille(graine, R, opts = {}) {
     couts: { bande: 0, version: 1, depuis: -1e9 },   // (depuis : le temps de la dernière version ; sert à étaler les champs, voir champDe)
     marges: { ...S.marges },            // le terrain déborde du secteur (zone())
     regiments: [], pertes: [0, 0], pertesJour: [[0, 0]], blesses: [0, 0],
-    corps: [],                  // les morts restent où ils sont tombés : [x×10, y×10, camp, jour, id]
+    corps: [],                  // les morts restent où ils sont tombés : [x×10, y×10, camp, jour, id, hommes abattus au fusil, marques]
     tranchees: !!S.tranchees,   // (les batailles d'avant la v0.4.0 n'en ont pas)
     troncons: [],               // qui tient chaque tronçon (0 nous, 1 en face)
     prises: [[0, 0]],           // tronçons pris par chaque camp, jour par jour
     melee: [],                  // par tronçon, les secondes où les attaquants y sont écrasants (la prise d'un tronçon défendu ; v0.15.0)
     travaux: [],                // les travaux de la nuit : [jour, sorte, tronçons…] (nuit.js ; rejoués par la sauvegarde)
-    tombes: [],                 // les morts inhumés : [x×10, y×10, camp, jour, id, jour de l'inhumation]
+    tombes: [],                 // les morts inhumés : [x×10, y×10, camp, jour, id, abattus, marques, jour de l'inhumation]
     abris: {},                  // les abris profonds : { tronçon : niveau } (nuit.js ; un 220 en crève un)
-    prisonniers: [],            // les hommes pris par un coup de main : [id, jour]
-    evacues: [],                // les blessés évacués : [id, jour]
+    prisonniers: [],            // les hommes pris par un coup de main : [id, jour, abattus, marques]
+    evacues: [],                // les blessés évacués : [numéro, jour, blessure, nuit du retour (0 : pas encore, −1 : non), régiment, expérience, abattus, marques]
     nuits: [],                  // ce que chaque nuit a vu : { jour, choix, bilan }
     grades: {},                 // les promus : { numéro: [rang, jour] } (le grade de départ vient du rang de création)
     batteries: Object.fromEntries(NOMS_CALIBRES.map(c => [c, 0])),   // s de jeu (depuis l'aube du jour 1) où la batterie est prête
@@ -477,7 +477,7 @@ export function mourir(B, i, cause, ou = null) {
   reg.moral = Math.max(0, reg.moral - R.moral.mort * 125 / reg.initial - (rang <= 3 ? R.moral.officier : 0));
   if (rang <= 5) promouvoir(B, A.reg[i], rang);
   const [x, y] = ou || [A.x[i], A.y[i]];
-  etat.corps.push([Math.round(x * 10), Math.round(y * 10), A.camp[i], etat.jour, A.id[i]]);
+  etat.corps.push([Math.round(x * 10), Math.round(y * 10), A.camp[i], etat.jour, A.id[i], A.victimes[i], 0]);
   if (ou && cause === 'obus') B.volants.push([etat.corps.length - 1, A.x[i], A.y[i], 0]);       // le dessin le fait voler (de là où il est tombé)
   B.evenements.push({ type: 'mort', camp: A.camp[i], cause, x, y, id: A.id[i] });
 }
@@ -489,7 +489,7 @@ export function capturer(B, i) {
   A.mort[i] = 1;
   const reg = etat.regiments[A.reg[i]];
   reg.effectif--; reg.prisonniers = (reg.prisonniers || 0) + 1;
-  etat.prisonniers.push([A.id[i], etat.jour]);
+  etat.prisonniers.push([A.id[i], etat.jour, A.victimes[i], 0]);
   const rang = rangDe(B, A.id[i], A.reg[i]);
   if (rang <= 5) promouvoir(B, A.reg[i], rang);
 }

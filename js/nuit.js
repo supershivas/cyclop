@@ -217,8 +217,8 @@ export function corvees(B, choix, ctx) {
         if (A.reg[i] !== reg.id || A.mort[i] || !A.blessure[i]) continue;
         if (rng() < N.risqueBoyau) { mourir(i, 'corvée'); b.mortsCorvee++; continue; }
         A.mort[i] = 1; reg.effectif--;                 // il quitte le front, vivant
-        // [numéro, jour, blessure, nuit du retour (0 : pas encore, -1 : ne reviendra pas), régiment, expérience, victimes]
-        etat.evacues.push([A.id[i], etat.jour, A.blessure[i], 0, reg.id, Math.round(A.exp[i] * 100) / 100, A.victimes[i]]); b.evacues++;
+        // [numéro, jour, blessure, nuit du retour (0 : pas encore, -1 : ne reviendra pas), régiment, expérience, victimes, marques]
+        etat.evacues.push([A.id[i], etat.jour, A.blessure[i], 0, reg.id, Math.round(A.exp[i] * 100) / 100, A.victimes[i], 0]); b.evacues++;
       }
       reg.moral = Math.min(1, reg.moral + N.moralEvacuer);
     }

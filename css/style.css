@@ -20,6 +20,7 @@
   /* les hauteurs, les traits */
   --jeu-cible: 44px;        /* tout bouton du HUD : cette hauteur au moins */
   --trait: 1px;
+  --marque: 30px;           /* une marque de la fiche : 15 unités de 2 px */
   --ombre-papier: 3px 3px 0 var(--jeu-fond);   /* l'ombre portée d'un cran, la seule */
   --titre-lettres: .08em;   /* l'espacement des titres */
 }
@@ -164,6 +165,26 @@
 .j-piste b { position: absolute; top: -3px; bottom: -3px; width: var(--trait); background: var(--jeu-fond); box-shadow: var(--trait) 0 0 var(--jeu-encre); }   /* (le repère se lit aussi sur la partie pleine : un liseré de papier) */
 .j-mot .chev { stroke: var(--jeu-fond); }
 .fiche-liste { max-height: 40dvh; overflow-y: auto; }
+/* Les marques d'un homme (Jérôme, v0.37.0) : une rangée d'icônes à l'encre ; la forme du cadre est la famille. Le texte au survol et au focus clavier. */
+.fiche .marques { list-style: none; display: flex; flex-wrap: wrap; gap: var(--e1); padding: 0; margin: var(--pas) 0 0; position: relative; }
+.marque, .marque-reste { position: static; box-sizing: border-box; height: var(--marque); min-width: var(--marque); display: flex; align-items: center; justify-content: center; color: var(--jeu-fond); cursor: default; outline-offset: var(--e0); }
+.marque svg { display: block; width: var(--marque); height: var(--marque); }
+.marque .cadre { fill: none; stroke: var(--jeu-fond); stroke-width: 1; vector-effect: non-scaling-stroke; }
+.marque .dessin rect { fill: var(--jeu-fond); }
+.marque .dessin rect.s { fill: var(--jeu-accent); }
+.marque .dessin text { fill: var(--jeu-fond); font: 700 5px var(--jeu-police); stroke: none; }
+.marque-reste { padding: 0 var(--e1); font-size: var(--texte-petit); border: var(--trait) solid var(--jeu-fond); }
+.marque:focus-visible, .marque-reste:focus-visible { outline: 2px solid var(--jeu-fond); }
+.marque:focus-visible::after, .marque-reste:focus-visible::after {
+  content: attr(data-nom) "\A" attr(data-dit); white-space: pre-line; position: absolute; left: 0; right: 0; top: calc(100% + var(--e1)); z-index: 2;
+  padding: var(--e1) var(--pas); background: var(--jeu-fond); color: var(--jeu-encre); font-size: var(--texte-petit); line-height: 1.3; box-shadow: var(--ombre-papier);
+}
+@media (hover: hover) {
+  .marque:hover::after, .marque-reste:hover::after {
+    content: attr(data-nom) "\A" attr(data-dit); white-space: pre-line; position: absolute; left: 0; right: 0; top: calc(100% + var(--e1)); z-index: 2;
+    padding: var(--e1) var(--pas); background: var(--jeu-fond); color: var(--jeu-encre); font-size: var(--texte-petit); line-height: 1.3; box-shadow: var(--ombre-papier);
+  }
+}
 .fiche-liste:empty { display: none; }
 .fiche-liste ul { list-style: none; padding: 0; margin: var(--e0) 0 0; }
 .lien, .fiche-liste .nom {

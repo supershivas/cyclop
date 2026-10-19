@@ -176,6 +176,19 @@ export const REGLAGES = {
     calme: 60,            // m : dans une tranchée d'en face, un régiment d'en face à moins de cela : ni évacuer ni ravitailler (v0.22.0)
     coupPortee: 200,      // m : jusqu'où ils vont chercher
   },
+  // les marques d'un homme (Jérôme, v0.37.0 ; js/marques.js) : des faits lus de l'état, aucun effet de jeu
+  marques: {
+    fusil: [1, 5, 10],    // hommes abattus au fusil : « Un à son compte », « Cinq », « Dix » (seuils à mesurer : scripts/mesure-victimes.mjs)
+    derniers: 12,         // « Parmi les douze derniers » : hommes debout du régiment au plus
+    cinqJours: 5,         // « Cinq jours de suite » : jours au front sans nuit de repos
+    pluies: 3,            // « Sous trois pluies » : jours de pluie au front
+    entonnoir: 3,         // « Resté dans l'entonnoir » : nuits sans inhumation
+    travaux: 3,           // « Pelle et pioche » : nuits de travaux
+    peur: 3,              // « N'a pas reflué » : secondes immobile pendant la déroute de son régiment
+    souffle: 8,           // « Secoué par le souffle » : vitesse du souffle (m/s) qui le jette
+    proche: 10,           // « Baptisé du feu » : m d'un obus qu'il survit
+    visibles: 6,          // la rangée de la fiche : au plus tant d'icônes, puis « +N »
+  },
   jour: {
     duree: 360,           // s de jeu pour une journée (6 h → 18 h)
     heureDebut: 6,
