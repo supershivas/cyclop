@@ -1,5 +1,9 @@
 # Journal des versions
 
+## 0.36.7 — 2026-10-19
+- Plus de fumée brune de l'écran titre au début d'une partie
+- Le ciel prend la couleur du temps : gris-bleu au sec, sombre sous la pluie, clair dans le brouillard, pâle au gel
+
 ## 0.36.6 — 2026-10-19
 - L'écran titre propose « Nouvelle campagne » (trois batailles, vos survivants d'une bataille à l'autre) et « Continuer la campagne » ; la campagne est dans l'export et l'import de la sauvegarde
 
