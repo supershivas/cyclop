@@ -30,7 +30,7 @@ export function creerCampagne({ $ }) {
     const vet = p.regiments.reduce((t, r) => t + r.veterans, 0), rec = p.regiments.reduce((t, r) => t + r.recrues, 0);
     const bouton = el('button', 'bouton', `Partir pour la bataille ${p.n} · ${secteur}`, el('span', 'discret', ' (Entrée)'));
     bouton.onclick = () => { cacher(); partir(); };
-    racine.replaceChildren(
+    racine.replaceChildren(...[
       el('h2', '', 'Entre deux batailles'),
       el('p', '', `Bataille ${d.n} finie : ${SECTEURS[d.secteur].nom}, ${pluriel(d.jours, 'jour', 'jours')}. ${d.issue?.texte ?? ''}`),
       el('p', 'discret', `Nos morts : ${d.pertes[0]}. Les leurs : ${d.pertes[1]}.`),
@@ -39,7 +39,7 @@ export function creerCampagne({ $ }) {
       p.perdus ? el('p', 'discret', `${hommes(p.perdus)} sans place : ils quittent la campagne.`) : null,
       el('p', 'discret', `Au total ${pluriel(vet, 'vétéran', 'vétérans')}, ${pluriel(rec, 'recrue', 'recrues')}. En face, ${p.forces[1]} hommes.`),
       el('p', '', `Mission : ${MISSIONS[p.mission].replace(/^./, c => c.toLowerCase())}`),
-      bouton);
+      bouton].filter(Boolean));
     racine.hidden = false;
     bouton.focus();
   }

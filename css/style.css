@@ -218,7 +218,7 @@ dialog .reglage input { width: 20px; height: 20px; margin: 0; flex: none; accent
 .campagne[hidden] { display: none; }
 .campagne h2 { margin: 0; font-size: var(--texte-moyen); letter-spacing: .14em; text-transform: uppercase; border-bottom: 1px solid var(--jeu-accent); padding-bottom: var(--e0); }
 .campagne .registre { display: grid; }
-.campagne .ligne { display: grid; grid-template-columns: 11ch 44px 120px 1fr; gap: var(--pas); align-items: center; padding: var(--e1) 0; border-bottom: 1px solid var(--jeu-accent); font-size: var(--texte-petit); }
+.campagne .ligne { display: grid; grid-template-columns: 13ch 44px 120px 1fr; gap: var(--pas); align-items: center; padding: var(--e1) 0; border-bottom: 1px solid var(--jeu-accent); font-size: var(--texte-petit); }
 .campagne .ligne b { font-weight: normal; font-size: var(--texte); }
 .campagne .chevrons { display: flex; gap: var(--e0); }
 .campagne .chev { stroke: var(--jeu-fond); }
