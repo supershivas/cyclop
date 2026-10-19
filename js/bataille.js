@@ -29,7 +29,7 @@ import { corvees, rejouerTravaux } from './nuit.js?v=0.36.2';
 
 export const PAS = 1 / 30;                 // s de jeu par pas
 export const NOUS = 0, EUX = 1;
-const VERSION = 1;
+const VERSION = 2;   // 2 : la graine d'identité (campagne, v0.37 : lot 1)
 
 const ticksParHeure = R => Math.max(1, Math.round(R.jour.duree / (R.jour.heureFin - R.jour.heureDebut) / PAS));
 const ticksParJour = R => ticksParHeure(R) * (R.jour.heureFin - R.jour.heureDebut);
@@ -54,8 +54,11 @@ function chaineMeteo(rng, jours, pluieAuMoins) {
   return { chaine, previsions };
 }
 
-/* Une nouvelle bataille. opts : { secteur: 'essai', soldats: par camp, jours, mission } (jours et mission :
-   tirés de la graine par un hachage, sans toucher au générateur : l'ordre des tirages ne change pas). */
+/* Une nouvelle bataille. opts : { secteur: 'essai', soldats: par camp, jours, mission, graineIdentite } (jours et mission :
+   tirés de la graine par un hachage, sans toucher au générateur : l'ordre des tirages ne change pas).
+   graineIdentite : d'où viennent les noms, âges et grades de NOS hommes (identite.js) ; elle ne sert qu'à cela. Une campagne la garde
+   d'une bataille à l'autre pendant que la graine (terrain, météo, tirages) change ; hors campagne elle vaut la graine. En face, les
+   hommes viennent toujours de la graine de la bataille : ce sont d'autres hommes à chaque fois. */
 export function nouvelleBataille(graine, R, opts = {}) {
   const idSecteur = opts.secteur || 'essai';
   const S = SECTEURS[idSecteur];
@@ -66,7 +69,7 @@ export function nouvelleBataille(graine, R, opts = {}) {
   const mission = opts.mission || (S.missions ? S.missions[Math.floor(hash2(graine | 0, 43, 7) * S.missions.length)] : null);
   const { chaine, previsions } = chaineMeteo(rng.fork('meteo'), jours, S.pluieAuMoins);
   const etat = {
-    v: VERSION, graine, secteur: idSecteur, parCamp,
+    v: VERSION, graine, graineIdentite: opts.graineIdentite ?? graine, secteur: idSecteur, parCamp,
     mission, issue: null,               // la mission (tenir, prendre) et, à la fin, ce qu'il en est
     reserves: [S.reserves ?? 0, S.reserves ?? 0],   // régiments frais en réserve, par camp (la relève)
     parRegiment: Math.floor(parCamp / S.regiments),

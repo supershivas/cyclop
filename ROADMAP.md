@@ -354,12 +354,21 @@ avant de brancher. Vérifie lisibilité (outils/lisibilite.mjs) et audit-ecran. 
 **Point dur** : l'identité d'un homme (nom, âge) vient de `graine` + numéro. Une campagne a donc deux graines : une **`graineIdentite`** stable pour toute la campagne (les noms ne changent pas d'une bataille à l'autre) et la graine de chaque bataille
 (terrain, météo). Hors campagne, `graineIdentite = graine`.
 
-**Décisions à trancher** (défaut en gras) : longueur (**3 batailles**) ; ce qui passe (**effectifs, expérience, grades, victimes ; pas la fatigue ni la peur**) ; renforts (**recrues sans expérience**) ; défaite (**repli : la campagne continue, finit sous quatre régiments**) ;
-à deux (**non, la campagne est solo**) ; le choix du secteur (**un seul au début, puis choisi**).
+**Décisions** (Jérôme, cadrage v0.36.3) : longueur **3 batailles** ; ce qui passe **effectifs, expérience, grades, victimes** (pas la fatigue, la peur ni le moral) ; renforts **recrues sans expérience** ; défaite **repli : la campagne continue, finit sous quatre régiments** ; à deux **non, la campagne est solo** ; secteur **un seul au début, puis choisi**.
+
+**Difficulté croissante** (Jérôme : « la première bataille nous sommes en surnombre, avec l'avantage du terrain, puis ça évolue ») — ordre proposé, à mesurer avec `scripts/trois-jours.mjs` étendu avant de figer les nombres :
+
+| | Secteur | Mission | Rapport de forces | Terrain | IA d'en face |
+|---|---|---|---|---|---|
+| 1 | Les labours (`essai`) | tenir | nous en surnombre (~1,3 contre 1) | plat, à notre avantage | `offensive` basse |
+| 2 | La crête (`crete`) | prendre | parité | ils tiennent la crête (7 m) | `offensive` normale |
+| 3 | Le marais (`marais`) | tenir | eux en surnombre (~1,3 contre 1) | boue, quatre jours de pluie au moins | `offensive` et `barrage` hauts |
+
+Dépendance : `parCamp` est une valeur unique pour les deux camps (`nouvelleBataille`) ; le surnombre demande un effectif par camp (capacité de l'armée, sauvegarde, `empreinteEtat`). Les recrues sans expérience s'ajoutent à la montée de l'adversaire ; on peut permuter 2 et 3 si la mesure le montre (le marais freine aussi l'attaquant).
 
 **Plan fin (lots)**
 
-1. *Identité portable* : `graineIdentite` dans `nouvelleBataille` (par défaut = `graine`), test « mêmes noms avant / après » ; aucun changement de partie.
+1. ~~*Identité portable*~~ **livré** (`etat.graineIdentite`, `VERSION` 2, `test/campagne.test.mjs`) : elle ne sert qu'aux noms de NOS hommes (`quiEst`) ; en face, la graine de bataille. Reste pour le lot 3 : `quiEst`, `premierDe` et `relever` additionnent les `initial` des régiments (numéros contigus) ; des vétérans qui gardent leurs numéros demandent un `reg.premier` ou un compteur de campagne.
 2. *Registre de campagne* : `js/campagne.js` pur (`nouvelleCampagne`, `cloturer(B)`, `suivante`) ; clé `cyclopeen:campagne` (versionnée, migrations) ; écrit à la fin de bataille, avant l'écran de fin (une coupure ne perd rien).
 3. *Reconstituer* : `nouvelleBataille(…, { troupes })` : les vétérans prennent leur place dans leur régiment, complétés par des recrues ; `A.exp`, `etat.grades`, victimes relus. Test : 750 hommes, mêmes numéros, mêmes noms.
 4. *Entre deux batailles* : un papier de campagne (régiments, effectifs, blessés qui reviennent, fusion des régiments décimés), sobre, au clavier ; le carnet de campagne (quatre lignes, comme celui de bataille).

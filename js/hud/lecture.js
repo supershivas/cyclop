@@ -20,12 +20,13 @@ export function premierDe(B, regId) {
 }
 // qui est le soldat n° id (vivant ou mort) : son régiment, son identité
 export function quiEst(B, id) {
+  const graineDe = camp => camp === NOUS ? B.etat.graineIdentite : B.etat.graine;   // en face : d'autres hommes à chaque bataille
   let p = 0;
   for (const r of B.etat.regiments) {
-    if (id < p + r.initial) return { reg: r, qui: identite(B.etat.graine, r.camp, id, id - p, r.initial, B.etat.grades[id]?.[0] ?? -1) };
+    if (id < p + r.initial) return { reg: r, qui: identite(graineDe(r.camp), r.camp, id, id - p, r.initial, B.etat.grades[id]?.[0] ?? -1) };
     p += r.initial;
   }
-  return { reg: null, qui: identite(B.etat.graine, NOUS, id) };
+  return { reg: null, qui: identite(graineDe(NOUS), NOUS, id) };
 }
 // le soldat le plus proche du point, à moins de r mètres (les deux camps)
 export function soldatSous(B, x, y, r) {
