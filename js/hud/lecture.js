@@ -1,9 +1,9 @@
 // Lire la bataille en mots : qui est un homme, ce qu'il est devenu, ce que compte un régiment. Des fonctions
 // qui prennent la bataille `B` et ne changent rien (aucun DOM) ; main.js et la fiche s'en servent.
-import { NOUS, arriereDe } from '../bataille.js?v=0.37.1';
-import { legere } from '../army.js?v=0.37.1';
-import { identite, prochainGrade } from '../identite.js?v=0.37.1';
-import { sejours } from '../marques.js?v=0.37.1';
+import { NOUS, arriereDe } from '../bataille.js?v=0.37.2';
+import { legere } from '../army.js?v=0.37.2';
+import { identite, prochainGrade } from '../identite.js?v=0.37.2';
+import { sejours, marquesRegiment } from '../marques.js?v=0.37.2';
 
 export const majuscule = s => s[0].toUpperCase() + s.slice(1);
 export const nomDe = reg => reg?.nom ? `Régiment ${reg.nom}` : 'En face';
@@ -106,3 +106,13 @@ export function moyennes(B, regId) {
   return n ? { n, peur: peur / n, fatJ: fatJ / n, fatB: fatB / n, exp: exp / n } : { n: 0, peur: 0, fatJ: 0, fatB: 0, exp: 0 };
 }
 export { prochainGrade };
+
+// les marques des hommes d'un régiment, refaites au plus une fois par seconde de jeu (un `marquesDe` par homme : pas à chaque image) ; v0.37.2
+const vuMarques = new WeakMap();
+export function marquesDuRegiment(B, regId) {
+  const cle = `${regId}:${B.etat.jour}:${B.etat.phase}:${B.etat.ticks >> 5}:${B.armee.n}`, v = vuMarques.get(B);
+  if (v && v.cle === cle) return v.val;
+  const val = marquesRegiment(B, regId);
+  vuMarques.set(B, { cle, val });
+  return val;
+}

@@ -21,6 +21,7 @@
   --jeu-cible: 44px;        /* tout bouton du HUD : cette hauteur au moins */
   --trait: 1px;
   --marque: 30px;           /* une marque de la fiche : 15 unités de 2 px */
+  --marque-petit: 20px;     /* une marque de la fenêtre du régiment : un nombre à côté */
   --ombre-papier: 3px 3px 0 var(--jeu-fond);   /* l'ombre portée d'un cran, la seule */
   --titre-lettres: .08em;   /* l'espacement des titres */
 }
@@ -174,6 +175,11 @@
 .marque .dessin rect.s { fill: var(--jeu-accent); }
 .marque .dessin text { fill: var(--jeu-fond); font: 700 5px var(--jeu-police); stroke: none; }
 .marque-reste { padding: 0 var(--e1); font-size: var(--texte-petit); border: var(--trait) solid var(--jeu-fond); }
+.marque.compte { gap: var(--e0); }
+.marque .nb { font-size: var(--texte-petit); font-weight: normal; line-height: 1; }
+.marques-reg { list-style: none; display: flex; flex-wrap: wrap; gap: var(--e1) var(--pas); padding: 0; margin: 0; position: relative; }
+.marques-reg .marque, .fiche .marques .marque.compte { --marque: var(--marque-petit); width: auto; }
+.fiche .marques .marque.compte { --marque: 26px; }
 .marque:focus-visible, .marque-reste:focus-visible { outline: 2px solid var(--jeu-fond); }
 .marque:focus-visible::after, .marque-reste:focus-visible::after {
   content: attr(data-nom) "\A" attr(data-dit); white-space: pre-line; position: absolute; left: 0; right: 0; top: calc(100% + var(--e1)); z-index: 2;

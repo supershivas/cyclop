@@ -3,8 +3,8 @@
 // `data/marques.js`, les seuils dans `reglages.js` (`marques`). Une marque se lit de l'état existant ou d'un bit posé là où l'événement
 // a lieu (`A.marques`, `BIT` : bataille.js, army.js, nuit.js) ; les bits d'un homme qui quitte la foule sont gardés avec lui
 // (`etat.corps[6]`, `tombes[6]`, `prisonniers[3]`, `evacues[7]`).
-import { MARQUES, MARQUE } from './data/marques.js?v=0.37.1';
-import { METEO } from './data/meteo.js?v=0.37.1';
+import { MARQUES, MARQUE } from './data/marques.js?v=0.37.2';
+import { METEO } from './data/meteo.js?v=0.37.2';
 
 // Les bits de `A.marques` (Uint32) : les événements comptés. 16-17 : nuits de travaux (0 à 3) ; 18-19 : secondes immobile pendant la déroute.
 export const BIT = {
@@ -156,5 +156,23 @@ export function aguerrissement(B) {
     somme[A.reg[i]] += Math.min(1, k / R.marques.aguerri); nb[A.reg[i]]++;
   }
   return Array.from(somme, (v, r) => nb[r] ? v / nb[r] : 0);
+}
+/* Les marques des hommes vivants d'un régiment (Jérôme, v0.37.2 : la fenêtre du régiment les compte, sans les classer) : [{ …la marque, nb }] dans
+   l'ordre du catalogue (jamais par nombre : rien n'est mis au-dessus d'une autre), seulement celles que portent au moins un homme ; `hommes` : les vivants ;
+   `sig` : une signature pour savoir quand la refaire. Un seul passage sur les hommes du régiment. */
+export function marquesRegiment(B, regId) {
+  const { etat, armee: A } = B, nb = new Int32Array(MARQUES.length + 1);
+  const evs = new Map(); for (const e of etat.evacues) { const l = evs.get(e[0]); if (l) l.push(e); else evs.set(e[0], [e]); }
+  const debout = []; debout[regId] = 0;
+  for (let i = 0; i < A.n; i++) if (A.reg[i] === regId && !A.mort[i] && !A.blessure[i]) debout[regId]++;
+  const pre = { evs, debout, i: 0 };
+  let hommes = 0;
+  for (let i = 0; i < A.n; i++) {
+    if (A.reg[i] !== regId || A.mort[i]) continue;
+    hommes++; pre.i = i;
+    for (const m of marquesDe(B, A.id[i], pre)) nb[m.n]++;
+  }
+  const marques = MARQUES.filter(m => nb[m.n]).map(m => ({ ...m, nb: nb[m.n] }));
+  return { hommes, marques, sig: marques.map(m => `${m.n}:${m.nb}`).join(',') };
 }
 export { MARQUES, MARQUE };

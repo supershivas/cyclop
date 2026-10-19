@@ -6,7 +6,7 @@
 // traîne, on attend. Toutes les `periode` cadres, on compare une empreinte de l'état : un écart, c'est une désynchronisation (dite à voix haute).
 //
 // Logique pure : ni DOM, ni horloge, ni réseau (`envoyer` est donné). Testée dans Node avec un réseau factice (test/lockstep.test.mjs).
-import { avancer, photo } from '../bataille.js?v=0.37.1';
+import { avancer, photo } from '../bataille.js?v=0.37.2';
 
 const fnv = (h, n) => Math.imul(h ^ (n | 0), 16777619) >>> 0;
 const tampon = new DataView(new ArrayBuffer(8));

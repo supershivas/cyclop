@@ -472,7 +472,7 @@ Tests d'abord : déterminisme (Node contre Chromium via outils/determinisme.mjs)
 
 ### 6. Les marques d'un homme — la suite (les 35 marques sont livrées en v0.37.0 : CLAUDE.md, « Les marques d'un homme »)
 
-**Statut** : reste à faire, dans cet ordre. (a) *Livré en v0.37.1* : le léger effet sur le moral (CLAUDE.md) ; à mesurer encore : la défense, 9 graines. (b) **La fenêtre du régiment** compte les marques de ses hommes sans les classer. (c) **La campagne et le Mémorial** : les marques entrent dans le registre d'un vétéran et deviennent l'épitaphe sobre ; un relevé n'emporte rien aujourd'hui (`reg.releve`).
+**Statut** : reste à faire, dans cet ordre. (a) *Livré en v0.37.1* : le léger effet sur le moral (CLAUDE.md) ; à mesurer encore : la défense, 9 graines. (b) *Livré en v0.37.2* : la fenêtre du régiment compte les marques de ses hommes sans les classer. (c) **La campagne et le Mémorial** : les marques entrent dans le registre d'un vétéran et deviennent l'épitaphe sobre ; un relevé n'emporte rien aujourd'hui (`reg.releve`).
 
 **Dettes** : « Resté dans l'entonnoir » et « Au dernier jour » se lisent à l'instant ; les marques du fusil n'ont pas de date (elles suivent l'ordre du catalogue dans la rangée) ; `A.marques` : 20 bits sur 32 (deux compteurs de 2 bits) ; les services (14-17) sont ceux du régiment, pas d'un homme précis (debout et valide la nuit de la corvée) ; « Entré le premier » est le plus avancé à la prise, pas le premier arrivé ; les icônes ont été jugées à 30 px sur un seul écran (le labo montre aussi 15 px).
 
@@ -485,4 +485,4 @@ Tests d'abord : déterminisme (Node contre Chromium via outils/determinisme.mjs)
 | 3. Mémorial | A | 2 | — (prépare 4) |
 | 4. Campagne | A | 5-6 | 3, identité portable |
 | 5. Gaz | rien avant décision de ton | 6-8 | décision de ton, eau de la nuit étalée, maquette au labo |
-| 6. Marques d'un homme (suite) | régiment, puis campagne | 1-2 | pistes 3 et 4 |
+| 6. Marques d'un homme (suite) | campagne et Mémorial | 1 | pistes 3 et 4 |

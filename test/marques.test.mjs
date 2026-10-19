@@ -5,7 +5,7 @@ import { ligneY } from '../js/tranchees.js';
 import { empreinteEtat } from '../js/reseau/lockstep.js';
 import { tuerDans, construireGrille } from '../js/army.js';
 import { BIT, TRAVAUX, IMMOBILE, compteBits } from '../js/marques.js';
-import { marquesDe, sejours, ouEst, aguerrissement, SURVIE } from '../js/marques.js';
+import { marquesDe, sejours, ouEst, aguerrissement, SURVIE, marquesRegiment } from '../js/marques.js';
 import { MARQUES } from '../js/data/marques.js';
 import { REGLAGES as R } from '../js/data/reglages.js';
 
@@ -548,4 +548,31 @@ test('les évacués d\'un régiment ne comptent plus dans sa moyenne, les morts 
   const B = bat(), A = B.armee; mourir(B, 5, 'balle');
   const v = aguerrissement(B);
   assert.ok(Math.abs(v[0] - 1 / R.marques.aguerri) < 1e-9);
+});
+
+group('marques — la fenêtre du régiment (v0.37.2)');
+test('les marques d\'un régiment : celles de ses hommes vivants, comptées, dans l\'ordre du catalogue, jamais classées par nombre', () => {
+  const B = bat(), A = B.armee, reg = B.etat.regiments[0];
+  const id = homme(B); evac(B, id, 1, 1, 2); B.etat.grades[id] = [3, 2];
+  const r = marquesRegiment(B, 0);
+  assert.equal(r.hommes, reg.effectif);
+  // la somme des marques de chaque homme est la somme des nombres
+  let somme = 0, par = new Map();
+  for (let i = 0; i < A.n; i++) if (A.reg[i] === 0) for (const m of marquesDe(B, A.id[i])) { somme++; par.set(m.n, (par.get(m.n) ?? 0) + 1); }
+  assert.equal(r.marques.reduce((s, m) => s + m.nb, 0), somme);
+  for (const m of r.marques) assert.equal(m.nb, par.get(m.n), m.id);
+  assert.deepEqual(r.marques.map(m => m.n), [...r.marques.map(m => m.n)].sort((u, v) => u - v), 'ordre du catalogue');
+  assert.ok(r.marques.some(m => m.nb === 1) && r.marques.some(m => m.nb === reg.effectif), 'un seul homme, et tous');
+  assert.ok(r.sig.length > 0);
+});
+test('les morts et les évacués ne comptent pas ; un autre régiment non plus ; elle change quand une marque est gagnée', () => {
+  const B = bat(), A = B.armee;
+  const avant = marquesRegiment(B, 0), autre = marquesRegiment(B, 1);
+  mourir(B, 5, 'balle');
+  const apres = marquesRegiment(B, 0);
+  assert.equal(apres.hommes, avant.hommes - 1);
+  assert.equal(marquesRegiment(B, 1).sig, autre.sig, 'l\'autre régiment ne bouge pas');
+  const id = homme(B); evac(B, id, 1, 2, 2);
+  assert.notEqual(marquesRegiment(B, 0).sig, apres.sig);
+  assert.ok(marquesRegiment(B, 0).marques.find(m => m.n === 5), 'marqué à la jambe');
 });

@@ -1,9 +1,9 @@
 // Le sujet « Les marques » du labo (Jérôme, v0.37.0) : les mentions de livret d'un homme, en icônes à l'encre sur le papier de la fiche. Deux variantes
 // d'icônes, dans les mêmes cadres (la forme du cadre est la famille) : les pictogrammes (9 × 9 cases, js/data/marques-icones.js) ou des sigles de deux
 // lettres. Rien ici ne lit ni ne modifie le jeu : le catalogue est celui du jeu (js/data/marques.js), la rangée est celle de la fiche (hud/marques.js).
-import { PALETTE as P } from './palette.js?v=0.37.1';
-import { MARQUES, FAMILLES } from './data/marques.js?v=0.37.1';
-import { marqueHtml, rangeeHtml } from './hud/marques.js?v=0.37.1';
+import { PALETTE as P } from './palette.js?v=0.37.2';
+import { MARQUES, FAMILLES } from './data/marques.js?v=0.37.2';
+import { marqueHtml, rangeeHtml } from './hud/marques.js?v=0.37.2';
 
 // les règles de css/style.css (« Les marques d'un homme »), pour une page qui ne charge pas la feuille du jeu
 const CSS = `

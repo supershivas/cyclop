@@ -1,11 +1,11 @@
 // Les fiches : un homme (son nom, son âge, son grade, ce qu'il endure) ou un régiment (ses hommes, ses
 // blessés, ses morts, et leurs fiches). De près, on regarde des hommes ; de loin, des régiments (Jérôme, v0.3.2).
-import { NOUS, moralEnMots, rangDe } from '../bataille.js?v=0.37.1';
-import { experienceEnMots, chevrons, peurEnMots, fatigueEnMots } from '../identite.js?v=0.37.1';
-import { majuscule, nomDe, indiceDe, premierDe, quiEst, tombe, bilan, enMots, refuseAujourdhui, actionEnMots, auFront, moyennes, prochainGrade } from './lecture.js?v=0.37.1';
-import { jauge, corps, chevronsHtml, REPERES } from './barres.js?v=0.37.1';
-import { marquesDe } from '../marques.js?v=0.37.1';
-import { rangeeHtml } from './marques.js?v=0.37.1';
+import { NOUS, moralEnMots, rangDe } from '../bataille.js?v=0.37.2';
+import { experienceEnMots, chevrons, peurEnMots, fatigueEnMots } from '../identite.js?v=0.37.2';
+import { majuscule, nomDe, indiceDe, premierDe, quiEst, tombe, bilan, enMots, refuseAujourdhui, actionEnMots, auFront, moyennes, prochainGrade, marquesDuRegiment } from './lecture.js?v=0.37.2';
+import { jauge, corps, chevronsHtml, REPERES } from './barres.js?v=0.37.2';
+import { marquesDe } from '../marques.js?v=0.37.2';
+import { rangeeHtml, regimentHtml } from './marques.js?v=0.37.2';
 
 // `$` : l'accès aux éléments ; `R` : les réglages ; `bataille()` : la bataille en cours
 export function creerFiche({ $, R, bataille }) {
@@ -27,6 +27,13 @@ export function creerFiche({ $, R, bataille }) {
     if (sig === marquesVues) return;
     marquesVues = sig;
     $('fiche-marques').innerHTML = rangeeHtml(liste, B.R.marques.visibles);
+  }
+  // celles d'un régiment : toutes, dans l'ordre du catalogue, chacune avec le nombre de ses hommes qui la portent (v0.37.2)
+  function montrerMarquesRegiment(B, regId) {
+    const { marques, sig } = marquesDuRegiment(B, regId), cle = `r${regId}:${sig}`;
+    if (cle === marquesVues) return;
+    marquesVues = cle;
+    $('fiche-marques').innerHTML = regimentHtml(marques);
   }
 
   function montrerFiche(i) {
@@ -74,7 +81,7 @@ export function creerFiche({ $, R, bataille }) {
     $('fiche-nom').textContent = nomDe(reg);
     $('fiche-qui').textContent = enMots(b);
     $('fiche-regiment').hidden = true;
-    montrerMarques(B, null);
+    montrerMarquesRegiment(B, reg.id);
     const m = moyennes(B, reg.id), nb = chevrons(m.exp), vivres = reg.vivres ?? R.nuit.vivres;
     montrerStats(`r${reg.id}:${[m.peur, m.fatJ, m.fatB, m.exp, reg.moral].map(v => Math.round(v * 100)).join(',')}:${vivres}:${reg.deroute ? 1 : 0}`, [
       jauge({ nom: 'Peur', val: m.peur, reperes: REPERES.peur, mot: peurEnMots(m.peur), titre: 'Peur moyenne de ses hommes' }),

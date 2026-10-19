@@ -1,5 +1,8 @@
 # Journal des versions
 
+## 0.37.2 — 2026-10-19
+- La fenêtre d'un régiment et sa fiche montrent les marques de ses hommes : chaque icône avec le nombre qui la porte, dans l'ordre du catalogue, sans rien classer
+
 ## 0.37.1 — 2026-10-19
 - Un régiment qui porte des marques de survie et de temps (blessés revenus, jours de pluie, nuits de gel au front) retrouve un peu plus vite son moral : moins de déroutes, autant de morts
 
