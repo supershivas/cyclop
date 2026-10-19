@@ -54,6 +54,7 @@ export function suivante(c, plan = CAMPAGNE) {
     secteur: P.secteur, mission: P.mission, graineIdentite: c.graineIdentite, campagne, troupes,
     soldatsEux: Math.round(S.soldats / (P.forces ?? 1)), iaRythme: P.ia ?? null,
   };
+  if (P.jours) opts.jours = P.jours;                      // sinon la durée du secteur (10 à 15 jours, tirée de la graine)
   return { n, graine, graineIdentite: c.graineIdentite, secteur: P.secteur, mission: P.mission, campagne, opts };
 }
 
