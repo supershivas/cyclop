@@ -1,7 +1,8 @@
-// L'onglet « Carte » de l'Atelier. Le terrain d'un secteur vu de dessus, monté par les MÊMES modules que la bataille (`terrainDuSecteur`,
-// `couleurCase`) : ce qu'on y voit est ce que le jeu monte au départ. Lot 1 : des curseurs règlent le relief, les arbres, les haies, la pluie
-// du secteur, et des outils posent des formes de relief (`formes.js` ; lot 2 : annuler, rétablir) ; chaque retouche va dans le brouillon (`secteurs` de `cyclopeen:atelier`, à plat : « relief.bosses ») et se publie dans
-// assets/design/secteurs.json. Le jeu les pose sur `SECTEURS` au lancement (`appliquerSecteurs`).
+// L'onglet « Carte » de l'Atelier : un éditeur visuel. Le terrain d'un secteur vu de dessus, monté par les MÊMES modules que la bataille (`terrainDuSecteur`,
+// `couleurCase`) : ce qu'on y voit est ce que le jeu monte au départ. Trois colonnes : la boîte à outils (poser du relief, de la végétation, sélectionner et déplacer, gommer),
+// la scène (la carte, large), l'inspecteur (l'outil ou la forme choisie, puis les réglages du secteur). Chaque chiffre porte un nom et une description (`data/carte-outils.js`,
+// `data/secteur-params.js`). Chaque retouche va dans le brouillon (`secteurs` de `cyclopeen:atelier`, à plat : « relief.bosses ») et se publie dans assets/design/secteurs.json ;
+// le jeu les pose sur `SECTEURS` au lancement (`appliquerSecteurs`).
 import { REGLAGES } from './data/reglages.js?v=0.36.2';
 import { SECTEURS } from './data/secteur.js?v=0.36.2';
 import { PALETTE, ORDRE } from './palette.js?v=0.36.2';
@@ -10,11 +11,11 @@ import { couleurCase } from './apparence.js?v=0.36.2';
 import { etat as etatCase, hauteurQ } from './terrain.js?v=0.36.2';
 import { ligneY } from './tranchees.js?v=0.36.2';
 import { PARAMS } from './data/secteur-params.js?v=0.36.2';
+import { OUTILS, GROUPES_OUTILS, champ, HERBE, SOLS } from './data/carte-outils.js?v=0.36.2';
 import { distanceForme, extremite } from './formes.js?v=0.36.2';
 import { validerSecteur } from './tranchees.js?v=0.36.2';
 import { lireBrouillon, ecrireBrouillon, lireChemin, deplier, secteurEffectif } from './design-store.js?v=0.36.2';
 
-const NOMS_ETAT = ['sec', 'humide', 'boue', 'eau', 'glace'];
 const rgb = hex => [1, 3, 5].map(k => parseInt(hex.slice(k, k + 2), 16));
 const COULEURS = ORDRE.map(k => rgb(PALETTE[k]));
 
@@ -43,31 +44,32 @@ function peindreSol(T, R, courbes) {
 }
 
 export function ongletCarte(zone, { el, R = REGLAGES, publie = {}, aPublier = () => {} } = {}) {
+  // ─── Les pièces de l'écran ───
   const sel = el('select', { ariaLabel: 'Secteur' }, ...Object.entries(SECTEURS).map(([id, s]) => el('option', { value: id, textContent: s.nom })));
-  const graine = el('input', { type: 'number', value: 1, step: 1, ariaLabel: 'Graine' });
+  const graine = el('input', { type: 'number', value: 1, step: 1, ariaLabel: 'Graine du hasard', title: 'La graine tire les bosses, les arbres et la boue de la carte : la même graine redonne la même carte. Elle ne change pas ce que vous posez.' });
+  const nouvelle = el('button', { textContent: 'Autre graine', title: 'Tire une autre graine : le sol de départ change, vos retouches restent.', onclick: () => { graine.value = Math.floor(Math.random() * 99999) + 1; refaire(); } });
   // lance une bataille d'essai dans un autre onglet : le jeu lit déjà les retouches de ce navigateur (le brouillon), rien n'est publié ni sauvegardé
   const essayer = el('button', { textContent: 'Essayer dans le jeu', className: 'primaire', onclick: () => {
     const url = new URL('./', location.href); url.searchParams.set('essai', sel.value); url.searchParams.set('graine', String(Number(graine.value) | 0));
     window.open(url, '_blank');
   } });
-  const nouvelle = el('button', { textContent: 'Autre graine', onclick: () => { graine.value = Math.floor(Math.random() * 99999) + 1; refaire(); } });
-  const coche = (texte, defaut) => { const i = el('input', { type: 'checkbox', checked: defaut }); i.onchange = redessiner; return [i, el('label', { className: 'at-coche' }, i, texte)]; };
-  const [cCourbes, lCourbes] = coche('Courbes de niveau', true);
-  const [cArbres, lArbres] = coche('Arbres et buissons', true);
-  const [cLignes, lLignes] = coche('Tranchées et secteurs', true);
-  const [cFormes, lFormes] = coche('Retouches', true);
-  const zoom = el('select', { ariaLabel: 'Zoom' }, ...[['0', 'Ajusté'], ['1', '× 1'], ['2', '× 2'], ['3', '× 3']].map(([v, t]) => el('option', { value: v, textContent: t })));
+  const coche = (texte, titre, defaut) => { const i = el('input', { type: 'checkbox', checked: defaut }); i.onchange = redessiner; return [i, el('label', { className: 'at-coche', title: titre }, i, texte)]; };
+  const [cCourbes, lCourbes] = coche('Courbes de niveau', 'Une ligne claire à chaque mètre de hauteur : elles se resserrent là où le sol monte vite.', true);
+  const [cArbres, lArbres] = coche('Arbres', 'Les arbres et les buissons du terrain.', true);
+  const [cLignes, lLignes] = coche('Tranchées', 'Les lignes de tranchées (bleu : nous, kaki : en face, 1 la plus avancée) et les secteurs A à D.', true);
+  const [cFormes, lFormes] = coche('Retouches', 'Les formes et les objets que vous avez posés.', true);
+  const [cReperes, lReperes] = coche('Repères', 'Une grille tous les 50 m, avec les distances depuis l’ouest et le haut du secteur.', false);
+  const zoom = el('select', { ariaLabel: 'Zoom', title: 'Taille de la carte à l’écran' }, ...[['0', 'Ajusté à l’écran'], ['1', 'Zoom × 1'], ['2', 'Zoom × 2'], ['3', 'Zoom × 3'], ['4', 'Zoom × 4']].map(([v, t]) => el('option', { value: v, textContent: t })));
   const canvas = el('canvas', { className: 'at-carte' });
-  const lecture = el('p', { className: 'at-note at-lecture', textContent: 'Survolez la carte pour lire une case.' });
-  const resume = el('p', { className: 'at-note' });
-  const boite = el('div', { className: 'at-carte-boite' }, canvas);
-  const reglages = el('div', { className: 'at-reglages' });
+  const scene = el('div', { className: 'ed-scene' }, canvas);
+  const etatBarre = el('div', { className: 'ed-etat', textContent: 'Survolez la carte pour lire le sol sous la souris.' });
+  const boite = el('div', { className: 'ed-boite' });
+  const insp = el('div', { className: 'ed-insp' });
   let C = null, sol = null, minuterie = 0;
 
   // le secteur tel que le jeu le lira : sa donnée, les retouches publiées, celles de ce navigateur (le brouillon)
   const effectif = () => secteurEffectif(SECTEURS[sel.value], publie[sel.value], deplier(lireBrouillon().secteurs?.[sel.value]));
   const valeurPubliee = (cle, param) => lireChemin(secteurEffectif(SECTEURS[sel.value], publie[sel.value]), cle) ?? param.defaut;
-
   // écrit une valeur dans le brouillon, ou l'en retire si elle est celle du publié
   function noter(cle, v, pub) {
     const br = lireBrouillon(); br.secteurs = br.secteurs || {}; const g = br.secteurs[sel.value] = br.secteurs[sel.value] || {};
@@ -78,204 +80,289 @@ export function ongletCarte(zone, { el, R = REGLAGES, publie = {}, aPublier = ()
   }
   const plusTard = () => { clearTimeout(minuterie); minuterie = setTimeout(refaire, 120); };       // le terrain se refait (~0,3 s) : on attend que la main s'arrête
 
-  // ─── Les retouches de relief : des formes, un historique pour annuler et rétablir (en mémoire : il ne survit pas à la page) ───
-  const NOMS_OUTILS = { regler: 'Lire', bosse: 'Bosse', creux: 'Creux', crete: 'Crête', plateau: 'Plateau', arbre: 'Arbre', buisson: 'Buisson', bois: 'Bois', haie: 'Haie', degager: 'Dégager', gomme: 'Gomme' };
-  const RELIEF = ['bosse', 'creux', 'crete', 'plateau'];             // des formes de relief (`retouches`) ; les autres outils posent des objets (`objets`), sauf lire et gomme
-  let outil = 'regler', rayon = 20, amplitude = 3, niveau = 3, trace = null, curseurCarte = null;
+  // ─── Les retouches : des formes de relief et des objets, une seule histoire pour annuler et rétablir (en mémoire : elle ne survit pas à la page) ───
+  let outil = 'selection', trace = null, curseurCarte = null, choix = null, edition = null, glisse = null;
+  const reglagesOutil = { bosse: { r: 20, h: 3 }, creux: { r: 20, h: 3 }, crete: { r: 20, h: 3 }, plateau: { r: 20, h: 3 }, bois: { r: 20 }, degager: { r: 20 } };
   const histoire = [], futur = [];
-  // deux listes, une seule histoire : un annuler défait la dernière pose, relief ou objet
+  const cleDe = F => (F.f ? 'retouches' : 'objets');
+  const genreDe = F => F.f || F.o;
   const listes = () => { const S = effectif(); return { retouches: structuredClone(S.retouches || []), objets: structuredClone(S.objets || []) }; };
   const publiees = () => { const S = secteurEffectif(SECTEURS[sel.value], publie[sel.value]); return { retouches: S.retouches || [], objets: S.objets || [] }; };
-  const formes = () => listes().retouches;
-  function ecrireListes(l) { const pub = publiees(); for (const cle of ['retouches', 'objets']) noter(cle, l[cle], pub[cle]); panneauFormes(); redessiner(); plusTard(); verifier(); }
+  // ce qu'on dessine : les listes, avec la forme en cours de glissé à la place de l'ancienne
+  const affichees = () => { const l = listes(); if (edition) l[edition.cle][edition.i] = edition.F; return l; };
+  function ecrireListes(l) { const pub = publiees(); for (const cle of ['retouches', 'objets']) noter(cle, l[cle], pub[cle]); tout(); plusTard(); }
   function poserListe(cle, liste) { histoire.push(listes()); futur.length = 0; ecrireListes({ ...listes(), [cle]: liste }); }
-  const annuler = () => { if (histoire.length) { futur.push(listes()); ecrireListes(histoire.pop()); } };
-  const retablir = () => { if (futur.length) { histoire.push(listes()); ecrireListes(futur.pop()); } };
+  function reajusterChoix() { if (choix && !listes()[choix.cle][choix.i]) choix = null; }
+  const annuler = () => { if (histoire.length) { futur.push(listes()); ecrireListes(histoire.pop()); reajusterChoix(); tout(); } };
+  const retablir = () => { if (futur.length) { histoire.push(listes()); ecrireListes(futur.pop()); reajusterChoix(); tout(); } };
   const arrondi = v => Math.round(v * 2) / 2;
-  const poserForme = F => { const cle = F.f ? 'retouches' : 'objets'; poserListe(cle, [...listes()[cle], F]); };
-  function effacerPres(x, y) {
+  const poserForme = F => { const cle = cleDe(F); poserListe(cle, [...listes()[cle], F]); };
+  function supprimerChoix() { if (!choix) return; const l = listes()[choix.cle]; l.splice(choix.i, 1); const c = choix.cle; choix = null; poserListe(c, l); }
+  function nouvelleForme(def, x, y) {
+    const F = { [def.type === 'relief' ? 'f' : 'o']: def.genre, x, y };
+    const r = reglagesOutil[def.genre];
+    if (def.champs.includes('r')) F.r = r.r;
+    if (def.champs.includes('h')) F.h = r.h;
+    return F;
+  }
+  // la forme la plus proche d'un point (la gomme, la sélection) : on y est si le point tombe dans sa zone (rayon, au moins 5 m)
+  function pres(x, y) {
     const l = listes(); let cible = null, best = Infinity;
-    for (const cle of ['retouches', 'objets']) l[cle].forEach((F, i) => { const d = distanceForme(F, x, y); if (d < Math.max(F.r || 0, 6) && d < best) { best = d; cible = [cle, i]; } });
-    if (cible) { const liste = l[cible[0]]; liste.splice(cible[1], 1); poserListe(cible[0], liste); }
+    for (const cle of ['retouches', 'objets']) l[cle].forEach((F, i) => { const d = distanceForme(F, x, y); if (d < Math.max(F.r || 0, 5) && d < best) { best = d; cible = { cle, i }; } });
+    return cible;
+  }
+  // les poignées d'une forme choisie, en mètres : le centre (déplacer), le rayon, les deux bouts d'un trait
+  function poignees(F) {
+    const def = OUTILS[genreDe(F)], [x2, y2] = extremite(F), mx = (F.x + x2) / 2, my = (F.y + y2) / 2;
+    if (def.segment) {
+      const h = [{ id: 'debut', x: F.x, y: F.y }, { id: 'fin', x: x2, y: y2 }, { id: 'milieu', x: mx, y: my }];
+      if (def.champs.includes('r')) { const L = Math.hypot(x2 - F.x, y2 - F.y) || 1; h.push({ id: 'rayon', x: mx - (y2 - F.y) / L * F.r, y: my + (x2 - F.x) / L * F.r }); }
+      return h;
+    }
+    return [{ id: 'centre', x: F.x, y: F.y }, ...(def.champs.includes('r') ? [{ id: 'rayon', x: F.x + F.r, y: F.y }] : [])];
+  }
+  const pxParM = () => canvas.getBoundingClientRect().width / (C ? C.T.W : 1);
+  function appliquerGlisse(p) {
+    const F = structuredClone(glisse.depart), dx = p[0] - glisse.p0[0], dy = p[1] - glisse.p0[1];
+    switch (glisse.mode) {
+      case 'centre': case 'milieu': F.x += dx; F.y += dy; if (F.x2 !== undefined) { F.x2 += dx; F.y2 += dy; } break;
+      case 'debut': F.x = p[0]; F.y = p[1]; break;
+      case 'fin': F.x2 = p[0]; F.y2 = p[1]; break;
+      case 'rayon': F.r = Math.max(3, Math.min(80, Math.round(distanceForme({ ...F, r: 1 }, p[0], p[1])))); break;
+    }
+    edition = { ...glisse.cible, F };
   }
   // le contrôle du secteur tel qu'il serait publié : dit à voix haute, et l'onglet Publier le refait avant d'écrire
-  const verdict = el('div', { className: 'at-verdict' });
+  let problemes = [];
   function verifier() {
-    const pb = validerSecteur(effectif());
-    essayer.disabled = pb.length > 0; essayer.title = pb.length ? 'Corrigez d\u2019abord ce que le contrôle signale' : 'Une bataille d\u2019essai dans un autre onglet, sans rien publier ni sauvegarder';
-    verdict.replaceChildren(...(pb.length ? [el('p', { className: 'at-modifie', textContent: 'Ce secteur ne peut pas être publié :' }), el('ul', null, ...pb.map(t => el('li', { textContent: t })))] : []));
+    problemes = validerSecteur(effectif());
+    essayer.disabled = problemes.length > 0; essayer.title = problemes.length ? 'Corrigez d’abord ce que le contrôle signale' : 'Une bataille d’essai dans un autre onglet, sans rien publier ni sauvegarder';
   }
-  const formesEl = el('div', { className: 'at-formes' });
-  function panneauFormes() {
-    const l = listes(), pub = publiees(), n = l.retouches.length, m = l.objets.length, modif = JSON.stringify(l) !== JSON.stringify(pub);
-    const bouton = ([id, nom]) => el('button', { textContent: nom, className: id === outil ? 'is-on' : '', ariaPressed: String(id === outil), onclick: () => { outil = id; trace = null; panneauFormes(); redessiner(); } });
-    const rangee = (titre, ids) => el('div', { className: 'at-outils', role: 'group', ariaLabel: titre }, el('span', { className: 'at-outils-titre', textContent: titre }), ...ids.map(id => bouton([id, NOMS_OUTILS[id]])));
-    const glisseur = (nom, unite, min, max, pas, v, poser) => {
-      const c = el('input', { type: 'range', min, max, step: pas, value: v, ariaLabel: nom }), t = el('span', { textContent: `${nom} ${v} ${unite}` });
-      c.oninput = () => { poser(Number(c.value)); t.textContent = `${nom} ${c.value} ${unite}`; redessiner(); };
-      return el('label', { className: 'at-glisseur' }, t, c);
-    };
-    const aRayon = outil !== 'regler' && outil !== 'gomme' && outil !== 'arbre' && outil !== 'buisson' && outil !== 'haie';
-    const lignes = [];
-    if (aRayon || outil === 'crete' || outil === 'haie') lignes.push(glisseur(outil === 'haie' ? 'Épaisseur du pinceau' : 'Rayon', 'm', 3, 80, 1, rayon, v => { rayon = v; }));
-    if (outil === 'plateau') lignes.push(glisseur('Niveau', 'm', 0, 15, 0.5, niveau, v => { niveau = v; }));
-    else if (RELIEF.includes(outil)) lignes.push(glisseur('Hauteur', 'm', 0.5, 12, 0.5, amplitude, v => { amplitude = v; }));
-    if (outil === 'haie') lignes.shift();
-    const aide = { regler: 'Choisissez un outil, puis cliquez sur la carte.', bosse: 'Un clic pose une bosse.', creux: 'Un clic creuse.', crete: 'Glissez d\u2019un point à l\u2019autre : une crête le long du trait.', plateau: 'Un clic aplanit à ce niveau (la hauteur lue au survol).',
-      arbre: 'Un clic plante un arbre.', buisson: 'Un clic plante un buisson.', bois: 'Un clic plante une tache d\u2019arbres serrés, jusqu\u2019au rayon.', haie: 'Glissez d\u2019un point à l\u2019autre : une haie, avec des trous.',
-      degager: 'Un clic retire les arbres et les buissons de la graine jusqu\u2019au rayon (pas ce que vous avez posé : la gomme).', gomme: 'Un clic retire la retouche ou l\u2019objet le plus proche. Pour déplacer : gommer, puis reposer.' }[outil];
-    formesEl.replaceChildren(el('h3', { textContent: 'Retouches de la carte' }),
-      rangee('Relief', ['bosse', 'creux', 'crete', 'plateau']), rangee('Objets', ['arbre', 'buisson', 'bois', 'haie', 'degager']), rangee('Autre', ['regler', 'gomme']),
-      el('p', { className: 'at-note', textContent: aide }), ...lignes,
-      el('div', { className: 'at-row' },
-        el('button', { textContent: 'Annuler', disabled: !histoire.length, onclick: annuler }),
-        el('button', { textContent: 'Rétablir', disabled: !futur.length, onclick: retablir }),
-        el('button', { textContent: 'Tout effacer', disabled: !n && !m, onclick: () => { histoire.push(l); futur.length = 0; ecrireListes({ retouches: [], objets: [] }); } })),
-      el('p', { className: 'at-note' }, el('span', { textContent: `${n} forme${n > 1 ? 's' : ''} de relief, ${m} objet${m > 1 ? 's' : ''}`, className: modif ? 'at-modifie' : '' }), modif ? ' (pas encore publiés)' : ''), verdict);
-  }
-  // un clic ou un glissé sur la carte, avec l'outil choisi
-  const enMetres = e => { const r = canvas.getBoundingClientRect(); return [arrondi((e.clientX - r.left) / r.width * C.T.W - C.marges.x), arrondi((e.clientY - r.top) / r.height * C.T.H - C.marges.y)]; };
-  canvas.onpointerdown = e => {
-    if (!C || e.button !== 0 || outil === 'regler') return;
-    const [x, y] = enMetres(e);
-    if (outil === 'gomme') return effacerPres(x, y);
-    if (outil === 'crete' || outil === 'haie') { trace = { x, y, x2: x, y2: y }; canvas.setPointerCapture(e.pointerId); return; }
-    if (RELIEF.includes(outil)) return poserForme(outil === 'plateau' ? { f: 'plateau', x, y, r: rayon, h: niveau } : { f: outil, x, y, r: rayon, h: amplitude });
-    poserForme(outil === 'arbre' || outil === 'buisson' ? { o: outil, x, y } : { o: outil, x, y, r: rayon });
-  };
-  canvas.onpointerup = e => {
-    if (!trace) return;
-    const T = trace; trace = null;
-    if (Math.hypot(T.x2 - T.x, T.y2 - T.y) < 4) return redessiner();
-    poserForme(outil === 'haie' ? { o: 'haie', x: T.x, y: T.y, x2: T.x2, y2: T.y2 } : { f: 'crete', x: T.x, y: T.y, x2: T.x2, y2: T.y2, r: rayon, h: amplitude });
-  };
+  const tout = () => { verifier(); panneauBoite(); panneauInspecteur(); redessiner(); };
 
-  function panneau() {
+  // ─── Des champs avec un nom, une description, un curseur et un chiffre ───
+  function champNum({ nom, desc, unite, min, max, pas, valeur, modifie = false, surInput, surChange, retour }) {
+    const c = el('input', { type: 'range', min, max, step: pas, value: valeur, ariaLabel: nom });
+    const n = el('input', { type: 'number', min, max, step: pas, value: valeur, ariaLabel: `${nom}, valeur` });
+    const titre = el('span', { className: `at-champ-nom${modifie ? ' at-modifie' : ''}`, textContent: nom });
+    const borne = v => Math.min(max, Math.max(min, v));
+    c.oninput = () => { n.value = c.value; surInput?.(Number(c.value)); };
+    c.onchange = () => surChange?.(Number(c.value));
+    n.onchange = () => { const v = Number(n.value); if (!Number.isFinite(v)) { n.value = c.value; return; } c.value = n.value = borne(v); surInput?.(borne(v)); surChange?.(borne(v)); };
+    return el('div', { className: 'at-champ' },
+      el('div', { className: 'at-champ-tete' }, titre, n, el('span', { className: 'at-unite', textContent: unite || '' }), ...(retour ? [retour] : [])),
+      el('p', { className: 'at-champ-desc', textContent: desc }), c);
+  }
+
+  // ─── La boîte à outils (à gauche) ───
+  function panneauBoite() {
+    const bouton = id => {
+      const d = OUTILS[id], b = el('button', { className: `ed-outil${id === outil ? ' is-on' : ''}`, title: `${d.nom} — ${d.aide}`, ariaPressed: String(id === outil), onclick: () => { outil = id; trace = null; if (id !== 'selection') choix = null; tout(); canvas.style.cursor = id === 'selection' ? 'default' : 'crosshair'; } });
+      b.innerHTML = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="${d.icone}"/></svg><span>${d.nom}</span>`;
+      return b;
+    };
+    boite.replaceChildren(
+      el('div', { className: 'at-row ed-histo' },
+        el('button', { textContent: 'Annuler', disabled: !histoire.length, title: 'Défait la dernière pose, déplacement ou suppression', onclick: annuler }),
+        el('button', { textContent: 'Rétablir', disabled: !futur.length, onclick: retablir })),
+      ...GROUPES_OUTILS.flatMap(g => [el('h3', { className: 'ed-groupe', textContent: g.titre }), ...Object.keys(OUTILS).filter(id => OUTILS[id].groupe === g.id).map(bouton)]));
+  }
+
+  // ─── L'inspecteur (à droite) : l'outil ou la forme choisie, puis le secteur ───
+  function panneauInspecteur() {
+    const l = listes(), pub = publiees(), n = l.retouches.length, m = l.objets.length, modif = JSON.stringify(l) !== JSON.stringify(pub);
+    const blocs = [];
+    if (problemes.length) blocs.push(el('div', { className: 'ed-alerte' }, el('p', { className: 'at-modifie', textContent: 'Ce secteur ne peut pas être publié :' }), el('ul', null, ...problemes.map(t => el('li', { textContent: t })))));
+    const def = OUTILS[outil];
+    if (outil === 'selection' && choix && l[choix.cle][choix.i]) {
+      const F = l[choix.cle][choix.i], genre = genreDe(F), d = OUTILS[genre], noms = ['x', 'y', ...(d.segment ? ['x2', 'y2'] : []), ...d.champs];
+      blocs.push(el('section', { className: 'ed-bloc' }, el('h3', { textContent: `Sélection : ${d.nom}` }), el('p', { className: 'at-note', textContent: `Glissez le carré du centre pour la déplacer${d.champs.includes('r') || d.segment ? ', les autres carrés pour la redimensionner' : ''}. Ou réglez ses chiffres ci-dessous.` }),
+        ...noms.map(k => { const c = champ(k, genre); return champNum({ ...c, valeur: F[k],
+          surInput: v => { edition = { ...choix, F: { ...F, [k]: v } }; redessiner(); },
+          surChange: v => { edition = null; const copie = l[choix.cle]; copie[choix.i] = { ...F, [k]: v }; poserListe(choix.cle, copie); } }); }),
+        el('div', { className: 'at-row' }, el('button', { textContent: 'Supprimer', onclick: supprimerChoix }))));
+    } else if (def.genre) {
+      blocs.push(el('section', { className: 'ed-bloc' }, el('h3', { textContent: `Outil : ${def.nom}` }), el('p', { className: 'at-note', textContent: def.aide }),
+        ...def.champs.map(k => { const c = champ(k, def.genre); const r = reglagesOutil[def.genre]; return champNum({ ...c, valeur: r[k], surInput: v => { r[k] = v; redessiner(); } }); })));
+    } else {
+      blocs.push(el('section', { className: 'ed-bloc' }, el('h3', { textContent: def.nom }), el('p', { className: 'at-note', textContent: def.aide + (outil === 'selection' ? ' Rien n’est choisi pour l’instant.' : '') })));
+    }
+    blocs.push(el('section', { className: 'ed-bloc' }, el('h3', { textContent: 'Ce que vous avez posé' }),
+      el('p', { className: 'at-note' }, el('span', { textContent: `${n} forme${n > 1 ? 's' : ''} de relief, ${m} objet${m > 1 ? 's' : ''}`, className: modif ? 'at-modifie' : '' }), modif ? ' (pas encore publiés : onglet Publier)' : ''),
+      el('div', { className: 'at-row' }, el('button', { textContent: 'Tout effacer', disabled: !n && !m, onclick: () => { histoire.push(l); futur.length = 0; choix = null; ecrireListes({ retouches: [], objets: [] }); } }))));
+    blocs.push(panneauSecteur());
+    insp.replaceChildren(...blocs);
+  }
+  function panneauSecteur() {
     const base = effectif(), b = lireBrouillon().secteurs?.[sel.value] || {};
-    const rangees = PARAMS.filter(p => !p.si || lireChemin(SECTEURS[sel.value], p.si)).map(p => {
+    const lignes = PARAMS.filter(p => !p.si || lireChemin(SECTEURS[sel.value], p.si)).map(p => {
       const v0 = lireChemin(base, p.cle) ?? p.defaut, pub = valeurPubliee(p.cle, p);
-      const curseur = el('input', { type: 'range', min: p.min, max: p.max, step: p.pas, value: v0, ariaLabel: p.nom });
-      const nombre = el('input', { type: 'number', min: p.min, max: p.max, step: p.pas, value: v0, ariaLabel: `${p.nom} (valeur)` });
-      const nom = el('span', { textContent: p.nom, className: p.cle in b ? 'at-modifie' : '' });
-      const rendre = () => { nom.className = Number(curseur.value) !== pub ? 'at-modifie' : ''; };
-      const poser = v => {
-        v = Math.min(p.max, Math.max(p.min, Number(v)));
-        if (!Number.isFinite(v)) return;
-        curseur.value = nombre.value = v; rendre();
-        const br = lireBrouillon(); br.secteurs = br.secteurs || {}; const g = br.secteurs[sel.value] = br.secteurs[sel.value] || {};
-        if (v === pub) delete g[p.cle]; else g[p.cle] = v;
-        if (!Object.keys(g).length) delete br.secteurs[sel.value];
-        if (!Object.keys(br.secteurs).length) delete br.secteurs;
-        ecrireBrouillon(br); aPublier(); verifier();
-        plusTard();
-      };
-      curseur.oninput = () => poser(curseur.value); nombre.onchange = () => poser(nombre.value);
-      const retour = el('button', { textContent: '\u21ba', title: `Revenir à ${pub}`, ariaLabel: `Revenir à la valeur publiée de ${p.nom}`, onclick: () => { poser(pub); } });
-      rendre();
-      const ligne = el('div', { className: 'at-reglage' }, nom, curseur, nombre, el('span', { className: 'at-unite', textContent: p.unite }), retour);
+      let nomEl;
+      const retour = el('button', { textContent: '↺', title: `Revenir à la valeur publiée (${pub})`, ariaLabel: `Revenir à la valeur publiée de ${p.nom}`, onclick: () => { poserParam(p, pub); panneauInspecteur(); } });
+      const ligne = champNum({ ...p, valeur: v0, modifie: p.cle in b, retour, surInput: v => { poserParam(p, v); ligne.querySelector('.at-champ-nom').className = `at-champ-nom${v !== pub ? ' at-modifie' : ''}`; } });
       ligne.dataset.groupe = p.groupe || '';
+      void nomEl;
       return ligne;
     });
-    const tout = el('button', { textContent: 'Tout remettre comme publié', onclick: () => {
+    const remise = el('button', { textContent: 'Tout remettre comme publié', title: 'Efface toutes les retouches de ce secteur dans ce navigateur', onclick: () => {
       const br = lireBrouillon(); if (br.secteurs) { delete br.secteurs[sel.value]; if (!Object.keys(br.secteurs).length) delete br.secteurs; }
-      ecrireBrouillon(br); aPublier(); histoire.length = futur.length = 0; panneau(); panneauFormes(); verifier(); refaire();
+      ecrireBrouillon(br); aPublier(); histoire.length = futur.length = 0; choix = null; tout(); refaire();
     } });
-    reglages.replaceChildren(el('h3', { textContent: 'Réglages du secteur' }),
-      el('p', { className: 'at-note', textContent: 'En rouge : retouché dans ce navigateur, pas encore publié (onglet Publier). Le jeu de ce navigateur les utilise déjà, à la prochaine bataille. La carte se refait quand la main s\u2019arrête.' }),
-      ...rangees.flatMap((r, k) => r.dataset.groupe && r.dataset.groupe !== rangees[k - 1]?.dataset.groupe ? [el('h4', { textContent: r.dataset.groupe }), r] : [r]), tout);
+    return el('details', { className: 'ed-bloc', open: true }, el('summary', { textContent: `Le secteur : ${SECTEURS[sel.value].nom}` }),
+      el('p', { className: 'at-note', textContent: `${SECTEURS[sel.value].resume} En rouge : retouché dans ce navigateur, pas encore publié. Le jeu de ce navigateur l’utilise déjà, à la prochaine bataille.` }),
+      ...lignes.flatMap((r, k) => r.dataset.groupe && r.dataset.groupe !== lignes[k - 1]?.dataset.groupe ? [el('h4', { textContent: r.dataset.groupe }), r] : [r]), el('div', { className: 'at-row' }, remise));
+  }
+  function poserParam(p, v) { noter(p.cle, v, valeurPubliee(p.cle, p)); verifier(); plusTard(); majAlerte(); }
+  // (le contrôle bouge pendant un glissé de curseur : on ne refait que son bloc)
+  function majAlerte() {
+    const ancien = insp.querySelector('.ed-alerte');
+    if (!problemes.length) { ancien?.remove(); return; }
+    const neuf = el('div', { className: 'ed-alerte' }, el('p', { className: 'at-modifie', textContent: 'Ce secteur ne peut pas être publié :' }), el('ul', null, ...problemes.map(t => el('li', { textContent: t }))));
+    if (ancien) ancien.replaceWith(neuf); else insp.prepend(neuf);
   }
 
+  // ─── La carte ───
   function refaire() {
     C = monterCarte(R, effectif(), Number(graine.value) | 0);
     sol = null;
-    resume.textContent = `${C.S.nom} : ${C.S.resume} Terrain ${C.T.W} × ${C.T.H} m, secteur ${C.S.largeur} × ${C.S.hauteur} m au milieu (marges ${C.marges.x} et ${C.marges.y} m). Le sol est celui du départ de la bataille : sec, tranchées creusées, aucun obus.`;
     redessiner();
   }
-  function echelle() {
-    const z = Number(zoom.value);
-    return z || Math.max(1, Math.min(3, Math.floor((boite.clientWidth || 840) / C.T.W)));
-  }
+  const echelle = () => Number(zoom.value) || Math.max(1, Math.min(4, Math.ceil((scene.clientWidth || 840) / (C ? C.T.W : 840))));
   function redessiner() {
     if (!C) return;
     const { T, S, lignes, marges: m } = C, k = echelle();
     if (!sol) { sol = document.createElement('canvas'); sol.width = T.W; sol.height = T.H; }
-    const lastCourbes = sol.dataset.courbes === String(cCourbes.checked);
-    if (!lastCourbes || !sol.dataset.fait) {
+    if (sol.dataset.courbes !== String(cCourbes.checked) || !sol.dataset.fait) {
       sol.getContext('2d').putImageData(peindreSol(T, R, cCourbes.checked), 0, 0);
       sol.dataset.courbes = String(cCourbes.checked); sol.dataset.fait = '1';
     }
     canvas.width = T.W * k; canvas.height = T.H * k;
+    if (Number(zoom.value)) { canvas.style.width = `${T.W * k}px`; canvas.style.height = `${T.H * k}px`; } else { canvas.style.width = '100%'; canvas.style.height = 'auto'; }
     const ctx = canvas.getContext('2d');
     ctx.imageSmoothingEnabled = false;
     ctx.drawImage(sol, 0, 0, T.W * k, T.H * k);
+    const px = n => n / (pxParM() || 1);                                  // n pixels de l'écran, en mètres de carte
     ctx.save(); ctx.scale(k, k);
     if (cArbres.checked) {
       ctx.fillStyle = PALETTE.w;
       for (const b of T.buissons) ctx.fillRect(b.i - 0.5, b.j - 0.5, 1.6, 1.6);
       for (const a of T.arbres) { ctx.fillStyle = PALETTE.t; ctx.fillRect(a.i - 2, a.j - 2, 4, 4); ctx.fillStyle = PALETTE.v; ctx.fillRect(a.i - 1.5, a.j - 1.5, 3, 3); }
     }
+    ctx.font = `${px(11)}px ui-monospace, monospace`;
+    if (cReperes.checked) {
+      ctx.strokeStyle = PALETTE.o; ctx.fillStyle = PALETTE.o; ctx.globalAlpha = 0.35; ctx.lineWidth = px(1);
+      for (let x = Math.ceil(-m.x / 50) * 50; x <= S.largeur + m.x; x += 50) { ctx.beginPath(); ctx.moveTo(m.x + x, 0); ctx.lineTo(m.x + x, T.H); ctx.stroke(); }
+      for (let y = Math.ceil(-m.y / 50) * 50; y <= S.hauteur + m.y; y += 50) { ctx.beginPath(); ctx.moveTo(0, m.y + y); ctx.lineTo(T.W, m.y + y); ctx.stroke(); }
+      ctx.globalAlpha = 1;
+      for (let x = Math.ceil(-m.x / 50) * 50; x <= S.largeur + m.x; x += 50) ctx.fillText(`${x}`, m.x + x + px(3), px(13));
+      for (let y = Math.ceil(-m.y / 50) * 50; y <= S.hauteur + m.y; y += 50) ctx.fillText(`${y}`, px(3), m.y + y - px(3));
+    }
     if (cLignes.checked) {
-      ctx.lineWidth = 1 / k + 0.4; ctx.font = `${Math.round(9 / k * 1.4 + 3)}px ui-monospace, monospace`;
+      ctx.lineWidth = px(1.5);
       // le secteur, découpé en quatre colonnes A à D
-      ctx.strokeStyle = PALETTE.o; ctx.setLineDash([6, 4]);
+      ctx.strokeStyle = PALETTE.o; ctx.setLineDash([px(8), px(5)]);
       ctx.strokeRect(m.x, m.y, S.largeur, S.hauteur);
       const largeurZone = S.largeur / 4;
       for (let z = 1; z < 4; z++) { ctx.beginPath(); ctx.moveTo(m.x + z * largeurZone, m.y); ctx.lineTo(m.x + z * largeurZone, m.y + S.hauteur); ctx.stroke(); }
       ctx.setLineDash([]); ctx.fillStyle = PALETTE.o;
-      'ABCD'.split('').forEach((l, z) => ctx.fillText(l, m.x + z * largeurZone + largeurZone / 2 - 3, m.y - 6));
+      'ABCD'.split('').forEach((l, z) => ctx.fillText(l, m.x + z * largeurZone + largeurZone / 2 - px(3), m.y - px(6)));
       // les lignes : 1 est la plus avancée de chaque camp ; bleu = nous, kaki = en face
       for (const L of lignes) {
         ctx.strokeStyle = L.camp === 0 ? PALETTE.n : PALETTE.x; ctx.fillStyle = ctx.strokeStyle;
         ctx.beginPath();
         for (let x = 0; x <= T.W; x += 2) { const y = ligneY(L, x + 0.5); if (x === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y); }
         ctx.stroke();
-        ctx.fillText(String(L.rang + 1), m.x + S.largeur + 4, L.y0 + 3);
+        ctx.fillText(String(L.rang + 1), m.x + S.largeur + px(5), L.y0 + px(4));
       }
     }
-    if (cFormes.checked || outil !== 'regler') {
-      // les retouches et les objets : un anneau (le rayon) et un signe au centre, un trait pour une crête ou une haie ; l'anneau du pinceau et le trait en cours
-      const ox = m.x, oy = m.y, glyphe = { bosse: '+', creux: '\u2212', crete: '+', plateau: '=', bois: 'B', haie: 'H', degager: '\u00d7' };
-      ctx.fillStyle = ctx.strokeStyle = PALETTE.o; ctx.lineWidth = 1 / k + 0.5; ctx.textAlign = 'center';
-      const dessiner = (F, enCours) => {
-        const [x2, y2] = extremite(F), genre = F.f || F.o, segment = genre === 'crete' || genre === 'haie', r = F.r ?? 2.5;
-        ctx.setLineDash(genre === 'creux' || genre === 'degager' ? [3, 3] : enCours || genre === 'bois' ? [2, 2] : []);
-        if (segment) { ctx.beginPath(); ctx.moveTo(ox + F.x, oy + F.y); ctx.lineTo(ox + x2, oy + y2); ctx.stroke(); }
-        if (genre !== 'haie') for (const [px, py] of genre === 'crete' ? [[F.x, F.y], [x2, y2]] : [[F.x, F.y]]) { ctx.beginPath(); ctx.arc(ox + px, oy + py, r, 0, 6.2832); ctx.stroke(); }
-        ctx.setLineDash([]); ctx.fillText(glyphe[genre] || '', ox + (F.x + x2) / 2, oy + (F.y + y2) / 2 + 3);
-      };
-      if (cFormes.checked) { const S = effectif(); for (const F of [...(S.retouches || []), ...(S.objets || [])]) dessiner(F, false); }
-      if (trace) dessiner(outil === 'haie' ? { o: 'haie', ...trace } : { f: 'crete', ...trace, r: rayon }, true);
-      else if (curseurCarte && outil !== 'regler' && outil !== 'gomme' && outil !== 'haie') dessiner({ [RELIEF.includes(outil) ? 'f' : 'o']: outil, x: curseurCarte[0], y: curseurCarte[1], ...(outil === 'arbre' || outil === 'buisson' ? {} : { r: rayon }) }, true);
-      ctx.textAlign = 'start'; ctx.setLineDash([]);
-    }
+    if (cFormes.checked || outil !== 'selection') dessinerRetouches(ctx, m, px);
     ctx.restore();
   }
-  canvas.onpointerleave = () => { curseurCarte = null; if (outil !== 'regler') redessiner(); };
+  const glyphe = { bosse: '+', creux: '−', crete: '+', plateau: '=', bois: 'B', haie: 'H', degager: '×' };
+  function dessinerRetouches(ctx, m, px) {
+    ctx.fillStyle = ctx.strokeStyle = PALETTE.o; ctx.lineWidth = px(1.5); ctx.textAlign = 'center';
+    const dessiner = (F, enCours, choisie) => {
+      const [x2, y2] = extremite(F), genre = genreDe(F), segment = OUTILS[genre].segment, r = F.r ?? px(7);
+      ctx.setLineDash(genre === 'creux' || genre === 'degager' ? [px(5), px(4)] : enCours || genre === 'bois' ? [px(3), px(3)] : []);
+      ctx.lineWidth = px(choisie ? 2.5 : 1.5);
+      if (segment) { ctx.beginPath(); ctx.moveTo(m.x + F.x, m.y + F.y); ctx.lineTo(m.x + x2, m.y + y2); ctx.stroke(); }
+      if (genre !== 'haie') for (const [qx, qy] of genre === 'crete' ? [[F.x, F.y], [x2, y2]] : [[F.x, F.y]]) { ctx.beginPath(); ctx.arc(m.x + qx, m.y + qy, r, 0, 6.2832); ctx.stroke(); }
+      ctx.setLineDash([]); ctx.font = `${px(14)}px ui-monospace, monospace`; ctx.fillText(glyphe[genre] || '', m.x + (F.x + x2) / 2, m.y + (F.y + y2) / 2 + px(5));
+    };
+    const l = affichees();
+    if (cFormes.checked) for (const cle of ['retouches', 'objets']) l[cle].forEach((F, i) => dessiner(F, false, choix?.cle === cle && choix.i === i));
+    if (outil === 'selection' && choix && l[choix.cle][choix.i]) {
+      const F = l[choix.cle][choix.i], t = px(7);
+      for (const h of poignees(F)) { ctx.fillStyle = PALETTE.o; ctx.strokeStyle = PALETTE.t; ctx.lineWidth = px(1.5); ctx.fillRect(m.x + h.x - t, m.y + h.y - t, 2 * t, 2 * t); ctx.strokeRect(m.x + h.x - t, m.y + h.y - t, 2 * t, 2 * t); }
+    }
+    const def = OUTILS[outil];
+    if (def.genre) {
+      if (trace) dessiner({ [def.type === 'relief' ? 'f' : 'o']: def.genre, ...trace, ...(def.champs.includes('r') ? { r: reglagesOutil[def.genre].r } : {}) }, true);
+      else if (curseurCarte && !def.segment) dessiner({ [def.type === 'relief' ? 'f' : 'o']: def.genre, x: curseurCarte[0], y: curseurCarte[1], ...(def.champs.includes('r') ? { r: reglagesOutil[def.genre].r } : {}) }, true);
+    }
+    ctx.textAlign = 'start'; ctx.setLineDash([]);
+  }
+
+  // ─── La souris sur la carte ───
+  const enMetres = e => { const r = canvas.getBoundingClientRect(); return [arrondi((e.clientX - r.left) / r.width * C.T.W - C.marges.x), arrondi((e.clientY - r.top) / r.height * C.T.H - C.marges.y)]; };
+  canvas.onpointerdown = e => {
+    if (!C || e.button !== 0) return;
+    const p = enMetres(e), def = OUTILS[outil];
+    if (outil === 'gomme') { const c = pres(...p); if (c) { const l = listes()[c.cle]; l.splice(c.i, 1); if (choix) choix = null; poserListe(c.cle, l); } return; }
+    if (outil === 'selection') {
+      const tol = 9 / (pxParM() || 1);
+      let mode = null, cible = choix && listes()[choix.cle][choix.i] ? choix : null;
+      if (cible) { const F = listes()[cible.cle][cible.i]; const h = poignees(F).filter(q => Math.hypot(q.x - p[0], q.y - p[1]) <= tol).sort((a, b) => (a.id === 'rayon') - (b.id === 'rayon'))[0]; if (h) mode = h.id; }
+      if (!mode) { cible = pres(...p); choix = cible; if (cible) mode = OUTILS[genreDe(listes()[cible.cle][cible.i])].segment ? 'milieu' : 'centre'; }
+      if (!cible || !mode) { tout(); return; }
+      glisse = { mode, cible, p0: p, depart: listes()[cible.cle][cible.i] };
+      canvas.setPointerCapture(e.pointerId); panneauInspecteur(); redessiner(); return;
+    }
+    if (def.segment) { trace = { x: p[0], y: p[1], x2: p[0], y2: p[1] }; canvas.setPointerCapture(e.pointerId); return; }
+    poserForme(nouvelleForme(def, ...p));
+  };
+  canvas.onpointerup = () => {
+    if (glisse) {
+      const g = glisse, F = edition?.F; glisse = null; edition = null;
+      if (F && JSON.stringify(F) !== JSON.stringify(g.depart)) { const l = listes()[g.cible.cle]; l[g.cible.i] = F; poserListe(g.cible.cle, l); } else redessiner();
+      return;
+    }
+    if (!trace) return;
+    const T = trace, def = OUTILS[outil]; trace = null;
+    if (Math.hypot(T.x2 - T.x, T.y2 - T.y) < 4) return redessiner();
+    poserForme({ ...nouvelleForme(def, T.x, T.y), x2: T.x2, y2: T.y2 });
+  };
+  canvas.onpointerleave = () => { curseurCarte = null; if (OUTILS[outil].genre) redessiner(); };
   canvas.onpointermove = e => {
     if (!C) return;
     curseurCarte = enMetres(e);
-    if (trace) { trace.x2 = curseurCarte[0]; trace.y2 = curseurCarte[1]; }
-    if (outil !== 'regler') redessiner();
+    if (glisse) { appliquerGlisse(curseurCarte); redessiner(); }
+    else if (trace) { trace.x2 = curseurCarte[0]; trace.y2 = curseurCarte[1]; redessiner(); }
+    else if (OUTILS[outil].genre) redessiner();
     const r = canvas.getBoundingClientRect(), { T, marges: m } = C;
     const i = Math.floor((e.clientX - r.left) / r.width * T.W), j = Math.floor((e.clientY - r.top) / r.height * T.H);
     if (i < 0 || j < 0 || i >= T.W || j >= T.H) return;
     const c = j * T.W + i, x = i - m.x, y = j - m.y, dedans = x >= 0 && y >= 0 && x < C.S.largeur && y < C.S.hauteur;
-    const zone = dedans ? ` · secteur ${'ABCD'[Math.min(3, Math.floor(x / (C.S.largeur / 4)))]}` : ' · marge';
-    const tr = T.troncon[c] >= 0 ? ' · tranchée' : T.troncon[c] === -2 ? ' · boyau' : '';
-    lecture.textContent = `x ${x}, y ${y} m${zone}${tr} · hauteur ${(hauteurQ(T, c) / 4).toFixed(2)} m · ${NOMS_ETAT[etatCase(T, c, R)]} · herbe ${T.herbe[c]}`;
+    const lieu = dedans ? `secteur ${'ABCD'[Math.min(3, Math.floor(x / (C.S.largeur / 4)))]}` : 'marge, hors du secteur';
+    const tr = T.troncon[c] >= 0 ? ' · dans une tranchée' : T.troncon[c] === -2 ? ' · dans un boyau' : '';
+    etatBarre.textContent = `Position : ${x} m depuis l’ouest, ${y} m depuis le haut (${lieu})${tr} · Hauteur du sol : ${(hauteurQ(T, c) / 4).toFixed(1)} m · Sol : ${SOLS[etatCase(T, c, R)]} · Herbe : ${HERBE[T.herbe[c]]}`;
   };
-  sel.onchange = () => { histoire.length = futur.length = 0; trace = null; panneau(); panneauFormes(); verifier(); refaire(); }; graine.onchange = refaire; zoom.onchange = redessiner;
+  document.addEventListener('keydown', e => {
+    if (!canvas.isConnected || /INPUT|SELECT|TEXTAREA/.test(document.activeElement?.tagName || '')) return;
+    if (e.key === 'Delete' || e.key === 'Backspace') { if (choix) { e.preventDefault(); supprimerChoix(); } }
+    else if (e.key === 'Escape') { choix = null; trace = null; glisse = null; edition = null; tout(); }
+  });
+  sel.onchange = () => { histoire.length = futur.length = 0; trace = null; choix = null; tout(); refaire(); };
+  graine.onchange = refaire; zoom.onchange = redessiner;
   window.addEventListener('resize', () => { if (canvas.isConnected) redessiner(); });
 
-  zone.replaceChildren(
-    el('h2', { textContent: 'Carte' }),
-    el('p', { className: 'at-note', textContent: 'Le terrain d\u2019un secteur vu de dessus, tel que la bataille le monte au départ. Les outils posent des formes de relief (bosse, creux, crête, plateau) ; les curseurs règlent le relief d\u2019ensemble, les arbres, les haies et la pluie.' }),
-    el('div', { className: 'at-row' }, sel, el('label', { className: 'at-coche' }, 'Graine ', graine), nouvelle, zoom, essayer),
-    el('div', { className: 'at-row' }, lCourbes, lArbres, lLignes, lFormes),
-    el('div', { className: 'at-carte-zone' }, el('div', { className: 'at-carte-vue' }, resume, lecture, boite), el('div', null, formesEl, reglages)),
-  );
-  panneau();
-  panneauFormes();
-  verifier();
+  zone.classList.add('at-plein');
+  zone.replaceChildren(el('div', { className: 'ed' },
+    el('div', { className: 'ed-haut' },
+      el('label', { className: 'at-coche' }, 'Secteur ', sel), el('label', { className: 'at-coche', title: graine.title }, 'Graine ', graine), nouvelle, zoom,
+      el('span', { className: 'ed-calques' }, lCourbes, lArbres, lLignes, lFormes, lReperes), essayer),
+    boite, scene, etatBarre, insp));
+  canvas.style.cursor = 'default';
+  tout();
   refaire();
 }

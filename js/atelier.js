@@ -94,6 +94,7 @@ function ongletPublier(zone) {
 const ONGLETS = { Réglages: ongletReglages, Carte: zone => ongletCarte(zone, { el, R: contenu.reglages, publie: contenu.publie.secteurs, aPublier }), Publier: ongletPublier };
 function ouvrir(nom) {
   for (const b of $('onglets').children) b.classList.toggle('is-on', b.textContent === nom);
+  $('travail').classList.remove('at-plein');       // l'éditeur de carte prend toute la place (il le remet)
   ONGLETS[nom]($('travail'));
   history.replaceState(null, '', `#${nom}`);
 }

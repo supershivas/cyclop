@@ -232,3 +232,12 @@ test('une partie garde ses tranchées et ses objets : republier le secteur ne le
   assert.deepEqual(C.terrain.arbres, B.terrain.arbres);
   assert.equal(secteurDuJeu(C.etat).tranchees.lignes.nous[0], 212);
 });
+
+group('atelier — chaque chiffre a un nom et une description');
+test('chaque réglage de secteur, chaque outil et chaque champ de forme porte un nom et une description lisibles', async () => {
+  const { PARAMS } = await import('../js/data/secteur-params.js');
+  const { OUTILS, CHAMPS, champ } = await import('../js/data/carte-outils.js');
+  for (const p of PARAMS) { assert.ok(p.nom && p.nom.length > 3, p.cle); assert.ok(p.desc && p.desc.length > 25, `${p.cle} : une description`); }
+  for (const [id, o] of Object.entries(OUTILS)) { assert.ok(o.nom && o.aide && o.icone, id); for (const k of o.champs || []) { const c = champ(k, o.genre); assert.ok(c.nom && c.desc, `${id}.${k}`); } }
+  for (const k of Object.keys(CHAMPS)) { const c = champ(k); assert.ok(c.nom && c.desc, k); }
+});
