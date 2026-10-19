@@ -1,5 +1,10 @@
 # Journal des versions
 
+## 0.37.0 — 2026-10-19
+- L'atelier s'ouvre sur un éditeur de carte visuel : on pose des bosses, des creux, des crêtes, des arbres et des haies, on les déplace, on règle chaque chiffre nommé et décrit
+- La carte se regarde aussi en 3D, avec le moteur du jeu, à l'heure et par le temps qu'on choisit ; on y pose d'un clic, et « Essayer dans le jeu » lance une bataille d'essai
+- Une partie garde le sol, les tranchées et les arbres qu'elle a reçus au départ : republier une carte ne la change pas
+
 ## 0.36.7 — 2026-10-19
 - Plus de fumée brune de l'écran titre au début d'une partie
 - Le ciel prend la couleur du temps : gris-bleu au sec, sombre sous la pluie, clair dans le brouillard, pâle au gel
