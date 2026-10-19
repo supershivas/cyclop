@@ -2,26 +2,27 @@
 // Chaque sujet utilise les mêmes modules que le jeu (terrain, apparence,
 // rendu three.js) : ce qu'on voit ici est ce que le jeu dessinera. Ajouter un
 // sujet ou une variante = ajouter une entrée dans GROUPES.
-import { mountLabo } from './lib/labo-shell.js?v=0.36.2';
-import { spriteCanvas, paletteToGPL, paletteToHex } from './lib/sprites.js?v=0.36.2';
-import { PALETTE, ROLES } from './palette.js?v=0.36.2';
-import { chargerContenu } from './design-store.js?v=0.36.2';
-import { tuile, ETAT } from './tuiles.js?v=0.36.2';
-import { creerTerrain, impact, hydroLignes } from './terrain.js?v=0.36.2';
-import { CALIBRES } from './data/calibres.js?v=0.36.2';
-import { METEO } from './data/meteo.js?v=0.36.2';
-import { nouvelleBataille, avancer, ordonnerMarche, ordonnerBarrage, mourir } from './bataille.js?v=0.36.2';
-import { creerRendu, ZOOMS } from './rendu3d.js?v=0.36.2';
-import { hash2 } from './lib/rng.js?v=0.36.2';
-import { reglerVerdure } from './apparence.js?v=0.36.2';
-import { maquetteAssaut } from './labo-assaut.js?v=0.36.2';
-import { calquePlaques } from './labo-plaques.js?v=0.36.2';
-import { calqueBarre } from './labo-barre-temps.js?v=0.36.2';
-import { maquetteProjections, maquetteVisee } from './labo-projections.js?v=0.36.2';
-import { calqueBarreVie } from './labo-barre-vie.js?v=0.36.2';
-import { calqueClic } from './labo-clic-regiment.js?v=0.36.2';
-import { JOURNAL } from './labo-journal.js?v=0.36.2';
-import { loadVersion } from './lib/app-update.js?v=0.36.2';
+import { mountLabo } from './lib/labo-shell.js?v=0.36.7';
+import { spriteCanvas, paletteToGPL, paletteToHex } from './lib/sprites.js?v=0.36.7';
+import { PALETTE, ROLES } from './palette.js?v=0.36.7';
+import { chargerContenu } from './design-store.js?v=0.36.7';
+import { tuile, ETAT } from './tuiles.js?v=0.36.7';
+import { creerTerrain, impact, hydroLignes } from './terrain.js?v=0.36.7';
+import { CALIBRES } from './data/calibres.js?v=0.36.7';
+import { METEO } from './data/meteo.js?v=0.36.7';
+import { nouvelleBataille, avancer, ordonnerMarche, ordonnerBarrage, mourir } from './bataille.js?v=0.36.7';
+import { creerRendu, ZOOMS } from './rendu3d.js?v=0.36.7';
+import { hash2 } from './lib/rng.js?v=0.36.7';
+import { reglerVerdure } from './apparence.js?v=0.36.7';
+import { maquetteAssaut } from './labo-assaut.js?v=0.36.7';
+import { calquePlaques } from './labo-plaques.js?v=0.36.7';
+import { calqueBarre } from './labo-barre-temps.js?v=0.36.7';
+import { maquetteProjections, maquetteVisee } from './labo-projections.js?v=0.36.7';
+import { calqueBarreVie } from './labo-barre-vie.js?v=0.36.7';
+import { calqueClic } from './labo-clic-regiment.js?v=0.36.7';
+import { maquetteCampagne } from './labo-campagne.js?v=0.36.7';
+import { JOURNAL } from './labo-journal.js?v=0.36.7';
+import { loadVersion } from './lib/app-update.js?v=0.36.7';
 
 document.documentElement.style.setProperty('--jeu-accent', ROLES.accent);
 const NOM = document.title.replace(/^Labo — /, ''); // le nom vient de la page (une apostrophe ne casse rien)
@@ -225,6 +226,12 @@ const GROUPES = [
       { title: 'La frise continue', note: 'Une ligne de texte, puis une frise de toute la bataille : chaque jour est un jour (clair) suivi de sa nuit (sombre), un trait bleu dit où l\'on est, et dessous, les seuls changements de météo (demain au trait pointillé : c\'est une prévision). Les jours d\'avant sont un ton plus bas.', render: s => moteur(s, { zoom: 3, cz: 185, soldats: 400, calque: calqueBarre('continue') }) },
       { title: 'Les jours en cases', note: 'Une case par jour, numérotée ; la case du jour s\'ouvre sur ses heures (jour puis nuit) avec le trait bleu ; la météo ne se dit qu\'au changement, un point sinon. Se lit comme un calendrier : « troisième jour sur onze ».', render: s => moteur(s, { zoom: 3, cz: 185, soldats: 400, calque: calqueBarre('cases') }) },
       { title: 'Une seule ligne', note: 'Le jour, l\'heure, le temps d\'aujourd\'hui et celui de demain à côté des boutons de vitesse ; une règle de cinq pixels dessous, jours et nuits, le trait bleu. La mission et le terrain quittent ce papier. Presque rien à l\'écran.', render: s => moteur(s, { zoom: 3, cz: 185, soldats: 400, calque: calqueBarre('ligne') }) },
+    ] },
+    { id: 'campagne', title: 'Le papier de campagne', variants: [
+      { title: 'Le registre', status: 'actuelle', depuis: '0.36.4', note: 'Retenu (v0.36.4), en jeu : un papier posé sur le champ à la fin de chaque bataille de campagne. Un seul papier, comme un registre de compagnie : la bataille qui finit en deux phrases, puis une ligne par régiment (les chevrons, la barre vétérans pleins et recrues hachurées, qui le commande, ce qui lui est venu d\'ailleurs), les régiments dissous en pied de page, un bouton pour partir. Le plus dense, tout se lit d\'un coup d\'œil.', render: s => maquetteCampagne(s, 'registre') },
+      { title: 'Les cartes en rangée', depuis: '0.36.3', note: 'Non retenue (v0.36.4). Les cartes de régiment du jeu, les mêmes qu\'au bas de l\'écran de bataille : on retrouve ses régiments tels qu\'ils seront. Les dissous restent dessous, barrés, avec l\'endroit où leurs hommes sont passés. Moins de texte, plus de forme.', render: s => maquetteCampagne(s, 'cartes') },
+      { title: 'La lettre', depuis: '0.36.3', note: 'Non retenue (v0.36.4). Une lettre de l\'état-major en phrases : la bataille, les régiments dissous, une phrase par régiment (ce qu\'il garde, qui le commande), la mission suivante. Aucun tableau ni chiffre mis en avant : une lecture, la plus proche du ton du jeu.', render: s => maquetteCampagne(s, 'lettre') },
+      { title: 'Sur la carte', depuis: '0.36.3', note: 'Non retenue (v0.36.4). Les régiments sont des cercles numérotés aux places qu\'ils prendront, comme sur la carte du jeu ; les dissous en pointillé au bas, avec un trait vers qui a reçu leurs hommes. Survolez ou cliquez un régiment pour son papier.', render: s => maquetteCampagne(s, 'surLaCarte') },
     ] },
     { id: 'assaut', title: 'Attaque d\'une tranchée', variants: [
       { title: 'Le feu se voit', status: 'actuelle', depuis: '0.9.2', note: 'Les hommes disent ce qu\'ils font : ceux qu\'on bombarde se tapissent et ne tirent plus, les autres tirent (éclair, traceur), un homme touché tombe et reste là. On lit à qui appartient la force sans un chiffre.', render: s => maquetteAssaut(s, 'feu') },

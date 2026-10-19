@@ -1,5 +1,21 @@
 # Journal des versions
 
+## 0.36.7 — 2026-10-19
+- Plus de fumée brune de l'écran titre au début d'une partie
+- Le ciel prend la couleur du temps : gris-bleu au sec, sombre sous la pluie, clair dans le brouillard, pâle au gel
+
+## 0.36.6 — 2026-10-19
+- L'écran titre propose « Nouvelle campagne » (trois batailles, vos survivants d'une bataille à l'autre) et « Continuer la campagne » ; la campagne est dans l'export et l'import de la sauvegarde
+
+## 0.36.5 — 2026-10-19
+- À la fin d'une campagne, un papier sobre dit chaque bataille, puis les noms de ceux qui sont tombés et de ceux qui sont restés (la campagne n'est pas encore jouable depuis l'écran titre)
+
+## 0.36.4 — 2026-10-19
+- Entre deux batailles de campagne, un registre dit ce que sera chaque régiment ; la mission de la bataille suivante suit l'issue de la précédente (la campagne n'est pas encore jouable depuis l'écran titre)
+
+## 0.36.3 — 2026-10-19
+- Le labo propose quatre façons de dire, entre deux batailles de campagne, ce qui reste de la bataille finie et ce que sera chaque régiment (la campagne n'est pas encore jouable)
+
 ## 0.36.2 — 2026-10-19
 - Un régiment en feu retenu porte son fusil baissé devant lui, la baïonnette ne dépasse plus de sa tête, et ne le lève que pour tirer
 

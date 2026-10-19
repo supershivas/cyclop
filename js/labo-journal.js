@@ -2,6 +2,12 @@
 // Une entrée par version qui touche au labo, la plus récente en haut. `ref` : « sujet-Lettre » (la lettre est celle de la variante,
 // A étant l'actuelle). À chaque changement du labo : une entrée ici, avec `depuis` sur les variantes ajoutées ou changées (labo.js).
 export const JOURNAL = [
+  { version: '0.36.4', date: '2026-10-19', items: [
+    { genre: 'mis-a-jour', texte: 'Le papier de campagne « Le registre » est retenu et passe en jeu (A), posé sur le champ à la fin de chaque bataille de campagne ; les cartes en rangée, la lettre et sur la carte restent au labo, non retenues', ref: 'campagne-A' },
+  ] },
+  { version: '0.36.3', date: '2026-10-19', items: [
+    { genre: 'nouveau', texte: 'Le papier de campagne : quatre façons de dire, entre deux batailles, ce qui reste de la bataille finie, ce que sera chaque régiment (vétérans, recrues, qui le commande) et où sont passés les hommes des régiments dissous (le registre, les cartes en rangée, la lettre, sur la carte)', ref: 'campagne-A' },
+  ] },
   { version: '0.34.6', date: '2026-10-18', items: [
     { genre: 'mis-a-jour', texte: 'La fenêtre d\'ordres « Le rabat » est retenue : posée au-dessus de la carte du régiment, elle se relève d\'un coup ; « Au régiment » passe en « ancienne »', ref: 'fenetre-ordres-A' },
   ] },

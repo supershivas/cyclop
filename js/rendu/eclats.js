@@ -2,9 +2,9 @@
 // et « le feu se voit » (Jérôme, v0.9.2 : l'éclair à la bouche du fusil et le trait vers la cible de chaque tir de `B.tirs`, la pose des tireurs, le bond de ceux que
 // le souffle jette). Une seule fabrique : tous tirent dans le même générateur de l'aspect (`alea`, une suite à graine : l'ordre des tirages fait l'image) et
 // dans les mêmes tampons de particules. Le dessin seulement : jamais la logique, jamais la partie.
-import * as SH from './shaders.js?v=0.36.2';
-import { INDICE } from '../palette.js?v=0.36.2';
-import { horloge } from '../bataille.js?v=0.36.2';
+import * as SH from './shaders.js?v=0.36.7';
+import { INDICE } from '../palette.js?v=0.36.7';
+import { horloge } from '../bataille.js?v=0.36.7';
 
 const ECLATS = 6000;     // (v0.24.0 ; 2 400 avant : une salve de 220 — ~200 éclats chacun, dont de la fumée de 8 à 16 s — faisait le tour du tampon et effaçait les éclats encore en vol)
 
@@ -334,7 +334,13 @@ export function creerEclats({ THREE, scene, col, palTex, NP, effets, surface, pr
     ecl, feux, ECLATS,                                           // lus par temps.js : les fusées et les incendies éclairent la nuit
     impactVu, majTirs, majEclats, majCorbeaux,
     setTaille(n) { eclMat.uniforms.uTaille.value = n; },          // la taille d'un point d'éclat, selon le zoom
-    reinitialiser() { feux.length = 0; brules.clear(); arbresEtat = null; },   // une autre bataille : ses arbres ne brûlent pas encore
+    // une autre bataille : ses arbres ne brûlent pas encore, et la fumée, les balles et les obus en vol de la précédente (le décor de l'écran titre) ne passent pas dans la suivante
+    reinitialiser() {
+      feux.length = 0; brules.clear(); arbresEtat = null;
+      ecl.age.fill(99); bal.age.fill(99);
+      for (const a of attente) if (a.mesh) { a.mesh.visible = false; obusLibres.push(a.mesh); }
+      attente.length = 0;
+    },
     fumer(x, z) { const T = terrain(); if (T) fumee(x + (alea() - 0.5) * 3, surface(x, z) + 0.5, z + (alea() - 0.5) * 3, 2, true); },   // une colonne de fumée (l'écran titre)
     lancers(liste) { reserverSoldats(bataille().armee.n); volT.fill(0); for (const [i, duree, haut, reste] of liste) { volT[i] = reste; volD[i] = duree; volH[i] = haut; } },   // des hommes jetés : [indice, durée du bond (s), hauteur (m), temps qui reste] ; les autres retombent (le labo)
     tirs() { return { tirVal, tirAng, volT, volH, volD }; },           // la pose des tireurs et le bond des soufflés, lus par les soldats (réservés à chaque image : relire)

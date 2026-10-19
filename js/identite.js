@@ -1,9 +1,10 @@
-/* Qui est ce soldat : un nom, un âge, un grade, tirés de la graine de la
-   bataille et de son numéro (il garde les mêmes d'une partie relue à l'autre).
+/* Qui est ce soldat : un nom, un âge, un grade, tirés d'une graine d'identité
+   (celle de la bataille, ou celle de la campagne pour nos hommes ; voir
+   `nouvelleBataille`) et de son numéro : il garde les mêmes d'une partie relue à l'autre.
    Et ce qu'il endure : la fatigue (jambes, bras), une blessure, la peur, dits en
    mots. Logique pure (aucun DOM), testée dans Node. */
-import { hash2 } from './lib/rng.js?v=0.36.2';
-import { NOMS } from './data/noms.js?v=0.36.2';
+import { hash2 } from './lib/rng.js?v=0.36.7';
+import { NOMS } from './data/noms.js?v=0.36.7';
 
 export const PARTIES = ['', 'bras', 'jambe', 'tête'];
 

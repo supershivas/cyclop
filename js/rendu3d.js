@@ -22,19 +22,19 @@
    - Les soldats : instanciés (une boîte et son ombre) ; au zoom 1 et 2, un
      point de 2 × 2 pixels (la couleur du camp sur son ombre).
    - Les corps : un homme couché (instancié) ; au zoom 1 et 2, un pixel. */
-import { loadThree } from './three-lib.js?v=0.36.2';
-import * as SH from './rendu/shaders.js?v=0.36.2';
-import { creerSoldats } from './rendu/soldats.js?v=0.36.2';
-import { creerMeteo } from './rendu/meteo.js?v=0.36.2';
-import { creerTroncons } from './rendu/troncons.js?v=0.36.2';
-import { creerVegetation } from './rendu/vegetation.js?v=0.36.2';
-import { creerTemps } from './rendu/temps.js?v=0.36.2';
-import { creerEclats } from './rendu/eclats.js?v=0.36.2';
-import { PALETTE, ORDRE, INDICE } from './palette.js?v=0.36.2';
-import { OMBRE, couleursLigne } from './apparence.js?v=0.36.2';
-import { MORCEAU, hauteurVueQ as hauteurQ, hauteurVueM as hauteurM } from './terrain.js?v=0.36.2';
-import { horloge } from './bataille.js?v=0.36.2';
-import { ligneY } from './tranchees.js?v=0.36.2';
+import { loadThree } from './three-lib.js?v=0.36.7';
+import * as SH from './rendu/shaders.js?v=0.36.7';
+import { creerSoldats } from './rendu/soldats.js?v=0.36.7';
+import { creerMeteo } from './rendu/meteo.js?v=0.36.7';
+import { creerTroncons } from './rendu/troncons.js?v=0.36.7';
+import { creerVegetation } from './rendu/vegetation.js?v=0.36.7';
+import { creerTemps } from './rendu/temps.js?v=0.36.7';
+import { creerEclats } from './rendu/eclats.js?v=0.36.7';
+import { PALETTE, ORDRE, INDICE } from './palette.js?v=0.36.7';
+import { OMBRE, couleursLigne } from './apparence.js?v=0.36.7';
+import { MORCEAU, hauteurVueQ as hauteurQ, hauteurVueM as hauteurM } from './terrain.js?v=0.36.7';
+import { horloge } from './bataille.js?v=0.36.7';
+import { ligneY } from './tranchees.js?v=0.36.7';
 
 export const CAMERA = { yaw: 0.15, tangage: 0.95, fov: 30 };   // au départ : tournée de 9°, plongée de 54°, angle de 30°
 // la caméra respire : un balancement très lent, 2° en 23 s (Jérôme, v0.3.1 : variante D du labo retenue)
@@ -101,11 +101,21 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
   const col = k => new THREE.Color(PALETTE[k]);
   // Le bord du terrain (v0.32.0, labo « Le bord de la carte ») : coupé net sur le ciel de brume (null, le jeu), ou se fondant dans une couleur
   // (`ciel` : la couleur du fond, `fondu` : mètres), ou prolongé par un faux terrain qui se perd dans la brume (`faux`)
-  const BORDS = { noir: { ciel: 't', fondu: 60 }, brume: { ciel: 'r', fondu: 100 }, papier: { ciel: 'o', fondu: 45 }, faux: { ciel: 'r', fondu: 0, faux: 1 }, 'faux-noir': { ciel: 't', fondu: 0, faux: 1, brume: 't' } };
+  const BORDS = { noir: { ciel: 't', fondu: 60 }, brume: { ciel: 'r', fondu: 100 }, papier: { ciel: 'o', fondu: 45 }, faux: { ciel: 'r', fondu: 0, faux: 1 }, 'faux-noir': { ciel: 't', fondu: 0, faux: 1, brume: 't' },
+    'faux-ciel': { ciel: 'r', fondu: 0, faux: 1, meteo: 1 } };   // (le jeu, v0.36.7 : le ciel et le bout du champ prennent la couleur du temps qu'il fait, `cielDeMeteo`)
   let leBord = BORDS[bord] || null;
   const cielCoul = () => col(leBord ? leBord.ciel : 'r');
+  // Le ciel du jeu selon la météo (Jérôme, v0.36.7 : « le ciel est noir, il doit être en rapport avec la météo ») : des mélanges continus de la palette (un fondu, comme les ombres) ;
+  // la nuit, le voile de `temps.js` le recouvre et le noircit
+  const CIELS = { sec: [['e', 1]], pluie: [['e', 0.4], ['s', 0.6]], brouillard: [['r', 1]], gel: [['e', 0.6], ['o', 0.4]] };
+  const cielMeteo = new THREE.Color();
+  function cielDeMeteo(nom) {
+    cielMeteo.setRGB(0, 0, 0);
+    for (const [k, p] of CIELS[nom] || CIELS.sec) cielMeteo.r += col(k).r * p, cielMeteo.g += col(k).g * p, cielMeteo.b += col(k).b * p;
+    return cielMeteo;
+  }
 
-  let B = null, T = null, faux = null;
+  let B = null, T = null, faux = null, fauxU = null;
   // Le sol a le même relief à tous les zooms (Jérôme, v0.12.0) ; seuls les petits décors (arbres, buissons, herbe) s'effacent de loin
   const petit = () => ZOOMS[vue.zoom] <= POINTS_JUSQUA;
   let sol = null, solTex = null, solData = null, solIdx = null, solAttente = 0, morceaux = [], vuLigne = null, gelVu = null, coutRangees = 0;
@@ -266,6 +276,7 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
     if (faux) { scene.remove(faux); faux.geometry.dispose(); faux.material.dispose(); faux = null; }
     if (!leBord?.faux || !T) return;
     const u = { uKaki: { value: col('h') }, uVert: { value: col('v') }, uGlaise: { value: col('g') }, uBrume: { value: col(leBord.brume || 'r') }, uCentre: { value: new THREE.Vector2(T.W / 2, T.H / 2) }, uDemi: { value: new THREE.Vector2(T.W / 2, T.H / 2) }, uPortee: { value: 500 } };
+    fauxU = u;
     faux = new THREE.Mesh(new THREE.PlaneGeometry(6000, 6000).rotateX(-Math.PI / 2).translate(T.W / 2, SOL_Y - 0.15, T.H / 2), new THREE.ShaderMaterial({ uniforms: u, vertexShader: SH.fauxMat.v, fragmentShader: SH.fauxMat.f }));
     faux.frustumCulled = false; scene.add(faux);
   }
@@ -421,6 +432,10 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
     tAnim += dt;
     eclats.majEclats(dt); eclats.majCorbeaux(dt, tAnim); troncons.maj(dt);
     const h = horloge(B);
+    if (leBord?.meteo && !vide) {
+      const c = cielDeMeteo(h.meteo);
+      renderer.setClearColor(c, 1); solMat.uniforms.uBordCoul.value.copy(c); fauxU?.uBrume.value.copy(c);
+    }
     temps.majNuit(h); temps.setTemps(tAnim);
     meteo.afficher(h, vide);
     const { cx, cz, p } = projeter();

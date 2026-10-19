@@ -197,7 +197,7 @@ touches (**boutons dans le rabat seulement, puis Maj+chiffre**) ; une posture su
 2. ✅ **Fait (v0.36.0).** *Commande* (`ordonnerStance` / `peutStance` existent déjà, lot 1) : refus à voix haute (déroute, nuit) ; commande `stance` de `executerCmd` ; `empreinteEtat` ; test lockstep.
 3. ✅ **Fait (v0.36.1).** *HUD* : boutons dans le rabat, mot de la posture dans `actionDe` et sous le nom de la carte, ligne du carnet ; `test/fumee.json` réécrit ; grisé et raison au clic.
 4. ✅ **Fait (v0.36.2, `retenu` seulement : `couvert` n'existe pas).** *Dessin* : `couvert` = hommes tapis (`TAPI`), `retenu` = fusil bas, pas d'éclair hors portée (le dessin seulement) ; image ajoutée à `test/rendu.json` avant.
-5. *IA et équilibre* : `enFace` choisit sa posture ; mesure (`scripts/mesure.mjs`, graines 3, 7, 8, 9 000 pas) : morts, mêlées, durée d'un assaut, pour chaque posture contre chaque autre.
+5. ✅ **Fait (v0.36.3, sans version : rien de visible).** *IA et équilibre* : `ia.stance` (éteint, `postureIA`), mesure avec appui d'artillerie (`scripts/mesure-stances.mjs --appui 60 [--ia on|off]`, détail dans le `CLAUDE.md`). Jérôme : `retenu` garde 35 m et ×1,5 ; l'IA n'en use pas.
 
 <details><summary>Plans de développement et coût</summary>
 
@@ -369,18 +369,27 @@ avant de brancher. Vérifie lisibilité (outils/lisibilite.mjs) et audit-ecran. 
 **Point dur** : l'identité d'un homme (nom, âge) vient de `graine` + numéro. Une campagne a donc deux graines : une **`graineIdentite`** stable pour toute la campagne (les noms ne changent pas d'une bataille à l'autre) et la graine de chaque bataille
 (terrain, météo). Hors campagne, `graineIdentite = graine`.
 
-**Décisions à trancher** (défaut en gras) : longueur (**3 batailles**) ; ce qui passe (**effectifs, expérience, grades, victimes ; pas la fatigue ni la peur**) ; renforts (**recrues sans expérience**) ; défaite (**repli : la campagne continue, finit sous quatre régiments**) ;
-à deux (**non, la campagne est solo**) ; le choix du secteur (**un seul au début, puis choisi**).
+**Décisions** (Jérôme, cadrage v0.36.3) : longueur **3 batailles** ; ce qui passe **effectifs, expérience, grades, victimes** (pas la fatigue, la peur ni le moral) ; renforts **recrues sans expérience** ; défaite **repli : la campagne continue, finit sous quatre régiments** ; à deux **non, la campagne est solo** ; secteur **un seul au début, puis choisi**.
+
+**Difficulté croissante** (Jérôme : « la première bataille nous sommes en surnombre, avec l'avantage du terrain, puis ça évolue ») — ordre proposé, à mesurer avec `scripts/trois-jours.mjs` étendu avant de figer les nombres :
+
+| | Secteur | Mission | Rapport de forces | Terrain | IA d'en face |
+|---|---|---|---|---|---|
+| 1 | Les labours (`essai`) | tenir | nous en surnombre (~1,3 contre 1) | plat, à notre avantage | `offensive` basse |
+| 2 | La crête (`crete`) | prendre | parité | ils tiennent la crête (7 m) | `offensive` normale |
+| 3 | Le marais (`marais`) | tenir | eux en surnombre (~1,3 contre 1) | boue, quatre jours de pluie au moins | `offensive` et `barrage` hauts |
+
+Dépendance : `parCamp` est une valeur unique pour les deux camps (`nouvelleBataille`) ; le surnombre demande un effectif par camp (capacité de l'armée, sauvegarde, `empreinteEtat`). Les recrues sans expérience s'ajoutent à la montée de l'adversaire ; on peut permuter 2 et 3 si la mesure le montre (le marais freine aussi l'attaquant).
 
 **Plan fin (lots)**
 
-1. *Identité portable* : `graineIdentite` dans `nouvelleBataille` (par défaut = `graine`), test « mêmes noms avant / après » ; aucun changement de partie.
-2. *Registre de campagne* : `js/campagne.js` pur (`nouvelleCampagne`, `cloturer(B)`, `suivante`) ; clé `cyclopeen:campagne` (versionnée, migrations) ; écrit à la fin de bataille, avant l'écran de fin (une coupure ne perd rien).
-3. *Reconstituer* : `nouvelleBataille(…, { troupes })` : les vétérans prennent leur place dans leur régiment, complétés par des recrues ; `A.exp`, `etat.grades`, victimes relus. Test : 750 hommes, mêmes numéros, mêmes noms.
-4. *Entre deux batailles* : un papier de campagne (régiments, effectifs, blessés qui reviennent, fusion des régiments décimés), sobre, au clavier ; le carnet de campagne (quatre lignes, comme celui de bataille).
-5. *Le secteur suivant* : mission selon l'issue, choix entre deux secteurs (les trois existants, puis d'autres).
-6. *Fin de campagne* : sans fanfare ; lien au Mémorial (les noms des trois batailles).
-7. *Écran titre et menus* : « Continuer la campagne », export / import JSON, clé autre en debug.
+1. ~~*Identité portable*~~ **livré** (`etat.graineIdentite`, `VERSION` 2, `test/campagne.test.mjs`) : elle ne sert qu'aux noms de NOS hommes (`quiEst`) ; en face, la graine de bataille. Reste pour le lot 3 : `quiEst`, `premierDe` et `relever` additionnent les `initial` des régiments (numéros contigus) ; des vétérans qui gardent leurs numéros demandent un `reg.premier` ou un compteur de campagne.
+2. ~~*Registre de campagne*~~ **livré** (`js/campagne.js` : `nouvelleCampagne`, `suivante`, `cloturer`, `cloturerDansLeStore` ; `js/data/campagne.js` ; clé `cyclopeen:campagne` ; écrit dans `montrerFin` avant l'écran de fin, idempotent). **Pas encore atteignable en jeu** : rien ne démarre une campagne avant le lot 7 (écran titre) ; `etat.campagne` ({ id, n }) est posé par `nouvelleBataille(…, { campagne })`. Restent : les batailles 2 et 3 reprennent les survivants du registre (lot 3), le surnombre par camp, la mesure d'attrition.
+3. ~~*Reconstituer*~~ **livré** (`nouvelleBataille(…, { troupes, soldatsEux, iaRythme })`, `reconstituer`, `etat.numeros`) : les vétérans prennent les premières places de leur régiment, complétés par des recrues ; expérience et victimes relues, hiérarchie par les places (pas de `etat.grades`) ; effectif par camp et rythme de l'IA pour la difficulté croissante. Test : 750 hommes, mêmes numéros, mêmes noms. **Reste** : régler les nombres de `data/campagne.js` d'après `scripts/mesure-campagne.mjs`.
+4. ~~*Entre deux batailles*~~ **livré** : `passage` (régiments, vétérans et recrues, blessés de retour, fusions ; « voir et valider », Jérôme), quatre variantes au labo dont A branchée au lot 5. **Reste** : le carnet de campagne (quatre lignes, comme celui de bataille), les noms des dissous au Mémorial.
+5. ~~*Le secteur suivant*~~ **livré** (v0.36.4) : l'ordre des secteurs est fixe (pas de choix, Jérôme) ; la mission suit l'issue (réussie → prendre, manquée → tenir) ; le papier de campagne « Le registre » (variante A du labo) est branché à la fin de chaque bataille de campagne, Entrée pour partir ; `outils/campagne.mjs` le joue dans le navigateur. Atteignable par le mode debug seulement (`__jeu.campagne`) jusqu'au lot 7.
+6. ~~*Fin de campagne*~~ **livré** (v0.36.5) : un papier sobre (une ligne par bataille, deux listes de noms repliées, « Écran titre »), `bilan(c)` donne les noms comme des chaînes pour le Mémorial. **Reste** : le Mémorial lui-même (§3), qui les reprendra ; le grade d'un tombé n'est pas gardé.
+7. ~~*Écran titre et menus*~~ **livré** (v0.36.6) : « Nouvelle campagne », « Continuer la campagne », confirmations, export / import (le registre est dans `store.exportAll`), clé autre en debug ; `outils/campagne-titre.mjs`.
 8. *Suite (plan C)* : état-major (doctrines débloquées, chacune avec un coût), saisons, trophées déclaratifs sobres (`DESIGN.md`).
 
 <details><summary>Plans de développement et coût</summary>

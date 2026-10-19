@@ -15,11 +15,11 @@
      de travail chacun) ; les vivres (`reg.vivres`, en nuits : sans eux, la nuit
      repose moins et le moral baisse) ; le coup de main (des volontaires ramènent
      des prisonniers de la tranchée d'en face, s'ils reviennent). */
-import { toucher } from './terrain.js?v=0.36.2';
-import { hash2 } from './lib/rng.js?v=0.36.2';
-import { CORVEES } from './data/corvees.js?v=0.36.2';
-import { REGIMENTS } from './data/lexique.js?v=0.36.2';
-import { ajouterSoldat } from './army.js?v=0.36.2';
+import { toucher } from './terrain.js?v=0.36.7';
+import { hash2 } from './lib/rng.js?v=0.36.7';
+import { CORVEES } from './data/corvees.js?v=0.36.7';
+import { REGIMENTS } from './data/lexique.js?v=0.36.7';
+import { ajouterSoldat } from './army.js?v=0.36.7';
 
 export const SORTES = ['reparer', 'caillebotis'];          // les travaux de terrain, par leur numéro dans etat.travaux
 export const corvee = id => CORVEES.find(c => c.id === id);
@@ -208,7 +208,7 @@ export function corvees(B, choix, ctx) {
       coupDeMain(B, reg, ctx, bilan);
     } else if (id === 'releve') {
       // il quitte le front (blessés compris) ; son remplaçant entre à l'aube, après les autres corvées
-      for (let i = 0; i < A.n; i++) if (A.reg[i] === reg.id && !A.mort[i]) A.mort[i] = 1;
+      for (let i = 0; i < A.n; i++) if (A.reg[i] === reg.id && !A.mort[i]) { etat.releves.push([A.id[i], reg.id, A.exp[i], A.victimes[i]]); A.mort[i] = 1; }
       reg.releve = etat.jour; reg.releves = reg.effectif; reg.effectif = 0;
       etat.reserves[reg.camp]--;
       releves.push(reg); b.releves = (b.releves || 0) + 1;
@@ -326,13 +326,13 @@ function coupDeMain(B, reg, ctx, bilan) {
    ceux de tous les régiments déjà là (les noms et les grades en découlent). */
 function relever(B, vieux, rng) {
   const { etat, R, armee: A } = B;
-  const n = etat.parRegiment || vieux.initial;
+  const n = (vieux.camp === 0 ? etat.parRegiment : etat.parRegimentEux ?? etat.parRegiment) || vieux.initial;
   let premier = 0;
   for (const r of etat.regiments) premier += r.initial;
   const deNous = etat.regiments.filter(r => r.camp === 0).length;
   const reg = {
     id: etat.regiments.length, camp: vieux.camp,
-    nom: vieux.camp === 0 ? REGIMENTS[deNous % REGIMENTS.length] : null,
+    nom: vieux.camp === 0 ? (REGIMENTS.find(n => !etat.regiments.some(r => r.nom === n)) ?? REGIMENTS[deNous % REGIMENTS.length]) : null,   // le premier nom du lexique encore libre (en campagne, les noms de départ ne sont plus les huit premiers)
     effectif: n, initial: n, pertes: 0, moral: R.moral.depart, deroute: false, vivres: R.nuit.vivres, stance: 'volonte',
     ordre: structuredClone(vieux.ordre), depart: structuredClone(vieux.depart), arrive: etat.jour + 1,
   };
@@ -344,6 +344,7 @@ function relever(B, vieux, rng) {
   for (let k = 0; k < n; k++) {
     const x = x0 + (k + 0.5) * (x1 - x0) / n;
     ajouterSoldat(A, x + (rng() - 0.5) * 2, Math.max(1, Math.min(B.terrain.H - 2, derriere + (rng() - 0.5) * 6)), reg.camp, reg.id, k, rng(), premier + k);
+    if (etat.numeros && reg.camp === 0) etat.numeros[premier + k] = etat.prochainNumero++;     // (campagne : un numéro neuf, jamais celui d'un vétéran)
   }
 }
 

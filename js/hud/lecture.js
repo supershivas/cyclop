@@ -1,8 +1,8 @@
 // Lire la bataille en mots : qui est un homme, ce qu'il est devenu, ce que compte un régiment. Des fonctions
 // qui prennent la bataille `B` et ne changent rien (aucun DOM) ; main.js et la fiche s'en servent.
-import { NOUS, arriereDe } from '../bataille.js?v=0.36.2';
-import { legere } from '../army.js?v=0.36.2';
-import { identite, prochainGrade } from '../identite.js?v=0.36.2';
+import { NOUS, arriereDe, numeroCampagne } from '../bataille.js?v=0.36.7';
+import { legere } from '../army.js?v=0.36.7';
+import { identite, prochainGrade } from '../identite.js?v=0.36.7';
 
 export const majuscule = s => s[0].toUpperCase() + s.slice(1);
 export const nomDe = reg => reg?.nom ? `Régiment ${reg.nom}` : 'En face';
@@ -20,12 +20,13 @@ export function premierDe(B, regId) {
 }
 // qui est le soldat n° id (vivant ou mort) : son régiment, son identité
 export function quiEst(B, id) {
+  const graineDe = camp => camp === NOUS ? B.etat.graineIdentite : B.etat.graine;   // en face : d'autres hommes à chaque bataille
   let p = 0;
   for (const r of B.etat.regiments) {
-    if (id < p + r.initial) return { reg: r, qui: identite(B.etat.graine, r.camp, id, id - p, r.initial, B.etat.grades[id]?.[0] ?? -1) };
+    if (id < p + r.initial) return { reg: r, qui: identite(graineDe(r.camp), r.camp, r.camp === NOUS ? numeroCampagne(B.etat, id) : id, id - p, r.initial, B.etat.grades[id]?.[0] ?? -1) };
     p += r.initial;
   }
-  return { reg: null, qui: identite(B.etat.graine, NOUS, id) };
+  return { reg: null, qui: identite(graineDe(NOUS), NOUS, numeroCampagne(B.etat, id)) };
 }
 // le soldat le plus proche du point, à moins de r mètres (les deux camps)
 export function soldatSous(B, x, y, r) {

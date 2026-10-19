@@ -2,12 +2,12 @@
 // Chaque modification est gardée tout de suite dans ce navigateur (brouillon),
 // visible dans le jeu de ce navigateur, puis publiée d'un geste dans le dépôt
 // (un commit sur main, par l'API de GitHub) : assets/design/reglages.json.
-// Les outils : les réglages chiffrés (Jérôme, v0.1.0) et la carte, en lecture seule pour l'instant (`atelier-carte.js`).
-import { createPublisher, TOKEN_URL } from './lib/gh-publish.js?v=0.36.2';
-import { validerSecteur } from './tranchees.js?v=0.36.2';
-import { SECTEURS } from './data/secteur.js?v=0.36.2';
-import { ongletCarte } from './atelier-carte.js?v=0.36.2';
-import { chargerContenu, lireBrouillon, ecrireBrouillon, compterBrouillon, deplier, secteurEffectif } from './design-store.js?v=0.36.2';
+// Les outils : les réglages chiffrés (Jérôme, v0.1.0) et la carte, un éditeur visuel (`atelier-carte.js`).
+import { createPublisher, TOKEN_URL } from './lib/gh-publish.js?v=0.36.7';
+import { validerSecteur } from './tranchees.js?v=0.36.7';
+import { SECTEURS } from './data/secteur.js?v=0.36.7';
+import { ongletCarte } from './atelier-carte.js?v=0.36.7';
+import { chargerContenu, lireBrouillon, ecrireBrouillon, compterBrouillon, deplier, secteurEffectif } from './design-store.js?v=0.36.7';
 
 const REPO = 'supershivas/cyclop';
 const $ = id => document.getElementById(id);
