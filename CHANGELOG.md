@@ -1,5 +1,9 @@
 # Journal des versions
 
+## 0.36.8 — 2026-10-19
+- Le ciel a un léger dégradé et des nuages qui dérivent, selon la météo
+- Vue lointaine : le fond du champ n'est plus coupé, il se perd dans la brume de l'horizon
+
 ## 0.36.7 — 2026-10-19
 - Plus de fumée brune de l'écran titre au début d'une partie
 - Le ciel prend la couleur du temps : gris-bleu au sec, sombre sous la pluie, clair dans le brouillard, pâle au gel

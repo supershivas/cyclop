@@ -330,3 +330,29 @@ export const nuitMat = {
         }
       }`,
 };
+
+// Le ciel du jeu (v0.36.8) : un dégradé de l'horizon au zénith et des nuages (un bruit de valeur, quatre octaves) sur un plan haut que la dérive du vent fait glisser.
+// Tout vient du rayon de chaque pixel (la caméra : `uInvProj`, `uMonde`), donc le ciel tourne et s'incline avec elle.
+export const cielMat = {
+  v: `uniform mat4 uInvProj; uniform mat4 uMonde; varying vec3 vDir;
+      void main() {
+        vec4 p = uInvProj * vec4(position.xy, 1.0, 1.0);
+        vDir = (uMonde * vec4(p.xyz / p.w, 0.0)).xyz;
+        gl_Position = vec4(position.xy, 0.999, 1.0);
+      }`,
+  f: `uniform vec3 uHor; uniform vec3 uHaut; uniform vec3 uNuage; uniform float uCouv; uniform float uT; varying vec3 vDir;
+      float h(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+      float bruit(vec2 p) {
+        vec2 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f);
+        return mix(mix(h(i), h(i + vec2(1.0, 0.0)), f.x), mix(h(i + vec2(0.0, 1.0)), h(i + vec2(1.0, 1.0)), f.x), f.y);
+      }
+      void main() {
+        vec3 d = normalize(vDir);
+        float e = max(d.y, 0.0);
+        vec3 c = mix(uHor, uHaut, smoothstep(0.0, 0.3, e));
+        vec2 q = d.xz / (e + 0.35) * 9.0 + vec2(uT * 0.012, uT * 0.004);
+        float n = 0.5 * bruit(q) + 0.25 * bruit(q * 2.1 + 5.0) + 0.17 * bruit(q * 4.3 + 11.0) + 0.08 * bruit(q * 8.7 + 17.0);
+        float nuage = smoothstep(0.56 - uCouv * 0.5, 0.74 - uCouv * 0.5, n) * smoothstep(0.0, 0.18, e);
+        gl_FragColor = vec4(mix(c, uNuage, nuage), 1.0);
+      }`,
+};
