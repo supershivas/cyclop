@@ -112,7 +112,7 @@ export function nouvelleBataille(graine, R, opts = {}) {
         id: etat.regiments.length, camp,
         nom: camp === NOUS ? REGIMENTS[r % REGIMENTS.length] : opts.deux ? REGIMENTS[(r + nReg) % REGIMENTS.length] : null,
         effectif, initial: effectif, pertes: 0,
-        moral: R.moral.depart, deroute: false, vivres: R.nuit.vivres, stance: STANCE_DEFAUT,
+        moral: R.moral.depart, deroute: false, vivres: R.nuit.vivres, stance: STANCE_DEFAUT, aguerri: 0,
         ordre: null, depart: null,
       };
       if (etat.tranchees) {
