@@ -29,7 +29,7 @@ import { corvees, rejouerTravaux } from './nuit.js?v=0.36.2';
 
 export const PAS = 1 / 30;                 // s de jeu par pas
 export const NOUS = 0, EUX = 1;
-const VERSION = 2;   // 2 : la graine d'identité (campagne, v0.37 : lot 1)
+const VERSION = 3;   // 2 : la graine d'identité ; 3 : la campagne et les relevés (campagne, lots 1 et 2)
 
 const ticksParHeure = R => Math.max(1, Math.round(R.jour.duree / (R.jour.heureFin - R.jour.heureDebut) / PAS));
 const ticksParJour = R => ticksParHeure(R) * (R.jour.heureFin - R.jour.heureDebut);
@@ -54,11 +54,12 @@ function chaineMeteo(rng, jours, pluieAuMoins) {
   return { chaine, previsions };
 }
 
-/* Une nouvelle bataille. opts : { secteur: 'essai', soldats: par camp, jours, mission, graineIdentite } (jours et mission :
+/* Une nouvelle bataille. opts : { secteur: 'essai', soldats: par camp, jours, mission, graineIdentite, campagne } (jours et mission :
    tirés de la graine par un hachage, sans toucher au générateur : l'ordre des tirages ne change pas).
    graineIdentite : d'où viennent les noms, âges et grades de NOS hommes (identite.js) ; elle ne sert qu'à cela. Une campagne la garde
    d'une bataille à l'autre pendant que la graine (terrain, météo, tirages) change ; hors campagne elle vaut la graine. En face, les
-   hommes viennent toujours de la graine de la bataille : ce sont d'autres hommes à chaque fois. */
+   hommes viennent toujours de la graine de la bataille : ce sont d'autres hommes à chaque fois.
+   campagne : { id, n } si la bataille est la n-ième d'une campagne (js/campagne.js) ; elle ne change rien à la partie. */
 export function nouvelleBataille(graine, R, opts = {}) {
   const idSecteur = opts.secteur || 'essai';
   const S = SECTEURS[idSecteur];
@@ -69,7 +70,7 @@ export function nouvelleBataille(graine, R, opts = {}) {
   const mission = opts.mission || (S.missions ? S.missions[Math.floor(hash2(graine | 0, 43, 7) * S.missions.length)] : null);
   const { chaine, previsions } = chaineMeteo(rng.fork('meteo'), jours, S.pluieAuMoins);
   const etat = {
-    v: VERSION, graine, graineIdentite: opts.graineIdentite ?? graine, secteur: idSecteur, parCamp,
+    v: VERSION, graine, graineIdentite: opts.graineIdentite ?? graine, campagne: opts.campagne ?? null, secteur: idSecteur, parCamp,
     mission, issue: null,               // la mission (tenir, prendre) et, à la fin, ce qu'il en est
     reserves: [S.reserves ?? 0, S.reserves ?? 0],   // régiments frais en réserve, par camp (la relève)
     parRegiment: Math.floor(parCamp / S.regiments),
@@ -90,6 +91,7 @@ export function nouvelleBataille(graine, R, opts = {}) {
     abris: {},                  // les abris profonds : { tronçon : niveau } (nuit.js ; un 220 en crève un)
     prisonniers: [],            // les hommes pris par un coup de main : [id, jour]
     evacues: [],                // les blessés évacués : [id, jour]
+    releves: [],                // les hommes d'un régiment relevé, partis vivants : [numéro, régiment, expérience, victimes] (le registre de campagne)
     nuits: [],                  // ce que chaque nuit a vu : { jour, choix, bilan }
     grades: {},                 // les promus : { numéro: [rang, jour] } (le grade de départ vient du rang de création)
     batteries: Object.fromEntries(NOMS_CALIBRES.map(c => [c, 0])),   // s de jeu (depuis l'aube du jour 1) où la batterie est prête

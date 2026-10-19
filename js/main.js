@@ -8,6 +8,7 @@ import { createGamepad } from './lib/gamepad.js?v=0.36.2';
 import { createStore, autosave, pickJSONFile } from './lib/save.js?v=0.36.2';
 import { startUpdateCheck, loadVersion, loadChangelog, downloadJSON } from './lib/app-update.js?v=0.36.2';
 import { ROLES } from './palette.js?v=0.36.2';
+import { VERSION_CAMPAGNE, cloturerDansLeStore } from './campagne.js?v=0.36.2';
 import { MISSIONS, EUX, nouvelleBataille, etapesRestaurer, avancer, aube, ordonnerMarche, peutOrdonner, ordonnerBarrage, peutBarrage, ordonnerStance, peutStance, horloge, effectifs, tronconsTenus, moralEnMots, terrainResume, forcesTroncons, largeurZone, lettreZone, etendueZones, nomTroncon, actionDe, secteursDe, tronconsDeLigne, zone, photo, restaurer, PAS, NOUS } from './bataille.js?v=0.36.2';
 import { ligneY } from './tranchees.js?v=0.36.2';
 import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.36.2';
@@ -48,6 +49,7 @@ const store = createStore({
   debug: DEBUG,
   entries: {
     partie: { version: 1 },
+    campagne: { version: VERSION_CAMPAGNE },   // le registre d'une campagne (js/campagne.js) ; en mode debug, une autre clé
     prefs: { version: 1, debugWrites: false, defaults: { zoom: 2, camera: null, carte: true } },
   },
   secret: ['gh-token'],
@@ -454,6 +456,8 @@ document.addEventListener('visibilitychange', () => { if (document.hidden) pause
 // ─── La nuit, la fin ───────────────────────────────────────────────────────
 function montrerFin() {
   loop.pause(); sauvegarder();
+  // le registre de la campagne est écrit avant l'écran de fin : une coupure ne perd rien (idempotent si la partie est relue ici)
+  try { cloturerDansLeStore(store, B); } catch (e) { toast(`Campagne : ${e.message}`); }
   const e = B.etat, [vNous, vEux] = effectifs(B);
   $('fin-titre').textContent = `${e.jour} jours.`;
   $('fin-issue').textContent = reseau ? `${e.issue?.reussie ? 'Le bleu' : 'Le kaki'} l'emporte. ${e.issue?.texte || ''}` : (e.issue?.texte || '');

@@ -208,7 +208,7 @@ export function corvees(B, choix, ctx) {
       coupDeMain(B, reg, ctx, bilan);
     } else if (id === 'releve') {
       // il quitte le front (blessés compris) ; son remplaçant entre à l'aube, après les autres corvées
-      for (let i = 0; i < A.n; i++) if (A.reg[i] === reg.id && !A.mort[i]) A.mort[i] = 1;
+      for (let i = 0; i < A.n; i++) if (A.reg[i] === reg.id && !A.mort[i]) { etat.releves.push([A.id[i], reg.id, A.exp[i], A.victimes[i]]); A.mort[i] = 1; }
       reg.releve = etat.jour; reg.releves = reg.effectif; reg.effectif = 0;
       etat.reserves[reg.camp]--;
       releves.push(reg); b.releves = (b.releves || 0) + 1;
