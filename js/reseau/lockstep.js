@@ -19,7 +19,7 @@ export function empreinteEtat(B) {
   let h = 2166136261;
   for (const v of [e.ticks, e.tickJour, e.jour, e.rng, e.pertes[0], e.pertes[1], e.corps.length, e.barrages.length, e.impacts.length, A.n]) h = fnv(h, bitsF(v));
   for (let i = 0; i < A.n; i++) { h = fnv(h, bitsF(A.x[i])); h = fnv(h, bitsF(A.y[i])); h = fnv(h, A.blessure[i]); h = fnv(h, bitsF(A.peur[i])); }
-  for (const r of e.regiments) { h = fnv(h, r.effectif); h = fnv(h, bitsF(r.moral)); h = fnv(h, bitsF(r.ordre.x)); h = fnv(h, bitsF(r.ordre.y)); for (const c of r.stance ?? 'volonte') h = fnv(h, c.charCodeAt(0)); }
+  for (const r of e.regiments) { h = fnv(h, r.effectif); h = fnv(h, bitsF(r.moral)); if (r.aguerri) h = fnv(h, bitsF(r.aguerri)); h = fnv(h, bitsF(r.ordre.x)); h = fnv(h, bitsF(r.ordre.y)); for (const c of r.stance ?? 'volonte') h = fnv(h, c.charCodeAt(0)); }
   for (const t of e.troncons) h = fnv(h, t);
   return h.toString(16);
 }

@@ -26,7 +26,7 @@ import { REGIMENTS } from './data/lexique.js?v=0.37.0';
 import { STANCES, STANCE_DEFAUT } from './data/stances.js?v=0.37.0';
 import { grade } from './identite.js?v=0.37.0';
 import { corvees, rejouerTravaux } from './nuit.js?v=0.37.0';
-import { BIT, IMMOBILE, STATUTS, compteBits } from './marques.js?v=0.37.0';
+import { BIT, IMMOBILE, STATUTS, compteBits, aguerrissement } from './marques.js?v=0.37.0';
 
 export const PAS = 1 / 30;                 // s de jeu par pas
 export const NOUS = 0, EUX = 1;
@@ -653,7 +653,7 @@ function moral(B, dt) {
     const k = reg.id;
     if (!nb[k]) continue;
     const p = peur[k] / nb[k], e = exp[k] / nb[k], encadrement = Math.min(1, off[k] / 2);
-    const retour = M.retour * (0.4 + 0.6 * encadrement) * (0.7 + 0.6 * e) * (1 - p);
+    const retour = M.retour * (0.4 + 0.6 * encadrement) * (0.7 + 0.6 * e) * (1 - p) * (1 + R.marques.moral * (reg.aguerri ?? 0));      // (les marques de survie et de temps, un peu : v0.37.1)
     reg.moral = Math.max(0, Math.min(1, reg.moral + (retour - M.peur * p) * dt));
     if (!reg.deroute && reg.moral < M.deroute) {
       reg.deroute = true;
@@ -948,6 +948,7 @@ export function aube(B, choix = {}) {
     (bilan[reg.camp].refus ??= []).push(reg.id);
   }
   for (let i = 0; i < B.armee.n; i++) B.armee.marques[i] &= ~STATUTS;      // les statuts durent une nuit (Jérôme, v0.37.0)
+  aguerrissement(B).forEach((v, r) => { etat.regiments[r].aguerri = Math.round(v * 1000) / 1000; });      // ce que les marques de survie et de temps rendent au moral demain (v0.37.1)
   compacter(B.armee);
   etat.rng = rng.state;
   etat.jour++; etat.tickJour = 0; etat.phase = 'jour';
@@ -1007,7 +1008,7 @@ export function* etapesRestaurer(p, R) {
   etat.reserves ??= [0, 0]; etat.mission ??= null; etat.issue ??= null;   // (avant la v0.9.0 : ni mission ni réserves)
   etat.parRegiment ??= Math.floor(etat.parCamp / SECTEURS[etat.secteur].regiments);
   etat.travaux ??= []; etat.tombes ??= []; etat.evacues ??= []; etat.nuits ??= [];   // (avant la v0.6.0 : pas de corvées)
-  for (const reg of etat.regiments) { reg.moral ??= R.moral.depart; reg.deroute ??= false; reg.vivres ??= R.nuit.vivres; reg.stance ??= STANCE_DEFAUT; }   // (avant la v0.5.0 : pas de moral ; avant la v0.36.0 : pas de posture)
+  for (const reg of etat.regiments) { reg.moral ??= R.moral.depart; reg.deroute ??= false; reg.vivres ??= R.nuit.vivres; reg.stance ??= STANCE_DEFAUT; reg.aguerri ??= 0; }   // (avant la v0.5.0 : pas de moral ; avant la v0.36.0 : pas de posture)
   etat.deux ??= false; etat.batteriesEux ??= Object.fromEntries(NOMS_CALIBRES.map(c => [c, 0]));
   etat.abris ??= {}; etat.prisonniers ??= [];   // (avant la v0.11.0 : ni abris ni coups de main ; ni vivres)
   etat.troncons ??= []; etat.melee ??= etat.troncons.map(() => 0); etat.prises ??= etat.pertesJour.map(() => [0, 0]);   // (avant la v0.4.0 : pas de tranchées)

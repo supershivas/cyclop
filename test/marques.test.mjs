@@ -5,7 +5,7 @@ import { ligneY } from '../js/tranchees.js';
 import { empreinteEtat } from '../js/reseau/lockstep.js';
 import { tuerDans, construireGrille } from '../js/army.js';
 import { BIT, TRAVAUX, IMMOBILE, compteBits } from '../js/marques.js';
-import { marquesDe, sejours, ouEst } from '../js/marques.js';
+import { marquesDe, sejours, ouEst, aguerrissement, SURVIE } from '../js/marques.js';
 import { MARQUES } from '../js/data/marques.js';
 import { REGLAGES as R } from '../js/data/reglages.js';
 
@@ -502,4 +502,50 @@ test('la partie relue au milieu garde les bits ; jouée ensuite, elle reste la m
   for (let k = 0; k < 600; k++) { avancer(B); avancer(C); }
   assert.deepEqual(Array.from(C.armee.marques.subarray(0, C.armee.n)), Array.from(B.armee.marques.subarray(0, B.armee.n)));
   assert.equal(empreinteEtat(C), empreinteEtat(B));
+});
+
+group('marques — un léger effet sur le moral (v0.37.1)');
+test('seules les marques de survie et de temps comptent : 4 à 7 et 9 à 12', () => {
+  assert.deepEqual([...SURVIE].sort((a, b) => a - b), [4, 5, 6, 7, 9, 10, 11, 12]);
+  assert.ok(![...SURVIE].some(n => (n >= 25 && n <= 29) || (n >= 32 && n <= 35) || n === 22 || n === 23), 'ni statuts, ni fusil, ni commandement');
+});
+test('l\'aguerrissement d\'un régiment : la moyenne de ses hommes, chacun plafonné à trois marques', () => {
+  const B = bat();
+  const base = aguerrissement(B);
+  assert.ok(base.every(v => Math.abs(v - 1 / R.marques.aguerri) < 1e-9), 'le premier jour : une marque (du premier jour) sur trois pour tous');
+  const id = homme(B);
+  evac(B, id, 1, 1, 2); evac(B, id, 3, 2, 4);       // 4 (bras), 5 (jambe), 7 (deux fois revenu), + 9 : plus de trois
+  const apres = aguerrissement(B), n = B.etat.regiments[0].effectif;
+  assert.ok(Math.abs(apres[0] - (base[0] * n + (1 - base[0])) / n) < 1e-9, 'un homme à 1, les autres inchangés');
+  assert.equal(apres[1], base[1], 'les autres régiments ne bougent pas');
+  // ni le fusil, ni le grade, ni les statuts n\'y changent rien
+  const A = B.armee, i = a(B, homme(B, 1)); A.victimes[i] = 5; B.etat.grades[A.id[i]] = [0, 1]; A.marques[i] |= BIT.tremble | BIT.cite;
+  assert.deepEqual(aguerrissement(B), apres);
+});
+test('à l\'aube, le régiment range son aguerrissement ; la partie relue le garde ; l\'empreinte le voit', () => {
+  const B = bat(), id = homme(B);
+  evac(B, id, 1, 1, 2);
+  const avant = empreinteEtat(B);
+  nuit(B);
+  const reg = B.etat.regiments[0];
+  assert.ok(reg.aguerri > 0 && reg.aguerri <= 1, `aguerri ${reg.aguerri}`);
+  assert.equal(restaurer(photo(B), R).etat.regiments[0].aguerri, reg.aguerri);
+  assert.notEqual(empreinteEtat(B), avant);
+});
+test('le retour du moral est plus vif pour un régiment aguerri, et à coefficient 0 rien ne change', () => {
+  const retour = (coef, aguerri) => {
+    const Rm = structuredClone(R); Rm.marques.moral = coef;
+    const B = nouvelleBataille(3, Rm, { soldats: 400, jours: 3 }), reg = B.etat.regiments[0];
+    reg.moral = 0.5; reg.aguerri = aguerri;
+    for (let k = 0; k < 31; k++) avancer(B);
+    return reg.moral;
+  };
+  assert.equal(retour(0, 1), retour(0, 0), 'coefficient 0 : aucun effet');
+  assert.ok(retour(0.2, 1) > retour(0.2, 0), 'aguerri : le moral remonte plus vite');
+  assert.equal(retour(0.2, 0), retour(0, 0), 'pas aguerri : comme avant');
+});
+test('les évacués d\'un régiment ne comptent plus dans sa moyenne, les morts non plus', () => {
+  const B = bat(), A = B.armee; mourir(B, 5, 'balle');
+  const v = aguerrissement(B);
+  assert.ok(Math.abs(v[0] - 1 / R.marques.aguerri) < 1e-9);
 });

@@ -29,8 +29,8 @@ function indiceVivant(A, id) {
 
 /* Où est un homme et ce qu'on a gardé de lui : { i (dans la foule, ou −1), genre, victimes, bits }. Vivant : la foule ; évacué qui n'est pas
    revenu : sa dernière entrée ; mort, inhumé, prisonnier : ce que son corps, sa tombe ou sa fiche de prisonnier a gardé. */
-export function ouEst(B, id) {
-  const { etat, armee: A } = B, i = indiceVivant(A, id);
+export function ouEst(B, id, indice) {
+  const { etat, armee: A } = B, i = indice ?? indiceVivant(A, id);
   if (i >= 0) return { i, genre: 'vivant', victimes: A.victimes[i], bits: A.marques ? A.marques[i] : 0 };
   const ev = etat.evacues.filter(e => e[0] === id);
   const dernier = ev[ev.length - 1];
@@ -47,11 +47,11 @@ export function ouEst(B, id) {
 /* Les séjours d'un homme au front : [[premier jour, dernier jour]…]. Il arrive avec son régiment (le jour 1, ou `arrive` pour une relève) ;
    une évacuation clôt le séjour à la nuit où il part, un retour en ouvre un le lendemain de la nuit du retour ; la mort, la capture ou la
    relève clôturent le dernier. Un séjour qui dure encore n'a pas de fin (`null`). */
-export function sejours(B, id, reg = regimentDe(B, id), ou = ouEst(B, id)) {
+export function sejours(B, id, reg = regimentDe(B, id), ou = ouEst(B, id), evs = null) {
   const { etat } = B, out = [];
   if (!reg) return out;
   let debut = reg.arrive ?? 1, ferme = false;
-  for (const e of etat.evacues.filter(e => e[0] === id).sort((a, b) => a[1] - b[1])) {
+  for (const e of (evs ?? etat.evacues.filter(e => e[0] === id)).slice().sort((a, b) => a[1] - b[1])) {
     out.push([debut, e[1]]);
     if (e[3] > 0) debut = e[3] + 1; else { ferme = true; break; }
   }
@@ -71,15 +71,16 @@ const nuitsDe = (B, [d, f]) => B.etat.nuits.filter(n => n.jour >= d && (f === nu
 
 /* Les marques de l'homme n° id : [{ n, id, famille, nom, dit, jour }], les plus récentes d'abord (`jour` : le jour où il l'a gagnée ; celles
    qui n'ont pas de date, après, dans l'ordre du catalogue). Une par palier pour le fusil : la plus haute. */
-export function marquesDe(B, id) {
+/* `pre` (facultatif, pour en lire beaucoup d'un coup) : { i : l'indice de l'homme vivant, evs : Map numéro → ses évacuations, debout : hommes debout de chaque régiment }. */
+export function marquesDe(B, id, pre = {}) {
   const { etat, R } = B, M = R.marques, A = B.armee;
   const reg = regimentDe(B, id);
   if (!reg) return [];
-  const ou = ouEst(B, id), vivant = ou.genre === 'vivant';
+  const ou = ouEst(B, id, pre.i), vivant = ou.genre === 'vivant', evs = pre.evs ? (pre.evs.get(id) ?? []) : null;
   const trouvees = new Map();         // n → jour (ou null)
   const donne = (n, jour = null) => { if (!trouvees.has(n)) trouvees.set(n, jour); };
-  const sj = sejours(B, id, reg, ou), bits = ou.bits & ~(vivant ? 0 : STATUTS);
-  const evRevenus = etat.evacues.filter(e => e[0] === id && e[3] > 0).sort((a, b) => a[3] - b[3]);
+  const sj = sejours(B, id, reg, ou, evs), bits = ou.bits & ~(vivant ? 0 : STATUTS);
+  const evRevenus = (evs ?? etat.evacues.filter(e => e[0] === id)).filter(e => e[3] > 0).sort((a, b) => a[3] - b[3]);
 
   // les blessures dont il est revenu (4 à 6), deux fois revenu (7)
   for (const e of evRevenus) donne(e[2] === 1 ? 4 : e[2] === 2 ? 5 : 6, e[3]);
@@ -111,8 +112,8 @@ export function marquesDe(B, id) {
   if (vivant && reg) {
     if (reg.refus === etat.jour) donne(28, etat.jour);
     if (reg.initial > M.derniers) {
-      let debout = 0;
-      for (let k = 0; k < A.n; k++) if (A.reg[k] === reg.id && !A.mort[k] && !A.blessure[k]) debout++;
+      let debout = pre.debout?.[reg.id];
+      if (debout === undefined) { debout = 0; for (let k = 0; k < A.n; k++) if (A.reg[k] === reg.id && !A.mort[k] && !A.blessure[k]) debout++; }
       if (debout <= M.derniers) donne(29, etat.jour);
     }
   }
@@ -135,5 +136,25 @@ export function marquesDe(B, id) {
   const out = [...trouvees].map(([n, jour]) => ({ ...MARQUES[n - 1], jour }));
   out.sort((a, b) => (b.jour ?? -1) - (a.jour ?? -1) || a.n - b.n);
   return out;
+}
+
+/* Ce qu'un homme a vécu qui aguerrit (Jérôme, v0.37.1 : un léger effet sur le moral) : les marques de survie et de temps seulement, 4 à 7 et 9 à 12 ;
+   ni le fusil (DESIGN.md : le compteur de morts n'est jamais une récompense), ni les statuts (28 vient du moral), ni le commandement. */
+export const SURVIE = new Set([4, 5, 6, 7, 9, 10, 11, 12]);
+
+/* L'aguerrissement de chaque régiment, de 0 à 1 : la moyenne, sur ses hommes vivants, de min(1, marques de survie / `aguerri`). Lu de l'état, sans hasard ;
+   `aube` le range dans `reg.aguerri` (sauvegardé), `moral` le lit. Un seul passage sur la foule (pas un `marquesDe` par homme qui la reparcourt). */
+export function aguerrissement(B) {
+  const { etat, R, armee: A } = B, n = etat.regiments.length;
+  const evs = new Map(); for (const e of etat.evacues) { const l = evs.get(e[0]); if (l) l.push(e); else evs.set(e[0], [e]); }
+  const debout = new Int32Array(n); for (let i = 0; i < A.n; i++) if (!A.mort[i] && !A.blessure[i]) debout[A.reg[i]]++;
+  const somme = new Float64Array(n), nb = new Int32Array(n), pre = { evs, debout, i: 0 };
+  for (let i = 0; i < A.n; i++) {
+    if (A.mort[i]) continue;
+    pre.i = i;
+    let k = 0; for (const m of marquesDe(B, A.id[i], pre)) if (SURVIE.has(m.n)) k++;
+    somme[A.reg[i]] += Math.min(1, k / R.marques.aguerri); nb[A.reg[i]]++;
+  }
+  return Array.from(somme, (v, r) => nb[r] ? v / nb[r] : 0);
 }
 export { MARQUES, MARQUE };

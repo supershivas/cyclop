@@ -187,6 +187,8 @@ export const REGLAGES = {
     peur: 3,              // « N'a pas reflué » : secondes immobile pendant la déroute de son régiment
     souffle: 8,           // « Secoué par le souffle » : vitesse du souffle (m/s) qui le jette
     proche: 10,           // « Baptisé du feu » : m d'un obus qu'il survit
+    aguerri: 3,           // un homme est « aguerri » à ce nombre de marques de survie et de temps (4-7, 9-12) ; en dessous, au prorata
+    moral: 0.2,           // le léger effet (v0.37.1) : le retour du moral d'un régiment est multiplié par 1 + moral × aguerri (0 : aucun effet) ; scripts/mesure-moral.mjs
     visibles: 6,          // la rangée de la fiche : au plus tant d'icônes, puis « +N »
   },
   jour: {
