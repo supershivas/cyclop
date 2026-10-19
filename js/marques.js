@@ -3,8 +3,8 @@
 // `data/marques.js`, les seuils dans `reglages.js` (`marques`). Une marque se lit de l'état existant ou d'un bit posé là où l'événement
 // a lieu (`A.marques`, `BIT` : bataille.js, army.js, nuit.js) ; les bits d'un homme qui quitte la foule sont gardés avec lui
 // (`etat.corps[6]`, `tombes[6]`, `prisonniers[3]`, `evacues[7]`).
-import { MARQUES, MARQUE } from './data/marques.js?v=0.36.2';
-import { METEO } from './data/meteo.js?v=0.36.2';
+import { MARQUES, MARQUE } from './data/marques.js?v=0.37.0';
+import { METEO } from './data/meteo.js?v=0.37.0';
 
 // Les bits de `A.marques` (Uint32) : les événements comptés. 16-17 : nuits de travaux (0 à 3) ; 18-19 : secondes immobile pendant la déroute.
 export const BIT = {

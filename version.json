@@ -1,7 +1,9 @@
 {
-  "version": "0.36.2",
+  "version": "0.37.0",
   "date": "2026-10-19",
   "changes": [
-    "Un régiment en feu retenu porte son fusil baissé devant lui, la baïonnette ne dépasse plus de sa tête, et ne le lève que pour tirer"
+    "Les hommes portent des marques sur leur fiche : trente-cinq mentions de livret en icônes (blessure dont on est revenu, jours de pluie au front, grade de circonstance, tronçon pris, hommes abattus…), le texte au survol",
+    "Le carnet de bord dit les plus rares : entré le premier, a tenu seul, cité à l'ordre du régiment",
+    "Un homme relevé, ou évacué puis revenu, a maintenant la bonne date « au front depuis » sur sa fiche"
   ]
 }

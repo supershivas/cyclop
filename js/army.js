@@ -25,8 +25,9 @@
      (rng.js), pour que la même graine rejoue la même bataille.
 
    Logique pure : aucun DOM. Le rendu lit les tableaux (rendu3d.js). */
-import { hauteurQ, etat, vitesseEtat } from './terrain.js?v=0.36.2';
-import { ligneY } from './tranchees.js?v=0.36.2';
+import { hauteurQ, etat, vitesseEtat } from './terrain.js?v=0.37.0';
+import { ligneY } from './tranchees.js?v=0.37.0';
+import { BIT } from './marques.js?v=0.37.0';
 
 export const GRILLE = 2;           // m : cases de voisinage
 export const DENSITE = 8;          // m : carrés de densité (tir)
@@ -42,6 +43,7 @@ export function creerArmee({ capacite, W, H }) {
     mort: new Uint8Array(capacite),
     // qui il est et ce qu'il endure (0 à 1 ; blessure : 0 aucune, 1 bras, 2 jambe, 3 tête)
     id: new Uint32Array(capacite), fatJ: f32(), fatB: f32(), peur: f32(), blessure: new Uint8Array(capacite), exp: f32(), victimes: new Uint16Array(capacite),
+    marques: new Uint32Array(capacite),       // les événements comptés d'un homme, des bits (js/marques.js : BIT) ; rien n'en change la partie
     // la grille de voisinage (tri par comptage)
     gw, gh, cellCount: new Int32Array(gw * gh), cellStart: new Int32Array(gw * gh + 1),
     sorted: new Int32Array(capacite), cellOf: new Int32Array(capacite),
@@ -53,7 +55,7 @@ export function creerArmee({ capacite, W, H }) {
 export function ajouterSoldat(A, x, y, camp, reg, slot, r, id = A.n) {
   if (A.n >= A.capacite) return -1;
   const i = A.n++;
-  A.id[i] = id; A.fatJ[i] = 0; A.fatB[i] = 0; A.peur[i] = 0; A.blessure[i] = 0; A.exp[i] = 0; A.victimes[i] = 0;
+  A.id[i] = id; A.fatJ[i] = 0; A.fatB[i] = 0; A.peur[i] = 0; A.blessure[i] = 0; A.exp[i] = 0; A.victimes[i] = 0; A.marques[i] = 0;
   A.x[i] = x; A.y[i] = y; A.vx[i] = 0; A.vy[i] = 0;
   A.camp[i] = camp; A.reg[i] = reg; A.slot[i] = slot; A.mort[i] = 0;
   A.rnd[i] = r; A.tirT[i] = 1 + r * 4; A.coince[i] = 0;
@@ -293,6 +295,7 @@ export function tuerDans(A, x0, y0, rayon, ctx, letal = 1) {
       if (T.diff[ci] <= -2) p *= R.obus.abri;
       if (ctx.abri) p *= ctx.abri(ci);
       if (rng() < p) frapper(i, 'obus', 0.5 + 0.5 * (1 - d / rayon), { x0, y0, d, rayon });
+      if (!A.mort[i] && d < Math.min(rayon, R.marques.proche)) A.marques[i] |= BIT.bapteme;      // (une marque : il a survécu à un obus tout près ; ni hasard ni effet)
     }
   }
   // le souffle : les survivants, plus loin que les morts (jusqu'à `souffleZone` rayons), sont jetés à l'opposé du point de chute ;
@@ -308,6 +311,7 @@ export function tuerDans(A, x0, y0, rayon, ctx, letal = 1) {
       const dx = A.x[i] - x0, dy = A.y[i] - y0, d = Math.hypot(dx, dy);
       if (d >= zone) continue;
       const u = (1 - d / zone) * vs;
+      if (u >= R.marques.souffle) A.marques[i] |= BIT.souffle;        // (une marque : le souffle l'a jeté à terre)
       A.vx[i] += (d > 0.05 ? dx / d : 1) * u; A.vy[i] += (d > 0.05 ? dy / d : 0) * u;
     }
   }
@@ -342,7 +346,7 @@ export function reposer(A, R) {
 // Retire les morts (on garde l'ordre des vivants : la même partie, rejouée, garde les mêmes indices)
 export function compacter(A) {
   let w = 0;
-  const keys = ['x', 'y', 'vx', 'vy', 'rnd', 'tirT', 'coince', 'camp', 'reg', 'slot', 'id', 'fatJ', 'fatB', 'peur', 'blessure', 'exp', 'victimes'];
+  const keys = ['x', 'y', 'vx', 'vy', 'rnd', 'tirT', 'coince', 'camp', 'reg', 'slot', 'id', 'fatJ', 'fatB', 'peur', 'blessure', 'exp', 'victimes', 'marques'];
   for (let r = 0; r < A.n; r++) {
     if (A.mort[r]) continue;
     if (w !== r) for (const k of keys) A[k][w] = A[k][r];
@@ -357,7 +361,7 @@ export function compacter(A) {
 
 // ─── Sauvegarde : les tableaux, exacts (base64 des octets) ───
 const CHAMPS = { x: Float32Array, y: Float32Array, vx: Float32Array, vy: Float32Array, rnd: Float32Array, tirT: Float32Array, coince: Float32Array, camp: Uint8Array, reg: Uint16Array, slot: Uint16Array,
-  id: Uint32Array, fatJ: Float32Array, fatB: Float32Array, peur: Float32Array, blessure: Uint8Array, exp: Float32Array, victimes: Uint16Array };
+  id: Uint32Array, fatJ: Float32Array, fatB: Float32Array, peur: Float32Array, blessure: Uint8Array, exp: Float32Array, victimes: Uint16Array, marques: Uint32Array };
 function b64(typed) {
   const u8 = new Uint8Array(typed.buffer, typed.byteOffset, typed.byteLength);
   let s = '';

@@ -66,10 +66,10 @@ export const ICONES = {
     '.........', '.........', '.........', 'tt.....tt', 'ttt...ttt', '.ttt.ttt.', '..ttttt..', 'sssssssss', '.........'],
   'fusil-1': [
     '.........', '.........', '.........', '....t....', '...ttt...', '....t....', '.........', '.........', '.........'],
+  'fusil-3': [
+    '.........', '.........', '.........', '.t..t..t.', '.........', '.........', '.........', '.........', '.........'],
   'fusil-5': [
     '.........', '.t.....t.', '.........', '....t....', '.........', '.t.....t.', '.........', '.........', '.........'],
-  'fusil-10': [
-    '.........', '.........', 't.t.t.t.t', '.........', '.........', '.........', 't.t.t.t.t', '.........', '.........'],
   'grade-abattu': [
     '.........', 'tt.....tt', '.tt...tt.', '..tt.tt..', '...ttt...', '..tt.tt..', '.tt...tt.', 'tt.....tt', '.........'],
 };
@@ -78,5 +78,5 @@ export const SIGLES = {
   bapteme: 'Bf', souffle: 'Sb', deterre: 'Dé', bras: 'Mb', jambe: 'Mj', tete: 'Mt', 'revenu-deux': '2R', 'a-pied': 'Ap', 'premier-jour': '1j',
   'cinq-jours': '5j', pluies: '3p', gel: 'Gl', 'dernier-jour': 'Dj', pelle: 'Pp', brancard: 'Br', porteur: 'Pt', soupe: 'So', 'coup-de-main': 'Cm',
   'entre-premier': 'Ep', 'tenu-seul': 'Ts', repris: 'Rp', circonstance: 'Gc', regiment: 'Rg', cite: 'Ci', tremble: 'Tr', 'pas-reflue': 'Pr',
-  rallie: 'Ra', 'jour-refuse': 'Jr', douze: '12', enterre: 'En', entonnoir: 'Eo', 'fusil-1': '·', 'fusil-5': '5·', 'fusil-10': '10', 'grade-abattu': 'Ga',
+  rallie: 'Ra', 'jour-refuse': 'Jr', douze: '12', enterre: 'En', entonnoir: 'Eo', 'fusil-1': '·', 'fusil-3': '3·', 'fusil-5': '5·', 'grade-abattu': 'Ga',
 };

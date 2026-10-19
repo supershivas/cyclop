@@ -178,7 +178,7 @@ export const REGLAGES = {
   },
   // les marques d'un homme (Jérôme, v0.37.0 ; js/marques.js) : des faits lus de l'état, aucun effet de jeu
   marques: {
-    fusil: [1, 5, 10],    // hommes abattus au fusil : « Un à son compte », « Cinq », « Dix » (seuils à mesurer : scripts/mesure-victimes.mjs)
+    fusil: [1, 3, 5],     // hommes abattus au fusil : « Un », « Trois », « Cinq à son compte ». Mesuré (scripts/mesure-victimes.mjs, graine 7, 10 jours d'assauts, IA qui joue) : au plus 6 par homme, 3 hommes sur 750 à 5, 26 à 3 ; dix ne se voyait jamais
     derniers: 12,         // « Parmi les douze derniers » : hommes debout du régiment au plus
     cinqJours: 5,         // « Cinq jours de suite » : jours au front sans nuit de repos
     pluies: 3,            // « Sous trois pluies » : jours de pluie au front

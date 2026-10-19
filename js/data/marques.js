@@ -1,6 +1,6 @@
 // Les marques d'un homme (Jérôme, v0.37.0) : des mentions de livret militaire, à l'encre. Un fait, jamais un éloge : DESIGN.md refuse les
 // médailles qui brillent, et le compteur de morts n'est ni expérience ni avantage. `n` : le numéro du catalogue (ROADMAP §6) ;
-// `id` : la clé stable (textes, tests, icônes) ; `famille` : le cadre de l'icône ; `dit` : la phrase du survol.
+// `id` : la clé stable (textes, tests, icônes) ; `famille` : le cadre de l'icône ; `dit` : la phrase du survol ; `carnet` : la fin de la ligne du carnet de bord, pour les marques rares seulement (Jérôme, v0.37.0 : 19, 20, 23, 24).
 export const FAMILLES = {
   marques:      { nom: 'Marques',       cadre: 'rond' },
   temps:        { nom: 'Le temps',      cadre: 'arche' },
@@ -30,12 +30,12 @@ export const MARQUES = [
   { n: 16, id: 'porteur',       famille: 'services',     nom: 'Porteur de terre',          dit: 'A mis en terre les morts de sa tranchée.' },
   { n: 17, id: 'soupe',         famille: 'services',     nom: 'La soupe par les boyaux',   dit: 'A monté la soupe jusqu\'à la tranchée.' },
   { n: 18, id: 'coup-de-main',  famille: 'services',     nom: 'Coup de main',              dit: 'Revenu d\'un coup de main chez l\'ennemi.' },
-  { n: 19, id: 'entre-premier', famille: 'services',     nom: 'Entré le premier',          dit: 'Le plus avancé des hommes entrés dans un tronçon pris.' },
-  { n: 20, id: 'tenu-seul',     famille: 'services',     nom: 'A tenu seul',               dit: 'Dernier défenseur d\'un tronçon, quand il est tombé.' },
+  { n: 19, id: 'entre-premier', famille: 'services',     nom: 'Entré le premier',          dit: 'Le plus avancé des hommes entrés dans un tronçon pris.', carnet: 'est entré le premier' },
+  { n: 20, id: 'tenu-seul',     famille: 'services',     nom: 'A tenu seul',               dit: 'Dernier défenseur d\'un tronçon, quand il est tombé.', carnet: 'a tenu seul son tronçon' },
   { n: 21, id: 'repris',        famille: 'services',     nom: 'Tronçon repris',            dit: 'Présent à la reprise d\'un tronçon perdu.' },
   { n: 22, id: 'circonstance',  famille: 'commandement', nom: 'Gradé de circonstance',     dit: 'Promu parce qu\'un supérieur est tombé.' },
-  { n: 23, id: 'regiment',      famille: 'commandement', nom: 'A pris le régiment',        dit: 'Devenu commandant de son régiment.' },
-  { n: 24, id: 'cite',          famille: 'commandement', nom: 'Cité à l\'ordre du régiment', dit: 'Le plus aguerri des hommes entrés dans un tronçon pris ce jour-là.' },
+  { n: 23, id: 'regiment',      famille: 'commandement', nom: 'A pris le régiment',        dit: 'Devenu commandant de son régiment.', carnet: 'commande' },
+  { n: 24, id: 'cite',          famille: 'commandement', nom: 'Cité à l\'ordre du régiment', dit: 'Le plus aguerri des hommes entrés dans un tronçon pris ce jour-là.', carnet: 'est cité à l\'ordre du régiment' },
   { n: 25, id: 'tremble',       famille: 'statuts',      nom: 'A tremblé',                 dit: 'Sa peur a dépassé la terreur.' },
   { n: 26, id: 'pas-reflue',    famille: 'statuts',      nom: 'N\'a pas reflué',           dit: 'Resté immobile pendant la déroute de son régiment.' },
   { n: 27, id: 'rallie',        famille: 'statuts',      nom: 'Rallié',                    dit: 'A reflué avec son régiment, puis est revenu.' },
@@ -44,8 +44,8 @@ export const MARQUES = [
   { n: 30, id: 'enterre',       famille: 'fin',          nom: 'Enterré par les siens',     dit: 'Mis en terre, une croix au crayon.' },
   { n: 31, id: 'entonnoir',     famille: 'fin',          nom: 'Resté dans l\'entonnoir',   dit: 'Son corps n\'a pas été relevé après trois nuits.' },
   { n: 32, id: 'fusil-1',       famille: 'fusil',        nom: 'Un à son compte',           dit: 'A abattu un homme au fusil.' },
-  { n: 33, id: 'fusil-5',       famille: 'fusil',        nom: 'Cinq à son compte',         dit: 'A abattu cinq hommes au fusil.' },
-  { n: 34, id: 'fusil-10',      famille: 'fusil',        nom: 'Dix à son compte',          dit: 'A abattu dix hommes au fusil.' },
+  { n: 33, id: 'fusil-3',       famille: 'fusil',        nom: 'Trois à son compte',        dit: 'A abattu trois hommes au fusil.' },
+  { n: 34, id: 'fusil-5',       famille: 'fusil',        nom: 'Cinq à son compte',         dit: 'A abattu cinq hommes au fusil.' },
   { n: 35, id: 'grade-abattu',  famille: 'fusil',        nom: 'A abattu un gradé',         dit: 'Une de ses victimes était officier ou adjudant.' },
 ];
 export const MARQUE = Object.fromEntries(MARQUES.map(m => [m.id, m]));

@@ -15,11 +15,12 @@
      de travail chacun) ; les vivres (`reg.vivres`, en nuits : sans eux, la nuit
      repose moins et le moral baisse) ; le coup de main (des volontaires ramènent
      des prisonniers de la tranchée d'en face, s'ils reviennent). */
-import { toucher } from './terrain.js?v=0.36.2';
-import { hash2 } from './lib/rng.js?v=0.36.2';
-import { CORVEES } from './data/corvees.js?v=0.36.2';
-import { REGIMENTS } from './data/lexique.js?v=0.36.2';
-import { ajouterSoldat } from './army.js?v=0.36.2';
+import { toucher } from './terrain.js?v=0.37.0';
+import { hash2 } from './lib/rng.js?v=0.37.0';
+import { CORVEES } from './data/corvees.js?v=0.37.0';
+import { REGIMENTS } from './data/lexique.js?v=0.37.0';
+import { ajouterSoldat } from './army.js?v=0.37.0';
+import { BIT, TRAVAUX, STATUTS, compteBits } from './marques.js?v=0.37.0';
 
 export const SORTES = ['reparer', 'caillebotis'];          // les travaux de terrain, par leur numéro dans etat.travaux
 export const corvee = id => CORVEES.find(c => c.id === id);
@@ -142,6 +143,11 @@ export function choixEnFace(B) {
   if (eprouves.length && B.etat.reserves?.[1] > 0) out[eprouves[0].id] = 'releve';
   return out;
 }
+// Une marque de service (v0.37.0) : ceux du régiment qui sont debout et valides la portent ; `ajouter` reçoit le tableau et l'indice
+function servir(A, reg, ajouter) {
+  for (let i = 0; i < A.n; i++) if (A.reg[i] === reg.id && !A.mort[i] && !A.blessure[i]) ajouter(A, i);
+}
+
 /* Les corvées de la nuit. choix : { id du régiment : corvée } (nos régiments ;
    ceux d'en face choisissent seuls ; sans choix, le repos). ctx : { rng,
    mourir(i, cause, ou) }. Rend le bilan de la nuit pour chaque camp. */
@@ -169,6 +175,7 @@ export function corvees(B, choix, ctx) {
         etat.travaux.push([etat.jour, SORTES.indexOf(id), ...ks]);
         b[id === 'reparer' ? 'repares' : 'caillebotis'] += ks.length;
       }
+      if (ks.length) servir(A, reg, (A, i) => { if (compteBits(A.marques[i], TRAVAUX) < R.marques.travaux) A.marques[i] += 1 << TRAVAUX.decalage; });      // « Pelle et pioche » : trois nuits de travaux (même quand tout est déjà fait : on y a passé la nuit)
     } else if (id === 'inhumer') {
       // les corps les plus proches, autant que les hommes en peuvent porter
       const r2 = N.rayonInhumer ** 2, L1 = premiere(reg.camp);
@@ -184,6 +191,7 @@ export function corvees(B, choix, ctx) {
         return false;
       });
       b.inhumes += pris.size;
+      if (pris.size) servir(A, reg, (A, i) => { A.marques[i] |= BIT.porteur; });
       // au-delà de nos lignes, on y reste parfois
       if (dehors.length) {
         const p = N.risqueDehors * Math.min(1, dehors.length / 10);
@@ -202,6 +210,7 @@ export function corvees(B, choix, ctx) {
         if (A.reg[i] !== reg.id || A.mort[i] || rng() >= N.risqueBoyau) continue;
         mourir(i, 'corvée'); b.mortsCorvee++;
       }
+      servir(A, reg, (A, i) => { A.marques[i] |= BIT.soupe; });
       reg.vivres = N.vivres + 1;      // la nuit qui vient en mange une
       b.ravitailles++;
     } else if (id === 'coup') {
@@ -218,8 +227,9 @@ export function corvees(B, choix, ctx) {
         if (rng() < N.risqueBoyau) { mourir(i, 'corvée'); b.mortsCorvee++; continue; }
         A.mort[i] = 1; reg.effectif--;                 // il quitte le front, vivant
         // [numéro, jour, blessure, nuit du retour (0 : pas encore, -1 : ne reviendra pas), régiment, expérience, victimes, marques]
-        etat.evacues.push([A.id[i], etat.jour, A.blessure[i], 0, reg.id, Math.round(A.exp[i] * 100) / 100, A.victimes[i], 0]); b.evacues++;
+        etat.evacues.push([A.id[i], etat.jour, A.blessure[i], 0, reg.id, Math.round(A.exp[i] * 100) / 100, A.victimes[i], A.marques[i] & ~STATUTS]); b.evacues++;
       }
+      servir(A, reg, (A, i) => { A.marques[i] |= BIT.brancard; });      // ceux qui restent ont porté les blessés
       reg.moral = Math.min(1, reg.moral + N.moralEvacuer);
     }
   }
@@ -280,7 +290,7 @@ function retours(B, rng, bilan) {
     const derriere = reg.ordre.y + (reg.camp === 0 ? 12 : -12);
     const i = ajouterSoldat(A, x0 + rng() * (x1 - x0), Math.max(1, Math.min(B.terrain.H - 2, derriere + (rng() - 0.5) * 6)), reg.camp, reg.id, slot, rng(), e[0]);
     if (i < 0) continue;
-    A.exp[i] = e[5]; A.victimes[i] = e[6] ?? 0;
+    A.exp[i] = e[5]; A.victimes[i] = e[6] ?? 0; A.marques[i] = e[7] ?? 0;
     reg.effectif++; e[3] = etat.jour; bilan[reg.camp].retours++;
   }
 }
@@ -305,6 +315,7 @@ function coupDeMain(B, reg, ctx, bilan) {
     exp += A.exp[i];
     if (rng() < N.coupMort * (1 - 0.5 * A.exp[i]) * veille) { mourir(i, 'corvée', [ou.x + (rng() - 0.5) * 10, ou.y + (rng() - 0.5) * 4]); bilan[reg.camp].mortsCorvee++; continue; }
     A.exp[i] = Math.min(1, A.exp[i] + N.coupExp);
+    A.marques[i] |= BIT.coup;
     prise += N.coupPrise * (1 + A.exp[i]) / veille;
   }
   let n = Math.floor(prise + rng());
