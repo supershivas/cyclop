@@ -45,3 +45,6 @@ body { font: 15px/1.45 system-ui, -apple-system, 'Segoe UI', sans-serif; color: 
 .at-work .at-outils button.is-on { background: #1c1c1e; color: #fff; border-color: #1c1c1e; }
 .at-glisseur { display: grid; gap: 0; margin-bottom: 8px; font-size: 14px; }
 .at-glisseur input[type=range] { width: 100%; min-height: 32px; margin: 0; }
+.at-outils-titre { flex-basis: 100%; font-size: 12px; opacity: .7; text-transform: uppercase; letter-spacing: .08em; }
+.at-reglages h4 { font-size: 14px; margin: 16px 0 8px; }
+.at-verdict ul { margin: 0 0 8px; padding-left: 20px; font-size: 13px; }

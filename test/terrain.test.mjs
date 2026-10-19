@@ -188,3 +188,47 @@ test('les formes d\'un secteur changent le sol, tranchées comprises ; la partie
   const C = restaurer(JSON.parse(JSON.stringify(photo(B))), R);          // le secteur republié depuis n'a plus de formes : la partie a gardé les siennes
   assert.deepEqual(C.terrain.base, B.terrain.base);
 });
+
+group('terrain — les objets et les tranchées de l\'atelier (lot 3)');
+test('des arbres, des bois et des haies se posent ; un dégagement retire ce que la graine avait planté, pas ce qui est posé ; sans objets, rien ne bouge', async () => {
+  const { terrainDuSecteur } = await import('../js/secteur-terrain.js');
+  const S = SECTEURS.essai, m = S.marges, ou = (T, x, y, r) => [...T.arbres, ...T.buissons].filter(t => Math.hypot(t.i + 0.5 - m.x - x, t.j + 0.5 - m.y - y) < r).length;
+  const nu = terrainDuSecteur(S, m, 5, R).terrain;
+  assert.equal(terrainDuSecteur({ ...S, objets: [] }, m, 5, R).terrain.arbres.length, nu.arbres.length);
+  const plante = terrainDuSecteur({ ...S, objets: [{ o: 'arbre', x: 10, y: 10 }, { o: 'bois', x: 300, y: 250, r: 15 }, { o: 'haie', x: 40, y: 200, x2: 100, y2: 210 }] }, m, 5, R).terrain;
+  assert.ok(plante.arbres.some(a => a.i === m.x + 10 && a.j === m.y + 10), 'l\'arbre est là');
+  assert.ok(plante.arbres.length > nu.arbres.length + 10, 'le bois ajoute des arbres');
+  assert.ok(plante.buissons.length > nu.buissons.length + 15, 'la haie ajoute des buissons');
+  const deux = terrainDuSecteur({ ...S, objets: [{ o: 'arbre', x: 10, y: 10 }, { o: 'bois', x: 300, y: 250, r: 15 }, { o: 'haie', x: 40, y: 200, x2: 100, y2: 210 }] }, m, 5, R).terrain;
+  assert.deepEqual(deux.arbres, plante.arbres); assert.deepEqual(deux.buissons, plante.buissons);
+  // un dégagement au milieu d'un bois de la graine
+  const A = nu.arbres[0], ax = A.i - m.x, ay = A.j - m.y;
+  assert.ok(ou(nu, ax, ay, 12) > 0);
+  const vide = terrainDuSecteur({ ...S, objets: [{ o: 'degager', x: ax, y: ay, r: 12 }, { o: 'arbre', x: ax, y: ay }] }, m, 5, R).terrain;
+  assert.equal(ou(vide, ax, ay, 12), 1, 'seul l\'arbre posé après le dégagement reste');
+});
+test('le contrôle d\'un secteur : les trois secteurs passent ; lignes dans le désordre, no man\'s land trop étroit, tracé coupé sont dits', async () => {
+  const { validerSecteur } = await import('../js/tranchees.js');
+  for (const id of Object.keys(SECTEURS)) assert.deepEqual(validerSecteur(SECTEURS[id]), [], id);
+  const avec = (f) => { const S = structuredClone(SECTEURS.essai); f(S.tranchees); return validerSecteur(S); };
+  assert.ok(avec(T => { T.lignes.nous[1] = 220; }).some(t => /nous, lignes 1 et 2/.test(t)));
+  assert.ok(avec(T => { T.lignes.eux[0] = 170; }).some(t => /no man's land/.test(t)));
+  assert.ok(avec(T => { T.lignes.nous[3] = 298; }).some(t => /trop près du bord/.test(t)));
+  assert.ok(avec(T => { T.creneau = 5; }).some(t => /se coupe/.test(t)));
+  assert.deepEqual(avec(T => { T.creneau = 2.5; }), [], 'l\'amplitude maximale de l\'atelier tient');
+});
+test('une partie garde ses tranchées et ses objets : republier le secteur ne les déplace pas', async () => {
+  const { nouvelleBataille, photo, restaurer, secteurDuJeu } = await import('../js/bataille.js');
+  const S = SECTEURS.essai, T = structuredClone(S.tranchees);
+  T.lignes.nous = [212, 232, 256, 278];
+  const { version } = JSON.parse(readFileSync(new URL('../version.json', import.meta.url)));
+  const dedans = (await import(`../js/data/secteur.js?v=${version}`)).SECTEURS;
+  dedans.essai = { ...S, tranchees: T, objets: [{ o: 'arbre', x: 12, y: 12 }] };
+  let B; try { B = nouvelleBataille(5, R, { soldats: 100, jours: 3 }); } finally { dedans.essai = S; }
+  const premiere = B.lignes.find(l => l.camp === 0 && l.rang === 0);
+  assert.equal(premiere.y0, B.etat.marges.y + 212);
+  const C = restaurer(JSON.parse(JSON.stringify(photo(B))), R);
+  assert.equal(C.lignes.find(l => l.camp === 0 && l.rang === 0).y0, premiere.y0);
+  assert.deepEqual(C.terrain.arbres, B.terrain.arbres);
+  assert.equal(secteurDuJeu(C.etat).tranchees.lignes.nous[0], 212);
+});

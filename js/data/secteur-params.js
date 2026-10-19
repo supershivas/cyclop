@@ -13,4 +13,8 @@ export const PARAMS = [
   { cle: 'haies', nom: 'Haies', unite: '', min: 0, max: 20, pas: 1, defaut: 0 },
   { cle: 'buissons', nom: 'Buissons épars', unite: '', min: 0, max: 600, pas: 10, defaut: 0 },
   { cle: 'pluieAuMoins', nom: 'Jours de pluie au moins', unite: '', min: 0, max: 6, pas: 1, defaut: 0 },
+  // les tranchées (lot 3) : la rangée de chaque ligne (en m depuis le haut du secteur ; 1 est la plus avancée), le tracé, les boyaux. Le contrôle (`validerSecteur`) dit ce qui ne va pas.
+  ...[['nous', 'Nous'], ['eux', 'En face']].flatMap(([camp, nom]) => [0, 1, 2, 3].map(k => ({ cle: `tranchees.lignes.${camp}.${k}`, nom: `${nom}, ligne ${k + 1}`, unite: 'm', min: 6, max: 294, pas: 1, si: 'tranchees', groupe: 'Tranchées' }))),
+  { cle: 'tranchees.creneau', nom: 'Tracé des tranchées : amplitude', unite: 'm', min: 0.5, max: 2.5, pas: 0.1, si: 'tranchees', groupe: 'Tranchées' },
+  { cle: 'tranchees.boyaux', nom: 'Boyaux, par camp', unite: '', min: 1, max: 8, pas: 1, si: 'tranchees', groupe: 'Tranchées' },
 ];

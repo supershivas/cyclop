@@ -4,8 +4,10 @@
 // (un commit sur main, par l'API de GitHub) : assets/design/reglages.json.
 // Les outils : les réglages chiffrés (Jérôme, v0.1.0) et la carte, en lecture seule pour l'instant (`atelier-carte.js`).
 import { createPublisher, TOKEN_URL } from './lib/gh-publish.js?v=0.36.2';
+import { validerSecteur } from './tranchees.js?v=0.36.2';
+import { SECTEURS } from './data/secteur.js?v=0.36.2';
 import { ongletCarte } from './atelier-carte.js?v=0.36.2';
-import { chargerContenu, lireBrouillon, ecrireBrouillon, compterBrouillon, deplier } from './design-store.js?v=0.36.2';
+import { chargerContenu, lireBrouillon, ecrireBrouillon, compterBrouillon, deplier, secteurEffectif } from './design-store.js?v=0.36.2';
 
 const REPO = 'supershivas/cyclop';
 const $ = id => document.getElementById(id);
@@ -71,6 +73,11 @@ function ongletPublier(zone) {
         fichiers.push({ path: 'assets/design/reglages.json', json: enLigne });
       }
       if (b.secteurs && Object.keys(b.secteurs).length) {
+        // un secteur retouché est contrôlé avant d'être écrit (tranchées dans l'ordre, tracé qui ne se coupe pas…) : on refuse à voix haute
+        for (const id of Object.keys(b.secteurs)) {
+          const pb = validerSecteur(secteurEffectif(SECTEURS[id], contenu.publie.secteurs[id], deplier(b.secteurs[id])));
+          if (pb.length) throw new Error(`Secteur « ${SECTEURS[id].nom} » refusé : ${pb.join(' ; ')}. Corrigez-le dans l'onglet Carte.`);
+        }
         const enLigne = (await pub.readJSON('assets/design/secteurs.json')) || {};
         for (const [id, plat] of Object.entries(b.secteurs)) enLigne[id] = fusionner(enLigne[id] || {}, deplier(plat));
         fichiers.push({ path: 'assets/design/secteurs.json', json: enLigne });

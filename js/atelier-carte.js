@@ -11,6 +11,7 @@ import { etat as etatCase, hauteurQ } from './terrain.js?v=0.36.2';
 import { ligneY } from './tranchees.js?v=0.36.2';
 import { PARAMS } from './data/secteur-params.js?v=0.36.2';
 import { distanceForme, extremite } from './formes.js?v=0.36.2';
+import { validerSecteur } from './tranchees.js?v=0.36.2';
 import { lireBrouillon, ecrireBrouillon, lireChemin, deplier, secteurEffectif } from './design-store.js?v=0.36.2';
 
 const NOMS_ETAT = ['sec', 'humide', 'boue', 'eau', 'glace'];
@@ -73,46 +74,58 @@ export function ongletCarte(zone, { el, R = REGLAGES, publie = {}, aPublier = ()
   const plusTard = () => { clearTimeout(minuterie); minuterie = setTimeout(refaire, 120); };       // le terrain se refait (~0,3 s) : on attend que la main s'arrête
 
   // ─── Les retouches de relief : des formes, un historique pour annuler et rétablir (en mémoire : il ne survit pas à la page) ───
-  const NOMS_OUTILS = { regler: 'Lire', bosse: 'Bosse', creux: 'Creux', crete: 'Crête', plateau: 'Plateau', gomme: 'Gomme' };
+  const NOMS_OUTILS = { regler: 'Lire', bosse: 'Bosse', creux: 'Creux', crete: 'Crête', plateau: 'Plateau', arbre: 'Arbre', buisson: 'Buisson', bois: 'Bois', haie: 'Haie', degager: 'Dégager', gomme: 'Gomme' };
+  const RELIEF = ['bosse', 'creux', 'crete', 'plateau'];             // des formes de relief (`retouches`) ; les autres outils posent des objets (`objets`), sauf lire et gomme
   let outil = 'regler', rayon = 20, amplitude = 3, niveau = 3, trace = null, curseurCarte = null;
   const histoire = [], futur = [];
-  const formes = () => structuredClone(effectif().retouches || []);
-  const formesPubliees = () => secteurEffectif(SECTEURS[sel.value], publie[sel.value]).retouches || [];
-  function poserFormes(liste, { historique = true } = {}) {
-    if (historique) { histoire.push(formes()); futur.length = 0; }
-    noter('retouches', liste, formesPubliees());
-    panneauFormes(); redessiner(); plusTard();
-  }
-  const annuler = () => { if (histoire.length) { futur.push(formes()); poserFormes(histoire.pop(), { historique: false }); } };
-  const retablir = () => { if (futur.length) { histoire.push(formes()); poserFormes(futur.pop(), { historique: false }); } };
+  // deux listes, une seule histoire : un annuler défait la dernière pose, relief ou objet
+  const listes = () => { const S = effectif(); return { retouches: structuredClone(S.retouches || []), objets: structuredClone(S.objets || []) }; };
+  const publiees = () => { const S = secteurEffectif(SECTEURS[sel.value], publie[sel.value]); return { retouches: S.retouches || [], objets: S.objets || [] }; };
+  const formes = () => listes().retouches;
+  function ecrireListes(l) { const pub = publiees(); for (const cle of ['retouches', 'objets']) noter(cle, l[cle], pub[cle]); panneauFormes(); redessiner(); plusTard(); verifier(); }
+  function poserListe(cle, liste) { histoire.push(listes()); futur.length = 0; ecrireListes({ ...listes(), [cle]: liste }); }
+  const annuler = () => { if (histoire.length) { futur.push(listes()); ecrireListes(histoire.pop()); } };
+  const retablir = () => { if (futur.length) { histoire.push(listes()); ecrireListes(futur.pop()); } };
   const arrondi = v => Math.round(v * 2) / 2;
-  function poserForme(F) { poserFormes([...formes(), F]); }
+  const poserForme = F => { const cle = F.f ? 'retouches' : 'objets'; poserListe(cle, [...listes()[cle], F]); };
   function effacerPres(x, y) {
-    const liste = formes(); let k = -1, best = Infinity;
-    liste.forEach((F, i) => { const d = distanceForme(F, x, y); if (d < Math.max(F.r, 6) && d < best) { best = d; k = i; } });
-    if (k >= 0) { liste.splice(k, 1); poserFormes(liste); }
+    const l = listes(); let cible = null, best = Infinity;
+    for (const cle of ['retouches', 'objets']) l[cle].forEach((F, i) => { const d = distanceForme(F, x, y); if (d < Math.max(F.r || 0, 6) && d < best) { best = d; cible = [cle, i]; } });
+    if (cible) { const liste = l[cible[0]]; liste.splice(cible[1], 1); poserListe(cible[0], liste); }
+  }
+  // le contrôle du secteur tel qu'il serait publié : dit à voix haute, et l'onglet Publier le refait avant d'écrire
+  const verdict = el('div', { className: 'at-verdict' });
+  function verifier() {
+    const pb = validerSecteur(effectif());
+    verdict.replaceChildren(...(pb.length ? [el('p', { className: 'at-modifie', textContent: 'Ce secteur ne peut pas être publié :' }), el('ul', null, ...pb.map(t => el('li', { textContent: t })))] : []));
   }
   const formesEl = el('div', { className: 'at-formes' });
   function panneauFormes() {
-    const n = formes().length, pubJ = JSON.stringify(formesPubliees()), modif = JSON.stringify(formes()) !== pubJ;
-    const boutons = Object.entries(NOMS_OUTILS).map(([id, nom]) => el('button', { textContent: nom, className: id === outil ? 'is-on' : '', ariaPressed: String(id === outil), onclick: () => { outil = id; trace = null; panneauFormes(); redessiner(); } }));
+    const l = listes(), pub = publiees(), n = l.retouches.length, m = l.objets.length, modif = JSON.stringify(l) !== JSON.stringify(pub);
+    const bouton = ([id, nom]) => el('button', { textContent: nom, className: id === outil ? 'is-on' : '', ariaPressed: String(id === outil), onclick: () => { outil = id; trace = null; panneauFormes(); redessiner(); } });
+    const rangee = (titre, ids) => el('div', { className: 'at-outils', role: 'group', ariaLabel: titre }, el('span', { className: 'at-outils-titre', textContent: titre }), ...ids.map(id => bouton([id, NOMS_OUTILS[id]])));
     const glisseur = (nom, unite, min, max, pas, v, poser) => {
       const c = el('input', { type: 'range', min, max, step: pas, value: v, ariaLabel: nom }), t = el('span', { textContent: `${nom} ${v} ${unite}` });
       c.oninput = () => { poser(Number(c.value)); t.textContent = `${nom} ${c.value} ${unite}`; redessiner(); };
       return el('label', { className: 'at-glisseur' }, t, c);
     };
-    const lignes = [glisseur('Rayon', 'm', 3, 80, 1, rayon, v => { rayon = v; })];
+    const aRayon = outil !== 'regler' && outil !== 'gomme' && outil !== 'arbre' && outil !== 'buisson' && outil !== 'haie';
+    const lignes = [];
+    if (aRayon || outil === 'crete' || outil === 'haie') lignes.push(glisseur(outil === 'haie' ? 'Épaisseur du pinceau' : 'Rayon', 'm', 3, 80, 1, rayon, v => { rayon = v; }));
     if (outil === 'plateau') lignes.push(glisseur('Niveau', 'm', 0, 15, 0.5, niveau, v => { niveau = v; }));
-    else if (outil !== 'gomme' && outil !== 'regler') lignes.push(glisseur('Hauteur', 'm', 0.5, 12, 0.5, amplitude, v => { amplitude = v; }));
-    const aide = { regler: 'Choisissez un outil, puis cliquez sur la carte.', bosse: 'Un clic pose une bosse.', creux: 'Un clic creuse.', crete: 'Glissez d\u2019un point à l\u2019autre : une crête le long du trait.', plateau: 'Un clic aplanit à ce niveau (la hauteur lue au survol).', gomme: 'Un clic retire la retouche la plus proche.' }[outil];
-    formesEl.replaceChildren(el('h3', { textContent: 'Retouches de relief' }),
-      el('div', { className: 'at-outils', role: 'group', ariaLabel: 'Outil' }, ...boutons),
-      el('p', { className: 'at-note', textContent: aide }), ...(outil === 'regler' ? [] : lignes),
+    else if (RELIEF.includes(outil)) lignes.push(glisseur('Hauteur', 'm', 0.5, 12, 0.5, amplitude, v => { amplitude = v; }));
+    if (outil === 'haie') lignes.shift();
+    const aide = { regler: 'Choisissez un outil, puis cliquez sur la carte.', bosse: 'Un clic pose une bosse.', creux: 'Un clic creuse.', crete: 'Glissez d\u2019un point à l\u2019autre : une crête le long du trait.', plateau: 'Un clic aplanit à ce niveau (la hauteur lue au survol).',
+      arbre: 'Un clic plante un arbre.', buisson: 'Un clic plante un buisson.', bois: 'Un clic plante une tache d\u2019arbres serrés, jusqu\u2019au rayon.', haie: 'Glissez d\u2019un point à l\u2019autre : une haie, avec des trous.',
+      degager: 'Un clic retire les arbres et les buissons de la graine jusqu\u2019au rayon (pas ce que vous avez posé : la gomme).', gomme: 'Un clic retire la retouche ou l\u2019objet le plus proche. Pour déplacer : gommer, puis reposer.' }[outil];
+    formesEl.replaceChildren(el('h3', { textContent: 'Retouches de la carte' }),
+      rangee('Relief', ['bosse', 'creux', 'crete', 'plateau']), rangee('Objets', ['arbre', 'buisson', 'bois', 'haie', 'degager']), rangee('Autre', ['regler', 'gomme']),
+      el('p', { className: 'at-note', textContent: aide }), ...lignes,
       el('div', { className: 'at-row' },
         el('button', { textContent: 'Annuler', disabled: !histoire.length, onclick: annuler }),
         el('button', { textContent: 'Rétablir', disabled: !futur.length, onclick: retablir }),
-        el('button', { textContent: 'Tout effacer', disabled: !n, onclick: () => poserFormes([]) })),
-      el('p', { className: 'at-note' }, el('span', { textContent: `${n} retouche${n > 1 ? 's' : ''}`, className: modif ? 'at-modifie' : '' }), modif ? ' (pas encore publiées)' : ''));
+        el('button', { textContent: 'Tout effacer', disabled: !n && !m, onclick: () => { histoire.push(l); futur.length = 0; ecrireListes({ retouches: [], objets: [] }); } })),
+      el('p', { className: 'at-note' }, el('span', { textContent: `${n} forme${n > 1 ? 's' : ''} de relief, ${m} objet${m > 1 ? 's' : ''}`, className: modif ? 'at-modifie' : '' }), modif ? ' (pas encore publiés)' : ''), verdict);
   }
   // un clic ou un glissé sur la carte, avec l'outil choisi
   const enMetres = e => { const r = canvas.getBoundingClientRect(); return [arrondi((e.clientX - r.left) / r.width * C.T.W - C.marges.x), arrondi((e.clientY - r.top) / r.height * C.T.H - C.marges.y)]; };
@@ -120,13 +133,15 @@ export function ongletCarte(zone, { el, R = REGLAGES, publie = {}, aPublier = ()
     if (!C || e.button !== 0 || outil === 'regler') return;
     const [x, y] = enMetres(e);
     if (outil === 'gomme') return effacerPres(x, y);
-    if (outil === 'crete') { trace = { x, y, x2: x, y2: y }; canvas.setPointerCapture(e.pointerId); return; }
-    poserForme(outil === 'plateau' ? { f: 'plateau', x, y, r: rayon, h: niveau } : { f: outil, x, y, r: rayon, h: amplitude });
+    if (outil === 'crete' || outil === 'haie') { trace = { x, y, x2: x, y2: y }; canvas.setPointerCapture(e.pointerId); return; }
+    if (RELIEF.includes(outil)) return poserForme(outil === 'plateau' ? { f: 'plateau', x, y, r: rayon, h: niveau } : { f: outil, x, y, r: rayon, h: amplitude });
+    poserForme(outil === 'arbre' || outil === 'buisson' ? { o: outil, x, y } : { o: outil, x, y, r: rayon });
   };
   canvas.onpointerup = e => {
     if (!trace) return;
     const T = trace; trace = null;
-    if (Math.hypot(T.x2 - T.x, T.y2 - T.y) >= 4) poserForme({ f: 'crete', x: T.x, y: T.y, x2: T.x2, y2: T.y2, r: rayon, h: amplitude }); else redessiner();
+    if (Math.hypot(T.x2 - T.x, T.y2 - T.y) < 4) return redessiner();
+    poserForme(outil === 'haie' ? { o: 'haie', x: T.x, y: T.y, x2: T.x2, y2: T.y2 } : { f: 'crete', x: T.x, y: T.y, x2: T.x2, y2: T.y2, r: rayon, h: amplitude });
   };
 
   function panneau() {
@@ -145,21 +160,23 @@ export function ongletCarte(zone, { el, R = REGLAGES, publie = {}, aPublier = ()
         if (v === pub) delete g[p.cle]; else g[p.cle] = v;
         if (!Object.keys(g).length) delete br.secteurs[sel.value];
         if (!Object.keys(br.secteurs).length) delete br.secteurs;
-        ecrireBrouillon(br); aPublier();
+        ecrireBrouillon(br); aPublier(); verifier();
         plusTard();
       };
       curseur.oninput = () => poser(curseur.value); nombre.onchange = () => poser(nombre.value);
       const retour = el('button', { textContent: '\u21ba', title: `Revenir à ${pub}`, ariaLabel: `Revenir à la valeur publiée de ${p.nom}`, onclick: () => { poser(pub); } });
       rendre();
-      return el('div', { className: 'at-reglage' }, nom, curseur, nombre, el('span', { className: 'at-unite', textContent: p.unite }), retour);
+      const ligne = el('div', { className: 'at-reglage' }, nom, curseur, nombre, el('span', { className: 'at-unite', textContent: p.unite }), retour);
+      ligne.dataset.groupe = p.groupe || '';
+      return ligne;
     });
     const tout = el('button', { textContent: 'Tout remettre comme publié', onclick: () => {
       const br = lireBrouillon(); if (br.secteurs) { delete br.secteurs[sel.value]; if (!Object.keys(br.secteurs).length) delete br.secteurs; }
-      ecrireBrouillon(br); aPublier(); histoire.length = futur.length = 0; panneau(); panneauFormes(); refaire();
+      ecrireBrouillon(br); aPublier(); histoire.length = futur.length = 0; panneau(); panneauFormes(); verifier(); refaire();
     } });
     reglages.replaceChildren(el('h3', { textContent: 'Réglages du secteur' }),
       el('p', { className: 'at-note', textContent: 'En rouge : retouché dans ce navigateur, pas encore publié (onglet Publier). Le jeu de ce navigateur les utilise déjà, à la prochaine bataille. La carte se refait quand la main s\u2019arrête.' }),
-      ...rangees, tout);
+      ...rangees.flatMap((r, k) => r.dataset.groupe && r.dataset.groupe !== rangees[k - 1]?.dataset.groupe ? [el('h4', { textContent: r.dataset.groupe }), r] : [r]), tout);
   }
 
   function refaire() {
@@ -210,19 +227,19 @@ export function ongletCarte(zone, { el, R = REGLAGES, publie = {}, aPublier = ()
       }
     }
     if (cFormes.checked || outil !== 'regler') {
-      // les retouches : un anneau (le rayon) et un signe au centre, un trait pour une crête ; l'anneau du pinceau et le trait en cours
-      const ox = m.x, oy = m.y, glyphe = { bosse: '+', creux: '\u2212', crete: '+', plateau: '=' };
+      // les retouches et les objets : un anneau (le rayon) et un signe au centre, un trait pour une crête ou une haie ; l'anneau du pinceau et le trait en cours
+      const ox = m.x, oy = m.y, glyphe = { bosse: '+', creux: '\u2212', crete: '+', plateau: '=', bois: 'B', haie: 'H', degager: '\u00d7' };
       ctx.fillStyle = ctx.strokeStyle = PALETTE.o; ctx.lineWidth = 1 / k + 0.5; ctx.textAlign = 'center';
       const dessiner = (F, enCours) => {
-        const [x2, y2] = extremite(F);
-        ctx.setLineDash(F.f === 'creux' ? [3, 3] : enCours ? [2, 2] : []);
-        if (F.f === 'crete') { ctx.beginPath(); ctx.moveTo(ox + F.x, oy + F.y); ctx.lineTo(ox + x2, oy + y2); ctx.stroke(); }
-        for (const [px, py] of F.f === 'crete' ? [[F.x, F.y], [x2, y2]] : [[F.x, F.y]]) { ctx.beginPath(); ctx.arc(ox + px, oy + py, F.r, 0, 6.2832); ctx.stroke(); }
-        ctx.setLineDash([]); ctx.fillText(glyphe[F.f] || '', ox + (F.x + x2) / 2, oy + (F.y + y2) / 2 + 3);
+        const [x2, y2] = extremite(F), genre = F.f || F.o, segment = genre === 'crete' || genre === 'haie', r = F.r ?? 2.5;
+        ctx.setLineDash(genre === 'creux' || genre === 'degager' ? [3, 3] : enCours || genre === 'bois' ? [2, 2] : []);
+        if (segment) { ctx.beginPath(); ctx.moveTo(ox + F.x, oy + F.y); ctx.lineTo(ox + x2, oy + y2); ctx.stroke(); }
+        if (genre !== 'haie') for (const [px, py] of genre === 'crete' ? [[F.x, F.y], [x2, y2]] : [[F.x, F.y]]) { ctx.beginPath(); ctx.arc(ox + px, oy + py, r, 0, 6.2832); ctx.stroke(); }
+        ctx.setLineDash([]); ctx.fillText(glyphe[genre] || '', ox + (F.x + x2) / 2, oy + (F.y + y2) / 2 + 3);
       };
-      if (cFormes.checked) for (const F of effectif().retouches || []) dessiner(F, false);
-      if (trace) dessiner({ f: 'crete', ...trace, r: rayon, h: amplitude }, true);
-      else if (curseurCarte && outil !== 'regler' && outil !== 'gomme') dessiner({ f: outil, x: curseurCarte[0], y: curseurCarte[1], r: rayon, h: amplitude }, true);
+      if (cFormes.checked) { const S = effectif(); for (const F of [...(S.retouches || []), ...(S.objets || [])]) dessiner(F, false); }
+      if (trace) dessiner(outil === 'haie' ? { o: 'haie', ...trace } : { f: 'crete', ...trace, r: rayon }, true);
+      else if (curseurCarte && outil !== 'regler' && outil !== 'gomme' && outil !== 'haie') dessiner({ [RELIEF.includes(outil) ? 'f' : 'o']: outil, x: curseurCarte[0], y: curseurCarte[1], ...(outil === 'arbre' || outil === 'buisson' ? {} : { r: rayon }) }, true);
       ctx.textAlign = 'start'; ctx.setLineDash([]);
     }
     ctx.restore();
@@ -241,7 +258,7 @@ export function ongletCarte(zone, { el, R = REGLAGES, publie = {}, aPublier = ()
     const tr = T.troncon[c] >= 0 ? ' · tranchée' : T.troncon[c] === -2 ? ' · boyau' : '';
     lecture.textContent = `x ${x}, y ${y} m${zone}${tr} · hauteur ${(hauteurQ(T, c) / 4).toFixed(2)} m · ${NOMS_ETAT[etatCase(T, c, R)]} · herbe ${T.herbe[c]}`;
   };
-  sel.onchange = () => { histoire.length = futur.length = 0; trace = null; panneau(); panneauFormes(); refaire(); }; graine.onchange = refaire; zoom.onchange = redessiner;
+  sel.onchange = () => { histoire.length = futur.length = 0; trace = null; panneau(); panneauFormes(); verifier(); refaire(); }; graine.onchange = refaire; zoom.onchange = redessiner;
   window.addEventListener('resize', () => { if (canvas.isConnected) redessiner(); });
 
   zone.replaceChildren(
@@ -253,5 +270,6 @@ export function ongletCarte(zone, { el, R = REGLAGES, publie = {}, aPublier = ()
   );
   panneau();
   panneauFormes();
+  verifier();
   refaire();
 }

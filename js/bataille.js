@@ -79,7 +79,7 @@ export function nouvelleBataille(graine, R, opts = {}) {
     marges: { ...S.marges },            // le terrain déborde du secteur (zone())
     regiments: [], pertes: [0, 0], pertesJour: [[0, 0]], blesses: [0, 0],
     corps: [],                  // les morts restent où ils sont tombés : [x×10, y×10, camp, jour, id]
-    sol: Object.fromEntries(['relief', 'arbres', 'bois', 'haies', 'buissons', 'retouches'].filter(k => S[k] !== undefined).map(k => [k, structuredClone(S[k])])),   // ce qui fait le sol du secteur, copié : les retouches de l'atelier (lots 1 et 2) ne changent pas une partie en cours
+    sol: Object.fromEntries(['relief', 'arbres', 'bois', 'haies', 'buissons', 'retouches', 'objets', 'tranchees'].filter(k => S[k] !== undefined).map(k => [k, structuredClone(S[k])])),   // ce qui fait le sol du secteur, copié : les retouches de l'atelier (lots 1 et 2) ne changent pas une partie en cours
     tranchees: !!S.tranchees,   // (les batailles d'avant la v0.4.0 n'en ont pas)
     troncons: [],               // qui tient chaque tronçon (0 nous, 1 en face)
     prises: [[0, 0]],           // tronçons pris par chaque camp, jour par jour
@@ -161,14 +161,23 @@ function formation(reg, x, y, largeurMax, R, forme = 'bloc') {
 /* Le secteur de bataille dans le terrain : { x0, y0, x1, y1 } (mètres). Autour,
    des marges sans régiments : les ordres n'y vont pas. */
 export function zone(B) {
-  const S = SECTEURS[B.etat.secteur], m = B.etat.marges;
+  const S = secteurDuJeu(B.etat), m = B.etat.marges;
   return { x0: m.x, y0: m.y, x1: m.x + S.largeur, y1: m.y + S.hauteur };
+}
+
+/* Le secteur d'une partie : sa donnée, et par-dessus ce qui fait son sol tel que la partie l'a reçu au départ (`etat.sol`), pas tel que l'atelier l'a republié depuis
+   (une partie d'avant n'a pas `etat.sol` : elle lit le secteur d'aujourd'hui). Gardé par état : les règles le demandent à chaque pas. */
+const secteurs = new WeakMap();
+export function secteurDuJeu(etat) {
+  let S = secteurs.get(etat);
+  if (!S || S.sol !== etat.sol) { S = { ...SECTEURS[etat.secteur], ...etat.sol }; Object.defineProperty(S, 'sol', { value: etat.sol, enumerable: false }); secteurs.set(etat, S); }
+  return S;
 }
 
 // L'état plus ce qui se refait (terrain, foule, champs)
 function monter(etat, R) {
   // le sol que la partie a reçu au départ (`etat.sol`), pas celui que l'atelier a republié depuis ; une partie d'avant lit le secteur
-  const S = { ...SECTEURS[etat.secteur], ...etat.sol }, m = etat.marges;
+  const S = secteurDuJeu(etat), m = etat.marges;
   const W = S.largeur + 2 * m.x, H = S.hauteur + 2 * m.y;
   const { terrain, lignes, troncons } = terrainDuSecteur(S, m, etat.graine, R, { tranchees: !!etat.tranchees });
   const faces = Int8Array.from(troncons, t => lignes[t.ligne].face);
@@ -193,7 +202,7 @@ function monter(etat, R) {
    changé, c'est ce que le dessin montre avant le clic, v0.21.0), puis `ordonnerMarche` l'applique. */
 function planMarche(B, ids, x, y, forme = 'bloc', camp = NOUS) {
   const { etat, R } = B;
-  const S = SECTEURS[etat.secteur];
+  const S = secteurDuJeu(etat);
   if (etat.phase !== 'jour') return { refus: 'La nuit, les ordres attendent l\'aube.' };
   let regs = ids.map(id => etat.regiments[id]).filter(r => r && r.camp === camp && r.effectif > 0);
   if (!regs.length) return { refus: 'Aucun régiment choisi.' };
@@ -320,7 +329,7 @@ export function peutBarrage(B, cal, x, y, camp = NOUS) {
 /* Un barrage d'artillerie autour de (x, y). */
 export function ordonnerBarrage(B, cal, x, y, camp = NOUS) {
   const { etat } = B;
-  const S = SECTEURS[etat.secteur];
+  const S = secteurDuJeu(etat);
   const C = CALIBRES[cal];
   void S;
   if (!C) return { refus: `Pas de batterie de ${cal}.` };
@@ -339,7 +348,7 @@ export function ordonnerBarrage(B, cal, x, y, camp = NOUS) {
 
 /* L'arrière de chaque camp [nous, en face] : la rangée derrière sa dernière ligne, où les blessés qui marchent s'arrêtent (Jérôme, v0.35.0) */
 export function arriereDe(B) {
-  const { etat, R } = B, Ld = SECTEURS[etat.secteur].tranchees?.lignes, y0 = etat.marges.y;
+  const { etat, R } = B, Ld = secteurDuJeu(etat).tranchees?.lignes, y0 = etat.marges.y;
   return Ld ? [y0 + Math.max(...Ld.nous) + R.soldat.arriere, y0 + Math.min(...Ld.eux) - R.soldat.arriere] : null;
 }
 
@@ -690,10 +699,10 @@ export function nomTroncon(B, t) {
    La logique coupe le front en colonnes de 50 m (`secteurDe`, numérotées de l'ouest à l'est). Le joueur voit quatre secteurs de 100 m,
    A à D de l'ouest à l'est (un régiment de départ en occupe un, sans chevaucher le voisin) et quatre lignes par camp, numérotées de la
    plus avancée : une tranchée se dit « B1 » (secteur B, notre 1re ligne), « B2 en face » (leur 2e ligne). */
-export const nombreSecteurs = B => SECTEURS[B.etat.secteur].regiments;
-export const largeurSecteur = B => SECTEURS[B.etat.secteur].largeur / SECTEURS[B.etat.secteur].regiments;
+export const nombreSecteurs = B => secteurDuJeu(B.etat).regiments;
+export const largeurSecteur = B => secteurDuJeu(B.etat).largeur / secteurDuJeu(B.etat).regiments;
 export function secteurDe(B, x) {
-  const n = SECTEURS[B.etat.secteur].regiments;
+  const n = secteurDuJeu(B.etat).regiments;
   return Math.max(1, Math.min(n, Math.floor((x - zone(B).x0) / largeurSecteur(B)) + 1));
 }
 export const nombreZones = B => Math.ceil(nombreSecteurs(B) / 2);
@@ -814,7 +823,7 @@ function champDe(B, reg) {
 function enFace(B, rng) {
   const { etat, R, armee: A } = B;
   if (etat.deux) return;                     // un joueur commande en face : pas d'IA
-  const S = SECTEURS[etat.secteur];
+  const S = secteurDuJeu(etat);
   if (etat.temps >= etat.ia.barrage) {
     etat.ia.barrage = etat.temps + R.ia.barrage * (0.6 + rng() * 0.8);
     const d = A.dens[NOUS];
@@ -931,7 +940,7 @@ export function* etapesRestaurer(p, R) {
   // une sauvegarde d'avant les marges (v0.2) : tout glisse de la largeur des marges
   const avantMarges = !etat.marges;
   if (avantMarges) {
-    const m = etat.marges = { ...SECTEURS[etat.secteur].marges };
+    const m = etat.marges = { ...secteurDuJeu(etat).marges };
     for (const imp of etat.impacts) { imp[2] += m.x * 10; imp[3] += m.y * 10; }
     for (const r of etat.regiments) for (const o of [r.ordre, r.depart]) { o.x += m.x; o.y += m.y; }
     for (const b of etat.barrages) { b.x += m.x; b.y += m.y; }
@@ -941,7 +950,7 @@ export function* etapesRestaurer(p, R) {
   etat.corps ??= [];          // (avant la v0.3.3, les morts ne restaient pas)
   etat.grades ??= {};
   etat.reserves ??= [0, 0]; etat.mission ??= null; etat.issue ??= null;   // (avant la v0.9.0 : ni mission ni réserves)
-  etat.parRegiment ??= Math.floor(etat.parCamp / SECTEURS[etat.secteur].regiments);
+  etat.parRegiment ??= Math.floor(etat.parCamp / secteurDuJeu(etat).regiments);
   etat.travaux ??= []; etat.tombes ??= []; etat.evacues ??= []; etat.nuits ??= [];   // (avant la v0.6.0 : pas de corvées)
   for (const reg of etat.regiments) { reg.moral ??= R.moral.depart; reg.deroute ??= false; reg.vivres ??= R.nuit.vivres; reg.stance ??= STANCE_DEFAUT; }   // (avant la v0.5.0 : pas de moral ; avant la v0.36.0 : pas de posture)
   etat.deux ??= false; etat.batteriesEux ??= Object.fromEntries(NOMS_CALIBRES.map(c => [c, 0]));

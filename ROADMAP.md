@@ -11,14 +11,15 @@ Statuts : **à l'étude** · **validé** (Jérôme a tranché) · **en cours** �
 
 ### L'éditeur de carte de l'atelier
 
-**Statut** : lots 0 à 2 faits (Jérôme : format « retouches sur la génération ») ; reste à mesurer sur une vraie carte retouchée et publiée
+**Statut** : lots 0 à 3 faits (Jérôme : format « retouches sur la génération ») ; reste à mesurer sur une vraie carte retouchée et publiée
 
 Principe : un secteur garde sa graine et son bruit (`creerTerrain`) ; l'éditeur ajoute des retouches déclaratives (formes de relief, objets), jamais une carte de hauteurs entière (fichier lourd, diffs illisibles, déterminisme perdu).
 
 - [x] Lot 0 — l'onglet « Carte » de l'atelier, en lecture seule (`atelier-carte.js`, `secteur-terrain.js`)
 - [x] Lot 1 — curseurs de `relief`, d'arbres, de bois, de haies, de buissons, de pluie ; brouillon `secteurs`, publication dans `assets/design/secteurs.json`, fusion au lancement (`appliquerSecteurs`). Reste, avec le lot 2 : garder les retouches dans `etat` pour qu'une partie sauvegardée refasse son sol, pas celui d'une carte republiée
 - [x] Lot 2 — retouches de relief (bosse, creux, crête, plateau, gomme), annuler / rétablir, appliquées dans `creerTerrain` (`formes.js`) ; la partie garde son sol dans `etat.sol`
-- [ ] Plus tard (non décidé) — objets posés, lignes de tranchées, « Essayer dans le jeu », export / import JSON
+- [x] Lot 3 — objets posés (arbre, buisson, bois, haie, dégager), lignes de tranchées au curseur, contrôle à voix haute (`validerSecteur`) qui refuse la publication d'un secteur invalide ; la partie garde aussi ses tranchées et ses objets (`secteurDuJeu`)
+- [ ] Lot 4 (à décider) — « Essayer dans le jeu » (une bataille avec le brouillon), export / import JSON d'un secteur, déplacer un objet à la souris, un nom et un résumé modifiables
 
 ### Refonte UX/UI (docs/ui-cible.md)
 
