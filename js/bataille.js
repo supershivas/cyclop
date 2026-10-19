@@ -915,6 +915,12 @@ export function horloge(B) {
     gel: !!METEO[etat.meteo[etat.jour - 1]].gel,
   };
 }
+/* Pour regarder un terrain sans jouer (la vue 3D de l'atelier) : l'heure du premier jour et le temps qu'il fait ; rien d'autre ne change */
+export function regarderAu(B, heure, meteo = 'sec') {
+  const { etat, R } = B, d = R.jour.heureDebut, f = Math.max(0, Math.min(0.999, (heure - d) / (R.jour.heureFin - d)));
+  etat.tickJour = Math.round(f * ticksParJour(R));
+  etat.meteo[etat.jour - 1] = meteo;
+}
 export const effectifs = B => [NOUS, EUX].map(c => B.etat.regiments.filter(r => r.camp === c).reduce((s, r) => s + r.effectif, 0));
 
 // ─── Sauvegarde ──────────────────────────────────────────────────────────

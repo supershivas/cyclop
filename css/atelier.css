@@ -64,3 +64,12 @@ body { font: 15px/1.45 system-ui, -apple-system, 'Segoe UI', sans-serif; color: 
   .ed-boite { border-right: 0; }
 }
 .at-work .ed-histo button { padding: 0 4px; font-size: 13px; }
+.ed-3d { grid-area: scene; min-width: 0; min-height: 0; overflow: hidden; background: #16130f; display: flex; align-items: center; justify-content: center; cursor: grab; touch-action: none; }
+.ed-3d[hidden], .ed-scene[hidden] { display: none; }
+.ed-3d canvas { display: block; image-rendering: pixelated; }
+.ed-vues { display: inline-flex; }
+.at-work .ed-vues button { border-radius: 0; min-width: 64px; }
+.at-work .ed-vues button:first-child { border-radius: 6px 0 0 6px; }
+.at-work .ed-vues button:last-child { border-radius: 0 6px 6px 0; margin-left: -1px; }
+.at-work .ed-vues button.is-on { background: #1c1c1e; color: #fff; border-color: #1c1c1e; }
+@media (max-width: 1000px) { .ed-3d { height: 60vh; } }

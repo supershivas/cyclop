@@ -60,8 +60,20 @@ export function ongletCarte(zone, { el, R = REGLAGES, publie = {}, aPublier = ()
   const [cFormes, lFormes] = coche('Retouches', 'Les formes et les objets que vous avez posés.', true);
   const [cReperes, lReperes] = coche('Repères', 'Une grille tous les 50 m, avec les distances depuis l’ouest et le haut du secteur.', false);
   const zoom = el('select', { ariaLabel: 'Zoom', title: 'Taille de la carte à l’écran' }, ...[['0', 'Ajusté à l’écran'], ['1', 'Zoom × 1'], ['2', 'Zoom × 2'], ['3', 'Zoom × 3'], ['4', 'Zoom × 4']].map(([v, t]) => el('option', { value: v, textContent: t })));
+  // Plan (2D, où l'on construit) ou 3D (le moteur du jeu, en lecture seule)
+  const vuePlan = el('button', { textContent: 'Plan', className: 'is-on', title: 'Le terrain vu de dessus : c\u2019est là qu\u2019on construit.', onclick: () => basculer('plan') });
+  const vue3d = el('button', { textContent: '3D', title: 'Le terrain tel que le jeu le montre : sol en cubes, tranchées, arbres, soldats. On le regarde (tourner, déplacer, zoomer) ; les outils agissent sur le plan.', onclick: () => basculer('3d') });
+  const [cSoldats, lSoldats] = coche('Soldats (3D)', 'Montre les régiments à leur place de départ, pour juger de l\u2019échelle.', true);
+  cSoldats.onchange = () => { perimee3D = true; if (mode === '3d') majVue3D(); };
+  // la lumière de la vue 3D : l'heure et le temps qu'il fait (le jeu change de lumière toute la journée, et de temps d'un jour à l'autre)
+  const AMBIANCES = { 'plein-jour': ['Plein jour', 12, 'sec'], soir: ['Soir', 17.5, 'sec'], aube: ['Aube', 6.5, 'sec'], pluie: ['Pluie', 12, 'pluie'], brouillard: ['Brouillard', 10, 'brouillard'], gel: ['Gel', 9, 'gel'] };
+  const ambiance = el('select', { ariaLabel: 'Lumière de la vue 3D', title: 'La lumière et le temps de la vue 3D : l\u2019heure change les ombres, la pluie ou le brouillard changent l\u2019air. Cela ne change pas la carte.' },
+    ...Object.entries(AMBIANCES).map(([id, [nom]]) => el('option', { value: id, textContent: nom })));
+  ambiance.onchange = () => { const [, h, m] = AMBIANCES[ambiance.value]; v3d?.regler(h, m); };
   const canvas = el('canvas', { className: 'at-carte' });
+  const hote3d = el('div', { className: 'ed-3d', hidden: true });
   const scene = el('div', { className: 'ed-scene' }, canvas);
+  let mode = 'plan', v3d = null, perimee2D = true, perimee3D = true;
   const etatBarre = el('div', { className: 'ed-etat', textContent: 'Survolez la carte pour lire le sol sous la souris.' });
   const boite = el('div', { className: 'ed-boite' });
   const insp = el('div', { className: 'ed-insp' });
@@ -222,10 +234,35 @@ export function ongletCarte(zone, { el, R = REGLAGES, publie = {}, aPublier = ()
   }
 
   // ─── La carte ───
+  // le terrain se refait pour la vue qu'on regarde ; l'autre se refera quand on y passera
   function refaire() {
+    perimee2D = perimee3D = true;
+    if (mode === '3d') majVue3D(); else majPlan();
+  }
+  function majPlan() {
+    if (!perimee2D && C) return redessiner();
     C = monterCarte(R, effectif(), Number(graine.value) | 0);
-    sol = null;
+    sol = null; perimee2D = false;
     redessiner();
+  }
+  async function majVue3D() {
+    if (!v3d) {
+      etatBarre.textContent = 'Chargement de la vue 3D…';
+      v3d = creerVue3D3(); v3d = await v3d;
+    }
+    if (mode !== '3d') return;
+    if (perimee3D || !v3d.bataille) { { const [, h, m] = AMBIANCES[ambiance.value]; v3d.regler(h, m); } v3d.monter(sel.value, effectif(), Number(graine.value) | 0, { soldats: cSoldats.checked }); perimee3D = false; }
+    v3d.activer(true);
+    etatBarre.textContent = 'Vue 3D : glisser pour tourner et incliner · clic droit (ou Maj) + glisser pour déplacer · molette pour zoomer. Les outils agissent sur le plan.';
+  }
+  const creerVue3D3 = async () => { const { creerVue3D } = await import('./atelier-3d.js?v=0.36.2'); return creerVue3D({ R, hote: hote3d }); };
+  function basculer(m) {
+    if (m === mode) return;
+    mode = m;
+    vuePlan.className = m === 'plan' ? 'is-on' : ''; vue3d.className = m === '3d' ? 'is-on' : '';
+    canvas.hidden = m === '3d'; scene.hidden = m === '3d'; hote3d.hidden = m !== '3d';
+    boite.inert = m === '3d'; boite.style.opacity = m === '3d' ? '.45' : '';
+    if (m === '3d') majVue3D(); else { v3d?.activer(false); majPlan(); }
   }
   const echelle = () => Number(zoom.value) || Math.max(1, Math.min(4, Math.ceil((scene.clientWidth || 840) / (C ? C.T.W : 840))));
   function redessiner() {
@@ -359,9 +396,9 @@ export function ongletCarte(zone, { el, R = REGLAGES, publie = {}, aPublier = ()
   zone.classList.add('at-plein');
   zone.replaceChildren(el('div', { className: 'ed' },
     el('div', { className: 'ed-haut' },
-      el('label', { className: 'at-coche' }, 'Secteur ', sel), el('label', { className: 'at-coche', title: graine.title }, 'Graine ', graine), nouvelle, zoom,
-      el('span', { className: 'ed-calques' }, lCourbes, lArbres, lLignes, lFormes, lReperes), essayer),
-    boite, scene, etatBarre, insp));
+      el('span', { className: 'ed-vues', role: 'group', ariaLabel: 'Vue' }, vuePlan, vue3d), el('label', { className: 'at-coche' }, 'Secteur ', sel), el('label', { className: 'at-coche', title: graine.title }, 'Graine ', graine), nouvelle, zoom,
+      el('span', { className: 'ed-calques' }, lCourbes, lArbres, lLignes, lFormes, lReperes, lSoldats, el('label', { className: 'at-coche', title: ambiance.title }, 'Lumière (3D) ', ambiance)), essayer),
+    boite, scene, hote3d, etatBarre, insp));
   canvas.style.cursor = 'default';
   tout();
   refaire();

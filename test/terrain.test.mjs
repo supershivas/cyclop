@@ -241,3 +241,14 @@ test('chaque réglage de secteur, chaque outil et chaque champ de forme porte un
   for (const [id, o] of Object.entries(OUTILS)) { assert.ok(o.nom && o.aide && o.icone, id); for (const k of o.champs || []) { const c = champ(k, o.genre); assert.ok(c.nom && c.desc, `${id}.${k}`); } }
   for (const k of Object.keys(CHAMPS)) { const c = champ(k); assert.ok(c.nom && c.desc, k); }
 });
+
+group('atelier — la vue 3D regarde le terrain à une heure donnée');
+test('regarderAu règle l\'heure et le temps du premier jour sans toucher au reste', async () => {
+  const { nouvelleBataille, regarderAu, horloge } = await import('../js/bataille.js');
+  const B = nouvelleBataille(5, R, { soldats: 100, jours: 3 }), avant = B.etat.meteo.slice(1).join();
+  regarderAu(B, 12, 'pluie');
+  const h = horloge(B);
+  assert.equal(h.heure, 12); assert.equal(h.meteo, 'pluie');
+  assert.equal(B.etat.meteo.slice(1).join(), avant, 'les autres jours ne changent pas');
+  regarderAu(B, 17.5, 'sec'); assert.deepEqual([horloge(B).heure, horloge(B).minute], [17, 30]);
+});
