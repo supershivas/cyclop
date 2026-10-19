@@ -23,6 +23,7 @@ import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.35.0';
 import { METEO, TRANSITIONS, PREVISION_JUSTE } from './data/meteo.js?v=0.35.0';
 import { SECTEURS } from './data/secteur.js?v=0.35.0';
 import { REGIMENTS } from './data/lexique.js?v=0.35.0';
+import { STANCES, STANCE_DEFAUT } from './data/stances.js?v=0.35.0';
 import { grade } from './identite.js?v=0.35.0';
 import { corvees, rejouerTravaux } from './nuit.js?v=0.35.0';
 
@@ -110,7 +111,7 @@ export function nouvelleBataille(graine, R, opts = {}) {
         id: etat.regiments.length, camp,
         nom: camp === NOUS ? REGIMENTS[r % REGIMENTS.length] : opts.deux ? REGIMENTS[(r + nReg) % REGIMENTS.length] : null,
         effectif, initial: effectif, pertes: 0,
-        moral: R.moral.depart, deroute: false, vivres: R.nuit.vivres,
+        moral: R.moral.depart, deroute: false, vivres: R.nuit.vivres, stance: STANCE_DEFAUT,
         ordre: null, depart: null,
       };
       if (etat.tranchees) {
@@ -239,7 +240,7 @@ function planMarche(B, ids, x, y, forme = 'bloc', camp = NOUS) {
 export function ordonnerMarche(B, ids, x, y, forme, camp = NOUS) {
   const p = planMarche(B, ids, x, y, forme, camp);
   if (p.refus) return { refus: p.refus };
-  for (const { r, ordre } of p.items) { r.ordre = ordre; reattribuer(B, r); }
+  for (const { r, ordre } of p.items) { r.ordre = ordre; r.stance = STANCE_DEFAUT; reattribuer(B, r); }   // (la posture est une consigne de place : marcher la remet à volonté)
   const res = p.tranchee ? { ok: true, regiments: p.regs.map(r => r.id), tranchee: true, ligne: p.ligne, troncons: p.troncons } : { ok: true, regiments: p.regs.map(r => r.id) };
   return p.raison ? { ...res, refus: p.raison } : res;
 }
@@ -281,6 +282,26 @@ function reattribuer(B, reg) {
     const col = ids.slice(c * rangs, (c + 1) * rangs).sort((a, b) => prof(a) - prof(b) || a - b);
     col.forEach((i, r) => { A.slot[i] = r * o.cols + c; });
   }
+}
+
+/* La posture à sec (v0.36.0) : quels régiments la prendraient, sans rien changer. Même refus que la marche : la nuit, la déroute. */
+export function peutStance(B, ids, stance, camp = NOUS) {
+  const { etat } = B;
+  if (!STANCES[stance]) return { refus: `Pas de posture « ${stance} ».` };
+  if (etat.phase !== 'jour') return { refus: 'La nuit, les ordres attendent l\'aube.' };
+  const regs = ids.map(id => etat.regiments[id]).filter(r => r && r.camp === camp && r.effectif > 0);
+  if (!regs.length) return { refus: 'Aucun régiment choisi.' };
+  const obeit = regs.filter(r => !r.deroute);
+  const raison = obeit.length < regs.length ? regs.filter(r => r.deroute).map(r => `${r.nom ?? 'Un régiment'} est en déroute`).join(' ; ') + '.' : null;
+  if (!obeit.length) return { refus: raison };
+  return raison ? { ok: true, regiments: obeit.map(r => r.id), refus: raison } : { ok: true, regiments: obeit.map(r => r.id) };
+}
+/* La posture des régiments choisis : à volonté, feu retenu… Rend { ok, regiments } (et `refus` pour ceux qui n'obéissent pas) ou { refus }. */
+export function ordonnerStance(B, ids, stance, camp = NOUS) {
+  const p = peutStance(B, ids, stance, camp);
+  if (!p.ok) return p;
+  for (const id of p.regiments) B.etat.regiments[id].stance = stance;
+  return p;
 }
 
 /* Le barrage à sec : { ok } ou { refus }, sans rien changer (à deux, on dit le refus tout de suite, l'ordre part ensuite pour les deux machines). */
@@ -918,7 +939,7 @@ export function* etapesRestaurer(p, R) {
   etat.reserves ??= [0, 0]; etat.mission ??= null; etat.issue ??= null;   // (avant la v0.9.0 : ni mission ni réserves)
   etat.parRegiment ??= Math.floor(etat.parCamp / SECTEURS[etat.secteur].regiments);
   etat.travaux ??= []; etat.tombes ??= []; etat.evacues ??= []; etat.nuits ??= [];   // (avant la v0.6.0 : pas de corvées)
-  for (const reg of etat.regiments) { reg.moral ??= R.moral.depart; reg.deroute ??= false; reg.vivres ??= R.nuit.vivres; }   // (avant la v0.5.0 : pas de moral)
+  for (const reg of etat.regiments) { reg.moral ??= R.moral.depart; reg.deroute ??= false; reg.vivres ??= R.nuit.vivres; reg.stance ??= STANCE_DEFAUT; }   // (avant la v0.5.0 : pas de moral ; avant la v0.36.0 : pas de posture)
   etat.deux ??= false; etat.batteriesEux ??= Object.fromEntries(NOMS_CALIBRES.map(c => [c, 0]));
   etat.abris ??= {}; etat.prisonniers ??= [];   // (avant la v0.11.0 : ni abris ni coups de main ; ni vivres)
   etat.troncons ??= []; etat.melee ??= etat.troncons.map(() => 0); etat.prises ??= etat.pertesJour.map(() => [0, 0]);   // (avant la v0.4.0 : pas de tranchées)

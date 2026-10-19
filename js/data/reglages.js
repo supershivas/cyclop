@@ -87,6 +87,11 @@ export const REGLAGES = {
     abri: 0.45,           // dans un creux d'un demi-mètre : la chance est multipliée par…
     mouvement: 0.75,      // un homme qui marche à pleine vitesse échappe au coup avec cette chance (proportionnelle à sa vitesse) : un assaut à découvert coûte moins (v0.17.0)
   },
+  // les postures d'un régiment (v0.36.0 ; textes : data/stances.js). Multiplicateurs de `tir` ; `volonte` est le tir d'avant : tout à 1.
+  stance: {
+    volonte: { portee: 1, precision: 1, periode: 1 },
+    retenu: { portee: 0.5, precision: 1.5, periode: 1 },   // portée : la part de `tir.portee` (35 m) ; périodes et précision à régler à la mesure (scripts/mesure-stances.mjs)
+  },
   obus: {
     boue: 0.5,            // dans la boue, l'obus s'enfouit : rayon et lèvre multipliés par…
     abri: 0.6,            // un soldat dans un creux : chance multipliée par…

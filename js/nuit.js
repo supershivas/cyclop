@@ -333,7 +333,7 @@ function relever(B, vieux, rng) {
   const reg = {
     id: etat.regiments.length, camp: vieux.camp,
     nom: vieux.camp === 0 ? REGIMENTS[deNous % REGIMENTS.length] : null,
-    effectif: n, initial: n, pertes: 0, moral: R.moral.depart, deroute: false, vivres: R.nuit.vivres,
+    effectif: n, initial: n, pertes: 0, moral: R.moral.depart, deroute: false, vivres: R.nuit.vivres, stance: 'volonte',
     ordre: structuredClone(vieux.ordre), depart: structuredClone(vieux.depart), arrive: etat.jour + 1,
   };
   etat.regiments.push(reg);

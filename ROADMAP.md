@@ -177,9 +177,9 @@ touches (**boutons dans le rabat seulement, puis Maj+chiffre**) ; une posture su
 
 **Plan fin (lots)**
 
-1. *Logique* : `reglages.js` (`stance`), `data/stances.js` (id, nom, court, dit), `reg.stance` (`??= 'volonte'` à la relecture), filtre dans `tirer` (portée) et facteurs de précision / cadence ;
+1. ✅ **Fait (cadrage v0.36.0, sans version : aucun effet visible).** *Logique* : `reglages.js` (`stance`), `data/stances.js` (id, nom, court, dit), `reg.stance` (`??= 'volonte'` à la relecture), filtre dans `tirer` (portée) et facteurs de précision / cadence ;
    ordre des tirages inchangé en `volonte` (test : une bataille sans stance donne les mêmes morts qu'avant, graines 3, 7, 8).
-2. *Commande* : `ordonnerStance(B, ids, stance, camp)` + `peutStance`, refus à voix haute (déroute, nuit) ; commande `stance` de `executerCmd` ; `empreinteEtat` ; test lockstep.
+2. *Commande* (`ordonnerStance` / `peutStance` existent déjà, lot 1) : refus à voix haute (déroute, nuit) ; commande `stance` de `executerCmd` ; `empreinteEtat` ; test lockstep.
 3. *HUD* : boutons dans le rabat, mot de la posture dans `actionDe` et sous le nom de la carte, ligne du carnet ; `test/fumee.json` réécrit ; grisé et raison au clic.
 4. *Dessin* : `couvert` = hommes tapis (`TAPI`), `retenu` = fusil bas, pas d'éclair hors portée (le dessin seulement) ; image ajoutée à `test/rendu.json` avant.
 5. *IA et équilibre* : `enFace` choisit sa posture ; mesure (`scripts/mesure.mjs`, graines 3, 7, 8, 9 000 pas) : morts, mêlées, durée d'un assaut, pour chaque posture contre chaque autre.
@@ -194,6 +194,9 @@ touches (**boutons dans le rabat seulement, puis Maj+chiffre**) ; une posture su
 
 Recommandé : A, mesurer, puis B.
 </details>
+
+**Cadrage (Jérôme)** : deux postures (volonté / retenu) ; l'IA d'en face n'en use pas avant le lot 5 ; boutons du rabat + Maj+chiffre (touche physique, Maj+1 volonté, Maj+2 retenu) ; un ordre de marche remet à volonté, sans mémoire.
+**Mesure du lot 1** (détail dans le `CLAUDE.md`, « Les postures, mesurées ») : `retenu` à 35 m / ×1,5 est neutre pour les morts de l'attaquant et coûte +28 % de morts au défenseur ; à 49 m ou à ×2,5 il domine. Le point d'équilibre reste à régler (session « Équilibre des stances »), avec un scénario où l'assaut atteint la tranchée (le tir seul ne l'y mène jamais en 300 s). `fatB` n'a aucun effet sur le tir : pas de prix par la fatigue.
 
 **Dettes anticipées** : touches (voir plus haut) ; sans munitions, `retenu` n'a pas de vrai coût (le prix est la portée et la cadence : à mesurer, et à relier aux vivres si on ajoute des
 cartouches un jour) ; `couvert` change `prises` (la mêlée) : test « la mêlée » à étendre ; l'IA ne doit pas devenir invulnérable en `couvert` ; deux : la posture est une commande.

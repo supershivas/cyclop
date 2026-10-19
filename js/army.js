@@ -98,6 +98,12 @@ export function place(o, slot, out) {
 
 const pl = [0, 0];
 
+/* Les nombres de la posture d'un régiment (`R.stance`, data/stances.js) ; un régiment sans posture tire à volonté. */
+export const parametresStance = (R, id) => R.stance[id] ?? R.stance.volonte;
+/* La chance de toucher d'un tir : la densité du carré visé, l'adresse acquise, la posture. */
+export const chanceTir = (R, stance, densite, exp) =>
+  R.tir.precision * parametresStance(R, stance).precision * Math.min(1, densite / R.tir.densite) * (1 + R.experience.adresse * exp);
+
 /* Un pas de la foule. ctx : { T, R, regiments, champDe(reg) → champ | null,
    rng, dt, gel, frapper(i, cause, gravite) }. frapper blesse ou tue (gravite :
    la chance d'être tué) ; les morts du pas sont marqués (A.mort) et retirés par
@@ -198,10 +204,10 @@ export function pasArmee(A, ctx) {
     tirT[i] -= dt;
     if (tirT[i] <= 0) {
       const ebranle = r.moral !== undefined && r.moral < R.moral.ebranle;
-      tirT[i] = R.tir.periode * (0.5 + rng()) * (blessure[i] === 1 ? Sd.brasBlesse : 1) * (ebranle ? R.moral.tirEbranle : 1);
+      tirT[i] = R.tir.periode * (0.5 + rng()) * (blessure[i] === 1 ? Sd.brasBlesse : 1) * (ebranle ? R.moral.tirEbranle : 1) * parametresStance(R, r.stance).periode;
       // la terreur, ou la déroute : on ne tire plus
       // (sans ennemi à portée, il ne tire pas : ni fatigue ni expérience)
-      if (!retrait && peur[i] < Sd.terreur && !r.deroute && tirer(A, i, o, ctx)) {
+      if (!retrait && peur[i] < Sd.terreur && !r.deroute && tirer(A, i, o, ctx, r.stance)) {
         fatB[i] = Math.min(1, fatB[i] + Sd.fatigueTir);
         A.exp[i] = Math.min(1, A.exp[i] + R.experience.tir);
       }
@@ -212,11 +218,11 @@ export function pasArmee(A, ctx) {
 /* Un tir (rend false s'il n'y avait personne à viser) : le carré le plus dense d'ennemis dans le cône du front, à portée ;
    la chance de toucher croît avec la densité et baisse si la cible est dans
    un creux. La victime est prise dans la grille fine. */
-function tirer(A, i, o, ctx) {
+function tirer(A, i, o, ctx, stance) {
   const { R, rng, T, frapper } = ctx;
   const { dw, dh, dens } = A;
   const ennemi = 1 - A.camp[i], de = dens[ennemi];
-  const P = R.tir, rB = Math.ceil(P.portee / DENSITE);
+  const P = R.tir, portee = P.portee * parametresStance(R, stance).portee, rB = Math.ceil(portee / DENSITE);
   const bx = (A.x[i] / DENSITE) | 0, by = (A.y[i] / DENSITE) | 0;
   const cosC = Math.cos(P.cone);
   let best = -1, bestN = 0;
@@ -227,14 +233,14 @@ function tirer(A, i, o, ctx) {
       const b = yy * dw + xx, m = de[b];
       if (m <= bestN) continue;
       const ddx = (xx + 0.5) * DENSITE - A.x[i], ddy = (yy + 0.5) * DENSITE - A.y[i], dd = Math.hypot(ddx, ddy) || 1;
-      if (dd > P.portee) continue;
+      if (dd > portee) continue;
       if ((ddx * o.fx + ddy * o.fy) / dd < cosC) continue;
       best = b; bestN = m;
     }
   }
   if (best < 0) return false;
   if (ctx.tir) { const bxx = best % dw; ctx.tir(i, (bxx + 0.5) * DENSITE, ((best - bxx) / dw + 0.5) * DENSITE); }   // pour le dessin : un tir part (jamais l'état)
-  const chance = P.precision * Math.min(1, bestN / P.densite) * (1 + R.experience.adresse * A.exp[i]);
+  const chance = chanceTir(R, stance, bestN, A.exp[i]);
   if (rng() >= chance) return true;
   // la victime : un ennemi du carré, au hasard
   const xx = best % dw, yy = (best - xx) / dw;

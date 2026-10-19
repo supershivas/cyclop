@@ -558,6 +558,7 @@ test('la relève : un régiment frais prend la place du régiment relevé ; la r
   assert.equal(B.etat.reserves[0], avant - 1);
   const neuf = B.etat.regiments.find(g => g.id >= n && g.camp === 0);
   assert.ok(neuf && neuf.nom && neuf.effectif === B.etat.parRegiment, 'un régiment frais, nommé');
+  assert.equal(neuf.stance, 'volonte');
   const A = B.armee, ids = new Set();
   for (let i = 0; i < A.n; i++) { assert.ok(!ids.has(A.id[i]), 'des numéros neufs'); ids.add(A.id[i]); }
   // ses hommes rejoignent la tranchée du régiment relevé
