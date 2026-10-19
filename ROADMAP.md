@@ -111,7 +111,7 @@ les deux machines calculent la même bataille, on n'échange que les ordres) sur
 
 **Statut** : à l'étude — rien n'est construit, rien n'est tranché. Inspirations : Total War (stances, moral de position, campagne), *Hearts of Iron*
 et *Order of Battle* (planification, transmissions), *Close Combat* (brouillard, moral). Chaque piste respecte `DESIGN.md` : pas de gloire, pas
-de gore, **le compteur de morts n'est jamais une récompense**, pas de couleur hors palette.
+de gore, pas de couleur hors palette. Le nombre d'hommes qu'un soldat a abattus se lit sur sa fiche et peut donner des marques (Jérôme, v0.35.0) : un fait, pas un score de jeu.
 
 **Barème** : 1 *session* = un lot livrable seul (logique + tests + mesure + `CLAUDE.md` + version), comme les lots de la refonte UX/UI. Les chiffres
 sont des ordres de grandeur d'avant lecture fine du code, à réviser au cadrage.
@@ -124,9 +124,9 @@ méta ; les gaz sont la plus grosse prise de risque (ton, rendu, nuit) et demand
 
 - **`main.js` fait 1 188 lignes** (le `CLAUDE.md` en annonce encore 867) : stances, plan, Mémorial y ajouteraient du HUD. Sortir d'abord la rangée des
   régiments (`majRegiments`, `placerFenetre`), le survol et la visée vers `js/hud/`, et mettre le `CLAUDE.md` à jour.
-- **Sauvegarde** : l'état de bataille est relu par des `??=` dans `etapesRestaurer` (`VERSION = 1`, bataille.js:31) ; tout champ neuf y reçoit sa valeur
-  d'avant. Un état hors bataille (campagne, Mémorial) a sa **propre clé** `cyclopeen:…` et passe par `js/lib/save.js` (versions, migrations ; conventions §11),
-  entre dans l'export / import JSON (jamais le jeton), et prend une autre clé en mode debug.
+- **Sauvegarde** (Jérôme : « on peut changer les sauvegardes, pas de parties en cours ») : les parties d'avant **peuvent casser**. Plus de `??=` ni de test « une partie d'avant se relit » pour une piste neuve : on ajoute le champ à l'état
+  et on monte `VERSION` (bataille.js:31) quand le format change. Ce qui reste exigé : une partie sauvegardée puis relue **dans la même version** est la même partie (tests « relue au milieu »). Un état hors bataille (campagne, Mémorial) a sa **propre clé**
+  `cyclopeen:…`, versionnée par `js/lib/save.js`, avec export / import JSON (jamais le jeton) et une autre clé en mode debug ; ses migrations ne sont pas nécessaires tant que rien n'est public. Dette à part : les `??=` d'`etapesRestaurer` pour les parties d'avant la v0.35.0 peuvent être retirés.
 - **Jeu à deux** : toute action neuve est une commande de `executerCmd` (main.js:297), toute donnée neuve entre dans `empreinteEtat`, et `outils/deux.mjs`
   + `test/lockstep.test.mjs` s'étendent avec elle. Les réglages sont comparés à l'appairage (`empreinte des réglages`) : un nombre neuf dans `reglages.js`
   oblige les deux machines à la même version.
@@ -146,7 +146,7 @@ Clôture du lot : (1) `node --input-type=module --check < f.js` sur chaque modul
 une règle ou un état partagé a changé ; (5) `node outils/captures.mjs` + `outils/audit-ecran.mjs` + `outils/lisibilite.mjs` si l'écran ou une couleur a changé,
 et regarde les captures ; (6) version.json (correctif / mineur), CHANGELOG.md, `node outils/stamp-version.mjs` ; (7) mets à jour CLAUDE.md (le jeu actuel,
 le piège rencontré avec son coût mesuré) et ROADMAP.md (coche le lot) ; (8) commit en français qui dit ce que le joueur verra, push sur main ; donne-moi
-les deux URL. Préviens-moi AVANT de pousser si une sauvegarde existante ne se relit plus. Si une règle vaut pour tous les jeux : « Proposition pour CONVENTIONS.md ».
+les deux URL. Les sauvegardes d'avant peuvent casser (monte VERSION si le format change) : pas besoin de me prévenir. Si une règle vaut pour tous les jeux : « Proposition pour CONVENTIONS.md ».
 ```
 
 ---
@@ -210,7 +210,7 @@ fichiers touchés, les tests à écrire (dont « sans stance, mêmes morts qu'av
 ```
 
 ```text
-Lot 1 « stances » (logique). Applique le plan validé. reg.stance avec `??=` à la relecture ; paramètres dans reglages.js ; textes dans data/stances.js ; aucun Math.random,
+Lot 1 « stances » (logique). Applique le plan validé. reg.stance dans l'état (VERSION montée) ; paramètres dans reglages.js ; textes dans data/stances.js ; aucun Math.random,
 aucun tirage déplacé. Écris les tests (portée, précision, sauvegarde relue, lockstep) AVANT le code qui les fait passer. Mesure avec scripts/mesure.mjs sur les graines 3, 7, 8
 et donne un tableau morts / blessés / durée par posture. Puis le prompt de clôture commun.
 ```
@@ -242,7 +242,7 @@ validé à sec à la pose **et** revalidé à l'heure (le terrain, le moral, la 
 
 **Plan fin (lots)**
 
-1. *Modèle et exécution* : `etat.plan` (`??= []`), `poserPlan` / `retirerPlan` (refus à voix haute), exécution dans `avancer` au pas `t` via les mêmes `ordonner…` (donc mêmes règles, même lockstep), purge à la fin du jour ;
+1. *Modèle et exécution* : `etat.plan` (dans l'état neuf), `poserPlan` / `retirerPlan` (refus à voix haute), exécution dans `avancer` au pas `t` via les mêmes `ordonner…` (donc mêmes règles, même lockstep), purge à la fin du jour ;
    `peutBarrage(…, { planifie: true })`. Tests : plan relu, plan exécuté au bon pas, ordre refusé à l'heure, déterminisme à deux.
 2. *Commande* : `plan` dans `executerCmd`, `empreinteEtat`, `pret` attend les plans des deux ; `outils/deux.mjs` joue une nuit avec plan.
 3. *HUD simple* : liste dans le papier de la nuit (« 6 h 20 · Viride · attaque B1 en face »), heure choisie par pas de 10 min, suppression ; module `js/hud/plan.js` (pas dans main.js).
@@ -274,7 +274,7 @@ visibilité à deux, types d'ordres du lot 1. Sors le plan du lot 1 avec fichier
 ```
 
 ```text
-Lot 1 « plan de nuit ». etat.plan avec `??= []`, exécution dans avancer par les mêmes ordonnerMarche / ordonnerBarrage (aucune règle dupliquée), refus à l'heure dits au carnet.
+Lot 1 « plan de nuit ». etat.plan dans l'état neuf (VERSION montée), exécution dans avancer par les mêmes ordonnerMarche / ordonnerBarrage (aucune règle dupliquée), refus à l'heure dits au carnet.
 Tests d'abord : relu au milieu, exécuté au bon pas, refusé à l'heure (batterie, déroute, hors secteur), déterminisme (outils/deux.mjs avec un plan). Ne touche pas à l'ordre des
 tirages. Puis le prompt de clôture commun.
 ```
@@ -352,7 +352,7 @@ avant de brancher. Vérifie lisibilité (outils/lisibilite.mjs) et audit-ecran. 
 `data/lexique.js` (noms de régiments) ; `identite.js` ; l'écran titre (`demanderSecteur`) ; `js/lib/save.js`.
 
 **Point dur** : l'identité d'un homme (nom, âge) vient de `graine` + numéro. Une campagne a donc deux graines : une **`graineIdentite`** stable pour toute la campagne (les noms ne changent pas d'une bataille à l'autre) et la graine de chaque bataille
-(terrain, météo). Hors campagne, `graineIdentite = graine` : les parties d'avant sont inchangées.
+(terrain, météo). Hors campagne, `graineIdentite = graine`.
 
 **Décisions à trancher** (défaut en gras) : longueur (**3 batailles**) ; ce qui passe (**effectifs, expérience, grades, victimes ; pas la fatigue ni la peur**) ; renforts (**recrues sans expérience**) ; défaite (**repli : la campagne continue, finit sous quatre régiments**) ;
 à deux (**non, la campagne est solo**) ; le choix du secteur (**un seul au début, puis choisi**).
@@ -392,8 +392,8 @@ défaite. Plan du lot 1 avec tests. Pas de code avant ma réponse.
 ```
 
 ```text
-Lot 1 « campagne » (identité portable). `graineIdentite` optionnelle dans nouvelleBataille, égale à `graine` par défaut ; identite.js la lit. Aucun tirage déplacé, aucune sauvegarde changée.
-Tests : une partie d'avant se relit avec les mêmes noms ; deux batailles d'une même campagne donnent le même nom au même numéro. Puis le prompt de clôture commun.
+Lot 1 « campagne » (identité portable). `graineIdentite` optionnelle dans nouvelleBataille, égale à `graine` par défaut ; identite.js la lit. Aucun tirage déplacé (les anciennes sauvegardes peuvent casser : VERSION montée).
+Tests : deux batailles d'une même campagne donnent le même nom au même numéro. Puis le prompt de clôture commun.
 ```
 
 ```text
@@ -418,7 +418,7 @@ est une décision de ton séparée.
 `effrayer`, `reposer`, `mourir` ; `enFace` ; `rendu/eclats.js` (`fumer`), `rendu/temps.js` (voile continu) ; `hud/carte.js` ; les corvées (`data/corvees.js`) ; `photo` / `restaurer` (les champs en b64, comme `coutsActuels`).
 
 **Modèle** : `etat.gaz` = grille d'octets (≈ 210 × 160 cases de 4 m, ~34 ko), évoluée chaque seconde : advection selon `vent` en huit directions avec reste fractionnaire (**pas de trigonométrie**), glissement vers le bas, diffusion, lavage par la pluie et le vent fort. Sauvegardée en b64 (rien à rejouer, contrairement à l'eau),
-dans `empreinteEtat`. `A.gaz[i]` : la dose d'un homme (sauvegardée avec la foule). Le vent d'un jour vient d'un hachage graine-jour (aucun tirage déplacé) ; la prévision le dit 7 fois sur 10 comme la météo. Une partie d'avant n'a ni vent ni gaz (`etat.gaz ??= null` : en face n'en lance pas).
+dans `empreinteEtat`. `A.gaz[i]` : la dose d'un homme (sauvegardée avec la foule). Le vent d'un jour vient d'un hachage graine-jour (aucun tirage déplacé) ; la prévision le dit 7 fois sur 10 comme la météo. Les parties d'avant ne se relisent plus (`VERSION` montée).
 
 **Décisions à trancher** (défaut en gras) : on le veut (**à décider avant tout**) ; qui l'emploie (**en face seulement d'abord**) ; effet (**peur, toux : tir ×, mort dans la nuit comme un blessé laissé, `mortBlesse`**) ; protection (**masques : un état par régiment, une corvée de nuit, un coût de cadence**) ; les abris profonds
 (**piégeux : le gaz y descend**, plan C).
@@ -474,15 +474,15 @@ Tests d'abord : déterminisme (Node contre Chromium via outils/determinisme.mjs)
 
 **Statut** : à l'étude. Idée de Jérôme : des médailles / hauts faits / statuts que chaque soldat gagne, en icône sur la fiche, le texte au survol.
 
-**Intention** : donner un poids à chaque homme nommé (ce qu'il a subi, fait, été), sans gloire. `DESIGN.md` refuse « les médailles qui brillent » et dit que le compteur de morts n'est jamais une récompense :
+**Intention** : donner un poids à chaque homme nommé (ce qu'il a subi, fait, été), sans gloire. `DESIGN.md` refuse « les médailles qui brillent » :
 ce sont donc des **mentions d'un livret militaire**, à l'encre sur papier. Même esprit que les chevrons d'expérience (v0.35.0 : « sans emplacement vide ») et que le compteur de victimes de la fiche (« ne donne ni expérience ni avantage »).
 
-**Garde-fous** : aucune marque ne vient d'un nombre de tués ; aucun effet de jeu par défaut ; pas d'emplacement vide, pas de « 12/31 », pas de fanfare (le carnet de bord n'en dit que les plus rares) ; des marques ambiguës exprès (« A tremblé », « Du jour refusé »).
+**Garde-fous** : aucun effet de jeu par défaut ; pas d'emplacement vide, pas de « 12/31 », pas de fanfare (le carnet de bord n'en dit que les plus rares) ; des marques ambiguës exprès (« A tremblé », « Du jour refusé »).
 
-**Ancrage** : `hud/fiche.js` et `hud/lecture.js` (`auFront`, `prochainGrade`), `hud/barres.js` ; `A.exp`, `A.victimes`, `etat.grades`, `etat.evacues` (retours), `etat.corps`, `etat.tombes`, `etat.nuits`, `reg.refus` ;
+**Ancrage** : `hud/fiche.js` et `hud/lecture.js` (`auFront`, `prochainGrade`), `hud/barres.js` ; `A.exp`, `A.victimes` (nombre d'hommes abattus au fusil, déjà sauvegardé, familles « Le fusil »), `etat.grades`, `etat.evacues` (retours), `etat.corps`, `etat.tombes`, `etat.nuits`, `reg.refus` ;
 `effrayer`, `tuerDans`, `prises`, `mourir` pour les événements ; `photoArmee` / `restaurerArmee` ; sprites en matrices de lettres (`js/lib/sprites.js`, conventions §12) ; le carnet (`noter`).
 
-**Le catalogue (31 marques, 5 familles)** — **L** : se lit de l'état existant ; **C** : demande un événement compté (`A.marques`, bits, sauvegardé). Sources à vérifier au cadrage.
+**Le catalogue (35 marques, 6 familles)** — **L** : se lit de l'état existant ; **C** : demande un événement compté (`A.marques`, bits, sauvegardé). Sources à vérifier au cadrage.
 
 | # | Famille (cadre) | Nom | Icône | Condition | Src |
 |---|---|---|---|---|---|
@@ -517,17 +517,23 @@ ce sont donc des **mentions d'un livret militaire**, à l'encre sur papier. Mêm
 | 29 | | Parmi les douze derniers | douze points | son régiment n'a plus que douze hommes debout | L |
 | 30 | Fin (fiche d'un mort, Mémorial) | Enterré par les siens | croix au crayon | inhumé (`etat.tombes`) | L |
 | 31 | | Resté dans l'entonnoir | creux sans croix | corps non inhumé après trois nuits | L |
+| 32 | Le fusil (octogone) | Un à son compte | un point | a abattu un homme au fusil (`A.victimes` ≥ 1) | L |
+| 33 | | Cinq à son compte | cinq points | `A.victimes` ≥ 5 (seuil à mesurer) | L |
+| 34 | | Dix à son compte | dix points en deux rangs | `A.victimes` ≥ 10 (seuil à mesurer) | L |
+| 35 | | A abattu un gradé | un galon barré | une victime était officier ou adjudant | C |
 
-**Affichage** : une rangée d'icônes sous le nom (sprites d'environ 11 px, encre `t` / `s` sur le papier, aucune couleur neuve) ; **la forme du cadre porte la famille** (rond, carré, losange : la forme porte l'information, `lisibilite.mjs`) ;
+**Les marques du fusil** (Jérôme : le nombre de tués est permis comme marque) : seuils **à mesurer** (combien d'hommes abat un soldat dans une bataille ? `A.victimes`, graines 3, 7, 8, tous nos régiments à l'attaque, puis en défense) pour que 5 et 10 soient rares mais atteignables ; le texte reste un fait sans éloge (« Cinq à son compte »).
+
+**Affichage** : une rangée d'icônes sous le nom (sprites d'environ 11 px, encre `t` / `s` sur le papier, aucune couleur neuve) ; **la forme du cadre porte la famille** (rond, carré, losange, octogone pour le fusil : la forme porte l'information, `lisibilite.mjs`) ;
 texte au survol **et au focus clavier** (`tabindex`, `aria-label` : le survol seul va contre conventions §7) ; six icônes au plus, les plus récentes d'abord, puis « +N ».
 
-**Décisions à trancher** (défaut en gras) : effet de jeu (**aucun**) ; marques d'en face (**non, les nôtres seulement**) ; « Cité à l'ordre du régiment » (**générique, sans la Croix de guerre réelle**) ; les statuts s'effacent (**après une nuit**) ; le carnet en dit (**les rares : 19, 20, 23, 24**).
+**Décisions à trancher** (défaut en gras) : effet de jeu (**aucun**) ; seuils du fusil (**1, 5, 10, à mesurer**) ; marques d'en face (**non, les nôtres seulement**) ; « Cité à l'ordre du régiment » (**générique, sans la Croix de guerre réelle**) ; les statuts s'effacent (**après une nuit**) ; le carnet en dit (**les rares : 19, 20, 23, 24**).
 
 **Plan fin (lots)**
 
-1. *Moteur de lecture* : `js/marques.js` pur (`marquesDe(B, id)` → liste ordonnée), `js/data/marques.js` (id, famille, icône en matrice, nom, dit), seuils dans `reglages.js` (`marques`) ; **15 marques lues de l'état** (4-7, 9-12, 22, 23, 28-31 + corvées si l'état retient l'homme). Aucune sauvegarde changée. Tests : une partie d'avant donne ses marques lisibles.
+1. *Moteur de lecture* : `js/marques.js` pur (`marquesDe(B, id)` → liste ordonnée), `js/data/marques.js` (id, famille, icône en matrice, nom, dit), seuils dans `reglages.js` (`marques`) ; **17 marques lues de l'état** (4-7, 9-12, 22, 23, 28-34, + 14-17 si l'état retient l'homme). Aucun champ neuf. Tests : une bataille minimale par marque.
 2. *Fiche* : rangée d'icônes dans `hud/fiche.js`, survol et focus, `aria-label`, `test/fumee.json` réécrit, `lisibilite.mjs` sur les cadres ; sujet « Les marques » au labo (variantes d'icônes) avec entrée de `labo-journal.js`.
-3. *Événements* : `A.marques` (`Uint32Array`, `??= 0` à la relecture, `photoArmee`) ; bits posés dans `effrayer`, `tuerDans`, `prises`, `mourir`, `coupDeMain`, la déroute ; **aucun tirage de hasard ajouté** ; `empreinteEtat` si la marque peut changer une règle (par défaut non : pas d'effet de jeu).
+3. *Événements* : `A.marques` (`Uint32Array`, dans `photoArmee` ; `VERSION` montée) ; bits posés dans `effrayer`, `tuerDans`, `prises`, `mourir`, `coupDeMain`, la déroute ; **aucun tirage de hasard ajouté** ; `empreinteEtat` si la marque peut changer une règle (par défaut non : pas d'effet de jeu).
 4. *Carnet et régiment* : une ligne de carnet pour les marques rares ; la fenêtre du régiment les compte sans les classer.
 5. *Campagne et Mémorial* : les marques entrent dans le registre de campagne (identité d'un vétéran) et deviennent l'épitaphe sobre au Mémorial ; un blessé évacué garde les siennes (`etat.evacues[7]`).
 
@@ -535,27 +541,27 @@ texte au survol **et au focus clavier** (`tabindex`, `aria-label` : le survol se
 
 | Plan | Contenu | Coût | Risque |
 |---|---|---|---|
-| **A — Les marques lues** | lots 1-2 : 15 marques sans nouvel état, rangée sur la fiche | **2-3 sessions** | faible : tout se lit, la sauvegarde ne bouge pas |
-| **B — Les marques comptées** | + lots 3-4 : les 16 autres, `A.marques`, carnet | **5-6 sessions** | moyen : événements dans `tuerDans` / `prises`, relecture des parties |
+| **A — Les marques lues** | lots 1-2 : 17 marques lues de l'état, rangée sur la fiche | **2-3 sessions** | faible : tout se lit, aucun événement à poser |
+| **B — Les marques comptées** | + lots 3-4 : les 18 autres, `A.marques`, carnet | **5-6 sessions** | moyen : événements dans `tuerDans` / `prises` |
 | **C — Portées par la campagne** | + lot 5 : vétérans, épitaphes, régiments dissous | **8+ sessions** (après les pistes 3 et 4) | moyen : identité portable |
 
 Recommandé : A, puis juger sur pièces avant de compter quoi que ce soit.
 </details>
 
-**Dettes anticipées** : aucune marque ne doit donner envie de tuer ou de sacrifier (relire chaque condition contre `DESIGN.md`) ; la rangée s'ajoute à `fiche.js` sans alourdir `main.js` ; les corvées sont notées par régiment (`etat.nuits`), pas par homme — « Pelle et pioche » dit alors « son régiment » à moins de marquer l'homme (lot 3) ;
-`A.marques` à 32 bits suffit pour 31 marques mais pas pour davantage (prévoir un second champ) ; les icônes sont des matrices de lettres de la palette : tout `test/rendu.json` reste intact (la fiche est du DOM) ; textes en données, clés stables.
+**Dettes anticipées** : les seuils du fusil à mesurer (voir plus haut) ; la rangée s'ajoute à `fiche.js` sans alourdir `main.js` ; les corvées sont notées par régiment (`etat.nuits`), pas par homme — « Pelle et pioche » dit alors « son régiment » à moins de marquer l'homme (lot 3) ;
+`A.marques` à 32 bits suffit pour les 18 marques comptées mais pas pour beaucoup plus (prévoir un second champ) ; les icônes sont des matrices de lettres de la palette : tout `test/rendu.json` reste intact (la fiche est du DOM) ; textes en données, clés stables.
 
 <details><summary>Prompts</summary>
 
 ```text
-Cadrage « marques d'un homme ». Lis ROADMAP.md §6 (le catalogue de 31 marques), DESIGN.md (« Ce que le jeu refuse »), CLAUDE.md (la fiche en jauges, les chevrons, A.victimes), js/hud/fiche.js, hud/lecture.js, etat.evacues, etat.nuits, etat.grades.
+Cadrage « marques d'un homme ». Lis ROADMAP.md §6 (le catalogue de 35 marques), DESIGN.md (« Ce que le jeu refuse »), CLAUDE.md (la fiche en jauges, les chevrons, A.victimes), js/hud/fiche.js, hud/lecture.js, etat.evacues, etat.nuits, etat.grades.
 Pour chacune des 15 marques marquées L, vérifie dans le code qu'elle se lit vraiment de l'état et dis-moi lesquelles ne le peuvent pas (avec la ligne qui manque). Puis UNE AskUserQuestion (4 questions max, recommandé en premier) :
 effet de jeu, marques d'en face, effacement des statuts, lignes de carnet. Plan du lot 1 avec fichiers, tests et dettes. Pas de code avant ma réponse.
 ```
 
 ```text
-Lot 1 « marques » (lecture). js/marques.js pur et testé dans Node, js/data/marques.js (icône en matrice de lettres de la palette, nom, dit), seuils dans reglages.js. Aucune sauvegarde changée : une partie d'avant doit donner ses marques.
-Tests d'abord, par marque : une bataille minimale qui la fait naître et une qui ne la fait pas. Aucune condition qui récompense un nombre de tués. Puis le prompt de clôture commun.
+Lot 1 « marques » (lecture). js/marques.js pur et testé dans Node, js/data/marques.js (icône en matrice de lettres de la palette, nom, dit), seuils dans reglages.js. Aucun champ neuf.
+Tests d'abord, par marque : une bataille minimale qui la fait naître et une qui ne la fait pas. Pour celles du fusil, mesure d'abord les seuils sur des batailles entières (graines 3, 7, 8) et donne-moi la distribution des victimes par homme. Puis le prompt de clôture commun.
 ```
 
 ```text
@@ -564,7 +570,7 @@ Montre-moi DEUX variantes d'icônes au labo (sujet « Les marques », entrée da
 ```
 
 ```text
-Lot 3 « marques » (événements). A.marques en Uint32Array avec `??= 0`, dans photoArmee / restaurerArmee ; bits posés là où l'événement a lieu. Aucun tirage de hasard ajouté, aucun ordre de tirage déplacé : prouve-le par une bataille de 9 000 pas
+Lot 3 « marques » (événements). A.marques en Uint32Array dans l'état (VERSION montée), dans photoArmee / restaurerArmee ; bits posés là où l'événement a lieu. Aucun tirage de hasard ajouté, aucun ordre de tirage déplacé : prouve-le par une bataille de 9 000 pas
 identique avant / après (graines 3, 7, 8). Test « relue au milieu », et outils/deux.mjs si un bit peut changer une règle. Puis le prompt de clôture commun.
 ```
 </details>

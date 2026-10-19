@@ -395,6 +395,9 @@ node outils/stamp-version.mjs            # après chaque changement de version.j
 
 ## Exceptions aux conventions
 
+- **Les sauvegardes d'avant peuvent casser** (Jérôme : « on peut changer les sauvegardes, pas de parties en cours ») : les conventions (sections 1 et 11) demandent de prévenir avant de pousser un
+  changement qui casse les sauvegardes, et des migrations ; ici, tant qu'aucune partie réelle n'est en cours, on monte `VERSION` (bataille.js) sans écrire de `??=` pour l'ancien format et sans prévenir.
+  Ce qui reste exigé : le format est versionné, et une partie sauvegardée puis relue dans la même version est la même partie (tests « relue au milieu », « relue après une nuit »).
 - **Pas d'aperçu téléphone** (`apercu.html` retiré) : le jeu est pour ordinateur
   seulement (Jérôme, v0.1.0). Les deux URL d'une livraison sont le jeu et le labo.
 - La manette n'ouvre que le menu (stratégie à la souris) : la section 22 demande
