@@ -85,6 +85,13 @@ export const soldatMat = {
         }
         // il tire (aTir : x la pose, 1 quand il épaule, y le cap vers sa cible) : les bras et le fusil se lèvent devant lui
         // (autour de l'épaule, à 1,3 m), et il se tourne vers l'ennemi ; sa pose seulement, jamais la partie
+        // feu retenu (aTir.x < 0) : le fusil est baissé, en travers devant les hanches, le canon vers l'avant ; il ne se lève que pour tirer (pose seulement)
+        if (aTir.x < -0.5 && kp > 3.5 && kp < 4.5) {
+          float a = -1.9;
+          vec3 d = p - vec3(0.0, 0.9, 0.0);
+          p.y = 0.9 + d.y * cos(a) - d.z * sin(a);
+          p.z = d.y * sin(a) + d.z * cos(a);
+        }
         float tir = clamp(aTir.x * 2.5, 0.0, 1.0);
         if (tir > 0.0 && !(aPart > 0.5 && aPart < 1.5)) {
           if (aBras != 0.0) {

@@ -1,5 +1,8 @@
 # Journal des versions
 
+## 0.36.2 — 2026-10-19
+- Un régiment en feu retenu porte son fusil baissé devant lui, la baïonnette ne dépasse plus de sa tête, et ne le lève que pour tirer
+
 ## 0.36.1 — 2026-10-19
 - Les boutons « À volonté » et « Feu retenu » sont dans la fenêtre du régiment choisi ; la carte du régiment et le carnet disent la posture, et un régiment en déroute dit pourquoi il ne l'accepte pas
 

@@ -106,6 +106,10 @@ for (const m of ['pluie', 'brouillard', 'gel']) {
   await etape(`meteo-${m}`, 6, m => { const B = __jeu.bataille(); B.etat.meteo[B.etat.jour - 1] = m; __jeu.zoom(3); }, m);
   await etape(`meteo-${m}-z1`, 3, () => { __jeu.zoom(0); });
 }
+// le feu retenu (v0.36.2) : nos régiments en `retenu`, de près (fusil baissé), puis d'en face (le décor : le fusil bas ne dépend pas du camp) ; en dernier, rien d'autre ne les suit
+await etape('retenu-z6', 3, () => { const B = __jeu.bataille(); __jeu.stance(B.etat.regiments.filter(r => r.camp === 0).map(r => r.id), 'retenu'); __jeu.zoom(4); __jeu.teleport({ x: 200, y: 215 }); });
+await etape('retenu-z8', 3, () => { __jeu.zoom(5); });
+await etape('retenu-fin', 2, () => { const B = __jeu.bataille(); __jeu.stance(B.etat.regiments.filter(r => r.camp === 0).map(r => r.id), 'volonte'); __jeu.zoom(3); });
 
 await nav.close(); await srv.close();
 
