@@ -8,9 +8,11 @@ export const CAMPAGNE = {
   longueur: 3,
   batailles: [
     { secteur: 'essai', mission: 'tenir', forces: 1.3, jours: 7, ia: { barrage: 1.4, offensive: 1.4 } },        // les labours : le terrain est à nous
-    { secteur: 'crete', mission: 'prendre', forces: 1, jours: 7, ia: { barrage: 1, offensive: 1 } },            // la crête : ils la tiennent
-    { secteur: 'marais', mission: 'tenir', forces: 0.77, jours: 7, ia: { barrage: 0.7, offensive: 0.7 } },      // le marais : la boue, et ils sont plus nombreux
+    { secteur: 'crete', forces: 1, jours: 7, ia: { barrage: 1, offensive: 1 } },            // la crête : ils la tiennent
+    { secteur: 'marais', forces: 0.77, jours: 7, ia: { barrage: 0.7, offensive: 0.7 } },      // le marais : la boue, et ils sont plus nombreux
   ],
+  // la mission de la 2e et de la 3e dépend de l'issue de la précédente (Jérôme, v0.36.4) : une victoire ouvre l'offensive, une défaite oblige à tenir ; l'ordre des secteurs est fixe
+  missionSelonIssue: { reussie: 'prendre', manquee: 'tenir' },
   regimentsMin: 4,                              // sous quatre régiments encore debout, la campagne finit (repli, pas de victoire claironnée)
   hommesMin: 20,                                // un régiment est « debout » à vingt survivants au moins (un cinquième de 94) : avec un seul homme, le nom n'est plus qu'un nom
 };

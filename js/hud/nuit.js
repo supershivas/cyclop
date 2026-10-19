@@ -1,10 +1,10 @@
 // Le papier de la nuit (Jérôme, v0.13.0) : un état (choix des corvées, puis le bilan de l'aube), jamais une boîte de
 // dialogue : le champ reste là, on choisit des régiments (clic, cadre, T) et on leur donne une corvée, dite sur leur carte.
-import { NOUS, aube } from '../bataille.js?v=0.36.3';
-import { METEO } from '../data/meteo.js?v=0.36.3';
-import { CORVEES } from '../data/corvees.js?v=0.36.3';
-import { refusCorvee } from '../nuit.js?v=0.36.3';
-import { pluriel } from './lecture.js?v=0.36.3';
+import { NOUS, aube } from '../bataille.js?v=0.36.4';
+import { METEO } from '../data/meteo.js?v=0.36.4';
+import { CORVEES } from '../data/corvees.js?v=0.36.4';
+import { refusCorvee } from '../nuit.js?v=0.36.4';
+import { pluriel } from './lecture.js?v=0.36.4';
 
 export const corveeDe = id => CORVEES.find(c => c.id === id)?.nom || '';
 export const corveeCourte = id => CORVEES.find(c => c.id === id)?.court || '';

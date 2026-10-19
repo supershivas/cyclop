@@ -6,7 +6,7 @@
    seulement quand le jeu n'est pas « occupé », toast « Mis à jour en vX.Y.Z ».
 
    Module ES sans dépendance :
-     import { startUpdateCheck, loadChangelog } from './lib/app-update.js?v=0.36.3'
+     import { startUpdateCheck, loadChangelog } from './lib/app-update.js?v=0.36.4'
      startUpdateCheck({
        isBusy: () => partieEnCours && !enPause,   // une partie qui tourne
        beforeReload: () => sauvegarder(),         // rien ne se perd

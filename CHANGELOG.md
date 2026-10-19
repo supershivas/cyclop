@@ -1,5 +1,8 @@
 # Journal des versions
 
+## 0.36.4 — 2026-10-19
+- Entre deux batailles de campagne, un registre dit ce que sera chaque régiment ; la mission de la bataille suivante suit l'issue de la précédente (la campagne n'est pas encore jouable depuis l'écran titre)
+
 ## 0.36.3 — 2026-10-19
 - Le labo propose quatre façons de dire, entre deux batailles de campagne, ce qui reste de la bataille finie et ce que sera chaque régiment (la campagne n'est pas encore jouable)
 

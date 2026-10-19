@@ -4,11 +4,11 @@
    identité à re-dériver : un homme est son numéro, son rang, son expérience et ses victimes ; son nom vient de `graineIdentite`.
    Il est écrit à la fin de chaque bataille, avant l'écran de fin (`cloturerDansLeStore`), et `cloturer` est idempotente : relire une
    partie arrêtée à la fin, ou clore deux fois, donne le même registre. Rien n'est reporté de la fatigue, de la peur ni du moral. */
-import { hash2 } from './lib/rng.js?v=0.36.3';
-import { NOUS, rangDe, numeroCampagne } from './bataille.js?v=0.36.3';
-import { SECTEURS } from './data/secteur.js?v=0.36.3';
-import { identite, chevrons } from './identite.js?v=0.36.3';
-import { CAMPAGNE } from './data/campagne.js?v=0.36.3';
+import { hash2 } from './lib/rng.js?v=0.36.4';
+import { NOUS, rangDe, numeroCampagne } from './bataille.js?v=0.36.4';
+import { SECTEURS } from './data/secteur.js?v=0.36.4';
+import { identite, chevrons } from './identite.js?v=0.36.4';
+import { CAMPAGNE } from './data/campagne.js?v=0.36.4';
 
 export const CLE = 'campagne';        // l'entrée de js/lib/save.js (cyclopeen:campagne)
 export const VERSION_CAMPAGNE = 1;
@@ -53,13 +53,14 @@ export function suivante(c, plan = CAMPAGNE) {
   if (!P) return null;
   const S = SECTEURS[P.secteur], graine = graineDe(c.graineIdentite, n), campagne = { id: c.id, n };
   const derniere = c.batailles[n - 2];
+  const mission = P.mission ?? (derniere?.issue?.reussie ? plan.missionSelonIssue.reussie : plan.missionSelonIssue.manquee);   // (la 1re est donnée ; les autres suivent l'issue de la précédente)
   const troupes = derniere ? { regiments: reconstituer(derniere.regiments, S.regiments, Math.floor(S.soldats / S.regiments)), prochainNumero: c.prochainNumero } : null;
   const opts = {
-    secteur: P.secteur, mission: P.mission, graineIdentite: c.graineIdentite, campagne, troupes,
+    secteur: P.secteur, mission, graineIdentite: c.graineIdentite, campagne, troupes,
     soldatsEux: Math.round(S.soldats / (P.forces ?? 1)), iaRythme: P.ia ?? null,
   };
   if (P.jours) opts.jours = P.jours;                      // sinon la durée du secteur (10 à 15 jours, tirée de la graine)
-  return { n, graine, graineIdentite: c.graineIdentite, secteur: P.secteur, mission: P.mission, campagne, opts };
+  return { n, graine, graineIdentite: c.graineIdentite, secteur: P.secteur, mission, campagne, opts };
 }
 
 /* Ceux de chez nous qui ont survécu à la bataille, par régiment : [[numéro, rang, expérience, victimes], …]. Les vivants (blessés compris :

@@ -160,7 +160,7 @@ test('la suite : une défaite ne ferme pas la campagne ; elle finit après trois
   const { c, B, apres } = unePartie();
   assert.equal(apres.statut, 'en cours');
   const n2 = suivante(apres);
-  assert.equal(n2.n, 2); assert.equal(n2.secteur, 'crete'); assert.equal(n2.mission, 'prendre');
+  assert.equal(n2.n, 2); assert.equal(n2.secteur, 'crete');
   assert.equal(suivante({ ...apres, batailles: [{ ...apres.batailles[0], issue: { reussie: false, texte: 'Le secteur est tombé.' } }] }).n, 2);
   // la troisième bataille ferme la campagne ; ensuite, plus de bataille
   const deux = { ...apres, batailles: [apres.batailles[0], { ...apres.batailles[0], n: 2 }] };
@@ -370,4 +370,23 @@ test('les blessés qui reviennent sont au registre, par régiment', () => {
   const { B, apres } = unePartie(), attendu = B.etat.evacues.filter(e => e.length >= 6 && e[3] === 0).length;
   assert.equal(apres.batailles[0].regiments.reduce((t, r) => t + r.enRoute, 0), attendu);
   assert.ok(attendu > 0);
+});
+
+group('campagne — le secteur suivant');
+test('l\'ordre des secteurs est fixe, la mission suit l\'issue : victoire, on prend ; défaite, on tient (Jérôme, v0.36.4)', () => {
+  const { apres } = unePartie();
+  const apresIssue = (c, reussie) => ({ ...c, batailles: c.batailles.map(b => ({ ...b, issue: { reussie, texte: '' } })) });
+  assert.equal(suivante(nouvelleCampagne(11)).mission, 'tenir');                      // la 1re est donnée
+  assert.equal(suivante(apresIssue(apres, true)).mission, 'prendre');
+  assert.equal(suivante(apresIssue(apres, false)).mission, 'tenir');
+  assert.equal(suivante(apresIssue(apres, null)).mission, 'tenir', 'une issue inconnue n\'ouvre pas l\'offensive');
+  const deux = c => ({ ...c, batailles: [...c.batailles, { ...c.batailles[0], n: 2 }] });
+  const g = apresIssue(apres, true), p = apresIssue(apres, false);
+  assert.deepEqual([suivante(g).secteur, suivante(deux(g)).secteur], ['crete', 'marais']);
+  assert.deepEqual([suivante(p).secteur, suivante(deux(p)).secteur], ['crete', 'marais'], 'le secteur ne dépend pas de l\'issue');
+  assert.equal(suivante(apresIssue(deux(apres), false)).mission, 'tenir');
+  assert.equal(suivante(apresIssue(deux(apres), true)).mission, 'prendre');
+  // la difficulté suit le rang de la bataille, pas la mission
+  assert.equal(suivante(g).opts.soldatsEux, suivante(p).opts.soldatsEux);
+  assert.equal(passage(g).mission, 'prendre'); assert.equal(passage(p).mission, 'tenir');
 });
