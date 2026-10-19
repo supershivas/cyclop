@@ -45,6 +45,11 @@ function peindreSol(T, R, courbes) {
 export function ongletCarte(zone, { el, R = REGLAGES, publie = {}, aPublier = () => {} } = {}) {
   const sel = el('select', { ariaLabel: 'Secteur' }, ...Object.entries(SECTEURS).map(([id, s]) => el('option', { value: id, textContent: s.nom })));
   const graine = el('input', { type: 'number', value: 1, step: 1, ariaLabel: 'Graine' });
+  // lance une bataille d'essai dans un autre onglet : le jeu lit déjà les retouches de ce navigateur (le brouillon), rien n'est publié ni sauvegardé
+  const essayer = el('button', { textContent: 'Essayer dans le jeu', className: 'primaire', onclick: () => {
+    const url = new URL('./', location.href); url.searchParams.set('essai', sel.value); url.searchParams.set('graine', String(Number(graine.value) | 0));
+    window.open(url, '_blank');
+  } });
   const nouvelle = el('button', { textContent: 'Autre graine', onclick: () => { graine.value = Math.floor(Math.random() * 99999) + 1; refaire(); } });
   const coche = (texte, defaut) => { const i = el('input', { type: 'checkbox', checked: defaut }); i.onchange = redessiner; return [i, el('label', { className: 'at-coche' }, i, texte)]; };
   const [cCourbes, lCourbes] = coche('Courbes de niveau', true);
@@ -97,6 +102,7 @@ export function ongletCarte(zone, { el, R = REGLAGES, publie = {}, aPublier = ()
   const verdict = el('div', { className: 'at-verdict' });
   function verifier() {
     const pb = validerSecteur(effectif());
+    essayer.disabled = pb.length > 0; essayer.title = pb.length ? 'Corrigez d\u2019abord ce que le contrôle signale' : 'Une bataille d\u2019essai dans un autre onglet, sans rien publier ni sauvegarder';
     verdict.replaceChildren(...(pb.length ? [el('p', { className: 'at-modifie', textContent: 'Ce secteur ne peut pas être publié :' }), el('ul', null, ...pb.map(t => el('li', { textContent: t })))] : []));
   }
   const formesEl = el('div', { className: 'at-formes' });
@@ -264,7 +270,7 @@ export function ongletCarte(zone, { el, R = REGLAGES, publie = {}, aPublier = ()
   zone.replaceChildren(
     el('h2', { textContent: 'Carte' }),
     el('p', { className: 'at-note', textContent: 'Le terrain d\u2019un secteur vu de dessus, tel que la bataille le monte au départ. Les outils posent des formes de relief (bosse, creux, crête, plateau) ; les curseurs règlent le relief d\u2019ensemble, les arbres, les haies et la pluie.' }),
-    el('div', { className: 'at-row' }, sel, el('label', { className: 'at-coche' }, 'Graine ', graine), nouvelle, zoom),
+    el('div', { className: 'at-row' }, sel, el('label', { className: 'at-coche' }, 'Graine ', graine), nouvelle, zoom, essayer),
     el('div', { className: 'at-row' }, lCourbes, lArbres, lLignes, lFormes),
     el('div', { className: 'at-carte-zone' }, el('div', { className: 'at-carte-vue' }, resume, lecture, boite), el('div', null, formesEl, reglages)),
   );

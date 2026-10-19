@@ -19,7 +19,8 @@ Principe : un secteur garde sa graine et son bruit (`creerTerrain`) ; l'éditeur
 - [x] Lot 1 — curseurs de `relief`, d'arbres, de bois, de haies, de buissons, de pluie ; brouillon `secteurs`, publication dans `assets/design/secteurs.json`, fusion au lancement (`appliquerSecteurs`). Reste, avec le lot 2 : garder les retouches dans `etat` pour qu'une partie sauvegardée refasse son sol, pas celui d'une carte republiée
 - [x] Lot 2 — retouches de relief (bosse, creux, crête, plateau, gomme), annuler / rétablir, appliquées dans `creerTerrain` (`formes.js`) ; la partie garde son sol dans `etat.sol`
 - [x] Lot 3 — objets posés (arbre, buisson, bois, haie, dégager), lignes de tranchées au curseur, contrôle à voix haute (`validerSecteur`) qui refuse la publication d'un secteur invalide ; la partie garde aussi ses tranchées et ses objets (`secteurDuJeu`)
-- [ ] Lot 4 (à décider) — « Essayer dans le jeu » (une bataille avec le brouillon), export / import JSON d'un secteur, déplacer un objet à la souris, un nom et un résumé modifiables
+- [x] Lot 4 — « Essayer dans le jeu » : `?essai=<secteur>&graine=<n>`, une bataille d'essai sans sauvegarde avec le brouillon de ce navigateur ; coût de la simulation mesuré sur quatre cartes retouchées : inchangé
+- [ ] Plus tard (non décidé) — export / import JSON d'un secteur, déplacer un objet à la souris, un nom et un résumé modifiables
 
 ### Refonte UX/UI (docs/ui-cible.md)
 
