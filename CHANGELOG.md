@@ -1,5 +1,9 @@
 # Journal des versions
 
+## 0.37.1 — 2026-10-19
+- Le choix du secteur à la nouvelle partie a deux colonnes : la liste des secteurs à gauche, le secteur choisi en 3D à droite, qui tourne
+- Le terrain montré est celui qu'on jouera ; « Autre terrain » en tire un autre
+
 ## 0.37.0 — 2026-10-19
 - L'atelier s'ouvre sur un éditeur de carte visuel : on pose des bosses, des creux, des crêtes, des arbres et des haies, on les déplace, on règle chaque chiffre nommé et décrit
 - La carte se regarde aussi en 3D, avec le moteur du jeu, à l'heure et par le temps qu'on choisit ; on y pose d'un clic, et « Essayer dans le jeu » lance une bataille d'essai

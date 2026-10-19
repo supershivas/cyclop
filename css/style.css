@@ -348,21 +348,29 @@ dialog form { margin-top: calc(var(--pas) * 2); }
 .chargement-piste { height: 10px; border: 2px solid var(--jeu-fond); }
 .chargement-piste i { display: block; height: 100%; background: var(--jeu-fond); transition: width .12s linear; }
 
-/* Le choix du secteur (Jérôme, v0.29.0) : trois cartes, une coupe du sol de chacune, deux phrases */
-#dialogue-carte { width: min(92vw, 62rem); }
-.cartes-choix { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--pas); }
+/* Le choix du secteur (Jérôme, v0.29.0 ; v0.37.1 : deux colonnes) : à gauche la liste des secteurs, à droite le secteur choisi en 3D, qui tourne ; le terrain montré est celui qu'on jouera */
+#dialogue-carte { width: min(94vw, 72rem); max-width: none; }        /* (game.css limite un dialogue à 520 px) */
+#dialogue-carte .menu { grid-auto-flow: column; justify-content: end; }
+.carte-colonnes { display: grid; grid-template-columns: minmax(15rem, 22rem) minmax(0, 1fr); gap: calc(var(--pas) * 2); align-items: start; }
+.cartes-choix { display: grid; gap: var(--pas); }
 .carte-choix { display: grid; gap: var(--pas); align-content: start; text-align: left; font: inherit; padding: var(--pas); cursor: pointer; color: var(--jeu-fond); background: var(--jeu-encre); border: 2px solid var(--jeu-encre); }
 .carte-choix:focus-visible { border-color: var(--jeu-nous); }
+.carte-choix[aria-pressed="true"] { border-color: var(--jeu-nous); outline: 2px solid var(--jeu-nous); outline-offset: 0; }
 @media (hover: hover) { .carte-choix:hover { border-color: var(--jeu-nous); } }
 .carte-choix b { font-weight: normal; font-size: var(--texte-moyen); letter-spacing: .06em; text-transform: uppercase; }
 .carte-choix .touche { float: right; color: var(--jeu-accent); }
 .carte-choix p { margin: 0; font-size: var(--texte-petit); line-height: 1.35; }
-.carte-choix svg { width: 100%; height: 64px; background: var(--jeu-fond); }
+.carte-choix svg { width: 100%; height: 3rem; background: var(--jeu-fond); }
 .carte-choix .sol { fill: none; stroke: var(--jeu-encre); stroke-width: 2; }
 .carte-choix .remplissage { fill: var(--jeu-accent); opacity: .5; stroke: none; }
 .carte-choix .ligne-nous { stroke: var(--jeu-nous); stroke-width: 3; }
 .carte-choix .ligne-eux { stroke: var(--jeu-eux); stroke-width: 3; }
-@media (max-width: 760px) { .cartes-choix { grid-template-columns: 1fr; } }
+.carte-apercu { display: grid; gap: var(--pas); }
+.carte-3d { position: relative; height: min(56vh, 30rem); overflow: hidden; display: flex; align-items: center; justify-content: center; background: var(--jeu-ombre); border: 1px solid var(--jeu-accent); }
+.carte-3d canvas { display: block; image-rendering: pixelated; }
+.carte-3d { cursor: grab; }
+.carte-legende { margin: 0; font-size: var(--texte-petit); line-height: 1.4; }
+@media (max-width: 760px) { .carte-colonnes { grid-template-columns: 1fr; } }
 
 /* Le haut de l'écran allégé pour un petit écran (Jérôme, v0.30.0 : 13 pouces, le champ était trop petit) : le temps à côté des réglages, les
    pertes sur une ligne par camp, la carte repliable, un billet sans montre dessinée (l'heure est dans le texte), le terrain sous la souris dans le billet. */

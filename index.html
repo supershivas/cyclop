@@ -9,8 +9,8 @@
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta property="og:image" content="og.png">
-<link rel="stylesheet" href="js/lib/game.css?v=0.37.0">
-<link rel="stylesheet" href="css/style.css?v=0.37.0">
+<link rel="stylesheet" href="js/lib/game.css?v=0.37.1">
+<link rel="stylesheet" href="css/style.css?v=0.37.1">
 </head>
 <body>
 <!-- La barre de chargement (v0.28.0) : là avant tout script ; main.js la remplit, puis la retire -->
@@ -241,8 +241,18 @@
 
 <dialog id="dialogue-carte" aria-label="Choisir le secteur">
   <h2>Quel secteur ?</h2>
-  <div class="cartes-choix" id="cartes-choix"></div>
-  <form method="dialog" class="menu"><button class="bouton" value="annuler">Annuler</button></form>
+  <div class="carte-colonnes">
+    <div class="cartes-choix" id="cartes-choix" role="group" aria-label="Les secteurs"></div>
+    <div class="carte-apercu">
+      <div class="carte-3d" id="carte-3d" aria-hidden="true"></div>
+      <p class="carte-legende" id="carte-legende"></p>
+    </div>
+  </div>
+  <form method="dialog" class="menu">
+    <button class="bouton" value="annuler">Annuler</button>
+    <button class="bouton" type="button" id="carte-autre" title="Tire un autre terrain pour ce secteur : les bosses, les arbres et la boue changent, le caractère du secteur reste">Autre terrain</button>
+    <button class="bouton" type="button" id="carte-jouer">Jouer ce secteur</button>
+  </form>
 </dialog>
 
 <dialog id="dialogue-confirmer" aria-label="Confirmer">
@@ -254,6 +264,6 @@
 </dialog>
 
 <div class="jeu-toast" id="toast" role="status" hidden></div>
-<script type="module" src="js/main.js?v=0.37.0"></script>
+<script type="module" src="js/main.js?v=0.37.1"></script>
 </body>
 </html>

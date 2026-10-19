@@ -1,35 +1,39 @@
-// La vue 3D de l'Atelier : le MÊME moteur que le jeu (`creerRendu` de rendu3d.js) posé sur une bataille de départ montée sur le secteur retouché
+// Un aperçu 3D d'un secteur : celui de l'Atelier (vue 3D de l'éditeur de carte) et celui du choix d'un secteur à la nouvelle partie. Le MÊME moteur que le jeu (`creerRendu` de rendu3d.js) posé sur une bataille de départ montée sur le secteur retouché
 // (`nouvelleBataille`) : ce qu'on y voit est ce que le joueur verra (sol en cubes, tranchées, arbres, soldats, lumière du jour). En lecture seule : on la regarde
 // (tourner, déplacer, zoomer) et l'on y construit : un clic sur le sol est rendu à l'éditeur (`surClic`, `surSurvol`, en mètres du terrain), qui dessine ses formes par-dessus
 // (`surcouche`, projetées par `versEcran` : elles suivent le relief et la perspective). Chargée à la demande (three.js ne se charge qu'au premier passage en 3D).
-import { creerRendu, CAMERA } from './rendu3d.js?v=0.37.0';
-import { nouvelleBataille, regarderAu } from './bataille.js?v=0.37.0';
-import { SECTEURS } from './data/secteur.js?v=0.37.0';
+import { creerRendu, CAMERA } from './rendu3d.js?v=0.37.1';
+import { nouvelleBataille, regarderAu } from './bataille.js?v=0.37.1';
+import { SECTEURS } from './data/secteur.js?v=0.37.1';
 
-export async function creerVue3D({ R, hote }) {
+export async function creerVue3D({ R, hote, rotation = 0 }) {       // rotation : rad/s, la caméra tourne seule (le choix d'un secteur) ; l'atelier la laisse immobile
   const canvas = document.createElement('canvas');
   const sur = document.createElement('canvas');                      // la surcouche : les formes de l'éditeur, projetées sur le sol
   sur.className = 'ed-3d-sur';
+  Object.assign(sur.style, { position: 'absolute', pointerEvents: 'none' });      // (sans CSS de la page : l'aperçu du choix d'un secteur n'a pas celui de l'atelier)
   hote.replaceChildren(canvas, sur);
   const rendu = await creerRendu(canvas, { respiration: 0 });      // la caméra ne respire pas : on construit, on ne joue pas
   rendu.bord = 'faux-noir';
   let B = null, actif = false, boucle = 0, derniere = 0, vu = false, ambiance = [12, 'sec'];
 
   // une bataille de départ sur le secteur `S` (déjà retouché) : `nouvelleBataille` lit `SECTEURS[id]`, qu'on remplace le temps de la monter
-  function monter(id, S, graine, { soldats = true } = {}) {
+  function monter(id, S, graine, { soldats = true, cadrer = false } = {}) {
     const avant = SECTEURS[id], v = rendu.vue, garde = vu && { cx: v.cx, cz: v.cz, zoom: v.zoom, yaw: v.cible.yaw, tangage: v.cible.tangage };
     SECTEURS[id] = S;
     try { B = nouvelleBataille(graine, R, { secteur: id, jours: 3, ...(soldats ? {} : { soldats: 16 }) }); } finally { SECTEURS[id] = avant; }
     regarderAu(B, ...ambiance);
     rendu.attacher(B);
     rendu.redimensionner();
-    if (garde) { v.cx = garde.cx; v.cz = garde.cz; v.zoom = garde.zoom; rendu.placerCamera(garde.yaw, garde.tangage); }
+    if (cadrer) {                      // tout le secteur, au centre, vu de haut
+      const m = S.marges; v.cx = m.x + S.largeur / 2; v.cz = m.y + S.hauteur / 2; v.zoom = 0; rendu.placerCamera(garde ? garde.yaw : CAMERA.yaw, 1.0); vu = true;
+    } else if (garde) { v.cx = garde.cx; v.cz = garde.cz; v.zoom = garde.zoom; rendu.placerCamera(garde.yaw, garde.tangage); }
     else { rendu.placerCamera(CAMERA.yaw, CAMERA.tangage); v.zoom = 1; vu = true; }
     rendu.dessiner(0.033, []);
   }
   function image(t) {
     if (!actif) return;
     const dt = Math.min(0.1, (t - derniere) / 1000 || 0.033); derniere = t;
+    if (rotation && !g) rendu.tourner(rotation * dt);
     if (B) { rendu.dessiner(dt, []); peindreSurcouche(); }
     boucle = requestAnimationFrame(image);
   }
@@ -74,6 +78,7 @@ export async function creerVue3D({ R, hote }) {
     rendu.zoomer(e.deltaY < 0 ? 1 : -1, [e.clientX - r.left, e.clientY - r.top]);
   }, { passive: false });
   window.addEventListener('resize', () => { if (actif) rendu.redimensionner(); });
+  new ResizeObserver(() => { if (actif) rendu.redimensionner(); }).observe(hote);          // la mise en page (une boîte de dialogue qui s'ouvre) change la taille sans fenêtre qui bouge
 
   // l'heure et le temps qu'il fait, sans remonter la bataille
   function regler(heure, meteo) { ambiance = [heure, meteo]; if (B) regarderAu(B, heure, meteo); }

@@ -1,40 +1,40 @@
 // Le cycle de vie : écran titre → bataille → nuit → fin ; pause active,
 // réglages, sauvegarde, mise à jour, debug. Les règles sont dans bataille.js
 // (pures), le dessin dans rendu3d.js (il ne modifie jamais l'état).
-import { createLoop } from './lib/loop.js?v=0.37.0';
-import { createKeys, stopTypeahead } from './lib/keys.js?v=0.37.0';
-import { createPointer, lockBrowserGestures } from './lib/pointer.js?v=0.37.0';
-import { createGamepad } from './lib/gamepad.js?v=0.37.0';
-import { createStore, autosave, pickJSONFile } from './lib/save.js?v=0.37.0';
-import { startUpdateCheck, loadVersion, loadChangelog, downloadJSON } from './lib/app-update.js?v=0.37.0';
-import { ROLES } from './palette.js?v=0.37.0';
-import { VERSION_CAMPAGNE, CLE as CLE_CAMPAGNE, cloturerDansLeStore, nouvelleCampagne, suivante, passage, bilan as bilanCampagne } from './campagne.js?v=0.37.0';
-import { MISSIONS, EUX, nouvelleBataille, etapesRestaurer, avancer, aube, ordonnerMarche, peutOrdonner, ordonnerBarrage, peutBarrage, ordonnerStance, peutStance, horloge, effectifs, tronconsTenus, moralEnMots, terrainResume, forcesTroncons, largeurZone, lettreZone, etendueZones, nomTroncon, actionDe, secteursDe, tronconsDeLigne, zone, photo, restaurer, PAS, NOUS } from './bataille.js?v=0.37.0';
-import { ligneY } from './tranchees.js?v=0.37.0';
-import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.37.0';
-import { STANCES, STANCE_DEFAUT } from './data/stances.js?v=0.37.0';
-import { METEO } from './data/meteo.js?v=0.37.0';
-import { impact, hydroLignes } from './terrain.js?v=0.37.0';
-import { hash2 } from './lib/rng.js?v=0.37.0';
-import { creerRendu, CAMERA } from './rendu3d.js?v=0.37.0';
-import { etatEnMots, experienceEnMots, chevrons } from './identite.js?v=0.37.0';
-import { CORVEES } from './data/corvees.js?v=0.37.0';
-import { refusCorvee } from './nuit.js?v=0.37.0';
-import { chargerContenu, appliquerSecteurs } from './design-store.js?v=0.37.0';
-import * as lecture from './hud/lecture.js?v=0.37.0';
-import { creerFiche } from './hud/fiche.js?v=0.37.0';
-import { chevronsHtml } from './hud/barres.js?v=0.37.0';
-import { creerNuit, corveeDe, corveeCourte } from './hud/nuit.js?v=0.37.0';
-import { creerCampagne } from './hud/campagne.js?v=0.37.0';
-import { creerCarnet, deux } from './hud/carnet.js?v=0.37.0';
-import { creerCarte } from './hud/carte.js?v=0.37.0';
-import { creerPertes } from './hud/pertes.js?v=0.37.0';
-import { creerBarreTemps } from './hud/temps.js?v=0.37.0';
-import { creerChargement } from './hud/chargement.js?v=0.37.0';
-import { SECTEURS } from './data/secteur.js?v=0.37.0';
-import { creerLockstep, empreinteEtat } from './reseau/lockstep.js?v=0.37.0';
-import { nouveauCode, codeValide, publier, ecouter } from './reseau/relais.js?v=0.37.0';
-import { creerHote, creerInvite } from './reseau/lien.js?v=0.37.0';
+import { createLoop } from './lib/loop.js?v=0.37.1';
+import { createKeys, stopTypeahead } from './lib/keys.js?v=0.37.1';
+import { createPointer, lockBrowserGestures } from './lib/pointer.js?v=0.37.1';
+import { createGamepad } from './lib/gamepad.js?v=0.37.1';
+import { createStore, autosave, pickJSONFile } from './lib/save.js?v=0.37.1';
+import { startUpdateCheck, loadVersion, loadChangelog, downloadJSON } from './lib/app-update.js?v=0.37.1';
+import { ROLES } from './palette.js?v=0.37.1';
+import { VERSION_CAMPAGNE, CLE as CLE_CAMPAGNE, cloturerDansLeStore, nouvelleCampagne, suivante, passage, bilan as bilanCampagne } from './campagne.js?v=0.37.1';
+import { MISSIONS, EUX, nouvelleBataille, etapesRestaurer, avancer, aube, ordonnerMarche, peutOrdonner, ordonnerBarrage, peutBarrage, ordonnerStance, peutStance, horloge, effectifs, tronconsTenus, moralEnMots, terrainResume, forcesTroncons, largeurZone, lettreZone, etendueZones, nomTroncon, actionDe, secteursDe, tronconsDeLigne, zone, photo, restaurer, PAS, NOUS } from './bataille.js?v=0.37.1';
+import { ligneY } from './tranchees.js?v=0.37.1';
+import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.37.1';
+import { STANCES, STANCE_DEFAUT } from './data/stances.js?v=0.37.1';
+import { METEO } from './data/meteo.js?v=0.37.1';
+import { impact, hydroLignes } from './terrain.js?v=0.37.1';
+import { hash2 } from './lib/rng.js?v=0.37.1';
+import { creerRendu, CAMERA } from './rendu3d.js?v=0.37.1';
+import { etatEnMots, experienceEnMots, chevrons } from './identite.js?v=0.37.1';
+import { CORVEES } from './data/corvees.js?v=0.37.1';
+import { refusCorvee } from './nuit.js?v=0.37.1';
+import { chargerContenu, appliquerSecteurs } from './design-store.js?v=0.37.1';
+import * as lecture from './hud/lecture.js?v=0.37.1';
+import { creerFiche } from './hud/fiche.js?v=0.37.1';
+import { chevronsHtml } from './hud/barres.js?v=0.37.1';
+import { creerNuit, corveeDe, corveeCourte } from './hud/nuit.js?v=0.37.1';
+import { creerCampagne } from './hud/campagne.js?v=0.37.1';
+import { creerCarnet, deux } from './hud/carnet.js?v=0.37.1';
+import { creerCarte } from './hud/carte.js?v=0.37.1';
+import { creerPertes } from './hud/pertes.js?v=0.37.1';
+import { creerBarreTemps } from './hud/temps.js?v=0.37.1';
+import { creerChargement } from './hud/chargement.js?v=0.37.1';
+import { SECTEURS } from './data/secteur.js?v=0.37.1';
+import { creerLockstep, empreinteEtat } from './reseau/lockstep.js?v=0.37.1';
+import { nouveauCode, codeValide, publier, ecouter } from './reseau/relais.js?v=0.37.1';
+import { creerHote, creerInvite } from './reseau/lien.js?v=0.37.1';
 
 const JEU = 'cyclopeen';
 const $ = id => document.getElementById(id);
@@ -292,11 +292,14 @@ function demarrerCampagne(graineIdentite) {
 }
 $('ordre-compris').onclick = () => $('dialogue-ordre').close();
 $('dialogue-ordre').addEventListener('close', reprendre);
-// Le choix du secteur (v0.29.0) : trois cartes (`SECTEURS` de data/secteur.js), une coupe du sol de chacune ; en mode debug, celui de l'adresse (?secteur=crete) sans demander
+// Le choix du secteur (v0.29.0 ; v0.37.1 : deux colonnes) : à gauche la liste des secteurs (`SECTEURS` de data/secteur.js, avec les retouches de l'atelier), à droite le secteur choisi en 3D,
+// la caméra tourne seule (`apercu-3d.js`, le même moteur que le jeu) ; le terrain montré est celui qu'on jouera (la graine est tirée ici : « Autre terrain » en tire une autre).
+// Rend { secteur, graine } ou null (annulé) ; en mode debug, celui de l'adresse (?secteur=crete) sans demander.
+let apercuSecteur = null;
 function demanderSecteur() {
-  const d = $('dialogue-carte');
-  if (DEBUG) return Promise.resolve(SECTEURS[params.get('secteur')] ? params.get('secteur') : 'essai');
-  const liste = $('cartes-choix');
+  const d = $('dialogue-carte'), tirage = () => window.__seed ?? Date.now() % 100000;
+  if (DEBUG) return Promise.resolve({ secteur: SECTEURS[params.get('secteur')] ? params.get('secteur') : 'essai', graine: tirage() });
+  const liste = $('cartes-choix'), ids = Object.keys(SECTEURS);
   liste.replaceChildren(...Object.entries(SECTEURS).map(([id, S], k) => {
     const b = document.createElement('button'); b.className = 'carte-choix'; b.dataset.id = id; b.type = 'button';
     // la coupe nord-sud : le sol, rempli dessous ; leurs lignes (rouge d'avant : vert kaki) en haut, les nôtres en bas
@@ -306,12 +309,35 @@ function demanderSecteur() {
     return b;
   }));
   return new Promise(ok => {
-    const fin = id => { d.onclose = null; if (d.open) d.close(); ok(id); };
-    liste.onclick = e => { const b = e.target.closest('.carte-choix'); if (b) fin(b.dataset.id); };
-    d.onkeydown = e => { const id = Object.keys(SECTEURS)[Number(e.key) - 1]; if (id) { e.preventDefault(); fin(id); } };
-    d.onclose = () => ok(null);                       // annulé (Échap ou le bouton)
+    let choisi = ids[0], graine = tirage(), ouvert = true;
+    const fin = res => { ouvert = false; apercuSecteur?.activer(false); d.onclose = null; if (d.open) d.close(); ok(res); };
+    // le secteur choisi, en 3D (le premier passage charge le moteur de l'aperçu ; sans WebGL, la liste reste utilisable)
+    const montrer = async () => {
+      for (const b of liste.children) b.setAttribute('aria-pressed', String(b.dataset.id === choisi));
+      $('carte-legende').textContent = `${SECTEURS[choisi].nom} : ${SECTEURS[choisi].resume}`;
+      try {
+        if (!apercuSecteur) { const { creerVue3D } = await import('./apercu-3d.js?v=0.37.1'); apercuSecteur = await creerVue3D({ R, hote: $('carte-3d'), rotation: 0.12 }); }
+        if (!ouvert) return;
+        apercuSecteur.monter(choisi, SECTEURS[choisi], graine, { soldats: false, cadrer: true });
+        apercuSecteur.activer(true);
+      } catch (e) { console.warn('Aperçu 3D indisponible', e); $('carte-3d').hidden = true; }
+    };
+    const choisir = id => { if (id === choisi && apercuSecteur) return; choisi = id; montrer(); };
+    liste.onclick = e => { const b = e.target.closest('.carte-choix'); if (b) choisir(b.dataset.id); };
+    liste.ondblclick = e => { if (e.target.closest('.carte-choix')) fin({ secteur: choisi, graine }); };
+    $('carte-autre').onclick = () => { graine = (Math.floor(Math.random() * 99999) + 1); montrer(); };
+    $('carte-jouer').onclick = () => fin({ secteur: choisi, graine });
+    d.onkeydown = e => {
+      const k = Number(e.key);
+      if (k >= 1 && k <= ids.length) { e.preventDefault(); choisir(ids[k - 1]); }
+      else if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { e.preventDefault(); const i = ids.indexOf(choisi) + (e.key === 'ArrowDown' ? 1 : -1); if (ids[i]) { choisir(ids[i]); liste.children[i].focus(); } }
+      else if (e.key === 'Enter' && !e.target.closest('#carte-autre, form button')) { e.preventDefault(); fin({ secteur: choisi, graine }); }
+    };
+    d.onclose = () => { ouvert = false; apercuSecteur?.activer(false); ok(null); };            // annulé (Échap ou le bouton)
+    $('carte-3d').hidden = false;
     d.showModal();
     liste.firstElementChild?.focus();
+    montrer();
   });
 }
 // ─── Le jeu à deux, sur le réseau (Jérôme, v0.30.0) ───────────────────────────────────────────────────────────────
@@ -413,9 +439,9 @@ function poigneeInvite(lien) {
   };
   dlg.addEventListener('close', () => { arreterRelais?.(); arreterRelais = null; if (!reseau && lien) { lien.fermer(); lien = null; } });
   $('deux-inviter').onclick = async () => {
-    const secteur = await demanderSecteur();
-    if (!secteur) return;
-    const graine = window.__seed ?? Date.now() % 100000;
+    const choix = await demanderSecteur();
+    if (!choix) return;
+    const { secteur, graine } = choix;
     $('deux-choix').hidden = true; $('deux-hote').hidden = false; statut('Préparation de l\'invitation…');
     try {
       lien = creerHote(); poigneeHote(lien, graine, secteur); suivreEtat(lien);
@@ -462,13 +488,12 @@ function poigneeInvite(lien) {
   $('deux-copier-reponse').onclick = () => copier('deux-ma-reponse');
 }
 $('nouvelle').onclick = async () => {
-  const graine = window.__seed ?? Date.now() % 100000;      // la graine elle-même peut venir de l'horloge
   if (store.has('partie')) {
     const deCampagne = !!store.load('partie')?.campagne;
     if (!await confirmer(deCampagne ? 'Une bataille de campagne est en cours. La remplacer ? La campagne reprendra à cette bataille avec « Continuer la campagne ».' : 'Une bataille est en cours. La remplacer ?', 'Nouvelle partie')) return;
   }
-  const secteur = await demanderSecteur();
-  if (secteur) commencer(graine, secteur);
+  const choix = await demanderSecteur();
+  if (choix) commencer(choix.graine, choix.secteur);
 };
 // La campagne depuis l'écran titre (lot 7) : une neuve efface le registre ; « Continuer la campagne » repart de la bataille qui suit la dernière close
 $('nouvelle-campagne').onclick = async () => {
@@ -522,7 +547,7 @@ function montrerFin() {
   $('fin-lignes').textContent = e.tranchees ? `Tronçons tenus : ${tronconsTenus(B)[0]} des nôtres, ${tronconsTenus(B)[1]} en face.` : '';
   $('dialogue-fin').showModal();
 }
-$('fin-nouvelle').onclick = async () => { $('dialogue-fin').close(); const secteur = await demanderSecteur(); if (!secteur) return montrerTitre(); if (!ESSAI) store.clear('partie'); commencer(window.__seed ?? Date.now() % 100000, secteur); };
+$('fin-nouvelle').onclick = async () => { $('dialogue-fin').close(); const choix = await demanderSecteur(); if (!choix) return montrerTitre(); if (!ESSAI) store.clear('partie'); commencer(choix.graine, choix.secteur); };
 $('fin-titre-btn').onclick = () => { $('dialogue-fin').close(); montrerTitre(); };
 
 // ─── Réglages ──────────────────────────────────────────────────────────────
@@ -1224,7 +1249,7 @@ startUpdateCheck({
 
 // ─── Mode debug (section 18) : chargé seulement avec ?debug=1 ──────────────
 if (DEBUG) {
-  const { installDebug, seedFromUrl } = await import('./lib/debug.js?v=0.37.0');
+  const { installDebug, seedFromUrl } = await import('./lib/debug.js?v=0.37.1');
   window.__seed = seedFromUrl() ?? undefined;
   installDebug({
     state: () => B && { ...horloge(B), effectifs: effectifs(B), pertes: B.etat.pertes, impacts: B.etat.impacts.length, enJeu: enJeu(), pause: loop.paused },
