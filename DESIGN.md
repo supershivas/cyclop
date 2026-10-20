@@ -82,7 +82,7 @@ sort que là où nos lignes ont faibli. (Jérôme, v0.9.0)
 Le soleil se lève à l'est et se couche à l'ouest : les ombres des hommes et des
 arbres tournent avec lui, longues le matin et le soir, courtes à midi. De 16 h à
 18 h, le soir tombe (une trame de terre qui monte) ; la nuit, le champ n'est plus
-éclairé que par les lanternes des tranchées, les incendies et les fusées. Les
+éclairé que par les lanternes des tranchées, les incendies et les fusées, et, à l'arrière, les lampes que portent les hommes (une pour dix, des deux camps ; Jérôme, v0.39.0). Un tronçon où les deux camps se font face au soir ne s'apaise pas : la mêlée se joue pendant la nuit, et ceux qui y sont ne font ni corvée ni vrai repos (Jérôme, v0.39.0 ; en 14-18, un combat engagé ne s'arrêtait pas au coucher du soleil et la tranchée prise était contre-attaquée dans la nuit). Les
 obus tombent du ciel, soulèvent une gerbe de terre, laissent une fumée qui
 dérive ; un arbre touché brûle et le feu gagne ses voisins ; des corbeaux
 tournent au-dessus des morts. (Jérôme, v0.8.0)

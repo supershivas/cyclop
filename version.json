@@ -1,8 +1,8 @@
 {
-  "version": "0.38.3",
+  "version": "0.39.0",
   "date": "2026-10-20",
   "changes": [
-    "La nuit, la carte d'un régiment à qui l'on a donné un ordre se grise ; sept corvées au lieu de neuf (plus de caillebotis ni de coup de main) ; donner une corvée à plusieurs régiments à la fois les atteint tous",
-    "Les boutons empilés d'un régiment (ordres, formes, postures, corvées) ont tous la même largeur"
+    "La nuit, un tronçon où les deux camps se font face au soir ne s'apaise pas : la mêlée se joue pendant la nuit, les régiments au contact se battent sans corvée ni repos, et l'aube dit les morts et les tronçons pris",
+    "À l'arrière, on voit les régiments bouger dans la nuit avec leurs lampes (une pour dix hommes, des deux camps)"
   ]
 }

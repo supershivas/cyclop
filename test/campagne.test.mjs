@@ -60,7 +60,8 @@ import { readFileSync } from 'node:fs';
 const magasin = (debug = false, backend = memoryBackend()) => createStore({ game: 'cyclopeen', debug, backend, entries: { campagne: { version: 1 } }, secret: ['gh-token'] });
 // la bataille n de la campagne c, petite, jouée jusqu'à sa fin (avec une relève et une évacuation, pour que les chemins des survivants servent)
 function jouerJusqu_aLaFin(c, { relever = false } = {}) {
-  const s = suivante(c), B = nouvelleBataille(s.graine, R, { soldats: 200, jours: 3, secteur: s.secteur, mission: s.mission, graineIdentite: s.graineIdentite, campagne: s.campagne });
+  // sans mêlée de nuit (`meleeMort: 0`, v0.39.0) : ces tests suivent le registre, pas l'issue d'un corps à corps (la mêlée a ses tests, dans bataille.test.mjs)
+  const s = suivante(c), B = nouvelleBataille(s.graine, { ...R, nuit: { ...R.nuit, meleeMort: 0 } }, { soldats: 200, jours: 3, secteur: s.secteur, mission: s.mission, graineIdentite: s.graineIdentite, campagne: s.campagne });
   ordonnerMarche(B, [0, 1], zone(B).x0 + 150, zone(B).y0 + 150);
   let nuits = 0;
   while (B.etat.phase !== 'fin') {

@@ -1,13 +1,13 @@
 // Le papier de la nuit (Jérôme, v0.13.0) : un état (choix des corvées, puis le bilan de l'aube), jamais une boîte de
 // dialogue : le champ reste là, on choisit des régiments (clic, cadre, T) et on leur donne une corvée, dite sur leur carte.
-import { NOUS, aube } from '../bataille.js?v=0.38.3';
-import { METEO } from '../data/meteo.js?v=0.38.3';
-import { CORVEES } from '../data/corvees.js?v=0.38.3';
-import { refusCorvee } from '../nuit.js?v=0.38.3';
-import { pluriel } from './lecture.js?v=0.38.3';
+import { NOUS, aube } from '../bataille.js?v=0.39.0';
+import { METEO } from '../data/meteo.js?v=0.39.0';
+import { CORVEES, CONTACT } from '../data/corvees.js?v=0.39.0';
+import { refusCorvee, contactDe } from '../nuit.js?v=0.39.0';
+import { pluriel } from './lecture.js?v=0.39.0';
 
-export const corveeDe = id => CORVEES.find(c => c.id === id)?.nom || '';
-export const corveeCourte = id => CORVEES.find(c => c.id === id)?.court || '';
+export const corveeDe = id => [...CORVEES, CONTACT].find(c => c.id === id)?.nom || '';
+export const corveeCourte = id => [...CORVEES, CONTACT].find(c => c.id === id)?.court || '';
 const nomJour = n => (n === 1 ? '1er' : `${n}e`);
 const tron = n => `${n} tronçon${n > 1 ? 's' : ''}`;
 // les tronçons gagnés et perdus dans la journée, et ce qu'ils ont coûté se lit juste au-dessus
@@ -23,17 +23,20 @@ function bilanEnMots(B, b) {
     b.evacues && `${pl(b.evacues, 'blessé évacué', 'blessés évacués')}`,
     b.retours && `${pl(b.retours, 'blessé guéri revenu', 'blessés guéris revenus')} au front`,
     b.repares && `${pl(b.repares, 'tronçon réparé', 'tronçons réparés')}`,
+    b.prisNuit && `${pl(b.prisNuit, 'tronçon pris', 'tronçons pris')} dans la mêlée`,
+    b.perdusNuit && `${pl(b.perdusNuit, 'tronçon perdu', 'tronçons perdus')} dans la mêlée`,
     b.releves && `${pl(b.releves, 'régiment relevé', 'régiments relevés')}`,
     b.abris && `des abris creusés sous ${pl(b.abris, 'tronçon', 'tronçons')}`,
     b.ravitailles && `${pl(b.ravitailles, 'régiment ravitaillé', 'régiments ravitaillés')}`,
   ].filter(Boolean);
   const morts = [
+    b.mortsMelee && `${b.mortsMelee} au corps à corps`,
     b.mortsCorvee && `${b.mortsCorvee} aux corvées`,
     b.mortsBlesses && `${b.mortsBlesses} de leurs blessures`,
   ].filter(Boolean);
   const regs = B.etat.regiments;
   return [
-    faits.length ? `Cette nuit : ${faits.join(', ')}.` : 'Une nuit de repos.',
+    faits.length ? `Cette nuit : ${faits.join(', ')}.` : b.mortsMelee ? 'Une nuit de combat.' : 'Une nuit de repos.',
     morts.length ? `Morts dans la nuit : ${morts.join(', ')}.` : 'Personne n\'est mort cette nuit.',
     b.affames && `${pl(b.affames, 'régiment n\'a', 'régiments n\'ont')} plus de vivres : la faim.`,
     ...(b.refus || []).map(id => `${regs[id].nom} refuse de monter aujourd'hui : il tiendra sa tranchée, rien de plus.`),
@@ -60,7 +63,8 @@ export function creerNuit({ $, bataille, choisis, pauser, reprendre, sauvegarder
     $('nuit-demain').textContent = `Demain : ${METEO[e.previsions[j - 1]]?.prevision || '—'}.`;
     $('nuit-reserves').textContent = e.mission ? `En réserve : ${pluriel(e.reserves[moi()], 'régiment frais', 'régiments frais')}.` : '';
     // la dernière corvée donnée, si elle est encore possible, sinon le repos
-    corvees = Object.fromEntries(nosRegiments(B).map(r => [r.id, avant[r.id] && !refusCorvee(B, r, avant[r.id]) ? avant[r.id] : 'repos']));
+    const contact = contactDe(B);              // au contact de l'ennemi : il se bat toute la nuit, ce n'est pas un choix
+    corvees = Object.fromEntries(nosRegiments(B).map(r => [r.id, contact.has(r.id) ? 'contact' : avant[r.id] && !refusCorvee(B, r, avant[r.id]) ? avant[r.id] : 'repos']));
     donnees = new Set();
     etat = 'choix';
     $('nuit-corps').hidden = false; $('aube-bilan').hidden = true; $('aube').textContent = 'À l\'aube';

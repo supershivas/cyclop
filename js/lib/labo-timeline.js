@@ -8,7 +8,7 @@
    « Contact » sans attendre la boucle.
 
    Module ES sans dépendance. À appeler dans le `render` d'une variante :
-     import { mountTimeline } from './lib/labo-timeline.js?v=0.38.3'
+     import { mountTimeline } from './lib/labo-timeline.js?v=0.39.0'
      render: stage => {
        const dessin = ...;                              // le canvas, le DOM de la variante
        stage.append(dessin);

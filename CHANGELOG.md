@@ -1,5 +1,10 @@
 # Journal des versions
 
+## 0.39.0 — 2026-10-20
+- La nuit, la mêlée continue : un tronçon où les deux camps se font face au soir est tranché pendant la nuit (le plus faible y laisse la plus grande part de ses hommes), et l'aube dit les morts au corps à corps et les tronçons pris ou perdus
+- Un régiment au contact de l'ennemi ne reçoit aucune corvée : sa carte dit « Au contact » et ses boutons sont grisés avec la raison
+- À l'arrière, des lampes vont et viennent dans la nuit, une pour dix hommes, dans les deux camps
+
 ## 0.38.3 — 2026-10-20
 - La nuit, la carte d'un régiment à qui l'on a donné un ordre se grise
 - Sept corvées au lieu de neuf : plus de caillebotis ni de coup de main

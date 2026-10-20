@@ -13,12 +13,14 @@
    - (v0.11.0) Les abris profonds (`etat.abris` : un niveau par tronçon, une nuit
      de travail chacun) ; les vivres (`reg.vivres`, en nuits : sans eux, la nuit
      repose moins et le moral baisse).
-   - (v0.38.3) Les caillebotis et le coup de main sont retirés : sept corvées. */
-import { toucher } from './terrain.js?v=0.38.3';
-import { hash2 } from './lib/rng.js?v=0.38.3';
-import { CORVEES } from './data/corvees.js?v=0.38.3';
-import { REGIMENTS } from './data/lexique.js?v=0.38.3';
-import { ajouterSoldat } from './army.js?v=0.38.3';
+   - (v0.38.3) Les caillebotis et le coup de main sont retirés : sept corvées.
+   - (v0.39.0) La mêlée se joue dans la nuit (`meleeNuit`) : un tronçon où les deux camps sont face à face au soir est tranché à l'aube, et les
+     régiments au contact (`contactDe`) ne reçoivent aucune corvée. */
+import { toucher } from './terrain.js?v=0.39.0';
+import { hash2 } from './lib/rng.js?v=0.39.0';
+import { CORVEES } from './data/corvees.js?v=0.39.0';
+import { REGIMENTS } from './data/lexique.js?v=0.39.0';
+import { ajouterSoldat } from './army.js?v=0.39.0';
 
 export const SORTES = ['reparer'];          // les travaux de terrain, par leur numéro dans etat.travaux
 export const corvee = id => CORVEES.find(c => c.id === id);
@@ -54,10 +56,36 @@ function isolement(B, reg) {
   return null;
 }
 
+/* La mêlée de nuit (Jérôme, v0.39.0) : les hommes de chaque camp dans chaque tronçon, tels que le jour les a laissés. Un tronçon où les deux camps sont
+   présents au soir est une mêlée en cours : elle ne s'arrête pas avec le soleil. */
+function comptes(B) {
+  const { terrain: T, armee: A } = B, n = B.etat.troncons.length, c = new Int32Array(n * 2);
+  if (!n || !T.troncon) return c;
+  for (let i = 0; i < A.n; i++) {
+    if (A.mort[i]) continue;
+    const t = T.troncon[(A.y[i] | 0) * T.W + (A.x[i] | 0)];
+    if (t >= 0) c[t * 2 + A.camp[i]]++;
+  }
+  return c;
+}
+// Les régiments au contact de l'ennemi : un de leurs hommes est dans un tronçon disputé (la nuit seulement)
+export function contactDe(B) {
+  const regs = new Set();
+  if (B.etat.phase !== 'nuit') return regs;
+  const { terrain: T, armee: A } = B, c = comptes(B);
+  for (let i = 0; i < A.n; i++) {
+    if (A.mort[i]) continue;
+    const t = T.troncon[(A.y[i] | 0) * T.W + (A.x[i] | 0)];
+    if (t >= 0 && c[t * 2] && c[t * 2 + 1]) regs.add(A.reg[i]);
+  }
+  return regs;
+}
+
 // Un régiment peut-il faire cette corvée ? Rend la raison du refus, ou null.
 export function refusCorvee(B, reg, id) {
   const c = corvee(id);
   if (!c) return 'Pas de telle corvée.';
+  if (contactDe(B).has(reg.id)) return 'Au contact de l\'ennemi : il se bat toute la nuit.';
   if ((id === 'evacuer' || id === 'ravitailler') && chezLEnnemi(B, reg)) {
     const m = isolement(B, reg);
     if (m) return `Chez l'ennemi, ${id === 'evacuer' ? 'les blessés ne passent pas' : 'la soupe ne passe pas'} : ${m}.`;
@@ -125,6 +153,40 @@ export function choixEnFace(B) {
   if (eprouves.length && B.etat.reserves?.[1] > 0) out[eprouves[0].id] = 'releve';
   return out;
 }
+/* La mêlée se joue dans la nuit, avant les corvées. Chaque homme d'un tronçon disputé tombe avec la chance `nuit.meleeMort` × 2 × (leurs forces /
+   toutes les forces) : à forces égales, `meleeMort` ; le plus faible y laisse bien plus que le plus fort. Puis la règle du jour (`prises` : au moins
+   `prise` attaquants et `melee` fois les défenseurs) dit si le tronçon change de main ; sinon la mêlée est toujours là au matin. Sans tronçon disputé,
+   aucun tirage : une nuit sans mêlée est celle d'avant au bit près. */
+function meleeNuit(B, ctx, bilan) {
+  const { etat, R, armee: A, terrain: T } = B, N = R.nuit, C = R.tranchee, { rng, mourir } = ctx;
+  const compte = comptes(B);
+  for (let t = 0; t < etat.troncons.length; t++) {
+    if (!compte[t * 2] || !compte[t * 2 + 1]) continue;
+    const dedans = [];
+    for (let i = 0; i < A.n; i++) if (!A.mort[i] && T.troncon[(A.y[i] | 0) * T.W + (A.x[i] | 0)] === t) dedans.push(i);
+    for (const i of dedans) {
+      const c = A.camp[i], siens = compte[t * 2 + c], leurs = compte[t * 2 + 1 - c];
+      if (rng() < N.meleeMort * 2 * leurs / (siens + leurs)) { mourir(i, 'mêlée'); bilan[c].mortsMelee++; }
+    }
+    const tient = etat.troncons[t], autre = 1 - tient;
+    let def = 0, att = 0;
+    for (const i of dedans) if (!A.mort[i]) { if (A.camp[i] === tient) def++; else att++; }
+    if (att < C.prise || (def && att < C.melee * def)) continue;
+    // il change de main : les vainqueurs s'aguerrissent, leur régiment se reprend, ceux qui devaient le tenir le perdent
+    etat.troncons[t] = autre; etat.melee[t] = 0;
+    etat.prises[etat.jour - 1][autre]++;
+    bilan[autre].prisNuit++; bilan[tient].perdusNuit++;
+    const tr = B.troncons[t], L = B.lignes[tr.ligne], gagnants = new Set();
+    for (const i of dedans) if (!A.mort[i] && A.camp[i] === autre) { A.exp[i] = Math.min(1, A.exp[i] + R.experience.prise); gagnants.add(A.reg[i]); }
+    for (const reg of etat.regiments) {
+      if (gagnants.has(reg.id)) reg.moral = Math.min(1, reg.moral + R.moral.prise);
+      const o = reg.ordre.trace;
+      if (reg.camp === tient && o && o.ligne === L.camp * 10 + L.rang && o.x1 > tr.x0 && o.x0 < tr.x1) reg.moral = Math.max(0, reg.moral - R.moral.perte);
+    }
+    B.evenements.push({ type: 'prise', camp: autre, troncon: t, x: (tr.x0 + tr.x1) / 2, y: L.y0 });
+  }
+}
+
 /* Les corvées de la nuit. choix : { id du régiment : corvée } (nos régiments ;
    ceux d'en face choisissent seuls ; sans choix, le repos). ctx : { rng,
    mourir(i, cause, ou) }. Rend le bilan de la nuit pour chaque camp. */
@@ -132,8 +194,10 @@ export function corvees(B, choix, ctx) {
   const { etat, R, armee: A } = B;
   const N = R.nuit, { rng, mourir } = ctx;
   const tous = etat.deux ? { ...choix } : { ...choixEnFace(B), ...choix };      // (à deux, chaque joueur choisit pour ses régiments ; sans choix, le repos)
-  const bilan = [0, 1].map(() => ({ inhumes: 0, evacues: 0, repares: 0, abris: 0, ravitailles: 0, mortsCorvee: 0, mortsBlesses: 0, affames: 0, retours: 0 }));
+  const bilan = [0, 1].map(() => ({ inhumes: 0, evacues: 0, repares: 0, abris: 0, ravitailles: 0, mortsCorvee: 0, mortsBlesses: 0, affames: 0, retours: 0, mortsMelee: 0, prisNuit: 0, perdusNuit: 0 }));
   const faite = {}, releves = [];
+  const contact = contactDe(B);                    // (avant la mêlée : ceux qui se battent cette nuit)
+  meleeNuit(B, ctx, bilan);
   // le centre de chaque régiment (là où sont ses hommes)
   const centres = etat.regiments.map(() => ({ x: 0, y: 0, n: 0 }));
   for (let i = 0; i < A.n; i++) { const c = centres[A.reg[i]]; c.x += A.x[i]; c.y += A.y[i]; c.n++; }
@@ -143,7 +207,8 @@ export function corvees(B, choix, ctx) {
   for (const reg of etat.regiments) {
     if (!reg.effectif) continue;
     let id = tous[reg.id] || 'repos';
-    if (refusCorvee(B, reg, id)) id = 'repos';
+    if (contact.has(reg.id)) id = 'contact';        // au contact : ni corvée ni vrai repos
+    else if (refusCorvee(B, reg, id)) id = 'repos';
     faite[reg.id] = id;
     const b = bilan[reg.camp], ctr = centres[reg.id];
     if (id === 'reparer') {

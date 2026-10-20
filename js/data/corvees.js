@@ -11,3 +11,5 @@ export const CORVEES = [
   { id: 'ravitailler', court: 'Vivres', nom: 'Ravitailler', dit: 'la soupe et le pain montent par les boyaux : des vivres pour trois nuits' },
   { id: 'releve', court: 'Relève', nom: 'La relève', dit: 'un régiment frais, pris dans la réserve, prend sa place à l\'aube ; celui-ci part au repos' },
 ];
+// Ce n'est pas un choix (Jérôme, v0.39.0) : un régiment au contact de l'ennemi au soir se bat toute la nuit, sans corvée ni vrai repos.
+export const CONTACT = { id: 'contact', court: 'Au contact', nom: 'Au contact de l\'ennemi', dit: 'il tient sa place toute la nuit et ne se repose pas' };

@@ -168,6 +168,8 @@ export const REGLAGES = {
     faimRepos: 0.5,       // sans vivres, la nuit ne repose que de cette part…
     faimMoral: 0.06,      // … et le moral perd cela chaque nuit
     calme: 60,            // m : dans une tranchée d'en face, un régiment d'en face à moins de cela : ni évacuer ni ravitailler (v0.22.0)
+    // la mêlée de nuit (Jérôme, v0.39.0) : un tronçon où les deux camps se font face au soir se joue pendant la nuit
+    meleeMort: 0.3,       // chance de tomber, par homme, à forces égales ; × 2 × (leurs forces / les forces totales) : le plus faible y laisse bien plus que le plus fort
   },
   jour: {
     duree: 360,           // s de jeu pour une journée (6 h → 18 h)

@@ -3,7 +3,7 @@ import { readFileSync } from 'node:fs';
 import { nouvelleBataille, avancer, ordonnerMarche, ordonnerBarrage, aube, photo, restaurer, effectifs, horloge, zone, tronconsTenus, rangDe, moralEnMots, abriDe, terrainSous, terrainResume, peutOrdonner } from '../js/bataille.js';
 import { ligneY } from '../js/tranchees.js';
 import { calculerCouts, dimensionsCouts, BLOC } from '../js/champs.js';
-import { tronconsDe, refusCorvee, chezLEnnemi, choixEnFace } from '../js/nuit.js';
+import { tronconsDe, refusCorvee, chezLEnnemi, choixEnFace, contactDe } from '../js/nuit.js';
 import { CORVEES } from '../js/data/corvees.js';
 import { SECTEURS as SECT } from '../js/data/secteur.js';
 import { identite, etatEnMots, chevrons, prochainGrade } from '../js/identite.js';
@@ -461,7 +461,7 @@ test('inhumer : les corps proches partent en terre ; une corvée de tranchée se
   assert.ok(r.bilan[0].inhumes > 0);
   assert.equal(B.etat.tombes.length, r.bilan[0].inhumes);
   // (les morts de la nuit, des deux camps)
-  assert.equal(B.etat.corps.length, corps - r.bilan[0].inhumes + r.bilan[0].mortsCorvee + r.bilan[0].mortsBlesses + r.bilan[1].mortsCorvee + r.bilan[1].mortsBlesses);
+  assert.equal(B.etat.corps.length, corps - r.bilan[0].inhumes + r.bilan[0].mortsCorvee + r.bilan[0].mortsBlesses + r.bilan[1].mortsCorvee + r.bilan[1].mortsBlesses + r.bilan[0].mortsMelee + r.bilan[1].mortsMelee);
   const reg = B.etat.regiments[2]; reg.ordre = { ...reg.ordre, trace: undefined };
   assert.match(refusCorvee(B, reg, 'reparer'), /ne tient pas de tranchée/);
 });
@@ -600,6 +600,55 @@ test('trois défenseurs contre vingt attaquants ne tiennent que quelques seconde
   };
   assert.equal(issue(R.tranchee.tenue), 0, 'pris par les nôtres');
   assert.equal(issue(1e9), 1, 'avant la mêlée, trois défenseurs gardaient le tronçon');
+});
+
+group('la mêlée de nuit');
+// la nuit tombe sur un tronçon de la 1re ligne d'en face où `def` des leurs et `att` des nôtres sont enchevêtrés
+function melleeAuSoir(def, att) {
+  const B = petite(), A = B.armee, T = B.terrain;
+  const k = B.troncons.findIndex((t, i) => t.camp === 1 && B.lignes[t.ligne].rang === 0);
+  const cases = [];
+  for (let c = 0; c < T.troncon.length && cases.length < 40; c++) if (T.troncon[c] === k) cases.push(c);
+  const pos = c => [c % T.W + 0.5, Math.floor(c / T.W) + 0.5];
+  const dans = i => T.troncon[(A.y[i] | 0) * T.W + (A.x[i] | 0)] === k;
+  let d = 0, a = 0;
+  for (let i = 0; i < A.n; i++) if (A.camp[i] === 1 && dans(i)) { if (d++ >= def) A.y[i] -= 30; }
+  for (let i = 0; i < A.n && a < att; i++) if (A.camp[i] === 0) { const [x, y] = pos(cases[(a * 2) % cases.length]); A.x[i] = x; A.y[i] = y; a++; }
+  B.etat.phase = 'nuit';
+  return { B, k };
+}
+test('vingt attaquants contre trois défenseurs : la nuit tranche, le tronçon change de main, les pertes sont dites ; les régiments au contact ne font pas de corvée', () => {
+  const { B, k } = melleeAuSoir(3, 20);
+  const au = contactDe(B);
+  assert.ok(au.size >= 2, 'un régiment de chaque camp au contact');
+  const reg = [...au].map(i => B.etat.regiments[i]).find(r => r.camp === 0);
+  assert.match(refusCorvee(B, reg, 'repos'), /Au contact/);
+  assert.match(refusCorvee(B, reg, 'inhumer'), /Au contact/);
+  const avant = B.etat.pertes.slice(), corps = B.etat.corps.length;
+  const r = aube(B, { [reg.id]: 'inhumer' });
+  assert.ok(r.ok);
+  assert.equal(B.etat.troncons[k], 0, 'pris par les nôtres dans la nuit');
+  assert.equal(r.bilan[0].prisNuit, 1); assert.equal(r.bilan[1].perdusNuit, 1);
+  assert.ok(r.bilan[1].mortsMelee / 3 > r.bilan[0].mortsMelee / 20, 'le plus faible y laisse la plus grande part de ses hommes');
+  assert.equal(B.etat.pertes[0] - avant[0] + B.etat.pertes[1] - avant[1], r.bilan[0].mortsMelee + r.bilan[1].mortsMelee + r.bilan[0].mortsCorvee + r.bilan[1].mortsCorvee + r.bilan[0].mortsBlesses + r.bilan[1].mortsBlesses);
+  assert.ok(B.etat.corps.length >= corps + r.bilan[0].mortsMelee, 'les morts restent où ils sont tombés');
+  assert.equal(B.etat.nuits.at(-1).choix[reg.id], 'contact', 'il a tenu, pas inhumé');
+  assert.equal(r.bilan[0].inhumes, 0);
+  const C = restaurer(photo(B), R);
+  assert.deepEqual(Array.from(C.etat.troncons), Array.from(B.etat.troncons), 'la partie relue garde le tronçon');
+});
+test('à forces égales, la mêlée coûte aux deux camps et reste ouverte au matin ; sans tronçon disputé, rien ne change (aucun tirage de plus)', () => {
+  const { B, k } = melleeAuSoir(6, 6);
+  const r = aube(B);
+  assert.equal(B.etat.troncons[k], 1, 'pas de décision');
+  assert.ok(r.bilan[0].mortsMelee > 0 && r.bilan[1].mortsMelee > 0);
+  assert.equal(r.bilan[0].prisNuit + r.bilan[1].prisNuit, 0);
+  // une nuit sans mêlée : les mêmes tirages qu'avant
+  const C = petite(); jusquALaNuit(C);
+  assert.equal(contactDe(C).size, 0);
+  const s = C.etat.rng, ra = aube(C);
+  assert.equal(ra.bilan[0].mortsMelee + ra.bilan[1].mortsMelee, 0);
+  assert.notEqual(C.etat.rng, s);
 });
 
 group('les blessés qui reviennent');

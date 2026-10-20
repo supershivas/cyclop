@@ -1,8 +1,9 @@
 // Le temps qui passe (Jérôme, v0.8.0) : le soleil (les ombres des soldats et des arbres tournent et s'allongent), le soir et la nuit (un voile de
 // terre qui monte), les lumières (lanternes des tranchées, incendies, fusées) qui le trouent. Rien hors de la palette, sauf les fondus du voile
 // (CLAUDE.md, palette). Le dessin seulement : tout se lit de l'heure (`horloge`) et de l'état.
-import * as SH from './shaders.js?v=0.38.3';
-import { ligneY } from '../tranchees.js?v=0.38.3';
+import * as SH from './shaders.js?v=0.39.0';
+import { ligneY } from '../tranchees.js?v=0.39.0';
+import { hash2 } from '../lib/rng.js?v=0.39.0';
 
 // `THREE`, `scene`, `col`, `camera`, `vue`, `surface(x, z)` viennent de creerRendu ; `soleilUniform` (le bout de l'ombre d'un mètre de hauteur, lu aussi par le nuanceur
 // des soldats) et `solUniforms` (`uSol`, `uTaille` : la texture du sol, que l'ombre d'un arbre reprend) sont les uniformes partagés ; `ecl` (les éclats : les fusées) et
@@ -47,8 +48,9 @@ export function creerTemps({ THREE, scene, col, camera, vue, surface, bataille, 
   const arbresOmbres = new THREE.Mesh(aoGeo, aoMat); arbresOmbres.frustumCulled = false; arbresOmbres.renderOrder = 1;
   scene.add(arbresOmbres);
 
-  // les lanternes : de petites lumières le long des tranchées tenues, le soir et la nuit
-  const LANTERNES = 120;
+  // les lanternes : de petites lumières le long des tranchées tenues, le soir et la nuit ; et, à l'arrière, les lampes que portent les hommes (Jérôme,
+  // v0.39.0 : « on voit les régiments à l'arrière bouger avec leurs lampes, 1 pour 10 soldats »)
+  const LANTERNES = 380, FIXES = 120;
   const lnPos = new Float32Array(LANTERNES * 3), lnGeo = new THREE.BufferGeometry();
   lnGeo.setAttribute('position', new THREE.BufferAttribute(lnPos, 3).setUsage(THREE.DynamicDrawUsage));
   lnGeo.setDrawRange(0, 0);
@@ -61,6 +63,27 @@ export function creerTemps({ THREE, scene, col, camera, vue, surface, bataille, 
   const lanternes = new THREE.Points(lnGeo, lnMat); lanternes.frustumCulled = false; lanternes.renderOrder = 6;
   scene.add(lanternes);
   const lanternesVues = [];
+  // Les lampes de l'arrière : un régiment qui n'est pas en 1re ligne (une ligne de rang 2 à 4, ou un ordre en terrain libre derrière la 1re ligne de son
+  // camp) a une lampe pour dix hommes, qui va et vient le long de sa place, quelques mètres derrière la ligne, à un pas de promeneur. Tout se lit de
+  // l'état et de l'horloge de l'image (aucun tirage, rien de sauvegardé) : un mouvement qui ne change rien à la partie.
+  const LAMPES_PAR_HOMME = 10, PAS_LAMPE = [0.7, 1.5];
+  function lampesDe(B, reg, temps, sortie) {
+    const n = Math.floor(reg.effectif / LAMPES_PAR_HOMME);
+    if (!n) return;
+    const o = reg.ordre, tr = o.trace, L1 = B.lignes.find(l => l.camp === reg.camp && l.rang === 0);
+    if (!L1) return;
+    const face = tr ? tr.face : L1.face;
+    // en 1re ligne (une ligne de rang 0) ou plus avancé que la 1re ligne de son camp : ce sont les lanternes fixes de la tranchée
+    if (tr ? tr.ligne % 10 < 1 : (o.y - L1.y0) * face > -3) return;
+    const x0 = tr ? tr.x0 : o.x - 30, x1 = tr ? tr.x1 : o.x + 30, long = Math.max(1, x1 - x0);
+    for (let k = 0; k < n && sortie.length < LANTERNES; k++) {
+      const h = hash2(reg.id, k, 211), h2 = hash2(reg.id, k, 223), h3 = hash2(reg.id, k, 227);
+      const v = PAS_LAMPE[0] + (PAS_LAMPE[1] - PAS_LAMPE[0]) * h2;                  // m/s
+      const s = (h + temps * v / long) % 2, u = s > 1 ? 2 - s : s;                  // l'aller-retour le long de sa place
+      const x = x0 + u * long, z = (tr ? ligneY(tr, x) : o.y) - face * (tr ? 4 + 6 * h3 : (h3 - 0.5) * 10);
+      sortie.push([x, surface(x, z) + 0.9 + 0.07 * Math.abs(Math.sin(temps * 5 + h * 40)), z]);
+    }
+  }
   function majLanternes(nuit) {
     const B = bataille();
     lanternesVues.length = 0;
@@ -68,11 +91,12 @@ export function creerTemps({ THREE, scene, col, camera, vue, surface, bataille, 
     for (const reg of B.etat.regiments) {
       const t = reg.ordre.trace;
       if (!t || !reg.effectif) continue;
-      for (let x = t.x0 + 9; x < t.x1 && lanternesVues.length < LANTERNES; x += 26) {
+      for (let x = t.x0 + 9; x < t.x1 && lanternesVues.length < FIXES; x += 26) {
         const z = ligneY(t, x) + 0.4 * t.face;
         lanternesVues.push([x, surface(x, z) + 0.9, z]);
       }
     }
+    for (const reg of B.etat.regiments) if (reg.effectif) lampesDe(B, reg, lnMat.uniforms.uT.value, lanternesVues);
     lanternesVues.forEach(([x, y, z], k) => { lnPos[k * 3] = x; lnPos[k * 3 + 1] = y; lnPos[k * 3 + 2] = z; });
     lnGeo.attributes.position.needsUpdate = true;
     lnGeo.setDrawRange(0, lanternesVues.length);
@@ -81,7 +105,7 @@ export function creerTemps({ THREE, scene, col, camera, vue, surface, bataille, 
   // la nuit : une trame de terre, trouée autour des lumières. Les lumières sont peintes une fois par image dans une
   // petite carte (un quart de la résolution, sur le processeur) : la trame n'y lit qu'une valeur par pixel. (Chercher
   // 32 lumières pour chaque pixel coûtait plus que tout le reste du dessin, en rendu logiciel.)
-  const LUMIERES = 64, QUART = 4;
+  const LUMIERES = 192, QUART = 4;       // (v0.39.0 : 64 → 192, les lampes de l'arrière s'ajoutent aux lanternes ; une lumière hors de l'écran ne compte pas)
   let lumW = 1, lumH = 1, lumData = new Uint8Array(1), lumTex = null;
   function preparerLumieres() {
     const w = Math.max(1, Math.ceil(vue.vw / QUART)), h = Math.max(1, Math.ceil(vue.vh / QUART));
