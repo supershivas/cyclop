@@ -307,14 +307,17 @@ dialog form { margin-top: calc(var(--pas) * 2); }
 .fleche { display: grid; place-items: center; width: 40px; height: 62px; padding: 0; border: 0; cursor: pointer; color: var(--jeu-fond); pointer-events: auto; }
 .fleche[hidden] { display: none; }
 .fleche svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
-.reg-ouvert { position: absolute; left: 0; top: 0; width: 36ch; max-width: 90vw; pointer-events: auto; display: grid; gap: var(--e1); transform-origin: 50% 100%; }
+.reg-ouvert { position: absolute; left: 0; top: 0; width: 44ch; max-width: 90vw; pointer-events: auto; display: grid; gap: var(--e1); transform-origin: 50% 100%; }
 .reg-ouvert[hidden] { display: none; }
 .reg-ouvert .tete { display: flex; justify-content: space-between; gap: var(--pas); border-bottom: 1px solid var(--jeu-accent); padding-bottom: var(--e0); font-size: var(--texte-moyen); }
 .reg-ouvert .tete b { font-weight: normal; }
 .reg-ouvert .tete span, .reg-ouvert .compte, .reg-ouvert .ordre { color: var(--jeu-accent); font-size: var(--texte-petit); }
 .reg-ouvert .tampon { justify-self: start; padding: 0 var(--pas); border: 3px double var(--jeu-encre); color: var(--jeu-encre); transform: rotate(-4deg); letter-spacing: .12em; text-transform: uppercase; font-size: var(--texte-petit); }
-.reg-ouvert .actions { display: flex; flex-wrap: wrap; gap: var(--e1); margin-top: var(--e1); }
-.reg-ouvert .actions button { height: 32px; padding: 0 var(--pas); font: inherit; font-size: var(--texte-petit); color: var(--jeu-fond); background: none; border: 1px solid var(--jeu-accent); cursor: pointer; }
+/* Des boutons empilés ont tous la même largeur (Jérôme, v0.38.3) : une grille de colonnes égales (deux ; quatre pour les formes, qui tiennent sur une ligne),
+   jamais des rangées de boutons à la largeur de leur texte. Un mot trop long passe à la ligne dans son bouton. */
+.reg-ouvert .actions { display: grid; grid-template-columns: repeat(var(--cols, 2), 1fr); gap: var(--e1); margin-top: var(--e1); }
+.reg-ouvert .actions.formes { --cols: 4; }
+.reg-ouvert .actions button { min-width: 0; line-height: 1.2; overflow-wrap: anywhere; height: 32px; padding: 0 var(--pas); font: inherit; font-size: var(--texte-petit); color: var(--jeu-fond); background: none; border: 1px solid var(--jeu-accent); cursor: pointer; }
 .reg-ouvert .actions button.actif { background: var(--jeu-fond); color: var(--jeu-encre); border-color: var(--jeu-fond); }
 @media (hover: hover) { .reg-carte:hover:not(.choisi) { --pap: var(--jeu-accent); } .reg-ouvert .actions button:hover { background: var(--jeu-accent); color: var(--jeu-fond); } }
 
@@ -337,6 +340,11 @@ dialog form { margin-top: calc(var(--pas) * 2); }
 /* La nuit : les corvées sont au-dessus de la carte du régiment choisi, comme les actions du jour (Jérôme, v0.22.0) */
 .reg-ouvert .actions button.refus { color: var(--jeu-accent); border-style: dashed; }
 .reg-carte .corvee { font-size: var(--texte-petit); line-height: 8px; color: var(--enc); }
+/* Un régiment à qui l'on a donné un ordre cette nuit se grise (Jérôme, v0.38.3) : la carte passe en glaise, sans la bande de son camp ;
+   seul le mot de la corvée garde l'os, pour relire l'ordre. Choisi, il reprend la carte claire (la sélection prime). */
+.reg-carte.donne:not(.choisi) { --enc: var(--jeu-accent); border-top-color: var(--jeu-accent); }
+.reg-carte.donne:not(.choisi) .corvee { color: var(--jeu-fond); }
+@media (hover: hover) { .reg-carte.donne:not(.choisi):hover { --pap: var(--jeu-encre); --enc: var(--jeu-fond); } }   /* (le survol d'une carte grisée l'éclaircit : le fond glaise du survol y rendrait le texte illisible) */
 
 /* La barre de chargement (Jérôme, v0.28.0) : un papier sur la terre, une barre d'encre ; au lancement et quand on relit ou commence une partie */
 .chargement { position: fixed; inset: 0; z-index: 50; display: grid; place-items: center; background: var(--jeu-fond); transition: opacity .25s; }

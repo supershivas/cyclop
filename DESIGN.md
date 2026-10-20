@@ -130,8 +130,7 @@ dans sa tranchée. (Jérôme, v0.4.0 : le lot 1)
 
 La nuit, chaque régiment reçoit une corvée : le repos (la fatigue et la peur
 tombent, le moral remonte un peu plus), réparer sa tranchée (les tronçons comblés
-par les obus sont recreusés), y poser des caillebotis (la boue ne retient plus),
-inhumer les morts autour de lui (ils partent en terre, leur fiche le dit ; au-delà
+par les obus sont recreusés), inhumer les morts autour de lui (ils partent en terre, leur fiche le dit ; au-delà
 de nos lignes, des hommes y restent), évacuer ses blessés (ils quittent le front,
 vivants). Un régiment qui travaille se repose moins. Un blessé laissé au front peut
 mourir dans la nuit ; les corps laissés autour d'un régiment pèsent sur son moral au
@@ -141,11 +140,9 @@ lignes. (Jérôme, v0.6.0)
 Puis (v0.11.0) : creuser des abris profonds sous sa tranchée (une nuit par niveau,
 trois niveaux : les obus y tuent de moins en moins ; un 220 tombé dans le tronçon en
 crève un ; un tronçon pris garde ses abris, pour l'autre camp) ; ravitailler (des
-vivres pour trois nuits : sans eux, la nuit repose moins et le moral baisse) ; le
-coup de main (les plus aguerris vont chercher des prisonniers dans la tranchée d'en
-face : certains n'en reviennent pas ; ceux qui reviennent ont appris ; des
-prisonniers ramenés relèvent le moral, et l'abattent en face). En face fait tout
-cela aussi. Les morts inhumés ont une tombe là où ils sont tombés : un tertre de
+vivres pour trois nuits : sans eux, la nuit repose moins et le moral baisse). En face fait tout
+cela aussi. (v0.38.3 : sept corvées au total ; les caillebotis et le coup de main sont retirés, voir
+`docs/archives/corvees-retirees.md`.) Les morts inhumés ont une tombe là où ils sont tombés : un tertre de
 glaise et une croix pâle, qui restent jusqu'à la fin.
 
 ### Le moral et l'expérience

@@ -1,10 +1,10 @@
 // Le papier de la nuit (Jérôme, v0.13.0) : un état (choix des corvées, puis le bilan de l'aube), jamais une boîte de
 // dialogue : le champ reste là, on choisit des régiments (clic, cadre, T) et on leur donne une corvée, dite sur leur carte.
-import { NOUS, aube } from '../bataille.js?v=0.38.2';
-import { METEO } from '../data/meteo.js?v=0.38.2';
-import { CORVEES } from '../data/corvees.js?v=0.38.2';
-import { refusCorvee } from '../nuit.js?v=0.38.2';
-import { pluriel } from './lecture.js?v=0.38.2';
+import { NOUS, aube } from '../bataille.js?v=0.38.3';
+import { METEO } from '../data/meteo.js?v=0.38.3';
+import { CORVEES } from '../data/corvees.js?v=0.38.3';
+import { refusCorvee } from '../nuit.js?v=0.38.3';
+import { pluriel } from './lecture.js?v=0.38.3';
 
 export const corveeDe = id => CORVEES.find(c => c.id === id)?.nom || '';
 export const corveeCourte = id => CORVEES.find(c => c.id === id)?.court || '';
@@ -23,11 +23,9 @@ function bilanEnMots(B, b) {
     b.evacues && `${pl(b.evacues, 'blessé évacué', 'blessés évacués')}`,
     b.retours && `${pl(b.retours, 'blessé guéri revenu', 'blessés guéris revenus')} au front`,
     b.repares && `${pl(b.repares, 'tronçon réparé', 'tronçons réparés')}`,
-    b.caillebotis && `des caillebotis dans ${pl(b.caillebotis, 'tronçon', 'tronçons')}`,
     b.releves && `${pl(b.releves, 'régiment relevé', 'régiments relevés')}`,
     b.abris && `des abris creusés sous ${pl(b.abris, 'tronçon', 'tronçons')}`,
     b.ravitailles && `${pl(b.ravitailles, 'régiment ravitaillé', 'régiments ravitaillés')}`,
-    b.coups && `${pl(b.coups, 'coup de main', 'coups de main')} : ${b.prisonniers ? pl(b.prisonniers, 'prisonnier ramené', 'prisonniers ramenés') : 'personne ramené'}`,
   ].filter(Boolean);
   const morts = [
     b.mortsCorvee && `${b.mortsCorvee} aux corvées`,
@@ -37,7 +35,6 @@ function bilanEnMots(B, b) {
   return [
     faits.length ? `Cette nuit : ${faits.join(', ')}.` : 'Une nuit de repos.',
     morts.length ? `Morts dans la nuit : ${morts.join(', ')}.` : 'Personne n\'est mort cette nuit.',
-    b.pris && `En face nous a pris ${pl(b.pris, 'homme', 'hommes')} : un coup de main.`,
     b.affames && `${pl(b.affames, 'régiment n\'a', 'régiments n\'ont')} plus de vivres : la faim.`,
     ...(b.refus || []).map(id => `${regs[id].nom} refuse de monter aujourd'hui : il tiendra sa tranchée, rien de plus.`),
   ].filter(Boolean);
@@ -50,6 +47,7 @@ function bilanEnMots(B, b) {
 export function creerNuit({ $, bataille, choisis, pauser, reprendre, sauvegarder, majHud, toast, dire, invalider, moi = () => NOUS, enReseau = () => false, surChoix = () => {}, surPret = () => {} }) {
   let etat = null;                 // 'choix' | 'aube' | null
   let corvees = {};                // la corvée de chacun de nos régiments cette nuit (id → corvée)
+  let donnees = new Set();         // ceux à qui l'on a donné un ordre cette nuit (leur carte se grise ; les autres ont celle d'hier, ou le repos)
   const nosRegiments = B => B.etat.regiments.filter(r => r.camp === moi() && r.effectif);
 
   function montrer() {
@@ -63,6 +61,7 @@ export function creerNuit({ $, bataille, choisis, pauser, reprendre, sauvegarder
     $('nuit-reserves').textContent = e.mission ? `En réserve : ${pluriel(e.reserves[moi()], 'régiment frais', 'régiments frais')}.` : '';
     // la dernière corvée donnée, si elle est encore possible, sinon le repos
     corvees = Object.fromEntries(nosRegiments(B).map(r => [r.id, avant[r.id] && !refusCorvee(B, r, avant[r.id]) ? avant[r.id] : 'repos']));
+    donnees = new Set();
     etat = 'choix';
     $('nuit-corps').hidden = false; $('aube-bilan').hidden = true; $('aube').textContent = 'À l\'aube';
     $('nuit').hidden = false;
@@ -75,7 +74,7 @@ export function creerNuit({ $, bataille, choisis, pauser, reprendre, sauvegarder
     const regs = [...choisis()].map(i => B.etat.regiments[i]).filter(r => r && r.camp === moi() && r.effectif);
     if (!regs.length) return toast('Choisissez d\'abord un régiment (clic, cadre, T pour tous).');
     const refus = [];
-    for (const r of regs) { const m = refusCorvee(B, r, id); if (m) refus.push(`${r.nom} : ${m}`); else { corvees[r.id] = id; surChoix(r.id, id); } }
+    for (const r of regs) { const m = refusCorvee(B, r, id); if (m) refus.push(`${r.nom} : ${m}`); else { corvees[r.id] = id; donnees.add(r.id); surChoix(r.id, id); } }
     if (refus.length) toast(refus[0]);
     invalider(); majHud();
   }
@@ -108,5 +107,6 @@ export function creerNuit({ $, bataille, choisis, pauser, reprendre, sauvegarder
     montrer, donner, fermer, apresAube,
     get etat() { return etat; },
     get corvees() { return corvees; },
+    get donnees() { return donnees; },
   };
 }

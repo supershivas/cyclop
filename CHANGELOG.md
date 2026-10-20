@@ -1,5 +1,11 @@
 # Journal des versions
 
+## 0.38.3 — 2026-10-20
+- La nuit, la carte d'un régiment à qui l'on a donné un ordre se grise
+- Sept corvées au lieu de neuf : plus de caillebotis ni de coup de main
+- Donner une corvée à plusieurs régiments à la fois les atteint tous (seul le premier la recevait, sans que l'écran le dise)
+- Les boutons empilés d'un régiment (ordres, formes, postures, corvées) ont tous la même largeur
+
 ## 0.38.2 — 2026-10-20
 - Au labo, un groupe « Arcade » : des maquettes de caisses de ravitaillement, d'obus ratés, de sapes, de gaz et de chars d'assaut, à essayer avant d'en retenir une (rien n'est encore dans le jeu)
 

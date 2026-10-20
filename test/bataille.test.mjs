@@ -3,7 +3,8 @@ import { readFileSync } from 'node:fs';
 import { nouvelleBataille, avancer, ordonnerMarche, ordonnerBarrage, aube, photo, restaurer, effectifs, horloge, zone, tronconsTenus, rangDe, moralEnMots, abriDe, terrainSous, terrainResume, peutOrdonner } from '../js/bataille.js';
 import { ligneY } from '../js/tranchees.js';
 import { calculerCouts, dimensionsCouts, BLOC } from '../js/champs.js';
-import { tronconsDe, refusCorvee, chezLEnnemi } from '../js/nuit.js';
+import { tronconsDe, refusCorvee, chezLEnnemi, choixEnFace } from '../js/nuit.js';
+import { CORVEES } from '../js/data/corvees.js';
 import { SECTEURS as SECT } from '../js/data/secteur.js';
 import { identite, etatEnMots, chevrons, prochainGrade } from '../js/identite.js';
 import { legere } from '../js/army.js';
@@ -452,18 +453,30 @@ test('réparer : les tronçons comblés sont recreusés ; la partie relue rejoue
   const C = restaurer(photo(B), R);
   assert.deepEqual(Array.from(C.terrain.diff), Array.from(T.diff));
 });
-test('inhumer : les corps proches partent en terre ; les caillebotis se posent ; pas de tranchée, pas de caillebotis', () => {
+test('inhumer : les corps proches partent en terre ; une corvée de tranchée se refuse sans tranchée', () => {
   const B = petite(); jusquALaNuit(B);
   const corps = B.etat.corps.length;
   assert.ok(corps > 0);
-  const r = aube(B, { 0: 'inhumer', 1: 'caillebotis' });
+  const r = aube(B, { 0: 'inhumer' });
   assert.ok(r.bilan[0].inhumes > 0);
   assert.equal(B.etat.tombes.length, r.bilan[0].inhumes);
-  // (les morts de la nuit, des deux camps : en face fait parfois un coup de main)
+  // (les morts de la nuit, des deux camps)
   assert.equal(B.etat.corps.length, corps - r.bilan[0].inhumes + r.bilan[0].mortsCorvee + r.bilan[0].mortsBlesses + r.bilan[1].mortsCorvee + r.bilan[1].mortsBlesses);
-  assert.ok(r.bilan[0].caillebotis > 0 && B.terrain.caille.some(v => v));
   const reg = B.etat.regiments[2]; reg.ordre = { ...reg.ordre, trace: undefined };
-  assert.match(refusCorvee(B, reg, 'caillebotis'), /ne tient pas de tranchée/);
+  assert.match(refusCorvee(B, reg, 'reparer'), /ne tient pas de tranchée/);
+});
+test('sept corvées (v0.38.3) : les caillebotis et le coup de main sont retirés, ni nous ni en face ne les choisissent, une ancienne s\'efface', () => {
+  const ids = CORVEES.map(c => c.id);
+  assert.deepEqual(ids, ['repos', 'reparer', 'inhumer', 'evacuer', 'abri', 'ravitailler', 'releve']);
+  const B = petite(); jusquALaNuit(B);
+  for (const id of ['caillebotis', 'coup']) assert.match(refusCorvee(B, B.etat.regiments[0], id), /Pas de telle corvée/);
+  for (let n = 0; n < 5; n++) {
+    for (const id of Object.values(choixEnFace(B))) assert.ok(ids.includes(id), id);
+    B.etat.phase = 'nuit'; aube(B, { 0: 'coup', 1: 'caillebotis' });       // (un choix d'avant : le repos)
+    assert.equal(B.etat.nuits.at(-1).choix[0], 'repos');
+    assert.equal(B.etat.nuits.at(-1).choix[1], 'repos');
+  }
+  assert.ok(!('prisonniers' in B.etat) && !('caille' in B.terrain));
 });
 test('les abris : un niveau par nuit, trois au plus ; les obus y tuent moins ; un 220 en crève un ; relu', () => {
   const B = nouvelleBataille(3, R, { soldats: 200, jours: 6 });
@@ -496,24 +509,8 @@ test('les vivres : trois nuits ; sans eux, la nuit repose moins et le moral bais
   B.etat.phase = 'nuit'; aube(B, { 0: 'ravitailler' });
   assert.equal(a.vivres, R.nuit.vivres);
 });
-test('un coup de main ramène des prisonniers (ni morts ni évacués) ; le moral en face baisse ; relu', () => {
-  const B = nouvelleBataille(3, { ...R, nuit: { ...R.nuit, coupPrise: 1, coupMort: 0 } }, { soldats: 400, jours: 3 });
-  const reg = B.etat.regiments[0], A = B.armee;
-  B.etat.phase = 'nuit';
-  const pertes = B.etat.pertes[1];
-  const r = aube(B, { 0: 'coup' });
-  assert.equal(r.bilan[0].coups, 1);
-  assert.ok(r.bilan[0].prisonniers > 0);
-  assert.equal(B.etat.pertes[1], pertes + r.bilan[1].mortsCorvee + r.bilan[1].mortsBlesses, 'pas des morts');
-  assert.ok(B.etat.prisonniers.length >= r.bilan[0].prisonniers);
-  const pris = new Set(B.etat.prisonniers.map(p => p[0]));
-  for (let i = 0; i < A.n; i++) assert.ok(!pris.has(A.id[i]), 'parti');
-  const C = restaurer(photo(B), R);
-  assert.deepEqual(C.etat.prisonniers, B.etat.prisonniers);
-  assert.ok(reg.moral > 0);
-});
 test('un blessé laissé au front peut mourir dans la nuit', () => {
-  const B = nouvelleBataille(3, { ...R, nuit: { ...R.nuit, mortBlesse: 1, coupMort: 0, coupPrise: 0 } }, { soldats: 200 });
+  const B = nouvelleBataille(3, { ...R, nuit: { ...R.nuit, mortBlesse: 1 } }, { soldats: 200 });
   jusquALaNuit(B);
   const A = B.armee;
   let blesses = 0; for (let i = 0; i < A.n; i++) if (A.blessure[i]) blesses++;

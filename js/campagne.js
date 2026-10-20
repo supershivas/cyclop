@@ -4,11 +4,11 @@
    identité à re-dériver : un homme est son numéro, son rang, son expérience et ses victimes ; son nom vient de `graineIdentite`.
    Il est écrit à la fin de chaque bataille, avant l'écran de fin (`cloturerDansLeStore`), et `cloturer` est idempotente : relire une
    partie arrêtée à la fin, ou clore deux fois, donne le même registre. Rien n'est reporté de la fatigue, de la peur ni du moral. */
-import { hash2 } from './lib/rng.js?v=0.38.2';
-import { NOUS, rangDe, numeroCampagne } from './bataille.js?v=0.38.2';
-import { SECTEURS } from './data/secteur.js?v=0.38.2';
-import { identite, chevrons } from './identite.js?v=0.38.2';
-import { CAMPAGNE, TEXTES } from './data/campagne.js?v=0.38.2';
+import { hash2 } from './lib/rng.js?v=0.38.3';
+import { NOUS, rangDe, numeroCampagne } from './bataille.js?v=0.38.3';
+import { SECTEURS } from './data/secteur.js?v=0.38.3';
+import { identite, chevrons } from './identite.js?v=0.38.3';
+import { CAMPAGNE, TEXTES } from './data/campagne.js?v=0.38.3';
 
 export const CLE = 'campagne';        // l'entrée de js/lib/save.js (cyclopeen:campagne)
 export const VERSION_CAMPAGNE = 1;
@@ -65,7 +65,7 @@ export function suivante(c, plan = CAMPAGNE) {
 
 /* Ceux de chez nous qui ont survécu à la bataille, par régiment : [[numéro, rang, expérience, victimes], …]. Les vivants (blessés compris :
    la blessure ne passe pas), les évacués qui n'ont pas encore fini de revenir et ceux d'un régiment relevé, qui ont quitté le front
-   vivants. Ne comptent pas : les morts, les prisonniers, les évacués qui ne reviendront pas (« disparus du front »). */
+   vivants. Ne comptent pas : les morts, les évacués qui ne reviendront pas (« disparus du front »). */
 function survivants(B) {
   const { etat, armee: A } = B;
   const out = new Map(etat.regiments.filter(r => r.camp === NOUS).map(r => [r.id, new Map()]));
@@ -83,7 +83,7 @@ function survivants(B) {
 }
 
 /* Nos morts de la bataille, du premier au dernier : [numéro de campagne, jour, nom du régiment]. Le régiment se retrouve comme `quiEst` : les numéros de bataille sont
-   contigus, régiment après régiment. Un prisonnier n'est pas un mort (il quitte la campagne vivant : ni mort, ni survivant). */
+   contigus, régiment après régiment. */
 function tombes(B) {
   const { etat } = B, bornes = []; let p = 0;
   for (const r of etat.regiments) { bornes.push([p += r.initial, r]); }

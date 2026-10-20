@@ -21,6 +21,7 @@ Une échelle déclarée une fois, dans `:root` de `css/style.css` : tout le rest
 Règles :
 - Une valeur qui n'est pas dans l'échelle est un défaut : on la ramène à l'échelle, ou on propose d'ajouter un cran (avec sa raison).
 - Les titres : un seul style (`h2` : texte normal, lettres espacées) en deux tailles : le titre d'un papier (`--texte-moyen`), le titre d'un dialogue (`--texte-grand`, majuscules).
+- **Des boutons empilés ont tous la même largeur** (Jérôme, v0.38.3) : les ordres d'un régiment (formes, postures, Marcher, Regagner sa tranchée) et les corvées de la nuit sont une grille de colonnes égales (`.reg-ouvert .actions`, `--cols` : 2, et 4 pour les quatre formes qui tiennent sur une ligne), jamais des rangées de boutons à la largeur de leur texte ; un mot trop long passe à la ligne dans son bouton. Un nouveau groupe de boutons dans un papier prend la même grille.
 - Les boutons du haut (Menu, Réglages, le temps) : même hauteur (`--jeu-cible`) et même habillage (papier clair, ombre d'un cran). La barre du temps, dessous, a la largeur de leur rangée.
 - Les hauteurs de mise en page qui dépendent d'une ligne de texte (le drapeau de la frise) se calculent de l'échelle, ou se disent en commentaire.
 

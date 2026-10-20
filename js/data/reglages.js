@@ -167,14 +167,7 @@ export const REGLAGES = {
     vivres: 3,            // nuits de vivres d'un régiment ravitaillé
     faimRepos: 0.5,       // sans vivres, la nuit ne repose que de cette part…
     faimMoral: 0.06,      // … et le moral perd cela chaque nuit
-    // le coup de main : quelques volontaires vont chercher des prisonniers dans la tranchée d'en face
-    coupHommes: 20,       // volontaires au plus (et un sur cinq du régiment au plus)
-    coupMort: 0.15,       // chance pour chacun d'y rester (moins s'il a de l'expérience)
-    coupPrise: 0.2,       // prisonniers ramenés par volontaire (plus avec l'expérience, moins si l'autre veille)
-    coupMoral: 0.06,      // le moral gagné (des prisonniers ramenés), ou perdu en face
-    coupExp: 0.15,        // l'expérience des volontaires qui reviennent
     calme: 60,            // m : dans une tranchée d'en face, un régiment d'en face à moins de cela : ni évacuer ni ravitailler (v0.22.0)
-    coupPortee: 200,      // m : jusqu'où ils vont chercher
   },
   jour: {
     duree: 360,           // s de jeu pour une journée (6 h → 18 h)

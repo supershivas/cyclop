@@ -106,8 +106,8 @@ les deux machines calculent la même bataille, on n'échange que les ordres) sur
 
 - **Tranchées, la suite** (v0.18.0 : traverses, sacs, fil de fer, abris dessinés) : 3 lignes en secteur calme, 5 en secteur fortifié ;
   les ouvrages au labo (variantes) ; le fil de fer qu'on coupe à la pince la nuit.
-- **La nuit, la suite** (v0.11.0 : abris, vivres, coups de main, tombes) : des
-  prisonniers qui parlent (le renseignement : où en face prépare son assaut).
+- **La nuit, la suite** (v0.11.0 : abris, vivres, tombes ; v0.38.3 : le coup de main et ses prisonniers sont retirés, voir
+  `docs/archives/corvees-retirees.md`) : l'ambiance de la nuit (à cadrer).
 - **Moral et expérience, la suite** (v0.11.0 : contagion, refus d'un jour,
   poursuite) : la fuite feinte jouée par le joueur (un régiment qui recule exprès
   pour disperser le poursuivant), l'expérience gardée d'une bataille à l'autre
@@ -528,7 +528,7 @@ ce sont donc des **mentions d'un livret militaire**, à l'encre sur papier. Mêm
 | 15 | | Brancardier | brancard | une nuit d'évacuation | L (idem) |
 | 16 | | Porteur de terre | croix et pelle | a inhumé les morts de sa tranchée | L (idem) |
 | 17 | | La soupe par les boyaux | gamelle | a ravitaillé | L (idem) |
-| 18 | | Coup de main | fil coupé | revenu d'un coup de main | C |
+| 18 | | ~~Coup de main~~ | ~~fil coupé~~ | retirée (v0.38.3 : la corvée « coup de main » n'existe plus ; le numéro reste, les autres ne bougent pas) | — |
 | 19 | | Entré le premier | porte ouverte | premier homme dans un tronçon pris | C |
 | 20 | | A tenu seul | homme seul entre deux traverses | dernier défenseur d'un tronçon avant renfort ou chute | C |
 | 21 | | Tronçon repris | tronçon à l'endroit | présent à la reprise d'un tronçon perdu | C |
@@ -558,7 +558,7 @@ texte au survol **et au focus clavier** (`tabindex`, `aria-label` : le survol se
 
 1. *Moteur de lecture* : `js/marques.js` pur (`marquesDe(B, id)` → liste ordonnée), `js/data/marques.js` (id, famille, icône en matrice, nom, dit), seuils dans `reglages.js` (`marques`) ; **17 marques lues de l'état** (4-7, 9-12, 22, 23, 28-34, + 14-17 si l'état retient l'homme). Aucun champ neuf. Tests : une bataille minimale par marque.
 2. *Fiche* : rangée d'icônes dans `hud/fiche.js`, survol et focus, `aria-label`, `test/fumee.json` réécrit, `lisibilite.mjs` sur les cadres ; sujet « Les marques » au labo (variantes d'icônes) avec entrée de `labo-journal.js`.
-3. *Événements* : `A.marques` (`Uint32Array`, dans `photoArmee` ; `VERSION` montée) ; bits posés dans `effrayer`, `tuerDans`, `prises`, `mourir`, `coupDeMain`, la déroute ; **aucun tirage de hasard ajouté** ; `empreinteEtat` si la marque peut changer une règle (par défaut non : pas d'effet de jeu).
+3. *Événements* : `A.marques` (`Uint32Array`, dans `photoArmee` ; `VERSION` montée) ; bits posés dans `effrayer`, `tuerDans`, `prises`, `mourir`, la déroute ; **aucun tirage de hasard ajouté** ; `empreinteEtat` si la marque peut changer une règle (par défaut non : pas d'effet de jeu).
 4. *Carnet et régiment* : une ligne de carnet pour les marques rares ; la fenêtre du régiment les compte sans les classer.
 5. *Campagne et Mémorial* : les marques entrent dans le registre de campagne (identité d'un vétéran) et deviennent l'épitaphe sobre au Mémorial ; un blessé évacué garde les siennes (`etat.evacues[7]`).
 

@@ -1,9 +1,8 @@
 /* La nuit et ses corvées (Jérôme, v0.6.0) : une par régiment — le repos,
-   réparer sa tranchée, y poser des caillebotis, inhumer les morts, évacuer les
-   blessés. Logique pure (aucun DOM, aucun hasard hors du générateur de la
-   bataille), testée dans Node.
+   réparer sa tranchée, inhumer les morts, évacuer les blessés. Logique pure
+   (aucun DOM, aucun hasard hors du générateur de la bataille), testée dans Node.
 
-   - Les travaux de terrain (réparer, caillebotis) sont notés dans
+   - Les travaux de terrain (réparer) sont notés dans
      `etat.travaux` ([jour, sorte, tronçons…]) : la sauvegarde les rejoue après
      l'eau de la nuit, comme les impacts (rejouerTerrain).
    - Ce que coûte une corvée : un régiment qui travaille se repose moins ;
@@ -13,15 +12,15 @@
    - En face fait ses corvées aussi (`choixEnFace`).
    - (v0.11.0) Les abris profonds (`etat.abris` : un niveau par tronçon, une nuit
      de travail chacun) ; les vivres (`reg.vivres`, en nuits : sans eux, la nuit
-     repose moins et le moral baisse) ; le coup de main (des volontaires ramènent
-     des prisonniers de la tranchée d'en face, s'ils reviennent). */
-import { toucher } from './terrain.js?v=0.38.2';
-import { hash2 } from './lib/rng.js?v=0.38.2';
-import { CORVEES } from './data/corvees.js?v=0.38.2';
-import { REGIMENTS } from './data/lexique.js?v=0.38.2';
-import { ajouterSoldat } from './army.js?v=0.38.2';
+     repose moins et le moral baisse).
+   - (v0.38.3) Les caillebotis et le coup de main sont retirés : sept corvées. */
+import { toucher } from './terrain.js?v=0.38.3';
+import { hash2 } from './lib/rng.js?v=0.38.3';
+import { CORVEES } from './data/corvees.js?v=0.38.3';
+import { REGIMENTS } from './data/lexique.js?v=0.38.3';
+import { ajouterSoldat } from './army.js?v=0.38.3';
 
-export const SORTES = ['reparer', 'caillebotis'];          // les travaux de terrain, par leur numéro dans etat.travaux
+export const SORTES = ['reparer'];          // les travaux de terrain, par leur numéro dans etat.travaux
 export const corvee = id => CORVEES.find(c => c.id === id);
 
 // Les tronçons de la tranchée qu'un régiment tient (sa ligne, sous son tracé)
@@ -66,12 +65,11 @@ export function refusCorvee(B, reg, id) {
   if (c.tranchee && !tronconsDe(B, reg).length) return `${reg.nom || 'Ce régiment'} ne tient pas de tranchée.`;
   if (id === 'releve' && !(B.etat.reserves?.[reg.camp] > 0)) return 'Plus un régiment en réserve.';
   if (id === 'abri' && tronconsDe(B, reg).every(k => (B.etat.abris[k] || 0) >= B.R.nuit.abriMax)) return 'Ses abris sont aussi profonds qu\'on peut les creuser.';
-  if (id === 'coup' && !cibleDuCoup(B, reg)) return 'Personne en face à portée d\'un coup de main.';
   return null;
 }
 
 /* Un travail de terrain sur des tronçons : réparer (recreuser ce que les obus
-   ont comblé) ou poser des caillebotis. Rend le nombre de cases changées. */
+   ont comblé). Rend le nombre de cases changées. */
 export function travail(B, sorte, ks) {
   const T = B.terrain, prof = B.profondeur, W = T.W, set = new Set(ks);
   let n = 0;
@@ -82,7 +80,6 @@ export function travail(B, sorte, ks) {
         const c = j * W + i;
         if (!set.has(T.troncon[c])) continue;
         if (sorte === 'reparer' && T.diff[c] > -prof) { T.diff[c] = -prof; toucher(T, i, j); n++; }
-        else if (sorte === 'caillebotis' && !T.caille[c]) { T.caille[c] = 1; toucher(T, i, j); n++; }
       }
     }
   }
@@ -109,19 +106,6 @@ function centreDe(B, reg) {
   for (let i = 0; i < A.n; i++) if (A.reg[i] === reg.id && !A.mort[i]) { x += A.x[i]; y += A.y[i]; n++; }
   return n ? { x: x / n, y: y / n } : null;
 }
-// La cible d'un coup de main : le régiment ennemi le plus proche, à portée
-export function cibleDuCoup(B, reg) {
-  const c = centreDe(B, reg);
-  if (!c) return null;
-  let best = null, bd = B.R.nuit.coupPortee;
-  for (const r of B.etat.regiments) {
-    if (r.camp === reg.camp || !r.effectif) continue;
-    const e = centreDe(B, r);
-    const d = e ? Math.hypot(e.x - c.x, e.y - c.y) : Infinity;
-    if (d < bd) { bd = d; best = r; }
-  }
-  return best;
-}
 
 // Les corvées d'en face : évacuer s'il a des blessés, réparer si sa tranchée est comblée, sinon le repos
 export function choixEnFace(B) {
@@ -133,7 +117,6 @@ export function choixEnFace(B) {
     const n = B.R.nuit, h = hash2(reg.id, B.etat.jour, (B.etat.graine | 0) + 59);
     out[reg.id] = (reg.vivres ?? n.vivres) <= 1 ? 'ravitailler'
       : blesses >= 5 ? 'evacuer' : combles(B, reg) >= 10 ? 'reparer'
-      : reg.moral >= 0.6 && h < 0.15 ? 'coup'
       : tronconsDe(B, reg).length && h > 0.75 && !refusCorvee(B, reg, 'abri') ? 'abri' : 'repos';
     if (refusCorvee(B, reg, out[reg.id])) out[reg.id] = 'repos';
   }
@@ -149,7 +132,7 @@ export function corvees(B, choix, ctx) {
   const { etat, R, armee: A } = B;
   const N = R.nuit, { rng, mourir } = ctx;
   const tous = etat.deux ? { ...choix } : { ...choixEnFace(B), ...choix };      // (à deux, chaque joueur choisit pour ses régiments ; sans choix, le repos)
-  const bilan = [0, 1].map(() => ({ inhumes: 0, evacues: 0, repares: 0, caillebotis: 0, abris: 0, ravitailles: 0, coups: 0, prisonniers: 0, pris: 0, mortsCorvee: 0, mortsBlesses: 0, affames: 0, retours: 0 }));
+  const bilan = [0, 1].map(() => ({ inhumes: 0, evacues: 0, repares: 0, abris: 0, ravitailles: 0, mortsCorvee: 0, mortsBlesses: 0, affames: 0, retours: 0 }));
   const faite = {}, releves = [];
   // le centre de chaque régiment (là où sont ses hommes)
   const centres = etat.regiments.map(() => ({ x: 0, y: 0, n: 0 }));
@@ -163,11 +146,11 @@ export function corvees(B, choix, ctx) {
     if (refusCorvee(B, reg, id)) id = 'repos';
     faite[reg.id] = id;
     const b = bilan[reg.camp], ctr = centres[reg.id];
-    if (id === 'reparer' || id === 'caillebotis') {
+    if (id === 'reparer') {
       const ks = tronconsDe(B, reg);
       if (travail(B, id, ks)) {
         etat.travaux.push([etat.jour, SORTES.indexOf(id), ...ks]);
-        b[id === 'reparer' ? 'repares' : 'caillebotis'] += ks.length;
+        b.repares += ks.length;
       }
     } else if (id === 'inhumer') {
       // les corps les plus proches, autant que les hommes en peuvent porter
@@ -204,8 +187,6 @@ export function corvees(B, choix, ctx) {
       }
       reg.vivres = N.vivres + 1;      // la nuit qui vient en mange une
       b.ravitailles++;
-    } else if (id === 'coup') {
-      coupDeMain(B, reg, ctx, bilan);
     } else if (id === 'releve') {
       // il quitte le front (blessés compris) ; son remplaçant entre à l'aube, après les autres corvées
       for (let i = 0; i < A.n; i++) if (A.reg[i] === reg.id && !A.mort[i]) { etat.releves.push([A.id[i], reg.id, A.exp[i], A.victimes[i]]); A.mort[i] = 1; }
@@ -282,42 +263,6 @@ function retours(B, rng, bilan) {
     if (i < 0) continue;
     A.exp[i] = e[5]; A.victimes[i] = e[6] ?? 0;
     reg.effectif++; e[3] = etat.jour; bilan[reg.camp].retours++;
-  }
-}
-
-/* Un coup de main : les volontaires (les plus aguerris, valides) vont dans la
-   tranchée d'en face ; certains y restent, les autres ramènent des prisonniers.
-   L'expérience les garde en vie et fait la prise ; un régiment d'en face au moral
-   haut veille mieux. */
-function coupDeMain(B, reg, ctx, bilan) {
-  const { etat, R, armee: A } = B;
-  const N = R.nuit, { rng, mourir, capturer } = ctx;
-  const cible = cibleDuCoup(B, reg);
-  if (!cible) return;
-  const vol = [];
-  for (let i = 0; i < A.n; i++) if (A.reg[i] === reg.id && !A.mort[i] && !A.blessure[i]) vol.push(i);
-  vol.sort((a, b) => A.exp[b] - A.exp[a] || a - b);
-  vol.length = Math.min(vol.length, N.coupHommes, Math.ceil(reg.effectif / 5));
-  if (!vol.length) return;
-  const ou = centreDe(B, cible), veille = 0.5 + cible.moral;
-  let prise = 0, exp = 0;
-  for (const i of vol) {
-    exp += A.exp[i];
-    if (rng() < N.coupMort * (1 - 0.5 * A.exp[i]) * veille) { mourir(i, 'corvée', [ou.x + (rng() - 0.5) * 10, ou.y + (rng() - 0.5) * 4]); bilan[reg.camp].mortsCorvee++; continue; }
-    A.exp[i] = Math.min(1, A.exp[i] + N.coupExp);
-    prise += N.coupPrise * (1 + A.exp[i]) / veille;
-  }
-  let n = Math.floor(prise + rng());
-  // les prisonniers : ceux d'en face les plus près de la tranchée qu'on visite (à son centre)
-  const proies = [];
-  for (let i = 0; i < A.n; i++) if (A.reg[i] === cible.id && !A.mort[i]) proies.push([Math.hypot(A.x[i] - ou.x, A.y[i] - ou.y), i]);
-  proies.sort((a, b) => a[0] - b[0] || a[1] - b[1]);
-  n = Math.min(n, proies.length);
-  for (let k = 0; k < n; k++) capturer(proies[k][1]);
-  bilan[reg.camp].coups++; bilan[reg.camp].prisonniers += n; bilan[cible.camp].pris += n;
-  if (n) {
-    reg.moral = Math.min(1, reg.moral + N.coupMoral);
-    cible.moral = Math.max(0, cible.moral - N.coupMoral);
   }
 }
 

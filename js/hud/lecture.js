@@ -1,8 +1,8 @@
 // Lire la bataille en mots : qui est un homme, ce qu'il est devenu, ce que compte un régiment. Des fonctions
 // qui prennent la bataille `B` et ne changent rien (aucun DOM) ; main.js et la fiche s'en servent.
-import { NOUS, arriereDe, numeroCampagne } from '../bataille.js?v=0.38.2';
-import { legere } from '../army.js?v=0.38.2';
-import { identite, prochainGrade } from '../identite.js?v=0.38.2';
+import { NOUS, arriereDe, numeroCampagne } from '../bataille.js?v=0.38.3';
+import { legere } from '../army.js?v=0.38.3';
+import { identite, prochainGrade } from '../identite.js?v=0.38.3';
 
 export const majuscule = s => s[0].toUpperCase() + s.slice(1);
 export const nomDe = reg => reg?.nom ? `Régiment ${reg.nom}` : 'En face';
@@ -51,8 +51,6 @@ export function corpsSous(B, x, y, r) {
 export function tombe(B, id) {
   const ev = B.etat.evacues.find(e => e[0] === id);
   if (ev) return `Évacué blessé le jour ${ev[1]}.`;
-  const pr = B.etat.prisonniers?.find(e => e[0] === id);
-  if (pr) return `Fait prisonnier la nuit du ${pr[1]}.`;
   const c = B.etat.corps.find(c => c[4] === id);
   if (c) return `Tombé le jour ${c[3]}.`;
   const t = B.etat.tombes.find(c => c[4] === id);
@@ -66,12 +64,12 @@ export function bilan(B, reg) {
   const A = B.armee;
   let blesses = 0;
   for (let i = 0; i < A.n; i++) if (A.reg[i] === reg.id && A.blessure[i]) blesses++;
-  const releves = reg.releves || 0, prisonniers = reg.prisonniers || 0, evacues = reg.initial - reg.effectif - reg.pertes - releves - prisonniers;
-  return { vivants: reg.effectif, initial: reg.initial, blesses, morts: reg.pertes, evacues, releves, prisonniers };
+  const releves = reg.releves || 0, evacues = reg.initial - reg.effectif - reg.pertes - releves;
+  return { vivants: reg.effectif, initial: reg.initial, blesses, morts: reg.pertes, evacues, releves };
 }
 export const enMots = b => b.releves
   ? `relevé : ${b.releves} hommes sur ${b.initial} en sont revenus · ${b.morts} morts`
-  : `${b.vivants} hommes sur ${b.initial} · ${b.blesses} blessés · ${b.morts} morts${b.evacues ? ` · ${b.evacues} évacués` : ''}${b.prisonniers ? ` · ${b.prisonniers} prisonniers` : ''}`;
+  : `${b.vivants} hommes sur ${b.initial} · ${b.blesses} blessés · ${b.morts} morts${b.evacues ? ` · ${b.evacues} évacués` : ''}`;
 
 // le numéro d'ordre d'un régiment dans son camp : « 3 · Viride »
 export const numeroDe = (B, r) => B.etat.regiments.filter(g => g.camp === r.camp).indexOf(r) + 1;

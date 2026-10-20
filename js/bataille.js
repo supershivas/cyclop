@@ -14,19 +14,19 @@
    La sauvegarde (photo) garde la graine, la liste compacte des impacts, l'état
    de la foule et les petites couches de logique ; jamais le relief : il se
    rejoue depuis la graine et les impacts (rejouerTerrain). */
-import { createRng, hash2 } from './lib/rng.js?v=0.38.2';
-import { impact, hydroLignes, etat as etatCase, vitesseEtat, ETAT } from './terrain.js?v=0.38.2';
-import { creerArmee, ajouterSoldat, construireGrille, pasArmee, tuerDans, effrayer, compacter, photoArmee, restaurerArmee, b64, deB64, DENSITE, place } from './army.js?v=0.38.2';
-import { ligneSous } from './tranchees.js?v=0.38.2';
-import { terrainDuSecteur } from './secteur-terrain.js?v=0.38.2';
-import { calculerCouts, creerCacheChamps, dimensionsCouts, BLOC } from './champs.js?v=0.38.2';
-import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.38.2';
-import { METEO, TRANSITIONS, PREVISION_JUSTE } from './data/meteo.js?v=0.38.2';
-import { SECTEURS } from './data/secteur.js?v=0.38.2';
-import { REGIMENTS } from './data/lexique.js?v=0.38.2';
-import { STANCES, STANCE_DEFAUT } from './data/stances.js?v=0.38.2';
-import { grade } from './identite.js?v=0.38.2';
-import { corvees, rejouerTravaux } from './nuit.js?v=0.38.2';
+import { createRng, hash2 } from './lib/rng.js?v=0.38.3';
+import { impact, hydroLignes, etat as etatCase, vitesseEtat, ETAT } from './terrain.js?v=0.38.3';
+import { creerArmee, ajouterSoldat, construireGrille, pasArmee, tuerDans, effrayer, compacter, photoArmee, restaurerArmee, b64, deB64, DENSITE, place } from './army.js?v=0.38.3';
+import { ligneSous } from './tranchees.js?v=0.38.3';
+import { terrainDuSecteur } from './secteur-terrain.js?v=0.38.3';
+import { calculerCouts, creerCacheChamps, dimensionsCouts, BLOC } from './champs.js?v=0.38.3';
+import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.38.3';
+import { METEO, TRANSITIONS, PREVISION_JUSTE } from './data/meteo.js?v=0.38.3';
+import { SECTEURS } from './data/secteur.js?v=0.38.3';
+import { REGIMENTS } from './data/lexique.js?v=0.38.3';
+import { STANCES, STANCE_DEFAUT } from './data/stances.js?v=0.38.3';
+import { grade } from './identite.js?v=0.38.3';
+import { corvees, rejouerTravaux } from './nuit.js?v=0.38.3';
 
 export const PAS = 1 / 30;                 // s de jeu par pas
 export const NOUS = 0, EUX = 1;
@@ -99,7 +99,6 @@ export function nouvelleBataille(graine, R, opts = {}) {
     travaux: [],                // les travaux de la nuit : [jour, sorte, tronçons…] (nuit.js ; rejoués par la sauvegarde)
     tombes: [],                 // les morts inhumés : [x×10, y×10, camp, jour, id, jour de l'inhumation]
     abris: {},                  // les abris profonds : { tronçon : niveau } (nuit.js ; un 220 en crève un)
-    prisonniers: [],            // les hommes pris par un coup de main : [id, jour]
     evacues: [],                // les blessés évacués : [id, jour]
     releves: [],                // les hommes d'un régiment relevé, partis vivants : [numéro, régiment, expérience, victimes] (le registre de campagne)
     nuits: [],                  // ce que chaque nuit a vu : { jour, choix, bilan }
@@ -512,18 +511,6 @@ export function mourir(B, i, cause, ou = null) {
   B.evenements.push({ type: 'mort', camp: A.camp[i], cause, x, y, id: A.id[i] });
 }
 
-// Un homme pris par l'ennemi (un coup de main) : il quitte le front, vivant ; un gradé est remplacé
-export function capturer(B, i) {
-  const { etat, armee: A } = B;
-  if (A.mort[i]) return;
-  A.mort[i] = 1;
-  const reg = etat.regiments[A.reg[i]];
-  reg.effectif--; reg.prisonniers = (reg.prisonniers || 0) + 1;
-  etat.prisonniers.push([A.id[i], etat.jour]);
-  const rang = rangDe(B, A.id[i], A.reg[i]);
-  if (rang <= 5) promouvoir(B, A.reg[i], rang);
-}
-
 /* Les hommes de chaque camp dans chaque tronçon : [nous, en face] par tronçon. Refait tel quel pour `prises` ; pour
    le dessin et les mots (`actionDe`, la carte), le dernier compte (au plus une demi-seconde de retard). */
 function compteTroncons(B) {
@@ -919,7 +906,7 @@ export function aube(B, choix = {}) {
   const rng = createRng(etat.graine); rng.setState(etat.rng);
   B.evenements = [];
   const soir = etat.regiments.map(r => r.moral);      // le moral du soir (la nuit en rend une part)
-  const bilan = corvees(B, choix, { rng, mourir: (i, cause, ou) => mourir(B, i, cause, ou), capturer: i => capturer(B, i) });
+  const bilan = corvees(B, choix, { rng, mourir: (i, cause, ou) => mourir(B, i, cause, ou) });
   // le refus d'un jour : un régiment brisé (moral au plus bas, saigné) refuse de monter de toute la journée ;
   // il tient sa tranchée et rien de plus (le Discours de la servitude volontaire : il suffit de ne plus servir)
   const M = R.moral;
@@ -995,7 +982,7 @@ export function* etapesRestaurer(p, R) {
   etat.travaux ??= []; etat.tombes ??= []; etat.evacues ??= []; etat.nuits ??= [];   // (avant la v0.6.0 : pas de corvées)
   for (const reg of etat.regiments) { reg.moral ??= R.moral.depart; reg.deroute ??= false; reg.vivres ??= R.nuit.vivres; reg.stance ??= STANCE_DEFAUT; }   // (avant la v0.5.0 : pas de moral ; avant la v0.36.0 : pas de posture)
   etat.deux ??= false; etat.batteriesEux ??= Object.fromEntries(NOMS_CALIBRES.map(c => [c, 0]));
-  etat.abris ??= {}; etat.prisonniers ??= [];   // (avant la v0.11.0 : ni abris ni coups de main ; ni vivres)
+  etat.abris ??= {};   // (avant la v0.11.0 : ni abris ; ni vivres)
   etat.troncons ??= []; etat.melee ??= etat.troncons.map(() => 0); etat.prises ??= etat.pertesJour.map(() => [0, 0]);   // (avant la v0.4.0 : pas de tranchées)
   yield [0.1, 'Le terrain'];
   const B = monter(etat, R);
