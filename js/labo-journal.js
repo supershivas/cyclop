@@ -2,6 +2,11 @@
 // Une entrée par version qui touche au labo, la plus récente en haut. `ref` : « sujet-Lettre » (la lettre est celle de la variante,
 // A étant l'actuelle). À chaque changement du labo : une entrée ici, avec `depuis` sur les variantes ajoutées ou changées (labo.js).
 export const JOURNAL = [
+  { version: '0.40.1', date: '2026-10-20', items: [
+    { genre: 'nouveau', texte: 'Le clic sur un bouton : cinq façons de le sentir (le rebond, le tampon, l\'onde, le cran, le maintien), contre le bouton sans retour d\'aujourd\'hui', ref: 'clic-bouton-B' },
+    { genre: 'nouveau', texte: 'Un ordre sur un secteur : cinq retours quand un régiment reçoit son ordre (le fanion planté, l\'onde du secteur, la réponse des hommes, la bannière, le réticule), sur le vrai moteur', ref: 'ordre-secteur-B' },
+    { genre: 'nouveau', texte: 'Le coup d\'obus : cinq façons de le sentir (la trajectoire, l\'impact en trois temps, l\'onde de choc qui fait trembler le champ, la terre qui retombe, le gel d\'image), pour les trois calibres', ref: 'coup-obus-B' },
+  ] },
   { version: '0.38.2', date: '2026-10-20', items: [
     { genre: 'nouveau', texte: 'Les caisses de ravitaillement : une caisse descend sous un parachute, les deux camps courent vers elle (une version piégée)', ref: 'caisses-A' },
     { genre: 'nouveau', texte: 'Les obus ratés : un obus sur trois ne part pas ; il gît (avec un cercle), il fume, ou il éclate plus tard', ref: 'obus-rates-A' },

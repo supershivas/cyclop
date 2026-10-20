@@ -2,28 +2,29 @@
 // Chaque sujet utilise les mêmes modules que le jeu (terrain, apparence,
 // rendu three.js) : ce qu'on voit ici est ce que le jeu dessinera. Ajouter un
 // sujet ou une variante = ajouter une entrée dans GROUPES.
-import { mountLabo } from './lib/labo-shell.js?v=0.40.0';
-import { spriteCanvas, paletteToGPL, paletteToHex } from './lib/sprites.js?v=0.40.0';
-import { PALETTE, ROLES } from './palette.js?v=0.40.0';
-import { chargerContenu } from './design-store.js?v=0.40.0';
-import { tuile, ETAT } from './tuiles.js?v=0.40.0';
-import { creerTerrain, impact, hydroLignes } from './terrain.js?v=0.40.0';
-import { CALIBRES } from './data/calibres.js?v=0.40.0';
-import { METEO } from './data/meteo.js?v=0.40.0';
-import { nouvelleBataille, avancer, ordonnerMarche, ordonnerBarrage, mourir } from './bataille.js?v=0.40.0';
-import { creerRendu, ZOOMS } from './rendu3d.js?v=0.40.0';
-import { hash2 } from './lib/rng.js?v=0.40.0';
-import { reglerVerdure } from './apparence.js?v=0.40.0';
-import { maquetteAssaut } from './labo-assaut.js?v=0.40.0';
-import { calquePlaques } from './labo-plaques.js?v=0.40.0';
-import { calqueBarre } from './labo-barre-temps.js?v=0.40.0';
-import { maquetteProjections, maquetteVisee } from './labo-projections.js?v=0.40.0';
-import { calqueBarreVie } from './labo-barre-vie.js?v=0.40.0';
-import { calqueClic } from './labo-clic-regiment.js?v=0.40.0';
-import { maquetteCampagne } from './labo-campagne.js?v=0.40.0';
-import { maquetteCaisses, maquetteRates, maquetteSapes, maquetteGaz, maquetteChars } from './labo-arcade.js?v=0.40.0';
-import { JOURNAL } from './labo-journal.js?v=0.40.0';
-import { loadVersion } from './lib/app-update.js?v=0.40.0';
+import { mountLabo } from './lib/labo-shell.js?v=0.40.1';
+import { spriteCanvas, paletteToGPL, paletteToHex } from './lib/sprites.js?v=0.40.1';
+import { PALETTE, ROLES } from './palette.js?v=0.40.1';
+import { chargerContenu } from './design-store.js?v=0.40.1';
+import { tuile, ETAT } from './tuiles.js?v=0.40.1';
+import { creerTerrain, impact, hydroLignes } from './terrain.js?v=0.40.1';
+import { CALIBRES } from './data/calibres.js?v=0.40.1';
+import { METEO } from './data/meteo.js?v=0.40.1';
+import { nouvelleBataille, avancer, ordonnerMarche, ordonnerBarrage, mourir } from './bataille.js?v=0.40.1';
+import { creerRendu, ZOOMS } from './rendu3d.js?v=0.40.1';
+import { hash2 } from './lib/rng.js?v=0.40.1';
+import { reglerVerdure } from './apparence.js?v=0.40.1';
+import { maquetteAssaut } from './labo-assaut.js?v=0.40.1';
+import { calquePlaques } from './labo-plaques.js?v=0.40.1';
+import { calqueBarre } from './labo-barre-temps.js?v=0.40.1';
+import { maquetteProjections, maquetteVisee } from './labo-projections.js?v=0.40.1';
+import { calqueBarreVie } from './labo-barre-vie.js?v=0.40.1';
+import { calqueClic } from './labo-clic-regiment.js?v=0.40.1';
+import { maquetteBoutons, calqueOrdre, calqueObus } from './labo-satisfaction.js?v=0.40.1';
+import { maquetteCampagne } from './labo-campagne.js?v=0.40.1';
+import { maquetteCaisses, maquetteRates, maquetteSapes, maquetteGaz, maquetteChars } from './labo-arcade.js?v=0.40.1';
+import { JOURNAL } from './labo-journal.js?v=0.40.1';
+import { loadVersion } from './lib/app-update.js?v=0.40.1';
 
 document.documentElement.style.setProperty('--jeu-accent', ROLES.accent);
 const NOM = document.title.replace(/^Labo — /, ''); // le nom vient de la page (une apostrophe ne casse rien)
@@ -212,6 +213,30 @@ const GROUPES = [
       { title: 'Ligne à ligne', depuis: '0.33.0', note: 'Le papier est posé d\'un coup mais s\'écrit : le titre, puis chaque ligne et chaque bouton apparaissent l\'un après l\'autre, à quelques centièmes d\'écart, comme un ordre qu\'on rédige.', render: s => moteur(s, { zoom: 3, cz: 185, soldats: 400, calque: calqueClic('equerres', 'lignes') }) },
       { title: 'Au régiment', status: 'ancienne', note: 'En jeu en v0.34.0 et v0.34.1, remplacée par le rabat en v0.34.6. La fenêtre quitte le bas de l\'écran : elle vient près des hommes, juste au-dessus de la boîte de leur nom (v0.34.1 ; la maquette la pose au-dessus de leur emprise), reliée à eux par une pointe, et les suit quand ils marchent. Elle fait un petit bond en arrivant.', render: s => moteur(s, { zoom: 3, cz: 185, soldats: 400, calque: calqueClic('equerres', 'bulle') }) },
       { title: 'Elle apparaît d\'un coup', status: 'ancienne', note: 'Jusqu\'à la v0.33 : un clic sur la carte, et le papier des ordres (le régiment, ce qu\'il fait, les formes, Marcher, Regagner, Fiche) est là, posé au-dessus de la carte, sans lien avec elle. Cliquez une carte du bas.', render: s => moteur(s, { zoom: 3, cz: 185, soldats: 400, calque: calqueClic('equerres', 'sec') }) },
+    ] },
+    { id: 'clic-bouton', title: 'Le clic sur un bouton', variants: [
+      { title: 'Sans retour', status: 'actuelle', depuis: '0.40.1', note: 'Ce que le jeu fait aujourd\'hui : le bouton s\'allume au survol (glaise), et au clic l\'ordre part, sans que le bouton lui-même réagisse. Seule la carte d\'un régiment s\'enfonce de deux pixels (v0.32.2). Une maquette du papier de campagne : les boutons de la fenêtre d\'ordres, les batteries, le temps. Le journal sous le papier dit l\'ordre reçu.', render: s => maquetteBoutons(s, 'actuelle') },
+      { title: 'Le rebond', depuis: '0.40.1', note: 'Dès l\'appui, le bouton s\'enfonce (94 %), puis revient en dépassant un peu (105 %) : 280 ms. Le plus discret et le plus universel ; il dit « j\'ai senti ton doigt » avant même que l\'ordre parte.', render: s => maquetteBoutons(s, 'rebond') },
+      { title: 'Le tampon', depuis: '0.40.1', note: 'Une empreinte REÇU, penchée, se plaque sur le bouton et s\'efface en une seconde ; le bouton s\'enfonce d\'un cran. C\'est le ton du jeu (les papiers de campagne, le registre) : un ordre se tamponne. Au son, un coup sourd (le jeu est muet pour l\'instant).', render: s => maquetteBoutons(s, 'tampon') },
+      { title: 'L\'onde', depuis: '0.40.1', note: 'Un disque de glaise part du point cliqué (le centre au clavier) et remplit le bouton en 460 ms avant de s\'éteindre. Le retour dit où l\'on a cliqué : utile sur les boutons larges (« Regagner sa tranchée »).', render: s => maquetteBoutons(s, 'onde') },
+      { title: 'Le cran', depuis: '0.40.1', note: 'Une touche de télégraphe : le bouton a un pied (une ombre de 3 px), descend de 2 px d\'un coup, tremble deux fois en deux images, puis remonte. Sans adoucissement (steps) : sec, mécanique, comme un levier.', render: s => maquetteBoutons(s, 'cran') },
+      { title: 'Le maintien', depuis: '0.40.1', note: 'Un ordre qui compte se tient un quart de seconde : une jauge se remplit au pied du bouton, puis il se retourne (os sur terre) et l\'ordre part ; lâché avant, rien ne part. Évite les clics maladroits et donne du poids. Au clavier : Espace ou Entrée tenus. À réserver aux ordres lourds, pas à « Fiche ».', render: s => maquetteBoutons(s, 'maintien') },
+    ] },
+    { id: 'ordre-secteur', title: 'Un ordre sur un secteur', variants: [
+      { title: 'Sans retour', status: 'actuelle', depuis: '0.40.1', note: 'Ce que le jeu fait aujourd\'hui : les régiments choisis se mettent en marche ; sur une tranchée, ses tronçons clignotent trois secondes (v0.21.0). En terrain libre, rien ne marque le point cliqué. Ici : cliquez un secteur, les régiments 1 et 2 y marchent vraiment (un ordre impossible est refusé à voix haute).', render: s => moteur(s, { zoom: 3, cz: 185, soldats: 400, calque: calqueOrdre('actuelle') }) },
+      { title: 'Le fanion planté', depuis: '0.40.1', note: 'Un fanion tombe au point cliqué, rebondit et se plante, la toile se déploie ; un fil pointillé court de chaque régiment au fanion. Le point d\'arrivée reste marqué 2,6 s : on voit où l\'on a envoyé quelqu\'un.', render: s => moteur(s, { zoom: 3, cz: 185, soldats: 400, calque: calqueOrdre('fanion') }) },
+      { title: 'L\'onde du secteur', depuis: '0.40.1', note: 'Trois anneaux partent du point cliqué sur le sol (en perspective) et l\'emprise de l\'ordre se dessine en pointillés qui défilent. On lit la zone, pas seulement le point (l\'emprise est indicative : 46 m sur 18 m).', render: s => moteur(s, { zoom: 3, cz: 185, soldats: 400, calque: calqueOrdre('ondes') }) },
+      { title: 'La réponse des hommes', depuis: '0.40.1', note: 'Chaque homme lève un petit « ! » puis lance un nuage de poussière à ses pieds, du plus près du secteur au plus loin : le régiment s\'ébranle comme une vague. C\'est le retour le plus « vivant », et le plus lourd (un dessin par homme).', render: s => moteur(s, { zoom: 3, cz: 185, soldats: 400, calque: calqueOrdre('reponse') }) },
+      { title: 'La bannière', depuis: '0.40.1', note: 'La bannière numérotée de chaque régiment se déploie au-dessus de ses hommes, flotte deux secondes puis se replie : on voit qui a reçu l\'ordre, et le numéro est celui de sa carte. Au zoom 1 et 2, elle remplace ce que le point ne dit pas.', render: s => moteur(s, { zoom: 3, cz: 185, soldats: 400, calque: calqueOrdre('banniere') }) },
+      { title: 'Le réticule', depuis: '0.40.1', note: 'Quatre coins d\'os se referment sur l\'emprise de l\'ordre et une croix se pose au milieu en tournant d\'un quart : le geste d\'un état-major qui pointe. Le plus économe, et le plus proche des équerres du clic sur un régiment.', render: s => moteur(s, { zoom: 3, cz: 185, soldats: 400, calque: calqueOrdre('reticule') }) },
+    ] },
+    { id: 'coup-obus', title: 'Le coup d\'obus', variants: [
+      { title: 'Sans retour', status: 'actuelle', depuis: '0.40.1', note: 'Ce que le jeu fait aujourd\'hui : la visée (le cercle du souffle) puis l\'obus tombe, la gerbe, l\'onde et la fumée du moteur, le cratère dans le sol. Ici : choisissez un calibre (75, 155, 220), cliquez le champ, un seul obus tombe où vous avez cliqué, après 1,3 s.', render: s => moteur(s, { zoom: 3, cz: 185, soldats: 400, calque: calqueObus('actuelle') }) },
+      { title: 'La trajectoire', depuis: '0.40.1', note: 'Un trait d\'os suit l\'obus du ciel jusqu\'au sol, et son ombre grandit sur la cible jusqu\'au rayon du calibre : on voit venir le coup, on sait où il tombe, on peut crier. Au son, un sifflement qui monte (le jeu est muet pour l\'instant).', render: s => moteur(s, { zoom: 3, cz: 185, soldats: 400, calque: calqueObus('trajectoire') }) },
+      { title: 'L\'impact en trois temps', depuis: '0.40.1', note: 'Un éclair d\'os d\'un dixième de seconde sur la gerbe, puis un anneau de poussière qui s\'élargit en une demi-seconde ; la fumée qui reste est celle du jeu. Le coup a un début net, un milieu, une fin.', render: s => moteur(s, { zoom: 3, cz: 185, soldats: 400, calque: calqueObus('troisTemps') }) },
+      { title: 'L\'onde de choc', depuis: '0.40.1', note: 'Un anneau de pression court sur le sol jusqu\'à trois fois le rayon, et le champ tremble : 1,5 px pour un 75, 3,5 pour un 155, 7 pour un 220, une demi-seconde. Le calibre se sent dans les mains. Coupée si le système demande un mouvement réduit.', render: s => moteur(s, { zoom: 3, cz: 185, soldats: 400, calque: calqueObus('ondeChoc') }) },
+      { title: 'La terre qui retombe', depuis: '0.40.1', note: 'Des éclats de terre (14, 26 ou 44 selon le calibre, de la couleur du sol) partent en l\'air et retombent autour du cratère, puis s\'effacent. La terre arrachée par l\'obus devient visible : c\'est le thème du jeu.', render: s => moteur(s, { zoom: 3, cz: 185, soldats: 400, calque: calqueObus('terre') }) },
+      { title: 'Le gel d\'image', depuis: '0.40.1', note: 'Sur un 155 et un 220, l\'image se fige 50 ou 90 ms au moment du choc, sous un voile d\'os qui s\'éteint ; rien sur un 75. La logique continue : on reprend le fil, les hommes ont déjà bougé. À essayer par petites doses : trop, il saccade.', render: s => moteur(s, { zoom: 3, cz: 185, soldats: 400, calque: calqueObus('gel') }) },
     ] },
     { id: 'bord-carte', title: 'Le bord de la carte', variants: [
       { title: 'Faux terrain dans la nuit', status: 'actuelle', depuis: '0.33.0', note: 'Retenu (v0.33.0), en jeu (pas à l\'écran titre, qui garde sa brume). Le champ se prolonge, mais qui s\'éteint dans le noir au lieu de la brume : le champ se prolonge, puis la nuit le mange. Entre « Faux terrain » et « Brouillard noir ».', render: s => moteur(s, { zoom: 1, soldats: 100, centre: [300, 80], vue: { tangage: 0.4, yaw: 0.7 }, bord: 'faux-noir' }) },
