@@ -8,7 +8,7 @@
    et la lettre (#loups-C).
 
    Module ES sans dépendance :
-     import { mountLabo } from './lib/labo-shell.js?v=0.37.2'
+     import { mountLabo } from './lib/labo-shell.js?v=0.37.3'
      mountLabo(document.getElementById('labo'), {
        game: 'Kingvi',               // nom affiché dans l'en-tête
        home: './',                   // lien de retour vers le jeu

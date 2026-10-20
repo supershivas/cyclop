@@ -71,6 +71,7 @@ export function creerGeometries(THREE, col) {
     gi.setAttribute('aBras', new THREE.Float32BufferAttribute(g.b, 1));
     gi.setAttribute('aPos', attrsI[0]); gi.setAttribute('aCamp', attrsI[1]); gi.setAttribute('aVit', attrsI[2]);
     if ((sil || style === 'legere') && attrsI[3]) gi.setAttribute('aTir', attrsI[3]);   // (la boîte ne tire pas : l'attribut absent vaut 0)
+    if ((sil || style === 'legere') && attrsI[4]) gi.setAttribute('aBless', attrsI[4]);  // la blessure sur le corps (v0.37.3) : la boîte n'a pas de membres
     gi.instanceCount = 0;
     return gi;
   }

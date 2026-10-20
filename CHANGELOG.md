@@ -1,5 +1,9 @@
 # Journal des versions
 
+## 0.37.3 — 2026-10-20
+- De près, un clic sur un de nos hommes ouvre sa fiche ; un clic sur la fiche la ferme
+- La blessure se voit sur le corps : un pansement clair au bras, à la jambe ou à la tête
+
 ## 0.37.2 — 2026-10-20
 - Les fusils touchent plus souvent, même un homme isolé
 - Au corps à corps, on se bat de près : un homme cerné par des ennemis tombe en quelques secondes, ou se rend et devient prisonnier

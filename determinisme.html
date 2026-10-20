@@ -12,7 +12,7 @@
 <p><button id="go">Lancer (120 s de jeu)</button></p>
 <pre id="sortie"></pre>
 <script type="module">
-import { empreinteMaths, empreintesBataille } from './js/determinisme.js?v=0.37.2';
+import { empreinteMaths, empreintesBataille } from './js/determinisme.js?v=0.37.3';
 const q = new URLSearchParams(location.search), sortie = document.getElementById('sortie');
 async function lancer() {
   const secondes = +(q.get('secondes') || 120), graine = +(q.get('graine') || 7);

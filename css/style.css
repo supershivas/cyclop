@@ -140,7 +140,7 @@
   border: 2px solid var(--jeu-encre); border-top: 0; pointer-events: none;
   margin-top: -14px;
 }
-.fiche { margin-left: auto; position: relative; color: var(--jeu-fond); width: min(40ch, 70vw); padding-right: calc(var(--jeu-cible) + var(--e1)); }
+.fiche { cursor: pointer; margin-left: auto; position: relative; color: var(--jeu-fond); width: min(40ch, 70vw); padding-right: calc(var(--jeu-cible) + var(--e1)); }
 .fiche h2 { margin: 0 0 var(--e0); }
 .fiche ul { margin: var(--pas) 0 0; padding-left: 1.1em; }
 .fiche-fermer { position: absolute; top: 0; right: 0; }

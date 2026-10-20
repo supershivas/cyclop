@@ -48,15 +48,21 @@ export const fauxMat = {
 
 export const soldatMat = {
   v: `
-      attribute vec3 aPos; attribute float aCamp; attribute float aPart; attribute float aJambe; attribute float aVit; attribute float aBras; attribute vec2 aTir;
+      attribute vec3 aPos; attribute float aCamp; attribute float aPart; attribute float aJambe; attribute float aVit; attribute float aBras; attribute vec2 aTir; attribute float aBless;
       uniform float uT; uniform vec2 uSoleil; uniform float uBalance;
-      varying float vCamp; varying float vPart; varying vec2 vXZ; varying float vLong;
+      varying float vCamp; varying float vPart; varying vec2 vXZ; varying float vLong; varying float vBless;
       void main() {
         // une partie de 10 à 19 n'est dessinée que pour nous, de 20 à 29 que pour en face (casque, moustache : v0.27.0, au labo)
         float cp = aCamp > 1.5 ? aCamp - 2.0 : aCamp, kp = aPart;
         bool cache = false;
         if (kp >= 20.0) { kp -= 20.0; cache = cp < 0.5; } else if (kp >= 10.0) { kp -= 10.0; cache = cp > 0.5; }
         vCamp = aCamp; vPart = kp; vLong = position.y;
+        // la blessure sur le corps (v0.37.3) : un pansement (1 : sur le bras, 2 : sur la jambe, 3 : sur la tête) du côté de la fiche (aBless = blessure + 4 si le côté droit)
+        vBless = 0.0;
+        float bw = mod(aBless, 4.0), droit = aBless > 3.5 ? 1.0 : 0.0;
+        if (bw > 0.5 && bw < 1.5 && abs(aBras) > 0.5 && abs(aBras) < 1.5 && (aBras > 0.0) == (droit > 0.5)) vBless = 1.0;
+        else if (bw > 1.5 && bw < 2.5 && kp > 2.5 && kp < 3.5 && (aJambe == 0.0 || (aJambe < 0.0) == (droit > 0.5))) vBless = 2.0;
+        else if (bw > 2.5 && bw < 3.5 && ((kp > 5.5 && kp < 6.5) || (kp > 1.5 && kp < 2.5))) vBless = 3.0;
         vec3 p = position;
         // la peur : un homme se tapit (aVit < 0 : −1 − sa vitesse), sauf son ombre
         bool tapi = aVit < 0.0;
@@ -109,9 +115,9 @@ export const soldatMat = {
       }`,
   f: `
       uniform vec3 uNous; uniform vec3 uEux; uniform vec3 uOmbre; uniform vec3 uSel;
-      uniform vec3 uJambes; uniform vec3 uFusil; uniform vec3 uSac; uniform vec3 uVisage; uniform vec3 uCuir; uniform vec3 uBotte;
+      uniform vec3 uJambes; uniform vec3 uFusil; uniform vec3 uSac; uniform vec3 uVisage; uniform vec3 uCuir; uniform vec3 uBotte; uniform vec3 uPansement;
       uniform sampler2D uSol; uniform vec2 uTaille;
-      varying float vCamp; varying float vPart; varying vec2 vXZ; varying float vLong;
+      varying float vCamp; varying float vPart; varying vec2 vXZ; varying float vLong; varying float vBless;
       void main() {
         float k = floor(vPart + 0.5);
         // l'ombre : le sol qu'elle couvre, un ton plus sombre (la couleur de ses parois), fondue de plus en plus
@@ -131,6 +137,8 @@ export const soldatMat = {
         else if (k == 6.0 || k == 9.0) c = uVisage;
         else if (k == 7.0) c = uCuir;
         else if (k == 8.0) c = uBotte;
+        // le pansement : une bande d'os autour du bras ou de la jambe ; pour la tête, tout le visage et le bas du casque (vu de dos aussi)
+        if ((vBless > 2.5 && (k == 6.0 || vLong < 1.64)) || (vBless > 1.5 && vBless < 2.5 && vLong > 0.2 && vLong < 0.62) || (vBless > 0.5 && vBless < 1.5 && vLong > 0.9 && vLong < 1.32)) c = uPansement;
         gl_FragColor = vec4(c, 1.0);
       }`,
 };

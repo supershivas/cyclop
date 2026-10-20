@@ -1,8 +1,8 @@
 // Les hommes : les soldats (une boîte et son ombre ; de près la silhouette, plus loin une silhouette allégée ; aux zooms 1 et 2 un point), les anneaux des
 // régiments choisis ou survolés, les corps (un homme couché) et les tombes (un tertre et une croix). Tout est instancié et ne reçoit que ce qu'on voit.
 // Le dessin seulement. Les formes viennent de geometries.js, le GLSL de shaders.js.
-import * as SH from './shaders.js?v=0.37.2';
-import { creerGeometries } from './geometries.js?v=0.37.2';
+import * as SH from './shaders.js?v=0.37.3';
+import { creerGeometries } from './geometries.js?v=0.37.3';
 
 // `THREE`, `scene`, `col`, `solUniforms` (`uSol`, `uTaille` : la texture du sol, que l'ombre d'un soldat reprend), `styleSoldat` (le style de près, comparé au labo),
 // `surface(x, z)` et `surfaceLisse(x, z)` (la hauteur du sol, lissée pour qui marche), `solY` (la hauteur moyenne du sol) et `POINTS_JUSQUA` (le zoom où un soldat n'est
@@ -15,14 +15,14 @@ export function creerSoldats({ THREE, scene, col, solUniforms, styleSoldat, cada
   // 3 les jambes (bandes molletières), 4 le fusil, 5 le sac, 6 le visage.
   const { geometrieSoldat: formeSoldat } = creerGeometries(THREE, col);
   const geometrieSoldat = style => formeSoldat(style, attrsI);
-  let cap = 0, posArr = null, campArr = null, vitArr = null, tirArr = null, soldatsInst = null, soldatsDetail = null, soldatsLeger = null, soldatsPoints = null, attrsI = null, attrsP = null;
+  let cap = 0, posArr = null, campArr = null, vitArr = null, tirArr = null, blessArr = null, soldatsInst = null, soldatsDetail = null, soldatsLeger = null, soldatsPoints = null, attrsI = null, attrsP = null;
   const TAPI = 0.5;                        // la peur au-delà de laquelle un homme se tapit (le dessin seulement ; on ne tire plus à 0,85)
   const LEGER_DES = 4;                     // dès 4 pixels par mètre : la silhouette allégée (corps, tête, bras, fusil : ~50 triangles au lieu de ~74 ; Jérôme, v0.17.0)
   let legerActif = true;                   // (la mesure du coût l'éteint)
   const DETAIL_DES = 6;                    // (à 4 pixels par mètre, un homme en fait 7 de haut : la silhouette ne s'y voyait pas, et coûtait 138 000 triangles pour 2 000 hommes)
   const soldatMat = new THREE.ShaderMaterial({
     uniforms: { uNous: { value: col('n') }, uEux: { value: col('x') }, uOmbre: { value: col('t') }, uSel: { value: col('o') },
-      uJambes: { value: col('s') }, uFusil: { value: col('t') }, uSac: { value: col('g') }, uVisage: { value: col('h') }, uCuir: { value: col('b') }, uBotte: { value: col('t') }, uT: { value: 0 },
+      uJambes: { value: col('s') }, uFusil: { value: col('t') }, uSac: { value: col('g') }, uVisage: { value: col('h') }, uCuir: { value: col('b') }, uBotte: { value: col('t') }, uPansement: { value: col('o') }, uT: { value: 0 },
       uBalance: { value: styleSoldat === 'equipe-marche' ? 1 : 0 },
       uSol: solUniforms.uSol, uTaille: solUniforms.uTaille,
       uSoleil: { value: new THREE.Vector2(0.5, 0.6) } },
@@ -53,8 +53,8 @@ export function creerSoldats({ THREE, scene, col, solUniforms, styleSoldat, cada
       if (soldatsLeger) { scene.remove(soldatsLeger); soldatsLeger.geometry.dispose(); }
     }
     cap = capacite;
-    posArr = new Float32Array(cap * 3); campArr = new Float32Array(cap); vitArr = new Float32Array(cap); tirArr = new Float32Array(cap * 2);
-    attrsI = [new THREE.InstancedBufferAttribute(posArr, 3), new THREE.InstancedBufferAttribute(campArr, 1), new THREE.InstancedBufferAttribute(vitArr, 1), new THREE.InstancedBufferAttribute(tirArr, 2)];
+    posArr = new Float32Array(cap * 3); campArr = new Float32Array(cap); vitArr = new Float32Array(cap); tirArr = new Float32Array(cap * 2); blessArr = new Float32Array(cap);
+    attrsI = [new THREE.InstancedBufferAttribute(posArr, 3), new THREE.InstancedBufferAttribute(campArr, 1), new THREE.InstancedBufferAttribute(vitArr, 1), new THREE.InstancedBufferAttribute(tirArr, 2), new THREE.InstancedBufferAttribute(blessArr, 1)];
     attrsI.forEach(a => a.setUsage(THREE.DynamicDrawUsage));
     soldatsInst = new THREE.Mesh(geometrieSoldat('boite'), soldatMat); soldatsInst.frustumCulled = false; soldatsInst.renderOrder = 2;
     soldatsDetail = styleSoldat === 'boite' ? null : new THREE.Mesh(geometrieSoldat(styleSoldat), soldatMat);
@@ -247,6 +247,7 @@ export function creerSoldats({ THREE, scene, col, solUniforms, styleSoldat, cada
       vitArr[k] = A.peur[i] >= TAPI ? -1 : Math.hypot(A.vx[i], A.vy[i]);
       tirArr[k * 2] = i < tirVal.length && tirVal[i] > 0 ? tirVal[i] : regs[A.reg[i]]?.stance === 'retenu' ? -1 : 0;       // (-1 : le fusil baissé du feu retenu ; la pose de tir, quand il tire, passe devant)
       tirArr[k * 2 + 1] = i < tirVal.length ? tirAng[i] : 0;
+      blessArr[k] = A.blessure[i] ? A.blessure[i] + 4 * ((A.id[i] >> 1) & 1) : 0;       // la blessure (1 bras, 2 jambe, 3 tête) et son côté, le même que celui de la fiche
       k++;
     }
     anGeo.setDrawRange(0, ka); anGeo.attributes.position.needsUpdate = true; anGeo.attributes.aTon.needsUpdate = true; anMat.uniforms.uTaille.value = Math.max(5, Math.round(p * 1.5));

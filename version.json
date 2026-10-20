@@ -1,8 +1,8 @@
 {
-  "version": "0.37.2",
+  "version": "0.37.3",
   "date": "2026-10-20",
   "changes": [
-    "Les fusils touchent plus souvent, même un homme isolé",
-    "Au corps à corps, on se bat de près : un homme cerné par des ennemis tombe en quelques secondes, ou se rend et devient prisonnier"
+    "De près, un clic sur un de nos hommes ouvre sa fiche ; un clic sur la fiche la ferme",
+    "La blessure se voit sur le corps : un pansement clair au bras, à la jambe ou à la tête"
   ]
 }
