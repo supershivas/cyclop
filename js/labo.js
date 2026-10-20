@@ -2,27 +2,28 @@
 // Chaque sujet utilise les mêmes modules que le jeu (terrain, apparence,
 // rendu three.js) : ce qu'on voit ici est ce que le jeu dessinera. Ajouter un
 // sujet ou une variante = ajouter une entrée dans GROUPES.
-import { mountLabo } from './lib/labo-shell.js?v=0.38.1';
-import { spriteCanvas, paletteToGPL, paletteToHex } from './lib/sprites.js?v=0.38.1';
-import { PALETTE, ROLES } from './palette.js?v=0.38.1';
-import { chargerContenu } from './design-store.js?v=0.38.1';
-import { tuile, ETAT } from './tuiles.js?v=0.38.1';
-import { creerTerrain, impact, hydroLignes } from './terrain.js?v=0.38.1';
-import { CALIBRES } from './data/calibres.js?v=0.38.1';
-import { METEO } from './data/meteo.js?v=0.38.1';
-import { nouvelleBataille, avancer, ordonnerMarche, ordonnerBarrage, mourir } from './bataille.js?v=0.38.1';
-import { creerRendu, ZOOMS } from './rendu3d.js?v=0.38.1';
-import { hash2 } from './lib/rng.js?v=0.38.1';
-import { reglerVerdure } from './apparence.js?v=0.38.1';
-import { maquetteAssaut } from './labo-assaut.js?v=0.38.1';
-import { calquePlaques } from './labo-plaques.js?v=0.38.1';
-import { calqueBarre } from './labo-barre-temps.js?v=0.38.1';
-import { maquetteProjections, maquetteVisee } from './labo-projections.js?v=0.38.1';
-import { calqueBarreVie } from './labo-barre-vie.js?v=0.38.1';
-import { calqueClic } from './labo-clic-regiment.js?v=0.38.1';
-import { maquetteCampagne } from './labo-campagne.js?v=0.38.1';
-import { JOURNAL } from './labo-journal.js?v=0.38.1';
-import { loadVersion } from './lib/app-update.js?v=0.38.1';
+import { mountLabo } from './lib/labo-shell.js?v=0.38.2';
+import { spriteCanvas, paletteToGPL, paletteToHex } from './lib/sprites.js?v=0.38.2';
+import { PALETTE, ROLES } from './palette.js?v=0.38.2';
+import { chargerContenu } from './design-store.js?v=0.38.2';
+import { tuile, ETAT } from './tuiles.js?v=0.38.2';
+import { creerTerrain, impact, hydroLignes } from './terrain.js?v=0.38.2';
+import { CALIBRES } from './data/calibres.js?v=0.38.2';
+import { METEO } from './data/meteo.js?v=0.38.2';
+import { nouvelleBataille, avancer, ordonnerMarche, ordonnerBarrage, mourir } from './bataille.js?v=0.38.2';
+import { creerRendu, ZOOMS } from './rendu3d.js?v=0.38.2';
+import { hash2 } from './lib/rng.js?v=0.38.2';
+import { reglerVerdure } from './apparence.js?v=0.38.2';
+import { maquetteAssaut } from './labo-assaut.js?v=0.38.2';
+import { calquePlaques } from './labo-plaques.js?v=0.38.2';
+import { calqueBarre } from './labo-barre-temps.js?v=0.38.2';
+import { maquetteProjections, maquetteVisee } from './labo-projections.js?v=0.38.2';
+import { calqueBarreVie } from './labo-barre-vie.js?v=0.38.2';
+import { calqueClic } from './labo-clic-regiment.js?v=0.38.2';
+import { maquetteCampagne } from './labo-campagne.js?v=0.38.2';
+import { maquetteCaisses, maquetteRates, maquetteSapes, maquetteGaz, maquetteChars } from './labo-arcade.js?v=0.38.2';
+import { JOURNAL } from './labo-journal.js?v=0.38.2';
+import { loadVersion } from './lib/app-update.js?v=0.38.2';
 
 document.documentElement.style.setProperty('--jeu-accent', ROLES.accent);
 const NOM = document.title.replace(/^Labo — /, ''); // le nom vient de la page (une apostrophe ne casse rien)
@@ -239,6 +240,30 @@ const GROUPES = [
       { title: 'Le compteur', status: 'ancienne', note: 'Ce que voyait le joueur avant la v0.9.2 : des hommes en boîtes, des obus, et « Tronçons : 12 · 11 » en coin. Rien ne dit qu\'un tronçon est disputé, ni que le dernier défenseur va tomber. Allez à « Contact » avec la frise.', render: s => maquetteAssaut(s, 'actuelle') },
       { title: 'Les fusées', note: 'Non retenu (v0.9.2). L\'avant-dernier acte : une fusée d\'appel quand la sortie commence, deux fusées quand il ne reste qu\'un homme (le tronçon va basculer), et celle d\'en face, d\'une autre couleur, quand il est pris. Un signal lisible de loin, au zoom 1.', render: s => maquetteAssaut(s, 'fusees') },
       { title: 'Tout ensemble', note: 'Non retenu (v0.9.2). Le feu, les marques du tronçon et les fusées. Pour juger si le tout reste lisible, ou s\'il faut en retirer.', render: s => maquetteAssaut(s, 'tout') },
+    ] },
+  ] },
+  { id: 'arcade', title: 'Arcade', topics: [
+    { id: 'caisses', title: 'Les caisses de ravitaillement', variants: [
+      { title: 'Le parachute', depuis: '0.38.2', note: 'Un ballon captif lâche une caisse dans le no man\'s land : elle descend sous un parachute d\'os pendant neuf secondes, une fumée dit où, et les deux camps courent vers elle. Le premier homme à moins de cinq mètres la prend, et le contenu se dit alors (vivres, obus, cartouches, pansements, fil de fer, vin). Pas de loot : des vivres et des outils. Aucun contenu n\'est branché dans le jeu.', render: s => maquetteCaisses(s, R, 'A') },
+      { title: 'La caisse piégée', depuis: '0.38.2', note: 'La même caisse, marquée d\'un point d\'interrogation : une sur trois est piégée (deux 75 quand on l\'ouvre). Un pari plutôt qu\'une course ; l\'IA d\'en face y tombe comme nous.', render: s => maquetteCaisses(s, R, 'B') },
+    ] },
+    { id: 'obus-rates', title: 'Les obus ratés', variants: [
+      { title: 'Il gît, un cercle', depuis: '0.38.2', note: 'Quatre obus sur dix d\'une salve ne partent pas : ils restent couchés dans la terre, un cercle pointillé dit où ne pas marcher. Un homme qui passe dessus le fait éclater une fois sur vingt par pas. « Désamorcer (la nuit) » les retire ; c\'est une corvée de plus pour la nuit.', render: s => maquetteRates(s, R, 'A') },
+      { title: 'Il fume', depuis: '0.38.2', note: 'Pas de cercle : un fil de fumée monte de l\'obus raté, on le voit de loin, on le contourne ou pas. Plus sobre, moins lisible au zoom 1.', render: s => maquetteRates(s, R, 'B') },
+      { title: 'Il couve', depuis: '0.38.2', note: 'Il gît sans rien dire, et éclate seul de quinze à trente-cinq secondes plus tard, après un tic-tac d\'une seconde (un anneau qui bat). L\'imprévu, pas la précaution : on ne peut plus rester près d\'un raté.', render: s => maquetteRates(s, R, 'C') },
+    ] },
+    { id: 'sapes', title: 'Les sapes et les mines', variants: [
+      { title: 'La galerie', depuis: '0.38.2', note: 'On creuse de notre ligne vers la leur (six mètres par seconde dans la maquette, un mètre à l\'heure dans la vie) : la galerie se dessine en pointillés d\'os, des anneaux de bruit grossissent à sa tête, et plus on approche, plus l\'autre camp peut nous entendre : un camouflet crève alors la galerie. « Faire sauter » à tout moment : neuf 220 en carré, un cratère de dix-sept mètres, des morts. Sauter trop tôt, c\'est faire un trou dans le no man\'s land.', render: s => maquetteSapes(s, R, 'A') },
+      { title: 'Le fourneau', depuis: '0.38.2', note: 'Sans galerie visible ni bruit : un point d\'os à la tête de la sape. Aucune chance d\'être entendu, aucune de savoir où l\'on en est autrement que par le papier. La mine est une surprise pour les deux camps.', render: s => maquetteSapes(s, R, 'B') },
+      { title: 'Le cratère-lac', depuis: '0.38.2', note: 'Comme la galerie ; puis la nappe remonte dans le trou (l\'eau du jeu, jusqu\'à un mètre sous le sol d\'origine) : le cratère se remplit, et l\'on a fait un lac au milieu du passage. Un obstacle pour tous, pour des jours.', render: s => maquetteSapes(s, R, 'C') },
+    ] },
+    { id: 'gaz', title: 'Les gaz', variants: [
+      { title: 'Le mur qui dérive', depuis: '0.38.2', note: 'En face lâche un nuage, qui avance au vent à trois mètres par seconde sur cent quarante mètres de large. Dedans, les hommes toussent (la peur monte), puis sont blessés, puis tombent. « Masques » divise la dose par cinq. « Reculer d\'une ligne » les sort du chemin. Un avertissement sur le papier, pas de surprise : un choix.', render: s => maquetteGaz(s, R, 'A') },
+      { title: 'Dans les creux', depuis: '0.38.2', note: 'Plus lourd que l\'air, le gaz coule dans les tranchées et les cratères : on le voit s\'y amasser, de petites taches vertes qui épousent le relief. Un homme au fond d\'un trou prend deux fois et demie la dose ; sur la lèvre, presque rien. La tranchée devient un piège, et les trous des obus aussi.', render: s => maquetteGaz(s, R, 'B') },
+    ] },
+    { id: 'chars', title: 'Les chars d\'assaut', variants: [
+      { title: 'Le losange', depuis: '0.38.2', note: 'Un Mark IV, dessiné en volumes : huit mètres de long, une chenille qui entoure la coque. Il avance à un mètre par seconde, tout droit, vers leur tranchée ; les balles ricochent (des traits d\'os), l\'infanterie le suit à douze mètres et s\'abrite derrière (la peur retombe). Un obus de 155 tout près le détruit. Nos hommes tombent encore sous les balles : la logique du jeu ne sait pas encore mettre à couvert.', render: s => maquetteChars(s, R, 'A') },
+      { title: 'Le char qui s\'enlise', depuis: '0.38.2', note: 'Même char, devant des cratères : sous un mètre cinquante, il les franchit lentement ; au-delà, il s\'y couche et ne bouge plus. L\'imprévisible qu\'on cherche : on ne sait pas s\'il arrivera.', render: s => maquetteChars(s, R, 'B') },
     ] },
   ] },
   { id: 'moteur', title: 'Moteur', topics: [

@@ -2,9 +2,9 @@
 // quatre lignes de chaque camp (en face au nord, en haut), chaque case en tronçons de 25 m à la couleur de celui qui les
 // tient. Une lettre choisit les régiments du secteur ; une case envoie les régiments choisis dans cette tranchée ; les
 // régiments y sont des cercles numérotés, à leur place. Le dessin seulement : les actions (choisir, ordonner) viennent de main.js.
-import { NOUS, EUX, nombreZones, lettreZone, zone, largeurZone, etendueZones, tronconsDeLigne, forcesTroncons, codeLigne } from '../bataille.js?v=0.38.1';
-import { ligneY } from '../tranchees.js?v=0.38.1';
-import { numeroDe as numeroDeB } from './lecture.js?v=0.38.1';
+import { NOUS, EUX, nombreZones, lettreZone, zone, largeurZone, etendueZones, tronconsDeLigne, forcesTroncons, codeLigne } from '../bataille.js?v=0.38.2';
+import { ligneY } from '../tranchees.js?v=0.38.2';
+import { numeroDe as numeroDeB } from './lecture.js?v=0.38.2';
 
 // `bataille()` : la bataille en cours ; `choisis()` : les régiments choisis (ids) ; `surSecteur`, `surCase`, `surRonde` : les clics
 // `moi()` : le camp qu'on joue (à deux sur le réseau, l'invité est en face : sa carte est tournée d'un demi-tour, ses lignes en bas, A à D de droite à gauche ; v0.30.0)

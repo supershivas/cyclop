@@ -1,5 +1,8 @@
 # Journal des versions
 
+## 0.38.2 — 2026-10-20
+- Au labo, un groupe « Arcade » : des maquettes de caisses de ravitaillement, d'obus ratés, de sapes, de gaz et de chars d'assaut, à essayer avant d'en retenir une (rien n'est encore dans le jeu)
+
 ## 0.38.1 — 2026-10-19
 - Les lueurs des feux et des lanternes ne traversent plus les collines
 

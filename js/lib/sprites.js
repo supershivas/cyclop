@@ -14,7 +14,7 @@
      ]
 
    Module ES sans dépendance :
-     import { spriteCanvas, drawSprite, frames, paletteToGPL } from './lib/sprites.js?v=0.38.1'
+     import { spriteCanvas, drawSprite, frames, paletteToGPL } from './lib/sprites.js?v=0.38.2'
      const img = spriteCanvas(HERO, PALETTE)          // canvas hors écran, mis en cache
      ctx.drawImage(img, x, y)                          // ou drawSprite(ctx, HERO, PALETTE, x, y, { flip: true })
      const anim = frames([POSE_A, POSE_B], PALETTE)   // tableau de canvas

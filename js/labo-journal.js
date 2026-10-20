@@ -2,6 +2,13 @@
 // Une entrée par version qui touche au labo, la plus récente en haut. `ref` : « sujet-Lettre » (la lettre est celle de la variante,
 // A étant l'actuelle). À chaque changement du labo : une entrée ici, avec `depuis` sur les variantes ajoutées ou changées (labo.js).
 export const JOURNAL = [
+  { version: '0.38.2', date: '2026-10-20', items: [
+    { genre: 'nouveau', texte: 'Les caisses de ravitaillement : une caisse descend sous un parachute, les deux camps courent vers elle (une version piégée)', ref: 'caisses-A' },
+    { genre: 'nouveau', texte: 'Les obus ratés : un obus sur trois ne part pas ; il gît (avec un cercle), il fume, ou il éclate plus tard', ref: 'obus-rates-A' },
+    { genre: 'nouveau', texte: 'Les sapes et les mines : une galerie sous le no man\'s land, entendue ou non, une charge de neuf 220, et un cratère qui se remplit sous la pluie', ref: 'sapes-A' },
+    { genre: 'nouveau', texte: 'Les gaz : un nuage qui dérive avec le vent, ou qui coule dans les creux ; les masques', ref: 'gaz-A' },
+    { genre: 'nouveau', texte: 'Les chars d\'assaut : un losange en volumes qui précède l\'infanterie, ou qui s\'enlise dans les cratères', ref: 'chars-A' },
+  ] },
   { version: '0.36.4', date: '2026-10-19', items: [
     { genre: 'mis-a-jour', texte: 'Le papier de campagne « Le registre » est retenu et passe en jeu (A), posé sur le champ à la fin de chaque bataille de campagne ; les cartes en rangée, la lettre et sur la carte restent au labo, non retenues', ref: 'campagne-A' },
   ] },

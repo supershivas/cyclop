@@ -432,7 +432,7 @@ avec deux réglages mesurés.
 
 ### 5. Les gaz
 
-**Statut** : à l'étude, **à valider sur le ton avant tout** (aucune mention dans `DESIGN.md`). Inspiration : la météo et le relief de *Total War* (vent, pluie), les nappes de *Company of Heroes*.
+**Statut** : à l'étude, **à valider sur le ton avant tout** (aucune mention dans `DESIGN.md`). Deux maquettes au labo depuis la v0.38.2 (« Les gaz » : un mur qui dérive, ou qui coule dans les creux ; sans règle, sans champ de 4 m, un nuage de maquette) : elles ne remplacent pas la maquette du dessin de la nappe demandée plus bas. Inspiration : la météo et le relief de *Total War* (vent, pluie), les nappes de *Company of Heroes*.
 
 **Intention** : un ennemi qui ne se voit presque pas, qui obéit au terrain : il dérive avec le vent, descend dans les creux, stagne dans les tranchées, la pluie le lave. Le jeu y gagne un usage du relief et de la météo qu'il n'avait pas. Le joueur le **subit** d'abord ; l'employer
 est une décision de ton séparée.
@@ -599,6 +599,14 @@ Lot 3 « marques » (événements). A.marques en Uint32Array dans l'état (VERSI
 identique avant / après (graines 3, 7, 8). Test « relue au milieu », et outils/deux.mjs si un bit peut changer une règle. Puis le prompt de clôture commun.
 ```
 </details>
+
+### 7. L'arcade : des surprises sur le champ (caisses, obus ratés, sapes, chars)
+
+**Statut** : à l'étude, **maquettes au labo (v0.38.2, groupe « Arcade »), rien dans le jeu**. Demande de Jérôme : des mécaniques plus arcade pour rendre la bataille imprévisible, pour des enfants qui aiment Star Wars, Fortnite et Minecraft. Gardé : ce qui se dit dans le ton (la danse macabre), jamais un loot qui brille ni une récompense au nombre de morts (DESIGN.md).
+
+**Maquettes** : les caisses (parachute, piégée), les obus ratés (gît avec un cercle / fume / couve), les sapes (galerie entendue ou non, fourneau, cratère-lac), les gaz (voir §5), les chars (le losange, ou qui s'enlise). Les avions ne sont pas maquettés : un biplan d'observation (révèle quelques secondes les batteries) est d'époque, un duel aérien est du Star Wars : à décider.
+
+**À trancher avant tout lot de règle** : lesquelles, avec quel ton ; pour chacune ce que ça coûte à la logique (une mine = des obus `220` à l'indice du calibre déjà là, une caisse = un état sauvegardé, un obus raté = un tirage de plus dans `tomber` : **déplace les parties d'avant**, donc `VERSION`) ; le jeu à deux (tout l'aléa vient de la graine et de l'état).
 
 ### Annexe : comparatif des coûts (plan recommandé de chaque piste)
 
