@@ -2,9 +2,9 @@
 // et « le feu se voit » (Jérôme, v0.9.2 : l'éclair à la bouche du fusil et le trait vers la cible de chaque tir de `B.tirs`, la pose des tireurs, le bond de ceux que
 // le souffle jette). Une seule fabrique : tous tirent dans le même générateur de l'aspect (`alea`, une suite à graine : l'ordre des tirages fait l'image) et
 // dans les mêmes tampons de particules. Le dessin seulement : jamais la logique, jamais la partie.
-import * as SH from './shaders.js?v=0.39.0';
-import { INDICE } from '../palette.js?v=0.39.0';
-import { horloge } from '../bataille.js?v=0.39.0';
+import * as SH from './shaders.js?v=0.39.1';
+import { INDICE } from '../palette.js?v=0.39.1';
+import { horloge } from '../bataille.js?v=0.39.1';
 
 const ECLATS = 6000;     // (v0.24.0 ; 2 400 avant : une salve de 220 — ~200 éclats chacun, dont de la fumée de 8 à 16 s — faisait le tour du tampon et effaçait les éclats encore en vol)
 
@@ -174,8 +174,10 @@ export function creerEclats({ THREE, scene, col, palTex, NP, effets, surface, pr
     const h = horloge(B);
     if (effets.fusees !== 'toujours' && h.heure < 16) return;
     if ((prochaineFusee -= dt) > 0) return;
-    prochaineFusee = 5 + alea() * 7;
-    const x = vue.cx + (alea() - 0.5) * 80, z = vue.cz - 5 - alea() * 35;
+    // la nuit (v0.39.1) : plus souvent et sur un front plus large, des deux côtés de la vue ; le soir, comme avant
+    const nuit = h.phase === 'nuit';
+    prochaineFusee = nuit ? 2 + alea() * 4 : 5 + alea() * 7;
+    const x = vue.cx + (alea() - 0.5) * (nuit ? 140 : 80), z = vue.cz - 5 - alea() * (nuit ? 60 : 35);
     particule(6, x, surface(x, z) + 1, z, (alea() - 0.5) * 2, 22, 0, 14, 2.5);
   }
   // Les corbeaux (v0.24.0) : des nids de six au-dessus des morts les plus proches de la vue (trois au plus, à 25 m l'un de l'autre) : la moitié tourne, l'autre est

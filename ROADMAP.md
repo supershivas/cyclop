@@ -107,8 +107,8 @@ les deux machines calculent la même bataille, on n'échange que les ordres) sur
 - **Tranchées, la suite** (v0.18.0 : traverses, sacs, fil de fer, abris dessinés) : 3 lignes en secteur calme, 5 en secteur fortifié ;
   les ouvrages au labo (variantes) ; le fil de fer qu'on coupe à la pince la nuit.
 - **La nuit, la suite** (v0.11.0 : abris, vivres, tombes ; v0.38.3 : le coup de main et ses prisonniers sont retirés, voir
-  `docs/archives/corvees-retirees.md`) : l'ambiance de la nuit (Jérôme, v0.39.0 : « ciel et lumière » ; **fait** : la mêlée de nuit, les lampes de l'arrière ;
-  **reste** : le ciel de nuit (étoiles, nuages, lune sous la météo), les fusées éclairantes plus présentes, la lanterne du front à décider).
+  `docs/archives/corvees-retirees.md`) : l'ambiance de la nuit (Jérôme, v0.39.0 : « ciel et lumière » ; **fait** : la mêlée de nuit, les lampes de l'arrière, les fusées plus présentes (v0.39.1) ;
+  **reste** : le ciel de nuit (étoiles, lune : la caméra du jeu voit peu de ciel, utile seulement en caméra libre), la lanterne du front à décider).
 - **Moral et expérience, la suite** (v0.11.0 : contagion, refus d'un jour,
   poursuite) : la fuite feinte jouée par le joueur (un régiment qui recule exprès
   pour disperser le poursuivant), l'expérience gardée d'une bataille à l'autre
