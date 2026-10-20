@@ -356,3 +356,64 @@ export const cielMat = {
         gl_FragColor = vec4(mix(c, uNuage, nuage), 1.0);
       }`,
 };
+
+// Le ciel de nuit (Jérôme, v0.40.0) : des étoiles, la lune dans sa phase, des nuages qui les cachent, une étoile filante de temps en temps. Un plan peint APRÈS le voile de
+// la nuit, à la profondeur du fond : seul le ciel (là où le sol n'a rien dessiné) le reçoit. Tout est lu de la direction du rayon de chaque pixel, donc le ciel suit la caméra.
+export const nuitCiel = {
+  v: cielMat.v,
+  f: `uniform vec3 uOs; uniform vec3 uBrume; uniform vec3 uTerre; uniform float uVis; uniform float uT; uniform float uCouv; uniform vec3 uLune; uniform float uClair; uniform vec2 uVue; varying vec3 vDir;
+      float h(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+      float bruit(vec2 p) {
+        vec2 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f);
+        return mix(mix(h(i), h(i + vec2(1.0, 0.0)), f.x), mix(h(i + vec2(0.0, 1.0)), h(i + vec2(1.0, 1.0)), f.x), f.y);
+      }
+      // une couche « par-dessus » (couleur non prémultipliée)
+      vec4 sur(vec4 b, vec3 c, float a) { float o = a + b.a * (1.0 - a); return o <= 0.0 ? vec4(0.0) : vec4((c * a + b.rgb * b.a * (1.0 - a)) / o, o); }
+      float segment(vec2 p, vec2 a, vec2 b) { vec2 pa = p - a, ba = b - a; return length(pa - ba * clamp(dot(pa, ba) / dot(ba, ba), 0.0, 1.0)); }
+      void main() {
+        vec3 d = normalize(vDir);
+        if (d.y <= 0.0 || uVis <= 0.0) { gl_FragColor = vec4(0.0); return; }     // (pas de discard : il couperait le test de profondeur avant le nuanceur)
+        float az = atan(d.x, d.z), el = asin(clamp(d.y, -1.0, 1.0));
+        // les nuages de la nuit (la même étoffe que le jour, plus épaisse avec la couverture)
+        vec2 q = d.xz / (d.y + 0.35) * 9.0 + vec2(uT * 0.008, uT * 0.003);
+        float n = 0.5 * bruit(q) + 0.25 * bruit(q * 2.1 + 5.0) + 0.17 * bruit(q * 4.3 + 11.0) + 0.08 * bruit(q * 8.7 + 17.0);
+        float nuage = smoothstep(0.56 - uCouv * 0.5, 0.74 - uCouv * 0.5, n) * smoothstep(0.0, 0.18, d.y);
+        vec4 c = vec4(0.0);
+        // les étoiles : un point par case d'une grille d'angles (~6 pixels), une sur vingt-cinq, qui scintille
+        vec2 g = vec2(az, el) * 110.0, cell = floor(g), f = fract(g);
+        float r = h(cell);
+        if (r > 0.96) {
+          vec2 pos = vec2(h(cell + 7.1), h(cell + 3.3)) * 0.6 + 0.2;
+          float tw = 0.65 + 0.35 * sin(uT * (1.5 + 3.0 * h(cell + 1.7)) + r * 50.0);
+          c = sur(c, uOs, smoothstep(0.17, 0.07, length(f - pos)) * tw * (0.45 + 0.55 * h(cell + 9.0)));
+        }
+        // la lune : un disque de 0,03 rad, éclairé selon sa phase (uLune.z : 0 nouvelle, 0,5 pleine), le reste de la face à peine visible
+        vec3 m = vec3(sin(uLune.x) * cos(uLune.y), sin(uLune.y), cos(uLune.x) * cos(uLune.y));
+        float R = 0.03, ang = acos(clamp(dot(d, m), -1.0, 1.0));
+        vec3 droite = normalize(cross(vec3(0.0, 1.0, 0.0), m)), haut = cross(m, droite);
+        float lueur = uClair * 0.5 * smoothstep(0.35, 0.0, ang);
+        c = sur(c, mix(uBrume, uOs, 0.4), lueur * 0.35);
+        if (dot(d, m) > 0.0 && ang < R * 1.6) {
+          vec2 l = vec2(dot(d, droite), dot(d, haut)) / (R * 1.0);
+          float r2 = dot(l, l);
+          if (r2 < 1.0) {
+            float z = sqrt(1.0 - r2), psi = 6.2831853 * uLune.z;
+            float eclaire = smoothstep(-0.03, 0.08, dot(vec3(l, z), vec3(sin(psi), 0.0, -cos(psi))));
+            c = sur(c, mix(uBrume, uOs, 0.5 + 0.5 * z), mix(0.07, 1.0, eclaire));
+          }
+        }
+        // une étoile filante : toutes les 7 s une chance sur deux, 0,9 s de vol, près de là où regarde la caméra
+        float k = floor(uT / 7.0), tt = uT - k * 7.0;
+        if (h(vec2(k, 1.3)) > 0.5 && tt < 0.9) {
+          float a0 = uVue.x + (h(vec2(k, 2.1)) - 0.5) * 0.7, e0 = 0.15 + h(vec2(k, 3.7)) * 0.6, dir = (h(vec2(k, 5.9)) - 0.5) * 1.6;
+          vec2 sens = normalize(vec2(sin(dir), -0.6 - 0.4 * h(vec2(k, 8.1))));
+          vec2 p = vec2(atan(sin(az - a0), cos(az - a0)) * cos(e0), el - e0);
+          vec2 tete = sens * tt * 0.3, queue = tete - sens * 0.05 * min(1.0, tt * 6.0);
+          float dist = segment(p, queue, tete), x = clamp(dot(p - queue, tete - queue) / max(dot(tete - queue, tete - queue), 1e-6), 0.0, 1.0);
+          c = sur(c, uOs, smoothstep(0.0025, 0.0006, dist) * (1.0 - tt / 0.9) * x);
+        }
+        // les nuages passent devant : sombres, éclaircis près de la lune
+        c = sur(c, mix(uTerre, uBrume, clamp(lueur * 2.5, 0.0, 0.7)), nuage * 0.8);
+        gl_FragColor = vec4(c.rgb, c.a * uVis);
+      }`,
+};

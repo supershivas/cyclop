@@ -283,3 +283,19 @@ test('une carte neuve (copie ou vierge) a un id tiré de son nom, passe le contr
   const C = restaurer(JSON.parse(JSON.stringify(photo(B))), R);       // la carte n'est plus dans la liste (supprimée) : la partie garde son sol et retombe sur un secteur d'origine pour le reste
   assert.deepEqual(C.terrain.base, B.terrain.base);
 });
+
+group('la lune (v0.40.0)');
+test('la lune change de phase de jour en jour, revient après une lunaison ; la lumière est étouffée par le temps ; rien ne dépend du hasard', async () => {
+  const { lune, clairDeLune, couvertureNuit, nomPhase, cielEnMots, CYCLE } = await import('../js/data/lune.js');
+  const a = [1, 2, 3, 4, 5, 6, 7].map(j => lune(j, 7).p);
+  for (let k = 1; k < a.length; k++) assert.ok(Math.abs(((a[k] - a[k - 1] + 1.5) % 1) - 0.5 - 1 / CYCLE) < 1e-9, 'un trentième de lunaison par jour');
+  assert.ok(Math.abs(lune(1, 7).p - lune(1 + Math.round(CYCLE), 7).p) < 0.02 + 1 / CYCLE / 2, 'revient après ~30 jours');
+  assert.deepEqual(lune(5, 3), lune(5, 3)); assert.notEqual(lune(5, 3).p, lune(5, 4).p, 'chaque graine a sa lune');
+  for (let j = 1; j < 40; j++) { const l = lune(j, 9); assert.ok(l.eclairement >= 0 && l.eclairement <= 1 && l.p >= 0 && l.p < 1 && l.el > 0.07 && l.el < 0.23, 'visible de la caméra du jeu'); }
+  assert.equal(nomPhase(0.5), 'Pleine lune'); assert.equal(nomPhase(0.99), 'Nouvelle lune'); assert.equal(nomPhase(0.25), 'Premier quartier');
+  // la même nuit : la pluie donne moins de lumière que le temps sec
+  const pleine = [...Array(30).keys()].map(j => j + 1).find(j => lune(j, 7).eclairement > 0.95);
+  assert.ok(clairDeLune(pleine, 7, 'pluie') < clairDeLune(pleine, 7, 'sec'));
+  for (let j = 1; j < 30; j++) { const c = couvertureNuit(j, 7, 'gel'); assert.ok(c >= 0 && c <= 1); }
+  assert.equal(cielEnMots(0.1), 'ciel dégagé'); assert.equal(cielEnMots(0.9), 'ciel couvert');
+});

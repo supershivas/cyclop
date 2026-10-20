@@ -1,5 +1,9 @@
 # Journal des versions
 
+## 0.40.0 — 2026-10-20
+- La nuit, le ciel : des étoiles, une lune dont la phase change de jour en jour (une lunaison en trente jours), des nuits plus ou moins nuageuses, des étoiles filantes — à voir en baissant la caméra
+- Une pleine lune éclaire un peu le champ, la pluie et le brouillard l'étouffent ; le papier de la nuit dit la phase de la lune et l'état du ciel
+
 ## 0.39.1 — 2026-10-20
 - La nuit, les fusées éclairantes montent plus souvent (toutes les 2 à 6 s au lieu de 5 à 12) et sur un front plus large
 

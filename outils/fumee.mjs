@@ -71,7 +71,7 @@ await jeu('() => __jeu.marche([1], 200, 190)');
 await etape('posture-marche');
 // la fiche d'un régiment (la carte du régiment choisi, son bouton « Fiche »), puis celle d'un officier
 await page.evaluate(() => document.querySelector('.reg-carte').click());
-await page.waitForTimeout(250);
+await page.waitForTimeout(1000);                           // le clic sur une carte glisse la caméra 0,6 s (v0.32.2) : le terrain sous la souris dépend de l'instant ; on attend la fin
 await page.evaluate(() => document.querySelector('[data-act="fiche"]').click());
 await etape('fiche-regiment');
 await page.evaluate(() => document.querySelector('#fiche-liste button.nom').click());

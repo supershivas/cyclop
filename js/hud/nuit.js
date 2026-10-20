@@ -1,10 +1,11 @@
 // Le papier de la nuit (Jérôme, v0.13.0) : un état (choix des corvées, puis le bilan de l'aube), jamais une boîte de
 // dialogue : le champ reste là, on choisit des régiments (clic, cadre, T) et on leur donne une corvée, dite sur leur carte.
-import { NOUS, aube } from '../bataille.js?v=0.39.1';
-import { METEO } from '../data/meteo.js?v=0.39.1';
-import { CORVEES, CONTACT } from '../data/corvees.js?v=0.39.1';
-import { refusCorvee, contactDe } from '../nuit.js?v=0.39.1';
-import { pluriel } from './lecture.js?v=0.39.1';
+import { NOUS, aube } from '../bataille.js?v=0.40.0';
+import { METEO } from '../data/meteo.js?v=0.40.0';
+import { CORVEES, CONTACT } from '../data/corvees.js?v=0.40.0';
+import { refusCorvee, contactDe } from '../nuit.js?v=0.40.0';
+import { pluriel } from './lecture.js?v=0.40.0';
+import { lune, nomPhase, couvertureNuit, cielEnMots } from '../data/lune.js?v=0.40.0';
 
 export const corveeDe = id => [...CORVEES, CONTACT].find(c => c.id === id)?.nom || '';
 export const corveeCourte = id => [...CORVEES, CONTACT].find(c => c.id === id)?.court || '';
@@ -61,6 +62,9 @@ export function creerNuit({ $, bataille, choisis, pauser, reprendre, sauvegarder
     $('nuit-pertes').textContent = moi() === NOUS ? `Morts du jour : ${nous} des nôtres, ${eux} en face.` : `Morts du jour : ${eux} des nôtres, ${nous} en face.`;
     $('nuit-lignes').textContent = e.tranchees ? enLignes(e.prises[j - 1]) : '';
     $('nuit-demain').textContent = `Demain : ${METEO[e.previsions[j - 1]]?.prevision || '—'}.`;
+    // le ciel de cette nuit (v0.40.0) : la phase de la lune et la couverture, les mêmes que celles que le dessin montre
+    const mt = e.meteo[j - 1], L = lune(j, e.graine);
+    $('nuit-ciel').textContent = `${nomPhase(L.p)}, ${cielEnMots(couvertureNuit(j, e.graine, mt))}.`;
     $('nuit-reserves').textContent = e.mission ? `En réserve : ${pluriel(e.reserves[moi()], 'régiment frais', 'régiments frais')}.` : '';
     // la dernière corvée donnée, si elle est encore possible, sinon le repos
     const contact = contactDe(B);              // au contact de l'ennemi : il se bat toute la nuit, ce n'est pas un choix

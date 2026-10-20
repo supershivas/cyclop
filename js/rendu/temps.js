@@ -1,9 +1,10 @@
 // Le temps qui passe (Jérôme, v0.8.0) : le soleil (les ombres des soldats et des arbres tournent et s'allongent), le soir et la nuit (un voile de
 // terre qui monte), les lumières (lanternes des tranchées, incendies, fusées) qui le trouent. Rien hors de la palette, sauf les fondus du voile
 // (CLAUDE.md, palette). Le dessin seulement : tout se lit de l'heure (`horloge`) et de l'état.
-import * as SH from './shaders.js?v=0.39.1';
-import { ligneY } from '../tranchees.js?v=0.39.1';
-import { hash2 } from '../lib/rng.js?v=0.39.1';
+import * as SH from './shaders.js?v=0.40.0';
+import { ligneY } from '../tranchees.js?v=0.40.0';
+import { hash2 } from '../lib/rng.js?v=0.40.0';
+import { clairDeLune } from '../data/lune.js?v=0.40.0';
 
 // `THREE`, `scene`, `col`, `camera`, `vue`, `surface(x, z)` viennent de creerRendu ; `soleilUniform` (le bout de l'ombre d'un mètre de hauteur, lu aussi par le nuanceur
 // des soldats) et `solUniforms` (`uSol`, `uTaille` : la texture du sol, que l'ombre d'un arbre reprend) sont les uniformes partagés ; `ecl` (les éclats : les fusées) et
@@ -22,8 +23,8 @@ export function creerTemps({ THREE, scene, col, camera, vue, surface, bataille, 
     soleil.set(-Math.cos(Math.PI * t) * L, -Math.sin(Math.PI * t) * L);       // le soleil à l'est, au sud, à l'ouest : l'ombre à l'opposé
   }
   // l'obscurité : 0 le jour, la trame monte de 16 h à 18 h, épaisse la nuit, et se lève à l'aube
-  function obscurite(h) {
-    if (h.phase === 'nuit') return 0.74;
+  function obscurite(h, clair = 0) {
+    if (h.phase === 'nuit') return 0.74 - 0.1 * clair;          // le clair de lune (v0.40.0) : jusqu'à un dixième de moins, pleine lune et ciel dégagé
     const hf = h.heure + h.minute / 60;
     if (hf < 7) return 0.4 * (7 - hf);
     if (hf > 16) return Math.min(0.45, 0.45 * (hf - 16) / 2);
@@ -160,11 +161,12 @@ export function creerTemps({ THREE, scene, col, camera, vue, surface, bataille, 
     return true;
   }
   function majNuit(h) {
-    const d = obscurite(h);
+    const B = bataille();
+    const d = obscurite(h, h.phase === 'nuit' && B ? clairDeLune(h.jour, B.etat.graine, h.meteo) : 0);
     nuitMat.uniforms.uD.value = d;
     if (!vide()) nuitPlan.visible = d > 0;
     majLanternes(d);
-    if (!d) return;
+    if (!d) return d;
     preparerLumieres();
     nuitMat.uniforms.uTaille.value.set(vue.vw, vue.vh);
     lumData.fill(0);
@@ -174,6 +176,7 @@ export function creerTemps({ THREE, scene, col, camera, vue, surface, bataille, 
     for (const f of feux) if (n < LUMIERES && lumiere(f.x, surface(f.x, f.z) + f.h, f.z, f.h > 2 ? 16 : 10)) n++;
     for (const [x, y, z] of lanternesVues) if (n < LUMIERES && lumiere(x, y, z, 7)) n++;
     lumTex.needsUpdate = true;
+    return d;
   }
 
   return {
