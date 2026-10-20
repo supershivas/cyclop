@@ -665,3 +665,30 @@ test('le prochain grade : celui du rang au-dessus, rien pour un capitaine', () =
   assert.equal(prochainGrade(0, 7), 'soldat de 1re classe');
   assert.equal(prochainGrade(1, 7), '');      // en face, les deux classes sont des Musketier
 });
+
+group('le corps à corps');
+test('un homme seul, cerné par quatre ennemis, se rend : il est pris, il n\'est pas tué ; la partie relue le garde', () => {
+  const B = petite(5), A = B.armee, Z = zone(B);
+  const eux = Array.from({ length: A.n }, (_, i) => i).find(i => A.camp[i] === 1);
+  const nos = Array.from({ length: A.n }, (_, i) => i).filter(i => A.camp[i] === 0).slice(0, 4);
+  const x = Z.x0 + 200, y = Z.y0 + 150, id = A.id[eux];
+  const mettre = () => { A.x[eux] = x; A.y[eux] = y; nos.forEach((i, k) => { A.x[i] = x + [1.5, -1.5, 0, 0][k]; A.y[i] = y + [0, 0, 1.5, -1.5][k]; A.vx[i] = A.vy[i] = A.vx[eux] = A.vy[eux] = 0; }); };
+  for (let k = 0; k < 900 && !B.etat.prisonniers.length; k++) {
+    mettre();
+    avancer(B);
+    // (les indices changent quand un mort est retiré : on ne pose que si l'homme vit encore)
+  }
+  assert.ok(B.etat.prisonniers.some(e => e[0] === id), 'il est prisonnier');
+  assert.ok(!B.etat.corps.some(c => c[4] === id), 'il n\'est pas tombé');
+  const C = restaurer(photo(B), R);
+  assert.deepEqual(C.etat.prisonniers, B.etat.prisonniers);
+});
+test('un homme cerné qui a des camarades à côté ne se rend pas', () => {
+  const B = petite(5), A = B.armee, Z = zone(B);
+  const camp1 = Array.from({ length: A.n }, (_, i) => i).filter(i => A.camp[i] === 1);
+  const nos = Array.from({ length: A.n }, (_, i) => i).filter(i => A.camp[i] === 0).slice(0, 4);
+  const x = Z.x0 + 200, y = Z.y0 + 150;
+  const mettre = () => { A.x[camp1[0]] = x; A.y[camp1[0]] = y; A.x[camp1[1]] = x + 3; A.y[camp1[1]] = y + 3; nos.forEach((i, k) => { A.x[i] = x + [1.5, -1.5, 0, 0][k]; A.y[i] = y + [0, 0, 1.5, -1.5][k]; }); };
+  for (let k = 0; k < 300; k++) { mettre(); avancer(B); }
+  assert.equal(B.etat.prisonniers.length, 0);
+});

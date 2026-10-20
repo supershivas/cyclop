@@ -14,19 +14,19 @@
    La sauvegarde (photo) garde la graine, la liste compacte des impacts, l'état
    de la foule et les petites couches de logique ; jamais le relief : il se
    rejoue depuis la graine et les impacts (rejouerTerrain). */
-import { createRng, hash2 } from './lib/rng.js?v=0.37.1';
-import { impact, hydroLignes, etat as etatCase, vitesseEtat, ETAT } from './terrain.js?v=0.37.1';
-import { creerArmee, ajouterSoldat, construireGrille, pasArmee, tuerDans, effrayer, compacter, photoArmee, restaurerArmee, b64, deB64, DENSITE, place } from './army.js?v=0.37.1';
-import { ligneSous } from './tranchees.js?v=0.37.1';
-import { terrainDuSecteur } from './secteur-terrain.js?v=0.37.1';
-import { calculerCouts, creerCacheChamps, dimensionsCouts, BLOC } from './champs.js?v=0.37.1';
-import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.37.1';
-import { METEO, TRANSITIONS, PREVISION_JUSTE } from './data/meteo.js?v=0.37.1';
-import { SECTEURS } from './data/secteur.js?v=0.37.1';
-import { REGIMENTS } from './data/lexique.js?v=0.37.1';
-import { STANCES, STANCE_DEFAUT } from './data/stances.js?v=0.37.1';
-import { grade } from './identite.js?v=0.37.1';
-import { corvees, rejouerTravaux } from './nuit.js?v=0.37.1';
+import { createRng, hash2 } from './lib/rng.js?v=0.37.2';
+import { impact, hydroLignes, etat as etatCase, vitesseEtat, ETAT } from './terrain.js?v=0.37.2';
+import { creerArmee, ajouterSoldat, construireGrille, pasArmee, tuerDans, effrayer, compacter, photoArmee, restaurerArmee, b64, deB64, DENSITE, GRILLE, place } from './army.js?v=0.37.2';
+import { ligneSous } from './tranchees.js?v=0.37.2';
+import { terrainDuSecteur } from './secteur-terrain.js?v=0.37.2';
+import { calculerCouts, creerCacheChamps, dimensionsCouts, BLOC } from './champs.js?v=0.37.2';
+import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.37.2';
+import { METEO, TRANSITIONS, PREVISION_JUSTE } from './data/meteo.js?v=0.37.2';
+import { SECTEURS } from './data/secteur.js?v=0.37.2';
+import { REGIMENTS } from './data/lexique.js?v=0.37.2';
+import { STANCES, STANCE_DEFAUT } from './data/stances.js?v=0.37.2';
+import { grade } from './identite.js?v=0.37.2';
+import { corvees, rejouerTravaux } from './nuit.js?v=0.37.2';
 
 export const PAS = 1 / 30;                 // s de jeu par pas
 export const NOUS = 0, EUX = 1;
@@ -421,6 +421,7 @@ export function avancer(B) {
   etat.barrages = etat.barrages.filter(b => b.reste > 0);
   enFace(B, rng);
   pasArmee(A, ctx);
+  if (etat.tickJour % 15 === 0) redditions(B, rng);       // un homme seul, cerné, se rend (v0.37.2)
   // un homme qui tombe fait peur à ceux qui sont à côté
   for (const i of morts) effrayer(A, A.x[i], A.y[i], 4, R.soldat.peurMort, R.experience);
   if (compacter(A)) for (const reg of etat.regiments) if (reg.effectif <= 0) reg.effectif = 0;
@@ -522,6 +523,44 @@ export function capturer(B, i) {
   etat.prisonniers.push([A.id[i], etat.jour]);
   const rang = rangDe(B, A.id[i], A.reg[i]);
   if (rang <= 5) promouvoir(B, A.reg[i], rang);
+}
+
+/* Un homme seul, cerné au corps à corps (au moins `cernes` ennemis à moins de `rayon` m, aucun des siens à moins de `amis` m), se
+   rend : il est pris, pas tué (v0.37.2 ; le corps à corps d'un 20 contre 1 laissait le dernier défenseur debout des minutes). */
+function redditions(B, rng) {
+  const { armee: A, R } = B, C = R.reddition;
+  if (!C) return;
+  const kr = Math.ceil(C.rayon / GRILLE), ka = Math.ceil(C.amis / GRILLE), r2 = C.rayon * C.rayon, a2 = C.amis * C.amis;
+  for (let i = 0; i < A.n; i++) {
+    if (A.mort[i]) continue;
+    const c0 = A.cellOf[i], gcx = c0 % A.gw, gcy = (c0 - gcx) / A.gw;
+    let cernes = 0;
+    for (let oy = -kr; oy <= kr; oy++) {
+      const yy = gcy + oy; if (yy < 0 || yy >= A.gh) continue;
+      for (let ox = -kr; ox <= kr; ox++) {
+        const xx = gcx + ox; if (xx < 0 || xx >= A.gw) continue;
+        const c = yy * A.gw + xx;
+        for (let s = A.cellStart[c], e = A.cellStart[c + 1]; s < e; s++) {
+          const j = A.sorted[s];
+          if (A.camp[j] !== A.camp[i] && !A.mort[j] && (A.x[j] - A.x[i]) ** 2 + (A.y[j] - A.y[i]) ** 2 < r2) cernes++;
+        }
+      }
+    }
+    if (cernes < C.cernes) continue;
+    let ami = false;
+    for (let oy = -ka; oy <= ka && !ami; oy++) {
+      const yy = gcy + oy; if (yy < 0 || yy >= A.gh) continue;
+      for (let ox = -ka; ox <= ka && !ami; ox++) {
+        const xx = gcx + ox; if (xx < 0 || xx >= A.gw) continue;
+        const c = yy * A.gw + xx;
+        for (let s = A.cellStart[c], e = A.cellStart[c + 1]; s < e; s++) {
+          const j = A.sorted[s];
+          if (j !== i && A.camp[j] === A.camp[i] && !A.mort[j] && (A.x[j] - A.x[i]) ** 2 + (A.y[j] - A.y[i]) ** 2 < a2) { ami = true; break; }
+        }
+      }
+    }
+    if (!ami && rng() < C.chance) capturer(B, i);
+  }
 }
 
 /* Les hommes de chaque camp dans chaque tronçon : [nous, en face] par tronçon. Refait tel quel pour `prises` ; pour

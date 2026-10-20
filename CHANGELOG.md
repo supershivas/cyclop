@@ -1,5 +1,9 @@
 # Journal des versions
 
+## 0.37.2 — 2026-10-20
+- Les fusils touchent plus souvent, même un homme isolé
+- Au corps à corps, on se bat de près : un homme cerné par des ennemis tombe en quelques secondes, ou se rend et devient prisonnier
+
 ## 0.37.1 — 2026-10-19
 - Le choix du secteur à la nouvelle partie a deux colonnes : la liste des secteurs à gauche, le secteur choisi en 3D à droite, qui tourne
 - Le terrain montré est celui qu'on jouera ; « Autre terrain » en tire un autre

@@ -4,7 +4,7 @@
 //   --cas volonte-retenu,retenu-retenu   → seulement ces couples (attaquant-défenseur) ; --role defense → un seul rôle
 //   --appui 90   → l'artillerie de l'attaquant pilonne la ligne visée pendant 90 s, puis l'assaut part (sans appui, l'assaut ne parvient jamais à la tranchée en 300 s)
 //   --ia on|off  → l'IA d'en face joue (barrages, assauts) avec ou sans la posture `ia.stance` ('retenu') : on l'attaque à volonté, sa posture n'est pas touchée (rôle « attaque », volonté-volonté)
-//   --regle retenu.precision=1.3         → essayer un réglage sans toucher au fichier
+//   --regle retenu.precision=1.3,tir.plancher=0.1   → essayer un réglage sans toucher au fichier
 // Deux rôles : on attaque la 1re ligne d'en face (elle tient, avec sa posture), ou on la tient contre l'assaut d'en face (les nôtres, avec la leur).
 // Pour chaque cas : les morts et blessés de l'attaquant et du défenseur, les tronçons de la ligne attaquée perdus, la date de la 1re prise.
 // Lecture : une posture domine si, à posture adverse égale, elle fait mieux sur les trois graines et dans les deux rôles ; la règle du lot est écrite dans le ROADMAP.
@@ -20,7 +20,7 @@ const ia = arg('ia', ''), appui = +arg('appui', 0), cas = arg('cas', '').split('
 const R = structuredClone(REGLAGES);
 for (const kv of (arg('regle', '') || '').split(',').filter(Boolean)) {      // --regle retenu.precision=1.3,retenu.periode=1.2 : essayer un réglage sans toucher au fichier
   const [chemin, v] = kv.split('='), [id, cle] = chemin.split('.');
-  R.stance[id][cle] = +v;
+  (R.stance[id] ?? R[id])[cle] = +v;      // une posture (retenu.precision) ou un réglage (tir.plancher, tir.contact=0)
 }
 
 if (ia) R.ia.stance = ia === 'on' ? 'retenu' : '';

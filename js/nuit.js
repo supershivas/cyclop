@@ -15,11 +15,11 @@
      de travail chacun) ; les vivres (`reg.vivres`, en nuits : sans eux, la nuit
      repose moins et le moral baisse) ; le coup de main (des volontaires ramènent
      des prisonniers de la tranchée d'en face, s'ils reviennent). */
-import { toucher } from './terrain.js?v=0.37.1';
-import { hash2 } from './lib/rng.js?v=0.37.1';
-import { CORVEES } from './data/corvees.js?v=0.37.1';
-import { REGIMENTS } from './data/lexique.js?v=0.37.1';
-import { ajouterSoldat } from './army.js?v=0.37.1';
+import { toucher } from './terrain.js?v=0.37.2';
+import { hash2 } from './lib/rng.js?v=0.37.2';
+import { CORVEES } from './data/corvees.js?v=0.37.2';
+import { REGIMENTS } from './data/lexique.js?v=0.37.2';
+import { ajouterSoldat } from './army.js?v=0.37.2';
 
 export const SORTES = ['reparer', 'caillebotis'];          // les travaux de terrain, par leur numéro dans etat.travaux
 export const corvee = id => CORVEES.find(c => c.id === id);

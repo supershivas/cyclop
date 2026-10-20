@@ -1,6 +1,6 @@
 // La foule : marcher vers sa place, la boue qui ralentit, le mur de deux mètres, les morts.
 import { creerTerrain } from '../js/terrain.js';
-import { creerArmee, ajouterSoldat, construireGrille, pasArmee, compacter, tuerDans, place, effrayer, reposer } from '../js/army.js';
+import { creerArmee, ajouterSoldat, construireGrille, pasArmee, compacter, tuerDans, place, effrayer, reposer, plusProche } from '../js/army.js';
 import { createRng } from '../js/lib/rng.js';
 import { REGLAGES as R } from '../js/data/reglages.js';
 
@@ -114,4 +114,36 @@ test('un obus fait peur jusqu\'à trois fois son rayon ; la nuit, la peur et la 
   A.fatJ[0] = 0.8;
   reposer(A, R);
   assert.ok(A.peur[0] < 0.3 && A.fatJ[0] < 0.3);
+});
+
+group('le corps à corps');
+// N hommes du camp 0 en bloc, face à un seul du camp 1 ; combien de secondes avant qu'il ne tombe (null : debout après `secondes`)
+function seulContre(N, graine, secondes, Rj = R) {
+  const T = monde(80, 60);
+  const A = creerArmee({ capacite: N + 2, W: T.W, H: T.H }), rng = createRng(graine);
+  for (let k = 0; k < N; k++) ajouterSoldat(A, 40 + (k % 5) * 2 - 4, 38 + Math.floor(k / 5) * 2, 0, 0, 0, 0.3);
+  ajouterSoldat(A, 37, 30, 1, 1, 0, 0.3);
+  const regiments = [
+    { id: 0, camp: 0, effectif: N, ordre: { x: 40, y: 32, fx: 0, fy: -1, cols: 5, esp: 2 } },
+    { id: 1, camp: 1, effectif: 1, ordre: { x: 37, y: 30, fx: 0, fy: 1, cols: 1, esp: 2 } },
+  ];
+  let mort = null, t = 0;
+  const frapper = i => { if (A.camp[i] === 1 && mort === null) mort = t; A.mort[i] = 1; };      // (un coup tue : on ne compte que le temps du premier)
+  const ctx = { T, R: Rj, regiments, champDe: () => null, rng, dt: 1 / 30, gel: false, frapper, faces: [], arriere: null };
+  for (let k = 0; k < secondes * 30 && mort === null; k++) { t = k / 30; construireGrille(A); pasArmee(A, ctx); }
+  return mort;
+}
+test('vingt hommes sur un seul : il tombe en quelques secondes d\'un coup, plus des minutes à tenir', () => {
+  const sans = structuredClone(R); sans.tir.contact = 0;
+  for (const g of [1, 2, 3]) assert.ok(seulContre(20, g, 40) !== null, `graine ${g}`);
+  assert.ok([1, 2, 3].some(g => seulContre(20, g, 10, sans) === null), 'sans le contact, il tient encore');
+});
+test('au contact, on vise l\'ennemi le plus près, dans le dos comme devant', () => {
+  const T = monde(80, 60), A = creerArmee({ capacite: 4, W: T.W, H: T.H });
+  ajouterSoldat(A, 40, 30, 0, 0, 0, 0.3);        // tourné vers le nord…
+  ajouterSoldat(A, 40, 31, 1, 1, 0, 0.3);        // … l'ennemi est derrière lui, à un mètre
+  ajouterSoldat(A, 40, 20, 1, 1, 0, 0.3);        // et un autre, à dix mètres devant
+  construireGrille(A);
+  assert.equal(plusProche(A, 0, R.tir.contact), 1);
+  assert.equal(plusProche(A, 0, 0.5), -1);
 });

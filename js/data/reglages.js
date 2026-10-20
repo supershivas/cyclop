@@ -82,10 +82,21 @@ export const REGLAGES = {
     portee: 70,           // m
     cone: 0.75,           // rad, de part et d'autre du front
     periode: 5,           // s entre deux tirs d'un soldat (en moyenne)
-    precision: 0.035,     // chance de toucher dans un groupe dense, à découvert (0,05 avant la v0.17.0 : l'assaut frontal coûtait 570 à 665 hommes sur 750 le premier jour ; 385 avec ceci et `mouvement`)
+    precision: 0.045,     // v0.37.2 : 0,035 avant ; chance de toucher dans un groupe dense, à découvert (0,05 avant la v0.17.0 : l'assaut frontal coûtait 570 à 665 hommes sur 750 le premier jour ; 385 avec ceci et `mouvement`)
     densite: 10,          // soldats dans un carré de 8 m pour la précision pleine
     abri: 0.45,           // dans un creux d'un demi-mètre : la chance est multipliée par…
     mouvement: 0.75,      // un homme qui marche à pleine vitesse échappe au coup avec cette chance (proportionnelle à sa vitesse) : un assaut à découvert coûte moins (v0.17.0)
+    plancher: 0.2,        // la part de la précision qu'un homme isolé garde : un carré de 8 m à moitié vide ne rend pas le tir inutile (v0.37.2 ; avant : proportionnelle à la densité, 0,35 % contre un homme seul)
+    contact: 2.5,         // m : un ennemi plus près que cela est visé avant tout, dans toutes les directions (le corps à corps, v0.37.2)
+    contactChance: 0.05,  // la chance de toucher au contact : la baïonnette, le coup de crosse, le fusil à bout portant (ni densité ni mouvement)
+    contactPeriode: 3,    // s entre deux coups au contact (en moyenne)
+  },
+  // un homme seul, cerné au corps à corps, se rend (v0.37.2) : il est pris (`capturer`), pas tué
+  reddition: {
+    rayon: 4,             // m : les ennemis qui le cernent sont à moins de…
+    cernes: 3,            // … au moins autant (et aucun des siens à moins de `amis`)
+    amis: 8,              // m
+    chance: 0.35,         // par demi-seconde, tant qu'il est cerné
   },
   // les postures d'un régiment (v0.36.0 ; textes : data/stances.js). Multiplicateurs de `tir` ; `volonte` est le tir d'avant : tout à 1.
   stance: {

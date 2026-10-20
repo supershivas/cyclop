@@ -25,8 +25,8 @@
      (rng.js), pour que la même graine rejoue la même bataille.
 
    Logique pure : aucun DOM. Le rendu lit les tableaux (rendu3d.js). */
-import { hauteurQ, etat, vitesseEtat } from './terrain.js?v=0.37.1';
-import { ligneY } from './tranchees.js?v=0.37.1';
+import { hauteurQ, etat, vitesseEtat } from './terrain.js?v=0.37.2';
+import { ligneY } from './tranchees.js?v=0.37.2';
 
 export const GRILLE = 2;           // m : cases de voisinage
 export const DENSITE = 8;          // m : carrés de densité (tir)
@@ -102,7 +102,28 @@ const pl = [0, 0];
 export const parametresStance = (R, id) => R.stance[id] ?? R.stance.volonte;
 /* La chance de toucher d'un tir : la densité du carré visé, l'adresse acquise, la posture. */
 export const chanceTir = (R, stance, densite, exp) =>
-  R.tir.precision * parametresStance(R, stance).precision * Math.min(1, densite / R.tir.densite) * (1 + R.experience.adresse * exp);
+  R.tir.precision * parametresStance(R, stance).precision * Math.max(R.tir.plancher, Math.min(1, densite / R.tir.densite)) * (1 + R.experience.adresse * exp);
+
+/* L'ennemi vivant le plus proche, à moins de `rayon` m (la grille de voisinage), ou −1. */
+export function plusProche(A, i, rayon) {
+  const c0 = A.cellOf[i], gcx = c0 % A.gw, gcy = (c0 - gcx) / A.gw, k = Math.ceil(rayon / GRILLE);
+  const ennemi = 1 - A.camp[i], r2 = rayon * rayon;
+  let best = -1, bd = r2;
+  for (let oy = -k; oy <= k; oy++) {
+    const yy = gcy + oy; if (yy < 0 || yy >= A.gh) continue;
+    for (let ox = -k; ox <= k; ox++) {
+      const xx = gcx + ox; if (xx < 0 || xx >= A.gw) continue;
+      const c = yy * A.gw + xx;
+      for (let s = A.cellStart[c], e = A.cellStart[c + 1]; s < e; s++) {
+        const j = A.sorted[s];
+        if (A.camp[j] !== ennemi || A.mort[j]) continue;
+        const d2 = (A.x[j] - A.x[i]) ** 2 + (A.y[j] - A.y[i]) ** 2;
+        if (d2 < bd) { bd = d2; best = j; }
+      }
+    }
+  }
+  return best;
+}
 
 /* Un pas de la foule. ctx : { T, R, regiments, champDe(reg) → champ | null,
    rng, dt, gel, frapper(i, cause, gravite) }. frapper blesse ou tue (gravite :
@@ -222,7 +243,16 @@ function tirer(A, i, o, ctx, stance) {
   const { R, rng, T, frapper } = ctx;
   const { dw, dh, dens } = A;
   const ennemi = 1 - A.camp[i], de = dens[ennemi];
-  const P = R.tir, portee = P.portee * parametresStance(R, stance).portee, rB = Math.ceil(portee / DENSITE);
+  const P = R.tir;
+  // au contact : l'ennemi le plus proche, quelle que soit la direction ; ni cône, ni densité, ni abri, et le coup revient vite (v0.37.2)
+  const v0 = P.contact > 0 ? plusProche(A, i, P.contact) : -1;
+  if (v0 >= 0) {
+    if (ctx.tir) ctx.tir(i, A.x[v0], A.y[v0]);
+    A.tirT[i] = P.contactPeriode * (0.5 + rng());
+    if (rng() < P.contactChance * (1 + R.experience.adresse * A.exp[i])) frapper(v0, 'tir', R.soldat.mortelTir, null, i);
+    return true;
+  }
+  const portee = P.portee * parametresStance(R, stance).portee, rB = Math.ceil(portee / DENSITE);
   const bx = (A.x[i] / DENSITE) | 0, by = (A.y[i] / DENSITE) | 0;
   const cosC = Math.cos(P.cone);
   let best = -1, bestN = 0;

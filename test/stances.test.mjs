@@ -1,5 +1,5 @@
 // Les stances (lot 1, logique) : une posture par régiment, qui change la portée, la précision et la cadence du tir.
-// La référence « sans stance » a été relevée sur le code d'avant le lot : l'ordre des tirages n'a pas bougé.
+// La référence « sans stance » a été relevée sur le code d'avant le lot (puis réécrite, v0.37.2, quand le tir a changé exprès) : l'ordre des tirages ne bouge pas avec une posture.
 import { nouvelleBataille, avancer, ordonnerMarche, photo, restaurer, zone, peutStance, ordonnerStance, actionDe } from '../js/bataille.js';
 import { ligneY } from '../js/tranchees.js';
 import { empreinteEtat } from '../js/reseau/lockstep.js';
@@ -21,10 +21,10 @@ function assaut(graine, Rj = R, avant = null) {
 const bilan = B => ({ pertes: B.etat.pertes, blesses: B.etat.blesses, rng: B.etat.rng, emp: empreinteEtat(B) });
 
 group('stances — rien ne bouge sans elles');
-const REFERENCE = {            // relevé sur le code d'avant les stances (pertes, blessés, hasard) ; l'empreinte, relevée à la v0.36.0, y ajoute la posture
-  3: { pertes: [62, 4], blesses: [39, 4], rng: 1162883254, emp: 'd4ac213' },
-  7: { pertes: [57, 5], blesses: [47, 3], rng: 2535038889, emp: 'e738935e' },
-  8: { pertes: [77, 3], blesses: [45, 4], rng: 271952004, emp: 'dcf4ff3a' },
+const REFERENCE = {            // relevé à la v0.37.2 (tir plus précis, corps à corps) ; avant : 62/4, 57/5, 77/3 morts, relevés sur le code d'avant les stances. L'empreinte y ajoute la posture
+  3: { pertes: [65, 6], blesses: [60, 9], rng: 2854744870, emp: '3a7c4ab5' },
+  7: { pertes: [88, 9], blesses: [69, 7], rng: 2557767789, emp: 'fc5093d1' },
+  8: { pertes: [84, 3], blesses: [56, 8], rng: 727116683, emp: 'fd3c9c43' },
 };
 for (const g of [3, 7, 8]) {
   test(`sans stance, mêmes morts, mêmes blessés, même hasard qu'avant (graine ${g})`, () => {
