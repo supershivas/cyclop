@@ -137,8 +137,8 @@ export const soldatMat = {
         else if (k == 6.0 || k == 9.0) c = uVisage;
         else if (k == 7.0) c = uCuir;
         else if (k == 8.0) c = uBotte;
-        // le pansement : une bande d'os autour du bras ou de la jambe ; pour la tête, tout le visage et le bas du casque (vu de dos aussi)
-        if ((vBless > 2.5 && (k == 6.0 || vLong < 1.64)) || (vBless > 1.5 && vBless < 2.5 && vLong > 0.2 && vLong < 0.62) || (vBless > 0.5 && vBless < 1.5 && vLong > 0.9 && vLong < 1.32)) c = uPansement;
+        // le pansement : le bras ou la jambe entiers en os, dessus compris (vu de haut, c'est ce qu'on voit) ; pour la tête, le visage et le casque entiers
+        if (vBless > 2.5 || (vBless > 1.5 && vBless < 2.5 && vLong > 0.1 && vLong < 0.83) || (vBless > 0.5 && vBless < 1.5 && vLong > 0.8 && vLong < 1.41)) c = uPansement;
         gl_FragColor = vec4(c, 1.0);
       }`,
 };

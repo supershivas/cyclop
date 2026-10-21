@@ -1,5 +1,8 @@
 # Journal des versions
 
+## 0.37.4 — 2026-10-21
+- Les pansements se voient mieux de près : le bras ou la jambe blessés sont tout clairs, la tête aussi
+
 ## 0.37.3 — 2026-10-20
 - De près, un clic sur un de nos hommes ouvre sa fiche ; un clic sur la fiche la ferme
 - La blessure se voit sur le corps : un pansement clair au bras, à la jambe ou à la tête

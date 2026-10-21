@@ -8,7 +8,7 @@
    et la lettre (#loups-C).
 
    Module ES sans dépendance :
-     import { mountLabo } from './lib/labo-shell.js?v=0.37.3'
+     import { mountLabo } from './lib/labo-shell.js?v=0.37.4'
      mountLabo(document.getElementById('labo'), {
        game: 'Kingvi',               // nom affiché dans l'en-tête
        home: './',                   // lien de retour vers le jeu
@@ -25,7 +25,12 @@
      })
    `render(stage, { topic, variant, letter })` dessine dans `stage` (un div vide,
    qui défile seul si besoin) et peut rendre une fonction de nettoyage
-   (arrêter une animation). Statuts : 'actuelle', 'retenue', 'ancienne'.
+   (arrêter une animation). Statuts : 'actuelle', 'retenue', 'ancienne',
+   'a-trancher' (une proposition attend un choix : le sujet passe en rouge
+   même si une variante est en jeu).
+   Un point de couleur dit l'état de chaque sujet (menu, puces, accueil) et de
+   chaque groupe : vert = tranché (une variante en jeu), rouge = à trancher,
+   orange = indéfini (aucune variante n'a de statut). Voir `etatSujet`.
    ─────────────────────────────────────────────────────────────────────────── */
 
 const LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
@@ -63,6 +68,24 @@ const plusRecente = (a, b) => {
   for (let i = 0; i < 3; i++) if ((x[i] || 0) !== (y[i] || 0)) return (x[i] || 0) > (y[i] || 0);
   return false;
 };
+// L'état d'un sujet : 'vert' (une variante est en jeu, rien n'attend), 'rouge'
+// (à trancher : une variante porte 'a-trancher', ou des statuts sans aucune
+// variante en jeu), 'orange' (indéfini : aucune variante n'a de statut).
+export function etatSujet(topic) {
+  const st = (topic?.variants || []).map(v => v.status).filter(Boolean);
+  if (st.includes('a-trancher')) return 'rouge';
+  if (st.includes('actuelle') || st.includes('retenue')) return 'vert';
+  return st.length ? 'rouge' : 'orange';
+}
+// L'état d'un groupe : le pire de ses sujets (rouge > orange > vert).
+export function etatGroupe(group) {
+  const e = (group?.topics || []).map(etatSujet);
+  return e.includes('rouge') ? 'rouge' : e.includes('orange') ? 'orange' : 'vert';
+}
+const MOT_ETAT = { vert: 'tranché, en jeu', rouge: 'à trancher', orange: 'indéfini' };
+// Le point : la forme (rond, carré, triangle) porte l'information, la couleur la confirme
+const point = etat => h('span', { class: `labo-point is-${etat}`, role: 'img', 'aria-label': MOT_ETAT[etat], title: MOT_ETAT[etat] });
+
 const GENRES = { nouveau: 'nouveau', 'mis-a-jour': 'mis à jour', retire: 'retiré' };
 
 export function mountLabo(root, { game = 'Jeu', home = './', atelier, groups = [], accueil = null } = {}) {
@@ -149,7 +172,7 @@ export function mountLabo(root, { game = 'Jeu', home = './', atelier, groups = [
         it.ref ? lien(it.ref, it.texte) : it.texte))));
     const atrancher = [];
     groups.forEach(gr => gr.topics.forEach(tp => {
-      if (!tp.variants.some(x => x.status === 'actuelle' || x.status === 'retenue')) atrancher.push(tp);
+      if (etatSujet(tp) !== 'vert') atrancher.push(tp);
     }));
     const sections = [];
     if (vu && nouveautes.length) sections.push(h('div', { class: 'labo-bloc' },
@@ -157,15 +180,15 @@ export function mountLabo(root, { game = 'Jeu', home = './', atelier, groups = [
     else if (!vu && journal.length) sections.push(h('p', { class: 'labo-aide' }, 'Première visite : tout le journal est ci-dessous. Les prochaines fois, ce qui est arrivé depuis votre dernier passage sera en tête.'));
     else if (vu) sections.push(h('p', { class: 'labo-aide' }, `Rien de nouveau depuis votre dernière visite (v${vu}).`));
     if (atrancher.length) sections.push(h('div', { class: 'labo-bloc' },
-      h('h2', {}, 'À trancher'), h('p', { class: 'labo-aide' }, 'Des sujets où aucune variante n\'est encore en jeu.'),
-      h('ul', {}, atrancher.map(tp => h('li', {}, lien(tp.id, tp.title), h('small', {}, ` · ${tp.variants.length} variantes`))))));
+      h('h2', {}, 'À trancher'), h('p', { class: 'labo-aide' }, 'Rouge : une décision attend. Orange : rien n\'est jugé ni en jeu.'),
+      h('ul', {}, atrancher.map(tp => h('li', {}, point(etatSujet(tp)), lien(tp.id, tp.title), h('small', {}, ` · ${tp.variants.length} variantes`))))));
     sections.push(h('div', { class: 'labo-bloc' }, h('h2', {}, 'Tous les sujets'),
-      groups.map(gr => h('div', { class: 'labo-index' }, h('h3', {}, gr.title),
+      groups.map(gr => h('div', { class: 'labo-index' }, h('h3', {}, point(etatGroupe(gr)), gr.title),
         h('ul', {}, gr.topics.map(tp => {
           const k = tp.variants.findIndex(x => x.status === 'retenue' || x.status === 'actuelle');
           const nv = tp.variants.findIndex(x => accueil.version && x.depuis === accueil.version);
-          return h('li', {}, lien(k >= 0 ? `${tp.id}-${LETTERS[k]}` : tp.id, tp.title),
-            h('small', {}, k >= 0 ? ` · en jeu : ${LETTERS[k]}` : ' · à trancher', ` · ${tp.variants.length} variante${tp.variants.length > 1 ? 's' : ''}`),
+          return h('li', {}, point(etatSujet(tp)), lien(k >= 0 ? `${tp.id}-${LETTERS[k]}` : tp.id, tp.title),
+            h('small', {}, k >= 0 ? ` · en jeu : ${LETTERS[k]}` : ' · à trancher', etatSujet(tp) === 'rouge' && k >= 0 ? ' · une proposition attend' : '', ` · ${tp.variants.length} variante${tp.variants.length > 1 ? 's' : ''}`),
             nv >= 0 ? h('span', { class: 'labo-new' }, 'nouveau') : null);
         }))))));
     sections.push(h('div', { class: 'labo-bloc' }, h('h2', {}, 'Tout le journal'),
@@ -183,16 +206,16 @@ export function mountLabo(root, { game = 'Jeu', home = './', atelier, groups = [
     root.classList.toggle('is-home', onHome);
     header.querySelector('.labo-groups').replaceChildren(
       ...(accueil ? [h('button', { class: `labo-group ${onHome ? 'is-on' : ''}`, onclick: () => allerAccueil() }, 'Accueil')] : []),
-      ...groups.map((gr, i) => h('button', { class: `labo-group ${!onHome && i === g ? 'is-on' : ''}`, onclick: () => go(i, 0, 0) }, gr.title)));
+      ...groups.map((gr, i) => h('button', { class: `labo-group ${!onHome && i === g ? 'is-on' : ''}`, onclick: () => go(i, 0, 0) }, point(etatGroupe(gr)), gr.title)));
     if (onHome) { drawHome(); return; }
     const topics = topicsOf(g);
     const topic = topics[t];
     side.replaceChildren(...topics.map((tp, i) => h('div', { class: `labo-topic ${i === t ? 'is-open' : ''}` },
-      h('button', { class: 'labo-topic-btn', onclick: () => go(g, i, 0) }, h('span', {}, tp.title), h('small', {}, String(tp.variants.length))),
+      h('button', { class: 'labo-topic-btn', onclick: () => go(g, i, 0) }, h('span', { class: 'labo-topic-nom' }, point(etatSujet(tp)), tp.title), h('small', {}, String(tp.variants.length))),
       i === t ? h('div', { class: 'labo-variants' }, tp.variants.map((variant, j) =>
         h('button', { class: `labo-variant ${j === v ? 'is-on' : ''}`, onclick: () => go(g, t, j) },
           h('b', { class: variant.status === 'retenue' ? 'is-kept' : '' }, LETTERS[j]), ' ', variant.title))) : null)));
-    chips.replaceChildren(...topics.map((tp, i) => h('button', { class: `labo-chip ${i === t ? 'is-on' : ''}`, onclick: () => go(g, i, 0) }, tp.title)));
+    chips.replaceChildren(...topics.map((tp, i) => h('button', { class: `labo-chip ${i === t ? 'is-on' : ''}`, onclick: () => go(g, i, 0) }, point(etatSujet(tp)), tp.title)));
     if (!topic) { info.replaceChildren(); stage.replaceChildren(); bar.replaceChildren(); return; }
     const variant = topic.variants[v];
     info.replaceChildren(
