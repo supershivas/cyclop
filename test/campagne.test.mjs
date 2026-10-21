@@ -433,3 +433,20 @@ test('le bilan : bataille par bataille, les noms de ceux qui sont tombés et de 
   assert.ok(!/victoire|gloire|bravo|score|record|médaille|!/i.test(JSON.stringify(TEXTES)));
   assert.equal(bilan({ ...c, statut: 'effondree', batailles: deux.batailles }).texte, TEXTES.fin.effondree);
 });
+
+group('campagne — la carte de chaque bataille (l\'atelier)');
+test('appliquerCampagne donne sa carte à une bataille ; une carte inconnue laisse la carte d\'origine ; la campagne la joue', async () => {
+  const { version } = JSON.parse(readFileSync(new URL('../version.json', import.meta.url)));
+  const { appliquerCampagne } = await import('../js/design-store.js');
+  const dedans = await import(`../js/data/campagne.js?v=${version}`), sect = (await import(`../js/data/secteur.js?v=${version}`)).SECTEURS;
+  const avant = dedans.CAMPAGNE.batailles.map(b => b.secteur);
+  assert.deepEqual(avant, dedans.SECTEURS_ORIGINE);
+  try {
+    sect['carte-test'] = { ...structuredClone(sect.crete), nom: 'Test', perso: true };
+    appliquerCampagne(dedans.CAMPAGNE, sect, { 1: 'carte-test', 2: 'carte-supprimee', 3: 'essai' });
+    assert.deepEqual(dedans.CAMPAGNE.batailles.map(b => b.secteur), ['carte-test', 'crete', 'essai'], 'inconnue : la carte d\'origine reste');
+    const s = suivante(nouvelleCampagne(11));
+    assert.equal(s.secteur, 'carte-test', 'la bataille 1 se joue sur la carte à vous');
+    assert.equal(dedans.CAMPAGNE.batailles[0].forces, 1.3, 'les forces suivent le rang, pas la carte');
+  } finally { dedans.CAMPAGNE.batailles.forEach((b, i) => { b.secteur = avant[i]; }); delete sect['carte-test']; }
+});

@@ -17,6 +17,9 @@ export const CAMPAGNE = {
   hommesMin: 20,                                // un régiment est « debout » à vingt survivants au moins (un cinquième de 94) : avec un seul homme, le nom n'est plus qu'un nom
 };
 
+// Les cartes d'origine de chaque bataille (ce que l'atelier remet quand on retire une carte de la campagne)
+export const SECTEURS_ORIGINE = CAMPAGNE.batailles.map(b => b.secteur);
+
 // Les mots de la fin (Jérôme, cadrage v0.36.3 : « le secteur suivant », pas de victoire claironnée ; DESIGN.md : aucune glorification, le compteur de morts n'est jamais une récompense).
 // Pas de total en tête, pas de mot de victoire : le détail seul, bataille par bataille, puis les noms.
 export const TEXTES = {

@@ -1,5 +1,9 @@
 # Journal des versions
 
+## 0.42.0 — 2026-10-21
+- Dans l'atelier, on choisit la carte de chaque bataille de la campagne
+- Le jeu se recharge de nouveau (deux imports perdus à la fusion de la v0.41.3)
+
 ## 0.41.3 — 2026-10-21
 - Le nom d'un régiment sur le champ est un cartouche cliquable : le numéro dans un carré (bleu ; orange si le régiment est ébranlé, rouge en déroute), le nom et le secteur, le statut, la barre debout / blessés
 - La carte d'un régiment dans la rangée a une hauteur fixe, la barre toujours au même endroit, un « ! » (« !! » en déroute) sur le coin et un fond hachuré quand il est ébranlé (plus légèrement s'il est choisi)

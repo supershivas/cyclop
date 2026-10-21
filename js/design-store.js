@@ -1,7 +1,7 @@
 // Le contenu modifiable par l'Atelier (section 17) : les réglages chiffrés
 // publiés dans le dépôt (assets/design/reglages.json), plus les retouches de
 // ce navigateur pas encore publiées. Le jeu l'appelle au lancement.
-import { REGLAGES } from './data/reglages.js?v=0.41.3';
+import { REGLAGES } from './data/reglages.js?v=0.42.0';
 
 const BROUILLON = 'cyclopeen:atelier';
 
@@ -57,18 +57,23 @@ export function appliquerSecteurs(SECTEURS, parId) {
   for (const [id, r] of Object.entries(parId || {})) if (SECTEURS[id]) SECTEURS[id] = fusion(SECTEURS[id], r);
 }
 // Combien de réglages et de retouches de secteur attendent d'être publiés
-export const compterBrouillon = b => Object.values(b.reglages || {}).reduce((s, g) => s + Object.keys(g).length, 0)
+// La campagne (v0.42.0) : { 1: id, 2: id, 3: id }, la carte de chaque bataille ; publiée dans assets/design/campagne.json, retouchée dans le brouillon (`campagne`).
+// Une carte inconnue (supprimée) laisse la place à celle d'origine.
+export function appliquerCampagne(CAMPAGNE, SECTEURS, rangs) {
+  CAMPAGNE.batailles.forEach((B, i) => { const id = rangs?.[i + 1]; if (id && SECTEURS[id]) B.secteur = id; });
+}
+export const compterBrouillon = b => Object.keys(b.campagne || {}).length + Object.values(b.reglages || {}).reduce((s, g) => s + Object.keys(g).length, 0)
   + Object.values(b.secteurs || {}).reduce((s, g) => s + Object.keys(g).length, 0)
   + Object.keys(b.cartes || {}).length + (b.supprimees || []).length;
 
-// → { reglages, secteurs, cartes, publie: { reglages, secteurs, cartes }, aPublier } ; cartes : { id: secteur entier }, les cartes à vous (publiées, puis celles de ce navigateur) ; secteurs : { id: retouches } en objets, à poser sur SECTEURS (`appliquerSecteurs`)
+// → { reglages, secteurs, cartes, campagne, publie: { reglages, secteurs, cartes, campagne }, aPublier } ; cartes : { id: secteur entier }, les cartes à vous (publiées, puis celles de ce navigateur) ; secteurs : { id: retouches } en objets, à poser sur SECTEURS (`appliquerSecteurs`)
 export async function chargerContenu() {
-  const [reglages, secteursPublies, cartesPubliees] = await Promise.all([lireJSON('assets/design/reglages.json'), lireJSON('assets/design/secteurs.json'), lireJSON('assets/design/cartes.json')]);
-  const publie = { reglages: fusion(REGLAGES, reglages), secteurs: secteursPublies || {}, cartes: cartesPubliees || {} };
+  const [reglages, secteursPublies, cartesPubliees, campagnePubliee] = await Promise.all([lireJSON('assets/design/reglages.json'), lireJSON('assets/design/secteurs.json'), lireJSON('assets/design/cartes.json'), lireJSON('assets/design/campagne.json')]);
+  const publie = { reglages: fusion(REGLAGES, reglages), secteurs: secteursPublies || {}, cartes: cartesPubliees || {}, campagne: campagnePubliee || {} };
   const b = lireBrouillon();
   const cartes = { ...publie.cartes, ...(b.cartes || {}) };
   for (const id of b.supprimees || []) delete cartes[id];
   const secteurs = {};
   for (const id of new Set([...Object.keys(publie.secteurs), ...Object.keys(b.secteurs || {})])) secteurs[id] = fusion(publie.secteurs[id] || {}, deplier(b.secteurs?.[id]));
-  return { reglages: fusion(publie.reglages, b.reglages), secteurs, cartes, publie, aPublier: compterBrouillon(b) };
+  return { reglages: fusion(publie.reglages, b.reglages), secteurs, cartes, campagne: { ...publie.campagne, ...(b.campagne || {}) }, publie, aPublier: compterBrouillon(b) };
 }

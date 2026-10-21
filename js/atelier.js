@@ -3,12 +3,12 @@
 // visible dans le jeu de ce navigateur, puis publiée d'un geste dans le dépôt
 // (un commit sur main, par l'API de GitHub) : assets/design/reglages.json.
 // Les outils : les réglages chiffrés (Jérôme, v0.1.0) et la carte, un éditeur visuel (`atelier-carte.js`).
-import { createPublisher, TOKEN_URL } from './lib/gh-publish.js?v=0.41.3';
-import { validerSecteur } from './tranchees.js?v=0.41.3';
-import { terrainDuSecteur, profilDe } from './secteur-terrain.js?v=0.41.3';
-import { SECTEURS } from './data/secteur.js?v=0.41.3';
-import { ongletCarte } from './atelier-carte.js?v=0.41.3';
-import { chargerContenu, lireBrouillon, ecrireBrouillon, compterBrouillon, deplier, secteurEffectif } from './design-store.js?v=0.41.3';
+import { createPublisher, TOKEN_URL } from './lib/gh-publish.js?v=0.42.0';
+import { validerSecteur } from './tranchees.js?v=0.42.0';
+import { terrainDuSecteur, profilDe } from './secteur-terrain.js?v=0.42.0';
+import { SECTEURS } from './data/secteur.js?v=0.42.0';
+import { ongletCarte } from './atelier-carte.js?v=0.42.0';
+import { chargerContenu, lireBrouillon, ecrireBrouillon, compterBrouillon, deplier, secteurEffectif } from './design-store.js?v=0.42.0';
 
 const REPO = 'supershivas/cyclop';
 const $ = id => document.getElementById(id);
@@ -101,6 +101,13 @@ function ongletPublier(zone) {
         for (const id of b.supprimees || []) delete enLigne[id];
         fichiers.push({ path: 'assets/design/cartes.json', json: enLigne });
       }
+      // la campagne : la carte de chaque bataille (campagne.json) ; une carte supprimée n'y reste pas
+      if (b.campagne && Object.keys(b.campagne).length) {
+        const cartes = { ...SECTEURS, ...contenu.cartes }, rangs = { ...contenu.publie.campagne };
+        for (const [n, id] of Object.entries(b.campagne)) if (cartes[id]) rangs[n] = id;
+        for (const n of Object.keys(rangs)) if (!cartes[rangs[n]] || (b.supprimees || []).includes(rangs[n])) delete rangs[n];
+        fichiers.push({ path: 'assets/design/campagne.json', json: rangs });
+      }
       await pub.publish(fichiers, { message: "Publie les cartes et les retouches de l'atelier", progress: t => { statut.textContent = t; } });
       ecrireBrouillon({});
       contenu = await chargerContenu();
@@ -111,7 +118,7 @@ function ongletPublier(zone) {
 }
 
 // l'éditeur de carte est le premier onglet et celui qui s'ouvre : c'est le plus visuel ; les nombres du jeu viennent après
-const ONGLETS = { Carte: zone => ongletCarte(zone, { el, R: contenu.reglages, publie: contenu.publie.secteurs, publieCartes: contenu.publie.cartes, aPublier }), Réglages: ongletReglages, Publier: ongletPublier };
+const ONGLETS = { Carte: zone => ongletCarte(zone, { el, R: contenu.reglages, publie: contenu.publie.secteurs, publieCartes: contenu.publie.cartes, publieCampagne: contenu.publie.campagne, aPublier }), Réglages: ongletReglages, Publier: ongletPublier };
 const LIBELLES = { Carte: 'Éditeur de carte', Réglages: 'Réglages chiffrés', Publier: 'Publier' };
 function ouvrir(nom) {
   for (const b of $('onglets').children) b.classList.toggle('is-on', b.dataset.onglet === nom);

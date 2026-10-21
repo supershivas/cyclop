@@ -3,18 +3,19 @@
 // la scène (la carte, large), l'inspecteur (l'outil ou la forme choisie, puis les réglages du secteur). Chaque chiffre porte un nom et une description (`data/carte-outils.js`,
 // `data/secteur-params.js`). Chaque retouche va dans le brouillon (`secteurs` de `cyclopeen:atelier`, à plat : « relief.bosses ») et se publie dans assets/design/secteurs.json ;
 // le jeu les pose sur `SECTEURS` au lancement (`appliquerSecteurs`).
-import { REGLAGES } from './data/reglages.js?v=0.41.3';
-import { SECTEURS, VIERGE } from './data/secteur.js?v=0.41.3';
-import { PALETTE, ORDRE } from './palette.js?v=0.41.3';
-import { terrainDuSecteur, profilDe } from './secteur-terrain.js?v=0.41.3';
-import { couleurCase } from './apparence.js?v=0.41.3';
-import { etat as etatCase, hauteurQ } from './terrain.js?v=0.41.3';
-import { ligneY } from './tranchees.js?v=0.41.3';
-import { PARAMS } from './data/secteur-params.js?v=0.41.3';
-import { OUTILS, GROUPES_OUTILS, champ, HERBE, SOLS } from './data/carte-outils.js?v=0.41.3';
-import { distanceForme, extremite } from './formes.js?v=0.41.3';
-import { validerSecteur } from './tranchees.js?v=0.41.3';
-import { lireBrouillon, ecrireBrouillon, lireChemin, deplier, secteurEffectif, idCarte, nouvelleCarte } from './design-store.js?v=0.41.3';
+import { REGLAGES } from './data/reglages.js?v=0.42.0';
+import { SECTEURS, VIERGE } from './data/secteur.js?v=0.42.0';
+import { PALETTE, ORDRE } from './palette.js?v=0.42.0';
+import { terrainDuSecteur, profilDe } from './secteur-terrain.js?v=0.42.0';
+import { couleurCase } from './apparence.js?v=0.42.0';
+import { etat as etatCase, hauteurQ } from './terrain.js?v=0.42.0';
+import { ligneY } from './tranchees.js?v=0.42.0';
+import { PARAMS } from './data/secteur-params.js?v=0.42.0';
+import { SECTEURS_ORIGINE } from './data/campagne.js?v=0.42.0';
+import { OUTILS, GROUPES_OUTILS, champ, HERBE, SOLS } from './data/carte-outils.js?v=0.42.0';
+import { distanceForme, extremite } from './formes.js?v=0.42.0';
+import { validerSecteur } from './tranchees.js?v=0.42.0';
+import { lireBrouillon, ecrireBrouillon, lireChemin, deplier, secteurEffectif, idCarte, nouvelleCarte } from './design-store.js?v=0.42.0';
 
 const rgb = hex => [1, 3, 5].map(k => parseInt(hex.slice(k, k + 2), 16));
 const COULEURS = ORDRE.map(k => rgb(PALETTE[k]));
@@ -43,7 +44,7 @@ function peindreSol(T, R, courbes) {
   return img;
 }
 
-export function ongletCarte(zone, { el, R = REGLAGES, publie = {}, publieCartes = {}, aPublier = () => {} } = {}) {
+export function ongletCarte(zone, { el, R = REGLAGES, publie = {}, publieCartes = {}, publieCampagne = {}, aPublier = () => {} } = {}) {
   // ─── Les cartes : celles d'origine, celles à vous déjà publiées (cartes.json), celles de ce navigateur pas encore publiées (le brouillon) ───
   const construireCatalogue = () => {
     const b = lireBrouillon(), out = { ...SECTEURS, ...structuredClone(publieCartes), ...structuredClone(b.cartes || {}) };
@@ -218,6 +219,31 @@ export function ongletCarte(zone, { el, R = REGLAGES, publie = {}, publieCartes 
     blocs.push(panneauSecteur());
     insp.replaceChildren(...blocs);
   }
+  // ─── La campagne (v0.42.0) : la carte de chaque bataille ; le brouillon ne garde que ce qui diffère de ce qui est publié (ou des trois d'origine) ───
+  const rangPublie = n => publieCampagne[n] && catalogue[publieCampagne[n]] ? publieCampagne[n] : SECTEURS_ORIGINE[n - 1];
+  const rangs = () => { const br = lireBrouillon().campagne || {}, out = {}; for (let n = 1; n <= SECTEURS_ORIGINE.length; n++) out[n] = br[n] && catalogue[br[n]] ? br[n] : rangPublie(n); return out; };
+  function poserRang(id, n) {
+    const cur = rangs(), m = Object.keys(cur).find(k => cur[k] === id), neuf = { ...cur };
+    if (n) { const deplace = cur[n]; neuf[n] = id; if (m && +m !== n) neuf[m] = deplace; }
+    else if (m) {
+      const origine = SECTEURS_ORIGINE[m - 1];
+      if (origine === id || Object.values(cur).includes(origine)) return 'La bataille ' + m + ' reprend sa carte d\u2019origine : elle est déjà prise. Donnez plutôt cette bataille à une autre carte.';
+      neuf[m] = origine;
+    }
+    const br = lireBrouillon(), c = {};
+    for (let k = 1; k <= SECTEURS_ORIGINE.length; k++) if (neuf[k] !== rangPublie(k)) c[k] = neuf[k];
+    if (Object.keys(c).length) br.campagne = c; else delete br.campagne;
+    ecrireBrouillon(br); aPublier(); return null;
+  }
+  function champCampagne(id) {
+    const cur = rangs(), m = Object.keys(cur).find(k => cur[k] === id);
+    const choix = el('select', { ariaLabel: 'Bataille de campagne' }, el('option', { value: '', textContent: 'Aucune' }), ...Object.keys(cur).map(n => el('option', { value: n, textContent: `Bataille ${n} (aujourd\u2019hui : ${nomDe(cur[n])})` })));
+    choix.value = m || '';
+    const msg = el('p', { className: 'at-note', textContent: m ? `Cette carte est jouée à la bataille ${m} de la campagne.` : '' });
+    choix.onchange = () => { const r = poserRang(id, +choix.value || 0); if (r) { msg.textContent = r; choix.value = m || ''; } else panneauInspecteur(); };
+    return el('div', { className: 'at-champ' }, el('div', { className: 'at-champ-tete' }, el('span', { className: 'at-champ-nom', textContent: 'Dans la campagne' })),
+      el('p', { className: 'at-champ-desc', textContent: 'La campagne enchaîne trois batailles de plus en plus dures, chacune sur une carte : en choisir une ici lui donne cette place (l\u2019autre carte de ce rang prend la vôtre). Les forces, les jours et la mission suivent le rang, pas la carte.' }), choix, msg);
+  }
   function panneauSecteur() {
     const base = effectif(), b = lireBrouillon().secteurs?.[sel.value] || {};
     const lignes = PARAMS.filter(p => !p.si || lireChemin(catalogue[sel.value], p.si)).map(p => {
@@ -248,6 +274,7 @@ export function ongletCarte(zone, { el, R = REGLAGES, publie = {}, publieCartes 
     return el('details', { className: 'ed-bloc', open: true }, el('summary', { textContent: `Le secteur : ${S.nom}` }),
       ...(etat ? [etat] : []),
       texte('nom', 'Nom de la carte', 'Le titre dans la liste des nouvelles parties.', false),
+      champCampagne(id),
       texte('resume', 'Résumé', 'Deux phrases qui disent le caractère de la carte au joueur : le sol, l\u2019eau, la végétation, ce qu\u2019elle demande.', true),
       el('p', { className: 'at-note', textContent: 'En rouge : retouché dans ce navigateur, pas encore publié. Le jeu de ce navigateur l\u2019utilise déjà, à la prochaine bataille.' }),
       ...lignes.flatMap((r, k) => r.dataset.groupe && r.dataset.groupe !== lignes[k - 1]?.dataset.groupe ? [el('h4', { textContent: r.dataset.groupe }), r] : [r]), el('div', { className: 'at-row' }, remise, ...(supprimer ? [supprimer] : [])));
@@ -292,6 +319,7 @@ export function ongletCarte(zone, { el, R = REGLAGES, publie = {}, publieCartes 
     const br = lireBrouillon();
     if (br.cartes?.[id]) { delete br.cartes[id]; if (!Object.keys(br.cartes).length) delete br.cartes; } else br.supprimees = [...new Set([...(br.supprimees || []), id])];
     if (br.secteurs) { delete br.secteurs[id]; if (!Object.keys(br.secteurs).length) delete br.secteurs; }
+    if (br.campagne) { for (const k of Object.keys(br.campagne)) if (br.campagne[k] === id) delete br.campagne[k]; if (!Object.keys(br.campagne).length) delete br.campagne; }
     ecrireBrouillon(br); catalogue = construireCatalogue(); aPublier();
     histoire.length = futur.length = 0; choix = null; remplirSelecteur(); sel.value = Object.keys(catalogue)[0]; sel.onchange();
   }
@@ -321,7 +349,7 @@ export function ongletCarte(zone, { el, R = REGLAGES, publie = {}, publieCartes 
     v3d.activer(true);
     etatBarre.textContent = 'Vue 3D : un clic pose avec l\u2019outil choisi (crête et haie : deux clics) · glisser tourne et incline · clic droit (ou Maj) + glisser déplace · molette zoome.';
   }
-  const creerVue3D3 = async () => { const { creerVue3D } = await import('./apercu-3d.js?v=0.41.3'); return creerVue3D({ R, hote: hote3d }); };
+  const creerVue3D3 = async () => { const { creerVue3D } = await import('./apercu-3d.js?v=0.42.0'); return creerVue3D({ R, hote: hote3d }); };
   function basculer(m) {
     if (m === mode) return;
     mode = m;
