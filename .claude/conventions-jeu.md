@@ -319,6 +319,14 @@ une. Il **montre** ; il ne modifie jamais le contenu du jeu (c'est l'Atelier).
 - **Adresse** : elle garde le sujet et la lettre (`#loups-C`).
 - **Chaque variante** a un titre et une phrase qui dit ce qu'elle change ;
   « actuelle », « retenue » (branchée dans le jeu), « ancienne ».
+- **Un point d'état devant chaque sujet** (menu, puces mobiles, index de
+  l'accueil) et devant chaque groupe (le pire de ses sujets) : **vert** (rond)
+  = tranché, une variante est en jeu (« actuelle » ou « retenue ») ; **rouge**
+  (carré) = à trancher : une variante porte le statut `a-trancher` (une
+  proposition attend, même si une autre est en jeu), ou des statuts existent
+  sans variante en jeu ; **orange** (triangle) = indéfini : aucune variante n'a
+  de statut. `etatSujet` et `etatGroupe` de `modules/labo-shell.js` le
+  calculent : ne pas le recoder dans le jeu.
 - **Page d'accueil** : un onglet « Accueil » (`#accueil`, la page d'ouverture)
   pour suivre les modifications : le journal du labo version par version, chaque
   ligne avec un lien vers le bon sujet et la bonne variante (`#sujet-Lettre`),

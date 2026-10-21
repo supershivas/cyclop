@@ -2,6 +2,12 @@
 // Une entrée par version qui touche au labo, la plus récente en haut. `ref` : « sujet-Lettre » (la lettre est celle de la variante,
 // A étant l'actuelle). À chaque changement du labo : une entrée ici, avec `depuis` sur les variantes ajoutées ou changées (labo.js).
 export const JOURNAL = [
+  { version: '0.41.0', date: '2026-10-21', items: [
+    { genre: 'nouveau', texte: 'Le nom d\'un régiment sur le champ : quatre propositions (trois étages, le cartouche, la pastille, le fanion) contre la ligne d\'aujourd\'hui, avec le nom en h1, le statut en h2 et une vraie cible de clic', ref: 'nom-regiment-B' },
+    { genre: 'nouveau', texte: 'Les toasts : sous le duel, la pile du bord, dans le carnet de bord, à l\'objet, contre la languette qui recouvre la rangée des cartes', ref: 'toasts-B' },
+    { genre: 'nouveau', texte: 'La carte d\'ordre de la rangée : quatre cartes à hauteur fixe (barre toujours au même endroit, « ! » hors du flux, un fond différent pour un régiment ébranlé) contre la carte d\'aujourd\'hui', ref: 'carte-ordre-B' },
+    { genre: 'mis-a-jour', texte: 'Un point vert, rouge ou orange devant chaque sujet et chaque groupe ; les propositions des sujets de satisfaction (v0.40.1) sont marquées « à trancher »', ref: 'accueil' },
+  ] },
   { version: '0.40.1', date: '2026-10-20', items: [
     { genre: 'nouveau', texte: 'Le clic sur un bouton : cinq façons de le sentir (le rebond, le tampon, l\'onde, le cran, le maintien), contre le bouton sans retour d\'aujourd\'hui', ref: 'clic-bouton-B' },
     { genre: 'nouveau', texte: 'Un ordre sur un secteur : cinq retours quand un régiment reçoit son ordre (le fanion planté, l\'onde du secteur, la réponse des hommes, la bannière, le réticule), sur le vrai moteur', ref: 'ordre-secteur-B' },

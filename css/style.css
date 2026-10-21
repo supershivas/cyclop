@@ -117,7 +117,9 @@
   padding: 1px var(--e1);
   background: var(--jeu-fond); color: var(--jeu-nous);
   font-size: var(--texte-petit); white-space: nowrap;
+  pointer-events: auto; cursor: pointer;
 }
+@media (hover: hover) { .etiquette:not(.choisi):hover { background: var(--jeu-accent); color: var(--jeu-fond); } }
 .etiquette.choisi { background: var(--jeu-encre); color: var(--jeu-fond); }
 /* Le clic sur une carte de régiment (Jérôme, v0.32.2 ; v0.33.0 : les équerres ; labo « Le clic sur un régiment ») : la caméra glisse sur lui, quatre coins d'os se
    referment sur ses hommes, la carte s'allume un instant (inversée) */

@@ -1,5 +1,10 @@
 # Journal des versions
 
+## 0.41.0 — 2026-10-21
+- Un clic sur le nom d'un régiment, sur le champ, le choisit comme sa carte de la rangée (Maj : en ajouter à la sélection)
+- Au labo, un point vert (tranché, en jeu), rouge (à trancher) ou orange (indéfini) devant chaque sujet et chaque groupe
+- Au labo, trois sujets à trancher, quatre propositions chacun (rien n'est encore dans le jeu) : le nom d'un régiment sur le champ (h1 nom, h2 statut, une vraie cible de clic), les toasts (qui recouvrent aujourd'hui la rangée des cartes) et la carte d'ordre de la rangée (hauteur fixe, barre toujours au même endroit, fond différent pour un régiment ébranlé)
+
 ## 0.40.1 — 2026-10-20
 - Au labo, trois sujets pour rendre les actions plus satisfaisantes, à essayer avant d'en retenir une (rien n'est encore dans le jeu) : le clic sur un bouton (rebond, tampon, onde, cran, maintien), un ordre d'un régiment sur un secteur (fanion, onde, réponse des hommes, bannière, réticule) et un coup d'obus (trajectoire, impact en trois temps, onde de choc, terre qui retombe, gel d'image)
 

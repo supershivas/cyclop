@@ -1,7 +1,9 @@
 {
-  "version": "0.40.1",
-  "date": "2026-10-20",
+  "version": "0.41.0",
+  "date": "2026-10-21",
   "changes": [
-    "Au labo, trois nouveaux sujets pour la satisfaction du joueur : le clic sur un bouton, un ordre sur un secteur et un coup d'obus (cinq propositions chacun, rien n'est encore dans le jeu)"
+    "Un clic sur le nom d'un régiment, sur le champ, le choisit (Maj : en ajouter)",
+    "Au labo, un point vert, rouge ou orange devant chaque sujet : tranché, à trancher, indéfini",
+    "Au labo, trois sujets à trancher : le nom d'un régiment sur le champ, les toasts, la carte d'ordre de la rangée (quatre propositions chacun)"
   ]
 }

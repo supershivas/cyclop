@@ -84,3 +84,14 @@
 .labo-genre.is-retire { text-decoration: line-through; opacity: .7; }
 .labo-version.is-new { border-left: 3px solid var(--labo-accent); padding-left: 12px; }
 .labo-index { margin-bottom: 8px; }
+
+/* Les points d'état (sujets, groupes) : la forme porte l'information, la couleur la confirme */
+.labo-point { flex: none; display: inline-block; width: 10px; height: 10px; margin-right: 8px; vertical-align: baseline; background: currentColor; }
+.labo-point.is-vert { color: #2f9e5a; border-radius: 50%; }
+.labo-point.is-rouge { color: #d6403a; border-radius: 1px; }
+.labo-point.is-orange { color: #e68a1f; clip-path: polygon(50% 0, 100% 100%, 0 100%); }
+.labo-head .labo-point { box-shadow: 0 0 0 1.5px #fff; }
+.labo-head .labo-point.is-orange { box-shadow: none; filter: drop-shadow(0 0 1px #fff); }
+.labo-topic-nom, .labo-chip, .labo-group { display: inline-flex; align-items: center; }
+.labo-topic-btn .labo-topic-nom { text-align: left; }
+.labo-stage h3 .labo-point { align-self: center; }
