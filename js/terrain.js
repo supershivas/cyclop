@@ -16,10 +16,10 @@
      nuit elle se fait en lot.
    - Les versions (`versionLigne`, `versionMorceau`) disent au rendu ce qui a
      changé ; le terrain ne connaît pas le rendu. */
-import { hash2 } from './lib/rng.js?v=0.41.1';
-import { CALIBRES } from './data/calibres.js?v=0.41.1';
-import { appliquerFormes } from './formes.js?v=0.41.1';
-import { poserObjets } from './objets.js?v=0.41.1';
+import { hash2 } from './lib/rng.js?v=0.41.2';
+import { CALIBRES } from './data/calibres.js?v=0.41.2';
+import { appliquerFormes } from './formes.js?v=0.41.2';
+import { poserObjets } from './objets.js?v=0.41.2';
 
 export const ETAT = { SEC: 0, HUMIDE: 1, BOUE: 2, EAU: 3, GLACE: 4 };
 export const MORCEAU = 25;             // cases : le côté d'un morceau de maillage (mesuré, rendu logiciel : à 100, la moitié du champ restait dessinée au zoom 4 ; à 25, 6 500 triangles au lieu de 15 600 au zoom 8)
@@ -121,9 +121,19 @@ export const hauteurVueQ = (T, c) => ((T.base[c] + 2) & ~3) + ((T.diff[c] / 2) |
 export const hauteurVueM = (T, c) => hauteurVueQ(T, c) * 0.25;
 export const hauteurM = (T, c) => (T.base[c] + T.diff[c]) * 0.25;
 
+// un voisin (4 cases) plus bas d'un demi-mètre au moins
+function penteSous(T, c) {
+  const h = hauteurQ(T, c) - 2, W = T.W, i = c % W;
+  return (i > 0 && hauteurQ(T, c - 1) <= h) || (i < W - 1 && hauteurQ(T, c + 1) <= h)
+    || (c >= W && hauteurQ(T, c - W) <= h) || (c < T.W * (T.H - 1) && hauteurQ(T, c + W) <= h);
+}
 export function etat(T, c, R, gel = false) {
   const H = R.hydro;
-  if (T.eau[c] > H.eau) return gel ? ETAT.GLACE : ETAT.EAU;
+  if (T.eau[c] > H.eau) {
+    // une pente ne garde pas d'eau : la nappe qui ruisselle dessus la mouille (boue), elle ne la peint pas en eau ; l'eau est dans les creux et sur le plat
+    if (!gel && penteSous(T, c)) return ETAT.BOUE;
+    return gel ? ETAT.GLACE : ETAT.EAU;
+  }
   const m = T.humid[c];
   if (gel) return ETAT.SEC;                     // le sol gelé porte
   return m > H.boue ? ETAT.BOUE : m > H.humide ? ETAT.HUMIDE : ETAT.SEC;

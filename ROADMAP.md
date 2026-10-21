@@ -36,7 +36,7 @@ cercles-régiments par-dessus) et la touche M disparaît (carte toujours visible
 - [x] Lot 1 — le râtelier : trois boutons papier 75 / 155 / 220, touches 1 2 3 (v0.18.1)
 - [x] Lot 2 — haut de l'écran : réglages et carnet en haut à gauche ; pertes des deux armées en feuille de situation, au centre ; carte
   fixe en haut à droite ; montre, lecture / pause / avance rapide (×1, ×2, ×4 par `setTimeScale`, plafonnée par `perf.sim`, retour à ×1
-  sur un assaut, une déroute, un tronçon pris), météo (aujourd'hui et lendemain, `etat.previsions` : pas de météo dans la journée) ;
+  à la nuit (v0.41.2 ; avant : sur un assaut, une déroute, un tronçon pris)), météo (aujourd'hui et lendemain, `etat.previsions` : pas de météo dans la journée) ;
   terrain sous la souris réduit à 2 lignes et une barre de vitesse (v0.19.0)
 - [x] Lot 3 — la rangée des 8 régiments : cartes compactes (numéro + nom, chevrons, barre debout / blessés / tombés en encres papier :
   plein / hachuré / vide + ✕, pas de vert-orange-rouge), flèches si l'écran est étroit ; la carte choisie s'ouvre vers le haut

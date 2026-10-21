@@ -2,12 +2,12 @@
 // `reconstituer` a déjà versé les régiments dissous dans les autres et complété chacun de recrues ; le papier dit ce qui reste de la bataille qui finit, ce que sera chaque régiment
 // (vétérans, recrues, expérience, qui le commande), d'où viennent les hommes ajoutés, et un seul geste : partir pour la suivante. Quatre façons de le dire, sur des données d'exemple
 // qui passent par le vrai `passage` de campagne.js (un registre de dix régiments inspiré d'une bataille 1 jouée sans ordres, dont les deux derniers, décimés, sont mis à 8 et 11 hommes pour qu'une fusion se voie). Rien ici ne lit ni ne modifie une partie.
-import { PALETTE as P } from './palette.js?v=0.41.1';
-import { hash2 } from './lib/rng.js?v=0.41.1';
-import { nouvelleCampagne, passage } from './campagne.js?v=0.41.1';
-import { grade } from './identite.js?v=0.41.1';
-import { SECTEURS } from './data/secteur.js?v=0.41.1';
-import { MISSIONS } from './bataille.js?v=0.41.1';
+import { PALETTE as P } from './palette.js?v=0.41.2';
+import { hash2 } from './lib/rng.js?v=0.41.2';
+import { nouvelleCampagne, passage } from './campagne.js?v=0.41.2';
+import { grade } from './identite.js?v=0.41.2';
+import { SECTEURS } from './data/secteur.js?v=0.41.2';
+import { MISSIONS } from './bataille.js?v=0.41.2';
 
 const el = (tag, css = '', ...kids) => { const e = document.createElement(tag); if (css) e.style.cssText = css; e.append(...kids.flat().filter(k => k != null)); return e; };
 const MONO = 'font:13px/1.35 ui-monospace,monospace;';

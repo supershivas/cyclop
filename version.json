@@ -1,9 +1,7 @@
 {
-  "version": "0.41.1",
+  "version": "0.41.2",
   "date": "2026-10-21",
   "changes": [
-    "Le nom d'un régiment sur le champ devient un cartouche cliquable (carré orange s'il est ébranlé, rouge en déroute) ; sa carte de la rangée a une hauteur fixe et un fond hachuré quand il est ébranlé",
-    "Les messages s'affichent sous les pertes, au centre, au lieu de recouvrir les cartes des régiments",
-    "Un ordre en terrain libre plante un fanion et les hommes lèvent un « ! », un obus qui tombe laisse un éclair et un anneau de poussière, un bouton rebondit quand on le clique"
+    "La vitesse du temps choisie (×2, ×4) est gardée jusqu'à la nuit : un assaut, une prise ou une déroute ne la ramènent plus à ×1"
   ]
 }
