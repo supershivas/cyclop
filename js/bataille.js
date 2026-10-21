@@ -14,22 +14,23 @@
    La sauvegarde (photo) garde la graine, la liste compacte des impacts, l'état
    de la foule et les petites couches de logique ; jamais le relief : il se
    rejoue depuis la graine et les impacts (rejouerTerrain). */
-import { createRng, hash2 } from './lib/rng.js?v=0.47.1';
-import { impact, hydroLignes, etat as etatCase, vitesseEtat, vitesseCase, ETAT } from './terrain.js?v=0.47.1';
-import { creerArmee, ajouterSoldat, construireGrille, pasArmee, tuerDans, effrayer, compacter, photoArmee, restaurerArmee, b64, deB64, DENSITE, place } from './army.js?v=0.47.1';
-import { ligneSous } from './tranchees.js?v=0.47.1';
-import { terrainDuSecteur } from './secteur-terrain.js?v=0.47.1';
-import { calculerCouts, creerCacheChamps, dimensionsCouts, BLOC } from './champs.js?v=0.47.1';
-import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.47.1';
-import { AVION, MITRAILLAGE } from './data/mitraillage.js?v=0.47.1';
-import { CHAR, CHAR_RECHARGE } from './data/chars.js?v=0.47.1';
-import { refusChar, lancerChar, degatsChars, avancerChars } from './chars.js?v=0.47.1';
-import { METEO, TRANSITIONS, PREVISION_JUSTE } from './data/meteo.js?v=0.47.1';
-import { SECTEURS } from './data/secteur.js?v=0.47.1';
-import { REGIMENTS } from './data/lexique.js?v=0.47.1';
-import { STANCES, STANCE_DEFAUT } from './data/stances.js?v=0.47.1';
-import { grade } from './identite.js?v=0.47.1';
-import { corvees, rejouerTravaux } from './nuit.js?v=0.47.1';
+import { createRng, hash2 } from './lib/rng.js?v=0.48.0';
+import { impact, hydroLignes, etat as etatCase, vitesseEtat, vitesseCase, ETAT } from './terrain.js?v=0.48.0';
+import { creerArmee, ajouterSoldat, construireGrille, pasArmee, tuerDans, effrayer, compacter, photoArmee, restaurerArmee, b64, deB64, DENSITE, place } from './army.js?v=0.48.0';
+import { ligneSous } from './tranchees.js?v=0.48.0';
+import { terrainDuSecteur } from './secteur-terrain.js?v=0.48.0';
+import { detruirePont } from './eaux.js?v=0.48.0';
+import { calculerCouts, creerCacheChamps, dimensionsCouts, BLOC } from './champs.js?v=0.48.0';
+import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.48.0';
+import { AVION, MITRAILLAGE } from './data/mitraillage.js?v=0.48.0';
+import { CHAR, CHAR_RECHARGE } from './data/chars.js?v=0.48.0';
+import { refusChar, lancerChar, degatsChars, avancerChars } from './chars.js?v=0.48.0';
+import { METEO, TRANSITIONS, PREVISION_JUSTE } from './data/meteo.js?v=0.48.0';
+import { SECTEURS } from './data/secteur.js?v=0.48.0';
+import { REGIMENTS } from './data/lexique.js?v=0.48.0';
+import { STANCES, STANCE_DEFAUT } from './data/stances.js?v=0.48.0';
+import { grade } from './identite.js?v=0.48.0';
+import { corvees, rejouerTravaux } from './nuit.js?v=0.48.0';
 
 export const PAS = 1 / 30;                 // s de jeu par pas
 export const NOUS = 0, EUX = 1;
@@ -112,6 +113,7 @@ export function nouvelleBataille(graine, R, opts = {}) {
     barrages: [],
     chars: [],                          // les chars d'assaut en route ou en épave (v0.47.0) : voir chars.js
     mitraillages: [],                   // les passes d'avion en attente (v0.46.0) : { camp, x, y, prochain }
+    pontsRompus: [],                    // les ponts tombés sous un char (v0.47.2) : [numéro de l'ouvrage, jour, pas] ; ceux qu'un obus coupe sont rejoués avec les impacts
     ia: { barrage: R.ia.barrage * 0.5, offensive: R.ia.offensive },
     temps: 0,                           // s de jeu écoulées, nuits non comptées
     rng: 0,
@@ -225,6 +227,22 @@ function monter(etat, R) {
 
 /* Marcher : les régiments choisis prennent place côte à côte autour de (x, y). L'ordre se prépare à sec (`planMarche` : rien n'est
    changé, c'est ce que le dessin montre avant le clic, v0.21.0), puis `ordonnerMarche` l'applique. */
+/* Les chemins vers (x, y) du centre de chacun des régiments : { reg, pts : [[x, y]…], atteint } (le champ de coûts du point visé, le même que celui des hommes ;
+   rien n'est changé dans la partie : le cache des champs ne garde que ce qu'on peut recalculer). */
+export function cheminsVers(B, regs, x, y) {
+  const A = B.armee, F = B.champs.champ(B.couts, B.etat.couts.version, x, y);
+  return regs.map(r => {
+    let n = 0, cx = 0, cy = 0;
+    for (let i = 0; i < A.n; i++) if (A.reg[i] === r.id) { n++; cx += A.x[i]; cy += A.y[i]; }
+    return { reg: r.id, ...F.chemin(n ? cx / n : r.ordre.x, n ? cy / n : r.ordre.y) };
+  });
+}
+// la droite de (x1, y1) à (x2, y2) coupe-t-elle de l'eau profonde ?
+function traverseEau(T, x1, y1, x2, y2) {
+  const n = Math.max(1, Math.ceil(Math.hypot(x2 - x1, y2 - y1) / 2));
+  for (let k = 0; k <= n; k++) { const i = Math.floor(x1 + (x2 - x1) * k / n), j = Math.floor(y1 + (y2 - y1) * k / n); if (i >= 0 && j >= 0 && i < T.W && j < T.H && T.profond[j * T.W + i]) return true; }
+  return false;
+}
 function planMarche(B, ids, x, y, forme = 'bloc', camp = NOUS) {
   const { etat, R } = B;
   const S = secteurDuJeu(etat);
@@ -241,6 +259,18 @@ function planMarche(B, ids, x, y, forme = 'bloc', camp = NOUS) {
     regs = regs.filter(r => !refuse.includes(r));
     raison = refuse.map(r => `${r.nom} ${r.deroute ? 'est en déroute' : r.refus === etat.jour ? 'refuse de monter : il tiendra sa tranchée, rien de plus' : 'est ébranlé : il ne sortira pas'}`).join(' ; ') + '.';
     if (!regs.length) return { refus: raison };
+  }
+  // le chemin de chacun (Jérôme, v0.47.2 : les régiments tiennent compte des ponts, le chemin se voit avant le clic) : le champ de coûts vers le point visé, du centre du régiment jusqu'à lui ;
+  // de l'eau profonde qui barre la route, sans pont, est dite à voix haute
+  const T = B.terrain;
+  if (T.profond[(Math.floor(y)) * T.W + Math.floor(x)]) return { refus: 'On n\'entre pas dans l\'eau profonde.' };
+  let chemins = cheminsVers(B, regs, x, y);
+  const barres = chemins.filter(c => !c.atteint && traverseEau(T, c.pts[0][0], c.pts[0][1], x, y)).map(c => c.reg);
+  if (barres.length) {
+    const noms = barres.map(id => etat.regiments[id].nom).join(', '), barre = `${noms} : aucun passage, de l'eau profonde barre la route (il faut un pont)`;
+    raison = raison ? `${raison} ; ${barre}` : barre;
+    regs = regs.filter(r => !barres.includes(r.id)); chemins = chemins.filter(c => !barres.includes(c.reg));
+    if (!regs.length) return { refus: raison, chemins: cheminsVers(B, barres.map(id => etat.regiments[id]), x, y) };
   }
   const largeurReg = S.largeur / S.regiments;
   regs.sort((a, b) => a.ordre.x - b.ordre.x);
@@ -260,7 +290,7 @@ function planMarche(B, ids, x, y, forme = 'bloc', camp = NOUS) {
     });
     // (la ligne et les tronçons visés : l'ordre clignote, le carnet le dit)
     const ligne = B.lignes.indexOf(L);
-    return { regs, raison, items, tranchee: true, ligne, troncons: tronconsDeLigne(B, ligne, debut, fin) };
+    return { regs, raison, items, chemins, tranchee: true, ligne, troncons: tronconsDeLigne(B, ligne, debut, fin) };
   }
   const largeurs = regs.map(r => formation(r, 0, 0, largeurReg, R, forme).cols * R.foule.espacement + 6);
   const total = largeurs.reduce((s, w) => s + w, 0);
@@ -269,7 +299,7 @@ function planMarche(B, ids, x, y, forme = 'bloc', camp = NOUS) {
     items.push({ r, ordre: formation(r, cx + largeurs[k] / 2, Math.max(Z.y0 + 4, Math.min(Z.y1 - 4, y)), largeurReg, R, forme) });
     cx += largeurs[k];
   });
-  return { regs, raison, items, tranchee: false };
+  return { regs, raison, items, chemins, tranchee: false };
 }
 export function ordonnerMarche(B, ids, x, y, forme, camp = NOUS) {
   const p = planMarche(B, ids, x, y, forme, camp);
@@ -283,8 +313,8 @@ export function ordonnerMarche(B, ids, x, y, forme, camp = NOUS) {
    `refus` aussi quand certains seulement n'obéiraient pas. */
 export function peutOrdonner(B, ids, x, y, forme, camp = NOUS) {
   const p = planMarche(B, ids, x, y, forme, camp);
-  if (p.refus) return { refus: p.refus };
-  const out = { ok: true, regiments: p.regs.map(r => r.id), tranchee: p.tranchee };
+  if (p.refus) return { refus: p.refus, chemins: p.chemins };
+  const out = { ok: true, chemins: p.chemins, regiments: p.regs.map(r => r.id), tranchee: p.tranchee };
   if (p.raison) out.refus = p.raison;
   if (p.tranchee) { out.troncons = p.troncons; out.ligne = p.ligne; }
   else out.emprises = p.items.map(({ r, ordre }) => ({ x: ordre.x, y: ordre.y, l: ordre.cols * ordre.esp, p: Math.ceil(Math.max(1, r.effectif) / ordre.cols) * ordre.esp }));
@@ -832,7 +862,9 @@ function tomber(B, x, y, cal, ctx, gel) {
   const { etat, terrain: T, R } = B;
   const n = etat.impacts.length;
   etat.impacts.push([etat.jour, etat.tickJour, Math.round(x * 10), Math.round(y * 10), NOMS_CALIBRES.indexOf(cal)]);
+  const coupes = T.versionPonts;
   const { rayon } = impact(T, x, y, cal, R, n, gel);
+  if (T.versionPonts !== coupes) B.evenements.push({ type: 'pont-coupe', x, y });      // un obus a coupé un pont (le carnet le dit)
   tuerDans(B.armee, x, y, rayon, ctx, CALIBRES[cal].letal);
   if (etat.chars.length) degatsChars(B, x, y, cal);
   // un gros obus tombé dans un tronçon crève un de ses abris
@@ -858,7 +890,8 @@ function calculerCoutsBande(B, b0, b1, gel) {
   // calculerCouts travaille sur tout le terrain : on lui passe une vue des rangées de la bande
   const { bw } = dimensionsCouts(T);
   const H = Math.min(T.H, b1 * BLOC) - b0 * BLOC;
-  const vue = { ...T, H, base: T.base.subarray(b0 * BLOC * T.W), diff: T.diff.subarray(b0 * BLOC * T.W), eau: T.eau.subarray(b0 * BLOC * T.W), humid: T.humid.subarray(b0 * BLOC * T.W), troncon: T.troncon ? T.troncon.subarray(b0 * BLOC * T.W) : null };
+  const vue = { ...T, H, base: T.base.subarray(b0 * BLOC * T.W), diff: T.diff.subarray(b0 * BLOC * T.W), eau: T.eau.subarray(b0 * BLOC * T.W), humid: T.humid.subarray(b0 * BLOC * T.W), troncon: T.troncon ? T.troncon.subarray(b0 * BLOC * T.W) : null,
+    profond: T.profond.subarray(b0 * BLOC * T.W), pont: T.pont.subarray(b0 * BLOC * T.W), pontH: T.pontH.subarray(b0 * BLOC * T.W) };      // (l'eau profonde et les ponts aussi : sans eux, une bande refaite lisait d'autres rangées, v0.47.2)
   calculerCouts(vue, R, B.coutsNeufs.subarray(b0 * bw, b1 * bw), gel);
 }
 
@@ -1025,7 +1058,7 @@ export function* etapesRestaurer(p, R) {
   etat.parRegiment ??= Math.floor(etat.parCamp / secteurDuJeu(etat).regiments);
   etat.travaux ??= []; etat.tombes ??= []; etat.evacues ??= []; etat.nuits ??= [];   // (avant la v0.6.0 : pas de corvées)
   for (const reg of etat.regiments) { reg.moral ??= R.moral.depart; reg.deroute ??= false; reg.vivres ??= R.nuit.vivres; reg.stance ??= STANCE_DEFAUT; }   // (avant la v0.5.0 : pas de moral ; avant la v0.36.0 : pas de posture)
-  etat.chars ??= []; etat.mitraillages ??= [];   // (avant la v0.46.0 : pas d'avions)
+  etat.chars ??= []; etat.mitraillages ??= []; etat.pontsRompus ??= [];   // (avant la v0.46.0 : pas d'avions)
   etat.deux ??= false; etat.batteriesEux ??= Object.fromEntries(NOMS_CALIBRES.map(c => [c, 0]));
   etat.abris ??= {};   // (avant la v0.11.0 : ni abris ; ni vivres)
   etat.troncons ??= []; etat.melee ??= etat.troncons.map(() => 0); etat.prises ??= etat.pertesJour.map(() => [0, 0]);   // (avant la v0.4.0 : pas de tranchées)
@@ -1057,7 +1090,8 @@ export function* etapesRejouer(B) {
   const tpj = ticksParJour(R);
   let k = 0, fait = 0;
   const total = Math.max(1, (etat.jour - 1) * tpj + etat.tickJour);      // (les pas à rejouer : la part faite se lit dessus)
-  const imp = etat.impacts;
+  const imp = etat.impacts, rompus = etat.pontsRompus ?? [];
+  let rp = 0;
   for (let jour = 1; jour <= etat.jour; jour++) {
     const fin = jour < etat.jour ? tpj : etat.tickJour;
     const m = METEO[etat.meteo[jour - 1]];
@@ -1069,6 +1103,7 @@ export function* etapesRejouer(B) {
         impact(T, x10 / 10, y10 / 10, NOMS_CALIBRES[ci], R, k, !!m.gel);
         k++;
       }
+      while (rp < rompus.length && rompus[rp][1] === jour && rompus[rp][2] === t) { const P = T.pontsListe[rompus[rp][0]]; if (P) detruirePont(T, P.cases[0] % T.W, (P.cases[0] / T.W) | 0, 0); rp++; }      // (un pont tombé sous un char)
       avancerEau(B, t);
       if (++fait % 300 === 0) yield fait / total;
     }

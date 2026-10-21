@@ -11,7 +11,7 @@
      de Dial : des files par coût entier), puis une direction par carré.
    - Les champs sont gardés en cache (au plus `foule.champsMax`), par carré visé
      et version des coûts. */
-import { hauteurQ, vitesseCase } from './terrain.js?v=0.47.1';
+import { hauteurQ, vitesseCase } from './terrain.js?v=0.48.0';
 
 export const BLOC = 4;   // m
 const DIRS = [[1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [1, -1], [-1, 1], [-1, -1]];
@@ -29,7 +29,7 @@ export function calculerCouts(T, R, couts, gel = false) {
         const c = j * T.W + i, h = hauteurQ(T, c);
         lent += 1 / vitesseCase(T, c, R, gel); n++; if (T.profond[c]) prof++; else if (T.pont[c]) pont++;
         if (T.troncon && T.troncon[c] !== -1 && T.diff[c] <= -2) creux++;       // une tranchée ou un boyau encore creusés : un abri
-        if (h < hmin) hmin = h; if (h > hmax) hmax = h;
+        if (!T.profond[c]) { if (h < hmin) hmin = h; if (h > hmax) hmax = h; }       // (le fond d'une eau profonde ne fait pas un mur : une rive ou un tablier au bord de l'eau reste praticable)
       }
     }
     // un carré où l'on descend de plus de deux mètres est un trou dont on ne sort pas
@@ -102,6 +102,18 @@ export function creerCacheChamps(T, R) {
     const dir = calculer(couts, cible);
     ch = {
       dir,
+      // le chemin que suivrait un régiment parti de (px, py) : les centres des carrés, de proche en proche, jusqu'au but (`atteint`) ou le bout du champ (aucun passage)
+      chemin(px, py) {
+        const pts = [[px, py]];
+        let c = Math.max(0, Math.min(bh - 1, (py / BLOC) | 0)) * bw + Math.max(0, Math.min(bw - 1, (px / BLOC) | 0));
+        for (let n = 0, borne = 2 * (bw + bh); n < borne; n++) {
+          const m = dir[c];
+          if (m < 0) break;
+          const cx = c % bw + DIRS[m][0], cy = ((c / bw) | 0) + DIRS[m][1];
+          c = cy * bw + cx; pts.push([(cx + 0.5) * BLOC, (cy + 0.5) * BLOC]);
+        }
+        return { pts, atteint: c === cible };
+      },
       // la direction à suivre depuis (x, y), ou null (le but, ou aucun chemin)
       dirA(px, py) {
         const m = dir[((py / BLOC) | 0) * bw + ((px / BLOC) | 0)];

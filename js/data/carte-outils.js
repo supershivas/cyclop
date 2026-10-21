@@ -1,6 +1,8 @@
 // Les outils de l'éditeur de carte et les champs que chacun règle, avec un NOM et une DESCRIPTION pour chaque chiffre (l'atelier les affiche tels quels : Jérôme, « je ne comprends pas
 // les chiffres de l'éditeur »). `genre` : le type de la forme (`f` d'une retouche de relief, `o` d'un objet) ; `segment` : posée d'un point à un autre ; `champs` : ce qui se règle.
 // `icone` : un tracé de 24 × 24 (au trait). Contenu en données (conventions, section 12) : ajouter un outil n'ajoute aucune ligne de code à l'éditeur.
+import { PONTS_JEU, PONT_DEFAUT } from './ponts.js?v=0.48.0';
+
 export const GROUPES_OUTILS = [
   { id: 'edition', titre: 'Édition' },
   { id: 'relief', titre: 'Relief' },
@@ -35,7 +37,7 @@ export const OUTILS = {
     aide: 'Un clic creuse un lac : une eau profonde, à plat, qu’on ne traverse pas. Gardez-le loin des tranchées (la bande de chaque camp), le contrôle le dit.' },
   fleuve: { groupe: 'eau', nom: 'Fleuve', genre: 'fleuve', type: 'objet', segment: true, champs: ['r'], icone: 'M2 8c4-4 6 4 10 0s6 4 10 0 M2 16c4-4 6 4 10 0s6 4 10 0',
     aide: 'Glissez d’un point à un autre : un fleuve de eau profonde le long du trait, qu’on ne traverse pas. Il peut couper le no man’s land, mais pas les tranchées.' },
-  pont: { groupe: 'eau', nom: 'Pont', genre: 'pont', type: 'objet', segment: true, champs: ['r'], icone: 'M2 9h20 M2 15c4-6 6-6 10-6s6 0 10 6 M6 15v4 M18 15v4',
+  pont: { groupe: 'eau', nom: 'Pont', genre: 'pont', type: 'objet', segment: true, champs: ['r', 'type'], icone: 'M2 9h20 M2 15c4-6 6-6 10-6s6 0 10 6 M6 15v4 M18 15v4',
     aide: 'Glissez d’une rive à l’autre : un tablier de planches sur l’eau, qu’on traverse à pied sec. Un obus tombé dessus le coupe. Sans eau sous le trait, rien ne se pose.' },
 };
 
@@ -63,6 +65,9 @@ export const CHAMPS = {
       plateau: { nom: 'Niveau du plateau', unite: 'm', min: 0, max: 15, desc: 'Hauteur du sol aplani, en mètres au-dessus du zéro du secteur : 3 m est le niveau moyen du terrain. Au survol, la carte donne la hauteur de chaque point.' },
     } },
 };
+// Un choix dans une liste (le type d'un pont) : `liste` = [{ id, nom, desc }] ; la valeur est l'identifiant (v0.47.2)
+CHAMPS.type = { nom: 'Type d\u2019ouvrage', defaut: PONT_DEFAUT, desc: 'L\u2019ouvrage dessiné sur l\u2019eau. Certains portent un char d\u2019assaut (pierre, métal, chevalets), les autres non : un char qui s\u2019y engage fait tomber le pont et s\u2019enlise.',
+  liste: Object.entries(PONTS_JEU).map(([id, P]) => ({ id, nom: `${P.nom}${P.char ? ' (porte un char)' : ''}`, desc: P.desc })) };
 export const champ = (nom, genre) => { const c = CHAMPS[nom]; return { ...c, ...(c.parGenre?.[genre] || {}) }; };
 
 // Ce que dit la carte d'une case survolée (en mots : herbe 0 à 3)

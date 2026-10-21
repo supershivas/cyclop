@@ -1,5 +1,12 @@
 # Journal des versions
 
+## 0.48.0 — 2026-10-21
+- Sept ponts en jeu (passerelle de planches, pierre à trois arches, dos d'âne, chevalets, poutre Warren, suspendu, cordes), au choix dans l'éditeur de carte ; l'eau passe dessous ; pierre, métal et chevalets portent un char, les autres cèdent sous lui
+- Les régiments tiennent compte des ponts : le chemin (qui contourne l'eau) s'affiche en pointillés avant le clic, un ordre sans passage est refusé à voix haute
+- Un régiment en route n'a plus le statut « Tient » : « En marche », « En mouvement », « Attaque »
+- Les soldats avancent de face, plus à reculons
+- La touche I ouvre la fiche de l'homme (ou du régiment) sous le pointeur, un des nôtres compris
+
 ## 0.47.1 — 2026-10-21
 - Un fleuve qui touche le bord de la carte continue en méandres dans le faux terrain
 - Les faces nord du terrain (vues quand on tourne la caméra) ont la couleur du sol, plus celle du fond ; les parois d'eau sont de l'eau

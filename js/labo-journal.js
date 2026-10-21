@@ -2,6 +2,9 @@
 // Une entrée par version qui touche au labo, la plus récente en haut. `ref` : « sujet-Lettre » (la lettre est celle de la variante,
 // A étant l'actuelle). À chaque changement du labo : une entrée ici, avec `depuis` sur les variantes ajoutées ou changées (labo.js).
 export const JOURNAL = [
+  { version: '0.47.2', date: '2026-10-21', items: [
+    { genre: 'mis-a-jour', texte: 'Les ponts : sept ouvrages (planches, pierre à trois arches, dos d\'âne, chevalets, Warren, suspendu, cordes) sont retenus et en jeu : on les choisit dans l\'éditeur de carte ; les bateaux, les poutres sur piles et la bascule restent à trancher', ref: 'ponts-A' },
+  ] },
   { version: '0.47.1', date: '2026-10-21', items: [
     { genre: 'nouveau', texte: 'Les ponts : dix ouvrages en volumes (passerelle de planches, pierre à trois arches, dos d\'âne, chevalets, poutre Warren, suspendu, bateaux, poutres sur piles, bascule, cordes) au-dessus d\'un fleuve dont l\'eau passe dessous, à la caméra libre, contre le tablier du jeu', ref: 'ponts-A' },
   ] },

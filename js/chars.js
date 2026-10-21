@@ -3,9 +3,12 @@
    ligne vers (tx, ty) à la vitesse de son modèle, ralentie par un cratère (la moitié de ce qu'il franchit), arrêtée par un cratère plus profond ou par l'eau
    profonde (`enlise` : il reste là et tire) ; il tire sur l'autre camp à portée ; un obus tombé près de lui l'abîme (`degatsChars`), jusqu'à l'épave (`detruit`).
    Les tranchées se franchissent (elles font 1,5 m : son modèle les passe). Les ordres rendent { refus } comme les barrages. */
-import { CHARS, CHAR_PAR_DEFAUT, CHAR_RECHARGE, CHAR_DEPART, CHAR_OBUS } from './data/chars.js?v=0.47.1';
-import { CALIBRES } from './data/calibres.js?v=0.47.1';
-import { effrayer } from './army.js?v=0.47.1';
+import { CHARS, CHAR_PAR_DEFAUT, CHAR_RECHARGE, CHAR_DEPART, CHAR_OBUS } from './data/chars.js?v=0.48.0';
+import { CALIBRES } from './data/calibres.js?v=0.48.0';
+import { effrayer } from './army.js?v=0.48.0';
+import { detruirePont } from './eaux.js?v=0.48.0';
+import { toucher } from './terrain.js?v=0.48.0';
+import { PONTS_JEU, typePont } from './data/ponts.js?v=0.48.0';
 
 /* Peut-on lancer un char de (camp) vers (x, y) ? `depart` : { x, y } d'où il partirait. */
 export function refusChar(etat, depart, x, y) {
@@ -38,6 +41,13 @@ export function avancerChars(B, ctx, rng) {
   for (const c of etat.chars) {
     if (c.etat === 'detruit') continue;
     const M = CHARS[c.modele];
+    // un pont qui ne porte pas un char (une passerelle, un câble, des cordes : `data/ponts.js`) cède sous lui : l'ouvrage tombe, le char s'enlise dans l'eau (v0.47.2)
+    const sous = c.x >= 0 && c.y >= 0 && c.x < T.W && c.y < T.H ? T.pont[Math.floor(c.y) * T.W + Math.floor(c.x)] : 0;
+    if (sous && c.etat === 'avance' && !PONTS_JEU[typePont(T.pontsListe[sous - 1].type)].char) {
+      etat.pontsRompus.push([sous - 1, etat.jour, etat.tickJour]);
+      for (const P of detruirePont(T, Math.floor(c.x), Math.floor(c.y), 0)) { for (const k of P.cases) toucher(T, k % T.W, (k / T.W) | 0); B.evenements.push({ type: 'pont-rompu', x: c.x, y: c.y, camp: c.camp }); }
+      c.etat = 'enlise'; c.v = 0;
+    }
     if (c.etat === 'avance') {
       const dx = c.tx - c.x, dy = c.ty - c.y, d = Math.hypot(dx, dy);
       if (d < 1.5) { c.etat = 'arrive'; c.v = 0; B.evenements.push({ type: 'char-arrive', x: c.x, y: c.y, camp: c.camp }); }

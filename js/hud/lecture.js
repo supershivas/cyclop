@@ -1,11 +1,25 @@
 // Lire la bataille en mots : qui est un homme, ce qu'il est devenu, ce que compte un régiment. Des fonctions
 // qui prennent la bataille `B` et ne changent rien (aucun DOM) ; main.js et la fiche s'en servent.
-import { NOUS, arriereDe, numeroCampagne, moralEnMots } from '../bataille.js?v=0.47.1';
-import { legere } from '../army.js?v=0.47.1';
-import { identite, prochainGrade } from '../identite.js?v=0.47.1';
+import { NOUS, arriereDe, numeroCampagne, moralEnMots, actionDe } from '../bataille.js?v=0.48.0';
+import { legere } from '../army.js?v=0.48.0';
+import { identite, prochainGrade } from '../identite.js?v=0.48.0';
 
 export const majuscule = s => s[0].toUpperCase() + s.slice(1);
 // Le moral d'un régiment en trois niveaux, pour l'interface (v0.41.3) : « tient » (tient, tient bon), « ebranle » (ébranlé, au bord de la déroute), « deroute »
+// Le statut d'un régiment qui tient son moral (Jérôme, v0.47.2 : un régiment à qui l'on ordonne de marcher n'a plus le statut « Tient ») : « Attaque » (il va vers une tranchée d'en face ou l'attaque),
+// « En marche » (vers une tranchée à nous), « En mouvement » (en terrain libre, ses hommes marchent : 0,35 m/s en moyenne), sinon « Tient ». Le moral prime : l'appelant garde « Ébranlé » et « En déroute ».
+export function statutOrdre(B, reg) {
+  if (!reg.effectif || reg.deroute) return 'Tient';
+  const a = actionDe(B, reg);
+  if (a.startsWith('attaque') || a.startsWith('marche à l\'attaque')) return 'Attaque';
+  if (a.startsWith('marche')) return 'En marche';
+  if (a.startsWith('en terrain libre')) {
+    const A = B.armee; let n = 0, v = 0;
+    for (let i = 0; i < A.n; i++) if (A.reg[i] === reg.id) { n++; v += Math.hypot(A.vx[i], A.vy[i]); }
+    if (n && v / n > 0.35) return 'En mouvement';
+  }
+  return 'Tient';
+}
 export function niveauMoral(reg, R) {
   const m = moralEnMots(reg, R);
   return m === 'en déroute' ? 'deroute' : m.startsWith('tient') ? 'tient' : 'ebranle';

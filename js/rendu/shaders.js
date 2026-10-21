@@ -116,6 +116,9 @@ export const soldatMat = {
             p.y = 1.3 + d.y * cos(a) - d.z * sin(a);
             p.z = d.y * sin(a) + d.z * cos(a);
           }
+        }
+        // le cap (aTir.y) : vers sa cible quand il tire, sinon dans le sens où il marche (Jérôme, v0.47.2 : « les soldats avancent en arrière ») ; sa pose seulement
+        if (abs(aTir.y) > 0.001 && !(aPart > 0.5 && aPart < 1.5)) {
           float c = cos(aTir.y), s = sin(aTir.y);
           p.xz = vec2(p.x * c + p.z * s, -p.x * s + p.z * c);
         }

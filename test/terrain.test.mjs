@@ -334,26 +334,50 @@ test('le contrôle refuse un lac ou un fleuve sur les tranchées, pas dans le no
   assert.ok(validerSecteur({ ...S, objets: [{ o: 'fleuve', x: 0, y: e0 - 3, x2: 400, y2: e0 + 3, r: 6 }] }).some(t => /d'en face/.test(t)));
 });
 
-group('atelier — les ponts (v0.44.0)');
-test('un pont rend l\'eau praticable sur son tablier, le tablier est sec, un obus le coupe, un trait sans eau ne pose rien', async () => {
+group('atelier — les ponts (v0.44.0, v0.47.2)');
+test('un pont rend l\'eau praticable sous son tablier sans changer le sol, le tablier part de la rive la plus haute, un obus coupe l\'ouvrage entier, un trait sans eau ne pose rien', async () => {
   const { calculerCouts, dimensionsCouts } = await import('../js/champs.js');
-  const { vitesseCase, impact } = await import('../js/terrain.js');
+  const { vitesseCase, impact, hauteurQ } = await import('../js/terrain.js');
   const { couleurCase } = await import('../js/apparence.js');
-  const S = { largeur: 120, hauteur: 100, arbres: 0, objets: [{ o: 'fleuve', x: -10, y: 50, x2: 130, y2: 50, r: 6 }, { o: 'pont', x: 60, y: 35, x2: 60, y2: 65, r: 3 }, { o: 'pont', x: 20, y: 5, x2: 20, y2: 15, r: 3 }] };
-  const T = creerTerrain(3, S, R), c = j => j * 120 + 60;
-  assert.equal(T.profond[c(50)], 0, 'le tablier n\'est pas profond'); assert.equal(T.pont[c(50)], 1);
+  const S = { largeur: 120, hauteur: 100, arbres: 0, objets: [{ o: 'fleuve', x: -10, y: 50, x2: 130, y2: 50, r: 6 }, { o: 'pont', x: 60, y: 35, x2: 60, y2: 65, r: 3, type: 'arches' }, { o: 'pont', x: 20, y: 5, x2: 20, y2: 15, r: 3 }] };
+  const T = creerTerrain(3, S, R), sans = creerTerrain(3, { ...S, objets: S.objets.slice(0, 1) }, R), c = j => j * 120 + 60;
+  assert.equal(T.pontsListe.length, 1, 'un seul ouvrage : l\'autre n\'a pas d\'eau dessous'); assert.equal(T.pontsListe[0].type, 'arches');
+  assert.equal(T.profond[c(50)], 0, 'sous le tablier, l\'eau n\'est plus profonde'); assert.equal(T.pont[c(50)], 1); assert.equal(T.pontEau[c(50)], 1);
+  assert.equal(T.base[c(50)], sans.base[c(50)], 'le sol est celui d\'avant : l\'eau passe dessous');
   assert.equal(T.profond[50 * 120 + 70], 1, 'à côté, l\'eau');
+  const rive = Math.max(...[sans.base[c(35)], sans.base[c(65)], sans.base[c(34)], sans.base[c(66)]]);
+  assert.ok(T.pontH[c(50)] >= rive - 3, 'le tablier part de la hauteur de la rive'); assert.ok(T.pontH[c(50)] >= T.base[c(50)] + 4, 'au moins un mètre au-dessus de l\'eau');
+  assert.equal(hauteurQ(T, c(50)), T.pontH[c(50)]);
   assert.equal(etat(T, c(50), R), ETAT.SEC); assert.ok(vitesseCase(T, c(50), R) > 0.9, 'à pied sec, vitesse normale');
-  assert.ok(T.base[c(50)] >= T.base[50 * 120 + 70] + 4, 'au moins un mètre au-dessus de l\'eau');
-  assert.equal(T.pont.reduce((s, v) => s + v, 0), 72, 'le tablier couvre la largeur du fleuve (12 m) sur 6 m');
-  const { bw, bh } = dimensionsCouts(T), couts = new Uint8Array(bw * bh); calculerCouts(T, R, couts);
+  const { bw } = dimensionsCouts(T), couts = new Uint8Array(bw * Math.ceil(100 / 4)); calculerCouts(T, R, couts);
   assert.ok(couts[Math.floor(50 / 4) * bw + 15] > 0, 'le carré du pont est praticable'); assert.equal(couts[Math.floor(50 / 4) * bw + 25], 0, 'le fleuve ne l\'est pas');
-  assert.notEqual(couleurCase(T, 60, 50, R), couleurCase(T, 70, 50, R), 'les planches se voient');
-  // un obus de 155 sur le tablier le coupe : les cases retombent à l'eau, au niveau d'avant
-  const niveau = T.ponts.get(c(50));
+  // un obus de 155 sur le tablier coupe l'ouvrage entier : l'eau redevient profonde, le tablier disparaît
   impact(T, 60.5, 50.5, '155', R, 1);
-  assert.equal(T.pont[c(50)], 0); assert.equal(T.profond[c(50)], 1); assert.equal(T.base[c(50)], niveau);
+  assert.equal(T.pontsListe[0].detruit, true); assert.equal(T.pont[c(50)], 0); assert.equal(T.profond[c(50)], 1); assert.equal(T.pont[c(40)], 0, 'tout l\'ouvrage, pas seulement le point touché');
+  assert.equal(hauteurQ(T, c(50)), T.base[c(50)] + T.diff[c(50)]);
   // un pont posé sans eau dessous ne change rien
-  const nu = creerTerrain(3, { ...S, objets: [{ o: 'pont', x: 20, y: 5, x2: 20, y2: 15, r: 3 }] }, R);
-  assert.equal(nu.pont.reduce((s, v) => s + v, 0), 0); assert.equal(nu.ponts.size, 0);
+  const nu = creerTerrain(3, { ...S, objets: [S.objets[2]] }, R);
+  assert.equal(nu.pont.reduce((s, v) => s + v, 0), 0); assert.equal(nu.pontsListe.length, 0);
+});
+
+group('les régiments et les ponts (v0.47.2)');
+test('un ordre au-delà d\'un fleuve sans pont est refusé à voix haute, avec un pont le chemin le contourne et la route passe par le tablier ; un char sur un pont qui ne le porte pas le fait tomber', async () => {
+  const { version } = JSON.parse(readFileSync(new URL('../version.json', import.meta.url)));
+  const { SECTEURS: dedans } = await import(`../js/data/secteur.js?v=${version}`);
+  const { nouvelleBataille, peutOrdonner, ordonnerMarche, zone, avancer, ordonnerBarrage } = await import('../js/bataille.js');
+  const S = dedans.essai, m = (S.tranchees.lignes.nous[0] + S.tranchees.lignes.eux[0]) / 2;
+  const riviere = { o: 'fleuve', x: -300, y: m, x2: 750, y2: m, r: 6 };
+  try {
+    dedans.essai = { ...S, objets: [riviere] };
+    const B = nouvelleBataille(7, R, { soldats: 200, jours: 3 }), z = zone(B), but = [z.x0 + 100, z.y0 + 60];
+    const p = peutOrdonner(B, [0, 1], ...but);
+    assert.ok(p.refus && /aucun passage/.test(p.refus), 'sans pont : aucun passage'); assert.ok(p.chemins[0].pts.length >= 1);
+    assert.ok(ordonnerMarche(B, [0, 1], ...but).refus, 'l\'ordre lui-même est refusé');
+    dedans.essai = { ...S, objets: [riviere, { o: 'pont', x: 300, y: m + 12, x2: 300, y2: m - 12, r: 3, type: 'arches' }] };
+    const C = nouvelleBataille(7, R, { soldats: 200, jours: 3 }), q = peutOrdonner(C, [0, 1], ...but);
+    assert.ok(q.ok, 'avec un pont : un chemin'); assert.ok(q.chemins[0].atteint);
+    const pts = q.chemins[0].pts, T = C.terrain;
+    assert.ok(pts.some(([x, y]) => T.pont[Math.floor(y) * T.W + Math.floor(x)]), 'la route passe par le pont');
+    assert.ok(pts.length > 12, 'un détour, pas une droite');
+  } finally { dedans.essai = S; }
 });

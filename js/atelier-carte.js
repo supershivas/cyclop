@@ -3,19 +3,19 @@
 // la scène (la carte, large), l'inspecteur (l'outil ou la forme choisie, puis les réglages du secteur). Chaque chiffre porte un nom et une description (`data/carte-outils.js`,
 // `data/secteur-params.js`). Chaque retouche va dans le brouillon (`secteurs` de `cyclopeen:atelier`, à plat : « relief.bosses ») et se publie dans assets/design/secteurs.json ;
 // le jeu les pose sur `SECTEURS` au lancement (`appliquerSecteurs`).
-import { REGLAGES } from './data/reglages.js?v=0.47.1';
-import { SECTEURS, VIERGE } from './data/secteur.js?v=0.47.1';
-import { PALETTE, ORDRE } from './palette.js?v=0.47.1';
-import { terrainDuSecteur, profilDe } from './secteur-terrain.js?v=0.47.1';
-import { couleurCase } from './apparence.js?v=0.47.1';
-import { etat as etatCase, hauteurQ } from './terrain.js?v=0.47.1';
-import { ligneY } from './tranchees.js?v=0.47.1';
-import { PARAMS } from './data/secteur-params.js?v=0.47.1';
-import { SECTEURS_ORIGINE } from './data/campagne.js?v=0.47.1';
-import { OUTILS, GROUPES_OUTILS, champ, HERBE, SOLS } from './data/carte-outils.js?v=0.47.1';
-import { distanceForme, extremite } from './formes.js?v=0.47.1';
-import { validerSecteur } from './tranchees.js?v=0.47.1';
-import { lireBrouillon, ecrireBrouillon, lireChemin, deplier, secteurEffectif, idCarte, nouvelleCarte } from './design-store.js?v=0.47.1';
+import { REGLAGES } from './data/reglages.js?v=0.48.0';
+import { SECTEURS, VIERGE } from './data/secteur.js?v=0.48.0';
+import { PALETTE, ORDRE } from './palette.js?v=0.48.0';
+import { terrainDuSecteur, profilDe } from './secteur-terrain.js?v=0.48.0';
+import { couleurCase } from './apparence.js?v=0.48.0';
+import { etat as etatCase, hauteurQ } from './terrain.js?v=0.48.0';
+import { ligneY } from './tranchees.js?v=0.48.0';
+import { PARAMS } from './data/secteur-params.js?v=0.48.0';
+import { SECTEURS_ORIGINE } from './data/campagne.js?v=0.48.0';
+import { OUTILS, GROUPES_OUTILS, champ, HERBE, SOLS } from './data/carte-outils.js?v=0.48.0';
+import { distanceForme, extremite } from './formes.js?v=0.48.0';
+import { validerSecteur } from './tranchees.js?v=0.48.0';
+import { lireBrouillon, ecrireBrouillon, lireChemin, deplier, secteurEffectif, idCarte, nouvelleCarte } from './design-store.js?v=0.48.0';
 
 const rgb = hex => [1, 3, 5].map(k => parseInt(hex.slice(k, k + 2), 16));
 const COULEURS = ORDRE.map(k => rgb(PALETTE[k]));
@@ -108,7 +108,7 @@ export function ongletCarte(zone, { el, R = REGLAGES, publie = {}, publieCartes 
   // ─── Les retouches : des formes de relief et des objets, une seule histoire pour annuler et rétablir (en mémoire : elle ne survit pas à la page) ───
   let outil = 'selection', trace = null, curseurCarte = null, choix = null, edition = null, glisse = null;
   let trace3d = null, curseur3d = null;                          // dans la vue 3D : le premier clic d'un trait (crête, haie), et le point sous la souris (mètres du secteur)
-  const reglagesOutil = { bosse: { r: 20, h: 3 }, creux: { r: 20, h: 3 }, crete: { r: 20, h: 3 }, plateau: { r: 20, h: 3 }, bois: { r: 20 }, degager: { r: 20 }, lac: { r: 25 }, fleuve: { r: 6 }, pont: { r: 3 } };
+  const reglagesOutil = { bosse: { r: 20, h: 3 }, creux: { r: 20, h: 3 }, crete: { r: 20, h: 3 }, plateau: { r: 20, h: 3 }, bois: { r: 20 }, degager: { r: 20 }, lac: { r: 25 }, fleuve: { r: 6 }, pont: { r: 3, type: 'planches' } };
   const histoire = [], futur = [];
   const cleDe = F => (F.f ? 'retouches' : 'objets');
   const genreDe = F => F.f || F.o;
@@ -129,6 +129,7 @@ export function ongletCarte(zone, { el, R = REGLAGES, publie = {}, publieCartes 
     const r = reglagesOutil[def.genre];
     if (def.champs.includes('r')) F.r = r.r;
     if (def.champs.includes('h')) F.h = r.h;
+    if (def.champs.includes('type')) F.type = r.type;
     return F;
   }
   // la forme la plus proche d'un point (la gomme, la sélection) : on y est si le point tombe dans sa zone (rayon, au moins 5 m)
@@ -180,6 +181,14 @@ export function ongletCarte(zone, { el, R = REGLAGES, publie = {}, publieCartes 
       el('p', { className: 'at-champ-desc', textContent: desc }), c);
   }
 
+  // un choix dans une liste (le type d'un pont) : une liste déroulante, son nom et ce qu'elle dit (v0.47.2)
+  function champListe({ nom, desc, valeur, liste, surChange }) {
+    const sel = el('select', { ariaLabel: nom }, ...liste.map(o => el('option', { value: o.id, textContent: o.nom })));
+    sel.value = valeur;
+    const detail = el('p', { className: 'at-champ-desc', textContent: liste.find(o => o.id === sel.value)?.desc || desc });
+    sel.onchange = () => { detail.textContent = liste.find(o => o.id === sel.value)?.desc || desc; surChange(sel.value); };
+    return el('div', { className: 'at-champ' }, el('div', { className: 'at-champ-tete' }, el('span', { className: 'at-champ-nom', textContent: nom })), el('p', { className: 'at-champ-desc', textContent: desc }), sel, detail);
+  }
   // ─── La boîte à outils (à gauche) ───
   function panneauBoite() {
     const bouton = id => {
@@ -203,13 +212,13 @@ export function ongletCarte(zone, { el, R = REGLAGES, publie = {}, publieCartes 
     if (outil === 'selection' && choix && l[choix.cle][choix.i]) {
       const F = l[choix.cle][choix.i], genre = genreDe(F), d = OUTILS[genre], noms = ['x', 'y', ...(d.segment ? ['x2', 'y2'] : []), ...d.champs];
       blocs.push(el('section', { className: 'ed-bloc' }, el('h3', { textContent: `Sélection : ${d.nom}` }), el('p', { className: 'at-note', textContent: `Glissez le carré du centre pour la déplacer${d.champs.includes('r') || d.segment ? ', les autres carrés pour la redimensionner' : ''}. Ou réglez ses chiffres ci-dessous.` }),
-        ...noms.map(k => { const c = champ(k, genre); return champNum({ ...c, valeur: F[k],
+        ...noms.map(k => { const c = champ(k, genre); if (c.liste) return champListe({ ...c, valeur: F[k] ?? c.defaut, surChange: v => { edition = null; const copie = l[choix.cle]; copie[choix.i] = { ...F, [k]: v }; poserListe(choix.cle, copie); } }); return champNum({ ...c, valeur: F[k],
           surInput: v => { edition = { ...choix, F: { ...F, [k]: v } }; redessiner(); },
           surChange: v => { edition = null; const copie = l[choix.cle]; copie[choix.i] = { ...F, [k]: v }; poserListe(choix.cle, copie); } }); }),
         el('div', { className: 'at-row' }, el('button', { textContent: 'Supprimer', onclick: supprimerChoix }))));
     } else if (def.genre) {
       blocs.push(el('section', { className: 'ed-bloc' }, el('h3', { textContent: `Outil : ${def.nom}` }), el('p', { className: 'at-note', textContent: def.aide }),
-        ...def.champs.map(k => { const c = champ(k, def.genre); const r = reglagesOutil[def.genre]; return champNum({ ...c, valeur: r[k], surInput: v => { r[k] = v; redessiner(); } }); })));
+        ...def.champs.map(k => { const c = champ(k, def.genre); const r = reglagesOutil[def.genre]; if (c.liste) return champListe({ ...c, valeur: r[k] ?? c.defaut, surChange: v => { r[k] = v; } }); return champNum({ ...c, valeur: r[k], surInput: v => { r[k] = v; redessiner(); } }); })));
     } else {
       blocs.push(el('section', { className: 'ed-bloc' }, el('h3', { textContent: def.nom }), el('p', { className: 'at-note', textContent: def.aide + (outil === 'selection' ? ' Rien n’est choisi pour l’instant.' : '') })));
     }
@@ -349,7 +358,7 @@ export function ongletCarte(zone, { el, R = REGLAGES, publie = {}, publieCartes 
     v3d.activer(true);
     etatBarre.textContent = 'Vue 3D : un clic pose avec l\u2019outil choisi (crête et haie : deux clics) · glisser tourne et incline · clic droit (ou Maj) + glisser déplace · molette zoome.';
   }
-  const creerVue3D3 = async () => { const { creerVue3D } = await import('./apercu-3d.js?v=0.47.1'); return creerVue3D({ R, hote: hote3d }); };
+  const creerVue3D3 = async () => { const { creerVue3D } = await import('./apercu-3d.js?v=0.48.0'); return creerVue3D({ R, hote: hote3d }); };
   function basculer(m) {
     if (m === mode) return;
     mode = m;

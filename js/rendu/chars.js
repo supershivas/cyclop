@@ -1,18 +1,19 @@
 // Les chars d'assaut dessinés (Jérôme, v0.47.0) : un volume par char de `B.etat.chars` (engins.js : le Schneider), posé sur le sol, incliné selon la pente sous lui,
 // tourné vers sa route ; les chenilles défilent quand il avance, une épave fume. Le dessin seulement : tout vient de l'état de la bataille, rien n'y est écrit.
 // Fabrique `creerChars({ THREE, scene, bataille: () => B, hauteur, fumer })` : la bataille change à chaque partie, on la lit à chaque image.
-import { atelier, schneider } from './engins.js?v=0.47.1';
+import { atelier, schneider } from './engins.js?v=0.48.0';
 
 const FABRIQUES = { schneider };
 
 export function creerChars({ THREE, scene, bataille, hauteur, fumer }) {
   let A = null, lumiere = null;
   const modeles = new Map();              // id du char → { pivot, modele, fumee }
-  const lampe = () => {                   // les volumes sont éclairés (une lumière ambiante et un soleil bas) ; ajoutée au premier char
+  const lampe = () => {                   // les volumes sont éclairés (une lumière ambiante et un soleil bas) ; une seule pour la scène, partagée avec les ponts (`scene.userData.lumiere`)
+    if (scene.userData.lumiere) { lumiere = scene.userData.lumiere; return; }
     lumiere = new THREE.Group();
     lumiere.add(new THREE.AmbientLight(0xffffff, 1.6));
     const soleil = new THREE.DirectionalLight(0xffffff, 1.7); soleil.position.set(-6, 12, 5); lumiere.add(soleil);
-    scene.add(lumiere);
+    scene.add(lumiere); scene.userData.lumiere = lumiere;
   };
   function vider() { for (const m of modeles.values()) scene.remove(m.pivot); modeles.clear(); }
   function maj(dt, sombre = 0) {

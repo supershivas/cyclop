@@ -319,6 +319,14 @@ une. Il **montre** ; il ne modifie jamais le contenu du jeu (c'est l'Atelier).
 - **Adresse** : elle garde le sujet et la lettre (`#loups-C`).
 - **Chaque variante** a un titre et une phrase qui dit ce qu'elle change ;
   « actuelle », « retenue » (branchée dans le jeu), « ancienne ».
+- **Les variantes se tranchent par `AskUserQuestion`** : quand un lot de variantes
+  est prêt (statut `a-trancher`), Claude donne le lien de chaque sujet
+  (`labo.html#sujet-Lettre`) puis pose **une question par sujet** (une série de
+  quatre au plus par appel), avec une option recommandée en premier et « garder
+  l'actuelle » parmi les choix ; plusieurs réponses sont permises quand les
+  variantes ne s'excluent pas. Il n'adopte rien avant la réponse : la variante
+  choisie passe en A (`actuelle`), l'ancienne en `ancienne`, les autres
+  restent.
 - **Un point d'état devant chaque sujet** (menu, puces mobiles, index de
   l'accueil) et devant chaque groupe (le pire de ses sujets) : **vert** (rond)
   = tranché, une variante est en jeu (« actuelle » ou « retenue ») ; **rouge**
