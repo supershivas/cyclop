@@ -35,6 +35,8 @@ export const OUTILS = {
     aide: 'Un clic creuse un lac : une eau profonde, à plat, qu’on ne traverse pas. Gardez-le loin des tranchées (la bande de chaque camp), le contrôle le dit.' },
   fleuve: { groupe: 'eau', nom: 'Fleuve', genre: 'fleuve', type: 'objet', segment: true, champs: ['r'], icone: 'M2 8c4-4 6 4 10 0s6 4 10 0 M2 16c4-4 6 4 10 0s6 4 10 0',
     aide: 'Glissez d’un point à un autre : un fleuve de eau profonde le long du trait, qu’on ne traverse pas. Il peut couper le no man’s land, mais pas les tranchées.' },
+  pont: { groupe: 'eau', nom: 'Pont', genre: 'pont', type: 'objet', segment: true, champs: ['r'], icone: 'M2 9h20 M2 15c4-6 6-6 10-6s6 0 10 6 M6 15v4 M18 15v4',
+    aide: 'Glissez d’une rive à l’autre : un tablier de planches sur l’eau, qu’on traverse à pied sec. Un obus tombé dessus le coupe. Sans eau sous le trait, rien ne se pose.' },
 };
 
 // Les champs d'une forme. `nom` et `desc` peuvent changer avec le genre (`parGenre`). Les positions sont en mètres, dans le repère du secteur :
@@ -51,6 +53,7 @@ export const CHAMPS = {
       bois: { nom: 'Rayon du bois', desc: 'Les arbres du bois sont répartis dans ce rayon, en mètres.' },
       lac: { nom: 'Rayon du lac', desc: 'Le lac couvre ce disque, en mètres, d’eau profonde à plat.' },
       fleuve: { nom: 'Demi-largeur', desc: 'Largeur du fleuve de chaque côté du trait, en mètres : 6 donne un fleuve de 12 m.' },
+      pont: { nom: 'Demi-largeur', desc: 'Largeur du tablier de chaque côté du trait, en mètres : 3 donne un pont de 6 m, où un petit groupe passe de front.' },
       degager: { nom: 'Rayon du dégagement', desc: 'Tout arbre et tout buisson tiré par le hasard à moins de ce rayon est retiré. Ce que vous avez posé reste.' },
     } },
   h: { nom: 'Hauteur', unite: 'm', min: 0.5, max: 12, pas: 0.5, desc: 'De combien le sol monte au centre, en mètres.',

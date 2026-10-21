@@ -8,7 +8,7 @@
      menu contextuel, ni zoom à la pince, ni rechargement en tirant vers le bas.
 
    Module ES sans dépendance :
-     import { createPointer, lockBrowserGestures } from './lib/pointer.js?v=0.43.0'
+     import { createPointer, lockBrowserGestures } from './lib/pointer.js?v=0.44.0'
      lockBrowserGestures(document.getElementById('jeu'))
      const ptr = createPointer(canvas, {
        toLocal: (x, y) => pixels.toLogical(x, y),  // coordonnées du jeu (facultatif)

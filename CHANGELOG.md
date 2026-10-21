@@ -1,5 +1,9 @@
 # Journal des versions
 
+## 0.44.0 — 2026-10-21
+- Dans l'éditeur de carte, un pont sur un lac ou un fleuve
+- Un obus tombé sur un pont le coupe
+
 ## 0.43.0 — 2026-10-21
 - Dans l'éditeur de carte, un lac et un fleuve : une eau profonde qu'on ne traverse pas
 - Les régiments s'arrêtent à la rive

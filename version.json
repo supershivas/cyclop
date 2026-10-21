@@ -1,8 +1,8 @@
 {
-  "version": "0.43.0",
+  "version": "0.44.0",
   "date": "2026-10-21",
   "changes": [
-    "Dans l'éditeur de carte, on creuse un lac ou un fleuve : une eau profonde qu'on ne traverse pas",
-    "Les régiments s'arrêtent à la rive ; le contrôle refuse l'eau sur les tranchées"
+    "Dans l'éditeur de carte, un pont : un tablier sur l'eau, qu'on traverse à pied sec",
+    "Un obus tombé sur un pont le coupe : il retombe à l'eau"
   ]
 }

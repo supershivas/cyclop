@@ -11,7 +11,7 @@
      de Dial : des files par coût entier), puis une direction par carré.
    - Les champs sont gardés en cache (au plus `foule.champsMax`), par carré visé
      et version des coûts. */
-import { hauteurQ, vitesseCase } from './terrain.js?v=0.43.0';
+import { hauteurQ, vitesseCase } from './terrain.js?v=0.44.0';
 
 export const BLOC = 4;   // m
 const DIRS = [[1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [1, -1], [-1, 1], [-1, -1]];
@@ -23,11 +23,11 @@ export function dimensionsCouts(T) { return { bw: Math.ceil(T.W / BLOC), bh: Mat
 export function calculerCouts(T, R, couts, gel = false) {
   const { bw, bh } = dimensionsCouts(T);
   for (let by = 0; by < bh; by++) for (let bx = 0; bx < bw; bx++) {
-    let lent = 0, n = 0, hmin = 1e9, hmax = -1e9, creux = 0, prof = 0;
+    let lent = 0, n = 0, hmin = 1e9, hmax = -1e9, creux = 0, prof = 0, pont = 0;
     for (let j = by * BLOC; j < Math.min(T.H, (by + 1) * BLOC); j++) {
       for (let i = bx * BLOC; i < Math.min(T.W, (bx + 1) * BLOC); i++) {
         const c = j * T.W + i, h = hauteurQ(T, c);
-        lent += 1 / vitesseCase(T, c, R, gel); n++; if (T.profond[c]) prof++;
+        lent += 1 / vitesseCase(T, c, R, gel); n++; if (T.profond[c]) prof++; else if (T.pont[c]) pont++;
         if (T.troncon && T.troncon[c] !== -1 && T.diff[c] <= -2) creux++;       // une tranchée ou un boyau encore creusés : un abri
         if (h < hmin) hmin = h; if (h > hmax) hmax = h;
       }
@@ -38,7 +38,7 @@ export function calculerCouts(T, R, couts, gel = false) {
     // parois ne comptent plus comme du relief (on y descend pour s'y mettre à couvert)
     const abrite = creux / n >= R.foule.abriPart;
     let cout = abrite ? Math.round(10 * lent / n * R.foule.abri) : Math.round(10 * lent / n + (relief >= 4 ? 8 : relief >= 2 ? 3 : 0));
-    if (relief >= R.vitesse.mur * 1.5 || prof * 2 >= n) cout = 0;                  // un trou dont on ne sort pas ; de l'eau profonde (la moitié du carré au moins : v0.43.0)
+    if (relief >= R.vitesse.mur * 1.5 || (prof * 2 >= n && !pont)) cout = 0;                  // un trou dont on ne sort pas ; de l'eau profonde (la moitié du carré au moins : v0.43.0)
     else if (cout < 1) cout = 1;
     couts[by * bw + bx] = Math.max(0, Math.min(255, cout));
   }

@@ -16,11 +16,11 @@
      nuit elle se fait en lot.
    - Les versions (`versionLigne`, `versionMorceau`) disent au rendu ce qui a
      changé ; le terrain ne connaît pas le rendu. */
-import { hash2 } from './lib/rng.js?v=0.43.0';
-import { CALIBRES } from './data/calibres.js?v=0.43.0';
-import { appliquerFormes } from './formes.js?v=0.43.0';
-import { poserObjets } from './objets.js?v=0.43.0';
-import { poserEaux, viderLesEaux } from './eaux.js?v=0.43.0';
+import { hash2 } from './lib/rng.js?v=0.44.0';
+import { CALIBRES } from './data/calibres.js?v=0.44.0';
+import { appliquerFormes } from './formes.js?v=0.44.0';
+import { poserObjets } from './objets.js?v=0.44.0';
+import { poserEaux, poserPonts, detruirePont, viderLesEaux } from './eaux.js?v=0.44.0';
 
 export const ETAT = { SEC: 0, HUMIDE: 1, BOUE: 2, EAU: 3, GLACE: 4 };
 export const MORCEAU = 25;             // cases : le côté d'un morceau de maillage (mesuré, rendu logiciel : à 100, la moitié du champ restait dessinée au zoom 4 ; à 25, 6 500 triangles au lieu de 15 600 au zoom 8)
@@ -46,6 +46,7 @@ export function creerTerrain(graine, secteur, R) {
   const nappe = new Float32Array(N);            // m (absolu) : le niveau de la nappe sous chaque case
   const eau = new Float32Array(N), humid = new Float32Array(N);
   const herbe = new Uint8Array(N);              // 0 à 3 : l'herbe (les obus la soufflent, la boue la tue)
+  const pont = new Uint8Array(N), ponts = new Map();    // un tablier (v0.44.0) : le drapeau, et le niveau de l'eau dessous (c → quarts) pour qu'un obus le coupe
   const profond = new Uint8Array(N);           // 1 : eau profonde (un lac, un fleuve de l'atelier : jamais sauvegardé, refait du secteur)
   const g = graine | 0;
   // le caractère de la carte (v0.29.0) : `bosses` et `ondulation` sont des facteurs, `crete` une bosse allongée d'est en ouest, `nappe` des m de plus ou de moins sous le sol
@@ -67,6 +68,7 @@ export function creerTerrain(graine, secteur, R) {
   }
   appliquerFormes(base, W, H, ox, oy, secteur.retouches);     // les retouches de l'atelier (formes.js), avant les tranchées
   poserEaux(base, profond, { W, H, ox, oy }, secteur.objets);   // les lacs et les fleuves (eaux.js) creusent à plat, après le relief
+  poserPonts(base, profond, pont, ponts, { W, H, ox, oy }, secteur.objets);   // puis les ponts, sur l'eau
   // Quelques arbres, loin des bords
   const arbres = [];
   for (let k = 0; arbres.length < secteur.arbres && k < secteur.arbres * 40; k++) {
@@ -106,7 +108,7 @@ export function creerTerrain(graine, secteur, R) {
   viderLesEaux(arbres, profond, W); viderLesEaux(buissons, profond, W);      // ni arbre ni buisson dans l'eau
   const mw = Math.ceil(W / MORCEAU), mh = Math.ceil(H / MORCEAU);
   return {
-    W, H, base, diff, nappe, eau, humid, arbres, herbe, buissons, profond,
+    W, H, base, diff, nappe, eau, humid, arbres, herbe, buissons, profond, pont, ponts,
     versionHerbe: 1,                            // l'herbe ou les buissons ont changé (rendu)
     versionLigne: new Uint32Array(H),           // couleur d'une rangée changée (rendu)
     versionMorceau: new Uint32Array(mw * mh),   // hauteurs d'un morceau changées (rendu)
@@ -134,6 +136,7 @@ function penteSous(T, c) {
 export function etat(T, c, R, gel = false) {
   const H = R.hydro;
   if (T.profond[c]) return ETAT.EAU;                // l'eau profonde est de l'eau, même par le gel
+  if (T.pont[c]) return ETAT.SEC;                   // un tablier est sec (et gèle pas)
   if (T.eau[c] > H.eau) {
     // une pente ne garde pas d'eau : la nappe qui ruisselle dessus la mouille (boue), elle ne la peint pas en eau ; l'eau est dans les creux et sur le plat
     if (!gel && penteSous(T, c)) return ETAT.BOUE;
@@ -210,6 +213,7 @@ export function impact(T, x, y, nomCal, R, n = 0, gel = false) {
   for (const a of T.arbres) {
     if (!a.abattu && (a.i + 0.5 - x) ** 2 + (a.j + 0.5 - y) ** 2 < R.terrain.arbreRayon ** 2) { a.abattu = 1; toucher(T, a.i, a.j); }
   }
+  if (T.ponts.size && detruirePont(T, i0, j0, r + 3)) { for (let dj = -r - 3; dj <= r + 3; dj++) for (let di = -r - 3; di <= r + 3; di++) if (i0 + di >= 0 && j0 + dj >= 0 && i0 + di < T.W && j0 + dj < T.H) toucher(T, i0 + di, j0 + dj); }      // un obus sur le tablier le coupe (v0.44.0)
   T.version++;
   return { rayon: cal.rayon * enfoui };
 }

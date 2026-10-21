@@ -5,8 +5,8 @@
    Les faces verticales (les parois tournées vers nous) d'au moins un demi-mètre
    prennent le ton plus sombre (OMBRE) ; une marche d'un quart garde la couleur
    du dessus (sinon chaque courbe de niveau des bosses se lit comme un trou). */
-import { INDICE, ORDRE } from './palette.js?v=0.43.0';
-import { ETAT, etat, hauteurQ } from './terrain.js?v=0.43.0';
+import { INDICE, ORDRE } from './palette.js?v=0.44.0';
+import { ETAT, etat, hauteurQ } from './terrain.js?v=0.44.0';
 
 const I = INDICE;
 // [terre jetée (plus claire), plat, creusé ou à l'ombre]
@@ -41,6 +41,7 @@ export function couleurCase(T, i, j, R, gel = false) {
     // des rides claires : l'eau se lit par sa forme, pas seulement par sa couleur
     return ((i * 3 + j * 7) % 11 === 0) ? I.r : TONS[e][1];
   }
+  if (T.pont[c]) return i % 2 ? I.h : I.g;                      // un tablier : des planches en travers, claires et sombres (v0.44.0)
   // un cratère se lit d'un coup d'œil : le creux plus sombre, la lèvre de terre jetée plus claire
   // (les bosses, elles, se lisent par leurs parois : une trame de pente faisait du bruit partout)
   const d = T.diff[c];

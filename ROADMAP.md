@@ -24,7 +24,7 @@ Principe : un secteur garde sa graine et son bruit (`creerTerrain`) ; l'éditeur
 - [x] Vue 3D dans l'atelier (le moteur du jeu, lumière au choix) ; on y pose des formes et des objets d'un clic
 - [x] **Créer et dupliquer une carte** (Jérôme, v0.38.0) : « Nouvelle carte… » (copie ou vierge), nom et résumé, suppression, publiée dans `cartes.json` et ajoutée à la liste des nouvelles parties. La carte de chaque bataille de la campagne se choisit dans l'éditeur (v0.42.0). Reste : choisir la taille d'une carte (400 × 300 partout)
 - [x] **Un lac et un fleuve** (Jérôme, v0.43.0) : eau profonde, infranchissable, outils du groupe « Eau »
-- [ ] **Des ponts** (prochain lot, accord de Jérôme) : une bande de tablier sur l'eau, qu'on traverse à vitesse normale ; un obus peut le détruire
+- [x] **Des ponts** (Jérôme, v0.44.0) : un tablier sur l'eau, qu'on traverse à pied sec ; un obus le coupe. Reste : reconstruire un pont la nuit, refuser à voix haute un ordre sans passage
 - [ ] Plus tard (non décidé) — export / import JSON d'un secteur, copier-coller d'une forme, déplacer et redimensionner à la souris dans la vue 3D
 
 ### Refonte UX/UI (docs/ui-cible.md)

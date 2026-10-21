@@ -333,3 +333,27 @@ test('le contrôle refuse un lac ou un fleuve sur les tranchées, pas dans le no
   assert.ok(validerSecteur({ ...S, objets: [{ o: 'lac', x: 200, y: n0, r: 15 }] }).some(t => /touche les tranchées de chez nous/.test(t)));
   assert.ok(validerSecteur({ ...S, objets: [{ o: 'fleuve', x: 0, y: e0 - 3, x2: 400, y2: e0 + 3, r: 6 }] }).some(t => /d'en face/.test(t)));
 });
+
+group('atelier — les ponts (v0.44.0)');
+test('un pont rend l\'eau praticable sur son tablier, le tablier est sec, un obus le coupe, un trait sans eau ne pose rien', async () => {
+  const { calculerCouts, dimensionsCouts } = await import('../js/champs.js');
+  const { vitesseCase, impact } = await import('../js/terrain.js');
+  const { couleurCase } = await import('../js/apparence.js');
+  const S = { largeur: 120, hauteur: 100, arbres: 0, objets: [{ o: 'fleuve', x: -10, y: 50, x2: 130, y2: 50, r: 6 }, { o: 'pont', x: 60, y: 35, x2: 60, y2: 65, r: 3 }, { o: 'pont', x: 20, y: 5, x2: 20, y2: 15, r: 3 }] };
+  const T = creerTerrain(3, S, R), c = j => j * 120 + 60;
+  assert.equal(T.profond[c(50)], 0, 'le tablier n\'est pas profond'); assert.equal(T.pont[c(50)], 1);
+  assert.equal(T.profond[50 * 120 + 70], 1, 'à côté, l\'eau');
+  assert.equal(etat(T, c(50), R), ETAT.SEC); assert.ok(vitesseCase(T, c(50), R) > 0.9, 'à pied sec, vitesse normale');
+  assert.ok(T.base[c(50)] >= T.base[50 * 120 + 70] + 4, 'au moins un mètre au-dessus de l\'eau');
+  assert.equal(T.pont.reduce((s, v) => s + v, 0), 72, 'le tablier couvre la largeur du fleuve (12 m) sur 6 m');
+  const { bw, bh } = dimensionsCouts(T), couts = new Uint8Array(bw * bh); calculerCouts(T, R, couts);
+  assert.ok(couts[Math.floor(50 / 4) * bw + 15] > 0, 'le carré du pont est praticable'); assert.equal(couts[Math.floor(50 / 4) * bw + 25], 0, 'le fleuve ne l\'est pas');
+  assert.notEqual(couleurCase(T, 60, 50, R), couleurCase(T, 70, 50, R), 'les planches se voient');
+  // un obus de 155 sur le tablier le coupe : les cases retombent à l'eau, au niveau d'avant
+  const niveau = T.ponts.get(c(50));
+  impact(T, 60.5, 50.5, '155', R, 1);
+  assert.equal(T.pont[c(50)], 0); assert.equal(T.profond[c(50)], 1); assert.equal(T.base[c(50)], niveau);
+  // un pont posé sans eau dessous ne change rien
+  const nu = creerTerrain(3, { ...S, objets: [{ o: 'pont', x: 20, y: 5, x2: 20, y2: 15, r: 3 }] }, R);
+  assert.equal(nu.pont.reduce((s, v) => s + v, 0), 0); assert.equal(nu.ponts.size, 0);
+});
