@@ -9,6 +9,14 @@ Statuts : **à l'étude** · **validé** (Jérôme a tranché) · **en cours** �
 
 ## En cours
 
+### Chars, mitraillage aérien (décidés au labo, v0.45.0 ; pas construits)
+
+**Statut** : décidé par Jérôme sur les maquettes du labo ; rien n'est dans le jeu.
+
+- **Les chars** : les cinq engins sont retenus (Mark IV et sa livrée allemande de Cambrai, Renault FT, Schneider CA 1, Saint-Chamond, A7V). Reste à décider comment ils entrent dans la bataille (qui les envoie, d'où, comment les arrêter) : voir les questions posées.
+- **Les avions** : seul **le mitraillage** est retenu, comme un **4e bouton dans le style des batteries** (75, 155, 220 : un cooldown, plus long, et un clic sur la zone visée). L'œil de l'artillerie, le cirque du Baron et les bombardiers de nuit restent au labo.
+- **Les gaz** : rien pour le moment, à reproposer plus tard (Jérôme). Les trois variantes restent au labo.
+
 ### L'éditeur de carte de l'atelier
 
 **Statut** : lots 0 à 3 faits (Jérôme : format « retouches sur la génération ») ; reste à mesurer sur une vraie carte retouchée et publiée
