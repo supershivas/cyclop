@@ -1,9 +1,8 @@
 {
-  "version": "0.48.1",
+  "version": "0.49.0",
   "date": "2026-10-21",
   "changes": [
-    "De près, un clic sur un de nos hommes ouvre sa fiche",
-    "Les avions arrivent de hors de la carte et la traversent : on les voit venir",
-    "Les chars entrent par le bord de la carte, sur la route, avant de gagner leur but"
+    "Une carte aléatoire dans la nouvelle partie : fleuves et ponts, côtes, montagnes, collines, étangs, tirés de la graine",
+    "« Autre terrain » tire une autre carte aléatoire, montrée en 3D avant de jouer"
   ]
 }

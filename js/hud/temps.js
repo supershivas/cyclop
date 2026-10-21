@@ -4,10 +4,10 @@
 // qui le suit dit le jour et l'heure ; tout en bas, les seuls changements de météo, en pictogrammes. Le joueur ne connaît pas la météo des jours à
 // venir (la logique la tire d'avance) : seuls les jours passés et le jour même sont lus dans l'état, demain est la prévision (juste 7 fois sur 10).
 // Le dessin seulement : rien n'est sauvegardé.
-import { PALETTE } from '../palette.js?v=0.48.1';
-import { METEO } from '../data/meteo.js?v=0.48.1';
-import { ICONES_METEO } from './meteo-icones.js?v=0.48.1';
-import { horloge } from '../bataille.js?v=0.48.1';
+import { PALETTE } from '../palette.js?v=0.49.0';
+import { METEO } from '../data/meteo.js?v=0.49.0';
+import { ICONES_METEO } from './meteo-icones.js?v=0.49.0';
+import { horloge } from '../bataille.js?v=0.49.0';
 
 const FOND = { sec: PALETTE.h, pluie: PALETTE.e, brouillard: PALETTE.r, gel: PALETTE.o };
 const el = (tag, cls, ...kids) => { const e = document.createElement(tag); if (cls) e.className = cls; e.append(...kids); return e; };

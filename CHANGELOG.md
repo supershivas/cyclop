@@ -1,5 +1,10 @@
 # Journal des versions
 
+## 0.49.0 — 2026-10-21
+- Une carte aléatoire dans le choix de la nouvelle partie : un fleuve en travers du no man's land (avec un à trois ponts, dont un porte un char), parfois un fleuve ou des étangs derrière les lignes, une côte (la mer d'un des quatre côtés), des montagnes et des chaînes, des collines et des plateaux, une végétation et une nappe tirées de la graine
+- « Autre terrain » en tire une autre, montrée en 3D avant de jouer ; l'eau ne touche jamais une tranchée
+- Un char arrive sur la route sans regarder le terrain (une côte ou un lac derrière nos lignes ne l'enlise pas)
+
 ## 0.48.1 — 2026-10-21
 - De près (3 pixels par mètre et plus), un clic sur un de nos hommes ouvre sa fiche ; son régiment se choisit par sa carte, son nom, le cadre ou T
 - Les avions viennent de loin : ils entrent par le bord de la carte derrière leur camp, la traversent à 45 m/s et frappent en passant sur la bande visée

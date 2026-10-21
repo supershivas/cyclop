@@ -1,45 +1,47 @@
 // Le cycle de vie : écran titre → bataille → nuit → fin ; pause active,
 // réglages, sauvegarde, mise à jour, debug. Les règles sont dans bataille.js
 // (pures), le dessin dans rendu3d.js (il ne modifie jamais l'état).
-import { createLoop } from './lib/loop.js?v=0.48.1';
-import { createKeys, stopTypeahead } from './lib/keys.js?v=0.48.1';
-import { createPointer, lockBrowserGestures } from './lib/pointer.js?v=0.48.1';
-import { createGamepad } from './lib/gamepad.js?v=0.48.1';
-import { createStore, autosave, pickJSONFile } from './lib/save.js?v=0.48.1';
-import { startUpdateCheck, loadVersion, loadChangelog, downloadJSON } from './lib/app-update.js?v=0.48.1';
-import { ROLES } from './palette.js?v=0.48.1';
-import { VERSION_CAMPAGNE, CLE as CLE_CAMPAGNE, cloturerDansLeStore, nouvelleCampagne, suivante, passage, bilan as bilanCampagne } from './campagne.js?v=0.48.1';
-import { CAMPAGNE } from './data/campagne.js?v=0.48.1';
-import { MISSIONS, EUX, nouvelleBataille, etapesRestaurer, avancer, aube, ordonnerMarche, peutOrdonner, ordonnerBarrage, peutBarrage, arriereDe, ordonnerStance, peutStance, horloge, effectifs, tronconsTenus, moralEnMots, terrainResume, forcesTroncons, largeurZone, lettreZone, etendueZones, nomTroncon, actionDe, secteursDe, tronconsDeLigne, zone, photo, restaurer, PAS, NOUS } from './bataille.js?v=0.48.1';
-import { ligneY } from './tranchees.js?v=0.48.1';
-import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.48.1';
-import { AVION, MITRAILLAGE } from './data/mitraillage.js?v=0.48.1';
-import { CHAR, CHAR_RECHARGE, CHARS, CHAR_PAR_DEFAUT } from './data/chars.js?v=0.48.1';
-import { STANCES, STANCE_DEFAUT } from './data/stances.js?v=0.48.1';
-import { METEO } from './data/meteo.js?v=0.48.1';
-import { impact, hydroLignes } from './terrain.js?v=0.48.1';
-import { hash2 } from './lib/rng.js?v=0.48.1';
-import { creerRendu, CAMERA } from './rendu3d.js?v=0.48.1';
-import { etatEnMots, experienceEnMots, chevrons } from './identite.js?v=0.48.1';
-import { CORVEES } from './data/corvees.js?v=0.48.1';
-import { refusCorvee } from './nuit.js?v=0.48.1';
-import { chargerContenu, appliquerSecteurs, appliquerCartes, appliquerCampagne } from './design-store.js?v=0.48.1';
-import * as lecture from './hud/lecture.js?v=0.48.1';
-import { creerFiche } from './hud/fiche.js?v=0.48.1';
-import { chevronsHtml } from './hud/barres.js?v=0.48.1';
-import { creerNuit, corveeDe, corveeCourte } from './hud/nuit.js?v=0.48.1';
-import { creerCampagne } from './hud/campagne.js?v=0.48.1';
-import { creerCarnet, deux } from './hud/carnet.js?v=0.48.1';
-import { creerCarte } from './hud/carte.js?v=0.48.1';
-import { creerPertes } from './hud/pertes.js?v=0.48.1';
-import { creerBarreTemps } from './hud/temps.js?v=0.48.1';
-import { creerChargement } from './hud/chargement.js?v=0.48.1';
-import { creerRetours } from './hud/retours.js?v=0.48.1';
-import { creerInfobulle } from './hud/infobulle.js?v=0.48.1';
-import { SECTEURS } from './data/secteur.js?v=0.48.1';
-import { creerLockstep, empreinteEtat } from './reseau/lockstep.js?v=0.48.1';
-import { nouveauCode, codeValide, publier, ecouter } from './reseau/relais.js?v=0.48.1';
-import { creerHote, creerInvite } from './reseau/lien.js?v=0.48.1';
+import { createLoop } from './lib/loop.js?v=0.49.0';
+import { createKeys, stopTypeahead } from './lib/keys.js?v=0.49.0';
+import { createPointer, lockBrowserGestures } from './lib/pointer.js?v=0.49.0';
+import { createGamepad } from './lib/gamepad.js?v=0.49.0';
+import { createStore, autosave, pickJSONFile } from './lib/save.js?v=0.49.0';
+import { startUpdateCheck, loadVersion, loadChangelog, downloadJSON } from './lib/app-update.js?v=0.49.0';
+import { ROLES } from './palette.js?v=0.49.0';
+import { VERSION_CAMPAGNE, CLE as CLE_CAMPAGNE, cloturerDansLeStore, nouvelleCampagne, suivante, passage, bilan as bilanCampagne } from './campagne.js?v=0.49.0';
+import { CAMPAGNE } from './data/campagne.js?v=0.49.0';
+import { MISSIONS, EUX, nouvelleBataille, etapesRestaurer, avancer, aube, ordonnerMarche, peutOrdonner, ordonnerBarrage, peutBarrage, arriereDe, ordonnerStance, peutStance, horloge, effectifs, tronconsTenus, moralEnMots, terrainResume, forcesTroncons, largeurZone, lettreZone, etendueZones, nomTroncon, actionDe, secteursDe, tronconsDeLigne, zone, photo, restaurer, PAS, NOUS } from './bataille.js?v=0.49.0';
+import { ligneY } from './tranchees.js?v=0.49.0';
+import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.49.0';
+import { AVION, MITRAILLAGE } from './data/mitraillage.js?v=0.49.0';
+import { CHAR, CHAR_RECHARGE, CHARS, CHAR_PAR_DEFAUT } from './data/chars.js?v=0.49.0';
+import { STANCES, STANCE_DEFAUT } from './data/stances.js?v=0.49.0';
+import { METEO } from './data/meteo.js?v=0.49.0';
+import { impact, hydroLignes } from './terrain.js?v=0.49.0';
+import { hash2 } from './lib/rng.js?v=0.49.0';
+import { creerRendu, CAMERA } from './rendu3d.js?v=0.49.0';
+import { etatEnMots, experienceEnMots, chevrons } from './identite.js?v=0.49.0';
+import { CORVEES } from './data/corvees.js?v=0.49.0';
+import { refusCorvee } from './nuit.js?v=0.49.0';
+import { chargerContenu, appliquerSecteurs, appliquerCartes, appliquerCampagne } from './design-store.js?v=0.49.0';
+import * as lecture from './hud/lecture.js?v=0.49.0';
+import { creerFiche } from './hud/fiche.js?v=0.49.0';
+import { chevronsHtml } from './hud/barres.js?v=0.49.0';
+import { creerNuit, corveeDe, corveeCourte } from './hud/nuit.js?v=0.49.0';
+import { creerCampagne } from './hud/campagne.js?v=0.49.0';
+import { creerCarnet, deux } from './hud/carnet.js?v=0.49.0';
+import { creerCarte } from './hud/carte.js?v=0.49.0';
+import { creerPertes } from './hud/pertes.js?v=0.49.0';
+import { creerBarreTemps } from './hud/temps.js?v=0.49.0';
+import { creerChargement } from './hud/chargement.js?v=0.49.0';
+import { creerRetours } from './hud/retours.js?v=0.49.0';
+import { creerInfobulle } from './hud/infobulle.js?v=0.49.0';
+import { SECTEURS } from './data/secteur.js?v=0.49.0';
+import { preparerAleatoire, ID_ALEATOIRE } from './generateur.js?v=0.49.0';
+import { terrainDuSecteur, profilDe } from './secteur-terrain.js?v=0.49.0';
+import { creerLockstep, empreinteEtat } from './reseau/lockstep.js?v=0.49.0';
+import { nouveauCode, codeValide, publier, ecouter } from './reseau/relais.js?v=0.49.0';
+import { creerHote, creerInvite } from './reseau/lien.js?v=0.49.0';
 
 const JEU = 'cyclopeen';
 const $ = id => document.getElementById(id);
@@ -309,25 +311,32 @@ $('dialogue-ordre').addEventListener('close', reprendre);
 let apercuSecteur = null;
 function demanderSecteur() {
   const d = $('dialogue-carte'), tirage = () => window.__seed ?? Date.now() % 100000;
-  if (DEBUG) return Promise.resolve({ secteur: SECTEURS[params.get('secteur')] ? params.get('secteur') : 'essai', graine: tirage() });
+  if (DEBUG) { const id = params.get('secteur'); if (id === ID_ALEATOIRE) preparerAleatoire(tirage()); return Promise.resolve({ secteur: SECTEURS[id] ? id : 'essai', graine: tirage() }); }
+  let graine = tirage(); preparerAleatoire(graine);                // la carte aléatoire (v0.49.0) : la dernière de la liste, tirée de la graine montrée
   const liste = $('cartes-choix'), ids = Object.keys(SECTEURS);
-  liste.replaceChildren(...Object.entries(SECTEURS).map(([id, S], k) => {
+  // une carte de la liste : la coupe nord-sud, le sol rempli dessous ; leurs lignes (vert kaki) en haut, les nôtres en bas
+  const fabriquer = ([id, S], k) => {
     const b = document.createElement('button'); b.className = 'carte-choix'; b.dataset.id = id; b.type = 'button';
-    // la coupe nord-sud : le sol, rempli dessous ; leurs lignes (rouge d'avant : vert kaki) en haut, les nôtres en bas
     const pts = S.profil.map((v, i) => `${(i / (S.profil.length - 1) * 100).toFixed(1)},${(52 - v * 40).toFixed(1)}`).join(' ');
     b.innerHTML = `<svg viewBox="0 0 100 64" preserveAspectRatio="none" aria-hidden="true"><polygon class="remplissage" points="0,64 ${pts} 100,64"/><polyline class="sol" points="${pts}"/><line class="ligne-eux" x1="4" y1="6" x2="30" y2="6"/><line class="ligne-nous" x1="70" y1="6" x2="96" y2="6"/></svg>
-      <b>${S.nom}<span class="touche">${k + 1}</span></b><p>${S.resume}</p>`;
+      <b>${id === ID_ALEATOIRE ? 'Au hasard : ' : ''}${S.nom}<span class="touche">${k + 1}</span></b><p>${S.resume}</p>`;
     return b;
-  }));
+  };
+  liste.replaceChildren(...Object.entries(SECTEURS).map(fabriquer));
   return new Promise(ok => {
-    let choisi = ids[0], graine = tirage(), ouvert = true;
+    let choisi = ids[0], ouvert = true;
     const fin = res => { ouvert = false; apercuSecteur?.activer(false); d.onclose = null; if (d.open) d.close(); ok(res); };
     // le secteur choisi, en 3D (le premier passage charge le moteur de l'aperçu ; sans WebGL, la liste reste utilisable)
     const montrer = async () => {
+      if (choisi === ID_ALEATOIRE) {                       // la carte de cette graine : on la tire, on en lit la coupe, on refait sa carte dans la liste
+        const S = preparerAleatoire(graine);
+        S.profil = profilDe(terrainDuSecteur(S, { ...S.marges }, graine, R).terrain, S);
+        const k = ids.indexOf(ID_ALEATOIRE); liste.children[k].replaceWith(fabriquer([ID_ALEATOIRE, S], k));
+      }
       for (const b of liste.children) b.setAttribute('aria-pressed', String(b.dataset.id === choisi));
       $('carte-legende').textContent = `${SECTEURS[choisi].nom} : ${SECTEURS[choisi].resume}`;
       try {
-        if (!apercuSecteur) { const { creerVue3D } = await import('./apercu-3d.js?v=0.48.1'); apercuSecteur = await creerVue3D({ R, hote: $('carte-3d'), rotation: 0.12 }); }
+        if (!apercuSecteur) { const { creerVue3D } = await import('./apercu-3d.js?v=0.49.0'); apercuSecteur = await creerVue3D({ R, hote: $('carte-3d'), rotation: 0.12 }); }
         if (!ouvert) return;
         apercuSecteur.monter(choisi, SECTEURS[choisi], graine, { soldats: false, cadrer: true });
         apercuSecteur.activer(true);
@@ -336,7 +345,7 @@ function demanderSecteur() {
     const choisir = id => { if (id === choisi && apercuSecteur) return; choisi = id; montrer(); };
     liste.onclick = e => { const b = e.target.closest('.carte-choix'); if (b) choisir(b.dataset.id); };
     liste.ondblclick = e => { if (e.target.closest('.carte-choix')) fin({ secteur: choisi, graine }); };
-    $('carte-autre').onclick = () => { graine = (Math.floor(Math.random() * 99999) + 1); montrer(); };
+    $('carte-autre').onclick = () => { graine = (Math.floor(Math.random() * 99999) + 1); montrer(); };       // (une autre graine : une autre carte aléatoire aussi)
     $('carte-jouer').onclick = () => fin({ secteur: choisi, graine });
     d.onkeydown = e => {
       const k = Number(e.key);
@@ -425,7 +434,7 @@ function poigneeHote(lien, graine, secteur) {
 function poigneeInvite(lien) {
   lien.surMessage = m => {
     if (m.t !== 'init') return;
-    const raison = m.version !== versionJeu ? `elle joue la v${m.version}, vous la v${versionJeu} : rechargez la page` : m.reglages !== empreinteReglages() ? 'les réglages (l\'atelier) ne sont pas les mêmes' : !SECTEURS[m.secteur] ? 'secteur inconnu' : null;
+    const raison = m.version !== versionJeu ? `elle joue la v${m.version}, vous la v${versionJeu} : rechargez la page` : m.reglages !== empreinteReglages() ? 'les réglages (l\'atelier) ne sont pas les mêmes' : !(SECTEURS[m.secteur] || m.secteur === ID_ALEATOIRE) ? 'secteur inconnu' : null;
     if (raison) { lien.envoyer({ t: 'refus', raison }); $('deux-statut').textContent = `Impossible de jouer ensemble : ${raison}.`; return; }
     lien.envoyer({ t: 'ok' });
     demarrerReseau({ moi: EUX, lien, graine: m.graine, secteur: m.secteur });
@@ -1366,7 +1375,7 @@ startUpdateCheck({
 
 // ─── Mode debug (section 18) : chargé seulement avec ?debug=1 ──────────────
 if (DEBUG) {
-  const { installDebug, seedFromUrl } = await import('./lib/debug.js?v=0.48.1');
+  const { installDebug, seedFromUrl } = await import('./lib/debug.js?v=0.49.0');
   window.__seed = seedFromUrl() ?? undefined;
   installDebug({
     state: () => B && { ...horloge(B), effectifs: effectifs(B), pertes: B.etat.pertes, impacts: B.etat.impacts.length, enJeu: enJeu(), pause: loop.paused },

@@ -3,12 +3,12 @@
    ligne vers (tx, ty) à la vitesse de son modèle, ralentie par un cratère (la moitié de ce qu'il franchit), arrêtée par un cratère plus profond ou par l'eau
    profonde (`enlise` : il reste là et tire) ; il tire sur l'autre camp à portée ; un obus tombé près de lui l'abîme (`degatsChars`), jusqu'à l'épave (`detruit`).
    Les tranchées se franchissent (elles font 1,5 m : son modèle les passe). Les ordres rendent { refus } comme les barrages. */
-import { CHARS, CHAR_PAR_DEFAUT, CHAR_RECHARGE, CHAR_DEPART, CHAR_OBUS } from './data/chars.js?v=0.48.1';
-import { CALIBRES } from './data/calibres.js?v=0.48.1';
-import { effrayer } from './army.js?v=0.48.1';
-import { detruirePont } from './eaux.js?v=0.48.1';
-import { toucher } from './terrain.js?v=0.48.1';
-import { PONTS_JEU, typePont } from './data/ponts.js?v=0.48.1';
+import { CHARS, CHAR_PAR_DEFAUT, CHAR_RECHARGE, CHAR_DEPART, CHAR_OBUS } from './data/chars.js?v=0.49.0';
+import { CALIBRES } from './data/calibres.js?v=0.49.0';
+import { effrayer } from './army.js?v=0.49.0';
+import { detruirePont } from './eaux.js?v=0.49.0';
+import { toucher } from './terrain.js?v=0.49.0';
+import { PONTS_JEU, typePont } from './data/ponts.js?v=0.49.0';
 
 /* Peut-on lancer un char de (camp) vers (x, y) ? `depart` : { x, y } d'où il partirait. */
 export function refusChar(etat, depart, x, y) {
@@ -57,7 +57,7 @@ export function avancerChars(B, ctx, rng) {
         const ici = cx >= 0 && cy >= 0 && cx < T.W && cy < T.H ? cy * T.W + cx : -1;
         const prof = ici >= 0 && !(T.troncon && T.troncon[ici] >= 0) ? -T.diff[ici] : 0;
         const profond = ici >= 0 && T.profond && T.profond[ici];
-        const f = profond || prof >= M.franchit ? 0 : prof >= M.franchit / 2 ? 0.35 : 1;
+        const route = c.ar !== undefined && (c.camp === 0 ? c.y > c.ar : c.y < c.ar), f = route ? 1 : profond || prof >= M.franchit ? 0 : prof >= M.franchit / 2 ? 0.35 : 1;
         if (f === 0) { c.etat = 'enlise'; c.v = 0; B.evenements.push({ type: 'char-enlise', x: c.x, y: c.y, camp: c.camp }); }
         else {
           const surRoute = c.ar !== undefined && (c.camp === 0 ? c.y > c.ar : c.y < c.ar);

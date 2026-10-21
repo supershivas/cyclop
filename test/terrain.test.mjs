@@ -381,3 +381,43 @@ test('un ordre au-delà d\'un fleuve sans pont est refusé à voix haute, avec u
     assert.ok(pts.length > 12, 'un détour, pas une droite');
   } finally { dedans.essai = S; }
 });
+
+group('le générateur de carte (v0.49.0)');
+test('une carte aléatoire est celle de sa graine, passe le contrôle, et varie : fleuves avec ponts, côtes, montagnes', async () => {
+  const { genererCarte } = await import('../js/generateur.js');
+  const { validerSecteur } = await import('../js/tranchees.js');
+  const traits = {}, noms = new Set();
+  for (let g = 1; g <= 120; g++) {
+    const S = genererCarte(g);
+    assert.deepEqual(S, genererCarte(g), 'la même graine, la même carte');
+    assert.deepEqual(validerSecteur(S), [], `la carte ${g} ne touche aucune tranchée`);
+    for (const t of S.genere.traits) traits[t] = (traits[t] || 0) + 1;
+    noms.add(S.nom + S.resume);
+    // un fleuve du no man's land a au moins un pont qui porte un char
+    const fl = S.objets.filter(o => o.o === 'fleuve' && o.y > 90 && o.y < 210);
+    if (fl.length) assert.ok(S.objets.some(o => o.o === 'pont'), `la carte ${g} : un fleuve sans pont`);
+  }
+  for (const t of ['fleuve', 'cote', 'montagne', 'lac', 'collines']) assert.ok(traits[t] > 10, `des cartes avec ${t} : ${traits[t]}`);
+  assert.ok(noms.size > 60, 'des cartes différentes');
+});
+test('le terrain d\'une carte aléatoire se monte, ses eaux sont de l\'eau profonde, et une bataille y tourne', async () => {
+  const { genererCarte } = await import('../js/generateur.js');
+  const { terrainDuSecteur } = await import('../js/secteur-terrain.js');
+  let eaux = 0, hauts = 0;
+  for (let g = 1; g <= 30; g++) {
+    const S = genererCarte(g), { terrain: T } = terrainDuSecteur(S, { ...S.marges }, g, R);
+    if (T.profond.some(v => v)) eaux++;
+    let max = 0; for (let c = 0; c < T.base.length; c += 7) if (T.base[c] > max) max = T.base[c];
+    if (max / 4 > 8) hauts++;
+  }
+  assert.ok(eaux > 8 && hauts > 5, `des eaux : ${eaux}, des hauteurs : ${hauts}`);
+});
+test('la carte aléatoire se joue : nouvelleBataille la tire de la graine, la relecture garde le même sol', async () => {
+  const { nouvelleBataille, avancer, photo, restaurer } = await import('../js/bataille.js');
+  const B = nouvelleBataille(7, R, { secteur: 'aleatoire', soldats: 40, jours: 3 });
+  assert.equal(B.etat.secteur, 'aleatoire');
+  for (let k = 0; k < 60; k++) avancer(B);
+  const b = restaurer(photo(B), R);
+  assert.deepEqual(b.etat.sol.objets, B.etat.sol.objets);
+  assert.equal(b.terrain.profond.reduce((s, v) => s + v, 0), B.terrain.profond.reduce((s, v) => s + v, 0));
+});
