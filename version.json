@@ -1,7 +1,7 @@
 {
-  "version": "0.41.1",
+  "version": "0.41.2",
   "date": "2026-10-21",
   "changes": [
-    "Les versants ne se couvrent plus d'eau sous la pluie : l'eau reste dans les creux et sur le plat, les pentes sont de la boue"
+    "La vitesse du temps choisie (×2, ×4) est gardée jusqu'à la nuit : un assaut, une prise ou une déroute ne la ramènent plus à ×1"
   ]
 }

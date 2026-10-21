@@ -1,5 +1,8 @@
 # Journal des versions
 
+## 0.41.2 — 2026-10-21
+- La vitesse du temps choisie (×2, ×4) est gardée jusqu'à la nuit
+
 ## 0.41.1 — 2026-10-21
 - Les versants ne se couvrent plus d'eau sous la pluie : l'eau reste dans les creux et sur le plat
 
