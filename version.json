@@ -1,8 +1,9 @@
 {
-  "version": "0.45.0",
+  "version": "0.45.1",
   "date": "2026-10-21",
   "changes": [
-    "Au labo, les chars d'assaut sont cinq engins historiques en volumes (Mark IV et sa livrée allemande, Renault FT, Schneider, Saint-Chamond, A7V), à regarder à la caméra libre",
-    "Au labo, trois nuages de gaz en volumes (bouteilles de chlore, obus à phosgène et ypérite, nappe qui coule dans les creux) et quatre propositions d'avions (réglage de tir, Baron rouge, mitraillage, bombardiers de nuit)"
+    "Les fleuves continuent hors de la carte, en méandres ; les faces nord du terrain ont la couleur du sol ; les ponts partent du haut de la rive",
+    "Au labo, dix ponts à comparer (le groupe Terrain) ; les cartes de nom des régiments tiennent dans leur cadre",
+    "Une infobulle à hiérarchie sur la barre de vie, le jour et la météo"
   ]
 }

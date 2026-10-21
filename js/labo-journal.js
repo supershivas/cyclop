@@ -2,6 +2,9 @@
 // Une entrée par version qui touche au labo, la plus récente en haut. `ref` : « sujet-Lettre » (la lettre est celle de la variante,
 // A étant l'actuelle). À chaque changement du labo : une entrée ici, avec `depuis` sur les variantes ajoutées ou changées (labo.js).
 export const JOURNAL = [
+  { version: '0.45.1', date: '2026-10-21', items: [
+    { genre: 'nouveau', texte: 'Les ponts : dix ouvrages en volumes (passerelle de planches, pierre à trois arches, dos d\'âne, chevalets, poutre Warren, suspendu, bateaux, poutres sur piles, bascule, cordes) au-dessus d\'un fleuve dont l\'eau passe dessous, à la caméra libre, contre le tablier du jeu', ref: 'ponts-A' },
+  ] },
   { version: '0.45.0', date: '2026-10-21', items: [
     { genre: 'mis-a-jour', texte: 'Les chars d\'assaut : cinq engins dessinés à l\'échelle en volumes (Mark IV, avec sa livrée allemande de Cambrai, Renault FT à tourelle tournante, Schneider CA 1, Saint-Chamond, A7V allemand), à la caméra libre (glisser, Maj, molette, « Suivre », trois crans de zoom en plus)', ref: 'chars-A' },
     { genre: 'mis-a-jour', texte: 'Les gaz : trois nuages en volumes translucides au lieu de ronds à plat (les bouteilles de chlore de 1915, les obus à phosgène et à ypérite, une nappe qui coule dans les creux), à la caméra libre', ref: 'gaz-A' },

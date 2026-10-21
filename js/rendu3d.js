@@ -6,7 +6,7 @@
      (Jérôme, v0.3.0 : « les régiments lointains apparaissent plus petits »). Au
      point visé, un mètre = `ppm` pixels (le zoom va par facteurs entiers). On la
      tourne (`yaw`) et l'incline un peu, en douceur ; elle ne sort jamais du
-     terrain (borner). Seules les parois tournées vers le sud, l'est et l'ouest
+     terrain (borner). Seules les parois tournées vers le sud, le nord, l'est et l'ouest
      peuvent se voir.
    - L'image est calculée en basse résolution puis agrandie d'un facteur entier
      sans lissage (`image-rendering: pixelated`).
@@ -22,20 +22,20 @@
    - Les soldats : instanciés (une boîte et son ombre) ; au zoom 1 et 2, un
      point de 2 × 2 pixels (la couleur du camp sur son ombre).
    - Les corps : un homme couché (instancié) ; au zoom 1 et 2, un pixel. */
-import { loadThree } from './three-lib.js?v=0.45.0';
-import * as SH from './rendu/shaders.js?v=0.45.0';
-import { creerSoldats } from './rendu/soldats.js?v=0.45.0';
-import { creerCiel } from './rendu/ciel.js?v=0.45.0';
-import { creerMeteo } from './rendu/meteo.js?v=0.45.0';
-import { creerTroncons } from './rendu/troncons.js?v=0.45.0';
-import { creerVegetation } from './rendu/vegetation.js?v=0.45.0';
-import { creerTemps } from './rendu/temps.js?v=0.45.0';
-import { creerEclats } from './rendu/eclats.js?v=0.45.0';
-import { PALETTE, ORDRE, INDICE } from './palette.js?v=0.45.0';
-import { OMBRE, couleursLigne } from './apparence.js?v=0.45.0';
-import { MORCEAU, hauteurVueQ as hauteurQ, hauteurVueM as hauteurM } from './terrain.js?v=0.45.0';
-import { horloge } from './bataille.js?v=0.45.0';
-import { ligneY } from './tranchees.js?v=0.45.0';
+import { loadThree } from './three-lib.js?v=0.45.1';
+import * as SH from './rendu/shaders.js?v=0.45.1';
+import { creerSoldats } from './rendu/soldats.js?v=0.45.1';
+import { creerCiel } from './rendu/ciel.js?v=0.45.1';
+import { creerMeteo } from './rendu/meteo.js?v=0.45.1';
+import { creerTroncons } from './rendu/troncons.js?v=0.45.1';
+import { creerVegetation } from './rendu/vegetation.js?v=0.45.1';
+import { creerTemps } from './rendu/temps.js?v=0.45.1';
+import { creerEclats } from './rendu/eclats.js?v=0.45.1';
+import { PALETTE, ORDRE, INDICE } from './palette.js?v=0.45.1';
+import { OMBRE, couleursLigne } from './apparence.js?v=0.45.1';
+import { MORCEAU, hauteurVueQ as hauteurQ, hauteurVueM as hauteurM } from './terrain.js?v=0.45.1';
+import { horloge, secteurDuJeu } from './bataille.js?v=0.45.1';
+import { ligneY } from './tranchees.js?v=0.45.1';
 
 export const CAMERA = { yaw: 0.15, tangage: 0.95, fov: 30 };   // au départ : tournée de 9°, plongée de 54°, angle de 30°
 // la caméra respire : un balancement très lent, 2° en 23 s (Jérôme, v0.3.1 : variante D du labo retenue)
@@ -169,6 +169,20 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
         i += k;
       }
     }
+    // les parois tournées vers le nord (Jérôme, v0.45.1 : « les faces nord ont la teinte de l'eau ») : la caméra libre peut regarder vers le sud ; sans elles, on voyait à travers le sol le fond de la couleur du temps
+    for (let j = 0; j < h; j++) {
+      const J = j0 + j, premier = J === 0;
+      let i = 0;
+      while (i < w) {
+        const haut = hq(i0 + i, J), bas = premier ? SOCLE * 4 : hq(i0 + i, J - 1);
+        if (haut <= bas) { i++; continue; }
+        let k = 1;
+        while (i + k < w && hq(i0 + i + k, J) === haut && (premier ? SOCLE * 4 : hq(i0 + i + k, J - 1)) === bas) k++;
+        const x0 = i0 + i, x1 = x0 + k, ya = haut * 0.25, yb = bas * 0.25;
+        quad(x1 + E, yb - E, J, x0 - E, yb - E, J, x0 - E, ya + E, J, x1 + E, ya + E, J, haut - bas >= 2 ? 1 : 0, 0, 0.5);
+        i += k;
+      }
+    }
     // les parois tournées vers l'est et l'ouest (vues quand la caméra tourne) ; les bords du champ descendent au socle.
     // L'ouest est éclairé (la lumière vient du nord-ouest) : il garde la couleur du dessus.
     for (let i = 0; i <= w; i++) {
@@ -267,11 +281,48 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
     faireFaux();
   }
   // le faux terrain au-delà du bord (le bord `faux` et `faux-noir`) : un plan immense posé juste sous le sol
+  // Les fleuves de l'atelier qui touchent le bord du terrain (v0.45.1) : pour chaque bout à moins de sa largeur (+ 3 m) du bord, le point où il sort et sa direction, puis sa demi-largeur,
+  // une phase, une amplitude et un nombre, tirés du bout (un hachage : la même graine donne les mêmes méandres). Au plus quatre.
+  function fleuvesSortants() {
+    const out = [];
+    if (!B || !T) return out;
+    const S = secteurDuJeu(B.etat), m = B.etat.marges, W = T.W, H = T.H;
+    for (const O of S.objets || []) {
+      if (O.o !== 'fleuve' || !(O.r > 0)) continue;
+      const P = [[O.x + m.x, O.y + m.y], [(O.x2 ?? O.x) + m.x, (O.y2 ?? O.y) + m.y]];
+      for (let e = 0; e < 2 && out.length < 8; e++) {
+        const [px, pz] = P[e], [qx, qz] = P[1 - e], L = Math.hypot(px - qx, pz - qz) || 1, dx = (px - qx) / L, dz = (pz - qz) / L;
+        const marge = O.r + 3, dehors = px < marge || pz < marge || px > W - marge || pz > H - marge;
+        if (!dehors) continue;
+        // le point où la droite sort du terrain : sur le trait Q → P s'il dépasse le bord, sinon en prolongeant au-delà de P
+        let ex, ez, t = 0;
+        if (px < 0 || pz < 0 || px > W || pz > H) {
+          let t0 = 0, t1 = 1;
+          for (const [a0, a1, lim] of [[qx, px, W], [qz, pz, H]]) {
+            const dd = a1 - a0;
+            if (Math.abs(dd) < 1e-9) continue;
+            let ta = (0 - a0) / dd, tb = (lim - a0) / dd; if (ta > tb) [ta, tb] = [tb, ta];
+            t0 = Math.max(t0, ta); t1 = Math.min(t1, tb);
+          }
+          if (t1 < t0 || t1 >= 1) continue;
+          ex = qx + (px - qx) * t1; ez = qz + (pz - qz) * t1;
+        } else {
+          for (let k = 0; k < 4000 && px + dx * t > 0 && px + dx * t < W && pz + dz * t > 0 && pz + dz * t < H; k++) t += 0.5;
+          ex = px + dx * t; ez = pz + dz * t;
+        }
+        const g = Math.sin(Math.round(ex) * 12.9898 + Math.round(ez) * 78.233) * 43758.5453, u1 = g - Math.floor(g), u2 = (g * 7.31) - Math.floor(g * 7.31);
+        out.push(new THREE.Vector4(ex, ez, dx, dz), new THREE.Vector4(O.r, u1 * 6.2832, 22 + 30 * u2, u2));
+      }
+    }
+    return out.slice(0, 8);
+  }
   function faireFaux() {
     if (faux) { scene.remove(faux); faux.geometry.dispose(); faux.material.dispose(); faux = null; }
     if (!leBord?.faux || !T) return;
     const u = { uKaki: { value: col('h') }, uVert: { value: col('v') }, uGlaise: { value: col('g') }, uBrume: { value: col(leBord.brume || 'r') }, uCentre: { value: new THREE.Vector2(T.W / 2, T.H / 2) }, uDemi: { value: new THREE.Vector2(T.W / 2, T.H / 2) }, uPortee: { value: 500 } };
     fauxU = u;
+    u.uEau = { value: col('e') }; u.uClair = { value: col('r') };
+    const riv = fleuvesSortants(); u.uNRiv = { value: riv.length / 2 }; u.uRiv = { value: Array.from({ length: 8 }, (_, k) => riv[k] || new THREE.Vector4()) };
     faux = new THREE.Mesh(new THREE.PlaneGeometry(6000, 6000).rotateX(-Math.PI / 2).translate(T.W / 2, SOL_Y - 0.15, T.H / 2), new THREE.ShaderMaterial({ uniforms: u, vertexShader: SH.fauxMat.v, fragmentShader: SH.fauxMat.f }));
     faux.frustumCulled = false; scene.add(faux);
   }
@@ -306,7 +357,7 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
       if (!tout && vuLigne[j] === T.versionLigne[j] && (j === T.H - 1 || vuLigne[j + 1] === T.versionLigne[j + 1])) continue;
       couleursLigne(T, j, B.R, gel, solIdx);
       for (let i = 0, c = j * W; i < W; i++, c++) {
-        const a = PAL_RGB[solIdx[c]], b = PAROI_RGB[solIdx[c]], o = c * 4;
+        const a = PAL_RGB[solIdx[c]], b = T.profond[c] ? a : PAROI_RGB[solIdx[c]], o = c * 4;      // la paroi d'une eau est de l'eau (v0.45.1)
         const marche = j < T.H - 1 && hauteurQ(T, c) - hauteurQ(T, c + W) >= 4;     // l'alpha dit : une marche d'un mètre au sud
         solData[o] = a[0]; solData[o + 1] = a[1]; solData[o + 2] = a[2]; solData[o + 3] = marche ? 0 : 255;
         solData[bas + o] = b[0]; solData[bas + o + 1] = b[1]; solData[bas + o + 2] = b[2]; solData[bas + o + 3] = 255;

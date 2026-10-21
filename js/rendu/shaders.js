@@ -30,7 +30,8 @@ export const solMat = {
 // Le faux terrain au-delà du bord : un plan immense, des plaques de la couleur du sol, qui se perd dans la brume
 export const fauxMat = {
   v: `varying vec2 vXZ; void main() { vXZ = position.xz; gl_Position = projectionMatrix * viewMatrix * vec4(position, 1.0); }`,
-  f: `uniform vec3 uKaki, uVert, uGlaise, uBrume; uniform vec2 uCentre, uDemi; uniform float uPortee;
+  f: `uniform vec3 uKaki, uVert, uGlaise, uBrume, uEau, uClair; uniform vec2 uCentre, uDemi; uniform float uPortee;
+      uniform vec4 uRiv[8]; uniform int uNRiv;
       varying vec2 vXZ;
       float h(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
       void main() {
@@ -40,6 +41,20 @@ export const fauxMat = {
         float grand = h(floor(vXZ / 22.0)), petit = h(floor(vXZ / 2.0));
         if (grand > 0.6) c = uVert; else if (grand < 0.1) c = uGlaise;
         if (petit > 0.94) c = uGlaise;
+        // un fleuve qui touche le bord du champ continue ici, en méandres (v0.45.1) : uRiv[2k] = point de sortie et direction, uRiv[2k+1] = demi-largeur, phase, amplitude, graine
+        for (int k = 0; k < 4; k++) {
+          if (k >= uNRiv) break;
+          vec4 a = uRiv[k * 2], b = uRiv[k * 2 + 1];
+          vec2 rel = vXZ - a.xy, dir = a.zw, nor = vec2(-dir.y, dir.x);
+          float t = dot(rel, dir), o = dot(rel, nor);
+          if (t > -30.0 && t < 3500.0) {
+            float tt = max(t, 0.0), ramp = smoothstep(0.0, 80.0, tt), lam = 190.0 + 110.0 * b.w, lam2 = lam * 0.37;
+            float cen = ramp * b.z * (sin(tt / lam + b.y) - sin(b.y) + 0.4 * (sin(tt / lam2 + b.y * 2.3) - sin(b.y * 2.3)));
+            float pente = ramp * b.z * (cos(tt / lam + b.y) / lam + 0.4 * cos(tt / lam2 + b.y * 2.3) / lam2);
+            float larg = b.x * (1.0 + 0.3 * ramp * sin(tt / 137.0 + b.w * 6.0)) * sqrt(1.0 + pente * pente);
+            if (abs(o - cen) < larg) { c = h(floor(vXZ / 3.0)) > 0.93 ? uClair : uEau; }
+          }
+        }
         vec2 q = max(abs(vXZ - uCentre) - uDemi, 0.0);
         c = mix(c, uBrume, smoothstep(30.0, uPortee, length(q)));
         gl_FragColor = vec4(c, 1.0);

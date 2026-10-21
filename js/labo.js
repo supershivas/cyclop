@@ -2,33 +2,34 @@
 // Chaque sujet utilise les mêmes modules que le jeu (terrain, apparence,
 // rendu three.js) : ce qu'on voit ici est ce que le jeu dessinera. Ajouter un
 // sujet ou une variante = ajouter une entrée dans GROUPES.
-import { mountLabo } from './lib/labo-shell.js?v=0.45.0';
-import { spriteCanvas, paletteToGPL, paletteToHex } from './lib/sprites.js?v=0.45.0';
-import { PALETTE, ROLES } from './palette.js?v=0.45.0';
-import { chargerContenu } from './design-store.js?v=0.45.0';
-import { tuile, ETAT } from './tuiles.js?v=0.45.0';
-import { creerTerrain, impact, hydroLignes } from './terrain.js?v=0.45.0';
-import { CALIBRES } from './data/calibres.js?v=0.45.0';
-import { METEO } from './data/meteo.js?v=0.45.0';
-import { nouvelleBataille, avancer, ordonnerMarche, ordonnerBarrage, mourir } from './bataille.js?v=0.45.0';
-import { creerRendu, ZOOMS } from './rendu3d.js?v=0.45.0';
-import { hash2 } from './lib/rng.js?v=0.45.0';
-import { reglerVerdure } from './apparence.js?v=0.45.0';
-import { maquetteAssaut } from './labo-assaut.js?v=0.45.0';
-import { calquePlaques } from './labo-plaques.js?v=0.45.0';
-import { calqueBarre } from './labo-barre-temps.js?v=0.45.0';
-import { maquetteProjections, maquetteVisee } from './labo-projections.js?v=0.45.0';
-import { calqueBarreVie } from './labo-barre-vie.js?v=0.45.0';
-import { calqueClic } from './labo-clic-regiment.js?v=0.45.0';
-import { maquetteBoutons, calqueOrdre, calqueObus } from './labo-satisfaction.js?v=0.45.0';
-import { calqueEtiquette, calqueToast, maquetteCartes } from './labo-hud-ux.js?v=0.45.0';
-import { maquetteCampagne } from './labo-campagne.js?v=0.45.0';
-import { maquetteCaisses, maquetteRates, maquetteSapes } from './labo-arcade.js?v=0.45.0';
-import { maquetteChars } from './labo-chars.js?v=0.45.0';
-import { maquetteGaz } from './labo-gaz.js?v=0.45.0';
-import { maquetteAvions } from './labo-avions.js?v=0.45.0';
-import { JOURNAL } from './labo-journal.js?v=0.45.0';
-import { loadVersion } from './lib/app-update.js?v=0.45.0';
+import { mountLabo } from './lib/labo-shell.js?v=0.45.1';
+import { spriteCanvas, paletteToGPL, paletteToHex } from './lib/sprites.js?v=0.45.1';
+import { PALETTE, ROLES } from './palette.js?v=0.45.1';
+import { chargerContenu } from './design-store.js?v=0.45.1';
+import { tuile, ETAT } from './tuiles.js?v=0.45.1';
+import { creerTerrain, impact, hydroLignes } from './terrain.js?v=0.45.1';
+import { CALIBRES } from './data/calibres.js?v=0.45.1';
+import { METEO } from './data/meteo.js?v=0.45.1';
+import { nouvelleBataille, avancer, ordonnerMarche, ordonnerBarrage, mourir } from './bataille.js?v=0.45.1';
+import { creerRendu, ZOOMS } from './rendu3d.js?v=0.45.1';
+import { hash2 } from './lib/rng.js?v=0.45.1';
+import { reglerVerdure } from './apparence.js?v=0.45.1';
+import { maquetteAssaut } from './labo-assaut.js?v=0.45.1';
+import { calquePlaques } from './labo-plaques.js?v=0.45.1';
+import { calqueBarre } from './labo-barre-temps.js?v=0.45.1';
+import { maquetteProjections, maquetteVisee } from './labo-projections.js?v=0.45.1';
+import { calqueBarreVie } from './labo-barre-vie.js?v=0.45.1';
+import { calqueClic } from './labo-clic-regiment.js?v=0.45.1';
+import { maquetteBoutons, calqueOrdre, calqueObus } from './labo-satisfaction.js?v=0.45.1';
+import { calqueEtiquette, calqueToast, maquetteCartes } from './labo-hud-ux.js?v=0.45.1';
+import { maquetteCampagne } from './labo-campagne.js?v=0.45.1';
+import { maquetteCaisses, maquetteRates, maquetteSapes } from './labo-arcade.js?v=0.45.1';
+import { maquetteChars } from './labo-chars.js?v=0.45.1';
+import { maquetteGaz } from './labo-gaz.js?v=0.45.1';
+import { maquetteAvions } from './labo-avions.js?v=0.45.1';
+import { maquettePonts, PONTS, NOMS_PONTS } from './labo-ponts.js?v=0.45.1';
+import { JOURNAL } from './labo-journal.js?v=0.45.1';
+import { loadVersion } from './lib/app-update.js?v=0.45.1';
 
 document.documentElement.style.setProperty('--jeu-accent', ROLES.accent);
 const NOM = document.title.replace(/^Labo — /, ''); // le nom vient de la page (une apostrophe ne casse rien)
@@ -297,6 +298,12 @@ const GROUPES = [
       { title: 'Le compteur', status: 'ancienne', note: 'Ce que voyait le joueur avant la v0.9.2 : des hommes en boîtes, des obus, et « Tronçons : 12 · 11 » en coin. Rien ne dit qu\'un tronçon est disputé, ni que le dernier défenseur va tomber. Allez à « Contact » avec la frise.', render: s => maquetteAssaut(s, 'actuelle') },
       { title: 'Les fusées', note: 'Non retenu (v0.9.2). L\'avant-dernier acte : une fusée d\'appel quand la sortie commence, deux fusées quand il ne reste qu\'un homme (le tronçon va basculer), et celle d\'en face, d\'une autre couleur, quand il est pris. Un signal lisible de loin, au zoom 1.', render: s => maquetteAssaut(s, 'fusees') },
       { title: 'Tout ensemble', note: 'Non retenu (v0.9.2). Le feu, les marques du tronçon et les fusées. Pour juger si le tout reste lisible, ou s\'il faut en retirer.', render: s => maquetteAssaut(s, 'tout') },
+    ] },
+  ] },
+  { id: 'terrain', title: 'Terrain', topics: [
+    { id: 'ponts', title: 'Les ponts', variants: [
+      { title: 'Le tablier du jeu', status: 'actuelle', depuis: '0.45.1', note: 'Ce que l\'éditeur de carte pose aujourd\'hui (v0.44.0) : un tablier de planches de 6 m sur l\'eau, une seule hauteur qui part de la rive la plus haute (v0.45.1). Pleine masse en cubes : l\'eau ne passe pas dessous, un obus le coupe. Les dix suivantes sont des ouvrages en volumes, au-dessus d\'un fleuve de 16 m dont l\'eau passe dessous.', render: s => maquettePonts(s, R, 'A') },
+      ...Object.keys(PONTS).map(cle => ({ title: NOMS_PONTS[cle], status: 'a-trancher', depuis: '0.45.1', note: PONTS[cle], render: s => maquettePonts(s, R, cle) })),
     ] },
   ] },
   { id: 'arcade', title: 'Arcade', topics: [

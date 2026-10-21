@@ -6,9 +6,9 @@
 // les corps, les traverses, le fanion, les fusées, les sacs retournés). Les nombres (12 défenseurs,
 // 22 assaillants, prise à 3) sont ceux d'une situation plausible ; la scène est écrite à la main,
 // une fonction pure du temps t : un assaut réel mettrait des minutes à venir.
-import { PALETTE } from './palette.js?v=0.45.0';
-import { hash2 } from './lib/rng.js?v=0.45.0';
-import { mountTimeline } from './lib/labo-timeline.js?v=0.45.0';
+import { PALETTE } from './palette.js?v=0.45.1';
+import { hash2 } from './lib/rng.js?v=0.45.1';
+import { mountTimeline } from './lib/labo-timeline.js?v=0.45.1';
 
 const el = (tag, props = {}, ...kids) => { const e = Object.assign(document.createElement(tag), props); e.append(...kids); return e; };
 

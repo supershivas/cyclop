@@ -4,10 +4,10 @@
 // qui le suit dit le jour et l'heure ; tout en bas, les seuls changements de météo, en pictogrammes. Le joueur ne connaît pas la météo des jours à
 // venir (la logique la tire d'avance) : seuls les jours passés et le jour même sont lus dans l'état, demain est la prévision (juste 7 fois sur 10).
 // Le dessin seulement : rien n'est sauvegardé.
-import { PALETTE } from '../palette.js?v=0.45.0';
-import { METEO } from '../data/meteo.js?v=0.45.0';
-import { ICONES_METEO } from './meteo-icones.js?v=0.45.0';
-import { horloge } from '../bataille.js?v=0.45.0';
+import { PALETTE } from '../palette.js?v=0.45.1';
+import { METEO } from '../data/meteo.js?v=0.45.1';
+import { ICONES_METEO } from './meteo-icones.js?v=0.45.1';
+import { horloge } from '../bataille.js?v=0.45.1';
 
 const FOND = { sec: PALETTE.h, pluie: PALETTE.e, brouillard: PALETTE.r, gel: PALETTE.o };
 const el = (tag, cls, ...kids) => { const e = document.createElement(tag); if (cls) e.className = cls; e.append(...kids); return e; };
@@ -55,10 +55,11 @@ export function creerBarreTemps({ $, bataille }) {
       const c = cases[k];
       c.style.background = m ? FOND[m] : '';
       c.className = prevu ? 'prevu' : '';
+      c.dataset.info = prevu ? `# Jour ${k + 1}\n## Demain (prévision)\n**${METEO[m].prevision}**` : m ? `# Jour ${k + 1}\n## Le temps\n**${METEO[m].nom}**` : `# Jour ${k + 1}\n## Pas encore connu`;
       f.querySelector('.frise-nuit').children[k].className = k < h.jour - 1 ? 'passe' : '';
       const g = icones[k], change = m && m !== avant;
       g.hidden = !change;
-      if (change) { g.firstChild.innerHTML = ICONES_METEO[m]; g.classList.toggle('prevu', prevu); g.title = prevu ? `Demain : ${METEO[m].prevision}` : METEO[m].nom; }
+      if (change) { g.firstChild.innerHTML = ICONES_METEO[m]; g.classList.toggle('prevu', prevu); g.dataset.info = prevu ? `# Demain\n## Prévision\n**${METEO[m].prevision}**` : `# Le temps change\n## Ce jour-là\n**${METEO[m].nom}**`; }
       avant = m || avant;
     }
     placerDrapeau(f);

@@ -111,6 +111,14 @@
 @media (hover: hover) { .batterie:hover:not(.vise) { background: var(--jeu-accent); color: var(--jeu-fond); } .batterie:hover:not(.vise) span { color: var(--jeu-fond); } }
 .vise .jeu-canvas { cursor: crosshair; }
 
+.infobulle { position: fixed; left: 0; top: 0; z-index: 60; max-width: 34ch; padding: var(--e1) var(--pas); background: var(--jeu-encre); color: var(--jeu-fond); font-size: var(--texte-petit); line-height: 1.4; box-shadow: 2px 2px 0 var(--jeu-fond); pointer-events: none; }
+.infobulle[hidden] { display: none; }
+.infobulle span { display: block; }
+.infobulle .h1 { font-size: var(--texte-moyen); font-weight: 700; line-height: 1.2; }
+.infobulle .h2 { font-size: var(--texte-petit); font-weight: 700; letter-spacing: .08em; text-transform: uppercase; margin-top: var(--e1); opacity: .8; }
+.infobulle .p { margin-top: var(--e0); }
+.infobulle b { font-weight: 700; }
+[data-info] { pointer-events: auto; }
 .etiquettes, .retours { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
 .etiquette {
   /* le cartouche (Jérôme, v0.41.3 ; sujet « Le nom d'un régiment » du labo, variante C) : un carré à numéro (la couleur de l'armée ; orange s'il est ébranlé, rouge s'il est en déroute),
@@ -124,7 +132,7 @@
 .etiquette .num { display: grid; place-items: center; background: var(--jeu-nous); color: var(--jeu-fond); font-size: var(--texte-grand); }
 .etiquette.ebranle .num { background: var(--jeu-ebranle); }
 .etiquette.deroute .num { background: var(--jeu-deroute); }
-.etiquette .corps { display: grid; gap: var(--e0); align-content: center; min-width: 96px; padding: var(--e1) var(--pas); }
+.etiquette .cart-corps { display: grid; gap: var(--e0); align-content: center; min-width: 96px; padding: var(--e1) var(--pas); }
 .etiquette .nom { font-size: var(--texte-moyen); line-height: 1.15; }
 .etiquette .statut { font-size: var(--texte-petit); line-height: 1.2; color: var(--jeu-accent); }
 .etiquette.ebranle .statut, .etiquette.deroute .statut { color: inherit; letter-spacing: .08em; text-transform: uppercase; }
@@ -487,7 +495,6 @@ h2 { font-weight: normal; letter-spacing: var(--titre-lettres); }
 .pertes-jour span { color: var(--jeu-accent); font-size: var(--texte-petit); white-space: nowrap; }
 /* le chiffre n'est dit qu'au survol d'un segment (ordinateur seulement) */
 @media (hover: hover) {
-  .pertes [data-tip]:hover::after { content: attr(data-tip); position: absolute; left: 50%; top: calc(100% + 6px); transform: translateX(-50%); z-index: 5; padding: 2px var(--pas); white-space: nowrap; background: var(--jeu-encre); color: var(--jeu-fond); font-size: var(--texte-petit); box-shadow: 2px 2px 0 var(--jeu-fond); pointer-events: none; }
   .pertes .vie, .pertes .troncons { cursor: default; }
 }
 

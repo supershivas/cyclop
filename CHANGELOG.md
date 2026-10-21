@@ -1,5 +1,13 @@
 # Journal des versions
 
+## 0.45.1 — 2026-10-21
+- Un fleuve qui touche le bord de la carte continue en méandres dans le faux terrain
+- Les faces nord du terrain (vues quand on tourne la caméra) ont la couleur du sol, plus celle du fond ; les parois d'eau sont de l'eau
+- Un pont part du point le plus haut de chaque rive
+- Le cartouche du nom d'un régiment contient son texte
+- Une infobulle (titre, sous-titre, gras) au survol de la barre de vie, du jour et des icônes de météo
+- Au labo, le groupe Terrain : dix ponts, l'eau passe dessous
+
 ## 0.45.0 — 2026-10-21
 - Au labo, les chars d'assaut sont cinq engins dessinés à l'échelle (Mark IV, avec sa livrée allemande de Cambrai, Renault FT à tourelle tournante, Schneider CA 1, Saint-Chamond, A7V allemand), qu'on regarde à la caméra libre (glisser, Maj, molette, « Suivre », trois crans de zoom en plus)
 - Au labo, les gaz sont trois nuages en volumes translucides (les bouteilles de chlore de 1915, les obus à phosgène et à ypérite, une nappe qui coule dans les creux)
