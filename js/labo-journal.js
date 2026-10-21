@@ -2,7 +2,7 @@
 // Une entrée par version qui touche au labo, la plus récente en haut. `ref` : « sujet-Lettre » (la lettre est celle de la variante,
 // A étant l'actuelle). À chaque changement du labo : une entrée ici, avec `depuis` sur les variantes ajoutées ou changées (labo.js).
 export const JOURNAL = [
-  { version: '0.45.1', date: '2026-10-21', items: [
+  { version: '0.47.1', date: '2026-10-21', items: [
     { genre: 'nouveau', texte: 'Les ponts : dix ouvrages en volumes (passerelle de planches, pierre à trois arches, dos d\'âne, chevalets, poutre Warren, suspendu, bateaux, poutres sur piles, bascule, cordes) au-dessus d\'un fleuve dont l\'eau passe dessous, à la caméra libre, contre le tablier du jeu', ref: 'ponts-A' },
   ] },
   { version: '0.45.0', date: '2026-10-21', items: [

@@ -1,15 +1,15 @@
-// Les ponts du labo (Jérôme, v0.45.1 : « dans l'onglet terrain, dix versions de ponts (simple, arches, bois, métal, etc.), l'eau doit passer dessous »).
+// Les ponts du labo (Jérôme, v0.47.1 : « dans l'onglet terrain, dix versions de ponts (simple, arches, bois, métal, etc.), l'eau doit passer dessous »).
 // A : le pont du jeu (un tablier de planches posé sur l'eau par l'éditeur de carte, `pont` de objets, v0.44.0). B à K : dix ouvrages de 1914-18 dessinés en volumes (`THREE`, 1 unité = 1 m, mêmes arêtes
 // que les chars), posés sur le moteur du jeu au-dessus d'un fleuve de 16 m de large : l'eau n'est pas touchée, elle passe sous chaque pont (les piles, les arches, les pontons, rien). La caméra est libre
 // (glisser : tourner et incliner ; Maj ou bouton droit : déplacer ; molette : zoomer). Rien n'est dans le jeu : le tablier du jeu reste celui d'aujourd'hui tant que Jérôme n'a pas tranché ;
 // le régiment au bord de l'eau donne l'échelle (un homme : 1,7 m).
 // Chaque ouvrage est construit autour de son tablier : l'origine est le milieu du pont, au niveau du dessus du tablier (y = 0), x le long de la portée, z en travers. `d` donne la portée entre les rives
 // (`L`, 16 m + les appuis), la largeur utile (`W`) et la hauteur de la rive sur l'eau (`H`). Les nombres sont des proportions plausibles de l'époque, pas des plans.
-import { PALETTE as P } from './palette.js?v=0.47.0';
-import { loadThree } from './three-lib.js?v=0.47.0';
-import { SECTEURS } from './data/secteur.js?v=0.47.0';
-import { el, scene, maquette, bouton } from './labo-arcade.js?v=0.47.0';
-import { atelier } from './labo-chars.js?v=0.47.0';
+import { PALETTE as P } from './palette.js?v=0.47.1';
+import { loadThree } from './three-lib.js?v=0.47.1';
+import { SECTEURS } from './data/secteur.js?v=0.47.1';
+import { el, scene, maquette, bouton } from './labo-arcade.js?v=0.47.1';
+import { atelier } from './labo-chars.js?v=0.47.1';
 
 const RIVIERE = { o: 'fleuve', x: -100, y: 150, x2: 500, y2: 150, r: 8 };
 const PONT_JEU = { o: 'pont', x: 150, y: 162, x2: 150, y2: 138, r: 3 };

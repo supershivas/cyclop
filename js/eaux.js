@@ -2,7 +2,7 @@
 // mêmes coordonnées que `formes.js` (mètres du SECTEUR). Logique pure, sans hasard. Une eau est creusée d'un coup à plat (au niveau de sa rive la plus basse moins un mètre, au mètre près : le sol se
 // dessine en marches d'un mètre) et marquée `profond` : on n'y passe pas (les champs de coûts la contournent, un homme qui s'y trouve la quitte à peine), sauf sur un pont (`ponts` : v0.44.0).
 // Un fleuve suit le terrain : son niveau est celui de la rive la plus basse sur ±15 m de son cours, pas un niveau pour tout le cours.
-import { distanceForme, extremite } from './formes.js?v=0.47.0';
+import { distanceForme, extremite } from './formes.js?v=0.47.1';
 
 export const EAUX = ['lac', 'fleuve'];
 export const PONT_AU_MOINS = 4;          // quarts : le tablier est à 1 m au moins au-dessus de l'eau
@@ -36,7 +36,7 @@ export function poserPonts(base, profond, pont, ponts, { W, H, ox, oy }, objets)
   for (const O of objets || []) {
     if (O.o !== 'pont' || !(O.r > 0)) continue;
     const F = { x: O.x, y: O.y, x2: O.x2, y2: O.y2 }, [x2, y2] = extremite(F), r = O.r, long = Math.hypot(x2 - F.x, y2 - F.y);
-    // la rive d'un bout : sa case la plus haute (hors de l'eau) à moins de r + 3 m du bout ; le tablier en part (v0.45.1 : il partait de la case du bout, souvent plus bas que la rive, et s'enfonçait)
+    // la rive d'un bout : sa case la plus haute (hors de l'eau) à moins de r + 3 m du bout ; le tablier en part (v0.47.1 : il partait de la case du bout, souvent plus bas que la rive, et s'enfonçait)
     const haut = (px, py) => {
       let m = -Infinity, rayon = r + 3;
       for (let j = Math.max(0, Math.floor(py + oy - rayon)); j <= Math.min(H - 1, Math.ceil(py + oy + rayon)); j++) for (let i = Math.max(0, Math.floor(px + ox - rayon)); i <= Math.min(W - 1, Math.ceil(px + ox + rayon)); i++) {

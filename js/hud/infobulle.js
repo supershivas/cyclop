@@ -1,5 +1,5 @@
-// L'infobulle du HUD (Jérôme, v0.45.1 : « barre de vie générale : au survol, les informations (blessés, tués, secteurs…), idem pour les icônes de météo ») : une seule bulle, posée près du pointeur,
-// qui dit ce que porte `data-info` de l'élément survolé : des lignes séparées par des retours, avec une hiérarchie (Jérôme, v0.45.1 : « toujours une hiérarchie (h1, h2…) et du gras ») :
+// L'infobulle du HUD (Jérôme, v0.47.1 : « barre de vie générale : au survol, les informations (blessés, tués, secteurs…), idem pour les icônes de météo ») : une seule bulle, posée près du pointeur,
+// qui dit ce que porte `data-info` de l'élément survolé : des lignes séparées par des retours, avec une hiérarchie (Jérôme, v0.47.1 : « toujours une hiérarchie (h1, h2…) et du gras ») :
 // `# titre` (h1), `## sous-titre` (h2), une ligne simple (le corps) ; `**gras**` dans une ligne. Elle remplace le `title` du navigateur (lent, parfois invisible) et le `data-tip` des segments, qui ne recevaient
 // aucun survol (le HUD ne prend pas le pointeur : `pointer-events: none`, sauf ce qui le demande). Le dessin seulement ; sans pointeur fin, rien.
 const echapper = t => t.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');

@@ -2,8 +2,9 @@
 // en trois temps) du labo) : le dessin seulement, par-dessus le moteur. Rien ici ne lit ni ne modifie la partie au-delà de lire `B.armee` pour placer le dessin ;
 // aucun tirage du générateur de la bataille, rien de sauvegardé. Un SVG (le fanion et ses fils) et un canvas 2D (la poussière, l'impact), suivis de la caméra
 // par `versEcran`. Fabrique `creerRetours({ $, rendu: () => rendu, bataille: () => B })` : le rendu et la bataille changent à chaque partie, on les lit à chaque appel.
-import { PALETTE as P } from '../palette.js?v=0.47.0';
-import { CALIBRES } from '../data/calibres.js?v=0.47.0';
+import { PALETTE as P } from '../palette.js?v=0.47.1';
+import { CALIBRES } from '../data/calibres.js?v=0.47.1';
+import { MITRAILLAGE as M } from '../data/mitraillage.js?v=0.47.1';
 
 const svgEl = (tag, attrs = {}) => { const e = document.createElementNS('http://www.w3.org/2000/svg', tag); for (const [k, v] of Object.entries(attrs)) e.setAttribute(k, v); return e; };
 const borne = (u, a = 0, b = 1) => Math.min(b, Math.max(a, u));
@@ -106,6 +107,40 @@ export function creerRetours({ $, rendu: lireRendu, bataille: lireBataille }) {
     };
   }
 
+  // la passe d'un avion (v0.46.0) : il traverse la bande de l'arrière de son camp vers l'autre (nous : vers le nord), deux traînées de balles tombent derrière lui
+  // et lèvent des gerbes de poussière en ligne ; son ombre le suit sur le sol. Le dessin seulement : les morts, eux, sont déjà tombés.
+  function passe(x, y, camp) {
+    const sens = camp === 0 ? -1 : 1, hl = M.longueur / 2, T_PASSE = 0.9;
+    return {
+      duree: 1.6,
+      maj(t, g) {
+        const u = borne(t / T_PASSE), yp = y - sens * hl + sens * 2 * hl * u;
+        const [px, py] = S(x, yp), [ex] = S(x + 1, yp), ppm = Math.abs(ex - px) || 1, haut = M.hauteur * ppm * 1.3;
+        // les gerbes le long de la piste, du départ à l'avion, qui s'éteignent
+        for (let k = 0; k <= 24; k++) {
+          const f = k / 24, yk = y - sens * hl + sens * 2 * hl * f;
+          if (f > u) break;
+          const age = (t - f * T_PASSE) / 0.7; if (age > 1) continue;
+          for (const dx of [-3, 3]) {
+            const [sx, sy] = S(x + dx + ((k * 7 + (dx > 0 ? 3 : 0)) % 5 - 2) * 0.4, yk);
+            g.globalAlpha = (1 - age) * 0.9; g.fillStyle = k % 3 ? P.r : P.o;
+            const r = 1 + 2.5 * age + ppm * 0.25; g.fillRect(sx - r, sy - r * 0.6 - age * 6, 2 * r, 1.2 * r);
+          }
+        }
+        if (u < 1) {
+          g.globalAlpha = 0.35; g.fillStyle = P.t;
+          g.beginPath(); g.ellipse(px, py, ppm * 4, ppm * 1.4, 0, 0, Math.PI * 2); g.fill();      // l'ombre
+          g.globalAlpha = 1; g.strokeStyle = P.o; g.lineWidth = 1.5; g.setLineDash([4, 5]);        // les traceurs, du ventre au sol
+          for (const dx of [-3, 3]) { const [sx, sy] = S(x + dx, yp - sens * 6); g.beginPath(); g.moveTo(px + dx * ppm * 0.4, py - haut); g.lineTo(sx, sy); g.stroke(); }
+          g.setLineDash([]);
+          g.fillStyle = P.t; g.fillRect(px - ppm * 3.6, py - haut - 3, ppm * 7.2, 6);               // l'avion : le corps, les ailes et la queue
+          g.fillStyle = P.o; g.fillRect(px - ppm * 3.6, py - haut - 2, ppm * 7.2, 3);
+          g.fillStyle = P.t; g.fillRect(px - 2, py - haut - 6 + (sens > 0 ? 0 : -4), 4, 14);
+        }
+      },
+    };
+  }
+
   const ajouter = fx => { fx.t = 0; liste.push(fx); };
   return {
     // un ordre de marche en terrain libre (la tranchée a déjà son clignotement) : le fanion, puis la réponse des hommes
@@ -117,6 +152,7 @@ export function creerRetours({ $, rendu: lireRendu, bataille: lireBataille }) {
     evenements(ev) {
       const R = lireRendu(); if (!R || !ev.length) return;
       for (const e of ev) {
+        if (e.type === 'mitraillage') { ajouter(passe(e.x, e.y, e.camp)); continue; }
         if (e.type !== 'impact' || liste.filter(f => f.impact).length >= MAX_IMPACTS) continue;
         const [sx, sy] = R.versEcran(e.x, e.y);
         if (sx < -50 || sy < -50 || sx > couche.clientWidth + 50 || sy > couche.clientHeight + 50) continue;

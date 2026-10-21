@@ -14,19 +14,22 @@
    La sauvegarde (photo) garde la graine, la liste compacte des impacts, l'état
    de la foule et les petites couches de logique ; jamais le relief : il se
    rejoue depuis la graine et les impacts (rejouerTerrain). */
-import { createRng, hash2 } from './lib/rng.js?v=0.47.0';
-import { impact, hydroLignes, etat as etatCase, vitesseEtat, vitesseCase, ETAT } from './terrain.js?v=0.47.0';
-import { creerArmee, ajouterSoldat, construireGrille, pasArmee, tuerDans, effrayer, compacter, photoArmee, restaurerArmee, b64, deB64, DENSITE, place } from './army.js?v=0.47.0';
-import { ligneSous } from './tranchees.js?v=0.47.0';
-import { terrainDuSecteur } from './secteur-terrain.js?v=0.47.0';
-import { calculerCouts, creerCacheChamps, dimensionsCouts, BLOC } from './champs.js?v=0.47.0';
-import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.47.0';
-import { METEO, TRANSITIONS, PREVISION_JUSTE } from './data/meteo.js?v=0.47.0';
-import { SECTEURS } from './data/secteur.js?v=0.47.0';
-import { REGIMENTS } from './data/lexique.js?v=0.47.0';
-import { STANCES, STANCE_DEFAUT } from './data/stances.js?v=0.47.0';
-import { grade } from './identite.js?v=0.47.0';
-import { corvees, rejouerTravaux } from './nuit.js?v=0.47.0';
+import { createRng, hash2 } from './lib/rng.js?v=0.47.1';
+import { impact, hydroLignes, etat as etatCase, vitesseEtat, vitesseCase, ETAT } from './terrain.js?v=0.47.1';
+import { creerArmee, ajouterSoldat, construireGrille, pasArmee, tuerDans, effrayer, compacter, photoArmee, restaurerArmee, b64, deB64, DENSITE, place } from './army.js?v=0.47.1';
+import { ligneSous } from './tranchees.js?v=0.47.1';
+import { terrainDuSecteur } from './secteur-terrain.js?v=0.47.1';
+import { calculerCouts, creerCacheChamps, dimensionsCouts, BLOC } from './champs.js?v=0.47.1';
+import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.47.1';
+import { AVION, MITRAILLAGE } from './data/mitraillage.js?v=0.47.1';
+import { CHAR, CHAR_RECHARGE } from './data/chars.js?v=0.47.1';
+import { refusChar, lancerChar, degatsChars, avancerChars } from './chars.js?v=0.47.1';
+import { METEO, TRANSITIONS, PREVISION_JUSTE } from './data/meteo.js?v=0.47.1';
+import { SECTEURS } from './data/secteur.js?v=0.47.1';
+import { REGIMENTS } from './data/lexique.js?v=0.47.1';
+import { STANCES, STANCE_DEFAUT } from './data/stances.js?v=0.47.1';
+import { grade } from './identite.js?v=0.47.1';
+import { corvees, rejouerTravaux } from './nuit.js?v=0.47.1';
 
 export const PAS = 1 / 30;                 // s de jeu par pas
 export const NOUS = 0, EUX = 1;
@@ -107,6 +110,8 @@ export function nouvelleBataille(graine, R, opts = {}) {
     deux: !!opts.deux,                  // un second joueur commande en face (v0.30.0) : l'IA d'en face se tait, ses batteries rechargent comme les nôtres
     batteriesEux: Object.fromEntries(NOMS_CALIBRES.map(c => [c, 0])),
     barrages: [],
+    chars: [],                          // les chars d'assaut en route ou en épave (v0.47.0) : voir chars.js
+    mitraillages: [],                   // les passes d'avion en attente (v0.46.0) : { camp, x, y, prochain }
     ia: { barrage: R.ia.barrage * 0.5, offensive: R.ia.offensive },
     temps: 0,                           // s de jeu écoulées, nuits non comptées
     rng: 0,
@@ -334,23 +339,26 @@ export function ordonnerStance(B, ids, stance, camp = NOUS) {
 }
 
 /* Le barrage à sec : { ok } ou { refus }, sans rien changer (à deux, on dit le refus tout de suite, l'ordre part ensuite pour les deux machines). */
+const batterieDe = cal => CALIBRES[cal] ?? (cal === AVION ? MITRAILLAGE : cal === CHAR ? { recharge: CHAR_RECHARGE } : null);
+const nomBatterie = cal => cal === AVION ? 'L\'escadrille rentre' : cal === CHAR ? 'Le prochain char n\'est pas prêt' : `La batterie de ${cal} recharge`;
 export function peutBarrage(B, cal, x, y, camp = NOUS) {
-  const { etat } = B, C = CALIBRES[cal];
+  const { etat } = B, C = batterieDe(cal);
   if (!C) return { refus: `Pas de batterie de ${cal}.` };
   if (etat.phase !== 'jour') return { refus: 'La nuit, les ordres attendent l\'aube.' };
   const Z = zone(B);
   if (x < Z.x0 || y < Z.y0 || x >= Z.x1 || y >= Z.y1) return { refus: 'Hors du secteur.' };
   if (camp === NOUS || etat.deux) {
-    const reste = (camp === NOUS ? etat.batteries : etat.batteriesEux)[cal] - etat.temps;
-    if (reste > 0) return { refus: `La batterie de ${cal} recharge : encore ${Math.ceil(reste)} s.` };
+    const reste = ((camp === NOUS ? etat.batteries : etat.batteriesEux)[cal] ?? 0) - etat.temps;
+    if (reste > 0) return { refus: `${nomBatterie(cal)} : encore ${Math.ceil(reste)} s.` };
   }
+  if (cal === CHAR) { const r = refusChar(etat, departChar(B, camp, x), x, y); if (r) return { refus: r }; }
   return { ok: true };
 }
 /* Un barrage d'artillerie autour de (x, y). */
 export function ordonnerBarrage(B, cal, x, y, camp = NOUS) {
   const { etat } = B;
   const S = secteurDuJeu(etat);
-  const C = CALIBRES[cal];
+  const C = batterieDe(cal);
   void S;
   if (!C) return { refus: `Pas de batterie de ${cal}.` };
   if (etat.phase !== 'jour') return { refus: 'La nuit, les ordres attendent l\'aube.' };
@@ -358,14 +366,22 @@ export function ordonnerBarrage(B, cal, x, y, camp = NOUS) {
   if (x < Z.x0 || y < Z.y0 || x >= Z.x1 || y >= Z.y1) return { refus: 'Hors du secteur.' };
   if (camp === NOUS || etat.deux) {        // (en face, l'IA tire sans attendre ; un second joueur recharge comme nous)
     const bat = camp === NOUS ? etat.batteries : (etat.batteriesEux ??= Object.fromEntries(NOMS_CALIBRES.map(c => [c, 0])));
-    const reste = bat[cal] - etat.temps;
-    if (reste > 0) return { refus: `La batterie de ${cal} recharge : encore ${Math.ceil(reste)} s.` };
+    const reste = (bat[cal] ?? 0) - etat.temps;
+    if (reste > 0) return { refus: `${nomBatterie(cal)} : encore ${Math.ceil(reste)} s.` };
+    if (cal === CHAR) { const r = refusChar(etat, departChar(B, camp, x), x, y); if (r) return { refus: r }; }
     bat[cal] = etat.temps + C.recharge;
   }
+  if (cal === CHAR) { lancerChar(B, camp, departChar(B, camp, x), x, y); return { ok: true }; }
+  if (cal === AVION) { etat.mitraillages.push({ camp, x, y, prochain: etat.temps + MITRAILLAGE.delai }); return { ok: true }; }
   etat.barrages.push({ camp, cal, x, y, reste: C.salve, prochain: etat.temps + 1.5 });
   return { ok: true };
 }
 
+/* D'où part un char de (camp) : l'arrière de son camp, à la colonne visée (null : pas de lignes dans ce secteur) */
+function departChar(B, camp, x) {
+  const a = arriereDe(B); if (!a) return null;
+  return { x, y: a[camp] };
+}
 /* L'arrière de chaque camp [nous, en face] : la rangée derrière sa dernière ligne, où les blessés qui marchent s'arrêtent (Jérôme, v0.35.0) */
 export function arriereDe(B) {
   const { etat, R } = B, Ld = secteurDuJeu(etat).tranchees?.lignes, y0 = etat.marges.y;
@@ -418,6 +434,8 @@ export function avancer(B) {
     }
   }
   etat.barrages = etat.barrages.filter(b => b.reste > 0);
+  if (etat.mitraillages.length) mitrailler(B, ctx, rng);
+  if (etat.chars.length) avancerChars(B, ctx, rng);
   enFace(B, rng);
   pasArmee(A, ctx);
   // un homme qui tombe fait peur à ceux qui sont à côté
@@ -786,12 +804,37 @@ export function abriDe(B, c) {
   return n ? 1 - B.R.nuit.abriParNiveau * n : 1;
 }
 
+/* Les passes d'avion dont l'heure est venue (v0.46.0) : tous les hommes de la bande, des deux camps, sont tirés dans l'ordre de leur indice (même partie à la relecture).
+   Un homme debout est touché avec la chance `letal` (les creux et tranchées l'abritent comme contre un obus), un touché meurt ou est blessé (`frapper`),
+   les autres de la bande prennent la peur ; leurs voisins, moins. L'événement `mitraillage` dit la passe au dessin (le sens : de l'arrière de son camp vers l'autre). */
+function mitrailler(B, ctx, rng) {
+  const { etat, terrain: T, armee: A, R } = B, M = MITRAILLAGE;
+  const reste = [];
+  for (const m of etat.mitraillages) {
+    if (etat.temps < m.prochain) { reste.push(m); continue; }
+    const hw = M.largeur / 2, hl = M.longueur / 2;
+    for (let i = 0; i < A.n; i++) {
+      if (A.mort[i] || Math.abs(A.x[i] - m.x) > hw || Math.abs(A.y[i] - m.y) > hl) continue;
+      let p = M.letal;
+      const ci = (A.y[i] | 0) * T.W + (A.x[i] | 0);
+      if (T.diff[ci] <= -2) p *= R.obus.abri;
+      if (ctx.abri) p *= ctx.abri(ci);
+      if (rng() < p) ctx.frapper(i, 'avion', M.gravite);
+      else A.peur[i] = Math.max(A.peur[i], M.peur);
+    }
+    effrayer(A, m.x, m.y, M.longueur / 2 + M.rayonPeur, R.soldat.peurObus, R.experience);
+    B.evenements.push({ type: 'mitraillage', camp: m.camp, x: m.x, y: m.y });
+  }
+  etat.mitraillages = reste;
+}
+
 function tomber(B, x, y, cal, ctx, gel) {
   const { etat, terrain: T, R } = B;
   const n = etat.impacts.length;
   etat.impacts.push([etat.jour, etat.tickJour, Math.round(x * 10), Math.round(y * 10), NOMS_CALIBRES.indexOf(cal)]);
   const { rayon } = impact(T, x, y, cal, R, n, gel);
   tuerDans(B.armee, x, y, rayon, ctx, CALIBRES[cal].letal);
+  if (etat.chars.length) degatsChars(B, x, y, cal);
   // un gros obus tombé dans un tronçon crève un de ses abris
   const k = T.troncon ? T.troncon[(y | 0) * T.W + (x | 0)] : -1;
   if (k >= 0 && cal === R.nuit.abriDetruit && etat.abris[k]) { if (--etat.abris[k] <= 0) delete etat.abris[k]; }
@@ -982,6 +1025,7 @@ export function* etapesRestaurer(p, R) {
   etat.parRegiment ??= Math.floor(etat.parCamp / secteurDuJeu(etat).regiments);
   etat.travaux ??= []; etat.tombes ??= []; etat.evacues ??= []; etat.nuits ??= [];   // (avant la v0.6.0 : pas de corvées)
   for (const reg of etat.regiments) { reg.moral ??= R.moral.depart; reg.deroute ??= false; reg.vivres ??= R.nuit.vivres; reg.stance ??= STANCE_DEFAUT; }   // (avant la v0.5.0 : pas de moral ; avant la v0.36.0 : pas de posture)
+  etat.chars ??= []; etat.mitraillages ??= [];   // (avant la v0.46.0 : pas d'avions)
   etat.deux ??= false; etat.batteriesEux ??= Object.fromEntries(NOMS_CALIBRES.map(c => [c, 0]));
   etat.abris ??= {};   // (avant la v0.11.0 : ni abris ; ni vivres)
   etat.troncons ??= []; etat.melee ??= etat.troncons.map(() => 0); etat.prises ??= etat.pertesJour.map(() => [0, 0]);   // (avant la v0.4.0 : pas de tranchées)

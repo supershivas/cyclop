@@ -41,7 +41,7 @@ export const fauxMat = {
         float grand = h(floor(vXZ / 22.0)), petit = h(floor(vXZ / 2.0));
         if (grand > 0.6) c = uVert; else if (grand < 0.1) c = uGlaise;
         if (petit > 0.94) c = uGlaise;
-        // un fleuve qui touche le bord du champ continue ici, en méandres (v0.45.1) : uRiv[2k] = point de sortie et direction, uRiv[2k+1] = demi-largeur, phase, amplitude, graine
+        // un fleuve qui touche le bord du champ continue ici, en méandres (v0.47.1) : uRiv[2k] = point de sortie et direction, uRiv[2k+1] = demi-largeur, phase, amplitude, graine
         for (int k = 0; k < 4; k++) {
           if (k >= uNRiv) break;
           vec4 a = uRiv[k * 2], b = uRiv[k * 2 + 1];

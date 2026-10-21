@@ -22,20 +22,21 @@
    - Les soldats : instanciés (une boîte et son ombre) ; au zoom 1 et 2, un
      point de 2 × 2 pixels (la couleur du camp sur son ombre).
    - Les corps : un homme couché (instancié) ; au zoom 1 et 2, un pixel. */
-import { loadThree } from './three-lib.js?v=0.47.0';
-import * as SH from './rendu/shaders.js?v=0.47.0';
-import { creerSoldats } from './rendu/soldats.js?v=0.47.0';
-import { creerCiel } from './rendu/ciel.js?v=0.47.0';
-import { creerMeteo } from './rendu/meteo.js?v=0.47.0';
-import { creerTroncons } from './rendu/troncons.js?v=0.47.0';
-import { creerVegetation } from './rendu/vegetation.js?v=0.47.0';
-import { creerTemps } from './rendu/temps.js?v=0.47.0';
-import { creerEclats } from './rendu/eclats.js?v=0.47.0';
-import { PALETTE, ORDRE, INDICE } from './palette.js?v=0.47.0';
-import { OMBRE, couleursLigne } from './apparence.js?v=0.47.0';
-import { MORCEAU, hauteurVueQ as hauteurQ, hauteurVueM as hauteurM } from './terrain.js?v=0.47.0';
-import { horloge, secteurDuJeu } from './bataille.js?v=0.47.0';
-import { ligneY } from './tranchees.js?v=0.47.0';
+import { loadThree } from './three-lib.js?v=0.47.1';
+import * as SH from './rendu/shaders.js?v=0.47.1';
+import { creerSoldats } from './rendu/soldats.js?v=0.47.1';
+import { creerChars } from './rendu/chars.js?v=0.47.1';
+import { creerCiel } from './rendu/ciel.js?v=0.47.1';
+import { creerMeteo } from './rendu/meteo.js?v=0.47.1';
+import { creerTroncons } from './rendu/troncons.js?v=0.47.1';
+import { creerVegetation } from './rendu/vegetation.js?v=0.47.1';
+import { creerTemps } from './rendu/temps.js?v=0.47.1';
+import { creerEclats } from './rendu/eclats.js?v=0.47.1';
+import { PALETTE, ORDRE, INDICE } from './palette.js?v=0.47.1';
+import { OMBRE, couleursLigne } from './apparence.js?v=0.47.1';
+import { MORCEAU, hauteurVueQ as hauteurQ, hauteurVueM as hauteurM } from './terrain.js?v=0.47.1';
+import { horloge, secteurDuJeu } from './bataille.js?v=0.47.1';
+import { ligneY } from './tranchees.js?v=0.47.1';
 
 export const CAMERA = { yaw: 0.15, tangage: 0.95, fov: 30 };   // au départ : tournée de 9°, plongée de 54°, angle de 30°
 // la caméra respire : un balancement très lent, 2° en 23 s (Jérôme, v0.3.1 : variante D du labo retenue)
@@ -169,7 +170,7 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
         i += k;
       }
     }
-    // les parois tournées vers le nord (Jérôme, v0.45.1 : « les faces nord ont la teinte de l'eau ») : la caméra libre peut regarder vers le sud ; sans elles, on voyait à travers le sol le fond de la couleur du temps
+    // les parois tournées vers le nord (Jérôme, v0.47.1 : « les faces nord ont la teinte de l'eau ») : la caméra libre peut regarder vers le sud ; sans elles, on voyait à travers le sol le fond de la couleur du temps
     for (let j = 0; j < h; j++) {
       const J = j0 + j, premier = J === 0;
       let i = 0;
@@ -254,6 +255,7 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
   });
 
   // ─── Brancher une bataille ───
+  const chars = creerChars({ THREE, scene, bataille: () => B, hauteur: (x, y) => surfaceLisse(x, y), fumer: (x, z) => eclats.fumer(x, z) });
   function attacher(bataille) {
     B = bataille; T = B.terrain;
     if (sol) { scene.remove(sol); sol.children.forEach(m => m.userData.fin?.dispose()); solTex.dispose(); }
@@ -276,12 +278,13 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
     soldats.preparer(B);
     vegetation.preparer();
     troncons.preparer();
+    chars.vider();
     eclats.reinitialiser();   // (une autre bataille : ses arbres ne brûlent pas encore)
     vue.cx = T.W / 2; vue.cz = T.H * 0.62;
     faireFaux();
   }
   // le faux terrain au-delà du bord (le bord `faux` et `faux-noir`) : un plan immense posé juste sous le sol
-  // Les fleuves de l'atelier qui touchent le bord du terrain (v0.45.1) : pour chaque bout à moins de sa largeur (+ 3 m) du bord, le point où il sort et sa direction, puis sa demi-largeur,
+  // Les fleuves de l'atelier qui touchent le bord du terrain (v0.47.1) : pour chaque bout à moins de sa largeur (+ 3 m) du bord, le point où il sort et sa direction, puis sa demi-largeur,
   // une phase, une amplitude et un nombre, tirés du bout (un hachage : la même graine donne les mêmes méandres). Au plus quatre.
   function fleuvesSortants() {
     const out = [];
@@ -357,7 +360,7 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
       if (!tout && vuLigne[j] === T.versionLigne[j] && (j === T.H - 1 || vuLigne[j + 1] === T.versionLigne[j + 1])) continue;
       couleursLigne(T, j, B.R, gel, solIdx);
       for (let i = 0, c = j * W; i < W; i++, c++) {
-        const a = PAL_RGB[solIdx[c]], b = T.profond[c] ? a : PAROI_RGB[solIdx[c]], o = c * 4;      // la paroi d'une eau est de l'eau (v0.45.1)
+        const a = PAL_RGB[solIdx[c]], b = T.profond[c] ? a : PAROI_RGB[solIdx[c]], o = c * 4;      // la paroi d'une eau est de l'eau (v0.47.1)
         const marche = j < T.H - 1 && hauteurQ(T, c) - hauteurQ(T, c + W) >= 4;     // l'alpha dit : une marche d'un mètre au sud
         solData[o] = a[0]; solData[o + 1] = a[1]; solData[o + 2] = a[2]; solData[o + 3] = marche ? 0 : 255;
         solData[bas + o] = b[0]; solData[bas + o + 1] = b[1]; solData[bas + o + 2] = b[2]; solData[bas + o + 3] = 255;
@@ -485,6 +488,7 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
       renderer.setClearColor(c, 1); solMat.uniforms.uBordCoul.value.copy(c); fauxU?.uBrume.value.copy(c);
     }
     const sombre = temps.majNuit(h); temps.setTemps(tAnim);
+    chars.maj(dt, sombre || 0);
     ciel.nuit(sombre || 0, tAnim, h.jour, B.etat.graine, h.meteo);       // les étoiles, la lune et les nuages de la nuit (v0.40.0)
     meteo.afficher(h, vide);
     const { cx, cz, p } = projeter();
