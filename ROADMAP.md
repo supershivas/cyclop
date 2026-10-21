@@ -13,9 +13,10 @@ Statuts : **à l'étude** · **validé** (Jérôme a tranché) · **en cours** �
 
 **Statut** : décidé par Jérôme sur les maquettes du labo ; rien n'est dans le jeu.
 
-- **Les chars** : les cinq engins sont retenus (Mark IV et sa livrée allemande de Cambrai, Renault FT, Schneider CA 1, Saint-Chamond, A7V). Reste à décider comment ils entrent dans la bataille (qui les envoie, d'où, comment les arrêter) : voir les questions posées.
-- **Les avions** : seul **le mitraillage** est retenu, comme un **4e bouton dans le style des batteries** (75, 155, 220 : un cooldown, plus long, et un clic sur la zone visée). L'œil de l'artillerie, le cirque du Baron et les bombardiers de nuit restent au labo.
+- **Les chars** : les cinq engins sont retenus (Mark IV et sa livrée allemande de Cambrai, Renault FT, Schneider CA 1, Saint-Chamond, A7V). **Une batterie de plus, comme le mitraillage** : un bouton « Char » à très long cooldown, on choisit le modèle disponible, on clique l'objectif, il part de nos lignes. **Français chez nous, allemands en face, selon la bataille** : nous, le Schneider, le Saint-Chamond, le FT et le Mark IV allié ; en face, l'A7V et le Mark IV pris ; la campagne (batailles 1, 2, 3) en débloque un après l'autre.
+- **Les avions** : seul **le mitraillage** est retenu, comme un **4e bouton dans le style des batteries** (75, 155, 220) : un clic sur la zone visée, un cooldown plus long (~90 s contre 20-40 s), **une passe en ligne** de 12 m de large sur ~60 m, à 10 m du sol, traceurs et poussière, les effets de la maquette (tir ~35 % par homme dans la bande, peur sur les autres). L'œil de l'artillerie, le cirque du Baron et les bombardiers de nuit restent au labo.
 - **Les gaz** : rien pour le moment, à reproposer plus tard (Jérôme). Les trois variantes restent au labo.
+- **Lots proposés** : 1) le mitraillage (le plus petit : `ordonnerMitraillage` et son à-sec dans bataille.js, un 4e bouton, la passe dessinée avec le moteur d'éclats, test, mesure) ; 2) le char de nous (un modèle, le Schneider : sa logique d'avance, ses balles qui ricochent, les cratères qui l'arrêtent, l'obus qui le détruit, le modèle `THREE` sorti du labo dans `js/rendu/`) ; 3) les quatre autres engins et leur déblocage par la campagne ; 4) le char d'en face (A7V, IA, affolement) ; chaque lot avec sa version et ses références réécrites.
 
 ### L'éditeur de carte de l'atelier
 
