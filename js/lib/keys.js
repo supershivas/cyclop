@@ -11,7 +11,7 @@
      toute touche imprimable est retenue.
 
    Module ES sans dépendance :
-     import { createKeys, keyIs, stopTypeahead } from './lib/keys.js?v=0.45.1'
+     import { createKeys, keyIs, stopTypeahead } from './lib/keys.js?v=0.47.0'
      stopTypeahead()
      const keys = createKeys({
        actions: { carte: 'm', inventaire: 'i', action: 'e', pause: 'Escape' },
