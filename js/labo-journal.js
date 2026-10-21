@@ -2,7 +2,7 @@
 // Une entrée par version qui touche au labo, la plus récente en haut. `ref` : « sujet-Lettre » (la lettre est celle de la variante,
 // A étant l'actuelle). À chaque changement du labo : une entrée ici, avec `depuis` sur les variantes ajoutées ou changées (labo.js).
 export const JOURNAL = [
-  { version: '0.41.1', date: '2026-10-21', items: [
+  { version: '0.41.3', date: '2026-10-21', items: [
     { genre: 'mis-a-jour', texte: 'Le nom d\'un régiment : « Le cartouche » est retenu et passe en jeu (A), avec un carré orange quand le régiment est ébranlé et rouge quand il est en déroute ; la ligne d\'avant passe en « ancienne »', ref: 'nom-regiment-A' },
     { genre: 'mis-a-jour', texte: 'Les toasts : « Sous le duel » est retenu et passe en jeu (A), un liseré et un petit mot par genre (information, ordre refusé, attention)', ref: 'toasts-A' },
     { genre: 'mis-a-jour', texte: 'La carte d\'ordre : « Fond hachuré » est retenu et passe en jeu (A) : hauteur fixe, barre toujours au même endroit, « ! » orange ou « !! » rouge hors du flux, hachures plus légères quand le régiment ébranlé est choisi', ref: 'carte-ordre-A' },

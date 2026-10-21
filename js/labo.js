@@ -2,30 +2,30 @@
 // Chaque sujet utilise les mêmes modules que le jeu (terrain, apparence,
 // rendu three.js) : ce qu'on voit ici est ce que le jeu dessinera. Ajouter un
 // sujet ou une variante = ajouter une entrée dans GROUPES.
-import { mountLabo } from './lib/labo-shell.js?v=0.41.2';
-import { spriteCanvas, paletteToGPL, paletteToHex } from './lib/sprites.js?v=0.41.2';
-import { PALETTE, ROLES } from './palette.js?v=0.41.2';
-import { chargerContenu } from './design-store.js?v=0.41.2';
-import { tuile, ETAT } from './tuiles.js?v=0.41.2';
-import { creerTerrain, impact, hydroLignes } from './terrain.js?v=0.41.2';
-import { CALIBRES } from './data/calibres.js?v=0.41.2';
-import { METEO } from './data/meteo.js?v=0.41.2';
-import { nouvelleBataille, avancer, ordonnerMarche, ordonnerBarrage, mourir } from './bataille.js?v=0.41.2';
-import { creerRendu, ZOOMS } from './rendu3d.js?v=0.41.2';
-import { hash2 } from './lib/rng.js?v=0.41.2';
-import { reglerVerdure } from './apparence.js?v=0.41.2';
-import { maquetteAssaut } from './labo-assaut.js?v=0.41.2';
-import { calquePlaques } from './labo-plaques.js?v=0.41.2';
-import { calqueBarre } from './labo-barre-temps.js?v=0.41.2';
-import { maquetteProjections, maquetteVisee } from './labo-projections.js?v=0.41.2';
-import { calqueBarreVie } from './labo-barre-vie.js?v=0.41.2';
-import { calqueClic } from './labo-clic-regiment.js?v=0.41.2';
-import { maquetteBoutons, calqueOrdre, calqueObus } from './labo-satisfaction.js?v=0.41.2';
-import { calqueEtiquette, calqueToast, maquetteCartes } from './labo-hud-ux.js?v=0.41.2';
-import { maquetteCampagne } from './labo-campagne.js?v=0.41.2';
-import { maquetteCaisses, maquetteRates, maquetteSapes, maquetteGaz, maquetteChars } from './labo-arcade.js?v=0.41.2';
-import { JOURNAL } from './labo-journal.js?v=0.41.2';
-import { loadVersion } from './lib/app-update.js?v=0.41.2';
+import { mountLabo } from './lib/labo-shell.js?v=0.41.3';
+import { spriteCanvas, paletteToGPL, paletteToHex } from './lib/sprites.js?v=0.41.3';
+import { PALETTE, ROLES } from './palette.js?v=0.41.3';
+import { chargerContenu } from './design-store.js?v=0.41.3';
+import { tuile, ETAT } from './tuiles.js?v=0.41.3';
+import { creerTerrain, impact, hydroLignes } from './terrain.js?v=0.41.3';
+import { CALIBRES } from './data/calibres.js?v=0.41.3';
+import { METEO } from './data/meteo.js?v=0.41.3';
+import { nouvelleBataille, avancer, ordonnerMarche, ordonnerBarrage, mourir } from './bataille.js?v=0.41.3';
+import { creerRendu, ZOOMS } from './rendu3d.js?v=0.41.3';
+import { hash2 } from './lib/rng.js?v=0.41.3';
+import { reglerVerdure } from './apparence.js?v=0.41.3';
+import { maquetteAssaut } from './labo-assaut.js?v=0.41.3';
+import { calquePlaques } from './labo-plaques.js?v=0.41.3';
+import { calqueBarre } from './labo-barre-temps.js?v=0.41.3';
+import { maquetteProjections, maquetteVisee } from './labo-projections.js?v=0.41.3';
+import { calqueBarreVie } from './labo-barre-vie.js?v=0.41.3';
+import { calqueClic } from './labo-clic-regiment.js?v=0.41.3';
+import { maquetteBoutons, calqueOrdre, calqueObus } from './labo-satisfaction.js?v=0.41.3';
+import { calqueEtiquette, calqueToast, maquetteCartes } from './labo-hud-ux.js?v=0.41.3';
+import { maquetteCampagne } from './labo-campagne.js?v=0.41.3';
+import { maquetteCaisses, maquetteRates, maquetteSapes, maquetteGaz, maquetteChars } from './labo-arcade.js?v=0.41.3';
+import { JOURNAL } from './labo-journal.js?v=0.41.3';
+import { loadVersion } from './lib/app-update.js?v=0.41.3';
 
 document.documentElement.style.setProperty('--jeu-accent', ROLES.accent);
 const NOM = document.title.replace(/^Labo — /, ''); // le nom vient de la page (une apostrophe ne casse rien)
@@ -216,8 +216,8 @@ const GROUPES = [
       { title: 'Elle apparaît d\'un coup', status: 'ancienne', note: 'Jusqu\'à la v0.33 : un clic sur la carte, et le papier des ordres (le régiment, ce qu\'il fait, les formes, Marcher, Regagner, Fiche) est là, posé au-dessus de la carte, sans lien avec elle. Cliquez une carte du bas.', render: s => moteur(s, { zoom: 3, cz: 185, soldats: 400, calque: calqueClic('equerres', 'sec') }) },
     ] },
     { id: 'clic-bouton', title: 'Le clic sur un bouton', variants: [
-      { title: 'Le rebond', status: 'actuelle', depuis: '0.41.1', note: 'Retenu (v0.41.1), en jeu : Dès l\'appui, le bouton s\'enfonce (94 %), puis revient en dépassant un peu (105 %) : 280 ms. Le plus discret et le plus universel ; il dit « j\'ai senti ton doigt » avant même que l\'ordre parte.', render: s => maquetteBoutons(s, 'rebond') },
-      { title: 'Sans retour', status: 'ancienne', depuis: '0.40.1', note: 'Jusqu\'à la v0.41.0 : Ce que le jeu faisait : le bouton s\'allume au survol (glaise), et au clic l\'ordre part, sans que le bouton lui-même réagisse. Seule la carte d\'un régiment s\'enfonce de deux pixels (v0.32.2). Une maquette du papier de campagne : les boutons de la fenêtre d\'ordres, les batteries, le temps. Le journal sous le papier dit l\'ordre reçu.', render: s => maquetteBoutons(s, 'actuelle') },
+      { title: 'Le rebond', status: 'actuelle', depuis: '0.41.3', note: 'Retenu (v0.41.3), en jeu : Dès l\'appui, le bouton s\'enfonce (94 %), puis revient en dépassant un peu (105 %) : 280 ms. Le plus discret et le plus universel ; il dit « j\'ai senti ton doigt » avant même que l\'ordre parte.', render: s => maquetteBoutons(s, 'rebond') },
+      { title: 'Sans retour', status: 'ancienne', depuis: '0.40.1', note: 'Jusqu\'à la v0.41.2 : Ce que le jeu faisait : le bouton s\'allume au survol (glaise), et au clic l\'ordre part, sans que le bouton lui-même réagisse. Seule la carte d\'un régiment s\'enfonce de deux pixels (v0.32.2). Une maquette du papier de campagne : les boutons de la fenêtre d\'ordres, les batteries, le temps. Le journal sous le papier dit l\'ordre reçu.', render: s => maquetteBoutons(s, 'actuelle') },
       { title: 'Le tampon', depuis: '0.40.1', note: 'Une empreinte REÇU, penchée, se plaque sur le bouton et s\'efface en une seconde ; le bouton s\'enfonce d\'un cran. C\'est le ton du jeu (les papiers de campagne, le registre) : un ordre se tamponne. Au son, un coup sourd (le jeu est muet pour l\'instant).', render: s => maquetteBoutons(s, 'tampon') },
       { title: 'L\'onde', depuis: '0.40.1', note: 'Un disque de glaise part du point cliqué (le centre au clavier) et remplit le bouton en 460 ms avant de s\'éteindre. Le retour dit où l\'on a cliqué : utile sur les boutons larges (« Regagner sa tranchée »).', render: s => maquetteBoutons(s, 'onde') },
       { title: 'Le cran', depuis: '0.40.1', note: 'Une touche de télégraphe : le bouton a un pied (une ombre de 3 px), descend de 2 px d\'un coup, tremble deux fois en deux images, puis remonte. Sans adoucissement (steps) : sec, mécanique, comme un levier.', render: s => maquetteBoutons(s, 'cran') },
@@ -225,8 +225,8 @@ const GROUPES = [
     ] },
 
     { id: 'ordre-secteur', title: 'Un ordre sur un secteur', variants: [
-      { title: 'Le fanion et la réponse des hommes', status: 'actuelle', depuis: '0.41.1', note: 'Retenu (v0.41.1), en jeu : en terrain libre, un fanion tombe au point cliqué et se plante pendant que chaque homme lève un « ! » et lance un peu de poussière, du plus près du secteur au plus loin. Sur une tranchée, rien de plus que le clignotement des tronçons. Cliquez un secteur : les régiments 1 et 2 y marchent vraiment.', render: s => moteur(s, { zoom: 3, cz: 185, soldats: 400, calque: calqueOrdre('combine') }) },
-      { title: 'Sans retour', status: 'ancienne', depuis: '0.40.1', note: 'Jusqu\'à la v0.41.0 : Ce que le jeu faisait : les régiments choisis se mettent en marche ; sur une tranchée, ses tronçons clignotent trois secondes (v0.21.0). En terrain libre, rien ne marque le point cliqué. Ici : cliquez un secteur, les régiments 1 et 2 y marchent vraiment (un ordre impossible est refusé à voix haute).', render: s => moteur(s, { zoom: 3, cz: 185, soldats: 400, calque: calqueOrdre('actuelle') }) },
+      { title: 'Le fanion et la réponse des hommes', status: 'actuelle', depuis: '0.41.3', note: 'Retenu (v0.41.3), en jeu : en terrain libre, un fanion tombe au point cliqué et se plante pendant que chaque homme lève un « ! » et lance un peu de poussière, du plus près du secteur au plus loin. Sur une tranchée, rien de plus que le clignotement des tronçons. Cliquez un secteur : les régiments 1 et 2 y marchent vraiment.', render: s => moteur(s, { zoom: 3, cz: 185, soldats: 400, calque: calqueOrdre('combine') }) },
+      { title: 'Sans retour', status: 'ancienne', depuis: '0.40.1', note: 'Jusqu\'à la v0.41.2 : Ce que le jeu faisait : les régiments choisis se mettent en marche ; sur une tranchée, ses tronçons clignotent trois secondes (v0.21.0). En terrain libre, rien ne marque le point cliqué. Ici : cliquez un secteur, les régiments 1 et 2 y marchent vraiment (un ordre impossible est refusé à voix haute).', render: s => moteur(s, { zoom: 3, cz: 185, soldats: 400, calque: calqueOrdre('actuelle') }) },
       { title: 'Le fanion planté', depuis: '0.40.1', note: 'Un fanion tombe au point cliqué, rebondit et se plante, la toile se déploie ; un fil pointillé court de chaque régiment au fanion. Le point d\'arrivée reste marqué 2,6 s : on voit où l\'on a envoyé quelqu\'un.', render: s => moteur(s, { zoom: 3, cz: 185, soldats: 400, calque: calqueOrdre('fanion') }) },
       { title: 'L\'onde du secteur', depuis: '0.40.1', note: 'Trois anneaux partent du point cliqué sur le sol (en perspective) et l\'emprise de l\'ordre se dessine en pointillés qui défilent. On lit la zone, pas seulement le point (l\'emprise est indicative : 46 m sur 18 m).', render: s => moteur(s, { zoom: 3, cz: 185, soldats: 400, calque: calqueOrdre('ondes') }) },
       { title: 'La réponse des hommes', depuis: '0.40.1', note: 'Chaque homme lève un petit « ! » puis lance un nuage de poussière à ses pieds, du plus près du secteur au plus loin : le régiment s\'ébranle comme une vague. C\'est le retour le plus « vivant », et le plus lourd (un dessin par homme).', render: s => moteur(s, { zoom: 3, cz: 185, soldats: 400, calque: calqueOrdre('reponse') }) },
@@ -235,8 +235,8 @@ const GROUPES = [
     ] },
 
     { id: 'coup-obus', title: 'Le coup d\'obus', variants: [
-      { title: 'La trajectoire', status: 'actuelle', depuis: '0.41.1', note: 'Retenu (v0.41.1), en jeu : Un trait d\'os suit l\'obus du ciel jusqu\'au sol, et son ombre grandit sur la cible jusqu\'au rayon du calibre : on voit venir le coup, on sait où il tombe, on peut crier. Au son, un sifflement qui monte (le jeu est muet pour l\'instant).', render: s => moteur(s, { zoom: 3, cz: 185, soldats: 400, calque: calqueObus('trajectoire') }) },
-      { title: 'Sans retour', status: 'ancienne', depuis: '0.40.1', note: 'Jusqu\'à la v0.41.0 : Ce que le jeu faisait : la visée (le cercle du souffle) puis l\'obus tombe, la gerbe, l\'onde et la fumée du moteur, le cratère dans le sol. Ici : choisissez un calibre (75, 155, 220), cliquez le champ, un seul obus tombe où vous avez cliqué, après 1,3 s.', render: s => moteur(s, { zoom: 3, cz: 185, soldats: 400, calque: calqueObus('actuelle') }) },
+      { title: 'La trajectoire', status: 'actuelle', depuis: '0.41.3', note: 'Retenu (v0.41.3), en jeu : Un trait d\'os suit l\'obus du ciel jusqu\'au sol, et son ombre grandit sur la cible jusqu\'au rayon du calibre : on voit venir le coup, on sait où il tombe, on peut crier. Au son, un sifflement qui monte (le jeu est muet pour l\'instant).', render: s => moteur(s, { zoom: 3, cz: 185, soldats: 400, calque: calqueObus('trajectoire') }) },
+      { title: 'Sans retour', status: 'ancienne', depuis: '0.40.1', note: 'Jusqu\'à la v0.41.2 : Ce que le jeu faisait : la visée (le cercle du souffle) puis l\'obus tombe, la gerbe, l\'onde et la fumée du moteur, le cratère dans le sol. Ici : choisissez un calibre (75, 155, 220), cliquez le champ, un seul obus tombe où vous avez cliqué, après 1,3 s.', render: s => moteur(s, { zoom: 3, cz: 185, soldats: 400, calque: calqueObus('actuelle') }) },
       { title: 'L\'impact en trois temps', depuis: '0.40.1', note: 'Un éclair d\'os d\'un dixième de seconde sur la gerbe, puis un anneau de poussière qui s\'élargit en une demi-seconde ; la fumée qui reste est celle du jeu. Le coup a un début net, un milieu, une fin.', render: s => moteur(s, { zoom: 3, cz: 185, soldats: 400, calque: calqueObus('troisTemps') }) },
       { title: 'L\'onde de choc', depuis: '0.40.1', note: 'Un anneau de pression court sur le sol jusqu\'à trois fois le rayon, et le champ tremble : 1,5 px pour un 75, 3,5 pour un 155, 7 pour un 220, une demi-seconde. Le calibre se sent dans les mains. Coupée si le système demande un mouvement réduit.', render: s => moteur(s, { zoom: 3, cz: 185, soldats: 400, calque: calqueObus('ondeChoc') }) },
       { title: 'La terre qui retombe', depuis: '0.40.1', note: 'Des éclats de terre (14, 26 ou 44 selon le calibre, de la couleur du sol) partent en l\'air et retombent autour du cratère, puis s\'effacent. La terre arrachée par l\'obus devient visible : c\'est le thème du jeu.', render: s => moteur(s, { zoom: 3, cz: 185, soldats: 400, calque: calqueObus('terre') }) },
@@ -244,24 +244,24 @@ const GROUPES = [
     ] },
 
     { id: 'nom-regiment', title: 'Le nom d\'un régiment', variants: [
-      { title: 'Le cartouche', status: 'actuelle', depuis: '0.41.1', note: 'Retenu (v0.41.1), en jeu : un carré à numéro (bleu ; orange quand le régiment est ébranlé, rouge quand il est en déroute), le nom et le secteur (h1), le statut (h2 : « Tient », « Ébranlé », « En déroute », ou la corvée de la nuit), la barre debout / blessés au pied ; 44 px de haut au moins, un clic le choisit (Maj : en ajouter). Orange et rouge sont hors de la palette du terrain (`ALERTES` de palette.js).', render: s => moteur(s, { zoom: 3, cz: 185, soldats: 400, calque: calqueEtiquette('cartouche') }) },
-      { title: 'Une ligne', status: 'ancienne', depuis: '0.41.0', note: 'Jusqu\'à la v0.41.0 : Ce que le jeu faisait : « 2 · Protogyne · B · Au contact de l\'ennemi », sur une ligne de papier au-dessus des hommes (v0.40.2 : un clic la choisit, mais elle reste une cible d\'une dizaine de pixels). Aucune hiérarchie : le nom, le secteur et l\'état se lisent d\'un bloc. Cliquez un nom.', render: s => moteur(s, { zoom: 3, cz: 185, soldats: 400, calque: calqueEtiquette('actuelle') }) },
+      { title: 'Le cartouche', status: 'actuelle', depuis: '0.41.3', note: 'Retenu (v0.41.3), en jeu : un carré à numéro (bleu ; orange quand le régiment est ébranlé, rouge quand il est en déroute), le nom et le secteur (h1), le statut (h2 : « Tient », « Ébranlé », « En déroute », ou la corvée de la nuit), la barre debout / blessés au pied ; 44 px de haut au moins, un clic le choisit (Maj : en ajouter). Orange et rouge sont hors de la palette du terrain (`ALERTES` de palette.js).', render: s => moteur(s, { zoom: 3, cz: 185, soldats: 400, calque: calqueEtiquette('cartouche') }) },
+      { title: 'Une ligne', status: 'ancienne', depuis: '0.41.0', note: 'Jusqu\'à la v0.41.2 : Ce que le jeu faisait : « 2 · Protogyne · B · Au contact de l\'ennemi », sur une ligne de papier au-dessus des hommes (v0.40.2 : un clic la choisit, mais elle reste une cible d\'une dizaine de pixels). Aucune hiérarchie : le nom, le secteur et l\'état se lisent d\'un bloc. Cliquez un nom.', render: s => moteur(s, { zoom: 3, cz: 185, soldats: 400, calque: calqueEtiquette('actuelle') }) },
       { title: 'Trois étages', depuis: '0.41.0', note: 'Le nom en grand (h1 : numéro et nom), le statut dessous (h2 : « Au contact », « Ébranlé », « Repos », ou « Tient »), le détail en corps de texte (secteur, hommes debout, blessés). Une cible de 44 px au moins, un liseré bleu comme les cartes de la rangée.', render: s => moteur(s, { zoom: 3, cz: 185, soldats: 400, calque: calqueEtiquette('bord') }) },
       { title: 'La pastille', depuis: '0.41.0', note: 'Un rond numéroté de 36 px, tout le champ reste net ; le nom n\'apparaît que pour le régiment choisi, ou quand son statut compte (au contact, ébranlé, repos). Le moins gênant sur la vue d\'ensemble, mais il faut cliquer ou attendre un statut pour lire un nom.', render: s => moteur(s, { zoom: 3, cz: 185, soldats: 400, calque: calqueEtiquette('pastille') }) },
       { title: 'Le fanion', depuis: '0.41.0', note: 'Un papier de carte posé sur une hampe qui descend vers les hommes ; le nom en h1, le détail dessous, et le statut en tampon penché sur le coin (comme « ébranlé » de la fenêtre d\'ordres). La hampe dit où est le régiment, le tampon n\'est là que si quelque chose ne va pas.', render: s => moteur(s, { zoom: 3, cz: 185, soldats: 400, calque: calqueEtiquette('fanion') }) },
     ] },
 
     { id: 'toasts', title: 'Les toasts', variants: [
-      { title: 'Sous le duel', status: 'actuelle', depuis: '0.41.1', note: 'Retenu (v0.41.1), en jeu : Une languette qui descend du haut, au centre, juste sous les pertes : le seul endroit du champ où rien d\'autre n\'est posé. Un liseré dit le genre (bleu : information, glaise : refus, vert kaki clair : alerte) et un petit mot en capitales (« Ordre refusé », « Attention »).', render: s => moteur(s, { zoom: 3, cz: 185, soldats: 400, calque: calqueToast('bande') }) },
-      { title: 'Sur la rangée', status: 'ancienne', depuis: '0.41.0', note: 'Jusqu\'à la v0.41.0 : Ce que le jeu faisait : un papier d\'os en bas au centre, deux secondes et demie, exactement sur la rangée des cartes de régiment : il en cache une ou deux et se lit mal sur leur texte. Déclenchez les trois messages à gauche.', render: s => moteur(s, { zoom: 3, cz: 185, soldats: 400, calque: calqueToast('actuelle') }) },
+      { title: 'Sous le duel', status: 'actuelle', depuis: '0.41.3', note: 'Retenu (v0.41.3), en jeu : Une languette qui descend du haut, au centre, juste sous les pertes : le seul endroit du champ où rien d\'autre n\'est posé. Un liseré dit le genre (bleu : information, glaise : refus, vert kaki clair : alerte) et un petit mot en capitales (« Ordre refusé », « Attention »).', render: s => moteur(s, { zoom: 3, cz: 185, soldats: 400, calque: calqueToast('bande') }) },
+      { title: 'Sur la rangée', status: 'ancienne', depuis: '0.41.0', note: 'Jusqu\'à la v0.41.2 : Ce que le jeu faisait : un papier d\'os en bas au centre, deux secondes et demie, exactement sur la rangée des cartes de régiment : il en cache une ou deux et se lit mal sur leur texte. Déclenchez les trois messages à gauche.', render: s => moteur(s, { zoom: 3, cz: 185, soldats: 400, calque: calqueToast('actuelle') }) },
       { title: 'La pile du bord', depuis: '0.41.0', note: 'Les messages s\'empilent au bord droit sous la carte, jusqu\'à trois, le plus récent en haut : un refus qui suit un autre ne le cache plus. Aucun message ne recouvre le champ ni la rangée, mais la colonne est loin du curseur.', render: s => moteur(s, { zoom: 3, cz: 185, soldats: 400, calque: calqueToast('pile') }) },
       { title: 'Dans le carnet', depuis: '0.41.0', note: 'Rien ne flotte : la ligne s\'écrit au bas du carnet de bord (en haut à gauche), surlignée de la couleur du genre. Le carnet est déjà l\'endroit où le jeu raconte, et la ligne reste ; mais un refus peut passer inaperçu si le carnet est replié.', render: s => moteur(s, { zoom: 3, cz: 185, soldats: 400, calque: calqueToast('carnet') }) },
       { title: 'À l\'objet', depuis: '0.41.0', note: 'Un refus parle depuis le régiment qu\'il vise : une bulle au-dessus de ses hommes, avec sa pointe. Les messages sans régiment (mise à jour, désynchronisation) tombent comme la languette du haut. Le plus lisible pour « qui a refusé ? », le plus bavard sur le champ.', render: s => moteur(s, { zoom: 3, cz: 185, soldats: 400, calque: calqueToast('objet') }) },
     ] },
 
     { id: 'carte-ordre', title: 'La carte d\'ordre', variants: [
-      { title: 'Fond hachuré', status: 'actuelle', depuis: '0.41.1', note: 'Retenu (v0.41.1), en jeu : hauteur fixe de 76 px, la barre toujours au même endroit, le nom sur une ligne (coupé par « … »), le « ! » (« !! » en déroute, orange ou rouge) sur le coin, hors du flux. Le fond d\'un régiment ébranlé ou en déroute est hachuré d\'os et de brume ; choisi, des hachures plus légères (terre et boue sombre).', render: s => maquetteCartes(s, 'hachure') },
-      { title: 'Avant la v0.41.1', status: 'ancienne', depuis: '0.41.0', note: 'Jusqu\'à la v0.41.0 : Ce que le jeu faisait : numéro et nom, un « ! » flottant quand le régiment est ébranlé, les chevrons ou le mot de la corvée, la barre. Défauts relevés sur la capture de Jérôme (v0.40.1) : la barre de la carte ébranlée n\'est pas à la hauteur des autres (le « ! » flottant sort du flux de la ligne du nom ; cette maquette reproduit la structure, pas ce décalage exact) ; « Au contact » remplace les chevrons ; sur un nom long, le texte est coupé.', render: s => maquetteCartes(s, 'avant') },
+      { title: 'Fond hachuré', status: 'actuelle', depuis: '0.41.3', note: 'Retenu (v0.41.3), en jeu : hauteur fixe de 76 px, la barre toujours au même endroit, le nom sur une ligne (coupé par « … »), le « ! » (« !! » en déroute, orange ou rouge) sur le coin, hors du flux. Le fond d\'un régiment ébranlé ou en déroute est hachuré d\'os et de brume ; choisi, des hachures plus légères (terre et boue sombre).', render: s => maquetteCartes(s, 'hachure') },
+      { title: 'Avant la v0.41.3', status: 'ancienne', depuis: '0.41.0', note: 'Jusqu\'à la v0.41.2 : Ce que le jeu faisait : numéro et nom, un « ! » flottant quand le régiment est ébranlé, les chevrons ou le mot de la corvée, la barre. Défauts relevés sur la capture de Jérôme (v0.40.1) : la barre de la carte ébranlée n\'est pas à la hauteur des autres (le « ! » flottant sort du flux de la ligne du nom ; cette maquette reproduit la structure, pas ce décalage exact) ; « Au contact » remplace les chevrons ; sur un nom long, le texte est coupé.', render: s => maquetteCartes(s, 'avant') },
       { title: 'Fond de boue', depuis: '0.41.0', note: 'Hauteur fixe, la barre toujours au même endroit : le nom (h1), le statut (h2, « Tient » quand tout va bien), les chevrons et la barre au pied. Le « ! » est sur le bord haut, hors du flux. Un régiment ébranlé : le fond passe à la boue, un ton plus brun que la terre.', render: s => maquetteCartes(s, 'boue') },
       { title: 'Fond de glaise', depuis: '0.41.0', note: 'Même carte fixe ; le fond ébranlé est la glaise, le texte passe à la terre, le « ! » devient un tampon penché : le papier change de ton nettement. Attention : la glaise est aussi la couleur d\'une corvée donnée la nuit (v0.38.3), à revoir si on la garde.', render: s => maquetteCartes(s, 'glaise') },
       { title: 'Bord abîmé', depuis: '0.41.0', note: 'Même carte fixe ; le fond ébranlé est la boue sombre, le liseré du haut passe en pointillé glaise, et le « ! » est un onglet d\'os qui dépasse du bord : un papier qui a pris l\'eau.', render: s => maquetteCartes(s, 'abime') },

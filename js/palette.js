@@ -24,7 +24,7 @@ export const PALETTE = {
   w: '#5c6e3c', // vert sombre — l'herbe dans l'humide
 };
 
-// Deux couleurs d'alerte (Jérôme, v0.41.1 : « un élément coloré pour les régiments ébranlés (orange) et en déroute (rouge) »), HORS de la palette du terrain :
+// Deux couleurs d'alerte (Jérôme, v0.41.3 : « un élément coloré pour les régiments ébranlés (orange) et en déroute (rouge) »), HORS de la palette du terrain :
 // elles ne sont ni dans `PALETTE`, ni dans `ORDRE` (les textures d'indices et la palette du moteur ne changent pas), elles ne servent qu'à l'interface et à son état moral.
 // Mesurées (`lisibilite.config.mjs`) sur la terre : orange 8,3, rouge 5,0 ; l'information reste portée par la forme (« ! », « !! », le mot), la couleur la confirme.
 export const ALERTES = {

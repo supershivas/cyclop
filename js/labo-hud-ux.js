@@ -5,7 +5,7 @@
 //  · le nom d'un régiment : posé sur le moteur en direct, à la place de l'étiquette du jeu (`majEtiquettes` de main.js), cliquable (il choisit) ;
 //  · les toasts : un HUD d'exemple (billet, pertes, carnet, rangée de cartes) sur le moteur en direct, trois messages à déclencher ;
 //  · la carte d'ordre : la rangée de cartes en tous ses états ; une ligne mesure la hauteur des cartes et la place de la barre (elle dit « elle bouge » si elles diffèrent).
-import { PALETTE as P } from './palette.js?v=0.41.2';
+import { PALETTE as P } from './palette.js?v=0.41.3';
 
 const el = (tag, css = '', ...kids) => { const e = document.createElement(tag); if (css) e.style.cssText = css; e.append(...kids.flat().filter(k => k != null)); return e; };
 const txt = (s, css = '') => el('span', css, s);
@@ -135,7 +135,7 @@ export function calqueEtiquette(nom) {
 }
 
 // ─── la carte d'ordre de la rangée (utilisée aussi par la maquette des toasts) ──
-// Dans le jeu, une carte est un papier d'os à texte de terre ; choisie, elle s'inverse (terre, texte d'os). Ce que le jeu posait avant la v0.41.1 (main.js `majRegiments`) :
+// Dans le jeu, une carte est un papier d'os à texte de terre ; choisie, elle s'inverse (terre, texte d'os). Ce que le jeu posait avant la v0.41.3 (main.js `majRegiments`) :
 // numéro et nom, un « ! » flottant quand le régiment est ébranlé, les chevrons (ou le mot de la corvée), la barre. Le « ! » flotte dans la ligne du nom.
 function carteAvant(c, { choisi = false, donne = false } = {}) {
   const enc = choisi ? P.o : donne ? P.g : P.t, pap = choisi ? P.t : P.o, ebranle = c.statut === 'Ébranlé' || c.statut === 'En déroute';
@@ -147,7 +147,7 @@ function carteAvant(c, { choisi = false, donne = false } = {}) {
 }
 
 // Les cartes à hauteur fixe (76 px) : le nom (h1), le statut (h2, « Tient » quand rien ne va mal), les chevrons, la barre collée au pied, le « ! » (« !! » en déroute) sur le coin, hors du flux :
-// rien ne bouge d'un état à l'autre, ni d'une carte à l'autre. Seul le fond dit « ébranlé » : quatre façons, la hachure est celle qu'a retenue Jérôme (v0.41.1).
+// rien ne bouge d'un état à l'autre, ni d'une carte à l'autre. Seul le fond dit « ébranlé » : quatre façons, la hachure est celle qu'a retenue Jérôme (v0.41.3).
 const FONDS = {
   // C · hachuré : des diagonales d'os et de brume (choisi : terre et boue sombre, plus légères) ; la forme porte l'information, lisible en gris, sans couleur nouvelle
   hachure: { fond: `repeating-linear-gradient(135deg,${P.o} 0 4px,${P.r} 4px 8px)`, enc: P.t, fondChoisi: `repeating-linear-gradient(135deg,${P.t} 0 4px,${P.s} 4px 8px)` },

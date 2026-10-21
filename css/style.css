@@ -113,7 +113,7 @@
 
 .etiquettes, .retours { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
 .etiquette {
-  /* le cartouche (Jérôme, v0.41.1 ; sujet « Le nom d'un régiment » du labo, variante C) : un carré à numéro (la couleur de l'armée ; orange s'il est ébranlé, rouge s'il est en déroute),
+  /* le cartouche (Jérôme, v0.41.3 ; sujet « Le nom d'un régiment » du labo, variante C) : un carré à numéro (la couleur de l'armée ; orange s'il est ébranlé, rouge s'il est en déroute),
      le nom (le « h1 »), le statut (le « h2 ») et la barre debout / blessés au pied ; 44 px de haut au moins : une vraie cible de clic */
   position: absolute; left: 0; top: 0;
   display: grid; grid-template-columns: 34px auto; min-height: var(--jeu-cible);
@@ -304,7 +304,7 @@ dialog form { margin-top: calc(var(--pas) * 2); }
 .regiments .rang { display: flex; gap: var(--pas); }
 .reg-carte {
   --enc: var(--jeu-fond); --pap: var(--jeu-encre);
-  /* une hauteur fixe (Jérôme, v0.41.1 ; sujet « La carte d'ordre » du labo) : le nom, le statut, les chevrons, la barre ; chaque ligne a sa place, rien ne bouge d'un état à l'autre,
+  /* une hauteur fixe (Jérôme, v0.41.3 ; sujet « La carte d'ordre » du labo) : le nom, le statut, les chevrons, la barre ; chaque ligne a sa place, rien ne bouge d'un état à l'autre,
      le nom ne passe jamais à la ligne (coupé par « … »), le « ! » est hors du flux */
   position: relative; display: grid; grid-template-rows: 18px 14px 8px 8px; align-content: space-between; width: 112px; height: 76px; padding: var(--e1) var(--pas) var(--pas); text-align: left; cursor: pointer;
   font: inherit; font-size: var(--texte-petit); background: var(--pap); color: var(--enc); border: 0; border-top: 3px solid var(--jeu-nous); box-shadow: var(--ombre-papier);
@@ -491,7 +491,7 @@ h2 { font-weight: normal; letter-spacing: var(--titre-lettres); }
   .pertes .vie, .pertes .troncons { cursor: default; }
 }
 
-/* Les messages (Jérôme, v0.41.1 ; sujet « Les toasts » du labo, variante B « Sous le duel ») : une languette sous les pertes, au centre, jamais sur la rangée des régiments.
+/* Les messages (Jérôme, v0.41.3 ; sujet « Les toasts » du labo, variante B « Sous le duel ») : une languette sous les pertes, au centre, jamais sur la rangée des régiments.
    Un liseré dit le genre (bleu : information, glaise : refus d'un ordre, vert kaki clair : alerte) et un petit mot en capitales pour les deux derniers. */
 #toast.jeu-toast {
   top: 76px; bottom: auto; left: 50%; max-width: min(44ch, 90vw);
