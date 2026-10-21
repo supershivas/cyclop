@@ -4,10 +4,10 @@
 //   arbre, buisson : { o, x, y } ;    bois : { o, x, y, r } une tache d'arbres serrés (40 essais, comme les bois de la graine) ;
 //   haie : { o, x, y, x2, y2 }        des buissons le long du segment, avec des trous.
 // Les dégagements passent d'abord (ils ne touchent que ce que la graine a planté), puis les objets, dans l'ordre de la liste : sans hasard hors de `g`.
-import { hash2 } from './lib/rng.js?v=0.49.0';
-import { distanceForme } from './formes.js?v=0.49.0';
+import { hash2 } from './lib/rng.js?v=0.50.0';
+import { distanceForme } from './formes.js?v=0.50.0';
 
-export const OBJETS = ['arbre', 'buisson', 'bois', 'haie', 'degager', 'lac', 'fleuve', 'pont'];       // (lac, fleuve, pont : eaux.js)
+export const OBJETS = ['arbre', 'buisson', 'bois', 'haie', 'degager', 'lac', 'fleuve', 'pont', 'marecage'];       // (lac, fleuve, pont, marecage : eaux.js)
 
 export function poserObjets({ arbres, buissons, W, H, ox, oy, g }, objets) {
   if (!objets || !objets.length) return;

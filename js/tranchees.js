@@ -11,7 +11,8 @@
      d'occuper une tranchée s'en servent pour poser les hommes dedans.
    - Un tronçon protège du tir qui vient de devant (le parapet), beaucoup moins
      de celui qui vient de derrière (le parados) : pris, il sert à l'envers. */
-import { hash2 } from './lib/rng.js?v=0.49.0';
+import { hash2 } from './lib/rng.js?v=0.50.0';
+import { etendueEau } from './eaux.js?v=0.50.0';
 
 // Un bruit de valeurs lissé à une dimension (0..1) : le tracé d'une tranchée creusée à la main, jamais deux fois pareil (v0.29.0)
 const lisse = u => u * u * (3 - 2 * u);
@@ -118,9 +119,8 @@ export function validerSecteur(S) {
   const bandes = [['nous', nous[0] - 8, nous.at(-1) + 8], ['en face', eux.at(-1) - 8, eux[0] + 8]];
   for (const O of S.objets || []) {
     if (O.o !== 'lac' && O.o !== 'fleuve') continue;
-    const x1 = Math.min(O.x, O.o === 'fleuve' ? O.x2 ?? O.x : O.x) - O.r, x2 = Math.max(O.x, O.o === 'fleuve' ? O.x2 ?? O.x : O.x) + O.r;
+    const { x0: x1, x1: x2, y0: y1, y1: y2 } = etendueEau(O.o === 'fleuve' ? { ...O, x2: O.x2 ?? O.x, y2: O.y2 ?? O.y } : O);     // ce que l'eau couvre vraiment (rives irrégulières, fleuve qui serpente : eaux.js)
     if (x2 < -8 || x1 > S.largeur + 8) continue;       // une côte ou un lac au-delà du flanc : les tranchées ne s'y étendent pas (v0.49.0)
-    const y1 = Math.min(O.y, O.o === 'fleuve' ? O.y2 ?? O.y : O.y) - O.r, y2 = Math.max(O.y, O.o === 'fleuve' ? O.y2 ?? O.y : O.y) + O.r;
     for (const [camp, a, b] of bandes) if (y2 > a && y1 < b) pb.push(`${O.o === 'lac' ? 'un lac' : 'un fleuve'} (${Math.round(O.x)} ; ${Math.round(O.y)}) touche les tranchées ${camp === 'nous' ? 'de chez nous' : 'd\'en face'} (de ${Math.round(a)} à ${Math.round(b)} m depuis le haut) : écartez-le`);
   }
   coupe: for (let g = 1; g <= 8; g++) for (const L of lignesDu(S, 0, 0, g)) {

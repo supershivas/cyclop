@@ -16,11 +16,11 @@
      nuit elle se fait en lot.
    - Les versions (`versionLigne`, `versionMorceau`) disent au rendu ce qui a
      changé ; le terrain ne connaît pas le rendu. */
-import { hash2 } from './lib/rng.js?v=0.49.0';
-import { CALIBRES } from './data/calibres.js?v=0.49.0';
-import { appliquerFormes } from './formes.js?v=0.49.0';
-import { poserObjets } from './objets.js?v=0.49.0';
-import { poserEaux, poserPonts, detruirePont, viderLesEaux } from './eaux.js?v=0.49.0';
+import { hash2 } from './lib/rng.js?v=0.50.0';
+import { CALIBRES } from './data/calibres.js?v=0.50.0';
+import { appliquerFormes } from './formes.js?v=0.50.0';
+import { poserObjets } from './objets.js?v=0.50.0';
+import { poserEaux, poserMarecages, poserPonts, detruirePont, viderLesEaux } from './eaux.js?v=0.50.0';
 
 export const ETAT = { SEC: 0, HUMIDE: 1, BOUE: 2, EAU: 3, GLACE: 4 };
 export const MORCEAU = 25;             // cases : le côté d'un morceau de maillage (mesuré, rendu logiciel : à 100, la moitié du champ restait dessinée au zoom 4 ; à 25, 6 500 triangles au lieu de 15 600 au zoom 8)
@@ -70,6 +70,7 @@ export function creerTerrain(graine, secteur, R) {
   poserEaux(base, profond, { W, H, ox, oy }, secteur.objets);   // les lacs et les fleuves (eaux.js) creusent à plat, après le relief
   const Tp = { pont, pontH, pontEau, pontsListe, profond, W, H, versionPonts: 0 };
   poserPonts(base, profond, Tp, { W, H, ox, oy }, secteur.objets);   // puis les ponts, sur l'eau
+  poserMarecages(base, nappe, eau, humid, herbe, profond, pont, { W, H, ox, oy }, secteur.objets);   // les marécages : la nappe au-dessus du sol, par plaques (v0.50.0)
   // Quelques arbres, loin des bords
   const arbres = [];
   for (let k = 0; arbres.length < secteur.arbres && k < secteur.arbres * 40; k++) {

@@ -1,7 +1,7 @@
 // Les outils de l'éditeur de carte et les champs que chacun règle, avec un NOM et une DESCRIPTION pour chaque chiffre (l'atelier les affiche tels quels : Jérôme, « je ne comprends pas
 // les chiffres de l'éditeur »). `genre` : le type de la forme (`f` d'une retouche de relief, `o` d'un objet) ; `segment` : posée d'un point à un autre ; `champs` : ce qui se règle.
 // `icone` : un tracé de 24 × 24 (au trait). Contenu en données (conventions, section 12) : ajouter un outil n'ajoute aucune ligne de code à l'éditeur.
-import { PONTS_JEU, PONT_DEFAUT } from './ponts.js?v=0.49.0';
+import { PONTS_JEU, PONT_DEFAUT } from './ponts.js?v=0.50.0';
 
 export const GROUPES_OUTILS = [
   { id: 'edition', titre: 'Édition' },
@@ -37,6 +37,8 @@ export const OUTILS = {
     aide: 'Un clic creuse un lac : une eau profonde, à plat, qu’on ne traverse pas. Gardez-le loin des tranchées (la bande de chaque camp), le contrôle le dit.' },
   fleuve: { groupe: 'eau', nom: 'Fleuve', genre: 'fleuve', type: 'objet', segment: true, champs: ['r'], icone: 'M2 8c4-4 6 4 10 0s6 4 10 0 M2 16c4-4 6 4 10 0s6 4 10 0',
     aide: 'Glissez d’un point à un autre : un fleuve de eau profonde le long du trait, qu’on ne traverse pas. Il peut couper le no man’s land, mais pas les tranchées.' },
+  marecage: { groupe: 'eau', nom: 'Marécage', genre: 'marecage', type: 'objet', champs: ['r'], icone: 'M3 15c3-3 5 3 9 0s6 3 9 0 M7 11V7 M12 11V5 M17 11V8',
+    aide: 'Un clic noie un coin de terrain : des flaques peu profondes et de la boue, par plaques, aux bords irréguliers. On y marche, très lentement ; ce n’est pas de l’eau profonde.' },
   pont: { groupe: 'eau', nom: 'Pont', genre: 'pont', type: 'objet', segment: true, champs: ['r', 'type'], icone: 'M2 9h20 M2 15c4-6 6-6 10-6s6 0 10 6 M6 15v4 M18 15v4',
     aide: 'Glissez d’une rive à l’autre : un tablier de planches sur l’eau, qu’on traverse à pied sec. Un obus tombé dessus le coupe. Sans eau sous le trait, rien ne se pose.' },
 };
@@ -53,8 +55,9 @@ export const CHAMPS = {
       crete: { nom: 'Demi-largeur', desc: 'Largeur de la crête de chaque côté du trait, en mètres.' },
       plateau: { nom: 'Rayon', desc: 'Taille du plateau : plat jusqu’à 60 % du rayon, puis le sol rejoint doucement le terrain alentour.' },
       bois: { nom: 'Rayon du bois', desc: 'Les arbres du bois sont répartis dans ce rayon, en mètres.' },
-      lac: { nom: 'Rayon du lac', desc: 'Le lac couvre ce disque, en mètres, d’eau profonde à plat.' },
-      fleuve: { nom: 'Demi-largeur', desc: 'Largeur du fleuve de chaque côté du trait, en mètres : 6 donne un fleuve de 12 m.' },
+      lac: { nom: 'Rayon du lac', desc: 'Le lac couvre à peu près ce disque, en mètres, d’eau profonde à plat ; la rive est irrégulière (plus ou moins un cinquième du rayon : des anses et des caps).' },
+      marecage: { nom: 'Rayon du marécage', desc: 'Le marécage couvre à peu près ce disque, en mètres ; le bord est rongé de plus ou moins un tiers, et plus on va vers le centre plus c’est mouillé.' },
+      fleuve: { nom: 'Demi-largeur', desc: 'Largeur moyenne du fleuve de chaque côté du trait, en mètres : 6 donne un fleuve d’environ 12 m, qui s’élargit et se resserre (de plus ou moins un tiers) et serpente autour du trait.' },
       pont: { nom: 'Demi-largeur', desc: 'Largeur du tablier de chaque côté du trait, en mètres : 3 donne un pont de 6 m, où un petit groupe passe de front.' },
       degager: { nom: 'Rayon du dégagement', desc: 'Tout arbre et tout buisson tiré par le hasard à moins de ce rayon est retiré. Ce que vous avez posé reste.' },
     } },

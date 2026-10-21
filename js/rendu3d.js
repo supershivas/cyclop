@@ -22,22 +22,22 @@
    - Les soldats : instanciés (une boîte et son ombre) ; au zoom 1 et 2, un
      point de 2 × 2 pixels (la couleur du camp sur son ombre).
    - Les corps : un homme couché (instancié) ; au zoom 1 et 2, un pixel. */
-import { loadThree } from './three-lib.js?v=0.49.0';
-import * as SH from './rendu/shaders.js?v=0.49.0';
-import { creerSoldats } from './rendu/soldats.js?v=0.49.0';
-import { creerChars } from './rendu/chars.js?v=0.49.0';
-import { creerPonts } from './rendu/ponts.js?v=0.49.0';
-import { creerCiel } from './rendu/ciel.js?v=0.49.0';
-import { creerMeteo } from './rendu/meteo.js?v=0.49.0';
-import { creerTroncons } from './rendu/troncons.js?v=0.49.0';
-import { creerVegetation } from './rendu/vegetation.js?v=0.49.0';
-import { creerTemps } from './rendu/temps.js?v=0.49.0';
-import { creerEclats } from './rendu/eclats.js?v=0.49.0';
-import { PALETTE, ORDRE, INDICE } from './palette.js?v=0.49.0';
-import { OMBRE, couleursLigne } from './apparence.js?v=0.49.0';
-import { MORCEAU, hauteurVueQ as hauteurQ, hauteurVueM as hauteurM } from './terrain.js?v=0.49.0';
-import { horloge, secteurDuJeu } from './bataille.js?v=0.49.0';
-import { ligneY } from './tranchees.js?v=0.49.0';
+import { loadThree } from './three-lib.js?v=0.50.0';
+import * as SH from './rendu/shaders.js?v=0.50.0';
+import { creerSoldats } from './rendu/soldats.js?v=0.50.0';
+import { creerChars } from './rendu/chars.js?v=0.50.0';
+import { creerPonts } from './rendu/ponts.js?v=0.50.0';
+import { creerCiel } from './rendu/ciel.js?v=0.50.0';
+import { creerMeteo } from './rendu/meteo.js?v=0.50.0';
+import { creerTroncons } from './rendu/troncons.js?v=0.50.0';
+import { creerVegetation } from './rendu/vegetation.js?v=0.50.0';
+import { creerTemps } from './rendu/temps.js?v=0.50.0';
+import { creerEclats } from './rendu/eclats.js?v=0.50.0';
+import { PALETTE, ORDRE, INDICE } from './palette.js?v=0.50.0';
+import { OMBRE, couleursLigne } from './apparence.js?v=0.50.0';
+import { MORCEAU, hauteurVueQ as hauteurQ, hauteurVueM as hauteurM } from './terrain.js?v=0.50.0';
+import { horloge, secteurDuJeu } from './bataille.js?v=0.50.0';
+import { ligneY } from './tranchees.js?v=0.50.0';
 
 export const CAMERA = { yaw: 0.15, tangage: 0.95, fov: 30 };   // au départ : tournée de 9°, plongée de 54°, angle de 30°
 // la caméra respire : un balancement très lent, 2° en 23 s (Jérôme, v0.3.1 : variante D du labo retenue)

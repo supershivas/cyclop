@@ -1,5 +1,9 @@
 # Journal des versions
 
+## 0.50.0 — 2026-10-21
+- Des marécages : un disque aux bords rongés où la nappe affleure par plaques (flaques peu profondes qu'on traverse très lentement, boue), dans l'éditeur de carte (outil Marécage) et dans la carte aléatoire
+- Les rives sont moins géométriques : un lac ou une côte a des anses et des caps (±22 % du rayon), un fleuve s'élargit et se resserre (±35 %) et serpente autour de son trait ; les cartes déjà faites changent de forme
+
 ## 0.49.0 — 2026-10-21
 - Une carte aléatoire dans le choix de la nouvelle partie : un fleuve en travers du no man's land (avec un à trois ponts, dont un porte un char), parfois un fleuve ou des étangs derrière les lignes, une côte (la mer d'un des quatre côtés), des montagnes et des chaînes, des collines et des plateaux, une végétation et une nappe tirées de la graine
 - « Autre terrain » en tire une autre, montrée en 3D avant de jouer ; l'eau ne touche jamais une tranchée

@@ -421,3 +421,34 @@ test('la carte aléatoire se joue : nouvelleBataille la tire de la graine, la re
   assert.deepEqual(b.etat.sol.objets, B.etat.sol.objets);
   assert.equal(b.terrain.profond.reduce((s, v) => s + v, 0), B.terrain.profond.reduce((s, v) => s + v, 0));
 });
+
+group('des rives vivantes et des marécages (v0.50.0)');
+test('un fleuve s\'élargit et se resserre, serpente ; un lac a des anses ; sans hasard', () => {
+  const S = { largeur: 400, hauteur: 160, arbres: 0, objets: [{ o: 'fleuve', x: 0, y: 80, x2: 400, y2: 80, r: 8 }, { o: 'lac', x: 200, y: 20, r: 14 }] };
+  const T = creerTerrain(5, S, R), T2 = creerTerrain(5, S, R);
+  assert.deepEqual(T.profond, T2.profond, 'sans hasard');
+  const largeurs = [], centres = [];
+  for (let i = 10; i < 390; i++) { let n = 0, somme = 0; for (let j = 40; j < 120; j++) if (T.profond[j * 400 + i]) { n++; somme += j; } if (n) { largeurs.push(n); centres.push(somme / n); } }
+  const min = Math.min(...largeurs), max = Math.max(...largeurs);
+  assert.ok(max - min >= 6, `la largeur varie : de ${min} à ${max} m`);
+  assert.ok(Math.max(...centres) - Math.min(...centres) >= 5, 'l\'axe serpente');
+  // le lac n'est pas un disque : son contour s'écarte de plus de 10 % du rayon moyen
+  let ecart = 0, n = 0, aire = 0; for (let j = 0; j < 40; j++) for (let i = 180; i < 220; i++) if (T.profond[j * 400 + i]) aire++;
+  const rMoy = Math.sqrt(aire / Math.PI);
+  for (let a = 0; a < 6.28; a += 0.2) { let r = 0; while (r < 30 && T.profond[Math.round(20 + Math.sin(a) * r) * 400 + Math.round(200 + Math.cos(a) * r)]) r++; ecart = Math.max(ecart, Math.abs(r - rMoy) / rMoy); n++; }
+  assert.ok(ecart > 0.1, `un lac aux anses : écart ${ecart.toFixed(2)}`);
+});
+test('un marécage met la nappe au-dessus du sol par plaques : de l\'eau peu profonde, de la boue, jamais d\'eau profonde', () => {
+  const S = { largeur: 160, hauteur: 160, arbres: 0, objets: [{ o: 'marecage', x: 80, y: 80, r: 30 }] };
+  const T = creerTerrain(3, S, R), sans = creerTerrain(3, { ...S, objets: [] }, R);
+  let eau = 0, boue = 0, profond = 0, dehors = 0;
+  for (let j = 0; j < 160; j++) for (let i = 0; i < 160; i++) {
+    const c = j * 160 + i, e = etat(T, c, R), d = Math.hypot(i - 80, j - 80);
+    if (T.profond[c]) profond++;
+    if (d < 20) { if (e === ETAT.EAU) eau++; else if (e === ETAT.BOUE) boue++; }
+    if (d > 50 && etat(T, c, R) !== etat(sans, c, R)) dehors++;
+  }
+  assert.equal(profond, 0, 'pas d\'eau profonde');
+  assert.ok(eau > 150 && boue > 100, `des flaques (${eau}) et de la boue (${boue})`);
+  assert.equal(dehors, 0, 'rien au-delà');
+});

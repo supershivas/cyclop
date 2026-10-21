@@ -1,8 +1,8 @@
 {
-  "version": "0.49.0",
+  "version": "0.50.0",
   "date": "2026-10-21",
   "changes": [
-    "Une carte aléatoire dans la nouvelle partie : fleuves et ponts, côtes, montagnes, collines, étangs, tirés de la graine",
-    "« Autre terrain » tire une autre carte aléatoire, montrée en 3D avant de jouer"
+    "Des marécages : flaques peu profondes et boue par plaques, dans l'éditeur et dans la carte aléatoire",
+    "Les rives des lacs et des côtes ont des anses et des caps ; les fleuves s'élargissent, se resserrent et serpentent"
   ]
 }

@@ -14,24 +14,24 @@
    La sauvegarde (photo) garde la graine, la liste compacte des impacts, l'état
    de la foule et les petites couches de logique ; jamais le relief : il se
    rejoue depuis la graine et les impacts (rejouerTerrain). */
-import { createRng, hash2 } from './lib/rng.js?v=0.49.0';
-import { impact, hydroLignes, etat as etatCase, vitesseEtat, vitesseCase, ETAT } from './terrain.js?v=0.49.0';
-import { creerArmee, ajouterSoldat, construireGrille, pasArmee, tuerDans, effrayer, compacter, photoArmee, restaurerArmee, b64, deB64, DENSITE, place } from './army.js?v=0.49.0';
-import { ligneSous } from './tranchees.js?v=0.49.0';
-import { terrainDuSecteur } from './secteur-terrain.js?v=0.49.0';
-import { detruirePont } from './eaux.js?v=0.49.0';
-import { calculerCouts, creerCacheChamps, dimensionsCouts, BLOC } from './champs.js?v=0.49.0';
-import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.49.0';
-import { preparerAleatoire, ID_ALEATOIRE } from './generateur.js?v=0.49.0';
-import { AVION, MITRAILLAGE } from './data/mitraillage.js?v=0.49.0';
-import { CHAR, CHAR_RECHARGE, CHAR_SORTIE } from './data/chars.js?v=0.49.0';
-import { refusChar, lancerChar, degatsChars, avancerChars } from './chars.js?v=0.49.0';
-import { METEO, TRANSITIONS, PREVISION_JUSTE } from './data/meteo.js?v=0.49.0';
-import { SECTEURS } from './data/secteur.js?v=0.49.0';
-import { REGIMENTS } from './data/lexique.js?v=0.49.0';
-import { STANCES, STANCE_DEFAUT } from './data/stances.js?v=0.49.0';
-import { grade } from './identite.js?v=0.49.0';
-import { corvees, rejouerTravaux } from './nuit.js?v=0.49.0';
+import { createRng, hash2 } from './lib/rng.js?v=0.50.0';
+import { impact, hydroLignes, etat as etatCase, vitesseEtat, vitesseCase, ETAT } from './terrain.js?v=0.50.0';
+import { creerArmee, ajouterSoldat, construireGrille, pasArmee, tuerDans, effrayer, compacter, photoArmee, restaurerArmee, b64, deB64, DENSITE, place } from './army.js?v=0.50.0';
+import { ligneSous } from './tranchees.js?v=0.50.0';
+import { terrainDuSecteur } from './secteur-terrain.js?v=0.50.0';
+import { detruirePont } from './eaux.js?v=0.50.0';
+import { calculerCouts, creerCacheChamps, dimensionsCouts, BLOC } from './champs.js?v=0.50.0';
+import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.50.0';
+import { preparerAleatoire, ID_ALEATOIRE } from './generateur.js?v=0.50.0';
+import { AVION, MITRAILLAGE } from './data/mitraillage.js?v=0.50.0';
+import { CHAR, CHAR_RECHARGE, CHAR_SORTIE } from './data/chars.js?v=0.50.0';
+import { refusChar, lancerChar, degatsChars, avancerChars } from './chars.js?v=0.50.0';
+import { METEO, TRANSITIONS, PREVISION_JUSTE } from './data/meteo.js?v=0.50.0';
+import { SECTEURS } from './data/secteur.js?v=0.50.0';
+import { REGIMENTS } from './data/lexique.js?v=0.50.0';
+import { STANCES, STANCE_DEFAUT } from './data/stances.js?v=0.50.0';
+import { grade } from './identite.js?v=0.50.0';
+import { corvees, rejouerTravaux } from './nuit.js?v=0.50.0';
 
 export const PAS = 1 / 30;                 // s de jeu par pas
 export const NOUS = 0, EUX = 1;
