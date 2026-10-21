@@ -111,16 +111,30 @@
 @media (hover: hover) { .batterie:hover:not(.vise) { background: var(--jeu-accent); color: var(--jeu-fond); } .batterie:hover:not(.vise) span { color: var(--jeu-fond); } }
 .vise .jeu-canvas { cursor: crosshair; }
 
-.etiquettes { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+.etiquettes, .retours { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
 .etiquette {
+  /* le cartouche (Jérôme, v0.41.1 ; sujet « Le nom d'un régiment » du labo, variante C) : un carré à numéro (la couleur de l'armée ; orange s'il est ébranlé, rouge s'il est en déroute),
+     le nom (le « h1 »), le statut (le « h2 ») et la barre debout / blessés au pied ; 44 px de haut au moins : une vraie cible de clic */
   position: absolute; left: 0; top: 0;
-  padding: 1px var(--e1);
-  background: var(--jeu-fond); color: var(--jeu-nous);
-  font-size: var(--texte-petit); white-space: nowrap;
+  display: grid; grid-template-columns: 34px auto; min-height: var(--jeu-cible);
+  background: var(--jeu-fond); color: var(--jeu-encre); white-space: nowrap;
   pointer-events: auto; cursor: pointer;
 }
+.etiquette[hidden] { display: none; }
+.etiquette .num { display: grid; place-items: center; background: var(--jeu-nous); color: var(--jeu-fond); font-size: var(--texte-grand); }
+.etiquette.ebranle .num { background: var(--jeu-ebranle); }
+.etiquette.deroute .num { background: var(--jeu-deroute); }
+.etiquette .corps { display: grid; gap: var(--e0); align-content: center; min-width: 96px; padding: var(--e1) var(--pas); }
+.etiquette .nom { font-size: var(--texte-moyen); line-height: 1.15; }
+.etiquette .statut { font-size: var(--texte-petit); line-height: 1.2; color: var(--jeu-accent); }
+.etiquette.ebranle .statut, .etiquette.deroute .statut { color: inherit; letter-spacing: .08em; text-transform: uppercase; }
+.etiquette .barre { display: flex; height: 5px; box-sizing: border-box; border: 1px solid currentColor; margin-top: var(--e0); }
+.etiquette .barre i { display: block; height: 100%; }
+.etiquette .barre .debout { background: currentColor; }
+.etiquette .barre .blesses { background: repeating-linear-gradient(135deg, currentColor 0 2px, transparent 2px 4px); }
 @media (hover: hover) { .etiquette:not(.choisi):hover { background: var(--jeu-accent); color: var(--jeu-fond); } }
 .etiquette.choisi { background: var(--jeu-encre); color: var(--jeu-fond); }
+.etiquette.choisi .statut { color: var(--jeu-fond); }
 /* Le clic sur une carte de régiment (Jérôme, v0.32.2 ; v0.33.0 : les équerres ; labo « Le clic sur un régiment ») : la caméra glisse sur lui, quatre coins d'os se
    referment sur ses hommes, la carte s'allume un instant (inversée) */
 .equerres { position: absolute; left: 0; top: 0; width: 0; height: 0; pointer-events: none; }
@@ -290,13 +304,22 @@ dialog form { margin-top: calc(var(--pas) * 2); }
 .regiments .rang { display: flex; gap: var(--pas); }
 .reg-carte {
   --enc: var(--jeu-fond); --pap: var(--jeu-encre);
-  display: grid; gap: var(--e1); align-content: start; width: 112px; min-height: 62px; padding: var(--e1) var(--pas) var(--pas); text-align: left; cursor: pointer;
+  /* une hauteur fixe (Jérôme, v0.41.1 ; sujet « La carte d'ordre » du labo) : le nom, le statut, les chevrons, la barre ; chaque ligne a sa place, rien ne bouge d'un état à l'autre,
+     le nom ne passe jamais à la ligne (coupé par « … »), le « ! » est hors du flux */
+  position: relative; display: grid; grid-template-rows: 18px 14px 8px 8px; align-content: space-between; width: 112px; height: 76px; padding: var(--e1) var(--pas) var(--pas); text-align: left; cursor: pointer;
   font: inherit; font-size: var(--texte-petit); background: var(--pap); color: var(--enc); border: 0; border-top: 3px solid var(--jeu-nous); box-shadow: var(--ombre-papier);
 }
 .reg-carte.choisi { --enc: var(--jeu-encre); --pap: var(--jeu-fond); outline: 2px solid var(--jeu-encre); outline-offset: -5px; }
-.reg-carte .l1 { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* un régiment ébranlé ou en déroute : le fond est hachuré (la forme porte l'information) ; choisi, des hachures légères (terre et boue sombre) */
+.reg-carte.ebranle:not(.choisi), .reg-carte.deroute:not(.choisi) { background-image: repeating-linear-gradient(135deg, var(--jeu-encre) 0 4px, var(--jeu-brume) 4px 8px); }
+.reg-carte.ebranle.choisi, .reg-carte.deroute.choisi { background-image: repeating-linear-gradient(135deg, var(--jeu-fond) 0 4px, var(--jeu-ombre) 4px 8px); }
+.reg-carte .l1 { display: block; line-height: 18px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.reg-carte.ebranle .l1, .reg-carte.deroute .l1 { padding-right: 20px; }
+.reg-carte .statut { display: block; line-height: 14px; white-space: nowrap; overflow: hidden; }
+.reg-carte.ebranle .statut, .reg-carte.deroute .statut { letter-spacing: .08em; text-transform: uppercase; }
+.reg-carte .alerte { position: absolute; right: var(--pas); top: var(--e1); display: grid; place-items: center; min-width: 16px; height: 16px; box-sizing: border-box; padding: 0 var(--e0); font-style: normal; font-size: var(--texte-petit); line-height: 1; color: var(--jeu-fond); background: var(--jeu-ebranle); border: 1px solid var(--jeu-fond); }
+.reg-carte.deroute .alerte { background: var(--jeu-deroute); }
 .reg-carte .l1 b { font-weight: normal; font-size: var(--texte-grand); line-height: 1; margin-right: var(--e0); }
-.reg-carte .alerte { float: right; font-style: normal; font-size: var(--texte-petit); line-height: 1; padding: 1px var(--e1); border: 1px double var(--jeu-encre); color: var(--jeu-encre); transform: rotate(-5deg); }
 .reg-carte .chevrons { display: flex; gap: var(--e0); height: 8px; }
 .reg-carte .posture { margin-left: auto; font-size: var(--texte-petit); line-height: 8px; color: var(--enc); }
 .chev { width: 12px; height: 8px; fill: none; stroke: var(--enc); stroke-width: 2; stroke-linecap: square; }
@@ -306,7 +329,7 @@ dialog form { margin-top: calc(var(--pas) * 2); }
 .reg-carte .barre .debout { background: var(--enc); }
 .reg-carte .barre .blesses { background: repeating-linear-gradient(135deg, var(--enc) 0 2px, transparent 2px 4px); }
 .reg-carte .barre .tombes { background: none; }
-.fleche { display: grid; place-items: center; width: 40px; height: 62px; padding: 0; border: 0; cursor: pointer; color: var(--jeu-fond); pointer-events: auto; }
+.fleche { display: grid; place-items: center; width: 40px; height: 76px; padding: 0; border: 0; cursor: pointer; color: var(--jeu-fond); pointer-events: auto; }
 .fleche[hidden] { display: none; }
 .fleche svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 .reg-ouvert { position: absolute; left: 0; top: 0; width: 44ch; max-width: 90vw; pointer-events: auto; display: grid; gap: var(--e1); transform-origin: 50% 100%; }
@@ -467,3 +490,18 @@ h2 { font-weight: normal; letter-spacing: var(--titre-lettres); }
   .pertes [data-tip]:hover::after { content: attr(data-tip); position: absolute; left: 50%; top: calc(100% + 6px); transform: translateX(-50%); z-index: 5; padding: 2px var(--pas); white-space: nowrap; background: var(--jeu-encre); color: var(--jeu-fond); font-size: var(--texte-petit); box-shadow: 2px 2px 0 var(--jeu-fond); pointer-events: none; }
   .pertes .vie, .pertes .troncons { cursor: default; }
 }
+
+/* Les messages (Jérôme, v0.41.1 ; sujet « Les toasts » du labo, variante B « Sous le duel ») : une languette sous les pertes, au centre, jamais sur la rangée des régiments.
+   Un liseré dit le genre (bleu : information, glaise : refus d'un ordre, vert kaki clair : alerte) et un petit mot en capitales pour les deux derniers. */
+#toast.jeu-toast {
+  top: 76px; bottom: auto; left: 50%; max-width: min(44ch, 90vw);
+  display: grid; gap: var(--e0); padding: var(--pas) var(--e3);
+  background: var(--jeu-encre); color: var(--jeu-fond); border-left: 4px solid var(--jeu-nous); box-shadow: var(--ombre-papier);
+  font-size: var(--texte-petit); line-height: 1.3;
+  animation: toast-entree .26s cubic-bezier(.2, .8, .3, 1);
+}
+#toast.jeu-toast[hidden] { display: none; }
+#toast.toast-refus { border-left-color: var(--jeu-accent); }
+#toast.toast-alerte { border-left-color: var(--jeu-eux); }
+#toast small { font-size: var(--texte-petit); letter-spacing: .1em; text-transform: uppercase; color: var(--jeu-ombre); }
+@keyframes toast-entree { from { opacity: 0; transform: translate(-50%, -14px); } to { opacity: 1; transform: translate(-50%, 0); } }

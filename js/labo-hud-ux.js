@@ -5,7 +5,7 @@
 //  · le nom d'un régiment : posé sur le moteur en direct, à la place de l'étiquette du jeu (`majEtiquettes` de main.js), cliquable (il choisit) ;
 //  · les toasts : un HUD d'exemple (billet, pertes, carnet, rangée de cartes) sur le moteur en direct, trois messages à déclencher ;
 //  · la carte d'ordre : la rangée de cartes en tous ses états ; une ligne mesure la hauteur des cartes et la place de la barre (elle dit « elle bouge » si elles diffèrent).
-import { PALETTE as P } from './palette.js?v=0.41.0';
+import { PALETTE as P, ALERTES } from './palette.js?v=0.41.1';
 
 const el = (tag, css = '', ...kids) => { const e = document.createElement(tag); if (css) e.style.cssText = css; e.append(...kids.flat().filter(k => k != null)); return e; };
 const txt = (s, css = '') => el('span', css, s);
@@ -14,13 +14,14 @@ const reduit = () => typeof matchMedia === 'function' && matchMedia('(prefers-re
 const jouer = (e, keyframes, duree, opts = {}) => reduit() ? null : e.animate(keyframes, { duration: duree, easing: 'cubic-bezier(.2,.8,.3,1)', ...opts });
 
 // Les quatre tailles de texte du jeu (docs/design-system.md) et la hiérarchie demandée : le nom est le « h1 » de la carte, le statut son « h2 », le reste du corps de texte
-const T = { petit: '11px', corps: '12px', h2: '12px', h1: '15px', grand: '17px' };
+const T = { petit: '12px', corps: '14px', h2: '12px', h1: '16px', grand: '20px' };
 const SIGNE = '!';
 
 // ─── des régiments d'exemple ─────────────────────────────────────────────────
-// `statut` : '' (tient), « Au contact », « Ébranlé », « Repos » (une corvée donnée la nuit)
-const STATUTS = ['', 'Au contact', 'Ébranlé', 'Repos'];
-const LONG = { 'Au contact': 'Au contact de l\'ennemi', 'Ébranlé': 'ébranlé', 'Repos': 'repos' };
+// `statut` : '' (tient), « Au contact » (la nuit), « Ébranlé », « En déroute »
+const STATUTS = ['', 'Au contact', 'Ébranlé', 'En déroute'];
+const LONG = { 'Au contact': 'Au contact de l\'ennemi', 'Ébranlé': 'ébranlé', 'En déroute': 'en déroute', 'Repos': 'repos' };
+const COULEUR_ETAT = { 'Ébranlé': ALERTES.orange, 'En déroute': ALERTES.rouge };   // le carré du numéro, quand le moral baisse
 const regsDe = ctx => ctx.B.etat.regiments.filter(r => r.camp === 0 && r.effectif).slice(0, 4).map((r, k) => {
   const A = ctx.B.armee, m = ctx.B.etat.marges;
   let x = 0, ymin = 1e9, n = 0, bl = 0;
@@ -64,10 +65,10 @@ const etiqB = (c, choisi) => {
 const etiqC = (c, choisi) => {
   const fg = choisi ? P.t : P.o, bg = choisi ? P.o : P.t;
   return el('div', `display:grid;grid-template-columns:34px 1fr;min-height:44px;background:${bg};color:${fg};box-shadow:2px 2px 0 ${P.t};${MONO}cursor:pointer`,
-    el('div', `display:grid;place-items:center;background:${P.n};color:${P.t};font-size:${T.grand}`, String(c.n)),
+    el('div', `display:grid;place-items:center;background:${COULEUR_ETAT[c.statut] || P.n};color:${P.t};font-size:${T.grand}`, String(c.n)),
     el('div', 'padding:4px 8px 4px;display:grid;gap:1px;min-width:96px',
       el('div', `font-size:${T.h1};line-height:1.15;white-space:nowrap`, c.nom),
-      el('div', `font-size:${T.h2};line-height:1.2;color:${c.statut ? fg : P.g}`, c.statut || 'Tient'),
+      el('div', `font-size:${T.h2};line-height:1.2;color:${c.statut ? fg : P.g};${COULEUR_ETAT[c.statut] ? 'letter-spacing:.08em;text-transform:uppercase' : ''}`, c.statut || 'Tient'),
       barre(c, fg, 'margin-top:3px;height:5px')));
 };
 
@@ -134,50 +135,45 @@ export function calqueEtiquette(nom) {
 }
 
 // ─── la carte d'ordre de la rangée (utilisée aussi par la maquette des toasts) ──
-// Ce que le jeu pose aujourd'hui (main.js `majRegiments`, style.css `.reg-carte`) : numéro et nom, un « ! » flottant quand le régiment est ébranlé,
-// les chevrons (ou la corvée / le mot du statut), la barre. Le « ! » flotte dans la ligne du nom.
-function carteA(c, { choisi = false, donne = false } = {}) {
-  const enc = choisi ? P.t : donne ? P.g : P.o, pap = choisi ? P.o : P.t, ebranle = c.statut === 'Ébranlé';
+// Dans le jeu, une carte est un papier d'os à texte de terre ; choisie, elle s'inverse (terre, texte d'os). Ce que le jeu posait avant la v0.41.1 (main.js `majRegiments`) :
+// numéro et nom, un « ! » flottant quand le régiment est ébranlé, les chevrons (ou le mot de la corvée), la barre. Le « ! » flotte dans la ligne du nom.
+function carteAvant(c, { choisi = false, donne = false } = {}) {
+  const enc = choisi ? P.o : donne ? P.g : P.t, pap = choisi ? P.t : P.o, ebranle = c.statut === 'Ébranlé' || c.statut === 'En déroute';
   const l1 = el('span', 'display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis',
     el('b', `font-weight:normal;font-size:${T.grand};line-height:1;margin-right:2px`, String(c.n)), ` ${c.nom}`,
-    ebranle ? el('i', `float:right;font-style:normal;font-size:${T.petit};line-height:1;padding:1px 4px;border:1px double ${P.t};color:${P.t};background:${P.o};transform:rotate(-5deg)`, SIGNE) : null);
-  const l2 = el('span', 'display:flex;gap:2px;height:8px;line-height:8px', c.statut && c.statut !== 'Ébranlé' ? txt(c.statut, `font-size:${T.petit};color:${enc}`) : chevrons(c.n % 3 + 1, enc));
-  return el('div', `display:grid;gap:2px;align-content:start;width:112px;min-height:62px;box-sizing:border-box;padding:2px 8px 8px;background:${pap};color:${enc};border-top:3px solid ${donne ? P.g : P.n};box-shadow:2px 2px 0 ${P.t};font:${T.petit}/1.2 ui-monospace,monospace;${choisi ? `outline:2px solid ${P.t};outline-offset:-5px` : ''}`, l1, l2, barre(c, enc));
+    ebranle ? el('i', `float:right;font-style:normal;font-size:${T.petit};line-height:1;padding:1px 4px;border:1px double ${P.o};color:${P.o};background:${P.t};transform:rotate(-5deg)`, SIGNE) : null);
+  const l2 = el('span', 'display:flex;gap:2px;height:8px;line-height:8px', c.statut && !ebranle ? txt(c.statut, `font-size:${T.petit};color:${enc}`) : chevrons(c.n % 3 + 1, enc));
+  return el('div', `display:grid;gap:2px;align-content:start;width:112px;min-height:62px;box-sizing:border-box;padding:2px 8px 8px;background:${pap};color:${enc};border-top:3px solid ${donne ? P.g : P.n};box-shadow:2px 2px 0 ${P.t};font:${T.petit}/1.2 ui-monospace,monospace;${choisi ? `outline:2px solid ${P.o};outline-offset:-5px` : ''}`, l1, l2, barre(c, enc));
 }
 
-// B–E : une carte à hauteur fixe (64 px) ; le nom en h1, le statut en h2 (toujours une ligne, « Tient » quand rien ne va mal), la barre collée au pied
-// et le « ! » sur le bord haut, hors du flux : rien ne bouge d'un état à l'autre, ni d'une carte à l'autre. Seul le fond dit « ébranlé ».
+// Les cartes à hauteur fixe (76 px) : le nom (h1), le statut (h2, « Tient » quand rien ne va mal), les chevrons, la barre collée au pied, le « ! » (« !! » en déroute) sur le coin, hors du flux :
+// rien ne bouge d'un état à l'autre, ni d'une carte à l'autre. Seul le fond dit « ébranlé » : quatre façons, la hachure est celle qu'a retenue Jérôme (v0.41.1).
 const FONDS = {
-  // B · fond de boue : le même papier, un ton plus brun
+  // C · hachuré : des diagonales d'os et de brume (choisi : terre et boue sombre, plus légères) ; la forme porte l'information, lisible en gris, sans couleur nouvelle
+  hachure: { fond: `repeating-linear-gradient(135deg,${P.o} 0 4px,${P.r} 4px 8px)`, enc: P.t, fondChoisi: `repeating-linear-gradient(135deg,${P.t} 0 4px,${P.s} 4px 8px)` },
+  // B · fond de boue : le papier passe au brun
   boue: { fond: P.b, enc: P.o },
-  // C · fond hachuré : des diagonales terre / boue, la forme porte l'information (lisible en gris)
-  hachure: { fond: `repeating-linear-gradient(135deg,${P.t} 0 4px,${P.b} 4px 8px)`, enc: P.o },
-  // D · fond de glaise : le papier change de ton, le texte passe à la terre
+  // D · fond de glaise : le papier passe à la glaise, texte de terre
   glaise: { fond: P.g, enc: P.t },
-  // E · fond de boue sombre et un liseré en pointillé : « abîmé »
-  abime: { fond: P.s, enc: P.o, liseré: `3px dashed ${P.g}` },
+  // E · papier mouillé : brume, liseré du haut en pointillé glaise
+  abime: { fond: P.r, enc: P.t, liseré: `3px dashed ${P.g}` },
 };
-const MARQUES = { boue: 'carre', hachure: 'carre', glaise: 'tampon', abime: 'onglet' };
 function carteFixe(variante) {
   const F = FONDS[variante];
   return (c, { choisi = false, donne = false } = {}) => {
-    const ebranle = c.statut === 'Ébranlé';
-    const enc = choisi ? P.t : ebranle ? F.enc : donne ? P.g : P.o;
-    const fond = choisi ? P.o : ebranle ? F.fond : P.t;
-    const mot = ebranle ? '' : (c.statut || 'Tient');
-    const marque = ebranle ? ({
-      carre: el('i', `position:absolute;right:6px;top:6px;display:grid;place-items:center;width:16px;height:16px;box-sizing:border-box;border:1px solid ${P.o};background:${P.t};color:${P.o};font-style:normal;font-size:${T.petit};line-height:1`, SIGNE),
-      tampon: el('i', `position:absolute;right:5px;top:5px;padding:0 4px;border:1px double ${P.t};background:${P.o};color:${P.t};font-style:normal;font-size:${T.petit};line-height:14px;transform:rotate(-5deg)`, SIGNE),
-      onglet: el('i', `position:absolute;right:8px;top:-3px;display:grid;place-items:center;width:18px;height:17px;background:${P.o};color:${P.t};font-style:normal;font-size:${T.corps};font-weight:700;line-height:1`, SIGNE),
-    })[MARQUES[variante]] : null;
-    return el('div', `position:relative;width:112px;height:64px;box-sizing:border-box;padding:6px 8px;background:${fond};color:${enc};border-top:${ebranle && F.liseré ? F.liseré : `3px solid ${donne ? P.g : P.n}`};box-shadow:2px 2px 0 ${P.t};${MONO}overflow:hidden;${choisi ? `outline:2px solid ${P.t};outline-offset:-5px` : ''}`,
+    const niveau = c.statut === 'En déroute' ? 2 : c.statut === 'Ébranlé' ? 1 : 0, ebranle = niveau > 0;
+    const enc = choisi ? P.o : ebranle ? F.enc : donne ? P.g : P.t;
+    const fond = choisi ? (ebranle && F.fondChoisi ? F.fondChoisi : P.t) : ebranle ? F.fond : P.o;
+    const mot = ebranle ? (niveau === 2 ? 'En déroute' : 'Ébranlé') : (c.statut || 'Tient');
+    const marque = ebranle ? el('i', `position:absolute;right:8px;top:4px;display:grid;place-items:center;min-width:16px;height:16px;box-sizing:border-box;padding:0 2px;border:1px solid ${P.t};background:${niveau === 2 ? ALERTES.rouge : ALERTES.orange};color:${P.t};font-style:normal;font-size:${T.petit};line-height:1`, niveau === 2 ? '!!' : SIGNE) : null;
+    return el('div', `position:relative;width:112px;height:76px;box-sizing:border-box;padding:4px 8px 8px;background:${fond};color:${enc};border-top:${ebranle && F.liseré ? F.liseré : `3px solid ${donne ? P.g : P.n}`};box-shadow:2px 2px 0 ${P.t};${MONO}overflow:hidden;${choisi ? `outline:2px solid ${P.o};outline-offset:-5px` : ''}`,
       el('div', `font-size:${T.h1};line-height:18px;height:18px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;${ebranle ? 'padding-right:20px' : ''}`, `${c.n} ${c.nom}`),
-      el('div', `font-size:${T.h2};line-height:14px;height:14px;white-space:nowrap;overflow:hidden;color:${enc}`, ebranle ? el('b', 'font-weight:normal;letter-spacing:.08em;text-transform:uppercase', 'Ébranlé') : (donne ? `${mot} ✓` : mot)),
+      el('div', `margin-top:4px;font-size:${T.h2};line-height:14px;height:14px;white-space:nowrap;overflow:hidden;color:${enc};${ebranle ? 'letter-spacing:.08em;text-transform:uppercase' : ''}`, donne && !ebranle ? `${mot} ✓` : mot),
       marque,
-      el('div', 'position:absolute;left:8px;right:8px;bottom:6px;display:grid;gap:3px', el('span', 'display:flex;height:8px;align-items:center', chevrons(c.n % 3 + 1, enc)), barre(c, enc)));
+      el('div', 'position:absolute;left:8px;right:8px;bottom:8px;display:grid;gap:4px;grid-template-rows:8px 8px', el('span', 'display:flex;height:8px;align-items:center', chevrons(c.n % 3 + 1, enc)), barre(c, enc)));
   };
 }
-const CARTES = { actuelle: carteA, boue: carteFixe('boue'), hachure: carteFixe('hachure'), glaise: carteFixe('glaise'), abime: carteFixe('abime') };
+const CARTES = { avant: carteAvant, hachure: carteFixe('hachure'), boue: carteFixe('boue'), glaise: carteFixe('glaise'), abime: carteFixe('abime') };
 
 // Des régiments d'exemple, sans moteur, pour la maquette des cartes
 const EXEMPLES = [
@@ -186,6 +182,7 @@ const EXEMPLES = [
   { n: 3, nom: 'Céruléen', statut: 'Repos', initial: 94, debout: 80, bles: 6, tombes: 8 },
   { n: 4, nom: 'Viride', statut: '', initial: 94, debout: 90, bles: 2, tombes: 2 },
   { n: 5, nom: 'Murmuration', statut: '', initial: 94, debout: 70, bles: 10, tombes: 14 },
+  { n: 6, nom: 'Sinople', statut: 'En déroute', initial: 94, debout: 22, bles: 30, tombes: 42 },
 ];
 
 // ─── 3 · La carte d'ordre de la rangée ───────────────────────────────────────
@@ -196,6 +193,7 @@ export function maquetteCartes(stage, nom) {
     ['Au contact', { ...EXEMPLES[0] }, {}],
     ['Ébranlé', { ...EXEMPLES[1] }, {}],
     ['Ébranlé et choisi', { ...EXEMPLES[1] }, { choisi: true }],
+    ['En déroute', { ...EXEMPLES[5] }, {}],
     ['Nuit : repos donné', { ...EXEMPLES[2] }, { donne: true }],
     ['Nom long', { ...EXEMPLES[4] }, {}],
   ];
@@ -203,9 +201,9 @@ export function maquetteCartes(stage, nom) {
   for (const [, c, o] of cas) rang.append(fab(c, o));
   const legende = el('div', `display:flex;gap:8px;flex-wrap:wrap;margin-top:4px;${MONO}color:${P.r}`, cas.map(([t]) => el('span', 'width:112px', t)));
   const champ = el('div', `padding:48px 16px 16px;background:${P.s};border-radius:4px`, rang, legende);
-  const aide = el('p', 'font:13px/1.4 ui-monospace,monospace;margin:8px 0 12px', nom === 'actuelle'
-    ? 'Les six états de la rangée. Regardez la barre et le « ! » (sur la capture de Jérôme, la barre de la carte ébranlée n\'est pas à la hauteur des autres ; ici, la mesure du bas dit ce que la maquette donne), et « Au contact » prend la place des chevrons.'
-    : 'Les six états de la rangée, la même hauteur pour toutes : le nom, le statut, la barre au pied. Le seul changement d\'un état à l\'autre est le fond (ou le mot).');
+  const aide = el('p', 'font:13px/1.4 ui-monospace,monospace;margin:8px 0 12px', nom === 'avant'
+    ? 'Les sept états de la rangée. Regardez la barre et le « ! » (sur la capture de Jérôme, la barre de la carte ébranlée n\'est pas à la hauteur des autres ; ici, la mesure du bas dit ce que la maquette donne), et « Au contact » prend la place des chevrons.'
+    : 'Les sept états de la rangée, la même hauteur pour toutes : le nom, le statut, la barre au pied. Le seul changement d\'un état à l\'autre est le fond (ou le mot).');
   // le repère de la barre : mesuré à la volée sur chaque carte
   const mesure = el('p', 'font:13px/1.4 ui-monospace,monospace;margin:12px 0 0');
   stage.append(aide, champ, mesure);
@@ -239,7 +237,7 @@ function hudExemple(boite, ctx) {
   const carnet = el('div', `position:absolute;left:8px;top:84px;width:240px;padding:6px 10px;background:${P.t};color:${P.o};${MONO}opacity:.96`, lignes.map(([h, t], k) => el('div', `font-size:${T.petit};line-height:1.45;${k === lignes.length - 1 ? `background:${P.g};color:${P.t};` : ''}white-space:nowrap;overflow:hidden;text-overflow:ellipsis`, `${h}  ${t}`)));
   const carteCoin = el('div', `position:absolute;right:8px;top:8px;width:110px;height:64px;background:${P.o};box-shadow:2px 2px 0 ${P.t};${MONO}padding:4px 8px;color:${P.t};font-size:${T.petit}`, 'Carte', el('div', `margin-top:6px;height:34px;border:1px solid ${P.t}`));
   const rang = el('div', 'position:absolute;left:50%;bottom:8px;transform:translateX(-50%);display:flex;gap:8px;align-items:flex-end');
-  for (const c of EXEMPLES.slice(0, 5)) rang.append(CARTES.actuelle(c, {}));
+  for (const c of EXEMPLES.slice(0, 5)) rang.append(CARTES.hachure(c, {}));
   boite.append(billet, duel, carnet, carteCoin, rang);
   return { carnet, lignes };
 }

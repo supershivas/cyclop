@@ -4,9 +4,9 @@
 //  · les boutons : une maquette de papier de campagne, les mêmes boutons que la fenêtre d'ordres, les batteries et le temps ;
 //  · les ordres et les obus : posés sur le moteur en direct (labo.js `moteur`), par-dessus le canvas (un SVG, un canvas 2D, quelques div) suivis
 //    de la caméra (`versEcran`) ; l'ordre est un vrai `ordonnerMarche`, l'obus un vrai obus de la logique (dispersion nulle : il tombe où l'on clique).
-import { PALETTE as P } from './palette.js?v=0.41.0';
-import { ordonnerMarche, ordonnerBarrage } from './bataille.js?v=0.41.0';
-import { CALIBRES } from './data/calibres.js?v=0.41.0';
+import { PALETTE as P } from './palette.js?v=0.41.1';
+import { ordonnerMarche, ordonnerBarrage } from './bataille.js?v=0.41.1';
+import { CALIBRES } from './data/calibres.js?v=0.41.1';
 
 const el = (tag, css = '', ...kids) => { const e = document.createElement(tag); if (css) e.style.cssText = css; e.append(...kids.flat().filter(k => k != null)); return e; };
 const svgEl = (tag, attrs = {}) => { const e = document.createElementNS('http://www.w3.org/2000/svg', tag); for (const [k, v] of Object.entries(attrs)) e.setAttribute(k, v); return e; };
@@ -270,7 +270,7 @@ function reticule(c) {
   };
 }
 
-const ORDRES = { fanion, ondes, reponse, banniere, reticule };
+const ORDRES = { fanion, ondes, reponse, banniere, reticule, combine: c => [fanion(c), reponse(c)] };   // `combine` : ce que le jeu fait depuis la v0.41.1 (le fanion et la réponse des hommes ensemble)
 
 export function calqueOrdre(nom) {
   return (boite, ctx) => {
@@ -290,7 +290,7 @@ export function calqueOrdre(nom) {
       if (!res.ok) { aide.textContent = res.refus || 'Ordre refusé.'; refus = 2.5; return; }   // un ordre impossible se refuse à voix haute (section 12)
       aide.textContent = 'Cliquez un autre secteur'; refus = 0;
       const fabrique = ORDRES[nom];
-      if (fabrique) G.ajouter(fabrique({ ctx, L, S, ids, x, y }));
+      if (fabrique) for (const fx of [].concat(fabrique({ ctx, L, S, ids, x, y }))) G.ajouter(fx);
     };
     boite.addEventListener('pointerdown', surClic);
     const boucle = now => {

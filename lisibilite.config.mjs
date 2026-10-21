@@ -2,7 +2,9 @@
 // Critère du lot minimal : après trois jours, un cratère, la boue, l'eau et un
 // soldat se distinguent. Les tuiles sont peintes par les MÊMES fonctions que le
 // jeu (js/tuiles.js) : ce qu'on mesure ici est ce que le jeu affiche.
-import { PALETTE } from './js/palette.js';
+import { PALETTE as BASE, ALERTES } from './js/palette.js';
+// (les deux couleurs d'alerte de l'interface, `a` orange et `d` rouge, ne sont pas dans la palette du terrain : on les ajoute pour la mesure)
+const PALETTE = { ...BASE, a: ALERTES.orange, d: ALERTES.rouge };
 import { REGLAGES as R } from './js/data/reglages.js';
 import { tuile as t, ETAT } from './js/tuiles.js';
 
@@ -16,6 +18,12 @@ export default {
     { avant: 'g', fond: 't', role: 'signe', ou: 'libellés discrets du HUD' },
     { avant: 't', fond: 'o', role: 'texte', ou: 'boutons' },
     { avant: 'n', fond: 't', role: 'texte', ou: 'noms de nos régiments' },
+    // l'état moral d'un régiment : le carré du nom et le « ! » de la carte
+    { avant: 'a', fond: 't', role: 'signe', ou: 'ébranlé (orange) sur la terre' },
+    { avant: 'd', fond: 't', role: 'signe', ou: 'en déroute (rouge) sur la terre' },
+    { avant: 'a', fond: 'b', role: 'signe', ou: 'ébranlé sur le fond hachuré des cartes' },
+    { avant: 'd', fond: 'b', seuil: 3, role: 'signe', ou: 'en déroute sur le fond hachuré des cartes' },
+    { avant: 'a', fond: 'x', seuil: 1.4, role: 'signe', ou: 'ébranlé et en face côte à côte' },
     // les états du sol entre eux
     { avant: 'b', fond: 'h', role: 'signe', ou: 'boue sur sol sec' },
     { avant: 'e', fond: 'b', role: 'signe', ou: 'eau dans la boue' },

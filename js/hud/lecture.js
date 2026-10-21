@@ -1,10 +1,15 @@
 // Lire la bataille en mots : qui est un homme, ce qu'il est devenu, ce que compte un régiment. Des fonctions
 // qui prennent la bataille `B` et ne changent rien (aucun DOM) ; main.js et la fiche s'en servent.
-import { NOUS, arriereDe, numeroCampagne } from '../bataille.js?v=0.41.0';
-import { legere } from '../army.js?v=0.41.0';
-import { identite, prochainGrade } from '../identite.js?v=0.41.0';
+import { NOUS, arriereDe, numeroCampagne, moralEnMots } from '../bataille.js?v=0.41.1';
+import { legere } from '../army.js?v=0.41.1';
+import { identite, prochainGrade } from '../identite.js?v=0.41.1';
 
 export const majuscule = s => s[0].toUpperCase() + s.slice(1);
+// Le moral d'un régiment en trois niveaux, pour l'interface (v0.41.1) : « tient » (tient, tient bon), « ebranle » (ébranlé, au bord de la déroute), « deroute »
+export function niveauMoral(reg, R) {
+  const m = moralEnMots(reg, R);
+  return m === 'en déroute' ? 'deroute' : m.startsWith('tient') ? 'tient' : 'ebranle';
+}
 export const nomDe = reg => reg?.nom ? `Régiment ${reg.nom}` : 'En face';
 
 export function indiceDe(B, id) {

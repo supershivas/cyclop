@@ -1,40 +1,41 @@
 // Le cycle de vie : écran titre → bataille → nuit → fin ; pause active,
 // réglages, sauvegarde, mise à jour, debug. Les règles sont dans bataille.js
 // (pures), le dessin dans rendu3d.js (il ne modifie jamais l'état).
-import { createLoop } from './lib/loop.js?v=0.41.0';
-import { createKeys, stopTypeahead } from './lib/keys.js?v=0.41.0';
-import { createPointer, lockBrowserGestures } from './lib/pointer.js?v=0.41.0';
-import { createGamepad } from './lib/gamepad.js?v=0.41.0';
-import { createStore, autosave, pickJSONFile } from './lib/save.js?v=0.41.0';
-import { startUpdateCheck, loadVersion, loadChangelog, downloadJSON } from './lib/app-update.js?v=0.41.0';
-import { ROLES } from './palette.js?v=0.41.0';
-import { VERSION_CAMPAGNE, CLE as CLE_CAMPAGNE, cloturerDansLeStore, nouvelleCampagne, suivante, passage, bilan as bilanCampagne } from './campagne.js?v=0.41.0';
-import { MISSIONS, EUX, nouvelleBataille, etapesRestaurer, avancer, aube, ordonnerMarche, peutOrdonner, ordonnerBarrage, peutBarrage, ordonnerStance, peutStance, horloge, effectifs, tronconsTenus, moralEnMots, terrainResume, forcesTroncons, largeurZone, lettreZone, etendueZones, nomTroncon, actionDe, secteursDe, tronconsDeLigne, zone, photo, restaurer, PAS, NOUS } from './bataille.js?v=0.41.0';
-import { ligneY } from './tranchees.js?v=0.41.0';
-import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.41.0';
-import { STANCES, STANCE_DEFAUT } from './data/stances.js?v=0.41.0';
-import { METEO } from './data/meteo.js?v=0.41.0';
-import { impact, hydroLignes } from './terrain.js?v=0.41.0';
-import { hash2 } from './lib/rng.js?v=0.41.0';
-import { creerRendu, CAMERA } from './rendu3d.js?v=0.41.0';
-import { etatEnMots, experienceEnMots, chevrons } from './identite.js?v=0.41.0';
-import { CORVEES } from './data/corvees.js?v=0.41.0';
-import { refusCorvee } from './nuit.js?v=0.41.0';
-import { chargerContenu, appliquerSecteurs, appliquerCartes } from './design-store.js?v=0.41.0';
-import * as lecture from './hud/lecture.js?v=0.41.0';
-import { creerFiche } from './hud/fiche.js?v=0.41.0';
-import { chevronsHtml } from './hud/barres.js?v=0.41.0';
-import { creerNuit, corveeDe, corveeCourte } from './hud/nuit.js?v=0.41.0';
-import { creerCampagne } from './hud/campagne.js?v=0.41.0';
-import { creerCarnet, deux } from './hud/carnet.js?v=0.41.0';
-import { creerCarte } from './hud/carte.js?v=0.41.0';
-import { creerPertes } from './hud/pertes.js?v=0.41.0';
-import { creerBarreTemps } from './hud/temps.js?v=0.41.0';
-import { creerChargement } from './hud/chargement.js?v=0.41.0';
-import { SECTEURS } from './data/secteur.js?v=0.41.0';
-import { creerLockstep, empreinteEtat } from './reseau/lockstep.js?v=0.41.0';
-import { nouveauCode, codeValide, publier, ecouter } from './reseau/relais.js?v=0.41.0';
-import { creerHote, creerInvite } from './reseau/lien.js?v=0.41.0';
+import { createLoop } from './lib/loop.js?v=0.41.1';
+import { createKeys, stopTypeahead } from './lib/keys.js?v=0.41.1';
+import { createPointer, lockBrowserGestures } from './lib/pointer.js?v=0.41.1';
+import { createGamepad } from './lib/gamepad.js?v=0.41.1';
+import { createStore, autosave, pickJSONFile } from './lib/save.js?v=0.41.1';
+import { startUpdateCheck, loadVersion, loadChangelog, downloadJSON } from './lib/app-update.js?v=0.41.1';
+import { ROLES } from './palette.js?v=0.41.1';
+import { VERSION_CAMPAGNE, CLE as CLE_CAMPAGNE, cloturerDansLeStore, nouvelleCampagne, suivante, passage, bilan as bilanCampagne } from './campagne.js?v=0.41.1';
+import { MISSIONS, EUX, nouvelleBataille, etapesRestaurer, avancer, aube, ordonnerMarche, peutOrdonner, ordonnerBarrage, peutBarrage, ordonnerStance, peutStance, horloge, effectifs, tronconsTenus, moralEnMots, terrainResume, forcesTroncons, largeurZone, lettreZone, etendueZones, nomTroncon, actionDe, secteursDe, tronconsDeLigne, zone, photo, restaurer, PAS, NOUS } from './bataille.js?v=0.41.1';
+import { ligneY } from './tranchees.js?v=0.41.1';
+import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.41.1';
+import { STANCES, STANCE_DEFAUT } from './data/stances.js?v=0.41.1';
+import { METEO } from './data/meteo.js?v=0.41.1';
+import { impact, hydroLignes } from './terrain.js?v=0.41.1';
+import { hash2 } from './lib/rng.js?v=0.41.1';
+import { creerRendu, CAMERA } from './rendu3d.js?v=0.41.1';
+import { etatEnMots, experienceEnMots, chevrons } from './identite.js?v=0.41.1';
+import { CORVEES } from './data/corvees.js?v=0.41.1';
+import { refusCorvee } from './nuit.js?v=0.41.1';
+import { chargerContenu, appliquerSecteurs, appliquerCartes } from './design-store.js?v=0.41.1';
+import * as lecture from './hud/lecture.js?v=0.41.1';
+import { creerFiche } from './hud/fiche.js?v=0.41.1';
+import { chevronsHtml } from './hud/barres.js?v=0.41.1';
+import { creerNuit, corveeDe, corveeCourte } from './hud/nuit.js?v=0.41.1';
+import { creerCampagne } from './hud/campagne.js?v=0.41.1';
+import { creerCarnet, deux } from './hud/carnet.js?v=0.41.1';
+import { creerCarte } from './hud/carte.js?v=0.41.1';
+import { creerPertes } from './hud/pertes.js?v=0.41.1';
+import { creerBarreTemps } from './hud/temps.js?v=0.41.1';
+import { creerChargement } from './hud/chargement.js?v=0.41.1';
+import { creerRetours } from './hud/retours.js?v=0.41.1';
+import { SECTEURS } from './data/secteur.js?v=0.41.1';
+import { creerLockstep, empreinteEtat } from './reseau/lockstep.js?v=0.41.1';
+import { nouveauCode, codeValide, publier, ecouter } from './reseau/relais.js?v=0.41.1';
+import { creerHote, creerInvite } from './reseau/lien.js?v=0.41.1';
 
 const JEU = 'cyclopeen';
 const $ = id => document.getElementById(id);
@@ -100,7 +101,7 @@ const laCarte = creerCarte({
 });
 const nuit = creerNuit({
   $, bataille: () => B, choisis: () => choisis, pauser: () => { if (!reseau) loop.pause(); }, reprendre: () => reprendre(),
-  sauvegarder: () => sauvegarder(), majHud: () => majHud(), toast: t => toast(t), dire: r => dire(r), invalider: () => { regimentsVus = ''; },
+  sauvegarder: () => sauvegarder(), majHud: () => majHud(), toast: (t, g) => toast(t, g), dire: r => dire(r), invalider: () => { regimentsVus = ''; },
   moi: () => MOI, enReseau: () => !!reseau,
   surChoix: (reg, id) => reseau?.ls?.commander({ t: 'corvee', reg, id }), surPret: () => reseau.ls.commander({ t: 'pret' }),
 });
@@ -112,6 +113,8 @@ lockBrowserGestures($('ecran'));
 stopTypeahead();
 chargement.progres(0.5, 'Le moteur de rendu');
 const rendu = await creerRendu($('canvas'), { mesure: MESURE });
+// les retours sur le champ : le fanion et la réponse des hommes d'un ordre en terrain libre, l'impact des obus en trois temps (v0.41.1)
+const retours = creerRetours({ $, rendu: () => rendu, bataille: () => B });
 chargement.progres(0.75, 'Le champ de bataille');
 rendu.redimensionner();
 addEventListener('resize', () => rendu.redimensionner());
@@ -210,7 +213,7 @@ function jouer(bataille) {
   B = bataille;
   if (!reseau) reglerCamp(NOUS);
   rendu.bord = 'faux-ciel';                        // le champ se prolonge dans le ciel du jour, que la nuit mange (v0.33.0 ; le ciel suit la météo, v0.36.7)
-  rendu.attacher(B);
+  rendu.attacher(B); retours.vider();
   rendu.vue.zoom = prefs.zoom ?? 2;
   // la caméra du joueur (ou celle de départ : l'écran titre a la sienne) ; un réglage de la v0.2, sans tangage, est ignoré
   if (prefs.camera?.tangage) rendu.placerCamera(prefs.camera.yaw, prefs.camera.tangage); else rendu.placerCamera(CAMERA.yaw, CAMERA.tangage);
@@ -249,7 +252,7 @@ function nouvelle(graine, secteur = 'essai') {
 $('continuer').onclick = async () => {
   const p = store.load('partie');
   try { jouer(p ? await sousBarre('Relecture de la partie', etapesRestaurer(p, R)) : nouvelle(1)); }
-  catch (e) { console.error(e); toast('Sauvegarde illisible : nouvelle bataille.'); jouer(nouvelle(1)); }
+  catch (e) { console.error(e); toast('Sauvegarde illisible : nouvelle bataille.', 'alerte'); jouer(nouvelle(1)); }
   chargement.cacher();
 };
 // Un travail en étapes sous la barre ; puis `jouer` (brancher la bataille au rendu : la fin de la barre)
@@ -317,7 +320,7 @@ function demanderSecteur() {
       for (const b of liste.children) b.setAttribute('aria-pressed', String(b.dataset.id === choisi));
       $('carte-legende').textContent = `${SECTEURS[choisi].nom} : ${SECTEURS[choisi].resume}`;
       try {
-        if (!apercuSecteur) { const { creerVue3D } = await import('./apercu-3d.js?v=0.41.0'); apercuSecteur = await creerVue3D({ R, hote: $('carte-3d'), rotation: 0.12 }); }
+        if (!apercuSecteur) { const { creerVue3D } = await import('./apercu-3d.js?v=0.41.1'); apercuSecteur = await creerVue3D({ R, hote: $('carte-3d'), rotation: 0.12 }); }
         if (!ouvert) return;
         apercuSecteur.monter(choisi, SECTEURS[choisi], graine, { soldats: false, cadrer: true });
         apercuSecteur.activer(true);
@@ -389,7 +392,7 @@ function demarrerReseau({ moi, lien, graine, secteur }) {
   const b = nouvelleBataille(graine, R, { secteur, deux: true });
   reseau.ls = creerLockstep({
     B: b, moi, envoyer: m => lien.envoyer(m), executer: executerCmd,
-    surEcart: (cadre) => { noter('Désynchronisation : les deux parties ne sont plus les mêmes.'); toast('Désynchronisation : les deux parties ont divergé.'); console.error('désynchronisation au cadre', cadre); },
+    surEcart: (cadre) => { noter('Désynchronisation : les deux parties ne sont plus les mêmes.'); toast('Désynchronisation : les deux parties ont divergé.', 'alerte'); console.error('désynchronisation au cadre', cadre); },
   });
   lien.surMessage = m => { if (m.t === 'cmds' || m.t === 'hash') reseau.ls.recevoir(m); else if (m.t === 'quitte') quitterReseau('L\'autre commandant a quitté la partie.'); };
   lien.surFermeture = () => { if (reseau) quitterReseau('La connexion est perdue.'); };
@@ -533,7 +536,7 @@ function montrerFin() {
   loop.pause(); sauvegarder();
   // le registre de la campagne est écrit avant l'écran de fin : une coupure ne perd rien (idempotent si la partie est relue ici)
   let campagne = null;
-  try { campagne = cloturerDansLeStore(store, B); } catch (e) { toast(`Campagne : ${e.message}`); }
+  try { campagne = cloturerDansLeStore(store, B); } catch (e) { toast(`Campagne : ${e.message}`, 'alerte'); }
   // la campagne continue : le registre (variante A du labo) remplace l'écran de fin, un papier posé sur le champ
   if (campagne?.statut === 'en cours') { laCampagne.montrer(passage(campagne), () => lancerCampagne(campagne)); return; }
   // elle est finie : un papier sobre, les batailles puis les noms (Jérôme : sans fanfare), au lieu de l'écran de fin
@@ -558,7 +561,7 @@ $('importer').onclick = async () => {
     const n = store.importAll(await pickJSONFile());
     toast(`${n} élément(s) importé(s)`);
     setTimeout(() => location.reload(), 800);
-  } catch (e) { toast(e.message); }
+  } catch (e) { toast(e.message, 'alerte'); }
 };
 loadVersion().then(v => { $('version').textContent = v ? `v${v}` : ''; });
 loadChangelog().then(entrees => {
@@ -570,15 +573,19 @@ loadChangelog().then(entrees => {
   }));
 });
 
-function toast(texte) {
+// Un message à l'écran (v0.41.1, sujet « Les toasts » du labo, variante B) : une languette sous les pertes, au centre, qui ne recouvre plus la rangée des régiments ;
+// le genre (information, refus d'un ordre, alerte) donne le liseré et le petit mot du haut
+const MOTS_TOAST = { refus: 'Ordre refusé', alerte: 'Attention' };
+function toast(texte, genre = 'info') {
   const t = $('toast');
-  t.textContent = texte;
+  t.className = `jeu-toast toast-${genre}`;
+  t.replaceChildren(...(MOTS_TOAST[genre] ? [Object.assign(document.createElement('small'), { textContent: MOTS_TOAST[genre] })] : []), Object.assign(document.createElement('span'), { textContent: texte }));
   t.hidden = false;
   clearTimeout(toast.timer);
   toast.timer = setTimeout(() => { t.hidden = true; }, 2600);
 }
 // Un ordre refusé se dit à voix haute (section 12)
-function dire(r) { if (r?.refus) toast(r.refus); return r; }
+function dire(r) { if (r?.refus) toast(r.refus, 'refus'); return r; }
 
 // ─── Le HUD ────────────────────────────────────────────────────────────────
 // La nuit, un régiment à qui l'on a donné un ordre (la carte se grise ; Jérôme, v0.38.3) : les autres ont encore celui d'hier, ou le repos
@@ -608,11 +615,15 @@ function majRegiments() {
   const cartes = regs.slice(regDebut, regDebut + visibles).map(r => {
     const bles = bl[r.id], debout = Math.max(0, r.effectif - bles), nb = chevrons(ex[r.id] / Math.max(1, vivants[r.id])), humeur = moralEnMots(r, R);
     const b = document.createElement('button');
-    b.className = `reg-carte${choisis.has(r.id) ? ' choisi' : ''}${donneeCetteNuit(r) ? ' donne' : ''}${r.id === clicCarte ? ' clic' : ''}`; b.dataset.id = r.id;
+    const niv = lecture.niveauMoral(r, R);
+    b.className = `reg-carte${choisis.has(r.id) ? ' choisi' : ''}${niv !== 'tient' ? ` ${niv === 'deroute' ? 'deroute' : 'ebranle'}` : ''}${donneeCetteNuit(r) ? ' donne' : ''}${r.id === clicCarte ? ' clic' : ''}`; b.dataset.id = r.id;
     b.setAttribute('aria-pressed', String(choisis.has(r.id)));
     b.setAttribute('aria-label', `${numeroDe(r)} · ${r.nom} : ${debout} debout, ${bles} blessés, ${r.pertes} tombés, ${'chevron '.repeat(nb).trim() || 'aucun chevron'}${humeur.startsWith('tient') ? '' : `, ${humeur}`}${r.stance !== STANCE_DEFAUT ? `, ${STANCES[r.stance].court}` : ''}${donneeCetteNuit(r) ? `, ordre donné : ${corveeDe(nuit.corvees[r.id]).toLowerCase()}` : ''}`);
-    b.innerHTML = `<span class="l1"><b>${numeroDe(r)}</b> ${r.nom}${humeur.startsWith('tient') ? '' : '<i class="alerte" aria-hidden="true">!</i>'}</span>
-      <span class="chevrons" aria-hidden="true">${nuit.etat === 'choix' ? `<span class="corvee">${corveeCourte(nuit.corvees[r.id])}</span>` : chevronsHtml(nb)}${r.stance !== STANCE_DEFAUT ? `<span class="posture">${STANCES[r.stance].court}</span>` : ''}</span>
+    // quatre lignes à place fixe : le nom, le statut (l'état moral, sinon la corvée de la nuit, sinon « Tient »), les chevrons et la posture, la barre ; le « ! » est hors du flux
+    const statut = niv === 'deroute' ? 'En déroute' : niv === 'ebranle' ? 'Ébranlé' : nuit.etat === 'choix' ? `<span class="corvee">${corveeCourte(nuit.corvees[r.id])}</span>` : 'Tient';
+    b.innerHTML = `<span class="l1"><b>${numeroDe(r)}</b> ${r.nom}</span>${niv === 'tient' ? '' : `<i class="alerte" aria-hidden="true">${niv === 'deroute' ? '!!' : '!'}</i>`}
+      <span class="statut">${statut}</span>
+      <span class="chevrons" aria-hidden="true">${chevronsHtml(nb)}${r.stance !== STANCE_DEFAUT ? `<span class="posture">${STANCES[r.stance].court}</span>` : ''}</span>
       <span class="barre" title="plein : debout (${debout}) · hachuré : blessés (${bles}) · vide : tombés (${r.pertes})"><i class="debout" style="width:${pc(debout, r)}"></i><i class="blesses" style="width:${pc(bles, r)}"></i><i class="tombes" style="width:${pc(r.pertes, r)}"></i></span>`;
     return b;
   });
@@ -636,6 +647,7 @@ function majRegiments() {
       return `<button data-corvee="${c.id}" class="${toutes ? 'actif' : ''}${m ? ' refus' : ''}" aria-disabled="${!!m}" title="${(m || c.dit).replace(/"/g, '&quot;')}">${c.nom}</button>`;
     }).join('') : ''}<button data-act="fiche">Fiche</button></div>`;
   pan.hidden = false;
+  rejouerRebond();
   // le rabat se relève quand on change de régiment (v0.34.6)
   if (fenetreVue !== actif.id && !mouvementReduit) pan.animate([{ transform: 'perspective(500px) rotateX(88deg)', opacity: .4 }, { transform: 'perspective(500px) rotateX(0)', opacity: 1 }], { duration: 340, easing: 'cubic-bezier(.2,.8,.3,1)' });
   fenetreVue = actif.id;
@@ -687,14 +699,14 @@ function choisirRegiment(id, ajout) {
 }
 function choisirSecteur(s, ajout) {
   const regs = B.etat.regiments.filter(r => { const [a, b] = etendueZones(B, r.depart); return r.camp === MOI && r.effectif && s >= a && s <= b; });
-  if (!regs.length) return toast(`Plus personne dans le secteur ${lettreZone(s)}.`);
+  if (!regs.length) return toast(`Plus personne dans le secteur ${lettreZone(s)}.`, 'refus');
   if (!ajout) choisis = new Set();
   for (const r of regs) { if (ajout && choisis.has(r.id)) choisis.delete(r.id); else choisis.add(r.id); }
   rendu.choisis = choisis; majHud();
 }
 function ordreCase(idx, s) {
-  if (B.etat.phase !== 'jour') return toast('La nuit, pas de marche : choisissez des régiments, puis une corvée.');
-  if (!choisis.size) return toast('Choisissez d\'abord un régiment (clic, cadre, T, ou la lettre d\'un secteur).');
+  if (B.etat.phase !== 'jour') return toast('La nuit, pas de marche : choisissez des régiments, puis une corvée.', 'refus');
+  if (!choisis.size) return toast('Choisissez d\'abord un régiment (clic, cadre, T, ou la lettre d\'un secteur).', 'refus');
   const Z = zone(B), x = Z.x0 + (s - 0.5) * largeurZone(B), y = ligneY(B.lignes[idx], x);
   const r = dire(lancerMarche([...choisis], x, y));
   if (r.ok) { marque = { x, y, t: 2 }; sauvegarder(); ordreDonne(r); }
@@ -789,6 +801,28 @@ function viser(cal) {
 // Le dessin seulement ; un déplacement de la vue à la main coupe le glissement.
 let centrage = null, equerres = null;
 const mouvementReduit = matchMedia('(prefers-reduced-motion: reduce)').matches;
+// Le rebond d'un bouton (Jérôme, v0.41.1 ; sujet « Le clic sur un bouton » du labo, variante B) : dès l'appui, il s'enfonce (94 %) puis revient en dépassant un peu (105 %), 280 ms ;
+// pas sur les cartes de régiment (elles ont leur clic), ni sur la carte, ni sur les flèches, ni dans une boîte de dialogue. La fenêtre d'ordres est refaite à chaque changement :
+// l'animation reprend sur le bouton neuf, là où elle en était (`rejouerRebond`). Le dessin seulement.
+const REBOND = [{ transform: 'scale(1)' }, { transform: 'scale(.94)', offset: .25 }, { transform: 'scale(1.05)', offset: .65 }, { transform: 'scale(1)' }];
+const REBOND_MS = 280;
+let rebond = null;
+function jouerRebond(b, avance = 0) { if (!mouvementReduit) b.animate(REBOND, { duration: REBOND_MS, delay: -avance, easing: 'cubic-bezier(.2,.8,.3,1)' }); }
+function surRebond(e) {
+  const b = e.target.closest?.('button');
+  if (!b || b.disabled || b.getAttribute('aria-disabled') === 'true' || b.closest('.reg-rang, .carte-grille, .fleche, dialog')) return;
+  jouerRebond(b);
+  const [k, v] = Object.entries(b.dataset)[0] || [], hote = b.closest('[id]');
+  rebond = k && hote ? { sel: `#${hote.id} [data-${k.replace(/[A-Z]/g, m => `-${m.toLowerCase()}`)}="${v}"]`, t0: performance.now() } : null;
+}
+document.addEventListener('pointerdown', e => { if (e.button === 0) surRebond(e); });
+document.addEventListener('click', e => { if (e.detail === 0) surRebond(e); });     // au clavier (Espace, Entrée)
+function rejouerRebond() {
+  if (!rebond) return;
+  const ecoule = performance.now() - rebond.t0;
+  if (ecoule < REBOND_MS) { const b = document.querySelector(rebond.sel); if (b) jouerRebond(b, ecoule); }
+  rebond = null;
+}
 function centreDe(id) {
   const A = B.armee; let x = 0, y = 0, n = 0;
   for (let i = 0; i < A.n; i++) if (A.reg[i] === id) { x += A.x[i]; y += A.y[i]; n++; }
@@ -843,7 +877,7 @@ function placerFenetre() {
   pan.style.translate = `${Math.round(Math.max(8, Math.min(r.left + r.width / 2 - w / 2, innerWidth - w - 8)))}px ${Math.round(r.top - h - 8)}px`;
 }
 
-// Les noms de nos régiments, au-dessus d'eux
+// Les noms de nos régiments, au-dessus d'eux : un cartouche (v0.41.1) : le numéro en carré (orange : ébranlé, rouge : en déroute), le nom et le secteur, le statut, la barre debout / blessés
 const etiq = new Map();
 function etiquettes() {
   $('etiquettes').replaceChildren();
@@ -851,11 +885,13 @@ function etiquettes() {
   for (const r of B.etat.regiments) {
     if (r.camp !== MOI) continue;
     const d = document.createElement('div');
-    d.className = 'etiquette'; d.textContent = r.nom; d.dataset.id = r.id;
-    $('etiquettes').append(d); etiq.set(r.id, d);
+    d.className = 'etiquette'; d.dataset.id = r.id;
+    d.innerHTML = '<b class="num"></b><span class="corps"><span class="nom"></span><span class="statut"></span><span class="barre"><i class="debout"></i><i class="blesses"></i></span></span>';
+    $('etiquettes').append(d);
+    etiq.set(r.id, { d, num: d.querySelector('.num'), nom: d.querySelector('.nom'), statut: d.querySelector('.statut'), debout: d.querySelector('.debout'), blesses: d.querySelector('.blesses'), cle: '' });
   }
 }
-// Un clic sur le nom d'un régiment le choisit (Jérôme, v0.40.2) : comme sa carte, sans glisser la caméra ; Maj ajoute, et le seul choisi se désélectionne
+// Un clic sur le nom d'un régiment le choisit (Jérôme, v0.41.0) : comme sa carte, sans glisser la caméra ; Maj ajoute, et le seul choisi se désélectionne
 $('etiquettes').onclick = e => {
   const d = e.target.closest('.etiquette');
   if (!d || !B || !enJeu()) return;
@@ -873,11 +909,11 @@ function majEtiquettes() {
   for (let i = 0; i < A.n; i++) {
     if (A.camp[i] !== MOI) continue;
     let c = centres.get(A.reg[i]);
-    if (!c) centres.set(A.reg[i], c = { x: 0, y: 0, n: 0, ymin: 1e9 });
-    c.x += A.x[i]; c.y += A.y[i]; c.n++; if (A.y[i] < c.ymin) c.ymin = A.y[i];
+    if (!c) centres.set(A.reg[i], c = { x: 0, y: 0, n: 0, ymin: 1e9, bl: 0 });
+    c.x += A.x[i]; c.y += A.y[i]; c.n++; if (A.y[i] < c.ymin) c.ymin = A.y[i]; if (A.blessure[i]) c.bl++;
   }
-  for (const [id, d] of etiq) {
-    const c = centres.get(id);
+  for (const [id, e] of etiq) {
+    const d = e.d, c = centres.get(id);
     if (!c) { d.hidden = true; continue; }
     const [sx, sy] = rendu.versEcran(c.x / c.n, c.ymin - 2);
     // hors de l'écran : caché (sinon il dépasse, et l'audit d'écran le voit amputé)
@@ -885,11 +921,16 @@ function majEtiquettes() {
     if (d.hidden) continue;
     d.style.transform = `translate(${Math.round(sx)}px, ${Math.round(sy)}px) translate(-50%, -100%)`;
     d.classList.toggle('choisi', choisis.has(id));
-    // « S3 · Viride », puis la corvée de la nuit, ou le moral quand il baisse
-    const reg = B.etat.regiments[id], m = moralEnMots(reg, R), base = `${numeroDe(reg)} · ${reg.nom} · ${secteursDe(B, reg)}`;
-    const suite = nuit.etat === 'choix' && nuit.corvees[id] ? corveeDe(nuit.corvees[id]) : m.startsWith('tient') ? '' : m;
-    const texte = suite ? `${base} · ${suite}` : base;
-    if (d.textContent !== texte) d.textContent = texte;
+    // « 3 | Viride · B », puis « Tient », ou le moral quand il baisse, ou la corvée de la nuit ; la barre : debout, blessés
+    const reg = B.etat.regiments[id], niv = lecture.niveauMoral(reg, R);
+    const statut = niv === 'deroute' ? 'En déroute' : niv === 'ebranle' ? 'Ébranlé' : nuit.etat === 'choix' && nuit.corvees[id] ? corveeCourte(nuit.corvees[id]) : 'Tient';
+    const debout = Math.max(0, c.n - c.bl), cle = `${numeroDe(reg)}|${reg.nom}|${secteursDe(B, reg)}|${statut}|${niv}|${debout}|${c.bl}`;
+    if (cle === e.cle) continue;
+    e.cle = cle;
+    d.classList.toggle('ebranle', niv === 'ebranle'); d.classList.toggle('deroute', niv === 'deroute');
+    e.num.textContent = numeroDe(reg); e.nom.textContent = `${reg.nom} · ${secteursDe(B, reg)}`; e.statut.textContent = statut;
+    e.debout.style.width = `${(debout / reg.initial * 100).toFixed(1)}%`; e.blesses.style.width = `${(c.bl / reg.initial * 100).toFixed(1)}%`;
+    d.setAttribute('aria-label', `${numeroDe(reg)} · ${reg.nom} : ${statut.toLowerCase()}, ${debout} debout, ${c.bl} blessés`);
   }
   const rs = $('repere-soldat'), is = laFiche.ouverte ? indiceDe(laFiche.ouverte.id) : -1;
   if (is >= 0) {
@@ -1058,7 +1099,7 @@ function majBulle() {
 // Donner l'ordre de marche aux régiments choisis, là où l'on a cliqué
 function ordreMarche(x, y) {
   const r = dire(lancerMarche([...choisis], x, y));
-  if (r.ok) { marque = { x, y, t: 2 }; sauvegarder(); ordreDonne(r); }
+  if (r.ok) { marque = { x, y, t: 2 }; sauvegarder(); ordreDonne(r); if (!r.tranchee) retours.ordre(r.regiments, x, y); }
 }
 // La posture des régiments choisis (Maj+1 : à volonté, Maj+2 : feu retenu ; les boutons du rabat au lot 3) ; le carnet dit ce qui a pris
 function noterStance(ids, stance) {
@@ -1066,7 +1107,7 @@ function noterStance(ids, stance) {
   noter(regs.length > 2 ? `${regs.length} régiments : ${STANCES[stance].court}.` : regs.map(g => `${g.nom} : ${STANCES[stance].court}`).join(' ; ') + '.');
 }
 function donnerStance(stance) {
-  if (!choisis.size) return toast('Choisissez d\'abord un régiment (clic, cadre, T, ou la lettre d\'un secteur).');
+  if (!choisis.size) return toast('Choisissez d\'abord un régiment (clic, cadre, T, ou la lettre d\'un secteur).', 'refus');
   const r = dire(lancerStance([...choisis], stance));
   if (r.ok && !reseau) { noterStance(r.regiments, stance); sauvegarder(); regimentsVus = ''; majHud(); }
 }
@@ -1226,7 +1267,10 @@ const loop = createLoop({
     }
     if (marque) marque.t -= dt;
     majCentrage(dt);
-    rendu.dessiner(dt, evenements.splice(0));
+    const ev = evenements.splice(0);
+    retours.evenements(ev);
+    rendu.dessiner(dt, ev);
+    retours.maj(dt);
     majEtiquettes();
     placerFenetre();
     majVisee();
@@ -1264,7 +1308,7 @@ startUpdateCheck({
 
 // ─── Mode debug (section 18) : chargé seulement avec ?debug=1 ──────────────
 if (DEBUG) {
-  const { installDebug, seedFromUrl } = await import('./lib/debug.js?v=0.41.0');
+  const { installDebug, seedFromUrl } = await import('./lib/debug.js?v=0.41.1');
   window.__seed = seedFromUrl() ?? undefined;
   installDebug({
     state: () => B && { ...horloge(B), effectifs: effectifs(B), pertes: B.etat.pertes, impacts: B.etat.impacts.length, enJeu: enJeu(), pause: loop.paused },

@@ -1,5 +1,11 @@
 # Journal des versions
 
+## 0.41.1 — 2026-10-21
+- Le nom d'un régiment sur le champ est un cartouche cliquable : le numéro dans un carré (bleu ; orange si le régiment est ébranlé, rouge en déroute), le nom et le secteur, le statut, la barre debout / blessés
+- La carte d'un régiment dans la rangée a une hauteur fixe, la barre toujours au même endroit, un « ! » (« !! » en déroute) sur le coin et un fond hachuré quand il est ébranlé (plus légèrement s'il est choisi)
+- Les messages (ordre refusé, mise à jour, alerte) tombent sous les pertes, au centre, avec un liseré et un petit mot par genre, au lieu de recouvrir les cartes des régiments
+- Un ordre en terrain libre plante un fanion et chaque homme lève un « ! » ; un obus qui tombe laisse un éclair et un anneau de poussière ; un bouton rebondit quand on le clique
+
 ## 0.41.0 — 2026-10-21
 - Un clic sur le nom d'un régiment, sur le champ, le choisit comme sa carte de la rangée (Maj : en ajouter à la sélection)
 - Au labo, un point vert (tranché, en jeu), rouge (à trancher) ou orange (indéfini) devant chaque sujet et chaque groupe

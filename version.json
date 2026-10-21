@@ -1,9 +1,9 @@
 {
-  "version": "0.41.0",
+  "version": "0.41.1",
   "date": "2026-10-21",
   "changes": [
-    "Un clic sur le nom d'un régiment, sur le champ, le choisit (Maj : en ajouter)",
-    "Au labo, un point vert, rouge ou orange devant chaque sujet : tranché, à trancher, indéfini",
-    "Au labo, trois sujets à trancher : le nom d'un régiment sur le champ, les toasts, la carte d'ordre de la rangée (quatre propositions chacun)"
+    "Le nom d'un régiment sur le champ devient un cartouche cliquable (carré orange s'il est ébranlé, rouge en déroute) ; sa carte de la rangée a une hauteur fixe et un fond hachuré quand il est ébranlé",
+    "Les messages s'affichent sous les pertes, au centre, au lieu de recouvrir les cartes des régiments",
+    "Un ordre en terrain libre plante un fanion et les hommes lèvent un « ! », un obus qui tombe laisse un éclair et un anneau de poussière, un bouton rebondit quand on le clique"
   ]
 }
