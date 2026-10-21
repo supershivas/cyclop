@@ -1,9 +1,9 @@
 {
-  "version": "0.48.0",
+  "version": "0.48.1",
   "date": "2026-10-21",
   "changes": [
-    "Sept ponts en jeu, au choix dans l'éditeur de carte ; l'eau passe dessous ; certains portent un char, les autres cèdent",
-    "Les régiments contournent l'eau et passent par les ponts : le chemin se voit en pointillés avant le clic, un ordre sans passage est refusé, le statut dit « En marche », « Attaque »…",
-    "Les soldats avancent de face ; la touche I ouvre la fiche de l'homme sous le pointeur"
+    "De près, un clic sur un de nos hommes ouvre sa fiche",
+    "Les avions arrivent de hors de la carte et la traversent : on les voit venir",
+    "Les chars entrent par le bord de la carte, sur la route, avant de gagner leur but"
   ]
 }

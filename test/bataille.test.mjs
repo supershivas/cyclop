@@ -724,7 +724,7 @@ test('le mitraillage : une passe en bande, des morts dans la bande et nulle part
   assert.ok(ordonnerBarrage(B, 'avion', cx, cy).ok);
   assert.ok(ordonnerBarrage(B, 'avion', cx, cy).refus, 'recharge');
   let passe = 0;
-  for (let k = 0; k < 150; k++) { avancer(B); passe += B.evenements.filter(e => e.type === 'mitraillage').length; }
+  for (let k = 0; k < 900; k++) { avancer(B); passe += B.evenements.filter(e => e.type === 'mitraillage').length; }
   assert.equal(passe, 1, 'un événement de passe');
   const restent = new Set(); for (let i = 0; i < A.n; i++) restent.add(A.id[i]);
   const tombes = [...vus].filter(id => !restent.has(id));
@@ -752,15 +752,15 @@ test('un char part de l\'arrière de son camp, avance en droite ligne, s\'arrêt
   assert.ok(ordonnerBarrage(B, 'char', x, a[0] - 40).ok);
   assert.ok(ordonnerBarrage(B, 'char', x, a[0] - 40).refus, 'recharge');
   const c = B.etat.chars[0];
-  assert.equal(c.y, a[0]); assert.equal(c.camp, 0);
-  for (let k = 0; k < 1500; k++) avancer(B);
+  assert.ok(c.y > B.terrain.H, 'il naît hors de la carte, derrière son camp'); assert.equal(c.camp, 0); assert.equal(c.ar, a[0]);
+  for (let k = 0; k < 3600; k++) avancer(B);
   assert.equal(c.etat, 'arrive'); assert.ok(Math.abs(c.y - (a[0] - 40)) < 2.5);
   assert.ok(Math.abs(c.x - x) < 0.01, 'en droite ligne');
 });
 test('un cratère profond l\'enlise, un obus qui tombe sur lui le détruit, un 75 de loin ne fait rien', () => {
   const B = petite(), a = arriereDeTest(B), x = 200 + M.x;
   ordonnerBarrage(B, 'char', x, a[0] - 60);
-  const c = B.etat.chars[0], T = B.terrain;
+  const c = B.etat.chars[0], T = B.terrain; c.y = a[0];
   for (let dy = 0; dy < 10; dy++) for (let dx = -3; dx <= 3; dx++) T.diff[(Math.floor(a[0] - 20 + dy - 5)) * T.W + x + dx] = -10;   // un trou de 2,5 m en travers de sa route
   for (let k = 0; k < 1200; k++) avancer(B);
   assert.equal(c.etat, 'enlise');
@@ -770,7 +770,7 @@ test('un cratère profond l\'enlise, un obus qui tombe sur lui le détruit, un 7
 test('ses mitrailleuses couchent les hommes de l\'autre camp à portée, pas les siens', () => {
   const B = petite(), a = arriereDeTest(B), A = B.armee, x = 200 + M.x;
   ordonnerBarrage(B, 'char', x, a[0] - 60);
-  const c = B.etat.chars[0];
+  const c = B.etat.chars[0]; c.y = a[0];
   let eux = 0, nous = 0;
   for (let i = 0; i < A.n; i++) if (Math.hypot(A.x[i] - c.x, A.y[i] - c.y) < 28) { if (A.camp[i] === 1) eux++; else nous++; }
   // on amène quarante hommes d'en face et dix des nôtres à dix mètres

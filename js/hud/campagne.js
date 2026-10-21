@@ -1,11 +1,11 @@
 // Le papier de campagne (Jérôme, v0.36.4 ; variante A « Le registre » du sujet « Le papier de campagne » du labo) : entre deux batailles, un papier posé sur le champ
 // (jamais une boîte de dialogue, comme celui de la nuit). Il ne décide rien : il dit ce que `passage` de campagne.js a calculé (la bataille qui finit, chaque régiment tel
 // que la reconstitution le fera, les fusions) et un seul geste, partir pour la suivante (Entrée : le bouton prend le focus). Il ne lit ni ne modifie la partie.
-import { MISSIONS } from '../bataille.js?v=0.48.0';
-import { SECTEURS } from '../data/secteur.js?v=0.48.0';
-import { chevronsHtml } from './barres.js?v=0.48.0';
-import { pluriel } from './lecture.js?v=0.48.0';
-import { TEXTES } from '../data/campagne.js?v=0.48.0';
+import { MISSIONS } from '../bataille.js?v=0.48.1';
+import { SECTEURS } from '../data/secteur.js?v=0.48.1';
+import { chevronsHtml } from './barres.js?v=0.48.1';
+import { pluriel } from './lecture.js?v=0.48.1';
+import { TEXTES } from '../data/campagne.js?v=0.48.1';
 
 const el = (tag, classe, ...kids) => { const e = document.createElement(tag); if (classe) e.className = classe; e.append(...kids.filter(k => k != null && k !== false)); return e; };
 const voyelle = n => /^[AEIOUYÉ]/.test(n);

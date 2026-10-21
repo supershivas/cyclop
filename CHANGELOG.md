@@ -1,5 +1,10 @@
 # Journal des versions
 
+## 0.48.1 — 2026-10-21
+- De près (3 pixels par mètre et plus), un clic sur un de nos hommes ouvre sa fiche ; son régiment se choisit par sa carte, son nom, le cadre ou T
+- Les avions viennent de loin : ils entrent par le bord de la carte derrière leur camp, la traversent à 45 m/s et frappent en passant sur la bande visée
+- Les chars naissent hors de la carte et entrent sur la route (8 m/s) jusqu'à l'arrière de leur camp, puis avancent vers leur but
+
 ## 0.48.0 — 2026-10-21
 - Sept ponts en jeu (passerelle de planches, pierre à trois arches, dos d'âne, chevalets, poutre Warren, suspendu, cordes), au choix dans l'éditeur de carte ; l'eau passe dessous ; pierre, métal et chevalets portent un char, les autres cèdent sous lui
 - Les régiments tiennent compte des ponts : le chemin (qui contourne l'eau) s'affiche en pointillés avant le clic, un ordre sans passage est refusé à voix haute

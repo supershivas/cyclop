@@ -14,23 +14,23 @@
    La sauvegarde (photo) garde la graine, la liste compacte des impacts, l'état
    de la foule et les petites couches de logique ; jamais le relief : il se
    rejoue depuis la graine et les impacts (rejouerTerrain). */
-import { createRng, hash2 } from './lib/rng.js?v=0.48.0';
-import { impact, hydroLignes, etat as etatCase, vitesseEtat, vitesseCase, ETAT } from './terrain.js?v=0.48.0';
-import { creerArmee, ajouterSoldat, construireGrille, pasArmee, tuerDans, effrayer, compacter, photoArmee, restaurerArmee, b64, deB64, DENSITE, place } from './army.js?v=0.48.0';
-import { ligneSous } from './tranchees.js?v=0.48.0';
-import { terrainDuSecteur } from './secteur-terrain.js?v=0.48.0';
-import { detruirePont } from './eaux.js?v=0.48.0';
-import { calculerCouts, creerCacheChamps, dimensionsCouts, BLOC } from './champs.js?v=0.48.0';
-import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.48.0';
-import { AVION, MITRAILLAGE } from './data/mitraillage.js?v=0.48.0';
-import { CHAR, CHAR_RECHARGE } from './data/chars.js?v=0.48.0';
-import { refusChar, lancerChar, degatsChars, avancerChars } from './chars.js?v=0.48.0';
-import { METEO, TRANSITIONS, PREVISION_JUSTE } from './data/meteo.js?v=0.48.0';
-import { SECTEURS } from './data/secteur.js?v=0.48.0';
-import { REGIMENTS } from './data/lexique.js?v=0.48.0';
-import { STANCES, STANCE_DEFAUT } from './data/stances.js?v=0.48.0';
-import { grade } from './identite.js?v=0.48.0';
-import { corvees, rejouerTravaux } from './nuit.js?v=0.48.0';
+import { createRng, hash2 } from './lib/rng.js?v=0.48.1';
+import { impact, hydroLignes, etat as etatCase, vitesseEtat, vitesseCase, ETAT } from './terrain.js?v=0.48.1';
+import { creerArmee, ajouterSoldat, construireGrille, pasArmee, tuerDans, effrayer, compacter, photoArmee, restaurerArmee, b64, deB64, DENSITE, place } from './army.js?v=0.48.1';
+import { ligneSous } from './tranchees.js?v=0.48.1';
+import { terrainDuSecteur } from './secteur-terrain.js?v=0.48.1';
+import { detruirePont } from './eaux.js?v=0.48.1';
+import { calculerCouts, creerCacheChamps, dimensionsCouts, BLOC } from './champs.js?v=0.48.1';
+import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.48.1';
+import { AVION, MITRAILLAGE } from './data/mitraillage.js?v=0.48.1';
+import { CHAR, CHAR_RECHARGE, CHAR_SORTIE } from './data/chars.js?v=0.48.1';
+import { refusChar, lancerChar, degatsChars, avancerChars } from './chars.js?v=0.48.1';
+import { METEO, TRANSITIONS, PREVISION_JUSTE } from './data/meteo.js?v=0.48.1';
+import { SECTEURS } from './data/secteur.js?v=0.48.1';
+import { REGIMENTS } from './data/lexique.js?v=0.48.1';
+import { STANCES, STANCE_DEFAUT } from './data/stances.js?v=0.48.1';
+import { grade } from './identite.js?v=0.48.1';
+import { corvees, rejouerTravaux } from './nuit.js?v=0.48.1';
 
 export const PAS = 1 / 30;                 // s de jeu par pas
 export const NOUS = 0, EUX = 1;
@@ -402,7 +402,13 @@ export function ordonnerBarrage(B, cal, x, y, camp = NOUS) {
     bat[cal] = etat.temps + C.recharge;
   }
   if (cal === CHAR) { lancerChar(B, camp, departChar(B, camp, x), x, y); return { ok: true }; }
-  if (cal === AVION) { etat.mitraillages.push({ camp, x, y, prochain: etat.temps + MITRAILLAGE.delai }); return { ok: true }; }
+  if (cal === AVION) {
+    // l'avion vient de hors de la carte (de derrière son camp) à `vitesse` m/s : il frappe quand il atteint la bande, `delai` s au moins après l'ordre (Jérôme, v0.48.1)
+    const T = B.terrain, ys = camp === NOUS ? T.H + MITRAILLAGE.sortie : -MITRAILLAGE.sortie;
+    const tHit = Math.max(MITRAILLAGE.delai, Math.abs(ys - y) / MITRAILLAGE.vitesse);
+    etat.mitraillages.push({ camp, x, y, ys, prochain: etat.temps + tHit });
+    return { ok: true };
+  }
   etat.barrages.push({ camp, cal, x, y, reste: C.salve, prochain: etat.temps + 1.5 });
   return { ok: true };
 }
@@ -410,7 +416,9 @@ export function ordonnerBarrage(B, cal, x, y, camp = NOUS) {
 /* D'où part un char de (camp) : l'arrière de son camp, à la colonne visée (null : pas de lignes dans ce secteur) */
 function departChar(B, camp, x) {
   const a = arriereDe(B); if (!a) return null;
-  return { x, y: a[camp] };
+  // il naît hors du terrain, derrière son camp (nous au sud, en face au nord), et entre sur la route jusqu'à l'arrière (Jérôme, v0.48.1)
+  const T = B.terrain;
+  return { x, y: camp === NOUS ? T.H + CHAR_SORTIE : -CHAR_SORTIE, ar: a[camp] };
 }
 /* L'arrière de chaque camp [nous, en face] : la rangée derrière sa dernière ligne, où les blessés qui marchent s'arrêtent (Jérôme, v0.35.0) */
 export function arriereDe(B) {
@@ -841,7 +849,11 @@ function mitrailler(B, ctx, rng) {
   const { etat, terrain: T, armee: A, R } = B, M = MITRAILLAGE;
   const reste = [];
   for (const m of etat.mitraillages) {
-    if (etat.temps < m.prochain) { reste.push(m); continue; }
+    if (etat.temps < m.prochain) {
+      // la première image après l'ordre (ou la relecture) : le dessin le voit arriver, il lui reste `tHit` s de vol avant la bande
+      if (!m.vu) { m.vu = true; B.evenements.push({ type: 'avion', camp: m.camp, x: m.x, y: m.y, ys: m.ys, t0: etat.temps, tHit: m.prochain - etat.temps }); }
+      reste.push(m); continue;
+    }
     const hw = M.largeur / 2, hl = M.longueur / 2;
     for (let i = 0; i < A.n; i++) {
       if (A.mort[i] || Math.abs(A.x[i] - m.x) > hw || Math.abs(A.y[i] - m.y) > hl) continue;
@@ -854,6 +866,7 @@ function mitrailler(B, ctx, rng) {
     }
     effrayer(A, m.x, m.y, M.longueur / 2 + M.rayonPeur, R.soldat.peurObus, R.experience);
     B.evenements.push({ type: 'mitraillage', camp: m.camp, x: m.x, y: m.y });
+    if (!m.vu) B.evenements.push({ type: 'avion', camp: m.camp, x: m.x, y: m.y, ys: m.ys, t0: etat.temps, tHit: 0 });
   }
   etat.mitraillages = reste;
 }

@@ -6,7 +6,9 @@ export const AVION = 'avion';
 export const MITRAILLAGE = {
   largeur: 12, longueur: 60, hauteur: 10,
   recharge: 90,          // s : plus long que les obus (40, 70, 110 pour un barrage de 6 à 24 coups)
-  delai: 3,              // s entre l'ordre et le passage
+  delai: 3,              // s entre l'ordre et le passage, au moins (l'avion vient de loin : voir `vitesse`)
+  vitesse: 45,           // m/s : il entre par le bord du terrain (à `sortie` m au-delà) et traverse la carte du sud au nord (nous) ou du nord au sud (eux), Jérôme, v0.48.1
+  sortie: 60,            // m au-delà du bord où il naît et où il disparaît
   letal: 0.35,           // chance de toucher un homme debout dans la bande
   gravite: 0.5,          // chance qu'un touché meure (sinon blessé), comme un obus au bord de son rayon
   peur: 0.6,             // la peur des hommes de la bande qui ne sont pas touchés

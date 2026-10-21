@@ -13,10 +13,12 @@ export const CHARS = {
     touche: 0.12,        // chance qu'une rafale touche un homme à portée (× 1 près, 0,4 à portée), puis gravité de `frapper`
     gravite: 0.7,
     peur: 0.5,           // la peur des hommes à portée de ses mitrailleuses
+    route: 8,            // m/s tant qu'il n'a pas rejoint l'arrière de son camp (il arrive de hors de la carte, sur la route)
   },
 };
 export const CHAR_PAR_DEFAUT = 'schneider';
 export const CHAR_RECHARGE = 240;           // s : un seul à la fois, on ne le recommande qu'après quatre minutes
-export const CHAR_DEPART = 20;              // m : on ne vise pas à moins de cette distance de son point de départ
+export const CHAR_SORTIE = 14;              // m : il naît à cette distance au-delà du bord du terrain, et se voit y entrer (Jérôme, v0.48.1)
+export const CHAR_DEPART = 20;             // m : on ne vise pas à moins de cette distance de son point de départ
 // dégâts d'un obus tombé à sa portée : `base` × (1 − distance / (rayon du calibre × `zone`)) ; il est détruit à `pv`
 export const CHAR_OBUS = { zone: 0.8, base: { '75': 30, '155': 70, '220': 120 } };
