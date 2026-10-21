@@ -23,9 +23,9 @@ export const PREVISION_JUSTE = 0.7;   // la prévision dit vrai sept fois sur di
 // `ete` : du sec, des jours de forte chaleur, des orages rares. `depart` : le temps du premier jour. `nappe` : m de plus sous le sol (un sol qui boit : les trous ne se remplissent plus), `humidite` : le facteur
 // de l'humidité de départ du sol. `pluieAuMoins` : le nombre de jours de pluie garantis (la boue doit venir : seulement en automne).
 export const SAISONS = {
-  automne: { nom: 'automne', transitions: TRANSITIONS, depart: 'sec', nappe: 0, humidite: 1 },
+  automne: { nom: 'automne', desc: 'Le temps d\u2019avant : de la pluie, du brouillard, du gel de temps en temps, et la boue qui vient.', transitions: TRANSITIONS, depart: 'sec', nappe: 0, humidite: 1 },
   hiver: {
-    nom: 'hiver', depart: 'gel', nappe: 0.3, humidite: 0.8, pluieAuMoins: 0,
+    nom: 'hiver', desc: 'De la neige, du gel et du brouillard, jamais de pluie. La neige blanchit le sol, il porte comme au gel.', depart: 'gel', nappe: 0.3, humidite: 0.8, pluieAuMoins: 0,
     transitions: {
       gel: { gel: 4, neige: 3, brouillard: 2, sec: 1 },
       neige: { neige: 4, gel: 3, brouillard: 2, sec: 1 },
@@ -34,7 +34,7 @@ export const SAISONS = {
     },
   },
   ete: {
-    nom: 'été', depart: 'canicule', nappe: 0.9, humidite: 0.35, pluieAuMoins: 0,
+    nom: 'été', desc: 'Du temps sec et des jours de forte chaleur, une pluie rare. Le sol boit : les trous ne se remplissent plus.', depart: 'canicule', nappe: 0.9, humidite: 0.35, pluieAuMoins: 0,
     transitions: {
       canicule: { canicule: 4, sec: 4, brouillard: 1, pluie: 1 },
       sec: { sec: 4, canicule: 3, brouillard: 1, pluie: 1 },

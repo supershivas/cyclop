@@ -1,9 +1,7 @@
 {
-  "version": "0.51.0",
+  "version": "0.52.0",
   "date": "2026-10-21",
   "changes": [
-    "Des roseaux dans les marécages (plus rares sur les cartes) ; l'hiver apporte la neige, l'été un sol sec et des jours de forte chaleur",
-    "Les fleuves continuent leur trajet dans le décor hors carte",
-    "Choix de la carte : les titres seulement à gauche ; un clic sur l'aperçu l'agrandit et on le parcourt"
+    "Un réglage de saison dans l'éditeur de carte : automne, hiver (neige, gel) ou été (sec, forte chaleur)"
   ]
 }

@@ -482,3 +482,18 @@ test('des roseaux dans les marécages, seulement là ; un fleuve de la carte al�
   const { genererCarte } = await import('../js/generateur.js');
   for (let g = 1; g <= 60; g++) for (const o of genererCarte(g).objets) if (o.o === 'fleuve') assert.ok(Math.min(o.x, o.x2) < -220 && Math.max(o.x, o.x2) > 620, `le fleuve de la carte ${g} sort du terrain (marges de 220 m)`);
 });
+
+group('la saison dans l\'atelier (v0.52.0)');
+test('chaque saison a un nom et une description ; une retouche « saison » du brouillon change le temps de la bataille', async () => {
+  const { SAISONS } = await import('../js/data/meteo.js');
+  const { appliquerSecteurs } = await import('../js/design-store.js');
+  const { nouvelleBataille } = await import('../js/bataille.js');
+  for (const [id, s] of Object.entries(SAISONS)) assert.ok(s.nom && s.desc && s.desc.length > 20, `la saison ${id}`);
+  const { version } = JSON.parse(readFileSync(new URL('../version.json', import.meta.url), 'utf8'));
+  const { SECTEURS: S2 } = await import(`../js/data/secteur.js?v=${version}`), avant = S2.essai;       // (l'instance que lit bataille.js : ses imports portent la version)
+  try {
+    appliquerSecteurs(S2, { essai: { saison: 'hiver' } });
+    const B = nouvelleBataille(4, R, { soldats: 20, jours: 8 });
+    assert.equal(B.etat.sol.saison, 'hiver'); assert.equal(B.etat.meteo[0], 'gel'); assert.ok(!B.etat.meteo.includes('pluie'));
+  } finally { S2.essai = avant; }
+});

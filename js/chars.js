@@ -3,12 +3,12 @@
    ligne vers (tx, ty) à la vitesse de son modèle, ralentie par un cratère (la moitié de ce qu'il franchit), arrêtée par un cratère plus profond ou par l'eau
    profonde (`enlise` : il reste là et tire) ; il tire sur l'autre camp à portée ; un obus tombé près de lui l'abîme (`degatsChars`), jusqu'à l'épave (`detruit`).
    Les tranchées se franchissent (elles font 1,5 m : son modèle les passe). Les ordres rendent { refus } comme les barrages. */
-import { CHARS, CHAR_PAR_DEFAUT, CHAR_RECHARGE, CHAR_DEPART, CHAR_OBUS } from './data/chars.js?v=0.51.0';
-import { CALIBRES } from './data/calibres.js?v=0.51.0';
-import { effrayer } from './army.js?v=0.51.0';
-import { detruirePont } from './eaux.js?v=0.51.0';
-import { toucher } from './terrain.js?v=0.51.0';
-import { PONTS_JEU, typePont } from './data/ponts.js?v=0.51.0';
+import { CHARS, CHAR_PAR_DEFAUT, CHAR_RECHARGE, CHAR_DEPART, CHAR_OBUS } from './data/chars.js?v=0.52.0';
+import { CALIBRES } from './data/calibres.js?v=0.52.0';
+import { effrayer } from './army.js?v=0.52.0';
+import { detruirePont } from './eaux.js?v=0.52.0';
+import { toucher } from './terrain.js?v=0.52.0';
+import { PONTS_JEU, typePont } from './data/ponts.js?v=0.52.0';
 
 /* Peut-on lancer un char de (camp) vers (x, y) ? `depart` : { x, y } d'où il partirait. */
 export function refusChar(etat, depart, x, y) {

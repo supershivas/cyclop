@@ -1,5 +1,8 @@
 # Journal des versions
 
+## 0.52.0 — 2026-10-21
+- Un réglage « Saison » dans l'inspecteur de l'éditeur de carte (automne par défaut, hiver, été) : il fixe le temps de la bataille et l'état du sol de n'importe quelle carte, publiée avec ses autres retouches
+
 ## 0.51.0 — 2026-10-21
 - Des roseaux dans les marécages (de hautes touffes qui ondulent) ; les marécages sont plus rares sur la carte aléatoire (15 % des cartes)
 - Les saisons : l'hiver tire de la neige (elle tombe, blanchit le sol par plaques), du gel et du brouillard, jamais de pluie ; l'été du temps sec et des jours de forte chaleur, avec un sol qui boit (les trous ne se remplissent plus) ; l'automne est le temps d'avant. La carte aléatoire tire sa saison

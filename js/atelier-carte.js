@@ -3,19 +3,20 @@
 // la scène (la carte, large), l'inspecteur (l'outil ou la forme choisie, puis les réglages du secteur). Chaque chiffre porte un nom et une description (`data/carte-outils.js`,
 // `data/secteur-params.js`). Chaque retouche va dans le brouillon (`secteurs` de `cyclopeen:atelier`, à plat : « relief.bosses ») et se publie dans assets/design/secteurs.json ;
 // le jeu les pose sur `SECTEURS` au lancement (`appliquerSecteurs`).
-import { REGLAGES } from './data/reglages.js?v=0.51.0';
-import { SECTEURS, VIERGE } from './data/secteur.js?v=0.51.0';
-import { PALETTE, ORDRE } from './palette.js?v=0.51.0';
-import { terrainDuSecteur, profilDe } from './secteur-terrain.js?v=0.51.0';
-import { couleurCase } from './apparence.js?v=0.51.0';
-import { etat as etatCase, hauteurQ } from './terrain.js?v=0.51.0';
-import { ligneY } from './tranchees.js?v=0.51.0';
-import { PARAMS } from './data/secteur-params.js?v=0.51.0';
-import { SECTEURS_ORIGINE } from './data/campagne.js?v=0.51.0';
-import { OUTILS, GROUPES_OUTILS, champ, HERBE, SOLS } from './data/carte-outils.js?v=0.51.0';
-import { distanceForme, extremite } from './formes.js?v=0.51.0';
-import { validerSecteur } from './tranchees.js?v=0.51.0';
-import { lireBrouillon, ecrireBrouillon, lireChemin, deplier, secteurEffectif, idCarte, nouvelleCarte } from './design-store.js?v=0.51.0';
+import { REGLAGES } from './data/reglages.js?v=0.52.0';
+import { SECTEURS, VIERGE } from './data/secteur.js?v=0.52.0';
+import { PALETTE, ORDRE } from './palette.js?v=0.52.0';
+import { terrainDuSecteur, profilDe } from './secteur-terrain.js?v=0.52.0';
+import { couleurCase } from './apparence.js?v=0.52.0';
+import { etat as etatCase, hauteurQ } from './terrain.js?v=0.52.0';
+import { ligneY } from './tranchees.js?v=0.52.0';
+import { PARAMS } from './data/secteur-params.js?v=0.52.0';
+import { SAISONS, SAISON_DEFAUT } from './data/meteo.js?v=0.52.0';
+import { SECTEURS_ORIGINE } from './data/campagne.js?v=0.52.0';
+import { OUTILS, GROUPES_OUTILS, champ, HERBE, SOLS } from './data/carte-outils.js?v=0.52.0';
+import { distanceForme, extremite } from './formes.js?v=0.52.0';
+import { validerSecteur } from './tranchees.js?v=0.52.0';
+import { lireBrouillon, ecrireBrouillon, lireChemin, deplier, secteurEffectif, idCarte, nouvelleCarte } from './design-store.js?v=0.52.0';
 
 const rgb = hex => [1, 3, 5].map(k => parseInt(hex.slice(k, k + 2), 16));
 const COULEURS = ORDRE.map(k => rgb(PALETTE[k]));
@@ -253,6 +254,14 @@ export function ongletCarte(zone, { el, R = REGLAGES, publie = {}, publieCartes 
     return el('div', { className: 'at-champ' }, el('div', { className: 'at-champ-tete' }, el('span', { className: 'at-champ-nom', textContent: 'Dans la campagne' })),
       el('p', { className: 'at-champ-desc', textContent: 'La campagne enchaîne trois batailles de plus en plus dures, chacune sur une carte : en choisir une ici lui donne cette place (l\u2019autre carte de ce rang prend la vôtre). Les forces, les jours et la mission suivent le rang, pas la carte.' }), choix, msg);
   }
+  // la saison de la carte (v0.52.0) : le temps de la bataille (neige et gel l'hiver, chaleur sèche l'été) et un sol plus ou moins sec ; une liste, comme le type d'un pont
+  function champSaison(id) {
+    const S = effectif(), pub = lireChemin(secteurEffectif(catalogue[id], publie[id]), 'saison') ?? SAISON_DEFAUT, actuelle = S.saison ?? SAISON_DEFAUT;
+    const liste = Object.entries(SAISONS).map(([k, v]) => ({ id: k, nom: v.nom.charAt(0).toUpperCase() + v.nom.slice(1) + (k === SAISON_DEFAUT ? ' (par défaut)' : ''), desc: v.desc }));
+    const c = champListe({ nom: 'Saison', desc: 'Le temps qu\u2019il fait pendant la bataille et l\u2019état du sol au départ.', valeur: actuelle, liste, surChange: v => { noter('saison', v, pub); plusTard(); majAlerte(); panneauInspecteur(); } });
+    if (actuelle !== pub) c.querySelector('.at-champ-nom').classList.add('at-modifie');
+    return c;
+  }
   function panneauSecteur() {
     const base = effectif(), b = lireBrouillon().secteurs?.[sel.value] || {};
     const lignes = PARAMS.filter(p => !p.si || lireChemin(catalogue[sel.value], p.si)).map(p => {
@@ -284,6 +293,7 @@ export function ongletCarte(zone, { el, R = REGLAGES, publie = {}, publieCartes 
       ...(etat ? [etat] : []),
       texte('nom', 'Nom de la carte', 'Le titre dans la liste des nouvelles parties.', false),
       champCampagne(id),
+      champSaison(id),
       texte('resume', 'Résumé', 'Deux phrases qui disent le caractère de la carte au joueur : le sol, l\u2019eau, la végétation, ce qu\u2019elle demande.', true),
       el('p', { className: 'at-note', textContent: 'En rouge : retouché dans ce navigateur, pas encore publié. Le jeu de ce navigateur l\u2019utilise déjà, à la prochaine bataille.' }),
       ...lignes.flatMap((r, k) => r.dataset.groupe && r.dataset.groupe !== lignes[k - 1]?.dataset.groupe ? [el('h4', { textContent: r.dataset.groupe }), r] : [r]), el('div', { className: 'at-row' }, remise, ...(supprimer ? [supprimer] : [])));
@@ -358,7 +368,7 @@ export function ongletCarte(zone, { el, R = REGLAGES, publie = {}, publieCartes 
     v3d.activer(true);
     etatBarre.textContent = 'Vue 3D : un clic pose avec l\u2019outil choisi (crête et haie : deux clics) · glisser tourne et incline · clic droit (ou Maj) + glisser déplace · molette zoome.';
   }
-  const creerVue3D3 = async () => { const { creerVue3D } = await import('./apercu-3d.js?v=0.51.0'); return creerVue3D({ R, hote: hote3d }); };
+  const creerVue3D3 = async () => { const { creerVue3D } = await import('./apercu-3d.js?v=0.52.0'); return creerVue3D({ R, hote: hote3d }); };
   function basculer(m) {
     if (m === mode) return;
     mode = m;

@@ -11,13 +11,13 @@
 //  · A7V (allemand, 1918) : 7,34 m, 3,1 m, 3,3 m, 31,5 t, dix-huit hommes au moins (jusqu'à 25), un 57 mm Maxim-Nordenfelt à l'avant, six mitrailleuses de 7,92 mm, une vingtaine d'exemplaires seulement.
 //    Les Allemands ont aussi retourné des Mark IV pris à Cambrai (1917) : la livrée « Beutepanzer » du Mark IV, croix sur les flancs.
 // Les nombres de jeu (vitesse, profondeur de cratère franchie) sont des propositions, pas des mesures : le Saint-Chamond et l'A7V franchissaient mal (porte-à-faux, garde au sol), le Mark IV très bien.
-import { PALETTE as P } from './palette.js?v=0.51.0';
-import { loadThree } from './three-lib.js?v=0.51.0';
-import { ordonnerMarche, mourir } from './bataille.js?v=0.51.0';
-import { hash2 } from './lib/rng.js?v=0.51.0';
-import { ZOOMS } from './rendu3d.js?v=0.51.0';
-import { el, svgEl, bouton, scene, maquette, texteSvg } from './labo-arcade.js?v=0.51.0';
-import { atelier, schneider } from './rendu/engins.js?v=0.51.0';
+import { PALETTE as P } from './palette.js?v=0.52.0';
+import { loadThree } from './three-lib.js?v=0.52.0';
+import { ordonnerMarche, mourir } from './bataille.js?v=0.52.0';
+import { hash2 } from './lib/rng.js?v=0.52.0';
+import { ZOOMS } from './rendu3d.js?v=0.52.0';
+import { el, svgEl, bouton, scene, maquette, texteSvg } from './labo-arcade.js?v=0.52.0';
+import { atelier, schneider } from './rendu/engins.js?v=0.52.0';
 export { atelier };
 
 // ─── Les cinq engins ────────────────────────────────────────────────────────
