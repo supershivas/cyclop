@@ -1,5 +1,10 @@
 # Journal des versions
 
+## 0.47.0 — 2026-10-21
+- Un cinquième bouton, « Char » (touche 5) : un Schneider CA 1 part de l'arrière de nos lignes en droite ligne vers le point cliqué (une ligne pointillée montre sa route), à 3,6 km/h
+- Il franchit les tranchées, ralentit dans un cratère de plus de 0,75 m, s'enlise dans plus de 1,5 m ou dans l'eau profonde, et ses mitrailleuses couchent les hommes de l'autre camp à 28 m
+- Un obus qui tombe sur lui l'abîme (un 220 le détruit, un 75 de loin ne fait rien) ; l'épave fume ; on n'en lance un autre qu'après 240 s
+
 ## 0.46.0 — 2026-10-21
 - Un quatrième bouton, « Avion » (touche 4), à côté des trois calibres : un clic sur le sol, et un avion passe en ligne sur la bande visée (12 m de large, 60 m de long, le long de l'axe nord-sud), avec traceurs et poussière
 - Les hommes de la bande sont touchés (35 %, moins dans un creux ou une tranchée) ou effrayés, de l'un et l'autre camp ; l'escadrille ne revient qu'après 90 s (les obus : 40 à 110 s)

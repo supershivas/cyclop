@@ -1,43 +1,44 @@
 // Le cycle de vie : écran titre → bataille → nuit → fin ; pause active,
 // réglages, sauvegarde, mise à jour, debug. Les règles sont dans bataille.js
 // (pures), le dessin dans rendu3d.js (il ne modifie jamais l'état).
-import { createLoop } from './lib/loop.js?v=0.46.0';
-import { createKeys, stopTypeahead } from './lib/keys.js?v=0.46.0';
-import { createPointer, lockBrowserGestures } from './lib/pointer.js?v=0.46.0';
-import { createGamepad } from './lib/gamepad.js?v=0.46.0';
-import { createStore, autosave, pickJSONFile } from './lib/save.js?v=0.46.0';
-import { startUpdateCheck, loadVersion, loadChangelog, downloadJSON } from './lib/app-update.js?v=0.46.0';
-import { ROLES } from './palette.js?v=0.46.0';
-import { VERSION_CAMPAGNE, CLE as CLE_CAMPAGNE, cloturerDansLeStore, nouvelleCampagne, suivante, passage, bilan as bilanCampagne } from './campagne.js?v=0.46.0';
-import { CAMPAGNE } from './data/campagne.js?v=0.46.0';
-import { MISSIONS, EUX, nouvelleBataille, etapesRestaurer, avancer, aube, ordonnerMarche, peutOrdonner, ordonnerBarrage, peutBarrage, ordonnerStance, peutStance, horloge, effectifs, tronconsTenus, moralEnMots, terrainResume, forcesTroncons, largeurZone, lettreZone, etendueZones, nomTroncon, actionDe, secteursDe, tronconsDeLigne, zone, photo, restaurer, PAS, NOUS } from './bataille.js?v=0.46.0';
-import { ligneY } from './tranchees.js?v=0.46.0';
-import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.46.0';
-import { AVION, MITRAILLAGE } from './data/mitraillage.js?v=0.46.0';
-import { STANCES, STANCE_DEFAUT } from './data/stances.js?v=0.46.0';
-import { METEO } from './data/meteo.js?v=0.46.0';
-import { impact, hydroLignes } from './terrain.js?v=0.46.0';
-import { hash2 } from './lib/rng.js?v=0.46.0';
-import { creerRendu, CAMERA } from './rendu3d.js?v=0.46.0';
-import { etatEnMots, experienceEnMots, chevrons } from './identite.js?v=0.46.0';
-import { CORVEES } from './data/corvees.js?v=0.46.0';
-import { refusCorvee } from './nuit.js?v=0.46.0';
-import { chargerContenu, appliquerSecteurs, appliquerCartes, appliquerCampagne } from './design-store.js?v=0.46.0';
-import * as lecture from './hud/lecture.js?v=0.46.0';
-import { creerFiche } from './hud/fiche.js?v=0.46.0';
-import { chevronsHtml } from './hud/barres.js?v=0.46.0';
-import { creerNuit, corveeDe, corveeCourte } from './hud/nuit.js?v=0.46.0';
-import { creerCampagne } from './hud/campagne.js?v=0.46.0';
-import { creerCarnet, deux } from './hud/carnet.js?v=0.46.0';
-import { creerCarte } from './hud/carte.js?v=0.46.0';
-import { creerPertes } from './hud/pertes.js?v=0.46.0';
-import { creerBarreTemps } from './hud/temps.js?v=0.46.0';
-import { creerChargement } from './hud/chargement.js?v=0.46.0';
-import { creerRetours } from './hud/retours.js?v=0.46.0';
-import { SECTEURS } from './data/secteur.js?v=0.46.0';
-import { creerLockstep, empreinteEtat } from './reseau/lockstep.js?v=0.46.0';
-import { nouveauCode, codeValide, publier, ecouter } from './reseau/relais.js?v=0.46.0';
-import { creerHote, creerInvite } from './reseau/lien.js?v=0.46.0';
+import { createLoop } from './lib/loop.js?v=0.47.0';
+import { createKeys, stopTypeahead } from './lib/keys.js?v=0.47.0';
+import { createPointer, lockBrowserGestures } from './lib/pointer.js?v=0.47.0';
+import { createGamepad } from './lib/gamepad.js?v=0.47.0';
+import { createStore, autosave, pickJSONFile } from './lib/save.js?v=0.47.0';
+import { startUpdateCheck, loadVersion, loadChangelog, downloadJSON } from './lib/app-update.js?v=0.47.0';
+import { ROLES } from './palette.js?v=0.47.0';
+import { VERSION_CAMPAGNE, CLE as CLE_CAMPAGNE, cloturerDansLeStore, nouvelleCampagne, suivante, passage, bilan as bilanCampagne } from './campagne.js?v=0.47.0';
+import { CAMPAGNE } from './data/campagne.js?v=0.47.0';
+import { MISSIONS, EUX, nouvelleBataille, etapesRestaurer, avancer, aube, ordonnerMarche, peutOrdonner, ordonnerBarrage, peutBarrage, arriereDe, ordonnerStance, peutStance, horloge, effectifs, tronconsTenus, moralEnMots, terrainResume, forcesTroncons, largeurZone, lettreZone, etendueZones, nomTroncon, actionDe, secteursDe, tronconsDeLigne, zone, photo, restaurer, PAS, NOUS } from './bataille.js?v=0.47.0';
+import { ligneY } from './tranchees.js?v=0.47.0';
+import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.47.0';
+import { AVION, MITRAILLAGE } from './data/mitraillage.js?v=0.47.0';
+import { CHAR, CHAR_RECHARGE, CHARS, CHAR_PAR_DEFAUT } from './data/chars.js?v=0.47.0';
+import { STANCES, STANCE_DEFAUT } from './data/stances.js?v=0.47.0';
+import { METEO } from './data/meteo.js?v=0.47.0';
+import { impact, hydroLignes } from './terrain.js?v=0.47.0';
+import { hash2 } from './lib/rng.js?v=0.47.0';
+import { creerRendu, CAMERA } from './rendu3d.js?v=0.47.0';
+import { etatEnMots, experienceEnMots, chevrons } from './identite.js?v=0.47.0';
+import { CORVEES } from './data/corvees.js?v=0.47.0';
+import { refusCorvee } from './nuit.js?v=0.47.0';
+import { chargerContenu, appliquerSecteurs, appliquerCartes, appliquerCampagne } from './design-store.js?v=0.47.0';
+import * as lecture from './hud/lecture.js?v=0.47.0';
+import { creerFiche } from './hud/fiche.js?v=0.47.0';
+import { chevronsHtml } from './hud/barres.js?v=0.47.0';
+import { creerNuit, corveeDe, corveeCourte } from './hud/nuit.js?v=0.47.0';
+import { creerCampagne } from './hud/campagne.js?v=0.47.0';
+import { creerCarnet, deux } from './hud/carnet.js?v=0.47.0';
+import { creerCarte } from './hud/carte.js?v=0.47.0';
+import { creerPertes } from './hud/pertes.js?v=0.47.0';
+import { creerBarreTemps } from './hud/temps.js?v=0.47.0';
+import { creerChargement } from './hud/chargement.js?v=0.47.0';
+import { creerRetours } from './hud/retours.js?v=0.47.0';
+import { SECTEURS } from './data/secteur.js?v=0.47.0';
+import { creerLockstep, empreinteEtat } from './reseau/lockstep.js?v=0.47.0';
+import { nouveauCode, codeValide, publier, ecouter } from './reseau/relais.js?v=0.47.0';
+import { creerHote, creerInvite } from './reseau/lien.js?v=0.47.0';
 
 const JEU = 'cyclopeen';
 const $ = id => document.getElementById(id);
@@ -81,7 +82,7 @@ let vitesse = 1;              // ×1, ×2, ×4 : la vitesse du temps (plafonnée
 let pauseActive = false;      // Espace : le temps s'arrête, les ordres restent possibles
 let forme = 'bloc';            // la forme des prochains ordres en terrain libre (bloc, ligne, par deux, colonne) ; sur une tranchée, les hommes suivent le tracé
 let modeMarche = false;        // le bouton « Marcher » d'une carte : le prochain clic sur le sol envoie les régiments choisis
-const BATTERIES = [...NOMS_CALIBRES, AVION];   // les trois calibres, puis le mitraillage aérien (touche 4)
+const BATTERIES = [...NOMS_CALIBRES, AVION, CHAR];   // les trois calibres, le mitraillage aérien (touche 4), puis le char (touche 5)
 let modeBarrage = null;       // un calibre : le prochain clic gauche vise
 let MOI = NOUS;               // le camp qu'on joue : le nôtre (bleu), ou le kaki quand on est l'invité d'une partie à deux (v0.30.0)
 let reseau = null;            // une partie à deux sur le réseau : { moi, lien, ls, nuit : { corvees, pret } } ; sinon null
@@ -324,7 +325,7 @@ function demanderSecteur() {
       for (const b of liste.children) b.setAttribute('aria-pressed', String(b.dataset.id === choisi));
       $('carte-legende').textContent = `${SECTEURS[choisi].nom} : ${SECTEURS[choisi].resume}`;
       try {
-        if (!apercuSecteur) { const { creerVue3D } = await import('./apercu-3d.js?v=0.46.0'); apercuSecteur = await creerVue3D({ R, hote: $('carte-3d'), rotation: 0.12 }); }
+        if (!apercuSecteur) { const { creerVue3D } = await import('./apercu-3d.js?v=0.47.0'); apercuSecteur = await creerVue3D({ R, hote: $('carte-3d'), rotation: 0.12 }); }
         if (!ouvert) return;
         apercuSecteur.monter(choisi, SECTEURS[choisi], graine, { soldats: false, cadrer: true });
         apercuSecteur.activer(true);
@@ -772,7 +773,7 @@ function majHud() {
   majFiche();
   $('pause-active').hidden = !pauseActive;
   for (const b of $('batteries').children) {
-    const cal = b.dataset.cal, pret = (MOI === NOUS ? e.batteries : e.batteriesEux)[cal] ?? 0, reste = Math.ceil(pret - e.temps), recharge = (CALIBRES[cal] ?? MITRAILLAGE).recharge;
+    const cal = b.dataset.cal, pret = (MOI === NOUS ? e.batteries : e.batteriesEux)[cal] ?? 0, reste = Math.ceil(pret - e.temps), recharge = cal === CHAR ? CHAR_RECHARGE : (CALIBRES[cal] ?? MITRAILLAGE).recharge;
     b.querySelector('span').textContent = reste > 0 ? `${reste} s` : 'prête';
     b.querySelector('s').style.width = `${Math.round(100 * (1 - Math.max(0, Math.min(1, (pret - e.temps) / recharge))))}%`;
     b.classList.toggle('vise', modeBarrage === cal);
@@ -785,7 +786,12 @@ function majHud() {
 $('batteries').append(...BATTERIES.map((cal, k) => {
   const b = document.createElement('button');
   b.className = 'batterie'; b.dataset.cal = cal;
-  b.setAttribute('aria-label', cal === AVION ? `Mitraillage aérien (touche ${k + 1})` : `Barrage de ${cal} (touche ${k + 1})`);
+  b.setAttribute('aria-label', cal === CHAR ? `Char d'assaut (touche ${k + 1})` : cal === AVION ? `Mitraillage aérien (touche ${k + 1})` : `Barrage de ${cal} (touche ${k + 1})`);
+  if (cal === CHAR) {      // le char vu de côté : la caisse, la chenille, le canon (Jérôme, v0.47.0)
+    b.innerHTML = `<svg viewBox="0 0 38 24" aria-hidden="true" style="max-width:38px"><path d="M3 20L6 16H28L35 20Z"/><path d="M8 16V9H24L28 16Z"/><rect class="ceinture" x="26" y="11" width="11" height="2.5"/><rect class="ceinture" x="7" y="20" width="26" height="2.5"/></svg><b>Char</b><span>prête</span><i class="touche" aria-hidden="true">${k + 1}</i><u><s></s></u>`;
+    b.onclick = () => viser(cal);
+    return b;
+  }
   if (cal === AVION) {      // l'avion vu de dessus (Jérôme, v0.46.0) : un biplan, l'envergure en travers ; ses ailes disent qu'il ne pilonne pas
     b.innerHTML = `<svg viewBox="0 0 34 30" aria-hidden="true" style="max-width:34px"><path d="M15 2h4v8h14v5H19v7h6v4H9v-4h6v-7H1v-5h14z"/></svg><b>Avion</b><span>prête</span><i class="touche" aria-hidden="true">${k + 1}</i><u><s></s></u>`;
     b.onclick = () => viser(cal);
@@ -966,6 +972,13 @@ function viseeBande(x, y) {
   const d = 'M' + coins.join('L') + 'Z';
   return `<path class="ombre" d="${d}"/><path class="zone" d="${d}"/><path class="anneau" d="M${a[0].toFixed(1)} ${a[1].toFixed(1)}L${b[0].toFixed(1)} ${b[1].toFixed(1)}"/><circle class="pt" cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="2"/>`;
 }
+// La route d'un char (v0.47.0) : un trait pointillé de son départ (l'arrière de nos lignes, sur la colonne visée) à l'objectif, la place de l'engin au bout
+function viseeChar(x, y) {
+  const a = arriereDe(B), y0 = a ? a[MOI] : y, [sx, sy] = rendu.versEcran(x, y0), [cx, cy] = rendu.versEcran(x, y);
+  const L = CHARS[CHAR_PAR_DEFAUT].longueur / 2, p = (dx, dy) => rendu.versEcran(x + dx, y + dy).map(v => v.toFixed(1)).join(' ');
+  const d = `M${p(-1.5, -L)}L${p(1.5, -L)}L${p(1.5, L)}L${p(-1.5, L)}Z`;
+  return `<path class="anneau" d="M${sx.toFixed(1)} ${sy.toFixed(1)}L${cx.toFixed(1)} ${cy.toFixed(1)}"/><path class="ombre" d="${d}"/><path class="zone" d="${d}"/><circle class="pt" cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="2"/>`;
+}
 // La visée (v0.21.0) : de chaque régiment choisi au curseur une ligne, une croix au bout ; l'ordre à sec (`peutOrdonner`) dit ce qu'il occuperait
 function majVisee() {
   const svg = $('visee');
@@ -973,7 +986,7 @@ function majVisee() {
   if (modeBarrage && enJeu() && B.etat.phase === 'jour' && !nuit.etat && souris && !glisse && !document.querySelector('dialog[open]')) {
     const [x, y] = rendu.versTerrain(souris.x, souris.y);
     rendu.surligner(null); svg.classList.remove('refus');
-    svg.innerHTML = x > -1e4 ? (modeBarrage === AVION ? viseeBande(x, y) : viseeObus(x, y, CALIBRES[modeBarrage].rayon)) : ''; svg.removeAttribute('hidden');
+    svg.innerHTML = x > -1e4 ? (modeBarrage === AVION ? viseeBande(x, y) : modeBarrage === CHAR ? viseeChar(x, y) : viseeObus(x, y, CALIBRES[modeBarrage].rayon)) : ''; svg.removeAttribute('hidden');
     return;
   }
   if (!(enJeu() && B.etat.phase === 'jour' && !nuit.etat && choisis.size && souris && !glisse && !modeBarrage && !document.querySelector('dialog[open]'))) {
@@ -1145,7 +1158,7 @@ const STANCES_TOUCHES = ['volonte', 'retenu'];       // Maj+1, Maj+2 (touches ph
 const keys = createKeys({
   actions: {
     menu: 'Escape', pause: ' ', tout: 't', centrer: 'c', plus: ['+', '=', 'NumpadAdd'], moins: ['-', 'NumpadSubtract'],
-    b1: 'Digit1', b2: 'Digit2', b3: 'Digit3', b4: 'Digit4',
+    b1: 'Digit1', b2: 'Digit2', b3: 'Digit3', b4: 'Digit4', b5: 'Digit5',
   },
   onAction: (nom, e) => {
     if (!enJeu()) return;
@@ -1325,7 +1338,7 @@ startUpdateCheck({
 
 // ─── Mode debug (section 18) : chargé seulement avec ?debug=1 ──────────────
 if (DEBUG) {
-  const { installDebug, seedFromUrl } = await import('./lib/debug.js?v=0.46.0');
+  const { installDebug, seedFromUrl } = await import('./lib/debug.js?v=0.47.0');
   window.__seed = seedFromUrl() ?? undefined;
   installDebug({
     state: () => B && { ...horloge(B), effectifs: effectifs(B), pertes: B.etat.pertes, impacts: B.etat.impacts.length, enJeu: enJeu(), pause: loop.paused },

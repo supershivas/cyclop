@@ -742,3 +742,51 @@ test('le mitraillage relu en attente donne la même partie', () => {
   for (let k = 0; k < 120; k++) { avancer(a); avancer(b); }
   assert.equal(empreinte(a), empreinte(b));
 });
+
+group('char d\'assaut');
+import { degatsChars } from '../js/chars.js';
+import { arriereDe as arriereDeTest } from '../js/bataille.js';
+test('un char part de l\'arrière de son camp, avance en droite ligne, s\'arrête au but, et ne se recommande qu\'après sa recharge', () => {
+  const B = petite(), a = arriereDeTest(B), x = 200 + M.x;
+  assert.ok(ordonnerBarrage(B, 'char', x, a[0] - 5).refus, 'trop près de ses lignes');
+  assert.ok(ordonnerBarrage(B, 'char', x, a[0] - 40).ok);
+  assert.ok(ordonnerBarrage(B, 'char', x, a[0] - 40).refus, 'recharge');
+  const c = B.etat.chars[0];
+  assert.equal(c.y, a[0]); assert.equal(c.camp, 0);
+  for (let k = 0; k < 1500; k++) avancer(B);
+  assert.equal(c.etat, 'arrive'); assert.ok(Math.abs(c.y - (a[0] - 40)) < 2.5);
+  assert.ok(Math.abs(c.x - x) < 0.01, 'en droite ligne');
+});
+test('un cratère profond l\'enlise, un obus qui tombe sur lui le détruit, un 75 de loin ne fait rien', () => {
+  const B = petite(), a = arriereDeTest(B), x = 200 + M.x;
+  ordonnerBarrage(B, 'char', x, a[0] - 60);
+  const c = B.etat.chars[0], T = B.terrain;
+  for (let dy = 0; dy < 10; dy++) for (let dx = -3; dx <= 3; dx++) T.diff[(Math.floor(a[0] - 20 + dy - 5)) * T.W + x + dx] = -10;   // un trou de 2,5 m en travers de sa route
+  for (let k = 0; k < 1200; k++) avancer(B);
+  assert.equal(c.etat, 'enlise');
+  degatsChars(B, c.x + 30, c.y, '75'); assert.equal(c.pv, 100);
+  degatsChars(B, c.x + 1, c.y, '220'); assert.equal(c.etat, 'detruit');
+});
+test('ses mitrailleuses couchent les hommes de l\'autre camp à portée, pas les siens', () => {
+  const B = petite(), a = arriereDeTest(B), A = B.armee, x = 200 + M.x;
+  ordonnerBarrage(B, 'char', x, a[0] - 60);
+  const c = B.etat.chars[0];
+  let eux = 0, nous = 0;
+  for (let i = 0; i < A.n; i++) if (Math.hypot(A.x[i] - c.x, A.y[i] - c.y) < 28) { if (A.camp[i] === 1) eux++; else nous++; }
+  // on amène quarante hommes d'en face et dix des nôtres à dix mètres
+  for (let i = 0, n = 0; i < A.n && n < 40; i++) if (A.camp[i] === 1) { A.x[i] = c.x + (n % 8) - 4; A.y[i] = c.y - 10 - (n / 8 | 0); n++; }
+  const avantNous = B.etat.pertes[0];
+  for (let k = 0; k < 150; k++) avancer(B);
+  assert.ok(B.etat.pertes[1] > 0, 'des morts en face');
+  assert.equal(B.etat.pertes[0], avantNous, 'aucun des nôtres');
+  void eux; void nous;
+});
+test('le char relu en route donne la même partie', () => {
+  const a = petite(), r = arriereDeTest(a), x = 200 + M.x;
+  ordonnerBarrage(a, 'char', x, r[0] - 80);
+  for (let k = 0; k < 200; k++) avancer(a);
+  const b = restaurer(photo(a), R);
+  assert.equal(b.etat.chars.length, 1);
+  for (let k = 0; k < 120; k++) { avancer(a); avancer(b); }
+  assert.equal(empreinte(a), empreinte(b));
+});

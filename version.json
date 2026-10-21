@@ -1,7 +1,7 @@
 {
-  "version": "0.46.0",
+  "version": "0.47.0",
   "date": "2026-10-21",
   "changes": [
-    "Un quatrième bouton, « Avion » (touche 4) : un avion mitraille en ligne la zone visée, 12 m de large sur 60 m de long, avec traceurs et poussière ; les hommes de la bande sont touchés ou prennent peur, les deux camps y compris ; il rentre en 90 s"
+    "Un cinquième bouton, « Char » (touche 5) : un Schneider part de l'arrière de nos lignes vers l'objectif cliqué, enjambe les tranchées, s'enlise dans un trou de plus de 1,5 m, couche les hommes d'en face à 28 m ; un obus qui tombe sur lui le détruit ; le suivant n'est prêt qu'après quatre minutes"
   ]
 }
