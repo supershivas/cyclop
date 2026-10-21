@@ -1,8 +1,8 @@
 {
-  "version": "0.42.0",
+  "version": "0.43.0",
   "date": "2026-10-21",
   "changes": [
-    "Dans l'atelier, on choisit la carte de chaque bataille de la campagne (case « Dans la campagne » de la carte)",
-    "Le jeu se recharge de nouveau : deux imports perdus à la fusion de la v0.41.3 sont remis"
+    "Dans l'éditeur de carte, on creuse un lac ou un fleuve : une eau profonde qu'on ne traverse pas",
+    "Les régiments s'arrêtent à la rive ; le contrôle refuse l'eau sur les tranchées"
   ]
 }

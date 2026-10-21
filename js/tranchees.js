@@ -11,7 +11,7 @@
      d'occuper une tranchée s'en servent pour poser les hommes dedans.
    - Un tronçon protège du tir qui vient de devant (le parapet), beaucoup moins
      de celui qui vient de derrière (le parados) : pris, il sert à l'envers. */
-import { hash2 } from './lib/rng.js?v=0.42.0';
+import { hash2 } from './lib/rng.js?v=0.43.0';
 
 // Un bruit de valeurs lissé à une dimension (0..1) : le tracé d'une tranchée creusée à la main, jamais deux fois pareil (v0.29.0)
 const lisse = u => u * u * (3 - 2 * u);
@@ -114,6 +114,13 @@ export function validerSecteur(S) {
   });
   if (nous[0] - eux[0] < 60) pb.push(`no man's land de ${Math.round(nous[0] - eux[0])} m entre les premières lignes : 60 m au moins`);
   if (!(T.boyaux >= 1)) pb.push('au moins un boyau par camp');
+  // l'eau (v0.43.0) : pas dans les tranchées ni les boyaux (la bande de chaque camp, de sa 1re à sa dernière ligne, 8 m de marge) ; elle peut couper le no man's land
+  const bandes = [['nous', nous[0] - 8, nous.at(-1) + 8], ['en face', eux.at(-1) - 8, eux[0] + 8]];
+  for (const O of S.objets || []) {
+    if (O.o !== 'lac' && O.o !== 'fleuve') continue;
+    const y1 = Math.min(O.y, O.o === 'fleuve' ? O.y2 ?? O.y : O.y) - O.r, y2 = Math.max(O.y, O.o === 'fleuve' ? O.y2 ?? O.y : O.y) + O.r;
+    for (const [camp, a, b] of bandes) if (y2 > a && y1 < b) pb.push(`${O.o === 'lac' ? 'un lac' : 'un fleuve'} (${Math.round(O.x)} ; ${Math.round(O.y)}) touche les tranchées ${camp === 'nous' ? 'de chez nous' : 'd\'en face'} (de ${Math.round(a)} à ${Math.round(b)} m depuis le haut) : écartez-le`);
+  }
   coupe: for (let g = 1; g <= 8; g++) for (const L of lignesDu(S, 0, 0, g)) {
     let prec = null;
     for (let i = 0; i <= S.largeur; i++) {

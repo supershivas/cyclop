@@ -299,3 +299,37 @@ test('la lune change de phase de jour en jour, revient après une lunaison ; la 
   for (let j = 1; j < 30; j++) { const c = couvertureNuit(j, 7, 'gel'); assert.ok(c >= 0 && c <= 1); }
   assert.equal(cielEnMots(0.1), 'ciel dégagé'); assert.equal(cielEnMots(0.9), 'ciel couvert');
 });
+
+group('atelier — les eaux profondes (v0.43.0)');
+test('un lac creuse à plat un niveau au mètre sous sa rive la plus basse, et rien n\'y pousse ; un fleuve suit le terrain', async () => {
+  const { calculerCouts, dimensionsCouts } = await import('../js/champs.js');
+  const { vitesseCase } = await import('../js/terrain.js');
+  const S = { largeur: 120, hauteur: 100, arbres: 80, buissons: 60, objets: [{ o: 'lac', x: 60, y: 50, r: 12 }] };
+  const T = creerTerrain(3, S, R), sans = creerTerrain(3, { ...S, objets: [] }, R);
+  const dedans = [], c0 = 50 * 120 + 60;
+  for (let j = 0; j < 100; j++) for (let i = 0; i < 120; i++) if (T.profond[j * 120 + i]) dedans.push(j * 120 + i);
+  assert.ok(dedans.length > 400 && dedans.length < 520, `un disque de rayon 12 : ${dedans.length} cases`);
+  assert.equal(new Set(dedans.map(c => T.base[c])).size, 1, 'à plat');
+  assert.equal(T.base[c0] % 4, 0, 'au mètre près');
+  const rive = Math.min(...dedans.map(c => sans.base[c]));
+  assert.equal(T.base[c0], (Math.floor(rive / 4) - 1) * 4, 'un mètre sous la rive la plus basse');
+  assert.equal(etat(T, c0, R), ETAT.EAU); assert.equal(etat(T, c0, R, true), ETAT.EAU, 'même par le gel');
+  assert.ok(vitesseCase(T, c0, R) < 0.05 && vitesseCase(T, c0 + 30, R) > 0.2, 'on n\'y passe pas, ailleurs si');
+  assert.ok(![...T.arbres, ...T.buissons].some(o => T.profond[o.j * 120 + o.i]), 'ni arbre ni buisson dans l\'eau');
+  // le champ de coûts contourne : un carré dans l'eau est infranchissable
+  const { bw, bh } = dimensionsCouts(T), couts = new Uint8Array(bw * bh); calculerCouts(T, R, couts);
+  assert.equal(couts[Math.floor(50 / 4) * bw + Math.floor(60 / 4)], 0); assert.ok(couts[Math.floor(10 / 4) * bw + 5] > 0);
+  // un fleuve : un niveau par tranche de son cours, il descend avec la pente
+  const F = creerTerrain(3, { ...S, objets: [{ o: 'fleuve', x: 5, y: 40, x2: 115, y2: 60, r: 5 }] }, R);
+  const niveaux = new Set(); for (let c = 0; c < F.profond.length; c++) if (F.profond[c]) niveaux.add(F.base[c]);
+  assert.ok(niveaux.size >= 1 && [...niveaux].every(n => n % 4 === 0));
+  assert.ok(F.profond.reduce((s, v) => s + v, 0) > 1000, 'un fleuve de 10 m sur ~110 m');
+  assert.equal(creerTerrain(3, { ...S, objets: [] }, R).profond.reduce((s, v) => s + v, 0), 0, 'sans eau, rien ne change');
+});
+test('le contrôle refuse un lac ou un fleuve sur les tranchées, pas dans le no man\'s land', async () => {
+  const { validerSecteur } = await import('../js/tranchees.js');
+  const S = structuredClone(SECTEURS.essai), n0 = S.tranchees.lignes.nous[0], e0 = S.tranchees.lignes.eux[0], milieu = (n0 + e0) / 2;
+  assert.deepEqual(validerSecteur({ ...S, objets: [{ o: 'fleuve', x: 0, y: milieu, x2: 400, y2: milieu, r: 6 }] }), [], 'un fleuve en travers du no man\'s land passe');
+  assert.ok(validerSecteur({ ...S, objets: [{ o: 'lac', x: 200, y: n0, r: 15 }] }).some(t => /touche les tranchées de chez nous/.test(t)));
+  assert.ok(validerSecteur({ ...S, objets: [{ o: 'fleuve', x: 0, y: e0 - 3, x2: 400, y2: e0 + 3, r: 6 }] }).some(t => /d'en face/.test(t)));
+});

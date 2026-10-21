@@ -3,19 +3,19 @@
 // la scène (la carte, large), l'inspecteur (l'outil ou la forme choisie, puis les réglages du secteur). Chaque chiffre porte un nom et une description (`data/carte-outils.js`,
 // `data/secteur-params.js`). Chaque retouche va dans le brouillon (`secteurs` de `cyclopeen:atelier`, à plat : « relief.bosses ») et se publie dans assets/design/secteurs.json ;
 // le jeu les pose sur `SECTEURS` au lancement (`appliquerSecteurs`).
-import { REGLAGES } from './data/reglages.js?v=0.42.0';
-import { SECTEURS, VIERGE } from './data/secteur.js?v=0.42.0';
-import { PALETTE, ORDRE } from './palette.js?v=0.42.0';
-import { terrainDuSecteur, profilDe } from './secteur-terrain.js?v=0.42.0';
-import { couleurCase } from './apparence.js?v=0.42.0';
-import { etat as etatCase, hauteurQ } from './terrain.js?v=0.42.0';
-import { ligneY } from './tranchees.js?v=0.42.0';
-import { PARAMS } from './data/secteur-params.js?v=0.42.0';
-import { SECTEURS_ORIGINE } from './data/campagne.js?v=0.42.0';
-import { OUTILS, GROUPES_OUTILS, champ, HERBE, SOLS } from './data/carte-outils.js?v=0.42.0';
-import { distanceForme, extremite } from './formes.js?v=0.42.0';
-import { validerSecteur } from './tranchees.js?v=0.42.0';
-import { lireBrouillon, ecrireBrouillon, lireChemin, deplier, secteurEffectif, idCarte, nouvelleCarte } from './design-store.js?v=0.42.0';
+import { REGLAGES } from './data/reglages.js?v=0.43.0';
+import { SECTEURS, VIERGE } from './data/secteur.js?v=0.43.0';
+import { PALETTE, ORDRE } from './palette.js?v=0.43.0';
+import { terrainDuSecteur, profilDe } from './secteur-terrain.js?v=0.43.0';
+import { couleurCase } from './apparence.js?v=0.43.0';
+import { etat as etatCase, hauteurQ } from './terrain.js?v=0.43.0';
+import { ligneY } from './tranchees.js?v=0.43.0';
+import { PARAMS } from './data/secteur-params.js?v=0.43.0';
+import { SECTEURS_ORIGINE } from './data/campagne.js?v=0.43.0';
+import { OUTILS, GROUPES_OUTILS, champ, HERBE, SOLS } from './data/carte-outils.js?v=0.43.0';
+import { distanceForme, extremite } from './formes.js?v=0.43.0';
+import { validerSecteur } from './tranchees.js?v=0.43.0';
+import { lireBrouillon, ecrireBrouillon, lireChemin, deplier, secteurEffectif, idCarte, nouvelleCarte } from './design-store.js?v=0.43.0';
 
 const rgb = hex => [1, 3, 5].map(k => parseInt(hex.slice(k, k + 2), 16));
 const COULEURS = ORDRE.map(k => rgb(PALETTE[k]));
@@ -108,7 +108,7 @@ export function ongletCarte(zone, { el, R = REGLAGES, publie = {}, publieCartes 
   // ─── Les retouches : des formes de relief et des objets, une seule histoire pour annuler et rétablir (en mémoire : elle ne survit pas à la page) ───
   let outil = 'selection', trace = null, curseurCarte = null, choix = null, edition = null, glisse = null;
   let trace3d = null, curseur3d = null;                          // dans la vue 3D : le premier clic d'un trait (crête, haie), et le point sous la souris (mètres du secteur)
-  const reglagesOutil = { bosse: { r: 20, h: 3 }, creux: { r: 20, h: 3 }, crete: { r: 20, h: 3 }, plateau: { r: 20, h: 3 }, bois: { r: 20 }, degager: { r: 20 } };
+  const reglagesOutil = { bosse: { r: 20, h: 3 }, creux: { r: 20, h: 3 }, crete: { r: 20, h: 3 }, plateau: { r: 20, h: 3 }, bois: { r: 20 }, degager: { r: 20 }, lac: { r: 25 }, fleuve: { r: 6 } };
   const histoire = [], futur = [];
   const cleDe = F => (F.f ? 'retouches' : 'objets');
   const genreDe = F => F.f || F.o;
@@ -349,7 +349,7 @@ export function ongletCarte(zone, { el, R = REGLAGES, publie = {}, publieCartes 
     v3d.activer(true);
     etatBarre.textContent = 'Vue 3D : un clic pose avec l\u2019outil choisi (crête et haie : deux clics) · glisser tourne et incline · clic droit (ou Maj) + glisser déplace · molette zoome.';
   }
-  const creerVue3D3 = async () => { const { creerVue3D } = await import('./apercu-3d.js?v=0.42.0'); return creerVue3D({ R, hote: hote3d }); };
+  const creerVue3D3 = async () => { const { creerVue3D } = await import('./apercu-3d.js?v=0.43.0'); return creerVue3D({ R, hote: hote3d }); };
   function basculer(m) {
     if (m === mode) return;
     mode = m;
@@ -409,7 +409,7 @@ export function ongletCarte(zone, { el, R = REGLAGES, publie = {}, publieCartes 
     if (cFormes.checked || outil !== 'selection') dessinerRetouches(ctx, m, px);
     ctx.restore();
   }
-  const glyphe = { bosse: '+', creux: '−', crete: '+', plateau: '=', bois: 'B', haie: 'H', degager: '×' };
+  const glyphe = { bosse: '+', creux: '−', crete: '+', plateau: '=', bois: 'B', haie: 'H', degager: '×', lac: '≈', fleuve: '≈' };
   function dessinerRetouches(ctx, m, px) {
     ctx.fillStyle = ctx.strokeStyle = PALETTE.o; ctx.lineWidth = px(1.5); ctx.textAlign = 'center';
     const dessiner = (F, enCours, choisie) => {
@@ -417,7 +417,7 @@ export function ongletCarte(zone, { el, R = REGLAGES, publie = {}, publieCartes 
       ctx.setLineDash(genre === 'creux' || genre === 'degager' ? [px(5), px(4)] : enCours || genre === 'bois' ? [px(3), px(3)] : []);
       ctx.lineWidth = px(choisie ? 2.5 : 1.5);
       if (segment) { ctx.beginPath(); ctx.moveTo(m.x + F.x, m.y + F.y); ctx.lineTo(m.x + x2, m.y + y2); ctx.stroke(); }
-      if (genre !== 'haie') for (const [qx, qy] of genre === 'crete' ? [[F.x, F.y], [x2, y2]] : [[F.x, F.y]]) { ctx.beginPath(); ctx.arc(m.x + qx, m.y + qy, r, 0, 6.2832); ctx.stroke(); }
+      if (genre !== 'haie') for (const [qx, qy] of genre === 'crete' || genre === 'fleuve' ? [[F.x, F.y], [x2, y2]] : [[F.x, F.y]]) { ctx.beginPath(); ctx.arc(m.x + qx, m.y + qy, r, 0, 6.2832); ctx.stroke(); }
       ctx.setLineDash([]); ctx.font = `${px(14)}px ui-monospace, monospace`; ctx.fillText(glyphe[genre] || '', m.x + (F.x + x2) / 2, m.y + (F.y + y2) / 2 + px(5));
     };
     const l = affichees();
@@ -462,7 +462,7 @@ export function ongletCarte(zone, { el, R = REGLAGES, publie = {}, publieCartes 
       ctx.strokeStyle = ctx.fillStyle = PALETTE.o; ctx.lineWidth = choisie ? 3.5 : 2;
       ctx.setLineDash(genre === 'creux' || genre === 'degager' ? [6, 5] : enCours || genre === 'bois' ? [3, 4] : []);
       if (segment) ligne([pt(F.x, F.y), pt(x2, y2)]);
-      if (F.r && genre !== 'haie') for (const [qx, qy] of genre === 'crete' ? [[F.x, F.y], [x2, y2]] : [[F.x, F.y]]) anneau(qx, qy, F.r);
+      if (F.r && genre !== 'haie') for (const [qx, qy] of genre === 'crete' || genre === 'fleuve' ? [[F.x, F.y], [x2, y2]] : [[F.x, F.y]]) anneau(qx, qy, F.r);
       ctx.setLineDash([]);
       const c = pt((F.x + x2) / 2, (F.y + y2) / 2);
       if (c) { if (F.r || segment) { ctx.font = '700 15px ui-monospace, monospace'; ctx.textAlign = 'center'; ctx.fillText(glyphe[genre] || '', c[0], c[1] + 5); } else { ctx.beginPath(); ctx.arc(c[0], c[1], choisie ? 7 : 5, 0, 6.2832); ctx.stroke(); } }

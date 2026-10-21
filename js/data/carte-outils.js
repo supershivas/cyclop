@@ -5,6 +5,7 @@ export const GROUPES_OUTILS = [
   { id: 'edition', titre: 'Édition' },
   { id: 'relief', titre: 'Relief' },
   { id: 'objets', titre: 'Végétation' },
+  { id: 'eau', titre: 'Eau' },
 ];
 
 export const OUTILS = {
@@ -30,6 +31,10 @@ export const OUTILS = {
     aide: 'Glissez d’un point à un autre : une haie de buissons le long du trait, avec quelques trous.' },
   degager: { groupe: 'objets', nom: 'Dégager', genre: 'degager', type: 'objet', champs: ['r'], icone: 'M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18z M8 8l8 8 M16 8l-8 8',
     aide: 'Un clic retire les arbres et les buissons que le hasard avait plantés, jusqu’au rayon. Ce que vous avez posé reste (la gomme le retire).' },
+  lac: { groupe: 'eau', nom: 'Lac', genre: 'lac', type: 'objet', champs: ['r'], icone: 'M3 12c0-4 4-7 9-7s9 3 9 7-4 7-9 7-9-3-9-7z M7 12c2 1 4-1 6 0s3 0 4-1',
+    aide: 'Un clic creuse un lac : une eau profonde, à plat, qu’on ne traverse pas. Gardez-le loin des tranchées (la bande de chaque camp), le contrôle le dit.' },
+  fleuve: { groupe: 'eau', nom: 'Fleuve', genre: 'fleuve', type: 'objet', segment: true, champs: ['r'], icone: 'M2 8c4-4 6 4 10 0s6 4 10 0 M2 16c4-4 6 4 10 0s6 4 10 0',
+    aide: 'Glissez d’un point à un autre : un fleuve de eau profonde le long du trait, qu’on ne traverse pas. Il peut couper le no man’s land, mais pas les tranchées.' },
 };
 
 // Les champs d'une forme. `nom` et `desc` peuvent changer avec le genre (`parGenre`). Les positions sont en mètres, dans le repère du secteur :
@@ -44,6 +49,8 @@ export const CHAMPS = {
       crete: { nom: 'Demi-largeur', desc: 'Largeur de la crête de chaque côté du trait, en mètres.' },
       plateau: { nom: 'Rayon', desc: 'Taille du plateau : plat jusqu’à 60 % du rayon, puis le sol rejoint doucement le terrain alentour.' },
       bois: { nom: 'Rayon du bois', desc: 'Les arbres du bois sont répartis dans ce rayon, en mètres.' },
+      lac: { nom: 'Rayon du lac', desc: 'Le lac couvre ce disque, en mètres, d’eau profonde à plat.' },
+      fleuve: { nom: 'Demi-largeur', desc: 'Largeur du fleuve de chaque côté du trait, en mètres : 6 donne un fleuve de 12 m.' },
       degager: { nom: 'Rayon du dégagement', desc: 'Tout arbre et tout buisson tiré par le hasard à moins de ce rayon est retiré. Ce que vous avez posé reste.' },
     } },
   h: { nom: 'Hauteur', unite: 'm', min: 0.5, max: 12, pas: 0.5, desc: 'De combien le sol monte au centre, en mètres.',

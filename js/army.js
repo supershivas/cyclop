@@ -25,8 +25,8 @@
      (rng.js), pour que la même graine rejoue la même bataille.
 
    Logique pure : aucun DOM. Le rendu lit les tableaux (rendu3d.js). */
-import { hauteurQ, etat, vitesseEtat } from './terrain.js?v=0.42.0';
-import { ligneY } from './tranchees.js?v=0.42.0';
+import { hauteurQ, vitesseCase } from './terrain.js?v=0.43.0';
+import { ligneY } from './tranchees.js?v=0.43.0';
 
 export const GRILLE = 2;           // m : cases de voisinage
 export const DENSITE = 8;          // m : carrés de densité (tir)
@@ -160,7 +160,7 @@ export function pasArmee(A, ctx) {
     } else voulu = 0;
     // ─ La case, la marche devant ─
     const ci = xi | 0, cj = yi | 0, cc = cj * W + ci;
-    let terrain = vitesseEtat(etat(T, cc, R, gel), R);
+    let terrain = vitesseCase(T, cc, R, gel);
     if (voulu > 0) {
       const ai = (xi + gx * 0.7) | 0, aj = (yi + gy * 0.7) | 0;
       if (ai >= 0 && aj >= 0 && ai < W && aj < H && (ai !== ci || aj !== cj)) {
@@ -185,7 +185,7 @@ export function pasArmee(A, ctx) {
     const hi = hauteurQ(T, cc);
     const mur = (px, py) => {
       const c = (py | 0) * W + (px | 0);
-      return c !== cc && hauteurQ(T, c) - hi >= V.mur && coince[i] <= 3;
+      return c !== cc && ((hauteurQ(T, c) - hi >= V.mur && coince[i] <= 3) || (T.profond[c] === 1 && T.profond[cc] === 0));      // un mur, ou de l'eau profonde où l'on n'entre jamais (v0.43.0)
     };
     let bloque = false;
     if (mur(nx, yi)) { nx = xi; vx[i] = 0; bloque = true; }

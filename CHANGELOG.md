@@ -1,5 +1,9 @@
 # Journal des versions
 
+## 0.43.0 — 2026-10-21
+- Dans l'éditeur de carte, un lac et un fleuve : une eau profonde qu'on ne traverse pas
+- Les régiments s'arrêtent à la rive
+
 ## 0.42.0 — 2026-10-21
 - Dans l'atelier, on choisit la carte de chaque bataille de la campagne
 - Le jeu se recharge de nouveau (deux imports perdus à la fusion de la v0.41.3)

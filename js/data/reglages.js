@@ -34,6 +34,7 @@ export const REGLAGES = {
   vitesse: {
     marche: 1.3,          // m/s sur sol sec et plat
     sec: 1, humide: 0.8, boue: 0.38, eau: 0.25, glace: 0.75,
+    profond: 0.03,        // l'eau profonde d'un lac ou d'un fleuve : on n'y passe pas (v0.43.0)
     pente1: 0.6,          // marche d'un demi-mètre
     pente2: 0.25,         // marche d'un mètre : très lent
     mur: 8,               // quarts : 2 m, infranchissable sans pente ni échelle
