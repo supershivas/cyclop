@@ -1,5 +1,10 @@
 # Journal des versions
 
+## 0.45.0 — 2026-10-21
+- Au labo, les chars d'assaut sont cinq engins dessinés à l'échelle (Mark IV, avec sa livrée allemande de Cambrai, Renault FT à tourelle tournante, Schneider CA 1, Saint-Chamond, A7V allemand), qu'on regarde à la caméra libre (glisser, Maj, molette, « Suivre », trois crans de zoom en plus)
+- Au labo, les gaz sont trois nuages en volumes translucides (les bouteilles de chlore de 1915, les obus à phosgène et à ypérite, une nappe qui coule dans les creux)
+- Au labo, quatre propositions de gameplay pour les avions, jouables à la caméra libre : l'avion de réglage de tir, le cirque du Baron rouge, le mitraillage, les bombardiers de nuit
+
 ## 0.44.0 — 2026-10-21
 - Dans l'éditeur de carte, un pont sur un lac ou un fleuve
 - Un obus tombé sur un pont le coupe

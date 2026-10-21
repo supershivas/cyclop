@@ -1,8 +1,8 @@
 {
-  "version": "0.44.0",
+  "version": "0.45.0",
   "date": "2026-10-21",
   "changes": [
-    "Dans l'éditeur de carte, un pont : un tablier sur l'eau, qu'on traverse à pied sec",
-    "Un obus tombé sur un pont le coupe : il retombe à l'eau"
+    "Au labo, les chars d'assaut sont cinq engins historiques en volumes (Mark IV et sa livrée allemande, Renault FT, Schneider, Saint-Chamond, A7V), à regarder à la caméra libre",
+    "Au labo, trois nuages de gaz en volumes (bouteilles de chlore, obus à phosgène et ypérite, nappe qui coule dans les creux) et quatre propositions d'avions (réglage de tir, Baron rouge, mitraillage, bombardiers de nuit)"
   ]
 }
