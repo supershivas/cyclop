@@ -1,9 +1,7 @@
 {
-  "version": "0.41.0",
+  "version": "0.41.1",
   "date": "2026-10-21",
   "changes": [
-    "Un clic sur le nom d'un régiment, sur le champ, le choisit (Maj : en ajouter)",
-    "Au labo, un point vert, rouge ou orange devant chaque sujet : tranché, à trancher, indéfini",
-    "Au labo, trois sujets à trancher : le nom d'un régiment sur le champ, les toasts, la carte d'ordre de la rangée (quatre propositions chacun)"
+    "Les versants ne se couvrent plus d'eau sous la pluie : l'eau reste dans les creux et sur le plat, les pentes sont de la boue"
   ]
 }

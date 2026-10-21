@@ -1,5 +1,8 @@
 # Journal des versions
 
+## 0.41.1 — 2026-10-21
+- Les versants ne se couvrent plus d'eau sous la pluie : l'eau reste dans les creux et sur le plat
+
 ## 0.41.0 — 2026-10-21
 - Un clic sur le nom d'un régiment, sur le champ, le choisit comme sa carte de la rangée (Maj : en ajouter à la sélection)
 - Au labo, un point vert (tranché, en jeu), rouge (à trancher) ou orange (indéfini) devant chaque sujet et chaque groupe
