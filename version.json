@@ -1,8 +1,9 @@
 {
-  "version": "0.50.0",
+  "version": "0.51.0",
   "date": "2026-10-21",
   "changes": [
-    "Des marécages : flaques peu profondes et boue par plaques, dans l'éditeur et dans la carte aléatoire",
-    "Les rives des lacs et des côtes ont des anses et des caps ; les fleuves s'élargissent, se resserrent et serpentent"
+    "Des roseaux dans les marécages (plus rares sur les cartes) ; l'hiver apporte la neige, l'été un sol sec et des jours de forte chaleur",
+    "Les fleuves continuent leur trajet dans le décor hors carte",
+    "Choix de la carte : les titres seulement à gauche ; un clic sur l'aperçu l'agrandit et on le parcourt"
   ]
 }

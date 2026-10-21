@@ -22,22 +22,23 @@
    - Les soldats : instanciés (une boîte et son ombre) ; au zoom 1 et 2, un
      point de 2 × 2 pixels (la couleur du camp sur son ombre).
    - Les corps : un homme couché (instancié) ; au zoom 1 et 2, un pixel. */
-import { loadThree } from './three-lib.js?v=0.50.0';
-import * as SH from './rendu/shaders.js?v=0.50.0';
-import { creerSoldats } from './rendu/soldats.js?v=0.50.0';
-import { creerChars } from './rendu/chars.js?v=0.50.0';
-import { creerPonts } from './rendu/ponts.js?v=0.50.0';
-import { creerCiel } from './rendu/ciel.js?v=0.50.0';
-import { creerMeteo } from './rendu/meteo.js?v=0.50.0';
-import { creerTroncons } from './rendu/troncons.js?v=0.50.0';
-import { creerVegetation } from './rendu/vegetation.js?v=0.50.0';
-import { creerTemps } from './rendu/temps.js?v=0.50.0';
-import { creerEclats } from './rendu/eclats.js?v=0.50.0';
-import { PALETTE, ORDRE, INDICE } from './palette.js?v=0.50.0';
-import { OMBRE, couleursLigne } from './apparence.js?v=0.50.0';
-import { MORCEAU, hauteurVueQ as hauteurQ, hauteurVueM as hauteurM } from './terrain.js?v=0.50.0';
-import { horloge, secteurDuJeu } from './bataille.js?v=0.50.0';
-import { ligneY } from './tranchees.js?v=0.50.0';
+import { loadThree } from './three-lib.js?v=0.51.0';
+import * as SH from './rendu/shaders.js?v=0.51.0';
+import { creerSoldats } from './rendu/soldats.js?v=0.51.0';
+import { creerChars } from './rendu/chars.js?v=0.51.0';
+import { creerPonts } from './rendu/ponts.js?v=0.51.0';
+import { creerCiel } from './rendu/ciel.js?v=0.51.0';
+import { creerMeteo } from './rendu/meteo.js?v=0.51.0';
+import { creerTroncons } from './rendu/troncons.js?v=0.51.0';
+import { creerVegetation } from './rendu/vegetation.js?v=0.51.0';
+import { creerTemps } from './rendu/temps.js?v=0.51.0';
+import { creerEclats } from './rendu/eclats.js?v=0.51.0';
+import { PALETTE, ORDRE, INDICE } from './palette.js?v=0.51.0';
+import { OMBRE, couleursLigne } from './apparence.js?v=0.51.0';
+import { MORCEAU, hauteurVueQ as hauteurQ, hauteurVueM as hauteurM } from './terrain.js?v=0.51.0';
+import { horloge, secteurDuJeu } from './bataille.js?v=0.51.0';
+import { profilFleuve } from './eaux.js?v=0.51.0';
+import { ligneY } from './tranchees.js?v=0.51.0';
 
 export const CAMERA = { yaw: 0.15, tangage: 0.95, fov: 30 };   // au départ : tournée de 9°, plongée de 54°, angle de 30°
 // la caméra respire : un balancement très lent, 2° en 23 s (Jérôme, v0.3.1 : variante D du labo retenue)
@@ -286,37 +287,37 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
     faireFaux();
   }
   // le faux terrain au-delà du bord (le bord `faux` et `faux-noir`) : un plan immense posé juste sous le sol
-  // Les fleuves de l'atelier qui touchent le bord du terrain (v0.47.1) : pour chaque bout à moins de sa largeur (+ 3 m) du bord, le point où il sort et sa direction, puis sa demi-largeur,
-  // une phase, une amplitude et un nombre, tirés du bout (un hachage : la même graine donne les mêmes méandres). Au plus quatre.
+  // Les fleuves qui touchent le bord du terrain (v0.47.1 ; v0.51.0 : ils suivent leur vrai tracé) : pour chaque bout, le point où l'axe du fleuve (son trait, plus son écart de méandre : `profilFleuve`) quitte le terrain,
+  // sa direction à cet endroit, sa demi-largeur de là (elle varie : on prend celle du dernier mètre dans le terrain), puis une phase, une amplitude et un nombre, tirés du point (un hachage : la même graine donne les mêmes
+  // méandres hors carte). Un bout resté dans le terrain, à moins de sa largeur du bord, est prolongé tout droit. Au plus quatre.
   function fleuvesSortants() {
     const out = [];
     if (!B || !T) return out;
-    const S = secteurDuJeu(B.etat), m = B.etat.marges, W = T.W, H = T.H;
+    const S = secteurDuJeu(B.etat), m = B.etat.marges, W = T.W, H = T.H, dedans = (x, z) => x >= 0 && z >= 0 && x <= W && z <= H;
     for (const O of S.objets || []) {
       if (O.o !== 'fleuve' || !(O.r > 0)) continue;
-      const P = [[O.x + m.x, O.y + m.y], [(O.x2 ?? O.x) + m.x, (O.y2 ?? O.y) + m.y]];
+      const F = { ...O, x2: O.x2 ?? O.x, y2: O.y2 ?? O.y }, P = profilFleuve(F), L = P.long || 1;
+      const axe = s => { const t = s / L, o = P.off(s); return [F.x + (F.x2 - F.x) * t + o * P.nx + m.x, F.y + (F.y2 - F.y) * t + o * P.ny + m.y]; };
       for (let e = 0; e < 2 && out.length < 8; e++) {
-        const [px, pz] = P[e], [qx, qz] = P[1 - e], L = Math.hypot(px - qx, pz - qz) || 1, dx = (px - qx) / L, dz = (pz - qz) / L;
-        const marge = O.r + 3, dehors = px < marge || pz < marge || px > W - marge || pz > H - marge;
-        if (!dehors) continue;
-        // le point où la droite sort du terrain : sur le trait Q → P s'il dépasse le bord, sinon en prolongeant au-delà de P
-        let ex, ez, t = 0;
-        if (px < 0 || pz < 0 || px > W || pz > H) {
-          let t0 = 0, t1 = 1;
-          for (const [a0, a1, lim] of [[qx, px, W], [qz, pz, H]]) {
-            const dd = a1 - a0;
-            if (Math.abs(dd) < 1e-9) continue;
-            let ta = (0 - a0) / dd, tb = (lim - a0) / dd; if (ta > tb) [ta, tb] = [tb, ta];
-            t0 = Math.max(t0, ta); t1 = Math.min(t1, tb);
-          }
-          if (t1 < t0 || t1 >= 1) continue;
-          ex = qx + (px - qx) * t1; ez = qz + (pz - qz) * t1;
+        const sens = e ? -1 : 1, s0 = e ? L : 0;           // e = 0 : le début du trait, on avance de 0 vers L ; e = 1 : la fin, on recule
+        let s = s0, [px, pz] = axe(s), ex, ez, dx, dz, demi;
+        if (!dedans(px, pz)) {
+          // le bout est hors du terrain : on rentre jusqu'au premier point dedans, le fleuve quitte le terrain juste avant
+          let sIn = -1;
+          for (let k = 0; k <= L; k += 1) { const [qx, qz] = axe(s0 + sens * k); if (dedans(qx, qz)) { sIn = s0 + sens * k; break; } }
+          if (sIn < 0) continue;
+          const [ix, iz] = axe(sIn), [jx, jz] = axe(sIn - sens * 1), d = Math.hypot(jx - ix, jz - iz) || 1;
+          ex = ix; ez = iz; dx = (jx - ix) / d; dz = (jz - iz) / d; demi = P.demi(sIn);
         } else {
-          for (let k = 0; k < 4000 && px + dx * t > 0 && px + dx * t < W && pz + dz * t > 0 && pz + dz * t < H; k++) t += 0.5;
+          const marge = O.r * 1.5 + 3;
+          if (!(px < marge || pz < marge || px > W - marge || pz > H - marge)) continue;      // le bout reste au milieu du terrain : un fleuve qui finit
+          const [qx, qz] = axe(s0 + sens * 4), d = Math.hypot(px - qx, pz - qz) || 1;
+          dx = (px - qx) / d; dz = (pz - qz) / d; demi = P.demi(s0);
+          let t = 0; for (let k = 0; k < 4000 && dedans(px + dx * t, pz + dz * t); k++) t += 0.5;
           ex = px + dx * t; ez = pz + dz * t;
         }
         const g = Math.sin(Math.round(ex) * 12.9898 + Math.round(ez) * 78.233) * 43758.5453, u1 = g - Math.floor(g), u2 = (g * 7.31) - Math.floor(g * 7.31);
-        out.push(new THREE.Vector4(ex, ez, dx, dz), new THREE.Vector4(O.r, u1 * 6.2832, 22 + 30 * u2, u2));
+        out.push(new THREE.Vector4(ex, ez, dx, dz), new THREE.Vector4(demi, u1 * 6.2832, 22 + 30 * u2, u2));
       }
     }
     return out.slice(0, 8);
@@ -349,7 +350,7 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
   }
   // la texture du sol : les rangées dont la couleur a changé
   function majSol(tout = false, dt = 0) {
-    const h = horloge(B), gel = h.gel;
+    const h = horloge(B), gel = h.neige ? 2 : h.gel ? 1 : 0;       // 2 : la neige blanchit le sol (apparence.js)
     if (gel !== gelVu) { tout = true; gelVu = gel; }
     // l'eau change quelques rangées à chaque pas : on n'envoie la texture qu'un peu plus tard
     solAttente -= dt;
@@ -404,7 +405,7 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
     mVP.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse);
     const e = mVP.elements;
     soldats.maj({ x0, x1, z0, z1, e, p, choisis });      // les soldats, leurs anneaux, les corps et les tombes
-    vegetation.majHerbe(x0, x1, z0, z1, e, petit());
+    vegetation.majHerbe(x0, x1, z0, z1, e, petit()); vegetation.majRoseaux(x0, x1, z0, z1, e, petit());
     const bornes = [x0 - 6, x1 + 6, z0 - 6, z1 + 10];
     vegetation.majArbres(e, bornes); vegetation.majBuissons(e, bornes);
   }

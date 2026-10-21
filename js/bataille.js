@@ -14,24 +14,24 @@
    La sauvegarde (photo) garde la graine, la liste compacte des impacts, l'état
    de la foule et les petites couches de logique ; jamais le relief : il se
    rejoue depuis la graine et les impacts (rejouerTerrain). */
-import { createRng, hash2 } from './lib/rng.js?v=0.50.0';
-import { impact, hydroLignes, etat as etatCase, vitesseEtat, vitesseCase, ETAT } from './terrain.js?v=0.50.0';
-import { creerArmee, ajouterSoldat, construireGrille, pasArmee, tuerDans, effrayer, compacter, photoArmee, restaurerArmee, b64, deB64, DENSITE, place } from './army.js?v=0.50.0';
-import { ligneSous } from './tranchees.js?v=0.50.0';
-import { terrainDuSecteur } from './secteur-terrain.js?v=0.50.0';
-import { detruirePont } from './eaux.js?v=0.50.0';
-import { calculerCouts, creerCacheChamps, dimensionsCouts, BLOC } from './champs.js?v=0.50.0';
-import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.50.0';
-import { preparerAleatoire, ID_ALEATOIRE } from './generateur.js?v=0.50.0';
-import { AVION, MITRAILLAGE } from './data/mitraillage.js?v=0.50.0';
-import { CHAR, CHAR_RECHARGE, CHAR_SORTIE } from './data/chars.js?v=0.50.0';
-import { refusChar, lancerChar, degatsChars, avancerChars } from './chars.js?v=0.50.0';
-import { METEO, TRANSITIONS, PREVISION_JUSTE } from './data/meteo.js?v=0.50.0';
-import { SECTEURS } from './data/secteur.js?v=0.50.0';
-import { REGIMENTS } from './data/lexique.js?v=0.50.0';
-import { STANCES, STANCE_DEFAUT } from './data/stances.js?v=0.50.0';
-import { grade } from './identite.js?v=0.50.0';
-import { corvees, rejouerTravaux } from './nuit.js?v=0.50.0';
+import { createRng, hash2 } from './lib/rng.js?v=0.51.0';
+import { impact, hydroLignes, etat as etatCase, vitesseEtat, vitesseCase, ETAT } from './terrain.js?v=0.51.0';
+import { creerArmee, ajouterSoldat, construireGrille, pasArmee, tuerDans, effrayer, compacter, photoArmee, restaurerArmee, b64, deB64, DENSITE, place } from './army.js?v=0.51.0';
+import { ligneSous } from './tranchees.js?v=0.51.0';
+import { terrainDuSecteur } from './secteur-terrain.js?v=0.51.0';
+import { detruirePont } from './eaux.js?v=0.51.0';
+import { calculerCouts, creerCacheChamps, dimensionsCouts, BLOC } from './champs.js?v=0.51.0';
+import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.51.0';
+import { preparerAleatoire, ID_ALEATOIRE } from './generateur.js?v=0.51.0';
+import { AVION, MITRAILLAGE } from './data/mitraillage.js?v=0.51.0';
+import { CHAR, CHAR_RECHARGE, CHAR_SORTIE } from './data/chars.js?v=0.51.0';
+import { refusChar, lancerChar, degatsChars, avancerChars } from './chars.js?v=0.51.0';
+import { METEO, SAISONS, SAISON_DEFAUT, PREVISION_JUSTE } from './data/meteo.js?v=0.51.0';
+import { SECTEURS } from './data/secteur.js?v=0.51.0';
+import { REGIMENTS } from './data/lexique.js?v=0.51.0';
+import { STANCES, STANCE_DEFAUT } from './data/stances.js?v=0.51.0';
+import { grade } from './identite.js?v=0.51.0';
+import { corvees, rejouerTravaux } from './nuit.js?v=0.51.0';
 
 export const PAS = 1 / 30;                 // s de jeu par pas
 export const NOUS = 0, EUX = 1;
@@ -43,10 +43,11 @@ const PERIODE_COUTS = R => Math.max(1, Math.round(R.foule.champPeriode / PAS));
 
 // ─── Création ────────────────────────────────────────────────────────────
 
-function chaineMeteo(rng, jours, pluieAuMoins) {
-  const chaine = ['sec'];
+function chaineMeteo(rng, jours, pluieAuMoins, saison = SAISON_DEFAUT) {
+  const SA = SAISONS[saison] ?? SAISONS[SAISON_DEFAUT], TR = SA.transitions;
+  const chaine = [SA.depart];
   for (let d = 1; d < jours; d++) {
-    const tr = TRANSITIONS[chaine[d - 1]];
+    const tr = TR[chaine[d - 1]];
     chaine.push(rng.weighted(Object.entries(tr).map(([v, w]) => ({ v, w }))));
   }
   // le lot minimal doit voir venir la boue : des jours de pluie garantis (pas le premier)
@@ -55,7 +56,7 @@ function chaineMeteo(rng, jours, pluieAuMoins) {
   const previsions = chaine.map((m, d) => {
     const vrai = chaine[d + 1];
     if (!vrai) return null;
-    return rng() < PREVISION_JUSTE ? vrai : rng.pick(Object.keys(METEO));
+    return rng() < PREVISION_JUSTE ? vrai : rng.pick(Object.keys(TR));
   });
   return { chaine, previsions };
 }
@@ -80,7 +81,7 @@ export function nouvelleBataille(graine, R, opts = {}) {
   const J = typeof S.jours === 'number' ? { min: S.jours, max: S.jours } : S.jours;
   const jours = opts.jours || J.min + Math.floor(hash2(graine | 0, 41, 7) * (J.max - J.min + 1));
   const mission = opts.mission || (S.missions ? S.missions[Math.floor(hash2(graine | 0, 43, 7) * S.missions.length)] : null);
-  const { chaine, previsions } = chaineMeteo(rng.fork('meteo'), jours, S.pluieAuMoins);
+  const { chaine, previsions } = chaineMeteo(rng.fork('meteo'), jours, S.saison ? (SAISONS[S.saison]?.pluieAuMoins ?? S.pluieAuMoins) : S.pluieAuMoins, S.saison);
   const etat = {
     v: VERSION, graine, graineIdentite: opts.graineIdentite ?? graine, campagne: opts.campagne ?? null, secteur: idSecteur, parCamp, parCampEux,
     mission, issue: null,               // la mission (tenir, prendre) et, à la fin, ce qu'il en est
@@ -97,7 +98,7 @@ export function nouvelleBataille(graine, R, opts = {}) {
     marges: { ...S.marges },            // le terrain déborde du secteur (zone())
     regiments: [], pertes: [0, 0], pertesJour: [[0, 0]], blesses: [0, 0],
     corps: [],                  // les morts restent où ils sont tombés : [x×10, y×10, camp, jour, id]
-    sol: Object.fromEntries(['relief', 'arbres', 'bois', 'haies', 'buissons', 'retouches', 'objets', 'tranchees'].filter(k => S[k] !== undefined).map(k => [k, structuredClone(S[k])])),   // ce qui fait le sol du secteur, copié : les retouches de l'atelier (lots 1 et 2) ne changent pas une partie en cours
+    sol: Object.fromEntries(['relief', 'arbres', 'bois', 'haies', 'buissons', 'retouches', 'objets', 'tranchees', 'saison'].filter(k => S[k] !== undefined).map(k => [k, structuredClone(S[k])])),   // ce qui fait le sol du secteur, copié : les retouches de l'atelier (lots 1 et 2) ne changent pas une partie en cours
     tranchees: !!S.tranchees,   // (les batailles d'avant la v0.4.0 n'en ont pas)
     troncons: [],               // qui tient chaque tronçon (0 nous, 1 en face)
     prises: [[0, 0]],           // tronçons pris par chaque camp, jour par jour
@@ -1026,7 +1027,7 @@ export function horloge(B) {
     jour: etat.jour, jours: etat.meteo.length, phase: etat.phase,
     heure: Math.floor(h), minute: Math.floor((h % 1) * 60),
     meteo: etat.meteo[etat.jour - 1], prevision: etat.previsions[etat.jour - 1],
-    gel: !!METEO[etat.meteo[etat.jour - 1]].gel,
+    gel: !!METEO[etat.meteo[etat.jour - 1]].gel, neige: !!METEO[etat.meteo[etat.jour - 1]].neige, chaud: !!METEO[etat.meteo[etat.jour - 1]].chaud, saison: etat.sol?.saison ?? SAISON_DEFAUT,
   };
 }
 /* Pour regarder un terrain sans jouer (la vue 3D de l'atelier) : l'heure du premier jour et le temps qu'il fait ; rien d'autre ne change */

@@ -2,12 +2,12 @@
 // Une carte est un secteur de `data/secteur.js` (mêmes lignes de tranchées, mêmes 400 × 300 m) dont on tire le sol : bosses et nappe, des montagnes et des chaînes, des collines et des plateaux (`retouches`, `formes.js`),
 // un fleuve en travers du no man's land avec ses ponts, un fleuve ou des lacs derrière les lignes, une côte (un grand disque d'eau d'un des quatre côtés), et ce qui pousse. Chaque tirage est contrôlé par `validerSecteur` :
 // l'eau ne touche jamais une tranchée (la même règle que l'atelier) ; sans accord après `essais` tirages, la carte n'a pas d'eau. `genererCarte(graine)` rend toujours la même carte.
-import { createRng } from './lib/rng.js?v=0.50.0';
-import { SECTEURS } from './data/secteur.js?v=0.50.0';
-import { validerSecteur } from './tranchees.js?v=0.50.0';
-import { GENERATEUR as G, ID_ALEATOIRE } from './data/generateur.js?v=0.50.0';
-import { PONTS_JEU } from './data/ponts.js?v=0.50.0';
-import { fleuveEn, VARIATION } from './eaux.js?v=0.50.0';
+import { createRng } from './lib/rng.js?v=0.51.0';
+import { SECTEURS } from './data/secteur.js?v=0.51.0';
+import { validerSecteur } from './tranchees.js?v=0.51.0';
+import { GENERATEUR as G, ID_ALEATOIRE } from './data/generateur.js?v=0.51.0';
+import { PONTS_JEU } from './data/ponts.js?v=0.51.0';
+import { fleuveEn, VARIATION } from './eaux.js?v=0.51.0';
 
 const dans = (rng, [a, b]) => a + rng() * (b - a);
 const entier = (rng, [a, b]) => Math.floor(dans(rng, [a, b + 1]));
@@ -20,7 +20,7 @@ function tirer(rng, S, sansEau) {
   // un fleuve en travers du no man's land, avec ses ponts
   if (!sansEau && rng() < G.chances.fleuve) {
     const f = G.fleuve, r = arrondi(dans(rng, f.r), 0.5), yc = dans(rng, f.yMilieu), d = dans(rng, [-f.pente, f.pente]);
-    const x0 = -150, x1 = L + 150, y0 = yc + d, y1 = yc - d;
+    const x0 = -f.debord, x1 = L + f.debord, y0 = yc + d, y1 = yc - d;
     objets.push({ o: 'fleuve', x: x0, y: arrondi(y0), x2: x1, y2: arrondi(y1), r });
     const n = entier(rng, f.ponts), types = Object.keys(PONTS_JEU), porteurs = types.filter(t => PONTS_JEU[t].char);
     const fleuve = objets[0];
@@ -33,7 +33,7 @@ function tirer(rng, S, sansEau) {
   // un fleuve derrière les lignes (d'un des deux camps) : dans la marge, hors des tranchées
   if (!sansEau && rng() < G.chances.fleuveArriere) {
     const r = arrondi(dans(rng, G.fleuve.r), 0.5), derriereNous = rng() < 0.5, c = r * 2.8, y = derriereNous ? bandeNous2 + c + 20 + rng() * 60 : bandeEux - c - 20 - rng() * 60;
-    objets.push({ o: 'fleuve', x: -150, y: arrondi(y + dans(rng, [-12, 12])), x2: L + 150, y2: arrondi(y + dans(rng, [-12, 12])), r });
+    objets.push({ o: 'fleuve', x: -G.fleuve.debord, y: arrondi(y + dans(rng, [-12, 12])), x2: L + G.fleuve.debord, y2: arrondi(y + dans(rng, [-12, 12])), r });
     traits.push('fleuve');
   }
   // des lacs : dans les marges d'un des quatre côtés
@@ -106,6 +106,8 @@ function decrire(traits, S) {
   a('marecage', 'des marécages où l\'on s\'enlise');
   a('montagne', 'des hauteurs dominent le front');
   a('collines', 'des collines dans le secteur');
+  const saison = S.saison === 'hiver' ? 'en hiver : neige et gel' : S.saison === 'ete' ? 'en été : un sol sec, des jours de forte chaleur' : '';
+  if (saison) eau.push(saison);
   const sol = S.relief.nappe < -0.6 ? 'la nappe affleure : la boue vient vite' : S.relief.bosses > 1.2 ? 'le sol est très accidenté' : 'un sol assez doux';
   const phrase = [...eau, sol].join(' ; ');
   return phrase.charAt(0).toUpperCase() + phrase.slice(1) + '. Tirée de la graine : elle change à chaque fois.';
@@ -128,6 +130,7 @@ export function genererCarte(graine) {
   S.relief = { bosses: +dans(rng, reg.bosses).toFixed(2), ondulation: +dans(rng, reg.ondulation).toFixed(2), nappe: +dans(rng, reg.nappe).toFixed(2) };
   S.arbres = entier(rng, v.arbres); S.bois = entier(rng, v.bois); S.haies = entier(rng, v.haies); S.buissons = entier(rng, v.buissons);
   S.pluieAuMoins = entier(rng, G.pluieAuMoins);
+  { const u = rng(); let a = 0; for (const [id, p] of Object.entries(G.saisons)) { a += p; if (u < a) { S.saison = id; break; } } S.saison ??= 'automne'; }      // la saison, tirée en dernier : les autres tirages sont ceux d'avant
   const n = G.noms, dominant = traits.includes('cote') ? 'cote' : traits.includes('fleuve') ? 'fleuve' : traits.includes('marecage') ? 'marecage' : traits.includes('montagne') ? 'montagne' : traits.includes('lac') ? 'lac' : 'plaine';
   S.nom = `${n[dominant][Math.floor(rng() * n[dominant].length)]} ${n.lieux[Math.floor(rng() * n.lieux.length)]}`;
   S.resume = decrire(traits, S);

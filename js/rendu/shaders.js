@@ -298,6 +298,9 @@ export const plMat = {
   f: `uniform vec3 uCol; void main() { if (gl_PointCoord.x > 0.5) discard; gl_FragColor = vec4(uCol, 1.0); }`,
 };
 
+// la neige (v0.51.0) : les mêmes points que la pluie, plus lents, ronds (des flocons, pas des traits)
+export const neigeMat = { v: plMat.v, f: `uniform vec3 uCol; void main() { gl_FragColor = vec4(uCol, 1.0); }` };
+
 export const brumeMat = {
   v: `void main() { gl_Position = vec4(position.xy, -1.0, 1.0); }`,
   f: `uniform vec3 uCol; uniform float uH;

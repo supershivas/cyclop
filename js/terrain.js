@@ -16,11 +16,12 @@
      nuit elle se fait en lot.
    - Les versions (`versionLigne`, `versionMorceau`) disent au rendu ce qui a
      changé ; le terrain ne connaît pas le rendu. */
-import { hash2 } from './lib/rng.js?v=0.50.0';
-import { CALIBRES } from './data/calibres.js?v=0.50.0';
-import { appliquerFormes } from './formes.js?v=0.50.0';
-import { poserObjets } from './objets.js?v=0.50.0';
-import { poserEaux, poserMarecages, poserPonts, detruirePont, viderLesEaux } from './eaux.js?v=0.50.0';
+import { hash2 } from './lib/rng.js?v=0.51.0';
+import { CALIBRES } from './data/calibres.js?v=0.51.0';
+import { appliquerFormes } from './formes.js?v=0.51.0';
+import { poserObjets } from './objets.js?v=0.51.0';
+import { SAISONS } from './data/meteo.js?v=0.51.0';
+import { poserEaux, poserMarecages, poserPonts, detruirePont, viderLesEaux } from './eaux.js?v=0.51.0';
 
 export const ETAT = { SEC: 0, HUMIDE: 1, BOUE: 2, EAU: 3, GLACE: 4 };
 export const MORCEAU = 25;             // cases : le côté d'un morceau de maillage (mesuré, rendu logiciel : à 100, la moitié du champ restait dessinée au zoom 4 ; à 25, 6 500 triangles au lieu de 15 600 au zoom 8)
@@ -51,7 +52,8 @@ export function creerTerrain(graine, secteur, R) {
   const g = graine | 0;
   // le caractère de la carte (v0.29.0) : `bosses` et `ondulation` sont des facteurs, `crete` une bosse allongée d'est en ouest, `nappe` des m de plus ou de moins sous le sol
   const Rf = secteur.relief || {}, fB = Rf.bosses ?? 1, fO = Rf.ondulation ?? 1, cr = Rf.crete;
-  const niveau = R.terrain.nappeMin + bruit(7, 3, 1, g + 99) * (R.terrain.nappeMax - R.terrain.nappeMin) + (Rf.nappe ?? 0);
+  const niveau = R.terrain.nappeMin + bruit(7, 3, 1, g + 99) * (R.terrain.nappeMax - R.terrain.nappeMin) + (Rf.nappe ?? 0) + (SAISONS[secteur.saison]?.nappe ?? 0);       // la saison : l'été, un sol qui boit (v0.51.0)
+  const humidSaison = SAISONS[secteur.saison]?.humidite ?? 1;
   for (let j = 0; j < H; j++) for (let i = 0; i < W; i++) {
     const c = j * W + i, x = i - ox, y = j - oy;
     const lent = bruit(x, y, 150, g + 1);                     // le relief lissé (la nappe le suit)
@@ -62,7 +64,7 @@ export function creerTerrain(graine, secteur, R) {
       + 3;                                                    // m au-dessus du zéro du secteur
     base[c] = Math.round(h * 4);
     nappe[c] = (lent - 0.5) * 2 * R.terrain.bosses * 0.6 * fB + 3 - niveau;
-    humid[c] = R.hydro.humiditeDepart * (0.7 + 0.6 * bruit(x, y, 23, g + 4));
+    humid[c] = R.hydro.humiditeDepart * (0.7 + 0.6 * bruit(x, y, 23, g + 4)) * humidSaison;
     // l'herbe : par plaques, plus drue dans les creux du relief lissé
     herbe[c] = Math.max(0, Math.min(3, Math.floor((bruit(x, y, 11, g + 6) * 0.8 + bruit(x, y, 37, g + 8) * 0.6 - lent * 0.3) * 4 - 1)));
   }
@@ -70,7 +72,8 @@ export function creerTerrain(graine, secteur, R) {
   poserEaux(base, profond, { W, H, ox, oy }, secteur.objets);   // les lacs et les fleuves (eaux.js) creusent à plat, après le relief
   const Tp = { pont, pontH, pontEau, pontsListe, profond, W, H, versionPonts: 0 };
   poserPonts(base, profond, Tp, { W, H, ox, oy }, secteur.objets);   // puis les ponts, sur l'eau
-  poserMarecages(base, nappe, eau, humid, herbe, profond, pont, { W, H, ox, oy }, secteur.objets);   // les marécages : la nappe au-dessus du sol, par plaques (v0.50.0)
+  const roseaux = [];
+  poserMarecages(base, nappe, eau, humid, herbe, profond, pont, { W, H, ox, oy }, secteur.objets, roseaux);   // les marécages : la nappe au-dessus du sol, par plaques (v0.50.0)
   // Quelques arbres, loin des bords
   const arbres = [];
   for (let k = 0; arbres.length < secteur.arbres && k < secteur.arbres * 40; k++) {
@@ -110,7 +113,7 @@ export function creerTerrain(graine, secteur, R) {
   viderLesEaux(arbres, profond, W); viderLesEaux(buissons, profond, W);      // ni arbre ni buisson dans l'eau
   const mw = Math.ceil(W / MORCEAU), mh = Math.ceil(H / MORCEAU);
   return {
-    W, H, base, diff, nappe, eau, humid, arbres, herbe, buissons, profond, pont, pontH, pontEau, pontsListe, versionPonts: 0,
+    W, H, base, diff, nappe, eau, humid, arbres, herbe, buissons, roseaux, profond, pont, pontH, pontEau, pontsListe, versionPonts: 0,
     versionHerbe: 1,                            // l'herbe ou les buissons ont changé (rendu)
     versionLigne: new Uint32Array(H),           // couleur d'une rangée changée (rendu)
     versionMorceau: new Uint32Array(mw * mh),   // hauteurs d'un morceau changées (rendu)

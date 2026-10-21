@@ -1,5 +1,11 @@
 # Journal des versions
 
+## 0.51.0 — 2026-10-21
+- Des roseaux dans les marécages (de hautes touffes qui ondulent) ; les marécages sont plus rares sur la carte aléatoire (15 % des cartes)
+- Les saisons : l'hiver tire de la neige (elle tombe, blanchit le sol par plaques), du gel et du brouillard, jamais de pluie ; l'été du temps sec et des jours de forte chaleur, avec un sol qui boit (les trous ne se remplissent plus) ; l'automne est le temps d'avant. La carte aléatoire tire sa saison
+- Les fleuves sortent du terrain et continuent dans le décor hors carte en suivant leur vrai tracé (méandres et largeur comprises)
+- Choix de la carte : à gauche les titres seulement ; un clic sur l'aperçu l'agrandit, on le parcourt (glisser, Maj, molette), un clic ou Échap le réduit
+
 ## 0.50.0 — 2026-10-21
 - Des marécages : un disque aux bords rongés où la nappe affleure par plaques (flaques peu profondes qu'on traverse très lentement, boue), dans l'éditeur de carte (outil Marécage) et dans la carte aléatoire
 - Les rives sont moins géométriques : un lac ou une côte a des anses et des caps (±22 % du rayon), un fleuve s'élargit et se resserre (±35 %) et serpente autour de son trait ; les cartes déjà faites changent de forme

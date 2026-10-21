@@ -5,8 +5,8 @@
    Les faces verticales (les parois tournées vers nous) d'au moins un demi-mètre
    prennent le ton plus sombre (OMBRE) ; une marche d'un quart garde la couleur
    du dessus (sinon chaque courbe de niveau des bosses se lit comme un trou). */
-import { INDICE, ORDRE } from './palette.js?v=0.50.0';
-import { ETAT, etat, hauteurQ } from './terrain.js?v=0.50.0';
+import { INDICE, ORDRE } from './palette.js?v=0.51.0';
+import { ETAT, etat, hauteurQ } from './terrain.js?v=0.51.0';
 
 const I = INDICE;
 // [terre jetée (plus claire), plat, creusé ou à l'ombre]
@@ -34,7 +34,15 @@ const lisse = (x, y, echelle, k) => {
   return (bruit(i, j, k) * (1 - a) + bruit(i + 1, j, k) * a) * (1 - b) + (bruit(i, j + 1, k) * (1 - a) + bruit(i + 1, j + 1, k) * a) * b;
 };
 
+// La neige (v0.51.0 ; `gel` vaut 2) : le sol nu se couvre par plaques de brume (les creux, la terre jetée et les tranchées restent de terre : la neige y fond, et les soldats s'y lisent) ; les rides de l'eau gelée restent
+function neigeSur(i, j, base, d) {
+  if (d !== 0) return base;
+  const n = lisse(i, j, 12, 11) * 0.8 + lisse(i, j, 4, 13) * 0.2;
+  return n > 0.34 ? (bruit(i, j, 21) < 0.07 ? I.o : I.r) : base;
+}
 export function couleurCase(T, i, j, R, gel = false) {
+  const neige = gel === 2;
+  if (neige) { const c = couleurCase(T, i, j, R, 1); const e = T.profond[j * T.W + i] || T.pont[j * T.W + i] || T.pontEau[j * T.W + i] ? null : etat(T, j * T.W + i, R, 1); return e === null || e === ETAT.EAU || e === ETAT.GLACE ? c : neigeSur(i, j, c, T.diff[j * T.W + i]); }
   const c = j * T.W + i;
   const e = etat(T, c, R, gel);
   if (e === ETAT.EAU || e === ETAT.GLACE) {

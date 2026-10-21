@@ -1,8 +1,8 @@
 // La végétation : les arbres (un tronc, quelques branches nues ; abattus, une souche), les buissons (deux ou trois boîtes basses ; arrachés, il
 // n'en reste rien) et l'herbe (des touffes de cinq brins, seulement de près, qui ondulent au vent). Seulement ce qu'on voit est dessiné : tous,
 // ils coûtaient des dizaines de milliers de triangles (CLAUDE.md, « Les arbres et les buissons dessinés partout »). Le dessin seulement.
-import * as SH from './shaders.js?v=0.50.0';
-import { creerGeometries } from './geometries.js?v=0.50.0';
+import * as SH from './shaders.js?v=0.51.0';
+import { creerGeometries } from './geometries.js?v=0.51.0';
 
 // `THREE`, `scene`, `col`, `camera`, `vue`, `solY` (la hauteur moyenne du sol), `distance(zoom)`, `surface(x, z)` et `petit()` (aux zooms où un soldat n'est qu'un point)
 // viennent de creerRendu ; `terrain()`, `vide()` et `ombres()` sont lus à chaque appel (le terrain change à chaque bataille). `ombres()` rend `{ ARBRES_OMBRES, aoPos, aoGeo, soleil }` :
@@ -141,10 +141,60 @@ export function creerVegetation({ THREE, scene, col, camera, vue, solY: SOL_Y, d
   }
   let vuesHerbe = 0;
 
+  // ─── Les roseaux des marécages (v0.51.0) : de hautes touffes (1,3 à 2,2 m) de brins serrés, aux pointes plus claires, qui ondulent plus que l'herbe ; seulement de près et dans l'écran ───
+  let roseaux = null;                  // { x, z, c } : une touffe par case de roseaux (`T.roseaux`), tirée une fois
+  const ROSEAUX_MAX = 3000;
+  const rPos = new Float32Array(ROSEAUX_MAX * 3);
+  // le maillage n'est créé qu'au premier marécage vu : un objet de plus dans la scène tire des identifiants avec `Math.random` (three.js), et l'ordre de ces tirages fait l'empreinte du dessin (CLAUDE.md)
+  let roseauGeo = null, roseauMat = null, roseauMesh = null;
+  function creerRoseaux() {
+    roseauGeo = new THREE.InstancedBufferGeometry();
+    const p = [], h = [];
+    for (const [x, l, ht] of [[-0.4, -0.15, 1.5], [-0.26, 0.1, 1.9], [-0.12, -0.08, 2.2], [0.02, 0.12, 1.7], [0.14, -0.1, 2.0], [0.27, 0.1, 1.4], [0.4, 0.16, 1.8]]) {
+      p.push(x - 0.05, 0, 0, x + 0.05, 0, 0, x + l, ht, 0); h.push(0, 0, 1);
+    }
+    roseauGeo.setAttribute('position', new THREE.Float32BufferAttribute(p, 3));
+    roseauGeo.setAttribute('aHaut', new THREE.Float32BufferAttribute(h, 1));
+    roseauGeo.setAttribute('aPos', new THREE.InstancedBufferAttribute(rPos, 3).setUsage(THREE.DynamicDrawUsage));
+    roseauGeo.instanceCount = 0;
+    roseauMat = new THREE.ShaderMaterial({
+      uniforms: { uT: { value: 0 }, uBas: { value: col('w') }, uHaut: { value: col('h') } },
+      vertexShader: SH.herbeMat.v, fragmentShader: SH.herbeMat.f, side: THREE.DoubleSide,
+    });
+    roseauMesh = new THREE.Mesh(roseauGeo, roseauMat); roseauMesh.frustumCulled = false; roseauMesh.renderOrder = 1;
+    scene.add(roseauMesh);
+  }
+  function preparerRoseaux() {
+    const T = terrain(), xs = [], zs = [], cs = [];
+    for (const c of T.roseaux || []) {
+      const i = c % T.W, j = (c / T.W) | 0, hsh = ((i * 2246822519) ^ (j * 3266489917)) >>> 0;
+      xs.push(i + ((hsh >>> 8) % 100) / 100); zs.push(j + ((hsh >>> 16) % 100) / 100); cs.push(c);
+    }
+    roseaux = { x: Float32Array.from(xs), z: Float32Array.from(zs), c: Int32Array.from(cs) };
+  }
+  function majRoseaux(x0, x1, z0, z1, e, masquee) {
+    const T = terrain();
+    if (masquee || !roseaux || !roseaux.x.length) { if (roseauMesh) roseauMesh.visible = false; return; }
+    if (!roseauMesh) creerRoseaux();
+    if (!vide()) roseauMesh.visible = true;
+    let k = 0;
+    const { x: X, z: Z, c: Cc } = roseaux, cp = camera.position, lim = (distance(vue.zoom) * 1.4) ** 2;
+    for (let n = 0; n < X.length && k < ROSEAUX_MAX; n++) {
+      const x = X[n], y = Z[n];
+      if (x < x0 || x > x1 || y < z0 || y > z1 || T.diff[Cc[n]] < -1 || T.profond[Cc[n]] || (x - cp.x) ** 2 + (SOL_Y - cp.y) ** 2 + (y - cp.z) ** 2 > lim) continue;      // (un cratère profond les arrache)
+      const cxp = e[0] * x + e[4] * SOL_Y + e[8] * y + e[12], cyp = e[1] * x + e[5] * SOL_Y + e[9] * y + e[13], cw = e[3] * x + e[7] * SOL_Y + e[11] * y + e[15];
+      if (cxp < -1.05 * cw || cxp > 1.05 * cw || cyp < -1.2 * cw || cyp > 1.1 * cw) continue;
+      rPos[k * 3] = x; rPos[k * 3 + 1] = surface(x, y); rPos[k * 3 + 2] = y;
+      k++;
+    }
+    const a = roseauGeo.attributes.aPos; a.clearUpdateRanges(); a.addUpdateRange(0, k * 3); a.needsUpdate = true;
+    roseauGeo.instanceCount = k;
+  }
+
   return {
-    preparer() { preparerArbres(); preparerBuissons(); preparerHerbe(); },      // une bataille est branchée
-    majArbres, majBuissons, majHerbe,
-    setTemps(t) { herbeMat.uniforms.uT.value = t; },                              // le vent
+    preparer() { preparerArbres(); preparerBuissons(); preparerHerbe(); preparerRoseaux(); },      // une bataille est branchée
+    majArbres, majBuissons, majHerbe, majRoseaux,
+    setTemps(t) { herbeMat.uniforms.uT.value = t; if (roseauMat) roseauMat.uniforms.uT.value = t * 1.3; },                              // le vent
     get vuesHerbe() { return vuesHerbe; },                                       // les touffes dessinées (pour les stats)
   };
 }

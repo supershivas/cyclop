@@ -2,8 +2,8 @@
 // mêmes coordonnées que `formes.js` (mètres du SECTEUR). Logique pure, sans hasard. Une eau est creusée d'un coup à plat (au niveau de sa rive la plus basse moins un mètre, au mètre près : le sol se
 // dessine en marches d'un mètre) et marquée `profond` : on n'y passe pas (les champs de coûts la contournent, un homme qui s'y trouve la quitte à peine), sauf sur un pont (`ponts` : v0.44.0).
 // Un fleuve suit le terrain : son niveau est celui de la rive la plus basse sur ±15 m de son cours, pas un niveau pour tout le cours.
-import { distanceForme, extremite } from './formes.js?v=0.50.0';
-import { hash2 } from './lib/rng.js?v=0.50.0';
+import { distanceForme, extremite } from './formes.js?v=0.51.0';
+import { hash2 } from './lib/rng.js?v=0.51.0';
 
 export const EAUX = ['lac', 'fleuve'];
 export const PONT_AU_MOINS = 4;          // quarts : le tablier est à 1 m au moins au-dessus de l'eau
@@ -76,7 +76,7 @@ export function poserEaux(base, profond, { W, H, ox, oy }, objets) {
 /* Les marécages (v0.50.0 ; `{ o: 'marecage', x, y, r }`) : pas d'eau profonde, un sol détrempé. Dans le contour d'un disque aux bords rongés (±35 % du rayon), la nappe monte au-dessus du sol, par plaques (un bruit de 5 m) : là
    l'eau stagne en flaques peu profondes (de l'eau où l'on marche très lentement), ailleurs de la boue ; plus on va vers le cœur, plus c'est mouillé. La nappe tient l'eau en place (`hydroLignes` : `manque`), la pluie la fait déborder un peu.
    Sans hasard (le bruit vient de la position de l'objet). L'herbe n'y pousse pas. Passe après les eaux profondes (qu'il ne remplace pas) et laisse les tabliers de ponts à sec. */
-export function poserMarecages(base, nappe, eau, humid, herbe, profond, pont, { W, H, ox, oy }, objets) {
+export function poserMarecages(base, nappe, eau, humid, herbe, profond, pont, { W, H, ox, oy }, objets, roseaux = []) {
   for (const O of objets || []) {
     if (O.o !== 'marecage' || !(O.r > 0)) continue;
     const g = graineDe(O) + 91, m = O.r * 1.45;
@@ -90,6 +90,7 @@ export function poserMarecages(base, nappe, eau, humid, herbe, profond, pont, { 
       const prof = nappe[c] - base[c] / 4;
       if (prof > 0) { eau[c] = Math.max(eau[c], prof); herbe[c] = 0; }
       humid[c] = Math.max(humid[c], 0.6 + 0.4 * mouille);
+      if (u > 0.12 && hash2(i, j, g + 9) < 0.08 + 0.42 * mouille) roseaux.push(c);       // des roseaux : dans l'eau peu profonde et la boue, plus drus vers le cœur (le dessin les lit : `rendu/vegetation.js`)
     }
   }
 }

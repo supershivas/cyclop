@@ -452,3 +452,33 @@ test('un marécage met la nappe au-dessus du sol par plaques : de l\'eau peu pro
   assert.ok(eau > 150 && boue > 100, `des flaques (${eau}) et de la boue (${boue})`);
   assert.equal(dehors, 0, 'rien au-delà');
 });
+
+group('saisons, roseaux, fleuves qui sortent (v0.51.0)');
+test('l\'hiver tire de la neige et du gel sans pluie, l\'été du sec et de la chaleur ; l\'automne est le temps d\'avant ; la neige blanchit le sol, la chaleur le sèche', async () => {
+  const { nouvelleBataille } = await import('../js/bataille.js');
+  const { couleurCase } = await import('../js/apparence.js');
+  const { INDICE: I } = await import('../js/palette.js');
+  const nb = (saison, g) => { SECTEURS.essai.saison = saison; try { return nouvelleBataille(g, R, { soldats: 20, jours: 14 }); } finally { delete SECTEURS.essai.saison; } };
+  const hiver = new Set(), ete = new Set();
+  for (const g of [1, 2, 3, 4]) { nb('hiver', g).etat.meteo.forEach(m => hiver.add(m)); nb('ete', g).etat.meteo.forEach(m => ete.add(m)); }
+  assert.ok(hiver.has('neige') && hiver.has('gel') && !hiver.has('pluie'), `hiver : ${[...hiver]}`);
+  assert.ok(ete.has('canicule') && ete.has('sec') && !ete.has('neige') && !ete.has('gel'), `été : ${[...ete]}`);
+  assert.equal(nb('hiver', 5).etat.meteo[0], 'gel'); assert.equal(nb('ete', 5).etat.meteo[0], 'canicule');
+  assert.deepEqual(nb(undefined, 7).etat.meteo, nouvelleBataille(7, R, { soldats: 20, jours: 14 }).etat.meteo, 'sans saison : le temps d\'avant');
+  // la neige : de la brume sur le sol nu, plus que sans neige ; les cratères restent de terre
+  const B = nb('hiver', 3), T = B.terrain;
+  let blanc = 0, nu = 0; for (let j = 100; j < 160; j++) for (let i = 100; i < 160; i++) { const c = couleurCase(T, i, j, R, 2); if (c === I.r || c === I.o) blanc++; if (couleurCase(T, i, j, R, 1) === I.r || couleurCase(T, i, j, R, 1) === I.o) nu++; }
+  assert.ok(blanc > 800 && blanc > nu + 800, `de la neige : ${blanc} cases contre ${nu}`);
+  // l'été, le sol est plus sec qu'en automne
+  const sec = nb('ete', 3).terrain, hum = nb(undefined, 3).terrain; let hs = 0, hh = 0; for (let c = 0; c < sec.humid.length; c += 13) { hs += sec.humid[c]; hh += hum.humid[c]; }
+  assert.ok(hs < hh * 0.6, `sol d'été plus sec : ${hs.toFixed(0)} contre ${hh.toFixed(0)}`);
+});
+test('des roseaux dans les marécages, seulement là ; un fleuve de la carte aléatoire sort du terrain des deux côtés', async () => {
+  const S = { largeur: 160, hauteur: 160, arbres: 0, objets: [{ o: 'marecage', x: 80, y: 80, r: 30 }] };
+  const T = creerTerrain(3, S, R);
+  assert.ok(T.roseaux.length > 150, `des roseaux : ${T.roseaux.length}`);
+  assert.ok(T.roseaux.every(c => Math.hypot((c % 160) - 80, ((c / 160) | 0) - 80) < 45), 'dans le marécage');
+  assert.equal(creerTerrain(3, { ...S, objets: [] }, R).roseaux.length, 0);
+  const { genererCarte } = await import('../js/generateur.js');
+  for (let g = 1; g <= 60; g++) for (const o of genererCarte(g).objets) if (o.o === 'fleuve') assert.ok(Math.min(o.x, o.x2) < -220 && Math.max(o.x, o.x2) > 620, `le fleuve de la carte ${g} sort du terrain (marges de 220 m)`);
+});

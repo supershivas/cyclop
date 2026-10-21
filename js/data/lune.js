@@ -1,13 +1,13 @@
 // La lune et le ciel de nuit (Jérôme, v0.40.0 : « les phases de la lune de jour en jour, une nuit nuageuse, des étoiles filantes »). Tout se lit du jour, de la graine et
 // du temps de la journée : aucune sauvegarde, aucun tirage du générateur de la bataille (un hachage graine-jour). Le dessin et l'obscurité de la nuit s'en servent ;
 // la logique de la bataille n'en lit rien.
-import { hash2 } from '../lib/rng.js?v=0.50.0';
+import { hash2 } from '../lib/rng.js?v=0.51.0';
 
 export const CYCLE = 29.53;                    // jours d'une lunaison
 // la part de lumière que le temps laisse passer (la pluie et le brouillard étouffent la lune)
-export const CLARTE = { sec: 1, gel: 1, pluie: 0.25, brouillard: 0.45 };
+export const CLARTE = { sec: 1, gel: 1, pluie: 0.25, brouillard: 0.45, neige: 0.8, canicule: 1 };
 // la couverture de nuages de la nuit : le temps d'abord (une nuit de gel est claire), puis un écart de nuit en nuit
-const COUVERTURE = { sec: 0.35, gel: 0.15, pluie: 0.8, brouillard: 0.6 };
+const COUVERTURE = { sec: 0.35, gel: 0.15, pluie: 0.8, brouillard: 0.6, neige: 0.7, canicule: 0.1 };
 
 /* La lune de la nuit du jour donné : `p` (0 nouvelle, 0,25 premier quartier, 0,5 pleine, 0,75 dernier quartier), `eclairement` (0 à 1 : la part éclairée),
    et sa place dans le ciel (azimut, hauteur, en radians). Elle change de jour en jour d'un trentième de lunaison. */
