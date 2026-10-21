@@ -711,3 +711,34 @@ test('le prochain grade : celui du rang au-dessus, rien pour un capitaine', () =
   assert.equal(prochainGrade(0, 7), 'soldat de 1re classe');
   assert.equal(prochainGrade(1, 7), '');      // en face, les deux classes sont des Musketier
 });
+
+group('mitraillage');
+const centreRegiment = (B, id) => { const A = B.armee; let x = 0, y = 0, n = 0; for (let i = 0; i < A.n; i++) if (A.reg[i] === id) { x += A.x[i]; y += A.y[i]; n++; } return [x / n, y / n]; };
+test('le mitraillage : une passe en bande, des morts dans la bande et nulle part ailleurs, puis la recharge', () => {
+  const B = petite();
+  const [cx, cy] = centreRegiment(B, 8);       // un régiment d'en face
+  const A = B.armee, dedans = i => Math.abs(A.x[i] - cx) <= 6 && Math.abs(A.y[i] - cy) <= 30;
+  const avant = new Set(); for (let i = 0; i < A.n; i++) if (dedans(i)) avant.add(A.id[i]);
+  assert.ok(avant.size > 5, 'des hommes dans la bande');
+  const vus = new Set(); for (let i = 0; i < A.n; i++) vus.add(A.id[i]);
+  assert.ok(ordonnerBarrage(B, 'avion', cx, cy).ok);
+  assert.ok(ordonnerBarrage(B, 'avion', cx, cy).refus, 'recharge');
+  let passe = 0;
+  for (let k = 0; k < 150; k++) { avancer(B); passe += B.evenements.filter(e => e.type === 'mitraillage').length; }
+  assert.equal(passe, 1, 'un événement de passe');
+  const restent = new Set(); for (let i = 0; i < A.n; i++) restent.add(A.id[i]);
+  const tombes = [...vus].filter(id => !restent.has(id));
+  let blesses = 0; for (let i = 0; i < A.n; i++) if (A.blessure[i] && avant.has(A.id[i])) blesses++;
+  assert.ok(tombes.length + blesses > 0, 'des touchés (tués ou blessés)');
+  assert.ok(tombes.every(id => avant.has(id)), 'seulement dans la bande');
+  assert.ok(B.etat.mitraillages.length === 0);
+});
+test('le mitraillage relu en attente donne la même partie', () => {
+  const a = petite(), [cx, cy] = centreRegiment(a, 8);
+  ordonnerBarrage(a, 'avion', cx, cy);
+  for (let k = 0; k < 30; k++) avancer(a);
+  const b = restaurer(photo(a), R);
+  assert.equal(b.etat.mitraillages.length, 1);
+  for (let k = 0; k < 120; k++) { avancer(a); avancer(b); }
+  assert.equal(empreinte(a), empreinte(b));
+});

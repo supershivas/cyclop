@@ -1,8 +1,7 @@
 {
-  "version": "0.45.0",
+  "version": "0.46.0",
   "date": "2026-10-21",
   "changes": [
-    "Au labo, les chars d'assaut sont cinq engins historiques en volumes (Mark IV et sa livrée allemande, Renault FT, Schneider, Saint-Chamond, A7V), à regarder à la caméra libre",
-    "Au labo, trois nuages de gaz en volumes (bouteilles de chlore, obus à phosgène et ypérite, nappe qui coule dans les creux) et quatre propositions d'avions (réglage de tir, Baron rouge, mitraillage, bombardiers de nuit)"
+    "Un quatrième bouton, « Avion » (touche 4) : un avion mitraille en ligne la zone visée, 12 m de large sur 60 m de long, avec traceurs et poussière ; les hommes de la bande sont touchés ou prennent peur, les deux camps y compris ; il rentre en 90 s"
   ]
 }

@@ -14,19 +14,20 @@
    La sauvegarde (photo) garde la graine, la liste compacte des impacts, l'état
    de la foule et les petites couches de logique ; jamais le relief : il se
    rejoue depuis la graine et les impacts (rejouerTerrain). */
-import { createRng, hash2 } from './lib/rng.js?v=0.45.0';
-import { impact, hydroLignes, etat as etatCase, vitesseEtat, vitesseCase, ETAT } from './terrain.js?v=0.45.0';
-import { creerArmee, ajouterSoldat, construireGrille, pasArmee, tuerDans, effrayer, compacter, photoArmee, restaurerArmee, b64, deB64, DENSITE, place } from './army.js?v=0.45.0';
-import { ligneSous } from './tranchees.js?v=0.45.0';
-import { terrainDuSecteur } from './secteur-terrain.js?v=0.45.0';
-import { calculerCouts, creerCacheChamps, dimensionsCouts, BLOC } from './champs.js?v=0.45.0';
-import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.45.0';
-import { METEO, TRANSITIONS, PREVISION_JUSTE } from './data/meteo.js?v=0.45.0';
-import { SECTEURS } from './data/secteur.js?v=0.45.0';
-import { REGIMENTS } from './data/lexique.js?v=0.45.0';
-import { STANCES, STANCE_DEFAUT } from './data/stances.js?v=0.45.0';
-import { grade } from './identite.js?v=0.45.0';
-import { corvees, rejouerTravaux } from './nuit.js?v=0.45.0';
+import { createRng, hash2 } from './lib/rng.js?v=0.46.0';
+import { impact, hydroLignes, etat as etatCase, vitesseEtat, vitesseCase, ETAT } from './terrain.js?v=0.46.0';
+import { creerArmee, ajouterSoldat, construireGrille, pasArmee, tuerDans, effrayer, compacter, photoArmee, restaurerArmee, b64, deB64, DENSITE, place } from './army.js?v=0.46.0';
+import { ligneSous } from './tranchees.js?v=0.46.0';
+import { terrainDuSecteur } from './secteur-terrain.js?v=0.46.0';
+import { calculerCouts, creerCacheChamps, dimensionsCouts, BLOC } from './champs.js?v=0.46.0';
+import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.46.0';
+import { AVION, MITRAILLAGE } from './data/mitraillage.js?v=0.46.0';
+import { METEO, TRANSITIONS, PREVISION_JUSTE } from './data/meteo.js?v=0.46.0';
+import { SECTEURS } from './data/secteur.js?v=0.46.0';
+import { REGIMENTS } from './data/lexique.js?v=0.46.0';
+import { STANCES, STANCE_DEFAUT } from './data/stances.js?v=0.46.0';
+import { grade } from './identite.js?v=0.46.0';
+import { corvees, rejouerTravaux } from './nuit.js?v=0.46.0';
 
 export const PAS = 1 / 30;                 // s de jeu par pas
 export const NOUS = 0, EUX = 1;
@@ -107,6 +108,7 @@ export function nouvelleBataille(graine, R, opts = {}) {
     deux: !!opts.deux,                  // un second joueur commande en face (v0.30.0) : l'IA d'en face se tait, ses batteries rechargent comme les nôtres
     batteriesEux: Object.fromEntries(NOMS_CALIBRES.map(c => [c, 0])),
     barrages: [],
+    mitraillages: [],                   // les passes d'avion en attente (v0.46.0) : { camp, x, y, prochain }
     ia: { barrage: R.ia.barrage * 0.5, offensive: R.ia.offensive },
     temps: 0,                           // s de jeu écoulées, nuits non comptées
     rng: 0,
@@ -335,14 +337,14 @@ export function ordonnerStance(B, ids, stance, camp = NOUS) {
 
 /* Le barrage à sec : { ok } ou { refus }, sans rien changer (à deux, on dit le refus tout de suite, l'ordre part ensuite pour les deux machines). */
 export function peutBarrage(B, cal, x, y, camp = NOUS) {
-  const { etat } = B, C = CALIBRES[cal];
+  const { etat } = B, C = CALIBRES[cal] ?? (cal === AVION ? MITRAILLAGE : null);
   if (!C) return { refus: `Pas de batterie de ${cal}.` };
   if (etat.phase !== 'jour') return { refus: 'La nuit, les ordres attendent l\'aube.' };
   const Z = zone(B);
   if (x < Z.x0 || y < Z.y0 || x >= Z.x1 || y >= Z.y1) return { refus: 'Hors du secteur.' };
   if (camp === NOUS || etat.deux) {
-    const reste = (camp === NOUS ? etat.batteries : etat.batteriesEux)[cal] - etat.temps;
-    if (reste > 0) return { refus: `La batterie de ${cal} recharge : encore ${Math.ceil(reste)} s.` };
+    const reste = ((camp === NOUS ? etat.batteries : etat.batteriesEux)[cal] ?? 0) - etat.temps;
+    if (reste > 0) return { refus: cal === AVION ? `L'escadrille rentre : encore ${Math.ceil(reste)} s.` : `La batterie de ${cal} recharge : encore ${Math.ceil(reste)} s.` };
   }
   return { ok: true };
 }
@@ -350,7 +352,7 @@ export function peutBarrage(B, cal, x, y, camp = NOUS) {
 export function ordonnerBarrage(B, cal, x, y, camp = NOUS) {
   const { etat } = B;
   const S = secteurDuJeu(etat);
-  const C = CALIBRES[cal];
+  const C = CALIBRES[cal] ?? (cal === AVION ? MITRAILLAGE : null);
   void S;
   if (!C) return { refus: `Pas de batterie de ${cal}.` };
   if (etat.phase !== 'jour') return { refus: 'La nuit, les ordres attendent l\'aube.' };
@@ -358,10 +360,11 @@ export function ordonnerBarrage(B, cal, x, y, camp = NOUS) {
   if (x < Z.x0 || y < Z.y0 || x >= Z.x1 || y >= Z.y1) return { refus: 'Hors du secteur.' };
   if (camp === NOUS || etat.deux) {        // (en face, l'IA tire sans attendre ; un second joueur recharge comme nous)
     const bat = camp === NOUS ? etat.batteries : (etat.batteriesEux ??= Object.fromEntries(NOMS_CALIBRES.map(c => [c, 0])));
-    const reste = bat[cal] - etat.temps;
-    if (reste > 0) return { refus: `La batterie de ${cal} recharge : encore ${Math.ceil(reste)} s.` };
+    const reste = (bat[cal] ?? 0) - etat.temps;
+    if (reste > 0) return { refus: cal === AVION ? `L'escadrille rentre : encore ${Math.ceil(reste)} s.` : `La batterie de ${cal} recharge : encore ${Math.ceil(reste)} s.` };
     bat[cal] = etat.temps + C.recharge;
   }
+  if (cal === AVION) { etat.mitraillages.push({ camp, x, y, prochain: etat.temps + MITRAILLAGE.delai }); return { ok: true }; }
   etat.barrages.push({ camp, cal, x, y, reste: C.salve, prochain: etat.temps + 1.5 });
   return { ok: true };
 }
@@ -418,6 +421,7 @@ export function avancer(B) {
     }
   }
   etat.barrages = etat.barrages.filter(b => b.reste > 0);
+  if (etat.mitraillages.length) mitrailler(B, ctx, rng);
   enFace(B, rng);
   pasArmee(A, ctx);
   // un homme qui tombe fait peur à ceux qui sont à côté
@@ -786,6 +790,30 @@ export function abriDe(B, c) {
   return n ? 1 - B.R.nuit.abriParNiveau * n : 1;
 }
 
+/* Les passes d'avion dont l'heure est venue (v0.46.0) : tous les hommes de la bande, des deux camps, sont tirés dans l'ordre de leur indice (même partie à la relecture).
+   Un homme debout est touché avec la chance `letal` (les creux et tranchées l'abritent comme contre un obus), un touché meurt ou est blessé (`frapper`),
+   les autres de la bande prennent la peur ; leurs voisins, moins. L'événement `mitraillage` dit la passe au dessin (le sens : de l'arrière de son camp vers l'autre). */
+function mitrailler(B, ctx, rng) {
+  const { etat, terrain: T, armee: A, R } = B, M = MITRAILLAGE;
+  const reste = [];
+  for (const m of etat.mitraillages) {
+    if (etat.temps < m.prochain) { reste.push(m); continue; }
+    const hw = M.largeur / 2, hl = M.longueur / 2;
+    for (let i = 0; i < A.n; i++) {
+      if (A.mort[i] || Math.abs(A.x[i] - m.x) > hw || Math.abs(A.y[i] - m.y) > hl) continue;
+      let p = M.letal;
+      const ci = (A.y[i] | 0) * T.W + (A.x[i] | 0);
+      if (T.diff[ci] <= -2) p *= R.obus.abri;
+      if (ctx.abri) p *= ctx.abri(ci);
+      if (rng() < p) ctx.frapper(i, 'avion', M.gravite);
+      else A.peur[i] = Math.max(A.peur[i], M.peur);
+    }
+    effrayer(A, m.x, m.y, M.longueur / 2 + M.rayonPeur, R.soldat.peurObus, R.experience);
+    B.evenements.push({ type: 'mitraillage', camp: m.camp, x: m.x, y: m.y });
+  }
+  etat.mitraillages = reste;
+}
+
 function tomber(B, x, y, cal, ctx, gel) {
   const { etat, terrain: T, R } = B;
   const n = etat.impacts.length;
@@ -982,6 +1010,7 @@ export function* etapesRestaurer(p, R) {
   etat.parRegiment ??= Math.floor(etat.parCamp / secteurDuJeu(etat).regiments);
   etat.travaux ??= []; etat.tombes ??= []; etat.evacues ??= []; etat.nuits ??= [];   // (avant la v0.6.0 : pas de corvées)
   for (const reg of etat.regiments) { reg.moral ??= R.moral.depart; reg.deroute ??= false; reg.vivres ??= R.nuit.vivres; reg.stance ??= STANCE_DEFAUT; }   // (avant la v0.5.0 : pas de moral ; avant la v0.36.0 : pas de posture)
+  etat.mitraillages ??= [];   // (avant la v0.46.0 : pas d'avions)
   etat.deux ??= false; etat.batteriesEux ??= Object.fromEntries(NOMS_CALIBRES.map(c => [c, 0]));
   etat.abris ??= {};   // (avant la v0.11.0 : ni abris ; ni vivres)
   etat.troncons ??= []; etat.melee ??= etat.troncons.map(() => 0); etat.prises ??= etat.pertesJour.map(() => [0, 0]);   // (avant la v0.4.0 : pas de tranchées)

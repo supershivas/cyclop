@@ -1,5 +1,9 @@
 # Journal des versions
 
+## 0.46.0 — 2026-10-21
+- Un quatrième bouton, « Avion » (touche 4), à côté des trois calibres : un clic sur le sol, et un avion passe en ligne sur la bande visée (12 m de large, 60 m de long, le long de l'axe nord-sud), avec traceurs et poussière
+- Les hommes de la bande sont touchés (35 %, moins dans un creux ou une tranchée) ou effrayés, de l'un et l'autre camp ; l'escadrille ne revient qu'après 90 s (les obus : 40 à 110 s)
+
 ## 0.45.0 — 2026-10-21
 - Au labo, les chars d'assaut sont cinq engins dessinés à l'échelle (Mark IV, avec sa livrée allemande de Cambrai, Renault FT à tourelle tournante, Schneider CA 1, Saint-Chamond, A7V allemand), qu'on regarde à la caméra libre (glisser, Maj, molette, « Suivre », trois crans de zoom en plus)
 - Au labo, les gaz sont trois nuages en volumes translucides (les bouteilles de chlore de 1915, les obus à phosgène et à ypérite, une nappe qui coule dans les creux)
