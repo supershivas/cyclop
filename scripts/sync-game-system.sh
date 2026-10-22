@@ -1,6 +1,7 @@
 #!/bin/sh
 # Récupère depuis supershivas/game-system (branche main) :
-#   - CONVENTIONS.md -> ./.claude/conventions-jeu.md (toujours)
+#   - CONVENTIONS.md -> ./.claude/conventions-jeu.md (toujours ; importé par CLAUDE.md)
+#   - CONVENTIONS-DETAIL.md -> ./.claude/conventions-detail.md (toujours ; lu à la demande)
 #   - les modules (modules/*) et les outils (outils/*) -> mis à jour LÀ OÙ LE JEU
 #     EN A DÉJÀ UNE COPIE, et seulement dans les dossiers réservés : js/lib/,
 #     src/lib/ ou lib/ pour les modules, outils/ pour les outils. Jamais
@@ -33,6 +34,7 @@ fetch() {
 }
 
 fetch CONVENTIONS.md .claude/conventions-jeu.md
+fetch CONVENTIONS-DETAIL.md .claude/conventions-detail.md
 
 MODULES="app-update.js keys.js pointer.js loop.js pixel-canvas.js rng.js save.js debug.js sprites.js audio.js gamepad.js i18n.js gh-publish.js labo-shell.js labo-shell.css labo-timeline.js pixel-editor.js game.css"
 for file in $MODULES; do
@@ -41,7 +43,7 @@ for file in $MODULES; do
   done
 done
 
-OUTILS="navigateur.mjs test-run.mjs captures.mjs audit-ecran.mjs lisibilite.mjs stamp-version.mjs icones.mjs playtest/run.mjs"
+OUTILS="navigateur.mjs test-run.mjs captures.mjs audit-ecran.mjs lisibilite.mjs stamp-version.mjs icones.mjs decouper-claude-md.mjs playtest/run.mjs"
 for file in $OUTILS; do
   [ -f "outils/$file" ] && fetch "outils/$file" "outils/$file"
 done
