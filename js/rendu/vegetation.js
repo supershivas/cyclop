@@ -1,10 +1,10 @@
 // La végétation : les arbres (un tronc, quelques branches nues ; abattus, une souche), les buissons (deux ou trois boîtes basses ; arrachés, il
 // n'en reste rien) et l'herbe (des touffes de cinq brins, seulement de près, qui ondulent au vent). Seulement ce qu'on voit est dessiné : tous,
 // ils coûtaient des dizaines de milliers de triangles (docs/domaines/rendu.md, « Les arbres et les buissons dessinés partout »). Le dessin seulement.
-import * as SH from './shaders.js?v=0.53.1';
-import { creerGeometries } from './geometries.js?v=0.53.1';
-import { hash2 } from '../lib/rng.js?v=0.53.1';
-import { ARBRES_FAMILLES, ARBRES_TIRAGES, ARBRES_ECHELLE, ARBRES_AUTOMNE, ARBRES_PPM_FEUILLES } from '../data/arbres.js?v=0.53.1';
+import * as SH from './shaders.js?v=0.54.0';
+import { creerGeometries } from './geometries.js?v=0.54.0';
+import { hash2 } from '../lib/rng.js?v=0.54.0';
+import { ARBRES_FAMILLES, ARBRES_TIRAGES, ARBRES_ECHELLE, ARBRES_AUTOMNE, ARBRES_PPM_FEUILLES } from '../data/arbres.js?v=0.54.0';
 
 // `THREE`, `scene`, `col`, `camera`, `vue`, `solY` (la hauteur moyenne du sol), `distance(zoom)`, `surface(x, z)` et `petit()` (aux zooms où un soldat n'est qu'un point)
 // viennent de creerRendu ; `terrain()`, `vide()` et `ombres()` sont lus à chaque appel (le terrain change à chaque bataille). `ombres()` rend `{ ARBRES_OMBRES, aoPos, aoGeo, soleil }` :
@@ -98,7 +98,7 @@ export function creerVegetation({ THREE, scene, col, camera, vue, solY: SOL_Y, d
     if (!opts.feuilles) return 'nu';
     const h = saison?.();
     if (!h) return 'automne';
-    return h.neige ? 'neige' : h.saison === 'hiver' ? 'nu' : h.saison === 'ete' ? 'ete' : 'automne';
+    return h.enneige ? 'neige' : h.saison === 'hiver' ? 'nu' : h.saison === 'ete' ? 'ete' : 'automne';
   }
   function refaireFeuilles(mode) {
     modeVu = mode;

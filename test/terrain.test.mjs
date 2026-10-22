@@ -566,3 +566,24 @@ test('une saison imposée à la bataille l\'emporte sur celle du secteur : sol, 
   const sec = nouvelleBataille(3, R, { ...base, saison: 'ete' }).terrain, hum = nouvelleBataille(3, R, { ...base, saison: 'automne' }).terrain; let hs = 0, hh = 0; for (let c = 0; c < sec.humid.length; c += 13) { hs += sec.humid[c]; hh += hum.humid[c]; }
   assert.ok(hs < hh * 0.6, 'le terrain est généré avec la saison choisie');
 });
+
+group('l\'hiver sous la neige, ses temps et la température (v0.54.0)');
+test('cinq temps d\'hiver, jamais de pluie ni de sec ; le sol est enneigé et porte chaque jour ; une température par jour, stable et dans sa fourchette', async () => {
+  const { nouvelleBataille, horloge } = await import('../js/bataille.js');
+  const { METEO: M, SAISONS, temperature } = await import('../js/data/meteo.js');
+  const vus = new Set();
+  for (const g of [1, 2, 3, 4, 5, 6]) nouvelleBataille(g, R, { soldats: 20, jours: 14, saison: 'hiver' }).etat.meteo.forEach(m => vus.add(m));
+  assert.deepEqual([...vus].sort(), ['beau', 'couvert', 'gel', 'neige', 'tempete'], `les temps d'hiver : ${[...vus]}`);
+  for (const id of Object.keys(SAISONS.hiver.transitions)) { assert.ok(M[id].gel, `${id} : le sol porte`); assert.ok(SAISONS.hiver.temperatures[id], `${id} : une température`); }
+  assert.ok(M.tempete.neige && M.neige.neige && !M.couvert.neige && !M.beau.neige, 'la neige tombe en tempête et en neige légère seulement');
+  const B = nouvelleBataille(2, R, { soldats: 20, jours: 14, saison: 'hiver' });
+  for (let j = 1; j <= 14; j++) {
+    B.etat.jour = j; const h = horloge(B), [bas, haut] = SAISONS.hiver.temperatures[h.meteo];
+    assert.ok(h.enneige, `jour ${j} : sol enneigé (${h.meteo})`);
+    assert.ok(Number.isInteger(h.temperature) && h.temperature >= bas && h.temperature <= haut, `jour ${j} : ${h.temperature} °C pour ${h.meteo}`);
+    assert.equal(h.temperature, temperature('hiver', h.meteo, 2, j), 'stable : la même chaque fois');
+  }
+  const A = nouvelleBataille(2, R, { soldats: 20, jours: 4, saison: 'automne' });
+  assert.equal(horloge(A).temperature, null, 'pas de température hors de l\'hiver (pour l\'instant)');
+  assert.ok(!horloge(A).enneige);
+});

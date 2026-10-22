@@ -1,7 +1,8 @@
 {
-  "version": "0.53.1",
+  "version": "0.54.0",
   "date": "2026-10-22",
   "changes": [
-    "Les arbres ne se ressemblent plus : six formes, des feuilles qui suivent la saison (vertes l'été, brunes l'automne, nus puis sous la neige l'hiver) et des abattus à la souche éclatée"
+    "L'hiver : sol toujours enneigé, et cinq temps (tempête de neige, neige légère, gel, ciel couvert, beau temps) avec la température du jour",
+    "Au-delà du bord du champ, le terrain prend la saison : champ blanc l'hiver, herbe jaunie l'été"
   ]
 }

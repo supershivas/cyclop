@@ -4,12 +4,12 @@
 // qui le suit dit le jour et l'heure ; tout en bas, les seuls changements de météo, en pictogrammes. Le joueur ne connaît pas la météo des jours à
 // venir (la logique la tire d'avance) : seuls les jours passés et le jour même sont lus dans l'état, demain est la prévision (juste 7 fois sur 10).
 // Le dessin seulement : rien n'est sauvegardé.
-import { PALETTE } from '../palette.js?v=0.53.1';
-import { METEO } from '../data/meteo.js?v=0.53.1';
-import { ICONES_METEO } from './meteo-icones.js?v=0.53.1';
-import { horloge } from '../bataille.js?v=0.53.1';
+import { PALETTE } from '../palette.js?v=0.54.0';
+import { METEO, temperature } from '../data/meteo.js?v=0.54.0';
+import { ICONES_METEO } from './meteo-icones.js?v=0.54.0';
+import { horloge } from '../bataille.js?v=0.54.0';
 
-const FOND = { sec: PALETTE.h, pluie: PALETTE.e, brouillard: PALETTE.r, gel: PALETTE.o, neige: PALETTE.o, canicule: PALETTE.x };
+const FOND = { sec: PALETTE.h, pluie: PALETTE.e, brouillard: PALETTE.r, gel: PALETTE.o, neige: PALETTE.o, canicule: PALETTE.x, tempete: PALETTE.r, couvert: PALETTE.g, beau: PALETTE.e };
 const el = (tag, cls, ...kids) => { const e = document.createElement(tag); if (cls) e.className = cls; e.append(...kids); return e; };
 
 // `$` : l'accès par id ; `bataille()` : la bataille en cours
@@ -33,14 +33,19 @@ export function creerBarreTemps({ $, bataille }) {
     f.style.setProperty('--jours', n);
   }
 
+  // la température d'un jour passé ou en cours, dite sous le temps (rien hors de l'hiver : `temperature` rend null)
+  let courante = null;
+  const degres = (jour, m) => { const t = courante && temperature(courante.etat.sol?.saison, m, courante.etat.graine, jour); return typeof t === 'number' ? `\n${t} °C` : ''; };
+
   return function majBarreTemps(B) {
+    courante = B;
     const h = horloge(B), e = B.etat;
     if (h.jours !== jours) construire(h.jours);
     const nuit = e.phase === 'nuit' || e.phase === 'fin';
     // où l'on est : de 0 à 1 le long des jours (12 h de jour, de 6 h à 18 h, puis 12 h de nuit)
     const heure = nuit ? 24 : h.heure + h.minute / 60 - 6;
     const ici = (h.jour - 1 + Math.min(heure, 24) / 24) / h.jours;
-    const mot = `J${h.jour}/${h.jours} · ${nuit ? 'nuit' : `${h.heure} h ${String(h.minute).padStart(2, '0')}`} · ${METEO[h.meteo].nom}`;
+    const mot = `J${h.jour}/${h.jours} · ${nuit ? 'nuit' : `${h.heure} h ${String(h.minute).padStart(2, '0')}`} · ${METEO[h.meteo].nom}${h.temperature !== null ? `, ${h.temperature} °C` : ''}`;
     const cle = `${h.jour}|${h.meteo}|${h.prevision}|${mot}|${nuit}`;
     const f = racine();
     f.style.setProperty('--ici', ici);
@@ -55,7 +60,7 @@ export function creerBarreTemps({ $, bataille }) {
       const c = cases[k];
       c.style.background = m ? FOND[m] : '';
       c.className = prevu ? 'prevu' : '';
-      c.dataset.info = prevu ? `# Jour ${k + 1}\n## Demain (prévision)\n**${METEO[m].prevision}**` : m ? `# Jour ${k + 1}\n## Le temps\n**${METEO[m].nom}**` : `# Jour ${k + 1}\n## Pas encore connu`;
+      c.dataset.info = prevu ? `# Jour ${k + 1}\n## Demain (prévision)\n**${METEO[m].prevision}**` : m ? `# Jour ${k + 1}\n## Le temps\n**${METEO[m].nom}**${degres(k + 1, m)}` : `# Jour ${k + 1}\n## Pas encore connu`;
       f.querySelector('.frise-nuit').children[k].className = k < h.jour - 1 ? 'passe' : '';
       const g = icones[k], change = m && m !== avant;
       g.hidden = !change;

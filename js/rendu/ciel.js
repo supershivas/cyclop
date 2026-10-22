@@ -1,8 +1,8 @@
 // Le ciel du jeu : un dégradé et des nuages selon la météo (Jérôme, v0.36.8 : « léger dégradé, nuages » ; v0.36.7 : le ciel suit la météo). Un plan plein écran
 // peint avant tout le reste, que le sol et le faux terrain recouvrent ; la nuit, le voile de `temps.js` le noircit. Des mélanges continus de la palette (des fondus) :
 // `[lettre, part]`. `hor` est aussi la couleur du fond et du bout du champ. Le dessin seulement : aucun hasard, le temps est celui du dessin.
-import * as SH from './shaders.js?v=0.53.1';
-import { lune, couvertureNuit, clairDeLune } from '../data/lune.js?v=0.53.1';
+import * as SH from './shaders.js?v=0.54.0';
+import { lune, couvertureNuit, clairDeLune } from '../data/lune.js?v=0.54.0';
 
 const CIELS = {
   sec: { hor: [['e', 1]], haut: [['e', 0.75], ['t', 0.25]], nuage: [['o', 0.8], ['r', 0.2]], couv: 0.45 },
@@ -11,6 +11,10 @@ const CIELS = {
   neige: { hor: [['r', 0.8], ['o', 0.2]], haut: [['r', 0.6], ['e', 0.4]], nuage: [['r', 0.75], ['o', 0.25]], couv: 0.7 },
   canicule: { hor: [['e', 0.55], ['o', 0.45]], haut: [['e', 0.9], ['t', 0.1]], nuage: [['o', 0.9], ['r', 0.1]], couv: 0.15 },
   gel: { hor: [['e', 0.6], ['o', 0.4]], haut: [['e', 0.8], ['t', 0.2]], nuage: [['o', 0.85], ['r', 0.15]], couv: 0.35 },
+  // l'hiver (v0.54.0) : la tempête est presque blanche et lourde, le ciel couvert gris clair, le beau temps pâle et clair
+  tempete: { hor: [['r', 0.9], ['o', 0.1]], haut: [['r', 0.7], ['s', 0.3]], nuage: [['r', 0.8], ['o', 0.2]], couv: 0.95 },
+  couvert: { hor: [['r', 0.85], ['e', 0.15]], haut: [['r', 0.55], ['e', 0.45]], nuage: [['r', 0.7], ['o', 0.3]], couv: 0.8 },
+  beau: { hor: [['e', 0.5], ['o', 0.5]], haut: [['e', 0.85], ['t', 0.15]], nuage: [['o', 0.9], ['r', 0.1]], couv: 0.12 },
 };
 
 // `THREE`, `scene`, `col` (une couleur de la palette) et `camera` viennent de creerRendu

@@ -22,24 +22,24 @@
    - Les soldats : instanciés (une boîte et son ombre) ; au zoom 1 et 2, un
      point de 2 × 2 pixels (la couleur du camp sur son ombre).
    - Les corps : un homme couché (instancié) ; au zoom 1 et 2, un pixel. */
-import { loadThree } from './three-lib.js?v=0.53.1';
-import * as SH from './rendu/shaders.js?v=0.53.1';
-import { creerSoldats } from './rendu/soldats.js?v=0.53.1';
-import { creerChars } from './rendu/chars.js?v=0.53.1';
-import { creerPonts } from './rendu/ponts.js?v=0.53.1';
-import { creerCiel } from './rendu/ciel.js?v=0.53.1';
-import { creerMeteo } from './rendu/meteo.js?v=0.53.1';
-import { creerTroncons } from './rendu/troncons.js?v=0.53.1';
-import { ARBRES_JEU } from './data/arbres.js?v=0.53.1';
-import { creerVegetation } from './rendu/vegetation.js?v=0.53.1';
-import { creerTemps } from './rendu/temps.js?v=0.53.1';
-import { creerEclats } from './rendu/eclats.js?v=0.53.1';
-import { PALETTE, ORDRE, INDICE } from './palette.js?v=0.53.1';
-import { OMBRE, couleursLigne } from './apparence.js?v=0.53.1';
-import { MORCEAU, hauteurVueQ as hauteurQ, hauteurVueM as hauteurM } from './terrain.js?v=0.53.1';
-import { horloge, secteurDuJeu } from './bataille.js?v=0.53.1';
-import { profilFleuve } from './eaux.js?v=0.53.1';
-import { ligneY } from './tranchees.js?v=0.53.1';
+import { loadThree } from './three-lib.js?v=0.54.0';
+import * as SH from './rendu/shaders.js?v=0.54.0';
+import { creerSoldats } from './rendu/soldats.js?v=0.54.0';
+import { creerChars } from './rendu/chars.js?v=0.54.0';
+import { creerPonts } from './rendu/ponts.js?v=0.54.0';
+import { creerCiel } from './rendu/ciel.js?v=0.54.0';
+import { creerMeteo } from './rendu/meteo.js?v=0.54.0';
+import { creerTroncons } from './rendu/troncons.js?v=0.54.0';
+import { ARBRES_JEU } from './data/arbres.js?v=0.54.0';
+import { creerVegetation } from './rendu/vegetation.js?v=0.54.0';
+import { creerTemps } from './rendu/temps.js?v=0.54.0';
+import { creerEclats } from './rendu/eclats.js?v=0.54.0';
+import { PALETTE, ORDRE, INDICE } from './palette.js?v=0.54.0';
+import { OMBRE, couleursLigne } from './apparence.js?v=0.54.0';
+import { MORCEAU, hauteurVueQ as hauteurQ, hauteurVueM as hauteurM } from './terrain.js?v=0.54.0';
+import { horloge, secteurDuJeu } from './bataille.js?v=0.54.0';
+import { profilFleuve } from './eaux.js?v=0.54.0';
+import { ligneY } from './tranchees.js?v=0.54.0';
 
 export const CAMERA = { yaw: 0.15, tangage: 0.95, fov: 30 };   // au départ : tournée de 9°, plongée de 54°, angle de 30°
 // la caméra respire : un balancement très lent, 2° en 23 s (Jérôme, v0.3.1 : variante D du labo retenue)
@@ -357,7 +357,9 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
   function faireFaux() {
     if (faux) { scene.remove(faux); faux.geometry.dispose(); faux.material.dispose(); faux = null; }
     if (!leBord?.faux || !T) return;
-    const u = { uKaki: { value: col('h') }, uVert: { value: col('v') }, uGlaise: { value: col('g') }, uBrume: { value: col(leBord.brume || 'r') }, uCentre: { value: new THREE.Vector2(T.W / 2, T.H / 2) }, uDemi: { value: new THREE.Vector2(T.W / 2, T.H / 2) }, uPortee: { value: 500 } };
+    // la saison au-delà du bord (v0.54.0) : l'hiver, un champ blanc où la terre perce ; l'été, une herbe jaunie sans verdure ; l'automne, le sol d'avant
+    const saison = B?.etat.sol?.saison, [cKaki, cVert, cGlaise] = saison === 'hiver' ? ['r', 'o', 'h'] : saison === 'ete' ? ['h', 'h', 'g'] : ['h', 'v', 'g'];
+    const u = { uKaki: { value: col(cKaki) }, uVert: { value: col(cVert) }, uGlaise: { value: col(cGlaise) }, uBrume: { value: col(leBord.brume || 'r') }, uCentre: { value: new THREE.Vector2(T.W / 2, T.H / 2) }, uDemi: { value: new THREE.Vector2(T.W / 2, T.H / 2) }, uPortee: { value: 500 } };
     fauxU = u;
     u.uEau = { value: col('e') }; u.uClair = { value: col('r') };
     const riv = fleuvesSortants(); u.uNRiv = { value: riv.length / 2 }; u.uRiv = { value: Array.from({ length: 8 }, (_, k) => riv[k] || new THREE.Vector4()) };
@@ -383,7 +385,7 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
   }
   // la texture du sol : les rangées dont la couleur a changé
   function majSol(tout = false, dt = 0) {
-    const h = horloge(B), gel = h.neige ? 2 : h.gel ? 1 : 0;       // 2 : la neige blanchit le sol (apparence.js)
+    const h = horloge(B), gel = h.enneige ? 2 : h.gel ? 1 : 0;       // 2 : la neige blanchit le sol (apparence.js)
     if (gel !== gelVu) { tout = true; gelVu = gel; }
     // l'eau change quelques rangées à chaque pas : on n'envoie la texture qu'un peu plus tard
     solAttente -= dt;

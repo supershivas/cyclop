@@ -7,7 +7,11 @@ export const METEO = {
   brouillard: { nom: 'brouillard', pluie: 0, evaporation: 0.2, sechage: 0.2, gel: 0, prevision: 'du brouillard, dit-on' },
   gel: { nom: 'gel', pluie: 0, evaporation: 0, sechage: 0, gel: 1, prevision: 'un froid sec, peut-être' },
   // l'hiver et l'été (v0.51.0) : la neige tombe et blanchit le sol (il gèle : il porte, comme au gel) ; la canicule sèche tout (le sol boit, rien ne boue)
-  neige: { nom: 'neige', pluie: 0, evaporation: 0, sechage: 0, gel: 1, neige: 1, prevision: 'de la neige, sans doute' },
+  neige: { nom: 'neige légère', pluie: 0, evaporation: 0, sechage: 0, gel: 1, neige: 1, prevision: 'un peu de neige, sans doute' },
+  // les temps d'hiver (v0.54.0) : le sol est enneigé tout l'hiver (`horloge.enneige`) et il porte, quel que soit le temps du jour ; ils ne diffèrent que par le ciel, la neige qui tombe et le froid (`SAISONS.hiver.temperatures`)
+  tempete: { nom: 'tempête de neige', pluie: 0, evaporation: 0, sechage: 0, gel: 1, neige: 1, tempete: 1, prevision: 'une tempête de neige, peut-être' },
+  couvert: { nom: 'temps couvert', pluie: 0, evaporation: 0, sechage: 0, gel: 1, prevision: 'un ciel couvert, sans doute' },
+  beau: { nom: 'beau temps', pluie: 0, evaporation: 0, sechage: 0, gel: 1, prevision: 'du beau temps, peut-être' },
   canicule: { nom: 'forte chaleur', pluie: 0, evaporation: 3, sechage: 3, gel: 0, chaud: 1, prevision: 'une chaleur sèche' },
 };
 // poids des transitions : d'un jour au suivant
@@ -25,13 +29,16 @@ export const PREVISION_JUSTE = 0.7;   // la prévision dit vrai sept fois sur di
 export const SAISONS = {
   automne: { nom: 'automne', desc: 'Le temps d\u2019avant : de la pluie, du brouillard, du gel de temps en temps, et la boue qui vient.', transitions: TRANSITIONS, depart: 'sec', nappe: 0, humidite: 1 },
   hiver: {
-    nom: 'hiver', desc: 'De la neige, du gel et du brouillard, jamais de pluie. La neige blanchit le sol, il porte comme au gel.', depart: 'gel', nappe: 0.3, humidite: 0.8, pluieAuMoins: 0,
+    nom: 'hiver', desc: 'Un sol toujours sous la neige, qui porte comme au gel : tempête de neige, neige légère, gel, ciel couvert ou beau temps, et le froid qui va avec.', depart: 'gel', nappe: 0.3, humidite: 0.8, pluieAuMoins: 0,
     transitions: {
-      gel: { gel: 4, neige: 3, brouillard: 2, sec: 1 },
-      neige: { neige: 4, gel: 3, brouillard: 2, sec: 1 },
-      brouillard: { brouillard: 2, gel: 3, neige: 3, sec: 1 },
-      sec: { sec: 2, gel: 3, neige: 2, brouillard: 2 },
+      gel: { gel: 3, neige: 2, couvert: 3, beau: 2, tempete: 1 },
+      neige: { neige: 3, tempete: 2, gel: 2, couvert: 3, beau: 1 },
+      tempete: { tempete: 2, neige: 4, couvert: 2, gel: 1 },
+      couvert: { couvert: 3, neige: 3, gel: 2, beau: 2, tempete: 1 },
+      beau: { beau: 3, gel: 3, couvert: 3, neige: 1 },
     },
+    // la température du jour, en °C : [la plus basse, la plus haute] selon le temps (tirée de la graine et du jour : `temperature`)
+    temperatures: { tempete: [-16, -9], neige: [-8, -2], gel: [-18, -8], couvert: [-6, 1], beau: [-12, 3] },
   },
   ete: {
     nom: 'été', desc: 'Du temps sec et des jours de forte chaleur, une pluie rare. Le sol boit : les trous ne se remplissent plus.', depart: 'canicule', nappe: 0.9, humidite: 0.35, pluieAuMoins: 0,
@@ -44,3 +51,12 @@ export const SAISONS = {
   },
 };
 export const SAISON_DEFAUT = 'automne';
+
+// La température du jour (°C, entière) ou null (une saison sans température : l'été et l'automne attendent). Tirée de la graine et du jour par un hachage : rien n'est sauvegardé, aucun tirage du générateur.
+export function temperature(saison, meteo, graine, jour) {
+  const T = SAISONS[saison]?.temperatures?.[meteo];
+  if (!T) return null;
+  let h = (Math.imul(graine | 0, 374761393) + Math.imul(jour | 0, 668265263) + 0x9e3779b9) | 0;
+  h = Math.imul(h ^ (h >>> 13), 1274126177); h ^= h >>> 16;
+  return Math.round(T[0] + ((h >>> 0) / 4294967296) * (T[1] - T[0]));
+}

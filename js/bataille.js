@@ -14,24 +14,24 @@
    La sauvegarde (photo) garde la graine, la liste compacte des impacts, l'état
    de la foule et les petites couches de logique ; jamais le relief : il se
    rejoue depuis la graine et les impacts (rejouerTerrain). */
-import { createRng, hash2 } from './lib/rng.js?v=0.53.1';
-import { impact, hydroLignes, etat as etatCase, vitesseEtat, vitesseCase, ETAT } from './terrain.js?v=0.53.1';
-import { creerArmee, ajouterSoldat, construireGrille, pasArmee, tuerDans, effrayer, compacter, photoArmee, restaurerArmee, b64, deB64, DENSITE, place } from './army.js?v=0.53.1';
-import { ligneSous } from './tranchees.js?v=0.53.1';
-import { terrainDuSecteur } from './secteur-terrain.js?v=0.53.1';
-import { detruirePont } from './eaux.js?v=0.53.1';
-import { calculerCouts, creerCacheChamps, dimensionsCouts, BLOC } from './champs.js?v=0.53.1';
-import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.53.1';
-import { preparerAleatoire, ID_ALEATOIRE } from './generateur.js?v=0.53.1';
-import { AVION, MITRAILLAGE } from './data/mitraillage.js?v=0.53.1';
-import { CHAR, CHAR_RECHARGE, CHAR_SORTIE } from './data/chars.js?v=0.53.1';
-import { refusChar, lancerChar, degatsChars, avancerChars } from './chars.js?v=0.53.1';
-import { METEO, SAISONS, SAISON_DEFAUT, PREVISION_JUSTE } from './data/meteo.js?v=0.53.1';
-import { SECTEURS } from './data/secteur.js?v=0.53.1';
-import { REGIMENTS } from './data/lexique.js?v=0.53.1';
-import { STANCES, STANCE_DEFAUT } from './data/stances.js?v=0.53.1';
-import { grade } from './identite.js?v=0.53.1';
-import { corvees, rejouerTravaux } from './nuit.js?v=0.53.1';
+import { createRng, hash2 } from './lib/rng.js?v=0.54.0';
+import { impact, hydroLignes, etat as etatCase, vitesseEtat, vitesseCase, ETAT } from './terrain.js?v=0.54.0';
+import { creerArmee, ajouterSoldat, construireGrille, pasArmee, tuerDans, effrayer, compacter, photoArmee, restaurerArmee, b64, deB64, DENSITE, place } from './army.js?v=0.54.0';
+import { ligneSous } from './tranchees.js?v=0.54.0';
+import { terrainDuSecteur } from './secteur-terrain.js?v=0.54.0';
+import { detruirePont } from './eaux.js?v=0.54.0';
+import { calculerCouts, creerCacheChamps, dimensionsCouts, BLOC } from './champs.js?v=0.54.0';
+import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.54.0';
+import { preparerAleatoire, ID_ALEATOIRE } from './generateur.js?v=0.54.0';
+import { AVION, MITRAILLAGE } from './data/mitraillage.js?v=0.54.0';
+import { CHAR, CHAR_RECHARGE, CHAR_SORTIE } from './data/chars.js?v=0.54.0';
+import { refusChar, lancerChar, degatsChars, avancerChars } from './chars.js?v=0.54.0';
+import { METEO, SAISONS, SAISON_DEFAUT, PREVISION_JUSTE, temperature } from './data/meteo.js?v=0.54.0';
+import { SECTEURS } from './data/secteur.js?v=0.54.0';
+import { REGIMENTS } from './data/lexique.js?v=0.54.0';
+import { STANCES, STANCE_DEFAUT } from './data/stances.js?v=0.54.0';
+import { grade } from './identite.js?v=0.54.0';
+import { corvees, rejouerTravaux } from './nuit.js?v=0.54.0';
 
 export const PAS = 1 / 30;                 // s de jeu par pas
 export const NOUS = 0, EUX = 1;
@@ -1030,6 +1030,10 @@ export function horloge(B) {
     heure: Math.floor(h), minute: Math.floor((h % 1) * 60),
     meteo: etat.meteo[etat.jour - 1], prevision: etat.previsions[etat.jour - 1],
     gel: !!METEO[etat.meteo[etat.jour - 1]].gel, neige: !!METEO[etat.meteo[etat.jour - 1]].neige, chaud: !!METEO[etat.meteo[etat.jour - 1]].chaud, saison: etat.sol?.saison ?? SAISON_DEFAUT,
+    tempete: !!METEO[etat.meteo[etat.jour - 1]].tempete,
+    temperature: temperature(etat.sol?.saison, etat.meteo[etat.jour - 1], etat.graine, etat.jour),
+    // le sol est blanc l'hiver tout entier, et un jour de neige où qu'on soit (v0.54.0)
+    enneige: etat.sol?.saison === 'hiver' || !!METEO[etat.meteo[etat.jour - 1]].neige,
   };
 }
 /* Pour regarder un terrain sans jouer (la vue 3D de l'atelier) : l'heure du premier jour et le temps qu'il fait ; rien d'autre ne change */

@@ -1,5 +1,9 @@
 # Journal des versions
 
+## 0.54.0 — 2026-10-22
+- L'hiver : le sol est enneigé tout l'hiver, et le temps est l'un de cinq (tempête de neige, neige légère, gel, ciel couvert, beau temps), avec la température du jour dans la barre du temps
+- Au-delà du bord du champ de bataille, le terrain prend la saison : un champ blanc l'hiver, une herbe jaunie l'été (les anciennes sauvegardes d'hiver changent de temps)
+
 ## 0.53.1 — 2026-10-22
 - Les arbres ne se ressemblent plus : six formes, des feuilles qui suivent la saison (vertes l'été, brunes l'automne, nus puis sous la neige l'hiver) et des abattus à la souche éclatée
 
