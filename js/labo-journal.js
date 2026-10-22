@@ -2,6 +2,9 @@
 // Une entrée par version qui touche au labo, la plus récente en haut. `ref` : « sujet-Lettre » (la lettre est celle de la variante,
 // A étant l'actuelle). À chaque changement du labo : une entrée ici, avec `depuis` sur les variantes ajoutées ou changées (labo.js).
 export const JOURNAL = [
+  { version: '0.53.1', date: '2026-10-22', items: [
+    { genre: 'mis-a-jour', texte: 'Des arbres plus variés : les six formes, les feuilles de la saison (vert l\'été, glaise et herbe morte l\'automne avec un arbre sur trois dégarni, nus puis sous la neige l\'hiver) et les abattus à la souche éclatée sont retenus et en jeu ; les arbres d\'avant, les formes nues, la chute des feuilles et la teinte de printemps passent en non retenus', ref: 'arbres-varies-C' },
+  ] },
   { version: '0.52.6', date: '2026-10-22', items: [
     { genre: 'nouveau', texte: 'Des arbres plus variés : six formes (droit, penché, double tronc, mort brisé par les obus, jeune, grand), des feuilles par saison (été vert, automne en glaise avec un arbre sur trois dégarni, qui se dégarnissent au fil des jours, hiver nu puis sous la neige, une teinte de printemps) et des abattus à la souche éclatée, contre les arbres d\'avant ; chaque variante affiche les triangles des arbres et le temps du tri ; rien n\'est dans le jeu', ref: 'arbres-varies-B' },
   ] },

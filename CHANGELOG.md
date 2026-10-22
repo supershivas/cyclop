@@ -1,5 +1,8 @@
 # Journal des versions
 
+## 0.53.1 — 2026-10-22
+- Les arbres ne se ressemblent plus : six formes, des feuilles qui suivent la saison (vertes l'été, brunes l'automne, nus puis sous la neige l'hiver) et des abattus à la souche éclatée
+
 ## 0.53.0 — 2026-10-22
 - Au choix du secteur (partie solo et jeu à deux), on choisit la saison : été, automne ou hiver ; les deux joueurs jouent la même
 - En campagne, la saison suit les batailles : été, puis automne, puis hiver (imposée, dès le terrain)

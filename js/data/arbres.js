@@ -29,3 +29,6 @@ export const ARBRES_FEUILLES = {
 // Un arbre sur trois est dégarni en automne ; la chute des feuilles (variante du labo) : la part de nus et de dégarnis au fil des jours
 export const ARBRES_AUTOMNE = { degarni: 0.33, margeChute: 0.35 };
 export const ARBRES_PPM_FEUILLES = 4;      // pixels par mètre à partir desquels on dessine les feuilles (en dessous : le tronc seul, comme avant)
+
+// Ce que le jeu dessine (Jérôme, v0.53.1, après le sujet « Des arbres plus variés » du labo) : les six formes, les feuilles de la saison, les abattus longs. Pas de chute des feuilles ni de printemps (restent au labo).
+export const ARBRES_JEU = { feuilles: true, abattus: 'longs' };

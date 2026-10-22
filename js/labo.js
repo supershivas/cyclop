@@ -2,37 +2,37 @@
 // Chaque sujet utilise les mêmes modules que le jeu (terrain, apparence,
 // rendu three.js) : ce qu'on voit ici est ce que le jeu dessinera. Ajouter un
 // sujet ou une variante = ajouter une entrée dans GROUPES.
-import { afficherVersion } from './version-tag.js?v=0.53.0';
-import { mountLabo } from './lib/labo-shell.js?v=0.53.0';
-import { spriteCanvas, paletteToGPL, paletteToHex } from './lib/sprites.js?v=0.53.0';
-import { PALETTE, ROLES } from './palette.js?v=0.53.0';
-import { chargerContenu } from './design-store.js?v=0.53.0';
-import { tuile, ETAT } from './tuiles.js?v=0.53.0';
-import { creerTerrain, impact, hydroLignes } from './terrain.js?v=0.53.0';
-import { FORMES } from './cratere.js?v=0.53.0';
-import { CALIBRES } from './data/calibres.js?v=0.53.0';
-import { METEO } from './data/meteo.js?v=0.53.0';
-import { nouvelleBataille, avancer, ordonnerMarche, ordonnerBarrage, mourir } from './bataille.js?v=0.53.0';
-import { creerRendu, ZOOMS } from './rendu3d.js?v=0.53.0';
-import { hash2 } from './lib/rng.js?v=0.53.0';
-import { reglerVerdure } from './apparence.js?v=0.53.0';
-import { maquetteAssaut } from './labo-assaut.js?v=0.53.0';
-import { calquePlaques } from './labo-plaques.js?v=0.53.0';
-import { calqueBarre } from './labo-barre-temps.js?v=0.53.0';
-import { maquetteProjections, maquetteVisee } from './labo-projections.js?v=0.53.0';
-import { calqueBarreVie } from './labo-barre-vie.js?v=0.53.0';
-import { calqueClic } from './labo-clic-regiment.js?v=0.53.0';
-import { maquetteBoutons, calqueOrdre, calqueObus } from './labo-satisfaction.js?v=0.53.0';
-import { calqueEtiquette, calqueToast, maquetteCartes } from './labo-hud-ux.js?v=0.53.0';
-import { maquetteCampagne } from './labo-campagne.js?v=0.53.0';
-import { maquetteCaisses, maquetteRates, maquetteSapes } from './labo-arcade.js?v=0.53.0';
-import { maquetteChars } from './labo-chars.js?v=0.53.0';
-import { maquetteGaz } from './labo-gaz.js?v=0.53.0';
-import { maquetteAvions } from './labo-avions.js?v=0.53.0';
-import { maquettePonts, PONTS, NOMS_PONTS } from './labo-ponts.js?v=0.53.0';
-import { PONTS_JEU } from './data/ponts.js?v=0.53.0';
-import { JOURNAL } from './labo-journal.js?v=0.53.0';
-import { loadVersion } from './lib/app-update.js?v=0.53.0';
+import { afficherVersion } from './version-tag.js?v=0.53.1';
+import { mountLabo } from './lib/labo-shell.js?v=0.53.1';
+import { spriteCanvas, paletteToGPL, paletteToHex } from './lib/sprites.js?v=0.53.1';
+import { PALETTE, ROLES } from './palette.js?v=0.53.1';
+import { chargerContenu } from './design-store.js?v=0.53.1';
+import { tuile, ETAT } from './tuiles.js?v=0.53.1';
+import { creerTerrain, impact, hydroLignes } from './terrain.js?v=0.53.1';
+import { FORMES } from './cratere.js?v=0.53.1';
+import { CALIBRES } from './data/calibres.js?v=0.53.1';
+import { METEO } from './data/meteo.js?v=0.53.1';
+import { nouvelleBataille, avancer, ordonnerMarche, ordonnerBarrage, mourir } from './bataille.js?v=0.53.1';
+import { creerRendu, ZOOMS } from './rendu3d.js?v=0.53.1';
+import { hash2 } from './lib/rng.js?v=0.53.1';
+import { reglerVerdure } from './apparence.js?v=0.53.1';
+import { maquetteAssaut } from './labo-assaut.js?v=0.53.1';
+import { calquePlaques } from './labo-plaques.js?v=0.53.1';
+import { calqueBarre } from './labo-barre-temps.js?v=0.53.1';
+import { maquetteProjections, maquetteVisee } from './labo-projections.js?v=0.53.1';
+import { calqueBarreVie } from './labo-barre-vie.js?v=0.53.1';
+import { calqueClic } from './labo-clic-regiment.js?v=0.53.1';
+import { maquetteBoutons, calqueOrdre, calqueObus } from './labo-satisfaction.js?v=0.53.1';
+import { calqueEtiquette, calqueToast, maquetteCartes } from './labo-hud-ux.js?v=0.53.1';
+import { maquetteCampagne } from './labo-campagne.js?v=0.53.1';
+import { maquetteCaisses, maquetteRates, maquetteSapes } from './labo-arcade.js?v=0.53.1';
+import { maquetteChars } from './labo-chars.js?v=0.53.1';
+import { maquetteGaz } from './labo-gaz.js?v=0.53.1';
+import { maquetteAvions } from './labo-avions.js?v=0.53.1';
+import { maquettePonts, PONTS, NOMS_PONTS } from './labo-ponts.js?v=0.53.1';
+import { PONTS_JEU } from './data/ponts.js?v=0.53.1';
+import { JOURNAL } from './labo-journal.js?v=0.53.1';
+import { loadVersion } from './lib/app-update.js?v=0.53.1';
 
 document.documentElement.style.setProperty('--jeu-accent', ROLES.accent);
 const NOM = document.title.replace(/^Labo — /, ''); // le nom vient de la page (une apostrophe ne casse rien)
@@ -126,7 +126,7 @@ function coutCratere(nom) {
 }
 
 // ─── Le moteur, en direct : le rendu du jeu sur une petite bataille ───
-function moteur(stage, { zoom = 3, pluie = false, gel = false, soldats = 600, cz = 185, camera = null, respiration = undefined, soldat = undefined, cadavre = undefined, morts = 0, effets = undefined, barrages = false, surLesArbres = false, vue = null, verdure = undefined, nuit = null, tombee = false, calque = null, bord = null, centre = null, finesse = 1, cratere = null, arbres = null, saison = null, jours = undefined, versLesArbres = false } = {}) {
+function moteur(stage, { zoom = 3, pluie = false, gel = false, soldats = 600, cz = 185, camera = null, respiration = undefined, soldat = undefined, cadavre = undefined, morts = 0, effets = undefined, barrages = false, surLesArbres = false, vue = null, verdure = undefined, nuit = null, tombee = false, calque = null, bord = null, centre = null, finesse = 1, cratere = null, arbres = undefined, saison = null, jours = undefined, versLesArbres = false } = {}) {
   reglerVerdure(verdure);                                   // le sol vert (apparence.js) : avant que le sol ne se peigne
   const boite = el('div'); boite.style.cssText = 'position:relative;width:100%;height:min(70vh,560px);overflow:hidden';
   const canvas = el('canvas'); canvas.style.cssText = 'position:absolute;left:0;top:0;image-rendering:pixelated';
@@ -138,10 +138,10 @@ function moteur(stage, { zoom = 3, pluie = false, gel = false, soldats = 600, cz
   if (cratere) stage.append(el('p', {}, el('button', { className: 'essai', textContent: 'Sol fin · 6 pixels par mètre', onclick: () => { if (rendu) { rendu.finesse = 2; rendu.vue.zoom = 4; } } }), el('button', { className: 'essai', textContent: 'Au mètre · 3 pixels par mètre', onclick: () => { if (rendu) { rendu.finesse = 1; rendu.vue.zoom = 2; } } })), el('p', { className: 'releve', textContent: coutCratere(cratere) }));
   // les arbres variés (v0.52.6) : les saisons, à changer à chaud, et les jours de la chute des feuilles
   let reglerSaison = () => {};
-  if (arbres) {
+  if (saison) {
     const boutons = [...SAISONS_ARBRES.map(([cle, nom]) => el('button', { className: 'essai', textContent: nom, onclick: () => reglerSaison(cle) }))];
     stage.append(el('p', {}, ...boutons));
-    if (arbres.chute) stage.append(el('p', {}, ...[1, 4, 7, 10].map(j => el('button', { className: 'essai', textContent: `Jour ${j}`, onclick: () => { if (ctx.B) ctx.B.etat.jour = j; } }))));
+    if (arbres?.chute) stage.append(el('p', {}, ...[1, 4, 7, 10].map(j => el('button', { className: 'essai', textContent: `Jour ${j}`, onclick: () => { if (ctx.B) ctx.B.etat.jour = j; } }))));
   }
   stage.append(zooms);
   let raf = 0, rendu = null, fini = false;
@@ -409,14 +409,14 @@ const GROUPES = [
       { title: 'Rond, lèvre jetée et éclats', status: 'retenue', depuis: '0.52.5', note: "Retenu (Jérôme, v0.52.5), en jeu : le disque, sa lèvre jetée d'un côté, plus les éclats : tout ce qui précède sauf l'ovale. Le plus lourd pour la logique (voir le relevé) et pour le dessin : plus de cases changent, plus de morceaux de sol à refaire. Coût mesuré : impact() 6 à 13 µs ; 20, 51 et 68 cases ; sol 122 000 / 92 000 triangles. Une salve de 24 obus de 75 coûte 0,15 ms de plus : rien à l'échelle d'un pas.", render: s => moteur(s, { zoom: 4, soldats: 400, cz: 185, finesse: 2, cratere: 'tout' }) },
     ] },
     { id: 'arbres-varies', title: 'Des arbres plus variés', variants: [
-      { title: 'Les arbres d\'avant', status: 'actuelle', depuis: '0.52.6', note: 'Le jeu : un tronc de 6 à 9 m, quatre branches nues d\'une boîte chacune, tous pareils, nus en toute saison ; de loin ou aux zooms 1 et 2, le tronc seul. Au coin le plus boisé du secteur, 6 pixels par mètre. Le relevé du bas compte les triangles des arbres seuls (`arbres`) et le tri à chaque image. Mesuré au labo (200 soldats, rendu logiciel) : arbres 7 600 triangles à 4 pixels par mètre, 2 700 à 8, 2 100 à 16 ; tri 0,2 ms.', render: s => moteur(s, { zoom: 4, soldats: 200, cz: 150, versLesArbres: true }) },
-      { title: 'Six formes, sans feuilles', status: 'a-trancher', depuis: '0.52.6', note: 'Six familles tirées du hachage de la position (le terrain et la graine du monde ne changent pas) : le droit (30 %), le penché (18 %), le double tronc (14 %), le mort brisé par les obus (10 % : sommet cassé, branches qui pendent), le jeune (16 %, petit et fin), le grand (12 %). La hauteur suit toujours `v` et varie de -10 à +14 %, la largeur de ±10 %, le sens se tire aussi. Toujours nus : on ne juge ici que la silhouette. Arbres : 7 300 / 2 500 / 2 000 triangles à 4, 8 et 16 pixels par mètre (autant qu\'avant), tri 0,05 à 0,12 ms (un seul passage sur les arbres au lieu de seize).', render: s => moteur(s, { zoom: 4, soldats: 200, cz: 150, versLesArbres: true, arbres: { feuilles: false }, saison: 'automne' }) },
-      { title: 'Été feuillu', status: 'a-trancher', depuis: '0.52.6', note: 'Les six formes avec des touffes de feuilles, vertes (`v` dessus, `w` flancs, `s` pour la touffe sombre) : des boîtes aux bouts des branches et au sommet. Seulement à partir de 4 pixels par mètre et de près (le tronc seul aux zooms 1 à 3 et de loin, comme avant). Le mort ne porte jamais de feuilles. Les boutons du bas changent de saison à chaud. Arbres : 12 900 / 4 400 / 3 500 triangles à 4, 8 et 16 pixels par mètre (+70 % contre les arbres d\'avant ; la scène +9 % à 4, +9 % à 8) ; dessin dans le bruit de la mesure.', render: s => moteur(s, { zoom: 4, soldats: 200, cz: 150, versLesArbres: true, arbres: { feuilles: true }, saison: 'ete' }) },
-      { title: 'Automne, un arbre sur trois dégarni', status: 'a-trancher', depuis: '0.52.6', note: 'Les feuilles de l\'automne en glaise et en herbe morte (`g`, `h`, flancs en boue `b`) ; un arbre sur trois (hachage) ne garde que la moitié de ses touffes. La saison par défaut du jeu. Arbres : 11 500 / 4 000 / 3 100 triangles à 4, 8 et 16 pixels par mètre.', render: s => moteur(s, { zoom: 4, soldats: 200, cz: 150, versLesArbres: true, arbres: { feuilles: true }, saison: 'automne' }) },
-      { title: 'Automne qui se dégarnit jour après jour', status: 'a-trancher', depuis: '0.52.6', note: 'Comme la précédente, mais la part des arbres dégarnis puis nus grandit au fil des jours de la bataille (`horloge.jour`) : au jour 1 un tiers des arbres sont dégarnis, au dernier tous sont nus. Les boutons « Jour » du bas passent d\'un jour à l\'autre. Une règle de dessin seulement : rien n\'est sauvegardé, tout vient du jour et du hachage. Essayez les jours 1, 4, 7 et 10 d\'une bataille de dix jours.', render: s => moteur(s, { zoom: 4, soldats: 200, cz: 150, versLesArbres: true, arbres: { feuilles: true, chute: true }, saison: 'automne', jours: 10 }) },
-      { title: 'Hiver : nus, puis de la neige', status: 'a-trancher', depuis: '0.52.6', note: 'En hiver les arbres sont nus (les formes seules) ; les jours de neige (`horloge.neige`), de petites coiffes d\'os (`o`) se posent sur les bouts de branches et sur le sommet des troncs, flancs en brume (`r`). Essayez « Hiver » puis « Hiver · neige ». Le mort garde une coiffe sur son éclat. Arbres sous la neige : 12 600 / 4 500 / 3 600 triangles ; nus (hiver sans neige) : ceux de la variante « Six formes ».', render: s => moteur(s, { zoom: 4, soldats: 200, cz: 150, versLesArbres: true, arbres: { feuilles: true }, saison: 'neige' }) },
-      { title: 'Printemps (une teinte, sans règle)', status: 'a-trancher', depuis: '0.52.6', note: 'Pas une saison du jeu (Jérôme, v0.52.6 : pas de printemps dans `SAISONS`) : seulement une teinte du feuillage, pour voir. Des touffes plus petites et clairsemées (60 %, 40 % sur un arbre sur deux), vertes sur des flancs d\'herbe morte. Le sol et la météo restent ceux de l\'automne.', render: s => moteur(s, { zoom: 4, soldats: 200, cz: 150, versLesArbres: true, arbres: { feuilles: true }, saison: 'printemps' }) },
-      { title: 'Abattus : souche éclatée et tronc long', status: 'a-trancher', depuis: '0.52.6', note: 'Un arbre abattu par un obus : une souche aux éclats, un tronc couché de 4,6 m (de 3,9 à 5,3 m selon l\'arbre) dans un sens tiré de la position, deux branches cassées. Du bois sombre, jamais de feuilles ; le feu reste à la souche. Des obus de 75 tombent sur les arbres ; l\'abattu d\'avant (une souche et un bâton dressé) est dans la première variante.', render: s => moteur(s, { zoom: 5, soldats: 200, cz: 150, versLesArbres: true, barrages: true, surLesArbres: true, arbres: { feuilles: true, abattus: 'longs' }, saison: 'automne' }) },
+      { title: 'Les arbres d\'avant', status: 'ancienne', depuis: '0.52.6', note: 'Remplacé (Jérôme, v0.53.1) : reste au labo. Le jeu : un tronc de 6 à 9 m, quatre branches nues d\'une boîte chacune, tous pareils, nus en toute saison ; de loin ou aux zooms 1 et 2, le tronc seul. Au coin le plus boisé du secteur, 6 pixels par mètre. Le relevé du bas compte les triangles des arbres seuls (`arbres`) et le tri à chaque image. Mesuré au labo (200 soldats, rendu logiciel) : arbres 7 600 triangles à 4 pixels par mètre, 2 700 à 8, 2 100 à 16 ; tri 0,2 ms.', render: s => moteur(s, { zoom: 4, soldats: 200, cz: 150, versLesArbres: true, arbres: null }) },
+      { title: 'Six formes, sans feuilles', status: 'ancienne', depuis: '0.52.6', note: 'Non retenu seul (Jérôme, v0.53.1) : les formes sont en jeu avec leurs feuilles. Six familles tirées du hachage de la position (le terrain et la graine du monde ne changent pas) : le droit (30 %), le penché (18 %), le double tronc (14 %), le mort brisé par les obus (10 % : sommet cassé, branches qui pendent), le jeune (16 %, petit et fin), le grand (12 %). La hauteur suit toujours `v` et varie de -10 à +14 %, la largeur de ±10 %, le sens se tire aussi. Toujours nus : on ne juge ici que la silhouette. Arbres : 7 300 / 2 500 / 2 000 triangles à 4, 8 et 16 pixels par mètre (autant qu\'avant), tri 0,05 à 0,12 ms (un seul passage sur les arbres au lieu de seize).', render: s => moteur(s, { zoom: 4, soldats: 200, cz: 150, versLesArbres: true, arbres: { feuilles: false }, saison: 'automne' }) },
+      { title: 'Été feuillu', status: 'retenue', depuis: '0.52.6', note: 'Retenu (Jérôme, v0.53.1), en jeu. Les six formes avec des touffes de feuilles, vertes (`v` dessus, `w` flancs, `s` pour la touffe sombre) : des boîtes aux bouts des branches et au sommet. Seulement à partir de 4 pixels par mètre et de près (le tronc seul aux zooms 1 à 3 et de loin, comme avant). Le mort ne porte jamais de feuilles. Les boutons du bas changent de saison à chaud. Arbres : 12 900 / 4 400 / 3 500 triangles à 4, 8 et 16 pixels par mètre (+70 % contre les arbres d\'avant ; la scène +9 % à 4, +9 % à 8) ; dessin dans le bruit de la mesure.', render: s => moteur(s, { zoom: 4, soldats: 200, cz: 150, versLesArbres: true, arbres: { feuilles: true }, saison: 'ete' }) },
+      { title: 'Automne, un arbre sur trois dégarni', status: 'retenue', depuis: '0.52.6', note: 'Retenu (Jérôme, v0.53.1), en jeu. Les feuilles de l\'automne en glaise et en herbe morte (`g`, `h`, flancs en boue `b`) ; un arbre sur trois (hachage) ne garde que la moitié de ses touffes. La saison par défaut du jeu. Arbres : 11 500 / 4 000 / 3 100 triangles à 4, 8 et 16 pixels par mètre.', render: s => moteur(s, { zoom: 4, soldats: 200, cz: 150, versLesArbres: true, arbres: { feuilles: true }, saison: 'automne' }) },
+      { title: 'Automne qui se dégarnit jour après jour', status: 'ancienne', depuis: '0.52.6', note: 'Non retenu (Jérôme, v0.53.1) : reste au labo. Comme la précédente, mais la part des arbres dégarnis puis nus grandit au fil des jours de la bataille (`horloge.jour`) : au jour 1 un tiers des arbres sont dégarnis, au dernier tous sont nus. Les boutons « Jour » du bas passent d\'un jour à l\'autre. Une règle de dessin seulement : rien n\'est sauvegardé, tout vient du jour et du hachage. Essayez les jours 1, 4, 7 et 10 d\'une bataille de dix jours.', render: s => moteur(s, { zoom: 4, soldats: 200, cz: 150, versLesArbres: true, arbres: { feuilles: true, chute: true }, saison: 'automne', jours: 10 }) },
+      { title: 'Hiver : nus, puis de la neige', status: 'retenue', depuis: '0.52.6', note: 'Retenu (Jérôme, v0.53.1), en jeu. En hiver les arbres sont nus (les formes seules) ; les jours de neige (`horloge.neige`), de petites coiffes d\'os (`o`) se posent sur les bouts de branches et sur le sommet des troncs, flancs en brume (`r`). Essayez « Hiver » puis « Hiver · neige ». Le mort garde une coiffe sur son éclat. Arbres sous la neige : 12 600 / 4 500 / 3 600 triangles ; nus (hiver sans neige) : ceux de la variante « Six formes ».', render: s => moteur(s, { zoom: 4, soldats: 200, cz: 150, versLesArbres: true, arbres: { feuilles: true }, saison: 'neige' }) },
+      { title: 'Printemps (une teinte, sans règle)', status: 'ancienne', depuis: '0.52.6', note: 'Non retenu (Jérôme, v0.53.1) : reste au labo, sans règle. Pas une saison du jeu (Jérôme, v0.52.6 : pas de printemps dans `SAISONS`) : seulement une teinte du feuillage, pour voir. Des touffes plus petites et clairsemées (60 %, 40 % sur un arbre sur deux), vertes sur des flancs d\'herbe morte. Le sol et la météo restent ceux de l\'automne.', render: s => moteur(s, { zoom: 4, soldats: 200, cz: 150, versLesArbres: true, arbres: { feuilles: true }, saison: 'printemps' }) },
+      { title: 'Abattus : souche éclatée et tronc long', status: 'retenue', depuis: '0.52.6', note: 'Retenu (Jérôme, v0.53.1), en jeu. Un arbre abattu par un obus : une souche aux éclats, un tronc couché de 4,6 m (de 3,9 à 5,3 m selon l\'arbre) dans un sens tiré de la position, deux branches cassées. Du bois sombre, jamais de feuilles ; le feu reste à la souche. Des obus de 75 tombent sur les arbres ; l\'abattu d\'avant (une souche et un bâton dressé) est dans la première variante.', render: s => moteur(s, { zoom: 5, soldats: 200, cz: 150, versLesArbres: true, barrages: true, surLesArbres: true, arbres: { feuilles: true, abattus: 'longs' }, saison: 'automne' }) },
     ] },
     { id: 'champ', title: 'Champ de bataille', variants: [
       { title: 'Zoom 4', note: 'Le rendu du jeu : quatre de nos régiments avancent ; à 4 pixels par mètre, chaque soldat est une silhouette allégée (jambes, corps, bras, tête, fusil) et son ombre ; l\'équipement n\'apparaît qu\'à partir de 6.', status: 'actuelle', render: s => moteur(s, { zoom: 3 }) },

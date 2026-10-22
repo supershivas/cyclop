@@ -22,23 +22,24 @@
    - Les soldats : instanciés (une boîte et son ombre) ; au zoom 1 et 2, un
      point de 2 × 2 pixels (la couleur du camp sur son ombre).
    - Les corps : un homme couché (instancié) ; au zoom 1 et 2, un pixel. */
-import { loadThree } from './three-lib.js?v=0.53.0';
-import * as SH from './rendu/shaders.js?v=0.53.0';
-import { creerSoldats } from './rendu/soldats.js?v=0.53.0';
-import { creerChars } from './rendu/chars.js?v=0.53.0';
-import { creerPonts } from './rendu/ponts.js?v=0.53.0';
-import { creerCiel } from './rendu/ciel.js?v=0.53.0';
-import { creerMeteo } from './rendu/meteo.js?v=0.53.0';
-import { creerTroncons } from './rendu/troncons.js?v=0.53.0';
-import { creerVegetation } from './rendu/vegetation.js?v=0.53.0';
-import { creerTemps } from './rendu/temps.js?v=0.53.0';
-import { creerEclats } from './rendu/eclats.js?v=0.53.0';
-import { PALETTE, ORDRE, INDICE } from './palette.js?v=0.53.0';
-import { OMBRE, couleursLigne } from './apparence.js?v=0.53.0';
-import { MORCEAU, hauteurVueQ as hauteurQ, hauteurVueM as hauteurM } from './terrain.js?v=0.53.0';
-import { horloge, secteurDuJeu } from './bataille.js?v=0.53.0';
-import { profilFleuve } from './eaux.js?v=0.53.0';
-import { ligneY } from './tranchees.js?v=0.53.0';
+import { loadThree } from './three-lib.js?v=0.53.1';
+import * as SH from './rendu/shaders.js?v=0.53.1';
+import { creerSoldats } from './rendu/soldats.js?v=0.53.1';
+import { creerChars } from './rendu/chars.js?v=0.53.1';
+import { creerPonts } from './rendu/ponts.js?v=0.53.1';
+import { creerCiel } from './rendu/ciel.js?v=0.53.1';
+import { creerMeteo } from './rendu/meteo.js?v=0.53.1';
+import { creerTroncons } from './rendu/troncons.js?v=0.53.1';
+import { ARBRES_JEU } from './data/arbres.js?v=0.53.1';
+import { creerVegetation } from './rendu/vegetation.js?v=0.53.1';
+import { creerTemps } from './rendu/temps.js?v=0.53.1';
+import { creerEclats } from './rendu/eclats.js?v=0.53.1';
+import { PALETTE, ORDRE, INDICE } from './palette.js?v=0.53.1';
+import { OMBRE, couleursLigne } from './apparence.js?v=0.53.1';
+import { MORCEAU, hauteurVueQ as hauteurQ, hauteurVueM as hauteurM } from './terrain.js?v=0.53.1';
+import { horloge, secteurDuJeu } from './bataille.js?v=0.53.1';
+import { profilFleuve } from './eaux.js?v=0.53.1';
+import { ligneY } from './tranchees.js?v=0.53.1';
 
 export const CAMERA = { yaw: 0.15, tangage: 0.95, fov: 30 };   // au départ : tournée de 9°, plongée de 54°, angle de 30°
 // la caméra respire : un balancement très lent, 2° en 23 s (Jérôme, v0.3.1 : variante D du labo retenue)
@@ -58,7 +59,7 @@ const HAUT = 8;                               // m : marge du bas de l'écran, o
 const SOCLE = -8;                             // m : le bas de la coupe du terrain (bord sud)
 
 /* respiration : l'amplitude (rad) du lent balancement de la caméra (0 : immobile). */
-export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera: camDepart = null, respiration = RESPIRATION, soldat: styleSoldat = SOLDAT, cadavre = 'poses', effets = EFFETS, bord = null, arbres = null } = {}) {
+export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera: camDepart = null, respiration = RESPIRATION, soldat: styleSoldat = SOLDAT, cadavre = 'poses', effets = EFFETS, bord = null, arbres = ARBRES_JEU } = {}) {
   // un mouvement réduit demandé par le système : la caméra ne bouge pas d'elle-même
   if (typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches) respiration = 0;
   const THREE = await loadThree();
@@ -265,7 +266,7 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
   const vegetation = creerVegetation({
     THREE, scene, col, camera, vue, solY: SOL_Y, distance, surface, petit,
     terrain: () => T, vide: () => vide, ombres: () => temps.ombres,
-    ppm: () => ZOOMS[vue.zoom], saison: () => (B ? horloge(B) : null), arbres,     // (les arbres variés du labo : null, ceux d'avant)
+    ppm: () => ZOOMS[vue.zoom], saison: () => (B ? horloge(B) : null), arbres,     // (les arbres variés ; null : ceux d'avant, au labo)
   });
 
   const eclats = creerEclats({

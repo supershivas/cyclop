@@ -2,7 +2,7 @@
 // de chaque côté d'un médaillon (le jour), nous à gauche, en face à droite ; la vie reste collée au centre, ce qui est perdu se vide vers le bord. Pas un chiffre
 // à l'écran : ils viennent au survol de la barre (une infobulle : debout, blessés, tombés, régiments, tronçons tenus ; `data-info`, hud/infobulle.js). Dessous, les tronçons tenus : une graduation d'os par tronçon tenu, de
 // terre par tronçon perdu, jamais la couleur d'un camp. Le dessin seulement.
-import { effectifs, tronconsTenus, horloge, NOUS } from '../bataille.js?v=0.53.0';
+import { effectifs, tronconsTenus, horloge, NOUS } from '../bataille.js?v=0.53.1';
 
 export function creerPertes({ $, moi = () => NOUS }) {
   let vues = '';

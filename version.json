@@ -1,8 +1,7 @@
 {
-  "version": "0.53.0",
+  "version": "0.53.1",
   "date": "2026-10-22",
   "changes": [
-    "Au choix du secteur (partie solo et jeu à deux), on choisit la saison : été, automne ou hiver",
-    "En campagne, la saison suit les batailles : été, puis automne, puis hiver"
+    "Les arbres ne se ressemblent plus : six formes, des feuilles qui suivent la saison (vertes l'été, brunes l'automne, nus puis sous la neige l'hiver) et des abattus à la souche éclatée"
   ]
 }
