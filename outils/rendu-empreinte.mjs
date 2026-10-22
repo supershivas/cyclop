@@ -122,10 +122,12 @@ if (o.ecrire) {
   await writeFile(o.ref, JSON.stringify(hashes, null, 1) + '\n');
   console.log(`✓ référence écrite : ${o.ref} (${Object.keys(hashes).length} images)`);
 } else {
+  const DETAIL = process.argv.includes('--detail');
   const ref = JSON.parse(await readFile(o.ref, 'utf8'));
   for (const [nom, h] of Object.entries(hashes)) {
-    if (ref[nom] === h) console.log(`✓ ${nom}`); else { code = 1; console.log(`✗ ${nom} : ${ref[nom] ? 'les pixels ont changé' : 'pas dans la référence'}`); }
+    if (ref[nom] === h) { if (DETAIL) console.log(`✓ ${nom}`); } else { code = 1; console.log(`✗ ${nom} : ${ref[nom] ? 'les pixels ont changé' : 'pas dans la référence'}`); }
   }
   for (const nom of Object.keys(ref)) if (!(nom in hashes)) { code = 1; console.log(`✗ ${nom} : absent de cette lecture`); }
 }
+if (!code && !process.argv.includes('--ecrire')) console.log(`✓ ${Object.keys(hashes).length} images identiques à la référence (--detail : une ligne par image)`);
 process.exit(code);

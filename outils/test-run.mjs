@@ -2,6 +2,7 @@
 //   node outils/test-run.mjs            → tous les *.test.mjs / *.test.js de test/
 //   node outils/test-run.mjs test/regles.test.mjs   → un fichier
 //   node outils/test-run.mjs test --filtre sauvegarde
+//   node outils/test-run.mjs --court    → seulement les échecs et le bilan (économise le contexte)
 //
 // Source de vérité : supershivas/game-system/outils/test-run.mjs
 // Section 19 de CONVENTIONS.md. Un fichier de test n'importe rien du runner :
@@ -22,6 +23,9 @@ import { join, resolve, relative } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
 const args = process.argv.slice(2);
+const ci = args.indexOf('--court');
+const court = ci >= 0;
+if (court) args.splice(ci, 1);
 const fi = args.indexOf('--filtre');
 const filtre = fi >= 0 ? args.splice(fi, 2)[1] : null;
 const cibles = args.length ? args : ['test'];
@@ -60,7 +64,7 @@ for (const t of tests) {
   try {
     await t.fn();
     ok++;
-    console.log(`  ✓ ${t.nom}`);
+    if (!court) console.log(`  ✓ ${t.nom}`);
   } catch (e) {
     ko++;
     console.log(`  ✗ ${t.nom}\n      ${String(e.message || e).split('\n').join('\n      ')}`);

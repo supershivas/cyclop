@@ -158,6 +158,20 @@ Autres : `DESIGN.md` (l'intention), `ROADMAP.md`, `docs/archives/` (ce qui a ét
 
 ## Vérifier et livrer
 
+**Ne lance que ce que le changement touche** (les tests de règles durent ~5 min en tout) :
+
+| Tu as touché… | Lance |
+|---|---|
+| `army.js`, tir, moral, postures | `node outils/test-run.mjs --court test/armee.test.mjs test/stances.test.mjs` (~35 s) |
+| `terrain.js`, eaux, formes, générateur, saisons | `... test/terrain.test.mjs` (~13 s) |
+| `bataille.js`, `nuit.js`, `tranchees.js`, `champs.js`, sauvegarde | `... test/bataille.test.mjs` (~195 s) ; `--filtre <mot>` pour un test |
+| `campagne.js`, `data/campagne.js` | `... test/campagne.test.mjs` (~46 s) |
+| `js/reseau/` | `... test/lockstep.test.mjs` (~9 s) puis `node outils/deux.mjs` |
+| le dessin | `node outils/rendu-empreinte.mjs` ; le HUD : `node outils/fumee.mjs` |
+| avant de pousser une règle | `node outils/test-run.mjs --court` (tous) |
+
+`--court` n'imprime que les échecs et le bilan ; `rendu-empreinte` et `fumee` aussi (une ligne si tout est identique, `--detail` pour la liste).
+
 ```bash
 node outils/test-run.mjs                 # règles, sauvegarde, pureté
 node outils/rendu-empreinte.mjs           # le dessin : 37 images à horloge et hasard truqués, hachées au pixel près (test/rendu.json)

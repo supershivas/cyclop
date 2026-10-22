@@ -102,7 +102,8 @@ if (o.ecrire) {
     const r = ref[nom] || {};
     const ecarts = [...new Set([...Object.keys(vue), ...Object.keys(r)])].filter(k => vue[k] !== r[k]);
     if (ecarts.length) { code = 1; console.log(`✗ ${nom} : ${ecarts.length} écart(s) — ${ecarts.slice(0, 8).join(', ')}`); }
-    else console.log(`✓ ${nom}`);
+    else if (process.argv.includes('--detail')) console.log(`✓ ${nom}`);
   }
+  if (!code) console.log(`✓ ${Object.keys(etapes).length} étapes identiques à la référence (--detail : une ligne par étape)`);
 }
 process.exit(code);
