@@ -16,16 +16,16 @@ function plat(W = 21, H = 21) {
 const diff = (T, i, j) => T.diff[j * T.W + i];
 
 group('terrain — cratères');
-test('un obus de 75 creuse son motif 3 × 3 : 1 m au centre, 50 cm sur les côtés, 25 cm aux coins', () => {
+test('l\'ancien motif (forme null) : un obus de 75 creuse 3 × 3 : 1 m au centre, 50 cm sur les côtés, 25 cm aux coins', () => {
   const T = plat();
-  impact(T, 10.5, 10.5, '75', R);
+  impact(T, 10.5, 10.5, '75', R, 0, false, null);
   assert.equal(diff(T, 10, 10), -4);
   for (const [i, j] of [[9, 10], [11, 10], [10, 9], [10, 11]]) assert.equal(diff(T, i, j), -2);
   for (const [i, j] of [[9, 9], [11, 9], [9, 11], [11, 11]]) assert.equal(diff(T, i, j), -1);
 });
-test('la terre jetée fait une lèvre autour du cratère (jamais aux coins de l\'anneau)', () => {
+test('l\'ancien motif : la terre jetée fait une lèvre carrée (jamais aux coins de l\'anneau)', () => {
   const T = plat();
-  impact(T, 10.5, 10.5, '75', R);
+  impact(T, 10.5, 10.5, '75', R, 0, false, null);
   let levre = 0;
   for (let j = 8; j <= 12; j++) for (let i = 8; i <= 12; i++) if (Math.max(Math.abs(i - 10), Math.abs(j - 10)) === 2 && diff(T, i, j) > 0) levre++;
   assert.ok(levre >= 6, `lèvre de ${levre} cases`);
@@ -42,14 +42,14 @@ test('le plancher dur arrête tout à −6 m', () => {
   for (let k = 0; k < 200; k++) impact(T, 10.5, 10.5, '220', R, k);
   assert.equal(diff(T, 10, 10), -R.terrain.plancher);
 });
-test('les gros calibres agrandissent le motif (5 × 5, 7 × 7)', () => {
+test('les gros calibres agrandissent le creux (5 m, 7 m)', () => {
   const T = plat(31, 31);
   impact(T, 15.5, 15.5, '155', R);
   assert.ok(diff(T, 13, 15) < 0 && diff(T, 17, 15) < 0, '155 : deux cases du centre');
-  assert.equal(diff(T, 12, 15) > 0 || diff(T, 12, 15) === 0, true);
+  assert.ok(diff(T, 11, 15) >= 0, '155 : pas de creux à quatre cases');
   const U = plat(31, 31);
   impact(U, 15.5, 15.5, '220', R);
-  assert.ok(diff(U, 12, 15) < 0 && diff(U, 18, 15) < 0, '220 : trois cases du centre');
+  assert.ok(diff(U, 13, 15) < 0 && diff(U, 17, 15) < 0, '220 : deux cases du centre, creusé plus large que le 155');
 });
 test('dans la boue, l\'obus s\'enfouit : il tue moins loin', () => {
   const T = plat(), U = plat();
@@ -62,7 +62,21 @@ test('un obus hors du champ ne fait rien', () => {
   assert.ok(T.diff.every(v => v === 0));
 });
 
-group('terrain — les formes de cratère du labo (v0.52.4)');
+test('le cratère du jeu est rond : la lèvre fait presque tout le tour, jamais en carré, et le creux a la forme d\'un disque', () => {
+  const T = plat(41, 41);
+  impact(T, 20.5, 20.5, '155', R, 3);
+  let levre = 0, creux = 0, loin = 0;
+  for (let j = 0; j < 41; j++) for (let i = 0; i < 41; i++) {
+    const d = Math.hypot(i - 20, j - 20), v = diff(T, i, j);
+    if (v > 0 && d >= 2.5 && d <= 5) levre++;
+    if (v < 0) { if (d > 4) loin++; else creux++; }
+  }
+  assert.ok(levre >= 8, `lèvre de ${levre} cases`);
+  assert.ok(loin <= CALIBRES['155'].eclats, `${loin} creux hors du disque (les éclats : ${CALIBRES['155'].eclats} au plus)`);
+  assert.ok(creux >= 20 && creux <= 40, `${creux} cases creusées`);
+});
+
+group('terrain — les formes de cratère (v0.52.4 au labo, du jeu en v0.52.5)');
 test('chaque forme est rejouée à l\'identique, creuse sans passer le plancher et ne change rien loin de l\'impact', () => {
   for (const [nom, forme] of Object.entries(FORMES)) for (const cal of ['75', '155', '220']) {
     const a = plat(41, 41), b = plat(41, 41);
@@ -78,7 +92,7 @@ test('une forme creuse à peu près le volume du motif (à 25 % près) et pas pl
     for (let k = 0; k < 30; k++) {
       const x = 20 + (k % 7) / 7, y = 20 + (k % 5) / 5;
       const A = plat(41, 41), B = plat(41, 41);
-      impact(A, x, y, cal, R, k); impact(B, x, y, cal, R, k, false, forme);
+      impact(A, x, y, cal, R, k, false, null); impact(B, x, y, cal, R, k, false, forme);
       for (const d of A.diff) if (d < 0) creuse0 -= d;
       for (const d of B.diff) if (d < 0) creuse -= d;
       centre = Math.max(centre, -Math.min(...B.diff));
@@ -87,10 +101,12 @@ test('une forme creuse à peu près le volume du motif (à 25 % près) et pas pl
     assert.ok(Math.abs(creuse / creuse0 - 1) < 0.25, `${nom} ${cal} : volume ${(creuse / creuse0).toFixed(2)}`);
   }
 });
-test('sans forme, impact() creuse comme avant (la forme null est le jeu)', () => {
-  const a = plat(), b = plat();
-  impact(a, 10.5, 10.5, '155', R, 3); impact(b, 10.5, 10.5, '155', R, 3, false, FORMES.actuel);
+test('sans forme, impact() prend la forme du jeu ; null garde l\'ancien motif carré', () => {
+  const a = plat(), b = plat(), c = plat();
+  impact(a, 10.5, 10.5, '155', R, 3); impact(b, 10.5, 10.5, '155', R, 3, false, FORMES.tout); impact(c, 10.5, 10.5, '155', R, 3, false, null);
   assert.deepEqual(a.diff, b.diff);
+  assert.equal(diff(c, 10, 10), -6);
+  assert.notDeepEqual(a.diff, c.diff);
 });
 
 group('terrain — eau');

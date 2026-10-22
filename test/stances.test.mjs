@@ -21,10 +21,10 @@ function assaut(graine, Rj = R, avant = null) {
 const bilan = B => ({ pertes: B.etat.pertes, blesses: B.etat.blesses, rng: B.etat.rng, emp: empreinteEtat(B) });
 
 group('stances — rien ne bouge sans elles');
-const REFERENCE = {            // relevé sur le code d'avant les stances (pertes, blessés, hasard) ; l'empreinte, relevée à la v0.36.0, y ajoute la posture
-  3: { pertes: [62, 4], blesses: [39, 4], rng: 1162883254, emp: 'd4ac213' },
-  7: { pertes: [57, 5], blesses: [47, 3], rng: 2535038889, emp: 'e738935e' },
-  8: { pertes: [77, 3], blesses: [45, 4], rng: 271952004, emp: 'dcf4ff3a' },
+const REFERENCE = {            // relevé sur le code d'avant les stances (pertes, blessés, hasard) ; l'empreinte, relevée à la v0.36.0, y ajoute la posture ; v0.52.5 : relevé de nouveau, les cratères ronds changent le terrain donc le hasard (pertes de chez nous 62, 57, 77 → 69, 72, 76)
+  3: { pertes: [69, 2], blesses: [53, 8], rng: 2498072091, emp: 'f0bd8ff5' },
+  7: { pertes: [72, 8], blesses: [49, 4], rng: 3445368247, emp: 'dd4f6b6a' },
+  8: { pertes: [76, 3], blesses: [43, 5], rng: 591657989, emp: 'c2d23331' },
 };
 for (const g of [3, 7, 8]) {
   test(`sans stance, mêmes morts, mêmes blessés, même hasard qu'avant (graine ${g})`, () => {

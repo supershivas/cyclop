@@ -1,7 +1,7 @@
 /* La forme d'un cratère, variantes du labo (v0.52.4). Logique pure : aucun DOM,
    aucune horloge, aucun hasard hors de `hash2` et du numéro `n` de l'impact.
-   `impact()` de terrain.js l'appelle quand on lui passe une `forme` ; sans elle,
-   il garde le motif carré du calibre. Rien ici n'est encore en jeu.
+   `impact()` de terrain.js l'appelle avec `FORME_JEU` (v0.52.5) ; `null` donne
+   l'ancien motif carré du calibre.
 
    Une forme = des drapeaux : `rond` (un disque au lieu de la matrice, pris au
    point exact de l'obus), `ovale` (le disque étiré et tourné, même aire),
@@ -9,8 +9,8 @@
    `eclats` (de petits creux et monticules autour). Même logique de jeu :
    mêmes profondeur au centre (donc `plancher` et dureté, appliqués par
    `impact`), à peu près le même volume creusé, mêmes `rayon` et `letal`. */
-import { hash2 } from './lib/rng.js?v=0.52.4';
-import { CALIBRES } from './data/calibres.js?v=0.52.4';
+import { hash2 } from './lib/rng.js?v=0.52.5';
+import { CALIBRES } from './data/calibres.js?v=0.52.5';
 
 export const FORMES = {
   actuel: null,
@@ -20,6 +20,9 @@ export const FORMES = {
   ovale: { rond: true, ovale: true },
   tout: { rond: true, levre: true, eclats: true },
 };
+
+// la forme du jeu (Jérôme, v0.52.5 : « rond, lèvre jetée et éclats ») ; `null` reste l'ancien motif carré, pour le labo et les tests
+export const FORME_JEU = FORMES.tout;
 
 const ETIRE = 1.25;                         // l'ovale : grand axe = rayon × 1,25, petit = rayon / 1,25 (même aire)
 const AMPLITUDE = [0.9, 1];                 // la profondeur d'un impact varie un peu avec n, sans jamais dépasser le motif

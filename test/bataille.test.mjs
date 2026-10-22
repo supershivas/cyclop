@@ -12,6 +12,7 @@ import { arriereDe } from '../js/bataille.js';
 import { SECTEURS } from '../js/data/secteur.js';
 import { REGLAGES as R } from '../js/data/reglages.js';
 
+const SEED_NUIT = 5;      // la graine des nuits sans contact au soir (v0.52.5 : avec les cratères ronds, la graine 3 finissait le jour au contact)
 const petite = (graine = 3) => nouvelleBataille(graine, R, { soldats: 200, jours: 3 });
 // (x, y) dans le secteur → dans le terrain (les marges autour)
 const M = SECTEURS.essai.marges, P = (x, y) => [x + M.x, y + M.y];
@@ -427,7 +428,7 @@ function jusquALaNuit(B) {
   }
 }
 test('évacuer : les blessés du régiment quittent le front vivants ; ce ne sont pas des morts', () => {
-  const B = petite(); jusquALaNuit(B);
+  const B = petite(SEED_NUIT); jusquALaNuit(B);
   const A = B.armee, nb = new Map();
   for (let i = 0; i < A.n; i++) if (A.camp[i] === 0 && A.blessure[i]) nb.set(A.reg[i], (nb.get(A.reg[i]) || 0) + 1);
   const g = [...nb.entries()].sort((a, b) => b[1] - a[1] || a[0] - b[0])[0]?.[0];
@@ -442,7 +443,7 @@ test('évacuer : les blessés du régiment quittent le front vivants ; ce ne son
   assert.equal(B.etat.evacues.length, r.bilan[0].evacues + r.bilan[1].evacues, 'en face évacue aussi les siens');
 });
 test('réparer : les tronçons comblés sont recreusés ; la partie relue rejoue la réparation', () => {
-  const B = petite(); jusquALaNuit(B);
+  const B = petite(SEED_NUIT); jusquALaNuit(B);
   const T = B.terrain, reg = B.etat.regiments[0], ks = new Set(tronconsDe(B, reg));
   const combles = () => { let n = 0; for (let c = 0; c < T.W * T.H; c++) if (ks.has(T.troncon[c]) && T.diff[c] > -B.profondeur) n++; return n; };
   assert.ok(combles() > 0, 'les obus en ont comblé');
@@ -454,7 +455,7 @@ test('réparer : les tronçons comblés sont recreusés ; la partie relue rejoue
   assert.deepEqual(Array.from(C.terrain.diff), Array.from(T.diff));
 });
 test('inhumer : les corps proches partent en terre ; une corvée de tranchée se refuse sans tranchée', () => {
-  const B = petite(); jusquALaNuit(B);
+  const B = petite(SEED_NUIT); jusquALaNuit(B);
   const corps = B.etat.corps.length;
   assert.ok(corps > 0);
   const r = aube(B, { 0: 'inhumer' });
@@ -468,7 +469,7 @@ test('inhumer : les corps proches partent en terre ; une corvée de tranchée se
 test('sept corvées (v0.38.3) : les caillebotis et le coup de main sont retirés, ni nous ni en face ne les choisissent, une ancienne s\'efface', () => {
   const ids = CORVEES.map(c => c.id);
   assert.deepEqual(ids, ['repos', 'reparer', 'inhumer', 'evacuer', 'abri', 'ravitailler', 'releve']);
-  const B = petite(); jusquALaNuit(B);
+  const B = petite(SEED_NUIT); jusquALaNuit(B);
   for (const id of ['caillebotis', 'coup']) assert.match(refusCorvee(B, B.etat.regiments[0], id), /Pas de telle corvée/);
   for (let n = 0; n < 5; n++) {
     for (const id of Object.values(choixEnFace(B))) assert.ok(ids.includes(id), id);
@@ -644,7 +645,7 @@ test('à forces égales, la mêlée coûte aux deux camps et reste ouverte au ma
   assert.ok(r.bilan[0].mortsMelee > 0 && r.bilan[1].mortsMelee > 0);
   assert.equal(r.bilan[0].prisNuit + r.bilan[1].prisNuit, 0);
   // une nuit sans mêlée : les mêmes tirages qu'avant
-  const C = petite(); jusquALaNuit(C);
+  const C = petite(SEED_NUIT); jusquALaNuit(C);
   assert.equal(contactDe(C).size, 0);
   const s = C.etat.rng, ra = aube(C);
   assert.equal(ra.bilan[0].mortsMelee + ra.bilan[1].mortsMelee, 0);

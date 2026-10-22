@@ -2,37 +2,37 @@
 // Chaque sujet utilise les mêmes modules que le jeu (terrain, apparence,
 // rendu three.js) : ce qu'on voit ici est ce que le jeu dessinera. Ajouter un
 // sujet ou une variante = ajouter une entrée dans GROUPES.
-import { afficherVersion } from './version-tag.js?v=0.52.4';
-import { mountLabo } from './lib/labo-shell.js?v=0.52.4';
-import { spriteCanvas, paletteToGPL, paletteToHex } from './lib/sprites.js?v=0.52.4';
-import { PALETTE, ROLES } from './palette.js?v=0.52.4';
-import { chargerContenu } from './design-store.js?v=0.52.4';
-import { tuile, ETAT } from './tuiles.js?v=0.52.4';
-import { creerTerrain, impact, hydroLignes } from './terrain.js?v=0.52.4';
-import { FORMES } from './cratere.js?v=0.52.4';
-import { CALIBRES } from './data/calibres.js?v=0.52.4';
-import { METEO } from './data/meteo.js?v=0.52.4';
-import { nouvelleBataille, avancer, ordonnerMarche, ordonnerBarrage, mourir } from './bataille.js?v=0.52.4';
-import { creerRendu, ZOOMS } from './rendu3d.js?v=0.52.4';
-import { hash2 } from './lib/rng.js?v=0.52.4';
-import { reglerVerdure } from './apparence.js?v=0.52.4';
-import { maquetteAssaut } from './labo-assaut.js?v=0.52.4';
-import { calquePlaques } from './labo-plaques.js?v=0.52.4';
-import { calqueBarre } from './labo-barre-temps.js?v=0.52.4';
-import { maquetteProjections, maquetteVisee } from './labo-projections.js?v=0.52.4';
-import { calqueBarreVie } from './labo-barre-vie.js?v=0.52.4';
-import { calqueClic } from './labo-clic-regiment.js?v=0.52.4';
-import { maquetteBoutons, calqueOrdre, calqueObus } from './labo-satisfaction.js?v=0.52.4';
-import { calqueEtiquette, calqueToast, maquetteCartes } from './labo-hud-ux.js?v=0.52.4';
-import { maquetteCampagne } from './labo-campagne.js?v=0.52.4';
-import { maquetteCaisses, maquetteRates, maquetteSapes } from './labo-arcade.js?v=0.52.4';
-import { maquetteChars } from './labo-chars.js?v=0.52.4';
-import { maquetteGaz } from './labo-gaz.js?v=0.52.4';
-import { maquetteAvions } from './labo-avions.js?v=0.52.4';
-import { maquettePonts, PONTS, NOMS_PONTS } from './labo-ponts.js?v=0.52.4';
-import { PONTS_JEU } from './data/ponts.js?v=0.52.4';
-import { JOURNAL } from './labo-journal.js?v=0.52.4';
-import { loadVersion } from './lib/app-update.js?v=0.52.4';
+import { afficherVersion } from './version-tag.js?v=0.52.5';
+import { mountLabo } from './lib/labo-shell.js?v=0.52.5';
+import { spriteCanvas, paletteToGPL, paletteToHex } from './lib/sprites.js?v=0.52.5';
+import { PALETTE, ROLES } from './palette.js?v=0.52.5';
+import { chargerContenu } from './design-store.js?v=0.52.5';
+import { tuile, ETAT } from './tuiles.js?v=0.52.5';
+import { creerTerrain, impact, hydroLignes } from './terrain.js?v=0.52.5';
+import { FORMES } from './cratere.js?v=0.52.5';
+import { CALIBRES } from './data/calibres.js?v=0.52.5';
+import { METEO } from './data/meteo.js?v=0.52.5';
+import { nouvelleBataille, avancer, ordonnerMarche, ordonnerBarrage, mourir } from './bataille.js?v=0.52.5';
+import { creerRendu, ZOOMS } from './rendu3d.js?v=0.52.5';
+import { hash2 } from './lib/rng.js?v=0.52.5';
+import { reglerVerdure } from './apparence.js?v=0.52.5';
+import { maquetteAssaut } from './labo-assaut.js?v=0.52.5';
+import { calquePlaques } from './labo-plaques.js?v=0.52.5';
+import { calqueBarre } from './labo-barre-temps.js?v=0.52.5';
+import { maquetteProjections, maquetteVisee } from './labo-projections.js?v=0.52.5';
+import { calqueBarreVie } from './labo-barre-vie.js?v=0.52.5';
+import { calqueClic } from './labo-clic-regiment.js?v=0.52.5';
+import { maquetteBoutons, calqueOrdre, calqueObus } from './labo-satisfaction.js?v=0.52.5';
+import { calqueEtiquette, calqueToast, maquetteCartes } from './labo-hud-ux.js?v=0.52.5';
+import { maquetteCampagne } from './labo-campagne.js?v=0.52.5';
+import { maquetteCaisses, maquetteRates, maquetteSapes } from './labo-arcade.js?v=0.52.5';
+import { maquetteChars } from './labo-chars.js?v=0.52.5';
+import { maquetteGaz } from './labo-gaz.js?v=0.52.5';
+import { maquetteAvions } from './labo-avions.js?v=0.52.5';
+import { maquettePonts, PONTS, NOMS_PONTS } from './labo-ponts.js?v=0.52.5';
+import { PONTS_JEU } from './data/ponts.js?v=0.52.5';
+import { JOURNAL } from './labo-journal.js?v=0.52.5';
+import { loadVersion } from './lib/app-update.js?v=0.52.5';
 
 document.documentElement.style.setProperty('--jeu-accent', ROLES.accent);
 const NOM = document.title.replace(/^Labo — /, ''); // le nom vient de la page (une apostrophe ne casse rien)
@@ -381,12 +381,12 @@ const GROUPES = [
       { title: 'Un demi-mètre, vu de loin (zoom 3)', status: 'ancienne', depuis: '0.52.3', note: 'Non retenu (Jérôme, v0.52.3) : le jeu garde le mètre jusqu\'au zoom 3. Le prix du sol fin quand on le regarde de loin : plus de sol dans l\'écran, donc le coût le plus élevé. Une version du jeu ne le garderait qu\'à partir du zoom 6.', render: s => moteur(s, { zoom: 2, soldats: 400, cz: 185, finesse: 2 }) },
     ] },
     { id: 'cratere-forme', title: 'Des cratères moins carrés', variants: [
-      { title: 'Le motif carré (le jeu)', status: 'actuelle', depuis: '0.52.4', note: "Ce que le jeu fait aujourd'hui : une matrice de 3×3, 5×5 ou 7×7 cases en quarts de mètre, au centre de la case, et une lèvre en anneau carré autour (une case sur quatre sautée, jamais les coins). Le champ : trois obus isolés au milieu (75, 155, 220) et quarante-cinq au hasard, les mêmes dans toutes les variantes. Les deux boutons montrent le sol fin (6 pixels par mètre) et le mètre (3 pixels par mètre). Coût mesuré (Node, 10 000 obus, puis le labo en rendu logiciel) : impact() 1,5 à 2,8 µs ; 18, 40 et 66 cases touchées (75, 155, 220) ; sol 125 000 triangles au sol fin, 94 000 au mètre.", render: s => moteur(s, { zoom: 4, soldats: 400, cz: 185, finesse: 2, cratere: 'actuel' }) },
-      { title: 'Un motif rond', status: 'a-trancher', depuis: '0.52.4', note: "Un disque à la place de la matrice, pris au point exact de l'obus (au décimètre, pas au mètre) : profondeur p·(1 − (d/R)²) calculée en quatre points par case, donc des bords en pente au lieu de gradins. Le rayon est choisi pour creuser le même volume que la matrice ; la profondeur au centre est celle du calibre (le plancher et la dureté s'appliquent comme avant) et varie de 0 à 10 % avec le numéro de l'impact. La lèvre suit le disque (anneau rond, même épaisseur partout). Rayon de tir et létalité inchangés. Coût mesuré : impact() 7 à 10 µs (+5 à 7 µs : quatre points par case) ; 17, 45 et 56 cases ; volume creusé 94 à 96 % de la matrice ; sol 121 000 triangles au sol fin, 91 000 au mètre (−3 %).", render: s => moteur(s, { zoom: 4, soldats: 400, cz: 185, finesse: 2, cratere: 'rond' }) },
-      { title: "Une lèvre jetée d'un côté", status: 'a-trancher', depuis: '0.52.4', note: "Le motif carré d'avant, mais la terre jetée forme un anneau rond, plus large (de 0 à 2,2 m du bord), plus épais d'un côté (le côté est tiré du numéro de l'impact, trois fois plus épais que l'autre) et interrompu par endroits ; aucun coin. Le même volume de terre jetée en moyenne : seule sa place change. Coût mesuré : impact() 5 à 9 µs ; 16, 43 et 68 cases ; terre jetée −10 à −15 % ; sol 121 000 / 92 000 triangles.", render: s => moteur(s, { zoom: 4, soldats: 400, cz: 185, finesse: 2, cratere: 'levre' }) },
-      { title: 'Des éclats autour', status: 'a-trancher', depuis: '0.52.4', note: "Le motif carré et la lèvre carrée d'avant, plus de petits creux et monticules d'un quart de mètre sur deux à trois anneaux autour : 4 pour un 75, 8 pour un 155, 14 pour un 220, à des angles et des distances tirés du numéro de l'impact. Sans aucune autre forme, le contour reste carré : à voir surtout avec les autres. Coût mesuré : impact() 2 à 3 µs (inchangé) ; 22, 48 et 79 cases (+20 % de cases à refaire) ; sol 125 000 / 93 000 triangles.", render: s => moteur(s, { zoom: 4, soldats: 400, cz: 185, finesse: 2, cratere: 'eclats' }) },
-      { title: 'Un cratère ovale', status: 'a-trancher', depuis: '0.52.4', note: "Un disque étiré (grand axe × 1,25, petit axe ÷ 1,25 : la même aire) et tourné au hasard du numéro de l'impact, avec sa lèvre ovale. Les cratères ne sont plus tous des copies les uns des autres ; coût de la logique identique au disque. Coût mesuré : impact() 6 à 11 µs ; 16, 45 et 56 cases ; volume creusé 88 à 100 % ; sol 121 000 / 91 000 triangles.", render: s => moteur(s, { zoom: 4, soldats: 400, cz: 185, finesse: 2, cratere: 'ovale' }) },
-      { title: 'Rond, lèvre jetée et éclats', status: 'a-trancher', depuis: '0.52.4', note: "Le disque, sa lèvre jetée d'un côté, plus les éclats : tout ce qui précède sauf l'ovale. Le plus lourd pour la logique (voir le relevé) et pour le dessin : plus de cases changent, plus de morceaux de sol à refaire. Coût mesuré : impact() 6 à 13 µs ; 20, 51 et 68 cases ; sol 122 000 / 92 000 triangles. Une salve de 24 obus de 75 coûte 0,15 ms de plus : rien à l'échelle d'un pas.", render: s => moteur(s, { zoom: 4, soldats: 400, cz: 185, finesse: 2, cratere: 'tout' }) },
+      { title: 'Le motif carré (avant la v0.52.5)', status: 'ancienne', depuis: '0.52.5', note: "Jusqu'à la v0.52.4 : une matrice de 3×3, 5×5 ou 7×7 cases en quarts de mètre, au centre de la case, et une lèvre en anneau carré autour (une case sur quatre sautée, jamais les coins). Le champ : trois obus isolés au milieu (75, 155, 220) et quarante-cinq au hasard, les mêmes dans toutes les variantes. Les deux boutons montrent le sol fin (6 pixels par mètre) et le mètre (3 pixels par mètre). Coût mesuré (Node, 10 000 obus, puis le labo en rendu logiciel) : impact() 1,5 à 2,8 µs ; 18, 40 et 66 cases touchées (75, 155, 220) ; sol 125 000 triangles au sol fin, 94 000 au mètre.", render: s => moteur(s, { zoom: 4, soldats: 400, cz: 185, finesse: 2, cratere: 'actuel' }) },
+      { title: 'Un motif rond', status: 'ancienne', depuis: '0.52.5', note: "Non retenu (Jérôme, v0.52.5) : reste au labo. Un disque à la place de la matrice, pris au point exact de l'obus (au décimètre, pas au mètre) : profondeur p·(1 − (d/R)²) calculée en quatre points par case, donc des bords en pente au lieu de gradins. Le rayon est choisi pour creuser le même volume que la matrice ; la profondeur au centre est celle du calibre (le plancher et la dureté s'appliquent comme avant) et varie de 0 à 10 % avec le numéro de l'impact. La lèvre suit le disque (anneau rond, même épaisseur partout). Rayon de tir et létalité inchangés. Coût mesuré : impact() 7 à 10 µs (+5 à 7 µs : quatre points par case) ; 17, 45 et 56 cases ; volume creusé 94 à 96 % de la matrice ; sol 121 000 triangles au sol fin, 91 000 au mètre (−3 %).", render: s => moteur(s, { zoom: 4, soldats: 400, cz: 185, finesse: 2, cratere: 'rond' }) },
+      { title: "Une lèvre jetée d'un côté", status: 'ancienne', depuis: '0.52.5', note: "Non retenu (Jérôme, v0.52.5) : reste au labo. Le motif carré d'avant, mais la terre jetée forme un anneau rond, plus large (de 0 à 2,2 m du bord), plus épais d'un côté (le côté est tiré du numéro de l'impact, trois fois plus épais que l'autre) et interrompu par endroits ; aucun coin. Le même volume de terre jetée en moyenne : seule sa place change. Coût mesuré : impact() 5 à 9 µs ; 16, 43 et 68 cases ; terre jetée −10 à −15 % ; sol 121 000 / 92 000 triangles.", render: s => moteur(s, { zoom: 4, soldats: 400, cz: 185, finesse: 2, cratere: 'levre' }) },
+      { title: 'Des éclats autour', status: 'ancienne', depuis: '0.52.5', note: "Non retenu (Jérôme, v0.52.5) : reste au labo. Le motif carré et la lèvre carrée d'avant, plus de petits creux et monticules d'un quart de mètre sur deux à trois anneaux autour : 4 pour un 75, 8 pour un 155, 14 pour un 220, à des angles et des distances tirés du numéro de l'impact. Sans aucune autre forme, le contour reste carré : à voir surtout avec les autres. Coût mesuré : impact() 2 à 3 µs (inchangé) ; 22, 48 et 79 cases (+20 % de cases à refaire) ; sol 125 000 / 93 000 triangles.", render: s => moteur(s, { zoom: 4, soldats: 400, cz: 185, finesse: 2, cratere: 'eclats' }) },
+      { title: 'Un cratère ovale', status: 'ancienne', depuis: '0.52.5', note: "Non retenu (Jérôme, v0.52.5) : reste au labo. Un disque étiré (grand axe × 1,25, petit axe ÷ 1,25 : la même aire) et tourné au hasard du numéro de l'impact, avec sa lèvre ovale. Les cratères ne sont plus tous des copies les uns des autres ; coût de la logique identique au disque. Coût mesuré : impact() 6 à 11 µs ; 16, 45 et 56 cases ; volume creusé 88 à 100 % ; sol 121 000 / 91 000 triangles.", render: s => moteur(s, { zoom: 4, soldats: 400, cz: 185, finesse: 2, cratere: 'ovale' }) },
+      { title: 'Rond, lèvre jetée et éclats', status: 'retenue', depuis: '0.52.5', note: "Retenu (Jérôme, v0.52.5), en jeu : le disque, sa lèvre jetée d'un côté, plus les éclats : tout ce qui précède sauf l'ovale. Le plus lourd pour la logique (voir le relevé) et pour le dessin : plus de cases changent, plus de morceaux de sol à refaire. Coût mesuré : impact() 6 à 13 µs ; 20, 51 et 68 cases ; sol 122 000 / 92 000 triangles. Une salve de 24 obus de 75 coûte 0,15 ms de plus : rien à l'échelle d'un pas.", render: s => moteur(s, { zoom: 4, soldats: 400, cz: 185, finesse: 2, cratere: 'tout' }) },
     ] },
     { id: 'champ', title: 'Champ de bataille', variants: [
       { title: 'Zoom 4', note: 'Le rendu du jeu : quatre de nos régiments avancent ; à 4 pixels par mètre, chaque soldat est une silhouette allégée (jambes, corps, bras, tête, fusil) et son ombre ; l\'équipement n\'apparaît qu\'à partir de 6.', status: 'actuelle', render: s => moteur(s, { zoom: 3 }) },

@@ -1,5 +1,8 @@
 # Journal des versions
 
+## 0.52.5 — 2026-10-22
+- Les cratères sont ronds : une lèvre de terre jetée plus épaisse d'un côté et de petits éclats autour, au lieu d'un carré à gradins (les anciennes sauvegardes ne se relisent pas)
+
 ## 0.52.4 — 2026-10-22
 - Au labo : des cratères moins carrés (disque, lèvre jetée d'un côté, éclats, ovale) à comparer au motif carré du jeu ; rien ne change en jeu
 

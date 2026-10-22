@@ -2,6 +2,9 @@
 // Une entrée par version qui touche au labo, la plus récente en haut. `ref` : « sujet-Lettre » (la lettre est celle de la variante,
 // A étant l'actuelle). À chaque changement du labo : une entrée ici, avec `depuis` sur les variantes ajoutées ou changées (labo.js).
 export const JOURNAL = [
+  { version: '0.52.5', date: '2026-10-22', items: [
+    { genre: 'mis-a-jour', texte: 'Des cratères moins carrés : « rond, lèvre jetée et éclats » est retenu et en jeu ; le motif carré, le rond seul, la lèvre seule, les éclats seuls et l\'ovale passent en non retenus', ref: 'cratere-forme-F' },
+  ] },
   { version: '0.52.4', date: '2026-10-22', items: [
     { genre: 'nouveau', texte: 'Des cratères moins carrés : un disque rond, une lèvre jetée d\'un côté, des éclats autour, un ovale, et le tout ensemble, contre le motif carré du jeu, sur le même champ labouré, au sol fin et au mètre ; chaque variante affiche ce qu\'elle coûte (cases touchées, temps de l\'obus, triangles)', ref: 'cratere-forme-B' },
   ] },

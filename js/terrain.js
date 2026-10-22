@@ -16,13 +16,13 @@
      nuit elle se fait en lot.
    - Les versions (`versionLigne`, `versionMorceau`) disent au rendu ce qui a
      changé ; le terrain ne connaît pas le rendu. */
-import { hash2 } from './lib/rng.js?v=0.52.4';
-import { CALIBRES } from './data/calibres.js?v=0.52.4';
-import { creuxRond, levreJetee, eclatsAutour, bordDuCreux } from './cratere.js?v=0.52.4';
-import { appliquerFormes } from './formes.js?v=0.52.4';
-import { poserObjets } from './objets.js?v=0.52.4';
-import { SAISONS } from './data/meteo.js?v=0.52.4';
-import { poserEaux, poserMarecages, poserPonts, detruirePont, viderLesEaux } from './eaux.js?v=0.52.4';
+import { hash2 } from './lib/rng.js?v=0.52.5';
+import { CALIBRES } from './data/calibres.js?v=0.52.5';
+import { creuxRond, levreJetee, eclatsAutour, bordDuCreux, FORME_JEU } from './cratere.js?v=0.52.5';
+import { appliquerFormes } from './formes.js?v=0.52.5';
+import { poserObjets } from './objets.js?v=0.52.5';
+import { SAISONS } from './data/meteo.js?v=0.52.5';
+import { poserEaux, poserMarecages, poserPonts, detruirePont, viderLesEaux } from './eaux.js?v=0.52.5';
 
 export const ETAT = { SEC: 0, HUMIDE: 1, BOUE: 2, EAU: 3, GLACE: 4 };
 export const MORCEAU = 25;             // cases : le côté d'un morceau de maillage (mesuré, rendu logiciel : à 100, la moitié du champ restait dessinée au zoom 4 ; à 25, 6 500 triangles au lieu de 15 600 au zoom 8)
@@ -165,8 +165,8 @@ export function toucher(T, i, j) {
 /* Un obus tombe en (x, y) (mètres). Rend { rayon } : la distance où il tue
    (réduite dans la boue, où il s'enfouit). n : le numéro de l'impact (pour
    le hasard déterministe de la lèvre). forme : une forme d'essai du labo
-   (cratere.js, `FORMES`) ; sans elle, le motif carré du calibre (le jeu). */
-export function impact(T, x, y, nomCal, R, n = 0, gel = false, forme = null) {
+   (cratere.js, `FORMES`) ; par défaut `FORME_JEU` (rond, lèvre jetée, éclats : v0.52.5) ; `null` : l'ancien motif carré (le labo). */
+export function impact(T, x, y, nomCal, R, n = 0, gel = false, forme = FORME_JEU) {
   const cal = CALIBRES[nomCal];
   const i0 = Math.floor(x), j0 = Math.floor(y);
   if (i0 < 0 || j0 < 0 || i0 >= T.W || j0 >= T.H) return { rayon: 0 };
