@@ -2,6 +2,7 @@
 
 <!-- Sorti de CLAUDE.md : fumée, empreinte du dessin, scripts de mesure. Le texte est celui d'origine, sans changement ; décisions datées, mesures et pièges avec leur coût. Un ajout se range ici, pas dans CLAUDE.md. -->
 
+- **La référence de fumée dépendait de la fenêtre** (v0.52.3) : après le clic droit de l'étape `annule`, la souris restait à (600, 380), qui tombe sur un élément du HUD selon la taille de la fenêtre ; le terrain sous la souris y est caché (`majBulle`, `souris` sur le HUD), donc la ligne `terrain` valait « visible » sur la machine qui avait écrit `test/fumee.json` et « cachée » ici (7 étapes en écart depuis au moins la v0.48.0, vérifié en retournant à ces commits). L'étape `fiche-regiment` pose maintenant la souris à (700, 300), sur le champ ; référence réécrite, deux lancements identiques.
 - Sorties courtes (économie de contexte) : `test-run.mjs --court`, `rendu-empreinte.mjs` et `fumee.mjs` n'impriment qu'une ligne quand tout est bon ; `--detail` rend la liste (Jérôme, demande d'efficacité, v0.52.2). Durées par fichier : bataille 195 s, campagne 46 s, stances 32 s, terrain 13 s, lockstep 9 s, armée 1 s.
 - `test/` — `node outils/test-run.mjs` (terrain, foule, bataille, sauvegarde, pureté). `test/fumee.json` (l'empreinte du HUD, `outils/fumee.mjs`) et `test/rendu.json` (celle du dessin, `outils/rendu-empreinte.mjs`) : des références, pas des tests de règles.
 - `scripts/mesure.mjs`, `scripts/trois-jours.mjs` — la mesure du critère et la

@@ -72,6 +72,9 @@ await etape('posture-marche');
 // la fiche d'un régiment (la carte du régiment choisi, son bouton « Fiche »), puis celle d'un officier
 await page.evaluate(() => document.querySelector('.reg-carte').click());
 await page.waitForTimeout(1000);                           // le clic sur une carte glisse la caméra 0,6 s (v0.32.2) : le terrain sous la souris dépend de l'instant ; on attend la fin
+// La souris est posée sur le champ, loin des cartes, du rabat et du carnet : là où elle restait après le clic droit (600, 380), elle tombait
+// sur un élément du HUD selon la taille de la fenêtre, et le terrain sous la souris y est caché (v0.41.0) ou non.
+await page.mouse.move(700, 300);
 await page.evaluate(() => document.querySelector('[data-act="fiche"]').click());
 await etape('fiche-regiment');
 await page.evaluate(() => document.querySelector('#fiche-liste button.nom').click());
