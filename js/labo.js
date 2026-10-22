@@ -2,6 +2,7 @@
 // Chaque sujet utilise les mêmes modules que le jeu (terrain, apparence,
 // rendu three.js) : ce qu'on voit ici est ce que le jeu dessinera. Ajouter un
 // sujet ou une variante = ajouter une entrée dans GROUPES.
+import { afficherVersion } from './version-tag.js?v=0.52.2';
 import { mountLabo } from './lib/labo-shell.js?v=0.52.2';
 import { spriteCanvas, paletteToGPL, paletteToHex } from './lib/sprites.js?v=0.52.2';
 import { PALETTE, ROLES } from './palette.js?v=0.52.2';
@@ -443,3 +444,4 @@ mountLabo(document.getElementById('labo'), {
   game: NOM, home: './', atelier: 'atelier.html', groups: GROUPES,
   accueil: { version: VERSION, intro: 'Ce qui a changé au labo, et où le voir. A est toujours la variante en jeu ; le point plein marque la retenue.', journal: JOURNAL },
 });
+afficherVersion();

@@ -3,6 +3,7 @@
 // visible dans le jeu de ce navigateur, puis publiée d'un geste dans le dépôt
 // (un commit sur main, par l'API de GitHub) : assets/design/reglages.json.
 // Les outils : les réglages chiffrés (Jérôme, v0.1.0) et la carte, un éditeur visuel (`atelier-carte.js`).
+import { afficherVersion } from './version-tag.js?v=0.52.2';
 import { createPublisher, TOKEN_URL } from './lib/gh-publish.js?v=0.52.2';
 import { validerSecteur } from './tranchees.js?v=0.52.2';
 import { terrainDuSecteur, profilDe } from './secteur-terrain.js?v=0.52.2';
@@ -129,3 +130,4 @@ function ouvrir(nom) {
 $('onglets').append(...Object.keys(ONGLETS).map(nom => { const b = el('button', { textContent: LIBELLES[nom], onclick: () => ouvrir(nom) }); b.dataset.onglet = nom; return b; }));
 ouvrir(ONGLETS[decodeURIComponent(location.hash.slice(1))] ? decodeURIComponent(location.hash.slice(1)) : 'Carte');
 aPublier();
+afficherVersion();
