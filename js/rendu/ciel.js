@@ -1,8 +1,8 @@
 // Le ciel du jeu : un dégradé et des nuages selon la météo (Jérôme, v0.36.8 : « léger dégradé, nuages » ; v0.36.7 : le ciel suit la météo). Un plan plein écran
 // peint avant tout le reste, que le sol et le faux terrain recouvrent ; la nuit, le voile de `temps.js` le noircit. Des mélanges continus de la palette (des fondus) :
 // `[lettre, part]`. `hor` est aussi la couleur du fond et du bout du champ. Le dessin seulement : aucun hasard, le temps est celui du dessin.
-import * as SH from './shaders.js?v=0.52.1';
-import { lune, couvertureNuit, clairDeLune } from '../data/lune.js?v=0.52.1';
+import * as SH from './shaders.js?v=0.52.2';
+import { lune, couvertureNuit, clairDeLune } from '../data/lune.js?v=0.52.2';
 
 const CIELS = {
   sec: { hor: [['e', 1]], haut: [['e', 0.75], ['t', 0.25]], nuage: [['o', 0.8], ['r', 0.2]], couv: 0.45 },

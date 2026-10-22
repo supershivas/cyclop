@@ -1,5 +1,8 @@
 # Journal des versions
 
+## 0.52.2 — 2026-10-22
+- Les soldats sont tournés vers l'ennemi dès le début de la partie ; en marche ils regardent où ils vont, puis se tournent vers l'ennemi à l'arrêt
+
 ## 0.52.1 — 2026-10-22
 - Tous les soldats, des deux armées, regardent vers l'ennemi, à l'arrêt comme en marche (sauf quand ils tirent sur une cible)
 

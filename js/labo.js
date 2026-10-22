@@ -2,35 +2,35 @@
 // Chaque sujet utilise les mêmes modules que le jeu (terrain, apparence,
 // rendu three.js) : ce qu'on voit ici est ce que le jeu dessinera. Ajouter un
 // sujet ou une variante = ajouter une entrée dans GROUPES.
-import { mountLabo } from './lib/labo-shell.js?v=0.52.1';
-import { spriteCanvas, paletteToGPL, paletteToHex } from './lib/sprites.js?v=0.52.1';
-import { PALETTE, ROLES } from './palette.js?v=0.52.1';
-import { chargerContenu } from './design-store.js?v=0.52.1';
-import { tuile, ETAT } from './tuiles.js?v=0.52.1';
-import { creerTerrain, impact, hydroLignes } from './terrain.js?v=0.52.1';
-import { CALIBRES } from './data/calibres.js?v=0.52.1';
-import { METEO } from './data/meteo.js?v=0.52.1';
-import { nouvelleBataille, avancer, ordonnerMarche, ordonnerBarrage, mourir } from './bataille.js?v=0.52.1';
-import { creerRendu, ZOOMS } from './rendu3d.js?v=0.52.1';
-import { hash2 } from './lib/rng.js?v=0.52.1';
-import { reglerVerdure } from './apparence.js?v=0.52.1';
-import { maquetteAssaut } from './labo-assaut.js?v=0.52.1';
-import { calquePlaques } from './labo-plaques.js?v=0.52.1';
-import { calqueBarre } from './labo-barre-temps.js?v=0.52.1';
-import { maquetteProjections, maquetteVisee } from './labo-projections.js?v=0.52.1';
-import { calqueBarreVie } from './labo-barre-vie.js?v=0.52.1';
-import { calqueClic } from './labo-clic-regiment.js?v=0.52.1';
-import { maquetteBoutons, calqueOrdre, calqueObus } from './labo-satisfaction.js?v=0.52.1';
-import { calqueEtiquette, calqueToast, maquetteCartes } from './labo-hud-ux.js?v=0.52.1';
-import { maquetteCampagne } from './labo-campagne.js?v=0.52.1';
-import { maquetteCaisses, maquetteRates, maquetteSapes } from './labo-arcade.js?v=0.52.1';
-import { maquetteChars } from './labo-chars.js?v=0.52.1';
-import { maquetteGaz } from './labo-gaz.js?v=0.52.1';
-import { maquetteAvions } from './labo-avions.js?v=0.52.1';
-import { maquettePonts, PONTS, NOMS_PONTS } from './labo-ponts.js?v=0.52.1';
-import { PONTS_JEU } from './data/ponts.js?v=0.52.1';
-import { JOURNAL } from './labo-journal.js?v=0.52.1';
-import { loadVersion } from './lib/app-update.js?v=0.52.1';
+import { mountLabo } from './lib/labo-shell.js?v=0.52.2';
+import { spriteCanvas, paletteToGPL, paletteToHex } from './lib/sprites.js?v=0.52.2';
+import { PALETTE, ROLES } from './palette.js?v=0.52.2';
+import { chargerContenu } from './design-store.js?v=0.52.2';
+import { tuile, ETAT } from './tuiles.js?v=0.52.2';
+import { creerTerrain, impact, hydroLignes } from './terrain.js?v=0.52.2';
+import { CALIBRES } from './data/calibres.js?v=0.52.2';
+import { METEO } from './data/meteo.js?v=0.52.2';
+import { nouvelleBataille, avancer, ordonnerMarche, ordonnerBarrage, mourir } from './bataille.js?v=0.52.2';
+import { creerRendu, ZOOMS } from './rendu3d.js?v=0.52.2';
+import { hash2 } from './lib/rng.js?v=0.52.2';
+import { reglerVerdure } from './apparence.js?v=0.52.2';
+import { maquetteAssaut } from './labo-assaut.js?v=0.52.2';
+import { calquePlaques } from './labo-plaques.js?v=0.52.2';
+import { calqueBarre } from './labo-barre-temps.js?v=0.52.2';
+import { maquetteProjections, maquetteVisee } from './labo-projections.js?v=0.52.2';
+import { calqueBarreVie } from './labo-barre-vie.js?v=0.52.2';
+import { calqueClic } from './labo-clic-regiment.js?v=0.52.2';
+import { maquetteBoutons, calqueOrdre, calqueObus } from './labo-satisfaction.js?v=0.52.2';
+import { calqueEtiquette, calqueToast, maquetteCartes } from './labo-hud-ux.js?v=0.52.2';
+import { maquetteCampagne } from './labo-campagne.js?v=0.52.2';
+import { maquetteCaisses, maquetteRates, maquetteSapes } from './labo-arcade.js?v=0.52.2';
+import { maquetteChars } from './labo-chars.js?v=0.52.2';
+import { maquetteGaz } from './labo-gaz.js?v=0.52.2';
+import { maquetteAvions } from './labo-avions.js?v=0.52.2';
+import { maquettePonts, PONTS, NOMS_PONTS } from './labo-ponts.js?v=0.52.2';
+import { PONTS_JEU } from './data/ponts.js?v=0.52.2';
+import { JOURNAL } from './labo-journal.js?v=0.52.2';
+import { loadVersion } from './lib/app-update.js?v=0.52.2';
 
 document.documentElement.style.setProperty('--jeu-accent', ROLES.accent);
 const NOM = document.title.replace(/^Labo — /, ''); // le nom vient de la page (une apostrophe ne casse rien)
@@ -306,7 +306,7 @@ const GROUPES = [
       { title: 'Le tablier du jeu', status: 'actuelle', depuis: '0.47.1', note: 'Ce que l\'éditeur de carte pose aujourd\'hui (v0.44.0) : un tablier de planches de 6 m sur l\'eau, une seule hauteur qui part de la rive la plus haute (v0.47.1). Pleine masse en cubes : l\'eau ne passe pas dessous, un obus le coupe. Les dix suivantes sont des ouvrages en volumes, au-dessus d\'un fleuve de 16 m dont l\'eau passe dessous.', render: s => maquettePonts(s, R, 'A') },
       ...Object.keys(PONTS).map(cle => PONTS_JEU[cle]
         ? { title: NOMS_PONTS[cle], status: 'retenue', depuis: '0.47.2', note: `En jeu (v0.47.2) : on le choisit dans l'éditeur de carte${PONTS_JEU[cle].char ? ' ; il porte un char' : ' ; il ne porte pas un char (il cède sous lui)'}. ${PONTS[cle]}`, render: s => maquettePonts(s, R, cle) }
-        : { title: NOMS_PONTS[cle], status: 'a-trancher', depuis: '0.47.1', note: PONTS[cle], render: s => maquettePonts(s, R, cle) }),
+        : { title: NOMS_PONTS[cle], status: 'ancienne', depuis: '0.52.2', note: `Non retenu (v0.47.2) : reste au labo. ${PONTS[cle]}`, render: s => maquettePonts(s, R, cle) }),
     ] },
   ] },
   { id: 'arcade', title: 'Arcade', topics: [
@@ -330,17 +330,17 @@ const GROUPES = [
       { title: 'Dans les creux (une nappe qui coule)', status: 'a-trancher', depuis: '0.45.0', note: 'Plus lourd que l\'air, le gaz suit le relief : une grille de colonnes qui coulent vers le bas, comme de l\'eau, et s\'amassent dans les tranchées et les cratères, où elles restent des minutes de plus. Un homme au fond d\'un trou prend bien plus de dose que celui sur la lèvre. La tranchée devient un piège ; en vue de côté ou au ras du sol, on voit les fosses se remplir.', render: s => maquetteGaz(s, R, 'creux') },
     ] },
     { id: 'chars', title: 'Les chars d\'assaut', variants: [
-      { title: 'Le Mark IV', status: 'a-trancher', depuis: '0.45.0', note: 'Le losange britannique de 1917 : 8,05 m de long, 4,12 m avec ses sponsons, 28 t (« mâle » : un 6-livres par flanc ; la « femelle » n\'a que des mitrailleuses), huit hommes. La chenille fait le tour de la caisse, la poutre de décrochage est en travers du toit, la cabine dépasse. Il franchit les cratères les plus profonds du jeu (2,25 m), lentement. Le bouton « Livrée » le repeint à la façon des Mark IV pris à Cambrai en 1917 et retournés par les Allemands : gris, croix de fer sur les flancs ; il arrive alors de leur côté.', render: s => maquetteChars(s, R, 'mark4') },
-      { title: 'Le Renault FT', status: 'a-trancher', depuis: '0.45.0', note: 'Le char léger français de 1917 : 5 m avec sa queue, 1,74 m de large, 6,5 t, deux hommes. Le premier à tourelle tournante : elle suit l\'ennemi le plus proche et son 37 mm Puteaux lance un éclair. La queue de deux poutres l\'aide à franchir les tranchées ; il va vite (1,4 m/s) mais un cratère de plus d\'un mètre vingt l\'arrête. Peint en vert sombre avec des taches ocre, comme le camouflage de 1918.', render: s => maquetteChars(s, R, 'ft') },
-      { title: 'Le Schneider CA 1', status: 'a-trancher', depuis: '0.45.0', note: 'Le premier char français, en 1916 : une caisse trapue de 6 m, 13,5 t, six hommes, une proue en coin avec son éperon coupe-fils. Un 75 « de tranchée » court dépasse du flanc droit, deux Hotchkiss à l\'avant, deux coupoles. En bleu-gris. Les chenilles sont courtes sous la caisse : un cratère de 1,5 m le couche.', render: s => maquetteChars(s, R, 'schneider') },
-      { title: 'Le Saint-Chamond', status: 'a-trancher', depuis: '0.45.0', note: 'Le gros char français de 1917 : 8,9 m, 23 t, huit ou neuf hommes, un 75 de long tube dans la proue et quatre Hotchkiss. Sa caisse déborde très largement des chenilles : il franchit mal les trous, parce que l\'avant plonge (un cratère d\'un mètre le couche).', render: s => maquetteChars(s, R, 'stchamond') },
-      { title: 'L\'A7V allemand', status: 'a-trancher', depuis: '0.45.0', note: 'Le seul char allemand construit en série (une vingtaine, en 1918) : 7,34 m, 3,1 m de large, 3,3 m de haut, 31,5 t, dix-huit hommes au moins ; un 57 mm à l\'avant, six mitrailleuses (deux par flanc, deux à l\'arrière), la croix de fer sur les flancs. Il vient d\'en face, vers nos lignes : nos hommes à vingt-cinq mètres s\'affolent et ses mitrailleuses en couchent quelques-uns. Garde au sol faible : un cratère d\'un mètre l\'arrête.', render: s => maquetteChars(s, R, 'a7v') },
+      { title: 'Le Mark IV', status: 'retenue', depuis: '0.52.2', note: 'Retenu (Jérôme, v0.45.0) ; en jeu : le Schneider (v0.47.0), les autres engins suivent (ROADMAP). Le losange britannique de 1917 : 8,05 m de long, 4,12 m avec ses sponsons, 28 t (« mâle » : un 6-livres par flanc ; la « femelle » n\'a que des mitrailleuses), huit hommes. La chenille fait le tour de la caisse, la poutre de décrochage est en travers du toit, la cabine dépasse. Il franchit les cratères les plus profonds du jeu (2,25 m), lentement. Le bouton « Livrée » le repeint à la façon des Mark IV pris à Cambrai en 1917 et retournés par les Allemands : gris, croix de fer sur les flancs ; il arrive alors de leur côté.', render: s => maquetteChars(s, R, 'mark4') },
+      { title: 'Le Renault FT', status: 'retenue', depuis: '0.52.2', note: 'Retenu (Jérôme, v0.45.0) ; en jeu : le Schneider (v0.47.0), les autres engins suivent (ROADMAP). Le char léger français de 1917 : 5 m avec sa queue, 1,74 m de large, 6,5 t, deux hommes. Le premier à tourelle tournante : elle suit l\'ennemi le plus proche et son 37 mm Puteaux lance un éclair. La queue de deux poutres l\'aide à franchir les tranchées ; il va vite (1,4 m/s) mais un cratère de plus d\'un mètre vingt l\'arrête. Peint en vert sombre avec des taches ocre, comme le camouflage de 1918.', render: s => maquetteChars(s, R, 'ft') },
+      { title: 'Le Schneider CA 1', status: 'retenue', depuis: '0.52.2', note: 'Retenu (Jérôme, v0.45.0) ; en jeu : le Schneider (v0.47.0), les autres engins suivent (ROADMAP). Le premier char français, en 1916 : une caisse trapue de 6 m, 13,5 t, six hommes, une proue en coin avec son éperon coupe-fils. Un 75 « de tranchée » court dépasse du flanc droit, deux Hotchkiss à l\'avant, deux coupoles. En bleu-gris. Les chenilles sont courtes sous la caisse : un cratère de 1,5 m le couche.', render: s => maquetteChars(s, R, 'schneider') },
+      { title: 'Le Saint-Chamond', status: 'retenue', depuis: '0.52.2', note: 'Retenu (Jérôme, v0.45.0) ; en jeu : le Schneider (v0.47.0), les autres engins suivent (ROADMAP). Le gros char français de 1917 : 8,9 m, 23 t, huit ou neuf hommes, un 75 de long tube dans la proue et quatre Hotchkiss. Sa caisse déborde très largement des chenilles : il franchit mal les trous, parce que l\'avant plonge (un cratère d\'un mètre le couche).', render: s => maquetteChars(s, R, 'stchamond') },
+      { title: 'L\'A7V allemand', status: 'retenue', depuis: '0.52.2', note: 'Retenu (Jérôme, v0.45.0) ; en jeu : le Schneider (v0.47.0), les autres engins suivent (ROADMAP). Le seul char allemand construit en série (une vingtaine, en 1918) : 7,34 m, 3,1 m de large, 3,3 m de haut, 31,5 t, dix-huit hommes au moins ; un 57 mm à l\'avant, six mitrailleuses (deux par flanc, deux à l\'arrière), la croix de fer sur les flancs. Il vient d\'en face, vers nos lignes : nos hommes à vingt-cinq mètres s\'affolent et ses mitrailleuses en couchent quelques-uns. Garde au sol faible : un cratère d\'un mètre l\'arrête.', render: s => maquetteChars(s, R, 'a7v') },
     ] },
     { id: 'avions', title: 'Les avions', variants: [
-      { title: 'L\'œil de l\'artillerie', status: 'a-trancher', depuis: '0.45.0', note: 'L\'avion de réglage, le rôle réel de l\'aviation de 1914 à 1918 : un Breguet 14 tourne à soixante-dix mètres au-dessus de leur tranchée et corrige le tir de nos batteries. Tant qu\'il vit, la salve de six 155 tombe près de la cible (dispersion de 6 m au lieu de 18) ; il rentre ou il tombe. Leur DCA (les éclatements sombres) le guette. Un choix de joueur : envoyer l\'appareil (et risquer l\'équipage) ou tirer à l\'aveugle. Le plus proche du jeu : il ne change aucune règle de la bataille, il resserre un nombre. Essayez la salve avec et sans l\'avion.', render: s => maquetteAvions(s, R, 'oeil') },
-      { title: 'Le cirque (le Baron et les autres)', status: 'a-trancher', depuis: '0.45.0', note: 'Le ciel disputé : trois Spad (Lt Aubry, Sgt Marchand, Cpl Vidal) contre le triplan rouge du « Baron » (un Fokker Dr.I, comme celui de Richthofen, abattu le 21 avril 1918) et deux Albatros. Ils se poursuivent, tirent des traceurs, tombent en fumée. Aucun compteur de victoires (DESIGN.md) : seuls comptent le nom du pilote, son état et le résultat : qui tient le ciel prive l\'autre de ses avions de réglage (A) et de ses mitraillages (C). Le plus spectaculaire, le plus indirect : le joueur ne dirige qu\'un ordre, « une patrouille ici ».', render: s => maquetteAvions(s, R, 'cirque') },
-      { title: 'Le mitraillage', status: 'a-trancher', depuis: '0.45.0', note: 'Deux appareils d\'attaque d\'en face (de type Halberstadt) arrivent à dix mètres du sol sur un régiment, mitraillent en ligne, remontent, reviennent. Trois réponses : rien ; le feu en l\'air (on tire, on reste debout : un coup au but abat l\'appareil au bout de quelques passes, mais on tombe plus) ; se jeter à terre (le tiers des pertes, aucune riposte). Le dilemme du fantassin sous l\'avion, en une posture de plus dans la fenêtre d\'ordres, comme « feu retenu ».', render: s => maquetteAvions(s, R, 'mitraillage') },
-      { title: 'Les bombardiers de nuit', status: 'a-trancher', depuis: '0.45.0', note: 'Un Gotha G.IV (bimoteur de bombardement allemand, 1917) vole la nuit sur nos lignes et cherche les lampes de l\'arrière (v0.39.0) : il lâche une chaîne de six bombes sur les lampes (5 m de précision), ou au hasard si on les éteint (36 m). Éteindre les lampes protège, mais coûte : la corvée de la nuit se travaille mal dans le noir. Les projecteurs et la DCA sont un pari : peut-être l\'abattre, mais leurs éclatements se voient. Le seul sujet qui prolonge une règle déjà en jeu (les lampes).', render: s => maquetteAvions(s, R, 'nuit') },
+      { title: 'L\'œil de l\'artillerie', status: 'ancienne', depuis: '0.52.2', note: 'Non retenu (Jérôme, v0.45.0) : reste au labo. L\'avion de réglage, le rôle réel de l\'aviation de 1914 à 1918 : un Breguet 14 tourne à soixante-dix mètres au-dessus de leur tranchée et corrige le tir de nos batteries. Tant qu\'il vit, la salve de six 155 tombe près de la cible (dispersion de 6 m au lieu de 18) ; il rentre ou il tombe. Leur DCA (les éclatements sombres) le guette. Un choix de joueur : envoyer l\'appareil (et risquer l\'équipage) ou tirer à l\'aveugle. Le plus proche du jeu : il ne change aucune règle de la bataille, il resserre un nombre. Essayez la salve avec et sans l\'avion.', render: s => maquetteAvions(s, R, 'oeil') },
+      { title: 'Le cirque (le Baron et les autres)', status: 'ancienne', depuis: '0.52.2', note: 'Non retenu (Jérôme, v0.45.0) : reste au labo. Le ciel disputé : trois Spad (Lt Aubry, Sgt Marchand, Cpl Vidal) contre le triplan rouge du « Baron » (un Fokker Dr.I, comme celui de Richthofen, abattu le 21 avril 1918) et deux Albatros. Ils se poursuivent, tirent des traceurs, tombent en fumée. Aucun compteur de victoires (DESIGN.md) : seuls comptent le nom du pilote, son état et le résultat : qui tient le ciel prive l\'autre de ses avions de réglage (A) et de ses mitraillages (C). Le plus spectaculaire, le plus indirect : le joueur ne dirige qu\'un ordre, « une patrouille ici ».', render: s => maquetteAvions(s, R, 'cirque') },
+      { title: 'Le mitraillage', status: 'retenue', depuis: '0.52.2', note: 'Retenu (Jérôme, v0.45.0) ; en jeu depuis la v0.46.0 comme un 4e bouton « Avion » : une passe en ligne sur une bande, sans les trois réponses ci-dessous. Deux appareils d\'attaque d\'en face (de type Halberstadt) arrivent à dix mètres du sol sur un régiment, mitraillent en ligne, remontent, reviennent. Trois réponses : rien ; le feu en l\'air (on tire, on reste debout : un coup au but abat l\'appareil au bout de quelques passes, mais on tombe plus) ; se jeter à terre (le tiers des pertes, aucune riposte). Le dilemme du fantassin sous l\'avion, en une posture de plus dans la fenêtre d\'ordres, comme « feu retenu ».', render: s => maquetteAvions(s, R, 'mitraillage') },
+      { title: 'Les bombardiers de nuit', status: 'ancienne', depuis: '0.52.2', note: 'Non retenu (Jérôme, v0.45.0) : reste au labo. Un Gotha G.IV (bimoteur de bombardement allemand, 1917) vole la nuit sur nos lignes et cherche les lampes de l\'arrière (v0.39.0) : il lâche une chaîne de six bombes sur les lampes (5 m de précision), ou au hasard si on les éteint (36 m). Éteindre les lampes protège, mais coûte : la corvée de la nuit se travaille mal dans le noir. Les projecteurs et la DCA sont un pari : peut-être l\'abattre, mais leurs éclatements se voient. Le seul sujet qui prolonge une règle déjà en jeu (les lampes).', render: s => maquetteAvions(s, R, 'nuit') },
     ] },
   ] },
   { id: 'moteur', title: 'Moteur', topics: [

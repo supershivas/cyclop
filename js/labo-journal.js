@@ -2,6 +2,9 @@
 // Une entrée par version qui touche au labo, la plus récente en haut. `ref` : « sujet-Lettre » (la lettre est celle de la variante,
 // A étant l'actuelle). À chaque changement du labo : une entrée ici, avec `depuis` sur les variantes ajoutées ou changées (labo.js).
 export const JOURNAL = [
+  { version: '0.52.2', date: '2026-10-22', items: [
+    { genre: 'mis-a-jour', texte: 'Les décisions déjà prises passent dans le labo : les cinq chars et le mitraillage sont retenus (le mitraillage est en jeu), l\'œil de l\'artillerie, le cirque, les bombardiers de nuit et les trois ponts non choisis sont non retenus ; seuls les gaz restent à trancher', ref: 'avions-D' },
+  ] },
   { version: '0.52.1', date: '2026-10-22', items: [
     { genre: 'mis-a-jour', texte: 'Les maquettes du moteur montrent les soldats des deux armées tournés vers l\'ennemi (ils regardaient là où ils allaient, et au départ vers le sud) ; coût de cubes de sol plus petits mesuré (voir la feuille de route), rien de nouveau au labo' },
   ] },
