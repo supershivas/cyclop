@@ -89,3 +89,4 @@
   `pointerdown` des boutons droit et du milieu sur le canvas (ce qui supprime
   mousedown et mouseup) et arrête mousedown, mouseup, auxclick, contextmenu à la
   capture. Une extension installée avant la page peut encore les lire : d'où (v0.21.2) le clic gauche pour choisir et ordonner (le clic droit n'annule que) et, pour la caméra, le bouton du milieu et le cadran à l'écran (v0.9.1 : tourner au clic droit restait gêné par les gestes de souris de Firefox).
+- **Le choix de la saison** (v0.53.0 ; `#saisons-choix` dans `#dialogue-carte`, `demanderSecteur` de main.js) : trois boutons (été, automne, hiver) sous l'aperçu, pour la partie solo, la fin de partie et le jeu à deux. Tant que le joueur n'a rien touché, la saison est celle du secteur (automne par défaut) et change avec lui ; son clic la fixe. L'aperçu 3D la montre (`monter(…, { saison })`). Le mode debug lit `?saison=` (sans lui, celle du secteur : les scripts ne changent pas).

@@ -87,6 +87,12 @@ test('une campagne neuve : trois batailles, labours puis crête puis marais, mê
   assert.equal(new Set(graines).size, 3);
   assert.notDeepEqual(nouvelleCampagne(12), a); assert.notEqual(suivante(nouvelleCampagne(12)).graine, n1.graine);
 });
+test('la saison suit l\'étape : été, automne, hiver, dès le terrain ; la même après une reprise', () => {
+  const c = nouvelleCampagne(11), etape = n => suivante({ ...c, batailles: Array(n - 1).fill({ regiments: [] }) });
+  assert.deepEqual([1, 2, 3].map(n => etape(n).opts.saison), ['ete', 'automne', 'hiver']);
+  assert.deepEqual([1, 2, 3].map(n => etape(n).opts.saison), [1, 2, 3].map(n => suivante({ ...nouvelleCampagne(11), batailles: Array(n - 1).fill({ regiments: [] }) }).opts.saison), 'reprise : la même');
+  for (const n of [1, 2, 3]) { const s = etape(n), B = nouvelleBataille(s.graine, R, { ...s.opts, soldats: 40, soldatsEux: 40, troupes: null }); assert.equal(B.etat.sol.saison, s.opts.saison); }
+});
 test('la bataille d\'une campagne le sait, et la partie n\'en change pas ; relue, elle le sait encore', () => {
   const a = jouer(bat(3)), b = jouer(bat(3, { campagne: { id: 11, n: 2 } }));
   assert.deepEqual(b.etat.campagne, { id: 11, n: 2 }); assert.equal(a.etat.campagne, null);

@@ -402,6 +402,11 @@ dialog form { margin-top: calc(var(--pas) * 2); }
 .carte-choix b { font-weight: normal; font-size: var(--texte-moyen); letter-spacing: .06em; text-transform: uppercase; }
 .carte-choix .touche { float: right; color: var(--jeu-accent); }
 .carte-choix p { margin: 0; font-size: var(--texte-petit); line-height: 1.35; }
+.saisons-choix { display: flex; gap: var(--pas); align-items: stretch; margin-top: var(--pas); }
+.saisons-choix .carte-choix { flex: 1; text-align: center; }
+.saisons-choix .carte-choix b { float: none; }
+.saisons-choix::before { content: 'Saison'; align-self: center; font-size: var(--texte-petit); color: var(--jeu-accent); letter-spacing: .06em; text-transform: uppercase; }
+#dialogue-carte.agrandi .saisons-choix { display: none; }
 .carte-apercu { display: grid; gap: var(--pas); }
 .carte-3d { position: relative; height: min(56vh, 30rem); overflow: hidden; display: flex; align-items: center; justify-content: center; background: var(--jeu-ombre); border: 1px solid var(--jeu-accent); }
 .carte-3d canvas { display: block; image-rendering: pixelated; }

@@ -4,11 +4,11 @@
    identité à re-dériver : un homme est son numéro, son rang, son expérience et ses victimes ; son nom vient de `graineIdentite`.
    Il est écrit à la fin de chaque bataille, avant l'écran de fin (`cloturerDansLeStore`), et `cloturer` est idempotente : relire une
    partie arrêtée à la fin, ou clore deux fois, donne le même registre. Rien n'est reporté de la fatigue, de la peur ni du moral. */
-import { hash2 } from './lib/rng.js?v=0.52.6';
-import { NOUS, rangDe, numeroCampagne } from './bataille.js?v=0.52.6';
-import { SECTEURS } from './data/secteur.js?v=0.52.6';
-import { identite, chevrons } from './identite.js?v=0.52.6';
-import { CAMPAGNE, TEXTES } from './data/campagne.js?v=0.52.6';
+import { hash2 } from './lib/rng.js?v=0.53.0';
+import { NOUS, rangDe, numeroCampagne } from './bataille.js?v=0.53.0';
+import { SECTEURS } from './data/secteur.js?v=0.53.0';
+import { identite, chevrons } from './identite.js?v=0.53.0';
+import { CAMPAGNE, TEXTES } from './data/campagne.js?v=0.53.0';
 
 export const CLE = 'campagne';        // l'entrée de js/lib/save.js (cyclopeen:campagne)
 export const VERSION_CAMPAGNE = 1;
@@ -59,6 +59,7 @@ export function suivante(c, plan = CAMPAGNE) {
     secteur: P.secteur, mission, graineIdentite: c.graineIdentite, campagne, troupes,
     soldatsEux: Math.round(S.soldats / (P.forces ?? 1)), iaRythme: P.ia ?? null,
   };
+  if (P.saison) opts.saison = P.saison;                   // imposée par l'étape, dès la génération du terrain
   if (P.jours) opts.jours = P.jours;                      // sinon la durée du secteur (10 à 15 jours, tirée de la graine)
   return { n, graine, graineIdentite: c.graineIdentite, secteur: P.secteur, mission, campagne, opts };
 }

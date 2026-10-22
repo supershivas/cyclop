@@ -4,12 +4,13 @@
 // `jours` : la durée de chaque bataille (Jérôme, v0.36.3 : sept jours, environ deux heures la campagne ; la bataille 1 coûte 151 morts au lieu de 359 à quinze jours,
 // la 2 en coûte à peu près autant, 886 contre 938 : mesuré, scripts/mesure-campagne.mjs). Le rapport de forces de la 2 reste la parité (la 1,25 ne sauve que ~85 hommes).
 // Les autres nombres sont des PROPOSITIONS, à régler d'après la mesure.
+// `saison` : imposée par l'étape (Jérôme, v0.53.0 : été, automne, hiver ; le joueur ne la change pas, elle l'emporte sur celle de la carte).
 export const CAMPAGNE = {
   longueur: 3,
   batailles: [
-    { secteur: 'essai', mission: 'tenir', forces: 1.3, jours: 7, ia: { barrage: 1.4, offensive: 1.4 } },        // les labours : le terrain est à nous
-    { secteur: 'crete', forces: 1, jours: 7, ia: { barrage: 1, offensive: 1 } },            // la crête : ils la tiennent
-    { secteur: 'marais', forces: 0.77, jours: 7, ia: { barrage: 0.7, offensive: 0.7 } },      // le marais : la boue, et ils sont plus nombreux
+    { secteur: 'essai', mission: 'tenir', forces: 1.3, jours: 7, saison: 'ete', ia: { barrage: 1.4, offensive: 1.4 } },        // les labours : le terrain est à nous
+    { secteur: 'crete', forces: 1, jours: 7, saison: 'automne', ia: { barrage: 1, offensive: 1 } },            // la crête : ils la tiennent
+    { secteur: 'marais', forces: 0.77, jours: 7, saison: 'hiver', ia: { barrage: 0.7, offensive: 0.7 } },      // le marais : la boue, et ils sont plus nombreux
   ],
   // la mission de la 2e et de la 3e dépend de l'issue de la précédente (Jérôme, v0.36.4) : une victoire ouvre l'offensive, une défaite oblige à tenir ; l'ordre des secteurs est fixe
   missionSelonIssue: { reussie: 'prendre', manquee: 'tenir' },

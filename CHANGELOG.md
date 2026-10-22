@@ -1,5 +1,9 @@
 # Journal des versions
 
+## 0.53.0 — 2026-10-22
+- Au choix du secteur (partie solo et jeu à deux), on choisit la saison : été, automne ou hiver ; les deux joueurs jouent la même
+- En campagne, la saison suit les batailles : été, puis automne, puis hiver (imposée, dès le terrain)
+
 ## 0.52.6 — 2026-10-22
 - Au labo : des arbres plus variés (six formes, des feuilles par saison, des abattus à la souche éclatée), à comparer avec ceux d'avant ; rien n'est encore dans le jeu
 

@@ -546,3 +546,23 @@ test('chaque saison a un nom et une description ; une retouche « saison » du b
     assert.equal(B.etat.sol.saison, 'hiver'); assert.equal(B.etat.meteo[0], 'gel'); assert.ok(!B.etat.meteo.includes('pluie'));
   } finally { S2.essai = avant; }
 });
+
+group('la saison choisie (v0.53.0)');
+test('une saison imposée à la bataille l\'emporte sur celle du secteur : sol, temps, sauvegarde relue', async () => {
+  const { nouvelleBataille, restaurer, photo } = await import('../js/bataille.js');
+  const base = { soldats: 20, jours: 8 };
+  for (const saison of ['ete', 'automne', 'hiver']) {
+    const B = nouvelleBataille(4, R, { ...base, saison });
+    assert.equal(B.etat.sol.saison, saison);
+    assert.deepEqual(B.etat.meteo, nouvelleBataille(4, R, { ...base, saison }).etat.meteo, 'même saison, même temps');
+    const relue = restaurer(JSON.parse(JSON.stringify(photo(B))), R);
+    assert.equal(relue.etat.sol.saison, saison, 'relue : la même saison'); assert.deepEqual(relue.etat.meteo, B.etat.meteo);
+  }
+  assert.equal(nouvelleBataille(4, R, { ...base, saison: 'hiver' }).etat.meteo[0], 'gel'); assert.equal(nouvelleBataille(4, R, { ...base, saison: 'ete' }).etat.meteo[0], 'canicule');
+  SECTEURS.essai.saison = 'hiver';
+  try { assert.equal(nouvelleBataille(4, R, { ...base, saison: 'ete' }).etat.sol.saison, 'ete', 'l\'emporte sur celle de la carte'); assert.equal(nouvelleBataille(4, R, base).etat.sol.saison, 'hiver', 'sans choix : celle de la carte'); }
+  finally { delete SECTEURS.essai.saison; }
+  assert.equal(nouvelleBataille(4, R, { ...base, saison: 'printemps' }).etat.sol.saison, undefined, 'une saison inconnue est ignorée');
+  const sec = nouvelleBataille(3, R, { ...base, saison: 'ete' }).terrain, hum = nouvelleBataille(3, R, { ...base, saison: 'automne' }).terrain; let hs = 0, hh = 0; for (let c = 0; c < sec.humid.length; c += 13) { hs += sec.humid[c]; hh += hum.humid[c]; }
+  assert.ok(hs < hh * 0.6, 'le terrain est généré avec la saison choisie');
+});

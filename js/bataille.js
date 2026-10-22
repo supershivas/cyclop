@@ -14,24 +14,24 @@
    La sauvegarde (photo) garde la graine, la liste compacte des impacts, l'état
    de la foule et les petites couches de logique ; jamais le relief : il se
    rejoue depuis la graine et les impacts (rejouerTerrain). */
-import { createRng, hash2 } from './lib/rng.js?v=0.52.6';
-import { impact, hydroLignes, etat as etatCase, vitesseEtat, vitesseCase, ETAT } from './terrain.js?v=0.52.6';
-import { creerArmee, ajouterSoldat, construireGrille, pasArmee, tuerDans, effrayer, compacter, photoArmee, restaurerArmee, b64, deB64, DENSITE, place } from './army.js?v=0.52.6';
-import { ligneSous } from './tranchees.js?v=0.52.6';
-import { terrainDuSecteur } from './secteur-terrain.js?v=0.52.6';
-import { detruirePont } from './eaux.js?v=0.52.6';
-import { calculerCouts, creerCacheChamps, dimensionsCouts, BLOC } from './champs.js?v=0.52.6';
-import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.52.6';
-import { preparerAleatoire, ID_ALEATOIRE } from './generateur.js?v=0.52.6';
-import { AVION, MITRAILLAGE } from './data/mitraillage.js?v=0.52.6';
-import { CHAR, CHAR_RECHARGE, CHAR_SORTIE } from './data/chars.js?v=0.52.6';
-import { refusChar, lancerChar, degatsChars, avancerChars } from './chars.js?v=0.52.6';
-import { METEO, SAISONS, SAISON_DEFAUT, PREVISION_JUSTE } from './data/meteo.js?v=0.52.6';
-import { SECTEURS } from './data/secteur.js?v=0.52.6';
-import { REGIMENTS } from './data/lexique.js?v=0.52.6';
-import { STANCES, STANCE_DEFAUT } from './data/stances.js?v=0.52.6';
-import { grade } from './identite.js?v=0.52.6';
-import { corvees, rejouerTravaux } from './nuit.js?v=0.52.6';
+import { createRng, hash2 } from './lib/rng.js?v=0.53.0';
+import { impact, hydroLignes, etat as etatCase, vitesseEtat, vitesseCase, ETAT } from './terrain.js?v=0.53.0';
+import { creerArmee, ajouterSoldat, construireGrille, pasArmee, tuerDans, effrayer, compacter, photoArmee, restaurerArmee, b64, deB64, DENSITE, place } from './army.js?v=0.53.0';
+import { ligneSous } from './tranchees.js?v=0.53.0';
+import { terrainDuSecteur } from './secteur-terrain.js?v=0.53.0';
+import { detruirePont } from './eaux.js?v=0.53.0';
+import { calculerCouts, creerCacheChamps, dimensionsCouts, BLOC } from './champs.js?v=0.53.0';
+import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.53.0';
+import { preparerAleatoire, ID_ALEATOIRE } from './generateur.js?v=0.53.0';
+import { AVION, MITRAILLAGE } from './data/mitraillage.js?v=0.53.0';
+import { CHAR, CHAR_RECHARGE, CHAR_SORTIE } from './data/chars.js?v=0.53.0';
+import { refusChar, lancerChar, degatsChars, avancerChars } from './chars.js?v=0.53.0';
+import { METEO, SAISONS, SAISON_DEFAUT, PREVISION_JUSTE } from './data/meteo.js?v=0.53.0';
+import { SECTEURS } from './data/secteur.js?v=0.53.0';
+import { REGIMENTS } from './data/lexique.js?v=0.53.0';
+import { STANCES, STANCE_DEFAUT } from './data/stances.js?v=0.53.0';
+import { grade } from './identite.js?v=0.53.0';
+import { corvees, rejouerTravaux } from './nuit.js?v=0.53.0';
 
 export const PAS = 1 / 30;                 // s de jeu par pas
 export const NOUS = 0, EUX = 1;
@@ -66,6 +66,7 @@ function chaineMeteo(rng, jours, pluieAuMoins, saison = SAISON_DEFAUT) {
    graineIdentite : d'où viennent les noms, âges et grades de NOS hommes (identite.js) ; elle ne sert qu'à cela. Une campagne la garde
    d'une bataille à l'autre pendant que la graine (terrain, météo, tirages) change ; hors campagne elle vaut la graine. En face, les
    hommes viennent toujours de la graine de la bataille : ce sont d'autres hommes à chaque fois.
+   saison : 'ete' | 'automne' | 'hiver' (v0.53.0) : impose la saison du sol et du temps, quelle que soit celle du secteur (parties personnalisées, étapes de la campagne) ; absente, le secteur décide.
    campagne : { id, n } si la bataille est la n-ième d'une campagne (js/campagne.js) ; elle ne change rien à la partie.
    troupes : { regiments: [{ nom, survivants: [[numéro, rang, expérience, victimes], …] }], prochainNumero } : nos régiments reconstitués
    (lot 3) ; chacun reprend ses survivants (par le rang, puis l'expérience), complétés par des recrues sans expérience. Les numéros de
@@ -81,7 +82,8 @@ export function nouvelleBataille(graine, R, opts = {}) {
   const J = typeof S.jours === 'number' ? { min: S.jours, max: S.jours } : S.jours;
   const jours = opts.jours || J.min + Math.floor(hash2(graine | 0, 41, 7) * (J.max - J.min + 1));
   const mission = opts.mission || (S.missions ? S.missions[Math.floor(hash2(graine | 0, 43, 7) * S.missions.length)] : null);
-  const { chaine, previsions } = chaineMeteo(rng.fork('meteo'), jours, S.saison ? (SAISONS[S.saison]?.pluieAuMoins ?? S.pluieAuMoins) : S.pluieAuMoins, S.saison);
+  const saison = opts.saison && SAISONS[opts.saison] ? opts.saison : S.saison;
+  const { chaine, previsions } = chaineMeteo(rng.fork('meteo'), jours, saison ? (SAISONS[saison]?.pluieAuMoins ?? S.pluieAuMoins) : S.pluieAuMoins, saison);
   const etat = {
     v: VERSION, graine, graineIdentite: opts.graineIdentite ?? graine, campagne: opts.campagne ?? null, secteur: idSecteur, parCamp, parCampEux,
     mission, issue: null,               // la mission (tenir, prendre) et, à la fin, ce qu'il en est
@@ -98,7 +100,7 @@ export function nouvelleBataille(graine, R, opts = {}) {
     marges: { ...S.marges },            // le terrain déborde du secteur (zone())
     regiments: [], pertes: [0, 0], pertesJour: [[0, 0]], blesses: [0, 0],
     corps: [],                  // les morts restent où ils sont tombés : [x×10, y×10, camp, jour, id]
-    sol: Object.fromEntries(['relief', 'arbres', 'bois', 'haies', 'buissons', 'retouches', 'objets', 'tranchees', 'saison'].filter(k => S[k] !== undefined).map(k => [k, structuredClone(S[k])])),   // ce qui fait le sol du secteur, copié : les retouches de l'atelier (lots 1 et 2) ne changent pas une partie en cours
+    sol: Object.fromEntries(['relief', 'arbres', 'bois', 'haies', 'buissons', 'retouches', 'objets', 'tranchees', 'saison'].map(k => [k, k === 'saison' ? saison : S[k]]).filter(([, v]) => v !== undefined).map(([k, v]) => [k, structuredClone(v)])),   // ce qui fait le sol du secteur, copié : les retouches de l'atelier (lots 1 et 2) ne changent pas une partie en cours
     tranchees: !!S.tranchees,   // (les batailles d'avant la v0.4.0 n'en ont pas)
     troncons: [],               // qui tient chaque tronçon (0 nous, 1 en face)
     prises: [[0, 0]],           // tronçons pris par chaque camp, jour par jour

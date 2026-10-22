@@ -1,7 +1,8 @@
 {
-  "version": "0.52.6",
+  "version": "0.53.0",
   "date": "2026-10-22",
   "changes": [
-    "Au labo : des arbres plus variés (six formes, des feuilles par saison, des abattus à la souche éclatée), à comparer avec ceux d'avant ; rien n'est encore dans le jeu"
+    "Au choix du secteur (partie solo et jeu à deux), on choisit la saison : été, automne ou hiver",
+    "En campagne, la saison suit les batailles : été, puis automne, puis hiver"
   ]
 }

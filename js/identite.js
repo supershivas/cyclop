@@ -3,8 +3,8 @@
    `nouvelleBataille`) et de son numéro : il garde les mêmes d'une partie relue à l'autre.
    Et ce qu'il endure : la fatigue (jambes, bras), une blessure, la peur, dits en
    mots. Logique pure (aucun DOM), testée dans Node. */
-import { hash2 } from './lib/rng.js?v=0.52.6';
-import { NOMS } from './data/noms.js?v=0.52.6';
+import { hash2 } from './lib/rng.js?v=0.53.0';
+import { NOMS } from './data/noms.js?v=0.53.0';
 
 export const PARTIES = ['', 'bras', 'jambe', 'tête'];
 
