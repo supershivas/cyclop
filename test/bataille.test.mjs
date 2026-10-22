@@ -839,6 +839,24 @@ test('le feu retenu ne tire pas sur l\'avion (sauf tout près) : il coûte bien 
   assert.equal(degatsParSeconde(B, 0, cx, cy, haut), 0, 'feu retenu : rien en croisière');
   assert.ok(degatsParSeconde(B, 0, cx, cy, MITRAILLAGE.passe) < volonteBas, 'et tout près, moins qu\'à volonté');
 });
+import { avionsEnMots } from '../js/hud/nuit.js';
+test('le rapport du soir compte les sorties et les avions perdus du jour, et repart de zéro à l\'aube', () => {
+  const B = petite(), [cx, cy] = centreRegiment(B, 8);
+  assert.match(avionsEnMots(B.etat, 0), /aucune sortie\. Il en reste 3/);
+  ordreAvion(B, cx, cy + 40, cx, cy - 40);
+  B.etat.mitraillages[0].pv = 0.3;
+  jouer(B, 1500);
+  assert.deepEqual(B.etat.avionsJour[0][0], [1, 1]);
+  assert.deepEqual(B.etat.avionsJour[0][1], [0, 0], 'rien pour l\'autre camp');
+  assert.match(avionsEnMots(B.etat, 0), /1 sortie, 1 avion abattu\. Il en reste 2/);
+  assert.doesNotMatch(avionsEnMots(B.etat, 0), /touché|tué|mort/, 'aucun compteur de ce qu\'on a tué');
+  while (B.etat.phase === 'jour') avancer(B);
+  aube(B);
+  assert.deepEqual(B.etat.avionsJour[1][0], [0, 0]);
+  assert.match(avionsEnMots(B.etat, 0), /aucune sortie/);
+  const b = restaurer(photo(B), R);
+  assert.deepEqual(b.etat.avionsJour, B.etat.avionsJour, 'gardé par la sauvegarde');
+});
 test('un avion relu en vol puis en chute donne la même partie', () => {
   const a = petite(), [cx, cy] = centreRegiment(a, 8);
   ordreAvion(a, cx, cy + 40, cx, cy - 40);

@@ -13,7 +13,7 @@
    seul `backend` change.
 
    Module ES sans dépendance :
-     import { createStore, autosave, pickJSONFile } from './lib/save.js?v=0.58.0'
+     import { createStore, autosave, pickJSONFile } from './lib/save.js?v=0.59.0'
      const store = createStore({
        game: 'kingvi',
        debug: new URLSearchParams(location.search).has('debug'),

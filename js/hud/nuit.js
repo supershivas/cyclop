@@ -1,11 +1,11 @@
 // Le papier de la nuit (Jérôme, v0.13.0) : un état (choix des corvées, puis le bilan de l'aube), jamais une boîte de
 // dialogue : le champ reste là, on choisit des régiments (clic, cadre, T) et on leur donne une corvée, dite sur leur carte.
-import { NOUS, aube } from '../bataille.js?v=0.58.0';
-import { METEO } from '../data/meteo.js?v=0.58.0';
-import { CORVEES, CONTACT } from '../data/corvees.js?v=0.58.0';
-import { refusCorvee, contactDe } from '../nuit.js?v=0.58.0';
-import { pluriel } from './lecture.js?v=0.58.0';
-import { lune, nomPhase, couvertureNuit, cielEnMots } from '../data/lune.js?v=0.58.0';
+import { NOUS, aube } from '../bataille.js?v=0.59.0';
+import { METEO } from '../data/meteo.js?v=0.59.0';
+import { CORVEES, CONTACT } from '../data/corvees.js?v=0.59.0';
+import { refusCorvee, contactDe } from '../nuit.js?v=0.59.0';
+import { pluriel } from './lecture.js?v=0.59.0';
+import { lune, nomPhase, couvertureNuit, cielEnMots } from '../data/lune.js?v=0.59.0';
 
 export const corveeDe = id => [...CORVEES, CONTACT].find(c => c.id === id)?.nom || '';
 export const corveeCourte = id => [...CORVEES, CONTACT].find(c => c.id === id)?.court || '';
@@ -15,6 +15,13 @@ const tron = n => `${n} tronçon${n > 1 ? 's' : ''}`;
 function enLignes([pris, perdus]) {
   if (!pris && !perdus) return 'Les lignes n\'ont pas bougé.';
   return [pris && `pris ${tron(pris)}`, perdus && `perdu ${tron(perdus)}`].filter(Boolean).join(', ').replace(/^./, c => c.toUpperCase()) + '.';
+}
+// Le rapport du soir sur les avions (v0.59.0) : les sorties du jour, ceux qu'on a perdus, ce qui reste. Ni ce qu'ils ont touché (DESIGN.md : aucun compteur de ce qu'on a tué) ni les pv de chacun.
+export function avionsEnMots(e, camp) {
+  const [sorties, perdus] = e.avionsJour[e.jour - 1][camp], restent = e.avions[camp].filter(pv => pv > 0).length;
+  const s = n => n > 1 ? 's' : '';
+  const jour = sorties ? `${sorties} sortie${s(sorties)}${perdus ? `, ${perdus} avion${s(perdus)} abattu${s(perdus)}` : ', tous rentrés'}` : 'aucune sortie';
+  return `Avions : ${jour}. ${restent ? `Il en reste ${restent}, réparés cette nuit.` : 'Plus un seul.'}`;
 }
 // le bilan de la nuit en quelques lignes (rien de ce qui n'a pas eu lieu)
 function bilanEnMots(B, b) {
@@ -61,6 +68,7 @@ export function creerNuit({ $, bataille, choisis, pauser, reprendre, sauvegarder
     $('nuit-titre').textContent = `Nuit du ${nomJour(j)} au ${nomJour(j + 1)} jour`;
     $('nuit-pertes').textContent = moi() === NOUS ? `Morts du jour : ${nous} des nôtres, ${eux} en face.` : `Morts du jour : ${eux} des nôtres, ${nous} en face.`;
     $('nuit-lignes').textContent = e.tranchees ? enLignes(e.prises[j - 1]) : '';
+    $('nuit-avions').textContent = avionsEnMots(e, moi());
     $('nuit-demain').textContent = `Demain : ${METEO[e.previsions[j - 1]]?.prevision || '—'}.`;
     // le ciel de cette nuit (v0.40.0) : la phase de la lune et la couverture, les mêmes que celles que le dessin montre
     const mt = e.meteo[j - 1], L = lune(j, e.graine);

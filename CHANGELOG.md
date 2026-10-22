@@ -1,5 +1,8 @@
 # Journal des versions
 
+## 0.59.0 — 2026-10-22
+- Le papier du soir a un rapport sur les avions : les sorties du jour, ceux qu'on a perdus, ceux qui restent et seront réparés cette nuit (sans compter ce qu'ils ont touché)
+
 ## 0.58.0 — 2026-10-22
 - L'attaque de l'avion se voit : feu de bouche, traceurs qui tombent du ciel, terre et poussière qui giclent en rangée le long de la bande, douilles ; abattu, il tombe en vrille et s'écrase en flammes, avec une colonne de fumée noire
 

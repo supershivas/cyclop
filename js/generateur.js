@@ -2,12 +2,12 @@
 // Une carte est un secteur de `data/secteur.js` (mêmes lignes de tranchées, mêmes 400 × 300 m) dont on tire le sol : bosses et nappe, des montagnes et des chaînes, des collines et des plateaux (`retouches`, `formes.js`),
 // un fleuve en travers du no man's land avec ses ponts, un fleuve ou des lacs derrière les lignes, une côte (un grand disque d'eau d'un des quatre côtés), et ce qui pousse. Chaque tirage est contrôlé par `validerSecteur` :
 // l'eau ne touche jamais une tranchée (la même règle que l'atelier) ; sans accord après `essais` tirages, la carte n'a pas d'eau. `genererCarte(graine)` rend toujours la même carte.
-import { createRng } from './lib/rng.js?v=0.58.0';
-import { SECTEURS } from './data/secteur.js?v=0.58.0';
-import { validerSecteur } from './tranchees.js?v=0.58.0';
-import { GENERATEUR as G, ID_ALEATOIRE } from './data/generateur.js?v=0.58.0';
-import { PONTS_JEU } from './data/ponts.js?v=0.58.0';
-import { fleuveEn, VARIATION } from './eaux.js?v=0.58.0';
+import { createRng } from './lib/rng.js?v=0.59.0';
+import { SECTEURS } from './data/secteur.js?v=0.59.0';
+import { validerSecteur } from './tranchees.js?v=0.59.0';
+import { GENERATEUR as G, ID_ALEATOIRE } from './data/generateur.js?v=0.59.0';
+import { PONTS_JEU } from './data/ponts.js?v=0.59.0';
+import { fleuveEn, VARIATION } from './eaux.js?v=0.59.0';
 
 const dans = (rng, [a, b]) => a + rng() * (b - a);
 const entier = (rng, [a, b]) => Math.floor(dans(rng, [a, b + 1]));

@@ -1,8 +1,7 @@
 {
-  "version": "0.58.0",
+  "version": "0.59.0",
   "date": "2026-10-22",
   "changes": [
-    "L'avion mitrailleur est un biplan à l'échelle qui descend sur la bande, tire en balayant, perd des points de vie sous le feu et tombe en flammes",
-    "La passe se trace en deux clics ; on a trois avions, réparés en partie chaque nuit"
+    "Le papier du soir a un rapport sur les avions : sorties du jour, avions perdus, avions restants"
   ]
 }
