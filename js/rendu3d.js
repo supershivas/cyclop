@@ -130,10 +130,21 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
   const PAROI_RGB = ORDRE.map(k => rgb(PALETTE[OMBRE[k]]));
 
   // ─── Un morceau de sol : dessus fusionnés, parois sud ───
+  // La finesse du sol (Jérôme, v0.52.2) : 1 = la case de 1 m ; 2 = des cubes de 0,5 m dont la hauteur suit la pente (la hauteur dessinée des quatre cases voisines, mêlée au centre du petit cube, arrondie au quart), sauf à un mur d'un mètre cinquante ou plus (tranchée, falaise) : le petit cube prend alors la hauteur de sa case, le bord reste net
+  let finesse = 1;
+  function hauteurFine(I, J) {
+    const x = (I + 0.5) / finesse, z = (J + 0.5) / finesse;
+    const fx = x - 0.5, fz = z - 0.5, i = Math.floor(fx), j = Math.floor(fz), tx = fx - i, tz = fz - j;
+    const c = (a, b) => hauteurQ(T, Math.max(0, Math.min(T.H - 1, b)) * T.W + Math.max(0, Math.min(T.W - 1, a)));
+    const h00 = c(i, j), h10 = c(i + 1, j), h01 = c(i, j + 1), h11 = c(i + 1, j + 1);
+    if (Math.max(h00, h10, h01, h11) - Math.min(h00, h10, h01, h11) >= 6) return c(Math.floor(x), Math.floor(z));
+    return Math.round((h00 * (1 - tx) + h10 * tx) * (1 - tz) + (h01 * (1 - tx) + h11 * tx) * tz);
+  }
   function construireMorceau(mx, my) {
     const i0 = mx * MORCEAU, j0 = my * MORCEAU;
     const i1 = Math.min(T.W, i0 + MORCEAU), j1 = Math.min(T.H, j0 + MORCEAU);
-    const w = i1 - i0, h = j1 - j0;
+    const F = finesse, w = (i1 - i0) * F, h = (j1 - j0) * F, W2 = T.W * F, H2 = T.H * F, D = 0.5 / F;     // F : cases par mètre (1 : la case de 1 m ; 2 : des cubes de 0,5 m, Jérôme, v0.52.2)
+    const i0s = i0 * F, j0s = j0 * F;
     const pos = [], paroi = [], decal = [];
     const quad = (ax, ay, az, bx, by, bz, cx, cy, cz, dx, dy, dz, p, ox = 0, oz = 0) => {
       pos.push(ax, ay, az, bx, by, bz, cx, cy, cz, ax, ay, az, cx, cy, cz, dx, dy, dz);
@@ -141,67 +152,67 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
     };
     // le dessus : rectangles de même hauteur
     const vu = new Uint8Array(w * h);
-    const hq = (i, j) => hauteurQ(T, j * T.W + i);
+    const hq = F === 1 ? (i, j) => hauteurQ(T, j * T.W + i) : hauteurFine;
     for (let j = 0; j < h; j++) for (let i = 0; i < w; i++) {
       if (vu[j * w + i]) continue;
-      const z = hq(i0 + i, j0 + j);
+      const z = hq(i0s + i, j0s + j);
       let rw = 1;
-      while (i + rw < w && !vu[j * w + i + rw] && hq(i0 + i + rw, j0 + j) === z) rw++;
+      while (i + rw < w && !vu[j * w + i + rw] && hq(i0s + i + rw, j0s + j) === z) rw++;
       let rh = 1;
       grandir: while (j + rh < h) {
-        for (let k = 0; k < rw; k++) if (vu[(j + rh) * w + i + k] || hq(i0 + i + k, j0 + j + rh) !== z) break grandir;
+        for (let k = 0; k < rw; k++) if (vu[(j + rh) * w + i + k] || hq(i0s + i + k, j0s + j + rh) !== z) break grandir;
         rh++;
       }
       for (let jj = 0; jj < rh; jj++) for (let k = 0; k < rw; k++) vu[(j + jj) * w + i + k] = 1;
-      const y = z * 0.25, x0 = i0 + i, x1 = x0 + rw, z0 = j0 + j, z1 = z0 + rh;
+      const y = z * 0.25, x0 = (i0s + i) / F, x1 = x0 + rw / F, z0 = (j0s + j) / F, z1 = z0 + rh / F;
       // chaque face déborde de quelques centimètres : vue de biais, deux rectangles qui ne partagent pas
       // leurs sommets laissaient des fentes d'un pixel (le noir du fond)
       quad(x0 - E, y, z0 - E, x0 - E, y, z1 + E, x1 + E, y, z1 + E, x1 + E, y, z0 - E, 0);
     }
     // les parois tournées vers le sud : là où la case est plus haute que sa voisine du sud
     for (let j = 0; j < h; j++) {
-      const J = j0 + j, dernier = J === T.H - 1;
+      const J = j0s + j, dernier = J === H2 - 1;
       let i = 0;
       while (i < w) {
-        const haut = hq(i0 + i, J), bas = dernier ? SOCLE * 4 : hq(i0 + i, J + 1);
+        const haut = hq(i0s + i, J), bas = dernier ? SOCLE * 4 : hq(i0s + i, J + 1);
         if (haut <= bas) { i++; continue; }
         let k = 1;
-        while (i + k < w && hq(i0 + i + k, J) === haut && (dernier ? SOCLE * 4 : hq(i0 + i + k, J + 1)) === bas) k++;
-        const x0 = i0 + i, x1 = x0 + k, z = J + 1, ya = haut * 0.25, yb = bas * 0.25;
-        quad(x0 - E, yb - E, z, x1 + E, yb - E, z, x1 + E, ya + E, z, x0 - E, ya + E, z, haut - bas >= 2 ? 1 : 0, 0, -0.5);
+        while (i + k < w && hq(i0s + i + k, J) === haut && (dernier ? SOCLE * 4 : hq(i0s + i + k, J + 1)) === bas) k++;
+        const x0 = (i0s + i) / F, x1 = x0 + k / F, z = (J + 1) / F, ya = haut * 0.25, yb = bas * 0.25;
+        quad(x0 - E, yb - E, z, x1 + E, yb - E, z, x1 + E, ya + E, z, x0 - E, ya + E, z, haut - bas >= 2 ? 1 : 0, 0, -D);
         i += k;
       }
     }
     // les parois tournées vers le nord (Jérôme, v0.47.1 : « les faces nord ont la teinte de l'eau ») : la caméra libre peut regarder vers le sud ; sans elles, on voyait à travers le sol le fond de la couleur du temps
     for (let j = 0; j < h; j++) {
-      const J = j0 + j, premier = J === 0;
+      const J = j0s + j, premier = J === 0;
       let i = 0;
       while (i < w) {
-        const haut = hq(i0 + i, J), bas = premier ? SOCLE * 4 : hq(i0 + i, J - 1);
+        const haut = hq(i0s + i, J), bas = premier ? SOCLE * 4 : hq(i0s + i, J - 1);
         if (haut <= bas) { i++; continue; }
         let k = 1;
-        while (i + k < w && hq(i0 + i + k, J) === haut && (premier ? SOCLE * 4 : hq(i0 + i + k, J - 1)) === bas) k++;
-        const x0 = i0 + i, x1 = x0 + k, ya = haut * 0.25, yb = bas * 0.25;
-        quad(x1 + E, yb - E, J, x0 - E, yb - E, J, x0 - E, ya + E, J, x1 + E, ya + E, J, haut - bas >= 2 ? 1 : 0, 0, 0.5);
+        while (i + k < w && hq(i0s + i + k, J) === haut && (premier ? SOCLE * 4 : hq(i0s + i + k, J - 1)) === bas) k++;
+        const x0 = (i0s + i) / F, x1 = x0 + k / F, ya = haut * 0.25, yb = bas * 0.25, Z = J / F;
+        quad(x1 + E, yb - E, Z, x0 - E, yb - E, Z, x0 - E, ya + E, Z, x1 + E, ya + E, Z, haut - bas >= 2 ? 1 : 0, 0, D);
         i += k;
       }
     }
     // les parois tournées vers l'est et l'ouest (vues quand la caméra tourne) ; les bords du champ descendent au socle.
     // L'ouest est éclairé (la lumière vient du nord-ouest) : il garde la couleur du dessus.
     for (let i = 0; i <= w; i++) {
-      const I = i0 + i;
-      if (I > T.W || (i === w && I !== T.W)) continue;
-      const hg = I === 0 ? SOCLE * 4 : null, hd = I === T.W ? SOCLE * 4 : null;
+      const I = i0s + i;
+      if (I > W2 || (i === w && I !== W2)) continue;
+      const hg = I === 0 ? SOCLE * 4 : null, hd = I === W2 ? SOCLE * 4 : null;
       let j = 0;
       while (j < h) {
-        const J = j0 + j;
+        const J = j0s + j;
         const g = hg ?? hq(I - 1, J), d = hd ?? hq(I, J);
         if (g === d) { j++; continue; }
         let k = 1;
         while (j + k < h && (hg ?? hq(I - 1, J + k)) === g && (hd ?? hq(I, J + k)) === d) k++;
-        const z0 = J, z1 = J + k, ya = Math.max(g, d) * 0.25, yb = Math.min(g, d) * 0.25;
-        if (g > d) quad(I, yb - E, z0 - E, I, yb - E, z1 + E, I, ya + E, z1 + E, I, ya + E, z0 - E, g - d >= 2 ? 1 : 0, -0.5, 0);   // vers l'est
-        else quad(I, yb - E, z1 + E, I, yb - E, z0 - E, I, ya + E, z0 - E, I, ya + E, z1 + E, 0, 0.5, 0);                          // vers l'ouest
+        const z0 = J / F, z1 = (J + k) / F, X = I / F, ya = Math.max(g, d) * 0.25, yb = Math.min(g, d) * 0.25;
+        if (g > d) quad(X, yb - E, z0 - E, X, yb - E, z1 + E, X, ya + E, z1 + E, X, ya + E, z0 - E, g - d >= 2 ? 1 : 0, -D, 0);   // vers l'est
+        else quad(X, yb - E, z1 + E, X, yb - E, z0 - E, X, ya + E, z0 - E, X, ya + E, z1 + E, 0, D, 0);                          // vers l'ouest
         j += k;
       }
     }
@@ -514,6 +525,8 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
     set choisis(s) { choisis = s; },
     // le style de la nuit : 'halos' (le jeu), 'doux', 'trame' (l'ancienne, gardée au labo)
     set styleNuit(m) { temps.setStyleNuit(m); },
+    get finesse() { return finesse; },
+    set finesse(n) { n = n === 2 ? 2 : 1; if (n === finesse) return; finesse = n; for (const m of morceaux) m.userData.version = NaN; },      // le sol se refait morceau par morceau (majMorceaux) : v0.52.2
     set vide(v) { vide = v; scene.children.forEach(o => { o.visible = !v; }); },
     zoomer(d, ancre = null) {
       const avant = ancre ? versTerrain(...ancre) : null;

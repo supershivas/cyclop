@@ -99,7 +99,7 @@ function tuiles(stage, gris = false) {
 }
 
 // ─── Le moteur, en direct : le rendu du jeu sur une petite bataille ───
-function moteur(stage, { zoom = 3, pluie = false, gel = false, soldats = 600, cz = 185, camera = null, respiration = undefined, soldat = undefined, cadavre = undefined, morts = 0, effets = undefined, barrages = false, surLesArbres = false, vue = null, verdure = undefined, nuit = null, tombee = false, calque = null, bord = null, centre = null } = {}) {
+function moteur(stage, { zoom = 3, pluie = false, gel = false, soldats = 600, cz = 185, camera = null, respiration = undefined, soldat = undefined, cadavre = undefined, morts = 0, effets = undefined, barrages = false, surLesArbres = false, vue = null, verdure = undefined, nuit = null, tombee = false, calque = null, bord = null, centre = null, finesse = 1 } = {}) {
   reglerVerdure(verdure);                                   // le sol vert (apparence.js) : avant que le sol ne se peigne
   const boite = el('div'); boite.style.cssText = 'position:relative;width:100%;height:min(70vh,560px);overflow:hidden';
   const canvas = el('canvas'); canvas.style.cssText = 'position:absolute;left:0;top:0;image-rendering:pixelated';
@@ -129,6 +129,7 @@ function moteur(stage, { zoom = 3, pluie = false, gel = false, soldats = 600, cz
     rendu = await creerRendu(canvas, { mesure: true, camera, respiration, soldat, cadavre, effets, bord });
     if (fini) { rendu.detruire(); return; }
     if (nuit) rendu.styleNuit = nuit;
+    rendu.finesse = finesse;
     rendu.redimensionner();
     rendu.attacher(B);
     if (vue) rendu.placerCamera(vue.yaw, vue.tangage);       // la caméra libre du jeu
@@ -344,6 +345,12 @@ const GROUPES = [
     ] },
   ] },
   { id: 'moteur', title: 'Moteur', topics: [
+    { id: 'sol-fin', title: 'Le sol en cubes plus fins', variants: [
+      { title: 'Cubes d\'un mètre', status: 'actuelle', depuis: '0.52.2', note: 'Le sol du jeu : une case, un cube d\'un mètre ; les pentes montent par marches d\'un mètre. Prenez le relevé de coût en bas, puis comparez avec les autres.', render: s => moteur(s, { zoom: 8, soldats: 400, cz: 185 }) },
+      { title: 'Cubes d\'un demi-mètre', status: 'a-trancher', depuis: '0.52.2', note: 'Chaque case se coupe en quatre cubes dont la hauteur suit la pente (arrondie au quart de mètre) : les bosses et les bords de cratère montent par petites marches. Un mur d\'un mètre cinquante ou plus (tranchée, falaise) reste net. Jusqu\'à quatre fois plus de triangles de sol : regardez le relevé, au zoom 8 puis au zoom 3.', render: s => moteur(s, { zoom: 8, soldats: 400, cz: 185, finesse: 2 }) },
+      { title: 'Un demi-mètre, après un jour de pluie', status: 'a-trancher', depuis: '0.52.2', note: 'Le même sol fin sur un champ labouré par les obus et trempé : c\'est là que la finesse se voit, sur les bords des cratères et les rigoles.', render: s => moteur(s, { zoom: 6, soldats: 400, cz: 185, pluie: true, finesse: 2 }) },
+      { title: 'Un demi-mètre, vu de loin (zoom 3)', status: 'a-trancher', depuis: '0.52.2', note: 'Le prix du sol fin quand on le regarde de loin : plus de sol dans l\'écran, donc le coût le plus élevé. Une version du jeu ne le garderait qu\'à partir du zoom 6.', render: s => moteur(s, { zoom: 2, soldats: 400, cz: 185, finesse: 2 }) },
+    ] },
     { id: 'champ', title: 'Champ de bataille', variants: [
       { title: 'Zoom 4', note: 'Le rendu du jeu : quatre de nos régiments avancent ; à 4 pixels par mètre, chaque soldat est une silhouette allégée (jambes, corps, bras, tête, fusil) et son ombre ; l\'équipement n\'apparaît qu\'à partir de 6.', status: 'actuelle', render: s => moteur(s, { zoom: 3 }) },
       { title: 'Zoom 1', note: 'Tout le champ : chaque soldat n\'est plus qu\'un point (sa couleur sur son ombre) ; le sol garde le même relief qu\'au zoom 4 (depuis la v0.12.0).', render: s => moteur(s, { zoom: 0 }) },
