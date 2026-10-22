@@ -1,7 +1,7 @@
 {
-  "version": "0.52.0",
-  "date": "2026-10-21",
+  "version": "0.52.1",
+  "date": "2026-10-22",
   "changes": [
-    "Un réglage de saison dans l'éditeur de carte : automne, hiver (neige, gel) ou été (sec, forte chaleur)"
+    "Tous les soldats, des deux armées, regardent vers l'ennemi, à l'arrêt comme en marche"
   ]
 }

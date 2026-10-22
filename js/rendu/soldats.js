@@ -1,8 +1,8 @@
 // Les hommes : les soldats (une boîte et son ombre ; de près la silhouette, plus loin une silhouette allégée ; aux zooms 1 et 2 un point), les anneaux des
 // régiments choisis ou survolés, les corps (un homme couché) et les tombes (un tertre et une croix). Tout est instancié et ne reçoit que ce qu'on voit.
 // Le dessin seulement. Les formes viennent de geometries.js, le GLSL de shaders.js.
-import * as SH from './shaders.js?v=0.52.0';
-import { creerGeometries } from './geometries.js?v=0.52.0';
+import * as SH from './shaders.js?v=0.52.1';
+import { creerGeometries } from './geometries.js?v=0.52.1';
 
 // `THREE`, `scene`, `col`, `solUniforms` (`uSol`, `uTaille` : la texture du sol, que l'ombre d'un soldat reprend), `styleSoldat` (le style de près, comparé au labo),
 // `surface(x, z)` et `surfaceLisse(x, z)` (la hauteur du sol, lissée pour qui marche), `solY` (la hauteur moyenne du sol) et `POINTS_JUSQUA` (le zoom où un soldat n'est
@@ -15,7 +15,7 @@ export function creerSoldats({ THREE, scene, col, solUniforms, styleSoldat, cada
   // 3 les jambes (bandes molletières), 4 le fusil, 5 le sac, 6 le visage.
   const { geometrieSoldat: formeSoldat } = creerGeometries(THREE, col);
   const geometrieSoldat = style => formeSoldat(style, attrsI);
-  const CAPS = new Float32Array(1 << 16);                    // le cap de chaque homme (par numéro : les indices bougent quand les morts sont retirés) : l'angle de son regard, gardé quand il s'arrête
+  const CAPS = new Float32Array(1 << 16);                    // le cap de chaque homme (par numéro : les indices bougent quand les morts sont retirés) : l'angle de son regard, qui tourne vers l'ennemi
   let cap = 0, posArr = null, campArr = null, vitArr = null, tirArr = null, soldatsInst = null, soldatsDetail = null, soldatsLeger = null, soldatsPoints = null, attrsI = null, attrsP = null;
   const TAPI = 0.5;                        // la peur au-delà de laquelle un homme se tapit (le dessin seulement ; on ne tire plus à 0,85)
   const LEGER_DES = 4;                     // dès 4 pixels par mètre : la silhouette allégée (corps, tête, bras, fusil : ~50 triangles au lieu de ~74 ; Jérôme, v0.17.0)
@@ -247,12 +247,10 @@ export function creerSoldats({ THREE, scene, col, solUniforms, styleSoldat, cada
       if (sel || A.reg[i] === survolReg) { an[ka * 3] = x; an[ka * 3 + 1] = posArr[k * 3 + 1]; an[ka * 3 + 2] = y; anTon[ka] = sel ? 0 : 1 + A.camp[i]; ka++; }
       vitArr[k] = A.peur[i] >= TAPI ? -1 : Math.hypot(A.vx[i], A.vy[i]);
       tirArr[k * 2] = i < tirVal.length && tirVal[i] > 0 ? tirVal[i] : regs[A.reg[i]]?.stance === 'retenu' ? -1 : 0;       // (-1 : le fusil baissé du feu retenu ; la pose de tir, quand il tire, passe devant)
-      // son cap : vers sa cible quand il tire ; sinon le sens où il va (lissé), qu'il garde à l'arrêt ; au départ, vers le sud (vers nous)
-      const id = A.id[i] & 0xffff, vx = A.vx[i], vz = A.vy[i];
-      if (vx * vx + vz * vz > 0.09) {
-        let d = Math.atan2(vx, vz) - CAPS[id]; d -= Math.round(d / (2 * Math.PI)) * 2 * Math.PI;
-        CAPS[id] += d * 0.3;
-      }
+      // son cap : vers sa cible quand il tire ; sinon vers l'ennemi, les deux armées (nous au nord, en face au sud : π ou 0), même quand il marche de côté ou recule (Jérôme, v0.52.1)
+      const id = A.id[i] & 0xffff;
+      let d = (A.camp[i] === 0 ? Math.PI : 0) - CAPS[id]; d -= Math.round(d / (2 * Math.PI)) * 2 * Math.PI;
+      CAPS[id] += d * 0.3;
       tirArr[k * 2 + 1] = i < tirVal.length && tirVal[i] > 0 ? tirAng[i] : CAPS[id];
       k++;
     }

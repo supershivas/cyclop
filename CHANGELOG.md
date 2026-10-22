@@ -1,5 +1,8 @@
 # Journal des versions
 
+## 0.52.1 — 2026-10-22
+- Tous les soldats, des deux armées, regardent vers l'ennemi, à l'arrêt comme en marche (sauf quand ils tirent sur une cible)
+
 ## 0.52.0 — 2026-10-21
 - Un réglage « Saison » dans l'inspecteur de l'éditeur de carte (automne par défaut, hiver, été) : il fixe le temps de la bataille et l'état du sol de n'importe quelle carte, publiée avec ses autres retouches
 
