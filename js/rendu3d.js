@@ -22,23 +22,23 @@
    - Les soldats : instanciés (une boîte et son ombre) ; au zoom 1 et 2, un
      point de 2 × 2 pixels (la couleur du camp sur son ombre).
    - Les corps : un homme couché (instancié) ; au zoom 1 et 2, un pixel. */
-import { loadThree } from './three-lib.js?v=0.52.2';
-import * as SH from './rendu/shaders.js?v=0.52.2';
-import { creerSoldats } from './rendu/soldats.js?v=0.52.2';
-import { creerChars } from './rendu/chars.js?v=0.52.2';
-import { creerPonts } from './rendu/ponts.js?v=0.52.2';
-import { creerCiel } from './rendu/ciel.js?v=0.52.2';
-import { creerMeteo } from './rendu/meteo.js?v=0.52.2';
-import { creerTroncons } from './rendu/troncons.js?v=0.52.2';
-import { creerVegetation } from './rendu/vegetation.js?v=0.52.2';
-import { creerTemps } from './rendu/temps.js?v=0.52.2';
-import { creerEclats } from './rendu/eclats.js?v=0.52.2';
-import { PALETTE, ORDRE, INDICE } from './palette.js?v=0.52.2';
-import { OMBRE, couleursLigne } from './apparence.js?v=0.52.2';
-import { MORCEAU, hauteurVueQ as hauteurQ, hauteurVueM as hauteurM } from './terrain.js?v=0.52.2';
-import { horloge, secteurDuJeu } from './bataille.js?v=0.52.2';
-import { profilFleuve } from './eaux.js?v=0.52.2';
-import { ligneY } from './tranchees.js?v=0.52.2';
+import { loadThree } from './three-lib.js?v=0.52.3';
+import * as SH from './rendu/shaders.js?v=0.52.3';
+import { creerSoldats } from './rendu/soldats.js?v=0.52.3';
+import { creerChars } from './rendu/chars.js?v=0.52.3';
+import { creerPonts } from './rendu/ponts.js?v=0.52.3';
+import { creerCiel } from './rendu/ciel.js?v=0.52.3';
+import { creerMeteo } from './rendu/meteo.js?v=0.52.3';
+import { creerTroncons } from './rendu/troncons.js?v=0.52.3';
+import { creerVegetation } from './rendu/vegetation.js?v=0.52.3';
+import { creerTemps } from './rendu/temps.js?v=0.52.3';
+import { creerEclats } from './rendu/eclats.js?v=0.52.3';
+import { PALETTE, ORDRE, INDICE } from './palette.js?v=0.52.3';
+import { OMBRE, couleursLigne } from './apparence.js?v=0.52.3';
+import { MORCEAU, hauteurVueQ as hauteurQ, hauteurVueM as hauteurM } from './terrain.js?v=0.52.3';
+import { horloge, secteurDuJeu } from './bataille.js?v=0.52.3';
+import { profilFleuve } from './eaux.js?v=0.52.3';
+import { ligneY } from './tranchees.js?v=0.52.3';
 
 export const CAMERA = { yaw: 0.15, tangage: 0.95, fov: 30 };   // au départ : tournée de 9°, plongée de 54°, angle de 30°
 // la caméra respire : un balancement très lent, 2° en 23 s (Jérôme, v0.3.1 : variante D du labo retenue)
@@ -131,7 +131,9 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
 
   // ─── Un morceau de sol : dessus fusionnés, parois sud ───
   // La finesse du sol (Jérôme, v0.52.2) : 1 = la case de 1 m ; 2 = des cubes de 0,5 m dont la hauteur suit la pente (la hauteur dessinée des quatre cases voisines, mêlée au centre du petit cube, arrondie au quart), sauf à un mur d'un mètre cinquante ou plus (tranchée, falaise) : le petit cube prend alors la hauteur de sa case, le bord reste net
-  let finesse = 1;
+  // Dans le jeu (Jérôme, v0.52.3), `finesseDes` : à partir de combien de pixels par mètre le sol passe au demi-mètre (null : le réglage fixe du labo) ; chaque morceau se souvient de la finesse où il a été fait (`userData.F`)
+  // et ne se refait que s'il est dans la vue, les autres attendent qu'on les regarde
+  let finesse = 1, finesseDes = null, finPerimee = false;
   function hauteurFine(I, J) {
     const x = (I + 0.5) / finesse, z = (J + 0.5) / finesse;
     const fx = x - 0.5, fz = z - 0.5, i = Math.floor(fx), j = Math.floor(fz), tx = fx - i, tz = fz - j;
@@ -143,7 +145,7 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
   function construireMorceau(mx, my) {
     const i0 = mx * MORCEAU, j0 = my * MORCEAU;
     const i1 = Math.min(T.W, i0 + MORCEAU), j1 = Math.min(T.H, j0 + MORCEAU);
-    const F = finesse, w = (i1 - i0) * F, h = (j1 - j0) * F, W2 = T.W * F, H2 = T.H * F, D = 0.5 / F;     // F : cases par mètre (1 : la case de 1 m ; 2 : des cubes de 0,5 m, Jérôme, v0.52.2)
+    const F = finesse, w = (i1 - i0) * F, h = (j1 - j0) * F, W2 = T.W * F, H2 = T.H * F, D = 0.25;     // F : cases par mètre (1 : la case de 1 m ; 2 : des cubes de 0,5 m, Jérôme, v0.52.2) ; D : la paroi prend la couleur d'un quart de mètre dans la case au-dessus d'elle, quelle que soit la texture (une case entière ou quatre moitiés : un morceau fait à 1 m peut lire la texture fine)
     const i0s = i0 * F, j0s = j0 * F;
     const pos = [], paroi = [], decal = [];
     const quad = (ax, ay, az, bx, by, bz, cx, cy, cz, dx, dy, dz, p, ox = 0, oz = 0) => {
@@ -152,7 +154,14 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
     };
     // le dessus : rectangles de même hauteur
     const vu = new Uint8Array(w * h);
-    const hq = F === 1 ? (i, j) => hauteurQ(T, j * T.W + i) : hauteurFine;
+    let hq;
+    if (F === 1) hq = (i, j) => hauteurQ(T, j * T.W + i);
+    else {
+      // la hauteur fine de tout le morceau et d'une bordure d'un cube, une seule fois (les rectangles et les parois la relisent cent fois)
+      const gw = w + 2, grille = new Int16Array(gw * (h + 2));
+      for (let j = 0; j < h + 2; j++) for (let i = 0; i < gw; i++) grille[j * gw + i] = hauteurFine(i0s + i - 1, j0s + j - 1);
+      hq = (I, J) => grille[(J - j0s + 1) * gw + (I - i0s + 1)];
+    }
     for (let j = 0; j < h; j++) for (let i = 0; i < w; i++) {
       if (vu[j * w + i]) continue;
       const z = hq(i0s + i, j0s + j);
@@ -224,8 +233,16 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
     return g;
   }
 
+  function reglerFinesse(n) {
+    n = n === 2 ? 2 : 1;
+    if (n === finesse) return;
+    finesse = n;
+    if (n === 1) solMat.uniforms.uSol.value = solTex;
+    else { solAttente = 0; finPerimee = true; }       // (la texture fine n'a pas suivi pendant qu'on était au mètre : on la réécrit)
+  }
   // la hauteur de la surface dessinée en (x, z) : là où l'on pose soldats et arbres
   function surface(x, z) {
+    if (finesse === 2) return hauteurFine(Math.max(0, Math.min(T.W * 2 - 1, (x * 2) | 0)), Math.max(0, Math.min(T.H * 2 - 1, (z * 2) | 0))) * 0.25;      // le cube de 0,5 m dessiné sous ce point
     const i = Math.max(0, Math.min(T.W - 1, x | 0)), j = Math.max(0, Math.min(T.H - 1, z | 0));
     return hauteurM(T, j * T.W + i);
   }
@@ -234,8 +251,9 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
   // La hauteur lissée entre les centres des cases voisines : un soldat qui passe d'une marche d'un demi-mètre à l'autre (le bord d'un
   // cratère) glisse au lieu de sauter, et ne scintille plus quand il se tient à cheval sur deux cases (Jérôme, v0.16.0).
   function surfaceLisse(x, z) {
-    const fx = x - 0.5, fz = z - 0.5, i = Math.floor(fx), j = Math.floor(fz), tx = fx - i, tz = fz - j;
-    const h = (a, b) => surface(a + 0.5, b + 0.5);
+    // (sol fin : entre les centres des cubes de 0,5 m, donc au plus un demi-cube d'écart avec ce qui est dessiné)
+    const e = finesse === 2 ? 0.5 : 1, fx = x / e - 0.5, fz = z / e - 0.5, i = Math.floor(fx), j = Math.floor(fz), tx = fx - i, tz = fz - j;
+    const h = (a, b) => surface((a + 0.5) * e, (b + 0.5) * e);
     return (h(i, j) * (1 - tx) + h(i + 1, j) * tx) * (1 - tz) + (h(i, j + 1) * (1 - tx) + h(i + 1, j + 1) * tx) * tz;
   }
 
@@ -272,6 +290,7 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
   const chars = creerChars({ THREE, scene, bataille: () => B, hauteur: (x, y) => surfaceLisse(x, y), fumer: (x, z) => eclats.fumer(x, z) });
   function attacher(bataille) {
     B = bataille; T = B.terrain;
+    if (finesseDes !== null) { finesse = 1; finPerimee = false; }      // une autre bataille : tout se fait d'abord au mètre, `dessiner` choisit ensuite
     if (sol) { scene.remove(sol); sol.children.forEach(m => m.userData.fin?.dispose()); solTex.dispose(); solTexFin?.dispose(); solTexFin = null; solDataFin = null; }
     solIdx = new Uint8Array(T.W * T.H);
     solData = new Uint8Array(T.W * T.H * 2 * 4);
@@ -356,6 +375,7 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
     const { mx, my } = m.userData;
     m.userData.fin?.dispose();
     m.userData.fin = construireMorceau(mx, my);
+    m.userData.F = finesse;
     m.geometry = m.userData.fin;
     m.userData.version = versionAutour(mx, my);
   }
@@ -382,7 +402,7 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
       vuLigne[j] = T.versionLigne[j]; n++; changees.push(j);
     }
     if (n) solTex.needsUpdate = true;
-    if (finesse === 2 && (n || !solTexFin)) ecrireFin(changees, !solTexFin);
+    if (finesse === 2 && (n || !solTexFin || finPerimee)) { ecrireFin(changees, !solTexFin || finPerimee); finPerimee = false; }
     coutRangees = n;
   }
   // Les couleurs au demi-mètre (v0.52.2) : chaque case de 1 m donne quatre texels ; un petit cube du bord prend de temps en temps la couleur de la case voisine
@@ -419,10 +439,23 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
     else { const vus = new Set(); for (const j of rangees) for (let d = -1; d <= 1; d++) { const r = j + d; if (r >= 0 && r < H && !vus.has(r)) { vus.add(r); ligne(r); } } }
     solTexFin.needsUpdate = true;
   }
+  // le rectangle de sol vu (mètres), avec sa marge ; sans coins (la caméra regarde l'horizon), 250 m autour du point visé
+  function zoneVue() {
+    const cs = coinsSol(vue.zoom, yawVu(), tangageVu());
+    return cs.ok ? [vue.cx + cs.x0 - 30, vue.cx + cs.x1 + 30, vue.cz + cs.z0 - 30, vue.cz + cs.z1 + 40] : [vue.cx - 250, vue.cx + 250, vue.cz - 250, vue.cz + 250];
+  }
   // refaire les morceaux changés, les plus proches du centre d'abord, dans le budget
   function majMorceaux() {
     const t0 = performance.now();
-    const sales = morceaux.filter(m => m.userData.version !== versionAutour(m.userData.mx, m.userData.my));
+    // un morceau fait à une autre finesse ne se refait que dans la vue (marge de 30 m) : ceux d'ailleurs attendent qu'on les regarde
+    let vu = null;
+    const sales = morceaux.filter(m => {
+      if (m.userData.version !== versionAutour(m.userData.mx, m.userData.my)) return true;
+      if (m.userData.F === finesse) return false;
+      vu ??= zoneVue();
+      const x = m.userData.mx * MORCEAU, z = m.userData.my * MORCEAU;
+      return x + MORCEAU > vu[0] && x < vu[1] && z + MORCEAU > vu[2] && z < vu[3];
+    });
     if (!sales.length) return 0;
     const d = m => ((m.userData.mx + 0.5) * MORCEAU - vue.cx) ** 2 + ((m.userData.my + 0.5) * MORCEAU - vue.cz) ** 2;
     sales.sort((a, b) => d(a) - d(b));
@@ -431,9 +464,11 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
       refaire(m); n++;
       if (performance.now() - t0 > budgetMs) break;
     }
+    morceauxFaits.n += n; morceauxFaits.ms += performance.now() - t0;
     return n;
   }
 
+  const morceauxFaits = { n: 0, ms: 0 };       // les morceaux refaits depuis le début et le temps qu'ils ont coûté (stats)
   let survolTroncons = [];       // les tronçons que le survol allume (lus par troncons.js)
 
   // ─── Le choix (les régiments choisis) ───
@@ -520,6 +555,7 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
       souffle.tangage = respiration * 0.6 * Math.sin(souffle.t * 2 * Math.PI / 31 + 1);
     }
     borner();
+    if (finesseDes !== null) reglerFinesse(!vue.libre && ZOOMS[vue.zoom] >= finesseDes ? 2 : 1);      // le sol au demi-mètre de près (v0.52.3)
     majSol(false, dt);
     if (!vide) sol.visible = true;
     majMorceaux(); projeter();
@@ -556,12 +592,15 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
 
   return {
     attacher, dessiner, redimensionner, versTerrain, versEcran, vue, renderer, scene,
+    hauteurDessinee: (x, y) => surface(x, y),       // la hauteur du cube dessiné sous ce point (les tests)
     hauteurSol: (x, y) => surfaceLisse(x, y),      // la hauteur où l'on pose un homme (m), pour viser son corps entier (v0.35.0)
     set choisis(s) { choisis = s; },
     // le style de la nuit : 'halos' (le jeu), 'doux', 'trame' (l'ancienne, gardée au labo)
     set styleNuit(m) { temps.setStyleNuit(m); },
     get finesse() { return finesse; },
-    set finesse(n) { n = n === 2 ? 2 : 1; if (n === finesse) return; finesse = n; for (const m of morceaux) m.userData.version = NaN; if (n === 1) solMat.uniforms.uSol.value = solTex; else solAttente = 0; },      // le sol se refait morceau par morceau (majMorceaux) : v0.52.2
+    set finesse(n) { reglerFinesse(n); },      // le sol se refait morceau par morceau, dans la vue d'abord (majMorceaux) : v0.52.2
+    get finesseDes() { return finesseDes; },
+    set finesseDes(px) { finesseDes = px; },       // le jeu : le sol passe au demi-mètre à partir de ce nombre de pixels par mètre (v0.52.3)
     set vide(v) { vide = v; scene.children.forEach(o => { o.visible = !v; }); },
     zoomer(d, ancre = null) {
       const avant = ancre ? versTerrain(...ancre) : null;
@@ -618,7 +657,7 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
     get stats() {
       let tri = 0;
       for (const m of morceaux) tri += (m.geometry.attributes.position?.count || 0) / 3;
-      return { ms: { sol: +perf.sol.toFixed(2), rendu: +perf.rendu.toFixed(2), renduFini: +perf.fini.toFixed(2) }, triangles: tri, trianglesDessines: renderer.info.render.triangles, soldatsVus: soldats.vus, touffesVues: vegetation.vuesHerbe, appels: renderer.info.render.calls, rangees: coutRangees };
+      return { ms: { sol: +perf.sol.toFixed(2), rendu: +perf.rendu.toFixed(2), renduFini: +perf.fini.toFixed(2) }, triangles: tri, trianglesDessines: renderer.info.render.triangles, soldatsVus: soldats.vus, touffesVues: vegetation.vuesHerbe, appels: renderer.info.render.calls, rangees: coutRangees, morceauxRefaits: morceauxFaits.n, msMorceaux: +morceauxFaits.ms.toFixed(1) };
     },
     detruire() { renderer.dispose(); },
   };

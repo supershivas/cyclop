@@ -3,6 +3,7 @@
 //
 //   node scripts/mesure.mjs                 → 8 000 soldats (4 000 par camp)
 //   node scripts/mesure.mjs --soldats 2000 --secondes 20
+//   node scripts/mesure.mjs --finesse 2 --zooms 3,4,5   (le sol en demi-mètres ; indices de ZOOMS : 3 = 4 px/m, 4 = 6, 5 = 8)
 //
 // Le rendu est mesuré avec ?mesure=1 : chaque image attend la fin du dessin
 // (gl.finish), sinon on ne mesure que l'envoi des commandes. Trois vues : tout
@@ -10,7 +11,7 @@
 // barrages en cours (le sol se refait).
 import { servir, lancerChromium, options } from '../outils/navigateur.mjs';
 
-const o = options(process.argv.slice(2), { soldats: '8000', secondes: '12', largeur: '1280', hauteur: '800' });
+const o = options(process.argv.slice(2), { soldats: '8000', secondes: '12', largeur: '1280', hauteur: '800', finesse: 'auto', zooms: '0,3,5' });
 const srv = await servir('.');
 const nav = await lancerChromium();
 const page = await (await nav.newContext({ viewport: { width: +o.largeur, height: +o.hauteur } })).newPage();
@@ -27,7 +28,9 @@ await page.evaluate(() => {
   __jeu.barrage('155', 200, 120, 0); __jeu.barrage('75', 120, 180, 1); __jeu.barrage('220', 280, 170, 0);
 });
 const resultats = [];
-for (const [nom, zoom, x, y] of [['tout le champ (points)', 0, 200, 150], ['zoom 4 (boîtes)', 3, 200, 170], ['zoom 8 (boîtes)', 5, 200, 190]]) {
+const VUES = [['tout le champ (points)', 0, 200, 150], ['zoom 3 (boîtes)', 2, 200, 165], ['zoom 4 (boîtes)', 3, 200, 170], ['zoom 6 (silhouettes)', 4, 200, 180], ['zoom 8 (silhouettes)', 5, 200, 190]];
+await page.evaluate(f => { const r = __jeu.rendu(); if (f !== 'auto') { r.finesseDes = null; r.finesse = +f; } }, o.finesse);      // auto : le réglage du jeu (le sol fin dès 4 px/m)
+for (const [nom, zoom, x, y] of VUES.filter(v => o.zooms.split(',').map(Number).includes(v[1]))) {
   await page.evaluate(([z, x, y]) => { __jeu.zoom(z); __jeu.teleport({ x, y }); }, [zoom, x, y]);
   await page.waitForTimeout(+o.secondes * 1000);
   const s = await page.evaluate(() => window.cyclopStats());

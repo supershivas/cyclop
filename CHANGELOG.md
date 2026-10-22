@@ -1,5 +1,8 @@
 # Journal des versions
 
+## 0.52.3 — 2026-10-22
+- Le sol est plus fin de près : des cubes d'un demi-mètre dont la hauteur suit la pente et des taches de couleur au demi-mètre, à partir de 4 pixels par mètre (le mètre reste de loin)
+
 ## 0.52.2 — 2026-10-22
 - Les soldats sont tournés vers l'ennemi dès le début de la partie ; en marche ils regardent où ils vont, puis se tournent vers l'ennemi à l'arrêt
 

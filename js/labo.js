@@ -2,36 +2,36 @@
 // Chaque sujet utilise les mêmes modules que le jeu (terrain, apparence,
 // rendu three.js) : ce qu'on voit ici est ce que le jeu dessinera. Ajouter un
 // sujet ou une variante = ajouter une entrée dans GROUPES.
-import { afficherVersion } from './version-tag.js?v=0.52.2';
-import { mountLabo } from './lib/labo-shell.js?v=0.52.2';
-import { spriteCanvas, paletteToGPL, paletteToHex } from './lib/sprites.js?v=0.52.2';
-import { PALETTE, ROLES } from './palette.js?v=0.52.2';
-import { chargerContenu } from './design-store.js?v=0.52.2';
-import { tuile, ETAT } from './tuiles.js?v=0.52.2';
-import { creerTerrain, impact, hydroLignes } from './terrain.js?v=0.52.2';
-import { CALIBRES } from './data/calibres.js?v=0.52.2';
-import { METEO } from './data/meteo.js?v=0.52.2';
-import { nouvelleBataille, avancer, ordonnerMarche, ordonnerBarrage, mourir } from './bataille.js?v=0.52.2';
-import { creerRendu, ZOOMS } from './rendu3d.js?v=0.52.2';
-import { hash2 } from './lib/rng.js?v=0.52.2';
-import { reglerVerdure } from './apparence.js?v=0.52.2';
-import { maquetteAssaut } from './labo-assaut.js?v=0.52.2';
-import { calquePlaques } from './labo-plaques.js?v=0.52.2';
-import { calqueBarre } from './labo-barre-temps.js?v=0.52.2';
-import { maquetteProjections, maquetteVisee } from './labo-projections.js?v=0.52.2';
-import { calqueBarreVie } from './labo-barre-vie.js?v=0.52.2';
-import { calqueClic } from './labo-clic-regiment.js?v=0.52.2';
-import { maquetteBoutons, calqueOrdre, calqueObus } from './labo-satisfaction.js?v=0.52.2';
-import { calqueEtiquette, calqueToast, maquetteCartes } from './labo-hud-ux.js?v=0.52.2';
-import { maquetteCampagne } from './labo-campagne.js?v=0.52.2';
-import { maquetteCaisses, maquetteRates, maquetteSapes } from './labo-arcade.js?v=0.52.2';
-import { maquetteChars } from './labo-chars.js?v=0.52.2';
-import { maquetteGaz } from './labo-gaz.js?v=0.52.2';
-import { maquetteAvions } from './labo-avions.js?v=0.52.2';
-import { maquettePonts, PONTS, NOMS_PONTS } from './labo-ponts.js?v=0.52.2';
-import { PONTS_JEU } from './data/ponts.js?v=0.52.2';
-import { JOURNAL } from './labo-journal.js?v=0.52.2';
-import { loadVersion } from './lib/app-update.js?v=0.52.2';
+import { afficherVersion } from './version-tag.js?v=0.52.3';
+import { mountLabo } from './lib/labo-shell.js?v=0.52.3';
+import { spriteCanvas, paletteToGPL, paletteToHex } from './lib/sprites.js?v=0.52.3';
+import { PALETTE, ROLES } from './palette.js?v=0.52.3';
+import { chargerContenu } from './design-store.js?v=0.52.3';
+import { tuile, ETAT } from './tuiles.js?v=0.52.3';
+import { creerTerrain, impact, hydroLignes } from './terrain.js?v=0.52.3';
+import { CALIBRES } from './data/calibres.js?v=0.52.3';
+import { METEO } from './data/meteo.js?v=0.52.3';
+import { nouvelleBataille, avancer, ordonnerMarche, ordonnerBarrage, mourir } from './bataille.js?v=0.52.3';
+import { creerRendu, ZOOMS } from './rendu3d.js?v=0.52.3';
+import { hash2 } from './lib/rng.js?v=0.52.3';
+import { reglerVerdure } from './apparence.js?v=0.52.3';
+import { maquetteAssaut } from './labo-assaut.js?v=0.52.3';
+import { calquePlaques } from './labo-plaques.js?v=0.52.3';
+import { calqueBarre } from './labo-barre-temps.js?v=0.52.3';
+import { maquetteProjections, maquetteVisee } from './labo-projections.js?v=0.52.3';
+import { calqueBarreVie } from './labo-barre-vie.js?v=0.52.3';
+import { calqueClic } from './labo-clic-regiment.js?v=0.52.3';
+import { maquetteBoutons, calqueOrdre, calqueObus } from './labo-satisfaction.js?v=0.52.3';
+import { calqueEtiquette, calqueToast, maquetteCartes } from './labo-hud-ux.js?v=0.52.3';
+import { maquetteCampagne } from './labo-campagne.js?v=0.52.3';
+import { maquetteCaisses, maquetteRates, maquetteSapes } from './labo-arcade.js?v=0.52.3';
+import { maquetteChars } from './labo-chars.js?v=0.52.3';
+import { maquetteGaz } from './labo-gaz.js?v=0.52.3';
+import { maquetteAvions } from './labo-avions.js?v=0.52.3';
+import { maquettePonts, PONTS, NOMS_PONTS } from './labo-ponts.js?v=0.52.3';
+import { PONTS_JEU } from './data/ponts.js?v=0.52.3';
+import { JOURNAL } from './labo-journal.js?v=0.52.3';
+import { loadVersion } from './lib/app-update.js?v=0.52.3';
 
 document.documentElement.style.setProperty('--jeu-accent', ROLES.accent);
 const NOM = document.title.replace(/^Labo — /, ''); // le nom vient de la page (une apostrophe ne casse rien)
@@ -347,10 +347,10 @@ const GROUPES = [
   ] },
   { id: 'moteur', title: 'Moteur', topics: [
     { id: 'sol-fin', title: 'Le sol en cubes plus fins', variants: [
-      { title: 'Cubes d\'un mètre', status: 'actuelle', depuis: '0.52.2', note: 'Le sol du jeu : une case, un cube d\'un mètre ; les pentes montent par marches d\'un mètre. Prenez le relevé de coût en bas, puis comparez avec les autres.', render: s => moteur(s, { zoom: 5, soldats: 400, cz: 185 }) },
-      { title: 'Cubes d\'un demi-mètre', status: 'a-trancher', depuis: '0.52.2', note: 'Chaque case se coupe en quatre cubes dont la hauteur suit la pente (arrondie au quart de mètre) : les bosses et les bords de cratère montent par petites marches. Les couleurs se découpent aussi au demi-mètre : au bord d\'une tache d\'herbe ou de boue, un petit cube sur deux ou trois prend la couleur du voisin, du même niveau. Un mur d\'un mètre cinquante ou plus (tranchée, falaise) reste net. Jusqu\'à quatre fois plus de triangles de sol : regardez le relevé, au zoom 8 puis au zoom 3.', render: s => moteur(s, { zoom: 5, soldats: 400, cz: 185, finesse: 2 }) },
-      { title: 'Un demi-mètre, après un jour de pluie', status: 'a-trancher', depuis: '0.52.2', note: 'Le même sol fin sur un champ labouré par les obus et trempé : c\'est là que la finesse se voit, sur les bords des cratères et les rigoles.', render: s => moteur(s, { zoom: 4, soldats: 400, cz: 185, pluie: true, finesse: 2 }) },
-      { title: 'Un demi-mètre, vu de loin (zoom 3)', status: 'a-trancher', depuis: '0.52.2', note: 'Le prix du sol fin quand on le regarde de loin : plus de sol dans l\'écran, donc le coût le plus élevé. Une version du jeu ne le garderait qu\'à partir du zoom 6.', render: s => moteur(s, { zoom: 2, soldats: 400, cz: 185, finesse: 2 }) },
+      { title: 'Cubes d\'un mètre', status: 'actuelle', depuis: '0.52.3', note: 'En jeu aux zooms 1 à 3 (Jérôme, v0.52.3 : le sol fin coûterait jusqu\'à 3,4 fois plus de triangles de loin). Le sol du jeu : une case, un cube d\'un mètre ; les pentes montent par marches d\'un mètre. Prenez le relevé de coût en bas, puis comparez avec les autres.', render: s => moteur(s, { zoom: 5, soldats: 400, cz: 185 }) },
+      { title: 'Cubes d\'un demi-mètre', status: 'retenue', depuis: '0.52.3', note: 'Retenu (Jérôme, v0.52.3) : en jeu à partir de 4 pixels par mètre. Chaque case se coupe en quatre cubes dont la hauteur suit la pente (arrondie au quart de mètre) : les bosses et les bords de cratère montent par petites marches. Les couleurs se découpent aussi au demi-mètre : au bord d\'une tache d\'herbe ou de boue, un petit cube sur deux ou trois prend la couleur du voisin, du même niveau. Un mur d\'un mètre cinquante ou plus (tranchée, falaise) reste net. Jusqu\'à quatre fois plus de triangles de sol : regardez le relevé, au zoom 8 puis au zoom 3.', render: s => moteur(s, { zoom: 5, soldats: 400, cz: 185, finesse: 2 }) },
+      { title: 'Un demi-mètre, après un jour de pluie', status: 'retenue', depuis: '0.52.3', note: 'Retenu (Jérôme, v0.52.3) : en jeu à partir de 4 pixels par mètre. Le même sol fin sur un champ labouré par les obus et trempé : c\'est là que la finesse se voit, sur les bords des cratères et les rigoles.', render: s => moteur(s, { zoom: 4, soldats: 400, cz: 185, pluie: true, finesse: 2 }) },
+      { title: 'Un demi-mètre, vu de loin (zoom 3)', status: 'ancienne', depuis: '0.52.3', note: 'Non retenu (Jérôme, v0.52.3) : le jeu garde le mètre jusqu\'au zoom 3. Le prix du sol fin quand on le regarde de loin : plus de sol dans l\'écran, donc le coût le plus élevé. Une version du jeu ne le garderait qu\'à partir du zoom 6.', render: s => moteur(s, { zoom: 2, soldats: 400, cz: 185, finesse: 2 }) },
     ] },
     { id: 'champ', title: 'Champ de bataille', variants: [
       { title: 'Zoom 4', note: 'Le rendu du jeu : quatre de nos régiments avancent ; à 4 pixels par mètre, chaque soldat est une silhouette allégée (jambes, corps, bras, tête, fusil) et son ombre ; l\'équipement n\'apparaît qu\'à partir de 6.', status: 'actuelle', render: s => moteur(s, { zoom: 3 }) },

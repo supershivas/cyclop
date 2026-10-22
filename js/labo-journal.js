@@ -2,6 +2,9 @@
 // Une entrée par version qui touche au labo, la plus récente en haut. `ref` : « sujet-Lettre » (la lettre est celle de la variante,
 // A étant l'actuelle). À chaque changement du labo : une entrée ici, avec `depuis` sur les variantes ajoutées ou changées (labo.js).
 export const JOURNAL = [
+  { version: '0.52.3', date: '2026-10-22', items: [
+    { genre: 'mis-a-jour', texte: 'Le sol au demi-mètre est retenu et passe en jeu à partir de 4 pixels par mètre ; le mètre reste aux zooms 1 à 3 (le zoom 3 coûtait le plus) ; les trois variantes du sujet sont tranchées', ref: 'sol-fin-B' },
+  ] },
   { version: '0.52.2', date: '2026-10-22', items: [
     { genre: 'nouveau', texte: 'Le sol en cubes plus fins : des cubes d\'un demi-mètre dont la hauteur suit la pente, contre le cube d\'un mètre du jeu, au zoom 8, après un jour de pluie et de loin ; chaque variante affiche ce qu\'elle coûte', ref: 'sol-fin-B' },
     { genre: 'mis-a-jour', texte: 'Les décisions déjà prises passent dans le labo : les cinq chars et le mitraillage sont retenus (le mitraillage est en jeu), l\'œil de l\'artillerie, le cirque, les bombardiers de nuit et les trois ponts non choisis sont non retenus ; seuls les gaz restent à trancher', ref: 'avions-D' },

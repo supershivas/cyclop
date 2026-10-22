@@ -3,9 +3,9 @@
 // (sombre), un repère dit où l'on est, et dessous les changements de météo. La météo des jours à venir ne se montre pas (le jeu ne la
 // connaît qu'à moitié) : le jour même est sûr, demain est une prévision (au trait, juste sept fois sur dix), le reste est vide.
 // Rien ici ne lit ni ne modifie le jeu : des données d'exemple, la palette du jeu (js/palette.js), aucune couleur de plus.
-import { PALETTE as P } from './palette.js?v=0.52.2';
-import { ICONES_METEO } from './hud/meteo-icones.js?v=0.52.2';
-import { METEO } from './data/meteo.js?v=0.52.2';
+import { PALETTE as P } from './palette.js?v=0.52.3';
+import { ICONES_METEO } from './hud/meteo-icones.js?v=0.52.3';
+import { METEO } from './data/meteo.js?v=0.52.3';
 
 const el = (tag, css = '', ...kids) => { const e = document.createElement(tag); if (css) e.style.cssText = css; e.append(...kids.flat().filter(k => k != null)); return e; };
 const MONO = 'font:13px/1.4 ui-monospace,monospace;';
