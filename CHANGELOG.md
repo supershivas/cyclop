@@ -1,5 +1,8 @@
 # Journal des versions
 
+## 0.52.6 — 2026-10-22
+- Au labo : des arbres plus variés (six formes, des feuilles par saison, des abattus à la souche éclatée), à comparer avec ceux d'avant ; rien n'est encore dans le jeu
+
 ## 0.52.5 — 2026-10-22
 - Les cratères sont ronds : une lèvre de terre jetée plus épaisse d'un côté et de petits éclats autour, au lieu d'un carré à gradins (les anciennes sauvegardes ne se relisent pas)
 

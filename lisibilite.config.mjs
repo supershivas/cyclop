@@ -42,6 +42,17 @@ export default {
     { avant: 'n', fond: 'v', seuil: 2, role: 'signe', ou: 'nous sur le vert mousse (proposé)' },
     { avant: 'x', fond: 'w', seuil: 1.5, role: 'signe', ou: 'en face sur le vert sombre (proposé)' },
     { avant: 't', fond: 'v', role: 'signe', ou: 'ombre d\'un soldat sur le vert mousse (proposé)' },
+    // les feuilles proposées au labo (sujet « Des arbres plus variés », pas encore dans le jeu) : un arbre se lit-il sur le sol ? Le dessus d'une touffe peut avoir la couleur du sol
+    // (herbe morte sur herbe morte) : ce sont ses flancs sombres et son ombre qui le dessinent ; les seuils sont ceux de ce qu'on a mesuré, pas du confort
+    { avant: 'v', fond: 'h', seuil: 1.1, role: 'signe', ou: 'dessus de feuilles d\'été sur herbe morte (proposé)' },
+    { avant: 'w', fond: 'h', seuil: 1.2, role: 'signe', ou: 'dessus sombre des feuilles d\'été sur herbe morte (proposé)' },
+    { avant: 'w', fond: 'v', seuil: 1.1, role: 'signe', ou: 'flanc des feuilles d\'été sur le vert mousse (proposé)' },
+    { avant: 'h', fond: 'g', seuil: 1.1, role: 'signe', ou: 'dessus de feuilles d\'automne sur sol humide (proposé)' },
+    { avant: 'b', fond: 'h', role: 'signe', ou: 'flanc des feuilles d\'automne sur herbe morte (proposé)' },
+    { avant: 'g', fond: 'h', seuil: 1.1, role: 'signe', ou: 'dessus de feuilles d\'automne en glaise sur herbe morte (proposé)' },
+    { avant: 's', fond: 'o', role: 'signe', ou: 'tronc sur la neige (proposé)' },
+    { avant: 'o', fond: 's', role: 'signe', ou: 'neige sur une branche (proposé)' },
+    { avant: 'r', fond: 's', role: 'signe', ou: 'flanc de neige sur une branche (proposé)' },
     // les deux camps entre eux (en gris, ils ne se confondent pas)
     { avant: 'n', fond: 'x', seuil: 1.4, role: 'signe', ou: 'nous et en face côte à côte' },
   ],

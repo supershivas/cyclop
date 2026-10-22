@@ -1,5 +1,7 @@
 // Les formes du rendu, construites à la main : un soldat (de la boîte à la silhouette), un arbre, un buisson. Pas d'état :
 // `THREE` et `col` (une couleur de la palette) viennent de creerRendu ; les soldats prennent aussi leurs attributs d'instance.
+import { ARBRES_FEUILLES } from '../data/arbres.js?v=0.52.6';
+
 export function creerGeometries(THREE, col) {
   // les faces d'une boîte qu'on voit d'ici : le dessus, le sud, l'est et l'ouest (jamais le nord ni le dessous)
   function boiteVue(out, x0, x1, y0, y1, z0, z1, part, jambe = 0, dessusPart = part, bras = 0) {
@@ -111,5 +113,104 @@ export function creerGeometries(THREE, col) {
     out.setAttribute('color', new THREE.Float32BufferAttribute(couleurs, 3));
     return out;
   }
-  return { boiteVue, geometrieSoldat, geometrieArbre, geometrieBuisson };
+
+  // ─── Les arbres variés (labo « Des arbres plus variés », v0.52.6) ───
+  // Une famille = un tronc (ou deux), des branches, et les points où poussent les touffes de feuilles. Tout est dessiné à la hauteur de base `h` de la famille ;
+  // l'instance l'allonge (échelle) selon `v` et le hachage de la position.
+  // (un bout de branche, comme `boite` plus bas la tourne : rotateZ puis rotateX, à partir de sa base)
+  const bout = (x, y, z, l, rz, rx) => { const c = l * Math.cos(rz); return [x - l * Math.sin(rz), y + c * Math.cos(rx), z + c * Math.sin(rx)]; };
+  function formeArbre(id) {
+    const troncs = [], pointes = [], neige = [];
+    const tronc = (w, h, x, y, z, rz = 0, rx = 0) => { troncs.push({ w, h, x, y, z, rz, rx }); return bout(x, y, z, h, rz, rx); };
+    // une branche sur un tronc incliné de `rzT` : sa base est sur le tronc, à la hauteur `y` ; elle part du côté `s` (±1)
+    const branche = (w, y, l, rz, rx, rzT = 0) => { const bx = -y * Math.sin(rzT), by = y * Math.cos(rzT); const t = tronc(w, l, bx, by, 0, rz, rx); return t; };
+    if (id === 'droit') {
+      const H = 6; tronc(0.55, H, 0, 0, 0);
+      for (let k = 0; k < 4; k++) { const t = branche(0.22, H * (0.45 + k * 0.13), 2.2 - k * 0.35, (k % 2 ? 1 : -1) * 0.85, (k - 1.5) * 0.3); pointes.push([t[0], t[1], t[2], 2.1 - k * 0.15]); }
+      pointes.push([0, H + 0.4, 0, 2.9], [0, H * 0.82, 0, 2.5]);
+      neige.push(...pointes.map(p => [p[0], p[1], p[2], 1]));
+    } else if (id === 'penche') {
+      const H = 5.5, r = 0.28; const top = tronc(0.5, H, 0, 0, 0, r);
+      for (let k = 0; k < 3; k++) { const t = branche(0.2, H * (0.5 + k * 0.13), 2 - k * 0.4, r + (k % 2 ? 0.8 : -0.8), (k - 1) * 0.35, r); pointes.push([t[0], t[1], t[2], 2 - k * 0.2]); }
+      pointes.push([top[0], top[1] + 0.3, top[2], 2.7]);
+      neige.push(...pointes.map(p => [p[0], p[1], p[2], 1]));
+    } else if (id === 'double') {
+      const a = tronc(0.45, 6, 0, 0, 0, 0.14), b = tronc(0.4, 5, 0.1, 0, 0, -0.22);
+      for (const [rzT, ys, sg] of [[0.14, [0.5, 0.72], 1], [-0.22, [0.55, 0.75], -1]]) for (const [k, f] of ys.entries()) {
+        const H = rzT > 0 ? 6 : 5, t = branche(0.18, H * f, 1.7 - k * 0.3, rzT + sg * (0.75 + k * 0.1), k * 0.3 - 0.15, rzT); pointes.push([t[0] + (sg < 0 ? 0.1 : 0), t[1], t[2], 1.7]);
+      }
+      pointes.push([a[0], a[1] + 0.3, a[2], 2.6], [b[0] + 0.1, b[1] + 0.3, b[2], 2.4]);
+      neige.push(...pointes.map(p => [p[0], p[1], p[2], 1]));
+    } else if (id === 'mort') {                                                  // brisé par les obus : le sommet cassé, des branches qui pendent
+      tronc(0.5, 5, 0, 0, 0); tronc(0.3, 1.4, 0.05, 5, 0, 0.9);                  // l'éclat du sommet
+      tronc(0.22, 2.2, 0.2, 4.4, 0, 2.6); tronc(0.18, 1.8, -0.2, 3.2, 0, -2.4, 0.3); tronc(0.2, 1, 0.2, 2.5, 0, 1.2);
+      neige.push([0.05, 5.1, 0, 1], [0.6, 4.4, 0, 0.8]);
+    } else if (id === 'jeune') {
+      const top = tronc(0.28, 3.4, 0, 0, 0);
+      for (const [k, [f, l, rz]] of [[0.5, 1, 0.8], [0.7, 0.8, -0.8]].entries()) { const t = branche(0.14, 3.4 * f, l, rz, k * 0.3); pointes.push([t[0], t[1], t[2], 1.3]); }
+      pointes.push([top[0], top[1] + 0.2, top[2], 1.9]);
+      neige.push(...pointes.map(p => [p[0], p[1], p[2], 0.8]));
+    } else {                                                                    // grand
+      const H = 9; tronc(0.85, H, 0, 0, 0);
+      for (let k = 0; k < 5; k++) { const t = branche(0.32, H * (0.35 + k * 0.1), 3.4 - k * 0.45, (k % 2 ? 1 : -1) * (0.8 + k * 0.03), (k - 2) * 0.3); pointes.push([t[0], t[1], t[2], 2.9 - k * 0.2]); }
+      pointes.push([0, H + 0.5, 0, 4], [0, H * 0.84, 0, 3.6]);
+      neige.push(...pointes.map(p => [p[0], p[1], p[2], 1.2]));
+    }
+    return { troncs, pointes, neige };
+  }
+  const boiteHaute = (parts, w, h, d, x, y, z, rz = 0, rx = 0) => {
+    const g = new THREE.BoxGeometry(w, h, d).toNonIndexed();
+    g.translate(0, h / 2, 0); g.rotateZ(rz); g.rotateX(rx); g.translate(x, y, z);
+    parts.push(g);
+  };
+  const positions = parts => new THREE.Float32BufferAttribute(parts.flatMap(g => [...g.attributes.position.array]), 3);
+  // les troncs et les branches de la famille (la couleur de `arbreMat`) ; `forme.longs` : les parties dessinées
+  function geometrieTroncs(id) {
+    const parts = [];
+    for (const t of formeArbre(id).troncs) boiteHaute(parts, t.w, t.h, t.w, t.x, t.y, t.z, t.rz, t.rx);
+    const out = new THREE.BufferGeometry(); out.setAttribute('position', positions(parts)); return out;
+  }
+  // de loin, un tronc d'une hauteur d'un mètre, que l'instance allonge (la même pour toutes les familles : un tronc de quelques pixels)
+  function geometrieTroncLoin() {
+    const parts = []; boiteHaute(parts, 0.55, 1, 0.55, 0, 0, 0);
+    const out = new THREE.BufferGeometry(); out.setAttribute('position', positions(parts)); return out;
+  }
+  // les feuilles d'une famille pour une saison (`mode` de ARBRES_FEUILLES) : des touffes en couleurs de sommets, ou des coiffes de neige ; `degarni` : seulement une part des touffes.
+  // Rend null quand la famille n'a rien à montrer. Le dessous des boîtes n'est jamais dessiné.
+  function geometrieFeuilles(id, mode, degarni) {
+    const P = ARBRES_FEUILLES[mode];
+    if (!P) return null;
+    const F = formeArbre(id), pts = P.neige ? F.neige : F.pointes;
+    if (!pts.length) return null;
+    const garde = degarni ? P.degarni : P.garde, pos = [], coul = [];
+    let n = 0;
+    pts.forEach((p, k) => {
+      if (Math.floor((k + 1) * garde) <= Math.floor(k * garde)) return;
+      const s = p[3] * P.taille, w = P.neige ? s * 0.8 : s, h = P.neige ? 0.22 : s * 0.75;
+      const g = new THREE.BoxGeometry(w, h, w).toNonIndexed(); g.translate(p[0], p[1], p[2]);
+      const dessus = col(P.dessus[n % P.dessus.length]), flanc = col(P.flanc[n % P.flanc.length]);
+      const a = g.attributes.position.array, nor = g.attributes.normal.array;
+      for (let t = 0; t < a.length; t += 9) {
+        if (nor[t + 1] < -0.5) continue;                                    // le dessous
+        const c = nor[t + 1] > 0.5 ? dessus : flanc;
+        for (let v = 0; v < 3; v++) { pos.push(a[t + v * 3], a[t + v * 3 + 1], a[t + v * 3 + 2]); coul.push(c.r, c.g, c.b); }
+      }
+      n++;
+    });
+    if (!pos.length) return null;
+    const out = new THREE.BufferGeometry();
+    out.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+    out.setAttribute('color', new THREE.Float32BufferAttribute(coul, 3));
+    return out;
+  }
+  // un arbre abattu : `longs` (labo) une souche éclatée et un tronc couché, long, au ras du sol, dont l'instance choisit le sens ; sinon celui d'avant
+  function geometrieAbattuLong() {
+    const parts = [];
+    boiteHaute(parts, 0.6, 0.9, 0.6, 0, 0, 0);                                    // la souche
+    boiteHaute(parts, 0.18, 0.5, 0.18, 0.14, 0.85, 0, 0.3); boiteHaute(parts, 0.15, 0.36, 0.15, -0.14, 0.85, 0.1, -0.4);        // ses éclats
+    parts.push(new THREE.BoxGeometry(0.42, 0.42, 4.6).toNonIndexed().translate(0.05, 0.21, 2.9));                                // le tronc couché
+    boiteHaute(parts, 0.14, 0.7, 0.14, 0.05, 0.4, 2.1, 0.5); boiteHaute(parts, 0.12, 0.6, 0.12, 0.05, 0.4, 3.7, -0.6);         // deux branches cassées
+    const out = new THREE.BufferGeometry(); out.setAttribute('position', positions(parts)); return out;
+  }
+  return { boiteVue, geometrieSoldat, geometrieArbre, geometrieBuisson, geometrieTroncs, geometrieTroncLoin, geometrieFeuilles, geometrieAbattuLong };
 }
