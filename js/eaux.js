@@ -2,8 +2,8 @@
 // mêmes coordonnées que `formes.js` (mètres du SECTEUR). Logique pure, sans hasard. Une eau est creusée d'un coup à plat (au niveau de sa rive la plus basse moins un mètre, au mètre près : le sol se
 // dessine en marches d'un mètre) et marquée `profond` : on n'y passe pas (les champs de coûts la contournent, un homme qui s'y trouve la quitte à peine), sauf sur un pont (`ponts` : v0.44.0).
 // Un fleuve suit le terrain : son niveau est celui de la rive la plus basse sur ±15 m de son cours, pas un niveau pour tout le cours.
-import { distanceForme, extremite } from './formes.js?v=0.54.0';
-import { hash2 } from './lib/rng.js?v=0.54.0';
+import { distanceForme, extremite } from './formes.js?v=0.54.1';
+import { hash2 } from './lib/rng.js?v=0.54.1';
 
 export const EAUX = ['lac', 'fleuve'];
 export const PONT_AU_MOINS = 4;          // quarts : le tablier est à 1 m au moins au-dessus de l'eau

@@ -1,8 +1,7 @@
 {
-  "version": "0.54.0",
+  "version": "0.54.1",
   "date": "2026-10-22",
   "changes": [
-    "L'hiver : sol toujours enneigé, et cinq temps (tempête de neige, neige légère, gel, ciel couvert, beau temps) avec la température du jour",
-    "Au-delà du bord du champ, le terrain prend la saison : champ blanc l'hiver, herbe jaunie l'été"
+    "La neige est d'un blanc franc, et les flancs des cubes de neige sont blancs aussi"
   ]
 }
