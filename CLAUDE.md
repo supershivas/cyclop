@@ -97,6 +97,7 @@ nuit (le voile continu et ses halos mélangent la terre, le sol et l'os : des co
 | Annuler | Échap | clic droit : le barrage visé, « Marcher », la fiche, puis les régiments choisis |
 | Posture des régiments choisis : à volonté, feu retenu | Maj+1, Maj+2 (touche physique ; Maj+3 ne fait rien) | deux boutons dans la fenêtre du régiment (v0.36.1) |
 | Barrage de 75, 155, 220 | 1, 2, 3 (touche physique) puis clic | bouton de la batterie puis clic |
+| Avion de mitraillage (3 par camp) | 4 puis deux clics : le début, la fin de la passe | bouton « Avion » puis deux clics ; clic droit : le premier point, puis le barrage |
 | Arrêter le temps (pause active) | Espace | — |
 | Déplacer la vue | flèches, ZQSD / WASD (selon l'écran) | Maj + glisser avec le bouton du milieu (la molette) |
 | Tourner, incliner la vue | A et E (Q et E en QWERTY), R et F (touches physiques, en continu) | glisser avec le bouton du milieu (ou le droit) ; le cadran à l'écran (v0.9.1) est retiré en v0.26.0 (Jérôme) |
@@ -129,7 +130,7 @@ nuit (le voile continu et ses halos mélangent la terre, le sol et l'os : des co
 | `js/rendu3d.js`, `js/rendu/` : caméra, sol, soldats, nuit et ciel, effets, performances du dessin (chargé seul dans `js/rendu/`) | `docs/domaines/rendu.md` |
 | `js/main.js`, `js/hud/`, `index.html`, `css/` : cartes, fiche, carte, papier de la nuit, haut de l'écran, survol, choix du secteur (chargé seul dans `js/hud/`) | `docs/domaines/interface.md` (+ `docs/design-system.md`, `docs/ui-cible.md`) |
 | `js/campagne.js`, `data/campagne.js` : registre, papier de campagne, reconstitution, identité portable | `docs/domaines/campagne.md` |
-| `js/eaux.js`, `generateur.js`, saisons, secteurs, ponts, `js/chars.js`, mitraillage | `docs/domaines/terrain-engins.md` |
+| `js/eaux.js`, `generateur.js`, saisons, secteurs, ponts, `js/chars.js`, `js/avions.js`, mitraillage aérien | `docs/domaines/terrain-engins.md` |
 | `js/reseau/`, le jeu à deux, `lancerMarche`, `executerCmd` (chargé seul dans `js/reseau/`) | `docs/domaines/reseau.md` |
 | `labo.html`, `js/labo*.js`, `atelier.html`, `js/atelier*.js`, `design-store.js`, contenu publié | `docs/domaines/labo-atelier.md` |
 | `test/`, `outils/fumee.mjs`, `outils/rendu-empreinte.mjs`, `scripts/` : références, mesures | `docs/domaines/tests.md` |
@@ -138,8 +139,8 @@ Autres : `DESIGN.md` (l'intention), `ROADMAP.md`, `docs/archives/` (ce qui a ét
 
 ## Structure (une ligne par module ; le détail est dans le fichier du domaine)
 
-- Logique pure (aucun DOM, aucune horloge, aucun hasard hors de la graine ; testée dans Node) : `terrain.js` (champ de hauteurs `base` + `diff`, eau), `army.js` (la foule), `tranchees.js`, `nuit.js` (corvées), `champs.js` (coûts de marche), `bataille.js` (état, règles, ordres, sauvegarde), `formes.js` / `objets.js` / `secteur-terrain.js` (retouches de relief, objets, terrain d'un secteur), `identite.js`, `eaux.js`, `generateur.js`, `chars.js`, `campagne.js`, `reseau/`, `data/` (les nombres et les textes).
-- Rendu : `rendu3d.js` (three.js, la caméra, l'API) + `rendu/` (soldats, sol, ciel, temps, effets, ponts, chars). Le rendu ne modifie jamais l'état.
+- Logique pure (aucun DOM, aucune horloge, aucun hasard hors de la graine ; testée dans Node) : `terrain.js` (champ de hauteurs `base` + `diff`, eau), `army.js` (la foule), `tranchees.js`, `nuit.js` (corvées), `champs.js` (coûts de marche), `bataille.js` (état, règles, ordres, sauvegarde), `formes.js` / `objets.js` / `secteur-terrain.js` (retouches de relief, objets, terrain d'un secteur), `identite.js`, `eaux.js`, `generateur.js`, `chars.js`, `avions.js`, `campagne.js`, `reseau/`, `data/` (les nombres et les textes).
+- Rendu : `rendu3d.js` (three.js, la caméra, l'API) + `rendu/` (soldats, sol, ciel, temps, effets, ponts, chars, avions). Le rendu ne modifie jamais l'état.
 - Interface : `main.js` (écran titre → bataille → nuit → fin, commandes, boucle), `hud/` (papiers, cartes, fiche, carte), `index.html`, `css/style.css`.
 - Outils de contenu : `labo.html` + `js/labo*.js`, `atelier.html` + `js/atelier*.js` + `design-store.js`.
 - Vérification : `test/` (règles, `fumee.json` et `rendu.json` : des références), `outils/`, `scripts/`, `lisibilite.config.mjs`.

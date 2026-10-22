@@ -100,6 +100,7 @@
 .batterie svg { fill: var(--jeu-fond); stroke: var(--jeu-encre); stroke-width: 1.5; }
 .batterie svg .ceinture { fill: var(--jeu-encre); stroke: none; }
 .batterie b { font-weight: normal; font-size: var(--texte-grand); line-height: 1; }
+.batterie .flotte { position: absolute; top: 3px; left: 4px; font-style: normal; font-size: var(--texte-petit); line-height: 1; }   /* (les avions qui restent : hors du flux, la barre garde sa largeur) */
 .batterie .touche { position: absolute; top: 3px; right: 4px; font-style: normal; font-size: var(--texte-petit); line-height: 1; padding: 1px var(--e1); border: 1px solid var(--jeu-accent); color: var(--jeu-accent); }
 .batterie span { color: var(--jeu-accent); line-height: 1; font-size: var(--texte-petit); }
 .batterie.recharge { color: var(--jeu-accent); }
@@ -367,6 +368,11 @@ dialog form { margin-top: calc(var(--pas) * 2); }
 .visee .zone { fill: var(--jeu-fond); fill-opacity: .3; stroke: var(--jeu-encre); stroke-width: 2; }   /* (le fondu : un mélange du fond et du sol, hors palette comme les ombres) */
 .visee .anneau { fill: none; stroke: var(--jeu-encre); stroke-width: 1.5; stroke-dasharray: 3 4; }
 .visee .pt { fill: var(--jeu-encre); }
+.visee text { fill: var(--jeu-encre); stroke: var(--jeu-fond); stroke-width: 3px; paint-order: stroke; font-size: var(--texte-petit); }
+.visee .route { fill: none; stroke: var(--jeu-encre); stroke-width: 1.5; stroke-dasharray: 2 7; opacity: .8; }
+.visee .pointe { fill: none; stroke: var(--jeu-encre); stroke-width: 2.5; stroke-linejoin: round; stroke-linecap: round; }
+.visee.refus .anneau { stroke: var(--jeu-accent); }
+.visee.refus text { fill: var(--jeu-accent); }
 .visee.refus .encre { stroke: var(--jeu-accent); }   /* (refusé : la ligne et la croix passent à la glaise ; l'ennemi est vert, plus de rouge dans le jeu) */
 .carte-grille .lib.eux { color: var(--jeu-eux); }
 .carte-grille .lib { font-size: var(--texte-petit); text-align: center; }

@@ -8,59 +8,21 @@
 // (français, 1917, biplan à moteur en ligne, deux mitrailleuses) ; le Breguet 14 (français, 1917, appareil de reconnaissance et de bombardement, biplan d'une quinzaine de mètres) ; le Gotha G.IV (allemand, 1917, bimoteur
 // de bombardement, trois hommes, ~24 m). Les envergures, longueurs et vitesses des autres sont approximatives ; les nombres de jeu sont des propositions. DESIGN.md : aucun compteur de victoires, pas d'« as » à glorifier ;
 // les pilotes ont un nom et un état (en vol, touché, abattu), rien de plus.
-import { PALETTE as P, ALERTES } from './palette.js?v=0.54.1';
-import { loadThree } from './three-lib.js?v=0.54.1';
-import { mourir } from './bataille.js?v=0.54.1';
-import { impact } from './terrain.js?v=0.54.1';
-import { hash2 } from './lib/rng.js?v=0.54.1';
-import { ZOOMS } from './rendu3d.js?v=0.54.1';
-import { el, svgEl, bouton, scene, maquette, texteSvg } from './labo-arcade.js?v=0.54.1';
-import { atelier } from './labo-chars.js?v=0.54.1';
+import { PALETTE as P, ALERTES } from './palette.js?v=0.58.0';
+import { loadThree } from './three-lib.js?v=0.58.0';
+import { mourir } from './bataille.js?v=0.58.0';
+import { impact } from './terrain.js?v=0.58.0';
+import { hash2 } from './lib/rng.js?v=0.58.0';
+import { ZOOMS } from './rendu3d.js?v=0.58.0';
+import { el, svgEl, bouton, scene, maquette, texteSvg } from './labo-arcade.js?v=0.58.0';
+import { atelier } from './labo-chars.js?v=0.58.0';
 
 const ROUGE = ALERTES.rouge;
 
 // ─── Les avions en volumes ──────────────────────────────────────────────────
 // L'avant est à +x, le haut à +y, la droite à +z. Un biplan paramétré (ou triplan), et le Gotha.
-function cocardeFr(A, g, x, y, z, r, axe) { A.cyl(g, r, 0.025, P.n, [x, y, z], axe, 10); A.cyl(g, r * 0.66, 0.03, P.o, [x, y, z], axe, 10); A.cyl(g, r * 0.33, 0.035, ROUGE, [x, y, z], axe, 10); }
-function croixPlate(A, g, x, y, z, t) {
-  A.b(g, [t * 1.2, 0.03, t * 1.2], P.t, [x, y, z]); A.b(g, [t * 1.1, 0.04, t * 0.32], P.o, [x, y, z], [0, 0, 0], false); A.b(g, [t * 0.32, 0.04, t * 1.1], P.o, [x, y, z], [0, 0, 0], false);
-}
-function biplan(A, o) {
-  const { THREE } = A, g = new THREE.Group();
-  const { L = 6.3, env = 8.1, corde = 1.45, ecart = 1.35, cc = P.w, ca = P.h, triplan = false, de = false, rotatif = false, deuxPlaces = false, couleurMoteur = P.r } = o;
-  // le fuselage : un profil plein, plus haut au moteur
-  A.prisme(g, [[-L * 0.5, 0.05], [-L * 0.15, 0.4], [L * 0.2, 0.5], [L * 0.5, 0.45], [L * 0.5, -0.4], [L * 0.2, -0.5], [-L * 0.1, -0.35]], 0.62, cc);
-  // le moteur : un capot rond (rotatif) ou long (en ligne), et l'hélice qui tourne
-  const helice = new THREE.Group(); helice.position.set(L * 0.5 + (rotatif ? 0.42 : 0.1), 0, 0); g.add(helice);
-  A.cyl(g, rotatif ? 0.52 : 0.3, rotatif ? 0.5 : 0.8, couleurMoteur, [L * 0.5 + (rotatif ? 0.2 : -0.1), 0, 0], 'x', 12);
-  A.b(helice, [0.05, 2.2, 0.15], P.b, [0, 0, 0]); A.b(helice, [0.05, 0.15, 2.2], P.b, [0, 0, 0], [0, 0, 0], false);
-  // les ailes
-  const x0 = L * 0.08, yb = -0.5, yh = yb + ecart;
-  const aile = (y, w, c) => { A.b(g, [corde, 0.07, w], c, [x0, y, 0]); };
-  aile(yb, env * 0.88, ca); aile(yh, env, ca);
-  if (triplan) { aile(yb + ecart * 0.5, env * 0.95, ca); }
-  for (const s of [1, -1]) {
-    for (const dx of [-corde * 0.32, corde * 0.32]) A.b(g, [0.05, ecart + 0.08, 0.05], P.s, [x0 + dx, yb + ecart / 2, s * env * 0.3]);            // les mâts
-    A.b(g, [0.04, 0.9, 0.04], P.s, [x0 + 0.1, 0.1, s * 0.3], [s * 0.4, 0, 0.0]);                                                               // la cabane
-    A.b(g, [0.5, 0.04, 1.0], ca, [x0, yh - 0.1, s * 0.0], [0, 0, 0], false);
-  }
-  // la queue
-  A.b(g, [1.0, 0.05, 2.6], ca, [-L * 0.5 + 0.2, 0.15, 0]);
-  A.prisme(g, [[0, 0], [1.0, 0], [0.55, 0.95], [0.1, 0.95]], 0.07, ca, [-L * 0.5 - 0.15, 0.15, 0]);
-  // le train
-  for (const s of [1, -1]) { A.b(g, [0.06, 0.9, 0.06], P.s, [L * 0.12, -0.95, s * 0.55], [s * 0.2, 0, 0]); A.cyl(g, 0.33, 0.12, P.t, [L * 0.12, -1.38, s * 0.75], 'z', 10); }
-  A.b(g, [0.06, 0.06, 1.6], P.s, [L * 0.12, -1.38, 0]); A.b(g, [0.5, 0.05, 0.08], P.s, [-L * 0.5 - 0.1, -0.1, 0]);
-  // les mitrailleuses, le poste de pilotage, l'observateur
-  for (const s of [1, -1]) { A.b(g, [0.3, 0.1, 0.1], P.t, [L * 0.38, 0.55, s * 0.12]); A.cyl(g, 0.025, 0.6, P.t, [L * 0.38 + 0.4, 0.55, s * 0.12], 'x', 5); }
-  A.b(g, [0.45, 0.1, 0.4], P.t, [L * 0.0, 0.5, 0]);
-  if (deuxPlaces) { A.b(g, [0.5, 0.1, 0.4], P.t, [-L * 0.2, 0.42, 0]); A.cyl(g, 0.28, 0.06, P.s, [-L * 0.2, 0.55, 0], 'y', 8); A.cyl(g, 0.025, 0.7, P.t, [-L * 0.2 - 0.3, 0.6, 0], 'x', 5); }
-  // les marques nationales
-  for (const s of [1, -1]) {
-    if (de) { A.croix(g, [-L * 0.3, 0.1, s * 0.32], 0.55); croixPlate(A, g, x0, yh + 0.06, s * env * 0.3, 0.85); }
-    else { cocardeFr(A, g, -L * 0.3, 0.1, s * 0.32, 0.26, 'z'); cocardeFr(A, g, x0, yh + 0.06, s * env * 0.3, 0.52, 'y'); }
-  }
-  return { groupe: g, helice, longueur: L, envergure: env };
-}
+import { biplan as biplanJeu, croixPlate } from './rendu/avions-modeles.js?v=0.58.0';
+const biplan = (A, o) => biplanJeu(A, { centre: ROUGE, ...o });
 const AVIONS = {
   // le chasseur français : un SPAD XIII, olive, cocardes
   spad: A => biplan(A, { L: 6.3, env: 8.1, corde: 1.4, ecart: 1.3, cc: P.w, ca: P.h }),

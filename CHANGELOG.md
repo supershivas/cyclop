@@ -1,5 +1,17 @@
 # Journal des versions
 
+## 0.58.0 — 2026-10-22
+- L'attaque de l'avion se voit : feu de bouche, traceurs qui tombent du ciel, terre et poussière qui giclent en rangée le long de la bande, douilles ; abattu, il tombe en vrille et s'écrase en flammes, avec une colonne de fumée noire
+
+## 0.57.0 — 2026-10-22
+- L'avion a des points de vie : au-dessus d'hommes qui lui tirent dessus (moins s'ils retiennent leur feu, moins en croisière), il en perd ; à zéro il tombe et laisse une épave. On a trois avions, qui rentrent avec leurs dégâts, réparés en partie chaque nuit ; ni brouillard ni tempête de neige
+
+## 0.56.0 — 2026-10-22
+- Le mitraillage se trace en deux clics (le début, la fin de la passe, de 30 à 150 m) : l'avion vole sur le prolongement de la ligne ; le fantôme montre la bande, la route, les hommes d'en face et les nôtres dans la bande, et ce que la passe coûterait à l'avion
+
+## 0.55.0 — 2026-10-22
+- L'avion est un vrai biplan à l'échelle (8 m d'envergure) dans la scène, avec son ombre au sol : il vole haut, descend avant la bande à mitrailler, tire en balayant la bande au fil du vol (les morts tombent avec les traceurs), puis remonte
+
 ## 0.54.1 — 2026-10-22
 - La neige est d'un blanc franc (la couleur « os » au lieu du gris brume), et les flancs des cubes de neige sont blancs aussi, au lieu de bruns
 

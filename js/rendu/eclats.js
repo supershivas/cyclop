@@ -2,9 +2,9 @@
 // et « le feu se voit » (Jérôme, v0.9.2 : l'éclair à la bouche du fusil et le trait vers la cible de chaque tir de `B.tirs`, la pose des tireurs, le bond de ceux que
 // le souffle jette). Une seule fabrique : tous tirent dans le même générateur de l'aspect (`alea`, une suite à graine : l'ordre des tirages fait l'image) et
 // dans les mêmes tampons de particules. Le dessin seulement : jamais la logique, jamais la partie.
-import * as SH from './shaders.js?v=0.54.1';
-import { INDICE } from '../palette.js?v=0.54.1';
-import { horloge } from '../bataille.js?v=0.54.1';
+import * as SH from './shaders.js?v=0.58.0';
+import { INDICE } from '../palette.js?v=0.58.0';
+import { horloge } from '../bataille.js?v=0.58.0';
 
 const ECLATS = 6000;     // (v0.24.0 ; 2 400 avant : une salve de 220 — ~200 éclats chacun, dont de la fumée de 8 à 16 s — faisait le tour du tampon et effaçait les éclats encore en vol)
 
@@ -51,9 +51,9 @@ export function creerEclats({ THREE, scene, col, palTex, NP, effets, surface, pr
       if (bal.age[s] > bal.vie[s]) { balX[o] = balX[o + 1] = balX[o + 2] = balX[o + 3] = balX[o + 4] = balX[o + 5] = 0; continue; }
       bal.age[s] += dt;
       for (let a = 0; a < 3; a++) balPos[s * 3 + a] += bal.v[s * 3 + a] * dt;
-      const vx = bal.v[s * 3], vz = bal.v[s * 3 + 2], d = Math.hypot(vx, vz) || 1;
+      const vx = bal.v[s * 3], vy = bal.v[s * 3 + 1], vz = bal.v[s * 3 + 2], d = Math.hypot(vx, vy, vz) || 1;
       balX[o] = balPos[s * 3]; balX[o + 1] = balPos[s * 3 + 1]; balX[o + 2] = balPos[s * 3 + 2];
-      balX[o + 3] = balX[o] - vx / d * 3; balX[o + 4] = balX[o + 1]; balX[o + 5] = balX[o + 2] - vz / d * 3;
+      balX[o + 3] = balX[o] - vx / d * 3; balX[o + 4] = balX[o + 1] - vy / d * 3; balX[o + 5] = balX[o + 2] - vz / d * 3;   // (v0.58.0 : le trait suit aussi la pente, les traceurs d'un avion tombent du ciel)
     }
     balGeo.attributes.position.needsUpdate = true;
   }
@@ -332,7 +332,32 @@ export function creerEclats({ THREE, scene, col, palTex, NP, effets, surface, pr
     eclGeo.attributes.position.needsUpdate = true; eclGeo.attributes.aTon.needsUpdate = true; eclGeo.attributes.aTaille.needsUpdate = true;
   }
 
+  // Le mitraillage aérien (Jérôme, v0.58.0) : un traceur du canon au sol, une gerbe de terre à l'impact, les douilles qui tombent, la fumée d'un avion touché, sa chute
+  function mitraille(x, y, z, tx, ty, tz) {
+    particule(0, x, y, z, 0, 0, 0, 0.06, 2);                                                  // le feu de bouche
+    for (let k = 0; k < 3; k++) {                                                             // un faisceau de traceurs, un peu écarté
+      const ex = tx + (alea() - 0.5) * 2.4, ey = ty, ez = tz + (alea() - 0.5) * 2.4;
+      const dx = ex - x, dy = ey - y, dz = ez - z, d = Math.hypot(dx, dy, dz) || 1, v = 380;
+      balle(x, y, z, dx / d * v, dy / d * v, dz / d * v, d / v);
+    }
+  }
+  function gerbeSol(x, h, z) {
+    for (let k = 0; k < 2; k++) particule(0, x + (alea() - 0.5), h + 0.5, z + (alea() - 0.5), 0, 0, 0, 0.12, 2);       // les éclairs
+    for (let k = 0; k < 6; k++) particule(k % 2 ? 1 : 8, x + (alea() - 0.5) * 1.5, h + 0.3, z + (alea() - 0.5) * 1.5, (alea() - 0.5) * 5, 5 + alea() * 9, (alea() - 0.5) * 5, 0.8 + alea() * 0.7, k % 2 ? 1.8 : 2.2);   // la terre et les mottes
+    for (let k = 0; k < 2; k++) particule(2, x + (alea() - 0.5) * 2, h + 0.5, z + (alea() - 0.5) * 2, (alea() - 0.5) * 2, 1.2 + alea(), (alea() - 0.5) * 2, 1.8 + alea() * 1.6, 1.8);   // la poussière, qui retombe lentement
+  }
+  function douilles(x, y, z, longueur) {
+    for (let k = 0, n = Math.ceil(longueur * 1.5); k < n; k++) particule(8, x + (alea() - 0.5) * 2, y, z + (alea() - 0.5) * 2, (alea() - 0.5) * 2, 1 + alea() * 2, (alea() - 0.5) * 2, 1.2, 0.5);
+  }
+  function fumeeAvion(x, y, z, niv) { fumee(x, y, z, niv === 2 ? 1.6 : 1, true, true, false); }
+  function ecraser(x, z) {
+    const h = terrain() ? surface(x, z) : 0;
+    eclater(x, z, '155');
+    for (let k = 0; k < 14; k++) particule(5, x + (alea() - 0.5) * 5, h + 0.6, z + (alea() - 0.5) * 5, (alea() - 0.5) * 3, 2 + alea() * 5, (alea() - 0.5) * 3, 1 + alea() * 1.4, 2);   // la flamme
+    for (let k = 0; k < 6; k++) fumee(x + (alea() - 0.5) * 4, h + 0.8, z + (alea() - 0.5) * 4, 2, true, true, true);     // la colonne noire, qui reste
+  }
   return {
+    mitraille, gerbeSol, douilles, fumeeAvion, ecraser,
     ecl, feux, ECLATS,                                           // lus par temps.js : les fusées et les incendies éclairent la nuit
     impactVu, majTirs, majEclats, majCorbeaux,
     setTaille(n) { eclMat.uniforms.uTaille.value = n; },          // la taille d'un point d'éclat, selon le zoom

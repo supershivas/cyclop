@@ -24,3 +24,4 @@
   **Ce que la découpe a appris** : une image que l'empreinte ne dessine pas n'est pas protégée (l'écran titre, le souffle, les anneaux de sélection, les tombes, le clignotement d'un ordre, les trois styles
   de nuit du labo n'y étaient pas : chacun a été ajouté **avant** de découper son morceau, la référence réécrite sur l'ancien code) ; régénérer la référence sans toucher le code fautif prouve le reste
   (`git stash push -- js/rendu3d.js`, `--ecrire`, `stash pop`) ; remplacer dans un fichier un texte qu'on a déjà modifié ne trouve rien (extraire le texte d'origine, le garder, puis le transformer à part).
+- `scripts/mesure-mitraillage.mjs [soldats]` (v0.57.0) : trois passes d'avion (droite sur leur ligne, le long de leur ligne, en profondeur) sur deux graines : pv restants, abattu ou non, touchés des deux camps. À rejouer après tout changement de `data/mitraillage.js`.

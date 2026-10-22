@@ -1,7 +1,8 @@
 {
-  "version": "0.54.1",
+  "version": "0.58.0",
   "date": "2026-10-22",
   "changes": [
-    "La neige est d'un blanc franc, et les flancs des cubes de neige sont blancs aussi"
+    "L'avion mitrailleur est un biplan à l'échelle qui descend sur la bande, tire en balayant, perd des points de vie sous le feu et tombe en flammes",
+    "La passe se trace en deux clics ; on a trois avions, réparés en partie chaque nuit"
   ]
 }

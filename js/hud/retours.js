@@ -2,9 +2,8 @@
 // en trois temps) du labo) : le dessin seulement, par-dessus le moteur. Rien ici ne lit ni ne modifie la partie au-delà de lire `B.armee` pour placer le dessin ;
 // aucun tirage du générateur de la bataille, rien de sauvegardé. Un SVG (le fanion et ses fils) et un canvas 2D (la poussière, l'impact), suivis de la caméra
 // par `versEcran`. Fabrique `creerRetours({ $, rendu: () => rendu, bataille: () => B })` : le rendu et la bataille changent à chaque partie, on les lit à chaque appel.
-import { PALETTE as P } from '../palette.js?v=0.54.1';
-import { CALIBRES } from '../data/calibres.js?v=0.54.1';
-import { MITRAILLAGE as M } from '../data/mitraillage.js?v=0.54.1';
+import { PALETTE as P } from '../palette.js?v=0.58.0';
+import { CALIBRES } from '../data/calibres.js?v=0.58.0';
 
 const svgEl = (tag, attrs = {}) => { const e = document.createElementNS('http://www.w3.org/2000/svg', tag); for (const [k, v] of Object.entries(attrs)) e.setAttribute(k, v); return e; };
 const borne = (u, a = 0, b = 1) => Math.min(b, Math.max(a, u));
@@ -107,46 +106,6 @@ export function creerRetours({ $, rendu: lireRendu, bataille: lireBataille }) {
     };
   }
 
-  // le vol d'un avion (v0.46.0 ; v0.48.1 : il vient de hors de la carte) : il entre par le bord du terrain derrière son camp (nous : par le sud), vole à `vitesse` m/s, traverse la bande
-  // visée (deux traînées de balles tombent derrière lui et lèvent des gerbes en ligne) et ressort de l'autre côté ; son ombre le suit sur le sol. Il suit l'horloge de la bataille
-  // (le temps ×2, ×4, la pause), pas celle de l'écran. Le dessin seulement : les morts tombent quand il atteint la bande (`mitrailler` de bataille.js).
-  function avion(e) {
-    const sens = e.camp === 0 ? -1 : 1, hl = M.longueur / 2, v = M.vitesse, { x, y, t0, tHit } = e;
-    return {
-      duree: 1e9,
-      maj(_, g) {
-        const B = lireBataille(); if (!B) { this.t = 1e10; return; }
-        const tg = B.etat.temps - t0, yp = y + sens * v * (tg - tHit), H = B.terrain.H;
-        if (yp < -M.sortie - 10 || yp > H + M.sortie + 10) { this.t = 1e10; return; }
-        const [px, py] = S(x, yp), [ex] = S(x + 1, yp), ppm = Math.abs(ex - px) || 1, haut = M.hauteur * ppm * 1.3;
-        // les gerbes le long de la bande, de l'entrée à l'avion, qui s'éteignent
-        for (let k = 0; k <= 24; k++) {
-          const f = k / 24, yk = y - sens * hl + sens * 2 * hl * f, tk = tHit + (yk - y) * sens / v;
-          if (tg < tk) break;
-          const age = (tg - tk) / 0.7; if (age > 1) continue;
-          for (const dx of [-3, 3]) {
-            const [sx, sy] = S(x + dx + ((k * 7 + (dx > 0 ? 3 : 0)) % 5 - 2) * 0.4, yk);
-            g.globalAlpha = (1 - age) * 0.9; g.fillStyle = k % 3 ? P.r : P.o;
-            const r = 1 + 2.5 * age + ppm * 0.25; g.fillRect(sx - r, sy - r * 0.6 - age * 6, 2 * r, 1.2 * r);
-          }
-        }
-        if (px < -5e4 || px > cv.clientWidth + 80 || py < -80 - haut || py > cv.clientHeight + 80) return;
-        const enBande = Math.abs(yp - y) <= hl && tg < tHit + hl / v;
-        g.globalAlpha = 0.35; g.fillStyle = P.t;
-        g.beginPath(); g.ellipse(px, py, ppm * 4, ppm * 1.4, 0, 0, Math.PI * 2); g.fill();      // l'ombre
-        g.globalAlpha = 1;
-        if (enBande) {
-          g.strokeStyle = P.o; g.lineWidth = 1.5; g.setLineDash([4, 5]);                          // les traceurs, du ventre au sol
-          for (const dx of [-3, 3]) { const [sx, sy] = S(x + dx, yp - sens * 6); g.beginPath(); g.moveTo(px + dx * ppm * 0.4, py - haut); g.lineTo(sx, sy); g.stroke(); }
-          g.setLineDash([]);
-        }
-        g.fillStyle = P.t; g.fillRect(px - ppm * 3.6, py - haut - 3, ppm * 7.2, 6);               // l'avion : le corps, les ailes et la queue
-        g.fillStyle = P.o; g.fillRect(px - ppm * 3.6, py - haut - 2, ppm * 7.2, 3);
-        g.fillStyle = P.t; g.fillRect(px - 2, py - haut - 6 + (sens > 0 ? 0 : -4), 4, 14);
-      },
-    };
-  }
-
   const ajouter = fx => { fx.t = 0; liste.push(fx); };
   return {
     // un ordre de marche en terrain libre (la tranchée a déjà son clignotement) : le fanion, puis la réponse des hommes
@@ -158,7 +117,6 @@ export function creerRetours({ $, rendu: lireRendu, bataille: lireBataille }) {
     evenements(ev) {
       const R = lireRendu(); if (!R || !ev.length) return;
       for (const e of ev) {
-        if (e.type === 'avion') { ajouter(avion(e)); continue; }
         if (e.type !== 'impact' || liste.filter(f => f.impact).length >= MAX_IMPACTS) continue;
         const [sx, sy] = R.versEcran(e.x, e.y);
         if (sx < -50 || sy < -50 || sx > couche.clientWidth + 50 || sy > couche.clientHeight + 50) continue;
