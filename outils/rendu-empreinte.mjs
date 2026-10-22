@@ -10,7 +10,7 @@
 // que quand on le dit (1/30 s par image, un pas de la simulation par image), `Math.random` par un générateur à graine (la pluie, les
 // éclats, les corbeaux le lisent), et le budget de ms du sol ne coupe plus rien (le temps ne passe pas dans une image).
 // Le rendu logiciel de Chromium est exact sur une même machine ; une autre machine peut donner d'autres pixels : on réécrit alors la référence
-// sur l'ancien code avant de découper (voir CLAUDE.md).
+// sur l'ancien code avant de découper (voir docs/domaines/tests.md).
 import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import { servir, lancerChromium, options } from './navigateur.mjs';
 
