@@ -9,6 +9,21 @@ Statuts : **à l'étude** · **validé** (Jérôme a tranché) · **en cours** �
 
 ## En cours
 
+### Un terrain et une végétation plus soignés (v0.52.3 → ; à continuer dans une nouvelle session)
+
+**Statut** : en cours. Le but (Jérôme) : un jeu plus joli **sans perdre de vitesse en rendu logiciel**. Quatre chantiers dans cet ordre, chacun avec son prompt à coller au début d'une session neuve (`CLAUDE.md` court + le fichier de domaine du chantier ; une session par chantier).
+
+| # | Chantier | État | Prompt |
+|---|---|---|---|
+| 1 | Le sol au demi-mètre dans le jeu | **livré v0.52.3** : dès 4 pixels par mètre (décision de Jérôme, à la question toujours / dès 4 / dès 6) ; mesures et pièges dans `docs/domaines/rendu.md` | `docs/prompt-session-visuel.md` §1 |
+| 2 | Des cratères moins carrés | **livré v0.52.5** : rond, lèvre jetée d'un côté, éclats, choisi au labo parmi six variantes (v0.52.4) ; `VERSION` de bataille.js à 5 (anciennes sauvegardes non relues) ; `docs/domaines/bataille.md` | `docs/prompt-chantier-2.md` |
+| 3 | **Des arbres plus variés, des saisons** | **à faire en premier** : au moins 4 à 6 familles de formes, feuillage selon la saison (`SAISONS`, `data/meteo.js`), d'abord au labo en variantes `a-trancher` | `docs/prompt-chantier-3.md` |
+| 4 | Des buissons plus variés | à faire après le 3 (il réutilise ses choix de saisons et de couleurs) : forme, taille, densité, fleurs ou baies, haies brisées | `docs/prompt-chantier-4.md` |
+
+Règles qui valent pour les deux chantiers restants : **labo avant jeu** (variantes tranchées par `AskUserQuestion`, journal du labo et points d'état à jour) ; mesurer chaque ajout (`scripts/mesure.mjs --soldats 2000`, triangles avant et après) et l'écrire dans `docs/domaines/rendu.md` ; aucun tirage de `Math.random` ni du générateur de la bataille pour le dessin (créer les objets au premier besoin : voir le « Piège » des roseaux dans `docs/domaines/rendu.md`) ; avant de pousser, les tests ciblés de `CLAUDE.md` (« Vérifier et livrer »), `rendu-empreinte`, `fumee`, `captures`, `lisibilite` si une couleur change, puis `stamp-version`. Réécrire `test/rendu.json` seulement après avoir regardé les images.
+
+**Efficacité des sessions** (fait le 22 octobre) : `CLAUDE.md` 152 → 16 ko avec le détail dans `docs/domaines/` ; conventions 28 → 15 ko (`.claude/conventions-detail.md` lu à la demande) ; `permissions.deny` sur `vendor/`, `captures/` et `test/fumee.json` ; sorties courtes (`--court`, `fumee`, `rendu-empreinte`) ; la référence de fumée ne dépend plus de la taille de la fenêtre. **Reste** : (a) `stamp-version.mjs` ajoute des `?v=` dans les commentaires de `js/lib/` que la synchronisation de game-system défait à chaque session (l'arbre git démarre modifié) : lui faire sauter les commentaires, ou restamper après la synchronisation ; (b) quelques skills pour les procédures qui reviennent (livrer une version, réécrire les références d'empreinte, ajouter une variante au labo) ; (c) lancer `fewer-permission-prompts` après quelques sessions de travail réel ; (d) mesurer avec `/context` ce qui pèse encore dans une session normale.
+
 ### Chars, mitraillage aérien (décidés au labo, v0.45.0 ; pas construits)
 
 **Statut** : décidé par Jérôme sur les maquettes du labo ; rien n'est dans le jeu.
