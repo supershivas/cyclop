@@ -115,7 +115,7 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
   let B = null, T = null, faux = null, fauxU = null;
   // Le sol a le même relief à tous les zooms (Jérôme, v0.12.0) ; seuls les petits décors (arbres, buissons, herbe) s'effacent de loin
   const petit = () => ZOOMS[vue.zoom] <= POINTS_JUSQUA;
-  let sol = null, solTex = null, solData = null, solIdx = null, solAttente = 0, morceaux = [], vuLigne = null, gelVu = null, coutRangees = 0;
+  let sol = null, solTex = null, solTexFin = null, solDataFin = null, solData = null, solIdx = null, solAttente = 0, morceaux = [], vuLigne = null, gelVu = null, coutRangees = 0;
   /* La texture du sol : une couleur par case (RVBA, déjà prise dans la palette),
      et en dessous, la couleur de la paroi de chaque case : une seule lecture de
      texture par pixel (mesuré : la lecture de l'indice puis de la palette coûtait
@@ -272,7 +272,7 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
   const chars = creerChars({ THREE, scene, bataille: () => B, hauteur: (x, y) => surfaceLisse(x, y), fumer: (x, z) => eclats.fumer(x, z) });
   function attacher(bataille) {
     B = bataille; T = B.terrain;
-    if (sol) { scene.remove(sol); sol.children.forEach(m => m.userData.fin?.dispose()); solTex.dispose(); }
+    if (sol) { scene.remove(sol); sol.children.forEach(m => m.userData.fin?.dispose()); solTex.dispose(); solTexFin?.dispose(); solTexFin = null; solDataFin = null; }
     solIdx = new Uint8Array(T.W * T.H);
     solData = new Uint8Array(T.W * T.H * 2 * 4);
     solTex = new THREE.DataTexture(solData, T.W, T.H * 2, THREE.RGBAFormat, THREE.UnsignedByteType);
@@ -368,7 +368,7 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
     if (!tout && solAttente > 0) return;
     solAttente = 0.25;
     let n = 0;
-    const W = T.W, bas = W * T.H * 4;
+    const W = T.W, bas = W * T.H * 4, changees = [];
     for (let j = 0; j < T.H; j++) {
       // une rangée dépend aussi de sa voisine du sud (la marche entre elles)
       if (!tout && vuLigne[j] === T.versionLigne[j] && (j === T.H - 1 || vuLigne[j + 1] === T.versionLigne[j + 1])) continue;
@@ -379,10 +379,45 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
         solData[o] = a[0]; solData[o + 1] = a[1]; solData[o + 2] = a[2]; solData[o + 3] = marche ? 0 : 255;
         solData[bas + o] = b[0]; solData[bas + o + 1] = b[1]; solData[bas + o + 2] = b[2]; solData[bas + o + 3] = 255;
       }
-      vuLigne[j] = T.versionLigne[j]; n++;
+      vuLigne[j] = T.versionLigne[j]; n++; changees.push(j);
     }
     if (n) solTex.needsUpdate = true;
+    if (finesse === 2 && (n || !solTexFin)) ecrireFin(changees, !solTexFin);
     coutRangees = n;
+  }
+  // Les couleurs au demi-mètre (v0.52.2) : chaque case de 1 m donne quatre texels ; un petit cube du bord prend de temps en temps la couleur de la case voisine
+  // (du même niveau, hors de l'eau profonde) : les taches d'herbe, de boue et les lèvres de cratère se découpent au demi-mètre. Un hachage de la position : aucun hasard.
+  function ecrireFin(rangees, tout) {
+    const W = T.W, H = T.H, W2 = W * 2, bas = W2 * H * 2 * 4;
+    if (!solTexFin) {
+      solDataFin = new Uint8Array(W2 * H * 4 * 4);
+      solTexFin = new THREE.DataTexture(solDataFin, W2, H * 4, THREE.RGBAFormat, THREE.UnsignedByteType);
+      solTexFin.magFilter = solTexFin.minFilter = THREE.NearestFilter; solTexFin.generateMipmaps = false;
+      tout = true;
+    }
+    solMat.uniforms.uSol.value = solTexFin;
+    const hach = (a, b) => (Math.imul(a, 73856093) ^ Math.imul(b, 19349663)) >>> 0;
+    const ligne = j => {
+      for (let i = 0; i < W; i++) {
+        const c = j * W + i, own = solIdx[c], hq = hauteurQ(T, c);
+        for (let sy = 0; sy < 2; sy++) for (let sx = 0; sx < 2; sx++) {
+          let k = own;
+          if (!T.profond[c]) {
+            const h = (hach(i * 2 + sx, j * 2 + sy) % 1000) / 1000;
+            const ni = i + (sx ? 1 : -1), nj = j + (sy ? 1 : -1);
+            if (h < 0.3 && ni >= 0 && ni < W) { const n = j * W + ni; if (!T.profond[n] && hauteurQ(T, n) === hq) k = solIdx[n]; }
+            else if (h < 0.6 && nj >= 0 && nj < H) { const n = nj * W + i; if (!T.profond[n] && hauteurQ(T, n) === hq) k = solIdx[n]; }
+          }
+          const a = PAL_RGB[k], b = T.profond[c] ? PAL_RGB[k] : PAROI_RGB[k];
+          const o = ((j * 2 + sy) * W2 + i * 2 + sx) * 4;
+          solDataFin[o] = a[0]; solDataFin[o + 1] = a[1]; solDataFin[o + 2] = a[2]; solDataFin[o + 3] = 255;
+          solDataFin[bas + o] = b[0]; solDataFin[bas + o + 1] = b[1]; solDataFin[bas + o + 2] = b[2]; solDataFin[bas + o + 3] = 255;
+        }
+      }
+    };
+    if (tout) { for (let j = 0; j < H; j++) ligne(j); }
+    else { const vus = new Set(); for (const j of rangees) for (let d = -1; d <= 1; d++) { const r = j + d; if (r >= 0 && r < H && !vus.has(r)) { vus.add(r); ligne(r); } } }
+    solTexFin.needsUpdate = true;
   }
   // refaire les morceaux changés, les plus proches du centre d'abord, dans le budget
   function majMorceaux() {
@@ -526,7 +561,7 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
     // le style de la nuit : 'halos' (le jeu), 'doux', 'trame' (l'ancienne, gardée au labo)
     set styleNuit(m) { temps.setStyleNuit(m); },
     get finesse() { return finesse; },
-    set finesse(n) { n = n === 2 ? 2 : 1; if (n === finesse) return; finesse = n; for (const m of morceaux) m.userData.version = NaN; },      // le sol se refait morceau par morceau (majMorceaux) : v0.52.2
+    set finesse(n) { n = n === 2 ? 2 : 1; if (n === finesse) return; finesse = n; for (const m of morceaux) m.userData.version = NaN; if (n === 1) solMat.uniforms.uSol.value = solTex; else solAttente = 0; },      // le sol se refait morceau par morceau (majMorceaux) : v0.52.2
     set vide(v) { vide = v; scene.children.forEach(o => { o.visible = !v; }); },
     zoomer(d, ancre = null) {
       const avant = ancre ? versTerrain(...ancre) : null;
