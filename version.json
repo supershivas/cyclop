@@ -1,7 +1,7 @@
 {
-  "version": "0.52.3",
+  "version": "0.52.4",
   "date": "2026-10-22",
   "changes": [
-    "Le sol est plus fin de près : des cubes d'un demi-mètre dont la hauteur suit la pente, à partir de 4 pixels par mètre"
+    "Au labo : des cratères moins carrés (disque, lèvre jetée d'un côté, éclats, ovale) à comparer ; rien ne change en jeu"
   ]
 }

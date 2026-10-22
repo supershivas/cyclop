@@ -16,12 +16,13 @@
      nuit elle se fait en lot.
    - Les versions (`versionLigne`, `versionMorceau`) disent au rendu ce qui a
      changé ; le terrain ne connaît pas le rendu. */
-import { hash2 } from './lib/rng.js?v=0.52.3';
-import { CALIBRES } from './data/calibres.js?v=0.52.3';
-import { appliquerFormes } from './formes.js?v=0.52.3';
-import { poserObjets } from './objets.js?v=0.52.3';
-import { SAISONS } from './data/meteo.js?v=0.52.3';
-import { poserEaux, poserMarecages, poserPonts, detruirePont, viderLesEaux } from './eaux.js?v=0.52.3';
+import { hash2 } from './lib/rng.js?v=0.52.4';
+import { CALIBRES } from './data/calibres.js?v=0.52.4';
+import { creuxRond, levreJetee, eclatsAutour, bordDuCreux } from './cratere.js?v=0.52.4';
+import { appliquerFormes } from './formes.js?v=0.52.4';
+import { poserObjets } from './objets.js?v=0.52.4';
+import { SAISONS } from './data/meteo.js?v=0.52.4';
+import { poserEaux, poserMarecages, poserPonts, detruirePont, viderLesEaux } from './eaux.js?v=0.52.4';
 
 export const ETAT = { SEC: 0, HUMIDE: 1, BOUE: 2, EAU: 3, GLACE: 4 };
 export const MORCEAU = 25;             // cases : le côté d'un morceau de maillage (mesuré, rendu logiciel : à 100, la moitié du champ restait dessinée au zoom 4 ; à 25, 6 500 triangles au lieu de 15 600 au zoom 8)
@@ -163,8 +164,9 @@ export function toucher(T, i, j) {
 
 /* Un obus tombe en (x, y) (mètres). Rend { rayon } : la distance où il tue
    (réduite dans la boue, où il s'enfouit). n : le numéro de l'impact (pour
-   le hasard déterministe de la lèvre). */
-export function impact(T, x, y, nomCal, R, n = 0, gel = false) {
+   le hasard déterministe de la lèvre). forme : une forme d'essai du labo
+   (cratere.js, `FORMES`) ; sans elle, le motif carré du calibre (le jeu). */
+export function impact(T, x, y, nomCal, R, n = 0, gel = false, forme = null) {
   const cal = CALIBRES[nomCal];
   const i0 = Math.floor(x), j0 = Math.floor(y);
   if (i0 < 0 || j0 < 0 || i0 >= T.W || j0 >= T.H) return { rayon: 0 };
@@ -173,10 +175,12 @@ export function impact(T, x, y, nomCal, R, n = 0, gel = false) {
   const enfoui = e0 === ETAT.BOUE || e0 === ETAT.EAU ? R.obus.boue : 1;
   const k = cal.motif.length, r = (k - 1) / 2;
   const P = R.terrain.plancher, d1 = R.terrain.durete1, d2 = R.terrain.durete2;
-  for (let dj = -r; dj <= r; dj++) for (let di = -r; di <= r; di++) {
+  const rond = forme?.rond ? creuxRond(nomCal, x, y, n, forme.ovale) : null;   // un disque au point exact, au lieu de la matrice
+  const rr = rond ? rond.r : r, L = 2 * rr + 1;
+  for (let dj = -rr; dj <= rr; dj++) for (let di = -rr; di <= rr; di++) {
     const i = i0 + di, j = j0 + dj;
     if (i < 0 || j < 0 || i >= T.W || j >= T.H) continue;
-    let u = cal.motif[dj + r][di + r];
+    let u = rond ? rond.u[(dj + rr) * L + di + rr] : cal.motif[dj + r][di + r];
     if (!u) continue;
     const c = j * T.W + i;
     // creuser quart par quart : la terre jetée (au-dessus du sol d'origine) part d'abord
@@ -195,8 +199,11 @@ export function impact(T, x, y, nomCal, R, n = 0, gel = false) {
   // La lèvre : l'anneau juste autour du motif, irrégulier
   const levre = Math.max(1, Math.round(cal.levre * enfoui));
   const ra = r + 1;
+  const bord = forme && (forme.levre || forme.rond || forme.eclats) ? bordDuCreux(nomCal, forme, n) : null;
+  if (forme?.levre || forme?.rond) levreJetee(T, x, y, nomCal, levre, bord.rim, bord.etire, bord.ang, n, R, toucher, !!forme.levre);   // un creux rond a sa lèvre ronde (symétrique, sauf `levre`)
+  if (forme?.eclats) eclatsAutour(T, x, y, nomCal, bord.rim * bord.etire, n, R, toucher);
   for (let dj = -ra; dj <= ra; dj++) for (let di = -ra; di <= ra; di++) {
-    if (Math.max(Math.abs(di), Math.abs(dj)) !== ra) continue;
+    if (forme?.levre || forme?.rond || Math.max(Math.abs(di), Math.abs(dj)) !== ra) continue;
     const i = i0 + di, j = j0 + dj;
     if (i < 0 || j < 0 || i >= T.W || j >= T.H) continue;
     const coin = Math.abs(di) === ra && Math.abs(dj) === ra;

@@ -1,5 +1,8 @@
 # Journal des versions
 
+## 0.52.4 — 2026-10-22
+- Au labo : des cratères moins carrés (disque, lèvre jetée d'un côté, éclats, ovale) à comparer au motif carré du jeu ; rien ne change en jeu
+
 ## 0.52.3 — 2026-10-22
 - Le sol est plus fin de près : des cubes d'un demi-mètre dont la hauteur suit la pente et des taches de couleur au demi-mètre, à partir de 4 pixels par mètre (le mètre reste de loin)
 

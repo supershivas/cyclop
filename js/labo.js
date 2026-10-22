@@ -2,36 +2,37 @@
 // Chaque sujet utilise les mêmes modules que le jeu (terrain, apparence,
 // rendu three.js) : ce qu'on voit ici est ce que le jeu dessinera. Ajouter un
 // sujet ou une variante = ajouter une entrée dans GROUPES.
-import { afficherVersion } from './version-tag.js?v=0.52.3';
-import { mountLabo } from './lib/labo-shell.js?v=0.52.3';
-import { spriteCanvas, paletteToGPL, paletteToHex } from './lib/sprites.js?v=0.52.3';
-import { PALETTE, ROLES } from './palette.js?v=0.52.3';
-import { chargerContenu } from './design-store.js?v=0.52.3';
-import { tuile, ETAT } from './tuiles.js?v=0.52.3';
-import { creerTerrain, impact, hydroLignes } from './terrain.js?v=0.52.3';
-import { CALIBRES } from './data/calibres.js?v=0.52.3';
-import { METEO } from './data/meteo.js?v=0.52.3';
-import { nouvelleBataille, avancer, ordonnerMarche, ordonnerBarrage, mourir } from './bataille.js?v=0.52.3';
-import { creerRendu, ZOOMS } from './rendu3d.js?v=0.52.3';
-import { hash2 } from './lib/rng.js?v=0.52.3';
-import { reglerVerdure } from './apparence.js?v=0.52.3';
-import { maquetteAssaut } from './labo-assaut.js?v=0.52.3';
-import { calquePlaques } from './labo-plaques.js?v=0.52.3';
-import { calqueBarre } from './labo-barre-temps.js?v=0.52.3';
-import { maquetteProjections, maquetteVisee } from './labo-projections.js?v=0.52.3';
-import { calqueBarreVie } from './labo-barre-vie.js?v=0.52.3';
-import { calqueClic } from './labo-clic-regiment.js?v=0.52.3';
-import { maquetteBoutons, calqueOrdre, calqueObus } from './labo-satisfaction.js?v=0.52.3';
-import { calqueEtiquette, calqueToast, maquetteCartes } from './labo-hud-ux.js?v=0.52.3';
-import { maquetteCampagne } from './labo-campagne.js?v=0.52.3';
-import { maquetteCaisses, maquetteRates, maquetteSapes } from './labo-arcade.js?v=0.52.3';
-import { maquetteChars } from './labo-chars.js?v=0.52.3';
-import { maquetteGaz } from './labo-gaz.js?v=0.52.3';
-import { maquetteAvions } from './labo-avions.js?v=0.52.3';
-import { maquettePonts, PONTS, NOMS_PONTS } from './labo-ponts.js?v=0.52.3';
-import { PONTS_JEU } from './data/ponts.js?v=0.52.3';
-import { JOURNAL } from './labo-journal.js?v=0.52.3';
-import { loadVersion } from './lib/app-update.js?v=0.52.3';
+import { afficherVersion } from './version-tag.js?v=0.52.4';
+import { mountLabo } from './lib/labo-shell.js?v=0.52.4';
+import { spriteCanvas, paletteToGPL, paletteToHex } from './lib/sprites.js?v=0.52.4';
+import { PALETTE, ROLES } from './palette.js?v=0.52.4';
+import { chargerContenu } from './design-store.js?v=0.52.4';
+import { tuile, ETAT } from './tuiles.js?v=0.52.4';
+import { creerTerrain, impact, hydroLignes } from './terrain.js?v=0.52.4';
+import { FORMES } from './cratere.js?v=0.52.4';
+import { CALIBRES } from './data/calibres.js?v=0.52.4';
+import { METEO } from './data/meteo.js?v=0.52.4';
+import { nouvelleBataille, avancer, ordonnerMarche, ordonnerBarrage, mourir } from './bataille.js?v=0.52.4';
+import { creerRendu, ZOOMS } from './rendu3d.js?v=0.52.4';
+import { hash2 } from './lib/rng.js?v=0.52.4';
+import { reglerVerdure } from './apparence.js?v=0.52.4';
+import { maquetteAssaut } from './labo-assaut.js?v=0.52.4';
+import { calquePlaques } from './labo-plaques.js?v=0.52.4';
+import { calqueBarre } from './labo-barre-temps.js?v=0.52.4';
+import { maquetteProjections, maquetteVisee } from './labo-projections.js?v=0.52.4';
+import { calqueBarreVie } from './labo-barre-vie.js?v=0.52.4';
+import { calqueClic } from './labo-clic-regiment.js?v=0.52.4';
+import { maquetteBoutons, calqueOrdre, calqueObus } from './labo-satisfaction.js?v=0.52.4';
+import { calqueEtiquette, calqueToast, maquetteCartes } from './labo-hud-ux.js?v=0.52.4';
+import { maquetteCampagne } from './labo-campagne.js?v=0.52.4';
+import { maquetteCaisses, maquetteRates, maquetteSapes } from './labo-arcade.js?v=0.52.4';
+import { maquetteChars } from './labo-chars.js?v=0.52.4';
+import { maquetteGaz } from './labo-gaz.js?v=0.52.4';
+import { maquetteAvions } from './labo-avions.js?v=0.52.4';
+import { maquettePonts, PONTS, NOMS_PONTS } from './labo-ponts.js?v=0.52.4';
+import { PONTS_JEU } from './data/ponts.js?v=0.52.4';
+import { JOURNAL } from './labo-journal.js?v=0.52.4';
+import { loadVersion } from './lib/app-update.js?v=0.52.4';
 
 document.documentElement.style.setProperty('--jeu-accent', ROLES.accent);
 const NOM = document.title.replace(/^Labo — /, ''); // le nom vient de la page (une apostrophe ne casse rien)
@@ -99,8 +100,32 @@ function tuiles(stage, gris = false) {
   stage.append(p, el('p', { textContent: gris ? 'En niveaux de gris : la forme porte l\'information, la couleur la confirme (section 5).' : 'Une case = un mètre. Le creux d\'un cratère est plus sombre, la terre jetée autour plus claire ; l\'eau a des rides.' }));
 }
 
+// ─── Les cratères : le même champ labouré, avec la forme à essayer (cratere.js) ───
+// trois obus isolés (75, 155, 220) au milieu de la vue pour lire la forme, puis quarante-cinq au hasard (tous les mêmes d'une forme à l'autre :
+// positions et calibres viennent de `hash2`, arrondis au décimètre comme les impacts de la sauvegarde)
+function labourer(B, forme, cz) {
+  const T = B.terrain, cx = B.etat.marges.x + 200, cy = B.etat.marges.y + cz, dm = v => Math.round(v * 10) / 10;
+  ['75', '155', '220'].forEach((cal, k) => impact(T, dm(cx + (k - 1) * 14 + 0.37 * k), dm(cy + 0.5 * k), cal, R, 1000 + k, false, forme));
+  for (let k = 0; k < 45; k++) impact(T, dm(cx - 70 + hash2(k, 1, 9) * 140), dm(cy - 40 + hash2(k, 2, 9) * 80), ['75', '155', '220'][k % 3], R, k, false, forme);
+}
+// ce que coûte une forme : les cases touchées et le temps d'un obus, par calibre (300 obus isolés sur un petit sol plat)
+const coutsCratere = {};
+function coutCratere(nom) {
+  if (coutsCratere[nom]) return coutsCratere[nom];
+  const parts = ['75', '155', '220'].map(cal => {
+    let cases = 0, ms = 0;
+    for (let k = 0; k < 300; k++) {
+      const T = creerTerrain(1, { largeur: 41, hauteur: 41, arbres: 0 }, R); T.base.fill(20); T.nappe.fill(-20);
+      const t = performance.now(); impact(T, 20 + hash2(k, 1, 5), 20 + hash2(k, 2, 5), cal, R, k, false, FORMES[nom]); ms += performance.now() - t;
+      for (let c = 0; c < T.diff.length; c++) if (T.diff[c]) cases++;
+    }
+    return `${cal} : ${(cases / 300).toFixed(0)} cases, ${(ms / 300 * 1000).toFixed(0)} µs`;
+  });
+  return (coutsCratere[nom] = `Un obus (cases touchées, temps de impact() ici) — ${parts.join(' · ')}`);
+}
+
 // ─── Le moteur, en direct : le rendu du jeu sur une petite bataille ───
-function moteur(stage, { zoom = 3, pluie = false, gel = false, soldats = 600, cz = 185, camera = null, respiration = undefined, soldat = undefined, cadavre = undefined, morts = 0, effets = undefined, barrages = false, surLesArbres = false, vue = null, verdure = undefined, nuit = null, tombee = false, calque = null, bord = null, centre = null, finesse = 1 } = {}) {
+function moteur(stage, { zoom = 3, pluie = false, gel = false, soldats = 600, cz = 185, camera = null, respiration = undefined, soldat = undefined, cadavre = undefined, morts = 0, effets = undefined, barrages = false, surLesArbres = false, vue = null, verdure = undefined, nuit = null, tombee = false, calque = null, bord = null, centre = null, finesse = 1, cratere = null } = {}) {
   reglerVerdure(verdure);                                   // le sol vert (apparence.js) : avant que le sol ne se peigne
   const boite = el('div'); boite.style.cssText = 'position:relative;width:100%;height:min(70vh,560px);overflow:hidden';
   const canvas = el('canvas'); canvas.style.cssText = 'position:absolute;left:0;top:0;image-rendering:pixelated';
@@ -108,7 +133,9 @@ function moteur(stage, { zoom = 3, pluie = false, gel = false, soldats = 600, cz
   const releve = el('p', { className: 'releve', textContent: '…' });
   const zooms = el('p', {}, ...ZOOMS.map((z, i) => el('button', { className: 'essai', textContent: `Zoom ${z}`, onclick: () => { if (rendu) rendu.vue.zoom = i; } })));
   const ctx = { rendu: null, B: null };                      // ce que le calque peut lire du moteur, une fois lancé
-  boite.append(canvas); const finCalque = calque?.(boite, ctx); stage.append(boite, releve, zooms);
+  boite.append(canvas); const finCalque = calque?.(boite, ctx); stage.append(boite, releve);
+  if (cratere) stage.append(el('p', {}, el('button', { className: 'essai', textContent: 'Sol fin · 6 pixels par mètre', onclick: () => { if (rendu) { rendu.finesse = 2; rendu.vue.zoom = 4; } } }), el('button', { className: 'essai', textContent: 'Au mètre · 3 pixels par mètre', onclick: () => { if (rendu) { rendu.finesse = 1; rendu.vue.zoom = 2; } } })), el('p', { className: 'releve', textContent: coutCratere(cratere) }));
+  stage.append(zooms);
   let raf = 0, rendu = null, fini = false;
   (async () => {
     const B = nouvelleBataille(5, R, { soldats });
@@ -120,6 +147,7 @@ function moteur(stage, { zoom = 3, pluie = false, gel = false, soldats = 600, cz
       for (let h = 0; h < 24; h++) hydroLignes(T, 0, T.H, METEO.pluie, R);
       if (gel) B.etat.meteo[0] = 'gel'; else B.etat.meteo[0] = 'pluie';
     }
+    if (cratere) labourer(B, FORMES[cratere], cz);
     if (morts) {
       // des morts de la veille (la glaise) et du jour (la couleur de leur camp), tombés en rangs là où l'on regarde
       const A = B.armee;
@@ -351,6 +379,14 @@ const GROUPES = [
       { title: 'Cubes d\'un demi-mètre', status: 'retenue', depuis: '0.52.3', note: 'Retenu (Jérôme, v0.52.3) : en jeu à partir de 4 pixels par mètre. Chaque case se coupe en quatre cubes dont la hauteur suit la pente (arrondie au quart de mètre) : les bosses et les bords de cratère montent par petites marches. Les couleurs se découpent aussi au demi-mètre : au bord d\'une tache d\'herbe ou de boue, un petit cube sur deux ou trois prend la couleur du voisin, du même niveau. Un mur d\'un mètre cinquante ou plus (tranchée, falaise) reste net. Jusqu\'à quatre fois plus de triangles de sol : regardez le relevé, au zoom 8 puis au zoom 3.', render: s => moteur(s, { zoom: 5, soldats: 400, cz: 185, finesse: 2 }) },
       { title: 'Un demi-mètre, après un jour de pluie', status: 'retenue', depuis: '0.52.3', note: 'Retenu (Jérôme, v0.52.3) : en jeu à partir de 4 pixels par mètre. Le même sol fin sur un champ labouré par les obus et trempé : c\'est là que la finesse se voit, sur les bords des cratères et les rigoles.', render: s => moteur(s, { zoom: 4, soldats: 400, cz: 185, pluie: true, finesse: 2 }) },
       { title: 'Un demi-mètre, vu de loin (zoom 3)', status: 'ancienne', depuis: '0.52.3', note: 'Non retenu (Jérôme, v0.52.3) : le jeu garde le mètre jusqu\'au zoom 3. Le prix du sol fin quand on le regarde de loin : plus de sol dans l\'écran, donc le coût le plus élevé. Une version du jeu ne le garderait qu\'à partir du zoom 6.', render: s => moteur(s, { zoom: 2, soldats: 400, cz: 185, finesse: 2 }) },
+    ] },
+    { id: 'cratere-forme', title: 'Des cratères moins carrés', variants: [
+      { title: 'Le motif carré (le jeu)', status: 'actuelle', depuis: '0.52.4', note: "Ce que le jeu fait aujourd'hui : une matrice de 3×3, 5×5 ou 7×7 cases en quarts de mètre, au centre de la case, et une lèvre en anneau carré autour (une case sur quatre sautée, jamais les coins). Le champ : trois obus isolés au milieu (75, 155, 220) et quarante-cinq au hasard, les mêmes dans toutes les variantes. Les deux boutons montrent le sol fin (6 pixels par mètre) et le mètre (3 pixels par mètre). Coût mesuré (Node, 10 000 obus, puis le labo en rendu logiciel) : impact() 1,5 à 2,8 µs ; 18, 40 et 66 cases touchées (75, 155, 220) ; sol 125 000 triangles au sol fin, 94 000 au mètre.", render: s => moteur(s, { zoom: 4, soldats: 400, cz: 185, finesse: 2, cratere: 'actuel' }) },
+      { title: 'Un motif rond', status: 'a-trancher', depuis: '0.52.4', note: "Un disque à la place de la matrice, pris au point exact de l'obus (au décimètre, pas au mètre) : profondeur p·(1 − (d/R)²) calculée en quatre points par case, donc des bords en pente au lieu de gradins. Le rayon est choisi pour creuser le même volume que la matrice ; la profondeur au centre est celle du calibre (le plancher et la dureté s'appliquent comme avant) et varie de 0 à 10 % avec le numéro de l'impact. La lèvre suit le disque (anneau rond, même épaisseur partout). Rayon de tir et létalité inchangés. Coût mesuré : impact() 7 à 10 µs (+5 à 7 µs : quatre points par case) ; 17, 45 et 56 cases ; volume creusé 94 à 96 % de la matrice ; sol 121 000 triangles au sol fin, 91 000 au mètre (−3 %).", render: s => moteur(s, { zoom: 4, soldats: 400, cz: 185, finesse: 2, cratere: 'rond' }) },
+      { title: "Une lèvre jetée d'un côté", status: 'a-trancher', depuis: '0.52.4', note: "Le motif carré d'avant, mais la terre jetée forme un anneau rond, plus large (de 0 à 2,2 m du bord), plus épais d'un côté (le côté est tiré du numéro de l'impact, trois fois plus épais que l'autre) et interrompu par endroits ; aucun coin. Le même volume de terre jetée en moyenne : seule sa place change. Coût mesuré : impact() 5 à 9 µs ; 16, 43 et 68 cases ; terre jetée −10 à −15 % ; sol 121 000 / 92 000 triangles.", render: s => moteur(s, { zoom: 4, soldats: 400, cz: 185, finesse: 2, cratere: 'levre' }) },
+      { title: 'Des éclats autour', status: 'a-trancher', depuis: '0.52.4', note: "Le motif carré et la lèvre carrée d'avant, plus de petits creux et monticules d'un quart de mètre sur deux à trois anneaux autour : 4 pour un 75, 8 pour un 155, 14 pour un 220, à des angles et des distances tirés du numéro de l'impact. Sans aucune autre forme, le contour reste carré : à voir surtout avec les autres. Coût mesuré : impact() 2 à 3 µs (inchangé) ; 22, 48 et 79 cases (+20 % de cases à refaire) ; sol 125 000 / 93 000 triangles.", render: s => moteur(s, { zoom: 4, soldats: 400, cz: 185, finesse: 2, cratere: 'eclats' }) },
+      { title: 'Un cratère ovale', status: 'a-trancher', depuis: '0.52.4', note: "Un disque étiré (grand axe × 1,25, petit axe ÷ 1,25 : la même aire) et tourné au hasard du numéro de l'impact, avec sa lèvre ovale. Les cratères ne sont plus tous des copies les uns des autres ; coût de la logique identique au disque. Coût mesuré : impact() 6 à 11 µs ; 16, 45 et 56 cases ; volume creusé 88 à 100 % ; sol 121 000 / 91 000 triangles.", render: s => moteur(s, { zoom: 4, soldats: 400, cz: 185, finesse: 2, cratere: 'ovale' }) },
+      { title: 'Rond, lèvre jetée et éclats', status: 'a-trancher', depuis: '0.52.4', note: "Le disque, sa lèvre jetée d'un côté, plus les éclats : tout ce qui précède sauf l'ovale. Le plus lourd pour la logique (voir le relevé) et pour le dessin : plus de cases changent, plus de morceaux de sol à refaire. Coût mesuré : impact() 6 à 13 µs ; 20, 51 et 68 cases ; sol 122 000 / 92 000 triangles. Une salve de 24 obus de 75 coûte 0,15 ms de plus : rien à l'échelle d'un pas.", render: s => moteur(s, { zoom: 4, soldats: 400, cz: 185, finesse: 2, cratere: 'tout' }) },
     ] },
     { id: 'champ', title: 'Champ de bataille', variants: [
       { title: 'Zoom 4', note: 'Le rendu du jeu : quatre de nos régiments avancent ; à 4 pixels par mètre, chaque soldat est une silhouette allégée (jambes, corps, bras, tête, fusil) et son ombre ; l\'équipement n\'apparaît qu\'à partir de 6.', status: 'actuelle', render: s => moteur(s, { zoom: 3 }) },

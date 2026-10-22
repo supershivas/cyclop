@@ -3,13 +3,13 @@
 // visible dans le jeu de ce navigateur, puis publiée d'un geste dans le dépôt
 // (un commit sur main, par l'API de GitHub) : assets/design/reglages.json.
 // Les outils : les réglages chiffrés (Jérôme, v0.1.0) et la carte, un éditeur visuel (`atelier-carte.js`).
-import { afficherVersion } from './version-tag.js?v=0.52.3';
-import { createPublisher, TOKEN_URL } from './lib/gh-publish.js?v=0.52.3';
-import { validerSecteur } from './tranchees.js?v=0.52.3';
-import { terrainDuSecteur, profilDe } from './secteur-terrain.js?v=0.52.3';
-import { SECTEURS } from './data/secteur.js?v=0.52.3';
-import { ongletCarte } from './atelier-carte.js?v=0.52.3';
-import { chargerContenu, lireBrouillon, ecrireBrouillon, compterBrouillon, deplier, secteurEffectif } from './design-store.js?v=0.52.3';
+import { afficherVersion } from './version-tag.js?v=0.52.4';
+import { createPublisher, TOKEN_URL } from './lib/gh-publish.js?v=0.52.4';
+import { validerSecteur } from './tranchees.js?v=0.52.4';
+import { terrainDuSecteur, profilDe } from './secteur-terrain.js?v=0.52.4';
+import { SECTEURS } from './data/secteur.js?v=0.52.4';
+import { ongletCarte } from './atelier-carte.js?v=0.52.4';
+import { chargerContenu, lireBrouillon, ecrireBrouillon, compterBrouillon, deplier, secteurEffectif } from './design-store.js?v=0.52.4';
 
 const REPO = 'supershivas/cyclop';
 const $ = id => document.getElementById(id);

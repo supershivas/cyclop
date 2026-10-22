@@ -2,6 +2,9 @@
 // Une entrée par version qui touche au labo, la plus récente en haut. `ref` : « sujet-Lettre » (la lettre est celle de la variante,
 // A étant l'actuelle). À chaque changement du labo : une entrée ici, avec `depuis` sur les variantes ajoutées ou changées (labo.js).
 export const JOURNAL = [
+  { version: '0.52.4', date: '2026-10-22', items: [
+    { genre: 'nouveau', texte: 'Des cratères moins carrés : un disque rond, une lèvre jetée d\'un côté, des éclats autour, un ovale, et le tout ensemble, contre le motif carré du jeu, sur le même champ labouré, au sol fin et au mètre ; chaque variante affiche ce qu\'elle coûte (cases touchées, temps de l\'obus, triangles)', ref: 'cratere-forme-B' },
+  ] },
   { version: '0.52.3', date: '2026-10-22', items: [
     { genre: 'mis-a-jour', texte: 'Le sol au demi-mètre est retenu et passe en jeu à partir de 4 pixels par mètre ; le mètre reste aux zooms 1 à 3 (le zoom 3 coûtait le plus) ; les trois variantes du sujet sont tranchées', ref: 'sol-fin-B' },
   ] },

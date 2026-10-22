@@ -3,6 +3,8 @@ import { readFileSync } from 'node:fs';
 import { creerTerrain, impact, hydroLignes, etat, hauteurQ, ETAT } from '../js/terrain.js';
 import { REGLAGES as R } from '../js/data/reglages.js';
 import { SECTEURS } from '../js/data/secteur.js';
+import { FORMES } from '../js/cratere.js';
+import { CALIBRES } from '../js/data/calibres.js';
 import { METEO } from '../js/data/meteo.js';
 
 // un petit terrain plat et sec, la nappe très bas
@@ -58,6 +60,37 @@ test('un obus hors du champ ne fait rien', () => {
   const T = plat();
   assert.equal(impact(T, -5, 3, '75', R).rayon, 0);
   assert.ok(T.diff.every(v => v === 0));
+});
+
+group('terrain — les formes de cratère du labo (v0.52.4)');
+test('chaque forme est rejouée à l\'identique, creuse sans passer le plancher et ne change rien loin de l\'impact', () => {
+  for (const [nom, forme] of Object.entries(FORMES)) for (const cal of ['75', '155', '220']) {
+    const a = plat(41, 41), b = plat(41, 41);
+    for (let k = 0; k < 6; k++) { impact(a, 20.3 + k * 0.1, 20.7, cal, R, k, false, forme); impact(b, 20.3 + k * 0.1, 20.7, cal, R, k, false, forme); }
+    assert.deepEqual(a.diff, b.diff, `${nom} ${cal}`);
+    assert.ok(Math.min(...a.diff) >= -R.terrain.plancher, `${nom} ${cal} : plancher`);
+    for (let j = 0; j < 41; j++) for (let i = 0; i < 41; i++) if (Math.hypot(i - 20, j - 20) > 12) assert.equal(a.diff[j * 41 + i], 0, `${nom} ${cal} : ${i},${j}`);
+  }
+});
+test('une forme creuse à peu près le volume du motif (à 25 % près) et pas plus profond', () => {
+  for (const [nom, forme] of Object.entries(FORMES)) for (const cal of ['75', '155', '220']) {
+    let creuse0 = 0, creuse = 0, centre = 0;
+    for (let k = 0; k < 30; k++) {
+      const x = 20 + (k % 7) / 7, y = 20 + (k % 5) / 5;
+      const A = plat(41, 41), B = plat(41, 41);
+      impact(A, x, y, cal, R, k); impact(B, x, y, cal, R, k, false, forme);
+      for (const d of A.diff) if (d < 0) creuse0 -= d;
+      for (const d of B.diff) if (d < 0) creuse -= d;
+      centre = Math.max(centre, -Math.min(...B.diff));
+      assert.ok(-Math.min(...B.diff) <= -Math.min(...A.diff), `${nom} ${cal} : plus profond que le motif`);
+    }
+    assert.ok(Math.abs(creuse / creuse0 - 1) < 0.25, `${nom} ${cal} : volume ${(creuse / creuse0).toFixed(2)}`);
+  }
+});
+test('sans forme, impact() creuse comme avant (la forme null est le jeu)', () => {
+  const a = plat(), b = plat();
+  impact(a, 10.5, 10.5, '155', R, 3); impact(b, 10.5, 10.5, '155', R, 3, false, FORMES.actuel);
+  assert.deepEqual(a.diff, b.diff);
 });
 
 group('terrain — eau');
