@@ -1,5 +1,8 @@
 # Journal des versions
 
+## 0.59.4 — 2026-10-23
+- L'herbe de l'automne est rousse, brun orangé, comme les feuilles
+
 ## 0.59.3 — 2026-10-23
 - L'automne flamboie (orange, rouge, or) et les feuilles se voient à tous les zooms, d'un seul cube de loin
 - Les chars contournent les fleuves, passent par les ponts qui les portent, démarrent et tournent en douceur

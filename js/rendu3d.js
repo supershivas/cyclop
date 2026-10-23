@@ -22,25 +22,25 @@
    - Les soldats : instanciés (une boîte et son ombre) ; au zoom 1 et 2, un
      point de 2 × 2 pixels (la couleur du camp sur son ombre).
    - Les corps : un homme couché (instancié) ; au zoom 1 et 2, un pixel. */
-import { loadThree } from './three-lib.js?v=0.59.3';
-import * as SH from './rendu/shaders.js?v=0.59.3';
-import { creerSoldats } from './rendu/soldats.js?v=0.59.3';
-import { creerChars } from './rendu/chars.js?v=0.59.3';
-import { creerAvions } from './rendu/avions.js?v=0.59.3';
-import { creerPonts } from './rendu/ponts.js?v=0.59.3';
-import { creerCiel } from './rendu/ciel.js?v=0.59.3';
-import { creerMeteo } from './rendu/meteo.js?v=0.59.3';
-import { creerTroncons } from './rendu/troncons.js?v=0.59.3';
-import { ARBRES_JEU } from './data/arbres.js?v=0.59.3';
-import { creerVegetation } from './rendu/vegetation.js?v=0.59.3';
-import { creerTemps } from './rendu/temps.js?v=0.59.3';
-import { creerEclats } from './rendu/eclats.js?v=0.59.3';
-import { PALETTE, ORDRE, INDICE } from './palette.js?v=0.59.3';
-import { OMBRE, couleursLigne } from './apparence.js?v=0.59.3';
-import { MORCEAU, hauteurVueQ as hauteurQ, hauteurVueM as hauteurM } from './terrain.js?v=0.59.3';
-import { horloge, secteurDuJeu } from './bataille.js?v=0.59.3';
-import { profilFleuve } from './eaux.js?v=0.59.3';
-import { ligneY } from './tranchees.js?v=0.59.3';
+import { loadThree } from './three-lib.js?v=0.59.4';
+import * as SH from './rendu/shaders.js?v=0.59.4';
+import { creerSoldats } from './rendu/soldats.js?v=0.59.4';
+import { creerChars } from './rendu/chars.js?v=0.59.4';
+import { creerAvions } from './rendu/avions.js?v=0.59.4';
+import { creerPonts } from './rendu/ponts.js?v=0.59.4';
+import { creerCiel } from './rendu/ciel.js?v=0.59.4';
+import { creerMeteo } from './rendu/meteo.js?v=0.59.4';
+import { creerTroncons } from './rendu/troncons.js?v=0.59.4';
+import { ARBRES_JEU } from './data/arbres.js?v=0.59.4';
+import { creerVegetation } from './rendu/vegetation.js?v=0.59.4';
+import { creerTemps } from './rendu/temps.js?v=0.59.4';
+import { creerEclats } from './rendu/eclats.js?v=0.59.4';
+import { PALETTE, ORDRE, INDICE } from './palette.js?v=0.59.4';
+import { OMBRE, couleursLigne } from './apparence.js?v=0.59.4';
+import { MORCEAU, hauteurVueQ as hauteurQ, hauteurVueM as hauteurM } from './terrain.js?v=0.59.4';
+import { horloge, secteurDuJeu } from './bataille.js?v=0.59.4';
+import { profilFleuve } from './eaux.js?v=0.59.4';
+import { ligneY } from './tranchees.js?v=0.59.4';
 
 export const CAMERA = { yaw: 0.15, tangage: 0.95, fov: 30 };   // au départ : tournée de 9°, plongée de 54°, angle de 30°
 // la caméra respire : un balancement très lent, 2° en 23 s (Jérôme, v0.3.1 : variante D du labo retenue)
@@ -294,6 +294,9 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
   const avions = creerAvions({ THREE, scene, bataille: () => B, hauteur: (x, y) => surfaceLisse(x, y), effets: eclats });
   function attacher(bataille) {
     B = bataille; T = B.terrain;
+    // l'herbe de l'automne est rousse (Jérôme, v0.59.4 : « plus orangée, marron ») : les deux verts du sol prennent des teintes de feuilles mortes, hors palette (exception déclarée dans CLAUDE.md) ; les autres saisons gardent les verts
+    const roux = (B.etat.sol?.saison ?? 'automne') === 'automne', sombre = h => rgb(h).map(v => Math.round(v * 0.7));
+    for (const [k, h] of [['v', '#a86a2c'], ['w', '#8a4c1e']]) { const i = ORDRE.indexOf(k); PAL_RGB[i] = rgb(roux ? h : PALETTE[k]); PAROI_RGB[i] = roux ? sombre(h) : rgb(PALETTE[OMBRE[k]]); }
     if (finesseDes !== null) { finesse = 1; finPerimee = false; }      // une autre bataille : tout se fait d'abord au mètre, `dessiner` choisit ensuite
     if (sol) { scene.remove(sol); sol.children.forEach(m => m.userData.fin?.dispose()); solTex.dispose(); solTexFin?.dispose(); solTexFin = null; solDataFin = null; }
     solIdx = new Uint8Array(T.W * T.H);
