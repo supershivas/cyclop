@@ -1,5 +1,8 @@
 # Journal des versions
 
+## 0.64.0 — 2026-10-23
+- Le menu pause a un bouton « Quitter la partie » : il efface la partie en cours (après confirmation) et revient à l'accueil
+
 ## 0.63.0 — 2026-10-23
 - Les buissons ont sept formes (rond, étalé, haut, touffes, ajonc, ronces, épineux brisé), des fleurs l'été, les teintes de l'automne, des branches nues l'hiver
 
