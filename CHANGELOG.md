@@ -1,5 +1,9 @@
 # Journal des versions
 
+## 0.60.2 — 2026-10-23
+- Le choix du secteur : les cartes sont les mêmes sur tous les ordinateurs, sans numéro ; « Au hasard » (un dé) tire une autre carte à chaque clic
+- Des icônes pour les saisons, des boutons plus petits, plus de barre de défilement, la carte agrandie ne coupe plus les boutons
+
 ## 0.60.1 — 2026-10-23
 - Les feuilles ne sont plus blanches ni changeantes de loin
 - La caméra de l'écran titre ne passe plus sous le sol ni hors du terrain
