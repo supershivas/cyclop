@@ -951,3 +951,30 @@ test('un char contourne le fleuve par un pont qui le porte, n\'y tombe pas, et a
   assert.ok(c.etat === 'arrive' || c.etat === 'avance', `ni enlisé ni détruit : ${c.etat}`); assert.equal(B.etat.pontsRompus.length, 0);
   assert.ok(Math.hypot(c.x - x, c.y - y) < 30, 'au bout de son chemin');
 });
+
+group('le génie refait un pont (v0.66.0)');
+test('une section de 20 hommes refait un pont coupé en 2 à 4 h, plus vite avec plus d\'hommes, et la sauvegarde rejoue le pont', async () => {
+  const { preparerAleatoire, ID_ALEATOIRE } = await import('../js/generateur.js');
+  const { detruirePont } = await import('../js/eaux.js');
+  preparerAleatoire(2);
+  const B = nouvelleBataille(2, R, { soldats: 200, jours: 3, secteur: ID_ALEATOIRE }), T = B.terrain, P0 = T.pontsListe[0], c0 = P0.cases[0];
+  const [i, j] = [c0 % T.W, (c0 / T.W) | 0], mx = Math.round(P0.mx), my = Math.round(P0.mz);
+  assert.ok(ordonnerBarrage(B, 'genie', mx, my).refus, 'un pont debout : refusé');
+  detruirePont(T, i, j, 0); assert.ok(P0.detruit);
+  assert.ok(ordonnerBarrage(B, 'genie', 5, 5).refus, 'loin d\'un pont coupé : refusé');
+  const o = ordonnerBarrage(B, 'genie', mx, my); assert.ok(o.ok, JSON.stringify(o) + ` ${mx},${my}`); assert.equal(B.etat.sapeurs[0], 3);
+  assert.ok(ordonnerBarrage(B, 'genie', mx, my).refus, 'recharge ou déjà au travail');
+  let t0 = null, t1 = null;
+  for (let n = 0; n < 60000 && B.etat.genies.length && B.etat.phase === 'jour'; n++) {
+    avancer(B); const g = B.etat.genies[0];
+    if (g?.etat === 'travaille' && t0 === null) t0 = B.etat.temps;
+  }
+  t1 = B.etat.temps;
+  assert.ok(!P0.detruit, 'le pont est refait'); assert.equal(B.etat.sapeurs[0], 4, 'la section rentre');
+  const heures = (t1 - t0) / (R.jour.duree / (R.jour.heureFin - R.jour.heureDebut));
+  assert.ok(heures > 1.9 && heures < 4.3, `de 2 à 4 h : ${heures.toFixed(2)}`);
+  assert.equal(B.etat.pontsRepares.length, 1);
+  assert.ok(T.pont[c0] && !T.profond[c0] || !P0.enEau.includes(c0), 'le tablier est revenu');
+  const B2 = restaurer(photo(B), R); 
+  assert.ok(!B2.terrain.pontsListe[0].detruit, 'relue : le pont est refait');
+});

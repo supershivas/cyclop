@@ -6,7 +6,7 @@
 // traîne, on attend. Toutes les `periode` cadres, on compare une empreinte de l'état : un écart, c'est une désynchronisation (dite à voix haute).
 //
 // Logique pure : ni DOM, ni horloge, ni réseau (`envoyer` est donné). Testée dans Node avec un réseau factice (test/lockstep.test.mjs).
-import { avancer, photo } from '../bataille.js?v=0.65.0';
+import { avancer, photo } from '../bataille.js?v=0.66.0';
 
 const fnv = (h, n) => Math.imul(h ^ (n | 0), 16777619) >>> 0;
 const tampon = new DataView(new ArrayBuffer(8));
@@ -22,6 +22,7 @@ export function empreinteEtat(B) {
   for (const r of e.regiments) { h = fnv(h, r.effectif); h = fnv(h, bitsF(r.moral)); h = fnv(h, bitsF(r.ordre.x)); h = fnv(h, bitsF(r.ordre.y)); for (const c of r.stance ?? 'volonte') h = fnv(h, c.charCodeAt(0)); }
   for (const t of e.troncons) h = fnv(h, t);
   for (const c of e.chars ?? []) { h = fnv(h, bitsF(c.x)); h = fnv(h, bitsF(c.y)); h = fnv(h, bitsF(c.pv)); }
+  for (const g of e.genies ?? []) { h = fnv(h, bitsF(g.x)); h = fnv(h, bitsF(g.y)); h = fnv(h, g.n); h = fnv(h, bitsF(g.travail)); }
   return h.toString(16);
 }
 

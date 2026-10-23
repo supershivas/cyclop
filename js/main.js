@@ -1,47 +1,48 @@
 // Le cycle de vie : écran titre → bataille → nuit → fin ; pause active,
 // réglages, sauvegarde, mise à jour, debug. Les règles sont dans bataille.js
 // (pures), le dessin dans rendu3d.js (il ne modifie jamais l'état).
-import { createLoop } from './lib/loop.js?v=0.65.0';
-import { createKeys, stopTypeahead } from './lib/keys.js?v=0.65.0';
-import { createPointer, lockBrowserGestures } from './lib/pointer.js?v=0.65.0';
-import { createGamepad } from './lib/gamepad.js?v=0.65.0';
-import { createStore, autosave, pickJSONFile } from './lib/save.js?v=0.65.0';
-import { startUpdateCheck, loadVersion, loadChangelog, downloadJSON } from './lib/app-update.js?v=0.65.0';
-import { ROLES } from './palette.js?v=0.65.0';
-import { VERSION_CAMPAGNE, CLE as CLE_CAMPAGNE, cloturerDansLeStore, nouvelleCampagne, suivante, passage, bilan as bilanCampagne } from './campagne.js?v=0.65.0';
-import { CAMPAGNE } from './data/campagne.js?v=0.65.0';
-import { MISSIONS, EUX, nouvelleBataille, etapesRestaurer, avancer, aube, ordonnerMarche, peutOrdonner, ordonnerBarrage, peutBarrage, arriereDe, ordonnerStance, peutStance, horloge, effectifs, tronconsTenus, moralEnMots, terrainResume, forcesTroncons, largeurZone, lettreZone, etendueZones, nomTroncon, actionDe, secteursDe, tronconsDeLigne, zone, photo, restaurer, PAS, NOUS } from './bataille.js?v=0.65.0';
-import { ligneY } from './tranchees.js?v=0.65.0';
-import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.65.0';
-import { AVION, MITRAILLAGE } from './data/mitraillage.js?v=0.65.0';
-import { ligneDe, apercuVol, avionsPrets, avionsRestants } from './avions.js?v=0.65.0';
-import { CHAR, CHAR_RECHARGE, CHARS, CHAR_PAR_DEFAUT } from './data/chars.js?v=0.65.0';
-import { routeChar } from './chars.js?v=0.65.0';
-import { STANCES, STANCE_DEFAUT } from './data/stances.js?v=0.65.0';
-import { METEO, SAISONS, SAISON_DEFAUT } from './data/meteo.js?v=0.65.0';
-import { hash2 } from './lib/rng.js?v=0.65.0';
-import { creerRendu, CAMERA } from './rendu3d.js?v=0.65.0';
-import { etatEnMots, experienceEnMots, chevrons } from './identite.js?v=0.65.0';
-import { CORVEES } from './data/corvees.js?v=0.65.0';
-import { refusCorvee } from './nuit.js?v=0.65.0';
-import { chargerContenu, appliquerSecteurs, appliquerCartes, appliquerCampagne } from './design-store.js?v=0.65.0';
-import * as lecture from './hud/lecture.js?v=0.65.0';
-import { creerFiche } from './hud/fiche.js?v=0.65.0';
-import { chevronsHtml } from './hud/barres.js?v=0.65.0';
-import { creerNuit, corveeDe, corveeCourte } from './hud/nuit.js?v=0.65.0';
-import { creerCampagne } from './hud/campagne.js?v=0.65.0';
-import { creerCarnet, deux } from './hud/carnet.js?v=0.65.0';
-import { creerCarte } from './hud/carte.js?v=0.65.0';
-import { creerPertes } from './hud/pertes.js?v=0.65.0';
-import { creerBarreTemps } from './hud/temps.js?v=0.65.0';
-import { creerChargement } from './hud/chargement.js?v=0.65.0';
-import { creerRetours } from './hud/retours.js?v=0.65.0';
-import { creerInfobulle } from './hud/infobulle.js?v=0.65.0';
-import { SECTEURS } from './data/secteur.js?v=0.65.0';
-import { preparerAleatoire, ID_ALEATOIRE } from './generateur.js?v=0.65.0';
-import { creerLockstep, empreinteEtat } from './reseau/lockstep.js?v=0.65.0';
-import { nouveauCode, codeValide, publier, ecouter } from './reseau/relais.js?v=0.65.0';
-import { creerHote, creerInvite } from './reseau/lien.js?v=0.65.0';
+import { createLoop } from './lib/loop.js?v=0.66.0';
+import { createKeys, stopTypeahead } from './lib/keys.js?v=0.66.0';
+import { createPointer, lockBrowserGestures } from './lib/pointer.js?v=0.66.0';
+import { createGamepad } from './lib/gamepad.js?v=0.66.0';
+import { createStore, autosave, pickJSONFile } from './lib/save.js?v=0.66.0';
+import { startUpdateCheck, loadVersion, loadChangelog, downloadJSON } from './lib/app-update.js?v=0.66.0';
+import { ROLES } from './palette.js?v=0.66.0';
+import { VERSION_CAMPAGNE, CLE as CLE_CAMPAGNE, cloturerDansLeStore, nouvelleCampagne, suivante, passage, bilan as bilanCampagne } from './campagne.js?v=0.66.0';
+import { CAMPAGNE } from './data/campagne.js?v=0.66.0';
+import { MISSIONS, EUX, nouvelleBataille, etapesRestaurer, avancer, aube, ordonnerMarche, peutOrdonner, ordonnerBarrage, peutBarrage, arriereDe, ordonnerStance, peutStance, horloge, effectifs, tronconsTenus, moralEnMots, terrainResume, forcesTroncons, largeurZone, lettreZone, etendueZones, nomTroncon, actionDe, secteursDe, tronconsDeLigne, zone, photo, restaurer, PAS, NOUS } from './bataille.js?v=0.66.0';
+import { ligneY } from './tranchees.js?v=0.66.0';
+import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.66.0';
+import { AVION, MITRAILLAGE } from './data/mitraillage.js?v=0.66.0';
+import { ligneDe, apercuVol, avionsPrets, avionsRestants } from './avions.js?v=0.66.0';
+import { CHAR, CHAR_RECHARGE, CHARS, CHAR_PAR_DEFAUT } from './data/chars.js?v=0.66.0';
+import { GENIE, GENIE_DATA } from './data/genie.js?v=0.66.0';
+import { routeChar } from './chars.js?v=0.66.0';
+import { STANCES, STANCE_DEFAUT } from './data/stances.js?v=0.66.0';
+import { METEO, SAISONS, SAISON_DEFAUT } from './data/meteo.js?v=0.66.0';
+import { hash2 } from './lib/rng.js?v=0.66.0';
+import { creerRendu, CAMERA } from './rendu3d.js?v=0.66.0';
+import { etatEnMots, experienceEnMots, chevrons } from './identite.js?v=0.66.0';
+import { CORVEES } from './data/corvees.js?v=0.66.0';
+import { refusCorvee } from './nuit.js?v=0.66.0';
+import { chargerContenu, appliquerSecteurs, appliquerCartes, appliquerCampagne } from './design-store.js?v=0.66.0';
+import * as lecture from './hud/lecture.js?v=0.66.0';
+import { creerFiche } from './hud/fiche.js?v=0.66.0';
+import { chevronsHtml } from './hud/barres.js?v=0.66.0';
+import { creerNuit, corveeDe, corveeCourte } from './hud/nuit.js?v=0.66.0';
+import { creerCampagne } from './hud/campagne.js?v=0.66.0';
+import { creerCarnet, deux } from './hud/carnet.js?v=0.66.0';
+import { creerCarte } from './hud/carte.js?v=0.66.0';
+import { creerPertes } from './hud/pertes.js?v=0.66.0';
+import { creerBarreTemps } from './hud/temps.js?v=0.66.0';
+import { creerChargement } from './hud/chargement.js?v=0.66.0';
+import { creerRetours } from './hud/retours.js?v=0.66.0';
+import { creerInfobulle } from './hud/infobulle.js?v=0.66.0';
+import { SECTEURS } from './data/secteur.js?v=0.66.0';
+import { preparerAleatoire, ID_ALEATOIRE } from './generateur.js?v=0.66.0';
+import { creerLockstep, empreinteEtat } from './reseau/lockstep.js?v=0.66.0';
+import { nouveauCode, codeValide, publier, ecouter } from './reseau/relais.js?v=0.66.0';
+import { creerHote, creerInvite } from './reseau/lien.js?v=0.66.0';
 
 const JEU = 'cyclopeen';
 const $ = id => document.getElementById(id);
@@ -86,7 +87,7 @@ let vitesse = 1;              // ×1, ×2, ×4 : la vitesse du temps (plafonnée
 let pauseActive = false;      // Espace : le temps s'arrête, les ordres restent possibles
 let forme = 'bloc';            // la forme des prochains ordres en terrain libre (bloc, ligne, par deux, colonne) ; sur une tranchée, les hommes suivent le tracé
 let modeMarche = false;        // le bouton « Marcher » d'une carte : le prochain clic sur le sol envoie les régiments choisis
-const BATTERIES = [...NOMS_CALIBRES, AVION, CHAR];   // les trois calibres, le mitraillage aérien (touche 4), puis le char (touche 5)
+const BATTERIES = [...NOMS_CALIBRES, AVION, CHAR, GENIE];   // les trois calibres, le mitraillage aérien (touche 4), le char (touche 5), puis le génie (touche 6, v0.66.0)
 let departAvion = null;       // le premier clic d'une passe d'avion (v0.56.0) : { x, y }, le second clic la termine
 let modeBarrage = null;       // un calibre : le prochain clic gauche vise
 let MOI = NOUS;               // le camp qu'on joue : le nôtre (bleu), ou le kaki quand on est l'invité d'une partie à deux (v0.30.0)
@@ -357,7 +358,7 @@ function demanderSecteur() {
       $('carte-titre').textContent = SECTEURS[choisi].nom;               // le nom sur l'aperçu, la description dessous (deux lignes au plus : la fenêtre ne change plus de taille)
       $('carte-legende').textContent = SECTEURS[choisi].resume;
       try {
-        if (!apercuSecteur) { const { creerVue3D } = await import('./apercu-3d.js?v=0.65.0'); apercuSecteur = await creerVue3D({ R, hote: $('carte-3d'), rotation: 0.12 }); apercuSecteur.surClic = () => agrandir(!d.classList.contains('agrandi')); }
+        if (!apercuSecteur) { const { creerVue3D } = await import('./apercu-3d.js?v=0.66.0'); apercuSecteur = await creerVue3D({ R, hote: $('carte-3d'), rotation: 0.12 }); apercuSecteur.surClic = () => agrandir(!d.classList.contains('agrandi')); }
         if (!ouvert) return;
         apercuSecteur.monter(choisi, SECTEURS[choisi], graineDe(), { soldats: false, cadrer: true, saison: saisonDe() });
         apercuSecteur.activer(true);
@@ -844,11 +845,17 @@ function majHud() {
   majFiche();
   $('pause-active').hidden = !pauseActive;
   for (const b of $('batteries').children) {
-    const cal = b.dataset.cal, pret = (MOI === NOUS ? e.batteries : e.batteriesEux)[cal] ?? 0, reste = Math.ceil(pret - e.temps), recharge = cal === CHAR ? CHAR_RECHARGE : (CALIBRES[cal] ?? MITRAILLAGE).recharge;
+    const cal = b.dataset.cal, pret = (MOI === NOUS ? e.batteries : e.batteriesEux)[cal] ?? 0, reste = Math.ceil(pret - e.temps), recharge = cal === CHAR ? CHAR_RECHARGE : cal === GENIE ? GENIE_DATA.recharge : (CALIBRES[cal] ?? MITRAILLAGE).recharge;
     b.querySelector('span').textContent = reste > 0 ? `${reste} s` : 'prête';
     b.querySelector('s').style.width = `${Math.round(100 * (1 - Math.max(0, Math.min(1, (pret - e.temps) / recharge))))}%`;
     b.classList.toggle('vise', modeBarrage === cal);
     b.classList.toggle('recharge', reste > 0);
+    if (cal === GENIE) {      // les sections du génie : combien au dépôt
+      const dep = e.sapeurs[MOI], en = e.genies.filter(g => g.camp === MOI).length;
+      b.querySelector('em').textContent = `×${dep}`;
+      if (!dep) b.querySelector('span').textContent = en ? 'au travail' : 'perdues';
+      b.title = `Génie : ${dep} section(s) au dépôt, ${en} en route ou au travail (${GENIE_DATA.hommes} hommes sans arme chacune)`;
+    }
     if (cal === AVION) {      // la flotte (v0.57.0) : combien d'avions restent, lesquels sont en l'air, leurs points de vie
       const flotte = e.avions[MOI], restants = avionsRestants(e, MOI), prets = avionsPrets(e, MOI);
       b.querySelector('em').textContent = `×${restants}`;
@@ -863,9 +870,14 @@ function majHud() {
 $('batteries').append(...BATTERIES.map((cal, k) => {
   const b = document.createElement('button');
   b.className = 'batterie'; b.dataset.cal = cal;
-  b.setAttribute('aria-label', cal === CHAR ? `Char d'assaut (touche ${k + 1})` : cal === AVION ? `Mitraillage aérien (touche ${k + 1})` : `Barrage de ${cal} (touche ${k + 1})`);
+  b.setAttribute('aria-label', cal === CHAR ? `Char d'assaut (touche ${k + 1})` : cal === AVION ? `Mitraillage aérien (touche ${k + 1})` : cal === GENIE ? `Génie : refaire un pont coupé (touche ${k + 1})` : `Barrage de ${cal} (touche ${k + 1})`);
   if (cal === CHAR) {      // le char vu de côté : la caisse, la chenille, le canon (Jérôme, v0.47.0)
     b.innerHTML = `<svg viewBox="0 0 38 24" aria-hidden="true" style="max-width:38px"><path d="M3 20L6 16H28L35 20Z"/><path d="M8 16V9H24L28 16Z"/><rect class="ceinture" x="26" y="11" width="11" height="2.5"/><rect class="ceinture" x="7" y="20" width="26" height="2.5"/></svg><b>Char</b><span>prête</span><i class="touche" aria-hidden="true">${k + 1}</i><u><s></s></u>`;
+    b.onclick = () => viser(cal);
+    return b;
+  }
+  if (cal === GENIE) {      // la pelle et le madrier (Jérôme, v0.66.0)
+    b.innerHTML = `<svg viewBox="0 0 34 26" aria-hidden="true" style="max-width:34px"><path d="M2 20h30v4H2z"/><path d="M5 20V8h4v12zM25 20V8h4v12z"/><path d="M3 5h28v4H3z"/></svg><b>Génie</b><span>prête</span><em class="flotte">×4</em><i class="touche" aria-hidden="true">${k + 1}</i><u><s></s></u>`;
     b.onclick = () => viser(cal);
     return b;
   }
@@ -1089,7 +1101,7 @@ function majVisee() {
   if (modeBarrage && enJeu() && B.etat.phase === 'jour' && !nuit.etat && souris && !glisse && !document.querySelector('dialog[open]')) {
     const [x, y] = rendu.versTerrain(souris.x, souris.y);
     rendu.surligner(null); svg.classList.remove('refus');
-    svg.innerHTML = x > -1e4 ? (modeBarrage === AVION ? viseeAvion(x, y) : modeBarrage === CHAR ? viseeChar(x, y) : viseeObus(x, y, CALIBRES[modeBarrage].rayon)) : ''; svg.removeAttribute('hidden');
+    svg.innerHTML = x > -1e4 ? (modeBarrage === AVION ? viseeAvion(x, y) : modeBarrage === CHAR ? viseeChar(x, y) : modeBarrage === GENIE ? viseeObus(x, y, 4) : viseeObus(x, y, CALIBRES[modeBarrage].rayon)) : ''; svg.removeAttribute('hidden');
     return;
   }
   if (!(enJeu() && B.etat.phase === 'jour' && !nuit.etat && choisis.size && souris && !glisse && !modeBarrage && !document.querySelector('dialog[open]'))) {
@@ -1280,7 +1292,7 @@ const STANCES_TOUCHES = ['volonte', 'retenu'];       // Maj+1, Maj+2 (touches ph
 const keys = createKeys({
   actions: {
     menu: 'Escape', pause: ' ', tout: 't', centrer: 'c', fiche: 'i', plus: ['+', '=', 'NumpadAdd'], moins: ['-', 'NumpadSubtract'],
-    b1: 'Digit1', b2: 'Digit2', b3: 'Digit3', b4: 'Digit4', b5: 'Digit5',
+    b1: 'Digit1', b2: 'Digit2', b3: 'Digit3', b4: 'Digit4', b5: 'Digit5', b6: 'Digit6',
   },
   onAction: (nom, e) => {
     if (!enJeu()) return;
@@ -1471,7 +1483,7 @@ startUpdateCheck({
 
 // ─── Mode debug (section 18) : chargé seulement avec ?debug=1 ──────────────
 if (DEBUG) {
-  const { installDebug, seedFromUrl } = await import('./lib/debug.js?v=0.65.0');
+  const { installDebug, seedFromUrl } = await import('./lib/debug.js?v=0.66.0');
   window.__seed = seedFromUrl() ?? undefined;
   installDebug({
     state: () => B && { ...horloge(B), effectifs: effectifs(B), pertes: B.etat.pertes, impacts: B.etat.impacts.length, enJeu: enJeu(), pause: loop.paused },

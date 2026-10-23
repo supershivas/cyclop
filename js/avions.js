@@ -4,9 +4,9 @@
    L'avion entre par le prolongement de la passe, vole à `croisiere` m, descend à `passe` m sur les `descente` m qui précèdent la bande, la balaie (ses balles tombent
    `avance` m devant lui, chaque homme de la bande n'est tiré qu'une fois), remonte, et sort. Au-dessus d'hommes qui tirent, il perd des points de vie (`exposition`) ;
    à zéro, il tombe, écrase ce qui est sous lui et laisse une épave jusqu'à l'aube. Les avions de chaque camp : `etat.avions[camp]`, les points de vie de chacun (0 : perdu). */
-import { MITRAILLAGE as M } from './data/mitraillage.js?v=0.65.0';
-import { METEO } from './data/meteo.js?v=0.65.0';
-import { GRILLE, effrayer } from './army.js?v=0.65.0';
+import { MITRAILLAGE as M } from './data/mitraillage.js?v=0.66.0';
+import { METEO } from './data/meteo.js?v=0.66.0';
+import { GRILLE, effrayer } from './army.js?v=0.66.0';
 
 const borne = (v, a, b) => v < a ? a : v > b ? b : v;
 const lisse = f => { f = borne(f, 0, 1); return f * f * (3 - 2 * f); };

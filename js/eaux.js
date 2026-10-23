@@ -2,8 +2,8 @@
 // mêmes coordonnées que `formes.js` (mètres du SECTEUR). Logique pure, sans hasard. Une eau est creusée d'un coup à plat (au niveau de sa rive la plus basse moins un mètre, au mètre près : le sol se
 // dessine en marches d'un mètre) et marquée `profond` : on n'y passe pas (les champs de coûts la contournent, un homme qui s'y trouve la quitte à peine), sauf sur un pont (`ponts` : v0.44.0).
 // Un fleuve suit le terrain : son niveau est celui de la rive la plus basse sur ±15 m de son cours, pas un niveau pour tout le cours.
-import { distanceForme, extremite } from './formes.js?v=0.65.0';
-import { hash2 } from './lib/rng.js?v=0.65.0';
+import { distanceForme, extremite } from './formes.js?v=0.66.0';
+import { hash2 } from './lib/rng.js?v=0.66.0';
 
 export const EAUX = ['lac', 'fleuve'];
 export const PONT_AU_MOINS = 4;          // quarts : le tablier est à 1 m au moins au-dessus de l'eau
@@ -130,6 +130,16 @@ export function poserPonts(base, profond, T, { W, H, ox, oy }, objets) {
     const n = T.pontsListe.length;
     for (const c of cases) { T.pont[c] = n; T.pontH[c] = pont.pontH; if (profond[c]) { T.pontEau[c] = 1; pont.enEau.push(c); profond[c] = 0; } }
   }
+}
+// Le génie a refait un ouvrage coupé (v0.66.0) : le tablier revient tel qu'avant, l'eau dessous cesse d'être profonde
+export function reconstruirePont(T, P) {
+  if (!P.detruit) return false;
+  const n = T.pontsListe.indexOf(P) + 1;
+  P.detruit = false;
+  for (const c of P.cases) { T.pont[c] = n; T.pontH[c] = P.pontH; }
+  for (const c of P.enEau) { T.profond[c] = 0; T.pontEau[c] = 1; }
+  T.versionPonts++;
+  return true;
 }
 // Un obus tombé sur le tablier (à moins de `rayon` cases du point de chute) coupe l'ouvrage entier : ses cases d'eau redeviennent profondes, plus personne n'y marche ; rend les ouvrages coupés
 export function detruirePont(T, i0, j0, rayon) {

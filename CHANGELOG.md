@@ -1,5 +1,8 @@
 # Journal des versions
 
+## 0.66.0 — 2026-10-23
+- Le génie militaire : une section de 20 hommes sans arme (4 par camp) refait un pont coupé, de 2 à 4 h selon l'ouvrage, plus vite avec plus d'hommes (bouton « Génie » ou touche 6, puis un clic sur le pont)
+
 ## 0.65.0 — 2026-10-23
 - Les huit régiments tiennent sur une ligne, sans flèches, dès que l'écran fait environ 1 100 px
 - Les batteries sont plus petites, sur deux lignes de même largeur : les trois obus, puis l'avion et le char

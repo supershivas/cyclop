@@ -12,3 +12,5 @@ export const PONTS_JEU = {
 };
 export const PONT_DEFAUT = 'planches';
 export const typePont = id => PONTS_JEU[id] ? id : PONT_DEFAUT;
+// Les heures de travail du génie pour refaire un ouvrage coupé, avec la section au complet (20 hommes ; Jérôme, v0.66.0 : de 2 à 4 h selon le type) ; des propositions
+export const PONTS_HEURES = { planches: 2, cordes: 2, chevalets: 2.5, suspendu: 3, dosdane: 3.5, warren: 3.5, arches: 4 };
