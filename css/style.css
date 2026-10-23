@@ -85,10 +85,12 @@
 .carnet li.recent b { color: var(--jeu-encre); }
 
 /* Le râtelier : trois obus en papier de campagne, un par calibre ; debout : prêt, couché : se recharge (v0.18.1) */
-.batteries { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: var(--pas); align-items: end; width: 264px; pointer-events: auto; }
+.batteries { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: var(--pas); align-items: end; width: 312px; pointer-events: auto; }
 /* deux lignes de la même largeur (Jérôme, v0.65.0) : les trois obus, puis l'avion et le char */
 .batterie[data-cal="75"], .batterie[data-cal="155"], .batterie[data-cal="220"] { grid-column: span 2; }
-.batterie[data-cal="avion"], .batterie[data-cal="char"] { grid-column: span 3; }
+.batterie[data-cal="avion"], .batterie[data-cal="char"], .batterie[data-cal="genie"] { grid-column: span 2; }   /* (v0.66.0 : trois sur la seconde ligne) */
+.batterie[data-cal="avion"] svg, .batterie[data-cal="char"] svg, .batterie[data-cal="genie"] svg { max-width: 24px !important; }
+.batterie[data-cal="avion"] b, .batterie[data-cal="char"] b, .batterie[data-cal="genie"] b { font-size: var(--texte-petit); }
 .batterie {
   position: relative; display: grid; grid-template-columns: auto 1fr; grid-template-rows: auto auto auto; column-gap: var(--pas); align-items: center; text-align: left;
   min-width: 0; padding: var(--e1) var(--e2) var(--e1) var(--e1);

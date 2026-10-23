@@ -10,5 +10,5 @@ export const GENIE_DATA = {
   route: 4,           // m/s jusqu'à l'arrière de leur camp, sur la route
   rive: 1.5,          // m : à cette distance de la rive visée, ils commencent le travail
   zone: 0.8,          // × le rayon du calibre : la zone où un obus les touche
-  obus: { '75': 0.5, '155': 0.8, '220': 1 },    // la part de la section couchée au centre du souffle
+  obus: { '75': 0.5, '155': 0.8, '220': 1 },    // × la zone du calibre : jusqu'où un homme tombe
 };

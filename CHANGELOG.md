@@ -1,5 +1,9 @@
 # Journal des versions
 
+## 0.66.1 — 2026-10-23
+- Un pont coupé laisse des ruines : piles cassées, tabliers qui pendent des rives, planches à la dérive
+- Les sapeurs du génie sont de vrais petits hommes qui marchent en bande, évitent l'eau et se répartissent sur la rive autour des ruines
+
 ## 0.66.0 — 2026-10-23
 - Le génie militaire : une section de 20 hommes sans arme (4 par camp) refait un pont coupé, de 2 à 4 h selon l'ouvrage, plus vite avec plus d'hommes (bouton « Génie » ou touche 6, puis un clic sur le pont)
 

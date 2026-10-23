@@ -14,27 +14,27 @@
    La sauvegarde (photo) garde la graine, la liste compacte des impacts, l'état
    de la foule et les petites couches de logique ; jamais le relief : il se
    rejoue depuis la graine et les impacts (rejouerTerrain). */
-import { createRng, hash2 } from './lib/rng.js?v=0.66.0';
-import { impact, hydroLignes, etat as etatCase, vitesseEtat, vitesseCase, ETAT } from './terrain.js?v=0.66.0';
-import { creerArmee, ajouterSoldat, construireGrille, pasArmee, tuerDans, effrayer, compacter, photoArmee, restaurerArmee, b64, deB64, DENSITE, place } from './army.js?v=0.66.0';
-import { ligneSous } from './tranchees.js?v=0.66.0';
-import { terrainDuSecteur } from './secteur-terrain.js?v=0.66.0';
-import { detruirePont, reconstruirePont } from './eaux.js?v=0.66.0';
-import { calculerCouts, creerCacheChamps, dimensionsCouts, BLOC } from './champs.js?v=0.66.0';
-import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.66.0';
-import { preparerAleatoire, ID_ALEATOIRE } from './generateur.js?v=0.66.0';
-import { AVION, MITRAILLAGE } from './data/mitraillage.js?v=0.66.0';
-import { refusAvion, lancerAvion, avancerAvions, flotteDeDepart, reparerAvions } from './avions.js?v=0.66.0';
-import { CHAR, CHAR_RECHARGE, CHAR_SORTIE } from './data/chars.js?v=0.66.0';
-import { GENIE, GENIE_DATA } from './data/genie.js?v=0.66.0';
-import { refusGenie, lancerGenie, avancerGenies, degatsGenies, sectionsDeDepart } from './genie.js?v=0.66.0';
-import { refusChar, lancerChar, degatsChars, avancerChars } from './chars.js?v=0.66.0';
-import { METEO, SAISONS, SAISON_DEFAUT, PREVISION_JUSTE, temperature } from './data/meteo.js?v=0.66.0';
-import { SECTEURS } from './data/secteur.js?v=0.66.0';
-import { REGIMENTS } from './data/lexique.js?v=0.66.0';
-import { STANCES, STANCE_DEFAUT } from './data/stances.js?v=0.66.0';
-import { grade } from './identite.js?v=0.66.0';
-import { corvees, rejouerTravaux } from './nuit.js?v=0.66.0';
+import { createRng, hash2 } from './lib/rng.js?v=0.66.1';
+import { impact, hydroLignes, etat as etatCase, vitesseEtat, vitesseCase, ETAT } from './terrain.js?v=0.66.1';
+import { creerArmee, ajouterSoldat, construireGrille, pasArmee, tuerDans, effrayer, compacter, photoArmee, restaurerArmee, b64, deB64, DENSITE, place } from './army.js?v=0.66.1';
+import { ligneSous } from './tranchees.js?v=0.66.1';
+import { terrainDuSecteur } from './secteur-terrain.js?v=0.66.1';
+import { detruirePont, reconstruirePont } from './eaux.js?v=0.66.1';
+import { calculerCouts, creerCacheChamps, dimensionsCouts, BLOC } from './champs.js?v=0.66.1';
+import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.66.1';
+import { preparerAleatoire, ID_ALEATOIRE } from './generateur.js?v=0.66.1';
+import { AVION, MITRAILLAGE } from './data/mitraillage.js?v=0.66.1';
+import { refusAvion, lancerAvion, avancerAvions, flotteDeDepart, reparerAvions } from './avions.js?v=0.66.1';
+import { CHAR, CHAR_RECHARGE, CHAR_SORTIE } from './data/chars.js?v=0.66.1';
+import { GENIE, GENIE_DATA } from './data/genie.js?v=0.66.1';
+import { refusGenie, lancerGenie, avancerGenies, degatsGenies, sectionsDeDepart } from './genie.js?v=0.66.1';
+import { refusChar, lancerChar, degatsChars, avancerChars } from './chars.js?v=0.66.1';
+import { METEO, SAISONS, SAISON_DEFAUT, PREVISION_JUSTE, temperature } from './data/meteo.js?v=0.66.1';
+import { SECTEURS } from './data/secteur.js?v=0.66.1';
+import { REGIMENTS } from './data/lexique.js?v=0.66.1';
+import { STANCES, STANCE_DEFAUT } from './data/stances.js?v=0.66.1';
+import { grade } from './identite.js?v=0.66.1';
+import { corvees, rejouerTravaux } from './nuit.js?v=0.66.1';
 
 export const PAS = 1 / 30;                 // s de jeu par pas
 export const NOUS = 0, EUX = 1;
@@ -395,7 +395,7 @@ export function peutBarrage(B, cal, x, y, camp = NOUS, x2, y2) {
     if (reste > 0) return { refus: `${nomBatterie(cal)} : encore ${Math.ceil(reste)} s.` };
   }
   if (cal === CHAR) { const r = refusChar(B, departChar(B, camp, x), x, y); if (r) return { refus: r }; }
-  if (cal === GENIE) { const r = refusGenie(B, camp, x, y); if (r.refus) return r; }
+  if (cal === GENIE) { const r = refusGenie(B, camp, x, y, departChar(B, camp, x)?.ar); if (r.refus) return r; }
   if (cal === AVION) {
     const r = refusAvion(B, camp, x, y, x2, y2); if (r.refus) return r;
     if (!Number.isFinite(x2 ?? 0) || (x2 !== undefined && x2 !== null && (x2 < Z.x0 || y2 < Z.y0 || x2 >= Z.x1 || y2 >= Z.y1))) return { refus: 'Hors du secteur.' };
@@ -417,12 +417,12 @@ export function ordonnerBarrage(B, cal, x, y, camp = NOUS, x2, y2) {
     const reste = (bat[cal] ?? 0) - etat.temps;
     if (reste > 0) return { refus: `${nomBatterie(cal)} : encore ${Math.ceil(reste)} s.` };
     if (cal === CHAR) { const r = refusChar(B, departChar(B, camp, x), x, y); if (r) return { refus: r }; }
-    if (cal === GENIE) { const r = refusGenie(B, camp, x, y); if (r.refus) return r; }
+    if (cal === GENIE) { const r = refusGenie(B, camp, x, y, departChar(B, camp, x)?.ar); if (r.refus) return r; }
     if (cal === AVION) { const r = peutBarrage(B, cal, x, y, camp, x2, y2); if (r.refus) return r; }
     bat[cal] = etat.temps + C.recharge;
   }
   if (cal === CHAR) { lancerChar(B, camp, departChar(B, camp, x), x, y); return { ok: true }; }
-  if (cal === GENIE) { const r = refusGenie(B, camp, x, y); if (r.refus) return r; lancerGenie(B, camp, r.pont); return { ok: true }; }
+  if (cal === GENIE) { const r = refusGenie(B, camp, x, y, departChar(B, camp, x)?.ar); if (r.refus) return r; lancerGenie(B, camp, r.pont, departChar(B, camp, x)?.ar); return { ok: true }; }
   if (cal === AVION) {
     // l'avion vient de hors de la carte, sur le prolongement de la passe tracée (A → B), et la balaie au fil de son vol (avions.js ; Jérôme, v0.55.0)
     const r = refusAvion(B, camp, x, y, x2, y2); if (r.refus) return r;
