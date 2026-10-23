@@ -1,47 +1,47 @@
 // Le cycle de vie : écran titre → bataille → nuit → fin ; pause active,
 // réglages, sauvegarde, mise à jour, debug. Les règles sont dans bataille.js
 // (pures), le dessin dans rendu3d.js (il ne modifie jamais l'état).
-import { createLoop } from './lib/loop.js?v=0.60.2';
-import { createKeys, stopTypeahead } from './lib/keys.js?v=0.60.2';
-import { createPointer, lockBrowserGestures } from './lib/pointer.js?v=0.60.2';
-import { createGamepad } from './lib/gamepad.js?v=0.60.2';
-import { createStore, autosave, pickJSONFile } from './lib/save.js?v=0.60.2';
-import { startUpdateCheck, loadVersion, loadChangelog, downloadJSON } from './lib/app-update.js?v=0.60.2';
-import { ROLES } from './palette.js?v=0.60.2';
-import { VERSION_CAMPAGNE, CLE as CLE_CAMPAGNE, cloturerDansLeStore, nouvelleCampagne, suivante, passage, bilan as bilanCampagne } from './campagne.js?v=0.60.2';
-import { CAMPAGNE } from './data/campagne.js?v=0.60.2';
-import { MISSIONS, EUX, nouvelleBataille, etapesRestaurer, avancer, aube, ordonnerMarche, peutOrdonner, ordonnerBarrage, peutBarrage, arriereDe, ordonnerStance, peutStance, horloge, effectifs, tronconsTenus, moralEnMots, terrainResume, forcesTroncons, largeurZone, lettreZone, etendueZones, nomTroncon, actionDe, secteursDe, tronconsDeLigne, zone, photo, restaurer, PAS, NOUS } from './bataille.js?v=0.60.2';
-import { ligneY } from './tranchees.js?v=0.60.2';
-import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.60.2';
-import { AVION, MITRAILLAGE } from './data/mitraillage.js?v=0.60.2';
-import { ligneDe, apercuVol, avionsPrets, avionsRestants } from './avions.js?v=0.60.2';
-import { CHAR, CHAR_RECHARGE, CHARS, CHAR_PAR_DEFAUT } from './data/chars.js?v=0.60.2';
-import { routeChar } from './chars.js?v=0.60.2';
-import { STANCES, STANCE_DEFAUT } from './data/stances.js?v=0.60.2';
-import { METEO, SAISONS, SAISON_DEFAUT } from './data/meteo.js?v=0.60.2';
-import { hash2 } from './lib/rng.js?v=0.60.2';
-import { creerRendu, CAMERA } from './rendu3d.js?v=0.60.2';
-import { etatEnMots, experienceEnMots, chevrons } from './identite.js?v=0.60.2';
-import { CORVEES } from './data/corvees.js?v=0.60.2';
-import { refusCorvee } from './nuit.js?v=0.60.2';
-import { chargerContenu, appliquerSecteurs, appliquerCartes, appliquerCampagne } from './design-store.js?v=0.60.2';
-import * as lecture from './hud/lecture.js?v=0.60.2';
-import { creerFiche } from './hud/fiche.js?v=0.60.2';
-import { chevronsHtml } from './hud/barres.js?v=0.60.2';
-import { creerNuit, corveeDe, corveeCourte } from './hud/nuit.js?v=0.60.2';
-import { creerCampagne } from './hud/campagne.js?v=0.60.2';
-import { creerCarnet, deux } from './hud/carnet.js?v=0.60.2';
-import { creerCarte } from './hud/carte.js?v=0.60.2';
-import { creerPertes } from './hud/pertes.js?v=0.60.2';
-import { creerBarreTemps } from './hud/temps.js?v=0.60.2';
-import { creerChargement } from './hud/chargement.js?v=0.60.2';
-import { creerRetours } from './hud/retours.js?v=0.60.2';
-import { creerInfobulle } from './hud/infobulle.js?v=0.60.2';
-import { SECTEURS } from './data/secteur.js?v=0.60.2';
-import { preparerAleatoire, ID_ALEATOIRE } from './generateur.js?v=0.60.2';
-import { creerLockstep, empreinteEtat } from './reseau/lockstep.js?v=0.60.2';
-import { nouveauCode, codeValide, publier, ecouter } from './reseau/relais.js?v=0.60.2';
-import { creerHote, creerInvite } from './reseau/lien.js?v=0.60.2';
+import { createLoop } from './lib/loop.js?v=0.61.0';
+import { createKeys, stopTypeahead } from './lib/keys.js?v=0.61.0';
+import { createPointer, lockBrowserGestures } from './lib/pointer.js?v=0.61.0';
+import { createGamepad } from './lib/gamepad.js?v=0.61.0';
+import { createStore, autosave, pickJSONFile } from './lib/save.js?v=0.61.0';
+import { startUpdateCheck, loadVersion, loadChangelog, downloadJSON } from './lib/app-update.js?v=0.61.0';
+import { ROLES } from './palette.js?v=0.61.0';
+import { VERSION_CAMPAGNE, CLE as CLE_CAMPAGNE, cloturerDansLeStore, nouvelleCampagne, suivante, passage, bilan as bilanCampagne } from './campagne.js?v=0.61.0';
+import { CAMPAGNE } from './data/campagne.js?v=0.61.0';
+import { MISSIONS, EUX, nouvelleBataille, etapesRestaurer, avancer, aube, ordonnerMarche, peutOrdonner, ordonnerBarrage, peutBarrage, arriereDe, ordonnerStance, peutStance, horloge, effectifs, tronconsTenus, moralEnMots, terrainResume, forcesTroncons, largeurZone, lettreZone, etendueZones, nomTroncon, actionDe, secteursDe, tronconsDeLigne, zone, photo, restaurer, PAS, NOUS } from './bataille.js?v=0.61.0';
+import { ligneY } from './tranchees.js?v=0.61.0';
+import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.61.0';
+import { AVION, MITRAILLAGE } from './data/mitraillage.js?v=0.61.0';
+import { ligneDe, apercuVol, avionsPrets, avionsRestants } from './avions.js?v=0.61.0';
+import { CHAR, CHAR_RECHARGE, CHARS, CHAR_PAR_DEFAUT } from './data/chars.js?v=0.61.0';
+import { routeChar } from './chars.js?v=0.61.0';
+import { STANCES, STANCE_DEFAUT } from './data/stances.js?v=0.61.0';
+import { METEO, SAISONS, SAISON_DEFAUT } from './data/meteo.js?v=0.61.0';
+import { hash2 } from './lib/rng.js?v=0.61.0';
+import { creerRendu, CAMERA } from './rendu3d.js?v=0.61.0';
+import { etatEnMots, experienceEnMots, chevrons } from './identite.js?v=0.61.0';
+import { CORVEES } from './data/corvees.js?v=0.61.0';
+import { refusCorvee } from './nuit.js?v=0.61.0';
+import { chargerContenu, appliquerSecteurs, appliquerCartes, appliquerCampagne } from './design-store.js?v=0.61.0';
+import * as lecture from './hud/lecture.js?v=0.61.0';
+import { creerFiche } from './hud/fiche.js?v=0.61.0';
+import { chevronsHtml } from './hud/barres.js?v=0.61.0';
+import { creerNuit, corveeDe, corveeCourte } from './hud/nuit.js?v=0.61.0';
+import { creerCampagne } from './hud/campagne.js?v=0.61.0';
+import { creerCarnet, deux } from './hud/carnet.js?v=0.61.0';
+import { creerCarte } from './hud/carte.js?v=0.61.0';
+import { creerPertes } from './hud/pertes.js?v=0.61.0';
+import { creerBarreTemps } from './hud/temps.js?v=0.61.0';
+import { creerChargement } from './hud/chargement.js?v=0.61.0';
+import { creerRetours } from './hud/retours.js?v=0.61.0';
+import { creerInfobulle } from './hud/infobulle.js?v=0.61.0';
+import { SECTEURS } from './data/secteur.js?v=0.61.0';
+import { preparerAleatoire, ID_ALEATOIRE } from './generateur.js?v=0.61.0';
+import { creerLockstep, empreinteEtat } from './reseau/lockstep.js?v=0.61.0';
+import { nouveauCode, codeValide, publier, ecouter } from './reseau/relais.js?v=0.61.0';
+import { creerHote, creerInvite } from './reseau/lien.js?v=0.61.0';
 
 const JEU = 'cyclopeen';
 const $ = id => document.getElementById(id);
@@ -316,7 +316,9 @@ function demanderSecteur() {
   const d = $('dialogue-carte'), tirage = () => window.__seed ?? Date.now() % 100000;
   if (DEBUG) { const id = params.get('secteur'); if (id === ID_ALEATOIRE) preparerAleatoire(tirage()); return Promise.resolve({ secteur: SECTEURS[id] ? id : 'essai', graine: tirage(), saison: SAISONS[params.get('saison')] ? params.get('saison') : undefined }); }
   let graine = tirage(); preparerAleatoire(graine);                // la carte aléatoire (v0.49.0) : la dernière de la liste, tirée de la graine montrée
-  const liste = $('cartes-choix'), ids = Object.keys(SECTEURS);
+  // les cartes d'origine, celles qu'on a publiées, puis la carte au hasard en dernier
+  const ordre = Object.keys(SECTEURS).sort((a, b) => (a === ID_ALEATOIRE) - (b === ID_ALEATOIRE));
+  const liste = $('cartes-choix'), ids = ordre;
   // une carte de la liste : son titre seulement (Jérôme, v0.51.0 : « pas d'aperçu du relief, uniquement les titres ») ; ce qu'elle est se lit dans la légende et se voit en 3D à droite
   // (Jérôme, v0.60.2 : le titre de la carte en grand, sans numéro ; « Au hasard » plus petit, avec un dé)
   const DE = '<svg viewBox="0 0 16 16" aria-hidden="true"><rect x="2" y="2" width="12" height="12" rx="2" fill="none" stroke="currentColor" stroke-width="1.5"/><circle cx="5.5" cy="5.5" r="1.1" fill="currentColor"/><circle cx="8" cy="8" r="1.1" fill="currentColor"/><circle cx="10.5" cy="10.5" r="1.1" fill="currentColor"/></svg>';
@@ -327,7 +329,7 @@ function demanderSecteur() {
   };
   // une carte du jeu est la même sur tous les ordinateurs : sa graine vient de son nom, pas de l'heure (seule la carte au hasard change, à chaque clic)
   const graineFixe = id => { let h = 2166136261; for (const c of id) h = Math.imul(h ^ c.charCodeAt(0), 16777619) >>> 0; return h % 99999 + 1; };
-  liste.replaceChildren(...Object.entries(SECTEURS).map(fabriquer));
+  liste.replaceChildren(...ordre.map(id => fabriquer([id, SECTEURS[id]])));
   return new Promise(ok => {
     let choisi = ids[0], ouvert = true, saison = null;       // saison : null tant que le joueur n'a rien touché (la saison du secteur, par défaut), puis son choix
     const saisonDe = () => saison ?? SECTEURS[choisi].saison ?? SAISON_DEFAUT;
@@ -353,7 +355,7 @@ function demanderSecteur() {
       marquerSaison();
       $('carte-legende').textContent = `${SECTEURS[choisi].nom} : ${SECTEURS[choisi].resume}`;
       try {
-        if (!apercuSecteur) { const { creerVue3D } = await import('./apercu-3d.js?v=0.60.2'); apercuSecteur = await creerVue3D({ R, hote: $('carte-3d'), rotation: 0.12 }); apercuSecteur.surClic = () => agrandir(!d.classList.contains('agrandi')); }
+        if (!apercuSecteur) { const { creerVue3D } = await import('./apercu-3d.js?v=0.61.0'); apercuSecteur = await creerVue3D({ R, hote: $('carte-3d'), rotation: 0.12 }); apercuSecteur.surClic = () => agrandir(!d.classList.contains('agrandi')); }
         if (!ouvert) return;
         apercuSecteur.monter(choisi, SECTEURS[choisi], graineDe(), { soldats: false, cadrer: true, saison: saisonDe() });
         apercuSecteur.activer(true);
@@ -1450,7 +1452,7 @@ startUpdateCheck({
 
 // ─── Mode debug (section 18) : chargé seulement avec ?debug=1 ──────────────
 if (DEBUG) {
-  const { installDebug, seedFromUrl } = await import('./lib/debug.js?v=0.60.2');
+  const { installDebug, seedFromUrl } = await import('./lib/debug.js?v=0.61.0');
   window.__seed = seedFromUrl() ?? undefined;
   installDebug({
     state: () => B && { ...horloge(B), effectifs: effectifs(B), pertes: B.etat.pertes, impacts: B.etat.impacts.length, enJeu: enJeu(), pause: loop.paused },

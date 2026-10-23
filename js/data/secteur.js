@@ -3,8 +3,9 @@
 // la carte au joueur ; `relief` est lu par creerTerrain (bosses et ondulation : des facteurs, `crete`, `nappe` : m de plus ou de moins sous le sol).
 const ESSAI = {
     nom: 'Les labours',
-    resume: 'Un champ ouvert aux bosses douces, quelques bosquets : le front tel qu\'on l\'imagine. La boue vient avec la pluie.',
-    profil: [0.50, 0.55, 0.50, 0.46, 0.52, 0.56, 0.50, 0.47, 0.52, 0.50, 0.46, 0.50],
+    resume: 'Un champ plat et ouvert, quelques bosquets : le front tel qu\'on l\'imagine, sans un pli pour s\'abriter. La boue vient avec la pluie.',
+    profil: Array(12).fill(0.5),
+    relief: { bosses: 0, ondulation: 0, nappe: 0 },          // un terrain plat (Jérôme, v0.61.0)
     largeur: 400,           // cases de 1 m
     hauteur: 300,
     jours: { min: 10, max: 15 },   // la durée de la bataille, tirée de la graine (trois jours avant la v0.9.0)
@@ -50,18 +51,25 @@ export const SECTEURS = {
   crete: {
     ...ESSAI,
     nom: 'La crête',
-    resume: 'Une crête haute de 7 m court devant leurs lignes : ils la tiennent, il faut la monter. Des bosses fortes, des haies, peu de bois, un sol qui boit.',
+    resume: 'Une crête haute de 16 m court devant leurs lignes : ils la tiennent, il faut la monter. Des bosses fortes, des haies, peu de bois, un sol qui boit.',
     profil: [0.50, 0.78, 0.98, 0.84, 0.52, 0.34, 0.30, 0.26, 0.30, 0.24, 0.26, 0.22],
-    relief: { bosses: 1.6, ondulation: 1.2, crete: { y: 62, hauteur: 7, largeur: 42 }, nappe: 0.8 },
+    relief: { bosses: 1.6, ondulation: 1.2, crete: { y: 62, hauteur: 16, largeur: 64 }, nappe: 0.8 },
     pluieAuMoins: 1, arbres: 60, bois: 2, haies: 9, buissons: 230,
   },
   // Un fond de vallée : plat, la nappe affleure, la pluie noie vite les trous.
   marais: {
     ...ESSAI,
     nom: 'Le marais',
-    resume: 'Un fond plat où la nappe affleure : le moindre trou se remplit, la boue vient dès le deuxième jour. Peu de relief, des saules, des haies basses.',
+    resume: 'Un fond plat où la nappe affleure : des marais partout, de petits lacs, le moindre trou se remplit, la boue vient dès le deuxième jour. Peu de relief, des saules, des haies basses.',
     profil: [0.30, 0.28, 0.30, 0.27, 0.29, 0.28, 0.30, 0.27, 0.29, 0.28, 0.30, 0.28],
     relief: { bosses: 0.45, ondulation: 0.55, nappe: -1.4 },
     pluieAuMoins: 4, arbres: 90, bois: 1, haies: 3, buissons: 320,
+    // beaucoup de marécages (dans le no man's land, derrière les lignes, sur les flancs) et de petits lacs (Jérôme, v0.61.0) ; l'eau reste à 20 m des tranchées (`validerSecteur`)
+    objets: [
+      { o: 'marecage', x: 60, y: 150, r: 28 }, { o: 'marecage', x: 170, y: 148, r: 24 }, { o: 'marecage', x: 270, y: 150, r: 30 }, { o: 'marecage', x: 350, y: 150, r: 22 },
+      { o: 'marecage', x: 115, y: 160, r: 20 }, { o: 'marecage', x: 220, y: 162, r: 18 },
+      { o: 'marecage', x: 80, y: 335, r: 30 }, { o: 'marecage', x: 320, y: 345, r: 28 }, { o: 'marecage', x: 200, y: -40, r: 30 }, { o: 'marecage', x: 60, y: -55, r: 26 }, { o: 'marecage', x: 340, y: -50, r: 24 },
+      { o: 'lac', x: 30, y: 135, r: 12 }, { o: 'lac', x: 125, y: 127, r: 10 }, { o: 'lac', x: 205, y: 135, r: 11 }, { o: 'lac', x: 240, y: 175, r: 13 }, { o: 'lac', x: 330, y: 127, r: 11 }, { o: 'lac', x: 150, y: 183, r: 10 }, { o: 'lac', x: 380, y: 172, r: 12 },
+    ],
   },
 };

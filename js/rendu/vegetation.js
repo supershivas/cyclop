@@ -1,10 +1,10 @@
 // La végétation : les arbres (un tronc, quelques branches nues ; abattus, une souche), les buissons (deux ou trois boîtes basses ; arrachés, il
 // n'en reste rien) et l'herbe (des touffes de cinq brins, seulement de près, qui ondulent au vent). Seulement ce qu'on voit est dessiné : tous,
 // ils coûtaient des dizaines de milliers de triangles (docs/domaines/rendu.md, « Les arbres et les buissons dessinés partout »). Le dessin seulement.
-import * as SH from './shaders.js?v=0.60.2';
-import { creerGeometries } from './geometries.js?v=0.60.2';
-import { hash2 } from '../lib/rng.js?v=0.60.2';
-import { ARBRES_FAMILLES, ARBRES_TIRAGES, ARBRES_ECHELLE, ARBRES_AUTOMNE, ARBRES_PPM_FEUILLES, ARBRES_FEUILLES } from '../data/arbres.js?v=0.60.2';
+import * as SH from './shaders.js?v=0.61.0';
+import { creerGeometries } from './geometries.js?v=0.61.0';
+import { hash2 } from '../lib/rng.js?v=0.61.0';
+import { ARBRES_FAMILLES, ARBRES_TIRAGES, ARBRES_ECHELLE, ARBRES_AUTOMNE, ARBRES_PPM_FEUILLES, ARBRES_FEUILLES } from '../data/arbres.js?v=0.61.0';
 
 // `THREE`, `scene`, `col`, `camera`, `vue`, `solY` (la hauteur moyenne du sol), `distance(zoom)`, `surface(x, z)` et `petit()` (aux zooms où un soldat n'est qu'un point)
 // viennent de creerRendu ; `terrain()`, `vide()` et `ombres()` sont lus à chaque appel (le terrain change à chaque bataille). `ombres()` rend `{ ARBRES_OMBRES, aoPos, aoGeo, soleil }` :
@@ -152,7 +152,7 @@ export function creerVegetation({ THREE, scene, col, camera, vue, solY: SOL_Y, d
     for (let k = 0; k < T.arbres.length; k++) {
       const a = T.arbres[k], inf = infos[k];
       if (!dansLaVue(a.i + 0.5, a.j + 0.5, e, b)) continue;
-      const loin = pose || (a.i - cp.x) ** 2 + (SOL_Y - cp.y) ** 2 + (a.j - cp.z) ** 2 > lim;
+      const loin = (a.i - cp.x) ** 2 + (SOL_Y - cp.y) ** 2 + (a.j - cp.z) ** 2 > lim;       // (le détail à tous les zooms : seuls les arbres au-delà de la portée n'ont qu'un cube)
       const x = a.i + 0.5, z = a.j + 0.5, y = surface(x, z);
       if (a.abattu) mettre(abattuMesh[loin ? 1 : 0], x, y, z, { ...inf, sx: 0.85 + inf.d * 0.3, sy: 0.85 + inf.d * 0.3 });
       else if (loin) { m4v.set(inf.sx, 0, 0, x, 0, inf.H, 0, y, 0, 0, inf.sx, z, 0, 0, 0, 1); loinMesh.setMatrixAt(loinMesh.userData.n++, m4v); couronne(k, x, y, z, inf); }

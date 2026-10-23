@@ -111,7 +111,7 @@ test('sans forme, impact() prend la forme du jeu ; null garde l\'ancien motif ca
 
 group('terrain — eau');
 test('même graine, même terrain ; autre graine, autre terrain', () => {
-  const S = SECTEURS.essai;
+  const S = SECTEURS.crete;       // (les labours sont plats depuis la v0.61.0 : la graine n'y change que les arbres)
   const a = creerTerrain(5, S, R), b = creerTerrain(5, S, R), c = creerTerrain(6, S, R);
   assert.deepEqual(a.base, b.base);
   assert.deepEqual(a.arbres, b.arbres);
@@ -176,7 +176,7 @@ test('la boue et l\'eau tuent l\'herbe, heure après heure', () => {
 group('terrain — le secteur de départ (l\'Atelier le montre)');
 test('terrainDuSecteur monte les marges et creuse les tranchées ; deux fois la même graine, le même sol', async () => {
   const { terrainDuSecteur } = await import('../js/secteur-terrain.js');
-  const S = SECTEURS.essai, a = terrainDuSecteur(S, S.marges, 7, R), b = terrainDuSecteur(S, S.marges, 7, R), c = terrainDuSecteur(S, S.marges, 8, R);
+  const S = SECTEURS.crete, a = terrainDuSecteur(S, S.marges, 7, R), b = terrainDuSecteur(S, S.marges, 7, R), c = terrainDuSecteur(S, S.marges, 8, R);
   assert.equal(a.terrain.W, S.largeur + 2 * S.marges.x);
   assert.equal(a.terrain.H, S.hauteur + 2 * S.marges.y);
   assert.equal(a.lignes.length, 8);
@@ -198,9 +198,10 @@ test('les retouches à plat se déplient, se posent sur le secteur sans toucher 
   const a = terrainDuSecteur(base, base.marges, 3, R).terrain, b = terrainDuSecteur(S, S.marges, 3, R).terrain;
   assert.notDeepEqual(a.base, b.base);
   assert.ok(b.arbres.length < a.arbres.length, 'moins d\'arbres : 20 contre 60 dans le secteur');
-  const copie = { essai: SECTEURS.essai };
-  appliquerSecteurs(copie, { essai: { arbres: 7 }, inconnu: { arbres: 1 } });
-  assert.equal(copie.essai.arbres, 7);
+  const copie = { essai: { ...SECTEURS.essai, perso: true }, crete: SECTEURS.crete };
+  appliquerSecteurs(copie, { essai: { arbres: 7 }, crete: { arbres: 1 }, inconnu: { arbres: 1 } });
+  assert.equal(copie.essai.arbres, 7, 'une carte à vous se retouche');
+  assert.equal(copie.crete.arbres, 60, 'une carte d\'origine ne se retouche pas (v0.61.0)');
   assert.equal(SECTEURS.essai.arbres, 150);
 });
 
@@ -541,6 +542,7 @@ test('chaque saison a un nom et une description ; une retouche « saison » du b
   const { version } = JSON.parse(readFileSync(new URL('../version.json', import.meta.url), 'utf8'));
   const { SECTEURS: S2 } = await import(`../js/data/secteur.js?v=${version}`), avant = S2.essai;       // (l'instance que lit bataille.js : ses imports portent la version)
   try {
+    S2.essai = { ...avant, perso: true };            // (seule une carte à vous se retouche)
     appliquerSecteurs(S2, { essai: { saison: 'hiver' } });
     const B = nouvelleBataille(4, R, { soldats: 20, jours: 8 });
     assert.equal(B.etat.sol.saison, 'hiver'); assert.equal(B.etat.meteo[0], 'gel'); assert.ok(!B.etat.meteo.includes('pluie'));
@@ -586,4 +588,19 @@ test('cinq temps d\'hiver, jamais de pluie ni de sec ; le sol est enneigé et po
   const A = nouvelleBataille(2, R, { soldats: 20, jours: 4, saison: 'automne' });
   assert.equal(horloge(A).temperature, null, 'pas de température hors de l\'hiver (pour l\'instant)');
   assert.ok(!horloge(A).enneige);
+});
+
+group('générateur — les ponts (v0.61.0)');
+test('une carte au hasard avec un fleuve en travers a au moins trois ponts, dont deux portent un char', async () => {
+  const { genererCarte } = await import('../js/generateur.js');
+  const { PONTS_JEU } = await import('../js/data/ponts.js');
+  let vus = 0;
+  for (let g = 1; g <= 60; g++) {
+    const S = genererCarte(g), ponts = S.objets.filter(o => o.o === 'pont');
+    if (!S.objets.some(o => o.o === 'fleuve' && o.y > 90 && o.y < 210)) continue;
+    vus++;
+    assert.ok(ponts.length >= 3, `graine ${g} : ${ponts.length} ponts`);
+    assert.ok(ponts.filter(p => PONTS_JEU[p.type].char).length >= 2, `graine ${g} : deux ponts de char`);
+  }
+  assert.ok(vus >= 5, `des fleuves tirés : ${vus}`);
 });

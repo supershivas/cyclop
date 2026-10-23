@@ -1,7 +1,7 @@
 // Le contenu modifiable par l'Atelier (section 17) : les réglages chiffrés
 // publiés dans le dépôt (assets/design/reglages.json), plus les retouches de
 // ce navigateur pas encore publiées. Le jeu l'appelle au lancement.
-import { REGLAGES } from './data/reglages.js?v=0.60.2';
+import { REGLAGES } from './data/reglages.js?v=0.61.0';
 
 const BROUILLON = 'cyclopeen:atelier';
 
@@ -54,7 +54,8 @@ export function idCarte(nom, existants) {
 // Une carte neuve : une copie du modèle (un secteur, ou le modèle vierge), sous un autre nom
 export const nouvelleCarte = (modele, nom) => { const c = structuredClone(modele); delete c.perso; c.nom = nom; if (modele.nom === nom) c.resume = modele.resume; return c; };
 export function appliquerSecteurs(SECTEURS, parId) {
-  for (const [id, r] of Object.entries(parId || {})) if (SECTEURS[id]) SECTEURS[id] = fusion(SECTEURS[id], r);
+  // les cartes d'origine ne se retouchent pas (Jérôme, v0.61.0) : une retouche d'un secteur d'origine, publiée ou de ce navigateur, est ignorée ; l'atelier en fait une copie, qui est une carte à vous
+  for (const [id, r] of Object.entries(parId || {})) if (SECTEURS[id]?.perso) SECTEURS[id] = fusion(SECTEURS[id], r);
 }
 // Combien de réglages et de retouches de secteur attendent d'être publiés
 // La campagne (v0.42.0) : { 1: id, 2: id, 3: id }, la carte de chaque bataille ; publiée dans assets/design/campagne.json, retouchée dans le brouillon (`campagne`).

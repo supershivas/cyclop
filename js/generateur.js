@@ -2,12 +2,12 @@
 // Une carte est un secteur de `data/secteur.js` (mêmes lignes de tranchées, mêmes 400 × 300 m) dont on tire le sol : bosses et nappe, des montagnes et des chaînes, des collines et des plateaux (`retouches`, `formes.js`),
 // un fleuve en travers du no man's land avec ses ponts, un fleuve ou des lacs derrière les lignes, une côte (un grand disque d'eau d'un des quatre côtés), et ce qui pousse. Chaque tirage est contrôlé par `validerSecteur` :
 // l'eau ne touche jamais une tranchée (la même règle que l'atelier) ; sans accord après `essais` tirages, la carte n'a pas d'eau. `genererCarte(graine)` rend toujours la même carte.
-import { createRng } from './lib/rng.js?v=0.60.2';
-import { SECTEURS } from './data/secteur.js?v=0.60.2';
-import { validerSecteur } from './tranchees.js?v=0.60.2';
-import { GENERATEUR as G, ID_ALEATOIRE } from './data/generateur.js?v=0.60.2';
-import { PONTS_JEU } from './data/ponts.js?v=0.60.2';
-import { fleuveEn, VARIATION } from './eaux.js?v=0.60.2';
+import { createRng } from './lib/rng.js?v=0.61.0';
+import { SECTEURS } from './data/secteur.js?v=0.61.0';
+import { validerSecteur } from './tranchees.js?v=0.61.0';
+import { GENERATEUR as G, ID_ALEATOIRE } from './data/generateur.js?v=0.61.0';
+import { PONTS_JEU } from './data/ponts.js?v=0.61.0';
+import { fleuveEn, VARIATION } from './eaux.js?v=0.61.0';
 
 const dans = (rng, [a, b]) => a + rng() * (b - a);
 const entier = (rng, [a, b]) => Math.floor(dans(rng, [a, b + 1]));
@@ -22,10 +22,10 @@ function tirer(rng, S, sansEau) {
     const f = G.fleuve, r = arrondi(dans(rng, f.r), 0.5), yc = dans(rng, f.yMilieu), d = dans(rng, [-f.pente, f.pente]);
     const x0 = -f.debord, x1 = L + f.debord, y0 = yc + d, y1 = yc - d;
     objets.push({ o: 'fleuve', x: x0, y: arrondi(y0), x2: x1, y2: arrondi(y1), r });
-    const n = entier(rng, f.ponts), types = Object.keys(PONTS_JEU), porteurs = types.filter(t => PONTS_JEU[t].char);
+    const n = entier(rng, f.ponts), types = Object.keys(PONTS_JEU), porteurs = types.filter(t => PONTS_JEU[t].char);       // (Jérôme, v0.61.0 : au moins 3 ponts, dont 2 portent un char)
     const fleuve = objets[0];
     for (let k = 0; k < n; k++) {
-      const x = arrondi(((k + 0.5 + (rng() - 0.5) * 0.5) / n) * L), { y, demi } = fleuveEn(fleuve, x), type = k === 0 ? porteurs[Math.floor(rng() * porteurs.length)] : types[Math.floor(rng() * types.length)];
+      const x = arrondi(((k + 0.5 + (rng() - 0.5) * 0.5) / n) * L), { y, demi } = fleuveEn(fleuve, x), type = k < 2 ? porteurs[Math.floor(rng() * porteurs.length)] : types[Math.floor(rng() * types.length)];
       objets.push({ o: 'pont', x, y: arrondi(y - demi - f.pontMarge), x2: x, y2: arrondi(y + demi + f.pontMarge), r: f.pontLargeur, type });
     }
     traits.push('fleuve');

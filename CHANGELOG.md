@@ -1,5 +1,10 @@
 # Journal des versions
 
+## 0.61.0 — 2026-10-23
+- Les labours sont plats, la crête monte à 16 m, le marais a de nombreux marécages et de petits lacs ; les cartes d'origine ne se retouchent plus (l'atelier en fait une copie)
+- Les feuillages gardent leur détail à tous les zooms ; le bord du champ se dissout dans le faux terrain
+- Une carte au hasard avec un fleuve a au moins trois ponts, dont deux portent un char
+
 ## 0.60.2 — 2026-10-23
 - Le choix du secteur : les cartes sont les mêmes sur tous les ordinateurs, sans numéro ; « Au hasard » (un dé) tire une autre carte à chaque clic
 - Des icônes pour les saisons, des boutons plus petits, plus de barre de défilement, la carte agrandie ne coupe plus les boutons

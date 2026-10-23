@@ -119,7 +119,10 @@ test('trois secteurs : la crête est haute devant leurs lignes, le marais est pl
   assert.ok(moy(cre, m.y + 45, m.y + 80) > moy(cre, m.y + 220, m.y + 260) + 3, 'une crête devant leurs lignes');
   assert.ok(moy(cre, m.y + 45, m.y + 80) > moy(lab, m.y + 45, m.y + 80) + 2);
   const relief = B => { const T = B.terrain; let mn = 1e9, mx = -1e9; for (let c = 0; c < T.base.length; c += 7) { mn = Math.min(mn, T.base[c]); mx = Math.max(mx, T.base[c]); } return (mx - mn) / 4; };
-  assert.ok(relief(mar) < relief(lab) && relief(lab) < relief(cre), `relief : marais ${relief(mar)}, labours ${relief(lab)}, crête ${relief(cre)}`);
+  assert.equal(relief(lab), 0, 'les labours : un terrain plat (v0.61.0)');
+  assert.ok(relief(mar) < relief(cre) && relief(lab) < relief(cre), `relief : marais ${relief(mar)}, labours ${relief(lab)}, crête ${relief(cre)}`);
+  assert.ok(relief(cre) > 14, 'une crête d\'au moins 16 m, deux fois plus haute qu\'avant');
+  assert.ok(mar.terrain.profond.reduce((n, v) => n + v, 0) > 2000, 'le marais a de petits lacs');
   for (const B of [lab, cre, mar]) {
     assert.equal(B.lignes.length, 8);
     // chaque colonne d'une ligne a ses cases creusées, et d'une colonne à la suivante le tracé ne saute pas de plus d'une case : la tranchée se suit
@@ -697,7 +700,7 @@ test('l\'arrière des deux camps : derrière leur dernière ligne', () => {
   assert.equal(ar[1], y0 + Math.min(...L.eux) - R.soldat.arriere);
 });
 test('un tireur qui abat un homme le compte parmi ses victimes ; la partie relue le garde', () => {
-  const B = nouvelleBataille(7, R, { soldats: 300, jours: 3 });
+  const B = nouvelleBataille(8, R, { soldats: 300, jours: 3 });
   ordonnerMarche(B, [0, 1, 2], ...P(200, 120));
   for (let k = 0; k < 2400; k++) avancer(B);
   const A = B.armee;

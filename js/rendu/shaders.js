@@ -14,7 +14,9 @@ export const solMat = {
       }`,
   f: `
       uniform sampler2D uSol; uniform vec2 uTaille; uniform float uBord; uniform vec3 uBordCoul;
+      uniform vec3 uKaki, uVert, uGlaise; uniform float uDissoudre;
       varying vec2 vUV; varying vec2 vXZ;
+      float h(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
       void main() {
         vec4 c = texture2D(uSol, vUV);
         vec3 rgb = c.rgb;
@@ -22,6 +24,19 @@ export const solMat = {
         if (uBord > 0.0) {
           float d = min(min(vXZ.x, uTaille.x - vXZ.x), min(vXZ.y, uTaille.y - vXZ.y));
           rgb = mix(uBordCoul, rgb, smoothstep(0.0, uBord, d));
+        }
+        // le bord se dissout dans le faux terrain (Jérôme, v0.61.0 : « plus de ligne franche ») : près du bord, des carrés de 2 m prennent les couleurs des plaques du faux terrain (les mêmes que fauxMat), de plus en plus nombreux ; l'eau reste de l'eau
+        if (uDissoudre > 0.0) {
+          float d = min(min(vXZ.x, uTaille.x - vXZ.x), min(vXZ.y, uTaille.y - vXZ.y));
+          if (d < uDissoudre && rgb.b - rgb.r < 0.04) {
+            float t = clamp(d / uDissoudre, 0.0, 1.0);
+            if (h(floor(vXZ / 2.0) + 3.0) > t * t) {
+              vec3 f = uKaki; float grand = h(floor(vXZ / 22.0)), petit = h(floor(vXZ / 2.0));
+              if (grand > 0.6) f = uVert; else if (grand < 0.1) f = uGlaise;
+              if (petit > 0.94) f = uGlaise;
+              rgb = f;
+            }
+          }
         }
         gl_FragColor = vec4(rgb, 1.0);
       }`,
