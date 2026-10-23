@@ -1,5 +1,8 @@
 # Journal des versions
 
+## 0.63.0 — 2026-10-23
+- Les buissons ont sept formes (rond, étalé, haut, touffes, ajonc, ronces, épineux brisé), des fleurs l'été, les teintes de l'automne, des branches nues l'hiver
+
 ## 0.62.0 — 2026-10-23
 - Au labo : « Des buissons plus variés » (sept formes, fleurs l'été, baies l'automne, nus l'hiver), à trancher avant d'entrer dans le jeu
 

@@ -17,8 +17,8 @@ Statuts : **à l'étude** · **validé** (Jérôme a tranché) · **en cours** �
 |---|---|---|---|
 | 1 | Le sol au demi-mètre dans le jeu | **livré v0.52.3** : dès 4 pixels par mètre (décision de Jérôme, à la question toujours / dès 4 / dès 6) ; mesures et pièges dans `docs/domaines/rendu.md` | `docs/prompt-session-visuel.md` §1 |
 | 2 | Des cratères moins carrés | **livré v0.52.5** : rond, lèvre jetée d'un côté, éclats, choisi au labo parmi six variantes (v0.52.4) ; `VERSION` de bataille.js à 5 (anciennes sauvegardes non relues) ; `docs/domaines/bataille.md` | `docs/prompt-chantier-2.md` |
-| 3 | **Des arbres plus variés, des saisons** | **à faire en premier** : au moins 4 à 6 familles de formes, feuillage selon la saison (`SAISONS`, `data/meteo.js`), d'abord au labo en variantes `a-trancher` | `docs/prompt-chantier-3.md` |
-| 4 | Des buissons plus variés | à faire après le 3 (il réutilise ses choix de saisons et de couleurs) : forme, taille, densité, fleurs ou baies, haies brisées | `docs/prompt-chantier-4.md` |
+| 3 | **Des arbres plus variés, des saisons** | **livré v0.53.1** (six formes, feuilles par saison ; v0.59.3 : automne flamboyant, détail à tous les zooms) | `docs/prompt-chantier-3.md` |
+| 4 | Des buissons plus variés | **livré v0.63.0** : sept formes, fleurs l'été, teintes de l'automne (sans baies, Jérôme), nus l'hiver ; reste : la densité des bosquets, relevés de triangles avant / après | `docs/prompt-chantier-4.md` |
 
 Règles qui valent pour les deux chantiers restants : **labo avant jeu** (variantes tranchées par `AskUserQuestion`, journal du labo et points d'état à jour) ; mesurer chaque ajout (`scripts/mesure.mjs --soldats 2000`, triangles avant et après) et l'écrire dans `docs/domaines/rendu.md` ; aucun tirage de `Math.random` ni du générateur de la bataille pour le dessin (créer les objets au premier besoin : voir le « Piège » des roseaux dans `docs/domaines/rendu.md`) ; avant de pousser, les tests ciblés de `CLAUDE.md` (« Vérifier et livrer »), `rendu-empreinte`, `fumee`, `captures`, `lisibilite` si une couleur change, puis `stamp-version`. Réécrire `test/rendu.json` seulement après avoir regardé les images.
 
