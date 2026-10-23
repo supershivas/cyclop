@@ -85,21 +85,24 @@
 .carnet li.recent b { color: var(--jeu-encre); }
 
 /* Le râtelier : trois obus en papier de campagne, un par calibre ; debout : prêt, couché : se recharge (v0.18.1) */
-.batteries { display: flex; gap: var(--pas); align-items: flex-end; pointer-events: auto; }
+.batteries { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: var(--pas); align-items: end; width: 264px; pointer-events: auto; }
+/* deux lignes de la même largeur (Jérôme, v0.65.0) : les trois obus, puis l'avion et le char */
+.batterie[data-cal="75"], .batterie[data-cal="155"], .batterie[data-cal="220"] { grid-column: span 2; }
+.batterie[data-cal="avion"], .batterie[data-cal="char"] { grid-column: span 3; }
 .batterie {
   position: relative; display: grid; grid-template-columns: auto 1fr; grid-template-rows: auto auto auto; column-gap: var(--pas); align-items: center; text-align: left;
-  min-width: 96px; padding: var(--pas) var(--e3) var(--pas) var(--pas);
+  min-width: 0; padding: var(--e1) var(--e2) var(--e1) var(--e1);
   background: var(--jeu-encre); color: var(--jeu-fond); box-shadow: var(--ombre-papier);
   border: 0; font: inherit; font-size: var(--texte); cursor: pointer;
 }
-.batterie svg { grid-row: 1 / 3; align-self: end; height: 42px; width: auto; max-width: 22px; }
+.batterie svg { grid-row: 1 / 3; align-self: end; height: 26px; width: auto; max-width: 24px; }
 .batterie b { align-self: end; }
 .batterie u { grid-column: 1 / -1; display: block; height: 4px; margin-top: var(--e1); background: var(--jeu-accent); text-decoration: none; }
 .batterie u s { display: block; height: 100%; background: var(--jeu-fond); text-decoration: none; }
 .batterie.vise u { background: var(--jeu-accent); } .batterie.vise u s { background: var(--jeu-encre); }
 .batterie svg { fill: var(--jeu-fond); stroke: var(--jeu-encre); stroke-width: 1.5; }
 .batterie svg .ceinture { fill: var(--jeu-encre); stroke: none; }
-.batterie b { font-weight: normal; font-size: var(--texte-grand); line-height: 1; }
+.batterie b { font-weight: normal; font-size: var(--texte-moyen); line-height: 1; }
 .batterie .flotte { position: absolute; top: 3px; left: 4px; font-style: normal; font-size: var(--texte-petit); line-height: 1; }   /* (les avions qui restent : hors du flux, la barre garde sa largeur) */
 .batterie .touche { position: absolute; top: 3px; right: 4px; font-style: normal; font-size: var(--texte-petit); line-height: 1; padding: 1px var(--e1); border: 1px solid var(--jeu-accent); color: var(--jeu-accent); }
 .batterie span { color: var(--jeu-accent); line-height: 1; font-size: var(--texte-petit); }
@@ -310,12 +313,12 @@ dialog form { margin-top: calc(var(--pas) * 2); }
 
 /* Nos régiments (Jérôme, v0.20.0) : une rangée de cartes compactes en papier de campagne ; la carte choisie s'ouvre vers le haut */
 .regiments { position: relative; flex: 1; min-width: 0; display: flex; justify-content: center; align-items: flex-end; gap: var(--pas); pointer-events: none; }
-.regiments .rang { display: flex; gap: var(--pas); }
+.regiments .rang { display: flex; gap: var(--pas); flex: 1; min-width: 0; justify-content: center; }
 .reg-carte {
   --enc: var(--jeu-fond); --pap: var(--jeu-encre);
   /* une hauteur fixe (Jérôme, v0.41.3 ; sujet « La carte d'ordre » du labo) : le nom, le statut, les chevrons, la barre ; chaque ligne a sa place, rien ne bouge d'un état à l'autre,
      le nom ne passe jamais à la ligne (coupé par « … »), le « ! » est hors du flux */
-  position: relative; display: grid; grid-template-rows: 18px 14px 8px 8px; align-content: space-between; width: 112px; height: 76px; padding: var(--e1) var(--pas) var(--pas); text-align: left; cursor: pointer;
+  position: relative; display: grid; grid-template-rows: 18px 14px 8px 8px; align-content: space-between; flex: 1 1 0; min-width: 88px; max-width: 120px; height: 76px; padding: var(--e1) var(--pas) var(--pas); text-align: left; cursor: pointer;
   font: inherit; font-size: var(--texte-petit); background: var(--pap); color: var(--enc); border: 0; border-top: 3px solid var(--jeu-nous); box-shadow: var(--ombre-papier);
 }
 .reg-carte.choisi { --enc: var(--jeu-encre); --pap: var(--jeu-fond); outline: 2px solid var(--jeu-encre); outline-offset: -5px; }

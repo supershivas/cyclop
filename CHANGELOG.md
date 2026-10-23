@@ -1,5 +1,9 @@
 # Journal des versions
 
+## 0.65.0 — 2026-10-23
+- Les huit régiments tiennent sur une ligne, sans flèches, dès que l'écran fait environ 1 100 px
+- Les batteries sont plus petites, sur deux lignes de même largeur : les trois obus, puis l'avion et le char
+
 ## 0.64.2 — 2026-10-23
 - Dans une bataille de campagne, le menu pause a un bouton « Abandonner la campagne » : il efface la campagne et revient à l'accueil
 
