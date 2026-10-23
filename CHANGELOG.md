@@ -1,5 +1,9 @@
 # Journal des versions
 
+## 0.60.0 — 2026-10-23
+- Le char va deux fois plus vite : un trajet de 400 m tient dans une demi-journée
+- Une partie à deux se reprend depuis l'écran titre (« Reprendre à deux ») : un point de reprise toutes les 60 s, chacun sur sa machine
+
 ## 0.59.4 — 2026-10-23
 - L'herbe de l'automne est rousse, brun orangé, comme les feuilles
 

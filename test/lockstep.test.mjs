@@ -1,5 +1,5 @@
 // Le jeu à deux : deux machines, les mêmes ordres aux mêmes cadres, la même bataille (lockstep.js, sur un réseau factice qui retarde et mélange les arrivées entre cadres).
-import { nouvelleBataille, ordonnerMarche, ordonnerBarrage, ordonnerStance, photo, zone } from '../js/bataille.js';
+import { nouvelleBataille, ordonnerMarche, ordonnerBarrage, ordonnerStance, photo, restaurer, zone } from '../js/bataille.js';
 import { creerLockstep, empreinteEtat } from '../js/reseau/lockstep.js';
 import { REGLAGES as R } from '../js/data/reglages.js';
 
@@ -77,4 +77,25 @@ test('la posture est dans l\'empreinte : un changement fait chez une machine seu
     for (const l of ls) l.cadre_();
   }
   assert.ok(ecarts.length > 0, 'l\'écart est vu');
+});
+
+group('jeu à deux — reprendre une partie (v0.60.0)');
+test('un point de reprise écrit au même cadre chez les deux, relu chez les deux, donne la même partie qu\'avant la coupure', () => {
+  const points = [[], []];
+  const faire = () => nouvelleBataille(7, R, { soldats: 200, jours: 3, deux: true });
+  const monter = (Bs, avec) => {
+    const files = [[], []], ls = [0, 1].map(moi => creerLockstep({ B: Bs[moi], moi, delai: 6, periode: 30, sauve: 4, executer, envoyer: msg => files[1 - moi].push(msg), surEcart: () => assert.fail('écart'), surPoint: avec ? h => points[moi].push({ id: h, photo: photo(Bs[moi]) }) : () => {} }));
+    return { ls, pomper() { for (const moi of [0, 1]) while (files[moi].length) ls[moi].recevoir(files[moi].shift()); } };
+  };
+  let M = monter([faire(), faire()], true);
+  for (let k = 0; k < 40000 && points[0].length < 2; k++) { M.pomper(); M.ls[0].cadre_(); M.ls[1].cadre_(); }
+  assert.ok(points[0].length >= 2 && points[1].length >= 2, 'deux points chez chacun');
+  assert.deepEqual(points[0].map(p => p.id), points[1].map(p => p.id), 'les mêmes noms chez les deux');
+  // la coupure : chacun relit le dernier point, et les deux repartent d'un cadre 0
+  const p = points[0][1], Bs = [restaurer(p.photo, R), restaurer(points[1][1].photo, R)];
+  assert.equal(empreinteEtat(Bs[0]), p.id); assert.equal(empreinteEtat(Bs[1]), p.id);
+  M = monter(Bs, false);
+  for (let k = 0; k < 4000; k++) { M.pomper(); M.ls[0].cadre_(); M.ls[1].cadre_(); }
+  assert.equal(empreinteEtat(Bs[0]), empreinteEtat(Bs[1]), 'toujours la même partie après la reprise');
+  assert.ok(Bs[0].etat.ticks > p.photo.ticks, 'elle avance');
 });

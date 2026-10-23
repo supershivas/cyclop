@@ -1,47 +1,47 @@
 // Le cycle de vie : écran titre → bataille → nuit → fin ; pause active,
 // réglages, sauvegarde, mise à jour, debug. Les règles sont dans bataille.js
 // (pures), le dessin dans rendu3d.js (il ne modifie jamais l'état).
-import { createLoop } from './lib/loop.js?v=0.59.4';
-import { createKeys, stopTypeahead } from './lib/keys.js?v=0.59.4';
-import { createPointer, lockBrowserGestures } from './lib/pointer.js?v=0.59.4';
-import { createGamepad } from './lib/gamepad.js?v=0.59.4';
-import { createStore, autosave, pickJSONFile } from './lib/save.js?v=0.59.4';
-import { startUpdateCheck, loadVersion, loadChangelog, downloadJSON } from './lib/app-update.js?v=0.59.4';
-import { ROLES } from './palette.js?v=0.59.4';
-import { VERSION_CAMPAGNE, CLE as CLE_CAMPAGNE, cloturerDansLeStore, nouvelleCampagne, suivante, passage, bilan as bilanCampagne } from './campagne.js?v=0.59.4';
-import { CAMPAGNE } from './data/campagne.js?v=0.59.4';
-import { MISSIONS, EUX, nouvelleBataille, etapesRestaurer, avancer, aube, ordonnerMarche, peutOrdonner, ordonnerBarrage, peutBarrage, arriereDe, ordonnerStance, peutStance, horloge, effectifs, tronconsTenus, moralEnMots, terrainResume, forcesTroncons, largeurZone, lettreZone, etendueZones, nomTroncon, actionDe, secteursDe, tronconsDeLigne, zone, photo, restaurer, PAS, NOUS } from './bataille.js?v=0.59.4';
-import { ligneY } from './tranchees.js?v=0.59.4';
-import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.59.4';
-import { AVION, MITRAILLAGE } from './data/mitraillage.js?v=0.59.4';
-import { ligneDe, apercuVol, avionsPrets, avionsRestants } from './avions.js?v=0.59.4';
-import { CHAR, CHAR_RECHARGE, CHARS, CHAR_PAR_DEFAUT } from './data/chars.js?v=0.59.4';
-import { routeChar } from './chars.js?v=0.59.4';
-import { STANCES, STANCE_DEFAUT } from './data/stances.js?v=0.59.4';
-import { METEO, SAISONS, SAISON_DEFAUT } from './data/meteo.js?v=0.59.4';
-import { hash2 } from './lib/rng.js?v=0.59.4';
-import { creerRendu, CAMERA } from './rendu3d.js?v=0.59.4';
-import { etatEnMots, experienceEnMots, chevrons } from './identite.js?v=0.59.4';
-import { CORVEES } from './data/corvees.js?v=0.59.4';
-import { refusCorvee } from './nuit.js?v=0.59.4';
-import { chargerContenu, appliquerSecteurs, appliquerCartes, appliquerCampagne } from './design-store.js?v=0.59.4';
-import * as lecture from './hud/lecture.js?v=0.59.4';
-import { creerFiche } from './hud/fiche.js?v=0.59.4';
-import { chevronsHtml } from './hud/barres.js?v=0.59.4';
-import { creerNuit, corveeDe, corveeCourte } from './hud/nuit.js?v=0.59.4';
-import { creerCampagne } from './hud/campagne.js?v=0.59.4';
-import { creerCarnet, deux } from './hud/carnet.js?v=0.59.4';
-import { creerCarte } from './hud/carte.js?v=0.59.4';
-import { creerPertes } from './hud/pertes.js?v=0.59.4';
-import { creerBarreTemps } from './hud/temps.js?v=0.59.4';
-import { creerChargement } from './hud/chargement.js?v=0.59.4';
-import { creerRetours } from './hud/retours.js?v=0.59.4';
-import { creerInfobulle } from './hud/infobulle.js?v=0.59.4';
-import { SECTEURS } from './data/secteur.js?v=0.59.4';
-import { preparerAleatoire, ID_ALEATOIRE } from './generateur.js?v=0.59.4';
-import { creerLockstep, empreinteEtat } from './reseau/lockstep.js?v=0.59.4';
-import { nouveauCode, codeValide, publier, ecouter } from './reseau/relais.js?v=0.59.4';
-import { creerHote, creerInvite } from './reseau/lien.js?v=0.59.4';
+import { createLoop } from './lib/loop.js?v=0.60.0';
+import { createKeys, stopTypeahead } from './lib/keys.js?v=0.60.0';
+import { createPointer, lockBrowserGestures } from './lib/pointer.js?v=0.60.0';
+import { createGamepad } from './lib/gamepad.js?v=0.60.0';
+import { createStore, autosave, pickJSONFile } from './lib/save.js?v=0.60.0';
+import { startUpdateCheck, loadVersion, loadChangelog, downloadJSON } from './lib/app-update.js?v=0.60.0';
+import { ROLES } from './palette.js?v=0.60.0';
+import { VERSION_CAMPAGNE, CLE as CLE_CAMPAGNE, cloturerDansLeStore, nouvelleCampagne, suivante, passage, bilan as bilanCampagne } from './campagne.js?v=0.60.0';
+import { CAMPAGNE } from './data/campagne.js?v=0.60.0';
+import { MISSIONS, EUX, nouvelleBataille, etapesRestaurer, avancer, aube, ordonnerMarche, peutOrdonner, ordonnerBarrage, peutBarrage, arriereDe, ordonnerStance, peutStance, horloge, effectifs, tronconsTenus, moralEnMots, terrainResume, forcesTroncons, largeurZone, lettreZone, etendueZones, nomTroncon, actionDe, secteursDe, tronconsDeLigne, zone, photo, restaurer, PAS, NOUS } from './bataille.js?v=0.60.0';
+import { ligneY } from './tranchees.js?v=0.60.0';
+import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.60.0';
+import { AVION, MITRAILLAGE } from './data/mitraillage.js?v=0.60.0';
+import { ligneDe, apercuVol, avionsPrets, avionsRestants } from './avions.js?v=0.60.0';
+import { CHAR, CHAR_RECHARGE, CHARS, CHAR_PAR_DEFAUT } from './data/chars.js?v=0.60.0';
+import { routeChar } from './chars.js?v=0.60.0';
+import { STANCES, STANCE_DEFAUT } from './data/stances.js?v=0.60.0';
+import { METEO, SAISONS, SAISON_DEFAUT } from './data/meteo.js?v=0.60.0';
+import { hash2 } from './lib/rng.js?v=0.60.0';
+import { creerRendu, CAMERA } from './rendu3d.js?v=0.60.0';
+import { etatEnMots, experienceEnMots, chevrons } from './identite.js?v=0.60.0';
+import { CORVEES } from './data/corvees.js?v=0.60.0';
+import { refusCorvee } from './nuit.js?v=0.60.0';
+import { chargerContenu, appliquerSecteurs, appliquerCartes, appliquerCampagne } from './design-store.js?v=0.60.0';
+import * as lecture from './hud/lecture.js?v=0.60.0';
+import { creerFiche } from './hud/fiche.js?v=0.60.0';
+import { chevronsHtml } from './hud/barres.js?v=0.60.0';
+import { creerNuit, corveeDe, corveeCourte } from './hud/nuit.js?v=0.60.0';
+import { creerCampagne } from './hud/campagne.js?v=0.60.0';
+import { creerCarnet, deux } from './hud/carnet.js?v=0.60.0';
+import { creerCarte } from './hud/carte.js?v=0.60.0';
+import { creerPertes } from './hud/pertes.js?v=0.60.0';
+import { creerBarreTemps } from './hud/temps.js?v=0.60.0';
+import { creerChargement } from './hud/chargement.js?v=0.60.0';
+import { creerRetours } from './hud/retours.js?v=0.60.0';
+import { creerInfobulle } from './hud/infobulle.js?v=0.60.0';
+import { SECTEURS } from './data/secteur.js?v=0.60.0';
+import { preparerAleatoire, ID_ALEATOIRE } from './generateur.js?v=0.60.0';
+import { creerLockstep, empreinteEtat } from './reseau/lockstep.js?v=0.60.0';
+import { nouveauCode, codeValide, publier, ecouter } from './reseau/relais.js?v=0.60.0';
+import { creerHote, creerInvite } from './reseau/lien.js?v=0.60.0';
 
 const JEU = 'cyclopeen';
 const $ = id => document.getElementById(id);
@@ -58,6 +58,7 @@ const store = createStore({
   debug: DEBUG,
   entries: {
     partie: { version: 1 },
+    partieDeux: { version: 1 },     // les deux derniers points de reprise d'une partie à deux : [{ id (l'empreinte de l'état), photo }], et le camp joué
     campagne: { version: VERSION_CAMPAGNE },   // le registre d'une campagne (js/campagne.js) ; en mode debug, une autre clé
     prefs: { version: 1, debugWrites: false, defaults: { zoom: 2, camera: null, carte: true } },
   },
@@ -195,6 +196,7 @@ function montrerTitre() {
   $('titre').hidden = false;
   $('hud').hidden = true;
   $('etiquettes').replaceChildren(); etiq.clear();         // les noms des régiments de la partie quittée ne restent pas devant le décor (Jérôme, v0.59.1)
+  $('reprendre-deux').hidden = !store.has('partieDeux');
   $('continuer').hidden = !store.has('partie');
   // La campagne (lot 7) : « Continuer » reprend la bataille de la campagne si c'est elle qu'on a laissée ; si on l'a remplacée par une autre partie, « Continuer la campagne » repart de la bataille qui suit
   const partie = $('continuer').hidden ? null : store.load('partie'), c = campagneEnCours();
@@ -344,7 +346,7 @@ function demanderSecteur() {
       marquerSaison();
       $('carte-legende').textContent = `${SECTEURS[choisi].nom} : ${SECTEURS[choisi].resume}`;
       try {
-        if (!apercuSecteur) { const { creerVue3D } = await import('./apercu-3d.js?v=0.59.4'); apercuSecteur = await creerVue3D({ R, hote: $('carte-3d'), rotation: 0.12 }); apercuSecteur.surClic = () => agrandir(!d.classList.contains('agrandi')); }
+        if (!apercuSecteur) { const { creerVue3D } = await import('./apercu-3d.js?v=0.60.0'); apercuSecteur = await creerVue3D({ R, hote: $('carte-3d'), rotation: 0.12 }); apercuSecteur.surClic = () => agrandir(!d.classList.contains('agrandi')); }
         if (!ouvert) return;
         apercuSecteur.monter(choisi, SECTEURS[choisi], graine, { soldats: false, cadrer: true, saison: saisonDe() });
         apercuSecteur.activer(true);
@@ -410,20 +412,29 @@ function executerCmd(c, camp, b, st) {
     }
   }
 }
-function demarrerReseau({ moi, lien, graine, secteur, saison }) {
+// Un point de reprise d'une partie à deux, tous les 60 s : les deux machines l'écrivent au même cadre, avec le même nom (l'empreinte de l'état) ; on garde les deux derniers,
+// car une machine coupée entre deux points n'a peut-être pas le plus récent. Rien n'est écrit en mode essai, ni quand la bataille est finie.
+function enregistrerDeux(h) {
+  if (!reseau || ESSAI || B.etat.phase === 'fin') return;
+  const avant = store.load('partieDeux')?.points ?? [];
+  try { store.save('partieDeux', { moi: reseau.moi, version: versionJeu, points: [{ id: h, photo: photo(B) }, ...avant.slice(0, 1)] }); } catch (e) { console.error(e); }
+}
+let repriseDeux = null;       // la sauvegarde qu'on veut reprendre (le bouton de l'écran titre), ou null
+function demarrerReseau({ moi, lien, graine, secteur, saison, reprise }) {
   for (const d of document.querySelectorAll('dialog[open]')) d.close();
   reseau = { moi, lien, ls: null, corvees: {}, pret: [false, false], pauseParMoi: false };
   reglerCamp(moi);
-  const b = nouvelleBataille(graine, R, { secteur, saison, deux: true });
+  const b = reprise ? restaurer(reprise.photo, R) : nouvelleBataille(graine, R, { secteur, saison, deux: true });
   reseau.ls = creerLockstep({
-    B: b, moi, envoyer: m => lien.envoyer(m), executer: executerCmd,
+    B: b, moi, surPoint: enregistrerDeux, envoyer: m => lien.envoyer(m), executer: executerCmd,
     surEcart: (cadre) => { noter('Désynchronisation : les deux parties ne sont plus les mêmes.'); toast('Désynchronisation : les deux parties ont divergé.', 'alerte'); console.error('désynchronisation au cadre', cadre); },
   });
   lien.surMessage = m => { if (m.t === 'cmds' || m.t === 'hash') reseau.ls.recevoir(m); else if (m.t === 'quitte') quitterReseau('L\'autre commandant a quitté la partie.'); };
   lien.surFermeture = () => { if (reseau) quitterReseau('La connexion est perdue.'); };
+  if (reprise) reseau.ls.etat.pause = true;                 // une partie reprise démarre en pause chez les deux : Espace, quand les deux sont prêts
   jouer(b);
   noter(`Vous êtes le ${moi === NOUS ? 'bleu' : 'kaki'}. ${MISSIONS[objectif()]}`);
-  toast(`Vous êtes le ${moi === NOUS ? 'bleu' : 'kaki'}. Espace : pause pour les deux.`);
+  toast(reprise ? `Partie reprise, en pause. Vous êtes le ${moi === NOUS ? 'bleu' : 'kaki'} : Espace pour la relancer.` : `Vous êtes le ${moi === NOUS ? 'bleu' : 'kaki'}. Espace : pause pour les deux.`);
 }
 function quitterReseau(message) {
   const r = reseau; if (!r) return;
@@ -434,9 +445,10 @@ function quitterReseau(message) {
 }
 // la poignée de main : la version du jeu et ses réglages doivent être les mêmes (les deux machines calculent avec le même code et les mêmes nombres)
 function poigneeHote(lien, graine, secteur, saison) {
-  lien.surOuvert = () => lien.envoyer({ t: 'init', version: versionJeu, reglages: empreinteReglages(), graine, secteur, saison });
+  const reprise = repriseDeux;
+  lien.surOuvert = () => lien.envoyer({ t: 'init', version: versionJeu, reglages: empreinteReglages(), graine, secteur, saison, reprise: reprise ? reprise.points.map(p => p.id) : null });
   lien.surMessage = m => {
-    if (m.t === 'ok') demarrerReseau({ moi: NOUS, lien, graine, secteur, saison });
+    if (m.t === 'ok') demarrerReseau({ moi: NOUS, lien, graine, secteur, saison, reprise: reprise ? reprise.points.find(p => p.id === m.reprise) : null });
     else if (m.t === 'refus') { $('deux-statut').textContent = `L'autre machine refuse : ${m.raison}`; lien.fermer(); }
   };
 }
@@ -445,8 +457,12 @@ function poigneeInvite(lien) {
     if (m.t !== 'init') return;
     const raison = m.version !== versionJeu ? `elle joue la v${m.version}, vous la v${versionJeu} : rechargez la page` : m.reglages !== empreinteReglages() ? 'les réglages (l\'atelier) ne sont pas les mêmes' : !(SECTEURS[m.secteur] || m.secteur === ID_ALEATOIRE) ? 'secteur inconnu' : m.saison && !SAISONS[m.saison] ? 'saison inconnue' : null;
     if (raison) { lien.envoyer({ t: 'refus', raison }); $('deux-statut').textContent = `Impossible de jouer ensemble : ${raison}.`; return; }
-    lien.envoyer({ t: 'ok' });
-    demarrerReseau({ moi: EUX, lien, graine: m.graine, secteur: m.secteur, saison: m.saison });
+    // la reprise d'une partie : les deux doivent la vouloir, avoir joué les mêmes camps (l'hôte le bleu) et partager un point (le plus récent des siens que l'hôte a aussi)
+    const sauv = store.load('partieDeux'), point = m.reprise && sauv && sauv.version === versionJeu && sauv.moi === EUX ? m.reprise.map(id => sauv.points.find(q => q.id === id)).find(Boolean) : null;
+    const refus = m.reprise && !point ? 'vous n\u2019avez pas de partie à deux à reprendre avec lui (autre camp, autre version, ou aucun point commun)' : !m.reprise && repriseDeux ? 'il lance une nouvelle partie, vous vouliez reprendre l\u2019ancienne' : '';
+    if (refus) { lien.envoyer({ t: 'refus', raison: refus }); $('deux-statut').textContent = `Impossible de jouer ensemble : ${refus}.`; return; }
+    lien.envoyer({ t: 'ok', reprise: point?.id ?? null });
+    demarrerReseau({ moi: EUX, lien, graine: m.graine, secteur: m.secteur, saison: m.saison, reprise: point });
   };
 }
 {
@@ -461,14 +477,18 @@ function poigneeInvite(lien) {
       else if (e === 'failed') statut('La connexion a échoué : les deux machines ne se voient pas (même réseau ? pare-feu, Wi-Fi « invité » ou VPN qui isolent les appareils). Recommencez avec une nouvelle invitation.' + (/firefox/i.test(navigator.userAgent) ? ' Firefox pose problème : essayez Chrome sur les deux machines.' : ''));
     };
   };
-  $('jouer-deux').onclick = () => {
+  $('jouer-deux').onclick = () => { repriseDeux = null; ouvrirDeux(); };
+  // reprendre : le bleu invite, le kaki rejoint, chacun avec sa sauvegarde (v0.60.0)
+  $('reprendre-deux').onclick = () => { repriseDeux = store.load('partieDeux'); if (!repriseDeux) return; ouvrirDeux(repriseDeux.moi === NOUS ? 'Reprise : vous étiez le bleu, vous invitez.' : 'Reprise : vous étiez le kaki, vous rejoignez avec le code du bleu.'); };
+  const ouvrirDeux = (mot = '') => {
     $('deux-choix').hidden = false; $('deux-hote').hidden = true; $('deux-invite').hidden = true; statut('');
     for (const id of ['deux-invitation', 'deux-reponse', 'deux-invitation-recue', 'deux-ma-reponse']) $(id).value = '';
+    $('deux-inviter').hidden = !!repriseDeux && repriseDeux.moi !== NOUS; $('deux-rejoindre').hidden = !!repriseDeux && repriseDeux.moi === NOUS; statut(mot);
     dlg.showModal();
   };
   dlg.addEventListener('close', () => { arreterRelais?.(); arreterRelais = null; if (!reseau && lien) { lien.fermer(); lien = null; } });
   $('deux-inviter').onclick = async () => {
-    const choix = await demanderSecteur();
+    const choix = repriseDeux ? { secteur: repriseDeux.points[0].photo.secteur ?? 'essai', graine: repriseDeux.points[0].photo.graine, saison: repriseDeux.points[0].photo.sol?.saison } : await demanderSecteur();
     if (!choix) return;
     const { secteur, graine, saison } = choix;
     $('deux-choix').hidden = true; $('deux-hote').hidden = false; statut('Préparation de l\'invitation…');
@@ -559,6 +579,7 @@ document.addEventListener('visibilitychange', () => { if (document.hidden) pause
 // ─── La nuit, la fin ───────────────────────────────────────────────────────
 function montrerFin() {
   loop.pause(); sauvegarder();
+  if (reseau) store.clear('partieDeux');          // la bataille est finie : rien à reprendre
   // le registre de la campagne est écrit avant l'écran de fin : une coupure ne perd rien (idempotent si la partie est relue ici)
   let campagne = null;
   try { campagne = cloturerDansLeStore(store, B); } catch (e) { toast(`Campagne : ${e.message}`, 'alerte'); }
@@ -1422,7 +1443,7 @@ startUpdateCheck({
 
 // ─── Mode debug (section 18) : chargé seulement avec ?debug=1 ──────────────
 if (DEBUG) {
-  const { installDebug, seedFromUrl } = await import('./lib/debug.js?v=0.59.4');
+  const { installDebug, seedFromUrl } = await import('./lib/debug.js?v=0.60.0');
   window.__seed = seedFromUrl() ?? undefined;
   installDebug({
     state: () => B && { ...horloge(B), effectifs: effectifs(B), pertes: B.etat.pertes, impacts: B.etat.impacts.length, enJeu: enJeu(), pause: loop.paused },

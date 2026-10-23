@@ -5,7 +5,7 @@ export const CHARS = {
   schneider: {
     nom: 'Schneider CA 1',
     longueur: 6.0,
-    vitesse: 1.0,        // m/s sur sol ferme (3,6 km/h)
+    vitesse: 2.0,        // m/s sur sol ferme (7,2 km/h ; Jérôme, v0.60.0 : un trajet de 400 m tient dans une demi-journée, 200 s ; avant 1 m/s)
     franchit: 6,         // quarts de mètre : la profondeur de cratère qu'il franchit (au-delà, il reste couché) ; la moitié le ralentit
     pv: 100,
     portee: 28,          // m : ses Hotchkiss couchent les hommes de l'autre camp dans ce rayon
@@ -29,6 +29,6 @@ export const CHAR_ROUTE = {
   cratere: 4,           // coût d'une case à demi profonde (1 : le plat) : il la contourne s'il peut
   arrivee: 2.5,         // m : à cette distance d'un point de son chemin, il vise le suivant
   virage: 0.9,          // rad/s : sa vitesse de rotation
-  accel: 1.2,           // m/s² : démarrage et freinage sur le champ
+  accel: 2.4,           // m/s² : démarrage et freinage sur le champ
   accelRoute: 6,        // m/s² : sur la route
 };

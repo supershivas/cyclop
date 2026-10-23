@@ -3,9 +3,9 @@
    apparence.js). Lues par l'outil de lisibilité (lisibilite.config.mjs) et
    par le labo : ce qu'on y mesure est ce que le jeu affiche. Une tuile est une
    matrice de lettres de la palette (modules/sprites.js). */
-import { ORDRE } from './palette.js?v=0.59.4';
-import { creerTerrain, impact, ETAT } from './terrain.js?v=0.59.4';
-import { couleurCase } from './apparence.js?v=0.59.4';
+import { ORDRE } from './palette.js?v=0.60.0';
+import { creerTerrain, impact, ETAT } from './terrain.js?v=0.60.0';
+import { couleurCase } from './apparence.js?v=0.60.0';
 
 export { ETAT };
 export const COTE = 9;

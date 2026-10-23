@@ -6,7 +6,7 @@
 // traîne, on attend. Toutes les `periode` cadres, on compare une empreinte de l'état : un écart, c'est une désynchronisation (dite à voix haute).
 //
 // Logique pure : ni DOM, ni horloge, ni réseau (`envoyer` est donné). Testée dans Node avec un réseau factice (test/lockstep.test.mjs).
-import { avancer, photo } from '../bataille.js?v=0.59.4';
+import { avancer, photo } from '../bataille.js?v=0.60.0';
 
 const fnv = (h, n) => Math.imul(h ^ (n | 0), 16777619) >>> 0;
 const tampon = new DataView(new ArrayBuffer(8));
@@ -27,7 +27,7 @@ export function empreinteEtat(B) {
 
 /* Un joueur. `moi` : 0 (nous, le bleu : l'hôte) ou 1 (en face, le kaki : l'invité). `envoyer(msg)` : l'autre machine, dans l'ordre, sans perte (un canal WebRTC fiable).
    `executer(cmd, camp, B)` : ce que fait un ordre (main.js : la même fonction chez les deux). `surEcart(cadre, miennes, siennes)` : une désynchronisation. */
-export function creerLockstep({ B, moi, envoyer, executer, delai = 6, periode = 90, surEcart = () => {} }) {
+export function creerLockstep({ B, moi, envoyer, executer, delai = 6, periode = 90, sauve = 20, surEcart = () => {}, surPoint = () => {} }) {
   let cadre = 0;                                   // le prochain cadre à jouer
   const miens = new Map(), siens = new Map();      // cadre → les ordres de chacun
   let aEnvoyer = [];                               // les ordres donnés depuis le dernier cadre : ils partent pour cadre + delai
@@ -69,7 +69,10 @@ export function creerLockstep({ B, moi, envoyer, executer, delai = 6, periode = 
       miens.delete(cadre); siens.delete(cadre);
       if (!etat.pause) avancer(B); else B.evenements = [];       // (en pause, les événements du dernier pas ne se rejouent pas)
       const joue = cadre++;
-      if (cadre % periode === 0) { const h = empreinteEtat(B); hMiens.set(cadre, h); envoyer({ t: 'hash', f: cadre, h }); comparer(cadre); }
+      if (cadre % periode === 0) { const h = empreinteEtat(B); hMiens.set(cadre, h); envoyer({ t: 'hash', f: cadre, h }); comparer(cadre);
+        // tous les `sauve` × `periode` cadres (60 s), un point de reprise : l'état est le même chez les deux, l'empreinte le nomme (Jérôme, v0.60.0 : reprendre une partie à deux)
+        if (cadre % (periode * sauve) === 0 && !ecart) surPoint(h);
+      }
       emettre(joue + delai);
       return true;
     },
