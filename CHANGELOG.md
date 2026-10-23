@@ -1,5 +1,8 @@
 # Journal des versions
 
+## 0.59.1 — 2026-10-23
+- L'écran titre montre un champ neuf, sans noms de régiments : saison, temps et heure au hasard, des obus qui tombent
+
 ## 0.59.0 — 2026-10-22
 - Le papier du soir a un rapport sur les avions : les sorties du jour, ceux qu'on a perdus, ceux qui restent et seront réparés cette nuit (sans compter ce qu'ils ont touché)
 

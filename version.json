@@ -1,7 +1,7 @@
 {
-  "version": "0.59.0",
-  "date": "2026-10-22",
+  "version": "0.59.1",
+  "date": "2026-10-23",
   "changes": [
-    "Le papier du soir a un rapport sur les avions : sorties du jour, avions perdus, avions restants"
+    "L'écran titre montre un champ neuf, sans noms de régiments : saison, temps et heure au hasard, des obus qui tombent"
   ]
 }
