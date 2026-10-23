@@ -1,5 +1,8 @@
 # Journal des versions
 
+## 0.64.2 — 2026-10-23
+- Dans une bataille de campagne, le menu pause a un bouton « Abandonner la campagne » : il efface la campagne et revient à l'accueil
+
 ## 0.64.1 — 2026-10-23
 - Choix du secteur : boutons de saison avec leur nom, le nom de la carte sur un dégradé au bas de l'aperçu, la description en deux lignes (la fenêtre ne change plus de taille), « Au hasard » comme les autres cartes
 - L'eau qui touche le bord du champ continue au-delà et s'effrange : plus de coupure nette
