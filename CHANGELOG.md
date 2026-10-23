@@ -1,5 +1,9 @@
 # Journal des versions
 
+## 0.64.1 — 2026-10-23
+- Choix du secteur : boutons de saison avec leur nom, le nom de la carte sur un dégradé au bas de l'aperçu, la description en deux lignes (la fenêtre ne change plus de taille), « Au hasard » comme les autres cartes
+- L'eau qui touche le bord du champ continue au-delà et s'effrange : plus de coupure nette
+
 ## 0.64.0 — 2026-10-23
 - Le menu pause a un bouton « Quitter la partie » : il efface la partie en cours (après confirmation) et revient à l'accueil
 

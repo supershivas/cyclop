@@ -406,13 +406,14 @@ dialog form { margin-top: calc(var(--pas) * 2); }
 .carte-choix[aria-pressed="true"] { border-color: var(--jeu-nous); outline: 2px solid var(--jeu-nous); outline-offset: 0; }
 @media (hover: hover) { .carte-choix:hover { border-color: var(--jeu-nous); } }
 .cartes-choix .carte-choix b { font-size: var(--texte-grand); }
-.carte-hasard { display: flex; align-items: center; gap: var(--pas); padding: calc(var(--pas) * .6) var(--pas); font-size: var(--texte-petit); letter-spacing: .06em; text-transform: uppercase; }
-.carte-hasard svg { width: 1.1rem; height: 1.1rem; flex: none; }
+.carte-hasard { display: flex; align-items: center; gap: var(--pas); background: var(--jeu-accent); border-color: var(--jeu-accent); }       /* (comme les autres cartes, d'une autre teinte) */
+.carte-hasard svg { width: 1.4rem; height: 1.4rem; flex: none; }
 .carte-choix b { font-weight: normal; font-size: var(--texte-moyen); letter-spacing: .06em; text-transform: uppercase; }
 .carte-choix p { margin: 0; font-size: var(--texte-petit); line-height: 1.35; }
 .saisons-choix { display: flex; gap: var(--pas); align-items: stretch; margin-top: var(--pas); }
-.saisons-choix .carte-choix { flex: none; width: 2.3rem; height: 2.3rem; padding: 0; display: grid; place-items: center; }
-.saisons-choix .carte-choix svg { width: 1.3rem; height: 1.3rem; }
+.saisons-choix .carte-choix { flex: none; display: flex; align-items: center; justify-content: center; gap: calc(var(--pas) * .6); padding: calc(var(--pas) * .5) var(--pas); text-align: center; }
+.saisons-choix .carte-choix svg { width: 1.1rem; height: 1.1rem; flex: none; }
+.saisons-choix .carte-choix span { font-size: var(--texte-petit); letter-spacing: .06em; text-transform: uppercase; line-height: 1; }
 .saisons-choix .carte-choix b { float: none; }
 .saisons-choix::before { content: 'Saison'; align-self: center; font-size: var(--texte-petit); color: var(--jeu-accent); letter-spacing: .06em; text-transform: uppercase; }
 #dialogue-carte.agrandi .saisons-choix { display: none; }
@@ -421,8 +422,12 @@ dialog form { margin-top: calc(var(--pas) * 2); }
 .carte-3d canvas { display: block; image-rendering: pixelated; }
 .carte-3d { cursor: zoom-in; }
 #dialogue-carte.agrandi .carte-3d { cursor: grab; }
-.carte-legende { margin: 0; font-size: var(--texte-petit); line-height: 1.4; }
-.carte-aide { margin: 0; font-size: var(--texte-petit); line-height: 1.4; color: var(--jeu-accent); }
+.carte-vue { position: relative; }
+/* le nom de la carte, sur un dégradé du noir vers le transparent au bas de l'aperçu (Jérôme, v0.64.1) ; les clics passent au 3D */
+.carte-titre { position: absolute; left: 0; right: 0; bottom: 0; padding: calc(var(--pas) * 3) var(--pas) var(--pas); font-size: var(--texte-grand); letter-spacing: .06em; text-transform: uppercase; color: var(--jeu-encre); background: linear-gradient(to top, rgba(0, 0, 0, .85), rgba(0, 0, 0, 0)); pointer-events: none; }
+/* la description et l'aide : deux lignes au plus, et toujours la place de deux lignes : la fenêtre ne change jamais de taille */
+.carte-legende, .carte-aide { margin: 0; font-size: var(--texte-petit); line-height: 1.4; height: 2.8em; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+.carte-aide { color: var(--jeu-accent); }
 /* la carte agrandie (v0.51.0) : la liste s'efface, l'aperçu prend la place */
 #dialogue-carte.agrandi .cartes-choix { display: none; }
 #dialogue-carte.agrandi .carte-colonnes { grid-template-columns: 1fr; }

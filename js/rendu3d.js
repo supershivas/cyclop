@@ -22,25 +22,25 @@
    - Les soldats : instanciés (une boîte et son ombre) ; au zoom 1 et 2, un
      point de 2 × 2 pixels (la couleur du camp sur son ombre).
    - Les corps : un homme couché (instancié) ; au zoom 1 et 2, un pixel. */
-import { loadThree } from './three-lib.js?v=0.64.0';
-import * as SH from './rendu/shaders.js?v=0.64.0';
-import { creerSoldats } from './rendu/soldats.js?v=0.64.0';
-import { creerChars } from './rendu/chars.js?v=0.64.0';
-import { creerAvions } from './rendu/avions.js?v=0.64.0';
-import { creerPonts } from './rendu/ponts.js?v=0.64.0';
-import { creerCiel } from './rendu/ciel.js?v=0.64.0';
-import { creerMeteo } from './rendu/meteo.js?v=0.64.0';
-import { creerTroncons } from './rendu/troncons.js?v=0.64.0';
-import { ARBRES_JEU } from './data/arbres.js?v=0.64.0';
-import { creerVegetation } from './rendu/vegetation.js?v=0.64.0';
-import { creerTemps } from './rendu/temps.js?v=0.64.0';
-import { creerEclats } from './rendu/eclats.js?v=0.64.0';
-import { PALETTE, ORDRE, INDICE } from './palette.js?v=0.64.0';
-import { OMBRE, couleursLigne } from './apparence.js?v=0.64.0';
-import { MORCEAU, hauteurVueQ as hauteurQ, hauteurVueM as hauteurM } from './terrain.js?v=0.64.0';
-import { horloge, secteurDuJeu } from './bataille.js?v=0.64.0';
-import { profilFleuve } from './eaux.js?v=0.64.0';
-import { ligneY } from './tranchees.js?v=0.64.0';
+import { loadThree } from './three-lib.js?v=0.64.1';
+import * as SH from './rendu/shaders.js?v=0.64.1';
+import { creerSoldats } from './rendu/soldats.js?v=0.64.1';
+import { creerChars } from './rendu/chars.js?v=0.64.1';
+import { creerAvions } from './rendu/avions.js?v=0.64.1';
+import { creerPonts } from './rendu/ponts.js?v=0.64.1';
+import { creerCiel } from './rendu/ciel.js?v=0.64.1';
+import { creerMeteo } from './rendu/meteo.js?v=0.64.1';
+import { creerTroncons } from './rendu/troncons.js?v=0.64.1';
+import { ARBRES_JEU } from './data/arbres.js?v=0.64.1';
+import { creerVegetation } from './rendu/vegetation.js?v=0.64.1';
+import { creerTemps } from './rendu/temps.js?v=0.64.1';
+import { creerEclats } from './rendu/eclats.js?v=0.64.1';
+import { PALETTE, ORDRE, INDICE } from './palette.js?v=0.64.1';
+import { OMBRE, couleursLigne } from './apparence.js?v=0.64.1';
+import { MORCEAU, hauteurVueQ as hauteurQ, hauteurVueM as hauteurM } from './terrain.js?v=0.64.1';
+import { horloge, secteurDuJeu } from './bataille.js?v=0.64.1';
+import { profilFleuve } from './eaux.js?v=0.64.1';
+import { ligneY } from './tranchees.js?v=0.64.1';
 
 export const CAMERA = { yaw: 0.15, tangage: 0.95, fov: 30 };   // au départ : tournée de 9°, plongée de 54°, angle de 30°
 // la caméra respire : un balancement très lent, 2° en 23 s (Jérôme, v0.3.1 : variante D du labo retenue)
@@ -369,7 +369,7 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
     const saison = B?.etat.sol?.saison, [cKaki, cVert, cGlaise] = saison === 'hiver' ? ['r', 'o', 'h'] : saison === 'ete' ? ['h', 'h', 'g'] : ['h', saison === 'automne' || !saison ? '#a86a2c' : 'v', 'g'];
     const cc = k => k[0] === '#' ? new THREE.Color(k) : col(k);       // (l'herbe rousse de l'automne est hors palette : le faux terrain la prend aussi)
     const u = { uKaki: { value: cc(cKaki) }, uVert: { value: cc(cVert) }, uGlaise: { value: cc(cGlaise) }, uBrume: { value: col(leBord.brume || 'r') }, uCentre: { value: new THREE.Vector2(T.W / 2, T.H / 2) }, uDemi: { value: new THREE.Vector2(T.W / 2, T.H / 2) }, uPortee: { value: 500 } };
-    fauxU = u;
+    fauxU = u; u.uSol = solMat.uniforms.uSol; u.uTaille = solMat.uniforms.uTaille;       // (le même sol : l'eau du bord continue dans le faux terrain)
     for (const k of ['uKaki', 'uVert', 'uGlaise']) solMat.uniforms[k].value.copy(u[k].value);
     solMat.uniforms.uDissoudre.value = 80;                 // m : la largeur sur laquelle le bord du champ se dissout
     u.uEau = { value: col('e') }; u.uClair = { value: col('r') };

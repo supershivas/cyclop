@@ -46,6 +46,7 @@ export const solMat = {
 export const fauxMat = {
   v: `varying vec2 vXZ; void main() { vXZ = position.xz; gl_Position = projectionMatrix * viewMatrix * vec4(position, 1.0); }`,
   f: `uniform vec3 uKaki, uVert, uGlaise, uBrume, uEau, uClair; uniform vec2 uCentre, uDemi; uniform float uPortee;
+      uniform sampler2D uSol; uniform vec2 uTaille;
       uniform vec4 uRiv[8]; uniform int uNRiv;
       varying vec2 vXZ;
       float h(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
@@ -69,6 +70,13 @@ export const fauxMat = {
             float larg = b.x * (1.0 + 0.3 * ramp * sin(tt / 137.0 + b.w * 6.0)) * sqrt(1.0 + pente * pente);
             if (abs(o - cen) < larg) { c = h(floor(vXZ / 3.0)) > 0.93 ? uClair : uEau; }
           }
+        }
+        // l'eau qui touche le bord du champ (un lac, la mer) continue au-delà, sur une longueur qui varie le long du bord, et finit en carrés de 2 m de moins en moins nombreux : pas de coupure nette (Jérôme, v0.64.1)
+        vec2 e = vec2(clamp(vXZ.x, 0.5, uTaille.x - 0.5), clamp(vXZ.y, 0.5, uTaille.y - 0.5));
+        vec3 te = texture2D(uSol, vec2(e.x / uTaille.x, e.y / uTaille.y * 0.5)).rgb;
+        if (te.b - te.r > 0.04) {
+          float dist = length(vXZ - e), lim = 30.0 + 90.0 * h(floor(e / 12.0) + 5.0);
+          if (dist < lim && h(floor(vXZ / 2.0) + 9.0) > dist / lim) c = h(floor(vXZ / 3.0)) > 0.93 ? uClair : uEau;
         }
         vec2 q = max(abs(vXZ - uCentre) - uDemi, 0.0);
         c = mix(c, uBrume, smoothstep(30.0, uPortee, length(q)));

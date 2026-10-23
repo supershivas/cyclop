@@ -9,8 +9,8 @@
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta property="og:image" content="og.png">
-<link rel="stylesheet" href="js/lib/game.css?v=0.64.0">
-<link rel="stylesheet" href="css/style.css?v=0.64.0">
+<link rel="stylesheet" href="js/lib/game.css?v=0.64.1">
+<link rel="stylesheet" href="css/style.css?v=0.64.1">
 </head>
 <body>
 <!-- La barre de chargement (v0.28.0) : là avant tout script ; main.js la remplit, puis la retire -->
@@ -250,7 +250,7 @@
   <div class="carte-colonnes">
     <div class="cartes-choix" id="cartes-choix" role="group" aria-label="Les secteurs"></div>
     <div class="carte-apercu">
-      <div class="carte-3d" id="carte-3d" aria-hidden="true"></div>
+      <div class="carte-vue"><div class="carte-3d" id="carte-3d" aria-hidden="true"></div><div class="carte-titre" id="carte-titre"></div></div>
       <p class="carte-legende" id="carte-legende"></p>
       <p class="carte-aide" id="carte-aide"></p>
     </div>
@@ -271,6 +271,6 @@
 </dialog>
 
 <div class="jeu-toast" id="toast" role="status" hidden></div>
-<script type="module" src="js/main.js?v=0.64.0"></script>
+<script type="module" src="js/main.js?v=0.64.1"></script>
 </body>
 </html>
