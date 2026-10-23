@@ -22,25 +22,25 @@
    - Les soldats : instanciés (une boîte et son ombre) ; au zoom 1 et 2, un
      point de 2 × 2 pixels (la couleur du camp sur son ombre).
    - Les corps : un homme couché (instancié) ; au zoom 1 et 2, un pixel. */
-import { loadThree } from './three-lib.js?v=0.60.0';
-import * as SH from './rendu/shaders.js?v=0.60.0';
-import { creerSoldats } from './rendu/soldats.js?v=0.60.0';
-import { creerChars } from './rendu/chars.js?v=0.60.0';
-import { creerAvions } from './rendu/avions.js?v=0.60.0';
-import { creerPonts } from './rendu/ponts.js?v=0.60.0';
-import { creerCiel } from './rendu/ciel.js?v=0.60.0';
-import { creerMeteo } from './rendu/meteo.js?v=0.60.0';
-import { creerTroncons } from './rendu/troncons.js?v=0.60.0';
-import { ARBRES_JEU } from './data/arbres.js?v=0.60.0';
-import { creerVegetation } from './rendu/vegetation.js?v=0.60.0';
-import { creerTemps } from './rendu/temps.js?v=0.60.0';
-import { creerEclats } from './rendu/eclats.js?v=0.60.0';
-import { PALETTE, ORDRE, INDICE } from './palette.js?v=0.60.0';
-import { OMBRE, couleursLigne } from './apparence.js?v=0.60.0';
-import { MORCEAU, hauteurVueQ as hauteurQ, hauteurVueM as hauteurM } from './terrain.js?v=0.60.0';
-import { horloge, secteurDuJeu } from './bataille.js?v=0.60.0';
-import { profilFleuve } from './eaux.js?v=0.60.0';
-import { ligneY } from './tranchees.js?v=0.60.0';
+import { loadThree } from './three-lib.js?v=0.60.1';
+import * as SH from './rendu/shaders.js?v=0.60.1';
+import { creerSoldats } from './rendu/soldats.js?v=0.60.1';
+import { creerChars } from './rendu/chars.js?v=0.60.1';
+import { creerAvions } from './rendu/avions.js?v=0.60.1';
+import { creerPonts } from './rendu/ponts.js?v=0.60.1';
+import { creerCiel } from './rendu/ciel.js?v=0.60.1';
+import { creerMeteo } from './rendu/meteo.js?v=0.60.1';
+import { creerTroncons } from './rendu/troncons.js?v=0.60.1';
+import { ARBRES_JEU } from './data/arbres.js?v=0.60.1';
+import { creerVegetation } from './rendu/vegetation.js?v=0.60.1';
+import { creerTemps } from './rendu/temps.js?v=0.60.1';
+import { creerEclats } from './rendu/eclats.js?v=0.60.1';
+import { PALETTE, ORDRE, INDICE } from './palette.js?v=0.60.1';
+import { OMBRE, couleursLigne } from './apparence.js?v=0.60.1';
+import { MORCEAU, hauteurVueQ as hauteurQ, hauteurVueM as hauteurM } from './terrain.js?v=0.60.1';
+import { horloge, secteurDuJeu } from './bataille.js?v=0.60.1';
+import { profilFleuve } from './eaux.js?v=0.60.1';
+import { ligneY } from './tranchees.js?v=0.60.1';
 
 export const CAMERA = { yaw: 0.15, tangage: 0.95, fov: 30 };   // au départ : tournée de 9°, plongée de 54°, angle de 30°
 // la caméra respire : un balancement très lent, 2° en 23 s (Jérôme, v0.3.1 : variante D du labo retenue)
@@ -697,11 +697,14 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
     return c.ok && c.x1 - c.x0 <= T.W && c.z1 - c.z0 + HAUT <= T.H;
   }
   function borner() {
-    if (!T || vue.libre) return;              // la caméra libre (l'écran titre) n'a pas de bornes
-    if (vue.ciel) {
+    if (!T) return;
+    // la caméra libre de l'écran titre passe aussi par là (Jérôme, v0.60.1 : « elle passe encore sous le sol, interdire ») : ni sous le sol, ni hors du terrain
+    if (vue.ciel || vue.libre) {
       // la caméra libre du jeu : le point visé reste sur le terrain, la caméra ne passe pas sous le sol (elle se relève au besoin)
       vue.cx = Math.max(0, Math.min(T.W, vue.cx)); vue.cz = Math.max(0, Math.min(T.H, vue.cz));
       const D = distance(vue.zoom);
+      { const v = versCamera(yawVu(), vue.tangage), px = vue.cx + v[0] * D, pz = vue.cz + v[2] * D;      // la caméra reste au-dessus du terrain : au-delà de son bord, il n'y a que le vide
+        vue.cx += Math.max(8, Math.min(T.W - 8, px)) - px; vue.cz += Math.max(8, Math.min(T.H - 8, pz)) - pz; }
       for (const cle of ['cible', 'vue']) {
         const o = cle === 'cible' ? vue.cible : vue;
         let tg = Math.max(TG_CIEL_MIN, Math.min(TG_CIEL_MAX, o.tangage));

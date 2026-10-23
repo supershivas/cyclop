@@ -1,10 +1,10 @@
 // La végétation : les arbres (un tronc, quelques branches nues ; abattus, une souche), les buissons (deux ou trois boîtes basses ; arrachés, il
 // n'en reste rien) et l'herbe (des touffes de cinq brins, seulement de près, qui ondulent au vent). Seulement ce qu'on voit est dessiné : tous,
 // ils coûtaient des dizaines de milliers de triangles (docs/domaines/rendu.md, « Les arbres et les buissons dessinés partout »). Le dessin seulement.
-import * as SH from './shaders.js?v=0.60.0';
-import { creerGeometries } from './geometries.js?v=0.60.0';
-import { hash2 } from '../lib/rng.js?v=0.60.0';
-import { ARBRES_FAMILLES, ARBRES_TIRAGES, ARBRES_ECHELLE, ARBRES_AUTOMNE, ARBRES_PPM_FEUILLES, ARBRES_FEUILLES } from '../data/arbres.js?v=0.60.0';
+import * as SH from './shaders.js?v=0.60.1';
+import { creerGeometries } from './geometries.js?v=0.60.1';
+import { hash2 } from '../lib/rng.js?v=0.60.1';
+import { ARBRES_FAMILLES, ARBRES_TIRAGES, ARBRES_ECHELLE, ARBRES_AUTOMNE, ARBRES_PPM_FEUILLES, ARBRES_FEUILLES } from '../data/arbres.js?v=0.60.1';
 
 // `THREE`, `scene`, `col`, `camera`, `vue`, `solY` (la hauteur moyenne du sol), `distance(zoom)`, `surface(x, z)` et `petit()` (aux zooms où un soldat n'est qu'un point)
 // viennent de creerRendu ; `terrain()`, `vide()` et `ombres()` sont lus à chaque appel (le terrain change à chaque bataille). `ombres()` rend `{ ARBRES_OMBRES, aoPos, aoGeo, soleil }` :
@@ -60,7 +60,6 @@ export function creerVegetation({ THREE, scene, col, camera, vue, solY: SOL_Y, d
       m.count = n; m.instanceMatrix.needsUpdate = true;
       trisArbres += n * m.userData.tri;
     }
-    if (couronneMesh?.instanceColor) couronneMesh.instanceColor.needsUpdate = true;
     const at = aoGeo.attributes.aPos; at.clearUpdateRanges(); at.addUpdateRange(0, o * 4); at.needsUpdate = true;
     aoGeo.instanceCount = soleil.lengthSq() > 0.01 && !petit() ? o : 0;     // (de loin, pas d'ombres d'arbres)
   }
@@ -68,7 +67,7 @@ export function creerVegetation({ THREE, scene, col, camera, vue, solY: SOL_Y, d
   // ─── Les arbres variés (labo « Des arbres plus variés », v0.52.6) ───
   // Un maillage de tronc par famille (et un tronc de loin, deux abattus), des maillages de feuilles par (famille, dégarni) refaits quand la saison change.
   // Famille, taille, sens et chute de chaque arbre : le hachage de sa position, tiré une fois par bataille (`infos`, parallèle à `T.arbres` : on n'écrit rien dans le terrain).
-  let couronneMesh = null, couronneMat = null, couronneMode = null, couronneCoul = [];
+  let couronnes = [], couronneMode = null, couronneCoul = [];       // un maillage par teinte (6 au plus) : pas de couleur par instance, qui restait blanche sur certaines cartes graphiques
   let infos = [], troncs = [], feuilles = [], loinMesh = null, abattuMesh = [null, null], modeVu = null;
   const tire = (a, graine) => hash2(a.i, a.j, graine);
   function preparerArbresVaries(T) {
@@ -83,15 +82,16 @@ export function creerVegetation({ THREE, scene, col, camera, vue, solY: SOL_Y, d
     });
     feuilleMat ??= new THREE.MeshBasicMaterial({ vertexColors: true, side: THREE.DoubleSide });
     const ajouter = (geo, userData) => {
-      const m = new THREE.InstancedMesh(geo, userData.couronne ? couronneMat : userData.feuilles ? feuilleMat : arbreMat, cap);
+      const m = new THREE.InstancedMesh(geo, userData.couronne ? new THREE.MeshBasicMaterial() : userData.feuilles ? feuilleMat : arbreMat, cap);
       m.count = 0; m.frustumCulled = false; m.userData = { ...userData, tri: geo.attributes.position.count / 3 };
       arbresMesh.push(m); scene.add(m); return m;
     };
     troncs = ARBRES_FAMILLES.map(F => ajouter(geometrieTroncs(F.id), {}));
     loinMesh = ajouter(geometrieTroncLoin(), {});
     // la couronne de loin (ou en dessous de 4 pixels par mètre) : un seul cube par arbre, à la couleur de la saison (Jérôme, v0.59.3 : les feuilles se voient à tous les zooms)
-    couronneMat ??= new THREE.MeshBasicMaterial();
-    couronneMesh = ajouter(new THREE.BoxGeometry(1, 1, 1).translate(0, 0.5, 0).toNonIndexed(), { couronne: true });
+    const cube = new THREE.BoxGeometry(1, 1, 1).translate(0, 0.5, 0).toNonIndexed();
+    couronnes = Array.from({ length: 6 }, () => ajouter(cube, { couronne: true }));
+    couronneMode = null;
     abattuMesh = [0, 1].map(() => ajouter(opts.abattus === 'longs' ? geometrieAbattuLong() : geometrieArbre(0, 1), {}));
     // (créés au premier besoin : un objet de plus dans la scène tire des identifiants avec `Math.random`, voir « Piège » plus haut)
     feuilles = ARBRES_FAMILLES.map(() => [null, null]);
@@ -134,16 +134,16 @@ export function creerVegetation({ THREE, scene, col, camera, vue, solY: SOL_Y, d
     const mode = modeFeuilles(), pm = ppm(), feuillu = pm >= ARBRES_PPM_FEUILLES && mode !== 'nu';
     if (feuillu && mode !== modeVu) refaireFeuilles(mode);
     const h = saison?.() || null;
-    if (mode !== 'nu' && mode !== couronneMode) { couronneCoul = (ARBRES_FEUILLES[mode]?.dessus ?? []).map(c => c[0] === '#' ? new THREE.Color(c) : col(c)); couronneMode = mode; }
+    if (mode !== 'nu' && mode !== couronneMode) { couronneCoul = (ARBRES_FEUILLES[mode]?.dessus ?? []).map(c => c[0] === '#' ? new THREE.Color(c) : col(c)); couronneMode = mode; couronnes.forEach((m, i) => m.material.color.copy(couronneCoul[i % couronneCoul.length] ?? col('o'))); }
     for (const m of arbresMesh) m.userData.n = 0;
     const cp = camera.position, lim = Math.max(160, distance(vue.zoom) * 1.3) ** 2, pose = petit();
     let o = 0;
     const couronne = (k, x, y, z, inf) => {
       if (mode === 'nu' || !couronneCoul.length) return;
       const d = etatFeuilles(inf, mode, h); if (d >= 2) return;
-      const w = inf.sx * 4.2 * (d ? 0.7 : 1), n = couronneMesh.userData.n++;
+      const w = inf.sx * 4.2 * (d ? 0.7 : 1), m = couronnes[(k % couronneCoul.length) % couronnes.length];
       m4v.set(w, 0, 0, x, 0, inf.H * 0.45, 0, y + inf.H * 0.55, 0, 0, w, z, 0, 0, 0, 1);
-      couronneMesh.setMatrixAt(n, m4v); couronneMesh.setColorAt(n, couronneCoul[k % couronneCoul.length]);
+      m.setMatrixAt(m.userData.n++, m4v);
     };
     const mettre = (m, x, y, z, inf) => {
       m4v.set(inf.c * inf.sx, 0, inf.s * inf.sx, x, 0, inf.sy, 0, y, -inf.s * inf.sx, 0, inf.c * inf.sx, z, 0, 0, 0, 1);

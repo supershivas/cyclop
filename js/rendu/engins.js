@@ -1,6 +1,6 @@
 // Les engins en volumes du jeu (Jérôme, v0.47.0) : l'atelier de formes (boîtes, cylindres, prismes, chenilles qui défilent, croix de fer) et le Schneider CA 1,
 // sortis du labo (`labo-chars.js`, qui les reprend d'ici) pour que la bataille les dessine. Dessin seulement. 1 unité = 1 m, l'avant à +x, le haut à +y, la droite à +z.
-import { PALETTE as P } from '../palette.js?v=0.60.0';
+import { PALETTE as P } from '../palette.js?v=0.60.1';
 
 // ─── Le petit atelier de volumes ─────────────────────────────────────────────
 // Un matériau éclairé (un peu de lumière au-dessus : les faces se distinguent) et des arêtes de terre sur chaque pièce
