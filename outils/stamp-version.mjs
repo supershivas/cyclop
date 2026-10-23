@@ -22,8 +22,9 @@ let modifies = 0;
 
 function estampiller(fichier, motifs) {
   const avant = readFileSync(fichier, 'utf8');
-  let s = avant;
-  for (const re of motifs) s = s.replace(re, (_, a, url, b) => `${a}${url}${v}${b}`);
+  // une ligne indentée qui commence par « import » ou « export » est un exemple dans un commentaire (js/lib/*.js) : la synchronisation de game-system le défait à chaque session, et l'arbre git démarrait modifié ;
+  // elle n'est pas estampillée. (Correction locale : à proposer pour supershivas/game-system.)
+  const s = avant.split('\n').map(l => /^\s+(?:import|export)\b/.test(l) ? l : motifs.reduce((t, re) => t.replace(re, (_, a, url, b) => `${a}${url}${v}${b}`), l)).join('\n');
   if (s !== avant) { writeFileSync(fichier, s); modifies++; }
 }
 
