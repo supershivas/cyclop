@@ -70,7 +70,7 @@ gris) et les deux camps (proposés `#6f86a6` et `#5b5d48`, invisibles sur la bou
 Un soldat se lit par sa couleur sur un sol sombre, par son ombre (`t`) sur un sol
 clair. Un cratère : le creux un ton plus sombre, la lèvre de terre jetée un ton
 plus clair (sans la lèvre, un cratère dans la boue ne se distinguait pas de la
-boue en gris : échec mesuré). Aucune autre couleur dans le jeu ; exceptions : les deux couleurs d'alerte de l'interface (orange et rouge, `ALERTES`, hors de `PALETTE` ; Jérôme, v0.41.3), les fondus continus (brouillard, bout des ombres et de la fumée : des mélanges d'une couleur de palette avec ce qu'elle recouvre ; Jérôme, v0.12.1),  le fond des boîtes de dialogue (`::backdrop` de `game.css`) et la
+boue en gris : échec mesuré). Aucune autre couleur dans le jeu ; exceptions : les deux couleurs d'alerte de l'interface (orange et rouge, `ALERTES`, hors de `PALETTE` ; Jérôme, v0.41.3), les teintes d'automne des feuilles d'arbre (`ARBRES_FEUILLES.automne` de data/arbres.js : orange brûlé, ocre, rouille, or terne, en `#rrggbb` ; Jérôme, v0.59.2), les fondus continus (brouillard, bout des ombres et de la fumée : des mélanges d'une couleur de palette avec ce qu'elle recouvre ; Jérôme, v0.12.1),  le fond des boîtes de dialogue (`::backdrop` de `game.css`) et la
 nuit (le voile continu et ses halos mélangent la terre, le sol et l'os : des couleurs qui ne sont pas dans la palette ; Jérôme, v0.9.3).
 
 ### Échelle

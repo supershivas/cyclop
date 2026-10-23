@@ -19,10 +19,11 @@ export const ARBRES_ECHELLE = { hauteur: [0.9, 1.14], largeur: [0.88, 1.2] };   
 
 // Les feuilles par saison : une touffe est une boîte, son dessus et ses flancs prennent chacun une couleur de la palette, tour à tour dans la liste.
 // `taille` : le facteur de la touffe ; `garde` : la part des touffes gardées (1 : toutes) ; `degarni` : la part gardée sur un arbre dégarni.
+// Une couleur peut être une teinte `#rrggbb` hors palette (Jérôme, v0.59.2 : l'automne plus orangé, de plusieurs teintes ; exception déclarée dans CLAUDE.md).
 // `neige` : pas de feuilles mais des coiffes plates sur les branches.
 export const ARBRES_FEUILLES = {
   ete: { dessus: ['v', 'v', 'w'], flanc: ['w', 'w', 's'], taille: 0.85, garde: 1, degarni: 1 },
-  automne: { dessus: ['h', 'g'], flanc: ['b', 'b'], taille: 0.85, garde: 1, degarni: 0.5 },
+  automne: { dessus: ['#b8702c', '#c48a3c', '#9c5a2a', '#a8984a', '#a8642a'], flanc: ['#5e3a20', '#6a4524', '#4e3322', '#5c4a26', '#5e3a20'], taille: 0.85, garde: 1, degarni: 0.5 },
   printemps: { dessus: ['v', 'h'], flanc: ['h', 'g'], taille: 0.7, garde: 0.6, degarni: 0.4 },    // une teinte du labo : le printemps n'est pas une saison du jeu
   neige: { dessus: ['o'], flanc: ['r'], neige: true, taille: 1, garde: 1, degarni: 1 },
 };

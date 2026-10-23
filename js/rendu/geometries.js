@@ -1,6 +1,6 @@
 // Les formes du rendu, construites à la main : un soldat (de la boîte à la silhouette), un arbre, un buisson. Pas d'état :
 // `THREE` et `col` (une couleur de la palette) viennent de creerRendu ; les soldats prennent aussi leurs attributs d'instance.
-import { ARBRES_FEUILLES } from '../data/arbres.js?v=0.59.1';
+import { ARBRES_FEUILLES } from '../data/arbres.js?v=0.59.2';
 
 export function creerGeometries(THREE, col) {
   // les faces d'une boîte qu'on voit d'ici : le dessus, le sud, l'est et l'ouest (jamais le nord ni le dessous)
@@ -188,7 +188,8 @@ export function creerGeometries(THREE, col) {
       if (Math.floor((k + 1) * garde) <= Math.floor(k * garde)) return;
       const s = p[3] * P.taille, w = P.neige ? s * 0.8 : s, h = P.neige ? 0.22 : s * 0.75;
       const g = new THREE.BoxGeometry(w, h, w).toNonIndexed(); g.translate(p[0], p[1], p[2]);
-      const dessus = col(P.dessus[n % P.dessus.length]), flanc = col(P.flanc[n % P.flanc.length]);
+      const teinte = k => k[0] === '#' ? new THREE.Color(k) : col(k);
+      const dessus = teinte(P.dessus[n % P.dessus.length]), flanc = teinte(P.flanc[n % P.flanc.length]);
       const a = g.attributes.position.array, nor = g.attributes.normal.array;
       for (let t = 0; t < a.length; t += 9) {
         if (nor[t + 1] < -0.5) continue;                                    // le dessous

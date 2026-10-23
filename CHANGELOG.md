@@ -1,5 +1,8 @@
 # Journal des versions
 
+## 0.59.2 — 2026-10-23
+- L'automne est plus orangé : les feuilles des arbres prennent plusieurs teintes (orange, ocre, rouille)
+
 ## 0.59.1 — 2026-10-23
 - L'écran titre montre un champ neuf, sans noms de régiments : saison, temps et heure au hasard, des obus qui tombent
 
