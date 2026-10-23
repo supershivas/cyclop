@@ -1,6 +1,6 @@
 // Les formes du rendu, construites à la main : un soldat (de la boîte à la silhouette), un arbre, un buisson. Pas d'état :
 // `THREE` et `col` (une couleur de la palette) viennent de creerRendu ; les soldats prennent aussi leurs attributs d'instance.
-import { ARBRES_FEUILLES } from '../data/arbres.js?v=0.61.0';
+import { ARBRES_FEUILLES } from '../data/arbres.js?v=0.62.0';
 
 export function creerGeometries(THREE, col) {
   // les faces d'une boîte qu'on voit d'ici : le dessus, le sud, l'est et l'ouest (jamais le nord ni le dessous)
@@ -114,6 +114,29 @@ export function creerGeometries(THREE, col) {
     return out;
   }
 
+  // un buisson d'une forme de `BUISSONS_FORMES` dans les couleurs d'une saison de `BUISSONS_SAISONS` (`n` : quelle teinte de la liste) ; des cubes de fleurs ou de baies sur le dessus
+  function geometrieBuissonVarie(F, P, n = 0) {
+    const parts = [], teinte = k => k[0] === '#' ? new THREE.Color(k) : col(k), mai = P.maigre ?? 1;
+    const boite = (w, h, d, x, y, z, dessus, flanc) => { const g = new THREE.BoxGeometry(w, h, d).toNonIndexed(); g.translate(x, y + h / 2, z); parts.push([g, dessus, flanc]); };
+    const dessus = teinte(P.dessus[n % P.dessus.length]), flanc = teinte(P.flanc[n % P.flanc.length]);
+    for (const [w, h, d, x, z] of F.boites) boite(w * mai, h * mai, d * mai, x, 0, z, dessus, flanc);
+    if (P.fruits && !F.casse) {
+      const f = teinte(P.fruits);
+      F.boites.forEach(([w, h, d, x, z], b) => { for (let q = 0; q < 3; q++) boite(0.2, 0.2, 0.2, x + (((q * 7 + b * 3) % 5) - 2) * w * 0.15, h * mai, z + (((q * 5 + b * 2) % 5) - 2) * d * 0.15, f, f); });
+    }
+    const pos = [], couleurs = [];
+    for (const [g, dc, fc] of parts) {
+      pos.push(...g.attributes.position.array);
+      const nor = g.attributes.normal.array;
+      for (let k = 0; k < nor.length; k += 3) { const c = nor[k + 1] > 0.5 ? dc : fc; couleurs.push(c.r, c.g, c.b); }
+    }
+    const out = new THREE.BufferGeometry();
+    out.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+    out.setAttribute('color', new THREE.Float32BufferAttribute(couleurs, 3));
+    if (F.casse) { out.rotateZ(0.35); out.translate(0, 0.25, 0); }
+    return out;
+  }
+
   // ─── Les arbres variés (labo « Des arbres plus variés », v0.52.6) ───
   // Une famille = un tronc (ou deux), des branches, et les points où poussent les touffes de feuilles. Tout est dessiné à la hauteur de base `h` de la famille ;
   // l'instance l'allonge (échelle) selon `v` et le hachage de la position.
@@ -213,5 +236,5 @@ export function creerGeometries(THREE, col) {
     boiteHaute(parts, 0.14, 0.7, 0.14, 0.05, 0.4, 2.1, 0.5); boiteHaute(parts, 0.12, 0.6, 0.12, 0.05, 0.4, 3.7, -0.6);         // deux branches cassées
     const out = new THREE.BufferGeometry(); out.setAttribute('position', positions(parts)); return out;
   }
-  return { boiteVue, geometrieSoldat, geometrieArbre, geometrieBuisson, geometrieTroncs, geometrieTroncLoin, geometrieFeuilles, geometrieAbattuLong };
+  return { boiteVue, geometrieSoldat, geometrieArbre, geometrieBuisson, geometrieBuissonVarie, geometrieTroncs, geometrieTroncLoin, geometrieFeuilles, geometrieAbattuLong };
 }

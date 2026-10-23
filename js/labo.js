@@ -2,37 +2,37 @@
 // Chaque sujet utilise les mêmes modules que le jeu (terrain, apparence,
 // rendu three.js) : ce qu'on voit ici est ce que le jeu dessinera. Ajouter un
 // sujet ou une variante = ajouter une entrée dans GROUPES.
-import { afficherVersion } from './version-tag.js?v=0.61.0';
-import { mountLabo } from './lib/labo-shell.js?v=0.61.0';
-import { spriteCanvas, paletteToGPL, paletteToHex } from './lib/sprites.js?v=0.61.0';
-import { PALETTE, ROLES } from './palette.js?v=0.61.0';
-import { chargerContenu } from './design-store.js?v=0.61.0';
-import { tuile, ETAT } from './tuiles.js?v=0.61.0';
-import { creerTerrain, impact, hydroLignes } from './terrain.js?v=0.61.0';
-import { FORMES } from './cratere.js?v=0.61.0';
-import { CALIBRES } from './data/calibres.js?v=0.61.0';
-import { METEO } from './data/meteo.js?v=0.61.0';
-import { nouvelleBataille, avancer, ordonnerMarche, ordonnerBarrage, mourir } from './bataille.js?v=0.61.0';
-import { creerRendu, ZOOMS } from './rendu3d.js?v=0.61.0';
-import { hash2 } from './lib/rng.js?v=0.61.0';
-import { reglerVerdure } from './apparence.js?v=0.61.0';
-import { maquetteAssaut } from './labo-assaut.js?v=0.61.0';
-import { calquePlaques } from './labo-plaques.js?v=0.61.0';
-import { calqueBarre } from './labo-barre-temps.js?v=0.61.0';
-import { maquetteProjections, maquetteVisee } from './labo-projections.js?v=0.61.0';
-import { calqueBarreVie } from './labo-barre-vie.js?v=0.61.0';
-import { calqueClic } from './labo-clic-regiment.js?v=0.61.0';
-import { maquetteBoutons, calqueOrdre, calqueObus } from './labo-satisfaction.js?v=0.61.0';
-import { calqueEtiquette, calqueToast, maquetteCartes } from './labo-hud-ux.js?v=0.61.0';
-import { maquetteCampagne } from './labo-campagne.js?v=0.61.0';
-import { maquetteCaisses, maquetteRates, maquetteSapes } from './labo-arcade.js?v=0.61.0';
-import { maquetteChars } from './labo-chars.js?v=0.61.0';
-import { maquetteGaz } from './labo-gaz.js?v=0.61.0';
-import { maquetteAvions } from './labo-avions.js?v=0.61.0';
-import { maquettePonts, PONTS, NOMS_PONTS } from './labo-ponts.js?v=0.61.0';
-import { PONTS_JEU } from './data/ponts.js?v=0.61.0';
-import { JOURNAL } from './labo-journal.js?v=0.61.0';
-import { loadVersion } from './lib/app-update.js?v=0.61.0';
+import { afficherVersion } from './version-tag.js?v=0.62.0';
+import { mountLabo } from './lib/labo-shell.js?v=0.62.0';
+import { spriteCanvas, paletteToGPL, paletteToHex } from './lib/sprites.js?v=0.62.0';
+import { PALETTE, ROLES } from './palette.js?v=0.62.0';
+import { chargerContenu } from './design-store.js?v=0.62.0';
+import { tuile, ETAT } from './tuiles.js?v=0.62.0';
+import { creerTerrain, impact, hydroLignes } from './terrain.js?v=0.62.0';
+import { FORMES } from './cratere.js?v=0.62.0';
+import { CALIBRES } from './data/calibres.js?v=0.62.0';
+import { METEO } from './data/meteo.js?v=0.62.0';
+import { nouvelleBataille, avancer, ordonnerMarche, ordonnerBarrage, mourir } from './bataille.js?v=0.62.0';
+import { creerRendu, ZOOMS } from './rendu3d.js?v=0.62.0';
+import { hash2 } from './lib/rng.js?v=0.62.0';
+import { reglerVerdure } from './apparence.js?v=0.62.0';
+import { maquetteAssaut } from './labo-assaut.js?v=0.62.0';
+import { calquePlaques } from './labo-plaques.js?v=0.62.0';
+import { calqueBarre } from './labo-barre-temps.js?v=0.62.0';
+import { maquetteProjections, maquetteVisee } from './labo-projections.js?v=0.62.0';
+import { calqueBarreVie } from './labo-barre-vie.js?v=0.62.0';
+import { calqueClic } from './labo-clic-regiment.js?v=0.62.0';
+import { maquetteBoutons, calqueOrdre, calqueObus } from './labo-satisfaction.js?v=0.62.0';
+import { calqueEtiquette, calqueToast, maquetteCartes } from './labo-hud-ux.js?v=0.62.0';
+import { maquetteCampagne } from './labo-campagne.js?v=0.62.0';
+import { maquetteCaisses, maquetteRates, maquetteSapes } from './labo-arcade.js?v=0.62.0';
+import { maquetteChars } from './labo-chars.js?v=0.62.0';
+import { maquetteGaz } from './labo-gaz.js?v=0.62.0';
+import { maquetteAvions } from './labo-avions.js?v=0.62.0';
+import { maquettePonts, PONTS, NOMS_PONTS } from './labo-ponts.js?v=0.62.0';
+import { PONTS_JEU } from './data/ponts.js?v=0.62.0';
+import { JOURNAL } from './labo-journal.js?v=0.62.0';
+import { loadVersion } from './lib/app-update.js?v=0.62.0';
 
 document.documentElement.style.setProperty('--jeu-accent', ROLES.accent);
 const NOM = document.title.replace(/^Labo — /, ''); // le nom vient de la page (une apostrophe ne casse rien)
@@ -126,7 +126,7 @@ function coutCratere(nom) {
 }
 
 // ─── Le moteur, en direct : le rendu du jeu sur une petite bataille ───
-function moteur(stage, { zoom = 3, pluie = false, gel = false, soldats = 600, cz = 185, camera = null, respiration = undefined, soldat = undefined, cadavre = undefined, morts = 0, effets = undefined, barrages = false, surLesArbres = false, vue = null, verdure = undefined, nuit = null, tombee = false, calque = null, bord = null, centre = null, finesse = 1, cratere = null, arbres = undefined, saison = null, jours = undefined, versLesArbres = false } = {}) {
+function moteur(stage, { zoom = 3, pluie = false, gel = false, soldats = 600, cz = 185, camera = null, respiration = undefined, soldat = undefined, cadavre = undefined, morts = 0, effets = undefined, barrages = false, surLesArbres = false, vue = null, verdure = undefined, nuit = null, tombee = false, calque = null, bord = null, centre = null, finesse = 1, cratere = null, arbres = undefined, saison = null, jours = undefined, versLesArbres = false, buissons = undefined, versLesBuissons = false } = {}) {
   reglerVerdure(verdure);                                   // le sol vert (apparence.js) : avant que le sol ne se peigne
   const boite = el('div'); boite.style.cssText = 'position:relative;width:100%;height:min(70vh,560px);overflow:hidden';
   const canvas = el('canvas'); canvas.style.cssText = 'position:absolute;left:0;top:0;image-rendering:pixelated';
@@ -163,7 +163,7 @@ function moteur(stage, { zoom = 3, pluie = false, gel = false, soldats = 600, cz
       B.etat.corps.forEach((c, k) => { if (k % 2) c[3] = B.etat.jour - 1; });
     }
     ordonnerMarche(B, B.etat.regiments.filter(r => r.camp === 0).slice(2, 6).map(r => r.id), B.etat.marges.x + 200, B.etat.marges.y + 175);
-    rendu = await creerRendu(canvas, { mesure: true, camera, respiration, soldat, cadavre, effets, bord, arbres });
+    rendu = await creerRendu(canvas, { mesure: true, camera, respiration, soldat, cadavre, effets, bord, arbres, buissons: buissons ? {} : null });
     if (fini) { rendu.detruire(); return; }
     if (nuit) rendu.styleNuit = nuit;
     rendu.finesse = finesse;
@@ -176,6 +176,12 @@ function moteur(stage, { zoom = 3, pluie = false, gel = false, soldats = 600, cz
       const T = B.terrain, m = B.etat.marges, dans = a => a.i > m.x + 20 && a.i < m.x + 380 && a.j > m.y + 20 && a.j < m.y + 280;
       let mieux = null, n = -1;
       for (const a of T.arbres) { if (!dans(a)) continue; const c = T.arbres.reduce((s, b) => s + ((a.i - b.i) ** 2 + (a.j - b.j) ** 2 < 400 ? 1 : 0), 0); if (c > n) { n = c; mieux = a; } }
+      if (mieux) { rendu.vue.cx = mieux.i + 0.5; rendu.vue.cz = mieux.j + 0.5; }
+    }
+    if (versLesBuissons) {                                     // le coin le plus fourni en buissons (celui qui en a le plus dans ses 12 m)
+      const T = B.terrain, m = B.etat.marges, dans = a => a.i > m.x + 20 && a.i < m.x + 380 && a.j > m.y + 20 && a.j < m.y + 280;
+      let mieux = null, n = -1;
+      for (const a of T.buissons) { if (!dans(a)) continue; const c = T.buissons.reduce((q, b) => q + ((a.i - b.i) ** 2 + (a.j - b.j) ** 2 < 144 ? 1 : 0), 0); if (c > n) { n = c; mieux = a; } }
       if (mieux) { rendu.vue.cx = mieux.i + 0.5; rendu.vue.cz = mieux.j + 0.5; }
     }
     reglerSaison = cle => {
@@ -417,6 +423,13 @@ const GROUPES = [
       { title: 'Hiver : nus, puis de la neige', status: 'retenue', depuis: '0.52.6', note: 'Retenu (Jérôme, v0.53.1), en jeu. En hiver les arbres sont nus (les formes seules) ; les jours de neige (`horloge.neige`), de petites coiffes d\'os (`o`) se posent sur les bouts de branches et sur le sommet des troncs, flancs en brume (`r`). Essayez « Hiver » puis « Hiver · neige ». Le mort garde une coiffe sur son éclat. Arbres sous la neige : 12 600 / 4 500 / 3 600 triangles ; nus (hiver sans neige) : ceux de la variante « Six formes ».', render: s => moteur(s, { zoom: 4, soldats: 200, cz: 150, versLesArbres: true, arbres: { feuilles: true }, saison: 'neige' }) },
       { title: 'Printemps (une teinte, sans règle)', status: 'ancienne', depuis: '0.52.6', note: 'Non retenu (Jérôme, v0.53.1) : reste au labo, sans règle. Pas une saison du jeu (Jérôme, v0.52.6 : pas de printemps dans `SAISONS`) : seulement une teinte du feuillage, pour voir. Des touffes plus petites et clairsemées (60 %, 40 % sur un arbre sur deux), vertes sur des flancs d\'herbe morte. Le sol et la météo restent ceux de l\'automne.', render: s => moteur(s, { zoom: 4, soldats: 200, cz: 150, versLesArbres: true, arbres: { feuilles: true }, saison: 'printemps' }) },
       { title: 'Abattus : souche éclatée et tronc long', status: 'retenue', depuis: '0.52.6', note: 'Retenu (Jérôme, v0.53.1), en jeu. Un arbre abattu par un obus : une souche aux éclats, un tronc couché de 4,6 m (de 3,9 à 5,3 m selon l\'arbre) dans un sens tiré de la position, deux branches cassées. Du bois sombre, jamais de feuilles ; le feu reste à la souche. Des obus de 75 tombent sur les arbres ; l\'abattu d\'avant (une souche et un bâton dressé) est dans la première variante.', render: s => moteur(s, { zoom: 5, soldats: 200, cz: 150, versLesArbres: true, barrages: true, surLesArbres: true, arbres: { feuilles: true, abattus: 'longs' }, saison: 'automne' }) },
+    ] },
+    { id: 'buissons-varies', title: 'Des buissons plus variés', variants: [
+      { title: 'Les buissons d\'avant', status: 'actuelle', depuis: '0.62.0', note: 'Le jeu : deux ou trois boîtes basses, dessus glaise (`g`) et flancs boue (`b`), trois tailles, tous pareils en toute saison ; aucun buisson aux zooms 1 et 2. Au coin le plus fourni du secteur ; les boutons du bas changent de saison.', render: s => moteur(s, { zoom: 4, soldats: 200, cz: 150, versLesBuissons: true, saison: 'automne' }) },
+      { title: 'Sept formes, l\'été', status: 'a-trancher', depuis: '0.62.0', note: 'Sept formes tirées du hachage de la position (le terrain et la graine du monde ne changent pas) : rond (30 %), étalé (20), haut et mince (14), en touffes (14), ajonc hérissé (10), ronces rampantes (6) et l\'épineux brisé, penché (6) ; une rotation de 0, 90, 180 ou 270° et une taille tirées aussi. Feuillage vert (`v` dessus, `w` et `s` flancs) et de petits cubes de fleurs claires (`o`) sur le dessus.', render: s => moteur(s, { zoom: 4, soldats: 200, cz: 150, versLesBuissons: true, buissons: true, saison: 'ete' }) },
+      { title: 'Sept formes, l\'automne et ses baies', status: 'a-trancher', depuis: '0.62.0', note: 'Les mêmes formes dans les teintes des arbres d\'automne (orange, ocre, rouille), des flancs bruns et de petites baies sombres rouges sur le dessus (exception de palette déclarée avec les feuilles d\'arbre, v0.59.2).', render: s => moteur(s, { zoom: 4, soldats: 200, cz: 150, versLesBuissons: true, buissons: true, saison: 'automne' }) },
+      { title: 'Hiver : branches nues, puis neige', status: 'a-trancher', depuis: '0.62.0', note: 'En hiver les buissons sont nus (des boîtes plus fines et plus basses, boue et terre sombre) ; un jour de neige (bouton « Neige »), le dessus devient os (`o`). Ni fleurs ni baies.', render: s => moteur(s, { zoom: 4, soldats: 200, cz: 150, versLesBuissons: true, buissons: true, saison: 'hiver' }) },
+      { title: 'Sept formes, de plus près', status: 'a-trancher', depuis: '0.62.0', note: 'Les mêmes formes à 8 pixels par mètre, l\'été : pour juger les silhouettes et les cubes de fleurs.', render: s => moteur(s, { zoom: 5, soldats: 120, cz: 150, versLesBuissons: true, buissons: true, saison: 'ete' }) },
     ] },
     { id: 'champ', title: 'Champ de bataille', variants: [
       { title: 'Zoom 4', note: 'Le rendu du jeu : quatre de nos régiments avancent ; à 4 pixels par mètre, chaque soldat est une silhouette allégée (jambes, corps, bras, tête, fusil) et son ombre ; l\'équipement n\'apparaît qu\'à partir de 6.', status: 'actuelle', render: s => moteur(s, { zoom: 3 }) },

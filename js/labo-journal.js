@@ -2,6 +2,9 @@
 // Une entrée par version qui touche au labo, la plus récente en haut. `ref` : « sujet-Lettre » (la lettre est celle de la variante,
 // A étant l'actuelle). À chaque changement du labo : une entrée ici, avec `depuis` sur les variantes ajoutées ou changées (labo.js).
 export const JOURNAL = [
+  { version: '0.62.0', date: '2026-10-23', items: [
+    { genre: 'nouveau', texte: 'Des buissons plus variés : sept formes (rond, étalé, haut, en touffes, ajonc, ronces, épineux brisé), des fleurs l\'été, des baies l\'automne, des branches nues l\'hiver, de la neige les jours de neige ; quatre variantes à trancher.', ref: 'buissons-varies-B' },
+  ] },
   { version: '0.53.1', date: '2026-10-22', items: [
     { genre: 'mis-a-jour', texte: 'Des arbres plus variés : les six formes, les feuilles de la saison (vert l\'été, glaise et herbe morte l\'automne avec un arbre sur trois dégarni, nus puis sous la neige l\'hiver) et les abattus à la souche éclatée sont retenus et en jeu ; les arbres d\'avant, les formes nues, la chute des feuilles et la teinte de printemps passent en non retenus', ref: 'arbres-varies-C' },
   ] },

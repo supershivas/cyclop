@@ -1,5 +1,8 @@
 # Journal des versions
 
+## 0.62.0 — 2026-10-23
+- Au labo : « Des buissons plus variés » (sept formes, fleurs l'été, baies l'automne, nus l'hiver), à trancher avant d'entrer dans le jeu
+
 ## 0.61.0 — 2026-10-23
 - Les labours sont plats, la crête monte à 16 m, le marais a de nombreux marécages et de petits lacs ; les cartes d'origine ne se retouchent plus (l'atelier en fait une copie)
 - Les feuillages gardent leur détail à tous les zooms ; le bord du champ se dissout dans le faux terrain

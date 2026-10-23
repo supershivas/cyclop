@@ -1,16 +1,17 @@
 // La végétation : les arbres (un tronc, quelques branches nues ; abattus, une souche), les buissons (deux ou trois boîtes basses ; arrachés, il
 // n'en reste rien) et l'herbe (des touffes de cinq brins, seulement de près, qui ondulent au vent). Seulement ce qu'on voit est dessiné : tous,
 // ils coûtaient des dizaines de milliers de triangles (docs/domaines/rendu.md, « Les arbres et les buissons dessinés partout »). Le dessin seulement.
-import * as SH from './shaders.js?v=0.61.0';
-import { creerGeometries } from './geometries.js?v=0.61.0';
-import { hash2 } from '../lib/rng.js?v=0.61.0';
-import { ARBRES_FAMILLES, ARBRES_TIRAGES, ARBRES_ECHELLE, ARBRES_AUTOMNE, ARBRES_PPM_FEUILLES, ARBRES_FEUILLES } from '../data/arbres.js?v=0.61.0';
+import * as SH from './shaders.js?v=0.62.0';
+import { creerGeometries } from './geometries.js?v=0.62.0';
+import { hash2 } from '../lib/rng.js?v=0.62.0';
+import { BUISSONS_FORMES, BUISSONS_SAISONS, BUISSONS_TIRAGES } from '../data/buissons.js?v=0.62.0';
+import { ARBRES_FAMILLES, ARBRES_TIRAGES, ARBRES_ECHELLE, ARBRES_AUTOMNE, ARBRES_PPM_FEUILLES, ARBRES_FEUILLES } from '../data/arbres.js?v=0.62.0';
 
 // `THREE`, `scene`, `col`, `camera`, `vue`, `solY` (la hauteur moyenne du sol), `distance(zoom)`, `surface(x, z)` et `petit()` (aux zooms où un soldat n'est qu'un point)
 // viennent de creerRendu ; `terrain()`, `vide()` et `ombres()` sont lus à chaque appel (le terrain change à chaque bataille). `ombres()` rend `{ ARBRES_OMBRES, aoPos, aoGeo, soleil }` :
 // les arbres vus remplissent le tampon des ombres, qui reste à rendu3d.js avec le soleil (il passera ici avec lui).
-export function creerVegetation({ THREE, scene, col, camera, vue, solY: SOL_Y, distance, surface, petit, terrain, vide, ombres, ppm, saison, arbres: optsArbres = null }) {
-  const { geometrieArbre, geometrieBuisson, geometrieTroncs, geometrieTroncLoin, geometrieFeuilles, geometrieAbattuLong } = creerGeometries(THREE, col);
+export function creerVegetation({ THREE, scene, col, camera, vue, solY: SOL_Y, distance, surface, petit, terrain, vide, ombres, ppm, saison, arbres: optsArbres = null, buissons: optsBuissons = null }) {
+  const { geometrieArbre, geometrieBuisson, geometrieBuissonVarie, geometrieTroncs, geometrieTroncLoin, geometrieFeuilles, geometrieAbattuLong } = creerGeometries(THREE, col);
   // `arbres` : null, les arbres d'avant (un tronc, quatre branches) ; sinon (labo « Des arbres plus variés ») `{ formes, feuilles, chute, abattus }` : des familles de formes, des feuilles
   // selon la saison (`saison()` rend l'horloge de la bataille ou null), la chute des feuilles au fil des jours, les abattus longs. `ppm()` : les pixels par mètre du zoom.
   let opts = optsArbres, forcee = null, trisArbres = 0, msArbres = 0;
@@ -173,10 +174,25 @@ export function creerVegetation({ THREE, scene, col, camera, vue, solY: SOL_Y, d
   // le dessus du feuillage plus clair (la glaise), les flancs sombres (la boue)
   const buissonsMesh = [];
   const buissonMat = new THREE.MeshBasicMaterial({ vertexColors: true, side: THREE.DoubleSide });
+  // Les buissons variés (`optsBuissons` ; null : ceux d'avant) : une forme par buisson (le hachage de sa position), un maillage par forme, refait quand la saison change ; la taille suit son `v`
+  let optsB = optsBuissons, infosB = [], modeB = null, teintesB = 0;
   function preparerBuissons() {
     const T = terrain();
     buissonsMesh.forEach(m => { scene.remove(m); m.geometry.dispose(); });
-    buissonsMesh.length = 0;
+    buissonsMesh.length = 0; modeB = null;
+    if (optsB) {
+      const poids = BUISSONS_FORMES.reduce((a, F) => a + F.poids, 0);
+      infosB = T.buissons.map(b => {
+        let r = hash2(b.i, b.j, BUISSONS_TIRAGES.forme) * poids, f = 0;
+        while (f < BUISSONS_FORMES.length - 1 && r >= BUISSONS_FORMES[f].poids) r -= BUISSONS_FORMES[f++].poids;
+        return { f, rot: Math.floor(hash2(b.i, b.j, BUISSONS_TIRAGES.rotation) * 4), t: hash2(b.i, b.j, BUISSONS_TIRAGES.taille) };
+      });
+      BUISSONS_FORMES.forEach((F, f) => {
+        const m = new THREE.InstancedMesh(new THREE.BufferGeometry(), buissonMat, Math.max(1, T.buissons.length));
+        m.count = 0; m.frustumCulled = false; m.userData = { f }; buissonsMesh.push(m); scene.add(m);
+      });
+      return;
+    }
     for (let v = 0; v < 3; v++) {
       const m = new THREE.InstancedMesh(geometrieBuisson(v), buissonMat, Math.max(1, T.buissons.length));
       m.count = 0; m.frustumCulled = false; m.userData = { v };
@@ -188,6 +204,23 @@ export function creerVegetation({ THREE, scene, col, camera, vue, solY: SOL_Y, d
     // de loin (le sol à plat), un buisson ne fait que deux pixels : on ne les dessine pas (tout le champ : ~25 000 triangles)
     if (petit()) { for (const m of buissonsMesh) m.count = 0; return; }
     const m4 = new THREE.Matrix4();
+    if (optsB) {
+      const h = saison?.(), mode = forcee || (!h ? 'automne' : h.enneige ? 'neige' : h.saison === 'hiver' ? 'nu' : h.saison === 'ete' ? 'ete' : 'automne'), P = BUISSONS_SAISONS[mode] ?? BUISSONS_SAISONS.nu;
+      if (mode !== modeB) {            // la saison a changé : les formes se refont dans ses couleurs
+        modeB = mode; teintesB = P.dessus.length;
+        for (const m of buissonsMesh) { m.geometry.dispose(); m.geometry = geometrieBuissonVarie(BUISSONS_FORMES[m.userData.f], P, 0); }
+      }
+      for (const m of buissonsMesh) m.count = 0;
+      for (let k = 0; k < T.buissons.length; k++) {
+        const b = T.buissons[k], inf = infosB[k];
+        if (b.detruit || !dansLaVue(b.i + 0.5, b.j + 0.5, e, bornes)) continue;
+        const m = buissonsMesh[inf.f], s = (0.85 + 0.2 * b.v) * (0.9 + 0.2 * inf.t), c = [1, 0, -1, 0][inf.rot], sn = [0, 1, 0, -1][inf.rot];
+        m4.set(c * s, 0, sn * s, b.i + 0.5, 0, s, 0, surface(b.i + 0.5, b.j + 0.5), -sn * s, 0, c * s, b.j + 0.5, 0, 0, 0, 1);
+        m.setMatrixAt(m.count++, m4);
+      }
+      for (const m of buissonsMesh) m.instanceMatrix.needsUpdate = true;
+      return;
+    }
     for (const m of buissonsMesh) {
       let n = 0;
       for (const b of T.buissons) {
@@ -316,7 +349,8 @@ export function creerVegetation({ THREE, scene, col, camera, vue, solY: SOL_Y, d
     get vuesHerbe() { return vuesHerbe; },
     get trianglesArbres() { return trisArbres; },                                // les triangles des arbres dessinés à cette image (pour les stats)
     get msArbres() { return msArbres; },                                         // le tri des arbres, ms par image (lissé)
-    regler(o) { opts = o; if (terrain()) preparerArbres(); },                    // les arbres variés (null : ceux d'avant), à chaud
+    regler(o) { opts = o; if (terrain()) preparerArbres(); },
+    reglerBuissons(o) { optsB = o; if (terrain()) preparerBuissons(); },        // les buissons variés (null : ceux d'avant), à chaud                    // les arbres variés (null : ceux d'avant), à chaud
     forcer(mode) { forcee = mode; },                                             // les feuilles d'une saison qui n'en est pas une (le printemps du labo)                                       // les touffes dessinées (pour les stats)
   };
 }
