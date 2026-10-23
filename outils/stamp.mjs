@@ -11,7 +11,8 @@ let n = 0;
 for (const d of ['js/lib']) for (const f of readdirSync(d)) {
   if (!f.endsWith('.js')) continue;
   const p = join(d, f), avant = readFileSync(p, 'utf8');
-  const apres = avant.split('\n').map(l => /^\s+(?:import|export)\b/.test(l) ? l.replace(/\?v=[^'"]*(['"])/g, '$1') : l).join('\n');
+  // (un chemin « ./lib/… » vu de js/ n'est jamais un vrai import de js/lib/, qui lit ses voisins en « ./nom.js » : c'est un exemple de commentaire)
+  const apres = avant.split('\n').map(l => /^\s+(?:import|export)\b/.test(l) || /\.\/lib\/[^'"\s]*\?v=/.test(l) ? l.replace(/(\.\/lib\/[^'"\s?]*|\.\/[^'"\s?]*\.m?js)\?v=[^'"]*(['"])/g, '$1$2') : l).join('\n');
   if (apres !== avant) { writeFileSync(p, apres); n++; }
 }
 console.log(`${n} fichier(s) de js/lib/ remis sans estampille dans les exemples des commentaires`);
