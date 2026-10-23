@@ -183,7 +183,7 @@ node outils/lisibilite.mjs               # contraste, tuiles en gris
 node outils/deux.mjs                     # le jeu à deux : deux pages s'appairent, jouent, aucune désynchronisation (~30 s)
 node scripts/mesure.mjs                  # 8 000 soldats : simulation et rendu
 node scripts/trois-jours.mjs             # trois jours de bataille, captures chaque soir
-node outils/stamp-version.mjs            # après chaque changement de version.json
+node outils/stamp.mjs                    # après chaque changement de version.json (l'outil de game-system, puis les exemples des commentaires de js/lib remis sans `?v=` : la synchronisation les défait)
 ```
 
 ## Exceptions aux conventions
