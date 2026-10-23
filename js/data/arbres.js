@@ -23,7 +23,7 @@ export const ARBRES_ECHELLE = { hauteur: [0.9, 1.14], largeur: [0.88, 1.2] };   
 // `neige` : pas de feuilles mais des coiffes plates sur les branches.
 export const ARBRES_FEUILLES = {
   ete: { dessus: ['v', 'v', 'w'], flanc: ['w', 'w', 's'], taille: 0.85, garde: 1, degarni: 1 },
-  automne: { dessus: ['#b8702c', '#c48a3c', '#9c5a2a', '#a8984a', '#a8642a'], flanc: ['#5e3a20', '#6a4524', '#4e3322', '#5c4a26', '#5e3a20'], taille: 0.85, garde: 1, degarni: 0.5 },
+  automne: { dessus: ['#ff7a14', '#e8321e', '#ffb400', '#d11a2a', '#ff9a1f', '#f05a0a'], flanc: ['#a8430c', '#8a1410', '#b87a06', '#7a0f1c', '#b8520c', '#962c06'], taille: 0.85, garde: 1, degarni: 0.5 },
   printemps: { dessus: ['v', 'h'], flanc: ['h', 'g'], taille: 0.7, garde: 0.6, degarni: 0.4 },    // une teinte du labo : le printemps n'est pas une saison du jeu
   neige: { dessus: ['o'], flanc: ['r'], neige: true, taille: 1, garde: 1, degarni: 1 },
 };

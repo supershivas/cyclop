@@ -922,3 +922,29 @@ test('le char relu en route donne la même partie', () => {
   for (let k = 0; k < 120; k++) { avancer(a); avancer(b); }
   assert.equal(empreinte(a), empreinte(b));
 });
+
+group('char d\'assaut — la route (v0.59.3)');
+test('un char contourne le fleuve par un pont qui le porte, n\'y tombe pas, et arrive', async () => {
+  const { preparerAleatoire, ID_ALEATOIRE } = await import('../js/generateur.js');
+  const { routeChar } = await import('../js/chars.js');
+  const { PONTS_JEU, typePont } = await import('../js/data/ponts.js');
+  preparerAleatoire(2);
+  const B = nouvelleBataille(2, R, { soldats: 200, jours: 3, secteur: ID_ALEATOIRE }), a = arriereDeTest(B), x = B.etat.marges.x + 200, y = B.etat.marges.y + 60;
+  const r = routeChar(B, x, a[0], x, y);
+  assert.ok(r && r.length > 1, 'un détour : plusieurs points');
+  const T = B.terrain; let p = [x, a[0]];
+  for (const q of r) {
+    const n = Math.ceil(Math.hypot(q[0] - p[0], q[1] - p[1]));
+    for (let k = 0; k <= n; k++) {
+      const c = Math.floor(p[1] + (q[1] - p[1]) * k / n) * T.W + Math.floor(p[0] + (q[0] - p[0]) * k / n);
+      assert.ok(!T.profond[c], 'jamais dans l\'eau profonde');
+      if (T.pont[c]) assert.ok(PONTS_JEU[typePont(T.pontsListe[T.pont[c] - 1].type)].char, 'seulement sur un pont qui le porte');
+    }
+    p = q;
+  }
+  assert.ok(ordonnerBarrage(B, 'char', x, y).ok);
+  for (let n = 0; n < 40000 && B.etat.chars[0].etat === 'avance' && B.etat.phase === 'jour'; n++) avancer(B);
+  const c = B.etat.chars[0];       // (un jour ne lui suffit pas toujours : 700 m à 1 m/s ; il doit être arrivé ou en route, jamais à l'eau)
+  assert.ok(c.etat === 'arrive' || c.etat === 'avance', `ni enlisé ni détruit : ${c.etat}`); assert.equal(B.etat.pontsRompus.length, 0);
+  assert.ok(Math.hypot(c.x - x, c.y - y) < 30, 'au bout de son chemin');
+});

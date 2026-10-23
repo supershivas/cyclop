@@ -1,46 +1,47 @@
 // Le cycle de vie : écran titre → bataille → nuit → fin ; pause active,
 // réglages, sauvegarde, mise à jour, debug. Les règles sont dans bataille.js
 // (pures), le dessin dans rendu3d.js (il ne modifie jamais l'état).
-import { createLoop } from './lib/loop.js?v=0.59.2';
-import { createKeys, stopTypeahead } from './lib/keys.js?v=0.59.2';
-import { createPointer, lockBrowserGestures } from './lib/pointer.js?v=0.59.2';
-import { createGamepad } from './lib/gamepad.js?v=0.59.2';
-import { createStore, autosave, pickJSONFile } from './lib/save.js?v=0.59.2';
-import { startUpdateCheck, loadVersion, loadChangelog, downloadJSON } from './lib/app-update.js?v=0.59.2';
-import { ROLES } from './palette.js?v=0.59.2';
-import { VERSION_CAMPAGNE, CLE as CLE_CAMPAGNE, cloturerDansLeStore, nouvelleCampagne, suivante, passage, bilan as bilanCampagne } from './campagne.js?v=0.59.2';
-import { CAMPAGNE } from './data/campagne.js?v=0.59.2';
-import { MISSIONS, EUX, nouvelleBataille, etapesRestaurer, avancer, aube, ordonnerMarche, peutOrdonner, ordonnerBarrage, peutBarrage, arriereDe, ordonnerStance, peutStance, horloge, effectifs, tronconsTenus, moralEnMots, terrainResume, forcesTroncons, largeurZone, lettreZone, etendueZones, nomTroncon, actionDe, secteursDe, tronconsDeLigne, zone, photo, restaurer, PAS, NOUS } from './bataille.js?v=0.59.2';
-import { ligneY } from './tranchees.js?v=0.59.2';
-import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.59.2';
-import { AVION, MITRAILLAGE } from './data/mitraillage.js?v=0.59.2';
-import { ligneDe, apercuVol, avionsPrets, avionsRestants } from './avions.js?v=0.59.2';
-import { CHAR, CHAR_RECHARGE, CHARS, CHAR_PAR_DEFAUT } from './data/chars.js?v=0.59.2';
-import { STANCES, STANCE_DEFAUT } from './data/stances.js?v=0.59.2';
-import { METEO, SAISONS, SAISON_DEFAUT } from './data/meteo.js?v=0.59.2';
-import { hash2 } from './lib/rng.js?v=0.59.2';
-import { creerRendu, CAMERA } from './rendu3d.js?v=0.59.2';
-import { etatEnMots, experienceEnMots, chevrons } from './identite.js?v=0.59.2';
-import { CORVEES } from './data/corvees.js?v=0.59.2';
-import { refusCorvee } from './nuit.js?v=0.59.2';
-import { chargerContenu, appliquerSecteurs, appliquerCartes, appliquerCampagne } from './design-store.js?v=0.59.2';
-import * as lecture from './hud/lecture.js?v=0.59.2';
-import { creerFiche } from './hud/fiche.js?v=0.59.2';
-import { chevronsHtml } from './hud/barres.js?v=0.59.2';
-import { creerNuit, corveeDe, corveeCourte } from './hud/nuit.js?v=0.59.2';
-import { creerCampagne } from './hud/campagne.js?v=0.59.2';
-import { creerCarnet, deux } from './hud/carnet.js?v=0.59.2';
-import { creerCarte } from './hud/carte.js?v=0.59.2';
-import { creerPertes } from './hud/pertes.js?v=0.59.2';
-import { creerBarreTemps } from './hud/temps.js?v=0.59.2';
-import { creerChargement } from './hud/chargement.js?v=0.59.2';
-import { creerRetours } from './hud/retours.js?v=0.59.2';
-import { creerInfobulle } from './hud/infobulle.js?v=0.59.2';
-import { SECTEURS } from './data/secteur.js?v=0.59.2';
-import { preparerAleatoire, ID_ALEATOIRE } from './generateur.js?v=0.59.2';
-import { creerLockstep, empreinteEtat } from './reseau/lockstep.js?v=0.59.2';
-import { nouveauCode, codeValide, publier, ecouter } from './reseau/relais.js?v=0.59.2';
-import { creerHote, creerInvite } from './reseau/lien.js?v=0.59.2';
+import { createLoop } from './lib/loop.js?v=0.59.3';
+import { createKeys, stopTypeahead } from './lib/keys.js?v=0.59.3';
+import { createPointer, lockBrowserGestures } from './lib/pointer.js?v=0.59.3';
+import { createGamepad } from './lib/gamepad.js?v=0.59.3';
+import { createStore, autosave, pickJSONFile } from './lib/save.js?v=0.59.3';
+import { startUpdateCheck, loadVersion, loadChangelog, downloadJSON } from './lib/app-update.js?v=0.59.3';
+import { ROLES } from './palette.js?v=0.59.3';
+import { VERSION_CAMPAGNE, CLE as CLE_CAMPAGNE, cloturerDansLeStore, nouvelleCampagne, suivante, passage, bilan as bilanCampagne } from './campagne.js?v=0.59.3';
+import { CAMPAGNE } from './data/campagne.js?v=0.59.3';
+import { MISSIONS, EUX, nouvelleBataille, etapesRestaurer, avancer, aube, ordonnerMarche, peutOrdonner, ordonnerBarrage, peutBarrage, arriereDe, ordonnerStance, peutStance, horloge, effectifs, tronconsTenus, moralEnMots, terrainResume, forcesTroncons, largeurZone, lettreZone, etendueZones, nomTroncon, actionDe, secteursDe, tronconsDeLigne, zone, photo, restaurer, PAS, NOUS } from './bataille.js?v=0.59.3';
+import { ligneY } from './tranchees.js?v=0.59.3';
+import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.59.3';
+import { AVION, MITRAILLAGE } from './data/mitraillage.js?v=0.59.3';
+import { ligneDe, apercuVol, avionsPrets, avionsRestants } from './avions.js?v=0.59.3';
+import { CHAR, CHAR_RECHARGE, CHARS, CHAR_PAR_DEFAUT } from './data/chars.js?v=0.59.3';
+import { routeChar } from './chars.js?v=0.59.3';
+import { STANCES, STANCE_DEFAUT } from './data/stances.js?v=0.59.3';
+import { METEO, SAISONS, SAISON_DEFAUT } from './data/meteo.js?v=0.59.3';
+import { hash2 } from './lib/rng.js?v=0.59.3';
+import { creerRendu, CAMERA } from './rendu3d.js?v=0.59.3';
+import { etatEnMots, experienceEnMots, chevrons } from './identite.js?v=0.59.3';
+import { CORVEES } from './data/corvees.js?v=0.59.3';
+import { refusCorvee } from './nuit.js?v=0.59.3';
+import { chargerContenu, appliquerSecteurs, appliquerCartes, appliquerCampagne } from './design-store.js?v=0.59.3';
+import * as lecture from './hud/lecture.js?v=0.59.3';
+import { creerFiche } from './hud/fiche.js?v=0.59.3';
+import { chevronsHtml } from './hud/barres.js?v=0.59.3';
+import { creerNuit, corveeDe, corveeCourte } from './hud/nuit.js?v=0.59.3';
+import { creerCampagne } from './hud/campagne.js?v=0.59.3';
+import { creerCarnet, deux } from './hud/carnet.js?v=0.59.3';
+import { creerCarte } from './hud/carte.js?v=0.59.3';
+import { creerPertes } from './hud/pertes.js?v=0.59.3';
+import { creerBarreTemps } from './hud/temps.js?v=0.59.3';
+import { creerChargement } from './hud/chargement.js?v=0.59.3';
+import { creerRetours } from './hud/retours.js?v=0.59.3';
+import { creerInfobulle } from './hud/infobulle.js?v=0.59.3';
+import { SECTEURS } from './data/secteur.js?v=0.59.3';
+import { preparerAleatoire, ID_ALEATOIRE } from './generateur.js?v=0.59.3';
+import { creerLockstep, empreinteEtat } from './reseau/lockstep.js?v=0.59.3';
+import { nouveauCode, codeValide, publier, ecouter } from './reseau/relais.js?v=0.59.3';
+import { creerHote, creerInvite } from './reseau/lien.js?v=0.59.3';
 
 const JEU = 'cyclopeen';
 const $ = id => document.getElementById(id);
@@ -343,7 +344,7 @@ function demanderSecteur() {
       marquerSaison();
       $('carte-legende').textContent = `${SECTEURS[choisi].nom} : ${SECTEURS[choisi].resume}`;
       try {
-        if (!apercuSecteur) { const { creerVue3D } = await import('./apercu-3d.js?v=0.59.2'); apercuSecteur = await creerVue3D({ R, hote: $('carte-3d'), rotation: 0.12 }); apercuSecteur.surClic = () => agrandir(!d.classList.contains('agrandi')); }
+        if (!apercuSecteur) { const { creerVue3D } = await import('./apercu-3d.js?v=0.59.3'); apercuSecteur = await creerVue3D({ R, hote: $('carte-3d'), rotation: 0.12 }); apercuSecteur.surClic = () => agrandir(!d.classList.contains('agrandi')); }
         if (!ouvert) return;
         apercuSecteur.monter(choisi, SECTEURS[choisi], graine, { soldats: false, cadrer: true, saison: saisonDe() });
         apercuSecteur.activer(true);
@@ -1014,12 +1015,23 @@ function viseeAvion(x, y) {
   const dit = `${ap.eux} d'en face · ${ap.nous} des nôtres · avion −${Math.round(ap.pertes)} pv`;
   return `<path class="route" d="${route}"/><path class="ombre" d="${bande}"/><path class="zone" d="${bande}"/><path class="pointe" d="M${tx.toFixed(1)} ${ty.toFixed(1)}L${bx.toFixed(1)} ${by.toFixed(1)}L${ux.toFixed(1)} ${uy.toFixed(1)}"/><circle class="pt" cx="${ax.toFixed(1)}" cy="${ay.toFixed(1)}" r="3"/>${note(cx, cy, dit)}`;
 }
-// La route d'un char (v0.47.0) : un trait pointillé de son départ (l'arrière de nos lignes, sur la colonne visée) à l'objectif, la place de l'engin au bout
+// La route d'un char (v0.47.0 ; v0.59.3 : son vrai chemin, détour par les ponts compris, et l'engin à son point de départ, derrière notre dernière ligne) : un trait pointillé de ce départ à l'objectif
+// où l'engin se pose ; la recherche coûte ~50 ms : on la refait quand le point visé change de 2 m, et pas plus d'une fois tous les 120 ms
+let routeVisee = { cle: '', pts: null, t: 0 };
 function viseeChar(x, y) {
-  const a = arriereDe(B), y0 = a ? a[MOI] : y, [sx, sy] = rendu.versEcran(x, y0), [cx, cy] = rendu.versEcran(x, y);
-  const L = CHARS[CHAR_PAR_DEFAUT].longueur / 2, p = (dx, dy) => rendu.versEcran(x + dx, y + dy).map(v => v.toFixed(1)).join(' ');
-  const d = `M${p(-1.5, -L)}L${p(1.5, -L)}L${p(1.5, L)}L${p(-1.5, L)}Z`;
-  return `<path class="anneau" d="M${sx.toFixed(1)} ${sy.toFixed(1)}L${cx.toFixed(1)} ${cy.toFixed(1)}"/><path class="ombre" d="${d}"/><path class="zone" d="${d}"/><circle class="pt" cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="2"/>`;
+  const a = arriereDe(B), y0 = a ? a[MOI] : y, cle = `${Math.round(x / 2)},${Math.round(y / 2)},${Math.floor(B.etat.temps / 4)}`, t = performance.now();
+  if (routeVisee.cle !== cle && t - routeVisee.t > 120) routeVisee = { cle, pts: a ? routeChar(B, x, y0, x, y) : null, t };
+  const pts = [[x, y0], ...(routeVisee.pts ?? [[x, y]])], E = (px, py) => rendu.versEcran(px, py).map(v => v.toFixed(1)).join(' ');
+  // l'engin vu de dessus (6 m sur 2,1) posé en (cx, cy), le nez dans la direction (ux, uy)
+  const L = CHARS[CHAR_PAR_DEFAUT].longueur / 2, Lg = 1.05, boite = (cx, cy, ux, uy) => {
+    const c = (u, v) => E(cx + ux * u - uy * v, cy + uy * u + ux * v);
+    return `M${c(-L, -Lg)}L${c(L - 0.7, -Lg)}L${c(L, 0)}L${c(L - 0.7, Lg)}L${c(-L, Lg)}Z`;
+  };
+  const dir = (p, q) => { const d = Math.hypot(q[0] - p[0], q[1] - p[1]) || 1; return [(q[0] - p[0]) / d, (q[1] - p[1]) / d]; };
+  const [ux, uy] = dir(pts[0], pts[1] ?? pts[0]), [vx, vy] = dir(pts[Math.max(0, pts.length - 2)], pts[pts.length - 1]);
+  const depart = boite(pts[0][0], pts[0][1], ux, uy), arrivee = boite(x, y, vx, vy), route = 'M' + pts.map(([px, py]) => E(px, py)).join('L');
+  const [cx, cy] = rendu.versEcran(x, y);
+  return `<path class="anneau" d="${route}"/><path class="ombre" d="${depart}"/><path class="zone" d="${depart}"/><path class="ombre" d="${arrivee}"/><path class="zone" d="${arrivee}"/><circle class="pt" cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="2"/>`;
 }
 // La visée (v0.21.0) : de chaque régiment choisi au curseur une ligne, une croix au bout ; l'ordre à sec (`peutOrdonner`) dit ce qu'il occuperait
 function majVisee() {
@@ -1410,7 +1422,7 @@ startUpdateCheck({
 
 // ─── Mode debug (section 18) : chargé seulement avec ?debug=1 ──────────────
 if (DEBUG) {
-  const { installDebug, seedFromUrl } = await import('./lib/debug.js?v=0.59.2');
+  const { installDebug, seedFromUrl } = await import('./lib/debug.js?v=0.59.3');
   window.__seed = seedFromUrl() ?? undefined;
   installDebug({
     state: () => B && { ...horloge(B), effectifs: effectifs(B), pertes: B.etat.pertes, impacts: B.etat.impacts.length, enJeu: enJeu(), pause: loop.paused },

@@ -22,3 +22,13 @@ export const CHAR_SORTIE = 14;              // m : il naît à cette distance au
 export const CHAR_DEPART = 20;             // m : on ne vise pas à moins de cette distance de son point de départ
 // dégâts d'un obus tombé à sa portée : `base` × (1 − distance / (rayon du calibre × `zone`)) ; il est détruit à `pv`
 export const CHAR_OBUS = { zone: 0.8, base: { '75': 30, '155': 70, '220': 120 } };
+// la route du char (Jérôme, v0.59.3 : il contourne les fleuves et passe par les ponts qui le portent) et sa conduite
+export const CHAR_ROUTE = {
+  maille: 2,            // m : la grille de la recherche de chemin
+  marge: 1.5,           // m : le dégagement exigé de chaque côté du chemin (eau, trou, pont trop faible)
+  cratere: 4,           // coût d'une case à demi profonde (1 : le plat) : il la contourne s'il peut
+  arrivee: 2.5,         // m : à cette distance d'un point de son chemin, il vise le suivant
+  virage: 0.9,          // rad/s : sa vitesse de rotation
+  accel: 1.2,           // m/s² : démarrage et freinage sur le champ
+  accelRoute: 6,        // m/s² : sur la route
+};

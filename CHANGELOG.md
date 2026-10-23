@@ -1,5 +1,10 @@
 # Journal des versions
 
+## 0.59.3 — 2026-10-23
+- L'automne flamboie (orange, rouge, or) et les feuilles se voient à tous les zooms, d'un seul cube de loin
+- Les chars contournent les fleuves, passent par les ponts qui les portent, démarrent et tournent en douceur
+- La visée d'un char montre son vrai chemin et l'engin à son point de départ, derrière notre dernière ligne
+
 ## 0.59.2 — 2026-10-23
 - L'automne est plus orangé : les feuilles des arbres prennent plusieurs teintes (orange, ocre, rouille)
 

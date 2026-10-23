@@ -14,29 +14,29 @@
    La sauvegarde (photo) garde la graine, la liste compacte des impacts, l'état
    de la foule et les petites couches de logique ; jamais le relief : il se
    rejoue depuis la graine et les impacts (rejouerTerrain). */
-import { createRng, hash2 } from './lib/rng.js?v=0.59.2';
-import { impact, hydroLignes, etat as etatCase, vitesseEtat, vitesseCase, ETAT } from './terrain.js?v=0.59.2';
-import { creerArmee, ajouterSoldat, construireGrille, pasArmee, tuerDans, effrayer, compacter, photoArmee, restaurerArmee, b64, deB64, DENSITE, place } from './army.js?v=0.59.2';
-import { ligneSous } from './tranchees.js?v=0.59.2';
-import { terrainDuSecteur } from './secteur-terrain.js?v=0.59.2';
-import { detruirePont } from './eaux.js?v=0.59.2';
-import { calculerCouts, creerCacheChamps, dimensionsCouts, BLOC } from './champs.js?v=0.59.2';
-import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.59.2';
-import { preparerAleatoire, ID_ALEATOIRE } from './generateur.js?v=0.59.2';
-import { AVION, MITRAILLAGE } from './data/mitraillage.js?v=0.59.2';
-import { refusAvion, lancerAvion, avancerAvions, flotteDeDepart, reparerAvions } from './avions.js?v=0.59.2';
-import { CHAR, CHAR_RECHARGE, CHAR_SORTIE } from './data/chars.js?v=0.59.2';
-import { refusChar, lancerChar, degatsChars, avancerChars } from './chars.js?v=0.59.2';
-import { METEO, SAISONS, SAISON_DEFAUT, PREVISION_JUSTE, temperature } from './data/meteo.js?v=0.59.2';
-import { SECTEURS } from './data/secteur.js?v=0.59.2';
-import { REGIMENTS } from './data/lexique.js?v=0.59.2';
-import { STANCES, STANCE_DEFAUT } from './data/stances.js?v=0.59.2';
-import { grade } from './identite.js?v=0.59.2';
-import { corvees, rejouerTravaux } from './nuit.js?v=0.59.2';
+import { createRng, hash2 } from './lib/rng.js?v=0.59.3';
+import { impact, hydroLignes, etat as etatCase, vitesseEtat, vitesseCase, ETAT } from './terrain.js?v=0.59.3';
+import { creerArmee, ajouterSoldat, construireGrille, pasArmee, tuerDans, effrayer, compacter, photoArmee, restaurerArmee, b64, deB64, DENSITE, place } from './army.js?v=0.59.3';
+import { ligneSous } from './tranchees.js?v=0.59.3';
+import { terrainDuSecteur } from './secteur-terrain.js?v=0.59.3';
+import { detruirePont } from './eaux.js?v=0.59.3';
+import { calculerCouts, creerCacheChamps, dimensionsCouts, BLOC } from './champs.js?v=0.59.3';
+import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.59.3';
+import { preparerAleatoire, ID_ALEATOIRE } from './generateur.js?v=0.59.3';
+import { AVION, MITRAILLAGE } from './data/mitraillage.js?v=0.59.3';
+import { refusAvion, lancerAvion, avancerAvions, flotteDeDepart, reparerAvions } from './avions.js?v=0.59.3';
+import { CHAR, CHAR_RECHARGE, CHAR_SORTIE } from './data/chars.js?v=0.59.3';
+import { refusChar, lancerChar, degatsChars, avancerChars } from './chars.js?v=0.59.3';
+import { METEO, SAISONS, SAISON_DEFAUT, PREVISION_JUSTE, temperature } from './data/meteo.js?v=0.59.3';
+import { SECTEURS } from './data/secteur.js?v=0.59.3';
+import { REGIMENTS } from './data/lexique.js?v=0.59.3';
+import { STANCES, STANCE_DEFAUT } from './data/stances.js?v=0.59.3';
+import { grade } from './identite.js?v=0.59.3';
+import { corvees, rejouerTravaux } from './nuit.js?v=0.59.3';
 
 export const PAS = 1 / 30;                 // s de jeu par pas
 export const NOUS = 0, EUX = 1;
-const VERSION = 7;   // 7 : le rapport du jour (les sorties et les pertes d'avions) ; 6 : les avions de mitraillage (une passe tracée, des points de vie, une flotte) ; 5 : la forme des cratères (rond, lèvre jetée, éclats : les impacts rejoués changent) ; 2 : la graine d'identité ; 3 : la campagne et les relevés ; 4 : les numéros de campagne, un effectif par camp, le rythme de l'IA (campagne, lots 1 à 3)
+const VERSION = 8;   // 8 : le chemin et le cap des chars ; 7 : le rapport du jour (les sorties et les pertes d'avions) ; 6 : les avions de mitraillage (une passe tracée, des points de vie, une flotte) ; 5 : la forme des cratères (rond, lèvre jetée, éclats : les impacts rejoués changent) ; 2 : la graine d'identité ; 3 : la campagne et les relevés ; 4 : les numéros de campagne, un effectif par camp, le rythme de l'IA (campagne, lots 1 à 3)
 
 const ticksParHeure = R => Math.max(1, Math.round(R.jour.duree / (R.jour.heureFin - R.jour.heureDebut) / PAS));
 const ticksParJour = R => ticksParHeure(R) * (R.jour.heureFin - R.jour.heureDebut);
@@ -389,7 +389,7 @@ export function peutBarrage(B, cal, x, y, camp = NOUS, x2, y2) {
     const reste = ((camp === NOUS ? etat.batteries : etat.batteriesEux)[cal] ?? 0) - etat.temps;
     if (reste > 0) return { refus: `${nomBatterie(cal)} : encore ${Math.ceil(reste)} s.` };
   }
-  if (cal === CHAR) { const r = refusChar(etat, departChar(B, camp, x), x, y); if (r) return { refus: r }; }
+  if (cal === CHAR) { const r = refusChar(B, departChar(B, camp, x), x, y); if (r) return { refus: r }; }
   if (cal === AVION) {
     const r = refusAvion(B, camp, x, y, x2, y2); if (r.refus) return r;
     if (!Number.isFinite(x2 ?? 0) || (x2 !== undefined && x2 !== null && (x2 < Z.x0 || y2 < Z.y0 || x2 >= Z.x1 || y2 >= Z.y1))) return { refus: 'Hors du secteur.' };
@@ -410,7 +410,7 @@ export function ordonnerBarrage(B, cal, x, y, camp = NOUS, x2, y2) {
     const bat = camp === NOUS ? etat.batteries : (etat.batteriesEux ??= Object.fromEntries(NOMS_CALIBRES.map(c => [c, 0])));
     const reste = (bat[cal] ?? 0) - etat.temps;
     if (reste > 0) return { refus: `${nomBatterie(cal)} : encore ${Math.ceil(reste)} s.` };
-    if (cal === CHAR) { const r = refusChar(etat, departChar(B, camp, x), x, y); if (r) return { refus: r }; }
+    if (cal === CHAR) { const r = refusChar(B, departChar(B, camp, x), x, y); if (r) return { refus: r }; }
     if (cal === AVION) { const r = peutBarrage(B, cal, x, y, camp, x2, y2); if (r.refus) return r; }
     bat[cal] = etat.temps + C.recharge;
   }
