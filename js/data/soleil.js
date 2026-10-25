@@ -21,6 +21,11 @@ export const SOLEIL_COTE = { angle: 0.45, oscillation: 0.35 };
 export const COTES = { 'Soleil à gauche': 'gauche', 'Soleil à droite': 'droite', 'Se lève à gauche': 'lever-gauche', 'Se lève à droite': 'lever-droite' };
 export const SOLEIL_LEVER = { marge: 0.25 };
 
+// Le soleil du jeu (Jérôme, v0.67.3 : « active les ombres et les nuages dans le jeu », après la journée en dix secondes du labo) : il se lève à gauche et se couche à droite, l'ombre passe par la caméra à midi, sa
+// longueur suit l'élévation de la saison, un temps couvert efface les ombres ; les ombres du relief et les ombres de nuages sont allumées (`rendu.ombresRelief`, `rendu.ombresNuages`, réglés par main.js).
+// Les parois ne suivent pas le soleil dans le jeu (`parois: false` : la règle d'avant, sud, nord et est sombres) : pas encore décidé. Le labo garde ses réglages à lui (tout éteint au départ).
+export const SOLEIL_JEU = { cote: 'lever-gauche', saisonnier: true, meteo: true, parois: false };
+
 // Les ombres de nuages (labo) : des plaques d'ombre sur le sol, de la couleur de paroi de chaque case, par blocs de 2 m (le sol en voxels) qui dérivent avec le vent (`NUAGES_VENT`, m/s). `taches` : la part du sol
 // qu'elles couvrent selon le temps (0 à 1). Un temps couvert (`couvert`) n'a ni plaques ni ombres du soleil : la lumière est la même partout, l'ombre d'un homme ou d'un parapet s'efface.
 export const NUAGES = { sec: { taches: 0.3 }, beau: { taches: 0.2 }, canicule: { taches: 0.1 }, gel: { taches: 0.28 }, couvert: { couvert: true }, pluie: { couvert: true }, brouillard: { couvert: true }, neige: { couvert: true }, tempete: { couvert: true } };

@@ -121,7 +121,7 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
   const cielMeteo = new THREE.Color();
 
   // Les ombres du relief (labo « La lumière dans le relief », éteintes dans le jeu) : une case que le soleil ne voit pas prend la couleur de sa paroi dans la texture du sol ; le soleil du labo : saisons, azimut
-  let ombresRelief = false, ombresNuages = false, soleilLabo = null, ombreVu = null;
+  let ombresRelief = false, ombresNuages = false, soleilReglage = null, ombreVu = null;
   const ombres = creerOmbresRelief({ hauteurQ });
   const soleilCase = { x: 0, z: 0 }, ecriture = { ms: 0, n: 0, rangees: 0, max: 0, maxOmbre: 0 };      // mesure : la réécriture de la texture du sol
   let B = null, T = null, faux = null, fauxU = null;
@@ -650,11 +650,11 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
     vegetation.setTemps(tAnim); soldats.setTemps(tAnim);
     const t1 = performance.now();
     const hj = horloge(B);
-    temps.majSoleil(hj, soleilLabo);
+    temps.majSoleil(hj, soleilReglage);
     { const nu = ombresNuages ? NUAGES[hj.meteo] : null;             // l'ombre des nuages (labo) : le jour, par un temps à plaques
       solMat.uniforms.uNuage.value = nu?.taches && hj.phase === 'jour' ? 0.5 + (nu.taches - 0.5) * 0.55 : 0; solMat.uniforms.uTemps.value = tAnim; }
     { const sv = soldats.soleilUniform.value, n = Math.hypot(sv.x, sv.y);           // les parois selon le soleil (labo) ; la nuit (soleil nul), celles du jeu
-      solMat.uniforms.uSuivre.value = soleilLabo?.parois && n > 0.05 ? 1 : 0; if (n > 0.05) solMat.uniforms.uVersSoleil.value.set(-sv.x / n, -sv.y / n); }
+      solMat.uniforms.uSuivre.value = soleilReglage?.parois && n > 0.05 ? 1 : 0; if (n > 0.05) solMat.uniforms.uVersSoleil.value.set(-sv.x / n, -sv.y / n); }
     majSoldats();
     tAnim += dt;
     eclats.majEclats(dt); eclats.majCorbeaux(dt, tAnim); troncons.maj(dt);
@@ -695,8 +695,8 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
     set ombresRelief(v) { ombresRelief = !!v; solAttente = 0; },      // les ombres du relief sur le sol (labo)
     get ombresNuages() { return ombresNuages; },
     set ombresNuages(v) { ombresNuages = !!v; },                    // l'ombre des nuages sur le sol (labo)
-    get soleilLabo() { return soleilLabo; },
-    set soleilLabo(r) { soleilLabo = r; },                           // { saisonnier, azimut } : la course du soleil à essayer (labo)
+    get soleilReglage() { return soleilReglage; },
+    set soleilReglage(r) { soleilReglage = r; },                           // { saisonnier, azimut } : la course du soleil à essayer (labo)
     // vérification (tests, labo) : sur les rangées à jour, le masque incrémental est celui qu'un calcul neuf donne, et la texture du sol le dit (le dessus d'une case à l'ombre : la couleur de sa paroi)
     verifierOmbres() {
       const neuf = creerOmbresRelief({ hauteurQ }); neuf.attacher(T); neuf.maj(true, ombres.calcule, 99);

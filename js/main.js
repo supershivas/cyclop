@@ -45,6 +45,7 @@ import { preparerAleatoire, ID_ALEATOIRE } from './generateur.js?v=0.69.0';
 import { creerLockstep, empreinteEtat } from './reseau/lockstep.js?v=0.69.0';
 import { nouveauCode, codeValide, publier, ecouter } from './reseau/relais.js?v=0.69.0';
 import { creerHote, creerInvite } from './reseau/lien.js?v=0.69.0';
+import { SOLEIL_JEU } from './data/soleil.js?v=0.69.0';
 
 const JEU = 'cyclopeen';
 const $ = id => document.getElementById(id);
@@ -126,6 +127,7 @@ lockBrowserGestures($('ecran'));
 stopTypeahead();
 chargement.progres(0.5, 'Le moteur de rendu');
 const rendu = await creerRendu($('canvas'), { mesure: MESURE, ...(DEBUG && params.has('grades') ? { grades: params.get('grades') || null } : {}) });     // ?debug=1&grades=fanion|jumelles|galons|(vide) : essayer une autre variante des grades (v0.68.0) ; par défaut `galons`, le képi et les galons (v0.69.0)
+rendu.ombresRelief = true; rendu.ombresNuages = true; rendu.soleilReglage = { ...SOLEIL_JEU };      // la lumière du jeu : ombres du relief, nuages, un soleil qui se lève et se couche (Jérôme, v0.67.3)
 rendu.finesseDes = 4;      // le sol au demi-mètre à partir de 4 pixels par mètre (Jérôme, v0.52.3 ; au-dessous, tout dézoomé, il coûterait jusqu'à 3,4 fois plus de triangles)
 // les retours sur le champ : le fanion et la réponse des hommes d'un ordre en terrain libre, l'impact des obus en trois temps (v0.41.3)
 creerInfobulle({ $ });

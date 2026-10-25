@@ -259,7 +259,7 @@ function moteur(stage, { zoom = 3, pluie = false, gel = false, soldats = 600, cz
       appliquerLumiere = () => {
         if (!journee) { B.etat.sol.saison = lum.saison; B.etat.phase = 'jour'; }
         rendu.ombresRelief = lum.ombres; rendu.ombresNuages = lum.nuages;
-        rendu.soleilLabo = { saisonnier: lum.saisonnier, azimut: AZIMUTS[lum.azimut], cote: COTES[lum.azimut], parois: lum.parois, meteo: lum.meteo };
+        rendu.soleilReglage = { saisonnier: lum.saisonnier, azimut: AZIMUTS[lum.azimut], cote: COTES[lum.azimut], parois: lum.parois, meteo: lum.meteo };
         if (lum.fige) regarderAu(B, lum.heure, journee ? B.etat.meteo[B.etat.jour - 1] : 'sec');
       };
       appliquerLumiere();
