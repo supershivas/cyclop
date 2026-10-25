@@ -115,6 +115,7 @@ Autres : `DESIGN.md` (l'intention), `ROADMAP.md` (`docs/pistes-avancees.md` : le
   `bataille()`, `rendu()`, `fiche()`, `survol(x, y)`, `nuit()` : ouvre la nuit, `fin()` : la fin), `&seed=7`. F9 masque le panneau. Les
   coordonnées du mode debug sont celles du **secteur** (0..400, 0..300) : les marges
   s'ajoutent dans `main.js`.
+- `?debug=1&grades=fanion` (ou `jumelles`, `galons`) : les grades à l'écran (v0.68.0, au labo seulement : sans ce paramètre tous les soldats sont pareils).
 - `?soldats=8000` : une bataille de 8 000 soldats (les deux camps).
 - `?mesure=1` : chaque image attend la fin du dessin (lecture d'un pixel) ;
   `cyclopStats().ms.renduFini`. Sans lui, `rendu` est le temps côté jeu (comme

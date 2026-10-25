@@ -1,21 +1,65 @@
 // Les formes du rendu, construites à la main : un soldat (de la boîte à la silhouette), un arbre, un buisson. Pas d'état :
 // `THREE` et `col` (une couleur de la palette) viennent de creerRendu ; les soldats prennent aussi leurs attributs d'instance.
-import { ARBRES_FEUILLES } from '../data/arbres.js?v=0.67.3';
+import { ARBRES_FEUILLES } from '../data/arbres.js?v=0.68.1';
 
 export function creerGeometries(THREE, col) {
   // les faces d'une boîte qu'on voit d'ici : le dessus, le sud, l'est et l'ouest (jamais le nord ni le dessous)
-  function boiteVue(out, x0, x1, y0, y1, z0, z1, part, jambe = 0, dessusPart = part, bras = 0) {
-    const q = (a, b, c, d, k) => { out.p.push(...a, ...b, ...c, ...a, ...c, ...d); for (let n = 0; n < 6; n++) { out.k.push(k); out.j.push(jambe); out.b.push(bras); } };
+  // `masque` (v0.68.0, les grades) : les classes (bits 0 à 4, data/grades.js) pour lesquelles la boîte se dessine ; 31 : toutes, le soldat d'avant
+  function boiteVue(out, x0, x1, y0, y1, z0, z1, part, jambe = 0, dessusPart = part, bras = 0, masque = 31) {
+    const q = (a, b, c, d, k) => { out.p.push(...a, ...b, ...c, ...a, ...c, ...d); for (let n = 0; n < 6; n++) { out.k.push(k); out.j.push(jambe); out.b.push(bras); out.r.push(masque); } };
     q([x0, y1, z0], [x0, y1, z1], [x1, y1, z1], [x1, y1, z0], dessusPart);
     q([x0, y0, z1], [x1, y0, z1], [x1, y1, z1], [x0, y1, z1], part);
     q([x1, y0, z1], [x1, y0, z0], [x1, y1, z0], [x1, y1, z1], part);
     q([x0, y0, z0], [x0, y0, z1], [x0, y1, z1], [x0, y1, z0], part);
   }
-  function geometrieSoldat(style, attrsI) {   // attrsI : les attributs d'instance (position, camp, vitesse, tir) du rendu
-    const g = { p: [], k: [], j: [], b: [] };
+  // Les pièces des grades (v0.68.0 ; `GRADES` de data/grades.js les nomme) : chacune pose ses boîtes avec le masque des classes qui la portent.
+  // `loin` : elle se dessine aussi sur la boîte des zooms 3 (une silhouette) ; `fin` : seulement sur la silhouette complète (6 pixels par mètre et plus).
+  // Les signes sombres sont en terre (part 30), le fanion en os (31) ; les pièces de manche suivent le bras (balancier, épaule).
+  const PIECES = {
+    mat: { loin: true, f: (g, m) => { boiteVue(g, -0.05, 0.05, 1.8, 3.5, -0.05, 0.05, 30, 0, 30, 0, m); boiteVue(g, 0.05, 0.9, 3.2, 3.5, -0.025, 0.025, 31, 0, 31, 0, m); boiteVue(g, 0.05, 0.9, 2.9, 3.2, -0.025, 0.025, 30, 0, 30, 0, m); } },       // le fanion : deux bandes, os sur terre, qui se lisent sur le kaki comme sur le bleu
+    kepiSombre: { loin: true, f: (g, m) => { boiteVue(g, -0.21, 0.21, 1.6, 1.78, -0.21, 0.21, 30, 0, 30, 0, m); boiteVue(g, -0.16, 0.16, 1.58, 1.64, 0.2, 0.34, 30, 0, 30, 0, m); } },
+    kepiBande: { loin: true, f: (g, m) => { boiteVue(g, -0.2, 0.2, 1.7, 1.82, -0.2, 0.2, 0, 0, 0, 0, m); boiteVue(g, -0.22, 0.22, 1.56, 1.7, -0.22, 0.22, 30, 0, 30, 0, m); boiteVue(g, -0.16, 0.16, 1.54, 1.6, 0.21, 0.34, 30, 0, 30, 0, m); } },
+    manteau: { loin: true, f: (g, m) => { boiteVue(g, -0.32, 0.32, 0.25, 0.86, -0.21, 0.21, 0, 0, 0, 0, m); boiteVue(g, -0.33, 0.33, 0.25, 0.36, -0.22, 0.22, 30, 0, 30, 0, m); } },
+    jumelles: { f: (g, m) => { boiteVue(g, -0.14, 0.14, 0.98, 1.22, 0.15, 0.3, 7, 0, 7, 0, m); boiteVue(g, -0.12, -0.02, 1.0, 1.12, 0.3, 0.34, 30, 0, 30, 0, m); boiteVue(g, 0.02, 0.12, 1.0, 1.12, 0.3, 0.34, 30, 0, 30, 0, m); boiteVue(g, -0.27, 0.27, 1.3, 1.4, -0.18, 0.18, 7, 0, 7, 0, m); } },
+    carte: { f: (g, m) => boiteVue(g, -0.36, -0.2, 0.58, 0.96, -0.18, 0.18, 5, 0, 5, 0, m) },
+    pistolet: { f: (g, m) => boiteVue(g, 0.37, 0.43, 0.9, 1.2, -0.04, 0.04, 4, 0, 4, 2, m) },
+    galons2: { fin: true, f: (g, m) => { for (let n = 0; n < 2; n++) for (const s of [-1, 1]) boiteVue(g, s < 0 ? -0.365 : 0.225, s < 0 ? -0.225 : 0.365, 0.86 + n * 0.08, 0.91 + n * 0.08, -0.08, 0.08, 30, 0, 30, s, m); } },
+    galons3: { fin: true, f: (g, m) => { for (let n = 0; n < 3; n++) for (const s of [-1, 1]) boiteVue(g, s < 0 ? -0.365 : 0.225, s < 0 ? -0.225 : 0.365, 0.86 + n * 0.08, 0.91 + n * 0.08, -0.08, 0.08, 30, 0, 30, s, m); } },
+    chevrons1: { fin: true, f: (g, m) => boiteVue(g, -0.365, -0.225, 1.2, 1.26, -0.08, 0.08, 30, 0, 30, -1, m) },
+    chevrons2: { fin: true, f: (g, m) => { boiteVue(g, -0.365, -0.225, 1.2, 1.26, -0.08, 0.08, 30, 0, 30, -1, m); boiteVue(g, -0.365, -0.225, 1.1, 1.16, -0.08, 0.08, 30, 0, 30, -1, m); } },
+    brassard: { f: (g, m) => boiteVue(g, -0.375, -0.215, 1.1, 1.3, -0.09, 0.09, 30, 0, 30, -1, m) },
+    baudrier: { f: (g, m) => boiteVue(g, -0.26, 0.26, 1.04, 1.24, -0.16, 0.16, 30, 0, 30, 0, m) },
+    epaulette1: { f: (g, m) => boiteVue(g, -0.29, -0.1, 1.38, 1.47, -0.13, 0.13, 30, 0, 30, 0, m) },
+    epaulettes: { f: (g, m) => { boiteVue(g, -0.29, -0.1, 1.38, 1.47, -0.13, 0.13, 30, 0, 30, 0, m); boiteVue(g, 0.1, 0.29, 1.38, 1.47, -0.13, 0.13, 30, 0, 30, 0, m); } },
+  };
+  const masqueDe = (V, nom) => V.classes.reduce((m, c, k) => m | (c.pieces?.includes(nom) ? 1 << k : 0), 0);
+  // les pièces d'une classe d'une variante pour un style (`boite` : les `loin` ; `legere` : sans les `fin` ; sinon toutes) ; les attributs d'instance sont ceux des gradés seuls (position, camp, vitesse, tir, classe)
+  function geometrieGrades(style, V, attrsG, classe) {
+    const g = { p: [], k: [], j: [], b: [], r: [] };
+    for (const [nom, P] of Object.entries(PIECES)) {
+      const m = masqueDe(V, nom);
+      if (!(m & (1 << classe)) || (style === 'boite' && !P.loin) || (style === 'legere' && P.fin)) continue;
+      P.f(g, m);
+    }
+    const gi = new THREE.InstancedBufferGeometry();
+    gi.setAttribute('position', new THREE.Float32BufferAttribute(g.p, 3));
+    gi.setAttribute('aPart', new THREE.Float32BufferAttribute(g.k, 1));
+    gi.setAttribute('aJambe', new THREE.Float32BufferAttribute(g.j, 1));
+    gi.setAttribute('aBras', new THREE.Float32BufferAttribute(g.b, 1));
+    gi.setAttribute('aGr', new THREE.Float32BufferAttribute(g.r, 1));
+    gi.setAttribute('aPos', attrsG[0]); gi.setAttribute('aCamp', attrsG[1]); gi.setAttribute('aVit', attrsG[2]);
+    if (style !== 'boite') gi.setAttribute('aTir', attrsG[3]);
+    gi.setAttribute('aGrade', attrsG[4]);
+    gi.instanceCount = 0;
+    return gi;
+  }
+  // `V` : la variante des grades (data/grades.js) ; les classes qui portent l'arme de poing n'ont plus le fusil (`sansFusil`), la baïonnette qui dépasse du rang les trahissait
+  function geometrieSoldat(style, attrsI, V = null) {   // attrsI : les attributs d'instance (position, camp, vitesse, tir, [classe]) du rendu
+    const g = { p: [], k: [], j: [], b: [], r: [] };
+    const masqueFusil = V ? V.classes.reduce((m, c, k) => m & ~(c.sansFusil ? 1 << k : 0), 31) : 31;
     // l'ombre au sol vers le sud-est (la lumière vient du nord-ouest)
     // (y = 1 : le bout de l'ombre, déplacé par le shader selon le soleil)
-    g.p.push(-0.22, 0, 0, 0.22, 0, 0, 0.22, 1, 0, -0.22, 0, 0, 0.22, 1, 0, -0.22, 1, 0); for (let n = 0; n < 6; n++) { g.k.push(1); g.j.push(0); g.b.push(0); }
+    g.p.push(-0.22, 0, 0, 0.22, 0, 0, 0.22, 1, 0, -0.22, 0, 0, 0.22, 1, 0, -0.22, 1, 0); for (let n = 0; n < 6; n++) { g.k.push(1); g.j.push(0); g.b.push(0); g.r.push(31); }
     // (v0.27.0, au labo) `equipe` : la silhouette et son équipement (bottes, capote, ceinturon, cartouchières, gourde, mains, couverture roulée, baïonnette ; un casque et une moustache
     // par camp) ; `equipe-marche` : la même, dont les bras balancent à la marche (le nuanceur, `uBalance`). Les parties 7 (le cuir), 8 (les bottes) et 9 (les mains) sont nouvelles ;
     // une partie de 10 à 19 n'est dessinée que pour nous, de 20 à 29 que pour en face (le nuanceur la retire à l'autre camp).
@@ -27,7 +71,7 @@ export function creerGeometries(THREE, col) {
       boiteVue(g, -0.35, -0.24, 0.82, 1.4, -0.07, 0.07, 0, 0, 0, -1);                // les bras
       boiteVue(g, 0.24, 0.35, 0.82, 1.4, -0.07, 0.07, 0, 0, 0, 1);
       boiteVue(g, -0.16, 0.16, 1.4, 1.7, -0.14, 0.14, 6, 0, 2);                      // la tête, son dessus est le casque
-      boiteVue(g, 0.37, 0.42, 0.55, 1.95, -0.03, 0.03, 4, 0, 4, 2);                  // le fusil
+      boiteVue(g, 0.37, 0.42, 0.55, 1.95, -0.03, 0.03, 4, 0, 4, 2, masqueFusil);     // le fusil
     } else if (!membres) boiteVue(g, -0.25, 0.25, 0, 1.7, -0.175, 0.175, 0, 0, 2);          // la boîte ; son dessus, le casque
     else if (style !== 'legere') {
       if (eq) {
@@ -63,15 +107,17 @@ export function creerGeometries(THREE, col) {
         boiteVue(g, -0.15, 0.15, 1.6, 1.64, -0.22, -0.15, 22, 0, 22);                // … et son couvre-nuque
       }
     }
-    if (style !== 'legere' && (style === 'fusil' || sil || style === 'marche')) boiteVue(g, sil ? 0.37 : 0.26, sil ? 0.42 : 0.31, 0.55, 1.95, -0.03, 0.03, 4, 0, 4, sil ? 2 : 0);   // le fusil, en bandoulière ; à l'épaule quand il tire
-    if (eq) boiteVue(g, 0.385, 0.405, 1.95, 2.2, -0.012, 0.012, 4, 0, 4, 2);       // la baïonnette
+    if (style !== 'legere' && (style === 'fusil' || sil || style === 'marche')) boiteVue(g, sil ? 0.37 : 0.26, sil ? 0.42 : 0.31, 0.55, 1.95, -0.03, 0.03, 4, 0, 4, sil ? 2 : 0, masqueFusil);   // le fusil, en bandoulière ; à l'épaule quand il tire
+    if (eq) boiteVue(g, 0.385, 0.405, 1.95, 2.2, -0.012, 0.012, 4, 0, 4, 2, masqueFusil);       // la baïonnette
     if (sil || style === 'marche') boiteVue(g, -0.19, 0.19, 0.95, 1.38, -0.32, -0.15, 5);                       // le sac, dans le dos
     const gi = new THREE.InstancedBufferGeometry();
     gi.setAttribute('position', new THREE.Float32BufferAttribute(g.p, 3));
     gi.setAttribute('aPart', new THREE.Float32BufferAttribute(g.k, 1));
     gi.setAttribute('aJambe', new THREE.Float32BufferAttribute(g.j, 1));
     gi.setAttribute('aBras', new THREE.Float32BufferAttribute(g.b, 1));
+    gi.setAttribute('aGr', new THREE.Float32BufferAttribute(g.r, 1));
     gi.setAttribute('aPos', attrsI[0]); gi.setAttribute('aCamp', attrsI[1]); gi.setAttribute('aVit', attrsI[2]);
+    if (V && attrsI[4]) gi.setAttribute('aGrade', attrsI[4]);
     if ((sil || style === 'legere') && attrsI[3]) gi.setAttribute('aTir', attrsI[3]);   // (la boîte ne tire pas : l'attribut absent vaut 0)
     gi.instanceCount = 0;
     return gi;
@@ -236,5 +282,5 @@ export function creerGeometries(THREE, col) {
     boiteHaute(parts, 0.14, 0.7, 0.14, 0.05, 0.4, 2.1, 0.5); boiteHaute(parts, 0.12, 0.6, 0.12, 0.05, 0.4, 3.7, -0.6);         // deux branches cassées
     const out = new THREE.BufferGeometry(); out.setAttribute('position', positions(parts)); return out;
   }
-  return { boiteVue, geometrieSoldat, geometrieArbre, geometrieBuisson, geometrieBuissonVarie, geometrieTroncs, geometrieTroncLoin, geometrieFeuilles, geometrieAbattuLong };
+  return { boiteVue, geometrieSoldat, geometrieGrades, geometrieArbre, geometrieBuisson, geometrieBuissonVarie, geometrieTroncs, geometrieTroncLoin, geometrieFeuilles, geometrieAbattuLong };
 }

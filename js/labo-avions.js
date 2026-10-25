@@ -8,20 +8,20 @@
 // (français, 1917, biplan à moteur en ligne, deux mitrailleuses) ; le Breguet 14 (français, 1917, appareil de reconnaissance et de bombardement, biplan d'une quinzaine de mètres) ; le Gotha G.IV (allemand, 1917, bimoteur
 // de bombardement, trois hommes, ~24 m). Les envergures, longueurs et vitesses des autres sont approximatives ; les nombres de jeu sont des propositions. DESIGN.md : aucun compteur de victoires, pas d'« as » à glorifier ;
 // les pilotes ont un nom et un état (en vol, touché, abattu), rien de plus.
-import { PALETTE as P, ALERTES } from './palette.js?v=0.67.3';
-import { loadThree } from './three-lib.js?v=0.67.3';
-import { mourir } from './bataille.js?v=0.67.3';
-import { impact } from './terrain.js?v=0.67.3';
-import { hash2 } from './lib/rng.js?v=0.67.3';
-import { ZOOMS } from './rendu3d.js?v=0.67.3';
-import { el, svgEl, bouton, scene, maquette, texteSvg } from './labo-arcade.js?v=0.67.3';
-import { atelier } from './labo-chars.js?v=0.67.3';
+import { PALETTE as P, ALERTES } from './palette.js?v=0.68.1';
+import { loadThree } from './three-lib.js?v=0.68.1';
+import { mourir } from './bataille.js?v=0.68.1';
+import { impact } from './terrain.js?v=0.68.1';
+import { hash2 } from './lib/rng.js?v=0.68.1';
+import { ZOOMS } from './rendu3d.js?v=0.68.1';
+import { el, svgEl, bouton, scene, maquette, texteSvg } from './labo-arcade.js?v=0.68.1';
+import { atelier } from './labo-chars.js?v=0.68.1';
 
 const ROUGE = ALERTES.rouge;
 
 // ─── Les avions en volumes ──────────────────────────────────────────────────
 // L'avant est à +x, le haut à +y, la droite à +z. Un biplan paramétré (ou triplan), et le Gotha.
-import { biplan as biplanJeu, croixPlate } from './rendu/avions-modeles.js?v=0.67.3';
+import { biplan as biplanJeu, croixPlate } from './rendu/avions-modeles.js?v=0.68.1';
 const biplan = (A, o) => biplanJeu(A, { centre: ROUGE, ...o });
 const AVIONS = {
   // le chasseur français : un SPAD XIII, olive, cocardes

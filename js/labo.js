@@ -2,39 +2,40 @@
 // Chaque sujet utilise les mêmes modules que le jeu (terrain, apparence,
 // rendu three.js) : ce qu'on voit ici est ce que le jeu dessinera. Ajouter un
 // sujet ou une variante = ajouter une entrée dans GROUPES.
-import { afficherVersion } from './version-tag.js?v=0.67.3';
-import { mountLabo } from './lib/labo-shell.js?v=0.67.3';
-import { spriteCanvas, paletteToGPL, paletteToHex } from './lib/sprites.js?v=0.67.3';
-import { PALETTE, ROLES } from './palette.js?v=0.67.3';
-import { chargerContenu } from './design-store.js?v=0.67.3';
-import { tuile, ETAT } from './tuiles.js?v=0.67.3';
-import { creerTerrain, impact, hydroLignes, toucher } from './terrain.js?v=0.67.3';
-import { FORMES } from './cratere.js?v=0.67.3';
-import { CALIBRES } from './data/calibres.js?v=0.67.3';
-import { METEO } from './data/meteo.js?v=0.67.3';
-import { nouvelleBataille, avancer, ordonnerMarche, ordonnerBarrage, mourir, regarderAu, aube, horloge, ticksParJour } from './bataille.js?v=0.67.3';
-import { AZIMUTS, COTES } from './data/soleil.js?v=0.67.3';
-import { creerRendu, ZOOMS } from './rendu3d.js?v=0.67.3';
-import { hash2 } from './lib/rng.js?v=0.67.3';
-import { reglerVerdure } from './apparence.js?v=0.67.3';
-import { maquetteAssaut } from './labo-assaut.js?v=0.67.3';
-import { calquePlaques } from './labo-plaques.js?v=0.67.3';
-import { calqueBarre } from './labo-barre-temps.js?v=0.67.3';
-import { maquetteProjections, maquetteVisee } from './labo-projections.js?v=0.67.3';
-import { calqueBarreVie } from './labo-barre-vie.js?v=0.67.3';
-import { calqueClic } from './labo-clic-regiment.js?v=0.67.3';
-import { maquetteBoutons, calqueOrdre, calqueObus } from './labo-satisfaction.js?v=0.67.3';
-import { calqueEtiquette, calqueToast, maquetteCartes } from './labo-hud-ux.js?v=0.67.3';
-import { maquetteCampagne } from './labo-campagne.js?v=0.67.3';
-import { maquetteCaisses, maquetteRates, maquetteSapes } from './labo-arcade.js?v=0.67.3';
-import { maquetteChars } from './labo-chars.js?v=0.67.3';
-import { maquetteGaz } from './labo-gaz.js?v=0.67.3';
-import { maquetteAvions } from './labo-avions.js?v=0.67.3';
-import { maquettePonts, PONTS, NOMS_PONTS } from './labo-ponts.js?v=0.67.3';
-import { PONTS_JEU } from './data/ponts.js?v=0.67.3';
-import { JOURNAL } from './labo-journal.js?v=0.67.3';
-import { loadVersion } from './lib/app-update.js?v=0.67.3';
-import { calqueMoral } from './labo-moral.js?v=0.67.3';
+import { afficherVersion } from './version-tag.js?v=0.68.1';
+import { mountLabo } from './lib/labo-shell.js?v=0.68.1';
+import { spriteCanvas, paletteToGPL, paletteToHex } from './lib/sprites.js?v=0.68.1';
+import { PALETTE, ROLES } from './palette.js?v=0.68.1';
+import { chargerContenu } from './design-store.js?v=0.68.1';
+import { tuile, ETAT } from './tuiles.js?v=0.68.1';
+import { creerTerrain, impact, hydroLignes, toucher } from './terrain.js?v=0.68.1';
+import { FORMES } from './cratere.js?v=0.68.1';
+import { CALIBRES } from './data/calibres.js?v=0.68.1';
+import { METEO } from './data/meteo.js?v=0.68.1';
+import { nouvelleBataille, avancer, ordonnerMarche, ordonnerBarrage, mourir, regarderAu, aube, horloge, ticksParJour, rangDe } from './bataille.js?v=0.68.1';
+import { AZIMUTS, COTES } from './data/soleil.js?v=0.68.1';
+import { creerRendu, ZOOMS } from './rendu3d.js?v=0.68.1';
+import { placesCommandement } from './army.js?v=0.68.1';
+import { hash2 } from './lib/rng.js?v=0.68.1';
+import { reglerVerdure } from './apparence.js?v=0.68.1';
+import { maquetteAssaut } from './labo-assaut.js?v=0.68.1';
+import { calquePlaques } from './labo-plaques.js?v=0.68.1';
+import { calqueBarre } from './labo-barre-temps.js?v=0.68.1';
+import { maquetteProjections, maquetteVisee } from './labo-projections.js?v=0.68.1';
+import { calqueBarreVie } from './labo-barre-vie.js?v=0.68.1';
+import { calqueClic } from './labo-clic-regiment.js?v=0.68.1';
+import { maquetteBoutons, calqueOrdre, calqueObus } from './labo-satisfaction.js?v=0.68.1';
+import { calqueEtiquette, calqueToast, maquetteCartes } from './labo-hud-ux.js?v=0.68.1';
+import { maquetteCampagne } from './labo-campagne.js?v=0.68.1';
+import { maquetteCaisses, maquetteRates, maquetteSapes } from './labo-arcade.js?v=0.68.1';
+import { maquetteChars } from './labo-chars.js?v=0.68.1';
+import { maquetteGaz } from './labo-gaz.js?v=0.68.1';
+import { maquetteAvions } from './labo-avions.js?v=0.68.1';
+import { maquettePonts, PONTS, NOMS_PONTS } from './labo-ponts.js?v=0.68.1';
+import { PONTS_JEU } from './data/ponts.js?v=0.68.1';
+import { JOURNAL } from './labo-journal.js?v=0.68.1';
+import { loadVersion } from './lib/app-update.js?v=0.68.1';
+import { calqueMoral } from './labo-moral.js?v=0.68.1';
 
 document.documentElement.style.setProperty('--jeu-accent', ROLES.accent);
 const NOM = document.title.replace(/^Labo — /, ''); // le nom vient de la page (une apostrophe ne casse rien)
@@ -127,6 +128,28 @@ function coutCratere(nom) {
   return (coutsCratere[nom] = `Un obus (cases touchées, temps de impact() ici) — ${parts.join(' · ')}`);
 }
 
+// ─── La parade des grades (v0.68.0) : un régiment de chaque camp rangé en plein champ, face à face, à la place que le jeu donne à son commandement (`placesCommandement`) ───
+// 14 hommes de large, 5 rangs, un mètre et demi entre eux ; les hommes sont ceux du régiment (leurs rangs, leurs numéros) : seuls leurs places changent, la simulation attend (`vivant`)
+function parader(B, cx0, cy0) {
+  // au plus près du point demandé, loin des arbres (ils cachaient les rangs)
+  let cx = cx0, cy = cy0, mieux = 1e9;
+  for (let dx = -90; dx <= 90; dx += 6) for (let dy = -60; dy <= 60; dy += 6) {
+    const x = cx0 + dx, y = cy0 + dy, d = dx * dx + dy * dy;
+    if (d < mieux && !B.terrain.arbres.some(a => Math.abs(a.i - x) < 20 && Math.abs(a.j - y) < 20)) { mieux = d; cx = x; cy = y; }
+  }
+  const A = B.armee, COLS = 14, N = 70, ESP = 1.5, places = Array.from({ length: N }, (_, k) => k);
+  placesCommandement({ cols: COLS }, N).forEach((t, g) => { const a = places[g]; places[g] = places[t]; places[t] = a; });
+  for (const camp of [0, 1]) {
+    const reg = B.etat.regiments.find(r => r.camp === camp);
+    const ids = []; for (let i = 0; i < A.n; i++) if (A.reg[i] === reg.id && ids.length < N) ids.push(i);
+    ids.forEach((i, k) => {
+      const col = places[k] % COLS, rang = (places[k] - col) / COLS, lx = (col - (COLS - 1) / 2) * ESP;
+      A.x[i] = cx + lx; A.y[i] = cy + (camp === 0 ? 6 + rang * ESP : -6 - rang * ESP); A.vx[i] = 0; A.vy[i] = 0;
+    });
+  }
+  return [cx, cy];
+}
+
 // Une colline pour juger l'ombre portée (labo « La lumière dans le relief ») : un mamelon de `r` mètres de rayon et `h` mètres de haut (sommet plat, flancs raides), à `dx` et `dz` mètres du point visé (le haut en marches d'un mètre, comme le sol du jeu) ; rien n'est sauvegardé
 function poserColline(B, { dx = 0, dz = 0, r = 22, h = 9 }, cz) {
   const T = B.terrain, cx = B.etat.marges.x + 200 + dx, cy = B.etat.marges.y + cz + dz;
@@ -138,8 +161,7 @@ function poserColline(B, { dx = 0, dz = 0, r = 22, h = 9 }, cz) {
   }
 }
 
-// ─── Le moteur, en direct : le rendu du jeu sur une petite bataille ───
-function moteur(stage, { zoom = 3, pluie = false, gel = false, soldats = 600, cz = 185, camera = null, respiration = undefined, soldat = undefined, cadavre = undefined, morts = 0, effets = undefined, barrages = false, surLesArbres = false, vue = null, verdure = undefined, nuit = null, tombee = false, calque = null, bord = null, centre = null, finesse = 1, cratere = null, arbres = undefined, saison = null, jours = undefined, versLesArbres = false, buissons = undefined, versLesBuissons = false, lumiere = null, colline = null, journee = null } = {}) {
+function moteur(stage, { zoom = 3, pluie = false, gel = false, soldats = 600, cz = 185, camera = null, respiration = undefined, soldat = undefined, cadavre = undefined, morts = 0, effets = undefined, barrages = false, surLesArbres = false, vue = null, verdure = undefined, nuit = null, tombee = false, calque = null, bord = null, centre = null, finesse = 1, cratere = null, arbres = undefined, saison = null, jours = undefined, versLesArbres = false, buissons = undefined, versLesBuissons = false, lumiere = null, colline = null, journee = null, grades = null, parade = false } = {}) {
   reglerVerdure(verdure);                                   // le sol vert (apparence.js) : avant que le sol ne se peigne
   const boite = el('div'); boite.style.cssText = 'position:relative;width:100%;height:min(70vh,560px);overflow:hidden';
   const canvas = el('canvas'); canvas.style.cssText = 'position:absolute;left:0;top:0;image-rendering:pixelated';
@@ -176,6 +198,11 @@ function moteur(stage, { zoom = 3, pluie = false, gel = false, soldats = 600, cz
     );
   }
   stage.append(zooms);
+  // les grades (v0.68.0) : d'un bouton à un capitaine, d'un camp ou de l'autre, au zoom où on le lit
+  if (grades) stage.append(el('p', {}, ...[['Un capitaine · nous', 0], ['Un capitaine · en face', 1]].map(([nom, camp]) => el('button', { className: 'essai', textContent: nom, onclick: () => {
+    const B = ctx.B, A = B?.armee; if (!A) return;
+    for (let i = 0; i < A.n; i++) if (A.camp[i] === camp && rangDe(B, A.id[i], A.reg[i]) === 0) { rendu.vue.cx = A.x[i]; rendu.vue.cz = A.y[i]; if (rendu.vue.zoom < 4) rendu.vue.zoom = 5; return; }
+  } }))));
   let raf = 0, rendu = null, fini = false;
   (async () => {
     const B = nouvelleBataille(5, R, { soldats, jours: journee?.jours ?? jours, ...(journee ? { saison: journee.saison } : {}) });
@@ -196,7 +223,7 @@ function moteur(stage, { zoom = 3, pluie = false, gel = false, soldats = 600, cz
       B.etat.corps.forEach((c, k) => { if (k % 2) c[3] = B.etat.jour - 1; });
     }
     ordonnerMarche(B, B.etat.regiments.filter(r => r.camp === 0).slice(2, 6).map(r => r.id), B.etat.marges.x + 200, B.etat.marges.y + 175);
-    rendu = await creerRendu(canvas, { mesure: true, camera, respiration, soldat, cadavre, effets, bord, arbres, buissons: buissons ? {} : null });
+    rendu = await creerRendu(canvas, { mesure: true, camera, respiration, soldat, cadavre, effets, bord, arbres, buissons: buissons ? {} : null, grades });
     if (fini) { rendu.detruire(); return; }
     if (nuit) rendu.styleNuit = nuit;
     rendu.finesse = finesse;
@@ -205,6 +232,11 @@ function moteur(stage, { zoom = 3, pluie = false, gel = false, soldats = 600, cz
     if (vue) rendu.placerCamera(vue.yaw, vue.tangage);       // la caméra libre du jeu
     rendu.vue.zoom = zoom; rendu.vue.cx = centre ? centre[0] : B.etat.marges.x + 200; rendu.vue.cz = centre ? centre[1] : B.etat.marges.y + cz;   // (coordonnées du secteur, plus les marges ; `centre` : celles du terrain)
     ctx.rendu = rendu; ctx.B = B;
+    let vivant = !(grades || parade);                                      // les grades : la parade d'abord (la simulation attend), la bataille ensuite
+    if (grades || parade) {
+      [rendu.vue.cx, rendu.vue.cz] = parader(B, rendu.vue.cx, rendu.vue.cz);
+      stage.append(el('p', {}, el('button', { className: 'essai', textContent: 'La parade (arrêtée)', onclick: () => { [rendu.vue.cx, rendu.vue.cz] = parader(B, B.etat.marges.x + 200, B.etat.marges.y + cz); vivant = false; } }), el('button', { className: 'essai', textContent: 'La bataille (en direct)', onclick: () => { vivant = true; } })));
+    }
     if (versLesArbres) {                                       // le coin le plus boisé du secteur (l'arbre qui en a le plus dans ses 20 m)
       const T = B.terrain, m = B.etat.marges, dans = a => a.i > m.x + 20 && a.i < m.x + 380 && a.j > m.y + 20 && a.j < m.y + 280;
       let mieux = null, n = -1;
@@ -246,18 +278,20 @@ function moteur(stage, { zoom = 3, pluie = false, gel = false, soldats = 600, cz
         else ordonnerBarrage(B, cal, rendu.vue.cx + hash2(kBarrage, 3, 9) * 60 - 30, rendu.vue.cz - 10 + hash2(kBarrage, 4, 9) * 20, 1);
       }
       let ev = [];
-      if (journee && !lum.fige) {
-        // un jour de jeu en `secondes` secondes : plusieurs pas par image (au plus 150) ; la nuit est sautée (l'aube sans corvée), la dernière nuit s'arrête sur la fin de la bataille
-        accel += dt * ticksParJour(R) / journee.secondes;
-        for (let n = Math.min(150, Math.floor(accel)); n > 0 && B.etat.phase !== 'fin'; n--) { ev = ev.concat(avancer(B)); accel -= 1; if (B.etat.phase === 'nuit') aube(B); }
-        accel = Math.min(accel, 150);
-      } else ev = avancer(B);
+      if (vivant) {
+        if (journee && !lum.fige) {
+          // un jour de jeu en `secondes` secondes : plusieurs pas par image (au plus 150) ; la nuit est sautée (l'aube sans corvée), la dernière nuit s'arrête sur la fin de la bataille
+          accel += dt * ticksParJour(R) / journee.secondes;
+          for (let n = Math.min(150, Math.floor(accel)); n > 0 && B.etat.phase !== 'fin'; n--) { ev = ev.concat(avancer(B)); accel -= 1; if (B.etat.phase === 'nuit') aube(B); }
+          accel = Math.min(accel, 150);
+        } else ev = avancer(B);
+      }
       if (lumiere && lum.fige) regarderAu(B, lum.heure, journee ? B.etat.meteo[B.etat.jour - 1] : 'sec');       // l'heure reste celle choisie : le soleil ne bouge pas pendant la comparaison
       rendu.dessiner(dt, ev);
       if ((tReleve -= dt) < 0) {
         tReleve = 0.5;
         const st = rendu.stats;
-        releve.textContent = `Dessin : ${st.ms.renduFini} ms (rendu logiciel ici, attendu jusqu'au bout) · ${st.trianglesDessines} triangles · ${st.soldatsVus} soldats dessinés` + (lumiere ? ` · ombres du relief : ${rendu.ombresReliefEtat.enCours ? 'calcul…' : 'à jour'}, sol ${st.ms.sol} ms` : '') + (arbres || versLesArbres ? ` · arbres : ${Math.round(st.trianglesArbres)} triangles, tri ${st.msArbres} ms` : '') + (journee ? (h => ` · jour ${h.jour}/${h.jours}, ${h.heure} h ${String(h.minute).padStart(2, '0')}, ${METEO[h.meteo].nom}, ${h.saison}${lum.fige ? ' (heure figée)' : ''}${B.etat.phase === 'fin' ? ' · fin de la bataille' : ''}`)(horloge(B)) : '');
+        releve.textContent = `Dessin : ${st.ms.renduFini} ms (rendu logiciel ici, attendu jusqu'au bout) · ${st.trianglesDessines} triangles · ${st.soldatsVus} soldats dessinés` + (grades ? ` · ${st.gradesVus} gradés` : '') + (lumiere ? ` · ombres du relief : ${rendu.ombresReliefEtat.enCours ? 'calcul…' : 'à jour'}, sol ${st.ms.sol} ms` : '') + (arbres || versLesArbres ? ` · arbres : ${Math.round(st.trianglesArbres)} triangles, tri ${st.msArbres} ms` : '') + (journee ? (h => ` · jour ${h.jour}/${h.jours}, ${h.heure} h ${String(h.minute).padStart(2, '0')}, ${METEO[h.meteo].nom}, ${h.saison}${lum.fige ? ' (heure figée)' : ''}${B.etat.phase === 'fin' ? ' · fin de la bataille' : ''}`)(horloge(B)) : '');
       }
       raf = requestAnimationFrame(boucle);
     };
@@ -496,6 +530,12 @@ const GROUPES = [
       { title: 'Hiver : nus, puis de la neige', status: 'retenue', depuis: '0.52.6', note: 'Retenu (Jérôme, v0.53.1), en jeu. En hiver les arbres sont nus (les formes seules) ; les jours de neige (`horloge.neige`), de petites coiffes d\'os (`o`) se posent sur les bouts de branches et sur le sommet des troncs, flancs en brume (`r`). Essayez « Hiver » puis « Hiver · neige ». Le mort garde une coiffe sur son éclat. Arbres sous la neige : 12 600 / 4 500 / 3 600 triangles ; nus (hiver sans neige) : ceux de la variante « Six formes ».', render: s => moteur(s, { zoom: 4, soldats: 200, cz: 150, versLesArbres: true, arbres: { feuilles: true }, saison: 'neige' }) },
       { title: 'Printemps (une teinte, sans règle)', status: 'ancienne', depuis: '0.52.6', note: 'Non retenu (Jérôme, v0.53.1) : reste au labo, sans règle. Pas une saison du jeu (Jérôme, v0.52.6 : pas de printemps dans `SAISONS`) : seulement une teinte du feuillage, pour voir. Des touffes plus petites et clairsemées (60 %, 40 % sur un arbre sur deux), vertes sur des flancs d\'herbe morte. Le sol et la météo restent ceux de l\'automne.', render: s => moteur(s, { zoom: 4, soldats: 200, cz: 150, versLesArbres: true, arbres: { feuilles: true }, saison: 'printemps' }) },
       { title: 'Abattus : souche éclatée et tronc long', status: 'retenue', depuis: '0.52.6', note: 'Retenu (Jérôme, v0.53.1), en jeu. Un arbre abattu par un obus : une souche aux éclats, un tronc couché de 4,6 m (de 3,9 à 5,3 m selon l\'arbre) dans un sens tiré de la position, deux branches cassées. Du bois sombre, jamais de feuilles ; le feu reste à la souche. Des obus de 75 tombent sur les arbres ; l\'abattu d\'avant (une souche et un bâton dressé) est dans la première variante.', render: s => moteur(s, { zoom: 5, soldats: 200, cz: 150, versLesArbres: true, barrages: true, surLesArbres: true, arbres: { feuilles: true, abattus: 'longs' }, saison: 'automne' }) },
+    ] },
+    { id: 'grades', title: 'Les grades se voient', variants: [
+      { title: 'Aujourd\'hui : tous pareils', status: 'actuelle', depuis: '0.68.0', note: 'Le jeu tel qu\'il est : capitaine, sergent et soldat ont la même silhouette ; le grade ne se lit que sur la fiche. Les boutons du bas mènent à un capitaine, de chaque camp. La parade range deux régiments face à face, le commandement au milieu du premier rang (`placesCommandement`) : le jeu, lui, place encore le capitaine au bout du rang, c\'est une proposition à part (docs/pistes-avancees.md, piste 7).', render: s => moteur(s, { zoom: 5, soldats: 600, parade: true }) },
+      { title: 'Le fanion', depuis: '0.68.0', note: 'La silhouette d\'abord : se lit de loin. Le capitaine porte un fanion de commandement (deux bandes, os sur terre, à 3,5 m) qui dépasse de la troupe, la capote longue, le képi, l\'arme de poing à la place du fusil (plus de baïonnette qui dépasse du rang), trois galons aux manchettes, un corps de 6 % plus haut. Le lieutenant (et le sous-lieutenant) : képi, capote longue, pistolet, deux galons. Le sergent (et l\'adjudant) : un baudrier sombre en travers de la poitrine, deux chevrons. Le caporal : un brassard. Aux zooms 1 et 2 : le capitaine est un point de 4 pixels, le lieutenant de 3.', render: s => moteur(s, { zoom: 5, soldats: 600, grades: 'fanion' }) },
+      { title: 'Les jumelles et la carte', depuis: '0.68.0', note: 'Les accessoires de commandement : pas de mât, la troupe garde sa ligne. Le capitaine : képi, capote longue, jumelles sur la poitrine, étui de carte à la ceinture, pistolet, trois galons, 4 % plus haut. Le lieutenant : képi, étui de carte, pistolet, deux galons. Le sergent : baudrier et un chevron ; le caporal : brassard. Se lit à partir de 6 pixels par mètre ; de loin, la capote et le képi du capitaine.', render: s => moteur(s, { zoom: 5, soldats: 600, grades: 'jumelles' }) },
+      { title: 'Le képi et les galons', depuis: '0.68.0', note: 'L\'uniforme seul, le plus discret : le képi, les galons aux manchettes, les épaulettes. Le capitaine : capote longue, trois galons, 10 % plus haut ; le lieutenant : képi, deux galons ; le sergent : deux chevrons et des épaulettes ; le caporal : un chevron. Aucun accessoire : les petits signes ne se lisent que de près (12 et 16 pixels par mètre), de loin on voit le képi, la capote et la taille.', render: s => moteur(s, { zoom: 5, soldats: 600, grades: 'galons' }) },
     ] },
     { id: 'buissons-varies', title: 'Des buissons plus variés', variants: [
       { title: 'Les buissons d\'avant', status: 'ancienne', depuis: '0.62.0', note: 'Remplacé (Jérôme, v0.63.0) : reste au labo. Le jeu d\'avant : deux ou trois boîtes basses, dessus glaise (`g`) et flancs boue (`b`), trois tailles, tous pareils en toute saison ; aucun buisson aux zooms 1 et 2. Au coin le plus fourni du secteur ; les boutons du bas changent de saison.', render: s => moteur(s, { zoom: 4, soldats: 200, cz: 150, versLesBuissons: true, saison: 'automne' }) },

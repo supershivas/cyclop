@@ -2,6 +2,9 @@
 // Une entrée par version qui touche au labo, la plus récente en haut. `ref` : « sujet-Lettre » (la lettre est celle de la variante,
 // A étant l'actuelle). À chaque changement du labo : une entrée ici, avec `depuis` sur les variantes ajoutées ou changées (labo.js).
 export const JOURNAL = [
+  { version: '0.68.0', date: '2026-10-25', items: [
+    { genre: 'nouveau', texte: 'Les grades se voient : trois façons de montrer le capitaine, le lieutenant, le sergent et le caporal dans la troupe (le fanion, les jumelles et la carte, le képi et les galons), contre le jeu d\'aujourd\'hui ; rien n\'est encore en jeu', ref: 'grades-B' },
+  ] },
   { version: '0.67.2', date: '2026-10-25', items: [
     { genre: 'nouveau', texte: 'Le moral sur le champ : quatre façons de montrer qu\'un régiment est ébranlé ou en déroute sur le champ même (un liseré qui s\'effrite, un pennon, une trame, des chevrons de repli), sur le moteur en direct ; rien n\'est dans le jeu', ref: 'moral-terrain-A' },
   ] },

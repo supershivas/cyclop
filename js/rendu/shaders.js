@@ -100,16 +100,20 @@ export const fauxMat = {
 
 export const soldatMat = {
   v: `
-      attribute vec3 aPos; attribute float aCamp; attribute float aPart; attribute float aJambe; attribute float aVit; attribute float aBras; attribute vec2 aTir;
-      uniform float uT; uniform vec2 uSoleil; uniform float uBalance;
+      attribute vec3 aPos; attribute float aCamp; attribute float aPart; attribute float aJambe; attribute float aVit; attribute float aBras; attribute vec2 aTir; attribute float aGr; attribute float aGrade;
+      uniform float uT; uniform vec2 uSoleil; uniform float uBalance; uniform vec2 uEch;
       varying float vCamp; varying float vPart; varying vec2 vXZ; varying float vLong;
       void main() {
         // une partie de 10 à 19 n'est dessinée que pour nous, de 20 à 29 que pour en face (casque, moustache : v0.27.0, au labo)
         float cp = aCamp > 1.5 ? aCamp - 2.0 : aCamp, kp = aPart;
         bool cache = false;
-        if (kp >= 20.0) { kp -= 20.0; cache = cp < 0.5; } else if (kp >= 10.0) { kp -= 10.0; cache = cp > 0.5; }
+        if (kp >= 30.0) { /* les signes des grades (v0.68.0) : 30 la terre, 31 l'os, pour les deux camps */ } else if (kp >= 20.0) { kp -= 20.0; cache = cp < 0.5; } else if (kp >= 10.0) { kp -= 10.0; cache = cp > 0.5; }
+        // les grades (v0.68.0) : une boîte ne se dessine que pour les classes de son masque (aGr : un bit par classe, 31 pour toutes ; aGrade : la classe de l'homme, 0 sans grades) ;
+        // le corps d'un capitaine ou d'un lieutenant est plus haut (uEch.y, uEch.x), son ombre est celle de tous
+        if (mod(floor(aGr / exp2(aGrade)), 2.0) < 0.5) cache = true;
         vCamp = aCamp; vPart = kp; vLong = position.y;
-        vec3 p = position;
+        float ech = aGrade > 3.5 ? uEch.y : (aGrade > 2.5 ? uEch.x : 1.0);
+        vec3 p = (kp > 0.5 && kp < 1.5) ? position : position * ech;
         // la peur : un homme se tapit (aVit < 0 : −1 − sa vitesse), sauf son ombre
         bool tapi = aVit < 0.0;
         float vit = tapi ? 0.0 : aVit;
@@ -186,6 +190,8 @@ export const soldatMat = {
         else if (k == 6.0 || k == 9.0) c = uVisage;
         else if (k == 7.0) c = uCuir;
         else if (k == 8.0) c = uBotte;
+        else if (k == 30.0) c = uOmbre;               // les signes sombres des grades (galons, képi, baudrier)
+        else if (k == 31.0) c = uSel;                 // le fanion de commandement
         gl_FragColor = vec4(c, 1.0);
       }`,
 };
@@ -202,6 +208,14 @@ export const pointMat = {
         float camp = sel ? vCamp - 2.0 : vCamp;
         gl_FragColor = vec4(sel ? uSel : (camp > 0.5 ? uEux : uNous), 1.0);
       }`,
+};
+
+// Les gradés, aux zooms 1 et 2 (v0.68.0) : un point plus grand, de la taille de sa classe (aTaille, en pixels), même couleur et même ombre que les autres
+export const pointGradeMat = {
+  v: `
+      attribute float aCamp; attribute float aTaille; varying float vCamp;
+      void main() { vCamp = aCamp; gl_Position = projectionMatrix * viewMatrix * vec4(position + vec3(0.0, 1.2, 0.0), 1.0); gl_PointSize = aTaille; }`,
+  f: pointMat.f,
 };
 
 export const anMat = {

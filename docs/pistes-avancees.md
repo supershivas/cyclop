@@ -483,6 +483,14 @@ identique avant / après (graines 3, 7, 8). Test « relue au milieu », et outil
 
 **À trancher avant tout lot de règle** : lesquelles, avec quel ton ; pour chacune ce que ça coûte à la logique (une mine = des obus `220` à l'indice du calibre déjà là, une caisse = un état sauvegardé, un obus raté = un tirage de plus dans `tomber` : **déplace les parties d'avant**, donc `VERSION`) ; le jeu à deux (tout l'aléa vient de la graine et de l'état).
 
+### Piste 7 : le commandement visible (proposée avec les grades à l'écran, v0.68.0 ; rien n'est construit)
+
+Les grades se voient au labo (`docs/domaines/rendu.md`) ; ce que le commandement pourrait *faire* est resté de côté. Idées, de la moins chère à la plus chère :
+1. **Le commandement au milieu du premier rang** (`placesCommandement` de army.js, déjà écrit et testé, pas branché) : le capitaine, les lieutenants et l'adjudant ne sont plus au bout gauche du rang. Change la simulation (5 tests de nuit à refaire, toutes les références de rendu).
+2. **Un régiment dont le capitaine est tombé le montre** : le fanion manque, le moral le dit déjà (`R.moral.officier`) ; coût : zéro ligne de règle, un fanion de moins.
+3. **La portée du commandement** : un officier vivant à moins de 25 m calme la peur de ses hommes (une aura, comme les sergents qui « tiennent » la ligne). Une règle de `army.js`, à équilibrer par une mesure.
+4. **Les tireurs d'élite d'en face visent les officiers** (le fanion du capitaine est une cible lisible) : un risque de plus à peser contre l'ordre de marche.
+
 ### Annexe : comparatif des coûts (plan recommandé de chaque piste)
 
 | Piste | Plan recommandé | Sessions | Dépend de |

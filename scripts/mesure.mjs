@@ -4,6 +4,7 @@
 //   node scripts/mesure.mjs                 → 8 000 soldats (4 000 par camp)
 //   node scripts/mesure.mjs --soldats 2000 --secondes 20
 //   node scripts/mesure.mjs --arbres '{"feuilles":true}'   (les arbres variés du labo, v0.52.6 : `{}` les formes seules, `feuilles`, `chute`, `abattus: "longs"`)
+//   node scripts/mesure.mjs --grades fanion|jumelles|galons   (les grades à l'écran, v0.68.0 ; sans : tous les soldats pareils)
 //   node scripts/mesure.mjs --ombres 1 --zooms 3,4,5   (les ombres du relief du labo, v0.67 : éteintes dans le jeu)
 //   node scripts/mesure.mjs --ombres 1 --parois 1 --zooms 3,4,5   (avec les parois qui suivent le soleil)
 //   node scripts/mesure.mjs --nuages 1 --zooms 3,4,5   (les ombres de nuages du labo)
@@ -15,13 +16,13 @@
 // barrages en cours (le sol se refait).
 import { servir, lancerChromium, options } from '../outils/navigateur.mjs';
 
-const o = options(process.argv.slice(2), { soldats: '8000', secondes: '12', largeur: '1280', hauteur: '800', finesse: 'auto', zooms: '0,3,5', arbres: '', ombres: '', parois: '', nuages: '' });
+const o = options(process.argv.slice(2), { soldats: '8000', secondes: '12', largeur: '1280', hauteur: '800', finesse: 'auto', zooms: '0,3,5', arbres: '', ombres: '', parois: '', nuages: '', grades: '' });
 const srv = await servir('.');
 const nav = await lancerChromium();
 const page = await (await nav.newContext({ viewport: { width: +o.largeur, height: +o.hauteur } })).newPage();
 const erreurs = [];
 page.on('pageerror', e => erreurs.push(e.message));
-await page.goto(`${srv.base}index.html?debug=1&mesure=1&seed=7&soldats=${o.soldats}`);
+await page.goto(`${srv.base}index.html?debug=1&mesure=1&seed=7&soldats=${o.soldats}${o.grades ? `&grades=${o.grades}` : ''}`);
 await page.waitForTimeout(600);
 await page.click('#nouvelle');
 await page.waitForTimeout(1500);

@@ -1,21 +1,28 @@
 // Les hommes : les soldats (une boîte et son ombre ; de près la silhouette, plus loin une silhouette allégée ; aux zooms 1 et 2 un point), les anneaux des
 // régiments choisis ou survolés, les corps (un homme couché) et les tombes (un tertre et une croix). Tout est instancié et ne reçoit que ce qu'on voit.
 // Le dessin seulement. Les formes viennent de geometries.js, le GLSL de shaders.js.
-import * as SH from './shaders.js?v=0.67.3';
-import { creerGeometries } from './geometries.js?v=0.67.3';
+import * as SH from './shaders.js?v=0.68.1';
+import { creerGeometries } from './geometries.js?v=0.68.1';
+import { classeDuRang } from '../data/grades.js?v=0.68.1';
 
 // `THREE`, `scene`, `col`, `solUniforms` (`uSol`, `uTaille` : la texture du sol, que l'ombre d'un soldat reprend), `styleSoldat` (le style de près, comparé au labo),
-// `surface(x, z)` et `surfaceLisse(x, z)` (la hauteur du sol, lissée pour qui marche), `solY` (la hauteur moyenne du sol) et `POINTS_JUSQUA` (le zoom où un soldat n'est
+// `grades` (v0.68.0 : une variante de `GRADES`, data/grades.js, ou null : tous pareils) et `rangDe(B, id, reg)` (le rang d'un homme, bataille.js) ; `surface(x, z)` et `surfaceLisse(x, z)` (la hauteur du sol, lissée pour qui marche), `solY` (la hauteur moyenne du sol) et `POINTS_JUSQUA` (le zoom où un soldat n'est
 // plus qu'un point) viennent de creerRendu ; `bataille()` et `vide()` changent ; `tirs()` rend la pose des tireurs et le bond des soufflés (eclats.js).
-export function creerSoldats({ THREE, scene, col, solUniforms, styleSoldat, cadavre = 'planche', surface, surfaceLisse, solY: SOL_Y, POINTS_JUSQUA, bataille, vide, tirs }) {
+export function creerSoldats({ THREE, scene, col, solUniforms, styleSoldat, grades = null, rangDe = null, cadavre = 'planche', surface, surfaceLisse, solY: SOL_Y, POINTS_JUSQUA, bataille, vide, tirs }) {
   // ─── Les soldats ───
   // Une boîte de 0,5 × 1,7 × 0,35 m et son ombre ; de près (DETAIL_DES pixels par mètre), selon le style
   // (`soldat` de creerRendu, comparé au labo) : jambes, tête, casque, fusil, sac, et les jambes qui marchent.
   // Les parties : 0 la vareuse (la couleur du camp), 1 l'ombre, 2 le casque (l'os pour les choisis),
   // 3 les jambes (bandes molletières), 4 le fusil, 5 le sac, 6 le visage.
   const { geometrieSoldat: formeSoldat } = creerGeometries(THREE, col);
-  const geometrieSoldat = style => formeSoldat(style, attrsI);
+  const geometrieSoldat = style => formeSoldat(style, attrsI, grades);
+  const { geometrieGrades: formeGrades } = creerGeometries(THREE, col);
   const CAPS = new Float32Array(1 << 16);                    // le cap de chaque homme (par numéro : les indices bougent quand les morts sont retirés) : l'angle de son regard (NaN : pas encore vu, il part tourné vers l'ennemi)
+  // Les gradés (v0.68.0) : leurs pièces (képi, fanion, galons…) sont des maillages à part, un par classe (une instance par gradé de cette classe seulement : un homme sur quatre
+  // en tout, et chaque instance ne porte que les pièces de sa classe), avec les mêmes attributs que le corps ; le corps, lui, ne change que par la classe (la taille) et le fusil que
+  // les officiers n'ont plus. Rien d'autre à dessiner pour un soldat ordinaire. Aux zooms 1 et 2, un seul tampon de points de tous les gradés.
+  const PART_CLASSE = [0, 0.2, 0.12, 0.05, 0.03];                                   // la part de la capacité de l'armée que chaque classe peut prendre (le caporal pour six hommes, le sergent pour douze…)
+  let GR = null, gpPos = null, gpCamp = null, gpTaille = null, attrsGP = null, gPoints = null, classeArr = null, capGP = 0;
   let cap = 0, posArr = null, campArr = null, vitArr = null, tirArr = null, soldatsInst = null, soldatsDetail = null, soldatsLeger = null, soldatsPoints = null, attrsI = null, attrsP = null;
   const TAPI = 0.5;                        // la peur au-delà de laquelle un homme se tapit (le dessin seulement ; on ne tire plus à 0,85)
   const LEGER_DES = 4;                     // dès 4 pixels par mètre : la silhouette allégée (corps, tête, bras, fusil : ~50 triangles au lieu de ~74 ; Jérôme, v0.17.0)
@@ -25,6 +32,7 @@ export function creerSoldats({ THREE, scene, col, solUniforms, styleSoldat, cada
     uniforms: { uNous: { value: col('n') }, uEux: { value: col('x') }, uOmbre: { value: col('t') }, uSel: { value: col('o') },
       uJambes: { value: col('s') }, uFusil: { value: col('t') }, uSac: { value: col('g') }, uVisage: { value: col('h') }, uCuir: { value: col('b') }, uBotte: { value: col('t') }, uT: { value: 0 },
       uBalance: { value: styleSoldat === 'equipe-marche' ? 1 : 0 },
+      uEch: { value: new THREE.Vector2(grades?.classes[3].echelle ?? 1, grades?.classes[4].echelle ?? 1) },
       uSol: solUniforms.uSol, uTaille: solUniforms.uTaille,
       uSoleil: { value: new THREE.Vector2(0.5, 0.6) } },
     vertexShader: SH.soldatMat.v,
@@ -36,6 +44,8 @@ export function creerSoldats({ THREE, scene, col, solUniforms, styleSoldat, cada
     vertexShader: SH.pointMat.v,
     fragmentShader: SH.pointMat.f,
   });
+  // (créé au premier besoin : un objet de plus change les tirages d'identifiants de three, donc les images de référence ; voir le piège des feuilles dans docs/domaines/rendu.md)
+  let pointGradeMat = null;
   // Le contour des régiments choisis (Jérôme, v0.21.0) : un anneau d'os, liseré de terre, au pied de chaque homme, à tous les zooms
   // (aux zooms 1 et 2, où un homme n'est qu'un point, c'est lui qui le montre) ; sous les soldats, sans test de profondeur.
   // Le survol (v0.21.1) : le régiment sous la souris (ou sous un bouton du HUD), tous ses hommes, d'un anneau à la couleur de son camp (celui des choisis est d'os).
@@ -53,9 +63,11 @@ export function creerSoldats({ THREE, scene, col, solUniforms, styleSoldat, cada
       if (soldatsDetail) { scene.remove(soldatsDetail); soldatsDetail.geometry.dispose(); }
       if (soldatsLeger) { scene.remove(soldatsLeger); soldatsLeger.geometry.dispose(); }
     }
+    if (GR) { for (const c of GR) if (c) { scene.remove(c.inst, c.leger, c.detail); for (const m of [c.inst, c.leger, c.detail]) m.geometry.dispose(); } scene.remove(gPoints); gPoints.geometry.dispose(); GR = gPoints = null; }
     cap = capacite;
     posArr = new Float32Array(cap * 3); campArr = new Float32Array(cap); vitArr = new Float32Array(cap); tirArr = new Float32Array(cap * 2);
     attrsI = [new THREE.InstancedBufferAttribute(posArr, 3), new THREE.InstancedBufferAttribute(campArr, 1), new THREE.InstancedBufferAttribute(vitArr, 1), new THREE.InstancedBufferAttribute(tirArr, 2)];
+    if (grades) { classeArr = new Float32Array(cap); attrsI.push(new THREE.InstancedBufferAttribute(classeArr, 1)); }
     attrsI.forEach(a => a.setUsage(THREE.DynamicDrawUsage));
     soldatsInst = new THREE.Mesh(geometrieSoldat('boite'), soldatMat); soldatsInst.frustumCulled = false; soldatsInst.renderOrder = 2;
     soldatsDetail = styleSoldat === 'boite' ? null : new THREE.Mesh(geometrieSoldat(styleSoldat), soldatMat);
@@ -68,6 +80,26 @@ export function creerSoldats({ THREE, scene, col, solUniforms, styleSoldat, cada
     gp.setDrawRange(0, 0);
     soldatsPoints = new THREE.Points(gp, pointMat); soldatsPoints.frustumCulled = false; soldatsPoints.renderOrder = 2;
     scene.add(soldatsInst, soldatsPoints);
+    if (grades) {
+      pointGradeMat ??= new THREE.ShaderMaterial({ uniforms: pointMat.uniforms, vertexShader: SH.pointGradeMat.v, fragmentShader: SH.pointGradeMat.f });
+      GR = [null];
+      for (let c = 1; c <= 4; c++) {
+        const n = Math.ceil(cap * PART_CLASSE[c]) + 64, G = { n, k: 0, pos: new Float32Array(n * 3), camp: new Float32Array(n), vit: new Float32Array(n), tir: new Float32Array(n * 2), cl: new Float32Array(n).fill(c) };
+        G.attrs = [new THREE.InstancedBufferAttribute(G.pos, 3), new THREE.InstancedBufferAttribute(G.camp, 1), new THREE.InstancedBufferAttribute(G.vit, 1), new THREE.InstancedBufferAttribute(G.tir, 2), new THREE.InstancedBufferAttribute(G.cl, 1)];
+        G.attrs.forEach(a => a.setUsage(THREE.DynamicDrawUsage));
+        const mesh = style => { const m = new THREE.Mesh(formeGrades(style, grades, G.attrs, c), soldatMat); m.frustumCulled = false; m.renderOrder = 2.1; scene.add(m); return m; };
+        G.inst = mesh('boite'); G.leger = mesh('legere'); G.detail = mesh(styleSoldat === 'boite' ? 'silhouette' : styleSoldat);
+        GR.push(G);
+      }
+      capGP = Math.ceil(cap * 0.4) + 64;
+      gpPos = new Float32Array(capGP * 3); gpCamp = new Float32Array(capGP); gpTaille = new Float32Array(capGP);
+      attrsGP = [new THREE.BufferAttribute(gpPos, 3), new THREE.BufferAttribute(gpCamp, 1), new THREE.BufferAttribute(gpTaille, 1)];
+      attrsGP.forEach(a => a.setUsage(THREE.DynamicDrawUsage));
+      const gg = new THREE.BufferGeometry();
+      gg.setAttribute('position', attrsGP[0]); gg.setAttribute('aCamp', attrsGP[1]); gg.setAttribute('aTaille', attrsGP[2]);
+      gg.setDrawRange(0, 0);
+      gPoints = new THREE.Points(gg, pointGradeMat); gPoints.frustumCulled = false; gPoints.renderOrder = 2.1; scene.add(gPoints);
+    }
     anGeo = new THREE.BufferGeometry(); anGeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(cap * 3), 3).setUsage(THREE.DynamicDrawUsage)); anGeo.setDrawRange(0, 0);
     anGeo.setAttribute('aTon', new THREE.BufferAttribute(new Float32Array(cap), 1).setUsage(THREE.DynamicDrawUsage));
     anneaux = new THREE.Points(anGeo, anMat); anneaux.frustumCulled = false; anneaux.renderOrder = 1.5; anneaux.visible = false;
@@ -233,7 +265,8 @@ export function creerSoldats({ THREE, scene, col, solUniforms, styleSoldat, cada
   function maj({ x0, x1, z0, z1, e, p, choisis }) {
     const B = bataille();
     const A = B.armee, n = A.n;
-    let k = 0, ka = 0;
+    let k = 0, ka = 0, kg = 0;
+    if (grades) for (let c = 1; c <= 4; c++) GR[c].k = 0;
     const an = anGeo.attributes.position.array, anTon = anGeo.attributes.aTon.array;
     const { tirVal, tirAng, volT, volH, volD } = tirs(), regs = B.etat.regiments;
     for (let i = 0; i < n; i++) {
@@ -254,6 +287,19 @@ export function creerSoldats({ THREE, scene, col, solUniforms, styleSoldat, cada
       let d = (marche ? Math.atan2(vx, vz) : ennemi) - CAPS[id]; d -= Math.round(d / (2 * Math.PI)) * 2 * Math.PI;
       CAPS[id] += d * (marche ? 0.3 : 0.1);
       tirArr[k * 2 + 1] = i < tirVal.length && tirVal[i] > 0 ? tirAng[i] : CAPS[id];
+      if (grades) {
+        // la classe de son rang (celui de sa création ou de sa promotion : un mort retiré de l'armée ne laisse rien ; un promu change de dessin à l'image suivante)
+        const classe = classeDuRang(rangDe(B, A.id[i], A.reg[i]));
+        classeArr[k] = classe;
+        const G = classe > 0 ? GR[classe] : null;
+        if (G && G.k < G.n && kg < capGP) {
+          const q = G.k++;
+          G.pos[q * 3] = x; G.pos[q * 3 + 1] = posArr[k * 3 + 1]; G.pos[q * 3 + 2] = y;
+          G.camp[q] = campArr[k]; G.vit[q] = vitArr[k]; G.tir[q * 2] = tirArr[k * 2]; G.tir[q * 2 + 1] = tirArr[k * 2 + 1];
+          gpPos[kg * 3] = x; gpPos[kg * 3 + 1] = posArr[k * 3 + 1]; gpPos[kg * 3 + 2] = y; gpCamp[kg] = campArr[k]; gpTaille[kg] = grades.classes[classe].points ?? 2;
+          kg++;
+        }
+      }
       k++;
     }
     anGeo.setDrawRange(0, ka); anGeo.attributes.position.needsUpdate = true; anGeo.attributes.aTon.needsUpdate = true; anMat.uniforms.uTaille.value = Math.max(5, Math.round(p * 1.5));
@@ -265,11 +311,23 @@ export function creerSoldats({ THREE, scene, col, solUniforms, styleSoldat, cada
     for (const a of points ? attrsP : attrsI) { a.clearUpdateRanges(); a.addUpdateRange(0, k * a.itemSize); a.needsUpdate = true; }
     soldatsPoints.geometry.setDrawRange(0, k);
     soldatsInst.geometry.instanceCount = k;
+    if (grades) {
+      for (let c = 1; c <= 4; c++) {
+        const G = GR[c];
+        if (!vide()) { G.inst.visible = !points && !detail && !leger; G.leger.visible = !!leger; G.detail.visible = !!detail; }
+        for (const m of [G.inst, G.leger, G.detail]) m.geometry.instanceCount = G.k;
+        if (!points) for (const a of G.attrs) { a.clearUpdateRanges(); a.addUpdateRange(0, G.k * a.itemSize); a.needsUpdate = true; }
+      }
+      if (!vide()) gPoints.visible = points;
+      if (points) for (const a of attrsGP) { a.clearUpdateRanges(); a.addUpdateRange(0, kg * a.itemSize); a.needsUpdate = true; }
+      gPoints.geometry.setDrawRange(0, kg);
+      gradesVus = kg;
+    }
     vus = k;
     majCorps(x0, x1, z0, z1, e, points, p);
     majTombes(x0, x1, z0, z1, e, points);
   }
-  let vus = 0;
+  let vus = 0, gradesVus = 0;
 
   return {
     soleilUniform: soldatMat.uniforms.uSoleil,                    // le bout de l'ombre d'un mètre de hauteur (temps.js le règle, le nuanceur le lit)
@@ -278,6 +336,7 @@ export function creerSoldats({ THREE, scene, col, solUniforms, styleSoldat, cada
     maj,
     survoler(reg) { survolReg = reg; },                            // le régiment qu'un anneau à la couleur de son camp désigne
     get legere() { return legerActif; }, set legere(v) { legerActif = !!v; },     // la silhouette allégée (la mesure du coût l'éteint)
+    get gradesVus() { return gradesVus; },                          // les gradés dessinés (pour les stats et le labo)
     get vus() { return vus; },                                    // les soldats dessinés (pour les stats)
   };
 }

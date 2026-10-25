@@ -25,8 +25,8 @@
      (rng.js), pour que la même graine rejoue la même bataille.
 
    Logique pure : aucun DOM. Le rendu lit les tableaux (rendu3d.js). */
-import { hauteurQ, vitesseCase } from './terrain.js?v=0.67.3';
-import { ligneY } from './tranchees.js?v=0.67.3';
+import { hauteurQ, vitesseCase } from './terrain.js?v=0.68.1';
+import { ligneY } from './tranchees.js?v=0.68.1';
 
 export const GRILLE = 2;           // m : cases de voisinage
 export const DENSITE = 8;          // m : carrés de densité (tir)
@@ -94,6 +94,16 @@ export function place(o, slot, out) {
   out[0] = o.x - o.fy * lx - o.fx * ly;
   out[1] = o.y + o.fx * lx - o.fy * ly;
   return out;
+}
+
+/* Les places du commandement dans la formation (v0.68.0, « les grades se voient ») : le capitaine au milieu du premier rang (contre le parapet, en tranchée),
+   les deux lieutenants au quart et aux trois quarts du même rang, l'adjudant derrière le capitaine ; `n` : l'effectif de la formation. Les gradés se retrouvent
+   donc là où l'œil les cherche, au lieu du coin gauche du rang. [slot du rang 0, 1, 2, 3 (identite.js)] ; une formation trop petite en garde le moins possible. */
+export function placesCommandement(o, n) {
+  const cols = o.cols, rangs = o.trace ? o.trace.rangs : Math.ceil(n / cols);
+  const at = (c, r) => Math.min(n - 1, o.trace ? c * rangs + r : r * cols + c);
+  const m = Math.floor(cols / 2);
+  return [at(m, 0), at(Math.round((cols - 1) / 4), 0), at(Math.round((cols - 1) * 3 / 4), 0), rangs > 1 ? at(m, 1) : at(Math.min(cols - 1, m + 1), 0)];
 }
 
 const pl = [0, 0];

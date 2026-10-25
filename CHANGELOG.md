@@ -1,8 +1,11 @@
 # Journal des versions
 
-## 0.67.3 — 2026-10-25
+## 0.68.1 — 2026-10-25
 - Des ombres sur le relief (parapets, cratères, tranchées) et des ombres de nuages qui dérivent sur le champ
 - Le soleil se lève à gauche et se couche à droite ; par temps couvert, plus d'ombres
+
+## 0.68.0 — 2026-10-25
+- Le labo propose trois façons de montrer les grades dans la troupe (le fanion, les jumelles et la carte, le képi et les galons) ; rien n'est encore changé dans la partie
 
 ## 0.67.2 — 2026-10-25
 - Le bord de la carte ne montre plus de ligne noire au-dessus d'un lac
