@@ -1,8 +1,8 @@
 // Ce que l'état des tronçons montre sur le terrain : les fanions (à la couleur de celui qui tient le tronçon, déchirés quand l'autre
 // camp y est entré), le clignotement d'un ordre et la surbrillance de la visée, les ouvrages des tranchées (traverses, sacs de terre,
 // fil de fer, portes d'abri). Le dessin seulement : tout se lit de l'état, rien n'en est sauvegardé.
-import { PALETTE } from '../palette.js?v=0.68.0';
-import { ligneY } from '../tranchees.js?v=0.68.0';
+import { PALETTE } from '../palette.js?v=0.69.0';
+import { ligneY } from '../tranchees.js?v=0.69.0';
 
 // `THREE`, `scene`, `col` (une couleur de la palette), `surface(x, z)` (la hauteur du sol), `projeter()` (le centre de la vue et les pixels par mètre),
 // `vue`, `zooms` viennent de creerRendu ; `bataille()`, `tAnim()` (le temps du dessin), `vide()` (rien n'est dessiné) et `survolTroncons()`

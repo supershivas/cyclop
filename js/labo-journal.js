@@ -2,6 +2,9 @@
 // Une entrée par version qui touche au labo, la plus récente en haut. `ref` : « sujet-Lettre » (la lettre est celle de la variante,
 // A étant l'actuelle). À chaque changement du labo : une entrée ici, avec `depuis` sur les variantes ajoutées ou changées (labo.js).
 export const JOURNAL = [
+  { version: '0.69.0', date: '2026-10-25', items: [
+    { genre: 'mis-a-jour', texte: 'Les grades se voient : « Le képi et les galons » est retenu et en jeu, avec un petit C au-dessus du capitaine ; le fanion, les jumelles et la carte passent en non retenus', ref: 'grades-D' },
+  ] },
   { version: '0.68.0', date: '2026-10-25', items: [
     { genre: 'nouveau', texte: 'Les grades se voient : trois façons de montrer le capitaine, le lieutenant, le sergent et le caporal dans la troupe (le fanion, les jumelles et la carte, le képi et les galons), contre le jeu d\'aujourd\'hui ; rien n\'est encore en jeu', ref: 'grades-B' },
   ] },

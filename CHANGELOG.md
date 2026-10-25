@@ -1,5 +1,10 @@
 # Journal des versions
 
+## 0.69.0 — 2026-10-25
+- Le képi et les galons sont en jeu, avec un C au-dessus du capitaine ; le fusil pointe vers l'avant quand on tire ; chaque soldat a sa taille et sa largeur
+- La marche est plus vive, les soldats se battent à la baïonnette au corps à corps, et la fiche montre tir, force, endurance et calme
+- Les soldats ne passent plus sous les ponts
+
 ## 0.68.0 — 2026-10-25
 - Le labo propose trois façons de montrer les grades dans la troupe (le fanion, les jumelles et la carte, le képi et les galons) ; rien n'est encore changé dans la partie
 
