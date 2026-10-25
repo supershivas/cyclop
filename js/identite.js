@@ -60,3 +60,13 @@ export function prochainGrade(camp, rang) {
 // Les mots des jauges de la fiche (v0.35.0), aux mêmes seuils que `etatEnMots`
 export const peurEnMots = p => p > 0.85 ? 'terrifié' : p > 0.55 ? 'a peur' : p > 0.25 ? 'inquiet' : 'calme';
 export const fatigueEnMots = f => f > 0.75 ? 'épuisé' : f > 0.4 ? 'lourd' : 'frais';
+
+/* Les caractéristiques d'un homme (v0.69.0) : l'adresse au tir, la force, l'endurance, le calme (de 0 à 100, 50 en moyenne : la moyenne de deux tirages, la plupart des hommes sont proches du milieu),
+   tirées de son numéro et de son camp comme son nom : les mêmes d'une partie relue à l'autre, rien de sauvegardé de plus que le tableau de l'armée. Elles jouent dans le tir, le corps à corps, la fatigue
+   et la peur (army.js, R.caracteristiques et R.melee). */
+export const CARACTERISTIQUES = [['adresse', 'Tir'], ['force', 'Force'], ['endurance', 'Endurance'], ['calme', 'Calme']];
+export function caracteristiques(id, camp) {
+  return CARACTERISTIQUES.map((_, q) => Math.round(50 * (hash2(id, 40 + q, 6007 + camp * 7919) + hash2(id, 50 + q, 6007 + camp * 7919))));
+}
+// …dites en mots (de 0 à 100)
+export const caracEnMots = v => v < 25 ? 'faible' : v < 42 ? 'médiocre' : v < 60 ? 'moyen' : v < 78 ? 'bon' : 'excellent';

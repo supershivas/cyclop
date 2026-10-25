@@ -130,8 +130,18 @@ export function poserPonts(base, profond, T, { W, H, ox, oy }, objets) {
       pvMax: PONTS_PV[typePont(O.type)], pv: PONTS_PV[typePont(O.type)], coupures: 0, reparations: 0, nom: nomDePont(T.pontsListe, F.x, F.y) };
     T.pontsListe.push(pont);
     const n = T.pontsListe.length;
-    for (const c of cases) { T.pont[c] = n; T.pontH[c] = pont.pontH; if (profond[c]) { T.pontEau[c] = 1; pont.enEau.push(c); profond[c] = 0; } }
+    pont.dh = decalagesPont(pont, W);
+    for (const [k, c] of cases.entries()) { T.pont[c] = n; T.pontH[c] = pont.pontH + pont.dh[k]; if (profond[c]) { T.pontEau[c] = 1; pont.enEau.push(c); profond[c] = 0; } }
   }
+}
+/* La hauteur de chaque case sous un tablier, en quarts (v0.69.0) : `pontH` pour un tablier plat ; le dos d'âne monte de 1,3 m au milieu (la même courbe que son dessin,
+   `dosdane` de rendu/ponts-modeles.js, sur la portée + 2 m) : avec un tablier plat à `pontH`, les hommes marchaient *dans* la pierre et le dos d'âne les cachait (Jérôme : « les soldats passent
+   sous le pont »). `P.dh` : le décalage de chaque case de `P.cases`, refait au besoin, jamais sauvegardé (il ne dépend que du tracé). */
+const BOSSE_DOSDANE = 1.3 * 4;
+function decalagesPont(P, W) {
+  if (P.type !== 'dosdane') return P.cases.map(() => 0);
+  const L = Math.max(8, P.long + 2), ca = Math.cos(P.ang), sa = -Math.sin(P.ang);
+  return P.cases.map(c => { const u = ((((c % W) + 0.5) - P.mx) * ca + ((((c / W) | 0) + 0.5) - P.mz) * sa) / L + 0.5; return u <= 0 || u >= 1 ? 0 : Math.round(BOSSE_DOSDANE * (1 - (2 * u - 1) ** 2)); });
 }
 // Le nom d'un ouvrage : tiré de sa position (sans hasard), sans doublon parmi ceux déjà posés (v0.67.0)
 function nomDePont(deja, x, y) {
@@ -144,7 +154,8 @@ export function reconstruirePont(T, P) {
   if (!P.detruit) return false;
   const n = T.pontsListe.indexOf(P) + 1;
   P.detruit = false; P.pv = P.pvMax; P.reparations++;
-  for (const c of P.cases) { T.pont[c] = n; T.pontH[c] = P.pontH; }
+  P.dh ??= decalagesPont(P, T.W);
+  for (const [k, c] of P.cases.entries()) { T.pont[c] = n; T.pontH[c] = P.pontH + P.dh[k]; }
   for (const c of P.enEau) { T.profond[c] = 0; T.pontEau[c] = 1; }
   T.versionPonts++;
   return true;

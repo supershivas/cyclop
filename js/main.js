@@ -125,7 +125,7 @@ const { montrerFiche, montrerSoldat, montrerRegiment, fermer: fermerFiche, maj: 
 lockBrowserGestures($('ecran'));
 stopTypeahead();
 chargement.progres(0.5, 'Le moteur de rendu');
-const rendu = await creerRendu($('canvas'), { mesure: MESURE, grades: DEBUG ? params.get('grades') : null });     // ?debug=1&grades=fanion|jumelles|galons : les grades à l'écran (v0.68.0), essai du labo ; sans, tous pareils
+const rendu = await creerRendu($('canvas'), { mesure: MESURE, ...(DEBUG && params.has('grades') ? { grades: params.get('grades') || null } : {}) });     // ?debug=1&grades=fanion|jumelles|galons|(vide) : essayer une autre variante des grades (v0.68.0) ; par défaut `galons`, le képi et les galons (v0.69.0)
 rendu.finesseDes = 4;      // le sol au demi-mètre à partir de 4 pixels par mètre (Jérôme, v0.52.3 ; au-dessous, tout dézoomé, il coûterait jusqu'à 3,4 fois plus de triangles)
 // les retours sur le champ : le fanion et la réponse des hommes d'un ordre en terrain libre, l'impact des obus en trois temps (v0.41.3)
 creerInfobulle({ $ });

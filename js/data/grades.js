@@ -11,6 +11,7 @@ export const CLASSES = ['soldat', 'caporal', 'sergent', 'lieutenant', 'capitaine
    - `mat` un fanion de commandement à 3,5 m, deux bandes (os sur terre) qui se lisent sur le kaki comme sur le bleu : la silhouette qu'on voit de loin ;
    - `kepiSombre` le képi tout sombre, `kepiBande` le képi à calotte de la couleur du camp et bandeau sombre (plus large et plus haut que le casque, à sa place) ; `manteau` la capote longue, jusqu'aux mollets ;
    - `jumelles` (sur la poitrine, leur cordon sur les épaules), `carte` (l'étui de carte, à la hanche : il se voit de dos comme de face) ; `pistolet` (l'arme de poing à la place du fusil : la baïonnette, qui dépasse du rang, disparaît) ;
+   - `lettreC` un C d'os sur fond de terre au-dessus de la tête du capitaine (Jérôme, v0.69.0 : « un petit C au-dessus du capitaine ») : il ne tourne pas avec l'homme ;
    - `galons2`, `galons3` aux manchettes ; `chevrons1`, `chevrons2` sur la manche gauche ; `brassard` ; `baudrier` en travers de la poitrine ; `epaulette1` (l'épaule gauche), `epaulettes` (les deux) :
    de loin, le dessus de la tête et des épaules est ce qu'on voit le mieux (la caméra plonge de 54°), et ceux qui marchent vers le nord nous tournent le dos : les signes de face ne se lisent que de près.
    `sansFusil` : la classe porte l'arme de poing, pas le fusil.
@@ -48,7 +49,7 @@ export const GRADES = {
       { pieces: ['chevrons1'], points: 2 },
       { pieces: ['chevrons2', 'epaulettes'], points: 2 },
       { pieces: ['kepiBande', 'galons2', 'epaulettes', 'pistolet'], sansFusil: true, points: 3 },
-      { pieces: ['kepiBande', 'galons3', 'epaulettes', 'manteau', 'pistolet'], sansFusil: true, points: 4, echelle: 1.1 },
+      { pieces: ['kepiBande', 'galons3', 'epaulettes', 'manteau', 'pistolet', 'lettreC'], sansFusil: true, points: 4, echelle: 1.1 },
     ],
   },
 };

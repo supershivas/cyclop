@@ -64,7 +64,7 @@ const HAUT = 8;                               // m : marge du bas de l'écran, o
 const SOCLE = -8;                             // m : le bas de la coupe du terrain (bord sud)
 
 /* respiration : l'amplitude (rad) du lent balancement de la caméra (0 : immobile). */
-export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera: camDepart = null, respiration = RESPIRATION, soldat: styleSoldat = SOLDAT, cadavre = 'poses', effets = EFFETS, bord = null, arbres = ARBRES_JEU, buissons = {}, grades = null } = {}) {       // (les buissons variés : en jeu depuis la v0.63.0 ; null : ceux d'avant, au labo)
+export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera: camDepart = null, respiration = RESPIRATION, soldat: styleSoldat = SOLDAT, cadavre = 'poses', effets = EFFETS, bord = null, arbres = ARBRES_JEU, buissons = {}, grades = 'galons' } = {}) {       // (les buissons variés : en jeu depuis la v0.63.0 ; null : ceux d'avant, au labo ; `grades` : le képi et les galons en jeu depuis la v0.69.0, Jérôme ; null : tous pareils, au labo)
 
   // un mouvement réduit demandé par le système : la caméra ne bouge pas d'elle-même
   if (typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches) respiration = 0;
@@ -259,6 +259,9 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
   }
   // la hauteur de la surface dessinée en (x, z) : là où l'on pose soldats et arbres
   function surface(x, z) {
+    // sur un tablier, le dessus du tablier (v0.69.0 : `hauteurVueQ` ne le lit pas, le sol dessous reste de l'eau : les hommes, les chars, les arbres se posaient 1 m plus bas, dans la pierre, et un dos d'âne les cachait)
+    const cp = Math.max(0, Math.min(T.H - 1, z | 0)) * T.W + Math.max(0, Math.min(T.W - 1, x | 0));
+    if (T.pont[cp]) return T.pontH[cp] * 0.25;
     if (finesse === 2) return hauteurFine(Math.max(0, Math.min(T.W * 2 - 1, (x * 2) | 0)), Math.max(0, Math.min(T.H * 2 - 1, (z * 2) | 0))) * 0.25;      // le cube de 0,5 m dessiné sous ce point
     const i = Math.max(0, Math.min(T.W - 1, x | 0)), j = Math.max(0, Math.min(T.H - 1, z | 0));
     return hauteurM(T, j * T.W + i);

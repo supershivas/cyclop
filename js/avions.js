@@ -158,7 +158,7 @@ function balayer(B, v, lo, hi, ctx, rng) {
     if (rng() < p) ctx.frapper(i, 'avion', M.gravite);
     else A.peur[i] = Math.max(A.peur[i], M.peur);
   });
-  effrayer(A, (ax + bx) / 2, (ay + by) / 2, M.rayonPeur + hw, M.peurVoisins, R.experience);
+  effrayer(A, (ax + bx) / 2, (ay + by) / 2, M.rayonPeur + hw, M.peurVoisins, R.experience, R.caracteristiques.calme);
 }
 
 function abattre(B, v, p) {
@@ -178,7 +178,7 @@ function ecraser(B, v, ctx, rng) {
     const dx = A.x[i] - v.cx, dy = A.y[i] - v.cy;
     if (dx * dx + dy * dy <= r2 && rng() < C.letal) ctx.frapper(i, 'avion', 0.8);
   });
-  effrayer(A, v.cx, v.cy, C.rayon * 3, B.R.soldat.peurObus, B.R.experience);
+  effrayer(A, v.cx, v.cy, C.rayon * 3, B.R.soldat.peurObus, B.R.experience, B.R.caracteristiques.calme);
   B.evenements.push({ type: 'avion-ecrase', camp: v.camp, x: v.cx, y: v.cy });
 }
 

@@ -107,6 +107,7 @@ export function actionEnMots(B, i) {
     return 'reste à terre, blessé';
   }
   if (A.peur[i] >= R.soldat.terreur) return 'tapi, terrifié';
+  if (A.duel[i]) return 'se bat à la baïonnette';
   if (Math.hypot(A.vx[i], A.vy[i]) > 0.5) return 'marche';
   return 'tient sa place';
 }

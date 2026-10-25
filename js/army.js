@@ -27,6 +27,7 @@
    Logique pure : aucun DOM. Le rendu lit les tableaux (rendu3d.js). */
 import { hauteurQ, vitesseCase } from './terrain.js?v=0.68.0';
 import { ligneY } from './tranchees.js?v=0.68.0';
+import { caracteristiques } from './identite.js?v=0.68.0';
 
 export const GRILLE = 2;           // m : cases de voisinage
 export const DENSITE = 8;          // m : carrés de densité (tir)
@@ -41,6 +42,10 @@ export function creerArmee({ capacite, W, H }) {
     camp: new Uint8Array(capacite), reg: new Uint16Array(capacite), slot: new Uint16Array(capacite),
     mort: new Uint8Array(capacite),
     // qui il est et ce qu'il endure (0 à 1 ; blessure : 0 aucune, 1 bras, 2 jambe, 3 tête)
+    // ses caractéristiques (identite.js : de 0 à 100) : l'adresse au tir, la force, l'endurance, le calme
+    adresse: new Uint8Array(capacite), force: new Uint8Array(capacite), endurance: new Uint8Array(capacite), calme: new Uint8Array(capacite),
+    // le corps à corps de ce pas (jamais sauvegardé : refait à chaque pas) : 1 s'il se bat, et l'angle où est son adversaire (dessin)
+    duel: new Uint8Array(capacite), duelAng: f32(),
     id: new Uint32Array(capacite), fatJ: f32(), fatB: f32(), peur: f32(), blessure: new Uint8Array(capacite), exp: f32(), victimes: new Uint16Array(capacite),
     // la grille de voisinage (tri par comptage)
     gw, gh, cellCount: new Int32Array(gw * gh), cellStart: new Int32Array(gw * gh + 1),
@@ -53,7 +58,7 @@ export function creerArmee({ capacite, W, H }) {
 export function ajouterSoldat(A, x, y, camp, reg, slot, r, id = A.n) {
   if (A.n >= A.capacite) return -1;
   const i = A.n++;
-  A.id[i] = id; A.fatJ[i] = 0; A.fatB[i] = 0; A.peur[i] = 0; A.blessure[i] = 0; A.exp[i] = 0; A.victimes[i] = 0;
+  A.id[i] = id; [A.adresse[i], A.force[i], A.endurance[i], A.calme[i]] = caracteristiques(id, camp); A.duel[i] = 0; A.fatJ[i] = 0; A.fatB[i] = 0; A.peur[i] = 0; A.blessure[i] = 0; A.exp[i] = 0; A.victimes[i] = 0;
   A.x[i] = x; A.y[i] = y; A.vx[i] = 0; A.vy[i] = 0;
   A.camp[i] = camp; A.reg[i] = reg; A.slot[i] = slot; A.mort[i] = 0;
   A.rnd[i] = r; A.tirT[i] = 1 + r * 4; A.coince[i] = 0;
@@ -111,8 +116,10 @@ const pl = [0, 0];
 /* Les nombres de la posture d'un régiment (`R.stance`, data/stances.js) ; un régiment sans posture tire à volonté. */
 export const parametresStance = (R, id) => R.stance[id] ?? R.stance.volonte;
 /* La chance de toucher d'un tir : la densité du carré visé, l'adresse acquise, la posture. */
-export const chanceTir = (R, stance, densite, exp) =>
-  R.tir.precision * parametresStance(R, stance).precision * Math.min(1, densite / R.tir.densite) * (1 + R.experience.adresse * exp);
+export const chanceTir = (R, stance, densite, exp, adresse = 50) =>
+  R.tir.precision * parametresStance(R, stance).precision * Math.min(1, densite / R.tir.densite) * (1 + R.experience.adresse * exp) * facteur(R.caracteristiques.adresse, adresse, 1);
+/* L'effet d'une caractéristique (0 à 100) : 1 ± amplitude × (valeur − 50 %) ; `sens` −1 : plus il en a, moins ça pèse (la fatigue, la peur). */
+export const facteur = (amplitude, valeur, sens) => 1 + sens * amplitude * (valeur / 100 - 0.5);
 
 /* Un pas de la foule. ctx : { T, R, regiments, champDe(reg) → champ | null,
    rng, dt, gel, frapper(i, cause, gravite) }. frapper blesse ou tue (gravite :
@@ -123,7 +130,7 @@ export const legere = (id, part) => (Math.imul(id + 1, 2654435761) >>> 0) / 4294
 export function pasArmee(A, ctx) {
   const { T, R, regiments, champDe, rng, dt, gel } = ctx;
   const { n, x, y, vx, vy, rnd, camp, reg, slot, mort, gw, gh, cellStart, sorted, cellOf, tirT, coince, fatJ, fatB, peur, blessure } = A;
-  const Sd = R.soldat;
+  const Sd = R.soldat, M = R.melee;
   const F = R.foule, V = R.vitesse;
   const sep = F.separation, sep2 = sep * sep, maxN = F.voisins;
   const W = T.W, H = T.H;
@@ -133,7 +140,7 @@ export function pasArmee(A, ctx) {
     if (mort[i]) continue;
     const xi = x[i], yi = y[i];
     // ─ Voisins : séparation ─
-    let sx = 0, sy = 0, seen = 0;
+    let sx = 0, sy = 0, seen = 0, ennemi = -1, ennemiD2 = M.portee * M.portee;       // (le corps à corps : l'ennemi le plus proche à portée de baïonnette)
     const c0 = cellOf[i], gcx = c0 % gw, gcy = (c0 - gcx) / gw;
     for (let oy = -1; oy <= 1 && seen < maxN; oy++) {
       const yy = gcy + oy; if (yy < 0 || yy >= gh) continue;
@@ -143,6 +150,7 @@ export function pasArmee(A, ctx) {
         for (let s = cellStart[c], e = cellStart[c + 1]; s < e && seen < maxN; s++) {
           const j = sorted[s]; if (j === i) continue;
           const dx = xi - x[j], dy = yi - y[j], d2 = dx * dx + dy * dy;
+          if (d2 < ennemiD2 && camp[j] !== camp[i] && !mort[j]) { ennemi = j; ennemiD2 = d2; }
           if (d2 > sep2) continue;
           seen++;
           const d = Math.sqrt(d2) || 0.01, f = (sep - d) / sep / d;
@@ -184,6 +192,10 @@ export function pasArmee(A, ctx) {
     // les jambes lourdes ou blessées ralentissent
     const corps = (1 - Sd.effetFatigue * fatJ[i]) * (blessure[i] === 2 ? Sd.jambeBlessee : 1);
     const vmax = V.marche * (0.88 + rnd[i] * 0.24) * terrain * corps;
+    // au corps à corps il garde sa place : il ne marche plus qu'un peu (sauf un blessé qui s'en va, ou une déroute) ; il fait face à son adversaire
+    const duel = ennemi >= 0 && !retrait && !blessure[i] && !r.deroute;
+    A.duel[i] = duel ? 1 : 0;
+    if (duel) { gx *= M.arret; gy *= M.arret; A.duelAng[i] = Math.atan2(x[ennemi] - xi, y[ennemi] - yi); }
     let wx = gx * voulu * vmax + sx * 1.6, wy = gy * voulu * vmax + sy * 1.6;
     const wl = Math.hypot(wx, wy), lim = Math.max(vmax, 0.4);
     if (wl > lim) { wx *= lim / wl; wy *= lim / wl; }
@@ -205,13 +217,25 @@ export function pasArmee(A, ctx) {
     // ─ La fatigue, la peur ─
     const marche = Math.hypot(nx - xi, ny - yi) / dt / V.marche;            // 0 à l'arrêt
     // l'effort compte au temps passé à marcher, pas au chemin fait : la boue, qui ralentit, fatigue d'autant plus
-    if (marche > 0.1) fatJ[i] = Math.min(1, fatJ[i] + Sd.fatigueMarche * dt * (terrain < V.humide ? Sd.fatigueBoue : 1));
+    if (marche > 0.1) fatJ[i] = Math.min(1, fatJ[i] + Sd.fatigueMarche * dt * (terrain < V.humide ? Sd.fatigueBoue : 1) * facteur(R.caracteristiques.endurance, A.endurance[i], -1));
     else fatJ[i] = Math.max(0, fatJ[i] - Sd.reposJambes * dt);
     fatB[i] = Math.max(0, fatB[i] - Sd.reposBras * dt);
     peur[i] = Math.max(0, peur[i] - Sd.peurDecroit * dt);
     // ─ Le tir (pas quand la terreur le tient) ─
     tirT[i] -= dt;
-    if (tirT[i] <= 0) {
+    if (duel) {
+      // le corps à corps : un coup de baïonnette toutes les `periode` secondes ; la force du frappeur contre l'endurance de l'autre, les bras fatigués frappent moins
+      if (tirT[i] <= 0) {
+        tirT[i] = M.periode * (0.7 + 0.6 * rng());
+        if (peur[i] < Sd.terreur) {
+          const j = ennemi;
+          const chance = M.touche * (0.55 + M.force * A.force[i] / 100) * (1.3 - M.endurance * A.endurance[j] / 100) * (1 - 0.4 * fatB[i]) * (1 + R.experience.adresse * A.exp[i]);
+          fatB[i] = Math.min(1, fatB[i] + M.fatigue);
+          A.exp[i] = Math.min(1, A.exp[i] + R.experience.tir);
+          if (rng() < chance) ctx.frapper(j, 'mêlée', M.mortel * (1.2 - 0.4 * A.endurance[j] / 100), null, i);
+        }
+      }
+    } else if (tirT[i] <= 0) {
       const ebranle = r.moral !== undefined && r.moral < R.moral.ebranle;
       tirT[i] = R.tir.periode * (0.5 + rng()) * (blessure[i] === 1 ? Sd.brasBlesse : 1) * (ebranle ? R.moral.tirEbranle : 1) * parametresStance(R, r.stance).periode;
       // la terreur, ou la déroute : on ne tire plus
@@ -249,7 +273,7 @@ function tirer(A, i, o, ctx, stance) {
   }
   if (best < 0) return false;
   if (ctx.tir) { const bxx = best % dw; ctx.tir(i, (bxx + 0.5) * DENSITE, ((best - bxx) / dw + 0.5) * DENSITE); }   // pour le dessin : un tir part (jamais l'état)
-  const chance = chanceTir(R, stance, bestN, A.exp[i]);
+  const chance = chanceTir(R, stance, bestN, A.exp[i], A.adresse[i]);
   if (rng() >= chance) return true;
   // la victime : un ennemi du carré, au hasard
   const xx = best % dw, yy = (best - xx) / dw;
@@ -287,7 +311,7 @@ function tirer(A, i, o, ctx, stance) {
 export function tuerDans(A, x0, y0, rayon, ctx, letal = 1) {
   const { R, rng, T, frapper } = ctx;
   if (rayon <= 0) return;
-  effrayer(A, x0, y0, rayon * 3, R.soldat.peurObus, R.experience);
+  effrayer(A, x0, y0, rayon * 3, R.soldat.peurObus, R.experience, R.caracteristiques.calme);
   const g0x = Math.max(0, ((x0 - rayon) / GRILLE) | 0), g1x = Math.min(A.gw - 1, ((x0 + rayon) / GRILLE) | 0);
   const g0y = Math.max(0, ((y0 - rayon) / GRILLE) | 0), g1y = Math.min(A.gh - 1, ((y0 + rayon) / GRILLE) | 0);
   for (let gy = g0y; gy <= g1y; gy++) for (let gx = g0x; gx <= g1x; gx++) {
@@ -325,7 +349,7 @@ export function tuerDans(A, x0, y0, rayon, ctx, letal = 1) {
 /* La peur gagne les vivants autour de (x0, y0), d'autant plus qu'ils sont près,
    et moins ceux qui ont l'habitude ; ceux qui en réchappent prennent de
    l'expérience (Ex : R.experience, ou rien). */
-export function effrayer(A, x0, y0, rayon, quantite, Ex = null) {
+export function effrayer(A, x0, y0, rayon, quantite, Ex = null, cal = 0) {
   const g0x = Math.max(0, ((x0 - rayon) / GRILLE) | 0), g1x = Math.min(A.gw - 1, ((x0 + rayon) / GRILLE) | 0);
   const g0y = Math.max(0, ((y0 - rayon) / GRILLE) | 0), g1y = Math.min(A.gh - 1, ((y0 + rayon) / GRILLE) | 0);
   for (let gy = g0y; gy <= g1y; gy++) for (let gx = g0x; gx <= g1x; gx++) {
@@ -336,7 +360,7 @@ export function effrayer(A, x0, y0, rayon, quantite, Ex = null) {
       const d = Math.hypot(A.x[i] - x0, A.y[i] - y0);
       if (d >= rayon) continue;
       const pres = 1 - d / rayon;
-      A.peur[i] = Math.min(1, A.peur[i] + quantite * pres * (Ex ? 1 - Ex.calme * A.exp[i] : 1));
+      A.peur[i] = Math.min(1, A.peur[i] + quantite * pres * (Ex ? 1 - Ex.calme * A.exp[i] : 1) * (cal ? facteur(cal, A.calme[i], -1) : 1));
       if (Ex) A.exp[i] = Math.min(1, A.exp[i] + Ex.feu * pres);
     }
   }
@@ -351,7 +375,7 @@ export function reposer(A, R) {
 // Retire les morts (on garde l'ordre des vivants : la même partie, rejouée, garde les mêmes indices)
 export function compacter(A) {
   let w = 0;
-  const keys = ['x', 'y', 'vx', 'vy', 'rnd', 'tirT', 'coince', 'camp', 'reg', 'slot', 'id', 'fatJ', 'fatB', 'peur', 'blessure', 'exp', 'victimes'];
+  const keys = ['x', 'y', 'vx', 'vy', 'rnd', 'tirT', 'coince', 'camp', 'reg', 'slot', 'id', 'fatJ', 'fatB', 'peur', 'blessure', 'exp', 'victimes', 'adresse', 'force', 'endurance', 'calme', 'duel', 'duelAng'];
   for (let r = 0; r < A.n; r++) {
     if (A.mort[r]) continue;
     if (w !== r) for (const k of keys) A[k][w] = A[k][r];
@@ -366,7 +390,8 @@ export function compacter(A) {
 
 // ─── Sauvegarde : les tableaux, exacts (base64 des octets) ───
 const CHAMPS = { x: Float32Array, y: Float32Array, vx: Float32Array, vy: Float32Array, rnd: Float32Array, tirT: Float32Array, coince: Float32Array, camp: Uint8Array, reg: Uint16Array, slot: Uint16Array,
-  id: Uint32Array, fatJ: Float32Array, fatB: Float32Array, peur: Float32Array, blessure: Uint8Array, exp: Float32Array, victimes: Uint16Array };
+  id: Uint32Array, fatJ: Float32Array, fatB: Float32Array, peur: Float32Array, blessure: Uint8Array, exp: Float32Array, victimes: Uint16Array,
+  adresse: Uint8Array, force: Uint8Array, endurance: Uint8Array, calme: Uint8Array };
 function b64(typed) {
   const u8 = new Uint8Array(typed.buffer, typed.byteOffset, typed.byteLength);
   let s = '';

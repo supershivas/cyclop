@@ -100,20 +100,22 @@ export const fauxMat = {
 
 export const soldatMat = {
   v: `
-      attribute vec3 aPos; attribute float aCamp; attribute float aPart; attribute float aJambe; attribute float aVit; attribute float aBras; attribute vec2 aTir; attribute float aGr; attribute float aGrade;
+      attribute vec3 aPos; attribute float aCamp; attribute float aPart; attribute float aJambe; attribute float aVit; attribute float aBras; attribute vec2 aTir; attribute float aGr; attribute float aGrade; attribute vec2 aVar;
       uniform float uT; uniform vec2 uSoleil; uniform float uBalance; uniform vec2 uEch;
       varying float vCamp; varying float vPart; varying vec2 vXZ; varying float vLong;
       void main() {
         // une partie de 10 à 19 n'est dessinée que pour nous, de 20 à 29 que pour en face (casque, moustache : v0.27.0, au labo)
         float cp = aCamp > 1.5 ? aCamp - 2.0 : aCamp, kp = aPart;
-        bool cache = false;
-        if (kp >= 30.0) { /* les signes des grades (v0.68.0) : 30 la terre, 31 l'os, pour les deux camps */ } else if (kp >= 20.0) { kp -= 20.0; cache = cp < 0.5; } else if (kp >= 10.0) { kp -= 10.0; cache = cp > 0.5; }
+        bool cache = false, fixe = false;
+        if (kp >= 30.0) { /* les signes des grades (v0.68.0) : 30 la terre, 31 l'os, pour les deux camps ; 32 et 33 (l'os et la terre, v0.69.0) : la lettre du capitaine, qui ne tourne pas avec lui */ fixe = kp >= 31.5; } else if (kp >= 20.0) { kp -= 20.0; cache = cp < 0.5; } else if (kp >= 10.0) { kp -= 10.0; cache = cp > 0.5; }
         // les grades (v0.68.0) : une boîte ne se dessine que pour les classes de son masque (aGr : un bit par classe, 31 pour toutes ; aGrade : la classe de l'homme, 0 sans grades) ;
         // le corps d'un capitaine ou d'un lieutenant est plus haut (uEch.y, uEch.x), son ombre est celle de tous
         if (mod(floor(aGr / exp2(aGrade)), 2.0) < 0.5) cache = true;
         vCamp = aCamp; vPart = kp; vLong = position.y;
         float ech = aGrade > 3.5 ? uEch.y : (aGrade > 2.5 ? uEch.x : 1.0);
-        vec3 p = (kp > 0.5 && kp < 1.5) ? position : position * ech;
+        // (v0.69.0) chaque homme a sa taille et sa largeur (aVar : le dessin seulement, tiré de son numéro) ; la lettre du capitaine reste à sa hauteur d'homme et à sa largeur
+        vec3 p = (kp > 0.5 && kp < 1.5) ? position : position * vec3(ech * aVar.x, ech * aVar.y, ech * aVar.x);
+        if (fixe) p = position * vec3(ech, ech * aVar.y, ech);
         // la peur : un homme se tapit (aVit < 0 : −1 − sa vitesse), sauf son ombre
         bool tapi = aVit < 0.0;
         float vit = tapi ? 0.0 : aVit;
@@ -142,8 +144,26 @@ export const soldatMat = {
         // il tire (aTir : x la pose, 1 quand il épaule, y le cap vers sa cible) : les bras et le fusil se lèvent devant lui
         // (autour de l'épaule, à 1,3 m), et il se tourne vers l'ennemi ; sa pose seulement, jamais la partie
         // feu retenu (aTir.x < 0) : le fusil est baissé, en travers devant les hanches, le canon vers l'avant ; il ne se lève que pour tirer (pose seulement)
-        if (aTir.x < -0.5 && kp > 3.5 && kp < 4.5) {
-          float a = -1.9;
+        // le corps à corps (v0.69.0) : aTir.x = −2 − la poussée (0 à 1), aTir.y = l'angle où est son adversaire ; le fusil passe à l'horizontale devant lui, la baïonnette vers l'autre (+z : devant), les bras s'avancent,
+        // le buste se penche, et chaque poussée jette le fusil d'un demi-mètre vers l'adversaire
+        bool melee = aTir.x < -1.5;
+        float poussee = melee ? -aTir.x - 2.0 : 0.0;
+        if (melee && !(aPart > 0.5 && aPart < 1.5)) {
+          if (kp > 3.5 && kp < 4.5) {
+            p.x -= 0.3;
+            float a = 1.45;
+            vec3 d = p - vec3(0.0, 0.95, 0.0);
+            p.y = 0.95 + d.y * cos(a) - d.z * sin(a);
+            p.z = d.y * sin(a) + d.z * cos(a) + 0.5 * poussee;
+          } else if (abs(aBras) > 0.5 && abs(aBras) < 1.5) {
+            float a = -1.0;
+            vec3 d = p - vec3(0.0, 1.3, 0.0);
+            p.y = 1.3 + d.y * cos(a) - d.z * sin(a);
+            p.z = d.y * sin(a) + d.z * cos(a) + 0.35 * poussee;
+          } else p.z += poussee * 0.2 * max(0.0, p.y - 0.6);
+        }
+        if (aTir.x < -0.5 && !melee && kp > 3.5 && kp < 4.5) {
+          float a = 1.9;      // (le canon, en haut du fusil, passe devant : v0.69.0, il pointait vers l'arrière)
           vec3 d = p - vec3(0.0, 0.9, 0.0);
           p.y = 0.9 + d.y * cos(a) - d.z * sin(a);
           p.z = d.y * sin(a) + d.z * cos(a);
@@ -152,14 +172,14 @@ export const soldatMat = {
         if (tir > 0.0 && !(aPart > 0.5 && aPart < 1.5)) {
           if (aBras != 0.0) {
             if (aBras > 1.5) p.x -= 0.28 * tir;
-            float a = -1.45 * tir;
+            float a = (aBras > 1.5 ? 1.45 : -1.45) * tir;      // les bras s'avancent vers le bas ; le fusil, lui, bascule vers l'avant par le haut : le canon devant, la crosse à l'épaule (v0.69.0 : il pointait vers l'arrière)
             vec3 d = p - vec3(0.0, 1.3, 0.0);
             p.y = 1.3 + d.y * cos(a) - d.z * sin(a);
             p.z = d.y * sin(a) + d.z * cos(a);
           }
         }
         // le cap (aTir.y) : vers sa cible quand il tire, sinon dans le sens où il marche (Jérôme, v0.47.2 : « les soldats avancent en arrière ») ; sa pose seulement
-        if (abs(aTir.y) > 0.001 && !(aPart > 0.5 && aPart < 1.5)) {
+        if (abs(aTir.y) > 0.001 && !(aPart > 0.5 && aPart < 1.5) && !fixe) {
           float c = cos(aTir.y), s = sin(aTir.y);
           p.xz = vec2(p.x * c + p.z * s, -p.x * s + p.z * c);
         }
@@ -191,7 +211,8 @@ export const soldatMat = {
         else if (k == 7.0) c = uCuir;
         else if (k == 8.0) c = uBotte;
         else if (k == 30.0) c = uOmbre;               // les signes sombres des grades (galons, képi, baudrier)
-        else if (k == 31.0) c = uSel;                 // le fanion de commandement
+        else if (k == 31.0 || k == 32.0) c = uSel;    // le fanion de commandement, la lettre du capitaine
+        else if (k == 33.0) c = uOmbre;
         gl_FragColor = vec4(c, 1.0);
       }`,
 };

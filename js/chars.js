@@ -143,7 +143,7 @@ export function avancerChars(B, ctx, rng) {
         if (rng() < M.touche * (1.4 - d / M.portee)) ctx.frapper(i, 'char', M.gravite);
         else A.peur[i] = Math.max(A.peur[i], M.peur * (1 - d / M.portee));
       }
-      effrayer(A, c.x, c.y, M.portee * 1.4, 0.02, R.experience);
+      effrayer(A, c.x, c.y, M.portee * 1.4, 0.02, R.experience, R.caracteristiques.calme);
     }
   }
 }

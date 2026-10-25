@@ -17,6 +17,13 @@ export function creerGeometries(THREE, col) {
   // Les signes sombres sont en terre (part 30), le fanion en os (31) ; les pièces de manche suivent le bras (balancier, épaule).
   const PIECES = {
     mat: { loin: true, f: (g, m) => { boiteVue(g, -0.05, 0.05, 1.8, 3.5, -0.05, 0.05, 30, 0, 30, 0, m); boiteVue(g, 0.05, 0.9, 3.2, 3.5, -0.025, 0.025, 31, 0, 31, 0, m); boiteVue(g, 0.05, 0.9, 2.9, 3.2, -0.025, 0.025, 30, 0, 30, 0, m); } },       // le fanion : deux bandes, os sur terre, qui se lisent sur le kaki comme sur le bleu
+    // la lettre du capitaine (v0.69.0) : un C de trois barres d'os sur un fond de terre, au-dessus de la tête, petit (0,5 m de large) ; elle ne tourne pas avec lui (parties 32 et 33 : le nuanceur la garde de face)
+    lettreC: { loin: true, f: (g, m) => {
+      boiteVue(g, -0.25, 0.25, 2.0, 2.66, 0.0, 0.02, 33, 0, 33, 0, m);                         // le fond
+      boiteVue(g, -0.2, 0.2, 2.53, 2.62, 0.02, 0.05, 32, 0, 32, 0, m);                          // la barre du haut
+      boiteVue(g, -0.2, -0.07, 2.04, 2.62, 0.02, 0.05, 32, 0, 32, 0, m);                        // le fût
+      boiteVue(g, -0.2, 0.2, 2.04, 2.13, 0.02, 0.05, 32, 0, 32, 0, m);                          // la barre du bas
+    } },
     kepiSombre: { loin: true, f: (g, m) => { boiteVue(g, -0.21, 0.21, 1.6, 1.78, -0.21, 0.21, 30, 0, 30, 0, m); boiteVue(g, -0.16, 0.16, 1.58, 1.64, 0.2, 0.34, 30, 0, 30, 0, m); } },
     kepiBande: { loin: true, f: (g, m) => { boiteVue(g, -0.2, 0.2, 1.7, 1.82, -0.2, 0.2, 0, 0, 0, 0, m); boiteVue(g, -0.22, 0.22, 1.56, 1.7, -0.22, 0.22, 30, 0, 30, 0, m); boiteVue(g, -0.16, 0.16, 1.54, 1.6, 0.21, 0.34, 30, 0, 30, 0, m); } },
     manteau: { loin: true, f: (g, m) => { boiteVue(g, -0.32, 0.32, 0.25, 0.86, -0.21, 0.21, 0, 0, 0, 0, m); boiteVue(g, -0.33, 0.33, 0.25, 0.36, -0.22, 0.22, 30, 0, 30, 0, m); } },
@@ -49,7 +56,7 @@ export function creerGeometries(THREE, col) {
     gi.setAttribute('aGr', new THREE.Float32BufferAttribute(g.r, 1));
     gi.setAttribute('aPos', attrsG[0]); gi.setAttribute('aCamp', attrsG[1]); gi.setAttribute('aVit', attrsG[2]);
     if (style !== 'boite') gi.setAttribute('aTir', attrsG[3]);
-    gi.setAttribute('aGrade', attrsG[4]);
+    gi.setAttribute('aGrade', attrsG[4]); gi.setAttribute('aVar', attrsG[5]);
     gi.instanceCount = 0;
     return gi;
   }
@@ -118,6 +125,7 @@ export function creerGeometries(THREE, col) {
     gi.setAttribute('aGr', new THREE.Float32BufferAttribute(g.r, 1));
     gi.setAttribute('aPos', attrsI[0]); gi.setAttribute('aCamp', attrsI[1]); gi.setAttribute('aVit', attrsI[2]);
     if (V && attrsI[4]) gi.setAttribute('aGrade', attrsI[4]);
+    if (attrsI[5]) gi.setAttribute('aVar', attrsI[5]);                // la taille et la largeur de chaque homme (v0.69.0) ; absent : le corps couché a son nuanceur
     if ((sil || style === 'legere') && attrsI[3]) gi.setAttribute('aTir', attrsI[3]);   // (la boîte ne tire pas : l'attribut absent vaut 0)
     gi.instanceCount = 0;
     return gi;

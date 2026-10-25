@@ -24,7 +24,7 @@ test('un régiment a un capitaine, deux lieutenants et des gradés en dessous, s
   }
 });
 test('les variantes sont bien formées : cinq classes, des pièces qui existent, le soldat sans rien', () => {
-  const pieces = new Set(['mat', 'kepiSombre', 'kepiBande', 'manteau', 'jumelles', 'carte', 'pistolet', 'galons2', 'galons3', 'chevrons1', 'chevrons2', 'brassard', 'baudrier', 'epaulette1', 'epaulettes']);
+  const pieces = new Set(['mat', 'kepiSombre', 'kepiBande', 'manteau', 'jumelles', 'carte', 'pistolet', 'galons2', 'galons3', 'chevrons1', 'chevrons2', 'brassard', 'baudrier', 'epaulette1', 'epaulettes', 'lettreC']);
   for (const [cle, V] of Object.entries(GRADES)) {
     assert.equal(V.classes.length, 5, cle);
     assert.deepEqual(V.classes[0], {}, `${cle} : le soldat est la référence`);

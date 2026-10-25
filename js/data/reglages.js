@@ -31,8 +31,24 @@ export const REGLAGES = {
     humide: 0.4,          // humidité : au-delà, un sol humide
     humiditeDepart: 0.18,
   },
+  // Le corps à corps (Jérôme, v0.69.0 : « l'animation au corps à corps est possible avec un combattant ennemi ; les statistiques de chacun jouent dans leur efficacité ») :
+  // deux hommes de camps opposés à moins de `portee` mètres s'affrontent : ils s'arrêtent, se font face, et frappent à la baïonnette toutes les `periode` secondes (± 30 %).
+  // La chance de toucher croît avec la force du frappeur et baisse avec l'endurance de l'autre (voir `caracteristiques` de identite.js : 0 à 100, 50 en moyenne) ; elle tombe avec la fatigue des bras.
+  melee: {
+    portee: 1.6,          // m
+    periode: 1.6,         // s entre deux coups
+    touche: 0.4,          // chance de toucher d'un homme moyen contre un homme moyen
+    mortel: 0.55,         // chance qu'un coup qui touche tue (sinon : blessé, comme un tir)
+    fatigue: 0.06,        // fatigue des bras par coup
+    arret: 0.12,          // la part de sa marche qu'un homme au corps à corps garde (il tient sa place d'escrime)
+    force: 0.9,           // l'écart de chance qu'apporte la force : chance × (0,55 + force × cette valeur), force de 0 à 1
+    endurance: 0.6,       // … et l'endurance de l'autre : chance × (1,3 − endurance × cette valeur)
+  },
+  // Les caractéristiques d'un homme (identite.js, de 0 à 100, 50 en moyenne) agissent par un facteur 1 ± amplitude × (valeur − 50 %) : l'adresse sur la chance de toucher d'un tir (plus d'adresse, plus de coups au but),
+  // l'endurance sur la fatigue des jambes et le calme sur la peur qui le gagne (plus, moins) ; 0,6 : de × 0,7 à × 1,3. Un homme moyen n'est pas touché : la moyenne de la troupe reste celle d'avant.
+  caracteristiques: { adresse: 0.6, endurance: 0.6, calme: 0.6 },
   vitesse: {
-    marche: 1.3,          // m/s sur sol sec et plat
+    marche: 1.9,          // m/s sur sol sec et plat (Jérôme, v0.69.0 : « accélérer la marche, que l'action soit plus nerveuse » ; 1,3 avant)
     sec: 1, humide: 0.8, boue: 0.38, eau: 0.25, glace: 0.75,
     profond: 0.03,        // l'eau profonde d'un lac ou d'un fleuve : on n'y passe pas (v0.43.0)
     pente1: 0.6,          // marche d'un demi-mètre
