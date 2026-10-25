@@ -1564,6 +1564,7 @@ if (DEBUG) {
       marche: (ids, x, y) => reseau ? lancerMarche(ids, x + B.etat.marges.x, y + B.etat.marges.y) : ordonnerMarche(B, ids, x + B.etat.marges.x, y + B.etat.marges.y),
       reseau: () => reseau ? { moi: reseau.moi, cadre: reseau.ls.cadre, pause: reseau.ls.etat.pause, vitesse: reseau.ls.etat.vitesse, ecart: reseau.ls.ecart, empreinte: empreinteEtat(B), ticks: B.etat.ticks } : null,
       zoom: z => { rendu.vue.zoom = z; },
+      ouvrirFiche: id => { montrerSoldat(id); majFiche(B); },      // la fiche d'un homme par son numéro (les captures)
       fiche: () => laFiche.ouverte && { ...laFiche.ouverte, nom: $('fiche-nom').textContent, qui: $('fiche-qui').textContent, etat: $('fiche-etat').textContent, liste: $('fiche-liste').textContent },
       survol: (x, y) => { souris = { x, y }; majBulle(); return $('bulle').hidden ? null : $('bulle').textContent; },
       camera: (yaw, tangage) => rendu.placerCamera(yaw, tangage),
