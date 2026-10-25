@@ -202,6 +202,8 @@
 }
 .lien { color: var(--jeu-nous); }
 .lien[hidden], .fiche ul:empty { display: none; }
+.bulle .barre-pont { display: block; height: 6px; margin-top: var(--e1, 4px); background: var(--jeu-fond); border: 1px solid var(--jeu-accent); }
+.bulle .barre-pont b { display: block; height: 100%; background: var(--jeu-accent); }
 .bulle { position: absolute; left: 0; top: 0; max-width: 40ch; pointer-events: none; z-index: 2; }
 @media (hover: hover) { .lien:hover, .fiche .fiche-liste .nom:hover { color: var(--jeu-accent); } }
 .cadre { position: absolute; border: 1px solid var(--jeu-encre); pointer-events: none; }

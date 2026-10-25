@@ -22,26 +22,26 @@
    - Les soldats : instanciés (une boîte et son ombre) ; au zoom 1 et 2, un
      point de 2 × 2 pixels (la couleur du camp sur son ombre).
    - Les corps : un homme couché (instancié) ; au zoom 1 et 2, un pixel. */
-import { loadThree } from './three-lib.js?v=0.66.3';
-import * as SH from './rendu/shaders.js?v=0.66.3';
-import { creerSoldats } from './rendu/soldats.js?v=0.66.3';
-import { creerChars } from './rendu/chars.js?v=0.66.3';
-import { creerGenies } from './rendu/genies.js?v=0.66.3';
-import { creerAvions } from './rendu/avions.js?v=0.66.3';
-import { creerPonts } from './rendu/ponts.js?v=0.66.3';
-import { creerCiel } from './rendu/ciel.js?v=0.66.3';
-import { creerMeteo } from './rendu/meteo.js?v=0.66.3';
-import { creerTroncons } from './rendu/troncons.js?v=0.66.3';
-import { ARBRES_JEU } from './data/arbres.js?v=0.66.3';
-import { creerVegetation } from './rendu/vegetation.js?v=0.66.3';
-import { creerTemps } from './rendu/temps.js?v=0.66.3';
-import { creerEclats } from './rendu/eclats.js?v=0.66.3';
-import { PALETTE, ORDRE, INDICE } from './palette.js?v=0.66.3';
-import { OMBRE, couleursLigne } from './apparence.js?v=0.66.3';
-import { MORCEAU, hauteurVueQ as hauteurQ, hauteurVueM as hauteurM } from './terrain.js?v=0.66.3';
-import { horloge, secteurDuJeu } from './bataille.js?v=0.66.3';
-import { profilFleuve } from './eaux.js?v=0.66.3';
-import { ligneY } from './tranchees.js?v=0.66.3';
+import { loadThree } from './three-lib.js?v=0.67.0';
+import * as SH from './rendu/shaders.js?v=0.67.0';
+import { creerSoldats } from './rendu/soldats.js?v=0.67.0';
+import { creerChars } from './rendu/chars.js?v=0.67.0';
+import { creerGenies } from './rendu/genies.js?v=0.67.0';
+import { creerAvions } from './rendu/avions.js?v=0.67.0';
+import { creerPonts } from './rendu/ponts.js?v=0.67.0';
+import { creerCiel } from './rendu/ciel.js?v=0.67.0';
+import { creerMeteo } from './rendu/meteo.js?v=0.67.0';
+import { creerTroncons } from './rendu/troncons.js?v=0.67.0';
+import { ARBRES_JEU } from './data/arbres.js?v=0.67.0';
+import { creerVegetation } from './rendu/vegetation.js?v=0.67.0';
+import { creerTemps } from './rendu/temps.js?v=0.67.0';
+import { creerEclats } from './rendu/eclats.js?v=0.67.0';
+import { PALETTE, ORDRE, INDICE } from './palette.js?v=0.67.0';
+import { OMBRE, couleursLigne } from './apparence.js?v=0.67.0';
+import { MORCEAU, hauteurVueQ as hauteurQ, hauteurVueM as hauteurM } from './terrain.js?v=0.67.0';
+import { horloge, secteurDuJeu } from './bataille.js?v=0.67.0';
+import { profilFleuve } from './eaux.js?v=0.67.0';
+import { ligneY } from './tranchees.js?v=0.67.0';
 
 export const CAMERA = { yaw: 0.15, tangage: 0.95, fov: 30 };   // au départ : tournée de 9°, plongée de 54°, angle de 30°
 // la caméra respire : un balancement très lent, 2° en 23 s (Jérôme, v0.3.1 : variante D du labo retenue)
@@ -68,6 +68,7 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
   const THREE = await loadThree();
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: false, powerPreference: 'high-performance' });
   renderer.setPixelRatio(1);
+  renderer.localClippingEnabled = true;        // les ruines des ponts sont découpées par des plans (rendu/ponts.js)
   renderer.outputColorSpace = THREE.LinearSRGBColorSpace;
   renderer.setClearColor(new THREE.Color(PALETTE.t), 1);
   const gl = renderer.getContext();
@@ -293,6 +294,7 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
 
   // ─── Brancher une bataille ───
   const ponts = creerPonts({ THREE, scene, bataille: () => B });
+  let aretesPonts = false;
   const chars = creerChars({ THREE, scene, bataille: () => B, hauteur: (x, y) => surfaceLisse(x, y), fumer: (x, z) => eclats.fumer(x, z) });
   const genies = creerGenies({ THREE, scene, bataille: () => B, hauteur: (x, y) => surfaceLisse(x, y) });
   const avions = creerAvions({ THREE, scene, bataille: () => B, hauteur: (x, y) => surfaceLisse(x, y), effets: eclats });
@@ -590,7 +592,7 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
       renderer.setClearColor(c, 1); solMat.uniforms.uBordCoul.value.copy(c); fauxU?.uBrume.value.copy(c);
     }
     const sombre = temps.majNuit(h); temps.setTemps(tAnim);
-    chars.maj(dt, sombre || 0); genies.maj(dt); avions.maj(dt, sombre || 0); ponts.maj(sombre || 0);
+    chars.maj(dt, sombre || 0); genies.maj(dt); avions.maj(dt, sombre || 0); ponts.maj(sombre || 0, aretesPonts);
     ciel.nuit(sombre || 0, tAnim, h.jour, B.etat.graine, h.meteo);       // les étoiles, la lune et les nuages de la nuit (v0.40.0)
     meteo.afficher(h, vide);
     const { cx, cz, p } = projeter();
@@ -666,6 +668,7 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
     get ppm() { return ZOOMS[vue.zoom]; },
     // une fumée qui dérive, posée en (x, z) (l'écran titre en épaissit le champ)
     clignoter: troncons.clignoter,
+    set aretesPonts(v) { aretesPonts = !!v; },       // le génie vise : les ponts coupés se montrent en arêtes (v0.67.0)
     survoler(reg, troncons) { soldats.survoler(reg); survolTroncons = troncons; },
     surligner(s) { troncons.surligner(s); },
     get legere() { return soldats.legere; }, set legere(v) { soldats.legere = v; },

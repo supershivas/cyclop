@@ -16,13 +16,13 @@
      nuit elle se fait en lot.
    - Les versions (`versionLigne`, `versionMorceau`) disent au rendu ce qui a
      changé ; le terrain ne connaît pas le rendu. */
-import { hash2 } from './lib/rng.js?v=0.66.3';
-import { CALIBRES } from './data/calibres.js?v=0.66.3';
-import { creuxRond, levreJetee, eclatsAutour, bordDuCreux, FORME_JEU } from './cratere.js?v=0.66.3';
-import { appliquerFormes } from './formes.js?v=0.66.3';
-import { poserObjets } from './objets.js?v=0.66.3';
-import { SAISONS } from './data/meteo.js?v=0.66.3';
-import { poserEaux, poserMarecages, poserPonts, detruirePont, viderLesEaux } from './eaux.js?v=0.66.3';
+import { hash2 } from './lib/rng.js?v=0.67.0';
+import { CALIBRES } from './data/calibres.js?v=0.67.0';
+import { creuxRond, levreJetee, eclatsAutour, bordDuCreux, FORME_JEU } from './cratere.js?v=0.67.0';
+import { appliquerFormes } from './formes.js?v=0.67.0';
+import { poserObjets } from './objets.js?v=0.67.0';
+import { SAISONS } from './data/meteo.js?v=0.67.0';
+import { poserEaux, poserMarecages, poserPonts, abimerPont, viderLesEaux } from './eaux.js?v=0.67.0';
 
 export const ETAT = { SEC: 0, HUMIDE: 1, BOUE: 2, EAU: 3, GLACE: 4 };
 export const MORCEAU = 25;             // cases : le côté d'un morceau de maillage (mesuré, rendu logiciel : à 100, la moitié du champ restait dessinée au zoom 4 ; à 25, 6 500 triangles au lieu de 15 600 au zoom 8)
@@ -71,7 +71,7 @@ export function creerTerrain(graine, secteur, R) {
   }
   appliquerFormes(base, W, H, ox, oy, secteur.retouches);     // les retouches de l'atelier (formes.js), avant les tranchées
   poserEaux(base, profond, { W, H, ox, oy }, secteur.objets);   // les lacs et les fleuves (eaux.js) creusent à plat, après le relief
-  const Tp = { pont, pontH, pontEau, pontsListe, profond, W, H, versionPonts: 0 };
+  const Tp = { pont, pontH, pontEau, pontsListe, profond, W, H, versionPonts: 0, coupes: [] };
   poserPonts(base, profond, Tp, { W, H, ox, oy }, secteur.objets);   // puis les ponts, sur l'eau
   const roseaux = [];
   poserMarecages(base, nappe, eau, humid, herbe, profond, pont, { W, H, ox, oy }, secteur.objets, roseaux);   // les marécages : la nappe au-dessus du sol, par plaques (v0.50.0)
@@ -114,7 +114,7 @@ export function creerTerrain(graine, secteur, R) {
   viderLesEaux(arbres, profond, W); viderLesEaux(buissons, profond, W);      // ni arbre ni buisson dans l'eau
   const mw = Math.ceil(W / MORCEAU), mh = Math.ceil(H / MORCEAU);
   return {
-    W, H, base, diff, nappe, eau, humid, arbres, herbe, buissons, roseaux, profond, pont, pontH, pontEau, pontsListe, versionPonts: 0,
+    W, H, base, diff, nappe, eau, humid, arbres, herbe, buissons, roseaux, profond, pont, pontH, pontEau, pontsListe, versionPonts: 0, coupes: [],
     versionHerbe: 1,                            // l'herbe ou les buissons ont changé (rendu)
     versionLigne: new Uint32Array(H),           // couleur d'une rangée changée (rendu)
     versionMorceau: new Uint32Array(mw * mh),   // hauteurs d'un morceau changées (rendu)
@@ -225,7 +225,7 @@ export function impact(T, x, y, nomCal, R, n = 0, gel = false, forme = FORME_JEU
   for (const a of T.arbres) {
     if (!a.abattu && (a.i + 0.5 - x) ** 2 + (a.j + 0.5 - y) ** 2 < R.terrain.arbreRayon ** 2) { a.abattu = 1; toucher(T, a.i, a.j); }
   }
-  if (T.pontsListe.length) { const coupes = detruirePont(T, i0, j0, r + 3); for (const P of coupes) for (const c of P.cases) toucher(T, c % T.W, (c / T.W) | 0); }      // un obus sur le tablier coupe l'ouvrage (v0.47.2)
+  if (T.pontsListe.length) { const coupes = abimerPont(T, i0, j0, r + 3, nomCal); for (const P of coupes) for (const c of P.cases) toucher(T, c % T.W, (c / T.W) | 0); }      // un obus sur le tablier coupe l'ouvrage (v0.47.2)
   T.version++;
   return { rayon: cal.rayon * enfoui };
 }

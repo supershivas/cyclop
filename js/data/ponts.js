@@ -14,3 +14,13 @@ export const PONT_DEFAUT = 'planches';
 export const typePont = id => PONTS_JEU[id] ? id : PONT_DEFAUT;
 // Les heures de travail du génie pour refaire un ouvrage coupé, avec la section au complet (20 hommes ; Jérôme, v0.66.0 : de 2 à 4 h selon le type) ; des propositions
 export const PONTS_HEURES = { planches: 2, cordes: 2, chevalets: 2.5, suspendu: 3, dosdane: 3.5, warren: 3.5, arches: 4 };
+// La solidité d'un ouvrage (Jérôme, v0.67.0 : « ils ne se détruisent pas au premier bombardement ») : des points de vie par type, et ce que chaque calibre en ôte quand son motif touche le tablier
+// (un obus qui tombe à moins de 3 m du tablier ; le génie refait l'ouvrage à pleine solidité). À zéro, l'ouvrage est coupé. Des propositions non mesurées : un 75 en ôte 6, un 155 en ôte 30, un 220 en ôte 60.
+export const PONTS_PV = { planches: 40, cordes: 25, chevalets: 70, suspendu: 80, dosdane: 130, warren: 130, arches: 180 };
+export const PONTS_DEGATS = { '75': 6, '155': 30, '220': 60 };
+// Ce qui se passe pour les hommes sur le tablier quand l'ouvrage est coupé : une part se noie (un hachage de leur numéro, sans hasard), les autres sont jetés sur la rive la plus proche, épuisés
+export const PONT_COUPE = { noyes: 0.3, fatigue: 0.7, rayonRive: 60 };
+// Les noms des ouvrages (Jérôme, v0.67.0) : tirés de la position de l'ouvrage (sans hasard, le même chez les deux joueurs), sans doublon dans un terrain
+export const NOMS_PONTS = ['Pont du Moulin', 'Pont de la Hutte', 'Pont des Saules', 'Passage du Gué', 'Pont Saint-Éloi', 'Pont de la Ferme', 'Pont du Curé', 'Pont des Trois Peupliers',
+  'Pont de l\'Écluse', 'Pont du Tilleul', 'Pont des Fusillés', 'Pont de la Brèche', 'Pont des Charrons', 'Pont du Bac', 'Pont Rouge', 'Pont des Hirondelles', 'Pont de la Poudrière',
+  'Pont du Calvaire', 'Pont Sainte-Barbe', 'Pont des Meuniers', 'Pont du Roi', 'Pont de la Vieille Garde', 'Pont des Aulnes', 'Pont du Hameau'];

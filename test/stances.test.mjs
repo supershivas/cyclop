@@ -22,9 +22,9 @@ const bilan = B => ({ pertes: B.etat.pertes, blesses: B.etat.blesses, rng: B.eta
 
 group('stances — rien ne bouge sans elles');
 const REFERENCE = {            // relevé sur le code d'avant les stances (pertes, blessés, hasard) ; l'empreinte, relevée à la v0.36.0, y ajoute la posture ; v0.52.5 : relevé de nouveau, les cratères ronds changent le terrain donc le hasard (pertes de chez nous 62, 57, 77 → 69, 72, 76)
-  3: { pertes: [62, 6], blesses: [66, 9], rng: 2177451400, emp: '204f7682' },      // v0.61.0 : relevé de nouveau, les labours sont plats
-  7: { pertes: [63, 3], blesses: [66, 4], rng: 3527792841, emp: '7d9cdc35' },
-  8: { pertes: [64, 3], blesses: [52, 4], rng: 718625677, emp: '5cca1725' },
+  3: { pertes: [62, 6], blesses: [66, 9], rng: 2177451400, emp: 'b738764b' },      // v0.66.2 : l'empreinte est calculée par sections (lockstep.js), relevée de nouveau, pertes, blessés et hasard inchangés ; v0.61.0 : relevé de nouveau, les labours sont plats
+  7: { pertes: [63, 3], blesses: [66, 4], rng: 3527792841, emp: '6d4b7fce' },
+  8: { pertes: [64, 3], blesses: [52, 4], rng: 718625677, emp: '71c1ef71' },
 };
 for (const g of [3, 7, 8]) {
   test(`sans stance, mêmes morts, mêmes blessés, même hasard qu'avant (graine ${g})`, () => {
