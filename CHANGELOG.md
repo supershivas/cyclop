@@ -1,5 +1,9 @@
 # Journal des versions
 
+## 0.67.3 — 2026-10-25
+- Des ombres sur le relief (parapets, cratères, tranchées) et des ombres de nuages qui dérivent sur le champ
+- Le soleil se lève à gauche et se couche à droite ; par temps couvert, plus d'ombres
+
 ## 0.67.2 — 2026-10-25
 - Le bord de la carte ne montre plus de ligne noire au-dessus d'un lac
 - Labo : quatre façons de montrer sur le champ qu'un régiment est ébranlé ou en déroute

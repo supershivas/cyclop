@@ -22,28 +22,28 @@
    - Les soldats : instanciés (une boîte et son ombre) ; au zoom 1 et 2, un
      point de 2 × 2 pixels (la couleur du camp sur son ombre).
    - Les corps : un homme couché (instancié) ; au zoom 1 et 2, un pixel. */
-import { loadThree } from './three-lib.js?v=0.67.2';
-import * as SH from './rendu/shaders.js?v=0.67.2';
-import { creerSoldats } from './rendu/soldats.js?v=0.67.2';
-import { creerChars } from './rendu/chars.js?v=0.67.2';
-import { creerGenies } from './rendu/genies.js?v=0.67.2';
-import { creerAvions } from './rendu/avions.js?v=0.67.2';
-import { creerPonts } from './rendu/ponts.js?v=0.67.2';
-import { creerCiel } from './rendu/ciel.js?v=0.67.2';
-import { creerMeteo } from './rendu/meteo.js?v=0.67.2';
-import { creerTroncons } from './rendu/troncons.js?v=0.67.2';
-import { ARBRES_JEU } from './data/arbres.js?v=0.67.2';
-import { creerVegetation } from './rendu/vegetation.js?v=0.67.2';
-import { creerTemps } from './rendu/temps.js?v=0.67.2';
-import { creerEclats } from './rendu/eclats.js?v=0.67.2';
-import { creerOmbresRelief } from './rendu/ombres-relief.js?v=0.67.2';
-import { OMBRES_RELIEF as OMB, NUAGES, NUAGES_VENT } from './data/soleil.js?v=0.67.2';
-import { PALETTE, ORDRE, INDICE } from './palette.js?v=0.67.2';
-import { OMBRE, couleursLigne } from './apparence.js?v=0.67.2';
-import { MORCEAU, hauteurVueQ as hauteurQ, hauteurVueM as hauteurM } from './terrain.js?v=0.67.2';
-import { horloge, secteurDuJeu } from './bataille.js?v=0.67.2';
-import { profilFleuve } from './eaux.js?v=0.67.2';
-import { ligneY } from './tranchees.js?v=0.67.2';
+import { loadThree } from './three-lib.js?v=0.67.3';
+import * as SH from './rendu/shaders.js?v=0.67.3';
+import { creerSoldats } from './rendu/soldats.js?v=0.67.3';
+import { creerChars } from './rendu/chars.js?v=0.67.3';
+import { creerGenies } from './rendu/genies.js?v=0.67.3';
+import { creerAvions } from './rendu/avions.js?v=0.67.3';
+import { creerPonts } from './rendu/ponts.js?v=0.67.3';
+import { creerCiel } from './rendu/ciel.js?v=0.67.3';
+import { creerMeteo } from './rendu/meteo.js?v=0.67.3';
+import { creerTroncons } from './rendu/troncons.js?v=0.67.3';
+import { ARBRES_JEU } from './data/arbres.js?v=0.67.3';
+import { creerVegetation } from './rendu/vegetation.js?v=0.67.3';
+import { creerTemps } from './rendu/temps.js?v=0.67.3';
+import { creerEclats } from './rendu/eclats.js?v=0.67.3';
+import { creerOmbresRelief } from './rendu/ombres-relief.js?v=0.67.3';
+import { OMBRES_RELIEF as OMB, NUAGES, NUAGES_VENT } from './data/soleil.js?v=0.67.3';
+import { PALETTE, ORDRE, INDICE } from './palette.js?v=0.67.3';
+import { OMBRE, couleursLigne } from './apparence.js?v=0.67.3';
+import { MORCEAU, hauteurVueQ as hauteurQ, hauteurVueM as hauteurM } from './terrain.js?v=0.67.3';
+import { horloge, secteurDuJeu } from './bataille.js?v=0.67.3';
+import { profilFleuve } from './eaux.js?v=0.67.3';
+import { ligneY } from './tranchees.js?v=0.67.3';
 
 export const CAMERA = { yaw: 0.15, tangage: 0.95, fov: 30 };   // au départ : tournée de 9°, plongée de 54°, angle de 30°
 // la caméra respire : un balancement très lent, 2° en 23 s (Jérôme, v0.3.1 : variante D du labo retenue)
@@ -120,7 +120,7 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
   const cielMeteo = new THREE.Color();
 
   // Les ombres du relief (labo « La lumière dans le relief », éteintes dans le jeu) : une case que le soleil ne voit pas prend la couleur de sa paroi dans la texture du sol ; le soleil du labo : saisons, azimut
-  let ombresRelief = false, ombresNuages = false, soleilLabo = null, ombreVu = null;
+  let ombresRelief = false, ombresNuages = false, soleilReglage = null, ombreVu = null;
   const ombres = creerOmbresRelief({ hauteurQ });
   const soleilCase = { x: 0, z: 0 }, ecriture = { ms: 0, n: 0, rangees: 0, max: 0, maxOmbre: 0 };      // mesure : la réécriture de la texture du sol
   let B = null, T = null, faux = null, fauxU = null;
@@ -646,11 +646,11 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
     vegetation.setTemps(tAnim); soldats.setTemps(tAnim);
     const t1 = performance.now();
     const hj = horloge(B);
-    temps.majSoleil(hj, soleilLabo);
+    temps.majSoleil(hj, soleilReglage);
     { const nu = ombresNuages ? NUAGES[hj.meteo] : null;             // l'ombre des nuages (labo) : le jour, par un temps à plaques
       solMat.uniforms.uNuage.value = nu?.taches && hj.phase === 'jour' ? 0.5 + (nu.taches - 0.5) * 0.55 : 0; solMat.uniforms.uTemps.value = tAnim; }
     { const sv = soldats.soleilUniform.value, n = Math.hypot(sv.x, sv.y);           // les parois selon le soleil (labo) ; la nuit (soleil nul), celles du jeu
-      solMat.uniforms.uSuivre.value = soleilLabo?.parois && n > 0.05 ? 1 : 0; if (n > 0.05) solMat.uniforms.uVersSoleil.value.set(-sv.x / n, -sv.y / n); }
+      solMat.uniforms.uSuivre.value = soleilReglage?.parois && n > 0.05 ? 1 : 0; if (n > 0.05) solMat.uniforms.uVersSoleil.value.set(-sv.x / n, -sv.y / n); }
     majSoldats();
     tAnim += dt;
     eclats.majEclats(dt); eclats.majCorbeaux(dt, tAnim); troncons.maj(dt);
@@ -691,8 +691,8 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
     set ombresRelief(v) { ombresRelief = !!v; solAttente = 0; },      // les ombres du relief sur le sol (labo)
     get ombresNuages() { return ombresNuages; },
     set ombresNuages(v) { ombresNuages = !!v; },                    // l'ombre des nuages sur le sol (labo)
-    get soleilLabo() { return soleilLabo; },
-    set soleilLabo(r) { soleilLabo = r; },                           // { saisonnier, azimut } : la course du soleil à essayer (labo)
+    get soleilReglage() { return soleilReglage; },
+    set soleilReglage(r) { soleilReglage = r; },                           // { saisonnier, azimut } : la course du soleil à essayer (labo)
     // vérification (tests, labo) : sur les rangées à jour, le masque incrémental est celui qu'un calcul neuf donne, et la texture du sol le dit (le dessus d'une case à l'ombre : la couleur de sa paroi)
     verifierOmbres() {
       const neuf = creerOmbresRelief({ hauteurQ }); neuf.attacher(T); neuf.maj(true, ombres.calcule, 99);

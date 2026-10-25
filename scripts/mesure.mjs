@@ -35,7 +35,7 @@ const resultats = [];
 const VUES = [['tout le champ (points)', 0, 200, 150], ['zoom 3 (boîtes)', 2, 200, 165], ['zoom 4 (boîtes)', 3, 200, 170], ['zoom 6 (silhouettes)', 4, 200, 180], ['zoom 8 (silhouettes)', 5, 200, 190]];
 if (o.ombres) await page.evaluate(() => { __jeu.rendu().ombresRelief = true; });
 if (o.nuages) await page.evaluate(() => { __jeu.rendu().ombresNuages = true; });
-if (o.parois) await page.evaluate(() => { __jeu.rendu().soleilLabo = { parois: true }; });
+if (o.parois) await page.evaluate(() => { __jeu.rendu().soleilReglage = { parois: true }; });
 if (o.arbres) await page.evaluate(a => __jeu.rendu().reglerArbres(JSON.parse(a)), o.arbres);
 await page.evaluate(f => { const r = __jeu.rendu(); if (f !== 'auto') { r.finesseDes = null; r.finesse = +f; } }, o.finesse);      // auto : le réglage du jeu (le sol fin dès 4 px/m)
 for (const [nom, zoom, x, y] of VUES.filter(v => o.zooms.split(',').map(Number).includes(v[1]))) {
