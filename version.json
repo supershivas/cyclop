@@ -1,7 +1,7 @@
 {
-  "version": "0.67.1",
+  "version": "0.68.0",
   "date": "2026-10-25",
   "changes": [
-    "Les ponts sont plus solides : un pont de pierre résiste à neuf obus de 155 au lieu de six"
+    "Le labo propose trois façons de montrer les grades dans la troupe (le fanion, les jumelles et la carte, le képi et les galons) ; rien n'est encore changé dans la partie"
   ]
 }

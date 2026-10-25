@@ -1,5 +1,8 @@
 # Journal des versions
 
+## 0.68.0 — 2026-10-25
+- Le labo propose trois façons de montrer les grades dans la troupe (le fanion, les jumelles et la carte, le képi et les galons) ; rien n'est encore changé dans la partie
+
 ## 0.67.1 — 2026-10-25
 - Les ponts sont plus solides : un pont de pierre résiste à neuf obus de 155 au lieu de six
 
