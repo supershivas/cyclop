@@ -6,8 +6,10 @@ export const SOLEIL = { hauteurMax: 0.95, hauteurMin: 0.1, ombreMax: 3.5, depart
 // Le soleil de chaque saison (`hauteurMax`, rad) : bas l'hiver (ombres longues), haut l'été. Le lever et le coucher restent ceux de l'horloge du jeu (6 h, 18 h).
 export const SOLEIL_SAISONS = { automne: 0.95, hiver: 0.5, ete: 1.2 };
 
-// Les azimuts à essayer (rad, ajoutés à l'arc : le soleil tourne autour de la vue). La caméra du jeu regarde le nord, le soleil est au sud à midi : l'ombre part loin d'elle.
-export const AZIMUTS = { sud: 0, 'sud-est': Math.PI / 4, 'vers la caméra': Math.PI / 2 };
+// Les azimuts à essayer (rad, ajoutés à l'arc : à midi l'ombre part vers le nord, loin de la caméra, qui regarde le nord ; chaque valeur la fait tourner d'autant, vers la droite de l'écran). `nord-ouest` :
+// le soleil au nord-ouest à midi, la lumière du jeu d'avant (la paroi ouest éclairée, les autres sombres) ; `vers la caméra` : l'ombre vient vers nous à midi. (Corrigé : `vers la caméra` valait π/2, qui
+// jette l'ombre vers la droite de l'écran, et `sud-est` π/4, vers le nord-est.)
+export const AZIMUTS = { sud: 0, 'ombres à droite': Math.PI / 2, 'nord-ouest': 3 * Math.PI / 4, 'vers la caméra': Math.PI };
 
 // Les ombres du relief : un relief casse la lumière s'il fait au moins `seuilQ` quarts de mètre de plus que la case (0,5 m : un parapet, la lèvre d'un cratère, une paroi de tranchée) ;
 // `portee` : mètres cherchés vers le soleil. Le soleil doit avoir bougé de `pasAngle` rad (ou de `pasLongueur` en part de l'ombre) pour qu'on recalcule, au plus toutes les `delai` s ; `budgetEcritureMs` : ms par image pour repeindre dans la texture du sol les rangées vues dont l'ombre a changé.

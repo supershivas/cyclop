@@ -2,13 +2,20 @@
 // sommet (`v`) et son fragment (`f`) ; le texte est exactement celui d'avant la découpe.
 export const solMat = {
   v: `
-      attribute float aParoi; attribute vec2 aDecal;
+      attribute float aParoi; attribute vec2 aDecal; attribute float aFace;
       varying vec2 vUV; varying vec2 vXZ;
-      uniform vec2 uTaille;
+      uniform vec2 uTaille; uniform float uSuivre; uniform vec2 uVersSoleil;
       void main() {
         // une paroi prend la couleur de la case au-dessus d'elle (aDecal : vers elle), en plus sombre (la moitié basse de la texture)
         vec2 xz = position.xz + aDecal;
-        vUV = vec2(xz.x / uTaille.x, (xz.y / uTaille.y + (aParoi > 0.5 ? 1.0 : 0.0)) * 0.5);
+        float sombre = aParoi;
+        // (labo) les parois suivent le soleil : une paroi d'un demi-mètre ou plus (aFace 4 à 7) est sombre si elle tourne le dos au soleil, claire sinon ; le dessus (aFace 8) ne change pas
+        if (uSuivre > 0.5 && aFace < 7.5) {
+          float f = mod(aFace, 4.0);
+          vec2 n = f < 0.5 ? vec2(0.0, 1.0) : f < 1.5 ? vec2(0.0, -1.0) : f < 2.5 ? vec2(1.0, 0.0) : vec2(-1.0, 0.0);      // sud, nord, est, ouest : où la paroi regarde
+          sombre = aFace > 3.5 && dot(n, uVersSoleil) <= 0.0 ? 1.0 : 0.0;
+        }
+        vUV = vec2(xz.x / uTaille.x, (xz.y / uTaille.y + (sombre > 0.5 ? 1.0 : 0.0)) * 0.5);
         vXZ = xz;
         gl_Position = projectionMatrix * viewMatrix * vec4(position, 1.0);
       }`,

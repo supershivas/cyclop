@@ -132,7 +132,8 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
      un tiers du rendu logiciel). */
   const solMat = new THREE.ShaderMaterial({
     uniforms: { uSol: { value: null }, uTaille: { value: new THREE.Vector2(1, 1) }, uBord: { value: leBord ? leBord.fondu : 0 }, uBordCoul: { value: leBord ? col(leBord.ciel) : new THREE.Color(0) },
-      uKaki: { value: new THREE.Color(0) }, uVert: { value: new THREE.Color(0) }, uGlaise: { value: new THREE.Color(0) }, uDissoudre: { value: 0 } },      // (le bord qui se dissout dans le faux terrain : `faireFaux`)
+      uKaki: { value: new THREE.Color(0) }, uVert: { value: new THREE.Color(0) }, uGlaise: { value: new THREE.Color(0) }, uDissoudre: { value: 0 },
+      uSuivre: { value: 0 }, uVersSoleil: { value: new THREE.Vector2(0, 1) } },       // les parois qui suivent le soleil (labo) : 1 et la direction du soleil, vers lui      // (le bord qui se dissout dans le faux terrain : `faireFaux`)
     vertexShader: SH.solMat.v,
     fragmentShader: SH.solMat.f,
     side: THREE.DoubleSide,
@@ -158,10 +159,11 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
     const i1 = Math.min(T.W, i0 + MORCEAU), j1 = Math.min(T.H, j0 + MORCEAU);
     const F = finesse, w = (i1 - i0) * F, h = (j1 - j0) * F, W2 = T.W * F, H2 = T.H * F, D = 0.25;     // F : cases par mètre (1 : la case de 1 m ; 2 : des cubes de 0,5 m, Jérôme, v0.52.2) ; D : la paroi prend la couleur d'un quart de mètre dans la case au-dessus d'elle, quelle que soit la texture (une case entière ou quatre moitiés : un morceau fait à 1 m peut lire la texture fine)
     const i0s = i0 * F, j0s = j0 * F;
-    const pos = [], paroi = [], decal = [];
-    const quad = (ax, ay, az, bx, by, bz, cx, cy, cz, dx, dy, dz, p, ox = 0, oz = 0) => {
+    const pos = [], paroi = [], decal = [], faces = [];
+    // `face` : 8 le dessus ; 0 sud, 1 nord, 2 est, 3 ouest (+ 4 si la paroi fait un demi-mètre ou plus : elle peut être à l'ombre) ; le nuanceur du sol s'en sert quand les parois suivent le soleil (labo)
+    const quad = (ax, ay, az, bx, by, bz, cx, cy, cz, dx, dy, dz, p, ox = 0, oz = 0, face = 8) => {
       pos.push(ax, ay, az, bx, by, bz, cx, cy, cz, ax, ay, az, cx, cy, cz, dx, dy, dz);
-      for (let k = 0; k < 6; k++) { paroi.push(p); decal.push(ox, oz); }
+      for (let k = 0; k < 6; k++) { paroi.push(p); decal.push(ox, oz); faces.push(face); }
     };
     // le dessus : rectangles de même hauteur
     const vu = new Uint8Array(w * h);
@@ -199,7 +201,7 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
         let k = 1;
         while (i + k < w && hq(i0s + i + k, J) === haut && (dernier ? SOCLE * 4 : hq(i0s + i + k, J + 1)) === bas) k++;
         const x0 = (i0s + i) / F, x1 = x0 + k / F, z = (J + 1) / F, ya = haut * 0.25, yb = bas * 0.25;
-        quad(x0 - E, yb - E, z, x1 + E, yb - E, z, x1 + E, ya + E, z, x0 - E, ya + E, z, haut - bas >= 2 ? 1 : 0, 0, -D);
+        quad(x0 - E, yb - E, z, x1 + E, yb - E, z, x1 + E, ya + E, z, x0 - E, ya + E, z, haut - bas >= 2 ? 1 : 0, 0, -D, haut - bas >= 2 ? 4 : 0);
         i += k;
       }
     }
@@ -213,7 +215,7 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
         let k = 1;
         while (i + k < w && hq(i0s + i + k, J) === haut && (premier ? SOCLE * 4 : hq(i0s + i + k, J - 1)) === bas) k++;
         const x0 = (i0s + i) / F, x1 = x0 + k / F, ya = haut * 0.25, yb = bas * 0.25, Z = J / F;
-        quad(x1 + E, yb - E, Z, x0 - E, yb - E, Z, x0 - E, ya + E, Z, x1 + E, ya + E, Z, haut - bas >= 2 ? 1 : 0, 0, D);
+        quad(x1 + E, yb - E, Z, x0 - E, yb - E, Z, x0 - E, ya + E, Z, x1 + E, ya + E, Z, haut - bas >= 2 ? 1 : 0, 0, D, 1 + (haut - bas >= 2 ? 4 : 0));
         i += k;
       }
     }
@@ -231,8 +233,8 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
         let k = 1;
         while (j + k < h && (hg ?? hq(I - 1, J + k)) === g && (hd ?? hq(I, J + k)) === d) k++;
         const z0 = J / F, z1 = (J + k) / F, X = I / F, ya = Math.max(g, d) * 0.25, yb = Math.min(g, d) * 0.25;
-        if (g > d) quad(X, yb - E, z0 - E, X, yb - E, z1 + E, X, ya + E, z1 + E, X, ya + E, z0 - E, g - d >= 2 ? 1 : 0, -D, 0);   // vers l'est
-        else quad(X, yb - E, z1 + E, X, yb - E, z0 - E, X, ya + E, z0 - E, X, ya + E, z1 + E, 0, D, 0);                          // vers l'ouest
+        if (g > d) quad(X, yb - E, z0 - E, X, yb - E, z1 + E, X, ya + E, z1 + E, X, ya + E, z0 - E, g - d >= 2 ? 1 : 0, -D, 0, 2 + (g - d >= 2 ? 4 : 0));   // vers l'est
+        else quad(X, yb - E, z1 + E, X, yb - E, z0 - E, X, ya + E, z0 - E, X, ya + E, z1 + E, 0, D, 0, 3 + (d - g >= 2 ? 4 : 0));                          // vers l'ouest
         j += k;
       }
     }
@@ -240,6 +242,7 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
     g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
     g.setAttribute('aParoi', new THREE.Float32BufferAttribute(paroi, 1));
     g.setAttribute('aDecal', new THREE.Float32BufferAttribute(decal, 2));
+    g.setAttribute('aFace', new THREE.Float32BufferAttribute(faces, 1));
     g.boundingSphere = new THREE.Sphere(new THREE.Vector3(i0 + w / 2, 3, j0 + h / 2), Math.hypot(w, h, 20) / 2);
     return g;
   }
@@ -630,6 +633,8 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
     vegetation.setTemps(tAnim); soldats.setTemps(tAnim);
     const t1 = performance.now();
     temps.majSoleil(horloge(B), soleilLabo);
+    { const sv = soldats.soleilUniform.value, n = Math.hypot(sv.x, sv.y);           // les parois selon le soleil (labo) ; la nuit (soleil nul), celles du jeu
+      solMat.uniforms.uSuivre.value = soleilLabo?.parois && n > 0.05 ? 1 : 0; if (n > 0.05) solMat.uniforms.uVersSoleil.value.set(-sv.x / n, -sv.y / n); }
     majSoldats();
     tAnim += dt;
     eclats.majEclats(dt); eclats.majCorbeaux(dt, tAnim); troncons.maj(dt);
