@@ -37,7 +37,7 @@ export const REGLAGES = {
   melee: {
     portee: 1.6,          // m
     periode: 1.6,         // s entre deux coups
-    touche: 0.4,          // chance de toucher d'un homme moyen contre un homme moyen
+    touche: 0.15,          // chance de toucher d'un homme moyen contre un homme moyen
     mortel: 0.55,         // chance qu'un coup qui touche tue (sinon : blessé, comme un tir)
     fatigue: 0.06,        // fatigue des bras par coup
     arret: 0.12,          // la part de sa marche qu'un homme au corps à corps garde (il tient sa place d'escrime)
