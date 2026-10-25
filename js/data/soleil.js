@@ -16,7 +16,16 @@ export const AZIMUTS = { sud: 0, 'ombres à droite': Math.PI / 2, 'nord-ouest': 
 // courte à midi : l'élévation de `SOLEIL`). `angle` : l'angle de l'ombre sous l'horizontale de l'écran à midi (rad, vers la caméra), `oscillation` : de combien il s'en écarte au lever et au coucher.
 export const SOLEIL_COTE = { angle: 0.45, oscillation: 0.35 };
 // les boutons du labo : le soleil à gauche (l'ombre vers la droite) ou à droite (l'ombre vers la gauche)
-export const COTES = { 'Soleil à gauche': 'gauche', 'Soleil à droite': 'droite' };
+// (Jérôme, v0.66.3 : « le soleil change de place mais pas besoin de déplacement réaliste, il se lève et se couche ») : `lever-gauche` : l'ombre part vers la droite au lever, vient vers la caméra à midi (courte),
+// part vers la gauche au coucher ; `lever-droite` : l'inverse. `marge` : l'angle de l'ombre au lever et au coucher sous l'horizontale de l'écran (rad, vers la caméra : jamais tout à fait de côté).
+export const COTES = { 'Soleil à gauche': 'gauche', 'Soleil à droite': 'droite', 'Se lève à gauche': 'lever-gauche', 'Se lève à droite': 'lever-droite' };
+export const SOLEIL_LEVER = { marge: 0.25 };
+
+// Les ombres de nuages (labo) : des plaques d'ombre sur le sol, de la couleur de paroi de chaque case, par blocs de 2 m (le sol en voxels) qui dérivent avec le vent (`NUAGES_VENT`, m/s). `taches` : la part du sol
+// qu'elles couvrent selon le temps (0 à 1). Un temps couvert (`couvert`) n'a ni plaques ni ombres du soleil : la lumière est la même partout, l'ombre d'un homme ou d'un parapet s'efface.
+export const NUAGES = { sec: { taches: 0.3 }, beau: { taches: 0.2 }, canicule: { taches: 0.1 }, gel: { taches: 0.28 }, couvert: { couvert: true }, pluie: { couvert: true }, brouillard: { couvert: true }, neige: { couvert: true }, tempete: { couvert: true } };
+export const NUAGES_VENT = [3, 1];
+
 
 // Les ombres du relief : un relief casse la lumière s'il fait au moins `seuilQ` quarts de mètre de plus que la case (0,5 m : un parapet, la lèvre d'un cratère, une paroi de tranchée) ;
 // `portee` : mètres cherchés vers le soleil. Le soleil doit avoir bougé de `pasAngle` rad (ou de `pasLongueur` en part de l'ombre) pour qu'on recalcule, au plus toutes les `delai` s ; `budgetEcritureMs` : ms par image pour repeindre dans la texture du sol les rangées vues dont l'ombre a changé.

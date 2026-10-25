@@ -41,7 +41,7 @@ export const NOUS = 0, EUX = 1;
 const VERSION = 9;   // 9 : le génie (les sections, les ponts refaits) ; 8 : le chemin et le cap des chars ; 7 : le rapport du jour (les sorties et les pertes d'avions) ; 6 : les avions de mitraillage (une passe tracée, des points de vie, une flotte) ; 5 : la forme des cratères (rond, lèvre jetée, éclats : les impacts rejoués changent) ; 2 : la graine d'identité ; 3 : la campagne et les relevés ; 4 : les numéros de campagne, un effectif par camp, le rythme de l'IA (campagne, lots 1 à 3)
 
 const ticksParHeure = R => Math.max(1, Math.round(R.jour.duree / (R.jour.heureFin - R.jour.heureDebut) / PAS));
-const ticksParJour = R => ticksParHeure(R) * (R.jour.heureFin - R.jour.heureDebut);
+export const ticksParJour = R => ticksParHeure(R) * (R.jour.heureFin - R.jour.heureDebut);
 const PERIODE_COUTS = R => Math.max(1, Math.round(R.foule.champPeriode / PAS));
 
 // ─── Création ────────────────────────────────────────────────────────────

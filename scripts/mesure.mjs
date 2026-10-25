@@ -6,6 +6,7 @@
 //   node scripts/mesure.mjs --arbres '{"feuilles":true}'   (les arbres variés du labo, v0.52.6 : `{}` les formes seules, `feuilles`, `chute`, `abattus: "longs"`)
 //   node scripts/mesure.mjs --ombres 1 --zooms 3,4,5   (les ombres du relief du labo, v0.67 : éteintes dans le jeu)
 //   node scripts/mesure.mjs --ombres 1 --parois 1 --zooms 3,4,5   (avec les parois qui suivent le soleil)
+//   node scripts/mesure.mjs --nuages 1 --zooms 3,4,5   (les ombres de nuages du labo)
 //   node scripts/mesure.mjs --finesse 2 --zooms 3,4,5   (le sol en demi-mètres ; indices de ZOOMS : 3 = 4 px/m, 4 = 6, 5 = 8)
 //
 // Le rendu est mesuré avec ?mesure=1 : chaque image attend la fin du dessin
@@ -14,7 +15,7 @@
 // barrages en cours (le sol se refait).
 import { servir, lancerChromium, options } from '../outils/navigateur.mjs';
 
-const o = options(process.argv.slice(2), { soldats: '8000', secondes: '12', largeur: '1280', hauteur: '800', finesse: 'auto', zooms: '0,3,5', arbres: '', ombres: '', parois: '' });
+const o = options(process.argv.slice(2), { soldats: '8000', secondes: '12', largeur: '1280', hauteur: '800', finesse: 'auto', zooms: '0,3,5', arbres: '', ombres: '', parois: '', nuages: '' });
 const srv = await servir('.');
 const nav = await lancerChromium();
 const page = await (await nav.newContext({ viewport: { width: +o.largeur, height: +o.hauteur } })).newPage();
@@ -33,6 +34,7 @@ await page.evaluate(() => {
 const resultats = [];
 const VUES = [['tout le champ (points)', 0, 200, 150], ['zoom 3 (boîtes)', 2, 200, 165], ['zoom 4 (boîtes)', 3, 200, 170], ['zoom 6 (silhouettes)', 4, 200, 180], ['zoom 8 (silhouettes)', 5, 200, 190]];
 if (o.ombres) await page.evaluate(() => { __jeu.rendu().ombresRelief = true; });
+if (o.nuages) await page.evaluate(() => { __jeu.rendu().ombresNuages = true; });
 if (o.parois) await page.evaluate(() => { __jeu.rendu().soleilLabo = { parois: true }; });
 if (o.arbres) await page.evaluate(a => __jeu.rendu().reglerArbres(JSON.parse(a)), o.arbres);
 await page.evaluate(f => { const r = __jeu.rendu(); if (f !== 'auto') { r.finesseDes = null; r.finesse = +f; } }, o.finesse);      // auto : le réglage du jeu (le sol fin dès 4 px/m)

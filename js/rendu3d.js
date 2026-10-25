@@ -37,7 +37,7 @@ import { creerVegetation } from './rendu/vegetation.js?v=0.66.3';
 import { creerTemps } from './rendu/temps.js?v=0.66.3';
 import { creerEclats } from './rendu/eclats.js?v=0.66.3';
 import { creerOmbresRelief } from './rendu/ombres-relief.js?v=0.66.3';
-import { OMBRES_RELIEF as OMB } from './data/soleil.js?v=0.66.3';
+import { OMBRES_RELIEF as OMB, NUAGES, NUAGES_VENT } from './data/soleil.js?v=0.66.3';
 import { PALETTE, ORDRE, INDICE } from './palette.js?v=0.66.3';
 import { OMBRE, couleursLigne } from './apparence.js?v=0.66.3';
 import { MORCEAU, hauteurVueQ as hauteurQ, hauteurVueM as hauteurM } from './terrain.js?v=0.66.3';
@@ -119,7 +119,7 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
   const cielMeteo = new THREE.Color();
 
   // Les ombres du relief (labo « La lumière dans le relief », éteintes dans le jeu) : une case que le soleil ne voit pas prend la couleur de sa paroi dans la texture du sol ; le soleil du labo : saisons, azimut
-  let ombresRelief = false, soleilLabo = null, ombreVu = null;
+  let ombresRelief = false, ombresNuages = false, soleilLabo = null, ombreVu = null;
   const ombres = creerOmbresRelief({ hauteurQ });
   const soleilCase = { x: 0, z: 0 }, ecriture = { ms: 0, n: 0, rangees: 0, max: 0, maxOmbre: 0 };      // mesure : la réécriture de la texture du sol
   let B = null, T = null, faux = null, fauxU = null;
@@ -133,7 +133,8 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
   const solMat = new THREE.ShaderMaterial({
     uniforms: { uSol: { value: null }, uTaille: { value: new THREE.Vector2(1, 1) }, uBord: { value: leBord ? leBord.fondu : 0 }, uBordCoul: { value: leBord ? col(leBord.ciel) : new THREE.Color(0) },
       uKaki: { value: new THREE.Color(0) }, uVert: { value: new THREE.Color(0) }, uGlaise: { value: new THREE.Color(0) }, uDissoudre: { value: 0 },
-      uSuivre: { value: 0 }, uVersSoleil: { value: new THREE.Vector2(0, 1) } },       // les parois qui suivent le soleil (labo) : 1 et la direction du soleil, vers lui      // (le bord qui se dissout dans le faux terrain : `faireFaux`)
+      uSuivre: { value: 0 }, uVersSoleil: { value: new THREE.Vector2(0, 1) },
+      uNuage: { value: 0 }, uTemps: { value: 0 }, uVent: { value: new THREE.Vector2(NUAGES_VENT[0], NUAGES_VENT[1]) } },      // l'ombre des nuages (labo) : la part du sol couverte (0 : rien), l'horloge de l'image, le vent       // les parois qui suivent le soleil (labo) : 1 et la direction du soleil, vers lui      // (le bord qui se dissout dans le faux terrain : `faireFaux`)
     vertexShader: SH.solMat.v,
     fragmentShader: SH.solMat.f,
     side: THREE.DoubleSide,
@@ -632,7 +633,10 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
     majMorceaux(); projeter();
     vegetation.setTemps(tAnim); soldats.setTemps(tAnim);
     const t1 = performance.now();
-    temps.majSoleil(horloge(B), soleilLabo);
+    const hj = horloge(B);
+    temps.majSoleil(hj, soleilLabo);
+    { const nu = ombresNuages ? NUAGES[hj.meteo] : null;             // l'ombre des nuages (labo) : le jour, par un temps à plaques
+      solMat.uniforms.uNuage.value = nu?.taches && hj.phase === 'jour' ? 0.5 + (nu.taches - 0.5) * 0.55 : 0; solMat.uniforms.uTemps.value = tAnim; }
     { const sv = soldats.soleilUniform.value, n = Math.hypot(sv.x, sv.y);           // les parois selon le soleil (labo) ; la nuit (soleil nul), celles du jeu
       solMat.uniforms.uSuivre.value = soleilLabo?.parois && n > 0.05 ? 1 : 0; if (n > 0.05) solMat.uniforms.uVersSoleil.value.set(-sv.x / n, -sv.y / n); }
     majSoldats();
@@ -673,6 +677,8 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
     get finesse() { return finesse; },
     get ombresRelief() { return ombresRelief; },
     set ombresRelief(v) { ombresRelief = !!v; solAttente = 0; },      // les ombres du relief sur le sol (labo)
+    get ombresNuages() { return ombresNuages; },
+    set ombresNuages(v) { ombresNuages = !!v; },                    // l'ombre des nuages sur le sol (labo)
     get soleilLabo() { return soleilLabo; },
     set soleilLabo(r) { soleilLabo = r; },                           // { saisonnier, azimut } : la course du soleil à essayer (labo)
     // vérification (tests, labo) : sur les rangées à jour, le masque incrémental est celui qu'un calcul neuf donne, et la texture du sol le dit (le dessus d'une case à l'ombre : la couleur de sa paroi)

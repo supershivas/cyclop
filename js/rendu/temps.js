@@ -5,7 +5,7 @@ import * as SH from './shaders.js?v=0.66.3';
 import { ligneY } from '../tranchees.js?v=0.66.3';
 import { hash2 } from '../lib/rng.js?v=0.66.3';
 import { clairDeLune } from '../data/lune.js?v=0.66.3';
-import { SOLEIL, SOLEIL_SAISONS, SOLEIL_COTE } from '../data/soleil.js?v=0.66.3';
+import { SOLEIL, SOLEIL_SAISONS, SOLEIL_COTE, SOLEIL_LEVER, NUAGES } from '../data/soleil.js?v=0.66.3';
 
 // `THREE`, `scene`, `col`, `camera`, `vue`, `surface(x, z)` viennent de creerRendu ; `soleilUniform` (le bout de l'ombre d'un mètre de hauteur, lu aussi par le nuanceur
 // des soldats) et `solUniforms` (`uSol`, `uTaille` : la texture du sol, que l'ombre d'un arbre reprend) sont les uniformes partagés ; `ecl` (les éclats : les fusées) et
@@ -16,16 +16,19 @@ export function creerTemps({ THREE, scene, col, camera, vue, surface, bataille, 
   // Rien hors de la palette : la nuit est une trame de la couleur la plus sombre. ───
   const soleil = soleilUniform.value;      // (partagé avec les ombres des arbres)
   // le bout de l'ombre d'un mètre de hauteur, selon l'heure (0 la nuit)
-  // `r` (le labo, « La lumière dans le relief ») : `saisonnier` (le soleil le plus haut de la saison : bas l'hiver, haut l'été), `azimut` (rad : l'arc tourne autour de la vue), `cote` ('gauche' | 'droite' : le soleil sur un côté de l'écran, voir `SOLEIL_COTE`) ; sans lui, le soleil du jeu
+  // `r` (le labo, « La lumière dans le relief ») : `saisonnier` (le soleil le plus haut de la saison : bas l'hiver, haut l'été), `azimut` (rad : l'arc tourne autour de la vue), `cote` ('gauche' | 'droite' | 'lever-gauche' | 'lever-droite' : le soleil sur un côté de l'écran, voir `SOLEIL_COTE`), `meteo` (un temps couvert éteint le soleil) ; sans lui, le soleil du jeu
   function majSoleil(h, r = null) {
-    if (h.phase !== 'jour') { soleil.set(0, 0); return; }
+    if (h.phase !== 'jour' || (r?.meteo && NUAGES[h.meteo]?.couvert)) { soleil.set(0, 0); return; }      // (labo : un temps couvert n'a pas d'ombres)
     const t = Math.max(0, Math.min(1, (h.heure + h.minute / 60 - SOLEIL.depart) / (SOLEIL.fin - SOLEIL.depart)));
     const haut = r?.saisonnier ? (SOLEIL_SAISONS[h.saison] ?? SOLEIL.hauteurMax) : SOLEIL.hauteurMax;
     const elev = Math.max(SOLEIL.hauteurMin, haut * Math.sin(Math.PI * t));        // rad : bas le matin et le soir
     const L = Math.min(SOLEIL.ombreMax, 1 / Math.tan(elev));                       // (à 5, l'ombre d'un arbre traversait 45 m de champ)
     let x = -Math.cos(Math.PI * t) * L, z = -Math.sin(Math.PI * t) * L;            // le soleil à l'est, au sud, à l'ouest : l'ombre à l'opposé
     if (r?.cote) {                                                                  // (labo) le soleil sur un côté : l'ombre reste de ce côté de l'écran, un peu tournée vers la caméra, et ne change que de longueur
-      const phi = SOLEIL_COTE.angle + SOLEIL_COTE.oscillation * (2 * t - 1), a = r.cote === 'gauche' ? phi : Math.PI - phi;
+      const lever = r.cote.startsWith('lever'), gauche = r.cote.endsWith('gauche');
+      // fixe : l'ombre reste de son côté ; `lever` : elle va d'un côté à l'autre, en passant à midi vers la caméra
+      const phi = lever ? SOLEIL_LEVER.marge + (Math.PI - 2 * SOLEIL_LEVER.marge) * t : SOLEIL_COTE.angle + SOLEIL_COTE.oscillation * (2 * t - 1);
+      const a = gauche ? phi : Math.PI - phi;
       x = Math.cos(a) * L; z = Math.sin(a) * L;
     } else if (r?.azimut) { const c = Math.cos(r.azimut), s = Math.sin(r.azimut); [x, z] = [x * c - z * s, x * s + z * c]; }
     soleil.set(x, z);

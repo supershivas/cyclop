@@ -22,11 +22,18 @@ export const solMat = {
   f: `
       uniform sampler2D uSol; uniform vec2 uTaille; uniform float uBord; uniform vec3 uBordCoul;
       uniform vec3 uKaki, uVert, uGlaise; uniform float uDissoudre;
+      uniform float uNuage, uTemps; uniform vec2 uVent;
       varying vec2 vUV; varying vec2 vXZ;
       float h(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+      float vn(vec2 p) { vec2 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f); return mix(mix(h(i), h(i + vec2(1.0, 0.0)), f.x), mix(h(i + vec2(0.0, 1.0)), h(i + vec2(1.0, 1.0)), f.x), f.y); }
       void main() {
         vec4 c = texture2D(uSol, vUV);
         vec3 rgb = c.rgb;
+        // (labo) l'ombre des nuages : par blocs de 2 m qui dérivent avec le vent, les cases sous un nuage prennent un mélange de leur couleur et de celle de leur paroi (la moitié basse de la texture) ; le dessus seulement, uNuage à 0 : rien
+        if (uNuage > 0.0 && vUV.y < 0.5) {
+          vec2 q = floor(vXZ / 2.0) * 2.0 + uVent * uTemps;
+          if (0.62 * vn(q / 30.0) + 0.38 * vn(q / 12.0 + 7.3) < uNuage) rgb = mix(rgb, texture2D(uSol, vUV + vec2(0.0, 0.5)).rgb, 0.55);       // à mi-chemin de la paroi : on ne les confond pas avec l'ombre du relief, qui est le ton plein
+        }
         // le bord du terrain (v0.32.0, labo « Le bord de la carte ») : le sol se fond dans une couleur sur uBord mètres (0 : coupé net)
         if (uBord > 0.0) {
           float d = min(min(vXZ.x, uTaille.x - vXZ.x), min(vXZ.y, uTaille.y - vXZ.y));
