@@ -34,6 +34,7 @@ la danse macabre, la catastrophe peinte avec calme. L'intention est dans `DESIGN
   pause). Pas d'interface tactile ni d'aperçu téléphone (Jérôme, v0.1.0) : sur un
   écran tactile, l'écran titre dit que le jeu se joue sur un ordinateur.
 - **Public** : joueur averti.
+- **Difficulté** (Jérôme, v0.70.0) : trois niveaux au choix du secteur (`DIFFICULTES` de data/difficulte.js : Secteur calme, Front ordinaire, Grande offensive), qui ne changent que l'adversaire (son effectif, le rythme de son IA, sa posture `retenu`) ; « ordinaire » est la partie d'avant ; le dernier choix est gardé dans `prefs.difficulte`. Pas à deux ; la campagne n'en use pas encore (second temps : un décalage de sa courbe). Détail : `docs/domaines/bataille.md`.
 - **Session** : un run = une bataille de 10 à 15 jours sur un secteur (Jérôme, v0.9.0 ;
   trois avant), avec une mission (`etat.mission` : tenir, prendre ; `juger` à la fin,
   ou avant si le secteur tombe ; `etat.issue`) et une réserve de régiments frais pour

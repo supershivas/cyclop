@@ -423,7 +423,11 @@ dialog form { margin-top: calc(var(--pas) * 2); }
 .saisons-choix .carte-choix span { font-size: var(--texte-petit); letter-spacing: .06em; text-transform: uppercase; line-height: 1; }
 .saisons-choix .carte-choix b { float: none; }
 .saisons-choix::before { content: 'Saison'; align-self: center; font-size: var(--texte-petit); color: var(--jeu-accent); letter-spacing: .06em; text-transform: uppercase; }
-#dialogue-carte.agrandi .saisons-choix { display: none; }
+#difficultes-choix::before { content: 'Niveau'; }
+#difficultes-choix[hidden], #difficulte-desc:empty { display: none; }
+#difficulte-desc { margin: calc(var(--pas) * .5) 0 0; font-size: var(--texte-petit); line-height: 1.4; color: var(--jeu-accent); }
+#difficultes-choix .carte-choix b { font-size: var(--texte-petit); }
+#dialogue-carte.agrandi .saisons-choix, #dialogue-carte.agrandi #difficulte-desc { display: none; }
 .carte-apercu { display: grid; gap: var(--pas); }
 .carte-3d { position: relative; height: min(44vh, 26rem); overflow: hidden; display: flex; align-items: center; justify-content: center; background: var(--jeu-ombre); border: 1px solid var(--jeu-accent); }
 .carte-3d canvas { display: block; image-rendering: pixelated; }
