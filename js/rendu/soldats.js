@@ -1,9 +1,9 @@
 // Les hommes : les soldats (une boîte et son ombre ; de près la silhouette, plus loin une silhouette allégée ; aux zooms 1 et 2 un point), les anneaux des
 // régiments choisis ou survolés, les corps (un homme couché) et les tombes (un tertre et une croix). Tout est instancié et ne reçoit que ce qu'on voit.
 // Le dessin seulement. Les formes viennent de geometries.js, le GLSL de shaders.js.
-import * as SH from './shaders.js?v=0.71.1';
-import { creerGeometries } from './geometries.js?v=0.71.1';
-import { classeDuRang } from '../data/grades.js?v=0.71.1';
+import * as SH from './shaders.js?v=0.72.0';
+import { creerGeometries } from './geometries.js?v=0.72.0';
+import { classeDuRang } from '../data/grades.js?v=0.72.0';
 
 // `THREE`, `scene`, `col`, `solUniforms` (`uSol`, `uTaille` : la texture du sol, que l'ombre d'un soldat reprend), `styleSoldat` (le style de près, comparé au labo),
 // `grades` (v0.68.0 : une variante de `GRADES`, data/grades.js, ou null : tous pareils) et `rangDe(B, id, reg)` (le rang d'un homme, bataille.js) ; `surface(x, z)` et `surfaceLisse(x, z)` (la hauteur du sol, lissée pour qui marche), `solY` (la hauteur moyenne du sol) et `POINTS_JUSQUA` (le zoom où un soldat n'est
@@ -16,13 +16,13 @@ export function creerSoldats({ THREE, scene, col, solUniforms, styleSoldat, grad
   // 3 les jambes (bandes molletières), 4 le fusil, 5 le sac, 6 le visage.
   const { geometrieSoldat: formeSoldat } = creerGeometries(THREE, col);
   const geometrieSoldat = style => formeSoldat(style, attrsI, grades);
-  const { geometrieGrades: formeGrades } = creerGeometries(THREE, col);
+  const { geometrieGrades: formeGrades, geometrieBandages: formeBandages } = creerGeometries(THREE, col);
   const CAPS = new Float32Array(1 << 16);                    // le cap de chaque homme (par numéro : les indices bougent quand les morts sont retirés) : l'angle de son regard (NaN : pas encore vu, il part tourné vers l'ennemi)
   // Les gradés (v0.68.0) : leurs pièces (képi, fanion, galons…) sont des maillages à part, un par classe (une instance par gradé de cette classe seulement : un homme sur quatre
   // en tout, et chaque instance ne porte que les pièces de sa classe), avec les mêmes attributs que le corps ; le corps, lui, ne change que par la classe (la taille) et le fusil que
   // les officiers n'ont plus. Rien d'autre à dessiner pour un soldat ordinaire. Aux zooms 1 et 2, un seul tampon de points de tous les gradés.
   const PART_CLASSE = [0, 0.2, 0.12, 0.05, 0.03];                                   // la part de la capacité de l'armée que chaque classe peut prendre (le caporal pour six hommes, le sergent pour douze…)
-  let varArr = null, GR = null, gpPos = null, gpCamp = null, gpTaille = null, attrsGP = null, gPoints = null, classeArr = null, capGP = 0;
+  let BL = null, blessArr = null, varArr = null, GR = null, gpPos = null, gpCamp = null, gpTaille = null, attrsGP = null, gPoints = null, classeArr = null, capGP = 0;
   let cap = 0, posArr = null, campArr = null, vitArr = null, tirArr = null, soldatsInst = null, soldatsDetail = null, soldatsLeger = null, soldatsPoints = null, attrsI = null, attrsP = null;
   const VARIATION = { taille: 0.07, largeur: 0.14 };      // la taille (±7 %) et la largeur (±14 %) d'un homme autour de la boîte de référence : le dessin seulement (Jérôme, v0.69.0)
   const TAPI = 0.5;                        // la peur au-delà de laquelle un homme se tapit (le dessin seulement ; on ne tire plus à 0,85)
@@ -64,13 +64,15 @@ export function creerSoldats({ THREE, scene, col, solUniforms, styleSoldat, grad
       if (soldatsDetail) { scene.remove(soldatsDetail); soldatsDetail.geometry.dispose(); }
       if (soldatsLeger) { scene.remove(soldatsLeger); soldatsLeger.geometry.dispose(); }
     }
+    if (BL) { scene.remove(BL.leger, BL.detail); BL.leger.geometry.dispose(); BL.detail.geometry.dispose(); BL = null; }
     if (GR) { for (const c of GR) if (c) { scene.remove(c.inst, c.leger, c.detail); for (const m of [c.inst, c.leger, c.detail]) m.geometry.dispose(); } scene.remove(gPoints); gPoints.geometry.dispose(); GR = gPoints = null; }
     if (lettres) { scene.remove(lettres); lettres.geometry.dispose(); lettres = null; }
     cap = capacite;
     posArr = new Float32Array(cap * 3); campArr = new Float32Array(cap); vitArr = new Float32Array(cap); tirArr = new Float32Array(cap * 2);
     attrsI = [new THREE.InstancedBufferAttribute(posArr, 3), new THREE.InstancedBufferAttribute(campArr, 1), new THREE.InstancedBufferAttribute(vitArr, 1), new THREE.InstancedBufferAttribute(tirArr, 2)];
     classeArr = new Float32Array(cap); varArr = new Float32Array(cap * 2).fill(1);
-    attrsI.push(new THREE.InstancedBufferAttribute(classeArr, 1), new THREE.InstancedBufferAttribute(varArr, 2));       // (la classe du grade, puis la taille et la largeur de chacun : v0.69.0)
+    blessArr = new Float32Array(cap);
+    attrsI.push(new THREE.InstancedBufferAttribute(classeArr, 1), new THREE.InstancedBufferAttribute(varArr, 2), new THREE.InstancedBufferAttribute(blessArr, 1));       // (la classe du grade, puis la taille et la largeur de chacun : v0.69.0)
     attrsI.forEach(a => a.setUsage(THREE.DynamicDrawUsage));
     soldatsInst = new THREE.Mesh(geometrieSoldat('boite'), soldatMat); soldatsInst.frustumCulled = false; soldatsInst.renderOrder = 2;
     soldatsDetail = styleSoldat === 'boite' ? null : new THREE.Mesh(geometrieSoldat(styleSoldat), soldatMat);
@@ -83,6 +85,13 @@ export function creerSoldats({ THREE, scene, col, solUniforms, styleSoldat, grad
     gp.setDrawRange(0, 0);
     soldatsPoints = new THREE.Points(gp, pointMat); soldatsPoints.frustumCulled = false; soldatsPoints.renderOrder = 2;
     scene.add(soldatsInst, soldatsPoints);
+    // les blessés (v0.72.0) : leurs pansements, un maillage à part qui ne porte qu'eux (jamais plus d'un homme sur sept : la marge est large)
+    { const n = Math.ceil(cap / 7) + 64;
+      BL = { n, k: 0, pos: new Float32Array(n * 3), camp: new Float32Array(n), vit: new Float32Array(n), tir: new Float32Array(n * 2), va: new Float32Array(n * 2).fill(1), bl: new Float32Array(n) };
+      BL.attrs = [new THREE.InstancedBufferAttribute(BL.pos, 3), new THREE.InstancedBufferAttribute(BL.camp, 1), new THREE.InstancedBufferAttribute(BL.vit, 1), new THREE.InstancedBufferAttribute(BL.tir, 2), new THREE.InstancedBufferAttribute(BL.va, 2), new THREE.InstancedBufferAttribute(BL.bl, 1)];
+      BL.attrs.forEach(a => a.setUsage(THREE.DynamicDrawUsage));
+      const mesh = style => { const m = new THREE.Mesh(formeBandages(style, BL.attrs), soldatMat); m.frustumCulled = false; m.renderOrder = 2.2; scene.add(m); return m; };
+      BL.leger = mesh('legere'); BL.detail = mesh('detail'); }
     if (grades) {
       if (grades.classes.some(c => c.etiquette)) {
         lettreMat ??= new THREE.ShaderMaterial({ uniforms: { uT: soldatMat.uniforms.uT, uEchelle: { value: 1 }, uHaut: { value: 400 }, uAmplitude: { value: 1.5 }, uOs: { value: col('o') }, uTerre: { value: col('t') } },
@@ -96,8 +105,8 @@ export function creerSoldats({ THREE, scene, col, solUniforms, styleSoldat, grad
       pointGradeMat ??= new THREE.ShaderMaterial({ uniforms: pointMat.uniforms, vertexShader: SH.pointGradeMat.v, fragmentShader: SH.pointGradeMat.f });
       GR = [null];
       for (let c = 1; c <= 4; c++) {
-        const n = Math.ceil(cap * PART_CLASSE[c]) + 64, G = { n, k: 0, pos: new Float32Array(n * 3), camp: new Float32Array(n), vit: new Float32Array(n), tir: new Float32Array(n * 2), cl: new Float32Array(n).fill(c), va: new Float32Array(n * 2).fill(1) };
-        G.attrs = [new THREE.InstancedBufferAttribute(G.pos, 3), new THREE.InstancedBufferAttribute(G.camp, 1), new THREE.InstancedBufferAttribute(G.vit, 1), new THREE.InstancedBufferAttribute(G.tir, 2), new THREE.InstancedBufferAttribute(G.cl, 1), new THREE.InstancedBufferAttribute(G.va, 2)];
+        const n = Math.ceil(cap * PART_CLASSE[c]) + 64, G = { n, k: 0, pos: new Float32Array(n * 3), camp: new Float32Array(n), vit: new Float32Array(n), tir: new Float32Array(n * 2), cl: new Float32Array(n).fill(c), va: new Float32Array(n * 2).fill(1), bl: new Float32Array(n) };
+        G.attrs = [new THREE.InstancedBufferAttribute(G.pos, 3), new THREE.InstancedBufferAttribute(G.camp, 1), new THREE.InstancedBufferAttribute(G.vit, 1), new THREE.InstancedBufferAttribute(G.tir, 2), new THREE.InstancedBufferAttribute(G.cl, 1), new THREE.InstancedBufferAttribute(G.va, 2), new THREE.InstancedBufferAttribute(G.bl, 1)];
         G.attrs.forEach(a => a.setUsage(THREE.DynamicDrawUsage));
         const mesh = style => { const m = new THREE.Mesh(formeGrades(style, grades, G.attrs, c), soldatMat); m.frustumCulled = false; m.renderOrder = 2.1; scene.add(m); return m; };
         G.inst = mesh('boite'); G.leger = mesh('legere'); G.detail = mesh(styleSoldat === 'boite' ? 'silhouette' : styleSoldat);
@@ -278,6 +287,7 @@ export function creerSoldats({ THREE, scene, col, solUniforms, styleSoldat, grad
     const B = bataille();
     const A = B.armee, n = A.n;
     let k = 0, ka = 0, kg = 0;
+    BL.k = 0;
     lcN = 0;
     if (grades) for (let c = 1; c <= 4; c++) GR[c].k = 0;
     const an = anGeo.attributes.position.array, anTon = anGeo.attributes.aTon.array;
@@ -304,7 +314,13 @@ export function creerSoldats({ THREE, scene, col, solUniforms, styleSoldat, grad
       if (A.duel[i]) { const ph = Math.sin(tAnim * 4.6 + id * 1.7); tirArr[k * 2] = -2 - (ph > 0 ? ph * ph : 0); tirArr[k * 2 + 1] = A.duelAng[i]; }
       // sa taille et sa largeur : un hachage de son numéro (le dessin seulement, rien de sauvegardé), de ±7 % en hauteur et ±14 % en largeur ; même numéro, même homme
       const hu = (Math.imul((A.id[i] & 0xffff) + 1, 2654435761) >>> 0) / 4294967296, hv = (Math.imul((A.id[i] & 0xffff) + 977, 1597334677) >>> 0) / 4294967296;
+      blessArr[k] = A.blessure[i];                    // sa blessure : la pose et le pansement (v0.72.0)
       varArr[k * 2] = 1 + VARIATION.largeur * (2 * hu - 1); varArr[k * 2 + 1] = 1 + VARIATION.taille * (2 * hv - 1);
+      if (A.blessure[i] && BL.k < BL.n) {
+        const q = BL.k++;
+        BL.pos[q * 3] = x; BL.pos[q * 3 + 1] = posArr[k * 3 + 1]; BL.pos[q * 3 + 2] = y; BL.camp[q] = campArr[k]; BL.vit[q] = vitArr[k]; BL.tir[q * 2] = tirArr[k * 2]; BL.tir[q * 2 + 1] = tirArr[k * 2 + 1];
+        BL.bl[q] = A.blessure[i]; BL.va[q * 2] = varArr[k * 2]; BL.va[q * 2 + 1] = varArr[k * 2 + 1];
+      }
       if (grades) {
         // la classe de son rang (celui de sa création ou de sa promotion : un mort retiré de l'armée ne laisse rien ; un promu change de dessin à l'image suivante)
         const classe = classeDuRang(rangDe(B, A.id[i], A.reg[i]));
@@ -319,7 +335,7 @@ export function creerSoldats({ THREE, scene, col, solUniforms, styleSoldat, grad
         if (G && G.k < G.n && kg < capGP) {
           const q = G.k++;
           G.pos[q * 3] = x; G.pos[q * 3 + 1] = posArr[k * 3 + 1]; G.pos[q * 3 + 2] = y;
-          G.camp[q] = campArr[k]; G.va[q * 2] = varArr[k * 2]; G.va[q * 2 + 1] = varArr[k * 2 + 1]; G.vit[q] = vitArr[k]; G.tir[q * 2] = tirArr[k * 2]; G.tir[q * 2 + 1] = tirArr[k * 2 + 1];
+          G.camp[q] = campArr[k]; G.va[q * 2] = varArr[k * 2]; G.va[q * 2 + 1] = varArr[k * 2 + 1]; G.bl[q] = blessArr[k]; G.vit[q] = vitArr[k]; G.tir[q * 2] = tirArr[k * 2]; G.tir[q * 2 + 1] = tirArr[k * 2 + 1];
           gpPos[kg * 3] = x; gpPos[kg * 3 + 1] = posArr[k * 3 + 1]; gpPos[kg * 3 + 2] = y; gpCamp[kg] = campArr[k]; gpTaille[kg] = grades.classes[classe].points ?? 2;
           kg++;
         }
@@ -335,6 +351,12 @@ export function creerSoldats({ THREE, scene, col, solUniforms, styleSoldat, grad
     for (const a of points ? attrsP : attrsI) { a.clearUpdateRanges(); a.addUpdateRange(0, k * a.itemSize); a.needsUpdate = true; }
     soldatsPoints.geometry.setDrawRange(0, k);
     soldatsInst.geometry.instanceCount = k;
+    // les pansements : seulement aux zooms où l'on voit les membres
+    for (const [m, voulu] of [[BL.leger, !!leger], [BL.detail, !!detail]]) {
+      if (!vide()) m.visible = voulu && BL.k > 0;
+      m.geometry.instanceCount = BL.k;
+    }
+    if (BL.k && (leger || detail)) for (const a of BL.attrs) { a.clearUpdateRanges(); a.addUpdateRange(0, BL.k * a.itemSize); a.needsUpdate = true; }
     if (grades) {
       for (let c = 1; c <= 4; c++) {
         const G = GR[c];

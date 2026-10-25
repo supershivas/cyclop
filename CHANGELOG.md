@@ -1,5 +1,8 @@
 # Journal des versions
 
+## 0.72.0 — 2026-10-25
+- Les blessés se voient : un homme blessé à la jambe s'affaisse ou boite, à la tête il se penche, au bras il le serre ; un pansement marque la blessure
+
 ## 0.71.1 — 2026-10-25
 - Le C du capitaine est un élément de l'interface : toujours de face, avec une légère animation de haut en bas
 - Le test de fumée ne dépend plus de la vitesse du rabat (posture, marche)

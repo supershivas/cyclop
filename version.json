@@ -1,7 +1,7 @@
 {
-  "version": "0.71.1",
+  "version": "0.72.0",
   "date": "2026-10-25",
   "changes": [
-    "Le C du capitaine est un élément de l'interface : toujours de face, avec une légère animation de haut en bas"
+    "Les blessés se voient : un homme blessé à la jambe s'affaisse ou boite, à la tête il se penche, au bras il le serre ; un pansement marque la blessure"
   ]
 }

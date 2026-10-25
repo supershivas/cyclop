@@ -100,7 +100,7 @@ export const fauxMat = {
 
 export const soldatMat = {
   v: `
-      attribute vec3 aPos; attribute float aCamp; attribute float aPart; attribute float aJambe; attribute float aVit; attribute float aBras; attribute vec2 aTir; attribute float aGr; attribute float aGrade; attribute vec2 aVar;
+      attribute vec3 aPos; attribute float aCamp; attribute float aPart; attribute float aJambe; attribute float aVit; attribute float aBras; attribute vec2 aTir; attribute float aGr; attribute float aGrade; attribute vec2 aVar; attribute float aBless; attribute float aBand;
       uniform float uT; uniform vec2 uSoleil; uniform float uBalance; uniform vec2 uEch;
       varying float vCamp; varying float vPart; varying vec2 vXZ; varying float vLong;
       void main() {
@@ -111,6 +111,8 @@ export const soldatMat = {
         // les grades (v0.68.0) : une boîte ne se dessine que pour les classes de son masque (aGr : un bit par classe, 31 pour toutes ; aGrade : la classe de l'homme, 0 sans grades) ;
         // le corps d'un capitaine ou d'un lieutenant est plus haut (uEch.y, uEch.x), son ombre est celle de tous
         if (mod(floor(aGr / exp2(aGrade)), 2.0) < 0.5) cache = true;
+        // les pansements (v0.72.0) : un bandeau n'existe que pour un homme blessé à cet endroit
+        if (aBand > 0.5 && abs(aBand - aBless) > 0.5) cache = true;
         vCamp = aCamp; vPart = kp; vLong = position.y;
         float ech = aGrade > 3.5 ? uEch.y : (aGrade > 2.5 ? uEch.x : 1.0);
         // (v0.69.0) chaque homme a sa taille et sa largeur (aVar : le dessin seulement, tiré de son numéro)
@@ -119,6 +121,28 @@ export const soldatMat = {
         bool tapi = aVit < 0.0;
         float vit = tapi ? 0.0 : aVit;
         if (tapi && (kp < 0.5 || kp > 1.5)) p.y *= 0.6;
+        // les blessés (v0.72.0 ; aBless : 1 bras, 2 jambe, 3 tête) : celui qui ne marche plus s'affaisse (un genou à terre, penché), celui qui boite se tient de travers ; la tête blessée se penche ;
+        // le bras blessé se serre contre le ventre ; l'ombre ne change pas
+        if (aBless > 0.5 && (kp < 0.5 || kp > 1.5)) {
+          bool immobile = vit < 0.15;
+          if (aBless > 2.5) {
+            p.z += max(0.0, p.y - 1.3) * 0.5;
+            if (immobile) { p.y *= 0.85; p.z += p.y * 0.12; }
+          } else if (aBless > 1.5) {
+            p.y *= immobile ? 0.66 : 0.9;
+            p.z += p.y * (immobile ? 0.3 : 0.1);
+            p.x += p.y * (immobile ? 0.14 : 0.18);
+          } else {
+            p.z += max(0.0, p.y - 0.8) * 0.12;
+            if (aBras < -0.5 && aBras > -1.5) {
+              vec3 d = p - vec3(0.0, 1.3, 0.0);
+              float a = -1.05;
+              p.y = 1.3 + d.y * cos(a) - d.z * sin(a);
+              p.z = d.y * sin(a) + d.z * cos(a);
+              p.x += 0.14;
+            }
+          }
+        }
         // l'ombre suit le soleil : elle part des pieds, longue le matin et le soir (uSoleil : son bout, par mètre de hauteur)
         if (kp > 0.5 && kp < 1.5) {
           vec2 d = length(uSoleil) > 0.05 ? normalize(uSoleil) : vec2(0.6, 0.8);
@@ -211,6 +235,7 @@ export const soldatMat = {
         else if (k == 8.0) c = uBotte;
         else if (k == 30.0) c = uOmbre;               // les signes sombres des grades (galons, képi, baudrier)
         else if (k == 31.0) c = uSel;                 // le fanion de commandement
+        else if (k == 34.0) c = camp > 0.5 ? uOmbre : uSel;     // le pansement : d'os sur le bleu de chez nous, de terre sur le kaki d'en face (l'os s'y perdait)
         gl_FragColor = vec4(c, 1.0);
       }`,
 };
