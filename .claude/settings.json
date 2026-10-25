@@ -15,8 +15,7 @@
     "deny": [
       "Read(./vendor/**)",
       "Read(./captures/**)",
-      "Read(./test/fumee.json)",
-      "Read(./CHANGELOG.md)"
+      "Read(./test/fumee.json)"
     ]
   }
 }

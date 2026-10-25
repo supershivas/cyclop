@@ -5,6 +5,9 @@ export const JOURNAL = [
   { version: '0.68.0', date: '2026-10-25', items: [
     { genre: 'nouveau', texte: 'Les grades se voient : trois façons de montrer le capitaine, le lieutenant, le sergent et le caporal dans la troupe (le fanion, les jumelles et la carte, le képi et les galons), contre le jeu d\'aujourd\'hui ; rien n\'est encore en jeu', ref: 'grades-B' },
   ] },
+  { version: '0.67.2', date: '2026-10-25', items: [
+    { genre: 'nouveau', texte: 'Le moral sur le champ : quatre façons de montrer qu\'un régiment est ébranlé ou en déroute sur le champ même (un liseré qui s\'effrite, un pennon, une trame, des chevrons de repli), sur le moteur en direct ; rien n\'est dans le jeu', ref: 'moral-terrain-A' },
+  ] },
   { version: '0.63.0', date: '2026-10-23', items: [
     { genre: 'mis-a-jour', texte: 'Des buissons plus variés : les sept formes, les fleurs de l\'été, les teintes de l\'automne (sans baies), les branches nues de l\'hiver et la neige sont retenus et en jeu ; l\'ancien buisson reste au labo.', ref: 'buissons-varies-B' },
   ] },

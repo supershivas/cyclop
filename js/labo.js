@@ -8,11 +8,12 @@ import { spriteCanvas, paletteToGPL, paletteToHex } from './lib/sprites.js?v=0.6
 import { PALETTE, ROLES } from './palette.js?v=0.68.0';
 import { chargerContenu } from './design-store.js?v=0.68.0';
 import { tuile, ETAT } from './tuiles.js?v=0.68.0';
-import { creerTerrain, impact, hydroLignes } from './terrain.js?v=0.68.0';
+import { creerTerrain, impact, hydroLignes, toucher } from './terrain.js?v=0.68.0';
 import { FORMES } from './cratere.js?v=0.68.0';
 import { CALIBRES } from './data/calibres.js?v=0.68.0';
 import { METEO } from './data/meteo.js?v=0.68.0';
-import { nouvelleBataille, avancer, ordonnerMarche, ordonnerBarrage, mourir, rangDe } from './bataille.js?v=0.68.0';
+import { nouvelleBataille, avancer, ordonnerMarche, ordonnerBarrage, mourir, regarderAu, aube, horloge, ticksParJour, rangDe } from './bataille.js?v=0.68.0';
+import { AZIMUTS, COTES } from './data/soleil.js?v=0.68.0';
 import { creerRendu, ZOOMS } from './rendu3d.js?v=0.68.0';
 import { placesCommandement } from './army.js?v=0.68.0';
 import { hash2 } from './lib/rng.js?v=0.68.0';
@@ -34,6 +35,7 @@ import { maquettePonts, PONTS, NOMS_PONTS } from './labo-ponts.js?v=0.68.0';
 import { PONTS_JEU } from './data/ponts.js?v=0.68.0';
 import { JOURNAL } from './labo-journal.js?v=0.68.0';
 import { loadVersion } from './lib/app-update.js?v=0.68.0';
+import { calqueMoral } from './labo-moral.js?v=0.68.0';
 
 document.documentElement.style.setProperty('--jeu-accent', ROLES.accent);
 const NOM = document.title.replace(/^Labo — /, ''); // le nom vient de la page (une apostrophe ne casse rien)
@@ -148,8 +150,18 @@ function parader(B, cx0, cy0) {
   return [cx, cy];
 }
 
-// ─── Le moteur, en direct : le rendu du jeu sur une petite bataille ───
-function moteur(stage, { zoom = 3, pluie = false, gel = false, soldats = 600, cz = 185, camera = null, respiration = undefined, soldat = undefined, cadavre = undefined, morts = 0, effets = undefined, barrages = false, surLesArbres = false, vue = null, verdure = undefined, nuit = null, tombee = false, calque = null, bord = null, centre = null, finesse = 1, cratere = null, arbres = undefined, saison = null, jours = undefined, versLesArbres = false, buissons = undefined, versLesBuissons = false, grades = null, parade = false } = {}) {
+// Une colline pour juger l'ombre portée (labo « La lumière dans le relief ») : un mamelon de `r` mètres de rayon et `h` mètres de haut (sommet plat, flancs raides), à `dx` et `dz` mètres du point visé (le haut en marches d'un mètre, comme le sol du jeu) ; rien n'est sauvegardé
+function poserColline(B, { dx = 0, dz = 0, r = 22, h = 9 }, cz) {
+  const T = B.terrain, cx = B.etat.marges.x + 200 + dx, cy = B.etat.marges.y + cz + dz;
+  for (let j = Math.max(0, Math.floor(cy - r)); j <= Math.min(T.H - 1, Math.ceil(cy + r)); j++) for (let i = Math.max(0, Math.floor(cx - r)); i <= Math.min(T.W - 1, Math.ceil(cx + r)); i++) {
+    const d = Math.hypot(i + 0.5 - cx, j + 0.5 - cy);
+    if (d >= r) continue;
+    T.base[j * T.W + i] += Math.round(h * 4 * Math.min(1, (r - d) / (0.4 * r)));      // un sommet plat, des flancs raides (en quarts de mètre) : de quoi jeter une vraie ombre
+    toucher(T, i, j);
+  }
+}
+
+function moteur(stage, { zoom = 3, pluie = false, gel = false, soldats = 600, cz = 185, camera = null, respiration = undefined, soldat = undefined, cadavre = undefined, morts = 0, effets = undefined, barrages = false, surLesArbres = false, vue = null, verdure = undefined, nuit = null, tombee = false, calque = null, bord = null, centre = null, finesse = 1, cratere = null, arbres = undefined, saison = null, jours = undefined, versLesArbres = false, buissons = undefined, versLesBuissons = false, lumiere = null, colline = null, journee = null, grades = null, parade = false } = {}) {
   reglerVerdure(verdure);                                   // le sol vert (apparence.js) : avant que le sol ne se peigne
   const boite = el('div'); boite.style.cssText = 'position:relative;width:100%;height:min(70vh,560px);overflow:hidden';
   const canvas = el('canvas'); canvas.style.cssText = 'position:absolute;left:0;top:0;image-rendering:pixelated';
@@ -166,6 +178,25 @@ function moteur(stage, { zoom = 3, pluie = false, gel = false, soldats = 600, cz
     stage.append(el('p', {}, ...boutons));
     if (arbres?.chute) stage.append(el('p', {}, ...[1, 4, 7, 10].map(j => el('button', { className: 'essai', textContent: `Jour ${j}`, onclick: () => { if (ctx.B) ctx.B.etat.jour = j; } }))));
   }
+  // la lumière dans le relief : l'heure (figée), la saison, l'azimut, les ombres du relief ; « Réinitialiser » remet les réglages de départ
+  // (`journee` : la bataille tourne, un jour de jeu en `secondes` secondes ; sinon l'heure est figée)
+  const depart = () => ({ ombres: !!lumiere?.ombres, heure: lumiere?.heure ?? 9, saison: 'automne', saisonnier: !!lumiere?.saisonnier, azimut: lumiere?.azimut ?? 'sud', fige: !journee, parois: !!lumiere?.parois, nuages: !!lumiere?.nuages, meteo: !!lumiere?.meteo });
+  const lum = depart();
+  let appliquerLumiere = () => {};
+  if (lumiere) {
+    const bascule = (nom, ...b) => el('p', {}, el('span', { textContent: nom + ' : ' }), ...b);
+    const bouton = (t, f) => el('button', { className: 'essai', textContent: t, onclick: () => { f(); appliquerLumiere(); } });
+    stage.append(
+      bascule('Ombres du relief', bouton('Sans', () => { lum.ombres = false; }), bouton('Avec', () => { lum.ombres = true; })),
+      bascule('Heure', ...[7, 8, 9, 10, 12, 14, 16, 17].map(h => bouton(`${h} h`, () => { lum.heure = h; lum.fige = true; })), bouton('Le temps passe', () => { lum.fige = false; })),
+      bascule('Saison', ...[['automne', 'Automne'], ['hiver', 'Hiver'], ['ete', 'Été']].map(([k, n]) => bouton(n, () => { lum.saison = k; })), bouton('Soleil du jeu', () => { lum.saisonnier = false; }), bouton('Soleil de la saison', () => { lum.saisonnier = true; })),
+      bascule('Soleil', ...[...Object.keys(COTES), ...Object.keys(AZIMUTS)].map(k => bouton(k, () => { lum.azimut = k; }))),
+      bascule('Parois', bouton('Parois du jeu', () => { lum.parois = false; }), bouton('Parois selon le soleil', () => { lum.parois = true; })),
+      bascule('Nuages', bouton('Sans ombres de nuages', () => { lum.nuages = false; }), bouton('Avec ombres de nuages', () => { lum.nuages = true; })),
+      bascule('Ciel couvert', bouton('Ombres toujours', () => { lum.meteo = false; }), bouton('Sans ombres sous un ciel couvert', () => { lum.meteo = true; })),
+      el('p', {}, bouton('Réinitialiser', () => { Object.assign(lum, depart()); })),
+    );
+  }
   stage.append(zooms);
   // les grades (v0.68.0) : d'un bouton à un capitaine, d'un camp ou de l'autre, au zoom où on le lit
   if (grades) stage.append(el('p', {}, ...[['Un capitaine · nous', 0], ['Un capitaine · en face', 1]].map(([nom, camp]) => el('button', { className: 'essai', textContent: nom, onclick: () => {
@@ -174,7 +205,7 @@ function moteur(stage, { zoom = 3, pluie = false, gel = false, soldats = 600, cz
   } }))));
   let raf = 0, rendu = null, fini = false;
   (async () => {
-    const B = nouvelleBataille(5, R, { soldats, jours });
+    const B = nouvelleBataille(5, R, { soldats, jours: journee?.jours ?? jours, ...(journee ? { saison: journee.saison } : {}) });
     if (tombee) B.etat.phase = 'nuit';                       // la nuit : l'obscurité du jeu, ses lanternes
     if (pluie || gel) {
       // une journée de pluie sur un champ labouré, calculée d'un coup
@@ -184,6 +215,7 @@ function moteur(stage, { zoom = 3, pluie = false, gel = false, soldats = 600, cz
       if (gel) B.etat.meteo[0] = 'gel'; else B.etat.meteo[0] = 'pluie';
     }
     if (cratere) labourer(B, FORMES[cratere], cz);
+    if (colline) poserColline(B, colline, cz);
     if (morts) {
       // des morts de la veille (la glaise) et du jour (la couleur de leur camp), tombés en rangs là où l'on regarde
       const A = B.armee;
@@ -223,7 +255,16 @@ function moteur(stage, { zoom = 3, pluie = false, gel = false, soldats = 600, cz
       rendu.saisonArbres = cle === 'printemps' ? 'printemps' : null;
     };
     if (saison) reglerSaison(saison);
-    let tReleve = 0, tBarrage = 0.3, kBarrage = 0;
+    if (lumiere) {
+      appliquerLumiere = () => {
+        if (!journee) { B.etat.sol.saison = lum.saison; B.etat.phase = 'jour'; }
+        rendu.ombresRelief = lum.ombres; rendu.ombresNuages = lum.nuages;
+        rendu.soleilLabo = { saisonnier: lum.saisonnier, azimut: AZIMUTS[lum.azimut], cote: COTES[lum.azimut], parois: lum.parois, meteo: lum.meteo };
+        if (lum.fige) regarderAu(B, lum.heure, journee ? B.etat.meteo[B.etat.jour - 1] : 'sec');
+      };
+      appliquerLumiere();
+    }
+    let tReleve = 0, tBarrage = 0.3, kBarrage = 0, accel = 0;
     let t = performance.now();
     const boucle = now => {
       const dt = Math.min(0.1, (now - t) / 1000); t = now;
@@ -236,12 +277,21 @@ function moteur(stage, { zoom = 3, pluie = false, gel = false, soldats = 600, cz
         if (arbre) ordonnerBarrage(B, '75', arbre.i + 0.5, arbre.j + 0.5, 1);
         else ordonnerBarrage(B, cal, rendu.vue.cx + hash2(kBarrage, 3, 9) * 60 - 30, rendu.vue.cz - 10 + hash2(kBarrage, 4, 9) * 20, 1);
       }
-      const ev = vivant ? avancer(B) : [];
+      let ev = [];
+      if (vivant) {
+        if (journee && !lum.fige) {
+          // un jour de jeu en `secondes` secondes : plusieurs pas par image (au plus 150) ; la nuit est sautée (l'aube sans corvée), la dernière nuit s'arrête sur la fin de la bataille
+          accel += dt * ticksParJour(R) / journee.secondes;
+          for (let n = Math.min(150, Math.floor(accel)); n > 0 && B.etat.phase !== 'fin'; n--) { ev = ev.concat(avancer(B)); accel -= 1; if (B.etat.phase === 'nuit') aube(B); }
+          accel = Math.min(accel, 150);
+        } else ev = avancer(B);
+      }
+      if (lumiere && lum.fige) regarderAu(B, lum.heure, journee ? B.etat.meteo[B.etat.jour - 1] : 'sec');       // l'heure reste celle choisie : le soleil ne bouge pas pendant la comparaison
       rendu.dessiner(dt, ev);
       if ((tReleve -= dt) < 0) {
         tReleve = 0.5;
         const st = rendu.stats;
-        releve.textContent = `Dessin : ${st.ms.renduFini} ms (rendu logiciel ici, attendu jusqu'au bout) · ${st.trianglesDessines} triangles · ${st.soldatsVus} soldats dessinés` + (grades ? ` · ${st.gradesVus} gradés` : '') + (arbres || versLesArbres ? ` · arbres : ${Math.round(st.trianglesArbres)} triangles, tri ${st.msArbres} ms` : '');
+        releve.textContent = `Dessin : ${st.ms.renduFini} ms (rendu logiciel ici, attendu jusqu'au bout) · ${st.trianglesDessines} triangles · ${st.soldatsVus} soldats dessinés` + (grades ? ` · ${st.gradesVus} gradés` : '') + (lumiere ? ` · ombres du relief : ${rendu.ombresReliefEtat.enCours ? 'calcul…' : 'à jour'}, sol ${st.ms.sol} ms` : '') + (arbres || versLesArbres ? ` · arbres : ${Math.round(st.trianglesArbres)} triangles, tri ${st.msArbres} ms` : '') + (journee ? (h => ` · jour ${h.jour}/${h.jours}, ${h.heure} h ${String(h.minute).padStart(2, '0')}, ${METEO[h.meteo].nom}, ${h.saison}${lum.fige ? ' (heure figée)' : ''}${B.etat.phase === 'fin' ? ' · fin de la bataille' : ''}`)(horloge(B)) : '');
       }
       raf = requestAnimationFrame(boucle);
     };
@@ -249,6 +299,12 @@ function moteur(stage, { zoom = 3, pluie = false, gel = false, soldats = 600, cz
   })();
   return () => { fini = true; finCalque?.(); cancelAnimationFrame(raf); rendu?.detruire(); reglerVerdure(0); };
 }
+
+// la scène des essais de lumière : la première tranchée, des cratères, une colline au sud-est (de quoi voir une grande ombre portée), à 4 pixels par mètre
+const SCENE_LUMIERE = lumiere => ({ zoom: 3, soldats: 600, cz: 255, finesse: 2, cratere: 'tout', colline: { dx: 20, dz: 31, r: 20, h: 12 }, lumiere });
+
+// une journée en dix secondes, par saison (Jérôme, v0.66.3) : la vraie bataille tourne (un jour de jeu de 360 s en 10 s), le soleil se lève d'un côté et se couche de l'autre, les ombres de nuages dérivent, un ciel couvert efface les ombres
+const SCENE_JOURNEE = saison => ({ ...SCENE_LUMIERE({ ombres: true, azimut: 'Se lève à gauche', parois: true, nuages: true, meteo: true, saisonnier: true }), soldats: 400, journee: { saison, secondes: 10, jours: 30 } });
 
 const GROUPES = [
   { id: 'dessin', title: 'Dessin', topics: [
@@ -308,6 +364,12 @@ const GROUPES = [
       { title: 'Ligne à ligne', depuis: '0.33.0', note: 'Le papier est posé d\'un coup mais s\'écrit : le titre, puis chaque ligne et chaque bouton apparaissent l\'un après l\'autre, à quelques centièmes d\'écart, comme un ordre qu\'on rédige.', render: s => moteur(s, { zoom: 3, cz: 185, soldats: 400, calque: calqueClic('equerres', 'lignes') }) },
       { title: 'Au régiment', status: 'ancienne', note: 'En jeu en v0.34.0 et v0.34.1, remplacée par le rabat en v0.34.6. La fenêtre quitte le bas de l\'écran : elle vient près des hommes, juste au-dessus de la boîte de leur nom (v0.34.1 ; la maquette la pose au-dessus de leur emprise), reliée à eux par une pointe, et les suit quand ils marchent. Elle fait un petit bond en arrivant.', render: s => moteur(s, { zoom: 3, cz: 185, soldats: 400, calque: calqueClic('equerres', 'bulle') }) },
       { title: 'Elle apparaît d\'un coup', status: 'ancienne', note: 'Jusqu\'à la v0.33 : un clic sur la carte, et le papier des ordres (le régiment, ce qu\'il fait, les formes, Marcher, Regagner, Fiche) est là, posé au-dessus de la carte, sans lien avec elle. Cliquez une carte du bas.', render: s => moteur(s, { zoom: 3, cz: 185, soldats: 400, calque: calqueClic('equerres', 'sec') }) },
+    ] },
+    { id: 'moral-terrain', title: 'Le moral sur le champ', variants: [
+      { title: 'Le liseré qui s\'effrite', depuis: '0.67.2', note: 'Un cadre autour des hommes. Ébranlé : des tirets orange qui marchent. En déroute : le cadre se casse en morceaux rouges qui vacillent et s\'éteignent à tour de rôle. Tient : rien (le silence dit « tout va bien »). Le plus discret ; il reprend la forme de l\'anneau et du cadre de choix, donc il se confond avec eux si le régiment est choisi.', render: s => moteur(s, { zoom: 2, cz: 185, soldats: 400, calque: calqueMoral('lisere') }) },
+      { title: 'Le pennon', depuis: '0.67.2', note: 'Un mât planté au bord des hommes, toujours là : il tient droit, toile bleue déployée ; ébranlé, il penche et la toile pend à mi-mât, orange ; en déroute, il est à terre, la toile rouge en lambeaux. Reprend le fanion déchiré des tranchées. Se lit même sans couleur (droit, penché, couché), mais ajoute un objet par régiment à l\'écran.', render: s => moteur(s, { zoom: 2, cz: 185, soldats: 400, calque: calqueMoral('pennon') }) },
+      { title: 'La trame', depuis: '0.67.2', note: 'Une hachure en biais sur toute l\'emprise, qui se resserre quand le régiment fléchit : espacée et orange (ébranlé), serrée et rouge avec un cadre pointillé (en déroute). C\'est la hachure de la barre de la carte, portée sur le champ. La plus lisible de loin, la plus lourde : elle couvre les hommes.', render: s => moteur(s, { zoom: 2, cz: 185, soldats: 400, calque: calqueMoral('trame') }) },
+      { title: 'Les chevrons de repli', depuis: '0.67.2', note: 'L\'action plutôt que l\'état : ébranlé, un chevron orange pulse sous les hommes, vers l\'arrière ; en déroute, trois chevrons rouges coulent vers le sud. Dit où ils vont, pas ce qu\'ils sont ; invisible dès que le régiment s\'arrête.', render: s => moteur(s, { zoom: 2, cz: 185, soldats: 400, calque: calqueMoral('chevrons') }) },
     ] },
     { id: 'clic-bouton', title: 'Le clic sur un bouton', variants: [
       { title: 'Le rebond', status: 'actuelle', depuis: '0.41.3', note: 'Retenu (v0.41.3), en jeu : Dès l\'appui, le bouton s\'enfonce (94 %), puis revient en dépassant un peu (105 %) : 280 ms. Le plus discret et le plus universel ; il dit « j\'ai senti ton doigt » avant même que l\'ordre parte.', render: s => maquetteBoutons(s, 'rebond') },
@@ -438,6 +500,18 @@ const GROUPES = [
       { title: 'Cubes d\'un demi-mètre', status: 'retenue', depuis: '0.52.3', note: 'Retenu (Jérôme, v0.52.3) : en jeu à partir de 4 pixels par mètre. Chaque case se coupe en quatre cubes dont la hauteur suit la pente (arrondie au quart de mètre) : les bosses et les bords de cratère montent par petites marches. Les couleurs se découpent aussi au demi-mètre : au bord d\'une tache d\'herbe ou de boue, un petit cube sur deux ou trois prend la couleur du voisin, du même niveau. Un mur d\'un mètre cinquante ou plus (tranchée, falaise) reste net. Jusqu\'à quatre fois plus de triangles de sol : regardez le relevé, au zoom 8 puis au zoom 3.', render: s => moteur(s, { zoom: 5, soldats: 400, cz: 185, finesse: 2 }) },
       { title: 'Un demi-mètre, après un jour de pluie', status: 'retenue', depuis: '0.52.3', note: 'Retenu (Jérôme, v0.52.3) : en jeu à partir de 4 pixels par mètre. Le même sol fin sur un champ labouré par les obus et trempé : c\'est là que la finesse se voit, sur les bords des cratères et les rigoles.', render: s => moteur(s, { zoom: 4, soldats: 400, cz: 185, pluie: true, finesse: 2 }) },
       { title: 'Un demi-mètre, vu de loin (zoom 3)', status: 'ancienne', depuis: '0.52.3', note: 'Non retenu (Jérôme, v0.52.3) : le jeu garde le mètre jusqu\'au zoom 3. Le prix du sol fin quand on le regarde de loin : plus de sol dans l\'écran, donc le coût le plus élevé. Une version du jeu ne le garderait qu\'à partir du zoom 6.', render: s => moteur(s, { zoom: 2, soldats: 400, cz: 185, finesse: 2 }) },
+    ] },
+    { id: 'lumiere-relief', title: 'La lumière dans le relief', variants: [
+      { title: 'Le soleil du jeu', status: 'actuelle', depuis: '0.66.3', note: 'La référence : le soleil ne projette que les ombres des soldats et des arbres, le relief n\'en a pas. Même terrain, mêmes hommes, même colline (20 m de rayon, 12 m de haut, au sud-est de la vue) pour toutes les variantes suivantes ; l\'heure est figée (choisissez-la), les boutons règlent la saison et le soleil.', render: s => moteur(s, SCENE_LUMIERE({ ombres: false })) },
+      { title: 'Les ombres du relief', status: 'essai', depuis: '0.66.3', note: 'Une case que le soleil ne voit pas (derrière la colline, un parapet, au fond d\'une tranchée, sous la lèvre d\'un cratère) prend la couleur de sa paroi : le ton le plus sombre de sa matière, comme l\'ombre des soldats. Aucune couleur nouvelle. Le soleil fait encore son arc du jeu (levant, sud, couchant).', render: s => moteur(s, SCENE_LUMIERE({ ombres: true, heure: 8 })) },
+      { title: 'Le soleil sur un côté', status: 'essai', depuis: '0.66.3', note: '(Jérôme, v0.66.3 : « le soleil doit toujours être sur un côté du terrain ; les ombres s\'étirent vers la gauche ou vers la droite ».) Le soleil à gauche de l\'écran : toute la journée l\'ombre part vers la droite, un peu vers nous, longue le matin et le soir, courte à midi. Les boutons Soleil à gauche / à droite, et l\'heure : regardez l\'ombre de la colline s\'étirer.', render: s => moteur(s, SCENE_LUMIERE({ ombres: true, heure: 9, azimut: 'Soleil à gauche' })) },
+      { title: 'Le soleil sur un côté, parois selon le soleil', status: 'essai', depuis: '0.66.3', note: 'Le soleil à gauche, et les parois d\'un demi-mètre ou plus claires ou sombres selon qu\'elles regardent le soleil : les flancs tournés vers la gauche sont éclairés, ceux tournés vers la droite et vers nous sont à l\'ombre (la lumière du jeu d\'avant, mais qui suit le côté choisi). La nuit, celle du jeu.', render: s => moteur(s, SCENE_LUMIERE({ ombres: true, heure: 9, azimut: 'Soleil à gauche', parois: true })) },
+      { title: 'Sous les obus', status: 'essai', depuis: '0.66.3', note: 'Les ombres du relief, le soleil à gauche, et un barrage toutes les 3,5 s : les cratères neufs se creusent et leurs ombres suivent, sans retarder l\'image.', render: s => moteur(s, { ...SCENE_LUMIERE({ ombres: true, heure: 9, azimut: 'Soleil à gauche' }), barrages: true }) },
+    ] },
+    { id: 'journee-saison', title: 'Une journée en dix secondes', variants: [
+      { title: 'Automne', status: 'essai', depuis: '0.66.3', note: 'La bataille tourne en accéléré (un jour de jeu en 10 s, trente jours) sur le terrain du labo, avec la colline : le soleil se lève à gauche et se couche à droite, l\'ombre de la colline passe de la droite à la gauche en vous regardant, les ombres du relief, les parois selon le soleil et les ombres de nuages. Le temps de chaque jour vient de la chaîne de la bataille : un jour de pluie ou de brouillard n\'a ni ombres ni plaques de nuages. « Le temps passe » relance la journée, une heure du jour la fige.', render: s => moteur(s, SCENE_JOURNEE('automne')) },
+      { title: 'Hiver', status: 'essai', depuis: '0.66.3', note: 'La même journée de dix secondes en hiver : le soleil est bas (0,5 rad au plus haut), les ombres restent longues à midi, le sol est blanc.', render: s => moteur(s, SCENE_JOURNEE('hiver')) },
+      { title: 'Été', status: 'essai', depuis: '0.66.3', note: 'La même journée de dix secondes en été : le soleil monte haut (1,2 rad), les ombres de midi sont courtes, peu de plaques de nuages par forte chaleur.', render: s => moteur(s, SCENE_JOURNEE('ete')) },
     ] },
     { id: 'cratere-forme', title: 'Des cratères moins carrés', variants: [
       { title: 'Le motif carré (avant la v0.52.5)', status: 'ancienne', depuis: '0.52.5', note: "Jusqu'à la v0.52.4 : une matrice de 3×3, 5×5 ou 7×7 cases en quarts de mètre, au centre de la case, et une lèvre en anneau carré autour (une case sur quatre sautée, jamais les coins). Le champ : trois obus isolés au milieu (75, 155, 220) et quarante-cinq au hasard, les mêmes dans toutes les variantes. Les deux boutons montrent le sol fin (6 pixels par mètre) et le mètre (3 pixels par mètre). Coût mesuré (Node, 10 000 obus, puis le labo en rendu logiciel) : impact() 1,5 à 2,8 µs ; 18, 40 et 66 cases touchées (75, 155, 220) ; sol 125 000 triangles au sol fin, 94 000 au mètre.", render: s => moteur(s, { zoom: 4, soldats: 400, cz: 185, finesse: 2, cratere: 'actuel' }) },
