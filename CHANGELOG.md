@@ -1,5 +1,9 @@
 # Journal des versions
 
+## 0.70.0 — 2026-10-25
+- Les caractéristiques des soldats évoluent : elles dépendent du grade et du régiment au départ, montent à l'usage (tir, coups, marche fatiguée, calme sous le feu) et baissent avec une blessure ou la terreur
+- La fiche montre la tendance (↑ ↓), le carnet note qu'un homme devient excellent, et les survivants gardent leurs caractéristiques d'une bataille à l'autre
+
 ## 0.69.0 — 2026-10-25
 - Le képi et les galons sont en jeu, avec un C au-dessus du capitaine ; le fusil pointe vers l'avant quand on tire ; chaque soldat a sa taille et sa largeur
 - La marche est plus vive, les soldats se battent à la baïonnette au corps à corps, et la fiche montre tir, force, endurance et calme

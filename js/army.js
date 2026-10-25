@@ -25,9 +25,9 @@
      (rng.js), pour que la même graine rejoue la même bataille.
 
    Logique pure : aucun DOM. Le rendu lit les tableaux (rendu3d.js). */
-import { hauteurQ, vitesseCase } from './terrain.js?v=0.69.0';
-import { ligneY } from './tranchees.js?v=0.69.0';
-import { caracteristiques } from './identite.js?v=0.69.0';
+import { hauteurQ, vitesseCase } from './terrain.js?v=0.70.0';
+import { ligneY } from './tranchees.js?v=0.70.0';
+import { caracteristiques } from './identite.js?v=0.70.0';
 
 export const GRILLE = 2;           // m : cases de voisinage
 export const DENSITE = 8;          // m : carrés de densité (tir)

@@ -1,11 +1,11 @@
 // Le temps qui passe (Jérôme, v0.8.0) : le soleil (les ombres des soldats et des arbres tournent et s'allongent), le soir et la nuit (un voile de
 // terre qui monte), les lumières (lanternes des tranchées, incendies, fusées) qui le trouent. Rien hors de la palette, sauf les fondus du voile
 // (CLAUDE.md, palette). Le dessin seulement : tout se lit de l'heure (`horloge`) et de l'état.
-import * as SH from './shaders.js?v=0.69.0';
-import { ligneY } from '../tranchees.js?v=0.69.0';
-import { hash2 } from '../lib/rng.js?v=0.69.0';
-import { clairDeLune } from '../data/lune.js?v=0.69.0';
-import { SOLEIL, SOLEIL_SAISONS, SOLEIL_COTE, SOLEIL_LEVER, NUAGES } from '../data/soleil.js?v=0.69.0';
+import * as SH from './shaders.js?v=0.70.0';
+import { ligneY } from '../tranchees.js?v=0.70.0';
+import { hash2 } from '../lib/rng.js?v=0.70.0';
+import { clairDeLune } from '../data/lune.js?v=0.70.0';
+import { SOLEIL, SOLEIL_SAISONS, SOLEIL_COTE, SOLEIL_LEVER, NUAGES } from '../data/soleil.js?v=0.70.0';
 
 // `THREE`, `scene`, `col`, `camera`, `vue`, `surface(x, z)` viennent de creerRendu ; `soleilUniform` (le bout de l'ombre d'un mètre de hauteur, lu aussi par le nuanceur
 // des soldats) et `solUniforms` (`uSol`, `uTaille` : la texture du sol, que l'ombre d'un arbre reprend) sont les uniformes partagés ; `ecl` (les éclats : les fusées) et
