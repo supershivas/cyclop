@@ -25,7 +25,7 @@ la danse macabre, la catastrophe peinte avec calme. L'intention est dans `DESIGN
   plus petits (Jérôme, v0.3.0 : c'est cela, « l'angle ») ; on la tourne (jusqu'à
   34°) et l'incline un peu, en douceur ; elle respire (un balancement de 2° en
   23 s, coupé si le système demande un mouvement réduit ; Jérôme, v0.3.1) ; elle
-  ne sort jamais du terrain. Zoom par
+  ne sort jamais du terrain. Lumière (Jérôme, v0.68.1) : un soleil qui se lève à gauche et se couche à droite, des ombres de relief et de nuages, un temps couvert sans ombres (`SOLEIL_JEU` de data/soleil.js ; détail dans `docs/domaines/rendu.md`). Zoom par
   facteurs entiers au point visé (1, 2, 3, 4, 6, 8, 12, 16 pixels par mètre ; Jérôme, v0.9.3 : tout près des soldats) ; aux zooms
   1 et 2, chaque soldat est un point (le sol, lui, garde le même relief à tous les zooms ; Jérôme, v0.12.0) ; en face est vert kaki clair (palette `x`). Sol en cubes et soldats en boîtes (Jérôme, v0.2.0 :
   les facettes et les sprites essayés au labo ne sont pas retenus). Profil game-system :
