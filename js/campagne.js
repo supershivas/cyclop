@@ -8,6 +8,7 @@ import { hash2 } from './lib/rng.js?v=0.69.0';
 import { NOUS, rangDe, numeroCampagne } from './bataille.js?v=0.69.0';
 import { SECTEURS } from './data/secteur.js?v=0.69.0';
 import { identite, chevrons } from './identite.js?v=0.69.0';
+import { lireCaracs } from './army.js?v=0.69.0';
 import { CAMPAGNE, TEXTES } from './data/campagne.js?v=0.69.0';
 
 export const CLE = 'campagne';        // l'entrée de js/lib/save.js (cyclopeen:campagne)
@@ -70,14 +71,14 @@ export function suivante(c, plan = CAMPAGNE) {
 function survivants(B) {
   const { etat, armee: A } = B;
   const out = new Map(etat.regiments.filter(r => r.camp === NOUS).map(r => [r.id, new Map()]));
-  const ajouter = (reg, id, exp, victimes) => {            // id : le numéro de bataille ; le registre garde le numéro de campagne
+  const ajouter = (reg, id, exp, victimes, carac) => {            // id : le numéro de bataille ; le registre garde le numéro de campagne
     const m = out.get(reg), numero = numeroCampagne(etat, id);
-    if (m && !m.has(numero)) m.set(numero, [numero, rangDe(B, id, reg), exp, victimes]);
+    if (m && !m.has(numero)) m.set(numero, [numero, rangDe(B, id, reg), exp, victimes, carac]);
   };
-  for (let i = 0; i < A.n; i++) if (A.camp[i] === NOUS && !A.mort[i]) ajouter(A.reg[i], A.id[i], A.exp[i], A.victimes[i]);
+  for (let i = 0; i < A.n; i++) if (A.camp[i] === NOUS && !A.mort[i]) ajouter(A.reg[i], A.id[i], A.exp[i], A.victimes[i], lireCaracs(A, i).slice(0, 4));
   const enRoute = new Map();                                // par régiment : combien reviennent encore du poste de secours
-  for (const e of etat.evacues) if (e.length >= 6 && e[3] === 0) { ajouter(e[4], e[0], e[5], e[6] ?? 0); enRoute.set(e[4], (enRoute.get(e[4]) ?? 0) + 1); }
-  for (const e of etat.releves ?? []) ajouter(e[1], e[0], e[2], e[3]);
+  for (const e of etat.evacues) if (e.length >= 6 && e[3] === 0) { ajouter(e[4], e[0], e[5], e[6] ?? 0, e[7]?.slice(0, 4)); enRoute.set(e[4], (enRoute.get(e[4]) ?? 0) + 1); }
+  for (const e of etat.releves ?? []) ajouter(e[1], e[0], e[2], e[3], e[4]);
   return etat.regiments.filter(r => r.camp === NOUS).map(r => ({
     nom: r.nom, depart: r.initial, enRoute: enRoute.get(r.id) ?? 0, survivants: [...out.get(r.id).values()].sort((a, b) => a[0] - b[0]),
   }));

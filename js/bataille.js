@@ -16,7 +16,7 @@
    rejoue depuis la graine et les impacts (rejouerTerrain). */
 import { createRng, hash2 } from './lib/rng.js?v=0.69.0';
 import { impact, hydroLignes, etat as etatCase, vitesseEtat, vitesseCase, ETAT } from './terrain.js?v=0.69.0';
-import { creerArmee, ajouterSoldat, construireGrille, pasArmee, tuerDans, effrayer, compacter, photoArmee, restaurerArmee, b64, deB64, DENSITE, place } from './army.js?v=0.69.0';
+import { creerArmee, ajouterSoldat, construireGrille, pasArmee, tuerDans, effrayer, compacter, photoArmee, restaurerArmee, b64, deB64, DENSITE, place, poserCaracs, lireCaracs, abimerCaracs, gagner, CARACS } from './army.js?v=0.69.0';
 import { ligneSous } from './tranchees.js?v=0.69.0';
 import { terrainDuSecteur } from './secteur-terrain.js?v=0.69.0';
 import { detruirePont, reconstruirePont, pontEn } from './eaux.js?v=0.69.0';
@@ -34,7 +34,7 @@ import { METEO, SAISONS, SAISON_DEFAUT, PREVISION_JUSTE, temperature } from './d
 import { SECTEURS } from './data/secteur.js?v=0.69.0';
 import { REGIMENTS } from './data/lexique.js?v=0.69.0';
 import { STANCES, STANCE_DEFAUT } from './data/stances.js?v=0.69.0';
-import { grade } from './identite.js?v=0.69.0';
+import { grade, departCaracs, caracEnMots } from './identite.js?v=0.69.0';
 import { corvees, rejouerTravaux } from './nuit.js?v=0.69.0';
 
 export const PAS = 1 / 30;                 // s de jeu par pas
@@ -168,6 +168,9 @@ export function nouvelleBataille(graine, R, opts = {}) {
           etat.numeros[id] = v ? v[0] : etat.prochainNumero++;
           if (v) { B.armee.exp[i] = v[2]; B.armee.victimes[i] = v[3]; }
         }
+        // ses caractéristiques : celles d'un survivant de la campagne (reprises là où il les a laissées), sinon le tirage de départ (grade, âge, esprit du régiment)
+        const v4 = T ? vieux[k]?.[4] : null;
+        poserCaracs(B.armee, i, v4 ?? departCaracs(camp === NOUS ? etat.graineIdentite : graine, camp, B.armee.id[i], T && camp === NOUS ? etat.numeros[B.armee.id[i]] : B.armee.id[i], k, effectif, reg.id));
       }
     }
   }
@@ -471,6 +474,7 @@ export function avancer(B) {
     } else {
       const r = rng();
       A.blessure[i] = r < 0.4 ? 1 : r < 0.8 ? 2 : 3;
+      abimerCaracs(A, i, A.blessure[i], R.progression);         // une blessure laisse des traces : bras (adresse, force), jambe (endurance), tête (calme)
       etat.blesses[A.camp[i]]++;
       const reg = etat.regiments[A.reg[i]];
       reg.moral = Math.max(0, reg.moral - R.moral.blesse * 125 / reg.initial);
@@ -499,6 +503,13 @@ export function avancer(B) {
   if (T.coupes.length) noyades(B);
   enFace(B, rng);
   pasArmee(A, ctx);
+  // les caractéristiques qui viennent de passer un mot : ceux de chez nous qui deviennent excellents font une ligne du carnet (`palier`, refait à chaque pas)
+  for (let i = 0; i < A.n; i++) {
+    const bits = A.palier[i]; if (!bits) continue;
+    A.palier[i] = 0;
+    if (A.camp[i] !== NOUS) continue;
+    CARACS.forEach((k, q) => { if (bits & (1 << q) && A[k][i] >= 78 && A[k + '0'][i] < 78) B.evenements.push({ type: 'palier', camp: NOUS, id: A.id[i], reg: A.reg[i], carac: q, mot: caracEnMots(A[k][i]) }); });
+  }
   // un homme qui tombe fait peur à ceux qui sont à côté
   for (const i of morts) effrayer(A, A.x[i], A.y[i], 4, R.soldat.peurMort, R.experience, R.caracteristiques.calme);
   if (compacter(A)) for (const reg of etat.regiments) if (reg.effectif <= 0) reg.effectif = 0;
@@ -736,6 +747,7 @@ function promouvoir(B, reg, g) {
     }
     if (best < 0) return;
     etat.grades[A.id[best]] = [g, etat.jour];
+    gagner(A, best, 'calme', B.R.progression.promotion, B.R.progression);       // commander aguerrit
     B.evenements.push({ type: 'promu', camp: A.camp[best], id: A.id[best], rang: g, reg });
     g = br;
   }

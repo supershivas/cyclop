@@ -20,7 +20,8 @@ import { toucher } from './terrain.js?v=0.69.0';
 import { hash2 } from './lib/rng.js?v=0.69.0';
 import { CORVEES } from './data/corvees.js?v=0.69.0';
 import { REGIMENTS } from './data/lexique.js?v=0.69.0';
-import { ajouterSoldat } from './army.js?v=0.69.0';
+import { ajouterSoldat, poserCaracs, lireCaracs } from './army.js?v=0.69.0';
+import { departCaracs } from './identite.js?v=0.69.0';
 
 export const SORTES = ['reparer'];          // les travaux de terrain, par leur numéro dans etat.travaux
 export const corvee = id => CORVEES.find(c => c.id === id);
@@ -254,7 +255,7 @@ export function corvees(B, choix, ctx) {
       b.ravitailles++;
     } else if (id === 'releve') {
       // il quitte le front (blessés compris) ; son remplaçant entre à l'aube, après les autres corvées
-      for (let i = 0; i < A.n; i++) if (A.reg[i] === reg.id && !A.mort[i]) { etat.releves.push([A.id[i], reg.id, A.exp[i], A.victimes[i]]); A.mort[i] = 1; }
+      for (let i = 0; i < A.n; i++) if (A.reg[i] === reg.id && !A.mort[i]) { etat.releves.push([A.id[i], reg.id, A.exp[i], A.victimes[i], lireCaracs(A, i).slice(0, 4)]); A.mort[i] = 1; }
       reg.releve = etat.jour; reg.releves = reg.effectif; reg.effectif = 0;
       etat.reserves[reg.camp]--;
       releves.push(reg); b.releves = (b.releves || 0) + 1;
@@ -264,7 +265,7 @@ export function corvees(B, choix, ctx) {
         if (rng() < N.risqueBoyau) { mourir(i, 'corvée'); b.mortsCorvee++; continue; }
         A.mort[i] = 1; reg.effectif--;                 // il quitte le front, vivant
         // [numéro, jour, blessure, nuit du retour (0 : pas encore, -1 : ne reviendra pas), régiment, expérience, victimes]
-        etat.evacues.push([A.id[i], etat.jour, A.blessure[i], 0, reg.id, Math.round(A.exp[i] * 100) / 100, A.victimes[i]]); b.evacues++;
+        etat.evacues.push([A.id[i], etat.jour, A.blessure[i], 0, reg.id, Math.round(A.exp[i] * 100) / 100, A.victimes[i], lireCaracs(A, i)]); b.evacues++;
       }
       reg.moral = Math.min(1, reg.moral + N.moralEvacuer);
     }
@@ -327,6 +328,7 @@ function retours(B, rng, bilan) {
     const i = ajouterSoldat(A, x0 + rng() * (x1 - x0), Math.max(1, Math.min(B.terrain.H - 2, derriere + (rng() - 0.5) * 6)), reg.camp, reg.id, slot, rng(), e[0]);
     if (i < 0) continue;
     A.exp[i] = e[5]; A.victimes[i] = e[6] ?? 0;
+    if (e[7]) poserCaracs(A, i, e[7]);                           // il revient avec ce qu'il avait appris (ses caractéristiques de l'évacuation)
     reg.effectif++; e[3] = etat.jour; bilan[reg.camp].retours++;
   }
 }
@@ -353,8 +355,9 @@ function relever(B, vieux, rng) {
   const t = reg.ordre.trace, x0 = t ? t.x0 : reg.ordre.x - 40, x1 = t ? t.x1 : reg.ordre.x + 40;
   for (let k = 0; k < n; k++) {
     const x = x0 + (k + 0.5) * (x1 - x0) / n;
-    ajouterSoldat(A, x + (rng() - 0.5) * 2, Math.max(1, Math.min(B.terrain.H - 2, derriere + (rng() - 0.5) * 6)), reg.camp, reg.id, k, rng(), premier + k);
+    const i = ajouterSoldat(A, x + (rng() - 0.5) * 2, Math.max(1, Math.min(B.terrain.H - 2, derriere + (rng() - 0.5) * 6)), reg.camp, reg.id, k, rng(), premier + k);
     if (etat.numeros && reg.camp === 0) etat.numeros[premier + k] = etat.prochainNumero++;     // (campagne : un numéro neuf, jamais celui d'un vétéran)
+    if (i >= 0) poserCaracs(A, i, departCaracs(reg.camp === 0 ? etat.graineIdentite : etat.graine, reg.camp, premier + k, etat.numeros?.[premier + k] ?? premier + k, k, n, reg.id));
   }
 }
 

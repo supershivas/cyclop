@@ -1,7 +1,7 @@
 // Les caractéristiques de chaque homme (adresse, force, endurance, calme) et le corps à corps (v0.69.0).
 import { creerTerrain } from '../js/terrain.js';
-import { creerArmee, ajouterSoldat, construireGrille, pasArmee, photoArmee, restaurerArmee, chanceTir, facteur, effrayer } from '../js/army.js';
-import { caracteristiques, caracEnMots, CARACTERISTIQUES } from '../js/identite.js';
+import { creerArmee, ajouterSoldat, construireGrille, pasArmee, photoArmee, restaurerArmee, chanceTir, facteur, effrayer, gagner, perdre, abimerCaracs, poserCaracs, lireCaracs } from '../js/army.js';
+import { caracteristiques, caracEnMots, CARACTERISTIQUES, departCaracs } from '../js/identite.js';
 import { createRng } from '../js/lib/rng.js';
 import { REGLAGES as R } from '../js/data/reglages.js';
 
@@ -102,4 +102,65 @@ test('deux hommes moyens : le corps à corps est mortel pour les deux camps, à 
   pas(30 * 10);
   const morts = [0, 0]; for (let i = 0; i < A.n; i++) if (A.mort[i]) morts[A.camp[i]]++;
   assert.ok(morts[0] > 20 && morts[1] > 20 && Math.abs(morts[0] - morts[1]) < 40, `${morts}`);
+});
+
+group('progression des caractéristiques');
+const PG = R.progression;
+const seul = () => { const T = creerTerrain(1, { largeur: 60, hauteur: 20, arbres: 0 }, R), A = creerArmee({ capacite: 4, W: T.W, H: T.H }); ajouterSoldat(A, 10, 10, 0, 0, 0, 0.5, 7); poserCaracs(A, 0, [50, 50, 50, 50]); return A; };
+test('le départ tient compte du grade, de l\'âge et de l\'esprit du régiment, entre 15 et 85, et se refait à l\'identique', () => {
+  const moy = (k, q) => { let s = 0; for (let id = 0; id < 600; id++) s += departCaracs(3, 0, id, id, k, 125, 2)[q]; return s / 600; };
+  assert.ok(moy(0, 3) > moy(100, 3) + 8, 'un capitaine est plus calme');
+  assert.ok(moy(30, 2) > moy(100, 2) + 4 && moy(30, 1) > moy(100, 1) + 2, 'un sergent est plus endurant et plus fort');
+  for (let id = 0; id < 400; id++) for (const v of departCaracs(3, id % 2, id, id, id % 130, 125, id % 8)) assert.ok(v >= 15 && v <= 85 && Number.isInteger(v));
+  assert.deepEqual(departCaracs(3, 0, 12, 12, 4, 125, 1), departCaracs(3, 0, 12, 12, 4, 125, 1));
+  const a = departCaracs(3, 0, 12, 12, 100, 125, 1), b = departCaracs(3, 0, 12, 12, 100, 125, 5);
+  assert.notDeepEqual(a, b, 'l\'esprit du régiment décale tout son monde');
+});
+test('on progresse en pratiquant, de moins en moins vite, jamais au-delà du plafond de la bataille ; un mot franchi se note', () => {
+  const A = seul();
+  gagner(A, 0, 'adresse', 10, PG);
+  assert.ok(Math.abs(A.adresse[0] - 55) < 1e-4, `${A.adresse[0]}`);
+  const bas = A.adresse[0] - 50; A.adresse[0] = 80; gagner(A, 0, 'adresse', 10, PG); const haut = A.adresse[0] - 80;
+  assert.ok(haut < bas * 0.6, 'près de 100, moins de gain');
+  A.adresse[0] = 50;
+  for (let k = 0; k < 500; k++) gagner(A, 0, 'adresse', 5, PG);
+  assert.ok(Math.abs(A.adresse[0] - (50 + PG.plafond)) < 1e-3, `plafond : ${A.adresse[0]}`);
+  A.adresse[0] = 59.9; A.palier[0] = 0; gagner(A, 0, 'adresse', 1, PG);
+  assert.equal(A.palier[0] & 1, 1, 'passé de « moyen » à « bon »');
+});
+test('une blessure et la terreur font perdre pour de bon, jamais sous le plancher', () => {
+  const A = seul();
+  abimerCaracs(A, 0, 1, PG); assert.deepEqual([A.adresse[0], A.force[0], A.endurance[0], A.calme[0]], [50 - PG.blessure.bras, 50 - PG.blessure.bras, 50, 50]);
+  abimerCaracs(A, 0, 2, PG); assert.equal(A.endurance[0], 50 - PG.blessure.jambe);
+  abimerCaracs(A, 0, 3, PG); assert.equal(A.calme[0], 50 - PG.blessure.tete);
+  for (let k = 0; k < 20; k++) perdre(A, 0, 'calme', 20, PG);
+  assert.equal(A.calme[0], PG.plancher);
+});
+test('sous le feu on se forge le calme, dans la terreur on le perd ; en déroute aussi', () => {
+  const marche = (peur, deroute = false) => {
+    const A = seul(), T = creerTerrain(1, { largeur: 60, hauteur: 20, arbres: 0 }, R); T.base.fill(20); T.nappe.fill(-20);
+    const regiments = [{ id: 0, camp: 0, effectif: 1, deroute, ordre: { x: 10, y: 10, fx: 0, fy: -1, cols: 1, esp: 2 } }];
+    A.tirT[0] = 1e9;
+    const ctx = { T, R, regiments, champDe: () => null, rng: createRng(1), dt: 1 / 30, gel: false, frapper: () => {} };
+    for (let k = 0; k < 30 * 20; k++) { A.peur[0] = peur; construireGrille(A); pasArmee(A, ctx); }
+    return A.calme[0];
+  };
+  assert.ok(marche(0.5) > 50.1, 'inquiet : il gagne');
+  assert.ok(marche(0) === 50, 'au calme : rien');
+  assert.ok(marche(1) < 47, 'terrifié : il perd');
+  assert.ok(marche(0, true) < 49.5, 'en déroute : il perd');
+});
+test('le corps à corps endurcit : après un duel, le survivant a de la force en plus ; l\'adresse monte en tirant', () => {
+  const { A, pas } = duels(Array.from({ length: 30 }, (_, k) => [[10 + k * 12, 20], [11 + k * 12, 20]]), (A, a, b) => { for (const i of [a, b]) poserCaracs(A, i, [50, 50, 50, 50]); });
+  pas(30 * 20);
+  let gain = 0, n = 0; for (let i = 0; i < A.n; i++) if (!A.mort[i]) { gain += A.force[i] - 50; n++; }
+  assert.ok(n > 0 && gain / n > 1.5, `gain moyen ${(gain / Math.max(1, n)).toFixed(2)}`);
+});
+test('la sauvegarde garde les valeurs et leur point de départ ; un évacué revenu les retrouve', () => {
+  const A = seul(); A.adresse[0] = 63.4; A.endurance[0] = 37.2; A.force0[0] = 44;
+  const B = creerArmee({ capacite: 4, W: A.W, H: A.H }); restaurerArmee(B, photoArmee(A));
+  assert.deepEqual(lireCaracs(B, 0), lireCaracs(A, 0));
+  const pack = lireCaracs(A, 0), C = creerArmee({ capacite: 4, W: A.W, H: A.H }); ajouterSoldat(C, 5, 5, 0, 0, 0, 0.5, 9); poserCaracs(C, 0, pack);
+  assert.deepEqual(lireCaracs(C, 0), pack);
+  assert.equal(pack.length, 8);
 });

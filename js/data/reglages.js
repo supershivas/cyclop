@@ -47,6 +47,20 @@ export const REGLAGES = {
   // Les caractéristiques d'un homme (identite.js, de 0 à 100, 50 en moyenne) agissent par un facteur 1 ± amplitude × (valeur − 50 %) : l'adresse sur la chance de toucher d'un tir (plus d'adresse, plus de coups au but),
   // l'endurance sur la fatigue des jambes et le calme sur la peur qui le gagne (plus, moins) ; 0,6 : de × 0,7 à × 1,3. Un homme moyen n'est pas touché : la moyenne de la troupe reste celle d'avant.
   caracteristiques: { adresse: 0.6, endurance: 0.6, calme: 0.6 },
+  // La progression des caractéristiques (Jérôme, v0.69.0 : « elles évoluent au fur et à mesure des combats ») : on progresse en pratiquant, de moins en moins vite près de 100, de `plafond` points au plus par
+  // bataille au-dessus du départ ; une blessure et la terreur font perdre pour de bon (jamais sous `plancher`). Aucun hasard : tout vient de ce qui arrive à l'homme (points ; par seconde quand c'est dit).
+  progression: {
+    plafond: 25,
+    plancher: 5,
+    tir: 0.2, toucheTir: 1.6,                  // adresse : par coup tiré, par coup au but
+    coup: 0.6, toucheCoup: 2, tue: 4,           // force : par coup de baïonnette, qui touche, qui tue
+    marcheFatigue: 0.06,                       // endurance : par seconde de marche, les jambes lourdes (fatigue au-delà de 0,4)
+    nuit: 2,                                   // endurance : par nuit passée au front les jambes lourdes
+    seuilPeur: 0.35, tient: 0.02,              // calme : par seconde passée inquiet sous le feu (peur entre ce seuil et la terreur)
+    terreur: 0.3, deroute: 0.1,                // calme perdu par seconde de terreur, de déroute du régiment
+    blessure: { bras: 10, jambe: 10, tete: 8 },  // points perdus : adresse et force (bras), endurance (jambe), calme et la moitié en adresse (tête)
+    promotion: 5,                              // calme gagné à une promotion
+  },
   vitesse: {
     marche: 1.9,          // m/s sur sol sec et plat (Jérôme, v0.69.0 : « accélérer la marche, que l'action soit plus nerveuse » ; 1,3 avant)
     sec: 1, humide: 0.8, boue: 0.38, eau: 0.25, glace: 0.75,

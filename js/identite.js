@@ -70,3 +70,16 @@ export function caracteristiques(id, camp) {
 }
 // …dites en mots (de 0 à 100)
 export const caracEnMots = v => v < 25 ? 'faible' : v < 42 ? 'médiocre' : v < 60 ? 'moyen' : v < 78 ? 'bon' : 'excellent';
+
+/* Les caractéristiques d'un homme au début d'une bataille (v0.69.0) : le tirage de son numéro (`caracteristiques`), puis ce que son grade, son âge et l'esprit de son régiment y ajoutent. Un officier a plus de calme
+   (+12) et d'adresse (+4) ; un sergent ou un caporal de l'endurance (+8), de la force (+5) et un peu de calme (+4) ; un homme de moins de 24 ans de l'endurance (+6), moins de calme (−5) ; un de 35 ans ou plus
+   moins d'endurance (−8) et de force (−3), plus de calme (+6) ; chaque régiment a son esprit, de −6 à +6 pour ses quatre caractéristiques (un hachage du numéro du régiment : le même pour toute la bataille).
+   Le tout reste entre 15 et 85 : les extrêmes se gagnent en jeu. `id` : le numéro de bataille (le tirage) ; `numero` : celui du nom et de l'âge (le numéro de campagne chez nous) ; `k` : sa place de création dans le régiment. */
+export function departCaracs(graine, camp, id, numero, k, n, regId) {
+  const c = caracteristiques(id, camp), qui = identite(graine, camp, numero, k, n), b = [0, 0, 0, 0];     // adresse, force, endurance, calme
+  if (qui.rang <= 3) { b[3] += 12; b[0] += 4; }
+  else if (qui.rang <= 5) { b[2] += 8; b[1] += 5; b[3] += 4; }
+  if (qui.age < 24) { b[2] += 6; b[3] -= 5; } else if (qui.age >= 35) { b[2] -= 8; b[1] -= 3; b[3] += 6; }
+  const esprit = Math.round((hash2(regId, 7, (graine | 0) + camp * 7919) - 0.5) * 12);
+  return c.map((v, q) => Math.max(15, Math.min(85, Math.round(v + b[q] + esprit))));
+}

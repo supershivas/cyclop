@@ -43,7 +43,9 @@ export function creerArmee({ capacite, W, H }) {
     mort: new Uint8Array(capacite),
     // qui il est et ce qu'il endure (0 à 1 ; blessure : 0 aucune, 1 bras, 2 jambe, 3 tête)
     // ses caractéristiques (identite.js : de 0 à 100) : l'adresse au tir, la force, l'endurance, le calme
-    adresse: new Uint8Array(capacite), force: new Uint8Array(capacite), endurance: new Uint8Array(capacite), calme: new Uint8Array(capacite),
+    // (des nombres à virgule : elles évoluent par petits gains, `gagner` et `perdre`) ; `…0` : leur valeur au début de la bataille (la tendance de la fiche, le plafond de progression) ; `palier` : un bit par caractéristique qui vient de changer de mot (le carnet, jamais sauvegardé)
+    adresse: f32(), force: f32(), endurance: f32(), calme: f32(),
+    adresse0: new Uint8Array(capacite), force0: new Uint8Array(capacite), endurance0: new Uint8Array(capacite), calme0: new Uint8Array(capacite), palier: new Uint8Array(capacite),
     // le corps à corps de ce pas (jamais sauvegardé : refait à chaque pas) : 1 s'il se bat, et l'angle où est son adversaire (dessin)
     duel: new Uint8Array(capacite), duelAng: f32(),
     id: new Uint32Array(capacite), fatJ: f32(), fatB: f32(), peur: f32(), blessure: new Uint8Array(capacite), exp: f32(), victimes: new Uint16Array(capacite),
@@ -55,10 +57,43 @@ export function creerArmee({ capacite, W, H }) {
   };
 }
 
+// ─── Les caractéristiques : le départ, la progression, la perte (v0.69.0) ───
+export const CARACS = ['adresse', 'force', 'endurance', 'calme'];
+/* Pose les quatre caractéristiques d'un homme (le départ d'une bataille : la valeur courante et celle d'où l'on compte la progression) ; `pack` : [adresse, force, endurance, calme] ou, d'un homme évacué
+   puis revenu, huit nombres (les quatre courantes, puis les quatre du début de la bataille). */
+export function poserCaracs(A, i, pack) {
+  CARACS.forEach((k, q) => { A[k][i] = pack[q]; A[k + '0'][i] = Math.round(pack.length > 4 ? pack[4 + q] : pack[q]); });
+}
+// Les huit nombres d'un homme (pour le garder pendant qu'il est évacué ou relevé : `poserCaracs` les reprend)
+export const lireCaracs = (A, i) => [...CARACS.map(k => Math.round(A[k][i] * 10) / 10), ...CARACS.map(k => A[k + '0'][i])];
+const MOTS = [25, 42, 60, 78];                       // les seuils de `caracEnMots` (identite.js)
+const palier = v => (v >= MOTS[0]) + (v >= MOTS[1]) + (v >= MOTS[2]) + (v >= MOTS[3]);
+/* Il progresse en pratiquant : `pts` points, de moins en moins vite près de 100, jamais plus de `plafond` au-dessus de sa valeur du début de la bataille. Un passage de mot se garde dans `palier`. */
+export function gagner(A, i, k, pts, P) {
+  const v = A[k][i], haut = Math.min(100, A[k + '0'][i] + P.plafond);
+  if (v >= haut) return;
+  const w = Math.min(haut, v + pts * (1 - v / 100));
+  A[k][i] = w;
+  if (palier(w) !== palier(v)) A.palier[i] |= 1 << CARACS.indexOf(k);
+}
+// Il perd (une blessure, la terreur) : pas sous `plancher`
+export function perdre(A, i, k, pts, P) {
+  const v = A[k][i], w = Math.max(P.plancher, v - pts);
+  A[k][i] = w;
+  if (palier(w) !== palier(v)) A.palier[i] |= 1 << CARACS.indexOf(k);
+}
+// Ce qu'une blessure lui enlève pour de bon (1 bras, 2 jambe, 3 tête)
+export function abimerCaracs(A, i, blessure, P) {
+  const B = P.blessure;
+  if (blessure === 1) { perdre(A, i, 'adresse', B.bras, P); perdre(A, i, 'force', B.bras, P); }
+  else if (blessure === 2) perdre(A, i, 'endurance', B.jambe, P);
+  else if (blessure === 3) { perdre(A, i, 'calme', B.tete, P); perdre(A, i, 'adresse', B.tete / 2, P); }
+}
+
 export function ajouterSoldat(A, x, y, camp, reg, slot, r, id = A.n) {
   if (A.n >= A.capacite) return -1;
   const i = A.n++;
-  A.id[i] = id; [A.adresse[i], A.force[i], A.endurance[i], A.calme[i]] = caracteristiques(id, camp); A.duel[i] = 0; A.fatJ[i] = 0; A.fatB[i] = 0; A.peur[i] = 0; A.blessure[i] = 0; A.exp[i] = 0; A.victimes[i] = 0;
+  A.id[i] = id; poserCaracs(A, i, caracteristiques(id, camp)); A.duel[i] = 0; A.palier[i] = 0; A.fatJ[i] = 0; A.fatB[i] = 0; A.peur[i] = 0; A.blessure[i] = 0; A.exp[i] = 0; A.victimes[i] = 0;
   A.x[i] = x; A.y[i] = y; A.vx[i] = 0; A.vy[i] = 0;
   A.camp[i] = camp; A.reg[i] = reg; A.slot[i] = slot; A.mort[i] = 0;
   A.rnd[i] = r; A.tirT[i] = 1 + r * 4; A.coince[i] = 0;
@@ -130,7 +165,7 @@ export const legere = (id, part) => (Math.imul(id + 1, 2654435761) >>> 0) / 4294
 export function pasArmee(A, ctx) {
   const { T, R, regiments, champDe, rng, dt, gel } = ctx;
   const { n, x, y, vx, vy, rnd, camp, reg, slot, mort, gw, gh, cellStart, sorted, cellOf, tirT, coince, fatJ, fatB, peur, blessure } = A;
-  const Sd = R.soldat, M = R.melee;
+  const Sd = R.soldat, M = R.melee, PG = R.progression;
   const F = R.foule, V = R.vitesse;
   const sep = F.separation, sep2 = sep * sep, maxN = F.voisins;
   const W = T.W, H = T.H;
@@ -217,10 +252,17 @@ export function pasArmee(A, ctx) {
     // ─ La fatigue, la peur ─
     const marche = Math.hypot(nx - xi, ny - yi) / dt / V.marche;            // 0 à l'arrêt
     // l'effort compte au temps passé à marcher, pas au chemin fait : la boue, qui ralentit, fatigue d'autant plus
-    if (marche > 0.1) fatJ[i] = Math.min(1, fatJ[i] + Sd.fatigueMarche * dt * (terrain < V.humide ? Sd.fatigueBoue : 1) * facteur(R.caracteristiques.endurance, A.endurance[i], -1));
+    if (marche > 0.1) {
+      fatJ[i] = Math.min(1, fatJ[i] + Sd.fatigueMarche * dt * (terrain < V.humide ? Sd.fatigueBoue : 1) * facteur(R.caracteristiques.endurance, A.endurance[i], -1));
+      if (fatJ[i] > 0.4) gagner(A, i, 'endurance', PG.marcheFatigue * dt, PG);               // marcher les jambes lourdes endurcit
+    }
     else fatJ[i] = Math.max(0, fatJ[i] - Sd.reposJambes * dt);
     fatB[i] = Math.max(0, fatB[i] - Sd.reposBras * dt);
     peur[i] = Math.max(0, peur[i] - Sd.peurDecroit * dt);
+    // le calme : il se forge sous le feu (de l'inquiétude à la terreur), il se perd dans la terreur et la déroute
+    if (peur[i] >= Sd.terreur) perdre(A, i, 'calme', PG.terreur * dt, PG);
+    else if (peur[i] > PG.seuilPeur) gagner(A, i, 'calme', PG.tient * dt, PG);
+    if (r.deroute) perdre(A, i, 'calme', PG.deroute * dt, PG);
     // ─ Le tir (pas quand la terreur le tient) ─
     tirT[i] -= dt;
     if (duel) {
@@ -232,7 +274,12 @@ export function pasArmee(A, ctx) {
           const chance = M.touche * (0.55 + M.force * A.force[i] / 100) * (1.3 - M.endurance * A.endurance[j] / 100) * (1 - 0.4 * fatB[i]) * (1 + R.experience.adresse * A.exp[i]);
           fatB[i] = Math.min(1, fatB[i] + M.fatigue);
           A.exp[i] = Math.min(1, A.exp[i] + R.experience.tir);
-          if (rng() < chance) ctx.frapper(j, 'mêlée', M.mortel * (1.2 - 0.4 * A.endurance[j] / 100), null, i);
+          gagner(A, i, 'force', PG.coup, PG);
+          if (rng() < chance) {
+            gagner(A, i, 'force', PG.toucheCoup, PG);
+            ctx.frapper(j, 'mêlée', M.mortel * (1.2 - 0.4 * A.endurance[j] / 100), null, i);
+            if (A.mort[j]) gagner(A, i, 'force', PG.tue, PG);
+          }
         }
       }
     } else if (tirT[i] <= 0) {
@@ -274,7 +321,9 @@ function tirer(A, i, o, ctx, stance) {
   if (best < 0) return false;
   if (ctx.tir) { const bxx = best % dw; ctx.tir(i, (bxx + 0.5) * DENSITE, ((best - bxx) / dw + 0.5) * DENSITE); }   // pour le dessin : un tir part (jamais l'état)
   const chance = chanceTir(R, stance, bestN, A.exp[i], A.adresse[i]);
+  gagner(A, i, 'adresse', R.progression.tir, R.progression);
   if (rng() >= chance) return true;
+  gagner(A, i, 'adresse', R.progression.toucheTir, R.progression);
   // la victime : un ennemi du carré, au hasard
   const xx = best % dw, yy = (best - xx) / dw;
   const k = DENSITE / GRILLE, cand = [];
@@ -369,13 +418,13 @@ export function effrayer(A, x0, y0, rayon, quantite, Ex = null, cal = 0) {
 // La nuit repose : la fatigue et la peur retombent
 export function reposer(A, R) {
   const k = 1 - R.soldat.nuitRepos;
-  for (let i = 0; i < A.n; i++) { A.fatJ[i] *= k; A.fatB[i] *= k; A.peur[i] *= 0.5; A.exp[i] = Math.min(1, A.exp[i] + R.experience.nuit); }
+  for (let i = 0; i < A.n; i++) { if (A.fatJ[i] > 0.4) gagner(A, i, 'endurance', R.progression.nuit, R.progression); A.fatJ[i] *= k; A.fatB[i] *= k; A.peur[i] *= 0.5; A.exp[i] = Math.min(1, A.exp[i] + R.experience.nuit); }
 }
 
 // Retire les morts (on garde l'ordre des vivants : la même partie, rejouée, garde les mêmes indices)
 export function compacter(A) {
   let w = 0;
-  const keys = ['x', 'y', 'vx', 'vy', 'rnd', 'tirT', 'coince', 'camp', 'reg', 'slot', 'id', 'fatJ', 'fatB', 'peur', 'blessure', 'exp', 'victimes', 'adresse', 'force', 'endurance', 'calme', 'duel', 'duelAng'];
+  const keys = ['x', 'y', 'vx', 'vy', 'rnd', 'tirT', 'coince', 'camp', 'reg', 'slot', 'id', 'fatJ', 'fatB', 'peur', 'blessure', 'exp', 'victimes', 'adresse', 'force', 'endurance', 'calme', 'adresse0', 'force0', 'endurance0', 'calme0', 'palier', 'duel', 'duelAng'];
   for (let r = 0; r < A.n; r++) {
     if (A.mort[r]) continue;
     if (w !== r) for (const k of keys) A[k][w] = A[k][r];
@@ -391,7 +440,7 @@ export function compacter(A) {
 // ─── Sauvegarde : les tableaux, exacts (base64 des octets) ───
 const CHAMPS = { x: Float32Array, y: Float32Array, vx: Float32Array, vy: Float32Array, rnd: Float32Array, tirT: Float32Array, coince: Float32Array, camp: Uint8Array, reg: Uint16Array, slot: Uint16Array,
   id: Uint32Array, fatJ: Float32Array, fatB: Float32Array, peur: Float32Array, blessure: Uint8Array, exp: Float32Array, victimes: Uint16Array,
-  adresse: Uint8Array, force: Uint8Array, endurance: Uint8Array, calme: Uint8Array };
+  adresse: Float32Array, force: Float32Array, endurance: Float32Array, calme: Float32Array, adresse0: Uint8Array, force0: Uint8Array, endurance0: Uint8Array, calme0: Uint8Array };
 function b64(typed) {
   const u8 = new Uint8Array(typed.buffer, typed.byteOffset, typed.byteLength);
   let s = '';

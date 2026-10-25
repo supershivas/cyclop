@@ -838,6 +838,7 @@ function raconter(ev) {
       else if (p.camp !== MOI) continue;
       else if (p.type === 'deroute') noter(`${reg.nom} est en déroute.`);
       else if (p.type === 'ralliement') noter(`${reg.nom} se rallie.`);
+      else if (p.type === 'palier') { const { qui } = quiEst(p.id); noter(`${qui.prenom} ${qui.nom} est devenu ${['excellent tireur', 'redoutable au corps à corps', 'infatigable', 'imperturbable'][p.carac]}.`); }
       else if (p.type === 'promu' && p.rang === 0) { const { qui } = quiEst(p.id); noter(`${qui.prenom} ${qui.nom} commande ${reg.nom}.`); }
     }
 }
