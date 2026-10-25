@@ -1,8 +1,11 @@
 # Journal des versions
 
-## 0.67.1 — 2026-10-25
+## 0.67.2 — 2026-10-25
 - Le bord de la carte ne montre plus de ligne noire au-dessus d'un lac
 - Labo : quatre façons de montrer sur le champ qu'un régiment est ébranlé ou en déroute
+
+## 0.67.1 — 2026-10-25
+- Les ponts sont plus solides : un pont de pierre résiste à neuf obus de 155 au lieu de six
 
 ## 0.67.0 — 2026-10-25
 - Les ponts ont un nom, une barre de solidité et une histoire au survol ; ils ne tombent plus au premier obus

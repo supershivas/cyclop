@@ -1,8 +1,8 @@
-// Le sujet « Le moral sur le champ » du labo (v0.67.1) : l'état moral d'un régiment (tient, ébranlé, en déroute) se lit aujourd'hui sur l'étiquette et la carte du bas, pas sur les hommes
+// Le sujet « Le moral sur le champ » du labo (v0.67.2) : l'état moral d'un régiment (tient, ébranlé, en déroute) se lit aujourd'hui sur l'étiquette et la carte du bas, pas sur les hommes
 // (docs/chantiers/langage-visuel-inventaire.md). Quatre façons de le poser sur le champ lui-même, sans couleur de plus que les deux d'alerte de l'interface (ALERTES) : la forme et le mouvement
 // portent l'information, la couleur la confirme. Posé sur le moteur en direct, avec les vrais hommes : un calque 2D par-dessus, qui lit seulement les positions (`versEcran`). Le dessin
 // seulement : rien ici ne modifie une partie. Les huit régiments de notre camp prennent tour à tour tient, ébranlé, en déroute (1 tient, 2 ébranlé, 3 en déroute, 4 tient…).
-import { PALETTE as P, ALERTES } from './palette.js?v=0.67.1';
+import { PALETTE as P, ALERTES } from './palette.js?v=0.67.2';
 
 const ETATS = ['tient', 'ebranle', 'deroute'];
 const ETAT_DE = i => ETATS[[0, 1, 2, 0, 1, 2, 0, 1][i % 8]];

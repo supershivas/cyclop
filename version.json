@@ -1,5 +1,5 @@
 {
-  "version": "0.67.1",
+  "version": "0.67.2",
   "date": "2026-10-25",
   "changes": [
     "Le bord de la carte ne montre plus de ligne noire au-dessus d'un lac",

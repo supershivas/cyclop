@@ -2,9 +2,9 @@
 // et « le feu se voit » (Jérôme, v0.9.2 : l'éclair à la bouche du fusil et le trait vers la cible de chaque tir de `B.tirs`, la pose des tireurs, le bond de ceux que
 // le souffle jette). Une seule fabrique : tous tirent dans le même générateur de l'aspect (`alea`, une suite à graine : l'ordre des tirages fait l'image) et
 // dans les mêmes tampons de particules. Le dessin seulement : jamais la logique, jamais la partie.
-import * as SH from './shaders.js?v=0.67.1';
-import { INDICE } from '../palette.js?v=0.67.1';
-import { horloge } from '../bataille.js?v=0.67.1';
+import * as SH from './shaders.js?v=0.67.2';
+import { INDICE } from '../palette.js?v=0.67.2';
+import { horloge } from '../bataille.js?v=0.67.2';
 
 const ECLATS = 6000;     // (v0.24.0 ; 2 400 avant : une salve de 220 — ~200 éclats chacun, dont de la fumée de 8 à 16 s — faisait le tour du tampon et effaçait les éclats encore en vol)
 
