@@ -1,5 +1,8 @@
 # Journal des versions
 
+## 0.73.0 — 2026-10-25
+- Les boutons d'obus, de char, d'avion et de génie sont refaits : une barre se charge, puis PRÊT ; ils sont muets pendant le chargement
+
 ## 0.72.0 — 2026-10-25
 - Les blessés se voient : un homme blessé à la jambe s'affaisse ou boite, à la tête il se penche, au bras il le serre ; un pansement marque la blessure
 

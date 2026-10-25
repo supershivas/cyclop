@@ -99,8 +99,12 @@
 }
 .batterie svg { grid-row: 1 / 3; align-self: end; height: 26px; width: auto; max-width: 24px; }
 .batterie b { align-self: end; }
-.batterie u { grid-column: 1 / -1; display: block; height: 4px; margin-top: var(--e1); background: var(--jeu-accent); text-decoration: none; }
+.batterie u { grid-column: 1 / -1; display: block; height: 6px; margin-top: var(--e1); background: var(--jeu-encre); outline: 1px solid var(--jeu-accent); outline-offset: -1px; text-decoration: none; }
 .batterie u s { display: block; height: 100%; background: var(--jeu-fond); text-decoration: none; }
+/* une barre se remplit (accent) pendant le chargement, puis « PRÊT » : la barre devient claire, le texte gras (Jérôme, v0.73.0) */
+.batterie.recharge u s { background: var(--jeu-accent); }
+.batterie span { font-weight: bold; letter-spacing: 0.04em; }
+.batterie.recharge span { font-weight: normal; letter-spacing: 0; }
 .batterie.vise u { background: var(--jeu-accent); } .batterie.vise u s { background: var(--jeu-encre); }
 .batterie svg { fill: var(--jeu-fond); stroke: var(--jeu-encre); stroke-width: 1.5; }
 .batterie svg .ceinture { fill: var(--jeu-encre); stroke: none; }
@@ -109,12 +113,18 @@
 .batterie .touche { position: absolute; top: 3px; right: 4px; font-style: normal; font-size: var(--texte-petit); line-height: 1; padding: 1px var(--e1); border: 1px solid var(--jeu-accent); color: var(--jeu-accent); }
 .batterie span { color: var(--jeu-accent); line-height: 1; font-size: var(--texte-petit); }
 .batterie.recharge { color: var(--jeu-accent); }
+/* muet : grisé, sans ombre, sans survol, le curseur dit non */
+.batterie.muet { box-shadow: none; cursor: not-allowed; }
+.batterie.muet .touche { opacity: 0.6; }
+@keyframes pret { 0%, 100% { background: var(--jeu-encre); } 35% { background: var(--jeu-accent); } }
+.batterie.vient { animation: pret 0.7s steps(4) 1; }
+@media (prefers-reduced-motion: reduce) { .batterie.vient { animation: none; } }
 .batterie.recharge svg { fill: var(--jeu-accent); }
 .batterie.vise { background: var(--jeu-fond); color: var(--jeu-encre); box-shadow: 3px 3px 0 var(--jeu-accent); outline: 2px solid var(--jeu-encre); outline-offset: -4px; }
 .batterie.vise svg { fill: var(--jeu-encre); stroke: var(--jeu-fond); }
 .batterie.vise svg .ceinture { fill: var(--jeu-fond); }
 .batterie.vise span, .batterie.vise .touche { color: var(--jeu-encre); border-color: var(--jeu-encre); }
-@media (hover: hover) { .batterie:hover:not(.vise) { background: var(--jeu-accent); color: var(--jeu-fond); } .batterie:hover:not(.vise) span { color: var(--jeu-fond); } }
+@media (hover: hover) { .batterie:hover:not(.vise):not(.muet) { background: var(--jeu-accent); color: var(--jeu-fond); } .batterie:hover:not(.vise):not(.muet) span { color: var(--jeu-fond); } }
 .vise .jeu-canvas { cursor: crosshair; }
 
 .infobulle { position: fixed; left: 0; top: 0; z-index: 60; max-width: 34ch; padding: var(--e1) var(--pas); background: var(--jeu-encre); color: var(--jeu-fond); font-size: var(--texte-petit); line-height: 1.4; box-shadow: 2px 2px 0 var(--jeu-fond); pointer-events: none; }

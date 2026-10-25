@@ -1,52 +1,52 @@
 // Le cycle de vie : écran titre → bataille → nuit → fin ; pause active,
 // réglages, sauvegarde, mise à jour, debug. Les règles sont dans bataille.js
 // (pures), le dessin dans rendu3d.js (il ne modifie jamais l'état).
-import { createLoop } from './lib/loop.js?v=0.72.0';
-import { createKeys, stopTypeahead } from './lib/keys.js?v=0.72.0';
-import { createPointer, lockBrowserGestures } from './lib/pointer.js?v=0.72.0';
-import { createGamepad } from './lib/gamepad.js?v=0.72.0';
-import { createStore, autosave, pickJSONFile } from './lib/save.js?v=0.72.0';
-import { startUpdateCheck, loadVersion, loadChangelog, downloadJSON } from './lib/app-update.js?v=0.72.0';
-import { ROLES } from './palette.js?v=0.72.0';
-import { VERSION_CAMPAGNE, CLE as CLE_CAMPAGNE, cloturerDansLeStore, nouvelleCampagne, suivante, passage, bilan as bilanCampagne } from './campagne.js?v=0.72.0';
-import { CAMPAGNE } from './data/campagne.js?v=0.72.0';
-import { MISSIONS, EUX, nouvelleBataille, etapesRestaurer, avancer, aube, ordonnerMarche, peutOrdonner, ordonnerBarrage, peutBarrage, arriereDe, ordonnerStance, peutStance, horloge, effectifs, tronconsTenus, moralEnMots, terrainResume, forcesTroncons, largeurZone, lettreZone, etendueZones, nomTroncon, actionDe, secteursDe, tronconsDeLigne, zone, photo, restaurer, PAS, NOUS } from './bataille.js?v=0.72.0';
-import { ligneY } from './tranchees.js?v=0.72.0';
-import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.72.0';
-import { AVION, MITRAILLAGE } from './data/mitraillage.js?v=0.72.0';
-import { ligneDe, apercuVol, avionsPrets, avionsRestants } from './avions.js?v=0.72.0';
-import { CHAR, CHAR_RECHARGE, CHARS, CHAR_PAR_DEFAUT } from './data/chars.js?v=0.72.0';
-import { GENIE, GENIE_DATA } from './data/genie.js?v=0.72.0';
-import { pontEn } from './eaux.js?v=0.72.0';
-import { PONTS_JEU, typePont } from './data/ponts.js?v=0.72.0';
-import { routeChar } from './chars.js?v=0.72.0';
-import { STANCES, STANCE_DEFAUT } from './data/stances.js?v=0.72.0';
-import { METEO, SAISONS, SAISON_DEFAUT } from './data/meteo.js?v=0.72.0';
-import { hash2 } from './lib/rng.js?v=0.72.0';
-import { creerRendu, CAMERA } from './rendu3d.js?v=0.72.0';
-import { etatEnMots, experienceEnMots, chevrons } from './identite.js?v=0.72.0';
-import { CORVEES } from './data/corvees.js?v=0.72.0';
-import { refusCorvee } from './nuit.js?v=0.72.0';
-import { chargerContenu, appliquerSecteurs, appliquerCartes, appliquerCampagne } from './design-store.js?v=0.72.0';
-import * as lecture from './hud/lecture.js?v=0.72.0';
-import { creerFiche } from './hud/fiche.js?v=0.72.0';
-import { chevronsHtml } from './hud/barres.js?v=0.72.0';
-import { creerNuit, corveeDe, corveeCourte } from './hud/nuit.js?v=0.72.0';
-import { creerCampagne } from './hud/campagne.js?v=0.72.0';
-import { creerCarnet, deux } from './hud/carnet.js?v=0.72.0';
-import { creerCarte } from './hud/carte.js?v=0.72.0';
-import { creerPertes } from './hud/pertes.js?v=0.72.0';
-import { creerBarreTemps } from './hud/temps.js?v=0.72.0';
-import { creerChargement } from './hud/chargement.js?v=0.72.0';
-import { creerRetours } from './hud/retours.js?v=0.72.0';
-import { creerInfobulle } from './hud/infobulle.js?v=0.72.0';
-import { SECTEURS } from './data/secteur.js?v=0.72.0';
-import { DIFFICULTES, DIFFICULTE_DEFAUT } from './data/difficulte.js?v=0.72.0';
-import { preparerAleatoire, ID_ALEATOIRE } from './generateur.js?v=0.72.0';
-import { creerLockstep, empreinteEtat } from './reseau/lockstep.js?v=0.72.0';
-import { nouveauCode, codeValide, publier, ecouter } from './reseau/relais.js?v=0.72.0';
-import { creerHote, creerInvite } from './reseau/lien.js?v=0.72.0';
-import { SOLEIL_JEU } from './data/soleil.js?v=0.72.0';
+import { createLoop } from './lib/loop.js?v=0.73.0';
+import { createKeys, stopTypeahead } from './lib/keys.js?v=0.73.0';
+import { createPointer, lockBrowserGestures } from './lib/pointer.js?v=0.73.0';
+import { createGamepad } from './lib/gamepad.js?v=0.73.0';
+import { createStore, autosave, pickJSONFile } from './lib/save.js?v=0.73.0';
+import { startUpdateCheck, loadVersion, loadChangelog, downloadJSON } from './lib/app-update.js?v=0.73.0';
+import { ROLES } from './palette.js?v=0.73.0';
+import { VERSION_CAMPAGNE, CLE as CLE_CAMPAGNE, cloturerDansLeStore, nouvelleCampagne, suivante, passage, bilan as bilanCampagne } from './campagne.js?v=0.73.0';
+import { CAMPAGNE } from './data/campagne.js?v=0.73.0';
+import { MISSIONS, EUX, nouvelleBataille, etapesRestaurer, avancer, aube, ordonnerMarche, peutOrdonner, ordonnerBarrage, peutBarrage, arriereDe, ordonnerStance, peutStance, horloge, effectifs, tronconsTenus, moralEnMots, terrainResume, forcesTroncons, largeurZone, lettreZone, etendueZones, nomTroncon, actionDe, secteursDe, tronconsDeLigne, zone, photo, restaurer, PAS, NOUS } from './bataille.js?v=0.73.0';
+import { ligneY } from './tranchees.js?v=0.73.0';
+import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.73.0';
+import { AVION, MITRAILLAGE } from './data/mitraillage.js?v=0.73.0';
+import { ligneDe, apercuVol, avionsPrets, avionsRestants } from './avions.js?v=0.73.0';
+import { CHAR, CHAR_RECHARGE, CHARS, CHAR_PAR_DEFAUT } from './data/chars.js?v=0.73.0';
+import { GENIE, GENIE_DATA } from './data/genie.js?v=0.73.0';
+import { pontEn } from './eaux.js?v=0.73.0';
+import { PONTS_JEU, typePont } from './data/ponts.js?v=0.73.0';
+import { routeChar } from './chars.js?v=0.73.0';
+import { STANCES, STANCE_DEFAUT } from './data/stances.js?v=0.73.0';
+import { METEO, SAISONS, SAISON_DEFAUT } from './data/meteo.js?v=0.73.0';
+import { hash2 } from './lib/rng.js?v=0.73.0';
+import { creerRendu, CAMERA } from './rendu3d.js?v=0.73.0';
+import { etatEnMots, experienceEnMots, chevrons } from './identite.js?v=0.73.0';
+import { CORVEES } from './data/corvees.js?v=0.73.0';
+import { refusCorvee } from './nuit.js?v=0.73.0';
+import { chargerContenu, appliquerSecteurs, appliquerCartes, appliquerCampagne } from './design-store.js?v=0.73.0';
+import * as lecture from './hud/lecture.js?v=0.73.0';
+import { creerFiche } from './hud/fiche.js?v=0.73.0';
+import { chevronsHtml } from './hud/barres.js?v=0.73.0';
+import { creerNuit, corveeDe, corveeCourte } from './hud/nuit.js?v=0.73.0';
+import { creerCampagne } from './hud/campagne.js?v=0.73.0';
+import { creerCarnet, deux } from './hud/carnet.js?v=0.73.0';
+import { creerCarte } from './hud/carte.js?v=0.73.0';
+import { creerPertes } from './hud/pertes.js?v=0.73.0';
+import { creerBarreTemps } from './hud/temps.js?v=0.73.0';
+import { creerChargement } from './hud/chargement.js?v=0.73.0';
+import { creerRetours } from './hud/retours.js?v=0.73.0';
+import { creerInfobulle } from './hud/infobulle.js?v=0.73.0';
+import { SECTEURS } from './data/secteur.js?v=0.73.0';
+import { DIFFICULTES, DIFFICULTE_DEFAUT } from './data/difficulte.js?v=0.73.0';
+import { preparerAleatoire, ID_ALEATOIRE } from './generateur.js?v=0.73.0';
+import { creerLockstep, empreinteEtat } from './reseau/lockstep.js?v=0.73.0';
+import { nouveauCode, codeValide, publier, ecouter } from './reseau/relais.js?v=0.73.0';
+import { creerHote, creerInvite } from './reseau/lien.js?v=0.73.0';
+import { SOLEIL_JEU } from './data/soleil.js?v=0.73.0';
 
 const JEU = 'cyclopeen';
 const $ = id => document.getElementById(id);
@@ -371,7 +371,7 @@ function demanderSecteur(avecDifficulte = true) {
       $('carte-titre').textContent = SECTEURS[choisi].nom;               // le nom sur l'aperçu, la description dessous (deux lignes au plus : la fenêtre ne change plus de taille)
       $('carte-legende').textContent = SECTEURS[choisi].resume;
       try {
-        if (!apercuSecteur) { const { creerVue3D } = await import('./apercu-3d.js?v=0.72.0'); apercuSecteur = await creerVue3D({ R, hote: $('carte-3d'), rotation: 0.12 }); apercuSecteur.surClic = () => agrandir(!d.classList.contains('agrandi')); }
+        if (!apercuSecteur) { const { creerVue3D } = await import('./apercu-3d.js?v=0.73.0'); apercuSecteur = await creerVue3D({ R, hote: $('carte-3d'), rotation: 0.12 }); apercuSecteur.surClic = () => agrandir(!d.classList.contains('agrandi')); }
         if (!ouvert) return;
         apercuSecteur.monter(choisi, SECTEURS[choisi], graineDe(), { soldats: false, cadrer: true, saison: saisonDe() });
         apercuSecteur.activer(true);
@@ -868,6 +868,10 @@ function majTemps(h) {
   for (const b of document.querySelectorAll('[data-vitesse]')) b.classList.toggle('actif', +b.dataset.vitesse === vitesse);
 }
 
+// les secondes qu'il reste à une batterie à charger (0 : prête) et ce qu'il lui en faut en tout
+const resteBatterie = cal => Math.max(0, Math.ceil(((MOI === NOUS ? B.etat.batteries : B.etat.batteriesEux)[cal] ?? 0) - B.etat.temps));
+const rechargeDe = cal => cal === CHAR ? CHAR_RECHARGE : cal === GENIE ? GENIE_DATA.recharge : (CALIBRES[cal] ?? MITRAILLAGE).recharge;
+const NOMS_BATTERIES = { [CHAR]: 'Char', [AVION]: 'Avion', [GENIE]: 'Génie' };
 function majHud() {
   if (!B) return;
   const h = horloge(B), e = B.etat;
@@ -878,23 +882,31 @@ function majHud() {
   majFiche();
   $('pause-active').hidden = !pauseActive;
   for (const b of $('batteries').children) {
-    const cal = b.dataset.cal, pret = (MOI === NOUS ? e.batteries : e.batteriesEux)[cal] ?? 0, reste = Math.ceil(pret - e.temps), recharge = cal === CHAR ? CHAR_RECHARGE : cal === GENIE ? GENIE_DATA.recharge : (CALIBRES[cal] ?? MITRAILLAGE).recharge;
-    b.querySelector('span').textContent = reste > 0 ? `${reste} s` : 'prête';
-    b.querySelector('s').style.width = `${Math.round(100 * (1 - Math.max(0, Math.min(1, (pret - e.temps) / recharge))))}%`;
-    b.classList.toggle('vise', modeBarrage === cal);
-    b.classList.toggle('recharge', reste > 0);
+    const cal = b.dataset.cal, reste = resteBatterie(cal), recharge = rechargeDe(cal), pret = reste <= 0;
+    // une barre se remplit pendant le chargement (le bouton est muet : grisé, sans survol, il refuse le clic), puis « PRÊT » (Jérôme, v0.73.0) ; les secondes restent à côté de la barre
+    b.querySelector('span').textContent = pret ? 'PRÊT' : `${reste} s`;
+    b.querySelector('s').style.width = `${Math.round(100 * (1 - Math.max(0, Math.min(1, reste / recharge))))}%`;
+    let muet = !pret;
+    b.title = pret ? '' : `${NOMS_BATTERIES[cal] ?? cal} : prêt dans ${reste} s`;
     if (cal === GENIE) {      // les sections du génie : combien au dépôt
       const dep = e.sapeurs[MOI], en = e.genies.filter(g => g.camp === MOI).length;
       b.querySelector('em').textContent = `×${dep}`;
-      if (!dep) b.querySelector('span').textContent = en ? 'au travail' : 'perdues';
+      if (!dep) { b.querySelector('span').textContent = en ? 'au travail' : 'perdues'; muet = true; }
       b.title = `Génie : ${dep} section(s) au dépôt, ${en} en route ou au travail (${GENIE_DATA.hommes} hommes sans arme chacune)`;
     }
     if (cal === AVION) {      // la flotte (v0.57.0) : combien d'avions restent, lesquels sont en l'air, leurs points de vie
       const flotte = e.avions[MOI], restants = avionsRestants(e, MOI), prets = avionsPrets(e, MOI);
       b.querySelector('em').textContent = `×${restants}`;
-      if (!restants) b.querySelector('span').textContent = 'perdus'; else if (!prets) b.querySelector('span').textContent = 'en vol';
+      if (!restants) { b.querySelector('span').textContent = 'perdus'; muet = true; } else if (!prets) { b.querySelector('span').textContent = 'en vol'; muet = true; }
       b.title = `Avions : ${flotte.map(pv => pv > 0 ? `${pv} pv` : 'perdu').join(', ')}`;
     }
+    b.classList.toggle('vise', modeBarrage === cal);
+    b.classList.toggle('recharge', !pret);
+    b.classList.toggle('muet', muet && modeBarrage !== cal);
+    b.setAttribute('aria-disabled', muet ? 'true' : 'false');
+    // l'instant où la barre se remplit : un éclair d'un instant (coupé si le système demande moins de mouvement)
+    if (b.dataset.pret === '0' && pret) { b.classList.remove('vient'); void b.offsetWidth; b.classList.add('vient'); }
+    b.dataset.pret = pret ? '1' : '0';
   }
   majRegiments(); laCarte.maj();
   $('batteries').hidden = nuit.etat === 'choix';    // la nuit, pas de barrage
@@ -902,32 +914,33 @@ function majHud() {
 }
 $('batteries').append(...BATTERIES.map((cal, k) => {
   const b = document.createElement('button');
-  b.className = 'batterie'; b.dataset.cal = cal;
+  b.className = 'batterie'; b.dataset.cal = cal; b.dataset.pret = '1';
   b.setAttribute('aria-label', cal === CHAR ? `Char d'assaut (touche ${k + 1})` : cal === AVION ? `Mitraillage aérien (touche ${k + 1})` : cal === GENIE ? `Génie : refaire un pont coupé (touche ${k + 1})` : `Barrage de ${cal} (touche ${k + 1})`);
   if (cal === CHAR) {      // le char vu de côté : la caisse, la chenille, le canon (Jérôme, v0.47.0)
-    b.innerHTML = `<svg viewBox="0 0 38 24" aria-hidden="true" style="max-width:38px"><path d="M3 20L6 16H28L35 20Z"/><path d="M8 16V9H24L28 16Z"/><rect class="ceinture" x="26" y="11" width="11" height="2.5"/><rect class="ceinture" x="7" y="20" width="26" height="2.5"/></svg><b>Char</b><span>prête</span><i class="touche" aria-hidden="true">${k + 1}</i><u><s></s></u>`;
+    b.innerHTML = `<svg viewBox="0 0 38 24" aria-hidden="true" style="max-width:38px"><path d="M3 20L6 16H28L35 20Z"/><path d="M8 16V9H24L28 16Z"/><rect class="ceinture" x="26" y="11" width="11" height="2.5"/><rect class="ceinture" x="7" y="20" width="26" height="2.5"/></svg><b>Char</b><span>PRÊT</span><i class="touche" aria-hidden="true">${k + 1}</i><u><s></s></u>`;
     b.onclick = () => viser(cal);
     return b;
   }
   if (cal === GENIE) {      // la pelle et le madrier (Jérôme, v0.66.0)
-    b.innerHTML = `<svg viewBox="0 0 34 26" aria-hidden="true" style="max-width:34px"><path d="M2 20h30v4H2z"/><path d="M5 20V8h4v12zM25 20V8h4v12z"/><path d="M3 5h28v4H3z"/></svg><b>Génie</b><span>prête</span><em class="flotte">×4</em><i class="touche" aria-hidden="true">${k + 1}</i><u><s></s></u>`;
+    b.innerHTML = `<svg viewBox="0 0 34 26" aria-hidden="true" style="max-width:34px"><path d="M2 20h30v4H2z"/><path d="M5 20V8h4v12zM25 20V8h4v12z"/><path d="M3 5h28v4H3z"/></svg><b>Génie</b><span>PRÊT</span><em class="flotte">×4</em><i class="touche" aria-hidden="true">${k + 1}</i><u><s></s></u>`;
     b.onclick = () => viser(cal);
     return b;
   }
   if (cal === AVION) {      // l'avion vu de dessus (Jérôme, v0.46.0) : un biplan, l'envergure en travers ; ses ailes disent qu'il ne pilonne pas
-    b.innerHTML = `<svg viewBox="0 0 34 30" aria-hidden="true" style="max-width:34px"><path d="M15 2h4v8h14v5H19v7h6v4H9v-4h6v-7H1v-5h14z"/></svg><b>Avion</b><span>prête</span><em class="flotte">×3</em><i class="touche" aria-hidden="true">${k + 1}</i><u><s></s></u>`;
+    b.innerHTML = `<svg viewBox="0 0 34 30" aria-hidden="true" style="max-width:34px"><path d="M15 2h4v8h14v5H19v7h6v4H9v-4h6v-7H1v-5h14z"/></svg><b>Avion</b><span>PRÊT</span><em class="flotte">×3</em><i class="touche" aria-hidden="true">${k + 1}</i><u><s></s></u>`;
     b.onclick = () => viser(cal);
     return b;
   }
   // l'obus debout à gauche (sa taille dit le calibre), le calibre et l'état à droite, une jauge de recharge dessous (v0.30.0)
   const H = { 75: 22, 155: 30, 220: 38 }[cal] || 28, W = { 75: 8, 155: 11, 220: 14 }[cal] || 10;
-  b.innerHTML = `<svg viewBox="0 0 ${W + 4} ${H + 4}" aria-hidden="true"><path d="M2 ${H + 2}V${Math.round(H * 0.45)}Q${2 + W / 2} 1 ${2 + W} ${Math.round(H * 0.45)}V${H + 2}Z"/><rect class="ceinture" x="2" y="${H - 6}" width="${W}" height="2.5"/></svg><b>${cal}</b><span>prête</span><i class="touche" aria-hidden="true">${k + 1}</i><u><s></s></u>`;
+  b.innerHTML = `<svg viewBox="0 0 ${W + 4} ${H + 4}" aria-hidden="true"><path d="M2 ${H + 2}V${Math.round(H * 0.45)}Q${2 + W / 2} 1 ${2 + W} ${Math.round(H * 0.45)}V${H + 2}Z"/><rect class="ceinture" x="2" y="${H - 6}" width="${W}" height="2.5"/></svg><b>${cal}</b><span>PRÊT</span><i class="touche" aria-hidden="true">${k + 1}</i><u><s></s></u>`;
   b.onclick = () => viser(cal);
   return b;
 }));
 function viser(cal) {
   if (!B) return;
   if (B.etat.phase !== 'jour') return dire({ refus: 'Pas de barrage la nuit.' });
+  if (modeBarrage !== cal && resteBatterie(cal) > 0) return dire({ refus: `${NOMS_BATTERIES[cal] ?? `Batterie de ${cal}`} : encore ${resteBatterie(cal)} s à charger.` });
   if (cal === AVION && modeBarrage !== AVION && !avionsRestants(B.etat, MOI)) return dire({ refus: 'Plus un avion : l\'escadrille est détruite.' });
   modeBarrage = modeBarrage === cal ? null : cal; departAvion = null; if (modeBarrage) modeMarche = false;
   majHud();
@@ -1534,7 +1547,7 @@ startUpdateCheck({
 
 // ─── Mode debug (section 18) : chargé seulement avec ?debug=1 ──────────────
 if (DEBUG) {
-  const { installDebug, seedFromUrl } = await import('./lib/debug.js?v=0.72.0');
+  const { installDebug, seedFromUrl } = await import('./lib/debug.js?v=0.73.0');
   window.__seed = seedFromUrl() ?? undefined;
   installDebug({
     state: () => B && { ...horloge(B), effectifs: effectifs(B), pertes: B.etat.pertes, impacts: B.etat.impacts.length, enJeu: enJeu(), pause: loop.paused },
