@@ -36,6 +36,7 @@ import { ARBRES_JEU } from './data/arbres.js?v=0.66.3';
 import { creerVegetation } from './rendu/vegetation.js?v=0.66.3';
 import { creerTemps } from './rendu/temps.js?v=0.66.3';
 import { creerEclats } from './rendu/eclats.js?v=0.66.3';
+import { creerOmbresRelief } from './rendu/ombres-relief.js?v=0.66.3';
 import { PALETTE, ORDRE, INDICE } from './palette.js?v=0.66.3';
 import { OMBRE, couleursLigne } from './apparence.js?v=0.66.3';
 import { MORCEAU, hauteurVueQ as hauteurQ, hauteurVueM as hauteurM } from './terrain.js?v=0.66.3';
@@ -116,6 +117,10 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
   const cielCoul = () => col(leBord ? leBord.ciel : 'r');
   const cielMeteo = new THREE.Color();
 
+  // Les ombres du relief (labo « La lumière dans le relief », éteintes dans le jeu) : une case que le soleil ne voit pas prend la couleur de sa paroi dans la texture du sol ; le soleil du labo : saisons, azimut
+  let ombresRelief = false, soleilLabo = null, ombreVu = null;
+  const ombres = creerOmbresRelief({ hauteurQ });
+  const soleilCase = { x: 0, z: 0 };
   let B = null, T = null, faux = null, fauxU = null;
   // Le sol a le même relief à tous les zooms (Jérôme, v0.12.0) ; seuls les petits décors (arbres, buissons, herbe) s'effacent de loin
   const petit = () => ZOOMS[vue.zoom] <= POINTS_JUSQUA;
@@ -303,6 +308,7 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
     for (const [k, h] of [['v', '#a86a2c'], ['w', '#8a4c1e']]) { const i = ORDRE.indexOf(k); PAL_RGB[i] = rgb(roux ? h : PALETTE[k]); PAROI_RGB[i] = roux ? sombre(h) : rgb(PALETTE[OMBRE[k]]); }
     if (finesseDes !== null) { finesse = 1; finPerimee = false; }      // une autre bataille : tout se fait d'abord au mètre, `dessiner` choisit ensuite
     if (sol) { scene.remove(sol); sol.children.forEach(m => m.userData.fin?.dispose()); solTex.dispose(); solTexFin?.dispose(); solTexFin = null; solDataFin = null; }
+    ombres.attacher(T); ombreVu = new Uint32Array(T.H);
     solIdx = new Uint8Array(T.W * T.H);
     solData = new Uint8Array(T.W * T.H * 2 * 4);
     solTex = new THREE.DataTexture(solData, T.W, T.H * 2, THREE.RGBAFormat, THREE.UnsignedByteType);
@@ -400,6 +406,9 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
   function majSol(tout = false, dt = 0) {
     const h = horloge(B), gel = h.enneige ? 2 : h.gel ? 1 : 0;       // 2 : la neige blanchit le sol (apparence.js)
     if (gel !== gelVu) { tout = true; gelVu = gel; }
+    const sv = soldats.soleilUniform.value; soleilCase.x = sv.x; soleilCase.z = sv.y;
+    ombres.maj(ombresRelief, soleilCase, dt);
+    const om = ombres.masque, omV = ombres.versions;
     // l'eau change quelques rangées à chaque pas : on n'envoie la texture qu'un peu plus tard
     solAttente -= dt;
     if (!tout && solAttente > 0) return;
@@ -408,15 +417,15 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
     const W = T.W, bas = W * T.H * 4, changees = [];
     for (let j = 0; j < T.H; j++) {
       // une rangée dépend aussi de sa voisine du sud (la marche entre elles)
-      if (!tout && vuLigne[j] === T.versionLigne[j] && (j === T.H - 1 || vuLigne[j + 1] === T.versionLigne[j + 1])) continue;
+      if (!tout && ombreVu[j] === omV[j] && vuLigne[j] === T.versionLigne[j] && (j === T.H - 1 || vuLigne[j + 1] === T.versionLigne[j + 1])) continue;
       couleursLigne(T, j, B.R, gel, solIdx);
       for (let i = 0, c = j * W; i < W; i++, c++) {
-        const a = PAL_RGB[solIdx[c]], b = T.profond[c] ? a : PAROI_RGB[solIdx[c]], o = c * 4;      // la paroi d'une eau est de l'eau (v0.47.1)
+        const a = om[c] ? PAROI_RGB[solIdx[c]] : PAL_RGB[solIdx[c]], b = T.profond[c] ? a : PAROI_RGB[solIdx[c]], o = c * 4;      // la paroi d'une eau est de l'eau (v0.47.1) ; à l'ombre du relief, le dessus prend la couleur de la paroi
         const marche = j < T.H - 1 && hauteurQ(T, c) - hauteurQ(T, c + W) >= 4;     // l'alpha dit : une marche d'un mètre au sud
         solData[o] = a[0]; solData[o + 1] = a[1]; solData[o + 2] = a[2]; solData[o + 3] = marche ? 0 : 255;
         solData[bas + o] = b[0]; solData[bas + o + 1] = b[1]; solData[bas + o + 2] = b[2]; solData[bas + o + 3] = 255;
       }
-      vuLigne[j] = T.versionLigne[j]; n++; changees.push(j);
+      vuLigne[j] = T.versionLigne[j]; ombreVu[j] = omV[j]; n++; changees.push(j);
     }
     if (n) solTex.needsUpdate = true;
     if (finesse === 2 && (n || !solTexFin || finPerimee)) { ecrireFin(changees, !solTexFin || finPerimee); finPerimee = false; }
@@ -445,7 +454,7 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
             if (h < 0.3 && ni >= 0 && ni < W) { const n = j * W + ni; if (!T.profond[n] && hauteurQ(T, n) === hq) k = solIdx[n]; }
             else if (h < 0.6 && nj >= 0 && nj < H) { const n = nj * W + i; if (!T.profond[n] && hauteurQ(T, n) === hq) k = solIdx[n]; }
           }
-          const a = PAL_RGB[k], b = T.profond[c] ? PAL_RGB[k] : PAROI_RGB[k];
+          const a = ombres.masque[c] ? PAROI_RGB[k] : PAL_RGB[k], b = T.profond[c] ? PAL_RGB[k] : PAROI_RGB[k];
           const o = ((j * 2 + sy) * W2 + i * 2 + sx) * 4;
           solDataFin[o] = a[0]; solDataFin[o + 1] = a[1]; solDataFin[o + 2] = a[2]; solDataFin[o + 3] = 255;
           solDataFin[bas + o] = b[0]; solDataFin[bas + o + 1] = b[1]; solDataFin[bas + o + 2] = b[2]; solDataFin[bas + o + 3] = 255;
@@ -578,7 +587,7 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
     majMorceaux(); projeter();
     vegetation.setTemps(tAnim); soldats.setTemps(tAnim);
     const t1 = performance.now();
-    temps.majSoleil(horloge(B));
+    temps.majSoleil(horloge(B), soleilLabo);
     majSoldats();
     tAnim += dt;
     eclats.majEclats(dt); eclats.majCorbeaux(dt, tAnim); troncons.maj(dt);
@@ -615,6 +624,11 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
     // le style de la nuit : 'halos' (le jeu), 'doux', 'trame' (l'ancienne, gardée au labo)
     set styleNuit(m) { temps.setStyleNuit(m); },
     get finesse() { return finesse; },
+    get ombresRelief() { return ombresRelief; },
+    set ombresRelief(v) { ombresRelief = !!v; solAttente = 0; },      // les ombres du relief sur le sol (labo)
+    get soleilLabo() { return soleilLabo; },
+    set soleilLabo(r) { soleilLabo = r; },                           // { saisonnier, azimut } : la course du soleil à essayer (labo)
+    get ombresReliefEtat() { return { calcule: ombres.calcule, enCours: ombres.enCours }; },
     set finesse(n) { reglerFinesse(n); },      // le sol se refait morceau par morceau, dans la vue d'abord (majMorceaux) : v0.52.2
     get finesseDes() { return finesseDes; },
     set finesseDes(px) { finesseDes = px; },       // le jeu : le sol passe au demi-mètre à partir de ce nombre de pixels par mètre (v0.52.3)
