@@ -1,5 +1,5 @@
 {
-  "version": "0.70.0",
+  "version": "0.71.0",
   "date": "2026-10-25",
   "changes": [
     "Les caractéristiques des soldats évoluent : elles dépendent du grade et du régiment au départ, montent à l'usage (tir, coups, marche fatiguée, calme sous le feu) et baissent avec une blessure ou la terreur",

@@ -3,7 +3,7 @@
 // droite, la vie qui reste collée au centre, ce qui est perdu qui se vide vers le bord. Pas un chiffre à l'écran : ils ne viennent qu'au
 // survol d'un segment de la barre. Dessous, la barre des tronçons tenus, plus petite, en couleurs neutres (os et terre : elle ne prend
 // parti pour personne). Posées sur le champ en direct ; rien ici ne lit ni ne modifie le jeu : des données d'exemple, la palette du jeu.
-import { PALETTE as P } from './palette.js?v=0.70.0';
+import { PALETTE as P } from './palette.js?v=0.71.0';
 
 const el = (tag, css = '', ...kids) => { const e = document.createElement(tag); if (css) e.style.cssText = css; e.append(...kids.flat().filter(k => k != null)); return e; };
 const MONO = 'font:12px/1.3 ui-monospace,monospace;';

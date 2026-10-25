@@ -21,7 +21,7 @@ export const CAMPAGNE = {
 // Les cartes d'origine de chaque bataille (ce que l'atelier remet quand on retire une carte de la campagne)
 export const SECTEURS_ORIGINE = CAMPAGNE.batailles.map(b => b.secteur);
 
-// Les mots de la fin (Jérôme, cadrage v0.36.3 : « le secteur suivant », pas de victoire claironnée ; DESIGN.md : aucune glorification, le compteur de morts n'est jamais une récompense).
+// Les mots de la fin (Jérôme, cadrage v0.36.3 : « le secteur suivant », pas de victoire claironnée ; DESIGN.md : le compteur de morts n'est jamais une récompense).
 // Pas de total en tête, pas de mot de victoire : le détail seul, bataille par bataille, puis les noms.
 export const TEXTES = {
   fin: { terminee: 'La campagne est finie.', effondree: 'Il ne reste plus de quoi tenir : la campagne est finie.' },
