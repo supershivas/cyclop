@@ -401,8 +401,14 @@ test('un pont rend l\'eau praticable sous son tablier sans changer le sol, le ta
   assert.equal(etat(T, c(50), R), ETAT.SEC); assert.ok(vitesseCase(T, c(50), R) > 0.9, 'à pied sec, vitesse normale');
   const { bw } = dimensionsCouts(T), couts = new Uint8Array(bw * Math.ceil(100 / 4)); calculerCouts(T, R, couts);
   assert.ok(couts[Math.floor(50 / 4) * bw + 15] > 0, 'le carré du pont est praticable'); assert.equal(couts[Math.floor(50 / 4) * bw + 25], 0, 'le fleuve ne l\'est pas');
-  // un obus de 155 sur le tablier coupe l'ouvrage entier : l'eau redevient profonde, le tablier disparaît
+  // un obus ne coupe plus l'ouvrage (v0.67.0) : il l'abîme ; un nom, une solidité, une histoire
+  const P = T.pontsListe[0];
+  assert.ok(P.nom && P.pvMax > 0 && P.pv === P.pvMax && P.coupures === 0 && P.reparations === 0, 'un nom, toute sa solidité, aucune histoire');
   impact(T, 60.5, 50.5, '155', R, 1);
+  assert.equal(P.detruit, false, 'un obus ne le coupe pas'); assert.ok(P.pv < P.pvMax && P.pv > 0, `abîmé : ${P.pv} / ${P.pvMax}`); assert.equal(T.pont[c(50)], 1);
+  // à zéro, l'ouvrage entier est coupé : l'eau redevient profonde, le tablier disparaît
+  for (let n = 0; n < 8 && !P.detruit; n++) impact(T, 60.5, 50.5, '220', R, 2 + n);
+  assert.equal(P.coupures, 1); assert.equal(P.pv, 0); assert.equal(T.coupes.length, 1);
   assert.equal(T.pontsListe[0].detruit, true); assert.equal(T.pont[c(50)], 0); assert.equal(T.profond[c(50)], 1); assert.equal(T.pont[c(40)], 0, 'tout l\'ouvrage, pas seulement le point touché');
   assert.equal(hauteurQ(T, c(50)), T.base[c(50)] + T.diff[c(50)]);
   // un pont posé sans eau dessous ne change rien
@@ -603,4 +609,20 @@ test('une carte au hasard avec un fleuve en travers a au moins trois ponts, dont
     assert.ok(ponts.filter(p => PONTS_JEU[p.type].char).length >= 2, `graine ${g} : deux ponts de char`);
   }
   assert.ok(vus >= 5, `des fleuves tirés : ${vus}`);
+});
+
+group('la solidité, le nom et l\'histoire des ponts (v0.67.0)');
+test('un ouvrage se refait à pleine solidité et garde son histoire ; les noms diffèrent d\'un ouvrage à l\'autre et ne dépendent que de la position ; pontEn le trouve debout ou coupé', async () => {
+  const { reconstruirePont, pontEn } = await import('../js/eaux.js');
+  const S = { largeur: 160, hauteur: 100, arbres: 0, objets: [{ o: 'fleuve', x: -10, y: 50, x2: 170, y2: 50, r: 6 }, { o: 'pont', x: 40, y: 35, x2: 40, y2: 65, r: 3, type: 'planches' }, { o: 'pont', x: 110, y: 35, x2: 110, y2: 65, r: 3, type: 'arches' }] };
+  const T = creerTerrain(3, S, R), U = creerTerrain(9, S, R);
+  assert.equal(T.pontsListe.length, 2); assert.notEqual(T.pontsListe[0].nom, T.pontsListe[1].nom);
+  assert.deepEqual(T.pontsListe.map(P => P.nom), U.pontsListe.map(P => P.nom), 'le nom vient de la position, pas de la graine du terrain');
+  assert.ok(T.pontsListe[0].pvMax < T.pontsListe[1].pvMax, 'une passerelle est plus fragile qu\'un pont de pierre');
+  const P = T.pontsListe[0];
+  assert.equal(pontEn(T, 40, 50, 1), 0); assert.equal(pontEn(T, 110, 50, 1), 1); assert.equal(pontEn(T, 75, 50, 1), -1);
+  for (let n = 0; n < 5 && !P.detruit; n++) impact(T, 40.5, 50.5, '155', R, n);
+  assert.ok(P.detruit && P.coupures === 1, 'trois obus de 155 coupent une passerelle'); assert.equal(pontEn(T, 40, 50, 1), 0, 'coupé, on le trouve encore');
+  reconstruirePont(T, P);
+  assert.ok(!P.detruit && P.pv === P.pvMax && P.reparations === 1 && P.coupures === 1);
 });

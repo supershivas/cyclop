@@ -978,3 +978,37 @@ test('une section de 20 hommes refait un pont coupé en 2 à 4 h, plus vite avec
   const B2 = restaurer(photo(B), R); 
   assert.ok(!B2.terrain.pontsListe[0].detruit, 'relue : le pont est refait');
 });
+
+group('un pont coupé sous un régiment (v0.67.0)');
+test('les hommes sur le tablier tombent à l\'eau : une part se noie, les autres sont jetés sur la rive ; les régiments qui y passaient s\'arrêtent ; la sauvegarde relue est la même partie', async () => {
+  const { version } = JSON.parse(readFileSync(new URL('../version.json', import.meta.url)));
+  const { SECTEURS: dedans } = await import(`../js/data/secteur.js?v=${version}`);
+  const { detruirePont } = await import('../js/eaux.js');
+  const S = dedans.essai, m = (S.tranchees.lignes.nous[0] + S.tranchees.lignes.eux[0]) / 2;
+  try {
+    dedans.essai = { ...S, objets: [{ o: 'fleuve', x: -300, y: m, x2: 750, y2: m, r: 6 }, { o: 'pont', x: 300, y: m + 12, x2: 300, y2: m - 12, r: 3, type: 'arches' }] };
+    const B = nouvelleBataille(7, R, { soldats: 400, jours: 3 }), T = B.terrain, A = B.armee, P = T.pontsListe[0], z = zone(B);
+    // le régiment 0 est sur le tablier
+    const reg = B.etat.regiments[0], sur = P.cases.filter(c => !P.enEau.includes(c) === false);
+    let k = 0, n0 = 0;
+    for (let i = 0; i < A.n; i++) if (A.reg[i] === reg.id) { const c = sur[(k++ * 7) % sur.length]; A.x[i] = c % T.W + 0.5; A.y[i] = ((c / T.W) | 0) + 0.5; n0++; }
+    assert.ok(n0 >= 20, `assez d'hommes : ${n0}`);
+    const but = [z.x0 + 100, z.y0 + 40];
+    reg.ordre = { x: but[0], y: but[1], fx: 0, fy: -1, cols: 12, esp: 2.4, forme: 'bloc' };
+    B.etat.pontsRompus.push([0, B.etat.jour, B.etat.tickJour + 1]);      // (comme un pont tombé sous un char : rejoué avec la partie)
+    detruirePont(T, P.cases[0] % T.W, (P.cases[0] / T.W) | 0, 0);
+    const morts0 = B.etat.pertes[0], evs = avancer(B);
+    const noye = evs.find(e => e.type === 'pont-noyes');
+    assert.ok(noye && noye.noyes + noye.sauves === n0 && noye.noyes > 0 && noye.sauves > 0, JSON.stringify(noye));
+    assert.equal(B.etat.pertes[0] - morts0, noye.noyes, 'les noyés sont comptés dans les pertes');
+    for (let i = 0; i < A.n; i++) if (A.reg[i] === reg.id && !A.mort[i]) assert.ok(!T.profond[(A.y[i] | 0) * T.W + (A.x[i] | 0)], 'personne ne reste dans l\'eau profonde');
+    // le régiment dont la route passait par le pont s'arrête quand les coûts le savent
+    let barre = null;
+    for (let n = 0; n < 400 && !barre; n++) barre = avancer(B).find(e => e.type === 'marche-barree' && e.reg === reg.id);
+    assert.ok(barre, 'le régiment est arrêté : plus de passage');
+    assert.ok(Math.hypot(reg.ordre.x - but[0], reg.ordre.y - but[1]) > 20, 'son ordre n\'est plus de l\'autre côté du fleuve');
+    const B2 = restaurer(photo(B), R);
+    assert.equal(JSON.stringify(photo(B2)), JSON.stringify(photo(B)), 'relue : la même partie'); assert.equal(B2.terrain.pontsListe[0].coupures, 1);
+    assert.equal(B2.terrain.coupes.length, 0, 'rien à refaire au rejeu');
+  } finally { dedans.essai = S; }
+});

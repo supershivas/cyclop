@@ -1,7 +1,9 @@
 {
-  "version": "0.66.3",
+  "version": "0.67.0",
   "date": "2026-10-25",
   "changes": [
-    "Le jeu à deux : une fenêtre « Prêt ? » au départ ; la bataille ne commence que lorsque les deux commandants ont cliqué sur « Prêt »"
+    "Les ponts ont un nom, une barre de solidité et une histoire au survol ; ils ne tombent plus au premier obus",
+    "Un pont détruit laisse ses deux têtes debout, et le génie voit ses arêtes pour le refaire",
+    "Sur un pont qui s'effondre, une part des hommes se noie, les autres gagnent la rive, et les régiments dont la route est coupée s'arrêtent"
   ]
 }

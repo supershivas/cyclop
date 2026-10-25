@@ -14,31 +14,32 @@
    La sauvegarde (photo) garde la graine, la liste compacte des impacts, l'état
    de la foule et les petites couches de logique ; jamais le relief : il se
    rejoue depuis la graine et les impacts (rejouerTerrain). */
-import { createRng, hash2 } from './lib/rng.js?v=0.66.3';
-import { impact, hydroLignes, etat as etatCase, vitesseEtat, vitesseCase, ETAT } from './terrain.js?v=0.66.3';
-import { creerArmee, ajouterSoldat, construireGrille, pasArmee, tuerDans, effrayer, compacter, photoArmee, restaurerArmee, b64, deB64, DENSITE, place } from './army.js?v=0.66.3';
-import { ligneSous } from './tranchees.js?v=0.66.3';
-import { terrainDuSecteur } from './secteur-terrain.js?v=0.66.3';
-import { detruirePont, reconstruirePont } from './eaux.js?v=0.66.3';
-import { calculerCouts, creerCacheChamps, dimensionsCouts, BLOC } from './champs.js?v=0.66.3';
-import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.66.3';
-import { preparerAleatoire, ID_ALEATOIRE } from './generateur.js?v=0.66.3';
-import { AVION, MITRAILLAGE } from './data/mitraillage.js?v=0.66.3';
-import { refusAvion, lancerAvion, avancerAvions, flotteDeDepart, reparerAvions } from './avions.js?v=0.66.3';
-import { CHAR, CHAR_RECHARGE, CHAR_SORTIE } from './data/chars.js?v=0.66.3';
-import { GENIE, GENIE_DATA } from './data/genie.js?v=0.66.3';
-import { refusGenie, lancerGenie, avancerGenies, degatsGenies, sectionsDeDepart } from './genie.js?v=0.66.3';
-import { refusChar, lancerChar, degatsChars, avancerChars } from './chars.js?v=0.66.3';
-import { METEO, SAISONS, SAISON_DEFAUT, PREVISION_JUSTE, temperature } from './data/meteo.js?v=0.66.3';
-import { SECTEURS } from './data/secteur.js?v=0.66.3';
-import { REGIMENTS } from './data/lexique.js?v=0.66.3';
-import { STANCES, STANCE_DEFAUT } from './data/stances.js?v=0.66.3';
-import { grade } from './identite.js?v=0.66.3';
-import { corvees, rejouerTravaux } from './nuit.js?v=0.66.3';
+import { createRng, hash2 } from './lib/rng.js?v=0.67.0';
+import { impact, hydroLignes, etat as etatCase, vitesseEtat, vitesseCase, ETAT } from './terrain.js?v=0.67.0';
+import { creerArmee, ajouterSoldat, construireGrille, pasArmee, tuerDans, effrayer, compacter, photoArmee, restaurerArmee, b64, deB64, DENSITE, place } from './army.js?v=0.67.0';
+import { ligneSous } from './tranchees.js?v=0.67.0';
+import { terrainDuSecteur } from './secteur-terrain.js?v=0.67.0';
+import { detruirePont, reconstruirePont, pontEn } from './eaux.js?v=0.67.0';
+import { PONT_COUPE } from './data/ponts.js?v=0.67.0';
+import { calculerCouts, creerCacheChamps, dimensionsCouts, BLOC } from './champs.js?v=0.67.0';
+import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.67.0';
+import { preparerAleatoire, ID_ALEATOIRE } from './generateur.js?v=0.67.0';
+import { AVION, MITRAILLAGE } from './data/mitraillage.js?v=0.67.0';
+import { refusAvion, lancerAvion, avancerAvions, flotteDeDepart, reparerAvions } from './avions.js?v=0.67.0';
+import { CHAR, CHAR_RECHARGE, CHAR_SORTIE } from './data/chars.js?v=0.67.0';
+import { GENIE, GENIE_DATA } from './data/genie.js?v=0.67.0';
+import { refusGenie, lancerGenie, avancerGenies, degatsGenies, sectionsDeDepart } from './genie.js?v=0.67.0';
+import { refusChar, lancerChar, degatsChars, avancerChars } from './chars.js?v=0.67.0';
+import { METEO, SAISONS, SAISON_DEFAUT, PREVISION_JUSTE, temperature } from './data/meteo.js?v=0.67.0';
+import { SECTEURS } from './data/secteur.js?v=0.67.0';
+import { REGIMENTS } from './data/lexique.js?v=0.67.0';
+import { STANCES, STANCE_DEFAUT } from './data/stances.js?v=0.67.0';
+import { grade } from './identite.js?v=0.67.0';
+import { corvees, rejouerTravaux } from './nuit.js?v=0.67.0';
 
 export const PAS = 1 / 30;                 // s de jeu par pas
 export const NOUS = 0, EUX = 1;
-const VERSION = 9;   // 9 : le génie (les sections, les ponts refaits) ; 8 : le chemin et le cap des chars ; 7 : le rapport du jour (les sorties et les pertes d'avions) ; 6 : les avions de mitraillage (une passe tracée, des points de vie, une flotte) ; 5 : la forme des cratères (rond, lèvre jetée, éclats : les impacts rejoués changent) ; 2 : la graine d'identité ; 3 : la campagne et les relevés ; 4 : les numéros de campagne, un effectif par camp, le rythme de l'IA (campagne, lots 1 à 3)
+const VERSION = 10;   // 10 : la solidité des ponts (pv, nom, historique), la coupure en attente de ses coûts (`etat.couts.coupure`) ; 9 : le génie (les sections, les ponts refaits) ; 8 : le chemin et le cap des chars ; 7 : le rapport du jour (les sorties et les pertes d'avions) ; 6 : les avions de mitraillage (une passe tracée, des points de vie, une flotte) ; 5 : la forme des cratères (rond, lèvre jetée, éclats : les impacts rejoués changent) ; 2 : la graine d'identité ; 3 : la campagne et les relevés ; 4 : les numéros de campagne, un effectif par camp, le rythme de l'IA (campagne, lots 1 à 3)
 
 const ticksParHeure = R => Math.max(1, Math.round(R.jour.duree / (R.jour.heureFin - R.jour.heureDebut) / PAS));
 const ticksParJour = R => ticksParHeure(R) * (R.jour.heureFin - R.jour.heureDebut);
@@ -495,6 +496,7 @@ export function avancer(B) {
   if (etat.mitraillages.length) avancerAvions(B, ctx, rng);
   if (etat.chars.length) avancerChars(B, ctx, rng);
   if (etat.genies.length) avancerGenies(B, ctx);
+  if (T.coupes.length) noyades(B);
   enFace(B, rng);
   pasArmee(A, ctx);
   // un homme qui tombe fait peur à ceux qui sont à côté
@@ -513,7 +515,7 @@ export function avancer(B) {
   const b0 = etat.couts.bande, b1 = Math.min(bh, b0 + parPas);
   calculerCoutsBande(B, b0, b1, gel);
   etat.couts.bande = b1;
-  if (b1 >= bh) { B.coutsPrec.set(B.couts); B.couts.set(B.coutsNeufs); etat.couts.version++; etat.couts.depuis = etat.temps; etat.couts.bande = 0; }
+  if (b1 >= bh) { B.coutsPrec.set(B.couts); B.couts.set(B.coutsNeufs); etat.couts.version++; etat.couts.depuis = etat.temps; etat.couts.bande = 0; if (etat.couts.coupure) { etat.couts.coupure = false; barrerMarches(B); } }
 
   etat.rng = rng.state;
   // la fin du jour
@@ -569,6 +571,59 @@ function projeter(B, i, { x0, y0, d, rayon }) {
   const ux = d > 0.05 ? dx / d : (A.id[i] & 1 ? 1 : -1), uy = d > 0.05 ? dy / d : 0;
   const m = (P.min + (P.max - P.min) * (1 - d / rayon)) * rayon / P.rayonRef;
   return [Math.max(0.5, Math.min(T.W - 0.5, A.x[i] + ux * m)), Math.max(0.5, Math.min(T.H - 0.5, A.y[i] + uy * m))];
+}
+
+/* Un pont coupé avec des hommes dessus (Jérôme, v0.67.0 : « beaucoup de bugs de pathfinding lorsqu'un pont est détruit avec un régiment dessus »). Le tablier disparu, ils étaient dans l'eau profonde :
+   la marche y est à 3 % (`vitesse.profond`), l'eau est un mur pour qui n'y est pas, les carrés de coûts alentour valent 0, donc le champ ne les menait plus nulle part (ils allaient droit vers leur place,
+   au travers du fleuve, nageant sur place). Maintenant une part se noie (un hachage du numéro : sans hasard), les autres sont jetés sur la rive la plus proche, épuisés ; ceux qui attendaient d'y monter
+   n'ont rien à faire de plus (l'eau est un mur pour eux, et leur régiment en est averti : `barrerMarches`). Les ouvrages coupés du pas sont dans `T.coupes`. */
+function noyades(B) {
+  const { terrain: T, armee: A, etat } = B, coupes = T.coupes.splice(0), W = T.W, H = T.H;
+  const sur = new Map();                                    // case → l'ouvrage coupé dont elle était le tablier
+  for (const P of coupes) for (const c of P.cases) sur.set(c, P);
+  const sec = c => !T.profond[c] && !T.pont[c];
+  const rive = (x, y) => {                                  // la case sèche la plus proche, en couronnes de plus en plus larges
+    const i0 = x | 0, j0 = y | 0;
+    for (let r = 1; r <= PONT_COUPE.rayonRive; r++) {
+      let best = -1, bd = Infinity;
+      for (let j = j0 - r; j <= j0 + r; j++) for (let i = i0 - r; i <= i0 + r; i++) {
+        if ((Math.abs(i - i0) !== r && Math.abs(j - j0) !== r) || i < 0 || j < 0 || i >= W || j >= H || !sec(j * W + i)) continue;
+        const d = (i + 0.5 - x) ** 2 + (j + 0.5 - y) ** 2; if (d < bd) { bd = d; best = j * W + i; }
+      }
+      if (best >= 0) return best;
+    }
+    return -1;
+  };
+  let noyes = 0, sauves = 0;
+  for (let i = 0; i < A.n; i++) {
+    if (A.mort[i]) continue;
+    const P = sur.get((A.y[i] | 0) * W + (A.x[i] | 0)); if (!P) continue;
+    if (hash2(A.id[i], T.pontsListe.indexOf(P), 9) < PONT_COUPE.noyes) { mourir(B, i, 'noyade'); noyes++; continue; }
+    const c = rive(A.x[i], A.y[i]);
+    if (c >= 0) { A.x[i] = (c % W) + 0.5 + (hash2(A.id[i], c, 1) - 0.5) * 0.6; A.y[i] = ((c / W) | 0) + 0.5 + (hash2(A.id[i], c, 2) - 0.5) * 0.6; }
+    A.vx[i] = 0; A.vy[i] = 0; A.fatJ[i] = Math.max(A.fatJ[i], PONT_COUPE.fatigue);
+    A.coince[i] = 0; sauves++;
+  }
+  etat.couts.coupure = true;                                // les coûts ne le savent pas encore : à leur prochain tour, `barrerMarches` arrête ceux dont la route passait par là
+  if (noyes + sauves) B.evenements.push({ type: 'pont-noyes', x: coupes[0].mx, y: coupes[0].mz, noyes, sauves, nom: coupes[0].nom });
+}
+/* Les régiments dont la route passait par un pont coupé : le champ de coûts neuf ne mène plus à leur place (de l'eau profonde la barre). Sans cela, leurs hommes allaient droit vers leur place
+   et s'entassaient sur la rive, contre l'eau, à pousser sans fin. Le régiment s'arrête où il est (l'ordre devient une place là où est son centre) ; le carnet le dit. */
+function barrerMarches(B) {
+  const { etat, R, terrain: T, armee: A } = B, S = secteurDuJeu(etat), largeurReg = S.largeur / S.regiments, Z = zone(B);
+  for (const reg of etat.regiments) {
+    if (!reg.effectif || reg.ordre.trace) continue;
+    let n = 0, cx = 0, cy = 0;
+    for (let i = 0; i < A.n; i++) if (A.reg[i] === reg.id && !A.mort[i]) { n++; cx += A.x[i]; cy += A.y[i]; }
+    if (!n) continue;
+    cx /= n; cy /= n;
+    if (Math.hypot(reg.ordre.x - cx, reg.ordre.y - cy) < 6 || !traverseEau(T, cx, cy, reg.ordre.x, reg.ordre.y)) continue;
+    const [{ atteint }] = cheminsVers(B, [reg], reg.ordre.x, reg.ordre.y);
+    if (atteint) continue;
+    reg.ordre = formation(reg, Math.max(Z.x0 + 2, Math.min(Z.x1 - 2, cx)), Math.max(Z.y0 + 2, Math.min(Z.y1 - 2, cy)), largeurReg, R, reg.ordre.forme);
+    reattribuer(B, reg);
+    B.evenements.push({ type: 'marche-barree', reg: reg.id, camp: reg.camp });
+  }
 }
 
 export function mourir(B, i, cause, ou = null) {
@@ -869,7 +924,7 @@ function tomber(B, x, y, cal, ctx, gel) {
   etat.impacts.push([etat.jour, etat.tickJour, Math.round(x * 10), Math.round(y * 10), NOMS_CALIBRES.indexOf(cal)]);
   const coupes = T.versionPonts;
   const { rayon } = impact(T, x, y, cal, R, n, gel);
-  if (T.versionPonts !== coupes) B.evenements.push({ type: 'pont-coupe', x, y });      // un obus a coupé un pont (le carnet le dit)
+  if (T.versionPonts !== coupes) B.evenements.push({ type: 'pont-coupe', x, y, nom: T.coupes[T.coupes.length - 1]?.nom });      // un obus a coupé un pont (le carnet le dit)
   tuerDans(B.armee, x, y, rayon, ctx, CALIBRES[cal].letal);
   if (etat.chars.length) degatsChars(B, x, y, cal);
   if (etat.genies.length) degatsGenies(B, x, y, cal);
@@ -1125,6 +1180,7 @@ export function* etapesRejouer(B) {
     // puis les travaux de la nuit, dans le même ordre que la partie (l'aube vient après l'eau de la nuit)
     if (jour < etat.jour) rejouerTravaux(B, jour);
   }
+  T.coupes.length = 0;      // (les hommes ont été relevés dans la partie d'alors : rien à refaire pour les ponts coupés du rejeu)
 }
 
 export { DENSITE };

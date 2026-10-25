@@ -2,8 +2,9 @@
 // mêmes coordonnées que `formes.js` (mètres du SECTEUR). Logique pure, sans hasard. Une eau est creusée d'un coup à plat (au niveau de sa rive la plus basse moins un mètre, au mètre près : le sol se
 // dessine en marches d'un mètre) et marquée `profond` : on n'y passe pas (les champs de coûts la contournent, un homme qui s'y trouve la quitte à peine), sauf sur un pont (`ponts` : v0.44.0).
 // Un fleuve suit le terrain : son niveau est celui de la rive la plus basse sur ±15 m de son cours, pas un niveau pour tout le cours.
-import { distanceForme, extremite } from './formes.js?v=0.66.3';
-import { hash2 } from './lib/rng.js?v=0.66.3';
+import { distanceForme, extremite } from './formes.js?v=0.67.0';
+import { hash2 } from './lib/rng.js?v=0.67.0';
+import { PONTS_PV, PONTS_DEGATS, NOMS_PONTS, typePont } from './data/ponts.js?v=0.67.0';
 
 export const EAUX = ['lac', 'fleuve'];
 export const PONT_AU_MOINS = 4;          // quarts : le tablier est à 1 m au moins au-dessus de l'eau
@@ -125,36 +126,72 @@ export function poserPonts(base, profond, T, { W, H, ox, oy }, objets) {
     }
     if (!aEau) continue;                                         // sans eau dessous, rien ne se pose
     const dx = x2 - F.x, dz = y2 - F.y;
-    const pont = { type: O.type, x: F.x, y: F.y, x2, y2, r, long, mx: (F.x + x2) / 2 + ox, mz: (F.y + y2) / 2 + oy, ang: -Math.atan2(dz, dx), pontH: Math.max(haut(F.x, F.y), haut(x2, y2), eau + PONT_AU_MOINS), eau, cases, enEau: [], detruit: false };
+    const pont = { type: O.type, x: F.x, y: F.y, x2, y2, r, long, mx: (F.x + x2) / 2 + ox, mz: (F.y + y2) / 2 + oy, ang: -Math.atan2(dz, dx), pontH: Math.max(haut(F.x, F.y), haut(x2, y2), eau + PONT_AU_MOINS), eau, cases, enEau: [], detruit: false,
+      pvMax: PONTS_PV[typePont(O.type)], pv: PONTS_PV[typePont(O.type)], coupures: 0, reparations: 0, nom: nomDePont(T.pontsListe, F.x, F.y) };
     T.pontsListe.push(pont);
     const n = T.pontsListe.length;
     for (const c of cases) { T.pont[c] = n; T.pontH[c] = pont.pontH; if (profond[c]) { T.pontEau[c] = 1; pont.enEau.push(c); profond[c] = 0; } }
   }
 }
-// Le génie a refait un ouvrage coupé (v0.66.0) : le tablier revient tel qu'avant, l'eau dessous cesse d'être profonde
+// Le nom d'un ouvrage : tiré de sa position (sans hasard), sans doublon parmi ceux déjà posés (v0.67.0)
+function nomDePont(deja, x, y) {
+  let k = Math.floor(hash2(Math.round(x * 10), Math.round(y * 10), 31) * NOMS_PONTS.length);
+  for (let n = 0; n < NOMS_PONTS.length; n++, k = (k + 1) % NOMS_PONTS.length) if (!deja.some(P => P.nom === NOMS_PONTS[k])) return NOMS_PONTS[k];
+  return `${NOMS_PONTS[k]} ${deja.length + 1}`;
+}
+// Le génie a refait un ouvrage coupé (v0.66.0) : le tablier revient tel qu'avant, l'eau dessous cesse d'être profonde, la solidité est entière
 export function reconstruirePont(T, P) {
   if (!P.detruit) return false;
   const n = T.pontsListe.indexOf(P) + 1;
-  P.detruit = false;
+  P.detruit = false; P.pv = P.pvMax; P.reparations++;
   for (const c of P.cases) { T.pont[c] = n; T.pontH[c] = P.pontH; }
   for (const c of P.enEau) { T.profond[c] = 0; T.pontEau[c] = 1; }
   T.versionPonts++;
   return true;
 }
-// Un obus tombé sur le tablier (à moins de `rayon` cases du point de chute) coupe l'ouvrage entier : ses cases d'eau redeviennent profondes, plus personne n'y marche ; rend les ouvrages coupés
-export function detruirePont(T, i0, j0, rayon) {
-  if (!T.pontsListe.length) return [];
-  const coupes = new Set();
+// L'ouvrage coupé : ses cases d'eau redeviennent profondes, plus personne n'y marche ; `T.coupes` le garde pour la bataille (les hommes dessus tombent à l'eau : `noyades`)
+function couper(T, P) {
+  P.detruit = true; P.pv = 0; P.coupures++;
+  for (const c of P.cases) { T.pont[c] = 0; T.pontH[c] = 0; }
+  for (const c of P.enEau) { T.profond[c] = 1; T.pontEau[c] = 0; }
+  T.coupes?.push(P);
+}
+// Les ouvrages dont le tablier est à moins de `rayon` cases du point (i0, j0), par numéro (à partir de 1)
+function pontsAutour(T, i0, j0, rayon) {
+  const touches = new Set();
   for (let j = Math.max(0, j0 - rayon); j <= Math.min(T.H - 1, j0 + rayon); j++) for (let i = Math.max(0, i0 - rayon); i <= Math.min(T.W - 1, i0 + rayon); i++) {
-    const n = T.pont[j * T.W + i]; if (n) coupes.add(n);
+    const n = T.pont[j * T.W + i]; if (n) touches.add(n);
   }
+  return touches;
+}
+// Un obus tombé sur le tablier (à moins de `rayon` cases du point de chute) l'abîme de `degats` points de solidité ; à zéro l'ouvrage est coupé en entier (v0.67.0 : avant, le premier obus coupait). Rend les ouvrages coupés
+export function abimerPont(T, i0, j0, rayon, nomCal) {
+  if (!T.pontsListe.length) return [];
   const out = [];
-  for (const n of coupes) {
+  for (const n of pontsAutour(T, i0, j0, rayon)) {
     const P = T.pontsListe[n - 1]; if (P.detruit) continue;
-    P.detruit = true; out.push(P);
-    for (const c of P.cases) { T.pont[c] = 0; T.pontH[c] = 0; }
-    for (const c of P.enEau) { T.profond[c] = 1; T.pontEau[c] = 0; }
+    P.pv = Math.max(0, P.pv - (PONTS_DEGATS[nomCal] ?? 0));
+    if (P.pv <= 0) { couper(T, P); out.push(P); }
   }
   if (out.length) T.versionPonts++;
   return out;
+}
+// Coupe d'un coup les ouvrages à moins de `rayon` cases (un char qui les fait céder) ; rend les ouvrages coupés
+export function detruirePont(T, i0, j0, rayon) {
+  if (!T.pontsListe.length) return [];
+  const out = [];
+  for (const n of pontsAutour(T, i0, j0, rayon)) { const P = T.pontsListe[n - 1]; if (!P.detruit) { couper(T, P); out.push(P); } }
+  if (out.length) T.versionPonts++;
+  return out;
+}
+// L'ouvrage sous un point du terrain (x, y en mètres du terrain), debout ou coupé, à moins de `marge` m de son tablier ; son indice dans `T.pontsListe`, ou -1
+export function pontEn(T, x, y, marge = 1) {
+  let meilleur = -1, d0 = Infinity;
+  T.pontsListe.forEach((P, k) => {
+    const ox = P.mx - (P.x + P.x2) / 2, oy = P.mz - (P.y + P.y2) / 2;
+    const ux = P.x2 - P.x, uy = P.y2 - P.y, l2 = ux * ux + uy * uy || 1, s = Math.max(0, Math.min(1, ((x - ox - P.x) * ux + (y - oy - P.y) * uy) / l2));
+    const d = Math.hypot(x - ox - (P.x + ux * s), y - oy - (P.y + uy * s));
+    if (d <= P.r + marge && d < d0) { d0 = d; meilleur = k; }
+  });
+  return meilleur;
 }
