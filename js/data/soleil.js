@@ -24,7 +24,7 @@ export const SOLEIL_LEVER = { marge: 0.25 };
 // Les ombres de nuages (labo) : des plaques d'ombre sur le sol, de la couleur de paroi de chaque case, par blocs de 2 m (le sol en voxels) qui dérivent avec le vent (`NUAGES_VENT`, m/s). `taches` : la part du sol
 // qu'elles couvrent selon le temps (0 à 1). Un temps couvert (`couvert`) n'a ni plaques ni ombres du soleil : la lumière est la même partout, l'ombre d'un homme ou d'un parapet s'efface.
 export const NUAGES = { sec: { taches: 0.3 }, beau: { taches: 0.2 }, canicule: { taches: 0.1 }, gel: { taches: 0.28 }, couvert: { couvert: true }, pluie: { couvert: true }, brouillard: { couvert: true }, neige: { couvert: true }, tempete: { couvert: true } };
-export const NUAGES_VENT = [3, 1];
+export const NUAGES_VENT = [10, 3];
 
 
 // Les ombres du relief : un relief casse la lumière s'il fait au moins `seuilQ` quarts de mètre de plus que la case (0,5 m : un parapet, la lèvre d'un cratère, une paroi de tranchée) ;
