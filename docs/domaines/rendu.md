@@ -155,3 +155,32 @@
   12 triangles pour 128 tronçons ajoutaient 3 000 triangles et ~10 ms tout dézoomé ; des
   plans de 2 triangles ne coûtent presque rien (v0.9.2). Les tirs sont vidés à chaque image
   et plafonnés à 160 points : tout dézoomé, il y en aurait des milliers.
+
+
+## Palette « Boue et ciel bas » (déplacée de CLAUDE.md)
+
+Choisie par Jérôme (v0.1.0). Trois valeurs éclaircies à la mesure de
+`outils/lisibilite.mjs` : l'eau (proposée `#34434c`, même valeur que la boue en
+gris) et les deux camps (proposés `#6f86a6` et `#5b5d48`, invisibles sur la boue).
+
+| Lettre | Valeur | Rôle |
+|---|---|---|
+| `t` | `#16130f` | terre — le fond, l'ombre des soldats, les parois |
+| `s` | `#2c2720` | boue sombre — creux dans la boue, parois |
+| `b` | `#42392e` | boue |
+| `g` | `#74664f` | glaise — sol humide, creux d'un sol sec, l'accent de l'interface |
+| `h` | `#8d8a62` | herbe morte — sol sec, terre jetée |
+| `e` | `#8a9799` | eau — reflète le ciel |
+| `r` | `#a9a89a` | brume — pluie, fumée, glace, rides de l'eau |
+| `o` | `#e4dfd0` | os — le texte, l'éclair d'un obus, le casque des choisis |
+| `n` | `#8cb6ff` | bleu horizon — nous (Jérôme, v0.16.0 : l'ancien `#a9bad0` avait la couleur de la pluie et de la brume, `r` : sous la pluie, notre armée se perdait ; plus saturé, il passe toutes les paires de `lisibilite.mjs`) |
+| `x` | `#dde874` | vert kaki clair — en face (Jérôme, v0.28.0 ; rouge `#e0604f` avant : un kaki pâle et jaune, plus clair que tout le sol, vert compris, sinon il se perdait dans l'herbe ; ΔE ≥ 45 de chaque sol, contraste ≥ 1,7 ; le casque à pointe de l'équipé aide) |
+| `v` | `#6f8147` | vert mousse — l'herbe qui reprend, par plaques (Jérôme, v0.9.3 : « intégré dans le design, sans grandes différences ») |
+| `w` | `#5c6e3c` | vert sombre — l'herbe dans l'humide |
+
+Un soldat se lit par sa couleur sur un sol sombre, par son ombre (`t`) sur un sol
+clair. Un cratère : le creux un ton plus sombre, la lèvre de terre jetée un ton
+plus clair (sans la lèvre, un cratère dans la boue ne se distinguait pas de la
+boue en gris : échec mesuré). Aucune autre couleur dans le jeu ; exceptions : les deux couleurs d'alerte de l'interface (orange et rouge, `ALERTES`, hors de `PALETTE` ; Jérôme, v0.41.3), les teintes d'automne des feuilles d'arbre (`ARBRES_FEUILLES.automne` de data/arbres.js : orange brûlé, ocre, rouille, or terne, en `#rrggbb` ; Jérôme, v0.59.2 ; et l'herbe rousse du sol d'automne, `v` et `w` remplacés dans `attacher` de rendu3d.js, v0.59.4), les fondus continus (brouillard, bout des ombres et de la fumée : des mélanges d'une couleur de palette avec ce qu'elle recouvre ; Jérôme, v0.12.1),  le fond des boîtes de dialogue (`::backdrop` de `game.css`) et la
+nuit (le voile continu et ses halos mélangent la terre, le sol et l'os : des couleurs qui ne sont pas dans la palette ; Jérôme, v0.9.3).
+
