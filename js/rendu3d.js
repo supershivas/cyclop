@@ -37,6 +37,7 @@ import { creerVegetation } from './rendu/vegetation.js?v=0.66.3';
 import { creerTemps } from './rendu/temps.js?v=0.66.3';
 import { creerEclats } from './rendu/eclats.js?v=0.66.3';
 import { creerOmbresRelief } from './rendu/ombres-relief.js?v=0.66.3';
+import { OMBRES_RELIEF as OMB } from './data/soleil.js?v=0.66.3';
 import { PALETTE, ORDRE, INDICE } from './palette.js?v=0.66.3';
 import { OMBRE, couleursLigne } from './apparence.js?v=0.66.3';
 import { MORCEAU, hauteurVueQ as hauteurQ, hauteurVueM as hauteurM } from './terrain.js?v=0.66.3';
@@ -120,7 +121,7 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
   // Les ombres du relief (labo « La lumière dans le relief », éteintes dans le jeu) : une case que le soleil ne voit pas prend la couleur de sa paroi dans la texture du sol ; le soleil du labo : saisons, azimut
   let ombresRelief = false, soleilLabo = null, ombreVu = null;
   const ombres = creerOmbresRelief({ hauteurQ });
-  const soleilCase = { x: 0, z: 0 };
+  const soleilCase = { x: 0, z: 0 }, ecriture = { ms: 0, n: 0, rangees: 0, max: 0, maxOmbre: 0 };      // mesure : la réécriture de la texture du sol
   let B = null, T = null, faux = null, fauxU = null;
   // Le sol a le même relief à tous les zooms (Jérôme, v0.12.0) ; seuls les petits décors (arbres, buissons, herbe) s'effacent de loin
   const petit = () => ZOOMS[vue.zoom] <= POINTS_JUSQUA;
@@ -402,6 +403,45 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
     m.geometry = m.userData.fin;
     m.userData.version = versionAutour(mx, my);
   }
+  // une rangée de la texture du sol, de ses indices (`solIdx`) et de son ombre (`om`) : le dessus, puis la paroi
+  function ecrireRangee(j, om) {
+    const W = T.W, bas = W * T.H * 4;
+    for (let i = 0, c = j * W; i < W; i++, c++) {
+      const a = om[c] ? PAROI_RGB[solIdx[c]] : PAL_RGB[solIdx[c]], b = T.profond[c] ? a : PAROI_RGB[solIdx[c]], o = c * 4;      // la paroi d'une eau est de l'eau (v0.47.1) ; à l'ombre du relief, le dessus prend la couleur de la paroi
+      const marche = j < T.H - 1 && hauteurQ(T, c) - hauteurQ(T, c + W) >= 4;     // l'alpha dit : une marche d'un mètre au sud
+      solData[o] = a[0]; solData[o + 1] = a[1]; solData[o + 2] = a[2]; solData[o + 3] = marche ? 0 : 255;
+      solData[bas + o] = b[0]; solData[bas + o + 1] = b[1]; solData[bas + o + 2] = b[2]; solData[bas + o + 3] = 255;
+    }
+  }
+  // Les ombres du relief changent des rangées sans que la couleur du terrain change : on ne repeint que celles qu'on voit (les plus proches du centre d'abord), peu à la fois (le budget
+  // de `OMBRES_RELIEF`), sans refaire les couleurs ; la texture n'est envoyée qu'un peu plus tard, comme celle de l'eau. Les rangées hors de la vue attendent qu'on les regarde.
+  let solSale = false, solAttenteOmbre = 0, msParRangee = 0.3;
+  function majOmbresSol(dt) {
+    solAttenteOmbre -= dt;
+    const omV = ombres.versions, [, , z0, z1] = zoneVue();
+    const j0 = Math.max(0, Math.floor(z0)), j1 = Math.min(T.H - 1, Math.ceil(z1)), sales = [];
+    for (let j = j0; j <= j1; j++) if (ombreVu[j] !== omV[j]) sales.push(j);
+    if (sales.length && !finPerimee) {
+      const t0 = performance.now(), cz = vue.cz;
+      sales.sort((a, b) => Math.abs(a - cz) - Math.abs(b - cz));
+      const lot = sales.slice(0, Math.max(4, Math.floor(OMB.budgetEcritureMs / msParRangee)));
+      const fin = finesse === 2 && solTexFin, om = ombres.masque, W = T.W;
+      let cases = 0;
+      for (const j of lot) {
+        const n = ombres.ligneA(j), ch = ombres.changees;      // seules les cases dont l'ombre a changé sont repeintes
+        for (let k = 0; k < n; k++) {
+          const i = ch[k], c = j * W + i, a = om[c] ? PAROI_RGB[solIdx[c]] : PAL_RGB[solIdx[c]], o = c * 4;
+          solData[o] = a[0]; solData[o + 1] = a[1]; solData[o + 2] = a[2];
+          if (fin) texelsFin(i, j, true);
+        }
+        cases += n; ombreVu[j] = omV[j];
+      }
+      if (cases) solSale = true;
+      msParRangee += ((performance.now() - t0) / lot.length - msParRangee) * 0.3;
+      { const d = performance.now() - t0; ecriture.ms += d; ecriture.n++; ecriture.rangees += lot.length; if (d > ecriture.maxOmbre) ecriture.maxOmbre = d; }
+    }
+    if (solSale && solAttenteOmbre <= 0) { solTex.needsUpdate = true; if (finesse === 2 && solTexFin) solTexFin.needsUpdate = true; solSale = false; solAttenteOmbre = 0.25; }
+  }
   // la texture du sol : les rangées dont la couleur a changé
   function majSol(tout = false, dt = 0) {
     const h = horloge(B), gel = h.enneige ? 2 : h.gel ? 1 : 0;       // 2 : la neige blanchit le sol (apparence.js)
@@ -409,32 +449,52 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
     const sv = soldats.soleilUniform.value; soleilCase.x = sv.x; soleilCase.z = sv.y;
     ombres.maj(ombresRelief, soleilCase, dt);
     const om = ombres.masque, omV = ombres.versions;
+    if (!tout) majOmbresSol(dt);
     // l'eau change quelques rangées à chaque pas : on n'envoie la texture qu'un peu plus tard
     solAttente -= dt;
     if (!tout && solAttente > 0) return;
     solAttente = 0.25;
+    const tEcr = performance.now();
     let n = 0;
-    const W = T.W, bas = W * T.H * 4, changees = [];
+    const changees = [];
     for (let j = 0; j < T.H; j++) {
       // une rangée dépend aussi de sa voisine du sud (la marche entre elles)
-      if (!tout && ombreVu[j] === omV[j] && vuLigne[j] === T.versionLigne[j] && (j === T.H - 1 || vuLigne[j + 1] === T.versionLigne[j + 1])) continue;
+      if (!tout && vuLigne[j] === T.versionLigne[j] && (j === T.H - 1 || vuLigne[j + 1] === T.versionLigne[j + 1])) continue;
       couleursLigne(T, j, B.R, gel, solIdx);
-      for (let i = 0, c = j * W; i < W; i++, c++) {
-        const a = om[c] ? PAROI_RGB[solIdx[c]] : PAL_RGB[solIdx[c]], b = T.profond[c] ? a : PAROI_RGB[solIdx[c]], o = c * 4;      // la paroi d'une eau est de l'eau (v0.47.1) ; à l'ombre du relief, le dessus prend la couleur de la paroi
-        const marche = j < T.H - 1 && hauteurQ(T, c) - hauteurQ(T, c + W) >= 4;     // l'alpha dit : une marche d'un mètre au sud
-        solData[o] = a[0]; solData[o + 1] = a[1]; solData[o + 2] = a[2]; solData[o + 3] = marche ? 0 : 255;
-        solData[bas + o] = b[0]; solData[bas + o + 1] = b[1]; solData[bas + o + 2] = b[2]; solData[bas + o + 3] = 255;
-      }
+      ombres.ligneA(j);
+      ecrireRangee(j, om);
       vuLigne[j] = T.versionLigne[j]; ombreVu[j] = omV[j]; n++; changees.push(j);
     }
     if (n) solTex.needsUpdate = true;
     if (finesse === 2 && (n || !solTexFin || finPerimee)) { ecrireFin(changees, !solTexFin || finPerimee); finPerimee = false; }
     coutRangees = n;
+    if (n) { const d = performance.now() - tEcr; ecriture.ms += d; ecriture.n++; ecriture.rangees += n; if (d > ecriture.max) ecriture.max = d; }
+  }
+  // les quatre texels fins d'une case (i, j), de la texture des indices `solIdx` et de l'ombre du relief ; `dessusSeul` : le dessus seulement (l'ombre a changé, pas la paroi)
+  const hach = (a, b) => (Math.imul(a, 73856093) ^ Math.imul(b, 19349663)) >>> 0;
+  function texelsFin(i, j, dessusSeul) {
+    const W = T.W, H = T.H, W2 = W * 2, bas = W2 * H * 2 * 4;
+    const c = j * W + i, own = solIdx[c], hq = hauteurQ(T, c);
+    for (let sy = 0; sy < 2; sy++) for (let sx = 0; sx < 2; sx++) {
+      let k = own;
+      if (!T.profond[c]) {
+        const h = (hach(i * 2 + sx, j * 2 + sy) % 1000) / 1000;
+        const ni = i + (sx ? 1 : -1), nj = j + (sy ? 1 : -1);
+        if (h < 0.3 && ni >= 0 && ni < W) { const n = j * W + ni; if (!T.profond[n] && hauteurQ(T, n) === hq) k = solIdx[n]; }
+        else if (h < 0.6 && nj >= 0 && nj < H) { const n = nj * W + i; if (!T.profond[n] && hauteurQ(T, n) === hq) k = solIdx[n]; }
+      }
+      const a = ombres.masque[c] ? PAROI_RGB[k] : PAL_RGB[k];
+      const o = ((j * 2 + sy) * W2 + i * 2 + sx) * 4;
+      solDataFin[o] = a[0]; solDataFin[o + 1] = a[1]; solDataFin[o + 2] = a[2]; solDataFin[o + 3] = 255;
+      if (dessusSeul) continue;
+      const b = T.profond[c] ? PAL_RGB[k] : PAROI_RGB[k];
+      solDataFin[bas + o] = b[0]; solDataFin[bas + o + 1] = b[1]; solDataFin[bas + o + 2] = b[2]; solDataFin[bas + o + 3] = 255;
+    }
   }
   // Les couleurs au demi-mètre (v0.52.2) : chaque case de 1 m donne quatre texels ; un petit cube du bord prend de temps en temps la couleur de la case voisine
   // (du même niveau, hors de l'eau profonde) : les taches d'herbe, de boue et les lèvres de cratère se découpent au demi-mètre. Un hachage de la position : aucun hasard.
-  function ecrireFin(rangees, tout) {
-    const W = T.W, H = T.H, W2 = W * 2, bas = W2 * H * 2 * 4;
+  function ecrireFin(rangees, tout, envoyer = true) {
+    const W = T.W, H = T.H, W2 = W * 2;
     if (!solTexFin) {
       solDataFin = new Uint8Array(W2 * H * 4 * 4);
       solTexFin = new THREE.DataTexture(solDataFin, W2, H * 4, THREE.RGBAFormat, THREE.UnsignedByteType);
@@ -442,28 +502,10 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
       tout = true;
     }
     solMat.uniforms.uSol.value = solTexFin;
-    const hach = (a, b) => (Math.imul(a, 73856093) ^ Math.imul(b, 19349663)) >>> 0;
-    const ligne = j => {
-      for (let i = 0; i < W; i++) {
-        const c = j * W + i, own = solIdx[c], hq = hauteurQ(T, c);
-        for (let sy = 0; sy < 2; sy++) for (let sx = 0; sx < 2; sx++) {
-          let k = own;
-          if (!T.profond[c]) {
-            const h = (hach(i * 2 + sx, j * 2 + sy) % 1000) / 1000;
-            const ni = i + (sx ? 1 : -1), nj = j + (sy ? 1 : -1);
-            if (h < 0.3 && ni >= 0 && ni < W) { const n = j * W + ni; if (!T.profond[n] && hauteurQ(T, n) === hq) k = solIdx[n]; }
-            else if (h < 0.6 && nj >= 0 && nj < H) { const n = nj * W + i; if (!T.profond[n] && hauteurQ(T, n) === hq) k = solIdx[n]; }
-          }
-          const a = ombres.masque[c] ? PAROI_RGB[k] : PAL_RGB[k], b = T.profond[c] ? PAL_RGB[k] : PAROI_RGB[k];
-          const o = ((j * 2 + sy) * W2 + i * 2 + sx) * 4;
-          solDataFin[o] = a[0]; solDataFin[o + 1] = a[1]; solDataFin[o + 2] = a[2]; solDataFin[o + 3] = 255;
-          solDataFin[bas + o] = b[0]; solDataFin[bas + o + 1] = b[1]; solDataFin[bas + o + 2] = b[2]; solDataFin[bas + o + 3] = 255;
-        }
-      }
-    };
+    const ligne = j => { for (let i = 0; i < W; i++) texelsFin(i, j, false); };
     if (tout) { for (let j = 0; j < H; j++) ligne(j); }
     else { const vus = new Set(); for (const j of rangees) for (let d = -1; d <= 1; d++) { const r = j + d; if (r >= 0 && r < H && !vus.has(r)) { vus.add(r); ligne(r); } } }
-    solTexFin.needsUpdate = true;
+    if (envoyer) solTexFin.needsUpdate = true;
   }
   // le rectangle de sol vu (mètres), avec sa marge ; sans coins (la caméra regarde l'horizon), 250 m autour du point visé
   function zoneVue() {
@@ -628,7 +670,23 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
     set ombresRelief(v) { ombresRelief = !!v; solAttente = 0; },      // les ombres du relief sur le sol (labo)
     get soleilLabo() { return soleilLabo; },
     set soleilLabo(r) { soleilLabo = r; },                           // { saisonnier, azimut } : la course du soleil à essayer (labo)
-    get ombresReliefEtat() { return { calcule: ombres.calcule, enCours: ombres.enCours }; },
+    // vérification (tests, labo) : sur les rangées à jour, le masque incrémental est celui qu'un calcul neuf donne, et la texture du sol le dit (le dessus d'une case à l'ombre : la couleur de sa paroi)
+    verifierOmbres() {
+      const neuf = creerOmbresRelief({ hauteurQ }); neuf.attacher(T); neuf.maj(true, ombres.calcule, 99);
+      const W = T.W, omV = ombres.versions; let lignes = 0, ecartsMasque = 0, ecartsTexture = 0, ecartsFin = 0;
+      for (let j = 0; j < T.H; j++) {
+        if (ombreVu[j] !== omV[j] || vuLigne[j] !== T.versionLigne[j]) continue;
+        lignes++; neuf.ligneA(j);
+        for (let i = 0; i < W; i++) {
+          const c = j * W + i, o = c * 4, a = ombres.masque[c] ? PAROI_RGB[solIdx[c]] : PAL_RGB[solIdx[c]];
+          if (neuf.masque[c] !== ombres.masque[c]) ecartsMasque++;
+          if (solData[o] !== a[0] || solData[o + 1] !== a[1] || solData[o + 2] !== a[2]) ecartsTexture++;
+          if (finesse === 2 && solDataFin) { const W2 = W * 2, f = (j * 2 * W2 + i * 2) * 4; if (ombres.masque[c] && !T.profond[c] && solDataFin[f] === PAL_RGB[solIdx[c]][0] && solDataFin[f + 1] === PAL_RGB[solIdx[c]][1] && solDataFin[f + 2] === PAL_RGB[solIdx[c]][2] && PAL_RGB[solIdx[c]].some((v, k) => v !== PAROI_RGB[solIdx[c]][k])) ecartsFin++; }
+        }
+      }
+      return { lignes, ecartsMasque, ecartsTexture, ecartsFin };
+    },
+    get ombresReliefEtat() { return { calcule: ombres.calcule, enCours: false, mesure: { ...ombres.mesure, ecriture: { ...ecriture } } }; },
     set finesse(n) { reglerFinesse(n); },      // le sol se refait morceau par morceau, dans la vue d'abord (majMorceaux) : v0.52.2
     get finesseDes() { return finesseDes; },
     set finesseDes(px) { finesseDes = px; },       // le jeu : le sol passe au demi-mètre à partir de ce nombre de pixels par mètre (v0.52.3)

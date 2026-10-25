@@ -9,7 +9,8 @@ function terrain(murs) {
   return T;
 }
 const hauteurQ = (T, c) => T.h[c];
-function calculer(o, sol) { let n = 0; do { o.maj(true, sol, 10); n++; } while (o.enCours && n < 2000); return n; }
+// le soleil donné, puis toutes les rangées demandées (le rendu ne demande que celles qu'il repeint)
+function calculer(o, sol) { o.maj(true, sol, 10); for (let j = 0; j < H; j++) o.ligneA(j); }
 const ombre = (o, i, j) => o.masque[j * W + i];
 
 group('ombres du relief — un mur de 2 m, le soleil à l\'est (l\'ombre part vers l\'ouest, 2 m d\'ombre par mètre)');
@@ -45,24 +46,29 @@ test('un mur neuf refait ses rangées, sur place', () => {
   calculer(o, sol);
   assert.equal(ombre(o, 10, 5), 0);
   T.h[5 * W + 12] = 8; T.versionLigne[5]++;                          // un obus : une rangée change
-  const v = o.versions[5];
+  const v = o.versions[5], v38 = o.versions[38];
   calculer(o, sol);
   assert.equal(ombre(o, 10, 5), 1);
+  assert.equal(o.versions[38], v38, 'une rangée loin de l\'ombre n\'est pas touchée');
   assert.ok(o.versions[5] > v, 'le rendu est prévenu');
-  assert.equal(ombre(o, 10, 20), 0, 'les autres rangées sont inchangées');
+  assert.equal(ombre(o, 10, 38), 0, 'les autres rangées sont inchangées');
 });
 test('éteintes : tout redevient au soleil, et le rendu est prévenu', () => {
   const o = creerOmbresRelief({ hauteurQ }); const T = terrain([[20, 8]]); o.attacher(T);
   calculer(o, { x: -2, z: 0 });
   const v = o.versions[10];
-  assert.equal(o.maj(false, { x: -2, z: 0 }, 1), true);
+  o.maj(false, { x: -2, z: 0 }, 1);
+  o.ligneA(10);
   assert.equal(ombre(o, 19, 10), 0);
-  assert.ok(o.versions[10] > v);
-  assert.equal(o.maj(false, { x: -2, z: 0 }, 1), false, 'rien de plus à faire');
+  assert.ok(o.versions[10] > v, 'le rendu est prévenu');
+  const v2 = o.versions[10];
+  o.maj(false, { x: -2, z: 0 }, 1);
+  assert.equal(o.versions[10], v2, 'rien de plus à faire');
 });
 test('un soleil qui bouge à peine ne relance pas le calcul', () => {
   const o = creerOmbresRelief({ hauteurQ }); const T = terrain([[20, 8]]); o.attacher(T);
   calculer(o, { x: -2, z: 0 });
+  const v = o.versions[10];
   o.maj(true, { x: -2, z: -0.01 }, 10);
-  assert.equal(o.enCours, false);
+  assert.equal(o.versions[10], v);
 });

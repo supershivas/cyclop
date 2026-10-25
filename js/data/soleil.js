@@ -10,5 +10,5 @@ export const SOLEIL_SAISONS = { automne: 0.95, hiver: 0.5, ete: 1.2 };
 export const AZIMUTS = { sud: 0, 'sud-est': Math.PI / 4, 'vers la caméra': Math.PI / 2 };
 
 // Les ombres du relief : un relief casse la lumière s'il fait au moins `seuilQ` quarts de mètre de plus que la case (0,5 m : un parapet, la lèvre d'un cratère, une paroi de tranchée) ;
-// `portee` : mètres cherchés vers le soleil. Le soleil doit avoir bougé de `pasAngle` rad (ou de `pasLongueur` en part de l'ombre) pour qu'on recalcule, au plus toutes les `delai` s.
-export const OMBRES_RELIEF = { seuilQ: 2, portee: 24, pasAngle: 0.035, pasLongueur: 0.06, delai: 3, budgetMs: 3 };
+// `portee` : mètres cherchés vers le soleil. Le soleil doit avoir bougé de `pasAngle` rad (ou de `pasLongueur` en part de l'ombre) pour qu'on recalcule, au plus toutes les `delai` s ; `budgetEcritureMs` : ms par image pour repeindre dans la texture du sol les rangées vues dont l'ombre a changé.
+export const OMBRES_RELIEF = { seuilQ: 2, portee: 24, pasAngle: 0.035, pasLongueur: 0.06, delai: 3, budgetEcritureMs: 3 };
