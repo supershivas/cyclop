@@ -2,6 +2,9 @@
 // Une entrée par version qui touche au labo, la plus récente en haut. `ref` : « sujet-Lettre » (la lettre est celle de la variante,
 // A étant l'actuelle). À chaque changement du labo : une entrée ici, avec `depuis` sur les variantes ajoutées ou changées (labo.js).
 export const JOURNAL = [
+  { version: '0.67.1', date: '2026-10-25', items: [
+    { genre: 'nouveau', texte: 'Le moral sur le champ : quatre façons de montrer qu\'un régiment est ébranlé ou en déroute sur le champ même (un liseré qui s\'effrite, un pennon, une trame, des chevrons de repli), sur le moteur en direct ; rien n\'est dans le jeu', ref: 'moral-terrain-A' },
+  ] },
   { version: '0.63.0', date: '2026-10-23', items: [
     { genre: 'mis-a-jour', texte: 'Des buissons plus variés : les sept formes, les fleurs de l\'été, les teintes de l\'automne (sans baies), les branches nues de l\'hiver et la neige sont retenus et en jeu ; l\'ancien buisson reste au labo.', ref: 'buissons-varies-B' },
   ] },
