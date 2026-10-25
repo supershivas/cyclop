@@ -365,6 +365,16 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
     }
     return out.slice(0, 8);
   }
+  // La hauteur du faux terrain : juste sous le sol, mais jamais au-dessus du point le plus bas du bord du champ (Jérôme, v0.66.4 : « une ligne noire dans le lac, au bord de la carte ») : le plan (à 2,85 m) passait
+  // au-dessus du fond d'un lac qui touche le bord (1,5 m) ; entre le bord du champ et le plan, le regard passait sous lui et ne voyait que le fond noir : un trait, épais sur le lac. Il suit donc le bord le plus bas
+  // (0,4 m de marge : le sol fin arrondit au quart de mètre) ; un bord plus haut ne cache que quelques mètres du plan, derrière lui.
+  function hauteurFaux() {
+    let bas = SOL_Y - 0.15;
+    const W = T.W, H = T.H, lire = (i, j) => hauteurQ(T, j * W + i) * 0.25;
+    for (let i = 0; i < W; i++) bas = Math.min(bas, lire(i, 0) - 0.4, lire(i, H - 1) - 0.4);
+    for (let j = 0; j < H; j++) bas = Math.min(bas, lire(0, j) - 0.4, lire(W - 1, j) - 0.4);
+    return bas;
+  }
   function faireFaux() {
     if (faux) { scene.remove(faux); faux.geometry.dispose(); faux.material.dispose(); faux = null; }
     solMat.uniforms.uDissoudre.value = 0;
@@ -378,7 +388,7 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
     solMat.uniforms.uDissoudre.value = 80;                 // m : la largeur sur laquelle le bord du champ se dissout
     u.uEau = { value: col('e') }; u.uClair = { value: col('r') };
     const riv = fleuvesSortants(); u.uNRiv = { value: riv.length / 2 }; u.uRiv = { value: Array.from({ length: 8 }, (_, k) => riv[k] || new THREE.Vector4()) };
-    faux = new THREE.Mesh(new THREE.PlaneGeometry(6000, 6000).rotateX(-Math.PI / 2).translate(T.W / 2, SOL_Y - 0.15, T.H / 2), new THREE.ShaderMaterial({ uniforms: u, vertexShader: SH.fauxMat.v, fragmentShader: SH.fauxMat.f }));
+    faux = new THREE.Mesh(new THREE.PlaneGeometry(6000, 6000).rotateX(-Math.PI / 2).translate(T.W / 2, hauteurFaux(), T.H / 2), new THREE.ShaderMaterial({ uniforms: u, vertexShader: SH.fauxMat.v, fragmentShader: SH.fauxMat.f }));
     faux.frustumCulled = false; scene.add(faux);
   }
   // un morceau dépend aussi de ses voisins (les parois au sud, à l'est, à l'ouest) : leurs versions comptent
