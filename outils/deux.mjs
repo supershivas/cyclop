@@ -23,7 +23,7 @@ const rep = await Bp.inputValue('#deux-ma-reponse');
 await A.fill('#deux-reponse', rep); await A.click('#deux-connecter');
 }
 await A.waitForFunction(() => window.__jeu?.reseau?.(), null, { timeout: 20000 }); await Bp.waitForFunction(() => window.__jeu?.reseau?.(), null, { timeout: 20000 });
-await A.waitForTimeout(3000);
+await A.click('#deux-pret'); await Bp.click('#deux-pret'); await A.waitForTimeout(3000);
 const etat = async p => p.evaluate(() => window.__jeu.reseau());
 console.log('A', JSON.stringify(await etat(A))); console.log('B', JSON.stringify(await etat(Bp)));
 // des ordres des deux côtés

@@ -1,5 +1,8 @@
 # Journal des versions
 
+## 0.66.3 — 2026-10-25
+- Le jeu à deux : une fenêtre « Prêt ? » au départ ; la bataille ne commence que lorsque les deux commandants ont cliqué sur « Prêt »
+
 ## 0.66.2 — 2026-10-25
 - Le jeu à deux : la pause demandée par les deux joueurs en même temps ne s'annule plus, et les réglages mettent les deux parties en pause
 - Le jeu à deux dit d'où vient une désynchronisation, prévient quand l'autre machine traîne, et ne lâche la partie qu'après 90 s de silence

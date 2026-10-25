@@ -1,7 +1,7 @@
 // Le sujet « Le clic sur un régiment » du labo (Jérôme, v0.32.2) : on clique le bouton d'un régiment, dans la rangée du bas ; la caméra glisse
 // sur lui (0,6 s, le zoom et l'angle ne changent pas) et quelque chose dit « c'est celui-là » : sur la carte et sur le champ. Posé sur le moteur en direct,
 // avec les vrais hommes qui marchent : cliquez une carte. Quatre animations ; la A est celle du jeu. Le dessin seulement : rien ici ne modifie une partie.
-import { PALETTE as P } from './palette.js?v=0.66.2';
+import { PALETTE as P } from './palette.js?v=0.66.3';
 
 const el = (tag, css = '', ...kids) => { const e = document.createElement(tag); if (css) e.style.cssText = css; e.append(...kids.flat().filter(k => k != null)); return e; };
 const MONO = 'font:12px/1.3 ui-monospace,monospace;';

@@ -16,11 +16,11 @@
    - (v0.38.3) Les caillebotis et le coup de main sont retirés : sept corvées.
    - (v0.39.0) La mêlée se joue dans la nuit (`meleeNuit`) : un tronçon où les deux camps sont face à face au soir est tranché à l'aube, et les
      régiments au contact (`contactDe`) ne reçoivent aucune corvée. */
-import { toucher } from './terrain.js?v=0.66.2';
-import { hash2 } from './lib/rng.js?v=0.66.2';
-import { CORVEES } from './data/corvees.js?v=0.66.2';
-import { REGIMENTS } from './data/lexique.js?v=0.66.2';
-import { ajouterSoldat } from './army.js?v=0.66.2';
+import { toucher } from './terrain.js?v=0.66.3';
+import { hash2 } from './lib/rng.js?v=0.66.3';
+import { CORVEES } from './data/corvees.js?v=0.66.3';
+import { REGIMENTS } from './data/lexique.js?v=0.66.3';
+import { ajouterSoldat } from './army.js?v=0.66.3';
 
 export const SORTES = ['reparer'];          // les travaux de terrain, par leur numéro dans etat.travaux
 export const corvee = id => CORVEES.find(c => c.id === id);
