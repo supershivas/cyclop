@@ -1,5 +1,9 @@
 # Journal des versions
 
+## 0.66.2 — 2026-10-25
+- Le jeu à deux : la pause demandée par les deux joueurs en même temps ne s'annule plus, et les réglages mettent les deux parties en pause
+- Le jeu à deux dit d'où vient une désynchronisation, prévient quand l'autre machine traîne, et ne lâche la partie qu'après 90 s de silence
+
 ## 0.66.1 — 2026-10-23
 - Un pont coupé laisse des ruines : piles cassées, tabliers qui pendent des rives, planches à la dérive
 - Les sapeurs du génie sont de vrais petits hommes qui marchent en bande, évitent l'eau et se répartissent sur la rive autour des ruines

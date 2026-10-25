@@ -4,11 +4,11 @@
    identité à re-dériver : un homme est son numéro, son rang, son expérience et ses victimes ; son nom vient de `graineIdentite`.
    Il est écrit à la fin de chaque bataille, avant l'écran de fin (`cloturerDansLeStore`), et `cloturer` est idempotente : relire une
    partie arrêtée à la fin, ou clore deux fois, donne le même registre. Rien n'est reporté de la fatigue, de la peur ni du moral. */
-import { hash2 } from './lib/rng.js?v=0.66.1';
-import { NOUS, rangDe, numeroCampagne } from './bataille.js?v=0.66.1';
-import { SECTEURS } from './data/secteur.js?v=0.66.1';
-import { identite, chevrons } from './identite.js?v=0.66.1';
-import { CAMPAGNE, TEXTES } from './data/campagne.js?v=0.66.1';
+import { hash2 } from './lib/rng.js?v=0.66.2';
+import { NOUS, rangDe, numeroCampagne } from './bataille.js?v=0.66.2';
+import { SECTEURS } from './data/secteur.js?v=0.66.2';
+import { identite, chevrons } from './identite.js?v=0.66.2';
+import { CAMPAGNE, TEXTES } from './data/campagne.js?v=0.66.2';
 
 export const CLE = 'campagne';        // l'entrée de js/lib/save.js (cyclopeen:campagne)
 export const VERSION_CAMPAGNE = 1;

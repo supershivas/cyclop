@@ -1,8 +1,8 @@
 // Le test de déterminisme (jeu à deux, lockstep) : la même graine et les mêmes ordres donnent-ils la même bataille, d'un moteur JavaScript à l'autre
 // (Chrome, Firefox, Node) ? Module partagé par `determinisme.html` (à ouvrir dans chaque navigateur) et `outils/determinisme.mjs` (Node contre Chromium).
 // Deux lectures : l'empreinte des fonctions mathématiques que la logique emploie (pour dire laquelle diverge), puis l'empreinte de l'état toutes les `pas` secondes.
-import { nouvelleBataille, avancer, ordonnerMarche, ordonnerBarrage, photo, zone } from './bataille.js?v=0.66.1';
-import { REGLAGES } from './data/reglages.js?v=0.66.1';
+import { nouvelleBataille, avancer, ordonnerMarche, ordonnerBarrage, photo, zone } from './bataille.js?v=0.66.2';
+import { REGLAGES } from './data/reglages.js?v=0.66.2';
 
 const fnv = (h, s) => { for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619) >>> 0; } return h; };
 const tampon = new DataView(new ArrayBuffer(8));

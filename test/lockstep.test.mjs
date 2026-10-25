@@ -10,7 +10,7 @@ function executer(c, camp, B, etat) {
   if (c.t === 'marche') ordonnerMarche(B, c.ids, c.x, c.y, c.forme, camp);
   else if (c.t === 'barrage') ordonnerBarrage(B, c.cal, c.x, c.y, camp);
   else if (c.t === 'stance') ordonnerStance(B, c.ids, c.stance, camp);
-  else if (c.t === 'pause') etat.pause = !etat.pause;
+  else if (c.t === 'pause') etat.pause = c.v ?? !etat.pause;
 }
 function deuxMachines({ latence = 0, graine = 7 } = {}) {
   const faire = () => nouvelleBataille(graine, R, { soldats: 200, jours: 3, deux: true });
