@@ -170,7 +170,7 @@ export function nouvelleBataille(graine, R, opts = {}) {
         }
         // ses caractéristiques : celles d'un survivant de la campagne (reprises là où il les a laissées), sinon le tirage de départ (grade, âge, esprit du régiment)
         const v4 = T ? vieux[k]?.[4] : null;
-        poserCaracs(B.armee, i, v4 ?? departCaracs(camp === NOUS ? etat.graineIdentite : graine, camp, B.armee.id[i], T && camp === NOUS ? etat.numeros[B.armee.id[i]] : B.armee.id[i], k, effectif, reg.id));
+        poserCaracs(B.armee, i, v4 ?? departCaracs(graine, camp, B.armee.id[i], k, effectif, reg.id));
       }
     }
   }

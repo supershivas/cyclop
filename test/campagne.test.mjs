@@ -71,7 +71,8 @@ function jouerJusqu_aLaFin(c, { relever = false } = {}) {
   return B;
 }
 let cache = null;
-const unePartie = () => cache ??= (() => { const c = nouvelleCampagne(11), B = jouerJusqu_aLaFin(c, { relever: true }); return { c, B, apres: cloturer(c, B) }; })();
+// (200 hommes en tout, 25 par régiment : « debout » se compte ici à dix survivants, le seuil de 20 est celui de régiments de 94 ; v0.70.0 : la marche et le corps à corps coûtent des hommes, trois régiments seulement dépassaient 20)
+const unePartie = () => cache ??= (() => { const c = { ...nouvelleCampagne(11), hommesMin: 10 }, B = jouerJusqu_aLaFin(c, { relever: true }); return { c, B, apres: cloturer(c, B) }; })();
 
 group('campagne — le registre');
 test('une campagne neuve : trois batailles, labours puis crête puis marais, mêmes graines pour la même campagne', () => {
@@ -108,7 +109,7 @@ test('on ne clôt pas une bataille qui n\'est pas finie, ni d\'une autre campagn
   const trois = { ...fini, etat: { ...fini.etat, campagne: { id: 11, n: 3 } } };
   assert.throws(() => cloturer(nouvelleCampagne(11), trois), /ne suit pas/);
 });
-test('clore une bataille : ce qui est gardé est le survivant (numéro, rang, expérience, victimes), jamais fatigue, peur ni identité', () => {
+test('clore une bataille : ce qui est gardé est le survivant (numéro, rang, expérience, victimes, caractéristiques), jamais fatigue, peur ni identité', () => {
   const { B, apres } = unePartie(), e = apres.batailles[0], A = B.armee;
   assert.equal(apres.batailles.length, 1);
   assert.equal(e.n, 1); assert.equal(e.graine, B.etat.graine); assert.equal(e.secteur, 'essai'); assert.equal(e.jours, B.etat.jour);
@@ -126,7 +127,7 @@ test('clore une bataille : ce qui est gardé est le survivant (numéro, rang, ex
   for (const m of B.etat.corps) if (m[2] === 0) assert.ok(!ids.includes(numeroCampagne(B.etat, m[4])), `n° ${m[4]} est mort`);
   // le rang : celui de la fiche (promus compris)
   for (const r of e.regiments) for (const s of r.survivants) assert.ok(Number.isInteger(s[1]) && s[1] >= 0 && s[1] <= 7);
-  assert.equal(tous.every(s => s.length === 4 && s.every(Number.isFinite)), true);
+  assert.equal(tous.every(s => s.length === 5 && s.slice(0, 4).every(Number.isFinite) && s[4].length === 4 && s[4].every(Number.isFinite)), true, 'numéro, rang, expérience, victimes, [adresse, force, endurance, calme]');
   // ni nom, ni fatigue, ni peur, ni moral dans le registre (seul le nom du régiment y est)
   assert.ok(!/prenom|fatJ|fatB|peur|moral|blessure/.test(JSON.stringify(e)));
 });
@@ -179,7 +180,7 @@ test('la suite : une défaite ne ferme pas la campagne ; elle finit après trois
   const exigeante = cloturer({ ...c, regimentsMin: debout + 1 }, B);
   assert.equal(exigeante.statut, 'effondree'); assert.equal(suivante(exigeante), null);
   assert.equal(cloturer({ ...c, regimentsMin: debout }, B).statut, 'en cours');
-  assert.equal(CAMPAGNE.longueur, 3); assert.equal(CAMPAGNE.regimentsMin, 4); assert.equal(c.hommesMin, 20);
+  assert.equal(CAMPAGNE.longueur, 3); assert.equal(CAMPAGNE.regimentsMin, 4); assert.equal(CAMPAGNE.hommesMin, 20);
   // un régiment réduit à quelques hommes n'est plus « debout »
   const miettes = { ...c, regimentsMin: 1, hommesMin: 1000 };
   assert.equal(cloturer(miettes, B).statut, 'effondree');

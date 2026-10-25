@@ -107,13 +107,13 @@ test('deux hommes moyens : le corps à corps est mortel pour les deux camps, à 
 group('progression des caractéristiques');
 const PG = R.progression;
 const seul = () => { const T = creerTerrain(1, { largeur: 60, hauteur: 20, arbres: 0 }, R), A = creerArmee({ capacite: 4, W: T.W, H: T.H }); ajouterSoldat(A, 10, 10, 0, 0, 0, 0.5, 7); poserCaracs(A, 0, [50, 50, 50, 50]); return A; };
-test('le départ tient compte du grade, de l\'âge et de l\'esprit du régiment, entre 15 et 85, et se refait à l\'identique', () => {
-  const moy = (k, q) => { let s = 0; for (let id = 0; id < 600; id++) s += departCaracs(3, 0, id, id, k, 125, 2)[q]; return s / 600; };
+test('le départ tient compte du grade et de l\'esprit du régiment, entre 15 et 85, et se refait à l\'identique', () => {
+  const moy = (k, q) => { let s = 0; for (let id = 0; id < 600; id++) s += departCaracs(3, 0, id, k, 125, 2)[q]; return s / 600; };
   assert.ok(moy(0, 3) > moy(100, 3) + 8, 'un capitaine est plus calme');
   assert.ok(moy(30, 2) > moy(100, 2) + 4 && moy(30, 1) > moy(100, 1) + 2, 'un sergent est plus endurant et plus fort');
-  for (let id = 0; id < 400; id++) for (const v of departCaracs(3, id % 2, id, id, id % 130, 125, id % 8)) assert.ok(v >= 15 && v <= 85 && Number.isInteger(v));
-  assert.deepEqual(departCaracs(3, 0, 12, 12, 4, 125, 1), departCaracs(3, 0, 12, 12, 4, 125, 1));
-  const a = departCaracs(3, 0, 12, 12, 100, 125, 1), b = departCaracs(3, 0, 12, 12, 100, 125, 5);
+  for (let id = 0; id < 400; id++) for (const v of departCaracs(3, id % 2, id, id % 130, 125, id % 8)) assert.ok(v >= 15 && v <= 85 && Number.isInteger(v));
+  assert.deepEqual(departCaracs(3, 0, 12, 4, 125, 1), departCaracs(3, 0, 12, 4, 125, 1));
+  const a = departCaracs(3, 0, 12, 100, 125, 1), b = departCaracs(3, 0, 12, 100, 125, 5);
   assert.notDeepEqual(a, b, 'l\'esprit du régiment décale tout son monde');
 });
 test('on progresse en pratiquant, de moins en moins vite, jamais au-delà du plafond de la bataille ; un mot franchi se note', () => {

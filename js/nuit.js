@@ -357,7 +357,7 @@ function relever(B, vieux, rng) {
     const x = x0 + (k + 0.5) * (x1 - x0) / n;
     const i = ajouterSoldat(A, x + (rng() - 0.5) * 2, Math.max(1, Math.min(B.terrain.H - 2, derriere + (rng() - 0.5) * 6)), reg.camp, reg.id, k, rng(), premier + k);
     if (etat.numeros && reg.camp === 0) etat.numeros[premier + k] = etat.prochainNumero++;     // (campagne : un numéro neuf, jamais celui d'un vétéran)
-    if (i >= 0) poserCaracs(A, i, departCaracs(reg.camp === 0 ? etat.graineIdentite : etat.graine, reg.camp, premier + k, etat.numeros?.[premier + k] ?? premier + k, k, n, reg.id));
+    if (i >= 0) poserCaracs(A, i, departCaracs(etat.graine, reg.camp, premier + k, k, n, reg.id));
   }
 }
 
