@@ -1,9 +1,9 @@
 // Les hommes : les soldats (une boîte et son ombre ; de près la silhouette, plus loin une silhouette allégée ; aux zooms 1 et 2 un point), les anneaux des
 // régiments choisis ou survolés, les corps (un homme couché) et les tombes (un tertre et une croix). Tout est instancié et ne reçoit que ce qu'on voit.
 // Le dessin seulement. Les formes viennent de geometries.js, le GLSL de shaders.js.
-import * as SH from './shaders.js?v=0.71.0';
-import { creerGeometries } from './geometries.js?v=0.71.0';
-import { classeDuRang } from '../data/grades.js?v=0.71.0';
+import * as SH from './shaders.js?v=0.71.1';
+import { creerGeometries } from './geometries.js?v=0.71.1';
+import { classeDuRang } from '../data/grades.js?v=0.71.1';
 
 // `THREE`, `scene`, `col`, `solUniforms` (`uSol`, `uTaille` : la texture du sol, que l'ombre d'un soldat reprend), `styleSoldat` (le style de près, comparé au labo),
 // `grades` (v0.68.0 : une variante de `GRADES`, data/grades.js, ou null : tous pareils) et `rangDe(B, id, reg)` (le rang d'un homme, bataille.js) ; `surface(x, z)` et `surfaceLisse(x, z)` (la hauteur du sol, lissée pour qui marche), `solY` (la hauteur moyenne du sol) et `POINTS_JUSQUA` (le zoom où un soldat n'est
@@ -46,7 +46,7 @@ export function creerSoldats({ THREE, scene, col, solUniforms, styleSoldat, grad
     fragmentShader: SH.pointMat.f,
   });
   // (créé au premier besoin : un objet de plus change les tirages d'identifiants de three, donc les images de référence ; voir le piège des feuilles dans docs/domaines/rendu.md)
-  let pointGradeMat = null;
+  let pointGradeMat = null, lettreMat = null, lettres = null, lcPos = null, lcPhase = null, lcN = 0;       // les lettres des capitaines (v0.71.1) : un point d'écran chacune
   // Le contour des régiments choisis (Jérôme, v0.21.0) : un anneau d'os, liseré de terre, au pied de chaque homme, à tous les zooms
   // (aux zooms 1 et 2, où un homme n'est qu'un point, c'est lui qui le montre) ; sous les soldats, sans test de profondeur.
   // Le survol (v0.21.1) : le régiment sous la souris (ou sous un bouton du HUD), tous ses hommes, d'un anneau à la couleur de son camp (celui des choisis est d'os).
@@ -65,6 +65,7 @@ export function creerSoldats({ THREE, scene, col, solUniforms, styleSoldat, grad
       if (soldatsLeger) { scene.remove(soldatsLeger); soldatsLeger.geometry.dispose(); }
     }
     if (GR) { for (const c of GR) if (c) { scene.remove(c.inst, c.leger, c.detail); for (const m of [c.inst, c.leger, c.detail]) m.geometry.dispose(); } scene.remove(gPoints); gPoints.geometry.dispose(); GR = gPoints = null; }
+    if (lettres) { scene.remove(lettres); lettres.geometry.dispose(); lettres = null; }
     cap = capacite;
     posArr = new Float32Array(cap * 3); campArr = new Float32Array(cap); vitArr = new Float32Array(cap); tirArr = new Float32Array(cap * 2);
     attrsI = [new THREE.InstancedBufferAttribute(posArr, 3), new THREE.InstancedBufferAttribute(campArr, 1), new THREE.InstancedBufferAttribute(vitArr, 1), new THREE.InstancedBufferAttribute(tirArr, 2)];
@@ -83,6 +84,15 @@ export function creerSoldats({ THREE, scene, col, solUniforms, styleSoldat, grad
     soldatsPoints = new THREE.Points(gp, pointMat); soldatsPoints.frustumCulled = false; soldatsPoints.renderOrder = 2;
     scene.add(soldatsInst, soldatsPoints);
     if (grades) {
+      if (grades.classes.some(c => c.etiquette)) {
+        lettreMat ??= new THREE.ShaderMaterial({ uniforms: { uT: soldatMat.uniforms.uT, uEchelle: { value: 1 }, uHaut: { value: 400 }, uAmplitude: { value: 1.5 }, uOs: { value: col('o') }, uTerre: { value: col('t') } },
+          vertexShader: SH.lettreMat.v, fragmentShader: SH.lettreMat.f, depthTest: false, depthWrite: false, transparent: true });
+        lcPos = new Float32Array(64 * 3); lcPhase = new Float32Array(64);
+        const gl = new THREE.BufferGeometry();
+        gl.setAttribute('position', new THREE.BufferAttribute(lcPos, 3).setUsage(THREE.DynamicDrawUsage)); gl.setAttribute('aPhase', new THREE.BufferAttribute(lcPhase, 1).setUsage(THREE.DynamicDrawUsage));
+        gl.setDrawRange(0, 0);
+        lettres = new THREE.Points(gl, lettreMat); lettres.frustumCulled = false; lettres.renderOrder = 6; scene.add(lettres);
+      }
       pointGradeMat ??= new THREE.ShaderMaterial({ uniforms: pointMat.uniforms, vertexShader: SH.pointGradeMat.v, fragmentShader: SH.pointGradeMat.f });
       GR = [null];
       for (let c = 1; c <= 4; c++) {
@@ -264,10 +274,11 @@ export function creerSoldats({ THREE, scene, col, solUniforms, styleSoldat, grad
     tombesInst.geometry.instanceCount = k;
   }
   // les positions dans les tampons : seulement ceux qu'on voit (`x0`…`z1` : le rectangle englobant du sol vu ; `e` : la matrice écran ; `p` : les pixels par mètre)
-  function maj({ x0, x1, z0, z1, e, p, choisis }) {
+  function maj({ x0, x1, z0, z1, e, p, choisis, vh = 400 }) {
     const B = bataille();
     const A = B.armee, n = A.n;
     let k = 0, ka = 0, kg = 0;
+    lcN = 0;
     if (grades) for (let c = 1; c <= 4; c++) GR[c].k = 0;
     const an = anGeo.attributes.position.array, anTon = anGeo.attributes.aTon.array;
     const { tirVal, tirAng, volT, volH, volD } = tirs(), regs = B.etat.regiments, tAnim = soldatMat.uniforms.uT.value;
@@ -298,6 +309,12 @@ export function creerSoldats({ THREE, scene, col, solUniforms, styleSoldat, grad
         // la classe de son rang (celui de sa création ou de sa promotion : un mort retiré de l'armée ne laisse rien ; un promu change de dessin à l'image suivante)
         const classe = classeDuRang(rangDe(B, A.id[i], A.reg[i]));
         classeArr[k] = classe;
+        // la lettre du capitaine : un point d'écran juste au-dessus de sa tête (sa taille et sa taille de classe comprises)
+        if (lettres && grades.classes[classe]?.etiquette && lcN < 64) {
+          lcPos[lcN * 3] = x; lcPos[lcN * 3 + 1] = posArr[k * 3 + 1] + 1.85 * (grades.classes[classe].echelle ?? 1) * varArr[k * 2 + 1]; lcPos[lcN * 3 + 2] = y;
+          lcPhase[lcN] = (A.id[i] & 0xff) * 0.7;
+          lcN++;
+        }
         const G = classe > 0 ? GR[classe] : null;
         if (G && G.k < G.n && kg < capGP) {
           const q = G.k++;
@@ -329,6 +346,12 @@ export function creerSoldats({ THREE, scene, col, solUniforms, styleSoldat, grad
       if (points) for (const a of attrsGP) { a.clearUpdateRanges(); a.addUpdateRange(0, kg * a.itemSize); a.needsUpdate = true; }
       gPoints.geometry.setDrawRange(0, kg);
       gradesVus = kg;
+      if (lettres) {
+        // une case de la lettre = 1 pixel de l'image à 4 pixels par mètre et moins, 2 à 8 et plus : elle reste lisible sans écraser un homme
+        lettreMat.uniforms.uEchelle.value = p >= 8 ? 2 : 1; lettreMat.uniforms.uHaut.value = vh;
+        const att = lettres.geometry.attributes; att.position.needsUpdate = true; att.aPhase.needsUpdate = true; lettres.geometry.setDrawRange(0, lcN);
+        if (!vide()) lettres.visible = lcN > 0;
+      }
     }
     vus = k;
     majCorps(x0, x1, z0, z1, e, points, p);

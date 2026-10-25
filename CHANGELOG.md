@@ -1,5 +1,9 @@
 # Journal des versions
 
+## 0.71.1 — 2026-10-25
+- Le C du capitaine est un élément de l'interface : toujours de face, avec une légère animation de haut en bas
+- Le test de fumée ne dépend plus de la vitesse du rabat (posture, marche)
+
 ## 0.71.0 — 2026-10-25
 - Les caractéristiques des soldats évoluent : elles dépendent du grade et du régiment au départ, montent à l'usage (tir, coups, marche fatiguée, calme sous le feu) et baissent avec une blessure ou la terreur
 - La fiche montre la tendance (↑ ↓), le carnet note qu'un homme devient excellent, et les survivants gardent leurs caractéristiques d'une bataille à l'autre

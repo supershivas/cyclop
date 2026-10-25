@@ -66,8 +66,12 @@ await etape('annule');
 await page.evaluate(() => document.querySelectorAll('.reg-carte')[1].click());
 await page.waitForTimeout(250);
 await page.evaluate(() => document.querySelector('[data-stance="retenu"]').click());
+await page.waitForFunction(() => document.querySelector('[data-stance="retenu"]')?.getAttribute('aria-pressed') === 'true', null, { timeout: 5000 });
 await etape('posture');
 await jeu('() => __jeu.marche([1], 200, 190)');
+// (la marche remet la posture à volonté, mais le rabat du régiment se rafraîchit à son rythme : 250 ms ne suffisaient pas toujours, l'étape lisait tantôt « tient B1, feu retenu », tantôt « en terrain libre » ;
+// on attend que le rabat dise la posture d'après, au lieu de compter sur le temps)
+await page.waitForFunction(() => document.querySelector('[data-stance="volonte"]')?.getAttribute('aria-pressed') === 'true', null, { timeout: 5000 });
 await etape('posture-marche');
 // la fiche d'un régiment (la carte du régiment choisi, son bouton « Fiche »), puis celle d'un officier
 await page.evaluate(() => document.querySelector('.reg-carte').click());

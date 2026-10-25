@@ -106,16 +106,15 @@ export const soldatMat = {
       void main() {
         // une partie de 10 à 19 n'est dessinée que pour nous, de 20 à 29 que pour en face (casque, moustache : v0.27.0, au labo)
         float cp = aCamp > 1.5 ? aCamp - 2.0 : aCamp, kp = aPart;
-        bool cache = false, fixe = false;
-        if (kp >= 30.0) { /* les signes des grades (v0.68.0) : 30 la terre, 31 l'os, pour les deux camps ; 32 et 33 (l'os et la terre, v0.69.0) : la lettre du capitaine, qui ne tourne pas avec lui */ fixe = kp >= 31.5; } else if (kp >= 20.0) { kp -= 20.0; cache = cp < 0.5; } else if (kp >= 10.0) { kp -= 10.0; cache = cp > 0.5; }
+        bool cache = false;
+        if (kp >= 30.0) { /* les signes des grades (v0.68.0) : 30 la terre, 31 l'os, pour les deux camps */ } else if (kp >= 20.0) { kp -= 20.0; cache = cp < 0.5; } else if (kp >= 10.0) { kp -= 10.0; cache = cp > 0.5; }
         // les grades (v0.68.0) : une boîte ne se dessine que pour les classes de son masque (aGr : un bit par classe, 31 pour toutes ; aGrade : la classe de l'homme, 0 sans grades) ;
         // le corps d'un capitaine ou d'un lieutenant est plus haut (uEch.y, uEch.x), son ombre est celle de tous
         if (mod(floor(aGr / exp2(aGrade)), 2.0) < 0.5) cache = true;
         vCamp = aCamp; vPart = kp; vLong = position.y;
         float ech = aGrade > 3.5 ? uEch.y : (aGrade > 2.5 ? uEch.x : 1.0);
-        // (v0.69.0) chaque homme a sa taille et sa largeur (aVar : le dessin seulement, tiré de son numéro) ; la lettre du capitaine reste à sa hauteur d'homme et à sa largeur
+        // (v0.69.0) chaque homme a sa taille et sa largeur (aVar : le dessin seulement, tiré de son numéro)
         vec3 p = (kp > 0.5 && kp < 1.5) ? position : position * vec3(ech * aVar.x, ech * aVar.y, ech * aVar.x);
-        if (fixe) p = position * vec3(ech, ech * aVar.y, ech);
         // la peur : un homme se tapit (aVit < 0 : −1 − sa vitesse), sauf son ombre
         bool tapi = aVit < 0.0;
         float vit = tapi ? 0.0 : aVit;
@@ -179,7 +178,7 @@ export const soldatMat = {
           }
         }
         // le cap (aTir.y) : vers sa cible quand il tire, sinon dans le sens où il marche (Jérôme, v0.47.2 : « les soldats avancent en arrière ») ; sa pose seulement
-        if (abs(aTir.y) > 0.001 && !(aPart > 0.5 && aPart < 1.5) && !fixe) {
+        if (abs(aTir.y) > 0.001 && !(aPart > 0.5 && aPart < 1.5)) {
           float c = cos(aTir.y), s = sin(aTir.y);
           p.xz = vec2(p.x * c + p.z * s, -p.x * s + p.z * c);
         }
@@ -211,8 +210,7 @@ export const soldatMat = {
         else if (k == 7.0) c = uCuir;
         else if (k == 8.0) c = uBotte;
         else if (k == 30.0) c = uOmbre;               // les signes sombres des grades (galons, képi, baudrier)
-        else if (k == 31.0 || k == 32.0) c = uSel;    // le fanion de commandement, la lettre du capitaine
-        else if (k == 33.0) c = uOmbre;
+        else if (k == 31.0) c = uSel;                 // le fanion de commandement
         gl_FragColor = vec4(c, 1.0);
       }`,
 };
@@ -237,6 +235,36 @@ export const pointGradeMat = {
       attribute float aCamp; attribute float aTaille; varying float vCamp;
       void main() { vCamp = aCamp; gl_Position = projectionMatrix * viewMatrix * vec4(position + vec3(0.0, 1.2, 0.0), 1.0); gl_PointSize = aTaille; }`,
   f: pointMat.f,
+};
+
+// La lettre du capitaine (v0.71.1, Jérôme : « un élément de l'interface : toujours face au joueur, une légère animation de haut en bas ») : un point d'écran par capitaine, qui garde la lettre de face quelle que soit
+// la caméra, posé juste au-dessus de sa tête ; la lettre est une grille de 9 × 9 cases (un C de 5 × 7, un liseré de terre autour), chaque case de `uEchelle` pixels de l'image ; elle monte et descend d'un à deux pixels entiers
+// (`uBalance` : l'amplitude en pixels), à la phase de chaque capitaine. Sans test de profondeur : on la lit même derrière un arbre ou une fumée.
+export const lettreMat = {
+  v: `
+      attribute float aPhase; uniform float uT; uniform float uEchelle; uniform float uHaut; uniform float uAmplitude;
+      void main() {
+        vec4 c = projectionMatrix * viewMatrix * vec4(position, 1.0);
+        float bob = floor(sin(uT * 2.6 + aPhase) * uAmplitude + 0.5) * uEchelle;
+        c.y += (uEchelle * 4.5 + bob) * 2.0 / uHaut * c.w;
+        gl_Position = c; gl_PointSize = 9.0 * uEchelle;
+      }`,
+  f: `
+      uniform vec3 uOs; uniform vec3 uTerre;
+      bool g(int x, int y) {
+        if (x < 2 || x > 6 || y < 1 || y > 7) return false;
+        int cx = x - 2;
+        if (y == 1 || y == 7) return cx >= 1 && cx <= 3;
+        if (y == 2 || y == 6) return cx == 0 || cx == 4;
+        return cx == 0;
+      }
+      uniform float uEchelle;
+      void main() {
+        int gx = int(floor(gl_PointCoord.x * 9.0)), gy = int(floor(gl_PointCoord.y * 9.0));
+        if (g(gx, gy)) gl_FragColor = vec4(uOs, 1.0);
+        else if (g(gx - 1, gy) || g(gx + 1, gy) || g(gx, gy - 1) || g(gx, gy + 1) || g(gx - 1, gy - 1) || g(gx + 1, gy - 1) || g(gx - 1, gy + 1) || g(gx + 1, gy + 1)) gl_FragColor = vec4(uTerre, 1.0);
+        else discard;
+      }`,
 };
 
 export const anMat = {

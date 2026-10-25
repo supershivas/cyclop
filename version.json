@@ -1,8 +1,7 @@
 {
-  "version": "0.71.0",
+  "version": "0.71.1",
   "date": "2026-10-25",
   "changes": [
-    "Les caractéristiques des soldats évoluent : elles dépendent du grade et du régiment au départ, montent à l'usage (tir, coups, marche fatiguée, calme sous le feu) et baissent avec une blessure ou la terreur",
-    "La fiche montre la tendance (↑ ↓), le carnet note qu'un homme devient excellent, et les survivants gardent leurs caractéristiques d'une bataille à l'autre"
+    "Le C du capitaine est un élément de l'interface : toujours de face, avec une légère animation de haut en bas"
   ]
 }

@@ -1,6 +1,6 @@
 // Les formes du rendu, construites à la main : un soldat (de la boîte à la silhouette), un arbre, un buisson. Pas d'état :
 // `THREE` et `col` (une couleur de la palette) viennent de creerRendu ; les soldats prennent aussi leurs attributs d'instance.
-import { ARBRES_FEUILLES } from '../data/arbres.js?v=0.71.0';
+import { ARBRES_FEUILLES } from '../data/arbres.js?v=0.71.1';
 
 export function creerGeometries(THREE, col) {
   // les faces d'une boîte qu'on voit d'ici : le dessus, le sud, l'est et l'ouest (jamais le nord ni le dessous)
@@ -17,13 +17,6 @@ export function creerGeometries(THREE, col) {
   // Les signes sombres sont en terre (part 30), le fanion en os (31) ; les pièces de manche suivent le bras (balancier, épaule).
   const PIECES = {
     mat: { loin: true, f: (g, m) => { boiteVue(g, -0.05, 0.05, 1.8, 3.5, -0.05, 0.05, 30, 0, 30, 0, m); boiteVue(g, 0.05, 0.9, 3.2, 3.5, -0.025, 0.025, 31, 0, 31, 0, m); boiteVue(g, 0.05, 0.9, 2.9, 3.2, -0.025, 0.025, 30, 0, 30, 0, m); } },       // le fanion : deux bandes, os sur terre, qui se lisent sur le kaki comme sur le bleu
-    // la lettre du capitaine (v0.69.0) : un C de trois barres d'os sur un fond de terre, au-dessus de la tête, petit (0,5 m de large) ; elle ne tourne pas avec lui (parties 32 et 33 : le nuanceur la garde de face)
-    lettreC: { loin: true, f: (g, m) => {
-      boiteVue(g, -0.25, 0.25, 2.0, 2.66, 0.0, 0.02, 33, 0, 33, 0, m);                         // le fond
-      boiteVue(g, -0.2, 0.2, 2.53, 2.62, 0.02, 0.05, 32, 0, 32, 0, m);                          // la barre du haut
-      boiteVue(g, -0.2, -0.07, 2.04, 2.62, 0.02, 0.05, 32, 0, 32, 0, m);                        // le fût
-      boiteVue(g, -0.2, 0.2, 2.04, 2.13, 0.02, 0.05, 32, 0, 32, 0, m);                          // la barre du bas
-    } },
     kepiSombre: { loin: true, f: (g, m) => { boiteVue(g, -0.21, 0.21, 1.6, 1.78, -0.21, 0.21, 30, 0, 30, 0, m); boiteVue(g, -0.16, 0.16, 1.58, 1.64, 0.2, 0.34, 30, 0, 30, 0, m); } },
     kepiBande: { loin: true, f: (g, m) => { boiteVue(g, -0.2, 0.2, 1.7, 1.82, -0.2, 0.2, 0, 0, 0, 0, m); boiteVue(g, -0.22, 0.22, 1.56, 1.7, -0.22, 0.22, 30, 0, 30, 0, m); boiteVue(g, -0.16, 0.16, 1.54, 1.6, 0.21, 0.34, 30, 0, 30, 0, m); } },
     manteau: { loin: true, f: (g, m) => { boiteVue(g, -0.32, 0.32, 0.25, 0.86, -0.21, 0.21, 0, 0, 0, 0, m); boiteVue(g, -0.33, 0.33, 0.25, 0.36, -0.22, 0.22, 30, 0, 30, 0, m); } },
