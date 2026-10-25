@@ -2,38 +2,39 @@
 // Chaque sujet utilise les mêmes modules que le jeu (terrain, apparence,
 // rendu three.js) : ce qu'on voit ici est ce que le jeu dessinera. Ajouter un
 // sujet ou une variante = ajouter une entrée dans GROUPES.
-import { afficherVersion } from './version-tag.js?v=0.66.3';
-import { mountLabo } from './lib/labo-shell.js?v=0.66.3';
-import { spriteCanvas, paletteToGPL, paletteToHex } from './lib/sprites.js?v=0.66.3';
-import { PALETTE, ROLES } from './palette.js?v=0.66.3';
-import { chargerContenu } from './design-store.js?v=0.66.3';
-import { tuile, ETAT } from './tuiles.js?v=0.66.3';
-import { creerTerrain, impact, hydroLignes, toucher } from './terrain.js?v=0.66.3';
-import { FORMES } from './cratere.js?v=0.66.3';
-import { CALIBRES } from './data/calibres.js?v=0.66.3';
-import { METEO } from './data/meteo.js?v=0.66.3';
-import { nouvelleBataille, avancer, ordonnerMarche, ordonnerBarrage, mourir, regarderAu, aube, horloge, ticksParJour } from './bataille.js?v=0.66.3';
-import { AZIMUTS, COTES } from './data/soleil.js?v=0.66.3';
-import { creerRendu, ZOOMS } from './rendu3d.js?v=0.66.3';
-import { hash2 } from './lib/rng.js?v=0.66.3';
-import { reglerVerdure } from './apparence.js?v=0.66.3';
-import { maquetteAssaut } from './labo-assaut.js?v=0.66.3';
-import { calquePlaques } from './labo-plaques.js?v=0.66.3';
-import { calqueBarre } from './labo-barre-temps.js?v=0.66.3';
-import { maquetteProjections, maquetteVisee } from './labo-projections.js?v=0.66.3';
-import { calqueBarreVie } from './labo-barre-vie.js?v=0.66.3';
-import { calqueClic } from './labo-clic-regiment.js?v=0.66.3';
-import { maquetteBoutons, calqueOrdre, calqueObus } from './labo-satisfaction.js?v=0.66.3';
-import { calqueEtiquette, calqueToast, maquetteCartes } from './labo-hud-ux.js?v=0.66.3';
-import { maquetteCampagne } from './labo-campagne.js?v=0.66.3';
-import { maquetteCaisses, maquetteRates, maquetteSapes } from './labo-arcade.js?v=0.66.3';
-import { maquetteChars } from './labo-chars.js?v=0.66.3';
-import { maquetteGaz } from './labo-gaz.js?v=0.66.3';
-import { maquetteAvions } from './labo-avions.js?v=0.66.3';
-import { maquettePonts, PONTS, NOMS_PONTS } from './labo-ponts.js?v=0.66.3';
-import { PONTS_JEU } from './data/ponts.js?v=0.66.3';
-import { JOURNAL } from './labo-journal.js?v=0.66.3';
-import { loadVersion } from './lib/app-update.js?v=0.66.3';
+import { afficherVersion } from './version-tag.js?v=0.67.2';
+import { mountLabo } from './lib/labo-shell.js?v=0.67.2';
+import { spriteCanvas, paletteToGPL, paletteToHex } from './lib/sprites.js?v=0.67.2';
+import { PALETTE, ROLES } from './palette.js?v=0.67.2';
+import { chargerContenu } from './design-store.js?v=0.67.2';
+import { tuile, ETAT } from './tuiles.js?v=0.67.2';
+import { creerTerrain, impact, hydroLignes, toucher } from './terrain.js?v=0.67.2';
+import { FORMES } from './cratere.js?v=0.67.2';
+import { CALIBRES } from './data/calibres.js?v=0.67.2';
+import { METEO } from './data/meteo.js?v=0.67.2';
+import { nouvelleBataille, avancer, ordonnerMarche, ordonnerBarrage, mourir, regarderAu, aube, horloge, ticksParJour } from './bataille.js?v=0.67.2';
+import { AZIMUTS, COTES } from './data/soleil.js?v=0.67.2';
+import { creerRendu, ZOOMS } from './rendu3d.js?v=0.67.2';
+import { hash2 } from './lib/rng.js?v=0.67.2';
+import { reglerVerdure } from './apparence.js?v=0.67.2';
+import { maquetteAssaut } from './labo-assaut.js?v=0.67.2';
+import { calquePlaques } from './labo-plaques.js?v=0.67.2';
+import { calqueBarre } from './labo-barre-temps.js?v=0.67.2';
+import { maquetteProjections, maquetteVisee } from './labo-projections.js?v=0.67.2';
+import { calqueBarreVie } from './labo-barre-vie.js?v=0.67.2';
+import { calqueClic } from './labo-clic-regiment.js?v=0.67.2';
+import { maquetteBoutons, calqueOrdre, calqueObus } from './labo-satisfaction.js?v=0.67.2';
+import { calqueEtiquette, calqueToast, maquetteCartes } from './labo-hud-ux.js?v=0.67.2';
+import { maquetteCampagne } from './labo-campagne.js?v=0.67.2';
+import { maquetteCaisses, maquetteRates, maquetteSapes } from './labo-arcade.js?v=0.67.2';
+import { maquetteChars } from './labo-chars.js?v=0.67.2';
+import { maquetteGaz } from './labo-gaz.js?v=0.67.2';
+import { maquetteAvions } from './labo-avions.js?v=0.67.2';
+import { maquettePonts, PONTS, NOMS_PONTS } from './labo-ponts.js?v=0.67.2';
+import { PONTS_JEU } from './data/ponts.js?v=0.67.2';
+import { JOURNAL } from './labo-journal.js?v=0.67.2';
+import { loadVersion } from './lib/app-update.js?v=0.67.2';
+import { calqueMoral } from './labo-moral.js?v=0.67.2';
 
 document.documentElement.style.setProperty('--jeu-accent', ROLES.accent);
 const NOM = document.title.replace(/^Labo — /, ''); // le nom vient de la page (une apostrophe ne casse rien)
@@ -329,6 +330,12 @@ const GROUPES = [
       { title: 'Ligne à ligne', depuis: '0.33.0', note: 'Le papier est posé d\'un coup mais s\'écrit : le titre, puis chaque ligne et chaque bouton apparaissent l\'un après l\'autre, à quelques centièmes d\'écart, comme un ordre qu\'on rédige.', render: s => moteur(s, { zoom: 3, cz: 185, soldats: 400, calque: calqueClic('equerres', 'lignes') }) },
       { title: 'Au régiment', status: 'ancienne', note: 'En jeu en v0.34.0 et v0.34.1, remplacée par le rabat en v0.34.6. La fenêtre quitte le bas de l\'écran : elle vient près des hommes, juste au-dessus de la boîte de leur nom (v0.34.1 ; la maquette la pose au-dessus de leur emprise), reliée à eux par une pointe, et les suit quand ils marchent. Elle fait un petit bond en arrivant.', render: s => moteur(s, { zoom: 3, cz: 185, soldats: 400, calque: calqueClic('equerres', 'bulle') }) },
       { title: 'Elle apparaît d\'un coup', status: 'ancienne', note: 'Jusqu\'à la v0.33 : un clic sur la carte, et le papier des ordres (le régiment, ce qu\'il fait, les formes, Marcher, Regagner, Fiche) est là, posé au-dessus de la carte, sans lien avec elle. Cliquez une carte du bas.', render: s => moteur(s, { zoom: 3, cz: 185, soldats: 400, calque: calqueClic('equerres', 'sec') }) },
+    ] },
+    { id: 'moral-terrain', title: 'Le moral sur le champ', variants: [
+      { title: 'Le liseré qui s\'effrite', depuis: '0.67.2', note: 'Un cadre autour des hommes. Ébranlé : des tirets orange qui marchent. En déroute : le cadre se casse en morceaux rouges qui vacillent et s\'éteignent à tour de rôle. Tient : rien (le silence dit « tout va bien »). Le plus discret ; il reprend la forme de l\'anneau et du cadre de choix, donc il se confond avec eux si le régiment est choisi.', render: s => moteur(s, { zoom: 2, cz: 185, soldats: 400, calque: calqueMoral('lisere') }) },
+      { title: 'Le pennon', depuis: '0.67.2', note: 'Un mât planté au bord des hommes, toujours là : il tient droit, toile bleue déployée ; ébranlé, il penche et la toile pend à mi-mât, orange ; en déroute, il est à terre, la toile rouge en lambeaux. Reprend le fanion déchiré des tranchées. Se lit même sans couleur (droit, penché, couché), mais ajoute un objet par régiment à l\'écran.', render: s => moteur(s, { zoom: 2, cz: 185, soldats: 400, calque: calqueMoral('pennon') }) },
+      { title: 'La trame', depuis: '0.67.2', note: 'Une hachure en biais sur toute l\'emprise, qui se resserre quand le régiment fléchit : espacée et orange (ébranlé), serrée et rouge avec un cadre pointillé (en déroute). C\'est la hachure de la barre de la carte, portée sur le champ. La plus lisible de loin, la plus lourde : elle couvre les hommes.', render: s => moteur(s, { zoom: 2, cz: 185, soldats: 400, calque: calqueMoral('trame') }) },
+      { title: 'Les chevrons de repli', depuis: '0.67.2', note: 'L\'action plutôt que l\'état : ébranlé, un chevron orange pulse sous les hommes, vers l\'arrière ; en déroute, trois chevrons rouges coulent vers le sud. Dit où ils vont, pas ce qu\'ils sont ; invisible dès que le régiment s\'arrête.', render: s => moteur(s, { zoom: 2, cz: 185, soldats: 400, calque: calqueMoral('chevrons') }) },
     ] },
     { id: 'clic-bouton', title: 'Le clic sur un bouton', variants: [
       { title: 'Le rebond', status: 'actuelle', depuis: '0.41.3', note: 'Retenu (v0.41.3), en jeu : Dès l\'appui, le bouton s\'enfonce (94 %), puis revient en dépassant un peu (105 %) : 280 ms. Le plus discret et le plus universel ; il dit « j\'ai senti ton doigt » avant même que l\'ordre parte.', render: s => maquetteBoutons(s, 'rebond') },

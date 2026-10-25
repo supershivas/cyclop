@@ -48,30 +48,7 @@ la danse macabre, la catastrophe peinte avec calme. L'intention est dans `DESIGN
 
 ### Palette « Boue et ciel bas » (js/palette.js, variables --jeu-*)
 
-Choisie par Jérôme (v0.1.0). Trois valeurs éclaircies à la mesure de
-`outils/lisibilite.mjs` : l'eau (proposée `#34434c`, même valeur que la boue en
-gris) et les deux camps (proposés `#6f86a6` et `#5b5d48`, invisibles sur la boue).
-
-| Lettre | Valeur | Rôle |
-|---|---|---|
-| `t` | `#16130f` | terre — le fond, l'ombre des soldats, les parois |
-| `s` | `#2c2720` | boue sombre — creux dans la boue, parois |
-| `b` | `#42392e` | boue |
-| `g` | `#74664f` | glaise — sol humide, creux d'un sol sec, l'accent de l'interface |
-| `h` | `#8d8a62` | herbe morte — sol sec, terre jetée |
-| `e` | `#8a9799` | eau — reflète le ciel |
-| `r` | `#a9a89a` | brume — pluie, fumée, glace, rides de l'eau |
-| `o` | `#e4dfd0` | os — le texte, l'éclair d'un obus, le casque des choisis |
-| `n` | `#8cb6ff` | bleu horizon — nous (Jérôme, v0.16.0 : l'ancien `#a9bad0` avait la couleur de la pluie et de la brume, `r` : sous la pluie, notre armée se perdait ; plus saturé, il passe toutes les paires de `lisibilite.mjs`) |
-| `x` | `#dde874` | vert kaki clair — en face (Jérôme, v0.28.0 ; rouge `#e0604f` avant : un kaki pâle et jaune, plus clair que tout le sol, vert compris, sinon il se perdait dans l'herbe ; ΔE ≥ 45 de chaque sol, contraste ≥ 1,7 ; le casque à pointe de l'équipé aide) |
-| `v` | `#6f8147` | vert mousse — l'herbe qui reprend, par plaques (Jérôme, v0.9.3 : « intégré dans le design, sans grandes différences ») |
-| `w` | `#5c6e3c` | vert sombre — l'herbe dans l'humide |
-
-Un soldat se lit par sa couleur sur un sol sombre, par son ombre (`t`) sur un sol
-clair. Un cratère : le creux un ton plus sombre, la lèvre de terre jetée un ton
-plus clair (sans la lèvre, un cratère dans la boue ne se distinguait pas de la
-boue en gris : échec mesuré). Aucune autre couleur dans le jeu ; exceptions : les deux couleurs d'alerte de l'interface (orange et rouge, `ALERTES`, hors de `PALETTE` ; Jérôme, v0.41.3), les teintes d'automne des feuilles d'arbre (`ARBRES_FEUILLES.automne` de data/arbres.js : orange brûlé, ocre, rouille, or terne, en `#rrggbb` ; Jérôme, v0.59.2 ; et l'herbe rousse du sol d'automne, `v` et `w` remplacés dans `attacher` de rendu3d.js, v0.59.4), les fondus continus (brouillard, bout des ombres et de la fumée : des mélanges d'une couleur de palette avec ce qu'elle recouvre ; Jérôme, v0.12.1),  le fond des boîtes de dialogue (`::backdrop` de `game.css`) et la
-nuit (le voile continu et ses halos mélangent la terre, le sol et l'os : des couleurs qui ne sont pas dans la palette ; Jérôme, v0.9.3).
+Choisie par Jérôme (v0.1.0). Lettres : `t s b g h e r o` (terre, boue, glaise, herbe morte, eau, brume, os), `n` bleu horizon (nous), `x` vert kaki clair (en face), `v w` (herbe qui reprend). **Aucune autre couleur dans le jeu**, hors les exceptions listées (alertes de l'interface, feuilles d'automne, fondus continus, fond des dialogues, voile de nuit). Valeurs, rôles, exceptions datées et mesures de lisibilité : `docs/domaines/rendu.md`, « Palette ». Toute couleur nouvelle se vérifie avec `outils/lisibilite.mjs`.
 
 ### Échelle
 
@@ -89,22 +66,7 @@ nuit (le voile continu et ses halos mélangent la terre, le sol et l'os : des co
 
 ### Commandes
 
-| Action | Clavier | Souris |
-|---|---|---|
-| Choisir un régiment | T (tous) | clic sur lui, sur sa carte ou son cercle (Maj : ajouter), glisser (cadre) |
-| Voir un homme, un régiment | I (la fiche de l'homme sous le pointeur, un des nôtres compris) | survol ; clic sur ceux d'en face ou sur un mort (sans régiment choisi) ; pour les nôtres, le bouton « Fiche » de leur carte |
-| Marcher (sur une tranchée : l'occuper) | — | clic gauche sur le sol, les régiments choisis restent choisis (v0.21.2) |
-| Annuler | Échap | clic droit : le barrage visé, « Marcher », la fiche, puis les régiments choisis |
-| Posture des régiments choisis : à volonté, feu retenu | Maj+1, Maj+2 (touche physique ; Maj+3 ne fait rien) | deux boutons dans la fenêtre du régiment (v0.36.1) |
-| Barrage de 75, 155, 220 | 1, 2, 3 (touche physique) puis clic | bouton de la batterie puis clic |
-| Avion de mitraillage (3 par camp) | 4 puis deux clics : le début, la fin de la passe | bouton « Avion » puis deux clics ; clic droit : le premier point, puis le barrage |
-| Génie : refaire un pont coupé (4 sections de 20 hommes par camp) | 6 puis clic sur le pont | bouton « Génie » puis clic |
-| Arrêter le temps (pause active) | Espace | — |
-| Déplacer la vue | flèches, ZQSD / WASD (selon l'écran) | Maj + glisser avec le bouton du milieu (la molette) |
-| Tourner, incliner la vue | A et E (Q et E en QWERTY), R et F (touches physiques, en continu) | glisser avec le bouton du milieu (ou le droit) ; le cadran à l'écran (v0.9.1) est retiré en v0.26.0 (Jérôme) |
-| Recentrer la vue | C (l'angle d'origine) | — |
-| Zoom | + et − | molette |
-| Menu (pause) | Échap (quand rien n'est à annuler) | bouton du HUD |
+Souris et clavier (choisir, marcher, barrages 1-2-3, avion 4, génie 6, pause Espace, caméra flèches/ZQSD, A/E/R/F, C, molette, Échap/clic droit pour annuler). Le tableau complet est dans `docs/domaines/interface.md`, « Commandes ».
 
 ## Stack
 
@@ -136,7 +98,7 @@ nuit (le voile continu et ses halos mélangent la terre, le sol et l'os : des co
 | `labo.html`, `js/labo*.js`, `atelier.html`, `js/atelier*.js`, `design-store.js`, contenu publié | `docs/domaines/labo-atelier.md` |
 | `test/`, `outils/fumee.mjs`, `outils/rendu-empreinte.mjs`, `scripts/` : références, mesures | `docs/domaines/tests.md` |
 
-Autres : `DESIGN.md` (l'intention), `ROADMAP.md`, `docs/archives/` (ce qui a été retiré), `docs/refonte-rendu3d.md`.
+Autres : `DESIGN.md` (l'intention), `ROADMAP.md` (`docs/pistes-avancees.md` : les pistes non construites), `docs/archives/` (ce qui a été retiré), `docs/refonte-rendu3d.md`.
 
 ## Structure (une ligne par module ; le détail est dans le fichier du domaine)
 

@@ -70,6 +70,7 @@
   balles, obus en vol, fumée, feux, fusées, corbeaux **et** les tirs et le souffle : une seule fabrique, car tout tire dans le même générateur de l'aspect `alea` — l'ordre des tirages fait l'image — et les
   mêmes tampons ; `tirs()` rend la pose des tireurs et le bond des soufflés, relus à chaque image par les soldats), `soldats.js` (les soldats, leurs anneaux, les corps et les tombes ; `maj({ x0, x1, z0, z1, e, p,
   choisis })` reçoit la vue calculée par `rendu3d.js`). Reste à décider : sortir le sol (`sol.js`) ou le laisser (voir `docs/refonte-rendu3d.md`).
+- **Une ligne noire au bord d'un lac** (Jérôme, après la v0.67.0 : « les bords de la carte se fondent bizarrement, une ligne noire dans le lac ») : le faux terrain (`fauxMat`, un plan) était posé à `SOL_Y - 0,15` = 2,85 m. Un lac qui touche le bord du champ a son fond plus bas (1,5 m sur la graine 1, bords est et ouest) ; entre le bord du champ et le plan, le regard passait **sous** le plan et ne voyait que le fond noir : un trait, épais sur le lac (le fond y est le plus bas), fin ailleurs. `hauteurFaux()` de rendu3d.js pose maintenant le plan à 0,4 m sous le point le plus bas du bord (0,4 : le sol fin arrondit au quart de mètre), jamais au-dessus de 2,85 m ; un bord plus haut que le plan ne cache que quelques mètres de plan derrière lui (3 m d'écart : 2 m à 54°). Reproduit en creusant de 3,5 m le bord nord de la graine 1 (300 m de large, 40 de profondeur) et en regardant le bord au zoom 1 : avant, un trait gris-bleu le long du bord ; après, il a disparu. `test/rendu.json` réécrit : sept images changent, toutes les `z1` (seules à voir au-delà du bord ; le plan bouge de quelques pixels de haut en bas, 0,2 à 6 % des pixels, en haut de l'image seulement). Non fait : un plan qui suit le relief du bord (une jupe de mailles) ; le plan reste à une seule hauteur. **Piège du travail** : une règle `Read` sur `CHANGELOG.md` dans `.claude/settings.json` (pour économiser des tokens) empêche aussi d'y ajouter l'entrée d'une version : la v0.67.2 a été écrite après avoir levé cette règle.
 - **La fumée de l'écran titre passait dans la partie** (Jérôme, v0.36.7 : « encore des fumées marron au démarrage ») : `attacher` ne vidait que les feux ; les éclats (fumée de 40 à 90 s), les balles et les obus en vol du décor restaient dans les tampons de `eclats.js`. `reinitialiser` les vide, avec les obus qui attendent le sol.
 - **Le plan lointain de la caméra était resté dans un commentaire** (Jérôme, v0.36.8 : « avec une vue lointaine, une partie du champ est coupée ») : `camera.far = D * 6` était collé à la fin du commentaire de la ligne du `near`, donc `far` restait à 1 000 m (la valeur de création) ; au zoom 1 et à une vue basse, le fond du terrain, à plus de 1 000 m de la caméra, disparaissait en bande nette. Le faux terrain se perd à 500 m du champ dans la couleur du ciel. Un commentaire en fin de ligne ne doit jamais précéder du code.
 - **Rendu logiciel (Chromium sans carte graphique)** : un triangle coûte cher.
@@ -157,3 +158,32 @@
   12 triangles pour 128 tronçons ajoutaient 3 000 triangles et ~10 ms tout dézoomé ; des
   plans de 2 triangles ne coûtent presque rien (v0.9.2). Les tirs sont vidés à chaque image
   et plafonnés à 160 points : tout dézoomé, il y en aurait des milliers.
+
+
+## Palette « Boue et ciel bas » (déplacée de CLAUDE.md)
+
+Choisie par Jérôme (v0.1.0). Trois valeurs éclaircies à la mesure de
+`outils/lisibilite.mjs` : l'eau (proposée `#34434c`, même valeur que la boue en
+gris) et les deux camps (proposés `#6f86a6` et `#5b5d48`, invisibles sur la boue).
+
+| Lettre | Valeur | Rôle |
+|---|---|---|
+| `t` | `#16130f` | terre — le fond, l'ombre des soldats, les parois |
+| `s` | `#2c2720` | boue sombre — creux dans la boue, parois |
+| `b` | `#42392e` | boue |
+| `g` | `#74664f` | glaise — sol humide, creux d'un sol sec, l'accent de l'interface |
+| `h` | `#8d8a62` | herbe morte — sol sec, terre jetée |
+| `e` | `#8a9799` | eau — reflète le ciel |
+| `r` | `#a9a89a` | brume — pluie, fumée, glace, rides de l'eau |
+| `o` | `#e4dfd0` | os — le texte, l'éclair d'un obus, le casque des choisis |
+| `n` | `#8cb6ff` | bleu horizon — nous (Jérôme, v0.16.0 : l'ancien `#a9bad0` avait la couleur de la pluie et de la brume, `r` : sous la pluie, notre armée se perdait ; plus saturé, il passe toutes les paires de `lisibilite.mjs`) |
+| `x` | `#dde874` | vert kaki clair — en face (Jérôme, v0.28.0 ; rouge `#e0604f` avant : un kaki pâle et jaune, plus clair que tout le sol, vert compris, sinon il se perdait dans l'herbe ; ΔE ≥ 45 de chaque sol, contraste ≥ 1,7 ; le casque à pointe de l'équipé aide) |
+| `v` | `#6f8147` | vert mousse — l'herbe qui reprend, par plaques (Jérôme, v0.9.3 : « intégré dans le design, sans grandes différences ») |
+| `w` | `#5c6e3c` | vert sombre — l'herbe dans l'humide |
+
+Un soldat se lit par sa couleur sur un sol sombre, par son ombre (`t`) sur un sol
+clair. Un cratère : le creux un ton plus sombre, la lèvre de terre jetée un ton
+plus clair (sans la lèvre, un cratère dans la boue ne se distinguait pas de la
+boue en gris : échec mesuré). Aucune autre couleur dans le jeu ; exceptions : les deux couleurs d'alerte de l'interface (orange et rouge, `ALERTES`, hors de `PALETTE` ; Jérôme, v0.41.3), les teintes d'automne des feuilles d'arbre (`ARBRES_FEUILLES.automne` de data/arbres.js : orange brûlé, ocre, rouille, or terne, en `#rrggbb` ; Jérôme, v0.59.2 ; et l'herbe rousse du sol d'automne, `v` et `w` remplacés dans `attacher` de rendu3d.js, v0.59.4), les fondus continus (brouillard, bout des ombres et de la fumée : des mélanges d'une couleur de palette avec ce qu'elle recouvre ; Jérôme, v0.12.1),  le fond des boîtes de dialogue (`::backdrop` de `game.css`) et la
+nuit (le voile continu et ses halos mélangent la terre, le sol et l'os : des couleurs qui ne sont pas dans la palette ; Jérôme, v0.9.3).
+

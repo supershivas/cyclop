@@ -1,7 +1,8 @@
 {
-  "version": "0.66.3",
+  "version": "0.67.2",
   "date": "2026-10-25",
   "changes": [
-    "Le jeu à deux : une fenêtre « Prêt ? » au départ ; la bataille ne commence que lorsque les deux commandants ont cliqué sur « Prêt »"
+    "Le bord de la carte ne montre plus de ligne noire au-dessus d'un lac",
+    "Labo : quatre façons de montrer sur le champ qu'un régiment est ébranlé ou en déroute"
   ]
 }

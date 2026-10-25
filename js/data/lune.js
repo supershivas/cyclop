@@ -1,7 +1,7 @@
 // La lune et le ciel de nuit (Jérôme, v0.40.0 : « les phases de la lune de jour en jour, une nuit nuageuse, des étoiles filantes »). Tout se lit du jour, de la graine et
 // du temps de la journée : aucune sauvegarde, aucun tirage du générateur de la bataille (un hachage graine-jour). Le dessin et l'obscurité de la nuit s'en servent ;
 // la logique de la bataille n'en lit rien.
-import { hash2 } from '../lib/rng.js?v=0.66.3';
+import { hash2 } from '../lib/rng.js?v=0.67.2';
 
 export const CYCLE = 29.53;                    // jours d'une lunaison
 // la part de lumière que le temps laisse passer (la pluie et le brouillard étouffent la lune)

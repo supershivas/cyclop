@@ -22,28 +22,28 @@
    - Les soldats : instanciés (une boîte et son ombre) ; au zoom 1 et 2, un
      point de 2 × 2 pixels (la couleur du camp sur son ombre).
    - Les corps : un homme couché (instancié) ; au zoom 1 et 2, un pixel. */
-import { loadThree } from './three-lib.js?v=0.66.3';
-import * as SH from './rendu/shaders.js?v=0.66.3';
-import { creerSoldats } from './rendu/soldats.js?v=0.66.3';
-import { creerChars } from './rendu/chars.js?v=0.66.3';
-import { creerGenies } from './rendu/genies.js?v=0.66.3';
-import { creerAvions } from './rendu/avions.js?v=0.66.3';
-import { creerPonts } from './rendu/ponts.js?v=0.66.3';
-import { creerCiel } from './rendu/ciel.js?v=0.66.3';
-import { creerMeteo } from './rendu/meteo.js?v=0.66.3';
-import { creerTroncons } from './rendu/troncons.js?v=0.66.3';
-import { ARBRES_JEU } from './data/arbres.js?v=0.66.3';
-import { creerVegetation } from './rendu/vegetation.js?v=0.66.3';
-import { creerTemps } from './rendu/temps.js?v=0.66.3';
-import { creerEclats } from './rendu/eclats.js?v=0.66.3';
-import { creerOmbresRelief } from './rendu/ombres-relief.js?v=0.66.3';
-import { OMBRES_RELIEF as OMB, NUAGES, NUAGES_VENT } from './data/soleil.js?v=0.66.3';
-import { PALETTE, ORDRE, INDICE } from './palette.js?v=0.66.3';
-import { OMBRE, couleursLigne } from './apparence.js?v=0.66.3';
-import { MORCEAU, hauteurVueQ as hauteurQ, hauteurVueM as hauteurM } from './terrain.js?v=0.66.3';
-import { horloge, secteurDuJeu } from './bataille.js?v=0.66.3';
-import { profilFleuve } from './eaux.js?v=0.66.3';
-import { ligneY } from './tranchees.js?v=0.66.3';
+import { loadThree } from './three-lib.js?v=0.67.2';
+import * as SH from './rendu/shaders.js?v=0.67.2';
+import { creerSoldats } from './rendu/soldats.js?v=0.67.2';
+import { creerChars } from './rendu/chars.js?v=0.67.2';
+import { creerGenies } from './rendu/genies.js?v=0.67.2';
+import { creerAvions } from './rendu/avions.js?v=0.67.2';
+import { creerPonts } from './rendu/ponts.js?v=0.67.2';
+import { creerCiel } from './rendu/ciel.js?v=0.67.2';
+import { creerMeteo } from './rendu/meteo.js?v=0.67.2';
+import { creerTroncons } from './rendu/troncons.js?v=0.67.2';
+import { ARBRES_JEU } from './data/arbres.js?v=0.67.2';
+import { creerVegetation } from './rendu/vegetation.js?v=0.67.2';
+import { creerTemps } from './rendu/temps.js?v=0.67.2';
+import { creerEclats } from './rendu/eclats.js?v=0.67.2';
+import { creerOmbresRelief } from './rendu/ombres-relief.js?v=0.67.2';
+import { OMBRES_RELIEF as OMB, NUAGES, NUAGES_VENT } from './data/soleil.js?v=0.67.2';
+import { PALETTE, ORDRE, INDICE } from './palette.js?v=0.67.2';
+import { OMBRE, couleursLigne } from './apparence.js?v=0.67.2';
+import { MORCEAU, hauteurVueQ as hauteurQ, hauteurVueM as hauteurM } from './terrain.js?v=0.67.2';
+import { horloge, secteurDuJeu } from './bataille.js?v=0.67.2';
+import { profilFleuve } from './eaux.js?v=0.67.2';
+import { ligneY } from './tranchees.js?v=0.67.2';
 
 export const CAMERA = { yaw: 0.15, tangage: 0.95, fov: 30 };   // au départ : tournée de 9°, plongée de 54°, angle de 30°
 // la caméra respire : un balancement très lent, 2° en 23 s (Jérôme, v0.3.1 : variante D du labo retenue)
@@ -70,6 +70,7 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
   const THREE = await loadThree();
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: false, powerPreference: 'high-performance' });
   renderer.setPixelRatio(1);
+  renderer.localClippingEnabled = true;        // les ruines des ponts sont découpées par des plans (rendu/ponts.js)
   renderer.outputColorSpace = THREE.LinearSRGBColorSpace;
   renderer.setClearColor(new THREE.Color(PALETTE.t), 1);
   const gl = renderer.getContext();
@@ -303,6 +304,7 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
 
   // ─── Brancher une bataille ───
   const ponts = creerPonts({ THREE, scene, bataille: () => B });
+  let aretesPonts = false;
   const chars = creerChars({ THREE, scene, bataille: () => B, hauteur: (x, y) => surfaceLisse(x, y), fumer: (x, z) => eclats.fumer(x, z) });
   const genies = creerGenies({ THREE, scene, bataille: () => B, hauteur: (x, y) => surfaceLisse(x, y) });
   const avions = creerAvions({ THREE, scene, bataille: () => B, hauteur: (x, y) => surfaceLisse(x, y), effets: eclats });
@@ -374,6 +376,16 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
     }
     return out.slice(0, 8);
   }
+  // La hauteur du faux terrain : juste sous le sol, mais jamais au-dessus du point le plus bas du bord du champ (Jérôme, v0.66.4 : « une ligne noire dans le lac, au bord de la carte ») : le plan (à 2,85 m) passait
+  // au-dessus du fond d'un lac qui touche le bord (1,5 m) ; entre le bord du champ et le plan, le regard passait sous lui et ne voyait que le fond noir : un trait, épais sur le lac. Il suit donc le bord le plus bas
+  // (0,4 m de marge : le sol fin arrondit au quart de mètre) ; un bord plus haut ne cache que quelques mètres du plan, derrière lui.
+  function hauteurFaux() {
+    let bas = SOL_Y - 0.15;
+    const W = T.W, H = T.H, lire = (i, j) => hauteurQ(T, j * W + i) * 0.25;
+    for (let i = 0; i < W; i++) bas = Math.min(bas, lire(i, 0) - 0.4, lire(i, H - 1) - 0.4);
+    for (let j = 0; j < H; j++) bas = Math.min(bas, lire(0, j) - 0.4, lire(W - 1, j) - 0.4);
+    return bas;
+  }
   function faireFaux() {
     if (faux) { scene.remove(faux); faux.geometry.dispose(); faux.material.dispose(); faux = null; }
     solMat.uniforms.uDissoudre.value = 0;
@@ -387,7 +399,7 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
     solMat.uniforms.uDissoudre.value = 80;                 // m : la largeur sur laquelle le bord du champ se dissout
     u.uEau = { value: col('e') }; u.uClair = { value: col('r') };
     const riv = fleuvesSortants(); u.uNRiv = { value: riv.length / 2 }; u.uRiv = { value: Array.from({ length: 8 }, (_, k) => riv[k] || new THREE.Vector4()) };
-    faux = new THREE.Mesh(new THREE.PlaneGeometry(6000, 6000).rotateX(-Math.PI / 2).translate(T.W / 2, SOL_Y - 0.15, T.H / 2), new THREE.ShaderMaterial({ uniforms: u, vertexShader: SH.fauxMat.v, fragmentShader: SH.fauxMat.f }));
+    faux = new THREE.Mesh(new THREE.PlaneGeometry(6000, 6000).rotateX(-Math.PI / 2).translate(T.W / 2, hauteurFaux(), T.H / 2), new THREE.ShaderMaterial({ uniforms: u, vertexShader: SH.fauxMat.v, fragmentShader: SH.fauxMat.f }));
     faux.frustumCulled = false; scene.add(faux);
   }
   // un morceau dépend aussi de ses voisins (les parois au sud, à l'est, à l'ouest) : leurs versions comptent
@@ -650,7 +662,7 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
       renderer.setClearColor(c, 1); solMat.uniforms.uBordCoul.value.copy(c); fauxU?.uBrume.value.copy(c);
     }
     const sombre = temps.majNuit(h); temps.setTemps(tAnim);
-    chars.maj(dt, sombre || 0); genies.maj(dt); avions.maj(dt, sombre || 0); ponts.maj(sombre || 0);
+    chars.maj(dt, sombre || 0); genies.maj(dt); avions.maj(dt, sombre || 0); ponts.maj(sombre || 0, aretesPonts);
     ciel.nuit(sombre || 0, tAnim, h.jour, B.etat.graine, h.meteo);       // les étoiles, la lune et les nuages de la nuit (v0.40.0)
     meteo.afficher(h, vide);
     const { cx, cz, p } = projeter();
@@ -749,6 +761,7 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
     get ppm() { return ZOOMS[vue.zoom]; },
     // une fumée qui dérive, posée en (x, z) (l'écran titre en épaissit le champ)
     clignoter: troncons.clignoter,
+    set aretesPonts(v) { aretesPonts = !!v; },       // le génie vise : les ponts coupés se montrent en arêtes (v0.67.0)
     survoler(reg, troncons) { soldats.survoler(reg); survolTroncons = troncons; },
     surligner(s) { troncons.surligner(s); },
     get legere() { return soldats.legere; }, set legere(v) { soldats.legere = v; },
