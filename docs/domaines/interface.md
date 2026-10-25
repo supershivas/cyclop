@@ -90,3 +90,24 @@
   mousedown et mouseup) et arrête mousedown, mouseup, auxclick, contextmenu à la
   capture. Une extension installée avant la page peut encore les lire : d'où (v0.21.2) le clic gauche pour choisir et ordonner (le clic droit n'annule que) et, pour la caméra, le bouton du milieu et le cadran à l'écran (v0.9.1 : tourner au clic droit restait gêné par les gestes de souris de Firefox).
 - **Le choix de la saison** (v0.53.0 ; `#saisons-choix` dans `#dialogue-carte`, `demanderSecteur` de main.js) : trois boutons (été, automne, hiver) sous l'aperçu, pour la partie solo, la fin de partie et le jeu à deux. Tant que le joueur n'a rien touché, la saison est celle du secteur (automne par défaut) et change avec lui ; son clic la fixe. L'aperçu 3D la montre (`monter(…, { saison })`). Le mode debug lit `?saison=` (sans lui, celle du secteur : les scripts ne changent pas).
+
+
+## Commandes (déplacées de CLAUDE.md)
+
+| Action | Clavier | Souris |
+|---|---|---|
+| Choisir un régiment | T (tous) | clic sur lui, sur sa carte ou son cercle (Maj : ajouter), glisser (cadre) |
+| Voir un homme, un régiment | I (la fiche de l'homme sous le pointeur, un des nôtres compris) | survol ; clic sur ceux d'en face ou sur un mort (sans régiment choisi) ; pour les nôtres, le bouton « Fiche » de leur carte |
+| Marcher (sur une tranchée : l'occuper) | — | clic gauche sur le sol, les régiments choisis restent choisis (v0.21.2) |
+| Annuler | Échap | clic droit : le barrage visé, « Marcher », la fiche, puis les régiments choisis |
+| Posture des régiments choisis : à volonté, feu retenu | Maj+1, Maj+2 (touche physique ; Maj+3 ne fait rien) | deux boutons dans la fenêtre du régiment (v0.36.1) |
+| Barrage de 75, 155, 220 | 1, 2, 3 (touche physique) puis clic | bouton de la batterie puis clic |
+| Avion de mitraillage (3 par camp) | 4 puis deux clics : le début, la fin de la passe | bouton « Avion » puis deux clics ; clic droit : le premier point, puis le barrage |
+| Génie : refaire un pont coupé (4 sections de 20 hommes par camp) | 6 puis clic sur le pont | bouton « Génie » puis clic |
+| Arrêter le temps (pause active) | Espace | — |
+| Déplacer la vue | flèches, ZQSD / WASD (selon l'écran) | Maj + glisser avec le bouton du milieu (la molette) |
+| Tourner, incliner la vue | A et E (Q et E en QWERTY), R et F (touches physiques, en continu) | glisser avec le bouton du milieu (ou le droit) ; le cadran à l'écran (v0.9.1) est retiré en v0.26.0 (Jérôme) |
+| Recentrer la vue | C (l'angle d'origine) | — |
+| Zoom | + et − | molette |
+| Menu (pause) | Échap (quand rien n'est à annuler) | bouton du HUD |
+
