@@ -1,5 +1,8 @@
 # Journal des versions
 
+## 0.67.1 — 2026-10-25
+- Les ponts sont plus solides : un pont de pierre résiste à neuf obus de 155 au lieu de six
+
 ## 0.67.0 — 2026-10-25
 - Les ponts ont un nom, une barre de solidité et une histoire au survol ; ils ne tombent plus au premier obus
 - Un pont détruit laisse ses deux têtes debout, et le génie voit ses arêtes pour le refaire

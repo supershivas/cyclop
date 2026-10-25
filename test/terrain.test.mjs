@@ -622,7 +622,7 @@ test('un ouvrage se refait à pleine solidité et garde son histoire ; les noms 
   const P = T.pontsListe[0];
   assert.equal(pontEn(T, 40, 50, 1), 0); assert.equal(pontEn(T, 110, 50, 1), 1); assert.equal(pontEn(T, 75, 50, 1), -1);
   for (let n = 0; n < 5 && !P.detruit; n++) impact(T, 40.5, 50.5, '155', R, n);
-  assert.ok(P.detruit && P.coupures === 1, 'trois obus de 155 coupent une passerelle'); assert.equal(pontEn(T, 40, 50, 1), 0, 'coupé, on le trouve encore');
+  assert.ok(P.detruit && P.coupures === 1, 'deux obus de 155 coupent une passerelle de planches (60 points)'); assert.equal(pontEn(T, 40, 50, 1), 0, 'coupé, on le trouve encore');
   reconstruirePont(T, P);
   assert.ok(!P.detruit && P.pv === P.pvMax && P.reparations === 1 && P.coupures === 1);
 });

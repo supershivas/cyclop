@@ -16,7 +16,7 @@ export const typePont = id => PONTS_JEU[id] ? id : PONT_DEFAUT;
 export const PONTS_HEURES = { planches: 2, cordes: 2, chevalets: 2.5, suspendu: 3, dosdane: 3.5, warren: 3.5, arches: 4 };
 // La solidité d'un ouvrage (Jérôme, v0.67.0 : « ils ne se détruisent pas au premier bombardement ») : des points de vie par type, et ce que chaque calibre en ôte quand son motif touche le tablier
 // (un obus qui tombe à moins de 3 m du tablier ; le génie refait l'ouvrage à pleine solidité). À zéro, l'ouvrage est coupé. Des propositions non mesurées : un 75 en ôte 6, un 155 en ôte 30, un 220 en ôte 60.
-export const PONTS_PV = { planches: 40, cordes: 25, chevalets: 70, suspendu: 80, dosdane: 130, warren: 130, arches: 180 };
+export const PONTS_PV = { planches: 60, cordes: 40, chevalets: 105, suspendu: 120, dosdane: 195, warren: 195, arches: 270 };      // (v0.67.1 : une fois et demie les premiers chiffres, Jérôme : « plus solides »)
 export const PONTS_DEGATS = { '75': 6, '155': 30, '220': 60 };
 // Ce qui se passe pour les hommes sur le tablier quand l'ouvrage est coupé : une part se noie (un hachage de leur numéro, sans hasard), les autres sont jetés sur la rive la plus proche, épuisés
 export const PONT_COUPE = { noyes: 0.3, fatigue: 0.7, rayonRive: 60 };
