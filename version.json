@@ -1,7 +1,8 @@
 {
-  "version": "0.81.0",
+  "version": "0.82.0",
   "date": "2026-10-26",
   "changes": [
-    "Les chars tirent des obus en roulant (une barre de canon qui charge, une cible) et se commandent à la volée : on les choisit (clic), puis marche, cible, arrêt ou tir libre"
+    "Les tranchées ont des toits de bois sur quelques tronçons ; les sacs de sable sont refaits sac par sac, en deux assises ; les barbelés sont refaits en deux rangées de piquets avec des fils en croix",
+    "Le bois, les sacs et les toits s'éboulent là où les obus comblent la tranchée"
   ]
 }

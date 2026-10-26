@@ -1,8 +1,8 @@
 // Ce que l'état des tronçons montre sur le terrain : les fanions (à la couleur de celui qui tient le tronçon, déchirés quand l'autre
 // camp y est entré), le clignotement d'un ordre et la surbrillance de la visée, les ouvrages des tranchées (traverses, sacs de terre,
 // fil de fer, bois). Le dessin seulement : tout se lit de l'état, rien n'en est sauvegardé.
-import { PALETTE } from '../palette.js?v=0.81.0';
-import { ligneY, demiLargeur } from '../tranchees.js?v=0.81.0';
+import { PALETTE } from '../palette.js?v=0.82.0';
+import { ligneY, demiLargeur } from '../tranchees.js?v=0.82.0';
 
 // `THREE`, `scene`, `col` (une couleur de la palette), `surface(x, z)` (la hauteur du sol), `projeter()` (le centre de la vue et les pixels par mètre),
 // `vue`, `zooms` viennent de creerRendu ; `bataille()`, `tAnim()` (le temps du dessin), `vide()` (rien n'est dessiné) et `survolTroncons()`
@@ -77,13 +77,13 @@ export function creerTroncons({ THREE, scene, col, surface, projeter, vue, zooms
   ouvGeo.setAttribute('color', new THREE.BufferAttribute(ouvCol, 3).setUsage(THREE.DynamicDrawUsage));
   ouvGeo.setDrawRange(0, 0);
   const ouvMesh = new THREE.Mesh(ouvGeo, new THREE.MeshBasicMaterial({ vertexColors: true, side: THREE.DoubleSide })); ouvMesh.frustumCulled = false; ouvMesh.renderOrder = 1; scene.add(ouvMesh);
-  const FIL_MAX = 5000, filPos = new Float32Array(FIL_MAX * 3), filGeo = new THREE.BufferGeometry();
+  const FIL_MAX = 24000, filPos = new Float32Array(FIL_MAX * 3), filGeo = new THREE.BufferGeometry();
   filGeo.setAttribute('position', new THREE.BufferAttribute(filPos, 3).setUsage(THREE.DynamicDrawUsage));
   filGeo.setDrawRange(0, 0);
   const filLignes = new THREE.LineSegments(filGeo, new THREE.LineBasicMaterial({ color: col('r') })); filLignes.frustumCulled = false; filLignes.renderOrder = 1; scene.add(filLignes);
   const cSacH = col('g'), cSacB = col('b'), cTravH = col('g'), cTravB = col('s'), cPorteH = col('g'), cPorteB = col('t');
   // le bois des tranchées (v0.80.0) : les planches (claires, `h` sur `g`) et les madriers (sombres, `g` sur `s`)
-  const cPlancheH = col('h'), cPlancheB = col('g'), cMadrierH = col('g'), cMadrierB = col('s');
+  const cPlancheH = col('h'), cPlancheB = col('g'), cMadrierH = col('g'), cMadrierB = col('s'), cSac2H = col('h'), cSac2B = col('b'), cFilH = col('r'), cFilB = col('g');
   let ouvT = 0;
   function majOuvrages(dt) {
     const B = bataille();
@@ -136,6 +136,50 @@ export function creerTroncons({ THREE, scene, col, surface, projeter, vue, zooms
         }
       }
     };
+    // L'état d'un bout de tranchée, lu de sa profondeur (comme pour le bois) : 2 intacte, 1 à moitié comblée, 0 comblée
+    const etatDe = (L, x) => { const zc = ligneY(L, x), ci = (Math.max(0, Math.min(T.H - 1, zc | 0))) * T.W + Math.max(0, Math.min(T.W - 1, x | 0)), creux = -T.diff[ci]; return creux >= prof - 1 ? 2 : creux >= prof * 0.4 ? 1 : 0; };
+    // Les sacs de sable (Jérôme, v0.82.0 : « revoir les sacs de sable et les barbelés ») : à 4 px/m et plus, des sacs un à un sur le parapet, en deux assises décalées d'un demi-sac, de deux tons,
+    // de hauteurs un peu inégales ; là où les obus ont éboulé la tranchée, la deuxième assise manque, puis les sacs ne sont plus que quelques-uns à terre.
+    const sacs = (tr, L, cote) => {
+      for (let x = Math.floor(tr.x0); x < tr.x1 - 0.8; x += 0.9) {
+        const xs = x + 0.45, zc = ligneY(L, xs), z = zc + cote, h = surface(xs, z), j = hachage(xs * 1.7, zc), etat = etatDe(L, xs);
+        const haut = j < 0.5 ? cSacH : cSac2H;
+        if (etat === 0) { if (j < 0.3) boite(xs - 0.4, xs + 0.4, h, h + 0.22, z + (j - 0.15) * 3 - 0.18, z + (j - 0.15) * 3 + 0.18, haut, cSacB); continue; }
+        const a = 0.25 + 0.06 * j;
+        boite(xs - 0.42, xs + 0.42, h, h + a, z - 0.22, z + 0.22, haut, cSacB);
+        if (etat === 2 ? j > 0.08 : j > 0.6) boite(xs - 0.42 + 0.45, xs + 0.42 + 0.45, h + a, h + a + 0.24, z - 0.19, z + 0.19, j < 0.5 ? cSac2H : cSacH, cSacB);
+      }
+    };
+    // Les barbelés : deux rangées de piquets (un piquet de bois tous les 3 m) reliées par trois fils et des fils en croix d'une rangée à l'autre ; coupés, il ne reste que des bouts à terre
+    const barbeles = (tr, L, coupe) => {
+      const f = L.face, rangs = [f * (L.amp + 6.5), f * (L.amp + 9)];
+      for (let x = tr.x0, n = 0; x < tr.x1; x += 3, n++) {
+        const xb = Math.min(tr.x1, x + 3), k = coupe ? 0.3 : 1;
+        if (coupe && n % 3 !== 0) continue;
+        const pts = rangs.map(dz => { const za = ligneY(L, x) + dz, zb = ligneY(L, xb) + dz; return [x, surface(x, za), za, xb, surface(xb, zb), zb]; });
+        for (const [xa, ha, za, xb2, hb, zb] of pts) {
+          for (const hh of [0.35, 0.75, 1.15]) trait(xa, ha + hh * k, za, xb2, hb + hh * k, zb);
+          if (!coupe) boite(xa - 0.06, xa + 0.06, ha, ha + 1.3, za - 0.06, za + 0.06, cMadrierH, cMadrierB);
+        }
+        if (!coupe) {
+          const [a, b] = pts;
+          trait(a[0], a[1] + 1.15, a[2], b[3], b[4] + 0.35, b[5]); trait(a[3], a[4] + 1.15, a[5], b[0], b[1] + 0.35, b[2]);       // les fils en croix
+          trait(a[0], a[1] + 0.35, a[2], b[3], b[4] + 1.15, b[5]); trait(a[3], a[4] + 0.35, a[5], b[0], b[1] + 1.15, b[2]);
+        }
+      }
+    };
+    // Les toits de bois (Jérôme, v0.82.0 : « certaines tranchées ont aussi des toits en bois ») : sur quelques tronçons des deux premières lignes (un hachage de leur numéro et de la graine), un abri
+    // de 9 m couvert de planches en travers, posées à claire-voie (on voit encore dedans), sur deux lisses ; éboulé, les planches pendent, puis gisent à terre.
+    const toit = (tr, L) => {
+      const a = tr.x0 + 7, b = tr.x0 + 16;
+      for (const cote of [-1, 1]) { const xs = (a + b) / 2, zc = ligneY(L, xs), z = zc + cote * (demiLargeur(L, xs) + 0.45), h = surface(xs, zc) + prof * 0.25 + 0.2; if (etatDe(L, xs) > 0) boite(a, b, h - 0.12, h, z - 0.1, z + 0.1, cMadrierH, cMadrierB); }
+      for (let x = a; x < b; x += 0.8) {
+        const xs = x + 0.28, zc = ligneY(L, xs), demi = demiLargeur(L, xs) + 0.55, h0 = surface(xs, zc), hr = h0 + prof * 0.25 + 0.2, j = hachage(xs, zc * 3.1), etat = etatDe(L, xs);
+        if (etat === 2) boite(x, x + 0.56, hr, hr + 0.09, zc - demi, zc + demi, cPlancheH, cPlancheB);
+        else if (etat === 1) { if (j > 0.45) boite(x, x + 0.56, hr - 0.9 * j, hr - 0.9 * j + 0.09, zc - demi * 0.5, zc + demi * 0.9, cPlancheH, cPlancheB); }
+        else if (j < 0.4) boite(x, x + 0.56, h0 + 0.05, h0 + 0.12, zc - demi * 0.7 + j, zc + demi * 0.6, cPlancheH, cPlancheB);
+      }
+    };
     B.troncons.forEach((tr, t) => {
       const L = B.lignes[tr.ligne], xm = (tr.x0 + tr.x1) / 2, zc = ligneY(L, xm);
       if (Math.abs(xm - cx) > e || Math.abs(zc - cz) > e) return;
@@ -144,17 +188,24 @@ export function creerTroncons({ THREE, scene, col, surface, projeter, vue, zooms
       for (const x of [tr.x0 + 6, tr.x0 + 18]) { const z = ligneY(L, x), h = surface(x, z); boite(x - 0.25, x + 0.25, h, h + 1.2, z - 1.5, z + 1.5, cTravH, cTravB); }
       // le bois : un caillebotis au fond, des planches contre les parois, des madriers (montants et lisse) tous les 4 m ; il disparaît où les obus ont comblé la tranchée
       if (p >= 4) bois(tr, L);
-      // les sacs de terre : sur le parapet, du côté de l'ennemi ; à l'envers quand le tronçon est pris
+      // les toits (quelques tronçons des deux premières lignes)
+      if (p >= 4 && L.rang <= 1 && hachage(t * 7.3 + 1, (et.graine | 0) % 997) < 0.25) toit(tr, L);
+      // les sacs de sable : sur le parapet, du côté de l'ennemi ; à l'envers quand le tronçon est pris
       const cote = (pris ? -1 : 1) * f * (L.amp + 2.1);
-      for (let x = tr.x0; x < tr.x1; x += 2.5) { const xx = x + 1.2, z = ligneY(L, xx) + cote, h = surface(xx, z); boite(x, x + 2.3, h, h + 0.35, z - 0.25, z + 0.25, cSacH, cSacB); }
+      if (p >= 4) sacs(tr, L, cote);
+      else for (let x = tr.x0; x < tr.x1; x += 2.5) { const xx = x + 1.2, z = ligneY(L, xx) + cote, h = surface(xx, z); boite(x, x + 2.3, h, h + 0.35, z - 0.25, z + 0.25, cSacH, cSacB); }
       // le fil de fer : devant les premières lignes ; coupé, il ne reste que des bouts, à terre
       if (L.rang === 0) {
-        const coupe = pris || B.disputes[t], dz = f * (L.amp + 7);
-        for (let x = tr.x0, n = 0; x < tr.x1; x += 1.5, n++) {
-          if (coupe && n % 5 > 1) continue;
-          const xa = x, xb = Math.min(tr.x1, x + 1.5), za = ligneY(L, xa) + dz, zb = ligneY(L, xb) + dz, ha = surface(xa, za), hb = surface(xb, zb), k = coupe ? 0.3 : 1;
-          trait(xa, ha + 0.45 * k, za, xb, hb + 0.45 * k, zb); trait(xa, ha + 0.9 * k, za, xb, hb + 0.9 * k, zb);
-          if (n % 3 === 0 && !coupe) trait(xa, ha, za, xa, ha + 1, za);          // un piquet
+        const coupe = pris || B.disputes[t];
+        if (p >= 4) barbeles(tr, L, coupe);
+        else {
+          const dz = f * (L.amp + 7);
+          for (let x = tr.x0, n = 0; x < tr.x1; x += 1.5, n++) {
+            if (coupe && n % 5 > 1) continue;
+            const xa = x, xb = Math.min(tr.x1, x + 1.5), za = ligneY(L, xa) + dz, zb = ligneY(L, xb) + dz, ha = surface(xa, za), hb = surface(xb, zb), k = coupe ? 0.3 : 1;
+            trait(xa, ha + 0.45 * k, za, xb, hb + 0.45 * k, zb); trait(xa, ha + 0.9 * k, za, xb, hb + 0.9 * k, zb);
+            if (n % 3 === 0 && !coupe) trait(xa, ha, za, xa, ha + 1, za);          // un piquet
+          }
         }
       }
     });

@@ -620,3 +620,4 @@ h2 { font-weight: normal; letter-spacing: var(--titre-lettres); }
 .char-boutons { display: grid; grid-template-columns: 1fr 1fr; gap: var(--e0); }
 .char-boutons .bouton { min-height: 0; padding: var(--e0) var(--e1); font-size: var(--texte-petit); }
 .char-boutons .bouton.vise { background: var(--jeu-encre); color: var(--jeu-fond); }
+.char-fiche[hidden] { display: none; }
