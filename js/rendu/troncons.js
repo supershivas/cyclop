@@ -1,8 +1,8 @@
 // Ce que l'état des tronçons montre sur le terrain : les fanions (à la couleur de celui qui tient le tronçon, déchirés quand l'autre
 // camp y est entré), le clignotement d'un ordre et la surbrillance de la visée, les ouvrages des tranchées (traverses, sacs de terre,
-// fil de fer, portes d'abri). Le dessin seulement : tout se lit de l'état, rien n'en est sauvegardé.
-import { PALETTE } from '../palette.js?v=0.79.0';
-import { ligneY } from '../tranchees.js?v=0.79.0';
+// fil de fer, bois). Le dessin seulement : tout se lit de l'état, rien n'en est sauvegardé.
+import { PALETTE } from '../palette.js?v=0.80.0';
+import { ligneY, demiLargeur } from '../tranchees.js?v=0.80.0';
 
 // `THREE`, `scene`, `col` (une couleur de la palette), `surface(x, z)` (la hauteur du sol), `projeter()` (le centre de la vue et les pixels par mètre),
 // `vue`, `zooms` viennent de creerRendu ; `bataille()`, `tAnim()` (le temps du dessin), `vide()` (rien n'est dessiné) et `survolTroncons()`
@@ -71,7 +71,7 @@ export function creerTroncons({ THREE, scene, col, surface, projeter, vue, zooms
   // quand le tronçon est pris : le parapet devient le parados), du fil de fer devant les premières lignes (coupé là où l'autre camp
   // est entré ou a pris), Le dessin seulement : rien n'en est sauvegardé,
   // tout se lit de l'état ; refait deux fois par seconde, et seulement ce qu'on voit, à partir de 3 pixels par mètre. ───
-  const OUV_BOITES = 2400, ouvPos = new Float32Array(OUV_BOITES * 30 * 3), ouvCol = new Float32Array(OUV_BOITES * 30 * 3);
+  const OUV_BOITES = 8000, ouvPos = new Float32Array(OUV_BOITES * 30 * 3), ouvCol = new Float32Array(OUV_BOITES * 30 * 3);
   const ouvGeo = new THREE.BufferGeometry();
   ouvGeo.setAttribute('position', new THREE.BufferAttribute(ouvPos, 3).setUsage(THREE.DynamicDrawUsage));
   ouvGeo.setAttribute('color', new THREE.BufferAttribute(ouvCol, 3).setUsage(THREE.DynamicDrawUsage));
@@ -82,6 +82,8 @@ export function creerTroncons({ THREE, scene, col, surface, projeter, vue, zooms
   filGeo.setDrawRange(0, 0);
   const filLignes = new THREE.LineSegments(filGeo, new THREE.LineBasicMaterial({ color: col('r') })); filLignes.frustumCulled = false; filLignes.renderOrder = 1; scene.add(filLignes);
   const cSacH = col('g'), cSacB = col('b'), cTravH = col('g'), cTravB = col('s'), cPorteH = col('g'), cPorteB = col('t');
+  // le bois des tranchées (v0.80.0) : les planches (claires, `h` sur `g`) et les madriers (sombres, `g` sur `s`)
+  const cPlancheH = col('h'), cPlancheB = col('g'), cMadrierH = col('g'), cMadrierB = col('s');
   let ouvT = 0;
   function majOuvrages(dt) {
     const B = bataille();
@@ -104,12 +106,44 @@ export function creerTroncons({ THREE, scene, col, surface, projeter, vue, zooms
       quad([x1, y0, z0], [x0, y0, z0], [x0, y1, z0], [x1, y1, z0], flanc);
     };
     const trait = (x0, y0, z0, x1, y1, z1) => { if (nf + 2 > FIL_MAX) return; filPos.set([x0, y0, z0, x1, y1, z1], nf * 3); nf += 2; };
+    // Le bois d'un tronçon (Jérôme, v0.80.0 : « des madriers et des planches dans les tranchées, détruits au fur et à mesure afin de voir l'état des tranchées »).
+    // L'état d'un bout de tranchée est sa profondeur (`T.diff`, rejouée par la sauvegarde : rien à garder) : creusée, tout est en place ; à moitié comblée, le bois est
+    // brisé (planches courtes et de travers, madrier rompu) ; comblée, il ne reste que des éclats par terre, çà et là.
+    const T = B.terrain, prof = B.profondeur;
+    const hachage = (a, b) => { const q = Math.sin(a * 127.1 + b * 311.7) * 43758.5453; return q - Math.floor(q); };
+    const bois = (tr, L) => {
+      for (let x = Math.floor(tr.x0) + 1; x < tr.x1 - 1; x += 2) {
+        const xs = x + 1, zc = ligneY(L, xs), demi = demiLargeur(L, xs), ci = (Math.max(0, Math.min(T.H - 1, zc | 0))) * T.W + Math.max(0, Math.min(T.W - 1, xs | 0));
+        const creux = -T.diff[ci], etat = creux >= prof - 1 ? 2 : creux >= prof * 0.4 ? 1 : 0, h0 = surface(xs, zc), haut = Math.min(1.3, prof * 0.25 * (etat === 2 ? 1 : 0.6));
+        const j = hachage(xs, zc);
+        if (etat === 0) {                        // comblée : un éclat par-ci par-là, une planche de travers sur la terre
+          if (j < 0.3) { const z = zc + (j - 0.15) * 4; boite(xs - 0.8, xs + 0.7, h0 + 0.05, h0 + 0.1, z - 0.1, z + 0.12, cPlancheH, cPlancheB); }
+          continue;
+        }
+        // le caillebotis : une planche en travers, tous les 2 m (brisée : une sur deux, plus courte)
+        if (etat === 2 || j < 0.5) boite(xs - 0.4, xs + 0.4, h0 + 0.02, h0 + 0.09, zc - demi * (etat === 2 ? 0.95 : 0.5), zc + demi * (etat === 2 ? 0.95 : 0.3), cPlancheH, cPlancheB);
+        // les planches contre les deux parois (brisées : d'un côté seulement, plus basses)
+        for (const cote of [-1, 1]) {
+          if (etat === 1 && (j < 0.5) === (cote > 0)) continue;
+          const z = zc + cote * (demi + 0.05);
+          boite(xs - 0.9, xs + 0.9, h0, h0 + haut * (etat === 2 ? 0.8 : 0.5 + 0.3 * j), z - 0.05, z + 0.05, cPlancheH, cPlancheB);
+        }
+        // les madriers : un montant de chaque côté tous les 4 m, et la lisse qui les relie en haut de la paroi
+        if ((Math.floor(xs) % 4) < 2) for (const cote of [-1, 1]) {
+          const z = zc + cote * (demi + 0.12);
+          if (etat === 2) { boite(xs - 0.1, xs + 0.1, h0, h0 + prof * 0.25 + 0.15, z - 0.1, z + 0.1, cMadrierH, cMadrierB); boite(xs - 1.9, xs + 0.1, h0 + prof * 0.25 + 0.05, h0 + prof * 0.25 + 0.2, z - 0.1, z + 0.1, cMadrierH, cMadrierB); }
+          else if (cote * (j - 0.5) > 0) boite(xs - 0.1, xs + 0.1, h0, h0 + prof * 0.25 * 0.5, z - 0.1, z + 0.1, cMadrierH, cMadrierB);       // un montant rompu
+        }
+      }
+    };
     B.troncons.forEach((tr, t) => {
       const L = B.lignes[tr.ligne], xm = (tr.x0 + tr.x1) / 2, zc = ligneY(L, xm);
       if (Math.abs(xm - cx) > e || Math.abs(zc - cz) > e) return;
       const pris = et.troncons[t] !== L.camp, f = L.face;
       // les traverses : deux par tronçon, en travers de la tranchée
       for (const x of [tr.x0 + 6, tr.x0 + 18]) { const z = ligneY(L, x), h = surface(x, z); boite(x - 0.25, x + 0.25, h, h + 1.2, z - 1.5, z + 1.5, cTravH, cTravB); }
+      // le bois : un caillebotis au fond, des planches contre les parois, des madriers (montants et lisse) tous les 4 m ; il disparaît où les obus ont comblé la tranchée
+      if (p >= 4) bois(tr, L);
       // les sacs de terre : sur le parapet, du côté de l'ennemi ; à l'envers quand le tronçon est pris
       const cote = (pris ? -1 : 1) * f * (L.amp + 2.1);
       for (let x = tr.x0; x < tr.x1; x += 2.5) { const xx = x + 1.2, z = ligneY(L, xx) + cote, h = surface(xx, z); boite(x, x + 2.3, h, h + 0.35, z - 0.25, z + 0.25, cSacH, cSacB); }

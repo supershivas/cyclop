@@ -1,5 +1,8 @@
 # Journal des versions
 
+## 0.80.0 — 2026-10-26
+- Des planches et des madriers dans les tranchées : un caillebotis au fond, des planches contre les parois, des montants et une lisse ; les obus les brisent puis les arrachent, on lit l'état de la tranchée
+
 ## 0.79.0 — 2026-10-26
 - Les soldats isolés ne sont plus inattaquables : nos hommes chargent à la baïonnette un ennemi vraiment seul à moins de 20 m, et un homme seul visé de près (12 m) n'est plus presque invulnérable
 

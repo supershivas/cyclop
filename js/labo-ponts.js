@@ -5,11 +5,11 @@
 // le régiment au bord de l'eau donne l'échelle (un homme : 1,7 m).
 // Chaque ouvrage est construit autour de son tablier : l'origine est le milieu du pont, au niveau du dessus du tablier (y = 0), x le long de la portée, z en travers. `d` donne la portée entre les rives
 // (`L`, 16 m + les appuis), la largeur utile (`W`) et la hauteur de la rive sur l'eau (`H`). Les nombres sont des proportions plausibles de l'époque, pas des plans.
-import { PALETTE as P } from './palette.js?v=0.79.0';
-import { loadThree } from './three-lib.js?v=0.79.0';
-import { SECTEURS } from './data/secteur.js?v=0.79.0';
-import { el, scene, maquette, bouton } from './labo-arcade.js?v=0.79.0';
-import { outils, OUVRAGES } from './rendu/ponts-modeles.js?v=0.79.0';
+import { PALETTE as P } from './palette.js?v=0.80.0';
+import { loadThree } from './three-lib.js?v=0.80.0';
+import { SECTEURS } from './data/secteur.js?v=0.80.0';
+import { el, scene, maquette, bouton } from './labo-arcade.js?v=0.80.0';
+import { outils, OUVRAGES } from './rendu/ponts-modeles.js?v=0.80.0';
 
 const RIVIERE = { o: 'fleuve', x: -100, y: 150, x2: 500, y2: 150, r: 8 };
 const PONT_JEU = { o: 'pont', x: 150, y: 162, x2: 150, y2: 138, r: 3 };
