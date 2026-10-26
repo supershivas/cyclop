@@ -44,7 +44,7 @@ la danse macabre, la catastrophe peinte avec calme. L'intention est dans `DESIGN
   (Mémorial, état-major, trophées) : pas encore construite.
 - **Steam** : porte ouverte (section 22). Manette : seulement le menu pour
   l'instant (`gamepad.js`).
-- **Langue** : français seulement. **Son** : aucun en v0 (Jérôme, v0.1.0).
+- **Langue** : français seulement. **Son** (Jérôme, v0.75.0 ; aucun avant) : synthétisé en Web Audio, `js/audio.js`, détail dans `docs/domaines/interface.md`.
 - Jeu : pas de sous-titre (section 3 des conventions).
 
 ### Palette « Boue et ciel bas » (js/palette.js, variables --jeu-*)

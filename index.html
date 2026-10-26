@@ -9,8 +9,8 @@
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta property="og:image" content="og.png">
-<link rel="stylesheet" href="js/lib/game.css?v=0.74.0">
-<link rel="stylesheet" href="css/style.css?v=0.74.0">
+<link rel="stylesheet" href="js/lib/game.css?v=0.75.0">
+<link rel="stylesheet" href="css/style.css?v=0.75.0">
 </head>
 <body>
 <!-- La barre de chargement (v0.28.0) : là avant tout script ; main.js la remplit, puis la retire -->
@@ -197,6 +197,10 @@
     </dl>
   </details>
   <hr>
+  <div class="son-reglages">
+    <label>Effets <input type="range" id="son-effets" min="0" max="100" step="5" aria-label="Volume des effets"></label>
+    <label>Musique <input type="range" id="son-musique" min="0" max="100" step="5" aria-label="Volume de la musique"></label>
+  </div>
   <p class="version" id="version">v…</p>
   <details>
     <summary>Dernières versions</summary>
@@ -282,6 +286,6 @@
 </dialog>
 
 <div class="jeu-toast" id="toast" role="status" hidden></div>
-<script type="module" src="js/main.js?v=0.74.0"></script>
+<script type="module" src="js/main.js?v=0.75.0"></script>
 </body>
 </html>

@@ -2,9 +2,9 @@
 // (`nouvelleBataille`) : ce qu'on y voit est ce que le joueur verra (sol en cubes, tranchées, arbres, soldats, lumière du jour). En lecture seule : on la regarde
 // (tourner, déplacer, zoomer) et l'on y construit : un clic sur le sol est rendu à l'éditeur (`surClic`, `surSurvol`, en mètres du terrain), qui dessine ses formes par-dessus
 // (`surcouche`, projetées par `versEcran` : elles suivent le relief et la perspective). Chargée à la demande (three.js ne se charge qu'au premier passage en 3D).
-import { creerRendu, CAMERA } from './rendu3d.js?v=0.74.0';
-import { nouvelleBataille, regarderAu } from './bataille.js?v=0.74.0';
-import { SECTEURS } from './data/secteur.js?v=0.74.0';
+import { creerRendu, CAMERA } from './rendu3d.js?v=0.75.0';
+import { nouvelleBataille, regarderAu } from './bataille.js?v=0.75.0';
+import { SECTEURS } from './data/secteur.js?v=0.75.0';
 
 export async function creerVue3D({ R, hote, rotation = 0 }) {       // rotation : rad/s, la caméra tourne seule (le choix d'un secteur) ; l'atelier la laisse immobile
   const canvas = document.createElement('canvas');

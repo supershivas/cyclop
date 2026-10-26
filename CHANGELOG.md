@@ -1,5 +1,8 @@
 # Journal des versions
 
+## 0.75.0 — 2026-10-26
+- Le son : obus, fusillade, avions, chars, vent et pluie, une musique sombre et lente ; deux curseurs dans les réglages (effets, musique)
+
 ## 0.74.0 — 2026-10-26
 - Un tableau des médailles chaque soir et à la fin de la bataille : régiment le plus meurtrier, qui a pris le plus de tronçons, le plus inutile… et les mêmes pour les hommes
 - L'avion tue deux fois plus et laboure la bande de creux ; les ordres sur collines et montagnes tombent où l'on clique

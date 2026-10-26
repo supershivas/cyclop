@@ -10,13 +10,13 @@
 //
 // « Visée d'un obus » : le cercle qui dit où l'obus tombera, sur le champ de bataille, pour chaque calibre. Un SVG posé sur la vue,
 // dont chaque point du cercle est projeté sur le sol (`versEcran`) : le cercle suit le relief et la perspective.
-import { PALETTE } from './palette.js?v=0.74.0';
-import { nouvelleBataille, avancer, ordonnerMarche, mourir, PAS } from './bataille.js?v=0.74.0';
-import { compacter } from './army.js?v=0.74.0';
-import { impact } from './terrain.js?v=0.74.0';
-import { creerRendu } from './rendu3d.js?v=0.74.0';
-import { CALIBRES } from './data/calibres.js?v=0.74.0';
-import { hash2 } from './lib/rng.js?v=0.74.0';
+import { PALETTE } from './palette.js?v=0.75.0';
+import { nouvelleBataille, avancer, ordonnerMarche, mourir, PAS } from './bataille.js?v=0.75.0';
+import { compacter } from './army.js?v=0.75.0';
+import { impact } from './terrain.js?v=0.75.0';
+import { creerRendu } from './rendu3d.js?v=0.75.0';
+import { CALIBRES } from './data/calibres.js?v=0.75.0';
+import { hash2 } from './lib/rng.js?v=0.75.0';
 
 const el = (tag, props = {}, ...kids) => { const e = Object.assign(document.createElement(tag), props); e.append(...kids); return e; };
 const svgEl = (tag, attrs = {}) => { const e = document.createElementNS('http://www.w3.org/2000/svg', tag); for (const [k, v] of Object.entries(attrs)) e.setAttribute(k, v); return e; };

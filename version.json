@@ -1,9 +1,7 @@
 {
-  "version": "0.74.0",
+  "version": "0.75.0",
   "date": "2026-10-26",
   "changes": [
-    "Un tableau des médailles chaque soir et à la fin de la bataille : régiment le plus meurtrier, qui a pris le plus de tronçons, le plus inutile… et les mêmes pour les hommes",
-    "L'avion tue deux fois plus et laboure la bande de creux ; les ordres sur collines et montagnes tombent où l'on clique",
-    "Au premier plan, soldats, arbres et herbe ne disparaissent plus sur les hauteurs"
+    "Le son : obus, fusillade, avions, chars, vent et pluie, une musique sombre et lente ; deux curseurs dans les réglages (effets, musique)"
   ]
 }
