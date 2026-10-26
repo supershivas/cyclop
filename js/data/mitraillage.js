@@ -14,8 +14,9 @@ export const MITRAILLAGE = {
   recharge: 90,                        // s : plus long que les obus (40, 70, 110 pour un barrage de 6 à 24 coups)
   vitesse: 40,                         // m/s : il entre par le bord du terrain (à `sortie` m au-delà) sur le prolongement de la passe, et sort de même
   sortie: 60,                          // m au-delà du bord où il naît et où il disparaît
-  letal: 0.35,                         // chance de toucher un homme debout dans la bande
-  gravite: 0.5,                        // chance qu'un touché meure (sinon blessé), comme un obus au bord de son rayon
+  letal: 0.7,                          // chance de toucher un homme debout dans la bande (0,35 avant la v0.73.1 : Jérôme, « plus meurtrier »)
+  gravite: 0.75,                       // chance qu'un touché meure (sinon blessé) (0,5 avant la v0.73.1)
+  labour: { calibre: '75', parCreux: 12 },   // m² de bande par creux de 75 que ses balles laissent (v0.73.1)
   peur: 0.6,                           // la peur des hommes de la bande qui ne sont pas touchés
   rayonPeur: 16,                       // les voisins de la bande sont effrayés aussi, moins
   peurVoisins: 0.05,                   // par pas, au point où tombent ses balles

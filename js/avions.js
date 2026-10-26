@@ -4,9 +4,12 @@
    L'avion entre par le prolongement de la passe, vole à `croisiere` m, descend à `passe` m sur les `descente` m qui précèdent la bande, la balaie (ses balles tombent
    `avance` m devant lui, chaque homme de la bande n'est tiré qu'une fois), remonte, et sort. Au-dessus d'hommes qui tirent, il perd des points de vie (`exposition`) ;
    à zéro, il tombe, écrase ce qui est sous lui et laisse une épave jusqu'à l'aube. Les avions de chaque camp : `etat.avions[camp]`, les points de vie de chacun (0 : perdu). */
-import { MITRAILLAGE as M } from './data/mitraillage.js?v=0.73.0';
-import { METEO } from './data/meteo.js?v=0.73.0';
-import { GRILLE, effrayer } from './army.js?v=0.73.0';
+import { MITRAILLAGE as M } from './data/mitraillage.js?v=0.74.0';
+import { METEO } from './data/meteo.js?v=0.74.0';
+import { GRILLE, effrayer } from './army.js?v=0.74.0';
+import { hash2 } from './lib/rng.js?v=0.74.0';
+import { impact } from './terrain.js?v=0.74.0';
+import { NOMS_CALIBRES } from './data/calibres.js?v=0.74.0';
 
 const borne = (v, a, b) => v < a ? a : v > b ? b : v;
 const lisse = f => { f = borne(f, 0, 1); return f * f * (3 - 2 * f); };
@@ -159,6 +162,21 @@ function balayer(B, v, lo, hi, ctx, rng) {
     else A.peur[i] = Math.max(A.peur[i], M.peur);
   });
   effrayer(A, (ax + bx) / 2, (ay + by) / 2, M.rayonPeur + hw, M.peurVoisins, R.experience, R.caracteristiques.calme);
+  labourer(B, v, lo, hi, ctx);
+}
+
+/* Les balles labourent la bande (v0.73.1, Jérôme : « l'avion doit plus labourer le sol ») : de petits creux au hasard sur la fenêtre qui vient de tomber, du relief seulement
+   (un 75 sans souffle : ni mort, ni peur ; l'impact est écrit comme ceux des obus, donc la sauvegarde le rejoue) */
+function labourer(B, v, lo, hi, ctx) {
+  const { etat, terrain: T, R } = B, hw = M.largeur / 2;
+  const n = Math.round((hi - lo) * M.largeur / M.labour.parCreux);
+  for (let q = 0; q < n; q++) {
+    const k = etat.impacts.length, l = lo + hash2(k, q, B.etat.graine) * (hi - lo), w = (hash2(k, q, B.etat.graine + 1) * 2 - 1) * hw;      // (un hachage, pas le générateur : le fil des tirages de la bataille ne bouge pas)
+    const x = arrondi(v.x1 + v.ux * l - v.uy * w), y = arrondi(v.y1 + v.uy * l + v.ux * w);
+    if (x < 0 || y < 0 || x >= T.W || y >= T.H) continue;
+    etat.impacts.push([etat.jour, etat.tickJour, Math.round(x * 10), Math.round(y * 10), NOMS_CALIBRES.indexOf(M.labour.calibre)]);
+    impact(T, x, y, M.labour.calibre, R, etat.impacts.length - 1, ctx.gel);
+  }
 }
 
 function abattre(B, v, p) {

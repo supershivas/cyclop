@@ -22,29 +22,29 @@
    - Les soldats : instanciés (une boîte et son ombre) ; au zoom 1 et 2, un
      point de 2 × 2 pixels (la couleur du camp sur son ombre).
    - Les corps : un homme couché (instancié) ; au zoom 1 et 2, un pixel. */
-import { loadThree } from './three-lib.js?v=0.73.0';
-import * as SH from './rendu/shaders.js?v=0.73.0';
-import { creerSoldats } from './rendu/soldats.js?v=0.73.0';
-import { creerChars } from './rendu/chars.js?v=0.73.0';
-import { creerGenies } from './rendu/genies.js?v=0.73.0';
-import { creerAvions } from './rendu/avions.js?v=0.73.0';
-import { creerPonts } from './rendu/ponts.js?v=0.73.0';
-import { creerCiel } from './rendu/ciel.js?v=0.73.0';
-import { creerMeteo } from './rendu/meteo.js?v=0.73.0';
-import { creerTroncons } from './rendu/troncons.js?v=0.73.0';
-import { ARBRES_JEU } from './data/arbres.js?v=0.73.0';
-import { creerVegetation } from './rendu/vegetation.js?v=0.73.0';
-import { creerTemps } from './rendu/temps.js?v=0.73.0';
-import { creerEclats } from './rendu/eclats.js?v=0.73.0';
-import { creerOmbresRelief } from './rendu/ombres-relief.js?v=0.73.0';
-import { OMBRES_RELIEF as OMB, NUAGES, NUAGES_VENT } from './data/soleil.js?v=0.73.0';
-import { PALETTE, ORDRE, INDICE } from './palette.js?v=0.73.0';
-import { OMBRE, couleursLigne } from './apparence.js?v=0.73.0';
-import { MORCEAU, hauteurVueQ as hauteurQ, hauteurVueM as hauteurM } from './terrain.js?v=0.73.0';
-import { horloge, secteurDuJeu, rangDe } from './bataille.js?v=0.73.0';
-import { GRADES } from './data/grades.js?v=0.73.0';
-import { profilFleuve } from './eaux.js?v=0.73.0';
-import { ligneY } from './tranchees.js?v=0.73.0';
+import { loadThree } from './three-lib.js?v=0.74.0';
+import * as SH from './rendu/shaders.js?v=0.74.0';
+import { creerSoldats } from './rendu/soldats.js?v=0.74.0';
+import { creerChars } from './rendu/chars.js?v=0.74.0';
+import { creerGenies } from './rendu/genies.js?v=0.74.0';
+import { creerAvions } from './rendu/avions.js?v=0.74.0';
+import { creerPonts } from './rendu/ponts.js?v=0.74.0';
+import { creerCiel } from './rendu/ciel.js?v=0.74.0';
+import { creerMeteo } from './rendu/meteo.js?v=0.74.0';
+import { creerTroncons } from './rendu/troncons.js?v=0.74.0';
+import { ARBRES_JEU } from './data/arbres.js?v=0.74.0';
+import { creerVegetation } from './rendu/vegetation.js?v=0.74.0';
+import { creerTemps } from './rendu/temps.js?v=0.74.0';
+import { creerEclats } from './rendu/eclats.js?v=0.74.0';
+import { creerOmbresRelief } from './rendu/ombres-relief.js?v=0.74.0';
+import { OMBRES_RELIEF as OMB, NUAGES, NUAGES_VENT } from './data/soleil.js?v=0.74.0';
+import { PALETTE, ORDRE, INDICE } from './palette.js?v=0.74.0';
+import { OMBRE, couleursLigne } from './apparence.js?v=0.74.0';
+import { MORCEAU, hauteurVueQ as hauteurQ, hauteurVueM as hauteurM } from './terrain.js?v=0.74.0';
+import { horloge, secteurDuJeu, rangDe } from './bataille.js?v=0.74.0';
+import { GRADES } from './data/grades.js?v=0.74.0';
+import { profilFleuve } from './eaux.js?v=0.74.0';
+import { ligneY } from './tranchees.js?v=0.74.0';
 
 export const CAMERA = { yaw: 0.15, tangage: 0.95, fov: 30 };   // au départ : tournée de 9°, plongée de 54°, angle de 30°
 // la caméra respire : un balancement très lent, 2° en 23 s (Jérôme, v0.3.1 : variante D du labo retenue)
@@ -60,6 +60,8 @@ const SOL_Y = 3;                              // m : la hauteur moyenne du sol (
 export const ZOOMS = [1, 2, 3, 4, 6, 8, 12, 16];   // pixels (logiques) par mètre (12 et 16 : tout près des hommes, Jérôme v0.9.3)
 const POINTS_JUSQUA = 2;                      // zoom où un soldat n'est plus qu'un point
  const E = 0.03;                               // m : le débord des faces (pas de fente vue de biais)
+const MARGE_RELIEF = 30;                     // m : un sol en hauteur, au premier plan, touche le rayon plus près de la caméra que le niveau de la mer (soldats retirés à tort, v0.73.1)
+const HAUT_MAX = 40;                         // m : la plus haute surface que le rayon du pointeur cherche (au-dessus, il passe)
 const HAUT = 8;                               // m : marge du bas de l'écran, où un sol en hauteur remonte (borner)
 const SOCLE = -8;                             // m : le bas de la coupe du terrain (bord sud)
 
@@ -568,7 +570,7 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
     // seulement ceux qu'on voit : le sol vu est un trapèze ; on garde ceux de son rectangle englobant
     const cs = coinsSol(vue.zoom, yawVu(), tangageVu());
     // (un coin de l'écran regarde le ciel : tout le terrain peut être vu, le vrai tri se fait à l'écran)
-    const x0 = cs.ok ? vue.cx + cs.x0 - 6 : 0, x1 = cs.ok ? vue.cx + cs.x1 + 6 : T.W, z0 = cs.ok ? vue.cz + cs.z0 - 6 : 0, z1 = cs.ok ? vue.cz + cs.z1 + 12 : T.H;
+    const x0 = cs.ok ? vue.cx + cs.x0 - 6 : 0, x1 = cs.ok ? vue.cx + cs.x1 + 6 : T.W, z0 = cs.ok ? vue.cz + cs.z0 - 6 : 0, z1 = cs.ok ? vue.cz + cs.z1 + 12 + MARGE_RELIEF : T.H;
     // puis le vrai test : projeté, il tombe dans l'écran (le trapèze n'est pas son rectangle)
     projeter();
     mVP.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse);
@@ -602,16 +604,19 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
     ndc.set(px / w * 2 - 1, -(py / h) * 2 + 1);
     rayon.setFromCamera(ndc, camera);
     const o = rayon.ray.origin, d = rayon.ray.direction;
-    // le sol à la hauteur où le rayon le touche (quelques allers-retours sur le relief)
-    let hy = SOL_Y, x = vue.cx, z = vue.cz;
     if (d.y > -1e-4) return [-1e5, -1e5];                 // le rayon regarde le ciel : hors de tout secteur (les ordres le refusent)
-    for (let k = 0; k < 6; k++) {
-      if (d.y > -1e-4) break;
-      const t = (hy - o.y) / d.y;
-      x = o.x + d.x * t; z = o.z + d.z * t;
-      if (!T) break;
-      hy = surface(x, z);
-    }
+    if (!T) { const t = (SOL_Y - o.y) / d.y; return [o.x + d.x * t, o.z + d.z * t]; }
+    // le rayon descend jusqu'à la première surface qu'il croise : on marche le long du rayon puis on affine
+    // (v0.73.1, Jérôme : « sur les collines et les montagnes on ne peut pas placer les cibles » : l'ancien point fixe, six lectures de la hauteur,
+    // oscillait d'un versant à l'autre sur une pente raide et posait l'ordre loin du pointeur)
+    const tHaut = (SOL_Y + HAUT_MAX - o.y) / d.y, tBas = (SOL_Y - 8 - o.y) / d.y;
+    const sous = t => o.y + d.y * t <= surface(o.x + d.x * t, o.z + d.z * t);
+    const pas = 0.5;                                      // (le rayon est unitaire : un demi-mètre le long de lui)
+    let t = Math.max(0, tHaut), tPrec = t;
+    while (t < tBas && !sous(t)) { tPrec = t; t += pas; }
+    if (t >= tBas) t = tBas;
+    for (let k = 0; k < 10; k++) { const m = (t + tPrec) / 2; if (sous(m)) t = m; else tPrec = m; }
+    const x = o.x + d.x * t, z = o.z + d.z * t;
     return [x, z];
   }
   // [x, y] du terrain (et une hauteur) → pixels CSS

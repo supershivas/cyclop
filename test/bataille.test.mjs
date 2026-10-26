@@ -1012,3 +1012,27 @@ test('les hommes sur le tablier tombent à l\'eau : une part se noie, les autres
     assert.equal(B2.terrain.coupes.length, 0, 'rien à refaire au rejeu');
   } finally { dedans.essai = S; }
 });
+
+import { palmares } from '../js/hud/medailles.js';
+test('le mitraillage laboure la bande (des creux) et la partie relue au milieu a le même relief', () => {
+  const B = petite(), [cx, cy] = centreRegiment(B, 8);
+  const T = B.terrain, avant = Int8Array.from(T.diff);
+  assert.ok(ordonnerBarrage(B, 'avion', cx, cy).ok);
+  for (let k = 0; k < 900; k++) avancer(B);
+  let creux = 0; for (let c = 0; c < T.diff.length; c++) if (T.diff[c] < avant[c]) creux++;
+  assert.ok(creux > 40, `des creux dans la bande (${creux})`);
+  assert.ok(B.etat.impacts.length > 10, 'ses creux sont écrits comme des impacts (rejoués)');
+  const b = restaurer(photo(B), R);
+  assert.deepEqual(Array.from(b.terrain.diff), Array.from(B.terrain.diff));
+});
+test('les médailles : un régiment qui tue et un tronçon pris se lisent, la journée seule se compte depuis le matin', () => {
+  const B = petite(), r = B.etat.regiments.find(x => x.camp === 0);
+  r.tues = 7; r.pris = 2;
+  let p = palmares(B, 0, 'total');
+  assert.equal(p.regiments.find(m => m.titre === 'Le plus meurtrier').detail, '7 hommes abattus');
+  assert.match(p.regiments.find(m => m.titre === 'Le conquérant').detail, /2 tronçons/);
+  r.debut = { tues: 7, pris: 2, pertes: 0 };
+  p = palmares(B, 0, 'jour');
+  assert.ok(!p.regiments.some(m => m.titre === 'Le plus meurtrier'), 'rien depuis le matin');
+  assert.ok(Array.isArray(p.soldats));
+});

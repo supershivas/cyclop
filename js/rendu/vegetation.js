@@ -1,11 +1,11 @@
 // La végétation : les arbres (un tronc, quelques branches nues ; abattus, une souche), les buissons (deux ou trois boîtes basses ; arrachés, il
 // n'en reste rien) et l'herbe (des touffes de cinq brins, seulement de près, qui ondulent au vent). Seulement ce qu'on voit est dessiné : tous,
 // ils coûtaient des dizaines de milliers de triangles (docs/domaines/rendu.md, « Les arbres et les buissons dessinés partout »). Le dessin seulement.
-import * as SH from './shaders.js?v=0.73.0';
-import { creerGeometries } from './geometries.js?v=0.73.0';
-import { hash2 } from '../lib/rng.js?v=0.73.0';
-import { BUISSONS_FORMES, BUISSONS_SAISONS, BUISSONS_TIRAGES } from '../data/buissons.js?v=0.73.0';
-import { ARBRES_FAMILLES, ARBRES_TIRAGES, ARBRES_ECHELLE, ARBRES_AUTOMNE, ARBRES_PPM_FEUILLES, ARBRES_FEUILLES } from '../data/arbres.js?v=0.73.0';
+import * as SH from './shaders.js?v=0.74.0';
+import { creerGeometries } from './geometries.js?v=0.74.0';
+import { hash2 } from '../lib/rng.js?v=0.74.0';
+import { BUISSONS_FORMES, BUISSONS_SAISONS, BUISSONS_TIRAGES } from '../data/buissons.js?v=0.74.0';
+import { ARBRES_FAMILLES, ARBRES_TIRAGES, ARBRES_ECHELLE, ARBRES_AUTOMNE, ARBRES_PPM_FEUILLES, ARBRES_FEUILLES } from '../data/arbres.js?v=0.74.0';
 
 // `THREE`, `scene`, `col`, `camera`, `vue`, `solY` (la hauteur moyenne du sol), `distance(zoom)`, `surface(x, z)` et `petit()` (aux zooms où un soldat n'est qu'un point)
 // viennent de creerRendu ; `terrain()`, `vide()` et `ombres()` sont lus à chaque appel (le terrain change à chaque bataille). `ombres()` rend `{ ARBRES_OMBRES, aoPos, aoGeo, soleil }` :
@@ -32,7 +32,8 @@ export function creerVegetation({ THREE, scene, col, camera, vue, solY: SOL_Y, d
   // un objet posé en (x, z) tombe-t-il dans l'écran (avec une marge pour sa hauteur) ?
   const dansLaVue = (x, z, e, b) => {
     if (x < b[0] || x > b[1] || z < b[2] || z > b[3]) return false;
-    const cxp = e[0] * x + e[4] * SOL_Y + e[8] * z + e[12], cyp = e[1] * x + e[5] * SOL_Y + e[9] * z + e[13], cw = e[3] * x + e[7] * SOL_Y + e[11] * z + e[15];
+    const hs = surface(x, z);        // (à sa vraie hauteur : une colline du premier plan monte à l'écran, v0.73.1)
+    const cxp = e[0] * x + e[4] * hs + e[8] * z + e[12], cyp = e[1] * x + e[5] * hs + e[9] * z + e[13], cw = e[3] * x + e[7] * hs + e[11] * z + e[15];
     return cxp > -1.15 * cw && cxp < 1.15 * cw && cyp > -1.3 * cw && cyp < 1.3 * cw;
   };
   // les arbres et les buissons : seulement ceux qu'on voit (tous, ils coûtaient des dizaines de milliers de triangles)
@@ -281,9 +282,10 @@ export function creerVegetation({ THREE, scene, col, camera, vue, solY: SOL_Y, d
     for (let n = 0; n < X.length && k < TOUFFES_MAX; n++) {
       const x = X[n], y = Z[n];
       if (x < x0 || x > x1 || y < z0 || y > z1 || !T.herbe[Cc[n]] || (x - cp.x) ** 2 + (SOL_Y - cp.y) ** 2 + (y - cp.z) ** 2 > lim) continue;
-      const cxp = e[0] * x + e[4] * SOL_Y + e[8] * y + e[12], cyp = e[1] * x + e[5] * SOL_Y + e[9] * y + e[13], cw = e[3] * x + e[7] * SOL_Y + e[11] * y + e[15];
+      const hs = surface(x, y);
+      const cxp = e[0] * x + e[4] * hs + e[8] * y + e[12], cyp = e[1] * x + e[5] * hs + e[9] * y + e[13], cw = e[3] * x + e[7] * hs + e[11] * y + e[15];
       if (cxp < -1.05 * cw || cxp > 1.05 * cw || cyp < -1.1 * cw || cyp > 1.1 * cw) continue;
-      tPos[k * 3] = x; tPos[k * 3 + 1] = surface(x, y); tPos[k * 3 + 2] = y;
+      tPos[k * 3] = x; tPos[k * 3 + 1] = hs; tPos[k * 3 + 2] = y;
       k++;
     }
     const a = herbeGeo.attributes.aPos; a.clearUpdateRanges(); a.addUpdateRange(0, k * 3); a.needsUpdate = true;
@@ -333,9 +335,10 @@ export function creerVegetation({ THREE, scene, col, camera, vue, solY: SOL_Y, d
     for (let n = 0; n < X.length && k < ROSEAUX_MAX; n++) {
       const x = X[n], y = Z[n];
       if (x < x0 || x > x1 || y < z0 || y > z1 || T.diff[Cc[n]] < -1 || T.profond[Cc[n]] || (x - cp.x) ** 2 + (SOL_Y - cp.y) ** 2 + (y - cp.z) ** 2 > lim) continue;      // (un cratère profond les arrache)
-      const cxp = e[0] * x + e[4] * SOL_Y + e[8] * y + e[12], cyp = e[1] * x + e[5] * SOL_Y + e[9] * y + e[13], cw = e[3] * x + e[7] * SOL_Y + e[11] * y + e[15];
+      const hs = surface(x, y);
+      const cxp = e[0] * x + e[4] * hs + e[8] * y + e[12], cyp = e[1] * x + e[5] * hs + e[9] * y + e[13], cw = e[3] * x + e[7] * hs + e[11] * y + e[15];
       if (cxp < -1.05 * cw || cxp > 1.05 * cw || cyp < -1.2 * cw || cyp > 1.1 * cw) continue;
-      rPos[k * 3] = x; rPos[k * 3 + 1] = surface(x, y); rPos[k * 3 + 2] = y;
+      rPos[k * 3] = x; rPos[k * 3 + 1] = hs; rPos[k * 3 + 2] = y;
       k++;
     }
     const a = roseauGeo.attributes.aPos; a.clearUpdateRanges(); a.addUpdateRange(0, k * 3); a.needsUpdate = true;

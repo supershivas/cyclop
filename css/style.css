@@ -284,6 +284,13 @@ dialog .reglage input { width: 20px; height: 20px; margin: 0; flex: none; accent
 .nuit button:disabled { color: var(--jeu-accent); border-color: var(--jeu-accent); }
 .nuit button.actif { background: var(--jeu-fond); color: var(--jeu-encre); }
 #aube { flex: none; width: 100%; min-height: var(--jeu-cible); margin-top: var(--pas); text-align: center; background: var(--jeu-fond); color: var(--jeu-encre); }
+/* Les médailles (v0.73.1) : le palmarès du soir et de la fin */
+.medailles-bloc h3 { margin: var(--pas) 0 2px; font-size: var(--texte-petit); }
+.medailles-bloc summary { cursor: pointer; font-weight: bold; }
+.medailles-bloc ul.medailles { margin: 0; padding-left: 0; list-style: none; font-size: var(--texte-petit); }
+.medailles-bloc ul.medailles li { margin: 2px 0; }
+.medailles-bloc .discret { font-size: var(--texte-petit); }
+#fin-medailles { max-height: 40vh; overflow-y: auto; margin-bottom: var(--pas); }
 .fin-jours { margin: var(--pas) 0; padding-left: 0; list-style: none; columns: 2; font-size: var(--texte-petit); color: var(--jeu-accent); }
 dialog hr { border: 0; border-top: 1px solid var(--jeu-ombre); margin: calc(var(--pas) * 2) 0; }
 .version { margin: 0; color: var(--jeu-accent); }

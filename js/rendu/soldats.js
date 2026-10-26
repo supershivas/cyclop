@@ -1,9 +1,9 @@
 // Les hommes : les soldats (une boîte et son ombre ; de près la silhouette, plus loin une silhouette allégée ; aux zooms 1 et 2 un point), les anneaux des
 // régiments choisis ou survolés, les corps (un homme couché) et les tombes (un tertre et une croix). Tout est instancié et ne reçoit que ce qu'on voit.
 // Le dessin seulement. Les formes viennent de geometries.js, le GLSL de shaders.js.
-import * as SH from './shaders.js?v=0.73.0';
-import { creerGeometries } from './geometries.js?v=0.73.0';
-import { classeDuRang } from '../data/grades.js?v=0.73.0';
+import * as SH from './shaders.js?v=0.74.0';
+import { creerGeometries } from './geometries.js?v=0.74.0';
+import { classeDuRang } from '../data/grades.js?v=0.74.0';
 
 // `THREE`, `scene`, `col`, `solUniforms` (`uSol`, `uTaille` : la texture du sol, que l'ombre d'un soldat reprend), `styleSoldat` (le style de près, comparé au labo),
 // `grades` (v0.68.0 : une variante de `GRADES`, data/grades.js, ou null : tous pareils) et `rangDe(B, id, reg)` (le rang d'un homme, bataille.js) ; `surface(x, z)` et `surfaceLisse(x, z)` (la hauteur du sol, lissée pour qui marche), `solY` (la hauteur moyenne du sol) et `POINTS_JUSQUA` (le zoom où un soldat n'est
@@ -249,9 +249,10 @@ export function creerSoldats({ THREE, scene, col, solUniforms, styleSoldat, grad
         x = v[1] + (x - v[1]) * f; y = v[2] + (y - v[2]) * f; haut = 4 * f * (1 - f) * d * P.haut;
       }
       if (x < x0 || x > x1 || y < z0 || y > z1) continue;
-      const cxp = e[0] * x + e[4] * SOL_Y + e[8] * y + e[12], cyp = e[1] * x + e[5] * SOL_Y + e[9] * y + e[13], cw = e[3] * x + e[7] * SOL_Y + e[11] * y + e[15];
+      const hs = surface(x, y) + haut;
+      const cxp = e[0] * x + e[4] * hs + e[8] * y + e[12], cyp = e[1] * x + e[5] * hs + e[9] * y + e[13], cw = e[3] * x + e[7] * hs + e[11] * y + e[15];
       if (cxp < -1.08 * cw || cxp > 1.08 * cw || cyp < -1.15 * cw || cyp > 1.15 * cw) continue;
-      cPos[k * 3] = x; cPos[k * 3 + 1] = surface(x, y) + haut; cPos[k * 3 + 2] = y;
+      cPos[k * 3] = x; cPos[k * 3 + 1] = hs; cPos[k * 3 + 2] = y;
       cInfo[k * 2] = c[3] < jour ? 2 : c[2]; cCamp[k] = c[2];
       cInfo[k * 2 + 1] = ((c[4] * 2654435761) >>> 0) % 628 / 100;     // couché dans un sens qui ne change pas
       k++;
@@ -272,9 +273,10 @@ export function creerSoldats({ THREE, scene, col, solUniforms, styleSoldat, grad
     for (const c of C) {
       const x = c[0] / 10, y = c[1] / 10;
       if (x < x0 || x > x1 || y < z0 || y > z1) continue;
-      const cxp = e[0] * x + e[4] * SOL_Y + e[8] * y + e[12], cyp = e[1] * x + e[5] * SOL_Y + e[9] * y + e[13], cw = e[3] * x + e[7] * SOL_Y + e[11] * y + e[15];
+      const hs = surface(x, y);
+      const cxp = e[0] * x + e[4] * hs + e[8] * y + e[12], cyp = e[1] * x + e[5] * hs + e[9] * y + e[13], cw = e[3] * x + e[7] * hs + e[11] * y + e[15];
       if (cxp < -1.08 * cw || cxp > 1.08 * cw || cyp < -1.15 * cw || cyp > 1.15 * cw) continue;
-      tbPos[k * 3] = x; tbPos[k * 3 + 1] = surface(x, y); tbPos[k * 3 + 2] = y;
+      tbPos[k * 3] = x; tbPos[k * 3 + 1] = hs; tbPos[k * 3 + 2] = y;
       k++;
     }
     if (!vide()) { tombesPoints.visible = points; tombesInst.visible = !points; }
@@ -295,9 +297,11 @@ export function creerSoldats({ THREE, scene, col, solUniforms, styleSoldat, grad
     for (let i = 0; i < n; i++) {
       const x = A.x[i], y = A.y[i];
       if (x < x0 || x > x1 || y < z0 || y > z1) continue;
-      const cxp = e[0] * x + e[4] * SOL_Y + e[8] * y + e[12], cyp = e[1] * x + e[5] * SOL_Y + e[9] * y + e[13], cw = e[3] * x + e[7] * SOL_Y + e[11] * y + e[15];
+      // à sa vraie hauteur : sur une colline du premier plan, l'homme monte à l'écran, et le tester au niveau de la mer le retirait (v0.73.1)
+      const hs = surfaceLisse(x, y);
+      const cxp = e[0] * x + e[4] * hs + e[8] * y + e[12], cyp = e[1] * x + e[5] * hs + e[9] * y + e[13], cw = e[3] * x + e[7] * hs + e[11] * y + e[15];
       if (cxp < -1.08 * cw || cxp > 1.08 * cw || cyp < -1.15 * cw || cyp > 1.15 * cw) continue;
-      posArr[k * 3] = x; posArr[k * 3 + 1] = surfaceLisse(x, y) + (i < volT.length && volT[i] > 0 ? volH[i] * Math.sin(Math.PI * (1 - volT[i] / volD[i])) : 0); posArr[k * 3 + 2] = y;
+      posArr[k * 3] = x; posArr[k * 3 + 1] = hs + (i < volT.length && volT[i] > 0 ? volH[i] * Math.sin(Math.PI * (1 - volT[i] / volD[i])) : 0); posArr[k * 3 + 2] = y;
       const sel = choisis.has(A.reg[i]);
       campArr[k] = A.camp[i] + (sel ? 2 : 0);
       if (sel || A.reg[i] === survolReg) { an[ka * 3] = x; an[ka * 3 + 1] = posArr[k * 3 + 1]; an[ka * 3 + 2] = y; anTon[ka] = sel ? 0 : 1 + A.camp[i]; ka++; }
