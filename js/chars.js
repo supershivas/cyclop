@@ -3,12 +3,13 @@
    ligne vers (tx, ty) à la vitesse de son modèle, ralentie par un cratère (la moitié de ce qu'il franchit), arrêtée par un cratère plus profond ou par l'eau
    profonde (`enlise` : il reste là et tire) ; il tire sur l'autre camp à portée ; un obus tombé près de lui l'abîme (`degatsChars`), jusqu'à l'épave (`detruit`).
    Les tranchées se franchissent (elles font 1,5 m : son modèle les passe). Les ordres rendent { refus } comme les barrages. */
-import { CHARS, CHAR_PAR_DEFAUT, CHAR_RECHARGE, CHAR_DEPART, CHAR_OBUS, CHAR_ROUTE } from './data/chars.js?v=0.80.0';
-import { CALIBRES } from './data/calibres.js?v=0.80.0';
-import { effrayer } from './army.js?v=0.80.0';
-import { detruirePont } from './eaux.js?v=0.80.0';
-import { toucher } from './terrain.js?v=0.80.0';
-import { PONTS_JEU, typePont } from './data/ponts.js?v=0.80.0';
+import { CHARS, CHAR_PAR_DEFAUT, CHAR_RECHARGE, CHAR_DEPART, CHAR_OBUS, CHAR_ROUTE } from './data/chars.js?v=0.81.0';
+import { CALIBRES } from './data/calibres.js?v=0.81.0';
+import { effrayer, DENSITE } from './army.js?v=0.81.0';
+import { zone as zoneDe } from './bataille.js?v=0.81.0';
+import { detruirePont } from './eaux.js?v=0.81.0';
+import { toucher } from './terrain.js?v=0.81.0';
+import { PONTS_JEU, typePont } from './data/ponts.js?v=0.81.0';
 
 /* La route d'un char (Jérôme, v0.59.3 : « ils doivent contourner les fleuves, passer par les ponts ») : une recherche sur une grille de `CHAR_ROUTE.maille` mètres, de (x0, y0) à (tx, ty), qui évite
    l'eau profonde, les cratères qu'il ne franchit pas, les ponts qui ne le portent pas, et se détourne des cratères à demi profonds. Rend les points à suivre (le dernier est le but), ou null
@@ -74,9 +75,63 @@ export function lancerChar(B, camp, depart, x, y, modele = CHAR_PAR_DEFAUT) {
   // `ar` : la rangée de l'arrière de son camp, où la route finit ; `chemin` : les points qu'il suit ensuite (`routeChar`), `k` celui qu'il vise
   const chemin = depart.ar !== undefined ? routeChar(B, depart.x, depart.ar, x, y, modele) : null;
   const ex = chemin ? 0 : x - depart.x, ey = chemin ? depart.ar - depart.y : y - depart.y, en = Math.hypot(ex, ey) || 1, hx = ex / en, hy = ey / en;
-  etat.chars.push({ id: etat.chars.length ? etat.chars[etat.chars.length - 1].id + 1 : 0, camp, modele, x: depart.x, y: depart.y, ar: depart.ar, dx0: depart.x, tx: x, ty: y, chemin, k: 0, pv: CHARS[modele].pv, etat: 'avance', v: 0, hx, hy, cap: Math.atan2(hy, hx) });
+  etat.chars.push({ id: etat.chars.length ? etat.chars[etat.chars.length - 1].id + 1 : 0, camp, modele, x: depart.x, y: depart.y, ar: depart.ar, dx0: depart.x, tx: x, ty: y, chemin, k: 0, pv: CHARS[modele].pv, canonT: etat.temps, cible: null, vise: null, etat: 'avance', v: 0, hx, hy, cap: Math.atan2(hy, hx) });
 }
 export const RECHARGE_CHAR = CHAR_RECHARGE;
+
+
+/* Où tirerait ce char : la cible qu'on lui a donnée si elle est à portée, sinon le carré de 8 m le plus chargé d'ennemis (à portée, au-delà de `minimum` : pas sur soi). Rend [x, y] ou null. */
+function viser(B, c, G) {
+  const A = B.armee, p2 = G.portee * G.portee, m2 = G.minimum * G.minimum;
+  if (c.cible) { const d2 = (c.cible[0] - c.x) ** 2 + (c.cible[1] - c.y) ** 2; if (d2 <= p2 && d2 >= m2) return c.cible; }
+  const de = A.dens[1 - c.camp], r = Math.ceil(G.portee / DENSITE), bx = (c.x / DENSITE) | 0, by = (c.y / DENSITE) | 0;
+  let meilleur = null, ms = 0;
+  for (let oy = -r; oy <= r; oy++) {
+    const yy = by + oy; if (yy < 0 || yy >= A.dh) continue;
+    for (let ox = -r; ox <= r; ox++) {
+      const xx = bx + ox; if (xx < 0 || xx >= A.dw) continue;
+      const n = de[yy * A.dw + xx]; if (!n) continue;
+      const x = (xx + 0.5) * DENSITE, y = (yy + 0.5) * DENSITE, d2 = (x - c.x) ** 2 + (y - c.y) ** 2;
+      if (d2 > p2 || d2 < m2) continue;
+      const score = n - Math.sqrt(d2) * 0.02;
+      if (score > ms) { ms = score; meilleur = [x, y]; }
+    }
+  }
+  return meilleur;
+}
+
+/* Un ordre donné à la volée à un de nos chars (Jérôme, v0.81.0) : `marche` (une nouvelle destination, la route recalculée d'où il est), `arret` (il s'arrête, il tire encore), `cible` (le point que son canon vise,
+   tant qu'il est à portée) et `libre` (il choisit lui-même). Rend '' si l'ordre est possible, sinon la raison du refus. */
+export function refusOrdreChar(B, id, ordre, x, y, camp) {
+  const c = B.etat.chars.find(k => k.id === id);
+  if (!c || c.camp !== camp) return 'Ce char n\'est plus à vous.';
+  if (c.etat === 'detruit') return 'Ce char est détruit.';
+  if (B.etat.phase !== 'jour') return 'La nuit, les ordres attendent l\'aube.';
+  if (ordre === 'marche') {
+    if (c.etat === 'enlise') return 'Ce char est enlisé : il ne repart pas.';
+    const Z = zoneDe(B);
+    if (x < Z.x0 || y < Z.y0 || x >= Z.x1 || y >= Z.y1) return 'Hors du secteur.';
+    const roule = c.ar !== undefined && (c.camp === 0 ? c.y > c.ar : c.y < c.ar);
+    if (!(roule ? routeChar(B, c.dx0, c.ar, x, y, c.modele) : routeChar(B, c.x, c.y, x, y, c.modele))) return 'Aucun passage pour un char jusque-là : eau, cratères ou pont trop faible.';
+  } else if (ordre === 'cible') {
+    const Z = zoneDe(B);
+    if (x < Z.x0 || y < Z.y0 || x >= Z.x1 || y >= Z.y1) return 'Hors du secteur.';
+  } else if (ordre !== 'arret' && ordre !== 'libre') return 'Pas de tel ordre.';
+  return '';
+}
+export function ordonnerChar(B, id, ordre, x, y, camp) {
+  const refus = refusOrdreChar(B, id, ordre, x, y, camp);
+  if (refus) return { refus };
+  const c = B.etat.chars.find(k => k.id === id);
+  if (ordre === 'marche') {
+    const roule = c.ar !== undefined && (c.camp === 0 ? c.y > c.ar : c.y < c.ar);
+    c.chemin = roule ? routeChar(B, c.dx0, c.ar, x, y, c.modele) : routeChar(B, c.x, c.y, x, y, c.modele);
+    c.tx = x; c.ty = y; c.k = 0; c.etat = 'avance';
+  } else if (ordre === 'arret') { c.tx = c.x; c.ty = c.y; c.etat = 'arrive'; c.chemin = null; }
+  else if (ordre === 'cible') c.cible = [Math.round(x * 10) / 10, Math.round(y * 10) / 10];
+  else if (ordre === 'libre') c.cible = null;
+  return { ok: true };
+}
 
 /* Un obus tombé en (x, y) : les chars à portée prennent des dégâts. Rend les chars détruits à ce coup (pour le dessin). */
 export function degatsChars(B, x, y, cal) {
@@ -132,6 +187,16 @@ export function avancerChars(B, ctx, rng) {
         }
       }
     } else c.v = 0;
+
+    // son canon : un obus tous les `recharge` s sur sa cible (en roulant), sans viser plus près que `minimum`
+    const G = M.canon;
+    c.vise = viser(B, c, G);
+    if (G && etat.temps - (c.canonT ?? 0) >= G.recharge && c.vise) {
+      c.canonT = etat.temps;
+      const [tx, ty] = c.vise, a = rng() * 6.2832, d = G.dispersion * Math.sqrt(rng());
+      B.evenements.push({ type: 'char-tir', id: c.id, camp: c.camp, x: c.x, y: c.y, tx, ty });
+      ctx.obus(Math.round((tx + Math.cos(a) * d) * 10) / 10, Math.round((ty + Math.sin(a) * d) * 10) / 10, G.calibre);
+    }
     // ses mitrailleuses : une rafale par `cadence`, sur les hommes de l'autre camp à portée (plus la rafale est proche, plus elle touche)
     c.tire = (c.tire ?? 0) + dt;
     if (c.tire >= M.cadence) {

@@ -1107,3 +1107,56 @@ test('un ennemi seul à 15 m de nos hommes est chargé et tombe ; sans la charge
   assert.ok(avec.proche < 3, `ils vont à lui (${avec.proche.toFixed(1)} m)`);
   assert.ok(sans.proche > avec.proche + 5, `sans la charge, personne ne s'approche autant (${sans.proche.toFixed(1)} m)`);
 });
+
+import { ordonnerChar } from '../js/chars.js';
+import { CHARS } from '../js/data/chars.js';
+group('le canon du char et ses ordres à la volée');
+const charEnRoute = () => {
+  const B = petite(), Zc = zoneDe(B), L = B.lignes.find(l => l.camp === 1 && l.rang === 0), x = (Zc.x0 + Zc.x1) / 2;
+  assert.ok(ordonnerBarrage(B, 'char', x, ligneYDe(L, x), 0).ok);
+  return { B, x, L };
+};
+test('un char qui roule tire un obus toutes les `recharge` secondes sur les ennemis à portée', () => {
+  const { B } = charEnRoute(), G = CHARS.schneider.canon;
+  let tirs = [], impacts = B.etat.impacts.length;
+  for (let s = 0; s < 30 * 150; s++) { avancer(B); for (const e of B.evenements) if (e.type === 'char-tir') tirs.push([s / 30, e]); }
+  assert.ok(tirs.length >= 4, `il a tiré (${tirs.length})`);
+  for (let k = 1; k < tirs.length; k++) assert.ok(tirs[k][0] - tirs[k - 1][0] >= G.recharge - 0.05, 'la recharge est tenue');
+  for (const [, e] of tirs) assert.ok(Math.hypot(e.tx - e.x, e.ty - e.y) <= G.portee && Math.hypot(e.tx - e.x, e.ty - e.y) >= G.minimum, 'à portée, pas sur lui');
+  assert.ok(B.etat.impacts.length - impacts >= tirs.length, 'chaque obus est un impact (écrit, rejoué par la sauvegarde)');
+});
+test('un char sans ennemi à portée ne tire pas ; une cible donnée est tenue', () => {
+  const { B } = charEnRoute(), A = B.armee;
+  for (let i = 0; i < A.n; i++) if (A.camp[i] === 1) A.mort[i] = 1;
+  let tirs = 0; for (let s = 0; s < 30 * 40; s++) { avancer(B); tirs += B.evenements.filter(e => e.type === 'char-tir').length; }
+  assert.equal(tirs, 0);
+  const c = B.etat.chars[0]; assert.ok(ordonnerChar(B, c.id, 'cible', c.x + 30, c.y - 40, 0).ok);
+  let vers = null; for (let s = 0; s < 30 * 30 && !vers; s++) { avancer(B); vers = B.evenements.find(e => e.type === 'char-tir'); }
+  assert.ok(vers && Math.hypot(vers.tx - c.cible[0], vers.ty - c.cible[1]) < 0.01, 'il tire sur le point désigné');
+});
+test('les ordres à la volée : marcher, s\'arrêter, cibler, être libre ; les refus sont dits', () => {
+  const { B, x, L } = charEnRoute(), c = B.etat.chars[0];
+  for (let s = 0; s < 30 * 50; s++) avancer(B);
+  assert.equal(c.etat, 'avance');
+  const y2 = ligneYDe(L, x + 60);
+  assert.ok(ordonnerChar(B, c.id, 'marche', x + 60, y2, 0).ok);
+  assert.equal(c.tx, x + 60); assert.equal(c.k, 0);
+  assert.ok(ordonnerChar(B, c.id, 'arret', 0, 0, 0).ok); assert.equal(c.etat, 'arrive');
+  for (let s = 0; s < 60; s++) avancer(B);
+  assert.ok(Math.abs(c.v) < 1e-9, 'à l\'arrêt');
+  assert.ok(ordonnerChar(B, c.id, 'marche', x + 60, y2, 0).ok); assert.equal(c.etat, 'avance');
+  assert.ok(ordonnerChar(B, c.id, 'cible', x, y2, 0).ok && c.cible); assert.ok(ordonnerChar(B, c.id, 'libre', 0, 0, 0).ok && c.cible === null);
+  const Zc = zoneDe(B);
+  assert.match(ordonnerChar(B, c.id, 'marche', Zc.x1 + 50, y2, 0).refus, /Hors du secteur/);
+  assert.match(ordonnerChar(B, c.id, 'marche', x, y2, 1).refus, /n'est plus à vous/);
+  assert.match(ordonnerChar(B, 99, 'arret', 0, 0, 0).refus, /n'est plus à vous/);
+  B.etat.phase = 'nuit'; assert.match(ordonnerChar(B, c.id, 'arret', 0, 0, 0).refus, /La nuit/);
+  B.etat.phase = 'jour'; c.pv = 0; c.etat = 'detruit'; assert.match(ordonnerChar(B, c.id, 'arret', 0, 0, 0).refus, /détruit/);
+});
+test('le canon relu en route donne la même partie', () => {
+  const { B } = charEnRoute();
+  for (let s = 0; s < 30 * 60; s++) avancer(B);
+  const C = restaurer(photo(B), R);
+  for (let s = 0; s < 30 * 25; s++) { avancer(B); avancer(C); }
+  assert.equal(empreinte(B), empreinte(C));
+});

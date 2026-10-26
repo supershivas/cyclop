@@ -1,5 +1,8 @@
 # Journal des versions
 
+## 0.81.0 — 2026-10-26
+- Les chars tirent des obus en roulant (une barre de canon qui charge, une cible) et se commandent à la volée : on les choisit (clic), puis marche, cible, arrêt ou tir libre
+
 ## 0.80.0 — 2026-10-26
 - Des planches et des madriers dans les tranchées : un caillebotis au fond, des planches contre les parois, des montants et une lisse ; les obus les brisent puis les arrachent, on lit l'état de la tranchée
 

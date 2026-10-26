@@ -88,6 +88,9 @@ export function creerSon(prefs = {}) {
       eclat(0.5 * k, { f0: 1800, f1: 60, gain: 1.1 * v, pan, q: 0.5 });
       ton(95 / k ** 0.5, 30, 0.55 * k, { gain: 0.9 * v, pan });
       eclat(0.09, { type: 'highpass', f0: 3000, f1: 1500, gain: 0.5 * v, pan });      // le claquement de l'éclat
+    } else if (e.type === 'char-tir') {
+      const { v, pan } = place(e.x, e.y, ecoute, 0.12);
+      eclat(0.22, { f0: 900, f1: 90, gain: 0.7 * v, pan, q: 0.6 }); ton(110, 45, 0.3, { gain: 0.6 * v, pan });
     } else if (e.type === 'avion-abattu') {
       const { v, pan } = place(e.x, e.y, ecoute, 0.2);
       ton(520, 60, 2.2, { type: 'sawtooth', gain: 0.5 * v, pan });

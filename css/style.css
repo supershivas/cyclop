@@ -595,3 +595,28 @@ h2 { font-weight: normal; letter-spacing: var(--titre-lettres); }
 .secteur-regs { list-style: none; margin: var(--e1) 0 0; padding: 0; display: grid; gap: var(--e0); font-size: var(--texte-petit); }
 .secteur-regs li { padding-left: var(--e1); border-left: 4px solid var(--jeu-nous); }
 .secteur-regs li.eux { border-left-color: var(--jeu-eux); }
+
+/* Nos chars sur le champ et leur fiche (v0.81.0) */
+.chars-etiq, .chars-cibles { position: absolute; left: 0; top: 0; pointer-events: none; }
+.chars-etiq { width: 100%; height: 100%; }
+.chars-cibles { overflow: visible; }
+.chars-cibles line { stroke: var(--jeu-fond); stroke-width: 1.5; stroke-dasharray: 4 4; opacity: .8; }
+.chars-cibles path { stroke: var(--jeu-fond); stroke-width: 2; fill: none; }
+.chars-cibles circle { stroke: var(--jeu-fond); stroke-width: 1.5; fill: none; }
+.chars-cibles g.manuelle line { stroke-dasharray: none; stroke-width: 2; }
+.chars-cibles g.choisie line, .chars-cibles g.choisie circle, .chars-cibles g.choisie path { stroke: var(--jeu-nous); }
+.char-etiq { position: absolute; left: 0; top: 0; pointer-events: auto; display: grid; gap: 2px; min-width: 70px; padding: 3px 5px; font: inherit; font-size: var(--texte-petit); line-height: 1.1; color: var(--jeu-encre); background: var(--jeu-fond); border: 1px solid var(--jeu-encre); cursor: pointer; min-height: 0; }
+.char-etiq .canon, .char-etiq .pv { display: block; height: 4px; border: 1px solid var(--jeu-encre); box-sizing: border-box; }
+.char-etiq .pv { height: 3px; }
+.char-etiq i { display: block; height: 100%; background: var(--jeu-encre); }
+.char-etiq .canon i { background: var(--jeu-accent); }
+.char-etiq.pret .canon i { background: var(--jeu-nous); }
+.char-etiq.choisi { outline: 2px solid var(--jeu-nous); }
+.char-fiche { position: absolute; right: 8px; bottom: 112px; width: min(26ch, 28vw); pointer-events: auto; display: grid; gap: var(--e1); }
+.char-fiche h3 { margin: 0; font-size: var(--texte-moyen); }
+.char-fiche .jauge { display: grid; grid-template-columns: 6ch 1fr; gap: var(--e1); align-items: center; font-size: var(--texte-petit); }
+.char-fiche .barre { display: block; height: 6px; border: 1px solid var(--jeu-encre); box-sizing: border-box; }
+.char-fiche .barre i { display: block; height: 100%; background: var(--jeu-encre); }
+.char-boutons { display: grid; grid-template-columns: 1fr 1fr; gap: var(--e0); }
+.char-boutons .bouton { min-height: 0; padding: var(--e0) var(--e1); font-size: var(--texte-petit); }
+.char-boutons .bouton.vise { background: var(--jeu-encre); color: var(--jeu-fond); }

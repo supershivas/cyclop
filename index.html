@@ -9,8 +9,8 @@
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta property="og:image" content="og.png">
-<link rel="stylesheet" href="js/lib/game.css?v=0.80.0">
-<link rel="stylesheet" href="css/style.css?v=0.80.0">
+<link rel="stylesheet" href="js/lib/game.css?v=0.81.0">
+<link rel="stylesheet" href="css/style.css?v=0.81.0">
 </head>
 <body>
 <!-- La barre de chargement (v0.28.0) : là avant tout script ; main.js la remplit, puis la retire -->
@@ -32,6 +32,8 @@
   <div class="repere-soldat" id="repere-soldat" hidden aria-hidden="true"></div>
   <div class="cadre" id="cadre" hidden aria-hidden="true"></div>
   <svg class="visee" id="visee" hidden aria-hidden="true"></svg>
+  <svg class="chars-cibles" id="chars-cibles" aria-hidden="true"></svg>
+  <div class="chars-etiq" id="chars-etiq"></div>
   <div class="plaque bulle" id="bulle" hidden aria-hidden="true"></div>
 
   <!-- HUD : en DOM par-dessus le canvas, dans la palette du jeu -->
@@ -132,6 +134,19 @@
         </section>
               </div>
     </div>
+    <section class="papier char-fiche" id="char-fiche" hidden aria-label="Le char choisi">
+      <h3 id="char-fiche-titre">Char</h3>
+      <div class="jauge"><span>Coque</span><span class="barre"><i id="char-fiche-pv"></i></span></div>
+      <div class="jauge"><span>Canon</span><span class="barre"><i id="char-fiche-canon"></i></span></div>
+      <p class="discret" id="char-fiche-etat"></p>
+      <div class="char-boutons">
+        <button class="bouton" data-char="marche" title="Le prochain clic sur le sol : où il va">Marcher</button>
+        <button class="bouton" data-char="cible" title="Le prochain clic sur le sol : ce que son canon vise">Cible</button>
+        <button class="bouton" data-char="arret" title="Il s'arrête et continue de tirer">Arrêt</button>
+        <button class="bouton" data-char="libre" title="Il choisit lui-même le carré le plus chargé">Tir libre</button>
+        <button class="bouton" data-char="fermer">Fermer</button>
+      </div>
+    </section>
     <div class="hud-bas">
       <!-- Au centre du bas : nos régiments, une rangée de cartes ; celle qu'on a choisie s'ouvre vers le haut -->
       <div class="regiments" id="regiments" aria-label="Nos régiments">
@@ -309,6 +324,6 @@
 </dialog>
 
 <div class="jeu-toast" id="toast" role="status" hidden></div>
-<script type="module" src="js/main.js?v=0.80.0"></script>
+<script type="module" src="js/main.js?v=0.81.0"></script>
 </body>
 </html>

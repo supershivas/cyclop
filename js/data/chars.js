@@ -14,6 +14,9 @@ export const CHARS = {
     gravite: 0.7,
     peur: 0.5,           // la peur des hommes à portée de ses mitrailleuses
     route: 8,            // m/s tant qu'il n'a pas rejoint l'arrière de son camp (il arrive de hors de la carte, sur la route)
+    // son canon (Jérôme, v0.81.0 : « même si ce n'est pas réaliste, les chars lancent des obus, avec une barre qui charge et une cible, lors de leur déplacement ») : un obus de `calibre`
+    // tombé sur la cible, tous les `recharge` s, en roulant ; la cible est celle qu'on lui désigne (`cible`), sinon le carré d'ennemis le plus dense à portée
+    canon: { calibre: '75', portee: 90, minimum: 14, recharge: 7, dispersion: 3 },
   },
 };
 export const CHAR_PAR_DEFAUT = 'schneider';
