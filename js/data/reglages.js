@@ -40,8 +40,8 @@ export const REGLAGES = {
     touche: 0.15,          // chance de toucher d'un homme moyen contre un homme moyen
     mortel: 0.55,         // chance qu'un coup qui touche tue (sinon : blessé, comme un tir)
     fatigue: 0.06,        // fatigue des bras par coup
-    charge: 30,           // m : un ennemi seul (1 à 3 hommes dans son carré de 8 m) à cette distance est chargé à la baïonnette (v0.79.0)
-    chargePart: 0,        // (0 : éteint ; 0,5 l'essayait : trop de morts, à calibrer) la part des hommes (par `rnd`, sans tirage) qui chargent ainsi
+    charge: 20,           // m : un ennemi vraiment seul (au plus 2 hommes d'en face dans les 9 carrés de 8 m autour de lui) à cette distance est chargé à la baïonnette (v0.79.0)
+    chargePart: 0.5,      // la part des hommes (par `rnd`, sans tirage) qui chargent ainsi
     arret: 0.12,          // la part de sa marche qu'un homme au corps à corps garde (il tient sa place d'escrime)
     force: 0.9,           // l'écart de chance qu'apporte la force : chance × (0,55 + force × cette valeur), force de 0 à 1
     endurance: 0.6,       // … et l'endurance de l'autre : chance × (1,3 − endurance × cette valeur)
@@ -119,7 +119,7 @@ export const REGLAGES = {
     periode: 5,           // s entre deux tirs d'un soldat (en moyenne)
     precision: 0.035,     // chance de toucher dans un groupe dense, à découvert (0,05 avant la v0.17.0 : l'assaut frontal coûtait 570 à 665 hommes sur 750 le premier jour ; 385 avec ceci et `mouvement`)
     densite: 10,          // soldats dans un carré de 8 m pour la précision pleine
-    proche: 0,            // m (0 : éteint, v0.79.0 ; 25 l'essayait : trop de morts, à calibrer) : à cette distance, un homme seul est visé comme une cible dense (la chance monte jusqu'à la pleine à bout portant) ; v0.79.0, avant un homme seul était touché 10 fois moins
+    proche: 12,           // m : à cette distance, un homme seul est visé comme une cible dense (la chance monte jusqu'à la pleine à bout portant) ; v0.79.0, avant un homme seul était touché 10 fois moins
     abri: 0.45,           // dans un creux d'un demi-mètre : la chance est multipliée par…
     mouvement: 0.75,      // un homme qui marche à pleine vitesse échappe au coup avec cette chance (proportionnelle à sa vitesse) : un assaut à découvert coûte moins (v0.17.0)
   },

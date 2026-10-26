@@ -1,5 +1,8 @@
 # Journal des versions
 
+## 0.79.0 — 2026-10-26
+- Les soldats isolés ne sont plus inattaquables : nos hommes chargent à la baïonnette un ennemi vraiment seul à moins de 20 m, et un homme seul visé de près (12 m) n'est plus presque invulnérable
+
 ## 0.78.1 — 2026-10-26
 - Le plan d'un secteur et la carte s'expliquent : légende, noms des tranchées, largeur du no man's land, liste des régiments présents, et un « Comment lire la carte »
 

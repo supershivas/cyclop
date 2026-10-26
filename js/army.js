@@ -25,9 +25,9 @@
      (rng.js), pour que la même graine rejoue la même bataille.
 
    Logique pure : aucun DOM. Le rendu lit les tableaux (rendu3d.js). */
-import { hauteurQ, vitesseCase } from './terrain.js?v=0.78.1';
-import { ligneY } from './tranchees.js?v=0.78.1';
-import { caracteristiques } from './identite.js?v=0.78.1';
+import { hauteurQ, vitesseCase } from './terrain.js?v=0.79.0';
+import { ligneY } from './tranchees.js?v=0.79.0';
+import { caracteristiques } from './identite.js?v=0.79.0';
 
 export const GRILLE = 2;           // m : cases de voisinage
 export const DENSITE = 8;          // m : carrés de densité (tir)
@@ -164,7 +164,7 @@ export const facteur = (amplitude, valeur, sens) => 1 + sens * amplitude * (vale
 // une blessure à la jambe est légère pour une part des hommes (`soldat.jambeLegere`) : un hachage de leur numéro, sans hasard ni état
 export const legere = (id, part) => (Math.imul(id + 1, 2654435761) >>> 0) / 4294967296 < part;
 /* Un ennemi isolé à portée de charge (Jérôme, v0.79.0 : « les deux soldats kaki au milieu sont inattaquables, alors qu'ils devraient l'être au corps à corps ») : le plus proche
-   des ennemis à moins de `rayon` m dont le carré de densité n'en compte que 1 à 3. Rend sa place [x, y] ou null. Sans hasard. */
+   des ennemis à moins de `rayon` m qui n'est qu'avec un autre au plus (9 carrés de 8 m autour de lui : 2 hommes d'en face au plus). Rend sa place [x, y] ou null. Sans hasard. */
 function isole(A, i, rayon) {
   const { dw, dh, dens } = A, de = dens[1 - A.camp[i]], xi = A.x[i], yi = A.y[i], rB = Math.ceil(rayon / DENSITE), k = DENSITE / GRILLE;
   const bx = (xi / DENSITE) | 0, by = (yi / DENSITE) | 0;
@@ -174,7 +174,11 @@ function isole(A, i, rayon) {
     for (let ox = -rB; ox <= rB; ox++) {
       const xx = bx + ox; if (xx < 0 || xx >= dw) continue;
       const m = de[yy * dw + xx];
-      if (m < 1 || m > 3) continue;
+      if (m < 1 || m > 2) continue;
+      // seul pour de bon : pas plus de deux hommes d'en face dans les neuf carrés autour de lui (~24 m) ; un front, même clairsemé, n'est pas un isolé
+      let voisins = 0;
+      for (let qy = -1; qy <= 1; qy++) for (let qx = -1; qx <= 1; qx++) { const ax = xx + qx, ay = yy + qy; if (ax >= 0 && ay >= 0 && ax < dw && ay < dh) voisins += de[ay * dw + ax]; }
+      if (voisins > 2) continue;
       for (let fy = yy * k; fy < (yy + 1) * k && fy < A.gh; fy++) for (let fx = xx * k; fx < (xx + 1) * k && fx < A.gw; fx++) {
         const c = fy * A.gw + fx;
         for (let s = A.cellStart[c], e = A.cellStart[c + 1]; s < e; s++) {

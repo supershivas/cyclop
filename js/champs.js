@@ -11,7 +11,7 @@
      de Dial : des files par coût entier), puis une direction par carré.
    - Les champs sont gardés en cache (au plus `foule.champsMax`), par carré visé
      et version des coûts. */
-import { hauteurQ, vitesseCase } from './terrain.js?v=0.78.1';
+import { hauteurQ, vitesseCase } from './terrain.js?v=0.79.0';
 
 export const BLOC = 4;   // m
 const DIRS = [[1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [1, -1], [-1, 1], [-1, -1]];

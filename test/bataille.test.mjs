@@ -1079,3 +1079,31 @@ test('un homme égaré, ou coincé loin de sa place, est ramené à sa place à 
   const ib = [...Array(A.n).keys()].find(i => A.id[i] === idb);
   assert.ok(ib === undefined || Math.abs(A.x[ib] - xb) < 5, 'le blessé n\'est pas ramené (il est évacué ou reste où il est)');
 });
+
+group('la charge sur un isolé');
+test('un ennemi seul à 15 m de nos hommes est chargé et tombe ; sans la charge (chargePart 0), ils restent à leur place', () => {
+  const issue = chargePart => {
+    const RR = { ...R, melee: { ...R.melee, chargePart }, tir: { ...R.tir, proche: 0 } };
+    const B = nouvelleBataille(3, RR, { soldats: 200, jours: 3 }), A = B.armee, Z = zoneDe(B);
+    let id = -1;
+    for (let i = 0; i < A.n; i++) if (A.camp[i] === 1) { if (id < 0) id = A.id[i]; else A.mort[i] = 1; }
+    const L = B.lignes.find(l => l.camp === 1 && l.rang === 0), xe = Z.x0 + 150, ye = ligneYDe(L, xe);
+    const idx = () => { for (let i = 0; i < A.n; i++) if (A.id[i] === id) return i; return -1; };
+    // vingt des nôtres à 15 m de lui, sans ordre de marche vers lui (ils tiennent leur place... qui est là)
+    let n = 0;
+    for (let i = 0; i < A.n && n < 20; i++) if (A.camp[i] === 0) {
+      A.x[i] = xe - 6 + (n % 5) * 3; A.y[i] = ye + 15 + Math.floor(n / 5) * 2; n++;
+      B.etat.regiments[A.reg[i]].ordre = { ...B.etat.regiments[A.reg[i]].ordre, x: A.x[i], y: A.y[i], trace: undefined };
+    }
+    let proche = 1e9;
+    for (let s = 0; s < 30 * 60; s++) {
+      const i = idx(); if (i < 0) return { mort: true, proche: 0 };
+      A.x[i] = xe; A.y[i] = ye; avancer(B);
+      const k = idx(); if (k >= 0) for (let j = 0; j < A.n; j++) if (A.camp[j] === 0 && !A.mort[j]) proche = Math.min(proche, Math.hypot(A.x[j] - xe, A.y[j] - ye));
+    }
+    return { mort: idx() < 0, proche };
+  };
+  const avec = issue(1), sans = issue(0);
+  assert.ok(avec.proche < 3, `ils vont à lui (${avec.proche.toFixed(1)} m)`);
+  assert.ok(sans.proche > avec.proche + 5, `sans la charge, personne ne s'approche autant (${sans.proche.toFixed(1)} m)`);
+});
