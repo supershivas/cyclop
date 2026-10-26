@@ -1,5 +1,8 @@
 # Journal des versions
 
+## 0.77.0 — 2026-10-26
+- La mission « prendre » se gagne avant le terme : leur première ligne tenue à 75 % deux soirs de suite, et la bataille est gagnée ; le papier de la nuit dit où l'on en est
+
 ## 0.76.2 — 2026-10-26
 - La musique est celle de Kingvi : sept morceaux en fondu enchaîné, qui suivent le champ (calme, combat, nuit, aube)
 - Les barres de vie du haut comptent les blessés d'aujourd'hui, plus ceux de tous les jours : elles ne tombent plus à zéro

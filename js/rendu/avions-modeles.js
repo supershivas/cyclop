@@ -1,7 +1,7 @@
 // Les biplans en volumes (Jérôme, v0.55.0), sortis du labo (`labo-avions.js`, qui les reprend d'ici) pour que la bataille les dessine à l'échelle : 1 unité = 1 m, l'avant à +x,
 // le haut à +y, la droite à +z. Dessin seulement. Le SPAD XIII français (8,1 m d'envergure) pour nous, l'Albatros D.V allemand (9 m) pour eux ; leurs marques sont celles de la palette
 // (la cocarde française n'a pas son rond rouge hors du labo : aucune autre couleur dans le jeu).
-import { PALETTE as P } from '../palette.js?v=0.76.2';
+import { PALETTE as P } from '../palette.js?v=0.77.0';
 
 export function cocardeFr(A, g, x, y, z, r, axe, centre = P.n) { A.cyl(g, r, 0.025, P.n, [x, y, z], axe, 10); A.cyl(g, r * 0.66, 0.03, P.o, [x, y, z], axe, 10); A.cyl(g, r * 0.33, 0.035, centre, [x, y, z], axe, 10); }
 export function croixPlate(A, g, x, y, z, t) {

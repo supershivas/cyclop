@@ -1064,3 +1064,40 @@ test('un défenseur seul au bout d\'une tranchée tombe quand ses assaillants l\
   }
   assert.equal(B.etat.troncons[k], 0, 'pris malgré le défenseur seul');
 });
+
+group('la victoire anticipée');
+function prendre(joursDeTenue) {
+  const B = nouvelleBataille(3, { ...R, tranchee: { ...R.tranchee, prise: 1e9 } }, { soldats: 200, jours: 6, mission: 'prendre' }), e = B.etat;   // (aucun tronçon ne change de main de lui-même : le test les pose)
+  const leur1 = B.troncons.map((t, k) => k).filter(k => B.lignes[B.troncons[k].ligne].camp === 1 && B.lignes[B.troncons[k].ligne].rang === 0);
+  const tenir = () => { for (const k of leur1) e.troncons[k] = 0; };
+  return { B, tenir, jours: () => e.jour };
+}
+test('prendre leur première ligne et la tenir deux soirs de suite gagne avant le terme ; un seul soir ne suffit pas', () => {
+  const { B, tenir } = prendre();
+  const e = B.etat;
+  let nuits = 0;
+  for (let s = 0; s < 30 * 60 * 40 && e.phase !== 'fin'; s++) {
+    tenir();
+    avancer(B);
+    if (e.phase === 'nuit') { nuits++; assert.equal(e.priseJours, nuits, 'un soir de plus'); aube(B); }
+  }
+  assert.equal(e.phase, 'fin');
+  assert.equal(nuits, 1, 'deux soirs : une nuit entre les deux');
+  assert.equal(e.issue.reussie, true);
+  assert.ok(e.jour < 6, 'avant le dernier jour');
+  const C = restaurer(photo(B), R);
+  assert.equal(C.etat.phase, 'fin'); assert.equal(C.etat.issue.reussie, true);
+});
+test('une première ligne rendue un soir remet le compte à zéro', () => {
+  const { B, tenir } = prendre();
+  const e = B.etat;
+  let soirs = 0;
+  for (let s = 0; s < 30 * 60 * 40 && e.phase !== 'fin' && soirs < 2; s++) {
+    if (soirs === 0) tenir();
+    if (soirs === 1) for (let k = 0; k < e.troncons.length; k++) if (B.lignes[B.troncons[k].ligne].camp === 1) e.troncons[k] = 1;
+    avancer(B);
+    if (e.phase === 'nuit') { soirs++; if (soirs === 1) assert.equal(e.priseJours, 1); aube(B); }
+  }
+  assert.equal(e.priseJours, 0, 'perdue le deuxième soir');
+  assert.notEqual(e.phase, 'fin');
+});

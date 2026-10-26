@@ -109,6 +109,8 @@ export const REGLAGES = {
     peurDecroit: 0.02,    // par seconde
     terreur: 0.85,        // au-delà, on ne tire plus
   },
+  // la victoire anticipée de la mission « prendre » (Jérôme, v0.77.0) : la 1re ligne d'en face tenue à `priseMin` pendant `joursDeTenue` soirs de suite
+  mission: { priseMin: 0.75, joursDeTenue: 2 },
   tir: {
     portee: 70,           // m
     cone: 0.75,           // rad, de part et d'autre du front

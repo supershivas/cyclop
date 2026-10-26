@@ -1,12 +1,12 @@
 // Le papier de la nuit (Jérôme, v0.13.0) : un état (choix des corvées, puis le bilan de l'aube), jamais une boîte de
 // dialogue : le champ reste là, on choisit des régiments (clic, cadre, T) et on leur donne une corvée, dite sur leur carte.
-import { NOUS, aube } from '../bataille.js?v=0.76.2';
-import { METEO } from '../data/meteo.js?v=0.76.2';
-import { CORVEES, CONTACT } from '../data/corvees.js?v=0.76.2';
-import { refusCorvee, contactDe } from '../nuit.js?v=0.76.2';
-import { palmares, tableau } from './medailles.js?v=0.76.2';
-import { pluriel } from './lecture.js?v=0.76.2';
-import { lune, nomPhase, couvertureNuit, cielEnMots } from '../data/lune.js?v=0.76.2';
+import { NOUS, aube, priseEnCours } from '../bataille.js?v=0.77.0';
+import { METEO } from '../data/meteo.js?v=0.77.0';
+import { CORVEES, CONTACT } from '../data/corvees.js?v=0.77.0';
+import { refusCorvee, contactDe } from '../nuit.js?v=0.77.0';
+import { palmares, tableau } from './medailles.js?v=0.77.0';
+import { pluriel } from './lecture.js?v=0.77.0';
+import { lune, nomPhase, couvertureNuit, cielEnMots } from '../data/lune.js?v=0.77.0';
 
 export const corveeDe = id => [...CORVEES, CONTACT].find(c => c.id === id)?.nom || '';
 export const corveeCourte = id => [...CORVEES, CONTACT].find(c => c.id === id)?.court || '';
@@ -69,6 +69,11 @@ export function creerNuit({ $, bataille, choisis, pauser, reprendre, sauvegarder
     $('nuit-titre').textContent = `Nuit du ${nomJour(j)} au ${nomJour(j + 1)} jour`;
     $('nuit-pertes').textContent = moi() === NOUS ? `Morts du jour : ${nous} des nôtres, ${eux} en face.` : `Morts du jour : ${eux} des nôtres, ${nous} en face.`;
     $('nuit-lignes').textContent = e.tranchees ? enLignes(e.prises[j - 1]) : '';
+    // la victoire anticipée (v0.77.0) : où l'on en est, pour qui doit prendre leur première ligne
+    if (e.tranchees && e.mission === 'prendre' && moi() === NOUS) {
+      const { tenus: [t, tot], jours } = priseEnCours(bataille());
+      $('nuit-lignes').textContent += jours ? ` Leur première ligne est tenue (${t} tronçons sur ${tot}) : encore un soir et la bataille est gagnée.` : ` Leur première ligne : ${t} tronçons sur ${tot} à nous ; il en faut 75 % pendant deux soirs de suite pour gagner avant le terme.`;
+    }
     $('nuit-medailles-corps').replaceChildren(...tableau(palmares(B, moi(), 'jour')));
     $('nuit-avions').textContent = avionsEnMots(e, moi());
     $('nuit-demain').textContent = `Demain : ${METEO[e.previsions[j - 1]]?.prevision || '—'}.`;
