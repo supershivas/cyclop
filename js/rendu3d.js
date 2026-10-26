@@ -22,29 +22,29 @@
    - Les soldats : instanciés (une boîte et son ombre) ; au zoom 1 et 2, un
      point de 2 × 2 pixels (la couleur du camp sur son ombre).
    - Les corps : un homme couché (instancié) ; au zoom 1 et 2, un pixel. */
-import { loadThree } from './three-lib.js?v=0.76.0';
-import * as SH from './rendu/shaders.js?v=0.76.0';
-import { creerSoldats } from './rendu/soldats.js?v=0.76.0';
-import { creerChars } from './rendu/chars.js?v=0.76.0';
-import { creerGenies } from './rendu/genies.js?v=0.76.0';
-import { creerAvions } from './rendu/avions.js?v=0.76.0';
-import { creerPonts } from './rendu/ponts.js?v=0.76.0';
-import { creerCiel } from './rendu/ciel.js?v=0.76.0';
-import { creerMeteo } from './rendu/meteo.js?v=0.76.0';
-import { creerTroncons } from './rendu/troncons.js?v=0.76.0';
-import { ARBRES_JEU } from './data/arbres.js?v=0.76.0';
-import { creerVegetation } from './rendu/vegetation.js?v=0.76.0';
-import { creerTemps } from './rendu/temps.js?v=0.76.0';
-import { creerEclats } from './rendu/eclats.js?v=0.76.0';
-import { creerOmbresRelief } from './rendu/ombres-relief.js?v=0.76.0';
-import { OMBRES_RELIEF as OMB, NUAGES, NUAGES_VENT } from './data/soleil.js?v=0.76.0';
-import { PALETTE, ORDRE, INDICE } from './palette.js?v=0.76.0';
-import { OMBRE, couleursLigne } from './apparence.js?v=0.76.0';
-import { MORCEAU, hauteurVueQ as hauteurQ, hauteurVueM as hauteurM } from './terrain.js?v=0.76.0';
-import { horloge, secteurDuJeu, rangDe } from './bataille.js?v=0.76.0';
-import { GRADES } from './data/grades.js?v=0.76.0';
-import { profilFleuve } from './eaux.js?v=0.76.0';
-import { ligneY } from './tranchees.js?v=0.76.0';
+import { loadThree } from './three-lib.js?v=0.76.2';
+import * as SH from './rendu/shaders.js?v=0.76.2';
+import { creerSoldats } from './rendu/soldats.js?v=0.76.2';
+import { creerChars } from './rendu/chars.js?v=0.76.2';
+import { creerGenies } from './rendu/genies.js?v=0.76.2';
+import { creerAvions } from './rendu/avions.js?v=0.76.2';
+import { creerPonts } from './rendu/ponts.js?v=0.76.2';
+import { creerCiel } from './rendu/ciel.js?v=0.76.2';
+import { creerMeteo } from './rendu/meteo.js?v=0.76.2';
+import { creerTroncons } from './rendu/troncons.js?v=0.76.2';
+import { ARBRES_JEU } from './data/arbres.js?v=0.76.2';
+import { creerVegetation } from './rendu/vegetation.js?v=0.76.2';
+import { creerTemps } from './rendu/temps.js?v=0.76.2';
+import { creerEclats } from './rendu/eclats.js?v=0.76.2';
+import { creerOmbresRelief } from './rendu/ombres-relief.js?v=0.76.2';
+import { OMBRES_RELIEF as OMB, NUAGES, NUAGES_VENT } from './data/soleil.js?v=0.76.2';
+import { PALETTE, ORDRE, INDICE } from './palette.js?v=0.76.2';
+import { OMBRE, couleursLigne } from './apparence.js?v=0.76.2';
+import { MORCEAU, hauteurVueQ as hauteurQ, hauteurVueM as hauteurM } from './terrain.js?v=0.76.2';
+import { horloge, secteurDuJeu, rangDe } from './bataille.js?v=0.76.2';
+import { GRADES } from './data/grades.js?v=0.76.2';
+import { profilFleuve } from './eaux.js?v=0.76.2';
+import { ligneY } from './tranchees.js?v=0.76.2';
 
 export const CAMERA = { yaw: 0.15, tangage: 0.95, fov: 30 };   // au départ : tournée de 9°, plongée de 54°, angle de 30°
 // la caméra respire : un balancement très lent, 2° en 23 s (Jérôme, v0.3.1 : variante D du labo retenue)
@@ -570,7 +570,8 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
     // seulement ceux qu'on voit : le sol vu est un trapèze ; on garde ceux de son rectangle englobant
     const cs = coinsSol(vue.zoom, yawVu(), tangageVu());
     // (un coin de l'écran regarde le ciel : tout le terrain peut être vu, le vrai tri se fait à l'écran)
-    const x0 = cs.ok ? vue.cx + cs.x0 - 6 : 0, x1 = cs.ok ? vue.cx + cs.x1 + 6 : T.W, z0 = cs.ok ? vue.cz + cs.z0 - 6 : 0, z1 = cs.ok ? vue.cz + cs.z1 + 12 + MARGE_RELIEF : T.H;
+    // (le relief rapproche du rayon un sol en hauteur, vers la caméra, de quelque côté qu'elle soit : la marge du relief est de tous les côtés ; v0.76.1, la caméra tournée)
+    const x0 = cs.ok ? vue.cx + cs.x0 - 6 - MARGE_RELIEF : 0, x1 = cs.ok ? vue.cx + cs.x1 + 6 + MARGE_RELIEF : T.W, z0 = cs.ok ? vue.cz + cs.z0 - 6 - MARGE_RELIEF : 0, z1 = cs.ok ? vue.cz + cs.z1 + 12 + MARGE_RELIEF : T.H;
     // puis le vrai test : projeté, il tombe dans l'écran (le trapèze n'est pas son rectangle)
     projeter();
     mVP.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse);

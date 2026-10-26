@@ -1,16 +1,28 @@
 /* Le son (Jérôme, v0.75.0 : « Ajoute le son »). Tout est synthétisé en Web Audio (aucun fichier, aucune dépendance) ; le dessin et la logique ne le connaissent pas :
    main.js lui passe les événements de la bataille et l'état de l'écoute. Déverrouillé au premier geste du joueur (les navigateurs refusent avant), coupé quand l'onglet est caché.
-   Deux volumes, gardés dans `prefs.son` : les effets (obus, fusillade, avion, char, vent, pluie) et la musique (un fond lent et sombre, sans mélodie).
+   Deux volumes, gardés dans `prefs.son` : les effets (obus, fusillade, avion, char, vent, pluie) et la musique : les morceaux de Kingvi (`assets/music/`, MP3, repris du jeu frère à la demande de Jérôme, v0.76.2), en playlist avec fondu enchaîné de 8 s, qui changent selon l'humeur du champ (calme, combat, nuit, aube).
    Le hasard du son est un petit générateur local (la graine de la bataille n'est jamais touchée). L'espace : un son loin est plus faible et vient du côté où il est (`ecoute` : le centre de la vue, en mètres du secteur, et sa largeur). */
 const borne = (v, a, b) => v < a ? a : v > b ? b : v;
-const COMMUN = { effets: 0.7, musique: 0.35 };
+const COMMUN = { effets: 0.7, musique: 0.5 };
+// ── La playlist : les fichiers de `assets/music/`. `humeur` : quand le champ la demande, on y passe en fondu (comme `lieu` dans Kingvi) ──
+export const TRACKS = {
+  'spring-reverb': { nom: 'Spring Reverb', file: 'Spring Reverb.mp3', humeur: 'calme' },
+  'breaks': { nom: 'Abstract Breaks', file: 'Abstract Breaks.mp3', humeur: 'calme' },
+  'breaks-2': { nom: 'Abstract Breaks II', file: 'Abstract Breaks II.mp3', humeur: 'calme' },
+  'foret-noire': { nom: 'La Forêt Noire', file: 'La Forêt Noire.mp3', humeur: 'nuit' },
+  'aube': { nom: 'L\'aube', file: 'L\'aube.mp3', humeur: 'aube' },
+  'loups': { nom: 'The wolves', file: 'The wolves.mp3', humeur: 'combat' },
+  'loups-2': { nom: 'The wolves II', file: 'The wolves II.mp3', humeur: 'combat' },
+};
+const XFADE = 8, GAIN_PISTE = 0.75;      // le fondu enchaîné (s) ; le niveau d'un morceau avant le curseur
 
 export function creerSon(prefs = {}) {
   let ctx = null, fx = null, mus = null, bruit = null, vol = { ...COMMUN, ...(prefs.son || {}) }, cache = false;
   let graine = 12345;
   const alea = () => (graine = (Math.imul(graine, 1664525) + 1013904223) >>> 0) / 4294967296;
   const lits = {};                        // les sons en continu : vent, pluie, fusillade, char, avion, nuit
-  let dernierImpact = 0, accord = 0, prochainAccord = 0, notes = null;
+  let dernierImpact = 0;
+  let deck = null, courante = null, choix = 'playlist', humeurVoulue = 'calme', humeurDepuis = 0, combatLisse = 0, combatDepuis = 0, calmeDepuis = 0, humeur = 'calme';
 
   function demarrer() {
     if (ctx) return;
@@ -31,7 +43,6 @@ export function creerSon(prefs = {}) {
     lits.char = grondement('sawtooth', 42, 150);
     lits.avion = grondement('sawtooth', 96, 420);
     lits.vent.g.gain.value = lits.pluie.g.gain.value = lits.fusillade.g.gain.value = lits.char.g.gain.value = lits.avion.g.gain.value = 0;
-    notes = [0, 1, 2].map(() => { const o = ctx.createOscillator(), g = ctx.createGain(), f = ctx.createBiquadFilter(); o.type = 'triangle'; f.type = 'lowpass'; f.frequency.value = 700; g.gain.value = 0; o.connect(f); f.connect(g); g.connect(mus); o.start(); return { o, g }; });
   }
   function boucle(type, freq, q) {
     const s = ctx.createBufferSource(), f = ctx.createBiquadFilter(), g = ctx.createGain(), p = ctx.createStereoPanner();
@@ -101,9 +112,51 @@ export function creerSon(prefs = {}) {
     else if (genre === 'pret') { ton(440, 440, 0.12, { type: 'triangle', gain: 0.15 }); }
   }
 
+  // ─── La musique : deux platines (un morceau qui monte, l'autre qui s'éteint), comme dans Kingvi ───
+  function lancerPiste(id) {
+    if (!ctx || !TRACKS[id]) return;
+    const t = maintenant(), vieux = deck, el = new Audio(`assets/music/${encodeURIComponent(TRACKS[id].file)}`), gain = ctx.createGain();
+    el.preload = 'auto'; gain.gain.value = 0.0001;
+    try { ctx.createMediaElementSource(el).connect(gain).connect(mus); } catch { return; }
+    const fondu = vieux ? XFADE : 3;       // (le premier monte plus vite : pas huit secondes de silence)
+    gain.gain.setValueAtTime(0.0001, t); gain.gain.linearRampToValueAtTime(GAIN_PISTE, t + fondu);
+    el.play().catch(() => {});
+    deck = { id, el, gain, depuis: t }; courante = id;
+    if (vieux) {
+      vieux.gain.gain.cancelScheduledValues(t); vieux.gain.gain.setValueAtTime(vieux.gain.gain.value, t); vieux.gain.gain.linearRampToValueAtTime(0.0001, t + XFADE);
+      setTimeout(() => { vieux.el.pause(); vieux.el.removeAttribute('src'); vieux.el.load(); vieux.gain.disconnect(); }, XFADE * 1000 + 300);
+    }
+  }
+  const pisteDe = h => { const ids = Object.keys(TRACKS).filter(k => TRACKS[k].humeur === h); return ids[Math.floor(alea() * ids.length)]; };
+  // le suivant : de la même humeur s'il y en a plusieurs (le combat, la nuit), sinon la playlist calme dans l'ordre
+  function suivante() {
+    if (choix !== 'playlist') return choix;
+    const ids = Object.keys(TRACKS).filter(k => TRACKS[k].humeur === humeur && k !== courante);
+    if (ids.length) return ids[Math.floor(alea() * ids.length)];
+    const calmes = Object.keys(TRACKS).filter(k => TRACKS[k].humeur === 'calme');
+    return calmes[(calmes.indexOf(courante) + 1) % calmes.length];
+  }
+  // L'humeur du champ : la nuit, l'aube (la première heure du jour), le combat (la fusillade dense, tenue quelques secondes ; elle ne retombe qu'après un long calme), sinon calme
+  function musique(dt, nuit, aube, dens) {
+    const t = maintenant();
+    combatLisse += (dens - combatLisse) * (1 - Math.exp(-dt / 2));
+    if (combatLisse > 0.45) { combatDepuis += dt; calmeDepuis = 0; } else { calmeDepuis += dt; combatDepuis = 0; }
+    const voulue = nuit ? 'nuit' : humeur === 'combat' ? (calmeDepuis > 20 ? (aube ? 'aube' : 'calme') : 'combat') : combatDepuis > 3 ? 'combat' : aube ? 'aube' : 'calme';
+    if (voulue !== humeurVoulue) { humeurVoulue = voulue; humeurDepuis = t; }
+    if (!deck) { lancerPiste(choix === 'playlist' ? (pisteDe('calme') || Object.keys(TRACKS)[0]) : choix); return; }
+    const el = deck.el;
+    // une humeur stable depuis 3 s a son morceau : on y passe en fondu (et on laisse finir un morceau d'humeur quand on la quitte)
+    if (choix === 'playlist' && humeurVoulue !== humeur && t - humeurDepuis > 3 && t - deck.depuis > XFADE + 2) {
+      humeur = humeurVoulue;
+      if (TRACKS[courante]?.humeur !== humeur) { const id = pisteDe(humeur); if (id) { lancerPiste(id); return; } }
+    }
+    if (el.duration && el.duration - el.currentTime < XFADE + 0.3 && t - deck.depuis > XFADE) lancerPiste(suivante());
+    else if ((el.ended || el.error) && t - deck.depuis > 2) lancerPiste(suivante());
+  }
+
   // ─── Chaque image : la fusillade, le vent, les moteurs, la musique ───
   const doux = (g, v, dt, vite = 3) => { g.gain.value += (v - g.gain.value) * (1 - Math.exp(-dt * vite)); };
-  function image(dt, { tirs, ecoute, meteo, nuit, chars = [], avions = [], titre = false, enJeu = true }) {
+  function image(dt, { tirs, ecoute, meteo, nuit, aube = false, chars = [], avions = [], titre = false, enJeu = true }) {
     if (!ctx || cache || ctx.state !== 'running') return;
     // les coups de fusil de l'image : quelques claquements au hasard parmi eux, de leur côté, sur un lit de grondement
     const n = tirs ? tirs.length / 6 : 0;
@@ -131,13 +184,7 @@ export function creerSon(prefs = {}) {
     for (const a of avions) if (a.etat === 'vol' || a.etat === 'chute') { const { v, pan } = place(a.x ?? 0, a.y ?? 0, ecoute, 0.05); if (v > va) { va = v; pa = pan; ha = a.h || 0; } }
     doux(lits.avion.g, 0.3 * va, dt, 3); lits.avion.p.pan.value = pa;
     lits.avion.o.frequency.value = 90 + 14 * Math.sin(maintenant() * 14) + (ha < 20 ? 25 : 0);
-    // la musique : un accord lent sous tout (la, fa, ré, mi), qui change toutes les ~16 s
-    if (notes && maintenant() >= prochainAccord) {
-      const ACCORDS = [[110, 164.8, 261.6], [87.3, 130.8, 220], [73.4, 110, 174.6], [82.4, 123.5, 207.7]];
-      const a = ACCORDS[accord++ % ACCORDS.length], t = maintenant();
-      notes.forEach((n, i) => { n.o.frequency.setTargetAtTime(a[i], t, 2.5); n.g.gain.setTargetAtTime(0.16 / (i + 1) ** 0.5 * (nuit ? 1.3 : 1), t, 3); });
-      prochainAccord = t + 14 + alea() * 6;
-    }
+    musique(dt, nuit, aube, dens);
   }
 
   function cacher(oui) {
@@ -149,6 +196,10 @@ export function creerSon(prefs = {}) {
     // à appeler dans un geste du joueur (clic, touche) : crée le contexte ou le reprend
     debloquer() { demarrer(); if (ctx && ctx.state === 'suspended' && !cache) ctx.resume(); },
     evenement, image, interface_, cacher,
+    // le labo : un morceau choisi (null : la playlist) et celui qu'on entend
+    piste(id) { choix = id || 'playlist'; if (ctx) lancerPiste(id || suivante()); },
+    get morceau() { return courante; },
+    get lecture() { return deck && { id: deck.id, t: +deck.el.currentTime.toFixed(2), erreur: deck.el.error ? deck.el.error.code : 0, pret: deck.el.readyState, humeur }; },
     // le labo en crée un par variante et le ferme en la quittant
     fermer() { if (ctx) { try { ctx.close(); } catch { /* déjà fermé */ } ctx = null; } },
     get volumes() { return { ...vol }; },

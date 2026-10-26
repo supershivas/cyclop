@@ -1,8 +1,8 @@
 // Les sections du génie dessinées (Jérôme, v0.66.1 : « un aspect plus humain, comme les autres soldats sans fusil ») : chaque homme de `B.etat.genies[].p` est une petite silhouette (jambes qui marchent,
 // buste, tête, casque, un outil sur deux : pelle ou madrier) aux couleurs de son camp, tournée comme il va ; au travail il se penche et frappe. Le dessin seulement : tout vient de l'état de la bataille
 // (les hommes marchent en bande et se répartissent seuls, voir genie.js). Fabrique `creerGenies({ THREE, scene, bataille, hauteur })`.
-import { PALETTE } from '../palette.js?v=0.76.0';
-import { GENIE_DATA } from '../data/genie.js?v=0.76.0';
+import { PALETTE } from '../palette.js?v=0.76.2';
+import { GENIE_DATA } from '../data/genie.js?v=0.76.2';
 
 const MAX = 4 * GENIE_DATA.sections * GENIE_DATA.hommes;      // les deux camps, toutes les sections en l'air
 // les pièces : [couleur, taille, position locale (hanche en bas), tourne avec le buste ?, pivot de jambe ?]

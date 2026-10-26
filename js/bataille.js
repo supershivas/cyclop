@@ -14,29 +14,29 @@
    La sauvegarde (photo) garde la graine, la liste compacte des impacts, l'état
    de la foule et les petites couches de logique ; jamais le relief : il se
    rejoue depuis la graine et les impacts (rejouerTerrain). */
-import { createRng, hash2 } from './lib/rng.js?v=0.76.0';
-import { impact, hydroLignes, etat as etatCase, vitesseEtat, vitesseCase, ETAT } from './terrain.js?v=0.76.0';
-import { creerArmee, ajouterSoldat, construireGrille, pasArmee, tuerDans, effrayer, compacter, photoArmee, restaurerArmee, b64, deB64, DENSITE, place, poserCaracs, lireCaracs, abimerCaracs, gagner, CARACS } from './army.js?v=0.76.0';
-import { ligneSous } from './tranchees.js?v=0.76.0';
-import { terrainDuSecteur } from './secteur-terrain.js?v=0.76.0';
-import { detruirePont, reconstruirePont, pontEn } from './eaux.js?v=0.76.0';
-import { PONT_COUPE } from './data/ponts.js?v=0.76.0';
-import { calculerCouts, creerCacheChamps, dimensionsCouts, BLOC } from './champs.js?v=0.76.0';
-import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.76.0';
-import { preparerAleatoire, ID_ALEATOIRE } from './generateur.js?v=0.76.0';
-import { AVION, MITRAILLAGE } from './data/mitraillage.js?v=0.76.0';
-import { refusAvion, lancerAvion, avancerAvions, flotteDeDepart, reparerAvions } from './avions.js?v=0.76.0';
-import { CHAR, CHAR_RECHARGE, CHAR_SORTIE } from './data/chars.js?v=0.76.0';
-import { GENIE, GENIE_DATA } from './data/genie.js?v=0.76.0';
-import { refusGenie, lancerGenie, avancerGenies, degatsGenies, sectionsDeDepart } from './genie.js?v=0.76.0';
-import { refusChar, lancerChar, degatsChars, avancerChars } from './chars.js?v=0.76.0';
-import { METEO, SAISONS, SAISON_DEFAUT, PREVISION_JUSTE, temperature } from './data/meteo.js?v=0.76.0';
-import { SECTEURS } from './data/secteur.js?v=0.76.0';
-import { REGIMENTS } from './data/lexique.js?v=0.76.0';
-import { STANCES, STANCE_DEFAUT } from './data/stances.js?v=0.76.0';
-import { DIFFICULTES, DIFFICULTE_DEFAUT } from './data/difficulte.js?v=0.76.0';
-import { grade, departCaracs, caracEnMots } from './identite.js?v=0.76.0';
-import { corvees, rejouerTravaux } from './nuit.js?v=0.76.0';
+import { createRng, hash2 } from './lib/rng.js?v=0.76.2';
+import { impact, hydroLignes, etat as etatCase, vitesseEtat, vitesseCase, ETAT } from './terrain.js?v=0.76.2';
+import { creerArmee, ajouterSoldat, construireGrille, pasArmee, tuerDans, effrayer, compacter, photoArmee, restaurerArmee, b64, deB64, DENSITE, place, poserCaracs, lireCaracs, abimerCaracs, gagner, CARACS } from './army.js?v=0.76.2';
+import { ligneSous } from './tranchees.js?v=0.76.2';
+import { terrainDuSecteur } from './secteur-terrain.js?v=0.76.2';
+import { detruirePont, reconstruirePont, pontEn } from './eaux.js?v=0.76.2';
+import { PONT_COUPE } from './data/ponts.js?v=0.76.2';
+import { calculerCouts, creerCacheChamps, dimensionsCouts, BLOC } from './champs.js?v=0.76.2';
+import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.76.2';
+import { preparerAleatoire, ID_ALEATOIRE } from './generateur.js?v=0.76.2';
+import { AVION, MITRAILLAGE } from './data/mitraillage.js?v=0.76.2';
+import { refusAvion, lancerAvion, avancerAvions, flotteDeDepart, reparerAvions } from './avions.js?v=0.76.2';
+import { CHAR, CHAR_RECHARGE, CHAR_SORTIE } from './data/chars.js?v=0.76.2';
+import { GENIE, GENIE_DATA } from './data/genie.js?v=0.76.2';
+import { refusGenie, lancerGenie, avancerGenies, degatsGenies, sectionsDeDepart } from './genie.js?v=0.76.2';
+import { refusChar, lancerChar, degatsChars, avancerChars } from './chars.js?v=0.76.2';
+import { METEO, SAISONS, SAISON_DEFAUT, PREVISION_JUSTE, temperature } from './data/meteo.js?v=0.76.2';
+import { SECTEURS } from './data/secteur.js?v=0.76.2';
+import { REGIMENTS } from './data/lexique.js?v=0.76.2';
+import { STANCES, STANCE_DEFAUT } from './data/stances.js?v=0.76.2';
+import { DIFFICULTES, DIFFICULTE_DEFAUT } from './data/difficulte.js?v=0.76.2';
+import { grade, departCaracs, caracEnMots } from './identite.js?v=0.76.2';
+import { corvees, rejouerTravaux } from './nuit.js?v=0.76.2';
 
 export const PAS = 1 / 30;                 // s de jeu par pas
 export const NOUS = 0, EUX = 1;
@@ -209,6 +209,12 @@ function formation(reg, x, y, largeurMax, R, forme = 'bloc') {
 
 /* Le secteur de bataille dans le terrain : { x0, y0, x1, y1 } (mètres). Autour,
    des marges sans régiments : les ordres n'y vont pas. */
+/* Un point du terrain dans le secteur de bataille : lui-même, ramené au bord s'il est à moins de `R.tranchee.bordOrdre` m au-delà (v0.76.1, Jérôme : « impossible d'attaquer le défenseur seul, il est au bord du dernier secteur » : un homme à 1 m du bord, dans la marge, était hors de tout ordre), sinon null. */
+export const BORD_ORDRE = 10;
+export function dansLaZone(Z, x, y) {
+  if (x < Z.x0 - BORD_ORDRE || y < Z.y0 - BORD_ORDRE || x >= Z.x1 + BORD_ORDRE || y >= Z.y1 + BORD_ORDRE) return null;
+  return [Math.min(Z.x1 - 0.5, Math.max(Z.x0 + 0.5, x)), Math.min(Z.y1 - 0.5, Math.max(Z.y0 + 0.5, y))];
+}
 export function zone(B) {
   const S = secteurDuJeu(B.etat), m = B.etat.marges;
   return { x0: m.x, y0: m.y, x1: m.x + S.largeur, y1: m.y + S.hauteur };
@@ -272,7 +278,9 @@ function planMarche(B, ids, x, y, forme = 'bloc', camp = NOUS) {
   let regs = ids.map(id => etat.regiments[id]).filter(r => r && r.camp === camp && r.effectif > 0);
   if (!regs.length) return { refus: 'Aucun régiment choisi.' };
   const Z = zone(B);
-  if (x < Z.x0 || y < Z.y0 || x >= Z.x1 || y >= Z.y1) return { refus: 'Hors du secteur.' };
+  const pt = dansLaZone(Z, x, y);
+  if (!pt) return { refus: 'Hors du secteur.' };
+  [x, y] = pt;
   // le moral : un régiment en déroute n'obéit plus ; ébranlé, il ne sort pas vers l'ennemi
   // et un régiment qui refuse de monter (aujourd'hui) n'obéit à rien
   const refuse = regs.filter(r => r.deroute || r.refus === etat.jour || (r.moral < R.moral.ebranle && (camp === NOUS ? y < r.ordre.y - R.moral.avance : y > r.ordre.y + R.moral.avance)));
@@ -398,7 +406,9 @@ export function peutBarrage(B, cal, x, y, camp = NOUS, x2, y2) {
   if (!C) return { refus: `Pas de batterie de ${cal}.` };
   if (etat.phase !== 'jour') return { refus: 'La nuit, les ordres attendent l\'aube.' };
   const Z = zone(B);
-  if (x < Z.x0 || y < Z.y0 || x >= Z.x1 || y >= Z.y1) return { refus: 'Hors du secteur.' };
+  const pt = dansLaZone(Z, x, y);
+  if (!pt) return { refus: 'Hors du secteur.' };
+  [x, y] = pt;
   if (camp === NOUS || etat.deux) {
     const reste = ((camp === NOUS ? etat.batteries : etat.batteriesEux)[cal] ?? 0) - etat.temps;
     if (reste > 0) return { refus: `${nomBatterie(cal)} : encore ${Math.ceil(reste)} s.` };
@@ -420,7 +430,9 @@ export function ordonnerBarrage(B, cal, x, y, camp = NOUS, x2, y2) {
   if (!C) return { refus: `Pas de batterie de ${cal}.` };
   if (etat.phase !== 'jour') return { refus: 'La nuit, les ordres attendent l\'aube.' };
   const Z = zone(B);
-  if (x < Z.x0 || y < Z.y0 || x >= Z.x1 || y >= Z.y1) return { refus: 'Hors du secteur.' };
+  const pt = dansLaZone(Z, x, y);
+  if (!pt) return { refus: 'Hors du secteur.' };
+  [x, y] = pt;
   if (camp === NOUS || etat.deux) {        // (en face, l'IA tire sans attendre ; un second joueur recharge comme nous)
     const bat = camp === NOUS ? etat.batteries : (etat.batteriesEux ??= Object.fromEntries(NOMS_CALIBRES.map(c => [c, 0])));
     const reste = (bat[cal] ?? 0) - etat.temps;
@@ -662,13 +674,24 @@ export function mourir(B, i, cause, ou = null) {
 
 /* Les hommes de chaque camp dans chaque tronçon : [nous, en face] par tronçon. Refait tel quel pour `prises` ; pour
    le dessin et les mots (`actionDe`, la carte), le dernier compte (au plus une demi-seconde de retard). */
+const VOISINS_TRONCON = [[6, 0], [-6, 0], [0, 6], [0, -6], [4, 4], [-4, 4], [4, -4], [-4, -4]];
 function compteTroncons(B) {
-  const { etat, terrain: T, armee: A } = B, n = etat.troncons.length, compte = new Int32Array(n * 2);
+  const { etat, terrain: T, armee: A } = B, n = etat.troncons.length, compte = new Int32Array(n * 2), proche = new Int32Array(n * 2);
   for (let i = 0; i < A.n; i++) {
+    if (A.mort[i]) continue;
     const t = T.troncon[(A.y[i] | 0) * T.W + (A.x[i] | 0)];
     if (t >= 0) compte[t * 2 + A.camp[i]]++;
+    else {
+      // à moins de 6 m d'un tronçon sans y être : il compte comme au contact (`prises` : un défenseur seul au bout d'une tranchée)
+      for (const [dx, dy] of VOISINS_TRONCON) {
+        const xx = (A.x[i] + dx) | 0, yy = (A.y[i] + dy) | 0;
+        if (xx < 0 || yy < 0 || xx >= T.W || yy >= T.H) continue;
+        const u = T.troncon[yy * T.W + xx];
+        if (u >= 0) { proche[u * 2 + A.camp[i]]++; break; }
+      }
+    }
   }
-  B._forces = { tick: etat.ticks, compte };
+  B._forces = { tick: etat.ticks, compte, proche };
   return compte;
 }
 export function forcesTroncons(B) {
@@ -689,7 +712,9 @@ function prises(B) {
     B.disputes[t] = compte[t * 2 + autre] > 0 ? 1 : 0;
     if (!avantDispute && B.disputes[t] && tient === NOUS) B.evenements.push({ type: 'dispute', camp: tient, troncon: t });   // le carnet : l'autre camp est entré chez nous
     const def = compte[t * 2 + tient], att = compte[t * 2 + autre];
-    const ecrase = att >= C.prise && (def === 0 || att >= C.melee * def);
+    // un ou deux défenseurs isolés (le bout d'une tranchée) : ceux qui l'entourent à moins de 6 m comptent aussi, sinon ils tenaient contre un régiment qui ne pouvait pas y entrer
+    const entoure = def <= 2 ? att + B._forces.proche[t * 2 + autre] : att;
+    const ecrase = entoure >= C.prise && (def === 0 || entoure >= C.melee * def);
     etat.melee[t] = ecrase ? etat.melee[t] + 15 * PAS : Math.max(0, etat.melee[t] - 30 * PAS);
     if (ecrase && (def === 0 || etat.melee[t] >= C.tenue)) {
       etat.melee[t] = 0;
@@ -1110,6 +1135,12 @@ export function regarderAu(B, heure, meteo = 'sec') {
   const { etat, R } = B, d = R.jour.heureDebut, f = Math.max(0, Math.min(0.999, (heure - d) / (R.jour.heureFin - d)));
   etat.tickJour = Math.round(f * ticksParJour(R));
   etat.meteo[etat.jour - 1] = meteo;
+}
+/* Les blessés d'aujourd'hui de chaque camp, comptés sur l'armée : `etat.blesses` est un cumul de blessures qui ne redescend jamais (v0.76.2, Jérôme : « les barres de vie disent aucun soldat debout alors qu'il en reste beaucoup » : au bout de quelques jours, blessés cumulés > hommes en vie) */
+export function blessesActuels(B) {
+  const A = B.armee, n = [0, 0];
+  for (let i = 0; i < A.n; i++) if (A.blessure[i] && !A.mort[i]) n[A.camp[i]]++;
+  return n;
 }
 export const effectifs = B => [NOUS, EUX].map(c => B.etat.regiments.filter(r => r.camp === c).reduce((s, r) => s + r.effectif, 0));
 

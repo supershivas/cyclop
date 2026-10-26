@@ -1036,3 +1036,31 @@ test('les médailles : un régiment qui tue et un tronçon pris se lisent, la jo
   assert.ok(!p.regiments.some(m => m.titre === 'Le plus meurtrier'), 'rien depuis le matin');
   assert.ok(Array.isArray(p.soldats));
 });
+
+import { dansLaZone, zone as zoneDe } from '../js/bataille.js';
+import { ligneY as ligneYDe } from '../js/tranchees.js';
+group('le bord du secteur');
+test('un ordre à quelques mètres au-delà du bord est ramené dedans ; plus loin, il est refusé', () => {
+  const B = petite(), Z = zoneDe(B);
+  assert.deepEqual(dansLaZone(Z, Z.x1 + 3, Z.y0 + 50), [Z.x1 - 0.5, Z.y0 + 50]);
+  assert.equal(dansLaZone(Z, Z.x1 + 40, Z.y0 + 50), null);
+  const r = peutOrdonner(B, [0], Z.x1 + 3, Z.y0 + 150);
+  assert.ok(!r.refus || !/Hors du secteur/.test(r.refus), r.refus);
+});
+test('un défenseur seul au bout d\'une tranchée tombe quand ses assaillants l\'entourent sans être dans son tronçon', () => {
+  const B = petite(), A = B.armee, T = B.terrain, Z = zoneDe(B);
+  const L = B.lignes.find(l => l.camp === 1 && l.rang === 0), xe = Z.x1 - 0.8;
+  const k = T.troncon[(Math.round(ligneYDe(L, xe)) | 0) * T.W + (xe | 0)];
+  assert.ok(k >= 0 && B.etat.troncons[k] === 1);
+  let seul = -1;
+  for (let i = 0; i < A.n; i++) if (A.camp[i] === 1 && T.troncon[(A.y[i] | 0) * T.W + (A.x[i] | 0)] === k) { if (seul < 0) seul = i; else A.y[i] -= 40; }
+  // six des nôtres posés à 5 m de la ligne, hors du tronçon
+  const yl = ligneYDe(L, xe), poses = [];
+  for (let i = 0, n = 0; i < A.n && n < 6; i++) if (A.camp[i] === 0) { poses.push([i, xe - 2 - n * 2, yl + 5]); n++; }
+  for (let s = 0; s < 30 * 20 && B.etat.troncons[k] === 1; s++) {
+    A.x[seul] = xe; A.y[seul] = yl; A.mort[seul] = 0;
+    for (const [i, x, y] of poses) { A.x[i] = x; A.y[i] = y; A.mort[i] = 0; }
+    avancer(B);
+  }
+  assert.equal(B.etat.troncons[k], 0, 'pris malgré le défenseur seul');
+});

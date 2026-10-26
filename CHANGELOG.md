@@ -1,5 +1,15 @@
 # Journal des versions
 
+## 0.76.2 — 2026-10-26
+- La musique est celle de Kingvi : sept morceaux en fondu enchaîné, qui suivent le champ (calme, combat, nuit, aube)
+- Les barres de vie du haut comptent les blessés d'aujourd'hui, plus ceux de tous les jours : elles ne tombent plus à zéro
+- Les régiments reprennent leur place sur la carte après plusieurs jours
+
+## 0.76.1 — 2026-10-26
+- Au premier plan, soldats, arbres et herbe ne disparaissent plus sur les hauteurs, quel que soit l'angle de la caméra
+- Un défenseur seul au bout d'une tranchée n'est plus imprenable, et on peut lui donner un ordre même près du bord du secteur
+- Une case de la carte, sans régiment choisi, ouvre le détail de son secteur
+
 ## 0.76.0 — 2026-10-26
 - Un clic sur un secteur de la carte ouvre son détail à la place de la carte : un plan avec les hommes de chaque camp, les tranchées et les secteurs voisins, et la caméra glisse au-dessus
 - Le labo a une section Son : chaque effet, l'ambiance et l'espace, joués par le module du jeu

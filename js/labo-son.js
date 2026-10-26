@@ -1,8 +1,8 @@
 // Le sujet « Le son » du labo (Jérôme, v0.76.0 : « ajoute la section Son au labo », conventions section 14 : le labo fait entendre chaque son).
 // Ce que le jeu fait entendre (js/audio.js, `creerSon`), joué ici par le même module : un bouton par effet, un mélangeur de l'ambiance, un auditeur qu'on déplace.
 // Le dessin n'y est pour rien : de simples boutons de papier. Le son se déverrouille au premier clic (les navigateurs refusent avant).
-import { creerSon } from './audio.js?v=0.76.0';
-import { PALETTE as P } from './palette.js?v=0.76.0';
+import { creerSon, TRACKS } from './audio.js?v=0.76.2';
+import { PALETTE as P } from './palette.js?v=0.76.2';
 
 const el = (tag, css = '', ...kids) => { const e = document.createElement(tag); if (css) e.style.cssText = css; e.append(...kids.flat().filter(k => k != null)); return e; };
 const MONO = 'font:12px/1.4 ui-monospace,monospace;';
@@ -50,7 +50,7 @@ export function maquetteEffets(stage) {
 
 // B · l'ambiance : les sons en continu et la musique, mélangés à la main
 export function maquetteAmbiance(stage) {
-  const m = base(stage, 'Les sons qui ne s\'arrêtent pas : le vent, la pluie, la fusillade, les moteurs, la musique. Chaque case les allume comme le fait l\'état du jeu.');
+  const m = base(stage, 'Les sons qui ne s\'arrêtent pas : le vent, la pluie, la fusillade, les moteurs, la musique (les morceaux de Kingvi). Chaque case les allume comme le fait l\'état du jeu.');
   const e = { fusillade: 0, meteo: 'sec', nuit: false, char: false, avion: false, dist: 60 };
   const METEOS = { sec: {}, pluie: { pluie: 1 }, neige: { neige: 1 }, tempete: { neige: 1, tempete: 1 } };
   const tirs = n => { const t = new Float32Array(n * 6); for (let i = 0; i < n; i++) { t[i * 6] = (Math.random() - 0.5) * 160; t[i * 6 + 1] = (Math.random() - 0.5) * 60; } return t; };   // (le labo : le hasard n'y touche aucune partie)
@@ -72,7 +72,9 @@ export function maquetteAmbiance(stage) {
     m.curseur('Fusillade (tirs/image)', 0, 80, 0, v => { e.fusillade = v; }),
     m.curseur('Distance des engins (m)', 0, 400, 60, v => { e.dist = v; }),
     m.curseur('Effets', 0, 100, 70, v => m.son.volume('effets', v / 100)),
-    m.curseur('Musique', 0, 100, 35, v => m.son.volume('musique', v / 100)),
+    m.curseur('Musique', 0, 100, 50, v => m.son.volume('musique', v / 100)),
+    el('div', `${MONO}color:${P.g};`, 'La musique de Kingvi (assets/music/) : un morceau choisi, ou la playlist qui suit l\'humeur du champ (calme, combat, nuit, aube)'),
+    m.grille(...Object.entries(TRACKS).map(([id, t]) => m.bouton(`${t.nom} · ${t.humeur}`, () => m.son.piste(id))), m.bouton('Playlist', () => m.son.piste(null))),
   );
   return fermer(m);
 }

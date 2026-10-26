@@ -2,9 +2,9 @@
 // quatre lignes de chaque camp (en face au nord, en haut), chaque case en tronçons de 25 m à la couleur de celui qui les
 // tient. Une lettre choisit les régiments du secteur ; une case envoie les régiments choisis dans cette tranchée ; les
 // régiments y sont des cercles numérotés, à leur place. Le dessin seulement : les actions (choisir, ordonner) viennent de main.js.
-import { NOUS, EUX, nombreZones, lettreZone, zone, largeurZone, etendueZones, tronconsDeLigne, forcesTroncons, codeLigne } from '../bataille.js?v=0.76.0';
-import { ligneY } from '../tranchees.js?v=0.76.0';
-import { numeroDe as numeroDeB } from './lecture.js?v=0.76.0';
+import { NOUS, EUX, nombreZones, lettreZone, zone, largeurZone, etendueZones, tronconsDeLigne, forcesTroncons, codeLigne } from '../bataille.js?v=0.76.2';
+import { ligneY } from '../tranchees.js?v=0.76.2';
+import { numeroDe as numeroDeB } from './lecture.js?v=0.76.2';
 
 // `bataille()` : la bataille en cours ; `choisis()` : les régiments choisis (ids) ; `surSecteur`, `surCase`, `surRonde` : les clics
 // `moi()` : le camp qu'on joue (à deux sur le réseau, l'invité est en face : sa carte est tournée d'un demi-tour, ses lignes en bas, A à D de droite à gauche ; v0.30.0)
@@ -24,7 +24,7 @@ export function creerCarte({ $, bataille, choisis, surSecteur, surCase, surRonde
     const kids = [document.createElement('span')];
     for (const s of colonnes) {
       const b = document.createElement('button');
-      b.className = 'sect'; b.textContent = lettreZone(s); b.title = `Choisir les régiments du secteur ${lettreZone(s)}`; b.setAttribute('aria-label', `Choisir les régiments du secteur ${lettreZone(s)}`);
+      b.className = 'sect'; b.textContent = lettreZone(s); b.title = `Voir le secteur ${lettreZone(s)} et choisir ses régiments`; b.setAttribute('aria-label', `Voir le secteur ${lettreZone(s)} et choisir ses régiments`);
       b.onclick = e => surSecteur(s, e.shiftKey);
       kids.push(b);
     }
@@ -69,11 +69,16 @@ export function creerCarte({ $, bataille, choisis, surSecteur, surCase, surRonde
     const B = bataille();
     const A = B.armee, Z = zone(B), L = Z.x1 - Z.x0, centres = new Map(), cont = $('carte-regs'), M = moi(), tourne = M === EUX;
     if (!cont) return;
+    // la médiane, pas la moyenne (v0.76.2, Jérôme : « après 6 jours, les régiments ne sont plus correctement placés sur la carte ») : quelques hommes restés loin
+    // (blessés qui reculent, égarés, relève) tiraient le cercle hors de la place du régiment
+    const xs = new Map(), ys = new Map();
     for (let i = 0; i < A.n; i++) {
-      let c = centres.get(A.reg[i]);
-      if (!c) centres.set(A.reg[i], c = { x: 0, y: 0, n: 0 });
-      c.x += A.x[i]; c.y += A.y[i]; c.n++;
+      if (A.mort[i]) continue;
+      (xs.get(A.reg[i]) || xs.set(A.reg[i], []).get(A.reg[i])).push(A.x[i]);
+      (ys.get(A.reg[i]) || ys.set(A.reg[i], []).get(A.reg[i])).push(A.y[i]);
     }
+    const med = a => { a.sort((p, q) => p - q); return a[a.length >> 1]; };
+    for (const [id, lx] of xs) centres.set(id, { x: med(lx), y: med(ys.get(id)), n: 1 });
     for (const r of B.etat.regiments) {
       let el = rondes.get(r.id);
       const c = centres.get(r.id);
