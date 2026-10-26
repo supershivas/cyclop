@@ -1,5 +1,9 @@
 # Journal des versions
 
+## 0.83.0 — 2026-10-26
+- Les toits de bois protègent du tir : les balles, les éclats d'obus et le mitraillage touchent moins ceux qui sont dessous, tant que la tranchée n'est pas éboulée
+- Des nids de mitrailleuses sur la première ligne de chaque camp (un par secteur) : ils fauchent devant eux, les obus les détruisent, le génie les refait (un clic sur le nid détruit avec « Génie »)
+
 ## 0.82.0 — 2026-10-26
 - Les tranchées ont des toits de bois sur quelques tronçons ; les sacs de sable sont refaits sac par sac, en deux assises ; les barbelés sont refaits en deux rangées de piquets avec des fils en croix
 - Le bois, les sacs et les toits s'éboulent là où les obus comblent la tranchée

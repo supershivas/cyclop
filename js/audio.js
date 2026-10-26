@@ -91,6 +91,9 @@ export function creerSon(prefs = {}) {
     } else if (e.type === 'char-tir') {
       const { v, pan } = place(e.x, e.y, ecoute, 0.12);
       eclat(0.22, { f0: 900, f1: 90, gain: 0.7 * v, pan, q: 0.6 }); ton(110, 45, 0.3, { gain: 0.6 * v, pan });
+    } else if (e.type === 'nid-detruit') {
+      const { v, pan } = place(e.x, e.y, ecoute, 0.2);
+      eclat(0.5, { f0: 1400, f1: 70, gain: 0.8 * v, pan, q: 0.5 }); ton(90, 35, 0.4, { gain: 0.7 * v, pan });
     } else if (e.type === 'avion-abattu') {
       const { v, pan } = place(e.x, e.y, ecoute, 0.2);
       ton(520, 60, 2.2, { type: 'sawtooth', gain: 0.5 * v, pan });

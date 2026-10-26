@@ -1,8 +1,9 @@
 // Ce que l'état des tronçons montre sur le terrain : les fanions (à la couleur de celui qui tient le tronçon, déchirés quand l'autre
 // camp y est entré), le clignotement d'un ordre et la surbrillance de la visée, les ouvrages des tranchées (traverses, sacs de terre,
 // fil de fer, bois). Le dessin seulement : tout se lit de l'état, rien n'en est sauvegardé.
-import { PALETTE } from '../palette.js?v=0.82.0';
-import { ligneY, demiLargeur } from '../tranchees.js?v=0.82.0';
+import { PALETTE } from '../palette.js?v=0.83.0';
+import { ligneY, demiLargeur } from '../tranchees.js?v=0.83.0';
+import { TOITS } from '../data/nids.js?v=0.83.0';
 
 // `THREE`, `scene`, `col` (une couleur de la palette), `surface(x, z)` (la hauteur du sol), `projeter()` (le centre de la vue et les pixels par mètre),
 // `vue`, `zooms` viennent de creerRendu ; `bataille()`, `tAnim()` (le temps du dessin), `vide()` (rien n'est dessiné) et `survolTroncons()`
@@ -171,7 +172,7 @@ export function creerTroncons({ THREE, scene, col, surface, projeter, vue, zooms
     // Les toits de bois (Jérôme, v0.82.0 : « certaines tranchées ont aussi des toits en bois ») : sur quelques tronçons des deux premières lignes (un hachage de leur numéro et de la graine), un abri
     // de 9 m couvert de planches en travers, posées à claire-voie (on voit encore dedans), sur deux lisses ; éboulé, les planches pendent, puis gisent à terre.
     const toit = (tr, L) => {
-      const a = tr.x0 + 7, b = tr.x0 + 16;
+      const a = tr.x0 + TOITS.de, b = tr.x0 + TOITS.a;
       for (const cote of [-1, 1]) { const xs = (a + b) / 2, zc = ligneY(L, xs), z = zc + cote * (demiLargeur(L, xs) + 0.45), h = surface(xs, zc) + prof * 0.25 + 0.2; if (etatDe(L, xs) > 0) boite(a, b, h - 0.12, h, z - 0.1, z + 0.1, cMadrierH, cMadrierB); }
       for (let x = a; x < b; x += 0.8) {
         const xs = x + 0.28, zc = ligneY(L, xs), demi = demiLargeur(L, xs) + 0.55, h0 = surface(xs, zc), hr = h0 + prof * 0.25 + 0.2, j = hachage(xs, zc * 3.1), etat = etatDe(L, xs);
@@ -189,7 +190,7 @@ export function creerTroncons({ THREE, scene, col, surface, projeter, vue, zooms
       // le bois : un caillebotis au fond, des planches contre les parois, des madriers (montants et lisse) tous les 4 m ; il disparaît où les obus ont comblé la tranchée
       if (p >= 4) bois(tr, L);
       // les toits (quelques tronçons des deux premières lignes)
-      if (p >= 4 && L.rang <= 1 && hachage(t * 7.3 + 1, (et.graine | 0) % 997) < 0.25) toit(tr, L);
+      if (p >= 4 && tr.toit) toit(tr, L);       // (quels tronçons ont un toit : la logique, `tr.toit` ; il protège du tir)
       // les sacs de sable : sur le parapet, du côté de l'ennemi ; à l'envers quand le tronçon est pris
       const cote = (pris ? -1 : 1) * f * (L.amp + 2.1);
       if (p >= 4) sacs(tr, L, cote);
@@ -209,6 +210,23 @@ export function creerTroncons({ THREE, scene, col, surface, projeter, vue, zooms
         }
       }
     });
+    // Les nids de mitrailleuses (v0.83.0) : trois murs de sacs en U ouverts vers l'ennemi, la mitrailleuse (un fût, un bouclier, un trépied) ; détruit : des sacs éparpillés, noircis, un fût à terre
+    for (const n of et.nids || []) {
+      if (Math.abs(n.x - cx) > e || Math.abs(n.y - cz) > e) continue;
+      const f = n.face, h = surface(n.x, n.y);
+      if (n.etat === 'detruit') {
+        for (let q = 0; q < 9; q++) { const a = hachage(n.id * 3 + q, 5.1) * 6.28, r = 0.6 + hachage(q, n.id + 7.7) * 1.9, x = n.x + Math.cos(a) * r, z = n.y + Math.sin(a) * r, hh = surface(x, z); boite(x - 0.4, x + 0.4, hh, hh + 0.2, z - 0.2, z + 0.2, cMadrierB, cMadrierH); }
+        boite(n.x - 0.9, n.x + 0.5, h + 0.05, h + 0.14, n.y - 0.1 * f, n.y + 0.15 * f, cMadrierH, cMadrierB);       // le fût à terre
+        continue;
+      }
+      for (const [x0, x1, z0, z1] of [[n.x - 1.1, n.x + 1.1, n.y - f * 1.0 - 0.25, n.y - f * 1.0 + 0.25], [n.x - 1.1 - 0.25, n.x - 1.1 + 0.25, n.y - f * 1.0, n.y + f * 0.5], [n.x + 1.1 - 0.25, n.x + 1.1 + 0.25, n.y - f * 1.0, n.y + f * 0.5]]) {
+        const za = Math.min(z0, z1), zb = Math.max(z0, z1);
+        boite(x0, x1, h, h + 0.27, za, zb, cSacH, cSacB); boite(x0 + 0.1, x1 - 0.1, h + 0.27, h + 0.5, za + 0.05, zb - 0.05, cSac2H, cSacB);
+      }
+      boite(n.x - 0.05, n.x + 0.05, h + 0.55, h + 0.65, n.y + (f > 0 ? 0 : -1.2), n.y + (f > 0 ? 1.2 : 0), cMadrierB, cMadrierH);       // le fût
+      boite(n.x - 0.35, n.x + 0.35, h + 0.45, h + 0.8, n.y + f * 0.15 - 0.05, n.y + f * 0.15 + 0.05, cMadrierH, cMadrierB);        // le bouclier
+      boite(n.x - 0.12, n.x + 0.12, h, h + 0.5, n.y - 0.12, n.y + 0.12, cMadrierH, cMadrierB);                                   // le trépied
+    }
     ouvGeo.attributes.position.needsUpdate = true; ouvGeo.attributes.color.needsUpdate = true; ouvGeo.setDrawRange(0, nv);
     filGeo.attributes.position.needsUpdate = true; filGeo.setDrawRange(0, nf);
   }

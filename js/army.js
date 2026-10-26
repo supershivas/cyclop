@@ -25,9 +25,10 @@
      (rng.js), pour que la même graine rejoue la même bataille.
 
    Logique pure : aucun DOM. Le rendu lit les tableaux (rendu3d.js). */
-import { hauteurQ, vitesseCase } from './terrain.js?v=0.82.0';
-import { ligneY } from './tranchees.js?v=0.82.0';
-import { caracteristiques } from './identite.js?v=0.82.0';
+import { hauteurQ, vitesseCase } from './terrain.js?v=0.83.0';
+import { ligneY } from './tranchees.js?v=0.83.0';
+import { TOITS } from './data/nids.js?v=0.83.0';
+import { caracteristiques } from './identite.js?v=0.83.0';
 
 export const GRILLE = 2;           // m : cases de voisinage
 export const DENSITE = 8;          // m : carrés de densité (tir)
@@ -334,6 +335,13 @@ export function pasArmee(A, ctx) {
 /* Un tir (rend false s'il n'y avait personne à viser) : le carré le plus dense d'ennemis dans le cône du front, à portée ;
    la chance de toucher croît avec la densité et baisse si la cible est dans
    un creux. La victime est prise dans la grille fine. */
+/* Ce qu'un toit de bois laisse passer (v0.83.0) : 1 sans toit ; sous un toit intact (la tranchée creusée : ≥ 5 quarts) la chance `TOITS[genre]`, à moitié éboulé (≥ 3) la moyenne avec 1 ; éboulé : 1 */
+export function toitFacteur(T, c, genre) {
+  if (!T.toit || !T.toit[c]) return 1;
+  const d = -T.diff[c], f = TOITS[genre];
+  return d >= 5 ? f : d >= 3 ? (1 + f) / 2 : 1;
+}
+
 function tirer(A, i, o, ctx, stance) {
   const { R, rng, T, frapper } = ctx;
   const { dw, dh, dens } = A;
@@ -385,6 +393,7 @@ function tirer(A, i, o, ctx, stance) {
     const abri = t < 0 ? P.abri : (A.y[i] - A.y[v]) * ctx.faces[t] > 0 ? R.tranchee.abriFace : R.tranchee.abriDos;
     if (rng() >= abri) return true;
   }
+  { const f = toitFacteur(T, cv, 'tir'); if (f < 1 && rng() >= f) return true; }       // un toit de bois (v0.83.0)
   frapper(v, 'tir', R.soldat.mortelTir, null, i);
   return true;
 }
@@ -409,6 +418,7 @@ export function tuerDans(A, x0, y0, rayon, ctx, letal = 1) {
       let p = Math.min(0.95, 0.7 * letal * (1 - d / rayon) ** 1.5);
       const ci = (A.y[i] | 0) * T.W + (A.x[i] | 0);
       if (T.diff[ci] <= -2) p *= R.obus.abri;
+      p *= toitFacteur(T, ci, 'obus');
       if (rng() < p) frapper(i, 'obus', 0.5 + 0.5 * (1 - d / rayon), { x0, y0, d, rayon });
     }
   }

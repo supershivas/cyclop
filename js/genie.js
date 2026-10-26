@@ -3,14 +3,16 @@
    Elle naît hors du terrain derrière son camp, marche en droite ligne jusqu'à la rive du pont coupé (`pont` : l'indice dans `T.pontsListe`), puis le refait : `travail` va de 0 à 1,
    et gagne `n / hommes` fois plus vite que la section au complet (de 2 à 4 h de jeu avec 20 hommes : `PONTS_HEURES`). Un obus couche une part de ses hommes. `etat.sapeurs[camp]` :
    les sections au dépôt. Les ordres rendent { refus } comme les barrages. */
-import { GENIE_DATA } from './data/genie.js?v=0.82.0';
-import { CALIBRES } from './data/calibres.js?v=0.82.0';
-import { CHAR_SORTIE } from './data/chars.js?v=0.82.0';
-import { PONTS_HEURES } from './data/ponts.js?v=0.82.0';
-import { routeChar } from './chars.js?v=0.82.0';
-import { reconstruirePont } from './eaux.js?v=0.82.0';
-import { toucher } from './terrain.js?v=0.82.0';
-import { hash2 } from './lib/rng.js?v=0.82.0';
+import { GENIE_DATA } from './data/genie.js?v=0.83.0';
+import { CALIBRES } from './data/calibres.js?v=0.83.0';
+import { CHAR_SORTIE } from './data/chars.js?v=0.83.0';
+import { PONTS_HEURES } from './data/ponts.js?v=0.83.0';
+import { routeChar } from './chars.js?v=0.83.0';
+import { reconstruirePont } from './eaux.js?v=0.83.0';
+import { toucher } from './terrain.js?v=0.83.0';
+import { hash2 } from './lib/rng.js?v=0.83.0';
+import { NIDS } from './data/nids.js?v=0.83.0';
+import { nidDetruitVise, reparerNid } from './nids.js?v=0.83.0';
 
 export const sectionsDeDepart = () => [GENIE_DATA.sections, GENIE_DATA.sections];
 
@@ -36,7 +38,15 @@ export function refusGenie(B, camp, x, y, ar) {
   const { etat, terrain: T } = B;
   if (!etat.sapeurs[camp]) return { refus: 'Plus une section du génie : elles travaillent déjà, ou sont anéanties.' };
   const k = pontVise(B, x, y);
-  if (k < 0) return { refus: 'Visez un pont coupé.' };
+  if (k < 0) {
+    // un nid de mitrailleuse détruit (v0.83.0) : le génie le refait
+    const nid = nidDetruitVise(B, camp, x, y);
+    if (nid < 0) return { refus: 'Visez un pont coupé ou un de nos nids de mitrailleuse détruits.' };
+    if (etat.genies.some(g => g.nid === nid)) return { refus: 'Le génie y travaille déjà.' };
+    const N = etat.nids.find(n => n.id === nid), bx = N.x, by = N.y - N.face * 5;      // (il y arrive par l'arrière de la tranchée)
+    if (ar !== undefined && !routeChar(B, bx, ar, bx, by)) return { refus: 'Aucun passage jusqu\'à ce nid : eau profonde ou trous.' };
+    return { ok: true, nid };
+  }
   if (etat.genies.some(g => g.pont === k)) return { refus: 'Le génie y travaille déjà.' };
   // la route : celle d'un char (l'eau profonde et les trous qu'il ne passe pas, les ponts qui ne le portent pas), de l'arrière de leur camp à la rive ; sans route, l'ordre est refusé
   const [bx, by] = rive(B, camp, T.pontsListe[k]);
@@ -44,10 +54,12 @@ export function refusGenie(B, camp, x, y, ar) {
   return { ok: true, pont: k };
 }
 
-export function lancerGenie(B, camp, pont, ar) {
-  const { etat, terrain: T } = B, P = T.pontsListe[pont], bout = rive(B, camp, P), chemin = ar !== undefined ? routeChar(B, bout[0], ar, bout[0], bout[1]) : null;
+/* Une section au travail : `cible` est le résultat de `refusGenie` : { pont } (un pont coupé) ou { nid } (un nid de mitrailleuse détruit) */
+export function lancerGenie(B, camp, cible, ar) {
+  const { etat, terrain: T } = B, nid = cible.nid !== undefined ? etat.nids.find(n => n.id === cible.nid) : null, pont = cible.pont;
+  const bout = nid ? [nid.x, nid.y - nid.face * 5] : rive(B, camp, T.pontsListe[pont]), chemin = ar !== undefined ? routeChar(B, bout[0], ar, bout[0], bout[1]) : null;
   etat.sapeurs[camp]--;
-  etat.genies.push({ id: etat.genies.length ? etat.genies[etat.genies.length - 1].id + 1 : 0, camp, pont, x: bout[0], y: camp === 0 ? T.H + CHAR_SORTIE : -CHAR_SORTIE, tx: bout[0], ty: bout[1], dx0: bout[0], ar, chemin, k: 0, hx: 0, hy: camp === 0 ? -1 : 1, n: GENIE_DATA.hommes, etat: 'marche', travail: 0, p: [] });
+  etat.genies.push({ id: etat.genies.length ? etat.genies[etat.genies.length - 1].id + 1 : 0, camp, ...(nid ? { nid: nid.id } : { pont }), x: bout[0], y: camp === 0 ? T.H + CHAR_SORTIE : -CHAR_SORTIE, tx: bout[0], ty: bout[1], dx0: bout[0], ar, chemin, k: 0, hx: 0, hy: camp === 0 ? -1 : 1, n: GENIE_DATA.hommes, etat: 'marche', travail: 0, p: [] });
   const g = etat.genies[etat.genies.length - 1], hy = camp === 0 ? -1 : 1;      // (ils partent vers le nord ou le sud)
   for (let i = 0; i < g.n; i++) { const [ox, oy] = rang(g, i, 0, hy); g.p.push(g.x + ox, g.y + oy, 0, 0); }
 }
@@ -59,6 +71,7 @@ function rang(g, i, hx, hy) {
 }
 // sa place au travail : sur la rive de leur camp, autour du bout de l'ouvrage, étalés le long de l'eau de part et d'autre
 function poste(B, g, i) {
+  if (g.nid !== undefined) { const lat = (hash2(g.id, i, 3) * 2 - 1) * 3.5, recul = 0.5 + hash2(g.id, i, 4) * 2.5; return [g.tx + lat, g.ty + (g.camp === 0 ? 1 : -1) * recul]; }      // (autour du nid, derrière lui)
   const P = B.terrain.pontsListe[g.pont], { x: ox, y: oy } = B.etat.marges, ux = P.x2 - P.x, uy = P.y2 - P.y, l = Math.hypot(ux, uy) || 1;
   const s = Math.sign((g.tx - ox - (P.x + P.x2) / 2) * ux + (g.ty - oy - (P.y + P.y2) / 2) * uy) || 1, ax = ux / l * s, ay = uy / l * s;      // vers l'intérieur de la rive
   const lat = (hash2(g.id, i, 3) * 2 - 1) * (P.r + 4), recul = 0.8 + hash2(g.id, i, 4) * 3.2;
@@ -107,8 +120,8 @@ export function avancerGenies(B, ctx) {
   const { etat, terrain: T, R } = B, dt = ctx.dt, secParHeure = R.jour.duree / (R.jour.heureFin - R.jour.heureDebut);
   for (const g of etat.genies) {
     if (g.etat === 'detruit') continue;
-    const P = T.pontsListe[g.pont];
-    if (!P.detruit) { g.etat = 'fini'; continue; }        // l'autre camp l'a déjà refait
+    const P = g.nid !== undefined ? null : T.pontsListe[g.pont], N = g.nid !== undefined ? etat.nids.find(n => n.id === g.nid) : null;
+    if (P ? !P.detruit : !N || N.etat !== 'detruit') { g.etat = 'fini'; continue; }        // l'autre camp l'a déjà refait (un nid refait en face, la nuit)
     bande(B, g, dt);
     if (g.etat === 'marche') {
       // le centre attend ceux qui traînent (la bande ne s'étire pas) ; il suit le chemin d'un char, après la route jusqu'à l'arrière de son camp
@@ -125,8 +138,9 @@ export function avancerGenies(B, ctx) {
       g.hx = (vx - g.x) / wd; g.hy = (vy - g.y) / wd;
       g.x += g.hx * Math.min(v, wd); g.y += g.hy * Math.min(v, wd);
     } else {
-      g.travail += (g.n / GENIE_DATA.hommes) * dt / ((PONTS_HEURES[P.type] ?? 3) * secParHeure);
-      if (g.travail >= 1) {
+      g.travail += (g.n / GENIE_DATA.hommes) * dt / ((P ? PONTS_HEURES[P.type] ?? 3 : NIDS.travail) * secParHeure);
+      if (g.travail >= 1 && N) { reparerNid(B, N.id); g.etat = 'fini'; }
+      else if (g.travail >= 1) {
         reconstruirePont(T, P);
         for (const k of P.cases) toucher(T, k % T.W, (k / T.W) | 0);
         etat.pontsRepares.push([g.pont, etat.jour, etat.tickJour]);

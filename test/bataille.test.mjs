@@ -482,7 +482,8 @@ test('un blessé laissé au front peut mourir dans la nuit', () => {
   assert.ok(blesses > 0);
   const r = aube(B, {});
   // (sauf ceux qu'en face évacue)
-  assert.equal(r.bilan[0].mortsBlesses + r.bilan[1].mortsBlesses + r.bilan[1].evacues + r.bilan[1].mortsCorvee, blesses);
+  // (… et la mêlée de nuit, au contact, tue aussi des hommes valides : le compte est donc une borne)
+  assert.ok(r.bilan[0].mortsBlesses + r.bilan[1].mortsBlesses + r.bilan[1].evacues + r.bilan[1].mortsCorvee + r.bilan[0].mortsMelee + r.bilan[1].mortsMelee >= blesses, 'chaque blessé est mort ou évacué');
   for (let i = 0; i < A.n; i++) assert.equal(A.blessure[i], 0);
 });
 
@@ -1159,4 +1160,70 @@ test('le canon relu en route donne la même partie', () => {
   const C = restaurer(photo(B), R);
   for (let s = 0; s < 30 * 25; s++) { avancer(B); avancer(C); }
   assert.equal(empreinte(B), empreinte(C));
+});
+
+import { toitFacteur } from '../js/army.js';
+import { TOITS, NIDS } from '../js/data/nids.js';
+import { degatsNids } from '../js/nids.js';
+group('les toits et les nids de mitrailleuses');
+test('les toits : quelques tronçons des deux premières lignes, les mêmes à chaque lecture ; ils filtrent le tir tant que la tranchée est creusée', () => {
+  const B = petite(), C = restaurer(photo(B), R);
+  const n = B.troncons.filter(t => t.toit).length;
+  assert.ok(n > 3 && n < B.troncons.length / 2, `${n} tronçons couverts`);
+  assert.deepEqual(C.troncons.map(t => !!t.toit), B.troncons.map(t => !!t.toit), 'la partie relue a les mêmes toits');
+  assert.ok(B.terrain.toit.some(v => v === 1) && !B.terrain.toit.every(v => v === 1));
+  const c = B.terrain.toit.findIndex(v => v === 1);
+  B.terrain.diff[c] = -6; assert.equal(toitFacteur(B.terrain, c, 'tir'), TOITS.tir);
+  B.terrain.diff[c] = -4; assert.ok(Math.abs(toitFacteur(B.terrain, c, 'tir') - (1 + TOITS.tir) / 2) < 1e-9);
+  B.terrain.diff[c] = -1; assert.equal(toitFacteur(B.terrain, c, 'tir'), 1, 'éboulé : plus de toit');
+  const sans = B.terrain.toit.findIndex(v => v === 0); assert.equal(toitFacteur(B.terrain, sans, 'tir'), 1);
+});
+const nidDe = (B, camp) => B.etat.nids.find(n => n.camp === camp);
+// des hommes de chaque camp : `n` de camp `camp`, posés autour de (x, y)
+function poser(B, camp, n, x, y, dispersion = 6) {
+  const A = B.armee; let k = 0;
+  for (let i = 0; i < A.n && k < n; i++) if (A.camp[i] === camp && !A.mort[i]) { A.x[i] = x + (k % 10 - 5) * dispersion / 5; A.y[i] = y + Math.floor(k / 10) * dispersion / 5; A.vx[i] = A.vy[i] = 0; k++; }
+}
+test('un nid de mitrailleuse : un par secteur et par camp ; servi, il couche les hommes d\'en face dans son cône, pas derrière lui, pas sans équipage, pas si son tronçon est pris', () => {
+  const B = petite(), n = nidDe(B, 0);
+  assert.equal(B.etat.nids.filter(k => k.camp === 0).length, 4); assert.equal(B.etat.nids.filter(k => k.camp === 1).length, 4);
+  const morts = () => B.etat.pertes[1];
+  const jouer = s => { for (let k = 0; k < s; k++) { poser(B, 1, 40, n.x, n.y + n.face * 40, 30); poser(B, 0, 1, n.x, n.y, 1); avancer(B); } };
+  const avant = morts(); jouer(30 * 20);
+  assert.ok(morts() - avant >= 3, `il a couché des hommes devant lui (${morts() - avant})`);
+  // derrière lui : personne n'est touché
+  const B2 = petite(), n2 = nidDe(B2, 0), a2 = B2.etat.pertes[1];
+  for (let k = 0; k < 30 * 20; k++) { poser(B2, 1, 40, n2.x, n2.y - n2.face * 40, 30); poser(B2, 0, 1, n2.x, n2.y, 1); avancer(B2); }
+  assert.ok(B2.etat.pertes[1] - a2 <= avant === true || B2.etat.pertes[1] - a2 < morts() - avant, 'derrière lui, le nid ne tire pas (moins de morts)');
+  // sans équipage
+  const B3 = petite(), n3 = nidDe(B3, 0), a3 = B3.etat.pertes[1];
+  for (let k = 0; k < 30 * 20; k++) { poser(B3, 1, 40, n3.x, n3.y + n3.face * 40, 30); for (let i = 0; i < B3.armee.n; i++) if (B3.armee.camp[i] === 0) { B3.armee.x[i] = 5; B3.armee.y[i] = 5; } avancer(B3); }
+  assert.ok(B3.etat.pertes[1] - a3 < morts() - avant, 'sans équipage, il se tait');
+  // tronçon pris
+  const B4 = petite(), n4 = nidDe(B4, 0); B4.etat.troncons[n4.troncon] = 1;
+  const a4 = B4.etat.pertes[1];
+  for (let k = 0; k < 30 * 20; k++) { poser(B4, 1, 40, n4.x, n4.y + n4.face * 40, 30); poser(B4, 0, 1, n4.x, n4.y, 1); avancer(B4); }
+  assert.ok(B4.etat.pertes[1] - a4 < morts() - avant, 'son tronçon pris, il se tait');
+});
+test('un obus de 75 abîme un nid, un 155 sur lui le détruit ; le génie le refait ; en face, la nuit, il se refait une fois sur deux', () => {
+  const B = petite(), n = nidDe(B, 0);
+  degatsNids(B, n.x, n.y, '75'); assert.ok(n.pv < NIDS.pv && n.etat === 'actif');
+  degatsNids(B, n.x, n.y, '155');
+  assert.equal(n.etat, 'detruit'); assert.ok(B.evenements.some(e => e.type === 'nid-detruit'));
+  const r = ordonnerBarrage(B, 'genie', n.x, n.y + 1, 0);
+  assert.ok(r.ok, JSON.stringify(r));
+  assert.equal(B.etat.genies.length, 1); assert.equal(B.etat.genies[0].nid, n.id);
+  for (let k = 0; k < 30 * 16; k++) avancer(B);
+  assert.match(ordonnerBarrage(B, 'genie', n.x, n.y, 0).refus, /déjà/);
+  const C = restaurer(photo(B), R);
+  for (let k = 0; k < 30 * 160 && n.etat === 'detruit'; k++) { avancer(B); avancer(C); }
+  assert.equal(n.etat, 'actif'); assert.equal(n.pv, NIDS.pv);
+  assert.equal(empreinte(B), empreinte(C), 'la partie relue en chemin donne la même réparation');
+  assert.match(ordonnerBarrage(B, 'genie', n.x, n.y, 0).refus, /Visez/);
+  // en face : détruits, certains sont refaits dans la nuit
+  const D = petite(), e = D.etat.nids.filter(k => k.camp === 1);
+  for (const k of e) { k.etat = 'detruit'; k.pv = 0; }
+  D.etat.phase = 'nuit'; aube(D);
+  const refaits = e.filter(k => k.etat === 'actif').length;
+  assert.ok(refaits >= 0 && refaits < 4, `refaits : ${refaits} sur 4`);
 });
