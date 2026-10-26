@@ -151,8 +151,9 @@ const pl = [0, 0];
 /* Les nombres de la posture d'un régiment (`R.stance`, data/stances.js) ; un régiment sans posture tire à volonté. */
 export const parametresStance = (R, id) => R.stance[id] ?? R.stance.volonte;
 /* La chance de toucher d'un tir : la densité du carré visé, l'adresse acquise, la posture. */
-export const chanceTir = (R, stance, densite, exp, adresse = 50) =>
-  R.tir.precision * parametresStance(R, stance).precision * Math.min(1, densite / R.tir.densite) * (1 + R.experience.adresse * exp) * facteur(R.caracteristiques.adresse, adresse, 1);
+export const chanceTir = (R, stance, densite, exp, adresse = 50, distance = Infinity) =>
+  // (v0.79.0 : un homme seul, visé de près, n'est plus presque invulnérable : `tir.proche` m, la visée compte comme une cible dense)
+  R.tir.precision * parametresStance(R, stance).precision * Math.max(Math.min(1, densite / R.tir.densite), distance < R.tir.proche ? 1 - distance / R.tir.proche : 0) * (1 + R.experience.adresse * exp) * facteur(R.caracteristiques.adresse, adresse, 1);
 /* L'effet d'une caractéristique (0 à 100) : 1 ± amplitude × (valeur − 50 %) ; `sens` −1 : plus il en a, moins ça pèse (la fatigue, la peur). */
 export const facteur = (amplitude, valeur, sens) => 1 + sens * amplitude * (valeur / 100 - 0.5);
 
@@ -162,6 +163,32 @@ export const facteur = (amplitude, valeur, sens) => 1 + sens * amplitude * (vale
    compacter(). */
 // une blessure à la jambe est légère pour une part des hommes (`soldat.jambeLegere`) : un hachage de leur numéro, sans hasard ni état
 export const legere = (id, part) => (Math.imul(id + 1, 2654435761) >>> 0) / 4294967296 < part;
+/* Un ennemi isolé à portée de charge (Jérôme, v0.79.0 : « les deux soldats kaki au milieu sont inattaquables, alors qu'ils devraient l'être au corps à corps ») : le plus proche
+   des ennemis à moins de `rayon` m dont le carré de densité n'en compte que 1 à 3. Rend sa place [x, y] ou null. Sans hasard. */
+function isole(A, i, rayon) {
+  const { dw, dh, dens } = A, de = dens[1 - A.camp[i]], xi = A.x[i], yi = A.y[i], rB = Math.ceil(rayon / DENSITE), k = DENSITE / GRILLE;
+  const bx = (xi / DENSITE) | 0, by = (yi / DENSITE) | 0;
+  let meilleur = null, md2 = rayon * rayon;
+  for (let oy = -rB; oy <= rB; oy++) {
+    const yy = by + oy; if (yy < 0 || yy >= dh) continue;
+    for (let ox = -rB; ox <= rB; ox++) {
+      const xx = bx + ox; if (xx < 0 || xx >= dw) continue;
+      const m = de[yy * dw + xx];
+      if (m < 1 || m > 3) continue;
+      for (let fy = yy * k; fy < (yy + 1) * k && fy < A.gh; fy++) for (let fx = xx * k; fx < (xx + 1) * k && fx < A.gw; fx++) {
+        const c = fy * A.gw + fx;
+        for (let s = A.cellStart[c], e = A.cellStart[c + 1]; s < e; s++) {
+          const j = A.sorted[s];
+          if (A.camp[j] === A.camp[i] || A.mort[j]) continue;
+          const d2 = (A.x[j] - xi) ** 2 + (A.y[j] - yi) ** 2;
+          if (d2 < md2) { md2 = d2; meilleur = j; }
+        }
+      }
+    }
+  }
+  return meilleur === null ? null : [A.x[meilleur], A.y[meilleur]];
+}
+
 export function pasArmee(A, ctx) {
   const { T, R, regiments, champDe, rng, dt, gel } = ctx;
   const { n, x, y, vx, vy, rnd, camp, reg, slot, mort, gw, gh, cellStart, sorted, cellOf, tirT, coince, fatJ, fatB, peur, blessure } = A;
@@ -211,6 +238,11 @@ export function pasArmee(A, ctx) {
       voulu = Math.min(1, d / 2.5);           // il ralentit en arrivant
       if (d < 0.3) voulu = 0;
     } else voulu = 0;
+    // ─ La charge sur un isolé : un homme sur `charge.part`, valide, sans ennemi au contact, va au corps à corps avec l'ennemi seul tout près (sans hasard : `rnd`) ─
+    if (rnd[i] < M.chargePart && ennemi < 0 && !retrait && !blessure[i] && !r.deroute && peur[i] < Sd.terreur) {
+      const cible = isole(A, i, M.charge);
+      if (cible) { const cx = cible[0] - xi, cy = cible[1] - yi, cd = Math.hypot(cx, cy) || 1; gx = cx / cd; gy = cy / cd; voulu = 1; }
+    }
     // ─ La case, la marche devant ─
     const ci = xi | 0, cj = yi | 0, cc = cj * W + ci;
     let terrain = vitesseCase(T, cc, R, gel);
@@ -305,7 +337,7 @@ function tirer(A, i, o, ctx, stance) {
   const P = R.tir, portee = P.portee * parametresStance(R, stance).portee, rB = Math.ceil(portee / DENSITE);
   const bx = (A.x[i] / DENSITE) | 0, by = (A.y[i] / DENSITE) | 0;
   const cosC = Math.cos(P.cone);
-  let best = -1, bestN = 0;
+  let best = -1, bestN = 0, bestD = Infinity;
   for (let oy = -rB; oy <= rB; oy++) {
     const yy = by + oy; if (yy < 0 || yy >= dh) continue;
     for (let ox = -rB; ox <= rB; ox++) {
@@ -315,12 +347,12 @@ function tirer(A, i, o, ctx, stance) {
       const ddx = (xx + 0.5) * DENSITE - A.x[i], ddy = (yy + 0.5) * DENSITE - A.y[i], dd = Math.hypot(ddx, ddy) || 1;
       if (dd > portee) continue;
       if ((ddx * o.fx + ddy * o.fy) / dd < cosC) continue;
-      best = b; bestN = m;
+      best = b; bestN = m; bestD = dd;
     }
   }
   if (best < 0) return false;
   if (ctx.tir) { const bxx = best % dw; ctx.tir(i, (bxx + 0.5) * DENSITE, ((best - bxx) / dw + 0.5) * DENSITE); }   // pour le dessin : un tir part (jamais l'état)
-  const chance = chanceTir(R, stance, bestN, A.exp[i], A.adresse[i]);
+  const chance = chanceTir(R, stance, bestN, A.exp[i], A.adresse[i], bestD);
   gagner(A, i, 'adresse', R.progression.tir, R.progression);
   if (rng() >= chance) return true;
   gagner(A, i, 'adresse', R.progression.toucheTir, R.progression);
