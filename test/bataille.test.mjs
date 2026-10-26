@@ -7,7 +7,7 @@ import { tronconsDe, refusCorvee, chezLEnnemi, choixEnFace, contactDe } from '..
 import { CORVEES } from '../js/data/corvees.js';
 import { SECTEURS as SECT } from '../js/data/secteur.js';
 import { identite, etatEnMots, chevrons, prochainGrade } from '../js/identite.js';
-import { legere } from '../js/army.js';
+import { legere, place } from '../js/army.js';
 import { degatsParSeconde } from '../js/avions.js';
 import { arriereDe } from '../js/bataille.js';
 import { SECTEURS } from '../js/data/secteur.js';
@@ -454,8 +454,9 @@ test('quatre corvées (v0.77.1) : les caillebotis, le coup de main, réparer, in
   for (let n = 0; n < 5; n++) {
     for (const id of Object.values(choixEnFace(B))) assert.ok(ids.includes(id), id);
     B.etat.phase = 'nuit'; aube(B, { 0: 'coup', 1: 'caillebotis' });       // (un choix d'avant : le repos)
-    assert.equal(B.etat.nuits.at(-1).choix[0], 'repos');
-    assert.equal(B.etat.nuits.at(-1).choix[1], 'repos');
+    // (un régiment qui se retrouve au contact au soir, après le regroupement des nuits d'avant, n'a pas le choix : « contact »)
+    assert.ok(['repos', 'contact'].includes(B.etat.nuits.at(-1).choix[0]));
+    assert.ok(['repos', 'contact'].includes(B.etat.nuits.at(-1).choix[1]));
   }
   assert.ok(!('prisonniers' in B.etat) && !('caille' in B.terrain));
 });
@@ -1058,4 +1059,23 @@ test('une première ligne rendue un soir remet le compte à zéro', () => {
   }
   assert.equal(e.priseJours, 0, 'perdue le deuxième soir');
   assert.notEqual(e.phase, 'fin');
+});
+
+group('le regroupement à l\'aube');
+test('un homme égaré, ou coincé loin de sa place, est ramené à sa place à l\'aube ; ni un blessé ni un régiment au contact', () => {
+  const B = petite(SEED_NUIT); jusquALaNuit(B);
+  const A = B.armee, reg = B.etat.regiments.find(r => r.camp === 0 && !contactDe(B).has(r.id));
+  const mien = [...Array(A.n).keys()].filter(i => A.reg[i] === reg.id && !A.blessure[i] && !A.mort[i]);
+  const [egare, blesse] = [mien[0], mien[1]];
+  A.x[egare] += 120; A.y[egare] -= 60; A.blessure[blesse] = 1; A.x[blesse] += 120;
+  const xb = A.x[blesse], idb = A.id[blesse], ide = A.id[egare];
+  const loin = i => { const p = [0, 0]; place(reg.ordre, A.slot[i], p); return Math.hypot(p[0] - A.x[i], p[1] - A.y[i]); };
+  assert.ok(loin(egare) > R.nuit.regroupe);
+  const r = aube(B);
+  assert.ok(r.ok);
+  assert.ok(r.bilan[0].regroupes >= 1, 'au moins lui');
+  const ie = [...Array(A.n).keys()].find(i => A.id[i] === ide);       // (les morts sont retirés à l'aube : les indices bougent)
+  assert.ok(ie !== undefined && loin(ie) < 1, `ramené à sa place`);
+  const ib = [...Array(A.n).keys()].find(i => A.id[i] === idb);
+  assert.ok(ib === undefined || Math.abs(A.x[ib] - xb) < 5, 'le blessé n\'est pas ramené (il est évacué ou reste où il est)');
 });

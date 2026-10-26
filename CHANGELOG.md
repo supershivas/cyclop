@@ -1,5 +1,12 @@
 # Journal des versions
 
+## 0.78.1 — 2026-10-26
+- Le plan d'un secteur et la carte s'expliquent : légende, noms des tranchées, largeur du no man's land, liste des régiments présents, et un « Comment lire la carte »
+
+## 0.78.0 — 2026-10-26
+- Les chars roulent à 3 m/s au lieu de 2 : un char met une minute et demie pour atteindre l'ennemi, il devance désormais l'infanterie
+- À l'aube, les soldats égarés ou bloqués loin de leur place (fuyards au bord de la carte) sont regroupés avec leur régiment ; le papier de l'aube le dit
+
 ## 0.77.1 — 2026-10-26
 - La carte montre les ordres (une ligne pointillée de chaque régiment à sa destination) et un « ! » rouge sur les régiments en déroute
 - La nuit, les corvées inutiles sont retirées : plus de réparation des tranchées, d'inhumation ni d'abris ; restent le repos, l'évacuation des blessés, le ravitaillement et la relève

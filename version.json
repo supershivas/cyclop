@@ -1,8 +1,7 @@
 {
-  "version": "0.77.1",
+  "version": "0.78.1",
   "date": "2026-10-26",
   "changes": [
-    "La carte montre les ordres (une ligne pointillée de chaque régiment à sa destination) et un « ! » rouge sur les régiments en déroute",
-    "La nuit, les corvées inutiles sont retirées : plus de réparation des tranchées, d'inhumation ni d'abris ; restent le repos, l'évacuation des blessés, le ravitaillement et la relève"
+    "Le plan d'un secteur et la carte s'expliquent : légende, noms des tranchées, largeur du no man's land, liste des régiments présents, et un « Comment lire la carte »"
   ]
 }

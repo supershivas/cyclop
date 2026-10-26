@@ -2,10 +2,10 @@
 // Un papier sous la carte : un plan vu de dessus du secteur choisi et d'une demi-largeur de chaque voisin (assombris), les hommes de chaque camp (un point par homme), les tranchées
 // à la couleur de celui qui les tient (en pointillé quand l'autre camp y est entré), les régiments en cercles numérotés ; dessous, une ligne par secteur (celui-ci et ses voisins) avec les effectifs.
 // Lecture seule de l'état ; le dessin d'un canvas 2D, palette du jeu. Comme la carte, tourné d'un demi-tour pour l'invité d'une partie à deux.
-import { NOUS, EUX, zone, largeurZone, nombreZones, lettreZone, forcesTroncons } from '../bataille.js?v=0.77.1';
-import { ligneY } from '../tranchees.js?v=0.77.1';
-import { PALETTE as P } from '../palette.js?v=0.77.1';
-import { numeroDe } from './lecture.js?v=0.77.1';
+import { NOUS, EUX, zone, largeurZone, nombreZones, lettreZone, forcesTroncons } from '../bataille.js?v=0.78.1';
+import { ligneY } from '../tranchees.js?v=0.78.1';
+import { PALETTE as P } from '../palette.js?v=0.78.1';
+import { numeroDe } from './lecture.js?v=0.78.1';
 
 const L = 320, H = 200;                  // le canvas, en pixels
 
@@ -39,6 +39,17 @@ export function creerSecteur({ $, bataille, moi = () => NOUS, surSecteur = () =>
       g.strokeStyle = P.t; g.lineWidth = 5; g.stroke();
       g.strokeStyle = tient === NOUS ? P.n : P.x; g.lineWidth = 1; g.setLineDash(B.disputes[i] ? [5, 4] : []); g.stroke(); g.setLineDash([]);
     });
+    // le nom de chaque ligne, à gauche, et la largeur du no man's land entre les deux premières
+    g.font = 'bold 11px ui-monospace,monospace'; g.textAlign = 'left'; g.textBaseline = 'alphabetic'; g.lineJoin = 'round';
+    const ecrire = (texte, X, Y, c = P.o) => { g.lineWidth = 3; g.strokeStyle = P.t; g.strokeText(texte, X, Y); g.fillStyle = c; g.fillText(texte, X, Y); };
+    const premieres = [];
+    for (const l of B.lignes) {
+      if (l.rang > 1) continue;
+      const ok = l.camp === M, yl = ligneY(l, (sx0 + sx1) / 2);
+      ecrire(`${ok ? 'Nos' : 'Leurs'} ${l.rang === 0 ? '1res' : '2es'} tranchées`, 4, py(yl) + (tourne === ok ? 12 : -5), ok ? P.n : P.x);
+      if (l.rang === 0) premieres.push(yl);
+    }
+    if (premieres.length === 2) { g.textAlign = 'center'; ecrire(`no man's land : ${Math.round(Math.abs(premieres[0] - premieres[1]))} m`, L / 2, (py(premieres[0]) + py(premieres[1])) / 2 + 3, P.r); g.textAlign = 'left'; }
     // les hommes : un point par homme, nous en bleu horizon, en face en kaki clair ; un blessé en os au centre
     const taille = Math.max(2, Math.round(ppm * 1.6));
     for (let i = 0; i < A.n; i++) {
@@ -79,9 +90,22 @@ export function creerSecteur({ $, bataille, moi = () => NOUS, surSecteur = () =>
       let tenus = 0, total = 0, disputes = 0;
       B.troncons.forEach((t, i) => { if ((t.x0 + t.x1) / 2 >= x0 && (t.x0 + t.x1) / 2 < x0 + w) { total++; if (B.etat.troncons[i] === M) tenus++; if (B.disputes[i]) disputes++; } });
       void f;
-      out.push({ s, texte: `${lettreZone(s)}${s === ouvert ? ' ·' : ''} ${miens} des nôtres, ${leurs} en face · tranchées ${tenus} à nous, ${total - tenus} à eux${disputes ? ` (${disputes} disputée${disputes > 1 ? 's' : ''})` : ''}`, ici: s === ouvert });
+      out.push({ s, texte: `Secteur ${lettreZone(s)}${s === ouvert ? ' (affiché)' : ''} : ${miens} à nous, ${leurs} en face · tranchées : ${tenus} tronçons à nous, ${total - tenus} à eux${disputes ? `, ${disputes} disputé${disputes > 1 ? 's' : ''}` : ''}`, ici: s === ouvert });
     }
     return out;
+  }
+  // les régiments dans le secteur : leur numéro, leur nom, combien d'hommes y sont (et combien en tout)
+  function regiments(B) {
+    const w = largeurZone(B), Z = zone(B), x0 = Z.x0 + (ouvert - 1) * w, A = B.armee, M = moi(), ici = new Map(), tous = new Map();
+    for (let i = 0; i < A.n; i++) {
+      if (A.mort[i]) continue;
+      tous.set(A.reg[i], (tous.get(A.reg[i]) || 0) + 1);
+      if (A.x[i] >= x0 && A.x[i] < x0 + w) ici.set(A.reg[i], (ici.get(A.reg[i]) || 0) + 1);
+    }
+    return [...ici].sort((a, b) => b[1] - a[1]).map(([id, n]) => {
+      const r = B.etat.regiments[id], nous = r.camp === M;
+      return { nous, texte: `${nous ? `${numeroDe(B, r)} · ${r.nom}` : `En face : régiment ${numeroDe(B, r)}`} : ${n} homme${n > 1 ? 's' : ''} ici${n < tous.get(id) ? ` (${tous.get(id)} en tout)` : ''}${r.deroute ? ' · EN DÉROUTE' : ''}` };
+    });
   }
   function maj() {
     const B = bataille();
@@ -91,6 +115,7 @@ export function creerSecteur({ $, bataille, moi = () => NOUS, surSecteur = () =>
     cle = c;
     dessiner(B);
     $('secteur-titre').textContent = `Secteur ${lettreZone(ouvert)}`;
+    $('secteur-regs').replaceChildren(...regiments(B).map(r => Object.assign(document.createElement('li'), { className: r.nous ? 'nous' : 'eux', textContent: r.texte })));
     $('secteur-lignes').replaceChildren(...lignes(B).map(l => {
       const b = document.createElement('button');
       b.className = `secteur-ligne${l.ici ? ' ici' : ''}`; b.textContent = l.texte; b.onclick = () => surSecteur(l.s);

@@ -9,8 +9,8 @@
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta property="og:image" content="og.png">
-<link rel="stylesheet" href="js/lib/game.css?v=0.77.1">
-<link rel="stylesheet" href="css/style.css?v=0.77.1">
+<link rel="stylesheet" href="js/lib/game.css?v=0.78.1">
+<link rel="stylesheet" href="css/style.css?v=0.78.1">
 </head>
 <body>
 <!-- La barre de chargement (v0.28.0) : là avant tout script ; main.js la remplit, puis la retire -->
@@ -106,10 +106,28 @@
         <section class="papier carte" id="carte" aria-label="Carte du secteur" hidden>
           <button class="entete" id="carte-bascule" aria-expanded="true" aria-label="Replier la carte du secteur">Le secteur · <span class="discret">en face au nord</span><i aria-hidden="true"></i></button>
           <div class="carte-grille" id="carte-grille"></div>
+          <details class="legende-carte">
+            <summary>Comment lire la carte</summary>
+            <ul class="legende">
+              <li><b>A à D</b> : les quatre secteurs de 100 m, de l'ouest à l'est ; un clic ouvre son détail (qui est où, les voisins) et y emmène la caméra.</li>
+              <li><b>Lignes 1 à 4</b> : les tranchées de chaque camp, de la plus avancée (1) à la plus en arrière (4) ; en face en haut (kaki), les nôtres en bas (bleu).</li>
+              <li><b>Quatre carrés par case</b> : quatre tronçons de 25 m, bleus s'ils sont à nous, kaki s'ils sont à eux ; un clic envoie les régiments choisis occuper la case.</li>
+              <li><b>« 1·12 »</b> : 1 attaquant contre 12 défenseurs dans la case, en pleine mêlée.</li>
+              <li><b>« 135 m »</b> : la largeur du no man's land entre les deux premières lignes.</li>
+              <li><b>Cercles numérotés</b> : les régiments, à leur place (bleus à nous, kaki en face) ; le contour épais : choisi ; <b>!</b> rouge : en déroute.</li>
+              <li><b>Ligne pointillée</b> : l'ordre d'un de nos régiments, de lui à sa destination, jusqu'à son arrivée.</li>
+            </ul>
+          </details>
         </section>
         <section class="papier secteur" id="secteur" aria-label="Détail d'un secteur" hidden>
           <button class="entete" id="secteur-fermer" aria-label="Revenir à la carte du secteur"><span><span aria-hidden="true">← </span><span id="secteur-titre">Secteur</span></span><span class="discret">la carte</span></button>
           <canvas id="secteur-plan" aria-label="Plan du secteur : les hommes de chaque camp, les tranchées, les secteurs voisins"></canvas>
+          <ul class="legende" aria-label="Légende du plan">
+            <li><i class="p nous"></i> nos hommes · <i class="p eux"></i> ceux d'en face · <i class="p bl"></i> un blessé</li>
+            <li><i class="t"></i> une tranchée, à la couleur de qui la tient (pointillé : l'autre camp y est entré)</li>
+            <li><i class="r"></i> un régiment (son numéro) · les bords assombris : les secteurs voisins</li>
+          </ul>
+          <ul id="secteur-regs" class="secteur-regs" aria-label="Les régiments du secteur"></ul>
           <div id="secteur-lignes" class="secteur-lignes"></div>
         </section>
               </div>
@@ -291,6 +309,6 @@
 </dialog>
 
 <div class="jeu-toast" id="toast" role="status" hidden></div>
-<script type="module" src="js/main.js?v=0.77.1"></script>
+<script type="module" src="js/main.js?v=0.78.1"></script>
 </body>
 </html>

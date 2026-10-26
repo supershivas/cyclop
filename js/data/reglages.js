@@ -183,6 +183,7 @@ export const REGLAGES = {
     retourNuits: [0, 1, 2, 3],   // … après autant de nuits que sa blessure en demande : un bras 1, une jambe 2, la tête 3 (l'indice : la blessure)
     reposTravail: 0.4,    // un régiment à la corvée ne se repose que de cette part
     moralRepos: 0.15,     // le repos rend en plus cette part de ce qui manque au moral
+    regroupe: 40,         // m : au matin, un homme plus loin que cela de sa place est ramené à sa place (le regroupement de l'aube, v0.78.0)
     mortBlesse: 0.12,     // un blessé laissé au front meurt dans la nuit (à la tête : deux fois plus)
     risqueBoyau: 0.005,   // … et pour porter les blessés par les boyaux
     rayonCorps: 40,       // m : les corps laissés autour d'un régiment…

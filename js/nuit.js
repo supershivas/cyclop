@@ -10,11 +10,11 @@
    - (v0.38.3) Les caillebotis et le coup de main sont retirés ; (v0.77.1) réparer la tranchée, inhumer les morts et creuser des abris aussi (docs/archives/corvees-retirees.md) : quatre corvées.
    - (v0.39.0) La mêlée se joue dans la nuit (`meleeNuit`) : un tronçon où les deux camps sont face à face au soir est tranché à l'aube, et les
      régiments au contact (`contactDe`) ne reçoivent aucune corvée. */
-import { hash2 } from './lib/rng.js?v=0.77.1';
-import { CORVEES } from './data/corvees.js?v=0.77.1';
-import { REGIMENTS } from './data/lexique.js?v=0.77.1';
-import { ajouterSoldat, poserCaracs, lireCaracs } from './army.js?v=0.77.1';
-import { departCaracs } from './identite.js?v=0.77.1';
+import { hash2 } from './lib/rng.js?v=0.78.1';
+import { CORVEES } from './data/corvees.js?v=0.78.1';
+import { REGIMENTS } from './data/lexique.js?v=0.78.1';
+import { ajouterSoldat, poserCaracs, lireCaracs, place } from './army.js?v=0.78.1';
+import { departCaracs } from './identite.js?v=0.78.1';
 
 export const corvee = id => CORVEES.find(c => c.id === id);
 
@@ -152,7 +152,7 @@ export function corvees(B, choix, ctx) {
   const { etat, R, armee: A } = B;
   const N = R.nuit, { rng, mourir } = ctx;
   const tous = etat.deux ? { ...choix } : { ...choixEnFace(B), ...choix };      // (à deux, chaque joueur choisit pour ses régiments ; sans choix, le repos)
-  const bilan = [0, 1].map(() => ({ evacues: 0, ravitailles: 0, mortsCorvee: 0, mortsBlesses: 0, affames: 0, retours: 0, mortsMelee: 0, prisNuit: 0, perdusNuit: 0 }));
+  const bilan = [0, 1].map(() => ({ evacues: 0, regroupes: 0, ravitailles: 0, mortsCorvee: 0, mortsBlesses: 0, affames: 0, retours: 0, mortsMelee: 0, prisNuit: 0, perdusNuit: 0 }));
   const faite = {}, releves = [];
   const contact = contactDe(B);                    // (avant la mêlée : ceux qui se battent cette nuit)
   meleeNuit(B, ctx, bilan);
@@ -225,11 +225,32 @@ export function corvees(B, choix, ctx) {
     for (const c of etat.corps) if ((c[0] / 10 - ctr.x) ** 2 + (c[1] / 10 - ctr.y) ** 2 < r2) n++;
     reg.moral = Math.max(0, reg.moral - Math.min(N.moralCorpsMax, n * N.moralCorps) - (faim.has(reg.id) ? N.faimMoral : 0));
   }
+  // le regroupement : les égarés rejoignent leur place avant l'aube
+  regrouper(B, contact, bilan);
   // la relève entre : un régiment frais à la place de chaque régiment relevé, qui arrive de l'arrière
   for (const vieux of releves) relever(B, vieux, rng);
   retours(B, rng, bilan);
   etat.nuits.push({ jour: etat.jour, choix: faite, bilan });
   return bilan;
+}
+
+/* Le regroupement à l'aube (Jérôme, v0.78.0 : « certains soldats en déroute restent au bord de la carte, bloqués » ; « parfois certains soldats restent bloqués et ne rejoignent plus leur régiment »)
+   Dans la nuit, tout homme debout à plus de `nuit.regroupe` m de sa place dans la formation de son régiment (un fuyard coincé contre le bord, un égaré, un homme que le champ de marche
+   n'amène plus nulle part) y est ramené : le régiment se retrouve au matin comme il a été ordonné (un régiment en déroute : à son départ). Pas les régiments au contact (ils ont
+   tenu leur place toute la nuit), pas les blessés (ils vont à l'arrière, ou sont évacués), pas une place dans l'eau profonde. Sans hasard. Rend le nombre d'hommes ramenés. */
+function regrouper(B, contact, bilan) {
+  const { etat, R, armee: A, terrain: T } = B, seuil = R.nuit.regroupe, pl = [0, 0];
+  for (let i = 0; i < A.n; i++) {
+    if (A.mort[i] || A.blessure[i] || contact.has(A.reg[i])) continue;
+    const reg = etat.regiments[A.reg[i]];
+    if (!reg || !reg.effectif) continue;
+    place(reg.ordre, A.slot[i], pl);
+    if (Math.hypot(pl[0] - A.x[i], pl[1] - A.y[i]) <= seuil) continue;
+    const ci = (Math.min(T.H - 1, Math.max(0, pl[1] | 0))) * T.W + Math.min(T.W - 1, Math.max(0, pl[0] | 0));
+    if (T.profond[ci]) continue;
+    A.x[i] = pl[0]; A.y[i] = pl[1]; A.vx[i] = 0; A.vy[i] = 0; A.coince[i] = 0;
+    bilan[A.camp[i]].regroupes++;
+  }
 }
 
 /* Les blessés évacués qui reviennent (Jérôme, v0.18.0) : une chance sur deux (`nuit.retourChance`), après autant de nuits que la

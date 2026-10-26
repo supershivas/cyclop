@@ -583,3 +583,15 @@ h2 { font-weight: normal; letter-spacing: var(--titre-lettres); }
 .secteur-ligne { font: inherit; font-size: var(--texte-petit); text-align: left; padding: var(--e0) var(--e1); background: none; border: 1px solid var(--jeu-accent); color: inherit; cursor: pointer; min-height: 0; }
 .secteur-ligne.ici { background: var(--jeu-fond); color: var(--jeu-encre); }
 .carte.remplacee { display: none; }
+
+/* La légende de la carte et du plan de secteur (v0.78.1) */
+.legende { list-style: none; margin: var(--e1) 0 0; padding: 0; display: grid; gap: var(--e0); font-size: var(--texte-petit); line-height: 1.35; }
+.legende i { display: inline-block; vertical-align: -1px; width: 10px; height: 10px; border: 1px solid var(--jeu-encre); }
+.legende i.p.nous { background: var(--jeu-nous); } .legende i.p.eux { background: var(--jeu-eux); } .legende i.p.bl { background: var(--jeu-fond); }
+.legende i.t { width: 16px; height: 4px; box-sizing: content-box; background: var(--jeu-nous); border: 2px solid var(--jeu-encre); border-left: 0; border-right: 0; }
+.legende i.r { border-radius: 50%; width: 10px; height: 10px; background: var(--jeu-fond); border-width: 2px; }
+.legende i.p.bl { background: var(--jeu-encre); }
+.legende-carte summary { cursor: pointer; font-size: var(--texte-petit); margin-top: var(--e1); color: var(--jeu-accent); }
+.secteur-regs { list-style: none; margin: var(--e1) 0 0; padding: 0; display: grid; gap: var(--e0); font-size: var(--texte-petit); }
+.secteur-regs li { padding-left: var(--e1); border-left: 4px solid var(--jeu-nous); }
+.secteur-regs li.eux { border-left-color: var(--jeu-eux); }
