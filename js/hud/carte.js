@@ -2,9 +2,9 @@
 // quatre lignes de chaque camp (en face au nord, en haut), chaque case en tronçons de 25 m à la couleur de celui qui les
 // tient. Une lettre choisit les régiments du secteur ; une case envoie les régiments choisis dans cette tranchée ; les
 // régiments y sont des cercles numérotés, à leur place. Le dessin seulement : les actions (choisir, ordonner) viennent de main.js.
-import { NOUS, EUX, nombreZones, lettreZone, zone, largeurZone, etendueZones, tronconsDeLigne, forcesTroncons, codeLigne } from '../bataille.js?v=0.77.0';
-import { ligneY } from '../tranchees.js?v=0.77.0';
-import { numeroDe as numeroDeB } from './lecture.js?v=0.77.0';
+import { NOUS, EUX, nombreZones, lettreZone, zone, largeurZone, etendueZones, tronconsDeLigne, forcesTroncons, codeLigne } from '../bataille.js?v=0.77.1';
+import { ligneY } from '../tranchees.js?v=0.77.1';
+import { numeroDe as numeroDeB } from './lecture.js?v=0.77.1';
 
 // `bataille()` : la bataille en cours ; `choisis()` : les régiments choisis (ids) ; `surSecteur`, `surCase`, `surRonde` : les clics
 // `moi()` : le camp qu'on joue (à deux sur le réseau, l'invité est en face : sa carte est tournée d'un demi-tour, ses lignes en bas, A à D de droite à gauche ; v0.30.0)
@@ -50,6 +50,7 @@ export function creerCarte({ $, bataille, choisis, surSecteur, surCase, surRonde
       }
     });
     const regs = document.createElement('div'); regs.className = 'carte-regs'; regs.id = 'carte-regs';
+    const ordres = document.createElementNS('http://www.w3.org/2000/svg', 'svg'); ordres.setAttribute('class', 'carte-ordres'); ordres.setAttribute('aria-hidden', 'true'); regs.append(ordres);
     kids.push(regs);
     g.replaceChildren(...kids);
     $('carte').hidden = false;
@@ -69,6 +70,9 @@ export function creerCarte({ $, bataille, choisis, surSecteur, surCase, surRonde
     const B = bataille();
     const A = B.armee, Z = zone(B), L = Z.x1 - Z.x0, centres = new Map(), cont = $('carte-regs'), M = moi(), tourne = M === EUX;
     if (!cont) return;
+    // les lignes d'ordre : un SVG en pixels (la rangée des cercles est en calc() : 2,4 em de libellés puis la largeur des secteurs)
+    const svgOrdres = cont.querySelector('.carte-ordres'), larg = cont.clientWidth, lab = 2.4 * parseFloat(getComputedStyle(cont).fontSize), lignes = [];
+    svgOrdres.setAttribute('width', larg); svgOrdres.setAttribute('height', cont.clientHeight);
     // la médiane, pas la moyenne (v0.76.2, Jérôme : « après 6 jours, les régiments ne sont plus correctement placés sur la carte ») : quelques hommes restés loin
     // (blessés qui reculent, égarés, relève) tiraient le cercle hors de la place du régiment
     const xs = new Map(), ys = new Map();
@@ -89,6 +93,7 @@ export function creerCarte({ $, bataille, choisis, surSecteur, surCase, surRonde
         const nom = r.camp === M ? `${numeroDe(r)} · ${r.nom}` : `Régiment ${numeroDe(r)} d'en face`;
         el.title = nom; el.setAttribute('aria-label', r.camp === M ? `Choisir le régiment ${nom}` : `Voir le ${nom}`);
         el.onclick = e => surRonde(r, e.shiftKey);
+        const alerte = document.createElement('i'); alerte.className = 'alerte'; alerte.textContent = '!'; alerte.hidden = true; el.append(alerte); el.alerte = alerte;
         cont.append(el); rondes.set(r.id, el);
       }
       el.hidden = false;
@@ -97,7 +102,21 @@ export function creerCarte({ $, bataille, choisis, surSecteur, surCase, surRonde
       if (el.style.left !== left) el.style.left = left;
       el.style.top = `${top}px`;
       el.classList.toggle('choisi', choisis().has(r.id));
+      // un « ! » rouge sur le cercle d'un régiment en déroute (v0.77.1, Jérôme) ; sa place vue en `titre`
+      if (el.alerte) { el.alerte.hidden = !r.deroute; el.title = `${el.title.split(' : ')[0]}${r.deroute ? ' : en déroute' : ''}`; }
+      // son ordre : une ligne pointillée de son cercle à sa destination, tant qu'il n'y est pas (les nôtres seulement : on ne lit pas les ordres d'en face)
+      if (r.camp === M && r.ordre && Math.hypot(r.ordre.x - c.x / c.n, r.ordre.y - c.y / c.n) > 10) {
+        const fd0 = Math.max(0, Math.min(1, (r.ordre.x - Z.x0) / L)), fd = tourne ? 1 - fd0 : fd0, yd = Math.round(carteY(tourne ? Z.y0 + Z.y1 - r.ordre.y : r.ordre.y));
+        lignes.push({ x1: lab + (larg - lab) * f, y1: top, x2: lab + (larg - lab) * fd, y2: yd, choisi: choisis().has(r.id) });
+      }
     }
+    svgOrdres.replaceChildren(...lignes.map(l => {
+      const g = document.createElementNS('http://www.w3.org/2000/svg', 'g'), ln = document.createElementNS('http://www.w3.org/2000/svg', 'line'), pt = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+      ln.setAttribute('x1', l.x1.toFixed(1)); ln.setAttribute('y1', l.y1); ln.setAttribute('x2', l.x2.toFixed(1)); ln.setAttribute('y2', l.y2);
+      pt.setAttribute('cx', l.x2.toFixed(1)); pt.setAttribute('cy', l.y2); pt.setAttribute('r', 3);
+      g.setAttribute('class', l.choisi ? 'choisi' : ''); g.append(ln, pt);
+      return g;
+    }));
   }
   function majCarte() {
     const B = bataille();

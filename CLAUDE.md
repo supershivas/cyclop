@@ -171,6 +171,7 @@ node outils/stamp.mjs                    # après chaque changement de version.j
 | Ombrage du sol en damier selon la pente | 0.1.0 (avant livraison) | du bruit partout : chaque bosse se lisait comme un cratère |
 | Le sol plat des zooms 1 et 2, les facettes de 5 m au loin | 0.12.0 | Jérôme veut la même résolution du terrain à tous les zooms ; coût : tout dézoomé, 8 000 soldats, rendu logiciel, 49 → 88 ms (12 800 → 88 000 triangles) ; zooms 4 et 8 inchangés |
 | Sol à facettes, soldats en sprites (labo) | 0.1.1 → 0.2.0 | non retenus par Jérôme ; facettes : +30 % de triangles sur un champ labouré, trame bruyante (`docs/archives/sol-facettes-et-soldats-sprites.md`) |
+| Les corvées « réparer », « inhumer » et « abris » (`etat.travaux`, `etat.abris`, `abriDe`) | 0.77.1 | Jérôme : « inutiles » ; un choix de plus par nuit pour presque aucun effet (`docs/archives/corvees-retirees.md`) |
 | Les corvées « caillebotis » et « coup de main » (`T.caille`, `etat.prisonniers`, `capturer`, `nuit.coup*`) | 0.38.3 | Jérôme : « il y en a trop » ; les caillebotis ne servaient qu'à faire marcher plus vite sur une case de boue de la tranchée (et doublaient « réparer ») ; le coup de main coûtait des hommes et ne rapportait que quelques prisonniers qui ne servaient à rien (`docs/archives/corvees-retirees.md`) |
 
 ## Pièges connus

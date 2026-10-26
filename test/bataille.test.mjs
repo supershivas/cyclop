@@ -1,6 +1,6 @@
 // La bataille : déterminisme, ordres refusés à voix haute, sauvegarde qui rejoue la même partie.
 import { readFileSync } from 'node:fs';
-import { nouvelleBataille, avancer, ordonnerMarche, ordonnerBarrage, aube, photo, restaurer, effectifs, horloge, zone, tronconsTenus, rangDe, moralEnMots, abriDe, terrainSous, terrainResume, peutOrdonner } from '../js/bataille.js';
+import { nouvelleBataille, avancer, ordonnerMarche, ordonnerBarrage, aube, photo, restaurer, effectifs, horloge, zone, tronconsTenus, rangDe, moralEnMots, terrainSous, terrainResume, peutOrdonner } from '../js/bataille.js';
 import { ligneY } from '../js/tranchees.js';
 import { calculerCouts, dimensionsCouts, BLOC } from '../js/champs.js';
 import { tronconsDe, refusCorvee, chezLEnnemi, choixEnFace, contactDe } from '../js/nuit.js';
@@ -86,7 +86,7 @@ test('chez l\'ennemi, on n\'évacue ni ne ravitaille, sauf tranchée toute à no
   assert.equal(chezLEnnemi(B, reg), true);
   assert.match(refusCorvee(B, reg, 'evacuer'), /ne passent pas.*pas toute à nous/);     // la tranchée est à eux
   assert.match(refusCorvee(B, reg, 'ravitailler'), /la soupe ne passe pas/);
-  assert.equal(refusCorvee(B, reg, 'repos'), null); assert.equal(refusCorvee(B, reg, 'reparer'), null); assert.equal(refusCorvee(B, reg, 'inhumer'), null);
+  assert.equal(refusCorvee(B, reg, 'repos'), null);
   for (const k of tronconsDe(B, reg)) B.etat.troncons[k] = 0;                           // la tranchée est toute à nous
   assert.equal(refusCorvee(B, reg, 'evacuer'), null); assert.equal(refusCorvee(B, reg, 'ravitailler'), null);
   B.R.nuit.calme = 1e6;                                                                  // … mais un régiment d'en face est tout près
@@ -446,35 +446,11 @@ test('évacuer : les blessés du régiment quittent le front vivants ; ce ne son
   assert.equal(B.etat.pertes[0], pertes + r.bilan[0].mortsCorvee + r.bilan[0].mortsBlesses);
   assert.equal(B.etat.evacues.length, r.bilan[0].evacues + r.bilan[1].evacues, 'en face évacue aussi les siens');
 });
-test('réparer : les tronçons comblés sont recreusés ; la partie relue rejoue la réparation', () => {
-  const B = petite(SEED_NUIT); jusquALaNuit(B);
-  const T = B.terrain, reg = B.etat.regiments[0], ks = new Set(tronconsDe(B, reg));
-  const combles = () => { let n = 0; for (let c = 0; c < T.W * T.H; c++) if (ks.has(T.troncon[c]) && T.diff[c] > -B.profondeur) n++; return n; };
-  assert.ok(combles() > 0, 'les obus en ont comblé');
-  const r = aube(B, { 0: 'reparer' });
-  assert.equal(combles(), 0);
-  assert.ok(r.bilan[0].repares > 0);
-  for (let k = 0; k < 300; k++) avancer(B);
-  const C = restaurer(photo(B), R);
-  assert.deepEqual(Array.from(C.terrain.diff), Array.from(T.diff));
-});
-test('inhumer : les corps proches partent en terre ; une corvée de tranchée se refuse sans tranchée', () => {
-  const B = petite(SEED_NUIT); jusquALaNuit(B);
-  const corps = B.etat.corps.length;
-  assert.ok(corps > 0);
-  const r = aube(B, { 0: 'inhumer' });
-  assert.ok(r.bilan[0].inhumes > 0);
-  assert.equal(B.etat.tombes.length, r.bilan[0].inhumes);
-  // (les morts de la nuit, des deux camps)
-  assert.equal(B.etat.corps.length, corps - r.bilan[0].inhumes + r.bilan[0].mortsCorvee + r.bilan[0].mortsBlesses + r.bilan[1].mortsCorvee + r.bilan[1].mortsBlesses + r.bilan[0].mortsMelee + r.bilan[1].mortsMelee);
-  const reg = B.etat.regiments[2]; reg.ordre = { ...reg.ordre, trace: undefined };
-  assert.match(refusCorvee(B, reg, 'reparer'), /ne tient pas de tranchée/);
-});
-test('sept corvées (v0.38.3) : les caillebotis et le coup de main sont retirés, ni nous ni en face ne les choisissent, une ancienne s\'efface', () => {
+test('quatre corvées (v0.77.1) : les caillebotis, le coup de main, réparer, inhumer et les abris sont retirés, ni nous ni en face ne les choisissent, une ancienne s\'efface', () => {
   const ids = CORVEES.map(c => c.id);
-  assert.deepEqual(ids, ['repos', 'reparer', 'inhumer', 'evacuer', 'abri', 'ravitailler', 'releve']);
+  assert.deepEqual(ids, ['repos', 'evacuer', 'ravitailler', 'releve']);
   const B = petite(SEED_NUIT); jusquALaNuit(B);
-  for (const id of ['caillebotis', 'coup']) assert.match(refusCorvee(B, B.etat.regiments[0], id), /Pas de telle corvée/);
+  for (const id of ['caillebotis', 'coup', 'reparer', 'inhumer', 'abri']) assert.match(refusCorvee(B, B.etat.regiments[0], id), /Pas de telle corvée/);
   for (let n = 0; n < 5; n++) {
     for (const id of Object.values(choixEnFace(B))) assert.ok(ids.includes(id), id);
     B.etat.phase = 'nuit'; aube(B, { 0: 'coup', 1: 'caillebotis' });       // (un choix d'avant : le repos)
@@ -482,23 +458,6 @@ test('sept corvées (v0.38.3) : les caillebotis et le coup de main sont retirés
     assert.equal(B.etat.nuits.at(-1).choix[1], 'repos');
   }
   assert.ok(!('prisonniers' in B.etat) && !('caille' in B.terrain));
-});
-test('les abris : un niveau par nuit, trois au plus ; les obus y tuent moins ; un 220 en crève un ; relu', () => {
-  const B = nouvelleBataille(3, R, { soldats: 200, jours: 6 });
-  const reg = B.etat.regiments[0], ks = tronconsDe(B, reg);
-  for (let n = 0; n < 4; n++) { B.etat.phase = 'nuit'; aube(B, { 0: 'abri' }); }
-  for (const k of ks) assert.equal(B.etat.abris[k], R.nuit.abriMax);
-  assert.match(refusCorvee(B, reg, 'abri'), /aussi profonds/);
-  // dans le tronçon, un obus ne fait plus que 40 % de ce qu'il faisait (le calcul est dans army.test : tuerDans)
-  const T = B.terrain;
-  const c = T.troncon.findIndex(k => k === ks[0]);
-  assert.ok(c >= 0 && Math.abs(abriDe(B, c) - (1 - R.nuit.abriParNiveau * R.nuit.abriMax)) < 1e-9);
-  assert.equal(abriDe(B, T.troncon.findIndex(k => k === -1)), 1);
-  const C = restaurer(photo(B), R);
-  for (let n = 0; n < 6; n++) ordonnerBarrage(C, '220', reg.ordre.x + (n - 3) * 6, reg.ordre.y, 1);   // (le secteur n'a que deux tronçons : plusieurs salves)
-  for (let k = 0; k < 30 * 40; k++) avancer(C);
-  assert.ok(ks.some(k => (C.etat.abris[k] || 0) < R.nuit.abriMax), 'crevé');
-  assert.deepEqual(restaurer(photo(C), R).etat.abris, C.etat.abris);
 });
 test('les vivres : trois nuits ; sans eux, la nuit repose moins et le moral baisse ; ravitailler les rend', () => {
   const B = petite();
@@ -628,17 +587,16 @@ test('vingt attaquants contre trois défenseurs : la nuit tranche, le tronçon c
   assert.ok(au.size >= 2, 'un régiment de chaque camp au contact');
   const reg = [...au].map(i => B.etat.regiments[i]).find(r => r.camp === 0);
   assert.match(refusCorvee(B, reg, 'repos'), /Au contact/);
-  assert.match(refusCorvee(B, reg, 'inhumer'), /Au contact/);
+  assert.match(refusCorvee(B, reg, 'evacuer'), /Au contact/);
   const avant = B.etat.pertes.slice(), corps = B.etat.corps.length;
-  const r = aube(B, { [reg.id]: 'inhumer' });
+  const r = aube(B, { [reg.id]: 'evacuer' });
   assert.ok(r.ok);
   assert.equal(B.etat.troncons[k], 0, 'pris par les nôtres dans la nuit');
   assert.equal(r.bilan[0].prisNuit, 1); assert.equal(r.bilan[1].perdusNuit, 1);
   assert.ok(r.bilan[1].mortsMelee / 3 > r.bilan[0].mortsMelee / 20, 'le plus faible y laisse la plus grande part de ses hommes');
   assert.equal(B.etat.pertes[0] - avant[0] + B.etat.pertes[1] - avant[1], r.bilan[0].mortsMelee + r.bilan[1].mortsMelee + r.bilan[0].mortsCorvee + r.bilan[1].mortsCorvee + r.bilan[0].mortsBlesses + r.bilan[1].mortsBlesses);
   assert.ok(B.etat.corps.length >= corps + r.bilan[0].mortsMelee, 'les morts restent où ils sont tombés');
-  assert.equal(B.etat.nuits.at(-1).choix[reg.id], 'contact', 'il a tenu, pas inhumé');
-  assert.equal(r.bilan[0].inhumes, 0);
+  assert.equal(B.etat.nuits.at(-1).choix[reg.id], 'contact', 'il a tenu, pas évacué');
   const C = restaurer(photo(B), R);
   assert.deepEqual(Array.from(C.etat.troncons), Array.from(B.etat.troncons), 'la partie relue garde le tronçon');
 });

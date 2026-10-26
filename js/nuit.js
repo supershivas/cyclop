@@ -1,29 +1,21 @@
 /* La nuit et ses corvées (Jérôme, v0.6.0) : une par régiment — le repos,
-   réparer sa tranchée, inhumer les morts, évacuer les blessés. Logique pure
+   évacuer les blessés, ravitailler, la relève. Logique pure
    (aucun DOM, aucun hasard hors du générateur de la bataille), testée dans Node.
 
-   - Les travaux de terrain (réparer) sont notés dans
-     `etat.travaux` ([jour, sorte, tronçons…]) : la sauvegarde les rejoue après
-     l'eau de la nuit, comme les impacts (rejouerTerrain).
    - Ce que coûte une corvée : un régiment qui travaille se repose moins ;
-     inhumer au-delà de nos lignes, c'est risquer d'y rester ; un blessé qu'on
-     n'évacue pas peut mourir dans la nuit ; les corps laissés autour d'un
-     régiment pèsent sur son moral au matin.
+     un blessé qu'on n'évacue pas peut mourir dans la nuit ; les corps laissés
+     autour d'un régiment pèsent sur son moral au matin (plus personne ne les enterre).
    - En face fait ses corvées aussi (`choixEnFace`).
-   - (v0.11.0) Les abris profonds (`etat.abris` : un niveau par tronçon, une nuit
-     de travail chacun) ; les vivres (`reg.vivres`, en nuits : sans eux, la nuit
-     repose moins et le moral baisse).
-   - (v0.38.3) Les caillebotis et le coup de main sont retirés : sept corvées.
+   - (v0.11.0) Les vivres (`reg.vivres`, en nuits : sans eux, la nuit repose moins et le moral baisse).
+   - (v0.38.3) Les caillebotis et le coup de main sont retirés ; (v0.77.1) réparer la tranchée, inhumer les morts et creuser des abris aussi (docs/archives/corvees-retirees.md) : quatre corvées.
    - (v0.39.0) La mêlée se joue dans la nuit (`meleeNuit`) : un tronçon où les deux camps sont face à face au soir est tranché à l'aube, et les
      régiments au contact (`contactDe`) ne reçoivent aucune corvée. */
-import { toucher } from './terrain.js?v=0.77.0';
-import { hash2 } from './lib/rng.js?v=0.77.0';
-import { CORVEES } from './data/corvees.js?v=0.77.0';
-import { REGIMENTS } from './data/lexique.js?v=0.77.0';
-import { ajouterSoldat, poserCaracs, lireCaracs } from './army.js?v=0.77.0';
-import { departCaracs } from './identite.js?v=0.77.0';
+import { hash2 } from './lib/rng.js?v=0.77.1';
+import { CORVEES } from './data/corvees.js?v=0.77.1';
+import { REGIMENTS } from './data/lexique.js?v=0.77.1';
+import { ajouterSoldat, poserCaracs, lireCaracs } from './army.js?v=0.77.1';
+import { departCaracs } from './identite.js?v=0.77.1';
 
-export const SORTES = ['reparer'];          // les travaux de terrain, par leur numéro dans etat.travaux
 export const corvee = id => CORVEES.find(c => c.id === id);
 
 // Les tronçons de la tranchée qu'un régiment tient (sa ligne, sous son tracé)
@@ -91,41 +83,8 @@ export function refusCorvee(B, reg, id) {
     const m = isolement(B, reg);
     if (m) return `Chez l'ennemi, ${id === 'evacuer' ? 'les blessés ne passent pas' : 'la soupe ne passe pas'} : ${m}.`;
   }
-  if (c.tranchee && !tronconsDe(B, reg).length) return `${reg.nom || 'Ce régiment'} ne tient pas de tranchée.`;
   if (id === 'releve' && !(B.etat.reserves?.[reg.camp] > 0)) return 'Plus un régiment en réserve.';
-  if (id === 'abri' && tronconsDe(B, reg).every(k => (B.etat.abris[k] || 0) >= B.R.nuit.abriMax)) return 'Ses abris sont aussi profonds qu\'on peut les creuser.';
   return null;
-}
-
-/* Un travail de terrain sur des tronçons : réparer (recreuser ce que les obus
-   ont comblé). Rend le nombre de cases changées. */
-export function travail(B, sorte, ks) {
-  const T = B.terrain, prof = B.profondeur, W = T.W, set = new Set(ks);
-  let n = 0;
-  for (const k of ks) {
-    const tr = B.troncons[k], L = B.lignes[tr.ligne];
-    for (let j = Math.max(0, Math.floor(L.y0 - 8)); j < Math.min(T.H, Math.ceil(L.y0 + 8)); j++) {
-      for (let i = Math.floor(tr.x0); i < Math.ceil(tr.x1); i++) {
-        const c = j * W + i;
-        if (!set.has(T.troncon[c])) continue;
-        if (sorte === 'reparer' && T.diff[c] > -prof) { T.diff[c] = -prof; toucher(T, i, j); n++; }
-      }
-    }
-  }
-  if (sorte === 'reparer' && n) T.version++;
-  return n;
-}
-
-// Les cases comblées de la tranchée d'un régiment (pour savoir s'il y a à réparer)
-function combles(B, reg) {
-  const T = B.terrain, prof = B.profondeur, ks = new Set(tronconsDe(B, reg));
-  let n = 0;
-  for (const k of ks) {
-    const tr = B.troncons[k], L = B.lignes[tr.ligne];
-    for (let j = Math.max(0, Math.floor(L.y0 - 8)); j < Math.min(T.H, Math.ceil(L.y0 + 8)); j++)
-      for (let i = Math.floor(tr.x0); i < Math.ceil(tr.x1); i++) { const c = j * T.W + i; if (ks.has(T.troncon[c]) && T.diff[c] > -prof + 1) n++; }
-  }
-  return n;
 }
 
 // Le centre des hommes d'un régiment (null s'il n'en a plus)
@@ -136,17 +95,15 @@ function centreDe(B, reg) {
   return n ? { x: x / n, y: y / n } : null;
 }
 
-// Les corvées d'en face : évacuer s'il a des blessés, réparer si sa tranchée est comblée, sinon le repos
+// Les corvées d'en face : ravitailler s'il a faim, évacuer s'il a des blessés, sinon le repos
 export function choixEnFace(B) {
   const A = B.armee, out = {};
   for (const reg of B.etat.regiments) {
     if (reg.camp !== 1 || !reg.effectif) continue;
     let blesses = 0;
     for (let i = 0; i < A.n; i++) if (A.reg[i] === reg.id && A.blessure[i]) blesses++;
-    const n = B.R.nuit, h = hash2(reg.id, B.etat.jour, (B.etat.graine | 0) + 59);
-    out[reg.id] = (reg.vivres ?? n.vivres) <= 1 ? 'ravitailler'
-      : blesses >= 5 ? 'evacuer' : combles(B, reg) >= 10 ? 'reparer'
-      : tronconsDe(B, reg).length && h > 0.75 && !refusCorvee(B, reg, 'abri') ? 'abri' : 'repos';
+    const n = B.R.nuit;
+    out[reg.id] = (reg.vivres ?? n.vivres) <= 1 ? 'ravitailler' : blesses >= 5 ? 'evacuer' : 'repos';
     if (refusCorvee(B, reg, out[reg.id])) out[reg.id] = 'repos';
   }
   // la relève : le régiment le plus éprouvé (moins de la moitié de ses hommes), un par nuit, tant qu'il en reste en réserve
@@ -195,7 +152,7 @@ export function corvees(B, choix, ctx) {
   const { etat, R, armee: A } = B;
   const N = R.nuit, { rng, mourir } = ctx;
   const tous = etat.deux ? { ...choix } : { ...choixEnFace(B), ...choix };      // (à deux, chaque joueur choisit pour ses régiments ; sans choix, le repos)
-  const bilan = [0, 1].map(() => ({ inhumes: 0, evacues: 0, repares: 0, abris: 0, ravitailles: 0, mortsCorvee: 0, mortsBlesses: 0, affames: 0, retours: 0, mortsMelee: 0, prisNuit: 0, perdusNuit: 0 }));
+  const bilan = [0, 1].map(() => ({ evacues: 0, ravitailles: 0, mortsCorvee: 0, mortsBlesses: 0, affames: 0, retours: 0, mortsMelee: 0, prisNuit: 0, perdusNuit: 0 }));
   const faite = {}, releves = [];
   const contact = contactDe(B);                    // (avant la mêlée : ceux qui se battent cette nuit)
   meleeNuit(B, ctx, bilan);
@@ -203,7 +160,6 @@ export function corvees(B, choix, ctx) {
   const centres = etat.regiments.map(() => ({ x: 0, y: 0, n: 0 }));
   for (let i = 0; i < A.n; i++) { const c = centres[A.reg[i]]; c.x += A.x[i]; c.y += A.y[i]; c.n++; }
   for (const c of centres) if (c.n) { c.x /= c.n; c.y /= c.n; }
-  const premiere = camp => B.lignes.find(L => L.camp === camp && L.rang === 0);
 
   for (const reg of etat.regiments) {
     if (!reg.effectif) continue;
@@ -212,40 +168,7 @@ export function corvees(B, choix, ctx) {
     else if (refusCorvee(B, reg, id)) id = 'repos';
     faite[reg.id] = id;
     const b = bilan[reg.camp], ctr = centres[reg.id];
-    if (id === 'reparer') {
-      const ks = tronconsDe(B, reg);
-      if (travail(B, id, ks)) {
-        etat.travaux.push([etat.jour, SORTES.indexOf(id), ...ks]);
-        b.repares += ks.length;
-      }
-    } else if (id === 'inhumer') {
-      // les corps les plus proches, autant que les hommes en peuvent porter
-      const r2 = N.rayonInhumer ** 2, L1 = premiere(reg.camp);
-      const proches = [];
-      etat.corps.forEach((c, k) => { const d = (c[0] / 10 - ctr.x) ** 2 + (c[1] / 10 - ctr.y) ** 2; if (d < r2) proches.push([d, k]); });
-      proches.sort((a, b) => a[0] - b[0] || a[1] - b[1]);
-      const pris = new Set(proches.slice(0, Math.floor(reg.effectif * N.inhumerParHomme)).map(p => p[1]));
-      const dehors = [];
-      etat.corps = etat.corps.filter((c, k) => {
-        if (!pris.has(k)) return true;
-        etat.tombes.push([...c, etat.jour]);
-        if (L1 && (c[1] / 10 - L1.y0) * L1.face > 3) dehors.push(c);
-        return false;
-      });
-      b.inhumes += pris.size;
-      // au-delà de nos lignes, on y reste parfois
-      if (dehors.length) {
-        const p = N.risqueDehors * Math.min(1, dehors.length / 10);
-        for (let i = 0; i < A.n; i++) {
-          if (A.reg[i] !== reg.id || A.mort[i] || rng() >= p) continue;
-          const c = dehors[Math.floor(rng() * dehors.length)];
-          mourir(i, 'corvée', [c[0] / 10, c[1] / 10]); b.mortsCorvee++;
-        }
-      }
-    } else if (id === 'abri') {
-      // un niveau de plus sous chacun de ses tronçons (on creuse sous le parapet, à six ou huit mètres)
-      for (const k of tronconsDe(B, reg)) if ((etat.abris[k] || 0) < N.abriMax) { etat.abris[k] = (etat.abris[k] || 0) + 1; b.abris++; }
-    } else if (id === 'ravitailler') {
+    if (id === 'ravitailler') {
       // la soupe et le pain montent par les boyaux ; on y laisse parfois un homme
       for (let i = 0; i < A.n; i++) {
         if (A.reg[i] !== reg.id || A.mort[i] || rng() >= N.risqueBoyau) continue;
@@ -359,9 +282,4 @@ function relever(B, vieux, rng) {
     if (etat.numeros && reg.camp === 0) etat.numeros[premier + k] = etat.prochainNumero++;     // (campagne : un numéro neuf, jamais celui d'un vétéran)
     if (i >= 0) poserCaracs(A, i, departCaracs(etat.graine, reg.camp, premier + k, k, n, reg.id));
   }
-}
-
-// La sauvegarde : rejoue les travaux de terrain de la nuit du jour donné
-export function rejouerTravaux(B, jour) {
-  for (const t of B.etat.travaux) if (t[0] === jour) travail(B, SORTES[t[1]], t.slice(2));
 }

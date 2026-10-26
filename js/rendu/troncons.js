@@ -1,8 +1,8 @@
 // Ce que l'état des tronçons montre sur le terrain : les fanions (à la couleur de celui qui tient le tronçon, déchirés quand l'autre
 // camp y est entré), le clignotement d'un ordre et la surbrillance de la visée, les ouvrages des tranchées (traverses, sacs de terre,
 // fil de fer, portes d'abri). Le dessin seulement : tout se lit de l'état, rien n'en est sauvegardé.
-import { PALETTE } from '../palette.js?v=0.77.0';
-import { ligneY } from '../tranchees.js?v=0.77.0';
+import { PALETTE } from '../palette.js?v=0.77.1';
+import { ligneY } from '../tranchees.js?v=0.77.1';
 
 // `THREE`, `scene`, `col` (une couleur de la palette), `surface(x, z)` (la hauteur du sol), `projeter()` (le centre de la vue et les pixels par mètre),
 // `vue`, `zooms` viennent de creerRendu ; `bataille()`, `tAnim()` (le temps du dessin), `vide()` (rien n'est dessiné) et `survolTroncons()`
@@ -69,7 +69,7 @@ export function creerTroncons({ THREE, scene, col, surface, projeter, vue, zooms
 
   // ─── Les ouvrages des tranchées (Jérôme, v0.18.0) : des traverses en travers de la tranchée, des sacs de terre sur le parapet (à l'envers
   // quand le tronçon est pris : le parapet devient le parados), du fil de fer devant les premières lignes (coupé là où l'autre camp
-  // est entré ou a pris), l'entrée des abris dans la paroi arrière (une porte par niveau). Le dessin seulement : rien n'en est sauvegardé,
+  // est entré ou a pris), Le dessin seulement : rien n'en est sauvegardé,
   // tout se lit de l'état ; refait deux fois par seconde, et seulement ce qu'on voit, à partir de 3 pixels par mètre. ───
   const OUV_BOITES = 2400, ouvPos = new Float32Array(OUV_BOITES * 30 * 3), ouvCol = new Float32Array(OUV_BOITES * 30 * 3);
   const ouvGeo = new THREE.BufferGeometry();
@@ -123,9 +123,6 @@ export function creerTroncons({ THREE, scene, col, surface, projeter, vue, zooms
           if (n % 3 === 0 && !coupe) trait(xa, ha, za, xa, ha + 1, za);          // un piquet
         }
       }
-      // les abris : une porte dans la paroi arrière par niveau creusé
-      const niveau = et.abris[t] || 0;
-      for (let d = 0; d < niveau; d++) { const x = xm - (niveau - 1) * 2 + d * 4, z = ligneY(L, x) - f * (L.amp + 1.4), h = surface(x, ligneY(L, x)); boite(x - 0.7, x + 0.7, h, h + 1.3, z - 0.2, z + 0.2, cPorteH, cPorteB); }
     });
     ouvGeo.attributes.position.needsUpdate = true; ouvGeo.attributes.color.needsUpdate = true; ouvGeo.setDrawRange(0, nv);
     filGeo.attributes.position.needsUpdate = true; filGeo.setDrawRange(0, nf);

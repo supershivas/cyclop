@@ -1,5 +1,9 @@
 # Journal des versions
 
+## 0.77.1 — 2026-10-26
+- La carte montre les ordres (une ligne pointillée de chaque régiment à sa destination) et un « ! » rouge sur les régiments en déroute
+- La nuit, les corvées inutiles sont retirées : plus de réparation des tranchées, d'inhumation ni d'abris ; restent le repos, l'évacuation des blessés, le ravitaillement et la relève
+
 ## 0.77.0 — 2026-10-26
 - La mission « prendre » se gagne avant le terme : leur première ligne tenue à 75 % deux soirs de suite, et la bataille est gagnée ; le papier de la nuit dit où l'on en est
 

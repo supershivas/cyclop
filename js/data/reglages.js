@@ -184,18 +184,11 @@ export const REGLAGES = {
     reposTravail: 0.4,    // un régiment à la corvée ne se repose que de cette part
     moralRepos: 0.15,     // le repos rend en plus cette part de ce qui manque au moral
     mortBlesse: 0.12,     // un blessé laissé au front meurt dans la nuit (à la tête : deux fois plus)
-    rayonInhumer: 60,     // m autour du régiment
-    inhumerParHomme: 1,   // corps qu'un homme peut porter en terre dans la nuit
-    risqueDehors: 0.03,   // chance de tomber, par homme, pour une corvée au-delà de nos lignes (balles perdues, fusées)
     risqueBoyau: 0.005,   // … et pour porter les blessés par les boyaux
     rayonCorps: 40,       // m : les corps laissés autour d'un régiment…
     moralCorps: 0.003,    // … lui pèsent, chacun, au matin…
     moralCorpsMax: 0.15,  // … jusqu'à cette part de son moral
     moralEvacuer: 0.03,   // on s'occupe des blessés : le moral remonte un peu
-    // les abris profonds (v0.11.0) : creusés nuit après nuit sous un tronçon
-    abriMax: 3,           // niveaux (une nuit de travail chacun)
-    abriParNiveau: 0.2,   // un obus tue d'autant moins (par niveau) ceux qui sont dans le tronçon
-    abriDetruit: '220',   // le calibre qui crève un abri (un niveau par obus tombé dans le tronçon)
     // le ravitaillement : des vivres pour quelques jours, apportés de nuit par les boyaux
     vivres: 3,            // nuits de vivres d'un régiment ravitaillé
     faimRepos: 0.5,       // sans vivres, la nuit ne repose que de cette part…

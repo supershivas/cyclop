@@ -331,6 +331,14 @@ dialog form { margin-top: calc(var(--pas) * 2); }
 .carte-grille .carte-ronde.eux { background: var(--jeu-eux); }
 .carte-grille .carte-ronde.choisi { outline: 2px solid var(--jeu-encre); outline-offset: 1px; }
 .carte-ronde[hidden] { display: none; }
+/* les ordres sur la carte et le « ! » d'un régiment en déroute (v0.77.1) */
+.carte-ordres { position: absolute; left: 0; top: 0; pointer-events: none; overflow: visible; }
+.carte-ordres line { stroke: var(--jeu-encre); stroke-width: 1.5; stroke-dasharray: 3 3; opacity: .7; }
+.carte-ordres circle { fill: var(--jeu-nous); stroke: var(--jeu-encre); stroke-width: 1.5; }
+.carte-ordres g.choisi line { stroke-width: 2.5; opacity: 1; }
+.carte-ordres g.choisi circle { fill: var(--jeu-encre); }
+.carte-grille .carte-ronde .alerte { position: absolute; top: -9px; right: -9px; width: 12px; height: 12px; border-radius: 50%; background: var(--jeu-deroute); color: var(--jeu-encre); font-style: normal; font-weight: bold; font-size: 10px; line-height: 12px; text-align: center; border: 1px solid var(--jeu-fond); }
+.carte-grille .carte-ronde .alerte[hidden] { display: none; }
 
 /* Nos régiments (Jérôme, v0.20.0) : une rangée de cartes compactes en papier de campagne ; la carte choisie s'ouvre vers le haut */
 .regiments { position: relative; flex: 1; min-width: 0; display: flex; justify-content: center; align-items: flex-end; gap: var(--pas); pointer-events: none; }
