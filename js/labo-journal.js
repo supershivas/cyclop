@@ -2,6 +2,9 @@
 // Une entrée par version qui touche au labo, la plus récente en haut. `ref` : « sujet-Lettre » (la lettre est celle de la variante,
 // A étant l'actuelle). À chaque changement du labo : une entrée ici, avec `depuis` sur les variantes ajoutées ou changées (labo.js).
 export const JOURNAL = [
+  { version: '0.76.0', date: '2026-10-26', items: [
+    { genre: 'nouveau', texte: 'Le son : chaque effet du jeu, l\'ambiance (vent, pluie, fusillade, moteurs, musique) et l\'espace (distance et côté), joués par le module du jeu', ref: 'son-A' },
+  ] },
   { version: '0.69.0', date: '2026-10-25', items: [
     { genre: 'mis-a-jour', texte: 'Les grades se voient : « Le képi et les galons » est retenu et en jeu, avec un petit C au-dessus du capitaine ; le fanion, les jumelles et la carte passent en non retenus', ref: 'grades-D' },
   ] },

@@ -1,10 +1,10 @@
 // Les ponts dessinés (Jérôme, v0.47.2) : un volume par ouvrage de `T.pontsListe` (le terrain de la bataille ; `rendu/ponts-modeles.js` : planches, arches, dos d'âne, chevalets, Warren, suspendu, cordes),
 // posé au niveau de son tablier (`pontH`), tourné le long de son trait, long comme lui, large du double de sa demi-largeur. Le sol dessous reste de l'eau : l'eau passe sous le pont. Un ouvrage coupé par un obus
 // (`detruit`) disparaît. Le dessin seulement : tout vient du terrain, rien n'y est écrit. Fabrique `creerPonts({ THREE, scene, bataille })`.
-import { outils, OUVRAGES } from './ponts-modeles.js?v=0.75.0';
-import { typePont } from '../data/ponts.js?v=0.75.0';
-import { PALETTE } from '../palette.js?v=0.75.0';
-import { hash2 } from '../lib/rng.js?v=0.75.0';
+import { outils, OUVRAGES } from './ponts-modeles.js?v=0.76.0';
+import { typePont } from '../data/ponts.js?v=0.76.0';
+import { PALETTE } from '../palette.js?v=0.76.0';
+import { hash2 } from '../lib/rng.js?v=0.76.0';
 
 export function creerPonts({ THREE, scene, bataille }) {
   let O = null, lumiere = null, terrain = null;

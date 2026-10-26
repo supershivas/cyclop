@@ -149,6 +149,8 @@ export function creerSon(prefs = {}) {
     // à appeler dans un geste du joueur (clic, touche) : crée le contexte ou le reprend
     debloquer() { demarrer(); if (ctx && ctx.state === 'suspended' && !cache) ctx.resume(); },
     evenement, image, interface_, cacher,
+    // le labo en crée un par variante et le ferme en la quittant
+    fermer() { if (ctx) { try { ctx.close(); } catch { /* déjà fermé */ } ctx = null; } },
     get volumes() { return { ...vol }; },
     volume(quoi, v) { vol[quoi] = borne(v, 0, 1); regler(); return vol; },
     get actif() { return !!ctx && ctx.state === 'running'; },

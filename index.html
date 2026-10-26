@@ -9,8 +9,8 @@
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta property="og:image" content="og.png">
-<link rel="stylesheet" href="js/lib/game.css?v=0.75.0">
-<link rel="stylesheet" href="css/style.css?v=0.75.0">
+<link rel="stylesheet" href="js/lib/game.css?v=0.76.0">
+<link rel="stylesheet" href="css/style.css?v=0.76.0">
 </head>
 <body>
 <!-- La barre de chargement (v0.28.0) : là avant tout script ; main.js la remplit, puis la retire -->
@@ -106,6 +106,11 @@
         <section class="papier carte" id="carte" aria-label="Carte du secteur" hidden>
           <button class="entete" id="carte-bascule" aria-expanded="true" aria-label="Replier la carte du secteur">Le secteur · <span class="discret">en face au nord</span><i aria-hidden="true"></i></button>
           <div class="carte-grille" id="carte-grille"></div>
+        </section>
+        <section class="papier secteur" id="secteur" aria-label="Détail d'un secteur" hidden>
+          <button class="entete" id="secteur-fermer" aria-label="Revenir à la carte du secteur"><span><span aria-hidden="true">← </span><span id="secteur-titre">Secteur</span></span><span class="discret">la carte</span></button>
+          <canvas id="secteur-plan" aria-label="Plan du secteur : les hommes de chaque camp, les tranchées, les secteurs voisins"></canvas>
+          <div id="secteur-lignes" class="secteur-lignes"></div>
         </section>
               </div>
     </div>
@@ -286,6 +291,6 @@
 </dialog>
 
 <div class="jeu-toast" id="toast" role="status" hidden></div>
-<script type="module" src="js/main.js?v=0.75.0"></script>
+<script type="module" src="js/main.js?v=0.76.0"></script>
 </body>
 </html>

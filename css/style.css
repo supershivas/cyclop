@@ -566,3 +566,12 @@ h2 { font-weight: normal; letter-spacing: var(--titre-lettres); }
 .son-reglages { display: grid; gap: var(--pas); margin: var(--pas) 0; }
 .son-reglages label { display: grid; grid-template-columns: 7ch 1fr; align-items: center; gap: var(--pas); }
 .son-reglages input { width: 100%; min-height: var(--jeu-cible); accent-color: var(--jeu-accent); }
+
+/* Le détail d'un secteur (v0.76.0) : sous la carte, un plan du secteur et de ses voisins */
+.secteur { width: min(38ch, 30vw); }
+.secteur .entete { display: flex; justify-content: space-between; gap: var(--pas); width: 100%; font: inherit; color: inherit; background: none; border: 0; border-bottom: 1px solid var(--jeu-accent); cursor: pointer; letter-spacing: .14em; text-transform: uppercase; font-size: var(--texte-petit); padding-bottom: var(--e0); margin-bottom: var(--e1); }
+.secteur canvas { display: block; width: 100%; height: auto; image-rendering: pixelated; background: var(--jeu-fond); }
+.secteur-lignes { display: grid; gap: var(--e0); margin-top: var(--e1); }
+.secteur-ligne { font: inherit; font-size: var(--texte-petit); text-align: left; padding: var(--e0) var(--e1); background: none; border: 1px solid var(--jeu-accent); color: inherit; cursor: pointer; min-height: 0; }
+.secteur-ligne.ici { background: var(--jeu-fond); color: var(--jeu-encre); }
+.carte.remplacee { display: none; }

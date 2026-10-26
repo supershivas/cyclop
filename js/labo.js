@@ -2,40 +2,41 @@
 // Chaque sujet utilise les mêmes modules que le jeu (terrain, apparence,
 // rendu three.js) : ce qu'on voit ici est ce que le jeu dessinera. Ajouter un
 // sujet ou une variante = ajouter une entrée dans GROUPES.
-import { afficherVersion } from './version-tag.js?v=0.75.0';
-import { mountLabo } from './lib/labo-shell.js?v=0.75.0';
-import { spriteCanvas, paletteToGPL, paletteToHex } from './lib/sprites.js?v=0.75.0';
-import { PALETTE, ROLES } from './palette.js?v=0.75.0';
-import { chargerContenu } from './design-store.js?v=0.75.0';
-import { tuile, ETAT } from './tuiles.js?v=0.75.0';
-import { creerTerrain, impact, hydroLignes, toucher } from './terrain.js?v=0.75.0';
-import { FORMES } from './cratere.js?v=0.75.0';
-import { CALIBRES } from './data/calibres.js?v=0.75.0';
-import { METEO } from './data/meteo.js?v=0.75.0';
-import { nouvelleBataille, avancer, ordonnerMarche, ordonnerBarrage, mourir, regarderAu, aube, horloge, ticksParJour, rangDe } from './bataille.js?v=0.75.0';
-import { AZIMUTS, COTES } from './data/soleil.js?v=0.75.0';
-import { creerRendu, ZOOMS } from './rendu3d.js?v=0.75.0';
-import { placesCommandement } from './army.js?v=0.75.0';
-import { hash2 } from './lib/rng.js?v=0.75.0';
-import { reglerVerdure } from './apparence.js?v=0.75.0';
-import { maquetteAssaut } from './labo-assaut.js?v=0.75.0';
-import { calquePlaques } from './labo-plaques.js?v=0.75.0';
-import { calqueBarre } from './labo-barre-temps.js?v=0.75.0';
-import { maquetteProjections, maquetteVisee } from './labo-projections.js?v=0.75.0';
-import { calqueBarreVie } from './labo-barre-vie.js?v=0.75.0';
-import { calqueClic } from './labo-clic-regiment.js?v=0.75.0';
-import { maquetteBoutons, calqueOrdre, calqueObus } from './labo-satisfaction.js?v=0.75.0';
-import { calqueEtiquette, calqueToast, maquetteCartes } from './labo-hud-ux.js?v=0.75.0';
-import { maquetteCampagne } from './labo-campagne.js?v=0.75.0';
-import { maquetteCaisses, maquetteRates, maquetteSapes } from './labo-arcade.js?v=0.75.0';
-import { maquetteChars } from './labo-chars.js?v=0.75.0';
-import { maquetteGaz } from './labo-gaz.js?v=0.75.0';
-import { maquetteAvions } from './labo-avions.js?v=0.75.0';
-import { maquettePonts, PONTS, NOMS_PONTS } from './labo-ponts.js?v=0.75.0';
-import { PONTS_JEU } from './data/ponts.js?v=0.75.0';
-import { JOURNAL } from './labo-journal.js?v=0.75.0';
-import { loadVersion } from './lib/app-update.js?v=0.75.0';
-import { calqueMoral } from './labo-moral.js?v=0.75.0';
+import { afficherVersion } from './version-tag.js?v=0.76.0';
+import { mountLabo } from './lib/labo-shell.js?v=0.76.0';
+import { spriteCanvas, paletteToGPL, paletteToHex } from './lib/sprites.js?v=0.76.0';
+import { PALETTE, ROLES } from './palette.js?v=0.76.0';
+import { chargerContenu } from './design-store.js?v=0.76.0';
+import { tuile, ETAT } from './tuiles.js?v=0.76.0';
+import { creerTerrain, impact, hydroLignes, toucher } from './terrain.js?v=0.76.0';
+import { FORMES } from './cratere.js?v=0.76.0';
+import { CALIBRES } from './data/calibres.js?v=0.76.0';
+import { METEO } from './data/meteo.js?v=0.76.0';
+import { nouvelleBataille, avancer, ordonnerMarche, ordonnerBarrage, mourir, regarderAu, aube, horloge, ticksParJour, rangDe } from './bataille.js?v=0.76.0';
+import { AZIMUTS, COTES } from './data/soleil.js?v=0.76.0';
+import { creerRendu, ZOOMS } from './rendu3d.js?v=0.76.0';
+import { placesCommandement } from './army.js?v=0.76.0';
+import { hash2 } from './lib/rng.js?v=0.76.0';
+import { reglerVerdure } from './apparence.js?v=0.76.0';
+import { maquetteAssaut } from './labo-assaut.js?v=0.76.0';
+import { calquePlaques } from './labo-plaques.js?v=0.76.0';
+import { calqueBarre } from './labo-barre-temps.js?v=0.76.0';
+import { maquetteProjections, maquetteVisee } from './labo-projections.js?v=0.76.0';
+import { calqueBarreVie } from './labo-barre-vie.js?v=0.76.0';
+import { calqueClic } from './labo-clic-regiment.js?v=0.76.0';
+import { maquetteBoutons, calqueOrdre, calqueObus } from './labo-satisfaction.js?v=0.76.0';
+import { calqueEtiquette, calqueToast, maquetteCartes } from './labo-hud-ux.js?v=0.76.0';
+import { maquetteCampagne } from './labo-campagne.js?v=0.76.0';
+import { maquetteCaisses, maquetteRates, maquetteSapes } from './labo-arcade.js?v=0.76.0';
+import { maquetteChars } from './labo-chars.js?v=0.76.0';
+import { maquetteGaz } from './labo-gaz.js?v=0.76.0';
+import { maquetteAvions } from './labo-avions.js?v=0.76.0';
+import { maquettePonts, PONTS, NOMS_PONTS } from './labo-ponts.js?v=0.76.0';
+import { PONTS_JEU } from './data/ponts.js?v=0.76.0';
+import { JOURNAL } from './labo-journal.js?v=0.76.0';
+import { loadVersion } from './lib/app-update.js?v=0.76.0';
+import { maquetteEffets, maquetteAmbiance, maquetteEspace } from './labo-son.js?v=0.76.0';
+import { calqueMoral } from './labo-moral.js?v=0.76.0';
 
 document.documentElement.style.setProperty('--jeu-accent', ROLES.accent);
 const NOM = document.title.replace(/^Labo — /, ''); // le nom vient de la page (une apostrophe ne casse rien)
@@ -492,6 +493,13 @@ const GROUPES = [
       { title: 'Le cirque (le Baron et les autres)', status: 'ancienne', depuis: '0.52.2', note: 'Non retenu (Jérôme, v0.45.0) : reste au labo. Le ciel disputé : trois Spad (Lt Aubry, Sgt Marchand, Cpl Vidal) contre le triplan rouge du « Baron » (un Fokker Dr.I, comme celui de Richthofen, abattu le 21 avril 1918) et deux Albatros. Ils se poursuivent, tirent des traceurs, tombent en fumée. Aucun compteur de victoires (DESIGN.md) : seuls comptent le nom du pilote, son état et le résultat : qui tient le ciel prive l\'autre de ses avions de réglage (A) et de ses mitraillages (C). Le plus spectaculaire, le plus indirect : le joueur ne dirige qu\'un ordre, « une patrouille ici ».', render: s => maquetteAvions(s, R, 'cirque') },
       { title: 'Le mitraillage', status: 'retenue', depuis: '0.52.2', note: 'Retenu (Jérôme, v0.45.0) ; en jeu depuis la v0.46.0 comme un 4e bouton « Avion » : une passe en ligne sur une bande, sans les trois réponses ci-dessous. Deux appareils d\'attaque d\'en face (de type Halberstadt) arrivent à dix mètres du sol sur un régiment, mitraillent en ligne, remontent, reviennent. Trois réponses : rien ; le feu en l\'air (on tire, on reste debout : un coup au but abat l\'appareil au bout de quelques passes, mais on tombe plus) ; se jeter à terre (le tiers des pertes, aucune riposte). Le dilemme du fantassin sous l\'avion, en une posture de plus dans la fenêtre d\'ordres, comme « feu retenu ».', render: s => maquetteAvions(s, R, 'mitraillage') },
       { title: 'Les bombardiers de nuit', status: 'ancienne', depuis: '0.52.2', note: 'Non retenu (Jérôme, v0.45.0) : reste au labo. Un Gotha G.IV (bimoteur de bombardement allemand, 1917) vole la nuit sur nos lignes et cherche les lampes de l\'arrière (v0.39.0) : il lâche une chaîne de six bombes sur les lampes (5 m de précision), ou au hasard si on les éteint (36 m). Éteindre les lampes protège, mais coûte : la corvée de la nuit se travaille mal dans le noir. Les projecteurs et la DCA sont un pari : peut-être l\'abattre, mais leurs éclatements se voient. Le seul sujet qui prolonge une règle déjà en jeu (les lampes).', render: s => maquetteAvions(s, R, 'nuit') },
+    ] },
+  ] },
+  { id: 'son', title: 'Son', topics: [
+    { id: 'son', title: 'Le son', variants: [
+      { title: 'Les effets', status: 'actuelle', depuis: '0.76.0', note: 'En jeu (v0.75.0) : chaque son d\'événement, joué par le même module que la bataille (`js/audio.js`) : trois obus, une salve de 24, l\'avion abattu ou écrasé, le char détruit, les ponts, le cor du tronçon pris, la nuit, les trois petits sons de l\'interface. « Loin » les pose à 300 m à gauche. Cliquer une fois déverrouille le son (le navigateur le veut).', render: s => maquetteEffets(s) },
+      { title: 'L\'ambiance', status: 'retenue', depuis: '0.76.0', note: 'Les sons qui ne s\'arrêtent pas : le vent (plus fort en tempête), la pluie et la neige, la fusillade (un lit de bruit et des claquements, selon le nombre de tirs), le moteur du char, celui de l\'avion (plus grave et plus fort bas), la musique lente. Les curseurs règlent ce que le jeu règle dans ses réglages.', render: s => maquetteAmbiance(s) },
+      { title: 'L\'espace', status: 'retenue', depuis: '0.76.0', note: 'Un 155 tombe là où l\'on clique sur la carte : plus loin du centre de la vue il est plus faible, et il vient de son côté (jamais tout à fait muet : un gros bruit s\'entend de loin). La portée est la largeur que la vue montre (le zoom du jeu la change).', render: s => maquetteEspace(s) },
     ] },
   ] },
   { id: 'moteur', title: 'Moteur', topics: [

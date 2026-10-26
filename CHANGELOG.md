@@ -1,5 +1,9 @@
 # Journal des versions
 
+## 0.76.0 — 2026-10-26
+- Un clic sur un secteur de la carte ouvre son détail à la place de la carte : un plan avec les hommes de chaque camp, les tranchées et les secteurs voisins, et la caméra glisse au-dessus
+- Le labo a une section Son : chaque effet, l'ambiance et l'espace, joués par le module du jeu
+
 ## 0.75.0 — 2026-10-26
 - Le son : obus, fusillade, avions, chars, vent et pluie, une musique sombre et lente ; deux curseurs dans les réglages (effets, musique)
 
