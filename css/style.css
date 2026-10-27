@@ -636,6 +636,7 @@ h2 { font-weight: normal; letter-spacing: var(--titre-lettres); }
 .camp-barre > * { pointer-events: auto; }
 .camp-dotation { flex: 1 0 100%; text-align: right; font-size: var(--texte-petit); color: var(--jeu-fond); background: var(--jeu-encre); padding: var(--e0) var(--e2); box-shadow: var(--ombre-papier); }
 .batteries[hidden] { display: none; }
+#batiment { z-index: 5; width: 50ch; }      /* au-dessus de la carte et des papiers du haut : la fenêtre d'un bâtiment se pose sur le champ, où qu'il soit */
 .pastille { display: grid; justify-items: center; gap: 0; width: 54px; overflow: hidden; padding: var(--e1) var(--e0); font: inherit; color: var(--jeu-fond); background: var(--jeu-encre); border: 1px solid var(--jeu-accent); box-shadow: var(--ombre-papier); cursor: pointer; opacity: 0.6; }
 .pastille svg { height: 18px; width: auto; fill: none; stroke: currentColor; stroke-width: 1.5; }
 .pastille b { font-weight: normal; font-size: var(--texte-petit); line-height: 1.1; }
@@ -643,15 +644,3 @@ h2 { font-weight: normal; letter-spacing: var(--titre-lettres); }
 .pastille.bati { opacity: 1; }
 .pastille.chantier { opacity: 1; border-style: dashed; }
 .pastille.choisi { border-color: var(--jeu-fond); outline: 1px solid var(--jeu-fond); outline-offset: 1px; }
-#batiment { width: 312px; display: grid; gap: var(--pas); }
-#batiment[hidden], .camp-barre[hidden] { display: none; }
-.bat-tete { display: flex; justify-content: space-between; align-items: center; gap: var(--pas); }
-.bat-ferme { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; padding: 0 var(--e1); }
-.bat-ordres { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: var(--pas); }
-.bat-ordres .batterie { grid-column: span 2; }
-.bat-ordres .discret { grid-column: 1 / -1; }
-.bat-ameliorer { font: inherit; color: var(--jeu-encre); background: var(--jeu-fond); border: 0; padding: var(--e1) var(--e2); cursor: pointer; text-align: left; }
-.bat-ameliorer.muet { opacity: 0.5; cursor: not-allowed; }
-.bat-chantier { color: var(--jeu-fond); }
-.bat-choix { font: inherit; font-size: var(--texte-petit); color: var(--jeu-fond); background: none; border: 1px solid var(--jeu-accent); padding: var(--e1) var(--e2); text-align: left; cursor: pointer; }
-.bat-choix.pris { border-color: var(--jeu-fond); outline: 1px solid var(--jeu-fond); }

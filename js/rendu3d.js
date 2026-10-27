@@ -22,31 +22,31 @@
    - Les soldats : instanciés (une boîte et son ombre) ; au zoom 1 et 2, un
      point de 2 × 2 pixels (la couleur du camp sur son ombre).
    - Les corps : un homme couché (instancié) ; au zoom 1 et 2, un pixel. */
-import { loadThree } from './three-lib.js';
-import * as SH from './rendu/shaders.js';
-import { creerSoldats } from './rendu/soldats.js';
-import { creerChars } from './rendu/chars.js';
-import { creerGenies } from './rendu/genies.js';
-import { creerCamp } from './rendu/camp.js';
-import { creerAvions } from './rendu/avions.js';
-import { creerPonts } from './rendu/ponts.js';
-import { creerCiel } from './rendu/ciel.js';
-import { creerMeteo } from './rendu/meteo.js';
-import { creerTroncons } from './rendu/troncons.js';
-import { ARBRES_JEU } from './data/arbres.js';
-import { creerVegetation } from './rendu/vegetation.js';
-import { creerTemps } from './rendu/temps.js';
-import { creerEclats } from './rendu/eclats.js';
-import { creerOmbresRelief } from './rendu/ombres-relief.js';
-import { OMBRES_RELIEF as OMB, NUAGES, NUAGES_VENT } from './data/soleil.js';
-import { PALETTE, ORDRE, INDICE } from './palette.js';
-import { OMBRE, couleursLigne } from './apparence.js';
-import { MORCEAU, hauteurVueQ as hauteurQ, hauteurVueM as hauteurM } from './terrain.js';
-import { horloge, secteurDuJeu, rangDe } from './bataille.js';
-import { GRADES } from './data/grades.js';
-import { profilFleuve } from './eaux.js';
-import { ligneY } from './tranchees.js';
-import { vent as ventDuJour } from './data/meteo.js';
+import { loadThree } from './three-lib.js?v=0.96.1';
+import * as SH from './rendu/shaders.js?v=0.96.1';
+import { creerSoldats } from './rendu/soldats.js?v=0.96.1';
+import { creerChars } from './rendu/chars.js?v=0.96.1';
+import { creerGenies } from './rendu/genies.js?v=0.96.1';
+import { creerCamp } from './rendu/camp.js?v=0.96.1';
+import { creerAvions } from './rendu/avions.js?v=0.96.1';
+import { creerPonts } from './rendu/ponts.js?v=0.96.1';
+import { creerCiel } from './rendu/ciel.js?v=0.96.1';
+import { creerMeteo } from './rendu/meteo.js?v=0.96.1';
+import { creerTroncons } from './rendu/troncons.js?v=0.96.1';
+import { ARBRES_JEU } from './data/arbres.js?v=0.96.1';
+import { creerVegetation } from './rendu/vegetation.js?v=0.96.1';
+import { creerTemps } from './rendu/temps.js?v=0.96.1';
+import { creerEclats } from './rendu/eclats.js?v=0.96.1';
+import { creerOmbresRelief } from './rendu/ombres-relief.js?v=0.96.1';
+import { OMBRES_RELIEF as OMB, NUAGES, NUAGES_VENT } from './data/soleil.js?v=0.96.1';
+import { PALETTE, ORDRE, INDICE } from './palette.js?v=0.96.1';
+import { OMBRE, couleursLigne } from './apparence.js?v=0.96.1';
+import { MORCEAU, hauteurVueQ as hauteurQ, hauteurVueM as hauteurM } from './terrain.js?v=0.96.1';
+import { horloge, secteurDuJeu, rangDe } from './bataille.js?v=0.96.1';
+import { GRADES } from './data/grades.js?v=0.96.1';
+import { profilFleuve } from './eaux.js?v=0.96.1';
+import { ligneY } from './tranchees.js?v=0.96.1';
+import { vent as ventDuJour } from './data/meteo.js?v=0.96.1';
 
 export const CAMERA = { yaw: 0.15, tangage: 0.95, fov: 30 };   // au départ : tournée de 9°, plongée de 54°, angle de 30°
 // la caméra respire : un balancement très lent, 2° en 23 s (Jérôme, v0.3.1 : variante D du labo retenue)
@@ -867,8 +867,23 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
       // la caméra libre du jeu : le point visé reste sur le terrain, la caméra ne passe pas sous le sol (elle se relève au besoin)
       vue.cx = Math.max(0, Math.min(T.W, vue.cx)); vue.cz = Math.max(0, Math.min(T.H, vue.cz));
       const D = distance(vue.zoom);
-      { const v = versCamera(yawVu(), vue.tangage), px = vue.cx + v[0] * D, pz = vue.cz + v[2] * D;      // la caméra reste au-dessus du terrain : au-delà de son bord, il n'y a que le vide
-        vue.cx += Math.max(8, Math.min(T.W - 8, px)) - px; vue.cz += Math.max(8, Math.min(T.H - 8, pz)) - pz; }
+      {
+        // la caméra reste au-dessus du terrain : au-delà de son bord, il n'y a que le vide
+        const v = versCamera(yawVu(), vue.tangage);
+        let x0 = Math.max(0, 8 - v[0] * D), x1 = Math.min(T.W, T.W - 8 - v[0] * D), z0 = Math.max(0, 8 - v[2] * D), z1 = Math.min(T.H, T.H - 8 - v[2] * D);
+        // Quand elle regarde le sol (la caméra assez haute), le vide est derrière elle, pas devant : c'est la vue qui ne sort pas du terrain (les coins de l'écran, `coinsSol`), pas
+        // la caméra (Jérôme, v0.96.0 : « la caméra n'intègre pas bien les nouveaux bâtiments » : à deux mètres par pixel, la caméra, à 216 m derrière son point visé, ne pouvait pas
+        // descendre au-delà de la rangée 416, et le camp est derrière la rangée 470). Le fondu : de 0 (tangage 0,5, la caméra seule) à 1 (0,75 et plus, la vue seule), sans saut.
+        const w = Math.max(0, Math.min(1, (tangageVu() - 0.5) / 0.25));
+        if (w > 0) {
+          const c = coinsSol(vue.zoom, yawVu(), tangageVu());
+          if (c.ok && -c.x0 <= T.W - c.x1 && -c.z0 <= T.H - HAUT - c.z1) {
+            x0 += (-c.x0 - x0) * w; x1 += (T.W - c.x1 - x1) * w; z0 += (-c.z0 - z0) * w; z1 += (T.H - HAUT - c.z1 - z1) * w;
+          }
+        }
+        vue.cx = x0 > x1 ? (x0 + x1) / 2 : Math.max(x0, Math.min(x1, vue.cx));
+        vue.cz = z0 > z1 ? (z0 + z1) / 2 : Math.max(z0, Math.min(z1, vue.cz));
+      }
       for (const cle of ['cible', 'vue']) {
         const o = cle === 'cible' ? vue.cible : vue;
         let tg = Math.max(TG_CIEL_MIN, Math.min(TG_CIEL_MAX, o.tangage));

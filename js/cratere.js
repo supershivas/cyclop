@@ -9,8 +9,8 @@
    `eclats` (de petits creux et monticules autour). Même logique de jeu :
    mêmes profondeur au centre (donc `plancher` et dureté, appliqués par
    `impact`), à peu près le même volume creusé, mêmes `rayon` et `letal`. */
-import { hash2 } from './lib/rng.js';
-import { CALIBRES } from './data/calibres.js';
+import { hash2 } from './lib/rng.js?v=0.96.1';
+import { CALIBRES } from './data/calibres.js?v=0.96.1';
 
 export const FORMES = {
   actuel: null,

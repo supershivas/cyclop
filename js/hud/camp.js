@@ -1,10 +1,11 @@
-// Le camp à l'écran (Jérôme, v0.87.0 ; lot 2 de docs/chantiers/camp-et-ameliorations.md) : une rangée de cinq pastilles en bas à droite (là où étaient les boutons de batterie) et, pour le bâtiment
-// choisi, son papier : ce qu'il est, ses ordres (les boutons de batterie y sont posés : ils gardent leur barre de charge, leur PRÊT et leur refus à voix haute) et son amélioration.
-// Un clic sur le bâtiment dans le champ le choisit aussi (main.js). Lecture seule de l'état : les ordres passent par les fonctions que main.js donne.
-import { BATIMENTS, ORDRE_BATIMENTS, EQUIPEMENT } from '../data/batiments.js';
-import { refusCamp, niveauDe, campDe, NIVEAU_MAX } from '../camp.js';
+// Le camp à l'écran (Jérôme, v0.87.0 ; lot 2 de docs/chantiers/camp-et-ameliorations.md) : une rangée de cinq pastilles en bas à droite et, pour le bâtiment choisi, une fenêtre posée au-dessus de lui
+// (v0.96.0 : « les options apparaissent au-dessus de chaque bâtiment au clic ; simplifier au maximum ») sur le modèle de la fenêtre d'un régiment (`.reg-ouvert` : le titre et son niveau, une ligne
+// de ce qu'il fait, des boutons de même largeur). Les ordres (un bouton par batterie : son nom et son état, PRÊT, les secondes, « Niv. 2 ») et l'amélioration : un seul clic, le choix du palier EST le bouton
+// (« Tir de réglage · 3 pts »). Le texte long est dans l'infobulle. Un clic sur le bâtiment dans le champ le choisit aussi (main.js). Lecture seule de l'état : les ordres passent par les fonctions que main.js donne.
+import { BATIMENTS, ORDRE_BATIMENTS, EQUIPEMENT } from '../data/batiments.js?v=0.96.1';
+import { refusCamp, niveauDe, campDe, NIVEAU_MAX } from '../camp.js?v=0.96.1';
 
-// les boutons de batterie que chaque bâtiment porte (ils sont créés par main.js et rangés dans #batteries, caché, tant qu'aucun bâtiment ne les réclame)
+// les ordres de batterie que chaque bâtiment porte, et leur nom court sur le bouton
 export const ORDRES_DE = { artillerie: ['75', '155', '220'], aerodrome: ['avion'], chars: ['char'], sapeurs: ['genie'], caserne: [] };
 const ICONES = {          // une silhouette par bâtiment (un trait, comme les boutons de batterie)
   artillerie: '<path d="M3 20h8l2-4h11l3 4h4v3H3z"/><path d="M12 14l17-6 2 3-17 6z"/>',
@@ -13,12 +14,13 @@ const ICONES = {          // une silhouette par bâtiment (un trait, comme les b
   sapeurs: '<path d="M2 20h30v4H2z"/><path d="M5 20V8h4v12zM25 20V8h4v12z"/><path d="M3 5h28v4H3z"/>',
   caserne: '<path d="M2 22V12l15-8 15 8v10z"/><path d="M13 22v-7h8v7z"/>',
 };
+const NOM_ORDRE = { '75': '75', '155': '155', '220': '220', avion: 'Avion', char: 'Char', genie: 'Génie' };
 const el = (tag, props = {}, ...kids) => { const e = Object.assign(document.createElement(tag), props); e.append(...kids); return e; };
 
-export function creerCampHud({ moi = () => 0, barre, papier, rangement, bouton, ameliorer, choisir, fermer }) {
-  let cle = null, signature = '', dernier = null;
-  const choixPris = {};      // le choix tenu pour chaque palier (clé + niveau visé) : 0, 1 ou rien
-  const pastilles = new Map();
+// `etatOrdre(cal)` : { texte, titre, muet, vise } (main.js : la recharge, la flotte, le niveau qui manque) ; `ordre(cal)` : viser ; `ameliorer(cle, choix)` : l'ordre de chantier (il dit son refus lui-même)
+export function creerCampHud({ moi = () => 0, barre, papier, etatOrdre, ordre, ameliorer, choisir }) {
+  let cle = null, signature = '';
+  const pastilles = new Map(), boutonsOrdre = new Map();
   const dotation = el('span', { className: 'camp-dotation', title: 'La dotation de l\'état-major : elle tombe à chaque aube (+1 ; +1 si nos lignes tiennent à 75 % ; +2 la première fois qu\'une ligne d\'en face est prise)' });
   barre.append(...ORDRE_BATIMENTS.map(k => {
     const b = el('button', { className: 'pastille', type: 'button' });
@@ -28,40 +30,47 @@ export function creerCampHud({ moi = () => 0, barre, papier, rangement, bouton, 
     pastilles.set(k, b); return b;
   }), dotation);
 
-  // les boutons de batterie rentrent au dépôt (caché) quand le papier se ferme ou change de bâtiment
-  const ranger = () => { for (const b of papier.querySelectorAll('.batterie')) rangement.append(b); };
-  const ameliorerSans = () => { if (dernier) maj(dernier); };      // un choix qu'on vient de poser : le papier se redessine tout de suite
+  const pts = n => `${n} pt${n > 1 ? 's' : ''}`;
+  // la fenêtre : refaite quand le bâtiment, son niveau, son chantier ou la caisse changent ; les boutons d'ordre, eux, se mettent à jour sur place (`majOrdres`, tous les 0,25 s) pour garder le survol et le clic
   function dessiner(B) {
     const e = B.etat, c = campDe(e, moi()).batiments[cle], Bd = BATIMENTS[cle], niveau = c.niveau, N = Bd.niveaux;
-    ranger(); papier.replaceChildren();
-    const tete = el('div', { className: 'bat-tete' }, el('b', { textContent: `${Bd.nom}${niveau ? ` · niveau ${niveau}` : ' · à bâtir'}` }),
-      el('button', { className: 'bat-ferme', type: 'button', textContent: '×', title: 'Fermer (Échap)', onclick: fermer }));
-    const courant = niveau ? N[niveau - 1] : N[0];
-    papier.append(tete, el('p', { className: 'discret', textContent: niveau ? `${courant.nom} : ${courant.effet}` : `À bâtir : ${courant.effet}` }));
-    // ses ordres : les boutons de batterie, ou, pour la caserne, ce qu'elle fait
-    const ordres = el('div', { className: 'bat-ordres' });
-    for (const cal of ORDRES_DE[cle]) { const b = bouton(cal); if (b) ordres.append(b); }
-    if (!ORDRES_DE[cle].length) ordres.append(el('p', { className: 'discret', textContent: `${e.reserves[moi()]} régiment${e.reserves[moi()] > 1 ? 's' : ''} frais en réserve : la relève se donne la nuit, depuis la carte du régiment à relever.${niveau >= EQUIPEMENT.niveauCaserne ? ` On y équipe aussi : casques, grenadiers, mitrailleuses ou brancardiers, un point chacun, par une corvée de la nuit (${EQUIPEMENT.places} pièces au plus par régiment).` : ''}` }));
-    papier.append(ordres);
-    // l'amélioration
-    if (niveau >= NIVEAU_MAX) papier.append(el('p', { className: 'discret', textContent: 'Niveau maximal.' }));
-    else if (c.chantier) papier.append(el('p', { className: 'bat-chantier', textContent: `Chantier : ${N[c.chantier.vers - 1].nom}, fini à l'aube${c.chantier.nuits > 1 ? ` (dans ${c.chantier.nuits} nuits)` : ''}.` }));
-    else {
-      const vers = niveau + 1, S = N[vers - 1];
-      // un palier à choix (niveaux 2 et 3) : deux améliorations, une seule se prend ; le choix se garde tant que le bâtiment n'a pas changé de niveau
-      if (S.choix) {
-        const tenu = choixPris[`${cle}${vers}`] ?? null;
-        papier.append(el('p', { className: 'discret', textContent: 'Une seule amélioration :' }),
-          ...S.choix.map(([nom, effet], i) => el('button', { className: `bat-choix${tenu === i ? ' pris' : ''}`, type: 'button', textContent: `${tenu === i ? '● ' : '○ '}${nom} : ${effet}`, onclick: () => { choixPris[`${cle}${vers}`] = i; signature = ''; ameliorerSans(); } })));
+    papier.replaceChildren(); boutonsOrdre.clear();
+    papier.append(el('div', { className: 'tete' }, el('b', { textContent: Bd.nom }), el('span', { textContent: niveau ? `niveau ${niveau}` : 'à bâtir' })));
+    const dit = c.chantier ? `Chantier : ${N[c.chantier.vers - 1].nom}, fini à l'aube${c.chantier.nuits > 1 ? ` (dans ${c.chantier.nuits} nuits)` : ''}.`
+      : ORDRES_DE[cle].length ? N[Math.max(0, niveau - 1)].effet
+      : `${e.reserves[moi()]} régiment${e.reserves[moi()] > 1 ? 's' : ''} frais en réserve. La relève${niveau >= EQUIPEMENT.niveauCaserne ? ' et l\'équipement se donnent' : ' se donne'} la nuit, depuis la carte du régiment.`;
+    papier.append(el('div', { className: 'compte', textContent: dit }));
+    // ses ordres : un bouton par batterie
+    if (ORDRES_DE[cle].length) {
+      const ordres = el('div', { className: 'actions' }); ordres.style.setProperty('--cols', ORDRES_DE[cle].length);
+      for (const cal of ORDRES_DE[cle]) {
+        const b = el('button', { type: 'button', onclick: () => ordre(cal) }); b.dataset.cal = cal;
+        boutonsOrdre.set(cal, b); ordres.append(b);
       }
-      const refus = refusCamp(e, cle, S.choix ? (choixPris[`${cle}${vers}`] ?? null) : null, moi());
-      const b = el('button', { className: `bat-ameliorer${refus ? ' muet' : ''}`, type: 'button', textContent: `${niveau ? 'Améliorer' : 'Bâtir'} : ${S.nom} (${S.cout} pt${S.cout > 1 ? 's' : ''})`, title: refus || S.effet, onclick: () => ameliorer(cle, S.choix ? (choixPris[`${cle}${vers}`] ?? null) : null) });
-      b.setAttribute('aria-disabled', refus ? 'true' : 'false');
-      papier.append(b);
+      papier.append(ordres);
+    }
+    // l'amélioration : un clic. Au niveau 1, « Bâtir » ; au palier à choix (2 et 3), deux boutons, un par amélioration ; rien au niveau maximal ni pendant un chantier
+    if (niveau < NIVEAU_MAX && !c.chantier) {
+      const vers = niveau + 1, S = N[vers - 1], options = S.choix ? S.choix.map(([nom, effet], i) => ({ nom, effet, i })) : [{ nom: niveau ? 'Améliorer' : 'Bâtir', effet: S.effet, i: null }];
+      const ligne = el('div', { className: 'actions' }); ligne.style.setProperty('--cols', options.length);
+      for (const o of options) {
+        const refus = refusCamp(e, cle, o.i, moi());
+        const b = el('button', { type: 'button', className: refus ? 'refus' : '', textContent: `${o.nom} · ${pts(S.cout)}`, title: `${S.nom} : ${o.effet}${refus ? ` (${refus})` : ''}`, onclick: () => ameliorer(cle, o.i) });
+        b.setAttribute('aria-disabled', refus ? 'true' : 'false');
+        ligne.append(b);
+      }
+      papier.append(ligne);
+    }
+    majOrdres(B);
+  }
+  function majOrdres() {
+    for (const [cal, b] of boutonsOrdre) {
+      const s = etatOrdre(cal), t = `${NOM_ORDRE[cal]} · ${s.texte}`;
+      if (b.textContent !== t) b.textContent = t;
+      b.title = s.titre ?? ''; b.classList.toggle('actif', !!s.vise); b.classList.toggle('refus', !!s.muet && !s.vise); b.setAttribute('aria-disabled', s.muet && !s.vise ? 'true' : 'false');
     }
   }
   function maj(B) {
-    dernier = B;
     const e = B.etat, camp = campDe(e, moi());
     if (!camp?.bride) { barre.hidden = true; papier.hidden = true; return; }
     barre.hidden = false;
@@ -74,9 +83,9 @@ export function creerCampHud({ moi = () => 0, barre, papier, rangement, bouton, 
       b.title = `${BATIMENTS[k].nom} : ${c.chantier ? 'en chantier' : c.niveau ? `niveau ${c.niveau}` : 'pas encore bâti'}`;
     }
     papier.hidden = !cle;
-    if (!cle) { ranger(); signature = ''; return; }
+    if (!cle) { signature = ''; return; }
     const c = camp.batiments[cle], s = [cle, c.niveau, c.chantier?.nuits ?? '', camp.dotation, e.reserves[moi()]].join('|');
-    if (s !== signature) { signature = s; dessiner(B); }
+    if (s !== signature) { signature = s; dessiner(B); } else majOrdres();
   }
-  return { maj, choisi: () => cle, choisirCle(k) { cle = k; signature = ''; if (!k) ranger(); } };
+  return { maj, choisi: () => cle, choisirCle(k) { cle = k; signature = ''; } };
 }

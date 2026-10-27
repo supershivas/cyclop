@@ -1,5 +1,5 @@
 {
-  "version": "0.95.1",
+  "version": "0.96.1",
   "date": "2026-10-27",
   "changes": [
     "Les échelles des tranchées s'adossent à la paroi : le pied sur le caillebotis, le sommet sur le bord, une brèche dans les sacs, la banquette, les lisses et le clayonnage ; elles ne traversent plus le bois"
