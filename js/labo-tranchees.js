@@ -4,12 +4,12 @@
 // bout de tranchée est lu du sol, comme dans la bataille. A : le dessin du jeu (niveau 0). B, C, D : les niveaux 1, 2, 3 de `rendu/tranchee-modeles.js` (`rendu.niveauTranchees`), E : le niveau choisi selon le zoom.
 // Le coût : un tableau de la géométrie seule (triangles par tronçon et pour un secteur de 128 tronçons, temps de construction : `mesurerNiveau`, le même calcul que `outils/mesure-tranchees.mjs`) et un bouton
 // « Mesurer dans la scène » qui relève le dessin entier (triangles dessinés, temps jusqu'au bout) pour chaque niveau. Rien n'est changé dans le jeu : `niveauTranchees` y vaut 0.
-import { impact } from './terrain.js?v=0.87.0';
-import { ligneY } from './tranchees.js?v=0.87.0';
-import { tronconSolidite } from './bataille.js?v=0.87.0';
-import { etatTranchee } from './tranchees.js?v=0.87.0';
-import { el, scene, texteSvg, maquette, bouton } from './labo-arcade.js?v=0.87.0';
-import { NIVEAUX_TRANCHEES, mesurerNiveau } from './rendu/tranchee-modeles.js?v=0.87.0';
+import { impact } from './terrain.js';
+import { ligneY } from './tranchees.js';
+import { tronconSolidite } from './bataille.js';
+import { etatTranchee } from './tranchees.js';
+import { el, scene, texteSvg, maquette, bouton } from './labo-arcade.js';
+import { NIVEAUX_TRANCHEES, mesurerNiveau } from './rendu/tranchee-modeles.js';
 
 export const NOTES_TRANCHEES = {
   A: 'Les tranchées du jeu : des sacs, des traverses, du bois et du fil de fer à partir de 4 pixels par mètre (le bois se brise avec le comblement), un dessin plus simple en dessous. C\'est le niveau 0.',
