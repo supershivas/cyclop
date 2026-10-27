@@ -1,5 +1,12 @@
 # Journal des versions
 
+## 0.92.0 — 2026-10-27
+- Le camp d'en face se bâtit seul à l'aube, avec la même dotation (selon la difficulté) : son artillerie ouvre ses 155 et 220, sa caserne grossit sa réserve ; on le voit au nord, tourné d'un demi-tour
+- Une campagne reporte les niveaux du camp d'une bataille à l'autre (la dotation repart du départ)
+
+## 0.91.1 — 2026-10-27
+- La pluie et la neige tombent partout sur le champ, même dézoomé (elles se perdaient au loin, à l'horizon) ; plus de gouttes, sur une boîte plafonnée à 600 m
+
 ## 0.91.0 — 2026-10-27
 - Les régiments s'équipent : à la caserne (niveau 2), une corvée de nuit donne casques, grenadiers, mitrailleuses ou brancardiers, un point de dotation chacun ; le régiment ne se repose pas cette nuit-là
 - Deux pièces au plus par régiment, qui les garde jusqu'à sa relève ; sa carte et son survol disent ce qu'il porte

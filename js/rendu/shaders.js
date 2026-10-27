@@ -417,8 +417,10 @@ export const plMat = {
       void main() {
         vec3 p = position;
         p.y = 30.0 - mod(uT * aVit + position.y, 40.0);
-        p.x = uC.x - uE.x * 0.5 + mod(p.x - uC.x + uE.x * 0.5 + uDer.x, uE.x);     // uDer : la dérive accumulée par le vent (m)
-        p.z = uC.y - uE.y * 0.5 + mod(p.z - uC.y + uE.y * 0.5 + uDer.y, uE.y);
+        // position.x et position.z sont des fractions (0 à 1) de la boîte, qui suit le centre de la vue ; uDer : la dérive accumulée par le vent (m).
+        // (Avant la v0.88.1 c'étaient des mètres tirés dans 400 × 300 m : dézoomé, la boîte les répétait en mosaïque et la pluie tombait loin du champ)
+        p.x = uC.x - uE.x * 0.5 + fract(position.x + (uDer.x - uC.x) / uE.x) * uE.x;
+        p.z = uC.y - uE.y * 0.5 + fract(position.z + (uDer.y - uC.y) / uE.y) * uE.y;
         gl_Position = projectionMatrix * viewMatrix * vec4(p, 1.0);
         gl_PointSize = uTaille;
       }`,
