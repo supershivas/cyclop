@@ -4,9 +4,9 @@
 //  · les boutons : une maquette de papier de campagne, les mêmes boutons que la fenêtre d'ordres, les batteries et le temps ;
 //  · les ordres et les obus : posés sur le moteur en direct (labo.js `moteur`), par-dessus le canvas (un SVG, un canvas 2D, quelques div) suivis
 //    de la caméra (`versEcran`) ; l'ordre est un vrai `ordonnerMarche`, l'obus un vrai obus de la logique (dispersion nulle : il tombe où l'on clique).
-import { PALETTE as P } from './palette.js?v=0.84.0';
-import { ordonnerMarche, ordonnerBarrage } from './bataille.js?v=0.84.0';
-import { CALIBRES } from './data/calibres.js?v=0.84.0';
+import { PALETTE as P } from './palette.js?v=0.85.0';
+import { ordonnerMarche, ordonnerBarrage } from './bataille.js?v=0.85.0';
+import { CALIBRES } from './data/calibres.js?v=0.85.0';
 
 const el = (tag, css = '', ...kids) => { const e = document.createElement(tag); if (css) e.style.cssText = css; e.append(...kids.flat().filter(k => k != null)); return e; };
 const svgEl = (tag, attrs = {}) => { const e = document.createElementNS('http://www.w3.org/2000/svg', tag); for (const [k, v] of Object.entries(attrs)) e.setAttribute(k, v); return e; };

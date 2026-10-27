@@ -1,6 +1,6 @@
 # Le camp, ses bâtiments et les améliorations (proposition, v0.84.0)
 
-**Statut** : décisions de principe prises (voir la fin) ; lot 0 fait, lots 1 à 5 à faire. Rien n'est dans le jeu. Les maquettes sont au labo (groupe « Camp », sujet « Le camp et ses bâtiments », 7 variantes `a-trancher`), les nombres dans `js/data/batiments.js` (des propositions, à mesurer). Source : la demande de Jérôme du 27 octobre (v0.83.1).
+**Statut** : décisions de principe prises (voir la fin) ; lots 0 (labo) et 1 (règle) faits, lots 2 à 5 à faire. Rien n'est dans le jeu. Les maquettes sont au labo (groupe « Camp », sujet « Le camp et ses bâtiments », 7 variantes `a-trancher`), les nombres dans `js/data/batiments.js` (des propositions, à mesurer). Source : la demande de Jérôme du 27 octobre (v0.83.1).
 
 ## Ce qui est demandé, et comment je le lis
 
@@ -69,7 +69,7 @@ Ce que la proposition refuse : une expérience qui monte avec les morts causés,
 ## Lots proposés (labo avant jeu ; chacun livrable seul)
 
 0. **Fait (v0.84.0)** : le labo (ce document, les maquettes, le papier d'un bâtiment, le parcours des jours). Reste : que Jérôme tranche (questions ci-dessous).
-1. **Règle sans écran** : `data/batiments.js` branché, `camp.js`, la dotation à l'aube, `etat.camp` ; **aucun niveau ne bride encore rien** (tout est « niveau max » par défaut) ; tests + sauvegarde ; équilibrage mesuré (`scripts/mesure-camp.mjs` : dotation versée sur les graines 3, 7, 8).
+1. **Fait (v0.85.0) : règle sans écran** : `data/batiments.js` branché, `camp.js`, la dotation à l'aube, `etat.camp` ; **aucun niveau ne bride encore rien** (tout est « niveau max » par défaut) ; tests + sauvegarde ; équilibrage mesuré (`scripts/mesure-camp.mjs` : dotation versée sur les graines 3, 7, 8).
 2. **Le camp dessiné et cliquable** : `rendu/camp.js`, le choix au clic, le papier d'un bâtiment, la touche B, les icônes de la carte ; les boutons latéraux sont retirés ; les niveaux brident (artillerie 75 seule au départ…). La mesure du rendu et `rendu-empreinte`.
 3. **Construire et améliorer** : le chantier d'une nuit, les choix aux paliers, le papier de la nuit qui dit les chantiers.
 4. **L'équipement des régiments** (casque, grenadiers…), la corvée « s'équiper ».
@@ -83,3 +83,8 @@ Ce que la proposition refuse : une expérience qui monte avec les morts causés,
 4. **Boutons latéraux** : retirés au lot 2.
 
 **Reste à trancher au labo** : le dessin de chaque bâtiment (variantes C à G, encore `a-trancher`) et les nombres (à mesurer au lot 1).
+
+## Lot 1, ce qui est construit (v0.85.0)
+
+`js/camp.js` (pur) : `campDeDepart`, `refusCamp` (la phrase du refus : bâtiment inconnu, chantier en cours, niveau maximal, points manquants, choix exigé aux niveaux 2 et 3), `ordonnerChantier` (paie tout de suite, le niveau vient à l'aube), `dotationAube` (chantiers d'une nuit, ou deux au niveau 3 sauf « Équipe de nuit » ; puis +1, +1 si nos lignes sont tenues à 75 %, +2 par ligne d'en face prise pour la première fois). `etat.camp` est sauvegardé (`VERSION` 16) ; `aube()` rend `dotation` ({ points, aube, tenue, lignes, finis }) pour le papier de la nuit. `test/camp.test.mjs` : 9 tests (départ, refus, chantier, deux nuits, jalons, sauvegarde relue au milieu d'un chantier et après une nuit).
+**Rien ne bride encore un ordre** (un barrage de 220 part au premier matin) et rien ne s'affiche : c'est le lot 2. Pas de commande réseau non plus : `bat` et `ameliorer` viendront avec l'écran. Reste à mesurer : la dotation versée sur des batailles entières (graines 3, 7, 8) pour vérifier les ~15 à 25 points.

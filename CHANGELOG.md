@@ -1,5 +1,8 @@
 # Journal des versions
 
+## 0.85.0 — 2026-10-27
+- La dotation de l'état-major tombe chaque aube et les chantiers du camp s'achèvent à la nuit (règle seule : rien n'est encore visible ni bridé)
+
 ## 0.84.0 — 2026-10-27
 - Au labo, le camp : cinq bâtiments en trois niveaux (artillerie, aérodrome, parc des chars, sapeurs, caserne) et un camp qui grandit au fil des jours, avec les ordres au clic (proposition, pas encore dans le jeu)
 

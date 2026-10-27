@@ -2,11 +2,11 @@
 // Cinq bâtiments dessinés en volumes (`THREE`, 1 unité = 1 m, mêmes arêtes et mêmes couleurs que le reste du jeu), chacun en trois niveaux, puis le camp entier dans la marge arrière du terrain, qui grandit avec les jours.
 // Rien n'est dans le jeu. Un clic sur un bâtiment ouvre son papier : ses ordres (ceux des boutons latéraux d'aujourd'hui), le niveau suivant et ce qu'il coûte. Les nombres sont dans `data/batiments.js`
 // (des propositions, à mesurer) ; le raisonnement est dans `docs/chantiers/camp-et-ameliorations.md`. Caméra : glisser pour tourner, molette pour zoomer, un clic (sans glisser) choisit un bâtiment.
-import { PALETTE as P } from './palette.js?v=0.84.0';
-import { loadThree } from './three-lib.js?v=0.84.0';
-import { el, bouton, maquette } from './labo-arcade.js?v=0.84.0';
-import { atelier, schneider } from './rendu/engins.js?v=0.84.0';
-import { BATIMENTS, ORDRE_BATIMENTS, PARCOURS_EXEMPLE, DOTATION } from './data/batiments.js?v=0.84.0';
+import { PALETTE as P } from './palette.js?v=0.85.0';
+import { loadThree } from './three-lib.js?v=0.85.0';
+import { el, bouton, maquette } from './labo-arcade.js?v=0.85.0';
+import { atelier, schneider } from './rendu/engins.js?v=0.85.0';
+import { BATIMENTS, ORDRE_BATIMENTS, PARCOURS_EXEMPLE, DOTATION } from './data/batiments.js?v=0.85.0';
 
 // ─── Les pièces communes ───────────────────────────────────────────────────
 const G = A => new A.THREE.Group();
