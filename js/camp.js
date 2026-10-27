@@ -92,16 +92,15 @@ export function dotationAube(B) {
   if (etat.campEux) { aubeDe(B, EUX); if (!etat.deux) iaBatir(B); }
   return out;
 }
-/* En face bâtit : tant qu'elle a de quoi payer, le bâtiment le plus bas de ses cibles (l'artillerie d'abord à niveau égal), le choix du palier tiré d'un hachage de la graine */
+/* En face bâtit : tant qu'elle a de quoi payer, le premier palier du plan (`CAMP_IA.plan`) qu'elle n'a pas atteint, le choix du palier tiré d'un hachage de la graine ; un palier trop cher attend l'aube suivante (elle ne passe pas au suivant : ses sous sont pour lui) */
 function iaBatir(B) {
   const { etat } = B, K = etat.campEux;
   if (!K?.bride) return;
   for (let tour = 0; tour < 6; tour++) {
-    const cand = CAMP_IA.ordre.filter(cle => niveauDe(etat, cle, EUX) < CAMP_IA.cibles[cle] && !K.batiments[cle].chantier)
-      .sort((a, b) => niveauDe(etat, a, EUX) - niveauDe(etat, b, EUX) || CAMP_IA.ordre.indexOf(a) - CAMP_IA.ordre.indexOf(b));
-    const cle = cand.find(c => !refusCamp(etat, c, hash2(etat.graine | 0, niveauDe(etat, c, EUX), 91) < 0.5 ? 0 : 1, EUX));
-    if (!cle) return;
-    ordonnerChantier(etat, cle, hash2(etat.graine | 0, niveauDe(etat, cle, EUX), 91) < 0.5 ? 0 : 1, EUX);
+    const pas = CAMP_IA.plan.find(([cle, n]) => niveauDe(etat, cle, EUX) < n);
+    if (!pas) return;
+    const [cle] = pas, choix = hash2(etat.graine | 0, niveauDe(etat, cle, EUX), 91) < 0.5 ? 0 : 1;
+    if (K.batiments[cle].chantier || !ordonnerChantier(etat, cle, choix, EUX).ok) return;
   }
 }
 

@@ -108,5 +108,5 @@ export const CAMP_PLAN = {
 export const PIEDS = { artillerie: [34, 22], aerodrome: [84, 40], chars: [32, 30], sapeurs: [26, 22], caserne: [42, 28] };
 
 // Le camp d'en face (Jérôme, v0.92.0 ; lot 5) : l'IA bâtit seule, à l'aube, avec la même dotation (× `dotation` de la difficulté : data/difficulte.js). Elle n'a besoin que de ce qu'elle emploie :
-// l'artillerie (ses barrages : les calibres s'ouvrent aux niveaux) et la caserne (sa relève) ; les sapeurs pour refaire ses nids. Le plus bas niveau d'abord, l'artillerie avant la caserne ; le choix du palier vient d'un hachage de la graine.
-export const CAMP_IA = { cibles: { artillerie: 3, caserne: 3, sapeurs: 2 }, ordre: ['artillerie', 'caserne', 'sapeurs'] };
+// l'artillerie (ses barrages : les calibres s'ouvrent aux niveaux) et la caserne (sa relève) ; les sapeurs pour refaire ses nids. Dans l'ordre de `plan` : l'artillerie d'abord (ses calibres sont sa force) ; le choix du palier vient d'un hachage de la graine.
+export const CAMP_IA = { plan: [['artillerie', 2], ['caserne', 2], ['artillerie', 3], ['sapeurs', 1], ['caserne', 3], ['sapeurs', 2]] };      // [bâtiment, niveau] : le premier palier qu'elle n'a pas atteint

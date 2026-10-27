@@ -3,6 +3,7 @@
 //   node scripts/mesure-camp.mjs [--graines 3,7,8] [--soldats 300] [--jours 11]
 import { nouvelleBataille, avancer, aube } from '../js/bataille.js';
 import { REGLAGES as R } from '../js/data/reglages.js';
+import { BATIMENTS } from '../js/data/batiments.js';
 import { NOMS_CALIBRES } from '../js/data/calibres.js';
 
 const arg = (nom, defaut) => { const i = process.argv.indexOf(`--${nom}`); return i >= 0 ? process.argv[i + 1] : defaut; };
@@ -13,10 +14,11 @@ function jouer(graine, camp, difficulte) {
   while (e.phase !== 'fin') {
     while (e.phase === 'jour') avancer(B);
     if (e.phase !== 'nuit') break;
-    const avant = [e.camp.dotation, e.campEux?.dotation ?? 0];
     const r = aube(B);
-    if (camp) { verses[0] += r.dotation.points; verses[1] += (e.campEux.dotation - avant[1]); }
+    if (camp) verses[0] += r.dotation.points;
   }
+  // la dotation versée à en face : ce qui lui reste, plus ce qu'elle a payé (les niveaux atteints, hors départ)
+  if (camp) verses[1] = e.campEux.dotation - 3 + Object.entries(e.campEux.batiments).reduce((t, [k, c]) => t + BATIMENTS[k].niveaux.slice(0, c.niveau).reduce((u, N) => u + N.cout, 0), 0);
   const tires = Object.fromEntries(NOMS_CALIBRES.map((c, k) => [c, e.impacts.filter(i => i[4] === k).length]));
   return { jours: e.jour, pertes: [...e.pertes], tires, verses, eux: camp ? Object.fromEntries(Object.entries(e.campEux.batiments).map(([k, c]) => [k, c.niveau])) : null, nous: e.camp.bride ? Object.fromEntries(Object.entries(e.camp.batiments).map(([k, c]) => [k, c.niveau])) : null };
 }
