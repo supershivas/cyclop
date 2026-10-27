@@ -9,7 +9,8 @@
 //   3 Détaillé — trois assises de sacs, le clayonnage des parois, des cadres de boisage avec leur écharpe, un caniveau, une échelle, un abri, des plaques de meurtrière,
 //       un fil téléphonique et une lanterne, des rouleaux de barbelé.
 // À chaque niveau, l'état du bout de tranchée (creusée, à moitié comblée, comblée) change ce qui reste : en place, brisé et de travers, puis des éclats à terre.
-import { ligneY, demiLargeur } from '../tranchees.js?v=0.84.0';
+import { ligneY, demiLargeur } from '../tranchees.js?v=0.84.1';
+import { TRANCHEE_OUVRAGES } from '../data/tranchees.js?v=0.84.1';
 
 export const NIVEAUX_TRANCHEES = [
   { n: 1, nom: 'Silhouette', note: 'Le parapet en tranches de 5 m, deux traverses, un fil à deux brins. Ce qui se lit de loin, pour presque rien.' },
@@ -55,6 +56,8 @@ export function ouvrageTroncon(g, tr, L, niveau) {
   const { boite, poutre, trait, surface, etat, j: hz, K } = g;
   const f = L.face, cote = (g.pris ? -1 : 1) * f, haut = g.prof * 0.25, x0 = tr.x0, x1 = tr.x1, premiere = L.rang === 0;
   const zc = x => ligneY(L, x), dm = x => demiLargeur(L, x);
+  // Des tons qui varient d'un sac, d'une planche à l'autre (la « texture » sans image : une couleur de la palette par élément, tirée du hachage de sa position ; aucun triangle de plus)
+  const tonSac = j => (j < 0.34 ? K.sac : j < 0.67 ? K.sac2 : K.sac3), tonBois = j => (j < 0.34 ? K.planche : j < 0.67 ? K.planche2 : K.madrier);
   const zp = x => zc(x) + cote * (dm(x) + 0.55);          // l'axe du parapet (du côté de l'ennemi, ou de l'autre quand le tronçon est pris)
   const zd = x => zc(x) - cote * (dm(x) + 0.55);          // l'axe du parados
   const pas = (a, b, p, fn) => { for (let x = a; x < b - 0.05; x += p) fn(x, Math.min(b, x + p), x + Math.min(p, b - x) / 2); };
@@ -69,11 +72,11 @@ export function ouvrageTroncon(g, tr, L, niveau) {
   else {
     const p = niveau === 3 ? 0.9 : 1.6, assises = niveau === 3 ? 3 : 2;
     pas(x0, x1, p, (a, b, xs) => {
-      const e = etat(xs), j = hz(xs * 1.7, 2), z = zp(xs), h = surface(xs, z), t = j < 0.5 ? K.sac : K.sac2;
+      const e = etat(xs), j = hz(xs * 1.7, 2), z = zp(xs), h = surface(xs, z), t = tonSac(j);
       if (e === 0) { if (j < 0.3) boite(a, b - 0.1, h, h + 0.22, z + (j - 0.15) * 3 - 0.2, z + (j - 0.15) * 3 + 0.2, K.sac2); return; }
       const a1 = 0.25 + 0.06 * j, l = b - a;
       boite(a, b, h, h + a1, z - 0.25, z + 0.25, t);
-      if (e === 2 ? j > 0.06 : j > 0.6) boite(a + l / 2, b + l / 2, h + a1, h + a1 + 0.24, z - 0.22, z + 0.22, j < 0.5 ? K.sac2 : K.sac);
+      if (e === 2 ? j > 0.06 : j > 0.6) boite(a + l / 2, b + l / 2, h + a1, h + a1 + 0.24, z - 0.22, z + 0.22, tonSac(1 - j));
       if (assises === 3 && e === 2 && j > 0.35) boite(a + 0.1, b + 0.1, h + a1 + 0.24, h + a1 + 0.46, z - 0.19, z + 0.19, t);
       // un sac de l'assise du haut qui a glissé, à moitié dans la tranchée (niveau 3, tranchée abîmée)
       if (niveau === 3 && e === 1 && j < 0.2) { const zi = zc(xs) + cote * (dm(xs) - 0.2); boite(a, b - 0.2, surface(xs, zi), surface(xs, zi) + 0.2, zi - 0.2, zi + 0.2, K.sac2); }
@@ -157,6 +160,16 @@ export function ouvrageTroncon(g, tr, L, niveau) {
     });
   }
 
+  // ─── les échelles pour sortir de la tranchée (tous les niveaux : un montant au niveau 1, deux montants et trois barreaux au 2, cinq barreaux au 3) : contre la paroi du parapet ;
+  // à moitié comblée elle penche et perd des barreaux, comblée elle gît à terre
+  for (const dx of g.echelles ?? TRANCHEE_OUVRAGES.echelles) {
+    const x = x0 + dx, e = etat(x), zcx = zc(x), dmx = dm(x), h = surface(x, zcx), j = hz(x, 12), zb = zcx + cote * (dmx - 0.3), zh = zcx + cote * (dmx + 0.35), top = h + haut + 0.3;
+    if (e === 0) { poutre(x - 0.25, h + 0.1, zcx - 0.5, x - 0.2, h + 0.15, zcx + 1.3, 0.05, K.madrier); if (niveau > 1) poutre(x + 0.25, h + 0.1, zcx - 0.5, x + 0.3, h + 0.12, zcx + 1.3, 0.05, K.madrier); continue; }
+    for (const s of niveau === 1 ? [0] : [-1, 1]) poutre(x + s * 0.25, h, zb, x + s * 0.25 + (e === 1 ? (s || 1) * 0.25 * j : 0), top, zh, niveau === 1 ? 0.12 : 0.05, K.madrier);
+    const barreaux = niveau === 3 ? 5 : niveau === 2 ? 3 : 0;
+    for (let k = 1; k <= barreaux; k++) { if (e === 1 && (k + Math.floor(j * 10)) % 2) continue; const u = k / (barreaux + 1); boite(x - 0.25, x + 0.25, h + (top - h) * u - 0.03, h + (top - h) * u + 0.03, zb + (zh - zb) * u - 0.04, zb + (zh - zb) * u + 0.04, K.planche); }
+  }
+
   // ─── le fond : le caillebotis (niveaux 2 et 3), le caniveau et l'eau (3) ───
   if (niveau >= 2) {
     const p = niveau === 3 ? 0.9 : 1.5;
@@ -164,7 +177,7 @@ export function ouvrageTroncon(g, tr, L, niveau) {
       const e = etat(xs), j = hz(xs, 6), z = zc(xs), d = dm(xs), h = surface(xs, z);
       if (e === 0) { if (j < 0.25) boite(a, a + 0.5, h + 0.02, h + 0.07, z - d * 0.6 + j, z + d * 0.5, K.planche); return; }
       if (e === 1 && j < 0.5) return;
-      boite(a, a + 0.5, h + 0.02, h + 0.09, z - d * (e === 2 ? 0.95 : 0.5), z + d * (e === 2 ? 0.95 : 0.3), K.planche);
+      boite(a, a + 0.5, h + 0.02, h + 0.09, z - d * (e === 2 ? 0.95 : 0.5), z + d * (e === 2 ? 0.95 : 0.3), tonBois(j));
     });
     if (niveau === 3) pas(x0, x1, 5, (a, b, xs) => {
       const e = etat(xs), z = zc(xs), h = surface(xs, z);
@@ -173,15 +186,8 @@ export function ouvrageTroncon(g, tr, L, niveau) {
     });
   }
 
-  // ─── les ouvrages du niveau 3 : l'échelle, l'abri, les meurtrières, le fil téléphonique ───
+  // ─── les ouvrages du niveau 3 : l'abri, les meurtrières, le fil téléphonique ───
   if (niveau === 3) {
-    // une échelle de sortie contre la paroi du parapet, tous les 12 m
-    for (const x of [x0 + 9, x0 + 21]) {
-      const e = etat(x), zcx = zc(x), dmx = dm(x), h = surface(x, zcx), j = hz(x, 12), zb = zcx + cote * (dmx - 0.3), zh = zcx + cote * (dmx + 0.35), top = h + haut + 0.3;
-      if (e === 0) { poutre(x - 0.25, h + 0.1, zcx - 0.5, x - 0.2, h + 0.15, zcx + 1.3, 0.05, K.madrier); poutre(x + 0.25, h + 0.1, zcx - 0.5, x + 0.3, h + 0.12, zcx + 1.3, 0.05, K.madrier); continue; }
-      for (const s of [-1, 1]) poutre(x + s * 0.25, h, zb, x + s * 0.25 + (e === 1 ? s * 0.25 * j : 0), top, zh, 0.05, K.madrier);
-      for (let k = 1; k <= 5; k++) { if (e === 1 && (k + Math.floor(j * 10)) % 2) continue; const u = k / 6; boite(x - 0.25, x + 0.25, h + (top - h) * u - 0.03, h + (top - h) * u + 0.03, zb + (zh - zb) * u - 0.04, zb + (zh - zb) * u + 0.04, K.planche); }
-    }
     // un abri creusé dans la paroi de derrière : un huis de bois, l'ouverture noire, des sacs au-dessus
     {
       const x = x0 + 13, e = etat(x), zcx = zc(x), dmx = dm(x), h = surface(x, zcx), j = hz(x, 13), z = zcx - cote * (dmx + 0.12), sens = cote;
@@ -252,12 +258,12 @@ export function ouvrageTroncon(g, tr, L, niveau) {
 
 /* Le coût d'un niveau, mesuré sur un tronçon droit à plat (sans le sol ni les soldats) : { boites, traits, triangles, ms } pour `n` tronçons dans l'état `etat`
    (2 intact, 1 abîmé, 0 détruit). Le même résultat dans Node et dans le labo (`ms` : le temps de construction de la géométrie seulement). */
-export function mesurerNiveau(niveau, etat, n = 1, now = () => 0) {
+export function mesurerNiveau(niveau, etat, n = 1, now = () => 0, echelles = undefined) {
   const compte = { sommets: 0, traits: 0 };
   const { boite, poutre } = primitives(() => { compte.sommets += 6; });
-  const K = Object.fromEntries(['sac', 'sac2', 'planche', 'madrier', 'terre', 'fascine', 'acier', 'eau', 'ombre', 'lanterne'].map(k => [k, [0, 0]]));
+  const K = Object.fromEntries(['sac', 'sac2', 'sac3', 'planche2', 'planche', 'madrier', 'terre', 'fascine', 'acier', 'eau', 'ombre', 'lanterne'].map(k => [k, [0, 0]]));
   const L = { camp: 0, rang: 0, y0: 100, amp: 1.5, phase: 1.234, face: -1 };
-  const g = { boite, poutre, trait: () => { compte.traits++; }, surface: () => 0, etat: () => etat, j: (a, b) => { const q = Math.sin(a * 127.1 + b * 311.7) * 43758.5453; return q - Math.floor(q); }, K, prof: 6, pris: false, coupe: false };
+  const g = { boite, poutre, trait: () => { compte.traits++; }, surface: () => 0, etat: () => etat, j: (a, b) => { const q = Math.sin(a * 127.1 + b * 311.7) * 43758.5453; return q - Math.floor(q); }, K, prof: 6, pris: false, coupe: false, echelles };
   const t0 = now();
   for (let k = 0; k < n; k++) ouvrageTroncon(g, { x0: k * 25, x1: k * 25 + 25 }, L, niveau);
   return { triangles: compte.sommets / 3, traits: compte.traits, ms: now() - t0 };

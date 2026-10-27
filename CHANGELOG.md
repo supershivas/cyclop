@@ -1,5 +1,9 @@
 # Journal des versions
 
+## 0.84.1 — 2026-10-27
+- Les tranchées gagnent en détail à mesure qu'on s'approche (silhouette de loin, ouvrage, puis détaillé de très près : cadres de boisage, clayonnage, abri, fil téléphonique), avec des tons de sacs et de planches variés
+- Des échelles pour sortir des tranchées, deux par tronçon, contre la paroi du parapet ; à moitié comblées elles penchent, comblées elles gisent à terre
+
 ## 0.84.0 — 2026-10-27
 - Les tranchées ont une barre de vie : en les survolant, le coin de l'écran dit leur solidité (Intacte, Abîmée, Bouleversée) en mot, en pourcentage et en barre, avant la ligne de vie des deux armées
 - Au labo, des tranchées en trois niveaux de détail, intactes, légèrement détruites et bouleversées, avec leur coût sur le dessin (rien n'est encore dans la bataille)
