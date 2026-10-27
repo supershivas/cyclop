@@ -2,8 +2,8 @@
 // (v0.96.0 : « les options apparaissent au-dessus de chaque bâtiment au clic ; simplifier au maximum ») sur le modèle de la fenêtre d'un régiment (`.reg-ouvert` : le titre et son niveau, une ligne
 // de ce qu'il fait, des boutons de même largeur). Les ordres (un bouton par batterie : son nom et son état, PRÊT, les secondes, « Niv. 2 ») et l'amélioration : un seul clic, le choix du palier EST le bouton
 // (« Tir de réglage · 3 pts »). Le texte long est dans l'infobulle. Un clic sur le bâtiment dans le champ le choisit aussi (main.js). Lecture seule de l'état : les ordres passent par les fonctions que main.js donne.
-import { BATIMENTS, ORDRE_BATIMENTS, EQUIPEMENT } from '../data/batiments.js?v=0.96.0';
-import { refusCamp, niveauDe, campDe, NIVEAU_MAX } from '../camp.js?v=0.96.0';
+import { BATIMENTS, ORDRE_BATIMENTS, EQUIPEMENT } from '../data/batiments.js';
+import { refusCamp, niveauDe, campDe, NIVEAU_MAX } from '../camp.js';
 
 // les ordres de batterie que chaque bâtiment porte, et leur nom court sur le bouton
 export const ORDRES_DE = { artillerie: ['75', '155', '220'], aerodrome: ['avion'], chars: ['char'], sapeurs: ['genie'], caserne: [] };
