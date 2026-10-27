@@ -23,7 +23,7 @@ page.on('console', m => { if (m.type() === 'error') erreurs.push(`console : ${m.
 
 // L'empreinte d'un instant : le HTML de chaque élément à id du HUD et des papiers (sans l'écran
 // titre, le canvas ni ce qui change à chaque image comme les étiquettes et la bulle).
-const ignorer = ['canvas', 'ecran', 'etiquettes', 'equerres', 'repere', 'repere-soldat', 'bulle', 'visee', 'version', 'changelog'];
+const ignorer = ['canvas', 'ecran', 'etiquettes', 'equerres', 'repere', 'repere-soldat', 'bulle', 'visee', 'visee-nid', 'version', 'changelog'];
 const empreinte = ignorer => page.evaluate(ignorer => {
   const sortie = {};
   for (const e of document.querySelectorAll('[id]')) {

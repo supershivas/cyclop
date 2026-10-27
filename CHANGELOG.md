@@ -1,5 +1,8 @@
 # Journal des versions
 
+## 0.83.1 — 2026-10-27
+- Le survol d'un nid de mitrailleuse montre sa visée : le cône où il tire, une croix sur les hommes d'en face sous son feu (ou « se tait » si son tronçon est pris)
+
 ## 0.83.0 — 2026-10-26
 - Les toits de bois protègent du tir : les balles, les éclats d'obus et le mitraillage touchent moins ceux qui sont dessous, tant que la tranchée n'est pas éboulée
 - Des nids de mitrailleuses sur la première ligne de chaque camp (un par secteur) : ils fauchent devant eux, les obus les détruisent, le génie les refait (un clic sur le nid détruit avec « Génie »)
