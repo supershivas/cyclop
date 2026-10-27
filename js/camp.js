@@ -1,7 +1,7 @@
 // Le camp : la règle, sans écran (Jérôme, v0.86.0 : lot 1 de `docs/chantiers/camp-et-ameliorations.md`). Logique pure : aucun DOM, aucune horloge, aucun hasard.
 // L'état est `etat.camp` : la dotation de l'état-major, le niveau de chaque bâtiment (et son chantier d'une nuit), les lignes d'en face déjà comptées.
 // Lot 1 : la dotation tombe à l'aube et les chantiers s'achèvent, mais AUCUN niveau ne bride encore un ordre (les batteries, l'avion, le char, le génie se donnent comme avant).
-import { BATIMENTS, DOTATION, CAMP_PLAN, PIEDS } from './data/batiments.js?v=0.89.0';
+import { BATIMENTS, DOTATION, CAMP_PLAN, PIEDS } from './data/batiments.js';
 
 const NOUS = 0;
 export const NIVEAU_MAX = 3;

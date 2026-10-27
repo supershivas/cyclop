@@ -16,13 +16,13 @@
      nuit elle se fait en lot.
    - Les versions (`versionLigne`, `versionMorceau`) disent au rendu ce qui a
      changé ; le terrain ne connaît pas le rendu. */
-import { hash2 } from './lib/rng.js?v=0.89.0';
-import { CALIBRES } from './data/calibres.js?v=0.89.0';
-import { creuxRond, levreJetee, eclatsAutour, bordDuCreux, FORME_JEU } from './cratere.js?v=0.89.0';
-import { appliquerFormes } from './formes.js?v=0.89.0';
-import { poserObjets } from './objets.js?v=0.89.0';
-import { SAISONS } from './data/meteo.js?v=0.89.0';
-import { poserEaux, poserMarecages, poserPonts, abimerPont, viderLesEaux } from './eaux.js?v=0.89.0';
+import { hash2 } from './lib/rng.js';
+import { CALIBRES } from './data/calibres.js';
+import { creuxRond, levreJetee, eclatsAutour, bordDuCreux, FORME_JEU } from './cratere.js';
+import { appliquerFormes } from './formes.js';
+import { poserObjets } from './objets.js';
+import { SAISONS } from './data/meteo.js';
+import { poserEaux, poserMarecages, poserPonts, abimerPont, viderLesEaux } from './eaux.js';
 
 export const ETAT = { SEC: 0, HUMIDE: 1, BOUE: 2, EAU: 3, GLACE: 4 };
 export const MORCEAU = 25;             // cases : le côté d'un morceau de maillage (mesuré, rendu logiciel : à 100, la moitié du champ restait dessinée au zoom 4 ; à 25, 6 500 triangles au lieu de 15 600 au zoom 8)
