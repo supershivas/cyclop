@@ -1324,7 +1324,7 @@ function majViseeNid(x, y) {
     if (A.mort[i] || A.camp[i] === n.camp) continue;
     const dx = A.x[i] - n.x, dy = A.y[i] - n.y, d = Math.hypot(dx, dy);
     if (d >= NIDS.portee || d < 2 || dy * n.face / d < c2) continue;
-    sous++; const [px, py] = E(A.x[i], A.y[i]); croix += `M${(px - 2).toFixed(1)} ${(py - 2).toFixed(1)}l4 4m0 -4l-4 4`;
+    sous++; const [px, py] = E(A.x[i], A.y[i]); croix += `M${(px - 5).toFixed(1)} ${(py - 5).toFixed(1)}l10 10m0 -10l-10 10`;
   }
   const tait = B.etat.troncons[n.troncon] !== n.camp, [nx, ny] = E(n.x, n.y + n.face * NIDS.portee);
   svg.innerHTML = `<path class="ombre" d="M${pts.map(F).join('L')}Z"/><path class="zone" d="M${pts.map(F).join('L')}Z"/><g class="croix"><path class="fond" d="${croix}"/><path class="encre" d="${croix}"/></g>`
