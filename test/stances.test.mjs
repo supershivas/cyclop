@@ -21,7 +21,7 @@ function assaut(graine, Rj = R, avant = null) {
 const bilan = B => ({ pertes: B.etat.pertes, blesses: B.etat.blesses, rng: B.etat.rng, emp: empreinteEtat(B) });
 
 group('stances — rien ne bouge sans elles');
-const REFERENCE = {            // v0.89.0 : relevé de nouveau (les échelles des tranchées ralentissent moins la sortie : pertes [128, 96] → [114, 97], [158, 83] → [156, 72], [135, 99] → [121, 91]) ; relevé sur le code d'avant les stances (pertes, blessés, hasard) ; l'empreinte, relevée à la v0.36.0, y ajoute la posture ; v0.52.5 : relevé de nouveau, les cratères ronds changent le terrain donc le hasard (pertes de chez nous 62, 57, 77 → 69, 72, 76)
+const REFERENCE = {            // v0.90.0 : relevé de nouveau (les échelles des tranchées ralentissent moins la sortie : pertes [128, 96] → [114, 97], [158, 83] → [156, 72], [135, 99] → [121, 91]) ; relevé sur le code d'avant les stances (pertes, blessés, hasard) ; l'empreinte, relevée à la v0.36.0, y ajoute la posture ; v0.52.5 : relevé de nouveau, les cratères ronds changent le terrain donc le hasard (pertes de chez nous 62, 57, 77 → 69, 72, 76)
   3: { pertes: [114, 97], blesses: [93, 74], rng: 3794067320, emp: 'bf04b8b5' },      // v0.70.0 : relevé de nouveau (les caractéristiques évoluent : adresse, force, endurance, calme) ; v0.79.0 : de nouveau (la visée de près et la charge sur un isolé : pertes 124/83, 115/105, 134/92 → 139/78, 104/99, 125/92 ; v0.83.0 : de nouveau, les toits et les nids de mitrailleuses → 128/96, 158/83, 135/99)
   7: { pertes: [156, 72], blesses: [94, 48], rng: 3558615345, emp: '3f8ed6a0' },
   8: { pertes: [121, 91], blesses: [91, 55], rng: 2422826400, emp: 'f1e13bc8' },

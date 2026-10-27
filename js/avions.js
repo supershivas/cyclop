@@ -4,12 +4,13 @@
    L'avion entre par le prolongement de la passe, vole à `croisiere` m, descend à `passe` m sur les `descente` m qui précèdent la bande, la balaie (ses balles tombent
    `avance` m devant lui, chaque homme de la bande n'est tiré qu'une fois), remonte, et sort. Au-dessus d'hommes qui tirent, il perd des points de vie (`exposition`) ;
    à zéro, il tombe, écrase ce qui est sous lui et laisse une épave jusqu'à l'aube. Les avions de chaque camp : `etat.avions[camp]`, les points de vie de chacun (0 : perdu). */
-import { MITRAILLAGE as M } from './data/mitraillage.js';
-import { METEO } from './data/meteo.js';
-import { GRILLE, effrayer, toitFacteur } from './army.js';
-import { hash2 } from './lib/rng.js';
-import { impact } from './terrain.js';
-import { NOMS_CALIBRES } from './data/calibres.js';
+import { MITRAILLAGE as M } from './data/mitraillage.js?v=0.89.0';
+import { METEO } from './data/meteo.js?v=0.89.0';
+import { GRILLE, effrayer, toitFacteur } from './army.js?v=0.89.0';
+import { hash2 } from './lib/rng.js?v=0.89.0';
+import { modif, pvAvion } from './camp.js?v=0.89.0';
+import { impact } from './terrain.js?v=0.89.0';
+import { NOMS_CALIBRES } from './data/calibres.js?v=0.89.0';
 
 const borne = (v, a, b) => v < a ? a : v > b ? b : v;
 const lisse = f => { f = borne(f, 0, 1); return f * f * (3 - 2 * f); };
@@ -19,7 +20,7 @@ const arrondi = v => Math.round(v * 10) / 10;
 export const flotteDeDepart = () => [0, 1].map(() => Array.from({ length: M.flotte }, () => M.pv));
 
 /* La passe qu'on trace : { x1, y1, x2, y2, L, ux, uy } ou { refus }. Sans second point : la passe par défaut, nord-sud, centrée sur (x, y), vers l'autre camp. */
-export function ligneDe(camp, x, y, x2, y2) {
+export function ligneDe(camp, x, y, x2, y2, longueurMax = M.longueurMax) {
   if (x2 === undefined || y2 === undefined || x2 === null || y2 === null) {
     const s = camp === 0 ? 1 : -1;
     x2 = x; y2 = y - s * M.defaut / 2; y += s * M.defaut / 2;
@@ -27,7 +28,7 @@ export function ligneDe(camp, x, y, x2, y2) {
   x = arrondi(x); y = arrondi(y); x2 = arrondi(x2); y2 = arrondi(y2);
   let dx = x2 - x, dy = y2 - y, L = Math.hypot(dx, dy);
   if (L < M.longueurMin) return { refus: `Tracez une passe d'au moins ${M.longueurMin} m.` };
-  if (L > M.longueurMax) { x2 = arrondi(x + dx * M.longueurMax / L); y2 = arrondi(y + dy * M.longueurMax / L); dx = x2 - x; dy = y2 - y; L = Math.hypot(dx, dy); }
+  if (L > longueurMax) { x2 = arrondi(x + dx * longueurMax / L); y2 = arrondi(y + dy * longueurMax / L); dx = x2 - x; dy = y2 - y; L = Math.hypot(dx, dy); }
   return { x1: x, y1: y, x2, y2, L, ux: dx / L, uy: dy / L };
 }
 
@@ -89,7 +90,7 @@ export function refusAvion(B, camp, x, y, x2, y2) {
   if (M.cloue.includes(meteo)) return { refus: `Par ${METEO[meteo].nom}, les avions restent au sol.` };
   if (!avionsRestants(etat, camp)) return { refus: 'Plus un avion : l\'escadrille est détruite.' };
   if (prochainAvion(etat, camp) < 0) return { refus: 'Tous les avions sont en vol.' };
-  const l = ligneDe(camp, x, y, x2, y2);
+  const l = ligneDe(camp, x, y, x2, y2, M.longueurMax * modif(B.etat, camp, 'aerodrome.longueur'));
   return l.refus ? { refus: l.refus } : { ligne: l };
 }
 
@@ -154,7 +155,7 @@ function balayer(B, v, lo, hi, ctx, rng) {
     if (A.mort[i]) return;
     const dx = A.x[i] - v.x1, dy = A.y[i] - v.y1, l = dx * v.ux + dy * v.uy;
     if (l <= lo || l > hi || Math.abs(dx * v.uy - dy * v.ux) > hw) return;
-    let p = M.letal;
+    let p = M.letal * modif(B.etat, v.camp, 'aerodrome.letal');      // les mitrailleuses jumelées (v0.88.0)
     const ci = (A.y[i] | 0) * T.W + (A.x[i] | 0);
     if (T.diff[ci] <= -2) p *= R.obus.abri;
     p *= toitFacteur(T, ci, 'avion');
@@ -223,5 +224,5 @@ export function avancerAvions(B, ctx, rng) {
 export function reparerAvions(etat) {
   for (const v of etat.mitraillages) if (v.etat === 'vol') etat.avions[v.camp][v.k] = v.pv;
   etat.mitraillages = [];
-  for (const flotte of etat.avions) for (let k = 0; k < flotte.length; k++) if (flotte[k] > 0) flotte[k] = Math.min(M.pv, flotte[k] + M.reparation);
+  etat.avions.forEach((flotte, camp) => { for (let k = 0; k < flotte.length; k++) if (flotte[k] > 0) flotte[k] = Math.min(pvAvion(etat, camp), flotte[k] + M.reparation); });
 }

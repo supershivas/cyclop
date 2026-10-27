@@ -3,13 +3,14 @@
    ligne vers (tx, ty) à la vitesse de son modèle, ralentie par un cratère (la moitié de ce qu'il franchit), arrêtée par un cratère plus profond ou par l'eau
    profonde (`enlise` : il reste là et tire) ; il tire sur l'autre camp à portée ; un obus tombé près de lui l'abîme (`degatsChars`), jusqu'à l'épave (`detruit`).
    Les tranchées se franchissent (elles font 1,5 m : son modèle les passe). Les ordres rendent { refus } comme les barrages. */
-import { CHARS, CHAR_PAR_DEFAUT, CHAR_RECHARGE, CHAR_DEPART, CHAR_OBUS, CHAR_ROUTE } from './data/chars.js';
-import { CALIBRES } from './data/calibres.js';
-import { effrayer, DENSITE } from './army.js';
-import { zone as zoneDe } from './bataille.js';
-import { detruirePont } from './eaux.js';
-import { toucher } from './terrain.js';
-import { PONTS_JEU, typePont } from './data/ponts.js';
+import { modif } from './camp.js?v=0.89.0';
+import { CHARS, CHAR_PAR_DEFAUT, CHAR_RECHARGE, CHAR_DEPART, CHAR_OBUS, CHAR_ROUTE } from './data/chars.js?v=0.89.0';
+import { CALIBRES } from './data/calibres.js?v=0.89.0';
+import { effrayer, DENSITE } from './army.js?v=0.89.0';
+import { zone as zoneDe } from './bataille.js?v=0.89.0';
+import { detruirePont } from './eaux.js?v=0.89.0';
+import { toucher } from './terrain.js?v=0.89.0';
+import { PONTS_JEU, typePont } from './data/ponts.js?v=0.89.0';
 
 /* La route d'un char (Jérôme, v0.59.3 : « ils doivent contourner les fleuves, passer par les ponts ») : une recherche sur une grille de `CHAR_ROUTE.maille` mètres, de (x0, y0) à (tx, ty), qui évite
    l'eau profonde, les cratères qu'il ne franchit pas, les ponts qui ne le portent pas, et se détourne des cratères à demi profonds. Rend les points à suivre (le dernier est le but), ou null
@@ -20,8 +21,8 @@ function coutCase(T, c, M, cr) {
   const prof = T.troncon && T.troncon[c] >= 0 ? 0 : -T.diff[c];
   return prof >= M.franchit ? Infinity : prof >= M.franchit / 2 ? cr : 1;
 }
-export function routeChar(B, x0, y0, tx, ty, modele = CHAR_PAR_DEFAUT) {
-  const T = B.terrain, M = CHARS[modele], m = CHAR_ROUTE.maille, W = Math.ceil(T.W / m), H = Math.ceil(T.H / m), N = W * H;
+export function routeChar(B, x0, y0, tx, ty, modele = CHAR_PAR_DEFAUT, franchit = null) {
+  const T = B.terrain, M = franchit ? { ...CHARS[modele], franchit } : CHARS[modele], m = CHAR_ROUTE.maille, W = Math.ceil(T.W / m), H = Math.ceil(T.H / m), N = W * H;
   const noeud = (x, y) => Math.max(0, Math.min(H - 1, Math.floor(y / m))) * W + Math.max(0, Math.min(W - 1, Math.floor(x / m)));
   const caseCout = (x, y) => { const i = Math.floor(x), j = Math.floor(y); return i >= 0 && j >= 0 && i < T.W && j < T.H ? coutCase(T, j * T.W + i, M, CHAR_ROUTE.cratere) : Infinity; };
   // un point est libre s'il l'est avec `marge` mètres de chaque côté (le char fait deux mètres de large et vire sur plusieurs mètres : le bord d'un trou ou de l'eau l'arrêterait)
@@ -63,19 +64,20 @@ export function routeChar(B, x0, y0, tx, ty, modele = CHAR_PAR_DEFAUT) {
 }
 
 /* Peut-on lancer un char de (camp) vers (x, y) ? `depart` : { x, y } d'où il partirait. */
-export function refusChar(B, depart, x, y) {
+export function refusChar(B, depart, x, y, camp = 0) {
   if (!depart) return 'Pas de route pour un char ici.';
   if (Math.hypot(x - depart.x, y - (depart.ar ?? depart.y)) < CHAR_DEPART) return `Trop près de ses lignes : visez à plus de ${CHAR_DEPART} m.`;
-  if (depart.ar !== undefined && !routeChar(B, depart.x, depart.ar, x, y)) return 'Aucun passage pour un char jusque-là : eau, cratères ou pont trop faible.';
+  if (depart.ar !== undefined && !routeChar(B, depart.x, depart.ar, x, y, undefined, CHARS[CHAR_PAR_DEFAUT].franchit * modif(B.etat, camp, 'chars.franchit'))) return 'Aucun passage pour un char jusque-là : eau, cratères ou pont trop faible.';
   return '';
 }
 
 export function lancerChar(B, camp, depart, x, y, modele = CHAR_PAR_DEFAUT) {
   const { etat } = B;
   // `ar` : la rangée de l'arrière de son camp, où la route finit ; `chemin` : les points qu'il suit ensuite (`routeChar`), `k` celui qu'il vise
-  const chemin = depart.ar !== undefined ? routeChar(B, depart.x, depart.ar, x, y, modele) : null;
+  const franchit = CHARS[modele].franchit * modif(etat, camp, 'chars.franchit'), pv = Math.round(CHARS[modele].pv * modif(etat, camp, 'chars.pv'));     // le parc des chars (v0.88.0)
+  const chemin = depart.ar !== undefined ? routeChar(B, depart.x, depart.ar, x, y, modele, franchit) : null;
   const ex = chemin ? 0 : x - depart.x, ey = chemin ? depart.ar - depart.y : y - depart.y, en = Math.hypot(ex, ey) || 1, hx = ex / en, hy = ey / en;
-  etat.chars.push({ id: etat.chars.length ? etat.chars[etat.chars.length - 1].id + 1 : 0, camp, modele, x: depart.x, y: depart.y, ar: depart.ar, dx0: depart.x, tx: x, ty: y, chemin, k: 0, pv: CHARS[modele].pv, canonT: etat.temps, cible: null, vise: null, etat: 'avance', v: 0, hx, hy, cap: Math.atan2(hy, hx) });
+  etat.chars.push({ id: etat.chars.length ? etat.chars[etat.chars.length - 1].id + 1 : 0, camp, modele, x: depart.x, y: depart.y, ar: depart.ar, dx0: depart.x, tx: x, ty: y, chemin, k: 0, pv, pvMax: pv, franchit, vit: modif(etat, camp, 'chars.vitesse'), canonMod: modif(etat, camp, 'chars.canon'), canonT: etat.temps, cible: null, vise: null, etat: 'avance', v: 0, hx, hy, cap: Math.atan2(hy, hx) });
 }
 export const RECHARGE_CHAR = CHAR_RECHARGE;
 
@@ -177,11 +179,11 @@ export function avancerChars(B, ctx, rng) {
         const ici = cx >= 0 && cy >= 0 && cx < T.W && cy < T.H ? cy * T.W + cx : -1;
         const prof = ici >= 0 && !(T.troncon && T.troncon[ici] >= 0) ? -T.diff[ici] : 0;
         const profond = ici >= 0 && T.profond && T.profond[ici];
-        const f = route ? 1 : profond || prof >= M.franchit ? 0 : prof >= M.franchit / 2 ? 0.35 : 1;
+        const f = route ? 1 : profond || prof >= (c.franchit ?? M.franchit) ? 0 : prof >= (c.franchit ?? M.franchit) / 2 ? 0.35 : 1;
         if (f === 0) { c.etat = 'enlise'; c.v = 0; B.evenements.push({ type: 'char-enlise', x: c.x, y: c.y, camp: c.camp }); }
         else {
           // il accélère et freine (un char ne démarre pas à pleine vitesse)
-          const cible = route ? M.route : M.vitesse * f, a = (route ? CHAR_ROUTE.accelRoute : CHAR_ROUTE.accel) * dt;
+          const cible = route ? M.route : M.vitesse * f * (c.vit ?? 1), a = (route ? CHAR_ROUTE.accelRoute : CHAR_ROUTE.accel) * dt;
           c.v += Math.max(-a, Math.min(a, cible - c.v));
           c.x += ux * c.v * dt; c.y += uy * c.v * dt;
         }
@@ -191,7 +193,7 @@ export function avancerChars(B, ctx, rng) {
     // son canon : un obus tous les `recharge` s sur sa cible (en roulant), sans viser plus près que `minimum`
     const G = M.canon;
     c.vise = viser(B, c, G);
-    if (G && etat.temps - (c.canonT ?? 0) >= G.recharge && c.vise) {
+    if (G && etat.temps - (c.canonT ?? 0) >= G.recharge * (c.canonMod ?? 1) && c.vise) {
       c.canonT = etat.temps;
       const [tx, ty] = c.vise, a = rng() * 6.2832, d = G.dispersion * Math.sqrt(rng());
       B.evenements.push({ type: 'char-tir', id: c.id, camp: c.camp, x: c.x, y: c.y, tx, ty });

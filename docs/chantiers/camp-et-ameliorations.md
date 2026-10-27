@@ -1,6 +1,6 @@
 # Le camp, ses bâtiments et les améliorations (proposition, v0.85.0)
 
-**Statut** : décisions de principe prises (voir la fin) ; lots 0 (labo), 1 (règle) et 2 (le camp à l'écran) faits, lots 3 à 5 à faire. Rien n'est dans le jeu. Les maquettes sont au labo (groupe « Camp », sujet « Le camp et ses bâtiments », 7 variantes `a-trancher`), les nombres dans `js/data/batiments.js` (des propositions, à mesurer). Source : la demande de Jérôme du 27 octobre (v0.83.1).
+**Statut** : décisions de principe prises (voir la fin) ; lots 0 (labo), 1 (règle), 2 (le camp à l'écran) et 3 (les choix et les effectifs) faits, lots 4 et 5 à faire. Rien n'est dans le jeu. Les maquettes sont au labo (groupe « Camp », sujet « Le camp et ses bâtiments », 7 variantes `a-trancher`), les nombres dans `js/data/batiments.js` (des propositions, à mesurer). Source : la demande de Jérôme du 27 octobre (v0.83.1).
 
 ## Ce qui est demandé, et comment je le lis
 
@@ -71,7 +71,7 @@ Ce que la proposition refuse : une expérience qui monte avec les morts causés,
 0. **Fait (v0.85.0)** : le labo (ce document, les maquettes, le papier d'un bâtiment, le parcours des jours). Reste : que Jérôme tranche (questions ci-dessous).
 1. **Fait (v0.86.0) : règle sans écran** : `data/batiments.js` branché, `camp.js`, la dotation à l'aube, `etat.camp` ; **aucun niveau ne bride encore rien** (tout est « niveau max » par défaut) ; tests + sauvegarde ; équilibrage mesuré (`scripts/mesure-camp.mjs` : dotation versée sur les graines 3, 7, 8).
 2. **Fait (v0.87.0) : le camp dessiné et cliquable** : `rendu/camp.js`, le choix au clic, le papier d'un bâtiment, la touche B, les icônes de la carte ; les boutons latéraux sont retirés ; les niveaux brident (artillerie 75 seule au départ…). La mesure du rendu et `rendu-empreinte`.
-3. **Construire et améliorer** : le chantier d'une nuit, les choix aux paliers, le papier de la nuit qui dit les chantiers.
+3. **Fait (v0.89.0) : construire et améliorer** : le chantier d'une nuit, les choix aux paliers, le papier de la nuit qui dit les chantiers.
 4. **L'équipement des régiments** (casque, grenadiers…), la corvée « s'équiper ».
 5. **En face et la campagne** : l'IA qui bâtit, le niveau de départ d'une bataille à l'autre.
 
@@ -100,3 +100,11 @@ Ce que la proposition refuse : une expérience qui monte avec les morts causés,
 - **Écart avec la proposition** : les pastilles sont en bas à droite et non sur la carte du haut (là où l'œil les cherchait déjà) ; **le jeu à deux garde ses boutons latéraux** : il n'a pas de camp (un camp par camp, miroir pour l'invité, les commandes `bat` et `ameliorer` dans le lockstep : lot 5).
 - **Reporté au lot 3** : les deux améliorations de chaque palier (le choix n'est pas demandé : `CHOIX_ACTIFS` = faux dans camp.js), le nombre d'avions, de sections, de régiments en réserve par niveau. Un niveau ouvre donc des ordres, rien d'autre.
 - Références : `fumee.json` réécrite (le HUD a trois éléments de plus, la fumée ouvre l'artillerie par le mode debug avant ses barrages, puis choisit le parc des chars et le bâtit) ; `rendu.json` ne bouge pas.
+
+## Lot 3, ce qui est construit (v0.89.0)
+
+- **Un choix à chaque palier** (niveaux 2 et 3 : `choix` de data/batiments.js, `[nom, texte, { modificateur: facteur }]`) : le papier du bâtiment montre les deux améliorations, le bouton « Améliorer » reste grisé tant qu'aucune n'est tenue (« Choisissez : … » à voix haute) ; le choix est écrit dans l'état avec le chantier (`chantier.choix`), puis dans `batiments[clé].choix` à l'aube.
+- **`modif(etat, camp, 'bâtiment.chiffre')`** (camp.js) : le produit des `effets` des niveaux atteints et du choix pris à chaque palier ; **1 pour en face et hors partie bridée**. Branchés une fois chacun : dispersion (bataille.js, tir), recharge d'une batterie (`rechargeDe` : calibres, avion, char ; le bouton la lit aussi), salve du 220, longueur de la passe et touche de l'avion (avions.js ; l'aperçu de la visée prend la même longueur), points de vie des avions (réparation plafonnée à `pvAvion`), pour un char sa vitesse, son franchissement (aussi dans le chemin), ses points de vie et la recharge de son canon (copiés sur le char à son départ : un char sorti ne change plus), pour le génie le travail, la vitesse et le nombre d'hommes (copiés sur la section), les vivres et le retour des blessés (nuit.js).
+- **Les effectifs viennent avec les bâtiments** : `appliquerDepart` (2 régiments en réserve, 0 section, 0 avion pour nous seuls ; en face garde tout) ; à l'aube d'un chantier, `monter` ajoute la différence entre deux niveaux (2 → 3 avions, 2 → 4 sections, 2 → 4 → 6 régiments, « Réserve de plus » +1) ; un avion abattu ou une section anéantie ne revient pas.
+- **Écarts avec la proposition** : pas de nouveaux modèles de chars (Renault FT, Saint-Chamond, Mark IV) : les paliers des chars changent des chiffres du Schneider (les modèles du labo restent à faire) ; l'équipement des régiments (lot 4) a quitté la caserne : ses ordres, son texte et « Dépôt d'équipement » reviendront avec lui ; la recharge du parc des chars baisse avec ses niveaux (0,8 par palier) au lieu de « deux chars à la fois » ; « Tir de nuit réglé » est devenu « Tube neuf » (la recharge du 220), faute d'effet de nuit à lui donner.
+- **Nombres non mesurés** : chacun est une proposition (facteurs entre 0,75 et 1,67) ; il reste à les peser sur des batailles entières, comme la dotation (lot 1).

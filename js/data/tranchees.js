@@ -3,7 +3,7 @@
 // de sortie, si on la construit, lirait la même.
 export const TRANCHEE_OUVRAGES = {
   echelles: [9, 21],        // m depuis x0 du tronçon : deux échelles par tronçon, à 12 m l'une de l'autre
-  // la règle de sortie (Jérôme, v0.89.0 : « une règle : on sort vite à l'échelle ») : une carte d'octets `T.echelle`, refaite avec les tranchées (rien dans la sauvegarde)
+  // la règle de sortie (Jérôme, v0.90.0 : « une règle : on sort vite à l'échelle ») : une carte d'octets `T.echelle`, refaite avec les tranchées (rien dans la sauvegarde)
   echelle: {
     coeur: 1,               // colonnes de chaque côté de l'échelle : au pied d'une échelle, sur 3 m de large, on monte et on descend sans que la paroi ralentisse
   },

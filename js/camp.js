@@ -1,11 +1,11 @@
 // Le camp : la règle, sans écran (Jérôme, v0.86.0 : lot 1 de `docs/chantiers/camp-et-ameliorations.md`). Logique pure : aucun DOM, aucune horloge, aucun hasard.
 // L'état est `etat.camp` : la dotation de l'état-major, le niveau de chaque bâtiment (et son chantier d'une nuit), les lignes d'en face déjà comptées.
-// Lot 1 : la dotation tombe à l'aube et les chantiers s'achèvent, mais AUCUN niveau ne bride encore un ordre (les batteries, l'avion, le char, le génie se donnent comme avant).
-import { BATIMENTS, DOTATION, CAMP_PLAN, PIEDS } from './data/batiments.js';
+// Lot 2 : les niveaux ouvrent les ordres (`refusOrdre`). Lot 3 (v0.88.0) : chaque niveau et chaque choix de palier change un chiffre (`modif`) ou un effectif (`effectifsDe`).
+import { BATIMENTS, DOTATION, CAMP_PLAN, PIEDS } from './data/batiments.js?v=0.89.0';
+import { MITRAILLAGE } from './data/mitraillage.js?v=0.89.0';
 
 const NOUS = 0;
 export const NIVEAU_MAX = 3;
-const CHOIX_ACTIFS = false;      // les deux améliorations de chaque palier (`choix` de data/batiments.js) : leurs effets viennent au lot 3 ; d'ici là, on monte de niveau sans choisir
 
 // Le niveau qui ouvre chaque ordre de batterie (`ordonnerBarrage`) : [bâtiment, niveau]
 const OUVERTURE = { '75': ['artillerie', 1], '155': ['artillerie', 2], '220': ['artillerie', 3], avion: ['aerodrome', 1], char: ['chars', 1], genie: ['sapeurs', 1] };
@@ -35,7 +35,7 @@ export function refusCamp(etat, cle, choix = null) {
   if (c.niveau >= NIVEAU_MAX) return `${B.nom} est déjà au niveau maximal.`;
   const vers = c.niveau + 1, N = B.niveaux[vers - 1], manque = N.cout - etat.camp.dotation;
   if (manque > 0) return `${manque} point${manque > 1 ? 's' : ''} de dotation manque${manque > 1 ? 'nt' : ''} pour ${N.nom.toLowerCase()} (${N.cout} points, ${etat.camp.dotation} en caisse).`;
-  if (CHOIX_ACTIFS && N.choix && !(choix === 0 || choix === 1)) return `Choisissez : ${N.choix[0][0].toLowerCase()} ou ${N.choix[1][0].toLowerCase()}.`;
+  if (N.choix && !(choix === 0 || choix === 1)) return `Choisissez : ${N.choix[0][0].toLowerCase()} ou ${N.choix[1][0].toLowerCase()}.`;
   return null;
 }
 
@@ -68,6 +68,7 @@ export function dotationAube(B) {
     if (--c.chantier.nuits > 0) continue;
     c.niveau = c.chantier.vers;
     if (c.chantier.choix != null) c.choix[c.niveau - 2] = c.chantier.choix;
+    if (camp.bride) monter(etat, cle, c.niveau, c.chantier.choix);      // les effectifs ne montent que dans la partie bridée
     c.chantier = null; out.finis.push([cle, c.niveau]);
   }
   const { eux, nos } = lignes(B);
@@ -107,3 +108,47 @@ export function emprisesCamp(etat) {
 export function batimentSous(etat, x, y, marge = 0) {
   return emprisesCamp(etat).find(e => Math.abs(x - e.x) <= e.w / 2 + marge && Math.abs(y - e.y) <= e.d / 2 + marge)?.cle ?? null;
 }
+
+// ─── Ce que les niveaux et les choix changent (lot 3) ───
+/* Le facteur d'un modificateur (`'artillerie.recharge'`, `'chars.pv'`…) pour `camp` : le produit des `effets` des niveaux atteints du bâtiment qui le porte (le préfixe) et du choix pris à chaque palier. 1 hors de la partie bridée et pour en face : rien ne change chez eux. */
+export function modif(etat, camp, cle) {
+  if (camp !== NOUS || !etat.camp?.bride) return 1;
+  const bat = cle.split('.')[0], c = etat.camp.batiments[bat];
+  if (!c?.niveau) return 1;
+  let f = 1;
+  BATIMENTS[bat].niveaux.slice(0, c.niveau).forEach((N, k) => {
+    if (N.effets?.[cle]) f *= N.effets[cle];
+    const i = k >= 1 ? c.choix[k - 1] : null;
+    if (i != null && N.choix?.[i]?.[2]?.[cle]) f *= N.choix[i][2][cle];
+  });
+  return f;
+}
+/* Le facteur de recharge d'une batterie (`cal` : '75', '155', '220', 'avion', 'char', 'genie') */
+export function rechargeDe(etat, camp, cal) {
+  if (cal === 'avion') return modif(etat, camp, 'aerodrome.recharge');
+  if (cal === 'char') return modif(etat, camp, 'chars.recharge');
+  if (cal === 'genie') return 1;
+  return modif(etat, camp, 'artillerie.recharge') * (cal === '220' ? modif(etat, camp, 'artillerie.recharge220') : 1);
+}
+const effectifDe = (cle, niveau, champ) => BATIMENTS[cle].niveaux[niveau - 1]?.[champ];
+/* Les effectifs du départ de la partie bridée : ceux des bâtiments de départ (2 régiments en réserve à la caserne) ; les avions et les sections du génie viennent avec leur bâtiment */
+export function appliquerDepart(etat) {
+  etat.reserves[NOUS] = effectifDe('caserne', 1, 'reserves');
+  etat.sapeurs[NOUS] = 0;
+  etat.avions[NOUS] = [];
+}
+/* Un bâtiment atteint `niveau` (avec le choix `choix` du palier) : ses effectifs montent d'autant, sauf ce que la partie a déjà perdu (les sections parties au travail, les avions abattus restent perdus) */
+function monter(etat, cle, niveau, choix) {
+  const avant = niveau > 1 ? BATIMENTS[cle].niveaux[niveau - 2] : null, N = BATIMENTS[cle].niveaux[niveau - 1];
+  const plus = champ => N[champ] != null ? N[champ] - (avant?.[champ] ?? 0) : 0;
+  if (cle === 'caserne') etat.reserves[NOUS] += plus('reserves');
+  if (cle === 'sapeurs') etat.sapeurs[NOUS] += plus('sections');
+  const eff = choix != null ? N.choix?.[choix]?.[2] : null;
+  if (eff?.['+reserves']) etat.reserves[NOUS] += eff['+reserves'];
+  if (cle === 'aerodrome') {
+    if (eff?.['aerodrome.pv']) etat.avions[NOUS] = etat.avions[NOUS].map(pv => pv > 0 ? Math.round(pv * eff['aerodrome.pv']) : 0);      // le blindage : les avions d'avant en profitent
+    for (let k = 0; k < plus('avions'); k++) etat.avions[NOUS].push(pvAvion(etat, NOUS));
+  }
+}
+/* Les points de vie d'un avion neuf ou réparé, au plus : ceux de la flotte, plus le blindage choisi */
+export const pvAvion = (etat, camp) => Math.round(MITRAILLAGE.pv * modif(etat, camp, 'aerodrome.pv'));

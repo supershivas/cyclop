@@ -3,16 +3,17 @@
    Elle naît hors du terrain derrière son camp, marche en droite ligne jusqu'à la rive du pont coupé (`pont` : l'indice dans `T.pontsListe`), puis le refait : `travail` va de 0 à 1,
    et gagne `n / hommes` fois plus vite que la section au complet (de 2 à 4 h de jeu avec 20 hommes : `PONTS_HEURES`). Un obus couche une part de ses hommes. `etat.sapeurs[camp]` :
    les sections au dépôt. Les ordres rendent { refus } comme les barrages. */
-import { GENIE_DATA } from './data/genie.js';
-import { CALIBRES } from './data/calibres.js';
-import { CHAR_SORTIE } from './data/chars.js';
-import { PONTS_HEURES } from './data/ponts.js';
-import { routeChar } from './chars.js';
-import { reconstruirePont } from './eaux.js';
-import { toucher } from './terrain.js';
-import { hash2 } from './lib/rng.js';
-import { NIDS } from './data/nids.js';
-import { nidDetruitVise, reparerNid } from './nids.js';
+import { GENIE_DATA } from './data/genie.js?v=0.89.0';
+import { CALIBRES } from './data/calibres.js?v=0.89.0';
+import { CHAR_SORTIE } from './data/chars.js?v=0.89.0';
+import { PONTS_HEURES } from './data/ponts.js?v=0.89.0';
+import { routeChar } from './chars.js?v=0.89.0';
+import { reconstruirePont } from './eaux.js?v=0.89.0';
+import { toucher } from './terrain.js?v=0.89.0';
+import { hash2 } from './lib/rng.js?v=0.89.0';
+import { NIDS } from './data/nids.js?v=0.89.0';
+import { modif } from './camp.js?v=0.89.0';
+import { nidDetruitVise, reparerNid } from './nids.js?v=0.89.0';
 
 export const sectionsDeDepart = () => [GENIE_DATA.sections, GENIE_DATA.sections];
 
@@ -59,7 +60,7 @@ export function lancerGenie(B, camp, cible, ar) {
   const { etat, terrain: T } = B, nid = cible.nid !== undefined ? etat.nids.find(n => n.id === cible.nid) : null, pont = cible.pont;
   const bout = nid ? [nid.x, nid.y - nid.face * 5] : rive(B, camp, T.pontsListe[pont]), chemin = ar !== undefined ? routeChar(B, bout[0], ar, bout[0], bout[1]) : null;
   etat.sapeurs[camp]--;
-  etat.genies.push({ id: etat.genies.length ? etat.genies[etat.genies.length - 1].id + 1 : 0, camp, ...(nid ? { nid: nid.id } : { pont }), x: bout[0], y: camp === 0 ? T.H + CHAR_SORTIE : -CHAR_SORTIE, tx: bout[0], ty: bout[1], dx0: bout[0], ar, chemin, k: 0, hx: 0, hy: camp === 0 ? -1 : 1, n: GENIE_DATA.hommes, etat: 'marche', travail: 0, p: [] });
+  etat.genies.push({ id: etat.genies.length ? etat.genies[etat.genies.length - 1].id + 1 : 0, camp, ...(nid ? { nid: nid.id } : { pont }), x: bout[0], y: camp === 0 ? T.H + CHAR_SORTIE : -CHAR_SORTIE, tx: bout[0], ty: bout[1], dx0: bout[0], ar, chemin, k: 0, hx: 0, hy: camp === 0 ? -1 : 1, n: Math.round(GENIE_DATA.hommes * modif(etat, camp, 'sapeurs.hommes')), vit: modif(etat, camp, 'sapeurs.vitesse'), tr: modif(etat, camp, 'sapeurs.travail'), etat: 'marche', travail: 0, p: [] });
   const g = etat.genies[etat.genies.length - 1], hy = camp === 0 ? -1 : 1;      // (ils partent vers le nord ou le sud)
   for (let i = 0; i < g.n; i++) { const [ox, oy] = rang(g, i, 0, hy); g.p.push(g.x + ox, g.y + oy, 0, 0); }
 }
@@ -93,7 +94,7 @@ export function degatsGenies(B, x, y, cal) {
 /* Les hommes d'une section : chacun vise sa place (dans la bande qui suit le centre, ou son poste sur la rive) et s'écarte de ses voisins ; jamais dans l'eau profonde. */
 function bande(B, g, dt) {
   const T = B.terrain, p = g.p, n = p.length / 4, travaille = g.etat === 'travaille', hx = g.hx, hy = g.hy;
-  const route = g.etat === 'marche' && g.ar !== undefined && (g.camp === 0 ? g.y > g.ar : g.y < g.ar), vmax = (route ? GENIE_DATA.route : GENIE_DATA.vitesse) * 1.25, k = Math.min(1, dt * 3);
+  const route = g.etat === 'marche' && g.ar !== undefined && (g.camp === 0 ? g.y > g.ar : g.y < g.ar), vmax = (route ? GENIE_DATA.route : GENIE_DATA.vitesse) * 1.25 * (g.vit ?? 1), k = Math.min(1, dt * 3);
   let ecart = 0;
   for (let i = 0; i < n; i++) {
     const o = i * 4;
@@ -134,11 +135,11 @@ export function avancerGenies(B, ctx) {
         if (route) { vx = g.dx0; vy = g.ar; }
         else { while (g.k < g.chemin.length - 1 && Math.hypot(g.chemin[g.k][0] - g.x, g.chemin[g.k][1] - g.y) < 2.5) g.k++; [vx, vy] = g.chemin[g.k]; }
       }
-      const wd = Math.hypot(vx - g.x, vy - g.y) || 1e-9, v = (route ? GENIE_DATA.route : GENIE_DATA.vitesse) * dt * (trainent > 2.5 ? 0.3 : 1);
+      const wd = Math.hypot(vx - g.x, vy - g.y) || 1e-9, v = (route ? GENIE_DATA.route : GENIE_DATA.vitesse) * (g.vit ?? 1) * dt * (trainent > 2.5 ? 0.3 : 1);
       g.hx = (vx - g.x) / wd; g.hy = (vy - g.y) / wd;
       g.x += g.hx * Math.min(v, wd); g.y += g.hy * Math.min(v, wd);
     } else {
-      g.travail += (g.n / GENIE_DATA.hommes) * dt / ((P ? PONTS_HEURES[P.type] ?? 3 : NIDS.travail) * secParHeure);
+      g.travail += (g.n / GENIE_DATA.hommes) * dt / ((P ? PONTS_HEURES[P.type] ?? 3 : NIDS.travail) * secParHeure * (g.tr ?? 1));
       if (g.travail >= 1 && N) { reparerNid(B, N.id); g.etat = 'fini'; }
       else if (g.travail >= 1) {
         reconstruirePont(T, P);
