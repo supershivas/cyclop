@@ -3,6 +3,6 @@
   "date": "2026-10-27",
   "changes": [
     "Les tranchées ne perdent plus leurs ouvrages (sacs, bois, fil, échelles) quand la caméra est basse ou qu'on la déplace : ils suivent tout le sol que l'écran voit, et les arbres du premier plan gardent leur cime",
-    "Au labo, les tranchées de près (32 pixels par mètre) avec quatre textures : aplats, tons variés, joints et grain, usure"
+    "Au labo, les tranchées de près (48 pixels par mètre) avec quatre textures : aplats, tons variés, joints et grain, usure"
   ]
 }

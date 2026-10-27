@@ -590,13 +590,22 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
   let choisis = new Set();
 
   // ─── Les soldats : leurs positions dans les tampons ───
+  // la plus haute case du terrain (m), relevée une fois par terrain (les obus ne montent un sol que d'un mètre ou deux : on y ajoute 3 m)
+  let hautMaxT = null, hautMaxPour = null;
+  function hautMax() {
+    if (hautMaxPour !== T) { let m = -1e9; for (let c = 0; c < T.W * T.H; c++) { const h = hauteurM(T, c); if (h > m) m = h; } hautMaxT = m + 3; hautMaxPour = T; }
+    return hautMaxT;
+  }
   function majSoldats() {
     const p = ZOOMS[vue.zoom];
     // seulement ceux qu'on voit : le sol vu est un trapèze ; on garde ceux de son rectangle englobant
     const cs = coinsSol(vue.zoom, yawVu(), tangageVu());
     // (un coin de l'écran regarde le ciel : tout le terrain peut être vu, le vrai tri se fait à l'écran)
     // (le relief rapproche du rayon un sol en hauteur, vers la caméra, de quelque côté qu'elle soit : la marge du relief est de tous les côtés ; v0.76.1, la caméra tournée)
-    const x0 = cs.ok ? vue.cx + cs.x0 - 6 - MARGE_RELIEF : 0, x1 = cs.ok ? vue.cx + cs.x1 + 6 + MARGE_RELIEF : T.W, z0 = cs.ok ? vue.cz + cs.z0 - 6 - MARGE_RELIEF : 0, z1 = cs.ok ? vue.cz + cs.z1 + 12 + MARGE_RELIEF : T.H;
+    // la marge du relief suit la caméra et le terrain (v0.93.1, « les éléments au premier plan disparaissent ») : un sol de H m au-dessus du niveau moyen rapproche le rayon de H × pente mètres, la pente du rayon le plus rasant
+    // (1,2 à 54° de plongée, 2,1 à 40°, 3 à 30°) ; les 30 m d'avant ne couvraient que 25 m de haut à 54° et 14 m à 40° (la crête : 20 m au-dessus du niveau moyen)
+    const marge = Math.min(Math.max(MARGE_RELIEF, (hautMax() - SOL_Y) * cs.pente + 6), 400);
+    const x0 = cs.ok ? vue.cx + cs.x0 - 6 - marge : 0, x1 = cs.ok ? vue.cx + cs.x1 + 6 + marge : T.W, z0 = cs.ok ? vue.cz + cs.z0 - 6 - marge : 0, z1 = cs.ok ? vue.cz + cs.z1 + 12 + marge : T.H;
     // puis le vrai test : projeté, il tombe dans l'écran (le trapèze n'est pas son rectangle)
     troncons.zone(x0, x1, z0, z1);                                      // les ouvrages des tranchées suivent le sol que l'écran voit
     projeter();
@@ -837,11 +846,12 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
     // f × r donnerait le bas : u, le haut de l'écran
     const u = [r[1] * f[2] - r[2] * f[1], r[2] * f[0] - r[0] * f[2], r[0] * f[1] - r[1] * f[0]];
     const ty = Math.tan(vue.fov * Math.PI / 360), tx = ty * vue.vw / vue.vh;
-    const out = { x0: Infinity, x1: -Infinity, z0: Infinity, z1: -Infinity, ok: true };
+    const out = { x0: Infinity, x1: -Infinity, z0: Infinity, z1: -Infinity, ok: true, pente: 0 };
     for (const [a, b] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) {
       const d = [f[0] + r[0] * a * tx + u[0] * b * ty, f[1] + r[1] * a * tx + u[1] * b * ty, f[2] + r[2] * a * tx + u[2] * b * ty];
       if (d[1] >= -1e-3) { out.ok = false; continue; }                // ce coin regarde au-dessus de l'horizon
       const t = -o[1] * D / d[1], x = o[0] * D + d[0] * t, z = o[2] * D + d[2] * t;
+      out.pente = Math.max(out.pente, Math.hypot(d[0], d[2]) / -d[1]);       // le rayon le plus rasant : de combien un sol en hauteur le rapproche de la caméra, par mètre de hauteur
       out.x0 = Math.min(out.x0, x); out.x1 = Math.max(out.x1, x); out.z0 = Math.min(out.z0, z); out.z1 = Math.max(out.z1, z);
     }
     return out;

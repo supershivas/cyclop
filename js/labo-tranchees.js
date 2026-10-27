@@ -19,7 +19,7 @@ export const NOTES_TRANCHEES = {
   D: NIVEAUX_TRANCHEES[2].note,
   E: 'Jusqu\'à la v0.84.0 : des sacs, des traverses, du bois et du fil de fer à partir de 4 pixels par mètre (le bois se brise avec le comblement), un dessin plus simple en dessous, ni banquette, ni cadres, ni échelles. C\'est le niveau 0.',
 };
-// Les tranchées de près (Jérôme, v0.93.1 : « je ne vois pas bien les tranchées dans le labo : peut-on les avoir en gros plan avec différents effets de texture ? ») : la même scène au niveau 3, à 32 pixels par mètre
+// Les tranchées de près (Jérôme, v0.93.1 : « je ne vois pas bien les tranchées dans le labo : peut-on les avoir en gros plan avec différents effets de texture ? ») : la même scène au niveau 3, à 48 pixels par mètre
 // (trois crans de zoom de plus, 24, 32 et 48), avec la « texture » de `rendu/tranchee-modeles.js` : pas une image (le jeu est en dix tons) mais des tons, des joints, du grain, de l'usure.
 export const NOTES_PRES = {
   P1: 'En jeu (v0.93.1) : un ton de la palette par sac et par planche, tiré de sa position : le dessin est moins uniforme, aucun triangle de plus.',
@@ -91,7 +91,7 @@ export function maquetteTranchees(stage, R, cle) {
         el('br'), el('span', { textContent: 'État : ' }), ...ETATS.map(([nom], q) => bouton(nom, () => voirDetail(q, detailVu))));
     }
     const arret = scene(ui.stage, R, {
-      ennemi: false, yNous: 300, zoom: pres ? 9 : 5, cz: 213, libre: pres ? { yaw: 0.45, tangage: 0.6 } : { yaw: 0.32, tangage: 0.7 }, bloc: true,
+      ennemi: false, yNous: 300, zoom: pres ? 10 : 5, cz: 213, libre: pres ? { yaw: 0.6, tangage: 0.9 } : { yaw: 0.32, tangage: 0.7 }, bloc: true,
       avant: ctx => {
         const { B, A } = ctx, M = B.etat.marges;
         // la première ligne de chez nous : trois tronçons de suite
@@ -138,7 +138,7 @@ export function maquetteTranchees(stage, R, cle) {
           texteSvg(ctx.svg, sx, sy, `${ETATS[q][0]} · ${etatTranchee(s)} ${Math.round(s * 100)} %`, 12);
         });
         const niv = r.niveauTranchees;
-        ctx.dire(pres ? [`${NOMS_PRES[cle]} — niveau 3, texture ${r.textureTranchees}`, NOTES_PRES[cle], `Dessin : ${st.ms.renduFini} ms (rendu logiciel ici, attendu jusqu'au bout) · ${st.trianglesDessines} triangles`, 'Glissez pour tourner, Maj ou clic droit pour déplacer, molette pour zoomer (jusqu\'à 48 pixels par mètre).'] : [`${NOMS_TRANCHEES[cle]} — niveau dessiné : ${niv === 0 ? '0 (le dessin d\'avant)' : niv}`, NOTES_TRANCHEES[cle], `Dessin : ${st.ms.renduFini} ms (rendu logiciel ici, attendu jusqu'au bout) · ${st.trianglesDessines} triangles`, 'Glissez pour tourner, Maj ou clic droit pour déplacer, molette pour zoomer.']);
+        ctx.dire(pres ? [`${NOMS_PRES[cle]} — niveau 3, texture ${r.textureTranchees}, ${r.ppm} pixels par mètre`, NOTES_PRES[cle], `Dessin : ${st.ms.renduFini} ms (rendu logiciel ici, attendu jusqu'au bout) · ${st.trianglesDessines} triangles`, 'Glissez pour tourner, Maj ou clic droit pour déplacer, molette pour zoomer (jusqu\'à 48 pixels par mètre).'] : [`${NOMS_TRANCHEES[cle]} — niveau dessiné : ${niv === 0 ? '0 (le dessin d\'avant)' : niv}`, NOTES_TRANCHEES[cle], `Dessin : ${st.ms.renduFini} ms (rendu logiciel ici, attendu jusqu'au bout) · ${st.trianglesDessines} triangles`, 'Glissez pour tourner, Maj ou clic droit pour déplacer, molette pour zoomer.']);
       },
     });
     return arret;

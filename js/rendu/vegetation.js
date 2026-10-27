@@ -6,6 +6,7 @@ import { creerGeometries } from './geometries.js?v=0.93.1';
 import { hash2 } from '../lib/rng.js?v=0.93.1';
 import { BUISSONS_FORMES, BUISSONS_SAISONS, BUISSONS_TIRAGES } from '../data/buissons.js?v=0.93.1';
 import { ARBRES_FAMILLES, ARBRES_TIRAGES, ARBRES_ECHELLE, ARBRES_AUTOMNE, ARBRES_PPM_FEUILLES, ARBRES_FEUILLES } from '../data/arbres.js?v=0.93.1';
+import { dansLEcran } from './vue-ecran.js?v=0.93.1';
 
 // `THREE`, `scene`, `col`, `camera`, `vue`, `solY` (la hauteur moyenne du sol), `distance(zoom)`, `surface(x, z)` et `petit()` (aux zooms où un soldat n'est qu'un point)
 // viennent de creerRendu ; `terrain()`, `vide()` et `ombres()` sont lus à chaque appel (le terrain change à chaque bataille). `ombres()` rend `{ ARBRES_OMBRES, aoPos, aoGeo, soleil }` :
@@ -54,13 +55,7 @@ export function creerVegetation({ THREE, scene, col, camera, vue, solY: SOL_Y, d
   // sous l'écran, alors qu'à 16 px/m sa cime y montait de 85 à 110 pixels) ; la marge de côté suit son rayon
   const dansLaVue = (x, z, e, b, h = 0, r = 0) => {
     if (x < b[0] || x > b[1] || z < b[2] || z > b[3]) return false;
-    const hs = surface(x, z);        // (à sa vraie hauteur : une colline du premier plan monte à l'écran, v0.73.1)
-    const cw = e[3] * x + e[7] * hs + e[11] * z + e[15], rx = r * Math.hypot(e[0], e[8]);
-    const cxp = e[0] * x + e[4] * hs + e[8] * z + e[12], cyp = e[1] * x + e[5] * hs + e[9] * z + e[13];
-    if (!h) return cxp > -1.15 * cw - rx && cxp < 1.15 * cw + rx && cyp > -1.3 * cw && cyp < 1.3 * cw;
-    const ht = hs + h, cwt = e[3] * x + e[7] * ht + e[11] * z + e[15], cxt = e[0] * x + e[4] * ht + e[8] * z + e[12], cyt = e[1] * x + e[5] * ht + e[9] * z + e[13], rxt = r * Math.hypot(e[0], e[8]);
-    if (!((cxp > -1.15 * cw - rx && cxp < 1.15 * cw + rx) || (cxt > -1.15 * cwt - rxt && cxt < 1.15 * cwt + rxt))) return false;
-    return !((cyp < -1.3 * cw && cyt < -1.3 * cwt) || (cyp > 1.3 * cw && cyt > 1.3 * cwt));      // le segment pied-sommet touche la bande de l'écran
+    return dansLEcran(e, x, surface(x, z), z, h, r);       // (à sa vraie hauteur : une colline du premier plan monte à l'écran, v0.73.1)
   };
   // la hauteur et le rayon qu'on lui donne pour la vue : un arbre (cime comprise ; les arbres variés : leur hauteur, au plus ×1,5 pour les grands, et la couronne)
   const ARBRE_RAYON = 5;

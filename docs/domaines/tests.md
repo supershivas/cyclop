@@ -1,5 +1,7 @@
 # Tests, références et mesures
 
+- **Le premier plan (v0.93.1)** : `test/vue-ecran.test.mjs` (`dansLEcran` : un arbre dont le pied est sous l'écran et la cime dedans reste ; le pied au-dessus ne revient pas ; la marge de côté suit le rayon) ; la sonde (jetable, voir `docs/domaines/rendu.md`, « Les éléments du premier plan disparaissaient encore ») compare, pour des vues variées, ce que l'écran montre et ce que le moteur dessine : `rendu.tronconsDessines`, `stats.arbresVus`, `stats.soldatsVus`.
+
 - **Les tranchées en trois niveaux (v0.84.0)** : `test/tranchees-modeles.test.mjs` (la géométrie pure : chaque niveau coûte plus que le précédent, une tranchée détruite moins qu'une intacte, un budget par tronçon (150 / 1 500 / 4 000 triangles), aucun NaN du côté pris comme du nôtre, déterminisme ; la solidité d'un tronçon : 1 au départ, décroissante sous les obus, le voisin à peine touché, le coin de l'écran, les mots) ; `node outils/mesure-tranchees.mjs` (le coût de la géométrie, sans navigateur) ; `node scripts/mesure-tranchees-labo.mjs --variantes ABCDE --png [--scene]` (le dessin entier au labo, une image par niveau, le bouton « Mesurer dans la scène »).
 
 <!-- Sorti de CLAUDE.md : fumée, empreinte du dessin, scripts de mesure. Le texte est celui d'origine, sans changement ; décisions datées, mesures et pièges avec leur coût. Un ajout se range ici, pas dans CLAUDE.md. -->

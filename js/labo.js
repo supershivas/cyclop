@@ -464,7 +464,7 @@ const GROUPES = [
       { title: NOMS_TRANCHEES.E, status: 'ancienne', depuis: '0.88.1', note: NOTES_TRANCHEES.E, render: s => maquetteTranchees(s, R, 'E') },
     ] },
     { id: 'tranchees-pres', title: 'Les tranchées de près', variants: [
-      { title: NOMS_PRES.P1, status: 'actuelle', depuis: '0.93.1', note: `${NOTES_PRES.P1} Le niveau 3 à 32 pixels par mètre (trois crans de zoom de plus : 24, 32, 48), l'échelle au milieu, des hommes dans la tranchée pour l'échelle. Boutons : la texture à comparer sur place, un détail à aller voir (l'échelle, le parapet, une meurtrière, le caillebotis, un abri, le fil téléphonique, le clayonnage), l'état de la tranchée (intacte, abîmée, détruite).`, render: s => maquetteTranchees(s, R, 'P1') },
+      { title: NOMS_PRES.P1, status: 'actuelle', depuis: '0.93.1', note: `${NOTES_PRES.P1} Le niveau 3 à 48 pixels par mètre, le plus près (trois crans de zoom de plus : 24, 32, 48), l'échelle au milieu, des hommes dans la tranchée pour l'échelle. Boutons : la texture à comparer sur place, un détail à aller voir (l'échelle, le parapet, une meurtrière, le caillebotis, un abri, le fil téléphonique, le clayonnage), l'état de la tranchée (intacte, abîmée, détruite).`, render: s => maquetteTranchees(s, R, 'P1') },
       { title: NOMS_PRES.P2, status: 'a-trancher', depuis: '0.93.1', note: NOTES_PRES.P2, render: s => maquetteTranchees(s, R, 'P2') },
       { title: NOMS_PRES.P3, status: 'a-trancher', depuis: '0.93.1', note: NOTES_PRES.P3, render: s => maquetteTranchees(s, R, 'P3') },
       { title: NOMS_PRES.P0, status: 'ancienne', depuis: '0.93.1', note: NOTES_PRES.P0, render: s => maquetteTranchees(s, R, 'P0') },

@@ -1,10 +1,10 @@
 // Les tranchées du labo (v0.84.0, sujet « Les tranchées ») : pour chaque variante, le dessin entier (ms, triangles dessinés, rendu logiciel, attendu jusqu'au bout) à quelques zooms, le tableau de la géométrie,
 // la mesure « dans la scène » du bouton, et une image (lue dans le même instant que le dessin : une capture d'écran du canvas WebGL est noire). Les étiquettes (SVG) ne sont pas dans l'image.
-//   node scripts/mesure-tranchees-labo.mjs [--variantes ABCDE] [--zooms 3,5] [--vues trois-quarts,dessus,profil] [--sortie captures/tranchees] [--png] [--scene]
+//   node scripts/mesure-tranchees-labo.mjs [--sujet tranchees|tranchees-pres] [--variantes ABCDE] [--zooms 3,5] [--vues trois-quarts,dessus,profil] [--sortie captures/tranchees] [--png] [--scene]
 import { servir, lancerChromium, options } from '../outils/navigateur.mjs';
 import { writeFileSync, mkdirSync } from 'node:fs';
 
-const o = options(process.argv.slice(2), { variantes: 'ABCDE', zooms: '0', vues: 'trois-quarts', sortie: 'captures/tranchees', png: '', scene: '', voir: '' });
+const o = options(process.argv.slice(2), { variantes: 'ABCDE', zooms: '0', vues: 'trois-quarts', sortie: 'captures/tranchees', png: '', scene: '', voir: '', sujet: 'tranchees' });
 if (o.png) mkdirSync(o.sortie, { recursive: true });
 const srv = await servir('.');
 const nav = await lancerChromium();
@@ -24,7 +24,7 @@ await page.addInitScript(() => {
   }
 });
 for (const L of o.variantes.split('')) {
-  await page.goto(`${srv.base}labo.html#tranchees-${L}`);
+  await page.goto(`${srv.base}labo.html#${o.sujet}-${L}`);
   await page.waitForSelector('button.essai');
   for (const z of o.zooms.split(',')) {
     // le zoom : on part du zoom d'origine (indice 5 : 8 px/m) et `z` crans de plus (négatif : de moins) avec les boutons
