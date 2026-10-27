@@ -1,10 +1,10 @@
 // Ce que l'état des tronçons montre sur le terrain : les fanions (à la couleur de celui qui tient le tronçon, déchirés quand l'autre
 // camp y est entré), le clignotement d'un ordre et la surbrillance de la visée, les ouvrages des tranchées (traverses, sacs de terre,
 // fil de fer, bois). Le dessin seulement : tout se lit de l'état, rien n'en est sauvegardé.
-import { PALETTE } from '../palette.js';
-import { ligneY, demiLargeur } from '../tranchees.js';
-import { TOITS } from '../data/nids.js';
-import { primitives, ouvrageTroncon, niveauSelonZoom } from './tranchee-modeles.js';
+import { PALETTE } from '../palette.js?v=0.87.1';
+import { ligneY, demiLargeur } from '../tranchees.js?v=0.87.1';
+import { TOITS } from '../data/nids.js?v=0.87.1';
+import { primitives, ouvrageTroncon, niveauSelonZoom } from './tranchee-modeles.js?v=0.87.1';
 
 // `THREE`, `scene`, `col` (une couleur de la palette), `surface(x, z)` (la hauteur du sol), `projeter()` (le centre de la vue et les pixels par mètre),
 // `vue`, `zooms` viennent de creerRendu ; `bataille()`, `tAnim()` (le temps du dessin), `vide()` (rien n'est dessiné) et `survolTroncons()`
@@ -89,7 +89,7 @@ export function creerTroncons({ THREE, scene, col, surface, projeter, vue, zooms
   const cSacH = col('g'), cSacB = col('b'), cTravH = col('g'), cTravB = col('s'), cPorteH = col('g'), cPorteB = col('t');
   // le bois des tranchées (v0.80.0) : les planches (claires, `h` sur `g`) et les madriers (sombres, `g` sur `s`)
   const cPlancheH = col('h'), cPlancheB = col('g'), cMadrierH = col('g'), cMadrierB = col('s'), cSac2H = col('h'), cSac2B = col('b'), cFilH = col('r'), cFilB = col('g');
-  // Les niveaux de détail des tranchées (Jérôme, v0.84.0 ; en jeu depuis la v0.84.1 : « mets le niveau selon le zoom dans le jeu ») : 'auto' (le défaut) : le niveau suit le zoom (niveauSelonZoom : 1, 2 puis 3) ; 1 à 3 un niveau fixe (labo) ; 0 le dessin d'avant la v0.84.1 (gardé au labo)
+  // Les niveaux de détail des tranchées (Jérôme, v0.84.0 ; en jeu depuis la v0.87.1 : « mets le niveau selon le zoom dans le jeu ») : 'auto' (le défaut) : le niveau suit le zoom (niveauSelonZoom : 1, 2 puis 3) ; 1 à 3 un niveau fixe (labo) ; 0 le dessin d'avant la v0.87.1 (gardé au labo)
   let niveauReglage = 'auto';
   // Au niveau 0 (le jeu) les tampons gardent leur taille d'avant (8 000 boîtes, 24 000 sommets de fil : ce qui dépasse n'est pas dessiné, comme avant) ; ils ne grandissent qu'aux niveaux 1 à 3
   let niveauCourant = 0;

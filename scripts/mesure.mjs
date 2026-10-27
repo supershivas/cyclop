@@ -8,7 +8,7 @@
 //   node scripts/mesure.mjs --ombres 1 --zooms 3,4,5   (les ombres du relief du labo, v0.67 : éteintes dans le jeu)
 //   node scripts/mesure.mjs --ombres 1 --parois 1 --zooms 3,4,5   (avec les parois qui suivent le soleil)
 //   node scripts/mesure.mjs --nuages 1 --zooms 3,4,5   (les ombres de nuages du labo)
-//   node scripts/mesure.mjs --tranchees 0 --zooms 3,4,5   (le dessin des tranchées d'avant la v0.84.1 ; 1 à 3 : un niveau fixe ; sans : selon le zoom)
+//   node scripts/mesure.mjs --tranchees 0 --zooms 3,4,5   (le dessin des tranchées d'avant la v0.87.1 ; 1 à 3 : un niveau fixe ; sans : selon le zoom)
 //   node scripts/mesure.mjs --finesse 2 --zooms 3,4,5   (le sol en demi-mètres ; indices de ZOOMS : 3 = 4 px/m, 4 = 6, 5 = 8)
 //
 // Le rendu est mesuré avec ?mesure=1 : chaque image attend la fin du dessin
@@ -35,7 +35,7 @@ await page.evaluate(() => {
 });
 const resultats = [];
 const VUES = [['tout le champ (points)', 0, 200, 150], ['zoom 3 (boîtes)', 2, 200, 165], ['zoom 4 (boîtes)', 3, 200, 170], ['zoom 6 (silhouettes)', 4, 200, 180], ['zoom 8 (silhouettes)', 5, 200, 190]];
-if (o.tranchees !== '') await page.evaluate(n => { __jeu.rendu().niveauTranchees = n === 'auto' ? 'auto' : +n; }, o.tranchees);       // les niveaux de détail des tranchées (v0.84.1) : 0 le dessin d'avant, 1 à 3, auto (le jeu : selon le zoom)
+if (o.tranchees !== '') await page.evaluate(n => { __jeu.rendu().niveauTranchees = n === 'auto' ? 'auto' : +n; }, o.tranchees);       // les niveaux de détail des tranchées (v0.87.1) : 0 le dessin d'avant, 1 à 3, auto (le jeu : selon le zoom)
 if (o.ombres) await page.evaluate(() => { __jeu.rendu().ombresRelief = true; });
 if (o.nuages) await page.evaluate(() => { __jeu.rendu().ombresNuages = true; });
 if (o.parois) await page.evaluate(() => { __jeu.rendu().soleilReglage = { parois: true }; });

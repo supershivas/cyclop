@@ -145,6 +145,10 @@ cela aussi. (v0.38.3 : sept corvées au total ; les caillebotis et le coup de ma
 `docs/archives/corvees-retirees.md`.) Les morts inhumés ont une tombe là où ils sont tombés : un tertre de
 glaise et une croix pâle, qui restent jusqu'à la fin.
 
+### Le camp
+
+Derrière nos lignes, dans la marge du terrain, un camp de cinq bâtiments : le parc d'artillerie, l'aérodrome, le parc des chars, la maison des sapeurs, la caserne des renforts. Chacun est une unité spéciale ; les ordres se donnent en le choisissant. Le camp démarre presque nu (l'artillerie au 75, la caserne) et se bâtit au fil des jours : une dotation de l'état-major tombe à chaque aube (jamais des morts : ce n'est pas une récompense), un chantier dure une nuit, trois niveaux par bâtiment. On ne peut pas tout prendre. (Jérôme, v0.87.0 ; les améliorations à choisir, l'équipement des régiments et le camp d'en face ne sont pas construits : `docs/chantiers/camp-et-ameliorations.md`.)
+
 ### Le moral et l'expérience
 
 Chaque régiment a un moral. Les morts le font baisser (un officier plus encore),

@@ -25,10 +25,10 @@
      (rng.js), pour que la même graine rejoue la même bataille.
 
    Logique pure : aucun DOM. Le rendu lit les tableaux (rendu3d.js). */
-import { hauteurQ, vitesseCase } from './terrain.js';
-import { ligneY } from './tranchees.js';
-import { TOITS } from './data/nids.js';
-import { caracteristiques } from './identite.js';
+import { hauteurQ, vitesseCase } from './terrain.js?v=0.87.1';
+import { ligneY } from './tranchees.js?v=0.87.1';
+import { TOITS } from './data/nids.js?v=0.87.1';
+import { caracteristiques } from './identite.js?v=0.87.1';
 
 export const GRILLE = 2;           // m : cases de voisinage
 export const DENSITE = 8;          // m : carrés de densité (tir)

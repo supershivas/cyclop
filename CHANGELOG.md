@@ -1,8 +1,18 @@
 # Journal des versions
 
-## 0.84.1 — 2026-10-27
+## 0.87.1 — 2026-10-27
 - Les tranchées gagnent en détail à mesure qu'on s'approche (silhouette de loin, ouvrage, puis détaillé de très près : cadres de boisage, clayonnage, abri, fil téléphonique), avec des tons de sacs et de planches variés
 - Des échelles pour sortir des tranchées, deux par tronçon, contre la paroi du parapet ; à moitié comblées elles penchent, comblées elles gisent à terre
+
+## 0.87.0 — 2026-10-27
+- Le camp apparaît dans la marge arrière : on clique un bâtiment (ou sa pastille, ou la touche B) pour lui donner ses ordres et le bâtir ou l'améliorer ; les boutons de batterie sont dans leur bâtiment
+- Il faut bâtir le parc des chars, l'aérodrome et la maison des sapeurs ; les 155 et 220 s'ouvrent aux niveaux 2 et 3 de l'artillerie ; la dotation tombe à l'aube
+
+## 0.86.0 — 2026-10-27
+- La dotation de l'état-major tombe chaque aube et les chantiers du camp s'achèvent à la nuit (règle seule : rien n'est encore visible ni bridé)
+
+## 0.85.0 — 2026-10-27
+- Au labo, le camp : cinq bâtiments en trois niveaux (artillerie, aérodrome, parc des chars, sapeurs, caserne) et un camp qui grandit au fil des jours, avec les ordres au clic (proposition, pas encore dans le jeu)
 
 ## 0.84.0 — 2026-10-27
 - Les tranchées ont une barre de vie : en les survolant, le coin de l'écran dit leur solidité (Intacte, Abîmée, Bouleversée) en mot, en pourcentage et en barre, avant la ligne de vie des deux armées
