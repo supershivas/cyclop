@@ -597,6 +597,7 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
     // (le relief rapproche du rayon un sol en hauteur, vers la caméra, de quelque côté qu'elle soit : la marge du relief est de tous les côtés ; v0.76.1, la caméra tournée)
     const x0 = cs.ok ? vue.cx + cs.x0 - 6 - MARGE_RELIEF : 0, x1 = cs.ok ? vue.cx + cs.x1 + 6 + MARGE_RELIEF : T.W, z0 = cs.ok ? vue.cz + cs.z0 - 6 - MARGE_RELIEF : 0, z1 = cs.ok ? vue.cz + cs.z1 + 12 + MARGE_RELIEF : T.H;
     // puis le vrai test : projeté, il tombe dans l'écran (le trapèze n'est pas son rectangle)
+    troncons.zone(x0, x1, z0, z1);                                      // les ouvrages des tranchées suivent le sol que l'écran voit
     projeter();
     mVP.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse);
     const e = mVP.elements;
@@ -725,6 +726,9 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
     get finesse() { return finesse; },
     get ombresRelief() { return ombresRelief; },
     set ombresRelief(v) { ombresRelief = !!v; solAttente = 0; },      // les ombres du relief sur le sol (labo)
+    get tronconsDessines() { return troncons.dessines; },                // les indices des tronçons dont les ouvrages sont dessinés (la mesure)
+    get textureTranchees() { return troncons.texture; },
+    set textureTranchees(v) { troncons.texture = v; },                     // 0 (aplats) à 3 (usure) : la « texture » des tranchées, sans image (labo, v0.91.0) ; 1 dans le jeu
     get niveauTranchees() { return troncons.niveau; },
     set niveauTranchees(v) { troncons.niveau = v; },                   // 0 (le dessin du jeu), 1 à 3 ou 'auto' : les niveaux de détail des tranchées (labo, v0.84.0)
     get vent() { return { force: +vent.force.toFixed(3), x: +vent.ms.x.toFixed(2), z: +vent.ms.z.toFixed(2), nom: vent.nom }; },   // le vent à l'image (le mode debug, les tests)
@@ -814,7 +818,7 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
     get stats() {
       let tri = 0;
       for (const m of morceaux) tri += (m.geometry.attributes.position?.count || 0) / 3;
-      return { ms: { sol: +perf.sol.toFixed(2), rendu: +perf.rendu.toFixed(2), renduFini: +perf.fini.toFixed(2) }, triangles: tri, trianglesDessines: renderer.info.render.triangles, soldatsVus: soldats.vus, gradesVus: soldats.gradesVus, touffesVues: vegetation.vuesHerbe, trianglesArbres: vegetation.trianglesArbres, msArbres: +vegetation.msArbres.toFixed(3), appels: renderer.info.render.calls, rangees: coutRangees, morceauxRefaits: morceauxFaits.n, msMorceaux: +morceauxFaits.ms.toFixed(1) };
+      return { ms: { sol: +perf.sol.toFixed(2), rendu: +perf.rendu.toFixed(2), renduFini: +perf.fini.toFixed(2) }, triangles: tri, trianglesDessines: renderer.info.render.triangles, soldatsVus: soldats.vus, gradesVus: soldats.gradesVus, touffesVues: vegetation.vuesHerbe, arbresVus: vegetation.arbresVus, trianglesArbres: vegetation.trianglesArbres, msArbres: +vegetation.msArbres.toFixed(3), appels: renderer.info.render.calls, rangees: coutRangees, morceauxRefaits: morceauxFaits.n, msMorceaux: +morceauxFaits.ms.toFixed(1) };
     },
     detruire() { renderer.dispose(); },
   };

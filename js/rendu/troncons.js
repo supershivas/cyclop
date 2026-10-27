@@ -91,7 +91,7 @@ export function creerTroncons({ THREE, scene, col, surface, projeter, vue, zooms
   // le bois des tranchées (v0.80.0) : les planches (claires, `h` sur `g`) et les madriers (sombres, `g` sur `s`)
   const cPlancheH = col('h'), cPlancheB = col('g'), cMadrierH = col('g'), cMadrierB = col('s'), cSac2H = col('h'), cSac2B = col('b'), cFilH = col('r'), cFilB = col('g');
   // Les niveaux de détail des tranchées (Jérôme, v0.84.0 ; en jeu depuis la v0.88.1 : « mets le niveau selon le zoom dans le jeu ») : 'auto' (le défaut) : le niveau suit le zoom (niveauSelonZoom : 1, 2 puis 3) ; 1 à 3 un niveau fixe (labo) ; 0 le dessin d'avant la v0.88.1 (gardé au labo)
-  let niveauReglage = 'auto';
+  let niveauReglage = 'auto', textureReglage = 1;       // textureReglage : de 0 (aplats) à 3 (usure), voir tranchee-modeles.js ; 1 : le jeu
   // Au niveau 0 (le jeu) les tampons gardent leur taille d'avant (8 000 boîtes, 24 000 sommets de fil : ce qui dépasse n'est pas dessiné, comme avant) ; ils ne grandissent qu'aux niveaux 1 à 3
   let niveauCourant = 0;
   const grandir = (v, n) => {                                   // de la place pour n sommets de plus dans les tampons des ouvrages (on recopie ce qui est déjà écrit)
@@ -115,17 +115,25 @@ export function creerTroncons({ THREE, scene, col, surface, projeter, vue, zooms
   // les couleurs des niveaux de détail : des paires [dessus, flanc] de la palette, comme pour le bois et les sacs du jeu (aucune couleur nouvelle)
   // (créées au premier besoin : des couleurs de plus créées d'emblée décaleraient les identifiants de three, donc les 37 images de test/rendu.json)
   let KN = null;
-  const couleursN = () => KN ??= { sac: [col('g'), col('b')], sac2: [col('h'), col('b')], sac3: [col('h'), col('s')], planche2: [col('g'), col('b')], planche: [col('h'), col('g')], madrier: [col('g'), col('s')], terre: [col('g'), col('s')], fascine: [col('b'), col('s')], acier: [col('r'), col('s')], eau: [col('e'), col('e')], ombre: [col('t'), col('t')], lanterne: [col('o'), col('g')] };
+  const couleursN = () => KN ??= { sac: [col('g'), col('b')], sac2: [col('h'), col('b')], sac3: [col('h'), col('s')], boue: [col('b'), col('s')], mousse: [col('v'), col('w')], planche2: [col('g'), col('b')], planche: [col('h'), col('g')], madrier: [col('g'), col('s')], terre: [col('g'), col('s')], fascine: [col('b'), col('s')], acier: [col('r'), col('s')], eau: [col('e'), col('e')], ombre: [col('t'), col('t')], lanterne: [col('o'), col('g')] };
   let ouvT = 0, niveauVu = null;
+  let zoneVue = null, zoneBatie = null;                          // le sol que l'écran voit (rendu3d.js le donne à chaque image) ; celui qu'on a garni
+  const MARGE_OUVRAGES = 20;                                     // m : on garnit un peu au-delà de ce que l'écran voit
+  const nDessines = [];                                          // les tronçons dont les ouvrages sont dessinés à la dernière refonte (la mesure du premier plan)
   function majOuvrages(dt) {
     const B = bataille();
     ouvT -= dt;
     const { cx, cz, p } = projeter();
     const niveau = niveauReglage === 'auto' ? niveauSelonZoom(p) : niveauReglage, voir = !!B && B.etat.tranchees && p >= (niveau ? 2 : 3);
     ouvMesh.visible = filLignes.visible = voir;
-    if (!voir || (ouvT > 0 && niveau === niveauVu)) return;
+    // le sol à garnir (v0.91.0, Jérôme : « les éléments au premier plan disparaissent ») : le rectangle de sol que l'écran voit (`zone`, donné par rendu3d.js : ses coins posés sur le sol, plus la marge du relief),
+    // pas un rayon autour du centre de la vue : une caméra basse voit beaucoup plus loin que ce rayon dans l'axe de la vue (à 6 px/m, inclinée à 0,45 rad : 16 tronçons visibles sur 50 sans ouvrages) ;
+    // on bâtit un peu au-delà (`MARGE_OUVRAGES`) et on refait dès que la vue en sort (sans attendre les 0,5 s : on ne voit plus la terre nue en déplaçant la caméra)
+    const besoin = zoneVue, dedans = !besoin || (zoneBatie && besoin.x0 >= zoneBatie.x0 && besoin.x1 <= zoneBatie.x1 && besoin.z0 >= zoneBatie.z0 && besoin.z1 <= zoneBatie.z1);
+    if (!voir || (ouvT > 0 && niveau === niveauVu && (dedans || ouvT > 0.35))) return;
     ouvT = 0.5; niveauVu = niveauCourant = niveau;
     const e = Math.hypot(vue.vw, vue.vh) / p + 30, et = B.etat;
+    const zb = zoneBatie = besoin ? { x0: besoin.x0 - MARGE_OUVRAGES, x1: besoin.x1 + MARGE_OUVRAGES, z0: besoin.z0 - MARGE_OUVRAGES, z1: besoin.z1 + MARGE_OUVRAGES } : { x0: cx - e, x1: cx + e, z0: cz - e, z1: cz + e };
     let nv = 0, nf = 0;
     const sommet = (x, y, z, c) => { if (nv * 3 + 3 > ouvPos.length) return; ouvPos[nv * 3] = x; ouvPos[nv * 3 + 1] = y; ouvPos[nv * 3 + 2] = z; ouvCol[nv * 3] = c.r; ouvCol[nv * 3 + 1] = c.g; ouvCol[nv * 3 + 2] = c.b; nv++; };
     const quad = (a, b, c, d, k) => { sommet(...a, k); sommet(...b, k); sommet(...c, k); sommet(...a, k); sommet(...c, k); sommet(...d, k); };
@@ -216,10 +224,12 @@ export function creerTroncons({ THREE, scene, col, surface, projeter, vue, zooms
     const quadN = (a, b, c, d, k) => { if (grandir(nv, 6)) quad(a, b, c, d, k); };
     const { boite: boiteN, poutre } = primitives(quadN);
     let Lcourante = null;
-    const gTr = { boite: boiteN, poutre, trait, surface, etat: x => etatDe(Lcourante, x), j: hachage, K: niveau ? couleursN() : null, prof, pris: false, coupe: false };
+    const gTr = { boite: boiteN, poutre, trait, surface, etat: x => etatDe(Lcourante, x), j: hachage, K: niveau ? couleursN() : null, prof, pris: false, coupe: false, texture: textureReglage };
+    nDessines.length = 0;
     B.troncons.forEach((tr, t) => {
       const L = B.lignes[tr.ligne], xm = (tr.x0 + tr.x1) / 2, zc = ligneY(L, xm);
-      if (Math.abs(xm - cx) > e || Math.abs(zc - cz) > e) return;
+      if (tr.x1 < zb.x0 || tr.x0 > zb.x1 || zc < zb.z0 - 4 || zc > zb.z1 + 4) return;       // (le tronçon, long de 25 m, touche le sol à garnir)
+      nDessines.push(t);
       const pris = et.troncons[t] !== L.camp, f = L.face;
       Lcourante = L;
       if (niveau) {      // les niveaux de détail (v0.84.0) : tout le tronçon vient de tranchee-modeles.js ; le toit, lui, protège du tir : il reste celui du jeu
@@ -255,7 +265,7 @@ export function creerTroncons({ THREE, scene, col, surface, projeter, vue, zooms
     });
     // Les nids de mitrailleuses (v0.83.0) : trois murs de sacs en U ouverts vers l'ennemi, la mitrailleuse (un fût, un bouclier, un trépied) ; détruit : des sacs éparpillés, noircis, un fût à terre
     for (const n of et.nids || []) {
-      if (Math.abs(n.x - cx) > e || Math.abs(n.y - cz) > e) continue;
+      if (n.x < zb.x0 || n.x > zb.x1 || n.y < zb.z0 || n.y > zb.z1) continue;
       const f = n.face, h = surface(n.x, n.y);
       if (n.etat === 'detruit') {
         for (let q = 0; q < 9; q++) { const a = hachage(n.id * 3 + q, 5.1) * 6.28, r = 0.6 + hachage(q, n.id + 7.7) * 1.9, x = n.x + Math.cos(a) * r, z = n.y + Math.sin(a) * r, hh = surface(x, z); boite(x - 0.4, x + 0.4, hh, hh + 0.2, z - 0.2, z + 0.2, cMadrierB, cMadrierH); }
@@ -309,6 +319,10 @@ export function creerTroncons({ THREE, scene, col, surface, projeter, vue, zooms
     maj(dt) { majFanions(dt); majClignotants(dt); majOuvrages(dt); },
     setVent(force, ang) { ventF.force = force; ventF.ang = ang; },   // les fanions suivent le vent
     clignoter,                                                   // un ordre validé : les tronçons visés clignotent
+    zone(x0, x1, z0, z1) { zoneVue = { x0, x1, z0, z1 }; },        // le rectangle de sol que l'écran voit (avec ses marges)
+    get texture() { return textureReglage; },
+    set texture(v) { textureReglage = Math.max(0, Math.min(3, v | 0)); ouvT = 0; },          // la « texture » des ouvrages : 0 à 3 (labo) ; 1 dans le jeu
+    get dessines() { return nDessines; },
     get niveau() { return niveauReglage; },
     set niveau(v) { niveauReglage = v === 'auto' ? 'auto' : Math.max(0, Math.min(3, v | 0)); ouvT = 0; },         // le niveau de détail des tranchées : 0 (le jeu), 1 à 3, 'auto' (selon le zoom)
     surligner(s) { surbrillance = s || { troncons: [], rects: [] }; },   // ce que l'ordre en cours de visée occuperait

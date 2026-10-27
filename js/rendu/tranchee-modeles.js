@@ -8,6 +8,8 @@
 //   2 Ouvrage — les sacs un à un, la banquette de tir, les lisses et les montants du boisage, le caillebotis, les barbelés sur piquets ;
 //   3 Détaillé — trois assises de sacs, le clayonnage des parois, des cadres de boisage avec leur écharpe, un caniveau, une échelle, un abri, des plaques de meurtrière,
 //       un fil téléphonique et une lanterne, des rouleaux de barbelé.
+// La « texture » (v0.91.0 : « différents effets de texture ») : `g.texture` de 0 à 3, sans image (le jeu est en dix tons) : 0 des aplats (un ton par élément) ; 1 des tons variés d'un sac, d'une planche à l'autre (le jeu) ;
+// 2 des joints entre les sacs, une ficelle sur le dessus, le grain des planches, le tressage du clayonnage ; 3 l'usure : la boue au pied des sacs, sur les planches, la mousse sur le dessus des sacs.
 // À chaque niveau, l'état du bout de tranchée (creusée, à moitié comblée, comblée) change ce qui reste : en place, brisé et de travers, puis des éclats à terre.
 import { ligneY, demiLargeur } from '../tranchees.js?v=0.91.0';
 import { TRANCHEE_OUVRAGES } from '../data/tranchees.js?v=0.91.0';
@@ -57,7 +59,8 @@ export function ouvrageTroncon(g, tr, L, niveau) {
   const f = L.face, cote = (g.pris ? -1 : 1) * f, haut = g.prof * 0.25, x0 = tr.x0, x1 = tr.x1, premiere = L.rang === 0;
   const zc = x => ligneY(L, x), dm = x => demiLargeur(L, x);
   // Des tons qui varient d'un sac, d'une planche à l'autre (la « texture » sans image : une couleur de la palette par élément, tirée du hachage de sa position ; aucun triangle de plus)
-  const tonSac = j => (j < 0.34 ? K.sac : j < 0.67 ? K.sac2 : K.sac3), tonBois = j => (j < 0.34 ? K.planche : j < 0.67 ? K.planche2 : K.madrier);
+  const tex = g.texture ?? 1;
+  const tonSac = j => (!tex ? K.sac : j < 0.34 ? K.sac : j < 0.67 ? K.sac2 : K.sac3), tonBois = j => (!tex ? K.planche : j < 0.34 ? K.planche : j < 0.67 ? K.planche2 : K.madrier);
   const zp = x => zc(x) + cote * (dm(x) + 0.55);          // l'axe du parapet (du côté de l'ennemi, ou de l'autre quand le tronçon est pris)
   const zd = x => zc(x) - cote * (dm(x) + 0.55);          // l'axe du parados
   const pas = (a, b, p, fn) => { for (let x = a; x < b - 0.05; x += p) fn(x, Math.min(b, x + p), x + Math.min(p, b - x) / 2); };
@@ -76,6 +79,8 @@ export function ouvrageTroncon(g, tr, L, niveau) {
       if (e === 0) { if (j < 0.3) boite(a, b - 0.1, h, h + 0.22, z + (j - 0.15) * 3 - 0.2, z + (j - 0.15) * 3 + 0.2, K.sac2); return; }
       const a1 = 0.25 + 0.06 * j, l = b - a;
       boite(a, b, h, h + a1, z - 0.25, z + 0.25, t);
+      if (tex >= 2) { boite(b - 0.03, b, h, h + a1 + 0.01, z - 0.26, z + 0.26, K.ombre); boite(a + 0.08, b - 0.08, h + a1, h + a1 + 0.012, z - 0.02, z + 0.02, K.ombre); }       // le joint avec le sac voisin, la ficelle sur le dessus
+      if (tex >= 3) { boite(a - 0.03, b + 0.03, h, h + 0.09, z - 0.3, z + 0.3, K.boue); if (j > 0.72) boite(a + 0.1, a + l * 0.6, h + a1, h + a1 + 0.025, z - 0.18, z + 0.18, K.mousse); }       // la boue au pied, la mousse sur le dessus
       if (e === 2 ? j > 0.06 : j > 0.6) boite(a + l / 2, b + l / 2, h + a1, h + a1 + 0.24, z - 0.22, z + 0.22, tonSac(1 - j));
       if (assises === 3 && e === 2 && j > 0.35) boite(a + 0.1, b + 0.1, h + a1 + 0.24, h + a1 + 0.46, z - 0.19, z + 0.19, t);
       // un sac de l'assise du haut qui a glissé, à moitié dans la tranchée (niveau 3, tranchée abîmée)
@@ -156,6 +161,7 @@ export function ouvrageTroncon(g, tr, L, niveau) {
         if (e === 2) for (let k = 0; k < 3; k++) boite(a, b - 0.1, h + k * 0.4, h + k * 0.4 + 0.33, z - 0.04, z + 0.04, K.fascine);
         else if (j2 > 0.55) { boite(a, b - 0.1, h, h + 0.33, z - 0.04, z + 0.04, K.fascine); if (j2 > 0.8) boite(a, b - 0.1, h + 0.4, h + 0.73, z - 0.04, z + 0.04, K.fascine); }
         else if (j2 < 0.25 && j > 0.4) poutre(a, h + 0.9, z, b - 0.1, h + 0.2, z - s * 0.6, 0.05, K.fascine);
+        if (e === 2 && tex >= 2) for (const u of [0.3, 0.85, 1.4, 1.95]) boite(a + u, a + u + 0.03, h, h + 1.16, z - 0.05, z + 0.05, K.ombre);       // le tressage : les montants du clayonnage
       }
     });
   }
@@ -178,6 +184,7 @@ export function ouvrageTroncon(g, tr, L, niveau) {
       if (e === 0) { if (j < 0.25) boite(a, a + 0.5, h + 0.02, h + 0.07, z - d * 0.6 + j, z + d * 0.5, K.planche); return; }
       if (e === 1 && j < 0.5) return;
       boite(a, a + 0.5, h + 0.02, h + 0.09, z - d * (e === 2 ? 0.95 : 0.5), z + d * (e === 2 ? 0.95 : 0.3), tonBois(j));
+      if (tex >= 2) { const zlo = z - d * (e === 2 ? 0.95 : 0.5), zhi = z + d * (e === 2 ? 0.95 : 0.3); for (const u of [0.15, 0.33]) boite(a + u, a + u + 0.02, h + 0.09, h + 0.097, zlo, zhi, K.ombre); if (tex >= 3 && hz(xs, 16) > 0.55) boite(a, a + 0.5, h + 0.09, h + 0.105, zlo + 0.2, zhi - 0.3, K.boue); }       // le grain ; la boue des bottes
     });
     if (niveau === 3) pas(x0, x1, 5, (a, b, xs) => {
       const e = etat(xs), z = zc(xs), h = surface(xs, z);
@@ -258,12 +265,12 @@ export function ouvrageTroncon(g, tr, L, niveau) {
 
 /* Le coût d'un niveau, mesuré sur un tronçon droit à plat (sans le sol ni les soldats) : { boites, traits, triangles, ms } pour `n` tronçons dans l'état `etat`
    (2 intact, 1 abîmé, 0 détruit). Le même résultat dans Node et dans le labo (`ms` : le temps de construction de la géométrie seulement). */
-export function mesurerNiveau(niveau, etat, n = 1, now = () => 0, echelles = undefined) {
+export function mesurerNiveau(niveau, etat, n = 1, now = () => 0, echelles = undefined, texture = undefined) {
   const compte = { sommets: 0, traits: 0 };
   const { boite, poutre } = primitives(() => { compte.sommets += 6; });
-  const K = Object.fromEntries(['sac', 'sac2', 'sac3', 'planche2', 'planche', 'madrier', 'terre', 'fascine', 'acier', 'eau', 'ombre', 'lanterne'].map(k => [k, [0, 0]]));
+  const K = Object.fromEntries(['sac', 'sac2', 'sac3', 'planche2', 'boue', 'mousse', 'planche', 'madrier', 'terre', 'fascine', 'acier', 'eau', 'ombre', 'lanterne'].map(k => [k, [0, 0]]));
   const L = { camp: 0, rang: 0, y0: 100, amp: 1.5, phase: 1.234, face: -1 };
-  const g = { boite, poutre, trait: () => { compte.traits++; }, surface: () => 0, etat: () => etat, j: (a, b) => { const q = Math.sin(a * 127.1 + b * 311.7) * 43758.5453; return q - Math.floor(q); }, K, prof: 6, pris: false, coupe: false, echelles };
+  const g = { boite, poutre, trait: () => { compte.traits++; }, surface: () => 0, etat: () => etat, j: (a, b) => { const q = Math.sin(a * 127.1 + b * 311.7) * 43758.5453; return q - Math.floor(q); }, K, prof: 6, pris: false, coupe: false, echelles, texture };
   const t0 = now();
   for (let k = 0; k < n; k++) ouvrageTroncon(g, { x0: k * 25, x1: k * 25 + 25 }, L, niveau);
   return { triangles: compte.sommets / 3, traits: compte.traits, ms: now() - t0 };

@@ -39,7 +39,7 @@ import { JOURNAL } from './labo-journal.js?v=0.91.0';
 import { loadVersion } from './lib/app-update.js?v=0.91.0';
 import { maquetteEffets, maquetteAmbiance, maquetteEspace } from './labo-son.js?v=0.91.0';
 import { calqueMoral } from './labo-moral.js?v=0.91.0';
-import { maquetteTranchees, NOTES_TRANCHEES, NOMS_TRANCHEES } from './labo-tranchees.js?v=0.91.0';
+import { maquetteTranchees, NOTES_TRANCHEES, NOMS_TRANCHEES, NOTES_PRES, NOMS_PRES } from './labo-tranchees.js?v=0.91.0';
 
 document.documentElement.style.setProperty('--jeu-accent', ROLES.accent);
 const NOM = document.title.replace(/^Labo — /, ''); // le nom vient de la page (une apostrophe ne casse rien)
@@ -461,6 +461,12 @@ const GROUPES = [
       { title: NOMS_TRANCHEES.A, status: 'actuelle', depuis: '0.88.1', note: `${NOTES_TRANCHEES.A} Trois tronçons de la première ligne : intact, légèrement détruit (six 75 et deux 155), complètement détruit (quatorze 155 et six 75) ; chacun dit son état et sa solidité (la barre du coin de l'écran, v0.84.0). Le tableau dessous donne le coût de chaque niveau et le bouton « Mesurer dans la scène » le dessin entier.`, render: s => maquetteTranchees(s, R, 'A') },
       ...['B', 'C', 'D'].map(c => ({ title: NOMS_TRANCHEES[c], status: 'retenue', depuis: '0.88.1', note: `En jeu (v0.88.1) selon le zoom. ${NOTES_TRANCHEES[c]}`, render: s => maquetteTranchees(s, R, c) })),
       { title: NOMS_TRANCHEES.E, status: 'ancienne', depuis: '0.88.1', note: NOTES_TRANCHEES.E, render: s => maquetteTranchees(s, R, 'E') },
+    ] },
+    { id: 'tranchees-pres', title: 'Les tranchées de près', variants: [
+      { title: NOMS_PRES.P1, status: 'actuelle', depuis: '0.91.0', note: `${NOTES_PRES.P1} Le niveau 3 à 32 pixels par mètre (trois crans de zoom de plus : 24, 32, 48), l'échelle au milieu, des hommes dans la tranchée pour l'échelle. Boutons : la texture à comparer sur place, un détail à aller voir (l'échelle, le parapet, une meurtrière, le caillebotis, un abri, le fil téléphonique, le clayonnage), l'état de la tranchée (intacte, abîmée, détruite).`, render: s => maquetteTranchees(s, R, 'P1') },
+      { title: NOMS_PRES.P2, status: 'a-trancher', depuis: '0.91.0', note: NOTES_PRES.P2, render: s => maquetteTranchees(s, R, 'P2') },
+      { title: NOMS_PRES.P3, status: 'a-trancher', depuis: '0.91.0', note: NOTES_PRES.P3, render: s => maquetteTranchees(s, R, 'P3') },
+      { title: NOMS_PRES.P0, status: 'ancienne', depuis: '0.91.0', note: NOTES_PRES.P0, render: s => maquetteTranchees(s, R, 'P0') },
     ] },
     { id: 'ponts', title: 'Les ponts', variants: [
       { title: 'Le tablier du jeu', status: 'actuelle', depuis: '0.47.1', note: 'Ce que l\'éditeur de carte pose aujourd\'hui (v0.44.0) : un tablier de planches de 6 m sur l\'eau, une seule hauteur qui part de la rive la plus haute (v0.47.1). Pleine masse en cubes : l\'eau ne passe pas dessous, un obus le coupe. Les dix suivantes sont des ouvrages en volumes, au-dessus d\'un fleuve de 16 m dont l\'eau passe dessous.', render: s => maquettePonts(s, R, 'A') },

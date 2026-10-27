@@ -14,7 +14,7 @@ export function creerVegetation({ THREE, scene, col, camera, vue, solY: SOL_Y, d
   const { geometrieArbre, geometrieBuisson, geometrieBuissonVarie, geometrieTroncs, geometrieTroncLoin, geometrieFeuilles, geometrieAbattuLong } = creerGeometries(THREE, col);
   // `arbres` : null, les arbres d'avant (un tronc, quatre branches) ; sinon (labo « Des arbres plus variés ») `{ formes, feuilles, chute, abattus }` : des familles de formes, des feuilles
   // selon la saison (`saison()` rend l'horloge de la bataille ou null), la chute des feuilles au fil des jours, les abattus longs. `ppm()` : les pixels par mètre du zoom.
-  let opts = optsArbres, forcee = null, trisArbres = 0, msArbres = 0;
+  let opts = optsArbres, forcee = null, trisArbres = 0, nbArbres = 0, msArbres = 0;
   // ─── Les arbres : un tronc, quelques branches nues ; abattus, une souche ───
   const arbresMesh = [];
   // le vent (Jérôme, v0.84.0) : sa force × son sens (x, z), lu par l'herbe, les roseaux et les arbres ; (0, 0) : l'air est calme (le labo, et d'avant)
@@ -49,13 +49,21 @@ export function creerVegetation({ THREE, scene, col, camera, vue, solY: SOL_Y, d
       arbresMesh.push(m); scene.add(m);
     }
   }
-  // un objet posé en (x, z) tombe-t-il dans l'écran (avec une marge pour sa hauteur) ?
-  const dansLaVue = (x, z, e, b) => {
+  // un objet posé en (x, z), haut de `h` m et large de `r` m de rayon, tombe-t-il dans l'écran (avec une marge) ? Son pied ET son sommet comptent : un arbre dont le pied est sorti par le bas
+  // de l'écran garde sa cime à l'écran (v0.91.0, Jérôme : « les éléments au premier plan disparaissent » : le pied seul, avec 30 % de marge, retirait un arbre de 9 m dont le pied était à 60 pixels
+  // sous l'écran, alors qu'à 16 px/m sa cime y montait de 85 à 110 pixels) ; la marge de côté suit son rayon
+  const dansLaVue = (x, z, e, b, h = 0, r = 0) => {
     if (x < b[0] || x > b[1] || z < b[2] || z > b[3]) return false;
     const hs = surface(x, z);        // (à sa vraie hauteur : une colline du premier plan monte à l'écran, v0.73.1)
-    const cxp = e[0] * x + e[4] * hs + e[8] * z + e[12], cyp = e[1] * x + e[5] * hs + e[9] * z + e[13], cw = e[3] * x + e[7] * hs + e[11] * z + e[15];
-    return cxp > -1.15 * cw && cxp < 1.15 * cw && cyp > -1.3 * cw && cyp < 1.3 * cw;
+    const cw = e[3] * x + e[7] * hs + e[11] * z + e[15], rx = r * Math.hypot(e[0], e[8]);
+    const cxp = e[0] * x + e[4] * hs + e[8] * z + e[12], cyp = e[1] * x + e[5] * hs + e[9] * z + e[13];
+    if (!h) return cxp > -1.15 * cw - rx && cxp < 1.15 * cw + rx && cyp > -1.3 * cw && cyp < 1.3 * cw;
+    const ht = hs + h, cwt = e[3] * x + e[7] * ht + e[11] * z + e[15], cxt = e[0] * x + e[4] * ht + e[8] * z + e[12], cyt = e[1] * x + e[5] * ht + e[9] * z + e[13], rxt = r * Math.hypot(e[0], e[8]);
+    if (!((cxp > -1.15 * cw - rx && cxp < 1.15 * cw + rx) || (cxt > -1.15 * cwt - rxt && cxt < 1.15 * cwt + rxt))) return false;
+    return !((cyp < -1.3 * cw && cyt < -1.3 * cwt) || (cyp > 1.3 * cw && cyt > 1.3 * cwt));      // le segment pied-sommet touche la bande de l'écran
   };
+  // la hauteur et le rayon qu'on lui donne pour la vue : un arbre (cime comprise ; les arbres variés : leur hauteur, au plus ×1,5 pour les grands, et la couronne)
+  const ARBRE_RAYON = 5;
   // les arbres et les buissons : seulement ceux qu'on voit (tous, ils coûtaient des dizaines de milliers de triangles)
   function majArbres(e, b) {
     const t0 = performance.now();
@@ -73,7 +81,7 @@ export function creerVegetation({ THREE, scene, col, camera, vue, solY: SOL_Y, d
     for (const m of arbresMesh) {
       let n = 0;
       for (const a of T.arbres) {
-        if (a.abattu !== m.userData.abattu || a.v !== m.userData.v || loin(a) !== m.userData.loin || !dansLaVue(a.i + 0.5, a.j + 0.5, e, b)) continue;
+        if (a.abattu !== m.userData.abattu || a.v !== m.userData.v || loin(a) !== m.userData.loin || !dansLaVue(a.i + 0.5, a.j + 0.5, e, b, a.abattu ? 2 : 6 + a.v + 3, ARBRE_RAYON)) continue;
         const y = surface(a.i + 0.5, a.j + 0.5);
         m4.makeTranslation(a.i + 0.5, y, a.j + 0.5);
         m.setMatrixAt(n++, m4);
@@ -173,7 +181,7 @@ export function creerVegetation({ THREE, scene, col, camera, vue, solY: SOL_Y, d
     };
     for (let k = 0; k < T.arbres.length; k++) {
       const a = T.arbres[k], inf = infos[k];
-      if (!dansLaVue(a.i + 0.5, a.j + 0.5, e, b)) continue;
+      if (!dansLaVue(a.i + 0.5, a.j + 0.5, e, b, a.abattu ? 2 : inf.H * 1.3, ARBRE_RAYON)) continue;
       const loin = (a.i - cp.x) ** 2 + (SOL_Y - cp.y) ** 2 + (a.j - cp.z) ** 2 > lim;       // (le détail à tous les zooms : seuls les arbres au-delà de la portée n'ont qu'un cube)
       const x = a.i + 0.5, z = a.j + 0.5, y = surface(x, z);
       if (a.abattu) mettre(abattuMesh[loin ? 1 : 0], x, y, z, { ...inf, sx: 0.85 + inf.d * 0.3, sy: 0.85 + inf.d * 0.3 });
@@ -185,8 +193,8 @@ export function creerVegetation({ THREE, scene, col, camera, vue, solY: SOL_Y, d
       }
       if (o < ARBRES_OMBRES && !loin) { aoPos[o * 4] = x; aoPos[o * 4 + 1] = y; aoPos[o * 4 + 2] = z; aoPos[o * 4 + 3] = a.abattu ? 1.2 : inf.H; o++; }
     }
-    trisArbres = 0;
-    for (const m of arbresMesh) { m.count = m.userData.n; m.instanceMatrix.needsUpdate = true; trisArbres += m.count * m.userData.tri; }
+    trisArbres = 0; nbArbres = 0;
+    for (const m of arbresMesh) { m.count = m.userData.n; m.instanceMatrix.needsUpdate = true; trisArbres += m.count * m.userData.tri; nbArbres += m.count; }
     const at = aoGeo.attributes.aPos; at.clearUpdateRanges(); at.addUpdateRange(0, o * 4); at.needsUpdate = true;
     aoGeo.instanceCount = soleil.lengthSq() > 0.01 && !pose ? o : 0;
   }
@@ -234,7 +242,7 @@ export function creerVegetation({ THREE, scene, col, camera, vue, solY: SOL_Y, d
       for (const m of buissonsMesh) m.count = 0;
       for (let k = 0; k < T.buissons.length; k++) {
         const b = T.buissons[k], inf = infosB[k];
-        if (b.detruit || !dansLaVue(b.i + 0.5, b.j + 0.5, e, bornes)) continue;
+        if (b.detruit || !dansLaVue(b.i + 0.5, b.j + 0.5, e, bornes, 3, 3)) continue;
         const m = buissonsMesh[inf.f], s = (0.85 + 0.2 * b.v) * (0.9 + 0.2 * inf.t), c = [1, 0, -1, 0][inf.rot], sn = [0, 1, 0, -1][inf.rot];
         m4.set(c * s, 0, sn * s, b.i + 0.5, 0, s, 0, surface(b.i + 0.5, b.j + 0.5), -sn * s, 0, c * s, b.j + 0.5, 0, 0, 0, 1);
         m.setMatrixAt(m.count++, m4);
@@ -245,7 +253,7 @@ export function creerVegetation({ THREE, scene, col, camera, vue, solY: SOL_Y, d
     for (const m of buissonsMesh) {
       let n = 0;
       for (const b of T.buissons) {
-        if (b.detruit || b.v !== m.userData.v || !dansLaVue(b.i + 0.5, b.j + 0.5, e, bornes)) continue;
+        if (b.detruit || b.v !== m.userData.v || !dansLaVue(b.i + 0.5, b.j + 0.5, e, bornes, 3, 3)) continue;
         m4.makeTranslation(b.i + 0.5, surface(b.i + 0.5, b.j + 0.5), b.j + 0.5);
         m.setMatrixAt(n++, m4);
       }
@@ -371,6 +379,7 @@ export function creerVegetation({ THREE, scene, col, camera, vue, solY: SOL_Y, d
     setTemps(t) { herbeMat.uniforms.uT.value = t; vent.uTV.value = t; if (roseauMat) roseauMat.uniforms.uT.value = t * 1.3; },                              // le vent
     setVent(x, z) { vent.uVent.value.set(x, z); },                                                       // sa force × son sens
     get vuesHerbe() { return vuesHerbe; },
+    get arbresVus() { return nbArbres; },                                        // les arbres dessinés à cette image (les arbres variés ; mesure du premier plan)
     get trianglesArbres() { return trisArbres; },                                // les triangles des arbres dessinés à cette image (pour les stats)
     get msArbres() { return msArbres; },                                         // le tri des arbres, ms par image (lissé)
     regler(o) { opts = o; if (terrain()) preparerArbres(); },
