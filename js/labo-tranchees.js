@@ -4,13 +4,13 @@
 // bout de tranchée est lu du sol, comme dans la bataille. A : le dessin du jeu (niveau 0). B, C, D : les niveaux 1, 2, 3 de `rendu/tranchee-modeles.js` (`rendu.niveauTranchees`), E : le niveau choisi selon le zoom.
 // Le coût : un tableau de la géométrie seule (triangles par tronçon et pour un secteur de 128 tronçons, temps de construction : `mesurerNiveau`, le même calcul que `outils/mesure-tranchees.mjs`) et un bouton
 // « Mesurer dans la scène » qui relève le dessin entier (triangles dessinés, temps jusqu'au bout) pour chaque niveau. Dans le jeu, `niveauTranchees` vaut 'auto'.
-import { impact } from './terrain.js?v=0.94.2';
-import { ligneY } from './tranchees.js?v=0.94.2';
-import { tronconSolidite } from './bataille.js?v=0.94.2';
-import { etatTranchee } from './tranchees.js?v=0.94.2';
-import { el, scene, texteSvg, maquette, bouton } from './labo-arcade.js?v=0.94.2';
-import { ZOOMS } from './rendu3d.js?v=0.94.2';
-import { NIVEAUX_TRANCHEES, mesurerNiveau } from './rendu/tranchee-modeles.js?v=0.94.2';
+import { impact } from './terrain.js?v=0.95.0';
+import { ligneY } from './tranchees.js?v=0.95.0';
+import { tronconSolidite } from './bataille.js?v=0.95.0';
+import { etatTranchee } from './tranchees.js?v=0.95.0';
+import { el, scene, texteSvg, maquette, bouton } from './labo-arcade.js?v=0.95.0';
+import { ZOOMS } from './rendu3d.js?v=0.95.0';
+import { NIVEAUX_TRANCHEES, mesurerNiveau } from './rendu/tranchee-modeles.js?v=0.95.0';
 
 export const NOTES_TRANCHEES = {
   A: 'En jeu (v0.88.1) : le niveau suit le zoom : la silhouette en dessous de 4 pixels par mètre, l\'ouvrage de 4 à 6, le détaillé à partir de 8. De loin presque rien, de près tout ; les échelles pour sortir sont là à tous les niveaux.',
@@ -22,12 +22,12 @@ export const NOTES_TRANCHEES = {
 // Les tranchées de près (Jérôme, v0.94.2 : « je ne vois pas bien les tranchées dans le labo : peut-on les avoir en gros plan avec différents effets de texture ? ») : la même scène au niveau 3, à 48 pixels par mètre
 // (trois crans de zoom de plus, 24, 32 et 48), avec la « texture » de `rendu/tranchee-modeles.js` : pas une image (le jeu est en dix tons) mais des tons, des joints, du grain, de l'usure.
 export const NOTES_PRES = {
-  P1: 'En jeu (v0.94.2) : un ton de la palette par sac et par planche, tiré de sa position : le dessin est moins uniforme, aucun triangle de plus.',
-  P2: 'Des joints entre les sacs, une ficelle sur le dessus, le grain des planches du caillebotis, le tressage du clayonnage : des traits fins en terre sombre. De près le dessin se lit comme une matière ; de loin il disparaît. Coûte environ 60 % de triangles de plus au niveau 3.',
-  P3: 'Les joints et le grain, plus l\'usure : de la boue au pied des sacs et sur les planches (les bottes), de la mousse (le vert de la palette) sur le dessus de certains sacs. La tranchée a servi. Coûte environ 80 % de triangles de plus au niveau 3.',
-  P0: 'Avant la v0.94.2 : des aplats, un seul ton par sorte d\'élément (tous les sacs pareils, toutes les planches pareilles).',
+  P3: 'En jeu (v0.95.0, Jérôme : « retiens la texture joints, grain et usure ») : les joints entre les sacs et une ficelle sur le dessus, le grain des planches du caillebotis, le tressage du clayonnage ; l\'usure : de la boue au pied des sacs et sur les planches (les bottes), de la mousse (le vert de la palette) sur le dessus de certains sacs. La tranchée a servi. Coûte environ 80 % de triangles de plus au niveau 3 que les aplats.',
+  P2: 'Non retenu (v0.95.0) : les joints et le grain sans l\'usure : joints entre les sacs, ficelle sur le dessus, grain des planches, tressage du clayonnage. Environ 60 % de triangles de plus au niveau 3.',
+  P1: 'En jeu de la v0.88.1 à la v0.94 : un ton de la palette par sac et par planche, tiré de sa position : moins uniforme que des aplats, aucun triangle de plus.',
+  P0: 'Avant la v0.88.1 : des aplats, un seul ton par sorte d\'élément (tous les sacs pareils, toutes les planches pareilles).',
 };
-export const NOMS_PRES = { P1: 'Tons variés', P2: 'Joints et grain', P3: 'Joints, grain et usure', P0: 'Aplats' };
+export const NOMS_PRES = { P3: 'Joints, grain et usure', P2: 'Joints et grain', P1: 'Tons variés', P0: 'Aplats' };
 // ce qu'on va voir de près : [nom, mètres depuis le début du tronçon]
 const DETAILS = [['L\'échelle', 9], ['Le parapet', 3], ['Une meurtrière', 5], ['Le caillebotis', 15], ['Un abri', 13], ['Le fil téléphonique', 12.5], ['Le clayonnage', 20]];
 export const NOMS_TRANCHEES = { A: 'Selon le zoom', B: 'Niveau 1 · Silhouette', C: 'Niveau 2 · Ouvrage', D: 'Niveau 3 · Détaillé', E: 'Le dessin d\'avant' };
@@ -81,17 +81,20 @@ export function maquetteTranchees(stage, R, cle) {
     ui.haut.append(el('br'), el('span', { textContent: 'Niveau dessiné : ' }), ...niveauBoutons);
     // aller voir un tronçon de près (le point visé se pose au milieu du tronçon)
     const voir = q => { if (!ctx0) return; const t = ctx0.B.troncons[ks[q]], L = ctx0.B.lignes[t.ligne], x = (t.x0 + t.x1) / 2; ctx0.rendu.vue.cx = x; ctx0.rendu.vue.cz = ligneY(L, x) - 2; };
-    ui.haut.append(el('br'), el('span', { textContent: 'Voir : ' }), ...ETATS.map(([nom], q) => bouton(nom, () => voir(q))), bouton('Les trois', () => voir(1)));
+    ui.haut.append(el('br'), el('span', { textContent: 'Voir : ' }), ...ETATS.map(([nom], q) => bouton(nom, () => voir(q))), bouton('Les trois (de loin)', () => { if (ctx0) { ctx0.rendu.vue.zoom = 5; voir(1); } }));
     // de près : les textures à comparer sur place, et les détails à aller voir (un état de tranchée, puis un détail)
     let etatVu = 0, detailVu = 9;
     const voirDetail = (q, dx) => { if (!ctx0) return; etatVu = q; detailVu = dx; const t = ctx0.B.troncons[ks[q]], L = ctx0.B.lignes[t.ligne], x = t.x0 + dx; ctx0.rendu.vue.cx = x; ctx0.rendu.vue.cz = ligneY(L, x) - 0.5; };
+    // un vrai obus sur le parapet qu'on regarde : les sacs sont jetés en l'air et retombent (v0.95.0), le tronçon s'abîme
+    const tirer = cal => { if (!ctx0) return; const t = ctx0.B.troncons[ks[etatVu]], L = ctx0.B.lignes[t.ligne], x = t.x0 + detailVu; ctx0.tirer(cal, x, ligneY(L, x) + L.face * 1.6, 0.2); };
+    ui.haut.append(el('br'), el('span', { textContent: 'Un obus sur le parapet : ' }), ...['75', '155', '220'].map(c => bouton(`Obus de ${c}`, () => tirer(c))));
     if (pres) {
       ui.haut.append(el('br'), el('span', { textContent: 'Texture : ' }), ...['P0', 'P3', 'P2', 'P1'].reverse().map(k => bouton(`${k[1]} · ${NOMS_PRES[k]}`, () => { if (ctx0) ctx0.rendu.textureTranchees = +k[1]; })),
         el('br'), el('span', { textContent: 'Voir de près : ' }), ...DETAILS.map(([nom, dx]) => bouton(nom, () => voirDetail(etatVu, dx))),
         el('br'), el('span', { textContent: 'État : ' }), ...ETATS.map(([nom], q) => bouton(nom, () => voirDetail(q, detailVu))));
     }
     const arret = scene(ui.stage, R, {
-      ennemi: false, yNous: 300, zoom: pres ? 10 : 5, cz: 213, libre: pres ? { yaw: 0.6, tangage: 0.9 } : { yaw: 0.32, tangage: 0.7 }, bloc: true,
+      ennemi: false, yNous: 300, zoom: pres ? 10 : 9, cz: 213, libre: { yaw: 0.6, tangage: 0.9 }, bloc: true,
       avant: ctx => {
         const { B, A } = ctx, M = B.etat.marges;
         // la première ligne de chez nous : trois tronçons de suite
@@ -125,7 +128,8 @@ export function maquetteTranchees(stage, R, cle) {
         const xm = B.troncons[ks[1]].x0 + TRONCONS / 2;
         rendu.vue.cx = xm; rendu.vue.cz = ligneY(L, xm) - 3;
         rendu.niveauTranchees = pres ? 3 : NIVEAU_DE[cle];
-        if (pres) { rendu.textureTranchees = +cle[1]; voirDetail(0, 9); }
+        if (pres) rendu.textureTranchees = +cle[1];
+        voirDetail(0, 9);
         ui.stage.append(el('p', { textContent: pres ? 'Le coût de la texture (la géométrie seule d\'un tronçon droit et plat) :' : 'Le coût de la géométrie seule (un tronçon droit et plat, sans le sol ni les soldats) :' }), pres ? tableauTextures() : tableauGeometrie(),
           el('p', {}, bouton('Mesurer dans la scène', () => mesurerScene(ctx, mesures))), mesures);
       },

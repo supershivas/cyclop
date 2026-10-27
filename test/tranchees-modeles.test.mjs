@@ -2,7 +2,7 @@
 import { nouvelleBataille, tronconSolidite, terrainResume } from '../js/bataille.js';
 import { impact } from '../js/terrain.js';
 import { ligneY, etatTranchee, ETATS_TRANCHEE } from '../js/tranchees.js';
-import { primitives, ouvrageTroncon, mesurerNiveau, niveauSelonZoom, NIVEAUX_TRANCHEES } from '../js/rendu/tranchee-modeles.js';
+import { primitives, ouvrageTroncon, mesurerNiveau, niveauSelonZoom, couchesDe, ORDRE_COUCHES, NIVEAUX_TRANCHEES } from '../js/rendu/tranchee-modeles.js';
 import { REGLAGES as R } from '../js/data/reglages.js';
 
 group('tranchées — niveaux de détail');
@@ -11,8 +11,8 @@ test('chaque niveau coûte plus que le précédent, et une tranchée détruite c
   for (const n of [1, 2, 3]) { assert.ok(tri(n, 2) >= tri(n, 1) && tri(n, 1) > tri(n, 0), `niveau ${n} : intact ≥ abîmé > détruit`); }
   assert.ok(tri(1, 2) < tri(2, 2) && tri(2, 2) < tri(3, 2));
 });
-test('le budget d\'un tronçon intact : au plus 150 triangles au niveau 1, 1 500 au niveau 2, 4 000 au niveau 3', () => {
-  const budget = { 1: 150, 2: 1500, 3: 4000 };
+test('le budget d\'un tronçon intact, avec la texture du jeu (joints, grain et usure) : au plus 150 triangles au niveau 1, 2 300 au niveau 2, 5 600 au niveau 3', () => {
+  const budget = { 1: 150, 2: 2300, 3: 5600 };
   for (const n of [1, 2, 3]) assert.ok(mesurerNiveau(n, 2, 8).triangles / 8 <= budget[n], `niveau ${n}`);
 });
 test('la géométrie est la même à chaque appel (aucun hasard : un hachage de la position)', () => {
@@ -95,4 +95,39 @@ test('chaque tronçon de ligne a ses échelles au pied desquelles la carte vaut 
 test('la carte se refait à l\'identique avec le terrain (rien à sauvegarder)', () => {
   const a = nouvelleBataille(5, structuredClone(R), { soldats: 200, jours: 3 }).terrain.echelle, b = nouvelleBataille(5, structuredClone(R), { soldats: 200, jours: 3 }).terrain.echelle;
   assert.deepEqual(a, b);
+});
+
+group('tranchées — le scintillement');
+// les faces de boîtes dans le même plan, tournées du même côté, de couleurs différentes : celles qui se disputent les pixels
+function paires(niveau, etat, texture, pris, face, tolerance) {
+  const noms = ORDRE_COUCHES, K = Object.fromEntries(noms.map(n => [n, [n + '/haut', n + '/flanc']])), Q = [];
+  const { boite, poutre } = primitives((a, b, c, d, col) => Q.push({ a, b, c, d, col }), couchesDe(K));
+  const hz = (a, b) => { const q = Math.sin(a * 127.1 + b * 311.7) * 43758.5453; return q - Math.floor(q); };
+  ouvrageTroncon({ boite, poutre, trait: () => {}, surface: () => 0, etat: () => etat, j: hz, K, prof: 6, pris, coupe: pris, texture }, { x0: 0, x1: 25 }, { camp: 0, rang: 0, y0: 50, amp: 1.5, phase: 2, face }, niveau);
+  const F = [];
+  for (const q of Q) {
+    const u = [q.b[0] - q.a[0], q.b[1] - q.a[1], q.b[2] - q.a[2]], v = [q.c[0] - q.a[0], q.c[1] - q.a[1], q.c[2] - q.a[2]], n = [u[1] * v[2] - u[2] * v[1], u[2] * v[0] - u[0] * v[2], u[0] * v[1] - u[1] * v[0]];
+    for (let ax = 0; ax < 3; ax++) {
+      const o = [0, 1, 2].filter(i => i !== ax), pts = [q.a, q.b, q.c, q.d];
+      if (Math.abs(n[ax]) > 1e-9 && o.every(i => Math.abs(n[i]) < 1e-9) && pts.every(p => Math.abs(p[ax] - q.a[ax]) < 1e-9))
+        F.push({ ax, sens: Math.sign(n[ax]), c: q.a[ax], u: [Math.min(...pts.map(p => p[o[0]])), Math.max(...pts.map(p => p[o[0]]))], v: [Math.min(...pts.map(p => p[o[1]])), Math.max(...pts.map(p => p[o[1]]))], col: q.col });
+    }
+  }
+  let n = 0;
+  for (let i = 0; i < F.length; i++) for (let k = i + 1; k < F.length; k++) {
+    const a = F[i], b = F[k];
+    if (a.ax !== b.ax || a.sens !== b.sens || Math.abs(a.c - b.c) > tolerance || a.col === b.col) continue;
+    if (Math.min(a.u[1], b.u[1]) - Math.max(a.u[0], b.u[0]) > 1e-3 && Math.min(a.v[1], b.v[1]) - Math.max(a.v[0], b.v[0]) > 1e-3) n++;
+  }
+  return n;
+}
+test('deux faces de couleurs différentes ne tombent presque jamais dans le même plan, du même côté (avant : 1 610 paires à 0,1 mm, après : moins de 200 à 1 mm)', () => {
+  let total = 0;
+  for (const niveau of [1, 2, 3]) for (const etat of [2, 1, 0]) for (const texture of [0, 1, 2, 3]) for (const pris of [false, true]) for (const face of [-1, 1]) total += paires(niveau, etat, texture, pris, face, 0.001);
+  assert.ok(total <= 200, `${total} paires`);
+});
+test('le plus gros des dangers, les joints, la boue et les sacs : plus aucune paire à 0,5 mm entre un sac et ce qui le recouvre', () => {
+  let total = 0;
+  for (const niveau of [2, 3]) for (const etat of [2, 1]) for (const texture of [2, 3]) total += paires(niveau, etat, texture, false, -1, 0.0005);
+  assert.ok(total <= 40, `${total} paires`);
 });

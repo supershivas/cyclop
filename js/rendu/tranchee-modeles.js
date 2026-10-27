@@ -11,8 +11,13 @@
 // La « texture » (v0.94.2 : « différents effets de texture ») : `g.texture` de 0 à 3, sans image (le jeu est en dix tons) : 0 des aplats (un ton par élément) ; 1 des tons variés d'un sac, d'une planche à l'autre (le jeu) ;
 // 2 des joints entre les sacs, une ficelle sur le dessus, le grain des planches, le tressage du clayonnage ; 3 l'usure : la boue au pied des sacs, sur les planches, la mousse sur le dessus des sacs.
 // À chaque niveau, l'état du bout de tranchée (creusée, à moitié comblée, comblée) change ce qui reste : en place, brisé et de travers, puis des éclats à terre.
-import { ligneY, demiLargeur } from '../tranchees.js?v=0.94.2';
-import { TRANCHEE_OUVRAGES } from '../data/tranchees.js?v=0.94.2';
+import { ligneY, demiLargeur } from '../tranchees.js?v=0.95.0';
+import { TRANCHEE_OUVRAGES } from '../data/tranchees.js?v=0.95.0';
+
+// L'ordre des couches : les sortes d'élément, des plus petites (les joints, la boue : des traits fins) aux plus grosses ; chaque rang grossit la sorte de 2 mm (voir `primitives`)
+export const ORDRE_COUCHES = ['sac', 'sac2', 'sac3', 'ombre', 'boue', 'mousse', 'eau', 'planche', 'planche2', 'madrier', 'terre', 'fascine', 'acier', 'lanterne'];
+const PAS_COUCHE = 0.002;
+export const couchesDe = K => new Map(ORDRE_COUCHES.filter(n => K[n]).map((n, i) => [K[n], i]));
 
 export const NIVEAUX_TRANCHEES = [
   { n: 1, nom: 'Silhouette', note: 'Le parapet en tranches de 5 m, deux traverses, un fil à deux brins. Ce qui se lit de loin, pour presque rien.' },
@@ -25,9 +30,14 @@ export const niveauSelonZoom = p => (p >= 8 ? 3 : p >= 4 ? 2 : 1);
 
 /* Les deux volumes dont tout est fait : la boîte (dessus et quatre flancs, 10 triangles : comme celle du jeu) et la poutre (un prisme carré de demi-côté e d'un point à un autre :
    les montants penchés, les planches qui pendent, les échelles couchées ; quatre flancs et un bout, 10 triangles). `quad(a, b, c, d, couleur)` écrit deux triangles. */
-export function primitives(quad) {
+export function primitives(quad, couches = null) {
+  // Contre le scintillement (Jérôme, v0.95.0 : « des scintillements sur certaines faces des sacs de sable ») : deux faces dans le même plan, tournées du même côté et de couleurs différentes (le bout d'une
+  // lisse contre celui de la banquette, un joint contre un sac, le montant et la planche du caillebotis qui tombent sur le même mètre) se disputent chaque pixel et clignotent quand la caméra bouge. Chaque sorte
+  // d'élément (`couches` : la table de `couchesDe(K)`) grossit donc d'un cran de 2 mm par côté et par rang (jusqu'à 2,6 cm pour le dernier) : deux sortes différentes ne tombent jamais dans le même plan, à 2 mm près au moins
+  // (la précision de profondeur d'une carte graphique est de 0,3 mm à 50 m, 1,2 à 100 m, 2,7 à 150 m : plus loin, un sac est sous le pixel).
   const boite = (x0, x1, y0, y1, z0, z1, k) => {
-    const [haut, flanc] = k;
+    const [haut, flanc] = k, e = couches ? (couches.get(k) ?? 0) * PAS_COUCHE : 0;
+    if (e) { if (x0 <= x1) { x0 -= e; x1 += e; } else { x0 += e; x1 -= e; } if (z0 <= z1) { z0 -= e; z1 += e; } else { z0 += e; z1 -= e; } y1 += e; }
     quad([x0, y1, z0], [x0, y1, z1], [x1, y1, z1], [x1, y1, z0], haut);
     quad([x0, y0, z1], [x1, y0, z1], [x1, y1, z1], [x0, y1, z1], flanc);
     quad([x1, y0, z1], [x1, y0, z0], [x1, y1, z0], [x1, y1, z1], flanc);
@@ -59,7 +69,7 @@ export function ouvrageTroncon(g, tr, L, niveau) {
   const f = L.face, cote = (g.pris ? -1 : 1) * f, haut = g.prof * 0.25, x0 = tr.x0, x1 = tr.x1, premiere = L.rang === 0;
   const zc = x => ligneY(L, x), dm = x => demiLargeur(L, x);
   // Des tons qui varient d'un sac, d'une planche à l'autre (la « texture » sans image : une couleur de la palette par élément, tirée du hachage de sa position ; aucun triangle de plus)
-  const tex = g.texture ?? 1;
+  const tex = g.texture ?? 3;
   const tonSac = j => (!tex ? K.sac : j < 0.34 ? K.sac : j < 0.67 ? K.sac2 : K.sac3), tonBois = j => (!tex ? K.planche : j < 0.34 ? K.planche : j < 0.67 ? K.planche2 : K.madrier);
   const zp = x => zc(x) + cote * (dm(x) + 0.55);          // l'axe du parapet (du côté de l'ennemi, ou de l'autre quand le tronçon est pris)
   const zd = x => zc(x) - cote * (dm(x) + 0.55);          // l'axe du parados
@@ -68,6 +78,7 @@ export function ouvrageTroncon(g, tr, L, niveau) {
   // ─── les sacs de sable ───
   if (niveau === 1) pas(x0, x1, 5, (a, b, xs) => {
     const e = etat(xs), j = hz(xs, 1), z = zp(xs), h = surface(xs, z);
+    if (g.manque?.(xs, z)) return;
     if (e === 2) boite(a, b, h, h + 0.5, z - 0.35, z + 0.35, K.sac);
     else if (e === 1) boite(a, a + (b - a) * (0.4 + 0.5 * j), h, h + 0.25, z - 0.35, z + 0.35, K.sac);
     else if (j < 0.5) boite(a + 1, a + 2.3, h, h + 0.2, z - 0.3, z + 0.3, K.sac2);
@@ -76,6 +87,7 @@ export function ouvrageTroncon(g, tr, L, niveau) {
     const p = niveau === 3 ? 0.9 : 1.6, assises = niveau === 3 ? 3 : 2;
     pas(x0, x1, p, (a, b, xs) => {
       const e = etat(xs), j = hz(xs * 1.7, 2), z = zp(xs), h = surface(xs, z), t = tonSac(j);
+      if (g.manque?.(xs, z)) return;                                      // un obus les a projetés (rendu/troncons.js, `projeterSacs`)
       if (e === 0) { if (j < 0.3) boite(a, b - 0.1, h, h + 0.22, z + (j - 0.15) * 3 - 0.2, z + (j - 0.15) * 3 + 0.2, K.sac2); return; }
       const a1 = 0.25 + 0.06 * j, l = b - a;
       boite(a, b, h, h + a1, z - 0.25, z + 0.25, t);
@@ -157,7 +169,7 @@ export function ouvrageTroncon(g, tr, L, niveau) {
       if (e === 0) return;
       const h = surface(xs, zc(xs));
       for (const s of [-1, 1]) {
-        const z = zc(xs) + s * (dm(xs) + 0.04), j2 = hz(xs, s * 3.3);
+        const z = zc(xs) + s * (dm(xs) + 0.07), j2 = hz(xs, s * 3.3);
         if (e === 2) for (let k = 0; k < 3; k++) boite(a, b - 0.1, h + k * 0.4, h + k * 0.4 + 0.33, z - 0.04, z + 0.04, K.fascine);
         else if (j2 > 0.55) { boite(a, b - 0.1, h, h + 0.33, z - 0.04, z + 0.04, K.fascine); if (j2 > 0.8) boite(a, b - 0.1, h + 0.4, h + 0.73, z - 0.04, z + 0.04, K.fascine); }
         else if (j2 < 0.25 && j > 0.4) poutre(a, h + 0.9, z, b - 0.1, h + 0.2, z - s * 0.6, 0.05, K.fascine);
@@ -184,7 +196,7 @@ export function ouvrageTroncon(g, tr, L, niveau) {
       if (e === 0) { if (j < 0.25) boite(a, a + 0.5, h + 0.02, h + 0.07, z - d * 0.6 + j, z + d * 0.5, K.planche); return; }
       if (e === 1 && j < 0.5) return;
       boite(a, a + 0.5, h + 0.02, h + 0.09, z - d * (e === 2 ? 0.95 : 0.5), z + d * (e === 2 ? 0.95 : 0.3), tonBois(j));
-      if (tex >= 2) { const zlo = z - d * (e === 2 ? 0.95 : 0.5), zhi = z + d * (e === 2 ? 0.95 : 0.3); for (const u of [0.15, 0.33]) boite(a + u, a + u + 0.02, h + 0.09, h + 0.097, zlo, zhi, K.ombre); if (tex >= 3 && hz(xs, 16) > 0.55) boite(a, a + 0.5, h + 0.09, h + 0.105, zlo + 0.2, zhi - 0.3, K.boue); }       // le grain ; la boue des bottes
+      if (tex >= 2) { const zlo = z - d * (e === 2 ? 0.95 : 0.5), zhi = z + d * (e === 2 ? 0.95 : 0.3); for (const u of [0.15, 0.33]) boite(a + u, a + u + 0.02, h + 0.09, h + 0.115, zlo, zhi, K.ombre); if (tex >= 3 && hz(xs, 16) > 0.55) boite(a, a + 0.5, h + 0.09, h + 0.105, zlo + 0.2, zhi - 0.3, K.boue); }       // le grain ; la boue des bottes
     });
     if (niveau === 3) pas(x0, x1, 5, (a, b, xs) => {
       const e = etat(xs), z = zc(xs), h = surface(xs, z);
@@ -267,8 +279,8 @@ export function ouvrageTroncon(g, tr, L, niveau) {
    (2 intact, 1 abîmé, 0 détruit). Le même résultat dans Node et dans le labo (`ms` : le temps de construction de la géométrie seulement). */
 export function mesurerNiveau(niveau, etat, n = 1, now = () => 0, echelles = undefined, texture = undefined) {
   const compte = { sommets: 0, traits: 0 };
-  const { boite, poutre } = primitives(() => { compte.sommets += 6; });
   const K = Object.fromEntries(['sac', 'sac2', 'sac3', 'planche2', 'boue', 'mousse', 'planche', 'madrier', 'terre', 'fascine', 'acier', 'eau', 'ombre', 'lanterne'].map(k => [k, [0, 0]]));
+  const { boite, poutre } = primitives(() => { compte.sommets += 6; }, couchesDe(K));
   const L = { camp: 0, rang: 0, y0: 100, amp: 1.5, phase: 1.234, face: -1 };
   const g = { boite, poutre, trait: () => { compte.traits++; }, surface: () => 0, etat: () => etat, j: (a, b) => { const q = Math.sin(a * 127.1 + b * 311.7) * 43758.5453; return q - Math.floor(q); }, K, prof: 6, pris: false, coupe: false, echelles, texture };
   const t0 = now();

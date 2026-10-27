@@ -1,10 +1,10 @@
 // Ce que l'état des tronçons montre sur le terrain : les fanions (à la couleur de celui qui tient le tronçon, déchirés quand l'autre
 // camp y est entré), le clignotement d'un ordre et la surbrillance de la visée, les ouvrages des tranchées (traverses, sacs de terre,
 // fil de fer, bois). Le dessin seulement : tout se lit de l'état, rien n'en est sauvegardé.
-import { PALETTE } from '../palette.js?v=0.94.2';
-import { ligneY, demiLargeur } from '../tranchees.js?v=0.94.2';
-import { TOITS } from '../data/nids.js?v=0.94.2';
-import { primitives, ouvrageTroncon, niveauSelonZoom } from './tranchee-modeles.js?v=0.94.2';
+import { PALETTE } from '../palette.js?v=0.95.0';
+import { ligneY, demiLargeur } from '../tranchees.js?v=0.95.0';
+import { TOITS } from '../data/nids.js?v=0.95.0';
+import { primitives, ouvrageTroncon, niveauSelonZoom, couchesDe } from './tranchee-modeles.js?v=0.95.0';
 
 // `THREE`, `scene`, `col` (une couleur de la palette), `surface(x, z)` (la hauteur du sol), `projeter()` (le centre de la vue et les pixels par mètre),
 // `vue`, `zooms` viennent de creerRendu ; `bataille()`, `tAnim()` (le temps du dessin), `vide()` (rien n'est dessiné) et `survolTroncons()`
@@ -43,7 +43,11 @@ export function creerTroncons({ THREE, scene, col, surface, projeter, vue, zooms
     fanP = fanF = null; fanEtat = [];
     const n = B.troncons?.length || 0;
     if (!n) return;
-    const plan = new THREE.PlaneGeometry(1, 1);          // deux triangles : 128 fanions ne doivent presque rien coûter (des boîtes : +3 000 triangles, +10 ms tout dézoomé)
+    // le mât (Jérôme, v0.95.0 : « les drapeaux sont encore mal accrochés à leur mât ») : deux rubans croisés à angle droit, quatre triangles : un seul ruban, vu de profil (le drapeau tourne avec le vent), disparaissait et le drapeau
+    // flottait seul ; des boîtes coûteraient +3 000 triangles et +10 ms tout dézoomé
+    const plan = new THREE.BufferGeometry();
+    plan.setAttribute('position', new THREE.BufferAttribute(new Float32Array([-0.5, -0.5, 0, 0.5, -0.5, 0, 0.5, 0.5, 0, -0.5, 0.5, 0, 0, -0.5, -0.5, 0, -0.5, 0.5, 0, 0.5, 0.5, 0, 0.5, -0.5]), 3));
+    plan.setIndex([0, 1, 2, 0, 2, 3, 4, 5, 6, 4, 6, 7]);
     fanP = new THREE.InstancedMesh(plan, new THREE.MeshBasicMaterial({ color: new THREE.Color(PALETTE.t), side: THREE.DoubleSide }), n);
     // le drapeau (Jérôme, v0.91.2 : « accrochés au mât et se déformer au vent ») : cinq bandes, le bord du mât en x = 0 et le haut du drapeau en y = 0 ; le nuanceur le plie (voir `fanMatVent`), en mètres, avec sa taille par instance (`aTaille` : largeur, hauteur, déchiré)
     const drap = new THREE.PlaneGeometry(1, 1, 5, 1).translate(0.5, 0.5, 0);
@@ -114,7 +118,7 @@ export function creerTroncons({ THREE, scene, col, surface, projeter, vue, zooms
   // le bois des tranchées (v0.80.0) : les planches (claires, `h` sur `g`) et les madriers (sombres, `g` sur `s`)
   const cPlancheH = col('h'), cPlancheB = col('g'), cMadrierH = col('g'), cMadrierB = col('s'), cSac2H = col('h'), cSac2B = col('b'), cFilH = col('r'), cFilB = col('g');
   // Les niveaux de détail des tranchées (Jérôme, v0.84.0 ; en jeu depuis la v0.88.1 : « mets le niveau selon le zoom dans le jeu ») : 'auto' (le défaut) : le niveau suit le zoom (niveauSelonZoom : 1, 2 puis 3) ; 1 à 3 un niveau fixe (labo) ; 0 le dessin d'avant la v0.88.1 (gardé au labo)
-  let niveauReglage = 'auto', textureReglage = 1;       // textureReglage : de 0 (aplats) à 3 (usure), voir tranchee-modeles.js ; 1 : le jeu
+  let niveauReglage = 'auto', textureReglage = 3;       // textureReglage : de 0 (aplats) à 3 (joints, grain et usure), voir tranchee-modeles.js ; 3 : le jeu (v0.95.0, Jérôme : « retiens la texture joints, grain et usure dans le jeu »)
   // Au niveau 0 (le jeu) les tampons gardent leur taille d'avant (8 000 boîtes, 24 000 sommets de fil : ce qui dépasse n'est pas dessiné, comme avant) ; ils ne grandissent qu'aux niveaux 1 à 3
   let niveauCourant = 0;
   const grandir = (v, n) => {                                   // de la place pour n sommets de plus dans les tampons des ouvrages (on recopie ce qui est déjà écrit)
@@ -245,9 +249,9 @@ export function creerTroncons({ THREE, scene, col, surface, projeter, vue, zooms
     };
     // le contexte des niveaux de détail : l'état d'un bout de tranchée (`etatDe`, plus bas) et un hachage, comme pour le bois
     const quadN = (a, b, c, d, k) => { if (grandir(nv, 6)) quad(a, b, c, d, k); };
-    const { boite: boiteN, poutre } = primitives(quadN);
+    const { boite: boiteN, poutre } = primitives(quadN, couchesDe(couleursN()));
     let Lcourante = null;
-    const gTr = { boite: boiteN, poutre, trait, surface, etat: x => etatDe(Lcourante, x), j: hachage, K: niveau ? couleursN() : null, prof, pris: false, coupe: false, texture: textureReglage };
+    const gTr = { boite: boiteN, poutre, trait, surface, etat: x => etatDe(Lcourante, x), j: hachage, K: niveau ? couleursN() : null, prof, pris: false, coupe: false, texture: textureReglage, manque: (x, z) => trous.some(t => (x - t.x) ** 2 + (z - t.z) ** 2 < t.r * t.r) };
     nDessines.length = 0;
     B.troncons.forEach((tr, t) => {
       const L = B.lignes[tr.ligne], xm = (tr.x0 + tr.x1) / 2, zc = ligneY(L, xm);
@@ -323,7 +327,7 @@ export function creerTroncons({ THREE, scene, col, surface, projeter, vue, zooms
       const y0 = surface(f.x, f.z);
       const gros = Math.max(1, 3 / Math.max(p, 1));              // de loin, un fanion doit encore faire un pixel
       // la hampe (3 m), puis le drapeau (1,3 × 0,8 m)
-      fanS.set(0.12 * gros, 3, 1); fanV.set(f.x, y0 + 1.5, f.z);
+      fanS.set(0.12 * gros, 3, 0.12 * gros); fanV.set(f.x, y0 + 1.5, f.z);
       fanMat.compose(fanV, fanQ.identity(), fanS); fanP.setMatrixAt(k, fanMat);
       // le haut du drapeau est au haut du mât (3 m) quand il est monté, à 2,5 m plus bas quand il est amené ; il part de l'axe du mât et regarde dans le sens du vent (tournée de -cap)
       const w = (dechire ? 0.6 : 1.3) * gros, h = (dechire ? 0.5 : 0.8) * gros;
@@ -338,14 +342,63 @@ export function creerTroncons({ THREE, scene, col, surface, projeter, vue, zooms
     fanP.visible = fanF.visible = !vide();
   }
 
+  // ─── Les sacs de sable projetés par les obus (Jérôme, v0.95.0 : « les sacs de sable sont aussi projetés lors des bombardements ») : un obus qui tombe près d'une tranchée jette des sacs en l'air (des boîtes de 84 × 25 × 44 cm
+  // qui retombent en tournant et restent à terre une vingtaine de secondes) et ceux du parapet, à moins de son rayon, ne sont plus dessinés (`trous`) : le dessin seulement, rien de l'état. Pas de `Math.random` : un hachage
+  // de la position du coup et du numéro du sac (la même chute à chaque lancement, comme les images de test). ───
+  const SACS_MAX = 192, sacsVol = [], trous = [];
+  let sacMesh = null, sacCoups = 0;
+  const SAC_PAR_CALIBRE = { '75': [5, 2.5, 6], '155': [9, 4, 9], '220': [14, 6, 12] };      // [sacs jetés, rayon où les sacs du parapet disparaissent (m), portée où l'on cherche une tranchée (m)]
+  const grainSac = (a, b) => { const q = Math.sin(a * 12.9898 + b * 78.233) * 43758.5453; return q - Math.floor(q); };
+  function projeterSacs(x, z, cal) {
+    const B = bataille(), C = SAC_PAR_CALIBRE[cal];
+    if (!B || !C || !B.etat.tranchees) return;
+    let L = null, d = C[2];
+    for (const l of B.lignes) { const e = Math.abs(ligneY(l, x) - z); if (e < d) { d = e; L = l; } }
+    if (!L) return;                                                // aucune tranchée à portée : pas de sacs
+    trous.push({ x, z: ligneY(L, x) + L.face * 2, r: C[1] }); while (trous.length > 240) trous.shift();
+    if (!sacMesh) {
+      sacMesh = new THREE.InstancedMesh(new THREE.BoxGeometry(0.84, 0.25, 0.44), new THREE.MeshBasicMaterial({ color: 0xffffff }), SACS_MAX);
+      sacMesh.frustumCulled = false; sacMesh.renderOrder = 1; sacMesh.count = 0; scene.add(sacMesh);
+    }
+    const tons = [col('g'), col('h'), col('b')];
+    for (let k = 0; k < C[0]; k++) {
+      const g1 = grainSac(x + k * 1.7, z + sacCoups), g2 = grainSac(z * 3.1 + k, x * 1.3 + sacCoups), g3 = grainSac(k * 5.3 + sacCoups, x + z), g4 = grainSac(x * 0.7 + k, z * 0.9 + sacCoups * 2);
+      const sx = x + (g1 - 0.5) * C[2], sz = ligneY(L, sx) + L.face * 2, dx = sx - x, dz = sz - z, dl = Math.hypot(dx, dz) || 1, v = 3 + g2 * (cal === '75' ? 3 : cal === '155' ? 5 : 7);
+      sacsVol.push({ x: sx, y: surface(sx, sz) + 0.4, z: sz, vx: dx / dl * v + (g3 - 0.5) * 2, vy: 4 + g4 * (cal === '75' ? 5 : cal === '155' ? 8 : 11), vz: dz / dl * v + (g4 - 0.5) * 2, ax: g1 * 6, ay: g2 * 6, wx: (g3 - 0.5) * 12, wy: (g4 - 0.5) * 12, vol: true, repos: 0, ton: tons[(k + sacCoups) % 3] });
+    }
+    sacCoups++; ouvT = Math.min(ouvT, 0.1);                         // les ouvrages se refont tout de suite : les sacs jetés ne sont plus sur le parapet
+    while (sacsVol.length > SACS_MAX) sacsVol.shift();
+  }
+  const sacM = new THREE.Matrix4(), sacQ = new THREE.Quaternion(), sacE = new THREE.Euler(), sacP = new THREE.Vector3(), sacS = new THREE.Vector3();
+  function majSacs(dt) {
+    if (!sacMesh) return;
+    for (let k = sacsVol.length - 1; k >= 0; k--) {
+      const s = sacsVol[k];
+      if (s.vol) {
+        s.vy -= 9.8 * dt; s.x += s.vx * dt; s.y += s.vy * dt; s.z += s.vz * dt; s.ax += s.wx * dt; s.ay += s.wy * dt;
+        const sol = surface(s.x, s.z) + 0.13;
+        if (s.y <= sol && s.vy < 0) { s.y = sol; s.vol = false; s.ax = 0; s.vx = s.vy = s.vz = 0; }       // il se pose à plat
+      } else if ((s.repos += dt) > 24) sacsVol.splice(k, 1);          // il reste à terre vingt-quatre secondes (la dernière : il rapetisse)
+    }
+    sacsVol.forEach((s, k) => {
+      const e = s.vol ? 1 : Math.max(0, Math.min(1, (25 - s.repos)));
+      sacE.set(s.ax, s.ay, 0); sacQ.setFromEuler(sacE); sacP.set(s.x, s.y, s.z); sacS.set(e, e, e);
+      sacM.compose(sacP, sacQ, sacS); sacMesh.setMatrixAt(k, sacM); sacMesh.setColorAt(k, s.ton);
+    });
+    sacMesh.count = sacsVol.length; sacMesh.instanceMatrix.needsUpdate = true; if (sacMesh.instanceColor) sacMesh.instanceColor.needsUpdate = true;
+    sacMesh.visible = !vide();
+  }
+
   return {
     preparer: preparerFanions,                                   // une bataille est branchée : un fanion par tronçon
-    maj(dt) { majFanions(dt); majClignotants(dt); majOuvrages(dt); },
+    maj(dt) { majFanions(dt); majClignotants(dt); majOuvrages(dt); majSacs(dt); },
+    projeterSacs,                                                // un obus tombe en (x, z) : des sacs de sable sont jetés en l'air
+    viderSacs() { sacsVol.length = 0; trous.length = 0; },       // une bataille est branchée : plus rien en l'air
     setVent(force, ang) { ventF.force = force; ventF.ang = ang; },   // les fanions suivent le vent
     clignoter,                                                   // un ordre validé : les tronçons visés clignotent
     zone(x0, x1, z0, z1) { zoneVue = { x0, x1, z0, z1 }; },        // le rectangle de sol que l'écran voit (avec ses marges)
     get texture() { return textureReglage; },
-    set texture(v) { textureReglage = Math.max(0, Math.min(3, v | 0)); ouvT = 0; },          // la « texture » des ouvrages : 0 à 3 (labo) ; 1 dans le jeu
+    set texture(v) { textureReglage = Math.max(0, Math.min(3, v | 0)); ouvT = 0; },          // la « texture » des ouvrages : 0 à 3 ; 3 dans le jeu
     get dessines() { return nDessines; },
     get niveau() { return niveauReglage; },
     set niveau(v) { niveauReglage = v === 'auto' ? 'auto' : Math.max(0, Math.min(3, v | 0)); ouvT = 0; },         // le niveau de détail des tranchées : 0 (le jeu), 1 à 3, 'auto' (selon le zoom)

@@ -1,7 +1,7 @@
 // Les médailles (Jérôme, v0.73.1 : « un tableau des médailles à la fin de chaque journée, de chaque partie : le régiment le plus meurtrier, qui a pris le plus de secteurs, le plus inutile… idem pour les soldats »).
 // Lecture seule de l'état : `tues` et `pris` de chaque régiment (bataille.js : un coup de fusil ou de baïonnette qui tue, un tronçon pris), `debut` (leur valeur au matin) ;
 // pour un homme, `victimes` (déjà sur la fiche) et `etat.victDebut` (id → victimes au matin). Les morts ne figurent pas parmi les hommes (leur fiche s'est effacée avec eux).
-import { quiEst, nomDe, auFront } from './lecture.js?v=0.94.2';
+import { quiEst, nomDe, auFront } from './lecture.js?v=0.95.0';
 
 const pl = (n, un, des) => `${n} ${n > 1 ? des : un}`;
 const meilleur = (liste, f) => liste.reduce((m, x) => (f(x) > (m ? f(m) : -Infinity) ? x : m), null);

@@ -4,7 +4,7 @@
 import { servir, lancerChromium, options } from '../outils/navigateur.mjs';
 import { writeFileSync, mkdirSync } from 'node:fs';
 
-const o = options(process.argv.slice(2), { variantes: 'ABCDE', zooms: '0', vues: 'trois-quarts', sortie: 'captures/tranchees', png: '', scene: '', voir: '', sujet: 'tranchees' });
+const o = options(process.argv.slice(2), { variantes: 'ABCDE', zooms: '0', vues: 'trois-quarts', sortie: 'captures/tranchees', png: '', scene: '', voir: '', sujet: 'tranchees', tirer: '', pauses: '1800,900,1500,4000' });
 if (o.png) mkdirSync(o.sortie, { recursive: true });
 const srv = await servir('.');
 const nav = await lancerChromium();
@@ -45,6 +45,17 @@ for (const L of o.variantes.split('')) {
         writeFileSync(`${o.sortie}/${L}-z${z}-${v}${o.voir ? '-' + o.voir.replace(/\W+/g, '_') : ''}.png`, Buffer.from(png.split(',')[1], 'base64'));
       }
       console.log(`${L} zoom ${z} vue ${v} : ${(pap.match(/Dessin : [^\n]*/) || [txt])[0]}`);
+    }
+  }
+  if (o.tirer) {                                  // un obus sur le parapet, puis des images à intervalles (les sacs jetés en l'air)
+    await page.getByRole('button', { name: `Obus de ${o.tirer}`, exact: true }).click();
+    let n = 0;
+    for (const t of o.pauses.split(',')) {
+      await page.waitForTimeout(+t);
+      await page.evaluate(() => { window.__veut = true; });
+      await page.waitForFunction(() => window.__pris, null, { timeout: 15000 });
+      const png = await page.evaluate(() => window.__pris); await page.evaluate(() => { window.__pris = null; });
+      writeFileSync(`${o.sortie}/${L}-obus-${++n}.png`, Buffer.from(png.split(',')[1], 'base64'));
     }
   }
   if (o.scene) {

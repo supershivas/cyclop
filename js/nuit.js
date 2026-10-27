@@ -10,13 +10,13 @@
    - (v0.38.3) Les caillebotis et le coup de main sont retirés ; (v0.77.1) réparer la tranchée, inhumer les morts et creuser des abris aussi (docs/archives/corvees-retirees.md) : quatre corvées.
    - (v0.39.0) La mêlée se joue dans la nuit (`meleeNuit`) : un tronçon où les deux camps sont face à face au soir est tranché à l'aube, et les
      régiments au contact (`contactDe`) ne reçoivent aucune corvée. */
-import { hash2 } from './lib/rng.js?v=0.94.2';
-import { modif, refusEquiper, equiper } from './camp.js?v=0.94.2';
-import { CORVEES } from './data/corvees.js?v=0.94.2';
-import { EQUIPEMENTS } from './data/batiments.js?v=0.94.2';
-import { REGIMENTS } from './data/lexique.js?v=0.94.2';
-import { ajouterSoldat, poserCaracs, lireCaracs, place } from './army.js?v=0.94.2';
-import { departCaracs } from './identite.js?v=0.94.2';
+import { hash2 } from './lib/rng.js?v=0.95.0';
+import { modif, refusEquiper, equiper } from './camp.js?v=0.95.0';
+import { CORVEES } from './data/corvees.js?v=0.95.0';
+import { EQUIPEMENTS } from './data/batiments.js?v=0.95.0';
+import { REGIMENTS } from './data/lexique.js?v=0.95.0';
+import { ajouterSoldat, poserCaracs, lireCaracs, place } from './army.js?v=0.95.0';
+import { departCaracs } from './identite.js?v=0.95.0';
 
 export const corvee = id => CORVEES.find(c => c.id === id);
 

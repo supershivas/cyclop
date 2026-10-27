@@ -1,5 +1,10 @@
 # Journal des versions
 
+## 0.95.0 — 2026-10-27
+- Les tranchées gardent la texture « joints, grain et usure » : joints entre les sacs, grain des planches, boue au pied, mousse sur le dessus
+- Les sacs de sable sont projetés par les obus : ils partent en l'air et retombent à plat ; le mât des drapeaux se voit sous tous les angles ; plus de scintillement sur les faces des sacs et des planches
+- Au labo, tous les aperçus des tranchées s'ouvrent en plan serré sur une échelle, avec un bouton « Obus sur le parapet »
+
 ## 0.94.2 — 2026-10-27
 - Les tranchées ne perdent plus leurs ouvrages (sacs, bois, fil, échelles) quand la caméra est basse ou qu'on la déplace : ils suivent tout le sol que l'écran voit, et les arbres du premier plan gardent leur cime
 - Au labo, les tranchées de près (48 pixels par mètre) avec quatre textures : aplats, tons variés, joints et grain, usure
