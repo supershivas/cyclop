@@ -198,7 +198,8 @@ test('équiper demande la caserne au niveau 2, de la dotation, une place libre, 
   assert.equal(equiper(B, r, 'grenades'), true);
   assert.match(refusEquiper(B, r, 'hotchkiss'), new RegExp(`${EQUIPEMENT.places} pièces`));
   assert.equal(equiper(B, r, 'hotchkiss'), false, 'rien ne change quand c\'est refusé'); assert.equal(e.camp.dotation, 3);
-  assert.match(refusEquiper(B, B.etat.regiments.find(x => x.camp === 1), 'casque'), /notre camp/);
+  assert.match(refusEquiper(B, B.etat.regiments.find(x => x.camp === 1), 'casque'), /caserne au niveau 2/, 'chaque camp équipe avec sa caserne (v0.94.0)');
+  { const P = petite(); assert.match(refusEquiper(P, P.etat.regiments[0], 'casque'), /Pas de caserne dans cette partie/); }
   assert.equal(facteurEquip(r, 'casque', 'obus'), EQUIPEMENTS.casque.obus); assert.equal(facteurEquip(r, 'brancards', 'retour'), 1);
   assert.equal(equipeEnMots(r), 'casques adrian et grenadiers');
 });

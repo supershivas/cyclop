@@ -1,5 +1,9 @@
 # Journal des versions
 
+## 0.94.0 — 2026-10-27
+- À deux aussi, chaque joueur a son camp : il bâtit et améliore ses bâtiments (l'ordre part aux deux machines), l'artillerie, les avions, les chars et le génie s'ouvrent avec eux, et chacun voit le camp de l'autre
+- Le papier de la nuit dit, à chacun, sa dotation et ses chantiers finis ; les boutons de batterie sont dans leur bâtiment partout
+
 ## 0.93.0 — 2026-10-27
 - Le camp d'en face se bâtit seul à l'aube, avec la même dotation (selon la difficulté) : son artillerie ouvre ses 155 et 220, sa caserne grossit sa réserve ; on le voit au nord, tourné d'un demi-tour
 - Une campagne reporte les niveaux du camp d'une bataille à l'autre (la dotation repart du départ)
