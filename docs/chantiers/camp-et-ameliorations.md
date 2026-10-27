@@ -71,7 +71,7 @@ Ce que la proposition refuse : une expérience qui monte avec les morts causés,
 0. **Fait (v0.85.0)** : le labo (ce document, les maquettes, le papier d'un bâtiment, le parcours des jours). Reste : que Jérôme tranche (questions ci-dessous).
 1. **Fait (v0.86.0) : règle sans écran** : `data/batiments.js` branché, `camp.js`, la dotation à l'aube, `etat.camp` ; **aucun niveau ne bride encore rien** (tout est « niveau max » par défaut) ; tests + sauvegarde ; équilibrage mesuré (`scripts/mesure-camp.mjs` : dotation versée sur les graines 3, 7, 8).
 2. **Fait (v0.87.0) : le camp dessiné et cliquable** : `rendu/camp.js`, le choix au clic, le papier d'un bâtiment, la touche B, les icônes de la carte ; les boutons latéraux sont retirés ; les niveaux brident (artillerie 75 seule au départ…). La mesure du rendu et `rendu-empreinte`.
-3. **Fait (v0.88.0) : construire et améliorer** : le chantier d'une nuit, les choix aux paliers, le papier de la nuit qui dit les chantiers.
+3. **Fait (v0.89.0) : construire et améliorer** : le chantier d'une nuit, les choix aux paliers, le papier de la nuit qui dit les chantiers.
 4. **L'équipement des régiments** (casque, grenadiers…), la corvée « s'équiper ».
 5. **En face et la campagne** : l'IA qui bâtit, le niveau de départ d'une bataille à l'autre.
 
@@ -101,7 +101,7 @@ Ce que la proposition refuse : une expérience qui monte avec les morts causés,
 - **Reporté au lot 3** : les deux améliorations de chaque palier (le choix n'est pas demandé : `CHOIX_ACTIFS` = faux dans camp.js), le nombre d'avions, de sections, de régiments en réserve par niveau. Un niveau ouvre donc des ordres, rien d'autre.
 - Références : `fumee.json` réécrite (le HUD a trois éléments de plus, la fumée ouvre l'artillerie par le mode debug avant ses barrages, puis choisit le parc des chars et le bâtit) ; `rendu.json` ne bouge pas.
 
-## Lot 3, ce qui est construit (v0.88.0)
+## Lot 3, ce qui est construit (v0.89.0)
 
 - **Un choix à chaque palier** (niveaux 2 et 3 : `choix` de data/batiments.js, `[nom, texte, { modificateur: facteur }]`) : le papier du bâtiment montre les deux améliorations, le bouton « Améliorer » reste grisé tant qu'aucune n'est tenue (« Choisissez : … » à voix haute) ; le choix est écrit dans l'état avec le chantier (`chantier.choix`), puis dans `batiments[clé].choix` à l'aube.
 - **`modif(etat, camp, 'bâtiment.chiffre')`** (camp.js) : le produit des `effets` des niveaux atteints et du choix pris à chaque palier ; **1 pour en face et hors partie bridée**. Branchés une fois chacun : dispersion (bataille.js, tir), recharge d'une batterie (`rechargeDe` : calibres, avion, char ; le bouton la lit aussi), salve du 220, longueur de la passe et touche de l'avion (avions.js ; l'aperçu de la visée prend la même longueur), points de vie des avions (réparation plafonnée à `pvAvion`), pour un char sa vitesse, son franchissement (aussi dans le chemin), ses points de vie et la recharge de son canon (copiés sur le char à son départ : un char sorti ne change plus), pour le génie le travail, la vitesse et le nombre d'hommes (copiés sur la section), les vivres et le retour des blessés (nuit.js).

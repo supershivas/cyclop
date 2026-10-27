@@ -1,8 +1,16 @@
 # Journal des versions
 
-## 0.88.0 — 2026-10-27
+## 0.89.0 — 2026-10-27
 - Chaque amélioration du camp change un chiffre : à chaque palier, on choisit entre deux améliorations (réglage ou caissons pour l'artillerie, blindage ou moteur pour les chars…)
 - Les bâtiments font venir les effectifs : 2 avions, puis 3 ; 2 sections du génie, puis 4 ; 2 régiments en réserve, puis 4, puis 6
+
+## 0.88.1 — 2026-10-27
+- Les tranchées gagnent en détail à mesure qu'on s'approche (silhouette de loin, ouvrage, puis détaillé de très près : cadres de boisage, clayonnage, abri, fil téléphonique), avec des tons de sacs et de planches variés
+- Des échelles pour sortir des tranchées, deux par tronçon, contre la paroi du parapet ; à moitié comblées elles penchent, comblées elles gisent à terre
+
+## 0.88.0 — 2026-10-27
+- Le vent souffle : plus ou moins fort selon le temps et le jour, il pousse les nuages, la pluie et la neige, la fumée, plie les arbres et l'herbe et fait claquer les fanions
+- Le haut de l'écran dit le vent du jour (« brise légère », « vent fort »…)
 
 ## 0.87.0 — 2026-10-27
 - Le camp apparaît dans la marge arrière : on clique un bâtiment (ou sa pastille, ou la touche B) pour lui donner ses ordres et le bâtir ou l'améliorer ; les boutons de batterie sont dans leur bâtiment

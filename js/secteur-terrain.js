@@ -1,8 +1,8 @@
 // Le terrain d'un secteur, tel que la bataille le monte au départ : le sol de la graine, ses marges, les tranchées creusées.
 // Partagé par la bataille (`monter` de bataille.js) et l'Atelier (la carte) : ce qu'on y voit est ce que le jeu monte.
 // Logique pure : aucun DOM, aucune horloge, aucun hasard hors de la graine.
-import { creerTerrain, hauteurQ } from './terrain.js?v=0.88.0';
-import { creuserTranchees } from './tranchees.js?v=0.88.0';
+import { creerTerrain, hauteurQ } from './terrain.js?v=0.89.0';
+import { creuserTranchees } from './tranchees.js?v=0.89.0';
 
 // → { terrain, lignes, troncons } ; `tranchees: false` : le sol seul (une bataille d'avant la v0.4.0 se relit sans tranchées)
 export function terrainDuSecteur(S, marges, graine, R, { tranchees = true } = {}) {

@@ -65,3 +65,14 @@ test('le coin de l\'écran la donne, et les mots suivent les seuils', () => {
   assert.deepEqual(ETATS_TRANCHEE.map(([, m]) => m), ['Intacte', 'Abîmée', 'Bouleversée']);
   assert.equal(etatTranchee(1), 'Intacte'); assert.equal(etatTranchee(0.85), 'Intacte'); assert.equal(etatTranchee(0.84), 'Abîmée'); assert.equal(etatTranchee(0.5), 'Abîmée'); assert.equal(etatTranchee(0.49), 'Bouleversée'); assert.equal(etatTranchee(0), 'Bouleversée');
 });
+
+group('tranchées — échelles');
+test('chaque niveau pose les échelles de TRANCHEE_OUVRAGES (en retirer une réduit les triangles, à chaque état)', async () => {
+  const { TRANCHEE_OUVRAGES } = await import('../js/data/tranchees.js');
+  assert.deepEqual(TRANCHEE_OUVRAGES.echelles, [9, 21]);
+  for (const n of [1, 2, 3]) for (const e of [2, 1, 0]) {
+    const tri = ech => mesurerNiveau(n, e, 3, () => 0, ech).triangles;
+    const avec = tri(undefined), deux = tri([9, 21]), une = tri([9]), sans = tri([]);
+    assert.equal(avec, deux); assert.ok(deux > une && une > sans, `niveau ${n}, état ${e} : ${deux} > ${une} > ${sans}`);
+  }
+});

@@ -3,23 +3,23 @@
 // trois tronçons de 25 m côte à côte, le premier intact, le deuxième abîmé (des 75 et un 155), le troisième bouleversé (des 155, des 75) ; les obus sont de vrais impacts du terrain (`impact`), donc l'état de chaque
 // bout de tranchée est lu du sol, comme dans la bataille. A : le dessin du jeu (niveau 0). B, C, D : les niveaux 1, 2, 3 de `rendu/tranchee-modeles.js` (`rendu.niveauTranchees`), E : le niveau choisi selon le zoom.
 // Le coût : un tableau de la géométrie seule (triangles par tronçon et pour un secteur de 128 tronçons, temps de construction : `mesurerNiveau`, le même calcul que `outils/mesure-tranchees.mjs`) et un bouton
-// « Mesurer dans la scène » qui relève le dessin entier (triangles dessinés, temps jusqu'au bout) pour chaque niveau. Rien n'est changé dans le jeu : `niveauTranchees` y vaut 0.
-import { impact } from './terrain.js?v=0.88.0';
-import { ligneY } from './tranchees.js?v=0.88.0';
-import { tronconSolidite } from './bataille.js?v=0.88.0';
-import { etatTranchee } from './tranchees.js?v=0.88.0';
-import { el, scene, texteSvg, maquette, bouton } from './labo-arcade.js?v=0.88.0';
-import { NIVEAUX_TRANCHEES, mesurerNiveau } from './rendu/tranchee-modeles.js?v=0.88.0';
+// « Mesurer dans la scène » qui relève le dessin entier (triangles dessinés, temps jusqu'au bout) pour chaque niveau. Dans le jeu, `niveauTranchees` vaut 'auto'.
+import { impact } from './terrain.js?v=0.89.0';
+import { ligneY } from './tranchees.js?v=0.89.0';
+import { tronconSolidite } from './bataille.js?v=0.89.0';
+import { etatTranchee } from './tranchees.js?v=0.89.0';
+import { el, scene, texteSvg, maquette, bouton } from './labo-arcade.js?v=0.89.0';
+import { NIVEAUX_TRANCHEES, mesurerNiveau } from './rendu/tranchee-modeles.js?v=0.89.0';
 
 export const NOTES_TRANCHEES = {
-  A: 'Les tranchées du jeu : des sacs, des traverses, du bois et du fil de fer à partir de 4 pixels par mètre (le bois se brise avec le comblement), un dessin plus simple en dessous. C\'est le niveau 0.',
+  A: 'En jeu (v0.88.1) : le niveau suit le zoom : la silhouette en dessous de 4 pixels par mètre, l\'ouvrage de 4 à 6, le détaillé à partir de 8. De loin presque rien, de près tout ; les échelles pour sortir sont là à tous les niveaux.',
   B: NIVEAUX_TRANCHEES[0].note,
   C: NIVEAUX_TRANCHEES[1].note,
   D: NIVEAUX_TRANCHEES[2].note,
-  E: 'Le niveau suit le zoom : la silhouette en dessous de 4 pixels par mètre, l\'ouvrage de 4 à 6, le détaillé à partir de 8. C\'est ce qu\'on mettrait en jeu : de loin presque rien, de près tout.',
+  E: 'Jusqu\'à la v0.84.0 : des sacs, des traverses, du bois et du fil de fer à partir de 4 pixels par mètre (le bois se brise avec le comblement), un dessin plus simple en dessous, ni banquette, ni cadres, ni échelles. C\'est le niveau 0.',
 };
-export const NOMS_TRANCHEES = { A: 'Le dessin du jeu', B: 'Niveau 1 · Silhouette', C: 'Niveau 2 · Ouvrage', D: 'Niveau 3 · Détaillé', E: 'Le niveau selon le zoom' };
-const NIVEAU_DE = { A: 0, B: 1, C: 2, D: 3, E: 'auto' };
+export const NOMS_TRANCHEES = { A: 'Selon le zoom', B: 'Niveau 1 · Silhouette', C: 'Niveau 2 · Ouvrage', D: 'Niveau 3 · Détaillé', E: 'Le dessin d\'avant' };
+const NIVEAU_DE = { A: 'auto', B: 1, C: 2, D: 3, E: 0 };
 const ETATS = [['Intacte', 2], ['Légèrement détruite', 1], ['Complètement détruite', 0]];
 // les obus de chaque tronçon abîmé : [calibre, nombre] ; ils tombent le long du tracé, en quinconce
 const OBUS = [[], [['75', 6], ['155', 2]], [['155', 14], ['75', 6]]];
@@ -45,7 +45,7 @@ export function maquetteTranchees(stage, R, cle) {
   const nettoyer = maquette(stage, ui => {
     let ctx0 = null, ks = [];
     const mesures = el('div');
-    const niveauBoutons = [['Jeu (0)', 0], ['1', 1], ['2', 2], ['3', 3], ['Selon le zoom', 'auto']].map(([t, n]) => bouton(t, () => { if (ctx0) ctx0.rendu.niveauTranchees = n; }));
+    const niveauBoutons = [['Selon le zoom', 'auto'], ['1', 1], ['2', 2], ['3', 3], ['Avant (0)', 0]].map(([t, n]) => bouton(t, () => { if (ctx0) ctx0.rendu.niveauTranchees = n; }));
     ui.haut.append(
       bouton('Zoom −', () => ctx0?.rendu.zoomer(-1)), bouton('Zoom +', () => ctx0?.rendu.zoomer(1)),
       bouton('De dessus', () => { if (ctx0) ctx0.rendu.placerCamera(ctx0.vue0.yaw, 1.2); }),
@@ -103,7 +103,7 @@ export function maquetteTranchees(stage, R, cle) {
           texteSvg(ctx.svg, sx, sy, `${ETATS[q][0]} · ${etatTranchee(s)} ${Math.round(s * 100)} %`, 12);
         });
         const niv = r.niveauTranchees;
-        ctx.dire([`${NOMS_TRANCHEES[cle]} — niveau dessiné : ${niv === 0 ? '0 (le jeu)' : niv}`, NOTES_TRANCHEES[cle], `Dessin : ${st.ms.renduFini} ms (rendu logiciel ici, attendu jusqu'au bout) · ${st.trianglesDessines} triangles`, 'Glissez pour tourner, Maj ou clic droit pour déplacer, molette pour zoomer.']);
+        ctx.dire([`${NOMS_TRANCHEES[cle]} — niveau dessiné : ${niv === 0 ? '0 (le dessin d\'avant)' : niv}`, NOTES_TRANCHEES[cle], `Dessin : ${st.ms.renduFini} ms (rendu logiciel ici, attendu jusqu'au bout) · ${st.trianglesDessines} triangles`, 'Glissez pour tourner, Maj ou clic droit pour déplacer, molette pour zoomer.']);
       },
     });
     return arret;
@@ -116,11 +116,11 @@ async function mesurerScene(ctx, boite) {
   const r = ctx.rendu, avant = r.niveauTranchees, t = el('table', { className: 'contraste' });
   boite.replaceChildren(el('p', { textContent: 'Mesure en cours…' }));
   t.append(el('tr', {}, ...['Niveau', 'Triangles dessinés', 'Dessin (ms)'].map(h => el('th', { textContent: h }))));
-  for (const n of [0, 1, 2, 3, 'auto']) {
+  for (const n of ['auto', 1, 2, 3, 0]) {
     r.niveauTranchees = n; await attendre(8);
     const tri = [], ms = [];
     for (let k = 0; k < 10; k++) { await attendre(1); tri.push(r.stats.trianglesDessines); ms.push(r.stats.ms.renduFini); }
-    t.append(el('tr', {}, el('th', { textContent: n === 0 ? '0 · le jeu' : n === 'auto' ? 'selon le zoom' : `${n} · ${NIVEAUX_TRANCHEES[n - 1].nom}` }), el('td', { textContent: String(mediane(tri)) }), el('td', { textContent: mediane(ms).toFixed(1) })));
+    t.append(el('tr', {}, el('th', { textContent: n === 0 ? '0 · le dessin d\'avant' : n === 'auto' ? 'selon le zoom (le jeu)' : `${n} · ${NIVEAUX_TRANCHEES[n - 1].nom}` }), el('td', { textContent: String(mediane(tri)) }), el('td', { textContent: mediane(ms).toFixed(1) })));
   }
   r.niveauTranchees = avant;
   boite.replaceChildren(el('p', { textContent: 'Le dessin entier, par niveau, à ce zoom et sur cette vue (médiane de dix images ; le temps est celui du rendu logiciel, à comparer d\'un niveau à l\'autre, jamais en absolu) :' }), t);

@@ -22,30 +22,31 @@
    - Les soldats : instanciés (une boîte et son ombre) ; au zoom 1 et 2, un
      point de 2 × 2 pixels (la couleur du camp sur son ombre).
    - Les corps : un homme couché (instancié) ; au zoom 1 et 2, un pixel. */
-import { loadThree } from './three-lib.js?v=0.88.0';
-import * as SH from './rendu/shaders.js?v=0.88.0';
-import { creerSoldats } from './rendu/soldats.js?v=0.88.0';
-import { creerChars } from './rendu/chars.js?v=0.88.0';
-import { creerGenies } from './rendu/genies.js?v=0.88.0';
-import { creerCamp } from './rendu/camp.js?v=0.88.0';
-import { creerAvions } from './rendu/avions.js?v=0.88.0';
-import { creerPonts } from './rendu/ponts.js?v=0.88.0';
-import { creerCiel } from './rendu/ciel.js?v=0.88.0';
-import { creerMeteo } from './rendu/meteo.js?v=0.88.0';
-import { creerTroncons } from './rendu/troncons.js?v=0.88.0';
-import { ARBRES_JEU } from './data/arbres.js?v=0.88.0';
-import { creerVegetation } from './rendu/vegetation.js?v=0.88.0';
-import { creerTemps } from './rendu/temps.js?v=0.88.0';
-import { creerEclats } from './rendu/eclats.js?v=0.88.0';
-import { creerOmbresRelief } from './rendu/ombres-relief.js?v=0.88.0';
-import { OMBRES_RELIEF as OMB, NUAGES, NUAGES_VENT } from './data/soleil.js?v=0.88.0';
-import { PALETTE, ORDRE, INDICE } from './palette.js?v=0.88.0';
-import { OMBRE, couleursLigne } from './apparence.js?v=0.88.0';
-import { MORCEAU, hauteurVueQ as hauteurQ, hauteurVueM as hauteurM } from './terrain.js?v=0.88.0';
-import { horloge, secteurDuJeu, rangDe } from './bataille.js?v=0.88.0';
-import { GRADES } from './data/grades.js?v=0.88.0';
-import { profilFleuve } from './eaux.js?v=0.88.0';
-import { ligneY } from './tranchees.js?v=0.88.0';
+import { loadThree } from './three-lib.js?v=0.89.0';
+import * as SH from './rendu/shaders.js?v=0.89.0';
+import { creerSoldats } from './rendu/soldats.js?v=0.89.0';
+import { creerChars } from './rendu/chars.js?v=0.89.0';
+import { creerGenies } from './rendu/genies.js?v=0.89.0';
+import { creerCamp } from './rendu/camp.js?v=0.89.0';
+import { creerAvions } from './rendu/avions.js?v=0.89.0';
+import { creerPonts } from './rendu/ponts.js?v=0.89.0';
+import { creerCiel } from './rendu/ciel.js?v=0.89.0';
+import { creerMeteo } from './rendu/meteo.js?v=0.89.0';
+import { creerTroncons } from './rendu/troncons.js?v=0.89.0';
+import { ARBRES_JEU } from './data/arbres.js?v=0.89.0';
+import { creerVegetation } from './rendu/vegetation.js?v=0.89.0';
+import { creerTemps } from './rendu/temps.js?v=0.89.0';
+import { creerEclats } from './rendu/eclats.js?v=0.89.0';
+import { creerOmbresRelief } from './rendu/ombres-relief.js?v=0.89.0';
+import { OMBRES_RELIEF as OMB, NUAGES, NUAGES_VENT } from './data/soleil.js?v=0.89.0';
+import { PALETTE, ORDRE, INDICE } from './palette.js?v=0.89.0';
+import { OMBRE, couleursLigne } from './apparence.js?v=0.89.0';
+import { MORCEAU, hauteurVueQ as hauteurQ, hauteurVueM as hauteurM } from './terrain.js?v=0.89.0';
+import { horloge, secteurDuJeu, rangDe } from './bataille.js?v=0.89.0';
+import { GRADES } from './data/grades.js?v=0.89.0';
+import { profilFleuve } from './eaux.js?v=0.89.0';
+import { ligneY } from './tranchees.js?v=0.89.0';
+import { vent as ventDuJour } from './data/meteo.js?v=0.89.0';
 
 export const CAMERA = { yaw: 0.15, tangage: 0.95, fov: 30 };   // au départ : tournée de 9°, plongée de 54°, angle de 30°
 // la caméra respire : un balancement très lent, 2° en 23 s (Jérôme, v0.3.1 : variante D du labo retenue)
@@ -303,6 +304,27 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
     THREE, scene, col, camera, vue, surface, bataille: () => B, vide: () => vide,
     soleilUniform: soldats.soleilUniform, solUniforms: solMat.uniforms, ecl: eclats.ecl, feux: eclats.feux, ECLATS: eclats.ECLATS,
   });
+
+  // ─── Le vent (Jérôme, v0.84.0) : celui du jour (`vent` de data/meteo.js : une force et un cap tirés de la graine, du jour et du temps), glissé d'un jour à l'autre, avec des rafales ; le dessin seulement.
+  // `ms` : le vent en m/s (x, z) ; `nuages`, `ciel` : la dérive accumulée des ombres de nuages (m) et des nuages du ciel, de sorte qu'un changement de vent ne fasse jamais sauter une plaque.
+  const VENT_MS = 14, NUAGES_V0 = Math.hypot(NUAGES_VENT[0], NUAGES_VENT[1]);
+  const vent = { base: { x: 0, z: 0 }, force: 0, ms: { x: 0, z: 0 }, nuages: { x: 0, z: 0 }, ciel: { x: 0, z: 0 }, nom: 'calme', ventActif: true };
+  function majVent(dt, h) {
+    let cx = 0, cz = 0;
+    if (vent.ventActif && B && h) { const v = ventDuJour(h.meteo, B.etat.graine, h.jour); cx = Math.cos(v.ang) * v.force; cz = Math.sin(v.ang) * v.force; vent.nom = v.nom; }
+    const k = 1 - Math.exp(-dt * 0.8);                                   // d'un jour à l'autre le vent tourne et monte en quelques secondes
+    vent.base.x += (cx - vent.base.x) * k; vent.base.z += (cz - vent.base.z) * k;
+    const f0 = Math.hypot(vent.base.x, vent.base.z);
+    // les rafales : trois ondes qui ne tombent jamais juste ensemble, plus fortes quand il y a du vent
+    const g = 1 + f0 * (0.32 * Math.sin(tAnim * 0.9) * Math.sin(tAnim * 0.37 + 1) + 0.18 * Math.sin(tAnim * 2.3 + 2));
+    vent.force = Math.min(1.2, f0 * g);
+    const ux = f0 > 1e-6 ? vent.base.x / f0 : 1, uz = f0 > 1e-6 ? vent.base.z / f0 : 0;
+    vent.ms.x = ux * vent.force * VENT_MS; vent.ms.z = uz * vent.force * VENT_MS;
+    const vn = NUAGES_V0 * (0.2 + 1.6 * f0) * dt;                         // les nuages vont avec le vent (au calme, ils dérivent à peine)
+    vent.nuages.x += ux * vn; vent.nuages.z += uz * vn;
+    vent.ciel.x += (ux * f0 * 0.034 + 0.004) * dt; vent.ciel.z += (uz * f0 * 0.034 + 0.0013) * dt;
+    vegetation.setVent(ux * vent.force, uz * vent.force); eclats.setVent(vent.ms.x * 0.4, vent.ms.z * 0.4); troncons.setVent(f0, Math.atan2(uz, ux));
+  }
 
   const troncons = creerTroncons({
     THREE, scene, col, surface, projeter, vue, zooms: ZOOMS, bataille: () => B,
@@ -659,8 +681,9 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
     const t1 = performance.now();
     const hj = horloge(B);
     temps.majSoleil(hj, soleilReglage);
+    majVent(dt, hj);
     { const nu = ombresNuages ? NUAGES[hj.meteo] : null;             // l'ombre des nuages (labo) : le jour, par un temps à plaques
-      solMat.uniforms.uNuage.value = nu?.taches && hj.phase === 'jour' ? 0.5 + (nu.taches - 0.5) * 0.55 : 0; solMat.uniforms.uTemps.value = tAnim; }
+      solMat.uniforms.uNuage.value = nu?.taches && hj.phase === 'jour' ? 0.5 + (nu.taches - 0.5) * 0.55 : 0; solMat.uniforms.uTemps.value = 1; solMat.uniforms.uVent.value.set(-vent.nuages.x, -vent.nuages.z); }
     { const sv = soldats.soleilUniform.value, n = Math.hypot(sv.x, sv.y);           // les parois selon le soleil (labo) ; la nuit (soleil nul), celles du jeu
       solMat.uniforms.uSuivre.value = soleilReglage?.parois && n > 0.05 ? 1 : 0; if (n > 0.05) solMat.uniforms.uVersSoleil.value.set(-sv.x / n, -sv.y / n); }
     majSoldats();
@@ -675,10 +698,11 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
     }
     const sombre = temps.majNuit(h); temps.setTemps(tAnim);
     chars.maj(dt, sombre || 0); genies.maj(dt); camp.maj(sombre || 0); avions.maj(dt, sombre || 0); ponts.maj(sombre || 0, aretesPonts);
+    ciel.derive(vent.ciel.x, vent.ciel.z);
     ciel.nuit(sombre || 0, tAnim, h.jour, B.etat.graine, h.meteo);       // les étoiles, la lune et les nuages de la nuit (v0.40.0)
     meteo.afficher(h, vide);
     const { cx, cz, p } = projeter();
-    meteo.maj(tAnim, cx, cz, p, vue);
+    meteo.maj(tAnim, cx, cz, p, vue, vent.ms.x, vent.ms.z, dt);
     eclats.setTaille(Math.max(1, Math.round(p / 2)));
     renderer.render(scene, camera);
     const t2 = performance.now();
@@ -703,6 +727,9 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
     set ombresRelief(v) { ombresRelief = !!v; solAttente = 0; },      // les ombres du relief sur le sol (labo)
     get niveauTranchees() { return troncons.niveau; },
     set niveauTranchees(v) { troncons.niveau = v; },                   // 0 (le dessin du jeu), 1 à 3 ou 'auto' : les niveaux de détail des tranchées (labo, v0.84.0)
+    get vent() { return { force: +vent.force.toFixed(3), x: +vent.ms.x.toFixed(2), z: +vent.ms.z.toFixed(2), nom: vent.nom }; },   // le vent à l'image (le mode debug, les tests)
+    set ventActif(v) { vent.ventActif = !!v; },                    // faux : l'air est calme (essais du labo)
+    get ventActif() { return vent.ventActif; },
     get ombresNuages() { return ombresNuages; },
     set ombresNuages(v) { ombresNuages = !!v; },                    // l'ombre des nuages sur le sol (labo)
     get soleilReglage() { return soleilReglage; },

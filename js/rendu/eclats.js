@@ -2,9 +2,9 @@
 // et « le feu se voit » (Jérôme, v0.9.2 : l'éclair à la bouche du fusil et le trait vers la cible de chaque tir de `B.tirs`, la pose des tireurs, le bond de ceux que
 // le souffle jette). Une seule fabrique : tous tirent dans le même générateur de l'aspect (`alea`, une suite à graine : l'ordre des tirages fait l'image) et
 // dans les mêmes tampons de particules. Le dessin seulement : jamais la logique, jamais la partie.
-import * as SH from './shaders.js?v=0.88.0';
-import { INDICE } from '../palette.js?v=0.88.0';
-import { horloge } from '../bataille.js?v=0.88.0';
+import * as SH from './shaders.js?v=0.89.0';
+import { INDICE } from '../palette.js?v=0.89.0';
+import { horloge } from '../bataille.js?v=0.89.0';
 
 const ECLATS = 6000;     // (v0.24.0 ; 2 400 avant : une salve de 220 — ~200 éclats chacun, dont de la fumée de 8 à 16 s — faisait le tour du tampon et effaçait les éclats encore en vol)
 
@@ -72,11 +72,11 @@ export function creerEclats({ THREE, scene, col, palTex, NP, effets, surface, pr
     ecl.x[s] = x; ecl.y[s] = y; ecl.z[s] = z; ecl.vx[s] = vx; ecl.vy[s] = vy; ecl.vz[s] = vz;
     ecl.age[s] = 0; ecl.vie[s] = vie; ecl.sorte[s] = sorte; ecl.taille[s] = taille;
   }
-  const VENT = 1.3;                                 // m/s vers l'est : la fumée qui dérive
+  let ventX = 0, ventZ = 0;                         // m/s : la fumée qui dérive (le vent du jour, `setVent` ; Jérôme, v0.84.0 ; avant : 1,3 vers l'est, toujours)
   // `noire` : une colonne de fumée noire (sorte 10), plus haute et plus large ; `reste` : elle reste 40 à 90 s au lieu de 8 à 16 (v0.27.0)
   function fumee(x, y, z, big, longue, noire = false, reste = false) {
     const a = alea() * Math.PI * 2, v = 1.5 * (0.4 + alea()) * big;
-    particule(noire ? 10 : 2, x, y, z, Math.cos(a) * v + (longue ? VENT : 0), (longue ? 0.5 + alea() * 0.6 : 1.2 + alea()) * (noire ? 1.5 : 1), Math.sin(a) * v * 0.7,
+    particule(noire ? 10 : 2, x, y, z, Math.cos(a) * v + (longue ? ventX : 0), (longue ? 0.5 + alea() * 0.6 : 1.2 + alea()) * (noire ? 1.5 : 1), Math.sin(a) * v * 0.7 + (longue ? ventZ : 0),
       reste ? 40 + alea() * 50 : longue ? 8 + alea() * 8 : 2.5 + alea() * 2, (longue ? 2 + alea() * 1.5 : 1) * (noire ? 1.3 : 1));
   }
   // la part des obus dont la fumée est noire, et de ceux dont la fumée reste, selon le calibre (plus le calibre est gros, plus c'est fréquent ; Jérôme, v0.27.0)
@@ -291,7 +291,7 @@ export function creerEclats({ THREE, scene, col, palTex, NP, effets, surface, pr
       const dx = tx - x, dy = ty - y, d = Math.hypot(dx, dy) || 1, ux = dx / d, uy = dy / d;
       const h = surface(x, y);
       particule(0, x + ux * 0.6, h + 1.3, y + uy * 0.6, 0, 0, 0, 0.07, 0.5);
-      if (alea() < 0.2) particule(2, x + ux * 0.9, h + 1.3, y + uy * 0.9, ux * 0.7 + VENT * 0.4, 0.3 + alea() * 0.3, uy * 0.7, 1 + alea() * 1.2, 0.6);   // la fumée du coup de fusil : un petit nuage clair qui dérive (v0.27.0)
+      if (alea() < 0.2) particule(2, x + ux * 0.9, h + 1.3, y + uy * 0.9, ux * 0.7 + ventX * 0.4, 0.3 + alea() * 0.3, uy * 0.7 + ventZ * 0.4, 1 + alea() * 1.2, 0.6);   // la fumée du coup de fusil : un petit nuage clair qui dérive (v0.27.0)
       balle(x + ux * 1.5, h + 1.3, y + uy * 1.5, ux * 110, 0, uy * 110, Math.max(0.12, (d - 1.5) / 110) + alea() * 0.04);   // elle court jusqu'à sa cible (la portée : 70 m), 0,12 s au moins
     }
     L.length = 0;
@@ -311,7 +311,7 @@ export function creerEclats({ THREE, scene, col, palTex, NP, effets, surface, pr
       ecl.age[s] += dt;
       const so = ecl.sorte[s], f = ecl.age[s] / ecl.vie[s];
       if (so === 1 || so === 8) ecl.vy[s] -= 18 * dt;
-      if (so === 2 || so === 10) { ecl.vx[s] *= 0.97; ecl.vz[s] *= 0.97; if (effets.derive) ecl.vx[s] += (VENT - ecl.vx[s]) * dt * 0.5; }
+      if (so === 2 || so === 10) { ecl.vx[s] *= 0.97; ecl.vz[s] *= 0.97; if (effets.derive) { ecl.vx[s] += (ventX - ecl.vx[s]) * dt * 0.5; ecl.vz[s] += (ventZ - ecl.vz[s]) * dt * 0.5; } }
       if (so === 6) {
         // la fusée : elle monte, freine, puis descend lentement sous son parachute ; une fumée derrière elle
         if (ecl.vy[s] > -1.2) ecl.vy[s] -= 14 * dt; else ecl.vy[s] = -1.2;
@@ -360,6 +360,7 @@ export function creerEclats({ THREE, scene, col, palTex, NP, effets, surface, pr
     mitraille, gerbeSol, douilles, fumeeAvion, ecraser,
     ecl, feux, ECLATS,                                           // lus par temps.js : les fusées et les incendies éclairent la nuit
     impactVu, majTirs, majEclats, majCorbeaux,
+    setVent(x, z) { ventX = x; ventZ = z; },                      // le vent en m/s
     setTaille(n) { eclMat.uniforms.uTaille.value = n; },          // la taille d'un point d'éclat, selon le zoom
     // une autre bataille : ses arbres ne brûlent pas encore, et la fumée, les balles et les obus en vol de la précédente (le décor de l'écran titre) ne passent pas dans la suivante
     reinitialiser() {
