@@ -1,8 +1,8 @@
 {
-  "version": "0.88.1",
+  "version": "0.89.0",
   "date": "2026-10-27",
   "changes": [
-    "Les tranchées gagnent en détail à mesure qu'on s'approche (silhouette de loin, ouvrage, puis détaillé de très près : cadres de boisage, clayonnage, abri, fil téléphonique), avec des tons de sacs et de planches variés",
-    "Des échelles pour sortir des tranchées, deux par tronçon, contre la paroi du parapet ; à moitié comblées elles penchent, comblées elles gisent à terre"
+    "Les échelles des tranchées servent : au pied d'une échelle, on monte et on descend sans que la paroi ralentisse (3 m de large, deux échelles par tronçon) ; les assauts et les replis en sont un peu plus rapides",
+    "Au labo, les échelles ont leur place dans les trois niveaux de détail des tranchées"
   ]
 }

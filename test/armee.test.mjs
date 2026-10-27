@@ -100,3 +100,22 @@ test('un obus fait peur jusqu\'à trois fois son rayon ; la nuit, la peur et la 
   reposer(A, R);
   assert.ok(A.peur[0] < 0.3 && A.fatJ[0] < 0.3);
 });
+
+group('foule — les échelles des tranchées');
+// une tranchée de 1,5 m (6 quarts) sur toute la largeur, d'est en ouest, au milieu du terrain ; un homme y est à l'arrière (au sud) et doit passer au nord
+function tranchee(echelle) {
+  const T = monde(60, 30);
+  for (let j = 14; j < 17; j++) for (let i = 0; i < 60; i++) T.diff[j * 60 + i] = -6;
+  T.echelle = echelle ? new Uint8Array(60 * 30) : null;
+  if (echelle) for (const [i, v] of echelle) for (let j = 13; j < 17; j++) T.echelle[j * 60 + i] = v;
+  return T;
+}
+const sortie = (T, secondes = 3) => marcher(T, 30.5, 16.5, 30.5, 8.5, secondes);
+test('sans échelle la paroi de 1,5 m ralentit la sortie ; au pied d\'une échelle elle ne ralentit plus', () => {
+  const sans = sortie(tranchee(null)), avec = sortie(tranchee([[29, 1], [30, 1], [31, 1]]));
+  assert.ok(avec.y[0] < sans.y[0] - 0.8, `à l'échelle il est plus loin : ${avec.y[0].toFixed(1)} contre ${sans.y[0].toFixed(1)}`);
+});
+test('sans carte d\'échelles (un terrain d\'essai) rien ne change et rien ne plante', () => {
+  const T = tranchee(null); assert.equal(T.echelle, null);
+  assert.ok(Number.isFinite(sortie(T).y[0]));
+});

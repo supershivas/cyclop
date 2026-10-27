@@ -1,11 +1,11 @@
 /* Les nids de mitrailleuses (Jérôme, v0.83.0) : la logique, pure. Un nid vit dans `etat.nids` (sauvegardé) : { id, camp, troncon, x, y, face, pv, etat: 'actif' | 'detruit', tire }.
    Il est posé sur le parapet de la 1re ligne de son camp. Tant qu'il est actif, que son tronçon est à son camp et qu'un de ses hommes le sert, il tire en avant sur l'autre camp ;
    un obus l'abîme, à zéro il est détruit ; le génie (genie.js) ou, en face, la nuit, le refait. Les sapeurs le refont : `reparerNid`. */
-import { NIDS } from './data/nids.js?v=0.88.1';
-import { CALIBRES } from './data/calibres.js?v=0.88.1';
-import { ligneY } from './tranchees.js?v=0.88.1';
-import { hash2 } from './lib/rng.js?v=0.88.1';
-import { GRILLE } from './army.js?v=0.88.1';
+import { NIDS } from './data/nids.js?v=0.89.0';
+import { CALIBRES } from './data/calibres.js?v=0.89.0';
+import { ligneY } from './tranchees.js?v=0.89.0';
+import { hash2 } from './lib/rng.js?v=0.89.0';
+import { GRILLE } from './army.js?v=0.89.0';
 
 /* Les nids du départ : un par secteur de 100 m sur la 1re ligne de chaque camp, au milieu du 2e tronçon de chaque quart de la ligne. */
 export function creerNids(B) {

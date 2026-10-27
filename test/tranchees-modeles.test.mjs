@@ -76,3 +76,23 @@ test('chaque niveau pose les échelles de TRANCHEE_OUVRAGES (en retirer une réd
     assert.equal(avec, deux); assert.ok(deux > une && une > sans, `niveau ${n}, état ${e} : ${deux} > ${une} > ${sans}`);
   }
 });
+
+group('tranchées — la carte des échelles');
+test('chaque tronçon de ligne a ses échelles au pied desquelles la carte vaut 1 (3 m de large, la tranchée et le parapet), les boyaux et le reste du sol : 0', () => {
+  const B = nouvelleBataille(5, structuredClone(R), { soldats: 200, jours: 3 }), T = B.terrain, E = T.echelle;
+  assert.ok(E instanceof Uint8Array && E.length === T.W * T.H);
+  for (let t = 0; t < B.troncons.length; t++) {
+    const tr = B.troncons[t], L = B.lignes[tr.ligne];
+    for (const d of [9, 21]) {
+      const i = Math.floor(tr.x0 + d), yc = di => ligneY(L, i + di + 0.5);
+      for (const di of [-1, 0, 1]) assert.equal(E[Math.round(yc(di)) * T.W + i + di], 1, `tronçon ${t}, ${d} m, colonne ${di}`);
+      assert.equal(E[Math.round(yc(3)) * T.W + i + 3], 0, 'à 3 m de l\'échelle : plus rien');
+    }
+  }
+  let n = 0; for (const v of E) n += v;
+  assert.ok(n > 0 && n < T.W * T.H * 0.01, `${n} cases`);
+});
+test('la carte se refait à l\'identique avec le terrain (rien à sauvegarder)', () => {
+  const a = nouvelleBataille(5, structuredClone(R), { soldats: 200, jours: 3 }).terrain.echelle, b = nouvelleBataille(5, structuredClone(R), { soldats: 200, jours: 3 }).terrain.echelle;
+  assert.deepEqual(a, b);
+});

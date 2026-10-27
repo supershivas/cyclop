@@ -2,6 +2,9 @@
 // Une entrée par version qui touche au labo, la plus récente en haut. `ref` : « sujet-Lettre » (la lettre est celle de la variante,
 // A étant l'actuelle). À chaque changement du labo : une entrée ici, avec `depuis` sur les variantes ajoutées ou changées (labo.js).
 export const JOURNAL = [
+  { version: '0.89.0', date: '2026-10-27', items: [
+    { genre: 'mis-a-jour', texte: 'Les échelles des tranchées servent en jeu : au pied d\'une échelle la paroi ne ralentit plus la sortie ; elles sont dans les trois niveaux de détail', ref: 'tranchees-A' },
+  ] },
   { version: '0.88.1', date: '2026-10-27', items: [
     { genre: 'mis-a-jour', texte: 'Les tranchées en trois niveaux de détail passent en jeu, le niveau suivant le zoom (A), avec des échelles pour sortir ; le dessin d\'avant est « ancien » (E)', ref: 'tranchees-A' },
   ] },

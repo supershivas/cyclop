@@ -25,10 +25,10 @@
      (rng.js), pour que la même graine rejoue la même bataille.
 
    Logique pure : aucun DOM. Le rendu lit les tableaux (rendu3d.js). */
-import { hauteurQ, vitesseCase } from './terrain.js?v=0.88.1';
-import { ligneY } from './tranchees.js?v=0.88.1';
-import { TOITS } from './data/nids.js?v=0.88.1';
-import { caracteristiques } from './identite.js?v=0.88.1';
+import { hauteurQ, vitesseCase } from './terrain.js?v=0.89.0';
+import { ligneY } from './tranchees.js?v=0.89.0';
+import { TOITS } from './data/nids.js?v=0.89.0';
+import { caracteristiques } from './identite.js?v=0.89.0';
 
 export const GRILLE = 2;           // m : cases de voisinage
 export const DENSITE = 8;          // m : carrés de densité (tir)
@@ -256,7 +256,10 @@ export function pasArmee(A, ctx) {
       if (ai >= 0 && aj >= 0 && ai < W && aj < H && (ai !== ci || aj !== cj)) {
         const dq = hauteurQ(T, aj * W + ai) - hauteurQ(T, cc);
         const adq = dq < 0 ? -dq : dq;
+        // une échelle (Jérôme, v0.89.0) : au pied d'une échelle (`T.echelle`) la paroi d'une tranchée ne ralentit ni la montée ni la descente
+        const E = T.echelle;
         if (dq >= V.mur) terrain *= coince[i] > 3 ? 0.08 : 0;      // deux mètres : on n'y monte qu'à force
+        else if (E && (E[cc] || E[aj * W + ai])) { /* à l'échelle : rien ne ralentit */ }
         else if (adq >= 4) terrain *= V.pente2;
         else if (adq >= 2) terrain *= V.pente1;
       }

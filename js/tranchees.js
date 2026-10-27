@@ -11,8 +11,9 @@
      d'occuper une tranchée s'en servent pour poser les hommes dedans.
    - Un tronçon protège du tir qui vient de devant (le parapet), beaucoup moins
      de celui qui vient de derrière (le parados) : pris, il sert à l'envers. */
-import { hash2 } from './lib/rng.js?v=0.88.1';
-import { etendueEau } from './eaux.js?v=0.88.1';
+import { hash2 } from './lib/rng.js?v=0.89.0';
+import { etendueEau } from './eaux.js?v=0.89.0';
+import { TRANCHEE_OUVRAGES } from './data/tranchees.js?v=0.89.0';
 
 // Un bruit de valeurs lissé à une dimension (0..1) : le tracé d'une tranchée creusée à la main, jamais deux fois pareil (v0.29.0)
 const lisse = u => u * u * (3 - 2 * u);
@@ -87,6 +88,7 @@ export function creuserTranchees(T, S, ox, oy, graine) {
     }
   }
   T.troncon = troncon;
+  T.echelle = carteEchelles(T, lignes, troncons);
   T.version++;
   return { lignes, troncons };
 }
@@ -111,6 +113,28 @@ export function solidite(T, prof, tr, L, t) {
 // Les mots de la barre (le coin de l'écran) : de la solidité à son état en trois mots
 export const ETATS_TRANCHEE = [[0.85, 'Intacte'], [0.5, 'Abîmée'], [0, 'Bouleversée']];
 export const etatTranchee = s => ETATS_TRANCHEE.find(([seuil]) => s >= seuil)[1];
+
+/* Les échelles pour sortir des tranchées (Jérôme, v0.89.0) : `T.echelle` (Uint8Array, une valeur par case), refaite avec les tranchées : 1 au pied d'une échelle (3 m de large, sur la largeur de
+   la tranchée et la case du parapet : on y monte et on y descend sans que la paroi ne ralentisse, `army.js`), 0 ailleurs. Les échelles viennent du tracé (`TRANCHEE_OUVRAGES.echelles`, depuis le
+   début de chaque tronçon) : le dessin les pose au même endroit, la sauvegarde ne garde rien. Les boyaux n'en ont pas. Un homme coincé par la paroi ne se glisse pas vers une échelle : à un quart de sa
+   vitesse il lui faudrait quinze secondes pour trois mètres, et il est sorti avant (essayé : il y perdait du chemin). */
+function carteEchelles(T, lignes, troncons) {
+  const { coeur } = TRANCHEE_OUVRAGES.echelle, E = new Uint8Array(T.W * T.H);
+  lignes.forEach((L, l) => {
+    for (const t of troncons) {
+      if (t.ligne !== l) continue;
+      for (const d of TRANCHEE_OUVRAGES.echelles) {
+        const c = Math.floor(t.x0 + d);
+        for (let i = Math.max(0, c - coeur); i <= Math.min(T.W - 1, c + coeur); i++) {
+          const yc = ligneY(L, i + 0.5), hw = demiLargeur(L, i + 0.5), j0 = Math.round(yc - hw), j1 = Math.max(j0 + 2, Math.round(yc + hw));
+          // les cases de la tranchée, et celle du parapet (du côté de l'ennemi)
+          for (let j = Math.max(0, j0 - (L.face < 0 ? 1 : 0)); j < Math.min(T.H, j1 + (L.face < 0 ? 0 : 1)); j++) E[j * T.W + i] = 1;
+        }
+      }
+    }
+  });
+  return E;
+}
 
 /* La ligne la plus proche du point (x, y) si le point est dans une tranchée de
    ligne (à 3 m près), sinon null. */
