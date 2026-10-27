@@ -10,14 +10,14 @@
 // faire (une caisse, un nuage, un char, une galerie) est dessiné par-dessus et suivi ici, pas dans la bataille. Rien n'est sauvegardé, rien ne change
 // dans le jeu. DESIGN.md : pas de loot, pas de gloire, le compteur de morts n'est pas une récompense ; les contenus de caisse sont des vivres et des outils,
 // jamais une puissance qu'on gagne en tuant.
-import { PALETTE } from './palette.js?v=0.86.0';
-import { nouvelleBataille, avancer, ordonnerMarche, mourir, PAS } from './bataille.js?v=0.86.0';
-import { compacter } from './army.js?v=0.86.0';
-import { impact } from './terrain.js?v=0.86.0';
-import { creerRendu } from './rendu3d.js?v=0.86.0';
-import { loadThree } from './three-lib.js?v=0.86.0';
-import { CALIBRES } from './data/calibres.js?v=0.86.0';
-import { hash2 } from './lib/rng.js?v=0.86.0';
+import { PALETTE } from './palette.js?v=0.87.0';
+import { nouvelleBataille, avancer, ordonnerMarche, mourir, PAS } from './bataille.js?v=0.87.0';
+import { compacter } from './army.js?v=0.87.0';
+import { impact } from './terrain.js?v=0.87.0';
+import { creerRendu } from './rendu3d.js?v=0.87.0';
+import { loadThree } from './three-lib.js?v=0.87.0';
+import { CALIBRES } from './data/calibres.js?v=0.87.0';
+import { hash2 } from './lib/rng.js?v=0.87.0';
 
 export const el = (tag, props = {}, ...kids) => { const e = Object.assign(document.createElement(tag), props); e.append(...kids); return e; };
 export const svgEl = (tag, attrs = {}) => { const e = document.createElementNS('http://www.w3.org/2000/svg', tag); for (const [k, v] of Object.entries(attrs)) e.setAttribute(k, v); return e; };
@@ -30,7 +30,7 @@ let partie = 0;                                              // chaque lancement
    obus à dispersion nulle (ils tombent où l'on vise), et par-dessus le canvas un SVG et un papier (les marques que la logique ne connaît pas).
    `pas(dt, ctx, ev)` à chaque pas de 1/30 s après celui de la bataille ; `image(dt, ctx)` à chaque image. Rend le nettoyage. */
 export function scene(stage, R, o) {
-  const { ennemi = false, bloc = true, yNous = 165, zoom = 2, cz = 130, crateres = [], pas = null, image = null, apres = null, echelle = () => 1, libre = null, nuit = false, soir = null } = o;   // `libre` : { yaw, tangage } : la caméra libre du jeu (placerCamera), qu'on tourne, incline, zoome et déplace à la souris
+  const { ennemi = false, bloc = true, yNous = 165, zoom = 2, cz = 130, crateres = [], pas = null, image = null, apres = null, avant = null, echelle = () => 1, libre = null, nuit = false, soir = null } = o;   // `libre` : { yaw, tangage } : la caméra libre du jeu (placerCamera), qu'on tourne, incline, zoome et déplace à la souris
   const R2 = structuredClone(R);
   R2.ia.barrage = R2.ia.offensive = 1e12;                    // l'IA d'en face se tait : la maquette décide de tout
   const dispersions = Object.entries(CALIBRES).map(([k, C]) => [k, C.dispersion]);
@@ -63,6 +63,7 @@ export function scene(stage, R, o) {
     // un obus de la logique (dispersion nulle), qui tombera dans `delai` secondes
     ctx.tirer = (cal, x, y, delai = 0) => B.etat.barrages.push({ camp: 1, cal, x, y, reste: 1, prochain: B.etat.temps + delai });
     ctx.dire = lignes => { papier.textContent = lignes.join('\n'); };
+    await avant?.(ctx);                                        // la maquette retouche le terrain ou l'armée avant que le moteur ne dessine le premier sol
     rendu = await creerRendu(canvas, { mesure: true });
     if (fini) { rendu.detruire(); return; }
     rendu.redimensionner(); rendu.attacher(B);

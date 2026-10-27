@@ -1,5 +1,7 @@
 # Tests, références et mesures
 
+- **Les tranchées en trois niveaux (v0.84.0)** : `test/tranchees-modeles.test.mjs` (la géométrie pure : chaque niveau coûte plus que le précédent, une tranchée détruite moins qu'une intacte, un budget par tronçon (150 / 1 500 / 4 000 triangles), aucun NaN du côté pris comme du nôtre, déterminisme ; la solidité d'un tronçon : 1 au départ, décroissante sous les obus, le voisin à peine touché, le coin de l'écran, les mots) ; `node outils/mesure-tranchees.mjs` (le coût de la géométrie, sans navigateur) ; `node scripts/mesure-tranchees-labo.mjs --variantes ABCDE --png [--scene]` (le dessin entier au labo, une image par niveau, le bouton « Mesurer dans la scène »).
+
 <!-- Sorti de CLAUDE.md : fumée, empreinte du dessin, scripts de mesure. Le texte est celui d'origine, sans changement ; décisions datées, mesures et pièges avec leur coût. Un ajout se range ici, pas dans CLAUDE.md. -->
 
 - **La référence de fumée dépendait de la fenêtre** (v0.52.3) : après le clic droit de l'étape `annule`, la souris restait à (600, 380), qui tombe sur un élément du HUD selon la taille de la fenêtre ; le terrain sous la souris y est caché (`majBulle`, `souris` sur le HUD), donc la ligne `terrain` valait « visible » sur la machine qui avait écrit `test/fumee.json` et « cachée » ici (7 étapes en écart depuis au moins la v0.48.0, vérifié en retournant à ces commits). L'étape `fiche-regiment` pose maintenant la souris à (700, 300), sur le champ ; référence réécrite, deux lancements identiques.

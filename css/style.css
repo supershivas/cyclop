@@ -531,6 +531,13 @@ h2 { font-weight: normal; letter-spacing: var(--titre-lettres); }
 .terrain .vit { flex: none; margin-left: auto; white-space: nowrap; }
 .terrain .vie .plein { display: flex; width: 10ch; background: var(--jeu-accent); }
 .terrain .vie .plein b { display: block; height: 100%; }
+/* La solidité d'une tranchée (Jérôme, v0.84.0) : une barre d'os qui se vide, avant la ligne de vie ; abîmée, elle prend l'orange de l'alerte, bouleversée le rouge (le mot porte l'information, la couleur la confirme) */
+.terrain .sol { margin-left: auto; }
+.terrain .sol + .vit { margin-left: 0; }
+.terrain .sol .plein { display: flex; width: 8ch; background: var(--jeu-fond); outline: var(--trait) solid var(--jeu-accent); }
+.terrain .sol .plein b { display: block; height: 100%; background: var(--jeu-encre); }
+.terrain .sol.abimee .plein b { background: var(--jeu-ebranle); }
+.terrain .sol.bouleversee .plein b { background: var(--jeu-deroute); }
 
 /* Les pertes (Jérôme, v0.33.0 ; « La barre de vie », variante B) : un duel, une barre de chaque côté du jour ; la vie collée au centre, la perte vers le bord */
 .pertes { display: flex; gap: var(--pas); align-items: flex-start; width: min(560px, 42vw); }
@@ -624,7 +631,7 @@ h2 { font-weight: normal; letter-spacing: var(--titre-lettres); }
 .char-boutons .bouton.vise { background: var(--jeu-encre); color: var(--jeu-fond); }
 .char-fiche[hidden] { display: none; }
 
-/* Le camp (Jérôme, v0.85.0) : les pastilles des cinq bâtiments, en bas à droite, et le papier du bâtiment choisi */
+/* Le camp (Jérôme, v0.87.0) : les pastilles des cinq bâtiments, en bas à droite, et le papier du bâtiment choisi */
 .camp-barre { display: flex; flex-wrap: wrap; gap: var(--e1); justify-content: flex-end; align-items: center; max-width: 312px; pointer-events: none; }
 .camp-barre > * { pointer-events: auto; }
 .camp-dotation { flex: 1 0 100%; text-align: right; font-size: var(--texte-petit); color: var(--jeu-fond); background: var(--jeu-encre); padding: var(--e0) var(--e2); box-shadow: var(--ombre-papier); }

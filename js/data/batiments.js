@@ -1,4 +1,4 @@
-// Le camp et ses bâtiments (Jérôme, v0.84.0 : « les ordres sont donnés en cliquant sur ces bâtiments, et non plus avec les boutons latéraux » ; « les bâtiments sont dans le système d'améliorations »).
+// Le camp et ses bâtiments (Jérôme, v0.85.0 : « les ordres sont donnés en cliquant sur ces bâtiments, et non plus avec les boutons latéraux » ; « les bâtiments sont dans le système d'améliorations »).
 // PROPOSITION lue par le labo (sujet « Le camp »), RIEN N'EST DANS LE JEU : les nombres sont à mesurer (`docs/chantiers/camp-et-ameliorations.md`).
 // Un bâtiment = une unité spéciale du jeu. Il porte ses ordres [nom, niveau où ils s'ouvrent] (ce qu'on lui demande en le choisissant) et trois niveaux ; aux niveaux 2 et 3, un choix entre deux améliorations
 // (on n'a jamais de quoi tout prendre). `cout` : en points de dotation (voir DOTATION). Aucune récompense ne vient d'un homme abattu (DESIGN.md, « Ce que le jeu refuse »).

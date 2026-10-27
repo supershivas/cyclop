@@ -1,13 +1,13 @@
 // Le papier de la nuit (Jérôme, v0.13.0) : un état (choix des corvées, puis le bilan de l'aube), jamais une boîte de
 // dialogue : le champ reste là, on choisit des régiments (clic, cadre, T) et on leur donne une corvée, dite sur leur carte.
-import { BATIMENTS } from '../data/batiments.js?v=0.86.0';
-import { NOUS, aube, priseEnCours } from '../bataille.js?v=0.86.0';
-import { METEO } from '../data/meteo.js?v=0.86.0';
-import { CORVEES, CONTACT } from '../data/corvees.js?v=0.86.0';
-import { refusCorvee, contactDe } from '../nuit.js?v=0.86.0';
-import { palmares, tableau } from './medailles.js?v=0.86.0';
-import { pluriel } from './lecture.js?v=0.86.0';
-import { lune, nomPhase, couvertureNuit, cielEnMots } from '../data/lune.js?v=0.86.0';
+import { BATIMENTS } from '../data/batiments.js?v=0.87.0';
+import { NOUS, aube, priseEnCours } from '../bataille.js?v=0.87.0';
+import { METEO } from '../data/meteo.js?v=0.87.0';
+import { CORVEES, CONTACT } from '../data/corvees.js?v=0.87.0';
+import { refusCorvee, contactDe } from '../nuit.js?v=0.87.0';
+import { palmares, tableau } from './medailles.js?v=0.87.0';
+import { pluriel } from './lecture.js?v=0.87.0';
+import { lune, nomPhase, couvertureNuit, cielEnMots } from '../data/lune.js?v=0.87.0';
 
 export const corveeDe = id => [...CORVEES, CONTACT].find(c => c.id === id)?.nom || '';
 export const corveeCourte = id => [...CORVEES, CONTACT].find(c => c.id === id)?.court || '';
@@ -55,7 +55,7 @@ function bilanEnMots(B, b) {
 // `pauser()` / `reprendre()` : arrêter / relancer la boucle ; `dire(r)` : montrer un refus
 // À deux sur le réseau (v0.30.0) : `moi()` est le camp qu'on joue, `enReseau()` dit si l'autre est un joueur ; ses choix et son « prêt » passent par `surChoix(régiment, corvée)` et `surPret()`
 // (le lockstep les rend aux deux machines), et le bilan de l'aube vient de main.js (`apresAube`), quand les deux sont prêts.
-// le camp au matin (v0.85.0) : les chantiers finis cette nuit et la dotation tombée (seulement dans la partie bridée)
+// le camp au matin (v0.87.0) : les chantiers finis cette nuit et la dotation tombée (seulement dans la partie bridée)
 const campEnMots = (B, d) => {
   if (!d || !B.etat.camp?.bride) return [];
   const fin = d.finis.map(([cle, n]) => `${BATIMENTS[cle].nom} : niveau ${n}, ${BATIMENTS[cle].niveaux[n - 1].nom.toLowerCase()}.`);

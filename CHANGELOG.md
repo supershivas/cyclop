@@ -1,14 +1,18 @@
 # Journal des versions
 
-## 0.86.0 — 2026-10-27
+## 0.87.0 — 2026-10-27
 - Le camp apparaît dans la marge arrière : on clique un bâtiment (ou sa pastille, ou la touche B) pour lui donner ses ordres et le bâtir ou l'améliorer ; les boutons de batterie sont dans leur bâtiment
 - Il faut bâtir le parc des chars, l'aérodrome et la maison des sapeurs ; les 155 et 220 s'ouvrent aux niveaux 2 et 3 de l'artillerie ; la dotation tombe à l'aube
 
-## 0.85.0 — 2026-10-27
+## 0.86.0 — 2026-10-27
 - La dotation de l'état-major tombe chaque aube et les chantiers du camp s'achèvent à la nuit (règle seule : rien n'est encore visible ni bridé)
 
-## 0.84.0 — 2026-10-27
+## 0.85.0 — 2026-10-27
 - Au labo, le camp : cinq bâtiments en trois niveaux (artillerie, aérodrome, parc des chars, sapeurs, caserne) et un camp qui grandit au fil des jours, avec les ordres au clic (proposition, pas encore dans le jeu)
+
+## 0.84.0 — 2026-10-27
+- Les tranchées ont une barre de vie : en les survolant, le coin de l'écran dit leur solidité (Intacte, Abîmée, Bouleversée) en mot, en pourcentage et en barre, avant la ligne de vie des deux armées
+- Au labo, des tranchées en trois niveaux de détail, intactes, légèrement détruites et bouleversées, avec leur coût sur le dessin (rien n'est encore dans la bataille)
 
 ## 0.83.3 — 2026-10-27
 - Les croix de la visée d'un nid sont plus grandes et plus épaisses : on voit mieux les hommes d'en face sous son feu

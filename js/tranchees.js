@@ -11,8 +11,8 @@
      d'occuper une tranchée s'en servent pour poser les hommes dedans.
    - Un tronçon protège du tir qui vient de devant (le parapet), beaucoup moins
      de celui qui vient de derrière (le parados) : pris, il sert à l'envers. */
-import { hash2 } from './lib/rng.js?v=0.86.0';
-import { etendueEau } from './eaux.js?v=0.86.0';
+import { hash2 } from './lib/rng.js?v=0.87.0';
+import { etendueEau } from './eaux.js?v=0.87.0';
 
 // Un bruit de valeurs lissé à une dimension (0..1) : le tracé d'une tranchée creusée à la main, jamais deux fois pareil (v0.29.0)
 const lisse = u => u * u * (3 - 2 * u);
@@ -90,6 +90,27 @@ export function creuserTranchees(T, S, ox, oy, graine) {
   T.version++;
   return { lignes, troncons };
 }
+
+/* La solidité d'un tronçon (Jérôme, v0.84.0 : « une barre de vie pour les tranchées ») : de 0 à 1, à quel point ses cases ont encore la forme creusée. Chaque case
+   compte l'écart entre son sol et la profondeur creusée, rapporté à cette profondeur (plafonné à 1) : un obus la comble (sa lèvre retombe dedans) ou la creuse en
+   cratère, et dans les deux cas le boyau n'est plus un boyau. 1 : creusée comme au premier jour ; 0 : plus une case à sa place. Se lit du sol (`T.diff`, rejoué par la
+   sauvegarde) : rien à garder. `T` le terrain, `prof` la profondeur en quarts, `tr` le tronçon, `L` sa ligne, `t` son indice (le même que dans `T.troncon`). */
+export function solidite(T, prof, tr, L, t) {
+  if (!(prof > 0)) return 1;
+  let somme = 0, n = 0;
+  for (let i = Math.max(0, Math.floor(tr.x0)); i < Math.min(T.W, Math.ceil(tr.x1)); i++) {
+    const yc = ligneY(L, i + 0.5), hw = demiLargeur(L, i + 0.5);
+    for (let j = Math.max(0, Math.floor(yc - hw) - 1); j < Math.min(T.H, Math.ceil(yc + hw) + 2); j++) {
+      const c = j * T.W + i;
+      if (T.troncon[c] !== t) continue;
+      somme += Math.min(1, Math.abs(T.diff[c] + prof) / prof); n++;
+    }
+  }
+  return n ? 1 - somme / n : 1;
+}
+// Les mots de la barre (le coin de l'écran) : de la solidité à son état en trois mots
+export const ETATS_TRANCHEE = [[0.85, 'Intacte'], [0.5, 'Abîmée'], [0, 'Bouleversée']];
+export const etatTranchee = s => ETATS_TRANCHEE.find(([seuil]) => s >= seuil)[1];
 
 /* La ligne la plus proche du point (x, y) si le point est dans une tranchée de
    ligne (à 3 m près), sinon null. */
