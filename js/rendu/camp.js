@@ -2,10 +2,10 @@
 // tant qu'un chantier dure, un liseré d'os autour du bâtiment choisi. Le dessin seulement : tout vient de l'état de la bataille, rien n'y est écrit ; et rien n'est dessiné hors de la partie bridée
 // (`etat.camp.bride`), donc ni le labo, ni les tests, ni le jeu à deux n'ont de camp.
 // Fabrique `creerCamp({ THREE, scene, bataille: () => B, hauteur })`.
-import { atelier } from './engins.js';
-import { BATIR, chantier } from './camp-modeles.js';
-import { emprisesCamp } from '../camp.js';
-import { PALETTE as P } from '../palette.js';
+import { atelier } from './engins.js?v=0.93.1';
+import { BATIR, chantier } from './camp-modeles.js?v=0.93.1';
+import { emprisesCamp } from '../camp.js?v=0.93.1';
+import { PALETTE as P } from '../palette.js?v=0.93.1';
 
 const LUEUR = 0.9;      // × la couleur de la matière (mesuré à l'œil sur la partie du premier matin : sans elle, la boue est noire)
 
@@ -32,10 +32,11 @@ export function creerCamp({ THREE, scene, bataille, hauteur }) {
     A ??= atelier(THREE);
     if (!lumiere) lampe();
     const vus = new Set();
-    for (const e of emprisesCamp(B.etat)) {
-      vus.add(e.cle);
-      const c = B.etat.camp.batiments[e.cle], signature = `${c.niveau}|${c.chantier ? 1 : 0}`;
-      let m = modeles.get(e.cle);
+    // les deux camps (v0.92.0) : le nôtre au sud, celui d'en face au nord, tourné d'un demi-tour ; seul le nôtre se choisit
+    for (const e of [...emprisesCamp(B.etat, 0), ...emprisesCamp(B.etat, 1)]) {
+      const id = `${e.camp}:${e.cle}`; vus.add(id);
+      const c = (e.camp === 0 ? B.etat.camp : B.etat.campEux).batiments[e.cle], signature = `${c.niveau}|${c.chantier ? 1 : 0}`;
+      let m = modeles.get(id);
       if (!m || m.signature !== signature) {
         if (m) scene.remove(m.pivot);
         const pivot = new THREE.Group();
@@ -43,14 +44,14 @@ export function creerCamp({ THREE, scene, bataille, hauteur }) {
         if (c.chantier) pivot.add(chantier(A, e.w * (c.niveau ? 1.02 : 0.7), e.d * (c.niveau ? 1.02 : 0.7), c.niveau ? 5 : 4));
         pivot.traverse(o => { if (o.material?.emissive) matieres.add(o.material); });
         scene.add(pivot);
-        m = { pivot, signature }; modeles.set(e.cle, m);
+        m = { pivot, signature }; modeles.set(id, m);
       }
       // posé sur le point le plus haut de l'emprise (les volumes sont plats : sur une pente, ils s'enterrent d'un côté plutôt que de flotter)
       let h = hauteur(e.x, e.y);
       for (const [sx, sy] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) h = Math.max(h, hauteur(e.x + sx * e.w / 2, e.y + sy * e.d / 2));
-      m.pivot.position.set(e.x, h, e.y);
+      m.pivot.position.set(e.x, h, e.y); m.pivot.rotation.y = e.rot;
     }
-    for (const [cle, m] of modeles) if (!vus.has(cle)) { scene.remove(m.pivot); modeles.delete(cle); }
+    for (const [id, m] of modeles) if (!vus.has(id)) { scene.remove(m.pivot); modeles.delete(id); }
     // sous la lumière commune (celle des chars et des ponts, faite pour des gris clairs), les volumes sombres de la palette (boue, glaise) tombent presque au noir : une lueur propre les relève, éteinte avec la nuit
     for (const mat of matieres) mat.emissive.copy(mat.color).multiplyScalar(LUEUR * (1 - Math.min(1, sombre)));
     for (const l of lumiere.children) if (l.isLight) l.intensity = (l.isAmbientLight ? 1.6 : 1.7) * (1 - 0.75 * Math.min(1, sombre));
@@ -63,7 +64,7 @@ export function creerCamp({ THREE, scene, bataille, hauteur }) {
       liseret = new THREE.LineSegments(geo, new THREE.LineBasicMaterial({ color: new THREE.Color(P.o), depthTest: false }));
       liseret.renderOrder = 10; liseret.userData.cle = choisi; scene.add(liseret);
     }
-    liseret.position.copy(modeles.get(choisi)?.pivot.position ?? liseret.position);
+    liseret.position.copy(modeles.get(`0:${choisi}`)?.pivot.position ?? liseret.position);
   }
   return { maj, vider, choisir: cle => { choisi = cle; if (!cle) sansLiseret(); } };
 }

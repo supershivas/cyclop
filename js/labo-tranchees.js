@@ -4,13 +4,13 @@
 // bout de tranchée est lu du sol, comme dans la bataille. A : le dessin du jeu (niveau 0). B, C, D : les niveaux 1, 2, 3 de `rendu/tranchee-modeles.js` (`rendu.niveauTranchees`), E : le niveau choisi selon le zoom.
 // Le coût : un tableau de la géométrie seule (triangles par tronçon et pour un secteur de 128 tronçons, temps de construction : `mesurerNiveau`, le même calcul que `outils/mesure-tranchees.mjs`) et un bouton
 // « Mesurer dans la scène » qui relève le dessin entier (triangles dessinés, temps jusqu'au bout) pour chaque niveau. Dans le jeu, `niveauTranchees` vaut 'auto'.
-import { impact } from './terrain.js';
-import { ligneY } from './tranchees.js';
-import { tronconSolidite } from './bataille.js';
-import { etatTranchee } from './tranchees.js';
-import { el, scene, texteSvg, maquette, bouton } from './labo-arcade.js';
-import { ZOOMS } from './rendu3d.js';
-import { NIVEAUX_TRANCHEES, mesurerNiveau } from './rendu/tranchee-modeles.js';
+import { impact } from './terrain.js?v=0.93.1';
+import { ligneY } from './tranchees.js?v=0.93.1';
+import { tronconSolidite } from './bataille.js?v=0.93.1';
+import { etatTranchee } from './tranchees.js?v=0.93.1';
+import { el, scene, texteSvg, maquette, bouton } from './labo-arcade.js?v=0.93.1';
+import { ZOOMS } from './rendu3d.js?v=0.93.1';
+import { NIVEAUX_TRANCHEES, mesurerNiveau } from './rendu/tranchee-modeles.js?v=0.93.1';
 
 export const NOTES_TRANCHEES = {
   A: 'En jeu (v0.88.1) : le niveau suit le zoom : la silhouette en dessous de 4 pixels par mètre, l\'ouvrage de 4 à 6, le détaillé à partir de 8. De loin presque rien, de près tout ; les échelles pour sortir sont là à tous les niveaux.',
@@ -19,13 +19,13 @@ export const NOTES_TRANCHEES = {
   D: NIVEAUX_TRANCHEES[2].note,
   E: 'Jusqu\'à la v0.84.0 : des sacs, des traverses, du bois et du fil de fer à partir de 4 pixels par mètre (le bois se brise avec le comblement), un dessin plus simple en dessous, ni banquette, ni cadres, ni échelles. C\'est le niveau 0.',
 };
-// Les tranchées de près (Jérôme, v0.91.0 : « je ne vois pas bien les tranchées dans le labo : peut-on les avoir en gros plan avec différents effets de texture ? ») : la même scène au niveau 3, à 32 pixels par mètre
+// Les tranchées de près (Jérôme, v0.93.1 : « je ne vois pas bien les tranchées dans le labo : peut-on les avoir en gros plan avec différents effets de texture ? ») : la même scène au niveau 3, à 32 pixels par mètre
 // (trois crans de zoom de plus, 24, 32 et 48), avec la « texture » de `rendu/tranchee-modeles.js` : pas une image (le jeu est en dix tons) mais des tons, des joints, du grain, de l'usure.
 export const NOTES_PRES = {
-  P1: 'En jeu (v0.91.0) : un ton de la palette par sac et par planche, tiré de sa position : le dessin est moins uniforme, aucun triangle de plus.',
+  P1: 'En jeu (v0.93.1) : un ton de la palette par sac et par planche, tiré de sa position : le dessin est moins uniforme, aucun triangle de plus.',
   P2: 'Des joints entre les sacs, une ficelle sur le dessus, le grain des planches du caillebotis, le tressage du clayonnage : des traits fins en terre sombre. De près le dessin se lit comme une matière ; de loin il disparaît. Coûte environ 60 % de triangles de plus au niveau 3.',
   P3: 'Les joints et le grain, plus l\'usure : de la boue au pied des sacs et sur les planches (les bottes), de la mousse (le vert de la palette) sur le dessus de certains sacs. La tranchée a servi. Coûte environ 80 % de triangles de plus au niveau 3.',
-  P0: 'Avant la v0.91.0 : des aplats, un seul ton par sorte d\'élément (tous les sacs pareils, toutes les planches pareilles).',
+  P0: 'Avant la v0.93.1 : des aplats, un seul ton par sorte d\'élément (tous les sacs pareils, toutes les planches pareilles).',
 };
 export const NOMS_PRES = { P1: 'Tons variés', P2: 'Joints et grain', P3: 'Joints, grain et usure', P0: 'Aplats' };
 // ce qu'on va voir de près : [nom, mètres depuis le début du tronçon]

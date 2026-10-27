@@ -2,8 +2,8 @@
 // sommet (`v`) et son fragment (`f`) ; le texte est exactement celui d'avant la découpe.
 export const solMat = {
   v: `
-      attribute float aParoi; attribute vec2 aDecal; attribute float aFace;
-      varying vec2 vUV; varying vec2 vXZ;
+      attribute float aParoi; attribute vec2 aDecal; attribute float aFace; attribute vec2 aMur;
+      varying vec2 vUV; varying vec2 vXZ; varying float vY; varying vec3 vMur;
       uniform vec2 uTaille; uniform float uSuivre; uniform vec2 uVersSoleil;
       void main() {
         // une paroi prend la couleur de la case au-dessus d'elle (aDecal : vers elle), en plus sombre (la moitié basse de la texture)
@@ -17,17 +17,21 @@ export const solMat = {
         }
         vUV = vec2(xz.x / uTaille.x, (xz.y / uTaille.y + (sombre > 0.5 ? 1.0 : 0.0)) * 0.5);
         vXZ = xz;
+        vY = position.y; vMur = vec3(aMur, sombre);
         gl_Position = projectionMatrix * viewMatrix * vec4(position, 1.0);
       }`,
   f: `
       uniform sampler2D uSol; uniform vec2 uTaille; uniform float uBord; uniform vec3 uBordCoul;
       uniform vec3 uKaki, uVert, uGlaise; uniform float uDissoudre;
-      uniform float uNuage, uTemps; uniform vec2 uVent;
-      varying vec2 vUV; varying vec2 vXZ;
+      uniform float uNuage, uTemps, uBiseau; uniform vec2 uVent;
+      varying vec2 vUV; varying vec2 vXZ; varying float vY; varying vec3 vMur;
       float h(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
       float vn(vec2 p) { vec2 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f); return mix(mix(h(i), h(i + vec2(1.0, 0.0)), f.x), mix(h(i + vec2(0.0, 1.0)), h(i + vec2(1.0, 1.0)), f.x), f.y); }
       void main() {
-        vec4 c = texture2D(uSol, vUV);
+        vec2 uv = vUV;
+        // (labo) le liseré : le haut d'une paroi prend la couleur du dessus de la case (la moitié haute de la texture), sur au plus deux cinquièmes de la paroi : l'arête paraît adoucie, sans triangle ni couleur de plus
+        if (uBiseau > 0.0 && vMur.z > 0.5 && vY > vMur.x - min(uBiseau, 0.4 * vMur.y)) uv.y -= 0.5;
+        vec4 c = texture2D(uSol, uv);
         vec3 rgb = c.rgb;
         // (labo) l'ombre des nuages : par blocs de 2 m qui dérivent avec le vent, les cases sous un nuage prennent un mélange de leur couleur et de celle de leur paroi (la moitié basse de la texture) ; le dessus seulement, uNuage à 0 : rien
         if (uNuage > 0.0 && vUV.y < 0.5) {
@@ -417,8 +421,10 @@ export const plMat = {
       void main() {
         vec3 p = position;
         p.y = 30.0 - mod(uT * aVit + position.y, 40.0);
-        p.x = uC.x - uE.x * 0.5 + mod(p.x - uC.x + uE.x * 0.5 + uDer.x, uE.x);     // uDer : la dérive accumulée par le vent (m)
-        p.z = uC.y - uE.y * 0.5 + mod(p.z - uC.y + uE.y * 0.5 + uDer.y, uE.y);
+        // position.x et position.z sont des fractions (0 à 1) de la boîte, qui suit le centre de la vue ; uDer : la dérive accumulée par le vent (m).
+        // (Avant la v0.88.1 c'étaient des mètres tirés dans 400 × 300 m : dézoomé, la boîte les répétait en mosaïque et la pluie tombait loin du champ)
+        p.x = uC.x - uE.x * 0.5 + fract(position.x + (uDer.x - uC.x) / uE.x) * uE.x;
+        p.z = uC.y - uE.y * 0.5 + fract(position.z + (uDer.y - uC.y) / uE.y) * uE.y;
         gl_Position = projectionMatrix * viewMatrix * vec4(p, 1.0);
         gl_PointSize = uTaille;
       }`,

@@ -1,15 +1,16 @@
 // La pluie (des traits qui tombent autour du centre de la vue) et le brouillard (un voile de brume continu qui s'épaissit vers le haut
 // de l'écran, le lointain ; plus de trame depuis la v0.12.1). Le dessin seulement : `afficher` lit la météo, `maj` règle les nuanceurs.
-import * as SH from './shaders.js';
-import { METEO } from '../data/meteo.js';
+import * as SH from './shaders.js?v=0.93.1';
+import { METEO } from '../data/meteo.js?v=0.93.1';
 
-const PLUIE = 1600, NEIGE = 1100;
+const PLUIE = 5000, NEIGE = 3500;
+const BOITE_MAX = 600;      // m : la boîte de pluie autour de la vue ne dépasse pas cela (dézoomé, 1 100 m pour 1 600 gouttes : presque rien sur le champ, tout au bord de l'horizon)
 
 // `THREE`, `scene` et `col` (une couleur de la palette) viennent de creerRendu ; l'ordre d'ajout à la scène et des tirages de `Math.random` est celui d'avant la découpe
 export function creerMeteo({ THREE, scene, col }) {
   // ─── La pluie : des traits qui tombent, autour du centre de la vue ───
   const plPos = new Float32Array(PLUIE * 3), plVit = new Float32Array(PLUIE);
-  for (let k = 0; k < PLUIE; k++) { plPos[k * 3] = Math.random() * 400; plPos[k * 3 + 1] = Math.random() * 40; plPos[k * 3 + 2] = Math.random() * 300; plVit[k] = 18 + Math.random() * 10; }
+  for (let k = 0; k < PLUIE; k++) { plPos[k * 3] = Math.random(); plPos[k * 3 + 1] = Math.random() * 40; plPos[k * 3 + 2] = Math.random(); plVit[k] = 18 + Math.random() * 10; }
   const plGeo = new THREE.BufferGeometry();
   plGeo.setAttribute('position', new THREE.BufferAttribute(plPos, 3));
   plGeo.setAttribute('aVit', new THREE.BufferAttribute(plVit, 1));
@@ -26,7 +27,7 @@ export function creerMeteo({ THREE, scene, col }) {
   function creerNeige() {
     const neigePos = new Float32Array(NEIGE * 3), neigeVit = new Float32Array(NEIGE);
     let germe = 12345; const hasard = () => ((germe = (Math.imul(germe, 1664525) + 1013904223) >>> 0) / 4294967296);
-    for (let k = 0; k < NEIGE; k++) { neigePos[k * 3] = hasard() * 400; neigePos[k * 3 + 1] = hasard() * 40; neigePos[k * 3 + 2] = hasard() * 300; neigeVit[k] = 2.5 + hasard() * 3; }
+    for (let k = 0; k < NEIGE; k++) { neigePos[k * 3] = hasard(); neigePos[k * 3 + 1] = hasard() * 40; neigePos[k * 3 + 2] = hasard(); neigeVit[k] = 2.5 + hasard() * 3; }
     const neigeGeo = new THREE.BufferGeometry();
     neigeGeo.setAttribute('position', new THREE.BufferAttribute(neigePos, 3));
     neigeGeo.setAttribute('aVit', new THREE.BufferAttribute(neigeVit, 1));
@@ -57,7 +58,7 @@ export function creerMeteo({ THREE, scene, col }) {
       plMat.uniforms.uDer.value.x += vx * 0.6 * dt; plMat.uniforms.uDer.value.y += vz * 0.6 * dt;
       if (neigeMatT) { neigeMatT.uniforms.uDer.value.x += (2 + vx * 1.1) * dt; neigeMatT.uniforms.uDer.value.y += vz * 1.1 * dt; }
       plMat.uniforms.uT.value = tAnim; plMat.uniforms.uC.value.set(cx, cz);
-      { const e = Math.hypot(vue.vw, vue.vh) / p + 40; plMat.uniforms.uE.value.set(e, e); }
+      { const e = Math.min(BOITE_MAX, Math.hypot(vue.vw, vue.vh) / p + 40); plMat.uniforms.uE.value.set(e, e); }
       plMat.uniforms.uTaille.value = p >= 4 ? 2 : 1;
       if (neigeMatT) neigeMatT.uniforms.uT.value = tAnim; if (neigeMatT) { neigeMatT.uniforms.uC.value.set(cx, cz); neigeMatT.uniforms.uE.value.copy(plMat.uniforms.uE.value); neigeMatT.uniforms.uTaille.value = (p >= 4 ? 3 : 2) + (fort ? 1 : 0); }
       brumeMat.uniforms.uH.value = vue.vh;

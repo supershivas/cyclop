@@ -4,12 +4,12 @@
    identité à re-dériver : un homme est son numéro, son rang, son expérience et ses victimes ; son nom vient de `graineIdentite`.
    Il est écrit à la fin de chaque bataille, avant l'écran de fin (`cloturerDansLeStore`), et `cloturer` est idempotente : relire une
    partie arrêtée à la fin, ou clore deux fois, donne le même registre. Rien n'est reporté de la fatigue, de la peur ni du moral. */
-import { hash2 } from './lib/rng.js';
-import { NOUS, rangDe, numeroCampagne } from './bataille.js';
-import { SECTEURS } from './data/secteur.js';
-import { identite, chevrons } from './identite.js';
-import { lireCaracs } from './army.js';
-import { CAMPAGNE, TEXTES } from './data/campagne.js';
+import { hash2 } from './lib/rng.js?v=0.93.1';
+import { NOUS, rangDe, numeroCampagne } from './bataille.js?v=0.93.1';
+import { SECTEURS } from './data/secteur.js?v=0.93.1';
+import { identite, chevrons } from './identite.js?v=0.93.1';
+import { lireCaracs } from './army.js?v=0.93.1';
+import { CAMPAGNE, TEXTES } from './data/campagne.js?v=0.93.1';
 
 export const CLE = 'campagne';        // l'entrée de js/lib/save.js (cyclopeen:campagne)
 export const VERSION_CAMPAGNE = 1;
@@ -59,6 +59,7 @@ export function suivante(c, plan = CAMPAGNE) {
   const opts = {
     secteur: P.secteur, mission, graineIdentite: c.graineIdentite, campagne, troupes,
     soldatsEux: Math.round(S.soldats / (P.forces ?? 1)), iaRythme: P.ia ?? null,
+    campDepart: derniere?.camp ?? null,                   // les niveaux du camp, d'une bataille à l'autre (le chantier en cours et la dotation ne passent pas)
   };
   if (P.saison) opts.saison = P.saison;                   // imposée par l'étape, dès la génération du terrain
   if (P.jours) opts.jours = P.jours;                      // sinon la durée du secteur (10 à 15 jours, tirée de la graine)
@@ -106,6 +107,7 @@ export function cloturer(c, B) {
     n: ref.n, graine: etat.graine, secteur: etat.secteur, mission: etat.mission, jours: etat.jour,
     issue: etat.issue ? { reussie: etat.issue.reussie, texte: etat.issue.texte } : null,
     pertes: [...etat.pertes], regiments,
+    ...(etat.camp?.bride ? { camp: Object.fromEntries(Object.entries(etat.camp.batiments).map(([cle, c]) => [cle, { niveau: c.niveau, choix: [...c.choix] }])) } : {}),      // le camp à la fin : la bataille suivante en part (v0.92.0)
     tombes: tombes(B),                         // nos morts : [numéro de campagne, jour, régiment] (les noms se refont de la graine d'identité : `memorial`)
   };
   const debout = regiments.filter(r => r.survivants.length >= (c.hommesMin ?? 1)).length;

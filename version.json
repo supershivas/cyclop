@@ -1,8 +1,8 @@
 {
-  "version": "0.91.0",
+  "version": "0.93.1",
   "date": "2026-10-27",
   "changes": [
-    "Les régiments s'équipent : à la caserne (niveau 2), une corvée de nuit donne casques, grenadiers, mitrailleuses ou brancardiers, un point de dotation chacun ; le régiment ne se repose pas cette nuit-là",
-    "Deux pièces au plus par régiment, qui les garde jusqu'à sa relève ; sa carte et son survol disent ce qu'il porte"
+    "Les tranchées ne perdent plus leurs ouvrages (sacs, bois, fil, échelles) quand la caméra est basse ou qu'on la déplace : ils suivent tout le sol que l'écran voit, et les arbres du premier plan gardent leur cime",
+    "Au labo, les tranchées de près (32 pixels par mètre) avec quatre textures : aplats, tons variés, joints et grain, usure"
   ]
 }

@@ -4,13 +4,13 @@
 //  C · « Dans les creux » : plus lourd que l'air, le gaz suit le relief : on voit la nappe se vider dans les tranchées et les cratères, qui deviennent des fosses (une grille de colonnes qui coule).
 // Historique vérifié : le 22 avril 1915 les Allemands lâchent ~170 t de chlore de plus de 5 700 bouteilles sur ~6 km de front, à la main (Second Ypres) ; l'ypérite (obus à croix jaune) date de juillet 1917 à Ypres et persiste dans le sol (non vérifié par la recherche, connaissance du domaine).
 // Les dégâts sont ceux de la maquette d'avant (toux et peur, brûlures, morts) ; les masques divisent la dose par cinq. Les nombres sont des propositions. Tout le dessin vient d'une grille de doses de 3 m : rien n'est dans la bataille.
-import { PALETTE as P } from './palette.js';
-import { loadThree } from './three-lib.js';
-import { ordonnerMarche, mourir } from './bataille.js';
-import { hash2 } from './lib/rng.js';
-import { ZOOMS } from './rendu3d.js';
-import { el, svgEl, bouton, scene, maquette, texteSvg } from './labo-arcade.js';
-import { atelier } from './labo-chars.js';
+import { PALETTE as P } from './palette.js?v=0.93.1';
+import { loadThree } from './three-lib.js?v=0.93.1';
+import { ordonnerMarche, mourir } from './bataille.js?v=0.93.1';
+import { hash2 } from './lib/rng.js?v=0.93.1';
+import { ZOOMS } from './rendu3d.js?v=0.93.1';
+import { el, svgEl, bouton, scene, maquette, texteSvg } from './labo-arcade.js?v=0.93.1';
+import { atelier } from './labo-chars.js?v=0.93.1';
 
 const CELLULE = 3;                                               // la grille de doses (m)
 const VENT = 3;                                                  // m/s, vers le sud (y croissant)

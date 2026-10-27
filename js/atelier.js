@@ -3,13 +3,13 @@
 // visible dans le jeu de ce navigateur, puis publiée d'un geste dans le dépôt
 // (un commit sur main, par l'API de GitHub) : assets/design/reglages.json.
 // Les outils : les réglages chiffrés (Jérôme, v0.1.0) et la carte, un éditeur visuel (`atelier-carte.js`).
-import { afficherVersion } from './version-tag.js';
-import { createPublisher, TOKEN_URL } from './lib/gh-publish.js';
-import { validerSecteur } from './tranchees.js';
-import { terrainDuSecteur, profilDe } from './secteur-terrain.js';
-import { SECTEURS } from './data/secteur.js';
-import { ongletCarte } from './atelier-carte.js';
-import { chargerContenu, lireBrouillon, ecrireBrouillon, compterBrouillon, deplier, secteurEffectif } from './design-store.js';
+import { afficherVersion } from './version-tag.js?v=0.93.1';
+import { createPublisher, TOKEN_URL } from './lib/gh-publish.js?v=0.93.1';
+import { validerSecteur } from './tranchees.js?v=0.93.1';
+import { terrainDuSecteur, profilDe } from './secteur-terrain.js?v=0.93.1';
+import { SECTEURS } from './data/secteur.js?v=0.93.1';
+import { ongletCarte } from './atelier-carte.js?v=0.93.1';
+import { chargerContenu, lireBrouillon, ecrireBrouillon, compterBrouillon, deplier, secteurEffectif } from './design-store.js?v=0.93.1';
 
 const REPO = 'supershivas/cyclop';
 const $ = id => document.getElementById(id);

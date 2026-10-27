@@ -2,12 +2,12 @@
 // Cinq bâtiments dessinés en volumes (`THREE`, 1 unité = 1 m, mêmes arêtes et mêmes couleurs que le reste du jeu), chacun en trois niveaux, puis le camp entier dans la marge arrière du terrain, qui grandit avec les jours.
 // Rien n'est dans le jeu. Un clic sur un bâtiment ouvre son papier : ses ordres (ceux des boutons latéraux d'aujourd'hui), le niveau suivant et ce qu'il coûte. Les nombres sont dans `data/batiments.js`
 // (des propositions, à mesurer) ; le raisonnement est dans `docs/chantiers/camp-et-ameliorations.md`. Caméra : glisser pour tourner, molette pour zoomer, un clic (sans glisser) choisit un bâtiment.
-import { PALETTE as P } from './palette.js';
-import { loadThree } from './three-lib.js';
-import { el, bouton, maquette } from './labo-arcade.js';
-import { atelier } from './rendu/engins.js';
-import { BATIR, PIED, G, soldat, chantier } from './rendu/camp-modeles.js';
-import { BATIMENTS, ORDRE_BATIMENTS, PARCOURS_EXEMPLE, DOTATION, CAMP_PLAN } from './data/batiments.js';
+import { PALETTE as P } from './palette.js?v=0.93.1';
+import { loadThree } from './three-lib.js?v=0.93.1';
+import { el, bouton, maquette } from './labo-arcade.js?v=0.93.1';
+import { atelier } from './rendu/engins.js?v=0.93.1';
+import { BATIR, PIED, G, soldat, chantier } from './rendu/camp-modeles.js?v=0.93.1';
+import { BATIMENTS, ORDRE_BATIMENTS, PARCOURS_EXEMPLE, DOTATION, CAMP_PLAN } from './data/batiments.js?v=0.93.1';
 
 // ─── Le visionneur : une scène THREE, une caméra qu'on tourne, un clic qui choisit ───
 function visionneur(boite, THREE, o) {

@@ -1,5 +1,22 @@
 # Journal des versions
 
+## 0.93.1 — 2026-10-27
+- Les tranchées ne perdent plus leurs ouvrages (sacs, bois, fil, échelles) quand la caméra est basse ou qu'on la déplace : ils suivent tout le sol que l'écran voit, et les arbres du premier plan gardent leur cime
+- Au labo, les tranchées de près (32 pixels par mètre) avec quatre textures : aplats, tons variés, joints et grain, usure
+
+## 0.93.0 — 2026-10-27
+- Le camp d'en face se bâtit seul à l'aube, avec la même dotation (selon la difficulté) : son artillerie ouvre ses 155 et 220, sa caserne grossit sa réserve ; on le voit au nord, tourné d'un demi-tour
+- Une campagne reporte les niveaux du camp d'une bataille à l'autre (la dotation repart du départ)
+
+## 0.92.0 — 2026-10-27
+- Au labo, nouveau sujet « Des angles adoucis » : des feuillages aux angles coupés et un liseré de lumière sur les arêtes du sol, à comparer avant de choisir ; le jeu ne change pas
+
+## 0.91.2 — 2026-10-27
+- Les drapeaux sont accrochés à leur mât et se déforment au vent : ils pendent au calme, se lèvent et ondulent quand il souffle, dans son sens
+
+## 0.91.1 — 2026-10-27
+- La pluie et la neige tombent partout sur le champ, même dézoomé (elles se perdaient au loin, à l'horizon) ; plus de gouttes, sur une boîte plafonnée à 600 m
+
 ## 0.91.0 — 2026-10-27
 - Les régiments s'équipent : à la caserne (niveau 2), une corvée de nuit donne casques, grenadiers, mitrailleuses ou brancardiers, un point de dotation chacun ; le régiment ne se repose pas cette nuit-là
 - Deux pièces au plus par régiment, qui les garde jusqu'à sa relève ; sa carte et son survol disent ce qu'il porte

@@ -2,7 +2,7 @@
 // Une entrée par version qui touche au labo, la plus récente en haut. `ref` : « sujet-Lettre » (la lettre est celle de la variante,
 // A étant l'actuelle). À chaque changement du labo : une entrée ici, avec `depuis` sur les variantes ajoutées ou changées (labo.js).
 export const JOURNAL = [
-  { version: '0.91.0', date: '2026-10-27', items: [
+  { version: '0.93.1', date: '2026-10-27', items: [
     { genre: 'nouveau', texte: 'Les tranchées de près : le niveau 3 à 32 pixels par mètre, avec quatre « textures » sans image (aplats, tons variés, joints et grain, usure), les détails à aller voir (l\'échelle, le parapet, l\'abri…) et l\'état de la tranchée', ref: 'tranchees-pres-A' },
   ] },
   { version: '0.90.0', date: '2026-10-27', items: [
