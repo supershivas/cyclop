@@ -1,6 +1,6 @@
 # Le camp, ses bâtiments et les améliorations (proposition, v0.85.0)
 
-**Statut** : décisions de principe prises (voir la fin) ; lots 0 (labo), 1 (règle), 2 (le camp à l'écran) 3 (les choix et les effectifs) et 4 (l'équipement) faits, lot 5 à faire. Rien n'est dans le jeu. Les maquettes sont au labo (groupe « Camp », sujet « Le camp et ses bâtiments », 7 variantes `a-trancher`), les nombres dans `js/data/batiments.js` (des propositions, à mesurer). Source : la demande de Jérôme du 27 octobre (v0.83.1).
+**Statut** : décisions de principe prises (voir la fin) ; lots 0 (labo), 1 (règle), 2 (le camp à l'écran) 3 (les choix et les effectifs), 4 (l'équipement) et 5 (en face et la campagne) faits ; reste le jeu à deux (lot 6). Rien n'est dans le jeu. Les maquettes sont au labo (groupe « Camp », sujet « Le camp et ses bâtiments », 7 variantes `a-trancher`), les nombres dans `js/data/batiments.js` (des propositions, à mesurer). Source : la demande de Jérôme du 27 octobre (v0.83.1).
 
 ## Ce qui est demandé, et comment je le lis
 
@@ -73,7 +73,7 @@ Ce que la proposition refuse : une expérience qui monte avec les morts causés,
 2. **Fait (v0.87.0) : le camp dessiné et cliquable** : `rendu/camp.js`, le choix au clic, le papier d'un bâtiment, la touche B, les icônes de la carte ; les boutons latéraux sont retirés ; les niveaux brident (artillerie 75 seule au départ…). La mesure du rendu et `rendu-empreinte`.
 3. **Fait (v0.89.0) : construire et améliorer** : le chantier d'une nuit, les choix aux paliers, le papier de la nuit qui dit les chantiers.
 4. **Fait (v0.91.0) : l'équipement des régiments** (casque, grenadiers…), la corvée « s'équiper ».
-5. **En face et la campagne** : l'IA qui bâtit, le niveau de départ d'une bataille à l'autre.
+5. **Fait (v0.92.0) : en face et la campagne** : l'IA qui bâtit, le niveau de départ d'une bataille à l'autre.
 
 ## Décisions de Jérôme (27 octobre, sur les recommandations ci-dessus)
 
@@ -116,3 +116,11 @@ Ce que la proposition refuse : une expérience qui monte avec les morts causés,
 - **L'état** : `reg.equip` (une liste de clés, au plus `EQUIPEMENT.places` = 2), sauvegardé (`VERSION` 17) ; **le matériel meurt avec le régiment** (un régiment relevé part avec ; le frais qui le remplace est nu). Dit sur le rabat du régiment (« Équipé : … ») et dans la bulle de survol ; la caserne l'annonce dans son papier.
 - **Écart avec la proposition** : une corvée par pièce (quatre boutons de plus sur le rabat) au lieu d'une seule corvée qui demande « quelle pièce ? » ; l'emplacement (tête / arme / soin) n'est pas distingué (deux pièces quelconques, une de chaque).
 - **Non mesuré** : les quatre facteurs. Le test « les casques font moins de morts » vérifie le sens (avec ≤ sans) sur une graine, pas l'ordre de grandeur.
+
+## Lot 5, ce qui est construit (v0.92.0)
+
+- **Le camp d'en face** : `etat.campEux` (le même état que le nôtre), dans toute partie bridée (`opts.camp`). Le même départ (artillerie et caserne au niveau 1, 2 régiments en réserve), la même règle : **ses ordres sont bridés comme les nôtres** (`refusOrdre` ne regarde plus que le camp demandé), ses choix de palier comptent (`modif` lit son camp). Sa dotation tombe à chaque aube × `dotation` de la difficulté (data/difficulte.js : 0,7 · 1 · 1,3 ; la nôtre ne change jamais). **Il bâtit seul** (`iaBatir`, camp.js ; à deux, un joueur le commande) selon `CAMP_IA.plan` : l'artillerie au niveau 2, la caserne au 2, l'artillerie au 3, les sapeurs au 1, la caserne au 3, les sapeurs au 2 ; un palier trop cher attend l'aube ; le choix du palier vient d'un hachage de la graine. Il n'a ni char ni avion (il n'en emploie pas encore). L'IA de tir ne choisit que parmi les calibres ouverts (même tirage quand tout l'est : hors partie bridée, rien ne change au bit près), refait ses nids seulement avec les sapeurs au niveau 2.
+- **On le voit** : le camp d'en face est le nôtre tourné d'un demi-tour autour du centre du secteur (au nord, dans la marge, `emprisesCamp(etat, 1)`), dessiné par `rendu/camp.js` ; il ne se choisit pas (un clic dessus ne fait rien). C'est une information donnée au joueur : ce qu'il a bâti se lit à l'œil.
+- **La campagne reporte le camp** : `cloturer` écrit les niveaux et les choix de la bataille au registre (`entree.camp`), `suivante` les passe en `opts.campDepart`, `campDeDepart({ depart })` les reprend et `appliquerDepart` refait les effectifs qu'ils donnent (avions, sections, réserve). Ne passent pas : le chantier en cours, la dotation (elle repart de 3), l'équipement des régiments (qui meurt avec eux), le camp d'en face (qui repart nu).
+- **Mesuré** (`node scripts/mesure-camp.mjs`, 300 hommes par camp, 11 jours, aucun ordre du joueur, graines 3 et 7) : nous recevons 18 à 20 points sur la bataille, en face 12 (calme), 20 (ordinaire) ; en face atteint l'artillerie de niveau 3 et la caserne de niveau 3 dans tous les cas. Ses obus passent du 220 (90 à 150 sans camp) à 54 à 70 : il tire plus de 75 (+25 à +30 %) et un peu plus de 155 ; **nos pertes ne bougent pas de façon lisible** (101 contre 98 ; 129 contre 176 ; 256 contre 248 selon la graine). Sur deux graines : à reprendre sur une dizaine avant de toucher à `dotation` ou au plan.
+- **Le jeu à deux n'a toujours pas de camp** (lot 6) : un camp par joueur, l'invité en miroir, les commandes `bat` et `ameliorer` dans le lockstep (une commande de plus par camp, rejouée par les deux pages), l'équipement, le rendu du camp de l'autre. Il garde ses boutons latéraux. Rien n'est cassé : `etat.campEux` n'existe que dans la partie du joueur seul.
