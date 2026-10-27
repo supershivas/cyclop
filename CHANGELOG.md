@@ -10,6 +10,12 @@
 ## 0.84.0 — 2026-10-27
 - Au labo, le camp : cinq bâtiments en trois niveaux (artillerie, aérodrome, parc des chars, sapeurs, caserne) et un camp qui grandit au fil des jours, avec les ordres au clic (proposition, pas encore dans le jeu)
 
+## 0.83.3 — 2026-10-27
+- Les croix de la visée d'un nid sont plus grandes et plus épaisses : on voit mieux les hommes d'en face sous son feu
+
+## 0.83.2 — 2026-10-27
+- Le survol d'un nid se lit mieux : le texte de sa visée est au bout du cône, et la bulle dit le nid (solidité, portée) au lieu du régiment qui l'entoure
+
 ## 0.83.1 — 2026-10-27
 - Le survol d'un nid de mitrailleuse montre sa visée : le cône où il tire, une croix sur les hommes d'en face sous son feu (ou « se tait » si son tronçon est pris)
 

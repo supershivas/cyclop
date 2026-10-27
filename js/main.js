@@ -1345,7 +1345,7 @@ for (const [id, sel] of [['reg-rang', '.reg-carte'], ['carte-grille', '.carte-ro
 function majViseeNid(x, y) {
   const svg = $('visee-nid');
   const n = x === null ? null : B.etat.nids.find(k => k.etat === 'actif' && Math.abs(k.x - x) < 3 && Math.abs(k.y - y) < 3);
-  if (!n) { if (!svg.hasAttribute('hidden')) { svg.setAttribute('hidden', ''); svg.innerHTML = ''; } return; }
+  if (!n) { if (!svg.hasAttribute('hidden')) { svg.setAttribute('hidden', ''); svg.innerHTML = ''; } return null; }
   const E = (px, py) => rendu.versEcran(px, py), F = ([a, b]) => `${a.toFixed(1)} ${b.toFixed(1)}`, pts = [E(n.x, n.y)], c2 = Math.cos(NIDS.demiCone), A = B.armee;
   for (let k = 0; k <= 16; k++) { const a = (k / 8 - 1) * NIDS.demiCone; pts.push(E(n.x + Math.sin(a) * NIDS.portee, n.y + n.face * Math.cos(a) * NIDS.portee)); }
   let croix = '', sous = 0;
@@ -1353,19 +1353,20 @@ function majViseeNid(x, y) {
     if (A.mort[i] || A.camp[i] === n.camp) continue;
     const dx = A.x[i] - n.x, dy = A.y[i] - n.y, d = Math.hypot(dx, dy);
     if (d >= NIDS.portee || d < 2 || dy * n.face / d < c2) continue;
-    sous++; const [px, py] = E(A.x[i], A.y[i]); croix += `M${(px - 2).toFixed(1)} ${(py - 2).toFixed(1)}l4 4m0 -4l-4 4`;
+    sous++; const [px, py] = E(A.x[i], A.y[i]); croix += `M${(px - 5).toFixed(1)} ${(py - 5).toFixed(1)}l10 10m0 -10l-10 10`;
   }
-  const tait = B.etat.troncons[n.troncon] !== n.camp, [nx, ny] = pts[0];
+  const tait = B.etat.troncons[n.troncon] !== n.camp, [nx, ny] = E(n.x, n.y + n.face * NIDS.portee);
   svg.innerHTML = `<path class="ombre" d="M${pts.map(F).join('L')}Z"/><path class="zone" d="M${pts.map(F).join('L')}Z"/><g class="croix"><path class="fond" d="${croix}"/><path class="encre" d="${croix}"/></g>`
-    + `<text x="${(nx + 12).toFixed(1)}" y="${(ny - 10).toFixed(1)}">${tait ? 'Se tait : son tronçon est pris' : `${sous} d'en face sous son feu`}</text>`;
+    + `<text x="${nx.toFixed(1)}" y="${(ny + (n.face > 0 ? 16 : -8)).toFixed(1)}" text-anchor="middle">${tait ? 'Se tait : son tronçon est pris' : `${sous} d'en face sous son feu`}</text>`;
   svg.removeAttribute('hidden');
+  return n;
 }
 function majBulle() {
   const bulle = $('bulle');
   if (!souris || !enJeu() || glisse || document.querySelector('dialog[open]')) { bulle.hidden = true; majTerrain(null); appliquerSurvol(-1, -1); majViseeNid(null); return; }
   const [x, y] = rendu.versTerrain(souris.x, souris.y);
   majTerrain(x, y);
-  majViseeNid(modeBarrage || nuit.etat ? null : x, y);
+  const nid = majViseeNid(modeBarrage || nuit.etat ? null : x, y);          // un nid sous la souris passe avant le régiment qui l'entoure
   let lignes = null, regSous = -1;
   if (dePres()) {
     const i = hommeSous(souris.x, souris.y);
@@ -1381,8 +1382,9 @@ function majBulle() {
       }
     }
   } else {
-    const r = regimentSous(x, y, Math.max(4, prise(16)));
-    if (r >= 0) { regSous = r; const reg = B.etat.regiments[r]; lignes = [nomDe(reg), enMots(bilan(reg)), majuscule(moralEnMots(reg, R)), refuseAujourdhui(reg)].filter(Boolean); }
+    const r = nid ? -1 : regimentSous(x, y, Math.max(4, prise(16)));
+    if (nid) lignes = ['Un nid de mitrailleuse', `Solidité ${Math.round(nid.pv / NIDS.pv * 100)} %`, `Tire à ${NIDS.portee} m devant lui`];
+    else if (r >= 0) { regSous = r; const reg = B.etat.regiments[r]; lignes = [nomDe(reg), enMots(bilan(reg)), majuscule(moralEnMots(reg, R)), refuseAujourdhui(reg)].filter(Boolean); }
   }
   const T = B.terrain, cc = Math.floor(y) * T.W + Math.floor(x);
   // un pont sous le pointeur (Jérôme, v0.67.0) : son nom, sa solidité en barre, son histoire (debout ou coupé)
