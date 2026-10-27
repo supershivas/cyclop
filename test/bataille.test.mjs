@@ -447,8 +447,9 @@ test('évacuer : les blessés du régiment quittent le front vivants ; ce ne son
   assert.equal(B.etat.evacues.length, r.bilan[0].evacues + r.bilan[1].evacues, 'en face évacue aussi les siens');
 });
 test('quatre corvées (v0.77.1) : les caillebotis, le coup de main, réparer, inhumer et les abris sont retirés, ni nous ni en face ne les choisissent, une ancienne s\'efface', () => {
-  const ids = CORVEES.map(c => c.id);
+  const ids = CORVEES.filter(c => !c.equipe).map(c => c.id);      // (v0.91.0 : les quatre pièces d'équipement de la caserne sont des corvées à part, `equipe`)
   assert.deepEqual(ids, ['repos', 'evacuer', 'ravitailler', 'releve']);
+  assert.deepEqual(CORVEES.filter(c => c.equipe).map(c => c.id), ['eq-casque', 'eq-grenades', 'eq-hotchkiss', 'eq-brancards']);
   const B = petite(SEED_NUIT); jusquALaNuit(B);
   for (const id of ['caillebotis', 'coup', 'reparer', 'inhumer', 'abri']) assert.match(refusCorvee(B, B.etat.regiments[0], id), /Pas de telle corvée/);
   for (let n = 0; n < 5; n++) {
