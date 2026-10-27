@@ -1,7 +1,7 @@
 // Les tranchées en trois niveaux de détail (v0.84.0) : la géométrie pure (budgets, état, déterminisme) et la solidité d'un tronçon (la barre de vie du coin de l'écran).
 import { nouvelleBataille, tronconSolidite, terrainResume } from '../js/bataille.js';
 import { impact } from '../js/terrain.js';
-import { ligneY, etatTranchee, ETATS_TRANCHEE } from '../js/tranchees.js';
+import { ligneY, demiLargeur, etatTranchee, ETATS_TRANCHEE } from '../js/tranchees.js';
 import { primitives, ouvrageTroncon, mesurerNiveau, niveauSelonZoom, couchesDe, ORDRE_COUCHES, NIVEAUX_TRANCHEES } from '../js/rendu/tranchee-modeles.js';
 import { REGLAGES as R } from '../js/data/reglages.js';
 
@@ -67,13 +67,39 @@ test('le coin de l\'écran la donne, et les mots suivent les seuils', () => {
 });
 
 group('tranchées — échelles');
-test('chaque niveau pose les échelles de TRANCHEE_OUVRAGES (en retirer une réduit les triangles, à chaque état)', async () => {
+// ce que dessine un tronçon avec ces échelles : les boîtes et les poutres (leurs deux bouts), avec le nom de leur sorte
+function dessin(niveau, etat, echelles, pris = false, face = -1) {
+  const noms = ORDRE_COUCHES, K = Object.fromEntries(noms.map(n => [n, [n + '/haut', n + '/flanc']])), B = [], P = [];
+  const hz = (a, b) => { const q = Math.sin(a * 127.1 + b * 311.7) * 43758.5453; return q - Math.floor(q); };
+  const boite = (x0, x1, y0, y1, z0, z1, k) => B.push({ x0: Math.min(x0, x1), x1: Math.max(x0, x1), y0, y1, z0: Math.min(z0, z1), z1: Math.max(z0, z1), nom: k[0].split('/')[0] });
+  const poutre = (ax, ay, az, bx, by, bz, e, k) => P.push({ a: [ax, ay, az], b: [bx, by, bz], e, nom: k[0].split('/')[0] });
+  const Lt = { camp: 0, rang: 0, y0: 50, amp: 1.5, phase: 2, face };
+  // un sol creusé comme une vraie tranchée : le fond à 0, le terrain autour à 1,5 m (la profondeur de 6 quarts), entre les deux la paroi
+  const surface = (x, z) => (Math.abs(z - ligneY(Lt, Math.floor(x) + 0.5)) < demiLargeur(Lt, Math.floor(x) + 0.5) ? 0 : 1.5);
+  ouvrageTroncon({ boite, poutre, trait: () => {}, surface, etat: () => etat, j: hz, K, prof: 6, pris, coupe: pris, texture: 3, echelles }, { x0: 0, x1: 25 }, Lt, niveau);
+  return { B, P };
+}
+const meme = (u, v) => JSON.stringify(u) === JSON.stringify(v);
+test('chaque niveau pose les échelles de TRANCHEE_OUVRAGES (le dessin change quand on en retire)', async () => {
   const { TRANCHEE_OUVRAGES } = await import('../js/data/tranchees.js');
   assert.deepEqual(TRANCHEE_OUVRAGES.echelles, [9, 21]);
   for (const n of [1, 2, 3]) for (const e of [2, 1, 0]) {
-    const tri = ech => mesurerNiveau(n, e, 3, () => 0, ech).triangles;
-    const avec = tri(undefined), deux = tri([9, 21]), une = tri([9]), sans = tri([]);
-    assert.equal(avec, deux); assert.ok(deux > une && une > sans, `niveau ${n}, état ${e} : ${deux} > ${une} > ${sans}`);
+    const a = dessin(n, e, undefined), b = dessin(n, e, [9]), c = dessin(n, e, []);
+    assert.ok(!meme(a, b) && !meme(b, c), `niveau ${n}, état ${e}`);
+  }
+});
+test('une échelle ne traverse rien : ses montants ne passent dans aucun sac, lisse, montant, panneau ni banquette (seul le caillebotis porte son pied)', () => {
+  for (const niveau of [1, 2, 3]) for (const pris of [false, true]) for (const face of [-1, 1]) {
+    const avec = dessin(niveau, 2, [9], pris, face), sans = dessin(niveau, 2, [], pris, face);
+    const rails = avec.P.filter(p => !sans.P.some(q => meme(p, q)));
+    assert.ok(rails.length >= 1, `des montants (niveau ${niveau})`);
+    const sol = b => b.y1 < 0.25 && ['planche', 'planche2', 'boue', 'ombre', 'eau'].includes(b.nom);          // le caillebotis et ce qui le couvre (grain, boue, eau) : le pied de l'échelle y repose
+    const autres = avec.B.filter(b => sans.B.some(q => meme(b, q)) && !sol(b));       // ce qui était déjà là, sauf le fond
+    for (const r of rails) for (let u = 0.25; u <= 1; u += 0.05) {                                  // le long du montant, sauf le pied
+      const x = r.a[0] + (r.b[0] - r.a[0]) * u, y = r.a[1] + (r.b[1] - r.a[1]) * u, z = r.a[2] + (r.b[2] - r.a[2]) * u, e = r.e - 0.01;
+      const dedans = autres.find(b => x + e > b.x0 + 0.01 && x - e < b.x1 - 0.01 && y + e > b.y0 + 0.01 && y - e < b.y1 - 0.01 && z + e > b.z0 + 0.01 && z - e < b.z1 - 0.01);
+      assert.ok(!dedans, `niveau ${niveau}, ${pris ? 'pris' : 'tenu'}, face ${face} : le montant entre dans ${dedans?.nom} en (${x.toFixed(2)}, ${y.toFixed(2)}, ${z.toFixed(2)}), u = ${u.toFixed(2)}`);
+    }
   }
 });
 

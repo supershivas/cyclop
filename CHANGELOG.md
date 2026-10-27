@@ -1,5 +1,8 @@
 # Journal des versions
 
+## 0.95.1 — 2026-10-27
+- Les échelles des tranchées s'adossent à la paroi : le pied sur le caillebotis, le sommet sur le bord, une brèche dans les sacs, la banquette, les lisses et le clayonnage ; elles ne traversent plus le bois
+
 ## 0.95.0 — 2026-10-27
 - Les tranchées gardent la texture « joints, grain et usure » : joints entre les sacs, grain des planches, boue au pied, mousse sur le dessus
 - Les sacs de sable sont projetés par les obus : ils partent en l'air et retombent à plat ; le mât des drapeaux se voit sous tous les angles ; plus de scintillement sur les faces des sacs et des planches

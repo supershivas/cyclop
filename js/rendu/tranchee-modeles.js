@@ -11,8 +11,8 @@
 // La « texture » (v0.94.2 : « différents effets de texture ») : `g.texture` de 0 à 3, sans image (le jeu est en dix tons) : 0 des aplats (un ton par élément) ; 1 des tons variés d'un sac, d'une planche à l'autre (le jeu) ;
 // 2 des joints entre les sacs, une ficelle sur le dessus, le grain des planches, le tressage du clayonnage ; 3 l'usure : la boue au pied des sacs, sur les planches, la mousse sur le dessus des sacs.
 // À chaque niveau, l'état du bout de tranchée (creusée, à moitié comblée, comblée) change ce qui reste : en place, brisé et de travers, puis des éclats à terre.
-import { ligneY, demiLargeur } from '../tranchees.js?v=0.95.0';
-import { TRANCHEE_OUVRAGES } from '../data/tranchees.js?v=0.95.0';
+import { ligneY, demiLargeur, paroisTranchee } from '../tranchees.js?v=0.95.1';
+import { TRANCHEE_OUVRAGES } from '../data/tranchees.js?v=0.95.1';
 
 // L'ordre des couches : les sortes d'élément, des plus petites (les joints, la boue : des traits fins) aux plus grosses ; chaque rang grossit la sorte de 2 mm (voir `primitives`)
 export const ORDRE_COUCHES = ['sac', 'sac2', 'sac3', 'ombre', 'boue', 'mousse', 'eau', 'planche', 'planche2', 'madrier', 'terre', 'fascine', 'acier', 'lanterne'];
@@ -73,14 +73,24 @@ export function ouvrageTroncon(g, tr, L, niveau) {
   const tonSac = j => (!tex ? K.sac : j < 0.34 ? K.sac : j < 0.67 ? K.sac2 : K.sac3), tonBois = j => (!tex ? K.planche : j < 0.34 ? K.planche : j < 0.67 ? K.planche2 : K.madrier);
   const zp = x => zc(x) + cote * (dm(x) + 0.55);          // l'axe du parapet (du côté de l'ennemi, ou de l'autre quand le tronçon est pris)
   const zd = x => zc(x) - cote * (dm(x) + 0.55);          // l'axe du parados
+  // Les échelles reposent sur la tranchée au lieu de la traverser (Jérôme, v0.96.0 : « peut-on poser les échelles sur les éléments, pour ne pas les faire traverser le bois ? ») : à chaque échelle, la paroi du parapet
+  // est libre sur 1,2 m (`coupee` : pas de banquette, de lisse, de clayonnage, de montant ni de sacs dans le passage ; on y voit la terre), le pied porte sur le caillebotis et le sommet s'appuie sur le bord de la paroi.
+  const echellesX = (g.echelles ?? TRANCHEE_OUVRAGES.echelles).map(d => x0 + d), LARGE = 0.62;
+  const surEchelle = (xa, xb, marge = LARGE) => echellesX.some(xe => xb > xe - marge && xa < xe + marge);
+  const coupee = (a, b, fn) => {                         // [a, b] privé des passages d'échelle
+    let segs = [[a, b]];
+    for (const xe of echellesX) segs = segs.flatMap(([u, v]) => (v <= xe - LARGE || u >= xe + LARGE) ? [[u, v]] : [[u, xe - LARGE], [xe + LARGE, v]].filter(([p, q]) => q - p > 0.08));
+    for (const [u, v] of segs) fn(u, v);
+  };
+  const trace = (s, u, v, fn) => (s === cote ? coupee(u, v, fn) : fn(u, v));      // une pièce du côté du parapet laisse le passage de l'échelle
   const pas = (a, b, p, fn) => { for (let x = a; x < b - 0.05; x += p) fn(x, Math.min(b, x + p), x + Math.min(p, b - x) / 2); };
 
   // ─── les sacs de sable ───
   if (niveau === 1) pas(x0, x1, 5, (a, b, xs) => {
     const e = etat(xs), j = hz(xs, 1), z = zp(xs), h = surface(xs, z);
     if (g.manque?.(xs, z)) return;
-    if (e === 2) boite(a, b, h, h + 0.5, z - 0.35, z + 0.35, K.sac);
-    else if (e === 1) boite(a, a + (b - a) * (0.4 + 0.5 * j), h, h + 0.25, z - 0.35, z + 0.35, K.sac);
+    if (e === 2) coupee(a, b, (u, v) => boite(u, v, h, h + 0.5, z - 0.35, z + 0.35, K.sac));
+    else if (e === 1) coupee(a, a + (b - a) * (0.4 + 0.5 * j), (u, v) => boite(u, v, h, h + 0.25, z - 0.35, z + 0.35, K.sac));
     else if (j < 0.5) boite(a + 1, a + 2.3, h, h + 0.2, z - 0.3, z + 0.3, K.sac2);
   });
   else {
@@ -88,6 +98,7 @@ export function ouvrageTroncon(g, tr, L, niveau) {
     pas(x0, x1, p, (a, b, xs) => {
       const e = etat(xs), j = hz(xs * 1.7, 2), z = zp(xs), h = surface(xs, z), t = tonSac(j);
       if (g.manque?.(xs, z)) return;                                      // un obus les a projetés (rendu/troncons.js, `projeterSacs`)
+      if (surEchelle(a - (b - a) / 2, b + (b - a) / 2, 0.5)) return;      // le passage de l'échelle : une brèche dans le parapet
       if (e === 0) { if (j < 0.3) boite(a, b - 0.1, h, h + 0.22, z + (j - 0.15) * 3 - 0.2, z + (j - 0.15) * 3 + 0.2, K.sac2); return; }
       const a1 = 0.25 + 0.06 * j, l = b - a;
       boite(a, b, h, h + a1, z - 0.25, z + 0.25, t);
@@ -117,7 +128,7 @@ export function ouvrageTroncon(g, tr, L, niveau) {
     const e = etat(xs);
     if (e === 0 || (e === 1 && hz(xs, 3) > 0.5)) return;
     const zb = zc(xs) + cote * dm(xs), h = surface(xs, zc(xs));
-    boite(a, b, h, h + (e === 2 ? 0.45 : 0.3), Math.min(zb, zb - cote * 0.55), Math.max(zb, zb - cote * 0.55), K.terre);
+    coupee(a, b, (u, v) => boite(u, v, h, h + (e === 2 ? 0.45 : 0.3), Math.min(zb, zb - cote * 0.55), Math.max(zb, zb - cote * 0.55), K.terre));
   });
 
   // ─── le boisage ───
@@ -127,12 +138,13 @@ export function ouvrageTroncon(g, tr, L, niveau) {
       const e = etat(xs);
       if (e === 0) return;
       const h = surface(xs, zc(xs));
-      for (const s of [-1, 1]) { if (e === 1 && (hz(xs, 4) < 0.5) === (s > 0)) continue; const z = zc(xs) + s * (dm(xs) + 0.1); boite(a, b - 0.2, h + haut * 0.9, h + haut * 0.9 + 0.13, z - 0.07, z + 0.07, K.madrier); }
+      for (const s of [-1, 1]) { if (e === 1 && (hz(xs, 4) < 0.5) === (s > 0)) continue; const z = zc(xs) + s * (dm(xs) + 0.1); trace(s, a, b - 0.2, (u, v) => boite(u, v, h + haut * 0.9, h + haut * 0.9 + 0.13, z - 0.07, z + 0.07, K.madrier)); }
     });
     for (let x = x0 + 1; x < x1 - 1; x += 4) {
       const e = etat(x), h = surface(x, zc(x));
       for (const s of [-1, 1]) {
         const z = zc(x) + s * (dm(x) + 0.1);
+        if (s === cote && surEchelle(x - 0.1, x + 0.1, 0.75)) continue;                  // pas de montant dans le passage de l'échelle
         if (e === 2) boite(x - 0.1, x + 0.1, h, h + haut * 0.9, z - 0.1, z + 0.1, K.madrier);
         else if (e === 1 && hz(x, s) > 0.5) boite(x - 0.1, x + 0.1, h, h + haut * 0.4, z - 0.1, z + 0.1, K.madrier);
       }
@@ -148,6 +160,7 @@ export function ouvrageTroncon(g, tr, L, niveau) {
       if (e === 2 || j > 0.4) boite(x - 0.12, x + 0.12, h, h + 0.05, zcx - dmx * 0.95, zcx + dmx * 0.95, K.planche);          // la semelle
       for (const s of [-1, 1]) {
         const z = zcx + s * (dmx + 0.1), haute = h + haut * 0.9;
+        if (s === cote && surEchelle(x - 0.2, x + 1.6, 0.75)) continue;                  // ni montant ni écharpe dans le passage de l'échelle
         if (e === 2) { boite(x - 0.09, x + 0.09, h, haute, z - 0.09, z + 0.09, K.madrier); poutre(x - 0.1, h + 0.1, z, x + 1.5, haute - 0.05, z, 0.04, K.madrier); }       // l'écharpe
         else if ((hz(x, s + 9) > 0.5)) poutre(x, h, z, x, h + haut * 0.8, z - s * (0.45 + 0.3 * j), 0.09, K.madrier);                                                       // un montant qui a plié vers l'intérieur
         else boite(x - 0.09, x + 0.09, h, h + haut * 0.35, z - 0.09, z + 0.09, K.madrier);                                                                                  // un montant rompu
@@ -159,8 +172,8 @@ export function ouvrageTroncon(g, tr, L, niveau) {
       const h = surface(xs, zc(xs));
       for (const s of [-1, 1]) {
         const z = zc(xs) + s * (dm(xs) + 0.1);
-        if (e === 2) boite(a, b - 0.2, h + haut * 0.9, h + haut * 0.9 + 0.13, z - 0.07, z + 0.07, K.madrier);
-        else if ((hz(xs, 4) < 0.5) === (s > 0)) poutre(a, h + haut * 0.9, z, b - 0.2, h + haut * 0.55, z, 0.06, K.madrier);       // la lisse qui pend
+        if (e === 2) trace(s, a, b - 0.2, (u, v) => boite(u, v, h + haut * 0.9, h + haut * 0.9 + 0.13, z - 0.07, z + 0.07, K.madrier));
+        else if ((hz(xs, 4) < 0.5) === (s > 0) && !(s === cote && surEchelle(a, b - 0.2))) poutre(a, h + haut * 0.9, z, b - 0.2, h + haut * 0.55, z, 0.06, K.madrier);       // la lisse qui pend
       }
     });
     // le clayonnage des parois : des panneaux de branches tressées, trois assises ; à moitié, des panneaux manquent, un autre pend ; comblé, quelques baguettes à terre
@@ -170,6 +183,7 @@ export function ouvrageTroncon(g, tr, L, niveau) {
       const h = surface(xs, zc(xs));
       for (const s of [-1, 1]) {
         const z = zc(xs) + s * (dm(xs) + 0.07), j2 = hz(xs, s * 3.3);
+        if (s === cote && surEchelle(a, b - 0.1)) continue;                                // le clayonnage laisse le passage de l'échelle
         if (e === 2) for (let k = 0; k < 3; k++) boite(a, b - 0.1, h + k * 0.4, h + k * 0.4 + 0.33, z - 0.04, z + 0.04, K.fascine);
         else if (j2 > 0.55) { boite(a, b - 0.1, h, h + 0.33, z - 0.04, z + 0.04, K.fascine); if (j2 > 0.8) boite(a, b - 0.1, h + 0.4, h + 0.73, z - 0.04, z + 0.04, K.fascine); }
         else if (j2 < 0.25 && j > 0.4) poutre(a, h + 0.9, z, b - 0.1, h + 0.2, z - s * 0.6, 0.05, K.fascine);
@@ -178,14 +192,17 @@ export function ouvrageTroncon(g, tr, L, niveau) {
     });
   }
 
-  // ─── les échelles pour sortir de la tranchée (tous les niveaux : un montant au niveau 1, deux montants et trois barreaux au 2, cinq barreaux au 3) : contre la paroi du parapet ;
-  // à moitié comblée elle penche et perd des barreaux, comblée elle gît à terre
-  for (const dx of g.echelles ?? TRANCHEE_OUVRAGES.echelles) {
-    const x = x0 + dx, e = etat(x), zcx = zc(x), dmx = dm(x), h = surface(x, zcx), j = hz(x, 12), zb = zcx + cote * (dmx - 0.3), zh = zcx + cote * (dmx + 0.35), top = h + haut + 0.3;
-    if (e === 0) { poutre(x - 0.25, h + 0.1, zcx - 0.5, x - 0.2, h + 0.15, zcx + 1.3, 0.05, K.madrier); if (niveau > 1) poutre(x + 0.25, h + 0.1, zcx - 0.5, x + 0.3, h + 0.12, zcx + 1.3, 0.05, K.madrier); continue; }
-    for (const s of niveau === 1 ? [0] : [-1, 1]) poutre(x + s * 0.25, h, zb, x + s * 0.25 + (e === 1 ? (s || 1) * 0.25 * j : 0), top, zh, niveau === 1 ? 0.12 : 0.05, K.madrier);
+  // ─── les échelles pour sortir de la tranchée (tous les niveaux : un montant au niveau 1, deux montants et trois barreaux au 2, cinq barreaux au 3) : contre la paroi du parapet, le pied sur le caillebotis et le sommet sur
+  // le bord de la paroi (le passage est libre : voir `coupee`) ; à moitié comblée elle penche de côté et perd des barreaux, comblée elle gît à terre
+  for (const xe of echellesX) {
+    const x = xe, e = etat(x), zcx = zc(x), j = hz(x, 12), { j0, j1 } = paroisTranchee(L, x), zw = cote > 0 ? j1 : j0, hf = surface(x, zcx);
+    const ep = niveau === 1 ? 0.12 : 0.05;
+    if (e === 0) { poutre(x - 0.25, hf + 0.15, zcx - 0.5, x - 0.2, hf + 0.2, zcx + 1.3, ep, K.madrier); if (niveau > 1) poutre(x + 0.25, hf + 0.15, zcx - 0.5, x + 0.3, hf + 0.17, zcx + 1.3, ep, K.madrier); continue; }
+    const hp = surface(x, zw + cote * 0.5), pied = zw - cote * 0.6, bord = zw - cote * ep, yf = hf + (niveau > 1 ? 0.1 : 0.02) + ep, T = 1.15;       // le sommet dépasse le bord de 15 %
+    const zt = u => pied + (bord - pied) * u, yt = u => yf + (hp - yf) * u;
+    for (const s of niveau === 1 ? [0] : [-1, 1]) poutre(x + s * 0.25, yt(0), zt(0), x + s * 0.25 + (e === 1 ? (s || 1) * 0.25 * j : 0), yt(T), zt(T), ep, K.madrier);
     const barreaux = niveau === 3 ? 5 : niveau === 2 ? 3 : 0;
-    for (let k = 1; k <= barreaux; k++) { if (e === 1 && (k + Math.floor(j * 10)) % 2) continue; const u = k / (barreaux + 1); boite(x - 0.25, x + 0.25, h + (top - h) * u - 0.03, h + (top - h) * u + 0.03, zb + (zh - zb) * u - 0.04, zb + (zh - zb) * u + 0.04, K.planche); }
+    for (let k = 1; k <= barreaux; k++) { if (e === 1 && (k + Math.floor(j * 10)) % 2) continue; const u = 0.12 + (T - 0.2) * k / (barreaux + 1); boite(x - 0.25, x + 0.25, yt(u) - 0.03, yt(u) + 0.03, zt(u) - 0.04, zt(u) + 0.04, K.planche); }
   }
 
   // ─── le fond : le caillebotis (niveaux 2 et 3), le caniveau et l'eau (3) ───

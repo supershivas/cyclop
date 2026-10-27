@@ -11,9 +11,9 @@
      d'occuper une tranchée s'en servent pour poser les hommes dedans.
    - Un tronçon protège du tir qui vient de devant (le parapet), beaucoup moins
      de celui qui vient de derrière (le parados) : pris, il sert à l'envers. */
-import { hash2 } from './lib/rng.js?v=0.95.0';
-import { etendueEau } from './eaux.js?v=0.95.0';
-import { TRANCHEE_OUVRAGES } from './data/tranchees.js?v=0.95.0';
+import { hash2 } from './lib/rng.js?v=0.95.1';
+import { etendueEau } from './eaux.js?v=0.95.1';
+import { TRANCHEE_OUVRAGES } from './data/tranchees.js?v=0.95.1';
 
 // Un bruit de valeurs lissé à une dimension (0..1) : le tracé d'une tranchée creusée à la main, jamais deux fois pareil (v0.29.0)
 const lisse = u => u * u * (3 - 2 * u);
@@ -28,6 +28,13 @@ export function ligneY(t, x) {
   const g = Math.round(t.phase * 1000), k = (t.amp || 1.5) / 1.5;
   return t.y0 + k * ((bruit1(x, 70, g) - 0.5) * 6.4 + (bruit1(x, 28, g + 1) - 0.5) * 3.6 + (bruit1(x, 11, g + 2) - 0.5) * 1.8);
 }
+/* Les parois de la tranchée à l'abscisse x (v0.96.0, pour poser les échelles contre elles) : { j0, j1 }, les plans z où le sol descend (le côté nord : j0, le côté sud : j1), comme `creuserTranchees` les creuse :
+   la colonne de x, le tracé et la largeur pris au milieu de la colonne. */
+export function paroisTranchee(t, x) {
+  const xc = Math.floor(x) + 0.5, yc = ligneY(t, xc), hw = demiLargeur(t, xc), j0 = Math.round(yc - hw);
+  return { j0, j1: Math.max(j0 + 2, Math.round(yc + hw)) };
+}
+
 /* La demi-largeur de la tranchée en x : 1 à 1,5 m (deux cases au moins) : tantôt étroite, tantôt une niche. */
 export const demiLargeur = (t, x) => 1 + 0.5 * bruit1(x, 17, Math.round(t.phase * 1000) + 3);
 
