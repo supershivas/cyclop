@@ -11,9 +11,9 @@
      d'occuper une tranchée s'en servent pour poser les hommes dedans.
    - Un tronçon protège du tir qui vient de devant (le parapet), beaucoup moins
      de celui qui vient de derrière (le parados) : pris, il sert à l'envers. */
-import { hash2 } from './lib/rng.js?v=0.95.1';
-import { etendueEau } from './eaux.js?v=0.95.1';
-import { TRANCHEE_OUVRAGES } from './data/tranchees.js?v=0.95.1';
+import { hash2 } from './lib/rng.js';
+import { etendueEau } from './eaux.js';
+import { TRANCHEE_OUVRAGES } from './data/tranchees.js';
 
 // Un bruit de valeurs lissé à une dimension (0..1) : le tracé d'une tranchée creusée à la main, jamais deux fois pareil (v0.29.0)
 const lisse = u => u * u * (3 - 2 * u);
