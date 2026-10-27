@@ -68,7 +68,7 @@ await etape('titre', 8);                                       // l'écran titre
 await page.evaluate(() => { document.getElementById('nouvelle').click(); });
 await page.waitForTimeout(500);
 await page.evaluate(() => { window.__images(2); });             // la partie commence
-await page.evaluate(() => { __jeu.setSeed(7); });
+await page.evaluate(() => { __jeu.setSeed(7); __jeu.bataille().etat.camp.batiments.artillerie.niveau = 3; });      // (v0.86.0 : le camp ouvre le 155 et le 220 au niveau 3 de l'artillerie ; le dessin du scénario ne change pas)
 await etape('z2', 4);
 await etape('z1', 3, () => { __jeu.zoom(0); __jeu.teleport({ x: 200, y: 150 }); });
 await etape('z4', 3, () => { __jeu.zoom(3); __jeu.teleport({ x: 200, y: 215 }); });
