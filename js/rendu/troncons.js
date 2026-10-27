@@ -1,9 +1,10 @@
 // Ce que l'état des tronçons montre sur le terrain : les fanions (à la couleur de celui qui tient le tronçon, déchirés quand l'autre
 // camp y est entré), le clignotement d'un ordre et la surbrillance de la visée, les ouvrages des tranchées (traverses, sacs de terre,
 // fil de fer, bois). Le dessin seulement : tout se lit de l'état, rien n'en est sauvegardé.
-import { PALETTE } from '../palette.js?v=0.83.2';
-import { ligneY, demiLargeur } from '../tranchees.js?v=0.83.2';
-import { TOITS } from '../data/nids.js?v=0.83.2';
+import { PALETTE } from '../palette.js?v=0.84.0';
+import { ligneY, demiLargeur } from '../tranchees.js?v=0.84.0';
+import { TOITS } from '../data/nids.js?v=0.84.0';
+import { primitives, ouvrageTroncon, niveauSelonZoom } from './tranchee-modeles.js?v=0.84.0';
 
 // `THREE`, `scene`, `col` (une couleur de la palette), `surface(x, z)` (la hauteur du sol), `projeter()` (le centre de la vue et les pixels par mètre),
 // `vue`, `zooms` viennent de creerRendu ; `bataille()`, `tAnim()` (le temps du dessin), `vide()` (rien n'est dessiné) et `survolTroncons()`
@@ -72,41 +73,70 @@ export function creerTroncons({ THREE, scene, col, surface, projeter, vue, zooms
   // quand le tronçon est pris : le parapet devient le parados), du fil de fer devant les premières lignes (coupé là où l'autre camp
   // est entré ou a pris), Le dessin seulement : rien n'en est sauvegardé,
   // tout se lit de l'état ; refait deux fois par seconde, et seulement ce qu'on voit, à partir de 3 pixels par mètre. ───
-  const OUV_BOITES = 8000, ouvPos = new Float32Array(OUV_BOITES * 30 * 3), ouvCol = new Float32Array(OUV_BOITES * 30 * 3);
+  // (les tampons grandissent à la demande, jusqu'à OUV_MAX boîtes : les niveaux de détail 2 et 3 des tranchées, v0.84.0, en veulent plus que les 8 000 d'avant)
+  const OUV_MAX = 120000;
+  let ouvCap = 8000 * 30, ouvPos = new Float32Array(ouvCap * 3), ouvCol = new Float32Array(ouvCap * 3);
   const ouvGeo = new THREE.BufferGeometry();
   ouvGeo.setAttribute('position', new THREE.BufferAttribute(ouvPos, 3).setUsage(THREE.DynamicDrawUsage));
   ouvGeo.setAttribute('color', new THREE.BufferAttribute(ouvCol, 3).setUsage(THREE.DynamicDrawUsage));
   ouvGeo.setDrawRange(0, 0);
   const ouvMesh = new THREE.Mesh(ouvGeo, new THREE.MeshBasicMaterial({ vertexColors: true, side: THREE.DoubleSide })); ouvMesh.frustumCulled = false; ouvMesh.renderOrder = 1; scene.add(ouvMesh);
-  const FIL_MAX = 24000, filPos = new Float32Array(FIL_MAX * 3), filGeo = new THREE.BufferGeometry();
+  let filCap = 24000, filPos = new Float32Array(filCap * 3);
+  const filGeo = new THREE.BufferGeometry();
   filGeo.setAttribute('position', new THREE.BufferAttribute(filPos, 3).setUsage(THREE.DynamicDrawUsage));
   filGeo.setDrawRange(0, 0);
   const filLignes = new THREE.LineSegments(filGeo, new THREE.LineBasicMaterial({ color: col('r') })); filLignes.frustumCulled = false; filLignes.renderOrder = 1; scene.add(filLignes);
   const cSacH = col('g'), cSacB = col('b'), cTravH = col('g'), cTravB = col('s'), cPorteH = col('g'), cPorteB = col('t');
   // le bois des tranchées (v0.80.0) : les planches (claires, `h` sur `g`) et les madriers (sombres, `g` sur `s`)
   const cPlancheH = col('h'), cPlancheB = col('g'), cMadrierH = col('g'), cMadrierB = col('s'), cSac2H = col('h'), cSac2B = col('b'), cFilH = col('r'), cFilB = col('g');
-  let ouvT = 0;
+  // Les niveaux de détail des tranchées (Jérôme, v0.84.0) : 0 le dessin d'avant (le jeu), 1 à 3 les ouvrages de tranchee-modeles.js, 'auto' : le niveau suit le zoom (niveauSelonZoom)
+  let niveauReglage = 0;
+  // Au niveau 0 (le jeu) les tampons gardent leur taille d'avant (8 000 boîtes, 24 000 sommets de fil : ce qui dépasse n'est pas dessiné, comme avant) ; ils ne grandissent qu'aux niveaux 1 à 3
+  let niveauCourant = 0;
+  const grandir = (v, n) => {                                   // de la place pour n sommets de plus dans les tampons des ouvrages (on recopie ce qui est déjà écrit)
+    if (v + n > (niveauCourant ? OUV_MAX * 30 : 8000 * 30)) return false;
+    if (v + n <= ouvCap) return true;
+    while (v + n > ouvCap) ouvCap *= 2;
+    const P = new Float32Array(ouvCap * 3), C = new Float32Array(ouvCap * 3); P.set(ouvPos.subarray(0, v * 3)); C.set(ouvCol.subarray(0, v * 3));
+    ouvPos = P; ouvCol = C;
+    ouvGeo.setAttribute('position', new THREE.BufferAttribute(ouvPos, 3).setUsage(THREE.DynamicDrawUsage));
+    ouvGeo.setAttribute('color', new THREE.BufferAttribute(ouvCol, 3).setUsage(THREE.DynamicDrawUsage));
+    return true;
+  };
+  const grandirFil = (v, n) => {
+    if (v + n > (niveauCourant ? 600000 : 24000)) return false;
+    if (v + n <= filCap) return true;
+    while (v + n > filCap) filCap *= 2;
+    const P = new Float32Array(filCap * 3); P.set(filPos.subarray(0, v * 3)); filPos = P;
+    filGeo.setAttribute('position', new THREE.BufferAttribute(filPos, 3).setUsage(THREE.DynamicDrawUsage));
+    return true;
+  };
+  // les couleurs des niveaux de détail : des paires [dessus, flanc] de la palette, comme pour le bois et les sacs du jeu (aucune couleur nouvelle)
+  // (créées au premier besoin : des couleurs de plus créées d'emblée décaleraient les identifiants de three, donc les 37 images de test/rendu.json)
+  let KN = null;
+  const couleursN = () => KN ??= { sac: [col('g'), col('b')], sac2: [col('h'), col('b')], planche: [col('h'), col('g')], madrier: [col('g'), col('s')], terre: [col('g'), col('s')], fascine: [col('b'), col('s')], acier: [col('r'), col('s')], eau: [col('e'), col('e')], ombre: [col('t'), col('t')], lanterne: [col('o'), col('g')] };
+  let ouvT = 0, niveauVu = null;
   function majOuvrages(dt) {
     const B = bataille();
     ouvT -= dt;
     const { cx, cz, p } = projeter();
-    const voir = !!B && B.etat.tranchees && p >= 3;
+    const niveau = niveauReglage === 'auto' ? niveauSelonZoom(p) : niveauReglage, voir = !!B && B.etat.tranchees && p >= (niveau ? 2 : 3);
     ouvMesh.visible = filLignes.visible = voir;
-    if (!voir || ouvT > 0) return;
-    ouvT = 0.5;
+    if (!voir || (ouvT > 0 && niveau === niveauVu)) return;
+    ouvT = 0.5; niveauVu = niveauCourant = niveau;
     const e = Math.hypot(vue.vw, vue.vh) / p + 30, et = B.etat;
     let nv = 0, nf = 0;
-    const sommet = (x, y, z, c) => { ouvPos[nv * 3] = x; ouvPos[nv * 3 + 1] = y; ouvPos[nv * 3 + 2] = z; ouvCol[nv * 3] = c.r; ouvCol[nv * 3 + 1] = c.g; ouvCol[nv * 3 + 2] = c.b; nv++; };
+    const sommet = (x, y, z, c) => { if (nv * 3 + 3 > ouvPos.length) return; ouvPos[nv * 3] = x; ouvPos[nv * 3 + 1] = y; ouvPos[nv * 3 + 2] = z; ouvCol[nv * 3] = c.r; ouvCol[nv * 3 + 1] = c.g; ouvCol[nv * 3 + 2] = c.b; nv++; };
     const quad = (a, b, c, d, k) => { sommet(...a, k); sommet(...b, k); sommet(...c, k); sommet(...a, k); sommet(...c, k); sommet(...d, k); };
     const boite = (x0, x1, y0, y1, z0, z1, haut, flanc) => {
-      if (nv + 30 > OUV_BOITES * 30) return;
+      if (!grandir(nv, 30)) return;
       quad([x0, y1, z0], [x0, y1, z1], [x1, y1, z1], [x1, y1, z0], haut);
       quad([x0, y0, z1], [x1, y0, z1], [x1, y1, z1], [x0, y1, z1], flanc);
       quad([x1, y0, z1], [x1, y0, z0], [x1, y1, z0], [x1, y1, z1], flanc);
       quad([x0, y0, z0], [x0, y0, z1], [x0, y1, z1], [x0, y1, z0], flanc);
       quad([x1, y0, z0], [x0, y0, z0], [x0, y1, z0], [x1, y1, z0], flanc);
     };
-    const trait = (x0, y0, z0, x1, y1, z1) => { if (nf + 2 > FIL_MAX) return; filPos.set([x0, y0, z0, x1, y1, z1], nf * 3); nf += 2; };
+    const trait = (x0, y0, z0, x1, y1, z1) => { if (!grandirFil(nf, 2)) return; filPos.set([x0, y0, z0, x1, y1, z1], nf * 3); nf += 2; };
     // Le bois d'un tronçon (Jérôme, v0.80.0 : « des madriers et des planches dans les tranchées, détruits au fur et à mesure afin de voir l'état des tranchées »).
     // L'état d'un bout de tranchée est sa profondeur (`T.diff`, rejouée par la sauvegarde : rien à garder) : creusée, tout est en place ; à moitié comblée, le bois est
     // brisé (planches courtes et de travers, madrier rompu) ; comblée, il ne reste que des éclats par terre, çà et là.
@@ -181,10 +211,22 @@ export function creerTroncons({ THREE, scene, col, surface, projeter, vue, zooms
         else if (j < 0.4) boite(x, x + 0.56, h0 + 0.05, h0 + 0.12, zc - demi * 0.7 + j, zc + demi * 0.6, cPlancheH, cPlancheB);
       }
     };
+    // le contexte des niveaux de détail : l'état d'un bout de tranchée (`etatDe`, plus bas) et un hachage, comme pour le bois
+    const quadN = (a, b, c, d, k) => { if (grandir(nv, 6)) quad(a, b, c, d, k); };
+    const { boite: boiteN, poutre } = primitives(quadN);
+    let Lcourante = null;
+    const gTr = { boite: boiteN, poutre, trait, surface, etat: x => etatDe(Lcourante, x), j: hachage, K: niveau ? couleursN() : null, prof, pris: false, coupe: false };
     B.troncons.forEach((tr, t) => {
       const L = B.lignes[tr.ligne], xm = (tr.x0 + tr.x1) / 2, zc = ligneY(L, xm);
       if (Math.abs(xm - cx) > e || Math.abs(zc - cz) > e) return;
       const pris = et.troncons[t] !== L.camp, f = L.face;
+      Lcourante = L;
+      if (niveau) {      // les niveaux de détail (v0.84.0) : tout le tronçon vient de tranchee-modeles.js ; le toit, lui, protège du tir : il reste celui du jeu
+        gTr.pris = pris; gTr.coupe = pris || !!B.disputes[t];
+        ouvrageTroncon(gTr, tr, L, niveau);
+        if (p >= 4 && tr.toit) toit(tr, L);
+        return;
+      }
       // les traverses : deux par tronçon, en travers de la tranchée
       for (const x of [tr.x0 + 6, tr.x0 + 18]) { const z = ligneY(L, x), h = surface(x, z); boite(x - 0.25, x + 0.25, h, h + 1.2, z - 1.5, z + 1.5, cTravH, cTravB); }
       // le bois : un caillebotis au fond, des planches contre les parois, des madriers (montants et lisse) tous les 4 m ; il disparaît où les obus ont comblé la tranchée
@@ -263,6 +305,8 @@ export function creerTroncons({ THREE, scene, col, surface, projeter, vue, zooms
     preparer: preparerFanions,                                   // une bataille est branchée : un fanion par tronçon
     maj(dt) { majFanions(dt); majClignotants(dt); majOuvrages(dt); },
     clignoter,                                                   // un ordre validé : les tronçons visés clignotent
+    get niveau() { return niveauReglage; },
+    set niveau(v) { niveauReglage = v === 'auto' ? 'auto' : Math.max(0, Math.min(3, v | 0)); ouvT = 0; },         // le niveau de détail des tranchées : 0 (le jeu), 1 à 3, 'auto' (selon le zoom)
     surligner(s) { surbrillance = s || { troncons: [], rects: [] }; },   // ce que l'ordre en cours de visée occuperait
   };
 }

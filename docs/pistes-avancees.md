@@ -491,6 +491,18 @@ Les grades se voient au labo (`docs/domaines/rendu.md`) ; ce que le commandement
 3. **La portée du commandement** : un officier vivant à moins de 25 m calme la peur de ses hommes (une aura, comme les sergents qui « tiennent » la ligne). Une règle de `army.js`, à équilibrer par une mesure.
 4. **Les tireurs d'élite d'en face visent les officiers** (le fanion du capitaine est une cible lisible) : un risque de plus à peser contre l'ordre de marche.
 
+### Piste 8 : les sapeurs améliorent un secteur de tranchées (proposée avec la barre de vie des tranchées, v0.84.0 ; rien n'est construit)
+
+**Point de départ** : depuis la v0.84.0 une tranchée a une **solidité** (0 à 1 : ce qui reste de sa forme creusée, `solidite` de tranchees.js, lue du sol : rien de sauvegardé), dite au survol (« Abîmée 64 % ») et dessinée en trois états (intacte, abîmée, bouleversée) par les trois niveaux de détail du labo. Les sapeurs existent déjà (`genie.js`, touche 6, sections de 20 hommes sans arme : ponts, nids de mitrailleuses). Il manque ce que le joueur *fait* de cette barre.
+
+**Deux gestes, du plus simple au plus riche** (la même touche 6 et le même clic sur un tronçon : le génie sait déjà marcher jusqu'à un point, travailler au prorata des hommes qui restent et se faire coucher par un obus) :
+1. **Remettre en état** (la 1re session) : une section creuse à nouveau le tronçon (elle rend au sol sa forme : `T.diff` reprend la profondeur creusée, les cases une à une, de l'ouest à l'est) ; la durée suit la solidité manquante (≈ 2 h de jeu pour un tronçon bouleversé avec 20 hommes), la barre remonte à mesure ; un obus sur les sapeurs les couche. Rien de nouveau dans l'état sauf la section et son travail (`etat.genies` a déjà `travail` de 0 à 1). Le jeu à deux : une commande de plus dans `executerCmd`, rien d'autre.
+2. **Fortifier** (la 2e session) : un niveau de fortification par tronçon (`etat.fortif[t]` : 0 creusé, 1 boisé, 2 renforcé, 3 fortifié ; sauvegardé, dans `empreinteEtat`), qui **relève le plafond** : un tronçon boisé ne s'éboule plus aussi vite (le comblement de ses cases par un obus est réduit d'un tiers par niveau), un tronçon fortifié a un abri creusé (le toit de bois existe déjà, `tr.toit`) et un nid. Chaque niveau est des heures de section et du bois (une réserve par camp, qui se vide : `etat.reserves` sait déjà compter les régiments frais). **Le dessin suit** : le niveau de fortification choisit ce que `ouvrageTroncon` pose (pas de cadres ni de clayonnage à 0, tout à 3) ; le niveau 3 du dessin n'est plus un luxe du zoom mais l'état du tronçon.
+
+**À trancher avec Jérôme** : (a) *remettre en état* est-il gratuit (des heures seulement) ou coûte-t-il du bois ? (b) les sapeurs travaillent-ils aussi de nuit, pendant la corvée (le jeu retire des corvées : « il y en a trop », v0.38.3 ; les corvées « réparer » et « inhumer » sont retirées, v0.77.1, `docs/archives/corvees-retirees.md` : *réparer* revient ici, mais avec une barre qui dit pourquoi) ? (c) l'IA d'en face fortifie-t-elle ? (d) un tronçon *pris* garde-t-il son niveau, ou retombe-t-il à 1 (le parapet se retourne : les sacs sont à l'envers, v0.18.0) ?
+**Risques** : l'équilibre (une tranchée fortifiée qui ne tombe plus fait tenir trop bien : à mesurer avec `scripts/mesure-stances.mjs`) ; le coût du dessin (niveau 3 : 2 800 triangles par tronçon intact, voir `docs/domaines/rendu.md`) ; le pathfinding des sections (les ponts ont déjà leurs bugs, v0.67.0).
+**Plan** : A (remettre en état) 2 sessions, B (fortifier) 3-4 sessions, après avoir choisi un niveau de détail au labo.
+
 ### Annexe : comparatif des coûts (plan recommandé de chaque piste)
 
 | Piste | Plan recommandé | Sessions | Dépend de |
@@ -501,3 +513,4 @@ Les grades se voient au labo (`docs/domaines/rendu.md`) ; ce que le commandement
 | 4. Campagne | A | 5-6 | 3, identité portable |
 | 5. Gaz | rien avant décision de ton | 6-8 | décision de ton, eau de la nuit étalée, maquette au labo |
 | 6. Marques d'un homme | A | 2-3 | — (la campagne et le Mémorial les prolongent) |
+| 8. Sapeurs et tranchées | A puis B | 2 → 3-4 | un niveau de détail choisi au labo, la barre de solidité (v0.84.0) |

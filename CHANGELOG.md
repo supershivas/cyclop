@@ -1,5 +1,9 @@
 # Journal des versions
 
+## 0.84.0 — 2026-10-27
+- Les tranchées ont une barre de vie : en les survolant, le coin de l'écran dit leur solidité (Intacte, Abîmée, Bouleversée) en mot, en pourcentage et en barre, avant la ligne de vie des deux armées
+- Au labo, des tranchées en trois niveaux de détail, intactes, légèrement détruites et bouleversées, avec leur coût sur le dessin (rien n'est encore dans la bataille)
+
 ## 0.83.2 — 2026-10-27
 - Le survol d'un nid se lit mieux : le texte de sa visée est au bout du cône, et la bulle dit le nid (solidité, portée) au lieu du régiment qui l'entoure
 

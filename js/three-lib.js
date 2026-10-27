@@ -5,7 +5,7 @@
 let promise = null;
 export function loadThree() {
   if (!promise) {
-    promise = import('../vendor/three.module.min.js?v=0.83.2').then(THREE => {
+    promise = import('../vendor/three.module.min.js?v=0.84.0').then(THREE => {
       THREE.ColorManagement.enabled = false;
       return THREE;
     });
