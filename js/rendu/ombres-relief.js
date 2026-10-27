@@ -5,7 +5,7 @@
 // Le masque (1 : à l'ombre) se calcule **à la demande, rangée par rangée** : quand le soleil a assez bougé ou que le terrain change, les rangées concernées sont
 // seulement déclarées périmées (`versions[j]` monte) ; le rendu, qui sait quelles rangées sont à l'écran, demande `ligneA(j)` pour celles qu'il repeint.
 // (Avant : un calcul complet de tout le champ puis la réécriture de toute la texture du sol d'un coup, ~250 ms de blocage à chaque échange.)
-import { OMBRES_RELIEF as O } from '../data/soleil.js?v=0.83.1';
+import { OMBRES_RELIEF as O } from '../data/soleil.js?v=0.84.0';
 
 export function creerOmbresRelief({ hauteurQ }) {
   let T = null, W = 0, H = 0;

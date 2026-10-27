@@ -1,5 +1,8 @@
 # Journal des versions
 
+## 0.84.0 — 2026-10-27
+- Au labo, le camp : cinq bâtiments en trois niveaux (artillerie, aérodrome, parc des chars, sapeurs, caserne) et un camp qui grandit au fil des jours, avec les ordres au clic (proposition, pas encore dans le jeu)
+
 ## 0.83.1 — 2026-10-27
 - Le survol d'un nid de mitrailleuse montre sa visée : le cône où il tire, une croix sur les hommes d'en face sous son feu (ou « se tait » si son tronçon est pris)
 
