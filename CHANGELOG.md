@@ -1,5 +1,8 @@
 # Journal des versions
 
+## 0.91.2 — 2026-10-27
+- Les drapeaux sont accrochés à leur mât et se déforment au vent : ils pendent au calme, se lèvent et ondulent quand il souffle, dans son sens
+
 ## 0.91.1 — 2026-10-27
 - La pluie et la neige tombent partout sur le champ, même dézoomé (elles se perdaient au loin, à l'horizon) ; plus de gouttes, sur une boîte plafonnée à 600 m
 

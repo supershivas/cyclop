@@ -1,10 +1,10 @@
 // Ce que l'état des tronçons montre sur le terrain : les fanions (à la couleur de celui qui tient le tronçon, déchirés quand l'autre
 // camp y est entré), le clignotement d'un ordre et la surbrillance de la visée, les ouvrages des tranchées (traverses, sacs de terre,
 // fil de fer, bois). Le dessin seulement : tout se lit de l'état, rien n'en est sauvegardé.
-import { PALETTE } from '../palette.js?v=0.91.1';
-import { ligneY, demiLargeur } from '../tranchees.js?v=0.91.1';
-import { TOITS } from '../data/nids.js?v=0.91.1';
-import { primitives, ouvrageTroncon, niveauSelonZoom } from './tranchee-modeles.js?v=0.91.1';
+import { PALETTE } from '../palette.js?v=0.91.2';
+import { ligneY, demiLargeur } from '../tranchees.js?v=0.91.2';
+import { TOITS } from '../data/nids.js?v=0.91.2';
+import { primitives, ouvrageTroncon, niveauSelonZoom } from './tranchee-modeles.js?v=0.91.2';
 
 // `THREE`, `scene`, `col` (une couleur de la palette), `surface(x, z)` (la hauteur du sol), `projeter()` (le centre de la vue et les pixels par mètre),
 // `vue`, `zooms` viennent de creerRendu ; `bataille()`, `tAnim()` (le temps du dessin), `vide()` (rien n'est dessiné) et `survolTroncons()`
@@ -17,6 +17,26 @@ export function creerTroncons({ THREE, scene, col, surface, projeter, vue, zooms
   let fanP = null, fanF = null, fanEtat = [];
   const fanMat = new THREE.Matrix4(), fanQ = new THREE.Quaternion(), fanE = new THREE.Euler(), fanS = new THREE.Vector3(), fanV = new THREE.Vector3();
   const fanCol = { 0: new THREE.Color(PALETTE.n), 1: new THREE.Color(PALETTE.x) };
+  // Un drapeau est accroché à son mât par son bord et ne tourne jamais autour de son centre : au calme il pend le long du mât ; plus le vent monte, plus il se lève à l'horizontale, dans le sens du vent (l'instance est tournée
+  // vers l'aval), et une onde court du mât vers le bout (plus ample au bout, plus vite et plus serrée par grand vent) ; déchiré, il pend toujours et claque.
+  const fanU = { uForce: { value: 0 }, uTV: { value: 0 } };
+  function fanMatVent() {
+    const m = new THREE.MeshBasicMaterial({ color: 0xffffff, side: THREE.DoubleSide });
+    m.onBeforeCompile = (sh) => {
+      sh.uniforms.uForce = fanU.uForce; sh.uniforms.uTV = fanU.uTV;
+      sh.vertexShader = 'attribute vec3 aTaille; uniform float uForce; uniform float uTV;\n' + sh.vertexShader.replace('#include <begin_vertex>', `
+        float s = position.x;
+        vec2 q = vec2(position.x * aTaille.x, (position.y - 1.0) * aTaille.y);
+        float pend = max(1.0 - smoothstep(0.0, 0.4, uForce), aTaille.z);
+        float d = pend * 1.2;
+        q = vec2(q.x * cos(d) + q.y * sin(d), -q.x * sin(d) + q.y * cos(d));
+        float ph = uTV * (2.5 + uForce * 10.0) - s * (4.0 + uForce * 4.0) + float(gl_InstanceID) * 1.7;
+        q.y += sin(ph * 0.7 + 1.3) * s * (0.03 + uForce * 0.12);
+        vec3 transformed = vec3(q.x, q.y, sin(ph) * s * (0.05 + uForce * 0.35 + aTaille.z * 0.2) * (1.0 - pend * 0.5));`);
+    };
+    m.customProgramCacheKey = () => 'drapeau-vent';
+    return m;
+  }
   function preparerFanions() {
     const B = bataille();
     for (const m of [fanP, fanF]) if (m) { scene.remove(m); m.dispose(); }
@@ -25,7 +45,10 @@ export function creerTroncons({ THREE, scene, col, surface, projeter, vue, zooms
     if (!n) return;
     const plan = new THREE.PlaneGeometry(1, 1);          // deux triangles : 128 fanions ne doivent presque rien coûter (des boîtes : +3 000 triangles, +10 ms tout dézoomé)
     fanP = new THREE.InstancedMesh(plan, new THREE.MeshBasicMaterial({ color: new THREE.Color(PALETTE.t), side: THREE.DoubleSide }), n);
-    fanF = new THREE.InstancedMesh(plan, new THREE.MeshBasicMaterial({ color: 0xffffff, side: THREE.DoubleSide }), n);
+    // le drapeau (Jérôme, v0.91.2 : « accrochés au mât et se déformer au vent ») : cinq bandes, le bord du mât en x = 0 et le haut du drapeau en y = 0 ; le nuanceur le plie (voir `fanMatVent`), en mètres, avec sa taille par instance (`aTaille` : largeur, hauteur, déchiré)
+    const drap = new THREE.PlaneGeometry(1, 1, 5, 1).translate(0.5, 0.5, 0);
+    drap.setAttribute('aTaille', new THREE.InstancedBufferAttribute(new Float32Array(n * 3), 3).setUsage(THREE.DynamicDrawUsage));
+    fanF = new THREE.InstancedMesh(drap, fanMatVent(), n);
     for (const m of [fanP, fanF]) { m.frustumCulled = false; m.renderOrder = 2; scene.add(m); }
     B.troncons.forEach((tr, k) => {
       const L = B.lignes[tr.ligne], x = (tr.x0 + tr.x1) / 2, z = ligneY(L, x) + L.face * 1.2;
@@ -277,7 +300,8 @@ export function creerTroncons({ THREE, scene, col, surface, projeter, vue, zooms
   function majFanions(dt) {
     const B = bataille();
     if (!fanP) return;
-    const p = zooms[vue.zoom];
+    const p = zooms[vue.zoom], taille = fanF.geometry.attributes.aTaille;
+    fanU.uForce.value = ventF.force; fanU.uTV.value = tAnim();
     for (let k = 0; k < fanEtat.length; k++) {
       const f = fanEtat[k], tient = B.etat.troncons[k];
       if (tient !== f.tient) { f.ancien = f.tient; f.tient = tient; f.t = 0; }
@@ -288,18 +312,18 @@ export function creerTroncons({ THREE, scene, col, surface, projeter, vue, zooms
       if (f.t < 1.2) { camp = f.ancien; monte = 1 - f.t / 1.2; } else if (f.t < 3.7) monte = (f.t - 1.2) / 2.5;
       const y0 = surface(f.x, f.z);
       const gros = Math.max(1, 3 / Math.max(p, 1));              // de loin, un fanion doit encore faire un pixel
-      // la hampe (3 m) et le drapeau (1,3 × 0,8 m), qui flotte un peu
+      // la hampe (3 m), puis le drapeau (1,3 × 0,8 m)
       fanS.set(0.12 * gros, 3, 1); fanV.set(f.x, y0 + 1.5, f.z);
       fanMat.compose(fanV, fanQ.identity(), fanS); fanP.setMatrixAt(k, fanMat);
-      // le drapeau flotte dans le sens du vent (Jérôme, v0.84.0) : calme il pend et bat à peine, au grand vent il claque, à plat
-      const fo = ventF.force, battement = Math.sin(tAnim() * (3 + fo * 9) + k) * (0.05 + fo * 0.22), w = (dechire ? 0.6 : 1.3) * gros, h = (dechire ? 0.5 : 0.8) * gros;
-      const cap = dechire ? 0 : -ventF.ang;
-      fanE.set(0, cap, dechire ? -0.35 : battement - (1 - Math.min(1, fo * 3)) * 0.55); fanQ.setFromEuler(fanE);
-      fanS.set(w, h, 1); fanV.set(f.x + Math.cos(-cap) * w / 2, y0 + 0.4 + 2.5 * monte - (dechire ? 0.2 : 0), f.z + Math.sin(-cap) * w / 2);
+      // le haut du drapeau est au haut du mât (3 m) quand il est monté, à 2,5 m plus bas quand il est amené ; il part de l'axe du mât et regarde dans le sens du vent (tournée de -cap)
+      const w = (dechire ? 0.6 : 1.3) * gros, h = (dechire ? 0.5 : 0.8) * gros;
+      fanE.set(0, -ventF.ang, 0); fanQ.setFromEuler(fanE);
+      fanS.set(1, 1, 1); fanV.set(f.x, y0 + 3 - 0.08 - 2.5 * (1 - monte), f.z);
       fanMat.compose(fanV, fanQ, fanS); fanF.setMatrixAt(k, fanMat);
+      taille.setXYZ(k, w, h, dechire ? 1 : 0);
       fanF.setColorAt(k, fanCol[camp]);
     }
-    fanP.instanceMatrix.needsUpdate = fanF.instanceMatrix.needsUpdate = true;
+    fanP.instanceMatrix.needsUpdate = fanF.instanceMatrix.needsUpdate = taille.needsUpdate = true;
     if (fanF.instanceColor) fanF.instanceColor.needsUpdate = true;
     fanP.visible = fanF.visible = !vide();
   }
