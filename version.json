@@ -1,5 +1,5 @@
 {
-  "version": "0.89.0",
+  "version": "0.90.0",
   "date": "2026-10-27",
   "changes": [
     "Les échelles des tranchées servent : au pied d'une échelle, on monte et on descend sans que la paroi ralentisse (3 m de large, deux échelles par tronçon) ; les assauts et les replis en sont un peu plus rapides",

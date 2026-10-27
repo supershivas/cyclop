@@ -1,9 +1,10 @@
 # Journal des versions
 
-## 0.89.0 — 2026-10-27
+## 0.90.0 — 2026-10-27
 - Les échelles des tranchées servent : au pied d'une échelle, on monte et on descend sans que la paroi ralentisse (3 m de large, deux échelles par tronçon) ; les assauts et les replis en sont un peu plus rapides
 - Au labo, les échelles ont leur place dans les trois niveaux de détail des tranchées
 
+## 0.89.0 — 2026-10-27
 - Chaque amélioration du camp change un chiffre : à chaque palier, on choisit entre deux améliorations (réglage ou caissons pour l'artillerie, blindage ou moteur pour les chars…)
 - Les bâtiments font venir les effectifs : 2 avions, puis 3 ; 2 sections du génie, puis 4 ; 2 régiments en réserve, puis 4, puis 6
 
