@@ -10,12 +10,13 @@
    - (v0.38.3) Les caillebotis et le coup de main sont retirés ; (v0.77.1) réparer la tranchée, inhumer les morts et creuser des abris aussi (docs/archives/corvees-retirees.md) : quatre corvées.
    - (v0.39.0) La mêlée se joue dans la nuit (`meleeNuit`) : un tronçon où les deux camps sont face à face au soir est tranché à l'aube, et les
      régiments au contact (`contactDe`) ne reçoivent aucune corvée. */
-import { hash2 } from './lib/rng.js?v=0.90.0';
-import { modif } from './camp.js?v=0.90.0';
-import { CORVEES } from './data/corvees.js?v=0.90.0';
-import { REGIMENTS } from './data/lexique.js?v=0.90.0';
-import { ajouterSoldat, poserCaracs, lireCaracs, place } from './army.js?v=0.90.0';
-import { departCaracs } from './identite.js?v=0.90.0';
+import { hash2 } from './lib/rng.js?v=0.91.0';
+import { modif, refusEquiper, equiper } from './camp.js?v=0.91.0';
+import { CORVEES } from './data/corvees.js?v=0.91.0';
+import { EQUIPEMENTS } from './data/batiments.js?v=0.91.0';
+import { REGIMENTS } from './data/lexique.js?v=0.91.0';
+import { ajouterSoldat, poserCaracs, lireCaracs, place } from './army.js?v=0.91.0';
+import { departCaracs } from './identite.js?v=0.91.0';
 
 export const corvee = id => CORVEES.find(c => c.id === id);
 
@@ -85,6 +86,7 @@ export function refusCorvee(B, reg, id) {
     if (m) return `Chez l'ennemi, ${id === 'evacuer' ? 'les blessés ne passent pas' : 'la soupe ne passe pas'} : ${m}.`;
   }
   if (id === 'releve' && !(B.etat.reserves?.[reg.camp] > 0)) return 'Plus un régiment en réserve.';
+  if (c.equipe) { const r = refusEquiper(B, reg, id.slice(3)); if (r) return r; }
   return null;
 }
 
@@ -183,6 +185,9 @@ export function corvees(B, choix, ctx) {
       reg.releve = etat.jour; reg.releves = reg.effectif; reg.effectif = 0;
       etat.reserves[reg.camp]--;
       releves.push(reg); b.releves = (b.releves || 0) + 1;
+    } else if (corvee(id)?.equipe) {
+      // l'équipement (v0.91.0) : un point de dotation, et le régiment ne se repose pas ; si la caisse s'est vidée entre-temps, il se repose
+      if (equiper(B, reg, id.slice(3))) b.equipes = (b.equipes || 0) + 1; else faite[reg.id] = 'repos';
     } else if (id === 'evacuer') {
       for (let i = 0; i < A.n; i++) {
         if (A.reg[i] !== reg.id || A.mort[i] || !A.blessure[i]) continue;
@@ -197,7 +202,7 @@ export function corvees(B, choix, ctx) {
   // les blessés laissés au front : certains ne passent pas la nuit
   for (let i = 0; i < A.n; i++) {
     if (A.mort[i] || !A.blessure[i]) continue;
-    if (rng() < N.mortBlesse * (A.blessure[i] === 3 ? 2 : 1)) { mourir(i, 'blessure'); bilan[A.camp[i]].mortsBlesses++; }
+    if (rng() < N.mortBlesse * (A.blessure[i] === 3 ? 2 : 1) * (etat.regiments[A.reg[i]].equip?.includes('brancards') ? EQUIPEMENTS.brancards.mortBlesse : 1)) { mourir(i, 'blessure'); bilan[A.camp[i]].mortsBlesses++; }
   }
   // les vivres : une nuit de moins ; qui n'en a plus a faim
   const faim = new Set();
@@ -264,7 +269,7 @@ function retours(B, rng, bilan) {
     if (e.length < 6 || e[3] !== 0) continue;                     // (avant la v0.18.0 : ni blessure ni régiment, ils ne reviennent pas)
     if (etat.jour - e[1] < (N.retourNuits[e[2]] ?? 1)) continue;
     const reg = etat.regiments[e[4]];
-    if (hash2(etat.graine | 0, e[0], 97 + e[1]) >= N.retourChance * modif(etat, reg?.camp ?? 1, 'caserne.retour') || !reg || reg.effectif <= 0) { e[3] = -1; continue; }
+    if (hash2(etat.graine | 0, e[0], 97 + e[1]) >= N.retourChance * modif(etat, reg?.camp ?? 1, 'caserne.retour') * (reg?.equip?.includes('brancards') ? EQUIPEMENTS.brancards.retour : 1) || !reg || reg.effectif <= 0) { e[3] = -1; continue; }
     // il remonte par les boyaux : à 12 m derrière la place de son régiment
     const t = reg.ordre.trace, x0 = t ? t.x0 : reg.ordre.x - 40, x1 = t ? t.x1 : reg.ordre.x + 40;
     let slot = 0;

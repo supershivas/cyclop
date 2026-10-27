@@ -1,5 +1,9 @@
 # Journal des versions
 
+## 0.91.0 — 2026-10-27
+- Les régiments s'équipent : à la caserne (niveau 2), une corvée de nuit donne casques, grenadiers, mitrailleuses ou brancardiers, un point de dotation chacun ; le régiment ne se repose pas cette nuit-là
+- Deux pièces au plus par régiment, qui les garde jusqu'à sa relève ; sa carte et son survol disent ce qu'il porte
+
 ## 0.90.0 — 2026-10-27
 - Les échelles des tranchées servent : au pied d'une échelle, on monte et on descend sans que la paroi ralentisse (3 m de large, deux échelles par tronçon) ; les assauts et les replis en sont un peu plus rapides
 - Au labo, les échelles ont leur place dans les trois niveaux de détail des tranchées

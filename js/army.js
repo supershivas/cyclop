@@ -25,10 +25,11 @@
      (rng.js), pour que la même graine rejoue la même bataille.
 
    Logique pure : aucun DOM. Le rendu lit les tableaux (rendu3d.js). */
-import { hauteurQ, vitesseCase } from './terrain.js?v=0.90.0';
-import { ligneY } from './tranchees.js?v=0.90.0';
-import { TOITS } from './data/nids.js?v=0.90.0';
-import { caracteristiques } from './identite.js?v=0.90.0';
+import { EQUIPEMENTS } from './data/batiments.js?v=0.91.0';
+import { hauteurQ, vitesseCase } from './terrain.js?v=0.91.0';
+import { ligneY } from './tranchees.js?v=0.91.0';
+import { TOITS } from './data/nids.js?v=0.91.0';
+import { caracteristiques } from './identite.js?v=0.91.0';
 
 export const GRILLE = 2;           // m : cases de voisinage
 export const DENSITE = 8;          // m : carrés de densité (tir)
@@ -311,7 +312,7 @@ export function pasArmee(A, ctx) {
         tirT[i] = M.periode * (0.7 + 0.6 * rng());
         if (peur[i] < Sd.terreur) {
           const j = ennemi;
-          const chance = M.touche * (0.55 + M.force * A.force[i] / 100) * (1.3 - M.endurance * A.endurance[j] / 100) * (1 - 0.4 * fatB[i]) * (1 + R.experience.adresse * A.exp[i]);
+          const chance = (r.equip?.includes('grenades') ? EQUIPEMENTS.grenades.melee : 1) * M.touche * (0.55 + M.force * A.force[i] / 100) * (1.3 - M.endurance * A.endurance[j] / 100) * (1 - 0.4 * fatB[i]) * (1 + R.experience.adresse * A.exp[i]);
           fatB[i] = Math.min(1, fatB[i] + M.fatigue);
           A.exp[i] = Math.min(1, A.exp[i] + R.experience.tir);
           gagner(A, i, 'force', PG.coup, PG);
@@ -327,7 +328,7 @@ export function pasArmee(A, ctx) {
       tirT[i] = R.tir.periode * (0.5 + rng()) * (blessure[i] === 1 ? Sd.brasBlesse : 1) * (ebranle ? R.moral.tirEbranle : 1) * parametresStance(R, r.stance).periode;
       // la terreur, ou la déroute : on ne tire plus
       // (sans ennemi à portée, il ne tire pas : ni fatigue ni expérience)
-      if (!retrait && peur[i] < Sd.terreur && !r.deroute && tirer(A, i, o, ctx, r.stance)) {
+      if (!retrait && peur[i] < Sd.terreur && !r.deroute && tirer(A, i, o, ctx, r.stance, r.equip?.includes('hotchkiss') ? EQUIPEMENTS.hotchkiss.portee : 1)) {
         fatB[i] = Math.min(1, fatB[i] + Sd.fatigueTir);
         A.exp[i] = Math.min(1, A.exp[i] + R.experience.tir);
       }
@@ -345,11 +346,11 @@ export function toitFacteur(T, c, genre) {
   return d >= 5 ? f : d >= 3 ? (1 + f) / 2 : 1;
 }
 
-function tirer(A, i, o, ctx, stance) {
+function tirer(A, i, o, ctx, stance, equip = 1) {
   const { R, rng, T, frapper } = ctx;
   const { dw, dh, dens } = A;
   const ennemi = 1 - A.camp[i], de = dens[ennemi];
-  const P = R.tir, portee = P.portee * parametresStance(R, stance).portee, rB = Math.ceil(portee / DENSITE);
+  const P = R.tir, portee = P.portee * parametresStance(R, stance).portee * equip, rB = Math.ceil(portee / DENSITE);
   const bx = (A.x[i] / DENSITE) | 0, by = (A.y[i] / DENSITE) | 0;
   const cosC = Math.cos(P.cone);
   let best = -1, bestN = 0, bestD = Infinity;

@@ -1,7 +1,7 @@
 // Le camp : la dotation de l'aube, les chantiers d'une nuit, les refus à voix haute, la sauvegarde (lot 1 de docs/chantiers/camp-et-ameliorations.md).
 import { nouvelleBataille, avancer, aube, photo, restaurer, ordonnerBarrage } from '../js/bataille.js';
-import { campDeDepart, modif, rechargeDe, pvAvion, refusOrdre, refusNid, emprisesCamp, batimentSous, refusCamp, ordonnerChantier, dotationAube, niveauDe, coutDe, nuitsDe, choisis } from '../js/camp.js';
-import { BATIMENTS, DOTATION } from '../js/data/batiments.js';
+import { refusEquiper, equiper, facteurEquip, campDeDepart, modif, rechargeDe, pvAvion, refusOrdre, refusNid, emprisesCamp, batimentSous, refusCamp, ordonnerChantier, dotationAube, niveauDe, coutDe, nuitsDe, choisis } from '../js/camp.js';
+import { BATIMENTS, DOTATION, EQUIPEMENTS, EQUIPEMENT, equipeEnMots } from '../js/data/batiments.js';
 import { REGLAGES as R } from '../js/data/reglages.js';
 
 const petite = (graine = 5) => nouvelleBataille(graine, R, { soldats: 200, jours: 6 });
@@ -179,6 +179,63 @@ test('une partie bridée relue après un chantier à choix est la même partie',
   const A = bridee(9); A.etat.camp.dotation = 20; ordonnerChantier(A.etat, 'artillerie', 1); nuit(A);
   const B = restaurer(JSON.parse(JSON.stringify(photo(A))), R);
   assert.deepEqual(B.etat.camp, A.etat.camp); assert.equal(modif(B.etat, 0, 'artillerie.recharge'), 0.85);
+  for (let k = 0; k < 300; k++) { avancer(A); avancer(B); }
+  assert.equal(JSON.stringify(photo(B)), JSON.stringify(photo(A)));
+});
+
+// ─── Lot 4 : l'équipement des régiments ───
+const regNous = B => B.etat.regiments.find(r => r.camp === 0);
+test('équiper demande la caserne au niveau 2, de la dotation, une place libre, une pièce qu\'il n\'a pas', () => {
+  const B = bridee(), e = B.etat, r = regNous(B);
+  assert.match(refusEquiper(B, r, 'casque'), /caserne au niveau 2/);
+  e.camp.batiments.caserne.niveau = 2;
+  assert.equal(refusEquiper(B, r, 'casque'), null);
+  e.camp.dotation = 0; assert.match(refusEquiper(B, r, 'casque'), /point de dotation/); e.camp.dotation = 5;
+  assert.match(refusEquiper(B, r, 'lance-flammes'), /Pas de telle pièce/);
+  assert.equal(equiper(B, r, 'casque'), true); assert.equal(e.camp.dotation, 4); assert.deepEqual(r.equip, ['casque']);
+  assert.match(refusEquiper(B, r, 'casque'), /a déjà/);
+  assert.equal(equiper(B, r, 'grenades'), true);
+  assert.match(refusEquiper(B, r, 'hotchkiss'), new RegExp(`${EQUIPEMENT.places} pièces`));
+  assert.equal(equiper(B, r, 'hotchkiss'), false, 'rien ne change quand c\'est refusé'); assert.equal(e.camp.dotation, 3);
+  assert.match(refusEquiper(B, B.etat.regiments.find(x => x.camp === 1), 'casque'), /notre camp/);
+  assert.equal(facteurEquip(r, 'casque', 'obus'), EQUIPEMENTS.casque.obus); assert.equal(facteurEquip(r, 'brancards', 'retour'), 1);
+  assert.equal(equipeEnMots(r), 'casques adrian et grenadiers');
+});
+test('la corvée de nuit équipe le régiment, coûte un point et lui ôte son repos ; sans caserne elle se refuse à voix haute', async () => {
+  const { refusCorvee } = await import('../js/nuit.js');
+  const B = bridee(), e = B.etat, r = regNous(B);
+  assert.match(refusCorvee(B, r, 'eq-casque'), /caserne au niveau 2/);
+  e.camp.batiments.caserne.niveau = 2;
+  while (e.phase === 'jour') avancer(B);
+  const avant = e.camp.dotation, autre = e.regiments.filter(x => x.camp === 0)[1];
+  const res = aube(B, { [r.id]: 'eq-brancards', [autre.id]: 'repos' });
+  assert.deepEqual(r.equip, ['brancards']); assert.equal(res.bilan[0].equipes, 1);
+  assert.equal(e.camp.dotation, avant - EQUIPEMENT.cout + res.dotation.points, 'un point payé, la dotation du matin versée');
+  assert.equal(autre.equip, undefined);
+});
+test('la dernière pièce ne se donne pas si la caisse s\'est vidée : le régiment se repose', () => {
+  const B = bridee(), e = B.etat; e.camp.batiments.caserne.niveau = 2;
+  const [a, b] = e.regiments.filter(x => x.camp === 0); e.camp.dotation = 1;
+  while (e.phase === 'jour') avancer(B);
+  const res = aube(B, { [a.id]: 'eq-casque', [b.id]: 'eq-grenades' });
+  assert.equal(res.bilan[0].equipes, 1); assert.equal((a.equip?.length ?? 0) + (b.equip?.length ?? 0), 1);
+});
+test('les casques font moins de morts sous les obus (même graine, mêmes obus)', () => {
+  const morts = casques => {
+    const B = bridee(11);
+    for (const r of B.etat.regiments) if (r.camp === 0 && casques) r.equip = ['casque'];
+    B.etat.camp.batiments.artillerie.niveau = 3;
+    for (let k = 0; k < 8; k++) ordonnerBarrage(B, '155', 300 + k * 6, 460, 1);
+    for (let k = 0; k < 900; k++) { avancer(B); if (k % 60 === 0) for (let q = 0; q < 3; q++) B.etat.barrages.push({ camp: 1, cal: '155', x: 280 + q * 30, y: 440, reste: 6, prochain: B.etat.temps }); }
+    return B.etat.pertes[0];
+  };
+  const sans = morts(false), avec = morts(true);
+  assert.ok(avec <= sans, `avec casques ${avec}, sans ${sans}`);
+});
+test('une partie équipée relue est la même partie, équipement compris', () => {
+  const A = bridee(13); A.etat.camp.batiments.caserne.niveau = 2; equiper(A, regNous(A), 'hotchkiss');
+  const B = restaurer(JSON.parse(JSON.stringify(photo(A))), R);
+  assert.deepEqual(regNous(B).equip, ['hotchkiss']);
   for (let k = 0; k < 300; k++) { avancer(A); avancer(B); }
   assert.equal(JSON.stringify(photo(B)), JSON.stringify(photo(A)));
 });

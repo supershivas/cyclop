@@ -54,10 +54,10 @@ export const BATIMENTS = {
   caserne: {
     nom: 'La caserne des renforts', court: 'Caserne', unite: 'la relève et les régiments frais', touches: 'T (nuit)',
     remplace: 'la corvée « relève » des cartes de régiment',
-    ordres: [['Relever un régiment (la nuit)', 1]],
+    ordres: [['Relever un régiment (la nuit)', 1], ['Équiper un régiment (la nuit)', 2]],
     niveaux: [
       { nom: 'Baraquements', cout: 0, depart: true, effet: 'Deux baraques, des tentes : 2 régiments frais en réserve.', reserves: 2 },
-      { nom: 'Cantonnement', cout: 2, effet: 'Quatre baraques, une cuisine roulante : 4 régiments en réserve (la réserve d\'aujourd\'hui).', reserves: 4,
+      { nom: 'Cantonnement', cout: 2, effet: 'Quatre baraques, une cuisine roulante : 4 régiments en réserve (la réserve d\'aujourd\'hui) ; on y équipe un régiment, la nuit.', reserves: 4,
         choix: [['Poste de secours', 'Les blessés évacués reviennent plus souvent (deux sur trois au lieu d\'un sur deux).', { 'caserne.retour': 4 / 3 }], ['Cuisine roulante', 'Le ravitaillement donne des vivres pour quatre nuits au lieu de trois.', { 'caserne.vivres': 4 / 3 }]] },
       { nom: 'Hôpital de campagne', cout: 3, effet: 'Un poste de secours, six baraques : 6 régiments en réserve.', reserves: 6,
         choix: [['Réserve de plus', 'Un régiment frais de plus en réserve.', { '+reserves': 1 }], ['Cantine de campagne', 'Le ravitaillement donne des vivres pour cinq nuits.', { 'caserne.vivres': 1.25 }]] },
@@ -66,13 +66,17 @@ export const BATIMENTS = {
 };
 export const ORDRE_BATIMENTS = ['caserne', 'artillerie', 'sapeurs', 'chars', 'aerodrome'];
 
-// L'équipement d'un régiment (la caserne, niveau 2) : ce qu'on donne aux hommes, jamais ce qu'ils ont abattu. Deux emplacements par régiment ; le matériel meurt avec le régiment.
+// L'équipement d'un régiment (Jérôme, v0.91.0 ; la caserne, niveau 2) : ce qu'on donne aux hommes, jamais ce qu'ils ont abattu. Il se donne la nuit, par une corvée (le régiment ne se repose pas : c'est son prix, avec `cout`
+// point de dotation) ; deux emplacements par régiment, un seul de chaque ; il meurt avec le régiment (relevé, il part avec son matériel). `id` d'une corvée : `eq-` + la clé. Les facteurs sont des propositions, à mesurer.
+export const EQUIPEMENT = { places: 2, cout: 1, niveauCaserne: 2 };
 export const EQUIPEMENTS = {
-  casque:   { nom: 'Casques Adrian', emplacement: 'tête', effet: 'Les éclats tuent moins : la blessure à la tête devient plus rarement mortelle.' },
-  grenades: { nom: 'Grenadiers', emplacement: 'arme', effet: 'Plus forts à la baïonnette et au corps à corps dans une tranchée prise.' },
-  hotchkiss: { nom: 'Section de mitrailleuses', emplacement: 'arme', effet: 'Le tir du régiment porte plus loin.' },
-  brancards: { nom: 'Brancardiers', emplacement: 'soin', effet: 'Ses blessés regagnent l\'arrière plus vite.' },
+  casque:    { nom: 'Casques Adrian', court: 'Casques', effet: 'Les éclats d\'obus tuent un cinquième de moins : ils blessent à la place.', obus: 0.8 },
+  grenades:  { nom: 'Grenadiers', court: 'Grenades', effet: 'Plus forts à la baïonnette et au corps à corps : un quart de coups qui portent en plus.', melee: 1.25 },
+  hotchkiss: { nom: 'Section de mitrailleuses', court: 'Hotchkiss', effet: 'Le tir du régiment porte 15 % plus loin.', portee: 1.15 },
+  brancards: { nom: 'Brancardiers', court: 'Brancards', effet: 'Moitié moins de blessés meurent laissés au front, et un quart de plus reviennent guéris.', mortBlesse: 0.5, retour: 1.25 },
 };
+/* Ce qu'un régiment porte, en mots */
+export const equipeEnMots = reg => (reg.equip ?? []).map(k => EQUIPEMENTS[k].nom.toLowerCase()).join(' et ');
 
 // La dotation de l'état-major : une seule monnaie, jamais des morts. Elle tombe à l'aube.
 export const DOTATION = {

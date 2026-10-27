@@ -1,8 +1,8 @@
 // Le camp : la règle, sans écran (Jérôme, v0.86.0 : lot 1 de `docs/chantiers/camp-et-ameliorations.md`). Logique pure : aucun DOM, aucune horloge, aucun hasard.
 // L'état est `etat.camp` : la dotation de l'état-major, le niveau de chaque bâtiment (et son chantier d'une nuit), les lignes d'en face déjà comptées.
 // Lot 2 : les niveaux ouvrent les ordres (`refusOrdre`). Lot 3 (v0.88.0) : chaque niveau et chaque choix de palier change un chiffre (`modif`) ou un effectif (`effectifsDe`).
-import { BATIMENTS, DOTATION, CAMP_PLAN, PIEDS } from './data/batiments.js?v=0.90.0';
-import { MITRAILLAGE } from './data/mitraillage.js?v=0.90.0';
+import { BATIMENTS, DOTATION, CAMP_PLAN, PIEDS, EQUIPEMENT, EQUIPEMENTS } from './data/batiments.js?v=0.91.0';
+import { MITRAILLAGE } from './data/mitraillage.js?v=0.91.0';
 
 const NOUS = 0;
 export const NIVEAU_MAX = 3;
@@ -152,3 +152,25 @@ function monter(etat, cle, niveau, choix) {
 }
 /* Les points de vie d'un avion neuf ou réparé, au plus : ceux de la flotte, plus le blindage choisi */
 export const pvAvion = (etat, camp) => Math.round(MITRAILLAGE.pv * modif(etat, camp, 'aerodrome.pv'));
+
+// ─── L'équipement des régiments (lot 4) : la corvée de nuit `eq-…` (nuit.js) ───
+/* Pourquoi on ne peut pas donner cette pièce (`cle` : une clé de EQUIPEMENTS) à ce régiment : une phrase, ou null */
+export function refusEquiper(B, reg, cle) {
+  const { etat } = B, c = etat.camp;
+  if (!EQUIPEMENTS[cle]) return 'Pas de telle pièce d\'équipement.';
+  if (reg.camp !== NOUS || !c?.bride) return 'Seule la caserne de notre camp équipe un régiment.';
+  if (niveauDe(etat, 'caserne') < EQUIPEMENT.niveauCaserne) return `Équiper un régiment demande la caserne au niveau ${EQUIPEMENT.niveauCaserne}.`;
+  if (reg.equip?.includes(cle)) return `${reg.nom} a déjà ${EQUIPEMENTS[cle].court.toLowerCase()}.`;
+  if ((reg.equip?.length ?? 0) >= EQUIPEMENT.places) return `${reg.nom} porte déjà tout ce qu'il peut : ${EQUIPEMENT.places} pièces.`;
+  if (c.dotation < EQUIPEMENT.cout) return `Il manque ${EQUIPEMENT.cout - c.dotation} point de dotation pour ${EQUIPEMENTS[cle].court.toLowerCase()}.`;
+  return null;
+}
+/* Donner la pièce, la nuit : paie un point et la note sur le régiment ; rend faux (sans rien changer) si la caisse s'est vidée depuis l'ordre */
+export function equiper(B, reg, cle) {
+  if (refusEquiper(B, reg, cle)) return false;
+  B.etat.camp.dotation -= EQUIPEMENT.cout;
+  (reg.equip ??= []).push(cle);
+  return true;
+}
+/* Le facteur d'une pièce pour un régiment (1 s'il ne la porte pas) */
+export const facteurEquip = (reg, cle, champ) => reg?.equip?.includes(cle) ? EQUIPEMENTS[cle][champ] : 1;

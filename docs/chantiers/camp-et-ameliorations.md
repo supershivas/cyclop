@@ -1,6 +1,6 @@
 # Le camp, ses bâtiments et les améliorations (proposition, v0.85.0)
 
-**Statut** : décisions de principe prises (voir la fin) ; lots 0 (labo), 1 (règle), 2 (le camp à l'écran) et 3 (les choix et les effectifs) faits, lots 4 et 5 à faire. Rien n'est dans le jeu. Les maquettes sont au labo (groupe « Camp », sujet « Le camp et ses bâtiments », 7 variantes `a-trancher`), les nombres dans `js/data/batiments.js` (des propositions, à mesurer). Source : la demande de Jérôme du 27 octobre (v0.83.1).
+**Statut** : décisions de principe prises (voir la fin) ; lots 0 (labo), 1 (règle), 2 (le camp à l'écran) 3 (les choix et les effectifs) et 4 (l'équipement) faits, lot 5 à faire. Rien n'est dans le jeu. Les maquettes sont au labo (groupe « Camp », sujet « Le camp et ses bâtiments », 7 variantes `a-trancher`), les nombres dans `js/data/batiments.js` (des propositions, à mesurer). Source : la demande de Jérôme du 27 octobre (v0.83.1).
 
 ## Ce qui est demandé, et comment je le lis
 
@@ -72,7 +72,7 @@ Ce que la proposition refuse : une expérience qui monte avec les morts causés,
 1. **Fait (v0.86.0) : règle sans écran** : `data/batiments.js` branché, `camp.js`, la dotation à l'aube, `etat.camp` ; **aucun niveau ne bride encore rien** (tout est « niveau max » par défaut) ; tests + sauvegarde ; équilibrage mesuré (`scripts/mesure-camp.mjs` : dotation versée sur les graines 3, 7, 8).
 2. **Fait (v0.87.0) : le camp dessiné et cliquable** : `rendu/camp.js`, le choix au clic, le papier d'un bâtiment, la touche B, les icônes de la carte ; les boutons latéraux sont retirés ; les niveaux brident (artillerie 75 seule au départ…). La mesure du rendu et `rendu-empreinte`.
 3. **Fait (v0.89.0) : construire et améliorer** : le chantier d'une nuit, les choix aux paliers, le papier de la nuit qui dit les chantiers.
-4. **L'équipement des régiments** (casque, grenadiers…), la corvée « s'équiper ».
+4. **Fait (v0.91.0) : l'équipement des régiments** (casque, grenadiers…), la corvée « s'équiper ».
 5. **En face et la campagne** : l'IA qui bâtit, le niveau de départ d'une bataille à l'autre.
 
 ## Décisions de Jérôme (27 octobre, sur les recommandations ci-dessus)
@@ -108,3 +108,11 @@ Ce que la proposition refuse : une expérience qui monte avec les morts causés,
 - **Les effectifs viennent avec les bâtiments** : `appliquerDepart` (2 régiments en réserve, 0 section, 0 avion pour nous seuls ; en face garde tout) ; à l'aube d'un chantier, `monter` ajoute la différence entre deux niveaux (2 → 3 avions, 2 → 4 sections, 2 → 4 → 6 régiments, « Réserve de plus » +1) ; un avion abattu ou une section anéantie ne revient pas.
 - **Écarts avec la proposition** : pas de nouveaux modèles de chars (Renault FT, Saint-Chamond, Mark IV) : les paliers des chars changent des chiffres du Schneider (les modèles du labo restent à faire) ; l'équipement des régiments (lot 4) a quitté la caserne : ses ordres, son texte et « Dépôt d'équipement » reviendront avec lui ; la recharge du parc des chars baisse avec ses niveaux (0,8 par palier) au lieu de « deux chars à la fois » ; « Tir de nuit réglé » est devenu « Tube neuf » (la recharge du 220), faute d'effet de nuit à lui donner.
 - **Nombres non mesurés** : chacun est une proposition (facteurs entre 0,75 et 1,67) ; il reste à les peser sur des batailles entières, comme la dotation (lot 1).
+
+## Lot 4, ce qui est construit (v0.91.0)
+
+- **La corvée de nuit** : quatre corvées de plus (`eq-casque`, `eq-grenades`, `eq-hotchkiss`, `eq-brancards`, data/corvees.js, marquées `equipe`), visibles sur le rabat du régiment seulement dans la partie bridée avec la caserne au niveau 2. `refusCorvee` les refuse à voix haute (`refusEquiper` de camp.js : pas de caserne de ce niveau, pièce déjà portée, deux pièces portées, point de dotation manquant, pas notre camp). **Le prix** : 1 point de dotation (`EQUIPEMENT.cout`) et la nuit sans repos du régiment ; si la caisse s'est vidée entre l'ordre et l'aube, `equiper` ne change rien et le régiment se repose. Le papier de la nuit dit « n régiments équipés ».
+- **Ce que ça change** (`EQUIPEMENTS` de data/batiments.js, facteurs lus à un seul endroit chacun) : les casques ×0,8 sur la mort par obus (`frapper`, bataille.js ; les blessés restent des blessés), les grenadiers ×1,25 sur les coups de baïonnette qui portent (army.js), la section de Hotchkiss ×1,15 sur la portée de tir du régiment (`tirer`), les brancardiers ×0,5 sur la mort d'un blessé laissé au front et ×1,25 sur le retour des évacués (nuit.js).
+- **L'état** : `reg.equip` (une liste de clés, au plus `EQUIPEMENT.places` = 2), sauvegardé (`VERSION` 17) ; **le matériel meurt avec le régiment** (un régiment relevé part avec ; le frais qui le remplace est nu). Dit sur le rabat du régiment (« Équipé : … ») et dans la bulle de survol ; la caserne l'annonce dans son papier.
+- **Écart avec la proposition** : une corvée par pièce (quatre boutons de plus sur le rabat) au lieu d'une seule corvée qui demande « quelle pièce ? » ; l'emplacement (tête / arme / soin) n'est pas distingué (deux pièces quelconques, une de chaque).
+- **Non mesuré** : les quatre facteurs. Le test « les casques font moins de morts » vérifie le sens (avec ≤ sans) sur une graine, pas l'ordre de grandeur.
