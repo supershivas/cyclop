@@ -1,8 +1,8 @@
 // Le ciel du jeu : un dégradé et des nuages selon la météo (Jérôme, v0.36.8 : « léger dégradé, nuages » ; v0.36.7 : le ciel suit la météo). Un plan plein écran
 // peint avant tout le reste, que le sol et le faux terrain recouvrent ; la nuit, le voile de `temps.js` le noircit. Des mélanges continus de la palette (des fondus) :
 // `[lettre, part]`. `hor` est aussi la couleur du fond et du bout du champ. Le dessin seulement : aucun hasard, le temps est celui du dessin.
-import * as SH from './shaders.js';
-import { lune, couvertureNuit, clairDeLune } from '../data/lune.js';
+import * as SH from './shaders.js?v=0.88.1';
+import { lune, couvertureNuit, clairDeLune } from '../data/lune.js?v=0.88.1';
 
 const CIELS = {
   sec: { hor: [['e', 1]], haut: [['e', 0.75], ['t', 0.25]], nuage: [['o', 0.8], ['r', 0.2]], couv: 0.45 },
@@ -21,7 +21,7 @@ const CIELS = {
 export function creerCiel({ THREE, scene, col, camera }) {
   const u = {
     uInvProj: { value: camera.projectionMatrixInverse }, uMonde: { value: camera.matrixWorld },
-    uHor: { value: new THREE.Color() }, uHaut: { value: new THREE.Color() }, uNuage: { value: new THREE.Color() }, uCouv: { value: 0.4 }, uT: { value: 0 },
+    uHor: { value: new THREE.Color() }, uHaut: { value: new THREE.Color() }, uNuage: { value: new THREE.Color() }, uCouv: { value: 0.4 }, uT: { value: 0 }, uDer: { value: new THREE.Vector2() },
   };
   const plan = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), new THREE.ShaderMaterial({ uniforms: u, vertexShader: SH.cielMat.v, fragmentShader: SH.cielMat.f, depthTest: false, depthWrite: false }));
   plan.frustumCulled = false; plan.renderOrder = -10; plan.visible = false;
@@ -29,7 +29,7 @@ export function creerCiel({ THREE, scene, col, camera }) {
   // le ciel de nuit (v0.40.0) : un second plan, peint après le voile, à la profondeur du fond (le sol le cache : seul le ciel le reçoit)
   const n = {
     uInvProj: u.uInvProj, uMonde: u.uMonde, uOs: { value: col('o') }, uBrume: { value: col('r') }, uTerre: { value: col('t') },
-    uVis: { value: 0 }, uT: { value: 0 }, uCouv: { value: 0.3 }, uLune: { value: new THREE.Vector3(0, 0.5, 0.5) }, uClair: { value: 0 }, uVue: { value: new THREE.Vector2() },
+    uVis: { value: 0 }, uT: { value: 0 }, uCouv: { value: 0.3 }, uLune: { value: new THREE.Vector3(0, 0.5, 0.5) }, uClair: { value: 0 }, uVue: { value: new THREE.Vector2() }, uDer: u.uDer,
   };
   const nuitPlan = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), new THREE.ShaderMaterial({ uniforms: n, vertexShader: SH.nuitCiel.v, fragmentShader: SH.nuitCiel.f, depthTest: true, depthWrite: false, transparent: true }));
   nuitPlan.frustumCulled = false; nuitPlan.renderOrder = 5.6; nuitPlan.visible = false;
@@ -52,6 +52,7 @@ export function creerCiel({ THREE, scene, col, camera }) {
       n.uVis.value = vis; n.uT.value = t; n.uCouv.value = couvertureNuit(jour, graine, meteo);
       n.uLune.value.set(L.az, L.el, L.p); n.uClair.value = clairDeLune(jour, graine, meteo); n.uVue.value.set(Math.atan2(devant.x, devant.z), 0);
     },
+    derive(x, z) { u.uDer.value.set(x, z); },                       // la dérive des nuages, accumulée par le vent (jour et nuit)
     maj(nom, t) {
       const C = CIELS[nom] || CIELS.sec;
       melange(u.uHor.value, C.hor); melange(u.uHaut.value, C.haut); melange(u.uNuage.value, C.nuage); u.uCouv.value = C.couv; u.uT.value = t;

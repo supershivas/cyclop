@@ -382,11 +382,13 @@ export const corpsPointMat = {
 
 export const herbeMat = {
   v: `
-      attribute vec3 aPos; attribute float aHaut; uniform float uT; varying float vHaut;
+      attribute vec3 aPos; attribute float aHaut; uniform float uT; uniform vec2 uVent; varying float vHaut;
       void main() {
         vHaut = aHaut;
         vec3 p = position;
-        p.x += sin(uT * 1.6 + aPos.x * 0.37 + aPos.z * 0.21) * 0.07 * aHaut;        // le vent
+        float rafale = 0.65 + 0.35 * sin(uT * 2.3 + aPos.x * 0.5 + aPos.z * 0.4);
+        p.x += sin(uT * 1.6 + aPos.x * 0.37 + aPos.z * 0.21) * 0.07 * aHaut * (1.0 + length(uVent) * 3.0);        // le vent : l'ondulation
+        p.xz += uVent * 0.45 * rafale * aHaut;                                      // et la courbure, dans son sens (uVent : sa force × son sens)
         gl_Position = projectionMatrix * viewMatrix * vec4(p + aPos, 1.0);
       }`,
   f: `uniform vec3 uBas; uniform vec3 uHaut; varying float vHaut;
@@ -411,12 +413,12 @@ export const crMat = {
 };
 
 export const plMat = {
-  v: `attribute float aVit; uniform float uT; uniform vec2 uC; uniform vec2 uE; uniform float uTaille;
+  v: `attribute float aVit; uniform float uT; uniform vec2 uC; uniform vec2 uE; uniform float uTaille; uniform vec2 uDer;
       void main() {
         vec3 p = position;
         p.y = 30.0 - mod(uT * aVit + position.y, 40.0);
-        p.x = uC.x - uE.x * 0.5 + mod(p.x - uC.x + uE.x * 0.5 - uT * 2.0, uE.x);
-        p.z = uC.y - uE.y * 0.5 + mod(p.z - uC.y + uE.y * 0.5, uE.y);
+        p.x = uC.x - uE.x * 0.5 + mod(p.x - uC.x + uE.x * 0.5 + uDer.x, uE.x);     // uDer : la dérive accumulée par le vent (m)
+        p.z = uC.y - uE.y * 0.5 + mod(p.z - uC.y + uE.y * 0.5 + uDer.y, uE.y);
         gl_Position = projectionMatrix * viewMatrix * vec4(p, 1.0);
         gl_PointSize = uTaille;
       }`,
@@ -486,7 +488,7 @@ export const cielMat = {
         vDir = (uMonde * vec4(p.xyz / p.w, 0.0)).xyz;
         gl_Position = vec4(position.xy, 0.999, 1.0);
       }`,
-  f: `uniform vec3 uHor; uniform vec3 uHaut; uniform vec3 uNuage; uniform float uCouv; uniform float uT; varying vec3 vDir;
+  f: `uniform vec3 uHor; uniform vec3 uHaut; uniform vec3 uNuage; uniform float uCouv; uniform float uT; uniform vec2 uDer; varying vec3 vDir;
       float h(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
       float bruit(vec2 p) {
         vec2 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f);
@@ -496,7 +498,7 @@ export const cielMat = {
         vec3 d = normalize(vDir);
         float e = max(d.y, 0.0);
         vec3 c = mix(uHor, uHaut, smoothstep(0.0, 0.3, e));
-        vec2 q = d.xz / (e + 0.35) * 9.0 + vec2(uT * 0.012, uT * 0.004);
+        vec2 q = d.xz / (e + 0.35) * 9.0 - uDer;
         float n = 0.5 * bruit(q) + 0.25 * bruit(q * 2.1 + 5.0) + 0.17 * bruit(q * 4.3 + 11.0) + 0.08 * bruit(q * 8.7 + 17.0);
         float nuage = smoothstep(0.56 - uCouv * 0.5, 0.74 - uCouv * 0.5, n) * smoothstep(0.0, 0.18, e);
         gl_FragColor = vec4(mix(c, uNuage, nuage), 1.0);
@@ -507,7 +509,7 @@ export const cielMat = {
 // la nuit, à la profondeur du fond : seul le ciel (là où le sol n'a rien dessiné) le reçoit. Tout est lu de la direction du rayon de chaque pixel, donc le ciel suit la caméra.
 export const nuitCiel = {
   v: cielMat.v,
-  f: `uniform vec3 uOs; uniform vec3 uBrume; uniform vec3 uTerre; uniform float uVis; uniform float uT; uniform float uCouv; uniform vec3 uLune; uniform float uClair; uniform vec2 uVue; varying vec3 vDir;
+  f: `uniform vec3 uOs; uniform vec3 uBrume; uniform vec3 uTerre; uniform float uVis; uniform float uT; uniform float uCouv; uniform vec3 uLune; uniform float uClair; uniform vec2 uVue; uniform vec2 uDer; varying vec3 vDir;
       float h(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
       float bruit(vec2 p) {
         vec2 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f);
@@ -521,7 +523,7 @@ export const nuitCiel = {
         if (d.y <= 0.0 || uVis <= 0.0) { gl_FragColor = vec4(0.0); return; }     // (pas de discard : il couperait le test de profondeur avant le nuanceur)
         float az = atan(d.x, d.z), el = asin(clamp(d.y, -1.0, 1.0));
         // les nuages de la nuit (la même étoffe que le jour, plus épaisse avec la couverture)
-        vec2 q = d.xz / (d.y + 0.35) * 9.0 + vec2(uT * 0.008, uT * 0.003);
+        vec2 q = d.xz / (d.y + 0.35) * 9.0 - uDer * 0.7;
         float n = 0.5 * bruit(q) + 0.25 * bruit(q * 2.1 + 5.0) + 0.17 * bruit(q * 4.3 + 11.0) + 0.08 * bruit(q * 8.7 + 17.0);
         float nuage = smoothstep(0.56 - uCouv * 0.5, 0.74 - uCouv * 0.5, n) * smoothstep(0.0, 0.18, d.y);
         vec4 c = vec4(0.0);

@@ -14,32 +14,32 @@
    La sauvegarde (photo) garde la graine, la liste compacte des impacts, l'état
    de la foule et les petites couches de logique ; jamais le relief : il se
    rejoue depuis la graine et les impacts (rejouerTerrain). */
-import { createRng, hash2 } from './lib/rng.js';
-import { impact, hydroLignes, etat as etatCase, vitesseEtat, vitesseCase, ETAT } from './terrain.js';
-import { creerArmee, ajouterSoldat, construireGrille, pasArmee, tuerDans, effrayer, compacter, photoArmee, restaurerArmee, b64, deB64, DENSITE, place, poserCaracs, lireCaracs, abimerCaracs, gagner, CARACS } from './army.js';
-import { ligneSous, solidite } from './tranchees.js';
-import { terrainDuSecteur } from './secteur-terrain.js';
-import { detruirePont, reconstruirePont, pontEn } from './eaux.js';
-import { PONT_COUPE } from './data/ponts.js';
-import { calculerCouts, creerCacheChamps, dimensionsCouts, BLOC } from './champs.js';
-import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js';
-import { preparerAleatoire, ID_ALEATOIRE } from './generateur.js';
-import { AVION, MITRAILLAGE } from './data/mitraillage.js';
-import { refusAvion, lancerAvion, avancerAvions, flotteDeDepart, reparerAvions } from './avions.js';
-import { CHAR, CHAR_RECHARGE, CHAR_SORTIE } from './data/chars.js';
-import { GENIE, GENIE_DATA } from './data/genie.js';
-import { creerNids, avancerNids, degatsNids, reparerNid } from './nids.js';
-import { TOITS, NIDS } from './data/nids.js';
-import { refusGenie, lancerGenie, avancerGenies, degatsGenies, sectionsDeDepart } from './genie.js';
-import { refusChar, lancerChar, degatsChars, avancerChars } from './chars.js';
-import { METEO, SAISONS, SAISON_DEFAUT, PREVISION_JUSTE, temperature } from './data/meteo.js';
-import { SECTEURS } from './data/secteur.js';
-import { REGIMENTS } from './data/lexique.js';
-import { STANCES, STANCE_DEFAUT } from './data/stances.js';
-import { DIFFICULTES, DIFFICULTE_DEFAUT } from './data/difficulte.js';
-import { grade, departCaracs, caracEnMots } from './identite.js';
-import { corvees } from './nuit.js';
-import { campDeDepart, dotationAube, refusOrdre, refusNid } from './camp.js';
+import { createRng, hash2 } from './lib/rng.js?v=0.88.1';
+import { impact, hydroLignes, etat as etatCase, vitesseEtat, vitesseCase, ETAT } from './terrain.js?v=0.88.1';
+import { creerArmee, ajouterSoldat, construireGrille, pasArmee, tuerDans, effrayer, compacter, photoArmee, restaurerArmee, b64, deB64, DENSITE, place, poserCaracs, lireCaracs, abimerCaracs, gagner, CARACS } from './army.js?v=0.88.1';
+import { ligneSous, solidite } from './tranchees.js?v=0.88.1';
+import { terrainDuSecteur } from './secteur-terrain.js?v=0.88.1';
+import { detruirePont, reconstruirePont, pontEn } from './eaux.js?v=0.88.1';
+import { PONT_COUPE } from './data/ponts.js?v=0.88.1';
+import { calculerCouts, creerCacheChamps, dimensionsCouts, BLOC } from './champs.js?v=0.88.1';
+import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.88.1';
+import { preparerAleatoire, ID_ALEATOIRE } from './generateur.js?v=0.88.1';
+import { AVION, MITRAILLAGE } from './data/mitraillage.js?v=0.88.1';
+import { refusAvion, lancerAvion, avancerAvions, flotteDeDepart, reparerAvions } from './avions.js?v=0.88.1';
+import { CHAR, CHAR_RECHARGE, CHAR_SORTIE } from './data/chars.js?v=0.88.1';
+import { GENIE, GENIE_DATA } from './data/genie.js?v=0.88.1';
+import { creerNids, avancerNids, degatsNids, reparerNid } from './nids.js?v=0.88.1';
+import { TOITS, NIDS } from './data/nids.js?v=0.88.1';
+import { refusGenie, lancerGenie, avancerGenies, degatsGenies, sectionsDeDepart } from './genie.js?v=0.88.1';
+import { refusChar, lancerChar, degatsChars, avancerChars } from './chars.js?v=0.88.1';
+import { METEO, SAISONS, SAISON_DEFAUT, PREVISION_JUSTE, temperature, vent } from './data/meteo.js?v=0.88.1';
+import { SECTEURS } from './data/secteur.js?v=0.88.1';
+import { REGIMENTS } from './data/lexique.js?v=0.88.1';
+import { STANCES, STANCE_DEFAUT } from './data/stances.js?v=0.88.1';
+import { DIFFICULTES, DIFFICULTE_DEFAUT } from './data/difficulte.js?v=0.88.1';
+import { grade, departCaracs, caracEnMots } from './identite.js?v=0.88.1';
+import { corvees } from './nuit.js?v=0.88.1';
+import { campDeDepart, dotationAube, refusOrdre, refusNid } from './camp.js?v=0.88.1';
 
 export const PAS = 1 / 30;                 // s de jeu par pas
 export const NOUS = 0, EUX = 1;
@@ -1156,6 +1156,7 @@ export function horloge(B) {
     gel: !!METEO[etat.meteo[etat.jour - 1]].gel, neige: !!METEO[etat.meteo[etat.jour - 1]].neige, chaud: !!METEO[etat.meteo[etat.jour - 1]].chaud, saison: etat.sol?.saison ?? SAISON_DEFAUT,
     tempete: !!METEO[etat.meteo[etat.jour - 1]].tempete,
     temperature: temperature(etat.sol?.saison, etat.meteo[etat.jour - 1], etat.graine, etat.jour),
+    vent: vent(etat.meteo[etat.jour - 1], etat.graine, etat.jour),               // la force, le cap et le mot du vent du jour (hachage : rien de sauvegardé)
     // le sol est blanc l'hiver tout entier, et un jour de neige où qu'on soit (v0.54.0)
     enneige: etat.sol?.saison === 'hiver' || !!METEO[etat.meteo[etat.jour - 1]].neige,
   };
