@@ -2,8 +2,8 @@
 // Sur le champ : au-dessus de chaque char à nous, une petite étiquette (sa barre de canon qui se remplit, puis PRÊT ; ses points de vie) ; de lui à sa cible, une ligne pointillée et une croix
 // (de la cible qu'on lui a donnée : trait plein ; du carré d'ennemis qu'il a choisi : pointillé). Un clic sur l'étiquette le choisit. La fiche (`#char-fiche`) du char choisi : ses barres,
 // « Marcher » / « Cible » (le prochain clic sur le sol), « Arrêt », « Tir libre », « Fermer ». Le dessin et les boutons seulement : les ordres partent par `surOrdre(ordre)` (main.js).
-import { CHARS } from '../data/chars.js?v=0.87.0';
-import { NOUS } from '../bataille.js?v=0.87.0';
+import { CHARS } from '../data/chars.js?v=0.88.0';
+import { NOUS } from '../bataille.js?v=0.88.0';
 
 const NS = 'http://www.w3.org/2000/svg';
 export function creerCharsHud({ $, bataille, moi = () => NOUS, versEcran, hauteurSol, choisir, surBouton }) {
@@ -35,7 +35,7 @@ export function creerCharsHud({ $, bataille, moi = () => NOUS, versEcran, hauteu
       e.d.style.transform = `translate(${Math.round(sx)}px, ${Math.round(sy)}px) translate(-50%, -100%)`;
       const f = fraction(B, c);
       e.canon.style.width = `${(f * 100).toFixed(0)}%`;
-      e.pv.style.width = `${Math.max(0, c.pv / CHARS[c.modele].pv * 100).toFixed(0)}%`;
+      e.pv.style.width = `${Math.max(0, c.pv / (c.pvMax ?? CHARS[c.modele].pv) * 100).toFixed(0)}%`;
       const pret = f >= 1;
       if (pret !== e.pret) { e.pret = pret; e.d.classList.toggle('pret', pret); }
       e.d.classList.toggle('choisi', choisi === c.id);
@@ -64,7 +64,7 @@ export function creerCharsHud({ $, bataille, moi = () => NOUS, versEcran, hauteu
     if (!c) return;
     const f = fraction(B, c), G = CHARS[c.modele].canon;
     $('char-fiche-titre').textContent = `${CHARS[c.modele].nom}${c.etat === 'enlise' ? ' · enlisé' : c.etat === 'arrive' ? ' · à l\'arrêt' : ''}`;
-    $('char-fiche-pv').style.width = `${Math.max(0, c.pv / CHARS[c.modele].pv * 100).toFixed(0)}%`;
+    $('char-fiche-pv').style.width = `${Math.max(0, c.pv / (c.pvMax ?? CHARS[c.modele].pv) * 100).toFixed(0)}%`;
     $('char-fiche-canon').style.width = `${(f * 100).toFixed(0)}%`;
     $('char-fiche-etat').textContent = `Canon ${G.calibre} : ${f >= 1 ? 'PRÊT' : `encore ${secondes(B, c)} s`} · ${c.vise ? (c.cible && c.vise === c.cible ? 'sur la cible donnée' : 'sur le carré le plus chargé') : 'aucune cible à portée'}`;
     for (const b of fiche.querySelectorAll('[data-char]')) b.classList.toggle('vise', b.dataset.char === mode);

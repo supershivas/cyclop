@@ -653,3 +653,5 @@ h2 { font-weight: normal; letter-spacing: var(--titre-lettres); }
 .bat-ameliorer { font: inherit; color: var(--jeu-encre); background: var(--jeu-fond); border: 0; padding: var(--e1) var(--e2); cursor: pointer; text-align: left; }
 .bat-ameliorer.muet { opacity: 0.5; cursor: not-allowed; }
 .bat-chantier { color: var(--jeu-fond); }
+.bat-choix { font: inherit; font-size: var(--texte-petit); color: var(--jeu-fond); background: none; border: 1px solid var(--jeu-accent); padding: var(--e1) var(--e2); text-align: left; cursor: pointer; }
+.bat-choix.pris { border-color: var(--jeu-fond); outline: 1px solid var(--jeu-fond); }

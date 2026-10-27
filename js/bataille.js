@@ -14,32 +14,32 @@
    La sauvegarde (photo) garde la graine, la liste compacte des impacts, l'état
    de la foule et les petites couches de logique ; jamais le relief : il se
    rejoue depuis la graine et les impacts (rejouerTerrain). */
-import { createRng, hash2 } from './lib/rng.js?v=0.87.0';
-import { impact, hydroLignes, etat as etatCase, vitesseEtat, vitesseCase, ETAT } from './terrain.js?v=0.87.0';
-import { creerArmee, ajouterSoldat, construireGrille, pasArmee, tuerDans, effrayer, compacter, photoArmee, restaurerArmee, b64, deB64, DENSITE, place, poserCaracs, lireCaracs, abimerCaracs, gagner, CARACS } from './army.js?v=0.87.0';
-import { ligneSous, solidite } from './tranchees.js?v=0.87.0';
-import { terrainDuSecteur } from './secteur-terrain.js?v=0.87.0';
-import { detruirePont, reconstruirePont, pontEn } from './eaux.js?v=0.87.0';
-import { PONT_COUPE } from './data/ponts.js?v=0.87.0';
-import { calculerCouts, creerCacheChamps, dimensionsCouts, BLOC } from './champs.js?v=0.87.0';
-import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.87.0';
-import { preparerAleatoire, ID_ALEATOIRE } from './generateur.js?v=0.87.0';
-import { AVION, MITRAILLAGE } from './data/mitraillage.js?v=0.87.0';
-import { refusAvion, lancerAvion, avancerAvions, flotteDeDepart, reparerAvions } from './avions.js?v=0.87.0';
-import { CHAR, CHAR_RECHARGE, CHAR_SORTIE } from './data/chars.js?v=0.87.0';
-import { GENIE, GENIE_DATA } from './data/genie.js?v=0.87.0';
-import { creerNids, avancerNids, degatsNids, reparerNid } from './nids.js?v=0.87.0';
-import { TOITS, NIDS } from './data/nids.js?v=0.87.0';
-import { refusGenie, lancerGenie, avancerGenies, degatsGenies, sectionsDeDepart } from './genie.js?v=0.87.0';
-import { refusChar, lancerChar, degatsChars, avancerChars } from './chars.js?v=0.87.0';
-import { METEO, SAISONS, SAISON_DEFAUT, PREVISION_JUSTE, temperature } from './data/meteo.js?v=0.87.0';
-import { SECTEURS } from './data/secteur.js?v=0.87.0';
-import { REGIMENTS } from './data/lexique.js?v=0.87.0';
-import { STANCES, STANCE_DEFAUT } from './data/stances.js?v=0.87.0';
-import { DIFFICULTES, DIFFICULTE_DEFAUT } from './data/difficulte.js?v=0.87.0';
-import { grade, departCaracs, caracEnMots } from './identite.js?v=0.87.0';
-import { corvees } from './nuit.js?v=0.87.0';
-import { campDeDepart, dotationAube, refusOrdre, refusNid } from './camp.js?v=0.87.0';
+import { createRng, hash2 } from './lib/rng.js?v=0.88.0';
+import { impact, hydroLignes, etat as etatCase, vitesseEtat, vitesseCase, ETAT } from './terrain.js?v=0.88.0';
+import { creerArmee, ajouterSoldat, construireGrille, pasArmee, tuerDans, effrayer, compacter, photoArmee, restaurerArmee, b64, deB64, DENSITE, place, poserCaracs, lireCaracs, abimerCaracs, gagner, CARACS } from './army.js?v=0.88.0';
+import { ligneSous, solidite } from './tranchees.js?v=0.88.0';
+import { terrainDuSecteur } from './secteur-terrain.js?v=0.88.0';
+import { detruirePont, reconstruirePont, pontEn } from './eaux.js?v=0.88.0';
+import { PONT_COUPE } from './data/ponts.js?v=0.88.0';
+import { calculerCouts, creerCacheChamps, dimensionsCouts, BLOC } from './champs.js?v=0.88.0';
+import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.88.0';
+import { preparerAleatoire, ID_ALEATOIRE } from './generateur.js?v=0.88.0';
+import { AVION, MITRAILLAGE } from './data/mitraillage.js?v=0.88.0';
+import { refusAvion, lancerAvion, avancerAvions, flotteDeDepart, reparerAvions } from './avions.js?v=0.88.0';
+import { CHAR, CHAR_RECHARGE, CHAR_SORTIE } from './data/chars.js?v=0.88.0';
+import { GENIE, GENIE_DATA } from './data/genie.js?v=0.88.0';
+import { creerNids, avancerNids, degatsNids, reparerNid } from './nids.js?v=0.88.0';
+import { TOITS, NIDS } from './data/nids.js?v=0.88.0';
+import { refusGenie, lancerGenie, avancerGenies, degatsGenies, sectionsDeDepart } from './genie.js?v=0.88.0';
+import { refusChar, lancerChar, degatsChars, avancerChars } from './chars.js?v=0.88.0';
+import { METEO, SAISONS, SAISON_DEFAUT, PREVISION_JUSTE, temperature } from './data/meteo.js?v=0.88.0';
+import { SECTEURS } from './data/secteur.js?v=0.88.0';
+import { REGIMENTS } from './data/lexique.js?v=0.88.0';
+import { STANCES, STANCE_DEFAUT } from './data/stances.js?v=0.88.0';
+import { DIFFICULTES, DIFFICULTE_DEFAUT } from './data/difficulte.js?v=0.88.0';
+import { grade, departCaracs, caracEnMots } from './identite.js?v=0.88.0';
+import { corvees } from './nuit.js?v=0.88.0';
+import { campDeDepart, dotationAube, refusOrdre, refusNid, appliquerDepart, modif, rechargeDe } from './camp.js?v=0.88.0';
 
 export const PAS = 1 / 30;                 // s de jeu par pas
 export const NOUS = 0, EUX = 1;
@@ -139,6 +139,7 @@ export function nouvelleBataille(graine, R, opts = {}) {
     temps: 0,                           // s de jeu écoulées, nuits non comptées
     rng: 0,
   };
+  if (opts.camp) appliquerDepart(etat);      // les effectifs de départ de la partie bridée : ceux des bâtiments de départ (v0.88.0)
   const B = monter(etat, R);
   etat.troncons = B.troncons.map(t => t.camp);
   etat.melee = B.troncons.map(() => 0);
@@ -426,7 +427,7 @@ export function peutBarrage(B, cal, x, y, camp = NOUS, x2, y2) {
     const reste = ((camp === NOUS ? etat.batteries : etat.batteriesEux)[cal] ?? 0) - etat.temps;
     if (reste > 0) return { refus: `${nomBatterie(cal)} : encore ${Math.ceil(reste)} s.` };
   }
-  if (cal === CHAR) { const r = refusChar(B, departChar(B, camp, x), x, y); if (r) return { refus: r }; }
+  if (cal === CHAR) { const r = refusChar(B, departChar(B, camp, x), x, y, camp); if (r) return { refus: r }; }
   if (cal === GENIE) { const r = refusGenie(B, camp, x, y, departChar(B, camp, x)?.ar); if (r.refus) return r; }
   if (cal === AVION) {
     const r = refusAvion(B, camp, x, y, x2, y2); if (r.refus) return r;
@@ -452,10 +453,10 @@ export function ordonnerBarrage(B, cal, x, y, camp = NOUS, x2, y2) {
     const bat = camp === NOUS ? etat.batteries : (etat.batteriesEux ??= Object.fromEntries(NOMS_CALIBRES.map(c => [c, 0])));
     const reste = (bat[cal] ?? 0) - etat.temps;
     if (reste > 0) return { refus: `${nomBatterie(cal)} : encore ${Math.ceil(reste)} s.` };
-    if (cal === CHAR) { const r = refusChar(B, departChar(B, camp, x), x, y); if (r) return { refus: r }; }
+    if (cal === CHAR) { const r = refusChar(B, departChar(B, camp, x), x, y, camp); if (r) return { refus: r }; }
     if (cal === GENIE) { const r = refusGenie(B, camp, x, y, departChar(B, camp, x)?.ar); if (r.refus) return r; if (r.nid !== undefined) { const n = refusNid(etat, camp); if (n) return { refus: n }; } }
     if (cal === AVION) { const r = peutBarrage(B, cal, x, y, camp, x2, y2); if (r.refus) return r; }
-    bat[cal] = etat.temps + C.recharge;
+    bat[cal] = etat.temps + C.recharge * rechargeDe(etat, camp, cal);
   }
   if (cal === CHAR) { lancerChar(B, camp, departChar(B, camp, x), x, y); return { ok: true }; }
   if (cal === GENIE) { const r = refusGenie(B, camp, x, y, departChar(B, camp, x)?.ar); if (r.refus) return r; lancerGenie(B, camp, r, departChar(B, camp, x)?.ar); return { ok: true }; }
@@ -465,7 +466,7 @@ export function ordonnerBarrage(B, cal, x, y, camp = NOUS, x2, y2) {
     lancerAvion(B, camp, r.ligne);
     return { ok: true };
   }
-  etat.barrages.push({ camp, cal, x, y, reste: C.salve, prochain: etat.temps + 1.5 });
+  etat.barrages.push({ camp, cal, x, y, reste: Math.round(C.salve * (cal === '220' ? modif(etat, camp, 'artillerie.salve220') : 1)), prochain: etat.temps + 1.5 });
   return { ok: true };
 }
 
@@ -523,7 +524,8 @@ export function avancer(B) {
   for (const b of etat.barrages) {
     const C = CALIBRES[b.cal];
     while (b.reste > 0 && etat.temps >= b.prochain) {
-      const gx = (rng() + rng() + rng() - 1.5) * C.dispersion, gy = (rng() + rng() + rng() - 1.5) * C.dispersion;
+      const disp = C.dispersion * modif(etat, b.camp, 'artillerie.dispersion');      // le tir de réglage (v0.88.0)
+      const gx = (rng() + rng() + rng() - 1.5) * disp, gy = (rng() + rng() + rng() - 1.5) * disp;
       const x = Math.round((b.x + gx) * 10) / 10, y = Math.round((b.y + gy) * 10) / 10;
       b.prochain += 1 / C.cadence * (0.7 + rng() * 0.6);
       b.reste--;

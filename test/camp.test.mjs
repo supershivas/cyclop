@@ -1,6 +1,6 @@
 // Le camp : la dotation de l'aube, les chantiers d'une nuit, les refus à voix haute, la sauvegarde (lot 1 de docs/chantiers/camp-et-ameliorations.md).
 import { nouvelleBataille, avancer, aube, photo, restaurer, ordonnerBarrage } from '../js/bataille.js';
-import { campDeDepart, refusOrdre, refusNid, emprisesCamp, batimentSous, refusCamp, ordonnerChantier, dotationAube, niveauDe, coutDe, nuitsDe, choisis } from '../js/camp.js';
+import { campDeDepart, modif, rechargeDe, pvAvion, refusOrdre, refusNid, emprisesCamp, batimentSous, refusCamp, ordonnerChantier, dotationAube, niveauDe, coutDe, nuitsDe, choisis } from '../js/camp.js';
 import { BATIMENTS, DOTATION } from '../js/data/batiments.js';
 import { REGLAGES as R } from '../js/data/reglages.js';
 
@@ -20,7 +20,8 @@ test('un ordre impossible se refuse à voix haute', () => {
   assert.match(refusCamp(e, 'chars'), /2 points de dotation manquent/);
   e.camp.dotation = 0; assert.match(refusCamp(e, 'sapeurs'), /2 points de dotation manquent/);
   e.camp.dotation = 9;
-  assert.equal(refusCamp(e, 'artillerie'), null, 'sans choix d\'amélioration au lot 2 (leurs effets viennent au lot 3)');
+  assert.match(refusCamp(e, 'artillerie'), /Choisissez/, 'le niveau 2 exige un choix');
+  assert.equal(refusCamp(e, 'artillerie', 1), null);
   e.camp.batiments.caserne.niveau = 3; assert.match(refusCamp(e, 'caserne', 0), /niveau maximal/);
 });
 test('le chantier : payé tout de suite, fini à l\'aube, refusé pendant qu\'il dure', () => {
@@ -130,4 +131,54 @@ test('une partie bridée relue est la même partie, camp compris', () => {
   const B = restaurer(JSON.parse(JSON.stringify(photo(A))), R);
   assert.deepEqual(B.etat.camp, A.etat.camp); assert.ok(B.etat.camp.bride);
   assert.match(ordonnerBarrage(B, '155', 300, 450).refus, /niveau 2/);
+});
+
+// ─── Lot 3 : ce que les niveaux et les choix changent ───
+const niveauEtChoix = (B, cle, niveau, choix = []) => { B.etat.camp.batiments[cle] = { niveau, choix, chantier: null }; };
+test('le départ de la partie bridée : 2 régiments en réserve, pas de section de génie ni d\'avion avant leurs bâtiments', () => {
+  const B = bridee();
+  assert.deepEqual(B.etat.reserves, [2, 4]); assert.equal(B.etat.sapeurs[0], 0); assert.deepEqual(B.etat.avions[0], []);
+  assert.equal(B.etat.avions[1].length, 3, 'en face garde sa flotte entière');
+  assert.deepEqual(petite().etat.reserves, [4, 4], 'hors partie bridée, rien ne change');
+});
+test('bâtir fait venir les effectifs : l\'aérodrome 2 avions, puis 3 ; les sapeurs 2 sections, puis 4 ; la caserne 4 puis 6 régiments', () => {
+  const B = bridee(), e = B.etat; e.camp.dotation = 30;
+  ordonnerChantier(e, 'aerodrome'); ordonnerChantier(e, 'sapeurs'); ordonnerChantier(e, 'caserne', 0); nuit(B);
+  assert.equal(e.camp.batiments.aerodrome.niveau, 1); assert.equal(e.avions[0].length, 2); assert.deepEqual(e.avions[0], [100, 100]);
+  assert.equal(e.sapeurs[0], 2);
+  assert.equal(e.reserves[0], 4);
+  ordonnerChantier(e, 'aerodrome', 1); ordonnerChantier(e, 'sapeurs', 0); nuit(B);
+  assert.equal(e.avions[0].length, 3); assert.equal(e.sapeurs[0], 4);
+});
+test('le blindage du siège : les avions d\'avant et ceux d\'après tiennent 40 % de plus', () => {
+  const B = bridee(), e = B.etat; e.camp.dotation = 30; ordonnerChantier(e, 'aerodrome'); nuit(B);
+  ordonnerChantier(e, 'aerodrome', 1); nuit(B);
+  assert.deepEqual(e.avions[0], [140, 140, 140]); assert.equal(pvAvion(e, 0), 140);
+});
+test('modif : le produit des niveaux et des choix pris, 1 pour en face et hors partie bridée', () => {
+  const B = bridee(), e = B.etat;
+  assert.equal(modif(e, 0, 'artillerie.dispersion'), 1);
+  niveauEtChoix(B, 'artillerie', 2, [0]); assert.equal(modif(e, 0, 'artillerie.dispersion'), 0.8);
+  niveauEtChoix(B, 'artillerie', 3, [1, 0]); assert.equal(modif(e, 0, 'artillerie.recharge'), 0.85); assert.ok(Math.abs(modif(e, 0, 'artillerie.salve220') - 10 / 6) < 1e-9);
+  niveauEtChoix(B, 'chars', 3, [0, 1]); assert.ok(Math.abs(modif(e, 0, 'chars.recharge') - 0.64) < 1e-9, 'deux paliers de 0,8'); assert.equal(modif(e, 0, 'chars.canon'), 1); assert.equal(modif(e, 0, 'chars.vitesse'), 1.15);
+  assert.equal(modif(e, 1, 'chars.recharge'), 1, 'en face');
+  assert.equal(modif(petite().etat, 0, 'chars.recharge'), 1, 'hors partie bridée');
+});
+test('la recharge d\'une batterie suit le parc : « Caissons doublés » raccourcit un barrage de 155', () => {
+  const B = bridee(), e = B.etat; niveauEtChoix(B, 'artillerie', 2, [1]);
+  assert.equal(ordonnerBarrage(B, '155', 300, 450).ok, true);
+  assert.ok(Math.abs(e.batteries['155'] - e.temps - 70 * 0.85) < 1e-6, `${e.batteries['155']}`);
+  assert.equal(rechargeDe(e, 0, '220'), 0.85); niveauEtChoix(B, 'artillerie', 3, [1, 1]); assert.ok(Math.abs(rechargeDe(e, 0, '220') - 0.85 * 0.75) < 1e-9);
+});
+test('« Salve longue » : le 220 tire 10 coups ; « Tir de réglage » resserre la dispersion', () => {
+  const B = bridee(), e = B.etat; niveauEtChoix(B, 'artillerie', 3, [0, 0]);
+  ordonnerBarrage(B, '220', 300, 450); assert.equal(e.barrages.at(-1).reste, 10);
+  const C = bridee(); niveauEtChoix(C, 'artillerie', 3, [0, 1]); ordonnerBarrage(C, '220', 300, 450); assert.equal(C.etat.barrages.at(-1).reste, 6);
+});
+test('une partie bridée relue après un chantier à choix est la même partie', () => {
+  const A = bridee(9); A.etat.camp.dotation = 20; ordonnerChantier(A.etat, 'artillerie', 1); nuit(A);
+  const B = restaurer(JSON.parse(JSON.stringify(photo(A))), R);
+  assert.deepEqual(B.etat.camp, A.etat.camp); assert.equal(modif(B.etat, 0, 'artillerie.recharge'), 0.85);
+  for (let k = 0; k < 300; k++) { avancer(A); avancer(B); }
+  assert.equal(JSON.stringify(photo(B)), JSON.stringify(photo(A)));
 });

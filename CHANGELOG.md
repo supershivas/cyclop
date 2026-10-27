@@ -1,5 +1,9 @@
 # Journal des versions
 
+## 0.88.0 — 2026-10-27
+- Chaque amélioration du camp change un chiffre : à chaque palier, on choisit entre deux améliorations (réglage ou caissons pour l'artillerie, blindage ou moteur pour les chars…)
+- Les bâtiments font venir les effectifs : 2 avions, puis 3 ; 2 sections du génie, puis 4 ; 2 régiments en réserve, puis 4, puis 6
+
 ## 0.87.0 — 2026-10-27
 - Le camp apparaît dans la marge arrière : on clique un bâtiment (ou sa pastille, ou la touche B) pour lui donner ses ordres et le bâtir ou l'améliorer ; les boutons de batterie sont dans leur bâtiment
 - Il faut bâtir le parc des chars, l'aérodrome et la maison des sapeurs ; les 155 et 220 s'ouvrent aux niveaux 2 et 3 de l'artillerie ; la dotation tombe à l'aube

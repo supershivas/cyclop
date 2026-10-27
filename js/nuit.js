@@ -10,11 +10,12 @@
    - (v0.38.3) Les caillebotis et le coup de main sont retirés ; (v0.77.1) réparer la tranchée, inhumer les morts et creuser des abris aussi (docs/archives/corvees-retirees.md) : quatre corvées.
    - (v0.39.0) La mêlée se joue dans la nuit (`meleeNuit`) : un tronçon où les deux camps sont face à face au soir est tranché à l'aube, et les
      régiments au contact (`contactDe`) ne reçoivent aucune corvée. */
-import { hash2 } from './lib/rng.js?v=0.87.0';
-import { CORVEES } from './data/corvees.js?v=0.87.0';
-import { REGIMENTS } from './data/lexique.js?v=0.87.0';
-import { ajouterSoldat, poserCaracs, lireCaracs, place } from './army.js?v=0.87.0';
-import { departCaracs } from './identite.js?v=0.87.0';
+import { hash2 } from './lib/rng.js?v=0.88.0';
+import { modif } from './camp.js?v=0.88.0';
+import { CORVEES } from './data/corvees.js?v=0.88.0';
+import { REGIMENTS } from './data/lexique.js?v=0.88.0';
+import { ajouterSoldat, poserCaracs, lireCaracs, place } from './army.js?v=0.88.0';
+import { departCaracs } from './identite.js?v=0.88.0';
 
 export const corvee = id => CORVEES.find(c => c.id === id);
 
@@ -174,7 +175,7 @@ export function corvees(B, choix, ctx) {
         if (A.reg[i] !== reg.id || A.mort[i] || rng() >= N.risqueBoyau) continue;
         mourir(i, 'corvée'); b.mortsCorvee++;
       }
-      reg.vivres = N.vivres + 1;      // la nuit qui vient en mange une
+      reg.vivres = Math.round(N.vivres * modif(B.etat, reg.camp, 'caserne.vivres')) + 1;      // la cuisine roulante (v0.88.0)      // la nuit qui vient en mange une
       b.ravitailles++;
     } else if (id === 'releve') {
       // il quitte le front (blessés compris) ; son remplaçant entre à l'aube, après les autres corvées
@@ -263,7 +264,7 @@ function retours(B, rng, bilan) {
     if (e.length < 6 || e[3] !== 0) continue;                     // (avant la v0.18.0 : ni blessure ni régiment, ils ne reviennent pas)
     if (etat.jour - e[1] < (N.retourNuits[e[2]] ?? 1)) continue;
     const reg = etat.regiments[e[4]];
-    if (hash2(etat.graine | 0, e[0], 97 + e[1]) >= N.retourChance || !reg || reg.effectif <= 0) { e[3] = -1; continue; }
+    if (hash2(etat.graine | 0, e[0], 97 + e[1]) >= N.retourChance * modif(etat, reg?.camp ?? 1, 'caserne.retour') || !reg || reg.effectif <= 0) { e[3] = -1; continue; }
     // il remonte par les boyaux : à 12 m derrière la place de son régiment
     const t = reg.ordre.trace, x0 = t ? t.x0 : reg.ordre.x - 40, x1 = t ? t.x1 : reg.ordre.x + 40;
     let slot = 0;
