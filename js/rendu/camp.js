@@ -2,10 +2,10 @@
 // tant qu'un chantier dure, un liseré d'os autour du bâtiment choisi. Le dessin seulement : tout vient de l'état de la bataille, rien n'y est écrit ; et rien n'est dessiné hors de la partie bridée
 // (`etat.camp.bride`), donc ni le labo ni les tests n'ont de camp ; le jeu à deux en a un par joueur (v0.94.0). Les deux camps sont dessinés : celui d'en face est le nôtre tourné d'un demi-tour.
 // Fabrique `creerCamp({ THREE, scene, bataille: () => B, hauteur })`.
-import { atelier } from './engins.js?v=0.94.1';
-import { BATIR, chantier } from './camp-modeles.js?v=0.94.1';
-import { emprisesCamp } from '../camp.js?v=0.94.1';
-import { PALETTE as P } from '../palette.js?v=0.94.1';
+import { atelier } from './engins.js';
+import { BATIR, chantier } from './camp-modeles.js';
+import { emprisesCamp } from '../camp.js';
+import { PALETTE as P } from '../palette.js';
 
 const LUEUR = 0.9;      // × la couleur de la matière (mesuré à l'œil sur la partie du premier matin : sans elle, la boue est noire)
 

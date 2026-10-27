@@ -10,14 +10,14 @@
 // faire (une caisse, un nuage, un char, une galerie) est dessiné par-dessus et suivi ici, pas dans la bataille. Rien n'est sauvegardé, rien ne change
 // dans le jeu. DESIGN.md : pas de loot, pas de gloire, le compteur de morts n'est pas une récompense ; les contenus de caisse sont des vivres et des outils,
 // jamais une puissance qu'on gagne en tuant.
-import { PALETTE } from './palette.js?v=0.94.1';
-import { nouvelleBataille, avancer, ordonnerMarche, mourir, PAS } from './bataille.js?v=0.94.1';
-import { compacter } from './army.js?v=0.94.1';
-import { impact } from './terrain.js?v=0.94.1';
-import { creerRendu } from './rendu3d.js?v=0.94.1';
-import { loadThree } from './three-lib.js?v=0.94.1';
-import { CALIBRES } from './data/calibres.js?v=0.94.1';
-import { hash2 } from './lib/rng.js?v=0.94.1';
+import { PALETTE } from './palette.js';
+import { nouvelleBataille, avancer, ordonnerMarche, mourir, PAS } from './bataille.js';
+import { compacter } from './army.js';
+import { impact } from './terrain.js';
+import { creerRendu } from './rendu3d.js';
+import { loadThree } from './three-lib.js';
+import { CALIBRES } from './data/calibres.js';
+import { hash2 } from './lib/rng.js';
 
 export const el = (tag, props = {}, ...kids) => { const e = Object.assign(document.createElement(tag), props); e.append(...kids); return e; };
 export const svgEl = (tag, attrs = {}) => { const e = document.createElementNS('http://www.w3.org/2000/svg', tag); for (const [k, v] of Object.entries(attrs)) e.setAttribute(k, v); return e; };
