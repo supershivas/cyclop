@@ -44,7 +44,7 @@ import { campDeDepart, dotationAube, refusOrdre, refusNid, appliquerDepart, modi
 
 export const PAS = 1 / 30;                 // s de jeu par pas
 export const NOUS = 0, EUX = 1;
-const VERSION = 17;   // 17 : l'équipement des régiments (`reg.equip`, v0.91.0) ; 16 : le camp (`etat.camp` : la dotation, les niveaux des bâtiments, v0.86.0) ; 15 : les nids de mitrailleuses (`etat.nids`, v0.83.0) ; 14 : la victoire anticipée (`etat.priseJours`, v0.77.0) ; 13 : les médailles (`tues`, `pris`, `debut` de chaque régiment, `etat.victDebut`, v0.73.1) ; 12 : le niveau de difficulté (`etat.difficulte`, la posture d'en face `etat.iaStance`, v0.70.0) ; 11 : les caractéristiques de chaque homme (adresse, force, endurance, calme) dans l'armée, le corps à corps (v0.69.0) ; 10 : la solidité des ponts (pv, nom, historique), la coupure en attente de ses coûts (`etat.couts.coupure`) ; 9 : le génie (les sections, les ponts refaits) ; 8 : le chemin et le cap des chars ; 7 : le rapport du jour (les sorties et les pertes d'avions) ; 6 : les avions de mitraillage (une passe tracée, des points de vie, une flotte) ; 5 : la forme des cratères (rond, lèvre jetée, éclats : les impacts rejoués changent) ; 2 : la graine d'identité ; 3 : la campagne et les relevés ; 4 : les numéros de campagne, un effectif par camp, le rythme de l'IA (campagne, lots 1 à 3)
+const VERSION = 18;   // 18 : le camp d'en face (`etat.campEux`, v0.92.0) ; 17 : l'équipement des régiments (`reg.equip`, v0.91.0) ; 16 : le camp (`etat.camp` : la dotation, les niveaux des bâtiments, v0.86.0) ; 15 : les nids de mitrailleuses (`etat.nids`, v0.83.0) ; 14 : la victoire anticipée (`etat.priseJours`, v0.77.0) ; 13 : les médailles (`tues`, `pris`, `debut` de chaque régiment, `etat.victDebut`, v0.73.1) ; 12 : le niveau de difficulté (`etat.difficulte`, la posture d'en face `etat.iaStance`, v0.70.0) ; 11 : les caractéristiques de chaque homme (adresse, force, endurance, calme) dans l'armée, le corps à corps (v0.69.0) ; 10 : la solidité des ponts (pv, nom, historique), la coupure en attente de ses coûts (`etat.couts.coupure`) ; 9 : le génie (les sections, les ponts refaits) ; 8 : le chemin et le cap des chars ; 7 : le rapport du jour (les sorties et les pertes d'avions) ; 6 : les avions de mitraillage (une passe tracée, des points de vie, une flotte) ; 5 : la forme des cratères (rond, lèvre jetée, éclats : les impacts rejoués changent) ; 2 : la graine d'identité ; 3 : la campagne et les relevés ; 4 : les numéros de campagne, un effectif par camp, le rythme de l'IA (campagne, lots 1 à 3)
 
 const ticksParHeure = R => Math.max(1, Math.round(R.jour.duree / (R.jour.heureFin - R.jour.heureDebut) / PAS));
 export const ticksParJour = R => ticksParHeure(R) * (R.jour.heureFin - R.jour.heureDebut);
@@ -100,7 +100,7 @@ export function nouvelleBataille(graine, R, opts = {}) {
     v: VERSION, graine, graineIdentite: opts.graineIdentite ?? graine, campagne: opts.campagne ?? null, secteur: idSecteur, parCamp, parCampEux,
     mission, issue: null,               // la mission (tenir, prendre) et, à la fin, ce qu'il en est
     reserves: [S.reserves ?? 0, S.reserves ?? 0],   // régiments frais en réserve, par camp (la relève)
-    camp: campDeDepart({ bride: !!opts.camp }),               // la dotation de l'état-major et les bâtiments de notre camp (js/camp.js, v0.86.0)
+    camp: campDeDepart({ bride: !!opts.camp, depart: opts.campDepart ?? null }),               // la dotation de l'état-major et les bâtiments de notre camp (js/camp.js, v0.86.0)
     parRegiment: Math.floor(parCamp / S.regiments), parRegimentEux: Math.floor(parCampEux / S.regiments),
     // la campagne : le numéro de campagne de nos hommes quand il n'est pas leur numéro de bataille ({ numéro de bataille : numéro }) et le prochain à donner
     numeros: opts.campagne || opts.troupes ? {} : null, prochainNumero: opts.troupes ? opts.troupes.prochainNumero : parCamp,
@@ -140,7 +140,8 @@ export function nouvelleBataille(graine, R, opts = {}) {
     temps: 0,                           // s de jeu écoulées, nuits non comptées
     rng: 0,
   };
-  if (opts.camp) appliquerDepart(etat);      // les effectifs de départ de la partie bridée : ceux des bâtiments de départ (v0.88.0)
+  if (opts.camp) { etat.campEux = campDeDepart({ bride: true, mult: niveau.dotation ?? 1 }); appliquerDepart(etat, NOUS); appliquerDepart(etat, EUX); }      // le camp d'en face : le même départ, sa dotation selon la difficulté (v0.92.0)
+  if (opts.camp) { /* (voir plus haut) */ }      // les effectifs de départ de la partie bridée : ceux des bâtiments de départ (v0.88.0)
   const B = monter(etat, R);
   etat.troncons = B.troncons.map(t => t.camp);
   etat.melee = B.troncons.map(() => 0);
@@ -1067,7 +1068,7 @@ function enFace(B, rng) {
     for (let b = 0; b < d.length; b++) if (d[b] > bn) { bn = d[b]; best = b; }
     if (best >= 0) {
       const bx = best % A.dw, by = (best - bx) / A.dw;
-      const cal = rng.weighted([{ v: '75', w: 6 }, { v: '155', w: 3 }, { v: '220', w: 1 }]);
+      const cal = rng.weighted([{ v: '75', w: 6 }, { v: '155', w: 3 }, { v: '220', w: 1 }].filter(c => !refusOrdre(etat, EUX, c.v)));      // (le camp d'en face n'ouvre le 155 et le 220 qu'avec son artillerie : v0.92.0)
       ordonnerBarrage(B, cal, (bx + 0.5) * DENSITE + (rng() - 0.5) * 20, (by + 0.5) * DENSITE + (rng() - 0.5) * 20, EUX);
     }
   }
@@ -1092,7 +1093,7 @@ function enFace(B, rng) {
         // (le carnet de bord : le tronçon que ça vise)
         const visee = o && B.troncons.findIndex(tr => tr.ligne === B.lignes.indexOf(o.cible) && tr.x1 > o.reg.ordre.trace.x0 && tr.x0 < o.reg.ordre.trace.x1);
         if (o && o.rapport >= R.tranchee.rapport) { o.reg.ordre = formationTranchee(o.reg, o.cible, o.reg.ordre.trace.x0, o.reg.ordre.trace.x1, R); reattribuer(B, o.reg); B.evenements.push({ type: 'assaut', camp: EUX, reg: o.reg.id, troncon: visee }); }
-        else if (o) { const t = o.reg.ordre.trace; ordonnerBarrage(B, '220', (t.x0 + t.x1) / 2 + (rng() - 0.5) * 30, o.cible.y0, EUX); B.evenements.push({ type: 'preparation', camp: EUX, reg: o.reg.id, troncon: visee }); }
+        else if (o) { const t = o.reg.ordre.trace; ordonnerBarrage(B, !refusOrdre(etat, EUX, '220') ? '220' : !refusOrdre(etat, EUX, '155') ? '155' : '75', (t.x0 + t.x1) / 2 + (rng() - 0.5) * 30, o.cible.y0, EUX); B.evenements.push({ type: 'preparation', camp: EUX, reg: o.reg.id, troncon: visee }); }
       }
     } else {
       const leurs = etat.regiments.filter(r => r.camp === EUX && r.effectif > r.initial * 0.4);
@@ -1138,7 +1139,7 @@ export function aube(B, choix = {}) {
   etat.jour++; etat.tickJour = 0; etat.phase = 'jour';
   reparerAvions(etat);
   // en face, sans génie : un nid détruit est refait dans la nuit une fois sur deux (v0.83.0)
-  if (!etat.deux) for (const n of etat.nids) if (n.camp === 1 && n.etat === 'detruit' && hash2(n.id, etat.jour, (etat.graine | 0) + 71) < NIDS.reparationEnFace) reparerNid(B, n.id);
+  if (!etat.deux) for (const n of etat.nids) if (n.camp === 1 && n.etat === 'detruit' && !refusNid(etat, EUX) && hash2(n.id, etat.jour, (etat.graine | 0) + 71) < NIDS.reparationEnFace) reparerNid(B, n.id);
   etat.hydro = { passe: 0, ligne: 0 };
   etat.pertesJour.push([0, 0]);
   etat.avionsJour.push([[0, 0], [0, 0]]);

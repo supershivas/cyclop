@@ -101,8 +101,12 @@ export const PARCOURS_EXEMPLE = [
 // Où est le camp (lot 2) : en coordonnées du secteur (0..400, 0..300 ; les marges s'ajoutent), à 80 m derrière notre 4e ligne (rangée 278), au milieu du front ; chaque bâtiment est centré
 // sur [dx, dy] depuis ce point (la disposition « en ligne » du labo, retenue par Jérôme le 27 octobre). Les emprises (`PIED` de rendu/camp-modeles.js) ne se touchent pas.
 export const CAMP_PLAN = {
-  x: 200, y: 358,
+  x: 200, y: 358, largeur: 400, hauteur: 300,      // le secteur (400 × 300) : le camp d'en face est celui-ci tourné d'un demi-tour autour de son centre
   ligne: { caserne: [-100, 0], artillerie: [-52, 0], sapeurs: [-14, 0], chars: [20, 0], aerodrome: [84, 0] },
 };
 // L'emprise de chaque bâtiment [largeur le long de x, profondeur le long de y], en m, à tout niveau (le dessin la garde : `rendu/camp-modeles.js`)
 export const PIEDS = { artillerie: [34, 22], aerodrome: [84, 40], chars: [32, 30], sapeurs: [26, 22], caserne: [42, 28] };
+
+// Le camp d'en face (Jérôme, v0.92.0 ; lot 5) : l'IA bâtit seule, à l'aube, avec la même dotation (× `dotation` de la difficulté : data/difficulte.js). Elle n'a besoin que de ce qu'elle emploie :
+// l'artillerie (ses barrages : les calibres s'ouvrent aux niveaux) et la caserne (sa relève) ; les sapeurs pour refaire ses nids. Le plus bas niveau d'abord, l'artillerie avant la caserne ; le choix du palier vient d'un hachage de la graine.
+export const CAMP_IA = { cibles: { artillerie: 3, caserne: 3, sapeurs: 2 }, ordre: ['artillerie', 'caserne', 'sapeurs'] };
