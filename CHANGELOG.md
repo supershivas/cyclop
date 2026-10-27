@@ -1,5 +1,8 @@
 # Journal des versions
 
+## 0.94.1 — 2026-10-27
+- Les feuillages des arbres ont les angles adoucis : plus d'escaliers là où deux touffes se croisent
+
 ## 0.94.0 — 2026-10-27
 - À deux aussi, chaque joueur a son camp : il bâtit et améliore ses bâtiments (l'ordre part aux deux machines), l'artillerie, les avions, les chars et le génie s'ouvrent avec eux, et chacun voit le camp de l'autre
 - Le papier de la nuit dit, à chacun, sa dotation et ses chantiers finis ; les boutons de batterie sont dans leur bâtiment partout

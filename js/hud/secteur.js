@@ -2,10 +2,10 @@
 // Un papier sous la carte : un plan vu de dessus du secteur choisi et d'une demi-largeur de chaque voisin (assombris), les hommes de chaque camp (un point par homme), les tranchées
 // à la couleur de celui qui les tient (en pointillé quand l'autre camp y est entré), les régiments en cercles numérotés ; dessous, une ligne par secteur (celui-ci et ses voisins) avec les effectifs.
 // Lecture seule de l'état ; le dessin d'un canvas 2D, palette du jeu. Comme la carte, tourné d'un demi-tour pour l'invité d'une partie à deux.
-import { NOUS, EUX, zone, largeurZone, nombreZones, lettreZone, forcesTroncons } from '../bataille.js?v=0.94.0';
-import { ligneY } from '../tranchees.js?v=0.94.0';
-import { PALETTE as P } from '../palette.js?v=0.94.0';
-import { numeroDe } from './lecture.js?v=0.94.0';
+import { NOUS, EUX, zone, largeurZone, nombreZones, lettreZone, forcesTroncons } from '../bataille.js?v=0.94.1';
+import { ligneY } from '../tranchees.js?v=0.94.1';
+import { PALETTE as P } from '../palette.js?v=0.94.1';
+import { numeroDe } from './lecture.js?v=0.94.1';
 
 const L = 320, H = 200;                  // le canvas, en pixels
 

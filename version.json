@@ -1,8 +1,7 @@
 {
-  "version": "0.94.0",
+  "version": "0.94.1",
   "date": "2026-10-27",
   "changes": [
-    "À deux aussi, chaque joueur a son camp : il bâtit et améliore ses bâtiments (l'ordre part aux deux machines), l'artillerie, les avions, les chars et le génie s'ouvrent avec eux, et chacun voit le camp de l'autre",
-    "Le papier de la nuit dit, à chacun, sa dotation et ses chantiers finis ; les boutons de batterie sont dans leur bâtiment partout"
+    "Les feuillages des arbres ont les angles adoucis : plus d'escaliers là où deux touffes se croisent"
   ]
 }
