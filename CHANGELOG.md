@@ -1,5 +1,8 @@
 # Journal des versions
 
+## 0.83.3 — 2026-10-27
+- Les croix de la visée d'un nid sont plus grandes et plus épaisses : on voit mieux les hommes d'en face sous son feu
+
 ## 0.83.2 — 2026-10-27
 - Le survol d'un nid se lit mieux : le texte de sa visée est au bout du cône, et la bulle dit le nid (solidité, portée) au lieu du régiment qui l'entoure
 
