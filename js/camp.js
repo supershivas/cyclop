@@ -1,9 +1,9 @@
 // Le camp : la règle, sans écran (Jérôme, v0.86.0 : lot 1 de `docs/chantiers/camp-et-ameliorations.md`). Logique pure : aucun DOM, aucune horloge, aucun hasard.
 // L'état est `etat.camp` : la dotation de l'état-major, le niveau de chaque bâtiment (et son chantier d'une nuit), les lignes d'en face déjà comptées.
 // Lot 2 : les niveaux ouvrent les ordres (`refusOrdre`). Lot 3 (v0.88.0) : chaque niveau et chaque choix de palier change un chiffre (`modif`) ou un effectif (`effectifsDe`).
-import { hash2 } from './lib/rng.js?v=0.95.0';
-import { BATIMENTS, DOTATION, CAMP_PLAN, CAMP_IA, PIEDS, EQUIPEMENT, EQUIPEMENTS } from './data/batiments.js?v=0.95.0';
-import { MITRAILLAGE } from './data/mitraillage.js?v=0.95.0';
+import { hash2 } from './lib/rng.js?v=0.96.0';
+import { BATIMENTS, DOTATION, CAMP_PLAN, CAMP_IA, PIEDS, EQUIPEMENT, EQUIPEMENTS } from './data/batiments.js?v=0.96.0';
+import { MITRAILLAGE } from './data/mitraillage.js?v=0.96.0';
 
 const NOUS = 0, EUX = 1;
 /* L'état du camp de `camp` : `etat.camp` (le nôtre), `etat.campEux` (celui d'en face : v0.92.0) */
@@ -12,6 +12,9 @@ export const NIVEAU_MAX = 3;
 
 // Le niveau qui ouvre chaque ordre de batterie (`ordonnerBarrage`) : [bâtiment, niveau]
 const OUVERTURE = { '75': ['artillerie', 1], '155': ['artillerie', 2], '220': ['artillerie', 3], avion: ['aerodrome', 1], char: ['chars', 1], genie: ['sapeurs', 1] };
+
+/* Le bâtiment et le niveau qui ouvrent un ordre de batterie, ou null */
+export const ouverture = cal => OUVERTURE[cal] ?? null;
 
 /* L'état du camp au premier matin : l'artillerie et la caserne au niveau 1 (donnés), le reste à bâtir */
 export function campDeDepart({ bride = false, depart = null, mult = 1 } = {}) {
@@ -120,17 +123,27 @@ export function refusNid(etat, camp) {
   return 'Refaire un nid de mitrailleuse demande la maison des sapeurs au niveau 2.';
 }
 
-/* Où est chaque bâtiment : { cle, x, y, w, d } (le centre et l'emprise, en coordonnées du terrain : les marges sont ajoutées) ; seulement ceux qui sont bâtis ou en chantier */
+/* La place de `cle` dans le camp de `camp` : { cle, camp, x, y, w, d, rot } (le centre et l'emprise, en coordonnées du terrain : les marges sont ajoutées), bâtie ou non */
+export function emplacementCamp(etat, cle, camp = NOUS) {
+  const m = etat.marges ?? { x: 0, y: 0 }, [dx, dy] = CAMP_PLAN.ligne[cle];
+  // le camp d'en face : le nôtre tourné d'un demi-tour autour du centre du secteur (au nord, ses bâtiments tournés vers le sud)
+  const X = CAMP_PLAN.x + dx, Y = CAMP_PLAN.y + dy;
+  return { cle, camp, x: m.x + (camp === NOUS ? X : CAMP_PLAN.largeur - X), y: m.y + (camp === NOUS ? Y : CAMP_PLAN.hauteur - Y), w: PIEDS[cle][0], d: PIEDS[cle][1], rot: camp === NOUS ? 0 : Math.PI };
+}
+/* Où est chaque bâtiment qui est bâti ou en chantier */
 export function emprisesCamp(etat, camp = NOUS) {
-  const m = etat.marges ?? { x: 0, y: 0 }, out = [], K = campDe(etat, camp);
+  const K = campDe(etat, camp);
+  return Object.keys(CAMP_PLAN.ligne).filter(cle => { const c = K?.batiments[cle]; return c && (c.niveau || c.chantier); }).map(cle => emplacementCamp(etat, cle, camp));
+}
+
+/* La place de tout le camp, bâti ou non (les cinq emplacements) : { x0, x1, y0, y1 } en coordonnées du terrain ; la caméra le cadre en entier (v0.96.0) */
+export function etendueCamp(etat, camp = NOUS) {
+  const m = etat.marges ?? { x: 0, y: 0 }, e = { x0: Infinity, x1: -Infinity, y0: Infinity, y1: -Infinity };
   for (const [cle, [dx, dy]] of Object.entries(CAMP_PLAN.ligne)) {
-    const c = K?.batiments[cle];
-    if (!c || !(c.niveau || c.chantier)) continue;
-    // le camp d'en face : le nôtre tourné d'un demi-tour autour du centre du secteur (au nord, ses bâtiments tournés vers le sud)
-    const X = CAMP_PLAN.x + dx, Y = CAMP_PLAN.y + dy;
-    out.push({ cle, camp, x: m.x + (camp === NOUS ? X : CAMP_PLAN.largeur - X), y: m.y + (camp === NOUS ? Y : CAMP_PLAN.hauteur - Y), w: PIEDS[cle][0], d: PIEDS[cle][1], rot: camp === NOUS ? 0 : Math.PI });
+    const X = CAMP_PLAN.x + dx, Y = CAMP_PLAN.y + dy, x = m.x + (camp === NOUS ? X : CAMP_PLAN.largeur - X), y = m.y + (camp === NOUS ? Y : CAMP_PLAN.hauteur - Y);
+    e.x0 = Math.min(e.x0, x - PIEDS[cle][0] / 2); e.x1 = Math.max(e.x1, x + PIEDS[cle][0] / 2); e.y0 = Math.min(e.y0, y - PIEDS[cle][1] / 2); e.y1 = Math.max(e.y1, y + PIEDS[cle][1] / 2);
   }
-  return out;
+  return e;
 }
 /* Le bâtiment sous un point du terrain (à `marge` m près), ou null */
 export function batimentSous(etat, x, y, marge = 0, camp = NOUS) {

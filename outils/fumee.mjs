@@ -59,10 +59,11 @@ await jeu('() => __jeu.avancer(60, false)');
 await etape('apres-ordre');
 await jeu('() => { __jeu.bataille().etat.camp.batiments.artillerie.niveau = 3; for (const c of [75, 155, 220]) __jeu.barrage(String(c), 150 + c / 3, 100); __jeu.avancer(300, false); }');
 await etape('apres-barrages');
-await page.click('.pastille[data-cle="chars"]');           // le camp (v0.85.0) : un bâtiment à bâtir, son papier
+await page.evaluate(() => document.querySelector('.pastille[data-cle="chars"]').click());           // le camp (v0.85.0) : un bâtiment à bâtir, son papier
 await etape('camp-chars');
-await page.click('.bat-ameliorer');                          // 3 points : le chantier est payé
+await page.evaluate(() => document.querySelector('#batiment .actions:last-child button').click());      // (la fenêtre suit le bâtiment, que la caméra respirante bouge : pas de clic de souris à viser)                          // 3 points : le chantier est payé
 await etape('camp-chantier');
+await page.waitForTimeout(3000);                              // le toast « chantier lancé » dure 2,6 s d'horloge : on attend qu'il s'efface (sinon l'étape d'après le lit ou non, selon la machine)
 await page.keyboard.press('Escape');                          // Échap ferme le papier du bâtiment
 await page.mouse.move(600, 380);
 await page.mouse.click(600, 380, { button: 'right' });     // le clic droit annule

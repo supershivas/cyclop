@@ -1,5 +1,9 @@
 # Journal des versions
 
+## 0.96.0 — 2026-10-27
+- La fenêtre d'un bâtiment s'ouvre au-dessus de lui, au clic : son nom et son niveau, une ligne de ce qu'il fait, un bouton par ordre (PRÊT, les secondes) et l'amélioration en un seul clic (le choix du palier est le bouton) ; les boutons de batterie du coin sont retirés
+- La touche B cadre tout le camp et le camp est rapproché de nos lignes ; la caméra n'est plus retenue par sa propre position : on peut descendre jusqu'au camp à tous les zooms, et tout dézoomé la vue est centrée sur le champ
+
 ## 0.95.0 — 2026-10-27
 - Les tranchées gardent la texture « joints, grain et usure » : joints entre les sacs, grain des planches, boue au pied, mousse sur le dessus
 - Les sacs de sable sont projetés par les obus : ils partent en l'air et retombent à plat ; le mât des drapeaux se voit sous tous les angles ; plus de scintillement sur les faces des sacs et des planches

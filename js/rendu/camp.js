@@ -2,10 +2,10 @@
 // tant qu'un chantier dure, un liseré d'os autour du bâtiment choisi. Le dessin seulement : tout vient de l'état de la bataille, rien n'y est écrit ; et rien n'est dessiné hors de la partie bridée
 // (`etat.camp.bride`), donc ni le labo ni les tests n'ont de camp ; le jeu à deux en a un par joueur (v0.94.0). Les deux camps sont dessinés : celui d'en face est le nôtre tourné d'un demi-tour.
 // Fabrique `creerCamp({ THREE, scene, bataille: () => B, hauteur })`.
-import { atelier } from './engins.js?v=0.95.0';
-import { BATIR, chantier } from './camp-modeles.js?v=0.95.0';
-import { emprisesCamp } from '../camp.js?v=0.95.0';
-import { PALETTE as P } from '../palette.js?v=0.95.0';
+import { atelier } from './engins.js?v=0.96.0';
+import { BATIR, chantier } from './camp-modeles.js?v=0.96.0';
+import { emprisesCamp, emplacementCamp } from '../camp.js?v=0.96.0';
+import { PALETTE as P } from '../palette.js?v=0.96.0';
 
 const LUEUR = 0.9;      // × la couleur de la matière (mesuré à l'œil sur la partie du premier matin : sans elle, la boue est noire)
 
@@ -56,7 +56,7 @@ export function creerCamp({ THREE, scene, bataille, hauteur }) {
     for (const mat of matieres) mat.emissive.copy(mat.color).multiplyScalar(LUEUR * (1 - Math.min(1, sombre)));
     for (const l of lumiere.children) if (l.isLight) l.intensity = (l.isAmbientLight ? 1.6 : 1.7) * (1 - 0.75 * Math.min(1, sombre));
     // le liseré du choisi : un cadre d'os autour de l'emprise, vu à travers les volumes
-    const e = choisi && emprisesCamp(B.etat, choisiCamp).find(x => x.cle === choisi);
+    const e = choisi && emplacementCamp(B.etat, choisi, choisiCamp);
     if (!e) return sansLiseret();
     if (!liseret || liseret.userData.cle !== `${choisiCamp}:${choisi}`) {
       sansLiseret();
@@ -64,7 +64,7 @@ export function creerCamp({ THREE, scene, bataille, hauteur }) {
       liseret = new THREE.LineSegments(geo, new THREE.LineBasicMaterial({ color: new THREE.Color(P.o), depthTest: false }));
       liseret.renderOrder = 10; liseret.userData.cle = `${choisiCamp}:${choisi}`; scene.add(liseret);
     }
-    liseret.position.copy(modeles.get(`${choisiCamp}:${choisi}`)?.pivot.position ?? liseret.position);
+    liseret.position.copy({ x: e.x, y: hauteur(e.x, e.y), z: e.y });
   }
   return { maj, vider, choisir: (cle, camp = 0) => { choisi = cle; choisiCamp = camp; if (!cle) sansLiseret(); } };
 }

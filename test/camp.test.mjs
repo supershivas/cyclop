@@ -120,7 +120,7 @@ test('le camp est dans la marge arrière, derrière notre 4e ligne, sans que deu
   const em = emprisesCamp(e);
   assert.equal(em.length, 5);
   const quatrieme = e.marges.y + 278;
-  for (const b of em) assert.ok(b.y - b.d / 2 > quatrieme + 40 && b.y + b.d / 2 < e.marges.y + 300 + e.marges.y, `${b.cle} derrière la 4e ligne, dans le terrain`);
+  for (const b of em) assert.ok(b.y - b.d / 2 > quatrieme + 30 && b.y + b.d / 2 < e.marges.y + 300 + e.marges.y, `${b.cle} derrière la 4e ligne, dans le terrain`);
   for (const a of em) for (const b of em) if (a !== b) assert.ok(Math.abs(a.x - b.x) >= (a.w + b.w) / 2 + 4 || Math.abs(a.y - b.y) >= (a.d + b.d) / 2, `${a.cle} et ${b.cle} se chevauchent`);
   for (const b of em) { assert.equal(batimentSous(e, b.x, b.y), b.cle); assert.ok(b.x - b.w / 2 >= 0 && b.x + b.w / 2 <= 2 * e.marges.x + 400); }
   assert.equal(batimentSous(e, 10, 10), null);
