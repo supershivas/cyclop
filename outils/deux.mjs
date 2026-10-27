@@ -36,8 +36,13 @@ await A.waitForTimeout(12000);
 const a = await etat(A), b = await etat(Bp);
 const camps = async p => p.evaluate(() => { const e = window.__jeu.bataille().etat; return JSON.stringify([e.camp.dotation, e.camp.batiments.chars.chantier, e.campEux.dotation, e.campEux.batiments.sapeurs.chantier]); });
 console.log('camps', await camps(A), await camps(Bp));
-if (process.env.DEUX_PNG) for (const [nom, p] of [['hote', A], ['invite', Bp]]) {      // (à regarder : la touche B va au camp de chacun ; DEUX_PNG = un dossier)
-  await p.keyboard.press('b'); await p.waitForTimeout(1500); await p.click('.pastille[data-cle="chars"], .pastille[data-cle="sapeurs"]'); await p.waitForTimeout(400); await p.screenshot({ path: `${process.env.DEUX_PNG}/deux-${nom}.png` });
+if (process.env.DEUX_PNG) for (const [nom, p] of [['hote', A], ['invite', Bp]]) {      // (à regarder : la touche B va au camp de chacun, la fenêtre d'un bâtiment à trois zooms ; DEUX_PNG = un dossier)
+  await p.keyboard.press('b'); await p.waitForTimeout(1500);
+  for (const [z, cle] of [[null, 'artillerie'], [2, 'caserne'], [3, 'sapeurs'], [0, 'chars']]) {
+    if (z !== null) await p.evaluate(z => window.__jeu.zoom(z), z);
+    await p.evaluate(cle => document.querySelector(`.pastille[data-cle="${cle}"]`).click(), cle); await p.waitForTimeout(1800);
+    await p.screenshot({ path: `${process.env.DEUX_PNG}/deux-${nom}-${cle}.png` });
+  }
 }
 if (await camps(A) !== await camps(Bp) || !JSON.parse(await camps(A))[1] || !JSON.parse(await camps(A))[3]) { console.log('✗ les camps diffèrent ou les chantiers manquent'); process.exitCode = 1; }
 console.log('A', JSON.stringify(a)); console.log('B', JSON.stringify(b));
