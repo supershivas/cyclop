@@ -1,16 +1,21 @@
 // Le camp : la règle, sans écran (Jérôme, v0.84.0 : lot 1 de `docs/chantiers/camp-et-ameliorations.md`). Logique pure : aucun DOM, aucune horloge, aucun hasard.
 // L'état est `etat.camp` : la dotation de l'état-major, le niveau de chaque bâtiment (et son chantier d'une nuit), les lignes d'en face déjà comptées.
 // Lot 1 : la dotation tombe à l'aube et les chantiers s'achèvent, mais AUCUN niveau ne bride encore un ordre (les batteries, l'avion, le char, le génie se donnent comme avant).
-import { BATIMENTS, DOTATION } from './data/batiments.js?v=0.85.0';
+import { BATIMENTS, DOTATION, CAMP_PLAN, PIEDS } from './data/batiments.js?v=0.86.0';
 
 const NOUS = 0;
 export const NIVEAU_MAX = 3;
+const CHOIX_ACTIFS = false;      // les deux améliorations de chaque palier (`choix` de data/batiments.js) : leurs effets viennent au lot 3 ; d'ici là, on monte de niveau sans choisir
+
+// Le niveau qui ouvre chaque ordre de batterie (`ordonnerBarrage`) : [bâtiment, niveau]
+const OUVERTURE = { '75': ['artillerie', 1], '155': ['artillerie', 2], '220': ['artillerie', 3], avion: ['aerodrome', 1], char: ['chars', 1], genie: ['sapeurs', 1] };
 
 /* L'état du camp au premier matin : l'artillerie et la caserne au niveau 1 (donnés), le reste à bâtir */
-export function campDeDepart() {
+export function campDeDepart({ bride = false } = {}) {
   const batiments = {};
   for (const [cle, B] of Object.entries(BATIMENTS)) batiments[cle] = { niveau: B.niveaux[0].depart ? 1 : 0, choix: [], chantier: null };
-  return { dotation: DOTATION.depart, batiments, lignes: [] };
+  // `bride` : les niveaux ouvrent les ordres (les 155 et 220, l'avion, le char, le génie) : vrai dans la partie du joueur ; faux pour les tests, le labo et le jeu à deux, où rien n'est bridé
+  return { dotation: DOTATION.depart, batiments, lignes: [], bride };
 }
 
 export const niveauDe = (etat, cle) => etat.camp?.batiments[cle]?.niveau ?? 0;
@@ -30,7 +35,7 @@ export function refusCamp(etat, cle, choix = null) {
   if (c.niveau >= NIVEAU_MAX) return `${B.nom} est déjà au niveau maximal.`;
   const vers = c.niveau + 1, N = B.niveaux[vers - 1], manque = N.cout - etat.camp.dotation;
   if (manque > 0) return `${manque} point${manque > 1 ? 's' : ''} de dotation manque${manque > 1 ? 'nt' : ''} pour ${N.nom.toLowerCase()} (${N.cout} points, ${etat.camp.dotation} en caisse).`;
-  if (N.choix && !(choix === 0 || choix === 1)) return `Choisissez : ${N.choix[0][0].toLowerCase()} ou ${N.choix[1][0].toLowerCase()}.`;
+  if (CHOIX_ACTIFS && N.choix && !(choix === 0 || choix === 1)) return `Choisissez : ${N.choix[0][0].toLowerCase()} ou ${N.choix[1][0].toLowerCase()}.`;
   return null;
 }
 
@@ -73,4 +78,32 @@ export function dotationAube(B) {
   out.points = out.aube + out.tenue + out.lignes;
   camp.dotation += out.points;
   return out;
+}
+
+/* Pourquoi le camp ne donne pas cet ordre (`cal` : '75', '155', '220', 'avion', 'char', 'genie') : une phrase, ou null. Seulement dans la partie bridée, et pour nous */
+export function refusOrdre(etat, camp, cal) {
+  if (camp !== NOUS || !etat.camp?.bride || !OUVERTURE[cal]) return null;
+  const [cle, n] = OUVERTURE[cal], B = BATIMENTS[cle], niveau = niveauDe(etat, cle);
+  if (niveau >= n) return null;
+  if (etat.camp.batiments[cle].chantier) return `${B.nom} est en chantier : fini à l'aube.`;
+  return niveau === 0 ? `${B.nom} n'est pas encore bâti.` : `${B.nom} : cet ordre s'ouvre au niveau ${n} (il est au niveau ${niveau}).`;
+}
+/* Le nid de mitrailleuse refait par le génie demande la maison des sapeurs au niveau 2 */
+export function refusNid(etat, camp) {
+  if (camp !== NOUS || !etat.camp?.bride || niveauDe(etat, 'sapeurs') >= 2) return null;
+  return 'Refaire un nid de mitrailleuse demande la maison des sapeurs au niveau 2.';
+}
+
+/* Où est chaque bâtiment : { cle, x, y, w, d } (le centre et l'emprise, en coordonnées du terrain : les marges sont ajoutées) ; seulement ceux qui sont bâtis ou en chantier */
+export function emprisesCamp(etat) {
+  const m = etat.marges ?? { x: 0, y: 0 }, out = [];
+  for (const [cle, [dx, dy]] of Object.entries(CAMP_PLAN.ligne)) {
+    const c = etat.camp?.batiments[cle];
+    if (c && (c.niveau || c.chantier)) out.push({ cle, x: m.x + CAMP_PLAN.x + dx, y: m.y + CAMP_PLAN.y + dy, w: PIEDS[cle][0], d: PIEDS[cle][1] });
+  }
+  return out;
+}
+/* Le bâtiment sous un point du terrain (à `marge` m près), ou null */
+export function batimentSous(etat, x, y, marge = 0) {
+  return emprisesCamp(etat).find(e => Math.abs(x - e.x) <= e.w / 2 + marge && Math.abs(y - e.y) <= e.d / 2 + marge)?.cle ?? null;
 }

@@ -1,5 +1,9 @@
 # Journal des versions
 
+## 0.86.0 — 2026-10-27
+- Le camp apparaît dans la marge arrière : on clique un bâtiment (ou sa pastille, ou la touche B) pour lui donner ses ordres et le bâtir ou l'améliorer ; les boutons de batterie sont dans leur bâtiment
+- Il faut bâtir le parc des chars, l'aérodrome et la maison des sapeurs ; les 155 et 220 s'ouvrent aux niveaux 2 et 3 de l'artillerie ; la dotation tombe à l'aube
+
 ## 0.85.0 — 2026-10-27
 - La dotation de l'état-major tombe chaque aube et les chantiers du camp s'achèvent à la nuit (règle seule : rien n'est encore visible ni bridé)
 

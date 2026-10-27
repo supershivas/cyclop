@@ -93,3 +93,12 @@ export const PARCOURS_EXEMPLE = [
   { jour: 10, aerodrome: 2 },
   { jour: 12, sapeurs: 2, artillerie: 3 },
 ];
+
+// Où est le camp (lot 2) : en coordonnées du secteur (0..400, 0..300 ; les marges s'ajoutent), à 80 m derrière notre 4e ligne (rangée 278), au milieu du front ; chaque bâtiment est centré
+// sur [dx, dy] depuis ce point (la disposition « en ligne » du labo, retenue par Jérôme le 27 octobre). Les emprises (`PIED` de rendu/camp-modeles.js) ne se touchent pas.
+export const CAMP_PLAN = {
+  x: 200, y: 358,
+  ligne: { caserne: [-100, 0], artillerie: [-52, 0], sapeurs: [-14, 0], chars: [20, 0], aerodrome: [84, 0] },
+};
+// L'emprise de chaque bâtiment [largeur le long de x, profondeur le long de y], en m, à tout niveau (le dessin la garde : `rendu/camp-modeles.js`)
+export const PIEDS = { artillerie: [34, 22], aerodrome: [84, 40], chars: [32, 30], sapeurs: [26, 22], caserne: [42, 28] };

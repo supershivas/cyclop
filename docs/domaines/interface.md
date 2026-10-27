@@ -1,4 +1,5 @@
 # Interface (HUD, main.js)
+- **Le camp (Jérôme, v0.86.0)** : `hud/camp.js` (`creerCampHud` : les cinq pastilles `#camp-barre`, le papier `#batiment` qui porte les boutons de batterie), `main.js` (`choisirBatiment`, `versLeCamp`, `leCamp`), la règle `js/camp.js`, le dessin `js/rendu/camp.js` ; détail, mesures et écarts : `docs/chantiers/camp-et-ameliorations.md`, « Lot 2 ». Dans la partie bridée `#batteries` est caché (ses boutons sont dans le papier de leur bâtiment) ; le jeu à deux le garde visible.
 - **Nos chars sur le champ (Jérôme, v0.81.0)** : voir `docs/domaines/terrain-engins.md`, « Le canon du char » : `hud/chars.js` (étiquettes, cibles en SVG `#chars-cibles`, fiche `#char-fiche`) ; main.js : `charChoisi`, `modeChar`, `choisirChar`, `actionChar`, `ordreChar`, `charSous`.
 - **La carte et le plan de secteur s'expliquent (Jérôme, v0.78.1 : « je ne comprends pas les détails de la carte, rends-les plus explicites »)** : le plan écrit le nom de chaque ligne (« Nos / Leurs 1res / 2es tranchées », bleu et kaki) et la largeur du no man's land ; une légende de trois lignes (hommes, tranchée, régiment) ; **la liste des régiments dans le secteur** (« 3 · Céruléen : 94 hommes ici », « En face : régiment 3… », « EN DÉROUTE ») ; une phrase par secteur (« Secteur B : 188 à nous, 188 en face · tranchées : 16 tronçons à nous, 16 à eux, 2 disputés »). La carte du haut a un volet **« Comment lire la carte »** (les lettres, les lignes 1 à 4, les quatre carrés d'une case, « 1·12 », « 135 m », les cercles, le « ! », la ligne pointillée). Non fait : les noms des régiments d'en face (ils n'en ont pas), une légende dans l'infobulle des cases.
 
@@ -110,9 +111,10 @@
 | Marcher (sur une tranchée : l'occuper) | — | clic gauche sur le sol, les régiments choisis restent choisis (v0.21.2) |
 | Annuler | Échap | clic droit : le barrage visé, « Marcher », la fiche, puis les régiments choisis |
 | Posture des régiments choisis : à volonté, feu retenu | Maj+1, Maj+2 (touche physique ; Maj+3 ne fait rien) | deux boutons dans la fenêtre du régiment (v0.36.1) |
-| Barrage de 75, 155, 220 | 1, 2, 3 (touche physique) puis clic | bouton de la batterie puis clic |
-| Avion de mitraillage (3 par camp) | 4 puis deux clics : le début, la fin de la passe | bouton « Avion » puis deux clics ; clic droit : le premier point, puis le barrage |
-| Génie : refaire un pont coupé (4 sections de 20 hommes par camp) | 6 puis clic sur le pont | bouton « Génie » puis clic |
+| Barrage de 75, 155, 220 | 1, 2, 3 (touche physique) puis clic ; refusé tant que l'artillerie n'a pas le niveau (v0.86.0) | le bâtiment (clic sur lui, sa pastille), son bouton de calibre, puis clic |
+| Avion de mitraillage (3 par camp) | 4 puis deux clics : le début, la fin de la passe | l'aérodrome, son bouton « Avion » puis deux clics ; clic droit : le premier point, puis le barrage |
+| Génie : refaire un pont coupé (4 sections de 20 hommes par camp) | 6 puis clic sur le pont | la maison des sapeurs, son bouton « Génie » puis clic |
+| Le camp : choisir un bâtiment, aller le voir | B (la caméra glisse jusqu'au camp, puis revient) | clic sur le bâtiment ou sa pastille (en bas à droite) ; Échap ferme son papier |
 | Arrêter le temps (pause active) | Espace | — |
 | Déplacer la vue | flèches, ZQSD / WASD (selon l'écran) | Maj + glisser avec le bouton du milieu (la molette) |
 | Tourner, incliner la vue | A et E (Q et E en QWERTY), R et F (touches physiques, en continu) | glisser avec le bouton du milieu (ou le droit) ; le cadran à l'écran (v0.9.1) est retiré en v0.26.0 (Jérôme) |

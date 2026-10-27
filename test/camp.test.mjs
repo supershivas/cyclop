@@ -1,6 +1,6 @@
 // Le camp : la dotation de l'aube, les chantiers d'une nuit, les refus à voix haute, la sauvegarde (lot 1 de docs/chantiers/camp-et-ameliorations.md).
-import { nouvelleBataille, avancer, aube, photo, restaurer } from '../js/bataille.js';
-import { campDeDepart, refusCamp, ordonnerChantier, dotationAube, niveauDe, coutDe, nuitsDe, choisis } from '../js/camp.js';
+import { nouvelleBataille, avancer, aube, photo, restaurer, ordonnerBarrage } from '../js/bataille.js';
+import { campDeDepart, refusOrdre, refusNid, emprisesCamp, batimentSous, refusCamp, ordonnerChantier, dotationAube, niveauDe, coutDe, nuitsDe, choisis } from '../js/camp.js';
 import { BATIMENTS, DOTATION } from '../js/data/batiments.js';
 import { REGLAGES as R } from '../js/data/reglages.js';
 
@@ -20,8 +20,7 @@ test('un ordre impossible se refuse à voix haute', () => {
   assert.match(refusCamp(e, 'chars'), /2 points de dotation manquent/);
   e.camp.dotation = 0; assert.match(refusCamp(e, 'sapeurs'), /2 points de dotation manquent/);
   e.camp.dotation = 9;
-  assert.match(refusCamp(e, 'artillerie'), /Choisissez/, 'le niveau 2 exige un choix');
-  assert.equal(refusCamp(e, 'artillerie', 1), null);
+  assert.equal(refusCamp(e, 'artillerie'), null, 'sans choix d\'amélioration au lot 2 (leurs effets viennent au lot 3)');
   e.camp.batiments.caserne.niveau = 3; assert.match(refusCamp(e, 'caserne', 0), /niveau maximal/);
 });
 test('le chantier : payé tout de suite, fini à l\'aube, refusé pendant qu\'il dure', () => {
@@ -82,4 +81,53 @@ test('le niveau ne bride encore aucun ordre (lot 1) : un barrage de 220 part au 
 test('le camp de départ est neuf à chaque bataille (pas d\'état partagé)', () => {
   const a = campDeDepart(); a.batiments.chars.niveau = 2; a.lignes.push(0);
   assert.equal(campDeDepart().batiments.chars.niveau, 0); assert.deepEqual(campDeDepart().lignes, []);
+});
+
+const bridee = (graine = 5) => nouvelleBataille(graine, R, { soldats: 200, jours: 6, camp: true });
+test('partie bridée : un barrage de 155 est refusé tant que l\'artillerie est au niveau 1, et s\'ouvre au niveau 2', () => {
+  const B = bridee();
+  assert.ok(B.etat.camp.bride);
+  assert.equal(ordonnerBarrage(B, '75', 300, 450).ok, true);
+  assert.match(ordonnerBarrage(B, '155', 300, 450).refus, /niveau 2/);
+  assert.match(ordonnerBarrage(B, '220', 300, 450).refus, /niveau 3/);
+  B.etat.camp.batiments.artillerie.niveau = 2;
+  assert.equal(ordonnerBarrage(B, '155', 300, 450).ok, true);
+});
+test('partie bridée : l\'avion, le char et le génie demandent leur bâtiment, dit à voix haute', () => {
+  const B = bridee();
+  for (const [cal, nom] of [['avion', /aérodrome n'est pas encore bâti/], ['char', /parc des chars n'est pas encore bâti/], ['genie', /maison des sapeurs n'est pas encore bâti/]]) assert.match(ordonnerBarrage(B, cal, 300, 450).refus, nom);
+  ordonnerChantier(B.etat, 'chars');
+  assert.match(refusOrdre(B.etat, 0, 'char'), /en chantier/);
+  nuit(B);
+  assert.equal(refusOrdre(B.etat, 0, 'char'), null);
+});
+test('partie bridée : refaire un nid demande les sapeurs au niveau 2 ; en face n\'est jamais bridé', () => {
+  const B = bridee();
+  B.etat.camp.batiments.sapeurs.niveau = 1;
+  assert.match(refusNid(B.etat, 0), /niveau 2/);
+  B.etat.camp.batiments.sapeurs.niveau = 2; assert.equal(refusNid(B.etat, 0), null);
+  assert.equal(refusOrdre(B.etat, 1, 'char'), null);
+});
+test('par défaut (tests, labo, jeu à deux) rien n\'est bridé', () => {
+  assert.equal(petite().etat.camp.bride, false);
+  assert.equal(refusOrdre(petite().etat, 0, 'char'), null);
+});
+test('le camp est dans la marge arrière, derrière notre 4e ligne, sans que deux bâtiments se touchent, et un point le retrouve', () => {
+  const B = bridee(), e = B.etat;
+  e.camp.batiments.chars.niveau = 1; e.camp.batiments.aerodrome.chantier = { vers: 1, nuits: 1, choix: null }; e.camp.batiments.sapeurs.niveau = 1;
+  const em = emprisesCamp(e);
+  assert.equal(em.length, 5);
+  const quatrieme = e.marges.y + 278;
+  for (const b of em) assert.ok(b.y - b.d / 2 > quatrieme + 40 && b.y + b.d / 2 < e.marges.y + 300 + e.marges.y, `${b.cle} derrière la 4e ligne, dans le terrain`);
+  for (const a of em) for (const b of em) if (a !== b) assert.ok(Math.abs(a.x - b.x) >= (a.w + b.w) / 2 + 4 || Math.abs(a.y - b.y) >= (a.d + b.d) / 2, `${a.cle} et ${b.cle} se chevauchent`);
+  for (const b of em) { assert.equal(batimentSous(e, b.x, b.y), b.cle); assert.ok(b.x - b.w / 2 >= 0 && b.x + b.w / 2 <= 2 * e.marges.x + 400); }
+  assert.equal(batimentSous(e, 10, 10), null);
+  e.camp.batiments.chars.niveau = 0;
+  assert.ok(!emprisesCamp(e).some(b => b.cle === 'chars'), 'un bâtiment à bâtir n\'a pas d\'emprise');
+});
+test('une partie bridée relue est la même partie, camp compris', () => {
+  const A = bridee(8); ordonnerChantier(A.etat, 'sapeurs'); nuit(A);
+  const B = restaurer(JSON.parse(JSON.stringify(photo(A))), R);
+  assert.deepEqual(B.etat.camp, A.etat.camp); assert.ok(B.etat.camp.bride);
+  assert.match(ordonnerBarrage(B, '155', 300, 450).refus, /niveau 2/);
 });

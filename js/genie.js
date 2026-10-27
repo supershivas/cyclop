@@ -3,16 +3,16 @@
    Elle naît hors du terrain derrière son camp, marche en droite ligne jusqu'à la rive du pont coupé (`pont` : l'indice dans `T.pontsListe`), puis le refait : `travail` va de 0 à 1,
    et gagne `n / hommes` fois plus vite que la section au complet (de 2 à 4 h de jeu avec 20 hommes : `PONTS_HEURES`). Un obus couche une part de ses hommes. `etat.sapeurs[camp]` :
    les sections au dépôt. Les ordres rendent { refus } comme les barrages. */
-import { GENIE_DATA } from './data/genie.js?v=0.85.0';
-import { CALIBRES } from './data/calibres.js?v=0.85.0';
-import { CHAR_SORTIE } from './data/chars.js?v=0.85.0';
-import { PONTS_HEURES } from './data/ponts.js?v=0.85.0';
-import { routeChar } from './chars.js?v=0.85.0';
-import { reconstruirePont } from './eaux.js?v=0.85.0';
-import { toucher } from './terrain.js?v=0.85.0';
-import { hash2 } from './lib/rng.js?v=0.85.0';
-import { NIDS } from './data/nids.js?v=0.85.0';
-import { nidDetruitVise, reparerNid } from './nids.js?v=0.85.0';
+import { GENIE_DATA } from './data/genie.js?v=0.86.0';
+import { CALIBRES } from './data/calibres.js?v=0.86.0';
+import { CHAR_SORTIE } from './data/chars.js?v=0.86.0';
+import { PONTS_HEURES } from './data/ponts.js?v=0.86.0';
+import { routeChar } from './chars.js?v=0.86.0';
+import { reconstruirePont } from './eaux.js?v=0.86.0';
+import { toucher } from './terrain.js?v=0.86.0';
+import { hash2 } from './lib/rng.js?v=0.86.0';
+import { NIDS } from './data/nids.js?v=0.86.0';
+import { nidDetruitVise, reparerNid } from './nids.js?v=0.86.0';
 
 export const sectionsDeDepart = () => [GENIE_DATA.sections, GENIE_DATA.sections];
 
