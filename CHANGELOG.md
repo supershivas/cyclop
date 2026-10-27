@@ -1,5 +1,8 @@
 # Journal des versions
 
+## 0.83.2 — 2026-10-27
+- Le survol d'un nid se lit mieux : le texte de sa visée est au bout du cône, et la bulle dit le nid (solidité, portée) au lieu du régiment qui l'entoure
+
 ## 0.83.1 — 2026-10-27
 - Le survol d'un nid de mitrailleuse montre sa visée : le cône où il tire, une croix sur les hommes d'en face sous son feu (ou « se tait » si son tronçon est pris)
 

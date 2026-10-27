@@ -1,7 +1,7 @@
 // Les outils de l'éditeur de carte et les champs que chacun règle, avec un NOM et une DESCRIPTION pour chaque chiffre (l'atelier les affiche tels quels : Jérôme, « je ne comprends pas
 // les chiffres de l'éditeur »). `genre` : le type de la forme (`f` d'une retouche de relief, `o` d'un objet) ; `segment` : posée d'un point à un autre ; `champs` : ce qui se règle.
 // `icone` : un tracé de 24 × 24 (au trait). Contenu en données (conventions, section 12) : ajouter un outil n'ajoute aucune ligne de code à l'éditeur.
-import { PONTS_JEU, PONT_DEFAUT } from './ponts.js?v=0.83.1';
+import { PONTS_JEU, PONT_DEFAUT } from './ponts.js?v=0.83.2';
 
 export const GROUPES_OUTILS = [
   { id: 'edition', titre: 'Édition' },
