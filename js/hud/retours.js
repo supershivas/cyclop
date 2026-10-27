@@ -2,8 +2,8 @@
 // en trois temps) du labo) : le dessin seulement, par-dessus le moteur. Rien ici ne lit ni ne modifie la partie au-delà de lire `B.armee` pour placer le dessin ;
 // aucun tirage du générateur de la bataille, rien de sauvegardé. Un SVG (le fanion et ses fils) et un canvas 2D (la poussière, l'impact), suivis de la caméra
 // par `versEcran`. Fabrique `creerRetours({ $, rendu: () => rendu, bataille: () => B })` : le rendu et la bataille changent à chaque partie, on les lit à chaque appel.
-import { PALETTE as P } from '../palette.js?v=0.89.0';
-import { CALIBRES } from '../data/calibres.js?v=0.89.0';
+import { PALETTE as P } from '../palette.js';
+import { CALIBRES } from '../data/calibres.js';
 
 const svgEl = (tag, attrs = {}) => { const e = document.createElementNS('http://www.w3.org/2000/svg', tag); for (const [k, v] of Object.entries(attrs)) e.setAttribute(k, v); return e; };
 const borne = (u, a = 0, b = 1) => Math.min(b, Math.max(a, u));
