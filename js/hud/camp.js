@@ -1,8 +1,8 @@
 // Le camp à l'écran (Jérôme, v0.87.0 ; lot 2 de docs/chantiers/camp-et-ameliorations.md) : une rangée de cinq pastilles en bas à droite (là où étaient les boutons de batterie) et, pour le bâtiment
 // choisi, son papier : ce qu'il est, ses ordres (les boutons de batterie y sont posés : ils gardent leur barre de charge, leur PRÊT et leur refus à voix haute) et son amélioration.
 // Un clic sur le bâtiment dans le champ le choisit aussi (main.js). Lecture seule de l'état : les ordres passent par les fonctions que main.js donne.
-import { BATIMENTS, ORDRE_BATIMENTS, EQUIPEMENT } from '../data/batiments.js?v=0.93.0';
-import { refusCamp, niveauDe, NIVEAU_MAX } from '../camp.js?v=0.93.0';
+import { BATIMENTS, ORDRE_BATIMENTS, EQUIPEMENT } from '../data/batiments.js';
+import { refusCamp, niveauDe, NIVEAU_MAX } from '../camp.js';
 
 // les boutons de batterie que chaque bâtiment porte (ils sont créés par main.js et rangés dans #batteries, caché, tant qu'aucun bâtiment ne les réclame)
 export const ORDRES_DE = { artillerie: ['75', '155', '220'], aerodrome: ['avion'], chars: ['char'], sapeurs: ['genie'], caserne: [] };
