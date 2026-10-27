@@ -1,8 +1,8 @@
 {
-  "version": "0.87.0",
+  "version": "0.88.0",
   "date": "2026-10-27",
   "changes": [
-    "Le camp apparaît dans la marge arrière : on clique un bâtiment (ou sa pastille, ou la touche B) pour lui donner ses ordres et le bâtir ou l'améliorer ; les boutons de batterie sont dans leur bâtiment",
-    "Il faut bâtir le parc des chars, l'aérodrome et la maison des sapeurs ; les 155 et 220 s'ouvrent aux niveaux 2 et 3 de l'artillerie ; la dotation tombe à l'aube"
+    "Le vent souffle : plus ou moins fort selon le temps et le jour, il pousse les nuages, la pluie et la neige, la fumée, plie les arbres et l'herbe et fait claquer les fanions",
+    "Le haut de l'écran dit le vent du jour (« brise légère », « vent fort »…)"
   ]
 }

@@ -1,15 +1,16 @@
 // Ce que l'état des tronçons montre sur le terrain : les fanions (à la couleur de celui qui tient le tronçon, déchirés quand l'autre
 // camp y est entré), le clignotement d'un ordre et la surbrillance de la visée, les ouvrages des tranchées (traverses, sacs de terre,
 // fil de fer, bois). Le dessin seulement : tout se lit de l'état, rien n'en est sauvegardé.
-import { PALETTE } from '../palette.js?v=0.87.0';
-import { ligneY, demiLargeur } from '../tranchees.js?v=0.87.0';
-import { TOITS } from '../data/nids.js?v=0.87.0';
-import { primitives, ouvrageTroncon, niveauSelonZoom } from './tranchee-modeles.js?v=0.87.0';
+import { PALETTE } from '../palette.js?v=0.88.0';
+import { ligneY, demiLargeur } from '../tranchees.js?v=0.88.0';
+import { TOITS } from '../data/nids.js?v=0.88.0';
+import { primitives, ouvrageTroncon, niveauSelonZoom } from './tranchee-modeles.js?v=0.88.0';
 
 // `THREE`, `scene`, `col` (une couleur de la palette), `surface(x, z)` (la hauteur du sol), `projeter()` (le centre de la vue et les pixels par mètre),
 // `vue`, `zooms` viennent de creerRendu ; `bataille()`, `tAnim()` (le temps du dessin), `vide()` (rien n'est dessiné) et `survolTroncons()`
 // (les tronçons que le survol allume) sont lus à chaque image, parce qu'ils changent. L'ordre d'ajout à la scène est celui d'avant la découpe.
 export function creerTroncons({ THREE, scene, col, surface, projeter, vue, zooms, bataille, tAnim, vide, survolTroncons }) {
+  const ventF = { force: 0, ang: 0 };       // le vent du moment (`setVent`), lu par les fanions
   // ─── Les fanions des tronçons (Jérôme, v0.9.2) : un fanion sur le parapet de chaque tronçon, à la couleur de celui qui
   // le tient. Déchiré quand l'autre camp y est entré ; quand le tronçon change de main, le nôtre descend, celui d'en
   // face monte. Rien n'est écrit : on lit la ligne, tronçon par tronçon, même de loin (un point de couleur). ───
@@ -290,9 +291,11 @@ export function creerTroncons({ THREE, scene, col, surface, projeter, vue, zooms
       // la hampe (3 m) et le drapeau (1,3 × 0,8 m), qui flotte un peu
       fanS.set(0.12 * gros, 3, 1); fanV.set(f.x, y0 + 1.5, f.z);
       fanMat.compose(fanV, fanQ.identity(), fanS); fanP.setMatrixAt(k, fanMat);
-      const vent = Math.sin(tAnim() * 4 + k) * 0.08, w = (dechire ? 0.6 : 1.3) * gros, h = (dechire ? 0.5 : 0.8) * gros;
-      fanE.set(0, 0, dechire ? -0.35 : vent); fanQ.setFromEuler(fanE);
-      fanS.set(w, h, 1); fanV.set(f.x + w / 2, y0 + 0.4 + 2.5 * monte - (dechire ? 0.2 : 0), f.z);
+      // le drapeau flotte dans le sens du vent (Jérôme, v0.84.0) : calme il pend et bat à peine, au grand vent il claque, à plat
+      const fo = ventF.force, battement = Math.sin(tAnim() * (3 + fo * 9) + k) * (0.05 + fo * 0.22), w = (dechire ? 0.6 : 1.3) * gros, h = (dechire ? 0.5 : 0.8) * gros;
+      const cap = dechire ? 0 : -ventF.ang;
+      fanE.set(0, cap, dechire ? -0.35 : battement - (1 - Math.min(1, fo * 3)) * 0.55); fanQ.setFromEuler(fanE);
+      fanS.set(w, h, 1); fanV.set(f.x + Math.cos(-cap) * w / 2, y0 + 0.4 + 2.5 * monte - (dechire ? 0.2 : 0), f.z + Math.sin(-cap) * w / 2);
       fanMat.compose(fanV, fanQ, fanS); fanF.setMatrixAt(k, fanMat);
       fanF.setColorAt(k, fanCol[camp]);
     }
@@ -304,6 +307,7 @@ export function creerTroncons({ THREE, scene, col, surface, projeter, vue, zooms
   return {
     preparer: preparerFanions,                                   // une bataille est branchée : un fanion par tronçon
     maj(dt) { majFanions(dt); majClignotants(dt); majOuvrages(dt); },
+    setVent(force, ang) { ventF.force = force; ventF.ang = ang; },   // les fanions suivent le vent
     clignoter,                                                   // un ordre validé : les tronçons visés clignotent
     get niveau() { return niveauReglage; },
     set niveau(v) { niveauReglage = v === 'auto' ? 'auto' : Math.max(0, Math.min(3, v | 0)); ouvT = 0; },         // le niveau de détail des tranchées : 0 (le jeu), 1 à 3, 'auto' (selon le zoom)

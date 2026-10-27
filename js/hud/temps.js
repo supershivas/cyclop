@@ -4,10 +4,10 @@
 // qui le suit dit le jour et l'heure ; tout en bas, les seuls changements de météo, en pictogrammes. Le joueur ne connaît pas la météo des jours à
 // venir (la logique la tire d'avance) : seuls les jours passés et le jour même sont lus dans l'état, demain est la prévision (juste 7 fois sur 10).
 // Le dessin seulement : rien n'est sauvegardé.
-import { PALETTE } from '../palette.js?v=0.87.0';
-import { METEO, temperature } from '../data/meteo.js?v=0.87.0';
-import { ICONES_METEO } from './meteo-icones.js?v=0.87.0';
-import { horloge } from '../bataille.js?v=0.87.0';
+import { PALETTE } from '../palette.js?v=0.88.0';
+import { METEO, temperature } from '../data/meteo.js?v=0.88.0';
+import { ICONES_METEO } from './meteo-icones.js?v=0.88.0';
+import { horloge } from '../bataille.js?v=0.88.0';
 
 const FOND = { sec: PALETTE.h, pluie: PALETTE.e, brouillard: PALETTE.r, gel: PALETTE.o, neige: PALETTE.o, canicule: PALETTE.x, tempete: PALETTE.r, couvert: PALETTE.g, beau: PALETTE.e };
 const el = (tag, cls, ...kids) => { const e = document.createElement(tag); if (cls) e.className = cls; e.append(...kids); return e; };
@@ -45,7 +45,7 @@ export function creerBarreTemps({ $, bataille }) {
     // où l'on est : de 0 à 1 le long des jours (12 h de jour, de 6 h à 18 h, puis 12 h de nuit)
     const heure = nuit ? 24 : h.heure + h.minute / 60 - 6;
     const ici = (h.jour - 1 + Math.min(heure, 24) / 24) / h.jours;
-    const mot = `J${h.jour}/${h.jours} · ${nuit ? 'nuit' : `${h.heure} h ${String(h.minute).padStart(2, '0')}`} · ${METEO[h.meteo].nom}${h.temperature !== null ? `, ${h.temperature} °C` : ''}`;
+    const mot = `J${h.jour}/${h.jours} · ${nuit ? 'nuit' : `${h.heure} h ${String(h.minute).padStart(2, '0')}`} · ${METEO[h.meteo].nom}${h.temperature !== null ? `, ${h.temperature} °C` : ''}, ${h.vent.nom === 'calme' ? 'pas de vent' : h.vent.nom}`;
     const cle = `${h.jour}|${h.meteo}|${h.prevision}|${mot}|${nuit}`;
     const f = racine();
     f.style.setProperty('--ici', ici);

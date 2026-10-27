@@ -9,7 +9,7 @@
 //   3 Détaillé — trois assises de sacs, le clayonnage des parois, des cadres de boisage avec leur écharpe, un caniveau, une échelle, un abri, des plaques de meurtrière,
 //       un fil téléphonique et une lanterne, des rouleaux de barbelé.
 // À chaque niveau, l'état du bout de tranchée (creusée, à moitié comblée, comblée) change ce qui reste : en place, brisé et de travers, puis des éclats à terre.
-import { ligneY, demiLargeur } from '../tranchees.js?v=0.87.0';
+import { ligneY, demiLargeur } from '../tranchees.js?v=0.88.0';
 
 export const NIVEAUX_TRANCHEES = [
   { n: 1, nom: 'Silhouette', note: 'Le parapet en tranches de 5 m, deux traverses, un fil à deux brins. Ce qui se lit de loin, pour presque rien.' },

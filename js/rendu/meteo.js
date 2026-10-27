@@ -1,7 +1,7 @@
 // La pluie (des traits qui tombent autour du centre de la vue) et le brouillard (un voile de brume continu qui s'épaissit vers le haut
 // de l'écran, le lointain ; plus de trame depuis la v0.12.1). Le dessin seulement : `afficher` lit la météo, `maj` règle les nuanceurs.
-import * as SH from './shaders.js?v=0.87.0';
-import { METEO } from '../data/meteo.js?v=0.87.0';
+import * as SH from './shaders.js?v=0.88.0';
+import { METEO } from '../data/meteo.js?v=0.88.0';
 
 const PLUIE = 1600, NEIGE = 1100;
 
@@ -14,7 +14,7 @@ export function creerMeteo({ THREE, scene, col }) {
   plGeo.setAttribute('position', new THREE.BufferAttribute(plPos, 3));
   plGeo.setAttribute('aVit', new THREE.BufferAttribute(plVit, 1));
   const plMat = new THREE.ShaderMaterial({
-    uniforms: { uT: { value: 0 }, uC: { value: new THREE.Vector2() }, uE: { value: new THREE.Vector2(400, 300) }, uCol: { value: col('r') }, uTaille: { value: 1 } },
+    uniforms: { uT: { value: 0 }, uC: { value: new THREE.Vector2() }, uE: { value: new THREE.Vector2(400, 300) }, uCol: { value: col('r') }, uTaille: { value: 1 }, uDer: { value: new THREE.Vector2() } },
     vertexShader: SH.plMat.v,
     fragmentShader: SH.plMat.f,
     depthTest: false, depthWrite: false,
@@ -31,7 +31,7 @@ export function creerMeteo({ THREE, scene, col }) {
     neigeGeo.setAttribute('position', new THREE.BufferAttribute(neigePos, 3));
     neigeGeo.setAttribute('aVit', new THREE.BufferAttribute(neigeVit, 1));
     neigeMatT = new THREE.ShaderMaterial({
-      uniforms: { uT: { value: 0 }, uC: { value: new THREE.Vector2() }, uE: { value: new THREE.Vector2(400, 300) }, uCol: { value: col('o') }, uTaille: { value: 2 } },
+      uniforms: { uT: { value: 0 }, uC: { value: new THREE.Vector2() }, uE: { value: new THREE.Vector2(400, 300) }, uCol: { value: col('o') }, uTaille: { value: 2 }, uDer: { value: new THREE.Vector2() } },
       vertexShader: SH.neigeMat.v, fragmentShader: SH.neigeMat.f, depthTest: false, depthWrite: false,
     });
     neige = new THREE.Points(neigeGeo, neigeMatT); neige.frustumCulled = false; neige.renderOrder = 4; neige.visible = false;
@@ -52,7 +52,10 @@ export function creerMeteo({ THREE, scene, col }) {
     // la pluie le jour seulement, le brouillard quand il y en a ; `vide` : rien (la vue sans bataille)
     afficher(h, vide) { if (!vide) { pluie.visible = h.meteo === 'pluie' && h.phase === 'jour'; { const nv = METEO[h.meteo]?.neige && h.phase === 'jour'; if (nv && !neige) creerNeige(); if (neige) neige.visible = !!nv; fort = !!h.tempete; } brume.visible = h.meteo === 'brouillard' || h.tempete; } },
     // `tAnim` : le temps du dessin ; `cx`, `cz` : le centre de la vue ; `p` : les pixels par mètre ; `vue` : la taille de l'écran
-    maj(tAnim, cx, cz, p, vue) {
+    // `vx`, `vz` : le vent en m/s ; la pluie en prend un peu (elle tombe en biais), la neige davantage (des flocons que le vent roule)
+    maj(tAnim, cx, cz, p, vue, vx = 0, vz = 0, dt = 0) {
+      plMat.uniforms.uDer.value.x += vx * 0.6 * dt; plMat.uniforms.uDer.value.y += vz * 0.6 * dt;
+      if (neigeMatT) { neigeMatT.uniforms.uDer.value.x += (2 + vx * 1.1) * dt; neigeMatT.uniforms.uDer.value.y += vz * 1.1 * dt; }
       plMat.uniforms.uT.value = tAnim; plMat.uniforms.uC.value.set(cx, cz);
       { const e = Math.hypot(vue.vw, vue.vh) / p + 40; plMat.uniforms.uE.value.set(e, e); }
       plMat.uniforms.uTaille.value = p >= 4 ? 2 : 1;

@@ -60,3 +60,22 @@ export function temperature(saison, meteo, graine, jour) {
   h = Math.imul(h ^ (h >>> 13), 1274126177); h ^= h >>> 16;
   return Math.round(T[0] + ((h >>> 0) / 4294967296) * (T[1] - T[0]));
 }
+
+// Le vent (Jérôme, v0.84.0 : « le vent réaliste, plus ou moins fort, qui influe sur les nuages, les arbres, la pluie… »). `force` : 0 (calme) à 1 (tempête), entre les bornes que le temps du jour permet ;
+// `ang` : le cap vers où il souffle (rad, 0 = vers l'est, sens horaire vu de dessus : x = cos, z = sin), le plus souvent d'ouest en est, écarté de ±1 rad. Comme `temperature`, tout vient d'un hachage de la
+// graine, du jour et du temps : aucun tirage du générateur de la bataille, rien n'est sauvegardé. La pluie et la tempête de neige poussent plus fort ; le brouillard, le gel et la canicule sont presque calmes.
+export const VENT_FORCE = {
+  sec: [0.1, 0.5], pluie: [0.3, 0.8], brouillard: [0, 0.18], gel: [0.05, 0.35], neige: [0.15, 0.5],
+  tempete: [0.7, 1], couvert: [0.1, 0.5], beau: [0.05, 0.4], canicule: [0, 0.25],
+};
+export const VENT_CAPS = { depart: 0, ecart: 1 };        // le cap moyen (vers l'est) et l'écart possible, en rad
+// les mots du vent selon sa force (seuils croissants)
+export const VENT_NOMS = [[0.12, 'calme'], [0.3, 'brise légère'], [0.5, 'vent modéré'], [0.7, 'vent fort'], [1.01, 'vent de tempête']];
+export function vent(meteo, graine, jour) {
+  const B = VENT_FORCE[meteo] || [0.1, 0.5];
+  const h = (s) => { let x = (Math.imul(graine | 0, 374761393) + Math.imul(jour | 0, 668265263) + Math.imul(s, 1597334677) + 0x9e3779b9) | 0; x = Math.imul(x ^ (x >>> 13), 1274126177); x ^= x >>> 16; return (x >>> 0) / 4294967296; };
+  const force = B[0] + h(1) * (B[1] - B[0]);
+  const ang = VENT_CAPS.depart + (h(2) * 2 - 1) * VENT_CAPS.ecart;
+  const nom = VENT_NOMS.find(([max]) => force < max)[1];
+  return { force, ang, nom };
+}

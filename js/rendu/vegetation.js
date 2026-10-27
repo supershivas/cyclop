@@ -1,11 +1,11 @@
 // La végétation : les arbres (un tronc, quelques branches nues ; abattus, une souche), les buissons (deux ou trois boîtes basses ; arrachés, il
 // n'en reste rien) et l'herbe (des touffes de cinq brins, seulement de près, qui ondulent au vent). Seulement ce qu'on voit est dessiné : tous,
 // ils coûtaient des dizaines de milliers de triangles (docs/domaines/rendu.md, « Les arbres et les buissons dessinés partout »). Le dessin seulement.
-import * as SH from './shaders.js?v=0.87.0';
-import { creerGeometries } from './geometries.js?v=0.87.0';
-import { hash2 } from '../lib/rng.js?v=0.87.0';
-import { BUISSONS_FORMES, BUISSONS_SAISONS, BUISSONS_TIRAGES } from '../data/buissons.js?v=0.87.0';
-import { ARBRES_FAMILLES, ARBRES_TIRAGES, ARBRES_ECHELLE, ARBRES_AUTOMNE, ARBRES_PPM_FEUILLES, ARBRES_FEUILLES } from '../data/arbres.js?v=0.87.0';
+import * as SH from './shaders.js?v=0.88.0';
+import { creerGeometries } from './geometries.js?v=0.88.0';
+import { hash2 } from '../lib/rng.js?v=0.88.0';
+import { BUISSONS_FORMES, BUISSONS_SAISONS, BUISSONS_TIRAGES } from '../data/buissons.js?v=0.88.0';
+import { ARBRES_FAMILLES, ARBRES_TIRAGES, ARBRES_ECHELLE, ARBRES_AUTOMNE, ARBRES_PPM_FEUILLES, ARBRES_FEUILLES } from '../data/arbres.js?v=0.88.0';
 
 // `THREE`, `scene`, `col`, `camera`, `vue`, `solY` (la hauteur moyenne du sol), `distance(zoom)`, `surface(x, z)` et `petit()` (aux zooms où un soldat n'est qu'un point)
 // viennent de creerRendu ; `terrain()`, `vide()` et `ombres()` sont lus à chaque appel (le terrain change à chaque bataille). `ombres()` rend `{ ARBRES_OMBRES, aoPos, aoGeo, soleil }` :
@@ -17,7 +17,27 @@ export function creerVegetation({ THREE, scene, col, camera, vue, solY: SOL_Y, d
   let opts = optsArbres, forcee = null, trisArbres = 0, msArbres = 0;
   // ─── Les arbres : un tronc, quelques branches nues ; abattus, une souche ───
   const arbresMesh = [];
-  const arbreMat = new THREE.MeshBasicMaterial({ color: col('s'), side: THREE.DoubleSide });
+  // le vent (Jérôme, v0.84.0) : sa force × son sens (x, z), lu par l'herbe, les roseaux et les arbres ; (0, 0) : l'air est calme (le labo, et d'avant)
+  const vent = { uVent: { value: new THREE.Vector2() }, uTV: { value: 0 } };
+  // les arbres plient : un déplacement du monde qui grandit avec le carré de la hauteur au-dessus du pied (le tronc plie peu, la cime beaucoup), dans le sens du vent, avec des rafales ; les instances tournent, d'où le décalage après leur matrice
+  const plierAuVent = (mat) => {
+    mat.onBeforeCompile = (sh) => {
+      sh.uniforms.uVent = vent.uVent; sh.uniforms.uTV = vent.uTV;
+      sh.vertexShader = 'uniform vec2 uVent; uniform float uTV;\n' + sh.vertexShader.replace('#include <project_vertex>', `
+        vec4 mvPosition = vec4(transformed, 1.0);
+        #ifdef USE_INSTANCING
+          mvPosition = instanceMatrix * mvPosition;
+        #endif
+        float hArb = max(transformed.y, 0.0);
+        float rafaleArb = 0.75 + 0.25 * sin(uTV * 1.7 + mvPosition.x * 0.21 + mvPosition.z * 0.17);
+        mvPosition.xz += uVent * hArb * hArb * 0.014 * rafaleArb;
+        mvPosition = modelViewMatrix * mvPosition;
+        gl_Position = projectionMatrix * mvPosition;`);
+    };
+    mat.customProgramCacheKey = () => 'vent-arbre';
+    return mat;
+  };
+  const arbreMat = plierAuVent(new THREE.MeshBasicMaterial({ color: col('s'), side: THREE.DoubleSide }));
   function preparerArbres() {
     const T = terrain();
     arbresMesh.forEach(m => { scene.remove(m); m.geometry.dispose(); });
@@ -82,9 +102,9 @@ export function creerVegetation({ THREE, scene, col, camera, vue, solY: SOL_Y, d
       const sxz = (w0 + (w1 - w0) * tire(a, ARBRES_TIRAGES.taille + 100)) * (1 + (hr - 1) * 0.5), yaw = tire(a, ARBRES_TIRAGES.sens) * Math.PI * 2;
       return { fam, sx: sxz, sy: hr, H: F.h * hr, c: Math.cos(yaw), s: Math.sin(yaw), d: tire(a, ARBRES_TIRAGES.feuilles), t: tire(a, ARBRES_TIRAGES.chute) };
     });
-    feuilleMat ??= new THREE.MeshBasicMaterial({ vertexColors: true, side: THREE.DoubleSide });
+    feuilleMat ??= plierAuVent(new THREE.MeshBasicMaterial({ vertexColors: true, side: THREE.DoubleSide }));
     const ajouter = (geo, userData) => {
-      const m = new THREE.InstancedMesh(geo, userData.couronne ? new THREE.MeshBasicMaterial() : userData.feuilles ? feuilleMat : arbreMat, cap);
+      const m = new THREE.InstancedMesh(geo, userData.couronne ? plierAuVent(new THREE.MeshBasicMaterial()) : userData.feuilles ? feuilleMat : arbreMat, cap);
       m.count = 0; m.frustumCulled = false; m.userData = { ...userData, tri: geo.attributes.position.count / 3 };
       arbresMesh.push(m); scene.add(m); return m;
     };
@@ -250,7 +270,7 @@ export function creerVegetation({ THREE, scene, col, camera, vue, solY: SOL_Y, d
     herbeGeo.instanceCount = 0;
   }
   const herbeMat = new THREE.ShaderMaterial({
-    uniforms: { uT: { value: 0 }, uBas: { value: col('g') }, uHaut: { value: col('h') } },
+    uniforms: { uT: { value: 0 }, uVent: vent.uVent, uBas: { value: col('g') }, uHaut: { value: col('h') } },
     vertexShader: SH.herbeMat.v,
     fragmentShader: SH.herbeMat.f,
     side: THREE.DoubleSide,
@@ -311,7 +331,7 @@ export function creerVegetation({ THREE, scene, col, camera, vue, solY: SOL_Y, d
     roseauGeo.setAttribute('aPos', new THREE.InstancedBufferAttribute(rPos, 3).setUsage(THREE.DynamicDrawUsage));
     roseauGeo.instanceCount = 0;
     roseauMat = new THREE.ShaderMaterial({
-      uniforms: { uT: { value: 0 }, uBas: { value: col('w') }, uHaut: { value: col('h') } },
+      uniforms: { uT: { value: 0 }, uVent: vent.uVent, uBas: { value: col('w') }, uHaut: { value: col('h') } },
       vertexShader: SH.herbeMat.v, fragmentShader: SH.herbeMat.f, side: THREE.DoubleSide,
     });
     roseauMesh = new THREE.Mesh(roseauGeo, roseauMat); roseauMesh.frustumCulled = false; roseauMesh.renderOrder = 1;
@@ -348,7 +368,8 @@ export function creerVegetation({ THREE, scene, col, camera, vue, solY: SOL_Y, d
   return {
     preparer() { preparerArbres(); preparerBuissons(); preparerHerbe(); preparerRoseaux(); },      // une bataille est branchée
     majArbres, majBuissons, majHerbe, majRoseaux,
-    setTemps(t) { herbeMat.uniforms.uT.value = t; if (roseauMat) roseauMat.uniforms.uT.value = t * 1.3; },                              // le vent
+    setTemps(t) { herbeMat.uniforms.uT.value = t; vent.uTV.value = t; if (roseauMat) roseauMat.uniforms.uT.value = t * 1.3; },                              // le vent
+    setVent(x, z) { vent.uVent.value.set(x, z); },                                                       // sa force × son sens
     get vuesHerbe() { return vuesHerbe; },
     get trianglesArbres() { return trisArbres; },                                // les triangles des arbres dessinés à cette image (pour les stats)
     get msArbres() { return msArbres; },                                         // le tri des arbres, ms par image (lissé)
