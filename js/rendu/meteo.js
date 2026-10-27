@@ -1,7 +1,7 @@
 // La pluie (des traits qui tombent autour du centre de la vue) et le brouillard (un voile de brume continu qui s'épaissit vers le haut
 // de l'écran, le lointain ; plus de trame depuis la v0.12.1). Le dessin seulement : `afficher` lit la météo, `maj` règle les nuanceurs.
-import * as SH from './shaders.js?v=0.91.2';
-import { METEO } from '../data/meteo.js?v=0.91.2';
+import * as SH from './shaders.js?v=0.92.0';
+import { METEO } from '../data/meteo.js?v=0.92.0';
 
 const PLUIE = 5000, NEIGE = 3500;
 const BOITE_MAX = 600;      // m : la boîte de pluie autour de la vue ne dépasse pas cela (dézoomé, 1 100 m pour 1 600 gouttes : presque rien sur le champ, tout au bord de l'horizon)

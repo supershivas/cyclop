@@ -1,5 +1,8 @@
 # Journal des versions
 
+## 0.92.0 — 2026-10-27
+- Au labo, nouveau sujet « Des angles adoucis » : des feuillages aux angles coupés et un liseré de lumière sur les arêtes du sol, à comparer avant de choisir ; le jeu ne change pas
+
 ## 0.91.2 — 2026-10-27
 - Les drapeaux sont accrochés à leur mât et se déforment au vent : ils pendent au calme, se lèvent et ondulent quand il souffle, dans son sens
 
