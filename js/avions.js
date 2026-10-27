@@ -4,13 +4,13 @@
    L'avion entre par le prolongement de la passe, vole à `croisiere` m, descend à `passe` m sur les `descente` m qui précèdent la bande, la balaie (ses balles tombent
    `avance` m devant lui, chaque homme de la bande n'est tiré qu'une fois), remonte, et sort. Au-dessus d'hommes qui tirent, il perd des points de vie (`exposition`) ;
    à zéro, il tombe, écrase ce qui est sous lui et laisse une épave jusqu'à l'aube. Les avions de chaque camp : `etat.avions[camp]`, les points de vie de chacun (0 : perdu). */
-import { MITRAILLAGE as M } from './data/mitraillage.js?v=0.91.1';
-import { METEO } from './data/meteo.js?v=0.91.1';
-import { GRILLE, effrayer, toitFacteur } from './army.js?v=0.91.1';
-import { hash2 } from './lib/rng.js?v=0.91.1';
-import { modif, pvAvion } from './camp.js?v=0.91.1';
-import { impact } from './terrain.js?v=0.91.1';
-import { NOMS_CALIBRES } from './data/calibres.js?v=0.91.1';
+import { MITRAILLAGE as M } from './data/mitraillage.js?v=0.92.0';
+import { METEO } from './data/meteo.js?v=0.92.0';
+import { GRILLE, effrayer, toitFacteur } from './army.js?v=0.92.0';
+import { hash2 } from './lib/rng.js?v=0.92.0';
+import { modif, pvAvion } from './camp.js?v=0.92.0';
+import { impact } from './terrain.js?v=0.92.0';
+import { NOMS_CALIBRES } from './data/calibres.js?v=0.92.0';
 
 const borne = (v, a, b) => v < a ? a : v > b ? b : v;
 const lisse = f => { f = borne(f, 0, 1); return f * f * (3 - 2 * f); };

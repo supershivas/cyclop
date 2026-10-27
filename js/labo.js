@@ -2,44 +2,44 @@
 // Chaque sujet utilise les mêmes modules que le jeu (terrain, apparence,
 // rendu three.js) : ce qu'on voit ici est ce que le jeu dessinera. Ajouter un
 // sujet ou une variante = ajouter une entrée dans GROUPES.
-import { afficherVersion } from './version-tag.js?v=0.91.1';
-import { mountLabo } from './lib/labo-shell.js?v=0.91.1';
-import { spriteCanvas, paletteToGPL, paletteToHex } from './lib/sprites.js?v=0.91.1';
-import { PALETTE, ROLES } from './palette.js?v=0.91.1';
-import { chargerContenu } from './design-store.js?v=0.91.1';
-import { tuile, ETAT } from './tuiles.js?v=0.91.1';
-import { creerTerrain, impact, hydroLignes, toucher } from './terrain.js?v=0.91.1';
-import { FORMES } from './cratere.js?v=0.91.1';
-import { CALIBRES } from './data/calibres.js?v=0.91.1';
-import { METEO } from './data/meteo.js?v=0.91.1';
-import { nouvelleBataille, avancer, ordonnerMarche, ordonnerBarrage, mourir, regarderAu, aube, horloge, ticksParJour, rangDe } from './bataille.js?v=0.91.1';
-import { AZIMUTS, COTES } from './data/soleil.js?v=0.91.1';
-import { creerRendu, ZOOMS } from './rendu3d.js?v=0.91.1';
-import { placesCommandement } from './army.js?v=0.91.1';
-import { hash2 } from './lib/rng.js?v=0.91.1';
-import { reglerVerdure } from './apparence.js?v=0.91.1';
-import { maquetteAssaut } from './labo-assaut.js?v=0.91.1';
-import { calquePlaques } from './labo-plaques.js?v=0.91.1';
-import { calqueBarre } from './labo-barre-temps.js?v=0.91.1';
-import { maquetteProjections, maquetteVisee } from './labo-projections.js?v=0.91.1';
-import { calqueBarreVie } from './labo-barre-vie.js?v=0.91.1';
-import { calqueClic } from './labo-clic-regiment.js?v=0.91.1';
-import { maquetteBoutons, calqueOrdre, calqueObus } from './labo-satisfaction.js?v=0.91.1';
-import { calqueEtiquette, calqueToast, maquetteCartes } from './labo-hud-ux.js?v=0.91.1';
-import { maquetteCampagne } from './labo-campagne.js?v=0.91.1';
-import { maquetteCaisses, maquetteRates, maquetteSapes } from './labo-arcade.js?v=0.91.1';
-import { maquetteChars } from './labo-chars.js?v=0.91.1';
-import { maquetteGaz } from './labo-gaz.js?v=0.91.1';
-import { maquetteAvions } from './labo-avions.js?v=0.91.1';
-import { maquetteBatiment, maquetteCamp } from './labo-batiments.js?v=0.91.1';
-import { BATIMENTS } from './data/batiments.js?v=0.91.1';
-import { maquettePonts, PONTS, NOMS_PONTS } from './labo-ponts.js?v=0.91.1';
-import { PONTS_JEU } from './data/ponts.js?v=0.91.1';
-import { JOURNAL } from './labo-journal.js?v=0.91.1';
-import { loadVersion } from './lib/app-update.js?v=0.91.1';
-import { maquetteEffets, maquetteAmbiance, maquetteEspace } from './labo-son.js?v=0.91.1';
-import { calqueMoral } from './labo-moral.js?v=0.91.1';
-import { maquetteTranchees, NOTES_TRANCHEES, NOMS_TRANCHEES } from './labo-tranchees.js?v=0.91.1';
+import { afficherVersion } from './version-tag.js?v=0.92.0';
+import { mountLabo } from './lib/labo-shell.js?v=0.92.0';
+import { spriteCanvas, paletteToGPL, paletteToHex } from './lib/sprites.js?v=0.92.0';
+import { PALETTE, ROLES } from './palette.js?v=0.92.0';
+import { chargerContenu } from './design-store.js?v=0.92.0';
+import { tuile, ETAT } from './tuiles.js?v=0.92.0';
+import { creerTerrain, impact, hydroLignes, toucher } from './terrain.js?v=0.92.0';
+import { FORMES } from './cratere.js?v=0.92.0';
+import { CALIBRES } from './data/calibres.js?v=0.92.0';
+import { METEO } from './data/meteo.js?v=0.92.0';
+import { nouvelleBataille, avancer, ordonnerMarche, ordonnerBarrage, mourir, regarderAu, aube, horloge, ticksParJour, rangDe } from './bataille.js?v=0.92.0';
+import { AZIMUTS, COTES } from './data/soleil.js?v=0.92.0';
+import { creerRendu, ZOOMS } from './rendu3d.js?v=0.92.0';
+import { placesCommandement } from './army.js?v=0.92.0';
+import { hash2 } from './lib/rng.js?v=0.92.0';
+import { reglerVerdure } from './apparence.js?v=0.92.0';
+import { maquetteAssaut } from './labo-assaut.js?v=0.92.0';
+import { calquePlaques } from './labo-plaques.js?v=0.92.0';
+import { calqueBarre } from './labo-barre-temps.js?v=0.92.0';
+import { maquetteProjections, maquetteVisee } from './labo-projections.js?v=0.92.0';
+import { calqueBarreVie } from './labo-barre-vie.js?v=0.92.0';
+import { calqueClic } from './labo-clic-regiment.js?v=0.92.0';
+import { maquetteBoutons, calqueOrdre, calqueObus } from './labo-satisfaction.js?v=0.92.0';
+import { calqueEtiquette, calqueToast, maquetteCartes } from './labo-hud-ux.js?v=0.92.0';
+import { maquetteCampagne } from './labo-campagne.js?v=0.92.0';
+import { maquetteCaisses, maquetteRates, maquetteSapes } from './labo-arcade.js?v=0.92.0';
+import { maquetteChars } from './labo-chars.js?v=0.92.0';
+import { maquetteGaz } from './labo-gaz.js?v=0.92.0';
+import { maquetteAvions } from './labo-avions.js?v=0.92.0';
+import { maquetteBatiment, maquetteCamp } from './labo-batiments.js?v=0.92.0';
+import { BATIMENTS } from './data/batiments.js?v=0.92.0';
+import { maquettePonts, PONTS, NOMS_PONTS } from './labo-ponts.js?v=0.92.0';
+import { PONTS_JEU } from './data/ponts.js?v=0.92.0';
+import { JOURNAL } from './labo-journal.js?v=0.92.0';
+import { loadVersion } from './lib/app-update.js?v=0.92.0';
+import { maquetteEffets, maquetteAmbiance, maquetteEspace } from './labo-son.js?v=0.92.0';
+import { calqueMoral } from './labo-moral.js?v=0.92.0';
+import { maquetteTranchees, NOTES_TRANCHEES, NOMS_TRANCHEES } from './labo-tranchees.js?v=0.92.0';
 
 document.documentElement.style.setProperty('--jeu-accent', ROLES.accent);
 const NOM = document.title.replace(/^Labo — /, ''); // le nom vient de la page (une apostrophe ne casse rien)
@@ -165,7 +165,7 @@ function poserColline(B, { dx = 0, dz = 0, r = 22, h = 9 }, cz) {
   }
 }
 
-function moteur(stage, { zoom = 3, pluie = false, gel = false, soldats = 600, cz = 185, camera = null, respiration = undefined, soldat = undefined, cadavre = undefined, morts = 0, effets = undefined, barrages = false, surLesArbres = false, vue = null, verdure = undefined, nuit = null, tombee = false, calque = null, bord = null, centre = null, finesse = 1, cratere = null, arbres = undefined, saison = null, jours = undefined, versLesArbres = false, buissons = undefined, versLesBuissons = false, lumiere = null, colline = null, journee = null, grades = undefined, parade = false } = {}) {
+function moteur(stage, { zoom = 3, pluie = false, gel = false, soldats = 600, cz = 185, camera = null, respiration = undefined, soldat = undefined, cadavre = undefined, morts = 0, effets = undefined, barrages = false, surLesArbres = false, vue = null, verdure = undefined, nuit = null, tombee = false, calque = null, bord = null, centre = null, finesse = 1, biseau = false, cratere = null, arbres = undefined, saison = null, jours = undefined, versLesArbres = false, buissons = undefined, versLesBuissons = false, lumiere = null, colline = null, journee = null, grades = undefined, parade = false } = {}) {
   reglerVerdure(verdure);                                   // le sol vert (apparence.js) : avant que le sol ne se peigne
   const boite = el('div'); boite.style.cssText = 'position:relative;width:100%;height:min(70vh,560px);overflow:hidden';
   const canvas = el('canvas'); canvas.style.cssText = 'position:absolute;left:0;top:0;image-rendering:pixelated';
@@ -231,6 +231,7 @@ function moteur(stage, { zoom = 3, pluie = false, gel = false, soldats = 600, cz
     if (fini) { rendu.detruire(); return; }
     if (nuit) rendu.styleNuit = nuit;
     rendu.finesse = finesse;
+    rendu.biseau = biseau;
     rendu.redimensionner();
     rendu.attacher(B);
     if (vue) rendu.placerCamera(vue.yaw, vue.tangage);       // la caméra libre du jeu
@@ -543,6 +544,13 @@ const GROUPES = [
       { title: 'Des éclats autour', status: 'ancienne', depuis: '0.52.5', note: "Non retenu (Jérôme, v0.52.5) : reste au labo. Le motif carré et la lèvre carrée d'avant, plus de petits creux et monticules d'un quart de mètre sur deux à trois anneaux autour : 4 pour un 75, 8 pour un 155, 14 pour un 220, à des angles et des distances tirés du numéro de l'impact. Sans aucune autre forme, le contour reste carré : à voir surtout avec les autres. Coût mesuré : impact() 2 à 3 µs (inchangé) ; 22, 48 et 79 cases (+20 % de cases à refaire) ; sol 125 000 / 93 000 triangles.", render: s => moteur(s, { zoom: 4, soldats: 400, cz: 185, finesse: 2, cratere: 'eclats' }) },
       { title: 'Un cratère ovale', status: 'ancienne', depuis: '0.52.5', note: "Non retenu (Jérôme, v0.52.5) : reste au labo. Un disque étiré (grand axe × 1,25, petit axe ÷ 1,25 : la même aire) et tourné au hasard du numéro de l'impact, avec sa lèvre ovale. Les cratères ne sont plus tous des copies les uns des autres ; coût de la logique identique au disque. Coût mesuré : impact() 6 à 11 µs ; 16, 45 et 56 cases ; volume creusé 88 à 100 % ; sol 121 000 / 91 000 triangles.", render: s => moteur(s, { zoom: 4, soldats: 400, cz: 185, finesse: 2, cratere: 'ovale' }) },
       { title: 'Rond, lèvre jetée et éclats', status: 'retenue', depuis: '0.52.5', note: "Retenu (Jérôme, v0.52.5), en jeu : le disque, sa lèvre jetée d'un côté, plus les éclats : tout ce qui précède sauf l'ovale. Le plus lourd pour la logique (voir le relevé) et pour le dessin : plus de cases changent, plus de morceaux de sol à refaire. Coût mesuré : impact() 6 à 13 µs ; 20, 51 et 68 cases ; sol 122 000 / 92 000 triangles. Une salve de 24 obus de 75 coûte 0,15 ms de plus : rien à l'échelle d'un pas.", render: s => moteur(s, { zoom: 4, soldats: 400, cz: 185, finesse: 2, cratere: 'tout' }) },
+    ] },
+    { id: 'angles-adoucis', title: 'Des angles adoucis', variants: [
+      { title: 'Les cubes francs (le jeu)', status: 'actuelle', depuis: '0.92.0', note: 'Le jeu : des cubes aux arêtes vives. Le sol (cubes d\'un demi-mètre) et les touffes de feuilles des arbres sont des boîtes qui s\'interpénètrent ; là où deux touffes se croisent, la ligne de rencontre est en marches d\'escalier. Prenez le relevé de triangles et de temps, puis comparez avec les trois suivantes.', render: s => moteur(s, { zoom: 5, soldats: 200, cz: 150, versLesArbres: true, arbres: { feuilles: true }, saison: 'automne', finesse: 2 }) },
+      { title: 'Feuillage aux angles coupés', status: 'essai', depuis: '0.92.0', note: 'Chaque touffe est une boîte dont les huit arêtes (le dessus et les verticales) sont coupées d\'un pan : le dessus prend la couleur du dessus, les arêtes verticales celle du flanc, aucune couleur de plus. Trente triangles par touffe au lieu de dix : voyez le relevé. Le pan fait 12 % de la touffe, au plus 30 cm.', render: s => moteur(s, { zoom: 5, soldats: 200, cz: 150, versLesArbres: true, arbres: { feuilles: true, chanfrein: 0.12 }, saison: 'automne', finesse: 2 }) },
+      { title: 'Sol du jeu, une colline et des cratères', status: 'actuelle', depuis: '0.92.0', note: 'Le sol du jeu au demi-mètre, sur une colline à flancs raides et un champ labouré : la référence pour juger le liseré, aux zooms 4, 6, 8 et 16.', render: s => moteur(s, { zoom: 4, soldats: 200, cz: 255, finesse: 2, cratere: 'tout', colline: { dx: 20, dz: 31, r: 20, h: 12 } }) },
+      { title: 'Sol : un liseré sur les arêtes', status: 'essai', depuis: '0.92.0', note: 'Le haut de chaque paroi d\'un demi-mètre ou plus prend la couleur du dessus de la case sur un pixel d\'écran (jamais plus de deux cinquièmes de la paroi) : l\'arête paraît arrondie, comme un fil de lumière. Aucun triangle, aucune couleur de plus : seul le nuanceur du sol change. Même scène que la précédente.', render: s => moteur(s, { zoom: 4, soldats: 200, cz: 255, finesse: 2, cratere: 'tout', colline: { dx: 20, dz: 31, r: 20, h: 12 }, biseau: true }) },
+      { title: 'Feuillage coupé et liseré du sol', status: 'essai', depuis: '0.92.0', note: 'Les deux ensemble : le sol au demi-mètre avec le liseré, les arbres aux angles coupés.', render: s => moteur(s, { zoom: 5, soldats: 200, cz: 150, versLesArbres: true, arbres: { feuilles: true, chanfrein: 0.12 }, saison: 'automne', finesse: 2, biseau: true }) },
     ] },
     { id: 'arbres-varies', title: 'Des arbres plus variés', variants: [
       { title: 'Les arbres d\'avant', status: 'ancienne', depuis: '0.52.6', note: 'Remplacé (Jérôme, v0.53.1) : reste au labo. Le jeu : un tronc de 6 à 9 m, quatre branches nues d\'une boîte chacune, tous pareils, nus en toute saison ; de loin ou aux zooms 1 et 2, le tronc seul. Au coin le plus boisé du secteur, 6 pixels par mètre. Le relevé du bas compte les triangles des arbres seuls (`arbres`) et le tri à chaque image. Mesuré au labo (200 soldats, rendu logiciel) : arbres 7 600 triangles à 4 pixels par mètre, 2 700 à 8, 2 100 à 16 ; tri 0,2 ms.', render: s => moteur(s, { zoom: 4, soldats: 200, cz: 150, versLesArbres: true, arbres: null }) },

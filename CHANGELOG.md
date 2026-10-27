@@ -1,5 +1,8 @@
 # Journal des versions
 
+## 0.92.0 — 2026-10-27
+- Au labo, nouveau sujet « Des angles adoucis » : des feuillages aux angles coupés et un liseré de lumière sur les arêtes du sol, à comparer avant de choisir ; le jeu ne change pas
+
 ## 0.91.1 — 2026-10-27
 - La pluie et la neige tombent partout sur le champ, même dézoomé (elles se perdaient au loin, à l'horizon) ; plus de gouttes, sur une boîte plafonnée à 600 m
 
