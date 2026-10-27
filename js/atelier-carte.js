@@ -3,20 +3,20 @@
 // la scène (la carte, large), l'inspecteur (l'outil ou la forme choisie, puis les réglages du secteur). Chaque chiffre porte un nom et une description (`data/carte-outils.js`,
 // `data/secteur-params.js`). Chaque retouche va dans le brouillon (`secteurs` de `cyclopeen:atelier`, à plat : « relief.bosses ») et se publie dans assets/design/secteurs.json ;
 // le jeu les pose sur `SECTEURS` au lancement (`appliquerSecteurs`).
-import { REGLAGES } from './data/reglages.js?v=0.84.1';
-import { SECTEURS, VIERGE } from './data/secteur.js?v=0.84.1';
-import { PALETTE, ORDRE } from './palette.js?v=0.84.1';
-import { terrainDuSecteur, profilDe } from './secteur-terrain.js?v=0.84.1';
-import { couleurCase } from './apparence.js?v=0.84.1';
-import { etat as etatCase, hauteurQ } from './terrain.js?v=0.84.1';
-import { ligneY } from './tranchees.js?v=0.84.1';
-import { PARAMS } from './data/secteur-params.js?v=0.84.1';
-import { SAISONS, SAISON_DEFAUT } from './data/meteo.js?v=0.84.1';
-import { SECTEURS_ORIGINE } from './data/campagne.js?v=0.84.1';
-import { OUTILS, GROUPES_OUTILS, champ, HERBE, SOLS } from './data/carte-outils.js?v=0.84.1';
-import { distanceForme, extremite } from './formes.js?v=0.84.1';
-import { validerSecteur } from './tranchees.js?v=0.84.1';
-import { lireBrouillon, ecrireBrouillon, lireChemin, deplier, secteurEffectif, idCarte, nouvelleCarte } from './design-store.js?v=0.84.1';
+import { REGLAGES } from './data/reglages.js';
+import { SECTEURS, VIERGE } from './data/secteur.js';
+import { PALETTE, ORDRE } from './palette.js';
+import { terrainDuSecteur, profilDe } from './secteur-terrain.js';
+import { couleurCase } from './apparence.js';
+import { etat as etatCase, hauteurQ } from './terrain.js';
+import { ligneY } from './tranchees.js';
+import { PARAMS } from './data/secteur-params.js';
+import { SAISONS, SAISON_DEFAUT } from './data/meteo.js';
+import { SECTEURS_ORIGINE } from './data/campagne.js';
+import { OUTILS, GROUPES_OUTILS, champ, HERBE, SOLS } from './data/carte-outils.js';
+import { distanceForme, extremite } from './formes.js';
+import { validerSecteur } from './tranchees.js';
+import { lireBrouillon, ecrireBrouillon, lireChemin, deplier, secteurEffectif, idCarte, nouvelleCarte } from './design-store.js';
 
 const rgb = hex => [1, 3, 5].map(k => parseInt(hex.slice(k, k + 2), 16));
 const COULEURS = ORDRE.map(k => rgb(PALETTE[k]));
@@ -378,7 +378,7 @@ export function ongletCarte(zone, { el, R = REGLAGES, publie = {}, publieCartes 
     v3d.activer(true);
     etatBarre.textContent = 'Vue 3D : un clic pose avec l\u2019outil choisi (crête et haie : deux clics) · glisser tourne et incline · clic droit (ou Maj) + glisser déplace · molette zoome.';
   }
-  const creerVue3D3 = async () => { const { creerVue3D } = await import('./apercu-3d.js?v=0.84.1'); return creerVue3D({ R, hote: hote3d }); };
+  const creerVue3D3 = async () => { const { creerVue3D } = await import('./apercu-3d.js'); return creerVue3D({ R, hote: hote3d }); };
   function basculer(m) {
     if (m === mode) return;
     mode = m;
