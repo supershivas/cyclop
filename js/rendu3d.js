@@ -22,31 +22,31 @@
    - Les soldats : instanciés (une boîte et son ombre) ; au zoom 1 et 2, un
      point de 2 × 2 pixels (la couleur du camp sur son ombre).
    - Les corps : un homme couché (instancié) ; au zoom 1 et 2, un pixel. */
-import { loadThree } from './three-lib.js?v=0.92.0';
-import * as SH from './rendu/shaders.js?v=0.92.0';
-import { creerSoldats } from './rendu/soldats.js?v=0.92.0';
-import { creerChars } from './rendu/chars.js?v=0.92.0';
-import { creerGenies } from './rendu/genies.js?v=0.92.0';
-import { creerCamp } from './rendu/camp.js?v=0.92.0';
-import { creerAvions } from './rendu/avions.js?v=0.92.0';
-import { creerPonts } from './rendu/ponts.js?v=0.92.0';
-import { creerCiel } from './rendu/ciel.js?v=0.92.0';
-import { creerMeteo } from './rendu/meteo.js?v=0.92.0';
-import { creerTroncons } from './rendu/troncons.js?v=0.92.0';
-import { ARBRES_JEU } from './data/arbres.js?v=0.92.0';
-import { creerVegetation } from './rendu/vegetation.js?v=0.92.0';
-import { creerTemps } from './rendu/temps.js?v=0.92.0';
-import { creerEclats } from './rendu/eclats.js?v=0.92.0';
-import { creerOmbresRelief } from './rendu/ombres-relief.js?v=0.92.0';
-import { OMBRES_RELIEF as OMB, NUAGES, NUAGES_VENT } from './data/soleil.js?v=0.92.0';
-import { PALETTE, ORDRE, INDICE } from './palette.js?v=0.92.0';
-import { OMBRE, couleursLigne } from './apparence.js?v=0.92.0';
-import { MORCEAU, hauteurVueQ as hauteurQ, hauteurVueM as hauteurM } from './terrain.js?v=0.92.0';
-import { horloge, secteurDuJeu, rangDe } from './bataille.js?v=0.92.0';
-import { GRADES } from './data/grades.js?v=0.92.0';
-import { profilFleuve } from './eaux.js?v=0.92.0';
-import { ligneY } from './tranchees.js?v=0.92.0';
-import { vent as ventDuJour } from './data/meteo.js?v=0.92.0';
+import { loadThree } from './three-lib.js?v=0.93.0';
+import * as SH from './rendu/shaders.js?v=0.93.0';
+import { creerSoldats } from './rendu/soldats.js?v=0.93.0';
+import { creerChars } from './rendu/chars.js?v=0.93.0';
+import { creerGenies } from './rendu/genies.js?v=0.93.0';
+import { creerCamp } from './rendu/camp.js?v=0.93.0';
+import { creerAvions } from './rendu/avions.js?v=0.93.0';
+import { creerPonts } from './rendu/ponts.js?v=0.93.0';
+import { creerCiel } from './rendu/ciel.js?v=0.93.0';
+import { creerMeteo } from './rendu/meteo.js?v=0.93.0';
+import { creerTroncons } from './rendu/troncons.js?v=0.93.0';
+import { ARBRES_JEU } from './data/arbres.js?v=0.93.0';
+import { creerVegetation } from './rendu/vegetation.js?v=0.93.0';
+import { creerTemps } from './rendu/temps.js?v=0.93.0';
+import { creerEclats } from './rendu/eclats.js?v=0.93.0';
+import { creerOmbresRelief } from './rendu/ombres-relief.js?v=0.93.0';
+import { OMBRES_RELIEF as OMB, NUAGES, NUAGES_VENT } from './data/soleil.js?v=0.93.0';
+import { PALETTE, ORDRE, INDICE } from './palette.js?v=0.93.0';
+import { OMBRE, couleursLigne } from './apparence.js?v=0.93.0';
+import { MORCEAU, hauteurVueQ as hauteurQ, hauteurVueM as hauteurM } from './terrain.js?v=0.93.0';
+import { horloge, secteurDuJeu, rangDe } from './bataille.js?v=0.93.0';
+import { GRADES } from './data/grades.js?v=0.93.0';
+import { profilFleuve } from './eaux.js?v=0.93.0';
+import { ligneY } from './tranchees.js?v=0.93.0';
+import { vent as ventDuJour } from './data/meteo.js?v=0.93.0';
 
 export const CAMERA = { yaw: 0.15, tangage: 0.95, fov: 30 };   // au départ : tournée de 9°, plongée de 54°, angle de 30°
 // la caméra respire : un balancement très lent, 2° en 23 s (Jérôme, v0.3.1 : variante D du labo retenue)
@@ -140,7 +140,7 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
     uniforms: { uSol: { value: null }, uTaille: { value: new THREE.Vector2(1, 1) }, uBord: { value: leBord ? leBord.fondu : 0 }, uBordCoul: { value: leBord ? col(leBord.ciel) : new THREE.Color(0) },
       uKaki: { value: new THREE.Color(0) }, uVert: { value: new THREE.Color(0) }, uGlaise: { value: new THREE.Color(0) }, uDissoudre: { value: 0 },
       uSuivre: { value: 0 }, uVersSoleil: { value: new THREE.Vector2(0, 1) },
-      uNuage: { value: 0 }, uTemps: { value: 0 }, uVent: { value: new THREE.Vector2(NUAGES_VENT[0], NUAGES_VENT[1]) } },      // l'ombre des nuages (labo) : la part du sol couverte (0 : rien), l'horloge de l'image, le vent       // les parois qui suivent le soleil (labo) : 1 et la direction du soleil, vers lui      // (le bord qui se dissout dans le faux terrain : `faireFaux`)
+      uBiseau: { value: 0 }, uNuage: { value: 0 }, uTemps: { value: 0 }, uVent: { value: new THREE.Vector2(NUAGES_VENT[0], NUAGES_VENT[1]) } },      // l'ombre des nuages (labo) : la part du sol couverte (0 : rien), l'horloge de l'image, le vent       // les parois qui suivent le soleil (labo) : 1 et la direction du soleil, vers lui      // (le bord qui se dissout dans le faux terrain : `faireFaux`)
     vertexShader: SH.solMat.v,
     fragmentShader: SH.solMat.f,
     side: THREE.DoubleSide,
@@ -152,7 +152,7 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
   // La finesse du sol (Jérôme, v0.52.2) : 1 = la case de 1 m ; 2 = des cubes de 0,5 m dont la hauteur suit la pente (la hauteur dessinée des quatre cases voisines, mêlée au centre du petit cube, arrondie au quart), sauf à un mur d'un mètre cinquante ou plus (tranchée, falaise) : le petit cube prend alors la hauteur de sa case, le bord reste net
   // Dans le jeu (Jérôme, v0.52.3), `finesseDes` : à partir de combien de pixels par mètre le sol passe au demi-mètre (null : le réglage fixe du labo) ; chaque morceau se souvient de la finesse où il a été fait (`userData.F`)
   // et ne se refait que s'il est dans la vue, les autres attendent qu'on les regarde
-  let finesse = 1, finesseDes = null, finPerimee = false;
+  let finesse = 1, finesseDes = null, finPerimee = false, biseau = false;      // `biseau` (labo « Des angles adoucis ») : un liseré de la couleur du dessus au haut de chaque paroi
   function hauteurFine(I, J) {
     const x = (I + 0.5) / finesse, z = (J + 0.5) / finesse;
     const fx = x - 0.5, fz = z - 0.5, i = Math.floor(fx), j = Math.floor(fz), tx = fx - i, tz = fz - j;
@@ -166,11 +166,11 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
     const i1 = Math.min(T.W, i0 + MORCEAU), j1 = Math.min(T.H, j0 + MORCEAU);
     const F = finesse, w = (i1 - i0) * F, h = (j1 - j0) * F, W2 = T.W * F, H2 = T.H * F, D = 0.25;     // F : cases par mètre (1 : la case de 1 m ; 2 : des cubes de 0,5 m, Jérôme, v0.52.2) ; D : la paroi prend la couleur d'un quart de mètre dans la case au-dessus d'elle, quelle que soit la texture (une case entière ou quatre moitiés : un morceau fait à 1 m peut lire la texture fine)
     const i0s = i0 * F, j0s = j0 * F;
-    const pos = [], paroi = [], decal = [], faces = [];
+    const pos = [], paroi = [], decal = [], faces = [], mur = [];
     // `face` : 8 le dessus ; 0 sud, 1 nord, 2 est, 3 ouest (+ 4 si la paroi fait un demi-mètre ou plus : elle peut être à l'ombre) ; le nuanceur du sol s'en sert quand les parois suivent le soleil (labo)
-    const quad = (ax, ay, az, bx, by, bz, cx, cy, cz, dx, dy, dz, p, ox = 0, oz = 0, face = 8) => {
+    const quad = (ax, ay, az, bx, by, bz, cx, cy, cz, dx, dy, dz, p, ox = 0, oz = 0, face = 8, mh = 1e4, mt = 0) => {
       pos.push(ax, ay, az, bx, by, bz, cx, cy, cz, ax, ay, az, cx, cy, cz, dx, dy, dz);
-      for (let k = 0; k < 6; k++) { paroi.push(p); decal.push(ox, oz); faces.push(face); }
+      for (let k = 0; k < 6; k++) { paroi.push(p); decal.push(ox, oz); faces.push(face); mur.push(mh, mt); }       // `mh`, `mt` : le haut d'une paroi et sa hauteur (le liseré de `biseau`) ; un dessus : très haut, rien
     };
     // le dessus : rectangles de même hauteur
     const vu = new Uint8Array(w * h);
@@ -208,7 +208,7 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
         let k = 1;
         while (i + k < w && hq(i0s + i + k, J) === haut && (dernier ? SOCLE * 4 : hq(i0s + i + k, J + 1)) === bas) k++;
         const x0 = (i0s + i) / F, x1 = x0 + k / F, z = (J + 1) / F, ya = haut * 0.25, yb = bas * 0.25;
-        quad(x0 - E, yb - E, z, x1 + E, yb - E, z, x1 + E, ya + E, z, x0 - E, ya + E, z, haut - bas >= 2 ? 1 : 0, 0, -D, haut - bas >= 2 ? 4 : 0);
+        quad(x0 - E, yb - E, z, x1 + E, yb - E, z, x1 + E, ya + E, z, x0 - E, ya + E, z, haut - bas >= 2 ? 1 : 0, 0, -D, haut - bas >= 2 ? 4 : 0, ya, ya - yb);
         i += k;
       }
     }
@@ -222,7 +222,7 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
         let k = 1;
         while (i + k < w && hq(i0s + i + k, J) === haut && (premier ? SOCLE * 4 : hq(i0s + i + k, J - 1)) === bas) k++;
         const x0 = (i0s + i) / F, x1 = x0 + k / F, ya = haut * 0.25, yb = bas * 0.25, Z = J / F;
-        quad(x1 + E, yb - E, Z, x0 - E, yb - E, Z, x0 - E, ya + E, Z, x1 + E, ya + E, Z, haut - bas >= 2 ? 1 : 0, 0, D, 1 + (haut - bas >= 2 ? 4 : 0));
+        quad(x1 + E, yb - E, Z, x0 - E, yb - E, Z, x0 - E, ya + E, Z, x1 + E, ya + E, Z, haut - bas >= 2 ? 1 : 0, 0, D, 1 + (haut - bas >= 2 ? 4 : 0), ya, ya - yb);
         i += k;
       }
     }
@@ -240,8 +240,8 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
         let k = 1;
         while (j + k < h && (hg ?? hq(I - 1, J + k)) === g && (hd ?? hq(I, J + k)) === d) k++;
         const z0 = J / F, z1 = (J + k) / F, X = I / F, ya = Math.max(g, d) * 0.25, yb = Math.min(g, d) * 0.25;
-        if (g > d) quad(X, yb - E, z0 - E, X, yb - E, z1 + E, X, ya + E, z1 + E, X, ya + E, z0 - E, g - d >= 2 ? 1 : 0, -D, 0, 2 + (g - d >= 2 ? 4 : 0));   // vers l'est
-        else quad(X, yb - E, z1 + E, X, yb - E, z0 - E, X, ya + E, z0 - E, X, ya + E, z1 + E, 0, D, 0, 3 + (d - g >= 2 ? 4 : 0));                          // vers l'ouest
+        if (g > d) quad(X, yb - E, z0 - E, X, yb - E, z1 + E, X, ya + E, z1 + E, X, ya + E, z0 - E, g - d >= 2 ? 1 : 0, -D, 0, 2 + (g - d >= 2 ? 4 : 0), ya, ya - yb);   // vers l'est
+        else quad(X, yb - E, z1 + E, X, yb - E, z0 - E, X, ya + E, z0 - E, X, ya + E, z1 + E, 0, D, 0, 3 + (d - g >= 2 ? 4 : 0), ya, ya - yb);                          // vers l'ouest
         j += k;
       }
     }
@@ -250,6 +250,7 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
     g.setAttribute('aParoi', new THREE.Float32BufferAttribute(paroi, 1));
     g.setAttribute('aDecal', new THREE.Float32BufferAttribute(decal, 2));
     g.setAttribute('aFace', new THREE.Float32BufferAttribute(faces, 1));
+    g.setAttribute('aMur', new THREE.Float32BufferAttribute(mur, 2));
     g.boundingSphere = new THREE.Sphere(new THREE.Vector3(i0 + w / 2, 3, j0 + h / 2), Math.hypot(w, h, 20) / 2);
     return g;
   }
@@ -682,6 +683,7 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
     const hj = horloge(B);
     temps.majSoleil(hj, soleilReglage);
     majVent(dt, hj);
+    solMat.uniforms.uBiseau.value = biseau ? 1.7 / ZOOMS[vue.zoom] : 0;      // le liseré des arêtes : un pixel d'écran de haut (1 m de hauteur s'écrase à cos(54°) ≈ 0,6 en hauteur d'écran)
     { const nu = ombresNuages ? NUAGES[hj.meteo] : null;             // l'ombre des nuages (labo) : le jour, par un temps à plaques
       solMat.uniforms.uNuage.value = nu?.taches && hj.phase === 'jour' ? 0.5 + (nu.taches - 0.5) * 0.55 : 0; solMat.uniforms.uTemps.value = 1; solMat.uniforms.uVent.value.set(-vent.nuages.x, -vent.nuages.z); }
     { const sv = soldats.soleilUniform.value, n = Math.hypot(sv.x, sv.y);           // les parois selon le soleil (labo) ; la nuit (soleil nul), celles du jeu
@@ -752,6 +754,8 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
     },
     get ombresReliefEtat() { return { calcule: ombres.calcule, enCours: false, mesure: { ...ombres.mesure, ecriture: { ...ecriture } } }; },
     set finesse(n) { reglerFinesse(n); },      // le sol se refait morceau par morceau, dans la vue d'abord (majMorceaux) : v0.52.2
+    get biseau() { return biseau; },
+    set biseau(v) { biseau = !!v; },
     get finesseDes() { return finesseDes; },
     set finesseDes(px) { finesseDes = px; },       // le jeu : le sol passe au demi-mètre à partir de ce nombre de pixels par mètre (v0.52.3)
     set vide(v) { vide = v; scene.children.forEach(o => { o.visible = !v; }); },
