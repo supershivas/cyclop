@@ -1,9 +1,9 @@
 // Le camp : la règle, sans écran (Jérôme, v0.86.0 : lot 1 de `docs/chantiers/camp-et-ameliorations.md`). Logique pure : aucun DOM, aucune horloge, aucun hasard.
 // L'état est `etat.camp` : la dotation de l'état-major, le niveau de chaque bâtiment (et son chantier d'une nuit), les lignes d'en face déjà comptées.
 // Lot 2 : les niveaux ouvrent les ordres (`refusOrdre`). Lot 3 (v0.88.0) : chaque niveau et chaque choix de palier change un chiffre (`modif`) ou un effectif (`effectifsDe`).
-import { hash2 } from './lib/rng.js';
-import { BATIMENTS, DOTATION, CAMP_PLAN, CAMP_IA, PIEDS, EQUIPEMENT, EQUIPEMENTS } from './data/batiments.js';
-import { MITRAILLAGE } from './data/mitraillage.js';
+import { hash2 } from './lib/rng.js?v=0.94.2';
+import { BATIMENTS, DOTATION, CAMP_PLAN, CAMP_IA, PIEDS, EQUIPEMENT, EQUIPEMENTS } from './data/batiments.js?v=0.94.2';
+import { MITRAILLAGE } from './data/mitraillage.js?v=0.94.2';
 
 const NOUS = 0, EUX = 1;
 /* L'état du camp de `camp` : `etat.camp` (le nôtre), `etat.campEux` (celui d'en face : v0.92.0) */
@@ -89,7 +89,8 @@ function aubeDe(B, camp) {
 /* L'aube des deux camps : rend le détail du nôtre (le papier de la nuit) ; en face bâtit seul (`iaBatir`) sauf à deux (un joueur le commande) */
 export function dotationAube(B) {
   const { etat } = B, out = aubeDe(B, NOUS);
-  if (etat.campEux) { aubeDe(B, EUX); if (!etat.deux) iaBatir(B); }
+  out.camps = [out];
+  if (etat.campEux) { out.camps.push(aubeDe(B, EUX)); if (!etat.deux) iaBatir(B); }      // à deux, le détail de chaque camp : chaque joueur lit le sien
   return out;
 }
 /* En face bâtit : tant qu'elle a de quoi payer, le premier palier du plan (`CAMP_IA.plan`) qu'elle n'a pas atteint, le choix du palier tiré d'un hachage de la graine ; un palier trop cher attend l'aube suivante (elle ne passe pas au suivant : ses sous sont pour lui) */
@@ -188,10 +189,10 @@ export const pvAvion = (etat, camp) => Math.round(MITRAILLAGE.pv * modif(etat, c
 // ─── L'équipement des régiments (lot 4) : la corvée de nuit `eq-…` (nuit.js) ───
 /* Pourquoi on ne peut pas donner cette pièce (`cle` : une clé de EQUIPEMENTS) à ce régiment : une phrase, ou null */
 export function refusEquiper(B, reg, cle) {
-  const { etat } = B, c = etat.camp;
+  const { etat } = B, c = campDe(etat, reg.camp);
   if (!EQUIPEMENTS[cle]) return 'Pas de telle pièce d\'équipement.';
-  if (reg.camp !== NOUS || !c?.bride) return 'Seule la caserne de notre camp équipe un régiment.';
-  if (niveauDe(etat, 'caserne') < EQUIPEMENT.niveauCaserne) return `Équiper un régiment demande la caserne au niveau ${EQUIPEMENT.niveauCaserne}.`;
+  if (!c?.bride) return 'Pas de caserne dans cette partie.';
+  if (niveauDe(etat, 'caserne', reg.camp) < EQUIPEMENT.niveauCaserne) return `Équiper un régiment demande la caserne au niveau ${EQUIPEMENT.niveauCaserne}.`;
   if (reg.equip?.includes(cle)) return `${reg.nom} a déjà ${EQUIPEMENTS[cle].court.toLowerCase()}.`;
   if ((reg.equip?.length ?? 0) >= EQUIPEMENT.places) return `${reg.nom} porte déjà tout ce qu'il peut : ${EQUIPEMENT.places} pièces.`;
   if (c.dotation < EQUIPEMENT.cout) return `Il manque ${EQUIPEMENT.cout - c.dotation} point de dotation pour ${EQUIPEMENTS[cle].court.toLowerCase()}.`;
@@ -200,7 +201,7 @@ export function refusEquiper(B, reg, cle) {
 /* Donner la pièce, la nuit : paie un point et la note sur le régiment ; rend faux (sans rien changer) si la caisse s'est vidée depuis l'ordre */
 export function equiper(B, reg, cle) {
   if (refusEquiper(B, reg, cle)) return false;
-  B.etat.camp.dotation -= EQUIPEMENT.cout;
+  campDe(B.etat, reg.camp).dotation -= EQUIPEMENT.cout;
   (reg.equip ??= []).push(cle);
   return true;
 }

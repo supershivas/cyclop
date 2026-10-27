@@ -1,10 +1,10 @@
 // Ce que l'état des tronçons montre sur le terrain : les fanions (à la couleur de celui qui tient le tronçon, déchirés quand l'autre
 // camp y est entré), le clignotement d'un ordre et la surbrillance de la visée, les ouvrages des tranchées (traverses, sacs de terre,
 // fil de fer, bois). Le dessin seulement : tout se lit de l'état, rien n'en est sauvegardé.
-import { PALETTE } from '../palette.js';
-import { ligneY, demiLargeur } from '../tranchees.js';
-import { TOITS } from '../data/nids.js';
-import { primitives, ouvrageTroncon, niveauSelonZoom } from './tranchee-modeles.js';
+import { PALETTE } from '../palette.js?v=0.94.2';
+import { ligneY, demiLargeur } from '../tranchees.js?v=0.94.2';
+import { TOITS } from '../data/nids.js?v=0.94.2';
+import { primitives, ouvrageTroncon, niveauSelonZoom } from './tranchee-modeles.js?v=0.94.2';
 
 // `THREE`, `scene`, `col` (une couleur de la palette), `surface(x, z)` (la hauteur du sol), `projeter()` (le centre de la vue et les pixels par mètre),
 // `vue`, `zooms` viennent de creerRendu ; `bataille()`, `tAnim()` (le temps du dessin), `vide()` (rien n'est dessiné) et `survolTroncons()`
@@ -149,7 +149,7 @@ export function creerTroncons({ THREE, scene, col, surface, projeter, vue, zooms
     const { cx, cz, p } = projeter();
     const niveau = niveauReglage === 'auto' ? niveauSelonZoom(p) : niveauReglage, voir = !!B && B.etat.tranchees && p >= (niveau ? 2 : 3);
     ouvMesh.visible = filLignes.visible = voir;
-    // le sol à garnir (v0.93.1, Jérôme : « les éléments au premier plan disparaissent ») : le rectangle de sol que l'écran voit (`zone`, donné par rendu3d.js : ses coins posés sur le sol, plus la marge du relief),
+    // le sol à garnir (v0.94.2, Jérôme : « les éléments au premier plan disparaissent ») : le rectangle de sol que l'écran voit (`zone`, donné par rendu3d.js : ses coins posés sur le sol, plus la marge du relief),
     // pas un rayon autour du centre de la vue : une caméra basse voit beaucoup plus loin que ce rayon dans l'axe de la vue (à 6 px/m, inclinée à 0,45 rad : 16 tronçons visibles sur 50 sans ouvrages) ;
     // on bâtit un peu au-delà (`MARGE_OUVRAGES`) et on refait dès que la vue en sort (sans attendre les 0,5 s : on ne voit plus la terre nue en déplaçant la caméra)
     const besoin = zoneVue, dedans = !besoin || (zoneBatie && besoin.x0 >= zoneBatie.x0 && besoin.x1 <= zoneBatie.x1 && besoin.z0 >= zoneBatie.z0 && besoin.z1 <= zoneBatie.z1);

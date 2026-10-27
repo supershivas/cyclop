@@ -1,8 +1,15 @@
 # Journal des versions
 
-## 0.93.1 — 2026-10-27
+## 0.94.2 — 2026-10-27
 - Les tranchées ne perdent plus leurs ouvrages (sacs, bois, fil, échelles) quand la caméra est basse ou qu'on la déplace : ils suivent tout le sol que l'écran voit, et les arbres du premier plan gardent leur cime
 - Au labo, les tranchées de près (48 pixels par mètre) avec quatre textures : aplats, tons variés, joints et grain, usure
+
+## 0.94.1 — 2026-10-27
+- Les feuillages des arbres ont les angles adoucis : plus d'escaliers là où deux touffes se croisent
+
+## 0.94.0 — 2026-10-27
+- À deux aussi, chaque joueur a son camp : il bâtit et améliore ses bâtiments (l'ordre part aux deux machines), l'artillerie, les avions, les chars et le génie s'ouvrent avec eux, et chacun voit le camp de l'autre
+- Le papier de la nuit dit, à chacun, sa dotation et ses chantiers finis ; les boutons de batterie sont dans leur bâtiment partout
 
 ## 0.93.0 — 2026-10-27
 - Le camp d'en face se bâtit seul à l'aube, avec la même dotation (selon la difficulté) : son artillerie ouvre ses 155 et 220, sa caserne grossit sa réserve ; on le voit au nord, tourné d'un demi-tour

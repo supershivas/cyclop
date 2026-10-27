@@ -8,11 +8,11 @@
 //   2 Ouvrage — les sacs un à un, la banquette de tir, les lisses et les montants du boisage, le caillebotis, les barbelés sur piquets ;
 //   3 Détaillé — trois assises de sacs, le clayonnage des parois, des cadres de boisage avec leur écharpe, un caniveau, une échelle, un abri, des plaques de meurtrière,
 //       un fil téléphonique et une lanterne, des rouleaux de barbelé.
-// La « texture » (v0.93.1 : « différents effets de texture ») : `g.texture` de 0 à 3, sans image (le jeu est en dix tons) : 0 des aplats (un ton par élément) ; 1 des tons variés d'un sac, d'une planche à l'autre (le jeu) ;
+// La « texture » (v0.94.2 : « différents effets de texture ») : `g.texture` de 0 à 3, sans image (le jeu est en dix tons) : 0 des aplats (un ton par élément) ; 1 des tons variés d'un sac, d'une planche à l'autre (le jeu) ;
 // 2 des joints entre les sacs, une ficelle sur le dessus, le grain des planches, le tressage du clayonnage ; 3 l'usure : la boue au pied des sacs, sur les planches, la mousse sur le dessus des sacs.
 // À chaque niveau, l'état du bout de tranchée (creusée, à moitié comblée, comblée) change ce qui reste : en place, brisé et de travers, puis des éclats à terre.
-import { ligneY, demiLargeur } from '../tranchees.js';
-import { TRANCHEE_OUVRAGES } from '../data/tranchees.js';
+import { ligneY, demiLargeur } from '../tranchees.js?v=0.94.2';
+import { TRANCHEE_OUVRAGES } from '../data/tranchees.js?v=0.94.2';
 
 export const NIVEAUX_TRANCHEES = [
   { n: 1, nom: 'Silhouette', note: 'Le parapet en tranches de 5 m, deux traverses, un fil à deux brins. Ce qui se lit de loin, pour presque rien.' },

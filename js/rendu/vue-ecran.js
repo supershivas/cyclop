@@ -1,4 +1,4 @@
-// Un objet haut tombe-t-il dans l'écran ? (v0.93.1, Jérôme : « les éléments au premier plan disparaissent ») : logique pure, sans THREE, testée dans Node.
+// Un objet haut tombe-t-il dans l'écran ? (v0.94.2, Jérôme : « les éléments au premier plan disparaissent ») : logique pure, sans THREE, testée dans Node.
 // `e` : la matrice vue-projection de la caméra (les 16 nombres, par colonnes, comme `Matrix4.elements`). L'objet est posé en (x, z), son pied à la hauteur `hs`, son sommet à `hs + h`, et il a un rayon `r` (m).
 // Son pied ET son sommet comptent : un arbre dont le pied est sorti par le bas de l'écran garde sa cime à l'écran (à 16 px/m, un arbre de 9 m monte de 85 à 110 pixels ; l'ancienne règle, le pied seul
 // avec 30 % de marge, soit ~60 pixels, le retirait d'un coup). La marge de côté suit son rayon. Sans hauteur (`h` = 0) : l'ancienne règle du pied seul.

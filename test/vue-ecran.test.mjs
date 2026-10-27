@@ -1,4 +1,4 @@
-// Un objet haut dans l'écran : le pied hors de l'écran, la cime dedans (v0.93.1, « les éléments au premier plan disparaissent »).
+// Un objet haut dans l'écran : le pied hors de l'écran, la cime dedans (v0.94.2, « les éléments au premier plan disparaissent »).
 import { dansLEcran } from '../js/rendu/vue-ecran.js';
 
 // une projection simple : x et y d'écran = x et y du monde / 10 (w = 1) ; l'écran va de −1 à 1, soit de −10 à 10 m ; la marge verticale est de 30 %

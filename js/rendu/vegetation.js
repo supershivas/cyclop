@@ -1,12 +1,12 @@
 // La végétation : les arbres (un tronc, quelques branches nues ; abattus, une souche), les buissons (deux ou trois boîtes basses ; arrachés, il
 // n'en reste rien) et l'herbe (des touffes de cinq brins, seulement de près, qui ondulent au vent). Seulement ce qu'on voit est dessiné : tous,
 // ils coûtaient des dizaines de milliers de triangles (docs/domaines/rendu.md, « Les arbres et les buissons dessinés partout »). Le dessin seulement.
-import * as SH from './shaders.js';
-import { creerGeometries } from './geometries.js';
-import { hash2 } from '../lib/rng.js';
-import { BUISSONS_FORMES, BUISSONS_SAISONS, BUISSONS_TIRAGES } from '../data/buissons.js';
-import { ARBRES_FAMILLES, ARBRES_TIRAGES, ARBRES_ECHELLE, ARBRES_AUTOMNE, ARBRES_PPM_FEUILLES, ARBRES_FEUILLES } from '../data/arbres.js';
-import { dansLEcran } from './vue-ecran.js';
+import * as SH from './shaders.js?v=0.94.2';
+import { creerGeometries } from './geometries.js?v=0.94.2';
+import { hash2 } from '../lib/rng.js?v=0.94.2';
+import { BUISSONS_FORMES, BUISSONS_SAISONS, BUISSONS_TIRAGES } from '../data/buissons.js?v=0.94.2';
+import { ARBRES_FAMILLES, ARBRES_TIRAGES, ARBRES_ECHELLE, ARBRES_AUTOMNE, ARBRES_PPM_FEUILLES, ARBRES_FEUILLES } from '../data/arbres.js?v=0.94.2';
+import { dansLEcran } from './vue-ecran.js?v=0.94.2';
 
 // `THREE`, `scene`, `col`, `camera`, `vue`, `solY` (la hauteur moyenne du sol), `distance(zoom)`, `surface(x, z)` et `petit()` (aux zooms où un soldat n'est qu'un point)
 // viennent de creerRendu ; `terrain()`, `vide()` et `ombres()` sont lus à chaque appel (le terrain change à chaque bataille). `ombres()` rend `{ ARBRES_OMBRES, aoPos, aoGeo, soleil }` :
@@ -51,7 +51,7 @@ export function creerVegetation({ THREE, scene, col, camera, vue, solY: SOL_Y, d
     }
   }
   // un objet posé en (x, z), haut de `h` m et large de `r` m de rayon, tombe-t-il dans l'écran (avec une marge) ? Son pied ET son sommet comptent : un arbre dont le pied est sorti par le bas
-  // de l'écran garde sa cime à l'écran (v0.93.1, Jérôme : « les éléments au premier plan disparaissent » : le pied seul, avec 30 % de marge, retirait un arbre de 9 m dont le pied était à 60 pixels
+  // de l'écran garde sa cime à l'écran (v0.94.2, Jérôme : « les éléments au premier plan disparaissent » : le pied seul, avec 30 % de marge, retirait un arbre de 9 m dont le pied était à 60 pixels
   // sous l'écran, alors qu'à 16 px/m sa cime y montait de 85 à 110 pixels) ; la marge de côté suit son rayon
   const dansLaVue = (x, z, e, b, h = 0, r = 0) => {
     if (x < b[0] || x > b[1] || z < b[2] || z > b[3]) return false;

@@ -1,5 +1,5 @@
 {
-  "version": "0.93.1",
+  "version": "0.94.2",
   "date": "2026-10-27",
   "changes": [
     "Les tranchées ne perdent plus leurs ouvrages (sacs, bois, fil, échelles) quand la caméra est basse ou qu'on la déplace : ils suivent tout le sol que l'écran voit, et les arbres du premier plan gardent leur cime",

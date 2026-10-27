@@ -32,4 +32,4 @@ export const ARBRES_AUTOMNE = { degarni: 0.33, margeChute: 0.35 };
 export const ARBRES_PPM_FEUILLES = 1;      // pixels par mètre à partir desquels on dessine les feuilles en détail (Jérôme, v0.61.0 : à tous les zooms ; 4 avant, et le cube de loin ne servait qu'en dessous)
 
 // Ce que le jeu dessine (Jérôme, v0.53.1, après le sujet « Des arbres plus variés » du labo) : les six formes, les feuilles de la saison, les abattus longs. Pas de chute des feuilles ni de printemps (restent au labo).
-export const ARBRES_JEU = { feuilles: true, abattus: 'longs' };
+export const ARBRES_JEU = { feuilles: true, abattus: 'longs', chanfrein: 0.12 };     // chanfrein (Jérôme) : les touffes aux angles coupés, un pan de 12 % (au plus 30 cm) ; 0 : les cubes francs d'avant

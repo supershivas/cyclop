@@ -1,8 +1,8 @@
 // Le camp à l'écran (Jérôme, v0.87.0 ; lot 2 de docs/chantiers/camp-et-ameliorations.md) : une rangée de cinq pastilles en bas à droite (là où étaient les boutons de batterie) et, pour le bâtiment
 // choisi, son papier : ce qu'il est, ses ordres (les boutons de batterie y sont posés : ils gardent leur barre de charge, leur PRÊT et leur refus à voix haute) et son amélioration.
 // Un clic sur le bâtiment dans le champ le choisit aussi (main.js). Lecture seule de l'état : les ordres passent par les fonctions que main.js donne.
-import { BATIMENTS, ORDRE_BATIMENTS, EQUIPEMENT } from '../data/batiments.js';
-import { refusCamp, niveauDe, NIVEAU_MAX } from '../camp.js';
+import { BATIMENTS, ORDRE_BATIMENTS, EQUIPEMENT } from '../data/batiments.js?v=0.94.2';
+import { refusCamp, niveauDe, campDe, NIVEAU_MAX } from '../camp.js?v=0.94.2';
 
 // les boutons de batterie que chaque bâtiment porte (ils sont créés par main.js et rangés dans #batteries, caché, tant qu'aucun bâtiment ne les réclame)
 export const ORDRES_DE = { artillerie: ['75', '155', '220'], aerodrome: ['avion'], chars: ['char'], sapeurs: ['genie'], caserne: [] };
@@ -15,7 +15,7 @@ const ICONES = {          // une silhouette par bâtiment (un trait, comme les b
 };
 const el = (tag, props = {}, ...kids) => { const e = Object.assign(document.createElement(tag), props); e.append(...kids); return e; };
 
-export function creerCampHud({ barre, papier, rangement, bouton, ameliorer, choisir, fermer }) {
+export function creerCampHud({ moi = () => 0, barre, papier, rangement, bouton, ameliorer, choisir, fermer }) {
   let cle = null, signature = '', dernier = null;
   const choixPris = {};      // le choix tenu pour chaque palier (clé + niveau visé) : 0, 1 ou rien
   const pastilles = new Map();
@@ -32,7 +32,7 @@ export function creerCampHud({ barre, papier, rangement, bouton, ameliorer, choi
   const ranger = () => { for (const b of papier.querySelectorAll('.batterie')) rangement.append(b); };
   const ameliorerSans = () => { if (dernier) maj(dernier); };      // un choix qu'on vient de poser : le papier se redessine tout de suite
   function dessiner(B) {
-    const e = B.etat, c = e.camp.batiments[cle], Bd = BATIMENTS[cle], niveau = c.niveau, N = Bd.niveaux;
+    const e = B.etat, c = campDe(e, moi()).batiments[cle], Bd = BATIMENTS[cle], niveau = c.niveau, N = Bd.niveaux;
     ranger(); papier.replaceChildren();
     const tete = el('div', { className: 'bat-tete' }, el('b', { textContent: `${Bd.nom}${niveau ? ` · niveau ${niveau}` : ' · à bâtir'}` }),
       el('button', { className: 'bat-ferme', type: 'button', textContent: '×', title: 'Fermer (Échap)', onclick: fermer }));
@@ -41,7 +41,7 @@ export function creerCampHud({ barre, papier, rangement, bouton, ameliorer, choi
     // ses ordres : les boutons de batterie, ou, pour la caserne, ce qu'elle fait
     const ordres = el('div', { className: 'bat-ordres' });
     for (const cal of ORDRES_DE[cle]) { const b = bouton(cal); if (b) ordres.append(b); }
-    if (!ORDRES_DE[cle].length) ordres.append(el('p', { className: 'discret', textContent: `${e.reserves[0]} régiment${e.reserves[0] > 1 ? 's' : ''} frais en réserve : la relève se donne la nuit, depuis la carte du régiment à relever.${niveau >= EQUIPEMENT.niveauCaserne ? ` On y équipe aussi : casques, grenadiers, mitrailleuses ou brancardiers, un point chacun, par une corvée de la nuit (${EQUIPEMENT.places} pièces au plus par régiment).` : ''}` }));
+    if (!ORDRES_DE[cle].length) ordres.append(el('p', { className: 'discret', textContent: `${e.reserves[moi()]} régiment${e.reserves[moi()] > 1 ? 's' : ''} frais en réserve : la relève se donne la nuit, depuis la carte du régiment à relever.${niveau >= EQUIPEMENT.niveauCaserne ? ` On y équipe aussi : casques, grenadiers, mitrailleuses ou brancardiers, un point chacun, par une corvée de la nuit (${EQUIPEMENT.places} pièces au plus par régiment).` : ''}` }));
     papier.append(ordres);
     // l'amélioration
     if (niveau >= NIVEAU_MAX) papier.append(el('p', { className: 'discret', textContent: 'Niveau maximal.' }));
@@ -54,7 +54,7 @@ export function creerCampHud({ barre, papier, rangement, bouton, ameliorer, choi
         papier.append(el('p', { className: 'discret', textContent: 'Une seule amélioration :' }),
           ...S.choix.map(([nom, effet], i) => el('button', { className: `bat-choix${tenu === i ? ' pris' : ''}`, type: 'button', textContent: `${tenu === i ? '● ' : '○ '}${nom} : ${effet}`, onclick: () => { choixPris[`${cle}${vers}`] = i; signature = ''; ameliorerSans(); } })));
       }
-      const refus = refusCamp(e, cle, S.choix ? (choixPris[`${cle}${vers}`] ?? null) : null);
+      const refus = refusCamp(e, cle, S.choix ? (choixPris[`${cle}${vers}`] ?? null) : null, moi());
       const b = el('button', { className: `bat-ameliorer${refus ? ' muet' : ''}`, type: 'button', textContent: `${niveau ? 'Améliorer' : 'Bâtir'} : ${S.nom} (${S.cout} pt${S.cout > 1 ? 's' : ''})`, title: refus || S.effet, onclick: () => ameliorer(cle, S.choix ? (choixPris[`${cle}${vers}`] ?? null) : null) });
       b.setAttribute('aria-disabled', refus ? 'true' : 'false');
       papier.append(b);
@@ -62,7 +62,7 @@ export function creerCampHud({ barre, papier, rangement, bouton, ameliorer, choi
   }
   function maj(B) {
     dernier = B;
-    const e = B.etat, camp = e.camp;
+    const e = B.etat, camp = campDe(e, moi());
     if (!camp?.bride) { barre.hidden = true; papier.hidden = true; return; }
     barre.hidden = false;
     dotation.textContent = `Dotation ${camp.dotation}`;
@@ -75,7 +75,7 @@ export function creerCampHud({ barre, papier, rangement, bouton, ameliorer, choi
     }
     papier.hidden = !cle;
     if (!cle) { ranger(); signature = ''; return; }
-    const c = camp.batiments[cle], s = [cle, c.niveau, c.chantier?.nuits ?? '', camp.dotation, e.reserves[0]].join('|');
+    const c = camp.batiments[cle], s = [cle, c.niveau, c.chantier?.nuits ?? '', camp.dotation, e.reserves[moi()]].join('|');
     if (s !== signature) { signature = s; dessiner(B); }
   }
   return { maj, choisi: () => cle, choisirCle(k) { cle = k; signature = ''; if (!k) ranger(); } };

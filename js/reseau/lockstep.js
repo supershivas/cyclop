@@ -6,7 +6,7 @@
 // traîne, on attend. Toutes les `periode` cadres, on compare une empreinte de l'état : un écart, c'est une désynchronisation (dite à voix haute).
 //
 // Logique pure : ni DOM, ni horloge, ni réseau (`envoyer` est donné). Testée dans Node avec un réseau factice (test/lockstep.test.mjs).
-import { avancer, photo } from '../bataille.js';
+import { avancer, photo } from '../bataille.js?v=0.94.2';
 
 const fnv = (h, n) => Math.imul(h ^ (n | 0), 16777619) >>> 0;
 const tampon = new DataView(new ArrayBuffer(8));
@@ -30,7 +30,9 @@ export function sectionsEtat(B) {
   for (const g of e.genies ?? []) { h = fnv(h, bitsF(g.x)); h = fnv(h, bitsF(g.y)); h = fnv(h, g.n); h = fnv(h, bitsF(g.travail)); }
   S.engins = h; h = 2166136261;
   if (T?.base) { const pas = Math.max(1, T.base.length >> 12); for (let i = 0; i < T.base.length; i += pas) { h = fnv(h, T.base[i]); h = fnv(h, T.diff[i]); h = fnv(h, T.pont?.[i] ?? 0); } }
-  S.terrain = h;
+  S.terrain = h; h = 2166136261;
+  for (const K of [e.camp, e.campEux]) if (K) { h = fnv(h, bitsF(K.dotation)); for (const c of Object.values(K.batiments)) { h = fnv(h, c.niveau); h = fnv(h, c.chantier ? c.chantier.nuits : 0); } }
+  S.camp = h;      // (v0.94.0 : le camp de chaque joueur)
   return S;
 }
 const hachage = sec => { let h = 2166136261; for (const v of Object.values(sec)) h = fnv(h, v); return h.toString(16); };

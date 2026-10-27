@@ -23,14 +23,23 @@ const rep = await Bp.inputValue('#deux-ma-reponse');
 await A.fill('#deux-reponse', rep); await A.click('#deux-connecter');
 }
 await A.waitForFunction(() => window.__jeu?.reseau?.(), null, { timeout: 20000 }); await Bp.waitForFunction(() => window.__jeu?.reseau?.(), null, { timeout: 20000 });
+// (v0.94.0 : chacun a son camp, bridé ; avant le départ, la même ouverture des deux côtés : l'artillerie au niveau 3, un aérodrome et ses deux avions, pour que le scénario tire comme avant)
+for (const p of [A, Bp]) await p.evaluate(() => { const e = window.__jeu.bataille().etat; for (const K of [e.camp, e.campEux]) { K.batiments.artillerie.niveau = 3; K.batiments.aerodrome.niveau = 1; } e.avions = [[100, 100], [100, 100]]; });
 await A.click('#deux-pret'); await Bp.click('#deux-pret'); await A.waitForTimeout(3000);
 const etat = async p => p.evaluate(() => window.__jeu.reseau());
 console.log('A', JSON.stringify(await etat(A))); console.log('B', JSON.stringify(await etat(Bp)));
 // des ordres des deux côtés
 await A.evaluate(() => { const B = window.__jeu.bataille(); window.__jeu.marche(B.etat.regiments.filter(r => r.camp === 0).slice(0, 2).map(r => r.id), 150, 150); window.__jeu.barrage('155', 200, 150); window.__jeu.barrage('avion', 150, 180, 0, 150, 110); window.__jeu.stance(B.etat.regiments.filter(r => r.camp === 0).slice(2, 4).map(r => r.id), 'retenu'); });
 await Bp.evaluate(() => { const B = window.__jeu.bataille(); window.__jeu.marche(B.etat.regiments.filter(r => r.camp === 1).slice(0, 2).map(r => r.id), 250, 140); window.__jeu.barrage('75', 120, 170); window.__jeu.barrage('avion', 250, 100, 1, 250, 170); window.__jeu.stance(B.etat.regiments.filter(r => r.camp === 1).slice(4, 6).map(r => r.id), 'retenu'); });
+await A.evaluate(() => window.__jeu.bat('chars')); await Bp.evaluate(() => window.__jeu.bat('sapeurs'));      // un chantier de chaque camp, par le lockstep
 await A.waitForTimeout(12000);
 const a = await etat(A), b = await etat(Bp);
+const camps = async p => p.evaluate(() => { const e = window.__jeu.bataille().etat; return JSON.stringify([e.camp.dotation, e.camp.batiments.chars.chantier, e.campEux.dotation, e.campEux.batiments.sapeurs.chantier]); });
+console.log('camps', await camps(A), await camps(Bp));
+if (process.env.DEUX_PNG) for (const [nom, p] of [['hote', A], ['invite', Bp]]) {      // (à regarder : la touche B va au camp de chacun ; DEUX_PNG = un dossier)
+  await p.keyboard.press('b'); await p.waitForTimeout(1500); await p.click('.pastille[data-cle="chars"], .pastille[data-cle="sapeurs"]'); await p.waitForTimeout(400); await p.screenshot({ path: `${process.env.DEUX_PNG}/deux-${nom}.png` });
+}
+if (await camps(A) !== await camps(Bp) || !JSON.parse(await camps(A))[1] || !JSON.parse(await camps(A))[3]) { console.log('✗ les camps diffèrent ou les chantiers manquent'); process.exitCode = 1; }
 console.log('A', JSON.stringify(a)); console.log('B', JSON.stringify(b));
 const postures = async p => p.evaluate(() => window.__jeu.bataille().etat.regiments.map(r => r.stance).join());
 const pa = await postures(A), pb = await postures(Bp);
