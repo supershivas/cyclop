@@ -97,10 +97,10 @@ function iaBatir(B) {
   const { etat } = B, K = etat.campEux;
   if (!K?.bride) return;
   for (let tour = 0; tour < 6; tour++) {
-    const pas = CAMP_IA.plan.find(([cle, n]) => niveauDe(etat, cle, EUX) < n);
+    const pas = CAMP_IA.plan.find(([cle, n]) => niveauDe(etat, cle, EUX) < n && !K.batiments[cle].chantier);      // (un bâtiment en chantier passe son tour : le suivant du plan se bâtit en même temps)
     if (!pas) return;
     const [cle] = pas, choix = hash2(etat.graine | 0, niveauDe(etat, cle, EUX), 91) < 0.5 ? 0 : 1;
-    if (K.batiments[cle].chantier || !ordonnerChantier(etat, cle, choix, EUX).ok) return;
+    if (!ordonnerChantier(etat, cle, choix, EUX).ok) return;
   }
 }
 
