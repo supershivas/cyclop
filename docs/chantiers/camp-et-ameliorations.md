@@ -1,6 +1,6 @@
 # Le camp, ses bâtiments et les améliorations (proposition, v0.84.0)
 
-**Statut** : à l'étude. Rien n'est dans le jeu. Les maquettes sont au labo (groupe « Camp », sujet « Le camp et ses bâtiments », 7 variantes `a-trancher`), les nombres dans `js/data/batiments.js` (des propositions, à mesurer). Source : la demande de Jérôme du 27 octobre (v0.83.1).
+**Statut** : décisions de principe prises (voir la fin) ; lot 0 fait, lots 1 à 5 à faire. Rien n'est dans le jeu. Les maquettes sont au labo (groupe « Camp », sujet « Le camp et ses bâtiments », 7 variantes `a-trancher`), les nombres dans `js/data/batiments.js` (des propositions, à mesurer). Source : la demande de Jérôme du 27 octobre (v0.83.1).
 
 ## Ce qui est demandé, et comment je le lis
 
@@ -75,9 +75,11 @@ Ce que la proposition refuse : une expérience qui monte avec les morts causés,
 4. **L'équipement des régiments** (casque, grenadiers…), la corvée « s'équiper ».
 5. **En face et la campagne** : l'IA qui bâtit, le niveau de départ d'une bataille à l'autre.
 
-## Questions ouvertes (à trancher par Jérôme)
+## Décisions de Jérôme (27 octobre, sur les recommandations ci-dessus)
 
-1. La monnaie : **dotation à l'aube** (proposée) · une corvée de nuit qui bâtit avec des hommes · un calendrier fixe par jour.
-2. La disposition du camp : **en ligne** (A) ou **autour d'une cour** (B).
-3. Le départ : **camp presque nu** (proposé) ou tous les bâtiments au niveau 1 dès le premier matin.
-4. Les boutons latéraux : retirés tout de suite (lot 2), ou gardés une version en double des clics.
+1. **Monnaie** : la dotation de l'état-major à l'aube.
+2. **Disposition** : le camp en ligne (A) ; la cour (B) reste au labo, non retenue.
+3. **Départ** : le camp presque nu (artillerie au niveau 1, caserne au niveau 1).
+4. **Boutons latéraux** : retirés au lot 2.
+
+**Reste à trancher au labo** : le dessin de chaque bâtiment (variantes C à G, encore `a-trancher`) et les nombres (à mesurer au lot 1).
