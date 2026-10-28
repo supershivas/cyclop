@@ -106,23 +106,24 @@ test('à deux, chacun a son camp et les chantiers passent par le lockstep : les 
   const executerCamp = (c, camp, B, etat) => { if (c.t === 'bat') ordonnerChantier(B.etat, c.cle, c.choix ?? null, camp); else executer(c, camp, B, etat); };
   const faire = () => nouvelleBataille(7, R, { soldats: 200, jours: 3, deux: true, camp: true });
   const Bs = [faire(), faire()], files = [[], []], ls = [], ecarts = []; let tour = 0;
+  for (const B of Bs) B.etat.camp.dotation = B.etat.campEux.dotation = 5;      // (la dotation part de 0 depuis la v0.98.0)
   for (const moi of [0, 1]) ls.push(creerLockstep({ B: Bs[moi], moi, delai: 6, periode: 30, executer: executerCamp, envoyer: msg => files[1 - moi].push({ arrive: tour + 2, msg }), surEcart: (f, a, b) => ecarts.push([f, a, b]) }));
   const pomper = () => { tour++; for (const moi of [0, 1]) { const f = files[moi]; while (f.length && f[0].arrive <= tour) ls[moi].recevoir(f.shift().msg); } };
   let jouees = 0;
   for (let k = 0; k < 20000 && jouees < 400; k++) {
     pomper();
-    if (ls[0].cadre === 40 && !ls[0].fait) { ls[0].fait = 1; ls[0].commander({ t: 'bat', cle: 'chars' }); }
-    if (ls[1].cadre === 55 && !ls[1].fait) { ls[1].fait = 1; ls[1].commander({ t: 'bat', cle: 'artillerie', choix: 1 }); ls[1].commander({ t: 'bat', cle: 'aerodrome' }); }
-    if (ls[0].cadre === 70 && !ls[0].fait2) { ls[0].fait2 = 1; ls[0].commander({ t: 'bat', cle: 'chars' }); }      // refusé chez les deux : déjà en chantier
+    if (ls[0].cadre === 40 && !ls[0].fait) { ls[0].fait = 1; ls[0].commander({ t: 'bat', cle: 'chars', choix: 0 }); }
+    if (ls[1].cadre === 55 && !ls[1].fait) { ls[1].fait = 1; ls[1].commander({ t: 'bat', cle: 'artillerie', choix: 1 }); ls[1].commander({ t: 'bat', cle: 'aerodrome', choix: 0 }); }
+    if (ls[0].cadre === 70 && !ls[0].fait2) { ls[0].fait2 = 1; ls[0].commander({ t: 'bat', cle: 'chars', choix: 0 }); }      // refusé chez les deux : déjà en chantier
     for (const l of ls) if (l.cadre_()) jouees = l.cadre;
   }
   assert.equal(ecarts.length, 0, `écarts : ${JSON.stringify(ecarts)}`);
   for (const B of Bs) {
-    assert.deepEqual(B.etat.camp.batiments.chars.chantier, { vers: 1, nuits: 1, choix: null }, 'le chantier de l\'hôte');
-    assert.equal(B.etat.camp.dotation, 0, '3 points payés par l\'hôte');
+    assert.deepEqual(B.etat.camp.batiments.chars.chantier, { vers: 2, nuits: 1, choix: 0 }, 'le chantier de l\'hôte');
+    assert.equal(B.etat.camp.dotation, 2, '3 points payés par l\'hôte');
     assert.deepEqual(B.etat.campEux.batiments.artillerie.chantier, { vers: 2, nuits: 1, choix: 1 }, 'le chantier de l\'invité, avec son choix');
-    assert.equal(B.etat.campEux.dotation, 0, '3 points de l\'invité : l\'artillerie au niveau 2 (3) ; l\'aérodrome (2) est refusé, la caisse est vide');
-    assert.equal(niveauDe(B.etat, 'aerodrome', 1), 0);
+    assert.equal(B.etat.campEux.dotation, 2, '3 points de l\'invité : l\'artillerie au niveau 2 (3) ; l\'aérodrome (3) est refusé, il n\'en reste que 2');
+    assert.equal(niveauDe(B.etat, 'aerodrome', 1), 1);
   }
   assert.equal(empreinteEtat(Bs[0]), empreinteEtat(Bs[1]));
 });
