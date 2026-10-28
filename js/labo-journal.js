@@ -2,6 +2,9 @@
 // Une entrée par version qui touche au labo, la plus récente en haut. `ref` : « sujet-Lettre » (la lettre est celle de la variante,
 // A étant l'actuelle). À chaque changement du labo : une entrée ici, avec `depuis` sur les variantes ajoutées ou changées (labo.js).
 export const JOURNAL = [
+  { version: '0.98.1', date: '2026-10-28', items: [
+    { genre: 'nouveau', texte: 'Design system, deuxième jet (proposition) : les titres en condensé fin et haut, jamais coupés ; des marges plus grandes ; des boutons refusés qui se lisent impossibles', ref: 'ds-revision-A' },
+  ] },
   { version: '0.98.0', date: '2026-10-28', items: [
     { genre: 'nouveau', texte: 'L\'onglet « Design system » : les fondations (typographie, espaces, couleurs de l\'interface), les boutons dans tous leurs états, les papiers, l\'infobulle et les dialogues, sur les vraies feuilles du jeu', ref: 'ds-fondations-A' },
     { genre: 'nouveau', texte: 'Quatre animations du gain d\'un point de dotation, quatre de la partie gagnée', ref: 'gain-point-A' },

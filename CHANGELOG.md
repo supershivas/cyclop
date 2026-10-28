@@ -1,5 +1,8 @@
 # Journal des versions
 
+## 0.98.1 — 2026-10-28
+- Au labo : le design system revu en proposition (titres en condensé fin et haut, jamais coupés ; marges plus grandes ; boutons refusés hachurés, inchangés au survol) ; le jeu n'y est pas encore adapté
+
 ## 0.98.0 — 2026-10-28
 - Les trois artilleries (75, 155, 220), l'aviation, les chars et le génie sont prêts dès le premier matin ; la dotation part de 0 et se gagne à l'aube, et les niveaux des bâtiments améliorent les unités au lieu d'ouvrir leurs ordres (en face aussi)
 - Les barbelés se coupent sous les obus ; la fiche d'un régiment s'ouvre par un petit « ? » dans l'en-tête de ses ordres ; un bouton refusé reste lisible au survol

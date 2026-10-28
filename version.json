@@ -1,9 +1,7 @@
 {
-  "version": "0.98.0",
+  "version": "0.98.1",
   "date": "2026-10-28",
   "changes": [
-    "Les trois artilleries, l'aviation, les chars et le génie sont prêts dès le premier matin ; la dotation part de 0 et se gagne, les niveaux des bâtiments améliorent les unités",
-    "Les barbelés se coupent sous les obus ; la fiche d'un régiment s'ouvre par un petit « ? » ; les boutons refusés restent lisibles au survol",
-    "Une seule infobulle pour tout le jeu (la météo n'est plus double) ; au labo, un onglet Design system et des propositions d'animations et de fiche de fin de journée"
+    "Au labo : le design system revu (titres en condensé, marges plus grandes, boutons refusés plus clairs), en proposition"
   ]
 }

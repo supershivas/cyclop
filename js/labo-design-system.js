@@ -2,18 +2,18 @@
 // Rien n'est recopié : chaque planche est un cadre (`iframe`) qui charge les VRAIES feuilles du jeu (`css/style.css`, `js/lib/game.css`) et les rôles de couleur de `palette.js`, et pose dedans le vrai balisage des papiers, des
 // boutons et des bulles. Les valeurs des fondations sont lues dans le `:root` de `css/style.css` (`jetons`) : changer une échelle dans la feuille change cette page. Les états qu'un pointeur seul montre (survol, focus) sont
 // forcés par les classes `.est-survol` et `.est-focus`, que la feuille du jeu accepte pour cela (le jeu ne les écrit jamais). Le labo montre, il ne modifie rien.
-import { ROLES, ALERTES } from './palette.js?v=0.98.0';
-import { lignesInfo } from './hud/infobulle.js?v=0.98.0';
+import { ROLES, ALERTES } from './palette.js?v=0.98.1';
+import { lignesInfo } from './hud/infobulle.js?v=0.98.1';
 
 const el = (tag, props = {}, ...kids) => { const e = Object.assign(document.createElement(tag), props); e.append(...kids); return e; };
 const roles = Object.entries({ ...ROLES }).map(([k, v]) => `--jeu-${k}:${v}`).join(';');
 
 // Un cadre : la page du jeu en petit, sans son écran ; `corps` est du balisage du jeu
-function cadre(stage, corps, { haut = '70vh', fond = 'fond' } = {}) {
+function cadre(stage, corps, { haut = '70vh', fond = 'fond', v2 = false } = {}) {
   const f = el('iframe', { title: 'Planche du design system', loading: 'eager' });
   f.style.cssText = `width:100%;height:${haut};border:1px solid rgba(0,0,0,.2);border-radius:6px;background:${ROLES[fond]}`;
   f.srcdoc = `<!doctype html><html lang="fr"><head><meta charset="utf-8">
-<link rel="stylesheet" href="js/lib/game.css"><link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="js/lib/game.css"><link rel="stylesheet" href="css/style.css">${v2 ? '<link rel="stylesheet" href="css/ds-v2.css">' : ''}
 <style>
   :root { ${roles}; --jeu-nous: ${ROLES.nous}; --jeu-eux: ${ROLES.eux}; }
   html, body { height: auto; overflow: auto; user-select: text; background: var(--jeu-fond); }
@@ -127,4 +127,40 @@ export function fenetres(stage, vue) {
       <div class="rang"><dialog open style="position:static;margin:0;max-width:46ch"><h2>Nouvelle partie</h2><p>Une bataille est en cours. La remplacer ?</p><div style="display:flex;gap:var(--pas);justify-content:flex-end"><button class="bouton" style="height:var(--jeu-cible)">Annuler</button><button class="bouton" style="height:var(--jeu-cible)">Remplacer</button></div></dialog></div>`;
   }
   cadre(stage, corps);
+}
+
+// ─── La révision (v0.98.1) : le design system, deuxième jet (css/ds-v2.css, chargé après la feuille du jeu) ───
+const meteo = `<div class="papier reg-ouvert demo"><h2>Météo</h2>
+  <div class="libelle">Aujourd'hui</div><div>Temps sec, 14 °C</div>
+  <div class="libelle">Le vent</div><div>Modéré : 29 km/h, vers le sud-est</div>
+  <div class="libelle">Demain</div><div>Du brouillard, dit-on</div></div>`;
+const meteoAvant = `<div class="papier reg-ouvert demo"><div class="tete"><b>J1/13 · 16 h 46 · temps sec, 14 °C</b></div>
+  <div class="compte">Vent modéré : 29 km/h, vers le sud-est</div><div class="compte">Demain : du brouillard, dit-on</div></div>`;
+export function revision(stage, vue) {
+  let corps = '', v2 = true;
+  if (vue === 'titres') {
+    corps = `<h1 class="titre-ds">Cyclopéen</h1><p class="note">Les titres du jeu, des fenêtres et des dialogues passent au condensé fin et haut (Antonio, corps 300, capitales, lettres espacées), dans le style de Cast Iron ; le texte courant reste en mono. Trois tailles : 40 (jeu, dialogue), 28 (fenêtre, papier), 22 (section). Un titre n'est jamais coupé : pas de points de suspension, il passe à la ligne entre deux mots, équilibré.</p>
+      <h2 class="titre-ds" style="border:0;margin:0">Nuit du 3e au 4e jour</h2><p class="note" style="margin-top:4px">28 · fenêtre, papier</p>
+      <h3 class="titre-3" style="margin-top:16px">Les ordres de la nuit</h3><p class="note" style="margin-top:4px">22 · section</p>
+      <div class="rang" style="margin-top:24px"><div><div class="note">Avant : la fenêtre météo avait pour « titre » tout son contenu, coupé dès que la ligne était longue</div>${meteoAvant}</div>
+      <div><div class="note">Après : le titre est « Météo » ; ce qui la compose (aujourd'hui, le vent, demain) sont des libellés, pas des titres</div>${meteo}</div></div>
+      <h2 style="margin-top:28px;font-size:var(--texte-moyen);font-family:var(--jeu-police)">La règle</h2>
+      <p class="note">Un titre dit <b>ce qu'est</b> la fenêtre, en un ou deux mots. Une date, une valeur, une phrase, un compteur ne sont pas des titres : texte courant (14) ou libellé (12, glaise). Si un titre doit être coupé pour tenir, c'est qu'il porte un élément qui n'en est pas un.</p>`;
+  } else if (vue === 'marges') {
+    const lignes = [['Papier, haut et bas', '8 px', '16 px', '--papier-v'], ['Papier, côtés', '12 px', '24 px', '--papier-h'], ['Dialogue', '24 px', '32 px', '<code>dialog</code>'], ['Bouton de papier, hauteur', '32 px', '40 px', '--bouton-h'], ['Bouton, souffle de chaque côté', '8 px', '16 px', '--bouton-px'], ['Entre deux boutons', '4 px', '8 px', '--ecart'], ['Entre deux blocs d\'une fenêtre', '4 px', '12 px', '<code>.reg-ouvert</code> gap'], ['Bouton de menu, côtés', '16 px', '24 px', '<code>.bouton</code>']];
+    corps = `<h1 class="titre-ds">Marges</h1><p class="note">Un cran de plus partout : plus de souffle autour du texte, des boutons plus faciles à viser. L'échelle gagne deux crans (24 et 32).</p>
+      <table><tr><th>Où</th><th>Avant</th><th>Après</th><th>Jeton</th></tr>${lignes.map(([a, b, c, d]) => `<tr><td>${a}</td><td>${b}</td><td><b style="font-weight:normal;color:var(--jeu-nous)">${c}</b></td><td><code>${d}</code></td></tr>`).join('')}</table>
+      <h2 style="font-size:var(--texte-moyen);font-family:var(--jeu-police)">Une fenêtre d'ordres</h2><div class="rang">
+      <div class="papier reg-ouvert demo"><div class="tete"><b>2 · Protogyne</b><span>secteurs 3-4</span><button type="button" class="aide" aria-label="Fiche du régiment">?</button></div><div class="compte">52 debout · 9 blessés · 14 tombés</div><div class="ordre">Tient sa tranchée</div>
+        <div class="actions"><button>Marcher</button><button>Regagner sa tranchée</button></div></div>
+      <dialog open style="position:static;margin:0;max-width:46ch"><h2>Nouvelle partie</h2><p>Une bataille est en cours. La remplacer ?</p><div class="menu" style="display:flex;justify-content:flex-end"><button class="bouton" style="height:var(--jeu-cible)">Annuler</button><button class="bouton" style="height:var(--jeu-cible)">Remplacer</button></div></dialog></div>`;
+  } else {
+    const cas = c => `<div class="papier reg-ouvert demo" style="padding:var(--pas)"><div class="actions" style="--cols:1"><button class="${c}">Tir de réglage · 3 pts</button></div></div>`;
+    const tableau = titre => `<h1 class="titre-ds" style="font-size:var(--titre-2,20px)">${titre}</h1><table><tr><th>Repos</th><th>Survol</th><th>Un bouton vivant, au survol</th></tr><tr><td>${cas('refus')}</td><td>${cas('refus est-survol')}</td><td>${cas('est-survol')}</td></tr></table>`;
+    stage.append(el('p', { textContent: 'Un bouton qu\'on ne peut pas actionner (pas assez de points, bâtiment en chantier, posture interdite) se lit « impossible » avant même d\'y toucher : hachuré, pointillé, curseur « interdit ». Au survol rien ne change (aujourd\'hui il se remplit comme un bouton vivant) : la raison est dans l\'infobulle.' }));
+    cadre(stage, tableau('Avant (v0.98.0)'), { haut: '200px', v2: false });
+    cadre(stage, tableau('Après'), { haut: '200px', v2: true });
+    return;
+  }
+  cadre(stage, corps, { v2 });
 }

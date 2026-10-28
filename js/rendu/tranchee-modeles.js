@@ -11,8 +11,8 @@
 // La « texture » (v0.94.2 : « différents effets de texture ») : `g.texture` de 0 à 3, sans image (le jeu est en dix tons) : 0 des aplats (un ton par élément) ; 1 des tons variés d'un sac, d'une planche à l'autre (le jeu) ;
 // 2 des joints entre les sacs, une ficelle sur le dessus, le grain des planches, le tressage du clayonnage ; 3 l'usure : la boue au pied des sacs, sur les planches, la mousse sur le dessus des sacs.
 // À chaque niveau, l'état du bout de tranchée (creusée, à moitié comblée, comblée) change ce qui reste : en place, brisé et de travers, puis des éclats à terre.
-import { ligneY, demiLargeur, paroisTranchee } from '../tranchees.js?v=0.98.0';
-import { TRANCHEE_OUVRAGES } from '../data/tranchees.js?v=0.98.0';
+import { ligneY, demiLargeur, paroisTranchee } from '../tranchees.js?v=0.98.1';
+import { TRANCHEE_OUVRAGES } from '../data/tranchees.js?v=0.98.1';
 
 // L'ordre des couches : les sortes d'élément, des plus petites (les joints, la boue : des traits fins) aux plus grosses ; chaque rang grossit la sorte de 2 mm (voir `primitives`)
 export const ORDRE_COUCHES = ['sac', 'sac2', 'sac3', 'ombre', 'boue', 'mousse', 'eau', 'planche', 'planche2', 'madrier', 'terre', 'fascine', 'acier', 'lanterne'];

@@ -1,0 +1,65 @@
+/* Le design system, deuxième jet (Jérôme, v0.98.1 : « revoir un peu le design system, il faudra ensuite l'adapter en jeu »). PROPOSITION lue par le labo seulement (onglet « Design system », sujet « Révision »),
+   chargée APRÈS css/style.css dans les cadres du labo : le jeu ne la charge pas encore. Quatre demandes :
+   1. les titres (du jeu, des fenêtres, des dialogues) en condensé fin et haut, dans le style de Cast Iron : Antonio (OFL, vendor/fonts), à défaut de Cast Iron (pas de licence libre trouvée) ;
+   2. un titre n'est jamais coupé : il ne porte que son titre (ce qui le compose n'est pas un titre : un libellé, `.libelle`) ;
+   3. des marges plus grandes (fenêtres, dialogues, boutons) ;
+   4. un bouton refusé se lit impossible, au repos comme au survol. */
+@font-face { font-family: 'Antonio'; font-weight: 100; font-style: normal; src: url(../vendor/fonts/Antonio-100.ttf) format('truetype'); font-display: block; }
+@font-face { font-family: 'Antonio'; font-weight: 300; font-style: normal; src: url(../vendor/fonts/Antonio-300.ttf) format('truetype'); font-display: block; }
+
+:root {
+  /* 1. la police des titres : condensée, fine, haute ; le reste du jeu garde la mono du système */
+  --police-titre: 'Antonio', 'Arial Narrow', 'Roboto Condensed', sans-serif;
+  --titre-poids: 300;
+  --titre-lettres: .1em;          /* (était .08em : un condensé respire plus) */
+  /* les titres : trois tailles, plus hautes qu'avant (le condensé paraît plus petit à corps égal) */
+  --titre-1: 40px;                /* le titre du jeu, d'un dialogue */
+  --titre-2: 28px;                /* le titre d'une fenêtre, d'un papier */
+  --titre-3: 22px;                /* le titre d'une section dans un papier */
+  /* 3. les marges : un cran de plus partout (4 → 8 → 12 → 16 → 24 → 32) */
+  --e1: 4px;
+  --pas: 8px;
+  --e3: 12px;
+  --e4: 16px;
+  --e5: 24px;
+  --e6: 32px;
+  --papier-v: var(--e4);          /* le haut et le bas d'un papier, d'une fenêtre (était 8) */
+  --papier-h: var(--e5);          /* les côtés (était 12) */
+  --bouton-h: 40px;               /* la hauteur d'un bouton de papier (était 32 : tassé) */
+  --bouton-px: var(--e4);         /* son souffle de chaque côté (était 8) */
+  --ecart: var(--pas);            /* entre deux boutons (était 4) */
+}
+
+/* les titres : un seul style, jamais coupés (`overflow: visible`, pas de points de suspension, retour à la ligne entre les mots seulement, équilibré) */
+.titre-ds, .papier h2, dialog h2, .reg-ouvert .tete b, .nuit h2, .campagne h2, .fiche h2 {
+  font-family: var(--police-titre); font-weight: var(--titre-poids); font-size: var(--titre-2);
+  line-height: 1.05; letter-spacing: var(--titre-lettres); text-transform: uppercase;
+  white-space: normal; overflow: visible; text-overflow: clip; overflow-wrap: normal; hyphens: none; text-wrap: balance; min-width: 0;
+}
+dialog h2, h1.titre-ds { font-size: var(--titre-1); margin-bottom: var(--e5); }
+.papier h3, .titre-3 { font-family: var(--police-titre); font-weight: var(--titre-poids); font-size: var(--titre-3); letter-spacing: var(--titre-lettres); text-transform: uppercase; margin: 0; }
+/* ce qui compose un titre n'est pas un titre : un libellé est du texte courant, petit, discret, jamais en capitales condensées */
+.libelle { font-size: var(--texte-petit); color: var(--jeu-accent); letter-spacing: .02em; }
+.papier .libelle { color: var(--jeu-accent); }
+
+/* 3. les marges */
+.papier { padding: var(--papier-v) var(--papier-h); }
+.plaque { padding: var(--e3) var(--e4); }
+dialog { padding: var(--e6); }
+.reg-ouvert { gap: var(--e3); width: 48ch; }
+.reg-ouvert .tete { align-items: baseline; padding-bottom: var(--pas); gap: var(--e4); }
+.reg-ouvert .actions { gap: var(--ecart); margin-top: var(--pas); }
+.reg-ouvert .actions button { height: var(--bouton-h); min-height: var(--bouton-h); padding: 0 var(--bouton-px); }
+.bouton { padding: 0 var(--e5); }
+dialog .menu, dialog form.menu { gap: var(--e3); }
+
+/* 4. un bouton refusé : hachuré, éteint, le curseur « interdit », et RIEN ne change au survol (la raison est dans l'infobulle) ; il ne prend ni le focus de la souris ni l'appui */
+.reg-ouvert .actions button.refus, .reg-ouvert .actions button[aria-disabled="true"], .nuit button:disabled {
+  color: var(--jeu-accent); border: 1px dashed var(--jeu-accent); background: repeating-linear-gradient(135deg, var(--jeu-encre) 0 6px, var(--jeu-brume) 6px 7px);
+  cursor: not-allowed;
+  box-shadow: none; transform: none;
+}
+.reg-ouvert .actions button.refus:is(:hover, .est-survol), .reg-ouvert .actions button[aria-disabled="true"]:is(:hover, .est-survol), .nuit button:disabled:hover {
+  color: var(--jeu-accent); border: 1px dashed var(--jeu-accent); background: repeating-linear-gradient(135deg, var(--jeu-encre) 0 6px, var(--jeu-brume) 6px 7px); cursor: not-allowed;
+}
+.reg-ouvert .actions button.refus:active { transform: none; }

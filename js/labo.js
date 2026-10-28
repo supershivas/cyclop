@@ -2,46 +2,46 @@
 // Chaque sujet utilise les mêmes modules que le jeu (terrain, apparence,
 // rendu three.js) : ce qu'on voit ici est ce que le jeu dessinera. Ajouter un
 // sujet ou une variante = ajouter une entrée dans GROUPES.
-import { afficherVersion } from './version-tag.js?v=0.98.0';
-import { mountLabo } from './lib/labo-shell.js?v=0.98.0';
-import { spriteCanvas, paletteToGPL, paletteToHex } from './lib/sprites.js?v=0.98.0';
-import { PALETTE, ROLES } from './palette.js?v=0.98.0';
-import { chargerContenu } from './design-store.js?v=0.98.0';
-import { tuile, ETAT } from './tuiles.js?v=0.98.0';
-import { creerTerrain, impact, hydroLignes, toucher } from './terrain.js?v=0.98.0';
-import { FORMES } from './cratere.js?v=0.98.0';
-import { CALIBRES } from './data/calibres.js?v=0.98.0';
-import { METEO } from './data/meteo.js?v=0.98.0';
-import { nouvelleBataille, avancer, ordonnerMarche, ordonnerBarrage, mourir, regarderAu, aube, horloge, ticksParJour, rangDe } from './bataille.js?v=0.98.0';
-import { AZIMUTS, COTES } from './data/soleil.js?v=0.98.0';
-import { creerRendu, ZOOMS } from './rendu3d.js?v=0.98.0';
-import { placesCommandement } from './army.js?v=0.98.0';
-import { hash2 } from './lib/rng.js?v=0.98.0';
-import { reglerVerdure } from './apparence.js?v=0.98.0';
-import { maquetteAssaut } from './labo-assaut.js?v=0.98.0';
-import { calquePlaques } from './labo-plaques.js?v=0.98.0';
-import { calqueBarre } from './labo-barre-temps.js?v=0.98.0';
-import { maquetteProjections, maquetteVisee } from './labo-projections.js?v=0.98.0';
-import { calqueBarreVie } from './labo-barre-vie.js?v=0.98.0';
-import { calqueClic } from './labo-clic-regiment.js?v=0.98.0';
-import { maquetteBoutons, calqueOrdre, calqueObus } from './labo-satisfaction.js?v=0.98.0';
-import { calqueEtiquette, calqueToast, maquetteCartes } from './labo-hud-ux.js?v=0.98.0';
-import { maquetteCampagne } from './labo-campagne.js?v=0.98.0';
-import { maquetteCaisses, maquetteRates, maquetteSapes } from './labo-arcade.js?v=0.98.0';
-import { maquetteChars } from './labo-chars.js?v=0.98.0';
-import { maquetteGaz } from './labo-gaz.js?v=0.98.0';
-import { maquetteAvions } from './labo-avions.js?v=0.98.0';
-import { fondations, boutons, fenetres } from './labo-design-system.js?v=0.98.0';
-import { gainTampon, gainCachets, gainFil, gainBordereau, victoireFanion, victoireTampon, victoireChevrons, victoireAube, ficheDeuxColonnes, ficheEtages, ficheRegistre, ficheDAbord } from './labo-recompenses.js?v=0.98.0';
-import { maquetteBatiment, maquetteCamp } from './labo-batiments.js?v=0.98.0';
-import { BATIMENTS } from './data/batiments.js?v=0.98.0';
-import { maquettePonts, PONTS, NOMS_PONTS } from './labo-ponts.js?v=0.98.0';
-import { PONTS_JEU } from './data/ponts.js?v=0.98.0';
-import { JOURNAL } from './labo-journal.js?v=0.98.0';
-import { loadVersion } from './lib/app-update.js?v=0.98.0';
-import { maquetteEffets, maquetteAmbiance, maquetteEspace } from './labo-son.js?v=0.98.0';
-import { calqueMoral } from './labo-moral.js?v=0.98.0';
-import { maquetteTranchees, NOTES_TRANCHEES, NOMS_TRANCHEES, NOTES_PRES, NOMS_PRES } from './labo-tranchees.js?v=0.98.0';
+import { afficherVersion } from './version-tag.js?v=0.98.1';
+import { mountLabo } from './lib/labo-shell.js?v=0.98.1';
+import { spriteCanvas, paletteToGPL, paletteToHex } from './lib/sprites.js?v=0.98.1';
+import { PALETTE, ROLES } from './palette.js?v=0.98.1';
+import { chargerContenu } from './design-store.js?v=0.98.1';
+import { tuile, ETAT } from './tuiles.js?v=0.98.1';
+import { creerTerrain, impact, hydroLignes, toucher } from './terrain.js?v=0.98.1';
+import { FORMES } from './cratere.js?v=0.98.1';
+import { CALIBRES } from './data/calibres.js?v=0.98.1';
+import { METEO } from './data/meteo.js?v=0.98.1';
+import { nouvelleBataille, avancer, ordonnerMarche, ordonnerBarrage, mourir, regarderAu, aube, horloge, ticksParJour, rangDe } from './bataille.js?v=0.98.1';
+import { AZIMUTS, COTES } from './data/soleil.js?v=0.98.1';
+import { creerRendu, ZOOMS } from './rendu3d.js?v=0.98.1';
+import { placesCommandement } from './army.js?v=0.98.1';
+import { hash2 } from './lib/rng.js?v=0.98.1';
+import { reglerVerdure } from './apparence.js?v=0.98.1';
+import { maquetteAssaut } from './labo-assaut.js?v=0.98.1';
+import { calquePlaques } from './labo-plaques.js?v=0.98.1';
+import { calqueBarre } from './labo-barre-temps.js?v=0.98.1';
+import { maquetteProjections, maquetteVisee } from './labo-projections.js?v=0.98.1';
+import { calqueBarreVie } from './labo-barre-vie.js?v=0.98.1';
+import { calqueClic } from './labo-clic-regiment.js?v=0.98.1';
+import { maquetteBoutons, calqueOrdre, calqueObus } from './labo-satisfaction.js?v=0.98.1';
+import { calqueEtiquette, calqueToast, maquetteCartes } from './labo-hud-ux.js?v=0.98.1';
+import { maquetteCampagne } from './labo-campagne.js?v=0.98.1';
+import { maquetteCaisses, maquetteRates, maquetteSapes } from './labo-arcade.js?v=0.98.1';
+import { maquetteChars } from './labo-chars.js?v=0.98.1';
+import { maquetteGaz } from './labo-gaz.js?v=0.98.1';
+import { maquetteAvions } from './labo-avions.js?v=0.98.1';
+import { fondations, boutons, fenetres, revision } from './labo-design-system.js?v=0.98.1';
+import { gainTampon, gainCachets, gainFil, gainBordereau, victoireFanion, victoireTampon, victoireChevrons, victoireAube, ficheDeuxColonnes, ficheEtages, ficheRegistre, ficheDAbord } from './labo-recompenses.js?v=0.98.1';
+import { maquetteBatiment, maquetteCamp } from './labo-batiments.js?v=0.98.1';
+import { BATIMENTS } from './data/batiments.js?v=0.98.1';
+import { maquettePonts, PONTS, NOMS_PONTS } from './labo-ponts.js?v=0.98.1';
+import { PONTS_JEU } from './data/ponts.js?v=0.98.1';
+import { JOURNAL } from './labo-journal.js?v=0.98.1';
+import { loadVersion } from './lib/app-update.js?v=0.98.1';
+import { maquetteEffets, maquetteAmbiance, maquetteEspace } from './labo-son.js?v=0.98.1';
+import { calqueMoral } from './labo-moral.js?v=0.98.1';
+import { maquetteTranchees, NOTES_TRANCHEES, NOMS_TRANCHEES, NOTES_PRES, NOMS_PRES } from './labo-tranchees.js?v=0.98.1';
 
 document.documentElement.style.setProperty('--jeu-accent', ROLES.accent);
 const NOM = document.title.replace(/^Labo — /, ''); // le nom vient de la page (une apostrophe ne casse rien)
@@ -485,6 +485,11 @@ const GROUPES = [
     ] },
     { id: 'ds-boutons', title: 'Boutons', variants: [
       { title: 'Les familles et leurs états', status: 'actuelle', depuis: '0.98.0', note: 'Repos, survol, focus clavier, choisi, refusé, refusé au survol : les vraies feuilles du jeu, états forcés par `.est-survol` et `.est-focus`.', render: s => { boutons(s); } },
+    ] },
+    { id: 'ds-revision', title: 'Révision (v2)', variants: [
+      { title: 'Les titres', status: 'a-trancher', depuis: '0.98.1', note: 'PROPOSITION (Jérôme, v0.98.1 : « les titres en condensé fin et haut dans le style de Cast Iron » ; « jamais coupés »). Antonio, en attendant Cast Iron ; la fenêtre météo a pour titre « Météo », ses lignes sont des libellés.', render: s => { revision(s, 'titres'); } },
+      { title: 'Les marges', status: 'a-trancher', depuis: '0.98.1', note: 'PROPOSITION. Fenêtres, dialogues et boutons plus aérés : un cran de plus.', render: s => { revision(s, 'marges'); } },
+      { title: 'Les boutons refusés', status: 'a-trancher', depuis: '0.98.1', note: 'PROPOSITION. Hachurés, pointillés, curseur interdit, et rien ne change au survol.', render: s => { revision(s, 'refus'); } },
     ] },
     { id: 'ds-fenetres', title: 'Fenêtres, bulles et dialogues', variants: [
       { title: 'Les papiers du champ', status: 'actuelle', depuis: '0.98.0', note: 'La fenêtre d\'ordres d\'un régiment (avec son « ? ») et celle d\'un bâtiment.', render: s => { fenetres(s, 'papiers'); } },
