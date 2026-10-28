@@ -1,7 +1,8 @@
 {
-  "version": "0.98.1",
+  "version": "0.98.2",
   "date": "2026-10-28",
   "changes": [
-    "Au labo : le design system revu (titres en condensé, marges plus grandes, boutons refusés plus clairs), en proposition"
+    "Le design system est en jeu : titres en condensé fin et haut, jamais coupés, marges plus grandes, boutons refusés hachurés",
+    "L'infobulle météo a pour titre « Météo » ; un bug de clic sur les boutons à infobulle est corrigé"
   ]
 }

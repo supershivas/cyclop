@@ -1,5 +1,5 @@
-/* Le design system, deuxième jet (Jérôme, v0.98.1 : « revoir un peu le design system, il faudra ensuite l'adapter en jeu »). PROPOSITION lue par le labo seulement (onglet « Design system », sujet « Révision »),
-   chargée APRÈS css/style.css dans les cadres du labo : le jeu ne la charge pas encore. Quatre demandes :
+/* Le design system, deuxième jet (Jérôme, v0.98.1 : « revoir un peu le design system » ; v0.98.2 : « adapte pour le jeu »). EN JEU depuis la v0.98.2 : chargée APRÈS css/style.css par index.html et par les cadres du
+   labo (onglet « Design system »). Quatre demandes :
    1. les titres (du jeu, des fenêtres, des dialogues) en condensé fin et haut, dans le style de Cast Iron : Antonio (OFL, vendor/fonts), à défaut de Cast Iron (pas de licence libre trouvée) ;
    2. un titre n'est jamais coupé : il ne porte que son titre (ce qui le compose n'est pas un titre : un libellé, `.libelle`) ;
    3. des marges plus grandes (fenêtres, dialogues, boutons) ;
@@ -55,11 +55,23 @@ dialog .menu, dialog form.menu { gap: var(--e3); }
 
 /* 4. un bouton refusé : hachuré, éteint, le curseur « interdit », et RIEN ne change au survol (la raison est dans l'infobulle) ; il ne prend ni le focus de la souris ni l'appui */
 .reg-ouvert .actions button.refus, .reg-ouvert .actions button[aria-disabled="true"], .nuit button:disabled {
-  color: var(--jeu-accent); border: 1px dashed var(--jeu-accent); background: repeating-linear-gradient(135deg, var(--jeu-encre) 0 6px, var(--jeu-brume) 6px 7px);
+  color: var(--jeu-accent); border: 1px dashed var(--jeu-accent); background: repeating-linear-gradient(135deg, var(--jeu-encre) 0 7px, var(--jeu-brume) 7px 8px);
   cursor: not-allowed;
   box-shadow: none; transform: none;
 }
-.reg-ouvert .actions button.refus:is(:hover, .est-survol), .reg-ouvert .actions button[aria-disabled="true"]:is(:hover, .est-survol), .nuit button:disabled:hover {
-  color: var(--jeu-accent); border: 1px dashed var(--jeu-accent); background: repeating-linear-gradient(135deg, var(--jeu-encre) 0 6px, var(--jeu-brume) 6px 7px); cursor: not-allowed;
-}
+.reg-ouvert .actions button.refus.est-survol, .reg-ouvert .actions button[aria-disabled="true"].est-survol { color: var(--jeu-accent); border: 1px dashed var(--jeu-accent); background: repeating-linear-gradient(135deg, var(--jeu-encre) 0 7px, var(--jeu-brume) 7px 8px); cursor: not-allowed; }
+@media (hover: hover) { .reg-ouvert .actions button.refus:hover, .reg-ouvert .actions button[aria-disabled="true"]:hover, .nuit button:disabled:hover { color: var(--jeu-accent); border: 1px dashed var(--jeu-accent); background: repeating-linear-gradient(135deg, var(--jeu-encre) 0 7px, var(--jeu-brume) 7px 8px); cursor: not-allowed; } }
 .reg-ouvert .actions button.refus:active { transform: none; }
+
+/* les en-têtes de papier (la carte, le secteur, le carnet) sont des titres : même police ; ce qui les accompagne (« en face au nord », « la carte ») est un libellé, jamais un titre */
+.carte .entete, .secteur .entete, .carnet .entete { font-family: var(--police-titre); font-weight: var(--titre-poids); font-size: var(--titre-3); letter-spacing: var(--titre-lettres); white-space: normal; overflow: visible; min-height: var(--jeu-cible); align-items: center; }
+.entete .discret, .entete .libelle { font-family: var(--jeu-police); font-size: var(--texte-petit); letter-spacing: .02em; text-transform: none; color: var(--jeu-accent); }
+.carte .entete .libelle { margin-left: var(--pas); }
+/* l'infobulle : son titre en condensé, ses lignes en mono ; les « **gras** » y font les libellés */
+.infobulle { padding: var(--e3) var(--e4); max-width: 38ch; }
+.infobulle .h1 { font-family: var(--police-titre); font-weight: var(--titre-poids); font-size: var(--titre-3); letter-spacing: var(--titre-lettres); text-transform: uppercase; line-height: 1.1; text-wrap: balance; }
+.infobulle .p { margin-top: var(--e1); }
+
+/* quatre boutons sur une ligne (les formes) : moins de souffle, sinon « Colonne » se coupe en deux ; la fenêtre d'un bâtiment est plus large (deux choix avec leur prix sur une ligne) */
+.reg-ouvert .actions.formes button { padding: 0 var(--e1); overflow-wrap: normal; }
+#batiment { width: 58ch; }

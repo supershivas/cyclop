@@ -4,10 +4,10 @@
 // qui le suit dit le jour et l'heure ; tout en bas, les seuls changements de météo, en pictogrammes. Le joueur ne connaît pas la météo des jours à
 // venir (la logique la tire d'avance) : seuls les jours passés et le jour même sont lus dans l'état, demain est la prévision (juste 7 fois sur 10).
 // Le dessin seulement : rien n'est sauvegardé.
-import { PALETTE } from '../palette.js?v=0.98.1';
-import { METEO, temperature, capDuVent } from '../data/meteo.js?v=0.98.1';
-import { ICONES_METEO } from './meteo-icones.js?v=0.98.1';
-import { horloge } from '../bataille.js?v=0.98.1';
+import { PALETTE } from '../palette.js?v=0.98.2';
+import { METEO, temperature, capDuVent } from '../data/meteo.js?v=0.98.2';
+import { ICONES_METEO } from './meteo-icones.js?v=0.98.2';
+import { horloge } from '../bataille.js?v=0.98.2';
 
 const FOND = { sec: PALETTE.h, pluie: PALETTE.e, brouillard: PALETTE.r, gel: PALETTE.o, neige: PALETTE.o, canicule: PALETTE.x, tempete: PALETTE.r, couvert: PALETTE.g, beau: PALETTE.e };
 const el = (tag, cls, ...kids) => { const e = document.createElement(tag); if (cls) e.className = cls; e.append(...kids); return e; };
@@ -48,7 +48,7 @@ export function creerBarreTemps({ $, bataille }) {
     const mot = `J${h.jour}/${h.jours} · ${nuit ? 'nuit' : `${h.heure} h ${String(h.minute).padStart(2, '0')}`} · ${METEO[h.meteo].nom}${h.temperature !== null ? `, ${h.temperature} °C` : ''}`;
     // le vent n'est plus dans le drapeau (le texte sortait de sa boîte, v0.97.0) : il est dans l'infobulle de la frise, avec sa vitesse
     const ventDit = h.vent.nom === 'calme' ? `Pas de vent (${h.vent.kmh} km/h)` : `${h.vent.nom[0].toUpperCase()}${h.vent.nom.slice(1)} : ${h.vent.kmh} km/h, vers le ${capDuVent(h.vent.ang)}`;
-    const info = `# ${mot}\n${ventDit}\n${h.prevision ? `Demain : ${METEO[h.prevision].prevision}` : 'Dernier jour'}`;
+    const info = `# Météo\n**Maintenant** ${mot}\n**Le vent** ${ventDit[0].toLowerCase()}${ventDit.slice(1)}\n**Demain** ${h.prevision ? METEO[h.prevision].prevision : 'dernier jour'}`;      // (v0.98.2 : le titre est « Météo » ; ce qui la compose n'est pas un titre)
     const cle = `${h.jour}|${h.meteo}|${h.prevision}|${mot}|${nuit}|${ventDit}`;
     const f = racine();
     f.style.setProperty('--ici', ici);

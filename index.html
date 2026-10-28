@@ -9,8 +9,9 @@
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta property="og:image" content="og.png">
-<link rel="stylesheet" href="js/lib/game.css?v=0.98.1">
-<link rel="stylesheet" href="css/style.css?v=0.98.1">
+<link rel="stylesheet" href="js/lib/game.css?v=0.98.2">
+<link rel="stylesheet" href="css/style.css?v=0.98.2">
+<link rel="stylesheet" href="css/ds-v2.css?v=0.98.2">
 </head>
 <body>
 <!-- La barre de chargement (v0.28.0) : là avant tout script ; main.js la remplit, puis la retire -->
@@ -108,7 +109,7 @@
       <!-- En haut à droite : la carte (repliable) -->
       <div class="haut-droite">
         <section class="papier carte" id="carte" aria-label="Carte du secteur" hidden>
-          <button class="entete" id="carte-bascule" aria-expanded="true" aria-label="Replier la carte du secteur">Le secteur · <span class="discret">en face au nord</span><i aria-hidden="true"></i></button>
+          <button class="entete" id="carte-bascule" aria-expanded="true" aria-label="Replier la carte du secteur">Le secteur<span class="libelle">en face au nord</span><i aria-hidden="true"></i></button>
           <div class="carte-grille" id="carte-grille"></div>
           <details class="legende-carte">
             <summary>Comment lire la carte</summary>
@@ -327,6 +328,6 @@
 </dialog>
 
 <div class="jeu-toast" id="toast" role="status" hidden></div>
-<script type="module" src="js/main.js?v=0.98.1"></script>
+<script type="module" src="js/main.js?v=0.98.2"></script>
 </body>
 </html>

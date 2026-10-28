@@ -1,5 +1,9 @@
 # Journal des versions
 
+## 0.98.2 — 2026-10-28
+- Le design system revu est en jeu : les titres des fenêtres, dialogues, cartes et infobulles en condensé fin et haut (Antonio), jamais coupés ; des marges plus grandes ; les boutons refusés hachurés, sans changement au survol ; l'infobulle météo a pour titre « Météo »
+- Un clic sur un bouton à infobulle (menu, vitesses, « À l'aube ») ne lève plus d'erreur dans la console
+
 ## 0.98.1 — 2026-10-28
 - Au labo : le design system revu en proposition (titres en condensé fin et haut, jamais coupés ; marges plus grandes ; boutons refusés hachurés, inchangés au survol) ; le jeu n'y est pas encore adapté
 

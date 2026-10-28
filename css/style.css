@@ -391,8 +391,10 @@ dialog form { margin-top: calc(var(--pas) * 2); }
 /* Le survol d'un bouton de papier (Jérôme, v0.98.0 : « revoir la lisibilité des boutons ») : la brume sous l'encre (7 : 1), jamais la glaise sous la glaise ; un bouton refusé (glaise en pointillé) devient plein et encré, sans fond : le texte ne disparaît jamais */
 @media (hover: hover) { .reg-carte:hover:not(.choisi) { --pap: var(--jeu-accent); } }
 /* (`.est-survol` : le même état forcé, pour que le labo le montre sans pointeur ; le jeu n'écrit jamais cette classe) */
-.reg-ouvert .actions button:is(:hover, .est-survol), .reg-ouvert .tete .aide:is(:hover, .est-survol) { background: var(--jeu-brume); color: var(--jeu-fond); border-color: var(--jeu-fond); }
-.reg-ouvert .actions button.refus:is(:hover, .est-survol) { background: none; border-style: solid; color: var(--jeu-fond); }
+.reg-ouvert .actions button.est-survol, .reg-ouvert .tete .aide.est-survol  { background: var(--jeu-brume); color: var(--jeu-fond); border-color: var(--jeu-fond); }
+@media (hover: hover) { .reg-ouvert .actions button:hover, .reg-ouvert .tete .aide:hover  { background: var(--jeu-brume); color: var(--jeu-fond); border-color: var(--jeu-fond); } }
+.reg-ouvert .actions button.refus.est-survol  { background: none; border-style: solid; color: var(--jeu-fond); }
+@media (hover: hover) { .reg-ouvert .actions button.refus:hover  { background: none; border-style: solid; color: var(--jeu-fond); } }
 .reg-ouvert .actions button.est-focus, .reg-ouvert .tete .aide.est-focus { outline: 2px solid var(--jeu-nous); outline-offset: 2px; }
 .reg-ouvert .actions button:focus-visible { outline: 2px solid var(--jeu-nous); outline-offset: 2px; }
 

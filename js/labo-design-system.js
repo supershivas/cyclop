@@ -2,14 +2,14 @@
 // Rien n'est recopié : chaque planche est un cadre (`iframe`) qui charge les VRAIES feuilles du jeu (`css/style.css`, `js/lib/game.css`) et les rôles de couleur de `palette.js`, et pose dedans le vrai balisage des papiers, des
 // boutons et des bulles. Les valeurs des fondations sont lues dans le `:root` de `css/style.css` (`jetons`) : changer une échelle dans la feuille change cette page. Les états qu'un pointeur seul montre (survol, focus) sont
 // forcés par les classes `.est-survol` et `.est-focus`, que la feuille du jeu accepte pour cela (le jeu ne les écrit jamais). Le labo montre, il ne modifie rien.
-import { ROLES, ALERTES } from './palette.js?v=0.98.1';
-import { lignesInfo } from './hud/infobulle.js?v=0.98.1';
+import { ROLES, ALERTES } from './palette.js?v=0.98.2';
+import { lignesInfo } from './hud/infobulle.js?v=0.98.2';
 
 const el = (tag, props = {}, ...kids) => { const e = Object.assign(document.createElement(tag), props); e.append(...kids); return e; };
 const roles = Object.entries({ ...ROLES }).map(([k, v]) => `--jeu-${k}:${v}`).join(';');
 
 // Un cadre : la page du jeu en petit, sans son écran ; `corps` est du balisage du jeu
-function cadre(stage, corps, { haut = '70vh', fond = 'fond', v2 = false } = {}) {
+function cadre(stage, corps, { haut = '70vh', fond = 'fond', v2 = true } = {}) {
   const f = el('iframe', { title: 'Planche du design system', loading: 'eager' });
   f.style.cssText = `width:100%;height:${haut};border:1px solid rgba(0,0,0,.2);border-radius:6px;background:${ROLES[fond]}`;
   f.srcdoc = `<!doctype html><html lang="fr"><head><meta charset="utf-8">
@@ -41,9 +41,13 @@ function cadre(stage, corps, { haut = '70vh', fond = 'fond', v2 = false } = {}) 
 
 // Les jetons du `:root` de la feuille du jeu, avec leur commentaire : [{ nom, valeur, dit }]
 async function jetons() {
-  const css = await (await fetch('css/style.css')).text();
-  const bloc = css.match(/:root\s*\{([\s\S]*?)\n\}/)?.[1] ?? '';
-  return [...bloc.matchAll(/(--[\w-]+):\s*([^;]+);\s*(?:\/\*\s*([\s\S]*?)\s*\*\/)?/g)].map(m => ({ nom: m[1], valeur: m[2].trim(), dit: m[3] ?? '' }));
+  const par = new Map();      // la feuille du jeu, puis la deuxième (css/ds-v2.css, en jeu depuis la v0.98.2) qui en redéfinit des jetons ; un jeton sans commentaire garde celui d'avant
+  for (const f of ['css/style.css', 'css/ds-v2.css']) {
+    const css = await (await fetch(f)).text();
+    const bloc = css.match(/:root\s*\{([\s\S]*?)\n\}/)?.[1] ?? '';
+    for (const m of bloc.matchAll(/(--[\w-]+):\s*([^;]+);\s*(?:\/\*\s*([\s\S]*?)\s*\*\/)?/g)) par.set(m[1], { nom: m[1], valeur: m[2].trim(), dit: m[3] || par.get(m[1])?.dit || '' });
+  }
+  return [...par.values()];
 }
 const px = v => parseFloat(v);
 
@@ -67,10 +71,10 @@ export async function fondations(stage, vue) {
   const J = await jetons(), par = nom => J.filter(j => j.nom.startsWith(nom));
   let corps = '';
   if (vue === 'typo') {
-    const echelle = par('--texte');
+    const echelle = [...par('--texte'), ...par('--titre-')];
     corps = `<h1>Typographie</h1><p class="note">Une police du système (monospace, en attendant une police d'identité auto-hébergée) et quatre tailles : jamais une cinquième. Un titre est en lettres espacées (<code>--titre-lettres</code>).</p>
       <h2>La police</h2><p style="font-family:var(--jeu-police);font-size:var(--texte-grand)">Cyclopéen — 0123456789 — « Le régiment tient la tranchée »</p><p class="note"><code>${par('--jeu-police')[0]?.valeur ?? ''}</code></p>
-      <h2>Les quatre tailles</h2><table><tr><th>Jeton</th><th>Valeur</th><th>Où</th><th>Exemple</th></tr>${echelle.map(t => `<tr><td><code>${t.nom}</code></td><td>${t.valeur}</td><td>${t.dit}</td><td style="font-size:var(${t.nom})">Un obus de 155 tombe au nord</td></tr>`).join('')}</table>
+      <h2>Les tailles : quatre de texte, trois de titre</h2><table><tr><th>Jeton</th><th>Valeur</th><th>Où</th><th>Exemple</th></tr>${echelle.map(t => `<tr><td><code>${t.nom}</code></td><td>${t.valeur}</td><td>${t.dit}</td><td style="${t.nom.startsWith('--titre-') ? 'font-family:var(--police-titre);font-weight:var(--titre-poids);text-transform:uppercase;letter-spacing:var(--titre-lettres);' : ''}font-size:var(${t.nom})">Un obus de 155 tombe au nord</td></tr>`).join('')}</table>
       <h2>La hiérarchie</h2><div class="papier" style="max-width:48ch"><h2 style="margin:0 0 var(--e1);font-size:var(--texte-moyen);letter-spacing:var(--titre-lettres);border:0;padding:0">Titre de papier (16)</h2><p>Le texte courant se lit à 14 pixels : un papier, un bouton, une ligne du carnet.</p><p class="discret" style="font-size:var(--texte-petit)">Le texte discret (12, glaise) : un compteur, une légende, la note d'un tronçon.</p></div>`;
   } else if (vue === 'espaces') {
     const e = [...par('--e'), ...par('--pas')];
