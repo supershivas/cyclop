@@ -2,8 +2,8 @@
 // sapeurs ») ; ici, la fenêtre d'un bâtiment, posée au-dessus de lui quand on le choisit (v0.96.0 : « les options apparaissent au-dessus de chaque bâtiment au clic ; simplifier au maximum »), sur le modèle de la
 // fenêtre d'un régiment (`.reg-ouvert` : le titre et son niveau, une ligne de ce qu'il fait, des boutons de même largeur), et le bouton « Le camp » (la dotation, et la touche B). L'amélioration tient en un clic : le
 // choix du palier EST le bouton (« Tir de réglage · 3 pts »). Le texte long est dans l'infobulle. Lecture seule de l'état : les ordres passent par les fonctions que main.js donne.
-import { BATIMENTS, EQUIPEMENT } from '../data/batiments.js?v=0.97.0';
-import { refusCamp, campDe, NIVEAU_MAX } from '../camp.js?v=0.97.0';
+import { BATIMENTS, EQUIPEMENT } from '../data/batiments.js?v=0.98.0';
+import { refusCamp, campDe, NIVEAU_MAX } from '../camp.js?v=0.98.0';
 
 const el = (tag, props = {}, ...kids) => { const e = Object.assign(document.createElement(tag), props); e.append(...kids); return e; };
 
@@ -27,7 +27,8 @@ export function creerCampHud({ moi = () => 0, bouton, papier, aller, ameliorer }
       const ligne = el('div', { className: 'actions' }); ligne.style.setProperty('--cols', options.length);
       for (const o of options) {
         const refus = refusCamp(e, cle, o.i, moi());
-        const b = el('button', { type: 'button', className: refus ? 'refus' : '', textContent: `${o.nom} · ${pts(S.cout)}`, title: `${S.nom} : ${o.effet}${refus ? ` (${refus})` : ''}`, onclick: () => ameliorer(cle, o.i) });
+        const b = el('button', { type: 'button', className: refus ? 'refus' : '', textContent: `${o.nom} · ${pts(S.cout)}`, onclick: () => ameliorer(cle, o.i) });
+        b.dataset.info = `# ${o.nom}\n## ${S.nom} · niveau ${niveau + 1} · ${pts(S.cout)}\n${o.effet}${refus ? `\n**${refus}**` : ''}`;
         b.setAttribute('aria-disabled', refus ? 'true' : 'false');
         ligne.append(b);
       }
@@ -40,7 +41,7 @@ export function creerCampHud({ moi = () => 0, bouton, papier, aller, ameliorer }
     bouton.hidden = false;
     const enChantier = Object.values(camp.batiments).filter(c => c.chantier).length;
     bouton.textContent = `Le camp · ${pts(camp.dotation)}${enChantier ? ` · ${enChantier} chantier${enChantier > 1 ? 's' : ''}` : ''}`;
-    bouton.title = "Le camp (B) : la caméra y va. La dotation de l'état-major tombe à chaque aube (+1 ; +1 si nos lignes tiennent à 75 % ; +2 la première fois qu'une ligne d'en face est prise). Un bâtiment se choisit d'un clic sur lui.";
+    bouton.title = `# Le camp (B)\nLa caméra y va. Un bâtiment se choisit d'un clic sur lui : on y dépense la dotation.\n## La dotation (${pts(camp.dotation)})\nElle tombe à l'aube : **+1** ; **+1** si nos lignes tiennent à 75 % ; **+2** la première fois qu'une ligne d'en face est prise.`;
     papier.hidden = !cle;
     if (!cle) { signature = ''; return; }
     const c = camp.batiments[cle], s = [cle, c.niveau, c.chantier?.nuits ?? '', camp.dotation, e.reserves[moi()]].join('|');

@@ -6,12 +6,12 @@ export const BATIMENTS = {
   artillerie: {
     nom: 'Le parc d\'artillerie', court: 'Canons', unite: 'les barrages de 75, 155 et 220', touches: '1 · 2 · 3',
     remplace: 'les boutons 75, 155 et 220',
-    ordres: [['Barrage de 75', 1], ['Barrage de 155', 2], ['Barrage de 220', 3]],
+    ordres: [['Barrage de 75', 1], ['Barrage de 155', 1], ['Barrage de 220', 1]],
     niveaux: [
-      { nom: 'Batterie de 75', cout: 0, depart: true, effet: 'Quatre pièces de 75 : le barrage de 24 coups, recharge 40 s (comme aujourd\'hui).' },
-      { nom: 'Groupe de 155', cout: 3, effet: 'Deux 155 sous leurs merlons : le barrage de 12 coups, recharge 70 s.',
+      { nom: 'Batteries de campagne', cout: 0, depart: true, effet: 'Les trois calibres sont prêts : le 75 (24 coups, recharge 40 s), le 155 (12 coups, 70 s) et le 220 (6 coups, 110 s).' },
+      { nom: 'Parc renforcé', cout: 3, effet: 'Des caissons pleins et des pointeurs aguerris : un choix entre la justesse et la cadence de tous les calibres.',
         choix: [['Tir de réglage', 'La dispersion de tous les calibres −20 %.', { 'artillerie.dispersion': 0.8 }], ['Caissons doublés', 'La recharge de tous les calibres −15 %.', { 'artillerie.recharge': 0.85 }]] },
-      { nom: 'Pièce de 220 sur affût', cout: 4, effet: 'Un 220 sur son affût à rails : le barrage de 6 coups, recharge 110 s.',
+      { nom: 'Parc lourd', cout: 4, effet: 'Le 220 sur son affût à rails : un choix entre une salve plus longue et une recharge plus courte.',
         choix: [['Salve longue', 'Le 220 tire 10 coups au lieu de 6.', { 'artillerie.salve220': 10 / 6 }], ['Tube neuf', 'La recharge du 220 est plus courte d\'un quart.', { 'artillerie.recharge220': 0.75 }]] },
     ],
   },
@@ -20,8 +20,8 @@ export const BATIMENTS = {
     remplace: 'le bouton « Avion »',
     ordres: [['Passe de mitraillage (deux clics)', 1]],
     niveaux: [
-      { nom: 'Terrain et un hangar', cout: 2, effet: 'Une bande d\'herbe, un hangar Bessonneau : 2 avions.', avions: 2 },
-      { nom: 'Deux hangars', cout: 3, effet: 'Une troisième cellule : 3 avions (la flotte d\'aujourd\'hui), des fûts d\'essence, une tente de l\'escadrille.', avions: 3,
+      { nom: 'Terrain et un hangar', cout: 0, depart: true, effet: 'Une bande d\'herbe, un hangar Bessonneau : 2 avions.', avions: 2 },
+      { nom: 'Deux hangars', cout: 3, effet: 'Une troisième cellule : 3 avions, des fûts d\'essence, une tente de l\'escadrille.', avions: 3,
         choix: [['Passe longue', 'La passe de mitraillage peut être plus longue de 30 %.', { 'aerodrome.longueur': 1.3 }], ['Blindage du siège', 'Un avion tient 40 % de points de vie de plus.', { 'aerodrome.pv': 1.4 }]] },
       { nom: 'Escadrille', cout: 4, effet: 'Cinq cellules sous trois hangars, une baraque de contrôle, une manche à air : 4 avions.', avions: 4,
         choix: [['Mitrailleuses jumelées', 'Chaque passe touche 25 % de plus.', { 'aerodrome.letal': 1.25 }], ['Moteur de 180 ch', 'Il revient plus vite : recharge de 70 s au lieu de 90.', { 'aerodrome.recharge': 0.78 }]] },
@@ -32,7 +32,7 @@ export const BATIMENTS = {
     remplace: 'le bouton « Char »',
     ordres: [['Sortir le char (puis l\'objectif)', 1]],
     niveaux: [
-      { nom: 'Abri à char', cout: 3, effet: 'Une galerie couverte de terre d\'où le Schneider sort, qu\'on choisit pour avoir ses options. Recharge 240 s.' },
+      { nom: 'Abri à char', cout: 0, depart: true, effet: 'Une galerie couverte de terre d\'où le Schneider sort, qu\'on choisit pour avoir ses options. Recharge 240 s.' },
       { nom: 'Deuxième abri', cout: 3, effet: 'Deux abris : on rappelle un char plus tôt (recharge 192 s au lieu de 240).', effets: { 'chars.recharge': 0.8 },
         choix: [['Chenilles larges', 'Il franchit des cratères plus profonds (+33 %).', { 'chars.franchit': 1.33 }], ['Canon à tir rapide', 'Son canon recharge 30 % plus vite.', { 'chars.canon': 0.7 }]] },
       { nom: 'Atelier de réparation', cout: 4, effet: 'Une grue, un rail, trois abris : recharge de 154 s.', effets: { 'chars.recharge': 0.8 },
@@ -44,8 +44,8 @@ export const BATIMENTS = {
     remplace: 'le bouton « Génie »',
     ordres: [['Refaire un pont (clic sur l\'ouvrage)', 1], ['Refaire un nid (clic sur l\'ouvrage)', 2]],
     niveaux: [
-      { nom: 'Baraque du génie', cout: 2, effet: 'Une baraque, des madriers, des gabions : 2 sections de 20 hommes.', sections: 2 },
-      { nom: 'Chantier', cout: 2, effet: 'Un chevalet de montage et un parc de pontons : 4 sections (aujourd\'hui) ; les nids de mitrailleuse se refont.', sections: 4,
+      { nom: 'Baraque du génie', cout: 0, depart: true, effet: 'Une baraque, des madriers, des gabions : 2 sections de 20 hommes, pour refaire les ponts.', sections: 2 },
+      { nom: 'Chantier', cout: 2, effet: 'Un chevalet de montage et un parc de pontons : 4 sections ; les nids de mitrailleuse se refont.', sections: 4,
         choix: [['Madriers taillés', 'Le travail dure 25 % de moins.', { 'sapeurs.travail': 0.75 }], ['Voiturettes Decauville', 'Les sections marchent 25 % plus vite.', { 'sapeurs.vitesse': 1.25 }]] },
       { nom: 'Forge et grue', cout: 3, effet: 'Une forge, une grue, un wagonnet.',
         choix: [['Sections de 30', 'Chaque section compte 30 hommes : le travail va une fois et demie plus vite.', { 'sapeurs.hommes': 1.5 }], ['Équipe de nuit', 'Un chantier du camp s\'achève en une nuit, quel que soit son niveau.', {}]] },
@@ -57,7 +57,7 @@ export const BATIMENTS = {
     ordres: [['Relever un régiment (la nuit)', 1], ['Équiper un régiment (la nuit)', 2]],
     niveaux: [
       { nom: 'Baraquements', cout: 0, depart: true, effet: 'Deux baraques, des tentes : 2 régiments frais en réserve.', reserves: 2 },
-      { nom: 'Cantonnement', cout: 2, effet: 'Quatre baraques, une cuisine roulante : 4 régiments en réserve (la réserve d\'aujourd\'hui) ; on y équipe un régiment, la nuit.', reserves: 4,
+      { nom: 'Cantonnement', cout: 2, effet: 'Quatre baraques, une cuisine roulante : 4 régiments en réserve ; on y équipe un régiment, la nuit.', reserves: 4,
         choix: [['Poste de secours', 'Les blessés évacués reviennent plus souvent (deux sur trois au lieu d\'un sur deux).', { 'caserne.retour': 4 / 3 }], ['Cuisine roulante', 'Le ravitaillement donne des vivres pour quatre nuits au lieu de trois.', { 'caserne.vivres': 4 / 3 }]] },
       { nom: 'Hôpital de campagne', cout: 3, effet: 'Un poste de secours, six baraques : 6 régiments en réserve.', reserves: 6,
         choix: [['Réserve de plus', 'Un régiment frais de plus en réserve.', { '+reserves': 1 }], ['Cantine de campagne', 'Le ravitaillement donne des vivres pour cinq nuits.', { 'caserne.vivres': 1.25 }]] },
@@ -80,7 +80,7 @@ export const equipeEnMots = reg => (reg.equip ?? []).map(k => EQUIPEMENTS[k].nom
 
 // La dotation de l'état-major : une seule monnaie, jamais des morts. Elle tombe à l'aube.
 export const DOTATION = {
-  depart: 3,            // points au premier matin
+  depart: 0,            // points au premier matin (Jérôme, v0.98.0 : « 0 au début » ; ils se gagnent)
   aube: 1,              // à chaque aube
   tenue: { seuil: 0.75, points: 1 },       // en plus, si nos lignes sont tenues à 75 % au moins
   ligne: 2,             // la première fois qu'on prend une des lignes d'en face (au plus quatre fois)

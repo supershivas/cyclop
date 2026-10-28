@@ -10,7 +10,30 @@ export function lignesInfo(texte) {
     return `<span class="${classe}">${echapper(corps).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>')}</span>`;
   }).join('');
 }
+// Les `title` du navigateur deviennent des `data-info` (Jérôme, v0.98.0 : « le survol de tous les éléments de l'interface donne une infobulle liée au design system ») : la bulle du jeu partout, jamais celle du système en plus.
+// Un bouton sans texte garde son nom accessible (`aria-label`). Appelé une fois sur la page, puis à chaque ajout ou changement d'un `title` (le HUD se refait souvent).
+export function adopterTitres(racine = document) {
+  const faire = e => {
+    const t = e.getAttribute('title');
+    if (t === null) return;
+    e.removeAttribute('title');
+    if (t && (!e.dataset.info || e.dataset.titre)) { e.dataset.info = t; e.dataset.titre = '1'; }      // (un `title` qui change met la bulle à jour)
+    if (t && !e.hasAttribute('aria-label') && !e.textContent.trim()) e.setAttribute('aria-label', t.replace(/^#+ /gm, '').split('\n')[0]);
+  };
+  if (racine instanceof Element && racine.hasAttribute('title')) faire(racine);
+  racine.querySelectorAll?.('[title]').forEach(faire);
+}
+function surveillerTitres() {
+  adopterTitres();
+  new MutationObserver(lots => {
+    for (const m of lots) {
+      if (m.type === 'attributes') { if (m.target.hasAttribute('title')) adopterTitres(m.target); }
+      else for (const n of m.addedNodes) if (n.nodeType === 1) adopterTitres(n);
+    }
+  }).observe(document.body, { subtree: true, childList: true, attributes: true, attributeFilter: ['title'] });
+}
 export function creerInfobulle({ $ }) {
+  surveillerTitres();
   const bulle = $('infobulle');
   let vers = null;
   const cacher = () => { bulle.hidden = true; vers = null; };
@@ -19,9 +42,10 @@ export function creerInfobulle({ $ }) {
     bulle.style.transform = `translate(${Math.max(4, Math.round(x))}px, ${Math.max(4, Math.round(y))}px)`;
   };
   document.addEventListener('pointermove', e => {
-    const c = e.target instanceof Element ? e.target.closest('[data-info]') : null;
-    if (!c || !c.dataset.info) { if (vers) cacher(); return; }
-    if (c !== vers || bulle.dataset.texte !== c.dataset.info) { vers = c; bulle.dataset.texte = c.dataset.info; bulle.innerHTML = lignesInfo(c.dataset.info); bulle.hidden = false; }
+    const c = e.target instanceof Element ? e.target.closest('[data-info], button[aria-label], [role="button"][aria-label], summary, input[aria-label]') : null;
+    const texte = c ? c.dataset.info || (c.classList.contains('reg-carte') ? '' : c.getAttribute('aria-label')) || '' : '';      // sans `data-info`, un bouton à nom (icône, flèche) dit son nom : tout ce qui se clique parle (v0.98.0)
+    if (!c || !texte) { if (vers) cacher(); return; }
+    if (c !== vers || bulle.dataset.texte !== texte) { vers = c; bulle.dataset.texte = texte; bulle.innerHTML = lignesInfo(c.dataset.info ? texte : `# ${texte}`); bulle.hidden = false; }
     poser(e);
   });
   document.addEventListener('pointerleave', cacher);

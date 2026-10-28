@@ -2,44 +2,46 @@
 // Chaque sujet utilise les mêmes modules que le jeu (terrain, apparence,
 // rendu three.js) : ce qu'on voit ici est ce que le jeu dessinera. Ajouter un
 // sujet ou une variante = ajouter une entrée dans GROUPES.
-import { afficherVersion } from './version-tag.js?v=0.97.0';
-import { mountLabo } from './lib/labo-shell.js?v=0.97.0';
-import { spriteCanvas, paletteToGPL, paletteToHex } from './lib/sprites.js?v=0.97.0';
-import { PALETTE, ROLES } from './palette.js?v=0.97.0';
-import { chargerContenu } from './design-store.js?v=0.97.0';
-import { tuile, ETAT } from './tuiles.js?v=0.97.0';
-import { creerTerrain, impact, hydroLignes, toucher } from './terrain.js?v=0.97.0';
-import { FORMES } from './cratere.js?v=0.97.0';
-import { CALIBRES } from './data/calibres.js?v=0.97.0';
-import { METEO } from './data/meteo.js?v=0.97.0';
-import { nouvelleBataille, avancer, ordonnerMarche, ordonnerBarrage, mourir, regarderAu, aube, horloge, ticksParJour, rangDe } from './bataille.js?v=0.97.0';
-import { AZIMUTS, COTES } from './data/soleil.js?v=0.97.0';
-import { creerRendu, ZOOMS } from './rendu3d.js?v=0.97.0';
-import { placesCommandement } from './army.js?v=0.97.0';
-import { hash2 } from './lib/rng.js?v=0.97.0';
-import { reglerVerdure } from './apparence.js?v=0.97.0';
-import { maquetteAssaut } from './labo-assaut.js?v=0.97.0';
-import { calquePlaques } from './labo-plaques.js?v=0.97.0';
-import { calqueBarre } from './labo-barre-temps.js?v=0.97.0';
-import { maquetteProjections, maquetteVisee } from './labo-projections.js?v=0.97.0';
-import { calqueBarreVie } from './labo-barre-vie.js?v=0.97.0';
-import { calqueClic } from './labo-clic-regiment.js?v=0.97.0';
-import { maquetteBoutons, calqueOrdre, calqueObus } from './labo-satisfaction.js?v=0.97.0';
-import { calqueEtiquette, calqueToast, maquetteCartes } from './labo-hud-ux.js?v=0.97.0';
-import { maquetteCampagne } from './labo-campagne.js?v=0.97.0';
-import { maquetteCaisses, maquetteRates, maquetteSapes } from './labo-arcade.js?v=0.97.0';
-import { maquetteChars } from './labo-chars.js?v=0.97.0';
-import { maquetteGaz } from './labo-gaz.js?v=0.97.0';
-import { maquetteAvions } from './labo-avions.js?v=0.97.0';
-import { maquetteBatiment, maquetteCamp } from './labo-batiments.js?v=0.97.0';
-import { BATIMENTS } from './data/batiments.js?v=0.97.0';
-import { maquettePonts, PONTS, NOMS_PONTS } from './labo-ponts.js?v=0.97.0';
-import { PONTS_JEU } from './data/ponts.js?v=0.97.0';
-import { JOURNAL } from './labo-journal.js?v=0.97.0';
-import { loadVersion } from './lib/app-update.js?v=0.97.0';
-import { maquetteEffets, maquetteAmbiance, maquetteEspace } from './labo-son.js?v=0.97.0';
-import { calqueMoral } from './labo-moral.js?v=0.97.0';
-import { maquetteTranchees, NOTES_TRANCHEES, NOMS_TRANCHEES, NOTES_PRES, NOMS_PRES } from './labo-tranchees.js?v=0.97.0';
+import { afficherVersion } from './version-tag.js?v=0.98.0';
+import { mountLabo } from './lib/labo-shell.js?v=0.98.0';
+import { spriteCanvas, paletteToGPL, paletteToHex } from './lib/sprites.js?v=0.98.0';
+import { PALETTE, ROLES } from './palette.js?v=0.98.0';
+import { chargerContenu } from './design-store.js?v=0.98.0';
+import { tuile, ETAT } from './tuiles.js?v=0.98.0';
+import { creerTerrain, impact, hydroLignes, toucher } from './terrain.js?v=0.98.0';
+import { FORMES } from './cratere.js?v=0.98.0';
+import { CALIBRES } from './data/calibres.js?v=0.98.0';
+import { METEO } from './data/meteo.js?v=0.98.0';
+import { nouvelleBataille, avancer, ordonnerMarche, ordonnerBarrage, mourir, regarderAu, aube, horloge, ticksParJour, rangDe } from './bataille.js?v=0.98.0';
+import { AZIMUTS, COTES } from './data/soleil.js?v=0.98.0';
+import { creerRendu, ZOOMS } from './rendu3d.js?v=0.98.0';
+import { placesCommandement } from './army.js?v=0.98.0';
+import { hash2 } from './lib/rng.js?v=0.98.0';
+import { reglerVerdure } from './apparence.js?v=0.98.0';
+import { maquetteAssaut } from './labo-assaut.js?v=0.98.0';
+import { calquePlaques } from './labo-plaques.js?v=0.98.0';
+import { calqueBarre } from './labo-barre-temps.js?v=0.98.0';
+import { maquetteProjections, maquetteVisee } from './labo-projections.js?v=0.98.0';
+import { calqueBarreVie } from './labo-barre-vie.js?v=0.98.0';
+import { calqueClic } from './labo-clic-regiment.js?v=0.98.0';
+import { maquetteBoutons, calqueOrdre, calqueObus } from './labo-satisfaction.js?v=0.98.0';
+import { calqueEtiquette, calqueToast, maquetteCartes } from './labo-hud-ux.js?v=0.98.0';
+import { maquetteCampagne } from './labo-campagne.js?v=0.98.0';
+import { maquetteCaisses, maquetteRates, maquetteSapes } from './labo-arcade.js?v=0.98.0';
+import { maquetteChars } from './labo-chars.js?v=0.98.0';
+import { maquetteGaz } from './labo-gaz.js?v=0.98.0';
+import { maquetteAvions } from './labo-avions.js?v=0.98.0';
+import { fondations, boutons, fenetres } from './labo-design-system.js?v=0.98.0';
+import { gainTampon, gainCachets, gainFil, gainBordereau, victoireFanion, victoireTampon, victoireChevrons, victoireAube, ficheDeuxColonnes, ficheEtages, ficheRegistre, ficheDAbord } from './labo-recompenses.js?v=0.98.0';
+import { maquetteBatiment, maquetteCamp } from './labo-batiments.js?v=0.98.0';
+import { BATIMENTS } from './data/batiments.js?v=0.98.0';
+import { maquettePonts, PONTS, NOMS_PONTS } from './labo-ponts.js?v=0.98.0';
+import { PONTS_JEU } from './data/ponts.js?v=0.98.0';
+import { JOURNAL } from './labo-journal.js?v=0.98.0';
+import { loadVersion } from './lib/app-update.js?v=0.98.0';
+import { maquetteEffets, maquetteAmbiance, maquetteEspace } from './labo-son.js?v=0.98.0';
+import { calqueMoral } from './labo-moral.js?v=0.98.0';
+import { maquetteTranchees, NOTES_TRANCHEES, NOMS_TRANCHEES, NOTES_PRES, NOMS_PRES } from './labo-tranchees.js?v=0.98.0';
 
 document.documentElement.style.setProperty('--jeu-accent', ROLES.accent);
 const NOM = document.title.replace(/^Labo — /, ''); // le nom vient de la page (une apostrophe ne casse rien)
@@ -455,6 +457,39 @@ const GROUPES = [
       { title: 'Le compteur', status: 'ancienne', note: 'Ce que voyait le joueur avant la v0.9.2 : des hommes en boîtes, des obus, et « Tronçons : 12 · 11 » en coin. Rien ne dit qu\'un tronçon est disputé, ni que le dernier défenseur va tomber. Allez à « Contact » avec la frise.', render: s => maquetteAssaut(s, 'actuelle') },
       { title: 'Les fusées', note: 'Non retenu (v0.9.2). L\'avant-dernier acte : une fusée d\'appel quand la sortie commence, deux fusées quand il ne reste qu\'un homme (le tronçon va basculer), et celle d\'en face, d\'une autre couleur, quand il est pris. Un signal lisible de loin, au zoom 1.', render: s => maquetteAssaut(s, 'fusees') },
       { title: 'Tout ensemble', note: 'Non retenu (v0.9.2). Le feu, les marques du tronçon et les fusées. Pour juger si le tout reste lisible, ou s\'il faut en retirer.', render: s => maquetteAssaut(s, 'tout') },
+    ] },
+    { id: 'gain-point', title: 'Un point de dotation', variants: [
+      { title: 'Le tampon', status: 'a-trancher', depuis: '0.98.0', note: 'PROPOSITION (Jérôme, v0.98.0 : « animation lors du gain d\'un point de dotation »). Un « +n » à double filet se plaque sur le bouton du camp, comme le tampon des papiers ; le nombre prend son rebond et le bouton s\'éclaircit une fois. Le plus bref (1,5 s), le plus proche du ton du jeu. Sans mouvement : seul le nombre change.', render: s => gainTampon(s) },
+      { title: 'Les cachets', status: 'a-trancher', depuis: '0.98.0', note: 'PROPOSITION. Un petit cachet par point tombe du haut sur le bouton, l\'un après l\'autre, et le nombre monte à chaque chute : on compte les points qu\'on gagne, un par un.', render: s => gainCachets(s) },
+      { title: 'Le fil des points', status: 'a-trancher', depuis: '0.98.0', note: 'PROPOSITION. Le papier de l\'aube liste d\'où viennent les points (l\'aube, les lignes tenues, une ligne prise) ; un jeton part de chaque ligne vers le bouton, en arc. On lit la cause, pas seulement la somme.', render: s => gainFil(s) },
+      { title: 'Le bordereau', status: 'a-trancher', depuis: '0.98.0', note: 'PROPOSITION. Un bordereau se déplie sous le bouton, s\'écrit ligne à ligne, additionne ; la somme monte dans le bouton et le papier se replie. Le plus lisible, le plus long (3 s).', render: s => gainBordereau(s) },
+    ] },
+    { id: 'partie-gagnee', title: 'La partie gagnée', variants: [
+      { title: 'Le fanion hissé', status: 'a-trancher', depuis: '0.98.0', note: 'PROPOSITION (Jérôme, v0.98.0 : « animation lors du gain de la partie »). Un mât sur la crête, la toile bleue monte d\'un cran à la fois (pas à pas, comme un fanion de tranchée) puis flotte ; le papier du résultat se pose dessous.', render: s => victoireFanion(s) },
+      { title: 'Le tampon « tenu »', status: 'a-trancher', depuis: '0.98.0', note: 'PROPOSITION. Le rapport du dernier soir est posé sur le champ, un tampon « TENU » claque dessus, le papier tressaute une fois. Un geste de bureau, aucun éclat.', render: s => victoireTampon(s) },
+      { title: 'Les chevrons', status: 'a-trancher', depuis: '0.98.0', note: 'PROPOSITION. Le ciel s\'éclaircit en six crans pendant que trois chevrons bleus (ceux des cartes de régiment) s\'allument un à un ; le papier du résultat se lit ensuite.', render: s => victoireChevrons(s) },
+      { title: 'Le lever du jour', status: 'a-trancher', depuis: '0.98.0', note: 'PROPOSITION. Le soleil monte derrière la crête de la tranchée ; le titre s\'écrit lettre à lettre dans le ciel. Le plus calme, le plus long (4 s) : la catastrophe peinte avec calme.', render: s => victoireAube(s) },
+    ] },
+    { id: 'fiche-jour', title: 'La fiche de fin de journée', variants: [
+      { title: 'Deux colonnes', status: 'a-trancher', depuis: '0.98.0', note: 'PROPOSITION (Jérôme, v0.98.0 : « plus claire, toujours développée, centrée, qui donne le nom des régiments dont l\'ordre n\'a pas été modifié ; peut-être 2 colonnes »). À gauche, le jour (ce qui s\'est passé) ; à droite, la nuit (ce qu\'on décide), avec la liste des régiments qui gardent leur ordre d\'hier. Le bouton « À l\'aube » en bas.', render: s => ficheDeuxColonnes(s) },
+      { title: 'Trois étages', status: 'a-trancher', depuis: '0.98.0', note: 'PROPOSITION. Une colonne : le résultat en grands chiffres (morts des deux camps, tronçons), puis ce qui reste à décider (les ordres inchangés, la dotation, la réserve), puis le détail du jour en gris.', render: s => ficheEtages(s) },
+      { title: 'Le registre', status: 'a-trancher', depuis: '0.98.0', note: 'PROPOSITION. Une ligne par régiment : son rang, ses hommes, l\'ordre de la nuit ; les ordres inchangés sont en pointillé. Le résumé du jour tient sur une ligne en haut. Le plus dense : tout se voit, rien ne se choisit d\'abord.', render: s => ficheRegistre(s) },
+      { title: 'D\'abord ce qui reste à faire', status: 'a-trancher', depuis: '0.98.0', note: 'PROPOSITION. Un bandeau de terre porte la nuit, la dotation et la réserve ; en haut du papier, en grand : « 4 régiments n\'ont pas d\'ordre nouveau », leurs noms ; le coût du jour est dessous, en retrait. La hiérarchie la plus nette.', render: s => ficheDAbord(s) },
+    ] },
+  ] },
+  { id: 'design-system', title: 'Design system', topics: [
+    { id: 'ds-fondations', title: 'Fondations', variants: [
+      { title: 'Typographie', status: 'actuelle', depuis: '0.98.0', note: 'La police et les quatre tailles, lues dans le `:root` de css/style.css (docs/design-system.md).', render: s => { fondations(s, 'typo'); } },
+      { title: 'Espaces, hauteurs, traits', status: 'actuelle', depuis: '0.98.0', note: 'L\'échelle d\'espacement (multiples de 4), la cible d\'un bouton, le trait, l\'ombre d\'un cran.', render: s => { fondations(s, 'espaces'); } },
+      { title: 'Couleurs de l\'interface', status: 'actuelle', depuis: '0.98.0', note: 'Les neuf rôles `--jeu-*` et leur contraste sur la terre et sur l\'os.', render: s => { fondations(s, 'couleurs'); } },
+    ] },
+    { id: 'ds-boutons', title: 'Boutons', variants: [
+      { title: 'Les familles et leurs états', status: 'actuelle', depuis: '0.98.0', note: 'Repos, survol, focus clavier, choisi, refusé, refusé au survol : les vraies feuilles du jeu, états forcés par `.est-survol` et `.est-focus`.', render: s => { boutons(s); } },
+    ] },
+    { id: 'ds-fenetres', title: 'Fenêtres, bulles et dialogues', variants: [
+      { title: 'Les papiers du champ', status: 'actuelle', depuis: '0.98.0', note: 'La fenêtre d\'ordres d\'un régiment (avec son « ? ») et celle d\'un bâtiment.', render: s => { fenetres(s, 'papiers'); } },
+      { title: 'L\'infobulle', status: 'actuelle', depuis: '0.98.0', note: 'La bulle unique du jeu : `data-info`, trois niveaux de texte. Les `title` sont adoptés.', render: s => { fenetres(s, 'infobulle'); } },
+      { title: 'Les dialogues', status: 'actuelle', depuis: '0.98.0', note: 'La boîte de dialogue : pour décider seulement.', render: s => { fenetres(s, 'dialogue'); } },
     ] },
   ] },
   { id: 'terrain', title: 'Terrain', topics: [

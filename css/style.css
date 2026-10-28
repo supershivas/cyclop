@@ -240,7 +240,7 @@
   border: 0; border-bottom: 4px solid var(--jeu-accent);
   font-size: var(--texte-moyen);
 }
-.bouton:focus-visible, .icone:focus-visible, .batterie:focus-visible { outline: 2px solid var(--jeu-nous); outline-offset: 2px; }
+.bouton.est-focus, .bouton:focus-visible, .icone:focus-visible, .batterie:focus-visible { outline: 2px solid var(--jeu-nous); outline-offset: 2px; }
 @media (hover: hover) {
   .bouton:hover { background: var(--jeu-accent); color: var(--jeu-encre); }
   .batterie:hover { border-color: var(--jeu-encre); }
@@ -376,7 +376,10 @@ dialog form { margin-top: calc(var(--pas) * 2); }
 .reg-ouvert { position: absolute; left: 0; top: 0; width: 44ch; max-width: 90vw; pointer-events: auto; display: grid; gap: var(--e1); transform-origin: 50% 100%; }
 .reg-ouvert[hidden] { display: none; }
 .reg-ouvert .tete { display: flex; justify-content: space-between; gap: var(--pas); border-bottom: 1px solid var(--jeu-accent); padding-bottom: var(--e0); font-size: var(--texte-moyen); }
-.reg-ouvert .tete b { font-weight: normal; }
+.reg-ouvert .tete b { font-weight: normal; margin-right: auto; }
+/* Le petit « ? » de la fenêtre d'ordres (Jérôme, v0.98.0 : « la fiche s'obtient par un petit bouton ? dans l'en-tête, pas un gros bouton ») : un carré de 20 px, dans l'échelle (--e4 + --e1) */
+.reg-ouvert .tete .aide { flex: none; min-width: 0; min-height: 0; width: calc(var(--e4) + var(--e1)); height: calc(var(--e4) + var(--e1)); padding: 0; display: grid; place-items: center; font: inherit; font-size: var(--texte-petit); line-height: 1; color: var(--jeu-fond); background: none; border: 1px solid var(--jeu-accent); cursor: pointer; }
+.reg-ouvert .tete .aide:focus-visible { outline: 2px solid var(--jeu-nous); outline-offset: 2px; }
 .reg-ouvert .tete span, .reg-ouvert .compte, .reg-ouvert .ordre { color: var(--jeu-accent); font-size: var(--texte-petit); }
 .reg-ouvert .tampon { justify-self: start; padding: 0 var(--pas); border: 3px double var(--jeu-encre); color: var(--jeu-encre); transform: rotate(-4deg); letter-spacing: .12em; text-transform: uppercase; font-size: var(--texte-petit); }
 /* Des boutons empilés ont tous la même largeur (Jérôme, v0.38.3) : une grille de colonnes égales (deux ; quatre pour les formes, qui tiennent sur une ligne),
@@ -385,7 +388,13 @@ dialog form { margin-top: calc(var(--pas) * 2); }
 .reg-ouvert .actions.formes { --cols: 4; }
 .reg-ouvert .actions button { min-width: 0; line-height: 1.2; overflow-wrap: anywhere; height: 32px; padding: 0 var(--pas); font: inherit; font-size: var(--texte-petit); color: var(--jeu-fond); background: none; border: 1px solid var(--jeu-accent); cursor: pointer; }
 .reg-ouvert .actions button.actif { background: var(--jeu-fond); color: var(--jeu-encre); border-color: var(--jeu-fond); }
-@media (hover: hover) { .reg-carte:hover:not(.choisi) { --pap: var(--jeu-accent); } .reg-ouvert .actions button:hover { background: var(--jeu-accent); color: var(--jeu-fond); } }
+/* Le survol d'un bouton de papier (Jérôme, v0.98.0 : « revoir la lisibilité des boutons ») : la brume sous l'encre (7 : 1), jamais la glaise sous la glaise ; un bouton refusé (glaise en pointillé) devient plein et encré, sans fond : le texte ne disparaît jamais */
+@media (hover: hover) { .reg-carte:hover:not(.choisi) { --pap: var(--jeu-accent); } }
+/* (`.est-survol` : le même état forcé, pour que le labo le montre sans pointeur ; le jeu n'écrit jamais cette classe) */
+.reg-ouvert .actions button:is(:hover, .est-survol), .reg-ouvert .tete .aide:is(:hover, .est-survol) { background: var(--jeu-brume); color: var(--jeu-fond); border-color: var(--jeu-fond); }
+.reg-ouvert .actions button.refus:is(:hover, .est-survol) { background: none; border-style: solid; color: var(--jeu-fond); }
+.reg-ouvert .actions button.est-focus, .reg-ouvert .tete .aide.est-focus { outline: 2px solid var(--jeu-nous); outline-offset: 2px; }
+.reg-ouvert .actions button:focus-visible { outline: 2px solid var(--jeu-nous); outline-offset: 2px; }
 
 /* La visée d'un ordre (Jérôme, v0.21.0) : une ligne du centre de chaque régiment choisi au curseur, terminée par une croix ; glaise quand l'ordre
    ne partirait pas (la raison est dite au clic). Sur le terrain, la surbrillance montre ce que l'ordre occuperait. */
@@ -635,5 +644,7 @@ h2 { font-weight: normal; letter-spacing: var(--titre-lettres); }
 .camp-btn { width: 312px; min-height: var(--jeu-cible); padding: 0 var(--pas); font: inherit; font-size: var(--texte); color: var(--jeu-fond); background: var(--jeu-encre); border: 0; box-shadow: var(--ombre-papier); cursor: pointer; text-align: left; }
 .camp-btn[hidden] { display: none; }
 @media (hover: hover) { .camp-btn:hover { background: var(--jeu-accent); } }
+.bouton.est-survol { background: var(--jeu-accent); color: var(--jeu-encre); }
+.camp-btn.est-survol { background: var(--jeu-accent); }
 .batteries[hidden] { display: none; }
 #batiment { z-index: 5; width: 50ch; }      /* au-dessus de la carte et des papiers du haut : la fenêtre d'un bâtiment se pose sur le champ, où qu'il soit */

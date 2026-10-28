@@ -2,9 +2,9 @@
 // quatre lignes de chaque camp (en face au nord, en haut), chaque case en tronçons de 25 m à la couleur de celui qui les
 // tient. Une lettre choisit les régiments du secteur ; une case envoie les régiments choisis dans cette tranchée ; les
 // régiments y sont des cercles numérotés, à leur place. Le dessin seulement : les actions (choisir, ordonner) viennent de main.js.
-import { NOUS, EUX, nombreZones, lettreZone, zone, largeurZone, etendueZones, tronconsDeLigne, forcesTroncons, codeLigne } from '../bataille.js?v=0.97.0';
-import { ligneY } from '../tranchees.js?v=0.97.0';
-import { numeroDe as numeroDeB } from './lecture.js?v=0.97.0';
+import { NOUS, EUX, nombreZones, lettreZone, zone, largeurZone, etendueZones, tronconsDeLigne, forcesTroncons, codeLigne } from '../bataille.js?v=0.98.0';
+import { ligneY } from '../tranchees.js?v=0.98.0';
+import { numeroDe as numeroDeB } from './lecture.js?v=0.98.0';
 
 // `bataille()` : la bataille en cours ; `choisis()` : les régiments choisis (ids) ; `surSecteur`, `surCase`, `surRonde` : les clics
 // `moi()` : le camp qu'on joue (à deux sur le réseau, l'invité est en face : sa carte est tournée d'un demi-tour, ses lignes en bas, A à D de droite à gauche ; v0.30.0)
@@ -103,7 +103,7 @@ export function creerCarte({ $, bataille, choisis, surSecteur, surCase, surRonde
       el.style.top = `${top}px`;
       el.classList.toggle('choisi', choisis().has(r.id));
       // un « ! » rouge sur le cercle d'un régiment en déroute (v0.77.1, Jérôme) ; sa place vue en `titre`
-      if (el.alerte) { el.alerte.hidden = !r.deroute; el.title = `${el.title.split(' : ')[0]}${r.deroute ? ' : en déroute' : ''}`; }
+      if (el.alerte) { el.alerte.hidden = !r.deroute; el.title = `${(el.title || el.dataset.info || '').split(' : ')[0]}${r.deroute ? ' : en déroute' : ''}`; }
       // son ordre : une ligne pointillée de son cercle à sa destination, tant qu'il n'y est pas (les nôtres seulement : on ne lit pas les ordres d'en face)
       if (r.camp === M && r.ordre && Math.hypot(r.ordre.x - c.x / c.n, r.ordre.y - c.y / c.n) > 10) {
         const fd0 = Math.max(0, Math.min(1, (r.ordre.x - Z.x0) / L)), fd = tourne ? 1 - fd0 : fd0, yd = Math.round(carteY(tourne ? Z.y0 + Z.y1 - r.ordre.y : r.ordre.y));

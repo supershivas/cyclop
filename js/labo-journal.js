@@ -2,6 +2,11 @@
 // Une entrée par version qui touche au labo, la plus récente en haut. `ref` : « sujet-Lettre » (la lettre est celle de la variante,
 // A étant l'actuelle). À chaque changement du labo : une entrée ici, avec `depuis` sur les variantes ajoutées ou changées (labo.js).
 export const JOURNAL = [
+  { version: '0.98.0', date: '2026-10-28', items: [
+    { genre: 'nouveau', texte: 'L\'onglet « Design system » : les fondations (typographie, espaces, couleurs de l\'interface), les boutons dans tous leurs états, les papiers, l\'infobulle et les dialogues, sur les vraies feuilles du jeu', ref: 'ds-fondations-A' },
+    { genre: 'nouveau', texte: 'Quatre animations du gain d\'un point de dotation, quatre de la partie gagnée', ref: 'gain-point-A' },
+    { genre: 'nouveau', texte: 'Quatre fiches de fin de journée, plus claires : toujours développées, centrées, avec les régiments qui gardent leur ordre', ref: 'fiche-jour-A' },
+  ] },
   { version: '0.95.0', date: '2026-10-27', items: [
     { genre: 'mis-a-jour', texte: 'Les tranchées de près : « joints, grain et usure » est retenue et passe en jeu (A) ; les autres textures sont « anciennes » ; tous les aperçus des tranchées s\'ouvrent en plan serré, avec un bouton « Obus sur le parapet »', ref: 'tranchees-pres-A' },
   ] },

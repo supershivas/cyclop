@@ -59,7 +59,8 @@ await jeu('() => __jeu.avancer(60, false)');
 await etape('apres-ordre');
 await jeu('() => { __jeu.bataille().etat.camp.batiments.artillerie.niveau = 3; for (const c of [75, 155, 220]) __jeu.barrage(String(c), 150 + c / 3, 100); __jeu.avancer(300, false); }');
 await etape('apres-barrages');
-await page.evaluate(() => document.querySelector('.batterie[data-cal="char"]').click());           // le camp : le bouton Char, fermé, ouvre la fenêtre du parc des chars (à bâtir)
+await jeu('() => { __jeu.bataille().etat.camp.dotation = 5; }');                                    // (la dotation est à 0 au départ depuis la v0.98.0)
+await page.evaluate(() => document.querySelector('.batterie[data-cal="char"]').dispatchEvent(new MouseEvent('contextmenu', { bubbles: true, cancelable: true })));           // le camp : le clic droit sur le bouton Char ouvre la fenêtre du parc des chars (à améliorer)
 await etape('camp-chars');
 await page.evaluate(() => document.querySelector('#batiment .actions:last-child button').click());      // (la fenêtre suit le bâtiment, que la caméra respirante bouge : pas de clic de souris à viser)                          // 3 points : le chantier est payé
 await etape('camp-chantier');

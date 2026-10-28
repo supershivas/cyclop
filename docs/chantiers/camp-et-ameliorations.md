@@ -1,5 +1,7 @@
 # Le camp, ses bâtiments et les améliorations (proposition, v0.85.0)
 
+**Changement de principe (Jérôme, v0.98.0)** : « les trois artilleries sont disponibles dès le début (ainsi que l'aviation et les chars) ; les points de dotation se gagnent (0 au début) ; les niveaux des unités spéciales s'améliorent avec les points ». Les niveaux n'**ouvrent** plus les ordres : tous les bâtiments démarrent au niveau 1 et les niveaux 2 et 3 les **améliorent** (les choix de palier). Ce qui est dit plus bas des « ordres qui s'ouvrent au niveau » est d'avant la v0.98.0. Détail : `docs/domaines/bataille.md`.
+
 **Statut** : décisions de principe prises (voir la fin) ; lots 0 (labo), 1 (règle), 2 (le camp à l'écran) 3 (les choix et les effectifs), 4 (l'équipement) et 5 (en face et la campagne) et 6 (le jeu à deux) faits : tout est construit ; reste à peser les nombres (dotation, facteurs) sur des batailles entières. Rien n'est dans le jeu. Les maquettes sont au labo (groupe « Camp », sujet « Le camp et ses bâtiments », 7 variantes `a-trancher`), les nombres dans `js/data/batiments.js` (des propositions, à mesurer). Source : la demande de Jérôme du 27 octobre (v0.83.1).
 
 ## Ce qui est demandé, et comment je le lis

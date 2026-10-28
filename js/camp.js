@@ -1,9 +1,9 @@
 // Le camp : la règle, sans écran (Jérôme, v0.86.0 : lot 1 de `docs/chantiers/camp-et-ameliorations.md`). Logique pure : aucun DOM, aucune horloge, aucun hasard.
 // L'état est `etat.camp` : la dotation de l'état-major, le niveau de chaque bâtiment (et son chantier d'une nuit), les lignes d'en face déjà comptées.
 // Lot 2 : les niveaux ouvrent les ordres (`refusOrdre`). Lot 3 (v0.88.0) : chaque niveau et chaque choix de palier change un chiffre (`modif`) ou un effectif (`effectifsDe`).
-import { hash2 } from './lib/rng.js?v=0.97.0';
-import { BATIMENTS, DOTATION, CAMP_PLAN, CAMP_IA, PIEDS, EQUIPEMENT, EQUIPEMENTS } from './data/batiments.js?v=0.97.0';
-import { MITRAILLAGE } from './data/mitraillage.js?v=0.97.0';
+import { hash2 } from './lib/rng.js?v=0.98.0';
+import { BATIMENTS, DOTATION, CAMP_PLAN, CAMP_IA, PIEDS, EQUIPEMENT, EQUIPEMENTS } from './data/batiments.js?v=0.98.0';
+import { MITRAILLAGE } from './data/mitraillage.js?v=0.98.0';
 
 const NOUS = 0, EUX = 1;
 /* L'état du camp de `camp` : `etat.camp` (le nôtre), `etat.campEux` (celui d'en face : v0.92.0) */
@@ -11,12 +11,12 @@ export const campDe = (etat, camp = NOUS) => camp === NOUS ? etat.camp : etat.ca
 export const NIVEAU_MAX = 3;
 
 // Le niveau qui ouvre chaque ordre de batterie (`ordonnerBarrage`) : [bâtiment, niveau]
-const OUVERTURE = { '75': ['artillerie', 1], '155': ['artillerie', 2], '220': ['artillerie', 3], avion: ['aerodrome', 1], char: ['chars', 1], genie: ['sapeurs', 1] };
+const OUVERTURE = { '75': ['artillerie', 1], '155': ['artillerie', 1], '220': ['artillerie', 1], avion: ['aerodrome', 1], char: ['chars', 1], genie: ['sapeurs', 1] };
 
 /* Le bâtiment et le niveau qui ouvrent un ordre de batterie, ou null */
 export const ouverture = cal => OUVERTURE[cal] ?? null;
 
-/* L'état du camp au premier matin : l'artillerie et la caserne au niveau 1 (donnés), le reste à bâtir */
+/* L'état du camp au premier matin : tous les bâtiments au niveau 1 (donnés : les trois artilleries, l'avion, le char, le génie et la relève sont prêts, v0.98.0) ; les niveaux suivants s'achètent avec la dotation (0 au départ) */
 export function campDeDepart({ bride = false, depart = null, mult = 1 } = {}) {
   const batiments = {};
   // `depart` : les niveaux et les choix d'une bataille précédente de la campagne ({ clé: { niveau, choix } }) ; ils ne descendent jamais sous ceux du départ
@@ -24,7 +24,7 @@ export function campDeDepart({ bride = false, depart = null, mult = 1 } = {}) {
     const d = depart?.[cle], base = B.niveaux[0].depart ? 1 : 0;
     batiments[cle] = { niveau: Math.max(base, d?.niveau ?? 0), choix: d?.niveau > base ? [...(d.choix ?? [])] : [], chantier: null };
   }
-  // `bride` : les niveaux ouvrent les ordres (les 155 et 220, l'avion, le char, le génie) : vrai dans la partie du joueur ; faux pour les tests, le labo et le jeu à deux, où rien n'est bridé
+  // `bride` : les niveaux améliorent les unités (v0.98.0 ; avant, ils ouvraient les ordres : les 155 et 220, l'avion, le char, le génie) : vrai dans la partie du joueur ; faux pour les tests, le labo et le jeu à deux, où rien n'est bridé
   return { dotation: DOTATION.depart, batiments, lignes: [], bride, mult };      // `mult` : le facteur de la dotation (la difficulté, pour en face)
 }
 
@@ -172,15 +172,14 @@ export function rechargeDe(etat, camp, cal) {
   if (cal === 'genie') return 1;
   return modif(etat, camp, 'artillerie.recharge') * (cal === '220' ? modif(etat, camp, 'artillerie.recharge220') : 1);
 }
-const effectifDe = (cle, niveau, champ) => BATIMENTS[cle].niveaux[niveau - 1]?.[champ];
 /* Les effectifs du départ de la partie bridée : ceux des bâtiments de départ (2 régiments en réserve à la caserne), puis ce que les niveaux déjà atteints (une campagne les reporte : `campDeDepart({ depart })`) ajoutent ; les avions et les sections du génie viennent avec leur bâtiment */
 export function appliquerDepart(etat, camp = NOUS) {
-  etat.reserves[camp] = effectifDe('caserne', 1, 'reserves');
+  etat.reserves[camp] = 0;
   etat.sapeurs[camp] = 0;
   etat.avions[camp] = [];
   const K = campDe(etat, camp);
   for (const [cle, c] of Object.entries(K.batiments)) {
-    for (let n = (BATIMENTS[cle].niveaux[0].depart ? 2 : 1); n <= c.niveau; n++) monter(etat, cle, n, n >= 2 ? c.choix[n - 2] ?? null : null, camp);
+    for (let n = 1; n <= c.niveau; n++) monter(etat, cle, n, n >= 2 ? c.choix[n - 2] ?? null : null, camp);
   }
 }
 /* Un bâtiment atteint `niveau` (avec le choix `choix` du palier) : ses effectifs montent d'autant, sauf ce que la partie a déjà perdu (les sections parties au travail, les avions abattus restent perdus) */

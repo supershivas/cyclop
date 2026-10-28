@@ -1,10 +1,11 @@
 // Ce que l'état des tronçons montre sur le terrain : les fanions (à la couleur de celui qui tient le tronçon, déchirés quand l'autre
 // camp y est entré), le clignotement d'un ordre et la surbrillance de la visée, les ouvrages des tranchées (traverses, sacs de terre,
 // fil de fer, bois). Le dessin seulement : tout se lit de l'état, rien n'en est sauvegardé.
-import { PALETTE } from '../palette.js?v=0.97.0';
-import { ligneY, demiLargeur } from '../tranchees.js?v=0.97.0';
-import { TOITS } from '../data/nids.js?v=0.97.0';
-import { primitives, ouvrageTroncon, niveauSelonZoom, couchesDe } from './tranchee-modeles.js?v=0.97.0';
+import { PALETTE } from '../palette.js?v=0.98.0';
+import { ligneY, demiLargeur } from '../tranchees.js?v=0.98.0';
+import { TOITS } from '../data/nids.js?v=0.98.0';
+import { filCoupe } from '../fil.js?v=0.98.0';
+import { primitives, ouvrageTroncon, niveauSelonZoom, couchesDe } from './tranchee-modeles.js?v=0.98.0';
 
 // `THREE`, `scene`, `col` (une couleur de la palette), `surface(x, z)` (la hauteur du sol), `projeter()` (le centre de la vue et les pixels par mètre),
 // `vue`, `zooms` viennent de creerRendu ; `bataille()`, `tAnim()` (le temps du dessin), `vide()` (rien n'est dessiné) et `survolTroncons()`
@@ -260,7 +261,7 @@ export function creerTroncons({ THREE, scene, col, surface, projeter, vue, zooms
       const pris = et.troncons[t] !== L.camp, f = L.face;
       Lcourante = L;
       if (niveau) {      // les niveaux de détail (v0.84.0) : tout le tronçon vient de tranchee-modeles.js ; le toit, lui, protège du tir : il reste celui du jeu
-        gTr.pris = pris; gTr.coupe = pris || !!B.disputes[t];
+        gTr.pris = pris; gTr.coupe = pris || !!B.disputes[t] || filCoupe(B.etat, t);
         ouvrageTroncon(gTr, tr, L, niveau);
         if (p >= 4 && tr.toit) toit(tr, L);
         return;
@@ -277,7 +278,7 @@ export function creerTroncons({ THREE, scene, col, surface, projeter, vue, zooms
       else for (let x = tr.x0; x < tr.x1; x += 2.5) { const xx = x + 1.2, z = ligneY(L, xx) + cote, h = surface(xx, z); boite(x, x + 2.3, h, h + 0.35, z - 0.25, z + 0.25, cSacH, cSacB); }
       // le fil de fer : devant les premières lignes ; coupé, il ne reste que des bouts, à terre
       if (L.rang === 0) {
-        const coupe = pris || B.disputes[t];
+        const coupe = pris || B.disputes[t] || filCoupe(B.etat, t);
         if (p >= 4) barbeles(tr, L, coupe);
         else {
           const dz = f * (L.amp + 7);

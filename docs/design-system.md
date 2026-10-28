@@ -26,3 +26,5 @@ Règles :
 - Les hauteurs de mise en page qui dépendent d'une ligne de texte (le drapeau de la frise) se calculent de l'échelle, ou se disent en commentaire.
 
 Ce qui a été arrondi à l'échelle (v0.31.3, `css/style.css`) : textes de 10, 11, 13 → 12 ; 15 → 16 ; 18 → 20 (dialogues) ou 16 (papiers) ; espacements de 3, 5 → 4 ; 6 → 8 ; 9 → 8 ; 10 → 12 ; 14 → 16. Les papiers prennent 2 à 4 px de plus.
+
+**Les états d'un bouton de papier (Jérôme, v0.98.0)** : repos (contour glaise), survol (brume sous l'encre, 7 : 1), focus clavier (anneau bleu horizon), choisi (encre sous l'os), refusé (glaise en pointillé), refusé au survol (plein, encré, sans fond : le texte ne disparaît jamais). Une couleur de texte n'est jamais celle du fond qu'elle a au survol. **Les infobulles** : une seule, `data-info` (# titre, ## sous-titre, corps, **gras**) ; un `title` du navigateur est adopté, jamais laissé. Tout cela se voit au labo, onglet « Design system » (les vraies feuilles du jeu).

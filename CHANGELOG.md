@@ -1,5 +1,10 @@
 # Journal des versions
 
+## 0.98.0 — 2026-10-28
+- Les trois artilleries (75, 155, 220), l'aviation, les chars et le génie sont prêts dès le premier matin ; la dotation part de 0 et se gagne à l'aube, et les niveaux des bâtiments améliorent les unités au lieu d'ouvrir leurs ordres (en face aussi)
+- Les barbelés se coupent sous les obus ; la fiche d'un régiment s'ouvre par un petit « ? » dans l'en-tête de ses ordres ; un bouton refusé reste lisible au survol
+- Une seule infobulle pour tout l'écran (la météo n'est plus double) ; au labo : l'onglet Design system, quatre animations du gain d'un point et de la partie gagnée, quatre fiches de fin de journée
+
 ## 0.97.0 — 2026-10-28
 - Les six ordres (75, 155, 220, avion, char, génie) ont leurs boutons permanents en bas à droite, avec touche et jauge ; un clic droit ouvre le bâtiment pour l'améliorer ; les pastilles du camp et la dotation en bandeau sont remplacées par un seul bouton « Le camp · N pts » dessous
 - Le texte météo ne sort plus de sa boîte : le vent (en km/h, avec son cap) passe dans l'infobulle de la frise

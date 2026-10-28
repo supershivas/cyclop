@@ -2,8 +2,8 @@
 // Sur le champ : au-dessus de chaque char à nous, une petite étiquette (sa barre de canon qui se remplit, puis PRÊT ; ses points de vie) ; de lui à sa cible, une ligne pointillée et une croix
 // (de la cible qu'on lui a donnée : trait plein ; du carré d'ennemis qu'il a choisi : pointillé). Un clic sur l'étiquette le choisit. La fiche (`#char-fiche`) du char choisi : ses barres,
 // « Marcher » / « Cible » (le prochain clic sur le sol), « Arrêt », « Tir libre », « Fermer ». Le dessin et les boutons seulement : les ordres partent par `surOrdre(ordre)` (main.js).
-import { CHARS } from '../data/chars.js?v=0.97.0';
-import { NOUS } from '../bataille.js?v=0.97.0';
+import { CHARS } from '../data/chars.js?v=0.98.0';
+import { NOUS } from '../bataille.js?v=0.98.0';
 
 const NS = 'http://www.w3.org/2000/svg';
 export function creerCharsHud({ $, bataille, moi = () => NOUS, versEcran, hauteurSol, choisir, surBouton }) {

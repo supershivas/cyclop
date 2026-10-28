@@ -8,10 +8,10 @@ const petite = (graine = 5) => nouvelleBataille(graine, R, { soldats: 200, jours
 const nuit = B => { while (B.etat.phase === 'jour') avancer(B); return aube(B); };
 
 group('camp');
-test('le premier matin : 3 points, l\'artillerie et la caserne au niveau 1, le reste à bâtir', () => {
+test('le premier matin : 0 point, tous les bâtiments au niveau 1 (v0.98.0)', () => {
   const B = petite(), c = B.etat.camp;
-  assert.equal(c.dotation, DOTATION.depart);
-  assert.deepEqual(Object.fromEntries(Object.keys(BATIMENTS).map(k => [k, niveauDe(B.etat, k)])), { artillerie: 1, aerodrome: 0, chars: 0, sapeurs: 0, caserne: 1 });
+  assert.equal(c.dotation, 0); assert.equal(DOTATION.depart, 0);
+  assert.deepEqual(Object.fromEntries(Object.keys(BATIMENTS).map(k => [k, niveauDe(B.etat, k)])), { artillerie: 1, aerodrome: 1, chars: 1, sapeurs: 1, caserne: 1 });
 });
 test('un ordre impossible se refuse à voix haute', () => {
   const B = petite(), e = B.etat;
@@ -26,14 +26,15 @@ test('un ordre impossible se refuse à voix haute', () => {
 });
 test('le chantier : payé tout de suite, fini à l\'aube, refusé pendant qu\'il dure', () => {
   const B = petite(), e = B.etat;
-  assert.deepEqual(ordonnerChantier(e, 'chars'), { ok: true, vers: 1, nuits: 1 });
-  assert.equal(e.camp.dotation, DOTATION.depart - coutDe('chars', 1));
-  assert.equal(niveauDe(e, 'chars'), 0);
-  assert.match(refusCamp(e, 'chars'), /en chantier/);
-  assert.ok(ordonnerChantier(e, 'chars').refus, 'un second ordre est refusé');
-  const dot = nuit(B).dotation;
-  assert.deepEqual(dot.finis, [['chars', 1]]);
+  e.camp.dotation = 5;
+  assert.deepEqual(ordonnerChantier(e, 'chars', 0), { ok: true, vers: 2, nuits: 1 });
+  assert.equal(e.camp.dotation, 5 - coutDe('chars', 2));
   assert.equal(niveauDe(e, 'chars'), 1);
+  assert.match(refusCamp(e, 'chars', 0), /en chantier/);
+  assert.ok(ordonnerChantier(e, 'chars', 0).refus, 'un second ordre est refusé');
+  const dot = nuit(B).dotation;
+  assert.deepEqual(dot.finis, [['chars', 2]]);
+  assert.equal(niveauDe(e, 'chars'), 2);
   assert.equal(e.camp.batiments.chars.chantier, null);
 });
 test('le niveau 3 prend deux nuits, une seule avec « Équipe de nuit »', () => {
@@ -64,13 +65,13 @@ test('l\'aube verse la dotation et la bataille en rend le détail', () => {
 });
 test('relue au milieu d\'un chantier, la partie garde son camp, et relue après une nuit elle est la même partie', () => {
   const A = petite(7);
-  ordonnerChantier(A.etat, 'aerodrome');
+  A.etat.camp.dotation = 5; ordonnerChantier(A.etat, 'aerodrome', 0);
   const B = restaurer(JSON.parse(JSON.stringify(photo(A))), R);
   assert.deepEqual(B.etat.camp, A.etat.camp);
-  assert.equal(B.etat.camp.batiments.aerodrome.chantier.vers, 1);
+  assert.equal(B.etat.camp.batiments.aerodrome.chantier.vers, 2);
   for (const X of [A, B]) nuit(X);
   assert.deepEqual(B.etat.camp, A.etat.camp);
-  assert.equal(niveauDe(B.etat, 'aerodrome'), 1);
+  assert.equal(niveauDe(B.etat, 'aerodrome'), 2);
   for (let k = 0; k < 300; k++) { avancer(A); avancer(B); }
   assert.equal(JSON.stringify(photo(B)), JSON.stringify(photo(A)));
 });
@@ -81,26 +82,15 @@ test('le niveau ne bride encore aucun ordre (lot 1) : un barrage de 220 part au 
 });
 test('le camp de départ est neuf à chaque bataille (pas d\'état partagé)', () => {
   const a = campDeDepart(); a.batiments.chars.niveau = 2; a.lignes.push(0);
-  assert.equal(campDeDepart().batiments.chars.niveau, 0); assert.deepEqual(campDeDepart().lignes, []);
+  assert.equal(campDeDepart().batiments.chars.niveau, 1); assert.deepEqual(campDeDepart().lignes, []);
 });
 
 const bridee = (graine = 5) => nouvelleBataille(graine, R, { soldats: 200, jours: 6, camp: true });
-test('partie bridée : un barrage de 155 est refusé tant que l\'artillerie est au niveau 1, et s\'ouvre au niveau 2', () => {
+test('partie bridée : les trois calibres, l\'avion, le char et le génie sont prêts dès le premier matin (v0.98.0 ; les niveaux les améliorent)', () => {
   const B = bridee();
   assert.ok(B.etat.camp.bride);
-  assert.equal(ordonnerBarrage(B, '75', 300, 450).ok, true);
-  assert.match(ordonnerBarrage(B, '155', 300, 450).refus, /niveau 2/);
-  assert.match(ordonnerBarrage(B, '220', 300, 450).refus, /niveau 3/);
-  B.etat.camp.batiments.artillerie.niveau = 2;
-  assert.equal(ordonnerBarrage(B, '155', 300, 450).ok, true);
-});
-test('partie bridée : l\'avion, le char et le génie demandent leur bâtiment, dit à voix haute', () => {
-  const B = bridee();
-  for (const [cal, nom] of [['avion', /aérodrome n'est pas encore bâti/], ['char', /parc des chars n'est pas encore bâti/], ['genie', /maison des sapeurs n'est pas encore bâti/]]) assert.match(ordonnerBarrage(B, cal, 300, 450).refus, nom);
-  ordonnerChantier(B.etat, 'chars');
-  assert.match(refusOrdre(B.etat, 0, 'char'), /en chantier/);
-  nuit(B);
-  assert.equal(refusOrdre(B.etat, 0, 'char'), null);
+  for (const cal of ['75', '155', '220', 'avion', 'char', 'genie']) assert.equal(refusOrdre(B.etat, 0, cal), null, cal);
+  for (const cal of ['75', '155', '220']) assert.equal(ordonnerBarrage(B, cal, 300, 450).ok, true, `barrage de ${cal}`);
 });
 test('partie bridée : refaire un nid demande les sapeurs au niveau 2 ; hors partie bridée, rien n\'est bridé', () => {
   const B = bridee();
@@ -108,7 +98,7 @@ test('partie bridée : refaire un nid demande les sapeurs au niveau 2 ; hors par
   assert.match(refusNid(B.etat, 0), /niveau 2/);
   B.etat.camp.batiments.sapeurs.niveau = 2; assert.equal(refusNid(B.etat, 0), null);
   assert.equal(refusOrdre(petite().etat, 1, 'char'), null, 'hors partie bridée, en face non plus');
-  assert.match(refusOrdre(B.etat, 1, 'char'), /pas encore bâti/, 'dans la partie bridée, en face est bridée aussi (v0.92.0)');
+  assert.equal(refusOrdre(B.etat, 1, 'char'), null, 'en face aussi : tout est prêt au départ');
 });
 test('par défaut (tests, labo, jeu à deux) rien n\'est bridé', () => {
   assert.equal(petite().etat.camp.bride, false);
@@ -128,31 +118,31 @@ test('le camp est dans la marge arrière, derrière notre 4e ligne, sans que deu
   assert.ok(!emprisesCamp(e).some(b => b.cle === 'chars'), 'un bâtiment à bâtir n\'a pas d\'emprise');
 });
 test('une partie bridée relue est la même partie, camp compris', () => {
-  const A = bridee(8); ordonnerChantier(A.etat, 'sapeurs'); nuit(A);
+  const A = bridee(8); A.etat.camp.dotation = 5; ordonnerChantier(A.etat, 'sapeurs', 0); nuit(A);
   const B = restaurer(JSON.parse(JSON.stringify(photo(A))), R);
   assert.deepEqual(B.etat.camp, A.etat.camp); assert.ok(B.etat.camp.bride);
-  assert.match(ordonnerBarrage(B, '155', 300, 450).refus, /niveau 2/);
+  assert.equal(niveauDe(B.etat, 'sapeurs'), 2); assert.equal(B.etat.sapeurs[0], 4);
 });
 
 // ─── Lot 3 : ce que les niveaux et les choix changent ───
 const niveauEtChoix = (B, cle, niveau, choix = []) => { B.etat.camp.batiments[cle] = { niveau, choix, chantier: null }; };
-test('le départ de la partie bridée : 2 régiments en réserve, pas de section de génie ni d\'avion avant leurs bâtiments', () => {
+test('le départ de la partie bridée : 2 régiments en réserve, 2 sections de génie et 2 avions (le niveau 1 de chaque bâtiment)', () => {
   const B = bridee();
-  assert.deepEqual(B.etat.reserves, [2, 2]); assert.equal(B.etat.sapeurs[0], 0); assert.deepEqual(B.etat.avions[0], []);
-  assert.deepEqual(B.etat.avions[1], [], 'en face part du même camp (v0.92.0)');
+  assert.deepEqual(B.etat.reserves, [2, 2]); assert.equal(B.etat.sapeurs[0], 2); assert.deepEqual(B.etat.avions[0], [100, 100]);
+  assert.deepEqual(B.etat.avions[1], [100, 100], 'en face part du même camp (v0.92.0)');
   assert.deepEqual(petite().etat.reserves, [4, 4], 'hors partie bridée, rien ne change');
 });
-test('bâtir fait venir les effectifs : l\'aérodrome 2 avions, puis 3 ; les sapeurs 2 sections, puis 4 ; la caserne 4 puis 6 régiments', () => {
+test('améliorer fait venir les effectifs : l\'aérodrome 3 avions, puis 4 ; les sapeurs 4 sections ; la caserne 4 puis 6 régiments', () => {
   const B = bridee(), e = B.etat; e.camp.dotation = 30;
-  ordonnerChantier(e, 'aerodrome'); ordonnerChantier(e, 'sapeurs'); ordonnerChantier(e, 'caserne', 0); nuit(B);
-  assert.equal(e.camp.batiments.aerodrome.niveau, 1); assert.equal(e.avions[0].length, 2); assert.deepEqual(e.avions[0], [100, 100]);
-  assert.equal(e.sapeurs[0], 2);
+  ordonnerChantier(e, 'aerodrome', 0); ordonnerChantier(e, 'sapeurs', 0); ordonnerChantier(e, 'caserne', 0); nuit(B);
+  assert.equal(e.camp.batiments.aerodrome.niveau, 2); assert.deepEqual(e.avions[0], [100, 100, 100]);
+  assert.equal(e.sapeurs[0], 4);
   assert.equal(e.reserves[0], 4);
-  ordonnerChantier(e, 'aerodrome', 1); ordonnerChantier(e, 'sapeurs', 0); nuit(B);
-  assert.equal(e.avions[0].length, 3); assert.equal(e.sapeurs[0], 4);
+  ordonnerChantier(e, 'aerodrome', 0); ordonnerChantier(e, 'caserne', 1); nuit(B); nuit(B);
+  assert.equal(e.avions[0].length, 4); assert.equal(e.reserves[0], 6);
 });
 test('le blindage du siège : les avions d\'avant et ceux d\'après tiennent 40 % de plus', () => {
-  const B = bridee(), e = B.etat; e.camp.dotation = 30; ordonnerChantier(e, 'aerodrome'); nuit(B);
+  const B = bridee(), e = B.etat; e.camp.dotation = 30;
   ordonnerChantier(e, 'aerodrome', 1); nuit(B);
   assert.deepEqual(e.avions[0], [140, 140, 140]); assert.equal(pvAvion(e, 0), 140);
 });
@@ -189,7 +179,7 @@ const regNous = B => B.etat.regiments.find(r => r.camp === 0);
 test('équiper demande la caserne au niveau 2, de la dotation, une place libre, une pièce qu\'il n\'a pas', () => {
   const B = bridee(), e = B.etat, r = regNous(B);
   assert.match(refusEquiper(B, r, 'casque'), /caserne au niveau 2/);
-  e.camp.batiments.caserne.niveau = 2;
+  e.camp.batiments.caserne.niveau = 2; e.camp.dotation = 5;
   assert.equal(refusEquiper(B, r, 'casque'), null);
   e.camp.dotation = 0; assert.match(refusEquiper(B, r, 'casque'), /point de dotation/); e.camp.dotation = 5;
   assert.match(refusEquiper(B, r, 'lance-flammes'), /Pas de telle pièce/);
@@ -207,7 +197,7 @@ test('la corvée de nuit équipe le régiment, coûte un point et lui ôte son r
   const { refusCorvee } = await import('../js/nuit.js');
   const B = bridee(), e = B.etat, r = regNous(B);
   assert.match(refusCorvee(B, r, 'eq-casque'), /caserne au niveau 2/);
-  e.camp.batiments.caserne.niveau = 2;
+  e.camp.batiments.caserne.niveau = 2; e.camp.dotation = 5;
   while (e.phase === 'jour') avancer(B);
   const avant = e.camp.dotation, autre = e.regiments.filter(x => x.camp === 0)[1];
   const res = aube(B, { [r.id]: 'eq-brancards', [autre.id]: 'repos' });
@@ -235,7 +225,7 @@ test('les casques font moins de morts sous les obus (même graine, mêmes obus)'
   assert.ok(avec <= sans, `avec casques ${avec}, sans ${sans}`);
 });
 test('une partie équipée relue est la même partie, équipement compris', () => {
-  const A = bridee(13); A.etat.camp.batiments.caserne.niveau = 2; equiper(A, regNous(A), 'hotchkiss');
+  const A = bridee(13); A.etat.camp.batiments.caserne.niveau = 2; A.etat.camp.dotation = 5; equiper(A, regNous(A), 'hotchkiss');
   const B = restaurer(JSON.parse(JSON.stringify(photo(A))), R);
   assert.deepEqual(regNous(B).equip, ['hotchkiss']);
   for (let k = 0; k < 300; k++) { avancer(A); avancer(B); }
@@ -251,12 +241,10 @@ test('en face a son camp : le même départ que nous, sa dotation selon la diffi
   const calme = nouvelleBataille(5, R, { soldats: 200, jours: 6, camp: true, difficulte: 'calme' }), dur = nouvelleBataille(5, R, { soldats: 200, jours: 6, camp: true, difficulte: 'offensive' });
   assert.equal(calme.etat.campEux.mult, 0.7); assert.equal(dur.etat.campEux.mult, 1.3); assert.equal(calme.etat.camp.mult, 1, 'la nôtre ne change jamais');
 });
-test('les ordres d\'en face sont bridés comme les nôtres : pas de 155 avant son artillerie de niveau 2', () => {
+test('les choix d\'en face comptent pour elle seule : ses calibres sont prêts, son artillerie au niveau 2 resserre sa dispersion', () => {
   const B = bridee();
-  assert.match(ordonnerBarrage(B, '155', 300, 200, 1).refus, /niveau 2/);
-  assert.equal(ordonnerBarrage(B, '75', 300, 200, 1).ok, true);
+  for (const cal of ['75', '155', '220']) assert.equal(ordonnerBarrage(B, cal, 300, 200, 1).ok, true, cal);
   B.etat.campEux.batiments.artillerie = { niveau: 2, choix: [0], chantier: null };
-  assert.equal(ordonnerBarrage(B, '155', 300, 200, 1).ok, true);
   assert.equal(modif(B.etat, 1, 'artillerie.dispersion'), 0.8, 'ses choix comptent aussi');
   assert.equal(modif(B.etat, 0, 'artillerie.dispersion'), 1, 'et ne changent rien chez nous');
 });
@@ -268,7 +256,7 @@ test('en face bâtit seule à l\'aube : l\'artillerie, la caserne, les sapeurs, 
   assert.ok(e.campEux.dotation < 20);
   for (let k = 0; k < 4 && e.phase !== 'fin'; k++) { e.campEux.dotation = Math.max(e.campEux.dotation, 10); nuit(B); }
   assert.ok(campDe(e, 1).batiments.artillerie.niveau >= 2); assert.ok(e.reserves[1] >= 4, `sa réserve a grandi (${e.reserves[1]})`);
-  assert.equal(e.campEux.batiments.chars.niveau, 0, 'elle ne bâtit pas ce qu\'elle n\'emploie pas');
+  assert.equal(e.campEux.batiments.chars.niveau, 1, 'elle ne bâtit pas ce qu\'elle n\'emploie pas');
 });
 test('son camp est le nôtre tourné d\'un demi-tour, au nord ; il ne se choisit pas', () => {
   const B = bridee(), e = B.etat; e.campEux.batiments.sapeurs.niveau = 1; e.camp.batiments.sapeurs.niveau = 1;
@@ -280,14 +268,13 @@ test('son camp est le nôtre tourné d\'un demi-tour, au nord ; il ne se choisit
 });
 test('la campagne reporte les niveaux du camp : la bataille suivante en part, sans le chantier ni la dotation', () => {
   const A = bridee(21); A.etat.camp.dotation = 50;
-  ordonnerChantier(A.etat, 'aerodrome'); ordonnerChantier(A.etat, 'artillerie', 1); ordonnerChantier(A.etat, 'sapeurs'); nuit(A);
-  ordonnerChantier(A.etat, 'aerodrome', 0); nuit(A);
+  ordonnerChantier(A.etat, 'aerodrome', 0); ordonnerChantier(A.etat, 'artillerie', 1); ordonnerChantier(A.etat, 'sapeurs', 0); nuit(A);
   const depart = Object.fromEntries(Object.entries(A.etat.camp.batiments).map(([k, c]) => [k, { niveau: c.niveau, choix: [...c.choix] }]));
   const S = nouvelleBataille(22, R, { soldats: 200, jours: 6, camp: true, campDepart: depart }), e = S.etat;
   assert.equal(e.camp.batiments.aerodrome.niveau, 2); assert.equal(e.camp.batiments.artillerie.niveau, 2); assert.deepEqual(e.camp.batiments.artillerie.choix, [1]);
   assert.equal(e.camp.dotation, DOTATION.depart, 'la dotation repart du départ'); assert.equal(e.camp.batiments.aerodrome.chantier, null);
-  assert.equal(e.avions[0].length, 3, 'les avions de l\'aérodrome au niveau 2'); assert.equal(e.sapeurs[0], 2); assert.equal(modif(e, 0, 'artillerie.recharge'), 0.85);
-  assert.equal(e.campEux.batiments.aerodrome.niveau, 0, 'en face repart nue');
+  assert.equal(e.avions[0].length, 3, 'les avions de l\'aérodrome au niveau 2'); assert.equal(e.sapeurs[0], 4); assert.equal(modif(e, 0, 'artillerie.recharge'), 0.85);
+  assert.equal(e.campEux.batiments.aerodrome.niveau, 1, 'en face repart du départ');
 });
 test('une partie avec le camp d\'en face relue est la même partie, après une nuit où elle a bâti', () => {
   const A = bridee(23); A.etat.campEux.dotation = 12; nuit(A);
