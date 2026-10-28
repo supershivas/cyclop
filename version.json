@@ -1,7 +1,8 @@
 {
-  "version": "0.96.1",
-  "date": "2026-10-27",
+  "version": "0.97.0",
+  "date": "2026-10-28",
   "changes": [
-    "Les échelles des tranchées s'adossent à la paroi : le pied sur le caillebotis, le sommet sur le bord, une brèche dans les sacs, la banquette, les lisses et le clayonnage ; elles ne traversent plus le bois"
+    "Les six ordres (75, 155, 220, avion, char, génie) ont leurs boutons permanents en bas à droite ; un seul bouton « Le camp » porte la dotation",
+    "Le texte météo ne sort plus de sa boîte : le vent, en km/h, est dans l'infobulle"
   ]
 }

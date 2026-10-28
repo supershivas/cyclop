@@ -5,7 +5,7 @@
 //  · le nom d'un régiment : posé sur le moteur en direct, à la place de l'étiquette du jeu (`majEtiquettes` de main.js), cliquable (il choisit) ;
 //  · les toasts : un HUD d'exemple (billet, pertes, carnet, rangée de cartes) sur le moteur en direct, trois messages à déclencher ;
 //  · la carte d'ordre : la rangée de cartes en tous ses états ; une ligne mesure la hauteur des cartes et la place de la barre (elle dit « elle bouge » si elles diffèrent).
-import { PALETTE as P, ALERTES } from './palette.js?v=0.96.1';
+import { PALETTE as P, ALERTES } from './palette.js?v=0.97.0';
 
 const el = (tag, css = '', ...kids) => { const e = document.createElement(tag); if (css) e.style.cssText = css; e.append(...kids.flat().filter(k => k != null)); return e; };
 const txt = (s, css = '') => el('span', css, s);

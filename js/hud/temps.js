@@ -4,10 +4,10 @@
 // qui le suit dit le jour et l'heure ; tout en bas, les seuls changements de météo, en pictogrammes. Le joueur ne connaît pas la météo des jours à
 // venir (la logique la tire d'avance) : seuls les jours passés et le jour même sont lus dans l'état, demain est la prévision (juste 7 fois sur 10).
 // Le dessin seulement : rien n'est sauvegardé.
-import { PALETTE } from '../palette.js?v=0.96.1';
-import { METEO, temperature } from '../data/meteo.js?v=0.96.1';
-import { ICONES_METEO } from './meteo-icones.js?v=0.96.1';
-import { horloge } from '../bataille.js?v=0.96.1';
+import { PALETTE } from '../palette.js?v=0.97.0';
+import { METEO, temperature, capDuVent } from '../data/meteo.js?v=0.97.0';
+import { ICONES_METEO } from './meteo-icones.js?v=0.97.0';
+import { horloge } from '../bataille.js?v=0.97.0';
 
 const FOND = { sec: PALETTE.h, pluie: PALETTE.e, brouillard: PALETTE.r, gel: PALETTE.o, neige: PALETTE.o, canicule: PALETTE.x, tempete: PALETTE.r, couvert: PALETTE.g, beau: PALETTE.e };
 const el = (tag, cls, ...kids) => { const e = document.createElement(tag); if (cls) e.className = cls; e.append(...kids); return e; };
@@ -45,14 +45,18 @@ export function creerBarreTemps({ $, bataille }) {
     // où l'on est : de 0 à 1 le long des jours (12 h de jour, de 6 h à 18 h, puis 12 h de nuit)
     const heure = nuit ? 24 : h.heure + h.minute / 60 - 6;
     const ici = (h.jour - 1 + Math.min(heure, 24) / 24) / h.jours;
-    const mot = `J${h.jour}/${h.jours} · ${nuit ? 'nuit' : `${h.heure} h ${String(h.minute).padStart(2, '0')}`} · ${METEO[h.meteo].nom}${h.temperature !== null ? `, ${h.temperature} °C` : ''}, ${h.vent.nom === 'calme' ? 'pas de vent' : h.vent.nom}`;
-    const cle = `${h.jour}|${h.meteo}|${h.prevision}|${mot}|${nuit}`;
+    const mot = `J${h.jour}/${h.jours} · ${nuit ? 'nuit' : `${h.heure} h ${String(h.minute).padStart(2, '0')}`} · ${METEO[h.meteo].nom}${h.temperature !== null ? `, ${h.temperature} °C` : ''}`;
+    // le vent n'est plus dans le drapeau (le texte sortait de sa boîte, v0.97.0) : il est dans l'infobulle de la frise, avec sa vitesse
+    const ventDit = h.vent.nom === 'calme' ? `Pas de vent (${h.vent.kmh} km/h)` : `${h.vent.nom[0].toUpperCase()}${h.vent.nom.slice(1)} : ${h.vent.kmh} km/h, vers le ${capDuVent(h.vent.ang)}`;
+    const info = `${mot}\n${ventDit}\n${h.prevision ? `Demain : ${METEO[h.prevision].prevision}` : 'Dernier jour'}`;
+    const cle = `${h.jour}|${h.meteo}|${h.prevision}|${mot}|${nuit}|${ventDit}`;
     const f = racine();
     f.style.setProperty('--ici', ici);
     if (cle === vue) { placerDrapeau(f); return; }
     vue = cle;
     f.querySelector('.frise-drapeau').textContent = mot;
-    f.setAttribute('aria-label', `${mot}. ${h.prevision ? `Demain : ${METEO[h.prevision].prevision}.` : 'Dernier jour.'}`);
+    f.setAttribute('aria-label', `${mot}. ${ventDit}. ${h.prevision ? `Demain : ${METEO[h.prevision].prevision}.` : 'Dernier jour.'}`);
+    f.title = info;
     let avant = null;
     for (let k = 0; k < h.jours; k++) {
       const sur = k < h.jour, prevu = k === h.jour && !!h.prevision;

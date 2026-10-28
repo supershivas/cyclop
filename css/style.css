@@ -631,16 +631,9 @@ h2 { font-weight: normal; letter-spacing: var(--titre-lettres); }
 .char-boutons .bouton.vise { background: var(--jeu-encre); color: var(--jeu-fond); }
 .char-fiche[hidden] { display: none; }
 
-/* Le camp (Jérôme, v0.87.0) : les pastilles des cinq bâtiments, en bas à droite, et le papier du bâtiment choisi */
-.camp-barre { display: flex; flex-wrap: wrap; gap: var(--e1); justify-content: flex-end; align-items: center; max-width: 312px; pointer-events: none; }
-.camp-barre > * { pointer-events: auto; }
-.camp-dotation { flex: 1 0 100%; text-align: right; font-size: var(--texte-petit); color: var(--jeu-fond); background: var(--jeu-encre); padding: var(--e0) var(--e2); box-shadow: var(--ombre-papier); }
+/* Le camp (Jérôme, v0.87.0 ; v0.97.0 : plus de pastilles, un seul bouton) : « Le camp · 5 pts », sous les ordres de batterie, et la fenêtre du bâtiment choisi */
+.camp-btn { width: 312px; min-height: var(--jeu-cible); padding: 0 var(--pas); font: inherit; font-size: var(--texte); color: var(--jeu-fond); background: var(--jeu-encre); border: 0; box-shadow: var(--ombre-papier); cursor: pointer; text-align: left; }
+.camp-btn[hidden] { display: none; }
+@media (hover: hover) { .camp-btn:hover { background: var(--jeu-accent); } }
 .batteries[hidden] { display: none; }
 #batiment { z-index: 5; width: 50ch; }      /* au-dessus de la carte et des papiers du haut : la fenêtre d'un bâtiment se pose sur le champ, où qu'il soit */
-.pastille { display: grid; justify-items: center; gap: 0; width: 54px; overflow: hidden; padding: var(--e1) var(--e0); font: inherit; color: var(--jeu-fond); background: var(--jeu-encre); border: 1px solid var(--jeu-accent); box-shadow: var(--ombre-papier); cursor: pointer; opacity: 0.6; }
-.pastille svg { height: 18px; width: auto; fill: none; stroke: currentColor; stroke-width: 1.5; }
-.pastille b { font-weight: normal; font-size: var(--texte-petit); line-height: 1.1; }
-.pastille i { font-style: normal; font-size: var(--texte-petit); line-height: 1; letter-spacing: 0.08em; }
-.pastille.bati { opacity: 1; }
-.pastille.chantier { opacity: 1; border-style: dashed; }
-.pastille.choisi { border-color: var(--jeu-fond); outline: 1px solid var(--jeu-fond); outline-offset: 1px; }

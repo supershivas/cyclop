@@ -40,7 +40,7 @@ if (process.env.DEUX_PNG) for (const [nom, p] of [['hote', A], ['invite', Bp]]) 
   await p.keyboard.press('b'); await p.waitForTimeout(1500);
   for (const [z, cle] of [[null, 'artillerie'], [2, 'caserne'], [3, 'sapeurs'], [0, 'chars']]) {
     if (z !== null) await p.evaluate(z => window.__jeu.zoom(z), z);
-    await p.evaluate(cle => document.querySelector(`.pastille[data-cle="${cle}"]`).click(), cle); await p.waitForTimeout(1800);
+    await p.evaluate(cle => window.__jeu.batiment(cle), cle); await p.waitForTimeout(1800);
     await p.screenshot({ path: `${process.env.DEUX_PNG}/deux-${nom}-${cle}.png` });
   }
 }

@@ -1,5 +1,9 @@
 # Journal des versions
 
+## 0.97.0 — 2026-10-28
+- Les six ordres (75, 155, 220, avion, char, génie) ont leurs boutons permanents en bas à droite, avec touche et jauge ; un clic droit ouvre le bâtiment pour l'améliorer ; les pastilles du camp et la dotation en bandeau sont remplacées par un seul bouton « Le camp · N pts » dessous
+- Le texte météo ne sort plus de sa boîte : le vent (en km/h, avec son cap) passe dans l'infobulle de la frise
+
 ## 0.96.1 — 2026-10-27
 - Les échelles des tranchées s'adossent à la paroi : le pied sur le caillebotis, le sommet sur le bord, une brèche dans les sacs, la banquette, les lisses et le clayonnage ; elles ne traversent plus le bois
 

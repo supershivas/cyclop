@@ -70,6 +70,9 @@ export const VENT_FORCE = {
 };
 export const VENT_CAPS = { depart: 0, ecart: 1 };        // le cap moyen (vers l'est) et l'écart possible, en rad
 // les mots du vent selon sa force (seuils croissants)
+export const VENT_KMH = 90;      // km/h d'un vent de force 1 : « calme » jusqu'à 11 km/h, « brise légère » 27, « vent modéré » 45, « vent fort » 63, la tempête au-delà (Beaufort, à peu près)
+export const VENT_CAP_NOMS = ['est', 'sud-est', 'sud', 'sud-ouest', 'ouest', 'nord-ouest', 'nord', 'nord-est'];      // le cap `ang` (rad, 0 vers l'est, sens horaire vu de dessus) en huit points
+export const capDuVent = ang => VENT_CAP_NOMS[((Math.round(ang / (Math.PI / 4)) % 8) + 8) % 8];
 export const VENT_NOMS = [[0.12, 'calme'], [0.3, 'brise légère'], [0.5, 'vent modéré'], [0.7, 'vent fort'], [1.01, 'vent de tempête']];
 export function vent(meteo, graine, jour) {
   const B = VENT_FORCE[meteo] || [0.1, 0.5];
@@ -77,5 +80,5 @@ export function vent(meteo, graine, jour) {
   const force = B[0] + h(1) * (B[1] - B[0]);
   const ang = VENT_CAPS.depart + (h(2) * 2 - 1) * VENT_CAPS.ecart;
   const nom = VENT_NOMS.find(([max]) => force < max)[1];
-  return { force, ang, nom };
+  return { force, ang, nom, kmh: Math.round(force * VENT_KMH) };
 }

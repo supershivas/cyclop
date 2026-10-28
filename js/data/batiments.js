@@ -4,7 +4,7 @@
 // aux niveaux 2 et 3, un choix entre deux améliorations [nom, ce que le joueur lit, { modificateur: facteur }] (on n'a jamais de quoi tout prendre). Un niveau peut aussi donner `effets` (même forme), des `avions`, des `sections` ou des `reserves` en tout (js/camp.js, `modif` et `effectifsDe`). `cout` : en points de dotation (voir DOTATION). Aucune récompense ne vient d'un homme abattu (DESIGN.md, « Ce que le jeu refuse »).
 export const BATIMENTS = {
   artillerie: {
-    nom: 'Le parc d\'artillerie', court: 'Artillerie', unite: 'les barrages de 75, 155 et 220', touches: '1 · 2 · 3',
+    nom: 'Le parc d\'artillerie', court: 'Canons', unite: 'les barrages de 75, 155 et 220', touches: '1 · 2 · 3',
     remplace: 'les boutons 75, 155 et 220',
     ordres: [['Barrage de 75', 1], ['Barrage de 155', 2], ['Barrage de 220', 3]],
     niveaux: [
@@ -16,7 +16,7 @@ export const BATIMENTS = {
     ],
   },
   aerodrome: {
-    nom: 'L\'aérodrome', court: 'Aérodrome', unite: 'les avions de mitraillage', touches: '4',
+    nom: 'L\'aérodrome', court: 'Avions', unite: 'les avions de mitraillage', touches: '4',
     remplace: 'le bouton « Avion »',
     ordres: [['Passe de mitraillage (deux clics)', 1]],
     niveaux: [
