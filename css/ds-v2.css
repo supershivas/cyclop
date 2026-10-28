@@ -75,3 +75,7 @@ dialog .menu, dialog form.menu { gap: var(--e3); }
 /* quatre boutons sur une ligne (les formes) : moins de souffle, sinon « Colonne » se coupe en deux ; la fenêtre d'un bâtiment est plus large (deux choix avec leur prix sur une ligne) */
 .reg-ouvert .actions.formes button { padding: 0 var(--e1); overflow-wrap: normal; }
 #batiment { width: 58ch; }
+
+/* le titre du jeu (écran titre) et celui d'une fiche de char : même police que tous les titres (v0.98.3 : « le titre du jeu n'est pas à jour avec la bonne police ») */
+.titre h1 { font-family: var(--police-titre); font-weight: var(--titre-poids); letter-spacing: .24em; font-size: clamp(48px, 12vmin, 112px); line-height: 1; padding: var(--e5) var(--e6) var(--e5) calc(var(--e6) + .24em); white-space: normal; overflow: visible; }
+#char-fiche-titre { font-family: var(--police-titre); font-weight: var(--titre-poids); font-size: var(--titre-3); letter-spacing: var(--titre-lettres); text-transform: uppercase; margin: 0; }

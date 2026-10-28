@@ -1,7 +1,7 @@
 /* Le fil de fer (Jérôme, v0.98.0), la logique : `etat.fil[t]` est la solidité du réseau du tronçon `t` (0 : coupé ; 0 aussi pour un tronçon qui n'en a pas : hors 1re ligne). Le dessin lit `filCoupe`. */
-import { FIL } from './data/fil.js?v=0.98.2';
-import { CALIBRES } from './data/calibres.js?v=0.98.2';
-import { ligneY } from './tranchees.js?v=0.98.2';
+import { FIL } from './data/fil.js?v=0.98.3';
+import { CALIBRES } from './data/calibres.js?v=0.98.3';
+import { ligneY } from './tranchees.js?v=0.98.3';
 
 /* Les réseaux du départ : un par tronçon de 1re ligne */
 export const filDeDepart = B => B.troncons.map(tr => B.lignes[tr.ligne].rang === 0 ? FIL.pv : 0);

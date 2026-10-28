@@ -1,8 +1,7 @@
 {
-  "version": "0.98.2",
+  "version": "0.98.3",
   "date": "2026-10-28",
   "changes": [
-    "Le design system est en jeu : titres en condensé fin et haut, jamais coupés, marges plus grandes, boutons refusés hachurés",
-    "L'infobulle météo a pour titre « Météo » ; un bug de clic sur les boutons à infobulle est corrigé"
+    "Le titre du jeu passe à la police des titres (condensé fin et haut)"
   ]
 }

@@ -2,8 +2,8 @@
 // et de la modale de la fiche de fin de journée, plus claire, toujours développée, centrée, avec le nom des régiments dont l'ordre n'a pas été modifié »). Rien n'est dans le jeu : des maquettes qui jouent sur des données d'exemple,
 // avec la palette du jeu seulement (une couleur de plus, une alerte, serait écrite dans `docs/domaines/rendu.md`). Le ton est celui du jeu (DESIGN.md) : la danse macabre, la catastrophe peinte avec calme : ni confettis ni éclats, un
 // geste de papier, de tampon, de jour qui se lève. `prefers-reduced-motion` : le nombre change, un éclair de brume le dit, rien ne bouge.
-import { PALETTE as P } from './palette.js?v=0.98.2';
-import { DOTATION } from './data/batiments.js?v=0.98.2';
+import { PALETTE as P } from './palette.js?v=0.98.3';
+import { DOTATION } from './data/batiments.js?v=0.98.3';
 
 const el = (tag, css = '', ...kids) => { const e = document.createElement(tag); if (css) e.style.cssText = css; e.append(...kids.flat().filter(k => k != null)); return e; };
 const MONO = 'font:13px/1.4 ui-monospace,"DejaVu Sans Mono",Menlo,Consolas,monospace;';
