@@ -9,6 +9,42 @@ Statuts : **à l'étude** · **validé** (Jérôme a tranché) · **en cours** �
 
 ## En cours
 
+### Retours de playtest du 30 octobre (Jérôme ; rien n'est construit, un lot par session)
+
+**Statut** : validé. Ordre proposé : A (bugs visuels) → B (interface) → C (missions et victoire) → D (renforts, déroute) → E (xp, mitrailleuses) → F (sons). Chaque lot : lire son fichier de domaine, tests ciblés, `stamp`, version.
+
+**A. Visuels**
+- **Arbres** : animation de chute sous un bombardement ; feuillage ellipsoïdal (rond) ; même aspect à tous les zooms (on peut simplifier les formes, pas en retirer le nombre).
+- **Aérodrome** : le sol du camp est le sol du terrain ; seule la piste a sa couleur (et quelques lignes blanches) ; la piste scintille (sans doute deux faces à la même hauteur : à corriger) ; les avions décollent de l'aérodrome avant leur attaque.
+- **Chars** : le char part du parc des chars ; le parc affiche le nombre total, un bouton vers les chars déployés et leur état (un clic centre la vue sur le char). Fenêtre d'ordres du char : décollée des boutons d'artillerie, boutons au design system, ordre en cours, vie du char, comprendre la 2e barre (bleue : cooldown du canon ? elle ne bouge pas : la faire vivre ou la retirer) ; l'artillerie arrête les chars trop difficilement (rééquilibrer par mesure).
+- **Fumée** : ellipses (plus de cubes), volutes plus réalistes.
+- **Météo** : la pluie est coupée au début du ciel (étrange) ; terre sèche → boue en transition douce et organique ; une pluie continue ne doit plus aplanir les cratères en lacs (l'eau s'y accumule sans raboter le relief).
+
+**B. Interface**
+- **Carte** (Jérôme, « les deux ») : un clic sur C2 cadre la vue 3D sur le seul secteur C2 **et** la carte n'affiche plus que C2 en gros plan, avec un retour à la vue d'ensemble.
+- **Fiche terrain** : les lignes longues ne sont plus coupées (« cratère 0,75 m de… ») ; chaque pourcentage dit de quoi il parle (« boue 35 % » : de la surface ? de la case ?).
+- **Fiche de fin de journée en trois colonnes** : gauche, chiffres clés de la journée ; centre, médailles du jour (`hud/medailles.js` existe) ; droite, ordres aux régiments. Espaces et hiérarchie vérifiés au design system.
+- **Divers** : Échap ne doit plus reprendre le jeu en pause ; la musique et les sons se coupent quand l'onglet n'est pas au premier plan.
+
+**C. Victoire et missions**
+- Les conditions ne sont toujours pas claires. Dans la fenêtre en haut à gauche, la condition (« tenir le secteur »…) devient un **bouton qui ouvre une modale** (et met en pause).
+- La modale dit ce qu'il faut faire, avec une **barre de remplissage** de la mission (3 jours tenus sur X ; tenir leur 1re ligne encore une journée ; encore deux secteurs à conquérir…).
+- **Liste de missions tirée au début de chaque partie** : une mission principale et des missions secondaires aléatoires (en données, `data/`). À préciser : ce que rapportent les secondaires (médaille ? renforts ? xp ?).
+
+**D. Renforts et déroute**
+- Les renforts s'affichent **dans la caserne** (plus dans le panneau en haut à gauche) et se déploient **à tout moment** s'ils sont disponibles.
+- Ils sortent de la caserne et se placent automatiquement dans le **premier secteur allié libre**. Si tout est tenu par l'ennemi ou plein (décision de Jérôme) : **contre-attaque forcée**, en colonne vers le secteur perdu le plus proche.
+- **Déroute** : les soldats en fuite se dirigent vers la caserne (ils ne restent plus au bord du terrain) et peuvent former une unité de renforts le lendemain.
+
+**E. Mitrailleuses et expérience**
+- **Mitrailleuses** : on sélectionne le poste et on règle la direction du cône ; barre de vie et barre de munitions (rechargée la nuit) ; elles gagnent de l'xp.
+- **Expérience** : petite animation du chevron quand un régiment en gagne ; tout ce qui a de l'xp (soldats, régiments, chars, mitrailleuses) a une barre d'xp et un nombre de chevrons affiché au-dessus ; gagner un chevron est plus difficile (trop rapide aujourd'hui, mesurer) ; **un chevron donne un bonus passif, différent selon le type d'unité** (décision de Jérôme ; valeurs en `data/` à proposer : régiment moral et précision, char blindage, mitrailleuse cadence ; à valider avant de coder).
+
+**F. Sons**
+- Remplacer le rendu actuel (très mauvais) pour les explosions, tirs, mitraillage et vol des avions, pluie, vent. Piste (Jérôme) : **sons libres de droits (CC0 / domaine public) que je cherche**, en mp3 dans `assets/`, licences notées, écoute et choix au labo avant le jeu. Garder la synthèse en repli. Si le réseau du conteneur bloque le téléchargement, le dire et demander les fichiers.
+
+**Points encore ouverts** : (1) ce que rapportent les missions secondaires ; (2) valeurs exactes des bonus de chevron ; (3) la 2e barre du char (à constater dans le code avant de décider) ; (4) forme de la contre-attaque forcée si aucun secteur n'est perdu mais tous sont pleins.
+
 ### Un terrain et une végétation plus soignés (v0.52.3 → ; à continuer dans une nouvelle session)
 
 **Statut** : en cours. Le but (Jérôme) : un jeu plus joli **sans perdre de vitesse en rendu logiciel**. Quatre chantiers dans cet ordre, chacun avec son prompt à coller au début d'une session neuve (`CLAUDE.md` court + le fichier de domaine du chantier ; une session par chantier).
