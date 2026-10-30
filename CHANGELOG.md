@@ -1,5 +1,8 @@
 # Journal des versions
 
+## 0.99.3 — 2026-10-30
+- Le bilan de fin affiche un bordereau de dotation (mission, secondaires) qui s'écrit ligne à ligne, puis un tampon « +n »
+
 ## 0.99.2 — 2026-10-30
 - La modale de mission : « Mission » en titre, le nom de la mission dessous, la description sans le répéter
 

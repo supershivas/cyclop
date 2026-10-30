@@ -2,8 +2,8 @@
 // Rien n'est recopié : chaque planche est un cadre (`iframe`) qui charge les VRAIES feuilles du jeu (`css/style.css`, `js/lib/game.css`) et les rôles de couleur de `palette.js`, et pose dedans le vrai balisage des papiers, des
 // boutons et des bulles. Les valeurs des fondations sont lues dans le `:root` de `css/style.css` (`jetons`) : changer une échelle dans la feuille change cette page. Les états qu'un pointeur seul montre (survol, focus) sont
 // forcés par les classes `.est-survol` et `.est-focus`, que la feuille du jeu accepte pour cela (le jeu ne les écrit jamais). Le labo montre, il ne modifie rien.
-import { ROLES, ALERTES } from './palette.js?v=0.99.2';
-import { lignesInfo } from './hud/infobulle.js?v=0.99.2';
+import { ROLES, ALERTES } from './palette.js?v=0.99.3';
+import { lignesInfo } from './hud/infobulle.js?v=0.99.3';
 
 const el = (tag, props = {}, ...kids) => { const e = Object.assign(document.createElement(tag), props); e.append(...kids); return e; };
 const roles = Object.entries({ ...ROLES }).map(([k, v]) => `--jeu-${k}:${v}`).join(';');

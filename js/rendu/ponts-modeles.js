@@ -1,7 +1,7 @@
 // Les ouvrages des ponts en volumes (Jérôme, v0.47.2 : « les ponts B C D E F G K sont à conserver en jeu ») : dessinés par le jeu (`rendu/ponts.js`, un pont posé par l'éditeur de carte) et par le labo (`labo-ponts.js`).
 // L'origine est le milieu du pont, au niveau du dessus du tablier (y = 0), x le long de la portée, z en travers ; `{ L, W, H }` : la longueur, la largeur utile, la hauteur du tablier sur l'eau.
 // Volumes `THREE` à l'échelle (1 unité = 1 m), mêmes arêtes de terre que les chars ; le dessin seulement.
-import { PALETTE as P } from '../palette.js?v=0.99.2';
+import { PALETTE as P } from '../palette.js?v=0.99.3';
 
 // ─── La boîte à pièces : une boîte, un cylindre couché, un prisme, des arêtes de terre ───
 export function outils(THREE) {

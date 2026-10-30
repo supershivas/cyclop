@@ -1,7 +1,7 @@
 {
-  "version": "0.99.2",
+  "version": "0.99.3",
   "date": "2026-10-30",
   "changes": [
-    "La modale de mission : « Mission » en titre, le nom de la mission dessous, la description sans le répéter"
+    "Le bilan de fin affiche un bordereau de dotation (mission, secondaires) qui s'écrit ligne à ligne, puis un tampon « +n »"
   ]
 }

@@ -1,6 +1,6 @@
 // La bataille : déterminisme, ordres refusés à voix haute, sauvegarde qui rejoue la même partie.
 import { readFileSync } from 'node:fs';
-import { progressionMission, progressionSecondaire, nouvelleBataille, avancer, ordonnerMarche, ordonnerBarrage, aube, photo, restaurer, effectifs, horloge, zone, tronconsTenus, rangDe, moralEnMots, terrainSous, terrainResume, peutOrdonner } from '../js/bataille.js';
+import { bordereau, progressionMission, progressionSecondaire, nouvelleBataille, avancer, ordonnerMarche, ordonnerBarrage, aube, photo, restaurer, effectifs, horloge, zone, tronconsTenus, rangDe, moralEnMots, terrainSous, terrainResume, peutOrdonner } from '../js/bataille.js';
 import { ligneY } from '../js/tranchees.js';
 import { calculerCouts, dimensionsCouts, BLOC } from '../js/champs.js';
 import { tronconsDe, refusCorvee, chezLEnnemi, choixEnFace, contactDe } from '../js/nuit.js';
@@ -1240,4 +1240,5 @@ test('mission : deux secondaires tirées à la graine, progression 0..1, la part
   const B = restaurer(JSON.parse(JSON.stringify(photo(A))), R);
   assert.deepEqual(B.etat.secondaires, A.etat.secondaires);
   assert.equal(progressionMission(B).p, progressionMission(A).p);
+  const bd = bordereau(A); assert.equal(bd.total, bd.lignes.reduce((t, l) => t + l[1], 0));
 });

@@ -4,6 +4,7 @@
    releve (relever au moins cible régiments), tenue (nos lignes ≥ lignesMin sur tous les soirs). Cibles à mesurer par régiment. */
 export const MISSIONS_SECONDAIRES = {
   secondairesParPartie: 2,
+  pointsMission: 100,   // le bordereau de fin : la mission principale réussie rapporte autant de points de dotation
   lignesMin: 0.9,
   catalogue: [
     { id: 'sobre', type: 'pertesMax', cible: 400, points: 30, texte: 'Perdre moins de {cible} hommes.' },

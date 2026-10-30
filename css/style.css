@@ -661,3 +661,11 @@ h2 { font-weight: normal; letter-spacing: var(--titre-lettres); }
 #dialogue-mission h2 { margin: 0 0 var(--e4); text-transform: none; }
 #dialogue-mission h3 { margin: calc(var(--pas) * 2) 0 var(--e4); font-size: var(--texte); }
 #dialogue-mission ul { margin: 0 0 calc(var(--pas) * 2); }
+/* Le bordereau de fin : les lignes s'écrivent une à une, puis le tampon claque (sans mouvement si le système le demande) (v0.99.3) */
+.bordereau { position: relative; padding: calc(var(--pas)) calc(var(--pas) * 2); border: 1px solid currentColor; margin: calc(var(--pas) * 2) 0; }
+.bd-ligne { display: flex; justify-content: space-between; padding: 1px 0; opacity: 0; animation: bd-ecrit .3s ease-out forwards; }
+.bd-somme { border-top: 2px solid currentColor; margin-top: 3px; padding-top: 2px; }
+.bd-tampon { position: absolute; right: 12px; bottom: 6px; padding: 0 8px; border: 2px solid var(--jeu-accent); color: var(--jeu-accent); text-transform: uppercase; opacity: 0; transform: rotate(-8deg); animation: bd-tampon .25s ease-in forwards; }
+@keyframes bd-ecrit { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
+@keyframes bd-tampon { from { opacity: 0; transform: rotate(-8deg) scale(1.8); } to { opacity: 1; transform: rotate(-8deg) scale(1); } }
+@media (prefers-reduced-motion: reduce) { .bd-ligne, .bd-tampon { animation-duration: 1ms; animation-delay: 0s !important; } }
