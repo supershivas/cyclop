@@ -1,5 +1,8 @@
 # Journal des versions
 
+## 0.99.1 — 2026-10-30
+- La modale de mission : le nom en titre, la description en corps, barre pleine largeur avec son nombre ou son pourcentage, et un titre « Missions secondaires »
+
 ## 0.99.0 — 2026-10-30
 - Un bouton de mission en haut à gauche explique ce qu'il faut faire, avec une barre de progression
 - Deux missions secondaires tirées à chaque partie : elles peuvent échouer et rapportent des points au bilan

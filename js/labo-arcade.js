@@ -1,13 +1,13 @@
 // Le moteur des maquettes du labo (scène du jeu en direct, caméra libre, outils SVG) : partagé par les chars, les tranchées et le camp.
 // Les maquettes d'Arcade (caisses, obus ratés, sapes, gaz) sont archivées : docs/archives/labo-archive.md.
-import { PALETTE } from './palette.js?v=0.99.0';
-import { nouvelleBataille, avancer, ordonnerMarche, mourir, PAS } from './bataille.js?v=0.99.0';
-import { compacter } from './army.js?v=0.99.0';
-import { impact } from './terrain.js?v=0.99.0';
-import { creerRendu } from './rendu3d.js?v=0.99.0';
-import { loadThree } from './three-lib.js?v=0.99.0';
-import { CALIBRES } from './data/calibres.js?v=0.99.0';
-import { hash2 } from './lib/rng.js?v=0.99.0';
+import { PALETTE } from './palette.js?v=0.99.1';
+import { nouvelleBataille, avancer, ordonnerMarche, mourir, PAS } from './bataille.js?v=0.99.1';
+import { compacter } from './army.js?v=0.99.1';
+import { impact } from './terrain.js?v=0.99.1';
+import { creerRendu } from './rendu3d.js?v=0.99.1';
+import { loadThree } from './three-lib.js?v=0.99.1';
+import { CALIBRES } from './data/calibres.js?v=0.99.1';
+import { hash2 } from './lib/rng.js?v=0.99.1';
 
 export const el = (tag, props = {}, ...kids) => { const e = Object.assign(document.createElement(tag), props); e.append(...kids); return e; };
 export const svgEl = (tag, attrs = {}) => { const e = document.createElementNS('http://www.w3.org/2000/svg', tag); for (const [k, v] of Object.entries(attrs)) e.setAttribute(k, v); return e; };

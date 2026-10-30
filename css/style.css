@@ -650,3 +650,9 @@ h2 { font-weight: normal; letter-spacing: var(--titre-lettres); }
 .camp-btn.est-survol { background: var(--jeu-accent); }
 .batteries[hidden] { display: none; }
 #batiment { z-index: 5; width: 50ch; }      /* au-dessus de la carte et des papiers du haut : la fenêtre d'un bâtiment se pose sur le champ, où qu'il soit */
+
+/* Le bouton de mission : la jauge prend toute la largeur de la modale, son texte (nombre ou pourcentage) est centré dessus (v0.99.1) */
+#dialogue-mission .jauge-mission { position: relative; width: 100%; height: 1.6em; box-sizing: border-box; border: 1px solid currentColor; }
+#dialogue-mission .jauge-mission i { display: block; height: 100%; width: 0; background: var(--jeu-accent, currentColor); opacity: .55; }
+#dialogue-mission .jauge-mission span { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; }
+#dialogue-mission ul { list-style: none; padding: 0; margin: 0; }

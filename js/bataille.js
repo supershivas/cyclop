@@ -14,35 +14,35 @@
    La sauvegarde (photo) garde la graine, la liste compacte des impacts, l'état
    de la foule et les petites couches de logique ; jamais le relief : il se
    rejoue depuis la graine et les impacts (rejouerTerrain). */
-import { createRng, hash2 } from './lib/rng.js?v=0.99.0';
-import { impact, hydroLignes, etat as etatCase, vitesseEtat, vitesseCase, ETAT } from './terrain.js?v=0.99.0';
-import { creerArmee, ajouterSoldat, construireGrille, pasArmee, tuerDans, effrayer, compacter, photoArmee, restaurerArmee, b64, deB64, DENSITE, place, poserCaracs, lireCaracs, abimerCaracs, gagner, CARACS } from './army.js?v=0.99.0';
-import { ligneSous, solidite } from './tranchees.js?v=0.99.0';
-import { terrainDuSecteur } from './secteur-terrain.js?v=0.99.0';
-import { detruirePont, reconstruirePont, pontEn } from './eaux.js?v=0.99.0';
-import { MISSIONS_SECONDAIRES as MS } from './data/missions.js?v=0.99.0';
-import { PONT_COUPE } from './data/ponts.js?v=0.99.0';
-import { calculerCouts, creerCacheChamps, dimensionsCouts, BLOC } from './champs.js?v=0.99.0';
-import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.99.0';
-import { preparerAleatoire, ID_ALEATOIRE } from './generateur.js?v=0.99.0';
-import { AVION, MITRAILLAGE } from './data/mitraillage.js?v=0.99.0';
-import { refusAvion, lancerAvion, avancerAvions, flotteDeDepart, reparerAvions } from './avions.js?v=0.99.0';
-import { CHAR, CHAR_RECHARGE, CHAR_SORTIE } from './data/chars.js?v=0.99.0';
-import { GENIE, GENIE_DATA } from './data/genie.js?v=0.99.0';
-import { filDeDepart, degatsFil } from './fil.js?v=0.99.0';
-import { creerNids, avancerNids, degatsNids, reparerNid } from './nids.js?v=0.99.0';
-import { TOITS, NIDS } from './data/nids.js?v=0.99.0';
-import { refusGenie, lancerGenie, avancerGenies, degatsGenies, sectionsDeDepart } from './genie.js?v=0.99.0';
-import { refusChar, lancerChar, degatsChars, avancerChars } from './chars.js?v=0.99.0';
-import { METEO, SAISONS, SAISON_DEFAUT, PREVISION_JUSTE, temperature, vent } from './data/meteo.js?v=0.99.0';
-import { SECTEURS } from './data/secteur.js?v=0.99.0';
-import { REGIMENTS } from './data/lexique.js?v=0.99.0';
-import { STANCES, STANCE_DEFAUT } from './data/stances.js?v=0.99.0';
-import { DIFFICULTES, DIFFICULTE_DEFAUT } from './data/difficulte.js?v=0.99.0';
-import { grade, departCaracs, caracEnMots } from './identite.js?v=0.99.0';
-import { corvees } from './nuit.js?v=0.99.0';
-import { EQUIPEMENTS } from './data/batiments.js?v=0.99.0';
-import { campDeDepart, dotationAube, refusOrdre, refusNid, appliquerDepart, modif, rechargeDe } from './camp.js?v=0.99.0';
+import { createRng, hash2 } from './lib/rng.js?v=0.99.1';
+import { impact, hydroLignes, etat as etatCase, vitesseEtat, vitesseCase, ETAT } from './terrain.js?v=0.99.1';
+import { creerArmee, ajouterSoldat, construireGrille, pasArmee, tuerDans, effrayer, compacter, photoArmee, restaurerArmee, b64, deB64, DENSITE, place, poserCaracs, lireCaracs, abimerCaracs, gagner, CARACS } from './army.js?v=0.99.1';
+import { ligneSous, solidite } from './tranchees.js?v=0.99.1';
+import { terrainDuSecteur } from './secteur-terrain.js?v=0.99.1';
+import { detruirePont, reconstruirePont, pontEn } from './eaux.js?v=0.99.1';
+import { MISSIONS_SECONDAIRES as MS } from './data/missions.js?v=0.99.1';
+import { PONT_COUPE } from './data/ponts.js?v=0.99.1';
+import { calculerCouts, creerCacheChamps, dimensionsCouts, BLOC } from './champs.js?v=0.99.1';
+import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.99.1';
+import { preparerAleatoire, ID_ALEATOIRE } from './generateur.js?v=0.99.1';
+import { AVION, MITRAILLAGE } from './data/mitraillage.js?v=0.99.1';
+import { refusAvion, lancerAvion, avancerAvions, flotteDeDepart, reparerAvions } from './avions.js?v=0.99.1';
+import { CHAR, CHAR_RECHARGE, CHAR_SORTIE } from './data/chars.js?v=0.99.1';
+import { GENIE, GENIE_DATA } from './data/genie.js?v=0.99.1';
+import { filDeDepart, degatsFil } from './fil.js?v=0.99.1';
+import { creerNids, avancerNids, degatsNids, reparerNid } from './nids.js?v=0.99.1';
+import { TOITS, NIDS } from './data/nids.js?v=0.99.1';
+import { refusGenie, lancerGenie, avancerGenies, degatsGenies, sectionsDeDepart } from './genie.js?v=0.99.1';
+import { refusChar, lancerChar, degatsChars, avancerChars } from './chars.js?v=0.99.1';
+import { METEO, SAISONS, SAISON_DEFAUT, PREVISION_JUSTE, temperature, vent } from './data/meteo.js?v=0.99.1';
+import { SECTEURS } from './data/secteur.js?v=0.99.1';
+import { REGIMENTS } from './data/lexique.js?v=0.99.1';
+import { STANCES, STANCE_DEFAUT } from './data/stances.js?v=0.99.1';
+import { DIFFICULTES, DIFFICULTE_DEFAUT } from './data/difficulte.js?v=0.99.1';
+import { grade, departCaracs, caracEnMots } from './identite.js?v=0.99.1';
+import { corvees } from './nuit.js?v=0.99.1';
+import { EQUIPEMENTS } from './data/batiments.js?v=0.99.1';
+import { campDeDepart, dotationAube, refusOrdre, refusNid, appliquerDepart, modif, rechargeDe } from './camp.js?v=0.99.1';
 
 export const PAS = 1 / 30;                 // s de jeu par pas
 export const NOUS = 0, EUX = 1;
@@ -612,14 +612,16 @@ const defSecondaire = s => MS.catalogue.find(m => m.id === s.id);
 export function progressionSecondaire(B, s) {
   const { etat } = B, d = defSecondaire(s), nous = etat.pertes[NOUS], eux = etat.pertes[EUX], relevés = s.depart - etat.reserves[NOUS];
   const texte = d.texte.replace('{cible}', d.cible);
-  if (s.echec) return { p: 0, texte, etat: 'echouee', raison: s.echec };
+  const nombre = { pertesMax: nous, ennemiMin: eux, releve: relevés }[d.type];
+  const label = nombre === undefined ? null : `${Math.min(nombre, 9999)} / ${d.cible}`;
+  if (s.echec) return { label, p: 0, texte, etat: 'echouee', raison: s.echec };
   const fin = etat.phase === 'fin';
   switch (d.type) {
-    case 'pertesMax': return { p: Math.max(0, 1 - nous / d.cible), texte, etat: fin ? 'reussie' : 'cours' };
-    case 'ennemiMin': return { p: Math.min(1, eux / d.cible), texte, etat: eux >= d.cible ? 'reussie' : 'cours' };
-    case 'releve': return { p: Math.min(1, relevés / d.cible), texte, etat: relevés >= d.cible ? 'reussie' : 'cours' };
-    case 'reserve': return { p: fin ? 1 : (etat.jour - 1) / etat.meteo.length, texte, etat: fin ? 'reussie' : 'cours' };
-    default: return { p: Math.min(1, (etat.jour - 1) / etat.meteo.length), texte, etat: fin ? 'reussie' : 'cours' };
+    case 'pertesMax': return { label, p: Math.max(0, 1 - nous / d.cible), texte, etat: fin ? 'reussie' : 'cours' };
+    case 'ennemiMin': return { label, p: Math.min(1, eux / d.cible), texte, etat: eux >= d.cible ? 'reussie' : 'cours' };
+    case 'releve': return { label, p: Math.min(1, relevés / d.cible), texte, etat: relevés >= d.cible ? 'reussie' : 'cours' };
+    case 'reserve': return { label, p: fin ? 1 : (etat.jour - 1) / etat.meteo.length, texte, etat: fin ? 'reussie' : 'cours' };
+    default: return { label, p: Math.min(1, (etat.jour - 1) / etat.meteo.length), texte, etat: fin ? 'reussie' : 'cours' };
   }
 }
 /* Le soir : une condition rompue marque la mission échouée (dit à voix haute dans la modale et le journal). */
@@ -648,10 +650,10 @@ export function progressionMission(B, camp = NOUS) {
   const { etat } = B, R = B.R, n = etat.meteo.length, jours = Math.min(n, etat.jour - 1);
   const [tenus, total] = premiereLigne(B), min = Math.ceil(total * R.mission.priseMin), reste = R.mission.joursDeTenue - (etat.priseJours ?? 0);
   const objectif = (camp === NOUS) === (etat.mission === 'tenir') ? 'tenir' : 'prendre';
-  if (objectif === 'tenir') return { objectif, p: n ? jours / n : 0, texte: `${jours} jours tenus sur ${n}` };
-  if (camp !== NOUS) return { objectif, p: Math.min(1, jours / n), texte: `${jours} jours écoulés sur ${n} : leur ligne doit tomber` };
-  if (etat.priseJours > 0) return { objectif, p: 0.5 + 0.5 * (etat.priseJours / R.mission.joursDeTenue), texte: `Tenir leur 1re ligne encore ${reste} soir${reste > 1 ? 's' : ''}` };
-  return { objectif, p: 0.5 * Math.min(1, min ? tenus / min : 0), texte: `${tenus} tronçons de leur 1re ligne sur ${min} à tenir` };
+  if (objectif === 'tenir') return { objectif, p: n ? jours / n : 0, label: `${jours} / ${n}`, texte: `${jours} jours tenus sur ${n}` };
+  if (camp !== NOUS) return { objectif, p: Math.min(1, jours / n), label: `${jours} / ${n}`, texte: `${jours} jours écoulés sur ${n} : leur ligne doit tomber` };
+  if (etat.priseJours > 0) return { objectif, p: 0.5 + 0.5 * (etat.priseJours / R.mission.joursDeTenue), label: `${Math.round(100 * (0.5 + 0.5 * etat.priseJours / R.mission.joursDeTenue))} %`, texte: `Tenir leur 1re ligne encore ${reste} soir${reste > 1 ? 's' : ''}` };
+  return { objectif, p: 0.5 * Math.min(1, min ? tenus / min : 0), label: `${tenus} / ${min}`, texte: `${tenus} tronçons de leur 1re ligne sur ${min} à tenir` };
 }
 
 /* Les tronçons de la 1re ligne d'en face que nous tenons : [tenus, en tout] */
