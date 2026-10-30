@@ -10,6 +10,8 @@ Lis `CLAUDE.md`, `docs/domaines/interface.md` (chargé seul dans `js/hud/`), `do
 4. **Échap ne reprend plus le jeu en pause** (il ferme les modales / annule un ordre seulement) ; vérifier la table des commandes de `interface.md`.
 5. **Onglet caché** : la musique et tous les sons se coupent (`visibilitychange`), reprennent au retour ; conforme à la section 9 des conventions (pause onglet caché). Voir `js/audio.js`.
 6. **Carnet de bord** : en cliquant dessus, on a tout l'historique. Les noms sont cliquables (soldats, secteurs ou régiments). Les évènements importants (un régiment ennemi lance un assaut, la perte d'un secteur, le gain) sont mis en valeur avec une icone et un unique et léger clignotement.
+7. **illustration de l'écran d'accueil** Jamais de son autre que la musique. Pas de HUD, pas de "C" de capitaine ou autres indications d'interface. Uniquement des éléments tangibles.
+8. **boutons "pause, réglages, vitesse de jeu "** revoir leur layout. Ils ne sont plus centrés (design system)
 
 ## Vérifier et livrer
 
