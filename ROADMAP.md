@@ -26,11 +26,6 @@ Statuts : **à l'étude** · **validé** (Jérôme a tranché) · **en cours** �
 - **Fiche de fin de journée en trois colonnes** : gauche, chiffres clés de la journée ; centre, médailles du jour (`hud/medailles.js` existe) ; droite, ordres aux régiments. Espaces et hiérarchie vérifiés au design system.
 - **Divers** : Échap ne doit plus reprendre le jeu en pause ; la musique et les sons se coupent quand l'onglet n'est pas au premier plan.
 
-**C. Victoire et missions**
-- Les conditions ne sont toujours pas claires. Dans la fenêtre en haut à gauche, la condition (« tenir le secteur »…) devient un **bouton qui ouvre une modale** (et met en pause).
-- La modale dit ce qu'il faut faire, avec une **barre de remplissage** de la mission (3 jours tenus sur X ; tenir leur 1re ligne encore une journée ; encore deux secteurs à conquérir…).
-- **Liste de missions tirée au début de chaque partie** : une mission principale et des missions secondaires aléatoires (en données, `data/`). À préciser : ce que rapportent les secondaires (médaille ? renforts ? xp ?).
-
 **D. Renforts et déroute**
 - Les renforts s'affichent **dans la caserne** (plus dans le panneau en haut à gauche) et se déploient **à tout moment** s'ils sont disponibles.
 - Ils sortent de la caserne et se placent automatiquement dans le **premier secteur allié libre**. Si tout est tenu par l'ennemi ou plein (décision de Jérôme) : **contre-attaque forcée**, en colonne vers le secteur perdu le plus proche.

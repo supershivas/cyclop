@@ -1,6 +1,6 @@
 // La bataille : déterminisme, ordres refusés à voix haute, sauvegarde qui rejoue la même partie.
 import { readFileSync } from 'node:fs';
-import { nouvelleBataille, avancer, ordonnerMarche, ordonnerBarrage, aube, photo, restaurer, effectifs, horloge, zone, tronconsTenus, rangDe, moralEnMots, terrainSous, terrainResume, peutOrdonner } from '../js/bataille.js';
+import { progressionMission, progressionSecondaire, nouvelleBataille, avancer, ordonnerMarche, ordonnerBarrage, aube, photo, restaurer, effectifs, horloge, zone, tronconsTenus, rangDe, moralEnMots, terrainSous, terrainResume, peutOrdonner } from '../js/bataille.js';
 import { ligneY } from '../js/tranchees.js';
 import { calculerCouts, dimensionsCouts, BLOC } from '../js/champs.js';
 import { tronconsDe, refusCorvee, chezLEnnemi, choixEnFace, contactDe } from '../js/nuit.js';
@@ -1227,4 +1227,17 @@ test('un obus de 75 abîme un nid, un 155 sur lui le détruit ; le génie le ref
   D.etat.phase = 'nuit'; aube(D);
   const refaits = e.filter(k => k.etat === 'actif').length;
   assert.ok(refaits >= 0 && refaits < 4, `refaits : ${refaits} sur 4`);
+});
+
+test('mission : deux secondaires tirées à la graine, progression 0..1, la partie relue est la même', () => {
+  const A = petite(12), A2 = petite(12);
+  assert.equal(A.etat.secondaires.length, 2);
+  assert.deepEqual(A.etat.secondaires, A2.etat.secondaires);
+  const m = progressionMission(A);
+  assert.ok(m.p >= 0 && m.p <= 1 && m.texte.length > 0);
+  for (const s of A.etat.secondaires) { const q = progressionSecondaire(A, s); assert.ok(q.p >= 0 && q.p <= 1); }
+  for (let k = 0; k < 60; k++) avancer(A);
+  const B = restaurer(JSON.parse(JSON.stringify(photo(A))), R);
+  assert.deepEqual(B.etat.secondaires, A.etat.secondaires);
+  assert.equal(progressionMission(B).p, progressionMission(A).p);
 });

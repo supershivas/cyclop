@@ -125,3 +125,7 @@
 | Zoom | + et − | molette |
 | Menu (pause) | Échap (quand rien n'est à annuler) | bouton du HUD |
 
+
+## Bouton de mission (Jérôme, v0.99.0)
+
+`#mission` (haut à gauche) est un bouton : il ouvre `#dialogue-mission` (pause, `reprendre` à la fermeture), qui montre l'ordre, une `<progress>` et les secondaires (✓ ✗ ·).

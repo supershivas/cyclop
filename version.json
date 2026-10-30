@@ -1,7 +1,8 @@
 {
-  "version": "0.98.3",
-  "date": "2026-10-28",
+  "version": "0.99.0",
+  "date": "2026-10-30",
   "changes": [
-    "Le titre du jeu passe à la police des titres (condensé fin et haut)"
+    "Un bouton de mission en haut à gauche explique ce qu'il faut faire, avec une barre de progression",
+    "Deux missions secondaires tirées à chaque partie : elles peuvent échouer et rapportent des points au bilan"
   ]
 }

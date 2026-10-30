@@ -1,5 +1,9 @@
 # Journal des versions
 
+## 0.99.0 — 2026-10-30
+- Un bouton de mission en haut à gauche explique ce qu'il faut faire, avec une barre de progression
+- Deux missions secondaires tirées à chaque partie : elles peuvent échouer et rapportent des points au bilan
+
 ## 0.98.3 — 2026-10-28
 - Le titre du jeu (écran titre) et la fiche d'un char passent à la police des titres, en condensé fin et haut
 
