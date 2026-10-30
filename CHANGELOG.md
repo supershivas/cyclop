@@ -1,5 +1,8 @@
 # Journal des versions
 
+## 0.99.2 — 2026-10-30
+- La modale de mission : « Mission » en titre, le nom de la mission dessous, la description sans le répéter
+
 ## 0.99.1 — 2026-10-30
 - La modale de mission : le nom en titre, la description en corps, barre pleine largeur avec son nombre ou son pourcentage, et un titre « Missions secondaires »
 

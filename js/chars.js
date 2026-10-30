@@ -3,14 +3,14 @@
    ligne vers (tx, ty) à la vitesse de son modèle, ralentie par un cratère (la moitié de ce qu'il franchit), arrêtée par un cratère plus profond ou par l'eau
    profonde (`enlise` : il reste là et tire) ; il tire sur l'autre camp à portée ; un obus tombé près de lui l'abîme (`degatsChars`), jusqu'à l'épave (`detruit`).
    Les tranchées se franchissent (elles font 1,5 m : son modèle les passe). Les ordres rendent { refus } comme les barrages. */
-import { modif } from './camp.js?v=0.99.1';
-import { CHARS, CHAR_PAR_DEFAUT, CHAR_RECHARGE, CHAR_DEPART, CHAR_OBUS, CHAR_ROUTE } from './data/chars.js?v=0.99.1';
-import { CALIBRES } from './data/calibres.js?v=0.99.1';
-import { effrayer, DENSITE } from './army.js?v=0.99.1';
-import { zone as zoneDe } from './bataille.js?v=0.99.1';
-import { detruirePont } from './eaux.js?v=0.99.1';
-import { toucher } from './terrain.js?v=0.99.1';
-import { PONTS_JEU, typePont } from './data/ponts.js?v=0.99.1';
+import { modif } from './camp.js?v=0.99.2';
+import { CHARS, CHAR_PAR_DEFAUT, CHAR_RECHARGE, CHAR_DEPART, CHAR_OBUS, CHAR_ROUTE } from './data/chars.js?v=0.99.2';
+import { CALIBRES } from './data/calibres.js?v=0.99.2';
+import { effrayer, DENSITE } from './army.js?v=0.99.2';
+import { zone as zoneDe } from './bataille.js?v=0.99.2';
+import { detruirePont } from './eaux.js?v=0.99.2';
+import { toucher } from './terrain.js?v=0.99.2';
+import { PONTS_JEU, typePont } from './data/ponts.js?v=0.99.2';
 
 /* La route d'un char (Jérôme, v0.59.3 : « ils doivent contourner les fleuves, passer par les ponts ») : une recherche sur une grille de `CHAR_ROUTE.maille` mètres, de (x0, y0) à (tx, ty), qui évite
    l'eau profonde, les cratères qu'il ne franchit pas, les ponts qui ne le portent pas, et se détourne des cratères à demi profonds. Rend les points à suivre (le dernier est le but), ou null
