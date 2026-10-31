@@ -2,8 +2,8 @@
 // Sur le champ : au-dessus de chaque char à nous, une petite étiquette (sa barre de canon qui se remplit, puis PRÊT ; ses points de vie) ; de lui à sa cible, une ligne pointillée et une croix
 // (de la cible qu'on lui a donnée : trait plein ; du carré d'ennemis qu'il a choisi : pointillé). Un clic sur l'étiquette le choisit. La fiche (`#char-fiche`) du char choisi : ses barres,
 // « Marcher » / « Cible » (le prochain clic sur le sol), « Arrêt », « Tir libre », « Fermer ». Le dessin et les boutons seulement : les ordres partent par `surOrdre(ordre)` (main.js).
-import { CHARS } from '../data/chars.js?v=0.99.9';
-import { NOUS } from '../bataille.js?v=0.99.9';
+import { CHARS } from '../data/chars.js?v=0.99.10';
+import { NOUS } from '../bataille.js?v=0.99.10';
 
 const NS = 'http://www.w3.org/2000/svg';
 export function creerCharsHud({ $, bataille, moi = () => NOUS, versEcran, hauteurSol, choisir, surBouton }) {
@@ -28,7 +28,7 @@ export function creerCharsHud({ $, bataille, moi = () => NOUS, versEcran, hauteu
         d.innerHTML = '<span class="nom">Char</span><span class="canon"><i></i></span><span class="pv"><i></i></span>';
         d.onclick = ev => { ev.stopPropagation(); choisir(c.id); };
         $('chars-etiq').append(d);
-        etiq.set(c.id, e = { d, canon: d.querySelector('.canon i'), pv: d.querySelector('.pv i'), nom: d.querySelector('.nom'), pret: null });
+        etiq.set(c.id, e = { d, canonB: d.querySelector('.canon'), canon: d.querySelector('.canon i'), pv: d.querySelector('.pv i'), nom: d.querySelector('.nom'), pret: null });
       }
       const [sx, sy] = versEcran(c.x, c.y, hauteurSol(c.x, c.y) + 3.5);
       e.d.hidden = sx < -1e4;
@@ -38,6 +38,7 @@ export function creerCharsHud({ $, bataille, moi = () => NOUS, versEcran, hauteu
       e.pv.style.width = `${Math.max(0, c.pv / (c.pvMax ?? CHARS[c.modele].pv) * 100).toFixed(0)}%`;
       const pret = f >= 1;
       if (pret !== e.pret) { e.pret = pret; e.d.classList.toggle('pret', pret); }
+      e.canonB.classList.toggle('attente', pret && !c.vise);
       e.d.classList.toggle('choisi', choisi === c.id);
       const texte = pret ? 'Char · PRÊT' : `Char · ${secondes(B, c)} s`;
       if (e.nom.textContent !== texte) e.nom.textContent = texte;
@@ -62,12 +63,23 @@ export function creerCharsHud({ $, bataille, moi = () => NOUS, versEcran, hauteu
     const c = vivants.find(k => k.id === choisi), fiche = $('char-fiche');
     fiche.hidden = !c;
     if (!c) return;
-    const f = fraction(B, c), G = CHARS[c.modele].canon;
-    $('char-fiche-titre').textContent = `${CHARS[c.modele].nom}${c.etat === 'enlise' ? ' · enlisé' : c.etat === 'arrive' ? ' · à l\'arrêt' : ''}`;
-    $('char-fiche-pv').style.width = `${Math.max(0, c.pv / (c.pvMax ?? CHARS[c.modele].pv) * 100).toFixed(0)}%`;
+    const f = fraction(B, c), G = CHARS[c.modele].canon, vie = Math.max(0, Math.round(c.pv / (c.pvMax ?? CHARS[c.modele].pv) * 100));
+    const roule = c.etat === 'avance' && c.ar !== undefined && (c.camp === 0 ? c.y > c.ar : c.y < c.ar), reste = Math.round(Math.hypot(c.tx - c.x, c.ty - c.y));
+    $('char-fiche-titre').textContent = CHARS[c.modele].nom;
+    $('char-fiche-etat-court').textContent = c.etat === 'enlise' ? 'enlisé' : c.etat === 'arrive' ? 'à l\'arrêt' : roule ? 'sort du parc' : 'en marche';
+    // l'ordre en cours : où il va, ce que son canon vise (v0.99.10 ; la fiche d'avant ne le disait pas)
+    $('char-fiche-ordre').textContent = c.etat === 'enlise' ? 'Enlisé dans un trou ou dans l\'eau : il ne repart pas, il tire encore.'
+      : c.etat === 'arrive' ? 'À l\'arrêt : il tient sa position et tire.'
+      : roule ? `Roule vers l'arrière de nos lignes, puis vers son objectif (${reste} m).`
+      : `Marche vers son objectif : encore ${reste} m.`;
+    $('char-fiche-pv-t').textContent = `${vie} %`;
+    $('char-fiche-pv').style.width = `${vie}%`;
+    const attente = f >= 1 && !c.vise;
     $('char-fiche-canon').style.width = `${(f * 100).toFixed(0)}%`;
-    $('char-fiche-etat').textContent = `Canon ${G.calibre} : ${f >= 1 ? 'PRÊT' : `encore ${secondes(B, c)} s`} · ${c.vise ? (c.cible && c.vise === c.cible ? 'sur la cible donnée' : 'sur le carré le plus chargé') : 'aucune cible à portée'}`;
-    for (const b of fiche.querySelectorAll('[data-char]')) b.classList.toggle('vise', b.dataset.char === mode);
+    $('char-fiche-canon-t').textContent = attente ? 'chargé' : f >= 1 ? 'PRÊT' : `${secondes(B, c)} s`;
+    $('char-fiche-canon-b').classList.toggle('pret', f >= 1); $('char-fiche-canon-b').classList.toggle('attente', attente);
+    $('char-fiche-etat').textContent = `Canon de ${G.calibre} : un obus tous les ${G.recharge} s, jusqu'à ${G.portee} m · ${c.vise ? (c.cible && c.vise === c.cible ? 'sur la cible donnée' : 'sur le carré le plus chargé') : 'aucune cible à portée'}`;
+    for (const b of fiche.querySelectorAll('[data-char]')) { b.classList.toggle('vise', b.dataset.char === mode); b.classList.toggle('actif', b.dataset.char === mode); }
   }
   function oublier() { for (const e of etiq.values()) e.d.remove(); etiq.clear(); signature = ''; svg.innerHTML = ''; }
   return { maj, oublier };

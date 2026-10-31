@@ -2,7 +2,7 @@
 import { positionDe } from '../js/avions.js';
 import { zone } from '../js/bataille.js';
 import { nouvelleBataille, avancer, aube, photo, restaurer, ordonnerBarrage } from '../js/bataille.js';
-import { sortieChars, emplacementCamp, campDe, refusEquiper, equiper, facteurEquip, campDeDepart, modif, rechargeDe, pvAvion, refusOrdre, refusNid, emprisesCamp, batimentSous, refusCamp, ordonnerChantier, dotationAube, niveauDe, coutDe, nuitsDe, choisis } from '../js/camp.js';
+import { charsDispo, appliquerDepart, sortieChars, emplacementCamp, campDe, refusEquiper, equiper, facteurEquip, campDeDepart, modif, rechargeDe, pvAvion, refusOrdre, refusNid, emprisesCamp, batimentSous, refusCamp, ordonnerChantier, dotationAube, niveauDe, coutDe, nuitsDe, choisis } from '../js/camp.js';
 import { BATIMENTS, DOTATION, EQUIPEMENTS, EQUIPEMENT, equipeEnMots } from '../js/data/batiments.js';
 import { REGLAGES as R } from '../js/data/reglages.js';
 
@@ -128,25 +128,25 @@ test('une partie bridée relue est la même partie, camp compris', () => {
 
 // ─── Lot 3 : ce que les niveaux et les choix changent ───
 const niveauEtChoix = (B, cle, niveau, choix = []) => { B.etat.camp.batiments[cle] = { niveau, choix, chantier: null }; };
-test('le départ de la partie bridée : 2 régiments en réserve, 2 sections de génie et 2 avions (le niveau 1 de chaque bâtiment)', () => {
+test('le départ de la partie bridée : 2 régiments en réserve, 2 sections de génie et 3 avions (le niveau 1; v0.99.10 : 3 avions) de chaque bâtiment)', () => {
   const B = bridee();
-  assert.deepEqual(B.etat.reserves, [2, 2]); assert.equal(B.etat.sapeurs[0], 2); assert.deepEqual(B.etat.avions[0], [100, 100]);
-  assert.deepEqual(B.etat.avions[1], [100, 100], 'en face part du même camp (v0.92.0)');
+  assert.deepEqual(B.etat.reserves, [2, 2]); assert.equal(B.etat.sapeurs[0], 2); assert.deepEqual(B.etat.avions[0], [100, 100, 100]);
+  assert.deepEqual(B.etat.avions[1], [100, 100, 100], 'en face part du même camp (v0.92.0)');
   assert.deepEqual(petite().etat.reserves, [4, 4], 'hors partie bridée, rien ne change');
 });
-test('améliorer fait venir les effectifs : l\'aérodrome 3 avions, puis 4 ; les sapeurs 4 sections ; la caserne 4 puis 6 régiments', () => {
+test('améliorer fait venir les effectifs : l\'aérodrome 4 avions, puis 5 ; les sapeurs 4 sections ; la caserne 4 puis 6 régiments', () => {
   const B = bridee(), e = B.etat; e.camp.dotation = 30;
   ordonnerChantier(e, 'aerodrome', 0); ordonnerChantier(e, 'sapeurs', 0); ordonnerChantier(e, 'caserne', 0); nuit(B);
-  assert.equal(e.camp.batiments.aerodrome.niveau, 2); assert.deepEqual(e.avions[0], [100, 100, 100]);
+  assert.equal(e.camp.batiments.aerodrome.niveau, 2); assert.deepEqual(e.avions[0], [100, 100, 100, 100]);
   assert.equal(e.sapeurs[0], 4);
   assert.equal(e.reserves[0], 4);
   ordonnerChantier(e, 'aerodrome', 0); ordonnerChantier(e, 'caserne', 1); nuit(B); nuit(B);
-  assert.equal(e.avions[0].length, 4); assert.equal(e.reserves[0], 6);
+  assert.equal(e.avions[0].length, 5); assert.equal(e.reserves[0], 6);
 });
 test('le blindage du siège : les avions d\'avant et ceux d\'après tiennent 40 % de plus', () => {
   const B = bridee(), e = B.etat; e.camp.dotation = 30;
   ordonnerChantier(e, 'aerodrome', 1); nuit(B);
-  assert.deepEqual(e.avions[0], [140, 140, 140]); assert.equal(pvAvion(e, 0), 140);
+  assert.deepEqual(e.avions[0], [140, 140, 140, 140]); assert.equal(pvAvion(e, 0), 140);
 });
 test('modif : le produit des niveaux et des choix pris, 1 pour en face et hors partie bridée', () => {
   const B = bridee(), e = B.etat;
@@ -275,7 +275,7 @@ test('la campagne reporte les niveaux du camp : la bataille suivante en part, sa
   const S = nouvelleBataille(22, R, { soldats: 200, jours: 6, camp: true, campDepart: depart }), e = S.etat;
   assert.equal(e.camp.batiments.aerodrome.niveau, 2); assert.equal(e.camp.batiments.artillerie.niveau, 2); assert.deepEqual(e.camp.batiments.artillerie.choix, [1]);
   assert.equal(e.camp.dotation, DOTATION.depart, 'la dotation repart du départ'); assert.equal(e.camp.batiments.aerodrome.chantier, null);
-  assert.equal(e.avions[0].length, 3, 'les avions de l\'aérodrome au niveau 2'); assert.equal(e.sapeurs[0], 4); assert.equal(modif(e, 0, 'artillerie.recharge'), 0.85);
+  assert.equal(e.avions[0].length, 4, 'les avions de l\'aérodrome au niveau 2'); assert.equal(e.sapeurs[0], 4); assert.equal(modif(e, 0, 'artillerie.recharge'), 0.85);
   assert.equal(e.campEux.batiments.aerodrome.niveau, 1, 'en face repart du départ');
 });
 test('une partie avec le camp d\'en face relue est la même partie, après une nuit où elle a bâti', () => {
@@ -312,4 +312,21 @@ test('sans camp dessiné, un vol et un char naissent à l\'entrée comme avant',
   const B = petite(), Z = zone(B), cx = (Z.x0 + Z.x1) / 2;
   assert.equal(sortieChars(B.etat, 0), null);
   ordonnerBarrage(B, 'avion', cx, Z.y0 + 100, 0); assert.equal(B.etat.mitraillages[0].av, undefined);
+});
+
+group('camp — le stock de chars et d\'avions (v0.99.10)');
+test('une bataille bridée a 2 chars et 3 avions au départ ; le parc et l\'aérodrome en gardent plus à leurs niveaux ; le stock s\'épuise', () => {
+  const B = bridee(), e = B.etat, Z = zone(B), cx = (Z.x0 + Z.x1) / 2;
+  assert.deepEqual(e.charsDispo, [2, 2]); assert.equal(e.avions[0].length, 3);
+  assert.deepEqual(charsDispo(e, 0), 2);
+  for (let n = 0; n < 2; n++) { e.batteries.char = 0; assert.ok(ordonnerBarrage(B, 'char', cx + 30 * n, Z.y0 + 120, 0).ok); }
+  assert.equal(charsDispo(e, 0), 0);
+  e.batteries.char = 0; const r = ordonnerBarrage(B, 'char', cx, Z.y0 + 120, 0);
+  assert.match(r.refus, /Plus un char au parc/);
+  // les niveaux supérieurs : 3 puis 4 chars, 4 puis 5 avions (les chars sortis ne reviennent pas)
+  e.camp.dotation = 20; e.camp.batiments.chars.niveau = 2; e.camp.batiments.aerodrome.niveau = 2;
+  const A = bridee(); appliquerDepart(A.etat, 0); // (un départ neuf au niveau 1)
+  A.etat.camp.batiments.chars.niveau = 3; A.etat.camp.batiments.aerodrome.niveau = 3; appliquerDepart(A.etat, 0);
+  assert.equal(A.etat.charsDispo[0], 4); assert.equal(A.etat.avions[0].length, 5);
+  assert.equal(petite().etat.charsDispo[0], null, 'sans camp bridé, pas de limite');
 });

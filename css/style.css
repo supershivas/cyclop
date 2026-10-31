@@ -636,14 +636,17 @@ h2 { font-weight: normal; letter-spacing: var(--titre-lettres); }
 .char-etiq .canon i { background: var(--jeu-accent); }
 .char-etiq.pret .canon i { background: var(--jeu-nous); }
 .char-etiq.choisi { outline: 2px solid var(--jeu-nous); }
-.char-fiche { position: absolute; right: 8px; bottom: 112px; width: min(26ch, 28vw); pointer-events: auto; display: grid; gap: var(--e1); }
-.char-fiche h3 { margin: 0; font-size: var(--texte-moyen); }
-.char-fiche .jauge { display: grid; grid-template-columns: 6ch 1fr; gap: var(--e1); align-items: center; font-size: var(--texte-petit); }
-.char-fiche .barre { display: block; height: 6px; border: 1px solid var(--jeu-encre); box-sizing: border-box; }
+.char-fiche { left: auto; top: auto; right: 336px; bottom: 112px; width: 34ch; z-index: 4; transform: none; }      /* à gauche des boutons de batterie (312 px + marges), au-dessus des cartes de régiment : sur aucun des deux (v0.99.10) */
+.char-fiche .jauge { grid-template-columns: 6ch 1fr; grid-template-areas: none; align-items: center; }
+.char-fiche .jauge .piste { grid-column: 1 / -1; }
+.char-fiche .jauge b { font-weight: normal; text-align: right; color: var(--jeu-accent); }
+.char-fiche .barre { display: block; height: 8px; border: 1px solid var(--jeu-encre); box-sizing: border-box; }
 .char-fiche .barre i { display: block; height: 100%; background: var(--jeu-encre); }
-.char-boutons { display: grid; grid-template-columns: 1fr 1fr; gap: var(--e0); }
-.char-boutons .bouton { min-height: 0; padding: var(--e0) var(--e1); font-size: var(--texte-petit); }
-.char-boutons .bouton.vise { background: var(--jeu-encre); color: var(--jeu-fond); }
+.char-fiche .barre.canon i { background: var(--jeu-accent); }
+.char-fiche .barre.canon.pret i { background: var(--jeu-nous); }
+.char-fiche .barre.canon.attente { background: repeating-linear-gradient(90deg, transparent 0 4px, var(--jeu-accent) 4px 5px); }     /* chargé, rien à portée : hachuré, il attend une cible */
+.char-fiche .barre.canon.attente i, .char-etiq .canon.attente i { background: transparent; }
+.char-etiq .canon.attente { background: repeating-linear-gradient(90deg, transparent 0 3px, var(--jeu-accent) 3px 4px); }
 .char-fiche[hidden] { display: none; }
 
 /* Le camp (Jérôme, v0.87.0 ; v0.97.0 : plus de pastilles, un seul bouton) : « Le camp · 5 pts », sous les ordres de batterie, et la fenêtre du bâtiment choisi */

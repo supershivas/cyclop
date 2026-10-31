@@ -2,11 +2,11 @@
 // sapeurs ») ; ici, la fenêtre d'un bâtiment, posée au-dessus de lui quand on le choisit (v0.96.0 : « les options apparaissent au-dessus de chaque bâtiment au clic ; simplifier au maximum »), sur le modèle de la
 // fenêtre d'un régiment (`.reg-ouvert` : le titre et son niveau, une ligne de ce qu'il fait, des boutons de même largeur), et le bouton « Le camp » (la dotation, et la touche B). L'amélioration tient en un clic : le
 // choix du palier EST le bouton (« Tir de réglage · 3 pts »). Le texte long est dans l'infobulle. Lecture seule de l'état : les ordres passent par les fonctions que main.js donne.
-import { BATIMENTS, EQUIPEMENT } from '../data/batiments.js?v=0.99.9';
-import { refusCamp, campDe, NIVEAU_MAX } from '../camp.js?v=0.99.9';
-import { avionsPrets, avionsRestants } from '../avions.js?v=0.99.9';
-import { MITRAILLAGE } from '../data/mitraillage.js?v=0.99.9';
-import { METEO } from '../data/meteo.js?v=0.99.9';
+import { BATIMENTS, EQUIPEMENT } from '../data/batiments.js?v=0.99.10';
+import { refusCamp, campDe, charsDispo, NIVEAU_MAX } from '../camp.js?v=0.99.10';
+import { avionsPrets, avionsRestants } from '../avions.js?v=0.99.10';
+import { MITRAILLAGE } from '../data/mitraillage.js?v=0.99.10';
+import { METEO } from '../data/meteo.js?v=0.99.10';
 
 const el = (tag, props = {}, ...kids) => { const e = Object.assign(document.createElement(tag), props); e.append(...kids); return e; };
 
@@ -28,7 +28,7 @@ export function creerCampHud({ moi = () => 0, bouton, papier, aller, ameliorer, 
     // le parc et l'aérodrome disent ce qu'ils ont (v0.99.8) : le total, ce qui est sorti et dans quel état ; un clic sur un char y mène la vue
     if (niveau && cle === 'chars') {
       const mes = e.chars.filter(c => c.camp === moi()), vivants = mes.filter(c => c.etat !== 'detruit'), morts = mes.length - vivants.length, r = reste('char');
-      papier.append(el('div', { className: 'compte', textContent: `${vivants.length} char${vivants.length > 1 ? 's' : ''} déployé${vivants.length > 1 ? 's' : ''}${morts ? ` · ${morts} détruit${morts > 1 ? 's' : ''}` : ''} · prochain char : ${r > 0 ? `dans ${r} s` : 'PRÊT'}` }));
+      papier.append(el('div', { className: 'compte', textContent: `${charsDispo(e, moi()) !== null ? `${charsDispo(e, moi())} au parc · ` : ''}${vivants.length} char${vivants.length > 1 ? 's' : ''} déployé${vivants.length > 1 ? 's' : ''}${morts ? ` · ${morts} détruit${morts > 1 ? 's' : ''}` : ''} · prochain char : ${r > 0 ? `dans ${r} s` : 'PRÊT'}` }));
       if (vivants.length) {
         const liste = el('div', { className: 'actions' }); liste.style.setProperty('--cols', 1);
         vivants.forEach((c, k) => {
@@ -67,7 +67,7 @@ export function creerCampHud({ moi = () => 0, bouton, papier, aller, ameliorer, 
     bouton.title = `# Le camp (B)\nLa caméra y va. Un bâtiment se choisit d'un clic sur lui : on y dépense la dotation.\n## La dotation (${pts(camp.dotation)})\nElle tombe à l'aube : **+1** ; **+1** si nos lignes tiennent à 75 % ; **+2** la première fois qu'une ligne d'en face est prise.`;
     papier.hidden = !cle;
     if (!cle) { signature = ''; return; }
-    const c = camp.batiments[cle], s = [cle, c.niveau, c.chantier?.nuits ?? '', camp.dotation, e.reserves[moi()], cle === 'chars' ? e.chars.filter(k => k.camp === moi()).map(k => `${k.id}${k.etat}${Math.round(k.pv)}`).join() + reste('char') : '', cle === 'aerodrome' ? e.avions[moi()].join() + avionsPrets(e, moi()) + e.meteo[e.jour - 1] : ''].join('|');
+    const c = camp.batiments[cle], s = [cle, c.niveau, c.chantier?.nuits ?? '', camp.dotation, e.reserves[moi()], cle === 'chars' ? e.chars.filter(k => k.camp === moi()).map(k => `${k.id}${k.etat}${Math.round(k.pv)}`).join() + reste('char') + charsDispo(e, moi()) : '', cle === 'aerodrome' ? e.avions[moi()].join() + avionsPrets(e, moi()) + e.meteo[e.jour - 1] : ''].join('|');
     if (s !== signature) { signature = s; dessiner(B); }
   }
   return { maj, choisi: () => cle, choisirCle(k) { cle = k; signature = ''; } };
