@@ -2,10 +2,10 @@
 // tant qu'un chantier dure, un liseré d'os autour du bâtiment choisi. Le dessin seulement : tout vient de l'état de la bataille, rien n'y est écrit ; et rien n'est dessiné hors de la partie bridée
 // (`etat.camp.bride`), donc ni le labo ni les tests n'ont de camp ; le jeu à deux en a un par joueur (v0.94.0). Les deux camps sont dessinés : celui d'en face est le nôtre tourné d'un demi-tour.
 // Fabrique `creerCamp({ THREE, scene, bataille: () => B, hauteur })`.
-import { atelier } from './engins.js?v=0.99.8';
-import { BATIR, chantier, regler_creux } from './camp-modeles.js?v=0.99.8';
-import { emprisesCamp, emplacementCamp } from '../camp.js?v=0.99.8';
-import { PALETTE as P } from '../palette.js?v=0.99.8';
+import { atelier } from './engins.js?v=0.99.9';
+import { BATIR, chantier, regler_creux } from './camp-modeles.js?v=0.99.9';
+import { emprisesCamp, emplacementCamp, sortieChars } from '../camp.js?v=0.99.9';
+import { PALETTE as P } from '../palette.js?v=0.99.9';
 
 const LUEUR = 0.9;      // × la couleur de la matière (mesuré à l'œil sur la partie du premier matin : sans elle, la boue est noire)
 
@@ -53,6 +53,15 @@ export function creerCamp({ THREE, scene, bataille, hauteur }) {
       }
       // posé sur le point le plus haut de l'emprise (plat : le socle descend jusqu'au plus bas)
       m.pivot.position.set(e.x, h, e.y); m.pivot.rotation.y = e.rot;
+      // ce qui est parti du bâtiment n'y est plus (v0.99.8) : les avions en vol quittent la piste, le char lancé quitte le parc (un autre n'y reparaît que la batterie prête)
+      if (e.cle === 'aerodrome') {
+        const E = B.etat, au = (E.avions?.[e.camp] ?? []).filter((pv, k) => pv > 0 && !E.mitraillages.some(v => v.camp === e.camp && v.k === k && v.etat === 'vol')).length;
+        m.pivot.traverse(o => { if (o.userData.parque !== undefined) o.visible = o.userData.parque < au; });
+      } else if (e.cle === 'chars') {
+        const E = B.etat, P = sortieChars(E, e.camp), prete = ((e.camp === 0 ? E.batteries : E.batteriesEux)?.char ?? 0) <= E.temps;
+        const sorti = !P || E.chars.some(c => c.camp === e.camp && c.etat !== 'detruit' && Math.hypot(c.x - P.x, c.y - P.y) < 14);
+        m.pivot.traverse(o => { if (o.userData.parc) o.visible = prete && !sorti; });
+      }
     }
     for (const [id, m] of modeles) if (!vus.has(id)) { scene.remove(m.pivot); modeles.delete(id); }
     // sous la lumière commune (celle des chars et des ponts, faite pour des gris clairs), les volumes sombres de la palette (boue, glaise) tombent presque au noir : une lueur propre les relève, éteinte avec la nuit

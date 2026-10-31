@@ -4,7 +4,7 @@
    Les bruitages (Jérôme, v0.99.6 : la synthèse était « très mauvaise ») : des mp3 CC0 de `assets/sons/` (catalogue et choix : `data/sons.js`), décodés au premier geste du joueur ;
    une famille dont le fichier manque ou n'est pas encore décodé retombe sur la synthèse d'avant (aucune erreur, aucun silence). Variantes, hauteur et voix simultanées : tirées/limitées ici, avec le générateur local.
    Le hasard du son est un petit générateur local (la graine de la bataille n'est jamais touchée). L'espace : un son loin est plus faible et vient du côté où il est (`ecoute` : le centre de la vue, en mètres du secteur, et sa largeur). */
-import { SONS, DOSSIER_SONS, VOIX } from './data/sons.js?v=0.99.8';
+import { SONS, DOSSIER_SONS, VOIX } from './data/sons.js?v=0.99.9';
 const borne = (v, a, b) => v < a ? a : v > b ? b : v;
 const COMMUN = { effets: 0.7, musique: 0.5 };
 // ── La playlist : les fichiers de `assets/music/`. `humeur` : quand le champ la demande, on y passe en fondu (comme `lieu` dans Kingvi) ──

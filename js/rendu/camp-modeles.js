@@ -1,9 +1,9 @@
 // Les bâtiments du camp dessinés en volumes (Jérôme, v0.87.0) : sortis du labo (`labo-batiments.js`) pour que le jeu les dessine aussi (`rendu/camp.js`).
 // Chaque fabrique `BATIR[clé](A, niveau)` rend { g, w, d } : le groupe centré sur son emprise (w le long de x, d le long de z), l'avant (le front) à −z ; `A` est `atelier(THREE)` (engins.js).
 // 1 unité = 1 m, la palette du jeu seulement ; le dessin seulement, rien n'y est écrit.
-import { PALETTE as P } from '../palette.js?v=0.99.8';
-import { schneider } from './engins.js?v=0.99.8';
-import { PIEDS } from '../data/batiments.js?v=0.99.8';
+import { PALETTE as P } from '../palette.js?v=0.99.9';
+import { schneider } from './engins.js?v=0.99.9';
+import { PIEDS } from '../data/batiments.js?v=0.99.9';
 
 // ─── Les pièces communes ───────────────────────────────────────────────────
 export const G = A => new A.THREE.Group();
@@ -86,7 +86,7 @@ export const BATIR = {
     const hangars = [-32, -19, -6].slice(0, n);
     for (const x of hangars) { A.prisme(g, arche(5), 14, P.r, [x, 0, -16]); A.b(g, [8, 3.4, 0.1], P.t, [x, 1.7, -8.97], [0, 0, 0], false); }
     const avions = [[-32, -5, 0], [20, 4, 0.1], ...(n >= 2 ? [[-19, -5, 0]] : []), ...(n >= 3 ? [[-6, -5, 0], [34, 4, -0.1]] : [])];
-    for (const [x, z, r] of avions.slice(0, [0, 2, 3, 5][n])) { const a = biplan(A); a.position.set(x, 0, z); a.rotation.y = Math.PI / 2 + r; g.add(a); }
+    avions.slice(0, [0, 2, 3, 5][n]).forEach(([x, z, r], k) => { const a = biplan(A); a.position.set(x, 0, z); a.rotation.y = Math.PI / 2 + r; a.userData.parque = k; g.add(a); });      // `parque` : son rang ; `rendu/camp.js` cache ceux qui sont partis (v0.99.8)
     if (n >= 2) { for (let k = 0; k < 4; k++) A.cyl(g, 0.3, 0.9, P.b, [12 + (k % 2) * 0.8, 0.55, -14 + Math.floor(k / 2) * 0.8], 'y', 8); baraque(A, g, [24, -16], 4, 6, 2, P.r, P.b); }
     if (n >= 3) { baraque(A, g, [36, -14], 4, 6, 3.4, P.h, P.b); A.b(g, [1.4, 0.4, 1.4], P.t, [36, 4.2, -14]); }
     A.cyl(g, 0.08, 7, P.s, [40, 3.5, -2], 'y', 6); A.cyl(g, 0.6, 2.6, P.o, [38.8, 6.6, -2], 'x', 8, 0.15);        // la manche à air
@@ -101,7 +101,7 @@ export const BATIR = {
       for (const s of [-1, 1]) A.b(g, [0.4, 3.3, 0.5], P.b, [x + s * 3.2, 1.65, -3.2]);        // ses poteaux
       A.b(g, [7, 0.4, 0.5], P.b, [x, 3.3, -3.2]);
     }
-    const c = schneider(A).groupe; c.position.set(baies[baies.length - 1], 0, -10); c.rotation.y = Math.PI / 2; g.add(c);
+    const c = schneider(A).groupe; c.position.set(baies[baies.length - 1], 0, -10); c.rotation.y = Math.PI / 2; c.userData.parc = true; g.add(c);      // `parc` : caché quand un char en sort (rendu/camp.js)
     if (n >= 3) {
       for (const s of [-1, 1]) A.b(g, [0.2, 0.15, 28], P.t, [s * 0.75 - 12.6, 0.25, 0], [0, 0, 0], false);                        // la voie de service
       A.b(g, [14, 3.4, 5], P.s, [-1, 1.7, 12.4]); A.prisme(g, [[-7.3, 3.4], [7.3, 3.4], [0, 4.6]], 5.6, P.b, [-1, 0, 12.4]);        // l'atelier

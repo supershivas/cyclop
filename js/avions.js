@@ -4,13 +4,13 @@
    L'avion entre par le prolongement de la passe, vole à `croisiere` m, descend à `passe` m sur les `descente` m qui précèdent la bande, la balaie (ses balles tombent
    `avance` m devant lui, chaque homme de la bande n'est tiré qu'une fois), remonte, et sort. Au-dessus d'hommes qui tirent, il perd des points de vie (`exposition`) ;
    à zéro, il tombe, écrase ce qui est sous lui et laisse une épave jusqu'à l'aube. Les avions de chaque camp : `etat.avions[camp]`, les points de vie de chacun (0 : perdu). */
-import { MITRAILLAGE as M } from './data/mitraillage.js?v=0.99.8';
-import { METEO } from './data/meteo.js?v=0.99.8';
-import { GRILLE, effrayer, toitFacteur } from './army.js?v=0.99.8';
-import { hash2 } from './lib/rng.js?v=0.99.8';
-import { modif, pvAvion } from './camp.js?v=0.99.8';
-import { impact } from './terrain.js?v=0.99.8';
-import { NOMS_CALIBRES } from './data/calibres.js?v=0.99.8';
+import { MITRAILLAGE as M } from './data/mitraillage.js?v=0.99.9';
+import { METEO } from './data/meteo.js?v=0.99.9';
+import { GRILLE, effrayer, toitFacteur } from './army.js?v=0.99.9';
+import { hash2 } from './lib/rng.js?v=0.99.9';
+import { modif, pvAvion, campDe, niveauDe, emplacementCamp } from './camp.js?v=0.99.9';
+import { impact } from './terrain.js?v=0.99.9';
+import { NOMS_CALIBRES } from './data/calibres.js?v=0.99.9';
 
 const borne = (v, a, b) => v < a ? a : v > b ? b : v;
 const lisse = f => { f = borne(f, 0, 1); return f * f * (3 - 2 * f); };
@@ -60,14 +60,28 @@ export function positionDe(v, temps) {
     const tau = Math.min(temps, v.chute.ti) - v.chute.t, d = M.vitesse * M.chute.vitesse * tau;
     return { x: v.chute.x + v.ux * d, y: v.chute.y + v.uy * d, h: Math.max(0, v.chute.h - 0.5 * M.chute.gravite * tau * tau), cap, pente: -Math.atan2(M.chute.gravite * tau, M.vitesse * M.chute.vitesse), etat: 'chute' };
   }
-  const s = borne((temps - v.t0) * M.vitesse, 0, v.total), h = altitudeA(v, s), dh = altitudeA(v, Math.min(v.total, s + 1)) - altitudeA(v, Math.max(0, s - 1));
+  const sP = v.av?.sP ?? 0, st = (temps - v.t0) * M.vitesse;
+  if (v.av && st < sP) return decollageDe(v, st, cap);
+  const s = borne(st - sP, 0, v.total), h = altitudeA(v, s), dh = altitudeA(v, Math.min(v.total, s + 1)) - altitudeA(v, Math.max(0, s - 1));
   return { x: v.ex + v.ux * s, y: v.ey + v.uy * s, h, cap, pente: Math.atan2(dh / 2, 1), etat: 'vol', s };
+}
+
+/* Le décollage (Jérôme, retours du 30 octobre, v0.99.8) : avant sa passe l'avion roule sur la piste de l'aérodrome de son camp (`v.av`, posé par `lancerAvion`), décolle au bout, et monte en ligne droite jusqu'au point d'entrée de la passe,
+   à l'altitude de croisière. Les deux tronçons sont de longueur `L1` (la roulette) et `L2` (la montée) ; `sP` leur somme. `piste` : il est encore sur ou près de la piste (le dessin règle sa hauteur sur la piste, pas sur le terrain). */
+function decollageDe(v, st, capPasse) {
+  const a = v.av, cap1 = Math.atan2(a.y1 - a.y0, a.x1 - a.x0);
+  if (st < a.L1) { const f = st / a.L1; return { x: a.x0 + (a.x1 - a.x0) * f, y: a.y0, h: 0, cap: cap1, pente: 0, etat: 'vol', s: -1, piste: true }; }
+  const u = st - a.L1, f = a.L2 > 0 ? borne(u / a.L2, 0, 1) : 1, hE = altitudeA(v, 0), cap2 = Math.atan2(v.ey - a.y1, v.ex - a.x1);
+  let d = cap2 - cap1; d -= Math.round(d / (2 * Math.PI)) * 2 * Math.PI;                      // le virage : par le plus court
+  const cap = cap1 + d * lisse(u / 90), h = hE * (1 - (1 - f) * (1 - f)), dh = a.L2 > 0 ? hE * 2 * (1 - f) / a.L2 : 0;
+  void capPasse;
+  return { x: a.x1 + (v.ex - a.x1) * f, y: a.y1 + (v.ey - a.y1) * f, h, cap, pente: Math.atan2(dh, 1), etat: 'vol', s: -1, piste: true };
 }
 
 /* Le balayage à ce temps : { actif, l (l'abscisse sur la bande où tombent ses balles), x, y } */
 export function balayage(v, temps) {
   if (v.etat !== 'vol') return { actif: false };
-  const s = (temps - v.t0) * M.vitesse, l = s + M.avance - v.sA;
+  const s = (temps - v.t0) * M.vitesse - (v.av?.sP ?? 0), l = s + M.avance - v.sA;
   return { actif: l > 0 && l <= v.L, l, x: v.x1 + v.ux * l, y: v.y1 + v.uy * l };
 }
 
@@ -94,10 +108,22 @@ export function refusAvion(B, camp, x, y, x2, y2) {
   return l.refus ? { refus: l.refus } : { ligne: l };
 }
 
+/* La roulette et la montée d'un vol depuis l'aérodrome de `camp` (null : pas d'aérodrome dessiné, la partie n'est pas bridée : le vol naît à l'entrée comme avant). La piste suit l'axe x du bâtiment (80 m, à 4 m de son centre vers l'arrière).
+   L'avion ne fait pas le tour par le bord du terrain : il rejoint la droite de la passe au pied de la perpendiculaire menée de l'aérodrome, au plus tard `JONCTION` m avant la descente ; le vol (`ex`, `ey`, `sA`, `sB`, `total`) est raccourci d'autant. */
+const JONCTION = 250;
+function decollage(etat, camp, v) {
+  if (!campDe(etat, camp)?.bride || !niveauDe(etat, 'aerodrome', camp)) return null;
+  const e = emplacementCamp(etat, 'aerodrome', camp), y = arrondi(e.y + (e.rot ? -4 : 4));
+  const sp = (e.x - v.ex) * v.ux + (e.y - v.ey) * v.uy, sj = borne(sp, 0, Math.max(0, v.sA - M.descente - JONCTION));
+  v.ex = arrondi(v.ex + v.ux * sj); v.ey = arrondi(v.ey + v.uy * sj); v.sA = arrondi(v.sA - sj); v.sB = arrondi(v.sB - sj); v.total = arrondi(v.total - sj);
+  const sg = v.ex >= e.x ? 1 : -1, x0 = arrondi(e.x - sg * 38), x1 = arrondi(e.x + sg * 38), L1 = 76, L2 = Math.hypot(v.ex - x1, v.ey - y);
+  return { x0, y0: y, x1, y1: y, L1, L2, sP: L1 + L2, cx: e.x, cy: e.y, w: e.w, d: e.d };
+}
+
 export function lancerAvion(B, camp, l) {
-  const { etat } = B, k = prochainAvion(etat, camp);
+  const { etat } = B, k = prochainAvion(etat, camp), vol = tracerVol(B.terrain, l), av = decollage(etat, camp, vol);      // (`decollage` raccourcit `vol`)
   etat.mitraillages.push({
-    id: etat.mitraillages.length ? etat.mitraillages[etat.mitraillages.length - 1].id + 1 : 0, camp, k, ...tracerVol(B.terrain, l),
+    id: etat.mitraillages.length ? etat.mitraillages[etat.mitraillages.length - 1].id + 1 : 0, camp, k, ...vol, ...(av ? { av } : {}),
     t0: etat.temps, pv: etat.avions[camp][k], etat: 'vol',
   });
   etat.avionsJour[etat.jour - 1][camp][0]++;
@@ -207,7 +233,7 @@ export function avancerAvions(B, ctx, rng) {
   for (const v of etat.mitraillages) {
     if (v.etat === 'epave') continue;
     if (v.etat === 'chute') { if (etat.temps >= v.chute.ti - 1e-9) ecraser(B, v, ctx, rng); continue; }
-    const s = (etat.temps - v.t0) * M.vitesse;
+    const s = (etat.temps - v.t0) * M.vitesse - (v.av?.sP ?? 0);
     if (s >= v.total) { v.etat = 'rentre'; etat.avions[v.camp][v.k] = v.pv; B.evenements.push({ type: 'avion-rentre', camp: v.camp, pv: v.pv }); continue; }
     const p = positionDe(v, etat.temps);
     // la bande : les balles qui tombent devant lui

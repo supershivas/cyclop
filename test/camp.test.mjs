@@ -1,6 +1,8 @@
 // Le camp : la dotation de l'aube, les chantiers d'une nuit, les refus à voix haute, la sauvegarde (lot 1 de docs/chantiers/camp-et-ameliorations.md).
+import { positionDe } from '../js/avions.js';
+import { zone } from '../js/bataille.js';
 import { nouvelleBataille, avancer, aube, photo, restaurer, ordonnerBarrage } from '../js/bataille.js';
-import { campDe, refusEquiper, equiper, facteurEquip, campDeDepart, modif, rechargeDe, pvAvion, refusOrdre, refusNid, emprisesCamp, batimentSous, refusCamp, ordonnerChantier, dotationAube, niveauDe, coutDe, nuitsDe, choisis } from '../js/camp.js';
+import { sortieChars, emplacementCamp, campDe, refusEquiper, equiper, facteurEquip, campDeDepart, modif, rechargeDe, pvAvion, refusOrdre, refusNid, emprisesCamp, batimentSous, refusCamp, ordonnerChantier, dotationAube, niveauDe, coutDe, nuitsDe, choisis } from '../js/camp.js';
 import { BATIMENTS, DOTATION, EQUIPEMENTS, EQUIPEMENT, equipeEnMots } from '../js/data/batiments.js';
 import { REGLAGES as R } from '../js/data/reglages.js';
 
@@ -282,4 +284,32 @@ test('une partie avec le camp d\'en face relue est la même partie, après une n
   assert.deepEqual(B.etat.campEux, A.etat.campEux);
   for (let k = 0; k < 300; k++) { avancer(A); avancer(B); }
   assert.equal(JSON.stringify(photo(B)), JSON.stringify(photo(A)));
+});
+
+group('camp — ce qui part du camp (v0.99.8)');
+test('le char sort du parc des chars, et les avions décollent de la piste avant leur passe', () => {
+  const B = bridee(), e = B.etat;
+  const parc = sortieChars(e, 0); assert.ok(parc, 'un parc bâti a une sortie');
+  const P = emplacementCamp(e, 'chars', 0); assert.ok(Math.abs(parc.x - P.x) < 12 && Math.abs(parc.y - (P.y - 10)) < 0.01);
+  const Z = zone(B), cx = (Z.x0 + Z.x1) / 2;
+  const r = ordonnerBarrage(B, 'char', cx, Z.y0 + 120, 0); assert.ok(r.ok, JSON.stringify(r));
+  const c = e.chars[0]; assert.equal(c.x, parc.x); assert.equal(c.y, parc.y, 'il part de la place que montre le parc');
+  e.temps = 10;
+  const a = ordonnerBarrage(B, 'avion', cx, Z.y0 + 100, 0, cx + 40, Z.y0 + 100); assert.ok(a.ok, JSON.stringify(a));
+  const v = e.mitraillages[0], A = emplacementCamp(e, 'aerodrome', 0);
+  assert.ok(v.av && v.av.sP > 76, 'le vol a une roulette et une montée');
+  const p0 = positionDe(v, v.t0), p1 = positionDe(v, v.t0 + 76 / 40 - 0.01), p2 = positionDe(v, v.t0 + v.av.sP / 40 + 0.01);
+  assert.equal(p0.h, 0); assert.ok(Math.abs(p0.y - (A.y + 4)) < 0.5 && Math.abs(p0.x - A.x) <= 39 && p0.piste, 'il roule sur la piste de l\'aérodrome');
+  assert.equal(p1.h, 0);
+  assert.ok(p2.h > 40 && Math.abs(p2.x - v.ex) < 2 && Math.abs(p2.y - v.ey) < 2 && !p2.piste, 'puis il entre par l\'entrée de la passe, à l\'altitude de croisière');
+  // la passe elle-même est décalée du temps de décollage ; relu, c'est le même vol
+  const R2 = restaurer(JSON.parse(JSON.stringify(photo(B))), R);
+  assert.deepEqual(R2.etat.mitraillages[0].av, v.av);
+  for (let k = 0; k < 200; k++) { avancer(B); avancer(R2); }
+  assert.equal(JSON.stringify(photo(R2)), JSON.stringify(photo(B)));
+});
+test('sans camp dessiné, un vol et un char naissent à l\'entrée comme avant', () => {
+  const B = petite(), Z = zone(B), cx = (Z.x0 + Z.x1) / 2;
+  assert.equal(sortieChars(B.etat, 0), null);
+  ordonnerBarrage(B, 'avion', cx, Z.y0 + 100, 0); assert.equal(B.etat.mitraillages[0].av, undefined);
 });

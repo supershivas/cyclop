@@ -2,11 +2,11 @@
 // posé à son altitude (avions.js : `positionDe`), cabré ou piqué selon sa pente, avec son ombre sur le sol. En tirant, ses traceurs tombent devant lui et la terre gicle le long de
 // la bande ; touché, il fume, il tombe en vrille et laisse une épave qui fume. Le dessin seulement : tout vient de l'état de la bataille, rien n'y est écrit.
 // Fabrique `creerAvions({ THREE, scene, bataille, hauteur, effets })` : la bataille change à chaque partie, on la lit à chaque image. `effets` : ceux de eclats.js.
-import { atelier } from './engins.js?v=0.99.8';
-import { AVIONS_JEU } from './avions-modeles.js?v=0.99.8';
-import { positionDe, balayage } from '../avions.js?v=0.99.8';
-import { MITRAILLAGE as M } from '../data/mitraillage.js?v=0.99.8';
-import { PALETTE as P } from '../palette.js?v=0.99.8';
+import { atelier } from './engins.js?v=0.99.9';
+import { AVIONS_JEU } from './avions-modeles.js?v=0.99.9';
+import { positionDe, balayage } from '../avions.js?v=0.99.9';
+import { MITRAILLAGE as M } from '../data/mitraillage.js?v=0.99.9';
+import { PALETTE as P } from '../palette.js?v=0.99.9';
 
 const MODELE = ['spad', 'albatros'];     // par camp : nous, en face
 const SOL = 1.7;                          // m entre le centre du modèle et le bas de ses roues
@@ -48,7 +48,12 @@ export function creerAvions({ THREE, scene, bataille, hauteur, effets }) {
     for (const v of vols) {
       vus.add(v.id);
       const m = modeles.get(v.id) ?? creer(v);
-      const p = positionDe(v, tAff), sol = hauteur(p.x, p.y);
+      const p = positionDe(v, tAff);
+      let sol = hauteur(p.x, p.y);
+      if (p.piste) {      // le décollage : la piste est un socle plat posé sur le point le plus haut de l'aérodrome (rendu/camp.js) ; l'avion y roule, puis quitte ce niveau en montant
+        if (m.hPiste === undefined) { let h = -Infinity; const a = v.av; for (let dx = -a.w / 2; dx <= a.w / 2 + 0.01; dx += 4) for (let dz = -a.d / 2; dz <= a.d / 2 + 0.01; dz += 4) h = Math.max(h, hauteur(a.cx + dx, a.cy + dz)); m.hPiste = h + 0.25; }
+        sol = m.hPiste + (sol - m.hPiste) * Math.min(1, p.h / 15);
+      }
       m.pivot.visible = m.ombre.visible = jour;
       m.pivot.position.set(p.x, sol + p.h + SOL, p.y);
       m.pivot.rotation.set(0, -p.cap, 0);

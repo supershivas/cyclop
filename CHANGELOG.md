@@ -1,5 +1,9 @@
 # Journal des versions
 
+## 0.99.9 — 2026-10-31
+- Les avions roulent sur la piste de l'aérodrome et décollent avant leur passe ; le char sort du parc des chars
+- Le parc et l'aérodrome disent leur total (chars déployés avec leur état, un clic y mène la vue ; avions au sol et en vol) ; le bouton Avion est muet par brouillard
+
 ## 0.99.8 — 2026-10-31
 - Bruitages choisis à l'écoute : obus de 75 et de 220 changés, mitrailleuse, mitraillage aérien et pluie aussi
 
