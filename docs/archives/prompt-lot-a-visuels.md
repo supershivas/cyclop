@@ -12,6 +12,8 @@ Sans perdre de vitesse en rendu logiciel : mesurer (`scripts/mesure.mjs --soldat
 4. **Fenêtre d'ordres du char** : décollée des boutons d'artillerie, boutons au design system, ordre en cours, vie du char ; dire à quoi sert la 2e barre bleue (cooldown du canon ? elle ne bouge pas) puis la faire vivre ou la retirer ; les chars sont trop durs à arrêter par l'artillerie : **mesurer** (skill `equilibrage`) puis régler dans `data/`.
 5. **Arbres** : animation de chute sous un bombardement ; feuillage ellipsoïdal (rond) ; même aspect à tous les zooms (on simplifie les formes, on n'en retire pas le nombre).
 6. **Fumée** : ellipses à la place des cubes, volutes plus réalistes (variantes au labo).
+7. **Bâtiments des bases** Améliorer leur aspect, ils paraissent ne pas appartenir au même jeu. Ajouter des drapeaux de l'armée qui flottent, des soldats non armés qui bouge
+8. **Hôpital** Les blessés évacués où en déroute vont à l'hôpital (on voit ainsi leur nombre, comment les réaffecter) ; l'hôpital permet de sauver plus de blessés en gagnant des niveau
 
 ## Vérifier et livrer
 
