@@ -13,7 +13,7 @@ Statuts : **à l'étude** · **validé** (Jérôme a tranché) · **en cours** �
 
 **Statut** : validé. Ordre proposé : A (bugs visuels) → B (interface) → C (missions et victoire) → D (renforts, déroute) → E (xp, mitrailleuses) → F (sons : fait, v0.99.6). Chaque lot : lire son fichier de domaine, tests ciblés, `stamp`, version.
 
-**A. Visuels** (v0.99.5 livré : pause qui fige l'écran, pluie dans le ciel, socle plat du camp, piste de l'aérodrome ; reste le reste de la liste)
+**A. Visuels** (v0.99.5 livré : pause qui fige l'écran, pluie dans le ciel, socle plat du camp, piste de l'aérodrome ; reste le reste de la liste) ; v0.99.7 livré : boue en taches, érosion et lacs, brouillard visible
 - **Arbres** : animation de chute sous un bombardement ; feuillage ellipsoïdal (rond) ; même aspect à tous les zooms (on peut simplifier les formes, pas en retirer le nombre).
 - **Aérodrome** : le sol du camp est le sol du terrain ; seule la piste a sa couleur (et quelques lignes blanches) ; la piste scintille (sans doute deux faces à la même hauteur : à corriger) ; les avions décollent de l'aérodrome avant leur attaque.
 - **Chars** : le char part du parc des chars ; le parc affiche le nombre total, un bouton vers les chars déployés et leur état (un clic centre la vue sur le char). Fenêtre d'ordres du char : décollée des boutons d'artillerie, boutons au design system, ordre en cours, vie du char, comprendre la 2e barre (bleue : cooldown du canon ? elle ne bouge pas : la faire vivre ou la retirer) ; l'artillerie arrête les chars trop difficilement (rééquilibrer par mesure).

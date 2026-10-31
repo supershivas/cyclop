@@ -16,13 +16,13 @@
      nuit elle se fait en lot.
    - Les versions (`versionLigne`, `versionMorceau`) disent au rendu ce qui a
      changé ; le terrain ne connaît pas le rendu. */
-import { hash2 } from './lib/rng.js?v=0.99.6';
-import { CALIBRES } from './data/calibres.js?v=0.99.6';
-import { creuxRond, levreJetee, eclatsAutour, bordDuCreux, FORME_JEU } from './cratere.js?v=0.99.6';
-import { appliquerFormes } from './formes.js?v=0.99.6';
-import { poserObjets } from './objets.js?v=0.99.6';
-import { SAISONS } from './data/meteo.js?v=0.99.6';
-import { poserEaux, poserMarecages, poserPonts, abimerPont, viderLesEaux } from './eaux.js?v=0.99.6';
+import { hash2 } from './lib/rng.js?v=0.99.7';
+import { CALIBRES } from './data/calibres.js?v=0.99.7';
+import { creuxRond, levreJetee, eclatsAutour, bordDuCreux, FORME_JEU } from './cratere.js?v=0.99.7';
+import { appliquerFormes } from './formes.js?v=0.99.7';
+import { poserObjets } from './objets.js?v=0.99.7';
+import { SAISONS } from './data/meteo.js?v=0.99.7';
+import { poserEaux, poserMarecages, poserPonts, abimerPont, viderLesEaux } from './eaux.js?v=0.99.7';
 
 export const ETAT = { SEC: 0, HUMIDE: 1, BOUE: 2, EAU: 3, GLACE: 4 };
 export const MORCEAU = 25;             // cases : le côté d'un morceau de maillage (mesuré, rendu logiciel : à 100, la moitié du champ restait dessinée au zoom 4 ; à 25, 6 500 triangles au lieu de 15 600 au zoom 8)
@@ -47,6 +47,7 @@ export function creerTerrain(graine, secteur, R) {
   const base = new Int16Array(N), diff = new Int8Array(N);
   const nappe = new Float32Array(N);            // m (absolu) : le niveau de la nappe sous chaque case
   const eau = new Float32Array(N), humid = new Float32Array(N);
+  const tache = new Int8Array(N);               // −127 à 127 : le seuil de boue de chaque case varie par plaques (v0.99.6) : la terre sèche vire à la boue en taches qui grandissent, pas d'un coup
   const herbe = new Uint8Array(N);              // 0 à 3 : l'herbe (les obus la soufflent, la boue la tue)
   const pont = new Uint8Array(N), pontH = new Int16Array(N), pontEau = new Uint8Array(N), pontsListe = [];   // les ponts (eaux.js) : le numéro de l'ouvrage sur chaque case, la hauteur de son tablier (quarts), la case était-elle de l'eau
   const profond = new Uint8Array(N);           // 1 : eau profonde (un lac, un fleuve de l'atelier : jamais sauvegardé, refait du secteur)
@@ -65,6 +66,7 @@ export function creerTerrain(graine, secteur, R) {
       + 3;                                                    // m au-dessus du zéro du secteur
     base[c] = Math.round(h * 4);
     nappe[c] = (lent - 0.5) * 2 * R.terrain.bosses * 0.6 * fB + 3 - niveau;
+    tache[c] = Math.round((bruit(x, y, 9, g + 31) * 0.65 + bruit(x, y, 3.5, g + 32) * 0.35 - 0.5) * 2 * 127);
     humid[c] = R.hydro.humiditeDepart * (0.7 + 0.6 * bruit(x, y, 23, g + 4)) * humidSaison;
     // l'herbe : par plaques, plus drue dans les creux du relief lissé
     herbe[c] = Math.max(0, Math.min(3, Math.floor((bruit(x, y, 11, g + 6) * 0.8 + bruit(x, y, 37, g + 8) * 0.6 - lent * 0.3) * 4 - 1)));
@@ -114,7 +116,7 @@ export function creerTerrain(graine, secteur, R) {
   viderLesEaux(arbres, profond, W); viderLesEaux(buissons, profond, W);      // ni arbre ni buisson dans l'eau
   const mw = Math.ceil(W / MORCEAU), mh = Math.ceil(H / MORCEAU);
   return {
-    W, H, base, diff, nappe, eau, humid, arbres, herbe, buissons, roseaux, profond, pont, pontH, pontEau, pontsListe, versionPonts: 0, coupes: [],
+    W, H, base, diff, nappe, eau, humid, tache, arbres, herbe, buissons, roseaux, profond, pont, pontH, pontEau, pontsListe, versionPonts: 0, coupes: [],
     versionHerbe: 1,                            // l'herbe ou les buissons ont changé (rendu)
     versionLigne: new Uint32Array(H),           // couleur d'une rangée changée (rendu)
     versionMorceau: new Uint32Array(mw * mh),   // hauteurs d'un morceau changées (rendu)
@@ -150,7 +152,8 @@ export function etat(T, c, R, gel = false) {
   }
   const m = T.humid[c];
   if (gel) return ETAT.SEC;                     // le sol gelé porte
-  return m > H.boue ? ETAT.BOUE : m > H.humide ? ETAT.HUMIDE : ETAT.SEC;
+  const t = T.tache ? T.tache[c] * (H.tache / 127) : 0;      // la plaque où l'on est : le seuil recule ou avance
+  return m > H.boue + t ? ETAT.BOUE : m > H.humide + t ? ETAT.HUMIDE : ETAT.SEC;
 }
 const VITESSE_ETAT = ['sec', 'humide', 'boue', 'eau', 'glace'];
 // la vitesse sur une case : l'eau profonde ne se traverse pas (presque à l'arrêt : un homme qui y tombe en ressort)
@@ -276,6 +279,29 @@ export function hydroLignes(T, j0, j1, m, R) {
         if (best < 0 || h - bh < 2) continue;
         const q = Math.min(1 - humid[best], humid[c] * Hy.glissement * Math.min(1, (h - bh) / 4));
         humid[c] -= q; humid[best] += q;
+      }
+    }
+    // la pluie ronge les parois des trous d'obus (v0.99.6) : un quart de mètre de terre glisse dans le trou, d'autant plus vite que l'eau y est ; le relief du sol généré et les tranchées (dans `base`) ne bougent pas
+    if (m.pluie > 0 && !m.gel && Hy.erosion) {
+      for (let i = 0; i < W; i++) {
+        const c = o + i;
+        if (humid[c] <= Hy.humide || T.pont[c] || T.profond[c]) continue;
+        const h = hauteurQ(T, c);
+        let best = -1, bh = h;
+        if (i > 0 && hauteurQ(T, c - 1) < bh) { bh = hauteurQ(T, c - 1); best = c - 1; }
+        if (i < W - 1 && hauteurQ(T, c + 1) < bh) { bh = hauteurQ(T, c + 1); best = c + 1; }
+        if (j > 0 && hauteurQ(T, c - W) < bh) { bh = hauteurQ(T, c - W); best = c - W; }
+        if (j < H - 1 && hauteurQ(T, c + W) < bh) { bh = hauteurQ(T, c + W); best = c + W; }
+        if (best < 0 || h - bh < 2 || T.diff[best] >= 0 || T.diff[c] <= -100 || T.diff[best] >= 100) continue;      // seulement vers un trou creusé par les obus
+        // le fond d'un trou ne se comble pas avant ses parois (un puits étroit ne tiendrait plus l'eau : une pente ne garde pas d'eau) : le voisin doit lui-même avoir plus bas que lui, ou être au niveau de ses voisins
+        { const bi = best % W, bj = (best / W) | 0, hb = hauteurQ(T, best); let creux = true;
+          if (bi > 0 && hauteurQ(T, best - 1) < hb) creux = false; if (bi < W - 1 && hauteurQ(T, best + 1) < hb) creux = false;
+          if (bj > 0 && hauteurQ(T, best - W) < hb) creux = false; if (bj < H - 1 && hauteurQ(T, best + W) < hb) creux = false;
+          if (creux && h - bh < 4) continue; }
+        const mouille = eau[best] > Hy.eau || eau[c] > Hy.eau;
+        if (hash2(c, T.versionLigne[j], 77) >= Hy.erosion * m.pluie * (mouille ? Hy.erosionEau : 1)) continue;
+        T.diff[c]--; T.diff[best]++;
+        toucher(T, i, j); toucher(T, best % W, (best / W) | 0);
       }
     }
     // l'eau coule vers le voisin le plus bas (4 voisins), quelques passes

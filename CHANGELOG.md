@@ -1,5 +1,9 @@
 # Journal des versions
 
+## 0.99.7 — 2026-10-31
+- La terre sèche vire à la boue en taches qui grandissent ; la pluie ronge les parois des cratères et les flaques se rejoignent en lacs
+- Le brouillard se voit : un voile gris sur tout le champ et des bancs de brume qui dérivent au ras du sol
+
 ## 0.99.6 — 2026-10-31
 - Les explosions, tirs de fusil, mitrailleuses, mitraillage aérien, vol d'avion, pluie et vent sont de vrais sons (libres de droits) au lieu de la synthèse
 - Le labo (sujet « Le son ») fait écouter les candidats de chaque famille, avec auteur et licence

@@ -1,7 +1,7 @@
 // La pluie (des traits qui tombent autour du centre de la vue) et le brouillard (un voile de brume continu qui s'épaissit vers le haut
 // de l'écran, le lointain ; plus de trame depuis la v0.12.1). Le dessin seulement : `afficher` lit la météo, `maj` règle les nuanceurs.
-import * as SH from './shaders.js?v=0.99.6';
-import { METEO } from '../data/meteo.js?v=0.99.6';
+import * as SH from './shaders.js?v=0.99.7';
+import { METEO } from '../data/meteo.js?v=0.99.7';
 
 const PLUIE = 5000, NEIGE = 3500;
 const BOITE_MAX = 600;      // m : la boîte de pluie autour de la vue ne dépasse pas cela (dézoomé, 1 100 m pour 1 600 gouttes : presque rien sur le champ, tout au bord de l'horizon)
@@ -41,7 +41,7 @@ export function creerMeteo({ THREE, scene, col }) {
   }
   // le brouillard : un voile de brume continu qui s'épaissit vers le haut de l'écran (le lointain) ; plus de trame (Jérôme, v0.12.1)
   const brumeMat = new THREE.ShaderMaterial({
-    uniforms: { uCol: { value: col('r') }, uH: { value: 400 } },
+    uniforms: { uCol: { value: col('r') }, uH: { value: 400 }, uT: { value: 0 }, uForce: { value: 1 }, uDer: { value: new THREE.Vector2() } },
     vertexShader: SH.brumeMat.v,
     fragmentShader: SH.brumeMat.f,
     transparent: true,
@@ -74,7 +74,8 @@ export function creerMeteo({ THREE, scene, col }) {
       { const e = Math.min(BOITE_MAX, Math.hypot(vue.vw, vue.vh) / p + 40); plMat.uniforms.uE.value.set(e, e); }
       plMat.uniforms.uTaille.value = p >= 4 ? 2 : 1;
       if (neigeMatT) neigeMatT.uniforms.uT.value = tAnim; if (neigeMatT) { neigeMatT.uniforms.uC.value.set(cx, cz); neigeMatT.uniforms.uE.value.copy(plMat.uniforms.uE.value); neigeMatT.uniforms.uTaille.value = (p >= 4 ? 3 : 2) + (fort ? 1 : 0); }
-      brumeMat.uniforms.uH.value = vue.vh;
+      brumeMat.uniforms.uH.value = vue.vh; brumeMat.uniforms.uT.value = tAnim; brumeMat.uniforms.uForce.value = fort ? 0.55 : 1;
+      brumeMat.uniforms.uDer.value.x += vx * 3 * dt; brumeMat.uniforms.uDer.value.y += vz * 3 * dt;
     },
   };
 }

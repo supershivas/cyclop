@@ -28,8 +28,12 @@ export const REGLAGES = {
     glissement: 0.12,     // part de l'humidité qui glisse vers le voisin plus bas, par heure
     eau: 0.07,            // m : au-delà, la case est de l'eau
     boue: 0.7,            // humidité : au-delà, de la boue
+    tache: 0.14,          // ± sur les seuils de boue et d'humide, par plaques de ~10 m : la boue gagne le sol en taches (Jérôme, v0.99.6)
     humide: 0.4,          // humidité : au-delà, un sol humide
     humiditeDepart: 0.18,
+    // l'érosion de la pluie (Jérôme, v0.99.6) : sur un sol détrempé, la terre d'une paroi de cratère (marche de 3 quarts de mètre au moins) glisse dans le trou ; plus vite au bord de l'eau, qui ronge
+    erosion: 0.3,        // chance par heure de pluie et par case de paroi de perdre un quart de mètre
+    erosionEau: 3,        // × cette chance quand un voisin est sous l'eau (le rivage recule : les flaques se rejoignent en lac)
   },
   // Le corps à corps (Jérôme, v0.69.0 : « l'animation au corps à corps est possible avec un combattant ennemi ; les statistiques de chacun jouent dans leur efficacité ») :
   // deux hommes de camps opposés à moins de `portee` mètres s'affrontent : ils s'arrêtent, se font face, et frappent à la baïonnette toutes les `periode` secondes (± 30 %).

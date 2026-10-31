@@ -452,10 +452,20 @@ export const cielPluie = {
 
 export const brumeMat = {
   v: `void main() { gl_Position = vec4(position.xy, -1.0, 1.0); }`,
-  f: `uniform vec3 uCol; uniform float uH;
+  // v0.99.6 (Jérôme : « on ne distingue aucune différence avec un jour normal ») : un voile gris sur tout le champ (plus épais au loin) et une fumée basse qui dérive, par blocs de 5 pixels
+  // (des bancs de brume : deux octaves de bruit de valeur, qui glissent avec le temps du dessin) ; `uForce` : 1 au brouillard, moins dans la tempête de neige
+  f: `uniform vec3 uCol; uniform float uH; uniform float uT; uniform float uForce; uniform vec2 uDer;
+      float h(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+      float bruit(vec2 p) {
+        vec2 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f);
+        return mix(mix(h(i), h(i + vec2(1.0, 0.0)), f.x), mix(h(i + vec2(0.0, 1.0)), h(i + vec2(1.0, 1.0)), f.x), f.y);
+      }
       void main() {
         float loin = gl_FragCoord.y / uH;                          // 0 en bas, 1 en haut
-        gl_FragColor = vec4(uCol, 0.2 * max(0.0, loin - 0.45) / 0.55);
+        vec2 q = floor(gl_FragCoord.xy / 5.0) * 5.0 / uH * 5.0 + vec2(uT * 0.05 + uDer.x * 0.01, -uDer.y * 0.01);
+        float banc = 0.65 * bruit(q) + 0.35 * bruit(q * 2.3 + 7.0);
+        float a = (0.2 + 0.3 * loin + 0.3 * (banc - 0.4)) * uForce;
+        gl_FragColor = vec4(uCol, clamp(a, 0.0, 0.7));
       }`,
 };
 
