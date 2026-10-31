@@ -1,8 +1,8 @@
 // Le ciel du jeu : un dégradé et des nuages selon la météo (Jérôme, v0.36.8 : « léger dégradé, nuages » ; v0.36.7 : le ciel suit la météo). Un plan plein écran
 // peint avant tout le reste, que le sol et le faux terrain recouvrent ; la nuit, le voile de `temps.js` le noircit. Des mélanges continus de la palette (des fondus) :
 // `[lettre, part]`. `hor` est aussi la couleur du fond et du bout du champ. Le dessin seulement : aucun hasard, le temps est celui du dessin.
-import * as SH from './shaders.js?v=0.99.4';
-import { lune, couvertureNuit, clairDeLune } from '../data/lune.js?v=0.99.4';
+import * as SH from './shaders.js?v=0.99.5';
+import { lune, couvertureNuit, clairDeLune } from '../data/lune.js?v=0.99.5';
 
 const CIELS = {
   sec: { hor: [['e', 1]], haut: [['e', 0.75], ['t', 0.25]], nuage: [['o', 0.8], ['r', 0.2]], couv: 0.45 },
@@ -52,6 +52,8 @@ export function creerCiel({ THREE, scene, col, camera }) {
       n.uVis.value = vis; n.uT.value = t; n.uCouv.value = couvertureNuit(jour, graine, meteo);
       n.uLune.value.set(L.az, L.el, L.p); n.uClair.value = clairDeLune(jour, graine, meteo); n.uVue.value.set(Math.atan2(devant.x, devant.z), 0);
     },
+    // le haut de l'écran regarde-t-il au-dessus de l'horizon ? (le ciel est visible)
+    visible() { camera.getWorldDirection(devant); return plan.visible && Math.asin(Math.max(-1, Math.min(1, devant.y))) + THREE.MathUtils.degToRad(camera.fov) / 2 >= 0.01; },
     derive(x, z) { u.uDer.value.set(x, z); },                       // la dérive des nuages, accumulée par le vent (jour et nuit)
     maj(nom, t) {
       const C = CIELS[nom] || CIELS.sec;

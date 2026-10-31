@@ -126,6 +126,10 @@
 .batterie.vise span, .batterie.vise .touche { color: var(--jeu-encre); border-color: var(--jeu-encre); }
 @media (hover: hover) { .batterie:hover:not(.vise):not(.muet) { background: var(--jeu-accent); color: var(--jeu-fond); } .batterie:hover:not(.vise):not(.muet) span { color: var(--jeu-fond); } }
 .vise .jeu-canvas { cursor: crosshair; }
+/* le temps arrêté (v0.99.5) : les couleurs se ternissent, tout le dessin est figé (rendu3d.js `gele`) ; un filtre continu, comme les fondus de la palette */
+.jeu-canvas { transition: filter .35s; }
+.jeu-canvas.gele { filter: saturate(.35) brightness(.88) contrast(.92); }
+@media (prefers-reduced-motion: reduce) { .jeu-canvas { transition: none; } }
 
 .infobulle { position: fixed; left: 0; top: 0; z-index: 60; max-width: 34ch; padding: var(--e1) var(--pas); background: var(--jeu-encre); color: var(--jeu-fond); font-size: var(--texte-petit); line-height: 1.4; box-shadow: 2px 2px 0 var(--jeu-fond); pointer-events: none; }
 .infobulle[hidden] { display: none; }

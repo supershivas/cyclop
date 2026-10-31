@@ -2,10 +2,10 @@
 // tant qu'un chantier dure, un liseré d'os autour du bâtiment choisi. Le dessin seulement : tout vient de l'état de la bataille, rien n'y est écrit ; et rien n'est dessiné hors de la partie bridée
 // (`etat.camp.bride`), donc ni le labo ni les tests n'ont de camp ; le jeu à deux en a un par joueur (v0.94.0). Les deux camps sont dessinés : celui d'en face est le nôtre tourné d'un demi-tour.
 // Fabrique `creerCamp({ THREE, scene, bataille: () => B, hauteur })`.
-import { atelier } from './engins.js?v=0.99.4';
-import { BATIR, chantier } from './camp-modeles.js?v=0.99.4';
-import { emprisesCamp, emplacementCamp } from '../camp.js?v=0.99.4';
-import { PALETTE as P } from '../palette.js?v=0.99.4';
+import { atelier } from './engins.js?v=0.99.5';
+import { BATIR, chantier, regler_creux } from './camp-modeles.js?v=0.99.5';
+import { emprisesCamp, emplacementCamp } from '../camp.js?v=0.99.5';
+import { PALETTE as P } from '../palette.js?v=0.99.5';
 
 const LUEUR = 0.9;      // × la couleur de la matière (mesuré à l'œil sur la partie du premier matin : sans elle, la boue est noire)
 
@@ -35,20 +35,23 @@ export function creerCamp({ THREE, scene, bataille, hauteur }) {
     // les deux camps (v0.92.0) : le nôtre au sud, celui d'en face au nord, tourné d'un demi-tour ; seul le nôtre se choisit
     for (const e of [...emprisesCamp(B.etat, 0), ...emprisesCamp(B.etat, 1)]) {
       const id = `${e.camp}:${e.cle}`; vus.add(id);
-      const c = (e.camp === 0 ? B.etat.camp : B.etat.campEux).batiments[e.cle], signature = `${c.niveau}|${c.chantier ? 1 : 0}`;
+      // la plus haute et la plus basse hauteur de l'emprise, relevées sur une grille de 4 m : le socle est plat et couvre tout le relief (v0.99.5)
+      let h = -Infinity, bas = Infinity;
+      for (let dx = -e.w / 2; dx <= e.w / 2 + 0.01; dx += 4) for (let dz = -e.d / 2; dz <= e.d / 2 + 0.01; dz += 4) { const v = hauteur(e.x + dx, e.y + dz); h = Math.max(h, v); bas = Math.min(bas, v); }
+      const creux = Math.ceil((h - bas) * 4) / 4 + 0.5;
+      const c = (e.camp === 0 ? B.etat.camp : B.etat.campEux).batiments[e.cle], signature = `${c.niveau}|${c.chantier ? 1 : 0}|${creux}`;
       let m = modeles.get(id);
       if (!m || m.signature !== signature) {
         if (m) scene.remove(m.pivot);
         const pivot = new THREE.Group();
+        regler_creux(creux);
         if (c.niveau) pivot.add(BATIR[e.cle](A, c.niveau).g);
         if (c.chantier) pivot.add(chantier(A, e.w * (c.niveau ? 1.02 : 0.7), e.d * (c.niveau ? 1.02 : 0.7), c.niveau ? 5 : 4));
         pivot.traverse(o => { if (o.material?.emissive) matieres.add(o.material); });
         scene.add(pivot);
         m = { pivot, signature }; modeles.set(id, m);
       }
-      // posé sur le point le plus haut de l'emprise (les volumes sont plats : sur une pente, ils s'enterrent d'un côté plutôt que de flotter)
-      let h = hauteur(e.x, e.y);
-      for (const [sx, sy] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) h = Math.max(h, hauteur(e.x + sx * e.w / 2, e.y + sy * e.d / 2));
+      // posé sur le point le plus haut de l'emprise (plat : le socle descend jusqu'au plus bas)
       m.pivot.position.set(e.x, h, e.y); m.pivot.rotation.y = e.rot;
     }
     for (const [id, m] of modeles) if (!vus.has(id)) { scene.remove(m.pivot); modeles.delete(id); }

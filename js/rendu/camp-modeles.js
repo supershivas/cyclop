@@ -1,9 +1,9 @@
 // Les bâtiments du camp dessinés en volumes (Jérôme, v0.87.0) : sortis du labo (`labo-batiments.js`) pour que le jeu les dessine aussi (`rendu/camp.js`).
 // Chaque fabrique `BATIR[clé](A, niveau)` rend { g, w, d } : le groupe centré sur son emprise (w le long de x, d le long de z), l'avant (le front) à −z ; `A` est `atelier(THREE)` (engins.js).
 // 1 unité = 1 m, la palette du jeu seulement ; le dessin seulement, rien n'y est écrit.
-import { PALETTE as P } from '../palette.js?v=0.99.4';
-import { schneider } from './engins.js?v=0.99.4';
-import { PIEDS } from '../data/batiments.js?v=0.99.4';
+import { PALETTE as P } from '../palette.js?v=0.99.5';
+import { schneider } from './engins.js?v=0.99.5';
+import { PIEDS } from '../data/batiments.js?v=0.99.5';
 
 // ─── Les pièces communes ───────────────────────────────────────────────────
 export const G = A => new A.THREE.Group();
@@ -18,7 +18,10 @@ function baraque(A, g, [x, z], w, L, h, mur, toit, rot = 0) {
   b.position.set(x, 0, z); b.rotation.y = rot; g.add(b); return b;
 }
 const arche = (R, n = 12) => { const p = [[-R, 0]]; for (let k = 1; k < n; k++) { const a = Math.PI - k * Math.PI / n; p.push([R * Math.cos(a), R * 0.8 * Math.sin(a)]); } p.push([R, 0]); return p; };
-function sol(A, g, w, d, c = P.b) { A.b(g, [w, 0.2, d], c, [0, 0.1, 0], [0, 0, 0], false); }
+// le socle : plat, posé sur le point le plus haut de l'emprise et descendant jusqu'au plus bas (`creux`, m ; v0.99.5), pour que le bâtiment ne lévite pas sur une pente et qu'aucune bosse ne perce le sol
+let CREUX = 0;
+export const regler_creux = c => { CREUX = Math.max(0, c); };
+function sol(A, g, w, d, c = P.b) { A.b(g, [w, 0.2 + CREUX, d], c, [0, 0.1 - CREUX / 2, 0], [0, 0, 0], false); }
 
 // un biplan : le nez à +x (rangé face au front par `face`)
 function biplan(A, c = P.h) {
@@ -76,8 +79,10 @@ export const BATIR = {
     return { g, w: 34, d: 22 };
   },
   aerodrome(A, n) {
-    const g = G(A); sol(A, g, 84, 40, P.h);
-    A.b(g, [80, 0.1, 14], P.v, [0, 0.22, 4], [0, 0, 0], false);                           // la bande d'herbe fauchée
+    const g = G(A); sol(A, g, 84, 40, P.h);                                               // le sol du terrain (herbe morte, `h`) ; seule la piste a sa couleur
+    A.b(g, [80, 0.05, 12], P.g, [0, 0.225, 4], [0, 0, 0], false);                         // la piste : une bande de glaise, 2,5 cm au-dessus du socle (v0.99.5 : elle clignotait à 0,2 → 0,17)
+    for (let k = -6; k <= 6; k++) A.b(g, [4, 0.02, 0.4], P.o, [k * 6, 0.26, 4], [0, 0, 0], false);       // l'axe en pointillé blanc
+    for (const s of [-1, 1]) A.b(g, [80, 0.02, 0.25], P.o, [0, 0.255, 4 + s * 5.6], [0, 0, 0], false);   // les bords
     const hangars = [-32, -19, -6].slice(0, n);
     for (const x of hangars) { A.prisme(g, arche(5), 14, P.r, [x, 0, -16]); A.b(g, [8, 3.4, 0.1], P.t, [x, 1.7, -8.97], [0, 0, 0], false); }
     const avions = [[-32, -5, 0], [20, 4, 0.1], ...(n >= 2 ? [[-19, -5, 0]] : []), ...(n >= 3 ? [[-6, -5, 0], [34, 4, -0.1]] : [])];

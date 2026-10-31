@@ -434,6 +434,22 @@ export const plMat = {
 // la neige (v0.51.0) : les mêmes points que la pluie, plus lents, ronds (des flocons, pas des traits)
 export const neigeMat = { v: plMat.v, f: `uniform vec3 uCol; void main() { gl_FragColor = vec4(uCol, 1.0); }` };
 
+// La pluie et la neige dans le ciel (v0.99.5) : les gouttes en 3D s'arrêtent au bord de la boîte, donc à l'horizon ; ce plan plein écran, à la profondeur du fond (seul le ciel le reçoit), prolonge
+// la chute par des traits (ou des flocons) en pixels d'écran, par colonne, tombant au rythme du temps du dessin. Aucun hasard : un hachage de la colonne et du rang.
+export const cielPluie = {
+  v: `void main() { gl_Position = vec4(position.xy, 0.9995, 1.0); }`,
+  f: `uniform vec3 uCol; uniform float uT; uniform float uNeige;
+      float h(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+      void main() {
+        vec2 f = floor(gl_FragCoord.xy);
+        float k = uNeige > 0.5 ? f.y / 3.0 + uT * (1.2 + 1.6 * h(vec2(f.x, 3.0))) : f.y / 6.0 + uT * (2.4 + 3.0 * h(vec2(f.x, 3.0)));
+        float c = floor(k);
+        float a = h(vec2(f.x, c)) > (uNeige > 0.5 ? 0.985 : 0.93) ? 1.0 : 0.0;
+        if (uNeige < 0.5 && fract(k) > 0.8) a = 0.0;
+        gl_FragColor = vec4(uCol, a);
+      }`,
+};
+
 export const brumeMat = {
   v: `void main() { gl_Position = vec4(position.xy, -1.0, 1.0); }`,
   f: `uniform vec3 uCol; uniform float uH;
