@@ -13,6 +13,7 @@ Les conditions de victoire ne sont toujours pas claires. Le joueur ne sait pas c
 3. **Une liste de missions tirée au début de chaque partie** : une mission principale et des missions secondaires aléatoires, tirées avec la graine de la partie (jamais `Math.random`), gardées dans `etat` (la sauvegarde relue est la même partie : tests « relue au milieu », « relue après une nuit »). Monter `VERSION` de bataille.js sans migration (exception du `CLAUDE.md`).
 4. **Les conditions sont implémentées et cohérentes** avec `juger` : ce que la modale annonce est exactement ce qui fait gagner ou perdre, y compris « prendre » avant la fin (1re ligne ennemie tenue à 75 % deux soirs de suite) et la chute du secteur. Un ordre ou un état impossible se refuse à voix haute.
 5. **Jeu à deux** : l'objectif du kaki est l'inverse de celui du bleu ; la modale dit la mission du camp joué (`MOI`). Tester avec `test/lockstep.test.mjs` puis `node outils/deux.mjs`.
+6. **Partie simple** : ajout d'options de partie (à proposer) dont une durée en nombre de jours (ce qui influence les ordres de mission
 
 ## À demander à Jérôme avant de coder (AskUserQuestion)
 
