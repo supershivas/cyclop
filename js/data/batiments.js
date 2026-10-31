@@ -59,12 +59,25 @@ export const BATIMENTS = {
       { nom: 'Baraquements', cout: 0, depart: true, effet: 'Deux baraques, des tentes : 2 régiments frais en réserve.', reserves: 2 },
       { nom: 'Cantonnement', cout: 2, effet: 'Quatre baraques, une cuisine roulante : 4 régiments en réserve ; on y équipe un régiment, la nuit.', reserves: 4,
         choix: [['Poste de secours', 'Les blessés évacués reviennent plus souvent (deux sur trois au lieu d\'un sur deux).', { 'caserne.retour': 4 / 3 }], ['Cuisine roulante', 'Le ravitaillement donne des vivres pour quatre nuits au lieu de trois.', { 'caserne.vivres': 4 / 3 }]] },
-      { nom: 'Hôpital de campagne', cout: 3, effet: 'Un poste de secours, six baraques : 6 régiments en réserve.', reserves: 6,
+      { nom: 'Camp de repos', cout: 3, effet: 'Six baraques, une cantine : 6 régiments en réserve.', reserves: 6,
         choix: [['Réserve de plus', 'Un régiment frais de plus en réserve.', { '+reserves': 1 }], ['Cantine de campagne', 'Le ravitaillement donne des vivres pour cinq nuits.', { 'caserne.vivres': 1.25 }]] },
     ],
   },
+  // L'hôpital (Jérôme, retours du 30 octobre, lot A8 ; v0.99.11) : les blessés évacués y sont soignés (leur nombre se lit dans sa fenêtre, on y choisit où les guéris repartent) ; ses niveaux en sauvent plus
+  hopital: {
+    nom: 'L\'hôpital', court: 'Hôpital', unite: 'les blessés évacués', touches: '',
+    remplace: 'rien : les blessés évacués de la nuit y sont soignés',
+    ordres: [['Réaffecter les guéris (la fenêtre du bâtiment)', 1]],
+    niveaux: [
+      { nom: 'Infirmerie', cout: 0, depart: true, effet: 'Une baraque, des lits de camp : les blessés évacués y sont soignés, et la moitié revient au front.' },
+      { nom: 'Hôpital de campagne', cout: 3, effet: 'Deux pavillons : les blessés laissés au front meurent un quart moins souvent.', effets: { 'hopital.mort': 0.75 },
+        choix: [['Ambulances', 'Les blessés laissés au front meurent encore un quart moins souvent.', { 'hopital.mort': 0.75 }], ['Chirurgiens', 'Les blessés évacués reviennent un quart plus souvent.', { 'hopital.retour': 1.25 }]] },
+      { nom: 'Grand hôpital', cout: 4, effet: 'Quatre pavillons, un bloc opératoire : les évacués reviennent un quart plus souvent.', effets: { 'hopital.retour': 1.25 },
+        choix: [['Salle d\'opération', 'Les blessés laissés au front meurent encore un quart moins souvent.', { 'hopital.mort': 0.75 }], ['Convalescence', 'Les évacués reviennent un quart plus souvent.', { 'hopital.retour': 1.25 }]] },
+    ],
+  },
 };
-export const ORDRE_BATIMENTS = ['caserne', 'artillerie', 'sapeurs', 'chars', 'aerodrome'];
+export const ORDRE_BATIMENTS = ['caserne', 'hopital', 'artillerie', 'sapeurs', 'chars', 'aerodrome'];
 
 // L'équipement d'un régiment (Jérôme, v0.91.0 ; la caserne, niveau 2) : ce qu'on donne aux hommes, jamais ce qu'ils ont abattu. Il se donne la nuit, par une corvée (le régiment ne se repose pas : c'est son prix, avec `cout`
 // point de dotation) ; deux emplacements par régiment, un seul de chaque ; il meurt avec le régiment (relevé, il part avec son matériel). `id` d'une corvée : `eq-` + la clé. Les facteurs sont des propositions, à mesurer.
@@ -102,10 +115,10 @@ export const PARCOURS_EXEMPLE = [
 // sur [dx, dy] depuis ce point (la disposition « en ligne » du labo, retenue par Jérôme le 27 octobre). Les emprises (`PIED` de rendu/camp-modeles.js) ne se touchent pas.
 export const CAMP_PLAN = {
   x: 200, y: 333, largeur: 400, hauteur: 300,      // le secteur (400 × 300) : le camp d'en face est celui-ci tourné d'un demi-tour autour de son centre
-  ligne: { caserne: [-100, 0], artillerie: [-52, 0], sapeurs: [-14, 0], chars: [20, 0], aerodrome: [84, 0] },
+  ligne: { hopital: [-142, 0], caserne: [-100, 0], artillerie: [-52, 0], sapeurs: [-14, 0], chars: [20, 0], aerodrome: [84, 0] },
 };
 // L'emprise de chaque bâtiment [largeur le long de x, profondeur le long de y], en m, à tout niveau (le dessin la garde : `rendu/camp-modeles.js`)
-export const PIEDS = { artillerie: [34, 22], aerodrome: [84, 40], chars: [32, 30], sapeurs: [26, 22], caserne: [42, 28] };
+export const PIEDS = { hopital: [30, 24], artillerie: [34, 22], aerodrome: [84, 40], chars: [32, 30], sapeurs: [26, 22], caserne: [42, 28] };
 
 // Le camp d'en face (Jérôme, v0.92.0 ; lot 5) : l'IA bâtit seule, à l'aube, avec la même dotation (× `dotation` de la difficulté : data/difficulte.js). Elle n'a besoin que de ce qu'elle emploie :
 // l'artillerie (ses barrages : les calibres s'ouvrent aux niveaux) et la caserne (sa relève) ; les sapeurs pour refaire ses nids. Dans l'ordre de `plan` : l'artillerie d'abord (ses calibres sont sa force) ; le choix du palier vient d'un hachage de la graine.

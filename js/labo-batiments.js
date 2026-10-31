@@ -2,12 +2,12 @@
 // Cinq bâtiments dessinés en volumes (`THREE`, 1 unité = 1 m, mêmes arêtes et mêmes couleurs que le reste du jeu), chacun en trois niveaux, puis le camp entier dans la marge arrière du terrain, qui grandit avec les jours.
 // Rien n'est dans le jeu. Un clic sur un bâtiment ouvre son papier : ses ordres (ceux des boutons latéraux d'aujourd'hui), le niveau suivant et ce qu'il coûte. Les nombres sont dans `data/batiments.js`
 // (des propositions, à mesurer) ; le raisonnement est dans `docs/chantiers/camp-et-ameliorations.md`. Caméra : glisser pour tourner, molette pour zoomer, un clic (sans glisser) choisit un bâtiment.
-import { PALETTE as P } from './palette.js?v=0.99.10';
-import { loadThree } from './three-lib.js?v=0.99.10';
-import { el, bouton, maquette } from './labo-arcade.js?v=0.99.10';
-import { atelier } from './rendu/engins.js?v=0.99.10';
-import { BATIR, PIED, G, soldat, chantier } from './rendu/camp-modeles.js?v=0.99.10';
-import { BATIMENTS, ORDRE_BATIMENTS, PARCOURS_EXEMPLE, DOTATION, CAMP_PLAN } from './data/batiments.js?v=0.99.10';
+import { PALETTE as P } from './palette.js?v=0.99.11';
+import { loadThree } from './three-lib.js?v=0.99.11';
+import { el, bouton, maquette } from './labo-arcade.js?v=0.99.11';
+import { atelier } from './rendu/engins.js?v=0.99.11';
+import { BATIR, PIED, G, soldat, chantier } from './rendu/camp-modeles.js?v=0.99.11';
+import { BATIMENTS, ORDRE_BATIMENTS, PARCOURS_EXEMPLE, DOTATION, CAMP_PLAN } from './data/batiments.js?v=0.99.11';
 
 // ─── Le visionneur : une scène THREE, une caméra qu'on tourne, un clic qui choisit ───
 function visionneur(boite, THREE, o) {
@@ -111,7 +111,7 @@ export function maquetteBatiment(stage, cle) {
 // `disposition` : 'ligne' (le long de la route, derrière les tranchées) ou 'cour' (autour d'une cour, l'aérodrome au fond).
 const DISPOSITIONS = {
   ligne: CAMP_PLAN.ligne,
-  cour: { caserne: [0, 34], artillerie: [-62, -6], sapeurs: [-50, 44], chars: [62, -6], aerodrome: [0, 100] },
+  cour: { hopital: [-62, 44], caserne: [0, 34], artillerie: [-62, -6], sapeurs: [-50, 44], chars: [62, -6], aerodrome: [0, 100] },
 };
 export function etatDuCamp(jour) {
   const niveaux = {}, chantier = {};

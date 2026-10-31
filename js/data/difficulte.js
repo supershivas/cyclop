@@ -4,8 +4,8 @@
 // `dotation` (v0.92.0) : le facteur de la dotation du camp d'en face (la nôtre ne change jamais).
 // « Front ordinaire » est la partie d'avant : rien ne change (test). Les nombres sont des PROPOSITIONS, à régler d'après `scripts/mesure-difficulte.mjs`.
 export const DIFFICULTES = {
-  calme:    { nom: 'Secteur calme',     desc: 'Nous sommes plus nombreux, en face tarde à répondre.',                       forces: 1.3, ia: { barrage: 1.4, offensive: 1.4 }, stance: '', dotation: 0.7 },
-  ordinaire: { nom: 'Front ordinaire',  desc: 'À forces égales.',                                                           forces: 1,   ia: { barrage: 1,   offensive: 1 },   stance: '', dotation: 1 },
-  offensive: { nom: 'Grande offensive', desc: 'En face est plus nombreux, répond vite et tient ses tranchées.',             forces: 0.8, ia: { barrage: 0.7, offensive: 0.7 }, stance: 'retenu', dotation: 1.3 },
+  calme:    { nom: 'Secteur calme',     desc: 'Nous sommes plus nombreux, en face tarde à répondre.',                       forces: 1.3, ia: { barrage: 1.4, offensive: 1.4 }, stance: '', dotation: 0.7, chars: false },
+  ordinaire: { nom: 'Front ordinaire',  desc: 'À forces égales.',                                                           forces: 1,   ia: { barrage: 1,   offensive: 1 },   stance: '', dotation: 1, chars: false },
+  offensive: { nom: 'Grande offensive', desc: 'En face est plus nombreux, répond vite, tient ses tranchées et lance ses chars.',             forces: 0.8, ia: { barrage: 0.7, offensive: 0.7 }, stance: 'retenu', dotation: 1.3, chars: true },
 };
 export const DIFFICULTE_DEFAUT = 'ordinaire';

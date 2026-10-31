@@ -1,6 +1,6 @@
 // Les formes du rendu, construites à la main : un soldat (de la boîte à la silhouette), un arbre, un buisson. Pas d'état :
 // `THREE` et `col` (une couleur de la palette) viennent de creerRendu ; les soldats prennent aussi leurs attributs d'instance.
-import { ARBRES_FEUILLES } from '../data/arbres.js?v=0.99.10';
+import { ARBRES_FEUILLES } from '../data/arbres.js?v=0.99.11';
 
 export function creerGeometries(THREE, col) {
   // les faces d'une boîte qu'on voit d'ici : le dessus, le sud, l'est et l'ouest (jamais le nord ni le dessous)
@@ -298,7 +298,19 @@ export function creerGeometries(THREE, col) {
     Q(false, [-a, -b, z], [-x, -b, e], [-x, yh, e], [-a, yh, z]);
     return tris;
   }
-  function geometrieFeuilles(id, mode, degarni, chanfrein = 0) {
+  // Une touffe ronde (Jérôme, retours du 30 octobre, v0.99.11 : « feuillage ellipsoïdal ») : un demi-ellipsoïde facetté, 6 pans de large, 3 anneaux (de la calotte au flanc, un peu sous l'équateur : le dessous n'est jamais dessiné) ;
+  // 42 triangles contre 30 pour la boîte aux angles coupés. Les pans qui regardent vers le haut prennent la couleur du dessus, les autres celle du flanc : aucune couleur de plus.
+  const ANNEAUX = [90, 58, 28, -2, -30], PANS = 6;
+  function ellipsoide(w, h) {
+    const a = w / 2, b = h / 2, R = ANNEAUX.map(lat => Array.from({ length: PANS }, (_, k) => { const t = k / PANS * Math.PI * 2, r = lat === 90 ? 0 : a * Math.cos(lat * Math.PI / 180); return [Math.cos(t) * r, Math.sin(lat * Math.PI / 180) * b, Math.sin(t) * r]; })), tris = [];
+    for (let k = 0; k < PANS; k++) tris.push({ haut: true, p: [R[0][0], R[1][(k + 1) % PANS], R[1][k]] });                // la calotte (l'anneau 0 est un point)
+    for (let r = 1; r + 1 < ANNEAUX.length; r++) for (let k = 0; k < PANS; k++) {                                          // trois bandes : deux triangles par pan ; les deux d'en haut prennent la couleur du dessus
+      const A = R[r], Bn = R[r + 1], k1 = (k + 1) % PANS, haut = r <= 2;
+      tris.push({ haut, p: [A[k], Bn[k], A[k1]] }, { haut, p: [A[k1], Bn[k], Bn[k1]] });
+    }
+    return tris;
+  }
+  function geometrieFeuilles(id, mode, degarni, chanfrein = 0, rond = false) {
     const P = ARBRES_FEUILLES[mode];
     if (!P) return null;
     const F = formeArbre(id), pts = P.neige ? F.neige : F.pointes;
@@ -310,6 +322,13 @@ export function creerGeometries(THREE, col) {
       const s = p[3] * P.taille, w = P.neige ? s * 0.8 : s, h = P.neige ? 0.22 : s * 0.75;
       const teinte = k => k[0] === '#' ? new THREE.Color(k) : col(k);
       const dessus = teinte(P.dessus[n % P.dessus.length]), flanc = teinte(P.flanc[n % P.flanc.length]);
+      if (rond && !P.neige) {                                                // la touffe ronde : un demi-ellipsoïde
+        for (const t of ellipsoide(w * 1.15, h * 1.25)) {
+          const c = t.haut ? dessus : flanc;
+          for (const v of t.p) { pos.push(v[0] + p[0], v[1] + p[1], v[2] + p[2]); coul.push(c.r, c.g, c.b); }
+        }
+        n++; return;
+      }
       if (chanfrein > 0 && !P.neige) {                                       // les angles adoucis : un pan d'une part de la touffe (au plus 0,3 m)
         for (const t of boiteChanfreinee(w, h, w, Math.min(0.3, chanfrein * w))) {
           const c = t.haut ? dessus : flanc;

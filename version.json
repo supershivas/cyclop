@@ -1,8 +1,9 @@
 {
-  "version": "0.99.10",
+  "version": "0.99.11",
   "date": "2026-10-31",
   "changes": [
-    "La fenêtre du char suit le design system, se pose à côté des boutons de batterie, dit son ordre en cours, sa coque et son canon (barre hachurée quand il attend une cible)",
-    "Le parc garde 2 chars par bataille (3 et 4 aux niveaux supérieurs), l'aérodrome 3 avions (4 et 5) ; les obus de 75, 155 et 220 arrêtent plus facilement un char"
+    "Grande offensive : en face lance ses chars ; à tous les niveaux, ses barrages visent nos chars, devant eux quand ils roulent",
+    "L'hôpital : les blessés évacués y sont comptés et soignés, ses niveaux en sauvent plus, on y renvoie les guéris dans le régiment de son choix",
+    "Les arbres tombent sous les obus et ont un feuillage rond ; la fumée est faite d'ellipses ; les bâtiments du camp ont des drapeaux qui flottent et des hommes sans arme qui font les cent pas"
   ]
 }

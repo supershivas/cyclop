@@ -10,13 +10,13 @@
    - (v0.38.3) Les caillebotis et le coup de main sont retirés ; (v0.77.1) réparer la tranchée, inhumer les morts et creuser des abris aussi (docs/archives/corvees-retirees.md) : quatre corvées.
    - (v0.39.0) La mêlée se joue dans la nuit (`meleeNuit`) : un tronçon où les deux camps sont face à face au soir est tranché à l'aube, et les
      régiments au contact (`contactDe`) ne reçoivent aucune corvée. */
-import { hash2 } from './lib/rng.js?v=0.99.10';
-import { modif, refusEquiper, equiper } from './camp.js?v=0.99.10';
-import { CORVEES } from './data/corvees.js?v=0.99.10';
-import { EQUIPEMENTS } from './data/batiments.js?v=0.99.10';
-import { REGIMENTS } from './data/lexique.js?v=0.99.10';
-import { ajouterSoldat, poserCaracs, lireCaracs, place } from './army.js?v=0.99.10';
-import { departCaracs } from './identite.js?v=0.99.10';
+import { hash2 } from './lib/rng.js?v=0.99.11';
+import { modif, refusEquiper, equiper } from './camp.js?v=0.99.11';
+import { CORVEES } from './data/corvees.js?v=0.99.11';
+import { EQUIPEMENTS } from './data/batiments.js?v=0.99.11';
+import { REGIMENTS } from './data/lexique.js?v=0.99.11';
+import { ajouterSoldat, poserCaracs, lireCaracs, place } from './army.js?v=0.99.11';
+import { departCaracs } from './identite.js?v=0.99.11';
 
 export const corvee = id => CORVEES.find(c => c.id === id);
 
@@ -202,7 +202,7 @@ export function corvees(B, choix, ctx) {
   // les blessés laissés au front : certains ne passent pas la nuit
   for (let i = 0; i < A.n; i++) {
     if (A.mort[i] || !A.blessure[i]) continue;
-    if (rng() < N.mortBlesse * (A.blessure[i] === 3 ? 2 : 1) * (etat.regiments[A.reg[i]].equip?.includes('brancards') ? EQUIPEMENTS.brancards.mortBlesse : 1)) { mourir(i, 'blessure'); bilan[A.camp[i]].mortsBlesses++; }
+    if (rng() < N.mortBlesse * (A.blessure[i] === 3 ? 2 : 1) * modif(etat, A.camp[i], 'hopital.mort') * (etat.regiments[A.reg[i]].equip?.includes('brancards') ? EQUIPEMENTS.brancards.mortBlesse : 1)) { mourir(i, 'blessure'); bilan[A.camp[i]].mortsBlesses++; }
   }
   // les vivres : une nuit de moins ; qui n'en a plus a faim
   const faim = new Set();
@@ -268,8 +268,10 @@ function retours(B, rng, bilan) {
   for (const e of etat.evacues) {
     if (e.length < 6 || e[3] !== 0) continue;                     // (avant la v0.18.0 : ni blessure ni régiment, ils ne reviennent pas)
     if (etat.jour - e[1] < (N.retourNuits[e[2]] ?? 1)) continue;
-    const reg = etat.regiments[e[4]];
-    if (hash2(etat.graine | 0, e[0], 97 + e[1]) >= N.retourChance * modif(etat, reg?.camp ?? 1, 'caserne.retour') * (reg?.equip?.includes('brancards') ? EQUIPEMENTS.brancards.retour : 1) || !reg || reg.effectif <= 0) { e[3] = -1; continue; }
+    const origine = etat.regiments[e[4]];
+    // l'hôpital : le joueur peut renvoyer les guéris dans un autre régiment (v0.99.11) ; l'ancien régiment compte encore pour la chance (ses brancards)
+    const voulu = etat.affectation?.[origine?.camp ?? 1], reg = voulu != null && etat.regiments[voulu]?.camp === origine?.camp && etat.regiments[voulu].effectif > 0 ? etat.regiments[voulu] : origine;
+    if (hash2(etat.graine | 0, e[0], 97 + e[1]) >= N.retourChance * modif(etat, reg?.camp ?? 1, 'caserne.retour') * modif(etat, reg?.camp ?? 1, 'hopital.retour') * (origine?.equip?.includes('brancards') ? EQUIPEMENTS.brancards.retour : 1) || !reg || reg.effectif <= 0) { e[3] = -1; continue; }
     // il remonte par les boyaux : à 12 m derrière la place de son régiment
     const t = reg.ordre.trace, x0 = t ? t.x0 : reg.ordre.x - 40, x1 = t ? t.x1 : reg.ordre.x + 40;
     let slot = 0;

@@ -2,17 +2,17 @@
 // sapeurs ») ; ici, la fenêtre d'un bâtiment, posée au-dessus de lui quand on le choisit (v0.96.0 : « les options apparaissent au-dessus de chaque bâtiment au clic ; simplifier au maximum »), sur le modèle de la
 // fenêtre d'un régiment (`.reg-ouvert` : le titre et son niveau, une ligne de ce qu'il fait, des boutons de même largeur), et le bouton « Le camp » (la dotation, et la touche B). L'amélioration tient en un clic : le
 // choix du palier EST le bouton (« Tir de réglage · 3 pts »). Le texte long est dans l'infobulle. Lecture seule de l'état : les ordres passent par les fonctions que main.js donne.
-import { BATIMENTS, EQUIPEMENT } from '../data/batiments.js?v=0.99.10';
-import { refusCamp, campDe, charsDispo, NIVEAU_MAX } from '../camp.js?v=0.99.10';
-import { avionsPrets, avionsRestants } from '../avions.js?v=0.99.10';
-import { MITRAILLAGE } from '../data/mitraillage.js?v=0.99.10';
-import { METEO } from '../data/meteo.js?v=0.99.10';
+import { BATIMENTS, EQUIPEMENT } from '../data/batiments.js?v=0.99.11';
+import { refusCamp, campDe, charsDispo, patients, NIVEAU_MAX } from '../camp.js?v=0.99.11';
+import { avionsPrets, avionsRestants } from '../avions.js?v=0.99.11';
+import { MITRAILLAGE } from '../data/mitraillage.js?v=0.99.11';
+import { METEO } from '../data/meteo.js?v=0.99.11';
 
 const el = (tag, props = {}, ...kids) => { const e = Object.assign(document.createElement(tag), props); e.append(...kids); return e; };
 
 // `centrer(x, y)` : la caméra va à ce point (un clic sur un char déployé) ; `reste(cal)` : les secondes avant que la batterie soit prête
 // `bouton` : le bouton « Le camp » ; `aller()` : la caméra au camp (la touche B) ; `ameliorer(cle, choix)` : l'ordre de chantier (il dit son refus lui-même)
-export function creerCampHud({ moi = () => 0, bouton, papier, aller, ameliorer, centrer = () => {}, reste = () => 0 }) {
+export function creerCampHud({ moi = () => 0, bouton, papier, aller, ameliorer, centrer = () => {}, reste = () => 0, affecter = () => {} }) {
   let cle = null, signature = '';
   bouton.onclick = () => aller();
   const pts = n => `${n} pt${n > 1 ? 's' : ''}`;
@@ -39,6 +39,19 @@ export function creerCampHud({ moi = () => 0, bouton, papier, aller, ameliorer, 
         });
         papier.append(liste);
       }
+    }
+    if (niveau && cle === 'hopital') {      // les blessés évacués (v0.99.11) : combien, de quelle blessure, et où repartent les guéris
+      const ps = patients(e, moi()), prets = ps.filter(p => p.pret).length, n = [0, 0, 0, 0];
+      for (const p of ps) n[p.blessure]++;
+      papier.append(el('div', { className: 'compte', textContent: ps.length ? `${ps.length} blessé${ps.length > 1 ? 's' : ''} soigné${ps.length > 1 ? 's' : ''} (${n[1]} au bras, ${n[2]} à la jambe, ${n[3]} à la tête) · ${prets} guéri${prets > 1 ? 's' : ''}, prêt${prets > 1 ? 's' : ''} à repartir à l'aube` : 'Aucun blessé évacué : la nuit, la corvée « évacuer » les amène ici.' }));
+      const liste = el('div', { className: 'actions' }); liste.style.setProperty('--cols', 2);
+      const voulu = e.affectation?.[moi()] ?? null;
+      const b0 = el('button', { type: 'button', className: voulu === null ? 'actif' : '', textContent: 'Chacun au sien', onclick: () => affecter(null) }); b0.dataset.info = '# Chacun au sien\nLes guéris retrouvent le régiment qu\'ils ont quitté.'; liste.append(b0);
+      for (const r of e.regiments) if (r.camp === moi() && r.effectif > 0) {
+        const b = el('button', { type: 'button', className: voulu === r.id ? 'actif' : '', textContent: `Tous au ${r.nom}`, onclick: () => affecter(r.id) });
+        b.dataset.info = `# ${r.nom}\nLes guéris repartent dans ce régiment, par l'arrière, à l'aube (s'il tient encore).`; liste.append(b);
+      }
+      papier.append(liste);
     }
     if (niveau && cle === 'aerodrome') {
       const restants = avionsRestants(e, moi()), prets = avionsPrets(e, moi()), meteo = e.meteo[e.jour - 1], cloue = MITRAILLAGE.cloue.includes(meteo);
@@ -67,7 +80,7 @@ export function creerCampHud({ moi = () => 0, bouton, papier, aller, ameliorer, 
     bouton.title = `# Le camp (B)\nLa caméra y va. Un bâtiment se choisit d'un clic sur lui : on y dépense la dotation.\n## La dotation (${pts(camp.dotation)})\nElle tombe à l'aube : **+1** ; **+1** si nos lignes tiennent à 75 % ; **+2** la première fois qu'une ligne d'en face est prise.`;
     papier.hidden = !cle;
     if (!cle) { signature = ''; return; }
-    const c = camp.batiments[cle], s = [cle, c.niveau, c.chantier?.nuits ?? '', camp.dotation, e.reserves[moi()], cle === 'chars' ? e.chars.filter(k => k.camp === moi()).map(k => `${k.id}${k.etat}${Math.round(k.pv)}`).join() + reste('char') + charsDispo(e, moi()) : '', cle === 'aerodrome' ? e.avions[moi()].join() + avionsPrets(e, moi()) + e.meteo[e.jour - 1] : ''].join('|');
+    const c = camp.batiments[cle], s = [cle, c.niveau, c.chantier?.nuits ?? '', camp.dotation, e.reserves[moi()], cle === 'chars' ? e.chars.filter(k => k.camp === moi()).map(k => `${k.id}${k.etat}${Math.round(k.pv)}`).join() + reste('char') + charsDispo(e, moi()) : '', cle === 'hopital' ? patients(e, moi()).map(p => p.id + (p.pret ? 'p' : '')).join() + (e.affectation?.[moi()] ?? '') : '', cle === 'aerodrome' ? e.avions[moi()].join() + avionsPrets(e, moi()) + e.meteo[e.jour - 1] : ''].join('|');
     if (s !== signature) { signature = s; dessiner(B); }
   }
   return { maj, choisi: () => cle, choisirCle(k) { cle = k; signature = ''; } };

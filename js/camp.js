@@ -1,14 +1,35 @@
 // Le camp : la règle, sans écran (Jérôme, v0.86.0 : lot 1 de `docs/chantiers/camp-et-ameliorations.md`). Logique pure : aucun DOM, aucune horloge, aucun hasard.
 // L'état est `etat.camp` : la dotation de l'état-major, le niveau de chaque bâtiment (et son chantier d'une nuit), les lignes d'en face déjà comptées.
 // Lot 2 : les niveaux ouvrent les ordres (`refusOrdre`). Lot 3 (v0.88.0) : chaque niveau et chaque choix de palier change un chiffre (`modif`) ou un effectif (`effectifsDe`).
-import { hash2 } from './lib/rng.js?v=0.99.10';
-import { BATIMENTS, DOTATION, CAMP_PLAN, CAMP_IA, PIEDS, EQUIPEMENT, EQUIPEMENTS } from './data/batiments.js?v=0.99.10';
-import { MITRAILLAGE } from './data/mitraillage.js?v=0.99.10';
+import { hash2 } from './lib/rng.js?v=0.99.11';
+import { BATIMENTS, DOTATION, CAMP_PLAN, CAMP_IA, PIEDS, EQUIPEMENT, EQUIPEMENTS } from './data/batiments.js?v=0.99.11';
+import { MITRAILLAGE } from './data/mitraillage.js?v=0.99.11';
 
 const NOUS = 0, EUX = 1;
 /* L'état du camp de `camp` : `etat.camp` (le nôtre), `etat.campEux` (celui d'en face : v0.92.0) */
 export const campDe = (etat, camp = NOUS) => camp === NOUS ? etat.camp : etat.campEux;
 export const NIVEAU_MAX = 3;
+
+/* Les blessés évacués de `camp` que l'hôpital soigne encore : [{ id, jour, blessure, regiment, pret }] (pret : assez de nuits passées pour repartir) */
+export function patients(etat, camp = NOUS, nuits = { 1: 1, 2: 2, 3: 3 }) {
+  const out = [];
+  for (const e of etat.evacues ?? []) {
+    if (e.length < 6 || e[3] !== 0 || etat.regiments[e[4]]?.camp !== camp) continue;
+    out.push({ id: e[0], jour: e[1], blessure: e[2], regiment: e[4], pret: etat.jour - e[1] >= (nuits[e[2]] ?? 1) });
+  }
+  return out;
+}
+/* Où repartent les guéris : un régiment de son camp encore debout, ou null (chacun au sien). Rend { ok } ou { refus } */
+export function affecterGueris(etat, camp, reg) {
+  if (etat.phase === 'fin') return { refus: 'La bataille est finie.' };
+  if (reg !== null) {
+    const r = etat.regiments[reg];
+    if (!r || r.camp !== camp) return { refus: 'Ce régiment n\'est pas le vôtre.' };
+    if (r.effectif <= 0) return { refus: `${r.nom} n'a plus d'hommes : les guéris n'y repartent pas.` };
+  }
+  (etat.affectation ??= [null, null])[camp] = reg;
+  return { ok: true };
+}
 
 /* Les chars qui restent au parc de `camp` (null : sans limite) */
 export const charsDispo = (etat, camp = NOUS) => etat.charsDispo?.[camp] ?? null;
