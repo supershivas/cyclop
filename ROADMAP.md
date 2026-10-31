@@ -38,7 +38,9 @@ Statuts : **à l'étude** · **validé** (Jérôme a tranché) · **en cours** �
 
 **Lot C** (missions et victoire) : livré v0.99.0 à v0.99.4. **Reste** de son prompt : des options de partie, dont une durée en jours choisie par le joueur (aujourd'hui tirée de la graine, 10 à 15 jours, `data/secteur.js`).
 
-**Points encore ouverts** : (1) valeurs exactes des bonus de chevron ; (2) la 2e barre du char (à constater dans le code avant de décider) ; (3) forme de la contre-attaque forcée si aucun secteur n'est perdu mais tous sont pleins. (Tranché : les missions secondaires rapportent des points au bilan, « Mérite », v0.99.0 et v0.99.4.)
+**Décisions de Jérôme (31 octobre)** : (1) la 2e barre du char devient le cooldown du canon (elle se vide au tir, se recharge) ; (2) bonus d'un chevron : départ modeste, +3 % par chevron (régiment moral et précision, char blindage, mitrailleuse cadence), à mesurer avant de monter ; (3) si tous les secteurs alliés sont pleins sans qu'aucun soit perdu, les renforts attendent à la caserne, avec un message à voix haute ; (4) les commits v0.99.5 à v0.99.9 sont publiés sur `main` à la fin des lots A et B, pas avant. Missions secondaires : points au bilan (« Mérite », v0.99.0 et v0.99.4).
+
+**Points encore ouverts** : aucun.
 
 ### Un terrain et une végétation plus soignés (v0.52.3 → ; à continuer dans une nouvelle session)
 
