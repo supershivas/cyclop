@@ -14,35 +14,35 @@
    La sauvegarde (photo) garde la graine, la liste compacte des impacts, l'état
    de la foule et les petites couches de logique ; jamais le relief : il se
    rejoue depuis la graine et les impacts (rejouerTerrain). */
-import { createRng, hash2 } from './lib/rng.js?v=0.99.3';
-import { impact, hydroLignes, etat as etatCase, vitesseEtat, vitesseCase, ETAT } from './terrain.js?v=0.99.3';
-import { creerArmee, ajouterSoldat, construireGrille, pasArmee, tuerDans, effrayer, compacter, photoArmee, restaurerArmee, b64, deB64, DENSITE, place, poserCaracs, lireCaracs, abimerCaracs, gagner, CARACS } from './army.js?v=0.99.3';
-import { ligneSous, solidite } from './tranchees.js?v=0.99.3';
-import { terrainDuSecteur } from './secteur-terrain.js?v=0.99.3';
-import { detruirePont, reconstruirePont, pontEn } from './eaux.js?v=0.99.3';
-import { MISSIONS_SECONDAIRES as MS } from './data/missions.js?v=0.99.3';
-import { PONT_COUPE } from './data/ponts.js?v=0.99.3';
-import { calculerCouts, creerCacheChamps, dimensionsCouts, BLOC } from './champs.js?v=0.99.3';
-import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.99.3';
-import { preparerAleatoire, ID_ALEATOIRE } from './generateur.js?v=0.99.3';
-import { AVION, MITRAILLAGE } from './data/mitraillage.js?v=0.99.3';
-import { refusAvion, lancerAvion, avancerAvions, flotteDeDepart, reparerAvions } from './avions.js?v=0.99.3';
-import { CHAR, CHAR_RECHARGE, CHAR_SORTIE } from './data/chars.js?v=0.99.3';
-import { GENIE, GENIE_DATA } from './data/genie.js?v=0.99.3';
-import { filDeDepart, degatsFil } from './fil.js?v=0.99.3';
-import { creerNids, avancerNids, degatsNids, reparerNid } from './nids.js?v=0.99.3';
-import { TOITS, NIDS } from './data/nids.js?v=0.99.3';
-import { refusGenie, lancerGenie, avancerGenies, degatsGenies, sectionsDeDepart } from './genie.js?v=0.99.3';
-import { refusChar, lancerChar, degatsChars, avancerChars } from './chars.js?v=0.99.3';
-import { METEO, SAISONS, SAISON_DEFAUT, PREVISION_JUSTE, temperature, vent } from './data/meteo.js?v=0.99.3';
-import { SECTEURS } from './data/secteur.js?v=0.99.3';
-import { REGIMENTS } from './data/lexique.js?v=0.99.3';
-import { STANCES, STANCE_DEFAUT } from './data/stances.js?v=0.99.3';
-import { DIFFICULTES, DIFFICULTE_DEFAUT } from './data/difficulte.js?v=0.99.3';
-import { grade, departCaracs, caracEnMots } from './identite.js?v=0.99.3';
-import { corvees } from './nuit.js?v=0.99.3';
-import { EQUIPEMENTS } from './data/batiments.js?v=0.99.3';
-import { campDeDepart, dotationAube, refusOrdre, refusNid, appliquerDepart, modif, rechargeDe } from './camp.js?v=0.99.3';
+import { createRng, hash2 } from './lib/rng.js?v=0.99.4';
+import { impact, hydroLignes, etat as etatCase, vitesseEtat, vitesseCase, ETAT } from './terrain.js?v=0.99.4';
+import { creerArmee, ajouterSoldat, construireGrille, pasArmee, tuerDans, effrayer, compacter, photoArmee, restaurerArmee, b64, deB64, DENSITE, place, poserCaracs, lireCaracs, abimerCaracs, gagner, CARACS } from './army.js?v=0.99.4';
+import { ligneSous, solidite } from './tranchees.js?v=0.99.4';
+import { terrainDuSecteur } from './secteur-terrain.js?v=0.99.4';
+import { detruirePont, reconstruirePont, pontEn } from './eaux.js?v=0.99.4';
+import { MISSIONS_SECONDAIRES as MS } from './data/missions.js?v=0.99.4';
+import { PONT_COUPE } from './data/ponts.js?v=0.99.4';
+import { calculerCouts, creerCacheChamps, dimensionsCouts, BLOC } from './champs.js?v=0.99.4';
+import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.99.4';
+import { preparerAleatoire, ID_ALEATOIRE } from './generateur.js?v=0.99.4';
+import { AVION, MITRAILLAGE } from './data/mitraillage.js?v=0.99.4';
+import { refusAvion, lancerAvion, avancerAvions, flotteDeDepart, reparerAvions } from './avions.js?v=0.99.4';
+import { CHAR, CHAR_RECHARGE, CHAR_SORTIE } from './data/chars.js?v=0.99.4';
+import { GENIE, GENIE_DATA } from './data/genie.js?v=0.99.4';
+import { filDeDepart, degatsFil } from './fil.js?v=0.99.4';
+import { creerNids, avancerNids, degatsNids, reparerNid } from './nids.js?v=0.99.4';
+import { TOITS, NIDS } from './data/nids.js?v=0.99.4';
+import { refusGenie, lancerGenie, avancerGenies, degatsGenies, sectionsDeDepart } from './genie.js?v=0.99.4';
+import { refusChar, lancerChar, degatsChars, avancerChars } from './chars.js?v=0.99.4';
+import { METEO, SAISONS, SAISON_DEFAUT, PREVISION_JUSTE, temperature, vent } from './data/meteo.js?v=0.99.4';
+import { SECTEURS } from './data/secteur.js?v=0.99.4';
+import { REGIMENTS } from './data/lexique.js?v=0.99.4';
+import { STANCES, STANCE_DEFAUT } from './data/stances.js?v=0.99.4';
+import { DIFFICULTES, DIFFICULTE_DEFAUT } from './data/difficulte.js?v=0.99.4';
+import { grade, departCaracs, caracEnMots } from './identite.js?v=0.99.4';
+import { corvees } from './nuit.js?v=0.99.4';
+import { EQUIPEMENTS } from './data/batiments.js?v=0.99.4';
+import { campDeDepart, dotationAube, refusOrdre, refusNid, appliquerDepart, modif, rechargeDe } from './camp.js?v=0.99.4';
 
 export const PAS = 1 / 30;                 // s de jeu par pas
 export const NOUS = 0, EUX = 1;
@@ -143,6 +143,7 @@ export function nouvelleBataille(graine, R, opts = {}) {
     temps: 0,                           // s de jeu écoulées, nuits non comptées
     rng: 0,
   };
+  if (opts.camp && opts.dotationBonus) etat.camp.dotation += opts.dotationBonus;      // le Mémorial (v0.99.4)
   if (opts.camp) { etat.campEux = campDeDepart({ bride: true, mult: niveau.dotation ?? 1 }); appliquerDepart(etat, NOUS); appliquerDepart(etat, EUX); }      // le camp d'en face : le même départ, sa dotation selon la difficulté (v0.92.0)
   if (opts.camp) { /* (voir plus haut) */ }      // les effectifs de départ de la partie bridée : ceux des bâtiments de départ (v0.88.0)
   const B = monter(etat, R);
@@ -625,9 +626,14 @@ export function progressionSecondaire(B, s) {
   }
 }
 /* Le bordereau de fin (points de dotation) : [[ligne, points]…] et le total. La mission principale réussie, puis chaque secondaire réussie (pure). */
+export const MEMORIAL = MS.memorial;
 export function bordereau(B) {
   const { etat } = B, lignes = [];
+  const bm = MS.bareme, frais = etat.reserves[NOUS], avance = etat.meteo.length - etat.jour;
   if (etat.issue?.reussie) lignes.push(['Mission remplie', MS.pointsMission]);
+  if (etat.issue?.reussie && etat.pertes[NOUS] < etat.pertes[EUX]) lignes.push(['Pertes contenues', bm.pertesContenues]);
+  if (etat.issue?.reussie && frais > 0) lignes.push([`${frais} régiment${frais > 1 ? 's' : ''} frais gardé${frais > 1 ? 's' : ''}`, frais * bm.parRegimentFrais]);
+  if (etat.issue?.reussie && avance > 0) lignes.push([`Gagné ${avance} jour${avance > 1 ? 's' : ''} d'avance`, avance * bm.parJourGagneDavance]);
   for (const s of etat.secondaires) if (progressionSecondaire(B, s).etat === 'reussie') lignes.push([defSecondaire(s).texte.replace('{cible}', defSecondaire(s).cible), defSecondaire(s).points]);
   return { lignes, total: lignes.reduce((t, l) => t + l[1], 0) };
 }

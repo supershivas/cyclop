@@ -1,61 +1,61 @@
 // Le cycle de vie : écran titre → bataille → nuit → fin ; pause active,
 // réglages, sauvegarde, mise à jour, debug. Les règles sont dans bataille.js
 // (pures), le dessin dans rendu3d.js (il ne modifie jamais l'état).
-import { createLoop } from './lib/loop.js?v=0.99.3';
-import { createKeys, stopTypeahead } from './lib/keys.js?v=0.99.3';
-import { createPointer, lockBrowserGestures } from './lib/pointer.js?v=0.99.3';
-import { createGamepad } from './lib/gamepad.js?v=0.99.3';
-import { createStore, autosave, pickJSONFile } from './lib/save.js?v=0.99.3';
-import { startUpdateCheck, loadVersion, loadChangelog, downloadJSON } from './lib/app-update.js?v=0.99.3';
-import { ROLES } from './palette.js?v=0.99.3';
-import { VERSION_CAMPAGNE, CLE as CLE_CAMPAGNE, cloturerDansLeStore, nouvelleCampagne, suivante, passage, bilan as bilanCampagne } from './campagne.js?v=0.99.3';
-import { CAMPAGNE } from './data/campagne.js?v=0.99.3';
-import { MISSIONS, bordereau, progressionMission, progressionSecondaire, EUX, nouvelleBataille, etapesRestaurer, avancer, aube, ordonnerMarche, peutOrdonner, ordonnerBarrage, peutBarrage, arriereDe, ordonnerStance, peutStance, horloge, effectifs, tronconsTenus, moralEnMots, terrainResume, forcesTroncons, largeurZone, lettreZone, etendueZones, nomTroncon, actionDe, secteursDe, tronconsDeLigne, zone, photo, restaurer, PAS, NOUS } from './bataille.js?v=0.99.3';
-import { ligneY, etatTranchee } from './tranchees.js?v=0.99.3';
-import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.99.3';
-import { AVION, MITRAILLAGE } from './data/mitraillage.js?v=0.99.3';
-import { NIDS } from './data/nids.js?v=0.99.3';
-import { ligneDe, apercuVol, avionsPrets, avionsRestants, positionDe } from './avions.js?v=0.99.3';
-import { creerSon } from './audio.js?v=0.99.3';
-import { CHAR, CHAR_RECHARGE, CHARS, CHAR_PAR_DEFAUT } from './data/chars.js?v=0.99.3';
-import { GENIE, GENIE_DATA } from './data/genie.js?v=0.99.3';
-import { pontEn } from './eaux.js?v=0.99.3';
-import { PONTS_JEU, typePont } from './data/ponts.js?v=0.99.3';
-import { routeChar } from './chars.js?v=0.99.3';
-import { STANCES, STANCE_DEFAUT } from './data/stances.js?v=0.99.3';
-import { METEO, SAISONS, SAISON_DEFAUT } from './data/meteo.js?v=0.99.3';
-import { hash2 } from './lib/rng.js?v=0.99.3';
-import { creerRendu, CAMERA, ZOOMS } from './rendu3d.js?v=0.99.3';
-import { etatEnMots, experienceEnMots, chevrons } from './identite.js?v=0.99.3';
-import { CORVEES } from './data/corvees.js?v=0.99.3';
-import { refusCorvee } from './nuit.js?v=0.99.3';
-import { chargerContenu, appliquerSecteurs, appliquerCartes, appliquerCampagne } from './design-store.js?v=0.99.3';
-import { ordonnerChar, refusOrdreChar } from './chars.js?v=0.99.3';
-import { creerCharsHud } from './hud/chars.js?v=0.99.3';
-import { creerCampHud } from './hud/camp.js?v=0.99.3';
-import { ordonnerChantier, refusCamp, ouverture, campDe, refusOrdre, batimentSous, emprisesCamp, emplacementCamp, etendueCamp, niveauDe, modif, rechargeDe as facteurRecharge } from './camp.js?v=0.99.3';
-import { BATIMENTS, EQUIPEMENT, equipeEnMots } from './data/batiments.js?v=0.99.3';
-import { creerSecteur } from './hud/secteur.js?v=0.99.3';
-import { palmares, tableau } from './hud/medailles.js?v=0.99.3';
-import * as lecture from './hud/lecture.js?v=0.99.3';
-import { creerFiche } from './hud/fiche.js?v=0.99.3';
-import { chevronsHtml } from './hud/barres.js?v=0.99.3';
-import { creerNuit, corveeDe, corveeCourte } from './hud/nuit.js?v=0.99.3';
-import { creerCampagne } from './hud/campagne.js?v=0.99.3';
-import { creerCarnet, deux } from './hud/carnet.js?v=0.99.3';
-import { creerCarte } from './hud/carte.js?v=0.99.3';
-import { creerPertes } from './hud/pertes.js?v=0.99.3';
-import { creerBarreTemps } from './hud/temps.js?v=0.99.3';
-import { creerChargement } from './hud/chargement.js?v=0.99.3';
-import { creerRetours } from './hud/retours.js?v=0.99.3';
-import { creerInfobulle } from './hud/infobulle.js?v=0.99.3';
-import { SECTEURS } from './data/secteur.js?v=0.99.3';
-import { DIFFICULTES, DIFFICULTE_DEFAUT } from './data/difficulte.js?v=0.99.3';
-import { preparerAleatoire, ID_ALEATOIRE } from './generateur.js?v=0.99.3';
-import { creerLockstep, empreinteEtat } from './reseau/lockstep.js?v=0.99.3';
-import { nouveauCode, codeValide, publier, ecouter } from './reseau/relais.js?v=0.99.3';
-import { creerHote, creerInvite } from './reseau/lien.js?v=0.99.3';
-import { SOLEIL_JEU } from './data/soleil.js?v=0.99.3';
+import { createLoop } from './lib/loop.js?v=0.99.4';
+import { createKeys, stopTypeahead } from './lib/keys.js?v=0.99.4';
+import { createPointer, lockBrowserGestures } from './lib/pointer.js?v=0.99.4';
+import { createGamepad } from './lib/gamepad.js?v=0.99.4';
+import { createStore, autosave, pickJSONFile } from './lib/save.js?v=0.99.4';
+import { startUpdateCheck, loadVersion, loadChangelog, downloadJSON } from './lib/app-update.js?v=0.99.4';
+import { ROLES } from './palette.js?v=0.99.4';
+import { VERSION_CAMPAGNE, CLE as CLE_CAMPAGNE, cloturerDansLeStore, nouvelleCampagne, suivante, passage, bilan as bilanCampagne } from './campagne.js?v=0.99.4';
+import { CAMPAGNE } from './data/campagne.js?v=0.99.4';
+import { MISSIONS, MEMORIAL, bordereau, progressionMission, progressionSecondaire, EUX, nouvelleBataille, etapesRestaurer, avancer, aube, ordonnerMarche, peutOrdonner, ordonnerBarrage, peutBarrage, arriereDe, ordonnerStance, peutStance, horloge, effectifs, tronconsTenus, moralEnMots, terrainResume, forcesTroncons, largeurZone, lettreZone, etendueZones, nomTroncon, actionDe, secteursDe, tronconsDeLigne, zone, photo, restaurer, PAS, NOUS } from './bataille.js?v=0.99.4';
+import { ligneY, etatTranchee } from './tranchees.js?v=0.99.4';
+import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.99.4';
+import { AVION, MITRAILLAGE } from './data/mitraillage.js?v=0.99.4';
+import { NIDS } from './data/nids.js?v=0.99.4';
+import { ligneDe, apercuVol, avionsPrets, avionsRestants, positionDe } from './avions.js?v=0.99.4';
+import { creerSon } from './audio.js?v=0.99.4';
+import { CHAR, CHAR_RECHARGE, CHARS, CHAR_PAR_DEFAUT } from './data/chars.js?v=0.99.4';
+import { GENIE, GENIE_DATA } from './data/genie.js?v=0.99.4';
+import { pontEn } from './eaux.js?v=0.99.4';
+import { PONTS_JEU, typePont } from './data/ponts.js?v=0.99.4';
+import { routeChar } from './chars.js?v=0.99.4';
+import { STANCES, STANCE_DEFAUT } from './data/stances.js?v=0.99.4';
+import { METEO, SAISONS, SAISON_DEFAUT } from './data/meteo.js?v=0.99.4';
+import { hash2 } from './lib/rng.js?v=0.99.4';
+import { creerRendu, CAMERA, ZOOMS } from './rendu3d.js?v=0.99.4';
+import { etatEnMots, experienceEnMots, chevrons } from './identite.js?v=0.99.4';
+import { CORVEES } from './data/corvees.js?v=0.99.4';
+import { refusCorvee } from './nuit.js?v=0.99.4';
+import { chargerContenu, appliquerSecteurs, appliquerCartes, appliquerCampagne } from './design-store.js?v=0.99.4';
+import { ordonnerChar, refusOrdreChar } from './chars.js?v=0.99.4';
+import { creerCharsHud } from './hud/chars.js?v=0.99.4';
+import { creerCampHud } from './hud/camp.js?v=0.99.4';
+import { ordonnerChantier, refusCamp, ouverture, campDe, refusOrdre, batimentSous, emprisesCamp, emplacementCamp, etendueCamp, niveauDe, modif, rechargeDe as facteurRecharge } from './camp.js?v=0.99.4';
+import { BATIMENTS, EQUIPEMENT, equipeEnMots } from './data/batiments.js?v=0.99.4';
+import { creerSecteur } from './hud/secteur.js?v=0.99.4';
+import { palmares, tableau } from './hud/medailles.js?v=0.99.4';
+import * as lecture from './hud/lecture.js?v=0.99.4';
+import { creerFiche } from './hud/fiche.js?v=0.99.4';
+import { chevronsHtml } from './hud/barres.js?v=0.99.4';
+import { creerNuit, corveeDe, corveeCourte } from './hud/nuit.js?v=0.99.4';
+import { creerCampagne } from './hud/campagne.js?v=0.99.4';
+import { creerCarnet, deux } from './hud/carnet.js?v=0.99.4';
+import { creerCarte } from './hud/carte.js?v=0.99.4';
+import { creerPertes } from './hud/pertes.js?v=0.99.4';
+import { creerBarreTemps } from './hud/temps.js?v=0.99.4';
+import { creerChargement } from './hud/chargement.js?v=0.99.4';
+import { creerRetours } from './hud/retours.js?v=0.99.4';
+import { creerInfobulle } from './hud/infobulle.js?v=0.99.4';
+import { SECTEURS } from './data/secteur.js?v=0.99.4';
+import { DIFFICULTES, DIFFICULTE_DEFAUT } from './data/difficulte.js?v=0.99.4';
+import { preparerAleatoire, ID_ALEATOIRE } from './generateur.js?v=0.99.4';
+import { creerLockstep, empreinteEtat } from './reseau/lockstep.js?v=0.99.4';
+import { nouveauCode, codeValide, publier, ecouter } from './reseau/relais.js?v=0.99.4';
+import { creerHote, creerInvite } from './reseau/lien.js?v=0.99.4';
+import { SOLEIL_JEU } from './data/soleil.js?v=0.99.4';
 
 const JEU = 'cyclopeen';
 const $ = id => document.getElementById(id);
@@ -282,7 +282,10 @@ function reprendre() {
 }
 
 function nouvelle(graine, secteur = 'essai', saison, difficulte) {
-  return nouvelleBataille(graine, R, { secteur, ...(saison ? { saison } : {}), ...(difficulte ? { difficulte } : {}), ...(SOLDATS ? { soldats: Math.floor(SOLDATS / 2) } : {}), camp: true });
+  // le Mémorial : le mérite gardé devient de la dotation de départ (au plus `plafond`), il est dépensé
+  const bonus = DEBUG ? 0 : Math.min(MEMORIAL.plafond, Math.floor((prefs.memorial || 0) * MEMORIAL.taux));
+  if (bonus) { prefs.memorial = Math.max(0, (prefs.memorial || 0) - Math.ceil(bonus / MEMORIAL.taux)); store.save('prefs', prefs); }
+  return nouvelleBataille(graine, R, { secteur, ...(bonus ? { dotationBonus: bonus } : {}), ...(saison ? { saison } : {}), ...(difficulte ? { difficulte } : {}), ...(SOLDATS ? { soldats: Math.floor(SOLDATS / 2) } : {}), camp: true });
 }
 // (v0.28.0 : sous une barre de chargement ; la relecture se fait par étapes, `etapesRestaurer`)
 $('continuer').onclick = async () => {
@@ -407,7 +410,7 @@ function demanderSecteur(avecDifficulte = true) {
       $('carte-titre').textContent = SECTEURS[choisi].nom;               // le nom sur l'aperçu, la description dessous (deux lignes au plus : la fenêtre ne change plus de taille)
       $('carte-legende').textContent = SECTEURS[choisi].resume;
       try {
-        if (!apercuSecteur) { const { creerVue3D } = await import('./apercu-3d.js?v=0.99.3'); apercuSecteur = await creerVue3D({ R, hote: $('carte-3d'), rotation: 0.12 }); apercuSecteur.surClic = () => agrandir(!d.classList.contains('agrandi')); }
+        if (!apercuSecteur) { const { creerVue3D } = await import('./apercu-3d.js?v=0.99.4'); apercuSecteur = await creerVue3D({ R, hote: $('carte-3d'), rotation: 0.12 }); apercuSecteur.surClic = () => agrandir(!d.classList.contains('agrandi')); }
         if (!ouvert) return;
         apercuSecteur.monter(choisi, SECTEURS[choisi], graineDe(), { soldats: false, cadrer: true, saison: saisonDe() });
         apercuSecteur.activer(true);
@@ -694,10 +697,11 @@ function montrerFin() {
   $('fin-lignes').textContent = e.tranchees ? `Tronçons tenus : ${tronconsTenus(B)[0]} des nôtres, ${tronconsTenus(B)[1]} en face.` : '';
   // le bordereau de dotation (variante tampon + bordereau du labo, v0.99.3) : il s'écrit ligne à ligne, puis le tampon « +n » claque
   const bd = bordereau(B), zone_ = $('fin-bordereau'); zone_.hidden = !bd.total; zone_.replaceChildren();
+  if (bd.total && !DEBUG && !reseau && !e.memorialVerse) { e.memorialVerse = true; prefs.memorial = (prefs.memorial || 0) + bd.total; store.save('prefs', prefs); }
   if (bd.total) {
     const ligne = (a, b, cls) => Object.assign(document.createElement('div'), { className: cls || 'bd-ligne', innerHTML: '' }).appendChild(document.createElement('span')).parentNode;
     bd.lignes.forEach(([t, n], k) => { const d = ligne(); d.firstChild.textContent = t; const b = document.createElement('b'); b.textContent = `+${n}`; d.append(b); d.style.animationDelay = `${k * 0.35}s`; zone_.append(d); });
-    const somme = ligne(null, null, 'bd-ligne bd-somme'); somme.firstChild.textContent = 'Dotation'; const bs = document.createElement('b'); bs.textContent = `+${bd.total}`; somme.append(bs); somme.style.animationDelay = `${bd.lignes.length * 0.35}s`; zone_.append(somme);
+    const somme = ligne(null, null, 'bd-ligne bd-somme'); somme.firstChild.textContent = 'Mérite'; const bs = document.createElement('b'); bs.textContent = `+${bd.total}`; somme.append(bs); somme.style.animationDelay = `${bd.lignes.length * 0.35}s`; zone_.append(somme);
     const t = document.createElement('div'); t.className = 'bd-tampon'; t.textContent = `+${bd.total}`; t.style.animationDelay = `${(bd.lignes.length + 1) * 0.35}s`; zone_.append(t);
   }
   $('dialogue-fin').showModal();
@@ -1740,7 +1744,7 @@ startUpdateCheck({
 
 // ─── Mode debug (section 18) : chargé seulement avec ?debug=1 ──────────────
 if (DEBUG) {
-  const { installDebug, seedFromUrl } = await import('./lib/debug.js?v=0.99.3');
+  const { installDebug, seedFromUrl } = await import('./lib/debug.js?v=0.99.4');
   window.__seed = seedFromUrl() ?? undefined;
   installDebug({
     state: () => B && { ...horloge(B), effectifs: effectifs(B), pertes: B.etat.pertes, impacts: B.etat.impacts.length, enJeu: enJeu(), pause: loop.paused },

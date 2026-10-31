@@ -4,7 +4,11 @@
    releve (relever au moins cible régiments), tenue (nos lignes ≥ lignesMin sur tous les soirs). Cibles à mesurer par régiment. */
 export const MISSIONS_SECONDAIRES = {
   secondairesParPartie: 2,
-  pointsMission: 100,   // le bordereau de fin : la mission principale réussie rapporte autant de points de dotation
+  pointsMission: 100,
+  // le barème de fin (Jérôme, v0.99.4) : s'ajoute à la mission et aux secondaires
+  bareme: { pertesContenues: 30, parRegimentFrais: 10, parJourGagneDavance: 20 },
+  // le Mémorial : le mérite d'une bataille devient de la dotation de départ à la suivante
+  memorial: { taux: 0.02, plafond: 5 },   // le bordereau de fin : la mission principale réussie rapporte autant de points de dotation
   lignesMin: 0.9,
   catalogue: [
     { id: 'sobre', type: 'pertesMax', cible: 400, points: 30, texte: 'Perdre moins de {cible} hommes.' },

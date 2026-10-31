@@ -1,5 +1,8 @@
 # Journal des versions
 
+## 0.99.4 — 2026-10-31
+- Le bilan de fin compte un « Mérite » (mission, secondaires, pertes contenues, régiments frais, jours d'avance), qui devient de la dotation de départ à la bataille suivante
+
 ## 0.99.3 — 2026-10-30
 - Le bilan de fin affiche un bordereau de dotation (mission, secondaires) qui s'écrit ligne à ligne, puis un tampon « +n »
 
