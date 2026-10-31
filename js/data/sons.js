@@ -8,7 +8,7 @@ const v = (nom, auteur, page, extra = {}) => ({ nom, auteur, url: OGA + page, li
 
 export const SONS = {
   obus75: {
-    nom: 'Obus de 75', genre: 'coup', taux: 0.08, gain: 0.9, choisi: ['a', 'b'],
+    nom: 'Obus de 75', genre: 'coup', taux: 0.08, gain: 0.9, choisi: ['b'],
     variantes: {
       a: v('Explosion', 'tinyworlds', 'explosion-0', { fichier: 'obus75-a.mp3' }),
       b: v('Synthesized explosion', 'qubodup', 'synthesized-explosion', { fichier: 'obus75-b.mp3' }),
@@ -16,14 +16,14 @@ export const SONS = {
     },
   },
   obus155: {
-    nom: 'Obus de 155', genre: 'coup', taux: 0.06, gain: 1, choisi: ['a', 'b'],
+    nom: 'Obus de 155', genre: 'coup', taux: 0.06, gain: 1, choisi: ['a'],
     variantes: {
       a: v('Explosion somewhere far', 'pauliuw', 'explosion-somewhere-far', { fichier: 'obus155-a.mp3' }),
       b: v('Chunky Explosion (3,5 s)', 'joth', 'chunky-explosion', { fichier: 'obus155-b.mp3' }),
     },
   },
   obus220: {
-    nom: 'Obus de 220', genre: 'coup', taux: 0.05, gain: 1, choisi: ['a'],
+    nom: 'Obus de 220', genre: 'coup', taux: 0.05, gain: 1, choisi: ['b'],
     variantes: {
       a: v('Muffled Distant Explosion', 'NenadSimic', 'muffled-distant-explosion', { fichier: 'obus220-a.mp3' }),
       b: v('Chunky Explosion (ralentie, plus grave)', 'joth', 'chunky-explosion', { fichier: 'obus220-b.mp3' }),
@@ -38,7 +38,7 @@ export const SONS = {
     },
   },
   mitrailleuse: {
-    nom: 'Mitrailleuse (un coup, répété)', genre: 'coup', taux: 0.1, gain: 0.45, cadence: 9, choisi: ['a'],
+    nom: 'Mitrailleuse (un coup, répété)', genre: 'coup', taux: 0.1, gain: 0.45, cadence: 9, choisi: ['b'],
     variantes: {
       a: v('gun3Machinegun', 'yd', 'war-on-water-sndfx', { fichier: 'mg-a.mp3' }),
       b: v('gun1Light', 'yd', 'war-on-water-sndfx', { fichier: 'mg-b.mp3' }),
@@ -62,7 +62,7 @@ export const SONS = {
     },
   },
   pluie: {
-    nom: 'Pluie (boucle)', genre: 'boucle', gain: 0.55, choisi: ['a'],
+    nom: 'Pluie (boucle)', genre: 'boucle', gain: 0.55, choisi: ['b'],
     variantes: {
       a: v('Rain (loopable) 1', 'ylmir', 'rain-loopable', { fichier: 'pluie-a.mp3' }),
       b: v('Rain (loopable) 2', 'ylmir', 'rain-loopable', { fichier: 'pluie-b.mp3' }),
