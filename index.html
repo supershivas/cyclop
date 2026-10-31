@@ -13,8 +13,8 @@
 <link rel="stylesheet" href="css/style.css?v=0.99.11">
 <link rel="stylesheet" href="css/ds-v2.css?v=0.99.11">
 </head>
-<body>
-<!-- La barre de chargement (v0.28.0) : là avant tout script ; main.js la remplit, puis la retire -->
+<body class="charge">
+<!-- La barre de chargement (v0.28.0) : là avant tout script ; main.js la remplit, puis la retire. `body.charge` (v0.100.0) : tout le reste de l'écran est caché tant qu'elle est là (le menu et le titre ne se voient plus derrière) -->
 <div class="chargement" id="chargement" role="progressbar" aria-label="Chargement" aria-valuemin="0" aria-valuemax="100" aria-valuenow="5">
   <div class="papier">
     <p id="chargement-titre">Cyclopéen</p>
@@ -66,7 +66,10 @@
         </div>
         </div>
         <div class="papier carnet" id="carnet" hidden>
-          <p class="entete">Carnet de bord</p>
+          <div class="entete">
+            <button type="button" class="titre-carnet" id="carnet-histo" aria-expanded="false">Carnet de bord</button>
+            <button type="button" class="icone replier" id="carnet-replier" aria-expanded="true" aria-label="Replier le carnet de bord"><i aria-hidden="true"></i></button>
+          </div>
           <ol id="carnet-liste"></ol>
         </div>
       <section class="papier fiche" id="fiche" hidden aria-live="polite">
@@ -86,15 +89,25 @@
       <!-- La nuit : le champ de bataille reste, ce papier s'y pose (pas de boîte de dialogue) ; on choisit des régiments, puis leur corvée -->
       <section class="papier nuit" id="nuit" hidden aria-live="polite">
         <h2 id="nuit-titre">Nuit</h2>
-        <div id="nuit-corps">
-          <p id="nuit-pertes"></p>
-          <p id="nuit-lignes"></p>
-          <p id="nuit-avions"></p>
-          <p class="discret" id="nuit-demain"></p>
-          <p class="discret" id="nuit-ciel"></p>
-          <p class="discret" id="nuit-reserves"></p>
-          <details class="medailles-bloc" id="nuit-medailles"><summary>Médailles du jour</summary><div id="nuit-medailles-corps"></div></details>
-          <p class="discret" id="nuit-aide">Choisissez des régiments (un clic sur eux ou sur leur carte, un cadre, T pour tous) : leurs corvées s'ouvrent au-dessus de la carte.</p>
+        <div id="nuit-corps" class="nuit-colonnes">
+          <!-- trois colonnes (Jérôme, v0.100.0) : les chiffres clés de la journée, les médailles du jour, les ordres aux régiments -->
+          <section class="nuit-col" aria-labelledby="nuit-h-jour">
+            <h3 id="nuit-h-jour">La journée</h3>
+            <dl class="chiffres" id="nuit-chiffres"></dl>
+            <p id="nuit-lignes"></p>
+            <p id="nuit-avions"></p>
+            <p class="discret" id="nuit-demain"></p>
+            <p class="discret" id="nuit-ciel"></p>
+          </section>
+          <section class="nuit-col" id="nuit-medailles" aria-labelledby="nuit-h-medailles">
+            <h3 id="nuit-h-medailles">Médailles du jour</h3>
+            <div id="nuit-medailles-corps"></div>
+          </section>
+          <section class="nuit-col" aria-labelledby="nuit-h-ordres">
+            <h3 id="nuit-h-ordres">Ordres aux régiments</h3>
+            <p class="discret" id="nuit-aide">Choisissez des régiments (un clic sur eux, un cadre, T pour tous), puis leur corvée.</p>
+            <div id="nuit-ordres"></div>
+          </section>
         </div>
         <div id="aube-bilan" hidden></div>
         <button class="bouton" id="aube" data-info="# À l'aube&#10;La nuit s'achève : les ordres donnés s'exécutent, la dotation tombe.">À l'aube</button>
@@ -114,7 +127,7 @@
           <details class="legende-carte">
             <summary>Comment lire la carte</summary>
             <ul class="legende">
-              <li><b>A à D</b> : les quatre secteurs de 100 m, de l'ouest à l'est ; un clic ouvre son détail (qui est où, les voisins) et y emmène la caméra.</li>
+              <li><b>A à D</b> : les quatre secteurs de 100 m, de l'ouest à l'est ; un clic le met en gros plan à la place de la carte et cadre la caméra sur lui ; Échap, « Vue d'ensemble » ou un second clic sur sa lettre reviennent.</li>
               <li><b>Lignes 1 à 4</b> : les tranchées de chaque camp, de la plus avancée (1) à la plus en arrière (4) ; en face en haut (kaki), les nôtres en bas (bleu).</li>
               <li><b>Quatre carrés par case</b> : quatre tronçons de 25 m, bleus s'ils sont à nous, kaki s'ils sont à eux ; un clic envoie les régiments choisis occuper la case.</li>
               <li><b>« 1·12 »</b> : 1 attaquant contre 12 défenseurs dans la case, en pleine mêlée.</li>
@@ -124,16 +137,21 @@
             </ul>
           </details>
         </section>
-        <section class="papier secteur" id="secteur" aria-label="Détail d'un secteur" hidden>
-          <button class="entete" id="secteur-fermer" aria-label="Revenir à la carte du secteur"><span><span aria-hidden="true">← </span><span id="secteur-titre">Secteur</span></span><span class="discret">la carte</span></button>
-          <canvas id="secteur-plan" aria-label="Plan du secteur : les hommes de chaque camp, les tranchées, les secteurs voisins"></canvas>
-          <ul class="legende" aria-label="Légende du plan">
-            <li><i class="p nous"></i> nos hommes · <i class="p eux"></i> ceux d'en face · <i class="p bl"></i> un blessé</li>
-            <li><i class="t"></i> une tranchée, à la couleur de qui la tient (pointillé : l'autre camp y est entré)</li>
-            <li><i class="r"></i> un régiment (son numéro) · les bords assombris : les secteurs voisins</li>
-          </ul>
-          <ul id="secteur-regs" class="secteur-regs" aria-label="Les régiments du secteur"></ul>
+        <section class="papier secteur" id="secteur" aria-label="Gros plan d'un secteur" hidden>
+          <button class="retour" id="secteur-fermer" data-info="# Vue d'ensemble&#10;Retour à la carte des quatre secteurs et à la vue d'avant (Échap).">← Vue d'ensemble</button>
+          <div class="secteur-tete"><h3 id="secteur-titre">Secteur</h3><div class="secteur-lettres" id="secteur-lettres" role="group" aria-label="Les secteurs"></div></div>
+          <canvas id="secteur-plan" aria-label="Plan du secteur : les hommes de chaque camp, les tombés, les tranchées"></canvas>
+          <details class="legende-carte">
+            <summary>Comment lire le plan</summary>
+            <ul class="legende">
+              <li><i class="p nous"></i> nos hommes · <i class="p eux"></i> ceux d'en face · <i class="p bl"></i> un blessé</li>
+              <li><i class="t"></i> une tranchée, à la couleur de qui la tient (pointillé : l'autre camp y est entré)</li>
+              <li><i class="r"></i> un régiment (son numéro) · les petits tirets : les tombés</li>
+              <li>Le plan est écrasé : 100 m de large, plus de 200 m de profondeur.</li>
+            </ul>
+          </details>
           <div id="secteur-lignes" class="secteur-lignes"></div>
+          <ul id="secteur-regs" class="secteur-regs" aria-label="Les régiments du secteur"></ul>
         </section>
               </div>
     </div>

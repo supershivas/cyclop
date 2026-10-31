@@ -730,6 +730,7 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
 
   return {
     set gele(v) { gele = !!v; }, get gele() { return gele; },
+    set decor(v) { soldats.sansInterface = !!v; }, get decor() { return soldats.sansInterface; },      // l'écran titre : une illustration, aucun repère d'interface (la lettre du capitaine)
     camp, attacher, dessiner, redimensionner, versTerrain, versEcran, vue, renderer, scene,
     hauteurDessinee: (x, y) => surface(x, y),       // la hauteur du cube dessiné sous ce point (les tests)
     hauteurSol: (x, y) => surfaceLisse(x, y),      // la hauteur où l'on pose un homme (m), pour viser son corps entier (v0.35.0)

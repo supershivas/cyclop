@@ -949,7 +949,7 @@ export function moralEnMots(reg, R) {
    terre jetée, l'eau, un arbre, la marche, l'abri. */
 const NOMS_ETAT = { [ETAT.SEC]: 'Sol sec', [ETAT.HUMIDE]: 'Sol humide', [ETAT.BOUE]: 'Boue', [ETAT.EAU]: 'Eau', [ETAT.GLACE]: 'Glace' };
 const metres = q => `${(Math.abs(q) / 4).toLocaleString('fr-FR', { maximumFractionDigits: 2 })} m`;
-export function terrainSous(B, x, y) {
+export function terrainSous(B, x, y, meta = null) {   // `meta.iSol` : l'indice de la ligne du sol (avant : le relief ; après : les objets), pour `terrainResume`
   const { terrain: T, R, etat } = B;
   const i = Math.floor(x), j = Math.floor(y);
   if (i < 0 || j < 0 || i >= T.W || j >= T.H) return null;
@@ -965,6 +965,7 @@ export function terrainSous(B, x, y) {
   else if (d <= -2) lignes.push(`Cratère, ${metres(d)} de creux`);
   else if (d < 0) lignes.push('Un creux');
   else if (d > 0) lignes.push('Terre jetée');
+  if (meta) meta.iSol = lignes.length;
   lignes.push(T.profond[c] ? 'Eau profonde : on n\'y passe pas' : e === ETAT.EAU ? `Eau, ${Math.round(T.eau[c] * 100)} cm` : NOMS_ETAT[e]);
   if (T.pont[c]) lignes.push('Un pont');
   const arbre = T.arbres.find(a => a.i === i && a.j === j);
@@ -986,12 +987,14 @@ export const tronconSolidite = (B, t) => solidite(B.terrain, B.profondeur, B.tro
 /* Le terrain sous la souris en peu de mots (le coin de l'écran, v0.19.0) : ses lignes, sans la vitesse, et la vitesse de marche
    (0 à 1, 1 : le sol sec) pour une barre. */
 export function terrainResume(B, x, y) {
-  const lignes = terrainSous(B, x, y);
+  const meta = {}, lignes = terrainSous(B, x, y, meta);
   if (!lignes) return null;
   const { terrain: T, R, etat } = B, gel = !!METEO[etat.meteo[etat.jour - 1]].gel;
   const c = Math.floor(y) * T.W + Math.floor(x), t = T.troncon ? T.troncon[c] : -1, tr = t >= 0 ? B.troncons[t] : null, xm = tr ? (tr.x0 + tr.x1) / 2 : 0;
   // `troncon` et `tranchee` : sur une tranchée, le tronçon et son nom (« B2 », « B2 en face »), pour la ligne de vie du coin de l'écran
-  return { lignes: lignes.filter(l => !l.startsWith('On y marche')), vitesse: vitesseCase(T, c, R, gel), troncon: t >= 0 ? t : -1, tranchee: tr ? nomTranchee(B, tr.ligne, xm, xm) : null, solidite: tr ? tronconSolidite(B, t) : null };
+  // `relief` (ce que le sol porte : cratère, creux, terre jetée, tranchée, boyau), `sol` (son état : sec, humide, boue, eau), `objets` (pont, arbre, herbe, nid…) : les deux lignes de la fiche (Jérôme, v0.100.0)
+  const utiles = lignes.filter(l => !l.startsWith('On y marche')), relief = utiles.slice(0, meta.iSol), sol = utiles[meta.iSol], objets = utiles.slice(meta.iSol + 1);
+  return { lignes: utiles, relief, sol, objets, vitesse: vitesseCase(T, c, R, gel), troncon: t >= 0 ? t : -1, tranchee: tr ? nomTranchee(B, tr.ligne, xm, xm) : null, solidite: tr ? tronconSolidite(B, t) : null };
 }
 
 // Les tronçons tenus par chaque camp : [nous, en face]

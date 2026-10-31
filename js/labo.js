@@ -2,32 +2,33 @@
 // Chaque sujet utilise les mêmes modules que le jeu (terrain, apparence,
 // rendu three.js) : ce qu'on voit ici est ce que le jeu dessinera. Ajouter un
 // sujet ou une variante = ajouter une entrée dans GROUPES.
-import { afficherVersion } from './version-tag.js?v=0.99.11';
-import { mountLabo } from './lib/labo-shell.js?v=0.99.11';
-import { spriteCanvas, paletteToGPL, paletteToHex } from './lib/sprites.js?v=0.99.11';
-import { PALETTE, ROLES } from './palette.js?v=0.99.11';
-import { chargerContenu } from './design-store.js?v=0.99.11';
-import { tuile, ETAT } from './tuiles.js?v=0.99.11';
-import { creerTerrain, impact, hydroLignes, toucher } from './terrain.js?v=0.99.11';
-import { FORMES } from './cratere.js?v=0.99.11';
-import { CALIBRES } from './data/calibres.js?v=0.99.11';
-import { METEO } from './data/meteo.js?v=0.99.11';
-import { nouvelleBataille, avancer, ordonnerMarche, ordonnerBarrage, mourir, regarderAu, aube, horloge, ticksParJour, rangDe } from './bataille.js?v=0.99.11';
-import { AZIMUTS, COTES } from './data/soleil.js?v=0.99.11';
-import { creerRendu, ZOOMS } from './rendu3d.js?v=0.99.11';
-import { placesCommandement } from './army.js?v=0.99.11';
-import { hash2 } from './lib/rng.js?v=0.99.11';
-import { reglerVerdure } from './apparence.js?v=0.99.11';
-import { maquetteChars } from './labo-chars.js?v=0.99.11';
-import { fondations, boutons, fenetres, revision } from './labo-design-system.js?v=0.99.11';
-import { gainTampon, gainCachets, gainFil, gainBordereau, victoireFanion, victoireTampon, victoireChevrons, victoireAube, ficheDeuxColonnes, ficheEtages, ficheRegistre, ficheDAbord } from './labo-recompenses.js?v=0.99.11';
-import { maquetteBatiment, maquetteCamp } from './labo-batiments.js?v=0.99.11';
-import { BATIMENTS } from './data/batiments.js?v=0.99.11';
-import { JOURNAL } from './labo-journal.js?v=0.99.11';
-import { loadVersion } from './lib/app-update.js?v=0.99.11';
-import { maquetteEffets, maquetteAmbiance, maquetteEspace, maquetteBruitages } from './labo-son.js?v=0.99.11';
-import { calqueMoral } from './labo-moral.js?v=0.99.11';
-import { maquetteTranchees, NOTES_TRANCHEES, NOMS_TRANCHEES } from './labo-tranchees.js?v=0.99.11';
+import { afficherVersion } from './version-tag.js?v=0.99.9';
+import { mountLabo } from './lib/labo-shell.js?v=0.99.9';
+import { spriteCanvas, paletteToGPL, paletteToHex } from './lib/sprites.js?v=0.99.9';
+import { PALETTE, ROLES } from './palette.js?v=0.99.9';
+import { chargerContenu } from './design-store.js?v=0.99.9';
+import { tuile, ETAT } from './tuiles.js?v=0.99.9';
+import { creerTerrain, impact, hydroLignes, toucher } from './terrain.js?v=0.99.9';
+import { FORMES } from './cratere.js?v=0.99.9';
+import { CALIBRES } from './data/calibres.js?v=0.99.9';
+import { METEO } from './data/meteo.js?v=0.99.9';
+import { nouvelleBataille, avancer, ordonnerMarche, ordonnerBarrage, mourir, regarderAu, aube, horloge, ticksParJour, rangDe } from './bataille.js?v=0.99.9';
+import { AZIMUTS, COTES } from './data/soleil.js?v=0.99.9';
+import { creerRendu, ZOOMS } from './rendu3d.js?v=0.99.9';
+import { placesCommandement } from './army.js?v=0.99.9';
+import { hash2 } from './lib/rng.js?v=0.99.9';
+import { reglerVerdure } from './apparence.js?v=0.99.9';
+import { maquetteChars } from './labo-chars.js?v=0.99.9';
+import { fondations, boutons, fenetres, revision } from './labo-design-system.js?v=0.99.9';
+import { gainTampon, gainCachets, gainFil, gainBordereau, victoireFanion, victoireTampon, victoireChevrons, victoireAube, ficheDeuxColonnes, ficheEtages, ficheRegistre, ficheDAbord } from './labo-recompenses.js?v=0.99.9';
+import { maquetteBatiment, maquetteCamp } from './labo-batiments.js?v=0.99.9';
+import { BATIMENTS } from './data/batiments.js?v=0.99.9';
+import { JOURNAL } from './labo-journal.js?v=0.99.9';
+import { loadVersion } from './lib/app-update.js?v=0.99.9';
+import { maquetteEffets, maquetteAmbiance, maquetteEspace, maquetteBruitages } from './labo-son.js?v=0.99.9';
+import { calqueMoral } from './labo-moral.js?v=0.99.9';
+import { maquetteTranchees, NOTES_TRANCHEES, NOMS_TRANCHEES } from './labo-tranchees.js?v=0.99.9';
+import { entrees as encEntrees, lexiqueAZ, planche as encPlanche } from './labo-encyclopedie.js?v=0.99.9';
 
 document.documentElement.style.setProperty('--jeu-accent', ROLES.accent);
 const NOM = document.title.replace(/^Labo — /, ''); // le nom vient de la page (une apostrophe ne casse rien)
@@ -345,7 +346,7 @@ const GROUPES = [
       },
     })) },
     { id: 'ds-fondations', title: 'Fondations', variants: [
-      { title: 'Typographie', status: 'actuelle', depuis: '0.98.0', note: 'La police et les quatre tailles, lues dans le `:root` de css/style.css (docs/design-system.md).', render: s => { fondations(s, 'typo'); } },
+      { title: 'Typographie', status: 'actuelle', depuis: '0.98.0', note: 'La police du texte (mono) et celle des titres (Antonio, deux graisses), les quatre tailles de texte et les trois de titre avec leur usage, lues dans le `:root` de css/style.css et de css/ds-v2.css (docs/design-system.md). À jour depuis la v0.100.0.', render: s => { fondations(s, 'typo'); } },
       { title: 'Espaces, hauteurs, traits', status: 'actuelle', depuis: '0.98.0', note: 'L\'échelle d\'espacement (multiples de 4), la cible d\'un bouton, le trait, l\'ombre d\'un cran.', render: s => { fondations(s, 'espaces'); } },
       { title: 'Couleurs de l\'interface', status: 'actuelle', depuis: '0.98.0', note: 'Les neuf rôles `--jeu-*` et leur contraste sur la terre et sur l\'os.', render: s => { fondations(s, 'couleurs'); } },
     ] },
@@ -356,6 +357,11 @@ const GROUPES = [
       { title: 'Les titres', status: 'actuelle', depuis: '0.98.1', note: 'EN JEU depuis la v0.98.2 (Jérôme, v0.98.1 : « les titres en condensé fin et haut dans le style de Cast Iron » ; « jamais coupés »). Antonio, en attendant Cast Iron ; la fenêtre météo a pour titre « Météo », ses lignes sont des libellés.', render: s => { revision(s, 'titres'); } },
       { title: 'Les marges', status: 'actuelle', depuis: '0.98.1', note: 'EN JEU depuis la v0.98.2. Fenêtres, dialogues et boutons plus aérés : un cran de plus.', render: s => { revision(s, 'marges'); } },
       { title: 'Les boutons refusés', status: 'actuelle', depuis: '0.98.1', note: 'EN JEU depuis la v0.98.2. Hachurés, pointillés, curseur interdit, et rien ne change au survol.', render: s => { revision(s, 'refus'); } },
+    ] },
+    { id: 'encyclopedie', title: 'Encyclopédie des règles', variants: [
+      { title: 'Les entrées', status: 'actuelle', depuis: '0.100.0', note: 'Chaque mot du jeu défini (le front, les hommes, le moral, les ordres, le combat, les armes lourdes, la nuit, le camp, le terrain et la météo, la bataille, l\'interface), avec sa capture. Une recherche, des catégories, des renvois.', render: s => { encEntrees(s); } },
+      { title: 'Lexique A–Z', status: 'actuelle', depuis: '0.100.0', note: 'Tous les termes sur une ligne, de A à Z.', render: s => { lexiqueAZ(s); } },
+      { title: 'La planche des captures', status: 'actuelle', depuis: '0.100.0', note: 'Toutes les captures du jeu (interface, unités, terrain, temps), faites par `node outils/encyclopedie.mjs` dans le vrai jeu.', render: s => { encPlanche(s); } },
     ] },
     { id: 'ds-fenetres', title: 'Fenêtres, bulles et dialogues', variants: [
       { title: 'Les papiers du champ', status: 'actuelle', depuis: '0.98.0', note: 'La fenêtre d\'ordres d\'un régiment (avec son « ? ») et celle d\'un bâtiment.', render: s => { fenetres(s, 'papiers'); } },

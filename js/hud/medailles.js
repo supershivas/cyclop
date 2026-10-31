@@ -46,7 +46,7 @@ export function palmares(B, camp, portee = 'jour') {
 export function tableau(p) {
   const bloc = (titre, liste) => {
     const sec = document.createElement('section');
-    sec.append(Object.assign(document.createElement('h3'), { textContent: titre }));
+    sec.append(Object.assign(document.createElement('h4'), { textContent: titre }));
     if (!liste.length) sec.append(Object.assign(document.createElement('p'), { className: 'discret', textContent: 'Personne ne s\'est distingué.' }));
     const ul = document.createElement('ul'); ul.className = 'medailles';
     for (const m of liste) {

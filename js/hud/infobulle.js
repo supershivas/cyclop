@@ -4,8 +4,12 @@
 // aucun survol (le HUD ne prend pas le pointeur : `pointer-events: none`, sauf ce qui le demande). Le dessin seulement ; sans pointeur fin, rien.
 const echapper = t => t.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 // le texte de `data-info` en lignes de la bulle (h1, h2, corps) : la même bulle partout, la même hiérarchie
+// Un titre n'existe que s'il a quelque chose à titrer (Jérôme, v0.100.0 : un énorme « Déplier le secteur de la carte » sur une simple bascule) : une bulle d'une seule ligne est
+// une ligne simple en gras (`seul`), pas un h1 ; le titre vient quand un corps le suit.
 export function lignesInfo(texte) {
-  return texte.split('\n').map(l => {
+  const lignes = texte.split('\n').filter(l => l.trim());
+  if (lignes.length === 1) return `<span class="seul">${echapper(lignes[0].replace(/^#{1,2} /, '')).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>')}</span>`;
+  return lignes.map(l => {
     const [classe, corps] = l.startsWith('## ') ? ['h2', l.slice(3)] : l.startsWith('# ') ? ['h1', l.slice(2)] : ['p', l];
     return `<span class="${classe}">${echapper(corps).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>')}</span>`;
   }).join('');
@@ -43,9 +47,10 @@ export function creerInfobulle({ $ }) {
   };
   document.addEventListener('pointermove', e => {
     const c = e.target instanceof Element ? e.target.closest('[data-info], button[aria-label], [role="button"][aria-label], summary, input[aria-label]') : null;
-    const texte = c ? c.dataset.info || (c.classList.contains('reg-carte') ? '' : c.getAttribute('aria-label')) || '' : '';      // sans `data-info`, un bouton à nom (icône, flèche) dit son nom : tout ce qui se clique parle (v0.98.0)
+    // sans `data-info`, un bouton **sans texte** (icône, flèche) dit son nom : tout ce qui se clique parle (v0.98.0) ; un bouton qui porte déjà son texte (la bascule de la carte, une carte de régiment) ne le répète pas (v0.100.0)
+    const texte = c ? c.dataset.info || (c.classList.contains('reg-carte') || c.textContent.trim() ? '' : c.getAttribute('aria-label')) || '' : '';
     if (!c || !texte) { if (vers) cacher(); return; }
-    if (c !== vers || bulle.dataset.texte !== texte) { vers = c; bulle.dataset.texte = texte; bulle.innerHTML = lignesInfo(c.dataset.info ? texte : `# ${texte}`); bulle.hidden = false; }
+    if (c !== vers || bulle.dataset.texte !== texte) { vers = c; bulle.dataset.texte = texte; bulle.innerHTML = lignesInfo(texte); bulle.hidden = false; }
     poser(e);
   });
   document.addEventListener('pointerleave', cacher);

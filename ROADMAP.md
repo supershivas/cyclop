@@ -11,7 +11,7 @@ Statuts : **à l'étude** · **validé** (Jérôme a tranché) · **en cours** �
 
 ### Retours de playtest du 30 octobre (Jérôme ; rien n'est construit, un lot par session)
 
-**Statut** : validé. Ordre proposé : A (bugs visuels) → B (interface) → C (missions et victoire) → D (renforts, déroute) → E (xp, mitrailleuses) → F (sons : fait, v0.99.6). Chaque lot : lire son fichier de domaine, tests ciblés, `stamp`, version.
+**Statut** : validé. Ordre proposé : A (bugs visuels) → B (interface : fait, v0.100.0) → C (missions et victoire) → D (renforts, déroute) → E (xp, mitrailleuses) → F (sons : fait, v0.99.6). Chaque lot : lire son fichier de domaine, tests ciblés, `stamp`, version.
 
 **A. Visuels** (v0.99.5 livré : pause qui fige l'écran, pluie dans le ciel, socle plat du camp, piste de l'aérodrome ; reste le reste de la liste) ; v0.99.7 livré : boue en taches, érosion et lacs, brouillard visible ; v0.99.9 livré : décollage, char sorti du parc, fenêtres parc et aérodrome, Avion muet au brouillard ; v0.99.10 livré : fenêtre du char, stock 2 chars / 3 avions, obus plus efficaces sur les chars ; v0.99.11 livré : IA et chars, hôpital, arbres ronds qui tombent, fumée en ellipses, drapeaux et hommes du camp (reste : mesure du coût du feuillage, déroute vers l'hôpital)
 - **Arbres** : animation de chute sous un bombardement ; feuillage ellipsoïdal (rond) ; même aspect à tous les zooms (on peut simplifier les formes, pas en retirer le nombre).
@@ -20,11 +20,7 @@ Statuts : **à l'étude** · **validé** (Jérôme a tranché) · **en cours** �
 - **Fumée** : ellipses (plus de cubes), volutes plus réalistes.
 - **Météo** : la pluie est coupée au début du ciel (étrange) ; terre sèche → boue en transition douce et organique ; une pluie continue ne doit plus aplanir les cratères en lacs (l'eau s'y accumule sans raboter le relief).
 
-**B. Interface**
-- **Carte** (Jérôme, « les deux ») : un clic sur C2 cadre la vue 3D sur le seul secteur C2 **et** la carte n'affiche plus que C2 en gros plan, avec un retour à la vue d'ensemble.
-- **Fiche terrain** : les lignes longues ne sont plus coupées (« cratère 0,75 m de… ») ; chaque pourcentage dit de quoi il parle (« boue 35 % » : de la surface ? de la case ?).
-- **Fiche de fin de journée en trois colonnes** : gauche, chiffres clés de la journée ; centre, médailles du jour (`hud/medailles.js` existe) ; droite, ordres aux régiments. Espaces et hiérarchie vérifiés au design system.
-- **Divers** : Échap ne doit plus reprendre le jeu en pause ; la musique et les sons se coupent quand l'onglet n'est pas au premier plan.
+**B. Interface** : **livré en v0.100.0** (gros plan d'un secteur, fiche du terrain en deux lignes, fiche de nuit en trois colonnes, Échap, onglet caché, carnet, écran titre, boutons du haut, infobulles, typographie du labo, fenêtre de base, encyclopédie, chargeur) ; le détail et les pièges sont dans `docs/domaines/interface.md`. À mesurer au playtest : le gros plan (la vue 3D ne masque pas le reste du front), la fiche de nuit (les corvées ne sont plus sur la carte du régiment).
 
 **D. Renforts et déroute**
 - Les renforts s'affichent **dans la caserne** (plus dans le panneau en haut à gauche) et se déploient **à tout moment** s'ils sont disponibles.

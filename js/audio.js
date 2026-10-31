@@ -20,7 +20,7 @@ export const TRACKS = {
 const XFADE = 8, GAIN_PISTE = 0.75;      // le fondu enchaîné (s) ; le niveau d'un morceau avant le curseur
 
 export function creerSon(prefs = {}) {
-  let ctx = null, fx = null, mus = null, bruit = null, vol = { ...COMMUN, ...(prefs.son || {}) }, cache = false;
+  let ctx = null, maitre = null, fx = null, mus = null, bruit = null, vol = { ...COMMUN, ...(prefs.son || {}) }, cache = false;
   let graine = 12345;
   const alea = () => (graine = (Math.imul(graine, 1664525) + 1013904223) >>> 0) / 4294967296;
   const lits = {};                        // les sons en continu : vent, pluie, fusillade, char, avion, nuit
@@ -35,7 +35,8 @@ export function creerSon(prefs = {}) {
     if (!AC) return;
     ctx = new AC();
     const comp = ctx.createDynamicsCompressor();        // mille coups de fusil ne saturent pas la sortie
-    comp.connect(ctx.destination);
+    maitre = ctx.createGain(); maitre.connect(ctx.destination); comp.connect(maitre);      // (le maître : coupé onglet caché, voir `cacher`)
+    if (cache) maitre.gain.value = 0;
     fx = ctx.createGain(); fx.connect(comp);
     mus = ctx.createGain(); mus.connect(comp);
     regler();
@@ -235,6 +236,13 @@ export function creerSon(prefs = {}) {
   const doux = (g, v, dt, vite = 3) => { g.gain.value += (v - g.gain.value) * (1 - Math.exp(-dt * vite)); };
   function image(dt, { tirs, ecoute, meteo, nuit, aube = false, chars = [], avions = [], titre = false, enJeu = true }) {
     if (!ctx || cache || ctx.state !== 'running') return;
+    // l'illustration de l'écran titre : la musique seule (Jérôme, v0.100.0), le vent, la pluie et la fusillade s'éteignent
+    if (titre) {
+      for (const nom of ['vent', 'pluie', 'avion']) doux(lit(nom).g, 0, dt, 6);
+      doux(lits.char.g, 0, dt, 6); doux(lits.fusillade.g, 0, dt, 6);
+      musique(dt, false, false, 0);
+      return;
+    }
     // les coups de fusil de l'image : quelques claquements au hasard parmi eux, de leur côté, sur un lit de grondement
     const n = tirs ? tirs.length / 6 : 0;
     let proche = 0;
@@ -273,10 +281,20 @@ export function creerSon(prefs = {}) {
     musique(dt, nuit, aube, dens);
   }
 
+  // Onglet caché (conventions, section 9 ; Jérôme, v0.100.0) : tout se tait, la musique est mise en pause (un morceau lu par un élément audio avance même
+  // quand le contexte est suspendu), et tout reprend au retour.
   function cacher(oui) {
     cache = oui;
     if (!ctx) return;
-    if (oui) ctx.suspend(); else ctx.resume();
+    if (oui) {
+      maitre.gain.value = 0;
+      if (deck) deck.el.pause();
+      ctx.suspend().catch(() => {});
+    } else {
+      ctx.resume().catch(() => {});
+      maitre.gain.value = 1;
+      if (deck) deck.el.play().catch(() => {});
+    }
   }
   return {
     // à appeler dans un geste du joueur (clic, touche) : crée le contexte ou le reprend

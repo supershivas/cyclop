@@ -43,7 +43,7 @@
 .plaque p { margin: 0; }
 .discret { color: var(--jeu-accent); }
 .terrain { pointer-events: none !important; }
-.terrain[hidden] { display: flex; visibility: hidden; }   /* la ligne garde sa place : le billet ne saute pas */
+.terrain[hidden] { display: grid; visibility: hidden; }   /* les deux lignes gardent leur place : le billet ne saute pas */
 .pause-active { letter-spacing: .12em; text-transform: uppercase; text-align: center; }
 
 /* Des papiers de campagne (Jérôme, v0.10.0 ; labo « Plaques et journal », variantes C et D) : l'interface est faite de ce qu'un
@@ -75,14 +75,33 @@
 .carte-grille .cel.clign { animation: clign .5s steps(1) 6; }
 @keyframes clign { 0% { outline: 3px solid var(--jeu-fond); outline-offset: 1px; } 50% { outline: 3px solid transparent; } }
 @media (hover: hover) { .carte-grille .cel:hover { outline: 2px solid var(--jeu-accent); outline-offset: 1px; } }
-.carnet { width: 30ch; max-width: 36vw; font-size: var(--texte-petit); }
+.carnet { width: 38ch; max-width: 36vw; font-size: var(--texte-petit); }
 .carnet[hidden] { display: none; }
-.carnet .entete { letter-spacing: .14em; text-transform: uppercase; border-bottom: 1px solid var(--jeu-accent); padding-bottom: var(--e0); }
+/* Le carnet (Jérôme, v0.100.0) : l'en-tête est un bouton (un clic : tout l'historique), une flèche le replie ; les noms sont des liens ; un événement important a son pictogramme et clignote une fois */
+.carnet .entete { display: flex; align-items: center; justify-content: space-between; gap: var(--pas); letter-spacing: .14em; text-transform: uppercase; border-bottom: 1px solid var(--jeu-accent); padding-bottom: var(--e0); }
+.carnet .titre-carnet { flex: 1; text-align: left; background: none; border: 0; padding: 0; color: inherit; font: inherit; letter-spacing: inherit; text-transform: inherit; cursor: pointer; min-height: var(--jeu-cible); }
+.carnet .replier { flex: none; background: none; color: inherit; }
+.carnet .replier i { display: block; width: 0; height: 0; border: 5px solid transparent; border-top: 0; border-bottom-color: currentColor; }
+.carnet.replie .replier i { border-bottom: 5px solid transparent; border-top-color: currentColor; }
+.carnet.replie ol { display: none; }
+.carnet.replie .entete { border-bottom: 0; padding-bottom: 0; }
 .carnet ol { margin: 0; padding: 0; list-style: none; }
+.carnet.histoire ol { max-height: 40vh; overflow-y: auto; }
+.carnet.histoire { width: 44ch; }
 .carnet li { border-bottom: 1px solid var(--jeu-accent); padding: var(--e0) 0; }
 .carnet li b { font-weight: normal; color: var(--jeu-accent); margin-right: .6em; }
 .carnet li.recent { background: var(--jeu-accent); color: var(--jeu-encre); }
 .carnet li.recent b { color: var(--jeu-encre); }
+.carnet a.carnet-lien { color: inherit; text-decoration: underline; text-underline-offset: 2px; text-decoration-thickness: 1px; cursor: pointer; }
+@media (hover: hover) { .carnet a.carnet-lien:hover { text-decoration-thickness: 2px; background: var(--jeu-brume); color: var(--jeu-fond); } .carnet li.recent a.carnet-lien:hover { color: var(--jeu-fond); } }
+.carnet li.grave { padding-left: 22px; position: relative; font-weight: bold; }
+.carnet li .picto { position: absolute; left: 0; top: 2px; width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.carnet li.grave-assaut .picto, .carnet li.grave-perte .picto { stroke: var(--jeu-deroute); }
+.carnet li.recent.grave .picto { stroke: currentColor; }
+.carnet li.clignote { animation: carnet-clignote .9s ease-out 1; }
+@keyframes carnet-clignote { 0% { background: var(--jeu-ebranle); } 40% { background: transparent; } 70% { background: var(--jeu-ebranle); } 100% { background: transparent; } }
+@media (prefers-reduced-motion: reduce) { .carnet li.clignote { animation: none; } }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 
 /* Le râtelier : trois obus en papier de campagne, un par calibre ; debout : prêt, couché : se recharge (v0.18.1) */
 .batteries { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: var(--pas); align-items: end; width: 312px; pointer-events: auto; }
@@ -134,6 +153,7 @@
 .infobulle { position: fixed; left: 0; top: 0; z-index: 60; max-width: 34ch; padding: var(--e1) var(--pas); background: var(--jeu-encre); color: var(--jeu-fond); font-size: var(--texte-petit); line-height: 1.4; box-shadow: 2px 2px 0 var(--jeu-fond); pointer-events: none; }
 .infobulle[hidden] { display: none; }
 .infobulle span { display: block; }
+.infobulle .seul { font-weight: 700; }
 .infobulle .h1 { font-size: var(--texte-moyen); font-weight: 700; line-height: 1.2; }
 .infobulle .h2 { font-size: var(--texte-petit); font-weight: 700; letter-spacing: .08em; text-transform: uppercase; margin-top: var(--e1); opacity: .8; }
 .infobulle .p { margin-top: var(--e0); }
@@ -280,19 +300,44 @@ dialog .reglage input { width: 20px; height: 20px; margin: 0; flex: none; accent
 @media (max-width: 720px) { .campagne .ligne { grid-template-columns: 9ch 40px 1fr; } .campagne .ligne > span:last-child { grid-column: 1 / -1; } }
 /* La nuit : un papier posé sur le champ (les mêmes papiers que le jour), jamais une boîte de dialogue */
 .nuit { width: min(42ch, 34vw); max-height: calc(100dvh - 24px); display: flex; flex-direction: column; margin: 0 auto 0 0; }
+/* La fiche de fin de journée en trois colonnes (Jérôme, v0.100.0) : posée au milieu de l'écran, au-dessus du reste du haut (la nuit est une pause : on ne regarde qu'elle), sans passer sur la rangée des régiments
+   du bas ; les colonnes passent l'une sous l'autre quand la place manque, la fiche défile alors dans sa hauteur (jamais de débordement de l'écran). Le bilan de l'aube garde le papier étroit d'avant. */
+.nuit:not(.aube) { position: fixed; left: 50%; top: calc(var(--jeu-cible) + 2 * var(--pas)); transform: translateX(-50%); z-index: 20; width: min(1080px, calc(100vw - 2 * var(--e4))); max-height: calc(100dvh - var(--jeu-cible) - 2 * var(--pas) - 104px); box-sizing: border-box; }
+.nuit-colonnes[hidden] { display: none; }
+.nuit-colonnes { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr)); gap: var(--e4) var(--e5); align-items: start; }
+.nuit-col { min-width: 0; display: grid; gap: var(--pas); align-content: start; }
+.nuit-col h3 { margin: 0; padding-bottom: var(--pas); border-bottom: var(--e0) solid var(--jeu-fond); }
+.nuit-col p { margin: 0; }
+.chiffres { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--pas); margin: 0; }
+.chiffres > div { border: var(--trait) solid var(--jeu-accent); padding: var(--pas); display: grid; gap: var(--e1); }
+.chiffres dt { font-size: var(--texte-petit); color: var(--jeu-accent); }
+.chiffres dd { margin: 0; font-size: var(--texte-grand); line-height: 1.1; }
+.nuit-regs { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--e1); margin-bottom: var(--pas); }
+.nuit-reg { display: grid; grid-template-columns: auto minmax(0, 1fr); column-gap: var(--pas); align-items: center; text-align: left; min-height: var(--jeu-cible); box-sizing: border-box; padding: 0 var(--pas); font-size: var(--texte-petit); }
+.nuit-reg b { grid-row: 1 / 3; font-size: var(--texte-grand); font-weight: normal; }
+.nuit-reg .nom { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.nuit-reg .corvee { color: var(--jeu-accent); }
+.nuit-reg.choisi .corvee, .nuit-reg.actif .corvee { color: inherit; }
+.nuit-reg.donne .corvee::after { content: ' ✓'; }
+.nuit-reg.tous { grid-column: 1 / -1; display: block; text-align: center; }
+.nuit-col .actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--ecart, var(--pas)); }
+.nuit-col .actions button { min-height: var(--jeu-cible); }
+@media (max-height: 640px) { .nuit:not(.aube) { max-height: calc(100dvh - var(--jeu-cible) - 3 * var(--pas)); } }
+.nuit:not(.aube) > h2 { margin-bottom: var(--e4); }
+.nuit:not(.aube) #nuit-corps { overflow-y: auto; }
 .nuit[hidden] { display: none; }
 #nuit-corps, #aube-bilan { overflow-y: auto; min-height: 0; }
 .nuit h2 { margin: 0 0 var(--e1); }
 .nuit p { margin: var(--e0) 0; }
 .nuit button { font: inherit; font-size: var(--texte-petit); color: var(--jeu-fond); background: none; border: 1px solid var(--jeu-fond); min-height: 36px; padding: 0 var(--pas); text-align: left; }
 .nuit button:disabled { color: var(--jeu-accent); border-color: var(--jeu-accent); }
-.nuit button.actif { background: var(--jeu-fond); color: var(--jeu-encre); }
+.nuit button.actif, .nuit button.choisi { background: var(--jeu-fond); color: var(--jeu-encre); }
 #aube { flex: none; width: 100%; min-height: var(--jeu-cible); margin-top: var(--pas); text-align: center; background: var(--jeu-fond); color: var(--jeu-encre); }
 /* Les médailles (v0.73.1) : le palmarès du soir et de la fin */
-.medailles-bloc h3 { margin: var(--pas) 0 2px; font-size: var(--texte-petit); }
+.medailles-bloc h4, #nuit-medailles h4, #fin-medailles h4 { margin: var(--pas) 0 var(--e1); font-size: var(--texte-petit); font-weight: bold; letter-spacing: .08em; text-transform: uppercase; }
 .medailles-bloc summary { cursor: pointer; font-weight: bold; }
-.medailles-bloc ul.medailles { margin: 0; padding-left: 0; list-style: none; font-size: var(--texte-petit); }
-.medailles-bloc ul.medailles li { margin: 2px 0; }
+ul.medailles { margin: 0; padding-left: 0; list-style: none; font-size: var(--texte-petit); }
+ul.medailles li { margin: 2px 0; }
 .medailles-bloc .discret { font-size: var(--texte-petit); }
 #fin-medailles { max-height: 40vh; overflow-y: auto; margin-bottom: var(--pas); }
 .fin-jours { margin: var(--pas) 0; padding-left: 0; list-style: none; columns: 2; font-size: var(--texte-petit); color: var(--jeu-accent); }
@@ -322,9 +367,6 @@ dialog form { margin-top: calc(var(--pas) * 2); }
 .temps button { display: grid; place-items: center; min-width: var(--jeu-cible); height: 36px; padding: 0 var(--pas); font: inherit; color: var(--jeu-fond); background: none; border: 0; cursor: pointer; }
 .temps button svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; }
 .temps button.actif { background: var(--jeu-fond); color: var(--jeu-encre); }
-.terrain .vit { display: flex; align-items: center; gap: var(--pas); font-size: var(--texte-petit); color: var(--jeu-accent); }
-.terrain .vit .plein { flex: 1; height: 6px; min-width: 8ch; background: var(--jeu-accent); }
-.terrain .vit b { display: block; height: 100%; background: var(--jeu-fond); }
 .carte-grille .trou { grid-column: 1 / -1; display: grid; place-items: center; font-size: var(--texte-petit); color: var(--jeu-accent); border-top: 1px dashed var(--jeu-accent); border-bottom: 1px dashed var(--jeu-accent); }
 .carte-regs { position: absolute; inset: 0; pointer-events: none; }
 .carte-grille .carte-ronde {
@@ -436,14 +478,18 @@ dialog form { margin-top: calc(var(--pas) * 2); }
 @media (hover: hover) { .reg-carte.donne:not(.choisi):hover { --pap: var(--jeu-encre); --enc: var(--jeu-fond); } }   /* (le survol d'une carte grisée l'éclaircit : le fond glaise du survol y rendrait le texte illisible) */
 
 /* La barre de chargement (Jérôme, v0.28.0) : un papier sur la terre, une barre d'encre ; au lancement et quand on relit ou commence une partie */
-.chargement { position: fixed; inset: 0; z-index: 50; display: grid; place-items: center; background: var(--jeu-fond); transition: opacity .25s; }
+.chargement { position: fixed; inset: 0; z-index: 50; display: grid; place-items: center; background: var(--jeu-fond, #16130f); color: var(--jeu-encre, #e4dfd0); transition: opacity .25s; }
+/* Le chargeur est seul (Jérôme, v0.100.0) : avant, au lancement (les variables --jeu-* ne sont écrites que par le premier script) il était transparent sur le titre et ses boutons ; tant qu'il est là, le champ, le HUD et le titre sont cachés, les fenêtres ouvertes aussi */
+body.charge #ecran { visibility: hidden; }
+body.charge dialog { display: none; }
+.chargement .papier { background: var(--jeu-encre, #e4dfd0); color: var(--jeu-fond, #16130f); }
 .chargement[hidden] { display: none; }
 .chargement.fondu { opacity: 0; pointer-events: none; }
 .chargement .papier { width: min(34ch, 80vw); display: grid; gap: var(--pas); }
 .chargement p { margin: 0; letter-spacing: .1em; text-transform: uppercase; font-size: var(--texte); }
 .chargement .discret { font-size: var(--texte-petit); letter-spacing: 0; text-transform: none; min-height: 1.3em; }
-.chargement-piste { height: 10px; border: 2px solid var(--jeu-fond); }
-.chargement-piste i { display: block; height: 100%; background: var(--jeu-fond); transition: width .12s linear; }
+.chargement-piste { height: 10px; border: 2px solid var(--jeu-fond, #16130f); }
+.chargement-piste i { display: block; height: 100%; background: var(--jeu-fond, #16130f); transition: width .12s linear; }
 
 /* Le choix du secteur (Jérôme, v0.29.0 ; v0.37.1 : deux colonnes) : à gauche la liste des secteurs, à droite le secteur choisi en 3D, qui tourne ; le terrain montré est celui qu'on jouera */
 #dialogue-carte { width: min(94vw, 72rem); max-width: none; overflow: hidden; }       /* (pas de barre de défilement : la carte se réduit à la place qui reste, Jérôme, v0.60.2) */        /* (game.css limite un dialogue à 520 px) */
@@ -518,9 +564,11 @@ dialog form { margin-top: calc(var(--pas) * 2); }
 .frise-chg .frise-icone[hidden] { display: block; visibility: hidden; }
 .frise-icone svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 .frise-icone.prevu svg { stroke-dasharray: 2.5 3; }
-.terrain { display: flex; flex-wrap: nowrap; overflow: hidden; align-items: center; gap: 0 var(--pas); font-size: var(--texte-petit); color: var(--jeu-accent); min-height: 1.4em; }
-.terrain .vit { display: flex; align-items: center; gap: var(--e1); }
+.terrain { display: grid; grid-auto-rows: 1.4em; align-content: start; overflow: hidden; font-size: var(--texte-petit); color: var(--jeu-accent); min-height: 2.8em; }
+.terrain .l { display: flex; align-items: center; gap: var(--pas); white-space: nowrap; }
+.terrain .vit { display: flex; align-items: center; gap: var(--e1); flex: none; margin-left: auto; }
 .terrain .vit .plein { flex: none; width: 6ch; min-width: 0; height: 6px; background: var(--jeu-accent); }
+.terrain .vit b { display: block; height: 100%; background: var(--jeu-fond); }
 .montre-bloc { max-width: 100%; }
 .montre-bloc > .papier { max-width: 40ch; }
 
@@ -541,14 +589,13 @@ h2 { font-weight: normal; letter-spacing: var(--titre-lettres); }
 /* Les boutons du haut ont tous le même habillage : du papier (l'os, l'ombre d'un cran), comme le billet et la carte (Jérôme, v0.31.3) */
 .haut-bloc .boutons > .icone { background: var(--jeu-encre); color: var(--jeu-fond); border: 0; box-shadow: var(--ombre-papier); }
 
-/* Le terrain sous la souris tient sur une seule ligne (Jérôme, v0.31.5) : le nom (coupé par des points de suspension s'il le faut), puis la marche ou, sur une tranchée, la ligne de vie : nous à gauche, en face à droite, aux couleurs des deux armées */
-.terrain .nom { flex: 0 1 auto; min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
-.terrain .vit { flex: none; margin-left: auto; white-space: nowrap; }
+/* Le terrain sous la souris tient sur deux lignes (Jérôme, v0.100.0 ; une seule avant, v0.31.5) : le lieu, puis son état ; chaque pourcentage a son libellé (Marche, Solidité, Hommes) ; un nom trop long passe en points de suspension, jamais un pourcentage */
+.terrain .nom { flex: 0 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.terrain .l:first-child .nom { color: var(--jeu-fond); }
+.terrain .lib { color: var(--jeu-accent); }
 .terrain .vie .plein { display: flex; width: 10ch; background: var(--jeu-accent); }
 .terrain .vie .plein b { display: block; height: 100%; }
-/* La solidité d'une tranchée (Jérôme, v0.84.0) : une barre d'os qui se vide, avant la ligne de vie ; abîmée, elle prend l'orange de l'alerte, bouleversée le rouge (le mot porte l'information, la couleur la confirme) */
-.terrain .sol { margin-left: auto; }
-.terrain .sol + .vit { margin-left: 0; }
+/* La solidité d'une tranchée (Jérôme, v0.84.0) : une barre d'os qui se vide ; abîmée, elle prend l'orange de l'alerte, bouleversée le rouge (le mot porte l'information, la couleur la confirme) */
 .terrain .sol .plein { display: flex; width: 8ch; background: var(--jeu-fond); outline: var(--trait) solid var(--jeu-accent); }
 .terrain .sol .plein b { display: block; height: 100%; background: var(--jeu-encre); }
 .terrain .sol.abimee .plein b { background: var(--jeu-ebranle); }
@@ -599,13 +646,18 @@ h2 { font-weight: normal; letter-spacing: var(--titre-lettres); }
 .son-reglages label { display: grid; grid-template-columns: 7ch 1fr; align-items: center; gap: var(--pas); }
 .son-reglages input { width: 100%; min-height: var(--jeu-cible); accent-color: var(--jeu-accent); }
 
-/* Le détail d'un secteur (v0.76.0) : sous la carte, un plan du secteur et de ses voisins */
-.secteur { width: min(38ch, 30vw); }
-.secteur .entete { display: flex; justify-content: space-between; gap: var(--pas); width: 100%; font: inherit; color: inherit; background: none; border: 0; border-bottom: 1px solid var(--jeu-accent); cursor: pointer; letter-spacing: .14em; text-transform: uppercase; font-size: var(--texte-petit); padding-bottom: var(--e0); margin-bottom: var(--e1); }
+/* Le gros plan d'un secteur (v0.76.0 ; v0.100.0 : le seul secteur choisi, la vue d'ensemble un clic plus loin) */
+.secteur { width: min(360px, 34vw); display: grid; gap: var(--pas); max-height: calc(100dvh - 2 * var(--pas) - 220px); overflow-y: auto; box-sizing: border-box; }
+.secteur details { margin: 0; }
+.secteur[hidden] { display: none; }
+.secteur p, .secteur h3 { margin: 0; }
+.secteur .retour { justify-self: start; font: inherit; font-size: var(--texte-petit); min-height: var(--jeu-cible); padding: 0 var(--pas); background: none; border: 1px solid var(--jeu-accent); color: inherit; cursor: pointer; }
+.secteur-tete { display: flex; align-items: center; justify-content: space-between; gap: var(--pas); }
+.secteur-lettres { display: flex; gap: var(--e1); }
+.secteur-lettres .sect { min-width: var(--jeu-cible); min-height: var(--jeu-cible); font: inherit; background: none; border: 1px solid var(--jeu-accent); color: inherit; cursor: pointer; }
+.secteur-lettres .sect.ici { background: var(--jeu-fond); color: var(--jeu-encre); border-color: var(--jeu-fond); }
 .secteur canvas { display: block; width: 100%; height: auto; image-rendering: pixelated; background: var(--jeu-fond); }
-.secteur-lignes { display: grid; gap: var(--e0); margin-top: var(--e1); }
-.secteur-ligne { font: inherit; font-size: var(--texte-petit); text-align: left; padding: var(--e0) var(--e1); background: none; border: 1px solid var(--jeu-accent); color: inherit; cursor: pointer; min-height: 0; }
-.secteur-ligne.ici { background: var(--jeu-fond); color: var(--jeu-encre); }
+.secteur-lignes { display: grid; gap: var(--e0); font-size: var(--texte-petit); }
 .carte.remplacee { display: none; }
 
 /* La légende de la carte et du plan de secteur (v0.78.1) */
