@@ -16,6 +16,7 @@ Lis `CLAUDE.md`, `docs/domaines/interface.md` (chargé seul dans `js/hud/`), `do
 10. **Labo/typographie** Le labo des références n'est pas à jour, il manque les typos des titres
 11. **Fenêtres de la base** Disparaissent si la base n'est plus à l'écran
 12. **Labo** Préparer une "encyclopédie" des règles du jeu : tous les termes utilisés sont définis, des captures de tous les éléments du jeu (unités, interfaces, mécaniques de jeu). Sois exhaustif.
+13. **chargement du jeu** Le loader n'est pas clean : on a parfois un arrière plan avec le menu et le titre sur fond noir (et le chargement du jeu au premier plan). Le loader doit être seul, il faut bien purger l'écran et n'afficher que ce qui est demandé.
 
 ## Vérifier et livrer
 
