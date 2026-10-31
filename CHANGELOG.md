@@ -1,5 +1,9 @@
 # Journal des versions
 
+## 0.99.6 — 2026-10-31
+- Les explosions, tirs de fusil, mitrailleuses, mitraillage aérien, vol d'avion, pluie et vent sont de vrais sons (libres de droits) au lieu de la synthèse
+- Le labo (sujet « Le son ») fait écouter les candidats de chaque famille, avec auteur et licence
+
 ## 0.99.5 — 2026-10-31
 - Le temps arrêté fige tout le dessin (nuages, pluie, fumée) et ternit les couleurs ; la pluie et la neige tombent aussi dans le ciel
 - Les bâtiments du camp reposent sur un socle plat qui couvre le relief ; l'aérodrome garde le sol du terrain, seule la piste (glaise, lignes blanches) a sa couleur et ne clignote plus

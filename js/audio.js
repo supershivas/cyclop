@@ -1,7 +1,10 @@
 /* Le son (Jérôme, v0.75.0 : « Ajoute le son »). Tout est synthétisé en Web Audio (aucun fichier, aucune dépendance) ; le dessin et la logique ne le connaissent pas :
    main.js lui passe les événements de la bataille et l'état de l'écoute. Déverrouillé au premier geste du joueur (les navigateurs refusent avant), coupé quand l'onglet est caché.
    Deux volumes, gardés dans `prefs.son` : les effets (obus, fusillade, avion, char, vent, pluie) et la musique : les morceaux de Kingvi (`assets/music/`, MP3, repris du jeu frère à la demande de Jérôme, v0.76.2), en playlist avec fondu enchaîné de 8 s, qui changent selon l'humeur du champ (calme, combat, nuit, aube).
+   Les bruitages (Jérôme, v0.99.6 : la synthèse était « très mauvaise ») : des mp3 CC0 de `assets/sons/` (catalogue et choix : `data/sons.js`), décodés au premier geste du joueur ;
+   une famille dont le fichier manque ou n'est pas encore décodé retombe sur la synthèse d'avant (aucune erreur, aucun silence). Variantes, hauteur et voix simultanées : tirées/limitées ici, avec le générateur local.
    Le hasard du son est un petit générateur local (la graine de la bataille n'est jamais touchée). L'espace : un son loin est plus faible et vient du côté où il est (`ecoute` : le centre de la vue, en mètres du secteur, et sa largeur). */
+import { SONS, DOSSIER_SONS, VOIX } from './data/sons.js?v=0.99.6';
 const borne = (v, a, b) => v < a ? a : v > b ? b : v;
 const COMMUN = { effets: 0.7, musique: 0.5 };
 // ── La playlist : les fichiers de `assets/music/`. `humeur` : quand le champ la demande, on y passe en fondu (comme `lieu` dans Kingvi) ──
@@ -22,6 +25,8 @@ export function creerSon(prefs = {}) {
   const alea = () => (graine = (Math.imul(graine, 1664525) + 1013904223) >>> 0) / 4294967296;
   const lits = {};                        // les sons en continu : vent, pluie, fusillade, char, avion, nuit
   let dernierImpact = 0;
+  const tampons = {}, voix = {}, credit = { fusil: 0, mitrailleuse: 0, mitraillage: 0 };      // les sons décodés ('famille/variante'), les voix en cours par famille, le rythme des rafales
+  let nVoix = 0, chargeLancee = false;
   let deck = null, courante = null, choix = 'playlist', humeurVoulue = 'calme', humeurDepuis = 0, combatLisse = 0, combatDepuis = 0, calmeDepuis = 0, humeur = 'calme';
 
   function demarrer() {
@@ -43,6 +48,67 @@ export function creerSon(prefs = {}) {
     lits.char = grondement('sawtooth', 42, 150);
     lits.avion = grondement('sawtooth', 96, 420);
     lits.vent.g.gain.value = lits.pluie.g.gain.value = lits.fusillade.g.gain.value = lits.char.g.gain.value = lits.avion.g.gain.value = 0;
+    chargerChoisis();
+  }
+
+  // ─── Les bruitages en fichiers : chargés au premier geste (les navigateurs refusent le son avant), jamais au lancement du jeu ───
+  const promesses = {};
+  function charger(famille, id) {
+    const cle = `${famille}/${id}`, d = SONS[famille]?.variantes[id];
+    if (!ctx || !d) return Promise.resolve(null);
+    return promesses[cle] ??= (async () => {               // (une seule fois par fichier ; un second appel attend le même décodage)
+      try {
+        const r = await fetch(DOSSIER_SONS + d.fichier);
+        if (r.ok) tampons[cle] = await ctx.decodeAudioData(await r.arrayBuffer());
+      } catch { /* le fichier manque : la synthèse reste */ }
+      return tampons[cle] || null;
+    })();
+  }
+  function chargerChoisis() {
+    if (chargeLancee) return; chargeLancee = true;
+    for (const [f, s] of Object.entries(SONS)) {
+      if (s.genre === 'boucle') {                          // une boucle : une seule des choisies, tirée une fois
+        const id = s.choisi[Math.floor(alea() * s.choisi.length)];
+        charger(f, id).then(buf => { if (buf && ctx) lierBoucle(f, buf, s.gain * (s.variantes[id].gain ?? 1)); });
+      } else for (const id of s.choisi) charger(f, id);
+    }
+  }
+  // une boucle en fichier remplace la boucle synthétisée du même nom (qui se tait)
+  function lierBoucle(nom, buf, base) {
+    const src = ctx.createBufferSource(), g = ctx.createGain(), p = ctx.createStereoPanner();
+    src.buffer = buf; src.loop = true; g.gain.value = 0; src.connect(g); g.connect(p); p.connect(fx); src.start(0, alea() * buf.duration);
+    lits[nom + 'F'] = { g, p, src, base };
+    if (lits[nom]) lits[nom].g.gain.value = 0;
+  }
+  const lit = nom => lits[nom + 'F'] || lits[nom];
+  /* Joue un coup d'une famille : une variante choisie au sort parmi celles que le jeu garde (`variante` : celle du labo), un peu plus grave ou aigu, plus sourd quand il est loin.
+     Rend faux si rien n'est prêt (le fichier manque ou se décode encore) : l'appelant fait alors la synthèse. */
+  function jouer(famille, v, pan, variante = null) {
+    const s = SONS[famille];
+    if (!ctx || !s) return false;
+    const prets = (variante ? [variante] : s.choisi).filter(i => tampons[`${famille}/${i}`]);
+    if (!prets.length) return false;
+    if (nVoix >= VOIX.total) return true;                  // trop de bruit : celui-ci se perd dans les autres
+    const id = prets[Math.floor(alea() * prets.length)], t = maintenant(), liste = voix[famille] ??= [];
+    while (liste.length >= (VOIX[famille] || 8)) { const vieille = liste.shift(); vieille.g.gain.setTargetAtTime(0, t, 0.03); try { vieille.src.stop(t + 0.2); } catch { /* déjà finie */ } }
+    const src = ctx.createBufferSource(), g = ctx.createGain(), f = ctx.createBiquadFilter(), p = ctx.createStereoPanner();
+    src.buffer = tampons[`${famille}/${id}`]; src.playbackRate.value = 1 + (alea() * 2 - 1) * (s.taux || 0);
+    g.gain.value = Math.min(1.5, v * s.gain * (s.variantes[id].gain ?? 1));
+    f.type = 'lowpass'; f.frequency.value = 900 + 17000 * Math.min(1, v) ** 0.5;      // loin : sourd
+    p.pan.value = pan; src.connect(f); f.connect(g); g.connect(p); p.connect(fx);
+    const voixCourante = { src, g }; liste.push(voixCourante); nVoix++;
+    src.onended = () => { nVoix--; const k = liste.indexOf(voixCourante); if (k >= 0) liste.splice(k, 1); g.disconnect(); };
+    src.start(t);
+    return true;
+  }
+  // le labo : écouter une candidate (une boucle tourne jusqu'à `stop`), sans voix limitées ni distance
+  async function ecouter(famille, id, { v = 1 } = {}) {
+    const s = SONS[famille], buf = await charger(famille, id);
+    if (!ctx || !s || !buf) return () => {};
+    const src = ctx.createBufferSource(), g = ctx.createGain();
+    src.buffer = buf; src.loop = s.genre === 'boucle'; g.gain.value = v * s.gain * (s.variantes[id].gain ?? 1);
+    src.connect(g); g.connect(fx); src.start();
+    return () => { try { src.stop(); } catch { /* déjà finie */ } g.disconnect(); };
   }
   function boucle(type, freq, q) {
     const s = ctx.createBufferSource(), f = ctx.createBiquadFilter(), g = ctx.createGain(), p = ctx.createStereoPanner();
@@ -85,23 +151,28 @@ export function creerSon(prefs = {}) {
       if (t - dernierImpact < 0.03) return;      // une salve de 24 obus ne fait pas 24 sons dans le même instant
       dernierImpact = t;
       const { v, pan } = place(e.x, e.y, ecoute, 0.18), k = e.cal === '220' ? 2.2 : e.cal === '155' ? 1.5 : 1;
+      if (jouer('obus' + e.cal, v, pan)) return;
       eclat(0.5 * k, { f0: 1800, f1: 60, gain: 1.1 * v, pan, q: 0.5 });
       ton(95 / k ** 0.5, 30, 0.55 * k, { gain: 0.9 * v, pan });
       eclat(0.09, { type: 'highpass', f0: 3000, f1: 1500, gain: 0.5 * v, pan });      // le claquement de l'éclat
     } else if (e.type === 'char-tir') {
       const { v, pan } = place(e.x, e.y, ecoute, 0.12);
+      if (jouer('obus75', v * 0.8, pan)) return;
       eclat(0.22, { f0: 900, f1: 90, gain: 0.7 * v, pan, q: 0.6 }); ton(110, 45, 0.3, { gain: 0.6 * v, pan });
     } else if (e.type === 'nid-detruit') {
       const { v, pan } = place(e.x, e.y, ecoute, 0.2);
+      if (jouer('obus75', v, pan)) return;
       eclat(0.5, { f0: 1400, f1: 70, gain: 0.8 * v, pan, q: 0.5 }); ton(90, 35, 0.4, { gain: 0.7 * v, pan });
     } else if (e.type === 'avion-abattu') {
       const { v, pan } = place(e.x, e.y, ecoute, 0.2);
       ton(520, 60, 2.2, { type: 'sawtooth', gain: 0.5 * v, pan });
     } else if (e.type === 'avion-ecrase' || e.type === 'char-detruit') {
       const { v, pan } = place(e.x, e.y, ecoute, 0.25);
+      if (jouer('obus155', v, pan)) return;
       eclat(1.2, { f0: 1500, f1: 50, gain: 1.2 * v, pan, q: 0.4 }); ton(70, 25, 1.0, { gain: v, pan });
     } else if (e.type === 'pont-coupe' || e.type === 'pont-rompu') {
       const { v, pan } = place(e.x ?? ecoute.x, e.y ?? ecoute.y, ecoute, 0.2);
+      if (jouer('obus155', v * 0.8, pan)) return;
       eclat(0.8, { f0: 900, f1: 100, gain: 0.9 * v, pan }); ton(180, 60, 0.6, { type: 'square', gain: 0.3 * v, pan });
     } else if (e.type === 'prise') {
       const { v, pan } = place(e.x, e.y ?? ecoute.y, ecoute, 0.3);
@@ -167,19 +238,23 @@ export function creerSon(prefs = {}) {
     // les coups de fusil de l'image : quelques claquements au hasard parmi eux, de leur côté, sur un lit de grondement
     const n = tirs ? tirs.length / 6 : 0;
     let proche = 0;
+    for (const k in credit) credit[k] = Math.min(3, credit[k] + (n || k === 'mitraillage' ? dt * (k === 'fusil' ? 16 : SONS[k].cadence) : 0));      // un rythme, pas un coup par tir : la foule est un bruit, pas mille claquements
     for (let q = 0; q < Math.min(8, n); q++) {
-      const i = Math.floor(alea() * n) * 6, { v, pan } = place(tirs[i], tirs[i + 1], ecoute, 0.04);
+      const i = Math.floor(alea() * n) * 6, { v, pan } = place(tirs[i], tirs[i + 1], ecoute, 0.04), genre = tirs[i + 5] === -1 ? 'mitrailleuse' : 'fusil';      // (un nid de mitrailleuse : son tireur est -1)
       proche += v;
-      if (alea() < 0.7) eclat(0.05 + alea() * 0.05, { type: 'bandpass', f0: 2400 + alea() * 1800, f1: 900, q: 1.5, gain: 0.35 * v, pan });
+      if (credit[genre] >= 1 && jouer(genre, v, pan)) { credit[genre]--; continue; }
+      if (!tampons[`${genre}/${SONS[genre].choisi[0]}`] && alea() < 0.7) eclat(0.05 + alea() * 0.05, { type: 'bandpass', f0: 2400 + alea() * 1800, f1: 900, q: 1.5, gain: 0.35 * v, pan });
     }
     const dens = n ? Math.min(1, proche / 5) : 0;
-    doux(lits.fusillade.g, 0.35 * dens, dt, 6);
+    doux(lits.fusillade.g, (tampons[`fusil/${SONS.fusil.choisi[0]}`] ? 0.15 : 0.35) * dens, dt, 6);      // (sous les vrais coups, le lit de grondement se fait discret)
     // le temps
     const pluie = meteo?.pluie || meteo?.neige ? 1 : 0, tempete = meteo?.tempete ? 1 : 0;
-    doux(lits.vent.g, (enJeu ? 0.12 : 0.18) + 0.22 * tempete + (nuit ? 0.05 : 0), dt, 1);
-    lits.vent.f.frequency.value = 300 + 220 * Math.sin(maintenant() * 0.23) ** 2 + 400 * tempete;
-    lits.vent.p.pan.value = Math.sin(maintenant() * 0.11) * 0.5;
-    doux(lits.pluie.g, enJeu || titre ? 0.12 * pluie : 0, dt, 1);
+    const niveauVent = (enJeu ? 0.12 : 0.18) + 0.22 * tempete + (nuit ? 0.05 : 0), vent = lit('vent'), fv = lits.ventF;
+    doux(vent.g, fv ? niveauVent * 5 * fv.base : niveauVent, dt, 1);
+    if (!fv) lits.vent.f.frequency.value = 300 + 220 * Math.sin(maintenant() * 0.23) ** 2 + 400 * tempete;
+    vent.p.pan.value = Math.sin(maintenant() * 0.11) * 0.5;
+    const averse = enJeu || titre ? pluie : 0, pl = lit('pluie');
+    doux(pl.g, lits.pluieF ? 0.12 * averse * 5 * lits.pluieF.base : 0.12 * averse, dt, 1);
     // les chars qui roulent : le plus proche donne le ton
     let vc = 0, pc = 0;
     for (const c of chars) if (c.etat === 'avance' || c.etat === 'enlise') { const { v, pan } = place(c.x, c.y, ecoute, 0.03); if (v > vc) { vc = v; pc = pan; } }
@@ -188,8 +263,13 @@ export function creerSon(prefs = {}) {
     // les avions en vol
     let va = 0, pa = 0, ha = 0;
     for (const a of avions) if (a.etat === 'vol' || a.etat === 'chute') { const { v, pan } = place(a.x ?? 0, a.y ?? 0, ecoute, 0.05); if (v > va) { va = v; pa = pan; ha = a.h || 0; } }
-    doux(lits.avion.g, 0.3 * va, dt, 3); lits.avion.p.pan.value = pa;
-    lits.avion.o.frequency.value = 90 + 14 * Math.sin(maintenant() * 14) + (ha < 20 ? 25 : 0);
+    const av = lit('avion');
+    doux(av.g, lits.avionF ? va * lits.avionF.base : 0.3 * va, dt, 3); av.p.pan.value = pa;
+    if (!lits.avionF) lits.avion.o.frequency.value = 90 + 14 * Math.sin(maintenant() * 14) + (ha < 20 ? 25 : 0);
+    // le mitraillage : tant que l'avion balaie sa bande, des coups à la cadence de la famille, de son côté
+    let mv = 0, mp = 0;
+    for (const a of avions) if (a.mitraille) { const { v, pan } = place(a.x ?? 0, a.y ?? 0, ecoute, 0.1); if (v > mv) { mv = v; mp = pan; } }
+    if (mv && credit.mitraillage >= 1 && jouer('mitraillage', mv, mp)) credit.mitraillage--;
     musique(dt, nuit, aube, dens);
   }
 
@@ -201,7 +281,7 @@ export function creerSon(prefs = {}) {
   return {
     // à appeler dans un geste du joueur (clic, touche) : crée le contexte ou le reprend
     debloquer() { demarrer(); if (ctx && ctx.state === 'suspended' && !cache) ctx.resume(); },
-    evenement, image, interface_, cacher,
+    evenement, image, interface_, cacher, ecouter, charger,
     // le labo : un morceau choisi (null : la playlist) et celui qu'on entend
     piste(id) { choix = id || 'playlist'; if (ctx) lancerPiste(id || suivante()); },
     get morceau() { return courante; },

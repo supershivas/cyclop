@@ -2,32 +2,32 @@
 // Chaque sujet utilise les mêmes modules que le jeu (terrain, apparence,
 // rendu three.js) : ce qu'on voit ici est ce que le jeu dessinera. Ajouter un
 // sujet ou une variante = ajouter une entrée dans GROUPES.
-import { afficherVersion } from './version-tag.js?v=0.99.5';
-import { mountLabo } from './lib/labo-shell.js?v=0.99.5';
-import { spriteCanvas, paletteToGPL, paletteToHex } from './lib/sprites.js?v=0.99.5';
-import { PALETTE, ROLES } from './palette.js?v=0.99.5';
-import { chargerContenu } from './design-store.js?v=0.99.5';
-import { tuile, ETAT } from './tuiles.js?v=0.99.5';
-import { creerTerrain, impact, hydroLignes, toucher } from './terrain.js?v=0.99.5';
-import { FORMES } from './cratere.js?v=0.99.5';
-import { CALIBRES } from './data/calibres.js?v=0.99.5';
-import { METEO } from './data/meteo.js?v=0.99.5';
-import { nouvelleBataille, avancer, ordonnerMarche, ordonnerBarrage, mourir, regarderAu, aube, horloge, ticksParJour, rangDe } from './bataille.js?v=0.99.5';
-import { AZIMUTS, COTES } from './data/soleil.js?v=0.99.5';
-import { creerRendu, ZOOMS } from './rendu3d.js?v=0.99.5';
-import { placesCommandement } from './army.js?v=0.99.5';
-import { hash2 } from './lib/rng.js?v=0.99.5';
-import { reglerVerdure } from './apparence.js?v=0.99.5';
-import { maquetteChars } from './labo-chars.js?v=0.99.5';
-import { fondations, boutons, fenetres, revision } from './labo-design-system.js?v=0.99.5';
-import { gainTampon, gainCachets, gainFil, gainBordereau, victoireFanion, victoireTampon, victoireChevrons, victoireAube, ficheDeuxColonnes, ficheEtages, ficheRegistre, ficheDAbord } from './labo-recompenses.js?v=0.99.5';
-import { maquetteBatiment, maquetteCamp } from './labo-batiments.js?v=0.99.5';
-import { BATIMENTS } from './data/batiments.js?v=0.99.5';
-import { JOURNAL } from './labo-journal.js?v=0.99.5';
-import { loadVersion } from './lib/app-update.js?v=0.99.5';
-import { maquetteEffets, maquetteAmbiance, maquetteEspace } from './labo-son.js?v=0.99.5';
-import { calqueMoral } from './labo-moral.js?v=0.99.5';
-import { maquetteTranchees, NOTES_TRANCHEES, NOMS_TRANCHEES } from './labo-tranchees.js?v=0.99.5';
+import { afficherVersion } from './version-tag.js?v=0.99.6';
+import { mountLabo } from './lib/labo-shell.js?v=0.99.6';
+import { spriteCanvas, paletteToGPL, paletteToHex } from './lib/sprites.js?v=0.99.6';
+import { PALETTE, ROLES } from './palette.js?v=0.99.6';
+import { chargerContenu } from './design-store.js?v=0.99.6';
+import { tuile, ETAT } from './tuiles.js?v=0.99.6';
+import { creerTerrain, impact, hydroLignes, toucher } from './terrain.js?v=0.99.6';
+import { FORMES } from './cratere.js?v=0.99.6';
+import { CALIBRES } from './data/calibres.js?v=0.99.6';
+import { METEO } from './data/meteo.js?v=0.99.6';
+import { nouvelleBataille, avancer, ordonnerMarche, ordonnerBarrage, mourir, regarderAu, aube, horloge, ticksParJour, rangDe } from './bataille.js?v=0.99.6';
+import { AZIMUTS, COTES } from './data/soleil.js?v=0.99.6';
+import { creerRendu, ZOOMS } from './rendu3d.js?v=0.99.6';
+import { placesCommandement } from './army.js?v=0.99.6';
+import { hash2 } from './lib/rng.js?v=0.99.6';
+import { reglerVerdure } from './apparence.js?v=0.99.6';
+import { maquetteChars } from './labo-chars.js?v=0.99.6';
+import { fondations, boutons, fenetres, revision } from './labo-design-system.js?v=0.99.6';
+import { gainTampon, gainCachets, gainFil, gainBordereau, victoireFanion, victoireTampon, victoireChevrons, victoireAube, ficheDeuxColonnes, ficheEtages, ficheRegistre, ficheDAbord } from './labo-recompenses.js?v=0.99.6';
+import { maquetteBatiment, maquetteCamp } from './labo-batiments.js?v=0.99.6';
+import { BATIMENTS } from './data/batiments.js?v=0.99.6';
+import { JOURNAL } from './labo-journal.js?v=0.99.6';
+import { loadVersion } from './lib/app-update.js?v=0.99.6';
+import { maquetteEffets, maquetteAmbiance, maquetteEspace, maquetteBruitages } from './labo-son.js?v=0.99.6';
+import { calqueMoral } from './labo-moral.js?v=0.99.6';
+import { maquetteTranchees, NOTES_TRANCHEES, NOMS_TRANCHEES } from './labo-tranchees.js?v=0.99.6';
 
 document.documentElement.style.setProperty('--jeu-accent', ROLES.accent);
 const NOM = document.title.replace(/^Labo — /, ''); // le nom vient de la page (une apostrophe ne casse rien)
@@ -405,6 +405,7 @@ const GROUPES = [
   ] },
   { id: 'ambiance', title: 'Ambiance', topics: [
     { id: 'son', title: 'Le son', variants: [
+      { title: 'Les bruitages à choisir', status: 'candidate', depuis: '0.99.6', note: 'Des sons libres de droits (CC0, OpenGameArt) pour remplacer la synthèse : explosions de 75, 155 et 220, fusil, mitrailleuse, mitraillage aérien, vol d\'avion, pluie, vent. 2 ou 3 candidates par famille, avec leur auteur et leur adresse. Écoutez, puis dites quelle lettre garder par famille : elle devient `choisi` dans `js/data/sons.js`. Les familles « répétées » (mitrailleuse, mitraillage) sont un seul coup joué à la cadence du jeu ; les boucles tournent jusqu\'à « Arrêter ».', render: s => maquetteBruitages(s) },
       { title: 'Les effets', status: 'actuelle', depuis: '0.76.0', note: 'En jeu (v0.75.0) : chaque son d\'événement, joué par le même module que la bataille (`js/audio.js`) : trois obus, une salve de 24, l\'avion abattu ou écrasé, le char détruit, les ponts, le cor du tronçon pris, la nuit, les trois petits sons de l\'interface. « Loin » les pose à 300 m à gauche. Cliquer une fois déverrouille le son (le navigateur le veut).', render: s => maquetteEffets(s) },
       { title: 'L\'ambiance', status: 'retenue', depuis: '0.76.0', note: 'Les sons qui ne s\'arrêtent pas : le vent (plus fort en tempête), la pluie et la neige, la fusillade (un lit de bruit et des claquements, selon le nombre de tirs), le moteur du char, celui de l\'avion (plus grave et plus fort bas), la musique lente. Les curseurs règlent ce que le jeu règle dans ses réglages.', render: s => maquetteAmbiance(s) },
       { title: 'L\'espace', status: 'retenue', depuis: '0.76.0', note: 'Un 155 tombe là où l\'on clique sur la carte : plus loin du centre de la vue il est plus faible, et il vient de son côté (jamais tout à fait muet : un gros bruit s\'entend de loin). La portée est la largeur que la vue montre (le zoom du jeu la change).', render: s => maquetteEspace(s) },

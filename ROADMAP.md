@@ -11,7 +11,7 @@ Statuts : **à l'étude** · **validé** (Jérôme a tranché) · **en cours** �
 
 ### Retours de playtest du 30 octobre (Jérôme ; rien n'est construit, un lot par session)
 
-**Statut** : validé. Ordre proposé : A (bugs visuels) → B (interface) → C (missions et victoire) → D (renforts, déroute) → E (xp, mitrailleuses) → F (sons). Chaque lot : lire son fichier de domaine, tests ciblés, `stamp`, version.
+**Statut** : validé. Ordre proposé : A (bugs visuels) → B (interface) → C (missions et victoire) → D (renforts, déroute) → E (xp, mitrailleuses) → F (sons : fait, v0.99.6). Chaque lot : lire son fichier de domaine, tests ciblés, `stamp`, version.
 
 **A. Visuels** (v0.99.5 livré : pause qui fige l'écran, pluie dans le ciel, socle plat du camp, piste de l'aérodrome ; reste le reste de la liste)
 - **Arbres** : animation de chute sous un bombardement ; feuillage ellipsoïdal (rond) ; même aspect à tous les zooms (on peut simplifier les formes, pas en retirer le nombre).
@@ -35,8 +35,6 @@ Statuts : **à l'étude** · **validé** (Jérôme a tranché) · **en cours** �
 - **Mitrailleuses** : on sélectionne le poste et on règle la direction du cône ; barre de vie et barre de munitions (rechargée la nuit) ; elles gagnent de l'xp.
 - **Expérience** : petite animation du chevron quand un régiment en gagne ; tout ce qui a de l'xp (soldats, régiments, chars, mitrailleuses) a une barre d'xp et un nombre de chevrons affiché au-dessus ; gagner un chevron est plus difficile (trop rapide aujourd'hui, mesurer) ; **un chevron donne un bonus passif, différent selon le type d'unité** (décision de Jérôme ; valeurs en `data/` à proposer : régiment moral et précision, char blindage, mitrailleuse cadence ; à valider avant de coder).
 
-**F. Sons**
-- Remplacer le rendu actuel (très mauvais) pour les explosions, tirs, mitraillage et vol des avions, pluie, vent. Piste (Jérôme) : **sons libres de droits (CC0 / domaine public) que je cherche**, en mp3 dans `assets/`, licences notées, écoute et choix au labo avant le jeu. Garder la synthèse en repli. Si le réseau du conteneur bloque le téléchargement, le dire et demander les fichiers.
 
 **Points encore ouverts** : (1) ce que rapportent les missions secondaires ; (2) valeurs exactes des bonus de chevron ; (3) la 2e barre du char (à constater dans le code avant de décider) ; (4) forme de la contre-attaque forcée si aucun secteur n'est perdu mais tous sont pleins.
 

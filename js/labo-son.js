@@ -1,8 +1,9 @@
 // Le sujet « Le son » du labo (Jérôme, v0.76.0 : « ajoute la section Son au labo », conventions section 14 : le labo fait entendre chaque son).
 // Ce que le jeu fait entendre (js/audio.js, `creerSon`), joué ici par le même module : un bouton par effet, un mélangeur de l'ambiance, un auditeur qu'on déplace.
 // Le dessin n'y est pour rien : de simples boutons de papier. Le son se déverrouille au premier clic (les navigateurs refusent avant).
-import { creerSon, TRACKS } from './audio.js?v=0.99.5';
-import { PALETTE as P } from './palette.js?v=0.99.5';
+import { creerSon, TRACKS } from './audio.js?v=0.99.6';
+import { SONS } from './data/sons.js?v=0.99.6';
+import { PALETTE as P } from './palette.js?v=0.99.6';
 
 const el = (tag, css = '', ...kids) => { const e = document.createElement(tag); if (css) e.style.cssText = css; e.append(...kids.flat().filter(k => k != null)); return e; };
 const MONO = 'font:12px/1.4 ui-monospace,monospace;';
@@ -95,5 +96,27 @@ export function maquetteEspace(stage) {
     m.son.evenement({ type: 'impact', cal: '155', x: e.x, y: e.y }, m.ecoute);
   };
   m.racine.append(carte, m.curseur('Portée (m)', 60, 640, 100, v => { m.ecoute.rayon = v; }), m.curseur('Effets', 0, 100, 70, v => m.son.volume('effets', v / 100)));
+  return fermer(m);
+}
+
+// D · les bruitages à choisir : chaque candidate de chaque famille (fichiers CC0 de assets/sons/), avec sa lettre, son auteur et sa licence
+export function maquetteBruitages(stage) {
+  const m = base(stage, 'Les candidates de chaque famille : une lettre par fichier. « ★ » : celle(s) que le jeu joue aujourd\'hui (`choisi` de data/sons.js). Un coup se joue une fois, une rafale à la cadence du jeu, une boucle jusqu\'à « Arrêter ».');
+  let arret = [];
+  const tout = () => { arret.forEach(f => f()); arret = []; };
+  m.fin.push(tout);
+  m.racine.append(m.bouton('Tout arrêter', tout), m.curseur('Effets', 0, 100, 70, v => m.son.volume('effets', v / 100)));
+  for (const [famille, s] of Object.entries(SONS)) {
+    const ligne = el('div', `display:grid;gap:6px;border-top:1px solid ${P.g};padding-top:8px;`, el('div', `${MONO}color:${P.g};`, `${s.nom} · ${s.genre === 'boucle' ? 'boucle' : s.cadence ? `rafale à ${s.cadence} coups/s` : 'un coup'}`));
+    for (const [id, d] of Object.entries(s.variantes)) {
+      const joue = () => m.son.ecouter(famille, id).then(stop => { if (s.genre === 'boucle') arret.push(stop); });
+      const unCoup = m.bouton(`${id.toUpperCase()}${s.choisi.includes(id) ? ' ★' : ''} · ${s.genre === 'boucle' ? 'Écouter' : 'Un coup'}`, joue);
+      const controles = [unCoup];
+      if (s.cadence) controles.push(m.bouton('Rafale 3 s', () => { const iv = setInterval(() => m.son.ecouter(famille, id), 1000 / s.cadence); const stop = () => clearInterval(iv); arret.push(stop); setTimeout(stop, 3000); }));
+      ligne.append(el('div', 'display:flex;flex-wrap:wrap;gap:8px;align-items:center;', ...controles,
+        el('span', `${MONO}color:${P.o};`, `${d.nom} — ${d.auteur} — ${d.licence} — `, Object.assign(el('a', `color:${P.o};`, 'page'), { href: d.url, target: '_blank', rel: 'noopener' }))));
+    }
+    m.racine.append(ligne);
+  }
   return fermer(m);
 }
