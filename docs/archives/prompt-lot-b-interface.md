@@ -15,6 +15,7 @@ Lis `CLAUDE.md`, `docs/domaines/interface.md` (chargé seul dans `js/hud/`), `do
 9. **infobulles au survol** Attention à la hiérarchisation de texte en H1 (par exemple, au survol de la fiche "carte", on a un énorme "déplier/replier le secteur de la carte". Vérifier que chaque infobulle a une bonne hiérarchie (title seulement si nécessaire, pas pour des infos de base)
 10. **Labo/typographie** Le labo des références n'est pas à jour, il manque les typos des titres
 11. **Fenêtres de la base** Disparaissent si la base n'est plus à l'écran
+12. **Labo** Préparer une "encyclopédie" des règles du jeu : tous les termes utilisés sont définis, des captures de tous les éléments du jeu (unités, interfaces, mécaniques de jeu). Sois exhaustif.
 
 ## Vérifier et livrer
 
