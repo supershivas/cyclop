@@ -37,7 +37,7 @@ test('toute la géométrie est finie (pas de NaN) à chaque niveau et à chaque 
   }
 });
 test('le niveau selon le zoom : la silhouette de loin, tout le détail de près', () => {
-  assert.deepEqual([1, 2, 3, 4, 6, 8, 12, 16].map(niveauSelonZoom), [1, 1, 1, 2, 2, 3, 3, 3]);
+  assert.deepEqual([1, 2, 3, 4, 6, 8, 12, 16, 24].map(niveauSelonZoom), [1, 1, 1, 2, 2, 3, 3, 3, 3]);
   assert.equal(NIVEAUX_TRANCHEES.length, 3);
 });
 
