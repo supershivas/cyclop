@@ -32,6 +32,8 @@ Statuts : **à l'étude** · **validé** (Jérôme a tranché) · **en cours** �
 - **Expérience** : petite animation du chevron quand un régiment en gagne ; tout ce qui a de l'xp (soldats, régiments, chars, mitrailleuses) a une barre d'xp et un nombre de chevrons affiché au-dessus ; gagner un chevron est plus difficile (trop rapide aujourd'hui, mesurer) ; **un chevron donne un bonus passif, différent selon le type d'unité** (décision de Jérôme ; valeurs en `data/` à proposer : régiment moral et précision, char blindage, mitrailleuse cadence ; à valider avant de coder).
 
 
+**Hors lot (Jérôme, 1er novembre) : le vol de l'avion** : (1) un **plan de vol réaliste** pour l'avion qui attaque : des virages à angle d'inclinaison et rayon réalistes, plus la droite unique de la v0.55.0 ; (2) les **avions détruits restent sur le champ de bataille** (aujourd'hui `reparerAvions` efface les épaves à l'aube) ; (3) **dégâts d'une passe** : une passe longue ôte au moins 75 % des pv de l'avion (jusqu'à 100 %), deux passes longues le détruisent à 100 %. Détail et questions : à trancher avant de coder (`js/avions.js`, `data/mitraillage.js`, `docs/domaines/terrain-engins.md`).
+
 **Points encore ouverts** : (1) ce que rapportent les missions secondaires ; (2) valeurs exactes des bonus de chevron ; (3) la 2e barre du char (à constater dans le code avant de décider) ; (4) forme de la contre-attaque forcée si aucun secteur n'est perdu mais tous sont pleins.
 
 ### Un terrain et une végétation plus soignés (v0.52.3 → ; à continuer dans une nouvelle session)
