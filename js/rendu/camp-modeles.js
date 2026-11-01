@@ -1,9 +1,9 @@
 // Les bâtiments du camp dessinés en volumes (Jérôme, v0.87.0) : sortis du labo (`labo-batiments.js`) pour que le jeu les dessine aussi (`rendu/camp.js`).
 // Chaque fabrique `BATIR[clé](A, niveau)` rend { g, w, d } : le groupe centré sur son emprise (w le long de x, d le long de z), l'avant (le front) à −z ; `A` est `atelier(THREE)` (engins.js).
 // 1 unité = 1 m, la palette du jeu seulement ; le dessin seulement, rien n'y est écrit.
-import { PALETTE as P } from '../palette.js?v=0.99.9';
-import { schneider } from './engins.js?v=0.99.9';
-import { PIEDS } from '../data/batiments.js?v=0.99.9';
+import { PALETTE as P } from '../palette.js?v=0.100.0';
+import { schneider } from './engins.js?v=0.100.0';
+import { PIEDS } from '../data/batiments.js?v=0.100.0';
 
 // ─── Les pièces communes ───────────────────────────────────────────────────
 export const G = A => new A.THREE.Group();
@@ -21,7 +21,7 @@ const arche = (R, n = 12) => { const p = [[-R, 0]]; for (let k = 1; k < n; k++) 
 // le socle : plat, posé sur le point le plus haut de l'emprise et descendant jusqu'au plus bas (`creux`, m ; v0.99.5), pour que le bâtiment ne lévite pas sur une pente et qu'aucune bosse ne perce le sol
 let CREUX = 0;
 export const regler_creux = c => { CREUX = Math.max(0, c); };
-function sol(A, g, w, d, c = P.b) { A.b(g, [w, 0.2 + CREUX, d], c, [0, 0.1 - CREUX / 2, 0], [0, 0, 0], false); }
+function sol(A, g, w, d, c = P.g) { A.b(g, [w, 0.2 + CREUX, d], c, [0, 0.1 - CREUX / 2, 0], [0, 0, 0], false); }
 
 // un biplan : le nez à +x (rangé face au front par `face`)
 function biplan(A, c = P.h) {
@@ -142,5 +142,36 @@ export const BATIR = {
     return { g, w: 42, d: 28 };
   },
 };
+// L'hôpital (v0.99.11) : des pavillons blancs (os) à toit de boue et croix de terre, des tentes de triage, une ambulance
+BATIR.hopital = (A, n) => {
+  const g = G(A); sol(A, g, 30, 24);
+  const places = [[-7, -4.5], [7, -4.5], [-7, 6.5], [7, 6.5]], nb = [0, 1, 2, 4][n];
+  places.slice(0, nb).forEach(([x, z]) => {
+    baraque(A, g, [x, z], 4.6, 9, 2.4, P.o, P.b, Math.PI / 2);
+    A.b(g, [1.6, 0.25, 0.3], P.t, [x, 3.05, z], [0, 0, 0], false); A.b(g, [0.3, 0.25, 1.6], P.t, [x, 3.08, z], [0, 0, 0], false);        // la croix, sur le faîtage
+  });
+  for (let k = 0; k < (n >= 2 ? 3 : 2); k++) A.prisme(g, [[-1.5, 0], [1.5, 0], [0, 2]], 2.8, P.r, [-12 + k * 4, 0, -9]);                            // les tentes de triage
+  if (n >= 3) { A.b(g, [3.4, 1.6, 2], P.o, [12, 0.9, -8]); A.b(g, [0.7, 0.2, 0.7], P.t, [12, 1.75, -8], [0, 0, 0], false); }                          // le bloc opératoire
+  A.b(g, [3, 1.5, 1.8], P.g, [11.5, 0.95, 9.5]); A.b(g, [1.6, 0.1, 0.35], P.o, [11.5, 1.75, 9.5], [0, 0, 0], false);                                // l'ambulance
+  return { g, w: 30, d: 24 };
+};
+// La vie d'un camp (v0.99.11 : « des drapeaux qui flottent, des soldats non armés qui bougent ») : un drapeau de l'armée au coin du bâtiment, et des hommes sans arme qui font les cent pas devant ;
+// `rendu/camp.js` les anime à chaque image (`userData.drapeau`, `userData.marche`). `coul` : la couleur de l'armée (n : nous, x : en face).
+export function vie(A, w, d, niveau, coul, graine) {
+  const g = G(A), h = (a, b) => { const v = Math.sin(a * 12.9898 + b * 78.233 + graine) * 43758.5453; return v - Math.floor(v); };
+  A.cyl(g, 0.09, 8, P.o, [w / 2 - 1.2, 4, d / 2 - 1.2], 'y', 6);
+  const f = G(A); f.position.set(w / 2 - 1.2, 7.3, d / 2 - 1.2);
+  const toile = G(A); toile.position.set(1.1, 0, 0); A.b(toile, [2.2, 1.4, 0.06], coul, [0, 0, 0], [0, 0, 0], false); f.add(toile);
+  f.userData.drapeau = { ph: h(1, 2) * 6 };
+  g.add(f);
+  for (let k = 0; k < 2 + niveau; k++) {
+    const m = G(A), x0 = -w / 2 + 3 + h(k, 3) * (w / 2 - 3), long = 4 + h(k, 4) * 6;
+    A.b(m, [0.5, 1.7, 0.35], coul, [0, 0.85, 0], [0, 0, 0], false);
+    m.userData.marche = { x0, x1: Math.min(w / 2 - 3, x0 + long), z: -d / 2 + 1.3 + (k % 2) * 1.1, v: 0.35 + h(k, 5) * 0.3, ph: h(k, 6) * 6 };
+    m.position.set(x0, 0.2, m.userData.marche.z);
+    g.add(m);
+  }
+  return g;
+}
 export const PIED = PIEDS;
 

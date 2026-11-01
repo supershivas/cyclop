@@ -1,8 +1,9 @@
 {
-  "version": "0.99.9",
-  "date": "2026-10-31",
+  "version": "0.100.0",
+  "date": "2026-11-01",
   "changes": [
-    "Les avions roulent sur la piste de l'aérodrome et décollent avant leur passe ; le char sort du parc des chars",
-    "Le parc et l'aérodrome disent leur total (chars déployés avec leur état, un clic y mène la vue ; avions au sol et en vol) ; le bouton Avion est muet par brouillard"
+    "Un clic sur un secteur cadre la vue 3D sur lui et met son plan en gros plan à la place de la carte ; « Vue d'ensemble », Échap ou un second clic reviennent",
+    "La fiche de fin de journée passe en trois colonnes (chiffres de la journée, médailles, ordres aux régiments) ; le carnet de bord montre tout l'historique d'un clic, ses noms se cliquent, les événements graves clignotent une fois",
+    "Échap ne relance plus le jeu, les sons se coupent onglet caché, l'écran titre n'a plus ni lettre de capitaine ni bruitage, le chargeur est seul, la fiche du terrain a deux lignes aux pourcentages nommés"
   ]
 }

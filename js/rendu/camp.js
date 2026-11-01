@@ -2,10 +2,10 @@
 // tant qu'un chantier dure, un liseré d'os autour du bâtiment choisi. Le dessin seulement : tout vient de l'état de la bataille, rien n'y est écrit ; et rien n'est dessiné hors de la partie bridée
 // (`etat.camp.bride`), donc ni le labo ni les tests n'ont de camp ; le jeu à deux en a un par joueur (v0.94.0). Les deux camps sont dessinés : celui d'en face est le nôtre tourné d'un demi-tour.
 // Fabrique `creerCamp({ THREE, scene, bataille: () => B, hauteur })`.
-import { atelier } from './engins.js?v=0.99.9';
-import { BATIR, chantier, regler_creux } from './camp-modeles.js?v=0.99.9';
-import { emprisesCamp, emplacementCamp, sortieChars } from '../camp.js?v=0.99.9';
-import { PALETTE as P } from '../palette.js?v=0.99.9';
+import { atelier } from './engins.js?v=0.100.0';
+import { BATIR, chantier, regler_creux, vie } from './camp-modeles.js?v=0.100.0';
+import { emprisesCamp, emplacementCamp, sortieChars } from '../camp.js?v=0.100.0';
+import { PALETTE as P } from '../palette.js?v=0.100.0';
 
 const LUEUR = 0.9;      // × la couleur de la matière (mesuré à l'œil sur la partie du premier matin : sans elle, la boue est noire)
 
@@ -26,7 +26,7 @@ export function creerCamp({ THREE, scene, bataille, hauteur }) {
     if (liseret) { scene.remove(liseret); liseret = null; }
   }
   const sansLiseret = () => { if (liseret) { scene.remove(liseret); liseret = null; } };
-  function maj(sombre = 0) {
+  function maj(sombre = 0, t = 0) {
     const B = bataille();
     if (!B || !B.etat.camp?.bride) { if (modeles.size) vider(); return; }
     A ??= atelier(THREE);
@@ -45,7 +45,7 @@ export function creerCamp({ THREE, scene, bataille, hauteur }) {
         if (m) scene.remove(m.pivot);
         const pivot = new THREE.Group();
         regler_creux(creux);
-        if (c.niveau) pivot.add(BATIR[e.cle](A, c.niveau).g);
+        if (c.niveau) { pivot.add(BATIR[e.cle](A, c.niveau).g); pivot.add(vie(A, e.w, e.d, c.niveau, e.camp === 0 ? P.n : P.x, e.x * 0.01 + e.y * 0.003)); }
         if (c.chantier) pivot.add(chantier(A, e.w * (c.niveau ? 1.02 : 0.7), e.d * (c.niveau ? 1.02 : 0.7), c.niveau ? 5 : 4));
         pivot.traverse(o => { if (o.material?.emissive) matieres.add(o.material); });
         scene.add(pivot);
@@ -63,6 +63,12 @@ export function creerCamp({ THREE, scene, bataille, hauteur }) {
         m.pivot.traverse(o => { if (o.userData.parc) o.visible = prete && !sorti; });
       }
     }
+    // la vie : les drapeaux battent, les hommes sans arme font les cent pas (le temps du dessin : figés par la pause)
+    for (const m of modeles.values()) m.pivot.traverse(o => {
+      const D = o.userData.drapeau, W = o.userData.marche;
+      if (D) { o.rotation.y = 0.45 * Math.sin(t * 2.3 + D.ph) + 0.15; o.children[0].scale.x = 0.92 + 0.12 * Math.sin(t * 5 + D.ph); }
+      else if (W) { const s = Math.sin(t * W.v + W.ph); o.position.x = W.x0 + (W.x1 - W.x0) * (0.5 + 0.5 * s); o.rotation.y = Math.cos(t * W.v + W.ph) >= 0 ? Math.PI / 2 : -Math.PI / 2; o.position.y = 0.2 + Math.abs(Math.sin(t * W.v * 9 + W.ph)) * 0.06; }
+    });
     for (const [id, m] of modeles) if (!vus.has(id)) { scene.remove(m.pivot); modeles.delete(id); }
     // sous la lumière commune (celle des chars et des ponts, faite pour des gris clairs), les volumes sombres de la palette (boue, glaise) tombent presque au noir : une lueur propre les relève, éteinte avec la nuit
     for (const mat of matieres) mat.emissive.copy(mat.color).multiplyScalar(LUEUR * (1 - Math.min(1, sombre)));

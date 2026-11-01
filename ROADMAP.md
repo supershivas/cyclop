@@ -11,20 +11,15 @@ Statuts : **à l'étude** · **validé** (Jérôme a tranché) · **en cours** �
 
 ### Retours de playtest du 30 octobre (Jérôme ; rien n'est construit, un lot par session)
 
-**Statut** : validé. Ordre proposé : A (visuels) → B (interface) → C (fait) → D (renforts, déroute) → E (xp, mitrailleuses) → F (sons : fait, v0.99.6). Chaque lot : lire son fichier de domaine, tests ciblés, `stamp`, version.
+**Statut** : validé. Ordre proposé : A (visuels) → B (interface : fait, v0.100.0) → C (fait) → D (renforts, déroute) → E (xp, mitrailleuses) → F (sons : fait, v0.99.6). Chaque lot : lire son fichier de domaine, tests ciblés, `stamp`, version.
 
-**A. Visuels** (livrés : v0.99.5 pause qui fige l'écran, pluie dans le ciel, socle plat du camp, piste ; v0.99.7 boue en taches, érosion et lacs, brouillard visible ; v0.99.9 décollage, char sorti du parc, fenêtres parc et aérodrome, Avion muet au brouillard). **Reste** :
-- **Fenêtre d'ordres du char** : décollée des boutons d'artillerie, boutons au design system, ordre en cours, vie du char, comprendre la 2e barre (bleue : cooldown du canon ? elle ne bouge pas : la faire vivre ou la retirer) ; l'artillerie arrête les chars trop difficilement (rééquilibrer par mesure, skill `equilibrage`).
+**A. Visuels** (v0.99.5 livré : pause qui fige l'écran, pluie dans le ciel, socle plat du camp, piste de l'aérodrome ; reste le reste de la liste) ; v0.99.7 livré : boue en taches, érosion et lacs, brouillard visible ; v0.99.9 livré : décollage, char sorti du parc, fenêtres parc et aérodrome, Avion muet au brouillard ; v0.99.10 livré : fenêtre du char, stock 2 chars / 3 avions, obus plus efficaces sur les chars ; v0.99.11 livré : IA et chars, hôpital, arbres ronds qui tombent, fumée en ellipses, drapeaux et hommes du camp (reste : mesure du coût du feuillage, déroute vers l'hôpital)
 - **Arbres** : animation de chute sous un bombardement ; feuillage ellipsoïdal (rond) ; même aspect à tous les zooms (on peut simplifier les formes, pas en retirer le nombre).
 - **Fumée** : ellipses (plus de cubes), volutes plus réalistes (variantes au labo).
 - **Bâtiments des bases** : aspect à reprendre (ils paraissent d'un autre jeu), drapeaux qui flottent, soldats non armés qui s'affairent.
 - **Hôpital** : les blessés évacués et les soldats en déroute y vont (on voit leur nombre, on peut les réaffecter) ; des niveaux pour sauver plus de blessés.
 
-**B. Interface** (rien de livré)
-- **Carte** (Jérôme, « les deux ») : un clic sur C2 cadre la vue 3D sur le seul secteur C2 **et** la carte n'affiche plus que C2 en gros plan, avec un retour à la vue d'ensemble.
-- **Fiche terrain** : les lignes longues ne sont plus coupées (« cratère 0,75 m de… ») sans agrandir la fiche ; chaque pourcentage dit de quoi il parle (« boue 35 % » : de la surface ? de la case ?).
-- **Fiche de fin de journée en trois colonnes** : chiffres clés, médailles du jour (`hud/medailles.js`), ordres aux régiments ; tient à 1 280 × 800.
-- **Divers** : Échap ne doit plus reprendre le jeu en pause ; musique et sons coupés quand l'onglet est caché (`js/audio.js` n'écoute pas `visibilitychange` : à faire, section 9 des conventions) ; carnet de bord (historique, noms cliquables, événements importants mis en valeur, repliable) ; écran d'accueil sans HUD ni son autre que la musique ; boutons pause / réglages / vitesse recentrés ; hiérarchie des infobulles (pas de H1 géant) ; fenêtres de la base qui disparaissent hors écran ; **loader** (parfois le menu et le titre sur fond noir derrière le chargement : il doit être seul) ; labo : typos des titres et « encyclopédie » des règles (`docs/archives/prompt-lot-b-interface.md`, points 6 à 13).
+**B. Interface** : **livré en v0.100.0** (gros plan d'un secteur, fiche du terrain en deux lignes, fiche de nuit en trois colonnes, Échap, onglet caché, carnet, écran titre, boutons du haut, infobulles, typographie du labo, fenêtre de base, encyclopédie, chargeur) ; le détail et les pièges sont dans `docs/domaines/interface.md`. À mesurer au playtest : le gros plan (la vue 3D ne masque pas le reste du front), la fiche de nuit (les corvées ne sont plus sur la carte du régiment).
 
 **D. Renforts et déroute**
 - Les renforts s'affichent **dans la caserne** (plus dans le panneau en haut à gauche) et se déploient **à tout moment** s'ils sont disponibles.

@@ -1,7 +1,7 @@
 // Les médailles (Jérôme, v0.73.1 : « un tableau des médailles à la fin de chaque journée, de chaque partie : le régiment le plus meurtrier, qui a pris le plus de secteurs, le plus inutile… idem pour les soldats »).
 // Lecture seule de l'état : `tues` et `pris` de chaque régiment (bataille.js : un coup de fusil ou de baïonnette qui tue, un tronçon pris), `debut` (leur valeur au matin) ;
 // pour un homme, `victimes` (déjà sur la fiche) et `etat.victDebut` (id → victimes au matin). Les morts ne figurent pas parmi les hommes (leur fiche s'est effacée avec eux).
-import { quiEst, nomDe, auFront } from './lecture.js?v=0.99.9';
+import { quiEst, nomDe, auFront } from './lecture.js?v=0.100.0';
 
 const pl = (n, un, des) => `${n} ${n > 1 ? des : un}`;
 const meilleur = (liste, f) => liste.reduce((m, x) => (f(x) > (m ? f(m) : -Infinity) ? x : m), null);
@@ -46,7 +46,7 @@ export function palmares(B, camp, portee = 'jour') {
 export function tableau(p) {
   const bloc = (titre, liste) => {
     const sec = document.createElement('section');
-    sec.append(Object.assign(document.createElement('h3'), { textContent: titre }));
+    sec.append(Object.assign(document.createElement('h4'), { textContent: titre }));
     if (!liste.length) sec.append(Object.assign(document.createElement('p'), { className: 'discret', textContent: 'Personne ne s\'est distingué.' }));
     const ul = document.createElement('ul'); ul.className = 'medailles';
     for (const m of liste) {

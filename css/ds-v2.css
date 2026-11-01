@@ -79,3 +79,8 @@ dialog .menu, dialog form.menu { gap: var(--e3); }
 /* le titre du jeu (écran titre) et celui d'une fiche de char : même police que tous les titres (v0.98.3 : « le titre du jeu n'est pas à jour avec la bonne police ») */
 .titre h1 { font-family: var(--police-titre); font-weight: var(--titre-poids); letter-spacing: .24em; font-size: clamp(48px, 12vmin, 112px); line-height: 1; padding: var(--e5) var(--e6) var(--e5) calc(var(--e6) + .24em); white-space: normal; overflow: visible; }
 #char-fiche-titre { font-family: var(--police-titre); font-weight: var(--titre-poids); font-size: var(--titre-3); letter-spacing: var(--titre-lettres); text-transform: uppercase; margin: 0; }
+
+/* Les boutons du haut, recentrés (Jérôme, v0.100.0 : « ils ne sont plus centrés ») : `.plaque` (marges d'un cran de plus, ci-dessus) s'appliquait aussi aux boutons à icône, dont la boîte fait
+   --jeu-cible : 2 × 16 px de souffle + 24 px d'icône débordaient de 12 px, l'icône partait à droite ; et `button { min-height: --jeu-cible }` de game.css faisait déborder le choisi (×1) de la barre du temps, haute de 36 px dedans. */
+.icone.plaque, .haut-bloc .boutons > .icone { padding: 0; }
+.haut-bloc .temps button { min-height: 0; }

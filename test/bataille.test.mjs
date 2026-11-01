@@ -1128,7 +1128,7 @@ test('un char qui roule tire un obus toutes les `recharge` secondes sur les enne
   assert.ok(B.etat.impacts.length - impacts >= tirs.length, 'chaque obus est un impact (écrit, rejoué par la sauvegarde)');
 });
 test('un char sans ennemi à portée ne tire pas ; une cible donnée est tenue', () => {
-  const { B } = charEnRoute(), A = B.armee;
+  const { B } = charEnRoute(), A = B.armee; B.etat.ia.barrage = 1e9;      // (v0.99.11 : en face tire sur nos chars ; ce test ne parle que du canon)
   for (let i = 0; i < A.n; i++) if (A.camp[i] === 1) A.mort[i] = 1;
   let tirs = 0; for (let s = 0; s < 30 * 40; s++) { avancer(B); tirs += B.evenements.filter(e => e.type === 'char-tir').length; }
   assert.equal(tirs, 0);

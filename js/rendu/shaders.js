@@ -400,13 +400,22 @@ export const herbeMat = {
 };
 
 export const eclMat = {
-  v: `attribute float aTon; attribute float aTaille; varying float vTon; uniform float uTaille;
-      void main() { vTon = aTon; gl_Position = projectionMatrix * viewMatrix * vec4(position, 1.0); gl_PointSize = aTon < 0.0 ? 0.0 : max(1.0, floor(uTaille * aTaille + 0.5)); if (aTon < 0.0) gl_Position = vec4(2.0); }`,
-  f: `uniform sampler2D uPal; uniform float uNP; varying float vTon;
+  // v0.99.11 (Jérôme : « la fumée en ellipses, plus de cubes ; des volutes plus réalistes ») : une bouffée de fumée (ton > 50) est une ellipse (axes 1 : 0,6) tournée d'un angle tiré de sa position (`vRot`), plus grande d'un tiers
+  // (l'ellipse ne remplit que la moitié de son carré), au bord fondu ; les bouffées d'un panache, toutes à des angles différents, se mêlent en volutes.
+  v: `attribute float aTon; attribute float aTaille; varying float vTon; varying float vRot; uniform float uTaille;
+      void main() { vTon = aTon; vRot = fract(sin(dot(position.xz, vec2(12.9898, 78.233))) * 43758.5453) * 6.2832; gl_Position = projectionMatrix * viewMatrix * vec4(position, 1.0);
+        float t = max(1.0, floor(uTaille * aTaille + 0.5)); gl_PointSize = aTon < 0.0 ? 0.0 : (aTon > 50.0 ? floor(t * 1.35 + 0.5) : t); if (aTon < 0.0) gl_Position = vec4(2.0); }`,
+  f: `uniform sampler2D uPal; uniform float uNP; varying float vTon; varying float vRot;
       void main() {
         float t = floor(vTon + 0.5);
         float a = 1.0;
-        if (t > 50.0) { a = 0.6; t -= 100.0; }   // la fumée, fondue (plus de trame ; v0.12.1)
+        if (t > 50.0) {                           // la fumée : une ellipse tournée, au bord fondu (v0.12.1 : fondue ; v0.99.11 : ronde)
+          vec2 p = (gl_PointCoord - 0.5) * 2.0; float c = cos(vRot), s = sin(vRot);
+          p = vec2(c * p.x - s * p.y, s * p.x + c * p.y);
+          float d = length(vec2(p.x, p.y / 0.6));
+          a = 0.62 * (1.0 - smoothstep(0.55, 1.0, d)); if (d > 1.0) discard;
+          t -= 100.0;
+        }
         gl_FragColor = vec4(texture2D(uPal, vec2((t + 0.5) / uNP, 0.25)).rgb, a);
       }`,
 };

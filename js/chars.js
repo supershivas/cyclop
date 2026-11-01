@@ -3,14 +3,14 @@
    ligne vers (tx, ty) à la vitesse de son modèle, ralentie par un cratère (la moitié de ce qu'il franchit), arrêtée par un cratère plus profond ou par l'eau
    profonde (`enlise` : il reste là et tire) ; il tire sur l'autre camp à portée ; un obus tombé près de lui l'abîme (`degatsChars`), jusqu'à l'épave (`detruit`).
    Les tranchées se franchissent (elles font 1,5 m : son modèle les passe). Les ordres rendent { refus } comme les barrages. */
-import { modif } from './camp.js?v=0.99.9';
-import { CHARS, CHAR_PAR_DEFAUT, CHAR_RECHARGE, CHAR_DEPART, CHAR_OBUS, CHAR_ROUTE } from './data/chars.js?v=0.99.9';
-import { CALIBRES } from './data/calibres.js?v=0.99.9';
-import { effrayer, DENSITE } from './army.js?v=0.99.9';
-import { zone as zoneDe } from './bataille.js?v=0.99.9';
-import { detruirePont } from './eaux.js?v=0.99.9';
-import { toucher } from './terrain.js?v=0.99.9';
-import { PONTS_JEU, typePont } from './data/ponts.js?v=0.99.9';
+import { modif, charsDispo } from './camp.js?v=0.100.0';
+import { CHARS, CHAR_PAR_DEFAUT, CHAR_RECHARGE, CHAR_DEPART, CHAR_OBUS, CHAR_ROUTE } from './data/chars.js?v=0.100.0';
+import { CALIBRES } from './data/calibres.js?v=0.100.0';
+import { effrayer, DENSITE } from './army.js?v=0.100.0';
+import { zone as zoneDe } from './bataille.js?v=0.100.0';
+import { detruirePont } from './eaux.js?v=0.100.0';
+import { toucher } from './terrain.js?v=0.100.0';
+import { PONTS_JEU, typePont } from './data/ponts.js?v=0.100.0';
 
 /* La route d'un char (Jérôme, v0.59.3 : « ils doivent contourner les fleuves, passer par les ponts ») : une recherche sur une grille de `CHAR_ROUTE.maille` mètres, de (x0, y0) à (tx, ty), qui évite
    l'eau profonde, les cratères qu'il ne franchit pas, les ponts qui ne le portent pas, et se détourne des cratères à demi profonds. Rend les points à suivre (le dernier est le but), ou null
@@ -66,6 +66,7 @@ export function routeChar(B, x0, y0, tx, ty, modele = CHAR_PAR_DEFAUT, franchit 
 /* Peut-on lancer un char de (camp) vers (x, y) ? `depart` : { x, y } d'où il partirait. */
 export function refusChar(B, depart, x, y, camp = 0) {
   if (!depart) return 'Pas de route pour un char ici.';
+  if (charsDispo(B.etat, camp) === 0) return 'Plus un char au parc : ceux de la bataille sont sortis (le parc en garde plus à ses niveaux supérieurs).';
   if (Math.hypot(x - depart.x, y - (depart.ar ?? depart.y)) < CHAR_DEPART) return `Trop près de ses lignes : visez à plus de ${CHAR_DEPART} m.`;
   if (depart.ar !== undefined && !routeChar(B, depart.x, depart.ar, x, y, undefined, CHARS[CHAR_PAR_DEFAUT].franchit * modif(B.etat, camp, 'chars.franchit'))) return 'Aucun passage pour un char jusque-là : eau, cratères ou pont trop faible.';
   return '';
@@ -73,6 +74,7 @@ export function refusChar(B, depart, x, y, camp = 0) {
 
 export function lancerChar(B, camp, depart, x, y, modele = CHAR_PAR_DEFAUT) {
   const { etat } = B;
+  if (charsDispo(etat, camp) !== null) etat.charsDispo[camp]--;
   // `ar` : la rangée de l'arrière de son camp, où la route finit ; `chemin` : les points qu'il suit ensuite (`routeChar`), `k` celui qu'il vise
   const franchit = CHARS[modele].franchit * modif(etat, camp, 'chars.franchit'), pv = Math.round(CHARS[modele].pv * modif(etat, camp, 'chars.pv'));     // le parc des chars (v0.88.0)
   const chemin = depart.ar !== undefined ? routeChar(B, depart.x, depart.ar, x, y, modele, franchit) : null;

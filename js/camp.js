@@ -1,14 +1,38 @@
 // Le camp : la règle, sans écran (Jérôme, v0.86.0 : lot 1 de `docs/chantiers/camp-et-ameliorations.md`). Logique pure : aucun DOM, aucune horloge, aucun hasard.
 // L'état est `etat.camp` : la dotation de l'état-major, le niveau de chaque bâtiment (et son chantier d'une nuit), les lignes d'en face déjà comptées.
 // Lot 2 : les niveaux ouvrent les ordres (`refusOrdre`). Lot 3 (v0.88.0) : chaque niveau et chaque choix de palier change un chiffre (`modif`) ou un effectif (`effectifsDe`).
-import { hash2 } from './lib/rng.js?v=0.99.9';
-import { BATIMENTS, DOTATION, CAMP_PLAN, CAMP_IA, PIEDS, EQUIPEMENT, EQUIPEMENTS } from './data/batiments.js?v=0.99.9';
-import { MITRAILLAGE } from './data/mitraillage.js?v=0.99.9';
+import { hash2 } from './lib/rng.js?v=0.100.0';
+import { BATIMENTS, DOTATION, CAMP_PLAN, CAMP_IA, PIEDS, EQUIPEMENT, EQUIPEMENTS } from './data/batiments.js?v=0.100.0';
+import { MITRAILLAGE } from './data/mitraillage.js?v=0.100.0';
 
 const NOUS = 0, EUX = 1;
 /* L'état du camp de `camp` : `etat.camp` (le nôtre), `etat.campEux` (celui d'en face : v0.92.0) */
 export const campDe = (etat, camp = NOUS) => camp === NOUS ? etat.camp : etat.campEux;
 export const NIVEAU_MAX = 3;
+
+/* Les blessés évacués de `camp` que l'hôpital soigne encore : [{ id, jour, blessure, regiment, pret }] (pret : assez de nuits passées pour repartir) */
+export function patients(etat, camp = NOUS, nuits = { 1: 1, 2: 2, 3: 3 }) {
+  const out = [];
+  for (const e of etat.evacues ?? []) {
+    if (e.length < 6 || e[3] !== 0 || etat.regiments[e[4]]?.camp !== camp) continue;
+    out.push({ id: e[0], jour: e[1], blessure: e[2], regiment: e[4], pret: etat.jour - e[1] >= (nuits[e[2]] ?? 1) });
+  }
+  return out;
+}
+/* Où repartent les guéris : un régiment de son camp encore debout, ou null (chacun au sien). Rend { ok } ou { refus } */
+export function affecterGueris(etat, camp, reg) {
+  if (etat.phase === 'fin') return { refus: 'La bataille est finie.' };
+  if (reg !== null) {
+    const r = etat.regiments[reg];
+    if (!r || r.camp !== camp) return { refus: 'Ce régiment n\'est pas le vôtre.' };
+    if (r.effectif <= 0) return { refus: `${r.nom} n'a plus d'hommes : les guéris n'y repartent pas.` };
+  }
+  (etat.affectation ??= [null, null])[camp] = reg;
+  return { ok: true };
+}
+
+/* Les chars qui restent au parc de `camp` (null : sans limite) */
+export const charsDispo = (etat, camp = NOUS) => etat.charsDispo?.[camp] ?? null;
 
 // Le niveau qui ouvre chaque ordre de batterie (`ordonnerBarrage`) : [bâtiment, niveau]
 const OUVERTURE = { '75': ['artillerie', 1], '155': ['artillerie', 1], '220': ['artillerie', 1], avion: ['aerodrome', 1], char: ['chars', 1], genie: ['sapeurs', 1] };
@@ -184,6 +208,7 @@ export function appliquerDepart(etat, camp = NOUS) {
   etat.reserves[camp] = 0;
   etat.sapeurs[camp] = 0;
   etat.avions[camp] = [];
+  (etat.charsDispo ??= [null, null])[camp] = 0;      // les chars du parc : un stock par bataille (v0.99.10) ; `null` : pas de limite (partie non bridée)
   const K = campDe(etat, camp);
   for (const [cle, c] of Object.entries(K.batiments)) {
     for (let n = 1; n <= c.niveau; n++) monter(etat, cle, n, n >= 2 ? c.choix[n - 2] ?? null : null, camp);
@@ -195,6 +220,7 @@ function monter(etat, cle, niveau, choix, camp = NOUS) {
   const plus = champ => N[champ] != null ? N[champ] - (avant?.[champ] ?? 0) : 0;
   if (cle === 'caserne') etat.reserves[camp] += plus('reserves');
   if (cle === 'sapeurs') etat.sapeurs[camp] += plus('sections');
+  if (cle === 'chars') etat.charsDispo[camp] += plus('chars');
   const eff = choix != null ? N.choix?.[choix]?.[2] : null;
   if (eff?.['+reserves']) etat.reserves[camp] += eff['+reserves'];
   if (cle === 'aerodrome') {

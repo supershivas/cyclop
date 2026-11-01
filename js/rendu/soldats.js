@@ -1,9 +1,9 @@
 // Les hommes : les soldats (une boîte et son ombre ; de près la silhouette, plus loin une silhouette allégée ; aux zooms 1 et 2 un point), les anneaux des
 // régiments choisis ou survolés, les corps (un homme couché) et les tombes (un tertre et une croix). Tout est instancié et ne reçoit que ce qu'on voit.
 // Le dessin seulement. Les formes viennent de geometries.js, le GLSL de shaders.js.
-import * as SH from './shaders.js?v=0.99.9';
-import { creerGeometries } from './geometries.js?v=0.99.9';
-import { classeDuRang } from '../data/grades.js?v=0.99.9';
+import * as SH from './shaders.js?v=0.100.0';
+import { creerGeometries } from './geometries.js?v=0.100.0';
+import { classeDuRang } from '../data/grades.js?v=0.100.0';
 
 // `THREE`, `scene`, `col`, `solUniforms` (`uSol`, `uTaille` : la texture du sol, que l'ombre d'un soldat reprend), `styleSoldat` (le style de près, comparé au labo),
 // `grades` (v0.68.0 : une variante de `GRADES`, data/grades.js, ou null : tous pareils) et `rangDe(B, id, reg)` (le rang d'un homme, bataille.js) ; `surface(x, z)` et `surfaceLisse(x, z)` (la hauteur du sol, lissée pour qui marche), `solY` (la hauteur moyenne du sol) et `POINTS_JUSQUA` (le zoom où un soldat n'est
@@ -376,14 +376,14 @@ export function creerSoldats({ THREE, scene, col, solUniforms, styleSoldat, grad
         // une case de la lettre = 1 pixel de l'image à 4 pixels par mètre et moins, 2 à 8 et plus : elle reste lisible sans écraser un homme
         lettreMat.uniforms.uEchelle.value = p >= 8 ? 2 : 1; lettreMat.uniforms.uHaut.value = vh;
         const att = lettres.geometry.attributes; att.position.needsUpdate = true; att.aPhase.needsUpdate = true; lettres.geometry.setDrawRange(0, lcN);
-        if (!vide()) lettres.visible = lcN > 0;
+        if (!vide()) lettres.visible = lcN > 0 && !sansInterface;
       }
     }
     vus = k;
     majCorps(x0, x1, z0, z1, e, points, p);
     majTombes(x0, x1, z0, z1, e, points);
   }
-  let vus = 0, gradesVus = 0;
+  let vus = 0, gradesVus = 0, sansInterface = false;
 
   return {
     soleilUniform: soldatMat.uniforms.uSoleil,                    // le bout de l'ombre d'un mètre de hauteur (temps.js le règle, le nuanceur le lit)
@@ -392,6 +392,7 @@ export function creerSoldats({ THREE, scene, col, solUniforms, styleSoldat, grad
     maj,
     survoler(reg) { survolReg = reg; },                            // le régiment qu'un anneau à la couleur de son camp désigne
     get legere() { return legerActif; }, set legere(v) { legerActif = !!v; },     // la silhouette allégée (la mesure du coût l'éteint)
+    get sansInterface() { return sansInterface; }, set sansInterface(v) { sansInterface = !!v; },      // le décor de l'écran titre : aucune lettre de capitaine, rien qui soit de l'interface (Jérôme, v0.100.0)
     get gradesVus() { return gradesVus; },                          // les gradés dessinés (pour les stats et le labo)
     get vus() { return vus; },                                    // les soldats dessinés (pour les stats)
   };

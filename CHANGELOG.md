@@ -1,5 +1,20 @@
 # Journal des versions
 
+## 0.100.0 — 2026-11-01
+- Un clic sur un secteur cadre la vue 3D sur lui et met son plan en gros plan à la place de la carte ; « Vue d'ensemble », Échap ou un second clic reviennent
+- La fiche de fin de journée passe en trois colonnes (chiffres de la journée, médailles, ordres aux régiments) ; le carnet de bord montre tout l'historique d'un clic, ses noms se cliquent, les événements graves clignotent une fois
+- Échap ne relance plus le jeu, les sons se coupent onglet caché, l'écran titre n'a plus ni lettre de capitaine ni bruitage, le chargeur est seul, la fiche du terrain a deux lignes aux pourcentages nommés
+- Au labo : l'encyclopédie des règles (153 mots définis, avec captures du vrai jeu) et les polices des titres dans la typographie
+
+## 0.99.11 — 2026-10-31
+- Grande offensive : en face lance ses chars ; à tous les niveaux, ses barrages visent nos chars, devant eux quand ils roulent
+- L'hôpital : les blessés évacués y sont comptés et soignés, ses niveaux en sauvent plus, on y renvoie les guéris dans le régiment de son choix
+- Les arbres tombent sous les obus et ont un feuillage rond ; la fumée est faite d'ellipses ; les bâtiments du camp ont des drapeaux qui flottent et des hommes sans arme qui font les cent pas
+
+## 0.99.10 — 2026-10-31
+- La fenêtre du char suit le design system, se pose à côté des boutons de batterie, dit son ordre en cours, sa coque et son canon (barre hachurée quand il attend une cible)
+- Le parc garde 2 chars par bataille (3 et 4 aux niveaux supérieurs), l'aérodrome 3 avions (4 et 5) ; les obus de 75, 155 et 220 arrêtent plus facilement un char
+
 ## 0.99.9 — 2026-10-31
 - Les avions roulent sur la piste de l'aérodrome et décollent avant leur passe ; le char sort du parc des chars
 - Le parc et l'aérodrome disent leur total (chars déployés avec leur état, un clic y mène la vue ; avions au sol et en vol) ; le bouton Avion est muet par brouillard

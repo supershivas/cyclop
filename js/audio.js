@@ -4,7 +4,7 @@
    Les bruitages (Jérôme, v0.99.6 : la synthèse était « très mauvaise ») : des mp3 CC0 de `assets/sons/` (catalogue et choix : `data/sons.js`), décodés au premier geste du joueur ;
    une famille dont le fichier manque ou n'est pas encore décodé retombe sur la synthèse d'avant (aucune erreur, aucun silence). Variantes, hauteur et voix simultanées : tirées/limitées ici, avec le générateur local.
    Le hasard du son est un petit générateur local (la graine de la bataille n'est jamais touchée). L'espace : un son loin est plus faible et vient du côté où il est (`ecoute` : le centre de la vue, en mètres du secteur, et sa largeur). */
-import { SONS, DOSSIER_SONS, VOIX } from './data/sons.js?v=0.99.9';
+import { SONS, DOSSIER_SONS, VOIX } from './data/sons.js?v=0.100.0';
 const borne = (v, a, b) => v < a ? a : v > b ? b : v;
 const COMMUN = { effets: 0.7, musique: 0.5 };
 // ── La playlist : les fichiers de `assets/music/`. `humeur` : quand le champ la demande, on y passe en fondu (comme `lieu` dans Kingvi) ──
@@ -20,7 +20,7 @@ export const TRACKS = {
 const XFADE = 8, GAIN_PISTE = 0.75;      // le fondu enchaîné (s) ; le niveau d'un morceau avant le curseur
 
 export function creerSon(prefs = {}) {
-  let ctx = null, fx = null, mus = null, bruit = null, vol = { ...COMMUN, ...(prefs.son || {}) }, cache = false;
+  let ctx = null, maitre = null, fx = null, mus = null, bruit = null, vol = { ...COMMUN, ...(prefs.son || {}) }, cache = false;
   let graine = 12345;
   const alea = () => (graine = (Math.imul(graine, 1664525) + 1013904223) >>> 0) / 4294967296;
   const lits = {};                        // les sons en continu : vent, pluie, fusillade, char, avion, nuit
@@ -35,7 +35,8 @@ export function creerSon(prefs = {}) {
     if (!AC) return;
     ctx = new AC();
     const comp = ctx.createDynamicsCompressor();        // mille coups de fusil ne saturent pas la sortie
-    comp.connect(ctx.destination);
+    maitre = ctx.createGain(); maitre.connect(ctx.destination); comp.connect(maitre);      // (le maître : coupé onglet caché, voir `cacher`)
+    if (cache) maitre.gain.value = 0;
     fx = ctx.createGain(); fx.connect(comp);
     mus = ctx.createGain(); mus.connect(comp);
     regler();
@@ -235,6 +236,13 @@ export function creerSon(prefs = {}) {
   const doux = (g, v, dt, vite = 3) => { g.gain.value += (v - g.gain.value) * (1 - Math.exp(-dt * vite)); };
   function image(dt, { tirs, ecoute, meteo, nuit, aube = false, chars = [], avions = [], titre = false, enJeu = true }) {
     if (!ctx || cache || ctx.state !== 'running') return;
+    // l'illustration de l'écran titre : la musique seule (Jérôme, v0.100.0), le vent, la pluie et la fusillade s'éteignent
+    if (titre) {
+      for (const nom of ['vent', 'pluie', 'avion']) doux(lit(nom).g, 0, dt, 6);
+      doux(lits.char.g, 0, dt, 6); doux(lits.fusillade.g, 0, dt, 6);
+      musique(dt, false, false, 0);
+      return;
+    }
     // les coups de fusil de l'image : quelques claquements au hasard parmi eux, de leur côté, sur un lit de grondement
     const n = tirs ? tirs.length / 6 : 0;
     let proche = 0;
@@ -273,10 +281,20 @@ export function creerSon(prefs = {}) {
     musique(dt, nuit, aube, dens);
   }
 
+  // Onglet caché (conventions, section 9 ; Jérôme, v0.100.0) : tout se tait, la musique est mise en pause (un morceau lu par un élément audio avance même
+  // quand le contexte est suspendu), et tout reprend au retour.
   function cacher(oui) {
     cache = oui;
     if (!ctx) return;
-    if (oui) ctx.suspend(); else ctx.resume();
+    if (oui) {
+      maitre.gain.value = 0;
+      if (deck) deck.el.pause();
+      ctx.suspend().catch(() => {});
+    } else {
+      ctx.resume().catch(() => {});
+      maitre.gain.value = 1;
+      if (deck) deck.el.play().catch(() => {});
+    }
   }
   return {
     // à appeler dans un geste du joueur (clic, touche) : crée le contexte ou le reprend

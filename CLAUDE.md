@@ -106,14 +106,14 @@ Autres : `DESIGN.md` (l'intention), `ROADMAP.md` (`docs/pistes-avancees.md` : le
 - Logique pure (aucun DOM, aucune horloge, aucun hasard hors de la graine ; testée dans Node) : `terrain.js` (champ de hauteurs `base` + `diff`, eau), `army.js` (la foule), `tranchees.js`, `nuit.js` (corvées), `champs.js` (coûts de marche), `bataille.js` (état, règles, ordres, sauvegarde), `formes.js` / `objets.js` / `secteur-terrain.js` (retouches de relief, objets, terrain d'un secteur), `identite.js`, `eaux.js`, `generateur.js`, `chars.js`, `avions.js`, `fil.js` (le fil de fer coupé par les obus), `campagne.js`, `reseau/`, `data/` (les nombres et les textes).
 - Rendu : `rendu3d.js` (three.js, la caméra, l'API) + `rendu/` (soldats, sol, ciel, temps, effets, ponts, chars, avions). Les ouvrages des tranchées : `rendu/tranchee-modeles.js` (trois niveaux de détail, choisis selon le zoom : `rendu.niveauTranchees` vaut `'auto'`, v0.88.1 ; échelles : `data/tranchees.js`) et `rendu/troncons.js` (le dessin d'avant, niveau 0, au labo). La barre de solidité d'une tranchée : `solidite` de `tranchees.js`. Le rendu ne modifie jamais l'état.
 - Interface : `main.js` (écran titre → bataille → nuit → fin, commandes, boucle), `hud/` (papiers, cartes, fiche, carte), `index.html`, `css/style.css`.
-- Outils de contenu : `labo.html` + `js/labo.js` + un `js/labo-*.js` par sujet (17 sujets en 5 familles ; le tranché est archivé), `atelier.html` + `js/atelier*.js` + `design-store.js`.
+- Outils de contenu : `labo.html` + `js/labo.js` + un `js/labo-*.js` par sujet (18 sujets en 5 familles, dont l'encyclopédie des règles : `labo-encyclopedie.js`, `data/encyclopedie.js`, `outils/encyclopedie.mjs` ; le tranché est archivé), `atelier.html` + `js/atelier*.js` + `design-store.js`.
 - Vérification : `test/` (règles, `fumee.json` et `rendu.json` : des références), `outils/`, `scripts/`, `lisibilite.config.mjs`.
 
 ## Mode debug et mesure
 
 - `?debug=1` : `window.__jeu` (`state`, `stats`, `avancer(n, passerNuits)`,
   `barrage(cal, x, y, camp)`, `marche(ids, x, y)`, `zoom(i)`, `camera(yaw, k)`, `teleport`,
-  `bataille()`, `rendu()`, `fiche()`, `survol(x, y)`, `nuit()` : ouvre la nuit, `fin()` : la fin), `&seed=7`. F9 masque le panneau. Les
+  `bataille()`, `rendu()`, `fiche()`, `survol(x, y)`, `nuit()` : ouvre la nuit, `fin()` : la fin, `raconter(ev)` : des événements au carnet), `&seed=7`. F9 masque le panneau. Les
   coordonnées du mode debug sont celles du **secteur** (0..400, 0..300) : les marges
   s'ajoutent dans `main.js`.
 - `?debug=1&grades=fanion` (ou `jumelles`, `galons`) : les grades à l'écran (v0.68.0, sujet du labo archivé : sans ce paramètre tous les soldats sont pareils).
