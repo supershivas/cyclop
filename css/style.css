@@ -408,6 +408,8 @@ dialog form { margin-top: calc(var(--pas) * 2); }
 .reg-carte.deroute .alerte { background: var(--jeu-deroute); }
 .reg-carte .l1 b { font-weight: normal; font-size: var(--texte-grand); line-height: 1; margin-right: var(--e0); }
 .reg-carte .chevrons { display: flex; gap: var(--e0); height: 8px; }
+.reg-carte .xp { display: block; width: 22px; height: 3px; margin: 2px 0 0 var(--e0); border: 1px solid var(--enc); box-sizing: border-box; flex: none; }      /* l'expérience moyenne (lot E) */
+.reg-carte .xp i { display: block; height: 100%; background: var(--enc); }
 .reg-carte .posture { margin-left: auto; font-size: var(--texte-petit); line-height: 8px; color: var(--enc); }
 .chev { width: 12px; height: 8px; fill: none; stroke: var(--enc); stroke-width: 2; stroke-linecap: square; }
 .chev.vide { stroke: var(--jeu-accent); }
@@ -700,6 +702,21 @@ h2 { font-weight: normal; letter-spacing: var(--titre-lettres); }
 .char-fiche .barre.canon.attente i, .char-etiq .canon.attente i { background: transparent; }
 .char-etiq .canon.attente { background: repeating-linear-gradient(90deg, transparent 0 3px, var(--jeu-accent) 3px 4px); }
 .char-fiche[hidden] { display: none; }
+/* lot E : les barres des fiches de char et de poste, à l'encre du papier (`currentColor` : `--jeu-encre` est la couleur claire des étiquettes, elle donnait celle du papier et la barre de vie ne se voyait pas ; `--enc` n'existe que dans les cartes de régiment) */
+.char-fiche .barre { border-color: currentColor; }
+.char-fiche .barre i { background: currentColor; }
+.char-fiche .barre.canon i { background: var(--jeu-accent); }
+.char-fiche .barre.canon.pret i { background: var(--jeu-nous); }
+.char-fiche .barre.xp i { background: var(--jeu-nous); }
+/* lot E : l'expérience des chars et des postes — une barre fine, les chevrons, et le saut du chevron gagné (coupé si le système demande moins de mouvement) */
+.char-etiq .xp { display: block; height: 3px; border: 1px solid var(--jeu-encre); box-sizing: border-box; }
+.char-etiq .xp i, .char-fiche .barre.xp i { background: var(--jeu-nous); }
+.char-etiq .chevrons, .char-fiche .jauge b .chev { display: inline-flex; gap: var(--e0); height: 8px; }
+.char-etiq .chev, .char-fiche .chev { stroke: currentColor; }
+.char-etiq.vide .canon { background: repeating-linear-gradient(90deg, transparent 0 3px, var(--jeu-accent) 3px 4px); }
+.chevrons.gagne .chev:last-child, .gagne .chev:last-child { animation: chev-gagne .9s ease-out 1; }
+@keyframes chev-gagne { 0% { transform: translateY(0) scale(1); } 30% { transform: translateY(-5px) scale(1.6); stroke: var(--jeu-nous); } 100% { transform: translateY(0) scale(1); } }
+@media (prefers-reduced-motion: reduce) { .chevrons.gagne .chev, .gagne .chev { animation: none; } }
 
 /* Le camp (Jérôme, v0.87.0 ; v0.97.0 : plus de pastilles, un seul bouton) : « Le camp · 5 pts », sous les ordres de batterie, et la fenêtre du bâtiment choisi */
 .camp-btn { width: 312px; min-height: var(--jeu-cible); padding: 0 var(--pas); font: inherit; font-size: var(--texte); color: var(--jeu-fond); background: var(--jeu-encre); border: 0; box-shadow: var(--ombre-papier); cursor: pointer; text-align: left; }

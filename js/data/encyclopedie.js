@@ -3,19 +3,19 @@
 // formes, équipements, grades) n'est PAS recopié : il est lu dans son module, donc l'encyclopédie suit le jeu ; seuls les concepts n'ayant pas de table sont écrits ici.
 // Une entrée : { id, terme, cat, def, voir: [ids], capture: 'id-du-fichier' | null, faits: [[libellé, valeur], …] }. Les captures sont celles de `outils/encyclopedie.mjs` (assets/encyclopedie/<capture>.png).
 // Ajouter un mot = ajouter une ligne ici ; le labo (sujet « Encyclopédie ») et `test/encyclopedie.test.mjs` (aucun renvoi vers un mot absent, aucun doublon) font le reste.
-import { CALIBRES } from './calibres.js?v=0.100.0';
-import { METEO, SAISONS } from './meteo.js?v=0.100.0';
-import { CORVEES, CONTACT } from './corvees.js?v=0.100.0';
-import { BATIMENTS, ORDRE_BATIMENTS, EQUIPEMENTS, EQUIPEMENT, DOTATION } from './batiments.js?v=0.100.0';
-import { DIFFICULTES } from './difficulte.js?v=0.100.0';
-import { STANCES } from './stances.js?v=0.100.0';
-import { PONTS_JEU } from './ponts.js?v=0.100.0';
-import { CHARS, CHAR_RECHARGE } from './chars.js?v=0.100.0';
-import { MITRAILLAGE } from './mitraillage.js?v=0.100.0';
-import { GENIE_DATA } from './genie.js?v=0.100.0';
-import { NIDS } from './nids.js?v=0.100.0';
-import { FIL } from './fil.js?v=0.100.0';
-import { CLASSES } from './grades.js?v=0.100.0';
+import { CALIBRES } from './calibres.js?v=0.101.0';
+import { METEO, SAISONS } from './meteo.js?v=0.101.0';
+import { CORVEES, CONTACT } from './corvees.js?v=0.101.0';
+import { BATIMENTS, ORDRE_BATIMENTS, EQUIPEMENTS, EQUIPEMENT, DOTATION } from './batiments.js?v=0.101.0';
+import { DIFFICULTES } from './difficulte.js?v=0.101.0';
+import { STANCES } from './stances.js?v=0.101.0';
+import { PONTS_JEU } from './ponts.js?v=0.101.0';
+import { CHARS, CHAR_RECHARGE } from './chars.js?v=0.101.0';
+import { MITRAILLAGE } from './mitraillage.js?v=0.101.0';
+import { GENIE_DATA } from './genie.js?v=0.101.0';
+import { NIDS } from './nids.js?v=0.101.0';
+import { FIL } from './fil.js?v=0.101.0';
+import { CLASSES } from './grades.js?v=0.101.0';
 
 export const CATEGORIES = [
   { id: 'front', nom: 'Le front', dit: 'Où l\'on se bat : secteurs, lignes, tranchées.' },
@@ -52,7 +52,7 @@ const CONCEPTS = [
   E('soldat', 'Soldat', 'hommes', 'Une boîte de 0,5 × 1,7 m, bleu horizon chez nous, vert kaki clair en face (un simple point aux zooms 1 et 2). Chacun a un nom, un âge, un grade et ce qu\'il endure ; un clic de près ouvre sa fiche.', { voir: ['grade', 'fiche-homme', 'peur'], capture: 'soldats-pres' }),
   E('regiment', 'Régiment', 'hommes', 'Le groupe qu\'on commande : 94 hommes, huit par camp, un numéro et un nom (« 3 · Céruléen »). On le choisit, on lui donne un ordre, il se bat ensemble. Le numéro est celui de sa carte et de son cercle sur la carte.', { voir: ['carte-regiment', 'fenetre-regiment', 'etiquette'], capture: 'regiments' }),
   E('experience', 'Expérience', 'hommes', 'Chaque homme en prend à survivre au feu : un obus, un camarade qui tombe, ses tirs, un tronçon pris, une nuit au front. Aguerri, il a moins peur et tire mieux. Les chevrons (0 à 3) d\'un régiment sont l\'expérience moyenne de ses hommes.', { voir: ['chevrons', 'caracteristiques'] }),
-  E('chevrons', 'Chevrons', 'hommes', 'Les petits V de la carte d\'un régiment : 0 à 3, selon l\'expérience moyenne (seuils : 0,08, 0,25 et 0,6). Ils n\'apparaissent qu\'avec l\'expérience. Rien n\'y compte ce qu\'on a tué.', { voir: ['experience', 'carte-regiment'], capture: 'regiments' }),
+  E('chevrons', 'Chevrons', 'hommes', 'Les petits V de la carte d\'un régiment : 0 à 3, selon l\'expérience moyenne (seuils : 0,2, 0,5 et 0,85). Chaque chevron donne un bonus : au régiment +5 % de précision et un moral qui encaisse 8 % de mieux ; au char 12 % de dégâts d\'obus en moins ; au poste de mitrailleuse 12 % de temps en moins entre deux rafales (le soldat seul n\'a rien de plus). Rien n\'y compte ce qu\'on a tué.', { voir: ['experience', 'carte-regiment'], capture: 'regiments' }),
   E('peur', 'Peur', 'hommes', 'Ce qui monte quand les obus tombent à côté ou que les camarades tombent. Un homme qui a peur tire moins bien. Elle redescend au calme et la nuit.', { voir: ['moral', 'fiche-homme', 'caracteristiques'] }),
   E('fatigue', 'Jambes et bras', 'hommes', 'Les jambes se fatiguent à marcher dans la boue, les bras à tirer. Sur la fiche, deux jauges ; une jambe ou un bras blessé se voit sur le corps dessiné.', { voir: ['fiche-homme', 'blesse', 'boue'] }),
   E('caracteristiques', 'Tir, Force, Endurance, Calme', 'hommes', 'Les quatre caractéristiques d\'un homme, dites en mots (faible, médiocre, moyen, bon, excellent). Le Tir est l\'adresse du tireur, la Force compte au corps à corps, l\'Endurance à la fatigue, le Calme à la peur (elle gagne moins vite chez un homme calme). Un gradé en a plus (un officier surtout du calme, un sergent de l\'endurance), chaque régiment a son esprit. Elles évoluent au feu, et une flèche ↑ ou ↓ dit le chemin fait.', { voir: ['experience', 'fiche-homme', 'peur'], capture: 'fiche-homme' }),
@@ -81,7 +81,7 @@ const CONCEPTS = [
   E('preparation', 'Préparation', 'combat', 'Avant de sortir, en face prépare l\'assaut par un barrage de 220 sur le tronçon visé. Le carnet l\'annonce : c\'est le moment de renforcer le tronçon.', { voir: ['assaut', 'barrage'] }),
   E('contre-attaque', 'Contre-attaque', 'combat', 'Reprendre un tronçon perdu. Il n\'y a pas d\'ordre spécial : on envoie un régiment, par un ordre de marche, sur la tranchée prise. Un tronçon repris relève le moral.', { voir: ['troncon', 'marcher', 'moral'] }),
   E('nid', 'Nid de mitrailleuse', 'combat', 'Un poste fixe sur la première ligne, un par secteur et par camp. Il tire en cône devant lui sur les hommes de l\'autre camp ; il faut au moins un de ses hommes à moins de 7 m pour le servir. Les obus l\'abîment, à zéro il est détruit ; le génie le refait.', { voir: ['toit', 'mitrailleuse'], capture: 'nid', faits: [['Points de vie', NIDS.pv], ['Portée', `${NIDS.portee} m`], ['Demi-cône', `${NIDS.demiCone} rad`], ['Équipage', `${NIDS.equipage} hommes`]] }),
-  E('mitrailleuse', 'Mitrailleuse', 'combat', 'L\'arme d\'un nid : sa cadence couche les hommes qui traversent son cône. Sous le pointeur, le cône est dessiné et une croix marque ceux qu\'il tient sous son feu ; il « se tait » si son tronçon est pris. Le génie peut le refaire.', { voir: ['nid', 'genie'], capture: 'nid' }),
+  E('mitrailleuse', 'Mitrailleuse', 'combat', 'L\'arme d\'un nid : sa cadence couche les hommes qui traversent son cône. On choisit un poste (son étiquette, ou un clic sur lui) puis un clic sur le sol tourne son cône, de 70° au plus de chaque côté ; sa bande (240 rafales) est refaite à l\'aube, il gagne des chevrons à tirer. Sous le pointeur, le cône est dessiné et une croix marque ceux qu\'il tient sous son feu ; il « se tait » si son tronçon est pris. Le génie peut le refaire.', { voir: ['nid', 'genie'], capture: 'nid' }),
   E('toit', 'Toit de bois', 'combat', 'Une couverture sur environ un tronçon sur quatre des deux premières lignes. Un homme dessous reçoit moins de balles de fusil, de balles d\'avion et d\'éclats d\'obus, tant que la tranchée n\'est pas éboulée.', { voir: ['tranchee', 'nid'] }),
   E('fil', 'Fil de fer', 'combat', 'Un réseau de barbelés devant chaque tronçon de première ligne. Un obus qui tombe près l\'abîme (plus fort au centre) ; à zéro, il est coupé. Aucun fil ne se refait : c\'est la bataille qui l\'use.', { voir: ['barrage'], faits: [['Points de vie', FIL.pv]] }),
   // les armes lourdes

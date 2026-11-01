@@ -25,11 +25,12 @@
      (rng.js), pour que la même graine rejoue la même bataille.
 
    Logique pure : aucun DOM. Le rendu lit les tableaux (rendu3d.js). */
-import { EQUIPEMENTS } from './data/batiments.js?v=0.100.0';
-import { hauteurQ, vitesseCase } from './terrain.js?v=0.100.0';
-import { ligneY } from './tranchees.js?v=0.100.0';
-import { TOITS } from './data/nids.js?v=0.100.0';
-import { caracteristiques } from './identite.js?v=0.100.0';
+import { EQUIPEMENTS } from './data/batiments.js?v=0.101.0';
+import { hauteurQ, vitesseCase } from './terrain.js?v=0.101.0';
+import { ligneY } from './tranchees.js?v=0.101.0';
+import { TOITS } from './data/nids.js?v=0.101.0';
+import { caracteristiques } from './identite.js?v=0.101.0';
+import { BONUS } from './data/experience.js?v=0.101.0';
 
 export const GRILLE = 2;           // m : cases de voisinage
 export const DENSITE = 8;          // m : carrés de densité (tir)
@@ -368,7 +369,7 @@ function tirer(A, i, o, ctx, stance, equip = 1) {
   }
   if (best < 0) return false;
   if (ctx.tir) { const bxx = best % dw; ctx.tir(i, (bxx + 0.5) * DENSITE, ((best - bxx) / dw + 0.5) * DENSITE); }   // pour le dessin : un tir part (jamais l'état)
-  const chance = chanceTir(R, stance, bestN, A.exp[i], A.adresse[i], bestD);
+  const chance = chanceTir(R, stance, bestN, A.exp[i], A.adresse[i], bestD) * (1 + BONUS.regiment.precision * (ctx.regiments[A.reg[i]].chev || 0));      // le bonus des chevrons du régiment (lot E)
   gagner(A, i, 'adresse', R.progression.tir, R.progression);
   if (rng() >= chance) return true;
   gagner(A, i, 'adresse', R.progression.toucheTir, R.progression);

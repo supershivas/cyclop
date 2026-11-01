@@ -52,8 +52,8 @@ test('le terrain sous la souris : un résumé sans la vitesse, et la vitesse en 
   assert.ok(long.some(l => l.startsWith('On y marche')) && court.vitesse > 0 && court.vitesse <= 1);
   assert.equal(terrainResume(B, -5, -5), null);
 });
-test('les chevrons suivent les mots de l\'expérience, sans compter ce qu\'on a tué', () => {
-  assert.deepEqual([0, 0.07, 0.08, 0.3, 0.6, 5].map(chevrons), [0, 0, 1, 2, 3, 3]);
+test('les chevrons suivent les seuils de data/experience.js (0,2 / 0,5 / 0,85), sans compter ce qu\'on a tué', () => {
+  assert.deepEqual([0, 0.19, 0.2, 0.3, 0.5, 0.84, 0.85, 5].map(chevrons), [0, 0, 1, 1, 2, 2, 3, 3]);
 });
 test('l\'ordre à sec ne change rien, et dit ce que l\'ordre fera', () => {
   const B = petite(), avant = empreinte(B), [x, y] = P(150, 150);
@@ -1241,4 +1241,62 @@ test('mission : deux secondaires tirées à la graine, progression 0..1, la part
   assert.deepEqual(B.etat.secondaires, A.etat.secondaires);
   assert.equal(progressionMission(B).p, progressionMission(A).p);
   const bd = bordereau(A); assert.equal(bd.total, bd.lignes.reduce((t, l) => t + l[1], 0));
+});
+
+// ─── Lot E (v0.101.0) : les postes de mitrailleuse (direction, munitions, expérience) et les bonus des chevrons ───
+import { orienterNid, refusOrienterNid, aubeNids, cadenceNid, chevronsNid } from '../js/nids.js';
+import { BONUS, SEUILS, GAINS, bonusEnMots } from '../js/data/experience.js';
+group('lot E — postes de mitrailleuse et chevrons');
+test('un poste à nous tourne son cône ; un ordre impossible se refuse à voix haute', () => {
+  const B = petite(), n = B.etat.nids.find(k => k.camp === 0);
+  assert.equal(n.muni, NIDS.munitions); assert.equal(n.exp, 0); assert.deepEqual([n.ax, n.ay], [0, n.face]);
+  assert.match(refusOrienterNid(B, n.id, 1, n.x, n.y + 50), /plus à vous/);
+  assert.match(refusOrienterNid(B, n.id, 0, n.x, n.y + 2), /Trop près/);
+  assert.match(refusOrienterNid(B, n.id, 0, n.x + 50, n.y - n.face * 5), /de travers/);
+  assert.match(refusOrienterNid(B, n.id, 0, -50, n.y + n.face * 20), /Hors du secteur/);
+  const avant = empreinte(B);
+  assert.equal(orienterNid(B, n.id, 0, n.x + 30, n.y + n.face * 30).ok, true);
+  assert.notEqual(empreinte(B), avant);
+  assert.ok(Math.abs(n.ax - 0.707) < 0.01 && Math.abs(n.ay - 0.707 * n.face) < 0.01);
+  n.etat = 'detruit'; assert.match(refusOrienterNid(B, n.id, 0, n.x, n.y + n.face * 30), /détruit/);
+});
+test('une rafale use une munition, donne de l\'expérience, et la bande est refaite à l\'aube', () => {
+  const B = petite(), n = B.etat.nids.find(k => k.camp === 0), A = B.armee;
+  // un homme d'en face dans le cône, un des nôtres pour servir
+  const i = A.n - 1; A.camp[i] = 1; A.mort[i] = 0; A.x[i] = n.x; A.y[i] = n.y + n.face * 30;
+  const j = 0; A.camp[j] = 0; A.mort[j] = 0; A.x[j] = n.x; A.y[j] = n.y;
+  for (let k = 0; k < 120; k++) avancer(B);
+  assert.ok(n.muni < NIDS.munitions, 'des munitions ont servi');
+  assert.ok(n.exp > 0, 'le poste a gagné de l\'expérience');
+  n.muni = 3; n.exp = 0.3;
+  B.etat.phase = 'nuit'; aubeNids(B);
+  assert.equal(n.muni, NIDS.munitions);
+});
+test('une bande vide se tait ; une bande pleine est refaite avec le poste réparé', () => {
+  const B = petite(), n = B.etat.nids.find(k => k.camp === 0), A = B.armee;
+  n.muni = 0; n.tire = 99; const i = A.n - 1; A.camp[i] = 1; A.mort[i] = 0; A.x[i] = n.x; A.y[i] = n.y + n.face * 30;
+  A.camp[0] = 0; A.mort[0] = 0; A.x[0] = n.x; A.y[0] = n.y;
+  for (let k = 0; k < 30; k++) avancer(B);
+  assert.equal(n.muni, 0); assert.equal(n.exp, 0);
+});
+test('les bonus des chevrons : cadence du poste, blindage du char, précision et moral du régiment', () => {
+  assert.deepEqual(SEUILS, [0.2, 0.5, 0.85]);
+  const B = petite(), n = B.etat.nids[0];
+  assert.equal(cadenceNid(n), NIDS.cadence);
+  n.exp = 0.9; assert.equal(chevronsNid(n), 3);
+  assert.ok(Math.abs(cadenceNid(n) - NIDS.cadence * (1 - 3 * BONUS.nid.cadence)) < 1e-9);
+  assert.match(bonusEnMots('nid', 3), /36 %/); assert.match(bonusEnMots('char', 2), /24 %/); assert.match(bonusEnMots('regiment', 1), /5 %.*8 %/);
+  assert.match(bonusEnMots('char', 0), /aucun/);
+  assert.ok(GAINS.nid.rafale > 0 && GAINS.char.obus > 0);
+});
+test('un char aguerri encaisse moins d\'un obus', () => {
+  const mk = exp => { const B = petite(); B.etat.chars.push({ id: 0, camp: 0, modele: 'schneider', x: 100, y: 100, pv: 100, pvMax: 100, etat: 'arrive', exp }); degatsChars(B, 100, 100, '75'); return B.etat.chars[0].pv; };
+  assert.ok(mk(0.9) > mk(0));
+});
+test('l\'expérience des postes et le chevron de régiment survivent à une sauvegarde', () => {
+  const A = petite(); A.etat.nids[0].exp = 0.4; A.etat.nids[0].muni = 17; A.etat.nids[0].ax = 0.6; A.etat.nids[0].ay = 0.8;
+  for (let k = 0; k < 60; k++) avancer(A);
+  const B = restaurer(JSON.parse(JSON.stringify(photo(A))), R);
+  assert.deepEqual(B.etat.nids, A.etat.nids);
+  assert.deepEqual(B.etat.regiments.map(r => r.chev), A.etat.regiments.map(r => r.chev));
 });

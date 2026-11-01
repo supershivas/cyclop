@@ -3,14 +3,15 @@
    ligne vers (tx, ty) à la vitesse de son modèle, ralentie par un cratère (la moitié de ce qu'il franchit), arrêtée par un cratère plus profond ou par l'eau
    profonde (`enlise` : il reste là et tire) ; il tire sur l'autre camp à portée ; un obus tombé près de lui l'abîme (`degatsChars`), jusqu'à l'épave (`detruit`).
    Les tranchées se franchissent (elles font 1,5 m : son modèle les passe). Les ordres rendent { refus } comme les barrages. */
-import { modif, charsDispo } from './camp.js?v=0.100.0';
-import { CHARS, CHAR_PAR_DEFAUT, CHAR_RECHARGE, CHAR_DEPART, CHAR_OBUS, CHAR_ROUTE } from './data/chars.js?v=0.100.0';
-import { CALIBRES } from './data/calibres.js?v=0.100.0';
-import { effrayer, DENSITE } from './army.js?v=0.100.0';
-import { zone as zoneDe } from './bataille.js?v=0.100.0';
-import { detruirePont } from './eaux.js?v=0.100.0';
-import { toucher } from './terrain.js?v=0.100.0';
-import { PONTS_JEU, typePont } from './data/ponts.js?v=0.100.0';
+import { modif, charsDispo } from './camp.js?v=0.101.0';
+import { CHARS, CHAR_PAR_DEFAUT, CHAR_RECHARGE, CHAR_DEPART, CHAR_OBUS, CHAR_ROUTE } from './data/chars.js?v=0.101.0';
+import { CALIBRES } from './data/calibres.js?v=0.101.0';
+import { effrayer, DENSITE } from './army.js?v=0.101.0';
+import { BONUS, GAINS, chevronsDe } from './data/experience.js?v=0.101.0';
+import { zone as zoneDe } from './bataille.js?v=0.101.0';
+import { detruirePont } from './eaux.js?v=0.101.0';
+import { toucher } from './terrain.js?v=0.101.0';
+import { PONTS_JEU, typePont } from './data/ponts.js?v=0.101.0';
 
 /* La route d'un char (Jérôme, v0.59.3 : « ils doivent contourner les fleuves, passer par les ponts ») : une recherche sur une grille de `CHAR_ROUTE.maille` mètres, de (x0, y0) à (tx, ty), qui évite
    l'eau profonde, les cratères qu'il ne franchit pas, les ponts qui ne le portent pas, et se détourne des cratères à demi profonds. Rend les points à suivre (le dernier est le but), ou null
@@ -79,7 +80,7 @@ export function lancerChar(B, camp, depart, x, y, modele = CHAR_PAR_DEFAUT) {
   const franchit = CHARS[modele].franchit * modif(etat, camp, 'chars.franchit'), pv = Math.round(CHARS[modele].pv * modif(etat, camp, 'chars.pv'));     // le parc des chars (v0.88.0)
   const chemin = depart.ar !== undefined ? routeChar(B, depart.x, depart.ar, x, y, modele, franchit) : null;
   const ex = chemin ? 0 : x - depart.x, ey = chemin ? depart.ar - depart.y : y - depart.y, en = Math.hypot(ex, ey) || 1, hx = ex / en, hy = ey / en;
-  etat.chars.push({ id: etat.chars.length ? etat.chars[etat.chars.length - 1].id + 1 : 0, camp, modele, x: depart.x, y: depart.y, ar: depart.ar, dx0: depart.x, tx: x, ty: y, chemin, k: 0, pv, pvMax: pv, franchit, vit: modif(etat, camp, 'chars.vitesse'), canonMod: modif(etat, camp, 'chars.canon'), canonT: etat.temps, cible: null, vise: null, etat: 'avance', v: 0, hx, hy, cap: Math.atan2(hy, hx) });
+  etat.chars.push({ id: etat.chars.length ? etat.chars[etat.chars.length - 1].id + 1 : 0, camp, modele, x: depart.x, y: depart.y, ar: depart.ar, dx0: depart.x, tx: x, ty: y, chemin, k: 0, pv, pvMax: pv, exp: 0, franchit, vit: modif(etat, camp, 'chars.vitesse'), canonMod: modif(etat, camp, 'chars.canon'), canonT: etat.temps, cible: null, vise: null, etat: 'avance', v: 0, hx, hy, cap: Math.atan2(hy, hx) });
 }
 export const RECHARGE_CHAR = CHAR_RECHARGE;
 
@@ -144,7 +145,7 @@ export function degatsChars(B, x, y, cal) {
     if (c.etat === 'detruit') continue;
     const d = Math.hypot(c.x - x, c.y - y);
     if (d >= rayon) continue;
-    c.pv -= base * (1 - d / rayon);
+    c.pv -= base * (1 - d / rayon) * (1 - BONUS.char.blindage * chevronsDe(c.exp ?? 0));      // le blindage des chevrons (lot E)
     if (c.pv <= 0) { c.pv = 0; c.etat = 'detruit'; c.v = 0; B.evenements.push({ type: 'char-detruit', x: c.x, y: c.y, camp: c.camp }); }
   }
 }
@@ -199,20 +200,23 @@ export function avancerChars(B, ctx, rng) {
       c.canonT = etat.temps;
       const [tx, ty] = c.vise, a = rng() * 6.2832, d = G.dispersion * Math.sqrt(rng());
       B.evenements.push({ type: 'char-tir', id: c.id, camp: c.camp, x: c.x, y: c.y, tx, ty });
+      c.exp = Math.min(1, (c.exp ?? 0) + GAINS.char.obus);
       ctx.obus(Math.round((tx + Math.cos(a) * d) * 10) / 10, Math.round((ty + Math.sin(a) * d) * 10) / 10, G.calibre);
     }
     // ses mitrailleuses : une rafale par `cadence`, sur les hommes de l'autre camp à portée (plus la rafale est proche, plus elle touche)
     c.tire = (c.tire ?? 0) + dt;
     if (c.tire >= M.cadence) {
-      c.tire = 0;
+      c.tire = 0; let touches = 0, cibles = 0;
       for (let i = 0; i < A.n; i++) {
         if (A.mort[i] || A.camp[i] === c.camp) continue;
         const d = Math.hypot(A.x[i] - c.x, A.y[i] - c.y);
         if (d >= M.portee) continue;
-        if (rng() < M.touche * (1.4 - d / M.portee)) ctx.frapper(i, 'char', M.gravite);
+        cibles++;
+        if (rng() < M.touche * (1.4 - d / M.portee)) { ctx.frapper(i, 'char', M.gravite); touches++; }
         else A.peur[i] = Math.max(A.peur[i], M.peur * (1 - d / M.portee));
       }
       effrayer(A, c.x, c.y, M.portee * 1.4, 0.02, R.experience, R.caracteristiques.calme);
+      if (cibles) c.exp = Math.min(1, (c.exp ?? 0) + GAINS.char.rafale * Math.min(cibles, 20) + GAINS.char.touche * touches);
     }
   }
 }

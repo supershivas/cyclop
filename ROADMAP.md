@@ -11,7 +11,7 @@ Statuts : **à l'étude** · **validé** (Jérôme a tranché) · **en cours** �
 
 ### Retours de playtest du 30 octobre (Jérôme ; rien n'est construit, un lot par session)
 
-**Statut** : validé. Ordre proposé : A (visuels) → B (interface : fait, v0.100.0) → C (fait) → D (renforts, déroute) → E (xp, mitrailleuses) → F (sons : fait, v0.99.6). Chaque lot : lire son fichier de domaine, tests ciblés, `stamp`, version.
+**Statut** : validé. Ordre proposé : A (visuels) → B (interface : fait, v0.100.0) → C (fait) → D (renforts, déroute) → E (xp, mitrailleuses : fait, v0.101.0) → F (sons : fait, v0.99.6). Chaque lot : lire son fichier de domaine, tests ciblés, `stamp`, version.
 
 **A. Visuels** : livré jusqu'à v0.99.11 (pause, pluie, socle, piste, boue en taches, brouillard, décollage, parc et aérodrome, fenêtre du char, stock 2 chars / 3 avions, équilibrage mesuré, IA et chars, hôpital, arbres ronds qui tombent, fumée en ellipses, drapeaux et hommes du camp). Contrôle du 1er novembre : 301 tests, `rendu-empreinte` et `fumee` identiques. **Reste** :
 - **Variantes au labo non faites** pour les arbres et la fumée (la roadmap les demandait avant le jeu) : Jérôme les regarde en jeu et tranche (garder, ou ouvrir un sujet du labo).
@@ -28,9 +28,7 @@ Statuts : **à l'étude** · **validé** (Jérôme a tranché) · **en cours** �
 - Ils sortent de la caserne et se placent automatiquement dans le **premier secteur allié libre**. Si tout est tenu par l'ennemi ou plein (décision de Jérôme) : **contre-attaque forcée**, en colonne vers le secteur perdu le plus proche.
 - **Déroute** : les soldats en fuite se dirigent vers la caserne (ils ne restent plus au bord du terrain) et peuvent former une unité de renforts le lendemain.
 
-**E. Mitrailleuses et expérience**
-- **Mitrailleuses** : on sélectionne le poste et on règle la direction du cône ; barre de vie et barre de munitions (rechargée la nuit) ; elles gagnent de l'xp.
-- **Expérience** : petite animation du chevron quand un régiment en gagne ; tout ce qui a de l'xp (soldats, régiments, chars, mitrailleuses) a une barre d'xp et un nombre de chevrons affiché au-dessus ; gagner un chevron est plus difficile (trop rapide aujourd'hui, mesurer) ; **un chevron donne un bonus passif, différent selon le type d'unité** (décision de Jérôme ; valeurs en `data/` à proposer : régiment moral et précision, char blindage, mitrailleuse cadence ; à valider avant de coder).
+**E. Mitrailleuses et expérience** : livré (v0.101.0), voir `docs/domaines/bataille.md` et `interface.md` (« lot E »). **Reste** : la fiche d'un soldat seul n'a aucun bonus (décision de Jérôme) ; le poste ne se dessine pas tourné (seul son cône l'est) ; l'IA d'en face ne tourne pas ses postes.
 
 
 **Lot C** (missions et victoire) : livré v0.99.0 à v0.99.4. **Reste** de son prompt : des options de partie, dont une durée en jours choisie par le joueur (aujourd'hui tirée de la graine, 10 à 15 jours, `data/secteur.js`).

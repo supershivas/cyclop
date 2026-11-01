@@ -22,9 +22,9 @@ const bilan = B => ({ pertes: B.etat.pertes, blesses: B.etat.blesses, rng: B.eta
 
 group('stances — rien ne bouge sans elles');
 const REFERENCE = {            // v0.99.11 : seules les empreintes de position changent (boue en taches v0.99.7, l'hôpital change l'emprise du camp : pertes et hasard identiques) ; v0.90.0 : relevé de nouveau (les échelles des tranchées ralentissent moins la sortie : pertes [128, 96] → [114, 97], [158, 83] → [156, 72], [135, 99] → [121, 91]) ; relevé sur le code d'avant les stances (pertes, blessés, hasard) ; l'empreinte, relevée à la v0.36.0, y ajoute la posture ; v0.52.5 : relevé de nouveau, les cratères ronds changent le terrain donc le hasard (pertes de chez nous 62, 57, 77 → 69, 72, 76)
-  3: { pertes: [114, 97], blesses: [93, 74], rng: 3794067320, emp: 'f5e4c6c' },      // v0.70.0 : relevé de nouveau (les caractéristiques évoluent : adresse, force, endurance, calme) ; v0.79.0 : de nouveau (la visée de près et la charge sur un isolé : pertes 124/83, 115/105, 134/92 → 139/78, 104/99, 125/92 ; v0.83.0 : de nouveau, les toits et les nids de mitrailleuses → 128/96, 158/83, 135/99)
-  7: { pertes: [156, 72], blesses: [94, 48], rng: 3558615345, emp: 'eac4fb75' },
-  8: { pertes: [121, 91], blesses: [91, 55], rng: 2422826400, emp: '15adbffc' },
+  3: { pertes: [116, 89], blesses: [100, 56], rng: 2850101965, emp: '8aaf98d0' },      // lot E (v0.101.0) : relevé (les chevrons donnent un bonus de tir et de moral aux régiments) ;      // v0.70.0 : relevé de nouveau (les caractéristiques évoluent : adresse, force, endurance, calme) ; v0.79.0 : de nouveau (la visée de près et la charge sur un isolé : pertes 124/83, 115/105, 134/92 → 139/78, 104/99, 125/92 ; v0.83.0 : de nouveau, les toits et les nids de mitrailleuses → 128/96, 158/83, 135/99)
+  7: { pertes: [149, 76], blesses: [100, 54], rng: 816720174, emp: '4b20f79b' },
+  8: { pertes: [142, 91], blesses: [107, 60], rng: 2182214212, emp: '1e61c36d' },
 };
 for (const g of [3, 7, 8]) {
   test(`sans stance, mêmes morts, mêmes blessés, même hasard qu'avant (graine ${g})`, () => {

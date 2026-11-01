@@ -11,5 +11,7 @@ export const NIDS = {
   portee: 100, demiCone: 0.5, cadence: 1, touche: 0.0015, gravite: 0.7, peur: 0.2, equipage: 7,
   obus: { '75': 25, '155': 60, '220': 120 }, zone: 0.8,
   travail: 1,
+  munitions: 240,              // rafales dans la bande (Jérôme, lot E : la barre de munitions) ; une rafale n'en use qu'une quand elle a un homme d'en face dans son cône ; rechargées à l'aube
+  pivot: 70,                   // degrés : de combien le poste tourne, de chaque côté de sa direction d'origine (Jérôme, lot E : « on règle la direction du cône »)
   reparationEnFace: 0.5,       // en face, sans génie : la chance par nuit qu'un nid détruit soit refait
 };

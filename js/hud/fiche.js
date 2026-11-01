@@ -1,9 +1,10 @@
 // Les fiches : un homme (son nom, son âge, son grade, ce qu'il endure) ou un régiment (ses hommes, ses
 // blessés, ses morts, et leurs fiches). De près, on regarde des hommes ; de loin, des régiments (Jérôme, v0.3.2).
-import { NOUS, moralEnMots, rangDe } from '../bataille.js?v=0.100.0';
-import { experienceEnMots, chevrons, peurEnMots, fatigueEnMots, CARACTERISTIQUES, caracEnMots } from '../identite.js?v=0.100.0';
-import { majuscule, nomDe, indiceDe, premierDe, quiEst, tombe, bilan, enMots, refuseAujourdhui, actionEnMots, auFront, moyennes, prochainGrade } from './lecture.js?v=0.100.0';
-import { jauge, corps, chevronsHtml, REPERES } from './barres.js?v=0.100.0';
+import { NOUS, moralEnMots, rangDe } from '../bataille.js?v=0.101.0';
+import { experienceEnMots, chevrons, peurEnMots, fatigueEnMots, CARACTERISTIQUES, caracEnMots } from '../identite.js?v=0.101.0';
+import { majuscule, nomDe, indiceDe, premierDe, quiEst, tombe, bilan, enMots, refuseAujourdhui, actionEnMots, auFront, moyennes, prochainGrade } from './lecture.js?v=0.101.0';
+import { bonusEnMots } from '../data/experience.js?v=0.101.0';
+import { jauge, corps, chevronsHtml, REPERES } from './barres.js?v=0.101.0';
 
 // `$` : l'accès aux éléments ; `R` : les réglages ; `bataille()` : la bataille en cours
 const CARAC_TITRES = {   // (elles montent à l'usage : tirer, frapper, marcher fatigué, tenir sous le feu ; elles baissent avec une blessure ou la terreur)
@@ -81,7 +82,7 @@ export function creerFiche({ $, R, bataille }) {
       jauge({ nom: 'Moral', val: reg.moral, reperes: [R.moral.deroute, R.moral.ebranle, 0.75], mot: moralEnMots(reg, R), titre: 'Moral du régiment : sous le premier repère, la déroute' }),
       jauge({ nom: 'Vivres', val: Math.min(1, vivres / R.nuit.vivres), mot: `${vivres} nuit${vivres > 1 ? 's' : ''}`, titre: 'Nuits de vivres restantes' }),
     ].join(''), '');
-    $('fiche-etat').replaceChildren(...[majuscule(moralEnMots(reg, R)), refuseAujourdhui(B, reg)].filter(Boolean).map(t => Object.assign(document.createElement('li'), { textContent: t })));
+    $('fiche-etat').replaceChildren(...[majuscule(moralEnMots(reg, R)), refuseAujourdhui(B, reg), nb ? `Chevrons : ${bonusEnMots('regiment', nb)}` : ''].filter(Boolean).map(t => Object.assign(document.createElement('li'), { textContent: t })));
     const sig = `${reg.id}:${b.vivants}:${b.blesses}:${b.morts}:${b.evacues}:${Object.keys(B.etat.grades).length}`;
     if (sig === listeVue) return;
     listeVue = sig;
