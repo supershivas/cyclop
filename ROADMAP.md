@@ -13,11 +13,13 @@ Statuts : **à l'étude** · **validé** (Jérôme a tranché) · **en cours** �
 
 **Statut** : validé. Ordre proposé : A (visuels) → B (interface : fait, v0.100.0) → C (fait) → D (renforts, déroute) → E (xp, mitrailleuses) → F (sons : fait, v0.99.6). Chaque lot : lire son fichier de domaine, tests ciblés, `stamp`, version.
 
-**A. Visuels** (v0.99.5 livré : pause qui fige l'écran, pluie dans le ciel, socle plat du camp, piste de l'aérodrome ; reste le reste de la liste) ; v0.99.7 livré : boue en taches, érosion et lacs, brouillard visible ; v0.99.9 livré : décollage, char sorti du parc, fenêtres parc et aérodrome, Avion muet au brouillard ; v0.99.10 livré : fenêtre du char, stock 2 chars / 3 avions, obus plus efficaces sur les chars ; v0.99.11 livré : IA et chars, hôpital, arbres ronds qui tombent, fumée en ellipses, drapeaux et hommes du camp (reste : mesure du coût du feuillage, déroute vers l'hôpital)
-- **Arbres** : animation de chute sous un bombardement ; feuillage ellipsoïdal (rond) ; même aspect à tous les zooms (on peut simplifier les formes, pas en retirer le nombre).
-- **Fumée** : ellipses (plus de cubes), volutes plus réalistes (variantes au labo).
-- **Bâtiments des bases** : aspect à reprendre (ils paraissent d'un autre jeu), drapeaux qui flottent, soldats non armés qui s'affairent.
-- **Hôpital** : les blessés évacués et les soldats en déroute y vont (on voit leur nombre, on peut les réaffecter) ; des niveaux pour sauver plus de blessés.
+**A. Visuels** : livré jusqu'à v0.99.11 (pause, pluie, socle, piste, boue en taches, brouillard, décollage, parc et aérodrome, fenêtre du char, stock 2 chars / 3 avions, équilibrage mesuré, IA et chars, hôpital, arbres ronds qui tombent, fumée en ellipses, drapeaux et hommes du camp). Contrôle du 1er novembre : 301 tests, `rendu-empreinte` et `fumee` identiques. **Reste** :
+- **Variantes au labo non faites** pour les arbres et la fumée (la roadmap les demandait avant le jeu) : Jérôme les regarde en jeu et tranche (garder, ou ouvrir un sujet du labo).
+- **Mesure du feuillage rond** : 42 triangles par touffe au lieu de 30 (+40 %), mais pas de comparaison avant / après sur la même machine ; à refaire (`scripts/mesure.mjs --soldats 2000`), le rendu est déjà à 124 ms à 4 px/m.
+- **Bâtiments des bases** : l'aspect lui-même n'est pas refondu (seuls drapeaux, socle et hommes ont été ajoutés).
+- **Volutes de fumée** plus réalistes (forme faite, mouvement à juger en jeu).
+- **Hôpital** : les blessés « en déroute » n'y vont pas (dépend du lot D).
+- **Lacs vrais** (fond qui monte, niveau d'eau qui déborde d'un trou à l'autre) : non fait, la pluie érode seulement les parois.
 
 **B. Interface** : **livré en v0.100.0** (gros plan d'un secteur, fiche du terrain en deux lignes, fiche de nuit en trois colonnes, Échap, onglet caché, carnet, écran titre, boutons du haut, infobulles, typographie du labo, fenêtre de base, encyclopédie, chargeur) ; le détail et les pièges sont dans `docs/domaines/interface.md`. À mesurer au playtest : le gros plan (la vue 3D ne masque pas le reste du front), la fiche de nuit (les corvées ne sont plus sur la carte du régiment).
 
