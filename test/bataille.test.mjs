@@ -13,7 +13,7 @@ import { arriereDe } from '../js/bataille.js';
 import { SECTEURS } from '../js/data/secteur.js';
 import { REGLAGES as R } from '../js/data/reglages.js';
 
-const SEED_NUIT = 5;      // la graine des nuits sans contact au soir (v0.52.5 : avec les cratères ronds, la graine 3 finissait le jour au contact)
+const SEED_NUIT = 4;      // la graine des nuits sans contact au soir et avec des blessés au régiment 0 (v0.52.5 : la graine 3 finissait le jour au contact ; 1er novembre : la 5, avec les nids de mitrailleuse et le lot A)
 const petite = (graine = 3) => nouvelleBataille(graine, R, { soldats: 200, jours: 3 });
 // (x, y) dans le secteur → dans le terrain (les marges autour)
 const M = SECTEURS.essai.marges, P = (x, y) => [x + M.x, y + M.y];
@@ -955,7 +955,8 @@ test('un char contourne le fleuve par un pont qui le porte, n\'y tombe pas, et a
   const { routeChar } = await import('../js/chars.js');
   const { PONTS_JEU, typePont } = await import('../js/data/ponts.js');
   preparerAleatoire(2);
-  const B = nouvelleBataille(2, R, { soldats: 200, jours: 3, secteur: ID_ALEATOIRE }), a = arriereDeTest(B), x = B.etat.marges.x + 200, y = B.etat.marges.y + 60;
+  const Rsilence = structuredClone(R); Rsilence.ia.barrage = Rsilence.ia.offensive = 1e12;      // (l'IA d'en face vise nos chars depuis le lot A : elle le détruisait avant qu'il arrive)
+  const B = nouvelleBataille(2, Rsilence, { soldats: 200, jours: 3, secteur: ID_ALEATOIRE }), a = arriereDeTest(B), x = B.etat.marges.x + 200, y = B.etat.marges.y + 60;
   const r = routeChar(B, x, a[0], x, y);
   assert.ok(r && r.length > 1, 'un détour : plusieurs points');
   const T = B.terrain; let p = [x, a[0]];
