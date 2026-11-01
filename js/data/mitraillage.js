@@ -23,7 +23,10 @@ export const MITRAILLAGE = {
   // Les dégâts reçus (v0.57.0) : l'avion a des points de vie ; chaque seconde passée au-dessus d'hommes qui tirent en l'air lui en coûte
   pv: 100,
   flotte: 3,                           // avions par camp
-  exposition: { rayon: 30, parHomme: 0.06, plafond: 45, bas: 0.3, retenu: 0.5, bas_retenu: 20 },   // pv/s ; `bas` : la part qu'il prend en croisière (1 à `passe`) ; `retenu` : la part du feu retenu, seulement sous `bas_retenu` m
+  exposition: { rayon: 30, parHomme: 0.075, plafond: 45, bas: 0.3, retenu: 0.5, bas_retenu: 20 },   // pv/s ; `bas` : la part qu'il prend en croisière (1 à `passe`) ; `retenu` : la part du feu retenu, seulement sous `bas_retenu` m
+  // Le plan de vol depuis l'aérodrome (Jérôme, 1er novembre) : des virages inclinés au rayon que donnent la vitesse et l'inclinaison (v² / (g tan i)), un grand virage après la passe, puis l'atterrissage sur la piste
+  circuit: { inclinaison: 0.7, g: 9.81, raccord: 60, approche: 300, roulage: 60 },   // inclinaison en rad (~40°) ; raccord : m de ligne droite avant la descente ; approche : m de la finale (descente jusqu'à la piste) ; roulage : m roulés après l'atterrissage
+  epave: { fumee: 90 },                // s : une épave fume ce temps-là, puis reste là, éteinte, toute la bataille
   reparation: 60,                      // pv rendus à chaque avion qui rentre, par nuit
   chute: { vitesse: 0.8, gravite: 14, rayon: 5, letal: 0.7 },   // abattu : il glisse (× sa vitesse), tombe, et écrase ceux du point de chute
   cloue: ['brouillard', 'tempete'],    // les météos où l'on ne vole pas

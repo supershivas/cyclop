@@ -710,7 +710,7 @@ test('le mitraillage relu en attente donne la même partie', () => {
 });
 
 
-import { positionDe, balayage, ligneDe, tracerVol, avionsPrets, avionsRestants } from '../js/avions.js';
+import { positionDe, balayage, ligneDe, tracerVol, avionsPrets, avionsRestants, raccorder, rayonVirage } from '../js/avions.js';
 import { MITRAILLAGE } from '../js/data/mitraillage.js';
 const ordreAvion = (B, x1, y1, x2, y2, camp = 0) => ordonnerBarrage(B, 'avion', x1, y1, camp, x2, y2);
 const jouer = (B, n, f = () => {}) => { for (let k = 0; k < n; k++) { avancer(B); f(); } };
@@ -769,7 +769,7 @@ test('au-dessus d\'hommes qui tirent, l\'avion perd des pv ; à zéro il tombe, 
   assert.equal(avionsRestants(B.etat, 0), 2);
   assert.equal(B.etat.avions[1].filter(pv => pv > 0).length, 3, 'la flotte d\'en face est intacte');
 });
-test('un avion qui rentre garde ses dégâts ; l\'aube le répare de `reparation` pv et efface les épaves', () => {
+test('un avion qui rentre garde ses dégâts ; l\'aube le répare de `reparation` pv, et les épaves restent', () => {
   const B = petite(), [cx, cy] = centreRegiment(B, 8);
   ordreAvion(B, cx, cy + 40, cx, cy - 40);
   const v = B.etat.mitraillages[0]; v.pv = 80;
@@ -779,10 +779,49 @@ test('un avion qui rentre garde ses dégâts ; l\'aube le répare de `reparation
   B.etat.mitraillages.push({ id: 9, camp: 0, k: 1, etat: 'epave', ux: 1, uy: 0, cx: 0, cy: 0 }); B.etat.avions[0][1] = 0;
   while (B.etat.phase === 'jour') avancer(B);
   assert.ok(aube(B).ok);
-  assert.equal(B.etat.mitraillages.length, 0, 'plus d\'épave');
+  assert.equal(B.etat.mitraillages.length, 1, 'l\'épave reste sur le champ de bataille'); assert.equal(B.etat.mitraillages[0].id, 9);
   assert.equal(B.etat.avions[0][0], Math.min(MITRAILLAGE.pv, v.pv + MITRAILLAGE.reparation));
   assert.equal(B.etat.avions[0][2], MITRAILLAGE.pv);
   assert.equal(B.etat.avions[0][1], 0, 'un avion perdu ne revient pas');
+});
+test('le plan de vol : des arcs au rayon que donnent la vitesse et l\'inclinaison, de pose à pose, sans saut', () => {
+  const r = rayonVirage(); assert.ok(r > 150 && r < 260, 'rayon de virage réaliste : ' + r);
+  for (const [p0, p1] of [[{ x: 0, y: 0, cap: 0 }, { x: 600, y: 400, cap: Math.PI / 2 }], [{ x: 0, y: 0, cap: 0 }, { x: -50, y: 30, cap: Math.PI }], [{ x: 100, y: 100, cap: 1 }, { x: 100, y: 100, cap: 1 }], [{ x: 0, y: 0, cap: 0 }, { x: 900, y: 0, cap: 0 }]]) {
+    const c = raccorder(p0, p1, r);
+    assert.ok(Math.abs(c.seg.reduce((n, g) => n + g.len, 0) - c.len) < 1e-6);
+    const [a, l, b] = c.seg, fin = b.da === 0 ? { x: l.x + l.ux * l.len, y: l.y + l.uy * l.len } : { x: b.cx + b.r * Math.cos(b.a + b.da), y: b.cy + b.r * Math.sin(b.a + b.da) };
+    assert.ok(Math.hypot(fin.x - p1.x, fin.y - p1.y) < 1e-6, 'arrive à la pose visée');
+    assert.ok(Math.abs(a.r - r) < 1e-9 && Math.abs(b.r - r) < 1e-9);
+  }
+});
+test('depuis l\'aérodrome : il décolle, vire, passe, revient et se pose sur la piste ; tout est continu', () => {
+  const B = nouvelleBataille(5, R, { soldats: 200, jours: 6, camp: true }), Z = zone(B), cx = (Z.x0 + Z.x1) / 2;
+  assert.ok(ordreAvion(B, cx, Z.y0 + 100, cx + 120, Z.y0 + 100).ok);
+  const v = B.etat.mitraillages[0], T = v.av.sP + v.total, r = rayonVirage();
+  let prec = null, roulisMax = 0, fin;
+  for (let st = 0; st <= T + 2; st += 0.5) {
+    const p = positionDe(v, v.t0 + st / MITRAILLAGE.vitesse);
+    if (prec) { assert.ok(Math.hypot(p.x - prec.x, p.y - prec.y) < 0.75, 'pas de saut à ' + st); let d = p.cap - prec.cap; d -= Math.round(d / (2 * Math.PI)) * 2 * Math.PI; assert.ok(Math.abs(d) <= 0.5 / r * 1.05 + 1e-9, 'jamais plus serré que le rayon de virage'); }
+    roulisMax = Math.max(roulisMax, Math.abs(p.roulis)); prec = p; fin = p;
+  }
+  assert.ok(Math.abs(roulisMax - MITRAILLAGE.circuit.inclinaison) < 1e-6, 'incliné de l\'inclinaison du virage');
+  assert.equal(fin.h, 0); assert.ok(fin.piste && Math.abs(fin.y - v.av.y0) < 0.5 && Math.abs(fin.x - v.av.cx) <= 40, 'il finit sur la piste');
+  for (let k = 0; k < 6000 && B.etat.mitraillages.length; k++) avancer(B);
+  assert.equal(B.etat.mitraillages.length, 0, 'il s\'est posé');
+});
+test('une passe longue sur une ligne garnie ôte au moins 75 % des pv ; deux le détruisent ; l\'épave reste', () => {
+  const trouve = [];
+  for (const graine of [7, 11, 3]) {
+    const B = nouvelleBataille(graine, R, { soldats: 1500 }), Z = zone(B), A = B.armee;
+    let y = 1e9; for (let i = 0; i < A.n; i++) if (A.camp[i] === 1) y = Math.min(y, A.y[i]);
+    const cx = (Z.x0 + Z.x1) / 2;
+    avancer(B);
+    assert.ok(ordreAvion(B, cx - 75, y + 3, cx + 75, y + 3).ok);
+    const v = B.etat.mitraillages[0];
+    for (let k = 0; k < 2400 && v.etat === 'vol'; k++) avancer(B);
+    const pv = v.etat === 'vol' ? B.etat.avions[0][0] : 0, perdu = MITRAILLAGE.pv - (v.etat === 'epave' || v.etat === 'chute' ? MITRAILLAGE.pv : v.pv);
+    trouve.push(perdu); assert.ok(perdu >= 75, `graine ${graine} : une passe longue ôte ${perdu} pv`); void pv;
+  }
 });
 test('plus d\'avion, tous en vol, brouillard : des refus dits à voix haute', () => {
   const B = petite(), [cx, cy] = centreRegiment(B, 8);

@@ -1,5 +1,10 @@
 # Journal des versions
 
+## 0.100.1 — 2026-11-01
+- L'avion décolle, vire à un rayon réaliste vers sa passe, puis revient se poser sur sa piste (plus de ligne droite d'un bord à l'autre)
+- Un avion abattu reste en épave sur le champ de bataille jusqu'à la fin, même la nuit
+- Une passe longue sur une ligne garnie ôte au moins 75 % de l'avion, deux le détruisent
+
 ## 0.100.0 — 2026-11-01
 - Un clic sur un secteur cadre la vue 3D sur lui et met son plan en gros plan à la place de la carte ; « Vue d'ensemble », Échap ou un second clic reviennent
 - La fiche de fin de journée passe en trois colonnes (chiffres de la journée, médailles, ordres aux régiments) ; le carnet de bord montre tout l'historique d'un clic, ses noms se cliquent, les événements graves clignotent une fois
