@@ -5,7 +5,9 @@
 import { servir, lancerChromium, CIBLES } from './navigateur.mjs';
 const s = await servir('.'); const nav = await lancerChromium({ args: ['--disable-features=WebRtcHideLocalIpsWithMdns'] });
 const errs = [];
-const ouvrir = async nom => { const p = await (await nav.newContext(CIBLES.bureau)).newPage(); p.on('pageerror', e => errs.push(nom + ' ' + e)); p.on('console', m => { if (m.type() === 'error') errs.push(nom + ' ' + m.text()); }); await p.goto(new URL('index.html?debug=1&seed=7', s.base).href); await p.waitForSelector('#jouer-deux', { state: 'visible' }); await p.waitForTimeout(500); return p; };
+// (hors --code, le relais public n'est pas nécessaire : le jeu dit « Relais injoignable » et le copier-coller suffit ; un 429 de ntfy.sh ne doit pas faire échouer l'outil)
+const toleree = t => !process.argv.includes('--code') && /relais refuse|429 \(Too Many Requests\)/.test(t);
+const ouvrir = async nom => { const p = await (await nav.newContext(CIBLES.bureau)).newPage(); p.on('pageerror', e => { if (!toleree(String(e))) errs.push(nom + ' ' + e); }); p.on('console', m => { if (m.type() === 'error' && !toleree(m.text())) errs.push(nom + ' ' + m.text()); }); await p.goto(new URL('index.html?debug=1&seed=7', s.base).href); await p.waitForSelector('#jouer-deux', { state: 'visible' }); await p.waitForTimeout(500); return p; };
 const A = await ouvrir('A'), Bp = await ouvrir('B');
 if (process.argv.includes('--code')) {       // le rendez-vous par code court : passe par le relais public (ntfy.sh), il faut le réseau
   await A.click('#jouer-deux'); await A.click('#deux-inviter');
@@ -23,15 +25,15 @@ const rep = await Bp.inputValue('#deux-ma-reponse');
 await A.fill('#deux-reponse', rep); await A.click('#deux-connecter');
 }
 await A.waitForFunction(() => window.__jeu?.reseau?.(), null, { timeout: 20000 }); await Bp.waitForFunction(() => window.__jeu?.reseau?.(), null, { timeout: 20000 });
-// (v0.94.0 : chacun a son camp, bridé ; avant le départ, la même ouverture des deux côtés : l'artillerie au niveau 3, un aérodrome et ses deux avions, pour que le scénario tire comme avant)
-for (const p of [A, Bp]) await p.evaluate(() => { const e = window.__jeu.bataille().etat; for (const K of [e.camp, e.campEux]) { K.batiments.artillerie.niveau = 3; K.batiments.aerodrome.niveau = 1; } e.avions = [[100, 100], [100, 100]]; });
+// (v0.94.0 : chacun a son camp, bridé ; avant le départ, la même ouverture des deux côtés : l'artillerie au niveau 3, un aérodrome et ses deux avions, 5 points de dotation (v0.98.0 : le départ est à 0, et les chantiers de chars et de sapeurs coûtent 3 et 2), pour que le scénario tire comme avant)
+for (const p of [A, Bp]) await p.evaluate(() => { const e = window.__jeu.bataille().etat; for (const K of [e.camp, e.campEux]) { K.batiments.artillerie.niveau = 3; K.batiments.aerodrome.niveau = 1; K.dotation = 5; } e.avions = [[100, 100], [100, 100]]; });
 await A.click('#deux-pret'); await Bp.click('#deux-pret'); await A.waitForTimeout(3000);
 const etat = async p => p.evaluate(() => window.__jeu.reseau());
 console.log('A', JSON.stringify(await etat(A))); console.log('B', JSON.stringify(await etat(Bp)));
 // des ordres des deux côtés
 await A.evaluate(() => { const B = window.__jeu.bataille(); window.__jeu.marche(B.etat.regiments.filter(r => r.camp === 0).slice(0, 2).map(r => r.id), 150, 150); window.__jeu.barrage('155', 200, 150); window.__jeu.barrage('avion', 150, 180, 0, 150, 110); window.__jeu.stance(B.etat.regiments.filter(r => r.camp === 0).slice(2, 4).map(r => r.id), 'retenu'); });
 await Bp.evaluate(() => { const B = window.__jeu.bataille(); window.__jeu.marche(B.etat.regiments.filter(r => r.camp === 1).slice(0, 2).map(r => r.id), 250, 140); window.__jeu.barrage('75', 120, 170); window.__jeu.barrage('avion', 250, 100, 1, 250, 170); window.__jeu.stance(B.etat.regiments.filter(r => r.camp === 1).slice(4, 6).map(r => r.id), 'retenu'); });
-await A.evaluate(() => window.__jeu.bat('chars')); await Bp.evaluate(() => window.__jeu.bat('sapeurs'));      // un chantier de chaque camp, par le lockstep
+await A.evaluate(() => window.__jeu.bat('chars', 0)); await Bp.evaluate(() => window.__jeu.bat('sapeurs', 0));      // un chantier de chaque camp, par le lockstep
 await A.waitForTimeout(12000);
 const a = await etat(A), b = await etat(Bp);
 const camps = async p => p.evaluate(() => { const e = window.__jeu.bataille().etat; return JSON.stringify([e.camp.dotation, e.camp.batiments.chars.chantier, e.campEux.dotation, e.campEux.batiments.sapeurs.chantier]); });
