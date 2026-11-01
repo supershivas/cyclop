@@ -1,18 +1,18 @@
 // La végétation : les arbres (un tronc, quelques branches nues ; abattus, une souche), les buissons (deux ou trois boîtes basses ; arrachés, il
 // n'en reste rien) et l'herbe (des touffes de cinq brins, seulement de près, qui ondulent au vent). Seulement ce qu'on voit est dessiné : tous,
 // ils coûtaient des dizaines de milliers de triangles (docs/domaines/rendu.md, « Les arbres et les buissons dessinés partout »). Le dessin seulement.
-import * as SH from './shaders.js?v=0.103.1';
-import { creerGeometries } from './geometries.js?v=0.103.1';
-import { hash2 } from '../lib/rng.js?v=0.103.1';
-import { BUISSONS_FORMES, BUISSONS_SAISONS, BUISSONS_TIRAGES } from '../data/buissons.js?v=0.103.1';
-import { ARBRES_FAMILLES, ARBRES_TIRAGES, ARBRES_ECHELLE, ARBRES_AUTOMNE, ARBRES_PPM_FEUILLES, ARBRES_FEUILLES } from '../data/arbres.js?v=0.103.1';
-import { dansLEcran } from './vue-ecran.js?v=0.103.1';
+import * as SH from './shaders.js?v=0.104.0';
+import { creerGeometries } from './geometries.js?v=0.104.0';
+import { hash2 } from '../lib/rng.js?v=0.104.0';
+import { BUISSONS_FORMES, BUISSONS_SAISONS, BUISSONS_TIRAGES } from '../data/buissons.js?v=0.104.0';
+import { ARBRES_FAMILLES, ARBRES_TIRAGES, ARBRES_ECHELLE, ARBRES_AUTOMNE, ARBRES_PPM_FEUILLES, ARBRES_FEUILLES, ARBRES_VARIANTES, ARBRES_COUCHE } from '../data/arbres.js?v=0.104.0';
+import { dansLEcran } from './vue-ecran.js?v=0.104.0';
 
 // `THREE`, `scene`, `col`, `camera`, `vue`, `solY` (la hauteur moyenne du sol), `distance(zoom)`, `surface(x, z)` et `petit()` (aux zooms où un soldat n'est qu'un point)
 // viennent de creerRendu ; `terrain()`, `vide()` et `ombres()` sont lus à chaque appel (le terrain change à chaque bataille). `ombres()` rend `{ ARBRES_OMBRES, aoPos, aoGeo, soleil }` :
 // les arbres vus remplissent le tampon des ombres, qui reste à rendu3d.js avec le soleil (il passera ici avec lui).
 export function creerVegetation({ THREE, scene, col, camera, vue, solY: SOL_Y, distance, surface, petit, terrain, vide, ombres, ppm, saison, arbres: optsArbres = null, buissons: optsBuissons = null }) {
-  const { geometrieArbre, geometrieBuisson, geometrieBuissonVarie, geometrieTroncs, geometrieTroncLoin, geometrieFeuilles, geometrieAbattuLong } = creerGeometries(THREE, col);
+  const { geometrieArbre, geometrieBuisson, geometrieBuissonVarie, geometrieTroncs, geometrieTroncLoin, geometrieFeuilles, geometrieSouche } = creerGeometries(THREE, col);
   // `arbres` : null, les arbres d'avant (un tronc, quatre branches) ; sinon (labo « Des arbres plus variés ») `{ formes, feuilles, chute, abattus }` : des familles de formes, des feuilles
   // selon la saison (`saison()` rend l'horloge de la bataille ou null), la chute des feuilles au fil des jours, les abattus longs. `ppm()` : les pixels par mètre du zoom.
   let opts = optsArbres, forcee = null, trisArbres = 0, nbArbres = 0, msArbres = 0;
@@ -98,13 +98,13 @@ export function creerVegetation({ THREE, scene, col, camera, vue, solY: SOL_Y, d
   function preparerArbresVaries(T) {
     const poids = ARBRES_FAMILLES.reduce((s, f) => s + f.poids, 0), cap = Math.max(1, T.arbres.length);
     const [h0, h1] = ARBRES_ECHELLE.hauteur, [w0, w1] = ARBRES_ECHELLE.largeur;
-    vuArbre = new Uint8Array(T.arbres.length); chutes.clear();
+    vuArbre = new Uint8Array(T.arbres.length); chutes.clear(); atterri.clear(); gisants = null;
     infos = T.arbres.map(a => {
       let r = tire(a, ARBRES_TIRAGES.famille) * poids, fam = 0;
       while (fam < ARBRES_FAMILLES.length - 1 && r >= ARBRES_FAMILLES[fam].poids) r -= ARBRES_FAMILLES[fam++].poids;
       const F = ARBRES_FAMILLES[fam], t = tire(a, ARBRES_TIRAGES.taille), hr = (F.h + a.v * F.dh) / F.h * (h0 + (h1 - h0) * t);
       const sxz = (w0 + (w1 - w0) * tire(a, ARBRES_TIRAGES.taille + 100)) * (1 + (hr - 1) * 0.5), yaw = tire(a, ARBRES_TIRAGES.sens) * Math.PI * 2;
-      return { fam, sx: sxz, sy: hr, H: F.h * hr, c: Math.cos(yaw), s: Math.sin(yaw), d: tire(a, ARBRES_TIRAGES.feuilles), t: tire(a, ARBRES_TIRAGES.chute) };
+      return { fam, sx: sxz, sy: hr, H: F.h * hr, c: Math.cos(yaw), s: Math.sin(yaw), d: tire(a, ARBRES_TIRAGES.feuilles), t: tire(a, ARBRES_TIRAGES.chute), va: Math.floor(tire(a, ARBRES_TIRAGES.variante) * ARBRES_VARIANTES.n), fb: tire(a, ARBRES_TIRAGES.brule) < ARBRES_COUCHE.brule, u: tire(a, ARBRES_TIRAGES.couche) };
     });
     feuilleMat ??= plierAuVent(new THREE.MeshBasicMaterial({ vertexColors: true, side: THREE.DoubleSide }));
     const ajouter = (geo, userData) => {
@@ -118,9 +118,9 @@ export function creerVegetation({ THREE, scene, col, camera, vue, solY: SOL_Y, d
     const cube = new THREE.BoxGeometry(1, 1, 1).translate(0, 0.5, 0).toNonIndexed();
     couronnes = Array.from({ length: 6 }, () => ajouter(cube, { couronne: true }));
     couronneMode = null;
-    abattuMesh = [0, 1].map(() => ajouter(opts.abattus === 'longs' ? geometrieAbattuLong() : geometrieArbre(0, 1), {}));
+    abattuMesh = [null, null];
     // (créés au premier besoin : un objet de plus dans la scène tire des identifiants avec `Math.random`, voir « Piège » plus haut)
-    feuilles = ARBRES_FAMILLES.map(() => [null, null]);
+    feuilles = ARBRES_FAMILLES.map(() => Array.from({ length: ARBRES_VARIANTES.n }, () => [null, null]));
     modeVu = null;
   }
   // les feuilles de la saison : la saison de la bataille (été, automne, hiver nu, hiver sous la neige), ou celle qu'on force (le printemps du labo)
@@ -133,17 +133,18 @@ export function creerVegetation({ THREE, scene, col, camera, vue, solY: SOL_Y, d
   }
   function refaireFeuilles(mode) {
     modeVu = mode;
-    ARBRES_FAMILLES.forEach((F, f) => [0, 1].forEach(d => {
-      const g = mode === 'nu' ? null : geometrieFeuilles(F.id, mode, d, opts.chanfrein ?? 0, !!opts.rond);
-      let m = feuilles[f][d];
+    ARBRES_FAMILLES.forEach((F, f) => Array.from({ length: ARBRES_VARIANTES.n }, (_, va) => [va, 0]).concat(Array.from({ length: ARBRES_VARIANTES.n }, (_, va) => [va, 1])).forEach(([va, d]) => {
+      const g = mode === 'nu' ? null : geometrieFeuilles(F.id, mode, d, opts.chanfrein ?? 0, !!opts.rond, va);
+      let m = feuilles[f][va][d];
       if (!g) { if (m) m.userData.vide = true; return; }
       if (!m) {
         m = new THREE.InstancedMesh(g, feuilleMat, Math.max(1, terrain().arbres.length));
         m.count = 0; m.frustumCulled = false; m.userData = { feuilles: true };
-        feuilles[f][d] = m; arbresMesh.push(m); scene.add(m);
+        feuilles[f][va][d] = m; arbresMesh.push(m); scene.add(m);
       } else { m.geometry.dispose(); m.geometry = g; }
       m.userData.vide = false; m.userData.tri = g.attributes.position.count / 3;
     }));
+    gisants?.synchro();
   }
   // 0 : touffu, 1 : dégarni, 2 : nu. En automne, un arbre sur trois est dégarni ; avec la chute (labo), la part de nus et de dégarnis grandit de jour en jour.
   function etatFeuilles(inf, mode, h) {
@@ -157,6 +158,33 @@ export function creerVegetation({ THREE, scene, col, camera, vue, solY: SOL_Y, d
   const DUREE_CHUTE = 1.5;
   let tVeg = 0, vuArbre = new Uint8Array(0);      // vuArbre : 1 vu debout, 2 vu abattu
   const chutes = new Map();                       // numéro de l'arbre → instant où il commence à tomber
+  const atterri = new Map();                      // numéro de l'arbre abattu → instant où il a touché le sol (ou, vu déjà couché : un instant fictif, plus ou moins ancien)
+  // Les arbres couchés (Jérôme, 1er novembre : « l'arbre reste au sol de la manière dont il est tombé : même axe, même largeur de tronc, même feuillage à moitié enterré ; il peut brûler, ou non ;
+  // le feuillage disparaît doucement s'il n'a pas brûlé ») : les mêmes troncs et les mêmes feuilles que debout, basculés de 90° autour de leur pied, enfoncés d'une part du tronc ; des maillages à part
+  // (sans le vent, qui plierait un tronc couché), créés au premier besoin. Le feuillage rapetisse vers le centre de la couronne.
+  let gisants = null;
+  function creerGisants() {
+    const clair = new THREE.MeshBasicMaterial({ color: col('s'), side: THREE.DoubleSide }), noir = new THREE.MeshBasicMaterial({ color: col('t'), side: THREE.DoubleSide });
+    const fm = new THREE.MeshBasicMaterial({ vertexColors: true, side: THREE.DoubleSide }), cap = Math.max(1, terrain().arbres.length);
+    const mesh = (geo, mat, extra = {}) => { const m = new THREE.InstancedMesh(geo, mat, cap); m.count = 0; m.frustumCulled = false; m.userData = { ...extra, n: 0, tri: geo.attributes.position.count / 3 }; arbresMesh.push(m); scene.add(m); return m; };
+    const G = {
+      troncs: ARBRES_FAMILLES.map(F => [mesh(troncs[ARBRES_FAMILLES.indexOf(F)].geometry, clair), mesh(troncs[ARBRES_FAMILLES.indexOf(F)].geometry, noir)]),
+      feuilles: ARBRES_FAMILLES.map(() => Array.from({ length: ARBRES_VARIANTES.n }, () => [null, null])),
+      loin: [mesh(loinMesh.geometry, clair), mesh(loinMesh.geometry, noir)],
+      souches: [mesh(geometrieSouche(), clair), mesh(geometrieSouche(), noir)],
+      synchro() {                                      // les feuilles ont changé de saison : les couchés reprennent leurs géométries
+        feuilles.forEach((par, f) => par.forEach((ds, va) => ds.forEach((src, d) => {
+          if (!src) return;
+          let m = G.feuilles[f][va][d];
+          if (!m) m = G.feuilles[f][va][d] = mesh(src.geometry, fm);
+          else m.geometry = src.geometry;
+          m.userData.tri = src.userData.tri; m.userData.vide = src.userData.vide;
+        })));
+      },
+    };
+    G.synchro();
+    return G;
+  }
   const mA = new THREE.Matrix4(), mB = new THREE.Matrix4(), axeChute = new THREE.Vector3();
   let feuilleMat = null;                  // (au premier besoin : un objet de plus dans la scène change l'empreinte)
   const m4v = new THREE.Matrix4();
@@ -177,11 +205,15 @@ export function creerVegetation({ THREE, scene, col, camera, vue, solY: SOL_Y, d
       m4v.set(w, 0, 0, x, 0, inf.H * 0.45, 0, y + inf.H * 0.55, 0, 0, w, z, 0, 0, 0, 1);
       m.setMatrixAt(m.userData.n++, m4v);
     };
-    const mettreChute = (m, x, y, z, inf, th) => {      // le même arbre que `mettre`, basculé de `th` rad autour de son pied, vers un côté qui vient de son sens
+    // un arbre couché : basculé de `th` rad autour de son pied (vers (−s, c)), enfoncé de `bas` m ; `echelle` rapetisse la couronne vers son centre (hauteur `hc` dans la forme de la famille)
+    const mCouche = new THREE.Matrix4();
+    const mettreCouche = (m, x, y, z, inf, th, bas, echelle = 1, hc = 0) => {
       axeChute.set(inf.c, 0, inf.s);
       mA.makeRotationAxis(axeChute, th);
       mB.set(inf.c * inf.sx, 0, inf.s * inf.sx, 0, 0, inf.sy, 0, 0, -inf.s * inf.sx, 0, inf.c * inf.sx, 0, 0, 0, 0, 1);
-      mA.multiply(mB); mA.setPosition(x, y, z);
+      mA.multiply(mB);
+      if (echelle !== 1) { mCouche.set(echelle, 0, 0, 0, 0, echelle, 0, hc * (1 - echelle), 0, 0, echelle, 0, 0, 0, 0, 1); mA.multiply(mCouche); }
+      mA.elements[12] += x; mA.elements[13] += y - bas; mA.elements[14] += z;
       m.setMatrixAt(m.userData.n++, mA);
     };
     const mettre = (m, x, y, z, inf) => {
@@ -193,22 +225,38 @@ export function creerVegetation({ THREE, scene, col, camera, vue, solY: SOL_Y, d
       if (!dansLaVue(a.i + 0.5, a.j + 0.5, e, b, a.abattu ? 2 : inf.H * 1.3, ARBRE_RAYON)) continue;
       const loin = (a.i - cp.x) ** 2 + (SOL_Y - cp.y) ** 2 + (a.j - cp.z) ** 2 > lim;       // (le détail à tous les zooms : seuls les arbres au-delà de la portée n'ont qu'un cube)
       const x = a.i + 0.5, z = a.j + 0.5, y = surface(x, z);
-      if (a.abattu) { if (vuArbre[k] === 1 && !chutes.has(k)) chutes.set(k, tVeg); vuArbre[k] = 2; } else vuArbre[k] = 1;
-      const tombe = a.abattu && !loin && chutes.has(k) ? (tVeg - chutes.get(k)) / DUREE_CHUTE : -1;
-      if (a.abattu && tombe >= 1) chutes.delete(k);
-      if (tombe >= 0 && tombe < 1) {                 // il tombe encore : le tronc et les feuilles basculent ensemble
-        const th = Math.PI / 2 * tombe * tombe;
-        mettreChute(troncs[inf.fam], x, y, z, inf, th);
-        if (feuillu) { const d = etatFeuilles(inf, mode, h), m = d < 2 ? feuilles[inf.fam][d] : null; if (m && !m.userData.vide) mettreChute(m, x, y, z, inf, th); }
-        else couronne(k, x, y, z, inf);
-        continue;
+      if (a.abattu) { if (vuArbre[k] === 1 && !chutes.has(k)) chutes.set(k, tVeg); else if (vuArbre[k] === 0 && !atterri.has(k)) atterri.set(k, tVeg - inf.u * (ARBRES_COUCHE.tient + ARBRES_COUCHE.fane) * 1.35); vuArbre[k] = 2; } else vuArbre[k] = 1;
+      let tombe = -1, th = 0;
+      if (a.abattu) {
+        gisants ??= creerGisants();
+        // son axe : il s'incline du bas de la pente vers le haut (le tronc suit le sol : sa pointe se pose sur la hauteur du terrain à 80 % de sa longueur)
+        const L = inf.H * 0.8, hp = surface(x - inf.s * L, z + inf.c * L), phi = Math.max(-0.5, Math.min(0.5, Math.atan2(hp - y, L)));
+        th = Math.PI / 2 - phi;
+        if (chutes.has(k) && !loin) {
+          tombe = (tVeg - chutes.get(k)) / DUREE_CHUTE;
+          if (tombe >= 1) { chutes.delete(k); atterri.set(k, tVeg - (tombe - 1) * DUREE_CHUTE); tombe = -1; }
+        }
+        const bas = ARBRES_COUCHE.enfonce * inf.sx * (tombe >= 0 ? tombe * tombe : 1), ang = tombe >= 0 ? th * tombe * tombe : th;
+        const br = inf.fb ? 1 : 0;
+        if (loin) { mettreCouche(gisants.loin[br], x, y, z, { ...inf, sx: inf.sx, sy: inf.H }, ang, bas); }
+        else {
+          mettreCouche(gisants.troncs[inf.fam][br], x, y, z, inf, ang, bas);
+          mettreCouche(gisants.souches[br], x, y, z, { ...inf, sy: 1 }, 0, 0.1);
+          if (feuillu) {
+            const age = tombe >= 0 ? 0 : tVeg - (atterri.get(k) ?? tVeg), C = ARBRES_COUCHE;
+            const f = inf.fb ? 1 - Math.min(1, age / C.brulure) : age < C.tient ? 1 : 1 - Math.min(1, (age - C.tient) / C.fane);
+            const d = etatFeuilles(inf, mode, h);
+            const src = d < 2 ? feuilles[inf.fam][inf.va][d] : null, m = f > 0.04 && src && !src.userData.vide ? gisants.feuilles[inf.fam][inf.va][d] : null;
+            if (m) mettreCouche(m, x, y, z, inf, ang, bas, 0.35 + 0.65 * f * f, ARBRES_FAMILLES[inf.fam].h * 0.75);
+          }
+        }
       }
-      if (a.abattu) mettre(abattuMesh[loin ? 1 : 0], x, y, z, { ...inf, sx: 0.85 + inf.d * 0.3, sy: 0.85 + inf.d * 0.3 });
+      if (a.abattu) { /* (dessiné ci-dessus) */ }
       else if (loin) { m4v.set(inf.sx, 0, 0, x, 0, inf.H, 0, y, 0, 0, inf.sx, z, 0, 0, 0, 1); loinMesh.setMatrixAt(loinMesh.userData.n++, m4v); couronne(k, x, y, z, inf); }
       else {
         mettre(troncs[inf.fam], x, y, z, inf);
         if (!feuillu) couronne(k, x, y, z, inf);
-        if (feuillu) { const d = etatFeuilles(inf, mode, h), m = d < 2 ? feuilles[inf.fam][d] : null; if (m && !m.userData.vide) mettre(m, x, y, z, inf); }
+        if (feuillu) { const d = etatFeuilles(inf, mode, h), m = d < 2 ? feuilles[inf.fam][inf.va][d] : null; if (m && !m.userData.vide) mettre(m, x, y, z, inf); }
       }
       if (o < ARBRES_OMBRES && !loin) { aoPos[o * 4] = x; aoPos[o * 4 + 1] = y; aoPos[o * 4 + 2] = z; aoPos[o * 4 + 3] = a.abattu ? 1.2 : inf.H; o++; }
     }

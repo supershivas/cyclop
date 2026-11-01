@@ -2,9 +2,11 @@
 // et « le feu se voit » (Jérôme, v0.9.2 : l'éclair à la bouche du fusil et le trait vers la cible de chaque tir de `B.tirs`, la pose des tireurs, le bond de ceux que
 // le souffle jette). Une seule fabrique : tous tirent dans le même générateur de l'aspect (`alea`, une suite à graine : l'ordre des tirages fait l'image) et
 // dans les mêmes tampons de particules. Le dessin seulement : jamais la logique, jamais la partie.
-import * as SH from './shaders.js?v=0.103.1';
-import { INDICE } from '../palette.js?v=0.103.1';
-import { horloge } from '../bataille.js?v=0.103.1';
+import * as SH from './shaders.js?v=0.104.0';
+import { INDICE } from '../palette.js?v=0.104.0';
+import { horloge } from '../bataille.js?v=0.104.0';
+import { hash2 } from '../lib/rng.js?v=0.104.0';
+import { ARBRES_TIRAGES, ARBRES_COUCHE } from '../data/arbres.js?v=0.104.0';
 
 const ECLATS = 6000;     // (v0.24.0 ; 2 400 avant : une salve de 220 — ~200 éclats chacun, dont de la fumée de 8 à 16 s — faisait le tour du tampon et effaçait les éclats encore en vol)
 
@@ -129,7 +131,7 @@ export function creerEclats({ THREE, scene, col, palTex, NP, effets, surface, pr
     const T = terrain();
     if (!effets.feu || !T) return;
     if (!arbresEtat || arbresEtat.length !== T.arbres.length) { arbresEtat = T.arbres.map(a => a.abattu); buissonsEtat = T.buissons.map(b => b.detruit); return; }
-    T.arbres.forEach((a, k) => { if (a.abattu && !arbresEtat[k]) allumer(k, 1.2); arbresEtat[k] = a.abattu; });
+    T.arbres.forEach((a, k) => { if (a.abattu && !arbresEtat[k] && hash2(a.i, a.j, ARBRES_TIRAGES.brule) < ARBRES_COUCHE.brule) allumer(k, 1.2); arbresEtat[k] = a.abattu; });      // (Jérôme, 1er novembre : un arbre abattu brûle, ou non — la même part que le feuillage qui disparaît vite, vegetation.js)
     T.buissons.forEach((b, k) => { if (b.detruit && !buissonsEtat[k]) feux.push({ x: b.i + 0.5, z: b.j + 0.5, h: 0.5, fin: 10 + alea() * 15, t: 0, f: 0 }); buissonsEtat[k] = b.detruit; });
     while (feux.length > 60) feux.shift();
   }
@@ -311,7 +313,8 @@ export function creerEclats({ THREE, scene, col, palTex, NP, effets, surface, pr
       ecl.age[s] += dt;
       const so = ecl.sorte[s], f = ecl.age[s] / ecl.vie[s];
       if (so === 1 || so === 8) ecl.vy[s] -= 18 * dt;
-      if (so === 2 || so === 10) { ecl.vx[s] *= 0.97; ecl.vz[s] *= 0.97; if (effets.derive) { ecl.vx[s] += (ventX - ecl.vx[s]) * dt * 0.5; ecl.vz[s] += (ventZ - ecl.vz[s]) * dt * 0.5; } }
+      // la fumée monte de moins en moins vite (Jérôme, 1er novembre : « certaines volutes restent seules à voler dans le ciel ») : sans cela une colonne de 40 à 90 s montait de 60 à 150 m, tout droit, et ses volutes planaient seules très haut
+      if (so === 2 || so === 10) { ecl.vy[s] *= Math.exp(-dt / (so === 10 ? 7 : 4)); ecl.vx[s] *= 0.97; ecl.vz[s] *= 0.97; if (effets.derive) { ecl.vx[s] += (ventX - ecl.vx[s]) * dt * 0.5; ecl.vz[s] += (ventZ - ecl.vz[s]) * dt * 0.5; } }
       if (so === 6) {
         // la fusée : elle monte, freine, puis descend lentement sous son parachute ; une fumée derrière elle
         if (ecl.vy[s] > -1.2) ecl.vy[s] -= 14 * dt; else ecl.vy[s] = -1.2;
@@ -321,7 +324,8 @@ export function creerEclats({ THREE, scene, col, palTex, NP, effets, surface, pr
       // la terre retombe au sol et s'y arrête
       if ((so === 1 || so === 8) && T && ecl.y[s] < surface(ecl.x[s], ecl.z[s])) ecl.age[s] = 99;
       eclPos[s * 3] = ecl.x[s]; eclPos[s * 3 + 1] = ecl.y[s]; eclPos[s * 3 + 2] = ecl.z[s];
-      eclTaille[s] = so === 2 || so === 10 ? ecl.taille[s] * (1 + f * 0.8) * (ecl.vie[s] > 20 && f > 0.75 ? Math.max(0.3, 1 - (f - 0.75) * 3) : 1) : ecl.taille[s];   // (celle qui reste se dissipe sur le dernier quart)
+      eclTaille[s] = so === 2 || so === 10 ? ecl.taille[s] * (1 + f * 0.8) * (f > 0.7 ? Math.max(0, 1 - (f - 0.7) / 0.3) ** 1.5 : 1) : ecl.taille[s];   // (toute fumée se dissipe sur la fin de sa vie, jusqu'à rien : une volute ne reste pas seule dans le ciel)
+      if ((so === 2 || so === 10) && f > 0.7 && (1 - (f - 0.7) / 0.3) ** 1.5 < 0.2) { eclTon[s] = -1; continue; }     // (un point d'un pixel, plancher du nuanceur, resterait seul : on le retire)
       eclTon[s] = so === 0 || so === 6 || so === 9 ? INDICE.o
         : so === 1 ? INDICE.b : so === 8 ? INDICE.s
         : so === 10 ? 100 + (f < 0.6 ? INDICE.t : INDICE.s)

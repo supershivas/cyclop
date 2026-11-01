@@ -1,7 +1,9 @@
 {
-  "version": "0.103.1",
+  "version": "0.104.0",
   "date": "2026-11-01",
   "changes": [
-    "Tout dézoomé, on peut viser n'importe quel point du secteur : le mur qui retenait la vue au milieu du terrain a disparu"
+    "Les arbres ont des feuillages variés (boules, galettes, colonnes, sapins, formes irrégulières) et moins d'arbres sont nus ; un arbre abattu reste couché où il est tombé, son feuillage se fane ou brûle",
+    "Une passe d'avion de 110 m ou plus le détruit à coup sûr ; la carcasse creuse des cratères et ses pièces gisent éparpillées sur le champ ; les chars détruits sont abîmés chacun à leur façon",
+    "Les volutes de fumée ne restent plus seules dans le ciel ; nouveau sujet « Les épaves » au labo"
   ]
 }

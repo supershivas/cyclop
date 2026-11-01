@@ -26,8 +26,11 @@ export const MITRAILLAGE = {
   exposition: { rayon: 30, parHomme: 0.075, plafond: 45, bas: 0.3, retenu: 0.5, bas_retenu: 20 },   // pv/s ; `bas` : la part qu'il prend en croisière (1 à `passe`) ; `retenu` : la part du feu retenu, seulement sous `bas_retenu` m
   // Le plan de vol depuis l'aérodrome (Jérôme, 1er novembre) : des virages inclinés au rayon que donnent la vitesse et l'inclinaison (v² / (g tan i)), un grand virage après la passe, puis l'atterrissage sur la piste
   circuit: { inclinaison: 0.7, g: 9.81, raccord: 60, approche: 300, roulage: 60 },   // inclinaison en rad (~40°) ; raccord : m de ligne droite avant la descente ; approche : m de la finale (descente jusqu'à la piste) ; roulage : m roulés après l'atterrissage
+  // Une passe longue le détruit à coup sûr (Jérôme, 1er novembre : « les avions sont encore indestructibles ; une passe longue le détruit à 100 % ») : au-dessus de la bande, un tir de barrage
+  // s'ajoute au feu des hommes, de `mortelle` fois ses points de vie sur la durée de la bande, quand elle fait `mortelle.de` m ou plus ; en dessous, il grandit avec la longueur (0 à `min`)
+  longue: { min: 70, de: 110, marge: 1.15 },
   epave: { fumee: 90 },                // s : une épave fume ce temps-là, puis reste là, éteinte, toute la bataille
   reparation: 60,                      // pv rendus à chaque avion qui rentre, par nuit
-  chute: { vitesse: 0.8, gravite: 14, rayon: 5, letal: 0.7 },   // abattu : il glisse (× sa vitesse), tombe, et écrase ceux du point de chute
+  chute: { vitesse: 0.8, gravite: 14, rayon: 5, letal: 0.7, cratere: '155', eclats: 3, dispersion: 9 },   // abattu : il glisse (× sa vitesse), tombe, et écrase ceux du point de chute
   cloue: ['brouillard', 'tempete'],    // les météos où l'on ne vole pas
 };

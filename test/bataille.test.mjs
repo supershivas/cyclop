@@ -13,7 +13,7 @@ import { arriereDe } from '../js/bataille.js';
 import { SECTEURS } from '../js/data/secteur.js';
 import { REGLAGES as R } from '../js/data/reglages.js';
 
-const SEED_NUIT = 5;      // la graine des nuits sans contact au soir (v0.52.5 : avec les cratères ronds, la graine 3 finissait le jour au contact)
+const SEED_NUIT = 4;      // la graine des nuits sans contact au soir et avec des blessés au régiment 0 (v0.52.5 : la graine 3 finissait le jour au contact ; 1er novembre : la 5, avec les nids de mitrailleuse et le lot A)
 const petite = (graine = 3) => nouvelleBataille(graine, R, { soldats: 200, jours: 3 });
 // (x, y) dans le secteur → dans le terrain (les marges autour)
 const M = SECTEURS.essai.marges, P = (x, y) => [x + M.x, y + M.y];
@@ -476,7 +476,7 @@ test('les vivres : trois nuits ; sans eux, la nuit repose moins et le moral bais
   assert.equal(a.vivres, R.nuit.vivres);
 });
 test('un blessé laissé au front peut mourir dans la nuit', () => {
-  const B = nouvelleBataille(3, { ...R, nuit: { ...R.nuit, mortBlesse: 1 } }, { soldats: 200 });
+  const B = nouvelleBataille(SEED_NUIT, { ...R, nuit: { ...R.nuit, mortBlesse: 1 } }, { soldats: 200 });
   jusquALaNuit(B);
   const A = B.armee;
   let blesses = 0; for (let i = 0; i < A.n; i++) if (A.blessure[i]) blesses++;
@@ -690,13 +690,15 @@ test('le mitraillage : une passe en bande, des morts dans la bande et nulle part
   assert.ok(ordonnerBarrage(B, 'avion', cx, cy).ok);
   assert.ok(ordonnerBarrage(B, 'avion', cx, cy).refus, 'recharge');
   let passe = 0;
-  for (let k = 0; k < 1800; k++) { avancer(B); passe += B.evenements.filter(e => e.type === 'avion-rentre').length; }
+  const parAvion = new Set();       // (depuis les nids de mitrailleuse, on tombe aussi hors de la bande : on ne compte que ce que l'avion a tué)
+  for (let k = 0; k < 1800; k++) { avancer(B); passe += B.evenements.filter(e => e.type === 'avion-rentre').length; for (const e of B.evenements) if (e.type === 'mort' && e.cause === 'avion') parAvion.add(e.id); }
   assert.equal(passe, 1, 'l\'avion rentre une fois');
   const restent = new Set(); for (let i = 0; i < A.n; i++) restent.add(A.id[i]);
   const tombes = [...vus].filter(id => !restent.has(id));
   let blesses = 0; for (let i = 0; i < A.n; i++) if (A.blessure[i] && avant.has(A.id[i])) blesses++;
   assert.ok(tombes.length + blesses > 0, 'des touchés (tués ou blessés)');
-  assert.ok(tombes.every(id => avant.has(id)), 'seulement dans la bande');
+  assert.ok(tombes.length > 0 && parAvion.size > 0 || blesses > 0, 'des touchés par l\'avion');
+  assert.ok([...parAvion].every(id => avant.has(id)), 'seulement dans la bande');
   assert.ok(B.etat.mitraillages.length === 0);
 });
 test('le mitraillage relu en attente donne la même partie', () => {
@@ -710,8 +712,9 @@ test('le mitraillage relu en attente donne la même partie', () => {
 });
 
 
-import { positionDe, balayage, ligneDe, tracerVol, avionsPrets, avionsRestants, raccorder, rayonVirage } from '../js/avions.js';
+import { positionDe, balayage, ligneDe, tracerVol, avionsPrets, avionsRestants, raccorder, rayonVirage, fatalite, tirDeBarrage } from '../js/avions.js';
 import { MITRAILLAGE } from '../js/data/mitraillage.js';
+import { NOMS_CALIBRES } from '../js/data/calibres.js';
 const ordreAvion = (B, x1, y1, x2, y2, camp = 0) => ordonnerBarrage(B, 'avion', x1, y1, camp, x2, y2);
 const jouer = (B, n, f = () => {}) => { for (let k = 0; k < n; k++) { avancer(B); f(); } };
 test('une passe se trace en deux points : trop courte, elle est refusée ; trop longue, ramenée ; l\'avion vient de hors de la carte, sur le prolongement', () => {
@@ -747,14 +750,15 @@ test('la passe oblique ne touche que la bande orientée, et ses balles tombent a
   ordreAvion(B, x1, y1, x2, y2);
   const v = B.etat.mitraillages[0];
   // tant qu'il n'est pas à la bande, personne ne tombe de son fait
-  jouer(B, Math.floor((v.sA - MITRAILLAGE.avance - 30) / MITRAILLAGE.vitesse * 30));
-  assert.equal(B.etat.pertes[0] + B.etat.pertes[1] + B.etat.blesses[0] + B.etat.blesses[1], 0, 'rien avant la passe');
-  const bals = []; for (let k = 0; k < 400; k++) { avancer(B); const b = balayage(B.etat.mitraillages[0] ?? { etat: 'x' }, B.etat.temps); if (b.actif) bals.push(b.l); }
+  const T1 = petite(), nPas = Math.floor((v.sA - MITRAILLAGE.avance - 30) / MITRAILLAGE.vitesse * 30);
+  jouer(B, nPas); jouer(T1, nPas);                  // (le témoin : la même bataille sans avion ; les postes de mitrailleuse font déjà des pertes)
+  assert.deepEqual([B.etat.pertes, B.etat.blesses], [T1.etat.pertes, T1.etat.blesses], 'rien de plus avant la passe');
+  const bals = [], parAvion = new Set(); for (let k = 0; k < 400; k++) { avancer(B); const b = balayage(B.etat.mitraillages[0] ?? { etat: 'x' }, B.etat.temps); if (b.actif) bals.push(b.l); for (const e of B.evenements) if (e.type === 'mort' && e.cause === 'avion') parAvion.add(e.id); }
   assert.ok(bals.length > 20 && bals.every((l, k) => k === 0 || l > bals[k - 1]), 'les balles avancent le long de la bande');
   const restent = new Set(); for (let i = 0; i < A.n; i++) restent.add(A.id[i]);
   const tombes = [...vus].filter(id => !restent.has(id));
   assert.ok(tombes.length > 0 || B.etat.blesses[1] + B.etat.blesses[0] > 0, 'des touchés');
-  assert.ok(tombes.every(id => avant.has(id)), 'seulement dans la bande orientée');
+  assert.ok([...parAvion].every(id => avant.has(id)), 'seulement dans la bande orientée (ceux que l\'avion a tués)');
 });
 test('au-dessus d\'hommes qui tirent, l\'avion perd des pv ; à zéro il tombe, écrase et laisse une épave ; la flotte baisse et un refus le dit', () => {
   const B = petite(), [cx, cy] = centreRegiment(B, 8);
@@ -796,7 +800,7 @@ test('le plan de vol : des arcs au rayon que donnent la vitesse et l\'inclinaiso
 });
 test('depuis l\'aérodrome : il décolle, vire, passe, revient et se pose sur la piste ; tout est continu', () => {
   const B = nouvelleBataille(5, R, { soldats: 200, jours: 6, camp: true }), Z = zone(B), cx = (Z.x0 + Z.x1) / 2;
-  assert.ok(ordreAvion(B, cx, Z.y0 + 100, cx + 120, Z.y0 + 100).ok);
+  assert.ok(ordreAvion(B, cx, Z.y0 + 100, cx + 60, Z.y0 + 100).ok);
   const v = B.etat.mitraillages[0], T = v.av.sP + v.total, r = rayonVirage();
   let prec = null, roulisMax = 0, fin;
   for (let st = 0; st <= T + 2; st += 0.5) {
@@ -821,6 +825,28 @@ test('une passe longue sur une ligne garnie ôte au moins 75 % des pv ; deux le 
     for (let k = 0; k < 2400 && v.etat === 'vol'; k++) avancer(B);
     const pv = v.etat === 'vol' ? B.etat.avions[0][0] : 0, perdu = v.etat === 'epave' || v.etat === 'chute' ? MITRAILLAGE.pv : MITRAILLAGE.pv - v.pv;      // (abattu : tout)
     trouve.push(perdu); assert.ok(perdu >= 75, `graine ${graine} : une passe longue ôte ${perdu} pv`); void pv;
+  }
+});
+test('une passe de 110 m ou plus détruit l\'avion à coup sûr, même sur un sol vide ; en dessous de 70 m le barrage ne s\'ajoute pas ; la carcasse creuse un cratère et reste', () => {
+  assert.equal(fatalite(MITRAILLAGE.longue.min), 0); assert.equal(fatalite(MITRAILLAGE.longue.de), 1); assert.ok(fatalite(90) > 0 && fatalite(90) < 1);
+  assert.ok(tirDeBarrage(150) * (150 / MITRAILLAGE.vitesse) >= MITRAILLAGE.pv, 'sur la durée de la bande, le barrage vaut tous les pv');
+  for (const [L, mort] of [[150, true], [110, true], [60, false]]) {
+    const B = nouvelleBataille(5, R, { soldats: 200, jours: 6 }), Z = zone(B);
+    const x = Z.x0 + 20, y = Z.y1 - 20;                                       // un coin de la carte, loin des hommes
+    for (let i = 0; i < B.armee.n; i++) { B.armee.mort[i] = 1; }
+    const imp0 = B.etat.impacts.length;
+    assert.ok(ordreAvion(B, x, y, x + L, y).ok, 'la passe de ' + L + ' m est ordonnée');
+    const v = B.etat.mitraillages[0];
+    for (let k = 0; k < 3000 && B.etat.mitraillages.length && v.etat !== 'epave'; k++) avancer(B);
+    if (mort) {
+      assert.equal(v.etat, 'epave', 'une passe de ' + L + ' m l\'abat');
+      assert.equal(B.etat.avions[0][v.k], 0, 'et la perte est écrite');
+      assert.ok(B.etat.impacts.length > imp0 + MITRAILLAGE.chute.eclats, 'la carcasse laisse un grand cratère et des petits (sans compter les creux du mitraillage)');
+      const e = B.etat.impacts.slice(-(MITRAILLAGE.chute.eclats + 1))[0];
+      assert.equal(e[4], NOMS_CALIBRES.indexOf(MITRAILLAGE.chute.cratere), 'le grand creux est du calibre déclaré');
+      for (let k = 0; k < 30; k++) avancer(B);
+      assert.equal(B.etat.mitraillages.filter(w => w.etat === 'epave').length, 1, 'l\'épave reste sur le champ');
+    } else assert.ok(v.etat !== 'epave' && v.pv > 0, 'une passe de ' + L + ' m ne l\'abat pas sur un sol vide');
   }
 });
 test('plus d\'avion, tous en vol, brouillard : des refus dits à voix haute', () => {
@@ -932,7 +958,8 @@ test('un char contourne le fleuve par un pont qui le porte, n\'y tombe pas, et a
   const { routeChar } = await import('../js/chars.js');
   const { PONTS_JEU, typePont } = await import('../js/data/ponts.js');
   preparerAleatoire(2);
-  const B = nouvelleBataille(2, R, { soldats: 200, jours: 3, secteur: ID_ALEATOIRE }), a = arriereDeTest(B), x = B.etat.marges.x + 200, y = B.etat.marges.y + 60;
+  const Rsilence = structuredClone(R); Rsilence.ia.barrage = Rsilence.ia.offensive = 1e12;      // (l'IA d'en face vise nos chars depuis le lot A : elle le détruisait avant qu'il arrive)
+  const B = nouvelleBataille(2, Rsilence, { soldats: 200, jours: 3, secteur: ID_ALEATOIRE }), a = arriereDeTest(B), x = B.etat.marges.x + 200, y = B.etat.marges.y + 60;
   const r = routeChar(B, x, a[0], x, y);
   assert.ok(r && r.length > 1, 'un détour : plusieurs points');
   const T = B.terrain; let p = [x, a[0]];

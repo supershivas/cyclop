@@ -4,13 +4,13 @@
    L'avion entre par le prolongement de la passe, vole à `croisiere` m, descend à `passe` m sur les `descente` m qui précèdent la bande, la balaie (ses balles tombent
    `avance` m devant lui, chaque homme de la bande n'est tiré qu'une fois), remonte, et sort. Au-dessus d'hommes qui tirent, il perd des points de vie (`exposition`) ;
    à zéro, il tombe, écrase ce qui est sous lui et laisse une épave pour le reste de la bataille. Les avions de chaque camp : `etat.avions[camp]`, les points de vie de chacun (0 : perdu). */
-import { MITRAILLAGE as M } from './data/mitraillage.js?v=0.103.1';
-import { METEO } from './data/meteo.js?v=0.103.1';
-import { GRILLE, effrayer, toitFacteur } from './army.js?v=0.103.1';
-import { hash2 } from './lib/rng.js?v=0.103.1';
-import { modif, pvAvion, campDe, niveauDe, emplacementCamp } from './camp.js?v=0.103.1';
-import { impact } from './terrain.js?v=0.103.1';
-import { NOMS_CALIBRES } from './data/calibres.js?v=0.103.1';
+import { MITRAILLAGE as M } from './data/mitraillage.js?v=0.104.0';
+import { METEO } from './data/meteo.js?v=0.104.0';
+import { GRILLE, effrayer, toitFacteur } from './army.js?v=0.104.0';
+import { hash2 } from './lib/rng.js?v=0.104.0';
+import { modif, pvAvion, campDe, niveauDe, emplacementCamp } from './camp.js?v=0.104.0';
+import { impact } from './terrain.js?v=0.104.0';
+import { NOMS_CALIBRES } from './data/calibres.js?v=0.104.0';
 
 const borne = (v, a, b) => v < a ? a : v > b ? b : v;
 const lisse = f => { f = borne(f, 0, 1); return f * f * (3 - 2 * f); };
@@ -216,6 +216,10 @@ export function degatsParSeconde(B, camp, x, y, h) {
   return Math.min(E.plafond, n * E.parHomme) * (E.bas + (1 - E.bas) * (1 - borne((h - M.passe) / (M.croisiere - M.passe), 0, 1)));
 }
 
+/* La part de la passe qui lui est fatale (0 à 1) : rien en dessous de `longue.min`, tout à partir de `longue.de` ; ses points de vie par seconde au-dessus de la bande, quand elle fait `L` m */
+export const fatalite = L => lisse((L - M.longue.min) / (M.longue.de - M.longue.min));
+export const tirDeBarrage = L => fatalite(L) * M.longue.marge * M.pv / (L / M.vitesse);
+
 /* L'aperçu d'une passe avant l'ordre (le dessin de la visée) : le vol, les hommes de la bande (les nôtres, ceux d'en face) et les pv qu'il y laisserait.
    Le tir se lit sur la grille du dernier pas. */
 export function apercuVol(B, camp, l) {
@@ -223,7 +227,7 @@ export function apercuVol(B, camp, l) {
   let pertes = 0;
   for (let s = 0; s < v.total; s += pas) {
     const p = positionDe({ ...v, etat: 'vol', t0: 0 }, s / M.vitesse);
-    pertes += degatsParSeconde(B, camp, p.x, p.y, p.h) * pas / M.vitesse;
+    pertes += (degatsParSeconde(B, camp, p.x, p.y, p.h) + (s >= v.sA && s <= v.sB ? tirDeBarrage(v.L) : 0)) * pas / M.vitesse;
   }
   const n = [0, 0];
   parmi(A, Math.min(l.x1, l.x2) - hw, Math.min(l.y1, l.y2) - hw, Math.max(l.x1, l.x2) + hw, Math.max(l.y1, l.y2) + hw, i => {
@@ -279,6 +283,19 @@ function abattre(B, v, p) {
   B.evenements.push({ type: 'avion-abattu', camp: v.camp, x: p.x, y: p.y, h: p.h });
 }
 
+/* La carcasse creuse le sol (Jérôme, 1er novembre : « elle atterrit en causant des dégâts et des cratères ») : un grand creux au point d'arrêt, et quelques petits où les pièces ont rebondi.
+   Du relief seulement (comme les creux du mitraillage : écrits dans `etat.impacts`, donc rejoués par la sauvegarde ; un hachage de l'avion, pas le générateur de la bataille). */
+function creuser(B, v, ctx) {
+  const { etat, terrain: T, R } = B, C = M.chute, N = C.eclats;
+  for (let q = 0; q <= N; q++) {
+    const k = etat.impacts.length, a = hash2(v.id, q, etat.graine + 5) * 2 * Math.PI, d = q ? C.dispersion * (0.35 + 0.65 * hash2(v.id, q, etat.graine + 6)) : 0;
+    const x = arrondi(v.cx + Math.cos(a) * d), y = arrondi(v.cy + Math.sin(a) * d), cal = q ? '75' : C.cratere;
+    if (x < 0 || y < 0 || x >= T.W || y >= T.H) continue;
+    etat.impacts.push([etat.jour, etat.tickJour, Math.round(x * 10), Math.round(y * 10), NOMS_CALIBRES.indexOf(cal)]);
+    impact(T, x, y, cal, R, k, ctx.gel);
+  }
+}
+
 function ecraser(B, v, ctx, rng) {
   const { armee: A } = B, C = M.chute, r2 = C.rayon * C.rayon;
   v.etat = 'epave';
@@ -288,6 +305,7 @@ function ecraser(B, v, ctx, rng) {
     if (dx * dx + dy * dy <= r2 && rng() < C.letal) ctx.frapper(i, 'avion', 0.8);
   });
   effrayer(A, v.cx, v.cy, C.rayon * 3, B.R.soldat.peurObus, B.R.experience, B.R.caracteristiques.calme);
+  creuser(B, v, ctx);
   B.evenements.push({ type: 'avion-ecrase', camp: v.camp, x: v.cx, y: v.cy });
 }
 
@@ -304,7 +322,7 @@ export function avancerAvions(B, ctx, rng) {
     const lo = borne(s - M.vitesse * dt + M.avance - v.sA, 0, v.L), hi = borne(s + M.avance - v.sA, 0, v.L);
     if (hi > lo) balayer(B, v, lo, hi, ctx, rng);
     // les hommes d'en face qui lui tirent dessus
-    const mal = degatsParSeconde(B, v.camp, p.x, p.y, p.h) * dt;
+    const mal = (degatsParSeconde(B, v.camp, p.x, p.y, p.h) + (s >= v.sA && s <= v.sB ? tirDeBarrage(v.L) : 0)) * dt;
     if (mal > 0) { v.pv = Math.max(0, v.pv - mal); if (v.pv <= 0) abattre(B, v, p); }
   }
   if (etat.mitraillages.some(v => v.etat === 'rentre')) etat.mitraillages = etat.mitraillages.filter(v => v.etat !== 'rentre');

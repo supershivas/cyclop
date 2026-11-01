@@ -1,7 +1,9 @@
 # Journal des versions
 
-## 0.103.1 — 2026-11-01
-- Tout dézoomé, on peut viser n'importe quel point du secteur : le mur qui retenait la vue au milieu du terrain a disparu
+## 0.104.0 — 2026-11-01
+- Les arbres ont des feuillages variés (boules, galettes, colonnes, sapins, formes irrégulières) et moins d'arbres sont nus ; un arbre abattu reste couché où il est tombé, son feuillage se fane ou brûle
+- Une passe d'avion de 110 m ou plus le détruit à coup sûr ; la carcasse creuse des cratères et ses pièces (ailes, queue, moteur, roues) gisent éparpillées sur le champ ; les chars détruits sont abîmés chacun à leur façon
+- Les volutes de fumée ne restent plus seules dans le ciel ; nouveau sujet « Les épaves » au labo
 
 ## 0.103.0 — 2026-11-01
 - Un zoom plus proche (24 pixels par mètre) pour distinguer les détails
