@@ -1,9 +1,9 @@
 {
-  "version": "0.99.11",
-  "date": "2026-10-31",
+  "version": "0.100.0",
+  "date": "2026-11-01",
   "changes": [
-    "Grande offensive : en face lance ses chars ; à tous les niveaux, ses barrages visent nos chars, devant eux quand ils roulent",
-    "L'hôpital : les blessés évacués y sont comptés et soignés, ses niveaux en sauvent plus, on y renvoie les guéris dans le régiment de son choix",
-    "Les arbres tombent sous les obus et ont un feuillage rond ; la fumée est faite d'ellipses ; les bâtiments du camp ont des drapeaux qui flottent et des hommes sans arme qui font les cent pas"
+    "Un clic sur un secteur cadre la vue 3D sur lui et met son plan en gros plan à la place de la carte ; « Vue d'ensemble », Échap ou un second clic reviennent",
+    "La fiche de fin de journée passe en trois colonnes (chiffres de la journée, médailles, ordres aux régiments) ; le carnet de bord montre tout l'historique d'un clic, ses noms se cliquent, les événements graves clignotent une fois",
+    "Échap ne relance plus le jeu, les sons se coupent onglet caché, l'écran titre n'a plus ni lettre de capitaine ni bruitage, le chargeur est seul, la fiche du terrain a deux lignes aux pourcentages nommés"
   ]
 }

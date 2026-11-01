@@ -2,9 +2,9 @@
 // quatre lignes de chaque camp (en face au nord, en haut), chaque case en tronçons de 25 m à la couleur de celui qui les
 // tient. Une lettre choisit les régiments du secteur ; une case envoie les régiments choisis dans cette tranchée ; les
 // régiments y sont des cercles numérotés, à leur place. Le dessin seulement : les actions (choisir, ordonner) viennent de main.js.
-import { NOUS, EUX, nombreZones, lettreZone, zone, largeurZone, etendueZones, tronconsDeLigne, forcesTroncons, codeLigne } from '../bataille.js?v=0.99.11';
-import { ligneY } from '../tranchees.js?v=0.99.11';
-import { numeroDe as numeroDeB } from './lecture.js?v=0.99.11';
+import { NOUS, EUX, nombreZones, lettreZone, zone, largeurZone, etendueZones, tronconsDeLigne, forcesTroncons, codeLigne } from '../bataille.js?v=0.100.0';
+import { ligneY } from '../tranchees.js?v=0.100.0';
+import { numeroDe as numeroDeB } from './lecture.js?v=0.100.0';
 
 // `bataille()` : la bataille en cours ; `choisis()` : les régiments choisis (ids) ; `surSecteur`, `surCase`, `surRonde` : les clics
 // `moi()` : le camp qu'on joue (à deux sur le réseau, l'invité est en face : sa carte est tournée d'un demi-tour, ses lignes en bas, A à D de droite à gauche ; v0.30.0)
@@ -69,7 +69,7 @@ export function creerCarte({ $, bataille, choisis, surSecteur, surCase, surRonde
   function majRondes() {
     const B = bataille();
     const A = B.armee, Z = zone(B), L = Z.x1 - Z.x0, centres = new Map(), cont = $('carte-regs'), M = moi(), tourne = M === EUX;
-    if (!cont) return;
+    if (!cont || !cont.offsetParent) return;      // (la carte est cachée par le gros plan d'un secteur : rien à placer, et la mesure donnerait 0 selon l'instant)
     // les lignes d'ordre : un SVG en pixels (la rangée des cercles est en calc() : 2,4 em de libellés puis la largeur des secteurs)
     const svgOrdres = cont.querySelector('.carte-ordres'), larg = cont.clientWidth, lab = 2.4 * parseFloat(getComputedStyle(cont).fontSize), lignes = [];
     svgOrdres.setAttribute('width', larg); svgOrdres.setAttribute('height', cont.clientHeight);
