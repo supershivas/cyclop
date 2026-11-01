@@ -819,7 +819,7 @@ test('une passe longue sur une ligne garnie ôte au moins 75 % des pv ; deux le 
     assert.ok(ordreAvion(B, cx - 75, y + 3, cx + 75, y + 3).ok);
     const v = B.etat.mitraillages[0];
     for (let k = 0; k < 2400 && v.etat === 'vol'; k++) avancer(B);
-    const pv = v.etat === 'vol' ? B.etat.avions[0][0] : 0, perdu = MITRAILLAGE.pv - (v.etat === 'epave' || v.etat === 'chute' ? MITRAILLAGE.pv : v.pv);
+    const pv = v.etat === 'vol' ? B.etat.avions[0][0] : 0, perdu = v.etat === 'epave' || v.etat === 'chute' ? MITRAILLAGE.pv : MITRAILLAGE.pv - v.pv;      // (abattu : tout)
     trouve.push(perdu); assert.ok(perdu >= 75, `graine ${graine} : une passe longue ôte ${perdu} pv`); void pv;
   }
 });
@@ -1280,4 +1280,74 @@ test('mission : deux secondaires tirées à la graine, progression 0..1, la part
   assert.deepEqual(B.etat.secondaires, A.etat.secondaires);
   assert.equal(progressionMission(B).p, progressionMission(A).p);
   const bd = bordereau(A); assert.equal(bd.total, bd.lignes.reduce((t, l) => t + l[1], 0));
+});
+
+group('renforts et déroute vers la caserne (lot D)');
+import { peutDeployer, deployer } from '../js/bataille.js';
+import { RENFORTS } from '../js/data/renforts.js';
+import { sortieCaserne } from '../js/camp.js';
+const bridee = (graine = 5) => nouvelleBataille(graine, R, { soldats: 400, jours: 6, camp: true });
+const viderRegiment = (B, reg) => { for (let i = 0; i < B.armee.n; i++) if (B.armee.reg[i] === reg.id) B.armee.mort[i] = 1; reg.effectif = 0; };
+test('un renfort est refusé à voix haute : tous les secteurs ont leurs défenseurs, la nuit, plus de réserve', () => {
+  const B = bridee(), e = B.etat;
+  assert.match(peutDeployer(B, 0).refus, /défenseurs/);
+  assert.match(deployer(B, 0).refus, /défenseurs/); assert.equal(e.reserves[0], 2, 'un refus ne coûte rien'); assert.equal(e.regiments.length, 16);
+  viderRegiment(B, e.regiments.find(r => r.camp === 0));
+  e.reserves[0] = 0; assert.match(peutDeployer(B, 0).refus, /Plus un régiment frais/);
+  e.reserves[0] = 2; e.phase = 'nuit'; assert.match(peutDeployer(B, 0).refus, /aube/);
+});
+test('le premier secteur sans défenseur reçoit le régiment frais, qui sort de la caserne et marche vers lui', () => {
+  const B = bridee(), e = B.etat, S = sortieCaserne(e, 0);
+  const vide = e.regiments.find(r => r.camp === 0); viderRegiment(B, vide);
+  const p = peutDeployer(B, 0); assert.ok(p.ok && p.mode === 'tenir', JSON.stringify(p));
+  const r = deployer(B, 0); assert.ok(r.ok, JSON.stringify(r));
+  assert.equal(e.reserves[0], 1, 'la réserve baisse d\'un'); assert.equal(e.regiments.length, 17);
+  const nv = e.regiments[16], t = nv.ordre.trace, t0 = vide.ordre.trace;
+  assert.equal(nv.effectif, e.parRegiment); assert.equal(t.ligne, t0.ligne, 'la ligne du régiment tombé'); assert.ok(Math.abs((t.x0 + t.x1) / 2 - (t0.x0 + t0.x1) / 2) < 60, 'son secteur');
+  const A = B.armee, un = () => { for (let i = 0; i < A.n; i++) if (A.reg[i] === nv.id && !A.mort[i]) return i; };
+  const i0 = un(), id = A.id[i0], at = () => { for (let i = 0; i < A.n; i++) if (A.id[i] === id) return i; };
+  assert.ok(Math.hypot(A.x[i0] - S.x, A.y[i0] - S.y) < 40, 'il naît à la caserne');
+  const d0 = Math.hypot(A.x[i0] - nv.ordre.x, A.y[i0] - nv.ordre.y);
+  for (let k = 0; k < 900; k++) avancer(B);
+  const i1 = at();
+  assert.ok(Math.hypot(A.x[i1] - nv.ordre.x, A.y[i1] - nv.ordre.y) < d0 - 20, 'il marche vers son secteur');
+  assert.match(peutDeployer(B, 0).refus, /défenseurs/, 'le secteur est tenu : plus rien à déployer');
+  const L = restaurer(JSON.parse(JSON.stringify(photo(B))), R);
+  for (let k = 0; k < 200; k++) { avancer(B); avancer(L); }
+  assert.equal(JSON.stringify(photo(L)), JSON.stringify(photo(B)), 'relue, c\'est la même partie');
+});
+test('sans secteur libre mais avec un secteur perdu, le renfort contre-attaque le plus proche de la caserne', () => {
+  const B = bridee(), e = B.etat;
+  const place = e.regiments.filter(r => r.camp === 0 && r.ordre.trace.ligne === 0)[1];      // un régiment de la 1re ligne, qui tient encore : on le laisse en place
+  const t = place.ordre.trace;
+  B.troncons.forEach((tr, k) => { if (tr.ligne === B.lignes.findIndex(l => l.camp === 0 && l.rang === 0) && tr.x1 > t.x0 && tr.x0 < t.x1) e.troncons[k] = 1; });
+  const p = peutDeployer(B, 0); assert.ok(p.ok && p.mode === 'contre', JSON.stringify(p));
+  const r = deployer(B, 0); assert.ok(r.ok && r.mode === 'contre');
+  const nv = e.regiments[e.regiments.length - 1];
+  assert.ok(nv.ordre.trace && B.troncons.some((tr, k) => e.troncons[k] === 1 && tr.x1 > nv.ordre.trace.x0 && tr.x0 < nv.ordre.trace.x1), 'son ordre vise des tronçons que l\'ennemi tient');
+  assert.ok(B.evenements.some(v => v.type === 'renfort' && v.mode === 'contre'));
+});
+test('un régiment en déroute se retire vers la caserne ; ceux qui y entrent forment une unité de ralliés à l\'aube, qu\'on déploie ensuite', () => {
+  const B = nouvelleBataille(5, R, { soldats: 800, jours: 6, camp: true }), e = B.etat, S = sortieCaserne(e, 0), A = B.armee;
+  const reg = e.regiments.find(r => r.camp === 0); reg.moral = 0.02;
+  for (let k = 0; k < 30 * 60 && !reg.deroute; k++) avancer(B);
+  assert.ok(reg.deroute && reg.versCaserne, 'en déroute, vers la caserne');
+  assert.ok(Math.abs(reg.ordre.x - S.x) < 30 && Math.abs(reg.ordre.y - S.y) < 30, 'son ordre est devant la caserne');
+  reg.moral = 0.02;       // (qu\'il ne se rallie pas en route)
+  for (let k = 0; k < 30 * 400 && e.arrives[0].n < RENFORTS.seuilRallies; k++) { avancer(B); reg.moral = Math.min(reg.moral, 0.05); }
+  assert.ok(e.arrives[0].n >= RENFORTS.seuilRallies, 'des fuyards sont rentrés : ' + e.arrives[0].n);
+  assert.equal(reg.effectif + reg.pertes + e.arrives[0].n, reg.initial, 'ils ne sont pas des morts : le compte tombe juste');
+  reg.moral = 0.5;
+  while (e.phase === 'jour') avancer(B);
+  const entres = e.arrives[0].n;
+  const regs0 = e.regiments.length;
+  assert.ok(aube(B).ok);
+  assert.equal(e.ralliees[0].length, 1, 'une unité de ralliés se forme au matin'); assert.ok(e.ralliees[0][0].n >= entres, 'avec tous ceux qui sont rentrés'); assert.equal(e.arrives[0].n, 0);
+  assert.equal(e.ralliees[0][0].moral, RENFORTS.moralRallies);
+  assert.equal(e.reserves[0], 2, 'la réserve de la relève ne bouge pas');
+  viderRegiment(B, e.regiments.filter(r => r.camp === 0 && r.effectif > 0)[1]);
+  const r = deployer(B, 0, true); assert.ok(r.ok, JSON.stringify(r));
+  assert.equal(e.ralliees[0].length, 0); assert.equal(e.regiments.length, regs0 + 1);
+  const nv = e.regiments[e.regiments.length - 1]; assert.ok(nv.effectif >= entres); assert.equal(nv.moral, RENFORTS.moralRallies);
+  assert.match(deployer(B, 0, true).refus, /rallié/);
 });

@@ -141,3 +141,8 @@
 ## Bouton de mission (Jérôme, v0.99.0)
 
 `#mission` (haut à gauche) est un bouton : il ouvre `#dialogue-mission` (pause, `reprendre` à la fermeture), qui montre l'ordre, une `<progress>` et les secondaires (✓ ✗ ·).
+
+## Les renforts dans la caserne (Jérôme, lot D ; v0.101.0)
+
+- La réserve **n'est plus affichée en haut à gauche** : ni dans le bouton de mission (« … ▸ · réserve : 2 » devient « … ▸ ») ni dans l'ordre de mission du premier matin (`#ordre-reserves` retiré). Elle reste sur le papier de la nuit (« En réserve »), où se donne la relève.
+- La fenêtre de la **caserne** (`hud/camp.js`) dit les régiments frais et les fuyards ralliés, et porte un bouton par sorte de renfort : « Déployer un régiment frais (2) → A1 » (le secteur où il irait, ou « contre-attaque » dans l'infobulle), « Déployer les ralliés (46) ». Un bouton refusé garde sa classe `refus` et l'infobulle dit la raison. La fenêtre se redessine quand la phase, les ralliés, les tronçons ou le nombre de régiments debout changent (signature). `creerCampHud` reçoit `deployer(ralliee)` ; à deux, l'ordre part en `{ t: 'renfort', ralliee }` et `executerCmd` l'exécute chez les deux. Le carnet raconte « X sort de la caserne : contre-attaque A1 » et les ralliés qui attendent.

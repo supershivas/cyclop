@@ -14,39 +14,40 @@
    La sauvegarde (photo) garde la graine, la liste compacte des impacts, l'état
    de la foule et les petites couches de logique ; jamais le relief : il se
    rejoue depuis la graine et les impacts (rejouerTerrain). */
-import { createRng, hash2 } from './lib/rng.js?v=0.100.1';
-import { impact, hydroLignes, etat as etatCase, vitesseEtat, vitesseCase, ETAT } from './terrain.js?v=0.100.1';
-import { creerArmee, ajouterSoldat, construireGrille, pasArmee, tuerDans, effrayer, compacter, photoArmee, restaurerArmee, b64, deB64, DENSITE, place, poserCaracs, lireCaracs, abimerCaracs, gagner, CARACS } from './army.js?v=0.100.1';
-import { ligneSous, solidite } from './tranchees.js?v=0.100.1';
-import { terrainDuSecteur } from './secteur-terrain.js?v=0.100.1';
-import { detruirePont, reconstruirePont, pontEn } from './eaux.js?v=0.100.1';
-import { MISSIONS_SECONDAIRES as MS } from './data/missions.js?v=0.100.1';
-import { PONT_COUPE } from './data/ponts.js?v=0.100.1';
-import { calculerCouts, creerCacheChamps, dimensionsCouts, BLOC } from './champs.js?v=0.100.1';
-import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.100.1';
-import { preparerAleatoire, ID_ALEATOIRE } from './generateur.js?v=0.100.1';
-import { AVION, MITRAILLAGE } from './data/mitraillage.js?v=0.100.1';
-import { refusAvion, lancerAvion, avancerAvions, flotteDeDepart, reparerAvions } from './avions.js?v=0.100.1';
-import { CHAR, CHAR_RECHARGE, CHAR_SORTIE } from './data/chars.js?v=0.100.1';
-import { GENIE, GENIE_DATA } from './data/genie.js?v=0.100.1';
-import { filDeDepart, degatsFil } from './fil.js?v=0.100.1';
-import { creerNids, avancerNids, degatsNids, reparerNid } from './nids.js?v=0.100.1';
-import { TOITS, NIDS } from './data/nids.js?v=0.100.1';
-import { refusGenie, lancerGenie, avancerGenies, degatsGenies, sectionsDeDepart } from './genie.js?v=0.100.1';
-import { refusChar, lancerChar, degatsChars, avancerChars } from './chars.js?v=0.100.1';
-import { METEO, SAISONS, SAISON_DEFAUT, PREVISION_JUSTE, temperature, vent } from './data/meteo.js?v=0.100.1';
-import { SECTEURS } from './data/secteur.js?v=0.100.1';
-import { REGIMENTS } from './data/lexique.js?v=0.100.1';
-import { STANCES, STANCE_DEFAUT } from './data/stances.js?v=0.100.1';
-import { DIFFICULTES, DIFFICULTE_DEFAUT } from './data/difficulte.js?v=0.100.1';
-import { grade, departCaracs, caracEnMots } from './identite.js?v=0.100.1';
-import { corvees } from './nuit.js?v=0.100.1';
-import { EQUIPEMENTS } from './data/batiments.js?v=0.100.1';
-import { campDeDepart, dotationAube, refusOrdre, refusNid, appliquerDepart, modif, rechargeDe, sortieChars } from './camp.js?v=0.100.1';
+import { createRng, hash2 } from './lib/rng.js?v=0.101.0';
+import { impact, hydroLignes, etat as etatCase, vitesseEtat, vitesseCase, ETAT } from './terrain.js?v=0.101.0';
+import { creerArmee, ajouterSoldat, construireGrille, pasArmee, tuerDans, effrayer, compacter, photoArmee, restaurerArmee, b64, deB64, DENSITE, place, poserCaracs, lireCaracs, abimerCaracs, gagner, CARACS } from './army.js?v=0.101.0';
+import { ligneSous, solidite } from './tranchees.js?v=0.101.0';
+import { terrainDuSecteur } from './secteur-terrain.js?v=0.101.0';
+import { detruirePont, reconstruirePont, pontEn } from './eaux.js?v=0.101.0';
+import { MISSIONS_SECONDAIRES as MS } from './data/missions.js?v=0.101.0';
+import { PONT_COUPE } from './data/ponts.js?v=0.101.0';
+import { calculerCouts, creerCacheChamps, dimensionsCouts, BLOC } from './champs.js?v=0.101.0';
+import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.101.0';
+import { preparerAleatoire, ID_ALEATOIRE } from './generateur.js?v=0.101.0';
+import { AVION, MITRAILLAGE } from './data/mitraillage.js?v=0.101.0';
+import { refusAvion, lancerAvion, avancerAvions, flotteDeDepart, reparerAvions } from './avions.js?v=0.101.0';
+import { CHAR, CHAR_RECHARGE, CHAR_SORTIE } from './data/chars.js?v=0.101.0';
+import { GENIE, GENIE_DATA } from './data/genie.js?v=0.101.0';
+import { filDeDepart, degatsFil } from './fil.js?v=0.101.0';
+import { creerNids, avancerNids, degatsNids, reparerNid } from './nids.js?v=0.101.0';
+import { TOITS, NIDS } from './data/nids.js?v=0.101.0';
+import { refusGenie, lancerGenie, avancerGenies, degatsGenies, sectionsDeDepart } from './genie.js?v=0.101.0';
+import { refusChar, lancerChar, degatsChars, avancerChars } from './chars.js?v=0.101.0';
+import { METEO, SAISONS, SAISON_DEFAUT, PREVISION_JUSTE, temperature, vent } from './data/meteo.js?v=0.101.0';
+import { SECTEURS } from './data/secteur.js?v=0.101.0';
+import { REGIMENTS } from './data/lexique.js?v=0.101.0';
+import { STANCES, STANCE_DEFAUT } from './data/stances.js?v=0.101.0';
+import { DIFFICULTES, DIFFICULTE_DEFAUT } from './data/difficulte.js?v=0.101.0';
+import { grade, departCaracs, caracEnMots } from './identite.js?v=0.101.0';
+import { corvees, creerRegiment, prendreReserve } from './nuit.js?v=0.101.0';
+import { RENFORTS } from './data/renforts.js?v=0.101.0';
+import { EQUIPEMENTS } from './data/batiments.js?v=0.101.0';
+import { campDeDepart, dotationAube, refusOrdre, refusNid, appliquerDepart, modif, rechargeDe, sortieChars, sortieCaserne, emplacementCamp } from './camp.js?v=0.101.0';
 
 export const PAS = 1 / 30;                 // s de jeu par pas
 export const NOUS = 0, EUX = 1;
-const VERSION = 22;   // 22 : l'affectation des guéris de l'hôpital (`etat.affectation`, v0.99.11) ; 21 : le stock de chars du parc (`etat.charsDispo`, v0.99.10) ; 20 : les missions secondaires (`etat.secondaires`, v0.99.0) ; 19 : le fil de fer de chaque tronçon (`etat.fil`, v0.98.0) ; 18 : le camp d'en face (`etat.campEux`, v0.92.0) ; 17 : l'équipement des régiments (`reg.equip`, v0.91.0) ; 16 : le camp (`etat.camp` : la dotation, les niveaux des bâtiments, v0.86.0) ; 15 : les nids de mitrailleuses (`etat.nids`, v0.83.0) ; 14 : la victoire anticipée (`etat.priseJours`, v0.77.0) ; 13 : les médailles (`tues`, `pris`, `debut` de chaque régiment, `etat.victDebut`, v0.73.1) ; 12 : le niveau de difficulté (`etat.difficulte`, la posture d'en face `etat.iaStance`, v0.70.0) ; 11 : les caractéristiques de chaque homme (adresse, force, endurance, calme) dans l'armée, le corps à corps (v0.69.0) ; 10 : la solidité des ponts (pv, nom, historique), la coupure en attente de ses coûts (`etat.couts.coupure`) ; 9 : le génie (les sections, les ponts refaits) ; 8 : le chemin et le cap des chars ; 7 : le rapport du jour (les sorties et les pertes d'avions) ; 6 : les avions de mitraillage (une passe tracée, des points de vie, une flotte) ; 5 : la forme des cratères (rond, lèvre jetée, éclats : les impacts rejoués changent) ; 2 : la graine d'identité ; 3 : la campagne et les relevés ; 4 : les numéros de campagne, un effectif par camp, le rythme de l'IA (campagne, lots 1 à 3)
+const VERSION = 23;   // 23 : les renforts (`etat.ralliees`, `etat.arrives`, `reg.versCaserne`, lot D, v0.101.0) ; 22 : l'affectation des guéris de l'hôpital (`etat.affectation`, v0.99.11) ; 21 : le stock de chars du parc (`etat.charsDispo`, v0.99.10) ; 20 : les missions secondaires (`etat.secondaires`, v0.99.0) ; 19 : le fil de fer de chaque tronçon (`etat.fil`, v0.98.0) ; 18 : le camp d'en face (`etat.campEux`, v0.92.0) ; 17 : l'équipement des régiments (`reg.equip`, v0.91.0) ; 16 : le camp (`etat.camp` : la dotation, les niveaux des bâtiments, v0.86.0) ; 15 : les nids de mitrailleuses (`etat.nids`, v0.83.0) ; 14 : la victoire anticipée (`etat.priseJours`, v0.77.0) ; 13 : les médailles (`tues`, `pris`, `debut` de chaque régiment, `etat.victDebut`, v0.73.1) ; 12 : le niveau de difficulté (`etat.difficulte`, la posture d'en face `etat.iaStance`, v0.70.0) ; 11 : les caractéristiques de chaque homme (adresse, force, endurance, calme) dans l'armée, le corps à corps (v0.69.0) ; 10 : la solidité des ponts (pv, nom, historique), la coupure en attente de ses coûts (`etat.couts.coupure`) ; 9 : le génie (les sections, les ponts refaits) ; 8 : le chemin et le cap des chars ; 7 : le rapport du jour (les sorties et les pertes d'avions) ; 6 : les avions de mitraillage (une passe tracée, des points de vie, une flotte) ; 5 : la forme des cratères (rond, lèvre jetée, éclats : les impacts rejoués changent) ; 2 : la graine d'identité ; 3 : la campagne et les relevés ; 4 : les numéros de campagne, un effectif par camp, le rythme de l'IA (campagne, lots 1 à 3)
 
 const ticksParHeure = R => Math.max(1, Math.round(R.jour.duree / (R.jour.heureFin - R.jour.heureDebut) / PAS));
 export const ticksParJour = R => ticksParHeure(R) * (R.jour.heureFin - R.jour.heureDebut);
@@ -102,7 +103,9 @@ export function nouvelleBataille(graine, R, opts = {}) {
     v: VERSION, graine, graineIdentite: opts.graineIdentite ?? graine, campagne: opts.campagne ?? null, secteur: idSecteur, parCamp, parCampEux,
     secondaires: tirerSecondaires(graine, S.reserves ?? 0),   // les missions secondaires tirées à la graine
     mission, issue: null,               // la mission (tenir, prendre) et, à la fin, ce qu'il en est
-    reserves: [S.reserves ?? 0, S.reserves ?? 0],   // régiments frais en réserve, par camp (la relève)
+    reserves: [S.reserves ?? 0, S.reserves ?? 0],   // régiments frais en réserve, par camp (la relève, le déploiement)
+    ralliees: [[], []],                 // les unités de fuyards ralliés à la caserne, prêtes à être déployées : { n, exp, moral } (lot D)
+    arrives: [{ n: 0, exp: 0 }, { n: 0, exp: 0 }],   // les fuyards entrés à la caserne depuis la dernière aube : de quoi former une unité au matin
     camp: campDeDepart({ bride: !!opts.camp, depart: opts.campDepart ?? null }),               // la dotation de l'état-major et les bâtiments de notre camp (js/camp.js, v0.86.0)
     parRegiment: Math.floor(parCamp / S.regiments), parRegimentEux: Math.floor(parCampEux / S.regiments),
     // la campagne : le numéro de campagne de nos hommes quand il n'est pas leur numéro de bataille ({ numéro de bataille : numéro }) et le prochain à donner
@@ -494,6 +497,110 @@ export function arriereDe(B) {
   return Ld ? [y0 + Math.max(...Ld.nous) + R.soldat.arriere, y0 + Math.min(...Ld.eux) - R.soldat.arriere] : null;
 }
 
+// ─── Les renforts (Jérôme, lot D des retours du 30 octobre) ──────────────
+/* Les places que tient un camp : une par (ligne de départ, tronçon de 100 m), comme à la création. */
+function placesDe(B, camp) {
+  const { etat } = B, S = secteurDuJeu(etat);
+  if (!etat.tranchees) return [];
+  const Z = zone(B), D = S.tranchees.depart, parLigne = Math.ceil(S.regiments / D.length), w = S.largeur / parLigne, out = [];
+  for (const rang of D) {
+    const ligne = B.lignes.findIndex(l => l.camp === camp && l.rang === rang);
+    if (ligne >= 0) for (let j = 0; j < parLigne; j++) out.push({ ligne, x0: Z.x0 + j * w, x1: Z.x0 + (j + 1) * w });
+  }
+  return out;
+}
+// une place est tenue quand un régiment debout, hors déroute, a pour tracé cette ligne et son centre dans la place
+const placeTenue = (B, camp, p) => B.etat.regiments.some(r => {
+  const t = r.ordre?.trace;
+  return r.camp === camp && r.effectif > 0 && !r.deroute && t && t.ligne === B_LIGNE(B.lignes[p.ligne]) && (t.x0 + t.x1) / 2 >= p.x0 && (t.x0 + t.x1) / 2 < p.x1;
+});
+// les tronçons de la place que l'ennemi tient
+function tronconsPerdus(B, camp, p) {
+  const out = [];
+  B.troncons.forEach((tr, k) => { if (tr.ligne === p.ligne && tr.x1 > p.x0 && tr.x0 < p.x1) out.push([k, B.etat.troncons[k] !== camp]); });
+  return out;
+}
+const placePerdue = (B, camp, p) => { const t = tronconsPerdus(B, camp, p); return t.length > 0 && t.filter(([, perdu]) => perdu).length / t.length > RENFORTS.perdu; };
+const effectifFrais = (etat, camp) => (camp === NOUS ? etat.parRegiment : etat.parRegimentEux ?? etat.parRegiment) || Math.round(etat.regiments.filter(r => r.camp === camp).reduce((n, r) => n + r.initial, 0) / Math.max(1, etat.regiments.filter(r => r.camp === camp).length));
+/* Où envoyer le prochain renfort : le premier secteur sans défenseur (de la ligne de départ la plus avancée, de l'ouest à l'est) ; sinon le secteur perdu le plus proche de la caserne (contre-attaque) ;
+   sinon rien : { refus }. */
+function planRenfort(B, camp) {
+  const places = placesDe(B, camp);
+  if (!places.length) return { refus: 'Pas de tranchée où les envoyer.' };
+  const libre = places.find(p => !placeTenue(B, camp, p) && !placePerdue(B, camp, p));
+  if (libre) return { mode: 'tenir', place: libre };
+  const e = emplacementCamp(B.etat, 'caserne', camp), perdues = places.filter(p => placePerdue(B, camp, p));
+  if (perdues.length) {
+    perdues.sort((a, b) => Math.abs((a.x0 + a.x1) / 2 - e.x) - Math.abs((b.x0 + b.x1) / 2 - e.x));
+    return { mode: 'contre', place: perdues[0] };
+  }
+  return { refus: 'Tous les secteurs ont leurs défenseurs et aucun n\'est perdu : le renfort reste à la caserne.' };
+}
+const nomPlace = (B, camp, p) => nomTranchee(B, p.ligne, p.x0 + 0.01, p.x1 - 0.01);
+/* Le déploiement à sec (le bouton de la caserne) : { ok, mode, place, n, ou } ou { refus }. `ralliee` : l'unité de fuyards ralliés plutôt qu'un régiment frais. */
+export function peutDeployer(B, camp = NOUS, ralliee = false) {
+  const { etat, armee: A } = B;
+  if (etat.phase !== 'jour') return { refus: 'La nuit, les renforts attendent l\'aube (ou la relève).' };
+  if (ralliee ? !etat.ralliees[camp].length : !(etat.reserves[camp] > 0)) return { refus: ralliee ? 'Aucun fuyard rallié n\'attend à la caserne.' : 'Plus un régiment frais en réserve.' };
+  const plan = planRenfort(B, camp);
+  if (plan.refus) return plan;
+  const n = ralliee ? etat.ralliees[camp][0].n : effectifFrais(etat, camp);
+  if (A.capacite - A.n < n) return { refus: 'Le champ de bataille est plein : ses morts n\'ont pas encore été comptés.' };
+  return { ok: true, ...plan, n, ou: nomPlace(B, camp, plan.place) };
+}
+/* Un régiment sort de la caserne (derrière la place, quand elle n'est pas dessinée) et prend sa place : défendre un secteur sans défenseur, ou contre-attaquer un secteur perdu. */
+export function deployer(B, camp = NOUS, ralliee = false) {
+  const { etat, R } = B, p = peutDeployer(B, camp, ralliee);
+  if (!p.ok) return p;
+  const rng = createRng(etat.graine); rng.setState(etat.rng);
+  const L = B.lignes[p.place.ligne], perdus = tronconsPerdus(B, camp, p.place).filter(([, perdu]) => perdu).map(([k]) => B.troncons[k]);
+  const a = p.mode === 'contre' ? Math.max(p.place.x0, Math.min(...perdus.map(t => t.x0))) : p.place.x0 + 2;
+  const b = p.mode === 'contre' ? Math.min(p.place.x1, Math.max(a + 24, ...perdus.map(t => t.x1))) : p.place.x1 - 2;
+  const unite = prendreReserve(etat, camp, ralliee), S = sortieCaserne(etat, camp), RS = RENFORTS;
+  const origine = S ? { x0: S.x - S.w / 2 + 1, x1: S.x + S.w / 2 - 1, y: S.y, rangees: true, espacement: RS.espacementSortie, sens: S.sens }
+    : { x0: a, x1: b, y: L.y0 + (camp === NOUS ? RS.derriere : -RS.derriere) };
+  const reg = creerRegiment(B, camp, { n: p.n, moral: unite?.moral, exp: unite?.exp, ordre: r => formationTranchee(r, L, a, b, R), origine }, rng);
+  reattribuer(B, reg);
+  etat.rng = rng.state;
+  B.evenements.push({ type: 'renfort', camp, reg: reg.id, mode: p.mode, ou: p.ou, ralliee });
+  return { ok: true, regiment: reg.id, mode: p.mode, ou: p.ou, n: p.n };
+}
+/* Où se replie un régiment en déroute : le rassemblement devant la caserne, quand elle est dessinée (null : sa tranchée de départ, comme avant) */
+function ordreRepli(B, reg) {
+  const S = sortieCaserne(B.etat, reg.camp);
+  return S ? formation(reg, S.x, S.y + S.sens * 4, B.R.foule.espacement * 40, B.R, 'bloc') : null;
+}
+/* Les fuyards qui sont rentrés à la caserne (à moins de `rayonCaserne` m de son centre) quittent leur régiment : ils attendent l'aube, où ils formeront une unité. Pas les blessés. */
+function rallierArrives(B) {
+  const { etat, armee: A } = B, r2 = RENFORTS.rayonCaserne ** 2;
+  for (const camp of [NOUS, EUX]) {
+    const regs = new Set(etat.regiments.filter(r => r.camp === camp && r.deroute && r.versCaserne && r.effectif > 0 && r.moral < B.R.moral.ralliement).map(r => r.id));
+    const S = regs.size ? sortieCaserne(etat, camp) : null;
+    if (!S) continue;
+    for (let i = 0; i < A.n; i++) {
+      if (A.mort[i] || A.blessure[i] || !regs.has(A.reg[i])) continue;
+      const dx = A.x[i] - S.cx, dy = A.y[i] - S.cy;
+      if (dx * dx + dy * dy > r2) continue;
+      A.mort[i] = 1; etat.regiments[A.reg[i]].effectif--;        // il entre à la caserne, vivant
+      etat.arrives[camp].n++; etat.arrives[camp].exp += A.exp[i];
+    }
+  }
+}
+/* À l'aube, assez de fuyards arrivés (`seuilRallies`) forment une unité de renforts (moral réduit, l'expérience moyenne des hommes), au plus d'un régiment. */
+function formerRalliees(B) {
+  const { etat } = B;
+  for (const camp of [NOUS, EUX]) {
+    const a = etat.arrives[camp], base = effectifFrais(etat, camp);
+    while (a.n >= RENFORTS.seuilRallies) {
+      const n = Math.min(a.n, base), exp = a.exp / a.n;
+      etat.ralliees[camp].push({ n, exp, moral: RENFORTS.moralRallies });
+      a.n -= n; a.exp -= exp * n;
+      B.evenements.push({ type: 'ralliees', camp, n });
+    }
+    if (a.n <= 0) { a.n = 0; a.exp = 0; }
+  }
+}
+
 // ─── Un pas ──────────────────────────────────────────────────────────────
 
 /* Avance d'un pas. Rend la liste des événements du pas (impacts, morts) pour
@@ -546,6 +653,7 @@ export function avancer(B) {
   }
   etat.barrages = etat.barrages.filter(b => b.reste > 0);
   if (etat.mitraillages.length) avancerAvions(B, ctx, rng);
+  if (etat.tickJour % RENFORTS.intervalle === 0) rallierArrives(B);
   if (etat.chars.length) avancerChars(B, ctx, rng);
   if (etat.nids.length) avancerNids(B, ctx, rng);
   if (etat.genies.length) avancerGenies(B, ctx);
@@ -923,7 +1031,8 @@ function moral(B, dt) {
     reg.moral = Math.max(0, Math.min(1, reg.moral + (retour - M.peur * p) * dt));
     if (!reg.deroute && reg.moral < M.deroute) {
       reg.deroute = true;
-      reg.ordre = structuredClone(reg.depart); reattribuer(B, reg);
+      const repli = ordreRepli(B, reg);      // vers la caserne quand elle est dessinée (lot D), sinon vers sa tranchée de départ
+      reg.ordre = repli ?? structuredClone(reg.depart); reg.versCaserne = !!repli; reattribuer(B, reg);
       B.evenements.push({ type: 'deroute', camp: reg.camp, reg: k });
       // la contagion : les régiments voisins (du même camp, à moins de M.contagionRayon m) voient fuir les leurs
       for (const v of etat.regiments) {
@@ -933,6 +1042,7 @@ function moral(B, dt) {
       }
     } else if (reg.deroute && reg.moral >= M.ralliement) {
       reg.deroute = false;
+      if (reg.versCaserne) { reg.versCaserne = false; reg.ordre = structuredClone(reg.depart); reattribuer(B, reg); }      // il revient à sa tranchée
       B.evenements.push({ type: 'ralliement', camp: reg.camp, reg: k });
     }
   }
@@ -1226,6 +1336,7 @@ export function aube(B, choix = {}) {
   B.evenements = [];
   const soir = etat.regiments.map(r => r.moral);      // le moral du soir (la nuit en rend une part)
   const bilan = corvees(B, choix, { rng, mourir: (i, cause, ou) => mourir(B, i, cause, ou) });
+  rallierArrives(B); formerRalliees(B);      // les fuyards arrivés à la caserne (le regroupement de la nuit compris) forment une unité au matin
   // le refus d'un jour : un régiment brisé (moral au plus bas, saigné) refuse de monter de toute la journée ;
   // il tient sa tranchée et rien de plus (le Discours de la servitude volontaire : il suffit de ne plus servir)
   const M = R.moral;

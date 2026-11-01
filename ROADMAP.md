@@ -22,19 +22,16 @@ Statuts : **à l'étude** · **validé** (Jérôme a tranché) · **en cours** �
 
 **B. Interface** : **livré en v0.100.0** (gros plan d'un secteur, fiche du terrain en deux lignes, fiche de nuit en trois colonnes, Échap, onglet caché, carnet, écran titre, boutons du haut, infobulles, typographie du labo, fenêtre de base, encyclopédie, chargeur) ; le détail et les pièges sont dans `docs/domaines/interface.md`. À mesurer au playtest : le gros plan (la vue 3D ne masque pas le reste du front), la fiche de nuit (les corvées ne sont plus sur la carte du régiment).
 
-**D. Renforts et déroute**
-- Les renforts s'affichent **dans la caserne** (plus dans le panneau en haut à gauche) et se déploient **à tout moment** s'ils sont disponibles.
-- Ils sortent de la caserne et se placent automatiquement dans le **premier secteur allié libre**. Si tout est tenu par l'ennemi ou plein (décision de Jérôme) : **contre-attaque forcée**, en colonne vers le secteur perdu le plus proche.
-- **Déroute** : les soldats en fuite se dirigent vers la caserne (ils ne restent plus au bord du terrain) et peuvent former une unité de renforts le lendemain.
+**D. Renforts et déroute** : **livré en v0.101.0** (déploiement depuis la caserne à tout moment du jour, premier secteur sans défenseur ou contre-attaque du secteur perdu, déroute vers la caserne, unité de ralliés dès 30 hommes) ; décisions, mesure et pièges dans `docs/domaines/bataille.md`. Reste : l'IA d'en face ne déploie pas (elle relève seulement), le seuil de 30 ralliés à mesurer au playtest.
 
 **E. Mitrailleuses et expérience**
 - **Mitrailleuses** : on sélectionne le poste et on règle la direction du cône ; barre de vie et barre de munitions (rechargée la nuit) ; elles gagnent de l'xp.
 - **Expérience** : petite animation du chevron quand un régiment en gagne ; tout ce qui a de l'xp (soldats, régiments, chars, mitrailleuses) a une barre d'xp et un nombre de chevrons affiché au-dessus ; gagner un chevron est plus difficile (trop rapide aujourd'hui, mesurer) ; **un chevron donne un bonus passif, différent selon le type d'unité** (décision de Jérôme ; valeurs en `data/` à proposer : régiment moral et précision, char blindage, mitrailleuse cadence ; à valider avant de coder).
 
 
-**Hors lot (Jérôme, 1er novembre) : le vol de l'avion** : (1) un **plan de vol réaliste** pour l'avion qui attaque : des virages à angle d'inclinaison et rayon réalistes, plus la droite unique de la v0.55.0 ; (2) les **avions détruits restent sur le champ de bataille** (aujourd'hui `reparerAvions` efface les épaves à l'aube) ; (3) **dégâts d'une passe** : une passe longue ôte au moins 75 % des pv de l'avion (jusqu'à 100 %), deux passes longues le détruisent à 100 %. Détail et questions : à trancher avant de coder (`js/avions.js`, `data/mitraillage.js`, `docs/domaines/terrain-engins.md`).
+**Hors lot (Jérôme, 1er novembre) : le vol de l'avion** : **livré en v0.100.1** (circuit avec virages au rayon réaliste, épaves qui restent, une passe longue ôte au moins 75 % des pv) ; détail dans `docs/domaines/terrain-engins.md`.
 
-**Points encore ouverts** : (1) ce que rapportent les missions secondaires ; (2) valeurs exactes des bonus de chevron ; (3) la 2e barre du char (à constater dans le code avant de décider) ; (4) forme de la contre-attaque forcée si aucun secteur n'est perdu mais tous sont pleins.
+**Points encore ouverts** : (1) ce que rapportent les missions secondaires ; (2) valeurs exactes des bonus de chevron ; (3) la 2e barre du char (à constater dans le code avant de décider) ; 
 
 ### Un terrain et une végétation plus soignés (v0.52.3 → ; à continuer dans une nouvelle session)
 

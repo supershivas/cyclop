@@ -39,7 +39,7 @@ la danse macabre, la catastrophe peinte avec calme. L'intention est dans `DESIGN
   trois avant), avec une mission (`etat.mission` : tenir, prendre ; `juger` à la fin,
   ou avant si le secteur tombe ; « prendre » se gagne aussi avant : leur 1re ligne tenue à 75 % deux soirs de suite, v0.77.0 ; `etat.issue`) et une réserve de régiments frais pour
   la relève (`etat.reserves`, corvée `releve` de nuit.js : le régiment frais monte à
-  12 m derrière la place qu'il prend). L'ordre de mission s'affiche au premier matin
+  12 m derrière la place qu'il prend ; v0.101.0 : il se déploie aussi à tout moment du jour depuis la caserne, et la déroute se retire vers elle : `docs/domaines/bataille.md`). L'ordre de mission s'affiche au premier matin
   (pas en mode debug, que les scripts pilotent). Progression permanente prévue
   (Mémorial, état-major, trophées) : pas encore construite.
 - **Steam** : porte ouverte (section 22). Manette : seulement le menu pour

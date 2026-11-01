@@ -1,5 +1,10 @@
 # Journal des versions
 
+## 0.101.0 — 2026-11-01
+- Les renforts se déploient depuis la caserne, à tout moment du jour : le régiment frais prend le premier secteur sans défenseur, ou contre-attaque le secteur perdu le plus proche
+- Les régiments en déroute se retirent vers la caserne ; 30 fuyards rentrés ou plus y forment une unité de ralliés le lendemain
+- La réserve n'est plus affichée en haut à gauche : elle est dans la fenêtre de la caserne
+
 ## 0.100.1 — 2026-11-01
 - L'avion décolle, vire à un rayon réaliste vers sa passe, puis revient se poser sur sa piste (plus de ligne droite d'un bord à l'autre)
 - Un avion abattu reste en épave sur le champ de bataille jusqu'à la fin, même la nuit

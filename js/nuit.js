@@ -10,13 +10,13 @@
    - (v0.38.3) Les caillebotis et le coup de main sont retirés ; (v0.77.1) réparer la tranchée, inhumer les morts et creuser des abris aussi (docs/archives/corvees-retirees.md) : quatre corvées.
    - (v0.39.0) La mêlée se joue dans la nuit (`meleeNuit`) : un tronçon où les deux camps sont face à face au soir est tranché à l'aube, et les
      régiments au contact (`contactDe`) ne reçoivent aucune corvée. */
-import { hash2 } from './lib/rng.js?v=0.100.1';
-import { modif, refusEquiper, equiper } from './camp.js?v=0.100.1';
-import { CORVEES } from './data/corvees.js?v=0.100.1';
-import { EQUIPEMENTS } from './data/batiments.js?v=0.100.1';
-import { REGIMENTS } from './data/lexique.js?v=0.100.1';
-import { ajouterSoldat, poserCaracs, lireCaracs, place } from './army.js?v=0.100.1';
-import { departCaracs } from './identite.js?v=0.100.1';
+import { hash2 } from './lib/rng.js?v=0.101.0';
+import { modif, refusEquiper, equiper } from './camp.js?v=0.101.0';
+import { CORVEES } from './data/corvees.js?v=0.101.0';
+import { EQUIPEMENTS } from './data/batiments.js?v=0.101.0';
+import { REGIMENTS } from './data/lexique.js?v=0.101.0';
+import { ajouterSoldat, poserCaracs, lireCaracs, place } from './army.js?v=0.101.0';
+import { departCaracs } from './identite.js?v=0.101.0';
 
 export const corvee = id => CORVEES.find(c => c.id === id);
 
@@ -183,8 +183,7 @@ export function corvees(B, choix, ctx) {
       // il quitte le front (blessés compris) ; son remplaçant entre à l'aube, après les autres corvées
       for (let i = 0; i < A.n; i++) if (A.reg[i] === reg.id && !A.mort[i]) { etat.releves.push([A.id[i], reg.id, A.exp[i], A.victimes[i], lireCaracs(A, i).slice(0, 4)]); A.mort[i] = 1; }
       reg.releve = etat.jour; reg.releves = reg.effectif; reg.effectif = 0;
-      etat.reserves[reg.camp]--;
-      releves.push(reg); b.releves = (b.releves || 0) + 1;
+      releves.push({ reg, unite: prendreReserve(etat, reg.camp) }); b.releves = (b.releves || 0) + 1;
     } else if (corvee(id)?.equipe) {
       // l'équipement (v0.91.0) : un point de dotation, et le régiment ne se repose pas ; si la caisse s'est vidée entre-temps, il se repose
       if (equiper(B, reg, id.slice(3))) b.equipes = (b.equipes || 0) + 1; else faite[reg.id] = 'repos';
@@ -234,7 +233,7 @@ export function corvees(B, choix, ctx) {
   // le regroupement : les égarés rejoignent leur place avant l'aube
   regrouper(B, contact, bilan);
   // la relève entre : un régiment frais à la place de chaque régiment relevé, qui arrive de l'arrière
-  for (const vieux of releves) relever(B, vieux, rng);
+  for (const { reg: vieux, unite } of releves) relever(B, vieux, rng, unite);
   retours(B, rng, bilan);
   etat.nuits.push({ jour: etat.jour, choix: faite, bilan });
   return bilan;
@@ -285,30 +284,49 @@ function retours(B, rng, bilan) {
   }
 }
 
-/* Un régiment frais (la réserve) prend la place d'un régiment relevé : même ordre
-   (sa tranchée), des hommes neufs qui arrivent par l'arrière. Ses numéros suivent
-   ceux de tous les régiments déjà là (les noms et les grades en découlent). */
-function relever(B, vieux, rng) {
+/* Prendre une unité de la réserve : un régiment frais (null) ; `ralliee` : une unité de fuyards ralliés à la caserne ({ n, exp, moral }, `etat.ralliees[camp]`, hors de `etat.reserves`). */
+export function prendreReserve(etat, camp, ralliee = false) {
+  if (ralliee) return etat.ralliees[camp].shift();
+  etat.reserves[camp]--;
+  return null;
+}
+
+/* Un régiment neuf entre sur le champ (la relève, le déploiement, les ralliés). `opts` : { n, moral, exp, ordre: reg → l'ordre, origine: { x0, x1, y, largeur? } où naissent les hommes }.
+   Ses numéros suivent ceux de tous les régiments déjà là (les noms et les grades en découlent). Rend le régiment. */
+export function creerRegiment(B, camp, opts, rng) {
   const { etat, R, armee: A } = B;
-  const n = (vieux.camp === 0 ? etat.parRegiment : etat.parRegimentEux ?? etat.parRegiment) || vieux.initial;
   let premier = 0;
   for (const r of etat.regiments) premier += r.initial;
-  const deNous = etat.regiments.filter(r => r.camp === 0).length;
+  const nomme = camp === 0 || etat.deux, deNous = etat.regiments.filter(r => r.camp === camp).length;
   const reg = {
-    id: etat.regiments.length, camp: vieux.camp,
-    nom: vieux.camp === 0 ? (REGIMENTS.find(n => !etat.regiments.some(r => r.nom === n)) ?? REGIMENTS[deNous % REGIMENTS.length]) : null,   // le premier nom du lexique encore libre (en campagne, les noms de départ ne sont plus les huit premiers)
-    effectif: n, initial: n, pertes: 0, moral: R.moral.depart, deroute: false, vivres: R.nuit.vivres, stance: 'volonte',
-    ordre: structuredClone(vieux.ordre), depart: structuredClone(vieux.depart), arrive: etat.jour + 1,
+    id: etat.regiments.length, camp,
+    nom: nomme ? (REGIMENTS.find(n => !etat.regiments.some(r => r.nom === n)) ?? REGIMENTS[deNous % REGIMENTS.length]) : null,   // le premier nom du lexique encore libre (en campagne, les noms de départ ne sont plus les huit premiers)
+    effectif: opts.n, initial: opts.n, pertes: 0, moral: opts.moral ?? R.moral.depart, deroute: false, vivres: R.nuit.vivres, stance: 'volonte',
+    ordre: null, depart: null, arrive: etat.jour + 1,
   };
+  reg.ordre = opts.ordre(reg); reg.depart = opts.depart ? opts.depart() : structuredClone(reg.ordre);
   etat.regiments.push(reg);
+  const { x0, x1, y } = opts.origine, n = opts.n;
+  for (let k = 0; k < n; k++) {
+    let x, yy;
+    if (opts.origine.rangees) {      // sortie d'un bâtiment : en rangées serrées
+      const cols = Math.max(1, Math.floor((x1 - x0) / opts.origine.espacement));
+      x = x0 + (k % cols) * opts.origine.espacement; yy = y + opts.origine.sens * Math.floor(k / cols) * opts.origine.espacement;
+    } else { x = x0 + (k + 0.5) * (x1 - x0) / n + (rng() - 0.5) * 2; yy = y + (rng() - 0.5) * 6; }
+    const i = ajouterSoldat(A, x, Math.max(1, Math.min(B.terrain.H - 2, yy)), camp, reg.id, k, rng(), premier + k);
+    if (etat.numeros && camp === 0) etat.numeros[premier + k] = etat.prochainNumero++;     // (campagne : un numéro neuf, jamais celui d'un vétéran)
+    if (i >= 0) { poserCaracs(A, i, departCaracs(etat.graine, camp, premier + k, k, n, reg.id)); if (opts.exp) A.exp[i] = opts.exp; }
+  }
+  return reg;
+}
+
+/* Un régiment frais (la réserve) prend la place d'un régiment relevé : même ordre (sa tranchée), des hommes neufs qui arrivent par l'arrière. */
+function relever(B, vieux, rng, unite) {
+  const { etat } = B;
+  const n = unite?.n ?? ((vieux.camp === 0 ? etat.parRegiment : etat.parRegimentEux ?? etat.parRegiment) || vieux.initial);
   // ils montent par les boyaux : à 12 m derrière la place qu'ils prennent (chez nous l'ennemi est au nord, l'arrière
   // au sud, les y plus grands ; en face, l'inverse). De 40 m derrière la dernière ligne, il leur fallait des minutes.
-  const derriere = reg.ordre.y + (reg.camp === 0 ? 12 : -12);
-  const t = reg.ordre.trace, x0 = t ? t.x0 : reg.ordre.x - 40, x1 = t ? t.x1 : reg.ordre.x + 40;
-  for (let k = 0; k < n; k++) {
-    const x = x0 + (k + 0.5) * (x1 - x0) / n;
-    const i = ajouterSoldat(A, x + (rng() - 0.5) * 2, Math.max(1, Math.min(B.terrain.H - 2, derriere + (rng() - 0.5) * 6)), reg.camp, reg.id, k, rng(), premier + k);
-    if (etat.numeros && reg.camp === 0) etat.numeros[premier + k] = etat.prochainNumero++;     // (campagne : un numéro neuf, jamais celui d'un vétéran)
-    if (i >= 0) poserCaracs(A, i, departCaracs(etat.graine, reg.camp, premier + k, k, n, reg.id));
-  }
+  const derriere = vieux.ordre.y + (vieux.camp === 0 ? 12 : -12), t = vieux.ordre.trace;
+  return creerRegiment(B, vieux.camp, { n, moral: unite?.moral, exp: unite?.exp, ordre: () => structuredClone(vieux.ordre), depart: () => structuredClone(vieux.depart),
+    origine: { x0: t ? t.x0 : vieux.ordre.x - 40, x1: t ? t.x1 : vieux.ordre.x + 40, y: derriere } }, rng);
 }
