@@ -1,5 +1,8 @@
 # Journal des versions
 
+## 0.103.1 — 2026-11-01
+- Tout dézoomé, on peut viser n'importe quel point du secteur : le mur qui retenait la vue au milieu du terrain a disparu
+
 ## 0.103.0 — 2026-11-01
 - Un zoom plus proche (24 pixels par mètre) pour distinguer les détails
 - La caméra ne se balance qu'après 5 secondes sans y toucher, et s'arrête au premier geste

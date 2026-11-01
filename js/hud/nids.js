@@ -1,11 +1,11 @@
 // Nos postes de mitrailleuse sur le champ et leur fiche (Jérôme, lot E : « on sélectionne le poste et on règle la direction du cône ; barre de vie, barre de munitions ; de l'xp »).
 // Sur le champ : au-dessus de chaque poste à nous, une étiquette (ses chevrons, sa vie, ses munitions, son expérience) ; un clic sur elle le choisit. La fiche (`#nid-fiche`) : les barres,
 // le bonus de ses chevrons, « Tourner » (le prochain clic sur le sol : la direction du cône), « Droit devant », « Fermer ». Le dessin et les boutons seulement : les ordres partent par `surBouton` (main.js).
-import { NIDS } from '../data/nids.js?v=0.103.0';
-import { bonusEnMots } from '../data/experience.js?v=0.103.0';
-import { chevronsNid, cadenceNid } from '../nids.js?v=0.103.0';
-import { chevronsHtml } from './barres.js?v=0.103.0';
-import { NOUS } from '../bataille.js?v=0.103.0';
+import { NIDS } from '../data/nids.js?v=0.103.1';
+import { bonusEnMots } from '../data/experience.js?v=0.103.1';
+import { chevronsNid, cadenceNid } from '../nids.js?v=0.103.1';
+import { chevronsHtml } from './barres.js?v=0.103.1';
+import { NOUS } from '../bataille.js?v=0.103.1';
 
 const REDUIT = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
 export function creerNidsHud({ $, bataille, moi = () => NOUS, versEcran, hauteurSol, choisir, surBouton }) {

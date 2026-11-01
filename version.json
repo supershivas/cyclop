@@ -1,9 +1,7 @@
 {
-  "version": "0.103.0",
+  "version": "0.103.1",
   "date": "2026-11-01",
   "changes": [
-    "Un zoom plus proche (24 pixels par mètre) pour distinguer les détails",
-    "La caméra ne se balance qu'après 5 secondes sans y toucher, et s'arrête au premier geste",
-    "La vue peut dépasser un peu le bord du terrain : plus de mur en reculant, on atteint les bords du secteur à tous les zooms"
+    "Tout dézoomé, on peut viser n'importe quel point du secteur : le mur qui retenait la vue au milieu du terrain a disparu"
   ]
 }
