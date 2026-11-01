@@ -256,8 +256,9 @@ test('en face bâtit seule à l\'aube : l\'artillerie, la caserne, les sapeurs, 
   const en = Object.values(e.campEux.batiments).filter(c => c.chantier).length;
   assert.ok(en >= 2, `des chantiers ouverts (${en})`);
   assert.ok(e.campEux.dotation < 20);
-  for (let k = 0; k < 4 && e.phase !== 'fin'; k++) { e.campEux.dotation = Math.max(e.campEux.dotation, 10); nuit(B); }
-  assert.ok(campDe(e, 1).batiments.artillerie.niveau >= 2); assert.ok(e.reserves[1] >= 4, `sa réserve a grandi (${e.reserves[1]})`);
+  let pic = e.reserves[1];       // (depuis la v0.101.0 en face déploie un régiment frais de sa réserve dans la journée : on regarde le plus haut qu'elle atteint, pas où elle finit)
+  for (let k = 0; k < 4 && e.phase !== 'fin'; k++) { e.campEux.dotation = Math.max(e.campEux.dotation, 10); nuit(B); pic = Math.max(pic, e.reserves[1]); }
+  assert.ok(campDe(e, 1).batiments.artillerie.niveau >= 2); assert.ok(pic >= 4, `sa réserve a grandi (${pic})`);
   assert.equal(e.campEux.batiments.chars.niveau, 1, 'elle ne bâtit pas ce qu\'elle n\'emploie pas');
 });
 test('son camp est le nôtre tourné d\'un demi-tour, au nord ; il ne se choisit pas', () => {

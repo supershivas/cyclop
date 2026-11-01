@@ -476,7 +476,7 @@ test('les vivres : trois nuits ; sans eux, la nuit repose moins et le moral bais
   assert.equal(a.vivres, R.nuit.vivres);
 });
 test('un blessé laissé au front peut mourir dans la nuit', () => {
-  const B = nouvelleBataille(3, { ...R, nuit: { ...R.nuit, mortBlesse: 1 } }, { soldats: 200 });
+  const B = nouvelleBataille(SEED_NUIT, { ...R, nuit: { ...R.nuit, mortBlesse: 1 } }, { soldats: 200 });
   jusquALaNuit(B);
   const A = B.armee;
   let blesses = 0; for (let i = 0; i < A.n; i++) if (A.blessure[i]) blesses++;
@@ -690,13 +690,15 @@ test('le mitraillage : une passe en bande, des morts dans la bande et nulle part
   assert.ok(ordonnerBarrage(B, 'avion', cx, cy).ok);
   assert.ok(ordonnerBarrage(B, 'avion', cx, cy).refus, 'recharge');
   let passe = 0;
-  for (let k = 0; k < 1800; k++) { avancer(B); passe += B.evenements.filter(e => e.type === 'avion-rentre').length; }
+  const parAvion = new Set();       // (depuis les nids de mitrailleuse, on tombe aussi hors de la bande : on ne compte que ce que l'avion a tué)
+  for (let k = 0; k < 1800; k++) { avancer(B); passe += B.evenements.filter(e => e.type === 'avion-rentre').length; for (const e of B.evenements) if (e.type === 'mort' && e.cause === 'avion') parAvion.add(e.id); }
   assert.equal(passe, 1, 'l\'avion rentre une fois');
   const restent = new Set(); for (let i = 0; i < A.n; i++) restent.add(A.id[i]);
   const tombes = [...vus].filter(id => !restent.has(id));
   let blesses = 0; for (let i = 0; i < A.n; i++) if (A.blessure[i] && avant.has(A.id[i])) blesses++;
   assert.ok(tombes.length + blesses > 0, 'des touchés (tués ou blessés)');
-  assert.ok(tombes.every(id => avant.has(id)), 'seulement dans la bande');
+  assert.ok(tombes.length > 0 && parAvion.size > 0 || blesses > 0, 'des touchés par l\'avion');
+  assert.ok([...parAvion].every(id => avant.has(id)), 'seulement dans la bande');
   assert.ok(B.etat.mitraillages.length === 0);
 });
 test('le mitraillage relu en attente donne la même partie', () => {
@@ -748,14 +750,15 @@ test('la passe oblique ne touche que la bande orientée, et ses balles tombent a
   ordreAvion(B, x1, y1, x2, y2);
   const v = B.etat.mitraillages[0];
   // tant qu'il n'est pas à la bande, personne ne tombe de son fait
-  jouer(B, Math.floor((v.sA - MITRAILLAGE.avance - 30) / MITRAILLAGE.vitesse * 30));
-  assert.equal(B.etat.pertes[0] + B.etat.pertes[1] + B.etat.blesses[0] + B.etat.blesses[1], 0, 'rien avant la passe');
-  const bals = []; for (let k = 0; k < 400; k++) { avancer(B); const b = balayage(B.etat.mitraillages[0] ?? { etat: 'x' }, B.etat.temps); if (b.actif) bals.push(b.l); }
+  const T1 = petite(), nPas = Math.floor((v.sA - MITRAILLAGE.avance - 30) / MITRAILLAGE.vitesse * 30);
+  jouer(B, nPas); jouer(T1, nPas);                  // (le témoin : la même bataille sans avion ; les postes de mitrailleuse font déjà des pertes)
+  assert.deepEqual([B.etat.pertes, B.etat.blesses], [T1.etat.pertes, T1.etat.blesses], 'rien de plus avant la passe');
+  const bals = [], parAvion = new Set(); for (let k = 0; k < 400; k++) { avancer(B); const b = balayage(B.etat.mitraillages[0] ?? { etat: 'x' }, B.etat.temps); if (b.actif) bals.push(b.l); for (const e of B.evenements) if (e.type === 'mort' && e.cause === 'avion') parAvion.add(e.id); }
   assert.ok(bals.length > 20 && bals.every((l, k) => k === 0 || l > bals[k - 1]), 'les balles avancent le long de la bande');
   const restent = new Set(); for (let i = 0; i < A.n; i++) restent.add(A.id[i]);
   const tombes = [...vus].filter(id => !restent.has(id));
   assert.ok(tombes.length > 0 || B.etat.blesses[1] + B.etat.blesses[0] > 0, 'des touchés');
-  assert.ok(tombes.every(id => avant.has(id)), 'seulement dans la bande orientée');
+  assert.ok([...parAvion].every(id => avant.has(id)), 'seulement dans la bande orientée (ceux que l\'avion a tués)');
 });
 test('au-dessus d\'hommes qui tirent, l\'avion perd des pv ; à zéro il tombe, écrase et laisse une épave ; la flotte baisse et un refus le dit', () => {
   const B = petite(), [cx, cy] = centreRegiment(B, 8);
