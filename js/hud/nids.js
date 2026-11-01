@@ -1,11 +1,11 @@
 // Nos postes de mitrailleuse sur le champ et leur fiche (Jérôme, lot E : « on sélectionne le poste et on règle la direction du cône ; barre de vie, barre de munitions ; de l'xp »).
 // Sur le champ : au-dessus de chaque poste à nous, une étiquette (ses chevrons, sa vie, ses munitions, son expérience) ; un clic sur elle le choisit. La fiche (`#nid-fiche`) : les barres,
 // le bonus de ses chevrons, « Tourner » (le prochain clic sur le sol : la direction du cône), « Droit devant », « Fermer ». Le dessin et les boutons seulement : les ordres partent par `surBouton` (main.js).
-import { NIDS } from '../data/nids.js?v=0.102.0';
-import { bonusEnMots } from '../data/experience.js?v=0.102.0';
-import { chevronsNid, cadenceNid } from '../nids.js?v=0.102.0';
-import { chevronsHtml } from './barres.js?v=0.102.0';
-import { NOUS } from '../bataille.js?v=0.102.0';
+import { NIDS } from '../data/nids.js?v=0.102.1';
+import { bonusEnMots } from '../data/experience.js?v=0.102.1';
+import { chevronsNid, cadenceNid } from '../nids.js?v=0.102.1';
+import { chevronsHtml } from './barres.js?v=0.102.1';
+import { NOUS } from '../bataille.js?v=0.102.1';
 
 const REDUIT = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
 export function creerNidsHud({ $, bataille, moi = () => NOUS, versEcran, hauteurSol, choisir, surBouton }) {
@@ -30,7 +30,9 @@ export function creerNidsHud({ $, bataille, moi = () => NOUS, versEcran, hauteur
       }
       const [sx, sy] = versEcran(n.x, n.y, hauteurSol(n.x, n.y) + 2.5);
       const cv = $('canvas'), dedans = sx > -80 && sx < cv.clientWidth + 80 && sy > -40 && sy < cv.clientHeight + 120;
-      e.d.hidden = !dedans || B.etat.phase !== 'jour';       // hors de la vue ou la nuit : pas d'étiquette (et pas de coordonnées à suivre)
+      // La règle (Jérôme, retour du 1er nov.) : l'étiquette n'est là que si le poste a quelque chose à dire — choisi, abîmé, presque à sec, ou il vient de tirer. Sinon le champ reste net.
+      const E = NIDS.etiquette, parle = choisi === n.id || n.pv < NIDS.pv || n.muni <= NIDS.munitions * E.munBas || B.etat.temps - (n.derniere ?? -1e9) < E.apresRafale;
+      e.d.hidden = !dedans || !parle || B.etat.phase !== 'jour';       // hors de la vue, la nuit ou sans rien à dire : pas d'étiquette
       if (!e.d.hidden) e.d.style.transform = `translate(${Math.round(sx)}px, ${Math.round(sy)}px) translate(-50%, -100%)`;
       e.pv.style.width = pct(n.pv / NIDS.pv); e.muni.style.width = pct(n.muni / NIDS.munitions); e.xp.style.width = pct(n.exp ?? 0);
       const nb = chevronsNid(n);
@@ -43,8 +45,15 @@ export function creerNidsHud({ $, bataille, moi = () => NOUS, versEcran, hauteur
     fiche.hidden = !n;
     if (!n) return;
     const nb = chevronsNid(n), vie = Math.round(n.pv / NIDS.pv * 100), tait = B.etat.troncons[n.troncon] !== n.camp;
-    $('nid-fiche-etat-court').textContent = tait ? 'se tait' : n.muni <= 0 ? 'à sec' : 'tire';
-    $('nid-fiche-ordre').textContent = tait ? 'Son tronçon est pris : plus personne pour le servir.' : n.muni <= 0 ? 'La bande est vide : elle sera refaite à l\'aube.' : `Tire à ${NIDS.portee} m, une rafale toutes les ${cadenceNid(n).toFixed(2).replace('.', ',')} s.`;
+    const MOTS = {
+      pris: ['se tait', 'Son tronçon est pris : plus personne pour le servir.'],
+      sec: ['à sec', 'La bande est vide : elle sera refaite à l\'aube.'],
+      seul: ['sans servant', `Aucun de nos hommes à moins de ${NIDS.equipage} m : le poste se tait tant que la tranchée est vide.`],
+      veille: ['veille', `Servi, mais personne à portée (${NIDS.portee} m) dans son cône : il tire dès qu'un ennemi y entre.`],
+      tire: ['tire', `Tire à ${NIDS.portee} m, une rafale toutes les ${cadenceNid(n).toFixed(2).replace('.', ',')} s.`],
+    }, [court, ordre] = MOTS[tait ? 'pris' : n.statut] ?? MOTS.veille;
+    $('nid-fiche-etat-court').textContent = court;
+    $('nid-fiche-ordre').textContent = ordre;
     $('nid-fiche-pv-t').textContent = `${vie} %`; $('nid-fiche-pv').style.width = `${vie}%`;
     $('nid-fiche-muni-t').textContent = `${n.muni} / ${NIDS.munitions}`; $('nid-fiche-muni').style.width = pct(n.muni / NIDS.munitions);
     $('nid-fiche-xp-t').innerHTML = nb ? chevronsHtml(nb) : 'novice'; $('nid-fiche-xp').style.width = pct(n.exp ?? 0);

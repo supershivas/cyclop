@@ -1,13 +1,13 @@
 /* Les nids de mitrailleuses (Jérôme, v0.83.0) : la logique, pure. Un nid vit dans `etat.nids` (sauvegardé) : { id, camp, troncon, x, y, face, pv, etat: 'actif' | 'detruit', tire }.
    Il est posé sur le parapet de la 1re ligne de son camp. Tant qu'il est actif, que son tronçon est à son camp et qu'un de ses hommes le sert, il tire en avant sur l'autre camp ;
    un obus l'abîme, à zéro il est détruit ; le génie (genie.js) ou, en face, la nuit, le refait. Les sapeurs le refont : `reparerNid`. */
-import { NIDS } from './data/nids.js?v=0.102.0';
-import { CALIBRES } from './data/calibres.js?v=0.102.0';
-import { ligneY } from './tranchees.js?v=0.102.0';
-import { hash2 } from './lib/rng.js?v=0.102.0';
-import { GRILLE } from './army.js?v=0.102.0';
-import { BONUS, GAINS, chevronsDe } from './data/experience.js?v=0.102.0';
-import { zone as zoneDe } from './bataille.js?v=0.102.0';
+import { NIDS } from './data/nids.js?v=0.102.1';
+import { CALIBRES } from './data/calibres.js?v=0.102.1';
+import { ligneY } from './tranchees.js?v=0.102.1';
+import { hash2 } from './lib/rng.js?v=0.102.1';
+import { GRILLE } from './army.js?v=0.102.1';
+import { BONUS, GAINS, chevronsDe } from './data/experience.js?v=0.102.1';
+import { zone as zoneDe } from './bataille.js?v=0.102.1';
 
 /* Les nids du départ : un par secteur de 100 m sur la 1re ligne de chaque camp, au milieu du 2e tronçon de chaque quart de la ligne. */
 export function creerNids(B) {
@@ -90,10 +90,10 @@ export function avancerNids(B, ctx, rng) {
   const { etat, armee: A, R } = B, dt = ctx.dt, c2 = Math.cos(NIDS.demiCone);
   for (const n of etat.nids) {
     if (n.etat !== 'actif') continue;
-    if (etat.troncons[n.troncon] !== n.camp) continue;                    // son tronçon est pris : plus personne pour le servir
+    if (etat.troncons[n.troncon] !== n.camp) { n.statut = 'pris'; continue; }  // son tronçon est pris : plus personne pour le servir
     n.tire = (n.tire ?? 0) + dt;
     if (n.tire < cadenceNid(n)) continue;
-    if (n.muni <= 0) continue;                                            // la bande est vide jusqu'à l'aube
+    if (n.muni <= 0) { n.statut = 'sec'; continue; }                      // la bande est vide jusqu'à l'aube
     // servi : un de ses hommes à moins de `equipage` m
     let servi = false;
     const g0x = Math.max(0, ((n.x - NIDS.equipage) / GRILLE) | 0), g1x = Math.min(A.gw - 1, ((n.x + NIDS.equipage) / GRILLE) | 0), g0y = Math.max(0, ((n.y - NIDS.equipage) / GRILLE) | 0), g1y = Math.min(A.gh - 1, ((n.y + NIDS.equipage) / GRILLE) | 0);
@@ -101,7 +101,7 @@ export function avancerNids(B, ctx, rng) {
       const c = gy * A.gw + gx;
       for (let s = A.cellStart[c], e = A.cellStart[c + 1]; s < e; s++) { const i = A.sorted[s]; if (A.camp[i] === n.camp && !A.mort[i] && !A.blessure[i] && Math.hypot(A.x[i] - n.x, A.y[i] - n.y) <= NIDS.equipage) { servi = true; break; } }
     }
-    if (!servi) continue;
+    if (!servi) { n.statut = 'seul'; continue; }                           // personne à moins de `equipage` m : le poste se tait (les hommes sont partis)
     n.tire = 0;
     let vise = 0, touches = 0, tx = n.x + n.ax * 40, ty = n.y + n.ay * 40;
     for (let i = 0; i < A.n; i++) {
@@ -112,7 +112,8 @@ export function avancerNids(B, ctx, rng) {
       if (rng() < NIDS.touche * (1.4 - d / NIDS.portee)) { ctx.frapper(i, 'nid', NIDS.gravite); touches++; }
       else A.peur[i] = Math.max(A.peur[i], NIDS.peur * (1 - d / NIDS.portee));
     }
-    if (vise) { n.muni--; n.exp = Math.min(1, (n.exp ?? 0) + GAINS.nid.rafale + GAINS.nid.touche * touches); }
+    n.statut = vise ? 'tire' : 'veille';                                  // 'veille' : servi, mais aucun ennemi dans son cône à portée
+    if (vise) { n.derniere = etat.temps; n.muni--; n.exp = Math.min(1, (n.exp ?? 0) + GAINS.nid.rafale + GAINS.nid.touche * touches); }
     if (vise && B.tirs.length < 2000) { B.tirs.push(n.x, n.y, tx, ty, n.camp, -1); B.tirs.push(n.x, n.y, tx + 2, ty - 2, n.camp, -1); }
   }
   void R;

@@ -1,5 +1,9 @@
 # Journal des versions
 
+## 0.102.1 — 2026-11-01
+- Les postes de mitrailleuse tirent sur la tranchée d'en face (portée 130 m, bande de 400) et la fiche dit pourquoi un poste se tait : veille, sans servant, à sec
+- L'étiquette d'un poste n'est sur le champ que s'il est choisi, abîmé, presque à sec ou s'il vient de tirer ; sa fiche se ferme après un ordre, à la nuit ou si le poste tombe
+
 ## 0.102.0 — 2026-11-01
 - Les postes de mitrailleuse se choisissent (étiquette ou clic) : un clic sur le sol tourne leur cône de 70° au plus de chaque côté ; barres de vie et de munitions, la bande se refait à l'aube
 - L'expérience : barre et chevrons sur les cartes de régiment, les chars et les postes, le chevron gagné saute ; les chevrons sont plus durs à gagner (seuils 0,2 / 0,5 / 0,85)

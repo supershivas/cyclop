@@ -1245,6 +1245,17 @@ test('un nid de mitrailleuse : un par secteur et par camp ; servi, il couche les
   for (let k = 0; k < 30 * 20; k++) { poser(B4, 1, 40, n4.x, n4.y + n4.face * 40, 30); poser(B4, 0, 1, n4.x, n4.y, 1); avancer(B4); }
   assert.ok(B4.etat.pertes[1] - a4 < morts() - avant, 'son tronçon pris, il se tait');
 });
+test('un nid tire sur la tranchée d\'en face (à 120 m) et dit pourquoi il se tait : veille, sans servant, à sec (retour du 1er nov.)', () => {
+  const B = petite(), n = nidDe(B, 0);
+  const pas = s => { for (let k = 0; k < s; k++) avancer(B); };
+  poser(B, 0, 1, n.x, n.y, 1); poser(B, 1, 30, n.x, n.y + n.face * 120, 20);
+  pas(40); assert.ok(n.muni < NIDS.munitions, 'il a tiré sur une tranchée à 120 m'); assert.equal(n.statut, 'tire');
+  const C = petite(), c = nidDe(C, 0); poser(C, 0, 1, c.x, c.y, 1); for (let i = 0; i < C.armee.n; i++) if (C.armee.camp[i] === 1) C.armee.mort[i] = 1; for (let k = 0; k < 40; k++) avancer(C);
+  assert.equal(c.statut, 'veille', 'servi mais personne à portée');
+  const D = petite(), d = nidDe(D, 0); for (const i of Array.from({ length: D.armee.n }, (_, i) => i)) if (D.armee.camp[i] === 0) D.armee.mort[i] = 1;
+  for (let k = 0; k < 40; k++) avancer(D);
+  assert.equal(d.statut, 'seul', 'personne pour le servir');
+});
 test('un obus de 75 abîme un nid, un 155 sur lui le détruit ; le génie le refait ; en face, la nuit, il se refait une fois sur deux', () => {
   const B = petite(), n = nidDe(B, 0);
   degatsNids(B, n.x, n.y, '75'); assert.ok(n.pv < NIDS.pv && n.etat === 'actif');
