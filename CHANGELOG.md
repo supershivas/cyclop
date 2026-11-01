@@ -1,5 +1,10 @@
 # Journal des versions
 
+## 0.103.0 — 2026-11-01
+- Un zoom plus proche (24 pixels par mètre) pour distinguer les détails
+- La caméra ne se balance qu'après 5 secondes sans y toucher, et s'arrête au premier geste
+- La vue peut dépasser un peu le bord du terrain : plus de mur en reculant, on atteint les bords du secteur à tous les zooms
+
 ## 0.102.2 — 2026-11-01
 - Les bâtiments de la base n'ont plus de socle : la piste est posée sur le sol, entourée de barbelés ; les soldats de la base ont le même modèle que les autres, à la couleur de leur armée
 - Nouvelle partie : au choix la durée (3 jours, 6 jours ou celle du secteur) et la saison « Au hasard »
