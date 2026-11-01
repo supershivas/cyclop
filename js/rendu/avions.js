@@ -2,11 +2,11 @@
 // posé à son altitude (avions.js : `positionDe`), cabré ou piqué selon sa pente, avec son ombre sur le sol. En tirant, ses traceurs tombent devant lui et la terre gicle le long de
 // la bande ; touché, il fume, il tombe en vrille et laisse une épave qui fume. Le dessin seulement : tout vient de l'état de la bataille, rien n'y est écrit.
 // Fabrique `creerAvions({ THREE, scene, bataille, hauteur, effets })` : la bataille change à chaque partie, on la lit à chaque image. `effets` : ceux de eclats.js.
-import { atelier } from './engins.js?v=0.101.0';
-import { AVIONS_JEU } from './avions-modeles.js?v=0.101.0';
-import { positionDe, balayage } from '../avions.js?v=0.101.0';
-import { MITRAILLAGE as M } from '../data/mitraillage.js?v=0.101.0';
-import { PALETTE as P } from '../palette.js?v=0.101.0';
+import { atelier } from './engins.js?v=0.102.0';
+import { AVIONS_JEU } from './avions-modeles.js?v=0.102.0';
+import { positionDe, balayage } from '../avions.js?v=0.102.0';
+import { MITRAILLAGE as M } from '../data/mitraillage.js?v=0.102.0';
+import { PALETTE as P } from '../palette.js?v=0.102.0';
 
 const MODELE = ['spad', 'albatros'];     // par camp : nous, en face
 const SOL = 1.7;                          // m entre le centre du modèle et le bas de ses roues
@@ -54,10 +54,10 @@ export function creerAvions({ THREE, scene, bataille, hauteur, effets }) {
         if (m.hPiste === undefined) { let h = -Infinity; const a = v.av; for (let dx = -a.w / 2; dx <= a.w / 2 + 0.01; dx += 4) for (let dz = -a.d / 2; dz <= a.d / 2 + 0.01; dz += 4) h = Math.max(h, hauteur(a.cx + dx, a.cy + dz)); m.hPiste = h + 0.25; }
         sol = m.hPiste + (sol - m.hPiste) * Math.min(1, p.h / 15);
       }
-      m.pivot.visible = m.ombre.visible = jour;
+      m.pivot.visible = m.ombre.visible = jour || p.etat === 'epave';      // une épave reste là, la nuit aussi
       m.pivot.position.set(p.x, sol + p.h + SOL, p.y);
       m.pivot.rotation.set(0, -p.cap, 0);
-      m.modele.groupe.rotation.set(0, 0, p.pente);
+      m.modele.groupe.rotation.set(p.roulis ?? 0, 0, p.pente);      // incliné dans les virages (vers le centre), cabré ou piqué selon sa pente
       if (p.etat === 'vol') m.modele.helice.rotation.x += dt * 70;
       if (p.etat === 'chute') { m.vrille += dt * 5; m.modele.groupe.rotation.x = m.vrille; m.modele.groupe.rotation.z = p.pente; }
       if (p.etat === 'epave') { m.modele.groupe.rotation.set(0.5, 0.15, -0.12); m.pivot.position.y = sol + 1.0; }
@@ -71,7 +71,8 @@ export function creerAvions({ THREE, scene, bataille, hauteur, effets }) {
       // touché, il fume ; abattu ou épave, plus noir
       if (p.etat === 'chute' || p.etat === 'epave' || (p.etat === 'vol' && v.pv < M.pv * 0.5)) {
         m.fumee -= dt;
-        if (m.fumee <= 0) { m.fumee = p.etat === 'epave' ? 0.3 : 0.07; effets.fumeeAvion(p.x, sol + p.h + SOL, p.y, p.etat === 'vol' ? 1 : 2); }
+        if (m.fumee <= 0 && !(p.etat === 'epave' && temps - (v.chute?.ti ?? 0) > M.epave.fumee)) {      // (l'épave fume un moment, puis reste là, éteinte)
+          m.fumee = p.etat === 'epave' ? 0.3 : 0.07; effets.fumeeAvion(p.x, sol + p.h + SOL, p.y, p.etat === 'vol' ? 1 : 2); }
       }
       // la rafale : ses traceurs tombent devant lui, la terre gicle le long de la bande
       const b = balayage(v, tAff);

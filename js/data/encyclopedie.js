@@ -3,19 +3,20 @@
 // formes, équipements, grades) n'est PAS recopié : il est lu dans son module, donc l'encyclopédie suit le jeu ; seuls les concepts n'ayant pas de table sont écrits ici.
 // Une entrée : { id, terme, cat, def, voir: [ids], capture: 'id-du-fichier' | null, faits: [[libellé, valeur], …] }. Les captures sont celles de `outils/encyclopedie.mjs` (assets/encyclopedie/<capture>.png).
 // Ajouter un mot = ajouter une ligne ici ; le labo (sujet « Encyclopédie ») et `test/encyclopedie.test.mjs` (aucun renvoi vers un mot absent, aucun doublon) font le reste.
-import { CALIBRES } from './calibres.js?v=0.101.0';
-import { METEO, SAISONS } from './meteo.js?v=0.101.0';
-import { CORVEES, CONTACT } from './corvees.js?v=0.101.0';
-import { BATIMENTS, ORDRE_BATIMENTS, EQUIPEMENTS, EQUIPEMENT, DOTATION } from './batiments.js?v=0.101.0';
-import { DIFFICULTES } from './difficulte.js?v=0.101.0';
-import { STANCES } from './stances.js?v=0.101.0';
-import { PONTS_JEU } from './ponts.js?v=0.101.0';
-import { CHARS, CHAR_RECHARGE } from './chars.js?v=0.101.0';
-import { MITRAILLAGE } from './mitraillage.js?v=0.101.0';
-import { GENIE_DATA } from './genie.js?v=0.101.0';
-import { NIDS } from './nids.js?v=0.101.0';
-import { FIL } from './fil.js?v=0.101.0';
-import { CLASSES } from './grades.js?v=0.101.0';
+import { CALIBRES } from './calibres.js?v=0.102.0';
+import { METEO, SAISONS } from './meteo.js?v=0.102.0';
+import { CORVEES, CONTACT } from './corvees.js?v=0.102.0';
+import { BATIMENTS, ORDRE_BATIMENTS, EQUIPEMENTS, EQUIPEMENT, DOTATION } from './batiments.js?v=0.102.0';
+import { DIFFICULTES } from './difficulte.js?v=0.102.0';
+import { STANCES } from './stances.js?v=0.102.0';
+import { PONTS_JEU } from './ponts.js?v=0.102.0';
+import { RENFORTS } from './renforts.js?v=0.102.0';
+import { CHARS, CHAR_RECHARGE } from './chars.js?v=0.102.0';
+import { MITRAILLAGE } from './mitraillage.js?v=0.102.0';
+import { GENIE_DATA } from './genie.js?v=0.102.0';
+import { NIDS } from './nids.js?v=0.102.0';
+import { FIL } from './fil.js?v=0.102.0';
+import { CLASSES } from './grades.js?v=0.102.0';
 
 export const CATEGORIES = [
   { id: 'front', nom: 'Le front', dit: 'Où l\'on se bat : secteurs, lignes, tranchées.' },
@@ -63,7 +64,7 @@ const CONCEPTS = [
   // le moral
   E('moral', 'Moral', 'moral', 'La tenue d\'un régiment. Les morts le font baisser (un officier plus encore), la peur aussi ; au calme il remonte, plus vite s\'il a encore ses officiers et des hommes aguerris. Un tronçon pris le relève, un tronçon perdu l\'abat. La nuit en rend une part, jamais tout.', { voir: ['ebranle', 'deroute', 'corvee-repos'], capture: 'etiquette' }),
   E('ebranle', 'Ébranlé', 'moral', 'Le moral est bas : le régiment tire moins et refuse de sortir vers l\'ennemi (« Céruléen est ébranlé : il ne sortira pas »). Orange à l\'écran, avec un « ! » : la forme dit la même chose que la couleur.', { voir: ['moral', 'deroute'], capture: 'etiquette' }),
-  E('deroute', 'Déroute', 'moral', 'Le moral est au plus bas : le régiment ne tire plus, reflue vers sa tranchée de départ et n\'obéit plus, jusqu\'à ce qu\'il se rallie. Rouge, « !! ». Elle gagne les voisins du même camp : leur moral tombe d\'autant plus qu\'ils sont près.', { voir: ['moral', 'ralliement', 'refus'], capture: 'etiquette' }),
+  E('deroute', 'Déroute', 'moral', 'Le moral est au plus bas : le régiment ne tire plus, reflue vers la caserne (sans caserne dessinée, vers sa tranchée de départ) et n\'obéit plus, jusqu\'à ce qu\'il se rallie. Rouge, « !! ». Elle gagne les voisins du même camp : leur moral tombe d\'autant plus qu\'ils sont près.', { voir: ['moral', 'ralliement', 'refus'], capture: 'etiquette' }),
   E('ralliement', 'Ralliement', 'moral', 'Un régiment en déroute qui retrouve son moral se rallie : il obéit de nouveau. Le carnet de bord le dit.', { voir: ['deroute'] }),
   E('refus', 'Refus de monter', 'moral', 'Un régiment brisé le soir (moral au plus bas, plus d\'un tiers de ses hommes perdus) peut refuser de monter toute la journée suivante : il tient sa tranchée, rien de plus. Le bilan de l\'aube le dit.', { voir: ['deroute', 'aube'] }),
   E('poursuite', 'Poursuite', 'moral', 'En face, après une prise, un régiment encore frais poursuit sur notre ligne suivante. Le carnet de bord l\'annonce.', { voir: ['assaut', 'carnet'] }),
@@ -96,7 +97,8 @@ const CONCEPTS = [
   E('corvee', 'Corvée', 'nuit', 'Le travail d\'un régiment pendant la nuit : une par régiment, choisie sur le papier de la nuit. Un régiment qui travaille se repose moins. Les quatre corvées de base sont le repos, évacuer, ravitailler et la relève ; la caserne ajoute les équipements.', { voir: ['corvee-repos', 'corvee-evacuer', 'corvee-ravitailler', 'corvee-releve', 'contact'], capture: 'nuit' }),
   E('contact', 'Au contact', 'nuit', `${CONTACT.nom} : ${CONTACT.dit}. Ce n\'est pas un choix.`, { voir: ['corvee'] }),
   E('releve', 'Relève', 'nuit', 'Un régiment frais, pris dans la réserve, monte par les boyaux et prend la place d\'un régiment usé, qui part au repos. Le frais se place à 12 m derrière la place qu\'il prend. La réserve ne revient pas.', { voir: ['reserve', 'corvee-releve'] }),
-  E('reserve', 'Réserve', 'nuit', 'Les régiments frais qui attendent la relève (quatre dans les premières batailles). Le billet (« réserve : 2 ») et le papier de la nuit en donnent le nombre.', { voir: ['releve', 'mission'], capture: 'billet' }),
+  E('renfort', 'Renfort', 'nuit', `Un régiment frais sort de la caserne, à tout moment du jour, par le bouton de la caserne : il prend le premier secteur sans défenseur (ligne la plus avancée d\'abord, de l\'ouest à l\'est). Si tous ont leurs défenseurs, il contre-attaque le secteur perdu (plus de ${Math.round(RENFORTS.perdu * 100)} % de sa tranchée à l\'ennemi) le plus proche de la caserne ; sinon l\'ordre est refusé. Un régiment en déroute se retire vers la caserne : ses hommes qui y entrent, d\'au moins ${RENFORTS.seuilRallies}, forment une unité de ralliés à l\'aube, moral réduit, qu\'on déploie de même.`, { voir: ['reserve', 'releve', 'deroute'] }),
+  E('reserve', 'Réserve', 'nuit', 'Les régiments frais qui attendent la relève (quatre dans les premières batailles). La caserne et le papier de la nuit en donnent le nombre ; un clic sur la caserne les déploie à tout moment du jour (voir Renfort).', { voir: ['releve', 'mission'], capture: 'billet' }),
   E('dotation', 'Dotation', 'nuit', 'Les points de l\'état-major qui paient les améliorations du camp. Ils tombent à l\'aube : un point par aube, un de plus si nos lignes sont tenues à 75 % au moins, et deux pour une ligne d\'en face prise. On les dépense en choisissant un bâtiment.', { voir: ['camp', 'aube'], faits: [['Par aube', DOTATION.aube], ['Lignes tenues (seuil)', `${DOTATION.tenue.seuil * 100} %`], ['Une ligne prise', DOTATION.ligne]], capture: 'fenetre-batiment' }),
   E('aube', 'Aube, bilan', 'nuit', 'Le bilan de la nuit en quelques lignes : ce qui a été fait (équipés, évacués, relevés, ravitaillés), les morts de la nuit, les régiments qui ont faim ou refusent de monter, les chantiers finis et la dotation. Puis « Le jour se lève ».', { voir: ['nuit', 'refus'], capture: 'nuit' }),
   E('vivres', 'Vivres', 'nuit', 'Les provisions d\'un régiment : la soupe et le pain montent par les boyaux la nuit pour trois nuits. Sans eux, la nuit repose moins et le moral baisse (« la faim »).', { voir: ['corvee-ravitailler', 'moral'] }),

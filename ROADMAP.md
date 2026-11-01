@@ -23,13 +23,12 @@ Statuts : **à l'étude** · **validé** (Jérôme a tranché) · **en cours** �
 
 **B. Interface** : **livré en v0.100.0** (gros plan d'un secteur, fiche du terrain en deux lignes, fiche de nuit en trois colonnes, Échap, onglet caché, carnet, écran titre, boutons du haut, infobulles, typographie du labo, fenêtre de base, encyclopédie, chargeur) ; le détail et les pièges sont dans `docs/domaines/interface.md`. À mesurer au playtest : le gros plan (la vue 3D ne masque pas le reste du front), la fiche de nuit (les corvées ne sont plus sur la carte du régiment).
 
-**D. Renforts et déroute**
-- Les renforts s'affichent **dans la caserne** (plus dans le panneau en haut à gauche) et se déploient **à tout moment** s'ils sont disponibles.
-- Ils sortent de la caserne et se placent automatiquement dans le **premier secteur allié libre**. Si tout est tenu par l'ennemi ou plein (décision de Jérôme) : **contre-attaque forcée**, en colonne vers le secteur perdu le plus proche.
-- **Déroute** : les soldats en fuite se dirigent vers la caserne (ils ne restent plus au bord du terrain) et peuvent former une unité de renforts le lendemain.
+**D. Renforts et déroute** : **livré en v0.101.0** (déploiement depuis la caserne à tout moment du jour, premier secteur sans défenseur ou contre-attaque du secteur perdu, déroute vers la caserne, unité de ralliés dès 30 hommes) ; décisions, mesure et pièges dans `docs/domaines/bataille.md`. Reste : l'IA d'en face ne déploie pas (elle relève seulement), le seuil de 30 ralliés à mesurer au playtest.
 
 **E. Mitrailleuses et expérience** : livré (v0.101.0), voir `docs/domaines/bataille.md` et `interface.md` (« lot E »). **Reste** : la fiche d'un soldat seul n'a aucun bonus (décision de Jérôme) ; le poste ne se dessine pas tourné (seul son cône l'est) ; l'IA d'en face ne tourne pas ses postes.
 
+
+**Hors lot (Jérôme, 1er novembre) : le vol de l'avion** : **livré en v0.100.1** (circuit avec virages au rayon réaliste, épaves qui restent, une passe longue ôte au moins 75 % des pv) ; détail dans `docs/domaines/terrain-engins.md`.
 
 **Lot C** (missions et victoire) : livré v0.99.0 à v0.99.4. **Reste** de son prompt : des options de partie, dont une durée en jours choisie par le joueur (aujourd'hui tirée de la graine, 10 à 15 jours, `data/secteur.js`).
 

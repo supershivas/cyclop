@@ -1,9 +1,19 @@
 # Journal des versions
 
-## 0.101.0 — 2026-11-01
+## 0.102.0 — 2026-11-01
 - Les postes de mitrailleuse se choisissent (étiquette ou clic) : un clic sur le sol tourne leur cône de 70° au plus de chaque côté ; barres de vie et de munitions, la bande se refait à l'aube
 - L'expérience : barre et chevrons sur les cartes de régiment, les chars et les postes, le chevron gagné saute ; les chevrons sont plus durs à gagner (seuils 0,2 / 0,5 / 0,85)
 - Chaque chevron donne un bonus : régiment +5 % de précision et un moral plus solide, char moins de dégâts d'obus, mitrailleuse plus de rafales ; montré dans les fiches
+
+## 0.101.0 — 2026-11-01
+- Les renforts se déploient depuis la caserne, à tout moment du jour : le régiment frais prend le premier secteur sans défenseur, ou contre-attaque le secteur perdu le plus proche
+- Les régiments en déroute se retirent vers la caserne ; 30 fuyards rentrés ou plus y forment une unité de ralliés le lendemain
+- La réserve n'est plus affichée en haut à gauche : elle est dans la fenêtre de la caserne
+
+## 0.100.1 — 2026-11-01
+- L'avion décolle, vire à un rayon réaliste vers sa passe, puis revient se poser sur sa piste (plus de ligne droite d'un bord à l'autre)
+- Un avion abattu reste en épave sur le champ de bataille jusqu'à la fin, même la nuit
+- Une passe longue sur une ligne garnie ôte au moins 75 % de l'avion, deux le détruisent
 
 ## 0.100.0 — 2026-11-01
 - Un clic sur un secteur cadre la vue 3D sur lui et met son plan en gros plan à la place de la carte ; « Vue d'ensemble », Échap ou un second clic reviennent
