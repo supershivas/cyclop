@@ -28,6 +28,7 @@ import { loadVersion } from './lib/app-update.js?v=0.103.0';
 import { maquetteEffets, maquetteAmbiance, maquetteEspace, maquetteBruitages } from './labo-son.js?v=0.103.0';
 import { calqueMoral } from './labo-moral.js?v=0.103.0';
 import { maquetteTranchees, NOTES_TRANCHEES, NOMS_TRANCHEES } from './labo-tranchees.js?v=0.103.0';
+import { maquetteFabrique } from './labo-fabrique.js?v=0.103.0';
 import { entrees as encEntrees, lexiqueAZ, planche as encPlanche } from './labo-encyclopedie.js?v=0.103.0';
 
 document.documentElement.style.setProperty('--jeu-accent', ROLES.accent);
@@ -407,6 +408,11 @@ const GROUPES = [
       { title: 'Le Schneider CA 1', status: 'retenue', depuis: '0.52.2', note: 'Retenu (Jérôme, v0.45.0) ; en jeu : le Schneider (v0.47.0), les autres engins suivent (ROADMAP). Le premier char français, en 1916 : une caisse trapue de 6 m, 13,5 t, six hommes, une proue en coin avec son éperon coupe-fils. Un 75 « de tranchée » court dépasse du flanc droit, deux Hotchkiss à l\'avant, deux coupoles. En bleu-gris. Les chenilles sont courtes sous la caisse : un cratère de 1,5 m le couche.', render: s => maquetteChars(s, R, 'schneider') },
       { title: 'Le Saint-Chamond', status: 'retenue', depuis: '0.52.2', note: 'Retenu (Jérôme, v0.45.0) ; en jeu : le Schneider (v0.47.0), les autres engins suivent (ROADMAP). Le gros char français de 1917 : 8,9 m, 23 t, huit ou neuf hommes, un 75 de long tube dans la proue et quatre Hotchkiss. Sa caisse déborde très largement des chenilles : il franchit mal les trous, parce que l\'avant plonge (un cratère d\'un mètre le couche).', render: s => maquetteChars(s, R, 'stchamond') },
       { title: 'L\'A7V allemand', status: 'retenue', depuis: '0.52.2', note: 'Retenu (Jérôme, v0.45.0) ; en jeu : le Schneider (v0.47.0), les autres engins suivent (ROADMAP). Le seul char allemand construit en série (une vingtaine, en 1918) : 7,34 m, 3,1 m de large, 3,3 m de haut, 31,5 t, dix-huit hommes au moins ; un 57 mm à l\'avant, six mitrailleuses (deux par flanc, deux à l\'arrière), la croix de fer sur les flancs. Il vient d\'en face, vers nos lignes : nos hommes à vingt-cinq mètres s\'affolent et ses mitrailleuses en couchent quelques-uns. Garde au sol faible : un cratère d\'un mètre l\'arrête.', render: s => maquetteChars(s, R, 'a7v') },
+    ] },
+  ] },
+  { id: 'soldats', title: 'Soldats', topics: [
+    { id: 'fabrique', title: 'Fabrique de soldats', variants: [
+      { title: 'Un soldat par clic', status: 'a-trancher', depuis: '0.102.2', note: 'PROPOSITION (Jérôme, 1er nov. : « les membres qui bougent, le visage visible et différent pour chaque soldat, pilosité, accessoires, carrure et taille »). À gauche un soldat articulé (genou, coude, main, pied) au zoom qu\'on veut, de 4 à 200 pixels par mètre ; à droite sa fiche : nom, grade, caractéristiques et aspect, ceux que le jeu tirerait de ce numéro. « Générer » en tire un autre (la barre d\'espace aussi) ; la graine du bas le retrouve. Rien n\'est dans le jeu : `js/aspect-soldat.js` et `js/rendu/soldat-articule.js`.', render: s => maquetteFabrique(s) },
     ] },
   ] },
   { id: 'ambiance', title: 'Ambiance', topics: [
