@@ -515,9 +515,13 @@ body.charge dialog { display: none; }
 .saisons-choix::before { content: 'Saison'; align-self: center; font-size: var(--texte-petit); color: var(--jeu-accent); letter-spacing: .06em; text-transform: uppercase; }
 #difficultes-choix::before { content: 'Niveau'; }
 #difficultes-choix[hidden], #difficulte-desc:empty { display: none; }
+#difficultes-choix, #durees-choix { display: inline-flex; vertical-align: top; margin-right: calc(var(--pas) * 3); }      /* le niveau et la durée sur la même ligne (la fenêtre tient à 800 px de haut) */
+#durees-choix::before { content: 'Durée'; }
+#durees-choix[hidden], #duree-desc[hidden], #duree-desc:empty { display: none; }
+#durees-choix .carte-choix { text-transform: uppercase; font-size: var(--texte-petit); letter-spacing: .06em; }
 #difficulte-desc { margin: calc(var(--pas) * .5) 0 0; font-size: var(--texte-petit); line-height: 1.4; color: var(--jeu-accent); }
 #difficultes-choix .carte-choix b { font-size: var(--texte-petit); }
-#dialogue-carte.agrandi .saisons-choix, #dialogue-carte.agrandi #difficulte-desc { display: none; }
+#dialogue-carte.agrandi .saisons-choix, #dialogue-carte.agrandi #difficulte-desc, #dialogue-carte.agrandi #duree-desc { display: none; }
 .carte-apercu { display: grid; gap: var(--pas); }
 .carte-3d { position: relative; height: min(44vh, 26rem); overflow: hidden; display: flex; align-items: center; justify-content: center; background: var(--jeu-ombre); border: 1px solid var(--jeu-accent); }
 .carte-3d canvas { display: block; image-rendering: pixelated; }
@@ -683,6 +687,7 @@ h2 { font-weight: normal; letter-spacing: var(--titre-lettres); }
 .chars-cibles circle { stroke: var(--jeu-fond); stroke-width: 1.5; fill: none; }
 .chars-cibles g.manuelle line { stroke-dasharray: none; stroke-width: 2; }
 .chars-cibles g.choisie line, .chars-cibles g.choisie circle, .chars-cibles g.choisie path { stroke: var(--jeu-nous); }
+.char-etiq[hidden] { display: none; }      /* display: grid annulait `hidden` : les étiquettes restaient à l écran hors de vue (retour du 1er nov.) */
 .char-etiq { position: absolute; left: 0; top: 0; pointer-events: auto; display: grid; gap: 2px; min-width: 70px; padding: 3px 5px; font: inherit; font-size: var(--texte-petit); line-height: 1.1; color: var(--jeu-encre); background: var(--jeu-fond); border: 1px solid var(--jeu-encre); cursor: pointer; min-height: 0; }
 .char-etiq .canon, .char-etiq .pv { display: block; height: 4px; border: 1px solid var(--jeu-encre); box-sizing: border-box; }
 .char-etiq .pv { height: 3px; }

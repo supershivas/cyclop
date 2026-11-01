@@ -9,3 +9,12 @@ export const DIFFICULTES = {
   offensive: { nom: 'Grande offensive', desc: 'En face est plus nombreux, répond vite, tient ses tranchées et lance ses chars.',             forces: 0.8, ia: { barrage: 0.7, offensive: 0.7 }, stance: 'retenu', dotation: 1.3, chars: true },
 };
 export const DIFFICULTE_DEFAUT = 'ordinaire';
+
+// La durée d'une partie (Jérôme, retour du 1er nov. : « des durées plus courtes pour les nouvelles parties simples ») : `jours` null = la durée du secteur (10 à 15 jours, tirée de la graine) ; sinon le nombre de jours imposé.
+// Ne change que la durée : la mission, l'adversaire et les règles sont les mêmes. Le dernier choix est gardé dans `prefs.duree`.
+export const DUREES = {
+  courte:  { nom: 'Courte',  jours: 3,    desc: 'Trois jours : une bataille pour une soirée.' },
+  moyenne: { nom: 'Moyenne', jours: 6,    desc: 'Six jours.' },
+  longue:  { nom: 'Longue',  jours: null, desc: 'La durée du secteur : 10 à 15 jours.' },
+};
+export const DUREE_DEFAUT = 'longue';

@@ -1,6 +1,6 @@
 // Les engins en volumes du jeu (Jérôme, v0.47.0) : l'atelier de formes (boîtes, cylindres, prismes, chenilles qui défilent, croix de fer) et le Schneider CA 1,
 // sortis du labo (`labo-chars.js`, qui les reprend d'ici) pour que la bataille les dessine. Dessin seulement. 1 unité = 1 m, l'avant à +x, le haut à +y, la droite à +z.
-import { PALETTE as P } from '../palette.js?v=0.102.1';
+import { PALETTE as P } from '../palette.js?v=0.102.2';
 
 // ─── Le petit atelier de volumes ─────────────────────────────────────────────
 // Un matériau éclairé (un peu de lumière au-dessus : les faces se distinguent) et des arêtes de terre sur chaque pièce
@@ -17,6 +17,11 @@ export function atelier(THREE) {
     THREE,
     // une boîte w × h × d (x, y, z)
     b: (g, [w, h, d], c, pos, rot) => poser(g, new THREE.BoxGeometry(w, h, d), c, pos, rot),
+    // un fil tendu entre deux points (x, y, z), très fin, sans arêtes (le fil de fer)
+    fil: (g, [x0, y0, z0], [x1, y1, z1], c, ep = 0.04) => {
+      const l = Math.hypot(x1 - x0, y1 - y0, z1 - z0) || 0.01, m = new THREE.Mesh(new THREE.BoxGeometry(l, ep, ep), mat(c));
+      m.position.set((x0 + x1) / 2, (y0 + y1) / 2, (z0 + z1) / 2); m.rotation.set(0, -Math.atan2(z1 - z0, x1 - x0), Math.asin((y1 - y0) / l)); g.add(m); return m;
+    },
     // un cylindre de rayon r et de longueur len, couché sur l'axe 'x', 'y' ou 'z'
     cyl: (g, r, len, c, pos, axe = 'y', seg = 8, r2 = r) => {
       const geo = new THREE.CylinderGeometry(r2, r, len, seg);

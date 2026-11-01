@@ -1,19 +1,66 @@
 // Les bâtiments du camp dessinés en volumes (Jérôme, v0.87.0) : sortis du labo (`labo-batiments.js`) pour que le jeu les dessine aussi (`rendu/camp.js`).
 // Chaque fabrique `BATIR[clé](A, niveau)` rend { g, w, d } : le groupe centré sur son emprise (w le long de x, d le long de z), l'avant (le front) à −z ; `A` est `atelier(THREE)` (engins.js).
 // 1 unité = 1 m, la palette du jeu seulement ; le dessin seulement, rien n'y est écrit.
-import { PALETTE as P } from '../palette.js?v=0.102.1';
-import { schneider } from './engins.js?v=0.102.1';
-import { PIEDS } from '../data/batiments.js?v=0.102.1';
+import { PALETTE as P } from '../palette.js?v=0.102.2';
+import { schneider } from './engins.js?v=0.102.2';
+import { PIEDS } from '../data/batiments.js?v=0.102.2';
 
 // ─── Les pièces communes ───────────────────────────────────────────────────
 export const G = A => new A.THREE.Group();
-export const soldat = (A, g, x, z) => A.b(g, [0.5, 1.7, 0.35], P.n, [x, 0.85, z], [0, 0, 0], false);          // 0,5 × 1,7 × 0,35 m, comme dans le jeu
+// Le camp qu'on dessine (réglé par `rendu/camp.js` avant chaque bâtiment) : la couleur de son armée (`n` : nous, `x` : en face) teinte les soldats, les faîtages et les drapeaux
+let CAMP = 0;
+export const regler_camp = c => { CAMP = c; };
+const coulCamp = () => (CAMP === 0 ? P.n : P.x);
+// Le soldat du camp (Jérôme, retour du 1er nov. : « les soldats des bâtiments ne doivent pas être des boîtes, mais le même modèle que les autres ») : les MÊMES boîtes que le soldat équipé du jeu
+// (`geometrieSoldat('equipe')` de geometries.js : bottes, bandes molletières, capote, ceinturon, bras, mains, visage, casque, cimier et visière chez nous, pointe chez eux, fusil, baïonnette, sac),
+// les mêmes cotes, une couleur de la palette par partie ; fondues en UN maillage par camp (une couleur par sommet, la face du dessus plus claire, le sud, l'est et l'ouest plus sombres :
+// l'éclairage plat du jeu) : un seul appel de dessin par homme, sans arêtes. Le devant est +z.
+const PARTS_SOLDAT = [   // x0, x1, y0, y1, z0, z1, partie
+  [-0.2, -0.03, 0.12, 0.82, -0.09, 0.09, 3], [0.03, 0.2, 0.12, 0.82, -0.09, 0.09, 3],
+  [-0.21, -0.02, 0, 0.12, -0.1, 0.2, 8], [0.02, 0.21, 0, 0.12, -0.1, 0.2, 8],
+  [-0.27, 0.27, 0.56, 0.84, -0.17, 0.17, 0], [-0.24, 0.24, 0.8, 1.42, -0.15, 0.15, 0],
+  [-0.255, 0.255, 0.77, 0.86, -0.16, 0.16, 7], [-0.17, -0.07, 0.84, 0.97, 0.15, 0.2, 7], [-0.02, 0.08, 0.84, 0.97, 0.15, 0.2, 7], [0.13, 0.23, 0.84, 0.97, 0.15, 0.2, 7],
+  [-0.3, -0.2, 0.55, 0.82, -0.2, -0.06, 5], [-0.22, 0.22, 1.35, 1.46, -0.2, 0.2, 5], [-0.09, 0.09, 1.38, 1.43, 0.1, 0.16, 7],
+  [-0.35, -0.24, 0.82, 1.4, -0.07, 0.07, 0], [0.24, 0.35, 0.82, 1.4, -0.07, 0.07, 0],
+  [-0.35, -0.24, 0.74, 0.84, -0.06, 0.06, 9], [0.24, 0.35, 0.74, 0.84, -0.06, 0.06, 9],
+  [-0.1, 0.1, 1.4, 1.6, -0.1, 0.1, 6], [-0.16, 0.16, 1.57, 1.7, -0.16, 0.16, 2],
+  [0.37, 0.42, 0.55, 1.95, -0.03, 0.03, 4], [0.385, 0.405, 1.95, 2.2, -0.012, 0.012, 4], [-0.19, 0.19, 0.95, 1.38, -0.32, -0.15, 5],
+];
+const PARTS_CAMP = {   // ce qui n'est que chez nous (cimier, visière, moustache) ou que chez eux (pointe, couvre-nuque)
+  0: [[-0.02, 0.02, 1.7, 1.79, -0.14, 0.14, 12], [-0.15, 0.15, 1.6, 1.64, 0.15, 0.22, 12], [-0.07, 0.07, 1.47, 1.51, 0.1, 0.14, 13]],
+  1: [[-0.015, 0.015, 1.7, 1.84, -0.015, 0.015, 22], [-0.15, 0.15, 1.6, 1.64, -0.22, -0.15, 22]],
+};
+const geosSoldat = new Map();
+function geoSoldat(A, camp) {
+  if (geosSoldat.has(camp)) return geosSoldat.get(camp);
+  const { THREE } = A, K = camp === 0 ? P.n : P.x;
+  const couleur = { 0: K, 2: K, 3: P.g, 4: P.s, 5: P.g, 6: P.o, 7: P.b, 8: P.t, 9: P.o, 12: K, 13: P.t, 22: P.t };
+  const pos = [], col = [], nor = [], c = new THREE.Color();
+  for (const [x0, x1, y0, y1, z0, z1, k] of [...PARTS_SOLDAT, ...PARTS_CAMP[camp]]) {
+    const g = new THREE.BoxGeometry(x1 - x0, y1 - y0, z1 - z0).toNonIndexed(); g.translate((x0 + x1) / 2, (y0 + y1) / 2, (z0 + z1) / 2);
+    const p = g.attributes.position, n = g.attributes.normal; c.set(couleur[k] ?? K);
+    for (let i = 0; i < p.count; i++) {
+      const ny = n.getY(i), nx = n.getX(i), nz = n.getZ(i), f = ny > 0.5 ? 1 : ny < -0.5 ? 0.45 : nz > 0.5 ? 0.82 : nz < -0.5 ? 0.6 : nx > 0 ? 0.7 : 0.62;
+      pos.push(p.getX(i), p.getY(i), p.getZ(i)); nor.push(nx, ny, nz); col.push(c.r * f, c.g * f, c.b * f);
+    }
+  }
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); geo.setAttribute('normal', new THREE.Float32BufferAttribute(nor, 3)); geo.setAttribute('color', new THREE.Float32BufferAttribute(col, 3));
+  geosSoldat.set(camp, geo); return geo;
+}
+const matSoldat = new Map();
+export function soldatDetaille(A) {
+  if (!matSoldat.has(A.THREE)) matSoldat.set(A.THREE, new A.THREE.MeshBasicMaterial({ vertexColors: true }));
+  const m = new A.THREE.Mesh(geoSoldat(A, CAMP), matSoldat.get(A.THREE)); m.userData.soldat = true; return m;
+}
+export const soldat = (A, g, x, z, ang = Math.PI) => { const m = soldatDetaille(A); m.position.set(x, 0, z); m.rotation.y = ang; g.add(m); return m; };
 const rang = (A, g, x0, z0, n, pas = 0.9, long = 10) => { for (let k = 0; k < n; k++) soldat(A, g, x0 + (k % long) * pas, z0 + Math.floor(k / long) * 1.1); };
 // une baraque à pignon : murs w × h × L, toit en deux pans
 function baraque(A, g, [x, z], w, L, h, mur, toit, rot = 0) {
   const b = G(A);
   A.b(b, [w, h, L], mur, [0, h / 2, 0]);
   A.prisme(b, [[-w / 2 - 0.3, h], [w / 2 + 0.3, h], [0, h + w * 0.3]], L + 0.6, toit);
+  A.b(b, [0.3, 0.22, L + 0.7], coulCamp(), [0, h + w * 0.3 + 0.02, 0]);                                  // le faîtage, à la couleur de l'armée
   A.b(b, [w * 0.35, h * 0.7, 0.1], P.t, [0, h * 0.35, L / 2 + 0.03], [0, 0, 0], false);                  // la porte
   b.position.set(x, 0, z); b.rotation.y = rot; g.add(b); return b;
 }
@@ -21,7 +68,8 @@ const arche = (R, n = 12) => { const p = [[-R, 0]]; for (let k = 1; k < n; k++) 
 // le socle : plat, posé sur le point le plus haut de l'emprise et descendant jusqu'au plus bas (`creux`, m ; v0.99.5), pour que le bâtiment ne lévite pas sur une pente et qu'aucune bosse ne perce le sol
 let CREUX = 0;
 export const regler_creux = c => { CREUX = Math.max(0, c); };
-function sol(A, g, w, d, c = P.g) { A.b(g, [w, 0.2 + CREUX, d], c, [0, 0.1 - CREUX / 2, 0], [0, 0, 0], false); }
+// (Jérôme, retour du 1er nov. : « la piste est posée directement sur le sol, pas de rectangle autour ; idem pour les autres bâtiments » : plus aucun socle ; `sol` ne dessine rien, `rendu/camp.js` pose le bâtiment à mi-hauteur de son emprise)
+function sol() {}
 
 // un biplan : le nez à +x (rangé face au front par `face`)
 function biplan(A, c = P.h) {
@@ -64,6 +112,19 @@ export function chantier(A, w, d, h = 4) {
   return g;
 }
 
+// Une clôture de fil de fer autour d'une emprise w × d (piquets tous les 5 m, deux fils tendus de piquet en piquet), posée à (cx, cz) : seule chose qui borde l'aérodrome
+function barbeles(A, g, w, d, cx, cz) {
+  const pts = [], pas = 5;
+  for (let x = -w / 2; x < w / 2; x += pas) pts.push([x, -d / 2]);
+  for (let z = -d / 2; z < d / 2; z += pas) pts.push([w / 2, z]);
+  for (let x = w / 2; x > -w / 2; x -= pas) pts.push([x, d / 2]);
+  for (let z = d / 2; z > -d / 2; z -= pas) pts.push([-w / 2, z]);
+  pts.forEach(([x, z], k) => {
+    A.b(g, [0.14, 1.5, 0.14], P.g, [cx + x, 0.75, cz + z]);
+    const [x2, z2] = pts[(k + 1) % pts.length];
+    for (const y of [0.55, 1.1]) A.fil(g, [cx + x, y, cz + z], [cx + x2, y, cz + z2], P.s);
+  });
+}
 // ─── Les cinq bâtiments ────────────────────────────────────────────────────
 // Chacun rend { g, w, d } : le groupe, centré sur son emprise (w le long de x, d le long de z) ; l'avant (le front) est à −z. Un `niveau` de 1 à 3.
 export const BATIR = {
@@ -79,10 +140,11 @@ export const BATIR = {
     return { g, w: 34, d: 22 };
   },
   aerodrome(A, n) {
-    const g = G(A); sol(A, g, 84, 40, P.h);                                               // le sol du terrain (herbe morte, `h`) ; seule la piste a sa couleur
-    A.b(g, [80, 0.05, 12], P.g, [0, 0.225, 4], [0, 0, 0], false);                         // la piste : une bande de glaise, 2,5 cm au-dessus du socle (v0.99.5 : elle clignotait à 0,2 → 0,17)
-    for (let k = -6; k <= 6; k++) A.b(g, [4, 0.02, 0.4], P.o, [k * 6, 0.26, 4], [0, 0, 0], false);       // l'axe en pointillé blanc
-    for (const s of [-1, 1]) A.b(g, [80, 0.02, 0.25], P.o, [0, 0.255, 4 + s * 5.6], [0, 0, 0], false);   // les bords
+    const g = G(A);                                                                       // plus de socle : la piste est posée sur le sol, entourée de barbelés
+    A.b(g, [80, 0.3, 12], P.g, [0, 0.15, 4], [0, 0, 0], false);                           // la piste : une bande de glaise, 30 cm haute (le sol d'à côté l'enterre d'un côté de la pente)
+    for (let k = -6; k <= 6; k++) A.b(g, [4, 0.02, 0.4], P.o, [k * 6, 0.31, 4], [0, 0, 0], false);       // l'axe en pointillé blanc
+    for (const s of [-1, 1]) A.b(g, [80, 0.02, 0.25], P.o, [0, 0.305, 4 + s * 5.6], [0, 0, 0], false);   // les bords
+    barbeles(A, g, 88, 44, 0, 0);                                                          // la clôture de fil de fer
     const hangars = [-32, -19, -6].slice(0, n);
     for (const x of hangars) { A.prisme(g, arche(5), 14, P.r, [x, 0, -16]); A.b(g, [8, 3.4, 0.1], P.t, [x, 1.7, -8.97], [0, 0, 0], false); }
     const avions = [[-32, -5, 0], [20, 4, 0.1], ...(n >= 2 ? [[-19, -5, 0]] : []), ...(n >= 3 ? [[-6, -5, 0], [34, 4, -0.1]] : [])];
@@ -138,7 +200,7 @@ export const BATIR = {
     for (let k = 0; k < (n >= 2 ? 4 : 2); k++) A.prisme(g, [[-1.6, 0], [1.6, 0], [0, 2.2]], 3, P.r, [-17 + (k % 2) * 4, 0, -6 + Math.floor(k / 2) * 5]);          // les tentes
     if (n >= 2) { A.b(g, [3, 1.8, 2], P.s, [17, 0.9, 0]); A.cyl(g, 0.2, 2, P.t, [17.8, 2.6, 0.5], 'y', 6); }          // la cuisine roulante
     A.cyl(g, 0.08, 8, P.o, [0, 4, 0], 'y', 6); A.b(g, [2, 1.2, 0.05], P.n, [1.1, 7.3, 0], [0, 0, 0], false);          // le mât et son fanion
-    rang(A, g, -4, -1, n >= 3 ? 36 : n >= 2 ? 24 : 12, 0.9, 12);
+    rang(A, g, -4, -19, n >= 3 ? 36 : n >= 2 ? 24 : 12, 0.9, 12);               // la cour, devant la façade (hors des baraques : plus d'hommes dans les murs)
     return { g, w: 42, d: 28 };
   },
 };
@@ -166,9 +228,9 @@ export function vie(A, w, d, niveau, coul, graine) {
   g.add(f);
   for (let k = 0; k < 2 + niveau; k++) {
     const m = G(A), x0 = -w / 2 + 3 + h(k, 3) * (w / 2 - 3), long = 4 + h(k, 4) * 6;
-    A.b(m, [0.5, 1.7, 0.35], coul, [0, 0.85, 0], [0, 0, 0], false);
+    const h0 = soldatDetaille(A); m.add(h0);                                               // le même homme que dans le jeu (sans arme au bras : il flâne)
     m.userData.marche = { x0, x1: Math.min(w / 2 - 3, x0 + long), z: -d / 2 + 1.3 + (k % 2) * 1.1, v: 0.35 + h(k, 5) * 0.3, ph: h(k, 6) * 6 };
-    m.position.set(x0, 0.2, m.userData.marche.z);
+    m.position.set(x0, 0, m.userData.marche.z);
     g.add(m);
   }
   return g;

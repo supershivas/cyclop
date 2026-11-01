@@ -9,9 +9,9 @@
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta property="og:image" content="og.png">
-<link rel="stylesheet" href="js/lib/game.css?v=0.102.1">
-<link rel="stylesheet" href="css/style.css?v=0.102.1">
-<link rel="stylesheet" href="css/ds-v2.css?v=0.102.1">
+<link rel="stylesheet" href="js/lib/game.css?v=0.102.2">
+<link rel="stylesheet" href="css/style.css?v=0.102.2">
+<link rel="stylesheet" href="css/ds-v2.css?v=0.102.2">
 </head>
 <body class="charge">
 <!-- La barre de chargement (v0.28.0) : là avant tout script ; main.js la remplit, puis la retire. `body.charge` (v0.100.0) : tout le reste de l'écran est caché tant qu'elle est là (le menu et le titre ne se voient plus derrière) -->
@@ -357,7 +357,9 @@
   </div>
   <div class="saisons-choix" id="saisons-choix" role="group" aria-label="La saison"></div>
   <div class="saisons-choix" id="difficultes-choix" role="group" aria-label="Le niveau"></div>
+  <div class="saisons-choix" id="durees-choix" role="group" aria-label="La durée"></div>
   <p id="difficulte-desc"></p>
+  <p id="duree-desc" hidden></p>
   <form method="dialog" class="menu">
     <button class="bouton" value="annuler">Annuler</button>
     <button class="bouton" type="button" id="carte-jouer">Jouer ce secteur</button>
@@ -373,6 +375,6 @@
 </dialog>
 
 <div class="jeu-toast" id="toast" role="status" hidden></div>
-<script type="module" src="js/main.js?v=0.102.1"></script>
+<script type="module" src="js/main.js?v=0.102.2"></script>
 </body>
 </html>

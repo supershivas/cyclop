@@ -2,10 +2,10 @@
 // tant qu'un chantier dure, un liseré d'os autour du bâtiment choisi. Le dessin seulement : tout vient de l'état de la bataille, rien n'y est écrit ; et rien n'est dessiné hors de la partie bridée
 // (`etat.camp.bride`), donc ni le labo ni les tests n'ont de camp ; le jeu à deux en a un par joueur (v0.94.0). Les deux camps sont dessinés : celui d'en face est le nôtre tourné d'un demi-tour.
 // Fabrique `creerCamp({ THREE, scene, bataille: () => B, hauteur })`.
-import { atelier } from './engins.js?v=0.102.1';
-import { BATIR, chantier, regler_creux, vie } from './camp-modeles.js?v=0.102.1';
-import { emprisesCamp, emplacementCamp, sortieChars } from '../camp.js?v=0.102.1';
-import { PALETTE as P } from '../palette.js?v=0.102.1';
+import { atelier } from './engins.js?v=0.102.2';
+import { BATIR, chantier, regler_creux, regler_camp, vie } from './camp-modeles.js?v=0.102.2';
+import { emprisesCamp, emplacementCamp, sortieChars } from '../camp.js?v=0.102.2';
+import { PALETTE as P } from '../palette.js?v=0.102.2';
 
 const LUEUR = 0.9;      // × la couleur de la matière (mesuré à l'œil sur la partie du premier matin : sans elle, la boue est noire)
 
@@ -44,15 +44,15 @@ export function creerCamp({ THREE, scene, bataille, hauteur }) {
       if (!m || m.signature !== signature) {
         if (m) scene.remove(m.pivot);
         const pivot = new THREE.Group();
-        regler_creux(creux);
+        regler_creux(creux); regler_camp(e.camp);
         if (c.niveau) { pivot.add(BATIR[e.cle](A, c.niveau).g); pivot.add(vie(A, e.w, e.d, c.niveau, e.camp === 0 ? P.n : P.x, e.x * 0.01 + e.y * 0.003)); }
         if (c.chantier) pivot.add(chantier(A, e.w * (c.niveau ? 1.02 : 0.7), e.d * (c.niveau ? 1.02 : 0.7), c.niveau ? 5 : 4));
-        pivot.traverse(o => { if (o.material?.emissive) matieres.add(o.material); });
+        pivot.traverse(o => { if (o.material?.emissive && !o.userData.soldat) matieres.add(o.material); });
         scene.add(pivot);
         m = { pivot, signature }; modeles.set(id, m);
       }
       // posé sur le point le plus haut de l'emprise (plat : le socle descend jusqu'au plus bas)
-      m.pivot.position.set(e.x, h, e.y); m.pivot.rotation.y = e.rot;
+      m.pivot.position.set(e.x, (h + bas) / 2, e.y); m.pivot.rotation.y = e.rot;
       // ce qui est parti du bâtiment n'y est plus (v0.99.8) : les avions en vol quittent la piste, le char lancé quitte le parc (un autre n'y reparaît que la batterie prête)
       if (e.cle === 'aerodrome') {
         const E = B.etat, au = (E.avions?.[e.camp] ?? []).filter((pv, k) => pv > 0 && !E.mitraillages.some(v => v.camp === e.camp && v.k === k && v.etat === 'vol')).length;
@@ -67,7 +67,7 @@ export function creerCamp({ THREE, scene, bataille, hauteur }) {
     for (const m of modeles.values()) m.pivot.traverse(o => {
       const D = o.userData.drapeau, W = o.userData.marche;
       if (D) { o.rotation.y = 0.45 * Math.sin(t * 2.3 + D.ph) + 0.15; o.children[0].scale.x = 0.92 + 0.12 * Math.sin(t * 5 + D.ph); }
-      else if (W) { const s = Math.sin(t * W.v + W.ph); o.position.x = W.x0 + (W.x1 - W.x0) * (0.5 + 0.5 * s); o.rotation.y = Math.cos(t * W.v + W.ph) >= 0 ? Math.PI / 2 : -Math.PI / 2; o.position.y = 0.2 + Math.abs(Math.sin(t * W.v * 9 + W.ph)) * 0.06; }
+      else if (W) { const s = Math.sin(t * W.v + W.ph); o.position.x = W.x0 + (W.x1 - W.x0) * (0.5 + 0.5 * s); o.rotation.y = Math.cos(t * W.v + W.ph) >= 0 ? Math.PI / 2 : -Math.PI / 2; o.position.y = Math.abs(Math.sin(t * W.v * 9 + W.ph)) * 0.06; }
     });
     for (const [id, m] of modeles) if (!vus.has(id)) { scene.remove(m.pivot); modeles.delete(id); }
     // sous la lumière commune (celle des chars et des ponts, faite pour des gris clairs), les volumes sombres de la palette (boue, glaise) tombent presque au noir : une lueur propre les relève, éteinte avec la nuit
