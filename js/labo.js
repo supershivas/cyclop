@@ -2,35 +2,35 @@
 // Chaque sujet utilise les mêmes modules que le jeu (terrain, apparence,
 // rendu three.js) : ce qu'on voit ici est ce que le jeu dessinera. Ajouter un
 // sujet ou une variante = ajouter une entrée dans GROUPES.
-import { afficherVersion } from './version-tag.js?v=0.104.1';
-import { mountLabo } from './lib/labo-shell.js?v=0.104.1';
-import { spriteCanvas, paletteToGPL, paletteToHex } from './lib/sprites.js?v=0.104.1';
-import { PALETTE, ROLES } from './palette.js?v=0.104.1';
-import { chargerContenu } from './design-store.js?v=0.104.1';
-import { tuile, ETAT } from './tuiles.js?v=0.104.1';
-import { creerTerrain, impact, hydroLignes, toucher } from './terrain.js?v=0.104.1';
-import { FORMES } from './cratere.js?v=0.104.1';
-import { CALIBRES } from './data/calibres.js?v=0.104.1';
-import { METEO } from './data/meteo.js?v=0.104.1';
-import { nouvelleBataille, avancer, ordonnerMarche, ordonnerBarrage, mourir, regarderAu, aube, horloge, ticksParJour, rangDe } from './bataille.js?v=0.104.1';
-import { AZIMUTS, COTES } from './data/soleil.js?v=0.104.1';
-import { creerRendu, ZOOMS } from './rendu3d.js?v=0.104.1';
-import { placesCommandement } from './army.js?v=0.104.1';
-import { hash2 } from './lib/rng.js?v=0.104.1';
-import { reglerVerdure } from './apparence.js?v=0.104.1';
-import { maquetteChars } from './labo-chars.js?v=0.104.1';
-import { maquetteEpaves } from './labo-epaves.js?v=0.104.1';
-import { fondations, boutons, fenetres, revision } from './labo-design-system.js?v=0.104.1';
-import { gainTampon, gainCachets, gainFil, gainBordereau, victoireFanion, victoireTampon, victoireChevrons, victoireAube, ficheDeuxColonnes, ficheEtages, ficheRegistre, ficheDAbord } from './labo-recompenses.js?v=0.104.1';
-import { maquetteBatiment, maquetteCamp } from './labo-batiments.js?v=0.104.1';
-import { BATIMENTS } from './data/batiments.js?v=0.104.1';
-import { JOURNAL } from './labo-journal.js?v=0.104.1';
-import { loadVersion } from './lib/app-update.js?v=0.104.1';
-import { maquetteEffets, maquetteAmbiance, maquetteEspace, maquetteBruitages } from './labo-son.js?v=0.104.1';
-import { calqueMoral } from './labo-moral.js?v=0.104.1';
-import { maquetteTranchees, NOTES_TRANCHEES, NOMS_TRANCHEES } from './labo-tranchees.js?v=0.104.1';
-import { maquetteFabrique } from './labo-fabrique.js?v=0.104.1';
-import { entrees as encEntrees, lexiqueAZ, planche as encPlanche } from './labo-encyclopedie.js?v=0.104.1';
+import { afficherVersion } from './version-tag.js?v=0.104.2';
+import { mountLabo } from './lib/labo-shell.js?v=0.104.2';
+import { spriteCanvas, paletteToGPL, paletteToHex } from './lib/sprites.js?v=0.104.2';
+import { PALETTE, ROLES } from './palette.js?v=0.104.2';
+import { chargerContenu } from './design-store.js?v=0.104.2';
+import { tuile, ETAT } from './tuiles.js?v=0.104.2';
+import { creerTerrain, impact, hydroLignes, toucher } from './terrain.js?v=0.104.2';
+import { FORMES } from './cratere.js?v=0.104.2';
+import { CALIBRES } from './data/calibres.js?v=0.104.2';
+import { METEO } from './data/meteo.js?v=0.104.2';
+import { nouvelleBataille, avancer, ordonnerMarche, ordonnerBarrage, mourir, regarderAu, aube, horloge, ticksParJour, rangDe } from './bataille.js?v=0.104.2';
+import { AZIMUTS, COTES } from './data/soleil.js?v=0.104.2';
+import { creerRendu, ZOOMS } from './rendu3d.js?v=0.104.2';
+import { placesCommandement } from './army.js?v=0.104.2';
+import { hash2 } from './lib/rng.js?v=0.104.2';
+import { reglerVerdure } from './apparence.js?v=0.104.2';
+import { maquetteChars } from './labo-chars.js?v=0.104.2';
+import { maquetteEpaves } from './labo-epaves.js?v=0.104.2';
+import { fondations, boutons, fenetres, revision } from './labo-design-system.js?v=0.104.2';
+import { gainTampon, gainCachets, gainFil, gainBordereau, victoireFanion, victoireTampon, victoireChevrons, victoireAube, ficheDeuxColonnes, ficheEtages, ficheRegistre, ficheDAbord } from './labo-recompenses.js?v=0.104.2';
+import { maquetteBatiment, maquetteCamp } from './labo-batiments.js?v=0.104.2';
+import { BATIMENTS } from './data/batiments.js?v=0.104.2';
+import { JOURNAL } from './labo-journal.js?v=0.104.2';
+import { loadVersion } from './lib/app-update.js?v=0.104.2';
+import { maquetteEffets, maquetteAmbiance, maquetteEspace, maquetteBruitages } from './labo-son.js?v=0.104.2';
+import { calqueMoral } from './labo-moral.js?v=0.104.2';
+import { maquetteTranchees, NOTES_TRANCHEES, NOMS_TRANCHEES } from './labo-tranchees.js?v=0.104.2';
+import { maquetteFabrique } from './labo-fabrique.js?v=0.104.2';
+import { entrees as encEntrees, lexiqueAZ, planche as encPlanche } from './labo-encyclopedie.js?v=0.104.2';
 
 document.documentElement.style.setProperty('--jeu-accent', ROLES.accent);
 const NOM = document.title.replace(/^Labo — /, ''); // le nom vient de la page (une apostrophe ne casse rien)
@@ -418,7 +418,7 @@ const GROUPES = [
   ] },
   { id: 'soldats', title: 'Soldats', topics: [
     { id: 'fabrique', title: 'Fabrique de soldats', variants: [
-      { title: 'Un soldat par clic', status: 'a-trancher', depuis: '0.102.2', note: 'PROPOSITION (Jérôme, 1er nov. : « les membres qui bougent, le visage visible et différent pour chaque soldat, pilosité, accessoires, carrure et taille »). À gauche un soldat articulé (genou, coude, main, pied) au zoom qu\'on veut, de 4 à 200 pixels par mètre ; à droite sa fiche : nom, grade, caractéristiques et aspect, ceux que le jeu tirerait de ce numéro. « Générer » en tire un autre (la barre d\'espace aussi) ; la graine du bas le retrouve. Rien n\'est dans le jeu : `js/aspect-soldat.js` et `js/rendu/soldat-articule.js`.', render: s => maquetteFabrique(s) },
+      { title: 'Un soldat par clic', status: 'a-trancher', depuis: '0.102.2', note: 'PROPOSITION (Jérôme, 1er nov. : « les membres qui bougent, le visage visible et différent pour chaque soldat, pilosité, accessoires, carrure et taille »). À gauche un soldat articulé (genou, coude, main, pied) au zoom qu\'on veut, de 4 à 420 pixels par mètre ; à droite sa fiche : nom, grade, caractéristiques et aspect, ceux que le jeu tirerait de ce numéro. « Générer » en tire un autre (la barre d\'espace aussi) ; la graine du bas le retrouve. Rien n\'est dans le jeu : `js/aspect-soldat.js` et `js/rendu/soldat-articule.js`.', render: s => maquetteFabrique(s) },
     ] },
   ] },
   { id: 'ambiance', title: 'Ambiance', topics: [

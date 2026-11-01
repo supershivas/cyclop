@@ -11,13 +11,13 @@
 //  · A7V (allemand, 1918) : 7,34 m, 3,1 m, 3,3 m, 31,5 t, dix-huit hommes au moins (jusqu'à 25), un 57 mm Maxim-Nordenfelt à l'avant, six mitrailleuses de 7,92 mm, une vingtaine d'exemplaires seulement.
 //    Les Allemands ont aussi retourné des Mark IV pris à Cambrai (1917) : la livrée « Beutepanzer » du Mark IV, croix sur les flancs.
 // Les nombres de jeu (vitesse, profondeur de cratère franchie) sont des propositions, pas des mesures : le Saint-Chamond et l'A7V franchissaient mal (porte-à-faux, garde au sol), le Mark IV très bien.
-import { PALETTE as P } from './palette.js?v=0.104.1';
-import { loadThree } from './three-lib.js?v=0.104.1';
-import { ordonnerMarche, mourir } from './bataille.js?v=0.104.1';
-import { hash2 } from './lib/rng.js?v=0.104.1';
-import { ZOOMS, ZOOMS_JEU } from './rendu3d.js?v=0.104.1';
-import { el, svgEl, bouton, scene, maquette, texteSvg } from './labo-arcade.js?v=0.104.1';
-import { atelier, schneider } from './rendu/engins.js?v=0.104.1';
+import { PALETTE as P } from './palette.js?v=0.104.2';
+import { loadThree } from './three-lib.js?v=0.104.2';
+import { ordonnerMarche, mourir } from './bataille.js?v=0.104.2';
+import { hash2 } from './lib/rng.js?v=0.104.2';
+import { ZOOMS, ZOOMS_JEU } from './rendu3d.js?v=0.104.2';
+import { el, svgEl, bouton, scene, maquette, texteSvg } from './labo-arcade.js?v=0.104.2';
+import { atelier, schneider } from './rendu/engins.js?v=0.104.2';
 export { atelier };
 
 // ─── Les cinq engins ────────────────────────────────────────────────────────
@@ -133,7 +133,7 @@ let crateres = false, livreeMark4 = 'nous';                   // gardés d'un «
 export function maquetteChars(stage, R, cle) {
   const E = ENGINS[cle], allemand0 = cle === 'a7v';
   // pour voir les détails, la maquette ajoute trois crans de zoom au-delà de 16 pixels par mètre (24, 32, 48) ; le jeu garde les siens (rendus à la fermeture)
-  if (ZOOMS.length === ZOOMS_JEU) ZOOMS.push(32, 48, 64);
+  if (ZOOMS.length === ZOOMS_JEU) ZOOMS.push(48, 64);
   const nettoyer = maquette(stage, ui => {
     let ctx0 = null, char = null, THREE = null, pivot = null, modele = null, nBalles = 0, ordreT = 0, bilan = '', AT = null;
     const livree = allemand0 || (cle === 'mark4' && livreeMark4 === 'allemand') ? 'allemand' : 'nous';

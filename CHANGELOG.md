@@ -1,5 +1,8 @@
 # Journal des versions
 
+## 0.104.2 — 2026-11-01
+- Un zoom de plus près, 32 pixels par mètre (molette ou boutons + et −) : on y lit le visage d'un soldat ; le cadrage automatique d'un camp ou d'un secteur reste à 24 au plus
+
 ## 0.104.1 — 2026-11-01
 - Tout dézoomé, on peut viser n'importe quel point du secteur : le mur qui retenait la vue au milieu du terrain a disparu
 

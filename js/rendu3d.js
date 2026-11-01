@@ -22,31 +22,31 @@
    - Les soldats : instanciés (une boîte et son ombre) ; au zoom 1 et 2, un
      point de 2 × 2 pixels (la couleur du camp sur son ombre).
    - Les corps : un homme couché (instancié) ; au zoom 1 et 2, un pixel. */
-import { loadThree } from './three-lib.js?v=0.104.1';
-import * as SH from './rendu/shaders.js?v=0.104.1';
-import { creerSoldats } from './rendu/soldats.js?v=0.104.1';
-import { creerChars } from './rendu/chars.js?v=0.104.1';
-import { creerGenies } from './rendu/genies.js?v=0.104.1';
-import { creerCamp } from './rendu/camp.js?v=0.104.1';
-import { creerAvions } from './rendu/avions.js?v=0.104.1';
-import { creerPonts } from './rendu/ponts.js?v=0.104.1';
-import { creerCiel } from './rendu/ciel.js?v=0.104.1';
-import { creerMeteo } from './rendu/meteo.js?v=0.104.1';
-import { creerTroncons } from './rendu/troncons.js?v=0.104.1';
-import { ARBRES_JEU } from './data/arbres.js?v=0.104.1';
-import { creerVegetation } from './rendu/vegetation.js?v=0.104.1';
-import { creerTemps } from './rendu/temps.js?v=0.104.1';
-import { creerEclats } from './rendu/eclats.js?v=0.104.1';
-import { creerOmbresRelief } from './rendu/ombres-relief.js?v=0.104.1';
-import { OMBRES_RELIEF as OMB, NUAGES, NUAGES_VENT } from './data/soleil.js?v=0.104.1';
-import { PALETTE, ORDRE, INDICE } from './palette.js?v=0.104.1';
-import { OMBRE, couleursLigne } from './apparence.js?v=0.104.1';
-import { MORCEAU, hauteurVueQ as hauteurQ, hauteurVueM as hauteurM } from './terrain.js?v=0.104.1';
-import { horloge, secteurDuJeu, rangDe } from './bataille.js?v=0.104.1';
-import { GRADES } from './data/grades.js?v=0.104.1';
-import { profilFleuve } from './eaux.js?v=0.104.1';
-import { ligneY } from './tranchees.js?v=0.104.1';
-import { vent as ventDuJour } from './data/meteo.js?v=0.104.1';
+import { loadThree } from './three-lib.js?v=0.104.2';
+import * as SH from './rendu/shaders.js?v=0.104.2';
+import { creerSoldats } from './rendu/soldats.js?v=0.104.2';
+import { creerChars } from './rendu/chars.js?v=0.104.2';
+import { creerGenies } from './rendu/genies.js?v=0.104.2';
+import { creerCamp } from './rendu/camp.js?v=0.104.2';
+import { creerAvions } from './rendu/avions.js?v=0.104.2';
+import { creerPonts } from './rendu/ponts.js?v=0.104.2';
+import { creerCiel } from './rendu/ciel.js?v=0.104.2';
+import { creerMeteo } from './rendu/meteo.js?v=0.104.2';
+import { creerTroncons } from './rendu/troncons.js?v=0.104.2';
+import { ARBRES_JEU } from './data/arbres.js?v=0.104.2';
+import { creerVegetation } from './rendu/vegetation.js?v=0.104.2';
+import { creerTemps } from './rendu/temps.js?v=0.104.2';
+import { creerEclats } from './rendu/eclats.js?v=0.104.2';
+import { creerOmbresRelief } from './rendu/ombres-relief.js?v=0.104.2';
+import { OMBRES_RELIEF as OMB, NUAGES, NUAGES_VENT } from './data/soleil.js?v=0.104.2';
+import { PALETTE, ORDRE, INDICE } from './palette.js?v=0.104.2';
+import { OMBRE, couleursLigne } from './apparence.js?v=0.104.2';
+import { MORCEAU, hauteurVueQ as hauteurQ, hauteurVueM as hauteurM } from './terrain.js?v=0.104.2';
+import { horloge, secteurDuJeu, rangDe } from './bataille.js?v=0.104.2';
+import { GRADES } from './data/grades.js?v=0.104.2';
+import { profilFleuve } from './eaux.js?v=0.104.2';
+import { ligneY } from './tranchees.js?v=0.104.2';
+import { vent as ventDuJour } from './data/meteo.js?v=0.104.2';
 
 export const CAMERA = { yaw: 0.15, tangage: 0.95, fov: 30 };   // au départ : tournée de 9°, plongée de 54°, angle de 30°
 // la caméra respire : un balancement très lent, 2° en 23 s (Jérôme, v0.3.1 : variante D du labo retenue)
@@ -60,7 +60,8 @@ export const YAW_MAX = 0.6, TANGAGE_MIN = 0.7, TANGAGE_MAX = 1.35;
 const TG_CIEL_MIN = 0.02, TG_CIEL_MAX = 1.55;     // la caméra libre : de l'horizon presque au zénith (le sol la relève : `borner`)
 const GARDE_SOL = 1.5;                            // m : la caméra libre ne passe jamais plus bas que le sol, moins cette garde
 const SOL_Y = 3;                              // m : la hauteur moyenne du sol (le point visé)
-export const ZOOMS = [1, 2, 3, 4, 6, 8, 12, 16, 24];   // pixels (logiques) par mètre (12 et 16 : tout près des hommes, Jérôme v0.9.3 ; 24 : pour distinguer les détails, v0.103.0)
+export const ZOOMS = [1, 2, 3, 4, 6, 8, 12, 16, 24, 32];   // pixels (logiques) par mètre (12 et 16 : tout près des hommes, Jérôme v0.9.3 ; 24 : pour distinguer les détails, v0.103.0 ; 32 : le visage d'un homme se lit, v0.104.2)
+export const ZOOMS_CADRAGE = 9;                      // les cadrages automatiques (le camp, un secteur) ne vont pas au-delà de 24 px/m : le 32 se prend à la molette
 export const ZOOMS_JEU = ZOOMS.length;               // (le labo en ajoute au-delà, puis revient à ce nombre)
 const POINTS_JUSQUA = 2;                      // zoom où un soldat n'est plus qu'un point
  const E = 0.03;                               // m : le débord des faces (pas de fente vue de biais)

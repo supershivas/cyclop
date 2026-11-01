@@ -42,14 +42,13 @@ test('chaque coiffe, barbe, couleur et accessoire se rencontre', () => {
   assert.equal(coiffes.size, COIFFES.length); assert.equal(barbes.size, BARBES.length); assert.equal(cheveux.size, CHEVEUX.length);
   assert.equal(couleurs.size, 5); assert.equal(peaux.size, PEAUX.length); assert.equal(acc.size, ACCESSOIRES.length);
 });
-test('la moitié des hommes de chaque camp portent le casque de leur armée, et le gris vient avec l\'âge', () => {
-  let casque = 0, jeunes = 0, grisJ = 0, vieux = 0, grisV = 0;
+test('tous les hommes portent le casque de leur armée, et le gris vient avec l\'âge', () => {
+  let jeunes = 0, grisJ = 0, vieux = 0, grisV = 0;
   for (let id = 0; id < 4000; id++) {
     const I = identite(7, 0, id, 99, 125), h = aspect(id, 0, 7, I.rang, I.age);
-    if (h.coiffe === 0) casque++;
+    assert.equal(h.coiffe, 0);
     if (I.age < 25) { jeunes++; if (h.couleur === 4) grisJ++; } else if (I.age > 37) { vieux++; if (h.couleur === 4) grisV++; }
   }
-  assert.ok(casque / 4000 > 0.5 && casque / 4000 < 0.75, String(casque / 4000));
   assert.ok(grisV / vieux > grisJ / jeunes + 0.1, `${grisJ / jeunes} ${grisV / vieux}`);
 });
 test('un officier ne porte ni pelle ni grenades ; un soldat n\'a pas de jumelles', () => {
@@ -93,6 +92,35 @@ test('chaque condition de visibilité sert à quelqu\'un', () => {
     for (let id = 0; id < 6000 && !vu; id++) for (const camp of [0, 1]) for (const bl of [0, 1, 2, 3]) if (voir(code, homme(id, camp), camp, bl)) vu = true;
     assert.ok(vu, `code ${code}`);
   }
+});
+test('les officiers ont un pistolet et pas de fusil, les autres un fusil', () => {
+  for (let id = 0; id < 400; id++) for (const camp of [0, 1]) for (const rang of [0, 1, 2, 3, 4, 5, 6, 7]) {
+    const a = aspect(id, camp, 7, rang, 30);
+    assert.equal(voir(1000, a, camp), rang <= 2); assert.equal(voir(1100, a, camp), rang > 2);
+  }
+});
+test('le casque se porte toujours, sauf à la blessure à la tête (les cheveux se voient alors)', () => {
+  const a = aspect(5, 0, 7, 6, 25); a.cheveux = 2;
+  for (const camp of [0, 1]) {
+    assert.ok(voir(1500 + camp, a, camp, 0) && voir(1500 + camp, a, camp, 1) && voir(1500 + camp, a, camp, 2));
+    assert.ok(!voir(1500 + camp, a, camp, 3) && voir(202, a, camp, 3) && !voir(202, a, camp, 0));
+    assert.ok(voir(1500 + (1 - camp), a, camp, 0) === false);          // le casque de l'autre armée jamais
+  }
+});
+test('galons : barrettes blanches françaises, épaulettes et galon de col allemands', () => {
+  const fr = r => aspect(1, 0, 7, r, 30), de = r => aspect(1, 1, 7, r, 30);
+  // officiers français : trois, deux, une barrettes larges (1700 : rang ≤ 0, 1701 : ≤ 1, 1702 : ≤ 2)
+  assert.deepEqual([0, 1, 2].map(r => [1700, 1701, 1702].filter(c => voir(c, fr(r), 0)).length), [3, 2, 1]);
+  // sous-officiers français : minces (2005 : rang 3 à 5, 2004 : 3 à 4, 2003 : 3)
+  assert.deepEqual([3, 4, 5].map(r => [2005, 2004, 2003].filter(c => voir(c, fr(r), 0)).length), [3, 2, 1]);
+  assert.ok(![6, 7].some(r => [1700, 1701, 1702, 2003, 2004, 2005].some(c => voir(c, fr(r), 0))));
+  // les Allemands n'ont pas de barrettes de manche : épaulettes (officiers, 1800 à 1802), galon de col (sous-officiers, 2103 à 2105)
+  assert.ok(![0, 1, 2, 3, 4, 5].some(r => [1700, 1701, 1702, 2003, 2004, 2005].some(c => voir(c, de(r), 1))));
+  assert.deepEqual([0, 1, 2].map(r => [1800, 1801, 1802].filter(c => voir(c, de(r), 1)).length), [3, 2, 1]);
+  assert.ok(![3, 4, 5, 6, 7].some(r => voir(1802, de(r), 1)));
+  assert.deepEqual([3, 4, 5].map(r => [2103, 2104, 2105].filter(c => voir(c, de(r), 1)).length), [3, 2, 1]);
+  // et les Français n'ont ni épaulettes ni galon de col
+  assert.ok(![0, 1, 2, 3, 4, 5].some(r => [1800, 1801, 1802, 2103, 2104, 2105].some(c => voir(c, fr(r), 0))));
 });
 test('un homme dessine entre 200 et 700 triangles (les autres sont aplatis)', () => {
   let min = 1e9, max = 0, somme = 0;

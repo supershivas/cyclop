@@ -2,8 +2,8 @@
 // Une entrée par version qui touche au labo, la plus récente en haut. `ref` : « sujet-Lettre » (la lettre est celle de la variante,
 // A étant l'actuelle). À chaque changement du labo : une entrée ici, avec `depuis` sur les variantes ajoutées ou changées (labo.js).
 export const JOURNAL = [
-  { version: '0.102.2', date: '2026-11-01', items: [
-    { genre: 'nouveau', texte: 'La fabrique de soldats : un soldat articulé (genou, coude, mains, pieds), un visage, des cheveux, une barbe, des accessoires et une carrure différents pour chaque numéro, avec sa fiche (nom, grade, caractéristiques) ; zoom jusqu\'à 200 pixels par mètre', ref: 'fabrique-A' },
+  { version: '0.104.2', date: '2026-11-01', items: [
+    { genre: 'nouveau', texte: 'La fabrique de soldats : un soldat articulé (genou, coude, mains, pieds), un visage, des cheveux, une barbe, des accessoires et une carrure différents pour chaque numéro, avec sa fiche (nom, grade, caractéristiques) ; zoom jusqu\'à 420 pixels par mètre', ref: 'fabrique-A' },
   ] },
   { version: '0.98.1', date: '2026-10-28', items: [
     { genre: 'nouveau', texte: 'Design system, deuxième jet (proposition) : les titres en condensé fin et haut, jamais coupés ; des marges plus grandes ; des boutons refusés qui se lisent impossibles', ref: 'ds-revision-A' },
