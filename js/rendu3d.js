@@ -828,6 +828,7 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
       if (vue.ciel || vue.libre) renderer.setClearColor(cielCoul(), 1);
     },
     get ppm() { return ZOOMS[vue.zoom]; },
+    get oeil() { const p = camera.position; return { x: p.x, y: p.y, z: p.z, sol: surface(p.x, p.z) }; },      // où est la caméra, et la hauteur du sol dessous (lecture seule : les tests de la caméra)
     // une fumée qui dérive, posée en (x, z) (l'écran titre en épaissit le champ)
     clignoter: troncons.clignoter,
     set aretesPonts(v) { aretesPonts = !!v; },       // le génie vise : les ponts coupés se montrent en arêtes (v0.67.0)
