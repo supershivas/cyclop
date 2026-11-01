@@ -2,33 +2,34 @@
 // Chaque sujet utilise les mêmes modules que le jeu (terrain, apparence,
 // rendu three.js) : ce qu'on voit ici est ce que le jeu dessinera. Ajouter un
 // sujet ou une variante = ajouter une entrée dans GROUPES.
-import { afficherVersion } from './version-tag.js?v=0.102.2';
-import { mountLabo } from './lib/labo-shell.js?v=0.102.2';
-import { spriteCanvas, paletteToGPL, paletteToHex } from './lib/sprites.js?v=0.102.2';
-import { PALETTE, ROLES } from './palette.js?v=0.102.2';
-import { chargerContenu } from './design-store.js?v=0.102.2';
-import { tuile, ETAT } from './tuiles.js?v=0.102.2';
-import { creerTerrain, impact, hydroLignes, toucher } from './terrain.js?v=0.102.2';
-import { FORMES } from './cratere.js?v=0.102.2';
-import { CALIBRES } from './data/calibres.js?v=0.102.2';
-import { METEO } from './data/meteo.js?v=0.102.2';
-import { nouvelleBataille, avancer, ordonnerMarche, ordonnerBarrage, mourir, regarderAu, aube, horloge, ticksParJour, rangDe } from './bataille.js?v=0.102.2';
-import { AZIMUTS, COTES } from './data/soleil.js?v=0.102.2';
-import { creerRendu, ZOOMS } from './rendu3d.js?v=0.102.2';
-import { placesCommandement } from './army.js?v=0.102.2';
-import { hash2 } from './lib/rng.js?v=0.102.2';
-import { reglerVerdure } from './apparence.js?v=0.102.2';
-import { maquetteChars } from './labo-chars.js?v=0.102.2';
-import { fondations, boutons, fenetres, revision } from './labo-design-system.js?v=0.102.2';
-import { gainTampon, gainCachets, gainFil, gainBordereau, victoireFanion, victoireTampon, victoireChevrons, victoireAube, ficheDeuxColonnes, ficheEtages, ficheRegistre, ficheDAbord } from './labo-recompenses.js?v=0.102.2';
-import { maquetteBatiment, maquetteCamp } from './labo-batiments.js?v=0.102.2';
-import { BATIMENTS } from './data/batiments.js?v=0.102.2';
-import { JOURNAL } from './labo-journal.js?v=0.102.2';
-import { loadVersion } from './lib/app-update.js?v=0.102.2';
-import { maquetteEffets, maquetteAmbiance, maquetteEspace, maquetteBruitages } from './labo-son.js?v=0.102.2';
-import { calqueMoral } from './labo-moral.js?v=0.102.2';
-import { maquetteTranchees, NOTES_TRANCHEES, NOMS_TRANCHEES } from './labo-tranchees.js?v=0.102.2';
-import { entrees as encEntrees, lexiqueAZ, planche as encPlanche } from './labo-encyclopedie.js?v=0.102.2';
+import { afficherVersion } from './version-tag.js?v=0.103.0';
+import { mountLabo } from './lib/labo-shell.js?v=0.103.0';
+import { spriteCanvas, paletteToGPL, paletteToHex } from './lib/sprites.js?v=0.103.0';
+import { PALETTE, ROLES } from './palette.js?v=0.103.0';
+import { chargerContenu } from './design-store.js?v=0.103.0';
+import { tuile, ETAT } from './tuiles.js?v=0.103.0';
+import { creerTerrain, impact, hydroLignes, toucher } from './terrain.js?v=0.103.0';
+import { FORMES } from './cratere.js?v=0.103.0';
+import { CALIBRES } from './data/calibres.js?v=0.103.0';
+import { METEO } from './data/meteo.js?v=0.103.0';
+import { nouvelleBataille, avancer, ordonnerMarche, ordonnerBarrage, mourir, regarderAu, aube, horloge, ticksParJour, rangDe } from './bataille.js?v=0.103.0';
+import { AZIMUTS, COTES } from './data/soleil.js?v=0.103.0';
+import { creerRendu, ZOOMS } from './rendu3d.js?v=0.103.0';
+import { placesCommandement } from './army.js?v=0.103.0';
+import { hash2 } from './lib/rng.js?v=0.103.0';
+import { reglerVerdure } from './apparence.js?v=0.103.0';
+import { maquetteChars } from './labo-chars.js?v=0.103.0';
+import { maquetteEpaves } from './labo-epaves.js?v=0.103.0';
+import { fondations, boutons, fenetres, revision } from './labo-design-system.js?v=0.103.0';
+import { gainTampon, gainCachets, gainFil, gainBordereau, victoireFanion, victoireTampon, victoireChevrons, victoireAube, ficheDeuxColonnes, ficheEtages, ficheRegistre, ficheDAbord } from './labo-recompenses.js?v=0.103.0';
+import { maquetteBatiment, maquetteCamp } from './labo-batiments.js?v=0.103.0';
+import { BATIMENTS } from './data/batiments.js?v=0.103.0';
+import { JOURNAL } from './labo-journal.js?v=0.103.0';
+import { loadVersion } from './lib/app-update.js?v=0.103.0';
+import { maquetteEffets, maquetteAmbiance, maquetteEspace, maquetteBruitages } from './labo-son.js?v=0.103.0';
+import { calqueMoral } from './labo-moral.js?v=0.103.0';
+import { maquetteTranchees, NOTES_TRANCHEES, NOMS_TRANCHEES } from './labo-tranchees.js?v=0.103.0';
+import { entrees as encEntrees, lexiqueAZ, planche as encPlanche } from './labo-encyclopedie.js?v=0.103.0';
 
 document.documentElement.style.setProperty('--jeu-accent', ROLES.accent);
 const NOM = document.title.replace(/^Labo — /, ''); // le nom vient de la page (une apostrophe ne casse rien)
@@ -407,6 +408,11 @@ const GROUPES = [
       { title: 'Le Schneider CA 1', status: 'retenue', depuis: '0.52.2', note: 'Retenu (Jérôme, v0.45.0) ; en jeu : le Schneider (v0.47.0), les autres engins suivent (ROADMAP). Le premier char français, en 1916 : une caisse trapue de 6 m, 13,5 t, six hommes, une proue en coin avec son éperon coupe-fils. Un 75 « de tranchée » court dépasse du flanc droit, deux Hotchkiss à l\'avant, deux coupoles. En bleu-gris. Les chenilles sont courtes sous la caisse : un cratère de 1,5 m le couche.', render: s => maquetteChars(s, R, 'schneider') },
       { title: 'Le Saint-Chamond', status: 'retenue', depuis: '0.52.2', note: 'Retenu (Jérôme, v0.45.0) ; en jeu : le Schneider (v0.47.0), les autres engins suivent (ROADMAP). Le gros char français de 1917 : 8,9 m, 23 t, huit ou neuf hommes, un 75 de long tube dans la proue et quatre Hotchkiss. Sa caisse déborde très largement des chenilles : il franchit mal les trous, parce que l\'avant plonge (un cratère d\'un mètre le couche).', render: s => maquetteChars(s, R, 'stchamond') },
       { title: 'L\'A7V allemand', status: 'retenue', depuis: '0.52.2', note: 'Retenu (Jérôme, v0.45.0) ; en jeu : le Schneider (v0.47.0), les autres engins suivent (ROADMAP). Le seul char allemand construit en série (une vingtaine, en 1918) : 7,34 m, 3,1 m de large, 3,3 m de haut, 31,5 t, dix-huit hommes au moins ; un 57 mm à l\'avant, six mitrailleuses (deux par flanc, deux à l\'arrière), la croix de fer sur les flancs. Il vient d\'en face, vers nos lignes : nos hommes à vingt-cinq mètres s\'affolent et ses mitrailleuses en couchent quelques-uns. Garde au sol faible : un cratère d\'un mètre l\'arrête.', render: s => maquetteChars(s, R, 'a7v') },
+    ] },
+    { id: 'epaves', title: 'Les épaves', variants: [
+      { title: 'Avions écrasés (SPAD)', status: 'actuelle', depuis: '0.103.0', note: 'Jérôme (1er novembre) : « un atelier de crash dans lequel on voit l\'aléatoire de la destruction ». Douze SPAD (le nôtre) à terre, chacun d\'une graine : le fuselage glisse, à plat, sur le flanc ou sur le dos, le nez plus ou moins planté ; les ailes, la queue, le moteur et les roues se détachent chacun leur tour (trois pièces libres au moins sur huit) et gisent à plat, sur la tranche ou à l\'envers, un peu enterrés ; ce qui a brûlé est noir. « Rejouer la chute » refait l\'instant où la carcasse touche. Dans le jeu : la même épave, tirée de l\'avion et de la graine de la bataille, reste sur le champ jusqu\'à la fin ; la chute creuse un cratère de 155 et trois petits de 75.', render: s => maquetteEpaves(s, R, 'spad') },
+      { title: 'Avions écrasés (Albatros)', status: 'actuelle', depuis: '0.103.0', note: 'Les mêmes douze graines pour l\'Albatros D.V d\'en face : mêmes tirages, un autre avion (la croix sur le fuselage et sur les ailes).', render: s => maquetteEpaves(s, R, 'albatros') },
+      { title: 'Chars détruits', status: 'actuelle', depuis: '0.103.0', note: 'Douze Schneider détruits : chenilles intactes, cassées (l\'arrière pend et traîne) ou déroulées à terre ; caisse entière, éventrée par un flanc (tôles ouvertes, intérieur noir) ou par le ventre ; coupole en place, ouverte ou arrachée ; canon droit, plié ou arraché ; suie, taches ou tout noirci ; des débris autour. Dans le jeu : chaque char détruit prend l\'épave de sa graine.', render: s => maquetteEpaves(s, R, 'char') },
     ] },
   ] },
   { id: 'ambiance', title: 'Ambiance', topics: [

@@ -1,5 +1,10 @@
 # Journal des versions
 
+## 0.103.0 — 2026-11-01
+- Les arbres ont des feuillages variés (boules, galettes, colonnes, sapins, formes irrégulières) et moins d'arbres sont nus ; un arbre abattu reste couché où il est tombé, son feuillage se fane ou brûle
+- Une passe d'avion de 110 m ou plus le détruit à coup sûr ; la carcasse creuse des cratères et ses pièces (ailes, queue, moteur, roues) gisent éparpillées sur le champ ; les chars détruits sont abîmés chacun à leur façon
+- Les volutes de fumée ne restent plus seules dans le ciel ; nouveau sujet « Les épaves » au labo
+
 ## 0.102.2 — 2026-11-01
 - Les bâtiments de la base n'ont plus de socle : la piste est posée sur le sol, entourée de barbelés ; les soldats de la base ont le même modèle que les autres, à la couleur de leur armée
 - Nouvelle partie : au choix la durée (3 jours, 6 jours ou celle du secteur) et la saison « Au hasard »

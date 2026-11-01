@@ -2,11 +2,14 @@
 // posé à son altitude (avions.js : `positionDe`), cabré ou piqué selon sa pente, avec son ombre sur le sol. En tirant, ses traceurs tombent devant lui et la terre gicle le long de
 // la bande ; touché, il fume, il tombe en vrille et laisse une épave qui fume. Le dessin seulement : tout vient de l'état de la bataille, rien n'y est écrit.
 // Fabrique `creerAvions({ THREE, scene, bataille, hauteur, effets })` : la bataille change à chaque partie, on la lit à chaque image. `effets` : ceux de eclats.js.
-import { atelier } from './engins.js?v=0.102.2';
-import { AVIONS_JEU } from './avions-modeles.js?v=0.102.2';
-import { positionDe, balayage } from '../avions.js?v=0.102.2';
-import { MITRAILLAGE as M } from '../data/mitraillage.js?v=0.102.2';
-import { PALETTE as P } from '../palette.js?v=0.102.2';
+import { atelier } from './engins.js?v=0.103.0';
+import { AVIONS_JEU } from './avions-modeles.js?v=0.103.0';
+import { positionDe, balayage } from '../avions.js?v=0.103.0';
+import { MITRAILLAGE as M } from '../data/mitraillage.js?v=0.103.0';
+import { PALETTE as P } from '../palette.js?v=0.103.0';
+import { monterEpaveAvion } from './epaves.js?v=0.103.0';
+
+const DUREE_DISPERSION = 1.8;               // s : de l'instant où la carcasse touche le sol à celui où ses pièces ont fini de rouler
 
 const MODELE = ['spad', 'albatros'];     // par camp : nous, en face
 const SOL = 1.7;                          // m entre le centre du modèle et le bas de ses roues
@@ -23,6 +26,12 @@ export function creerAvions({ THREE, scene, bataille, hauteur, effets }) {
     scene.add(lumiere); scene.userData.lumiere = lumiere;
   };
   function vider() { for (const m of modeles.values()) { scene.remove(m.pivot); scene.remove(m.ombre); } modeles.clear(); tAff = -1; }
+  // l'épave : l'avion entier cède la place à ses pièces dispersées (rendu/epaves.js), disposées selon un hachage de l'avion et de la graine de la bataille
+  function disperser(m, v, B, sol, hauteur) {
+    m.pivot.remove(m.modele.groupe);
+    m.epave = monterEpaveAvion(THREE, A, MODELE[v.camp], (B.etat.graine ^ Math.imul(v.id + 1, 7919)) | 0);
+    m.pivot.add(m.epave.racine); m.crashT = m.enChute ? tAff : -1e9; m.posee = false;
+  }
   function creer(v) {
     A ??= atelier(THREE);
     if (!ombreGeo) {
@@ -54,13 +63,20 @@ export function creerAvions({ THREE, scene, bataille, hauteur, effets }) {
         if (m.hPiste === undefined) { let h = -Infinity; const a = v.av; for (let dx = -a.w / 2; dx <= a.w / 2 + 0.01; dx += 4) for (let dz = -a.d / 2; dz <= a.d / 2 + 0.01; dz += 4) h = Math.max(h, hauteur(a.cx + dx, a.cy + dz)); m.hPiste = h + 0.25; }
         sol = m.hPiste + (sol - m.hPiste) * Math.min(1, p.h / 15);
       }
-      m.pivot.visible = m.ombre.visible = jour || p.etat === 'epave';      // une épave reste là, la nuit aussi
+      m.pivot.visible = jour || p.etat === 'epave'; m.ombre.visible = jour && p.etat !== 'epave';      // une épave reste là, la nuit aussi
       m.pivot.position.set(p.x, sol + p.h + SOL, p.y);
       m.pivot.rotation.set(0, -p.cap, 0);
       m.modele.groupe.rotation.set(p.roulis ?? 0, 0, p.pente);      // incliné dans les virages (vers le centre), cabré ou piqué selon sa pente
       if (p.etat === 'vol') m.modele.helice.rotation.x += dt * 70;
       if (p.etat === 'chute') { m.vrille += dt * 5; m.modele.groupe.rotation.x = m.vrille; m.modele.groupe.rotation.z = p.pente; }
-      if (p.etat === 'epave') { m.modele.groupe.rotation.set(0.5, 0.15, -0.12); m.pivot.position.y = sol + 1.0; }
+      if (p.etat === 'chute') m.enChute = true;
+      if (p.etat === 'epave') {
+        if (!m.epave) disperser(m, v, B, sol);
+        m.pivot.position.set(p.x, sol, p.y);
+        if (!m.posee) { m.epave.poser((x, z) => hauteur(x, z) - sol); m.posee = true; m.u = -1; }
+        const u = (tAff - m.crashT) / DUREE_DISPERSION;
+        if (u < 1 || m.u < 1) { m.epave.animer(u); m.u = Math.min(1, u); }
+      }
       // l'ombre : sur le sol, sous lui, plus large et plus pâle quand il est haut
       const haut = p.etat === 'epave' ? 0 : p.h;
       m.ombre.position.set(p.x + 0.5 + haut * 0.12, sol + 0.12, p.y + haut * 0.05);

@@ -5,10 +5,10 @@
 // recliquant la lettre du secteur ; la vue 3D revient où elle était (main.js).
 // Lecture seule de l'état ; le dessin d'un canvas 2D, palette du jeu. Comme la carte, tourné d'un demi-tour pour l'invité d'une partie à deux.
 // L'échelle n'est pas la même en x et en y (un secteur fait 100 m de large pour ~220 m de profondeur : à l'échelle, il serait un ruban) : le plan est un schéma, pas une carte au mètre.
-import { NOUS, EUX, zone, largeurZone, nombreZones, lettreZone } from '../bataille.js?v=0.102.2';
-import { ligneY } from '../tranchees.js?v=0.102.2';
-import { PALETTE as P } from '../palette.js?v=0.102.2';
-import { numeroDe } from './lecture.js?v=0.102.2';
+import { NOUS, EUX, zone, largeurZone, nombreZones, lettreZone } from '../bataille.js?v=0.103.0';
+import { ligneY } from '../tranchees.js?v=0.103.0';
+import { PALETTE as P } from '../palette.js?v=0.103.0';
+import { numeroDe } from './lecture.js?v=0.103.0';
 
 const L = 336, H = 192;                  // le canvas, en pixels
 

@@ -1,6 +1,6 @@
 // Les formes du rendu, construites à la main : un soldat (de la boîte à la silhouette), un arbre, un buisson. Pas d'état :
 // `THREE` et `col` (une couleur de la palette) viennent de creerRendu ; les soldats prennent aussi leurs attributs d'instance.
-import { ARBRES_FEUILLES } from '../data/arbres.js?v=0.102.2';
+import { ARBRES_FEUILLES, ARBRES_COURONNES, ARBRES_VARIANTES } from '../data/arbres.js?v=0.103.0';
 
 export function creerGeometries(THREE, col) {
   // les faces d'une boîte qu'on voit d'ici : le dessus, le sud, l'est et l'ouest (jamais le nord ni le dessous)
@@ -310,7 +310,30 @@ export function creerGeometries(THREE, col) {
     }
     return tris;
   }
-  function geometrieFeuilles(id, mode, degarni, chanfrein = 0, rond = false) {
+  // Les formes de couronne (Jérôme, 1er novembre : « actuellement, nous n'avons que des sortes de champignons ») : chacune rend les triangles { haut, p } d'une touffe de largeur `w` et de hauteur `h`, dont le pied est à l'origine
+  // (le dessous n'est jamais dessiné). `dome` : le demi-ellipsoïde d'avant ; `boule` : presque une sphère ; `galette` : large et plate ; `colonne` : haute et étroite ; `cone` : un sapin de deux étages ;
+  // `irregulier` : un dôme dont les sommets sont déplacés par un hachage (jamais deux pareils). Aucune couleur de plus : les pans qui regardent en haut prennent le dessus, les autres le flanc.
+  const decaler = (tris, dy) => { for (const t of tris) for (const v of t.p) v[1] += dy; return tris; };
+  function cone(w, h, pans, etage) {
+    const tris = [], a = w / 2, base = Array.from({ length: pans }, (_, k) => { const t = k / pans * Math.PI * 2 + etage * 0.4; return [Math.cos(t) * a, 0, Math.sin(t) * a]; });
+    for (let k = 0; k < pans; k++) tris.push({ haut: k % 2 === 0, p: [[0, h, 0], base[(k + 1) % pans], base[k]] });
+    return tris;
+  }
+  function formeCouronne(nom, w, h, graine) {
+    if (nom === 'boule') return decaler(ellipsoide(w * 1.0, h * 1.9), h * 0.175);
+    if (nom === 'galette') return decaler(ellipsoide(w * 1.55, h * 0.85), -h * 0.09);
+    if (nom === 'colonne') return decaler(ellipsoide(w * 0.78, h * 2.7), h * 0.375);
+    if (nom === 'cone') return decaler([...cone(w * 1.45, h * 1.05, 7, 0), ...decaler(cone(w * 0.95, h * 1.0, 6, 1), h * 0.7)], -h * 0.3);
+    if (nom === 'irregulier') {
+      const tris = ellipsoide(w * 1.2, h * 1.5), cache = new Map();
+      const bruit = v => { const k = v.map(c => Math.round(c * 50)).join(','); if (!cache.has(k)) cache.set(k, [1 + (hash(k, graine) - 0.5) * 0.7, (hash(k, graine + 9) - 0.5) * 0.5 * h]); return cache.get(k); };
+      for (const t of tris) for (const v of t.p) { const [f, dy] = bruit(v); v[0] *= f; v[2] *= f; if (v[1] > 0.01) v[1] += dy; }
+      return decaler(tris, h * 0.075);
+    }
+    return ellipsoide(w * 1.15, h * 1.25);                                          // dome
+  }
+  const hash = (k, s) => { let x = s | 0; for (let i = 0; i < k.length; i++) x = Math.imul(x ^ k.charCodeAt(i), 0x01000193); x = Math.imul(x ^ (x >>> 15), 0x2c1b3c6d); return ((x ^ (x >>> 12)) >>> 0) / 4294967296; };
+  function geometrieFeuilles(id, mode, degarni, chanfrein = 0, rond = false, variante = 0) {
     const P = ARBRES_FEUILLES[mode];
     if (!P) return null;
     const F = formeArbre(id), pts = P.neige ? F.neige : F.pointes;
@@ -322,8 +345,9 @@ export function creerGeometries(THREE, col) {
       const s = p[3] * P.taille, w = P.neige ? s * 0.8 : s, h = P.neige ? 0.22 : s * 0.75;
       const teinte = k => k[0] === '#' ? new THREE.Color(k) : col(k);
       const dessus = teinte(P.dessus[n % P.dessus.length]), flanc = teinte(P.flanc[n % P.flanc.length]);
-      if (rond && !P.neige) {                                                // la touffe ronde : un demi-ellipsoïde
-        for (const t of ellipsoide(w * 1.15, h * 1.25)) {
+      if (rond && !P.neige) {                                                // la touffe ronde : une forme de la famille, selon la variante de l'arbre
+        const formes = ARBRES_COURONNES[id] ?? ['dome'], largeur = ARBRES_VARIANTES.largeur[variante % ARBRES_VARIANTES.largeur.length];
+        for (const t of formeCouronne(formes[(k + variante) % formes.length], w * largeur, h, variante * 31 + k)) {
           const c = t.haut ? dessus : flanc;
           for (const v of t.p) { pos.push(v[0] + p[0], v[1] + p[1], v[2] + p[2]); coul.push(c.r, c.g, c.b); }
         }
@@ -360,5 +384,12 @@ export function creerGeometries(THREE, col) {
     boiteHaute(parts, 0.14, 0.7, 0.14, 0.05, 0.4, 2.1, 0.5); boiteHaute(parts, 0.12, 0.6, 0.12, 0.05, 0.4, 3.7, -0.6);         // deux branches cassées
     const out = new THREE.BufferGeometry(); out.setAttribute('position', positions(parts)); return out;
   }
-  return { boiteVue, geometrieSoldat, geometrieGrades, geometrieBandages, geometrieArbre, geometrieBuisson, geometrieBuissonVarie, geometrieTroncs, geometrieTroncLoin, geometrieFeuilles, geometrieAbattuLong };
+  // la souche d'un arbre abattu : un moignon éclaté au pied de l'arbre couché
+  function geometrieSouche() {
+    const parts = [];
+    boiteHaute(parts, 0.6, 0.8, 0.6, 0, 0, 0);
+    boiteHaute(parts, 0.18, 0.5, 0.18, 0.14, 0.75, 0, 0.3); boiteHaute(parts, 0.15, 0.36, 0.15, -0.14, 0.75, 0.1, -0.4);
+    const out = new THREE.BufferGeometry(); out.setAttribute('position', positions(parts)); return out;
+  }
+  return { geometrieSouche, boiteVue, geometrieSoldat, geometrieGrades, geometrieBandages, geometrieArbre, geometrieBuisson, geometrieBuissonVarie, geometrieTroncs, geometrieTroncLoin, geometrieFeuilles, geometrieAbattuLong };
 }

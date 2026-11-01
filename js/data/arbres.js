@@ -5,16 +5,16 @@
 // `h` : la hauteur (m) de l'arbre à `v` = 0 ; `dh` : ce que `v` (0 à 3, tiré par terrain.js) y ajoute. Le droit garde 6 + v, l'arbre d'avant.
 // `feuilles` : la famille en porte (le mort, brisé par les obus, n'en porte jamais).
 export const ARBRES_FAMILLES = [
-  { id: 'droit', poids: 30, h: 6, dh: 1, feuilles: true },
+  { id: 'droit', poids: 34, h: 6, dh: 1, feuilles: true },
   { id: 'penche', poids: 18, h: 5.5, dh: 0.9, feuilles: true },
   { id: 'double', poids: 14, h: 6, dh: 0.8, feuilles: true },
-  { id: 'mort', poids: 10, h: 5, dh: 0.7, feuilles: false },
+  { id: 'mort', poids: 4, h: 5, dh: 0.7, feuilles: false },
   { id: 'jeune', poids: 16, h: 3.4, dh: 0.4, feuilles: true },
   { id: 'grand', poids: 12, h: 9, dh: 1.2, feuilles: true },
 ];
 
 // Les tirages de la position (le dernier nombre de `hash2` : la graine du tirage)
-export const ARBRES_TIRAGES = { famille: 71, taille: 72, sens: 73, feuilles: 74, chute: 75 };
+export const ARBRES_TIRAGES = { famille: 71, taille: 72, sens: 73, feuilles: 74, chute: 75, variante: 76, brule: 77, couche: 78 };
 export const ARBRES_ECHELLE = { hauteur: [0.9, 1.14], largeur: [0.88, 1.2] };     // facteurs tirés, en plus de la hauteur de `v`
 
 // Les feuilles par saison : une touffe est une boîte, son dessus et ses flancs prennent chacun une couleur de la palette, tour à tour dans la liste.
@@ -23,13 +23,31 @@ export const ARBRES_ECHELLE = { hauteur: [0.9, 1.14], largeur: [0.88, 1.2] };   
 // `neige` : pas de feuilles mais des coiffes plates sur les branches.
 export const ARBRES_FEUILLES = {
   ete: { dessus: ['v', 'v', 'w'], flanc: ['w', 'w', 's'], taille: 0.85, garde: 1, degarni: 1 },
-  automne: { dessus: ['#ff7a14', '#e8321e', '#ffb400', '#d11a2a', '#ff9a1f', '#f05a0a'], flanc: ['#a8430c', '#8a1410', '#b87a06', '#7a0f1c', '#b8520c', '#962c06'], taille: 0.85, garde: 1, degarni: 0.5 },
+  automne: { dessus: ['#ff7a14', '#e8321e', '#ffb400', '#d11a2a', '#ff9a1f', '#f05a0a'], flanc: ['#a8430c', '#8a1410', '#b87a06', '#7a0f1c', '#b8520c', '#962c06'], taille: 0.85, garde: 1, degarni: 0.75 },
   printemps: { dessus: ['v', 'h'], flanc: ['h', 'g'], taille: 0.7, garde: 0.6, degarni: 0.4 },    // une teinte du labo : le printemps n'est pas une saison du jeu
   neige: { dessus: ['o'], flanc: ['r'], neige: true, taille: 1, garde: 1, degarni: 1 },
 };
 // Un arbre sur trois est dégarni en automne ; la chute des feuilles (variante du labo) : la part de nus et de dégarnis au fil des jours
-export const ARBRES_AUTOMNE = { degarni: 0.33, margeChute: 0.35 };
+export const ARBRES_AUTOMNE = { degarni: 0.12, margeChute: 0.35 };     // (0,33 avant le 1er novembre : Jérôme, « trop d'arbres n'ont pas de feuillages »)
 export const ARBRES_PPM_FEUILLES = 1;      // pixels par mètre à partir desquels on dessine les feuilles en détail (Jérôme, v0.61.0 : à tous les zooms ; 4 avant, et le cube de loin ne servait qu'en dessous)
 
 // Ce que le jeu dessine (Jérôme, v0.53.1, après le sujet « Des arbres plus variés » du labo) : les six formes, les feuilles de la saison, les abattus longs. Pas de chute des feuilles ni de printemps (restent au labo).
 export const ARBRES_JEU = { feuilles: true, abattus: 'longs', chanfrein: 0.12, rond: true };     // chanfrein (Jérôme) : les touffes aux angles coupés, un pan de 12 % (au plus 30 cm) ; 0 : les cubes francs d'avant
+
+// Les formes de couronne (Jérôme, 1er novembre : « la forme des feuillages doit être plus variée, nous n'avons que des sortes de champignons ») : par famille, les formes que prennent ses touffes
+// (`dome`, `boule`, `galette`, `colonne`, `cone`, `irregulier` : `formeCouronne` de rendu/geometries.js), tour à tour selon le rang de la touffe et la variante de l'arbre.
+export const ARBRES_COURONNES = {
+  droit: ['boule', 'dome', 'irregulier'],
+  penche: ['galette', 'irregulier', 'dome'],
+  double: ['colonne', 'boule', 'irregulier'],
+  jeune: ['boule', 'dome'],
+  grand: ['cone', 'irregulier', 'boule', 'cone'],
+  mort: ['irregulier'],
+};
+// Trois variantes par arbre (un hachage de sa position) : la largeur des touffes change, et le décalage dans la liste des formes
+export const ARBRES_VARIANTES = { n: 3, largeur: [1, 1.22, 0.86] };
+
+// L'arbre abattu reste où il est tombé (Jérôme, 1er novembre : « même axe, même largeur de tronc, même feuillage à moitié enterré »).
+// `enfonce` : la part de sa hauteur dont il s'enfonce dans le sol (m par mètre d'échelle) ; `brule` : la part des abattus qui brûlent (les autres gardent leur feuillage un moment, puis il se fane) ;
+// `tient` : s'écoulent avant que le feuillage ne commence à disparaître (s), puis `fane` s pour disparaître ; `brulure` : le feuillage d'un arbre brûlé disparaît en cette durée (s).
+export const ARBRES_COUCHE = { enfonce: 0.22, brule: 0.55, tient: 25, fane: 70, brulure: 14, gardeAuChargement: 0.35 };
