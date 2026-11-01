@@ -2,15 +2,15 @@
 // à droite ses stats, noms, armées »). Un clic tire un numéro d'homme ; son nom, son âge, son grade et ses caractéristiques sont ceux du jeu (`identite.js`, `caracteristiques`) ; son aspect
 // est celui de `aspect` (js/aspect-soldat.js), dessiné par le soldat articulé (js/rendu/soldat-articule.js). Le labo montre sans rien modifier : rien n'est écrit dans une bataille.
 // Le zoom est celui du jeu, en pixels de l'image par mètre (4 à 32 : les zooms du jeu ; 64 à 420 : plus près que le jeu ne va), l'image étant agrandie ×2 sans lissage comme à l'écran.
-import { PALETTE } from './palette.js?v=0.104.2';
-import { loadThree } from './three-lib.js?v=0.104.2';
-import { hash2 } from './lib/rng.js?v=0.104.2';
-import { identite, caracteristiques, departCaracs, CARACTERISTIQUES, caracEnMots, chevrons, experienceEnMots, etatEnMots } from './identite.js?v=0.104.2';
-import { NOMS } from './data/noms.js?v=0.104.2';
-import { aspect, aspectEnMots } from './aspect-soldat.js?v=0.104.2';
-import { COIFFES, CHEVEUX, BARBES, PEAUX, NOMS_COULEURS_CHEVEUX, YEUX, NEZ, BOUCHES, SOURCILS } from './data/aspect-soldat.js?v=0.104.2';
-import { creerSoldatArticule, trianglesVisibles } from './rendu/soldat-articule.js?v=0.104.2';
-import { ZOOMS } from './rendu3d.js?v=0.104.2';
+import { PALETTE } from './palette.js?v=0.105.0';
+import { loadThree } from './three-lib.js?v=0.105.0';
+import { hash2 } from './lib/rng.js?v=0.105.0';
+import { identite, caracteristiques, departCaracs, CARACTERISTIQUES, caracEnMots, chevrons, experienceEnMots, etatEnMots } from './identite.js?v=0.105.0';
+import { NOMS } from './data/noms.js?v=0.105.0';
+import { aspect, aspectEnMots } from './aspect-soldat.js?v=0.105.0';
+import { COIFFES, CHEVEUX, BARBES, PEAUX, NOMS_COULEURS_CHEVEUX, YEUX, NEZ, BOUCHES, SOURCILS } from './data/aspect-soldat.js?v=0.105.0';
+import { creerSoldatArticule, trianglesVisibles } from './rendu/soldat-articule.js?v=0.105.0';
+import { ZOOMS } from './rendu3d.js?v=0.105.0';
 
 const el = (tag, props = {}, ...kids) => { const e = Object.assign(document.createElement(tag), props); e.append(...kids); return e; };
 const GRAINE = 7;                         // la graine d'identité de la fabrique (n'importe laquelle : c'est le numéro qui fait l'homme)
@@ -134,7 +134,7 @@ function monter(stage, THREE) {
   }
   function ecrireHomme() {
     const P = POSES.find(p => p[0] === S.pose)[2];
-    lot.ecrire(0, { x: 0, y: 0, z: 0, camp: H.camp, vit: P.vit ?? 0, tir: P.tir ?? 0, tapi: P.tapi ?? 0, couche: P.couche ?? 0, blessure: P.blessure ?? 0, cap: 0, aspect: H.aspect });
+    lot.ecrire(0, { x: 0, y: 0, z: 0, camp: H.camp, vit: P.vit ?? 0, tir: P.tir ?? 0, tapi: P.tapi ?? 0, couche: P.couche ?? 0, blessure: P.blessure ?? 0, cap: 0, aspect: H.aspect }); lot.envoyer(1);
     ombre.scale.set(P.couche ? 2.0 : 1, P.couche ? 0.55 : 0.7, 1);
   }
   function image(now) {

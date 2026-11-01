@@ -147,20 +147,21 @@ export function boites() {
 // La géométrie : quatre faces par boîte (dessus, devant, est, ouest, comme les soldats du jeu : DoubleSide cache le reste), ou cinq (`complet` : le derrière aussi, pour la fabrique qu'on fait tourner)
 // `filtre(boite)` : ne garder que certaines boîtes (un maillage par option : le corps seul, puis chaque coiffe, barbe ou accessoire dans son propre maillage, qui ne porte que ceux qui l'ont)
 export function modeleArticule({ complet = false, filtre = null } = {}) {
-  const pos = [], part = [], os = [], show = [];
+  const pos = [], part = [], os = [], show = [], nor = [];
   let nBoites = 0;
   for (const [x0, x1, y0, y1, z0, z1, p, o, s, haut, avant, rot] of boites().filter(b => !filtre || filtre(b))) {
     const cx = (x0 + x1) / 2, cz = (z0 + z1) / 2, c = Math.cos(rot || 0), sn = Math.sin(rot || 0);
     const r = v => rot ? [cx + (v[0] - cx) * c + (v[2] - cz) * sn, v[1], cz - (v[0] - cx) * sn + (v[2] - cz) * c] : v;      // une boîte tournée de 45° autour de y : les anneaux octogonaux des casques
-    const q = (a, b, cc, d, k) => { pos.push(...r(a), ...r(b), ...r(cc), ...r(a), ...r(cc), ...r(d)); for (let n = 0; n < 6; n++) { part.push(k); os.push(o); show.push(s); } };
-    q([x0, y1, z0], [x0, y1, z1], [x1, y1, z1], [x1, y1, z0], haut);
-    q([x0, y0, z1], [x1, y0, z1], [x1, y1, z1], [x0, y1, z1], avant);
-    q([x1, y0, z1], [x1, y0, z0], [x1, y1, z0], [x1, y1, z1], p);
-    q([x0, y0, z0], [x0, y0, z1], [x0, y1, z1], [x0, y1, z0], p);
-    if (complet) q([x1, y0, z0], [x0, y0, z0], [x0, y1, z0], [x1, y1, z0], p);
+    // la normale de la face (tournée avec la boîte) : l'éclairage de relief se calcule par sommet, face par face (les dérivées de l'écran faisaient du bruit à 40 pixels de haut)
+    const q = (a, b, cc, d, k, nx, ny, nz) => { pos.push(...r(a), ...r(b), ...r(cc), ...r(a), ...r(cc), ...r(d)); const mx = nx * c + nz * sn, mz = -nx * sn + nz * c; for (let n = 0; n < 6; n++) { part.push(k); os.push(o); show.push(s); nor.push(mx, ny, mz); } };
+    q([x0, y1, z0], [x0, y1, z1], [x1, y1, z1], [x1, y1, z0], haut, 0, 1, 0);
+    q([x0, y0, z1], [x1, y0, z1], [x1, y1, z1], [x0, y1, z1], avant, 0, 0, 1);
+    q([x1, y0, z1], [x1, y0, z0], [x1, y1, z0], [x1, y1, z1], p, 1, 0, 0);
+    q([x0, y0, z0], [x0, y0, z1], [x0, y1, z1], [x0, y1, z0], p, -1, 0, 0);
+    if (complet) q([x1, y0, z0], [x0, y0, z0], [x0, y1, z0], [x1, y1, z0], p, 0, 0, -1);
     nBoites++;
   }
-  return { position: new Float32Array(pos), part: new Float32Array(part), os: new Float32Array(os), show: new Float32Array(show), triangles: pos.length / 9, boites: nBoites };
+  return { position: new Float32Array(pos), part: new Float32Array(part), os: new Float32Array(os), show: new Float32Array(show), nor: new Float32Array(nor), triangles: pos.length / 9, boites: nBoites };
 }
 
 // Les triangles qu'un homme dessine vraiment (les autres sont aplatis par le nuanceur : ils coûtent leurs sommets, pas leurs pixels)
@@ -172,11 +173,11 @@ export function trianglesVisibles(a, camp, blessure = 0, { complet = false } = {
 
 // ─── le nuanceur ───
 export const VERT = `
-  attribute float aPart; attribute float aOs; attribute float aShow;
+  attribute float aPart; attribute float aOs; attribute float aShow; attribute vec3 aNor;
   attribute vec3 aPos; attribute float aCamp; attribute float aWound; attribute float aCap; attribute float aGrade;
   attribute vec4 aPose; attribute vec4 aBody; attribute vec4 aLook; attribute vec4 aLook2;
-  uniform float uT;
-  varying float vPart; varying float vCamp; varying vec2 vFace; varying vec3 vV; varying vec4 vLook; varying vec4 vLook2;
+  uniform float uT; uniform float uShade;
+  varying float vPart; varying float vCamp; varying vec2 vFace; varying float vShade; varying vec4 vLook; varying vec4 vLook2;
   float sl, st, wd, vt;
   bool voir(float code) {
     float genre = floor(code / 100.0 + 0.001), v = code - genre * 100.0;
@@ -265,15 +266,16 @@ export const VERT = `
     float c = cos(aCap), s = sin(aCap);
     p.xz = vec2(p.x * c + p.z * s, -p.x * s + p.z * c);
     if (!voir(aShow)) p = vec3(0.0);
-    vec4 mv = viewMatrix * vec4(p + aPos, 1.0);
-    vV = mv.xyz;
-    gl_Position = projectionMatrix * mv;
+    // l'éclairage de relief (au labo et pour les hommes articulés, uShade : 0 redonne les aplats) : le dessus plus clair, les côtés plus sombres, d'après la normale de la face tournée par le cap
+    vec3 nw = vec3(aNor.x * c + aNor.z * s, aNor.y, -aNor.x * s + aNor.z * c);
+    vShade = mix(1.0, 0.58 + 0.42 * max(dot(nw, normalize(vec3(-0.35, 0.8, 0.5))), 0.0), uShade);
+    gl_Position = projectionMatrix * viewMatrix * vec4(p + aPos, 1.0);
   }`;
 
 export const FRAG = `
   uniform vec3 uNous; uniform vec3 uEux; uniform vec3 uOmbre; uniform vec3 uSel; uniform vec3 uJambes; uniform vec3 uBois; uniform vec3 uToile; uniform vec3 uCuir; uniform vec3 uBotte; uniform vec3 uMetal; uniform vec3 uTrait;
-  uniform vec3 uPeau[3]; uniform vec3 uMarque[3]; uniform vec3 uCh[5]; uniform float uShade;
-  varying float vPart; varying float vCamp; varying vec2 vFace; varying vec3 vV; varying vec4 vLook; varying vec4 vLook2;
+  uniform vec3 uPeau[3]; uniform vec3 uMarque[3]; uniform vec3 uCh[5];
+  varying float vPart; varying float vCamp; varying vec2 vFace; varying float vShade; varying vec4 vLook; varying vec4 vLook2;
   // le visage : une grille de 12 × 12 cases (1,7 cm chacune) ; yeux (le blanc et la pupille), paupières, sourcils, nez, bouche, rides (vLook2.z : yeux + 3 nez + 9 bouche + 27 sourcils + 81 rides)
   bool dans(int iu, int a, int b) { return iu >= a && iu <= b; }
   vec3 visage(vec3 peau, vec3 marque, vec3 cheveux) {
@@ -330,52 +332,110 @@ export const FRAG = `
     else if (k == 15.0) c = uSel;
     else if (k == 17.0) c = uMetal;
     else if (k == 16.0) c = gl_FrontFacing ? visage(peau, marque, cheveux) : cheveux;
-    // un éclairage de relief (au labo seulement, uShade : 0 redonne les aplats du jeu) : le dessus plus clair, les côtés plus sombres
-    if (uShade > 0.001) {
-      vec3 n = normalize(cross(dFdx(vV), dFdy(vV)));
-      float l = max(dot(n, normalize(vec3(-0.35, 0.8, 0.5))), 0.0);
-      c *= mix(1.0, 0.58 + 0.42 * l, uShade);
-    }
-    gl_FragColor = vec4(c, 1.0);
+    gl_FragColor = vec4(c * vShade, 1.0);
   }`;
 
+// L'ombre au sol (le jeu seulement) : un quadrilatère par homme, comme celle des soldats du jeu : la couleur du sol un ton plus sombre (la texture `uSol`), fondue vers son bout, qui suit le soleil (`uSoleil`)
+export const OMBRE_VERT = `
+  attribute vec3 aPos; attribute vec4 aBody;
+  uniform vec2 uSoleil;
+  varying vec2 vXZ; varying float vLong;
+  void main() {
+    vec2 d = length(uSoleil) > 0.05 ? normalize(uSoleil) : vec2(0.6, 0.8);
+    vec2 xz = vec2(-d.y, d.x) * position.x * aBody.y + (position.y > 0.5 ? uSoleil * 1.7 + d * 0.1 : -d * 0.05);
+    vXZ = xz + aPos.xz; vLong = position.y;
+    gl_Position = projectionMatrix * viewMatrix * vec4(xz.x + aPos.x, aPos.y + 0.03, xz.y + aPos.z, 1.0);
+  }`;
+export const OMBRE_FRAG = `
+  uniform sampler2D uSol; uniform vec2 uTaille;
+  varying vec2 vXZ; varying float vLong;
+  void main() { gl_FragColor = vec4(texture2D(uSol, vec2(vXZ.x / uTaille.x, (vXZ.y / uTaille.y + 1.0) * 0.5)).rgb, 0.95 - 0.6 * vLong); }`;
+
 // ─── three.js : le matériau et les instances ───
-// `col(lettre)` : une couleur de la palette (celle de creerRendu ou de la fabrique)
-export function creerSoldatArticule(THREE, col, { complet = false, ombrage = 0, filtre = null } = {}) {
-  const M = modeleArticule({ complet, filtre });
-  const materiel = new THREE.ShaderMaterial({
-    uniforms: {
-      uNous: { value: col('n') }, uEux: { value: col('x') }, uOmbre: { value: col('t') }, uSel: { value: col('o') }, uJambes: { value: col('s') }, uBois: { value: col('t') }, uToile: { value: col('g') },
-      uCuir: { value: col('b') }, uBotte: { value: col('t') }, uMetal: { value: col('r') }, uTrait: { value: col('s') },
-      uPeau: { value: ['o', 'r', 'g'].map(col) }, uMarque: { value: ['g', 'g', 'b'].map(col) }, uCh: { value: ['t', 's', 'b', 'g', 'r'].map(col) },
-      uShade: { value: ombrage }, uT: { value: 0 },
-    },
-    vertexShader: VERT, fragmentShader: FRAG, side: THREE.DoubleSide,
-  });
+// `col(lettre)` : une couleur de la palette (celle de creerRendu ou de la fabrique) ; `partages` : des uniformes du jeu à partager (`uT` : l'horloge de l'image, `uSoleil`, `uSol`, `uTaille`) ;
+// `ombreSeule` : le maillage des ombres au sol (le jeu), et rien d'autre
+export function creerSoldatArticule(THREE, col, { complet = false, ombrage = 0, filtre = null, partages = {}, ombreSeule = false } = {}) {
+  const M = ombreSeule ? ombreEtModele(THREE) : modeleArticule({ complet, filtre });
+  const materiel = ombreSeule
+    ? new THREE.ShaderMaterial({ uniforms: { uSoleil: partages.uSoleil ?? { value: new THREE.Vector2(0.5, 0.6) }, uSol: partages.uSol ?? { value: new THREE.DataTexture(new Uint8Array([70, 66, 50, 255]), 1, 1) }, uTaille: partages.uTaille ?? { value: new THREE.Vector2(400, 300) } },
+      vertexShader: OMBRE_VERT, fragmentShader: OMBRE_FRAG, side: THREE.DoubleSide, transparent: true })
+    : new THREE.ShaderMaterial({
+      uniforms: {
+        uNous: { value: col('n') }, uEux: { value: col('x') }, uOmbre: { value: col('t') }, uSel: { value: col('o') }, uJambes: { value: col('s') }, uBois: { value: col('t') }, uToile: { value: col('g') },
+        uCuir: { value: col('b') }, uBotte: { value: col('t') }, uMetal: { value: col('r') }, uTrait: { value: col('s') },
+        uPeau: { value: ['o', 'r', 'g'].map(col) }, uMarque: { value: ['g', 'g', 'b'].map(col) }, uCh: { value: ['t', 's', 'b', 'g', 'r'].map(col) },
+        uShade: { value: ombrage }, uT: partages.uT ?? { value: 0 },
+      },
+      vertexShader: VERT, fragmentShader: FRAG, side: THREE.DoubleSide,
+    });
+  if (ombreSeule && !partages.uSol) materiel.uniforms.uSol.value.needsUpdate = true;
   // un lot de `n` hommes : les tampons d'instance et l'écriture d'un homme
   function instances(n) {
     const g = new THREE.InstancedBufferGeometry();
     g.setAttribute('position', new THREE.BufferAttribute(M.position, 3));
-    g.setAttribute('aPart', new THREE.BufferAttribute(M.part, 1));
-    g.setAttribute('aOs', new THREE.BufferAttribute(M.os, 1));
-    g.setAttribute('aShow', new THREE.BufferAttribute(M.show, 1));
+    if (!ombreSeule) {
+      g.setAttribute('aPart', new THREE.BufferAttribute(M.part, 1));
+      g.setAttribute('aOs', new THREE.BufferAttribute(M.os, 1));
+      g.setAttribute('aShow', new THREE.BufferAttribute(M.show, 1));
+      g.setAttribute('aNor', new THREE.BufferAttribute(M.nor, 3));
+    }
     const T = { pos: new Float32Array(n * 3), camp: new Float32Array(n), blessure: new Float32Array(n), cap: new Float32Array(n), grade: new Float32Array(n), pose: new Float32Array(n * 4), corps: new Float32Array(n * 4), aspect: new Float32Array(n * 4), aspect2: new Float32Array(n * 4) };
     const A = (nom, arr, k) => { const a = new THREE.InstancedBufferAttribute(arr, k).setUsage(THREE.DynamicDrawUsage); g.setAttribute(nom, a); return a; };
-    const attrs = [A('aPos', T.pos, 3), A('aCamp', T.camp, 1), A('aWound', T.blessure, 1), A('aCap', T.cap, 1), A('aGrade', T.grade, 1), A('aPose', T.pose, 4), A('aBody', T.corps, 4), A('aLook', T.aspect, 4), A('aLook2', T.aspect2, 4)];
+    const attrs = ombreSeule ? [A('aPos', T.pos, 3), A('aBody', T.corps, 4)]
+      : [A('aPos', T.pos, 3), A('aCamp', T.camp, 1), A('aWound', T.blessure, 1), A('aCap', T.cap, 1), A('aGrade', T.grade, 1), A('aPose', T.pose, 4), A('aBody', T.corps, 4), A('aLook', T.aspect, 4), A('aLook2', T.aspect2, 4)];
     g.instanceCount = n;
     const mesh = new THREE.Mesh(g, materiel); mesh.frustumCulled = false;
     // h : { x, y, z, camp, vit, tir, tapi, couche, blessure, cap, aspect } (`aspect` : l'objet de js/aspect-soldat.js)
     function ecrire(i, h) {
-      T.pos.set([h.x ?? 0, h.y ?? 0, h.z ?? 0], i * 3);
-      T.camp[i] = h.camp ?? 0; T.blessure[i] = h.blessure ?? 0; T.cap[i] = h.cap ?? 0; T.grade[i] = h.aspect.rang ?? 6;
-      T.pose.set([h.vit ?? 0, h.tir ?? 0, h.tapi ?? 0, h.couche ?? 0], i * 4);
       const a = h.aspect, c = a.carrure, t = a.traits;
-      T.corps.set([c.taille, c.epaules, c.jambes, c.tete], i * 4);
-      T.aspect.set([a.coiffe, a.cheveux, a.couleur, a.barbe], i * 4);
-      T.aspect2.set([a.acc, a.peau, t.yeux + 3 * t.nez + 9 * t.bouche + 27 * t.sourcils, c.ventre], i * 4);
-      for (const at of attrs) at.needsUpdate = true;
+      T.pos[i * 3] = h.x ?? 0; T.pos[i * 3 + 1] = h.y ?? 0; T.pos[i * 3 + 2] = h.z ?? 0;
+      T.corps[i * 4] = c.taille; T.corps[i * 4 + 1] = c.epaules; T.corps[i * 4 + 2] = c.jambes; T.corps[i * 4 + 3] = c.tete;
+      if (ombreSeule) return;
+      T.camp[i] = h.camp ?? 0; T.blessure[i] = h.blessure ?? 0; T.cap[i] = h.cap ?? 0; T.grade[i] = a.rang ?? 6;
+      T.pose[i * 4] = h.vit ?? 0; T.pose[i * 4 + 1] = h.tir ?? 0; T.pose[i * 4 + 2] = h.tapi ?? 0; T.pose[i * 4 + 3] = h.couche ?? 0;
+      T.aspect[i * 4] = a.coiffe; T.aspect[i * 4 + 1] = a.cheveux; T.aspect[i * 4 + 2] = a.couleur; T.aspect[i * 4 + 3] = a.barbe;
+      T.aspect2[i * 4] = a.acc; T.aspect2[i * 4 + 1] = a.peau; T.aspect2[i * 4 + 2] = t.yeux + 3 * t.nez + 9 * t.bouche + 27 * t.sourcils + 81 * (t.rides || 0); T.aspect2[i * 4 + 3] = c.ventre;
     }
-    return { geometrie: g, mesh, ecrire, attrs };
+    // envoyer au processeur graphique les `k` premiers hommes seulement
+    function envoyer(k) { g.instanceCount = k; for (const at of attrs) { at.clearUpdateRanges(); at.addUpdateRange(0, k * at.itemSize); at.needsUpdate = true; } }
+    return { geometrie: g, mesh, ecrire, envoyer, attrs };
   }
   return { materiel, instances, modele: M };
+}
+// le quadrilatère de l'ombre : 0,44 m de large, y = 1 : le bout (le nuanceur le pose selon le soleil)
+function ombreEtModele() {
+  const p = [-0.22, 0, 0, 0.22, 0, 0, 0.22, 1, 0, -0.22, 0, 0, 0.22, 1, 0, -0.22, 1, 0];
+  return { position: new Float32Array(p), triangles: 2, boites: 0 };
+}
+
+// Les hommes d'un lot, le jeu : un maillage par option (le corps seul pour tous, puis chaque casque, barbe, accessoire, galon dans le sien, avec les seuls hommes qui l'ont : le schéma des pansements
+// et des grades) et un maillage d'ombres. `capacite` : le nombre d'hommes au plus ; `ajouter(h)` écrit un homme (le même objet que `ecrire`), `fin()` envoie les tampons.
+export function creerEquipeArticulee(THREE, col, { capacite, ombrage = 0, partages = {} }) {
+  const codes = [...new Set(boites().map(b => b[8]))].sort((a, b) => a - b);
+  const groupes = [];
+  for (const code of codes) {
+    const S = creerSoldatArticule(THREE, col, { ombrage, filtre: b => b[8] === code, partages });
+    if (!S.modele.triangles) continue;
+    const lot = S.instances(capacite); lot.mesh.renderOrder = 2; lot.envoyer(0);
+    groupes.push({ code, S, lot, n: 0 });
+  }
+  const O = creerSoldatArticule(THREE, col, { ombreSeule: true, partages });
+  const ombres = O.instances(capacite); ombres.mesh.renderOrder = 1.9; ombres.envoyer(0);
+  let nO = 0;
+  const meshes = [ombres.mesh, ...groupes.map(g => g.lot.mesh)];
+  return {
+    meshes,
+    debut() { nO = 0; for (const g of groupes) g.n = 0; },
+    ajouter(h) {
+      if (nO >= capacite) return false;
+      ombres.ecrire(nO++, h);
+      const camp = (h.camp ?? 0) & 1;
+      for (const g of groupes) if (g.n < capacite && voir(g.code, h.aspect, camp, h.blessure ?? 0)) g.lot.ecrire(g.n++, h);
+      return true;
+    },
+    fin() { ombres.envoyer(nO); for (const g of groupes) g.lot.envoyer(g.n); return nO; },
+    get compte() { return nO; },
+    get appels() { return groupes.length + 1; },
+    dispose() { for (const m of meshes) m.geometry.dispose(); for (const g of groupes) g.S.materiel.dispose(); O.materiel.dispose(); },
+  };
 }

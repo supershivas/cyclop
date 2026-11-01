@@ -57,3 +57,8 @@ export const CARRURE = {
   tete: { ecart: 0.07 },
   ventre: { ecart: 0.08, age: 0.05 },     // le ventre : l'âge l'arrondit
 };
+
+// Les soldats articulés en jeu (Jérôme, v0.105.0 : « j'aime le rendu, on continue »), seulement de près : dès `des` pixels par mètre, et au plus `max` hommes, les plus proches du centre de la vue
+// (le coût mesuré, rendu logiciel : environ trois fois celui du soldat équipé du jeu : `docs/domaines/rendu.md`) ; les autres gardent le soldat équipé. `ombrage` : le relief des faces (0 : les aplats),
+// un mélange continu du ton de la palette (comme les fondus : voir la palette), qui fait lire les membres.
+export const ARTICULE = { des: 12, max: 250, ombrage: 0.5 };
