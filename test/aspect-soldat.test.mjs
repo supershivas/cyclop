@@ -128,3 +128,16 @@ test('un homme dessine entre 200 et 700 triangles (les autres sont aplatis)', ()
   assert.ok(min >= 200 && max <= 700, `${min} ${max}`);
   console.log(`  triangles dessinés par homme : ${min} à ${max}, moyenne ${Math.round(somme / 1000)} ; modèle entier ${modeleArticule().triangles} (${modeleArticule({ complet: true }).triangles} complet)`);
 });
+test('le niveau intermédiaire dessine nettement moins que le fin, et jamais ce qu\'il ne montre pas', () => {
+  let fin = 0, moyen = 0;
+  for (let id = 0; id < 600; id++) for (const camp of [0, 1]) {
+    const a = homme(id, camp);
+    fin += trianglesVisibles(a, camp, 0, { niveau: 'fin' }); moyen += trianglesVisibles(a, camp, 0, { niveau: 'moyen' });
+  }
+  console.log(`  par homme : fin ${Math.round(fin / 1200)}, intermédiaire ${Math.round(moyen / 1200)} triangles (modèles entiers ${modeleArticule().triangles} et ${modeleArticule({ niveau: 'moyen' }).triangles})`);
+  assert.ok(moyen < fin * 0.72, `${moyen} ${fin}`);
+  assert.ok(modeleArticule({ niveau: 'moyen' }).triangles < modeleArticule().triangles);
+  // les deux niveaux partagent le corps : mêmes os et mêmes parties pour ce qui est commun
+  const corps = n => boites().filter(b => b[12] === 0).length;
+  assert.ok(corps() > 40);
+});

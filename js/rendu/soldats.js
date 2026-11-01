@@ -1,10 +1,10 @@
 // Les hommes : les soldats (une boîte et son ombre ; de près la silhouette, plus loin une silhouette allégée ; aux zooms 1 et 2 un point), les anneaux des
 // régiments choisis ou survolés, les corps (un homme couché) et les tombes (un tertre et une croix). Tout est instancié et ne reçoit que ce qu'on voit.
 // Le dessin seulement. Les formes viennent de geometries.js, le GLSL de shaders.js.
-import * as SH from './shaders.js?v=0.105.0';
-import { creerGeometries } from './geometries.js?v=0.105.0';
-import { classeDuRang } from '../data/grades.js?v=0.105.0';
-import { creerEquipeArticulee } from './soldat-articule.js?v=0.105.0';
+import * as SH from './shaders.js?v=0.105.1';
+import { creerGeometries } from './geometries.js?v=0.105.1';
+import { classeDuRang } from '../data/grades.js?v=0.105.1';
+import { creerEquipeArticulee } from './soldat-articule.js?v=0.105.1';
 
 // `THREE`, `scene`, `col`, `solUniforms` (`uSol`, `uTaille` : la texture du sol, que l'ombre d'un soldat reprend), `styleSoldat` (le style de près, comparé au labo),
 // `grades` (v0.68.0 : une variante de `GRADES`, data/grades.js, ou null : tous pareils) et `rangDe(B, id, reg)` (le rang d'un homme, bataille.js) ; `surface(x, z)` et `surfaceLisse(x, z)` (la hauteur du sol, lissée pour qui marche), `solY` (la hauteur moyenne du sol) et `POINTS_JUSQUA` (le zoom où un soldat n'est
@@ -27,7 +27,7 @@ export function creerSoldats({ THREE, scene, col, solUniforms, styleSoldat, grad
   // Les soldats articulés (Jérôme, v0.105.0 ; labo « Fabrique de soldats ») : de près (`articule.des` pixels par mètre) les `articule.max` hommes les plus proches du centre de la vue prennent le squelette, le visage, le casque
   // et les galons de `aspect` (js/aspect-soldat.js) ; ils quittent les tampons des soldats équipés (et des gradés, des pansements) : un homme n'est dessiné qu'une fois. Créés au premier besoin (un objet de plus
   // décale les tirages d'identifiants de three, donc les images de référence). `aspectDe(B, id, camp)` : l'aspect d'un homme (main.js : son numéro de campagne, la graine d'identité, son âge et son rang) ; gardé par numéro.
-  let artCfg = null, aspectDe = null, EQ = null, artSel = null, candI = null, candD = null, artVus = 0;
+  let artCfg = null, aspectDe = null, EQ = null, EQs = { moyen: null, fin: null }, artSel = null, candI = null, candD = null, artVus = 0;
   const aspects = new Map(), hArt = { x: 0, y: 0, z: 0, camp: 0, vit: 0, tir: 0, tapi: 0, couche: 0, blessure: 0, cap: 0, aspect: null };
   let cap = 0, posArr = null, campArr = null, vitArr = null, tirArr = null, soldatsInst = null, soldatsDetail = null, soldatsLeger = null, soldatsPoints = null, attrsI = null, attrsP = null;
   const VARIATION = { taille: 0.07, largeur: 0.14 };      // la taille (±7 %) et la largeur (±14 %) d'un homme autour de la boîte de référence : le dessin seulement (Jérôme, v0.69.0)
@@ -73,7 +73,8 @@ export function creerSoldats({ THREE, scene, col, solUniforms, styleSoldat, grad
     if (BL) { scene.remove(BL.leger, BL.detail); BL.leger.geometry.dispose(); BL.detail.geometry.dispose(); BL = null; }
     if (GR) { for (const c of GR) if (c) { scene.remove(c.inst, c.leger, c.detail); for (const m of [c.inst, c.leger, c.detail]) m.geometry.dispose(); } scene.remove(gPoints); gPoints.geometry.dispose(); GR = gPoints = null; }
     if (lettres) { scene.remove(lettres); lettres.geometry.dispose(); lettres = null; }
-    if (EQ) { for (const m of EQ.meshes) scene.remove(m); EQ.dispose(); EQ = null; }
+    for (const k of ['moyen', 'fin']) if (EQs[k]) { for (const m of EQs[k].meshes) scene.remove(m); EQs[k].dispose(); EQs[k] = null; }
+    EQ = null;
     aspects.clear(); artSel = new Uint8Array(capacite); candI = new Int32Array(capacite); candD = new Float32Array(capacite);
     cap = capacite;
     posArr = new Float32Array(cap * 3); campArr = new Float32Array(cap); vitArr = new Float32Array(cap); tirArr = new Float32Array(cap * 2);
@@ -319,11 +320,14 @@ export function creerSoldats({ THREE, scene, col, solUniforms, styleSoldat, grad
       const seuil = nc > artCfg.max ? candD.slice(0, nc).sort()[artCfg.max - 1] : Infinity;
       let nArt = 0;
       for (let c = 0; c < nc && nArt < artCfg.max; c++) if (candD[c] <= seuil) { artSel[candI[c]] = 1; nArt++; }
-      if (nArt && !EQ) {
-        EQ = creerEquipeArticulee(THREE, col, { capacite: artCfg.max + 8, ombrage: artCfg.ombrage ?? 0,
+      // deux niveaux de détail (v0.105.1) : dès `fin` px/m le fin (le visage se lit, les galons, les boutons), de `des` à là l'intermédiaire (un casque simplifié, ni boutons, ni pouces, ni galons : moins d'un pixel)
+      const niv = p >= (artCfg.fin ?? 24) ? 'fin' : 'moyen';
+      if (nArt && !EQs[niv]) {
+        EQs[niv] = creerEquipeArticulee(THREE, col, { capacite: artCfg.max + 8, ombrage: artCfg.ombrage ?? 0, niveau: niv,
           partages: { uT: soldatMat.uniforms.uT, uSoleil: soldatMat.uniforms.uSoleil, uSol: solUniforms.uSol, uTaille: solUniforms.uTaille } });
-        for (const m of EQ.meshes) scene.add(m);
+        for (const m of EQs[niv].meshes) scene.add(m);
       }
+      EQ = EQs[niv];
       if (EQ) EQ.debut();
     }
     for (let i = 0; i < n; i++) {
@@ -394,7 +398,7 @@ export function creerSoldats({ THREE, scene, col, solUniforms, styleSoldat, grad
     }
     // les maillages des hommes articulés : seulement de près, seulement s'il y en a
     artVus = arti && EQ ? EQ.fin() : 0;
-    if (EQ && !vide()) for (const m of EQ.meshes) m.visible = artVus > 0;
+    if (!vide()) for (const k of ['moyen', 'fin']) if (EQs[k]) for (const m of EQs[k].meshes) m.visible = artVus > 0 && EQs[k] === EQ;
     anGeo.setDrawRange(0, ka); anGeo.attributes.position.needsUpdate = true; anGeo.attributes.aTon.needsUpdate = true; anMat.uniforms.uTaille.value = Math.max(5, Math.round(p * 1.5));
     if (!vide()) anneaux.visible = ka > 0;
     const points = p <= POINTS_JUSQUA, detail = !points && soldatsDetail && p >= DETAIL_DES, leger = !points && !detail && legerActif && p >= LEGER_DES;

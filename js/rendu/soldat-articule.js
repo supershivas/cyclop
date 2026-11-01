@@ -42,10 +42,12 @@ export const PARTIES = { vareuse: 0, casque: 2, pantalon: 0, bois: 4, toile: 5, 
 const { tronc, tete, brasG, avantBrasG, brasD, avantBrasD, cuisseG, molletG, piedG, cuisseD, molletD, piedD, fusil, basques } = OS;
 const P = PARTIES;
 
-// La liste des boîtes : [x0, x1, y0, y1, z0, z1, partie, os, show, dessus, devant, rotation autour de y]
+// La liste des boîtes : [x0, x1, y0, y1, z0, z1, partie, os, show, dessus, devant, rotation autour de y, niveau]
+// `niveau` (v0.105.1) : 0 les deux niveaux de détail ; 1 le niveau fin seulement (boutons, parements, pouces, galons, oreilles, anneaux octogonaux du casque, moustaches, pipe : moins d'un pixel de 12 à 16 px/m) ; 2 le niveau intermédiaire seulement (le casque simplifié)
 export function boites() {
   const L = [];
-  const B = (x0, x1, y0, y1, z0, z1, part, os, show = 0, haut = part, avant = part, rot = 0) => L.push([x0, x1, y0, y1, z0, z1, part, os, show, haut, avant, rot]);
+  let niv = 0;
+  const B = (x0, x1, y0, y1, z0, z1, part, os, show = 0, haut = part, avant = part, rot = 0) => L.push([x0, x1, y0, y1, z0, z1, part, os, show, haut, avant, rot, niv]);
   const x = (s, a, b) => s > 0 ? [a, b] : [-b, -a];
   const cote = f => { f(-1); f(1); };
   // ── le tronc : la vareuse descend sous le ceinturon (les basques à mi-cuisse), le pantalon est de la couleur de l'armée (français : bleu horizon ; allemand : feldgrau, veste et pantalon unis)
@@ -53,8 +55,8 @@ export function boites() {
   B(-0.25, 0.25, 0.95, 1.42, -0.15, 0.15, P.vareuse, tronc);                          // la vareuse
   B(-0.258, 0.258, 0.62, 0.95, -0.168, 0.168, P.vareuse, basques);                    // ses basques, sous la ceinture
   B(-0.1, 0.1, 1.37, 1.42, -0.12, 0.13, P.vareuse, tronc);                             // le col droit (sous le menton)
-  for (const y of [1.28, 1.16, 1.04]) B(-0.012, 0.012, y, y + 0.035, 0.15, 0.158, P.metal, tronc);      // les boutons
-  B(-0.258, 0.258, 0.88, 0.97, -0.17, 0.17, P.cuir, tronc); B(-0.03, 0.03, 0.89, 0.96, 0.17, 0.182, P.metal, tronc);   // le ceinturon et sa boucle
+  niv = 1; for (const y of [1.28, 1.16, 1.04]) B(-0.012, 0.012, y, y + 0.035, 0.15, 0.158, P.metal, tronc); niv = 0;      // les boutons
+  B(-0.258, 0.258, 0.88, 0.97, -0.17, 0.17, P.cuir, tronc); niv = 1; B(-0.03, 0.03, 0.89, 0.96, 0.17, 0.182, P.metal, tronc); niv = 0;   // le ceinturon et sa boucle
   for (const c of [-0.17, -0.05, 0.07]) B(c, c + 0.1, 0.97, 1.1, 0.17, 0.22, P.cuir, tronc, 500);          // les trois cartouchières françaises
   for (const [a, b] of [[-0.23, -0.13], [-0.115, -0.015], [0.015, 0.115], [0.13, 0.23]]) B(a, b, 0.97, 1.09, 0.17, 0.21, P.cuir, tronc, 501);        // les quatre cartouchières allemandes
   B(-0.33, -0.25, 0.58, 0.88, -0.14, 0.0, P.toile, tronc);                              // la gourde, à la hanche
@@ -62,9 +64,10 @@ export function boites() {
   B(-0.19, 0.19, 0.95, 1.38, -0.32, -0.15, P.toile, tronc);                              // le sac
   B(-0.2, 0.2, 1.38, 1.47, -0.34, -0.2, P.toile, tronc);                                // la couverture roulée sur le sac
   // ── les officiers : un pistolet à l'étui, le baudrier (et pas de fusil : voir plus bas)
-  B(0.24, 0.32, 0.68, 0.9, 0.0, 0.1, P.cuir, tronc, 1000); B(0.26, 0.3, 0.9, 0.96, 0.04, 0.09, P.bois, tronc, 1000);
+  B(0.24, 0.32, 0.68, 0.9, 0.0, 0.1, P.cuir, tronc, 1000); niv = 1; B(0.26, 0.3, 0.9, 0.96, 0.04, 0.09, P.bois, tronc, 1000); niv = 0;
   B(-0.258, 0.258, 1.02, 1.12, -0.17, 0.17, P.cuir, tronc, 1000);
   // ── les galons : français, des barrettes blanches sur les deux manches (officiers : trois, deux, une, larges ; sous-officiers : minces) ; allemands : des épaulettes (officiers), le galon au col (sous-officiers)
+  niv = 1;
   for (const s of [-1, 1]) {
     const os = s < 0 ? avantBrasG : avantBrasD;
     for (const [n, y] of [[1, 0.9], [2, 0.96], [3, 1.02]]) B(...x(s, 0.253, 0.347), y, y + 0.04, -0.06, 0.06, P.os, os, 1700 + (3 - n));          // rang ≤ 2, ≤ 1, ≤ 0 : la 1re barrette pour les trois officiers
@@ -74,22 +77,23 @@ export function boites() {
   }
   for (const [n, y] of [[1, 1.395], [2, 1.41]]) B(-0.1, 0.1, y, y + 0.012, 0.13, 0.166, P.os, tronc, 2100 + (n === 1 ? 5 : 4));                         // le galon de col : caporal ou sergent ; l'adjudant en a deux de plus
   B(-0.1, 0.1, 1.425, 1.437, 0.13, 0.166, P.os, tronc, 2103);
+  niv = 0;
   // ── les bras
   cote(s => B(...x(s, 0.25, 0.35), 1.08, 1.4, -0.065, 0.065, P.vareuse, s < 0 ? brasG : brasD));
-  cote(s => { const os = s < 0 ? avantBrasG : avantBrasD; B(...x(s, 0.255, 0.345), 0.8, 1.08, -0.055, 0.055, P.vareuse, os); B(...x(s, 0.25, 0.35), 0.8, 0.84, -0.06, 0.06, P.vareuse, os); B(...x(s, 0.26, 0.34), 0.72, 0.81, -0.05, 0.05, P.main, os); B(...x(s, 0.335, 0.35), 0.74, 0.8, -0.03, 0.03, P.main, os); });   // l'avant-bras, son parement, la main et le pouce
+  cote(s => { const os = s < 0 ? avantBrasG : avantBrasD; B(...x(s, 0.255, 0.345), 0.8, 1.08, -0.055, 0.055, P.vareuse, os); niv = 1; B(...x(s, 0.25, 0.35), 0.8, 0.84, -0.06, 0.06, P.vareuse, os); niv = 0; B(...x(s, 0.26, 0.34), 0.72, 0.81, -0.05, 0.05, P.main, os); niv = 1; B(...x(s, 0.335, 0.35), 0.74, 0.8, -0.03, 0.03, P.main, os); niv = 0; });   // l'avant-bras, son parement, la main et le pouce
   // ── les jambes : le pantalon bleu (français : bandes molletières de la couleur des brodequins, de mi-tibia à la cheville) ; allemands : des bottes jusqu'aux genoux
   cote(s => B(...x(s, 0.03, 0.2), 0.5, 0.92, -0.1, 0.1, P.pantalon, s < 0 ? cuisseG : cuisseD));
   cote(s => { const os = s < 0 ? molletG : molletD;
     B(...x(s, 0.04, 0.19), 0.32, 0.52, -0.088, 0.088, P.pantalon, os, 500);                      // le bas du pantalon
     B(...x(s, 0.045, 0.196), 0.1, 0.33, -0.092, 0.092, P.botte, os, 500);                         // la bande molletière, de la couleur des chaussures
     B(...x(s, 0.035, 0.205), 0.1, 0.5, -0.097, 0.097, P.botte, os, 501);                          // la botte allemande, jusqu'au genou
-    B(...x(s, 0.03, 0.21), 0.46, 0.5, -0.1, 0.1, P.botte, os, 501);                               // son revers
+    niv = 1; B(...x(s, 0.03, 0.21), 0.46, 0.5, -0.1, 0.1, P.botte, os, 501); niv = 0;               // son revers
   });
-  cote(s => { const os = s < 0 ? piedG : piedD; B(...x(s, 0.02, 0.21), 0, 0.1, -0.1, 0.2, P.botte, os); B(...x(s, 0.02, 0.21), 0, 0.022, -0.1, 0.2, P.trait, os); B(...x(s, 0.03, 0.2), 0.1, 0.13, 0.0, 0.17, P.botte, os); });   // le brodequin, sa semelle, sa languette
+  cote(s => { const os = s < 0 ? piedG : piedD; B(...x(s, 0.02, 0.21), 0, 0.1, -0.1, 0.2, P.botte, os); niv = 1; B(...x(s, 0.02, 0.21), 0, 0.022, -0.1, 0.2, P.trait, os); B(...x(s, 0.03, 0.2), 0.1, 0.13, 0.0, 0.17, P.botte, os); niv = 0; });   // le brodequin, sa semelle, sa languette
   // ── la tête, le visage
   B(-0.04, 0.04, 1.4, 1.45, -0.04, 0.04, P.peau, tete);                                // le cou
   B(-0.1, 0.1, 1.42, 1.64, -0.1, 0.1, P.peau, tete, 0, P.peau, P.visage);              // la tête, son devant est le visage
-  cote(s => B(...x(s, 0.1, 0.118), 1.5, 1.57, -0.025, 0.045, P.peau, tete));   // les oreilles
+  niv = 1; cote(s => B(...x(s, 0.1, 0.118), 1.5, 1.57, -0.025, 0.045, P.peau, tete)); niv = 0;   // les oreilles
   B(-0.106, 0.106, 1.5, 1.62, -0.106, 0.0, P.cheveux, tete, 700);                       // la nuque et les tempes (sous le casque)
   // les cheveux, seulement quand le casque est tombé (blessé à la tête)
   B(-0.103, 0.103, 1.62, 1.65, -0.103, 0.103, P.cheveux, tete, 201);                    // ras
@@ -98,43 +102,55 @@ export function boites() {
   cote(s => B(...x(s, 0.1, 0.12), 1.45, 1.62, -0.1, 0.05, P.cheveux, tete, 203));        // longs
   B(-0.105, 0.105, 1.62, 1.68, -0.105, 0.105, P.cheveux, tete, 204); B(-0.105, 0.105, 1.56, 1.66, 0.1, 0.12, P.cheveux, tete, 204);      // frange
   // le casque Adrian (français) : une demi-sphère (quatre anneaux octogonaux qui se resserrent), le cimier, la visière, le couvre-nuque et la cocarde ; 26 cm de large, comme le vrai
-  for (const [y0, y1, r] of [[1.57, 1.61, 0.13], [1.61, 1.65, 0.12], [1.65, 1.69, 0.1], [1.69, 1.72, 0.065]]) { B(-r, r, y0, y1, -r, r, P.casque, tete, 1500); B(-r, r, y0, y1, -r, r, P.casque, tete, 1500, P.casque, P.casque, Math.PI / 4); }
+  niv = 1; for (const [y0, y1, r] of [[1.57, 1.61, 0.13], [1.61, 1.65, 0.12], [1.65, 1.69, 0.1], [1.69, 1.72, 0.065]]) { B(-r, r, y0, y1, -r, r, P.casque, tete, 1500); B(-r, r, y0, y1, -r, r, P.casque, tete, 1500, P.casque, P.casque, Math.PI / 4); }
+  niv = 2; for (const [y0, y1, r] of [[1.57, 1.62, 0.13], [1.62, 1.67, 0.11], [1.67, 1.72, 0.075]]) B(-r, r, y0, y1, -r, r, P.casque, tete, 1500);       // (intermédiaire : trois anneaux carrés)
+  niv = 0;
   B(-0.01, 0.01, 1.7, 1.765, -0.12, 0.12, P.casque, tete, 1500);                         // le cimier, d'avant en arrière
   B(-0.115, 0.115, 1.585, 1.605, 0.12, 0.19, P.casque, tete, 1500);                      // la visière
   B(-0.11, 0.11, 1.575, 1.6, -0.17, -0.12, P.casque, tete, 1500);                        // le couvre-nuque
-  B(-0.025, 0.025, 1.62, 1.665, 0.13, 0.142, P.metal, tete, 1500);                        // la cocarde, l'insigne de grenade
+  niv = 1; B(-0.025, 0.025, 1.62, 1.665, 0.13, 0.142, P.metal, tete, 1500); niv = 0;                        // la cocarde, l'insigne de grenade
   // le Stahlhelm (allemand, M1916) : un dôme plus bas, la jupe tout autour, le long couvre-nuque, les protège-oreilles, la visière, les cornes d'aération
-  for (const [y0, y1, r] of [[1.6, 1.64, 0.13], [1.64, 1.68, 0.115], [1.68, 1.71, 0.08]]) { B(-r, r, y0, y1, -r, r, P.casque, tete, 1501); B(-r, r, y0, y1, -r, r, P.casque, tete, 1501, P.casque, P.casque, Math.PI / 4); }
+  niv = 1; for (const [y0, y1, r] of [[1.6, 1.64, 0.13], [1.64, 1.68, 0.115], [1.68, 1.71, 0.08]]) { B(-r, r, y0, y1, -r, r, P.casque, tete, 1501); B(-r, r, y0, y1, -r, r, P.casque, tete, 1501, P.casque, P.casque, Math.PI / 4); }
+  niv = 2; for (const [y0, y1, r] of [[1.6, 1.66, 0.13], [1.66, 1.71, 0.09]]) B(-r, r, y0, y1, -r, r, P.casque, tete, 1501);
+  niv = 0;
   B(-0.15, 0.15, 1.555, 1.6, -0.16, 0.145, P.casque, tete, 1501);                         // la jupe
   B(-0.14, 0.14, 1.5, 1.56, -0.23, -0.12, P.casque, tete, 1501);                          // le couvre-nuque, long
   cote(s => B(...x(s, 0.12, 0.16), 1.5, 1.58, -0.1, 0.08, P.casque, tete, 1501));         // les protège-oreilles
   B(-0.12, 0.12, 1.565, 1.6, 0.145, 0.2, P.casque, tete, 1501);                           // la visière
+  niv = 1;
   cote(s => B(...x(s, 0.145, 0.168), 1.625, 1.65, -0.015, 0.015, P.metal, tete, 1501));   // les cornes d'aération
   B(-0.012, 0.012, 1.7, 1.725, -0.04, 0.04, P.metal, tete, 1501);                          // le support de la cocarde, au sommet
-  cote(s => B(...x(s, 0.1, 0.108), 1.42, 1.58, 0.0, 0.03, P.cuir, tete, 1502)); B(-0.09, 0.09, 1.405, 1.425, 0.0, 0.1, P.cuir, tete, 1502);   // la jugulaire, sous le menton
+  cote(s => B(...x(s, 0.1, 0.108), 1.42, 1.58, 0.0, 0.03, P.cuir, tete, 1502)); B(-0.09, 0.09, 1.405, 1.425, 0.0, 0.1, P.cuir, tete, 1502);
+  niv = 0;   // la jugulaire, sous le menton
   // les barbes (la bouche reste visible entre la moustache et le menton : sa ligne est à 1,46 m)
+  niv = 1;
   B(-0.065, 0.065, 1.478, 1.5, 0.1, 0.122, P.cheveux, tete, 301);                        // la moustache
   B(-0.035, 0.035, 1.42, 1.455, 0.1, 0.122, P.cheveux, tete, 302);                       // le bouc
+  niv = 0;
   B(-0.1, 0.1, 1.42, 1.456, 0.1, 0.124, P.cheveux, tete, 303);                            // la barbe pleine : le menton,
   cote(s => B(...x(s, 0.07, 0.1), 1.456, 1.52, 0.1, 0.122, P.cheveux, tete, 303));        // les joues,
   cote(s => B(...x(s, 0.1, 0.112), 1.43, 1.54, -0.02, 0.1, P.cheveux, tete, 303));        // les côtés,
+  niv = 1;
   B(-0.065, 0.065, 1.478, 1.5, 0.1, 0.122, P.cheveux, tete, 303);                          // la moustache
   cote(s => B(...x(s, 0.1, 0.115), 1.46, 1.6, 0.0, 0.1, P.cheveux, tete, 304));           // les favoris,
   B(-0.065, 0.065, 1.478, 1.5, 0.1, 0.122, P.cheveux, tete, 304);                          // et la moustache
+  niv = 0;
   // le fusil (les officiers n'en ont pas : le pistolet)
   B(0.37, 0.42, 0.55, 1.95, -0.03, 0.03, P.bois, fusil, 1100); B(0.385, 0.405, 1.95, 2.2, -0.012, 0.012, P.metal, fusil, 1100); B(0.36, 0.43, 1.0, 1.4, -0.018, 0.018, P.metal, fusil, 1100);
   // les accessoires (le numéro du bit : `ACCESSOIRES` de data/aspect-soldat.js)
-  B(0.03, 0.06, 1.455, 1.475, 0.1, 0.2, P.bois, tete, 400); B(0.03, 0.07, 1.475, 1.54, 0.17, 0.21, P.bois, tete, 400);        // 0 la pipe
+  niv = 1; B(0.03, 0.06, 1.455, 1.475, 0.1, 0.2, P.bois, tete, 400); B(0.03, 0.07, 1.475, 1.54, 0.17, 0.21, P.bois, tete, 400); niv = 0;        // 0 la pipe
   B(0.26, 0.34, 0.72, 1.0, -0.1, 0.12, P.claire, tronc, 401);                              // 1 la musette
   B(0.08, 0.14, 0.7, 1.2, -0.36, -0.32, P.bois, tronc, 402); B(0.04, 0.18, 0.55, 0.75, -0.36, -0.32, P.metal, tronc, 402);     // 2 la pelle
   B(-0.12, 0.12, 1.0, 1.18, 0.17, 0.29, P.cuir, tronc, 403);                              // 3 les jumelles
-  B(-0.095, 0.095, 1.527, 1.555, 0.1, 0.108, P.trait, tete, 404); cote(s => B(...x(s, 0.1, 0.108), 1.535, 1.55, -0.02, 0.1, P.trait, tete, 404));   // 4 les lunettes
+  niv = 1; B(-0.095, 0.095, 1.527, 1.555, 0.1, 0.108, P.trait, tete, 404); cote(s => B(...x(s, 0.1, 0.108), 1.535, 1.55, -0.02, 0.1, P.trait, tete, 404)); niv = 0;   // 4 les lunettes
   B(-0.3, -0.2, 0.78, 0.98, 0.05, 0.2, P.cuir, tronc, 405);                                // 5 la sacoche
   B(-0.1, 0.1, 1.0, 1.22, 0.17, 0.28, P.toile, tronc, 406);                                // 6 le masque à gaz
   B(-0.27, -0.14, 1.3, 1.44, -0.19, 0.19, P.toile, tronc, 407);                            // 7 la couverture en bandoulière : sur l'épaule gauche, puis en biais jusqu'à la hanche droite
   for (const [x0, y0] of [[-0.16, 1.2], [-0.04, 1.1], [0.08, 1.0], [0.18, 0.92]]) { B(x0, x0 + 0.14, y0, y0 + 0.16, 0.15, 0.2, P.toile, tronc, 407); B(x0, x0 + 0.14, y0, y0 + 0.16, -0.2, -0.15, P.toile, tronc, 407); }
+  niv = 1;
   B(0.04, 0.055, 1.458, 1.468, 0.1, 0.2, P.os, tete, 408);                                  // 8 la cigarette
   cote(s => B(...x(s, 0.14, 0.2), 0.7, 0.88, 0.17, 0.22, P.metal, tronc, 409));           // 9 les grenades
+  niv = 0;
   B(-0.375, -0.245, 1.22, 1.34, -0.09, 0.09, P.os, brasG, 410);                              // 10 le brassard
   B(-0.11, 0.11, 1.38, 1.46, -0.11, 0.11, P.claire, tete, 411);                             // 11 le cache-nez
   // les pansements des blessés
@@ -146,10 +162,11 @@ export function boites() {
 
 // La géométrie : quatre faces par boîte (dessus, devant, est, ouest, comme les soldats du jeu : DoubleSide cache le reste), ou cinq (`complet` : le derrière aussi, pour la fabrique qu'on fait tourner)
 // `filtre(boite)` : ne garder que certaines boîtes (un maillage par option : le corps seul, puis chaque coiffe, barbe ou accessoire dans son propre maillage, qui ne porte que ceux qui l'ont)
-export function modeleArticule({ complet = false, filtre = null } = {}) {
+// `niveau` : 'fin' (défaut : les boîtes de niveau 0 et 1) ou 'moyen' (0 et 2 : le niveau intermédiaire, de 12 à 16 px/m)
+export function modeleArticule({ complet = false, filtre = null, niveau = 'fin' } = {}) {
   const pos = [], part = [], os = [], show = [], nor = [];
   let nBoites = 0;
-  for (const [x0, x1, y0, y1, z0, z1, p, o, s, haut, avant, rot] of boites().filter(b => !filtre || filtre(b))) {
+  for (const [x0, x1, y0, y1, z0, z1, p, o, s, haut, avant, rot] of boites().filter(b => (niveau === 'moyen' ? b[12] !== 1 : b[12] !== 2) && (!filtre || filtre(b)))) {
     const cx = (x0 + x1) / 2, cz = (z0 + z1) / 2, c = Math.cos(rot || 0), sn = Math.sin(rot || 0);
     const r = v => rot ? [cx + (v[0] - cx) * c + (v[2] - cz) * sn, v[1], cz - (v[0] - cx) * sn + (v[2] - cz) * c] : v;      // une boîte tournée de 45° autour de y : les anneaux octogonaux des casques
     // la normale de la face (tournée avec la boîte) : l'éclairage de relief se calcule par sommet, face par face (les dérivées de l'écran faisaient du bruit à 40 pixels de haut)
@@ -165,9 +182,9 @@ export function modeleArticule({ complet = false, filtre = null } = {}) {
 }
 
 // Les triangles qu'un homme dessine vraiment (les autres sont aplatis par le nuanceur : ils coûtent leurs sommets, pas leurs pixels)
-export function trianglesVisibles(a, camp, blessure = 0, { complet = false } = {}) {
+export function trianglesVisibles(a, camp, blessure = 0, { complet = false, niveau = 'fin' } = {}) {
   let n = 0;
-  for (const b of boites()) if (voir(b[8], a, camp, blessure)) n += complet ? 10 : 8;
+  for (const b of boites()) if ((niveau === 'moyen' ? b[12] !== 1 : b[12] !== 2) && voir(b[8], a, camp, blessure)) n += complet ? 10 : 8;
   return n;
 }
 
@@ -354,8 +371,8 @@ export const OMBRE_FRAG = `
 // ─── three.js : le matériau et les instances ───
 // `col(lettre)` : une couleur de la palette (celle de creerRendu ou de la fabrique) ; `partages` : des uniformes du jeu à partager (`uT` : l'horloge de l'image, `uSoleil`, `uSol`, `uTaille`) ;
 // `ombreSeule` : le maillage des ombres au sol (le jeu), et rien d'autre
-export function creerSoldatArticule(THREE, col, { complet = false, ombrage = 0, filtre = null, partages = {}, ombreSeule = false } = {}) {
-  const M = ombreSeule ? ombreEtModele(THREE) : modeleArticule({ complet, filtre });
+export function creerSoldatArticule(THREE, col, { complet = false, ombrage = 0, filtre = null, partages = {}, ombreSeule = false, niveau = 'fin' } = {}) {
+  const M = ombreSeule ? ombreEtModele(THREE) : modeleArticule({ complet, filtre, niveau });
   const materiel = ombreSeule
     ? new THREE.ShaderMaterial({ uniforms: { uSoleil: partages.uSoleil ?? { value: new THREE.Vector2(0.5, 0.6) }, uSol: partages.uSol ?? { value: new THREE.DataTexture(new Uint8Array([70, 66, 50, 255]), 1, 1) }, uTaille: partages.uTaille ?? { value: new THREE.Vector2(400, 300) } },
       vertexShader: OMBRE_VERT, fragmentShader: OMBRE_FRAG, side: THREE.DoubleSide, transparent: true })
@@ -410,11 +427,11 @@ function ombreEtModele() {
 
 // Les hommes d'un lot, le jeu : un maillage par option (le corps seul pour tous, puis chaque casque, barbe, accessoire, galon dans le sien, avec les seuls hommes qui l'ont : le schéma des pansements
 // et des grades) et un maillage d'ombres. `capacite` : le nombre d'hommes au plus ; `ajouter(h)` écrit un homme (le même objet que `ecrire`), `fin()` envoie les tampons.
-export function creerEquipeArticulee(THREE, col, { capacite, ombrage = 0, partages = {} }) {
+export function creerEquipeArticulee(THREE, col, { capacite, ombrage = 0, partages = {}, niveau = 'fin' }) {
   const codes = [...new Set(boites().map(b => b[8]))].sort((a, b) => a - b);
   const groupes = [];
   for (const code of codes) {
-    const S = creerSoldatArticule(THREE, col, { ombrage, filtre: b => b[8] === code, partages });
+    const S = creerSoldatArticule(THREE, col, { ombrage, filtre: b => b[8] === code, partages, niveau });
     if (!S.modele.triangles) continue;
     const lot = S.instances(capacite); lot.mesh.renderOrder = 2; lot.envoyer(0);
     groupes.push({ code, S, lot, n: 0 });
