@@ -1,7 +1,7 @@
 {
-  "version": "0.105.1",
+  "version": "0.105.2",
   "date": "2026-11-01",
   "changes": [
-    "Les soldats de près ont deux niveaux de détail : le fin dès 24 pixels par mètre (boutons, galons, moustache, pipe, casque rond), un plus simple de 12 à 16 qui coûte moins à dessiner"
+    "De près, les soldats d'un régiment en feu retenu tiennent le fusil baissé en travers des hanches ; au corps à corps ils se fendent et poussent la baïonnette vers l'adversaire (comme les soldats de loin)"
   ]
 }

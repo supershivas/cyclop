@@ -1,10 +1,10 @@
 // Les hommes : les soldats (une boîte et son ombre ; de près la silhouette, plus loin une silhouette allégée ; aux zooms 1 et 2 un point), les anneaux des
 // régiments choisis ou survolés, les corps (un homme couché) et les tombes (un tertre et une croix). Tout est instancié et ne reçoit que ce qu'on voit.
 // Le dessin seulement. Les formes viennent de geometries.js, le GLSL de shaders.js.
-import * as SH from './shaders.js?v=0.105.1';
-import { creerGeometries } from './geometries.js?v=0.105.1';
-import { classeDuRang } from '../data/grades.js?v=0.105.1';
-import { creerEquipeArticulee } from './soldat-articule.js?v=0.105.1';
+import * as SH from './shaders.js?v=0.105.2';
+import { creerGeometries } from './geometries.js?v=0.105.2';
+import { classeDuRang } from '../data/grades.js?v=0.105.2';
+import { creerEquipeArticulee } from './soldat-articule.js?v=0.105.2';
 
 // `THREE`, `scene`, `col`, `solUniforms` (`uSol`, `uTaille` : la texture du sol, que l'ombre d'un soldat reprend), `styleSoldat` (le style de près, comparé au labo),
 // `grades` (v0.68.0 : une variante de `GRADES`, data/grades.js, ou null : tous pareils) et `rangDe(B, id, reg)` (le rang d'un homme, bataille.js) ; `surface(x, z)` et `surfaceLisse(x, z)` (la hauteur du sol, lissée pour qui marche), `solY` (la hauteur moyenne du sol) et `POINTS_JUSQUA` (le zoom où un soldat n'est
@@ -28,7 +28,7 @@ export function creerSoldats({ THREE, scene, col, solUniforms, styleSoldat, grad
   // et les galons de `aspect` (js/aspect-soldat.js) ; ils quittent les tampons des soldats équipés (et des gradés, des pansements) : un homme n'est dessiné qu'une fois. Créés au premier besoin (un objet de plus
   // décale les tirages d'identifiants de three, donc les images de référence). `aspectDe(B, id, camp)` : l'aspect d'un homme (main.js : son numéro de campagne, la graine d'identité, son âge et son rang) ; gardé par numéro.
   let artCfg = null, aspectDe = null, EQ = null, EQs = { moyen: null, fin: null }, artSel = null, candI = null, candD = null, artVus = 0;
-  const aspects = new Map(), hArt = { x: 0, y: 0, z: 0, camp: 0, vit: 0, tir: 0, tapi: 0, couche: 0, blessure: 0, cap: 0, aspect: null };
+  const aspects = new Map(), hArt = { x: 0, y: 0, z: 0, camp: 0, vit: 0, tir: 0, tapi: 0, couche: 0, blessure: 0, cap: 0, temps: 0, aspect: null };
   let cap = 0, posArr = null, campArr = null, vitArr = null, tirArr = null, soldatsInst = null, soldatsDetail = null, soldatsLeger = null, soldatsPoints = null, attrsI = null, attrsP = null;
   const VARIATION = { taille: 0.07, largeur: 0.14 };      // la taille (±7 %) et la largeur (±14 %) d'un homme autour de la boîte de référence : le dessin seulement (Jérôme, v0.69.0)
   const TAPI = 0.5;                        // la peur au-delà de laquelle un homme se tapit (le dessin seulement ; on ne tire plus à 0,85)
@@ -324,7 +324,7 @@ export function creerSoldats({ THREE, scene, col, solUniforms, styleSoldat, grad
       const niv = p >= (artCfg.fin ?? 24) ? 'fin' : 'moyen';
       if (nArt && !EQs[niv]) {
         EQs[niv] = creerEquipeArticulee(THREE, col, { capacite: artCfg.max + 8, ombrage: artCfg.ombrage ?? 0, niveau: niv,
-          partages: { uT: soldatMat.uniforms.uT, uSoleil: soldatMat.uniforms.uSoleil, uSol: solUniforms.uSol, uTaille: solUniforms.uTaille } });
+          partages: { uSoleil: soldatMat.uniforms.uSoleil, uSol: solUniforms.uSol, uTaille: solUniforms.uTaille } });
         for (const m of EQs[niv].meshes) scene.add(m);
       }
       EQ = EQs[niv];
@@ -389,8 +389,8 @@ export function creerSoldats({ THREE, scene, col, solUniforms, styleSoldat, grad
         const v = vitArr[k], tx = tirArr[k * 2];
         hArt.x = posArr[k * 3]; hArt.y = posArr[k * 3 + 1]; hArt.z = posArr[k * 3 + 2]; hArt.camp = campArr[k];
         hArt.vit = v < 0 ? 0 : v; hArt.tapi = v < 0 ? 1 : 0;
-        hArt.tir = tx > 0 ? Math.min(1, tx * 2.5) : tx <= -2 ? 0.8 : 0;       // (le feu retenu : le fusil à l'épaule baissé, pas repris ; la mêlée : à l'épaule, tourné vers l'adversaire)
-        hArt.cap = tirArr[k * 2 + 1]; hArt.blessure = blessArr[k]; hArt.aspect = c.a;
+        hArt.tir = tx > 0 ? Math.min(1, tx * 2.5) : tx <= -2 ? -tx : tx < -0.5 ? -1 : 0;       // (−1 le feu retenu : le fusil baissé ; de 2 à 3 la mêlée : 2 + la poussée, tourné vers l'adversaire : `aTir` du soldat équipé)
+        hArt.cap = tirArr[k * 2 + 1]; hArt.blessure = blessArr[k]; hArt.aspect = c.a; hArt.temps = tAnim;
         EQ.ajouter(hArt);
         continue;
       }
