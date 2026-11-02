@@ -1,5 +1,9 @@
 # Journal des versions
 
+## 0.106.0 — 2026-11-02
+- Nouvelle partie : les secteurs sont des cartes de papier usé posées sur une table ; la carte choisie glisse sur le dessus de la pile avec sa vraie carte en 3D, sa description, la saison, le niveau et la durée
+- La description d'un niveau n'est plus qu'une infobulle au survol, et les infobulles s'affichent au-dessus des fenêtres
+
 ## 0.105.6 — 2026-11-02
 - Au labo, les cartes de secteur montrent la vraie carte du secteur (rendue par le moteur du jeu) sur un papier usé, grainé, plié, aux bords rongés, posé sur une table de toile
 

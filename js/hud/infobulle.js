@@ -40,7 +40,10 @@ export function creerInfobulle({ $ }) {
   surveillerTitres();
   const bulle = $('infobulle');
   let vers = null;
-  const cacher = () => { bulle.hidden = true; vers = null; };
+  // la bulle est un « popover » : dans la couche supérieure du navigateur, donc AU-DESSUS d'un dialogue modal (sans cela, l'infobulle d'un bouton du choix du secteur restait cachée derrière sa fenêtre, v0.106.0)
+  bulle.setAttribute('popover', 'manual');
+  const afficher = () => { bulle.hidden = false; try { if (!bulle.matches(':popover-open')) bulle.showPopover(); } catch { /* sans popover : la bulle reste dans la page */ } };
+  const cacher = () => { bulle.hidden = true; vers = null; try { if (bulle.matches(':popover-open')) bulle.hidePopover(); } catch { /* idem */ } };
   const poser = e => {
     const x = Math.min(e.clientX + 14, innerWidth - bulle.offsetWidth - 6), y = e.clientY + 18 + bulle.offsetHeight > innerHeight ? e.clientY - bulle.offsetHeight - 10 : e.clientY + 18;
     bulle.style.transform = `translate(${Math.max(4, Math.round(x))}px, ${Math.max(4, Math.round(y))}px)`;
@@ -50,7 +53,7 @@ export function creerInfobulle({ $ }) {
     // sans `data-info`, un bouton **sans texte** (icône, flèche) dit son nom : tout ce qui se clique parle (v0.98.0) ; un bouton qui porte déjà son texte (la bascule de la carte, une carte de régiment) ne le répète pas (v0.100.0)
     const texte = c ? c.dataset.info || (c.classList.contains('reg-carte') || c.textContent.trim() ? '' : c.getAttribute('aria-label')) || '' : '';
     if (!c || !texte) { if (vers) cacher(); return; }
-    if (c !== vers || bulle.dataset.texte !== texte) { vers = c; bulle.dataset.texte = texte; bulle.innerHTML = lignesInfo(texte); bulle.hidden = false; }
+    if (c !== vers || bulle.dataset.texte !== texte) { vers = c; bulle.dataset.texte = texte; bulle.innerHTML = lignesInfo(texte); afficher(); }
     poser(e);
   });
   document.addEventListener('pointerleave', cacher);

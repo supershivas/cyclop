@@ -152,6 +152,7 @@
 
 .infobulle { position: fixed; left: 0; top: 0; z-index: 60; max-width: 34ch; padding: var(--e1) var(--pas); background: var(--jeu-encre); color: var(--jeu-fond); font-size: var(--texte-petit); line-height: 1.4; box-shadow: 2px 2px 0 var(--jeu-fond); pointer-events: none; }
 .infobulle[hidden] { display: none; }
+.infobulle[popover] { inset: 0 auto auto 0; margin: 0; border: 0; overflow: visible; }       /* (les réglages d'office d'un popover : centré, bordé, qui défile) */
 .infobulle span { display: block; }
 .infobulle .seul { font-weight: 700; }
 .infobulle .h1 { font-size: var(--texte-moyen); font-weight: 700; line-height: 1.2; }
@@ -493,10 +494,11 @@ body.charge dialog { display: none; }
 .chargement-piste { height: 10px; border: 2px solid var(--jeu-fond, #16130f); }
 .chargement-piste i { display: block; height: 100%; background: var(--jeu-fond, #16130f); transition: width .12s linear; }
 
-/* Le choix du secteur (Jérôme, v0.29.0 ; v0.37.1 : deux colonnes) : à gauche la liste des secteurs, à droite le secteur choisi en 3D, qui tourne ; le terrain montré est celui qu'on jouera */
-#dialogue-carte { width: min(94vw, 72rem); max-width: none; overflow: hidden; }       /* (pas de barre de défilement : la carte se réduit à la place qui reste, Jérôme, v0.60.2) */        /* (game.css limite un dialogue à 520 px) */
+/* Le choix du secteur (Jérôme, v0.29.0 ; v0.37.1 : deux colonnes ; v0.106.0 : des cartes de papier sur une table) : à gauche la liste des secteurs, à droite la pile de cartes ; la carte choisie glisse sur le dessus.
+   Aucune valeur de couleur ici : le papier est l'encre (os), le grain et les plis la terre, les taches la glaise, en transparence (`color-mix`) ; le bruit est un masque (sa couleur vient des variables). */
+#dialogue-carte { width: min(94vw, 72rem); max-width: none; overflow: hidden; }       /* (pas de barre de défilement : la pile se réduit à la place qui reste, Jérôme, v0.60.2) */        /* (game.css limite un dialogue à 520 px) */
 #dialogue-carte .menu { grid-auto-flow: column; justify-content: end; }
-.carte-colonnes { display: grid; grid-template-columns: minmax(15rem, 22rem) minmax(0, 1fr); gap: calc(var(--pas) * 2); align-items: start; }
+.carte-colonnes { display: grid; grid-template-columns: minmax(13rem, 18rem) minmax(0, 1fr); gap: calc(var(--pas) * 2); align-items: start; }
 .cartes-choix { display: grid; gap: var(--pas); }
 .carte-choix { display: grid; gap: var(--pas); align-content: start; text-align: left; font: inherit; padding: var(--pas); cursor: pointer; color: var(--jeu-fond); background: var(--jeu-encre); border: 2px solid var(--jeu-encre); }
 .carte-choix:focus-visible { border-color: var(--jeu-nous); }
@@ -506,45 +508,63 @@ body.charge dialog { display: none; }
 .carte-hasard { display: flex; align-items: center; gap: var(--pas); background: var(--jeu-accent); border-color: var(--jeu-accent); }       /* (comme les autres cartes, d'une autre teinte) */
 .carte-hasard svg { width: 1.4rem; height: 1.4rem; flex: none; }
 .carte-choix b { font-weight: normal; font-size: var(--texte-moyen); letter-spacing: .06em; text-transform: uppercase; }
-.carte-choix p { margin: 0; font-size: var(--texte-petit); line-height: 1.35; }
-.saisons-choix { display: flex; gap: var(--pas); align-items: stretch; margin-top: var(--pas); }
-.saisons-choix .carte-choix { flex: none; display: flex; align-items: center; justify-content: center; gap: calc(var(--pas) * .6); padding: calc(var(--pas) * .5) var(--pas); text-align: center; }
-.saisons-choix .carte-choix svg { width: 1.1rem; height: 1.1rem; flex: none; }
-.saisons-choix .carte-choix span { font-size: var(--texte-petit); letter-spacing: .06em; text-transform: uppercase; line-height: 1; }
-.saisons-choix .carte-choix b { float: none; }
-.saisons-choix::before { content: 'Saison'; align-self: center; font-size: var(--texte-petit); color: var(--jeu-accent); letter-spacing: .06em; text-transform: uppercase; }
-#difficultes-choix::before { content: 'Niveau'; }
-#difficultes-choix[hidden], #difficulte-desc:empty { display: none; }
-/* le niveau (avec sa phrase juste dessous, alignée sur ses boutons) et la durée, côte à côte (la fenêtre tient à 800 px de haut) */
-.reglages-partie { display: flex; flex-wrap: wrap; align-items: flex-start; gap: var(--pas) calc(var(--pas) * 4); margin-top: var(--pas); }
-.reglages-partie .saisons-choix { margin-top: 0; }
-.reglages-partie .saisons-choix::before { min-width: 3.4rem; }
-.reglage-niveau { flex: 1 1 auto; min-width: 0; }
-#durees-choix::before { content: 'Durée'; }
-#durees-choix[hidden], #duree-desc[hidden], #duree-desc:empty { display: none; }
-#durees-choix .carte-choix { text-transform: uppercase; font-size: var(--texte-petit); letter-spacing: .06em; }
-#difficulte-desc { margin: var(--pas) 0 0; padding-left: calc(var(--pas) * 1.5); border-left: 2px solid var(--jeu-accent); margin-left: calc(3.4rem + var(--pas)); font-size: var(--texte-petit); line-height: 1.45; color: var(--jeu-encre); max-width: 46rem; }
-#difficultes-choix .carte-choix b { font-size: var(--texte-petit); }
-#dialogue-carte.agrandi .reglages-partie, #dialogue-carte.agrandi #duree-desc { display: none; }
-.carte-apercu { display: grid; gap: var(--pas); }
-.carte-3d { position: relative; height: min(44vh, 26rem); overflow: hidden; display: flex; align-items: center; justify-content: center; background: var(--jeu-ombre); border: 1px solid var(--jeu-accent); }
+
+/* la table : une toile sombre, du grain, un coin plus noir ; la pile y est posée (les cartes sont au-dessus : z-index 1 et plus) */
+.carte-table { --bruit-grain: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='240'%20height='240'%3E%3Cfilter%20id='n'%3E%3CfeTurbulence%20type='fractalNoise'%20baseFrequency='0.85'%20numOctaves='3'%20stitchTiles='stitch'/%3E%3CfeColorMatrix%20values='0%200%200%200%200%200%200%200%200%200%200%200%200%200%200%200%200%200%201.1%20-0.3'/%3E%3C/filter%3E%3Crect%20width='100%25'%20height='100%25'%20filter='url%28%23n%29'/%3E%3C/svg%3E"); --bruit-taches: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='520'%20height='520'%3E%3Cfilter%20id='n'%3E%3CfeTurbulence%20type='fractalNoise'%20baseFrequency='0.011'%20numOctaves='3'%20stitchTiles='stitch'/%3E%3CfeColorMatrix%20values='0%200%200%200%200%200%200%200%200%200%200%200%200%200%200%200%200%200%202.2%20-0.75'/%3E%3C/filter%3E%3Crect%20width='100%25'%20height='100%25'%20filter='url%28%23n%29'/%3E%3C/svg%3E");
+  position: relative; overflow: hidden; height: clamp(24rem, calc(100dvh - 19rem), 40rem); background: var(--jeu-ombre); border: var(--trait) solid var(--jeu-accent);
+  background-image: repeating-linear-gradient(0deg, color-mix(in srgb, var(--jeu-accent) 10%, transparent) 0 1px, transparent 1px 4px), repeating-linear-gradient(90deg, color-mix(in srgb, var(--jeu-accent) 8%, transparent) 0 1px, transparent 1px 4px); }
+.carte-table::before, .carte-table::after { content: ''; position: absolute; inset: 0; pointer-events: none; z-index: 0; }
+.carte-table::before { background: var(--jeu-fond); -webkit-mask-image: var(--bruit-grain); mask-image: var(--bruit-grain); opacity: .5; }
+.carte-table::after { background: radial-gradient(ellipse at 50% 45%, transparent 45%, color-mix(in srgb, var(--jeu-fond) 55%, transparent)); }
+
+/* une carte : posée de biais (le transform est écrit par main.js), celles du dessous assombries et inertes (leur onglet seul se lit) */
+.carte-papier { --bruit-grain: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='240'%20height='240'%3E%3Cfilter%20id='n'%3E%3CfeTurbulence%20type='fractalNoise'%20baseFrequency='0.85'%20numOctaves='3'%20stitchTiles='stitch'/%3E%3CfeColorMatrix%20values='0%200%200%200%200%200%200%200%200%200%200%200%200%200%200%200%200%200%201.1%20-0.3'/%3E%3C/filter%3E%3Crect%20width='100%25'%20height='100%25'%20filter='url%28%23n%29'/%3E%3C/svg%3E"); --bruit-taches: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='520'%20height='520'%3E%3Cfilter%20id='n'%3E%3CfeTurbulence%20type='fractalNoise'%20baseFrequency='0.011'%20numOctaves='3'%20stitchTiles='stitch'/%3E%3CfeColorMatrix%20values='0%200%200%200%200%200%200%200%200%200%200%200%200%200%200%200%200%200%202.2%20-0.75'/%3E%3C/filter%3E%3Crect%20width='100%25'%20height='100%25'%20filter='url%28%23n%29'/%3E%3C/svg%3E");
+  position: absolute; left: 0; right: 0; margin: 0 auto; top: calc(var(--decal) * var(--onglets) + var(--pas)); width: min(38rem, calc(100% - var(--pas) * 4)); height: calc(100% - var(--decal) * var(--onglets) - var(--pas) * 2);
+  color: var(--jeu-fond); transition: transform .4s cubic-bezier(.2, .8, .2, 1); will-change: transform; }
+.carte-papier.glisse { transition: none; }
+.carte-papier.dessous { filter: brightness(.8); pointer-events: none; }
+.carte-papier.profond { visibility: hidden; }       /* (au-delà du dernier onglet montré : une carte rognée ne se lit pas) */
+.papier-fond { position: absolute; inset: 0; background: var(--jeu-encre); filter: url(#usure-papier) drop-shadow(3px 4px 0 var(--jeu-fond)); }
+.papier-calque { position: absolute; inset: 4px; pointer-events: none; z-index: 3; mix-blend-mode: multiply; }
+.papier-calque.grain { background: var(--jeu-fond); -webkit-mask-image: var(--bruit-grain); mask-image: var(--bruit-grain); opacity: .3; }
+.papier-calque.taches { background: var(--jeu-accent); -webkit-mask-image: var(--bruit-taches); mask-image: var(--bruit-taches); opacity: .34; }
+.papier-calque.plis { mix-blend-mode: normal; background:
+  linear-gradient(90deg, transparent calc(50% - 2px), color-mix(in srgb, var(--jeu-fond) 16%, transparent) calc(50% - 1px), color-mix(in srgb, var(--jeu-encre) 55%, transparent) 50%, transparent calc(50% + 2px)),
+  linear-gradient(0deg, transparent calc(34% - 2px), color-mix(in srgb, var(--jeu-fond) 14%, transparent) calc(34% - 1px), color-mix(in srgb, var(--jeu-encre) 50%, transparent) 34%, transparent calc(34% + 2px)),
+  radial-gradient(circle at 0 100%, color-mix(in srgb, var(--jeu-accent) 40%, transparent), transparent 20%), radial-gradient(circle at 100% 0, color-mix(in srgb, var(--jeu-accent) 30%, transparent), transparent 16%),
+  radial-gradient(ellipse at 50% 50%, transparent 62%, color-mix(in srgb, var(--jeu-accent) 30%, transparent)); }
+.papier-contenu { position: relative; z-index: 2; height: 100%; display: flex; flex-direction: column; gap: var(--pas); padding: var(--e1) var(--e1) var(--e3); box-sizing: border-box; }
+.carte-nom { margin: 0; padding: var(--e1) var(--e3); flex: none; font-size: var(--texte-moyen); font-weight: normal; line-height: 1.3; letter-spacing: var(--titre-lettres); text-transform: uppercase; color: var(--jeu-encre); background: var(--jeu-fond); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* la vraie carte du secteur (l'aperçu 3D du jeu) dans son cadre, collée au papier par deux bouts d'adhésif ; la saison dessus, en haut à droite (Jérôme, retour du 2 nov.) */
+.carte-cadre { position: relative; flex: 1 1 5rem; min-height: 5rem; margin: var(--pas) var(--e3) 0; background: var(--jeu-ombre); box-shadow: 0 0 0 var(--trait) var(--jeu-fond); }
+.carte-cadre::before, .carte-cadre::after { content: ''; position: absolute; z-index: 4; top: -8px; width: 52px; height: 16px; background: color-mix(in srgb, var(--jeu-brume) 85%, transparent); box-shadow: 0 0 0 var(--trait) color-mix(in srgb, var(--jeu-accent) 50%, transparent); pointer-events: none; }
+.carte-cadre::before { left: -16px; transform: rotate(-38deg); }
+.carte-cadre::after { right: -16px; transform: rotate(36deg); }
+.carte-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; image-rendering: pixelated; }
+.carte-img:not([src]) { display: none; }
+.carte-3d { position: absolute; inset: 0; overflow: hidden; display: flex; align-items: center; justify-content: center; background: var(--jeu-ombre); cursor: zoom-in; }
 .carte-3d canvas { display: block; image-rendering: pixelated; }
-.carte-3d { cursor: zoom-in; }
+.carte-saisons { position: absolute; z-index: 3; top: var(--pas); right: var(--pas); display: flex; gap: var(--e1); padding: var(--e1); background: color-mix(in srgb, var(--jeu-fond) 60%, transparent); }
+.carte-legende { margin: 0 var(--e3); flex: none; font-size: var(--texte-petit); line-height: 1.4; min-height: 4.2em; }
+.carte-reglages { flex: none; display: grid; gap: var(--pas); margin: 0 var(--e3); }
+.carte-reglage { display: grid; grid-template-columns: 4.5rem minmax(0, 1fr); align-items: center; gap: var(--pas); }
+.carte-reglage-nom { font-size: var(--texte-petit); letter-spacing: .08em; text-transform: uppercase; color: var(--jeu-accent); }
+.carte-reglage-rang { display: flex; flex-wrap: wrap; gap: var(--e1) var(--pas); }
+/* une pastille : le contour glaise au repos, l'encre sous l'os quand elle est choisie (comme les boutons de papier du jeu) */
+.pastille { display: inline-flex; align-items: center; justify-content: center; gap: var(--e1); font: inherit; font-size: var(--texte-petit); letter-spacing: .06em; text-transform: uppercase; white-space: nowrap; min-height: 28px; padding: 0 var(--pas); cursor: pointer; color: var(--jeu-fond); background: transparent; border: 2px solid var(--jeu-accent); }
+.pastille svg { width: 1rem; height: 1rem; flex: none; }
+.pastille:focus-visible { outline: 2px solid var(--jeu-nous); outline-offset: 1px; }
+.pastille[aria-pressed="true"] { color: var(--jeu-encre); background: var(--jeu-fond); border-color: var(--jeu-fond); }
+@media (hover: hover) { .pastille:hover { border-color: var(--jeu-fond); } }
+.carte-saisons .pastille { color: var(--jeu-encre); background: var(--jeu-fond); border-color: var(--jeu-fond); min-height: 26px; }
+.carte-saisons .pastille[aria-pressed="true"] { color: var(--jeu-fond); background: var(--jeu-encre); border-color: var(--jeu-nous); }
+@media (hover: hover) { .carte-saisons .pastille:hover { border-color: var(--jeu-nous); } }
+.carte-aide { margin: var(--pas) 0 0; font-size: var(--texte-petit); line-height: 1.4; min-height: 1.4em; color: var(--jeu-accent); }
+/* la carte agrandie (v0.51.0) : la liste et la pile s'effacent, l'aperçu prend la place */
+.carte-grande { margin-top: 0; }
+.carte-grande .carte-3d { position: relative; height: calc(100dvh - 19rem); border: var(--trait) solid var(--jeu-accent); }
+#dialogue-carte.agrandi .carte-colonnes { display: none; }
 #dialogue-carte.agrandi .carte-3d { cursor: grab; }
-.carte-vue { position: relative; }
-/* la saison, sur la carte en haut à droite (Jérôme, retour du 2 nov.) : des pastilles sur un voile sombre, le relief reste lisible dessous */
-#saisons-choix { position: absolute; top: var(--pas); right: var(--pas); z-index: 2; margin: 0; padding: calc(var(--pas) * .5); gap: calc(var(--pas) * .5); background: rgba(0, 0, 0, .55); }
-#saisons-choix::before { content: none; }
-#saisons-choix .carte-choix { padding: calc(var(--pas) * .5) calc(var(--pas) * .75); }
-/* le nom de la carte, sur un dégradé du noir vers le transparent au bas de l'aperçu (Jérôme, v0.64.1) ; les clics passent au 3D */
-.carte-titre { position: absolute; left: 0; right: 0; bottom: 0; padding: calc(var(--pas) * 3) var(--pas) var(--pas); font-size: var(--texte-grand); letter-spacing: .06em; text-transform: uppercase; color: var(--jeu-encre); background: linear-gradient(to top, rgba(0, 0, 0, .85), rgba(0, 0, 0, 0)); pointer-events: none; }
-/* la description et l'aide : deux lignes au plus, et toujours la place de deux lignes : la fenêtre ne change jamais de taille */
-.carte-legende, .carte-aide { margin: 0; font-size: var(--texte-petit); line-height: 1.4; height: 2.8em; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
-.carte-aide { color: var(--jeu-accent); }
-/* la carte agrandie (v0.51.0) : la liste s'efface, l'aperçu prend la place */
-#dialogue-carte.agrandi .cartes-choix { display: none; }
-#dialogue-carte.agrandi .carte-colonnes { grid-template-columns: 1fr; }
-#dialogue-carte.agrandi .carte-3d { height: calc(100dvh - 22rem); }
 @media (max-width: 760px) { .carte-colonnes { grid-template-columns: 1fr; } }
 
 /* Le haut de l'écran allégé pour un petit écran (Jérôme, v0.30.0 : 13 pouces, le champ était trop petit) : le temps à côté des réglages, les

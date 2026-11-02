@@ -9,9 +9,9 @@
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta property="og:image" content="og.png">
-<link rel="stylesheet" href="js/lib/game.css?v=0.105.6">
-<link rel="stylesheet" href="css/style.css?v=0.105.6">
-<link rel="stylesheet" href="css/ds-v2.css?v=0.105.6">
+<link rel="stylesheet" href="js/lib/game.css?v=0.106.0">
+<link rel="stylesheet" href="css/style.css?v=0.106.0">
+<link rel="stylesheet" href="css/ds-v2.css?v=0.106.0">
 </head>
 <body class="charge">
 <!-- La barre de chargement (v0.28.0) : là avant tout script ; main.js la remplit, puis la retire. `body.charge` (v0.100.0) : tout le reste de l'écran est caché tant qu'elle est là (le menu et le titre ne se voient plus derrière) -->
@@ -345,25 +345,16 @@
   <form method="dialog" class="menu"><button class="bouton" value="annuler">Annuler</button></form>
 </dialog>
 
+<!-- les bords d'une carte de papier : un papier ne coupe pas droit (filtre de déplacement, utilisé par .papier-fond) -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><filter id="usure-papier" x="-4%" y="-4%" width="108%" height="108%"><feTurbulence type="fractalNoise" baseFrequency="0.035 0.05" numOctaves="3" seed="5" result="b"/><feDisplacementMap in="SourceGraphic" in2="b" scale="8" xChannelSelector="R" yChannelSelector="G" result="d"/><feTurbulence type="fractalNoise" baseFrequency="0.4" numOctaves="2" seed="9" result="f"/><feDisplacementMap in="d" in2="f" scale="3" xChannelSelector="R" yChannelSelector="G"/></filter></svg>
 <dialog id="dialogue-carte" aria-label="Choisir le secteur">
   <h2>Quel secteur ?</h2>
   <div class="carte-colonnes">
     <div class="cartes-choix" id="cartes-choix" role="group" aria-label="Les secteurs"></div>
-    <div class="carte-apercu">
-      <div class="carte-vue"><div class="carte-3d" id="carte-3d" aria-hidden="true"></div><div class="carte-titre" id="carte-titre"></div>
-        <div class="saisons-choix" id="saisons-choix" role="group" aria-label="La saison"></div></div>
-      <p class="carte-legende" id="carte-legende"></p>
-      <p class="carte-aide" id="carte-aide"></p>
-    </div>
+    <div class="carte-table" id="carte-table"></div>
   </div>
-  <div class="reglages-partie">
-    <div class="reglage-niveau">
-      <div class="saisons-choix" id="difficultes-choix" role="group" aria-label="Le niveau"></div>
-      <p id="difficulte-desc"></p>
-    </div>
-    <div class="saisons-choix" id="durees-choix" role="group" aria-label="La durée"></div>
-  </div>
-  <p id="duree-desc" hidden></p>
+  <div class="carte-grande" id="carte-grande" hidden><div class="carte-3d" id="carte-3d" aria-hidden="true"></div></div>
+  <p class="carte-aide" id="carte-aide"></p>
   <form method="dialog" class="menu">
     <button class="bouton" value="annuler">Annuler</button>
     <button class="bouton" type="button" id="carte-jouer">Jouer ce secteur</button>
@@ -379,6 +370,6 @@
 </dialog>
 
 <div class="jeu-toast" id="toast" role="status" hidden></div>
-<script type="module" src="js/main.js?v=0.105.6"></script>
+<script type="module" src="js/main.js?v=0.106.0"></script>
 </body>
 </html>
