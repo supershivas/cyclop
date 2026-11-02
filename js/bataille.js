@@ -17,7 +17,7 @@
 import { createRng, hash2 } from './lib/rng.js?v=0.107.1';
 import { impact, hydroLignes, etat as etatCase, vitesseEtat, vitesseCase, ETAT } from './terrain.js?v=0.107.1';
 import { creerArmee, ajouterSoldat, construireGrille, pasArmee, tuerDans, effrayer, compacter, photoArmee, restaurerArmee, b64, deB64, DENSITE, place, poserCaracs, lireCaracs, abimerCaracs, gagner, CARACS } from './army.js?v=0.107.1';
-import { ligneSous, solidite } from './tranchees.js?v=0.107.1';
+import { ligneSous, solidite, y0En, arcMax } from './tranchees.js?v=0.107.1';
 import { terrainDuSecteur } from './secteur-terrain.js?v=0.107.1';
 import { detruirePont, reconstruirePont, pontEn } from './eaux.js?v=0.107.1';
 import { MISSIONS_SECONDAIRES as MS } from './data/missions.js?v=0.107.1';
@@ -49,7 +49,7 @@ import { campDeDepart, dotationAube, refusOrdre, refusNid, appliquerDepart, modi
 
 export const PAS = 1 / 30;                 // s de jeu par pas
 export const NOUS = 0, EUX = 1;
-const VERSION = 24;   // 24 : les postes de mitrailleuse (munitions, expérience, direction du cône) et l'expérience des chars (lot E, v0.102.0) ; 23 : les renforts (`etat.ralliees`, `etat.arrives`, `reg.versCaserne`, lot D, v0.101.0) ; 22 : l'affectation des guéris de l'hôpital (`etat.affectation`, v0.99.11) ; 21 : le stock de chars du parc (`etat.charsDispo`, v0.99.10) ; 20 : les missions secondaires (`etat.secondaires`, v0.99.0) ; 19 : le fil de fer de chaque tronçon (`etat.fil`, v0.98.0) ; 18 : le camp d'en face (`etat.campEux`, v0.92.0) ; 17 : l'équipement des régiments (`reg.equip`, v0.91.0) ; 16 : le camp (`etat.camp` : la dotation, les niveaux des bâtiments, v0.86.0) ; 15 : les nids de mitrailleuses (`etat.nids`, v0.83.0) ; 14 : la victoire anticipée (`etat.priseJours`, v0.77.0) ; 13 : les médailles (`tues`, `pris`, `debut` de chaque régiment, `etat.victDebut`, v0.73.1) ; 12 : le niveau de difficulté (`etat.difficulte`, la posture d'en face `etat.iaStance`, v0.70.0) ; 11 : les caractéristiques de chaque homme (adresse, force, endurance, calme) dans l'armée, le corps à corps (v0.69.0) ; 10 : la solidité des ponts (pv, nom, historique), la coupure en attente de ses coûts (`etat.couts.coupure`) ; 9 : le génie (les sections, les ponts refaits) ; 8 : le chemin et le cap des chars ; 7 : le rapport du jour (les sorties et les pertes d'avions) ; 6 : les avions de mitraillage (une passe tracée, des points de vie, une flotte) ; 5 : la forme des cratères (rond, lèvre jetée, éclats : les impacts rejoués changent) ; 2 : la graine d'identité ; 3 : la campagne et les relevés ; 4 : les numéros de campagne, un effectif par camp, le rythme de l'IA (campagne, lots 1 à 3)
+const VERSION = 25;   // 25 : la contre-attaque éclair (`etat.contre`, v0.108.0) ; 24 : les postes de mitrailleuse (munitions, expérience, direction du cône) et l'expérience des chars (lot E, v0.102.0) ; 23 : les renforts (`etat.ralliees`, `etat.arrives`, `reg.versCaserne`, lot D, v0.101.0) ; 22 : l'affectation des guéris de l'hôpital (`etat.affectation`, v0.99.11) ; 21 : le stock de chars du parc (`etat.charsDispo`, v0.99.10) ; 20 : les missions secondaires (`etat.secondaires`, v0.99.0) ; 19 : le fil de fer de chaque tronçon (`etat.fil`, v0.98.0) ; 18 : le camp d'en face (`etat.campEux`, v0.92.0) ; 17 : l'équipement des régiments (`reg.equip`, v0.91.0) ; 16 : le camp (`etat.camp` : la dotation, les niveaux des bâtiments, v0.86.0) ; 15 : les nids de mitrailleuses (`etat.nids`, v0.83.0) ; 14 : la victoire anticipée (`etat.priseJours`, v0.77.0) ; 13 : les médailles (`tues`, `pris`, `debut` de chaque régiment, `etat.victDebut`, v0.73.1) ; 12 : le niveau de difficulté (`etat.difficulte`, la posture d'en face `etat.iaStance`, v0.70.0) ; 11 : les caractéristiques de chaque homme (adresse, force, endurance, calme) dans l'armée, le corps à corps (v0.69.0) ; 10 : la solidité des ponts (pv, nom, historique), la coupure en attente de ses coûts (`etat.couts.coupure`) ; 9 : le génie (les sections, les ponts refaits) ; 8 : le chemin et le cap des chars ; 7 : le rapport du jour (les sorties et les pertes d'avions) ; 6 : les avions de mitraillage (une passe tracée, des points de vie, une flotte) ; 5 : la forme des cratères (rond, lèvre jetée, éclats : les impacts rejoués changent) ; 2 : la graine d'identité ; 3 : la campagne et les relevés ; 4 : les numéros de campagne, un effectif par camp, le rythme de l'IA (campagne, lots 1 à 3)
 
 const ticksParHeure = R => Math.max(1, Math.round(R.jour.duree / (R.jour.heureFin - R.jour.heureDebut) / PAS));
 export const ticksParJour = R => ticksParHeure(R) * (R.jour.heureFin - R.jour.heureDebut);
@@ -104,7 +104,8 @@ export function nouvelleBataille(graine, R, opts = {}) {
   const etat = {
     v: VERSION, graine, graineIdentite: opts.graineIdentite ?? graine, campagne: opts.campagne ?? null, secteur: idSecteur, parCamp, parCampEux,
     secondaires: tirerSecondaires(graine, S.reserves ?? 0),   // les missions secondaires tirées à la graine
-    mission, issue: null,               // la mission (tenir, prendre) et, à la fin, ce qu'il en est
+    mission, issue: null,               // la mission (tenir, prendre, contre) et, à la fin, ce qu'il en est
+    contre: mission === 'contre' && S.contre ? { ...S.contre, ks: [] } : null,   // la contre-attaque éclair (v0.108.0) : où notre 1re ligne est tombée au départ (x0, x1 du secteur) et les tronçons perdus (`ks`, rempli au départ)
     reserves: [S.reserves ?? 0, S.reserves ?? 0],   // régiments frais en réserve, par camp (la relève, le déploiement)
     ralliees: [[], []],                 // les unités de fuyards ralliés à la caserne, prêtes à être déployées : { n, exp, moral } (lot D)
     arrives: [{ n: 0, exp: 0 }, { n: 0, exp: 0 }],   // les fuyards entrés à la caserne depuis la dernière aube : de quoi former une unité au matin
@@ -155,6 +156,11 @@ export function nouvelleBataille(graine, R, opts = {}) {
   if (opts.camp) { /* (voir plus haut) */ }      // les effectifs de départ de la partie bridée : ceux des bâtiments de départ (v0.88.0)
   const B = monter(etat, R);
   etat.troncons = B.troncons.map(t => t.camp);
+  // la contre-attaque éclair : un morceau de notre 1re ligne est déjà tombé (leur régiment y est entré, le nôtre a reculé d'une ligne ; plus bas, au déploiement)
+  if (etat.contre && etat.tranchees) {
+    const Zc = zone(B);
+    B.troncons.forEach((tr, k) => { const L = B.lignes[tr.ligne]; const c = (tr.x0 + tr.x1) / 2 - Zc.x0; if (L.camp === NOUS && L.rang === 0 && c >= etat.contre.x0 && c < etat.contre.x1) { etat.troncons[k] = EUX; etat.contre.ks.push(k); } });
+  }
   etat.melee = B.troncons.map(() => 0);
   etat.fil = filDeDepart(B);           // (v0.98.0) le fil de fer de chaque tronçon de 1re ligne : les obus le coupent
   etat.nids = creerNids(B);            // (v0.83.0) les nids de mitrailleuses : un par secteur sur la 1re ligne de chaque camp
@@ -173,8 +179,14 @@ export function nouvelleBataille(graine, R, opts = {}) {
         ordre: null, depart: null,
       };
       if (etat.tranchees) {
-        const D = S.tranchees.depart, parLigne = Math.ceil(nReg / D.length), L = B.lignes.find(l => l.camp === camp && l.rang === D[Math.floor(r / parLigne)]);
+        const D = S.tranchees.depart, parLigne = Math.ceil(nReg / D.length), rangD = D[Math.floor(r / parLigne)];
         const w = S.largeur / parLigne, x0 = Z.x0 + (r % parLigne) * w;
+        let L = B.lignes.find(l => l.camp === camp && l.rang === rangD);
+        // (la contre-attaque : en face, le régiment de la place perdue tient NOTRE 1re ligne ; le nôtre a reculé à la 3e)
+        if (etat.contre && rangD === D[0] && etat.contre.ks.length) {
+          const mid = x0 + w / 2 - Z.x0;
+          if (mid >= etat.contre.x0 && mid < etat.contre.x1) L = B.lignes.find(l => l.camp === NOUS && l.rang === (camp === NOUS ? D[0] + 2 : D[0]));
+        }
         reg.ordre = formationTranchee(reg, L, x0 + 2, x0 + w - 2, R);
       } else reg.ordre = formation(reg, Z.x0 + (r + 0.5) * largeurReg, ligne, largeurReg, R);
       reg.depart = structuredClone(reg.ordre);
@@ -210,8 +222,8 @@ function formationTranchee(reg, L, x0, x1, R) {
   const rangs = Math.max(2, Math.ceil(n * esp / Math.max(esp, x1 - x0)));
   const cols = Math.ceil(n / rangs), xc = (x0 + x1) / 2;
   return {
-    x: xc, y: L.y0, fx: 0, fy: reg.camp === NOUS ? -1 : 1, cols, esp,
-    trace: { y0: L.y0, amp: L.amp, baie: L.baie, phase: L.phase, face: L.face, x0, x1, rangs, ligne: B_LIGNE(L) },
+    x: xc, y: y0En(L, xc), fx: 0, fy: reg.camp === NOUS ? -1 : 1, cols, esp,
+    trace: { y0: L.y0, ...(L.arc ? { arc: L.arc } : {}), amp: L.amp, baie: L.baie, phase: L.phase, face: L.face, x0, x1, rangs, ligne: B_LIGNE(L) },
   };
 }
 const B_LIGNE = L => L.camp * 10 + L.rang;      // la ligne d'un ordre : 0..3 chez nous, 10..13 en face
@@ -495,8 +507,8 @@ function departChar(B, camp, x) {
 }
 /* L'arrière de chaque camp [nous, en face] : la rangée derrière sa dernière ligne, où les blessés qui marchent s'arrêtent (Jérôme, v0.35.0) */
 export function arriereDe(B) {
-  const { etat, R } = B, Ld = secteurDuJeu(etat).tranchees?.lignes, y0 = etat.marges.y;
-  return Ld ? [y0 + Math.max(...Ld.nous) + R.soldat.arriere, y0 + Math.min(...Ld.eux) - R.soldat.arriere] : null;
+  const { etat, R } = B, Tr = secteurDuJeu(etat).tranchees, Ld = Tr?.lignes, y0 = etat.marges.y;
+  return Ld ? [y0 + Math.max(...Ld.nous) + arcMax(Tr.courbe?.nous) + R.soldat.arriere, y0 + Math.min(...Ld.eux) - arcMax(Tr.courbe?.eux) - R.soldat.arriere] : null;
 }
 
 // ─── Les renforts (Jérôme, lot D des retours du 30 octobre) ──────────────
@@ -776,6 +788,10 @@ function marquerSecondaires(B) {
 export function progressionMission(B, camp = NOUS) {
   const { etat } = B, R = B.R, n = etat.meteo.length, jours = Math.min(n, etat.jour - 1);
   const [tenus, total] = premiereLigne(B), min = Math.ceil(total * R.mission.priseMin), reste = R.mission.joursDeTenue - (etat.priseJours ?? 0);
+  if (etat.mission === 'contre' && etat.contre) {
+    const a = etat.contre.ks.length, r = etat.contre.ks.filter(k => etat.troncons[k] === NOUS).length;
+    return { objectif: camp === NOUS ? 'prendre' : 'tenir', p: a ? r / a : 0, label: `${r} / ${a}`, texte: camp === NOUS ? `${r} tronçons repris sur ${a}, avant la nuit` : `${a - r} tronçons gardés sur ${a}` };
+  }
   const objectif = (camp === NOUS) === (etat.mission === 'tenir') ? 'tenir' : 'prendre';
   if (objectif === 'tenir') return { objectif, p: n ? jours / n : 0, label: `${jours} / ${n}`, texte: `${jours} jours tenus sur ${n}` };
   if (camp !== NOUS) return { objectif, p: Math.min(1, jours / n), label: `${jours} / ${n}`, texte: `${jours} jours écoulés sur ${n} : leur ligne doit tomber` };
@@ -801,8 +817,10 @@ function juger(B, enCours) {
   B.troncons.forEach((tr, k) => { if (B.lignes[tr.ligne].camp === NOUS) { nos[1]++; if (etat.troncons[k] === NOUS) nos[0]++; } });
   const vivants = etat.regiments.some(r => r.camp === NOUS && r.effectif > 0);
   const tombe = !vivants || (nos[1] && nos[0] < nos[1] * 0.4);
-  if (enCours) return tombe ? { reussie: false, texte: !vivants ? 'Il ne reste plus un homme dans le secteur.' : 'Le secteur est tombé.' } : null;
+  const repris = etat.mission === 'contre' && etat.contre ? etat.contre.ks.filter(k => etat.troncons[k] === NOUS).length : 0, aRepris = etat.contre?.ks.length ?? 0;
+  if (enCours) return tombe ? { reussie: false, texte: !vivants ? 'Il ne reste plus un homme dans le secteur.' : 'Le secteur est tombé.' } : (etat.mission === 'contre' && aRepris && repris === aRepris) ? { reussie: true, texte: `La ligne est reprise : ${repris} tronçons sur ${aRepris}, avant la nuit.` } : null;
   if (tombe) return { reussie: false, texte: 'Le secteur est tombé.' };
+  if (etat.mission === 'contre') { const ok = aRepris > 0 && repris === aRepris; return { reussie: ok, texte: ok ? `La ligne est reprise : ${repris} tronçons sur ${aRepris}.` : `La ligne n'est pas reprise : ${repris} tronçons sur ${aRepris}. La nuit tombe, les renforts d'en face sont là.` }; }
   if (etat.mission === 'tenir') {
     const ok = nos[0] >= nos[1] * 0.9;
     return { reussie: ok, texte: ok ? 'Le secteur est tenu.' : `Le secteur n'est plus tenu : ${nos[1] - nos[0]} tronçons perdus.` };
@@ -812,6 +830,7 @@ function juger(B, enCours) {
 }
 export const MISSIONS = {
   tenir: 'Tenir le secteur : à la fin, nos lignes doivent être à nous.',
+  contre: 'Contre-attaque : un morceau de notre première ligne vient de tomber. Le reprendre avant la nuit, avant que leurs renforts n\'arrivent.',
   prendre: 'Prendre la première ligne d\'en face et la tenir deux soirs de suite : la bataille est gagnée avant son terme ; sinon, la tenir jusqu\'à la fin.',
 };
 
@@ -968,7 +987,7 @@ function prises(B) {
         const o = reg.ordre.trace;
         if (reg.camp === tient && o && o.ligne === B.lignes[tr.ligne].camp * 10 + B.lignes[tr.ligne].rang && o.x1 > tr.x0 && o.x0 < tr.x1) reg.moral = Math.max(0, reg.moral - R.moral.perte * resiste(reg));
       }
-      B.evenements.push({ type: 'prise', camp: autre, troncon: t, x: (tr.x0 + tr.x1) / 2, y: B.lignes[tr.ligne].y0 });
+      B.evenements.push({ type: 'prise', camp: autre, troncon: t, x: (tr.x0 + tr.x1) / 2, y: y0En(B.lignes[tr.ligne], (tr.x0 + tr.x1) / 2) });
     }
   }
 }
@@ -1183,7 +1202,7 @@ function actionSansPosture(B, reg) {
   let mine = 0, theirs = 0, melee = 0;
   for (const k of ks) { mine += f[k * 2 + reg.camp]; theirs += f[k * 2 + 1 - reg.camp]; melee = Math.max(melee, B.etat.melee?.[k] || 0); }
   const forces = `${mine} contre ${theirs}`, tour = melee > 0 ? `, mêlée ${Math.ceil(melee)}/${B.R.tranchee.tenue} s` : '';
-  if (n && Math.abs(somme / n - t.y0) > 14) return adverse ? `marche à l'attaque de ${nom} (${theirs} en face)` : `marche vers ${nom}`;
+  if (n && Math.abs(somme / n - y0En(t, (t.x0 + t.x1) / 2)) > 14) return adverse ? `marche à l'attaque de ${nom} (${theirs} en face)` : `marche vers ${nom}`;
   if (adverse) return `attaque ${nom} : ${forces}${tour}`;
   return `tient ${nom}${conteste ? ` : l'ennemi y est entré, ${forces}` : ''}`;
 }
@@ -1301,7 +1320,7 @@ function enFace(B, rng) {
           const t = reg.ordre.trace;
           const cible = nos.find(L => B.troncons.some((tr, k) => tr.ligne === B.lignes.indexOf(L) && etat.troncons[k] === NOUS && tr.x1 > t.x0 && tr.x0 < t.x1));
           let def = 0;
-          if (cible) for (let i = 0; i < A.n; i++) if (A.camp[i] === NOUS && A.x[i] > t.x0 - 10 && A.x[i] < t.x1 + 10 && Math.abs(A.y[i] - cible.y0) < 8) def++;
+          if (cible) for (let i = 0; i < A.n; i++) if (A.camp[i] === NOUS && A.x[i] > t.x0 - 10 && A.x[i] < t.x1 + 10 && Math.abs(A.y[i] - y0En(cible, A.x[i])) < 8) def++;
           return { reg, cible, def, rapport: reg.effectif / Math.max(1, def) };
         }).filter(o => o.cible).sort((a, b) => b.rapport - a.rapport || a.reg.id - b.reg.id);
         const o = options[0];
@@ -1310,7 +1329,7 @@ function enFace(B, rng) {
         // (le carnet de bord : le tronçon que ça vise)
         const visee = o && B.troncons.findIndex(tr => tr.ligne === B.lignes.indexOf(o.cible) && tr.x1 > o.reg.ordre.trace.x0 && tr.x0 < o.reg.ordre.trace.x1);
         if (o && o.rapport >= R.tranchee.rapport) { o.reg.ordre = formationTranchee(o.reg, o.cible, o.reg.ordre.trace.x0, o.reg.ordre.trace.x1, R); reattribuer(B, o.reg); B.evenements.push({ type: 'assaut', camp: EUX, reg: o.reg.id, troncon: visee }); }
-        else if (o) { const t = o.reg.ordre.trace; ordonnerBarrage(B, !refusOrdre(etat, EUX, '220') ? '220' : !refusOrdre(etat, EUX, '155') ? '155' : '75', (t.x0 + t.x1) / 2 + (rng() - 0.5) * 30, o.cible.y0, EUX); B.evenements.push({ type: 'preparation', camp: EUX, reg: o.reg.id, troncon: visee }); }
+        else if (o) { const t = o.reg.ordre.trace; ordonnerBarrage(B, !refusOrdre(etat, EUX, '220') ? '220' : !refusOrdre(etat, EUX, '155') ? '155' : '75', (t.x0 + t.x1) / 2 + (rng() - 0.5) * 30, y0En(o.cible, (t.x0 + t.x1) / 2), EUX); B.evenements.push({ type: 'preparation', camp: EUX, reg: o.reg.id, troncon: visee }); }
       }
     } else {
       const leurs = etat.regiments.filter(r => r.camp === EUX && r.effectif > r.initial * 0.4);

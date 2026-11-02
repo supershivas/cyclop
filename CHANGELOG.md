@@ -1,5 +1,10 @@
 # Journal des versions
 
+## 0.108.0 — 2026-11-02
+- Les lignes de tranchée peuvent être courbes : « Le méandre » ondule, et son no man's land passe de 82 à 181 m
+- Nouvelle mission « contre-attaque éclair » sur « Le saillant » : un morceau de notre ligne vient de tomber, il faut le reprendre avant la nuit
+- « 1 jour » au singulier quand la bataille ne dure qu'un jour
+
 ## 0.107.1 — 2026-11-02
 - Les mitrailleuses ne tirent plus d'une tranchée à l'autre : leur portée passe de 130 à 80 m, elles couvrent le no man's land mais plus la ligne d'en face
 

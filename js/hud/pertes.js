@@ -22,7 +22,7 @@ export function creerPertes({ $, moi = () => NOUS }) {
         <span class="vie" role="img" aria-label="${nom} : ${debout} debout, ${bl[c]} blessés, ${tombes} tombés">${seg(debout, 'debout')}${seg(bl[c], 'blesses')}${seg(tombes, 'tombes')}</span>
         ${tr ? `<span class="troncons">${graduations}</span>` : ''}`;
     });
-    $('pertes-jour').innerHTML = `<b>J${h.jour}</b><span>${h.jours} jours</span>`;
+    $('pertes-jour').innerHTML = `<b>J${h.jour}</b><span>${h.jours} jour${h.jours > 1 ? 's' : ''}</span>`;
     $('pertes-jour').dataset.info = `# Jour ${h.jour} sur ${h.jours}\n## La bataille\nIl reste **${h.jours - h.jour}** jour${h.jours - h.jour > 1 ? 's' : ''} après celui-ci`;
   };
 }

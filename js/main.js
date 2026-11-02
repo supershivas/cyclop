@@ -11,7 +11,7 @@ import { ROLES } from './palette.js?v=0.107.1';
 import { VERSION_CAMPAGNE, CLE as CLE_CAMPAGNE, cloturerDansLeStore, nouvelleCampagne, suivante, passage, bilan as bilanCampagne } from './campagne.js?v=0.107.1';
 import { CAMPAGNE } from './data/campagne.js?v=0.107.1';
 import { MISSIONS, MEMORIAL, peutDeployer, deployer, bordereau, progressionMission, progressionSecondaire, EUX, nouvelleBataille, etapesRestaurer, avancer, aube, ordonnerMarche, peutOrdonner, ordonnerBarrage, peutBarrage, arriereDe, ordonnerStance, peutStance, horloge, effectifs, tronconsTenus, moralEnMots, terrainResume, forcesTroncons, largeurZone, lettreZone, etendueZones, nomTroncon, actionDe, secteursDe, tronconsDeLigne, zone, photo, restaurer, PAS, NOUS } from './bataille.js?v=0.107.1';
-import { ligneY, etatTranchee } from './tranchees.js?v=0.107.1';
+import { ligneY, y0En, etatTranchee } from './tranchees.js?v=0.107.1';
 import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.107.1';
 import { AVION, MITRAILLAGE } from './data/mitraillage.js?v=0.107.1';
 import { NIDS } from './data/nids.js?v=0.107.1';
@@ -269,6 +269,9 @@ function confirmer(texte, oui) {
 }
 // L'objectif de celui qui joue : la mission est celle des nôtres ; à deux, en face a l'objectif inverse (tenir ce qu'on attaque, prendre ce qu'on tient)
 const objectif = () => (MOI === NOUS) === (B.etat.mission === 'tenir') ? 'tenir' : 'prendre';
+// le nom et le texte de la mission du camp joué (la contre-attaque éclair a les siens : un seul ordre, dans les deux camps ; v0.108.0)
+const missionNom = () => B.etat.mission === 'contre' ? 'Contre-attaque éclair' : objectif() === 'tenir' ? 'Tenir le secteur' : 'Prendre leur première ligne';
+const missionOrdre = () => MISSIONS[B.etat.mission === 'contre' ? 'contre' : objectif()];
 function reglerCamp(camp) {
   MOI = camp;
   // l'interface parle de « nous » en bleu et « eux » en face : à l'invité, le kaki est « nous »
@@ -342,8 +345,8 @@ async function lancer(titre, etapes) {
   if (DEBUG || !B.etat.mission) return;
   loop.pause();
   const e = B.etat;
-  $('ordre-mission').textContent = MISSIONS[objectif()];
-  $('ordre-duree').textContent = `La bataille durera ${e.meteo.length} jours${e.sol?.saison && SAISONS[e.sol.saison] ? `, en ${SAISONS[e.sol.saison].nom}` : ''}.`;
+  $('ordre-mission').textContent = missionOrdre();
+  $('ordre-duree').textContent = `La bataille durera ${e.meteo.length} jour${e.meteo.length > 1 ? 's' : ''}${e.sol?.saison && SAISONS[e.sol.saison] ? `, en ${SAISONS[e.sol.saison].nom}` : ''}.`;
   $('dialogue-ordre').showModal();
 }
 // La campagne (v0.36.4) : la bataille n d'une campagne, avec ses survivants (`suivante`). Le registre est celui de `cyclopeen:campagne` ; une partie en cours est remplacée.
@@ -367,8 +370,8 @@ function demarrerCampagne(graineIdentite) {
 // le bouton de mission : la modale dit quoi faire et où on en est (pause, reprise à la fermeture)
 $('mission').onclick = () => {
   const m = progressionMission(B, MOI);
-  $('mission-nom').textContent = objectif() === 'tenir' ? 'Tenir le secteur' : 'Prendre leur première ligne';
-  $('mission-texte').textContent = MISSIONS[objectif()].replace(/^[^:]*: /, '').replace(/^./, c => c.toUpperCase());
+  $('mission-nom').textContent = missionNom();
+  $('mission-texte').textContent = missionOrdre().replace(/^[^:]*: /, '').replace(/^./, c => c.toUpperCase());
   const pct = Math.round(100 * m.p), jauge = $('mission-barre');
   jauge.setAttribute('aria-valuenow', pct); jauge.firstChild.style.width = pct + '%'; jauge.lastChild.textContent = m.label ?? pct + ' %';
   $('mission-etat').textContent = m.texte;
@@ -669,7 +672,7 @@ function demarrerReseau({ moi, lien, graine, secteur, saison, reprise }) {
   jouer(b);
   $('depart-statut').textContent = reprise ? 'Partie reprise. La bataille repart quand les deux commandants sont prêts.' : 'La bataille commence quand les deux commandants sont prêts.';
   $('deux-pret').disabled = false; $('deux-pret').textContent = 'Prêt'; $('dialogue-depart').showModal();
-  noter(`Vous êtes le ${moi === NOUS ? 'bleu' : 'kaki'}. ${MISSIONS[objectif()]}`);
+  noter(`Vous êtes le ${moi === NOUS ? 'bleu' : 'kaki'}. ${missionOrdre()}`);
   toast(`Vous êtes le ${moi === NOUS ? 'bleu' : 'kaki'}. Espace : pause pour les deux.`);
 }
 function quitterReseau(message) {
@@ -849,7 +852,7 @@ function montrerFin() {
   // elle est finie : un papier sobre, les batailles puis les noms (Jérôme : sans fanfare), au lieu de l'écran de fin
   if (campagne) { laCampagne.montrerFin(bilanCampagne(campagne), montrerTitre); return; }
   const e = B.etat, [vNous, vEux] = effectifs(B);
-  $('fin-titre').textContent = `${e.jour} jours.`;
+  $('fin-titre').textContent = `${e.jour} jour${e.jour > 1 ? 's' : ''}.`;
   $('fin-issue').textContent = reseau ? `${e.issue?.reussie ? 'Le bleu' : 'Le kaki'} l'emporte. ${e.issue?.texte || ''}` : (e.issue?.texte || '') + (e.issue?.secondaires ? ` Missions secondaires : ${e.issue.secondaires.reussies.length} réussie(s), ${e.issue.secondaires.score} points.` : '');
   $('fin-nouvelle').hidden = !!reseau;
   // jour après jour : ce qu'il a coûté, sans un mot de plus
@@ -1139,7 +1142,7 @@ function majHud() {
   const h = horloge(B), e = B.etat;
   majBarreTemps(B);
   $('mission').hidden = !e.mission;
-  if (e.mission) $('mission').textContent = `${objectif() === 'tenir' ? 'Tenir le secteur' : 'Prendre leur première ligne'} ▸`;
+  if (e.mission) $('mission').textContent = `${missionNom()} ▸`;
   majPertes(B); majTemps(h);
   majFiche();
   $('pause-active').hidden = !pauseActive;
@@ -1318,7 +1321,7 @@ function allerA(l) {
   if (l.reg !== undefined) centrerSur(l.reg);
   else if (l.troncon !== undefined) {
     const tr = B.troncons[l.troncon];
-    if (tr) { vers((tr.x0 + tr.x1) / 2, B.lignes[tr.ligne].y0); rendu.clignoter([l.troncon]); }
+    if (tr) { vers((tr.x0 + tr.x1) / 2, y0En(B.lignes[tr.ligne], (tr.x0 + tr.x1) / 2)); rendu.clignoter([l.troncon]); }
   } else if (l.soldat !== undefined) {
     const A = B.armee; let i = -1;
     for (let k = 0; k < A.n; k++) if (A.id[k] === l.soldat) { i = k; break; }
