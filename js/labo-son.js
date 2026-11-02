@@ -1,9 +1,9 @@
 // Le sujet « Le son » du labo (Jérôme, v0.76.0 : « ajoute la section Son au labo », conventions section 14 : le labo fait entendre chaque son).
 // Ce que le jeu fait entendre (js/audio.js, `creerSon`), joué ici par le même module : un bouton par effet, un mélangeur de l'ambiance, un auditeur qu'on déplace.
 // Le dessin n'y est pour rien : de simples boutons de papier. Le son se déverrouille au premier clic (les navigateurs refusent avant).
-import { creerSon, TRACKS } from './audio.js?v=0.108.0';
-import { SONS } from './data/sons.js?v=0.108.0';
-import { PALETTE as P } from './palette.js?v=0.108.0';
+import { creerSon, TRACKS } from './audio.js?v=0.108.1';
+import { SONS } from './data/sons.js?v=0.108.1';
+import { PALETTE as P } from './palette.js?v=0.108.1';
 
 const el = (tag, css = '', ...kids) => { const e = document.createElement(tag); if (css) e.style.cssText = css; e.append(...kids.flat().filter(k => k != null)); return e; };
 const MONO = 'font:12px/1.4 ui-monospace,monospace;';

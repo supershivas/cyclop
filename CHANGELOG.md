@@ -1,5 +1,8 @@
 # Journal des versions
 
+## 0.108.1 — 2026-11-02
+- La fenêtre d'un régiment ne garde que le « ? » : « Marcher » et « Regagner sa tranchée » sont retirés
+
 ## 0.108.0 — 2026-11-02
 - La carte : une case est un secteur (B1, C6…) ; un clic en montre le plan seul, soldats à leur place, avec les cases voisines à un bouton ; lignes 1 à 4 chez nous, 5 à 8 en face
 - Un petit « ? » explique la carte (marges resserrées) ; la fenêtre d'un régiment perd ses boutons de formation et de tir, et elle comme les fiches des hommes se déplacent à la main
