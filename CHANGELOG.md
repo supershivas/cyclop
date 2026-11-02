@@ -1,5 +1,8 @@
 # Journal des versions
 
+## 0.105.4 — 2026-11-02
+- Au retour à l'écran titre, plus aucune fenêtre de la partie ne reste devant le décor (fenêtre de régiment, de bâtiment, visées, repères, bulles)
+
 ## 0.105.3 — 2026-11-02
 - Nouvelle partie : la saison est sur la carte, en haut à droite ; la météo de l'aperçu est tirée au sort à chaque clic sur « Au hasard » ; la phrase du niveau est alignée sur ses boutons
 - Au labo : un test des cartes de secteur qui glissent sur une table (deux gestes à comparer)
