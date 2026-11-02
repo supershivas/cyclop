@@ -1,5 +1,12 @@
 # Journal des versions
 
+## 0.105.3 — 2026-11-02
+- Nouvelle partie : la saison est sur la carte, en haut à droite ; la météo de l'aperçu est tirée au sort à chaque clic sur « Au hasard » ; la phrase du niveau est alignée sur ses boutons
+- Au labo : un test des cartes de secteur qui glissent sur une table (deux gestes à comparer)
+
+## 0.105.2 — 2026-11-02
+- De près, les soldats d'un régiment en feu retenu tiennent le fusil baissé en travers des hanches ; au corps à corps ils se fendent et poussent la baïonnette vers l'adversaire (comme les soldats de loin)
+
 ## 0.105.1 — 2026-11-01
 - Les soldats de près ont deux niveaux de détail : le fin dès 24 pixels par mètre (boutons, galons, moustache, pipe, casque rond), un plus simple de 12 à 16 qui coûte moins à dessiner
 

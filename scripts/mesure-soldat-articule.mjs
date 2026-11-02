@@ -3,13 +3,14 @@
 //
 //   node scripts/mesure-soldat-articule.mjs                    → 2 000 hommes dans la vue, à 4, 8 et 16 pixels par mètre
 //   node scripts/mesure-soldat-articule.mjs --n 1000 --zooms 8
+//   node scripts/mesure-soldat-articule.mjs --n 1000 --zooms 8 --seul 1 --niveau moyen   (seulement l'équipe articulée du jeu, au niveau fin ou moyen : pour régler le nuanceur)
 //
 // Six dessins : la boîte du jeu (zoom 3), la silhouette allégée (4-6 px/m), l'équipée du jeu (dès 6 px/m), puis l'articulé tel quel (le modèle entier : les coiffes, barbes et accessoires
 // absents d'un homme sont aplatis au sommet : ils coûtent leurs sommets, pas leurs pixels), l'articulé sans relief de faces (les aplats du jeu), et l'articulé à quatre faces par boîte (comme le jeu : sans le derrière).
 // Les hommes sont rangés en grille serrée, tous dans la vue (comme `maj` de rendu/soldats.js, qui n'envoie que ceux qu'on voit), en marche.
 import { servir, lancerChromium, options } from '../outils/navigateur.mjs';
 
-const o = options(process.argv.slice(2), { n: '2000', zooms: '4,8,16', images: '14' });
+const o = options(process.argv.slice(2), { n: '2000', zooms: '4,8,16', images: '14', seul: '', niveau: 'fin', frag: '', vert: '', cote: '' });
 const srv = await servir('.');
 const nav = await lancerChromium();
 const page = await (await nav.newContext({ viewport: { width: 1280, height: 800 } })).newPage();
@@ -18,7 +19,7 @@ page.on('pageerror', e => erreurs.push(e.message));
 page.on('console', m => { if (m.type() === 'error') erreurs.push(m.text()); });
 await page.goto(`${srv.base}labo.html`);
 await page.waitForTimeout(800);
-const resultats = await page.evaluate(async ({ N, zooms, images }) => {
+const resultats = await page.evaluate(async ({ N, zooms, images, seul, niveau, frag, vert, cote }) => {
   const { loadThree } = await import('/js/three-lib.js?v=0.102.2');
   const THREE = await loadThree();
   const { PALETTE } = await import('/js/palette.js?v=0.102.2');
@@ -62,7 +63,7 @@ const resultats = await page.evaluate(async ({ N, zooms, images }) => {
     const tex = new THREE.DataTexture(new Uint8Array([70, 66, 50, 255]), 1, 1); tex.needsUpdate = true;
     const mat = new THREE.ShaderMaterial({ uniforms: { uNous: { value: col('n') }, uEux: { value: col('x') }, uOmbre: { value: col('t') }, uSel: { value: col('o') }, uJambes: { value: col('s') }, uFusil: { value: col('t') }, uSac: { value: col('g') }, uVisage: { value: col('h') }, uCuir: { value: col('b') }, uBotte: { value: col('t') }, uT: { value: 1.3 }, uBalance: { value: 1 }, uEch: { value: new THREE.Vector2(1, 1) }, uSol: { value: tex }, uTaille: { value: new THREE.Vector2(400, 300) }, uSoleil: { value: new THREE.Vector2(0.5, 0.6) } }, vertexShader: SH.soldatMat.v, fragmentShader: SH.soldatMat.f, side: THREE.DoubleSide, transparent: true });
     const G = creerGeometries(THREE, col);
-    for (const [nom, style] of [['jeu : la boîte', 'boite'], ['jeu : silhouette allégée', 'legere'], ['jeu : l\'équipée', 'equipe-marche']]) {
+    for (const [nom, style] of seul ? [] : [['jeu : la boîte', 'boite'], ['jeu : silhouette allégée', 'legere'], ['jeu : l\'équipée', 'equipe-marche']]) {
       const g = G.geometrieSoldat(style, attrs, null); g.instanceCount = N;
       const m = new THREE.Mesh(g, mat); m.frustumCulled = false;
       mesurer(nom, m, g.getAttribute('position').count / 3);
@@ -74,12 +75,15 @@ const resultats = await page.evaluate(async ({ N, zooms, images }) => {
       const sc = new THREE.Scene(); sc.background = col('s'); sc.add(fond);
       const lots = []; let tris = 0, dessines = 0;
       for (const code of codes) {
-        const S = creerSoldatArticule(THREE, col, { complet: false, ombrage: 0, filtre: b => b[8] === code });
+        const S = creerSoldatArticule(THREE, col, { complet: cote === 'front', ombrage: 0, filtre: b => b[8] === code, niveau });
+        if (cote === 'front') S.materiel.side = THREE.FrontSide;       // diagnostic : des boîtes fermées (cinq faces) et l'élimination des faces arrière
         const qui = hommes.map((h, i) => [h, i]).filter(([h]) => voir(code, h.a, h.camp, 0));
         if (!qui.length || !S.modele.triangles) continue;
+        if (frag === '0') { S.materiel.fragmentShader = 'void main() { gl_FragColor = vec4(0.5, 0.6, 0.7, 1.0); }'; S.materiel.needsUpdate = true; }       // diagnostic : un nuanceur de pixels vide (le coût des sommets seul)
+        if (vert === '0') { S.materiel.vertexShader = 'attribute float aPart; attribute float aOs; attribute float aShow; attribute vec3 aNor; attribute vec3 aPos; attribute float aCamp; attribute float aWound; attribute vec4 aCap; attribute float aGrade; attribute vec4 aPose; attribute vec4 aBody; attribute vec4 aLook; attribute vec4 aLook2; varying float vPart; varying float vCamp; varying vec2 vFace; varying float vShade; varying vec4 vLook; varying vec4 vLook2; void main() { vPart = aPart; vCamp = aCamp; vFace = vec2(0.0); vShade = 1.0; vLook = aLook; vLook2 = aLook2; gl_Position = projectionMatrix * viewMatrix * vec4(position + aPos + (aCap.x + aPose.x + aBody.x + aGrade + aWound + aOs + aShow + aNor.x) * 0.0, 1.0); }'; S.materiel.needsUpdate = true; }       // diagnostic : des sommets sans pose
         const lot = S.instances(qui.length);
-        qui.forEach(([h, i], k) => lot.ecrire(k, { x: pts[i][0], z: pts[i][1], camp: h.camp, vit: 1.4, aspect: h.a }));
-        lot.envoyer(qui.length); S.materiel.uniforms.uT.value = 1.3; sc.add(lot.mesh); lots.push([lot, S]); dessines += qui.length * S.modele.triangles / 1;
+        qui.forEach(([h, i], k) => lot.ecrire(k, { x: pts[i][0], z: pts[i][1], camp: h.camp, vit: 1.4, temps: 1.3, aspect: h.a }));
+        lot.envoyer(qui.length); sc.add(lot.mesh); lots.push([lot, S]); dessines += qui.length * S.modele.triangles / 1;
       }
       for (let i = 0; i < 3; i++) { renderer.render(sc, camera); gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, px); }
       const ts = [];
@@ -88,16 +92,16 @@ const resultats = await page.evaluate(async ({ N, zooms, images }) => {
       sorties.push({ zoom, nom: `articulé : ${lots.length} maillages`, ms: +ts[Math.floor(ts.length / 2)].toFixed(1), triangles: renderer.info.render.triangles, parHomme: dessines / N, appels: renderer.info.render.calls });
       for (const [lot, S] of lots) { sc.remove(lot.mesh); lot.geometrie.dispose(); S.materiel.dispose(); }
     }
-    for (const [nom, complet, ombrage] of [['articulé (relief des faces)', true, 0.5], ['articulé (aplats du jeu)', true, 0], ['articulé (quatre faces)', false, 0]]) {
+    for (const [nom, complet, ombrage] of seul ? [] : [['articulé (relief des faces)', true, 0.5], ['articulé (aplats du jeu)', true, 0], ['articulé (quatre faces)', false, 0]]) {
       const S = creerSoldatArticule(THREE, col, { complet, ombrage }), lot = S.instances(N);
-      hommes.forEach((hmm, i) => lot.ecrire(i, { x: pts[i][0], z: pts[i][1], camp: hmm.camp, vit: 1.4, aspect: hmm.a })); lot.envoyer(N);
-      S.materiel.uniforms.uT.value = 1.3;
+      hommes.forEach((hmm, i) => lot.ecrire(i, { x: pts[i][0], z: pts[i][1], camp: hmm.camp, vit: 1.4, temps: 1.3, aspect: hmm.a })); lot.envoyer(N);
+     
       mesurer(nom, lot.mesh, S.modele.triangles);
       lot.geometrie.dispose(); S.materiel.dispose();
     }
   }
   return sorties;
-}, { N: +o.n, zooms: o.zooms.split(',').map(Number), images: +o.images });
+}, { N: +o.n, zooms: o.zooms.split(',').map(Number), images: +o.images, seul: !!o.seul, niveau: o.niveau, frag: o.frag, vert: o.vert, cote: o.cote });
 let zoom = 0;
 for (const r of resultats) {
   if (r.zoom !== zoom) { zoom = r.zoom; console.log(`\n${o.n} hommes dans la vue, ${zoom} pixels par mètre (image 640 × 400) :`); }

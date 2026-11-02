@@ -2,15 +2,15 @@
 // à droite ses stats, noms, armées »). Un clic tire un numéro d'homme ; son nom, son âge, son grade et ses caractéristiques sont ceux du jeu (`identite.js`, `caracteristiques`) ; son aspect
 // est celui de `aspect` (js/aspect-soldat.js), dessiné par le soldat articulé (js/rendu/soldat-articule.js). Le labo montre sans rien modifier : rien n'est écrit dans une bataille.
 // Le zoom est celui du jeu, en pixels de l'image par mètre (4 à 32 : les zooms du jeu ; 64 à 420 : plus près que le jeu ne va), l'image étant agrandie ×2 sans lissage comme à l'écran.
-import { PALETTE } from './palette.js?v=0.105.1';
-import { loadThree } from './three-lib.js?v=0.105.1';
-import { hash2 } from './lib/rng.js?v=0.105.1';
-import { identite, caracteristiques, departCaracs, CARACTERISTIQUES, caracEnMots, chevrons, experienceEnMots, etatEnMots } from './identite.js?v=0.105.1';
-import { NOMS } from './data/noms.js?v=0.105.1';
-import { aspect, aspectEnMots } from './aspect-soldat.js?v=0.105.1';
-import { COIFFES, CHEVEUX, BARBES, PEAUX, NOMS_COULEURS_CHEVEUX, YEUX, NEZ, BOUCHES, SOURCILS } from './data/aspect-soldat.js?v=0.105.1';
-import { creerSoldatArticule, trianglesVisibles } from './rendu/soldat-articule.js?v=0.105.1';
-import { ZOOMS } from './rendu3d.js?v=0.105.1';
+import { PALETTE } from './palette.js?v=0.105.3';
+import { loadThree } from './three-lib.js?v=0.105.3';
+import { hash2 } from './lib/rng.js?v=0.105.3';
+import { identite, caracteristiques, departCaracs, CARACTERISTIQUES, caracEnMots, chevrons, experienceEnMots, etatEnMots } from './identite.js?v=0.105.3';
+import { NOMS } from './data/noms.js?v=0.105.3';
+import { aspect, aspectEnMots } from './aspect-soldat.js?v=0.105.3';
+import { COIFFES, CHEVEUX, BARBES, PEAUX, NOMS_COULEURS_CHEVEUX, YEUX, NEZ, BOUCHES, SOURCILS } from './data/aspect-soldat.js?v=0.105.3';
+import { creerSoldatArticule, trianglesVisibles } from './rendu/soldat-articule.js?v=0.105.3';
+import { ZOOMS } from './rendu3d.js?v=0.105.3';
 
 const el = (tag, props = {}, ...kids) => { const e = Object.assign(document.createElement(tag), props); e.append(...kids); return e; };
 const GRAINE = 7;                         // la graine d'identité de la fabrique (n'importe laquelle : c'est le numéro qui fait l'homme)
@@ -19,6 +19,7 @@ const FACTEUR = 2;                        // l'image est agrandie ×2, sans liss
 const TAN15 = Math.tan(15 * Math.PI / 180);   // le champ de la caméra du jeu : 30°
 const POSES = [
   ['repos', 'Au repos', {}], ['marche', 'Marche', { vit: 1.4 }], ['tir', 'Tir', { tir: 1 }], ['tapi', 'Accroupi', { tapi: 1 }],
+  ['retenu', 'Feu retenu', { tir: -1 }], ['melee', 'Mêlée', { melee: true }],
   ['bras', 'Blessé au bras', { blessure: 1 }], ['jambe', 'Blessé à la jambe', { blessure: 2 }], ['tete', 'Blessé à la tête', { blessure: 3 }], ['couche', 'Couché', { couche: 1 }],
 ];
 // [clé, nom, hauteur visée (m), zoom conseillé (pixels par mètre)]
@@ -136,15 +137,16 @@ function monter(stage, THREE) {
   }
   function ecrireHomme() {
     const P = POSES.find(p => p[0] === S.pose)[2];
-    for (const { lot } of niveaux) { lot.ecrire(0, { x: 0, y: 0, z: 0, camp: H.camp, vit: P.vit ?? 0, tir: P.tir ?? 0, tapi: P.tapi ?? 0, couche: P.couche ?? 0, blessure: P.blessure ?? 0, cap: 0, aspect: H.aspect }); lot.envoyer(1); }
+    for (const { lot } of niveaux) { lot.ecrire(0, { x: 0, y: 0, z: 0, camp: H.camp, vit: P.vit ?? 0, tir: P.melee ? 2 + Math.max(0, Math.sin(temps * 4.6)) ** 2 : (P.tir ?? 0), tapi: P.tapi ?? 0, couche: P.couche ?? 0, blessure: P.blessure ?? 0, cap: 0, temps, aspect: H.aspect }); lot.envoyer(1); }
     ombre.scale.set(P.couche ? 2.0 : 1, P.couche ? 0.55 : 0.7, 1);
   }
   function image(now) {
     raf = requestAnimationFrame(image);
     const dt = Math.min(0.1, (now - dernierT) / 1000); dernierT = now; temps += dt;
     taille();
+    ecrireHomme();       // (l'horloge de la marche entre dans les tampons de l'homme)
     if (S.auto) S.yaw += dt * 0.5;
-    for (const { niveau, soldat: so, lot } of niveaux) { so.materiel.uniforms.uT.value = temps; so.materiel.uniforms.uShade.value = S.ombrage ? 0.5 : 0; lot.mesh.visible = niveau === S.niveau; }
+    for (const { niveau, soldat: so, lot } of niveaux) { so.materiel.uniforms.uShade.value = S.ombrage ? 0.5 : 0; lot.mesh.visible = niveau === S.niveau; }
     // la caméra du jeu : un champ de 30°, placée pour que 1 m = ppm pixels de l'image
     const cible = new THREE.Vector3(0, CADRAGES.find(c => c[0] === S.cadrage)[2] * H.aspect.carrure.taille, 0);
     if (S.pose === 'couche') cible.y = 0.2;

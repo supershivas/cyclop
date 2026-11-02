@@ -191,9 +191,9 @@ export function trianglesVisibles(a, camp, blessure = 0, { complet = false, nive
 // ─── le nuanceur ───
 export const VERT = `
   attribute float aPart; attribute float aOs; attribute float aShow; attribute vec3 aNor;
-  attribute vec3 aPos; attribute float aCamp; attribute float aWound; attribute float aCap; attribute float aGrade;
+  attribute vec3 aPos; attribute float aCamp; attribute float aWound; attribute vec4 aCap; attribute float aGrade;
   attribute vec4 aPose; attribute vec4 aBody; attribute vec4 aLook; attribute vec4 aLook2;
-  uniform float uT; uniform float uShade;
+  uniform float uShade; uniform float uVoir;
   varying float vPart; varying float vCamp; varying vec2 vFace; varying float vShade; varying vec4 vLook; varying vec4 vLook2;
   float sl, st, wd, vt;
   bool voir(float code) {
@@ -222,6 +222,8 @@ export const VERT = `
   vec3 rx(vec3 p, vec3 pv, float a) { vec3 d = p - pv; float c = cos(a), s = sin(a); return pv + vec3(d.x, d.y * c + d.z * s, d.z * c - d.y * s); }
   vec3 ry(vec3 p, vec3 pv, float a) { vec3 d = p - pv; float c = cos(a), s = sin(a); return pv + vec3(d.x * c + d.z * s, d.y, d.z * c - d.x * s); }
   void main() {
+    // une boîte qu'il n'a pas : hors de l'écran tout de suite, sans calculer sa pose (uVoir : 0 pour les maillages d'une option, dont tous les hommes ont la boîte)
+    if (uVoir > 0.5 && !voir(aShow)) { gl_Position = vec4(2.0, 2.0, 2.0, 1.0); return; }
     float b = floor(aOs + 0.5);
     vPart = aPart; vCamp = aCamp; vLook = aLook; vLook2 = aLook2;
     vFace = vec2((position.x + 0.1) / 0.2, (position.y - 1.42) / 0.22);
@@ -234,17 +236,25 @@ export const VERT = `
     if (b > 0.5 && b < 1.5) p0 = vec3(0.0, 1.42, 0.0) + (p0 - vec3(0.0, 1.42, 0.0)) * aBody.w;
     vec3 p = mp(p0, xs, zs);
     // la pose : la vitesse (aPose.x), le tir (aPose.y), l'accroupi (aPose.z), couché (aPose.w) ; la blessure (aWound : 1 bras, 2 jambe, 3 tête)
-    float vit = max(aPose.x, 0.0), v = min(1.0, vit), tir = aPose.y, tapi = aPose.z, couche = aPose.w;
-    float ph = uT * 8.0 + aPos.x * 1.7 + aPos.z * 1.3;
+    float vit = max(aPose.x, 0.0), v = min(1.0, vit), tapi = aPose.z, couche = aPose.w;
+    // le tir (aPose.y) : de 0 à 1, l'épaule ; −1 le feu retenu (le fusil baissé) ; de 2 à 3 le corps à corps (2 + la poussée) ; un officier (le pistolet) tire d'une main dans tous les cas
+    bool pistolet = aGrade < 2.5;
+    float tirR = aPose.y;
+    bool melee = tirR > 1.5 && !pistolet;
+    bool retenu = tirR < -0.5 && !pistolet;
+    float tir = melee ? 0.0 : clamp(tirR, 0.0, 1.0);
+    float pouss = melee ? clamp(tirR - 2.0, 0.0, 1.0) : 0.0;
+    float sph = aCap.z, cph = aCap.w;      // le sinus et le cosinus de la phase de la marche : tirés une fois par homme (le processeur), pas par sommet
     bool genou = aWound > 1.5 && aWound < 2.5 && vit < 0.15;
-    float lean = 0.07 * v + 0.12 * tir + 0.55 * tapi + (genou ? 0.35 : 0.0);
+    float lean = 0.07 * v + 0.12 * tir + 0.55 * tapi + (genou ? 0.35 : 0.0) + (melee ? 0.22 + 0.15 * pouss : 0.0) + (retenu ? 0.03 : 0.0);
     vec3 hanche = mp(vec3(0.0, 0.9, 0.0), 1.0, 1.0);
     bool gauche = (b > 1.5 && b < 3.5) || (b > 5.5 && b < 8.5);
     if (jambeOs) {
       float cote = gauche ? -1.0 : 1.0;
-      float pj = ph + (gauche ? 0.0 : 3.14159);
-      float hip = sin(pj) * 0.55 * v, kn = 0.9 * v * max(0.0, cos(pj));
+      float sg = gauche ? 1.0 : -1.0;       // (la jambe droite est en opposition de phase)
+      float hip = sg * sph * 0.55 * v, kn = 0.9 * v * max(0.0, sg * cph);
       hip += tapi * 1.05; kn += tapi * 1.9;
+      if (melee) { hip = gauche ? 0.55 + 0.2 * pouss : -0.4; kn = gauche ? 0.5 + 0.2 * pouss : 0.35; }      // le fente : la jambe gauche devant, la droite en arrière
       if (couche > 0.5) { hip = gauche ? 0.3 : 0.0; kn = gauche ? 0.7 : 0.1; }
       if (genou) { hip = gauche ? 0.2 : 1.3; kn = gauche ? 2.0 : 1.5; }
       vec3 hp = mp(vec3(cote * 0.11, 0.9, 0.0), sqrt(wd), 1.0), kp = mp(vec3(cote * 0.11, 0.5, 0.0), sqrt(wd), 1.0), ap = mp(vec3(cote * 0.11, 0.08, 0.0), sqrt(wd), 1.0);
@@ -255,11 +265,12 @@ export const VERT = `
     bool brasOs = b > 1.5 && b < 5.5;
     if (brasOs) {
       float cote = gauche ? -1.0 : 1.0;
-      float pb = ph + (gauche ? 3.14159 : 0.0);
-      float sh = sin(pb) * 0.5 * v, el = 0.25 + 0.35 * v * max(0.0, sin(pb)), conv = 0.0;
-      bool pistolet = aGrade < 2.5;
+      float sa = gauche ? -sph : sph;       // (le bras balance à l'opposé de la jambe du même côté)
+      float sh = sa * 0.5 * v, el = 0.25 + 0.35 * v * max(0.0, sa), conv = 0.0;
       sh = mix(sh, pistolet ? (gauche ? 0.25 : 1.2) : 1.35, tir); el = mix(el, pistolet ? (gauche ? 0.5 : 0.4) : (gauche ? 0.35 : 0.7), tir); conv = tir * (pistolet ? (gauche ? 0.0 : -0.15) : (gauche ? 0.6 : -0.5));
       sh = mix(sh, 0.7, tapi); el = mix(el, 1.5, tapi);
+      if (retenu) { sh = 0.5; el = gauche ? 1.0 : 0.8; conv = gauche ? 0.5 : -0.3; }          // le feu retenu : les mains devant les hanches, sur le fusil baissé
+      if (melee) { sh = 1.0; el = gauche ? 0.45 : 0.6; conv = gauche ? 0.55 : -0.45; }        // la mêlée : les bras tendus devant, tenant le fusil
       if (couche > 0.5) { sh = 0.0; el = 0.1; }
       if (aWound > 0.5 && aWound < 1.5 && gauche) { sh = 0.5; el = 1.9; conv = 0.6; }
       vec3 sp = mp(vec3(cote * 0.30, 1.38, 0.0), wd, 1.0), ep = mp(vec3(cote * 0.30, 1.08, 0.0), wd, 1.0);
@@ -268,7 +279,11 @@ export const VERT = `
       p = ry(p, sp, conv);
     }
     // le fusil : en bandoulière, ou à l'épaule quand il tire
-    if (b > 11.5 && b < 12.5) { p.x -= 0.28 * tir * wd; p = rx(p, mp(vec3(0.0, 1.3, 0.0), 1.0, 1.0), -1.45 * tir); }
+    if (b > 11.5 && b < 12.5) {
+      if (melee) { p.x -= 0.3 * wd; p = rx(p, mp(vec3(0.0, 0.95, 0.0), 1.0, 1.0), -1.45); p.z += 0.5 * pouss; }       // à l'horizontale devant lui, la baïonnette vers l'adversaire, d'un demi-mètre à chaque poussée
+      else if (retenu) { p.x -= 0.18 * wd; p = rx(p, mp(vec3(0.0, 0.9, 0.0), 1.0, 1.0), -1.9); }                     // baissé en travers des hanches, le canon devant
+      else { p.x -= 0.28 * tir * wd; p = rx(p, mp(vec3(0.0, 1.3, 0.0), 1.0, 1.0), -1.45 * tir); }
+    }
     // les basques de la vareuse : elles suivent les cuisses à moitié quand l'homme s'accroupit ou s'agenouille
     if (b > 12.5) p = rx(p, hanche, 0.75 * tapi + (genou ? 0.4 : 0.0));
     // la tête penchée (blessure à la tête)
@@ -276,13 +291,13 @@ export const VERT = `
     // le buste penché autour de la hanche (le tronc, la tête, les bras, le fusil, les basques)
     bool haut = b < 5.5 || b > 11.5;
     if (haut) p = rx(p, hanche, lean);
+    if (melee && haut && !(b > 11.5 && b < 12.5)) p.z += 0.2 * pouss * max(0.0, p.y - 0.6);      // le buste part avec la poussée
     p.y -= 0.44 * tapi + (genou ? 0.42 : 0.0);
     // couché sur le dos, la tête vers l'arrière
     if (couche > 0.5) { p = rx(p, vec3(0.0), 1.5708); p.y += 0.16; }
     // le cap
-    float c = cos(aCap), s = sin(aCap);
+    float c = aCap.x, s = aCap.y;
     p.xz = vec2(p.x * c + p.z * s, -p.x * s + p.z * c);
-    if (!voir(aShow)) p = vec3(0.0);
     // l'éclairage de relief (au labo et pour les hommes articulés, uShade : 0 redonne les aplats) : le dessus plus clair, les côtés plus sombres, d'après la normale de la face tournée par le cap
     vec3 nw = vec3(aNor.x * c + aNor.z * s, aNor.y, -aNor.x * s + aNor.z * c);
     vShade = mix(1.0, 0.58 + 0.42 * max(dot(nw, normalize(vec3(-0.35, 0.8, 0.5))), 0.0), uShade);
@@ -369,7 +384,7 @@ export const OMBRE_FRAG = `
   void main() { gl_FragColor = vec4(texture2D(uSol, vec2(vXZ.x / uTaille.x, (vXZ.y / uTaille.y + 1.0) * 0.5)).rgb, 0.95 - 0.6 * vLong); }`;
 
 // ─── three.js : le matériau et les instances ───
-// `col(lettre)` : une couleur de la palette (celle de creerRendu ou de la fabrique) ; `partages` : des uniformes du jeu à partager (`uT` : l'horloge de l'image, `uSoleil`, `uSol`, `uTaille`) ;
+// `col(lettre)` : une couleur de la palette (celle de creerRendu ou de la fabrique) ; `partages` : des uniformes du jeu à partager (`uSoleil`, `uSol`, `uTaille` : l'ombre ; l'horloge de la marche passe par `h.temps` à l'écriture de chaque homme) ;
 // `ombreSeule` : le maillage des ombres au sol (le jeu), et rien d'autre
 export function creerSoldatArticule(THREE, col, { complet = false, ombrage = 0, filtre = null, partages = {}, ombreSeule = false, niveau = 'fin' } = {}) {
   const M = ombreSeule ? ombreEtModele(THREE) : modeleArticule({ complet, filtre, niveau });
@@ -381,7 +396,7 @@ export function creerSoldatArticule(THREE, col, { complet = false, ombrage = 0, 
         uNous: { value: col('n') }, uEux: { value: col('x') }, uOmbre: { value: col('t') }, uSel: { value: col('o') }, uJambes: { value: col('s') }, uBois: { value: col('t') }, uToile: { value: col('g') },
         uCuir: { value: col('b') }, uBotte: { value: col('t') }, uMetal: { value: col('r') }, uTrait: { value: col('s') },
         uPeau: { value: ['o', 'r', 'g'].map(col) }, uMarque: { value: ['g', 'g', 'b'].map(col) }, uCh: { value: ['t', 's', 'b', 'g', 'r'].map(col) },
-        uShade: { value: ombrage }, uT: partages.uT ?? { value: 0 },
+        uShade: { value: ombrage }, uVoir: { value: filtre ? 0 : 1 },
       },
       vertexShader: VERT, fragmentShader: FRAG, side: THREE.DoubleSide,
     });
@@ -396,10 +411,10 @@ export function creerSoldatArticule(THREE, col, { complet = false, ombrage = 0, 
       g.setAttribute('aShow', new THREE.BufferAttribute(M.show, 1));
       g.setAttribute('aNor', new THREE.BufferAttribute(M.nor, 3));
     }
-    const T = { pos: new Float32Array(n * 3), camp: new Float32Array(n), blessure: new Float32Array(n), cap: new Float32Array(n), grade: new Float32Array(n), pose: new Float32Array(n * 4), corps: new Float32Array(n * 4), aspect: new Float32Array(n * 4), aspect2: new Float32Array(n * 4) };
+    const T = { pos: new Float32Array(n * 3), camp: new Float32Array(n), blessure: new Float32Array(n), cap: new Float32Array(n * 4), grade: new Float32Array(n), pose: new Float32Array(n * 4), corps: new Float32Array(n * 4), aspect: new Float32Array(n * 4), aspect2: new Float32Array(n * 4) };
     const A = (nom, arr, k) => { const a = new THREE.InstancedBufferAttribute(arr, k).setUsage(THREE.DynamicDrawUsage); g.setAttribute(nom, a); return a; };
     const attrs = ombreSeule ? [A('aPos', T.pos, 3), A('aBody', T.corps, 4)]
-      : [A('aPos', T.pos, 3), A('aCamp', T.camp, 1), A('aWound', T.blessure, 1), A('aCap', T.cap, 1), A('aGrade', T.grade, 1), A('aPose', T.pose, 4), A('aBody', T.corps, 4), A('aLook', T.aspect, 4), A('aLook2', T.aspect2, 4)];
+      : [A('aPos', T.pos, 3), A('aCamp', T.camp, 1), A('aWound', T.blessure, 1), A('aCap', T.cap, 4), A('aGrade', T.grade, 1), A('aPose', T.pose, 4), A('aBody', T.corps, 4), A('aLook', T.aspect, 4), A('aLook2', T.aspect2, 4)];
     g.instanceCount = n;
     const mesh = new THREE.Mesh(g, materiel); mesh.frustumCulled = false;
     // h : { x, y, z, camp, vit, tir, tapi, couche, blessure, cap, aspect } (`aspect` : l'objet de js/aspect-soldat.js)
@@ -408,7 +423,10 @@ export function creerSoldatArticule(THREE, col, { complet = false, ombrage = 0, 
       T.pos[i * 3] = h.x ?? 0; T.pos[i * 3 + 1] = h.y ?? 0; T.pos[i * 3 + 2] = h.z ?? 0;
       T.corps[i * 4] = c.taille; T.corps[i * 4 + 1] = c.epaules; T.corps[i * 4 + 2] = c.jambes; T.corps[i * 4 + 3] = c.tete;
       if (ombreSeule) return;
-      T.camp[i] = h.camp ?? 0; T.blessure[i] = h.blessure ?? 0; T.cap[i] = h.cap ?? 0; T.grade[i] = a.rang ?? 6;
+      T.camp[i] = h.camp ?? 0; T.blessure[i] = h.blessure ?? 0; T.grade[i] = a.rang ?? 6;
+      // le cap, et la phase de la marche (la même formule qu'avant : l'horloge de l'image, la position) : le cosinus et le sinus de chacun, une fois par homme
+      const cap = h.cap ?? 0, ph = (h.temps ?? 0) * 8 + (h.x ?? 0) * 1.7 + (h.z ?? 0) * 1.3;
+      T.cap[i * 4] = Math.cos(cap); T.cap[i * 4 + 1] = Math.sin(cap); T.cap[i * 4 + 2] = Math.sin(ph); T.cap[i * 4 + 3] = Math.cos(ph);
       T.pose[i * 4] = h.vit ?? 0; T.pose[i * 4 + 1] = h.tir ?? 0; T.pose[i * 4 + 2] = h.tapi ?? 0; T.pose[i * 4 + 3] = h.couche ?? 0;
       T.aspect[i * 4] = a.coiffe; T.aspect[i * 4 + 1] = a.cheveux; T.aspect[i * 4 + 2] = a.couleur; T.aspect[i * 4 + 3] = a.barbe;
       T.aspect2[i * 4] = a.acc; T.aspect2[i * 4 + 1] = a.peau; T.aspect2[i * 4 + 2] = t.yeux + 3 * t.nez + 9 * t.bouche + 27 * t.sourcils + 81 * (t.rides || 0); T.aspect2[i * 4 + 3] = c.ventre;
