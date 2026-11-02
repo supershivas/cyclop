@@ -2,6 +2,9 @@
 // Une entrée par version qui touche au labo, la plus récente en haut. `ref` : « sujet-Lettre » (la lettre est celle de la variante,
 // A étant l'actuelle). À chaque changement du labo : une entrée ici, avec `depuis` sur les variantes ajoutées ou changées (labo.js).
 export const JOURNAL = [
+  { version: '0.105.2', date: '2026-11-02', items: [
+    { genre: 'mis-a-jour', texte: 'La fabrique de soldats a deux poses de plus : le feu retenu (le fusil baissé en travers des hanches) et la mêlée (la fente, la baïonnette qui part par à-coups) ; elles sont aussi en jeu de près', ref: 'fabrique-A' },
+  ] },
   { version: '0.105.1', date: '2026-11-01', items: [
     { genre: 'mis-a-jour', texte: 'La fabrique de soldats montre les deux niveaux de détail du jeu : le fin (24 pixels par mètre et plus) et l\'intermédiaire (12 à 16), avec le nombre de triangles de chacun', ref: 'fabrique-A' },
   ] },

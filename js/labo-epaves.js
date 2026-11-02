@@ -1,11 +1,11 @@
 // Les épaves du labo (Jérôme, 1er novembre : « fais un atelier de crash dans le labo dans lequel on voit l'aléatoire de la destruction ; je veux du réalisme ») : douze carcasses d'un coup, chacune d'une graine
 // différente (`dispositionAvion` / `dispositionChar` de js/epaves.js), posées sur le sol du moteur du jeu, vues de dessus par défaut (la caméra est libre : glisser, Maj ou bouton droit, molette). « Rejouer la chute »
 // refait l'instant où la carcasse touche le sol et ses pièces partent ; « Autres tirages » prend douze autres graines ; une graine se rejoue (le numéro sous chaque épave). Dessin seulement : rien n'est sauvegardé.
-import { loadThree } from './three-lib.js?v=0.105.1';
-import { ZOOMS, ZOOMS_JEU } from './rendu3d.js?v=0.105.1';
-import { el, svgEl, bouton, scene, maquette, texteSvg } from './labo-arcade.js?v=0.105.1';
-import { atelier } from './rendu/engins.js?v=0.105.1';
-import { monterEpaveAvion, monterEpaveChar } from './rendu/epaves.js?v=0.105.1';
+import { loadThree } from './three-lib.js?v=0.105.5';
+import { ZOOMS, ZOOMS_JEU } from './rendu3d.js?v=0.105.5';
+import { el, svgEl, bouton, scene, maquette, texteSvg } from './labo-arcade.js?v=0.105.5';
+import { atelier } from './rendu/engins.js?v=0.105.5';
+import { monterEpaveAvion, monterEpaveChar } from './rendu/epaves.js?v=0.105.5';
 
 const COLONNES = 4, LIGNES = 3;
 const GABARIT = { spad: { pas: [34, 30], nom: 'SPAD XIII (nous)' }, albatros: { pas: [34, 30], nom: 'Albatros D.V (en face)' }, char: { pas: [22, 22], nom: 'Schneider CA 1' } };

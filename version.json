@@ -1,7 +1,7 @@
 {
-  "version": "0.105.1",
-  "date": "2026-11-01",
+  "version": "0.105.5",
+  "date": "2026-11-02",
   "changes": [
-    "Les soldats de près ont deux niveaux de détail : le fin dès 24 pixels par mètre (boutons, galons, moustache, pipe, casque rond), un plus simple de 12 à 16 qui coûte moins à dessiner"
+    "Nouvelle partie : avec la saison « Au hasard », chaque nouvelle carte cliquée dans la liste tire une autre saison et une autre météo"
   ]
 }
