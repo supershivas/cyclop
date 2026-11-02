@@ -2,10 +2,10 @@
 // ses options, sa description glisse sur le dessus de la pile »). Une maquette, rien n'est dans le jeu : les vrais secteurs, niveaux et durées (`data/`), la palette du jeu seulement, aucune couleur de plus.
 // Le geste est celui du papier posé sur une table (DESIGN.md : la catastrophe peinte avec calme) : la carte choisie glisse et se pose en travers, un peu de biais, sur celles déjà là ; celles du dessous
 // ne montrent plus que leur onglet. `prefers-reduced-motion` : la carte est posée d'un coup, rien ne glisse.
-import { PALETTE as P } from './palette.js?v=0.105.4';
-import { SECTEURS } from './data/secteur.js?v=0.105.4';
-import { DIFFICULTES, DIFFICULTE_DEFAUT, DUREES, DUREE_DEFAUT } from './data/difficulte.js?v=0.105.4';
-import { SAISONS, SAISON_DEFAUT } from './data/meteo.js?v=0.105.4';
+import { PALETTE as P } from './palette.js?v=0.105.5';
+import { SECTEURS } from './data/secteur.js?v=0.105.5';
+import { DIFFICULTES, DIFFICULTE_DEFAUT, DUREES, DUREE_DEFAUT } from './data/difficulte.js?v=0.105.5';
+import { SAISONS, SAISON_DEFAUT } from './data/meteo.js?v=0.105.5';
 
 const el = (tag, css = '', ...kids) => { const e = document.createElement(tag); if (css) e.style.cssText = css; e.append(...kids.flat().filter(k => k != null)); return e; };
 const MONO = 'font:13px/1.4 ui-monospace,"DejaVu Sans Mono",Menlo,Consolas,monospace;';

@@ -1,7 +1,7 @@
 {
-  "version": "0.105.4",
+  "version": "0.105.5",
   "date": "2026-11-02",
   "changes": [
-    "Au retour à l'écran titre, plus aucune fenêtre de la partie ne reste devant le décor (fenêtre de régiment, de bâtiment, visées, repères, bulles)"
+    "Nouvelle partie : avec la saison « Au hasard », chaque nouvelle carte cliquée dans la liste tire une autre saison et une autre météo"
   ]
 }

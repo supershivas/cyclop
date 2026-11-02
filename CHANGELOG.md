@@ -1,5 +1,8 @@
 # Journal des versions
 
+## 0.105.5 — 2026-11-02
+- Nouvelle partie : avec la saison « Au hasard », chaque nouvelle carte cliquée dans la liste tire une autre saison et une autre météo
+
 ## 0.105.4 — 2026-11-02
 - Au retour à l'écran titre, plus aucune fenêtre de la partie ne reste devant le décor (fenêtre de régiment, de bâtiment, visées, repères, bulles)
 
