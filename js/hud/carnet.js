@@ -2,7 +2,7 @@
 // Jérôme, v0.100.0 : (1) un clic sur le carnet en montre tout l'historique (défilant), un second le referme sur les quatre dernières lignes ; (2) les noms y sont cliquables
 // (un régiment, un homme, un tronçon : `liens` d'une ligne, rendus à `surLien`, qui mène la vue ou ouvre la fiche) ; (3) un événement important (un assaut d'en face, un tronçon perdu ou pris)
 // porte son pictogramme et clignote UNE fois à son arrivée (jamais en boucle ; coupé si le système demande un mouvement réduit) ; (4) il se replie sur son en-tête pour prendre moins de place.
-import { horloge } from '../bataille.js?v=0.104.2';
+import { horloge } from '../bataille.js?v=0.105.1';
 
 export const deux = n => String(n).padStart(2, '0');
 // les genres d'événement important : le pictogramme (dessiné comme les autres icônes du HUD) et le mot que lit un lecteur d'écran

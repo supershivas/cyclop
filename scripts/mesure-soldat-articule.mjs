@@ -79,7 +79,7 @@ const resultats = await page.evaluate(async ({ N, zooms, images }) => {
         if (!qui.length || !S.modele.triangles) continue;
         const lot = S.instances(qui.length);
         qui.forEach(([h, i], k) => lot.ecrire(k, { x: pts[i][0], z: pts[i][1], camp: h.camp, vit: 1.4, aspect: h.a }));
-        S.materiel.uniforms.uT.value = 1.3; sc.add(lot.mesh); lots.push([lot, S]); dessines += qui.length * S.modele.triangles / 1;
+        lot.envoyer(qui.length); S.materiel.uniforms.uT.value = 1.3; sc.add(lot.mesh); lots.push([lot, S]); dessines += qui.length * S.modele.triangles / 1;
       }
       for (let i = 0; i < 3; i++) { renderer.render(sc, camera); gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, px); }
       const ts = [];
@@ -90,7 +90,7 @@ const resultats = await page.evaluate(async ({ N, zooms, images }) => {
     }
     for (const [nom, complet, ombrage] of [['articulé (relief des faces)', true, 0.5], ['articulé (aplats du jeu)', true, 0], ['articulé (quatre faces)', false, 0]]) {
       const S = creerSoldatArticule(THREE, col, { complet, ombrage }), lot = S.instances(N);
-      hommes.forEach((hmm, i) => lot.ecrire(i, { x: pts[i][0], z: pts[i][1], camp: hmm.camp, vit: 1.4, aspect: hmm.a }));
+      hommes.forEach((hmm, i) => lot.ecrire(i, { x: pts[i][0], z: pts[i][1], camp: hmm.camp, vit: 1.4, aspect: hmm.a })); lot.envoyer(N);
       S.materiel.uniforms.uT.value = 1.3;
       mesurer(nom, lot.mesh, S.modele.triangles);
       lot.geometrie.dispose(); S.materiel.dispose();

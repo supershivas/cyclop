@@ -1,5 +1,12 @@
 # Journal des versions
 
+## 0.105.1 — 2026-11-01
+- Les soldats de près ont deux niveaux de détail : le fin dès 24 pixels par mètre (boutons, galons, moustache, pipe, casque rond), un plus simple de 12 à 16 qui coûte moins à dessiner
+
+## 0.105.0 — 2026-11-01
+- De près (12 pixels par mètre et plus), les 250 soldats les plus proches ont un vrai corps : genoux, coudes, mains et pieds qui bougent, un visage différent pour chacun, des cheveux, une barbe, des accessoires, une carrure et une taille propres
+- Casque Adrian français en demi-sphère, Stahlhelm allemand ; vareuse sous le ceinturon, guêtres brunes françaises, bottes allemandes jusqu'aux genoux ; les officiers ont un pistolet au lieu du fusil et des barrettes blanches sur la manche (épaulettes chez les Allemands)
+
 ## 0.104.2 — 2026-11-01
 - Un zoom de plus près, 32 pixels par mètre (molette ou boutons + et −) : on y lit le visage d'un soldat ; le cadrage automatique d'un camp ou d'un secteur reste à 24 au plus
 

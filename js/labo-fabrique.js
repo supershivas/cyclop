@@ -2,15 +2,15 @@
 // à droite ses stats, noms, armées »). Un clic tire un numéro d'homme ; son nom, son âge, son grade et ses caractéristiques sont ceux du jeu (`identite.js`, `caracteristiques`) ; son aspect
 // est celui de `aspect` (js/aspect-soldat.js), dessiné par le soldat articulé (js/rendu/soldat-articule.js). Le labo montre sans rien modifier : rien n'est écrit dans une bataille.
 // Le zoom est celui du jeu, en pixels de l'image par mètre (4 à 32 : les zooms du jeu ; 64 à 420 : plus près que le jeu ne va), l'image étant agrandie ×2 sans lissage comme à l'écran.
-import { PALETTE } from './palette.js?v=0.104.2';
-import { loadThree } from './three-lib.js?v=0.104.2';
-import { hash2 } from './lib/rng.js?v=0.104.2';
-import { identite, caracteristiques, departCaracs, CARACTERISTIQUES, caracEnMots, chevrons, experienceEnMots, etatEnMots } from './identite.js?v=0.104.2';
-import { NOMS } from './data/noms.js?v=0.104.2';
-import { aspect, aspectEnMots } from './aspect-soldat.js?v=0.104.2';
-import { COIFFES, CHEVEUX, BARBES, PEAUX, NOMS_COULEURS_CHEVEUX, YEUX, NEZ, BOUCHES, SOURCILS } from './data/aspect-soldat.js?v=0.104.2';
-import { creerSoldatArticule, trianglesVisibles } from './rendu/soldat-articule.js?v=0.104.2';
-import { ZOOMS } from './rendu3d.js?v=0.104.2';
+import { PALETTE } from './palette.js?v=0.105.1';
+import { loadThree } from './three-lib.js?v=0.105.1';
+import { hash2 } from './lib/rng.js?v=0.105.1';
+import { identite, caracteristiques, departCaracs, CARACTERISTIQUES, caracEnMots, chevrons, experienceEnMots, etatEnMots } from './identite.js?v=0.105.1';
+import { NOMS } from './data/noms.js?v=0.105.1';
+import { aspect, aspectEnMots } from './aspect-soldat.js?v=0.105.1';
+import { COIFFES, CHEVEUX, BARBES, PEAUX, NOMS_COULEURS_CHEVEUX, YEUX, NEZ, BOUCHES, SOURCILS } from './data/aspect-soldat.js?v=0.105.1';
+import { creerSoldatArticule, trianglesVisibles } from './rendu/soldat-articule.js?v=0.105.1';
+import { ZOOMS } from './rendu3d.js?v=0.105.1';
 
 const el = (tag, props = {}, ...kids) => { const e = Object.assign(document.createElement(tag), props); e.append(...kids); return e; };
 const GRAINE = 7;                         // la graine d'identité de la fabrique (n'importe laquelle : c'est le numéro qui fait l'homme)
@@ -59,7 +59,7 @@ export function maquetteFabrique(stage) {
 function monter(stage, THREE) {
   const col = l => new THREE.Color(PALETTE[l]);
   // ─── l'état ───
-  const S = { id: Math.floor(Math.random() * 65536), camp: 0, grade: '', pose: 'repos', cadrage: 'corps', ppm: 32, yaw: 0.45, tangage: 0.28, auto: true, ombrage: true, histo: [], pos: -1 };
+  const S = { id: Math.floor(Math.random() * 65536), camp: 0, grade: '', niveau: 'fin', pose: 'repos', cadrage: 'corps', ppm: 32, yaw: 0.45, tangage: 0.28, auto: true, ombrage: true, histo: [], pos: -1 };
   const lire = () => { const q = new URLSearchParams(location.search); if (q.has('soldat')) { const [i, c] = q.get('soldat').split(':'); S.id = (+i || 0) & 0xffff; S.camp = c === '1' ? 1 : 0; } };
   lire();
   let H = fabriquer(S.id, S.camp, S.grade);
@@ -82,6 +82,7 @@ function monter(stage, THREE) {
   gradeSel.onchange = () => { S.grade = gradeSel.value; refaire(); };
   const poseBtns = choix(POSES.map(([id, nom]) => [id, nom]), 'pose', () => { ecrireHomme(); remplirFiche(); });
   const cadrBtns = choix(CADRAGES.map(([id, nom]) => [id, nom]), 'cadrage', () => { S.ppm = CADRAGES.find(c => c[0] === S.cadrage)[3]; if (S.cadrage === 'visage') { S.yaw = 0.2; S.tangage = 0.06; S.auto = false; auto.checked = false; } majBoutons(); });
+  const niveauBtns = choix([['fin', 'Fin (24 px/m et plus)'], ['moyen', 'Intermédiaire (12 à 16 px/m)']], 'niveau', () => { remplirFiche(); });
   const zoomBtns = [4, 8, 16, 32, 64, 128, 200, 420].map(p => { const b = bouton(`${p} px/m`, () => { S.ppm = p; majBoutons(); }); b.dataset.cle = 'ppm'; b.dataset.id = p; return b; });
   const auto = el('input', { type: 'checkbox', checked: true, onchange: () => { S.auto = auto.checked; } });
   const ombr = el('input', { type: 'checkbox', checked: true, onchange: () => { S.ombrage = ombr.checked; } });
@@ -89,7 +90,7 @@ function monter(stage, THREE) {
   graineEl.onchange = () => { const [i, c] = graineEl.value.split(':'); const id = (+i || 0) & 0xffff; S.camp = c === '1' ? 1 : 0; S.histo = S.histo.slice(0, S.pos + 1); S.histo.push({ id, camp: S.camp }); S.pos = S.histo.length - 1; H = fabriquer(id, S.camp, S.grade); ecrireHomme(); remplirFiche(); majBoutons(); };
   gauche.append(boite,
     rang('', precedent, generer, suivant),
-    rang('Zoom', ...zoomBtns), rang('Cadrage', ...cadrBtns), rang('Pose', ...poseBtns), rang('Armée', ...campBtns, gradeSel),
+    rang('Détail', ...niveauBtns), rang('Zoom', ...zoomBtns), rang('Cadrage', ...cadrBtns), rang('Pose', ...poseBtns), rang('Armée', ...campBtns, gradeSel),
     rang('', el('label', {}, auto, ' faire tourner'), el('label', {}, ombr, ' relief des faces (hors palette : aplats du jeu si décoché)')),
     rang('Numéro', graineEl, el('span', { textContent: 'ou ?soldat=numéro:camp dans l\'adresse', style: 'font-size:12px;opacity:.7' })));
   grille.append(gauche, droite); stage.append(grille);
@@ -116,15 +117,16 @@ function monter(stage, THREE) {
       ligne('Visage', `yeux ${YEUX[t.yeux]}, nez ${NEZ[t.nez]}, bouche ${BOUCHES[t.bouche]}, sourcils ${SOURCILS[t.sourcils]}${t.rides ? `, ${t.rides > 1 ? 'front et joues ridés' : 'quelques rides'}` : ''}`),
       ligne('Carrure', `taille ${(1.7 * c.taille).toFixed(2)} m · épaules ×${c.epaules.toFixed(2)} · jambes ×${c.jambes.toFixed(2)} · ventre ×${c.ventre.toFixed(2)}`),
       ligne('Équipé de', aspectEnMots(a, H.camp).slice(1).filter(m => !/^(cheveux|crâne)/.test(m) && !BARBES.some(b => b.nom === m)).join(', ') || 'l\'ordinaire'),
-      titre('Coût'), ligne('Triangles dessinés', `${trianglesVisibles(a, H.camp, POSES.find(p => p[0] === S.pose)?.[2].blessure ?? 0, { complet: true })} (modèle entier : ${soldat.modele.triangles})`));
+      titre('Coût'), ligne('Triangles dessinés', `${trianglesVisibles(a, H.camp, POSES.find(p => p[0] === S.pose)?.[2].blessure ?? 0, { complet: true, niveau: S.niveau })} (modèle entier : ${niveaux.find(n => n.niveau === S.niveau).soldat.modele.triangles})`));
     graineEl.value = `${H.id}:${H.camp}`;
   }
   // ─── le dessin ───
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: false, preserveDrawingBuffer: true }); renderer.setPixelRatio(1); renderer.outputColorSpace = THREE.LinearSRGBColorSpace;
   const scene = new THREE.Scene(); scene.background = col('s');
   const camera = new THREE.PerspectiveCamera(30, 1, 0.05, 200);
-  const soldat = creerSoldatArticule(THREE, col, { complet: true, ombrage: 0.5 });
-  const lot = soldat.instances(1); scene.add(lot.mesh);
+  // les deux niveaux de détail du jeu (v0.105.1) : le fin (24 px/m et plus) et l'intermédiaire (12 à 16 px/m) ; la fabrique les montre l'un ou l'autre, à quatre faces par boîte comme le jeu (`complet` : le derrière pour tourner autour)
+  const niveaux = ['fin', 'moyen'].map(niveau => { const so = creerSoldatArticule(THREE, col, { complet: true, ombrage: 0.5, niveau }); const lo = so.instances(1); scene.add(lo.mesh); return { niveau, soldat: so, lot: lo }; });
+  const soldat = niveaux[0].soldat;      // (pour l'horloge et le relief : les deux niveaux partagent leurs réglages ci-dessous)
   const sol = new THREE.Mesh(new THREE.CircleGeometry(6, 48), new THREE.MeshBasicMaterial({ color: col('b') })); sol.rotation.x = -Math.PI / 2; sol.position.y = -0.002; scene.add(sol);
   const ombre = new THREE.Mesh(new THREE.CircleGeometry(0.42, 24), new THREE.MeshBasicMaterial({ color: col('t'), transparent: true, opacity: 0.55 })); ombre.rotation.x = -Math.PI / 2; ombre.scale.y = 0.7; ombre.position.y = 0.002; scene.add(ombre);
   let dernierT = performance.now(), temps = 0, raf = 0, w = 0, h = 0;
@@ -134,7 +136,7 @@ function monter(stage, THREE) {
   }
   function ecrireHomme() {
     const P = POSES.find(p => p[0] === S.pose)[2];
-    lot.ecrire(0, { x: 0, y: 0, z: 0, camp: H.camp, vit: P.vit ?? 0, tir: P.tir ?? 0, tapi: P.tapi ?? 0, couche: P.couche ?? 0, blessure: P.blessure ?? 0, cap: 0, aspect: H.aspect });
+    for (const { lot } of niveaux) { lot.ecrire(0, { x: 0, y: 0, z: 0, camp: H.camp, vit: P.vit ?? 0, tir: P.tir ?? 0, tapi: P.tapi ?? 0, couche: P.couche ?? 0, blessure: P.blessure ?? 0, cap: 0, aspect: H.aspect }); lot.envoyer(1); }
     ombre.scale.set(P.couche ? 2.0 : 1, P.couche ? 0.55 : 0.7, 1);
   }
   function image(now) {
@@ -142,7 +144,7 @@ function monter(stage, THREE) {
     const dt = Math.min(0.1, (now - dernierT) / 1000); dernierT = now; temps += dt;
     taille();
     if (S.auto) S.yaw += dt * 0.5;
-    soldat.materiel.uniforms.uT.value = temps; soldat.materiel.uniforms.uShade.value = S.ombrage ? 0.5 : 0;
+    for (const { niveau, soldat: so, lot } of niveaux) { so.materiel.uniforms.uT.value = temps; so.materiel.uniforms.uShade.value = S.ombrage ? 0.5 : 0; lot.mesh.visible = niveau === S.niveau; }
     // la caméra du jeu : un champ de 30°, placée pour que 1 m = ppm pixels de l'image
     const cible = new THREE.Vector3(0, CADRAGES.find(c => c[0] === S.cadrage)[2] * H.aspect.carrure.taille, 0);
     if (S.pose === 'couche') cible.y = 0.2;
@@ -177,5 +179,5 @@ function monter(stage, THREE) {
   document.addEventListener('keydown', touche);
   S.histo.push({ id: H.id, camp: S.camp }); S.pos = 0;
   ecrireHomme(); remplirFiche(); majBoutons(); raf = requestAnimationFrame(image);
-  return () => { cancelAnimationFrame(raf); document.removeEventListener('keydown', touche); renderer.dispose(); lot.geometrie.dispose(); soldat.materiel.dispose(); };
+  return () => { cancelAnimationFrame(raf); document.removeEventListener('keydown', touche); renderer.dispose(); for (const { lot, soldat: so } of niveaux) { lot.geometrie.dispose(); so.materiel.dispose(); } };
 }

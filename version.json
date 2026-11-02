@@ -1,7 +1,7 @@
 {
-  "version": "0.104.2",
+  "version": "0.105.1",
   "date": "2026-11-01",
   "changes": [
-    "Un zoom de plus près, 32 pixels par mètre (molette ou boutons + et −) : on y lit le visage d'un soldat ; le cadrage automatique d'un camp ou d'un secteur reste à 24 au plus"
+    "Les soldats de près ont deux niveaux de détail : le fin dès 24 pixels par mètre (boutons, galons, moustache, pipe, casque rond), un plus simple de 12 à 16 qui coûte moins à dessiner"
   ]
 }

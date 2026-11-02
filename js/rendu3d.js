@@ -22,31 +22,31 @@
    - Les soldats : instanciés (une boîte et son ombre) ; au zoom 1 et 2, un
      point de 2 × 2 pixels (la couleur du camp sur son ombre).
    - Les corps : un homme couché (instancié) ; au zoom 1 et 2, un pixel. */
-import { loadThree } from './three-lib.js?v=0.104.2';
-import * as SH from './rendu/shaders.js?v=0.104.2';
-import { creerSoldats } from './rendu/soldats.js?v=0.104.2';
-import { creerChars } from './rendu/chars.js?v=0.104.2';
-import { creerGenies } from './rendu/genies.js?v=0.104.2';
-import { creerCamp } from './rendu/camp.js?v=0.104.2';
-import { creerAvions } from './rendu/avions.js?v=0.104.2';
-import { creerPonts } from './rendu/ponts.js?v=0.104.2';
-import { creerCiel } from './rendu/ciel.js?v=0.104.2';
-import { creerMeteo } from './rendu/meteo.js?v=0.104.2';
-import { creerTroncons } from './rendu/troncons.js?v=0.104.2';
-import { ARBRES_JEU } from './data/arbres.js?v=0.104.2';
-import { creerVegetation } from './rendu/vegetation.js?v=0.104.2';
-import { creerTemps } from './rendu/temps.js?v=0.104.2';
-import { creerEclats } from './rendu/eclats.js?v=0.104.2';
-import { creerOmbresRelief } from './rendu/ombres-relief.js?v=0.104.2';
-import { OMBRES_RELIEF as OMB, NUAGES, NUAGES_VENT } from './data/soleil.js?v=0.104.2';
-import { PALETTE, ORDRE, INDICE } from './palette.js?v=0.104.2';
-import { OMBRE, couleursLigne } from './apparence.js?v=0.104.2';
-import { MORCEAU, hauteurVueQ as hauteurQ, hauteurVueM as hauteurM } from './terrain.js?v=0.104.2';
-import { horloge, secteurDuJeu, rangDe } from './bataille.js?v=0.104.2';
-import { GRADES } from './data/grades.js?v=0.104.2';
-import { profilFleuve } from './eaux.js?v=0.104.2';
-import { ligneY } from './tranchees.js?v=0.104.2';
-import { vent as ventDuJour } from './data/meteo.js?v=0.104.2';
+import { loadThree } from './three-lib.js?v=0.105.1';
+import * as SH from './rendu/shaders.js?v=0.105.1';
+import { creerSoldats } from './rendu/soldats.js?v=0.105.1';
+import { creerChars } from './rendu/chars.js?v=0.105.1';
+import { creerGenies } from './rendu/genies.js?v=0.105.1';
+import { creerCamp } from './rendu/camp.js?v=0.105.1';
+import { creerAvions } from './rendu/avions.js?v=0.105.1';
+import { creerPonts } from './rendu/ponts.js?v=0.105.1';
+import { creerCiel } from './rendu/ciel.js?v=0.105.1';
+import { creerMeteo } from './rendu/meteo.js?v=0.105.1';
+import { creerTroncons } from './rendu/troncons.js?v=0.105.1';
+import { ARBRES_JEU } from './data/arbres.js?v=0.105.1';
+import { creerVegetation } from './rendu/vegetation.js?v=0.105.1';
+import { creerTemps } from './rendu/temps.js?v=0.105.1';
+import { creerEclats } from './rendu/eclats.js?v=0.105.1';
+import { creerOmbresRelief } from './rendu/ombres-relief.js?v=0.105.1';
+import { OMBRES_RELIEF as OMB, NUAGES, NUAGES_VENT } from './data/soleil.js?v=0.105.1';
+import { PALETTE, ORDRE, INDICE } from './palette.js?v=0.105.1';
+import { OMBRE, couleursLigne } from './apparence.js?v=0.105.1';
+import { MORCEAU, hauteurVueQ as hauteurQ, hauteurVueM as hauteurM } from './terrain.js?v=0.105.1';
+import { horloge, secteurDuJeu, rangDe } from './bataille.js?v=0.105.1';
+import { GRADES } from './data/grades.js?v=0.105.1';
+import { profilFleuve } from './eaux.js?v=0.105.1';
+import { ligneY } from './tranchees.js?v=0.105.1';
+import { vent as ventDuJour } from './data/meteo.js?v=0.105.1';
 
 export const CAMERA = { yaw: 0.15, tangage: 0.95, fov: 30 };   // au départ : tournée de 9°, plongée de 54°, angle de 30°
 // la caméra respire : un balancement très lent, 2° en 23 s (Jérôme, v0.3.1 : variante D du labo retenue)
@@ -837,6 +837,7 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
     survoler(reg, troncons) { soldats.survoler(reg); survolTroncons = troncons; },
     surligner(s) { troncons.surligner(s); },
     get legere() { return soldats.legere; }, set legere(v) { soldats.legere = v; },
+    get articule() { return soldats.articule; }, set articule(v) { soldats.articule = v; }, set aspectDe(f) { soldats.aspectDe = f; },      // les soldats articulés de près (v0.105.0)
     fumer(x, z) { eclats.fumer(x, z); },
     reglerBuissons(o) { vegetation.reglerBuissons(o); },        // les buissons variés (null : ceux d'avant) ; le labo
     reglerArbres(o) { vegetation.regler(o); },           // les arbres variés (null : ceux d'avant) ; le labo et la mesure
@@ -845,7 +846,7 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
     get stats() {
       let tri = 0;
       for (const m of morceaux) tri += (m.geometry.attributes.position?.count || 0) / 3;
-      return { ms: { sol: +perf.sol.toFixed(2), rendu: +perf.rendu.toFixed(2), renduFini: +perf.fini.toFixed(2) }, triangles: tri, trianglesDessines: renderer.info.render.triangles, soldatsVus: soldats.vus, gradesVus: soldats.gradesVus, touffesVues: vegetation.vuesHerbe, arbresVus: vegetation.arbresVus, trianglesArbres: vegetation.trianglesArbres, msArbres: +vegetation.msArbres.toFixed(3), appels: renderer.info.render.calls, rangees: coutRangees, morceauxRefaits: morceauxFaits.n, msMorceaux: +morceauxFaits.ms.toFixed(1) };
+      return { ms: { sol: +perf.sol.toFixed(2), rendu: +perf.rendu.toFixed(2), renduFini: +perf.fini.toFixed(2) }, triangles: tri, trianglesDessines: renderer.info.render.triangles, soldatsVus: soldats.vus, gradesVus: soldats.gradesVus, articulesVus: soldats.articulesVus, touffesVues: vegetation.vuesHerbe, arbresVus: vegetation.arbresVus, trianglesArbres: vegetation.trianglesArbres, msArbres: +vegetation.msArbres.toFixed(3), appels: renderer.info.render.calls, rangees: coutRangees, morceauxRefaits: morceauxFaits.n, msMorceaux: +morceauxFaits.ms.toFixed(1) };
     },
     detruire() { renderer.dispose(); },
   };
