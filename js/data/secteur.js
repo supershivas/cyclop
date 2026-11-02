@@ -56,6 +56,22 @@ export const SECTEURS = {
     relief: { bosses: 1.6, ondulation: 1.2, crete: { y: 62, hauteur: 16, largeur: 64 }, nappe: 0.8 },
     pluieAuMoins: 1, arbres: 60, bois: 2, haies: 9, buissons: 230,
   },
+  // Un fond de vallée : plat, la nappe affleure, la pluie noie vite les trous.
+  marais: {
+    ...ESSAI,
+    nom: 'Le marais',
+    resume: 'Un fond plat où la nappe affleure : des marais partout, de petits lacs, le moindre trou se remplit, la boue vient dès le deuxième jour. Peu de relief, des saules, des haies basses.',
+    profil: [0.30, 0.28, 0.30, 0.27, 0.29, 0.28, 0.30, 0.27, 0.29, 0.28, 0.30, 0.28],
+    relief: { bosses: 0.45, ondulation: 0.55, nappe: -1.4 },
+    pluieAuMoins: 4, arbres: 90, bois: 1, haies: 3, buissons: 320,
+    // beaucoup de marécages (dans le no man's land, derrière les lignes, sur les flancs) et de petits lacs (Jérôme, v0.61.0) ; l'eau reste à 20 m des tranchées (`validerSecteur`)
+    objets: [
+      { o: 'marecage', x: 60, y: 150, r: 28 }, { o: 'marecage', x: 170, y: 148, r: 24 }, { o: 'marecage', x: 270, y: 150, r: 30 }, { o: 'marecage', x: 350, y: 150, r: 22 },
+      { o: 'marecage', x: 115, y: 160, r: 20 }, { o: 'marecage', x: 220, y: 162, r: 18 },
+      { o: 'marecage', x: 80, y: 335, r: 30 }, { o: 'marecage', x: 320, y: 345, r: 28 }, { o: 'marecage', x: 200, y: -40, r: 30 }, { o: 'marecage', x: 60, y: -55, r: 26 }, { o: 'marecage', x: 340, y: -50, r: 24 },
+      { o: 'lac', x: 30, y: 135, r: 12 }, { o: 'lac', x: 125, y: 127, r: 10 }, { o: 'lac', x: 205, y: 135, r: 11 }, { o: 'lac', x: 240, y: 175, r: 13 }, { o: 'lac', x: 330, y: 127, r: 11 }, { o: 'lac', x: 150, y: 183, r: 10 }, { o: 'lac', x: 380, y: 172, r: 12 },
+    ],
+  },
   // Des lignes qui épousent un coude du terrain (Jérôme, v0.108.0 : « les lignes peuvent être courbes, moins linéaires » ; « no man's land plus longs ou plus courts ») : la courbe de chaque camp est
   // une grande onde (`tranchees.courbe`, termes de `arcY`), en opposition de phase d'un camp à l'autre, plus une onde courte : le no man's land passe de ~70 m, où un poste de mitrailleuse couvre tout, à ~190 m, où l'on n'est sous le feu que de l'artillerie.
   meandres: {
@@ -87,21 +103,5 @@ export const SECTEURS = {
       ...ESSAI.tranchees,
       courbe: { nous: [{ bosse: true, x: 150, l: 70, h: -34 }] },
     },
-  },
-  // Un fond de vallée : plat, la nappe affleure, la pluie noie vite les trous.
-  marais: {
-    ...ESSAI,
-    nom: 'Le marais',
-    resume: 'Un fond plat où la nappe affleure : des marais partout, de petits lacs, le moindre trou se remplit, la boue vient dès le deuxième jour. Peu de relief, des saules, des haies basses.',
-    profil: [0.30, 0.28, 0.30, 0.27, 0.29, 0.28, 0.30, 0.27, 0.29, 0.28, 0.30, 0.28],
-    relief: { bosses: 0.45, ondulation: 0.55, nappe: -1.4 },
-    pluieAuMoins: 4, arbres: 90, bois: 1, haies: 3, buissons: 320,
-    // beaucoup de marécages (dans le no man's land, derrière les lignes, sur les flancs) et de petits lacs (Jérôme, v0.61.0) ; l'eau reste à 20 m des tranchées (`validerSecteur`)
-    objets: [
-      { o: 'marecage', x: 60, y: 150, r: 28 }, { o: 'marecage', x: 170, y: 148, r: 24 }, { o: 'marecage', x: 270, y: 150, r: 30 }, { o: 'marecage', x: 350, y: 150, r: 22 },
-      { o: 'marecage', x: 115, y: 160, r: 20 }, { o: 'marecage', x: 220, y: 162, r: 18 },
-      { o: 'marecage', x: 80, y: 335, r: 30 }, { o: 'marecage', x: 320, y: 345, r: 28 }, { o: 'marecage', x: 200, y: -40, r: 30 }, { o: 'marecage', x: 60, y: -55, r: 26 }, { o: 'marecage', x: 340, y: -50, r: 24 },
-      { o: 'lac', x: 30, y: 135, r: 12 }, { o: 'lac', x: 125, y: 127, r: 10 }, { o: 'lac', x: 205, y: 135, r: 11 }, { o: 'lac', x: 240, y: 175, r: 13 }, { o: 'lac', x: 330, y: 127, r: 11 }, { o: 'lac', x: 150, y: 183, r: 10 }, { o: 'lac', x: 380, y: 172, r: 12 },
-    ],
   },
 };
