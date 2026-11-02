@@ -1,5 +1,9 @@
 # Journal des versions
 
+## 0.108.0 — 2026-11-02
+- La carte : une case est un secteur (B1, C6…) ; un clic en montre le plan seul, soldats à leur place, avec les cases voisines à un bouton ; lignes 1 à 4 chez nous, 5 à 8 en face
+- Un petit « ? » explique la carte (marges resserrées) ; la fenêtre d'un régiment perd ses boutons de formation et de tir, et elle comme les fiches des hommes se déplacent à la main
+
 ## 0.107.0 — 2026-11-02
 - Nouvelle partie : plus de liste ni de cadre, les cartes de secteur sont empilées sur la fenêtre et leurs titres servent de menu ; la carte choisie glisse sur le dessus, sans saccade
 - La carte « Au hasard » porte le nom du secteur tiré et un dé « Une autre carte » pour en tirer un autre ; le décor de l'écran titre ne se redessine plus derrière le choix du secteur

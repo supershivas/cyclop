@@ -9,9 +9,9 @@
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta property="og:image" content="og.png">
-<link rel="stylesheet" href="js/lib/game.css?v=0.107.0">
-<link rel="stylesheet" href="css/style.css?v=0.107.0">
-<link rel="stylesheet" href="css/ds-v2.css?v=0.107.0">
+<link rel="stylesheet" href="js/lib/game.css?v=0.108.0">
+<link rel="stylesheet" href="css/style.css?v=0.108.0">
+<link rel="stylesheet" href="css/ds-v2.css?v=0.108.0">
 </head>
 <body class="charge">
 <!-- La barre de chargement (v0.28.0) : là avant tout script ; main.js la remplit, puis la retire. `body.charge` (v0.100.0) : tout le reste de l'écran est caché tant qu'elle est là (le menu et le titre ne se voient plus derrière) -->
@@ -122,34 +122,18 @@
       <!-- En haut à droite : la carte (repliable) -->
       <div class="haut-droite">
         <section class="papier carte" id="carte" aria-label="Carte du secteur" hidden>
-          <button class="entete" id="carte-bascule" aria-expanded="true" aria-label="Replier la carte du secteur">Le secteur<span class="libelle">en face au nord</span><i aria-hidden="true"></i></button>
+          <div class="carte-tete">
+            <button class="entete" id="carte-bascule" aria-expanded="true" aria-label="Replier la carte du secteur">Le secteur<span class="libelle">en face au nord</span><i aria-hidden="true"></i></button>
+            <button type="button" class="aide" id="carte-aide" aria-label="Comment lire la carte" data-info="# Comment lire la carte&#10;Les secteurs, les lignes, les couleurs.">?</button>
+          </div>
           <div class="carte-grille" id="carte-grille"></div>
-          <details class="legende-carte">
-            <summary>Comment lire la carte</summary>
-            <ul class="legende">
-              <li><b>A à D</b> : les quatre secteurs de 100 m, de l'ouest à l'est ; un clic le met en gros plan à la place de la carte et cadre la caméra sur lui ; Échap, « Vue d'ensemble » ou un second clic sur sa lettre reviennent.</li>
-              <li><b>Lignes 1 à 4</b> : les tranchées de chaque camp, de la plus avancée (1) à la plus en arrière (4) ; en face en haut (kaki), les nôtres en bas (bleu).</li>
-              <li><b>Quatre carrés par case</b> : quatre tronçons de 25 m, bleus s'ils sont à nous, kaki s'ils sont à eux ; un clic envoie les régiments choisis occuper la case.</li>
-              <li><b>« 1·12 »</b> : 1 attaquant contre 12 défenseurs dans la case, en pleine mêlée.</li>
-              <li><b>« 135 m »</b> : la largeur du no man's land entre les deux premières lignes.</li>
-              <li><b>Cercles numérotés</b> : les régiments, à leur place (bleus à nous, kaki en face) ; le contour épais : choisi ; <b>!</b> rouge : en déroute.</li>
-              <li><b>Ligne pointillée</b> : l'ordre d'un de nos régiments, de lui à sa destination, jusqu'à son arrivée.</li>
-            </ul>
-          </details>
         </section>
         <section class="papier secteur" id="secteur" aria-label="Gros plan d'un secteur" hidden>
           <button class="retour" id="secteur-fermer" data-info="# Vue d'ensemble&#10;Retour à la carte des quatre secteurs et à la vue d'avant (Échap).">← Vue d'ensemble</button>
-          <div class="secteur-tete"><h3 id="secteur-titre">Secteur</h3><div class="secteur-lettres" id="secteur-lettres" role="group" aria-label="Les secteurs"></div></div>
+          <div class="secteur-tete"><h3 id="secteur-titre">Secteur</h3><button type="button" class="aide" id="secteur-aide" aria-label="Comment lire le plan" data-info="# Comment lire le plan&#10;Les points, les tranchées, les régiments.">?</button></div>
+          <p class="discret" id="secteur-sous"></p>
+          <div class="secteur-nav" id="secteur-nav" role="group" aria-label="Les cases voisines"></div>
           <canvas id="secteur-plan" aria-label="Plan du secteur : les hommes de chaque camp, les tombés, les tranchées"></canvas>
-          <details class="legende-carte">
-            <summary>Comment lire le plan</summary>
-            <ul class="legende">
-              <li><i class="p nous"></i> nos hommes · <i class="p eux"></i> ceux d'en face · <i class="p bl"></i> un blessé</li>
-              <li><i class="t"></i> une tranchée, à la couleur de qui la tient (pointillé : l'autre camp y est entré)</li>
-              <li><i class="r"></i> un régiment (son numéro) · les petits tirets : les tombés</li>
-              <li>Le plan est écrasé : 100 m de large, plus de 200 m de profondeur.</li>
-            </ul>
-          </details>
           <div id="secteur-lignes" class="secteur-lignes"></div>
           <ul id="secteur-regs" class="secteur-regs" aria-label="Les régiments du secteur"></ul>
         </section>
@@ -238,6 +222,28 @@
   <div class="menu"><button class="bouton" id="ordre-compris">Compris</button></div>
 </dialog>
 
+
+<dialog id="dialogue-aide-carte" aria-label="Comment lire la carte">
+  <h2>La carte</h2>
+  <ul class="legende">
+    <li><b>A à D</b> : les quatre colonnes de 100 m, de l'ouest à l'est ; un clic sur une lettre choisit les régiments de la colonne.</li>
+    <li><b>Lignes 1 à 4</b> (en bas, bleu) : nos tranchées, de la plus avancée (1) à la plus en arrière (4). <b>Lignes 5 à 8</b> (en haut, kaki) : celles d'en face, de leur première ligne (5) à leur dernière (8).</li>
+    <li><b>Une case est un secteur</b> : sa colonne et sa ligne le nomment (B1, C6). Un clic en montre le plan en gros plan, soldats à leur place, et la caméra le cadre ; avec des régiments choisis, le clic leur ordonne de s'y rendre (Alt + clic : toujours le gros plan).</li>
+    <li><b>Quatre carrés par case</b> : quatre tronçons de 25 m, bleus s'ils sont à nous, kaki s'ils sont à eux.</li>
+    <li><b>« 1·12 »</b> : 1 attaquant contre 12 défenseurs dans la case, en pleine mêlée.</li>
+    <li><b>« 135 m »</b> : la largeur du no man's land entre les deux premières lignes.</li>
+    <li><b>Cercles numérotés</b> : les régiments, à leur place (bleus à nous, kaki en face) ; le contour épais : choisi ; <b>!</b> rouge : en déroute.</li>
+    <li><b>Ligne pointillée</b> : l'ordre d'un de nos régiments, de lui à sa destination, jusqu'à son arrivée.</li>
+  </ul>
+  <h3 class="aide-titre">Le plan d'un secteur</h3>
+  <ul class="legende">
+    <li><i class="p nous"></i> nos hommes · <i class="p eux"></i> ceux d'en face · <i class="p bl"></i> un blessé</li>
+    <li><i class="t"></i> une tranchée, à la couleur de qui la tient (pointillé : l'autre camp y est entré)</li>
+    <li><i class="r"></i> un régiment (son numéro) · les petits tirets : les tombés</li>
+    <li>Le plan est à l'échelle : 100 m de large, 57 m de profondeur. Les boutons ← → ↑ ↓ mènent aux cases voisines ; Échap ou « Vue d'ensemble » reviennent à la carte.</li>
+  </ul>
+  <div class="menu"><button class="bouton" id="aide-carte-fermer">Fermer</button></div>
+</dialog>
 
 <dialog id="dialogue-mission" aria-label="La mission">
   <h1>Mission</h1>
@@ -365,6 +371,6 @@
 </dialog>
 
 <div class="jeu-toast" id="toast" role="status" hidden></div>
-<script type="module" src="js/main.js?v=0.107.0"></script>
+<script type="module" src="js/main.js?v=0.108.0"></script>
 </body>
 </html>
