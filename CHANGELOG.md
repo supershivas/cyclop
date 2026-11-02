@@ -1,5 +1,8 @@
 # Journal des versions
 
+## 0.105.6 — 2026-11-02
+- Au labo, les cartes de secteur montrent la vraie carte du secteur (rendue par le moteur du jeu) sur un papier usé, grainé, plié, aux bords rongés, posé sur une table de toile
+
 ## 0.105.5 — 2026-11-02
 - Nouvelle partie : avec la saison « Au hasard », chaque nouvelle carte cliquée dans la liste tire une autre saison et une autre météo
 

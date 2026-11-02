@@ -1,83 +1,136 @@
 // Le sujet « Les cartes de secteur » du labo (Jérôme, retour du 2 nov. : « les cartes de secteur qui glissent sur une table : une liste des secteurs à gauche ; au clic, la carte du secteur, son titre,
-// ses options, sa description glisse sur le dessus de la pile »). Une maquette, rien n'est dans le jeu : les vrais secteurs, niveaux et durées (`data/`), la palette du jeu seulement, aucune couleur de plus.
-// Le geste est celui du papier posé sur une table (DESIGN.md : la catastrophe peinte avec calme) : la carte choisie glisse et se pose en travers, un peu de biais, sur celles déjà là ; celles du dessous
-// ne montrent plus que leur onglet. `prefers-reduced-motion` : la carte est posée d'un coup, rien ne glisse.
-import { PALETTE as P } from './palette.js?v=0.105.5';
-import { SECTEURS } from './data/secteur.js?v=0.105.5';
-import { DIFFICULTES, DIFFICULTE_DEFAUT, DUREES, DUREE_DEFAUT } from './data/difficulte.js?v=0.105.5';
-import { SAISONS, SAISON_DEFAUT } from './data/meteo.js?v=0.105.5';
+// ses options, sa description glisse sur le dessus de la pile » ; puis « on ne voit pas la vraie map », « un rendu plus papier, carte usée, texturée »). Une maquette, rien n'est dans le jeu : les vrais
+// secteurs, niveaux et durées (`data/`), la palette du jeu seulement (le papier est de l'os, la tache de la glaise, le grain de la terre, en transparence : aucune couleur de plus).
+// La vraie carte : le moteur du jeu (`apercu-3d.js`) rend chaque secteur UNE fois, vu de haut, hors de l'écran ; l'image est collée sur la carte (un moteur WebGL pour six cartes, pas six).
+// Le papier : bords irréguliers (un filtre de déplacement), grain, taches, deux plis, coins sombres, adhésif ; la table est une toile. Le geste : la carte choisie glisse et se pose en travers, de biais,
+// sur celles déjà là (les autres ne montrent que leur onglet). `prefers-reduced-motion` : la carte est posée d'un coup, rien ne glisse.
+import { PALETTE as P } from './palette.js?v=0.105.6';
+import { SECTEURS } from './data/secteur.js?v=0.105.6';
+import { DIFFICULTES, DIFFICULTE_DEFAUT, DUREES, DUREE_DEFAUT } from './data/difficulte.js?v=0.105.6';
+import { SAISONS, SAISON_DEFAUT } from './data/meteo.js?v=0.105.6';
+import { preparerAleatoire, ID_ALEATOIRE } from './generateur.js?v=0.105.6';
 
 const el = (tag, css = '', ...kids) => { const e = document.createElement(tag); if (css) e.style.cssText = css; e.append(...kids.flat().filter(k => k != null)); return e; };
 const MONO = 'font:13px/1.4 ui-monospace,"DejaVu Sans Mono",Menlo,Consolas,monospace;';
 const reduit = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
 const NS = 'http://www.w3.org/2000/svg';
-const COUPE = (profil, w, h) => {      // la coupe nord-sud du sol, en aplat (0 bas, 1 haut)
-  const s = document.createElementNS(NS, 'svg'); s.setAttribute('viewBox', `0 0 ${w} ${h}`); s.style.cssText = `display:block;width:100%;height:${h}px`;
-  const pas = w / (profil.length - 1), pts = profil.map((v, i) => `${(i * pas).toFixed(1)},${(h - 6 - v * (h - 16)).toFixed(1)}`);
-  s.innerHTML = `<rect width="${w}" height="${h}" fill="${P.r}"/><polygon points="0,${h} ${pts.join(' ')} ${w},${h}" fill="${P.g}"/><polyline points="${pts.join(' ')}" fill="none" stroke="${P.t}" stroke-width="2"/>`;
-  return s;
-};
 const hash = id => { let h = 2166136261; for (const c of id) h = Math.imul(h ^ c.charCodeAt(0), 16777619) >>> 0; return h; };
+const graineFixe = id => hash(id) % 99999 + 1;          // la même formule que l'écran de choix : une carte du jeu est la même partout
+const rgb = hex => { const n = parseInt(hex.slice(1), 16); return `${(n >> 16) & 255},${(n >> 8) & 255},${n & 255}`; };
+const [TERRE, GLAISE, OS, BRUME] = [P.t, P.g, P.o, P.r].map(rgb);
+
+// les textures : du bruit de papier (SVG), en transparence, aux couleurs de la palette
+const bruit = (freq, octaves, couleur, alpha, taille = 240) => `url("data:image/svg+xml;utf8,${encodeURIComponent(`<svg xmlns='http://www.w3.org/2000/svg' width='${taille}' height='${taille}'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='${freq}' numOctaves='${octaves}' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 ${couleur[0]} 0 0 0 0 ${couleur[1]} 0 0 0 0 ${couleur[2]} 0 0 0 ${alpha[0]} ${alpha[1]}'/></filter><rect width='100%' height='100%' filter='url(#n)'/></svg>`)}")`;
+const GRAIN_LEGER = bruit(0.85, 3, [0.086, 0.075, 0.059], [0.55, -0.1]);       // le même, deux fois plus léger (les boutons)
+const GRAIN = bruit(0.85, 3, [0.086, 0.075, 0.059], [1.1, -0.3]);               // le grain fin (terre)
+const TACHES = bruit(0.011, 3, [0.455, 0.4, 0.31], [2.2, -0.75], 520);           // les rousseurs, grandes taches (glaise)
+const FIBRES = bruit('0.02 0.6', 2, [0.455, 0.4, 0.31], [1.2, -0.45], 300);      // les fibres du papier : étirées
+const TOILE = `repeating-linear-gradient(0deg,rgba(${GLAISE},.10) 0 1px,transparent 1px 4px),repeating-linear-gradient(90deg,rgba(${GLAISE},.08) 0 1px,transparent 1px 4px)`;
 
 const SAISONS_CHOIX = ['ete', 'automne', 'hiver'];
-// la liste : les secteurs du jeu, puis le hasard (comme l'écran de choix)
-const SECTEURS_LISTE = () => [...Object.entries(SECTEURS).map(([id, S]) => ({ id, nom: S.nom, resume: S.resume, profil: S.profil, saison: S.saison ?? SAISON_DEFAUT })),
-  { id: 'hasard', nom: 'Au hasard', resume: 'Un secteur tiré de la graine : il change à chaque clic, le terrain, la saison, les noms.', profil: [0.4, 0.55, 0.3, 0.7, 0.45, 0.5, 0.35, 0.6, 0.4, 0.5, 0.3, 0.45], saison: SAISON_DEFAUT, hasard: true }];
+const SUJET = id => SECTEURS[id];
 
-// `geste` : 'glisse' (la carte vient de la liste, de la gauche) ou 'tire' (elle est tirée de la pile, sort de côté, revient dessus)
-export function cartesSecteur(stage, { geste = 'glisse' } = {}) {
-  const secteurs = SECTEURS_LISTE();
-  const L = 430, H = 436, DECALAGE = 25, VISIBLES = 4;           // la carte (px), la hauteur d'un onglet, le nombre d'onglets montrés
-  const etat = {};                                               // ce que le joueur a réglé sur chaque carte
-  for (const S of secteurs) etat[S.id] = { saison: S.saison, niveau: DIFFICULTE_DEFAUT, duree: DUREE_DEFAUT };
-  let pile = secteurs.map(S => S.id).reverse();                 // du dessous au dessus : le premier de la liste est dessus au départ
+// `geste` : 'glisse' (la carte vient de la liste, de la gauche) ou 'tire' (elle est tirée de la pile, sort de côté, revient dessus) ; `R` : les réglages du jeu (le moteur de l'aperçu en a besoin)
+export function cartesSecteur(stage, { geste = 'glisse', R } = {}) {
+  let grainesHasard = Math.floor(Math.random() * 99999) + 1;
+  preparerAleatoire(grainesHasard);
+  const ids = Object.keys(SECTEURS).sort((a, b) => (a === ID_ALEATOIRE) - (b === ID_ALEATOIRE));
+  const L = 430, IMG = 196, H = 604, DECALAGE = 25, VISIBLES = 4;      // la carte (px), la hauteur de l'image, la hauteur d'un onglet, le nombre d'onglets montrés
+  const etat = {};                                                      // ce que le joueur a réglé sur chaque carte
+  for (const id of ids) etat[id] = { saison: SUJET(id).saison ?? SAISON_DEFAUT, niveau: DIFFICULTE_DEFAUT, duree: DUREE_DEFAUT };
+  let pile = [...ids].reverse();                                       // du dessous au dessus : le premier de la liste est dessus au départ
   const racine = el('div', `display:flex;gap:16px;align-items:stretch;flex-wrap:wrap;${MONO}color:${P.o}`);
   const liste = el('div', 'display:grid;gap:8px;align-content:start;width:230px;flex:none');
-  const table = el('div', `position:relative;flex:1 1 ${L + 60}px;min-width:${L + 40}px;height:${H + DECALAGE * VISIBLES + 70}px;overflow:hidden;background:${P.s};border:1px solid ${P.b};background-image:repeating-linear-gradient(0deg,transparent 0 23px,${P.b} 23px 24px)`);
-  racine.append(liste, table);
+  const table = el('div', `position:relative;flex:1 1 ${L + 60}px;min-width:${L + 40}px;height:${H + DECALAGE * VISIBLES + 60}px;overflow:hidden;background:${P.s};border:1px solid ${P.b};background-image:${TOILE},${GRAIN},radial-gradient(ellipse at 50% 45%,transparent 45%,rgba(${TERRE},.55))`);
+  // le filtre des bords : un papier ne coupe pas droit
+  const defs = document.createElementNS(NS, 'svg'); defs.setAttribute('width', '0'); defs.setAttribute('height', '0'); defs.style.cssText = 'position:absolute';
+  defs.innerHTML = `<filter id="cy-usure" x="-4%" y="-4%" width="108%" height="108%"><feTurbulence type="fractalNoise" baseFrequency="0.035 0.05" numOctaves="3" seed="5" result="b"/><feDisplacementMap in="SourceGraphic" in2="b" scale="8" xChannelSelector="R" yChannelSelector="G" result="d"/><feTurbulence type="fractalNoise" baseFrequency="0.4" numOctaves="2" seed="9" result="f"/><feDisplacementMap in="d" in2="f" scale="3" xChannelSelector="R" yChannelSelector="G"/></filter>`;
+  racine.append(defs, liste, table);
 
-  const cartes = {}, boutons = {};
-  const pose = id => {                                           // où repose une carte, selon sa place dans la pile : [dx, dy, degrés]
+  // ─ la vraie carte : le moteur du jeu, une fois, hors de l'écran ; une file, pour ne rendre qu'un secteur à la fois ─
+  let vue = null, file = Promise.resolve();
+  const instantane = (id, S, graine, saison) => { const p = file.then(async () => {
+    if (!vue) {
+      const { creerVue3D } = await import('./apercu-3d.js?v=0.105.6');
+      const hote = el('div', `position:fixed;left:-9999px;top:0;width:${L - 28}px;height:${IMG}px;overflow:hidden`); document.body.append(hote);
+      vue = { api: await creerVue3D({ R, hote }), hote };
+    }
+    vue.api.monter(id, S, graine, { soldats: false, cadrer: true, saison });
+    return vue.hote.querySelector('canvas').toDataURL('image/png');
+  }); file = p.catch(() => {}); return p; };
+
+  const cartes = {}, boutons = {}, images = {};
+  const graineDe = id => id === ID_ALEATOIRE ? grainesHasard : graineFixe(id);
+  const peindre = id => {                                               // l'image de la carte : la vraie, quand elle est prête (la coupe du sol d'ici là n'existe plus : un aplat de papier)
+    const img = images[id], e = etat[id];
+    img.style.opacity = '.55';
+    instantane(id, SUJET(id), graineDe(id), e.saison === 'hasard' ? SAISONS_CHOIX[Math.floor(Math.random() * 3)] : e.saison)
+      .then(url => { img.src = url; img.style.opacity = ''; }).catch(err => { console.warn('Aperçu 3D indisponible', err); });
+  };
+
+  const pose = id => {                                                  // où repose une carte, selon sa place dans la pile : [dx, dy, degrés]
     const k = pile.length - 1 - pile.indexOf(id), h = hash(id);
     const biais = ((h % 1000) / 1000 - 0.5) * 5, glisse = (((h >> 10) % 1000) / 1000 - 0.5) * 22;
     return k === 0 ? [glisse * 0.3, 0, biais * 0.25] : [glisse, -Math.min(k, VISIBLES) * DECALAGE, biais];
   };
   const transform = id => { const [x, y, r] = pose(id); return `translate(${x.toFixed(1)}px,${y}px) rotate(${r.toFixed(2)}deg)`; };
 
+  const pastilleCss = oui => `${MONO}font-size:12px;letter-spacing:.06em;text-transform:uppercase;height:26px;padding:0 9px;cursor:pointer;border:2px solid ${oui ? P.t : P.g};background:${oui ? P.t : 'transparent'};color:${oui ? P.o : P.t}`;
   const pastilles = (groupe, valeurs, actuel, f) => {
     const rang = el('div', 'display:flex;gap:6px;flex-wrap:wrap');
     const marquer = v => { for (const b of rang.children) { const oui = b.dataset.v === v; b.setAttribute('aria-pressed', String(oui)); b.style.cssText = pastilleCss(oui); } };
     for (const [v, nom] of valeurs) { const b = Object.assign(el('button', pastilleCss(v === actuel)), { type: 'button', textContent: nom, onclick: () => { marquer(v); f(v); } }); b.dataset.v = v; b.setAttribute('aria-pressed', String(v === actuel)); rang.append(b); }
     return el('div', 'display:grid;grid-template-columns:62px 1fr;align-items:center;gap:8px', el('span', `color:${P.g};font-size:12px;letter-spacing:.08em;text-transform:uppercase`, groupe), rang);
   };
-  const pastilleCss = oui => `${MONO}font-size:12px;letter-spacing:.06em;text-transform:uppercase;height:26px;padding:0 9px;cursor:pointer;border:2px solid ${oui ? P.t : P.g};background:${oui ? P.t : 'transparent'};color:${oui ? P.o : P.t}`;
 
-  const fabriquer = S => {
-    const carte = el('div', `position:absolute;left:50%;top:${DECALAGE * VISIBLES + 24}px;width:${L}px;height:${H}px;margin-left:${-L / 2}px;background:${P.o};color:${P.t};box-shadow:3px 3px 0 ${P.t};transition:transform .4s cubic-bezier(.2,.8,.2,1);will-change:transform;overflow:hidden`);
-    const e = etat[S.id];
+  const fabriquer = id => {
+    const S = SUJET(id), e = etat[id], hasard = id === ID_ALEATOIRE;
+    const carte = el('div', `position:absolute;left:50%;top:${DECALAGE * VISIBLES + 20}px;width:${L}px;height:${H}px;margin-left:${-L / 2}px;color:${P.t};transition:transform .4s cubic-bezier(.2,.8,.2,1);will-change:transform`);
+    // le papier : le fond aux bords rongés (et son ombre), puis le grain, les taches, les fibres, les plis, les coins sombres (au-dessus du texte : l'encre est imprimée dans le papier)
+    const fond = el('div', `position:absolute;inset:0;background:${P.o};filter:url(#cy-usure) drop-shadow(3px 4px 0 rgba(${TERRE},.9))`);
+    const couche = (css, z = 3) => el('div', `position:absolute;inset:4px;pointer-events:none;z-index:${z};${css}`);
+    const grain = couche(`background-image:${GRAIN};mix-blend-mode:multiply;opacity:.3`);
+    const taches = couche(`background-image:${TACHES};mix-blend-mode:multiply;opacity:.42`);
+    const fibres = couche(`background-image:${FIBRES};mix-blend-mode:multiply;opacity:.2`);
+    const plis = couche(`background:
+      linear-gradient(90deg,transparent calc(50% - 2px),rgba(${TERRE},.16) calc(50% - 1px),rgba(${OS},.55) 50%,transparent calc(50% + 2px)),
+      linear-gradient(0deg,transparent calc(34% - 2px),rgba(${TERRE},.14) calc(34% - 1px),rgba(${OS},.5) 34%,transparent calc(34% + 2px)),
+      radial-gradient(circle at 0 100%,rgba(${GLAISE},.4),transparent 20%),radial-gradient(circle at 100% 0,rgba(${GLAISE},.3),transparent 16%),
+      radial-gradient(ellipse at 50% 50%,transparent 62%,rgba(${GLAISE},.3))`);
+    // l'image : la vraie carte du secteur, collée avec deux bouts d'adhésif
+    const img = Object.assign(el('img', `display:block;width:100%;height:${IMG}px;object-fit:cover;image-rendering:pixelated;background:${P.s};box-shadow:0 0 0 1px ${P.t},1px 2px 0 1px rgba(${TERRE},.35);transition:opacity .3s`), { alt: `Le secteur ${S.nom}, vu de haut`, draggable: false });
+    images[id] = img;
+    const adhesif = (css) => el('div', `position:absolute;width:52px;height:15px;background:rgba(${BRUME},.85);box-shadow:0 0 0 1px rgba(${GLAISE},.5);${css}`);
+    const cadre = el('div', 'position:relative;margin:10px 14px 0', img, adhesif('top:-7px;left:-16px;transform:rotate(-38deg)'), adhesif('top:-7px;right:-16px;transform:rotate(36deg)'));
     const desc = el('div', `margin-left:70px;padding-left:10px;border-left:2px solid ${P.g};font-size:12px;line-height:1.4;height:2.8em;overflow:hidden`, DIFFICULTES[e.niveau].desc);
-    carte.append(
-      el('div', `background:${P.b};color:${P.o};padding:5px 14px 8px;font-size:15px;line-height:1.3;letter-spacing:.08em;text-transform:uppercase;display:flex;justify-content:space-between;align-items:baseline`, S.nom, S.hasard ? '' : el('span', `font-size:11px;color:${P.r}`, (() => { const m = Math.round((Math.max(...S.profil) - Math.min(...S.profil)) * 16); return m < 2 ? 'terrain plat' : `${m} m de relief`; })())),
-      COUPE(S.profil, L, 56),
-      el('div', 'padding:10px 14px 0;display:grid;gap:8px',
+    const relief = (() => { const m = Math.round((Math.max(...S.profil) - Math.min(...S.profil)) * 16); return m < 2 ? 'terrain plat' : `${m} m de relief`; })();
+    const contenu = el('div', 'position:relative;z-index:2',
+      el('div', `background:${P.b};color:${P.o};margin:4px 4px 0;padding:5px 12px 8px;font-size:15px;line-height:1.3;letter-spacing:.08em;text-transform:uppercase;display:flex;justify-content:space-between;align-items:baseline`, S.nom, el('span', `font-size:11px;color:${P.r}`, relief)),
+      cadre,
+      el('div', 'padding:12px 14px 0;display:grid;gap:8px',
         el('p', 'margin:0;height:5.6em;overflow:hidden;line-height:1.4;font-size:12px', S.resume),
-        pastilles('Saison', [...SAISONS_CHOIX.map(id => [id, SAISONS[id].nom]), ['hasard', 'Hasard']], e.saison, v => { e.saison = v; }),
-        pastilles('Niveau', Object.entries(DIFFICULTES).map(([id, D]) => [id, D.nom.split(' ').pop()]), e.niveau, v => { e.niveau = v; desc.textContent = DIFFICULTES[v].desc; }),
+        pastilles('Saison', [...SAISONS_CHOIX.map(s => [s, SAISONS[s].nom]), ['hasard', 'Hasard']], e.saison, v => { e.saison = v; peindre(id); }),
+        pastilles('Niveau', Object.entries(DIFFICULTES).map(([k, D]) => [k, D.nom.split(' ').pop()]), e.niveau, v => { e.niveau = v; desc.textContent = DIFFICULTES[v].desc; }),
         desc,
-        pastilles('Durée', Object.entries(DUREES).map(([id, D]) => [id, D.nom]), e.duree, v => { e.duree = v; }),
+        pastilles('Durée', Object.entries(DUREES).map(([k, D]) => [k, D.nom]), e.duree, v => { e.duree = v; }),
         el('div', 'justify-self:end;margin-top:4px', Object.assign(el('button', `${MONO}height:34px;padding:0 16px;cursor:pointer;color:${P.o};background:${P.t};border:0;box-shadow:0 3px 0 ${P.b}`), { type: 'button', textContent: 'Jouer ce secteur' }))));
+    carte.append(fond, contenu, grain, taches, fibres, plis);
     return carte;
   };
 
-  const ranger = () => {                                         // la pile telle qu'elle est : z, pose, onglets lisibles
-    pile.forEach((id, i) => { const c = cartes[id]; c.style.zIndex = String(i + 1); c.style.transform = transform(id); c.style.filter = i === pile.length - 1 ? '' : 'brightness(.82)'; c.style.pointerEvents = i === pile.length - 1 ? '' : 'none'; });
-    for (const S of secteurs) boutons[S.id].setAttribute('aria-pressed', String(S.id === pile[pile.length - 1]));
+  const ranger = () => {                                                // la pile telle qu'elle est : z, pose, onglets lisibles
+    pile.forEach((id, i) => { const c = cartes[id]; c.style.zIndex = String(i + 1); c.style.transform = transform(id); c.style.filter = i === pile.length - 1 ? '' : 'brightness(.8)'; c.style.pointerEvents = i === pile.length - 1 ? '' : 'none'; });
+    for (const id of ids) boutons[id].setAttribute('aria-pressed', String(id === pile[pile.length - 1]));
   };
 
   const choisir = id => {
-    const c = cartes[id], haut = pile[pile.length - 1];
-    if (id === haut && !secteurs.find(S => S.id === id).hasard) return;
-    const depart = id === haut ? [0, 0, 0] : pose(id);          // la carte part d'où elle repose (le hasard rejoue le geste sur place)
+    const haut = pile[pile.length - 1];
+    if (id === haut && id !== ID_ALEATOIRE) return;
+    if (id === ID_ALEATOIRE) {                                          // le hasard : un autre secteur à chaque clic (la carte est refaite, son nom aussi)
+      grainesHasard = Math.floor(Math.random() * 99999) + 1; preparerAleatoire(grainesHasard);
+      const neuve = fabriquer(id); neuve.style.zIndex = cartes[id].style.zIndex; cartes[id].replaceWith(neuve); cartes[id] = neuve; peindre(id);
+    }
+    const c = cartes[id], depart = id === haut ? [0, 0, 0] : pose(id);   // la carte part d'où elle repose (le hasard rejoue le geste sur place)
     pile = pile.filter(x => x !== id); pile.push(id);
     ranger();
     if (reduit()) return;
@@ -90,14 +143,16 @@ export function cartesSecteur(stage, { geste = 'glisse' } = {}) {
     a.finished.catch(() => {}).finally(() => { c.style.transition = ''; });
   };
 
-  for (const S of secteurs) {
-    cartes[S.id] = fabriquer(S); table.append(cartes[S.id]);
-    boutons[S.id] = Object.assign(el('button', `${MONO}font-size:15px;letter-spacing:.06em;text-transform:uppercase;text-align:left;padding:10px 12px;cursor:pointer;color:${P.t};background:${S.hasard ? P.g : P.o};border:2px solid ${P.o}`), { type: 'button', textContent: S.nom, onclick: () => choisir(S.id) });
-    boutons[S.id].dataset.id = S.id;
-    liste.append(boutons[S.id]);
+  for (const id of ids) {
+    cartes[id] = fabriquer(id); table.append(cartes[id]);
+    const hasard = id === ID_ALEATOIRE;
+    boutons[id] = Object.assign(el('button', `${MONO}font-size:15px;letter-spacing:.06em;text-transform:uppercase;text-align:left;padding:10px 12px;cursor:pointer;color:${P.t};background:${hasard ? P.g : P.o};border:2px solid ${P.o};background-image:${GRAIN_LEGER}`), { type: 'button', textContent: hasard ? 'Au hasard' : SUJET(id).nom, onclick: () => choisir(id) });
+    boutons[id].dataset.id = id === ID_ALEATOIRE ? 'hasard' : id;
+    liste.append(boutons[id]);
   }
   // l'aria-pressed se lit sur la bordure (bleu horizon : « nous »)
-  new MutationObserver(() => { for (const S of secteurs) boutons[S.id].style.borderColor = boutons[S.id].getAttribute('aria-pressed') === 'true' ? P.n : P.o; }).observe(liste, { attributes: true, subtree: true, attributeFilter: ['aria-pressed'] });
+  new MutationObserver(() => { for (const id of ids) boutons[id].style.borderColor = boutons[id].getAttribute('aria-pressed') === 'true' ? P.n : P.o; }).observe(liste, { attributes: true, subtree: true, attributeFilter: ['aria-pressed'] });
   ranger();
   stage.append(racine);
+  for (const id of ids) peindre(id);                     // la carte du dessus d'abord (la file rend dans l'ordre)
 }
