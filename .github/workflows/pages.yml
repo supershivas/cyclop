@@ -2,37 +2,87 @@
 # publier un jeu dont les règles sont cassées coûte plus cher que ne pas
 # publier (section 19 des conventions). Dans les réglages du dépôt :
 # Settings → Pages → Source : « GitHub Actions ».
+#
+# Les tests tournent en parallèle (un job par groupe de fichiers) : mesuré en
+# v0.104, un seul processus enchaînait les 19 fichiers en ~9,6 min, dont
+# bataille.test.mjs et camp.test.mjs pour l'essentiel. Le groupe « reste »
+# prend tout fichier de test non nommé ailleurs : un nouveau test est donc
+# toujours lancé, sans toucher à ce fichier.
 name: Pages
 
 on:
   push:
     branches: [main]
+    # Une doc seule ne change pas le jeu ; CHANGELOG.md, lui, est servi.
+    paths-ignore:
+      - '**.md'
+      - '!CHANGELOG.md'
   workflow_dispatch:
 
 permissions:
   contents: read
-  pages: write
-  id-token: write
-
-concurrency:
-  group: pages
-  cancel-in-progress: true
 
 jobs:
-  deploy:
+  tests:
+    name: tests (${{ matrix.groupe }})
     runs-on: ubuntu-latest
+    # Un push plus récent annule les tests devenus obsolètes, mais jamais
+    # un déploiement en cours (voir le job deploy).
+    concurrency:
+      group: tests-${{ github.ref }}-${{ matrix.groupe }}
+      cancel-in-progress: true
+    strategy:
+      # Un échec arrête les autres groupes : on le voit sans attendre les
+      # plus longs.
+      fail-fast: true
+      matrix:
+        include:
+          - groupe: bataille
+            fichiers: test/bataille.test.mjs
+          - groupe: camp
+            fichiers: test/camp.test.mjs
+          - groupe: campagne-stances
+            fichiers: test/campagne.test.mjs test/stances.test.mjs
+          - groupe: reste
+            fichiers: ''
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Tests
+        env:
+          FICHIERS: ${{ matrix.fichiers }}
+          GROUPE: ${{ matrix.groupe }}
+        run: |
+          if [ "$GROUPE" = reste ]; then
+            FICHIERS=$(ls test/*.test.mjs | grep -Ev '^test/(bataille|camp|campagne|stances)\.test\.mjs$')
+          fi
+          echo "Fichiers : $FICHIERS"
+          node outils/test-run.mjs $FICHIERS
+
+  deploy:
+    needs: tests
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    # Un déploiement commencé va à son terme ; un seul reste en attente.
+    concurrency:
+      group: pages
+      cancel-in-progress: false
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
         with:
-          node-version: 22
-      - name: Tests
-        run: node outils/test-run.mjs
+          fetch-depth: 1
       - uses: actions/configure-pages@v5
-      - uses: actions/upload-pages-artifact@v3
+      - uses: actions/upload-pages-artifact@v4
         with:
           path: .
       - id: deployment
