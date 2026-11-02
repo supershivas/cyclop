@@ -3,20 +3,20 @@
 // formes, équipements, grades) n'est PAS recopié : il est lu dans son module, donc l'encyclopédie suit le jeu ; seuls les concepts n'ayant pas de table sont écrits ici.
 // Une entrée : { id, terme, cat, def, voir: [ids], capture: 'id-du-fichier' | null, faits: [[libellé, valeur], …] }. Les captures sont celles de `outils/encyclopedie.mjs` (assets/encyclopedie/<capture>.png).
 // Ajouter un mot = ajouter une ligne ici ; le labo (sujet « Encyclopédie ») et `test/encyclopedie.test.mjs` (aucun renvoi vers un mot absent, aucun doublon) font le reste.
-import { CALIBRES } from './calibres.js?v=0.107.0';
-import { METEO, SAISONS } from './meteo.js?v=0.107.0';
-import { CORVEES, CONTACT } from './corvees.js?v=0.107.0';
-import { BATIMENTS, ORDRE_BATIMENTS, EQUIPEMENTS, EQUIPEMENT, DOTATION } from './batiments.js?v=0.107.0';
-import { DIFFICULTES } from './difficulte.js?v=0.107.0';
-import { STANCES } from './stances.js?v=0.107.0';
-import { PONTS_JEU } from './ponts.js?v=0.107.0';
-import { RENFORTS } from './renforts.js?v=0.107.0';
-import { CHARS, CHAR_RECHARGE } from './chars.js?v=0.107.0';
-import { MITRAILLAGE } from './mitraillage.js?v=0.107.0';
-import { GENIE_DATA } from './genie.js?v=0.107.0';
-import { NIDS } from './nids.js?v=0.107.0';
-import { FIL } from './fil.js?v=0.107.0';
-import { CLASSES } from './grades.js?v=0.107.0';
+import { CALIBRES } from './calibres.js?v=0.107.1';
+import { METEO, SAISONS } from './meteo.js?v=0.107.1';
+import { CORVEES, CONTACT } from './corvees.js?v=0.107.1';
+import { BATIMENTS, ORDRE_BATIMENTS, EQUIPEMENTS, EQUIPEMENT, DOTATION } from './batiments.js?v=0.107.1';
+import { DIFFICULTES } from './difficulte.js?v=0.107.1';
+import { STANCES } from './stances.js?v=0.107.1';
+import { PONTS_JEU } from './ponts.js?v=0.107.1';
+import { RENFORTS } from './renforts.js?v=0.107.1';
+import { CHARS, CHAR_RECHARGE } from './chars.js?v=0.107.1';
+import { MITRAILLAGE } from './mitraillage.js?v=0.107.1';
+import { GENIE_DATA } from './genie.js?v=0.107.1';
+import { NIDS } from './nids.js?v=0.107.1';
+import { FIL } from './fil.js?v=0.107.1';
+import { CLASSES } from './grades.js?v=0.107.1';
 
 export const CATEGORIES = [
   { id: 'front', nom: 'Le front', dit: 'Où l\'on se bat : secteurs, lignes, tranchées.' },
@@ -45,7 +45,7 @@ const CONCEPTS = [
   E('troncon', 'Tronçon', 'front', 'Un morceau de ligne de 25 m, à la couleur de celui qui le tient (bleu : à nous, kaki : à eux). Un tronçon change de main quand l\'autre camp l\'occupe sans qu\'un seul défenseur y reste. Le carnet de bord dit « Pris » et « Perdu ».', { voir: ['dispute', 'ligne', 'carnet'], capture: 'carte' }),
   E('dispute', 'Tronçon disputé', 'front', 'Un tronçon où l\'autre camp est entré alors que le défenseur tient encore : la mêlée y décide. Il est en pointillé sur le plan du secteur, et la carte y écrit « attaquants·défenseurs » (« 1·12 » : un attaquant contre douze).', { voir: ['melee', 'troncon'], capture: 'carte' }),
   E('boyau', 'Boyau', 'front', 'Un couloir en zigzag qui relie les lignes d\'un même camp : on y monte de l\'arrière sans être vu. Il se comble comme une tranchée.', { voir: ['tranchee'] }),
-  E('no-mans-land', 'No man\'s land', 'front', 'L\'espace entre les premières lignes des deux camps, environ 130 m. La carte et le plan du secteur en écrivent la largeur. On y est sous le feu : c\'est là que la boue et les cratères se lisent le mieux.', { voir: ['ligne', 'cratere'], capture: 'champ' }),
+  E('no-mans-land', 'No man\'s land', 'front', 'L\'espace entre les premières lignes des deux camps, environ 120 m. La carte et le plan du secteur en écrivent la largeur. On y est sous le feu : c\'est là que la boue et les cratères se lisent le mieux.', { voir: ['ligne', 'cratere'], capture: 'champ' }),
   E('solidite', 'Solidité', 'front', 'Ce qui reste de la forme creusée d\'une tranchée : « Intacte » (85 % et plus), « Abîmée » (50 % et plus), « Bouleversée » (moins). Elle s\'affiche quand on survole une tranchée ; l\'orange et le rouge confirment le mot, le pourcentage dit la mesure.', { voir: ['tranchee', 'terrain-survole'], capture: 'terrain-survole' }),
   E('abri', 'À l\'abri', 'front', 'Un creux assez profond (un cratère, une tranchée) abrite des éclats d\'obus ; le parapet protège de face. Un homme à l\'abri meurt moins sous un barrage.', { voir: ['cratere', 'tranchee'] }),
   E('marge', 'Marge', 'front', 'Le terrain est plus grand que le secteur : 220 m de marge de chaque côté, 170 m devant et derrière, sans régiments. Aucun ordre n\'y va ; c\'est là que se tient le camp, à l\'arrière. La caméra ne sort jamais du terrain.', { voir: ['camp'], capture: 'champ' }),

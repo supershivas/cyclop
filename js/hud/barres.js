@@ -1,13 +1,13 @@
 // Les jauges et le corps de la fiche (Jérôme, v0.35.0) : une barre par chose qu'un homme endure (la peur, les jambes, les bras,
 // l'expérience), des repères aux seuils des mots de `identite.js` (la forme dit le niveau, pas seulement la longueur), et le corps
 // entier avec la blessure. Des fonctions de DOM qui ne lisent que ce qu'on leur donne ; fiche.js et main.js s'en servent.
-import { PARTIES } from '../identite.js?v=0.107.0';
+import { PARTIES } from '../identite.js?v=0.107.1';
 
 export const CHEVRON = '<svg class="chev" viewBox="0 0 12 8" aria-hidden="true"><path d="M1 7l5-5 5 5"/></svg>';
 export const chevronsHtml = n => CHEVRON.repeat(n);
 
 // les seuils des mots (identite.js) : la peur (inquiet, a peur, terrifié), la fatigue (lourd, épuisé), l'expérience (baptême, a vu le feu, aguerri)
-import { SEUILS } from '../data/experience.js?v=0.107.0';
+import { SEUILS } from '../data/experience.js?v=0.107.1';
 export const REPERES = { peur: [0.25, 0.55, 0.85], fatigue: [0.4, 0.75], exp: SEUILS, moral: [0.3, 0.6] };
 
 const pct = v => `${(Math.max(0, Math.min(1, v)) * 100).toFixed(0)}%`;

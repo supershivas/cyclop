@@ -1,5 +1,8 @@
 # Journal des versions
 
+## 0.107.1 — 2026-11-02
+- Les mitrailleuses ne tirent plus d'une tranchée à l'autre : leur portée passe de 130 à 80 m, elles couvrent le no man's land mais plus la ligne d'en face
+
 ## 0.107.0 — 2026-11-02
 - Nouvelle partie : plus de liste ni de cadre, les cartes de secteur sont empilées sur la fenêtre et leurs titres servent de menu ; la carte choisie glisse sur le dessus, sans saccade
 - La carte « Au hasard » porte le nom du secteur tiré et un dé « Une autre carte » pour en tirer un autre ; le décor de l'écran titre ne se redessine plus derrière le choix du secteur
