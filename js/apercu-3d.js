@@ -17,11 +17,11 @@ export async function creerVue3D({ R, hote, rotation = 0 }) {       // rotation 
   let B = null, actif = false, boucle = 0, derniere = 0, vu = false, ambiance = [12, 'sec'];
 
   // une bataille de départ sur le secteur `S` (déjà retouché) : `nouvelleBataille` lit `SECTEURS[id]`, qu'on remplace le temps de la monter
-  function monter(id, S, graine, { soldats = true, cadrer = false, saison } = {}) {
+  function monter(id, S, graine, { soldats = true, cadrer = false, saison, meteo } = {}) {
     const avant = SECTEURS[id], v = rendu.vue, garde = vu && { cx: v.cx, cz: v.cz, zoom: v.zoom, yaw: v.cible.yaw, tangage: v.cible.tangage };
     SECTEURS[id] = S;
     try { B = nouvelleBataille(graine, R, { secteur: id, jours: 3, ...(saison ? { saison } : {}), ...(soldats ? {} : { soldats: 16 }) }); } finally { if (avant === undefined) delete SECTEURS[id]; else SECTEURS[id] = avant; }
-    regarderAu(B, ambiance[0], saison === 'hiver' ? 'beau' : saison === 'ete' ? 'canicule' : ambiance[1]);      // le temps typique de la saison choisie
+    regarderAu(B, ambiance[0], meteo ?? (saison === 'hiver' ? 'beau' : saison === 'ete' ? 'canicule' : ambiance[1]));      // le temps demandé (le choix d'un secteur le tire au sort), sinon le temps typique de la saison choisie
     rendu.attacher(B);
     rendu.redimensionner();
     if (cadrer) {                      // tout le secteur, au centre, vu de haut

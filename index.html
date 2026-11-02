@@ -350,15 +350,19 @@
   <div class="carte-colonnes">
     <div class="cartes-choix" id="cartes-choix" role="group" aria-label="Les secteurs"></div>
     <div class="carte-apercu">
-      <div class="carte-vue"><div class="carte-3d" id="carte-3d" aria-hidden="true"></div><div class="carte-titre" id="carte-titre"></div></div>
+      <div class="carte-vue"><div class="carte-3d" id="carte-3d" aria-hidden="true"></div><div class="carte-titre" id="carte-titre"></div>
+        <div class="saisons-choix" id="saisons-choix" role="group" aria-label="La saison"></div></div>
       <p class="carte-legende" id="carte-legende"></p>
       <p class="carte-aide" id="carte-aide"></p>
     </div>
   </div>
-  <div class="saisons-choix" id="saisons-choix" role="group" aria-label="La saison"></div>
-  <div class="saisons-choix" id="difficultes-choix" role="group" aria-label="Le niveau"></div>
-  <div class="saisons-choix" id="durees-choix" role="group" aria-label="La durée"></div>
-  <p id="difficulte-desc"></p>
+  <div class="reglages-partie">
+    <div class="reglage-niveau">
+      <div class="saisons-choix" id="difficultes-choix" role="group" aria-label="Le niveau"></div>
+      <p id="difficulte-desc"></p>
+    </div>
+    <div class="saisons-choix" id="durees-choix" role="group" aria-label="La durée"></div>
+  </div>
   <p id="duree-desc" hidden></p>
   <form method="dialog" class="menu">
     <button class="bouton" value="annuler">Annuler</button>

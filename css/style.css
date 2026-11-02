@@ -515,19 +515,27 @@ body.charge dialog { display: none; }
 .saisons-choix::before { content: 'Saison'; align-self: center; font-size: var(--texte-petit); color: var(--jeu-accent); letter-spacing: .06em; text-transform: uppercase; }
 #difficultes-choix::before { content: 'Niveau'; }
 #difficultes-choix[hidden], #difficulte-desc:empty { display: none; }
-#difficultes-choix, #durees-choix { display: inline-flex; vertical-align: top; margin-right: calc(var(--pas) * 3); }      /* le niveau et la durée sur la même ligne (la fenêtre tient à 800 px de haut) */
+/* le niveau (avec sa phrase juste dessous, alignée sur ses boutons) et la durée, côte à côte (la fenêtre tient à 800 px de haut) */
+.reglages-partie { display: flex; flex-wrap: wrap; align-items: flex-start; gap: var(--pas) calc(var(--pas) * 4); margin-top: var(--pas); }
+.reglages-partie .saisons-choix { margin-top: 0; }
+.reglages-partie .saisons-choix::before { min-width: 3.4rem; }
+.reglage-niveau { flex: 1 1 auto; min-width: 0; }
 #durees-choix::before { content: 'Durée'; }
 #durees-choix[hidden], #duree-desc[hidden], #duree-desc:empty { display: none; }
 #durees-choix .carte-choix { text-transform: uppercase; font-size: var(--texte-petit); letter-spacing: .06em; }
-#difficulte-desc { margin: calc(var(--pas) * .5) 0 0; font-size: var(--texte-petit); line-height: 1.4; color: var(--jeu-accent); }
+#difficulte-desc { margin: var(--pas) 0 0; padding-left: calc(var(--pas) * 1.5); border-left: 2px solid var(--jeu-accent); margin-left: calc(3.4rem + var(--pas)); font-size: var(--texte-petit); line-height: 1.45; color: var(--jeu-encre); max-width: 46rem; }
 #difficultes-choix .carte-choix b { font-size: var(--texte-petit); }
-#dialogue-carte.agrandi .saisons-choix, #dialogue-carte.agrandi #difficulte-desc, #dialogue-carte.agrandi #duree-desc { display: none; }
+#dialogue-carte.agrandi .reglages-partie, #dialogue-carte.agrandi #duree-desc { display: none; }
 .carte-apercu { display: grid; gap: var(--pas); }
 .carte-3d { position: relative; height: min(44vh, 26rem); overflow: hidden; display: flex; align-items: center; justify-content: center; background: var(--jeu-ombre); border: 1px solid var(--jeu-accent); }
 .carte-3d canvas { display: block; image-rendering: pixelated; }
 .carte-3d { cursor: zoom-in; }
 #dialogue-carte.agrandi .carte-3d { cursor: grab; }
 .carte-vue { position: relative; }
+/* la saison, sur la carte en haut à droite (Jérôme, retour du 2 nov.) : des pastilles sur un voile sombre, le relief reste lisible dessous */
+#saisons-choix { position: absolute; top: var(--pas); right: var(--pas); z-index: 2; margin: 0; padding: calc(var(--pas) * .5); gap: calc(var(--pas) * .5); background: rgba(0, 0, 0, .55); }
+#saisons-choix::before { content: none; }
+#saisons-choix .carte-choix { padding: calc(var(--pas) * .5) calc(var(--pas) * .75); }
 /* le nom de la carte, sur un dégradé du noir vers le transparent au bas de l'aperçu (Jérôme, v0.64.1) ; les clics passent au 3D */
 .carte-titre { position: absolute; left: 0; right: 0; bottom: 0; padding: calc(var(--pas) * 3) var(--pas) var(--pas); font-size: var(--texte-grand); letter-spacing: .06em; text-transform: uppercase; color: var(--jeu-encre); background: linear-gradient(to top, rgba(0, 0, 0, .85), rgba(0, 0, 0, 0)); pointer-events: none; }
 /* la description et l'aide : deux lignes au plus, et toujours la place de deux lignes : la fenêtre ne change jamais de taille */

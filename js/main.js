@@ -398,8 +398,10 @@ function demanderSecteur(avecDifficulte = true) {
   const graineFixe = id => { let h = 2166136261; for (const c of id) h = Math.imul(h ^ c.charCodeAt(0), 16777619) >>> 0; return h % 99999 + 1; };
   liste.replaceChildren(...ordre.map(id => fabriquer([id, SECTEURS[id]])));
   return new Promise(ok => {
-    let choisi = ids[0], ouvert = true, saison = null, saisonHasard = false;       // saison : null tant que le joueur n'a rien touché (la saison du secteur, par défaut), puis son choix
+    let choisi = ids[0], ouvert = true, saison = null, saisonHasard = false, meteoApercu = null;       // saison : null tant que le joueur n'a rien touché (la saison du secteur, par défaut), puis son choix
     const saisonDe = () => saison ?? SECTEURS[choisi].saison ?? SAISON_DEFAUT;
+    // le temps de l'aperçu (Jérôme, retour du 2 nov.) : tiré au sort parmi ceux de la saison, retiré à chaque clic sur « Au hasard » (la carte) et à chaque saison choisie ; il ne change pas la partie (le premier jour suit la saison)
+    const tirerMeteo = () => { const ts = Object.keys(SAISONS[saisonDe()]?.transitions ?? {}); meteoApercu = ts.length ? ts[Math.floor(Math.random() * ts.length)] : null; };
     const graineDe = () => choisi === ID_ALEATOIRE ? graine : graineFixe(choisi);
     const resultat = () => ({ secteur: choisi, graine: graineDe(), saison: saisonDe(), difficulte: avecDifficulte ? difficulte : undefined, jours: avecDifficulte ? DUREES[duree].jours ?? undefined : undefined });
     // le niveau (Jérôme, v0.70.0) : trois boutons sous la saison ; le dernier choisi est gardé dans les réglages (jamais en mode essai ni à deux)
@@ -427,7 +429,7 @@ function demanderSecteur(avecDifficulte = true) {
     boutonsSaison.replaceChildren(...SAISONS_CHOIX.map(id => { const b = document.createElement('button'); b.type = 'button'; b.className = 'carte-choix'; b.dataset.saison = id; b.title = SAISONS[id].nom; b.setAttribute('aria-label', `${SAISONS[id].nom} : ${SAISONS[id].desc}`); b.innerHTML = `${ICONES_SAISON[id]}<span>${SAISONS[id].nom}</span>`; return b; }), (() => { const b = document.createElement('button'); b.type = 'button'; b.className = 'carte-choix'; b.dataset.saison = 'hasard'; b.title = 'Une saison tirée au hasard'; b.setAttribute('aria-label', 'Au hasard : une saison tirée au sort'); b.innerHTML = `${DE_SAISON}<span>Au hasard</span>`; return b; })());
     // « Au hasard » (Jérôme, retour du 1er nov.) : un clic tire une saison, montrée tout de suite sur l'aperçu et jouée telle quelle ; un autre clic en tire une autre
     const marquerSaison = () => { for (const b of boutonsSaison.children) b.setAttribute('aria-pressed', String(saisonHasard ? b.dataset.saison === 'hasard' : b.dataset.saison === saisonDe())); };
-    boutonsSaison.onclick = e => { const b = e.target.closest('[data-saison]'); if (!b) return; if (b.dataset.saison === 'hasard') { saisonHasard = true; saison = SAISONS_CHOIX[Math.floor(Math.random() * SAISONS_CHOIX.length)]; montrer(); } else if (saisonHasard || b.dataset.saison !== saisonDe()) { saisonHasard = false; saison = b.dataset.saison; montrer(); } };
+    boutonsSaison.onclick = e => { const b = e.target.closest('[data-saison]'); if (!b) return; if (b.dataset.saison === 'hasard') { saisonHasard = true; saison = SAISONS_CHOIX[Math.floor(Math.random() * SAISONS_CHOIX.length)]; tirerMeteo(); montrer(); } else if (saisonHasard || b.dataset.saison !== saisonDe()) { saisonHasard = false; saison = b.dataset.saison; tirerMeteo(); montrer(); } };
     // un clic sur l'aperçu l'agrandit (Jérôme, v0.51.0) : la liste s'efface, la carte tient tout l'écran du dialogue et se parcourt (glisser : tourner, Maj ou bouton droit : déplacer, molette : zoomer) ; un autre clic ou Échap la réduit
     const agrandir = oui => { d.classList.toggle('agrandi', oui); $('carte-aide').textContent = oui ? 'Glissez pour tourner, Maj ou bouton droit pour déplacer, molette pour zoomer. Cliquez ou Échap pour réduire.' : 'Cliquez sur la carte pour l\'agrandir et la parcourir.'; apercuSecteur?.redimensionner(); };
     d.oncancel = e => { if (d.classList.contains('agrandi')) { e.preventDefault(); agrandir(false); } };
@@ -443,12 +445,12 @@ function demanderSecteur(avecDifficulte = true) {
       try {
         if (!apercuSecteur) { const { creerVue3D } = await import('./apercu-3d.js?v=0.105.1'); apercuSecteur = await creerVue3D({ R, hote: $('carte-3d'), rotation: 0.12 }); apercuSecteur.surClic = () => agrandir(!d.classList.contains('agrandi')); }
         if (!ouvert) return;
-        apercuSecteur.monter(choisi, SECTEURS[choisi], graineDe(), { soldats: false, cadrer: true, saison: saisonDe() });
+        apercuSecteur.monter(choisi, SECTEURS[choisi], graineDe(), { soldats: false, cadrer: true, saison: saisonDe(), meteo: meteoApercu ?? undefined });
         apercuSecteur.activer(true);
       } catch (e) { console.warn('Aperçu 3D indisponible', e); $('carte-3d').hidden = true; }
     };
     // « Au hasard » tire une autre carte à chaque clic, même déjà choisi (Jérôme, v0.60.2 : plus de bouton « Autre terrain »)
-    const choisir = id => { if (id === ID_ALEATOIRE) graine = Math.floor(Math.random() * 99999) + 1; else if (id === choisi && apercuSecteur) return; choisi = id; montrer(); };
+    const choisir = id => { if (id === ID_ALEATOIRE) graine = Math.floor(Math.random() * 99999) + 1; else if (id === choisi && apercuSecteur) return; choisi = id; tirerMeteo(); montrer(); };
     liste.onclick = e => { const b = e.target.closest('.carte-choix'); if (b) choisir(b.dataset.id); };
     liste.ondblclick = e => { if (e.target.closest('.carte-choix')) fin(resultat()); };
     $('carte-jouer').onclick = () => fin(resultat());
@@ -463,6 +465,7 @@ function demanderSecteur(avecDifficulte = true) {
     $('carte-3d').hidden = false;
     d.showModal();
     liste.firstElementChild?.focus();
+    tirerMeteo();
     montrer();
   });
 }
