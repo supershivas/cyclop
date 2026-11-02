@@ -21,6 +21,7 @@ import { reglerVerdure } from './apparence.js?v=0.105.1';
 import { maquetteChars } from './labo-chars.js?v=0.105.1';
 import { maquetteEpaves } from './labo-epaves.js?v=0.105.1';
 import { fondations, boutons, fenetres, revision } from './labo-design-system.js?v=0.105.1';
+import { cartesSecteur } from './labo-cartes.js?v=0.105.1';
 import { gainTampon, gainCachets, gainFil, gainBordereau, victoireFanion, victoireTampon, victoireChevrons, victoireAube, ficheDeuxColonnes, ficheEtages, ficheRegistre, ficheDAbord } from './labo-recompenses.js?v=0.105.1';
 import { maquetteBatiment, maquetteCamp } from './labo-batiments.js?v=0.105.1';
 import { BATIMENTS } from './data/batiments.js?v=0.105.1';
@@ -389,6 +390,10 @@ const GROUPES = [
       { title: 'Le tampon « tenu »', status: 'a-trancher', depuis: '0.98.0', note: 'PROPOSITION. Le rapport du dernier soir est posé sur le champ, un tampon « TENU » claque dessus, le papier tressaute une fois. Un geste de bureau, aucun éclat.', render: s => victoireTampon(s) },
       { title: 'Les chevrons', status: 'a-trancher', depuis: '0.98.0', note: 'PROPOSITION. Le ciel s\'éclaircit en six crans pendant que trois chevrons bleus (ceux des cartes de régiment) s\'allument un à un ; le papier du résultat se lit ensuite.', render: s => victoireChevrons(s) },
       { title: 'Le lever du jour', status: 'a-trancher', depuis: '0.98.0', note: 'PROPOSITION. Le soleil monte derrière la crête de la tranchée ; le titre s\'écrit lettre à lettre dans le ciel. Le plus calme, le plus long (4 s) : la catastrophe peinte avec calme.', render: s => victoireAube(s) },
+    ] },
+    { id: 'cartes-secteur', title: 'Les cartes de secteur', variants: [
+      { title: 'Elle glisse depuis la liste', status: 'a-trancher', depuis: '0.105.1', note: 'PROPOSITION (Jérôme, 2 nov. : « les cartes de secteur glissent sur une table »). La liste à gauche ; au clic, la carte du secteur (titre, coupe du sol, description, saison, niveau, durée) glisse depuis la liste et se pose de biais sur la pile. Celles du dessous ne montrent que leur onglet. Les réglages se gardent carte par carte.', render: s => cartesSecteur(s, { geste: 'glisse' }) },
+      { title: 'Elle est tirée de la pile', status: 'a-trancher', depuis: '0.105.1', note: 'PROPOSITION. La carte choisie sort de la pile par le côté, puis revient se poser dessus : le geste d\'une carte qu\'on tire d\'un paquet. Plus long (0,8 s), plus lisible quand la carte est déjà au milieu de la pile.', render: s => cartesSecteur(s, { geste: 'tire' }) },
     ] },
     { id: 'fiche-jour', title: 'La fiche de fin de journée', variants: [
       { title: 'Deux colonnes', status: 'a-trancher', depuis: '0.98.0', note: 'PROPOSITION (Jérôme, v0.98.0 : « plus claire, toujours développée, centrée, qui donne le nom des régiments dont l\'ordre n\'a pas été modifié ; peut-être 2 colonnes »). À gauche, le jour (ce qui s\'est passé) ; à droite, la nuit (ce qu\'on décide), avec la liste des régiments qui gardent leur ordre d\'hier. Le bouton « À l\'aube » en bas.', render: s => ficheDeuxColonnes(s) },
