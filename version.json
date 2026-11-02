@@ -1,8 +1,7 @@
 {
-  "version": "0.108.0",
+  "version": "0.108.1",
   "date": "2026-11-02",
   "changes": [
-    "Nouvelle partie : une liste de secteurs à gauche, plus petite (elle défile s'il y en a des dizaines, « Au hasard » reste en bas), et à droite la carte du secteur choisi avec son aperçu et ses options, posée sur quelques feuilles",
-    "Un clic sur un secteur : l'ancienne carte part sous les feuilles, la nouvelle grossit depuis la ligne cliquée ; le tirage d'un autre secteur au hasard change bien l'aperçu"
+    "Les cartes de secteur n'ont plus de pli vertical au milieu (il ne rendait pas bien) ; le pli horizontal reste"
   ]
 }
