@@ -103,7 +103,6 @@
   "jouer-deux": "bouton|Jouer à deux",
   "reprendre-deux": "H|bouton|Reprendre à deux",
   "ouvrir-reglages": "icone titre-reglages|\n      <svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M10.3 4.3c.4-1.8 2.9-1.8 3.4 0a1.7 1.7 0 0 0 2.6 1.1c1.5-.9 3.3.8 2.4 2.4a1.7 1.7 0 0 0 1 2.5c1.8.5 1.8 3 0 3.4a1.7 1.7 0 0 0-1 2.6c.9 1.5-.9 3.3-2.4 2.4a1.7 1.7 0 0 0-2.6 1c-.5 1.8-3 1.8-3.4 0a1.7 1.7 0 0 0-2.5-1c-1.6.9-3.3-.9-2.4-2.4a1.7 1.7 0 0 0-1.1-2.6c-1.8-.4-1.8-2.9 0-3.4a1.7 1.7 0 0 0 1.1-2.5c-.9-1.6.8-3.3 2.4-2.4 1 .6 2.3.1 2.5-1.1z\"></path><circle cx=\"12\" cy=\"12\" r=\"3\"></circle></svg>\n    ",
-  "usure-papier": "[object SVGAnimatedString]|<feTurbulence type=\"fractalNoise\" baseFrequency=\"0.035 0.05\" numOctaves=\"3\" seed=\"5\" result=\"b\"></feTurbulence><feDisplacementMap in=\"SourceGraphic\" in2=\"b\" scale=\"8\" xChannelSelector=\"R\" yChannelSelector=\"G\" result=\"d\"></feDisplacementMap><feTurbulence type=\"fractalNoise\" baseFrequency=\"0.4\" numOctaves=\"2\" seed=\"9\" result=\"f\"></feTurbulence><feDisplacementMap in=\"d\" in2=\"f\" scale=\"3\" xChannelSelector=\"R\" yChannelSelector=\"G\"></feDisplacementMap>",
   "toast": "H|jeu-toast|"
  },
  "tous-choisis": {
@@ -210,7 +209,6 @@
   "jouer-deux": "bouton|Jouer à deux",
   "reprendre-deux": "H|bouton|Reprendre à deux",
   "ouvrir-reglages": "icone titre-reglages|\n      <svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M10.3 4.3c.4-1.8 2.9-1.8 3.4 0a1.7 1.7 0 0 0 2.6 1.1c1.5-.9 3.3.8 2.4 2.4a1.7 1.7 0 0 0 1 2.5c1.8.5 1.8 3 0 3.4a1.7 1.7 0 0 0-1 2.6c.9 1.5-.9 3.3-2.4 2.4a1.7 1.7 0 0 0-2.6 1c-.5 1.8-3 1.8-3.4 0a1.7 1.7 0 0 0-2.5-1c-1.6.9-3.3-.9-2.4-2.4a1.7 1.7 0 0 0-1.1-2.6c-1.8-.4-1.8-2.9 0-3.4a1.7 1.7 0 0 0 1.1-2.5c-.9-1.6.8-3.3 2.4-2.4 1 .6 2.3.1 2.5-1.1z\"></path><circle cx=\"12\" cy=\"12\" r=\"3\"></circle></svg>\n    ",
-  "usure-papier": "[object SVGAnimatedString]|<feTurbulence type=\"fractalNoise\" baseFrequency=\"0.035 0.05\" numOctaves=\"3\" seed=\"5\" result=\"b\"></feTurbulence><feDisplacementMap in=\"SourceGraphic\" in2=\"b\" scale=\"8\" xChannelSelector=\"R\" yChannelSelector=\"G\" result=\"d\"></feDisplacementMap><feTurbulence type=\"fractalNoise\" baseFrequency=\"0.4\" numOctaves=\"2\" seed=\"9\" result=\"f\"></feTurbulence><feDisplacementMap in=\"d\" in2=\"f\" scale=\"3\" xChannelSelector=\"R\" yChannelSelector=\"G\"></feDisplacementMap>",
   "toast": "H|jeu-toast|"
  },
  "ordre-carte": {
@@ -317,7 +315,6 @@
   "jouer-deux": "bouton|Jouer à deux",
   "reprendre-deux": "H|bouton|Reprendre à deux",
   "ouvrir-reglages": "icone titre-reglages|\n      <svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M10.3 4.3c.4-1.8 2.9-1.8 3.4 0a1.7 1.7 0 0 0 2.6 1.1c1.5-.9 3.3.8 2.4 2.4a1.7 1.7 0 0 0 1 2.5c1.8.5 1.8 3 0 3.4a1.7 1.7 0 0 0-1 2.6c.9 1.5-.9 3.3-2.4 2.4a1.7 1.7 0 0 0-2.6 1c-.5 1.8-3 1.8-3.4 0a1.7 1.7 0 0 0-2.5-1c-1.6.9-3.3-.9-2.4-2.4a1.7 1.7 0 0 0-1.1-2.6c-1.8-.4-1.8-2.9 0-3.4a1.7 1.7 0 0 0 1.1-2.5c-.9-1.6.8-3.3 2.4-2.4 1 .6 2.3.1 2.5-1.1z\"></path><circle cx=\"12\" cy=\"12\" r=\"3\"></circle></svg>\n    ",
-  "usure-papier": "[object SVGAnimatedString]|<feTurbulence type=\"fractalNoise\" baseFrequency=\"0.035 0.05\" numOctaves=\"3\" seed=\"5\" result=\"b\"></feTurbulence><feDisplacementMap in=\"SourceGraphic\" in2=\"b\" scale=\"8\" xChannelSelector=\"R\" yChannelSelector=\"G\" result=\"d\"></feDisplacementMap><feTurbulence type=\"fractalNoise\" baseFrequency=\"0.4\" numOctaves=\"2\" seed=\"9\" result=\"f\"></feTurbulence><feDisplacementMap in=\"d\" in2=\"f\" scale=\"3\" xChannelSelector=\"R\" yChannelSelector=\"G\"></feDisplacementMap>",
   "toast": "H|jeu-toast|"
  },
  "secteur-A": {
@@ -424,7 +421,6 @@
   "jouer-deux": "bouton|Jouer à deux",
   "reprendre-deux": "H|bouton|Reprendre à deux",
   "ouvrir-reglages": "icone titre-reglages|\n      <svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M10.3 4.3c.4-1.8 2.9-1.8 3.4 0a1.7 1.7 0 0 0 2.6 1.1c1.5-.9 3.3.8 2.4 2.4a1.7 1.7 0 0 0 1 2.5c1.8.5 1.8 3 0 3.4a1.7 1.7 0 0 0-1 2.6c.9 1.5-.9 3.3-2.4 2.4a1.7 1.7 0 0 0-2.6 1c-.5 1.8-3 1.8-3.4 0a1.7 1.7 0 0 0-2.5-1c-1.6.9-3.3-.9-2.4-2.4a1.7 1.7 0 0 0-1.1-2.6c-1.8-.4-1.8-2.9 0-3.4a1.7 1.7 0 0 0 1.1-2.5c-.9-1.6.8-3.3 2.4-2.4 1 .6 2.3.1 2.5-1.1z\"></path><circle cx=\"12\" cy=\"12\" r=\"3\"></circle></svg>\n    ",
-  "usure-papier": "[object SVGAnimatedString]|<feTurbulence type=\"fractalNoise\" baseFrequency=\"0.035 0.05\" numOctaves=\"3\" seed=\"5\" result=\"b\"></feTurbulence><feDisplacementMap in=\"SourceGraphic\" in2=\"b\" scale=\"8\" xChannelSelector=\"R\" yChannelSelector=\"G\" result=\"d\"></feDisplacementMap><feTurbulence type=\"fractalNoise\" baseFrequency=\"0.4\" numOctaves=\"2\" seed=\"9\" result=\"f\"></feTurbulence><feDisplacementMap in=\"d\" in2=\"f\" scale=\"3\" xChannelSelector=\"R\" yChannelSelector=\"G\"></feDisplacementMap>",
   "toast": "H|jeu-toast|"
  },
  "apres-ordre": {
@@ -531,7 +527,6 @@
   "jouer-deux": "bouton|Jouer à deux",
   "reprendre-deux": "H|bouton|Reprendre à deux",
   "ouvrir-reglages": "icone titre-reglages|\n      <svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M10.3 4.3c.4-1.8 2.9-1.8 3.4 0a1.7 1.7 0 0 0 2.6 1.1c1.5-.9 3.3.8 2.4 2.4a1.7 1.7 0 0 0 1 2.5c1.8.5 1.8 3 0 3.4a1.7 1.7 0 0 0-1 2.6c.9 1.5-.9 3.3-2.4 2.4a1.7 1.7 0 0 0-2.6 1c-.5 1.8-3 1.8-3.4 0a1.7 1.7 0 0 0-2.5-1c-1.6.9-3.3-.9-2.4-2.4a1.7 1.7 0 0 0-1.1-2.6c-1.8-.4-1.8-2.9 0-3.4a1.7 1.7 0 0 0 1.1-2.5c-.9-1.6.8-3.3 2.4-2.4 1 .6 2.3.1 2.5-1.1z\"></path><circle cx=\"12\" cy=\"12\" r=\"3\"></circle></svg>\n    ",
-  "usure-papier": "[object SVGAnimatedString]|<feTurbulence type=\"fractalNoise\" baseFrequency=\"0.035 0.05\" numOctaves=\"3\" seed=\"5\" result=\"b\"></feTurbulence><feDisplacementMap in=\"SourceGraphic\" in2=\"b\" scale=\"8\" xChannelSelector=\"R\" yChannelSelector=\"G\" result=\"d\"></feDisplacementMap><feTurbulence type=\"fractalNoise\" baseFrequency=\"0.4\" numOctaves=\"2\" seed=\"9\" result=\"f\"></feTurbulence><feDisplacementMap in=\"d\" in2=\"f\" scale=\"3\" xChannelSelector=\"R\" yChannelSelector=\"G\"></feDisplacementMap>",
   "toast": "H|jeu-toast|"
  },
  "apres-barrages": {
@@ -638,7 +633,6 @@
   "jouer-deux": "bouton|Jouer à deux",
   "reprendre-deux": "H|bouton|Reprendre à deux",
   "ouvrir-reglages": "icone titre-reglages|\n      <svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M10.3 4.3c.4-1.8 2.9-1.8 3.4 0a1.7 1.7 0 0 0 2.6 1.1c1.5-.9 3.3.8 2.4 2.4a1.7 1.7 0 0 0 1 2.5c1.8.5 1.8 3 0 3.4a1.7 1.7 0 0 0-1 2.6c.9 1.5-.9 3.3-2.4 2.4a1.7 1.7 0 0 0-2.6 1c-.5 1.8-3 1.8-3.4 0a1.7 1.7 0 0 0-2.5-1c-1.6.9-3.3-.9-2.4-2.4a1.7 1.7 0 0 0-1.1-2.6c-1.8-.4-1.8-2.9 0-3.4a1.7 1.7 0 0 0 1.1-2.5c-.9-1.6.8-3.3 2.4-2.4 1 .6 2.3.1 2.5-1.1z\"></path><circle cx=\"12\" cy=\"12\" r=\"3\"></circle></svg>\n    ",
-  "usure-papier": "[object SVGAnimatedString]|<feTurbulence type=\"fractalNoise\" baseFrequency=\"0.035 0.05\" numOctaves=\"3\" seed=\"5\" result=\"b\"></feTurbulence><feDisplacementMap in=\"SourceGraphic\" in2=\"b\" scale=\"8\" xChannelSelector=\"R\" yChannelSelector=\"G\" result=\"d\"></feDisplacementMap><feTurbulence type=\"fractalNoise\" baseFrequency=\"0.4\" numOctaves=\"2\" seed=\"9\" result=\"f\"></feTurbulence><feDisplacementMap in=\"d\" in2=\"f\" scale=\"3\" xChannelSelector=\"R\" yChannelSelector=\"G\"></feDisplacementMap>",
   "toast": "H|jeu-toast|"
  },
  "camp-chars": {
@@ -745,7 +739,6 @@
   "jouer-deux": "bouton|Jouer à deux",
   "reprendre-deux": "H|bouton|Reprendre à deux",
   "ouvrir-reglages": "icone titre-reglages|\n      <svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M10.3 4.3c.4-1.8 2.9-1.8 3.4 0a1.7 1.7 0 0 0 2.6 1.1c1.5-.9 3.3.8 2.4 2.4a1.7 1.7 0 0 0 1 2.5c1.8.5 1.8 3 0 3.4a1.7 1.7 0 0 0-1 2.6c.9 1.5-.9 3.3-2.4 2.4a1.7 1.7 0 0 0-2.6 1c-.5 1.8-3 1.8-3.4 0a1.7 1.7 0 0 0-2.5-1c-1.6.9-3.3-.9-2.4-2.4a1.7 1.7 0 0 0-1.1-2.6c-1.8-.4-1.8-2.9 0-3.4a1.7 1.7 0 0 0 1.1-2.5c-.9-1.6.8-3.3 2.4-2.4 1 .6 2.3.1 2.5-1.1z\"></path><circle cx=\"12\" cy=\"12\" r=\"3\"></circle></svg>\n    ",
-  "usure-papier": "[object SVGAnimatedString]|<feTurbulence type=\"fractalNoise\" baseFrequency=\"0.035 0.05\" numOctaves=\"3\" seed=\"5\" result=\"b\"></feTurbulence><feDisplacementMap in=\"SourceGraphic\" in2=\"b\" scale=\"8\" xChannelSelector=\"R\" yChannelSelector=\"G\" result=\"d\"></feDisplacementMap><feTurbulence type=\"fractalNoise\" baseFrequency=\"0.4\" numOctaves=\"2\" seed=\"9\" result=\"f\"></feTurbulence><feDisplacementMap in=\"d\" in2=\"f\" scale=\"3\" xChannelSelector=\"R\" yChannelSelector=\"G\"></feDisplacementMap>",
   "toast": "H|jeu-toast|"
  },
  "camp-chantier": {
@@ -852,7 +845,6 @@
   "jouer-deux": "bouton|Jouer à deux",
   "reprendre-deux": "H|bouton|Reprendre à deux",
   "ouvrir-reglages": "icone titre-reglages|\n      <svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M10.3 4.3c.4-1.8 2.9-1.8 3.4 0a1.7 1.7 0 0 0 2.6 1.1c1.5-.9 3.3.8 2.4 2.4a1.7 1.7 0 0 0 1 2.5c1.8.5 1.8 3 0 3.4a1.7 1.7 0 0 0-1 2.6c.9 1.5-.9 3.3-2.4 2.4a1.7 1.7 0 0 0-2.6 1c-.5 1.8-3 1.8-3.4 0a1.7 1.7 0 0 0-2.5-1c-1.6.9-3.3-.9-2.4-2.4a1.7 1.7 0 0 0-1.1-2.6c-1.8-.4-1.8-2.9 0-3.4a1.7 1.7 0 0 0 1.1-2.5c-.9-1.6.8-3.3 2.4-2.4 1 .6 2.3.1 2.5-1.1z\"></path><circle cx=\"12\" cy=\"12\" r=\"3\"></circle></svg>\n    ",
-  "usure-papier": "[object SVGAnimatedString]|<feTurbulence type=\"fractalNoise\" baseFrequency=\"0.035 0.05\" numOctaves=\"3\" seed=\"5\" result=\"b\"></feTurbulence><feDisplacementMap in=\"SourceGraphic\" in2=\"b\" scale=\"8\" xChannelSelector=\"R\" yChannelSelector=\"G\" result=\"d\"></feDisplacementMap><feTurbulence type=\"fractalNoise\" baseFrequency=\"0.4\" numOctaves=\"2\" seed=\"9\" result=\"f\"></feTurbulence><feDisplacementMap in=\"d\" in2=\"f\" scale=\"3\" xChannelSelector=\"R\" yChannelSelector=\"G\"></feDisplacementMap>",
   "toast": "jeu-toast toast-info|<span>Le parc des chars : chantier lancé, fini à l'aube.</span>"
  },
  "annule": {
@@ -959,7 +951,6 @@
   "jouer-deux": "bouton|Jouer à deux",
   "reprendre-deux": "H|bouton|Reprendre à deux",
   "ouvrir-reglages": "icone titre-reglages|\n      <svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M10.3 4.3c.4-1.8 2.9-1.8 3.4 0a1.7 1.7 0 0 0 2.6 1.1c1.5-.9 3.3.8 2.4 2.4a1.7 1.7 0 0 0 1 2.5c1.8.5 1.8 3 0 3.4a1.7 1.7 0 0 0-1 2.6c.9 1.5-.9 3.3-2.4 2.4a1.7 1.7 0 0 0-2.6 1c-.5 1.8-3 1.8-3.4 0a1.7 1.7 0 0 0-2.5-1c-1.6.9-3.3-.9-2.4-2.4a1.7 1.7 0 0 0-1.1-2.6c-1.8-.4-1.8-2.9 0-3.4a1.7 1.7 0 0 0 1.1-2.5c-.9-1.6.8-3.3 2.4-2.4 1 .6 2.3.1 2.5-1.1z\"></path><circle cx=\"12\" cy=\"12\" r=\"3\"></circle></svg>\n    ",
-  "usure-papier": "[object SVGAnimatedString]|<feTurbulence type=\"fractalNoise\" baseFrequency=\"0.035 0.05\" numOctaves=\"3\" seed=\"5\" result=\"b\"></feTurbulence><feDisplacementMap in=\"SourceGraphic\" in2=\"b\" scale=\"8\" xChannelSelector=\"R\" yChannelSelector=\"G\" result=\"d\"></feDisplacementMap><feTurbulence type=\"fractalNoise\" baseFrequency=\"0.4\" numOctaves=\"2\" seed=\"9\" result=\"f\"></feTurbulence><feDisplacementMap in=\"d\" in2=\"f\" scale=\"3\" xChannelSelector=\"R\" yChannelSelector=\"G\"></feDisplacementMap>",
   "toast": "H|jeu-toast toast-info|<span>Le parc des chars : chantier lancé, fini à l'aube.</span>"
  },
  "posture": {
@@ -1066,7 +1057,6 @@
   "jouer-deux": "bouton|Jouer à deux",
   "reprendre-deux": "H|bouton|Reprendre à deux",
   "ouvrir-reglages": "icone titre-reglages|\n      <svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M10.3 4.3c.4-1.8 2.9-1.8 3.4 0a1.7 1.7 0 0 0 2.6 1.1c1.5-.9 3.3.8 2.4 2.4a1.7 1.7 0 0 0 1 2.5c1.8.5 1.8 3 0 3.4a1.7 1.7 0 0 0-1 2.6c.9 1.5-.9 3.3-2.4 2.4a1.7 1.7 0 0 0-2.6 1c-.5 1.8-3 1.8-3.4 0a1.7 1.7 0 0 0-2.5-1c-1.6.9-3.3-.9-2.4-2.4a1.7 1.7 0 0 0-1.1-2.6c-1.8-.4-1.8-2.9 0-3.4a1.7 1.7 0 0 0 1.1-2.5c-.9-1.6.8-3.3 2.4-2.4 1 .6 2.3.1 2.5-1.1z\"></path><circle cx=\"12\" cy=\"12\" r=\"3\"></circle></svg>\n    ",
-  "usure-papier": "[object SVGAnimatedString]|<feTurbulence type=\"fractalNoise\" baseFrequency=\"0.035 0.05\" numOctaves=\"3\" seed=\"5\" result=\"b\"></feTurbulence><feDisplacementMap in=\"SourceGraphic\" in2=\"b\" scale=\"8\" xChannelSelector=\"R\" yChannelSelector=\"G\" result=\"d\"></feDisplacementMap><feTurbulence type=\"fractalNoise\" baseFrequency=\"0.4\" numOctaves=\"2\" seed=\"9\" result=\"f\"></feTurbulence><feDisplacementMap in=\"d\" in2=\"f\" scale=\"3\" xChannelSelector=\"R\" yChannelSelector=\"G\"></feDisplacementMap>",
   "toast": "H|jeu-toast toast-info|<span>Le parc des chars : chantier lancé, fini à l'aube.</span>"
  },
  "posture-marche": {
@@ -1173,7 +1163,6 @@
   "jouer-deux": "bouton|Jouer à deux",
   "reprendre-deux": "H|bouton|Reprendre à deux",
   "ouvrir-reglages": "icone titre-reglages|\n      <svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M10.3 4.3c.4-1.8 2.9-1.8 3.4 0a1.7 1.7 0 0 0 2.6 1.1c1.5-.9 3.3.8 2.4 2.4a1.7 1.7 0 0 0 1 2.5c1.8.5 1.8 3 0 3.4a1.7 1.7 0 0 0-1 2.6c.9 1.5-.9 3.3-2.4 2.4a1.7 1.7 0 0 0-2.6 1c-.5 1.8-3 1.8-3.4 0a1.7 1.7 0 0 0-2.5-1c-1.6.9-3.3-.9-2.4-2.4a1.7 1.7 0 0 0-1.1-2.6c-1.8-.4-1.8-2.9 0-3.4a1.7 1.7 0 0 0 1.1-2.5c-.9-1.6.8-3.3 2.4-2.4 1 .6 2.3.1 2.5-1.1z\"></path><circle cx=\"12\" cy=\"12\" r=\"3\"></circle></svg>\n    ",
-  "usure-papier": "[object SVGAnimatedString]|<feTurbulence type=\"fractalNoise\" baseFrequency=\"0.035 0.05\" numOctaves=\"3\" seed=\"5\" result=\"b\"></feTurbulence><feDisplacementMap in=\"SourceGraphic\" in2=\"b\" scale=\"8\" xChannelSelector=\"R\" yChannelSelector=\"G\" result=\"d\"></feDisplacementMap><feTurbulence type=\"fractalNoise\" baseFrequency=\"0.4\" numOctaves=\"2\" seed=\"9\" result=\"f\"></feTurbulence><feDisplacementMap in=\"d\" in2=\"f\" scale=\"3\" xChannelSelector=\"R\" yChannelSelector=\"G\"></feDisplacementMap>",
   "toast": "H|jeu-toast toast-info|<span>Le parc des chars : chantier lancé, fini à l'aube.</span>"
  },
  "fiche-regiment": {
@@ -1280,7 +1269,6 @@
   "jouer-deux": "bouton|Jouer à deux",
   "reprendre-deux": "H|bouton|Reprendre à deux",
   "ouvrir-reglages": "icone titre-reglages|\n      <svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M10.3 4.3c.4-1.8 2.9-1.8 3.4 0a1.7 1.7 0 0 0 2.6 1.1c1.5-.9 3.3.8 2.4 2.4a1.7 1.7 0 0 0 1 2.5c1.8.5 1.8 3 0 3.4a1.7 1.7 0 0 0-1 2.6c.9 1.5-.9 3.3-2.4 2.4a1.7 1.7 0 0 0-2.6 1c-.5 1.8-3 1.8-3.4 0a1.7 1.7 0 0 0-2.5-1c-1.6.9-3.3-.9-2.4-2.4a1.7 1.7 0 0 0-1.1-2.6c-1.8-.4-1.8-2.9 0-3.4a1.7 1.7 0 0 0 1.1-2.5c-.9-1.6.8-3.3 2.4-2.4 1 .6 2.3.1 2.5-1.1z\"></path><circle cx=\"12\" cy=\"12\" r=\"3\"></circle></svg>\n    ",
-  "usure-papier": "[object SVGAnimatedString]|<feTurbulence type=\"fractalNoise\" baseFrequency=\"0.035 0.05\" numOctaves=\"3\" seed=\"5\" result=\"b\"></feTurbulence><feDisplacementMap in=\"SourceGraphic\" in2=\"b\" scale=\"8\" xChannelSelector=\"R\" yChannelSelector=\"G\" result=\"d\"></feDisplacementMap><feTurbulence type=\"fractalNoise\" baseFrequency=\"0.4\" numOctaves=\"2\" seed=\"9\" result=\"f\"></feTurbulence><feDisplacementMap in=\"d\" in2=\"f\" scale=\"3\" xChannelSelector=\"R\" yChannelSelector=\"G\"></feDisplacementMap>",
   "toast": "H|jeu-toast toast-info|<span>Le parc des chars : chantier lancé, fini à l'aube.</span>"
  },
  "fiche-homme": {
@@ -1387,7 +1375,6 @@
   "jouer-deux": "bouton|Jouer à deux",
   "reprendre-deux": "H|bouton|Reprendre à deux",
   "ouvrir-reglages": "icone titre-reglages|\n      <svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M10.3 4.3c.4-1.8 2.9-1.8 3.4 0a1.7 1.7 0 0 0 2.6 1.1c1.5-.9 3.3.8 2.4 2.4a1.7 1.7 0 0 0 1 2.5c1.8.5 1.8 3 0 3.4a1.7 1.7 0 0 0-1 2.6c.9 1.5-.9 3.3-2.4 2.4a1.7 1.7 0 0 0-2.6 1c-.5 1.8-3 1.8-3.4 0a1.7 1.7 0 0 0-2.5-1c-1.6.9-3.3-.9-2.4-2.4a1.7 1.7 0 0 0-1.1-2.6c-1.8-.4-1.8-2.9 0-3.4a1.7 1.7 0 0 0 1.1-2.5c-.9-1.6.8-3.3 2.4-2.4 1 .6 2.3.1 2.5-1.1z\"></path><circle cx=\"12\" cy=\"12\" r=\"3\"></circle></svg>\n    ",
-  "usure-papier": "[object SVGAnimatedString]|<feTurbulence type=\"fractalNoise\" baseFrequency=\"0.035 0.05\" numOctaves=\"3\" seed=\"5\" result=\"b\"></feTurbulence><feDisplacementMap in=\"SourceGraphic\" in2=\"b\" scale=\"8\" xChannelSelector=\"R\" yChannelSelector=\"G\" result=\"d\"></feDisplacementMap><feTurbulence type=\"fractalNoise\" baseFrequency=\"0.4\" numOctaves=\"2\" seed=\"9\" result=\"f\"></feTurbulence><feDisplacementMap in=\"d\" in2=\"f\" scale=\"3\" xChannelSelector=\"R\" yChannelSelector=\"G\"></feDisplacementMap>",
   "toast": "H|jeu-toast toast-info|<span>Le parc des chars : chantier lancé, fini à l'aube.</span>"
  },
  "soir": {
@@ -1494,7 +1481,6 @@
   "jouer-deux": "bouton|Jouer à deux",
   "reprendre-deux": "H|bouton|Reprendre à deux",
   "ouvrir-reglages": "icone titre-reglages|\n      <svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M10.3 4.3c.4-1.8 2.9-1.8 3.4 0a1.7 1.7 0 0 0 2.6 1.1c1.5-.9 3.3.8 2.4 2.4a1.7 1.7 0 0 0 1 2.5c1.8.5 1.8 3 0 3.4a1.7 1.7 0 0 0-1 2.6c.9 1.5-.9 3.3-2.4 2.4a1.7 1.7 0 0 0-2.6 1c-.5 1.8-3 1.8-3.4 0a1.7 1.7 0 0 0-2.5-1c-1.6.9-3.3-.9-2.4-2.4a1.7 1.7 0 0 0-1.1-2.6c-1.8-.4-1.8-2.9 0-3.4a1.7 1.7 0 0 0 1.1-2.5c-.9-1.6.8-3.3 2.4-2.4 1 .6 2.3.1 2.5-1.1z\"></path><circle cx=\"12\" cy=\"12\" r=\"3\"></circle></svg>\n    ",
-  "usure-papier": "[object SVGAnimatedString]|<feTurbulence type=\"fractalNoise\" baseFrequency=\"0.035 0.05\" numOctaves=\"3\" seed=\"5\" result=\"b\"></feTurbulence><feDisplacementMap in=\"SourceGraphic\" in2=\"b\" scale=\"8\" xChannelSelector=\"R\" yChannelSelector=\"G\" result=\"d\"></feDisplacementMap><feTurbulence type=\"fractalNoise\" baseFrequency=\"0.4\" numOctaves=\"2\" seed=\"9\" result=\"f\"></feTurbulence><feDisplacementMap in=\"d\" in2=\"f\" scale=\"3\" xChannelSelector=\"R\" yChannelSelector=\"G\"></feDisplacementMap>",
   "toast": "H|jeu-toast toast-info|<span>Le parc des chars : chantier lancé, fini à l'aube.</span>"
  },
  "nuit": {
@@ -1601,7 +1587,6 @@
   "jouer-deux": "bouton|Jouer à deux",
   "reprendre-deux": "H|bouton|Reprendre à deux",
   "ouvrir-reglages": "icone titre-reglages|\n      <svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M10.3 4.3c.4-1.8 2.9-1.8 3.4 0a1.7 1.7 0 0 0 2.6 1.1c1.5-.9 3.3.8 2.4 2.4a1.7 1.7 0 0 0 1 2.5c1.8.5 1.8 3 0 3.4a1.7 1.7 0 0 0-1 2.6c.9 1.5-.9 3.3-2.4 2.4a1.7 1.7 0 0 0-2.6 1c-.5 1.8-3 1.8-3.4 0a1.7 1.7 0 0 0-2.5-1c-1.6.9-3.3-.9-2.4-2.4a1.7 1.7 0 0 0-1.1-2.6c-1.8-.4-1.8-2.9 0-3.4a1.7 1.7 0 0 0 1.1-2.5c-.9-1.6.8-3.3 2.4-2.4 1 .6 2.3.1 2.5-1.1z\"></path><circle cx=\"12\" cy=\"12\" r=\"3\"></circle></svg>\n    ",
-  "usure-papier": "[object SVGAnimatedString]|<feTurbulence type=\"fractalNoise\" baseFrequency=\"0.035 0.05\" numOctaves=\"3\" seed=\"5\" result=\"b\"></feTurbulence><feDisplacementMap in=\"SourceGraphic\" in2=\"b\" scale=\"8\" xChannelSelector=\"R\" yChannelSelector=\"G\" result=\"d\"></feDisplacementMap><feTurbulence type=\"fractalNoise\" baseFrequency=\"0.4\" numOctaves=\"2\" seed=\"9\" result=\"f\"></feTurbulence><feDisplacementMap in=\"d\" in2=\"f\" scale=\"3\" xChannelSelector=\"R\" yChannelSelector=\"G\"></feDisplacementMap>",
   "toast": "H|jeu-toast toast-info|<span>Le parc des chars : chantier lancé, fini à l'aube.</span>"
  },
  "nuit-choisis": {
@@ -1708,7 +1693,6 @@
   "jouer-deux": "bouton|Jouer à deux",
   "reprendre-deux": "H|bouton|Reprendre à deux",
   "ouvrir-reglages": "icone titre-reglages|\n      <svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M10.3 4.3c.4-1.8 2.9-1.8 3.4 0a1.7 1.7 0 0 0 2.6 1.1c1.5-.9 3.3.8 2.4 2.4a1.7 1.7 0 0 0 1 2.5c1.8.5 1.8 3 0 3.4a1.7 1.7 0 0 0-1 2.6c.9 1.5-.9 3.3-2.4 2.4a1.7 1.7 0 0 0-2.6 1c-.5 1.8-3 1.8-3.4 0a1.7 1.7 0 0 0-2.5-1c-1.6.9-3.3-.9-2.4-2.4a1.7 1.7 0 0 0-1.1-2.6c-1.8-.4-1.8-2.9 0-3.4a1.7 1.7 0 0 0 1.1-2.5c-.9-1.6.8-3.3 2.4-2.4 1 .6 2.3.1 2.5-1.1z\"></path><circle cx=\"12\" cy=\"12\" r=\"3\"></circle></svg>\n    ",
-  "usure-papier": "[object SVGAnimatedString]|<feTurbulence type=\"fractalNoise\" baseFrequency=\"0.035 0.05\" numOctaves=\"3\" seed=\"5\" result=\"b\"></feTurbulence><feDisplacementMap in=\"SourceGraphic\" in2=\"b\" scale=\"8\" xChannelSelector=\"R\" yChannelSelector=\"G\" result=\"d\"></feDisplacementMap><feTurbulence type=\"fractalNoise\" baseFrequency=\"0.4\" numOctaves=\"2\" seed=\"9\" result=\"f\"></feTurbulence><feDisplacementMap in=\"d\" in2=\"f\" scale=\"3\" xChannelSelector=\"R\" yChannelSelector=\"G\"></feDisplacementMap>",
   "toast": "H|jeu-toast toast-info|<span>Le parc des chars : chantier lancé, fini à l'aube.</span>"
  },
  "nuit-ordre": {
@@ -1815,7 +1799,6 @@
   "jouer-deux": "bouton|Jouer à deux",
   "reprendre-deux": "H|bouton|Reprendre à deux",
   "ouvrir-reglages": "icone titre-reglages|\n      <svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M10.3 4.3c.4-1.8 2.9-1.8 3.4 0a1.7 1.7 0 0 0 2.6 1.1c1.5-.9 3.3.8 2.4 2.4a1.7 1.7 0 0 0 1 2.5c1.8.5 1.8 3 0 3.4a1.7 1.7 0 0 0-1 2.6c.9 1.5-.9 3.3-2.4 2.4a1.7 1.7 0 0 0-2.6 1c-.5 1.8-3 1.8-3.4 0a1.7 1.7 0 0 0-2.5-1c-1.6.9-3.3-.9-2.4-2.4a1.7 1.7 0 0 0-1.1-2.6c-1.8-.4-1.8-2.9 0-3.4a1.7 1.7 0 0 0 1.1-2.5c-.9-1.6.8-3.3 2.4-2.4 1 .6 2.3.1 2.5-1.1z\"></path><circle cx=\"12\" cy=\"12\" r=\"3\"></circle></svg>\n    ",
-  "usure-papier": "[object SVGAnimatedString]|<feTurbulence type=\"fractalNoise\" baseFrequency=\"0.035 0.05\" numOctaves=\"3\" seed=\"5\" result=\"b\"></feTurbulence><feDisplacementMap in=\"SourceGraphic\" in2=\"b\" scale=\"8\" xChannelSelector=\"R\" yChannelSelector=\"G\" result=\"d\"></feDisplacementMap><feTurbulence type=\"fractalNoise\" baseFrequency=\"0.4\" numOctaves=\"2\" seed=\"9\" result=\"f\"></feTurbulence><feDisplacementMap in=\"d\" in2=\"f\" scale=\"3\" xChannelSelector=\"R\" yChannelSelector=\"G\"></feDisplacementMap>",
   "toast": "H|jeu-toast toast-info|<span>Le parc des chars : chantier lancé, fini à l'aube.</span>"
  },
  "fin": {
@@ -1932,7 +1915,6 @@
   "fin-medailles": "medailles-bloc|<h3>Médailles de la bataille</h3><section><h4>Les régiments</h4><ul class=\"medailles\"><li><b>Le plus meurtrier</b> — Régiment Syzygie (11 hommes abattus)</li><li><b>Le plus sacrifié</b> — Régiment Murmuration (44 morts)</li><li><b>Le plus inutile</b> — Régiment Céruléen (rien abattu, rien pris)</li></ul></section><section><h4>Les hommes</h4><ul class=\"medailles\"><li><b>Le plus meurtrier</b> — René Blanc (soldat de 2e classe, Syzygie · 3 hommes abattus)</li><li><b>Le plus aguerri</b> — Louis Lacroix (caporal, Porphyre · a tout vu du feu)</li><li><b>Le plus inutile</b> — Léon Bernard (sergent, Sinople · rien abattu)</li></ul></section>",
   "fin-nouvelle": "bouton|Nouvelle partie",
   "fin-titre-btn": "bouton|Écran titre",
-  "usure-papier": "[object SVGAnimatedString]|<feTurbulence type=\"fractalNoise\" baseFrequency=\"0.035 0.05\" numOctaves=\"3\" seed=\"5\" result=\"b\"></feTurbulence><feDisplacementMap in=\"SourceGraphic\" in2=\"b\" scale=\"8\" xChannelSelector=\"R\" yChannelSelector=\"G\" result=\"d\"></feDisplacementMap><feTurbulence type=\"fractalNoise\" baseFrequency=\"0.4\" numOctaves=\"2\" seed=\"9\" result=\"f\"></feTurbulence><feDisplacementMap in=\"d\" in2=\"f\" scale=\"3\" xChannelSelector=\"R\" yChannelSelector=\"G\"></feDisplacementMap>",
   "toast": "H|jeu-toast toast-info|<span>Le parc des chars : chantier lancé, fini à l'aube.</span>"
  }
 }

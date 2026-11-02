@@ -1,5 +1,9 @@
 # Journal des versions
 
+## 0.107.0 — 2026-11-02
+- Nouvelle partie : plus de liste ni de cadre, les cartes de secteur sont empilées sur la fenêtre et leurs titres servent de menu ; la carte choisie glisse sur le dessus, sans saccade
+- La carte « Au hasard » porte le nom du secteur tiré et un dé « Une autre carte » pour en tirer un autre ; le décor de l'écran titre ne se redessine plus derrière le choix du secteur
+
 ## 0.106.0 — 2026-11-02
 - Nouvelle partie : les secteurs sont des cartes de papier usé posées sur une table ; la carte choisie glisse sur le dessus de la pile avec sa vraie carte en 3D, sa description, la saison, le niveau et la durée
 - La description d'un niveau n'est plus qu'une infobulle au survol, et les infobulles s'affichent au-dessus des fenêtres
