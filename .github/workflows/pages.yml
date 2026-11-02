@@ -22,15 +22,17 @@ on:
 permissions:
   contents: read
 
+# Un push plus récent annule tout le run précédent d'un coup. Mesuré (run 298) :
+# avec une concurrence par job de la matrice, les jobs du nouveau run ont attendu
+# ~1 min 30 s que ceux du run précédent finissent ou soient annulés.
+concurrency:
+  group: pages-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   tests:
     name: tests (${{ matrix.groupe }})
     runs-on: ubuntu-latest
-    # Un push plus récent annule les tests devenus obsolètes, mais jamais
-    # un déploiement en cours (voir le job deploy).
-    concurrency:
-      group: tests-${{ github.ref }}-${{ matrix.groupe }}
-      cancel-in-progress: true
     strategy:
       # Un échec arrête les autres groupes : on le voit sans attendre les
       # plus longs.
@@ -70,10 +72,6 @@ jobs:
       contents: read
       pages: write
       id-token: write
-    # Un déploiement commencé va à son terme ; un seul reste en attente.
-    concurrency:
-      group: pages
-      cancel-in-progress: false
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
