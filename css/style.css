@@ -19,6 +19,9 @@
   --e4: 16px;
   /* les hauteurs, les traits */
   --jeu-cible: 44px;        /* tout bouton du HUD : cette hauteur au moins */
+  --barre-h: 6px;           /* la barre de vie ou de tir d'une unité (carte, étiquette, char, batterie) : une seule épaisseur (v0.110.0) */
+  --barre-xp: 3px;          /* la barre d'expérience */
+  --lettres-etiquette: .08em; /* l'espacement d'une étiquette en capitales (statut, nom d'armée, sous-titre) ; les titres : --titre-lettres */
   --trait: 1px;
   --ombre-papier: 3px 3px 0 var(--jeu-fond);   /* l'ombre portée d'un cran, la seule */
   --titre-lettres: .08em;   /* l'espacement des titres */
@@ -44,7 +47,7 @@
 .discret { color: var(--jeu-accent); }
 .terrain { pointer-events: none !important; }
 .terrain[hidden] { display: grid; visibility: hidden; }   /* les deux lignes gardent leur place : le billet ne saute pas */
-.pause-active { letter-spacing: .12em; text-transform: uppercase; text-align: center; }
+.pause-active { letter-spacing: var(--lettres-etiquette); text-transform: uppercase; text-align: center; }
 
 /* Des papiers de campagne (Jérôme, v0.10.0 ; labo « Plaques et journal », variantes C et D) : l'interface est faite de ce qu'un
    officier a sur lui : une montre, des feuilles de situation, un râtelier d'obus, un carnet de bord. Du papier (l'os), de l'encre
@@ -60,7 +63,7 @@
 .montre-bloc { display: flex; gap: var(--pas); align-items: center; }
 .droite { display: grid; gap: var(--pas); align-content: end; justify-items: end; flex: none; }
 .carte { width: min(38ch, 30vw); }
-.carte .entete { display: flex; align-items: center; gap: var(--pas); width: 100%; font: inherit; color: inherit; background: none; border: 0; border-bottom: 1px solid var(--jeu-accent); text-align: left; cursor: pointer; letter-spacing: .14em; text-transform: uppercase; border-bottom: 1px solid var(--jeu-accent); padding-bottom: var(--e0); font-size: var(--texte-petit); margin-bottom: var(--e1); }
+.carte .entete { display: flex; align-items: center; gap: var(--pas); width: 100%; font: inherit; color: inherit; background: none; border: 0; border-bottom: 1px solid var(--jeu-accent); text-align: left; cursor: pointer; letter-spacing: var(--titre-lettres); text-transform: uppercase; padding-bottom: var(--e0); font-size: var(--texte-petit); margin-bottom: var(--e1); }
 .carte-grille { position: relative; display: grid; gap: var(--e0); align-items: stretch; }
 .carte-grille .lib { font-size: var(--texte-petit); align-self: center; color: var(--jeu-accent); }
 .carte-grille button { font: inherit; padding: 0; border: 0; min-height: 0; cursor: pointer; }
@@ -78,7 +81,7 @@
 .carnet { width: 38ch; max-width: 36vw; font-size: var(--texte-petit); }
 .carnet[hidden] { display: none; }
 /* Le carnet (Jérôme, v0.100.0) : l'en-tête est un bouton (un clic : tout l'historique), une flèche le replie ; les noms sont des liens ; un événement important a son pictogramme et clignote une fois */
-.carnet .entete { display: flex; align-items: center; justify-content: space-between; gap: var(--pas); letter-spacing: .14em; text-transform: uppercase; border-bottom: 1px solid var(--jeu-accent); padding-bottom: var(--e0); }
+.carnet .entete { display: flex; align-items: center; justify-content: space-between; gap: var(--pas); letter-spacing: var(--titre-lettres); text-transform: uppercase; border-bottom: 1px solid var(--jeu-accent); padding-bottom: var(--e0); }
 .carnet .titre-carnet { flex: 1; text-align: left; background: none; border: 0; padding: 0; color: inherit; font: inherit; letter-spacing: inherit; text-transform: inherit; cursor: pointer; min-height: var(--jeu-cible); }
 .carnet .replier { flex: none; background: none; color: inherit; }
 .carnet .replier i { display: block; width: 0; height: 0; border: 5px solid transparent; border-top: 0; border-bottom-color: currentColor; }
@@ -156,34 +159,32 @@
 .infobulle span { display: block; }
 .infobulle .seul { font-weight: 700; }
 .infobulle .h1 { font-size: var(--texte-moyen); font-weight: 700; line-height: 1.2; }
-.infobulle .h2 { font-size: var(--texte-petit); font-weight: 700; letter-spacing: .08em; text-transform: uppercase; margin-top: var(--e1); opacity: .8; }
+.infobulle .h2 { font-size: var(--texte-petit); font-weight: 700; letter-spacing: var(--lettres-etiquette); text-transform: uppercase; margin-top: var(--e1); opacity: .8; }
 .infobulle .p { margin-top: var(--e0); }
 .infobulle b { font-weight: 700; }
 [data-info] { pointer-events: auto; }
 .etiquettes, .retours { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
 .etiquette {
-  /* le cartouche (Jérôme, v0.41.3 ; sujet « Le nom d'un régiment » du labo, variante C) : un carré à numéro (la couleur de l'armée ; orange s'il est ébranlé, rouge s'il est en déroute),
-     le nom (le « h1 »), le statut (le « h2 ») et la barre debout / blessés au pied ; 44 px de haut au moins : une vraie cible de clic */
+  /* v0.110.0 : la même grammaire que la carte de régiment du bas (docs/design-system.md, « Les unités ») : du papier clair, le liseré de l'armée en haut, l'ombre d'un cran, numéro puis nom,
+     statut, barre ; ébranlé ou en déroute : hachuré ; choisi : inversé, un anneau à l'intérieur ; 44 px de haut au moins : une vraie cible de clic */
+  --enc: var(--jeu-fond); --pap: var(--jeu-encre);
   position: absolute; left: 0; top: 0;
-  display: grid; grid-template-columns: 34px auto; min-height: var(--jeu-cible);
-  background: var(--jeu-fond); color: var(--jeu-encre); white-space: nowrap;
+  display: grid; grid-template-columns: auto auto; align-items: center; column-gap: var(--pas); min-height: var(--jeu-cible); box-sizing: border-box; padding: var(--e1) var(--pas);
+  background: var(--pap); color: var(--enc); border-top: 3px solid var(--jeu-nous); box-shadow: var(--ombre-papier); white-space: nowrap;
   pointer-events: auto; cursor: pointer;
 }
 .etiquette[hidden] { display: none; }
-.etiquette .num { display: grid; place-items: center; background: var(--jeu-nous); color: var(--jeu-fond); font-size: var(--texte-grand); }
-.etiquette.ebranle .num { background: var(--jeu-ebranle); }
-.etiquette.deroute .num { background: var(--jeu-deroute); }
-.etiquette .cart-corps { display: grid; gap: var(--e0); align-content: center; min-width: 96px; padding: var(--e1) var(--pas); }
+.etiquette .num { font-size: var(--texte-grand); font-weight: normal; line-height: 1; }
+.etiquette .cart-corps { display: grid; gap: var(--e0); align-content: center; min-width: 96px; }
 .etiquette .nom { font-size: var(--texte-moyen); line-height: 1.15; }
-.etiquette .statut { font-size: var(--texte-petit); line-height: 1.2; color: var(--jeu-accent); }
-.etiquette.ebranle .statut, .etiquette.deroute .statut { color: inherit; letter-spacing: .08em; text-transform: uppercase; }
-.etiquette .barre { display: flex; height: 5px; box-sizing: border-box; border: 1px solid currentColor; margin-top: var(--e0); }
+.etiquette .statut { font-size: var(--texte-petit); line-height: 1.2; }
+.etiquette.ebranle .statut, .etiquette.deroute .statut { letter-spacing: var(--lettres-etiquette); text-transform: uppercase; }
+.etiquette .barre { display: flex; height: var(--barre-h); box-sizing: border-box; border: 1px solid currentColor; margin-top: var(--e0); }
 .etiquette .barre i { display: block; height: 100%; }
 .etiquette .barre .debout { background: currentColor; }
 .etiquette .barre .blesses { background: repeating-linear-gradient(135deg, currentColor 0 2px, transparent 2px 4px); }
-@media (hover: hover) { .etiquette:not(.choisi):hover { background: var(--jeu-accent); color: var(--jeu-fond); } }
-.etiquette.choisi { background: var(--jeu-encre); color: var(--jeu-fond); }
-.etiquette.choisi .statut { color: var(--jeu-fond); }
+.etiquette.ebranle:not(.choisi), .etiquette.deroute:not(.choisi) { background-image: repeating-linear-gradient(135deg, var(--jeu-encre) 0 4px, var(--jeu-brume) 4px 8px); }
+.etiquette.ebranle.choisi, .etiquette.deroute.choisi { background-image: repeating-linear-gradient(135deg, var(--jeu-fond) 0 4px, var(--jeu-ombre) 4px 8px); }
 /* Le clic sur une carte de régiment (Jérôme, v0.32.2 ; v0.33.0 : les équerres ; labo « Le clic sur un régiment ») : la caméra glisse sur lui, quatre coins d'os se
    referment sur ses hommes, la carte s'allume un instant (inversée) */
 .equerres { position: absolute; left: 0; top: 0; width: 0; height: 0; pointer-events: none; }
@@ -262,7 +263,7 @@
 .bouton {
   padding: 0 calc(var(--pas) * 2);
   background: var(--jeu-encre); color: var(--jeu-fond);
-  border: 0; border-bottom: 4px solid var(--jeu-accent);
+  border: 0; box-shadow: var(--ombre-papier);
   font-size: var(--texte-moyen);
 }
 .bouton.est-focus, .bouton:focus-visible, .icone:focus-visible, .batterie:focus-visible { outline: 2px solid var(--jeu-nous); outline-offset: 2px; }
@@ -283,7 +284,7 @@ dialog .reglage input { width: 20px; height: 20px; margin: 0; flex: none; accent
 /* Entre deux batailles de campagne (v0.36.4) : le registre, un papier posé au milieu du champ */
 .campagne { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: min(78ch, calc(100% - 2 * var(--pas))); max-height: calc(100dvh - 24px); overflow-y: auto; display: grid; gap: var(--pas); pointer-events: auto; padding: var(--e3); }
 .campagne[hidden] { display: none; }
-.campagne h2 { margin: 0; font-size: var(--texte-moyen); letter-spacing: .14em; text-transform: uppercase; border-bottom: 1px solid var(--jeu-accent); padding-bottom: var(--e0); }
+.campagne h2 { margin: 0; font-size: var(--texte-moyen); letter-spacing: var(--titre-lettres); text-transform: uppercase; border-bottom: 1px solid var(--jeu-accent); padding-bottom: var(--e0); }
 .campagne .registre { display: grid; }
 .campagne .ligne { display: grid; grid-template-columns: 13ch 44px 120px 1fr; gap: var(--pas); align-items: center; padding: var(--e1) 0; border-bottom: 1px solid var(--jeu-accent); font-size: var(--texte-petit); }
 .campagne .ligne b { font-weight: normal; font-size: var(--texte); }
@@ -330,12 +331,12 @@ dialog .reglage input { width: 20px; height: 20px; margin: 0; flex: none; accent
 #nuit-corps, #aube-bilan { overflow-y: auto; min-height: 0; }
 .nuit h2 { margin: 0 0 var(--e1); }
 .nuit p { margin: var(--e0) 0; }
-.nuit button { font: inherit; font-size: var(--texte-petit); color: var(--jeu-fond); background: none; border: 1px solid var(--jeu-fond); min-height: 36px; padding: 0 var(--pas); text-align: left; }
+.nuit button { font: inherit; font-size: var(--texte-petit); color: var(--jeu-fond); background: none; border: 1px solid var(--jeu-fond); min-height: var(--jeu-cible); padding: 0 var(--pas); text-align: left; }
 .nuit button:disabled { color: var(--jeu-accent); border-color: var(--jeu-accent); }
 .nuit button.actif, .nuit button.choisi { background: var(--jeu-fond); color: var(--jeu-encre); }
 #aube { flex: none; width: 100%; min-height: var(--jeu-cible); margin-top: var(--pas); text-align: center; background: var(--jeu-fond); color: var(--jeu-encre); }
 /* Les médailles (v0.73.1) : le palmarès du soir et de la fin */
-.medailles-bloc h4, #nuit-medailles h4, #fin-medailles h4 { margin: var(--pas) 0 var(--e1); font-size: var(--texte-petit); font-weight: bold; letter-spacing: .08em; text-transform: uppercase; }
+.medailles-bloc h4, #nuit-medailles h4, #fin-medailles h4 { margin: var(--pas) 0 var(--e1); font-size: var(--texte-petit); font-weight: bold; letter-spacing: var(--lettres-etiquette); text-transform: uppercase; }
 .medailles-bloc summary { cursor: pointer; font-weight: bold; }
 ul.medailles { margin: 0; padding-left: 0; list-style: none; font-size: var(--texte-petit); }
 ul.medailles li { margin: 2px 0; }
@@ -394,7 +395,7 @@ dialog form { margin-top: calc(var(--pas) * 2); }
   --enc: var(--jeu-fond); --pap: var(--jeu-encre);
   /* une hauteur fixe (Jérôme, v0.41.3 ; sujet « La carte d'ordre » du labo) : le nom, le statut, les chevrons, la barre ; chaque ligne a sa place, rien ne bouge d'un état à l'autre,
      le nom ne passe jamais à la ligne (coupé par « … »), le « ! » est hors du flux */
-  position: relative; display: grid; grid-template-rows: 18px 14px 8px 8px; align-content: space-between; flex: 1 1 0; min-width: 88px; max-width: 120px; height: 76px; padding: var(--e1) var(--pas) var(--pas); text-align: left; cursor: pointer;
+  position: relative; display: grid; grid-template-rows: 18px 14px 8px var(--barre-h); align-content: space-between; flex: 1 1 0; min-width: 88px; max-width: 120px; height: 76px; padding: var(--e1) var(--pas) var(--pas); text-align: left; cursor: pointer;
   font: inherit; font-size: var(--texte-petit); background: var(--pap); color: var(--enc); border: 0; border-top: 3px solid var(--jeu-nous); box-shadow: var(--ombre-papier);
 }
 .reg-carte.choisi { --enc: var(--jeu-encre); --pap: var(--jeu-fond); outline: 2px solid var(--jeu-encre); outline-offset: -5px; }
@@ -404,17 +405,17 @@ dialog form { margin-top: calc(var(--pas) * 2); }
 .reg-carte .l1 { display: block; line-height: 18px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .reg-carte.ebranle .l1, .reg-carte.deroute .l1 { padding-right: 20px; }
 .reg-carte .statut { display: block; line-height: 14px; white-space: nowrap; overflow: hidden; }
-.reg-carte.ebranle .statut, .reg-carte.deroute .statut { letter-spacing: .08em; text-transform: uppercase; }
+.reg-carte.ebranle .statut, .reg-carte.deroute .statut { letter-spacing: var(--lettres-etiquette); text-transform: uppercase; }
 .reg-carte .alerte { position: absolute; right: var(--pas); top: var(--e1); display: grid; place-items: center; min-width: 16px; height: 16px; box-sizing: border-box; padding: 0 var(--e0); font-style: normal; font-size: var(--texte-petit); line-height: 1; color: var(--jeu-fond); background: var(--jeu-ebranle); border: 1px solid var(--jeu-fond); }
 .reg-carte.deroute .alerte { background: var(--jeu-deroute); }
 .reg-carte .l1 b { font-weight: normal; font-size: var(--texte-grand); line-height: 1; margin-right: var(--e0); }
 .reg-carte .chevrons { display: flex; gap: var(--e0); height: 8px; }
-.reg-carte .xp { display: block; width: 22px; height: 3px; margin: 2px 0 0 var(--e0); border: 1px solid var(--enc); box-sizing: border-box; flex: none; }      /* l'expérience moyenne (lot E) */
+.reg-carte .xp { display: block; width: 22px; height: var(--barre-xp); margin: 2px 0 0 var(--e0); border: 1px solid var(--enc); box-sizing: border-box; flex: none; }      /* l'expérience moyenne (lot E) */
 .reg-carte .xp i { display: block; height: 100%; background: var(--enc); }
 .reg-carte .posture { margin-left: auto; font-size: var(--texte-petit); line-height: 8px; color: var(--enc); }
 .chev { width: 12px; height: 8px; fill: none; stroke: var(--enc); stroke-width: 2; stroke-linecap: square; }
 .chev.vide { stroke: var(--jeu-accent); }
-.reg-carte .barre, .reg-ouvert .barre { display: flex; height: 8px; box-sizing: border-box; border: 1px solid var(--enc); }
+.reg-carte .barre, .reg-ouvert .barre { display: flex; height: var(--barre-h); box-sizing: border-box; border: 1px solid var(--enc); }
 .reg-carte .barre i { display: block; height: 100%; }
 .reg-carte .barre .debout { background: var(--enc); }
 .reg-carte .barre .blesses { background: repeating-linear-gradient(135deg, var(--enc) 0 2px, transparent 2px 4px); }
@@ -430,7 +431,7 @@ dialog form { margin-top: calc(var(--pas) * 2); }
 .reg-ouvert .tete .aide { flex: none; min-width: 0; min-height: 0; width: calc(var(--e4) + var(--e1)); height: calc(var(--e4) + var(--e1)); padding: 0; display: grid; place-items: center; font: inherit; font-size: var(--texte-petit); line-height: 1; color: var(--jeu-fond); background: none; border: 1px solid var(--jeu-accent); cursor: pointer; }
 .reg-ouvert .tete .aide:focus-visible { outline: 2px solid var(--jeu-nous); outline-offset: 2px; }
 .reg-ouvert .tete span, .reg-ouvert .compte, .reg-ouvert .ordre { color: var(--jeu-accent); font-size: var(--texte-petit); }
-.reg-ouvert .tampon { justify-self: start; padding: 0 var(--pas); border: 3px double var(--jeu-encre); color: var(--jeu-encre); transform: rotate(-4deg); letter-spacing: .12em; text-transform: uppercase; font-size: var(--texte-petit); }
+.reg-ouvert .tampon { justify-self: start; padding: 0 var(--pas); border: 3px double var(--jeu-encre); color: var(--jeu-encre); transform: rotate(-4deg); letter-spacing: var(--lettres-etiquette); text-transform: uppercase; font-size: var(--texte-petit); }
 /* Des boutons empilés ont tous la même largeur (Jérôme, v0.38.3) : une grille de colonnes égales (deux ; quatre pour les formes, qui tiennent sur une ligne),
    jamais des rangées de boutons à la largeur de leur texte. Un mot trop long passe à la ligne dans son bouton. */
 .reg-ouvert .actions { display: grid; grid-template-columns: repeat(var(--cols, 2), 1fr); gap: var(--e1); margin-top: var(--e1); }
@@ -489,7 +490,7 @@ body.charge dialog { display: none; }
 .chargement[hidden] { display: none; }
 .chargement.fondu { opacity: 0; pointer-events: none; }
 .chargement .papier { width: min(34ch, 80vw); display: grid; gap: var(--pas); }
-.chargement p { margin: 0; letter-spacing: .1em; text-transform: uppercase; font-size: var(--texte); }
+.chargement p { margin: 0; letter-spacing: var(--lettres-etiquette); text-transform: uppercase; font-size: var(--texte); }
 .chargement .discret { font-size: var(--texte-petit); letter-spacing: 0; text-transform: none; min-height: 1.3em; }
 .chargement-piste { height: 10px; border: 2px solid var(--jeu-fond, #16130f); }
 .chargement-piste i { display: block; height: 100%; background: var(--jeu-fond, #16130f); transition: width .12s linear; }
@@ -503,7 +504,7 @@ body.charge dialog { display: none; }
 .carte-colonnes > * { height: clamp(24rem, calc(100dvh - 19rem), 44rem); }
 /* la liste : une ligne par secteur, petite ; elle défile s'il y en a beaucoup, « Au hasard » reste épinglée en bas */
 .cartes-liste { display: flex; flex-direction: column; gap: var(--e0); overflow-y: auto; overscroll-behavior: contain; padding-right: var(--e1); scrollbar-width: thin; scrollbar-color: var(--jeu-accent) transparent; }
-.carte-ligne { flex: none; display: flex; align-items: center; gap: var(--pas); min-height: 0; padding: var(--e1) var(--pas); font: inherit; font-size: var(--texte); line-height: 1.3; letter-spacing: .04em; text-align: left; text-transform: uppercase; cursor: pointer; color: var(--jeu-fond); background: var(--jeu-encre); border: 2px solid var(--jeu-encre); }
+.carte-ligne { flex: none; display: flex; align-items: center; gap: var(--pas); min-height: 0; padding: var(--e1) var(--pas); font: inherit; font-size: var(--texte); line-height: 1.3; text-align: left; cursor: pointer; color: var(--jeu-fond); background: var(--jeu-encre); border: 2px solid var(--jeu-encre); }
 .carte-ligne span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .carte-ligne svg { width: 1rem; height: 1rem; flex: none; }
 .carte-ligne:focus-visible { border-color: var(--jeu-nous); }
@@ -542,15 +543,15 @@ body.charge dialog { display: none; }
 .carte-legende { flex: none; margin: 0 var(--e3); font-size: var(--texte-petit); line-height: 1.4; min-height: 2.8em; }
 .carte-reglages { flex: none; display: grid; gap: var(--pas); margin: 0 var(--e3); }
 .carte-reglage { display: grid; grid-template-columns: 4.5rem minmax(0, 1fr); align-items: center; gap: var(--pas); }
-.carte-reglage-nom { font-size: var(--texte-petit); letter-spacing: .08em; text-transform: uppercase; color: var(--jeu-accent); }
+.carte-reglage-nom { font-size: var(--texte-petit); letter-spacing: var(--lettres-etiquette); text-transform: uppercase; color: var(--jeu-accent); }
 .carte-reglage-rang { display: flex; flex-wrap: wrap; gap: var(--e1) var(--pas); }
 /* une pastille : le contour glaise au repos, l'encre sous l'os quand elle est choisie (comme les boutons de papier du jeu) */
-.pastille { display: inline-flex; align-items: center; justify-content: center; gap: var(--e1); font: inherit; font-size: var(--texte-petit); letter-spacing: .06em; text-transform: uppercase; white-space: nowrap; min-height: 28px; padding: 0 var(--pas); cursor: pointer; color: var(--jeu-fond); background: transparent; border: 2px solid var(--jeu-accent); }
+.pastille { display: inline-flex; align-items: center; justify-content: center; gap: var(--e1); font: inherit; font-size: var(--texte-petit); white-space: nowrap; min-height: var(--jeu-cible); padding: 0 var(--pas); cursor: pointer; color: var(--jeu-fond); background: transparent; border: 1px solid var(--jeu-accent); }
 .pastille svg { width: 1rem; height: 1rem; flex: none; }
 .pastille:focus-visible { outline: 2px solid var(--jeu-nous); outline-offset: 1px; }
 .pastille[aria-pressed="true"] { color: var(--jeu-encre); background: var(--jeu-fond); border-color: var(--jeu-fond); }
 @media (hover: hover) { .pastille:hover { border-color: var(--jeu-fond); } }
-.carte-saisons .pastille, .carte-de { color: var(--jeu-encre); background: var(--jeu-fond); border-color: var(--jeu-fond); min-height: 26px; }
+.carte-saisons .pastille, .carte-de { color: var(--jeu-encre); background: var(--jeu-fond); border-color: var(--jeu-fond); min-height: var(--jeu-cible); }
 .carte-saisons .pastille[aria-pressed="true"] { color: var(--jeu-fond); background: var(--jeu-encre); border-color: var(--jeu-nous); }
 @media (hover: hover) { .carte-saisons .pastille:hover, .carte-de:hover { border-color: var(--jeu-nous); } }
 .carte-aide { margin: var(--pas) 0 0; font-size: var(--texte-petit); line-height: 1.4; min-height: 1.4em; color: var(--jeu-accent); }
@@ -631,7 +632,7 @@ h2 { font-weight: normal; letter-spacing: var(--titre-lettres); }
 /* Les pertes (Jérôme, v0.33.0 ; « La barre de vie », variante B) : un duel, une barre de chaque côté du jour ; la vie collée au centre, la perte vers le bord */
 .pertes { display: flex; gap: var(--pas); align-items: flex-start; width: min(560px, 42vw); }
 .pertes .armee { flex: 1; min-width: 0; display: grid; gap: 3px; }
-.pertes .nom { font-size: var(--texte-petit); letter-spacing: .12em; text-transform: uppercase; color: var(--jeu-nous); background: var(--jeu-fond); justify-self: start; padding: 0 var(--e1); }
+.pertes .nom { font-size: var(--texte-petit); letter-spacing: var(--lettres-etiquette); text-transform: uppercase; color: var(--jeu-nous); background: var(--jeu-fond); justify-self: start; padding: 0 var(--e1); }
 .pertes .eux .nom { color: var(--jeu-eux); justify-self: end; }
 .pertes .vie { display: flex; flex-direction: row-reverse; height: 20px; box-sizing: border-box; border: 2px solid var(--jeu-fond); background: var(--jeu-fond); }
 .pertes .eux .vie { flex-direction: row; }
@@ -665,7 +666,7 @@ h2 { font-weight: normal; letter-spacing: var(--titre-lettres); }
 #toast.jeu-toast[hidden] { display: none; }
 #toast.toast-refus { border-left-color: var(--jeu-accent); }
 #toast.toast-alerte { border-left-color: var(--jeu-eux); }
-#toast small { font-size: var(--texte-petit); letter-spacing: .1em; text-transform: uppercase; color: var(--jeu-ombre); }
+#toast small { font-size: var(--texte-petit); letter-spacing: var(--lettres-etiquette); text-transform: uppercase; color: var(--jeu-ombre); }
 @keyframes toast-entree { from { opacity: 0; transform: translate(-50%, -14px); } to { opacity: 1; transform: translate(-50%, 0); } }
 
 /* Le son (v0.75.0) : deux curseurs dans les réglages */
@@ -709,13 +710,11 @@ h2 { font-weight: normal; letter-spacing: var(--titre-lettres); }
 .chars-cibles g.manuelle line { stroke-dasharray: none; stroke-width: 2; }
 .chars-cibles g.choisie line, .chars-cibles g.choisie circle, .chars-cibles g.choisie path { stroke: var(--jeu-nous); }
 .char-etiq[hidden] { display: none; }      /* display: grid annulait `hidden` : les étiquettes restaient à l écran hors de vue (retour du 1er nov.) */
-.char-etiq { position: absolute; left: 0; top: 0; pointer-events: auto; display: grid; gap: 2px; min-width: 70px; padding: 3px 5px; font: inherit; font-size: var(--texte-petit); line-height: 1.1; color: var(--jeu-encre); background: var(--jeu-fond); border: 1px solid var(--jeu-encre); cursor: pointer; min-height: 0; }
-.char-etiq .canon, .char-etiq .pv { display: block; height: 4px; border: 1px solid var(--jeu-encre); box-sizing: border-box; }
-.char-etiq .pv { height: 3px; }
-.char-etiq i { display: block; height: 100%; background: var(--jeu-encre); }
+.char-etiq { --enc: var(--jeu-fond); --pap: var(--jeu-encre); position: absolute; left: 0; top: 0; pointer-events: auto; display: grid; gap: var(--e0); min-width: 88px; box-sizing: border-box; padding: var(--e1) var(--pas); font: inherit; font-size: var(--texte-petit); line-height: 1.2; color: var(--enc); background: var(--pap); border: 0; border-top: 3px solid var(--jeu-nous); box-shadow: var(--ombre-papier); cursor: pointer; min-height: 0; }
+.char-etiq .canon, .char-etiq .pv { display: block; height: var(--barre-h); border: 1px solid currentColor; box-sizing: border-box; }
+.char-etiq i { display: block; height: 100%; background: currentColor; }
 .char-etiq .canon i { background: var(--jeu-accent); }
 .char-etiq.pret .canon i { background: var(--jeu-nous); }
-.char-etiq.choisi { outline: 2px solid var(--jeu-nous); }
 .char-fiche { left: auto; top: auto; right: 336px; bottom: 112px; width: 34ch; z-index: 4; transform: none; }      /* à gauche des boutons de batterie (312 px + marges), au-dessus des cartes de régiment : sur aucun des deux (v0.99.10) */
 .char-fiche .jauge { grid-template-columns: 6ch 1fr; grid-template-areas: none; align-items: center; }
 .char-fiche .jauge .piste { grid-column: 1 / -1; }
@@ -735,7 +734,7 @@ h2 { font-weight: normal; letter-spacing: var(--titre-lettres); }
 .char-fiche .barre.canon.pret i { background: var(--jeu-nous); }
 .char-fiche .barre.xp i { background: var(--jeu-nous); }
 /* lot E : l'expérience des chars et des postes — une barre fine, les chevrons, et le saut du chevron gagné (coupé si le système demande moins de mouvement) */
-.char-etiq .xp { display: block; height: 3px; border: 1px solid var(--jeu-encre); box-sizing: border-box; }
+.char-etiq .xp { display: block; height: var(--barre-xp); border: 1px solid currentColor; box-sizing: border-box; }
 .char-etiq .xp i, .char-fiche .barre.xp i { background: var(--jeu-nous); }
 .char-etiq .chevrons, .char-fiche .jauge b .chev { display: inline-flex; gap: var(--e0); height: 8px; }
 .char-etiq .chev, .char-fiche .chev { stroke: currentColor; }

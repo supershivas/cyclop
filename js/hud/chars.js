@@ -28,7 +28,7 @@ export function creerCharsHud({ $, bataille, moi = () => NOUS, versEcran, hauteu
       let e = etiq.get(c.id);
       if (!e) {
         const d = document.createElement('div'); d.className = 'char-etiq'; d.setAttribute('role', 'button'); d.tabIndex = 0; d.title = 'Choisir ce char';       // (une <div> : le rebond des boutons animait son `transform`, donc sa place)
-        d.innerHTML = '<span class="nom">Char</span><span class="chevrons"></span><span class="canon"><i></i></span><span class="pv"><i></i></span><span class="xp"><i></i></span>';
+        d.innerHTML = '<span class="nom">Char</span><span class="chevrons"></span><span class="pv"><i></i></span><span class="canon"><i></i></span><span class="xp"><i></i></span>';
         d.onclick = ev => { ev.stopPropagation(); choisir(c.id); };
         $('chars-etiq').append(d);
         etiq.set(c.id, e = { d, canonB: d.querySelector('.canon'), canon: d.querySelector('.canon i'), pv: d.querySelector('.pv i'), xp: d.querySelector('.xp i'), chev: d.querySelector('.chevrons'), nb: chevronsDe(c.exp ?? 0), nom: d.querySelector('.nom'), pret: null });

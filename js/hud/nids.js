@@ -22,7 +22,7 @@ export function creerNidsHud({ $, bataille, moi = () => NOUS, versEcran, hauteur
       let e = etiq.get(n.id);
       if (!e) {
         const d = document.createElement('div'); d.className = 'char-etiq nid-etiq'; d.setAttribute('role', 'button'); d.tabIndex = 0; d.title = 'Choisir ce poste de mitrailleuse';
-        d.innerHTML = '<span class="nom">Mitrailleuse <span class="chevrons"></span></span><span class="pv"><i></i></span><span class="canon"><i></i></span><span class="xp"><i></i></span>';
+        d.innerHTML = '<span class="nom">Mitrailleuse</span><span class="chevrons"></span><span class="pv"><i></i></span><span class="canon"><i></i></span><span class="xp"><i></i></span>';
         d.onclick = ev => { ev.stopPropagation(); choisir(n.id); };
         $('chars-etiq').append(d);
         etiq.set(n.id, e = { d, pv: d.querySelector('.pv i'), muni: d.querySelector('.canon i'), xp: d.querySelector('.xp i'), chev: d.querySelector('.chevrons'), nb: chevronsNid(n) });

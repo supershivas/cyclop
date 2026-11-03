@@ -144,6 +144,7 @@ node outils/fumee.mjs                    # le jeu dans le navigateur : un scéna
 node outils/captures.mjs --page index.html --page labo.html --page atelier.html
 node outils/audit-ecran.mjs --page index.html --page labo.html --page atelier.html
 node outils/lisibilite.mjs               # contraste, tuiles en gris
+node outils/audit-boutons.mjs            # le design system des boutons et des unités : 44 px, ombre, casse, liseré, ordre des barres (~40 s)
 node outils/deux.mjs                     # le jeu à deux : deux pages s'appairent, jouent, aucune désynchronisation (~30 s)
 node scripts/mesure.mjs                  # 8 000 soldats : simulation et rendu
 node scripts/trois-jours.mjs             # trois jours de bataille, captures chaque soir

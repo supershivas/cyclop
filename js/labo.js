@@ -20,7 +20,7 @@ import { hash2 } from './lib/rng.js?v=0.111.0';
 import { reglerVerdure } from './apparence.js?v=0.111.0';
 import { maquetteChars } from './labo-chars.js?v=0.111.0';
 import { maquetteEpaves } from './labo-epaves.js?v=0.111.0';
-import { fondations, boutons, fenetres, revision } from './labo-design-system.js?v=0.111.0';
+import { fondations, boutons, unites, fenetres, revision } from './labo-design-system.js?v=0.111.0';
 import { cartesSecteur } from './labo-cartes.js?v=0.111.0';
 import { gainTampon, gainCachets, gainFil, gainBordereau, victoireFanion, victoireTampon, victoireChevrons, victoireAube, ficheDeuxColonnes, ficheEtages, ficheRegistre, ficheDAbord } from './labo-recompenses.js?v=0.111.0';
 import { maquetteBatiment, maquetteCamp } from './labo-batiments.js?v=0.111.0';
@@ -358,6 +358,7 @@ const GROUPES = [
     ] },
     { id: 'ds-revision', title: 'Révision (v2)', variants: [
       { title: 'Les titres', status: 'actuelle', depuis: '0.98.1', note: 'EN JEU depuis la v0.98.2 (Jérôme, v0.98.1 : « les titres en condensé fin et haut dans le style de Cast Iron » ; « jamais coupés »). Antonio, en attendant Cast Iron ; la fenêtre météo a pour titre « Météo », ses lignes sont des libellés.', render: s => { revision(s, 'titres'); } },
+      { title: 'Les unités', status: 'actuelle', depuis: '0.110.0', note: 'Carte et étiquette de régiment, étiquette de char et de poste, batterie : le liseré de l\'armée, le survol, le choisi, l\'ordre des barres.', render: s => { unites(s); } },
       { title: 'Les marges', status: 'actuelle', depuis: '0.98.1', note: 'EN JEU depuis la v0.98.2. Fenêtres, dialogues et boutons plus aérés : un cran de plus.', render: s => { revision(s, 'marges'); } },
       { title: 'Les boutons refusés', status: 'actuelle', depuis: '0.98.1', note: 'EN JEU depuis la v0.98.2. Hachurés, pointillés, curseur interdit, et rien ne change au survol.', render: s => { revision(s, 'refus'); } },
     ] },
