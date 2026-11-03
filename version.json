@@ -1,7 +1,7 @@
 {
-  "version": "0.108.1",
-  "date": "2026-11-02",
+  "version": "0.108.2",
+  "date": "2026-11-03",
   "changes": [
-    "Les cartes de secteur n'ont plus de pli vertical au milieu (il ne rendait pas bien) ; le pli horizontal reste"
+    "Les cartes de secteur n'ont plus aucun pli : le papier reste usé, grainé et taché"
   ]
 }

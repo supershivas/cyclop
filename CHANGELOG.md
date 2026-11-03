@@ -1,5 +1,8 @@
 # Journal des versions
 
+## 0.108.2 — 2026-11-03
+- Les cartes de secteur n'ont plus aucun pli : le papier reste usé, grainé et taché
+
 ## 0.108.1 — 2026-11-02
 - Les cartes de secteur n'ont plus de pli vertical au milieu (il ne rendait pas bien) ; le pli horizontal reste
 
