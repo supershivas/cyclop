@@ -2,8 +2,8 @@
 // Rien n'est recopié : chaque planche est un cadre (`iframe`) qui charge les VRAIES feuilles du jeu (`css/style.css`, `js/lib/game.css`) et les rôles de couleur de `palette.js`, et pose dedans le vrai balisage des papiers, des
 // boutons et des bulles. Les valeurs des fondations sont lues dans le `:root` de `css/style.css` (`jetons`) : changer une échelle dans la feuille change cette page. Les états qu'un pointeur seul montre (survol, focus) sont
 // forcés par les classes `.est-survol` et `.est-focus`, que la feuille du jeu accepte pour cela (le jeu ne les écrit jamais). Le labo montre, il ne modifie rien.
-import { ROLES, ALERTES } from './palette.js?v=0.109.1';
-import { lignesInfo } from './hud/infobulle.js?v=0.109.1';
+import { ROLES, ALERTES } from './palette.js?v=0.109.2';
+import { lignesInfo } from './hud/infobulle.js?v=0.109.2';
 
 const el = (tag, props = {}, ...kids) => { const e = Object.assign(document.createElement(tag), props); e.append(...kids); return e; };
 const roles = Object.entries({ ...ROLES }).map(([k, v]) => `--jeu-${k}:${v}`).join(';');
@@ -111,11 +111,30 @@ export function boutons(stage) {
   const lignes = [
     ['Bouton de papier', '<code>.reg-ouvert .actions button</code><br>Les ordres d\'un régiment, les choix d\'un bâtiment, les corvées. Une grille de colonnes égales.', ETATS.map(([, c]) => dansPapier(c))],
     ['Le « ? » de la fenêtre', '<code>.reg-ouvert .tete .aide</code><br>Ouvre la fiche du régiment : petit, dans l\'en-tête.', ETATS.slice(0, 3).map(([, c]) => `<div class="papier reg-ouvert demo" style="padding:var(--e1);width:auto"><div class="tete" style="border:0;padding:0"><button type="button" class="aide ${c}">?</button></div></div>`)],
-    ['Bouton de menu', '<code>.bouton</code><br>Terre sur os, un filet de glaise dessous ; le survol vire à la glaise.', ETATS.slice(0, 3).map(([, c]) => `<button class="bouton ${c}" style="height:var(--jeu-cible)">À l'aube</button>`)],
+    ['Bouton de menu', '<code>.bouton</code><br>Terre sur os, l\'ombre d\'un cran (v0.110.0 : plus de filet dessous) ; le survol vire à la glaise.', ETATS.slice(0, 3).map(([, c]) => `<button class="bouton ${c}" style="height:var(--jeu-cible)">À l'aube</button>`)],
     ['Le camp', '<code>.camp-btn</code><br>« Le camp · 5 pts » : la dotation en toutes lettres.', ETATS.slice(0, 2).map(([, c]) => `<button class="camp-btn ${c}" style="width:auto">Le camp · 5 pts</button>`)],
   ];
   const corps = `<h1>Boutons</h1><p class="note">Chaque famille dans ses états. Le survol d'un bouton de papier vire à la brume sous l'encre (7 : 1) ; un bouton refusé (glaise, pointillé) devient plein et encré au survol : le texte ne disparaît jamais (v0.98.0 ; avant, glaise sur glaise). La raison d'un refus est dite dans l'infobulle.</p>
     <table><tr><th>Famille</th>${ETATS.map(([n]) => `<th>${n}</th>`).join('')}</tr>${lignes.map(([nom, dit, cases]) => `<tr><td style="min-width:22ch"><b style="font-weight:normal">${nom}</b><div class="note">${dit}</div></td>${ETATS.map((_, i) => `<td>${cases[i] ?? ''}</td>`).join('')}</tr>`).join('')}</table>`;
+  cadre(stage, corps);
+}
+
+// ─── Les unités (v0.110.0 : l'audit graphique) ───
+// Une même grammaire pour tout ce qui représente une unité : papier clair, liseré de l'armée en haut, l'ombre d'un cran ; survol en glaise ; choisi inversé avec un anneau à l'intérieur ;
+// les barres dans le même ordre : vie, tir (canon, bande), expérience. Les vraies feuilles du jeu ; `.est-survol` n'existe pas ici : le survol se simule par `--pap`.
+export function unites(stage) {
+  const PAP = ['', 'style="--pap:var(--jeu-accent)"', 'choisi'];
+  const etat = (cls, a) => a === 'choisi' ? `${cls} choisi` : cls;
+  const att = a => a.startsWith('style') ? a : '';
+  const NOMS = ['Repos', 'Survol', 'Choisi'];
+  const carte = a => `<div class="reg-carte ${a === 'choisi' ? 'choisi' : ''}" ${att(a)} style="position:relative;width:112px;${a.startsWith('style') ? '--pap:var(--jeu-accent)' : ''}"><span class="l1"><b>3</b> Céruléen</span><span class="statut">Tient</span><span class="chevrons"><svg class="chev" viewBox="0 0 12 8"><path d="M1 7l5-5 5 5"/></svg></span><span class="barre"><i class="debout" style="width:70%"></i><i class="blesses" style="width:15%"></i></span></div>`;
+  const etiq = a => `<div class="etiquette ${a === 'choisi' ? 'choisi' : ''}" style="position:relative;${a.startsWith('style') ? '--pap:var(--jeu-accent)' : ''}"><b class="num">3</b><span class="cart-corps"><span class="nom">Céruléen · C</span><span class="statut">Tient</span><span class="barre"><i class="debout" style="width:70%"></i><i class="blesses" style="width:15%"></i></span></span></div>`;
+  const char = (a, nid) => `<div class="char-etiq ${a === 'choisi' ? 'choisi' : ''}" style="position:relative;${a.startsWith('style') ? '--pap:var(--jeu-accent)' : ''}"><span class="nom">${nid ? 'Mitrailleuse' : 'Char'}</span><span class="chevrons"><svg class="chev" viewBox="0 0 12 8"><path d="M1 7l5-5 5 5"/></svg></span><span class="pv"><i style="width:80%"></i></span><span class="canon"><i style="width:55%"></i></span><span class="xp"><i style="width:30%"></i></span></div>`;
+  const bat = a => `<button class="batterie ${a === 'choisi' ? 'vise' : ''}" style="width:99px;${a.startsWith('style') ? 'background:var(--jeu-accent);color:var(--jeu-fond)' : ''}"><b>155</b><span>PRÊT</span><u><s style="width:100%"></s></u></button>`;
+  const lignes = [['Carte de régiment', carte], ['Étiquette de régiment', etiq], ['Étiquette de char', a => char(a, false)], ['Étiquette de poste', a => char(a, true)], ['Batterie (avion, char, génie : la même)', bat]];
+  const corps = `<h1>Les unités</h1><p class="note">Une grammaire : du papier clair, le liseré de la couleur de l'armée en haut, l'ombre d'un cran ; le survol vire à la glaise ; le choisi s'inverse (sombre) avec un anneau à l'intérieur. Les barres, dans le même ordre partout : vie, tir (canon, bande), expérience ; une seule épaisseur (<code>--barre-h</code>, <code>--barre-xp</code>). Casse : le nom en casse de phrase, le statut qui alerte (ébranlé, en déroute, prêt) en capitales.</p>
+    <table><tr><th>Unité</th>${NOMS.map(n => `<th>${n}</th>`).join('')}</tr>${lignes.map(([nom, f]) => `<tr><td style="min-width:22ch"><b style="font-weight:normal">${nom}</b></td>${PAP.map(a => `<td style="padding:var(--pas)">${f(a)}</td>`).join('')}</tr>`).join('')}</table>
+    <style>.etiquette, .char-etiq { position: relative !important; display: inline-grid; } td { vertical-align: top; }</style>`;
   cadre(stage, corps);
 }
 

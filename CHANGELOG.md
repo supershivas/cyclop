@@ -1,5 +1,9 @@
 # Journal des versions
 
+## 0.109.2 — 2026-11-03
+- Boutons, casse et unités uniformes : même ombre, mêmes 44 px, mêmes barres pour régiments, chars, mitrailleuses et batteries
+- Un régiment choisi s'inverse de la même façon sur sa carte et sur le champ ; chars et mitrailleuses ont le liseré de l'armée et un survol
+
 ## 0.109.1 — 2026-11-03
 - Les cartes de secteur n'ont plus aucun pli : le papier reste usé, grainé et taché
 
