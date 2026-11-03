@@ -1,11 +1,11 @@
 // Le temps qui passe (Jérôme, v0.8.0) : le soleil (les ombres des soldats et des arbres tournent et s'allongent), le soir et la nuit (un voile de
 // terre qui monte), les lumières (lanternes des tranchées, incendies, fusées) qui le trouent. Rien hors de la palette, sauf les fondus du voile
 // (CLAUDE.md, palette). Le dessin seulement : tout se lit de l'heure (`horloge`) et de l'état.
-import * as SH from './shaders.js?v=0.110.0';
-import { ligneY } from '../tranchees.js?v=0.110.0';
-import { hash2 } from '../lib/rng.js?v=0.110.0';
-import { clairDeLune } from '../data/lune.js?v=0.110.0';
-import { SOLEIL, SOLEIL_SAISONS, SOLEIL_COTE, SOLEIL_LEVER, NUAGES } from '../data/soleil.js?v=0.110.0';
+import * as SH from './shaders.js?v=0.111.0';
+import { ligneY } from '../tranchees.js?v=0.111.0';
+import { hash2 } from '../lib/rng.js?v=0.111.0';
+import { clairDeLune } from '../data/lune.js?v=0.111.0';
+import { SOLEIL, SOLEIL_SAISONS, SOLEIL_COTE, SOLEIL_LEVER, NUAGES } from '../data/soleil.js?v=0.111.0';
 
 // `THREE`, `scene`, `col`, `camera`, `vue`, `surface(x, z)` viennent de creerRendu ; `soleilUniform` (le bout de l'ombre d'un mètre de hauteur, lu aussi par le nuanceur
 // des soldats) et `solUniforms` (`uSol`, `uTaille` : la texture du sol, que l'ombre d'un arbre reprend) sont les uniformes partagés ; `ecl` (les éclats : les fusées) et
@@ -18,7 +18,7 @@ export function creerTemps({ THREE, scene, col, camera, vue, surface, bataille, 
   // le bout de l'ombre d'un mètre de hauteur, selon l'heure (0 la nuit)
   // `r` (le labo, « La lumière dans le relief ») : `saisonnier` (le soleil le plus haut de la saison : bas l'hiver, haut l'été), `azimut` (rad : l'arc tourne autour de la vue), `cote` ('gauche' | 'droite' | 'lever-gauche' | 'lever-droite' : le soleil sur un côté de l'écran, voir `SOLEIL_COTE`), `meteo` (un temps couvert éteint le soleil) ; sans lui, le soleil du jeu
   function majSoleil(h, r = null) {
-    if (h.phase !== 'jour' || (r?.meteo && NUAGES[h.meteo]?.couvert)) { soleil.set(0, 0); return; }      // (labo : un temps couvert n'a pas d'ombres)
+    if (h.phase !== 'jour' || h.nuitReelle || (r?.meteo && NUAGES[h.meteo]?.couvert)) { soleil.set(0, 0); return; }      // (labo : un temps couvert n'a pas d'ombres)
     const t = Math.max(0, Math.min(1, (h.heure + h.minute / 60 - SOLEIL.depart) / (SOLEIL.fin - SOLEIL.depart)));
     const haut = r?.saisonnier ? (SOLEIL_SAISONS[h.saison] ?? SOLEIL.hauteurMax) : SOLEIL.hauteurMax;
     const elev = Math.max(SOLEIL.hauteurMin, haut * Math.sin(Math.PI * t));        // rad : bas le matin et le soir
@@ -35,7 +35,7 @@ export function creerTemps({ THREE, scene, col, camera, vue, surface, bataille, 
   }
   // l'obscurité : 0 le jour, la trame monte de 16 h à 18 h, épaisse la nuit, et se lève à l'aube
   function obscurite(h, clair = 0) {
-    if (h.phase === 'nuit') return 0.74 - 0.1 * clair;          // le clair de lune (v0.40.0) : jusqu'à un dixième de moins, pleine lune et ciel dégagé
+    if (h.phase === 'nuit' || h.nuitReelle) return 0.74 - 0.1 * clair;          // le clair de lune (v0.40.0) : jusqu'à un dixième de moins, pleine lune et ciel dégagé
     const hf = h.heure + h.minute / 60;
     if (hf < 7) return 0.4 * (7 - hf);
     if (hf > 16) return Math.min(0.45, 0.45 * (hf - 16) / 2);
@@ -173,7 +173,7 @@ export function creerTemps({ THREE, scene, col, camera, vue, surface, bataille, 
   }
   function majNuit(h) {
     const B = bataille();
-    const d = obscurite(h, h.phase === 'nuit' && B ? clairDeLune(h.jour, B.etat.graine, h.meteo) : 0);
+    const d = obscurite(h, (h.phase === 'nuit' || h.nuitReelle) && B ? clairDeLune(h.jour, B.etat.graine, h.meteo) : 0);
     nuitMat.uniforms.uD.value = d;
     if (!vide()) nuitPlan.visible = d > 0;
     majLanternes(d);

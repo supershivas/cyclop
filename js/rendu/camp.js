@@ -2,10 +2,10 @@
 // tant qu'un chantier dure, un liseré d'os autour du bâtiment choisi. Le dessin seulement : tout vient de l'état de la bataille, rien n'y est écrit ; et rien n'est dessiné hors de la partie bridée
 // (`etat.camp.bride`), donc ni le labo ni les tests n'ont de camp ; le jeu à deux en a un par joueur (v0.94.0). Les deux camps sont dessinés : celui d'en face est le nôtre tourné d'un demi-tour.
 // Fabrique `creerCamp({ THREE, scene, bataille: () => B, hauteur })`.
-import { atelier } from './engins.js?v=0.110.0';
-import { BATIR, chantier, regler_creux, regler_camp, vie } from './camp-modeles.js?v=0.110.0';
-import { emprisesCamp, emplacementCamp, sortieChars } from '../camp.js?v=0.110.0';
-import { PALETTE as P } from '../palette.js?v=0.110.0';
+import { atelier } from './engins.js?v=0.111.0';
+import { BATIR, chantier, regler_creux, regler_camp, vie } from './camp-modeles.js?v=0.111.0';
+import { emprisesCamp, emplacementCamp, sortieChars } from '../camp.js?v=0.111.0';
+import { PALETTE as P } from '../palette.js?v=0.111.0';
 
 const LUEUR = 0.9;      // × la couleur de la matière (mesuré à l'œil sur la partie du premier matin : sans elle, la boue est noire)
 
@@ -28,7 +28,7 @@ export function creerCamp({ THREE, scene, bataille, hauteur }) {
   const sansLiseret = () => { if (liseret) { scene.remove(liseret); liseret = null; } };
   function maj(sombre = 0, t = 0) {
     const B = bataille();
-    if (!B || !B.etat.camp?.bride) { if (modeles.size) vider(); return; }
+    if (!B || !B.etat.camp?.bride || B.etat.escarmouche) { if (modeles.size) vider(); return; }
     A ??= atelier(THREE);
     if (!lumiere) lampe();
     const vus = new Set();

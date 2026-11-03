@@ -1,11 +1,11 @@
 // Ce que l'état des tronçons montre sur le terrain : les fanions (à la couleur de celui qui tient le tronçon, déchirés quand l'autre
 // camp y est entré), le clignotement d'un ordre et la surbrillance de la visée, les ouvrages des tranchées (traverses, sacs de terre,
 // fil de fer, bois). Le dessin seulement : tout se lit de l'état, rien n'en est sauvegardé.
-import { PALETTE } from '../palette.js?v=0.110.0';
-import { ligneY, demiLargeur } from '../tranchees.js?v=0.110.0';
-import { TOITS } from '../data/nids.js?v=0.110.0';
-import { filCoupe } from '../fil.js?v=0.110.0';
-import { primitives, ouvrageTroncon, niveauSelonZoom, couchesDe } from './tranchee-modeles.js?v=0.110.0';
+import { PALETTE } from '../palette.js?v=0.111.0';
+import { ligneY, demiLargeur } from '../tranchees.js?v=0.111.0';
+import { TOITS } from '../data/nids.js?v=0.111.0';
+import { filCoupe } from '../fil.js?v=0.111.0';
+import { primitives, ouvrageTroncon, niveauSelonZoom, couchesDe } from './tranchee-modeles.js?v=0.111.0';
 
 // `THREE`, `scene`, `col` (une couleur de la palette), `surface(x, z)` (la hauteur du sol), `projeter()` (le centre de la vue et les pixels par mètre),
 // `vue`, `zooms` viennent de creerRendu ; `bataille()`, `tAnim()` (le temps du dessin), `vide()` (rien n'est dessiné) et `survolTroncons()`
@@ -307,6 +307,21 @@ export function creerTroncons({ THREE, scene, col, surface, projeter, vue, zooms
       boite(n.x - 0.05, n.x + 0.05, h + 0.55, h + 0.65, n.y + (f > 0 ? 0 : -1.2), n.y + (f > 0 ? 1.2 : 0), cMadrierB, cMadrierH);       // le fût
       boite(n.x - 0.35, n.x + 0.35, h + 0.45, h + 0.8, n.y + f * 0.15 - 0.05, n.y + f * 0.15 + 0.05, cMadrierH, cMadrierB);        // le bouclier
       boite(n.x - 0.12, n.x + 0.12, h, h + 0.5, n.y - 0.12, n.y + 0.12, cMadrierH, cMadrierB);                                   // le trépied
+    }
+    // Le dépôt du coup de main (v0.111.0) : un tas de caisses et de sacs (deux rangs de caisses, un bâti de planches) ; détruit : des planches et des caisses éparpillées, noircies
+    { const D = et.depot;
+      if (D && D.x > zb.x0 && D.x < zb.x1 && D.y > zb.z0 && D.y < zb.z1) {
+        const h = surface(D.x, D.y);
+        if (D.etat === 'detruit') {
+          for (let q = 0; q < 14; q++) { const a = hachage(q, 9.3) * 6.28, r = 0.8 + hachage(q, 4.1) * 3.6, x = D.x + Math.cos(a) * r, z = D.y + Math.sin(a) * r, hh = surface(x, z); boite(x - 0.5, x + 0.5, hh, hh + 0.16, z - 0.3, z + 0.3, cMadrierH, cMadrierB); }
+        } else {
+          for (let i = -2; i <= 2; i++) for (let j = -1; j <= 1; j++) {
+            const x = D.x + i * 1.35, z = D.y + j * 1.35, k = hachage(i * 7 + 3, j * 5 + 11), top = 0.9 + (k > 0.5 ? 0.45 : 0);
+            boite(x - 0.6, x + 0.6, h, h + top, z - 0.6, z + 0.6, k > 0.3 ? cSacH : cPlancheH, k > 0.3 ? cSacB : cPlancheB);
+          }
+          boite(D.x - 3.6, D.x + 3.6, h + 1.4, h + 1.5, D.y - 2.3, D.y + 2.3, cMadrierH, cMadrierB);          // la bâche, posée sur le tout
+        }
+      }
     }
     ouvGeo.attributes.position.needsUpdate = true; ouvGeo.attributes.color.needsUpdate = true; ouvGeo.setDrawRange(0, nv);
     filGeo.attributes.position.needsUpdate = true; filGeo.setDrawRange(0, nf);

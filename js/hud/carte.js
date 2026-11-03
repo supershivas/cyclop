@@ -2,9 +2,9 @@
 // quatre lignes de chaque camp (en face au nord, en haut), chaque case en tronçons de 25 m à la couleur de celui qui les
 // tient. Une lettre choisit les régiments du secteur ; une case envoie les régiments choisis dans cette tranchée ; les
 // régiments y sont des cercles numérotés, à leur place. Le dessin seulement : les actions (choisir, ordonner) viennent de main.js.
-import { NOUS, EUX, nombreZones, lettreZone, zone, largeurZone, etendueZones, tronconsDeLigne, forcesTroncons, codeLigne } from '../bataille.js?v=0.110.0';
-import { ligneY } from '../tranchees.js?v=0.110.0';
-import { numeroDe as numeroDeB } from './lecture.js?v=0.110.0';
+import { NOUS, EUX, nombreZones, lettreZone, zone, largeurZone, etendueZones, tronconsDeLigne, forcesTroncons, codeLigne } from '../bataille.js?v=0.111.0';
+import { ligneY } from '../tranchees.js?v=0.111.0';
+import { numeroDe as numeroDeB } from './lecture.js?v=0.111.0';
 
 // `bataille()` : la bataille en cours ; `choisis()` : les régiments choisis (ids) ; `surSecteur`, `surCase`, `surRonde` : les clics
 // `moi()` : le camp qu'on joue (à deux sur le réseau, l'invité est en face : sa carte est tournée d'un demi-tour, ses lignes en bas, A à D de droite à gauche ; v0.30.0)
@@ -12,7 +12,8 @@ export function creerCarte({ $, bataille, choisis, surSecteur, surCase, surRonde
   const numeroDe = r => numeroDeB(bataille(), r);
   let carteCases = [], carteVue = '', carteReperes = [], rondes = new Map();
   const CASE_H = 22, CASE_ECART = 2, TROU = 64;
-  const hautLigne = k => 2 * CASE_H + CASE_ECART + (k < 4 ? k * (CASE_H + CASE_ECART) : 4 * (CASE_H + CASE_ECART) + TROU + CASE_ECART + (k - 4) * (CASE_H + CASE_ECART)) - CASE_H;
+  let NL = 4;          // le nombre de lignes par camp : quatre, deux dans une escarmouche (v0.111.0)
+  const hautLigne = k => 2 * CASE_H + CASE_ECART + (k < NL ? k * (CASE_H + CASE_ECART) : NL * (CASE_H + CASE_ECART) + TROU + CASE_ECART + (k - NL) * (CASE_H + CASE_ECART)) - CASE_H;
   function construireCarte() {
     const B = bataille(), M = moi(), tourne = M === EUX;
     const g = $('carte-grille'), n = nombreZones(B);
@@ -20,7 +21,8 @@ export function creerCarte({ $, bataille, choisis, surSecteur, surCase, surRonde
     carteCases = []; carteVue = ''; carteReperes = []; rondes = new Map();
     if (!B.etat.tranchees) { g.replaceChildren(); $('carte').hidden = true; return; }
     g.style.gridTemplateColumns = `2.4em repeat(${n}, minmax(0, 1fr))`;
-    g.style.gridTemplateRows = `${CASE_H}px repeat(4, ${CASE_H}px) ${TROU}px repeat(4, ${CASE_H}px)`;
+    NL = Math.max(1, ...B.lignes.map(l => l.rang + 1));
+    g.style.gridTemplateRows = `${CASE_H}px repeat(${NL}, ${CASE_H}px) ${TROU}px repeat(${NL}, ${CASE_H}px)`;
     const kids = [document.createElement('span')];
     for (const s of colonnes) {
       const b = document.createElement('button');
@@ -30,12 +32,12 @@ export function creerCarte({ $, bataille, choisis, surSecteur, surCase, surRonde
     }
     const Z = zone(B), xc = (Z.x0 + Z.x1) / 2;
     const A_ = tourne ? NOUS : EUX, B_ = tourne ? EUX : NOUS;       // l'autre camp en haut, le sien en bas
-    [[A_, 3], [A_, 2], [A_, 1], [A_, 0], [B_, 0], [B_, 1], [B_, 2], [B_, 3]].forEach(([camp, rang], k) => {
+    [...Array.from({ length: NL }, (_, r) => [A_, NL - 1 - r]), ...Array.from({ length: NL }, (_, r) => [B_, r])].forEach(([camp, rang], k) => {
       const idx = B.lignes.findIndex(L => L.camp === camp && L.rang === rang);
       if (idx < 0) return;
-      if (k === 4) {
+      if (k === NL) {
         const t = document.createElement('span'); t.className = 'trou';
-        t.textContent = `${Math.round(Math.abs(ligneY(B.lignes[idx], xc) - carteReperes[3].yr))} m`;
+        t.textContent = `${Math.round(Math.abs(ligneY(B.lignes[idx], xc) - carteReperes[NL - 1].yr))} m`;
         kids.push(t);
       }
       carteReperes.push({ yr: ligneY(B.lignes[idx], xc), y: tourne ? Z.y0 + Z.y1 - ligneY(B.lignes[idx], xc) : ligneY(B.lignes[idx], xc), c: hautLigne(k) + CASE_H / 2 });

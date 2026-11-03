@@ -14,42 +14,42 @@
    La sauvegarde (photo) garde la graine, la liste compacte des impacts, l'état
    de la foule et les petites couches de logique ; jamais le relief : il se
    rejoue depuis la graine et les impacts (rejouerTerrain). */
-import { createRng, hash2 } from './lib/rng.js?v=0.110.0';
-import { impact, hydroLignes, etat as etatCase, vitesseEtat, vitesseCase, ETAT } from './terrain.js?v=0.110.0';
-import { creerArmee, ajouterSoldat, construireGrille, pasArmee, tuerDans, effrayer, compacter, photoArmee, restaurerArmee, b64, deB64, DENSITE, place, poserCaracs, lireCaracs, abimerCaracs, gagner, CARACS } from './army.js?v=0.110.0';
-import { ligneSous, solidite, y0En, arcMax } from './tranchees.js?v=0.110.0';
-import { terrainDuSecteur } from './secteur-terrain.js?v=0.110.0';
-import { detruirePont, reconstruirePont, pontEn } from './eaux.js?v=0.110.0';
-import { MISSIONS_SECONDAIRES as MS } from './data/missions.js?v=0.110.0';
-import { PONT_COUPE } from './data/ponts.js?v=0.110.0';
-import { calculerCouts, creerCacheChamps, dimensionsCouts, BLOC } from './champs.js?v=0.110.0';
-import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.110.0';
-import { preparerAleatoire, ID_ALEATOIRE } from './generateur.js?v=0.110.0';
-import { AVION, MITRAILLAGE } from './data/mitraillage.js?v=0.110.0';
-import { refusAvion, lancerAvion, avancerAvions, flotteDeDepart, reparerAvions } from './avions.js?v=0.110.0';
-import { CHAR, CHAR_RECHARGE, CHAR_SORTIE } from './data/chars.js?v=0.110.0';
-import { GENIE, GENIE_DATA } from './data/genie.js?v=0.110.0';
-import { filDeDepart, degatsFil } from './fil.js?v=0.110.0';
-import { creerNids, avancerNids, degatsNids, reparerNid, aubeNids } from './nids.js?v=0.110.0';
-import { TOITS, NIDS } from './data/nids.js?v=0.110.0';
-import { BONUS, chevronsDe } from './data/experience.js?v=0.110.0';
+import { createRng, hash2 } from './lib/rng.js?v=0.111.0';
+import { impact, hydroLignes, etat as etatCase, vitesseEtat, vitesseCase, ETAT } from './terrain.js?v=0.111.0';
+import { creerArmee, ajouterSoldat, construireGrille, pasArmee, tuerDans, effrayer, compacter, photoArmee, restaurerArmee, b64, deB64, DENSITE, place, poserCaracs, lireCaracs, abimerCaracs, gagner, CARACS } from './army.js?v=0.111.0';
+import { ligneSous, solidite, y0En, arcMax } from './tranchees.js?v=0.111.0';
+import { terrainDuSecteur } from './secteur-terrain.js?v=0.111.0';
+import { detruirePont, reconstruirePont, pontEn } from './eaux.js?v=0.111.0';
+import { MISSIONS_SECONDAIRES as MS } from './data/missions.js?v=0.111.0';
+import { PONT_COUPE } from './data/ponts.js?v=0.111.0';
+import { calculerCouts, creerCacheChamps, dimensionsCouts, BLOC } from './champs.js?v=0.111.0';
+import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.111.0';
+import { preparerAleatoire, ID_ALEATOIRE } from './generateur.js?v=0.111.0';
+import { AVION, MITRAILLAGE } from './data/mitraillage.js?v=0.111.0';
+import { refusAvion, lancerAvion, avancerAvions, flotteDeDepart, reparerAvions } from './avions.js?v=0.111.0';
+import { CHAR, CHAR_RECHARGE, CHAR_SORTIE } from './data/chars.js?v=0.111.0';
+import { GENIE, GENIE_DATA } from './data/genie.js?v=0.111.0';
+import { filDeDepart, degatsFil } from './fil.js?v=0.111.0';
+import { creerNids, avancerNids, degatsNids, reparerNid, aubeNids } from './nids.js?v=0.111.0';
+import { TOITS, NIDS } from './data/nids.js?v=0.111.0';
+import { BONUS, chevronsDe } from './data/experience.js?v=0.111.0';
 const resiste = reg => 1 - BONUS.regiment.moral * (reg.chev || 0);      // les chevrons d'un régiment adoucissent ses pertes de moral (lot E)
-import { refusGenie, lancerGenie, avancerGenies, degatsGenies, sectionsDeDepart } from './genie.js?v=0.110.0';
-import { refusChar, lancerChar, degatsChars, avancerChars } from './chars.js?v=0.110.0';
-import { METEO, SAISONS, SAISON_DEFAUT, PREVISION_JUSTE, temperature, vent } from './data/meteo.js?v=0.110.0';
-import { SECTEURS } from './data/secteur.js?v=0.110.0';
-import { REGIMENTS, REGIMENTS_GRANDS } from './data/lexique.js?v=0.110.0';
-import { STANCES, STANCE_DEFAUT } from './data/stances.js?v=0.110.0';
-import { DIFFICULTES, DIFFICULTE_DEFAUT } from './data/difficulte.js?v=0.110.0';
-import { grade, departCaracs, caracEnMots } from './identite.js?v=0.110.0';
-import { corvees, creerRegiment, prendreReserve } from './nuit.js?v=0.110.0';
-import { RENFORTS } from './data/renforts.js?v=0.110.0';
-import { EQUIPEMENTS } from './data/batiments.js?v=0.110.0';
-import { campDeDepart, dotationAube, refusOrdre, refusNid, appliquerDepart, modif, rechargeDe, sortieChars, sortieCaserne, emplacementCamp } from './camp.js?v=0.110.0';
+import { refusGenie, lancerGenie, avancerGenies, degatsGenies, sectionsDeDepart } from './genie.js?v=0.111.0';
+import { refusChar, lancerChar, degatsChars, avancerChars } from './chars.js?v=0.111.0';
+import { METEO, SAISONS, SAISON_DEFAUT, PREVISION_JUSTE, temperature, vent } from './data/meteo.js?v=0.111.0';
+import { SECTEURS } from './data/secteur.js?v=0.111.0';
+import { REGIMENTS, REGIMENTS_GRANDS } from './data/lexique.js?v=0.111.0';
+import { STANCES, STANCE_DEFAUT } from './data/stances.js?v=0.111.0';
+import { DIFFICULTES, DIFFICULTE_DEFAUT } from './data/difficulte.js?v=0.111.0';
+import { grade, departCaracs, caracEnMots } from './identite.js?v=0.111.0';
+import { corvees, creerRegiment, prendreReserve } from './nuit.js?v=0.111.0';
+import { RENFORTS } from './data/renforts.js?v=0.111.0';
+import { EQUIPEMENTS } from './data/batiments.js?v=0.111.0';
+import { campDeDepart, dotationAube, refusOrdre, refusNid, appliquerDepart, modif, rechargeDe, sortieChars, sortieCaserne, emplacementCamp } from './camp.js?v=0.111.0';
 
 export const PAS = 1 / 30;                 // s de jeu par pas
 export const NOUS = 0, EUX = 1;
-const VERSION = 26;   // 26 : la taille du secteur (`etat.dim`, v0.110.0) ; 25 : la contre-attaque éclair (`etat.contre`, v0.109.0) ; 24 : les postes de mitrailleuse (munitions, expérience, direction du cône) et l'expérience des chars (lot E, v0.102.0) ; 23 : les renforts (`etat.ralliees`, `etat.arrives`, `reg.versCaserne`, lot D, v0.101.0) ; 22 : l'affectation des guéris de l'hôpital (`etat.affectation`, v0.99.11) ; 21 : le stock de chars du parc (`etat.charsDispo`, v0.99.10) ; 20 : les missions secondaires (`etat.secondaires`, v0.99.0) ; 19 : le fil de fer de chaque tronçon (`etat.fil`, v0.98.0) ; 18 : le camp d'en face (`etat.campEux`, v0.92.0) ; 17 : l'équipement des régiments (`reg.equip`, v0.91.0) ; 16 : le camp (`etat.camp` : la dotation, les niveaux des bâtiments, v0.86.0) ; 15 : les nids de mitrailleuses (`etat.nids`, v0.83.0) ; 14 : la victoire anticipée (`etat.priseJours`, v0.77.0) ; 13 : les médailles (`tues`, `pris`, `debut` de chaque régiment, `etat.victDebut`, v0.73.1) ; 12 : le niveau de difficulté (`etat.difficulte`, la posture d'en face `etat.iaStance`, v0.70.0) ; 11 : les caractéristiques de chaque homme (adresse, force, endurance, calme) dans l'armée, le corps à corps (v0.69.0) ; 10 : la solidité des ponts (pv, nom, historique), la coupure en attente de ses coûts (`etat.couts.coupure`) ; 9 : le génie (les sections, les ponts refaits) ; 8 : le chemin et le cap des chars ; 7 : le rapport du jour (les sorties et les pertes d'avions) ; 6 : les avions de mitraillage (une passe tracée, des points de vie, une flotte) ; 5 : la forme des cratères (rond, lèvre jetée, éclats : les impacts rejoués changent) ; 2 : la graine d'identité ; 3 : la campagne et les relevés ; 4 : les numéros de campagne, un effectif par camp, le rythme de l'IA (campagne, lots 1 à 3)
+const VERSION = 27;   // 27 : l'escarmouche et le dépôt du coup de main (`etat.escarmouche`, `etat.depot`, v0.111.0) ; 26 : la taille du secteur (`etat.dim`, v0.110.0) ; 25 : la contre-attaque éclair (`etat.contre`, v0.109.0) ; 24 : les postes de mitrailleuse (munitions, expérience, direction du cône) et l'expérience des chars (lot E, v0.102.0) ; 23 : les renforts (`etat.ralliees`, `etat.arrives`, `reg.versCaserne`, lot D, v0.101.0) ; 22 : l'affectation des guéris de l'hôpital (`etat.affectation`, v0.99.11) ; 21 : le stock de chars du parc (`etat.charsDispo`, v0.99.10) ; 20 : les missions secondaires (`etat.secondaires`, v0.99.0) ; 19 : le fil de fer de chaque tronçon (`etat.fil`, v0.98.0) ; 18 : le camp d'en face (`etat.campEux`, v0.92.0) ; 17 : l'équipement des régiments (`reg.equip`, v0.91.0) ; 16 : le camp (`etat.camp` : la dotation, les niveaux des bâtiments, v0.86.0) ; 15 : les nids de mitrailleuses (`etat.nids`, v0.83.0) ; 14 : la victoire anticipée (`etat.priseJours`, v0.77.0) ; 13 : les médailles (`tues`, `pris`, `debut` de chaque régiment, `etat.victDebut`, v0.73.1) ; 12 : le niveau de difficulté (`etat.difficulte`, la posture d'en face `etat.iaStance`, v0.70.0) ; 11 : les caractéristiques de chaque homme (adresse, force, endurance, calme) dans l'armée, le corps à corps (v0.69.0) ; 10 : la solidité des ponts (pv, nom, historique), la coupure en attente de ses coûts (`etat.couts.coupure`) ; 9 : le génie (les sections, les ponts refaits) ; 8 : le chemin et le cap des chars ; 7 : le rapport du jour (les sorties et les pertes d'avions) ; 6 : les avions de mitraillage (une passe tracée, des points de vie, une flotte) ; 5 : la forme des cratères (rond, lèvre jetée, éclats : les impacts rejoués changent) ; 2 : la graine d'identité ; 3 : la campagne et les relevés ; 4 : les numéros de campagne, un effectif par camp, le rythme de l'IA (campagne, lots 1 à 3)
 
 const ticksParHeure = R => Math.max(1, Math.round(R.jour.duree / (R.jour.heureFin - R.jour.heureDebut) / PAS));
 export const ticksParJour = R => ticksParHeure(R) * (R.jour.heureFin - R.jour.heureDebut);
@@ -103,13 +103,15 @@ export function nouvelleBataille(graine, R, opts = {}) {
   const { chaine, previsions } = chaineMeteo(rng.fork('meteo'), jours, saison ? (SAISONS[saison]?.pluieAuMoins ?? S.pluieAuMoins) : S.pluieAuMoins, saison);
   const etat = {
     v: VERSION, graine, graineIdentite: opts.graineIdentite ?? graine, campagne: opts.campagne ?? null, secteur: idSecteur, parCamp, parCampEux,
-    secondaires: tirerSecondaires(graine, S.reserves ?? 0),   // les missions secondaires tirées à la graine
+    secondaires: S.escarmouche ? [] : tirerSecondaires(graine, S.reserves ?? 0),      // (une escarmouche : pas de missions secondaires, leurs cibles sont celles d'une grande bataille)   // les missions secondaires tirées à la graine
     mission, issue: null,               // la mission (tenir, prendre, contre) et, à la fin, ce qu'il en est
+    escarmouche: !!S.escarmouche,        // (v0.111.0) une escarmouche : ni artillerie, ni avion, ni char, ni génie (`refusOrdre`) ; son horaire est de nuit (`S.horaire`, `reglagesDe`)
+    depot: mission === 'coup' && S.depot ? { x: S.marges.x + S.depot.x, y: S.marges.y + S.depot.y, r: S.depot.r, seuil: S.depot.seuil, charge: 0, etat: 'intact' } : null,   // le dépôt du coup de main : détruit quand nos hommes y ont passé `seuil` hommes-secondes
     contre: mission === 'contre' && S.contre ? { ...S.contre, ks: [] } : null,   // la contre-attaque éclair (v0.108.0) : où notre 1re ligne est tombée au départ (x0, x1 du secteur) et les tronçons perdus (`ks`, rempli au départ)
     reserves: [S.reserves ?? 0, S.reserves ?? 0],   // régiments frais en réserve, par camp (la relève, le déploiement)
     ralliees: [[], []],                 // les unités de fuyards ralliés à la caserne, prêtes à être déployées : { n, exp, moral } (lot D)
     arrives: [{ n: 0, exp: 0 }, { n: 0, exp: 0 }],   // les fuyards entrés à la caserne depuis la dernière aube : de quoi former une unité au matin
-    camp: campDeDepart({ bride: !!opts.camp, depart: opts.campDepart ?? null }),               // la dotation de l'état-major et les bâtiments de notre camp (js/camp.js, v0.86.0)
+    camp: campDeDepart({ bride: !!opts.camp && !S.escarmouche, depart: opts.campDepart ?? null }),      // (une escarmouche n'a pas de camp : ni dotation, ni réserve)               // la dotation de l'état-major et les bâtiments de notre camp (js/camp.js, v0.86.0)
     parRegiment: Math.floor(parCamp / S.regiments), parRegimentEux: Math.floor(parCampEux / S.regiments),
     // la campagne : le numéro de campagne de nos hommes quand il n'est pas leur numéro de bataille ({ numéro de bataille : numéro }) et le prochain à donner
     numeros: opts.campagne || opts.troupes ? {} : null, prochainNumero: opts.troupes ? opts.troupes.prochainNumero : parCamp,
@@ -153,7 +155,7 @@ export function nouvelleBataille(graine, R, opts = {}) {
     rng: 0,
   };
   if (opts.camp && opts.dotationBonus) etat.camp.dotation += opts.dotationBonus;      // le Mémorial (v0.99.4)
-  if (opts.camp) { etat.campEux = campDeDepart({ bride: true, mult: niveau.dotation ?? 1 }); appliquerDepart(etat, NOUS); appliquerDepart(etat, EUX); }      // le camp d'en face : le même départ, sa dotation selon la difficulté (v0.92.0)
+  if (opts.camp && !S.escarmouche) { etat.campEux = campDeDepart({ bride: true, mult: niveau.dotation ?? 1 }); appliquerDepart(etat, NOUS); appliquerDepart(etat, EUX); }      // le camp d'en face : le même départ, sa dotation selon la difficulté (v0.92.0)
   if (opts.camp) { /* (voir plus haut) */ }      // les effectifs de départ de la partie bridée : ceux des bâtiments de départ (v0.88.0)
   const B = monter(etat, R);
   etat.troncons = B.troncons.map(t => t.camp);
@@ -266,6 +268,7 @@ function monter(etat, R) {
   const S = secteurDuJeu(etat), m = etat.marges;
   const W = S.largeur + 2 * m.x, H = S.hauteur + 2 * m.y;
   const { terrain, lignes, troncons } = terrainDuSecteur(S, m, etat.graine, R, { tranchees: !!etat.tranchees });
+  R = reglagesDe(S, R);          // (l'horaire du secteur : une escarmouche se joue de nuit)
   const faces = Int8Array.from(troncons, t => lignes[t.ligne].face);
   // les toits de bois (v0.83.0) : quelques tronçons des deux premières lignes en ont un, de `TOITS.de` à `TOITS.a` m ; `terrain.toit` : les cases couvertes (le dessin et le tir le lisent)
   terrain.toit = new Uint8Array(W * H);
@@ -687,6 +690,7 @@ export function avancer(B) {
   if (compacter(A)) for (const reg of etat.regiments) if (reg.effectif <= 0) reg.effectif = 0;
   // les tronçons : pris quand l'autre camp y est et que plus un défenseur n'y tient
   if (etat.tranchees && etat.tickJour % 15 === 0) prises(B);
+  if (etat.depot && etat.depot.etat === 'intact' && etat.tickJour % 15 === 0) avancerDepot(B, 15 * PAS);
   // le moral : chaque seconde
   if (etat.tickJour % 30 === 0) moral(B, 30 * PAS);
 
@@ -789,6 +793,10 @@ function marquerSecondaires(B) {
 export function progressionMission(B, camp = NOUS) {
   const { etat } = B, R = B.R, n = etat.meteo.length, jours = Math.min(n, etat.jour - 1);
   const [tenus, total] = premiereLigne(B), min = Math.ceil(total * R.mission.priseMin), reste = R.mission.joursDeTenue - (etat.priseJours ?? 0);
+  if (etat.mission === 'coup' && etat.depot) {
+    const p = Math.min(1, etat.depot.charge / etat.depot.seuil);
+    return { objectif: camp === NOUS ? 'prendre' : 'tenir', p: etat.depot.etat === 'detruit' ? 1 : p, label: etat.depot.etat === 'detruit' ? 'détruit' : `${Math.round(100 * p)} %`, texte: etat.depot.etat === 'detruit' ? 'Le dépôt est détruit' : camp === NOUS ? `Le dépôt : ${Math.round(100 * p)} % de la charge posée, avant l'aube` : 'Le dépôt tient' };
+  }
   if (etat.mission === 'contre' && etat.contre) {
     const a = etat.contre.ks.length, r = etat.contre.ks.filter(k => etat.troncons[k] === NOUS).length;
     return { objectif: camp === NOUS ? 'prendre' : 'tenir', p: a ? r / a : 0, label: `${r} / ${a}`, texte: camp === NOUS ? `${r} tronçons repris sur ${a}, avant la nuit` : `${a - r} tronçons gardés sur ${a}` };
@@ -819,8 +827,9 @@ function juger(B, enCours) {
   const vivants = etat.regiments.some(r => r.camp === NOUS && r.effectif > 0);
   const tombe = !vivants || (nos[1] && nos[0] < nos[1] * 0.4);
   const repris = etat.mission === 'contre' && etat.contre ? etat.contre.ks.filter(k => etat.troncons[k] === NOUS).length : 0, aRepris = etat.contre?.ks.length ?? 0;
-  if (enCours) return tombe ? { reussie: false, texte: !vivants ? 'Il ne reste plus un homme dans le secteur.' : 'Le secteur est tombé.' } : (etat.mission === 'contre' && aRepris && repris === aRepris) ? { reussie: true, texte: `La ligne est reprise : ${repris} tronçons sur ${aRepris}, avant la nuit.` } : null;
+  if (enCours) return tombe ? { reussie: false, texte: !vivants ? 'Il ne reste plus un homme dans le secteur.' : 'Le secteur est tombé.' } : (etat.mission === 'coup' && etat.depot?.etat === 'detruit') ? { reussie: true, texte: 'Le dépôt est détruit : le coup de main a réussi, avant l\'aube.' } : (etat.mission === 'contre' && aRepris && repris === aRepris) ? { reussie: true, texte: `La ligne est reprise : ${repris} tronçons sur ${aRepris}, avant la nuit.` } : null;
   if (tombe) return { reussie: false, texte: 'Le secteur est tombé.' };
+  if (etat.mission === 'coup') { const ok = etat.depot?.etat === 'detruit'; return { reussie: ok, texte: ok ? 'Le dépôt est détruit : le coup de main a réussi.' : 'Le jour se lève : le dépôt est intact. Le coup de main a échoué.' }; }
   if (etat.mission === 'contre') { const ok = aRepris > 0 && repris === aRepris; return { reussie: ok, texte: ok ? `La ligne est reprise : ${repris} tronçons sur ${aRepris}.` : `La ligne n'est pas reprise : ${repris} tronçons sur ${aRepris}. La nuit tombe, les renforts d'en face sont là.` }; }
   if (etat.mission === 'tenir') {
     const ok = nos[0] >= nos[1] * 0.9;
@@ -831,6 +840,7 @@ function juger(B, enCours) {
 }
 export const MISSIONS = {
   tenir: 'Tenir le secteur : à la fin, nos lignes doivent être à nous.',
+  coup: 'Coup de main : entrer de nuit chez eux, détruire le dépôt derrière leur deuxième ligne, avant l\'aube. Sans artillerie, sans avion, sans char : seuls vos hommes y vont.',
   contre: 'Contre-attaque : un morceau de notre première ligne vient de tomber. Le reprendre avant la nuit, avant que leurs renforts n\'arrivent.',
   prendre: 'Prendre la première ligne d\'en face et la tenir deux soirs de suite : la bataille est gagnée avant son terme ; sinon, la tenir jusqu\'à la fin.',
 };
@@ -1279,7 +1289,7 @@ function enFace(B, rng) {
   if (etat.deux) return;                     // un joueur commande en face : pas d'IA
   if (etat.iaStance || R.ia.stance) postureIA(B);
   const S = secteurDuJeu(etat);
-  if (etat.temps >= etat.ia.barrage) {
+  if (etat.temps >= etat.ia.barrage && !etat.escarmouche) {      // (une escarmouche : pas d'artillerie en face)
     etat.ia.barrage = etat.temps + R.ia.barrage * (etat.iaRythme?.barrage ?? 1) * (0.6 + rng() * 0.8);
     const d = A.dens[NOUS];
     let best = -1, bn = 0;
@@ -1387,6 +1397,20 @@ export function aube(B, choix = {}) {
   return { ok: true, bilan, dotation };
 }
 
+/* Les réglages d'une bataille : ceux du jeu, sauf l'horaire que le secteur impose (`S.horaire: { debut, fin }` en heures, fin > 24 pour passer minuit) : une escarmouche se joue de 22 h à 5 h (v0.111.0),
+   dans la même durée de jeu qu'un jour (`R.jour.duree`). `jour.nuit` : le rendu l'assombrit comme la nuit. Sans horaire, `R` lui-même (rien ne change). */
+export function reglagesDe(S, R) {
+  return S?.horaire ? { ...R, jour: { ...R.jour, heureDebut: S.horaire.debut, heureFin: S.horaire.fin, nuit: true } } : R;
+}
+/* Le dépôt du coup de main : chaque `dt` s de jeu, nos hommes debout à moins de `r` m y posent leur charge (hommes-secondes) ; à `seuil`, il saute. Rien d'autre que la présence ne compte. */
+function avancerDepot(B, dt) {
+  const D = B.etat.depot, A = B.armee, r2 = D.r * D.r;
+  let n = 0;
+  for (let i = 0; i < A.n; i++) { if (A.camp[i] !== NOUS || A.mort[i] || A.blessure[i]) continue; const dx = A.x[i] - D.x, dy = A.y[i] - D.y; if (dx * dx + dy * dy <= r2) n++; }
+  D.charge += n * dt;
+  if (D.charge >= D.seuil) { D.etat = 'detruit'; B.evenements.push({ type: 'depot', x: D.x, y: D.y }); }
+}
+
 // ─── Lecture ─────────────────────────────────────────────────────────────
 
 export function horloge(B) {
@@ -1394,8 +1418,8 @@ export function horloge(B) {
   const f = etat.tickJour / ticksParJour(R);
   const h = R.jour.heureDebut + f * (R.jour.heureFin - R.jour.heureDebut);
   return {
-    jour: etat.jour, jours: etat.meteo.length, phase: etat.phase,
-    heure: Math.floor(h), minute: Math.floor((h % 1) * 60),
+    jour: etat.jour, jours: etat.meteo.length, phase: etat.phase, nuitReelle: !!R.jour.nuit, frac: f,      // (nuitReelle : une escarmouche, l'horloge est de nuit, v0.111.0)
+    heure: Math.floor(h) % 24, minute: Math.floor((h % 1) * 60),
     meteo: etat.meteo[etat.jour - 1], prevision: etat.previsions[etat.jour - 1],
     gel: !!METEO[etat.meteo[etat.jour - 1]].gel, neige: !!METEO[etat.meteo[etat.jour - 1]].neige, chaud: !!METEO[etat.meteo[etat.jour - 1]].chaud, saison: etat.sol?.saison ?? SAISON_DEFAUT,
     tempete: !!METEO[etat.meteo[etat.jour - 1]].tempete,

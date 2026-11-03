@@ -124,4 +124,19 @@ export const SECTEURS = {
       },
     },
   },
+  // Le coup de main de nuit (Jérôme, v0.111.0, parmi les missions proposées : « 2 régiments se battent de nuit, pas d'artillerie, aviation, chars ») : une escarmouche, un régiment contre un, de 22 h à 5 h (`horaire`),
+  // ni artillerie, ni avion, ni char, ni génie (`escarmouche`). Un no man's land de 56 m, que les postes de mitrailleuse (80 m) couvrent d'un bout à l'autre ; derrière leur 2e ligne, un dépôt (`depot`) qu'il faut
+  // détruire avant l'aube : 12 hommes dessus pendant 30 s (`seuil` : hommes-secondes). La mission `coup`, une seule nuit.
+  verger: {
+    ...ESSAI,
+    nom: 'Le verger',
+    resume: 'Une nuit, un régiment contre un. Ni obus, ni avion, ni char : seuls vos hommes y vont. Un dépôt derrière leur seconde ligne, à 56 m de vos tranchées, sous leurs mitrailleuses : il faut le détruire avant l\'aube.',
+    profil: [0.50, 0.50, 0.50, 0.50, 0.52, 0.52, 0.52, 0.52, 0.50, 0.50, 0.50, 0.50],
+    relief: { bosses: 0.3, ondulation: 0.5, nappe: 0 },
+    largeur: 100, hauteur: 140, regiments: 1, soldats: 70, reserves: 0,
+    jours: 1, joursFixes: true, missions: ['coup'], escarmouche: true, horaire: { debut: 22, fin: 29 },
+    pluieAuMoins: 0, arbres: 30, bois: 1, haies: 2, buissons: 70,
+    depot: { x: 50, y: 10, r: 7, seuil: 360 },
+    tranchees: { ...ESSAI.tranchees, lignes: { nous: [100, 118], eux: [44, 26] }, boyaux: 2, depart: [0], minNoMansLand: 40 },
+  },
 };

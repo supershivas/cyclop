@@ -2,12 +2,12 @@
 // sapeurs ») ; ici, la fenêtre d'un bâtiment, posée au-dessus de lui quand on le choisit (v0.96.0 : « les options apparaissent au-dessus de chaque bâtiment au clic ; simplifier au maximum »), sur le modèle de la
 // fenêtre d'un régiment (`.reg-ouvert` : le titre et son niveau, une ligne de ce qu'il fait, des boutons de même largeur), et le bouton « Le camp » (la dotation, et la touche B). L'amélioration tient en un clic : le
 // choix du palier EST le bouton (« Tir de réglage · 3 pts »). Le texte long est dans l'infobulle. Lecture seule de l'état : les ordres passent par les fonctions que main.js donne.
-import { BATIMENTS, EQUIPEMENT } from '../data/batiments.js?v=0.110.0';
-import { refusCamp, campDe, charsDispo, patients, NIVEAU_MAX } from '../camp.js?v=0.110.0';
-import { peutDeployer } from '../bataille.js?v=0.110.0';
-import { avionsPrets, avionsRestants } from '../avions.js?v=0.110.0';
-import { MITRAILLAGE } from '../data/mitraillage.js?v=0.110.0';
-import { METEO } from '../data/meteo.js?v=0.110.0';
+import { BATIMENTS, EQUIPEMENT } from '../data/batiments.js?v=0.111.0';
+import { refusCamp, campDe, charsDispo, patients, NIVEAU_MAX } from '../camp.js?v=0.111.0';
+import { peutDeployer } from '../bataille.js?v=0.111.0';
+import { avionsPrets, avionsRestants } from '../avions.js?v=0.111.0';
+import { MITRAILLAGE } from '../data/mitraillage.js?v=0.111.0';
+import { METEO } from '../data/meteo.js?v=0.111.0';
 
 const el = (tag, props = {}, ...kids) => { const e = Object.assign(document.createElement(tag), props); e.append(...kids); return e; };
 
@@ -87,7 +87,7 @@ export function creerCampHud({ moi = () => 0, deployer = () => {}, bouton, papie
   }
   function maj(B) {
     const e = B.etat, camp = campDe(e, moi());
-    if (!camp?.bride) { bouton.hidden = true; papier.hidden = true; return; }
+    if (!camp?.bride || B.etat.escarmouche) { bouton.hidden = true; papier.hidden = true; return; }
     bouton.hidden = false;
     const enChantier = Object.values(camp.batiments).filter(c => c.chantier).length;
     bouton.textContent = `Le camp · ${pts(camp.dotation)}${enChantier ? ` · ${enChantier} chantier${enChantier > 1 ? 's' : ''}` : ''}`;

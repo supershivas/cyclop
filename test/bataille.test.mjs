@@ -1525,3 +1525,48 @@ test('la contre-attaque éclair dure un jour, quelle que soit la durée demandé
   assert.equal(nouvelleBataille(3, R, { secteur: 'saillant', soldats: 400, jours: 6 }).etat.meteo.length, 1);
   assert.equal(nouvelleBataille(3, R, { secteur: 'essai', soldats: 200, jours: 6 }).etat.meteo.length, 6);
 });
+
+// ─── Le coup de main de nuit (Jérôme, v0.111.0) ──────────────────────────
+import { refusOrdre as refusOrdreEsc } from '../js/camp.js';
+group('le coup de main de nuit (escarmouche)');
+test('« Le verger » : valide, un régiment contre un, de 22 h à l\'aube ; ni artillerie, ni avion, ni char, ni génie, des deux côtés, et en face l\'IA ne tire aucun obus', () => {
+  assert.deepEqual(validerCourbe(SECTEURS.verger), []);
+  const B = nouvelleBataille(3, R, { secteur: 'verger' }), e = B.etat;
+  assert.equal(e.mission, 'coup'); assert.equal(e.meteo.length, 1); assert.equal(e.regiments.length, 2);
+  const h = horloge(B); assert.equal(h.heure, 22); assert.equal(h.nuitReelle, true);
+  for (const cal of ['75', '155', '220', 'avion', 'char', 'genie']) { assert.match(refusOrdreEsc(e, 0, cal), /escarmouche/); assert.match(refusOrdreEsc(e, 1, cal), /escarmouche/); }
+  assert.match(ordonnerBarrage(B, '75', e.marges.x + 50, e.marges.y + 50).refus, /escarmouche/);
+  for (let k = 0; k < 1500; k++) avancer(B);
+  assert.equal(e.impacts.length, 0, 'aucun obus tombé en 50 s de jeu');
+  const ordinaire = nouvelleBataille(3, R, { soldats: 200, jours: 3 }); assert.equal(horloge(ordinaire).nuitReelle, false); assert.equal(refusOrdreEsc(ordinaire.etat, 0, '75'), null);
+});
+test('une escarmouche n\'a ni camp, ni réserve, ni missions secondaires, même dans une partie bridée', () => {
+  const B = nouvelleBataille(3, R, { secteur: 'verger', camp: true }), e = B.etat;
+  assert.deepEqual(e.reserves, [0, 0]); assert.deepEqual(e.secondaires, []); assert.ok(!e.camp.bride);
+  const C = nouvelleBataille(3, R, { camp: true, soldats: 200, jours: 3 }); assert.ok(C.etat.camp.bride); assert.ok(C.etat.reserves[0] > 0);
+});
+test('l\'horloge de l\'escarmouche passe minuit : de 22 h à 4 h 59, jamais 24 h ou plus', () => {
+  const B = nouvelleBataille(3, R, { secteur: 'verger' }); const vus = new Set();
+  const total = ticksParJour(B.R);
+  for (let f = 0; f < 1; f += 0.05) { B.etat.tickJour = Math.floor(f * total); vus.add(horloge(B).heure); }
+  assert.ok(vus.has(22) && vus.has(23) && vus.has(0) && vus.has(4)); assert.ok([...vus].every(h => h < 24 && h >= 0));
+});
+test('le dépôt saute quand assez d\'hommes y restent : la mission est gagnée tout de suite ; au jour, sinon, elle est perdue', () => {
+  const B = nouvelleBataille(3, R, { secteur: 'verger' }), e = B.etat, D = e.depot, A = B.armee;
+  assert.equal(D.etat, 'intact'); assert.equal(progressionMission(B).p, 0);
+  for (let i = 0; i < A.n; i++) if (A.camp[i] === 1) A.mort[i] = 1;        // (en face, plus personne pour les déloger)
+  let k = 0; for (let i = 0; i < A.n && k < 20; i++) if (A.camp[i] === 0) { A.x[i] = D.x + (k % 5 - 2); A.y[i] = D.y + (Math.floor(k / 5) - 1); A.vx[i] = A.vy[i] = 0; k++; }
+  let pas = 0; while (D.etat === 'intact' && pas++ < 2000) { for (let i = 0, j = 0; i < A.n && j < 20; i++) if (A.camp[i] === 0 && !A.mort[i]) { A.x[i] = D.x + (j % 5 - 2); A.y[i] = D.y + (Math.floor(j / 5) - 1); A.vx[i] = A.vy[i] = 0; j++; } avancer(B); }
+  assert.equal(D.etat, 'detruit'); assert.ok(B.evenements.length >= 0);
+  for (let t = 0; t < 40 && e.phase === 'jour'; t++) avancer(B);
+  assert.equal(e.phase, 'fin'); assert.equal(e.issue.reussie, true); assert.match(e.issue.texte, /détruit/);
+  const C = nouvelleBataille(3, R, { secteur: 'verger' }); C.etat.tickJour = ticksParJour(C.R) - 1; avancer(C);
+  assert.equal(C.etat.phase, 'fin'); assert.equal(C.etat.issue.reussie, false); assert.match(C.etat.issue.texte, /intact/);
+});
+test('la partie d\'une escarmouche, sauvegardée puis relue, est la même (horaire, dépôt, escarmouche)', () => {
+  const B = nouvelleBataille(3, R, { secteur: 'verger' }); for (let k = 0; k < 900; k++) avancer(B);
+  const C = restaurer(photo(B), R);
+  assert.equal(C.etat.escarmouche, true); assert.deepEqual(C.etat.depot, B.etat.depot); assert.equal(horloge(C).heure, horloge(B).heure); assert.equal(horloge(C).nuitReelle, true);
+  for (let k = 0; k < 300; k++) { avancer(B); avancer(C); }
+  assert.deepEqual(C.etat.pertes, B.etat.pertes);
+});

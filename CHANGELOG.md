@@ -1,5 +1,8 @@
 # Journal des versions
 
+## 0.111.0 — 2026-11-03
+- Nouvelle carte « Le verger » : un coup de main de nuit, un régiment contre un, ni artillerie, ni avion, ni char ; il faut détruire le dépôt avant l'aube
+
 ## 0.110.0 — 2026-11-03
 - Nouvelle carte « La grande plaine » : 800 × 500 m, seize régiments par camp et un no man's land de 160 à 240 m
 - La contre-attaque éclair dure toujours un jour : les boutons de durée sont grisés pour elle
