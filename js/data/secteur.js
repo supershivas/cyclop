@@ -97,11 +97,31 @@ export const SECTEURS = {
     resume: 'Notre ligne fait un saillant ; l\'ennemi vient de le prendre. Une journée pour reprendre les tranchées perdues, avant que leurs renforts n\'arrivent. Les lignes avancent en bosse vers l\'ennemi : le no man\'s land n\'y fait plus que 95 m.',
     profil: [0.50, 0.50, 0.50, 0.50, 0.52, 0.55, 0.55, 0.52, 0.50, 0.50, 0.50, 0.50],
     relief: { bosses: 0.6, ondulation: 0.7, nappe: 0 },
-    jours: 1, missions: ['contre'], reserves: 2, pluieAuMoins: 0, arbres: 90, bois: 2, haies: 4, buissons: 150,
+    jours: 1, joursFixes: true, missions: ['contre'], reserves: 2, pluieAuMoins: 0, arbres: 90, bois: 2, haies: 4, buissons: 150,
     contre: { x0: 100, x1: 200 },
     tranchees: {
       ...ESSAI.tranchees,
       courbe: { nous: [{ bosse: true, x: 150, l: 70, h: -34 }] },
+    },
+  },
+  // Une grande carte (Jérôme, v0.110.0 : « cartes plus grandes », 800 × 500 au plus) : seize régiments par camp, un no man's land de 160 à 240 m (plus que les ~130 m ordinaires : on le traverse sous l'artillerie,
+  // un poste de mitrailleuse de 80 m n'en couvre que le bord), des lignes qui ondulent à peine. Le camp se pose derrière le bord sud du secteur (`planDe`, camp.js) ; les noms de régiments passent à vingt.
+  plaine: {
+    ...ESSAI,
+    nom: 'La grande plaine',
+    resume: 'Un front de 800 m, seize régiments par camp et un no man\'s land de 160 à 240 m : on le traverse sous les obus, les mitrailleuses n\'en couvrent que les bords. Des lignes qui ondulent, de la place pour manœuvrer.',
+    profil: [0.52, 0.50, 0.48, 0.46, 0.45, 0.44, 0.44, 0.45, 0.46, 0.48, 0.50, 0.52],
+    relief: { bosses: 0.7, ondulation: 0.7, nappe: 0 },
+    largeur: 800, hauteur: 500, regiments: 16, soldats: 1500, reserves: 6,      // (soldats : par camp, 94 par régiment comme ailleurs)
+    jours: { min: 10, max: 15 }, pluieAuMoins: 2, arbres: 400, bois: 8, haies: 14, buissons: 420,
+    tranchees: {
+      ...ESSAI.tranchees,
+      lignes: { nous: [350, 371, 393, 416], eux: [150, 129, 107, 84] },
+      boyaux: 8,
+      courbe: {
+        nous: [{ amp: 14, long: 520, dec: 0 }, { amp: 5, long: 190, dec: 30 }],
+        eux: [{ amp: -14, long: 520, dec: 0 }, { amp: -5, long: 230, dec: 80 }],
+      },
     },
   },
 };
