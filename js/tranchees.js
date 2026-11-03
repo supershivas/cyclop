@@ -11,9 +11,9 @@
      d'occuper une tranchée s'en servent pour poser les hommes dedans.
    - Un tronçon protège du tir qui vient de devant (le parapet), beaucoup moins
      de celui qui vient de derrière (le parados) : pris, il sert à l'envers. */
-import { hash2 } from './lib/rng.js?v=0.108.2';
-import { etendueEau } from './eaux.js?v=0.108.2';
-import { TRANCHEE_OUVRAGES } from './data/tranchees.js?v=0.108.2';
+import { hash2 } from './lib/rng.js?v=0.109.1';
+import { etendueEau } from './eaux.js?v=0.109.1';
+import { TRANCHEE_OUVRAGES } from './data/tranchees.js?v=0.109.1';
 
 // Un bruit de valeurs lissé à une dimension (0..1) : le tracé d'une tranchée creusée à la main, jamais deux fois pareil (v0.29.0)
 const lisse = u => u * u * (3 - 2 * u);
@@ -26,8 +26,25 @@ function bruit1(x, longueur, graine) {
    tracé qui serpente, des coudes irréguliers, plus les créneaux en carré d'avant. Reste une fonction de x seule. */
 export function ligneY(t, x) {
   const g = Math.round(t.phase * 1000), k = (t.amp || 1.5) / 1.5;
-  return t.y0 + k * ((bruit1(x, 70, g) - 0.5) * 6.4 + (bruit1(x, 28, g + 1) - 0.5) * 3.6 + (bruit1(x, 11, g + 2) - 0.5) * 1.8);
+  return t.y0 + (t.arc ? arcY(t.arc, x) : 0) + k * ((bruit1(x, 70, g) - 0.5) * 6.4 + (bruit1(x, 28, g + 1) - 0.5) * 3.6 + (bruit1(x, 11, g + 2) - 0.5) * 1.8);
 }
+/* La courbe d'ensemble d'un camp (Jérôme, v0.109.0 : « les lignes peuvent être courbes, moins linéaires ») : une somme de termes, en mètres de décalage vers le sud (y croissant), lue à l'abscisse x du terrain.
+   Un terme est une onde `{ amp, long, dec }` (amp m d'amplitude, long m de longueur d'onde, dec m de décalage depuis le bord ouest du secteur) ou une bosse `{ bosse: true, x, l, h }` (une cloche de hauteur h, de largeur l,
+   centrée à x m du bord ouest : un saillant). Toutes les lignes d'un camp la suivent ensemble (elles restent à leur écart) ; deux camps aux courbes différentes font varier le no man's land.
+   Sans courbe (`arc` absent), `ligneY` rend exactement ce qu'il rendait avant : les cartes d'avant restent les mêmes à l'octet près. La pente doit rester sous ~1 m par colonne (le creusement se fait colonne
+   par colonne sur deux cases de large au moins : `validerSecteur` le vérifie). */
+export function arcY(arc, x) {
+  let s = 0;
+  for (const a of arc) s += a.bosse ? a.h * Math.exp(-(((x - a.x) / a.l) ** 2)) : a.amp * Math.sin(6.283185 * (x - a.x0) / a.long);
+  return s;
+}
+/* Les termes d'une courbe passés en coordonnées du terrain (ox : la marge ouest du secteur) */
+export const arcDuSecteur = (termes, ox) => termes?.length ? termes.map(a => a.bosse ? { bosse: true, x: ox + a.x, l: a.l, h: a.h } : { amp: a.amp, long: a.long, x0: ox + (a.dec || 0) }) : null;
+/* L'écart le plus grand que la courbe peut faire (m) : de quoi réserver la place derrière les lignes */
+export const arcMax = termes => (termes || []).reduce((m, a) => m + Math.abs(a.bosse ? a.h : a.amp), 0);
+/* L'ordonnée de base d'une ligne en x : son rang plus sa courbe, sans le tracé serpentant (là où se tient un ordre, un coup, un événement) */
+export const y0En = (L, x) => L.y0 + (L.arc ? arcY(L.arc, x) : 0);
+
 /* Les parois de la tranchée à l'abscisse x (v0.96.0, pour poser les échelles contre elles) : { j0, j1 }, les plans z où le sol descend (le côté nord : j0, le côté sud : j1), comme `creuserTranchees` les creuse :
    la colonne de x, le tracé et la largeur pris au milieu de la colonne. */
 export function paroisTranchee(t, x) {
@@ -43,9 +60,11 @@ export const demiLargeur = (t, x) => 1 + 0.5 * bruit1(x, 17, Math.round(t.phase 
 export function lignesDu(S, ox, oy, graine) {
   const T = S.tranchees, out = [];
   for (const [camp, ys] of [[0, T.lignes.nous], [1, T.lignes.eux]]) {
+    const arc = arcDuSecteur(T.courbe?.[camp === 0 ? 'nous' : 'eux'], ox);
     ys.forEach((y, rang) => out.push({
       camp, rang, y0: oy + y, amp: T.creneau, baie: T.baie,
       phase: hash2(camp, rang, (graine | 0) + 17) * 6.283, face: camp === 0 ? -1 : 1,
+      ...(arc ? { arc } : {}),
     }));
   }
   return out;
@@ -83,9 +102,10 @@ export function creuserTranchees(T, S, ox, oy, graine) {
   // les boyaux : de la première ligne à la dernière de chaque camp, en zigzag
   for (const camp of [0, 1]) {
     const ls = lignes.filter(L => L.camp === camp);
-    const ya = Math.min(...ls.map(L => L.y0)) - 3, yb = Math.max(...ls.map(L => L.y0)) + 3;
     for (let k = 0; k < C.boyaux; k++) {
       const X = ox + (k + 0.5) * S.largeur / C.boyaux + (hash2(camp, k, (graine | 0) + 23) - 0.5) * S.largeur / C.boyaux * 0.5;
+      // (la bande du boyau : de la 1re à la dernière ligne, là où il passe : la courbe d'ensemble la déplace)
+      const ya = Math.min(...ls.map(L => y0En(L, X))) - 3, yb = Math.max(...ls.map(L => y0En(L, X))) + 3;
       for (let j = Math.max(0, Math.floor(ya)); j < Math.min(H, Math.ceil(yb)); j++) {
         // (un boyau qui serpente, plus le zigzag en carré d'avant la v0.29.0)
         const ph = hash2(camp, k, (graine | 0) + 29) * 6.283, xb = X + 3.2 * Math.sin(j / 11 + ph) + 1.4 * Math.sin(j / 4.3 + ph * 2);
@@ -165,10 +185,14 @@ export function validerSecteur(S) {
     if (y < 6 || y > S.hauteur - 6) pb.push(`${camp}, ligne ${k + 1} : à ${y} m, trop près du bord du secteur (6 m au moins)`);
     if (k && (y - ys[k - 1]) * sens < 10) pb.push(`${camp}, lignes ${k} et ${k + 1} : à moins de 10 m l'une de l'autre, ou dans le désordre`);
   });
-  if (nous[0] - eux[0] < 60) pb.push(`no man's land de ${Math.round(nous[0] - eux[0])} m entre les premières lignes : 60 m au moins`);
+  // le no man's land (v0.109.0 : il varie avec les courbes, et une escarmouche peut le resserrer : `minNoMansLand`) : le plus étroit, sur toute la largeur
+  const minNML = T.minNoMansLand ?? 60, cN = arcDuSecteur(T.courbe?.nous, 0), cE = arcDuSecteur(T.courbe?.eux, 0);
+  let etroit = Infinity; for (let x = 0; x <= S.largeur; x += 4) etroit = Math.min(etroit, nous[0] + (cN ? arcY(cN, x) : 0) - eux[0] - (cE ? arcY(cE, x) : 0));
+  if (etroit < minNML) pb.push(`no man's land de ${Math.round(etroit)} m entre les premières lignes : ${minNML} m au moins`);
   if (!(T.boyaux >= 1)) pb.push('au moins un boyau par camp');
   // l'eau (v0.43.0) : pas dans les tranchées ni les boyaux (la bande de chaque camp, de sa 1re à sa dernière ligne, 8 m de marge) ; elle peut couper le no man's land
-  const bandes = [['nous', nous[0] - 8, nous.at(-1) + 8], ['en face', eux.at(-1) - 8, eux[0] + 8]];
+  const mN = arcMax(T.courbe?.nous), mE = arcMax(T.courbe?.eux);
+  const bandes = [['nous', nous[0] - 8 - mN, nous.at(-1) + 8 + mN], ['en face', eux.at(-1) - 8 - mE, eux[0] + 8 + mE]];
   for (const O of S.objets || []) {
     if (O.o !== 'lac' && O.o !== 'fleuve') continue;
     const { x0: x1, x1: x2, y0: y1, y1: y2 } = etendueEau(O.o === 'fleuve' ? { ...O, x2: O.x2 ?? O.x, y2: O.y2 ?? O.y } : O);     // ce que l'eau couvre vraiment (rives irrégulières, fleuve qui serpente : eaux.js)

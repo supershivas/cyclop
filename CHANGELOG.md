@@ -1,7 +1,12 @@
 # Journal des versions
 
-## 0.108.2 — 2026-11-03
+## 0.109.1 — 2026-11-03
 - Les cartes de secteur n'ont plus aucun pli : le papier reste usé, grainé et taché
+
+## 0.109.0 — 2026-11-03
+- Les lignes de tranchée peuvent être courbes : « Le méandre » ondule, et son no man's land passe de 82 à 181 m
+- Nouvelle mission « contre-attaque éclair » sur « Le saillant » : un morceau de notre ligne vient de tomber, il faut le reprendre avant la nuit
+- « 1 jour » au singulier quand la bataille ne dure qu'un jour
 
 ## 0.108.1 — 2026-11-02
 - Les cartes de secteur n'ont plus de pli vertical au milieu (il ne rendait pas bien) ; le pli horizontal reste

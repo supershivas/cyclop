@@ -5,10 +5,10 @@
 // recliquant la lettre du secteur ; la vue 3D revient où elle était (main.js).
 // Lecture seule de l'état ; le dessin d'un canvas 2D, palette du jeu. Comme la carte, tourné d'un demi-tour pour l'invité d'une partie à deux.
 // L'échelle n'est pas la même en x et en y (un secteur fait 100 m de large pour ~220 m de profondeur : à l'échelle, il serait un ruban) : le plan est un schéma, pas une carte au mètre.
-import { NOUS, EUX, zone, largeurZone, nombreZones, lettreZone } from '../bataille.js?v=0.108.2';
-import { ligneY } from '../tranchees.js?v=0.108.2';
-import { PALETTE as P } from '../palette.js?v=0.108.2';
-import { numeroDe } from './lecture.js?v=0.108.2';
+import { NOUS, EUX, zone, largeurZone, nombreZones, lettreZone } from '../bataille.js?v=0.109.1';
+import { ligneY, y0En } from '../tranchees.js?v=0.109.1';
+import { PALETTE as P } from '../palette.js?v=0.109.1';
+import { numeroDe } from './lecture.js?v=0.109.1';
 
 const L = 336, H = 192;                  // le canvas, en pixels
 
@@ -32,7 +32,7 @@ export function creerSecteur({ $, bataille, moi = () => NOUS, surSecteur = () =>
     const Z = zone(B), w = largeurZone(B), s = ouvert, M = moi(), tourne = M === EUX;
     const sx0 = Z.x0 + (s - 1) * w, sx1 = sx0 + w, A = B.armee;
     // la hauteur montrée : du fond de la 2e ligne d'un camp à celle de l'autre (là où sont les hommes) ; le secteur remplit toute la largeur
-    const ys = B.lignes.filter(l => l.rang <= 1).map(l => l.y0), y0 = Math.min(...ys) - 14, y1 = Math.max(...ys) + 14;
+    const ys = B.lignes.filter(l => l.rang <= 1).flatMap(l => l.arc ? [0, 0.25, 0.5, 0.75, 1].map(f => y0En(l, sx0 + f * w)) : [l.y0]), y0 = Math.min(...ys) - 14, y1 = Math.max(...ys) + 14;
     const kx = L / w, ky = H / (y1 - y0);
     const px = x => { const u = (x - sx0) * kx; return tourne ? L - u : u; };
     const py = y => { const u = (y - y0) * ky; return tourne ? H - u : u; };

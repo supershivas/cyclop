@@ -1449,3 +1449,48 @@ test('un régiment en déroute se retire vers la caserne ; ceux qui y entrent fo
   const nv = e.regiments[e.regiments.length - 1]; assert.ok(nv.effectif >= entres); assert.equal(nv.moral, RENFORTS.moralRallies);
   assert.match(deployer(B, 0, true).refus, /rallié/);
 });
+
+// ─── Des cartes à lignes courbes (Jérôme, v0.109.0) ──────────────────────
+import { validerSecteur as validerCourbe, y0En, arcY } from '../js/tranchees.js';
+import { ticksParJour } from '../js/bataille.js';
+group('lignes courbes et no man\'s land variable');
+test('un secteur courbe est valide, son no man\'s land varie, et les hommes se tiennent sur la courbe, pas sur une rangée droite', () => {
+  const S = SECTEURS.meandres;
+  assert.deepEqual(validerCourbe(S), []);
+  const B = nouvelleBataille(3, R, { secteur: 'meandres', soldats: 200, jours: 3 }), ox = B.etat.marges.x;
+  const n = B.lignes.find(l => l.camp === 0 && l.rang === 0), e = B.lignes.find(l => l.camp === 1 && l.rang === 0);
+  let mn = Infinity, mx = 0; for (let x = 0; x <= S.largeur; x += 5) { const d = y0En(n, ox + x) - y0En(e, ox + x); mn = Math.min(mn, d); mx = Math.max(mx, d); }
+  assert.ok(mn < 100 && mx > 160, `no man's land de ${Math.round(mn)} à ${Math.round(mx)} m`);
+  assert.ok(Math.abs(y0En(n, ox) - y0En(n, ox + 100)) > 5, 'la ligne n\'est pas droite');
+  // un régiment en 1re ligne : ses hommes sont à moins de 6 m du tracé
+  const A = B.armee, A0 = B.etat.regiments.find(r => r.camp === 0 && r.ordre.trace?.rang === undefined && r.ordre.trace?.ligne === 0);
+  let max = 0, k = 0; for (let i = 0; i < A.n; i++) if (A.reg[i] === A0.id) { max = Math.max(max, Math.abs(A.y[i] - ligneY(n, A.x[i]))); k++; }
+  assert.ok(k > 0 && max < 6, `hommes à ${max.toFixed(1)} m du tracé`);
+});
+test('sans courbe, une ligne rend ce qu\'elle rendait avant (les cartes d\'avant ne bougent pas)', () => {
+  const B = nouvelleBataille(3, R, { soldats: 200, jours: 3 });
+  assert.ok(B.lignes.every(l => !l.arc));
+  assert.equal(arcY([{ amp: 10, long: 100, x0: 0 }], 25) > 9.9, true);
+});
+test('un secteur dont la courbe resserre trop le no man\'s land est refusé à voix haute', () => {
+  const S = structuredClone(SECTEURS.meandres); S.tranchees.courbe.nous[0].amp = 80;
+  assert.ok(validerCourbe(S).some(p => /no man's land/.test(p) || /se coupe/.test(p)), JSON.stringify(validerCourbe(S)));
+});
+group('la contre-attaque éclair (mission « contre »)');
+test('au départ, un morceau de notre 1re ligne est à eux (leur régiment y est, le nôtre a reculé) ; la mission le dit ; une journée seulement', () => {
+  const B = nouvelleBataille(3, R, { secteur: 'saillant', soldats: 400 }), e = B.etat;
+  assert.equal(e.mission, 'contre'); assert.equal(e.meteo.length, 1); assert.ok(e.contre.ks.length >= 2);
+  for (const k of e.contre.ks) { assert.equal(e.troncons[k], 1); assert.equal(B.lignes[B.troncons[k].ligne].camp, 0); assert.equal(B.lignes[B.troncons[k].ligne].rang, 0); }
+  assert.ok(e.regiments.some(r => r.camp === 1 && r.ordre.trace.ligne === 0), 'un régiment d\'en face tient notre 1re ligne');
+  assert.ok(e.regiments.some(r => r.camp === 0 && r.ordre.trace.ligne === 2), 'le nôtre a reculé à la 3e ligne');
+  const p = progressionMission(B); assert.equal(p.p, 0); assert.match(p.texte, /repris/);
+});
+test('reprendre tous les tronçons perdus gagne tout de suite ; à la fin du jour, sinon, la mission est perdue', () => {
+  const B = nouvelleBataille(3, R, { secteur: 'saillant', soldats: 400 }), e = B.etat;
+  for (const k of e.contre.ks) e.troncons[k] = 0; e.tickJour = 29;      // (leur régiment, encore dedans, les reprendrait aussitôt : on le suppose tombé)
+  for (let i = 0; i < B.armee.n; i++) if (B.armee.camp[i] === 1) B.armee.mort[i] = 1;
+  avancer(B); avancer(B);
+  assert.equal(e.phase, 'fin'); assert.equal(e.issue.reussie, true); assert.match(e.issue.texte, /reprise/);
+  const C = nouvelleBataille(3, R, { secteur: 'saillant', soldats: 400 }); C.etat.tickJour = ticksParJour(R) - 1; avancer(C);      // (la fin du jour)
+  assert.equal(C.etat.phase, 'fin'); assert.equal(C.etat.issue.reussie, false); assert.match(C.etat.issue.texte, /pas reprise/);
+});

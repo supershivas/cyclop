@@ -1,65 +1,65 @@
 // Le cycle de vie : écran titre → bataille → nuit → fin ; pause active,
 // réglages, sauvegarde, mise à jour, debug. Les règles sont dans bataille.js
 // (pures), le dessin dans rendu3d.js (il ne modifie jamais l'état).
-import { createLoop } from './lib/loop.js?v=0.108.2';
-import { createKeys, stopTypeahead } from './lib/keys.js?v=0.108.2';
-import { createPointer, lockBrowserGestures } from './lib/pointer.js?v=0.108.2';
-import { createGamepad } from './lib/gamepad.js?v=0.108.2';
-import { createStore, autosave, pickJSONFile } from './lib/save.js?v=0.108.2';
-import { startUpdateCheck, loadVersion, loadChangelog, downloadJSON } from './lib/app-update.js?v=0.108.2';
-import { ROLES } from './palette.js?v=0.108.2';
-import { VERSION_CAMPAGNE, CLE as CLE_CAMPAGNE, cloturerDansLeStore, nouvelleCampagne, suivante, passage, bilan as bilanCampagne } from './campagne.js?v=0.108.2';
-import { CAMPAGNE } from './data/campagne.js?v=0.108.2';
-import { MISSIONS, MEMORIAL, peutDeployer, deployer, bordereau, progressionMission, progressionSecondaire, EUX, nouvelleBataille, etapesRestaurer, avancer, aube, ordonnerMarche, peutOrdonner, ordonnerBarrage, peutBarrage, arriereDe, ordonnerStance, peutStance, horloge, effectifs, tronconsTenus, moralEnMots, terrainResume, forcesTroncons, largeurZone, lettreZone, etendueZones, nomTroncon, actionDe, secteursDe, tronconsDeLigne, zone, photo, restaurer, PAS, NOUS } from './bataille.js?v=0.108.2';
-import { ligneY, etatTranchee } from './tranchees.js?v=0.108.2';
-import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.108.2';
-import { AVION, MITRAILLAGE } from './data/mitraillage.js?v=0.108.2';
-import { NIDS } from './data/nids.js?v=0.108.2';
-import { ligneDe, apercuVol, avionsPrets, avionsRestants, positionDe, balayage } from './avions.js?v=0.108.2';
-import { creerSon } from './audio.js?v=0.108.2';
-import { CHAR, CHAR_RECHARGE, CHARS, CHAR_PAR_DEFAUT } from './data/chars.js?v=0.108.2';
-import { GENIE, GENIE_DATA } from './data/genie.js?v=0.108.2';
-import { pontEn } from './eaux.js?v=0.108.2';
-import { PONTS_JEU, typePont } from './data/ponts.js?v=0.108.2';
-import { routeChar } from './chars.js?v=0.108.2';
-import { STANCES, STANCE_DEFAUT } from './data/stances.js?v=0.108.2';
-import { METEO, SAISONS, SAISON_DEFAUT } from './data/meteo.js?v=0.108.2';
-import { hash2 } from './lib/rng.js?v=0.108.2';
-import { creerRendu, CAMERA, ZOOMS, ZOOMS_CADRAGE } from './rendu3d.js?v=0.108.2';
-import { etatEnMots, experienceEnMots, chevrons, caracteristiques } from './identite.js?v=0.108.2';
-import { aspect } from './aspect-soldat.js?v=0.108.2';
-import { numeroCampagne } from './bataille.js?v=0.108.2';
-import { ARTICULE } from './data/aspect-soldat.js?v=0.108.2';
-import { refusCorvee } from './nuit.js?v=0.108.2';
-import { chargerContenu, appliquerSecteurs, appliquerCartes, appliquerCampagne } from './design-store.js?v=0.108.2';
-import { ordonnerChar, refusOrdreChar } from './chars.js?v=0.108.2';
-import { orienterNid, refusOrienterNid } from './nids.js?v=0.108.2';
-import { creerNidsHud } from './hud/nids.js?v=0.108.2';
-import { creerCharsHud } from './hud/chars.js?v=0.108.2';
-import { creerCampHud } from './hud/camp.js?v=0.108.2';
-import { affecterGueris, charsDispo, ordonnerChantier, refusCamp, ouverture, campDe, refusOrdre, batimentSous, emprisesCamp, emplacementCamp, etendueCamp, niveauDe, modif, rechargeDe as facteurRecharge } from './camp.js?v=0.108.2';
-import { BATIMENTS, equipeEnMots } from './data/batiments.js?v=0.108.2';
-import { creerSecteur } from './hud/secteur.js?v=0.108.2';
-import { palmares, tableau } from './hud/medailles.js?v=0.108.2';
-import * as lecture from './hud/lecture.js?v=0.108.2';
-import { creerFiche } from './hud/fiche.js?v=0.108.2';
-import { chevronsHtml } from './hud/barres.js?v=0.108.2';
-import { creerNuit, corveeDe, corveeCourte } from './hud/nuit.js?v=0.108.2';
-import { creerCampagne } from './hud/campagne.js?v=0.108.2';
-import { creerCarnet, deux } from './hud/carnet.js?v=0.108.2';
-import { creerCarte } from './hud/carte.js?v=0.108.2';
-import { creerPertes } from './hud/pertes.js?v=0.108.2';
-import { creerBarreTemps } from './hud/temps.js?v=0.108.2';
-import { creerChargement } from './hud/chargement.js?v=0.108.2';
-import { creerRetours } from './hud/retours.js?v=0.108.2';
-import { creerInfobulle } from './hud/infobulle.js?v=0.108.2';
-import { SECTEURS } from './data/secteur.js?v=0.108.2';
-import { DIFFICULTES, DIFFICULTE_DEFAUT, DUREES, DUREE_DEFAUT } from './data/difficulte.js?v=0.108.2';
-import { preparerAleatoire, ID_ALEATOIRE } from './generateur.js?v=0.108.2';
-import { creerLockstep, empreinteEtat } from './reseau/lockstep.js?v=0.108.2';
-import { nouveauCode, codeValide, publier, ecouter } from './reseau/relais.js?v=0.108.2';
-import { creerHote, creerInvite } from './reseau/lien.js?v=0.108.2';
-import { SOLEIL_JEU } from './data/soleil.js?v=0.108.2';
+import { createLoop } from './lib/loop.js?v=0.109.1';
+import { createKeys, stopTypeahead } from './lib/keys.js?v=0.109.1';
+import { createPointer, lockBrowserGestures } from './lib/pointer.js?v=0.109.1';
+import { createGamepad } from './lib/gamepad.js?v=0.109.1';
+import { createStore, autosave, pickJSONFile } from './lib/save.js?v=0.109.1';
+import { startUpdateCheck, loadVersion, loadChangelog, downloadJSON } from './lib/app-update.js?v=0.109.1';
+import { ROLES } from './palette.js?v=0.109.1';
+import { VERSION_CAMPAGNE, CLE as CLE_CAMPAGNE, cloturerDansLeStore, nouvelleCampagne, suivante, passage, bilan as bilanCampagne } from './campagne.js?v=0.109.1';
+import { CAMPAGNE } from './data/campagne.js?v=0.109.1';
+import { MISSIONS, MEMORIAL, peutDeployer, deployer, bordereau, progressionMission, progressionSecondaire, EUX, nouvelleBataille, etapesRestaurer, avancer, aube, ordonnerMarche, peutOrdonner, ordonnerBarrage, peutBarrage, arriereDe, ordonnerStance, peutStance, horloge, effectifs, tronconsTenus, moralEnMots, terrainResume, forcesTroncons, largeurZone, lettreZone, etendueZones, nomTroncon, actionDe, secteursDe, tronconsDeLigne, zone, photo, restaurer, PAS, NOUS } from './bataille.js?v=0.109.1';
+import { ligneY, y0En, etatTranchee } from './tranchees.js?v=0.109.1';
+import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.109.1';
+import { AVION, MITRAILLAGE } from './data/mitraillage.js?v=0.109.1';
+import { NIDS } from './data/nids.js?v=0.109.1';
+import { ligneDe, apercuVol, avionsPrets, avionsRestants, positionDe, balayage } from './avions.js?v=0.109.1';
+import { creerSon } from './audio.js?v=0.109.1';
+import { CHAR, CHAR_RECHARGE, CHARS, CHAR_PAR_DEFAUT } from './data/chars.js?v=0.109.1';
+import { GENIE, GENIE_DATA } from './data/genie.js?v=0.109.1';
+import { pontEn } from './eaux.js?v=0.109.1';
+import { PONTS_JEU, typePont } from './data/ponts.js?v=0.109.1';
+import { routeChar } from './chars.js?v=0.109.1';
+import { STANCES, STANCE_DEFAUT } from './data/stances.js?v=0.109.1';
+import { METEO, SAISONS, SAISON_DEFAUT } from './data/meteo.js?v=0.109.1';
+import { hash2 } from './lib/rng.js?v=0.109.1';
+import { creerRendu, CAMERA, ZOOMS, ZOOMS_CADRAGE } from './rendu3d.js?v=0.109.1';
+import { etatEnMots, experienceEnMots, chevrons, caracteristiques } from './identite.js?v=0.109.1';
+import { aspect } from './aspect-soldat.js?v=0.109.1';
+import { numeroCampagne } from './bataille.js?v=0.109.1';
+import { ARTICULE } from './data/aspect-soldat.js?v=0.109.1';
+import { refusCorvee } from './nuit.js?v=0.109.1';
+import { chargerContenu, appliquerSecteurs, appliquerCartes, appliquerCampagne } from './design-store.js?v=0.109.1';
+import { ordonnerChar, refusOrdreChar } from './chars.js?v=0.109.1';
+import { orienterNid, refusOrienterNid } from './nids.js?v=0.109.1';
+import { creerNidsHud } from './hud/nids.js?v=0.109.1';
+import { creerCharsHud } from './hud/chars.js?v=0.109.1';
+import { creerCampHud } from './hud/camp.js?v=0.109.1';
+import { affecterGueris, charsDispo, ordonnerChantier, refusCamp, ouverture, campDe, refusOrdre, batimentSous, emprisesCamp, emplacementCamp, etendueCamp, niveauDe, modif, rechargeDe as facteurRecharge } from './camp.js?v=0.109.1';
+import { BATIMENTS, equipeEnMots } from './data/batiments.js?v=0.109.1';
+import { creerSecteur } from './hud/secteur.js?v=0.109.1';
+import { palmares, tableau } from './hud/medailles.js?v=0.109.1';
+import * as lecture from './hud/lecture.js?v=0.109.1';
+import { creerFiche } from './hud/fiche.js?v=0.109.1';
+import { chevronsHtml } from './hud/barres.js?v=0.109.1';
+import { creerNuit, corveeDe, corveeCourte } from './hud/nuit.js?v=0.109.1';
+import { creerCampagne } from './hud/campagne.js?v=0.109.1';
+import { creerCarnet, deux } from './hud/carnet.js?v=0.109.1';
+import { creerCarte } from './hud/carte.js?v=0.109.1';
+import { creerPertes } from './hud/pertes.js?v=0.109.1';
+import { creerBarreTemps } from './hud/temps.js?v=0.109.1';
+import { creerChargement } from './hud/chargement.js?v=0.109.1';
+import { creerRetours } from './hud/retours.js?v=0.109.1';
+import { creerInfobulle } from './hud/infobulle.js?v=0.109.1';
+import { SECTEURS } from './data/secteur.js?v=0.109.1';
+import { DIFFICULTES, DIFFICULTE_DEFAUT, DUREES, DUREE_DEFAUT } from './data/difficulte.js?v=0.109.1';
+import { preparerAleatoire, ID_ALEATOIRE } from './generateur.js?v=0.109.1';
+import { creerLockstep, empreinteEtat } from './reseau/lockstep.js?v=0.109.1';
+import { nouveauCode, codeValide, publier, ecouter } from './reseau/relais.js?v=0.109.1';
+import { creerHote, creerInvite } from './reseau/lien.js?v=0.109.1';
+import { SOLEIL_JEU } from './data/soleil.js?v=0.109.1';
 
 const JEU = 'cyclopeen';
 const $ = id => document.getElementById(id);
@@ -269,6 +269,9 @@ function confirmer(texte, oui) {
 }
 // L'objectif de celui qui joue : la mission est celle des nôtres ; à deux, en face a l'objectif inverse (tenir ce qu'on attaque, prendre ce qu'on tient)
 const objectif = () => (MOI === NOUS) === (B.etat.mission === 'tenir') ? 'tenir' : 'prendre';
+// le nom et le texte de la mission du camp joué (la contre-attaque éclair a les siens : un seul ordre, dans les deux camps ; v0.108.0)
+const missionNom = () => B.etat.mission === 'contre' ? 'Contre-attaque éclair' : objectif() === 'tenir' ? 'Tenir le secteur' : 'Prendre leur première ligne';
+const missionOrdre = () => MISSIONS[B.etat.mission === 'contre' ? 'contre' : objectif()];
 function reglerCamp(camp) {
   MOI = camp;
   // l'interface parle de « nous » en bleu et « eux » en face : à l'invité, le kaki est « nous »
@@ -342,8 +345,8 @@ async function lancer(titre, etapes) {
   if (DEBUG || !B.etat.mission) return;
   loop.pause();
   const e = B.etat;
-  $('ordre-mission').textContent = MISSIONS[objectif()];
-  $('ordre-duree').textContent = `La bataille durera ${e.meteo.length} jours${e.sol?.saison && SAISONS[e.sol.saison] ? `, en ${SAISONS[e.sol.saison].nom}` : ''}.`;
+  $('ordre-mission').textContent = missionOrdre();
+  $('ordre-duree').textContent = `La bataille durera ${e.meteo.length} jour${e.meteo.length > 1 ? 's' : ''}${e.sol?.saison && SAISONS[e.sol.saison] ? `, en ${SAISONS[e.sol.saison].nom}` : ''}.`;
   $('dialogue-ordre').showModal();
 }
 // La campagne (v0.36.4) : la bataille n d'une campagne, avec ses survivants (`suivante`). Le registre est celui de `cyclopeen:campagne` ; une partie en cours est remplacée.
@@ -367,8 +370,8 @@ function demarrerCampagne(graineIdentite) {
 // le bouton de mission : la modale dit quoi faire et où on en est (pause, reprise à la fermeture)
 $('mission').onclick = () => {
   const m = progressionMission(B, MOI);
-  $('mission-nom').textContent = objectif() === 'tenir' ? 'Tenir le secteur' : 'Prendre leur première ligne';
-  $('mission-texte').textContent = MISSIONS[objectif()].replace(/^[^:]*: /, '').replace(/^./, c => c.toUpperCase());
+  $('mission-nom').textContent = missionNom();
+  $('mission-texte').textContent = missionOrdre().replace(/^[^:]*: /, '').replace(/^./, c => c.toUpperCase());
   const pct = Math.round(100 * m.p), jauge = $('mission-barre');
   jauge.setAttribute('aria-valuenow', pct); jauge.firstChild.style.width = pct + '%'; jauge.lastChild.textContent = m.label ?? pct + ' %';
   $('mission-etat').textContent = m.texte;
@@ -534,7 +537,7 @@ function demanderSecteur(avecDifficulte = true) {
     const montrer = async () => {
       marquer();
       try {
-        if (!apercuSecteur) { const { creerVue3D } = await import('./apercu-3d.js?v=0.108.2'); apercuSecteur = await creerVue3D({ R, hote, rotation: 0.12 }); apercuSecteur.surClic = () => agrandir(!d.classList.contains('agrandi')); }
+        if (!apercuSecteur) { const { creerVue3D } = await import('./apercu-3d.js?v=0.109.1'); apercuSecteur = await creerVue3D({ R, hote, rotation: 0.12 }); apercuSecteur.surClic = () => agrandir(!d.classList.contains('agrandi')); }
         if (!ouvert) return;
         apercuSecteur.monter(choisi, SECTEURS[choisi], graineDe(), { soldats: false, cadrer: true, saison: saisonDe(), meteo: meteoApercu ?? undefined });
         hote.style.visibility = ''; d.dataset.apercu = `${choisi}:${graineDe()}:${saisonDe()}`;
@@ -655,7 +658,7 @@ function demarrerReseau({ moi, lien, graine, secteur, saison, reprise }) {
   jouer(b);
   $('depart-statut').textContent = reprise ? 'Partie reprise. La bataille repart quand les deux commandants sont prêts.' : 'La bataille commence quand les deux commandants sont prêts.';
   $('deux-pret').disabled = false; $('deux-pret').textContent = 'Prêt'; $('dialogue-depart').showModal();
-  noter(`Vous êtes le ${moi === NOUS ? 'bleu' : 'kaki'}. ${MISSIONS[objectif()]}`);
+  noter(`Vous êtes le ${moi === NOUS ? 'bleu' : 'kaki'}. ${missionOrdre()}`);
   toast(`Vous êtes le ${moi === NOUS ? 'bleu' : 'kaki'}. Espace : pause pour les deux.`);
 }
 function quitterReseau(message) {
@@ -835,7 +838,7 @@ function montrerFin() {
   // elle est finie : un papier sobre, les batailles puis les noms (Jérôme : sans fanfare), au lieu de l'écran de fin
   if (campagne) { laCampagne.montrerFin(bilanCampagne(campagne), montrerTitre); return; }
   const e = B.etat, [vNous, vEux] = effectifs(B);
-  $('fin-titre').textContent = `${e.jour} jours.`;
+  $('fin-titre').textContent = `${e.jour} jour${e.jour > 1 ? 's' : ''}.`;
   $('fin-issue').textContent = reseau ? `${e.issue?.reussie ? 'Le bleu' : 'Le kaki'} l'emporte. ${e.issue?.texte || ''}` : (e.issue?.texte || '') + (e.issue?.secondaires ? ` Missions secondaires : ${e.issue.secondaires.reussies.length} réussie(s), ${e.issue.secondaires.score} points.` : '');
   $('fin-nouvelle').hidden = !!reseau;
   // jour après jour : ce qu'il a coûté, sans un mot de plus
@@ -1125,7 +1128,7 @@ function majHud() {
   const h = horloge(B), e = B.etat;
   majBarreTemps(B);
   $('mission').hidden = !e.mission;
-  if (e.mission) $('mission').textContent = `${objectif() === 'tenir' ? 'Tenir le secteur' : 'Prendre leur première ligne'} ▸`;
+  if (e.mission) $('mission').textContent = `${missionNom()} ▸`;
   majPertes(B); majTemps(h);
   majFiche();
   $('pause-active').hidden = !pauseActive;
@@ -1304,7 +1307,7 @@ function allerA(l) {
   if (l.reg !== undefined) centrerSur(l.reg);
   else if (l.troncon !== undefined) {
     const tr = B.troncons[l.troncon];
-    if (tr) { vers((tr.x0 + tr.x1) / 2, B.lignes[tr.ligne].y0); rendu.clignoter([l.troncon]); }
+    if (tr) { vers((tr.x0 + tr.x1) / 2, y0En(B.lignes[tr.ligne], (tr.x0 + tr.x1) / 2)); rendu.clignoter([l.troncon]); }
   } else if (l.soldat !== undefined) {
     const A = B.armee; let i = -1;
     for (let k = 0; k < A.n; k++) if (A.id[k] === l.soldat) { i = k; break; }
@@ -1972,7 +1975,7 @@ startUpdateCheck({
 
 // ─── Mode debug (section 18) : chargé seulement avec ?debug=1 ──────────────
 if (DEBUG) {
-  const { installDebug, seedFromUrl } = await import('./lib/debug.js?v=0.108.2');
+  const { installDebug, seedFromUrl } = await import('./lib/debug.js?v=0.109.1');
   window.__seed = seedFromUrl() ?? undefined;
   installDebug({
     state: () => B && { ...horloge(B), effectifs: effectifs(B), pertes: B.etat.pertes, impacts: B.etat.impacts.length, enJeu: enJeu(), pause: loop.paused },

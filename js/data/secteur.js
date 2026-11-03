@@ -72,4 +72,36 @@ export const SECTEURS = {
       { o: 'lac', x: 30, y: 135, r: 12 }, { o: 'lac', x: 125, y: 127, r: 10 }, { o: 'lac', x: 205, y: 135, r: 11 }, { o: 'lac', x: 240, y: 175, r: 13 }, { o: 'lac', x: 330, y: 127, r: 11 }, { o: 'lac', x: 150, y: 183, r: 10 }, { o: 'lac', x: 380, y: 172, r: 12 },
     ],
   },
+  // Des lignes qui épousent un coude du terrain (Jérôme, v0.109.0 : « les lignes peuvent être courbes, moins linéaires » ; « no man's land plus longs ou plus courts ») : la courbe de chaque camp est
+  // une grande onde (`tranchees.courbe`, termes de `arcY`), en opposition de phase d'un camp à l'autre, plus une onde courte : le no man's land passe de ~70 m, où un poste de mitrailleuse couvre tout, à ~190 m, où l'on n'est sous le feu que de l'artillerie.
+  meandres: {
+    ...ESSAI,
+    nom: 'Le méandre',
+    resume: 'Les lignes suivent le coude d\'un ruisseau à sec : elles ondulent, et le no man\'s land s\'étrangle à 70 m au milieu avant de s\'ouvrir à 190 m sur les ailes. Les mitrailleuses y couvrent tout le goulet.',
+    profil: [0.55, 0.50, 0.44, 0.40, 0.38, 0.36, 0.36, 0.38, 0.40, 0.44, 0.50, 0.55],
+    relief: { bosses: 0.8, ondulation: 0.8, nappe: 0 },
+    pluieAuMoins: 2, arbres: 110, bois: 3, haies: 6, buissons: 200,
+    tranchees: {
+      ...ESSAI.tranchees,
+      courbe: {
+        nous: [{ amp: 25, long: 400, dec: 0 }, { amp: 8, long: 150, dec: 20 }],
+        eux: [{ amp: -25, long: 400, dec: 0 }, { amp: -6, long: 170, dec: 60 }],
+      },
+    },
+  },
+  // La contre-attaque éclair (Jérôme, v0.109.0, parmi les missions proposées) : notre ligne fait un saillant que l'ennemi vient de prendre (`contre` : de x0 à x1 m du bord ouest, un régiment d'en face y est
+  // entré, le nôtre a reculé à la 3e ligne). Une seule journée : il faut reprendre tous les tronçons perdus avant la nuit (la mission `contre`, jugée par `juger`), ou la ligne est perdue.
+  saillant: {
+    ...ESSAI,
+    nom: 'Le saillant',
+    resume: 'Notre ligne fait un saillant ; l\'ennemi vient de le prendre. Une journée pour reprendre les tranchées perdues, avant que leurs renforts n\'arrivent. Les lignes avancent en bosse vers l\'ennemi : le no man\'s land n\'y fait plus que 95 m.',
+    profil: [0.50, 0.50, 0.50, 0.50, 0.52, 0.55, 0.55, 0.52, 0.50, 0.50, 0.50, 0.50],
+    relief: { bosses: 0.6, ondulation: 0.7, nappe: 0 },
+    jours: 1, missions: ['contre'], reserves: 2, pluieAuMoins: 0, arbres: 90, bois: 2, haies: 4, buissons: 150,
+    contre: { x0: 100, x1: 200 },
+    tranchees: {
+      ...ESSAI.tranchees,
+      courbe: { nous: [{ bosse: true, x: 150, l: 70, h: -34 }] },
+    },
+  },
 };
