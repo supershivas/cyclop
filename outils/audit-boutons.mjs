@@ -1,4 +1,4 @@
-// Audit des boutons et des unités du HUD (v0.109.2 ; docs/design-system.md, « Troisième jet »).
+// Audit des boutons et des unités du HUD (v0.110.1 ; docs/design-system.md, « Troisième jet »).
 //
 //   node outils/audit-boutons.mjs            → échoue (code 1) à la moindre entorse, une ligne par entorse
 //   node outils/audit-boutons.mjs --detail   → ajoute le tableau des familles mesurées

@@ -1,5 +1,9 @@
 # Journal des versions
 
+## 0.110.1 — 2026-11-03
+- Boutons, casse et unités uniformes : même ombre, mêmes 44 px, mêmes barres pour régiments, chars, mitrailleuses et batteries
+- Un régiment choisi s'inverse de la même façon sur sa carte et sur le champ ; chars et mitrailleuses ont le liseré de l'armée et un survol
+
 ## 0.110.0 — 2026-11-03
 - Nouvelle carte « La grande plaine » : 800 × 500 m, seize régiments par camp et un no man's land de 160 à 240 m
 - La contre-attaque éclair dure toujours un jour : les boutons de durée sont grisés pour elle

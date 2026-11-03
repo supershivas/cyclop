@@ -546,7 +546,7 @@ body.charge dialog { display: none; }
 .carte-reglage-nom { font-size: var(--texte-petit); letter-spacing: var(--lettres-etiquette); text-transform: uppercase; color: var(--jeu-accent); }
 .carte-reglage-rang { display: flex; flex-wrap: wrap; gap: var(--e1) var(--pas); }
 /* une pastille : le contour glaise au repos, l'encre sous l'os quand elle est choisie (comme les boutons de papier du jeu) */
-.pastille { display: inline-flex; align-items: center; justify-content: center; gap: var(--e1); font: inherit; font-size: var(--texte-petit); white-space: nowrap; min-height: var(--jeu-cible); padding: 0 var(--pas); cursor: pointer; color: var(--jeu-fond); background: transparent; border: 2px solid var(--jeu-accent); }
+.pastille { display: inline-flex; align-items: center; justify-content: center; gap: var(--e1); font: inherit; font-size: var(--texte-petit); white-space: nowrap; min-height: var(--jeu-cible); padding: 0 var(--pas); cursor: pointer; color: var(--jeu-fond); background: transparent; border: 1px solid var(--jeu-accent); }
 .pastille svg { width: 1rem; height: 1rem; flex: none; }
 .pastille:focus-visible { outline: 2px solid var(--jeu-nous); outline-offset: 1px; }
 .pastille[aria-pressed="true"] { color: var(--jeu-encre); background: var(--jeu-fond); border-color: var(--jeu-fond); }
