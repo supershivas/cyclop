@@ -52,7 +52,7 @@ Choisie par Jérôme (v0.1.0). Lettres : `t s b g h e r o` (terre, boue, glaise,
 
 ### Échelle
 
-- Une case = 1 m. Hauteurs en quarts (25 cm). Secteur du lot minimal : 400 × 300
+- Une case = 1 m. Hauteurs en quarts (25 cm). Cartes jusqu'à 800 × 500 (`plaine`, v0.110.0 : `docs/domaines/bataille.md`). Secteur du lot minimal : 400 × 300
   cases, au milieu d'un terrain de 840 × 640 (des marges de 220 et 170 m, sans
   régiments, où les ordres ne vont pas) : tout dézoomé, la vue reste sur le
   terrain (Jérôme, v0.3.0).
