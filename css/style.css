@@ -331,7 +331,7 @@ dialog .reglage input { width: 20px; height: 20px; margin: 0; flex: none; accent
 #nuit-corps, #aube-bilan { overflow-y: auto; min-height: 0; }
 .nuit h2 { margin: 0 0 var(--e1); }
 .nuit p { margin: var(--e0) 0; }
-.nuit button { font: inherit; font-size: var(--texte-petit); color: var(--jeu-fond); background: none; border: 1px solid var(--jeu-fond); min-height: 36px; padding: 0 var(--pas); text-align: left; }
+.nuit button { font: inherit; font-size: var(--texte-petit); color: var(--jeu-fond); background: none; border: 1px solid var(--jeu-fond); min-height: var(--jeu-cible); padding: 0 var(--pas); text-align: left; }
 .nuit button:disabled { color: var(--jeu-accent); border-color: var(--jeu-accent); }
 .nuit button.actif, .nuit button.choisi { background: var(--jeu-fond); color: var(--jeu-encre); }
 #aube { flex: none; width: 100%; min-height: var(--jeu-cible); margin-top: var(--pas); text-align: center; background: var(--jeu-fond); color: var(--jeu-encre); }
