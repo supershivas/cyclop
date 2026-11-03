@@ -522,7 +522,6 @@ body.charge dialog { display: none; }
 .papier-calque.grain { background: var(--jeu-fond); -webkit-mask-image: var(--bruit-grain, linear-gradient(transparent, transparent)); mask-image: var(--bruit-grain, linear-gradient(transparent, transparent)); opacity: .15; }
 .papier-calque.taches { background: var(--jeu-accent); -webkit-mask-image: var(--bruit-taches, linear-gradient(transparent, transparent)); mask-image: var(--bruit-taches, linear-gradient(transparent, transparent)); opacity: .34; }
 .papier-calque.plis { background:
-  linear-gradient(0deg, transparent calc(34% - 2px), color-mix(in srgb, var(--jeu-fond) 14%, transparent) calc(34% - 1px), color-mix(in srgb, var(--jeu-encre) 50%, transparent) 34%, transparent calc(34% + 2px)),
   radial-gradient(circle at 0 100%, color-mix(in srgb, var(--jeu-accent) 40%, transparent), transparent 20%), radial-gradient(circle at 100% 0, color-mix(in srgb, var(--jeu-accent) 30%, transparent), transparent 16%),
   radial-gradient(ellipse at 50% 50%, transparent 62%, color-mix(in srgb, var(--jeu-accent) 30%, transparent)); }
 .papier-contenu { position: relative; z-index: 2; height: 100%; display: flex; flex-direction: column; gap: var(--pas); padding: var(--e1) var(--e1) var(--e3); box-sizing: border-box; }

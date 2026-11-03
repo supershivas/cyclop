@@ -4,6 +4,9 @@
 - Nouvelle carte « La grande plaine » : 800 × 500 m, seize régiments par camp et un no man's land de 160 à 240 m
 - La contre-attaque éclair dure toujours un jour : les boutons de durée sont grisés pour elle
 
+## 0.109.1 — 2026-11-03
+- Les cartes de secteur n'ont plus aucun pli : le papier reste usé, grainé et taché
+
 ## 0.109.0 — 2026-11-03
 - Les lignes de tranchée peuvent être courbes : « Le méandre » ondule, et son no man's land passe de 82 à 181 m
 - Nouvelle mission « contre-attaque éclair » sur « Le saillant » : un morceau de notre ligne vient de tomber, il faut le reprendre avant la nuit

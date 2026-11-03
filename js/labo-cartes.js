@@ -93,7 +93,6 @@ export function cartesSecteur(stage, { geste = 'glisse', R } = {}) {
     const taches = couche(`background-image:${TACHES};mix-blend-mode:multiply;opacity:.42`);
     const fibres = couche(`background-image:${FIBRES};mix-blend-mode:multiply;opacity:.2`);
     const plis = couche(`background:
-      linear-gradient(0deg,transparent calc(34% - 2px),rgba(${TERRE},.14) calc(34% - 1px),rgba(${OS},.5) 34%,transparent calc(34% + 2px)),
       radial-gradient(circle at 0 100%,rgba(${GLAISE},.4),transparent 20%),radial-gradient(circle at 100% 0,rgba(${GLAISE},.3),transparent 16%),
       radial-gradient(ellipse at 50% 50%,transparent 62%,rgba(${GLAISE},.3))`);
     // l'image : la vraie carte du secteur, collée avec deux bouts d'adhésif
