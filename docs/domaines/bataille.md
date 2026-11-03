@@ -230,7 +230,7 @@
 - **Portée ramenée à 80 m (Jérôme, v0.107.1)** : « les mitrailleuses attaquent d'une ligne à l'autre, leur portée devrait être plus réduite ». Le 130 m ci-dessus atteignait le parapet d'en face (119 m) : il fait place à 80 m, qui couvre les deux tiers du no man's land mais pas la tranchée ennemie. Conséquence voulue : un poste « veille » tant que l'ennemi reste dans sa tranchée et ne tire que sur un assaut en marche. Test « ne tire plus d'une tranchée à l'autre » ; références `rendu.json` et `fumee.json` réécrites (la simulation change). Si le no man's land d'une carte devient plus étroit que 80 m, les postes se verront d'une ligne à l'autre : à surveiller avec les cartes variées.
 - `test/rendu.json` (30 images : traceurs des postes) et `test/fumee.json` (pertes) relevés ; l'image `retenu-z6` regardée.
 
-## Lignes courbes, no man's land variable, contre-attaque éclair (Jérôme, v0.108.0)
+## Lignes courbes, no man's land variable, contre-attaque éclair (Jérôme, v0.109.0)
 
 Demande du 2 novembre : « les lignes peuvent être courbes, moins linéaires ; no man's land plus longs ou plus courts ; cartes plus grandes ; escarmouches ; missions ». Première tranche livrée ; le reste est à la fin de cette section.
 

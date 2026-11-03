@@ -1,9 +1,16 @@
 # Journal des versions
 
-## 0.108.0 — 2026-11-02
+## 0.109.0 — 2026-11-03
 - Les lignes de tranchée peuvent être courbes : « Le méandre » ondule, et son no man's land passe de 82 à 181 m
 - Nouvelle mission « contre-attaque éclair » sur « Le saillant » : un morceau de notre ligne vient de tomber, il faut le reprendre avant la nuit
 - « 1 jour » au singulier quand la bataille ne dure qu'un jour
+
+## 0.108.1 — 2026-11-02
+- Les cartes de secteur n'ont plus de pli vertical au milieu (il ne rendait pas bien) ; le pli horizontal reste
+
+## 0.108.0 — 2026-11-02
+- Nouvelle partie : une liste de secteurs à gauche, plus petite (elle défile s'il y en a des dizaines, « Au hasard » reste en bas), et à droite la carte du secteur choisi avec son aperçu et ses options, posée sur quelques feuilles
+- Un clic sur un secteur : l'ancienne carte part sous les feuilles, la nouvelle grossit depuis la ligne cliquée ; le tirage d'un autre secteur au hasard change bien l'aperçu
 
 ## 0.107.1 — 2026-11-02
 - Les mitrailleuses ne tirent plus d'une tranchée à l'autre : leur portée passe de 130 à 80 m, elles couvrent le no man's land mais plus la ligne d'en face

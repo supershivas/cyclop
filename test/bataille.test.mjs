@@ -1450,7 +1450,7 @@ test('un régiment en déroute se retire vers la caserne ; ceux qui y entrent fo
   assert.match(deployer(B, 0, true).refus, /rallié/);
 });
 
-// ─── Des cartes à lignes courbes (Jérôme, v0.108.0) ──────────────────────
+// ─── Des cartes à lignes courbes (Jérôme, v0.109.0) ──────────────────────
 import { validerSecteur as validerCourbe, y0En, arcY } from '../js/tranchees.js';
 import { ticksParJour } from '../js/bataille.js';
 group('lignes courbes et no man\'s land variable');

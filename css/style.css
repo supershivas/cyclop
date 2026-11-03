@@ -494,43 +494,40 @@ body.charge dialog { display: none; }
 .chargement-piste { height: 10px; border: 2px solid var(--jeu-fond, #16130f); }
 .chargement-piste i { display: block; height: 100%; background: var(--jeu-fond, #16130f); transition: width .12s linear; }
 
-/* Le choix du secteur (Jérôme, v0.29.0 ; v0.106.0 : des cartes de papier ; v0.107.0 : posées sur la fenêtre même, sans cadre ni liste : « le menu fait doublon avec les cartes ») : une pile de cartes ; le titre de chaque carte
-   dépasse de la pile et sert de menu ; la carte choisie glisse sur le dessus. Aucune valeur de couleur ici : le papier est l'encre (os), le grain et les plis la terre, les taches la glaise, en transparence (`color-mix`) ;
-   le bruit est un masque (sa couleur vient des variables). */
-#dialogue-carte { width: min(94vw, 72rem); max-width: none; overflow: hidden; }       /* (pas de barre de défilement : la pile se réduit à la place qui reste, Jérôme, v0.60.2) */        /* (game.css limite un dialogue à 520 px) */
+/* Le choix du secteur (Jérôme, v0.29.0 ; v0.37.1 : deux colonnes ; v0.106.0 : des cartes de papier ; v0.108.0 : « et si nous avons des dizaines de cartes, ça ne fonctionne plus ») : à gauche la liste des secteurs (petite, elle défile),
+   à droite UNE carte de papier posée sur quelques feuilles de décor. Aucune valeur de couleur ici : le papier est l'encre (os), le grain et les plis la terre, les taches la glaise, en transparence (`color-mix`) ;
+   le bruit est un masque dessiné par main.js (sa couleur vient des variables). */
+#dialogue-carte { width: min(94vw, 72rem); max-width: none; overflow: hidden; }       /* (pas de barre de défilement : la carte se réduit à la place qui reste, Jérôme, v0.60.2) */        /* (game.css limite un dialogue à 520 px) */
 #dialogue-carte .menu { grid-auto-flow: column; justify-content: end; }
-.carte-pile { position: relative; height: clamp(24rem, calc(100dvh - 19rem), 44rem); }
+.carte-colonnes { display: grid; grid-template-columns: minmax(11rem, 14rem) minmax(0, 1fr); gap: calc(var(--pas) * 2); align-items: start; }
+.carte-colonnes > * { height: clamp(24rem, calc(100dvh - 19rem), 44rem); }
+/* la liste : une ligne par secteur, petite ; elle défile s'il y en a beaucoup, « Au hasard » reste épinglée en bas */
+.cartes-liste { display: flex; flex-direction: column; gap: var(--e0); overflow-y: auto; overscroll-behavior: contain; padding-right: var(--e1); scrollbar-width: thin; scrollbar-color: var(--jeu-accent) transparent; }
+.carte-ligne { flex: none; display: flex; align-items: center; gap: var(--pas); min-height: 0; padding: var(--e1) var(--pas); font: inherit; font-size: var(--texte); line-height: 1.3; letter-spacing: .04em; text-align: left; text-transform: uppercase; cursor: pointer; color: var(--jeu-fond); background: var(--jeu-encre); border: 2px solid var(--jeu-encre); }
+.carte-ligne span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.carte-ligne svg { width: 1rem; height: 1rem; flex: none; }
+.carte-ligne:focus-visible { border-color: var(--jeu-nous); }
+.carte-ligne[aria-pressed="true"] { border-color: var(--jeu-nous); outline: 2px solid var(--jeu-nous); outline-offset: -2px; }
+@media (hover: hover) { .carte-ligne:hover { border-color: var(--jeu-nous); } }
+.carte-ligne.hasard { position: sticky; bottom: 0; background: var(--jeu-accent); border-color: var(--jeu-accent); }       /* (d'une autre teinte, et toujours visible) */
 
-/* une carte : posée de biais (le transform est écrit par main.js), celles du dessous assombries (leur onglet seul se lit et se clique) */
-/* (les masques de bruit `--bruit-grain` et `--bruit-taches` sont dessinés une fois par main.js dans un canvas : un bruit SVG se recalculait à chaque réveil de la carte) */
-.carte-papier {
-  position: absolute; left: 0; right: 0; margin: 0 auto; top: calc(var(--decal) * var(--onglets) + var(--e1)); width: min(56rem, 100%); height: calc(100% - var(--decal) * var(--onglets) - var(--e1));
-  color: var(--jeu-fond); transition: transform .4s cubic-bezier(.2, .8, .2, 1); will-change: transform; }       /* (ni `filter` animé ni `mix-blend-mode` : chacun re-dessine à chaque image le filtre de bords de six cartes, 370 ms par image mesurés, le glissement gelait) */
-.carte-papier.glisse { transition: none; }
-.papier-voile { position: absolute; inset: 4px; z-index: 3; pointer-events: none; background: var(--jeu-fond); opacity: 0; transition: opacity .4s; }       /* une carte du dessous s'assombrit par un voile (de l'opacité : gratuit), pas par un filtre */
-.carte-papier.dessous .papier-voile { opacity: .22; }
+/* la scène : la carte au premier plan, des feuilles dessous (du décor : leur épaisseur seule compte) */
+.carte-scene { position: relative; }
+.carte-feuille, .carte-papier { position: absolute; top: 20px; bottom: 0; left: 0; right: 0; margin: 0 auto; width: min(56rem, 100%); }
+.carte-feuille { background: color-mix(in srgb, var(--jeu-encre) 62%, var(--jeu-fond)); }
+.carte-papier { color: var(--jeu-fond); z-index: 1; }
+.carte-papier.sortante { z-index: 0; }
 .papier-fond { position: absolute; inset: 0; background: var(--jeu-encre); }       /* (le contour déchiré est un `clip-path` écrit par main.js, `bordRonge` : un filtre SVG de turbulence coûtait ~200 ms à chaque glissement) */
 .papier-calque { position: absolute; inset: 4px; pointer-events: none; z-index: 3; }
 .papier-calque.grain { background: var(--jeu-fond); -webkit-mask-image: var(--bruit-grain, linear-gradient(transparent, transparent)); mask-image: var(--bruit-grain, linear-gradient(transparent, transparent)); opacity: .15; }
 .papier-calque.taches { background: var(--jeu-accent); -webkit-mask-image: var(--bruit-taches, linear-gradient(transparent, transparent)); mask-image: var(--bruit-taches, linear-gradient(transparent, transparent)); opacity: .34; }
 .papier-calque.plis { background:
-  linear-gradient(90deg, transparent calc(50% - 2px), color-mix(in srgb, var(--jeu-fond) 16%, transparent) calc(50% - 1px), color-mix(in srgb, var(--jeu-encre) 55%, transparent) 50%, transparent calc(50% + 2px)),
   linear-gradient(0deg, transparent calc(34% - 2px), color-mix(in srgb, var(--jeu-fond) 14%, transparent) calc(34% - 1px), color-mix(in srgb, var(--jeu-encre) 50%, transparent) 34%, transparent calc(34% + 2px)),
   radial-gradient(circle at 0 100%, color-mix(in srgb, var(--jeu-accent) 40%, transparent), transparent 20%), radial-gradient(circle at 100% 0, color-mix(in srgb, var(--jeu-accent) 30%, transparent), transparent 16%),
   radial-gradient(ellipse at 50% 50%, transparent 62%, color-mix(in srgb, var(--jeu-accent) 30%, transparent)); }
 .papier-contenu { position: relative; z-index: 2; height: 100%; display: flex; flex-direction: column; gap: var(--pas); padding: var(--e1) var(--e1) var(--e3); box-sizing: border-box; }
 .carte-corps { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; gap: var(--pas); }
-/* l'onglet : le nom de la carte, un bouton qui la prend ; sur la carte du dessus, c'est son titre */
-.carte-nom { flex: none; min-height: 0; display: flex; align-items: center; gap: var(--pas); width: 100%; margin: 0; padding: var(--e1) var(--e3); font: inherit; font-size: var(--texte); line-height: 1.3; letter-spacing: var(--titre-lettres); text-align: left; text-transform: uppercase; color: var(--jeu-encre); background: var(--jeu-fond); border: 0; cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.carte-pile.compacte .carte-papier.dessous .carte-nom { font-size: var(--texte-petit); padding: var(--e0) var(--e3); }       /* (un onglet de moins de 34 px : le titre plus petit tient encore) */
-.carte-nom svg { width: 1rem; height: 1rem; flex: none; }
-.carte-nom span { overflow: hidden; text-overflow: ellipsis; }
-.carte-papier:not(.dessous) .carte-nom { font-size: var(--texte-moyen); cursor: default; }
-.carte-nom:focus-visible { outline: 2px solid var(--jeu-nous); outline-offset: -2px; }
-@media (hover: hover) { .carte-papier.dessous .carte-nom:hover { color: var(--jeu-fond); background: var(--jeu-brume); } }
-.carte-papier.hasard .nom-onglet { display: none; }
-.carte-papier.hasard.dessous .nom-onglet { display: inline-flex; align-items: center; gap: var(--pas); }
-.carte-papier.hasard.dessous .nom-reel { display: none; }
+.carte-nom { flex: none; margin: 0; padding: var(--e1) var(--e3); font-size: var(--texte-moyen); font-weight: normal; line-height: 1.3; letter-spacing: var(--titre-lettres); text-transform: uppercase; color: var(--jeu-encre); background: var(--jeu-fond); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 /* la vraie carte du secteur (l'aperçu 3D du jeu) dans son cadre, collée au papier par deux bouts d'adhésif ; la saison dessus, en haut à droite (Jérôme, retour du 2 nov.) */
 .carte-cadre { position: relative; flex: 1 1 5rem; min-height: 5rem; margin: var(--pas) var(--e3) 0; background: var(--jeu-ombre); box-shadow: 0 0 0 var(--trait) var(--jeu-fond); }
 .carte-cadre::before, .carte-cadre::after { content: ''; position: absolute; z-index: 4; top: -8px; width: 52px; height: 16px; background: color-mix(in srgb, var(--jeu-brume) 85%, transparent); box-shadow: 0 0 0 var(--trait) color-mix(in srgb, var(--jeu-accent) 50%, transparent); pointer-events: none; }
@@ -541,7 +538,8 @@ body.charge dialog { display: none; }
 .carte-3d { position: absolute; inset: 0; overflow: hidden; display: flex; align-items: center; justify-content: center; background: var(--jeu-ombre); cursor: zoom-in; }
 .carte-3d canvas { display: block; image-rendering: pixelated; }
 .carte-saisons { position: absolute; z-index: 3; top: var(--pas); right: var(--pas); display: flex; gap: var(--e1); padding: var(--e1); background: color-mix(in srgb, var(--jeu-fond) 60%, transparent); }
-.carte-de { position: absolute; z-index: 3; left: var(--pas); bottom: var(--pas); }
+.carte-papier .carte-de { display: none; position: absolute; z-index: 3; left: var(--pas); bottom: var(--pas); }
+.carte-papier.hasard .carte-de { display: inline-flex; }       /* (seulement sur la carte « Au hasard » ; `.pastille` donne `display: inline-flex` : l'ordre des règles compte) */
 .carte-legende { flex: none; margin: 0 var(--e3); font-size: var(--texte-petit); line-height: 1.4; min-height: 2.8em; }
 .carte-reglages { flex: none; display: grid; gap: var(--pas); margin: 0 var(--e3); }
 .carte-reglage { display: grid; grid-template-columns: 4.5rem minmax(0, 1fr); align-items: center; gap: var(--pas); }
@@ -557,10 +555,11 @@ body.charge dialog { display: none; }
 .carte-saisons .pastille[aria-pressed="true"] { color: var(--jeu-fond); background: var(--jeu-encre); border-color: var(--jeu-nous); }
 @media (hover: hover) { .carte-saisons .pastille:hover, .carte-de:hover { border-color: var(--jeu-nous); } }
 .carte-aide { margin: var(--pas) 0 0; font-size: var(--texte-petit); line-height: 1.4; min-height: 1.4em; color: var(--jeu-accent); }
-/* la carte agrandie (v0.51.0) : la pile s'efface, l'aperçu prend la place */
+/* la carte agrandie (v0.51.0) : la liste et la carte s'effacent, l'aperçu prend la place */
 .carte-grande .carte-3d { position: relative; height: calc(100dvh - 19rem); border: var(--trait) solid var(--jeu-accent); }
-#dialogue-carte.agrandi .carte-pile { display: none; }
+#dialogue-carte.agrandi .carte-colonnes { display: none; }
 #dialogue-carte.agrandi .carte-3d { cursor: grab; }
+@media (max-width: 760px) { .carte-colonnes { grid-template-columns: 1fr; } .carte-colonnes > * { height: auto; max-height: 22rem; } }
 
 /* Le haut de l'écran allégé pour un petit écran (Jérôme, v0.30.0 : 13 pouces, le champ était trop petit) : le temps à côté des réglages, les
    pertes sur une ligne par camp, la carte repliable, un billet sans montre dessinée (l'heure est dans le texte), le terrain sous la souris dans le billet. */

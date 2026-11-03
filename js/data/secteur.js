@@ -72,7 +72,7 @@ export const SECTEURS = {
       { o: 'lac', x: 30, y: 135, r: 12 }, { o: 'lac', x: 125, y: 127, r: 10 }, { o: 'lac', x: 205, y: 135, r: 11 }, { o: 'lac', x: 240, y: 175, r: 13 }, { o: 'lac', x: 330, y: 127, r: 11 }, { o: 'lac', x: 150, y: 183, r: 10 }, { o: 'lac', x: 380, y: 172, r: 12 },
     ],
   },
-  // Des lignes qui épousent un coude du terrain (Jérôme, v0.108.0 : « les lignes peuvent être courbes, moins linéaires » ; « no man's land plus longs ou plus courts ») : la courbe de chaque camp est
+  // Des lignes qui épousent un coude du terrain (Jérôme, v0.109.0 : « les lignes peuvent être courbes, moins linéaires » ; « no man's land plus longs ou plus courts ») : la courbe de chaque camp est
   // une grande onde (`tranchees.courbe`, termes de `arcY`), en opposition de phase d'un camp à l'autre, plus une onde courte : le no man's land passe de ~70 m, où un poste de mitrailleuse couvre tout, à ~190 m, où l'on n'est sous le feu que de l'artillerie.
   meandres: {
     ...ESSAI,
@@ -89,7 +89,7 @@ export const SECTEURS = {
       },
     },
   },
-  // La contre-attaque éclair (Jérôme, v0.108.0, parmi les missions proposées) : notre ligne fait un saillant que l'ennemi vient de prendre (`contre` : de x0 à x1 m du bord ouest, un régiment d'en face y est
+  // La contre-attaque éclair (Jérôme, v0.109.0, parmi les missions proposées) : notre ligne fait un saillant que l'ennemi vient de prendre (`contre` : de x0 à x1 m du bord ouest, un régiment d'en face y est
   // entré, le nôtre a reculé à la 3e ligne). Une seule journée : il faut reprendre tous les tronçons perdus avant la nuit (la mission `contre`, jugée par `juger`), ou la ligne est perdue.
   saillant: {
     ...ESSAI,

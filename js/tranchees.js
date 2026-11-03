@@ -11,9 +11,9 @@
      d'occuper une tranchée s'en servent pour poser les hommes dedans.
    - Un tronçon protège du tir qui vient de devant (le parapet), beaucoup moins
      de celui qui vient de derrière (le parados) : pris, il sert à l'envers. */
-import { hash2 } from './lib/rng.js?v=0.108.0';
-import { etendueEau } from './eaux.js?v=0.108.0';
-import { TRANCHEE_OUVRAGES } from './data/tranchees.js?v=0.108.0';
+import { hash2 } from './lib/rng.js?v=0.109.0';
+import { etendueEau } from './eaux.js?v=0.109.0';
+import { TRANCHEE_OUVRAGES } from './data/tranchees.js?v=0.109.0';
 
 // Un bruit de valeurs lissé à une dimension (0..1) : le tracé d'une tranchée creusée à la main, jamais deux fois pareil (v0.29.0)
 const lisse = u => u * u * (3 - 2 * u);
@@ -28,7 +28,7 @@ export function ligneY(t, x) {
   const g = Math.round(t.phase * 1000), k = (t.amp || 1.5) / 1.5;
   return t.y0 + (t.arc ? arcY(t.arc, x) : 0) + k * ((bruit1(x, 70, g) - 0.5) * 6.4 + (bruit1(x, 28, g + 1) - 0.5) * 3.6 + (bruit1(x, 11, g + 2) - 0.5) * 1.8);
 }
-/* La courbe d'ensemble d'un camp (Jérôme, v0.108.0 : « les lignes peuvent être courbes, moins linéaires ») : une somme de termes, en mètres de décalage vers le sud (y croissant), lue à l'abscisse x du terrain.
+/* La courbe d'ensemble d'un camp (Jérôme, v0.109.0 : « les lignes peuvent être courbes, moins linéaires ») : une somme de termes, en mètres de décalage vers le sud (y croissant), lue à l'abscisse x du terrain.
    Un terme est une onde `{ amp, long, dec }` (amp m d'amplitude, long m de longueur d'onde, dec m de décalage depuis le bord ouest du secteur) ou une bosse `{ bosse: true, x, l, h }` (une cloche de hauteur h, de largeur l,
    centrée à x m du bord ouest : un saillant). Toutes les lignes d'un camp la suivent ensemble (elles restent à leur écart) ; deux camps aux courbes différentes font varier le no man's land.
    Sans courbe (`arc` absent), `ligneY` rend exactement ce qu'il rendait avant : les cartes d'avant restent les mêmes à l'octet près. La pente doit rester sous ~1 m par colonne (le creusement se fait colonne
@@ -185,7 +185,7 @@ export function validerSecteur(S) {
     if (y < 6 || y > S.hauteur - 6) pb.push(`${camp}, ligne ${k + 1} : à ${y} m, trop près du bord du secteur (6 m au moins)`);
     if (k && (y - ys[k - 1]) * sens < 10) pb.push(`${camp}, lignes ${k} et ${k + 1} : à moins de 10 m l'une de l'autre, ou dans le désordre`);
   });
-  // le no man's land (v0.108.0 : il varie avec les courbes, et une escarmouche peut le resserrer : `minNoMansLand`) : le plus étroit, sur toute la largeur
+  // le no man's land (v0.109.0 : il varie avec les courbes, et une escarmouche peut le resserrer : `minNoMansLand`) : le plus étroit, sur toute la largeur
   const minNML = T.minNoMansLand ?? 60, cN = arcDuSecteur(T.courbe?.nous, 0), cE = arcDuSecteur(T.courbe?.eux, 0);
   let etroit = Infinity; for (let x = 0; x <= S.largeur; x += 4) etroit = Math.min(etroit, nous[0] + (cN ? arcY(cN, x) : 0) - eux[0] - (cE ? arcY(cE, x) : 0));
   if (etroit < minNML) pb.push(`no man's land de ${Math.round(etroit)} m entre les premières lignes : ${minNML} m au moins`);
