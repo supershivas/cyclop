@@ -88,8 +88,11 @@ verifier(moyen.art === 0 && moyen.legere + moyen.boite + moyen.equipe > 50, `vue
 await J(() => { window.__lumiere.voirPreset('large', true); Object.assign(window.__lumiere.C, { distance: 140, tangage: 0.1 }); }); await p.waitForTimeout(1200); await image('faux-terrain');
 // Le clignotement des soldats (v0.114.0) : une image fixe est identique d'une image à l'autre, et, la foule en marche, les hommes ne changent pas de niveau de détail à tout bout de champ
 await J(() => { const L = window.__lumiere; L.voirPreset('colline', true); L.S.pause = true; }); await p.waitForTimeout(1500);
+const habillage = ['ll-mesures', 'll-barre', 'll-etat', 'll-toast', 'll-nom'];            // le texte des mesures change à chaque image : on ne compare que le dessin
+const cacher = v => J(([ids, v2]) => ids.forEach(i => { const e = document.getElementById(i); if (e) e.style.visibility = v2; }), [habillage, v]);
 const buffer = async () => (await p.screenshot()).toString('base64');
-const [f1, f2, f3] = [await buffer(), await buffer(), await buffer()];
+await cacher('hidden'); await p.waitForTimeout(400);
+const [f1, f2, f3] = [await buffer(), await buffer(), await buffer()]; await cacher('');
 verifier(f1 === f2 && f2 === f3, 'une image fixe (temps arrêté, vue moyenne) est identique d\'une image à l\'autre : aucun scintillement du dessin');
 await J(() => { window.__lumiere.S.pause = false; }); await p.waitForTimeout(800);
 const bascule = await J(async () => {
