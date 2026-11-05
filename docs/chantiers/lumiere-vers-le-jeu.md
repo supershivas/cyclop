@@ -62,3 +62,5 @@ Le scintillement vu par Jérôme existe sans la lumière (aussi en « tout désa
 **Étape 1 faite** : le soleil du labo sur le sol du jeu (`rendu.soleilSol`, éteint ; voir `docs/domaines/rendu.md`). Prochaine : (2) la lumière propagée sous les abris.
 
 **Étape 2 faite** : la lumière propagée sous les toits du jeu (`rendu.abrisSol`, éteinte). Prochaine : (3) la cavité (flaques) avec la météo du jeu, puis (4) la lecture par les soldats, (5) la bascule.
+
+**Étapes 3 et 4 faites** : les flaques (`rendu.flaquesSol`) et la lecture de la lumière par les soldats (boîtes, silhouettes, équipés, gradés, articulés). Reste (5) : la bascule, c'est-à-dire décider quelles options deviennent celles du jeu, réécrire `rendu.json` et `fumee.json` en regardant chaque image, et mesurer sur 8 000 soldats (`scripts/mesure.mjs`). Les flaques sous la pluie n'ont pas encore été vues.

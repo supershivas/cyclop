@@ -194,7 +194,7 @@ export const VERT = `
   attribute vec3 aPos; attribute float aCamp; attribute float aWound; attribute vec4 aCap; attribute float aGrade;
   attribute vec4 aPose; attribute vec4 aBody; attribute vec4 aLook; attribute vec4 aLook2;
   uniform float uShade; uniform float uVoir;
-  varying float vPart; varying float vCamp; varying vec2 vFace; varying float vShade; varying vec4 vLook; varying vec4 vLook2;
+  varying float vPart; varying float vCamp; varying vec2 vFace; varying float vShade; varying vec4 vLook; varying vec4 vLook2; varying vec2 vMonde;
   float sl, st, wd, vt;
   bool voir(float code) {
     float genre = floor(code / 100.0 + 0.001), v = code - genre * 100.0;
@@ -301,13 +301,15 @@ export const VERT = `
     // l'éclairage de relief (au labo et pour les hommes articulés, uShade : 0 redonne les aplats) : le dessus plus clair, les côtés plus sombres, d'après la normale de la face tournée par le cap
     vec3 nw = vec3(aNor.x * c + aNor.z * s, aNor.y, -aNor.x * s + aNor.z * c);
     vShade = mix(1.0, 0.58 + 0.42 * max(dot(nw, normalize(vec3(-0.35, 0.8, 0.5))), 0.0), uShade);
+    vMonde = (p + aPos).xz;
     gl_Position = projectionMatrix * viewMatrix * vec4(p + aPos, 1.0);
   }`;
 
 export const FRAG = `
   uniform vec3 uNous; uniform vec3 uEux; uniform vec3 uOmbre; uniform vec3 uSel; uniform vec3 uJambes; uniform vec3 uBois; uniform vec3 uToile; uniform vec3 uCuir; uniform vec3 uBotte; uniform vec3 uMetal; uniform vec3 uTrait;
   uniform vec3 uPeau[3]; uniform vec3 uMarque[3]; uniform vec3 uCh[5];
-  varying float vPart; varying float vCamp; varying vec2 vFace; varying float vShade; varying vec4 vLook; varying vec4 vLook2;
+  uniform sampler2D uAO; uniform float uAOon, uSunOn, uAbriOn; uniform vec2 uTaille;
+  varying float vPart; varying float vCamp; varying vec2 vFace; varying float vShade; varying vec4 vLook; varying vec4 vLook2; varying vec2 vMonde;
   // le visage : une grille de 12 × 12 cases (1,7 cm chacune) ; yeux (le blanc et la pupille), paupières, sourcils, nez, bouche, rides (vLook2.z : yeux + 3 nez + 9 bouche + 27 sourcils + 81 rides)
   bool dans(int iu, int a, int b) { return iu >= a && iu <= b; }
   vec3 visage(vec3 peau, vec3 marque, vec3 cheveux) {
@@ -364,6 +366,13 @@ export const FRAG = `
     else if (k == 15.0) c = uSel;
     else if (k == 17.0) c = uMetal;
     else if (k == 16.0) c = gl_FrontFacing ? visage(peau, marque, cheveux) : cheveux;
+    if (uSunOn + uAOon + uAbriOn > 0.5) {      // (session 2, éteint) la lumière du sol lue à la place de l'homme : voir shaders.js, soldatMat
+      vec4 Lm = texture2D(uAO, vMonde / uTaille); float fl = 1.0;
+      if (uSunOn > 0.5) fl *= 0.72 + 0.28 * Lm.r;
+      if (uAOon > 0.5) fl *= 0.65 + 0.35 * pow(Lm.g, 1.3);
+      if (uAbriOn > 0.5) fl *= mix(0.4, 1.0, clamp(Lm.b / 0.941, 0.0, 1.0));
+      c *= fl;
+    }
     gl_FragColor = vec4(c * vShade, 1.0);
   }`;
 
@@ -397,6 +406,7 @@ export function creerSoldatArticule(THREE, col, { complet = false, ombrage = 0, 
         uCuir: { value: col('b') }, uBotte: { value: col('t') }, uMetal: { value: col('r') }, uTrait: { value: col('s') },
         uPeau: { value: ['o', 'r', 'g'].map(col) }, uMarque: { value: ['g', 'g', 'b'].map(col) }, uCh: { value: ['t', 's', 'b', 'g', 'r'].map(col) },
         uShade: { value: ombrage }, uVoir: { value: filtre ? 0 : 1 },
+        ...(partages.uAO ? { uAO: partages.uAO, uAOon: partages.uAOon, uSunOn: partages.uSunOn, uAbriOn: partages.uAbriOn, uTaille: partages.uTaille } : { uAO: { value: null }, uAOon: { value: 0 }, uSunOn: { value: 0 }, uAbriOn: { value: 0 }, uTaille: { value: new THREE.Vector2(1, 1) } }),
       },
       vertexShader: VERT, fragmentShader: FRAG, side: THREE.DoubleSide,
     });

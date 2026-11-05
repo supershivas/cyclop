@@ -3,7 +3,7 @@
 // (`soleil` : le bout de l'ombre d'un mètre de hauteur), rien n'est sauvegardé, aucun tirage.
 // Une rangée dont `T.versionLigne` a bougé est refaite avec ses voisines (l'AO lit `rayonM` autour d'une case, le soleil `porteeM` vers lui), rangée par rangée dans un budget de millisecondes par image, comme
 // `ombres-relief.js` : jamais de blocage de la boucle. Un soleil qui a assez bougé périme toutes les rangées du soleil. `tex` (RGBA, une case = un texel) est lu par le nuanceur du sol.
-import { calculerAO, calculerSoleil, calculerFlood } from '../lumiere/lumiere.js?v=0.114.0';
+import { calculerAO, calculerSoleil, calculerFlood, calculerCavite } from '../lumiere/lumiere.js?v=0.114.0';
 import { OMBRES_RELIEF as O } from '../data/soleil.js?v=0.114.0';
 
 export const AO_SOL = { rayonM: 6, directions: 8, budgetMs: 2.5 };
@@ -27,14 +27,14 @@ export function assezBouge(a, b) {
 }
 
 export function creerAOSol({ hauteurQ, now = () => performance.now() }) {
-  let T = null, M = null, L = null, vus = null, file = null, besoin = null, soleil = null, soleilCalcule = null, aoFait = false, solFait = false, abriFait = false, regions = [], couverts = null;
-  const R = AO_SOL.rayonM, P = O.portee, AO = 1, SOL = 2;
+  let T = null, M = null, L = null, vus = null, file = null, besoin = null, soleil = null, soleilCalcule = null, aoFait = false, solFait = false, abriFait = false, cavFait = false, regions = [], couverts = null;
+  const R = AO_SOL.rayonM, P = O.portee, AO = 1, SOL = 2, CAV = 8, CAV_RAYON = 3;      // la cavité lit les cases à 3 m
   const attacher = terrain => {
     T = terrain; const n = T.W * T.H;
     M = { W: T.W, H: T.H, n, top: new Int16Array(n), toit: new Int16Array(n), cell: 1, cpm: 1, roofQ: ABRIS.epaisseurQ, cubeQ: ABRIS.cubeQ };
     M.sol = M.top;
     L = { tex: new Uint8Array(n * 4).fill(255) };
-    vus = new Uint32Array(T.H).fill(0xffffffff); file = []; besoin = new Uint8Array(T.H); soleilCalcule = null; aoFait = false; solFait = false; soleil = null; abriFait = false; regions = [];
+    vus = new Uint32Array(T.H).fill(0xffffffff); file = []; besoin = new Uint8Array(T.H); soleilCalcule = null; aoFait = false; solFait = false; soleil = null; abriFait = false; cavFait = false; regions = [];
     couverts = new Uint16Array(T.H); if (T.toit) for (let c = 0; c < n; c++) if (T.toit[c]) couverts[(c / T.W) | 0]++;
   };
   // les régions (bandes de rangées pleine largeur) à refaire autour des rangées couvertes : fusionnées, avec la marge où la lumière porte
@@ -46,9 +46,9 @@ export function creerAOSol({ hauteurQ, now = () => performance.now() }) {
   };
   const empiler = (j, quoi) => { if (j >= 0 && j < T.H) { if (!besoin[j]) file.push(j); besoin[j] |= quoi; } };
   // `veutAO`, `veutSoleil` : ce que le rendu utilise ; `s` : { x, z } le soleil du jeu. Rend vrai si la texture a changé.
-  function maj(veutAO, veutSoleil, s, budgetMs = AO_SOL.budgetMs, veutAbris = false) {
+  function maj(veutAO, veutSoleil, s, budgetMs = AO_SOL.budgetMs, veutAbris = false, veutFlaques = false) {
     if (!T) return false;
-    const quoi = (veutAO ? AO : 0) | (veutSoleil ? SOL : 0) | (veutAbris ? 4 : 0);
+    const quoi = (veutAO ? AO : 0) | (veutSoleil ? SOL : 0) | (veutAbris ? 4 : 0) | (veutFlaques ? CAV : 0);
     if (!quoi) return false;
     for (let j = 0; j < T.H; j++) {                                       // les rangées dont le relief a changé : les hauteurs relues, leurs voisines à refaire
       if (vus[j] === T.versionLigne[j]) continue;
@@ -56,9 +56,11 @@ export function creerAOSol({ hauteurQ, now = () => performance.now() }) {
       vus[j] = T.versionLigne[j];
       if (aoFait && veutAO) for (let d = -R; d <= R; d++) empiler(j + d, AO);
       if (solFait && veutSoleil) for (let d = -P; d <= P; d++) empiler(j + d, SOL);
+      if (cavFait && veutFlaques) for (let d = -CAV_RAYON; d <= CAV_RAYON; d++) empiler(j + d, CAV);
       if (abriFait && veutAbris) for (const r of bandesAbris(j - 2, j + 2)) regions.push(r);
     }
     if (veutAO && !aoFait) { aoFait = true; for (let j = 0; j < T.H; j++) empiler(j, AO); }              // la première fois : tout
+    if (veutFlaques && !cavFait) { cavFait = true; for (let j = 0; j < T.H; j++) empiler(j, CAV); }
     if (veutSoleil && !solFait) { solFait = true; soleil = null; for (let j = 0; j < T.H; j++) empiler(j, SOL); }
     if (veutSoleil) {
       if (assezBouge(soleil, s) ) { soleil = { x: s.x, z: s.z }; soleilCalcule = soleilDuJeu(s.x, s.z); for (let j = 0; j < T.H; j++) empiler(j, SOL); }
@@ -72,6 +74,7 @@ export function creerAOSol({ hauteurQ, now = () => performance.now() }) {
       const j = file.shift(), b = besoin[j]; besoin[j] = 0;
       const reg = { i0: 0, i1: T.W - 1, j0: j, j1: j };
       if ((b & AO) && veutAO) calculerAO(M, L, reg, R, AO_SOL.directions);
+      if ((b & CAV) && veutFlaques) calculerCavite(M, L, reg);
       if ((b & SOL) && veutSoleil && soleilCalcule) calculerSoleil(M, L, reg, soleilCalcule, P);
       fait = true;
     }

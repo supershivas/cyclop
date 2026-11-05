@@ -18,7 +18,8 @@ export const glslVert = () => '#version 300 es\nprecision highp float; precision
 // `commun` : le début des nuanceurs du labo (la lumière : `eclairer`, `finir`) ; sa première ligne est `#version 300 es`
 export const glslFrag = commun => commun + '\nin vec3 vWp, vNw; out vec4 fragColor;\n' + FRAG
   .replace(/\bvarying\b/g, 'in')
-  .replace('gl_FragColor = vec4(c * vShade, 1.0);', 'gS = uS; gL = uLampOn; vec4 Ld = texture(uLight, vWp.xz / uCell / uGrid); fragColor = vec4(finir(eclairer(c * .62, normalize(vNw), vWp, Ld, 1., 0., 0., 0.)), 1.);');
+  .replace('gl_FragColor = vec4(c * vShade, 1.0);', 'gS = uS; gL = uLampOn; vec4 Ld = texture(uLight, vWp.xz / uCell / uGrid); fragColor = vec4(finir(eclairer(c * .62, normalize(vNw), vWp, Ld, 1., 0., 0., 0.)), 1.);')
+  .replace(/texture2D\(/g, 'texture(');                                                    // (la lumière du sol du jeu, session 2 : GLSL ES 3.0)
 
 const modeles = {};
 export const modele = niveau => modeles[niveau] || (modeles[niveau] = modeleArticule({ niveau }));
@@ -90,7 +91,8 @@ export const glslVertJeu = () => '#version 300 es\nprecision highp float; precis
 export const glslFragJeu = commun => commun + '\nin vec3 vWp, vNw; out vec4 fragColor;\n' + soldatMat.f
   .replace(/\bvarying\b/g, 'in')
   .replace(/gl_FragColor = vec4\(texture2D[^;]*;\s*return;/, 'discard;')                    // l'ombre au sol du jeu : le labo a la sienne (la lumière)
-  .replace('gl_FragColor = vec4(c, 1.0);', 'gS = uS; gL = uLampOn; vec4 Ld = texture(uLight, vWp.xz / uCell / uGrid); fragColor = vec4(finir(eclairer(c * .62, normalize(vNw), vWp, Ld, 1., 0., 0., 0.)), 1.);');
+  .replace('gl_FragColor = vec4(c, 1.0);', 'gS = uS; gL = uLampOn; vec4 Ld = texture(uLight, vWp.xz / uCell / uGrid); fragColor = vec4(finir(eclairer(c * .62, normalize(vNw), vWp, Ld, 1., 0., 0., 0.)), 1.);')
+  .replace(/texture2D\(/g, 'texture(');
 
 // L'écriture d'un homme (comme `ecrire` de rendu/soldats.js) : `tapi` à 1 : la peur (aVit < 0 : −1 − la vitesse)
 const hv = i => { let h = Math.imul(i + 1, 2654435761); h ^= h >>> 15; h = Math.imul(h, 2246822519); return ((h ^ (h >>> 13)) >>> 0) / 4294967296; };

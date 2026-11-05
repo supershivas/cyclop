@@ -333,6 +333,16 @@ test('les abris du jeu : le jour entre par les bouts d\'un toit de bois et s\'é
   assert.equal(B(25), 240); assert.ok(B(30) < 240 && B(33) < B(30) && B(36) < B(33), 'plus sombre à mesure qu\'on s\'enfonce'); assert.ok(B(36) < 150, `au milieu : ${B(36)}`); assert.equal(B(60), 240, 'la tranchée à ciel ouvert'); assert.ok(ao.tex[(19 * W + 36) * 4 + 2] === 240, 'le terrain à côté est au jour');
 });
 
+test('les flaques du jeu : un creux est marqué (canal A), le plat et la bosse ne le sont pas', async () => {
+  const { creerAOSol } = await import('../js/rendu/ao-sol.js');
+  const W = 60, H = 40, h = new Int16Array(W * H).fill(40); for (let j = 18; j < 23; j++) for (let i = 28; i < 33; i++) h[j * W + i] = 30;      // un creux de 2,5 m
+  const T = { W, H, versionLigne: new Uint32Array(H) }, ao = creerAOSol({ hauteurQ: (_, c) => h[c], now: () => 0 }); ao.attacher(T);
+  while (ao.maj(false, false, null, 1e9, false, true) || ao.restant);
+  const A = (i, j) => ao.tex[(j * W + i) * 4 + 3];
+  assert.ok(A(30, 20) > 150 && A(5, 5) === 0, `creux ${A(30, 20)}, plat ${A(5, 5)}`);
+  assert.equal(ao.tex[(5 * W + 5) * 4 + 1], 255, 'les autres canaux ne sont pas touchés');
+});
+
 group('labo lumière — pureté');
 test('terrain, lumière, foule, maillage, particules, ciel : ni DOM, ni horloge, ni Math.random', () => {
   for (const f of ['terrain', 'lumiere', 'foule', 'maillage', 'particules', 'ciel', 'camera', 'config', 'soldats-reels', 'lampes', 'ombres', 'engins']) {

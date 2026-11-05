@@ -41,6 +41,7 @@ export function creerSoldats({ THREE, scene, col, solUniforms, styleSoldat, grad
       uBalance: { value: styleSoldat === 'equipe-marche' ? 1 : 0 },
       uEch: { value: new THREE.Vector2(grades?.classes[3].echelle ?? 1, grades?.classes[4].echelle ?? 1) },
       uSol: solUniforms.uSol, uTaille: solUniforms.uTaille,
+      uAO: solUniforms.uAO, uAOon: solUniforms.uAOon, uSunOn: solUniforms.uSunOn, uAbriOn: solUniforms.uAbriOn,      // la lumière du sol lue à la place de l'homme (session 2 : éteinte)
       uSoleil: { value: new THREE.Vector2(0.5, 0.6) } },
     vertexShader: SH.soldatMat.v,
     fragmentShader: SH.soldatMat.f,
@@ -324,7 +325,7 @@ export function creerSoldats({ THREE, scene, col, solUniforms, styleSoldat, grad
       const niv = p >= (artCfg.fin ?? 24) ? 'fin' : 'moyen';
       if (nArt && !EQs[niv]) {
         EQs[niv] = creerEquipeArticulee(THREE, col, { capacite: artCfg.max + 8, ombrage: artCfg.ombrage ?? 0, niveau: niv,
-          partages: { uSoleil: soldatMat.uniforms.uSoleil, uSol: solUniforms.uSol, uTaille: solUniforms.uTaille } });
+          partages: { uSoleil: soldatMat.uniforms.uSoleil, uSol: solUniforms.uSol, uTaille: solUniforms.uTaille, uAO: solUniforms.uAO, uAOon: solUniforms.uAOon, uSunOn: solUniforms.uSunOn, uAbriOn: solUniforms.uAbriOn } });
         for (const m of EQs[niv].meshes) scene.add(m);
       }
       EQ = EQs[niv];
