@@ -42,7 +42,7 @@ const meteoNow = { ...METEOS[S.meteo] }; let prochainMeteo = 30; const derive = 
 function avancerMeteo(dt) {
   if (S.meteoAuto) {
     prochainMeteo -= dt;
-    if (prochainMeteo <= 0) { const choix = (METEO_AUTO.suite[S.meteo] || ['sec']).filter(k => k !== S.meteo);   // toujours un autre temps S.meteo = choix[Math.floor(hasard() * choix.length)]; prochainMeteo = METEO_AUTO.tenueS[0] + hasard() * (METEO_AUTO.tenueS[1] - METEO_AUTO.tenueS[0]); marquerMeteo(); dire(`La météo tourne : ${METEOS[S.meteo].nom}`); setTimeout(() => dire(''), 2500); }
+    if (prochainMeteo <= 0) { const choix = (METEO_AUTO.suite[S.meteo] || ['sec']).filter(k => k !== S.meteo); /* toujours un autre temps */ S.meteo = choix[Math.floor(hasard() * choix.length)]; prochainMeteo = METEO_AUTO.tenueS[0] + hasard() * (METEO_AUTO.tenueS[1] - METEO_AUTO.tenueS[0]); marquerMeteo(); dire(`La météo tourne : ${METEOS[S.meteo].nom}`); setTimeout(() => dire(''), 2500); }
   }
   const k = 1 - Math.exp(-dt * (S.meteoAuto ? METEO_AUTO.vitesse : 0.6)), cible = METEOS[S.meteo];
   for (const c of CLES_METEO) meteoNow[c] += (cible[c] - meteoNow[c]) * k;
