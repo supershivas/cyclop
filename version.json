@@ -1,8 +1,8 @@
 {
-  "version": "0.112.0",
+  "version": "0.113.0",
   "date": "2026-11-05",
   "changes": [
-    "Labo lumière : les vrais soldats articulés du jeu (casque, sac, fusil, visage) sont dessinés de près, avec la lumière du labo",
-    "Un faux terrain prolonge la carte jusqu'à l'horizon, le ciel a des nuages qui dérivent (et leur ombre), des étoiles et une lune, et le temps (sec, pluie, boue, brouillard, neige) peut changer tout seul"
+    "Labo lumière : les soldats du jeu à tous les niveaux de détail (boîte, silhouette, soldat équipé, articulé), au lieu de simples colonnes",
+    "Des lanternes dans les tranchées et des lampes sur certains soldats, une carte quatre fois plus grande (512 × 320 m) et une colline"
   ]
 }

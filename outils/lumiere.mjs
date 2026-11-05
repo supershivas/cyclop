@@ -65,7 +65,11 @@ verifier(cpt.fixes > 100, `des lanternes dans les tranchées (${cpt.fixes})`);
 await J(() => { window.__lumiere.voirPreset('colline', true); }); await p.waitForTimeout(1200); await image('colline');
 await J(() => { const J = window.__lumiere; document.getElementById('ll-heure').value = 22; document.getElementById('ll-heure').dispatchEvent(new Event('input')); J.voirPreset('tranchee', true); Object.assign(J.C, { distance: 22, tangage: 0.6 }); }); await p.waitForTimeout(2200); await image('nuit-lanternes');
 await J(() => { const J = window.__lumiere; document.getElementById('ll-heure').value = 9; document.getElementById('ll-heure').dispatchEvent(new Event('input')); J.voirPreset('large', true); }); await p.waitForTimeout(1200);
-const large = await J(() => window.__lumiere.comptes); verifier(large.art === 0 && large.boite + large.legere + large.equipe > 100, `vue large : des boîtes et des silhouettes, pas d'articulés (${JSON.stringify(large)})`); await image('vue-large');
+const large = await J(() => window.__lumiere.comptes);
+verifier(large.art + large.equipe + large.legere + large.boite === 0, `vue large (≈ 1 px/m) : des points, comme le jeu aux zooms 1 et 2 (${JSON.stringify(large)})`); await image('vue-large');
+await J(() => { window.__lumiere.voirPreset('colline', true); }); await p.waitForTimeout(1500);
+const moyen = await J(() => window.__lumiere.comptes);
+verifier(moyen.art === 0 && moyen.legere + moyen.boite + moyen.equipe > 50, `vue moyenne (≈ 5 px/m) : des silhouettes allégées et des boîtes (${JSON.stringify(moyen)})`); await image('vue-moyenne');
 await J(() => { window.__lumiere.voirPreset('large', true); Object.assign(window.__lumiere.C, { distance: 140, tangage: 0.1 }); }); await p.waitForTimeout(1200); await image('faux-terrain');
 // La météo : chaque temps, puis le temps qui change tout seul
 for (const m of ['pluie', 'neige', 'brouillard', 'boue', 'sec']) { await J(mm => { const J = window.__lumiere; J.S.meteo = mm; if (!J.S.etapes[7]) J.basculerEtape(7, true); Object.assign(J.meteoNow, J.METEOS[mm]); }, m); await p.waitForTimeout(700); await image(`meteo-${m}`); }
