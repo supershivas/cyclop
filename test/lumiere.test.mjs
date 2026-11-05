@@ -295,6 +295,20 @@ test('l\'air traversé fait le dégradé ; le soleil bas rougit l\'horizon de so
   assert.ok(couleurCiel([0, 1, 0], P)[2] > couleurCiel([0, 0.02, 1], { ...P, sunDir: [0, 0.9, 0.3] })[2] * 0.2);
 });
 
+group('jeu — l\'ouverture au ciel du terrain (session 2)');
+test('l\'AO du sol du jeu, par rangées dans un budget, redonne le calcul complet ; un obus ne refait que les rangées proches', async () => {
+  const { creerAOSol, AO_SOL } = await import('../js/rendu/ao-sol.js');
+  const W = 120, H = 90, h = new Int16Array(W * H); for (let j = 0; j < H; j++) for (let i = 0; i < W; i++) h[j * W + i] = 8 + ((i * 7 + j * 3) % 11) + (Math.abs(i - 60) < 3 && j > 20 && j < 70 ? 24 : 0);
+  const T = { W, H, versionLigne: new Uint32Array(H) }, ao = creerAOSol({ hauteurQ: (_, c) => h[c], now: () => 0 });
+  ao.attacher(T); let tours = 0; while (ao.maj(1e9) || ao.restant) { tours++; if (tours > 1000) break; }
+  const M = { W, H, n: W * H, top: h, cell: 1, cpm: 1 }, L = { tex: new Uint8Array(W * H * 4).fill(255) }; calculerAO(M, L, regionTotale(M), AO_SOL.rayonM, AO_SOL.directions);
+  assert.equal(hache(ao.tex), hache(L.tex));
+  for (let i = 55; i < 66; i++) h[45 * W + i] = 2; T.versionLigne[45]++;                     // un cratère, une rangée touchée
+  let rangees = 0; const compte = () => { const avant = ao.restant; return avant; };
+  ao.maj(0); rangees = ao.restant + 1; assert.ok(rangees <= 2 * AO_SOL.rayonM + 1, `${rangees} rangées refaites`);
+  while (ao.restant) ao.maj(1e9); calculerAO(M, L, regionTotale(M), AO_SOL.rayonM, AO_SOL.directions); assert.equal(hache(ao.tex), hache(L.tex)); void compte;
+});
+
 group('labo lumière — pureté');
 test('terrain, lumière, foule, maillage, particules, ciel : ni DOM, ni horloge, ni Math.random', () => {
   for (const f of ['terrain', 'lumiere', 'foule', 'maillage', 'particules', 'ciel', 'camera', 'config', 'soldats-reels', 'lampes', 'ombres', 'engins']) {
