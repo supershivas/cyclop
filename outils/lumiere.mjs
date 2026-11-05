@@ -65,7 +65,7 @@ await J(() => { window.__lumiere.voirPreset('large', true); Object.assign(window
 for (const m of ['pluie', 'neige', 'brouillard', 'boue', 'sec']) { await J(mm => { const J = window.__lumiere; J.S.meteo = mm; if (!J.S.etapes[7]) J.basculerEtape(7, true); Object.assign(J.meteoNow, J.METEOS[mm]); }, m); await p.waitForTimeout(700); await image(`meteo-${m}`); }
 const avant = await J(() => window.__lumiere.S.meteo);
 await J(() => { window.__lumiere.voirPreset('large', true); document.getElementById('ll-meteo-auto').click(); });
-await p.waitForTimeout(14000);
+await p.waitForFunction(av => window.__lumiere.S.meteo !== av, avant, { timeout: 150000 }).catch(() => {});   // le temps de jeu avance lentement en rendu logiciel : on attend le changement
 const apres = await J(() => window.__lumiere.S.meteo);
 verifier(await J(() => window.__lumiere.S.meteoAuto === true) && apres !== avant, `le temps change tout seul (${avant} → ${apres})`);
 await J(() => document.getElementById('ll-meteo-auto').click());
