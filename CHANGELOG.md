@@ -1,5 +1,9 @@
 # Journal des versions
 
+## 0.114.0 — 2026-11-05
+- Labo lumière : les soldats ne clignotent plus, et les ombres portées sont dynamiques (soldats, arbres, chars, biplans, fumée)
+- Un ciel plus réaliste (soleil, nuages éclairés), l'AO de toute la carte réparti sur plusieurs images, un banc de mesure fiable sous Firefox
+
 ## 0.113.0 — 2026-11-05
 - Labo lumière : les soldats du jeu à tous les niveaux de détail (boîte, silhouette, soldat équipé, articulé), au lieu de simples colonnes
 - Des lanternes dans les tranchées et des lampes sur certains soldats, une carte quatre fois plus grande (512 × 320 m) et une colline

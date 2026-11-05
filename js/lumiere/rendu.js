@@ -2,14 +2,14 @@
 // Passes : 0) la carte d'ombre (étape 9) : vue du soleil, la profondeur des objets qui projettent et l'épaisseur de la fumée ;  1) la scène dans un tampon (couleur + profondeur) : sol, toits, soldats, débris, fumée, pluie ;
 //          2) l'AO écran (étape 8), si demandée ;  3) la composition à l'écran : ciel, fondu avec la distance, brume au sol (étape 5), AO écran, écran partagé.
 // Chaque étape de lumière est un interrupteur de nuanceur (`cfg.etapes`), jamais une autre version du code : c'est ce qui rend « tout activé / tout désactivé » instantané.
-import { MONDE, ATMOSPHERE, CAMERA, NUAGES, HORS_CARTE, OMBRES, CIEL } from './config.js?v=0.113.0';
-import { MAT } from './terrain.js?v=0.113.0';
-import { FLOATS, construireChunk, creerTampons } from './maillage.js?v=0.113.0';
-import { matrices } from './camera.js?v=0.113.0';
-import * as REELS from './soldats-reels.js?v=0.113.0';
-import { COULEURS_MATIERES, COUL } from './ciel.js?v=0.113.0';
-import { cadrerOmbre, rectDansOmbre } from './ombres.js?v=0.113.0';
-import { MODELES, FLOATS_ENGIN } from './engins.js?v=0.113.0';
+import { MONDE, ATMOSPHERE, CAMERA, NUAGES, HORS_CARTE, OMBRES, CIEL } from './config.js?v=0.114.0';
+import { MAT } from './terrain.js?v=0.114.0';
+import { FLOATS, construireChunk, creerTampons } from './maillage.js?v=0.114.0';
+import { matrices } from './camera.js?v=0.114.0';
+import * as REELS from './soldats-reels.js?v=0.114.0';
+import { COULEURS_MATIERES, COUL } from './ciel.js?v=0.114.0';
+import { cadrerOmbre, rectDansOmbre } from './ombres.js?v=0.114.0';
+import { MODELES, FLOATS_ENGIN } from './engins.js?v=0.114.0';
 
 const GLSL_COMMUN = `#version 300 es
 precision highp float; precision highp int; precision highp sampler2D; precision highp sampler2DShadow;
