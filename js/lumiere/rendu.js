@@ -1,16 +1,18 @@
 // Le rendu WebGL2 du labo lumière. Il LIT le terrain, la lumière (une texture RGBA8, une case = un texel) et la foule ; il ne modifie jamais l'état.
-// Passes : 1) la scène dans un tampon (couleur + profondeur) : sol, toits, soldats, débris, fumée, pluie ;
+// Passes : 0) la carte d'ombre (étape 9) : vue du soleil, la profondeur des objets qui projettent et l'épaisseur de la fumée ;  1) la scène dans un tampon (couleur + profondeur) : sol, toits, soldats, débris, fumée, pluie ;
 //          2) l'AO écran (étape 8), si demandée ;  3) la composition à l'écran : ciel, fondu avec la distance, brume au sol (étape 5), AO écran, écran partagé.
 // Chaque étape de lumière est un interrupteur de nuanceur (`cfg.etapes`), jamais une autre version du code : c'est ce qui rend « tout activé / tout désactivé » instantané.
-import { MONDE, ATMOSPHERE, CAMERA, NUAGES, HORS_CARTE } from './config.js?v=0.113.0';
+import { MONDE, ATMOSPHERE, CAMERA, NUAGES, HORS_CARTE, OMBRES, CIEL } from './config.js?v=0.113.0';
 import { MAT } from './terrain.js?v=0.113.0';
 import { FLOATS, construireChunk, creerTampons } from './maillage.js?v=0.113.0';
 import { matrices } from './camera.js?v=0.113.0';
 import * as REELS from './soldats-reels.js?v=0.113.0';
 import { COULEURS_MATIERES, COUL } from './ciel.js?v=0.113.0';
+import { cadrerOmbre, rectDansOmbre } from './ombres.js?v=0.113.0';
+import { MODELES, FLOATS_ENGIN } from './engins.js?v=0.113.0';
 
 const GLSL_COMMUN = `#version 300 es
-precision highp float; precision highp int; precision highp sampler2D;
+precision highp float; precision highp int; precision highp sampler2D; precision highp sampler2DShadow;
 uniform sampler2D uLight; uniform vec2 uGrid; uniform float uCell;
 uniform vec3 uSunDir, uSunCol, uSkyAmb, uGroundAmb, uSkyH, uSkyZ, uCam;
 uniform vec4 uS;            // 1 directe, 2 AO, 4 propagée, 7 météo (0 ou 1)
@@ -20,11 +22,38 @@ uniform vec4 uNuage;                 // couverture, décalage x, décalage z (m)
 uniform float uNuageH, uNeige, uVent, uTemps; uniform vec3 uSnow;
 vec4 gS; float gL;                   // les interrupteurs d'étapes de CE pixel (l'écran partagé en a deux jeux) ; gL : les lampes
 uniform sampler2D uLamp; uniform float uLampOn; uniform vec3 uLampCol;
+uniform sampler2DShadow uCarteOmbre; uniform sampler2D uFumee; uniform mat4 uLVP; uniform vec4 uOmb;        // la carte d'ombre : marche, 1 / taille, décalage le long de la normale (m), biais de profondeur ; la fumée : épaisseur optique et profondeur moyenne
+uniform float uFumeK;
+uniform vec4 uCiel, uCielK, uCielD, uCielC;       // le ciel v2 : soleil bas, cirrus, voile / masse d'air, Mie (g, force), rougeur / disque (2), lueur, éclairage des nuages / échelle et force des cirrus, hauteur
+float gBiais = .05;                                // le décalage vers le soleil du récepteur (m) : un homme en volume en veut plus que le sol (son modèle déborde de la boîte qui projette)
 float h21(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
 float vn(vec2 p) { vec2 i = floor(p), f = fract(p); f = f * f * (3. - 2. * f); return mix(mix(h21(i), h21(i + vec2(1, 0)), f.x), mix(h21(i + vec2(0, 1)), h21(i + vec2(1, 1)), f.x), f.y); }
 // la densité du ciel au point q (mètres) du plan des nuages : la même fonction fait les nuages du ciel et leur ombre au sol
 float nuageAt(vec2 q) { vec2 p = (q + uNuage.yz) * uNuage.w; float n = vn(p) * .55 + vn(p * 2.1 + 7.) * .3 + vn(p * 4.3 + 3.) * .15; float c = 1. - uNuage.x * 1.1; return smoothstep(c, c + .3, n); }
-vec3 ciel(vec3 d) { float t = clamp(d.y, 0., 1.); vec3 c = mix(uSkyH, uSkyZ, pow(t, .55)); c += uSunCol * pow(max(dot(d, uSunDir), 0.), 28.) * .22; return c; }
+// le ciel v2 : le même modèle que ciel.js (couleurCiel de ciel.js, qui en tire l'éclairage du sol) : l'air traversé donne le dégradé, la diffusion avant de Mie le reflet autour du soleil, le soleil bas rougit l'horizon de son côté
+float masseAir(float c) { c = clamp(c, 0., 1.); return 1. / (c + .15 * pow(93.885 - degrees(acos(c)), -1.253)); }
+float phaseMie(float mu) { float g = uCielK.y; return (1. - g * g) / (12.566 * pow(1. + g * g - 2. * g * mu, 1.5)); }
+vec3 ciel(vec3 d) {
+  float t = 1. - exp(-masseAir(d.y) * uCielK.x), mu = dot(d, uSunDir);
+  vec3 base = mix(uSkyZ, uSkyH, t) * (.88 + .24 * mu * mu);
+  float mie = phaseMie(mu) * uCielK.z * (.35 + .65 * t) * (1. - .7 * uCiel.z);
+  float rouge = pow(clamp(mu * .5 + .5, 0., 1.), 3.) * pow(1. - clamp(d.y, 0., 1.), 3.) * uCiel.x * uCielK.w;
+  return base + uSunCol * (mie + rouge * .5);
+}
+// l'ombre dynamique au point P de normale N : 1 éclairé, 0 à l'ombre. Le décalage le long de la normale et vers le soleil (gBiais) évite les rayures ; 3 × 3 lectures comparées (chacune filtrée par le matériel) font la pénombre.
+float ombreCarte(vec3 P, vec3 N) {
+  if (uOmb.x < .5) return 1.;
+  float nl = clamp(dot(N, uSunDir), 0., 1.);
+  vec4 c = uLVP * vec4(P + N * (uOmb.z * (1.2 - nl)) + uSunDir * gBiais, 1.);
+  vec3 t = c.xyz * .5 + .5;
+  if (t.x < .002 || t.y < .002 || t.x > .998 || t.y > .998 || t.z > 1.) return 1.;
+  float lit = 0.;
+  for (int j = -1; j <= 1; j++) for (int i = -1; i <= 1; i++) lit += texture(uCarteOmbre, vec3(t.xy + vec2(float(i), float(j)) * uOmb.y, t.z - uOmb.w));
+  lit /= 9.;
+  vec4 f = texture(uFumee, t.xy); float tau = f.r * 4., md = f.g / max(f.r, 1e-4);             // la fumée est écrite à 1/4 (une plage utile pour 8 et 16 bits)
+  float derriere = smoothstep(md - .006, md + .006, t.z);                                      // seul ce qui est plus loin du soleil que la fumée est dans son ombre
+  return lit * exp(-tau * uFumeK * derriere);
+}
 vec3 finir(vec3 c) { c *= uExpo; c = c / (1. + c * .22); return pow(clamp(c, 0., 1.), vec3(1. / 2.2)); }
 vec3 eclairer(vec3 alb, vec3 N, vec3 P, vec4 Ld, float ao, float under, float mud, float pudFlat) {
   float wet = gS.w > .5 ? uWet : 0.;
@@ -34,7 +63,7 @@ vec3 eclairer(vec3 alb, vec3 N, vec3 P, vec4 Ld, float ao, float under, float mu
   vec3 hemi = mix(uGroundAmb, uSkyAmb, N.y * .5 + .5);
   float aoF = gS.y > .5 ? ao * (.3 + .7 * pow(Ld.g, 1.3)) : 1.;
   vec3 sun = vec3(0.), amb;
-  if (gS.x > .5) { sun = uSunCol * nl * Ld.r; amb = hemi * aoF; if (gS.w > .5) sun *= 1. - .72 * nuageAt(P.xz + uSunDir.xz / max(uSunDir.y, .08) * uNuageH); }      // l'ombre d'un nuage
+  if (gS.x > .5) { sun = uSunCol * nl * min(Ld.r, nl > 0. ? ombreCarte(P, N) : 1.); amb = hemi * aoF; if (gS.w > .5) sun *= 1. - .72 * nuageAt(P.xz + uSunDir.xz / max(uSunDir.y, .08) * uNuageH); }      // l'ombre d'un nuage
   else amb = vec3(.62 + .38 * max(dot(N, normalize(vec3(-.4, .8, .45))), 0.)) * .8 * aoF;   // plat : seule la forme des cubes se lit
   if (gS.z > .5 && under > .5) { float fl = Ld.b; sun = vec3(0.); amb *= fl * fl; }       // sous un toit : le soleil n'entre pas, la lumière se propage
   vec3 col = alb * (sun + amb);
@@ -169,6 +198,48 @@ const FS_LUEURS = `${GLSL_COMMUN}
 in float vPh; in float vTaille; out vec4 o;
 void main() { float d = length(gl_PointCoord - .5) * 2.; if (d > 1.) discard; float f = (1. - d); f = f * f * (.85 + .15 * sin(uTemps * 9. + vPh * 6.)); o = vec4(uLampCol * 1.6 * f, f * (.3 + .7 * uNuit)); }`;
 
+// Les engins (chars, biplans) : une géométrie en boîtes, un tampon d'instances (x, y, z, cap | tangage, roulis, camp). Le même sommet sert à la scène et à la carte d'ombre.
+const VS_ENGINS = `${GLSL_COMMUN}
+layout(location = 0) in vec3 aPosition; layout(location = 1) in vec3 aNor; layout(location = 2) in vec3 aCol; layout(location = 3) in vec4 aI0; layout(location = 4) in vec3 aI1;
+uniform mat4 uVP;
+out vec3 vWp, vNw, vCol;
+vec3 tourner(vec3 p) {
+  float cy = cos(aI0.w), sy = sin(aI0.w), cz = cos(aI1.x), sz = sin(aI1.x), cx = cos(aI1.y), sx = sin(aI1.y);
+  p = vec3(p.x, p.y * cx - p.z * sx, p.y * sx + p.z * cx);
+  p = vec3(p.x * cz - p.y * sz, p.x * sz + p.y * cz, p.z);
+  return vec3(p.x * cy + p.z * sy, p.y, -p.x * sy + p.z * cy);
+}
+void main() { vWp = tourner(aPosition) + aI0.xyz; vNw = tourner(aNor); vCol = aCol; gl_Position = uVP * vec4(vWp, 1.); }`;
+const FS_ENGINS = `${GLSL_COMMUN}
+uniform float uAir;
+in vec3 vWp, vNw, vCol; out vec4 o;
+void main() {
+  gS = uS; gL = uLampOn; gBiais = .1;
+  vec4 Ld = uAir > .5 ? vec4(1., 1., 1., 0.) : texture(uLight, vWp.xz / uCell / uGrid);       // un avion en plein ciel n'est pas à l'ombre du relief qui est sous lui
+  vec3 c = eclairer(vCol * .8, normalize(vNw), vWp, Ld, 1., 0., 0., 0.);
+  o = vec4(finir(c), 1.);
+}`;
+// La carte d'ombre : seule la profondeur compte (aucune sortie couleur), sauf pour la fumée qui cumule son épaisseur optique (R) et sa profondeur pondérée (G), écrites à 1/4.
+const FS_VIDE = `#version 300 es
+precision highp float; void main() {}`;
+const VS_OMB_SOL = `${GLSL_COMMUN}
+layout(location = 0) in vec3 aPos; layout(location = 1) in vec4 aA; uniform mat4 uVP;
+void main() { if (aA.w < 4.5 || aA.w > 6.5) { gl_Position = vec4(2., 2., 2., 1.); return; } gl_Position = uVP * vec4(aPos, 1.); }`;      // seuls les troncs et les buissons projettent (le relief a sa propre ombre, étape 1)
+const VS_OMB_FUMEE = `${GLSL_COMMUN}
+layout(location = 0) in vec3 aPos; layout(location = 1) in vec3 aA; uniform mat4 uVP; uniform float uPxM;
+out float vA, vZ;
+void main() {
+  vec4 c = uVP * vec4(aPos, 1.); gl_Position = c; vZ = c.z * .5 + .5;
+  gl_PointSize = clamp(aA.x * uPxM, 1., 160.);
+  vA = aA.y < .5 ? 0. : aA.z * (aA.y < 1.5 ? 1. : .6);                      // les débris ne comptent pas ; la poussière arrête moins la lumière que la fumée
+}`;
+const FS_OMB_FUMEE = `#version 300 es
+precision highp float; in float vA, vZ; out vec4 o;
+void main() {
+  float d = length(gl_PointCoord - .5) * 2.; float a = vA * (1. - smoothstep(.2, 1., d)); if (a < .004 || d > 1.) discard;
+  o = vec4(a * .25, a * .25 * vZ, 0., 0.);
+}`;
+
 const VS_PLEIN = `#version 300 es
 out vec2 uv; void main() { vec2 p = vec2(gl_VertexID == 1 ? 3. : -1., gl_VertexID == 2 ? 3. : -1.); uv = p * .5 + .5; gl_Position = vec4(p, 0., 1.); }`;
 
@@ -207,19 +278,32 @@ in vec2 uv; out vec4 o;
 uniform sampler2D uColor, uDepth, uAOtex; uniform mat4 uInvVP; uniform vec3 uLuneDir, uNuageCoul; uniform vec4 uHors; uniform float uBordY, uEtoiles;
 uniform vec3 uMat[8];
 uniform float uFocus, uFondu, uSplit, uAOon, uBrumeOn, uBrumeD, uBrumeK; uniform vec3 uBrumeCoul;
-// le ciel : dégradé, soleil, lune, étoiles, nuages qui dérivent (ils se lisent sur le même champ que leur ombre au sol)
+// le ciel : dégradé physique, soleil et sa lueur, lune, étoiles, deux couches de nuages ÉCLAIRÉS (cumulus bas, cirrus hauts) qui dérivent ; ils se lisent sur le même champ que leur ombre au sol
 vec3 cielComplet(vec3 rd) {
   vec3 c = ciel(rd);
   if (rd.y > .0) {
-    c += uSunCol * smoothstep(.9994, .9998, dot(rd, uSunDir)) * 2.;                       // le disque du soleil
+    float mu = dot(rd, uSunDir);
+    c += uSunCol * (smoothstep(uCielD.x, uCielD.y, mu) * 2.4 + pow(max(mu, 0.), 220.) * uCielD.z * 1.6 + pow(max(mu, 0.), 28.) * uCielD.z * .16);       // le disque, sa lueur, son halo
     if (uEtoiles > .01) {
       vec2 g = rd.xz / (rd.y + .25) * 70.; float hh = h21(floor(g)), dd = length(fract(g) - .5);
       c += vec3(.8, .85, .9) * step(.985, hh) * smoothstep(.3, .05, dd) * (.55 + .45 * sin(uTemps * 3. + hh * 60.)) * uEtoiles * 1.6;
       c += vec3(.9, .9, .82) * smoothstep(.9985, .9992, dot(rd, uLuneDir)) * 1.4 * uEtoiles;       // la lune
     }
-    float t = (uNuageH - uCam.y) / max(rd.y, .001);
-    float d = nuageAt(uCam.xz + rd.xz * t) * smoothstep(.0, .16, rd.y);
-    c = mix(c, uNuageCoul * (1. + uSunCol * .25) , d * .88);
+    // les cirrus : des traînées hautes, étirées dans le sens du vent, claires du côté du soleil
+    float t2 = (uCielC.z - uCam.y) / max(rd.y, .001); vec2 p2 = (uCam.xz + rd.xz * t2 + uNuage.yz * 1.8) / uCielC.x;
+    float n2 = vn(p2 * vec2(.35, 1.5)) * .6 + vn(p2 * vec2(.9, 3.8) + 3.) * .4;
+    float d2 = smoothstep(.5, .85, n2) * uCiel.y * uCielC.y * smoothstep(0., .1, rd.y);
+    c = mix(c, uNuageCoul * .95 + uSunCol * (.1 + .5 * pow(max(mu, 0.), 6.)), d2 * .55);
+    // les cumulus : le bord tourné vers le soleil est clair (le ciel y est mince), le ventre est sombre (il a plus de nuage entre lui et le soleil) ; un liseré d'argent face au soleil
+    float t = (uNuageH - uCam.y) / max(rd.y, .001); vec2 q = uCam.xz + rd.xz * t;
+    float d = nuageAt(q) * smoothstep(.0, .16, rd.y);
+    vec2 vers = uSunDir.xz / max(uSunDir.y, .2) * uCielD.w;
+    float dS = nuageAt(q + vers), lum = exp(-dS * 1.8);
+    vec3 clair = uNuageCoul * 1.3 + uSunCol * .3, ventre = uNuageCoul * .36 + uSkyAmb * .5;
+    vec3 nc = mix(ventre, clair, lum) * (1. - .25 * smoothstep(.6, 1., d) * (1. - lum));
+    nc += uSunCol * pow(max(mu, 0.), 9.) * (1. - d) * lum * .5;
+    nc = mix(nc, ciel(normalize(vec3(rd.x, .02, rd.z))) , (1. - smoothstep(0., .22, rd.y)) * .55);        // vers l'horizon, la distance les fond dans la brume
+    c = mix(c, nc, d * .9);
   }
   return c;
 }
@@ -243,7 +327,7 @@ void main() {
   float dp = texture(uDepth, uv).r;
   vec4 w = uInvVP * vec4(uv * 2. - 1., dp * 2. - 1., 1.); vec3 P = w.xyz / w.w;
   vec3 rd = normalize(P - uCam); float dist = length(P - uCam);
-  vec3 hz = finir(uSkyH);
+  vec3 hz = finir(ciel(normalize(vec3(rd.x, .05, rd.z))));        // la brume au loin a la couleur du ciel de ce côté-là (rougeâtre vers le soleil bas)
   vec3 col;
   if (dp >= .9999) {
     if (rd.y < -.0015) {                                                       // sous l'horizon : le faux terrain, qui se perd dans la brume
@@ -287,9 +371,10 @@ export function creerRendu(canvas) {
 
   const progs = {
     sol: programme(gl, VS_SOL, FS_SOL, 'sol'), soldats: programme(gl, VS_SOLDATS, FS_SOLDATS, 'soldats'), parts: programme(gl, VS_PARTS, FS_PARTS, 'particules'),
-    pluie: programme(gl, VS_PLUIE, FS_PLUIE, 'pluie'), neige: programme(gl, VS_NEIGE, FS_NEIGE, 'neige'), lueurs: programme(gl, VS_LUEURS, FS_LUEURS, 'lueurs'), reels: programme(gl, REELS.glslVert(), REELS.glslFrag(GLSL_COMMUN), 'soldats articulés'), jeu: programme(gl, REELS.glslVertJeu(), REELS.glslFragJeu(GLSL_COMMUN), 'soldats du jeu'), ssao: programme(gl, VS_PLEIN, FS_SSAO, 'ssao'), flou: programme(gl, VS_PLEIN, FS_FLOU, 'flou'), compo: programme(gl, VS_PLEIN, FS_COMPO, 'composition'),
+    pluie: programme(gl, VS_PLUIE, FS_PLUIE, 'pluie'), neige: programme(gl, VS_NEIGE, FS_NEIGE, 'neige'), lueurs: programme(gl, VS_LUEURS, FS_LUEURS, 'lueurs'), reels: programme(gl, REELS.glslVert(), REELS.glslFrag(GLSL_COMMUN), 'soldats articulés'), jeu: programme(gl, REELS.glslVertJeu(), REELS.glslFragJeu(GLSL_COMMUN), 'soldats du jeu'), engins: programme(gl, VS_ENGINS, FS_ENGINS, 'engins'), ombSol: programme(gl, VS_OMB_SOL, FS_VIDE, 'ombre : arbres'), ombSold: programme(gl, REELS.glslVertOmbre(), FS_VIDE, 'ombre : soldats'), ombEngins: programme(gl, VS_ENGINS, FS_VIDE, 'ombre : engins'), ombFumee: programme(gl, VS_OMB_FUMEE, FS_OMB_FUMEE, 'ombre : fumée'),
+    ssao: programme(gl, VS_PLEIN, FS_SSAO, 'ssao'), flou: programme(gl, VS_PLEIN, FS_FLOU, 'flou'), compo: programme(gl, VS_PLEIN, FS_COMPO, 'composition'),
   };
-  const R = { gl, info, stats: { triangles: 0, appels: 0 }, gpu: { scene: null, ssao: null, composition: null }, largeur: 1, hauteur: 1 };
+  const R = { gl, info, stats: { triangles: 0, appels: 0, ombre: null }, gpu: { ombre: null, scene: null, ssao: null, composition: null }, largeur: 1, hauteur: 1 };
 
   // ─── les textures de données : la lumière (RGBA8) et les hauteurs (R32F), une case = un texel ───
   let texLamp = null, texLum = null, texHF = null, tampons = null, chunks = [], vaoS = null, vboS = null, vboC = null, vboH = null, masqueSale = true;
@@ -300,12 +385,13 @@ export function creerRendu(canvas) {
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
   };
   // relier : (re)crée tout ce qui dépend de la taille de la grille
-  let LA = null;
+  let LA = null, solExtreme = { bas: 0, haut: 16 };
   R.relier = (M2, L2, F2, A2) => {
-    for (const c of chunks) if (c) for (const k of ['sol', 'toit']) if (c[k].vao) { gl.deleteVertexArray(c[k].vao); gl.deleteBuffer(c[k].vbo); gl.deleteBuffer(c[k].ibo); }
+    for (const c of chunks) if (c) for (const k of ['sol', 'toit']) if (c[k].vao) { gl.deleteVertexArray(c[k].vao); gl.deleteBuffer(c[k].vbo); gl.deleteBuffer(c[k].ibo); if (c[k].vaoV) { gl.deleteVertexArray(c[k].vaoV); gl.deleteBuffer(c[k].iboV); } }
     for (const t of [texLamp, texLum, texHF]) if (t) gl.deleteTexture(t);
     if (vaoS) { gl.deleteVertexArray(vaoS); gl.deleteBuffer(vboS); gl.deleteBuffer(vboC); gl.deleteBuffer(vboH); }
     M = M2; L = L2; F = F2; LA = A2;
+    { let bas = 1e9, haut = -1e9; for (let k = 0; k < L.hf.length; k += 5) { const h = L.hf[k]; if (h < bas) bas = h; if (h > haut) haut = h; } solExtreme = { bas: Math.min(bas, 0) - 1, haut: haut + 1 }; }
     texLum = gl.createTexture(); texHF = gl.createTexture(); texLamp = gl.createTexture();
     gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
     reglerTex(texLum, gl.RGBA, gl.RGBA8, gl.UNSIGNED_BYTE, L.tex, gl.LINEAR);
@@ -332,8 +418,8 @@ export function creerRendu(canvas) {
   R.majHauteurs = region => sous(texHF, region, gl.RED, gl.FLOAT, L.hf, 4);
 
   // ─── les maillages, un par chunk (sol et toit) ───
-  const envoyer = (cible, T) => {
-    if (!T.nv) { cible.ni = 0; return; }
+  const envoyer = (cible, T, veg = false) => {
+    if (!T.nv) { cible.ni = 0; cible.niV = 0; return; }
     if (!cible.vao) { cible.vao = gl.createVertexArray(); cible.vbo = gl.createBuffer(); cible.ibo = gl.createBuffer(); }
     gl.bindVertexArray(cible.vao);
     gl.bindBuffer(gl.ARRAY_BUFFER, cible.vbo); gl.bufferData(gl.ARRAY_BUFFER, T.v.subarray(0, T.nv * FLOATS), gl.DYNAMIC_DRAW);
@@ -342,13 +428,25 @@ export function creerRendu(canvas) {
     gl.enableVertexAttribArray(1); gl.vertexAttribPointer(1, 4, gl.FLOAT, false, S, 12);
     gl.enableVertexAttribArray(2); gl.vertexAttribPointer(2, 1, gl.FLOAT, false, S, 28);
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, cible.ibo); gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, T.x.subarray(0, T.nx), gl.DYNAMIC_DRAW);
-    cible.ni = T.nx; gl.bindVertexArray(null);
+    cible.ni = T.nx;
+    if (veg) {                                                             // un second jeu d'indices sur les mêmes sommets : les seuls troncs et buissons, pour la carte d'ombre (le relief n'y est pas)
+      const idx = []; for (let q = 0; q < T.nx; q += 3) { const mt = T.v[T.x[q] * FLOATS + 6]; if (mt >= 4.5 && mt <= 6.5) idx.push(T.x[q], T.x[q + 1], T.x[q + 2]); }
+      cible.niV = idx.length;
+      if (idx.length) {
+        if (!cible.vaoV) { cible.vaoV = gl.createVertexArray(); cible.iboV = gl.createBuffer(); }
+        gl.bindVertexArray(cible.vaoV); gl.bindBuffer(gl.ARRAY_BUFFER, cible.vbo);
+        gl.enableVertexAttribArray(0); gl.vertexAttribPointer(0, 3, gl.FLOAT, false, S, 0); gl.enableVertexAttribArray(1); gl.vertexAttribPointer(1, 4, gl.FLOAT, false, S, 12); gl.enableVertexAttribArray(2); gl.vertexAttribPointer(2, 1, gl.FLOAT, false, S, 28);
+        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, cible.iboV); gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, Uint32Array.from(idx), gl.DYNAMIC_DRAW);
+      }
+    }
+    gl.bindVertexArray(null);
   };
   R.reconstruire = (liste, ao) => {          // liste de { cx, cy } ; rend le temps en ms passé à construire (hors téléversement)
     for (const { cx, cy } of liste) {
       construireChunk(M, cx, cy, { ao }, tampons);
-      const k = cy * M.cw + cx, c = chunks[k] || (chunks[k] = { sol: {}, toit: {} });
-      envoyer(c.sol, tampons.sol); envoyer(c.toit, tampons.toit);
+      const k = cy * M.cw + cx, c = chunks[k] || (chunks[k] = { sol: {}, toit: {}, veg: false });
+      envoyer(c.sol, tampons.sol, true); envoyer(c.toit, tampons.toit);
+      c.veg = c.sol.niV > 0;
     }
   };
   R.tout = ao => R.reconstruire(Array.from({ length: M.cw * M.chh }, (_, k) => ({ cx: k % M.cw, cy: (k / M.cw) | 0 })), ao);
@@ -391,6 +489,54 @@ export function creerRendu(canvas) {
   const PAL_J = Object.fromEntries(Object.entries(REELS.COULEURS_JEU).map(([k, l]) => [k, COUL[l]]));
   const paletteReels = () => { const o = {}; for (const [k, l] of Object.entries(REELS.COULEURS)) o[k] = COUL[l]; for (const [k, ls] of Object.entries(REELS.COULEURS_LISTES)) o[k] = ls.flatMap(l => COUL[l]); return o; };
   const PAL_R = paletteReels();
+
+  // ─── les engins : des chars et des biplans en boîtes, un tampon d'instances chacun ───
+  const instE = {}, vaoE = {}, capE = {};
+  const typeEngin = nom => {
+    if (vaoE[nom]) return vaoE[nom];
+    const G = MODELES[nom], v = gl.createVertexArray(), col = new Float32Array(G.n * 3);
+    G.lettres.forEach((l, k) => col.set(COUL[l], k * 3));
+    gl.bindVertexArray(v);
+    const att = (loc, data, n) => { const b = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, b); gl.bufferData(gl.ARRAY_BUFFER, data, gl.STATIC_DRAW); gl.enableVertexAttribArray(loc); gl.vertexAttribPointer(loc, n, gl.FLOAT, false, 0, 0); };
+    att(0, G.position, 3); att(1, G.normale, 3); att(2, col, 3);
+    instE[nom] = gl.createBuffer(); capE[nom] = 0; gl.bindBuffer(gl.ARRAY_BUFFER, instE[nom]);
+    const S = FLOATS_ENGIN * 4; gl.enableVertexAttribArray(3); gl.vertexAttribPointer(3, 4, gl.FLOAT, false, S, 0); gl.vertexAttribDivisor(3, 1); gl.enableVertexAttribArray(4); gl.vertexAttribPointer(4, 3, gl.FLOAT, false, S, 16); gl.vertexAttribDivisor(4, 1);
+    gl.bindVertexArray(null);
+    return (vaoE[nom] = { v, n: G.n });
+  };
+
+  // ─── la carte d'ombre : une profondeur (comparée par le matériel, donc filtrée) et l'épaisseur de la fumée (R, G) vues du soleil ───
+  const demiFloat = !!(gl.getExtension('EXT_color_buffer_float') || gl.getExtension('EXT_color_buffer_half_float'));
+  info.fumeeFlottante = demiFloat;
+  let om = null;
+  const creerOmbre = taille => {
+    if (om) { gl.deleteFramebuffer(om.f); gl.deleteTexture(om.prof); gl.deleteTexture(om.fumee); }
+    const prof = gl.createTexture(), fumee = gl.createTexture(), f = gl.createFramebuffer();
+    gl.bindTexture(gl.TEXTURE_2D, prof); gl.texImage2D(gl.TEXTURE_2D, 0, gl.DEPTH_COMPONENT24, taille, taille, 0, gl.DEPTH_COMPONENT, gl.UNSIGNED_INT, null);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_COMPARE_MODE, gl.COMPARE_REF_TO_TEXTURE); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_COMPARE_FUNC, gl.LEQUAL);
+    gl.bindTexture(gl.TEXTURE_2D, fumee);
+    if (demiFloat) gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA16F, taille, taille, 0, gl.RGBA, gl.HALF_FLOAT, null); else gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA8, taille, taille, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, f); gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.TEXTURE_2D, prof, 0); gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, fumee, 0);
+    const etat = gl.checkFramebufferStatus(gl.FRAMEBUFFER); gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    om = { f, prof, fumee, taille, ok: etat === gl.FRAMEBUFFER_COMPLETE, C: null };
+    info.ombreFBO = om.ok;
+  };
+  creerOmbre(1);                                                           // de quoi lier quelque chose avant la première vraie carte
+  // les boîtes qui projettent : la géométrie « boîte » du jeu, un VAO par tampon d'instances (boîtes, allégés, équipés ; les articulés ont le leur)
+  const instOmArt = gl.createBuffer(); let capOmArt = 0; const vaoOm = {};
+  const vaoBoites = (cle, buf) => {
+    if (vaoOm[cle]) return vaoOm[cle];
+    const G = REELS.geometrieJeu('boite'), v = gl.createVertexArray(), P = progs.ombSold; gl.bindVertexArray(v);
+    for (const [nom, k, c] of REELS.PAR_SOMMET_JEU) { const loc = gl.getAttribLocation(P.p, nom); if (loc < 0) continue; const b = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, b); gl.bufferData(gl.ARRAY_BUFFER, G[c], gl.STATIC_DRAW); gl.enableVertexAttribArray(loc); gl.vertexAttribPointer(loc, k, gl.FLOAT, false, 0, 0); }
+    gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+    for (const [nom, k, off] of REELS.ATTRIBUTS_JEU) { const loc = gl.getAttribLocation(P.p, nom); if (loc < 0) continue; gl.enableVertexAttribArray(loc); gl.vertexAttribPointer(loc, k, gl.FLOAT, false, REELS.FLOATS_JEU * 4, off * 4); gl.vertexAttribDivisor(loc, 1); }
+    gl.bindVertexArray(null);
+    return (vaoOm[cle] = { v, n: G.n });
+  };
 
   // ─── les tampons d'image : scène (couleur + profondeur), AO ───
   let fbo = null, texCoul = null, texProf = null, fboAO = null, texAO = null, fboAO2 = null, texAO2 = null;
@@ -435,9 +581,47 @@ export function creerRendu(canvas) {
     }
   };
 
+  const IDENTITE = new Float32Array([1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]);
   const uMat = new Float32Array(COULEURS_MATIERES.flat());
   const LAMPE_COUL = COUL.o.map((v, i) => v * 0.45 + COUL.orange[i] * 0.55);       // une flamme : l'os qui tire sur l'orange d'alerte
   const NEIGE_COUL = COUL.o.map((v, i) => (v * 0.78 + COUL.r[i] * 0.22) * 0.72);
+  // La carte d'ombre d'une image : les arbres (troncs et buissons des chunks vus), les soldats (leur boîte), les engins, puis l'épaisseur de la fumée ; rend le nombre de casteurs dessinés
+  const passeOmbre = (E, O, m) => {
+    const T = om.taille; let casteurs = 0;
+    gl.bindFramebuffer(gl.FRAMEBUFFER, om.f); gl.viewport(0, 0, T, T); gl.disable(gl.SCISSOR_TEST);
+    gl.colorMask(true, true, true, true); gl.depthMask(true); gl.clearColor(0, 0, 0, 0); gl.clearDepth(1); gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+    gl.enable(gl.DEPTH_TEST); gl.depthFunc(gl.LEQUAL); gl.disable(gl.BLEND); gl.colorMask(false, false, false, false);
+    gl.enable(gl.POLYGON_OFFSET_FILL); gl.polygonOffset(1.2, 2.0);
+    let P = progs.ombSol; gl.useProgram(P.p); gl.uniformMatrix4fv(P.u.uVP, false, O.vp);
+    const cm = M.chunk * M.cell;
+    for (let k = 0; k < chunks.length; k++) {
+      const c = chunks[k]; if (!c || !c.veg || !c.sol.niV) continue;
+      const x0 = (k % M.cw) * cm, z0 = ((k / M.cw) | 0) * cm; if (!rectDansOmbre(O, x0, z0, x0 + cm, z0 + cm, 24)) continue;
+      gl.bindVertexArray(c.sol.vaoV); gl.drawElements(gl.TRIANGLES, c.sol.niV, gl.UNSIGNED_INT, 0); casteurs += c.sol.niV / 3; R.stats.appels++;
+    }
+    P = progs.ombSold; gl.useProgram(P.p); gl.uniformMatrix4fv(P.u.uVP, false, O.vp);
+    P.u.uT && gl.uniform1f(P.u.uT, E.temps); P.u.uBalance && gl.uniform1f(P.u.uBalance, 1); P.u.uEch && gl.uniform2f(P.u.uEch, 1, 1); P.u.uSoleil && gl.uniform2f(P.u.uSoleil, .5, .6);
+    const dessinerBoites = (g, n) => { gl.bindVertexArray(g.v); gl.drawArraysInstanced(gl.TRIANGLES, 0, g.n, n); casteurs += g.n / 3 * n; R.stats.appels++; };
+    for (const style of ['boite', 'legere', 'equipe']) { const L = E.jeu && E.jeu[style]; if (L && L.n) { styleJ(style); dessinerBoites(vaoBoites(style, instJ[style]), L.n); } }
+    const A = E.ombreArt;
+    if (A && A.n) {
+      gl.bindBuffer(gl.ARRAY_BUFFER, instOmArt); const oct = A.n * REELS.FLOATS_JEU * 4; if (oct > capOmArt) { capOmArt = oct * 2; gl.bufferData(gl.ARRAY_BUFFER, capOmArt, gl.DYNAMIC_DRAW); }
+      gl.bufferSubData(gl.ARRAY_BUFFER, 0, A.data, 0, A.n * REELS.FLOATS_JEU); dessinerBoites(vaoBoites('art', instOmArt), A.n);
+    }
+    P = progs.ombEngins; gl.useProgram(P.p); gl.uniformMatrix4fv(P.u.uVP, false, O.vp);
+    for (const nom of ['char', 'avion']) { const L = E.engins && E.engins[nom]; if (L && L.n) { const g = typeEngin(nom); gl.bindVertexArray(g.v); gl.drawArraysInstanced(gl.TRIANGLES, 0, g.n, L.n); casteurs += g.n / 3 * L.n; R.stats.appels++; } }
+    gl.disable(gl.POLYGON_OFFSET_FILL); gl.colorMask(true, true, true, true);
+    const np = E.particules.n, nd = E.particules.nd;                       // la fumée et la poussière : leur épaisseur cumulée (la profondeur n'est pas écrite)
+    if (np > nd) {
+      P = progs.ombFumee; gl.useProgram(P.p); gl.uniformMatrix4fv(P.u.uVP, false, O.vp); gl.uniform1f(P.u.uPxM, T / Math.max(O.etendue[0], O.etendue[1]));
+      gl.disable(gl.DEPTH_TEST); gl.depthMask(false); gl.enable(gl.BLEND); gl.blendFunc(gl.ONE, gl.ONE);
+      gl.bindVertexArray(vaoP); gl.drawArrays(gl.POINTS, nd, np - nd); R.stats.appels++;
+      gl.disable(gl.BLEND); gl.depthMask(true); gl.enable(gl.DEPTH_TEST);
+    }
+    gl.bindVertexArray(null); gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    return casteurs;
+  };
+
   const poserCommun = (P, E, cam, m) => {
     const u = P.u, U3 = (n, v) => u[n] && gl.uniform3f(u[n], v[0], v[1], v[2]);
     if (u.uVP) gl.uniformMatrix4fv(u.uVP, false, m.vp);
@@ -458,6 +642,15 @@ export function creerRendu(canvas) {
     u.uMat && gl.uniform3fv(u.uMat, uMat);
     if (u.uLamp) { gl.activeTexture(gl.TEXTURE4); gl.bindTexture(gl.TEXTURE_2D, texLamp); gl.uniform1i(u.uLamp, 4); gl.activeTexture(gl.TEXTURE0); }
     u.uLampOn && gl.uniform1f(u.uLampOn, E.etapes[6] ? 1 : 0); u.uLampCol && gl.uniform3f(u.uLampCol, ...LAMPE_COUL);
+    const O = E.ombreC && E.etapes[9] ? E.ombreC : null;                   // la carte d'ombre (étape 9) : le cadre, ses deux textures, ses réglages
+    u.uOmb && gl.uniform4f(u.uOmb, O ? 1 : 0, 1 / om.taille, O ? OMBRES.biaisTexels * O.texelM : 0, O ? 0.12 / O.profondeurM : 0);
+    u.uLVP && gl.uniformMatrix4fv(u.uLVP, false, O ? O.vp : IDENTITE); u.uFumeK && gl.uniform1f(u.uFumeK, OMBRES.extinctionFumee);
+    if (u.uCarteOmbre) { gl.activeTexture(gl.TEXTURE5); gl.bindTexture(gl.TEXTURE_2D, om.prof); gl.uniform1i(u.uCarteOmbre, 5); gl.activeTexture(gl.TEXTURE0); }
+    if (u.uFumee) { gl.activeTexture(gl.TEXTURE6); gl.bindTexture(gl.TEXTURE_2D, om.fumee); gl.uniform1i(u.uFumee, 6); gl.activeTexture(gl.TEXTURE0); }
+    u.uCiel && gl.uniform4f(u.uCiel, E.ciel.bas ?? 0, E.ciel.cirrus ?? 0, E.ciel.voile, 0);
+    u.uCielK && gl.uniform4f(u.uCielK, CIEL.masseAir, CIEL.mieG, CIEL.mieForce, CIEL.rougeurHorizon);
+    u.uCielD && gl.uniform4f(u.uCielD, CIEL.disqueSoleil[0], CIEL.disqueSoleil[1], CIEL.lueurSoleil, CIEL.eclairageNuage);
+    u.uCielC && gl.uniform4f(u.uCielC, CIEL.cirrusEchelleM, CIEL.cirrusForce, CIEL.cirrusHauteurM, 0);
   };
 
   // Dessine une image. `E` : { camera, ciel, etapes: {1..8: bool}, flashs, particules: {n, tampon}, temps, split, toitsTransparents, ssaoEchantillons, brume: 'simple'|'complete' }
@@ -466,6 +659,11 @@ export function creerRendu(canvas) {
     lireChronos();
     const m = matrices(E.camera), W = R.largeur, H = R.hauteur;
     R.stats.triangles = 0; R.stats.appels = 0;
+    // le cadre de la carte d'ombre : seulement si l'étape est active, le soleil assez haut et l'écran partagé ne la coupe pas (les deux moitiés lisent la même carte)
+    const tailleOmbre = E.ombreTaille || 1024;
+    let O = null;
+    if (E.etapes[9]) { if (om.taille !== tailleOmbre) creerOmbre(tailleOmbre); if (om.ok) O = cadrerOmbre({ cam: m, sunDir: E.ciel.sunDir, taille: tailleOmbre, monde: M, sol: solExtreme, distanceM: E.camera.distance }); }
+    E = { ...E, ombreC: O };
     const scene = (etapes, x0, x1) => {
       const ee = { ...E, etapes };
       gl.bindFramebuffer(gl.FRAMEBUFFER, cSc.f); gl.viewport(0, 0, W, H);
@@ -497,6 +695,15 @@ export function creerRendu(canvas) {
         for (const [k, v] of Object.entries(PAL_R)) if (P.u[k]) (v.length === 3 ? gl.uniform3f(P.u[k], ...v) : gl.uniform3fv(P.u[k], v));
         const g = niveauR(E.reels.niveau); gl.bindVertexArray(g.v); gl.drawArraysInstanced(gl.TRIANGLES, 0, g.n, E.reels.n); R.stats.appels++; R.stats.triangles += g.n / 3 * E.reels.n;
       }
+      if (E.engins) {                                                       // les chars et les biplans
+        P = progs.engins; let prêt = false;
+        for (const nom of ['char', 'avion']) {
+          const L = E.engins[nom]; if (!L || !L.n) continue;
+          if (!prêt) { gl.useProgram(P.p); poserCommun(P, ee, E.camera, m); prêt = true; }
+          gl.uniform1f(P.u.uAir, nom === 'avion' ? 1 : 0);
+          const g = typeEngin(nom); gl.bindVertexArray(g.v); gl.drawArraysInstanced(gl.TRIANGLES, 0, g.n, L.n); R.stats.appels++; R.stats.triangles += g.n / 3 * L.n;
+        }
+      }
       // les débris, puis (sans écrire la profondeur) fumée, poussière, toits transparents et pluie
       const np = E.particules.n, nd = E.particules.nd;
       P = progs.parts;
@@ -526,7 +733,10 @@ export function creerRendu(canvas) {
     // la foule et les particules : les tampons partent une fois par image (même en écran partagé)
     gl.bindBuffer(gl.ARRAY_BUFFER, vboS); gl.bufferSubData(gl.ARRAY_BUFFER, 0, F.xy, 0, F.n * 2);
     if (E.particules.n) { gl.bindBuffer(gl.ARRAY_BUFFER, vboP); const oct = E.particules.n * 24; if (oct > capP) { capP = Math.max(oct, 24 * 2048); gl.bufferData(gl.ARRAY_BUFFER, capP, gl.DYNAMIC_DRAW); } gl.bufferSubData(gl.ARRAY_BUFFER, 0, E.particules.tampon, 0, E.particules.n * 6); }
-    if ((E.reels && E.reels.n) || masqueSale) { gl.bindBuffer(gl.ARRAY_BUFFER, vboH); gl.bufferSubData(gl.ARRAY_BUFFER, 0, E.masque, 0, F.n); masqueSale = !!(E.reels && E.reels.n); }
+    // Le masque des points (un homme dessiné en volume n'est plus un point). v0.114.0, le clignotement : il ne partait que s'il y avait des articulés ; avec des seuls équipés, allégés ou boîtes (la vue moyenne)
+    // il restait celui d'une image lointaine, et un homme qui changeait de niveau disparaissait ou se dessinait deux fois (le point ET le volume).
+    const nVolumes = (E.reels ? E.reels.n : 0) + (E.jeu ? (E.jeu.boite?.n || 0) + (E.jeu.legere?.n || 0) + (E.jeu.equipe?.n || 0) : 0);
+    if (nVolumes || masqueSale) { gl.bindBuffer(gl.ARRAY_BUFFER, vboH); gl.bufferSubData(gl.ARRAY_BUFFER, 0, E.masque, 0, F.n); masqueSale = nVolumes > 0; }
     if (E.reels && E.reels.n) { gl.bindBuffer(gl.ARRAY_BUFFER, instR); const oct = E.reels.n * REELS.FLOATS * 4; if (oct > capR) { capR = oct * 2; gl.bufferData(gl.ARRAY_BUFFER, capR, gl.DYNAMIC_DRAW); } gl.bufferSubData(gl.ARRAY_BUFFER, 0, E.reels.data, 0, E.reels.n * REELS.FLOATS); }
     if (E.lueurs && E.lueurs.n) { gl.bindBuffer(gl.ARRAY_BUFFER, vboL); const oct = E.lueurs.n * 20; if (oct > capL) { capL = Math.max(oct, 20 * 512); gl.bufferData(gl.ARRAY_BUFFER, capL, gl.DYNAMIC_DRAW); } gl.bufferSubData(gl.ARRAY_BUFFER, 0, E.lueurs.data, 0, E.lueurs.n * 5); }
     for (const style of ['boite', 'legere', 'equipe']) {
@@ -535,7 +745,15 @@ export function creerRendu(canvas) {
       if (oct > capJ[style]) { capJ[style] = oct * 2; gl.bufferData(gl.ARRAY_BUFFER, capJ[style], gl.DYNAMIC_DRAW); }
       gl.bufferSubData(gl.ARRAY_BUFFER, 0, L.data, 0, L.n * REELS.FLOATS_JEU);
     }
+    for (const nom of ['char', 'avion']) {
+      const L = E.engins && E.engins[nom]; if (!L || !L.n) continue;
+      typeEngin(nom); gl.bindBuffer(gl.ARRAY_BUFFER, instE[nom]); const oct = L.n * FLOATS_ENGIN * 4;
+      if (oct > capE[nom]) { capE[nom] = oct * 2; gl.bufferData(gl.ARRAY_BUFFER, capE[nom], gl.DYNAMIC_DRAW); }
+      gl.bufferSubData(gl.ARRAY_BUFFER, 0, L.data, 0, L.n * FLOATS_ENGIN);
+    }
     const tout = E.etapes, partage = E.moitie && E.split > 0;
+    R.stats.ombre = null;
+    if (O) chrono('ombre', () => { const casteurs = passeOmbre(E, O, m); R.stats.ombre = { taille: om.taille, etendueM: O.etendue.map(v => +v.toFixed(1)), texelCm: +(O.texelM * 100).toFixed(1), casteurs: Math.round(casteurs) }; });
     chrono('scene', () => {
       if (partage) {
         const xs = Math.round(E.split * W);

@@ -43,16 +43,19 @@ export function ecrire(T, n, h) {
   T[o + 22] = a.acc; T[o + 23] = a.peau; T[o + 24] = t.yeux + 3 * t.nez + 9 * t.bouche + 27 * t.sourcils + 81 * (t.rides || 0); T[o + 25] = c.ventre;
 }
 
-// Le suivi des hommes dessinés : leur vitesse (lissée : la marche au hasard de la foule tremble) et leur cap, d'après leur déplacement sur 0,35 s
-export function creerSuivi(max) { return { ox: new Float32Array(max), oz: new Float32Array(max), ot: new Float32Array(max).fill(-1), vit: new Float32Array(max), cap: new Float32Array(max), dirx: new Float32Array(max), dirz: new Float32Array(max) }; }
-export function suivre(S, F, i, t) {
-  if (S.ot[i] < 0 || t - S.ot[i] > 3) { S.ox[i] = F.x[i]; S.oz[i] = F.z[i]; S.ot[i] = t; S.cap[i] = F.camp[i] ? 0 : Math.PI; S.vit[i] = 0; return; }
-  const dt = t - S.ot[i]; if (dt < 0.35) return;
+// Le suivi des hommes dessinés : leur vitesse (lissée) et leur cap, d'après leur déplacement sur 0,2 s. L'homme marche ou s'arrête avec une HYSTÉRÉSIS (SOLDATS_REELS.marche) : sans elle, une vitesse qui frôle le seuil
+// le faisait passer de la marche à l'arrêt (le cap, les jambes) d'une mesure à l'autre, et on le voyait clignoter.
+export function creerSuivi(max) { return { ox: new Float32Array(max), oz: new Float32Array(max), ot: new Float32Array(max).fill(-1), vit: new Float32Array(max), cap: new Float32Array(max), marche: new Uint8Array(max) }; }
+export function suivre(S, F, i, t, K = SOLDATS_REELS.marche) {
+  if (S.ot[i] < 0 || t - S.ot[i] > 3) { S.ox[i] = F.x[i]; S.oz[i] = F.z[i]; S.ot[i] = t; S.cap[i] = F.camp[i] ? 0 : Math.PI; S.vit[i] = 0; S.marche[i] = 0; return; }
+  const dt = t - S.ot[i]; if (dt < 0.2) return;
   const dx = F.x[i] - S.ox[i], dz = F.z[i] - S.oz[i], v = Math.hypot(dx, dz) / dt;
-  S.vit[i] = S.vit[i] * 0.4 + v * 0.6;
+  const brute = S.marche[i] ? S.vit[i] * 0.4 + v * 0.6 : v;                         // lissée tant qu'il marche
+  S.marche[i] = (S.marche[i] ? brute > K.arrete : brute > K.demarre) ? 1 : 0;
+  S.vit[i] = S.marche[i] ? brute : 0;
   const but = F.camp[i] ? 0 : Math.PI;                                              // à l'arrêt : face à l'ennemi (nous vers le nord, en face vers le sud)
-  const vers = v > 0.45 ? Math.atan2(dx, dz) : but;
-  let d = vers - S.cap[i]; d = Math.atan2(Math.sin(d), Math.cos(d)); S.cap[i] += d * 0.5;
+  const vers = S.marche[i] ? Math.atan2(dx, dz) : but;
+  let d = vers - S.cap[i]; d = Math.atan2(Math.sin(d), Math.cos(d)); S.cap[i] += d * (1 - Math.exp(-dt / 0.22));
   S.ox[i] = F.x[i]; S.oz[i] = F.z[i]; S.ot[i] = t;
 }
 
@@ -101,37 +104,52 @@ export function ecrireJeu(T, n, h) {
 
 // Classe les soldats vus : pour chacun, ses pixels par mètre (k / profondeur de l'écran) donne son niveau de détail. Les `maxArticule` plus proches en articulés, au plus `maxEquipe` équipés, `maxLegere` allégés ;
 // ceux qui dépassent descendent d'un niveau. `masque[i] = 1` : l'homme est dessiné en géométrie (le point est caché). Rend les listes (indices) et leur taille.
+// L'HYSTÉRÉSIS (v0.114.0, le clignotement) : `niv[i]` garde le niveau de l'image d'avant (0 articulé … 3 boîte, 4 point) ; un homme le conserve tant que ses pixels par mètre restent à 12 % du seuil
+// et, pour les places limitées (les 250 articulés…), il passe avant ceux qui n'y étaient pas. Avant, deux hommes à égalité se disputaient la dernière place d'une image à l'autre.
 export function creerClasses(max) {
   const l = () => ({ i: new Int32Array(max), n: 0 });
-  return { art: l(), equipe: l(), legere: l(), boite: l(), w: new Float32Array(max), cand: [new Int32Array(max), new Int32Array(max), new Int32Array(max)], nc: [0, 0, 0], masque: new Float32Array(max), plusProche: 0 };
+  return { art: l(), equipe: l(), legere: l(), boite: l(), w: new Float32Array(max), cand: [new Int32Array(max), new Int32Array(max), new Int32Array(max)], nc: [0, 0, 0], masque: new Float32Array(max), plusProche: 0, niv: new Uint8Array(max).fill(4), prec: new Uint8Array(max).fill(4), ppm: new Float32Array(max), nivListe: 0 };
+}
+// le niveau voulu pour des pixels par mètre `ppm`, sachant le niveau précédent `p`
+export function niveauDe(ppm, p, S = SOLDATS_REELS) {
+  const T = [S.pxmArticule, S.pxmEquipe, S.pxmLegere, S.pxmBoite], H = S.hysteresis || { bas: 1, haut: 1 };
+  const base = ppm >= T[0] ? 0 : ppm >= T[1] ? 1 : ppm >= T[2] ? 2 : ppm >= T[3] ? 3 : 4;
+  if (p === base || p > 4) return base;
+  const bas = p < 4 ? T[p] * H.bas : 0, haut = p > 0 ? T[p - 1] * H.haut : Infinity;       // le niveau p dure de T[p]·bas à T[p−1]·haut
+  return ppm >= bas && ppm < haut ? p : base;
 }
 export function classer(F, hf, M, vp, H, fov, C = creerClasses(F.max), S = SOLDATS_REELS) {
-  const k = (H / 2) / Math.tan(fov / 2), { W } = M, art = C.art, eq = C.equipe, lg = C.legere, bt = C.boite;
+  const k = (H / 2) / Math.tan(fov / 2), { W } = M, art = C.art, eq = C.equipe, lg = C.legere, bt = C.boite, prio = (S.hysteresis || { priorite: 1 }).priorite;
   art.n = eq.n = lg.n = bt.n = 0; C.nc[0] = C.nc[1] = C.nc[2] = 0; C.masque.fill(0); C.plusProche = 0;
   for (let i = 0; i < F.n; i++) {
-    const x = F.x[i], z = F.z[i], y = hf[Math.min(M.H - 1, z * M.cpm | 0) * W + Math.min(W - 1, x * M.cpm | 0)] + 0.9;
+    const x = F.x[i], z = F.z[i], y = hf[Math.min(M.H - 1, z * M.cpm | 0) * W + Math.min(W - 1, x * M.cpm | 0)] + 0.9, prev = C.niv[i];
+    C.niv[i] = 4; C.prec[i] = prev;
     const cw = vp[3] * x + vp[7] * y + vp[11] * z + vp[15]; if (cw < 0.5) continue;
-    const ppm = k / cw; if (ppm < S.pxmBoite) continue;
+    const ppm = k / cw;
     const cx = (vp[0] * x + vp[4] * y + vp[8] * z + vp[12]) / cw, cy = (vp[1] * x + vp[5] * y + vp[9] * z + vp[13]) / cw;
     if (cx < -1.12 || cx > 1.12 || cy < -1.15 || cy > 1.15) continue;
-    C.w[i] = cw;
-    if (ppm >= S.pxmArticule) C.cand[0][C.nc[0]++] = i;
-    else if (ppm >= S.pxmEquipe) C.cand[1][C.nc[1]++] = i;
-    else if (ppm >= S.pxmLegere) C.cand[2][C.nc[2]++] = i;
-    else bt.i[bt.n++] = i;
+    const niv = niveauDe(ppm, prev, S);
+    if (niv === 4) continue;
+    C.w[i] = cw; C.ppm[i] = ppm;
+    if (niv === 3) { C.niv[i] = 3; bt.i[bt.n++] = i; } else { C.cand[niv > 1 ? 2 : niv][C.nc[niv > 1 ? 2 : niv]++] = i; C.niv[i] = niv; }
   }
-  const par = (a, b) => C.w[a] - C.w[b];
-  // les articulés : les plus proches ; le reste est équipé
-  const sel = (cand, n, cap, dest, trop) => {
+  // un homme qui occupait déjà un niveau garde sa place d'abord : sa profondeur compte pour 15 % de moins
+  const par = (a, b) => C.w[a] * (C.prec[a] === C.nivListe ? prio : 1) - C.w[b] * (C.prec[b] === C.nivListe ? prio : 1);
+  const sel = (cand, n, cap, dest, trop, niveau) => {
     const liste = Array.from(cand.subarray(0, n));
-    if (n > cap) { liste.sort(par); for (let q = cap; q < n; q++) trop(liste[q]); liste.length = cap; }
-    for (const i of liste) dest.i[dest.n++] = i;
+    if (n > cap) { C.nivListe = niveau; liste.sort(par); for (let q = cap; q < n; q++) trop(liste[q]); liste.length = cap; }
+    for (const i of liste) { dest.i[dest.n++] = i; C.niv[i] = niveau; }
   };
-  const versEq = i => { C.cand[1][C.nc[1]++] = i; }, versLg = i => { C.cand[2][C.nc[2]++] = i; }, versBt = i => { bt.i[bt.n++] = i; };
-  sel(C.cand[0], C.nc[0], S.maxArticule, art, versEq);
-  sel(C.cand[1], C.nc[1], S.maxEquipe, eq, versLg);
-  sel(C.cand[2], C.nc[2], S.maxLegere, lg, versBt);
+  const versEq = i => { C.cand[1][C.nc[1]++] = i; }, versLg = i => { C.cand[2][C.nc[2]++] = i; }, versBt = i => { bt.i[bt.n++] = i; C.niv[i] = 3; };
+  sel(C.cand[0], C.nc[0], S.maxArticule, art, versEq, 0);
+  sel(C.cand[1], C.nc[1], S.maxEquipe, eq, versLg, 1);
+  sel(C.cand[2], C.nc[2], S.maxLegere, lg, versBt, 2);
   for (const L of [art, eq, lg, bt]) for (let q = 0; q < L.n; q++) C.masque[L.i[q]] = 1;
   if (art.n) { let m = 1e9; for (let q = 0; q < art.n; q++) m = Math.min(m, C.w[art.i[q]]); C.plusProche = k / m; }
   return C;
 }
+
+// Le même sommet pour la CARTE D'OMBRE : la boîte du soldat (10 triangles) qui projette, sans l'ombre au sol du jeu (le quadrilatère plat de l'ombre ferait une rayure dans la carte) et un peu plus mince que l'homme
+// en volume qui la reçoit (0,8 en largeur) : le modèle articulé déborde de sa boîte, et sa face tournée vers le soleil s'ombrerait elle-même.
+export const glslVertOmbre = () => glslVertJeu()
+  .replace('if (cache) p = vec3(0.0);', 'if (cache || (kp > 0.5 && kp < 1.5)) p = vec3(0.0); else p.xz *= 0.8;');

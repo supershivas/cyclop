@@ -11,7 +11,7 @@ export const MONDE = {
   tranchees: { niveaux: 4, largeurM: 2.2, profondeurQ: 8, boyauM: 1.6, abrisParLigne: 2, abrisLongM: 11 },
   vegetation: { souches: 110, buissons: 160, bois: 6 },
   obusInitiaux: 230,
-  foule: { max: 50000, defaut: 8000, vague: { periodeS: 26, avanceS: 8, retardParRangS: 1.4 } },
+  foule: { max: 50000, defaut: 8000, flanage: { vitesse: 0.12, tauS: 1.6 }, vague: { periodeS: 26, avanceS: 8, retardParRangS: 1.4 } },
 };
 
 // Les tailles de carte au choix (réglages) ; au-delà de `COLONNES_MAX` colonnes, la grille revient à 1 case par mètre
@@ -33,15 +33,16 @@ export const ETAPES = [
   { id: 6, cle: 'flash', nom: 'Lumières temporaires', desc: 'flash des obus, lanternes des tranchées, lampes portées', budget: { chunkMs: 0, globalMs: 0, gpuMs: 0.6 } },
   { id: 7, cle: 'meteo', nom: 'Météo', desc: 'boue sombre et brillante, flaques, ciel du jour de bataille', budget: { chunkMs: 0.3, globalMs: 20, gpuMs: 0.5 } },
   { id: 8, cle: 'ssao', nom: 'AO écran', desc: 'contacts fins : corps, débris, rebords', budget: { chunkMs: 0, globalMs: 0, gpuMs: 2.0 } },
+  { id: 9, cle: 'ombres', nom: 'Ombres portées', desc: 'carte d\'ombre : soldats, arbres, chars, avions ; la fumée projette une ombre qui s\'éclaircit', budget: { chunkMs: 0, globalMs: 0, gpuMs: 1.5 } },
 ];
 export const BUDGET_IMAGE_MS = 16.7;       // 60 images par seconde
 export const BUDGET_RECALCUL_CHUNK_MS = 2; // tout le recalcul local après un obus, étapes confondues
 
 // Les niveaux de qualité. `etapes` : ce qui est actif au départ ; `cpm` : cases par mètre ; `rayonAO`, `porteeOmbre` en mètres.
 export const QUALITES = {
-  bas: { nom: 'Bas', etapes: [1, 2, 3], cpm: 1, rayonAO: 4, porteeOmbre: 12, directionsAO: 8, brume: 'simple', ssaoEchantillons: 0, debris: 24 },
-  moyen: { nom: 'Moyen', etapes: [1, 2, 3, 4, 5, 6], cpm: 1, rayonAO: 6, porteeOmbre: 16, directionsAO: 8, brume: 'complete', ssaoEchantillons: 0, debris: 48 },
-  haut: { nom: 'Haut', etapes: [1, 2, 3, 4, 5, 6, 7, 8], cpm: 2, rayonAO: 8, porteeOmbre: 16, directionsAO: 8, brume: 'complete', ssaoEchantillons: 12, debris: 90 },
+  bas: { nom: 'Bas', etapes: [1, 2, 3], cpm: 1, rayonAO: 4, porteeOmbre: 12, directionsAO: 8, brume: 'simple', ssaoEchantillons: 0, debris: 24, ombreTaille: 0 },
+  moyen: { nom: 'Moyen', etapes: [1, 2, 3, 4, 5, 6, 9], cpm: 1, rayonAO: 6, porteeOmbre: 16, directionsAO: 8, brume: 'complete', ssaoEchantillons: 0, debris: 48, ombreTaille: 1024 },
+  haut: { nom: 'Haut', etapes: [1, 2, 3, 4, 5, 6, 7, 8, 9], cpm: 2, rayonAO: 8, porteeOmbre: 16, directionsAO: 8, brume: 'complete', ssaoEchantillons: 12, debris: 90, ombreTaille: 2048 },
 };
 
 // Résolution de l'image : celle du jeu (≈ 400 pixels de haut, agrandie sans lissage), ou plus fine.
@@ -68,7 +69,9 @@ export const NUAGES = { hauteurM: 420, echelleM: 140, derive: 0.9 };
 export const HORS_CARTE = { echelleM: 38, relief: 0.8, fonduM: 1800 };
 // Les vrais soldats du jeu, avec l'échelle de détail du jeu lui-même (rendu/soldats.js) : le point (le jeu aux zooms 1 et 2), la boîte, la silhouette allégée (dès 4 px/m), le soldat équipé
 // (dès 6) et l'articulé, un squelette et un visage (dès 12 : les `maxArticule` plus proches ; le modèle fin dès 24). Les seuils sont en pixels par mètre à l'endroit de chaque homme.
-export const SOLDATS_REELS = { pxmBoite: 2.5, pxmLegere: 4, pxmEquipe: 6, pxmArticule: 12, pxmFin: 24, maxArticule: 250, maxEquipe: 4000, maxLegere: 14000 };
+export const SOLDATS_REELS = { pxmBoite: 2.5, pxmLegere: 4, pxmEquipe: 6, pxmArticule: 12, pxmFin: 24, maxArticule: 250, maxEquipe: 4000, maxLegere: 14000,
+  hysteresis: { bas: 0.88, haut: 1.12, priorite: 0.85 },        // un homme garde son niveau de détail tant que ses pixels par mètre restent à 12 % du seuil (et il passe avant les autres pour une place : plus de va-et-vient)
+  marche: { demarre: 0.6, arrete: 0.3 } };                      // un homme se met à marcher au-dessus de 0,6 m/s et s'arrête au-dessous de 0,3 m/s (le flânage de la foule reste loin dessous)
 
 // Le ciel et le soleil : ils ne tirent leurs couleurs que de la palette du jeu (js/palette.js), mélangées en continu.
 export const SOLEIL = {
@@ -84,6 +87,7 @@ export const CAMERA = {
     tranchee: { nom: 'Vue tranchée', distance: 46, tangage: 0.72, lacet: -0.45 },
     cratere: { nom: 'Vue cratère', distance: 19, tangage: 0.82, lacet: 0.3 },
     colline: { nom: 'Vue colline', distance: 150, tangage: 0.55, lacet: -0.55 },
+    engins: { nom: 'Vue engins', distance: 70, tangage: 0.6, lacet: 0.5 },
   },
 };
 
@@ -101,3 +105,19 @@ export const LAMPES = {
   couleur: [1.0, 0.62, 0.28],       // une flamme : l'os qui tire sur l'orange d'alerte (ciel.js la recalcule de la palette)
 };
 export const FLASH = { dureeS: 0.75, rayonM: 34, intensite: 3.2, max: 8 };
+
+// La carte d'ombre (étape 9) : une projection orthogonale le long du soleil sur le rectangle de sol vu. `hautCasteurM` : la hauteur des plus hauts objets qui projettent (un avion) ;
+// `pas` : l'étendue de la carte ne prend que des valeurs en progression géométrique (le cadre ne « nage » pas quand on bouge la vue) ; `biaisTexels` : décalage le long de la normale, en texels ;
+// `extinctionFumee` : l'épaisseur optique d'une bouffée de fumée à plein (plus c'est grand, plus l'ombre est noire) ; `soleilMinRad` : au-dessous, pas de carte (le soleil rase, les ombres seraient infinies).
+export const OMBRES = { hautCasteurM: 60, pas: 1.12, biaisTexels: 1.6, extinctionFumee: 2.2, soleilMinRad: 0.05, maxEtendueM: 1400, couleurMinimale: 0 };
+
+// Les engins (chars et biplans) du labo : de quoi projeter des ombres sans reprendre les modèles du jeu (ils viennent à la session 3). Nombres : combien, vitesse (m/s), altitude (m), rayon du cercle (m).
+export const ENGINS = { chars: 5, avions: 4, vitesseChar: 1.3, vitesseAvion: 24, altitudeAvion: [26, 52], rayonCercle: [70, 150] };
+
+// Le ciel v2 : un dégradé « physique » (l'épaisseur d'air traversée donne le zénith, l'horizon et le rougissement), un soleil avec sa lueur (diffusion avant de Mie), deux couches de nuages éclairés.
+// Aucune couleur nouvelle : les ancres sont celles de la palette (ciel.js), seule la FORME du ciel est calculée.
+export const CIEL = { masseAir: 0.13, mieG: 0.78, mieForce: 0.32, lueurSoleil: 0.55, disqueSoleil: [0.9996, 0.99985], rougeurHorizon: 0.62, cirrusHauteurM: 1500, cirrusEchelleM: 520, cirrusForce: 0.55, eclairageNuage: 52 };
+// Le travail de l'AO de toute la carte, réparti sur plusieurs images (étape 2) : millisecondes par image, puis rangées de colonnes par pas ; le maillage (AO des arêtes) suit, quelques chunks par image.
+export const REPARTITION = { msParImage: 3, rangeesDepart: 2, chunksMax: 2 };
+// Le banc de mesure : des lots d'images dont la durée dépasse `fenetreMs` (et 40 fois la résolution de l'horloge : Firefox arrondit à 1 ms, ou à 100 ms avec la protection de la vie privée), pris par la médiane.
+export const BANC = { fenetreMs: 60, lots: 5, lotsLents: 3, imagesMax: 400, lentMs: 120 };

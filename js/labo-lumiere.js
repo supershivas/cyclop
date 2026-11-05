@@ -3,12 +3,13 @@
 // Il ne contient aucune règle : le futur jeu reprend js/lumiere/ tel quel.
 import { ROLES } from './palette.js?v=0.113.0';
 import { startUpdateCheck, loadVersion, loadChangelog } from './lib/app-update.js?v=0.113.0';
-import { MONDE, TAILLES, COLONNES_MAX, LAMPES, ETAPES, QUALITES, RESOLUTIONS, METEOS, METEO_AUTO, NUAGES, SOLDATS_REELS, CAMERA, BARRAGE, FLASH, BUDGET_IMAGE_MS, BUDGET_RECALCUL_CHUNK_MS } from './lumiere/config.js?v=0.113.0';
+import { MONDE, TAILLES, COLONNES_MAX, LAMPES, ETAPES, QUALITES, RESOLUTIONS, METEOS, METEO_AUTO, NUAGES, SOLDATS_REELS, CAMERA, BARRAGE, FLASH, BUDGET_IMAGE_MS, BUDGET_RECALCUL_CHUNK_MS, REPARTITION, ENGINS } from './lumiere/config.js?v=0.113.0';
 import { creerMonde, impact, chunksDe, rectDeChunks } from './lumiere/terrain.js?v=0.113.0';
-import { creerLumiere, calculerSoleil, calculerAO, calculerFlood, calculerCavite, majHauteurs, regionTotale } from './lumiere/lumiere.js?v=0.113.0';
+import { creerLumiere, calculerSoleil, calculerAO, calculerFlood, calculerCavite, majHauteurs, regionTotale, bandeSuivante } from './lumiere/lumiere.js?v=0.113.0';
 import { creerFoule, regler as reglerFoule, avancer as avancerFoule } from './lumiere/foule.js?v=0.113.0';
 import { aspectDe, creerSuivi, suivre, ecrire as ecrireReel, FLOATS as FLOATS_REEL, creerClasses, classer, ecrireJeu, FLOATS_JEU } from './lumiere/soldats-reels.js?v=0.113.0';
 import { creerLampes, poserFixes, refaireFixes, majMobiles, lampesDeSoldats } from './lumiere/lampes.js?v=0.113.0';
+import { creerEngins, avancerEngins, ecrireEngins, FLOATS_ENGIN } from './lumiere/engins.js?v=0.113.0';
 import { creerParticules, explosion, avancer as avancerParticules, ecrire as ecrireParticules } from './lumiere/particules.js?v=0.113.0';
 import { creerCamera, rayon, toucherSol, matrices } from './lumiere/camera.js?v=0.113.0';
 import { ciel as calculerCiel, COUL } from './lumiere/ciel.js?v=0.113.0';
@@ -28,7 +29,7 @@ const TOUT_OFF = Object.fromEntries(IDS.map(i => [i, false]));
 const S = {
   qualite: QUALITES[P0.qualite] ? P0.qualite : 'moyen', taille: TAILLES[P0.taille] ? P0.taille : 'grande', grille: ['auto', '1', '2'].includes(P0.grille) ? P0.grille : 'auto', resolution: RESOLUTIONS[P0.resolution] ? P0.resolution : 'jeu',
   etapes: {}, surcharges: new Set(), heure: 8, jour: 1, meteo: METEOS[P0.meteo] ? P0.meteo : 'sec', unites: MONDE.foule.defaut,
-  meteoAuto: false, reels: true, comparer: 'normal', split: 0.5, toits: false, cycle: false, nBarrage: BARRAGE.obus, pause: false, banc: false,
+  meteoAuto: false, reels: true, engins: true, comparer: 'normal', split: 0.5, toits: false, cycle: false, nBarrage: BARRAGE.obus, pause: false, banc: false,
 };
 const preset = () => QUALITES[S.qualite].etapes;
 // la grille voulue, ramenée à 1 case par mètre si la carte aurait trop de colonnes (COLONNES_MAX)
@@ -38,7 +39,8 @@ const hasard = createRng(MONDE.graine + 100);
 
 let M, L, F, R, C, particules = creerParticules(), flashs = [], file = [], temps = 0, soleilSale = false, dernierSoleil = 0;
 let LA = null, lampesPerimees = false, dernierMob = -1, lueursData = new Float32Array(5 * 800);
-let perime = {}, maillageAO = false, banque = null, moisi = 0;
+let perime = {}, maillageAO = false, banque = null, moisi = 0, travail = null, EN = null;
+const dataChar = new Float32Array(ENGINS.chars * FLOATS_ENGIN), dataAvion = new Float32Array(ENGINS.avions * FLOATS_ENGIN), dataOmArt = new Float32Array(SOLDATS_REELS.maxArticule * FLOATS_JEU);
 // la météo qui évolue : `meteoNow` glisse vers la météo voulue (S.meteo) ; les nuages dérivent avec le vent
 const CLES_METEO = ['humidite', 'pluie', 'neige', 'brouillard', 'voile', 'soleil', 'vent'];
 const meteoNow = { ...METEOS[S.meteo] }; let prochainMeteo = 30; const derive = [0, 0];
@@ -58,7 +60,7 @@ const dataArt = new Float32Array(SOLDATS_REELS.maxArticule * FLOATS_REEL), dataE
 let comptes = { art: 0, equipe: 0, legere: 0, boite: 0 };
 function lotsSoldats() {
   const vide = { n: 0, data: dataBt };
-  if (!S.reels || !F) { classes.masque.fill(0); comptes = { art: 0, equipe: 0, legere: 0, boite: 0 }; return { jeu: { boite: vide, legere: vide, equipe: vide }, reels: { n: 0, niveau: 'moyen', data: dataArt } }; }
+  if (!S.reels || !F) { classes.masque.fill(0); comptes = { art: 0, equipe: 0, legere: 0, boite: 0 }; return { jeu: { boite: vide, legere: vide, equipe: vide }, reels: { n: 0, niveau: 'moyen', data: dataArt }, ombreArt: { n: 0, data: dataOmArt } }; }
   mesures.chrono('soldats:classer', () => { classer(F, L.hf, M, matrices(C).vp, R.hauteur, C.fov, classes); });
   const Cl = classes;
   const peur = flashs.filter(f => temps - f.t0 < 5);
@@ -66,7 +68,9 @@ function lotsSoldats() {
   mesures.chrono('soldats:ecrire', () => {
     for (let q = 0; q < Cl.art.n; q++) {
       const i = Cl.art.i[q], x = F.x[i], z = F.z[i]; suivre(suivi, F, i, temps);
-      ecrireReel(dataArt, q, { x, y: hauteurM(x, z), z, camp: F.camp[i], vit: suivi.vit[i], tapi: tapiDe(x, z) ? 0.9 : 0, cap: suivi.cap[i], temps, aspect: aspectDe(i, F.camp[i]) });
+      const tapi = tapiDe(x, z), y = hauteurM(x, z);
+      ecrireReel(dataArt, q, { x, y, z, camp: F.camp[i], vit: suivi.vit[i], tapi: tapi ? 0.9 : 0, cap: suivi.cap[i], temps, aspect: aspectDe(i, F.camp[i]) });
+      ecrireJeu(dataOmArt, q, { i, x, y, z, camp: F.camp[i], vit: suivi.vit[i], tapi, cap: suivi.cap[i] });          // la boîte qui projette son ombre (carte d'ombre, étape 9)
     }
     for (const [liste, data] of [[Cl.equipe, dataEq], [Cl.legere, dataLg]]) for (let q = 0; q < liste.n; q++) {
       const i = liste.i[q], x = F.x[i], z = F.z[i]; suivre(suivi, F, i, temps);
@@ -75,7 +79,7 @@ function lotsSoldats() {
     for (let q = 0; q < Cl.boite.n; q++) { const i = Cl.boite.i[q], x = F.x[i], z = F.z[i]; ecrireJeu(dataBt, q, { i, x, y: hauteurM(x, z), z, camp: F.camp[i], vit: 0, tapi: false, cap: 0 }); }
   });
   comptes = { art: Cl.art.n, equipe: Cl.equipe.n, legere: Cl.legere.n, boite: Cl.boite.n };
-  return { jeu: { boite: { n: Cl.boite.n, data: dataBt }, legere: { n: Cl.legere.n, data: dataLg }, equipe: { n: Cl.equipe.n, data: dataEq } }, reels: { n: Cl.art.n, niveau: Cl.plusProche >= SOLDATS_REELS.pxmFin ? 'fin' : 'moyen', data: dataArt } };
+  return { jeu: { boite: { n: Cl.boite.n, data: dataBt }, legere: { n: Cl.legere.n, data: dataLg }, equipe: { n: Cl.equipe.n, data: dataEq } }, reels: { n: Cl.art.n, niveau: Cl.plusProche >= SOLDATS_REELS.pxmFin ? 'fin' : 'moyen', data: dataArt }, ombreArt: { n: Cl.art.n, data: dataOmArt } };
 }
 
 const toast = (t) => { const e = $('ll-toast'); e.textContent = t; e.hidden = false; clearTimeout(toast.n); toast.n = setTimeout(() => { e.hidden = true; }, 4200); };
@@ -95,20 +99,50 @@ function calculer(id, region) {                                       // un calc
   });
 }
 function globalPour(id) {
+  if (id === 2) { lancerAO(); return 0; }                                // l'AO de toute la carte (230 ms d'un coup) se répartit sur plusieurs images
   const ms = calculer(id, 'carte'); perime[id] = false;
-  if (id === 2 && !maillageAO) { mesures.chrono('maillage:tout', () => R.tout(true)); maillageAO = true; }
   R.majLumiere(regionTotale(M));
   return ms;
 }
+// ─── L'AO de toute la carte, réparti sur plusieurs images (REPARTITION.msParImage par image) : d'abord la texture d'ouverture par bandes de rangées, puis l'AO des arêtes cuit dans le maillage, chunk par chunk.
+// Le monde reste jouable et éclairé pendant ce temps (l'ouverture vaut « ciel ouvert » là où le calcul n'est pas passé). Un obus pendant le travail est sans danger : chaque bande lit les hauteurs du moment.
+function lancerAO() {
+  maillageAO = false;
+  travail = { phase: 'ao', j: 0, rangees: REPARTITION.rangeesDepart, c: 0, nChunks: M.cw * M.chh, depart: performance.now(), images: 0 };
+  perime[2] = false;
+}
+function avancerTravail() {
+  if (!travail) return;
+  const T = travail, q = Q(), t0 = performance.now(), budget = REPARTITION.msParImage; let touche = false;
+  while (performance.now() - t0 < budget) {
+    if (T.phase === 'ao') {
+      if (T.j >= M.H) { T.phase = 'maillage'; maillageAO = true; continue; }
+      const b = bandeSuivante(regionTotale(M), T.j, T.rangees), tb = performance.now();
+      calculerAO(M, L, b, q.rayonAO, q.directionsAO); R.majLumiere(b); T.j = b.j1 + 1; touche = true;
+      const ms = performance.now() - tb;                                                    // la bande suivante vise un tiers du budget : l'horloge est grossière, on ne s'y fie pas à moins
+      if (ms > 0.2) T.rangees = Math.max(1, Math.min(64, Math.round(T.rangees * (budget / 3) / ms)));
+    } else {
+      if (T.c >= T.nChunks) { travail = null; mesures.noter('ao:total', performance.now() - T.depart); dire(`AO prêt : ${Math.round(performance.now() - T.depart)} ms, sur ${T.images} images`); setTimeout(() => dire(''), 2500); mesures.evenement('AO réparti terminé'); return; }
+      const liste = []; for (let k = 0; k < REPARTITION.chunksMax && T.c < T.nChunks; k++, T.c++) liste.push({ cx: T.c % M.cw, cy: (T.c / M.cw) | 0 });
+      R.reconstruire(liste, true); touche = true;
+    }
+  }
+  T.images++;
+  if (touche || T.images) { const pct = T.phase === 'ao' ? 0.5 * T.j / M.H : 0.5 + 0.5 * T.c / T.nChunks; dire(`AO réparti : ${Math.round(pct * 100)} %`); }
+  mesures.noter('ao:image', performance.now() - t0);
+}
+function annulerTravail() { if (travail) { travail = null; maillageAO = false; perime[2] = true; dire(''); } }
 function monter(cpm) {
   const t0 = performance.now();
   const T = TAILLES[S.taille];
+  travail = null;
   mesures.chrono('monde:creation', () => { M = creerMonde({ cpm, largeurM: T.largeurM, profondeurM: T.profondeurM }); });
   L = creerLumiere(M, Q()); F = creerFoule(M); reglerFoule(F, S.unites);
   soleil = cielCourant();
   majHauteurs(M, L, regionTotale(M));
   LA = creerLampes(M); mesures.chrono('lampes:statique', () => poserFixes(M, L.hf, LA)); lampesPerimees = false;
   R.relier(M, L, F, LA);
+  EN = creerEngins(M);
   file.length = 0; flashs.length = 0; particules = creerParticules();
   perime = { 1: true, 2: true, 4: true, 7: true }; maillageAO = false;
   for (const id of CALCULS) if (S.etapes[id]) globalPour(id);
@@ -130,7 +164,8 @@ function appliquerQualite(q, { garder = false } = {}) {
 function basculerEtape(id, on) {
   S.etapes[id] = on;
   if (on && id === 6 && lampesPerimees) { poserFixes(M, L.hf, LA); lampesPerimees = false; R.majLampes(regionTotale(M)); }
-  if (on && CALCULS.includes(id) && (perime[id] || (id === 2 && !maillageAO))) { const ms = globalPour(id); dire(`Étape ${id} calculée sur toute la carte : ${ms.toFixed(1)} ms`); setTimeout(() => dire(''), 2500); }
+  if (!on && id === 2) annulerTravail();
+  if (on && CALCULS.includes(id) && (perime[id] || (id === 2 && !maillageAO && !travail))) { const ms = globalPour(id); if (id !== 2) { dire(`Étape ${id} calculée sur toute la carte : ${ms.toFixed(1)} ms`); setTimeout(() => dire(''), 2500); } }
   if (on === preset().includes(id)) S.surcharges.delete(id); else S.surcharges.add(id);
   tracerReglages();
 }
@@ -181,6 +216,7 @@ function voirPreset(nom, direct = false) {
   const p = CAMERA.presets[nom]; let cible = [M.largeurM / 2, 0, M.profondeurM / 2];
   if (nom === 'tranchee') { const a = M.abris.find(x => x.camp === 0 && x.niveau === 1) || M.abris[0]; cible = [a ? a.x : 128, 0, a ? a.z : 100]; }
   if (nom === 'colline') cible = [M.colline.x, 0, M.colline.z];
+  if (nom === 'engins') { const c = EN && EN.chars[0] || { x: 200, z: 160 }; cible = [c.x, 0, c.z]; }
   if (nom === 'cratere') { const c = M.craters[M.craters.length - 1] || { x: 128, z: 80 }; cible = [c.x, 0, c.z]; }
   cible[1] = hauteurM(cible[0], cible[2]);
   const vers = { cible, distance: p.distance * (nom === 'large' ? M.largeurM / 256 : 1), tangage: p.tangage, lacet: p.lacet };
@@ -216,7 +252,8 @@ function scene(etapesForcees) {
   const c = cielCourant();
   const { n, nd } = ecrireParticules(particules);
   const fl = flashs.map(f => { const age = (temps - f.t0) / FLASH.dureeS; return { ...f, rayon: FLASH.rayonM, coul: f.coul || [1.2, 0.8, 0.45], force: f.fixe ? FLASH.intensite : Math.max(0, 1 - age) ** 2 * FLASH.intensite }; }).filter(f => f.force > 0.01);
-  R.dessiner({ camera: C, ciel: c, etapes: eff, moitie: partage ? { etapes: TOUT_OFF } : null, split: partage ? S.split : 0, flashs: fl, particules: { n, nd, tampon: particules.sortie }, temps, derive, bordY: M.bordM, ...lotsSoldats(), masque: classes.masque, lueurs: lueursDe(), toitsTransparents: S.toits, ssaoEchantillons: Q().ssaoEchantillons || 10, brume: Q().brume });
+  const engins = S.engins && EN ? { char: { n: ecrireEngins(EN.chars, dataChar), data: dataChar }, avion: { n: ecrireEngins(EN.avions, dataAvion), data: dataAvion } } : null;
+  R.dessiner({ camera: C, ciel: c, etapes: eff, engins, ombreTaille: Q().ombreTaille || 1024, moitie: partage ? { etapes: TOUT_OFF } : null, split: partage ? S.split : 0, flashs: fl, particules: { n, nd, tampon: particules.sortie }, temps, derive, bordY: M.bordM, ...lotsSoldats(), masque: classes.masque, lueurs: lueursDe(), toitsTransparents: S.toits, ssaoEchantillons: Q().ssaoEchantillons || 10, brume: Q().brume });
 }
 
 // ─── La boucle ────────────────────────────────────────────────────────────────
@@ -230,13 +267,14 @@ function boucle(tms) {
     temps += dt; avancerMeteo(dt);
     if (S.etapes[6] && temps - dernierMob > 0.15) { dernierMob = temps; mesures.chrono('lampes:mobiles', () => { const z = majMobiles(M, L.hf, LA, lampesDeSoldats(F, L.hf, M, C.cible[0], C.cible[2])); if (z) R.majLampes(z); }); }
     mesures.chrono('foule', () => avancerFoule(F, dt));
-    avancerParticules(particules, dt, hauteurM);
+    avancerParticules(particules, dt, hauteurM); if (EN) avancerEngins(EN, M, dt, hauteurM);
     flashs = flashs.filter(f => f.fixe || temps - f.t0 < FLASH.dureeS);
     while (file.length && file[0].t <= temps) { const o = file.shift(); obus(o.x, o.z, { silencieux: true }); }
     if (S.cycle) { S.heure = (S.heure + dt * 0.5) % 24; $('ll-heure').value = S.heure; soleilSale = true; majLibelles(); }
   }
   avancerTween(dtReel);
   if (soleilSale && performance.now() - dernierSoleil > (S.cycle ? 400 : 90)) { soleilSale = false; dernierSoleil = performance.now(); soleil = cielCourant(); if (S.etapes[1]) { calculer(1, 'carte'); R.majLumiere(regionTotale(M)); perime[1] = false; } else perime[1] = true; }
+  avancerTravail();
   const d = performance.now(); mesures.noter('js:avant-dessin', d - t0);
   scene();
   mesures.noter('js:image', performance.now() - t0);
@@ -249,13 +287,13 @@ async function lancerBanc() {
   const avant = { fl: flashs, p: particules, comp: S.comparer }; S.comparer = 'normal';
   try {
     banque = await banc({
-      appliquer: et => { S.bancEtapes = et; }, image: () => { scene(S.bancEtapes); R.attendre(); },
+      appliquer: et => { S.bancEtapes = et; }, image: () => scene(S.bancEtapes), fin: () => R.attendre(),
       preparer: () => { flashs = [0, 1, 2, 3].map(k => ({ x: M.W / M.cpm / 2 + (k - 1.5) * 18, y: 6, z: M.H / M.cpm / 2, t0: 0, fixe: true })); particules = creerParticules(7000, 3); for (let k = 0; k < 8; k++) explosion(particules, 70 + k * 16, 8, 80, { nbDebris: Q().debris, atmosphere: true }); for (let k = 0; k < 6; k++) avancerParticules(particules, 0.5, hauteurM); },
       rendre: () => { S.bancEtapes = null; flashs = avant.fl; particules = avant.p; },
       progression: t => { b.textContent = `Banc : ${t}`; },
     });
     mesures.evenement('banc GPU fait');
-    dire(`Banc : image sans lumière ${banque.base.toFixed(1)} ms, toutes les étapes ${banque.toutes.toFixed(1)} ms`);
+    dire(`Banc : image sans lumière ${banque.base.toFixed(2)} ms, toutes les étapes ${banque.toutes.toFixed(2)} ms (± ${banque.incertitude.toFixed(2)})`);
   } finally { S.banc = false; S.comparer = avant.comp; b.disabled = false; b.textContent = 'Mesurer le coût GPU'; dernierT = performance.now(); }
 }
 
@@ -282,18 +320,21 @@ function tracerMesures() {
       <dt>Grille</dt><dd>${M.W} × ${M.H} (${nombre(M.n)} colonnes), ${M.cpm} case/m</dd>
       <dt>Chunks</dt><dd>${M.cw * M.chh} de ${M.chunk} × ${M.chunk}</dd>
       <dt>Triangles · appels</dt><dd>${nombre(R.stats.triangles)} · ${R.stats.appels}</dd>
-      <dt>Recalcul après un obus</dt><dd class="${depassement(tot?.moy, BUDGET_RECALCUL_CHUNK_MS) ? 'depasse' : ''}">${ms(tot?.moy)} ms${tot ? ` (pire ${ms(tot.max)})` : ''}${depassement(tot?.moy, BUDGET_RECALCUL_CHUNK_MS) ? ` ▲ budget ${BUDGET_RECALCUL_CHUNK_MS}` : ''}</dd>
+      <dt>Recalcul après un obus</dt><dd class="${depassement(tot?.moy, BUDGET_RECALCUL_CHUNK_MS) ? 'depasse' : ''}">${ms(tot?.moy)} ms${tot && mesures.pire('recalcul:total') != null ? ` (pire ${ms(mesures.pire('recalcul:total'))})` : tot ? ' (pire sous la résolution de l\'horloge)' : ''}${depassement(tot?.moy, BUDGET_RECALCUL_CHUNK_MS) ? ` ▲ budget ${BUDGET_RECALCUL_CHUNK_MS}` : ''}</dd>
       <dt>…dont maillage du chunk</dt><dd>${ms(mail?.moy)} ms</dd>
       <dt>Foule (CPU)</dt><dd>${ms(fou?.moy)} ms</dd>
       <dt>Soldats dessinés en volume</dt><dd>${comptes.art} articulés · ${comptes.equipe} équipés · ${comptes.legere} allégés · ${nombre(comptes.boite)} boîtes</dd>
       <dt>…choix et écriture</dt><dd>${ms(mesures.lire('soldats:classer')?.moy)} + ${ms(mesures.lire('soldats:ecrire')?.moy)} ms</dd>
       <dt>Lanternes · lampes portées</dt><dd>${LA ? `${LA.fixes.length} · ${LA.dernieres.length}` : '—'} (${ms(mesures.lire('lampes:mobiles')?.moy)} ms)</dd>
+      <dt>Carte d'ombre (étape 9)</dt><dd>${R.stats.ombre ? `${R.stats.ombre.taille}² · ${R.stats.ombre.etendueM[0]} × ${R.stats.ombre.etendueM[1]} m · ${R.stats.ombre.texelCm} cm par texel · ${nombre(R.stats.ombre.casteurs)} triangles` : S.etapes[9] ? 'soleil trop bas : pas de carte' : 'éteinte'}${g.ombre != null ? ` · GPU ${ms(g.ombre, 1)} ms` : ''}</dd>
+      <dt>AO de toute la carte</dt><dd>${travail ? `en cours (${travail.phase === 'ao' ? 'ouverture' : 'maillage'})` : mesures.lire('ao:total') ? `fait en ${ms(mesures.lire('ao:total').dernier, 0)} ms, au plus ${ms(mesures.lire('ao:image')?.max, 1)} ms par image` : '—'}</dd>
+      <dt>Horloge du navigateur</dt><dd>${mesures.resolution >= 0.05 ? `grossière : ${ms(mesures.resolution, 2)} ms (les temps plus courts sont arrondis ; le banc mesure par lots)` : `fine (${ms(mesures.resolution, 3)} ms)`}</dd>
       <dt>JS par image</dt><dd>${ms(js?.moy, 1)} ms</dd>
-      <dt>GPU scène · AO · composition</dt><dd>${g.scene == null ? 'n/d' : `${ms(g.scene, 1)} · ${ms(g.ssao, 1)} · ${ms(g.composition, 1)} ms`}</dd>
+      <dt>GPU scène · AO · composition</dt><dd>${g.scene == null ? 'n/d (pas de chronomètre GPU : lancer le banc)' : `${ms(g.scene, 1)} · ${ms(g.ssao, 1)} · ${ms(g.composition, 1)} ms`}</dd>
     </dl>
     <table><thead><tr><th>Étape</th><th>carte ms</th><th>chunk ms</th><th>GPU ms</th></tr></thead><tbody>${lignes}</tbody></table>
     ${logiciel ? `<p class="ll-alerte" title="${R.info.renderer.replace(/[<>&"]/g, '')}">Rendu logiciel : les temps GPU ne sont pas représentatifs (seuls les rapports comptent).</p>` : ''}
-    ${banque ? `<p class="ll-note">Banc : image sans lumière ${ms(banque.base, 1)} ms ; toutes les étapes ${ms(banque.toutes, 1)} ms.</p>` : '<p class="ll-note">Colonne GPU : lancer le banc (le coût de chaque étape, seule).</p>'}`;
+    ${banque ? `<p class="ll-note">Banc : image sans lumière ${ms(banque.base, 2)} ms ; toutes les étapes ${ms(banque.toutes, 2)} ms (± ${ms(banque.incertitude, 2)} ms, par lots).</p>` : '<p class="ll-note">Colonne GPU : lancer le banc (le coût de chaque étape, seule).</p>'}`;
 }
 function majLibelles() {
   const h = Math.floor(S.heure), m = Math.round((S.heure - h) * 60);
@@ -372,7 +413,7 @@ function brancherClavier() {
     if (k === 'escape') { ouvrirReglages(false); return; }
     if (k === ' ' && e.target.tagName !== 'BUTTON') { S.pause = !S.pause; S.pauseAuto = false; dire(S.pause ? 'Pause' : ''); e.preventDefault(); }
     else if (k === 'b') barrage(); else if (k === 'c') basculerComparer(); else if (k === 'v') basculerPartage();
-    else if (/^[1-8]$/.test(k) && !e.altKey) { const id = +k; basculerEtape(id, !S.etapes[id]); }
+    else if (/^[1-9]$/.test(k) && !e.altKey) { const id = +k; basculerEtape(id, !S.etapes[id]); }
     else tenues.add(k);
   });
   addEventListener('keyup', e => tenues.delete(e.key.toLowerCase()));
@@ -421,6 +462,7 @@ async function demarrer() {
   $('ll-barrage').onclick = () => barrage();
   $('ll-comparer').onclick = basculerComparer; $('ll-partage').onclick = basculerPartage;
   $('ll-meteo-auto').onclick = () => { S.meteoAuto = !S.meteoAuto; majMeteoAuto(); if (S.meteoAuto) { prochainMeteo = 8; if (!S.etapes[7]) { basculerEtape(7, true); toast('La météo est l\'étape 7 : activée.'); } } };
+  $('ll-engins').checked = S.engins; $('ll-engins').onchange = e => { S.engins = e.target.checked; };
   $('ll-reels').checked = S.reels; $('ll-reels').onchange = e => { S.reels = e.target.checked; };
   $('ll-cycle').onclick = () => { S.cycle = !S.cycle; $('ll-cycle').setAttribute('aria-pressed', String(S.cycle)); };
   document.querySelectorAll('[data-cam]').forEach(b => { b.onclick = () => voirPreset(b.dataset.cam); });
@@ -437,7 +479,7 @@ async function demarrer() {
   const jr = await loadChangelog('CHANGELOG.md', 5);
   $('ll-journal').innerHTML = jr.map(j => `<h4>v${j.version} — ${j.date}</h4><ul>${j.changes.map(c => `<li>${c.replace(/[<>&]/g, '')}</li>`).join('')}</ul>`).join('');
   startUpdateCheck({ isBusy: () => false, onUpdated: ver => toast(`Mis à jour en v${ver}`) });
-  window.__lumiere = { S, mesures, meteoNow, METEOS, get comptes() { return comptes; }, get LA() { return LA; }, get M() { return M; }, get L() { return L; }, get R() { return R; }, get C() { return C; }, obus, barrage, basculerEtape, appliquerQualite, voirPreset, scene, lancerBanc, get banque() { return banque; }, tracerMesures, monter, dimensionner };
+  window.__lumiere = { S, mesures, get classes() { return classes; }, get EN() { return EN; }, get travail() { return travail; }, meteoNow, METEOS, get comptes() { return comptes; }, get LA() { return LA; }, get M() { return M; }, get L() { return L; }, get R() { return R; }, get C() { return C; }, obus, barrage, basculerEtape, appliquerQualite, voirPreset, scene, lancerBanc, get banque() { return banque; }, tracerMesures, monter, dimensionner };
   requestAnimationFrame(boucle);
 }
 demarrer();

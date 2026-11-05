@@ -1,6 +1,13 @@
 // Le labo lumière (js/lumiere/) : le terrain en voxels, l'obus, la lumière locale, la foule. Logique pure, sans navigateur.
 import { readFileSync, readdirSync } from 'node:fs';
 import { creerMonde, impact, chunksDe, rectDeChunks, MAT } from '../js/lumiere/terrain.js';
+import { cadrerOmbre, versOmbre, rectDansOmbre, reperLumiere } from '../js/lumiere/ombres.js';
+import { creerEngins, avancerEngins, MODELES, ecrireEngins, FLOATS_ENGIN } from '../js/lumiere/engins.js';
+import { banc, resolutionHorloge } from '../js/lumiere/mesures.js';
+import { mat4, matrices, creerCamera } from '../js/lumiere/camera.js';
+import { bandes, bandeSuivante } from '../js/lumiere/lumiere.js';
+import { niveauDe, creerClasses as creerClasses2 } from '../js/lumiere/soldats-reels.js';
+import { couleurCiel, masseAir } from '../js/lumiere/ciel.js';
 import { creerLumiere, calculerSoleil, calculerAO, calculerFlood, calculerCavite, regionTotale, directionSoleil } from '../js/lumiere/lumiere.js';
 import { creerFoule, regler, avancer, plusProches } from '../js/lumiere/foule.js';
 import { ciel, melangerMeteo } from '../js/lumiere/ciel.js';
@@ -196,9 +203,101 @@ test('une météo se mélange en continu, et le ciel suit l\'heure : étoiles la
   assert.ok(ciel({ heure: 10, meteo: 'neige' }).neige === 1 && ciel({ heure: 10, meteo: 'brouillard' }).brouillard === 1);
 });
 
+group('labo lumière — la carte d\'ombre (étape 9)');
+const camVue = (cible = [128, 4, 80], distance = 120, tangage = 0.95, lacet = 0.15) => { const C = creerCamera(); Object.assign(C, { cible, distance, tangage, lacet, aspect: 1.6 }); return matrices(C); };
+test('un point et son ombre ont les mêmes coordonnées dans la carte : le cadrage couvre tout le sol vu, et rien que lui', () => {
+  const sun = [Math.sin(1.2) * Math.cos(0.5), Math.sin(0.5), Math.cos(1.2) * Math.cos(0.5)], m = camVue(), C = cadrerOmbre({ cam: m, sunDir: sun, taille: 1024, monde: { largeurM: 256, profondeurM: 160 }, distanceM: 120 });
+  assert.ok(C);
+  // le centre de l'écran (le point visé) est dans la carte, bien au milieu
+  const cible = versOmbre(C, [128, 4, 80]); assert.ok(cible.u > 0.1 && cible.u < 0.9 && cible.v > 0.1 && cible.v < 0.9 && cible.z > 0 && cible.z < 1, JSON.stringify(cible));
+  // un poteau de 10 m : son sommet et l'endroit de son ombre au sol sont au même (u, v) ; le sommet est plus près du soleil (z plus petit)
+  const sommet = [128, 14, 80], t = 14 / sun[1], ombre = [128 - sun[0] * t, 0, 80 - sun[2] * t];
+  const a = versOmbre(C, sommet), b = versOmbre(C, ombre);
+  assert.ok(Math.abs(a.u - b.u) < 1e-4 && Math.abs(a.v - b.v) < 1e-4, 'même position dans le plan de la lumière'); assert.ok(a.z < b.z, 'le sommet est devant le sol, vu du soleil');
+  // l'ombre au sol d'un objet haut reste dans la carte (la profondeur couvre ce qui projette)
+  const haut = versOmbre(C, [128 + sun[0] * 50, 50 * sun[1] + 4, 80 + sun[2] * 50]); assert.ok(haut.z >= 0 && haut.z <= 1, 'un avion à 50 m vers le soleil reste dans la profondeur');
+  // la résolution : 1 024 texels pour la vue large couvrent ~ 100-200 m : de l'ordre de 10-20 cm
+  assert.ok(C.texelM < 0.5, `${C.texelM} m par texel`);
+});
+test('le soleil bas ou couché : pas de carte ; le cadre est stable quand la vue bouge de moins qu\'un texel', () => {
+  const m = camVue(), monde = { largeurM: 256, profondeurM: 160 };
+  assert.equal(cadrerOmbre({ cam: m, sunDir: [1, 0.01, 0], taille: 1024, monde }), null); assert.equal(cadrerOmbre({ cam: m, sunDir: [0, -1, 0], taille: 1024, monde }), null);
+  const sun = reperLumiere([0.6, 0.5, 0.62]).l, a = cadrerOmbre({ cam: camVue([128, 4, 80]), sunDir: sun, taille: 1024, monde, distanceM: 120 }), b = cadrerOmbre({ cam: camVue([128.02, 4, 80]), sunDir: sun, taille: 1024, monde, distanceM: 120 });
+  assert.deepEqual(a.etendue, b.etendue, 'l\'étendue ne change que par paliers');
+  const decal = Math.hypot(a.vp[12] - b.vp[12], a.vp[13] - b.vp[13]); assert.ok(decal < 2 / 1024 * 3 || decal === 0, 'le centre est collé aux texels');
+});
+test('un rectangle de sol hors de la carte est écarté, un rectangle vu est gardé', () => {
+  const sun = reperLumiere([0.6, 0.5, 0.62]).l, C = cadrerOmbre({ cam: camVue(), sunDir: sun, taille: 1024, monde: { largeurM: 256, profondeurM: 160 }, distanceM: 120 });
+  assert.ok(rectDansOmbre(C, 120, 72, 136, 88, 24)); assert.ok(!rectDansOmbre(C, 5000, 5000, 5016, 5016, 24));
+});
+test('les engins : chars et biplans en boîtes de la palette, qui vont et viennent sans sortir de la carte', () => {
+  const M = creerMonde({ ...PETIT }), E = creerEngins(M);
+  assert.ok(MODELES.char.n > 100 && MODELES.avion.n > 100 && MODELES.char.n % 36 === 0);
+  for (let k = 0; k < 400; k++) avancerEngins(E, M, 0.25, () => 3);
+  for (const c of E.chars) assert.ok(c.x > 15 && c.x < M.largeurM - 15 && Math.abs(c.y - 3) < 1e-6);
+  for (const a of E.avions) { assert.ok(a.y > 3 + 20, 'un avion vole haut'); assert.ok(Math.abs(a.roulis) > 0.3, 'il penche dans le virage'); }
+  const T = new Float32Array(10 * FLOATS_ENGIN); assert.equal(ecrireEngins(E.chars, T), E.chars.length);
+});
+
+group('labo lumière — le clignotement et la répartition du travail (v0.114.0)');
+test('un homme garde son niveau de détail tant que ses pixels par mètre restent à 12 % du seuil : plus de va-et-vient', () => {
+  let niv = 4, bascules = 0;
+  for (let k = 0; k < 400; k++) { const ppm = 12 * (1 + 0.1 * Math.sin(k * 0.7)), n = niveauDe(ppm, niv); if (n !== niv) bascules++; niv = n; }          // ±10 % autour du seuil des articulés
+  assert.ok(bascules <= 1, `${bascules} bascules`);
+  assert.equal(niveauDe(20, 3), 0, 'bien au-dessus du seuil, il monte quand même'); assert.equal(niveauDe(1, 0), 4, 'de très loin, il redevient un point');
+  // sans mémoire (premier passage) c\'est le seuil franc
+  assert.equal(niveauDe(11.9, 4), 1); assert.equal(niveauDe(12.1, 4), 0);
+});
+test('la foule ne tremble plus : sans vague, l\'accélération d\'un homme d\'une image à l\'autre est minuscule (avant : des secousses de ± 3 cm à chaque image)', () => {
+  const M = creerMonde({ ...PETIT }), F = creerFoule(M); regler(F, 3000); F.zc.set(F.z0); for (let k = 0; k < 600; k++) avancer(F, 1 / 60);
+  const x1 = Float32Array.from(F.x.subarray(0, 3000)), z1 = Float32Array.from(F.z.subarray(0, 3000)); avancer(F, 1 / 60);
+  const x2 = Float32Array.from(F.x.subarray(0, 3000)), z2 = Float32Array.from(F.z.subarray(0, 3000)); avancer(F, 1 / 60);
+  let acc = 0, vit = 0; for (let i = 0; i < 3000; i++) { acc = Math.max(acc, Math.hypot(F.x[i] - 2 * x2[i] + x1[i], F.z[i] - 2 * z2[i] + z1[i])); vit = Math.max(vit, Math.hypot(F.vx[i], F.vz[i])); }
+  assert.ok(acc < 0.004, `${acc} m d'écart à une marche régulière`); assert.ok(vit < 0.7, `le flânage reste sous le seuil de marche (${vit} m/s)`);
+});
+test('suivre : sur la foule qui flâne, personne ne se met à marcher ni ne s\'arrête d\'une mesure à l\'autre (avant : la vitesse frôlait le seuil)', () => {
+  const M = creerMonde({ ...PETIT }), F = creerFoule(M), S = creerSuivi(F.max); regler(F, 400); F.zc.set(F.z0);
+  for (let k = 0; k < 300; k++) avancer(F, 1 / 30); let t = 0;
+  for (let i = 0; i < 400; i++) suivre(S, F, i, t);
+  let bascules = 0; const avant = new Uint8Array(400);
+  for (let k = 0; k < 1800; k++) { avancer(F, 1 / 30); t += 1 / 30; for (let i = 0; i < 400; i++) { suivre(S, F, i, t); if (S.marche[i] !== avant[i]) { bascules++; avant[i] = S.marche[i]; } } }
+  assert.equal(bascules, 0, `${bascules} changements marche/arrêt en 60 s pour 400 hommes`);
+});
+test('l\'AO par bandes redonne exactement l\'AO de toute la carte, quelle que soit la hauteur des bandes (le calcul réparti sur plusieurs images est juste)', () => {
+  const M = creerMonde({ ...PETIT }), q = QUALITES.moyen, A = creerLumiere(M, q), B = creerLumiere(M, q);
+  calculerAO(M, A, regionTotale(M), q.rayonAO, q.directionsAO);
+  let n = 0; for (const b of bandes(regionTotale(M), 7)) { calculerAO(M, B, b, q.rayonAO, q.directionsAO); n++; }
+  assert.equal(hache(B.tex), hache(A.tex)); assert.ok(n > 10);
+  assert.deepEqual(bandeSuivante(regionTotale(M), M.H - 2, 9), { i0: 0, i1: M.W - 1, j0: M.H - 2, j1: M.H - 1 });
+});
+test('le banc mesure par lots : sur une horloge grossière (1 ms, comme Firefox) il retrouve le vrai coût à quelques pour cent près', () => {
+  let t = 0; const reel = { coutImage: 0.37, base: 0.2 }; let etat = {}; // l\'horloge avance du coût du dessin ; elle ne montre que des millisecondes entières
+  const now = () => Math.floor(t);
+  const cout = e => reel.base + Object.entries(e).filter(([, v]) => v).length * 0.1 + (e[8] ? 0.3 : 0);
+  return banc({ now, resolution: 1, appliquer: e => { etat = e; }, image: () => { t += cout(etat); }, fin: () => { t += 0.01; }, pause: async () => {} }).then(b => {
+    assert.ok(Math.abs(b.base - 0.2) < 0.04, `base ${b.base}`); assert.ok(Math.abs(b.marginal[1] - 0.1) < 0.04, `étape 1 : ${b.marginal[1]}`); assert.ok(Math.abs(b.marginal[8] - 0.4) < 0.06, `étape 8 : ${b.marginal[8]}`);
+    assert.ok(b.details['seule:1'].images_par_lot >= 40, 'des lots d\'au moins 40 images : la résolution de l\'horloge pèse moins de 2,5 %'); assert.ok(b.incertitude < 0.03);
+    assert.ok(Math.abs(b.toutes - (0.2 + 0.1 * 8 + 0.3 + 0.1 /* l\'étape 9 */ + 0)) < 0.2, `toutes ${b.toutes}`);
+  });
+});
+test('l\'horloge : sa résolution est mesurée, et un chronomètre grossier ne donne pas de « pire » inventé', () => {
+  let t = 0; const r = resolutionHorloge(5000, () => { t += 0.3; return Math.floor(t); });
+  assert.equal(r, 1);
+});
+
+group('labo lumière — le ciel v2');
+test('l\'air traversé fait le dégradé ; le soleil bas rougit l\'horizon de son côté ; la diffusion avant éclaire autour du soleil', () => {
+  assert.ok(masseAir(1) < 1.01 && masseAir(0) > 30 && masseAir(0) < 40);
+  const P = { skyZ: [0.1, 0.2, 0.4], skyH: [0.5, 0.5, 0.5], sunCol: [2, 1.6, 1], sunDir: [0, 0.1, 1], bas: 1, voile: 0 };
+  const cote = couleurCiel([0, 0.05, 1], P), oppose = couleurCiel([0, 0.05, -1], P);
+  assert.ok(cote[0] > oppose[0] * 1.5, 'plus de lumière du côté du soleil');
+  assert.ok(cote[0] / cote[2] > oppose[0] / oppose[2], 'plus rouge du côté du soleil');
+  assert.ok(couleurCiel([0, 1, 0], P)[2] > couleurCiel([0, 0.02, 1], { ...P, sunDir: [0, 0.9, 0.3] })[2] * 0.2);
+});
+
 group('labo lumière — pureté');
 test('terrain, lumière, foule, maillage, particules, ciel : ni DOM, ni horloge, ni Math.random', () => {
-  for (const f of ['terrain', 'lumiere', 'foule', 'maillage', 'particules', 'ciel', 'camera', 'config', 'soldats-reels', 'lampes']) {
+  for (const f of ['terrain', 'lumiere', 'foule', 'maillage', 'particules', 'ciel', 'camera', 'config', 'soldats-reels', 'lampes', 'ombres', 'engins']) {
     const src = readFileSync(`js/lumiere/${f}.js`, 'utf8').replace(/\/\/.*$/gm, '');
     for (const mot of ['Math.random', 'Date.now', 'performance.now', 'document.', 'window.', 'localStorage']) assert.ok(!src.includes(mot), `${f}.js utilise ${mot}`);
   }

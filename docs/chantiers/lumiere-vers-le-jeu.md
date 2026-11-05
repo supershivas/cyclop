@@ -42,3 +42,16 @@ Palette (on la garde) ; matériel visé (un ordinateur de bureau récent avec ca
 
 ## Première mesure sur du vrai matériel (Jérôme, 5 novembre, v0.113.0)
 Apple M1, Firefox 156, niveau Moyen (étapes 1 à 7), carte de 512 × 320 m, 34 000 soldats, 1,27 million de triangles, 691 appels de dessin : **60 images par seconde**, 16,67 ms (la synchronisation verticale plafonne : on ne voit pas la marge). Le banc donne 4 à 5 ms par image avec **toutes** les étapes, y compris l'AO écran : aucune étape ne se distingue (moins de 1 ms chacune). **Limites de la mesure** : Firefox n'a pas de chronomètre GPU (`chronoGPU: false`) et arrondit `performance.now()` à 1 ms (le recalcul local après un obus s'y lit 0,006 ms de moyenne et 1 ms de pire : c'est de la quantification) ; le banc prend le meilleur quart de 18 images, trop peu pour une horloge à 1 ms. **À retenir** : sur un GPU intégré récent, le budget de la lumière actuelle est très large (≥ 3 fois de marge) ; ce qui dépasse est du calcul CPU unique : l'AO de toute la carte, 230 ms (budget 120) au chargement ou quand on réactive l'étape. À refaire sur une machine plus modeste (Windows, GPU Intel) avant de fixer les niveaux de qualité du jeu.
+
+## Session 1 faite (v0.114.0, 5 novembre)
+
+Tout est au labo (`js/lumiere/README.md`, « Ajouts de la v0.114.0 » : le détail, les mesures, les pièges). Ce qui est fait :
+1. **Le clignotement** : trois causes, aucune n'était l'AO écran. (a) vraie : le **masque des points** ne partait au GPU que s'il y avait des articulés ; (b) **hystérésis** par homme (niveau de détail, places limitées, marche/arrêt) ; (c) **la foule tremblait** (tirage de ±3 cm à chaque image) : flânage lent à la place. La piste « points de 2 pixels qui glissent » n'a pas été retenue (le jeu fait pareil ; la foule calme suffit).
+2. **La carte d'ombre** (étape 9, 1 024² Moyen, 2 048² Haut) : soldats, troncs et buissons, chars et biplans du labo (des boîtes : les modèles du jeu viennent en S3), fumée (épaisseur cumulée, ombre pâle sous un panache mince), combinée au relief par un minimum, cadre stabilisé. Le coût GPU est à mesurer sur du vrai matériel.
+3. **Le ciel v2** : air traversé, Mie, couchant, soleil et lueur, cumulus éclairés, cirrus ; l'ambiance du sol vient du même modèle. **Palette gardée.**
+4. **Le banc sous Firefox** : des lots d'images assez longs pour l'horloge à 1 ms, la médiane, l'incertitude affichée et exportée.
+5. **L'AO global réparti** : 3 ms par image au lieu de 230 ms d'un coup.
+
+**Ce qui reste pour vous** : relancer « Mesurer le coût GPU » puis « Exporter (JSON) » (Firefox ou autre, niveau Moyen puis Haut) et me donner le fichier : la ligne de l'étape 9 donnera le vrai coût des ombres, et l'incertitude dira si la mesure est bonne. Le conteneur n'a que le rendu logiciel.
+
+**Ce que S2 devra savoir** : (1) la carte d'ombre et `ombreCarte` s'appellent depuis `eclairer` : le jeu, qui passe par three.js, devra recevoir la matrice `uLVP`, la texture de profondeur comparée et la texture de fumée dans `solMat`/`soldatMat` (les nuanceurs du jeu sont déjà portés par remplacement de texte) ; (2) la hauteur des casteurs vient du jeu (arbres de `vegetation.js`, avions, chars) : un jeu d'instances par type, comme `engins.js` ; (3) le jeu a une ombre au sol par soldat (quadrilatère teinté) : elle disparaît en S3, quand la carte d'ombre est branchée.
