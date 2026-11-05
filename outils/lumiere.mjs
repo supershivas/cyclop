@@ -55,6 +55,7 @@ verifier(motif === '1,2,1,4,2,2,1,2,1' || motif.split(',').map(Number).sort().jo
 // Les trois niveaux : chaque étape, activée seule ou toutes, sans erreur, et le recalcul local reste local
 for (const q of ['bas', 'moyen', 'haut']) {
   await J(qq => window.__lumiere.appliquerQualite(qq), q); await p.waitForTimeout(600);
+  await p.waitForFunction(() => !window.__lumiere.travail, null, { timeout: 240000 });          // l'AO réparti tourne en tâche de fond : on mesure le recalcul local après lui
   const etat = await J(() => ({ etapes: Object.entries(window.__lumiere.S.etapes).filter(([, v]) => v).map(([k]) => +k), cases: window.__lumiere.M.n }));
   const attendu = { bas: '1,2,3', moyen: '1,2,3,4,5,6,9', haut: '1,2,3,4,5,6,7,8,9' }[q];
   verifier(etat.etapes.join() === attendu, `qualité ${q} : étapes ${etat.etapes.join(',')}`);
