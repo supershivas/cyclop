@@ -25,6 +25,7 @@ export const solMat = {
       uniform vec3 uKaki, uVert, uGlaise; uniform float uDissoudre;
       uniform float uNuage, uTemps, uBiseau; uniform vec2 uVent;
       uniform sampler2D uAO; uniform float uAOon, uSunOn, uAbriOn, uFlaque; uniform vec3 uEauCoul;
+      uniform sampler2D uCarteOmbre; uniform mat4 uLVP; uniform float uOmbOn; uniform vec2 uOmbPx;
       varying vec2 vUV; varying vec2 vXZ; varying float vY; varying vec3 vMur;
       float h(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
       float vn(vec2 p) { vec2 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f); return mix(mix(h(i), h(i + vec2(1.0, 0.0)), f.x), mix(h(i + vec2(0.0, 1.0)), h(i + vec2(1.0, 1.0)), f.x), f.y); }
@@ -59,7 +60,19 @@ export const solMat = {
         }
         // (session 2, éteint dans le jeu : uAOon à 0) l'ouverture au ciel du relief (js/rendu/ao-sol.js, le calcul du labo lumière) : les creux, les tranchées et les cratères s'assombrissent, comme au labo
         // (session 2, éteint : uSunOn à 0) le soleil du labo : la visibilité du soleil (canal R, une ombre douce) mélange le dessus de la case et la couleur de sa paroi, comme l'ombre de relief du jeu mais sans marche
-        if (uSunOn > 0.5 && vUV.y < 0.5) rgb = mix(texture2D(uSol, vUV + vec2(0.0, 0.5)).rgb, rgb, texture2D(uAO, vXZ / uTaille).r);
+        if ((uSunOn > 0.5 || uOmbOn > 0.5) && vUV.y < 0.5) {
+          float vis = uSunOn > 0.5 ? texture2D(uAO, vXZ / uTaille).r : 1.0;
+          // (session 3, éteint : uOmbOn à 0) la carte d'ombre : ce qui projette (les soldats) vu du soleil ; 3 x 3 lectures de la profondeur, comparées à la main (un sampler2DShadow vide fait échouer le dessin du sol tant que la carte n'existe pas) ; le minimum avec l'ombre du relief
+          if (uOmbOn > 0.5) {
+            vec4 lc = uLVP * vec4(vXZ.x, vY + 0.05, vXZ.y, 1.0); vec3 t = lc.xyz * 0.5 + 0.5;
+            if (t.x > 0.002 && t.y > 0.002 && t.x < 0.998 && t.y < 0.998 && t.z < 1.0) {
+              float lit = 0.0;
+              for (int j = -1; j <= 1; j++) for (int i = -1; i <= 1; i++) lit += (t.z - uOmbPx.y <= texture2D(uCarteOmbre, t.xy + vec2(float(i), float(j)) * uOmbPx.x).r) ? 1.0 : 0.0;
+              vis = min(vis, lit / 9.0);
+            }
+          }
+          rgb = mix(texture2D(uSol, vUV + vec2(0.0, 0.5)).rgb, rgb, vis);
+        }
         // (session 2, éteint : uAbriOn à 0) la lumière propagée sous les toits de bois (canal B : 240 à ciel ouvert, moins à mesure qu'on s'enfonce sous le toit)
         // (session 2, éteint : uFlaque à 0) les flaques : le creux (canal A : de combien la case est plus basse que celles à 3 m autour) se remplit d'eau quand il pleut ; un mélange continu avec l'eau de la palette
         if (uFlaque > 0.0 && vUV.y < 0.5) { float thr = 1.0 - 0.85 * uFlaque; float pud = smoothstep(thr, thr + 0.25, texture2D(uAO, vXZ / uTaille).a); rgb = mix(rgb, uEauCoul * 0.8, pud * 0.75); }
@@ -114,7 +127,7 @@ export const fauxMat = {
 export const soldatMat = {
   v: `
       attribute vec3 aPos; attribute float aCamp; attribute float aPart; attribute float aJambe; attribute float aVit; attribute float aBras; attribute vec2 aTir; attribute float aGr; attribute float aGrade; attribute vec2 aVar; attribute float aBless; attribute float aBand;
-      uniform float uT; uniform vec2 uSoleil; uniform float uBalance; uniform vec2 uEch;
+      uniform float uT; uniform vec2 uSoleil; uniform float uBalance; uniform vec2 uEch; uniform float uSansOmbre;
       varying float vCamp; varying float vPart; varying vec2 vXZ; varying float vLong;
       void main() {
         // une partie de 10 à 19 n'est dessinée que pour nous, de 20 à 29 que pour en face (casque, moustache : v0.27.0, au labo)
@@ -219,6 +232,7 @@ export const soldatMat = {
           float c = cos(aTir.y), s = sin(aTir.y);
           p.xz = vec2(p.x * c + p.z * s, -p.x * s + p.z * c);
         }
+        if (uSansOmbre > 0.5 && kp > 0.5 && kp < 1.5) cache = true;      // (session 3) la carte d'ombre remplace l'ombre au sol en quadrilatère
         if (cache) p = vec3(0.0);
         gl_Position = projectionMatrix * viewMatrix * vec4(p + aPos, 1.0);
       }`,

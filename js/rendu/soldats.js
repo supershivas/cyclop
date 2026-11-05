@@ -40,6 +40,7 @@ export function creerSoldats({ THREE, scene, col, solUniforms, styleSoldat, grad
       uJambes: { value: col('s') }, uFusil: { value: col('t') }, uSac: { value: col('g') }, uVisage: { value: col('h') }, uCuir: { value: col('b') }, uBotte: { value: col('t') }, uT: { value: 0 },
       uBalance: { value: styleSoldat === 'equipe-marche' ? 1 : 0 },
       uEch: { value: new THREE.Vector2(grades?.classes[3].echelle ?? 1, grades?.classes[4].echelle ?? 1) },
+      uSansOmbre: { value: 0 },
       uSol: solUniforms.uSol, uTaille: solUniforms.uTaille,
       uAO: solUniforms.uAO, uAOon: solUniforms.uAOon, uSunOn: solUniforms.uSunOn, uAbriOn: solUniforms.uAbriOn,      // la lumière du sol lue à la place de l'homme (session 2 : éteinte)
       uSoleil: { value: new THREE.Vector2(0.5, 0.6) } },
@@ -440,6 +441,8 @@ export function creerSoldats({ THREE, scene, col, solUniforms, styleSoldat, grad
   let vus = 0, gradesVus = 0, sansInterface = false;
 
   return {
+    casteurs() { return [soldatsInst, soldatsDetail, soldatsLeger, ...Object.values(EQs).flatMap(E => (E ? E.meshes.slice(1) : []))].filter(Boolean); },      // (le premier maillage d'une équipe articulée est son ombre au sol : il ne projette pas)      // les maillages qui projettent dans la carte d'ombre (session 3 : les hommes en boîtes, silhouettes et équipés)
+    sansOmbre(v) { soldatMat.uniforms.uSansOmbre.value = v ? 1 : 0; for (const E of Object.values(EQs)) if (E && v) E.meshes[0].visible = false; },                       // la carte d'ombre remplace l'ombre au sol en quadrilatère
     soleilUniform: soldatMat.uniforms.uSoleil,                    // le bout de l'ombre d'un mètre de hauteur (temps.js le règle, le nuanceur le lit)
     setTemps(t) { soldatMat.uniforms.uT.value = t; },             // les jambes qui marchent
     preparer(B) { CAPS.fill(NaN); preparerSoldats(B.armee.capacite); preparerCorps(Math.max(1024, B.etat.corps.length * 2)); preparerTombes(Math.max(256, (B.etat.tombes?.length || 0) * 2)); },

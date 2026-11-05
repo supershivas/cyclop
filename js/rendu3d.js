@@ -38,7 +38,8 @@ import { creerVegetation } from './rendu/vegetation.js?v=0.115.0';
 import { creerTemps } from './rendu/temps.js?v=0.115.0';
 import { creerEclats } from './rendu/eclats.js?v=0.115.0';
 import { creerOmbresRelief } from './rendu/ombres-relief.js?v=0.115.0';
-import { creerAOSol } from './rendu/ao-sol.js?v=0.115.0';
+import { creerAOSol, soleilDuJeu } from './rendu/ao-sol.js?v=0.115.0';
+import { cadrerOmbre } from './lumiere/ombres.js?v=0.115.0';
 import { OMBRES_RELIEF as OMB, NUAGES, NUAGES_VENT } from './data/soleil.js?v=0.115.0';
 import { PALETTE, ORDRE, INDICE } from './palette.js?v=0.115.0';
 import { OMBRE, couleursLigne } from './apparence.js?v=0.115.0';
@@ -133,7 +134,7 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
   // Les ombres du relief (labo « La lumière dans le relief », éteintes dans le jeu) : une case que le soleil ne voit pas prend la couleur de sa paroi dans la texture du sol ; le soleil du labo : saisons, azimut
   let ombresRelief = false, ombresNuages = false, soleilReglage = null, ombreVu = null;
   const ombres = creerOmbresRelief({ hauteurQ });
-  let aoSol = false, soleilSol = false, abrisSol = false, flaquesSol = false, flaque = 0, aoTex = null, aoAttente = 0, aoSale = false;      // l'ouverture au ciel du relief (éteinte : `rendu.aoSol`) ; sa texture n'est créée qu'au premier besoin (un objet de plus d'emblée décale les tirages d'identifiants de three : les images de référence)
+  let ombresCarte = false, omRT = null, omCam = null, omInv = null, omInfo = null, aoSol = false, soleilSol = false, abrisSol = false, flaquesSol = false, flaque = 0, aoTex = null, aoAttente = 0, aoSale = false;      // l'ouverture au ciel du relief (éteinte : `rendu.aoSol`) ; sa texture n'est créée qu'au premier besoin (un objet de plus d'emblée décale les tirages d'identifiants de three : les images de référence)
   const ao = creerAOSol({ hauteurQ });
   const soleilCase = { x: 0, z: 0 }, ecriture = { ms: 0, n: 0, rangees: 0, max: 0, maxOmbre: 0 };      // mesure : la réécriture de la texture du sol
   let B = null, T = null, faux = null, fauxU = null;
@@ -149,6 +150,7 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
       uKaki: { value: new THREE.Color(0) }, uVert: { value: new THREE.Color(0) }, uGlaise: { value: new THREE.Color(0) }, uDissoudre: { value: 0 },
       uSuivre: { value: 0 }, uVersSoleil: { value: new THREE.Vector2(0, 1) },
       uAO: { value: null }, uAOon: { value: 0 }, uSunOn: { value: 0 }, uAbriOn: { value: 0 }, uFlaque: { value: 0 }, uEauCoul: { value: col('e') },
+      uCarteOmbre: { value: null }, uLVP: { value: new THREE.Matrix4() }, uOmbOn: { value: 0 }, uOmbPx: { value: new THREE.Vector2(1 / 1024, 0.0003) },      // la carte d'ombre (session 3)
       uBiseau: { value: 0 }, uNuage: { value: 0 }, uTemps: { value: 0 }, uVent: { value: new THREE.Vector2(NUAGES_VENT[0], NUAGES_VENT[1]) } },      // l'ombre des nuages (labo) : la part du sol couverte (0 : rien), l'horloge de l'image, le vent       // les parois qui suivent le soleil (labo) : 1 et la direction du soleil, vers lui      // (le bord qui se dissout dans le faux terrain : `faireFaux`)
     vertexShader: SH.solMat.v,
     fragmentShader: SH.solMat.f,
@@ -686,6 +688,33 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
   const perf = { rendu: 0, fini: 0, sol: 0, n: 0 };
   const unPixel = new Uint8Array(4);
   let tAnim = 0, vide = false, gele = false;            // gele : le temps est arrêté (v0.99.5) ; le dessin s'arrête (nuages, pluie, fumée, herbe), la caméra reste libre ; vide : rien n'est dessiné (mesure du prix de l'attente)
+  // La carte d'ombre (session 3 du chantier lumière ; éteinte : `rendu.ombresCarte`) : les hommes en boîtes, silhouettes et équipés vus du soleil dans une cible de profondeur de 1 024 × 1 024 ; le sol la lit
+  // (solMat.f, `uCarteOmbre`) et ne dessine plus l'ombre au sol en quadrilatère de ces hommes. Pas de carte la nuit ni sans soleil. Cadrage : js/lumiere/ombres.js (le même que le labo, stabilisé).
+  function passeOmbres() {
+    const U = solMat.uniforms, sv = soldats.soleilUniform.value;
+    const actif = ombresCarte && T && Math.hypot(sv.x, sv.y) > 0.05;
+    soldats.sansOmbre(actif);
+    if (!actif) { U.uOmbOn.value = 0; return; }
+    if (!omRT) {                                                   // créée au premier besoin (un objet three de plus décale les identifiants tirés de Math.random : les images de référence)
+      const dt = new THREE.DepthTexture(1024, 1024); dt.minFilter = dt.magFilter = THREE.NearestFilter;
+      omRT = new THREE.WebGLRenderTarget(1024, 1024, { depthTexture: dt, depthBuffer: true });
+      omCam = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 10); omCam.matrixAutoUpdate = false; omCam.matrixWorldAutoUpdate = false;
+      omInv = new THREE.Matrix4(); omInfo = { m: new THREE.Matrix4() };
+    }
+    camera.updateMatrixWorld(); omInfo.m.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse).invert();
+    const s = soleilDuJeu(sv.x, sv.y);
+    const C = cadrerOmbre({ cam: { oeil: [camera.position.x, camera.position.y, camera.position.z], invVP: omInfo.m.elements }, sunDir: s.dir, taille: 1024, monde: { largeurM: T.W, profondeurM: T.H },
+      sol: { bas: SOL_Y - 3, haut: hautMax() }, distanceM: Math.min(900, camera.position.y * 2 + 80), hautCasteurM: 12 });
+    if (!C) { U.uOmbOn.value = 0; soldats.sansOmbre(false); return; }
+    omCam.projectionMatrix.fromArray(C.proj); omCam.projectionMatrixInverse.copy(omCam.projectionMatrix).invert();
+    omCam.matrixWorldInverse.fromArray(C.vue); omCam.matrixWorld.copy(omCam.matrixWorldInverse).invert();
+    const casteurs = new Set(soldats.casteurs()), vus = [];
+    for (const m of scene.children) { vus.push([m, m.visible]); m.visible = casteurs.has(m) && m.visible; }
+    const fond = renderer.getRenderTarget();
+    renderer.setRenderTarget(omRT); renderer.clear(); renderer.render(scene, omCam); renderer.setRenderTarget(fond);
+    for (const [m, v] of vus) m.visible = v;
+    U.uCarteOmbre.value = omRT.depthTexture; U.uLVP.value.fromArray(C.vp); U.uOmbOn.value = 1; U.uOmbPx.value.set(1 / 1024, 0.15 / C.profondeurM);
+  }
   function dessiner(dtVrai, evenements = []) {
     if (!B) return;
     const dt = gele ? 0 : dtVrai;      // le temps du dessin ; `dtVrai` ne sert qu'à la caméra
@@ -736,6 +765,7 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
     const { cx, cz, p } = projeter();
     meteo.maj(tAnim, cx, cz, p, vue, vent.ms.x, vent.ms.z, dt);
     eclats.setTaille(Math.max(1, Math.round(p / 2)));
+    passeOmbres();
     renderer.render(scene, camera);
     const t2 = performance.now();
     // gl.finish() n'attend pas le rendu logiciel de Chromium : lire un pixel, si (mesure honnête)
@@ -757,6 +787,11 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
     // le style de la nuit : 'halos' (le jeu), 'doux', 'trame' (l'ancienne, gardée au labo)
     set styleNuit(m) { temps.setStyleNuit(m); },
     get finesse() { return finesse; },
+    get ombresCarteEtat() {                                          // (essais) la carte d'ombre : combien de pixels de la cible ne sont pas le fond (les hommes qui projettent)
+      if (!omRT) return null; const b = new Uint8Array(1024 * 1024 * 4); renderer.readRenderTargetPixels(omRT, 0, 0, 1024, 1024, b); let n = 0; for (let i = 4; i < b.length; i += 4) if (b[i] !== b[0] || b[i + 1] !== b[1] || b[i + 2] !== b[2]) n++; return { pixels: n, fond: [b[0], b[1], b[2]] };
+    },
+    get ombresCarte() { return ombresCarte; },
+    set ombresCarte(v) { ombresCarte = !!v; },                        // la carte d'ombre des soldats sur le sol (session 3 ; éteinte)
     get flaquesSol() { return flaquesSol; },
     set flaquesSol(v) { flaquesSol = !!v; },                          // des flaques dans les creux quand il pleut (session 2 ; éteint)
     get abrisSol() { return abrisSol; },

@@ -51,7 +51,7 @@ export function cadrerOmbre({ cam, sunDir, taille, monde, sol = { bas: 0, haut: 
   P[0] = 2 / w; P[5] = 2 / h; P[10] = -2 / prof; P[12] = -2 * cx / w; P[13] = -2 * cy / h; P[14] = -1; P[15] = 1;
   const vp = new Float32Array(16);
   for (let c = 0; c < 4; c++) for (let rr = 0; rr < 4; rr++) { let s = 0; for (let k = 0; k < 4; k++) s += P[k * 4 + rr] * vue[c * 4 + k]; vp[c * 4 + rr] = s; }
-  return { vp, vue, etendue: [w, h], texelM: Math.max(tw, th), profondeurM: prof, l, r, u, centre: [cx, cy], taille, sMax };
+  return { vp, vue, proj: P, etendue: [w, h], texelM: Math.max(tw, th), profondeurM: prof, l, r, u, centre: [cx, cy], taille, sMax };
 }
 
 // Où un point du monde tombe dans la carte : { u, v } dans [0, 1] et la profondeur normalisée z dans [0, 1] (0 : le plus près du soleil) ; la même opération que le nuanceur
