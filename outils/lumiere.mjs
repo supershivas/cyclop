@@ -56,10 +56,16 @@ for (const q of ['bas', 'moyen', 'haut']) {
   await J(() => { const e = document.getElementById('ll-unites'); e.value = 8000; e.dispatchEvent(new Event('input')); });
 }
 
-// Les vrais soldats du jeu, de près (le modèle articulé : casque, sac, fusil, visage), et le faux terrain autour de la carte
+// Les soldats du jeu avec son échelle de détail (articulés, équipés, allégés, boîtes, points), les lanternes des tranchées, la colline et la grande carte
 await J(() => { window.__lumiere.S.pause = false; window.__lumiere.voirPreset('tranchee', true); Object.assign(window.__lumiere.C, { distance: 15, tangage: 0.5 }); }); await p.waitForTimeout(1500);
-const reels = await J(() => window.__lumiere.mesures.lire('reels'));
-verifier(!!reels && reels.n > 3, 'les vrais soldats du jeu sont dessinés de près'); await image('vrais-soldats');
+const cpt = await J(() => ({ ...window.__lumiere.comptes, fixes: window.__lumiere.LA.fixes.length, W: window.__lumiere.M.largeurM, D: window.__lumiere.M.profondeurM, colline: window.__lumiere.M.colline.hauteurM }));
+verifier(cpt.art > 3, `de près : des soldats articulés (${cpt.art}), des équipés (${cpt.equipe}), des allégés (${cpt.legere})`); await image('vrais-soldats');
+verifier(cpt.W >= 512 && cpt.D >= 320, `la carte est grande (${cpt.W} × ${cpt.D} m)`); verifier(cpt.colline > 8, `une colline de ${cpt.colline} m`);
+verifier(cpt.fixes > 100, `des lanternes dans les tranchées (${cpt.fixes})`);
+await J(() => { window.__lumiere.voirPreset('colline', true); }); await p.waitForTimeout(1200); await image('colline');
+await J(() => { const J = window.__lumiere; document.getElementById('ll-heure').value = 22; document.getElementById('ll-heure').dispatchEvent(new Event('input')); J.voirPreset('tranchee', true); Object.assign(J.C, { distance: 22, tangage: 0.6 }); }); await p.waitForTimeout(2200); await image('nuit-lanternes');
+await J(() => { const J = window.__lumiere; document.getElementById('ll-heure').value = 9; document.getElementById('ll-heure').dispatchEvent(new Event('input')); J.voirPreset('large', true); }); await p.waitForTimeout(1200);
+const large = await J(() => window.__lumiere.comptes); verifier(large.art === 0 && large.boite + large.legere + large.equipe > 100, `vue large : des boîtes et des silhouettes, pas d'articulés (${JSON.stringify(large)})`); await image('vue-large');
 await J(() => { window.__lumiere.voirPreset('large', true); Object.assign(window.__lumiere.C, { distance: 140, tangage: 0.1 }); }); await p.waitForTimeout(1200); await image('faux-terrain');
 // La météo : chaque temps, puis le temps qui change tout seul
 for (const m of ['pluie', 'neige', 'brouillard', 'boue', 'sec']) { await J(mm => { const J = window.__lumiere; J.S.meteo = mm; if (!J.S.etapes[7]) J.basculerEtape(7, true); Object.assign(J.meteoNow, J.METEOS[mm]); }, m); await p.waitForTimeout(700); await image(`meteo-${m}`); }

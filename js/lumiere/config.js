@@ -4,7 +4,8 @@
 // Le monde : 256 × 160 m, des chunks de 16 m. Une « grille » est un nombre de cases par mètre : 1 (cube de 1 m) ou 2 (cube de 50 cm).
 // Les hauteurs sont des entiers en quarts de cube : un cube entier = 4, un demi-cube = 2, un quart = 1.
 export const MONDE = {
-  largeurM: 256, profondeurM: 160, chunkM: 16,
+  largeurM: 512, profondeurM: 320, chunkM: 16,       // la carte par défaut (4 fois l'aire d'avant) ; `TAILLES` : les trois choix
+  colline: { x: 0.74, z: 0.5, rayonM: 46, hauteurM: 16 },     // une colline dans le no man's land (en fractions de la carte, en mètres)
   quartsParCube: 4,
   graine: 7,
   tranchees: { niveaux: 4, largeurM: 2.2, profondeurQ: 8, boyauM: 1.6, abrisParLigne: 2, abrisLongM: 11 },
@@ -12,6 +13,10 @@ export const MONDE = {
   obusInitiaux: 230,
   foule: { max: 50000, defaut: 8000, vague: { periodeS: 26, avanceS: 8, retardParRangS: 1.4 } },
 };
+
+// Les tailles de carte au choix (réglages) ; au-delà de `COLONNES_MAX` colonnes, la grille revient à 1 case par mètre
+export const TAILLES = { moyenne: { nom: 'Moyenne (256 × 160 m)', largeurM: 256, profondeurM: 160 }, grande: { nom: 'Grande (512 × 320 m)', largeurM: 512, profondeurM: 320 }, immense: { nom: 'Immense (768 × 480 m)', largeurM: 768, profondeurM: 480 } };
+export const COLONNES_MAX = 700000;
 
 // L'obus (Jérôme : un cube entier, quatre demi-cubes, quatre quarts de cube). Quarts retirés, sur une grille de 3 × 3 « super-cases ».
 export const MOTIF_OBUS = [[1, 2, 1], [2, 4, 2], [1, 2, 1]];
@@ -25,7 +30,7 @@ export const ETAPES = [
   { id: 3, cle: 'local', nom: 'Mise à jour locale', desc: 'un obus ne recalcule que son chunk et ses voisins', budget: { chunkMs: 2.0, globalMs: 0, gpuMs: 0 } },
   { id: 4, cle: 'propagee', nom: 'Lumière propagée', desc: 'flood fill : abris et tranchées couvertes sombres', budget: { chunkMs: 0.5, globalMs: 30, gpuMs: 0.1 } },
   { id: 5, cle: 'atmosphere', nom: 'Atmosphère', desc: 'brume au sol, fumée et poussière d\'obus', budget: { chunkMs: 0, globalMs: 0, gpuMs: 1.2 } },
-  { id: 6, cle: 'flash', nom: 'Lumières temporaires', desc: 'le flash d\'un obus éclaire le terrain autour', budget: { chunkMs: 0, globalMs: 0, gpuMs: 0.6 } },
+  { id: 6, cle: 'flash', nom: 'Lumières temporaires', desc: 'flash des obus, lanternes des tranchées, lampes portées', budget: { chunkMs: 0, globalMs: 0, gpuMs: 0.6 } },
   { id: 7, cle: 'meteo', nom: 'Météo', desc: 'boue sombre et brillante, flaques, ciel du jour de bataille', budget: { chunkMs: 0.3, globalMs: 20, gpuMs: 0.5 } },
   { id: 8, cle: 'ssao', nom: 'AO écran', desc: 'contacts fins : corps, débris, rebords', budget: { chunkMs: 0, globalMs: 0, gpuMs: 2.0 } },
 ];
@@ -61,8 +66,9 @@ export const METEO_AUTO = { tenueS: [22, 40], vitesse: 0.12, suite: { sec: ['sec
 export const NUAGES = { hauteurM: 420, echelleM: 140, derive: 0.9 };
 // Le faux terrain autour de la carte : un sol qui se prolonge jusqu'à l'horizon (calculé à l'écran, sans maillage)
 export const HORS_CARTE = { echelleM: 38, relief: 0.8, fonduM: 1800 };
-// Les vrais soldats du jeu (js/rendu/soldat-articule.js) : les `max` hommes les plus proches du point visé, dès `pxmMoyen` pixels par mètre ; le modèle fin dès `pxmFin`
-export const SOLDATS_REELS = { max: 150, pxmMoyen: 9, pxmFin: 20 };
+// Les vrais soldats du jeu, avec l'échelle de détail du jeu lui-même (rendu/soldats.js) : le point (le jeu aux zooms 1 et 2), la boîte, la silhouette allégée (dès 4 px/m), le soldat équipé
+// (dès 6) et l'articulé, un squelette et un visage (dès 12 : les `maxArticule` plus proches ; le modèle fin dès 24). Les seuils sont en pixels par mètre à l'endroit de chaque homme.
+export const SOLDATS_REELS = { pxmBoite: 2.5, pxmLegere: 4, pxmEquipe: 6, pxmArticule: 12, pxmFin: 24, maxArticule: 250, maxEquipe: 4000, maxLegere: 14000 };
 
 // Le ciel et le soleil : ils ne tirent leurs couleurs que de la palette du jeu (js/palette.js), mélangées en continu.
 export const SOLEIL = {
@@ -72,11 +78,12 @@ export const SOLEIL = {
 };
 
 export const CAMERA = {
-  fovDeg: 30, proche: 1, loin: 1400,
+  fovDeg: 30, proche: 1, loin: 3500,
   presets: {
     large: { nom: 'Vue large', distance: 330, tangage: 0.95, lacet: 0.15 },
     tranchee: { nom: 'Vue tranchée', distance: 46, tangage: 0.72, lacet: -0.45 },
     cratere: { nom: 'Vue cratère', distance: 19, tangage: 0.82, lacet: 0.3 },
+    colline: { nom: 'Vue colline', distance: 150, tangage: 0.55, lacet: -0.55 },
   },
 };
 
@@ -86,4 +93,11 @@ export const ATMOSPHERE = {
   fumee: { duree: [6, 11], taille: [2.2, 4.6] },
 };
 
+// Les sources de lumière fixes et portées : des lanternes accrochées dans les tranchées (et dans les abris), des lampes que portent certains soldats.
+// `pasM` : une lanterne tous les tant de mètres le long de chaque ligne ; `force` 1 = un éclairage plein à bout portant ; la lumière est cachée par le relief (une lanterne de tranchée n'éclaire pas la plaine derrière le parapet).
+export const LAMPES = {
+  tranchees: { pasM: 17, force: 1.25, rayonM: 12, hauteurM: 1.9, abri: { hauteurM: 1.1, force: 1.5, rayonM: 9 } },
+  soldats: { un_sur: 41, max: 48, rayonActifM: 110, force: 0.9, rayonM: 8, hauteurM: 1.4 },
+  couleur: [1.0, 0.62, 0.28],       // une flamme : l'os qui tire sur l'orange d'alerte (ciel.js la recalcule de la palette)
+};
 export const FLASH = { dureeS: 0.75, rayonM: 34, intensite: 3.2, max: 8 };

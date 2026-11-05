@@ -18,7 +18,7 @@ export const glslVert = () => '#version 300 es\nprecision highp float; precision
 // `commun` : le début des nuanceurs du labo (la lumière : `eclairer`, `finir`) ; sa première ligne est `#version 300 es`
 export const glslFrag = commun => commun + '\nin vec3 vWp, vNw; out vec4 fragColor;\n' + FRAG
   .replace(/\bvarying\b/g, 'in')
-  .replace('gl_FragColor = vec4(c * vShade, 1.0);', 'gS = uS; vec4 Ld = texture(uLight, vWp.xz / uCell / uGrid); fragColor = vec4(finir(eclairer(c * .62, normalize(vNw), vWp, Ld, 1., 0., 0., 0.)), 1.);');
+  .replace('gl_FragColor = vec4(c * vShade, 1.0);', 'gS = uS; gL = uLampOn; vec4 Ld = texture(uLight, vWp.xz / uCell / uGrid); fragColor = vec4(finir(eclairer(c * .62, normalize(vNw), vWp, Ld, 1., 0., 0., 0.)), 1.);');
 
 const modeles = {};
 export const modele = niveau => modeles[niveau] || (modeles[niveau] = modeleArticule({ niveau }));
@@ -54,4 +54,84 @@ export function suivre(S, F, i, t) {
   const vers = v > 0.45 ? Math.atan2(dx, dz) : but;
   let d = vers - S.cap[i]; d = Math.atan2(Math.sin(d), Math.cos(d)); S.cap[i] += d * 0.5;
   S.ox[i] = F.x[i]; S.oz[i] = F.z[i]; S.ot[i] = t;
+}
+
+// ─── Les soldats du jeu, de loin à près : la boîte, la silhouette allégée, le soldat équipé (rendu/geometries.js, rendu/shaders.js) ───
+// La géométrie vient du jeu : `creerGeometries` veut un THREE, on lui en donne un de pacotille qui garde les tableaux (aucun THREE n'est chargé).
+import { creerGeometries } from '../rendu/geometries.js';
+import { soldatMat } from '../rendu/shaders.js';
+import { SOLDATS_REELS } from './config.js';
+
+const FAUX_THREE = { InstancedBufferGeometry: class { setAttribute(n, a) { this[n] = a; } }, Float32BufferAttribute: class { constructor(a, k) { this.array = Float32Array.from(a); this.itemSize = k; } } };
+export const STYLES_JEU = { boite: 'boite', legere: 'legere', equipe: 'equipe-marche' };
+const geoms = {};
+export function geometrieJeu(style) {
+  if (geoms[style]) return geoms[style];
+  const gi = creerGeometries(FAUX_THREE, () => null).geometrieSoldat(STYLES_JEU[style], [{}, {}, {}, {}, {}, {}, {}]);
+  const pos = gi.position.array, nor = new Float32Array(pos.length);
+  for (let t = 0; t < pos.length; t += 9) {                                               // une normale par triangle (les boîtes sont des faces planes)
+    const ax = pos[t + 3] - pos[t], ay = pos[t + 4] - pos[t + 1], az = pos[t + 5] - pos[t + 2], bx = pos[t + 6] - pos[t], by = pos[t + 7] - pos[t + 1], bz = pos[t + 8] - pos[t + 2];
+    let nx = ay * bz - az * by, ny = az * bx - ax * bz, nz = ax * by - ay * bx; const l = Math.hypot(nx, ny, nz) || 1; nx /= l; ny /= l; nz /= l;
+    for (let v = 0; v < 3; v++) { nor[t + 3 * v] = nx; nor[t + 3 * v + 1] = ny; nor[t + 3 * v + 2] = nz; }
+  }
+  return (geoms[style] = { position: pos, aPart: gi.aPart.array, aJambe: gi.aJambe.array, aBras: gi.aBras.array, aGr: gi.aGr.array, aNor: nor, n: pos.length / 3 });
+}
+export const PAR_SOMMET_JEU = [['aPosition', 3, 'position'], ['aPart', 1, 'aPart'], ['aJambe', 1, 'aJambe'], ['aBras', 1, 'aBras'], ['aGr', 1, 'aGr'], ['aNor', 3, 'aNor']];
+export const FLOATS_JEU = 11;                  // par homme : pos 3, camp, vitesse, tir 2 (pose, cap), corps 2 (largeur, hauteur), grade, blessure
+export const ATTRIBUTS_JEU = [['aPos', 3, 0], ['aCamp', 1, 3], ['aVit', 1, 4], ['aTir', 2, 5], ['aVar', 2, 7], ['aGrade', 1, 9], ['aBless', 1, 10]];
+export const COULEURS_JEU = { uNous: 'n', uEux: 'x', uOmbre: 't', uSel: 'o', uJambes: 's', uFusil: 't', uSac: 'g', uVisage: 'h', uCuir: 'b', uBotte: 't' };
+
+export const glslVertJeu = () => '#version 300 es\nprecision highp float; precision highp int;\nin vec3 aPosition; in vec3 aNor; out vec3 vWp, vNw; uniform mat4 uVP;\n' + soldatMat.v
+  .replace(/\battribute\b/g, 'in').replace(/\bvarying\b/g, 'out').replace(/\bposition\b/g, 'aPosition')
+  .replace('gl_Position = projectionMatrix * viewMatrix * vec4(p + aPos, 1.0);', 'vWp = p + aPos; vNw = aNor; gl_Position = uVP * vec4(vWp, 1.0);');
+export const glslFragJeu = commun => commun + '\nin vec3 vWp, vNw; out vec4 fragColor;\n' + soldatMat.f
+  .replace(/\bvarying\b/g, 'in')
+  .replace(/gl_FragColor = vec4\(texture2D[^;]*;\s*return;/, 'discard;')                    // l'ombre au sol du jeu : le labo a la sienne (la lumière)
+  .replace('gl_FragColor = vec4(c, 1.0);', 'gS = uS; gL = uLampOn; vec4 Ld = texture(uLight, vWp.xz / uCell / uGrid); fragColor = vec4(finir(eclairer(c * .62, normalize(vNw), vWp, Ld, 1., 0., 0., 0.)), 1.);');
+
+// L'écriture d'un homme (comme `ecrire` de rendu/soldats.js) : `tapi` à 1 : la peur (aVit < 0 : −1 − la vitesse)
+const hv = i => { let h = Math.imul(i + 1, 2654435761); h ^= h >>> 15; h = Math.imul(h, 2246822519); return ((h ^ (h >>> 13)) >>> 0) / 4294967296; };
+export function ecrireJeu(T, n, h) {
+  const o = n * FLOATS_JEU;
+  T[o] = h.x; T[o + 1] = h.y; T[o + 2] = h.z; T[o + 3] = h.camp; T[o + 4] = h.tapi ? -1 - h.vit : h.vit;
+  T[o + 5] = 0; T[o + 6] = h.cap ?? 0;
+  T[o + 7] = 1 + (hv(h.i) - 0.5) * 0.28; T[o + 8] = 1 + (hv(h.i + 99991) - 0.5) * 0.14;       // la largeur et la taille de chaque homme (±14 %, ±7 %)
+  T[o + 9] = 0; T[o + 10] = 0;
+}
+
+// Classe les soldats vus : pour chacun, ses pixels par mètre (k / profondeur de l'écran) donne son niveau de détail. Les `maxArticule` plus proches en articulés, au plus `maxEquipe` équipés, `maxLegere` allégés ;
+// ceux qui dépassent descendent d'un niveau. `masque[i] = 1` : l'homme est dessiné en géométrie (le point est caché). Rend les listes (indices) et leur taille.
+export function creerClasses(max) {
+  const l = () => ({ i: new Int32Array(max), n: 0 });
+  return { art: l(), equipe: l(), legere: l(), boite: l(), w: new Float32Array(max), cand: [new Int32Array(max), new Int32Array(max), new Int32Array(max)], nc: [0, 0, 0], masque: new Float32Array(max), plusProche: 0 };
+}
+export function classer(F, hf, M, vp, H, fov, C = creerClasses(F.max), S = SOLDATS_REELS) {
+  const k = (H / 2) / Math.tan(fov / 2), { W } = M, art = C.art, eq = C.equipe, lg = C.legere, bt = C.boite;
+  art.n = eq.n = lg.n = bt.n = 0; C.nc[0] = C.nc[1] = C.nc[2] = 0; C.masque.fill(0); C.plusProche = 0;
+  for (let i = 0; i < F.n; i++) {
+    const x = F.x[i], z = F.z[i], y = hf[Math.min(M.H - 1, z * M.cpm | 0) * W + Math.min(W - 1, x * M.cpm | 0)] + 0.9;
+    const cw = vp[3] * x + vp[7] * y + vp[11] * z + vp[15]; if (cw < 0.5) continue;
+    const ppm = k / cw; if (ppm < S.pxmBoite) continue;
+    const cx = (vp[0] * x + vp[4] * y + vp[8] * z + vp[12]) / cw, cy = (vp[1] * x + vp[5] * y + vp[9] * z + vp[13]) / cw;
+    if (cx < -1.12 || cx > 1.12 || cy < -1.15 || cy > 1.15) continue;
+    C.w[i] = cw;
+    if (ppm >= S.pxmArticule) C.cand[0][C.nc[0]++] = i;
+    else if (ppm >= S.pxmEquipe) C.cand[1][C.nc[1]++] = i;
+    else if (ppm >= S.pxmLegere) C.cand[2][C.nc[2]++] = i;
+    else bt.i[bt.n++] = i;
+  }
+  const par = (a, b) => C.w[a] - C.w[b];
+  // les articulés : les plus proches ; le reste est équipé
+  const sel = (cand, n, cap, dest, trop) => {
+    const liste = Array.from(cand.subarray(0, n));
+    if (n > cap) { liste.sort(par); for (let q = cap; q < n; q++) trop(liste[q]); liste.length = cap; }
+    for (const i of liste) dest.i[dest.n++] = i;
+  };
+  const versEq = i => { C.cand[1][C.nc[1]++] = i; }, versLg = i => { C.cand[2][C.nc[2]++] = i; }, versBt = i => { bt.i[bt.n++] = i; };
+  sel(C.cand[0], C.nc[0], S.maxArticule, art, versEq);
+  sel(C.cand[1], C.nc[1], S.maxEquipe, eq, versLg);
+  sel(C.cand[2], C.nc[2], S.maxLegere, lg, versBt);
+  for (const L of [art, eq, lg, bt]) for (let q = 0; q < L.n; q++) C.masque[L.i[q]] = 1;
+  if (art.n) { let m = 1e9; for (let q = 0; q < art.n; q++) m = Math.min(m, C.w[art.i[q]]); C.plusProche = k / m; }
+  return C;
 }

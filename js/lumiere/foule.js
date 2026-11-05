@@ -5,7 +5,7 @@ import { MONDE } from './config.js?v=0.112.0';
 
 export function creerFoule(M, max = MONDE.foule.max, graine = MONDE.graine) {
   const F = {
-    max, n: 0, t: 0,
+    max, n: 0, t: 0, largeurM: M.largeurM, profondeurM: M.profondeurM,
     x: new Float32Array(max), z: new Float32Array(max),
     x0: new Float32Array(max), z0: new Float32Array(max), zc: new Float32Array(max),      // départ (leur tranchée) et but (le no man's land)
     camp: new Uint8Array(max), rang: new Uint8Array(max), graine: new Uint32Array(max),
@@ -17,9 +17,9 @@ export function creerFoule(M, max = MONDE.foule.max, graine = MONDE.graine) {
   for (let i = 0; i < max; i++) {
     const camp = i & 1, lignes = camp ? eux : nous;
     const L = lignes[Math.min(lignes.length - 1, Math.floor(alea() ** 1.6 * lignes.length))];
-    const x = 3 + alea() * (MONDE.largeurM - 6), z = L.zAt(x) + (alea() - 0.5) * 1.4;
+    const x = 3 + alea() * (M.largeurM - 6), z = L.zAt(x) + (alea() - 0.5) * 1.4;
     F.camp[i] = camp; F.rang[i] = L.niveau; F.x0[i] = F.x[i] = x; F.z0[i] = F.z[i] = z;
-    F.zc[i] = MONDE.profondeurM * (camp ? 0.5 - 0.06 - alea() * 0.1 : 0.5 + 0.06 + alea() * 0.1);   // jusqu'au milieu du no man's land
+    F.zc[i] = M.profondeurM * (camp ? 0.5 - 0.06 - alea() * 0.1 : 0.5 + 0.06 + alea() * 0.1);   // jusqu'au milieu du no man's land
     F.graine[i] = (alea() * 4294967295) >>> 0 || 1;
   }
   F.n = Math.min(max, MONDE.foule.defaut);
@@ -32,7 +32,7 @@ export function regler(F, n) { F.n = Math.max(0, Math.min(F.max, n | 0)); }
 const vague = u => (u <= 0 || u >= 1) ? 0 : 0.5 - 0.5 * Math.cos(Math.PI * 2 * u);
 export function avancer(F, dt) {
   F.t += dt;
-  const V = MONDE.foule.vague, n = F.n, x = F.x, z = F.z, xy = F.xy, g = F.graine, jit = 0.8 * dt, W = MONDE.largeurM, H = MONDE.profondeurM;
+  const V = MONDE.foule.vague, n = F.n, x = F.x, z = F.z, xy = F.xy, g = F.graine, jit = 0.8 * dt, W = F.largeurM, H = F.profondeurM;
   for (let i = 0; i < n; i++) {
     let s = g[i];
     s ^= s << 13; s >>>= 0; s ^= s >>> 17; s ^= s << 5; s >>>= 0;

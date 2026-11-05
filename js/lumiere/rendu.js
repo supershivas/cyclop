@@ -18,7 +18,8 @@ uniform float uWet, uExpo, uNuit;
 uniform int uFlashN; uniform vec4 uFlashA[8]; uniform vec4 uFlashB[8];
 uniform vec4 uNuage;                 // couverture, décalage x, décalage z (m), échelle (1/m)
 uniform float uNuageH, uNeige, uVent, uTemps; uniform vec3 uSnow;
-vec4 gS;                             // les interrupteurs d'étapes de CE pixel (l'écran partagé en a deux jeux)
+vec4 gS; float gL;                   // les interrupteurs d'étapes de CE pixel (l'écran partagé en a deux jeux) ; gL : les lampes
+uniform sampler2D uLamp; uniform float uLampOn; uniform vec3 uLampCol;
 float h21(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
 float vn(vec2 p) { vec2 i = floor(p), f = fract(p); f = f * f * (3. - 2. * f); return mix(mix(h21(i), h21(i + vec2(1, 0)), f.x), mix(h21(i + vec2(0, 1)), h21(i + vec2(1, 1)), f.x), f.y); }
 // la densité du ciel au point q (mètres) du plan des nuages : la même fonction fait les nuages du ciel et leur ombre au sol
@@ -52,6 +53,13 @@ vec3 eclairer(vec3 alb, vec3 N, vec3 P, vec4 Ld, float ao, float under, float mu
     vec3 d = uFlashA[k].xyz - P; float dist = length(d), a = clamp(1. - dist / uFlashA[k].w, 0., 1.);
     col += alb * uFlashB[k].rgb * (a * a * (max(dot(N, d / max(dist, .001)), 0.) * .8 + .2) * uFlashB[k].a);
   }
+  if (gL > .5) {                                                           // les lanternes et les lampes : une couche de la grille, cachée par le relief (lampes.js)
+    vec2 spl = (P.xz + N.xz * .5 * uCell) / uCell;
+    if (spl.x > 0. && spl.y > 0. && spl.x < uGrid.x && spl.y < uGrid.y) {
+      float lm = texture(uLamp, spl / uGrid).r, fl = 1. + .08 * sin(uTemps * 11. + h21(floor(spl)) * 40.);
+      col += alb * uLampCol * lm * (.45 + .55 * N.y) * 2.2 * fl * (.18 + .82 * uNuit);       // par grand jour, une flamme ne se voit presque pas
+    }
+  }
   return col;
 }`;
 
@@ -66,7 +74,7 @@ uniform vec3 uMat[8]; uniform float uAlpha;
 in vec3 vP; flat in vec3 vN; in float vAO, vVar; flat in float vMat, vUnder;
 out vec4 o;
 void main() {
-  gS = uS;
+  gS = uS; gL = uLampOn;
   vec3 N = normalize(vN);
   vec3 alb = uMat[int(vMat + .5)] * (1. + (vVar - .5) * .2);
   vec2 sp = (vP.xz + N.xz * .5 * uCell) / uCell;
@@ -78,27 +86,26 @@ void main() {
 
 const VS_SOLDATS = `${GLSL_COMMUN}
 layout(location = 0) in vec2 aXZ; layout(location = 1) in float aCamp; layout(location = 2) in float aHide;
-uniform mat4 uVP; uniform sampler2D uHF; uniform float uPx17;
-out vec3 vP; flat out float vCamp; flat out float vSize;
+uniform mat4 uVP; uniform sampler2D uHF;
+out vec3 vP; flat out float vCamp;
 void main() {
-  if (aHide > .5) { gl_Position = vec4(2., 2., 2., 1.); gl_PointSize = 0.; return; }           // cet homme est dessiné avec le vrai modèle du jeu
+  if (aHide > .5) { gl_Position = vec4(2., 2., 2., 1.); gl_PointSize = 0.; return; }           // cet homme est dessiné en volume (la boîte, la silhouette, l'équipé, l'articulé)
   ivec2 c = ivec2(floor(aXZ / uCell));
   float h = texelFetch(uHF, clamp(c, ivec2(0), ivec2(uGrid) - 1), 0).r;
-  vP = vec3(aXZ.x, h + .85, aXZ.y);
+  vP = vec3(aXZ.x, h + 1.2, aXZ.y);                                        // le point du jeu (rendu/shaders.js, pointMat) : deux pixels, l'homme sur son ombre
   gl_Position = uVP * vec4(vP, 1.);
-  vSize = max(uPx17 / gl_Position.w, 3.); gl_PointSize = vSize; vCamp = aCamp;
+  gl_PointSize = 2.; vCamp = aCamp;
 }`;
 const FS_SOLDATS = `${GLSL_COMMUN}
-uniform vec3 uNous, uEux;
-in vec3 vP; flat in float vCamp; flat in float vSize;
+uniform vec3 uNous, uEux, uOmbre;
+in vec3 vP; flat in float vCamp;
 out vec4 o;
 void main() {
-  gS = uS;
-  vec2 p = gl_PointCoord - .5;
-  if (abs(p.x) > max(.15, .55 / vSize)) discard;
+  gS = uS; gL = uLampOn;
+  if (gl_PointCoord.y > .5) { o = vec4(finir(uOmbre * .8), 1.); return; }
   vec3 alb = vCamp > .5 ? uEux : uNous;
   vec4 Ld = texture(uLight, vP.xz / uCell / uGrid);
-  vec3 c = eclairer(alb * (p.y < -.32 ? 0.85 : 0.62), vec3(0, 1, 0), vP, Ld, 1., 0., 0., 0.);
+  vec3 c = eclairer(alb * .62, vec3(0, 1, 0), vP, Ld, 1., 0., 0., 0.);
   o = vec4(finir(c), 1.);
 }`;
 
@@ -112,7 +119,7 @@ uniform vec3 uMat[8];
 in vec3 vP; flat in float vGenre, vAlpha, vSize;
 out vec4 o;
 void main() {
-  gS = uS; vec2 p = gl_PointCoord - .5; float d = length(p) * 2.;
+  gS = uS; gL = uLampOn; vec2 p = gl_PointCoord - .5; float d = length(p) * 2.;
   vec4 Ld = texture(uLight, vP.xz / uCell / uGrid);
   if (vGenre < .5) {
     vec3 c = eclairer(uMat[2], vec3(0, 1, 0), vP, Ld, 1., 0., 0., 0.);
@@ -153,6 +160,15 @@ void main() {
 const FS_NEIGE = `${GLSL_COMMUN}
 out vec4 o; void main() { o = vec4(finir(uSnow * 1.6 + .15), .85); }`;
 
+const VS_LUEURS = `${GLSL_COMMUN}
+layout(location = 0) in vec3 aPos; layout(location = 1) in vec2 aA;
+uniform mat4 uVP; uniform float uPx1;
+out float vPh; out float vTaille;
+void main() { gl_Position = uVP * vec4(aPos, 1.); vTaille = clamp(aA.x * uPx1 / gl_Position.w, 2., 26.); gl_PointSize = vTaille; vPh = aA.y; }`;
+const FS_LUEURS = `${GLSL_COMMUN}
+in float vPh; in float vTaille; out vec4 o;
+void main() { float d = length(gl_PointCoord - .5) * 2.; if (d > 1.) discard; float f = (1. - d); f = f * f * (.85 + .15 * sin(uTemps * 9. + vPh * 6.)); o = vec4(uLampCol * 1.6 * f, f * (.3 + .7 * uNuit)); }`;
+
 const VS_PLEIN = `#version 300 es
 out vec2 uv; void main() { vec2 p = vec2(gl_VertexID == 1 ? 3. : -1., gl_VertexID == 2 ? 3. : -1.); uv = p * .5 + .5; gl_Position = vec4(p, 0., 1.); }`;
 
@@ -190,7 +206,7 @@ const FS_COMPO = `${GLSL_COMMUN}
 in vec2 uv; out vec4 o;
 uniform sampler2D uColor, uDepth, uAOtex; uniform mat4 uInvVP; uniform vec3 uLuneDir, uNuageCoul; uniform vec4 uHors; uniform float uBordY, uEtoiles;
 uniform vec3 uMat[8];
-uniform float uFondu, uSplit, uAOon, uBrumeOn, uBrumeD, uBrumeK; uniform vec3 uBrumeCoul;
+uniform float uFocus, uFondu, uSplit, uAOon, uBrumeOn, uBrumeD, uBrumeK; uniform vec3 uBrumeCoul;
 // le ciel : dégradé, soleil, lune, étoiles, nuages qui dérivent (ils se lisent sur le même champ que leur ombre au sol)
 vec3 cielComplet(vec3 rd) {
   vec3 c = ciel(rd);
@@ -223,7 +239,7 @@ vec3 horsCarte(vec3 rd) {
 }
 void main() {
   bool off = uv.x < uSplit;
-  gS = off ? vec4(0.) : uS;
+  gS = off ? vec4(0.) : uS; gL = off ? 0. : uLampOn;
   float dp = texture(uDepth, uv).r;
   vec4 w = uInvVP * vec4(uv * 2. - 1., dp * 2. - 1., 1.); vec3 P = w.xyz / w.w;
   vec3 rd = normalize(P - uCam); float dist = length(P - uCam);
@@ -233,13 +249,13 @@ void main() {
     if (rd.y < -.0015) {                                                       // sous l'horizon : le faux terrain, qui se perd dans la brume
       col = finir(horsCarte(rd));
       float t = (uBordY - uCam.y) / rd.y;
-      col = mix(col, hz, 1. - exp(-t * uFondu * .5));
+      col = mix(col, hz, 1. - exp(-max(t - uFocus, 0.) * uFondu * .5));
       dist = t;
     } else col = finir(cielComplet(rd));
   } else {
     col = texture(uColor, uv).rgb;
     if (!off && uAOon > .5) col *= texture(uAOtex, uv).r;
-    col = mix(col, hz, 1. - exp(-dist * uFondu));                         // le fondu avec la distance (toujours là)
+    col = mix(col, hz, 1. - exp(-max(dist - uFocus, 0.) * uFondu));        // le fondu avec la distance (toujours là) : il ne commence qu'au-delà du point visé
   }
   if (!off && uBrumeOn > .5) {                                              // la brume au sol : épaisse en bas, légère en haut (intégrale exacte le long du rayon)
     float k = uBrumeK, ry = abs(rd.y) < .002 ? .002 * sign(rd.y + 1e-6) : rd.y;
@@ -271,12 +287,12 @@ export function creerRendu(canvas) {
 
   const progs = {
     sol: programme(gl, VS_SOL, FS_SOL, 'sol'), soldats: programme(gl, VS_SOLDATS, FS_SOLDATS, 'soldats'), parts: programme(gl, VS_PARTS, FS_PARTS, 'particules'),
-    pluie: programme(gl, VS_PLUIE, FS_PLUIE, 'pluie'), neige: programme(gl, VS_NEIGE, FS_NEIGE, 'neige'), reels: programme(gl, REELS.glslVert(), REELS.glslFrag(GLSL_COMMUN), 'vrais soldats'), ssao: programme(gl, VS_PLEIN, FS_SSAO, 'ssao'), flou: programme(gl, VS_PLEIN, FS_FLOU, 'flou'), compo: programme(gl, VS_PLEIN, FS_COMPO, 'composition'),
+    pluie: programme(gl, VS_PLUIE, FS_PLUIE, 'pluie'), neige: programme(gl, VS_NEIGE, FS_NEIGE, 'neige'), lueurs: programme(gl, VS_LUEURS, FS_LUEURS, 'lueurs'), reels: programme(gl, REELS.glslVert(), REELS.glslFrag(GLSL_COMMUN), 'soldats articulés'), jeu: programme(gl, REELS.glslVertJeu(), REELS.glslFragJeu(GLSL_COMMUN), 'soldats du jeu'), ssao: programme(gl, VS_PLEIN, FS_SSAO, 'ssao'), flou: programme(gl, VS_PLEIN, FS_FLOU, 'flou'), compo: programme(gl, VS_PLEIN, FS_COMPO, 'composition'),
   };
   const R = { gl, info, stats: { triangles: 0, appels: 0 }, gpu: { scene: null, ssao: null, composition: null }, largeur: 1, hauteur: 1 };
 
   // ─── les textures de données : la lumière (RGBA8) et les hauteurs (R32F), une case = un texel ───
-  let texLum = null, texHF = null, tampons = null, chunks = [], vaoS = null, vboS = null, vboC = null, vboH = null, masqueSale = true;
+  let texLamp = null, texLum = null, texHF = null, tampons = null, chunks = [], vaoS = null, vboS = null, vboC = null, vboH = null, masqueSale = true;
   const reglerTex = (t, fmt, interne, type, data, filtre) => {
     gl.bindTexture(gl.TEXTURE_2D, t);
     gl.texImage2D(gl.TEXTURE_2D, 0, interne, M.W, M.H, 0, fmt, type, data);
@@ -284,15 +300,17 @@ export function creerRendu(canvas) {
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
   };
   // relier : (re)crée tout ce qui dépend de la taille de la grille
-  R.relier = (M2, L2, F2) => {
+  let LA = null;
+  R.relier = (M2, L2, F2, A2) => {
     for (const c of chunks) if (c) for (const k of ['sol', 'toit']) if (c[k].vao) { gl.deleteVertexArray(c[k].vao); gl.deleteBuffer(c[k].vbo); gl.deleteBuffer(c[k].ibo); }
-    for (const t of [texLum, texHF]) if (t) gl.deleteTexture(t);
+    for (const t of [texLamp, texLum, texHF]) if (t) gl.deleteTexture(t);
     if (vaoS) { gl.deleteVertexArray(vaoS); gl.deleteBuffer(vboS); gl.deleteBuffer(vboC); gl.deleteBuffer(vboH); }
-    M = M2; L = L2; F = F2;
-    texLum = gl.createTexture(); texHF = gl.createTexture();
+    M = M2; L = L2; F = F2; LA = A2;
+    texLum = gl.createTexture(); texHF = gl.createTexture(); texLamp = gl.createTexture();
     gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
     reglerTex(texLum, gl.RGBA, gl.RGBA8, gl.UNSIGNED_BYTE, L.tex, gl.LINEAR);
     reglerTex(texHF, gl.RED, gl.R32F, gl.FLOAT, L.hf, gl.NEAREST);
+    reglerTex(texLamp, gl.RED, gl.R8, gl.UNSIGNED_BYTE, LA.tex, gl.LINEAR);
     tampons = creerTampons(M); chunks = new Array(M.cw * M.chh).fill(null);
     vaoS = gl.createVertexArray(); vboS = gl.createBuffer(); vboC = gl.createBuffer(); vboH = gl.createBuffer();
     gl.bindVertexArray(vaoS);
@@ -310,6 +328,7 @@ export function creerRendu(canvas) {
     gl.pixelStorei(gl.UNPACK_ROW_LENGTH, 0); gl.pixelStorei(gl.UNPACK_SKIP_PIXELS, 0); gl.pixelStorei(gl.UNPACK_SKIP_ROWS, 0); gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
   };
   R.majLumiere = region => sous(texLum, region, gl.RGBA, gl.UNSIGNED_BYTE, L.tex, 4);
+  R.majLampes = region => sous(texLamp, region, gl.RED, gl.UNSIGNED_BYTE, LA.tex, 1);
   R.majHauteurs = region => sous(texHF, region, gl.RED, gl.FLOAT, L.hf, 4);
 
   // ─── les maillages, un par chunk (sol et toit) ───
@@ -339,6 +358,9 @@ export function creerRendu(canvas) {
   const vaoP = gl.createVertexArray(), vboP = gl.createBuffer(); let capP = 0;
   gl.bindVertexArray(vaoP); gl.bindBuffer(gl.ARRAY_BUFFER, vboP);
   gl.enableVertexAttribArray(0); gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 24, 0); gl.enableVertexAttribArray(1); gl.vertexAttribPointer(1, 3, gl.FLOAT, false, 24, 12); gl.bindVertexArray(null);
+  const vaoL = gl.createVertexArray(), vboL = gl.createBuffer(); let capL = 0;
+  gl.bindVertexArray(vaoL); gl.bindBuffer(gl.ARRAY_BUFFER, vboL);
+  gl.enableVertexAttribArray(0); gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 20, 0); gl.enableVertexAttribArray(1); gl.vertexAttribPointer(1, 2, gl.FLOAT, false, 20, 12); gl.bindVertexArray(null);
   const vaoVide = gl.createVertexArray();
 
   // ─── les vrais soldats : le modèle du jeu (deux niveaux de détail), un tampon d'instances de 26 nombres par homme ───
@@ -355,6 +377,18 @@ export function creerRendu(canvas) {
     gl.bindVertexArray(null);
     return (vaoR[niveau] = { v, n: Mo.triangles * 3 });
   };
+  // les soldats du jeu (boîte, silhouette allégée, équipé) : une géométrie par style (rendu/geometries.js), un tampon d'instances chacun
+  const instJ = {}, vaoJ = {}, capJ = {};
+  const styleJ = style => {
+    if (vaoJ[style]) return vaoJ[style];
+    const G = REELS.geometrieJeu(style), v = gl.createVertexArray(), P = progs.jeu; gl.bindVertexArray(v);
+    for (const [nom, k, cle] of REELS.PAR_SOMMET_JEU) { const loc = gl.getAttribLocation(P.p, nom); if (loc < 0) continue; const b = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, b); gl.bufferData(gl.ARRAY_BUFFER, G[cle], gl.STATIC_DRAW); gl.enableVertexAttribArray(loc); gl.vertexAttribPointer(loc, k, gl.FLOAT, false, 0, 0); }
+    instJ[style] = gl.createBuffer(); capJ[style] = 0; gl.bindBuffer(gl.ARRAY_BUFFER, instJ[style]);
+    for (const [nom, k, off] of REELS.ATTRIBUTS_JEU) { const loc = gl.getAttribLocation(P.p, nom); if (loc < 0) continue; gl.enableVertexAttribArray(loc); gl.vertexAttribPointer(loc, k, gl.FLOAT, false, REELS.FLOATS_JEU * 4, off * 4); gl.vertexAttribDivisor(loc, 1); }
+    gl.bindVertexArray(null);
+    return (vaoJ[style] = { v, n: G.n });
+  };
+  const PAL_J = Object.fromEntries(Object.entries(REELS.COULEURS_JEU).map(([k, l]) => [k, COUL[l]]));
   const paletteReels = () => { const o = {}; for (const [k, l] of Object.entries(REELS.COULEURS)) o[k] = COUL[l]; for (const [k, ls] of Object.entries(REELS.COULEURS_LISTES)) o[k] = ls.flatMap(l => COUL[l]); return o; };
   const PAL_R = paletteReels();
 
@@ -402,6 +436,7 @@ export function creerRendu(canvas) {
   };
 
   const uMat = new Float32Array(COULEURS_MATIERES.flat());
+  const LAMPE_COUL = COUL.o.map((v, i) => v * 0.45 + COUL.orange[i] * 0.55);       // une flamme : l'os qui tire sur l'orange d'alerte
   const NEIGE_COUL = COUL.o.map((v, i) => (v * 0.78 + COUL.r[i] * 0.22) * 0.72);
   const poserCommun = (P, E, cam, m) => {
     const u = P.u, U3 = (n, v) => u[n] && gl.uniform3f(u[n], v[0], v[1], v[2]);
@@ -421,6 +456,8 @@ export function creerRendu(canvas) {
       gl.uniform4fv(u.uFlashA, a); gl.uniform4fv(u.uFlashB, b);
     }
     u.uMat && gl.uniform3fv(u.uMat, uMat);
+    if (u.uLamp) { gl.activeTexture(gl.TEXTURE4); gl.bindTexture(gl.TEXTURE_2D, texLamp); gl.uniform1i(u.uLamp, 4); gl.activeTexture(gl.TEXTURE0); }
+    u.uLampOn && gl.uniform1f(u.uLampOn, E.etapes[6] ? 1 : 0); u.uLampCol && gl.uniform3f(u.uLampCol, ...LAMPE_COUL);
   };
 
   // Dessine une image. `E` : { camera, ciel, etapes: {1..8: bool}, flashs, particules: {n, tampon}, temps, split, toitsTransparents, ssaoEchantillons, brume: 'simple'|'complete' }
@@ -442,12 +479,19 @@ export function creerRendu(canvas) {
       // les soldats
       P = progs.soldats; gl.useProgram(P.p); poserCommun(P, ee, E.camera, m);
       gl.activeTexture(gl.TEXTURE1); gl.bindTexture(gl.TEXTURE_2D, texHF); gl.uniform1i(P.u.uHF, 1);
-      gl.uniform1f(P.u.uPx17, 1.7 * (H / 2) / Math.tan(E.camera.fov / 2));
-      gl.uniform3f(P.u.uNous, ...COUL.n); gl.uniform3f(P.u.uEux, ...COUL.x);
+      gl.uniform3f(P.u.uNous, ...COUL.n); gl.uniform3f(P.u.uEux, ...COUL.x); gl.uniform3f(P.u.uOmbre, ...COUL.t);
       gl.bindVertexArray(vaoS);
       gl.drawArrays(gl.POINTS, 0, F.n); R.stats.appels++;
       gl.activeTexture(gl.TEXTURE0);
-      if (E.reels && E.reels.n) {                                          // les vrais soldats du jeu, de près
+      if (E.jeu) {                                                         // les soldats du jeu : la boîte, la silhouette allégée, l'équipé
+        P = progs.jeu; let prêt = false;
+        for (const style of ['boite', 'legere', 'equipe']) {
+          const L = E.jeu[style]; if (!L || !L.n) continue;
+          if (!prêt) { gl.useProgram(P.p); poserCommun(P, ee, E.camera, m); gl.uniform1f(P.u.uT, E.temps); gl.uniform1f(P.u.uBalance, 1); gl.uniform2f(P.u.uEch, 1, 1); gl.uniform2f(P.u.uSoleil, .5, .6); for (const [k, v] of Object.entries(PAL_J)) if (P.u[k]) gl.uniform3f(P.u[k], ...v); prêt = true; }
+          const g = styleJ(style); gl.bindVertexArray(g.v); gl.drawArraysInstanced(gl.TRIANGLES, 0, g.n, L.n); R.stats.appels++; R.stats.triangles += g.n / 3 * L.n;
+        }
+      }
+      if (E.reels && E.reels.n) {                                          // les vrais soldats articulés, de près
         P = progs.reels; gl.useProgram(P.p); poserCommun(P, ee, E.camera, m);
         gl.uniform1f(P.u.uShade, 0); gl.uniform1f(P.u.uVoir, 1);
         for (const [k, v] of Object.entries(PAL_R)) if (P.u[k]) (v.length === 3 ? gl.uniform3f(P.u[k], ...v) : gl.uniform3fv(P.u[k], v));
@@ -460,6 +504,11 @@ export function creerRendu(canvas) {
       if (nd) { gl.drawArrays(gl.POINTS, 0, nd); R.stats.appels++; }
       gl.enable(gl.BLEND); gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA); gl.depthMask(false);
       if (np > nd) { gl.useProgram(P.p); gl.bindVertexArray(vaoP); gl.drawArrays(gl.POINTS, nd, np - nd); R.stats.appels++; }
+      if (E.etapes[6] && E.lueurs && E.lueurs.n) {                          // la flamme des lanternes et des lampes : un point doux, ajouté à l'image
+        P = progs.lueurs; gl.useProgram(P.p); poserCommun(P, ee, E.camera, m); gl.uniform1f(P.u.uPx1, (H / 2) / Math.tan(E.camera.fov / 2));
+        gl.blendFunc(gl.SRC_ALPHA, gl.ONE); gl.bindVertexArray(vaoL); gl.drawArrays(gl.POINTS, 0, E.lueurs.n); R.stats.appels++;
+        gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+      }
       if (E.toitsTransparents) {
         P = progs.sol; gl.useProgram(P.p); poserCommun(P, ee, E.camera, m); gl.uniform1f(P.u.uAlpha, 0.28);
         for (const c of chunks) if (c && c.toit.ni) { gl.bindVertexArray(c.toit.vao); gl.drawElements(gl.TRIANGLES, c.toit.ni, gl.UNSIGNED_INT, 0); R.stats.triangles += c.toit.ni / 3; R.stats.appels++; }
@@ -479,6 +528,13 @@ export function creerRendu(canvas) {
     if (E.particules.n) { gl.bindBuffer(gl.ARRAY_BUFFER, vboP); const oct = E.particules.n * 24; if (oct > capP) { capP = Math.max(oct, 24 * 2048); gl.bufferData(gl.ARRAY_BUFFER, capP, gl.DYNAMIC_DRAW); } gl.bufferSubData(gl.ARRAY_BUFFER, 0, E.particules.tampon, 0, E.particules.n * 6); }
     if ((E.reels && E.reels.n) || masqueSale) { gl.bindBuffer(gl.ARRAY_BUFFER, vboH); gl.bufferSubData(gl.ARRAY_BUFFER, 0, E.masque, 0, F.n); masqueSale = !!(E.reels && E.reels.n); }
     if (E.reels && E.reels.n) { gl.bindBuffer(gl.ARRAY_BUFFER, instR); const oct = E.reels.n * REELS.FLOATS * 4; if (oct > capR) { capR = oct * 2; gl.bufferData(gl.ARRAY_BUFFER, capR, gl.DYNAMIC_DRAW); } gl.bufferSubData(gl.ARRAY_BUFFER, 0, E.reels.data, 0, E.reels.n * REELS.FLOATS); }
+    if (E.lueurs && E.lueurs.n) { gl.bindBuffer(gl.ARRAY_BUFFER, vboL); const oct = E.lueurs.n * 20; if (oct > capL) { capL = Math.max(oct, 20 * 512); gl.bufferData(gl.ARRAY_BUFFER, capL, gl.DYNAMIC_DRAW); } gl.bufferSubData(gl.ARRAY_BUFFER, 0, E.lueurs.data, 0, E.lueurs.n * 5); }
+    for (const style of ['boite', 'legere', 'equipe']) {
+      const L = E.jeu && E.jeu[style]; if (!L || !L.n) continue;
+      styleJ(style); gl.bindBuffer(gl.ARRAY_BUFFER, instJ[style]); const oct = L.n * REELS.FLOATS_JEU * 4;
+      if (oct > capJ[style]) { capJ[style] = oct * 2; gl.bufferData(gl.ARRAY_BUFFER, capJ[style], gl.DYNAMIC_DRAW); }
+      gl.bufferSubData(gl.ARRAY_BUFFER, 0, L.data, 0, L.n * REELS.FLOATS_JEU);
+    }
     const tout = E.etapes, partage = E.moitie && E.split > 0;
     chrono('scene', () => {
       if (partage) {
@@ -505,6 +561,7 @@ export function creerRendu(canvas) {
       gl.activeTexture(gl.TEXTURE2); gl.bindTexture(gl.TEXTURE_2D, cSc.p); gl.uniform1i(P.u.uDepth, 2);
       gl.activeTexture(gl.TEXTURE3); gl.bindTexture(gl.TEXTURE_2D, cA2.t); gl.uniform1i(P.u.uAOtex, 3);
       gl.uniformMatrix4fv(P.u.uInvVP, false, m.invVP);
+      gl.uniform1f(P.u.uFocus, E.camera.distance * 0.9);
       gl.uniform1f(P.u.uFondu, (ATMOSPHERE.fondu[E.brume] || ATMOSPHERE.fondu.simple) * (1 + 3.5 * (tout[7] ? E.ciel.brouillard : 0)));
       gl.uniform1f(P.u.uSplit, partage ? E.split : 0); gl.uniform1f(P.u.uAOon, ssao ? 1 : 0);
       gl.uniform1f(P.u.uBrumeOn, tout[5] || (tout[7] && E.ciel.brouillard > 0.02) ? 1 : 0);

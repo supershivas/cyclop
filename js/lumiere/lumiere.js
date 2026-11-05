@@ -3,7 +3,6 @@
 //   R = visibilité du soleil (étape 1)   G = ouverture au ciel (étape 2)   B = lumière propagée (étape 4)   A = creux, pour les flaques (étape 7)
 // Aucun chronomètre ici : mesures.js mesure autour de chaque appel.
 import { MONDE, SOLEIL } from './config.js?v=0.112.0';
-import { ROOF_Q } from './terrain.js?v=0.112.0';
 
 const NIVEAU_MAX = 240, PAS_QUART = MONDE.quartsParCube;
 
@@ -93,8 +92,8 @@ export function calculerAO(M, L, region, rayonM = 6, nbDirs = 8) {
 export function calculerFlood(M, L, region) {
   const { W, H } = M, sol = M.sol, toit = M.toit, out = L.tex;
   const perte = Math.max(1, Math.round(16 / M.cpm)), { i0, j0, i1, j1 } = region;
-  const plafond = idx => toit[idx] ? toit[idx] - ROOF_Q : 32767;
-  const passe = (a, b) => Math.min(plafond(a), plafond(b)) - Math.max(sol[a], sol[b]) >= PAS_QUART;
+  const plafond = idx => toit[idx] ? toit[idx] - M.roofQ : 32767;
+  const passe = (a, b) => Math.min(plafond(a), plafond(b)) - Math.max(sol[a], sol[b]) >= M.cubeQ;
   const file = [];
   for (let j = j0; j <= j1; j++) for (let i = i0; i <= i1; i++) { const idx = j * W + i; out[idx * 4 + 2] = toit[idx] ? 0 : NIVEAU_MAX; }
   const voisins = [[1, 0], [-1, 0], [0, 1], [0, -1]];

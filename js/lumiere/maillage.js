@@ -2,7 +2,7 @@
 // Logique pure (des tableaux de nombres) : rendu.js les téléverse tels quels. Un sommet = 8 nombres : x, y, z (mètres), ao, variation, normale (0..5), matière, « dessous » (1 sous un toit).
 // L'AO des arêtes (étape 2) est cuite ici, façon Minecraft : un sommet sombrit selon les trois colonnes qui le touchent. `opts.ao` faux : tout vaut 1.
 import { MONDE } from './config.js?v=0.112.0';
-import { MAT, ROOF_Q } from './terrain.js?v=0.112.0';
+import { MAT } from './terrain.js?v=0.112.0';
 
 export const FLOATS = 8;
 const hache = (i, j) => { let h = Math.imul(i, 374761393) ^ Math.imul(j, 668265263); h = Math.imul(h ^ (h >>> 13), 1274126177); return ((h ^ (h >>> 16)) >>> 0) / 4294967296; };
@@ -28,7 +28,7 @@ export function construireChunk(M, cx, cy, { ao = true } = {}, B = creerTampons(
   B.sol.nv = B.sol.nx = B.toit.nv = B.toit.nx = 0;
   const T = (i, j) => (i < 0 || j < 0 || i >= W || j >= H) ? -1 : top[j * W + i];
   const tq = (i, j, ref) => { const t = T(i, j); return t < 0 ? ref : t; };       // hors carte : comme la colonne (pas de mur)
-  const occ = (n, ref) => clamp01((n - ref) / 8);
+  const occ = (n, ref) => clamp01((n - ref) / (8 * M.cpm));
   const coin = (i, j, sx, sz, ref) => {                                           // l'AO du sommet (i + (sx>0), j + (sz>0)) du dessus de (i, j)
     if (!ao) return 1;
     const oa = occ(tq(i + sx, j, ref), ref), ob = occ(tq(i, j + sz, ref), ref), od = occ(tq(i + sx, j + sz, ref), ref);
@@ -40,13 +40,13 @@ export function construireChunk(M, cx, cy, { ao = true } = {}, B = creerTampons(
     const idx = j * W + i, tt = top[idx], r = toit[idx], vr = hache(i, j);
     const x0 = i * cell, x1 = x0 + cell, z0 = j * cell, z1 = z0 + cell;
     const sg = r ? sol[idx] : tt;                                                // la surface du sol (sous le toit, le plancher de l'abri)
-    const topMat = r ? MAT.TOIT : veg[idx] ? (veg[idx] >= 12 ? MAT.TRONC : MAT.BUISSON) : mat[idx];
+    const topMat = r ? MAT.TOIT : veg[idx] ? (veg[idx] >= 12 * M.cpm ? MAT.TRONC : MAT.BUISSON) : mat[idx];
     // le dessus : visible (toit, sol, végétation) — le plancher d'un abri est dessous
     const ys = tt * mq;
     quad(B.sol, [x0, ys, z0], [x1, ys, z0], [x1, ys, z1], [x0, ys, z1], 0, r ? MAT.TOIT : topMat, 0, [coin(i, j, -1, -1, tt), coin(i, j, 1, -1, tt), coin(i, j, 1, 1, tt), coin(i, j, -1, 1, tt)], vr);
     if (r) {                                                                       // le toit va dans le maillage du sol à l'origine ; on le déplace dans celui du toit
       B.sol.nv -= 4; B.sol.nx -= 6;
-      const yb = (r - ROOF_Q) * mq, yt = r * mq, yf = sol[idx] * mq;
+      const yb = (r - M.roofQ) * mq, yt = r * mq, yf = sol[idx] * mq;
       quad(B.toit, [x0, yt, z0], [x1, yt, z0], [x1, yt, z1], [x0, yt, z1], 0, MAT.TOIT, 0, [coin(i, j, -1, -1, r), coin(i, j, 1, -1, r), coin(i, j, 1, 1, r), coin(i, j, -1, 1, r)], vr);
       quad(B.toit, [x0, yb, z1], [x1, yb, z1], [x1, yb, z0], [x0, yb, z0], 1, MAT.TOIT, 1, [0.55, 0.55, 0.55, 0.55], vr);
       quad(B.sol, [x0, yf, z0], [x1, yf, z0], [x1, yf, z1], [x0, yf, z1], 0, mat[idx], 1, [0.8, 0.8, 0.8, 0.8], vr);
@@ -60,7 +60,7 @@ export function construireChunk(M, cx, cy, { ao = true } = {}, B = creerTampons(
       // le mur de terre : du sol voisin au sol de cette colonne
       if (sg > nSol) {
         const ya = nSol * mq, yb = sg * mq, nn = d === 0 ? 2 : d === 1 ? 3 : d === 2 ? 4 : 5;
-        const m2 = r ? mat[idx] : veg[idx] ? (veg[idx] >= 12 ? MAT.TRONC : MAT.BUISSON) : mat[idx];
+        const m2 = r ? mat[idx] : veg[idx] ? (veg[idx] >= 12 * M.cpm ? MAT.TRONC : MAT.BUISSON) : mat[idx];
         const hb = fond + (1 - fond) * clamp01((sg - nSol) / 8) * 0, top1 = 1;
         let a, b, c, e;
         if (d === 0) { a = [x1, ya, z1]; b = [x1, ya, z0]; c = [x1, yb, z0]; e = [x1, yb, z1]; }
@@ -73,7 +73,7 @@ export function construireChunk(M, cx, cy, { ao = true } = {}, B = creerTampons(
       if (r && !dehors && nRoof !== r) {
         const nt = top[nidx];
         if (nt < r) {
-          const ya = Math.max(r - ROOF_Q, nt) * mq, yb = r * mq, nn = d === 0 ? 2 : d === 1 ? 3 : d === 2 ? 4 : 5;
+          const ya = Math.max(r - M.roofQ, nt) * mq, yb = r * mq, nn = d === 0 ? 2 : d === 1 ? 3 : d === 2 ? 4 : 5;
           let a, b, c, e;
           if (d === 0) { a = [x1, ya, z1]; b = [x1, ya, z0]; c = [x1, yb, z0]; e = [x1, yb, z1]; }
           else if (d === 1) { a = [x0, ya, z0]; b = [x0, ya, z1]; c = [x0, yb, z1]; e = [x0, yb, z0]; }

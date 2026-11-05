@@ -2,6 +2,9 @@
 // Une entrée par version qui touche au labo, la plus récente en haut. `ref` : « sujet-Lettre » (la lettre est celle de la variante,
 // A étant l'actuelle). À chaque changement du labo : une entrée ici, avec `depuis` sur les variantes ajoutées ou changées (labo.js).
 export const JOURNAL = [
+  { version: '0.113.0', date: '2026-11-05', items: [
+    { genre: 'mis-a-jour', texte: 'Labo lumière : les soldats du jeu à tous les niveaux de détail (boîte, silhouette, équipé, articulé), des lanternes dans les tranchées et des lampes sur certains soldats, une carte de 512 × 320 m et une colline' },
+  ] },
   { version: '0.112.0', date: '2026-11-05', items: [
     { genre: 'mis-a-jour', texte: 'Labo lumière : les vrais soldats articulés du jeu de près, un faux terrain qui prolonge la carte jusqu\'à l\'horizon, des nuages (et leur ombre), des étoiles et la lune, cinq temps (brouillard et neige en plus) qui peuvent changer tout seuls' },
   ] },
