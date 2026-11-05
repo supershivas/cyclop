@@ -1,5 +1,9 @@
 # Journal des versions
 
+## 0.115.0 — 2026-11-05
+- La lumière du labo lumière entre dans le jeu : des ombres de relief douces, les creux, les tranchées et les hommes qui s'y trouvent plus sombres
+- Le jour s'éteint sous les toits de bois, et des flaques se forment dans les creux quand il pleut
+
 ## 0.114.0 — 2026-11-05
 - Labo lumière : les soldats ne clignotent plus, et les ombres portées sont dynamiques (soldats, arbres, chars, biplans, fumée)
 - Un ciel plus réaliste (soleil, nuages éclairés), l'AO de toute la carte réparti sur plusieurs images, un banc de mesure fiable sous Firefox

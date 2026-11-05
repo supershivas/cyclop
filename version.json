@@ -1,8 +1,8 @@
 {
-  "version": "0.114.0",
+  "version": "0.115.0",
   "date": "2026-11-05",
   "changes": [
-    "Labo lumière : les soldats ne clignotent plus, et les ombres portées sont dynamiques (soldats, arbres, chars, biplans, fumée)",
-    "Un ciel plus réaliste (soleil, nuages éclairés), l'AO de toute la carte réparti sur plusieurs images, un banc de mesure fiable sous Firefox"
+    "La lumière du labo lumière entre dans le jeu : des ombres de relief douces, les creux, les tranchées et les hommes qui s'y trouvent plus sombres",
+    "Le jour s'éteint sous les toits de bois, et des flaques se forment dans les creux quand il pleut"
   ]
 }
