@@ -58,3 +58,5 @@ Tout est au labo (`js/lumiere/README.md`, « Ajouts de la v0.114.0 » : le déta
 
 ## Session 2 commencée (v0.114.0)
 Le scintillement vu par Jérôme existe sans la lumière (aussi en « tout désactivé ») mais **pas dans le jeu** : on laisse tomber le sujet. Première pièce posée : **l'ouverture au ciel du relief dans le jeu** (`js/rendu/ao-sol.js`, `rendu.aoSol`, éteinte, références intactes : voir `docs/domaines/rendu.md`). Suite proposée, dans l'ordre : (1) le soleil du labo à la place des ombres de relief du jeu, derrière une option ; (2) lumière propagée sous les abris (`tr.toit`) ; (3) cavité (flaques) avec la météo du jeu ; (4) la lecture par le nuanceur des soldats ; (5) bascule : l'option devient celle du jeu, `rendu.json` et `fumee.json` réécrits en regardant chaque image. La carte d'ombre (S3) vient ensuite.
+
+**Étape 1 faite** : le soleil du labo sur le sol du jeu (`rendu.soleilSol`, éteint ; voir `docs/domaines/rendu.md`). Prochaine : (2) la lumière propagée sous les abris.

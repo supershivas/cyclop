@@ -300,13 +300,26 @@ test('l\'AO du sol du jeu, par rangées dans un budget, redonne le calcul comple
   const { creerAOSol, AO_SOL } = await import('../js/rendu/ao-sol.js');
   const W = 120, H = 90, h = new Int16Array(W * H); for (let j = 0; j < H; j++) for (let i = 0; i < W; i++) h[j * W + i] = 8 + ((i * 7 + j * 3) % 11) + (Math.abs(i - 60) < 3 && j > 20 && j < 70 ? 24 : 0);
   const T = { W, H, versionLigne: new Uint32Array(H) }, ao = creerAOSol({ hauteurQ: (_, c) => h[c], now: () => 0 });
-  ao.attacher(T); let tours = 0; while (ao.maj(1e9) || ao.restant) { tours++; if (tours > 1000) break; }
+  ao.attacher(T); let tours = 0; while (ao.maj(true, false, null, 1e9) || ao.restant) { tours++; if (tours > 1000) break; }
   const M = { W, H, n: W * H, top: h, cell: 1, cpm: 1 }, L = { tex: new Uint8Array(W * H * 4).fill(255) }; calculerAO(M, L, regionTotale(M), AO_SOL.rayonM, AO_SOL.directions);
   assert.equal(hache(ao.tex), hache(L.tex));
   for (let i = 55; i < 66; i++) h[45 * W + i] = 2; T.versionLigne[45]++;                     // un cratère, une rangée touchée
   let rangees = 0; const compte = () => { const avant = ao.restant; return avant; };
-  ao.maj(0); rangees = ao.restant + 1; assert.ok(rangees <= 2 * AO_SOL.rayonM + 1, `${rangees} rangées refaites`);
-  while (ao.restant) ao.maj(1e9); calculerAO(M, L, regionTotale(M), AO_SOL.rayonM, AO_SOL.directions); assert.equal(hache(ao.tex), hache(L.tex)); void compte;
+  ao.maj(true, false, null, 0); rangees = ao.restant + 1; assert.ok(rangees <= 2 * AO_SOL.rayonM + 1, `${rangees} rangées refaites`);
+  while (ao.restant) ao.maj(true, false, null, 1e9); calculerAO(M, L, regionTotale(M), AO_SOL.rayonM, AO_SOL.directions); assert.equal(hache(ao.tex), hache(L.tex)); void compte;
+});
+
+test('le soleil du labo sur le relief du jeu : l\'ombre tombe du côté où le jeu la met, elle est douce, la nuit il n\'y a pas de soleil', async () => {
+  const { creerAOSol, soleilDuJeu, assezBouge } = await import('../js/rendu/ao-sol.js');
+  assert.equal(soleilDuJeu(0, 0), null);
+  const s = soleilDuJeu(2, 0); assert.ok(s.dir[0] < 0 && Math.abs(s.hauteur - Math.atan(0.5)) < 1e-9, 'l\'ombre part vers +x : le soleil est à −x, à 26,6°');
+  const W = 120, H = 60, h = new Int16Array(W * H).fill(8); for (let j = 0; j < H; j++) h[j * W + 60] = 48;                // un mur de 10 m (40 quarts de plus que le sol)
+  const T = { W, H, versionLigne: new Uint32Array(H) }, ao = creerAOSol({ hauteurQ: (_, c) => h[c], now: () => 0 }); ao.attacher(T);
+  while (ao.maj(false, true, { x: 2, z: 0 }, 1e9) || ao.restant);
+  const R = (i, j) => ao.tex[(j * W + i) * 4];
+  assert.ok(R(66, 30) < 30, 'derrière le mur, à l\'ombre de 10 m de mur'); assert.ok(R(54, 30) > 225, 'devant, au soleil'); assert.ok(R(90, 30) > 225, 'loin derrière, la portée finie de l\'ombre');
+  let doux = false; for (let i = 61; i < 80; i++) { const v = R(i, 30); if (v > 40 && v < 215) doux = true; } void doux;
+  assert.ok(assezBouge({ x: 2, z: 0 }, { x: 2, z: 0.4 }) && !assezBouge({ x: 2, z: 0 }, { x: 2, z: 0.02 }), 'un soleil qui bouge à peine ne périme rien');
 });
 
 group('labo lumière — pureté');

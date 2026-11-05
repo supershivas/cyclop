@@ -133,7 +133,7 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
   // Les ombres du relief (labo « La lumière dans le relief », éteintes dans le jeu) : une case que le soleil ne voit pas prend la couleur de sa paroi dans la texture du sol ; le soleil du labo : saisons, azimut
   let ombresRelief = false, ombresNuages = false, soleilReglage = null, ombreVu = null;
   const ombres = creerOmbresRelief({ hauteurQ });
-  let aoSol = false, aoTex = null, aoAttente = 0, aoSale = false;      // l'ouverture au ciel du relief (éteinte : `rendu.aoSol`) ; sa texture n'est créée qu'au premier besoin (un objet de plus d'emblée décale les tirages d'identifiants de three : les images de référence)
+  let aoSol = false, soleilSol = false, aoTex = null, aoAttente = 0, aoSale = false;      // l'ouverture au ciel du relief (éteinte : `rendu.aoSol`) ; sa texture n'est créée qu'au premier besoin (un objet de plus d'emblée décale les tirages d'identifiants de three : les images de référence)
   const ao = creerAOSol({ hauteurQ });
   const soleilCase = { x: 0, z: 0 }, ecriture = { ms: 0, n: 0, rangees: 0, max: 0, maxOmbre: 0 };      // mesure : la réécriture de la texture du sol
   let B = null, T = null, faux = null, fauxU = null;
@@ -148,7 +148,7 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
     uniforms: { uSol: { value: null }, uTaille: { value: new THREE.Vector2(1, 1) }, uBord: { value: leBord ? leBord.fondu : 0 }, uBordCoul: { value: leBord ? col(leBord.ciel) : new THREE.Color(0) },
       uKaki: { value: new THREE.Color(0) }, uVert: { value: new THREE.Color(0) }, uGlaise: { value: new THREE.Color(0) }, uDissoudre: { value: 0 },
       uSuivre: { value: 0 }, uVersSoleil: { value: new THREE.Vector2(0, 1) },
-      uAO: { value: null }, uAOon: { value: 0 },
+      uAO: { value: null }, uAOon: { value: 0 }, uSunOn: { value: 0 },
       uBiseau: { value: 0 }, uNuage: { value: 0 }, uTemps: { value: 0 }, uVent: { value: new THREE.Vector2(NUAGES_VENT[0], NUAGES_VENT[1]) } },      // l'ombre des nuages (labo) : la part du sol couverte (0 : rien), l'horloge de l'image, le vent       // les parois qui suivent le soleil (labo) : 1 et la direction du soleil, vers lui      // (le bord qui se dissout dans le faux terrain : `faireFaux`)
     vertexShader: SH.solMat.v,
     fragmentShader: SH.solMat.f,
@@ -503,13 +503,14 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
     const h = horloge(B), gel = h.enneige ? 2 : h.gel ? 1 : 0;       // 2 : la neige blanchit le sol (apparence.js)
     if (gel !== gelVu) { tout = true; gelVu = gel; }
     const sv = soldats.soleilUniform.value; soleilCase.x = sv.x; soleilCase.z = sv.y;
-    ombres.maj(ombresRelief, soleilCase, dt);
-    if (aoSol) {                                                     // l'ouverture au ciel : par rangées dans un budget, la texture renvoyée au plus toutes les 0,25 s
+    ombres.maj(ombresRelief && !soleilSol, soleilCase, dt);
+    const soleilLà = soleilSol && Math.hypot(soleilCase.x, soleilCase.z) > 0.05;      // la nuit et le ciel couvert : pas de soleil, pas d'ombre
+    if (aoSol || soleilSol) {                                                     // l'ouverture au ciel : par rangées dans un budget, la texture renvoyée au plus toutes les 0,25 s
       if (!aoTex) { aoTex = new THREE.DataTexture(ao.tex, ao.largeur, ao.hauteur, THREE.RGBAFormat, THREE.UnsignedByteType); aoTex.magFilter = aoTex.minFilter = THREE.LinearFilter; aoTex.generateMipmaps = false; aoTex.needsUpdate = true; solMat.uniforms.uAO.value = aoTex; }
-      aoAttente -= dt; if (ao.maj()) aoSale = true;
+      aoAttente -= dt; if (ao.maj(aoSol, soleilSol, soleilCase)) aoSale = true;
       if (aoSale && aoAttente <= 0) { aoTex.needsUpdate = true; aoAttente = 0.25; aoSale = false; }
     }
-    solMat.uniforms.uAOon.value = aoSol && aoTex ? 1 : 0;
+    solMat.uniforms.uAOon.value = aoSol && aoTex ? 1 : 0; solMat.uniforms.uSunOn.value = soleilLà && aoTex ? 1 : 0;
     const om = ombres.masque, omV = ombres.versions;
     if (!tout) majOmbresSol(dt);
     // l'eau change quelques rangées à chaque pas : on n'envoie la texture qu'un peu plus tard
@@ -755,6 +756,8 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
     // le style de la nuit : 'halos' (le jeu), 'doux', 'trame' (l'ancienne, gardée au labo)
     set styleNuit(m) { temps.setStyleNuit(m); },
     get finesse() { return finesse; },
+    get soleilSol() { return soleilSol; },
+    set soleilSol(v) { soleilSol = !!v; },                            // le soleil du labo lumière sur le sol, à la place des ombres de relief (session 2 ; éteint)
     get aoSol() { return aoSol; },
     set aoSol(v) { aoSol = !!v; },                                    // l'ouverture au ciel du relief sur le sol (session 2 du chantier lumière ; éteinte)
     get ombresRelief() { return ombresRelief; },
