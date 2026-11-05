@@ -16,7 +16,7 @@ la danse macabre, la catastrophe peinte avec calme. L'intention est dans `DESIGN
 
 - **Production** : https://supershivas.github.io/cyclop/ (le dépôt s'appelle
   `supershivas/cyclop`)
-- **Labo** : https://supershivas.github.io/cyclop/labo.html
+- **Labo** : https://supershivas.github.io/cyclop/labo.html ; **Labo lumière** (une page à part, v0.111.0) : https://supershivas.github.io/cyclop/labo-lumiere.html
 - **Genre** : stratégie et gestion, temps réel avec pause active. Boucle
   principale : la bataille de plusieurs jours (jour : ordres et barrages ; nuit :
   l'évolution du terrain en lot).
@@ -96,6 +96,7 @@ Souris et clavier (choisir, marcher, barrages 1-2-3, avion 4, génie 6, pause Es
 | `js/eaux.js`, `generateur.js`, saisons, secteurs, ponts, `js/chars.js`, `js/avions.js`, mitraillage aérien | `docs/domaines/terrain-engins.md` |
 | `js/reseau/`, le jeu à deux, `lancerMarche`, `executerCmd` (chargé seul dans `js/reseau/`) | `docs/domaines/reseau.md` |
 | `labo.html`, `js/labo*.js`, `atelier.html`, `js/atelier*.js`, `design-store.js`, contenu publié | `docs/domaines/labo-atelier.md` |
+| `labo-lumiere.html`, `js/labo-lumiere.js`, `js/lumiere/` : la lumière en voxels, ses étapes, ses mesures | `js/lumiere/README.md` (+ `labo-atelier.md`) |
 | `test/`, `outils/fumee.mjs`, `outils/rendu-empreinte.mjs`, `scripts/` : références, mesures | `docs/domaines/tests.md` |
 
 Autres : `DESIGN.md` (l'intention), `ROADMAP.md` (`docs/pistes-avancees.md` : les pistes non construites), `docs/archives/` (ce qui a été retiré), `docs/refonte-rendu3d.md`.
@@ -106,6 +107,7 @@ Autres : `DESIGN.md` (l'intention), `ROADMAP.md` (`docs/pistes-avancees.md` : le
 - Rendu : `rendu3d.js` (three.js, la caméra, l'API) + `rendu/` (soldats, sol, ciel, temps, effets, ponts, chars, avions). Les ouvrages des tranchées : `rendu/tranchee-modeles.js` (trois niveaux de détail, choisis selon le zoom : `rendu.niveauTranchees` vaut `'auto'`, v0.88.1 ; échelles : `data/tranchees.js`) et `rendu/troncons.js` (le dessin d'avant, niveau 0, au labo). La barre de solidité d'une tranchée : `solidite` de `tranchees.js`. Le rendu ne modifie jamais l'état.
 - Interface : `main.js` (écran titre → bataille → nuit → fin, commandes, boucle), `hud/` (papiers, cartes, fiche, carte), `index.html`, `css/style.css`.
 - Outils de contenu : `labo.html` + `js/labo.js` + un `js/labo-*.js` par sujet (19 sujets en 6 familles, dont la fabrique de soldats : `labo-fabrique.js`, `aspect-soldat.js`, `rendu/soldat-articule.js` (l'aspect d'un homme tiré de son numéro, son squelette ; en jeu de près depuis la v0.105.0, au labo avant ; `rendu/soldats.js` choisit les 250 plus proches ; le coût mesuré dans `docs/domaines/rendu.md`) et l'encyclopédie des règles : `labo-encyclopedie.js`, `data/encyclopedie.js`, `outils/encyclopedie.mjs` ; le tranché est archivé), `atelier.html` + `js/atelier*.js` + `design-store.js`.
+- Labo lumière (v0.111.0, page à part) : `labo-lumiere.html` + `js/labo-lumiere.js` (l'écran) + `js/lumiere/` (terrain en voxels, lumière en huit étapes, foule, maillage, particules, ciel, caméra, rendu WebGL 2, mesures ; la logique est pure et prête à être reprise ; `README.md` du dossier) ; ne touche ni au jeu ni au labo principal.
 - Vérification : `test/` (règles, `fumee.json` et `rendu.json` : des références), `outils/`, `scripts/`, `lisibilite.config.mjs`.
 
 ## Mode debug et mesure
@@ -133,6 +135,7 @@ Autres : `DESIGN.md` (l'intention), `ROADMAP.md` (`docs/pistes-avancees.md` : le
 | `campagne.js`, `data/campagne.js` | `... test/campagne.test.mjs` (~46 s) |
 | `js/reseau/` | `... test/lockstep.test.mjs` (~9 s) puis `node outils/deux.mjs` |
 | le dessin | `node outils/rendu-empreinte.mjs` ; le HUD : `node outils/fumee.mjs` |
+| `js/lumiere/`, `labo-lumiere.html` | `... test/lumiere.test.mjs` (~1 s) puis `node outils/lumiere.mjs` (~1 min ; `--banc` : le coût GPU de chaque étape) |
 | avant de pousser une règle | `node outils/test-run.mjs --court` (tous) |
 
 `--court` n'imprime que les échecs et le bilan ; `rendu-empreinte` et `fumee` aussi (une ligne si tout est identique, `--detail` pour la liste).

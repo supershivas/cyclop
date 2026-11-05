@@ -1,0 +1,88 @@
+// Vérifie le Labo lumière dans le vrai navigateur (Chromium, rendu logiciel dans le conteneur) :
+//   node outils/lumiere.mjs                  → la page se charge sans erreur console, un obus, un barrage, la comparaison, l'écran partagé, les trois niveaux de qualité,
+//                                              les 50 000 soldats, l'export JSON ; écrit des captures dans le dossier --sortie (défaut : /tmp)
+//   node outils/lumiere.mjs --banc           → ajoute le banc GPU (le coût de chaque étape ; lent en rendu logiciel)
+//   node outils/lumiere.mjs --sortie dossier
+// Code de sortie 1 s'il y a une erreur de console, une exception, ou une règle non tenue (le coût du recalcul local ne doit pas dépendre du nombre de soldats).
+import { servir, lancerChromium, options } from './navigateur.mjs';
+import { mkdirSync, writeFileSync } from 'node:fs';
+
+const o = options();
+const sortie = typeof o.sortie === 'string' ? o.sortie : '/tmp';
+mkdirSync(sortie, { recursive: true });
+const srv = await servir(process.cwd());
+const b = await lancerChromium({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'] });
+const p = await b.newPage({ viewport: { width: 1280, height: 800 } });
+const erreurs = [], echecs = [];
+p.on('console', m => { if (m.type() === 'error' || (m.type() === 'warning' && /webgl|shader/i.test(m.text()) && !/GPU stall/i.test(m.text()))) erreurs.push(`${m.type()}: ${m.text()}`); });
+p.on('pageerror', e => erreurs.push(`exception: ${e.stack || e.message}`));
+const verifier = (ok, texte) => { console.log(`${ok ? 'ok  ' : 'ÉCHEC'} ${texte}`); if (!ok) echecs.push(texte); };
+const J = (f, arg) => p.evaluate(f, arg);
+const image = nom => p.screenshot({ path: `${sortie}/lumiere-${nom}.png` });
+
+await p.goto(srv.base + 'labo-lumiere.html');
+await p.waitForFunction(() => window.__lumiere, null, { timeout: 60000 });
+await p.waitForTimeout(1500);
+verifier(await J(() => document.title === 'Labo lumière — Cyclopéen'), 'le titre de la page');
+verifier(await J(() => document.getElementById('ll-nom').getAttribute('href') === './'), 'le nom en haut à gauche ramène à l\'accueil');
+verifier(await J(() => !!document.querySelector('link[rel=icon]')), 'un favicon');
+await image('depart');
+
+// Un obus : un cube entier, quatre demi-cubes, quatre quarts (sur un terrain plat : on aplatit d'abord un coin)
+const motif = await J(() => {
+  const { M } = window.__lumiere, i = 20, j = 20; for (let dj = -4; dj <= 4; dj++) for (let di = -4; di <= 4; di++) { const k = (j + dj) * M.W + i + di; M.sol[k] = 40; M.top[k] = 40; M.veg[k] = 0; M.toit[k] = 0; }
+  window.__lumiere.obus(i + 0.5, j + 0.5, { silencieux: true });
+  return [0, 1, -1].flatMap(dj => [-1, 0, 1].map(di => 40 - M.sol[(j + dj) * M.W + i + di])).join(',');
+});
+verifier(motif === '1,2,1,4,2,2,1,2,1' || motif.split(',').map(Number).sort().join() === '1,1,1,1,2,2,2,2,4', `un obus : 1 cube entier, 4 demi-cubes, 4 quarts (${motif})`);
+
+// Les trois niveaux : chaque étape, activée seule ou toutes, sans erreur, et le recalcul local reste local
+const rapport = { niveaux: {} };
+for (const q of ['bas', 'moyen', 'haut']) {
+  await J(qq => window.__lumiere.appliquerQualite(qq), q); await p.waitForTimeout(600);
+  const etat = await J(() => ({ etapes: Object.entries(window.__lumiere.S.etapes).filter(([, v]) => v).map(([k]) => +k), cases: window.__lumiere.M.n }));
+  const attendu = { bas: '1,2,3', moyen: '1,2,3,4,5,6', haut: '1,2,3,4,5,6,7,8' }[q];
+  verifier(etat.etapes.join() === attendu, `qualité ${q} : étapes ${etat.etapes.join(',')}`);
+  // des obus au même endroit avec 1 000 puis 50 000 soldats : le recalcul ne dépend pas de la foule
+  const mes = {};
+  for (const n of [1000, 50000]) {
+    await J(nn => { const e = document.getElementById('ll-unites'); e.value = nn; e.dispatchEvent(new Event('input')); window.__lumiere.mesures.v.delete('recalcul:total'); for (let k = 0; k < 12; k++) window.__lumiere.obus(60 + k * 9, 70 + (k % 4) * 5, { silencieux: true }); }, n);
+    await p.waitForTimeout(500);
+    mes[n] = await J(() => window.__lumiere.mesures.lire('recalcul:total').moy);
+  }
+  rapport.niveaux[q] = { recalcul_ms_1000: +mes[1000].toFixed(2), recalcul_ms_50000: +mes[50000].toFixed(2), colonnes: etat.cases };
+  verifier(Math.abs(mes[50000] - mes[1000]) < Math.max(1.5, mes[1000] * 0.6), `qualité ${q} : le recalcul local ne dépend pas des soldats (${mes[1000].toFixed(2)} ms à 1 000, ${mes[50000].toFixed(2)} ms à 50 000)`);
+  await image(`niveau-${q}`);
+  await J(() => { const e = document.getElementById('ll-unites'); e.value = 8000; e.dispatchEvent(new Event('input')); });
+}
+
+// Un barrage, la comparaison, l'écran partagé, la météo, la nuit
+await J(() => window.__lumiere.barrage(128, 80)); await p.waitForTimeout(3500); await image('barrage');
+await p.keyboard.press('c'); await p.waitForTimeout(400); verifier(await J(() => window.__lumiere.S.comparer === 'tout-off'), 'la touche C bascule « tout désactivé »'); await image('compare-off');
+await p.keyboard.press('c'); await p.keyboard.press('v'); await p.waitForTimeout(400); verifier(await J(() => window.__lumiere.S.comparer === 'partage'), 'la touche V ouvre l\'écran partagé'); await image('compare-partage');
+await p.keyboard.press('v');
+await J(() => { window.__lumiere.S.meteo = 'boue'; document.getElementById('ll-heure').value = 17; document.getElementById('ll-heure').dispatchEvent(new Event('input')); }); await p.waitForTimeout(800); await image('boue-17h');
+await J(() => { document.getElementById('ll-heure').value = 22; document.getElementById('ll-heure').dispatchEvent(new Event('input')); window.__lumiere.barrage(); }); await p.waitForTimeout(2200); await image('nuit-barrage');
+
+// Les réglages par l'engrenage, la version
+await p.click('#ll-ouvrir'); await p.waitForTimeout(300);
+verifier(await J(() => !document.getElementById('ll-reglages').hidden && /^v\d+\.\d+\.\d+$/.test(document.getElementById('ll-version').textContent)), 'l\'engrenage ouvre les réglages ; la version y est affichée');
+await image('reglages'); await p.keyboard.press('Escape');
+
+if (o.banc) {
+  await J(() => window.__lumiere.appliquerQualite('haut'));
+  await J(() => window.__lumiere.lancerBanc());
+  rapport.banc = await J(() => window.__lumiere.banque);
+  verifier(!!rapport.banc, 'le banc GPU a tourné');
+}
+// L'export
+const json = await J(async () => { let r = null; const orig = URL.createObjectURL; URL.createObjectURL = b => { r = b; return orig(b); }; document.getElementById('ll-export').click(); URL.createObjectURL = orig; return r ? await r.text() : null; });
+verifier(!!json && !!JSON.parse(json).etapes?.length, 'l\'export JSON est lisible et porte les étapes');
+if (json) writeFileSync(`${sortie}/lumiere-mesures.json`, json);
+writeFileSync(`${sortie}/lumiere-rapport.json`, JSON.stringify(rapport, null, 2));
+
+verifier(erreurs.length === 0, `aucune erreur en console (${erreurs.length})`);
+for (const e of erreurs.slice(0, 8)) console.log('   ', e);
+console.log(JSON.stringify(rapport.niveaux));
+await b.close(); await srv.close();
+process.exit(echecs.length ? 1 : 0);

@@ -1,8 +1,8 @@
 {
-  "version": "0.110.1",
-  "date": "2026-11-03",
+  "version": "0.111.0",
+  "date": "2026-11-05",
   "changes": [
-    "Boutons, casse et unités uniformes : même ombre, mêmes 44 px, mêmes barres pour régiments, chars, mitrailleuses et batteries",
-    "Un régiment choisi s'inverse de la même façon sur sa carte et sur le champ ; chars et mitrailleuses ont le liseré de l'armée et un survol"
+    "Une nouvelle page, « Labo lumière » : un champ de bataille en voxels pour juger une lumière proche d'un GI voxel, sans raytracing, avec jusqu'à 50 000 soldats",
+    "Huit étapes de lumière activables une à une (ombres, AO, recalcul local, lumière propagée, brume et fumée, flash des obus, météo, AO écran), trois niveaux de qualité, mesures et comparaison"
   ]
 }

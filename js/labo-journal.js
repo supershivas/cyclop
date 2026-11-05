@@ -2,6 +2,9 @@
 // Une entrée par version qui touche au labo, la plus récente en haut. `ref` : « sujet-Lettre » (la lettre est celle de la variante,
 // A étant l'actuelle). À chaque changement du labo : une entrée ici, avec `depuis` sur les variantes ajoutées ou changées (labo.js).
 export const JOURNAL = [
+  { version: '0.111.0', date: '2026-11-05', items: [
+    { genre: 'nouveau', texte: 'Une page à part, « Labo lumière » (labo-lumiere.html, lien dans les réglages du jeu) : le futur jeu simulé avec un terrain en voxels, jusqu\'à 50 000 soldats et huit étapes de lumière (soleil et ombres, AO par voxel, recalcul local, lumière propagée, atmosphère, flash des obus, météo, AO écran), chacune activable seule, avec panneau de mesures et comparaison' },
+  ] },
   { version: '0.105.2', date: '2026-11-02', items: [
     { genre: 'mis-a-jour', texte: 'La fabrique de soldats a deux poses de plus : le feu retenu (le fusil baissé en travers des hanches) et la mêlée (la fente, la baïonnette qui part par à-coups) ; elles sont aussi en jeu de près', ref: 'fabrique-A' },
   ] },

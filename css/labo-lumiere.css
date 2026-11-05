@@ -1,0 +1,79 @@
+/* Labo lumière : un seul écran, la scène en plein cadre, des panneaux posés dessus. Couleurs : les rôles du jeu (--jeu-*, js/palette.js) ; aucune couleur nouvelle. */
+:root {
+  --jeu-fond: #16130f; --jeu-ombre: #2c2720; --jeu-encre: #e4dfd0; --jeu-accent: #74664f; --jeu-brume: #a9a89a; --jeu-nous: #8cb6ff;
+  --jeu-ebranle: #f29a3a; --jeu-deroute: #e5533d; --jeu-eau: #8a9799;
+  --jeu-police: ui-monospace, 'DejaVu Sans Mono', Menlo, Consolas, monospace; --jeu-cible: 44px;
+  --texte-petit: 12px; --texte: 14px; --pas: 8px; --e3: 12px; --e4: 16px;
+}
+#ll-scene { position: absolute; inset: 0; width: 100%; height: 100%; cursor: crosshair; }
+.ll-entete { position: absolute; top: 0; left: 0; right: 0; display: flex; justify-content: space-between; align-items: flex-start; padding: var(--pas); pointer-events: none; }
+.ll-entete > * { pointer-events: auto; }
+.ll-nom { display: inline-flex; align-items: center; min-height: var(--jeu-cible); padding: 0 var(--e4); background: var(--jeu-fond); color: var(--jeu-encre); border: 1px solid var(--jeu-accent); text-decoration: none; font-size: var(--texte); letter-spacing: .08em; text-transform: uppercase; box-shadow: 3px 3px 0 var(--jeu-fond); }
+.ll-nom:focus-visible { background: var(--jeu-accent); outline: none; }
+@media (hover: hover) { .ll-nom:hover { background: var(--jeu-accent); } }
+.icone { display: grid; place-items: center; width: var(--jeu-cible); height: var(--jeu-cible); padding: 0; background: var(--jeu-fond); border: 1px solid var(--jeu-accent); color: var(--jeu-encre); cursor: pointer; }
+.icone svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.icone:focus-visible, .icone[aria-expanded="true"] { background: var(--jeu-accent); outline: none; }
+@media (hover: hover) { .icone:hover { background: var(--jeu-accent); } }
+
+.bouton { min-height: var(--jeu-cible); padding: 0 var(--e4); background: var(--jeu-encre); color: var(--jeu-fond); border: 0; box-shadow: 3px 3px 0 var(--jeu-fond); font: inherit; font-size: var(--texte); cursor: pointer; }
+.bouton:focus-visible { background: var(--jeu-accent); color: var(--jeu-encre); outline: none; }
+@media (hover: hover) { .bouton:hover { background: var(--jeu-accent); color: var(--jeu-encre); } }
+.bouton[aria-pressed="true"], .bouton.actif { background: var(--jeu-nous); color: var(--jeu-fond); }
+.bouton:disabled { opacity: .5; cursor: progress; }
+
+.ll-panneau { position: absolute; background: color-mix(in srgb, var(--jeu-fond) 92%, transparent); color: var(--jeu-encre); border: 1px solid var(--jeu-accent); padding: var(--e3) var(--e4); font-size: var(--texte-petit); line-height: 1.45; box-shadow: 3px 3px 0 var(--jeu-fond); }
+.ll-panneau h2 { margin: 0 0 var(--pas); font-size: var(--texte); letter-spacing: .08em; text-transform: uppercase; font-weight: 600; }
+.ll-panneau h3 { margin: var(--e4) 0 var(--pas); font-size: var(--texte-petit); letter-spacing: .08em; text-transform: uppercase; color: var(--jeu-brume); font-weight: 600; }
+.ll-mesures { top: 68px; right: var(--pas); width: 430px; max-height: calc(100dvh - 68px - 76px - 2 * var(--pas) - 60px); overflow: auto; }
+.ll-mesures table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+.ll-mesures th { text-align: right; font-weight: 400; color: var(--jeu-brume); padding: 2px 4px; }
+.ll-mesures th:first-child, .ll-mesures td:first-child { text-align: left; }
+.ll-mesures td { text-align: right; padding: 2px 4px; border-top: 1px solid var(--jeu-ombre); }
+.ll-mesures tr.eteint td { opacity: .45; }
+.ll-mesures td.depasse, .ll-mesures .depasse { color: var(--jeu-deroute); font-weight: 700; }
+.ll-mesures .ok { color: var(--jeu-nous); }
+.ll-mesures dl { display: grid; grid-template-columns: auto 1fr; gap: 1px 12px; margin: 0 0 var(--pas); }
+.ll-mesures dt { color: var(--jeu-brume); } .ll-mesures dd { margin: 0; text-align: right; font-variant-numeric: tabular-nums; }
+.ll-alerte { margin: var(--pas) 0 0; padding: 4px 8px; border-left: 3px solid var(--jeu-ebranle); color: var(--jeu-ebranle); }
+.ll-rang { display: flex; gap: var(--pas); margin: 0 0 var(--e3); flex-wrap: wrap; }
+
+.ll-barre { position: absolute; left: var(--pas); right: var(--pas); bottom: var(--pas); display: flex; flex-wrap: wrap; gap: var(--pas) var(--e4); align-items: center; padding: var(--pas) var(--e3); background: color-mix(in srgb, var(--jeu-fond) 92%, transparent); border: 1px solid var(--jeu-accent); box-shadow: 3px 3px 0 var(--jeu-fond); }
+.ll-groupe { display: flex; gap: var(--pas); flex-wrap: wrap; }
+.ll-champ { display: grid; grid-template-columns: 1fr auto; gap: 0 var(--pas); font-size: var(--texte-petit); min-width: 150px; align-items: end; }
+.ll-champ input { grid-column: 1 / -1; width: 100%; margin: 0; height: var(--jeu-cible); accent-color: var(--jeu-nous); }
+.ll-champ output { color: var(--jeu-nous); font-variant-numeric: tabular-nums; }
+.ll-meteo-b { min-width: 64px; }
+
+.ll-etat { position: absolute; left: var(--pas); top: 68px; padding: 4px var(--e3); background: var(--jeu-fond); border: 1px solid var(--jeu-accent); font-size: var(--texte-petit); max-width: 40ch; }
+.ll-etat:empty { display: none; }
+.ll-etiquettes { position: absolute; top: 68px; left: 0; right: 0; display: flex; justify-content: space-between; padding: 0 28%; pointer-events: none; font-size: var(--texte-petit); text-transform: uppercase; letter-spacing: .08em; }
+.ll-etiquettes[hidden] { display: none; }
+.ll-etiquettes span { background: var(--jeu-fond); padding: 2px 8px; border: 1px solid var(--jeu-accent); }
+
+.ll-reglages { top: 68px; left: var(--pas); width: 380px; max-height: calc(100dvh - 76px - 88px - 2 * var(--pas)); overflow: auto; z-index: 3; font-size: var(--texte); }
+.ll-reglages[hidden] { display: none; }
+.ll-reglages-tete { display: flex; justify-content: space-between; align-items: center; }
+.ll-reglages-tete h2 { margin: 0; }
+.ll-note { color: var(--jeu-brume); font-size: var(--texte-petit); margin: 0 0 var(--pas); }
+.ll-case, .ll-select { display: flex; gap: var(--pas); align-items: center; min-height: var(--jeu-cible); font-size: var(--texte); }
+.ll-select { justify-content: space-between; }
+.ll-select select { min-height: 36px; background: var(--jeu-ombre); color: var(--jeu-encre); border: 1px solid var(--jeu-accent); font: inherit; padding: 0 8px; }
+.ll-case input { width: 20px; height: 20px; accent-color: var(--jeu-nous); }
+.ll-etape { display: flex; gap: var(--pas); align-items: flex-start; min-height: var(--jeu-cible); padding: 4px 0; border-top: 1px solid var(--jeu-ombre); cursor: pointer; }
+.ll-etape input { width: 20px; height: 20px; margin: 2px 0 0; accent-color: var(--jeu-nous); flex: none; }
+.ll-etape b { font-weight: 600; } .ll-etape small { display: block; color: var(--jeu-brume); font-size: var(--texte-petit); }
+.ll-etape .marque { color: var(--jeu-ebranle); }
+.ll-commandes { display: grid; grid-template-columns: auto 1fr; gap: 2px 12px; margin: 0; font-size: var(--texte-petit); }
+.ll-commandes dt { color: var(--jeu-nous); } .ll-commandes dd { margin: 0; }
+.ll-version { margin: 0 0 var(--pas); color: var(--jeu-nous); }
+#ll-journal { font-size: var(--texte-petit); } #ll-journal h4 { margin: var(--pas) 0 2px; font-size: var(--texte-petit); } #ll-journal ul { margin: 0; padding-left: 18px; }
+.ll-reglages details summary { min-height: var(--jeu-cible); display: flex; align-items: center; cursor: pointer; }
+
+.ll-toast { position: absolute; left: 50%; top: 68px; transform: translateX(-50%); background: var(--jeu-encre); color: var(--jeu-fond); padding: var(--pas) var(--e4); box-shadow: 3px 3px 0 var(--jeu-fond); font-size: var(--texte); z-index: 5; max-width: 80vw; }
+.ll-toast[hidden] { display: none; }
+.ll-pour-ordinateur { display: none; position: absolute; inset: auto 0 40% 0; margin: 0 auto; width: min(34ch, 80vw); padding: var(--e4); background: var(--jeu-encre); color: var(--jeu-fond); }
+@media (pointer: coarse) { .ll-pour-ordinateur { display: block; } }
+@media (max-width: 1100px) { .ll-mesures { width: 330px; } }
+@media (max-width: 900px), (max-height: 600px) { .ll-mesures { display: none; } }   /* page d'ordinateur : sur un petit écran, seule la scène reste */
+@media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }

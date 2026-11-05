@@ -1,5 +1,7 @@
 # Tests, références et mesures
 
+- **Le labo lumière (v0.111.0)** : `test/lumiere.test.mjs` (l'obus 1 / 4 / 4, le monde à graine, le maillage, **le recalcul local de la lumière égal au recalcul de toute la carte** aux niveaux bas et haut, la lumière propagée sous un toit, l'ombre, l'AO, la foule, la pureté de `js/lumiere/`) ; `outils/lumiere.mjs` joue la page dans Chromium (obus, trois niveaux, 1 000 puis 50 000 soldats, comparaison, météo, nuit, export, console sans erreur) ; `--banc` ajoute le coût GPU de chaque étape. Aucune référence à rafraîchir.
+
 - **L'encyclopédie (v0.100.0)** : `test/encyclopedie.test.mjs` (la structure des 153 entrées : doublons, renvois, catégories, couverture des tables du jeu) ; `outils/encyclopedie.mjs` fait ses captures (~5 min, aucun fichier de référence : elles se relisent à l'œil).
 
 - **Le premier plan (v0.94.2)** : `test/vue-ecran.test.mjs` (`dansLEcran` : un arbre dont le pied est sous l'écran et la cime dedans reste ; le pied au-dessus ne revient pas ; la marge de côté suit le rayon) ; la sonde (jetable, voir `docs/domaines/rendu.md`, « Les éléments du premier plan disparaissaient encore ») compare, pour des vues variées, ce que l'écran montre et ce que le moteur dessine : `rendu.tronconsDessines`, `stats.arbresVus`, `stats.soldatsVus`.
