@@ -24,7 +24,7 @@ export const solMat = {
       uniform sampler2D uSol; uniform vec2 uTaille; uniform float uBord; uniform vec3 uBordCoul;
       uniform vec3 uKaki, uVert, uGlaise; uniform float uDissoudre;
       uniform float uNuage, uTemps, uBiseau; uniform vec2 uVent;
-      uniform sampler2D uAO; uniform float uAOon, uSunOn;
+      uniform sampler2D uAO; uniform float uAOon, uSunOn, uAbriOn;
       varying vec2 vUV; varying vec2 vXZ; varying float vY; varying vec3 vMur;
       float h(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
       float vn(vec2 p) { vec2 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f); return mix(mix(h(i), h(i + vec2(1.0, 0.0)), f.x), mix(h(i + vec2(0.0, 1.0)), h(i + vec2(1.0, 1.0)), f.x), f.y); }
@@ -60,6 +60,8 @@ export const solMat = {
         // (session 2, éteint dans le jeu : uAOon à 0) l'ouverture au ciel du relief (js/rendu/ao-sol.js, le calcul du labo lumière) : les creux, les tranchées et les cratères s'assombrissent, comme au labo
         // (session 2, éteint : uSunOn à 0) le soleil du labo : la visibilité du soleil (canal R, une ombre douce) mélange le dessus de la case et la couleur de sa paroi, comme l'ombre de relief du jeu mais sans marche
         if (uSunOn > 0.5 && vUV.y < 0.5) rgb = mix(texture2D(uSol, vUV + vec2(0.0, 0.5)).rgb, rgb, texture2D(uAO, vXZ / uTaille).r);
+        // (session 2, éteint : uAbriOn à 0) la lumière propagée sous les toits de bois (canal B : 240 à ciel ouvert, moins à mesure qu'on s'enfonce sous le toit)
+        if (uAbriOn > 0.5) { float f = clamp(texture2D(uAO, vXZ / uTaille).b / 0.941, 0.0, 1.0); rgb *= mix(0.25, 1.0, f * f * f); }
         if (uAOon > 0.5) rgb *= 0.5 + 0.5 * pow(texture2D(uAO, vXZ / uTaille).g, 1.3);
         gl_FragColor = vec4(rgb, 1.0);
       }`,

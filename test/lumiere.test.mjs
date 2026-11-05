@@ -322,6 +322,17 @@ test('le soleil du labo sur le relief du jeu : l\'ombre tombe du côté où le j
   assert.ok(assezBouge({ x: 2, z: 0 }, { x: 2, z: 0.4 }) && !assezBouge({ x: 2, z: 0 }, { x: 2, z: 0.02 }), 'un soleil qui bouge à peine ne périme rien');
 });
 
+test('les abris du jeu : le jour entre par les bouts d\'un toit de bois et s\'éteint à mesure qu\'on s\'enfonce ; un parapet ne laisse rien passer', async () => {
+  const { creerAOSol } = await import('../js/rendu/ao-sol.js');
+  const W = 80, H = 40, h = new Int16Array(W * H).fill(40), toit = new Uint8Array(W * H);
+  for (let i = 10; i < 70; i++) h[20 * W + i] = 32;                                  // une tranchée d'un mètre... de deux (8 quarts) de profondeur
+  for (let i = 30; i < 42; i++) toit[20 * W + i] = 1;                                // couverte sur 12 m
+  const T = { W, H, versionLigne: new Uint32Array(H), toit }, ao = creerAOSol({ hauteurQ: (_, c) => h[c], now: () => 0 }); ao.attacher(T);
+  while (ao.maj(false, false, null, 1e9, true) || ao.restant);
+  const B = i => ao.tex[(20 * W + i) * 4 + 2];
+  assert.equal(B(25), 240); assert.ok(B(30) < 240 && B(33) < B(30) && B(36) < B(33), 'plus sombre à mesure qu\'on s\'enfonce'); assert.ok(B(36) < 150, `au milieu : ${B(36)}`); assert.equal(B(60), 240, 'la tranchée à ciel ouvert'); assert.ok(ao.tex[(19 * W + 36) * 4 + 2] === 240, 'le terrain à côté est au jour');
+});
+
 group('labo lumière — pureté');
 test('terrain, lumière, foule, maillage, particules, ciel : ni DOM, ni horloge, ni Math.random', () => {
   for (const f of ['terrain', 'lumiere', 'foule', 'maillage', 'particules', 'ciel', 'camera', 'config', 'soldats-reels', 'lampes', 'ombres', 'engins']) {
