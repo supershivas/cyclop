@@ -2,7 +2,10 @@
 import { readFileSync, readdirSync } from 'node:fs';
 import { creerMonde, impact, chunksDe, rectDeChunks, MAT } from '../js/lumiere/terrain.js';
 import { creerLumiere, calculerSoleil, calculerAO, calculerFlood, calculerCavite, regionTotale, directionSoleil } from '../js/lumiere/lumiere.js';
-import { creerFoule, regler, avancer } from '../js/lumiere/foule.js';
+import { creerFoule, regler, avancer, plusProches } from '../js/lumiere/foule.js';
+import { ciel, melangerMeteo } from '../js/lumiere/ciel.js';
+import { glslVert, glslFrag, modele, ecrire as ecrireReel, aspectDe, FLOATS as FLOATS_REEL, creerSuivi, suivre } from '../js/lumiere/soldats-reels.js';
+import { METEOS } from '../js/lumiere/config.js';
 import { construireChunk, creerTampons } from '../js/lumiere/maillage.js';
 import { QUALITES } from '../js/lumiere/config.js';
 
@@ -95,9 +98,54 @@ test('le coût de la foule ne dépend pas du terrain, et elle est déterministe'
   regler(a, 999999); assert.equal(a.n, 50000);
 });
 
+test('au bord de la carte, un flanc descend jusqu\'au faux terrain qui l\'entoure', () => {
+  const M = creerMonde({}), B = creerTampons(M); construireChunk(M, 0, 0, { ao: true }, B);
+  let bas = 1e9; for (let k = 0; k < B.sol.nv; k++) bas = Math.min(bas, B.sol.v[k * 8 + 1]);
+  assert.ok(Math.abs(bas - M.bordM) < 1e-4, `le point le plus bas ${bas}, le faux terrain ${M.bordM}`);
+});
+
+group('labo lumière — les vrais soldats du jeu');
+test('les plus proches du point visé sont les bons, du plus proche au plus loin', () => {
+  const M = creerMonde({}), F = creerFoule(M); regler(F, 20000); for (let k = 0; k < 30; k++) avancer(F, 1 / 30);
+  const out = new Int32Array(3000), n = plusProches(F, 120, 100, 150, out);
+  assert.equal(n, 150);
+  const d = i => Math.hypot(F.x[i] - 120, F.z[i] - 100), tous = Array.from({ length: F.n }, (_, i) => i).sort((a, b) => d(a) - d(b) || a - b).slice(0, 150);
+  assert.deepEqual(Array.from(out.subarray(0, 150)), tous);
+});
+test('le modèle du jeu passe de GLSL ES 1.0 à 3.0, et ses deux niveaux de détail existent', () => {
+  const v = glslVert(), f = glslFrag('#version 300 es');
+  assert.ok(v.startsWith('#version 300 es') && !/\battribute\b|\bvarying\b|\bprojectionMatrix\b|gl_FragColor/.test(v + f));
+  assert.ok(f.includes('fragColor = vec4(finir(eclairer('), 'la lumière du labo remplace l\'aplat du jeu');
+  assert.ok(modele('moyen').triangles < modele('fin').triangles * 0.65 && modele('fin').triangles > 1000);
+});
+test('un homme : son aspect est celui que le jeu tire de son numéro, écrit en 26 nombres', () => {
+  const a = aspectDe(12, 0), b = aspectDe(12, 0), T = new Float32Array(2 * FLOATS_REEL);
+  assert.equal(a, b); assert.ok(a.carrure.taille > 0.8);
+  ecrireReel(T, 1, { x: 10, y: 2, z: 30, camp: 1, vit: 1.2, tapi: 0.5, cap: 0.3, temps: 1, aspect: a });
+  assert.equal(T[FLOATS_REEL], 10); assert.equal(T[FLOATS_REEL + 3], 1); assert.ok(Math.abs(T[FLOATS_REEL + 5] - Math.cos(0.3)) < 1e-6);
+});
+test('un soldat qui marche prend sa vitesse et son cap ; celui qui tremble sur place reste à l\'arrêt, face à l\'ennemi', () => {
+  const M = creerMonde({}), F = creerFoule(M), S = creerSuivi(F.max); F.x[0] = 50; F.z[0] = 50; F.camp[0] = 0; F.camp[1] = 0; F.x[1] = 80; F.z[1] = 80;
+  suivre(S, F, 0, 0); suivre(S, F, 1, 0);
+  for (let t = 0.4; t < 3; t += 0.4) { F.x[0] += 0.6; F.x[1] += (Math.round(t * 10) % 2 ? 0.05 : -0.05); suivre(S, F, 0, t); suivre(S, F, 1, t); }
+  assert.ok(S.vit[0] > 1.2 && Math.abs(S.cap[0] - Math.PI / 2) < 0.3, 'vers l\'est');
+  assert.ok(S.vit[1] < 0.3 && Math.abs(Math.abs(S.cap[1]) - Math.PI) < 0.3, 'face au nord');
+});
+
+group('labo lumière — le ciel et la météo');
+test('une météo se mélange en continu, et le ciel suit l\'heure : étoiles la nuit, nuages et neige selon le temps', () => {
+  const m = melangerMeteo('sec', 'neige', 0.5);
+  assert.ok(Math.abs(m.neige - 0.5) < 1e-9 && m.voile > METEOS.sec.voile && m.voile < METEOS.neige.voile);
+  assert.ok(ciel({ heure: 23 }).etoiles > 0.3 && ciel({ heure: 12 }).etoiles === 0);
+  assert.ok(ciel({ heure: 23 }).luneDir[1] > 0, 'la lune est levée quand le soleil est couché');
+  assert.ok(ciel({ heure: 10, meteo: 'pluie' }).voile > ciel({ heure: 10, meteo: 'sec' }).voile);
+  assert.ok(ciel({ heure: 10, jour: 10 }).voile > ciel({ heure: 10, jour: 1 }).voile, 'le ciel se couvre au fil de la bataille');
+  assert.ok(ciel({ heure: 10, meteo: 'neige' }).neige === 1 && ciel({ heure: 10, meteo: 'brouillard' }).brouillard === 1);
+});
+
 group('labo lumière — pureté');
 test('terrain, lumière, foule, maillage, particules, ciel : ni DOM, ni horloge, ni Math.random', () => {
-  for (const f of ['terrain', 'lumiere', 'foule', 'maillage', 'particules', 'ciel', 'camera', 'config']) {
+  for (const f of ['terrain', 'lumiere', 'foule', 'maillage', 'particules', 'ciel', 'camera', 'config', 'soldats-reels']) {
     const src = readFileSync(`js/lumiere/${f}.js`, 'utf8').replace(/\/\/.*$/gm, '');
     for (const mot of ['Math.random', 'Date.now', 'performance.now', 'document.', 'window.', 'localStorage']) assert.ok(!src.includes(mot), `${f}.js utilise ${mot}`);
   }

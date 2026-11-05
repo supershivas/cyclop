@@ -1,8 +1,8 @@
 // Le terrain en voxels du labo lumière : une grille de colonnes de hauteur (en quarts de cube), déjà façonnée
 // (bosses, végétation, tranchées sur quelques niveaux par camp, abris couverts) et que les obus creusent.
 // Logique pure (aucun DOM, aucune horloge, aucun hasard hors de la graine) : le futur jeu peut la reprendre telle quelle.
-import { createRng } from '../lib/rng.js?v=0.111.0';
-import { MONDE, MOTIF_OBUS } from './config.js?v=0.111.0';
+import { createRng } from '../lib/rng.js?v=0.112.0';
+import { MONDE, MOTIF_OBUS } from './config.js?v=0.112.0';
 
 export const MAT = { HERBE: 0, GLAISE: 1, TERRE: 2, BOUE: 3, SAC: 4, TRONC: 5, BUISSON: 6, TOIT: 7 };
 const NIVEAU_BASE = 40;                // un sol à 10 cubes : les cratères et les tranchées ont de la place
@@ -23,6 +23,7 @@ export function creerMonde({ cpm = 1, graine = MONDE.graine, niveaux = MONDE.tra
     W, H, n, cpm, cell: 1 / cpm, chunk: ch, cw: Math.ceil(W / ch), chh: Math.ceil(H / ch), graine, niveaux,
     sol: new Int16Array(n), veg: new Uint8Array(n), toit: new Int16Array(n), mat: new Uint8Array(n),
     top: new Int16Array(n),            // la surface visible : le toit, sinon le sol + la végétation
+    bordQ: NIVEAU_BASE - 12, bordM: (NIVEAU_BASE - 12) * (1 / cpm) / MONDE.quartsParCube,     // le niveau du faux terrain autour : la carte est un plateau qui se prolonge
     lignes: [],                        // les rangées de tranchées : { camp, niveau, z0, ... }
     abris: [], craters: [], obusTires: 0, quartsRetires: 0,
   };

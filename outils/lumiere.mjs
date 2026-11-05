@@ -56,6 +56,19 @@ for (const q of ['bas', 'moyen', 'haut']) {
   await J(() => { const e = document.getElementById('ll-unites'); e.value = 8000; e.dispatchEvent(new Event('input')); });
 }
 
+// Les vrais soldats du jeu, de près (le modèle articulé : casque, sac, fusil, visage), et le faux terrain autour de la carte
+await J(() => { window.__lumiere.S.pause = false; window.__lumiere.voirPreset('tranchee', true); Object.assign(window.__lumiere.C, { distance: 15, tangage: 0.5 }); }); await p.waitForTimeout(1500);
+const reels = await J(() => window.__lumiere.mesures.lire('reels'));
+verifier(!!reels && reels.n > 3, 'les vrais soldats du jeu sont dessinés de près'); await image('vrais-soldats');
+await J(() => { window.__lumiere.voirPreset('large', true); Object.assign(window.__lumiere.C, { distance: 140, tangage: 0.1 }); }); await p.waitForTimeout(1200); await image('faux-terrain');
+// La météo : chaque temps, puis le temps qui change tout seul
+for (const m of ['pluie', 'neige', 'brouillard', 'boue', 'sec']) { await J(mm => { const J = window.__lumiere; J.S.meteo = mm; if (!J.S.etapes[7]) J.basculerEtape(7, true); Object.assign(J.meteoNow, J.METEOS[mm]); }, m); await p.waitForTimeout(700); await image(`meteo-${m}`); }
+const avant = await J(() => window.__lumiere.S.meteo);
+await J(() => { window.__lumiere.voirPreset('large', true); document.getElementById('ll-meteo-auto').click(); });
+await p.waitForTimeout(14000);
+const apres = await J(() => window.__lumiere.S.meteo);
+verifier(await J(() => window.__lumiere.S.meteoAuto === true) && apres !== avant, `le temps change tout seul (${avant} → ${apres})`);
+await J(() => document.getElementById('ll-meteo-auto').click());
 // Un barrage, la comparaison, l'écran partagé, la météo, la nuit
 await J(() => window.__lumiere.barrage(128, 80)); await p.waitForTimeout(3500); await image('barrage');
 await p.keyboard.press('c'); await p.waitForTimeout(400); verifier(await J(() => window.__lumiere.S.comparer === 'tout-off'), 'la touche C bascule « tout désactivé »'); await image('compare-off');

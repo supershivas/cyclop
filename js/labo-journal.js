@@ -2,6 +2,9 @@
 // Une entrée par version qui touche au labo, la plus récente en haut. `ref` : « sujet-Lettre » (la lettre est celle de la variante,
 // A étant l'actuelle). À chaque changement du labo : une entrée ici, avec `depuis` sur les variantes ajoutées ou changées (labo.js).
 export const JOURNAL = [
+  { version: '0.112.0', date: '2026-11-05', items: [
+    { genre: 'mis-a-jour', texte: 'Labo lumière : les vrais soldats articulés du jeu de près, un faux terrain qui prolonge la carte jusqu\'à l\'horizon, des nuages (et leur ombre), des étoiles et la lune, cinq temps (brouillard et neige en plus) qui peuvent changer tout seuls' },
+  ] },
   { version: '0.111.0', date: '2026-11-05', items: [
     { genre: 'nouveau', texte: 'Une page à part, « Labo lumière » (labo-lumiere.html, lien dans les réglages du jeu) : le futur jeu simulé avec un terrain en voxels, jusqu\'à 50 000 soldats et huit étapes de lumière (soleil et ombres, AO par voxel, recalcul local, lumière propagée, atmosphère, flash des obus, météo, AO écran), chacune activable seule, avec panneau de mesures et comparaison' },
   ] },

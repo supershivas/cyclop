@@ -1,5 +1,9 @@
 # Journal des versions
 
+## 0.112.0 — 2026-11-05
+- Labo lumière : les vrais soldats articulés du jeu (casque, sac, fusil, visage) sont dessinés de près, avec la lumière du labo
+- Un faux terrain prolonge la carte jusqu'à l'horizon, le ciel a des nuages qui dérivent (et leur ombre), des étoiles et une lune, et le temps (sec, pluie, boue, brouillard, neige) peut changer tout seul
+
 ## 0.111.0 — 2026-11-05
 - Une nouvelle page, « Labo lumière » : un champ de bataille en voxels pour juger une lumière proche d'un GI voxel, sans raytracing, avec jusqu'à 50 000 soldats
 - Huit étapes de lumière activables une à une (ombres, AO, recalcul local, lumière propagée, brume et fumée, flash des obus, météo, AO écran), trois niveaux de qualité, mesures et comparaison

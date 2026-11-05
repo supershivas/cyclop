@@ -1,18 +1,19 @@
 // Labo lumière — Cyclopéen : peut-on obtenir un rendu de lumière proche d'un GI voxel, sans raytracing, avec un budget tenable dans un navigateur ?
 // Ce fichier relie les modules (terrain, lumière, foule, particules, rendu, mesures — js/lumiere/) à l'écran : réglages, boucle, souris, panneau de mesures.
 // Il ne contient aucune règle : le futur jeu reprend js/lumiere/ tel quel.
-import { ROLES } from './palette.js?v=0.111.0';
-import { startUpdateCheck, loadVersion, loadChangelog } from './lib/app-update.js?v=0.111.0';
-import { MONDE, ETAPES, QUALITES, RESOLUTIONS, METEOS, CAMERA, BARRAGE, FLASH, BUDGET_IMAGE_MS, BUDGET_RECALCUL_CHUNK_MS } from './lumiere/config.js?v=0.111.0';
-import { creerMonde, impact, chunksDe, rectDeChunks } from './lumiere/terrain.js?v=0.111.0';
-import { creerLumiere, calculerSoleil, calculerAO, calculerFlood, calculerCavite, majHauteurs, regionTotale } from './lumiere/lumiere.js?v=0.111.0';
-import { creerFoule, regler as reglerFoule, avancer as avancerFoule } from './lumiere/foule.js?v=0.111.0';
-import { creerParticules, explosion, avancer as avancerParticules, ecrire as ecrireParticules } from './lumiere/particules.js?v=0.111.0';
-import { creerCamera, rayon, toucherSol } from './lumiere/camera.js?v=0.111.0';
-import { ciel as calculerCiel, COUL } from './lumiere/ciel.js?v=0.111.0';
-import { creerRendu } from './lumiere/rendu.js?v=0.111.0';
-import { creerMesures, depassement, banc, exporter } from './lumiere/mesures.js?v=0.111.0';
-import { createRng } from './lib/rng.js?v=0.111.0';
+import { ROLES } from './palette.js?v=0.112.0';
+import { startUpdateCheck, loadVersion, loadChangelog } from './lib/app-update.js?v=0.112.0';
+import { MONDE, ETAPES, QUALITES, RESOLUTIONS, METEOS, METEO_AUTO, NUAGES, SOLDATS_REELS, CAMERA, BARRAGE, FLASH, BUDGET_IMAGE_MS, BUDGET_RECALCUL_CHUNK_MS } from './lumiere/config.js?v=0.112.0';
+import { creerMonde, impact, chunksDe, rectDeChunks } from './lumiere/terrain.js?v=0.112.0';
+import { creerLumiere, calculerSoleil, calculerAO, calculerFlood, calculerCavite, majHauteurs, regionTotale } from './lumiere/lumiere.js?v=0.112.0';
+import { creerFoule, regler as reglerFoule, avancer as avancerFoule, plusProches } from './lumiere/foule.js?v=0.112.0';
+import { aspectDe, creerSuivi, suivre, ecrire as ecrireReel, FLOATS as FLOATS_REEL } from './lumiere/soldats-reels.js?v=0.112.0';
+import { creerParticules, explosion, avancer as avancerParticules, ecrire as ecrireParticules } from './lumiere/particules.js?v=0.112.0';
+import { creerCamera, rayon, toucherSol } from './lumiere/camera.js?v=0.112.0';
+import { ciel as calculerCiel, COUL } from './lumiere/ciel.js?v=0.112.0';
+import { creerRendu } from './lumiere/rendu.js?v=0.112.0';
+import { creerMesures, depassement, banc, exporter } from './lumiere/mesures.js?v=0.112.0';
+import { createRng } from './lib/rng.js?v=0.112.0';
 
 for (const [role, couleur] of Object.entries(ROLES)) document.documentElement.style.setProperty(`--jeu-${role}`, couleur);
 const $ = id => document.getElementById(id);
@@ -26,7 +27,7 @@ const TOUT_OFF = Object.fromEntries(IDS.map(i => [i, false]));
 const S = {
   qualite: QUALITES[P0.qualite] ? P0.qualite : 'moyen', grille: ['auto', '1', '2'].includes(P0.grille) ? P0.grille : 'auto', resolution: RESOLUTIONS[P0.resolution] ? P0.resolution : 'jeu',
   etapes: {}, surcharges: new Set(), heure: 8, jour: 1, meteo: METEOS[P0.meteo] ? P0.meteo : 'sec', unites: MONDE.foule.defaut,
-  comparer: 'normal', split: 0.5, toits: false, cycle: false, nBarrage: BARRAGE.obus, pause: false, banc: false,
+  meteoAuto: false, reels: true, comparer: 'normal', split: 0.5, toits: false, cycle: false, nBarrage: BARRAGE.obus, pause: false, banc: false,
 };
 const preset = () => QUALITES[S.qualite].etapes;
 const cpmVoulu = () => S.grille === 'auto' ? QUALITES[S.qualite].cpm : +S.grille;
@@ -35,13 +36,45 @@ const hasard = createRng(MONDE.graine + 100);
 
 let M, L, F, R, C, particules = creerParticules(), flashs = [], file = [], temps = 0, soleilSale = false, dernierSoleil = 0;
 let perime = {}, maillageAO = false, banque = null, moisi = 0;
+// la météo qui évolue : `meteoNow` glisse vers la météo voulue (S.meteo) ; les nuages dérivent avec le vent
+const CLES_METEO = ['humidite', 'pluie', 'neige', 'brouillard', 'voile', 'soleil', 'vent'];
+const meteoNow = { ...METEOS[S.meteo] }; let prochainMeteo = 30; const derive = [0, 0];
+function avancerMeteo(dt) {
+  if (S.meteoAuto) {
+    prochainMeteo -= dt;
+    if (prochainMeteo <= 0) { const choix = (METEO_AUTO.suite[S.meteo] || ['sec']).filter(k => k !== S.meteo);   // toujours un autre temps S.meteo = choix[Math.floor(hasard() * choix.length)]; prochainMeteo = METEO_AUTO.tenueS[0] + hasard() * (METEO_AUTO.tenueS[1] - METEO_AUTO.tenueS[0]); marquerMeteo(); dire(`La météo tourne : ${METEOS[S.meteo].nom}`); setTimeout(() => dire(''), 2500); }
+  }
+  const k = 1 - Math.exp(-dt * (S.meteoAuto ? METEO_AUTO.vitesse : 0.6)), cible = METEOS[S.meteo];
+  for (const c of CLES_METEO) meteoNow[c] += (cible[c] - meteoNow[c]) * k;
+  derive[0] += dt * NUAGES.derive * (1 + meteoNow.vent); derive[1] += dt * NUAGES.derive * 0.3 * (1 + meteoNow.vent);
+}
+// les vrais soldats du jeu : les plus proches du point visé, quand on est assez près pour lire un homme
+const suivi = creerSuivi(MONDE.foule.max), proches = new Int32Array(MONDE.foule.max), d2 = new Float32Array(MONDE.foule.max), dataReels = new Float32Array(SOLDATS_REELS.max * FLOATS_REEL), masque = new Float32Array(MONDE.foule.max);
+let lastReels = 0;
+function lotReels() {
+  lastReels = 0; masque.fill(0);
+  if (!S.reels || !F) return { n: 0, niveau: 'moyen', data: dataReels };
+  const ppm = (R.hauteur / 2) / Math.tan(C.fov / 2) / C.distance;
+  if (ppm < SOLDATS_REELS.pxmMoyen) return { n: 0, niveau: 'moyen', data: dataReels };
+  let n = 0;
+  mesures.chrono('reels', () => {
+    n = plusProches(F, C.cible[0], C.cible[2], SOLDATS_REELS.max, proches, d2);
+    for (let k = 0; k < n; k++) {
+      const i = proches[k]; suivre(suivi, F, i, temps); masque[i] = 1;
+      let tapi = 0; for (const f of flashs) { const age = temps - f.t0; if (age < 5 && Math.hypot(f.x - F.x[i], f.z - F.z[i]) < 28) tapi = Math.max(tapi, 0.9 * Math.min(1, (5 - age) / 1.5)); }   // la peur : on s'accroupit près d'un obus
+      const x = F.x[i], z = F.z[i];
+      ecrireReel(dataReels, k, { x, y: hauteurM(x, z), z, camp: F.camp[i], vit: suivi.vit[i], tapi, cap: suivi.cap[i], temps, aspect: aspectDe(i, F.camp[i]) });
+    }
+  });
+  lastReels = n; return { n, niveau: ppm >= SOLDATS_REELS.pxmFin ? 'fin' : 'moyen', data: dataReels };
+}
 
 const toast = (t) => { const e = $('ll-toast'); e.textContent = t; e.hidden = false; clearTimeout(toast.n); toast.n = setTimeout(() => { e.hidden = true; }, 4200); };
 const dire = (t) => { $('ll-etat').textContent = t || ''; };
 
 // ─── Le monde et la lumière ───────────────────────────────────────────────────
 const Q = () => QUALITES[S.qualite];
-const cielCourant = () => calculerCiel({ heure: S.heure, jour: S.etapes[7] ? S.jour : 1, meteo: S.etapes[7] ? S.meteo : 'sec' });
+const cielCourant = () => calculerCiel({ heure: S.heure, jour: S.etapes[7] ? S.jour : 1, meteo: S.etapes[7] ? meteoNow : 'sec' });
 let soleil = null;
 function calculer(id, region) {                                       // un calcul de lumière sur une région, chronométré à part ; rend les ms
   return mesures.chrono(region === 'carte' ? `global:${id}` : `chunk:${id}`, () => {
@@ -161,7 +194,7 @@ function scene(etapesForcees) {
   const c = cielCourant();
   const { n, nd } = ecrireParticules(particules);
   const fl = flashs.map(f => { const age = (temps - f.t0) / FLASH.dureeS; return { ...f, rayon: FLASH.rayonM, coul: f.coul || [1.2, 0.8, 0.45], force: f.fixe ? FLASH.intensite : Math.max(0, 1 - age) ** 2 * FLASH.intensite }; }).filter(f => f.force > 0.01);
-  R.dessiner({ camera: C, ciel: c, etapes: eff, moitie: partage ? { etapes: TOUT_OFF } : null, split: partage ? S.split : 0, flashs: fl, particules: { n, nd, tampon: particules.sortie }, temps, toitsTransparents: S.toits, ssaoEchantillons: Q().ssaoEchantillons || 10, brume: Q().brume });
+  R.dessiner({ camera: C, ciel: c, etapes: eff, moitie: partage ? { etapes: TOUT_OFF } : null, split: partage ? S.split : 0, flashs: fl, particules: { n, nd, tampon: particules.sortie }, temps, derive, bordY: M.bordM, reels: lotReels(), masque, toitsTransparents: S.toits, ssaoEchantillons: Q().ssaoEchantillons || 10, brume: Q().brume });
 }
 
 // ─── La boucle ────────────────────────────────────────────────────────────────
@@ -172,7 +205,7 @@ function boucle(tms) {
   const dtReel = Math.min(0.1, (tms - dernierT) / 1000); dernierT = tms; mesures.imageFaite(dtReel * 1000);
   const t0 = performance.now(), dt = S.pause ? 0 : Math.min(0.05, dtReel);
   if (!S.pause) {
-    temps += dt;
+    temps += dt; avancerMeteo(dt);
     mesures.chrono('foule', () => avancerFoule(F, dt));
     avancerParticules(particules, dt, hauteurM);
     flashs = flashs.filter(f => f.fixe || temps - f.t0 < FLASH.dureeS);
@@ -211,7 +244,7 @@ function cellule(valeur, budget, extra = '') {
   return `<td class="${dep ? 'depasse' : ''}" title="${budget > 0 ? `budget ${budget} ms${dep ? ' — dépassé' : ''}` : 'pas de budget'}">${ms(valeur)}${dep ? ' ▲' : ''}${extra}</td>`;
 }
 function tracerMesures() {
-  const fps = mesures.fps(), msI = mesures.msImage(), tot = mesures.lire('recalcul:total'), mail = mesures.lire('maillage:chunk'), fou = mesures.lire('foule'), js = mesures.lire('js:image');
+  const reelsN = lastReels, fps = mesures.fps(), msI = mesures.msImage(), tot = mesures.lire('recalcul:total'), mail = mesures.lire('maillage:chunk'), fou = mesures.lire('foule'), js = mesures.lire('js:image');
   const lignes = ETAPES.map(e => {
     const g = mesures.lire(`global:${e.id}`), c = mesures.lire(`chunk:${e.id}`), b = banque ? (banque.marginal[e.id] ?? null) : null;
     const gpu = e.budget.gpuMs > 0 ? cellule(b, e.budget.gpuMs) : '<td>—</td>';
@@ -229,6 +262,7 @@ function tracerMesures() {
       <dt>Recalcul après un obus</dt><dd class="${depassement(tot?.moy, BUDGET_RECALCUL_CHUNK_MS) ? 'depasse' : ''}">${ms(tot?.moy)} ms${tot ? ` (pire ${ms(tot.max)})` : ''}${depassement(tot?.moy, BUDGET_RECALCUL_CHUNK_MS) ? ` ▲ budget ${BUDGET_RECALCUL_CHUNK_MS}` : ''}</dd>
       <dt>…dont maillage du chunk</dt><dd>${ms(mail?.moy)} ms</dd>
       <dt>Foule (CPU)</dt><dd>${ms(fou?.moy)} ms</dd>
+      <dt>Vrais soldats du jeu</dt><dd>${reelsN ? `${reelsN} · ${ms(mesures.lire('reels')?.moy)} ms` : 'hors de vue (zoomer)'}</dd>
       <dt>JS par image</dt><dd>${ms(js?.moy, 1)} ms</dd>
       <dt>GPU scène · AO · composition</dt><dd>${g.scene == null ? 'n/d' : `${ms(g.scene, 1)} · ${ms(g.ssao, 1)} · ${ms(g.composition, 1)} ms`}</dd>
     </dl>
@@ -267,9 +301,10 @@ function remplirSelects() {
   $('ll-grille').value = S.grille;
   $('ll-resolution').innerHTML = Object.entries(RESOLUTIONS).map(([k, r]) => `<option value="${k}">${r.nom}</option>`).join(''); $('ll-resolution').value = S.resolution;
   const mt = $('ll-meteo'); mt.innerHTML = '';
-  for (const [k, m] of Object.entries(METEOS)) { const b = document.createElement('button'); b.className = 'bouton ll-meteo-b'; b.type = 'button'; b.textContent = m.nom; b.dataset.meteo = k; b.onclick = () => { S.meteo = k; ecrireP(); marquerMeteo(); if (!S.etapes[7]) toast('La météo est l\'étape 7 : activez-la dans les réglages.'); }; mt.append(b); }
+  for (const [k, m] of Object.entries(METEOS)) { const b = document.createElement('button'); b.className = 'bouton ll-meteo-b'; b.type = 'button'; b.textContent = m.nom; b.dataset.meteo = k; b.onclick = () => { S.meteo = k; S.meteoAuto = false; majMeteoAuto(); ecrireP(); marquerMeteo(); if (!S.etapes[7]) { basculerEtape(7, true); toast('La météo est l\'étape 7 : activée.'); } }; mt.append(b); }
   marquerMeteo();
 }
+const majMeteoAuto = () => $('ll-meteo-auto').setAttribute('aria-pressed', String(S.meteoAuto));
 const marquerMeteo = () => document.querySelectorAll('[data-meteo]').forEach(b => b.classList.toggle('actif', b.dataset.meteo === S.meteo));
 function ouvrirReglages(ouvert) {
   const p = $('ll-reglages'); p.hidden = !ouvert; $('ll-ouvrir').setAttribute('aria-expanded', String(ouvert));
@@ -358,6 +393,8 @@ async function demarrer() {
   $('ll-reviens').onclick = () => { appliquerQualite(S.qualite, { garder: true }); };
   $('ll-barrage').onclick = () => barrage();
   $('ll-comparer').onclick = basculerComparer; $('ll-partage').onclick = basculerPartage;
+  $('ll-meteo-auto').onclick = () => { S.meteoAuto = !S.meteoAuto; majMeteoAuto(); if (S.meteoAuto) { prochainMeteo = 8; if (!S.etapes[7]) { basculerEtape(7, true); toast('La météo est l\'étape 7 : activée.'); } } };
+  $('ll-reels').checked = S.reels; $('ll-reels').onchange = e => { S.reels = e.target.checked; };
   $('ll-cycle').onclick = () => { S.cycle = !S.cycle; $('ll-cycle').setAttribute('aria-pressed', String(S.cycle)); };
   document.querySelectorAll('[data-cam]').forEach(b => { b.onclick = () => voirPreset(b.dataset.cam); });
   $('ll-ouvrir').onclick = () => ouvrirReglages($('ll-reglages').hidden); $('ll-fermer').onclick = () => ouvrirReglages(false);
@@ -373,7 +410,7 @@ async function demarrer() {
   const jr = await loadChangelog('CHANGELOG.md', 5);
   $('ll-journal').innerHTML = jr.map(j => `<h4>v${j.version} — ${j.date}</h4><ul>${j.changes.map(c => `<li>${c.replace(/[<>&]/g, '')}</li>`).join('')}</ul>`).join('');
   startUpdateCheck({ isBusy: () => false, onUpdated: ver => toast(`Mis à jour en v${ver}`) });
-  window.__lumiere = { S, mesures, get M() { return M; }, get L() { return L; }, get R() { return R; }, get C() { return C; }, obus, barrage, basculerEtape, appliquerQualite, voirPreset, scene, lancerBanc, get banque() { return banque; }, tracerMesures, monter, dimensionner };
+  window.__lumiere = { S, mesures, meteoNow, METEOS, get M() { return M; }, get L() { return L; }, get R() { return R; }, get C() { return C; }, obus, barrage, basculerEtape, appliquerQualite, voirPreset, scene, lancerBanc, get banque() { return banque; }, tracerMesures, monter, dimensionner };
   requestAnimationFrame(boucle);
 }
 demarrer();

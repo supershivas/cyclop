@@ -1,7 +1,7 @@
 // La foule : des milliers de soldats de quelques pixels, un simple va-et-vient (marche au hasard + vagues d'assaut), aucun gameplay.
 // Logique pure et déterministe (un xorshift par soldat, semé par la graine) ; le coût ne dépend que du nombre de soldats, jamais de la lumière :
 // la hauteur du sol sous chacun est lue par le nuanceur dans la texture des hauteurs, pas ici.
-import { MONDE } from './config.js?v=0.111.0';
+import { MONDE } from './config.js?v=0.112.0';
 
 export function creerFoule(M, max = MONDE.foule.max, graine = MONDE.graine) {
   const F = {
@@ -32,7 +32,7 @@ export function regler(F, n) { F.n = Math.max(0, Math.min(F.max, n | 0)); }
 const vague = u => (u <= 0 || u >= 1) ? 0 : 0.5 - 0.5 * Math.cos(Math.PI * 2 * u);
 export function avancer(F, dt) {
   F.t += dt;
-  const V = MONDE.foule.vague, n = F.n, x = F.x, z = F.z, xy = F.xy, g = F.graine, jit = 2.2 * dt, W = MONDE.largeurM, H = MONDE.profondeurM;
+  const V = MONDE.foule.vague, n = F.n, x = F.x, z = F.z, xy = F.xy, g = F.graine, jit = 0.8 * dt, W = MONDE.largeurM, H = MONDE.profondeurM;
   for (let i = 0; i < n; i++) {
     let s = g[i];
     s ^= s << 13; s >>>= 0; s ^= s >>> 17; s ^= s << 5; s >>>= 0;
@@ -50,4 +50,18 @@ export function avancer(F, dt) {
     if (z[i] < 1) z[i] = 1; else if (z[i] > H - 1) z[i] = H - 1;
     xy[2 * i] = x[i]; xy[2 * i + 1] = z[i];
   }
+}
+
+// Les `n` soldats les plus proches d'un point (mètres) : ceux que l'on dessine avec le vrai modèle du jeu. Rend le nombre trouvé et remplit `sortie` (des indices, du plus proche au plus loin).
+// Un rayon qui double jusqu'à trouver assez d'hommes, puis un tri des seuls candidats : le coût suit le nombre de soldats une fois (un passage), jamais le tri de toute la foule.
+export function plusProches(F, cx, cz, n, sortie, d2 = new Float32Array(F.max)) {
+  let R2 = 30 * 30, trouves = 0;
+  for (;;) {
+    trouves = 0;
+    for (let i = 0; i < F.n; i++) { const dx = F.x[i] - cx, dz = F.z[i] - cz, d = dx * dx + dz * dz; if (d < R2 && trouves < sortie.length) { sortie[trouves++] = i; d2[i] = d; } }
+    if (trouves >= n || R2 > 1e7) break;
+    R2 *= 4;
+  }
+  const liste = Array.from(sortie.subarray(0, trouves)).sort((a, b) => d2[a] - d2[b] || a - b).slice(0, n);
+  sortie.set(liste); return liste.length;
 }

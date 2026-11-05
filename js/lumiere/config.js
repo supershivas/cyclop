@@ -46,11 +46,23 @@ export const RESOLUTIONS = {
   native: { nom: 'Native', hauteur: 0 },
 };
 
+// Une météo = des nombres de 0 à 1 que l'on peut mélanger en continu (la météo évolue : `melangerMeteo` de ciel.js) :
+// humidite (boue et flaques), pluie, neige, brouillard, voile (la couverture des nuages), soleil (ce qui passe des rayons), vent (m/s)
 export const METEOS = {
-  sec: { nom: 'Sec', humidite: 0, pluie: 0, voile: 0.0, soleil: 1.0 },
-  pluie: { nom: 'Pluie', humidite: 0.6, pluie: 1, voile: 0.55, soleil: 0.35 },
-  boue: { nom: 'Boue', humidite: 1, pluie: 0.2, voile: 0.3, soleil: 0.6 },
+  sec: { nom: 'Sec', humidite: 0, pluie: 0, neige: 0, brouillard: 0, voile: 0.3, soleil: 1.0, vent: 2 },
+  pluie: { nom: 'Pluie', humidite: 0.6, pluie: 1, neige: 0, brouillard: 0.15, voile: 0.8, soleil: 0.3, vent: 6 },
+  boue: { nom: 'Boue', humidite: 1, pluie: 0.2, neige: 0, brouillard: 0.1, voile: 0.5, soleil: 0.6, vent: 3 },
+  brouillard: { nom: 'Brouillard', humidite: 0.35, pluie: 0, neige: 0, brouillard: 1, voile: 0.7, soleil: 0.35, vent: 0.5 },
+  neige: { nom: 'Neige', humidite: 0.1, pluie: 0, neige: 1, brouillard: 0.18, voile: 0.85, soleil: 0.3, vent: 4 },
 };
+// La météo qui évolue : tous les `tenueS` secondes de jeu, le temps vers lequel elle glisse change (hasard à graine) ; `vitesse` : la part de l'écart rattrapée par seconde
+export const METEO_AUTO = { tenueS: [22, 40], vitesse: 0.12, suite: { sec: ['sec', 'boue', 'brouillard', 'pluie'], boue: ['sec', 'pluie', 'brouillard'], pluie: ['boue', 'pluie', 'neige', 'brouillard'], brouillard: ['sec', 'boue', 'pluie'], neige: ['neige', 'brouillard', 'sec'] } };
+// Les nuages : un champ de bruit sur un plan à `hauteurM` ; la même fonction fait le ciel et les ombres au sol (le nuage et son ombre s'accordent)
+export const NUAGES = { hauteurM: 420, echelleM: 140, derive: 0.9 };
+// Le faux terrain autour de la carte : un sol qui se prolonge jusqu'à l'horizon (calculé à l'écran, sans maillage)
+export const HORS_CARTE = { echelleM: 38, relief: 0.8, fonduM: 1800 };
+// Les vrais soldats du jeu (js/rendu/soldat-articule.js) : les `max` hommes les plus proches du point visé, dès `pxmMoyen` pixels par mètre ; le modèle fin dès `pxmFin`
+export const SOLDATS_REELS = { max: 150, pxmMoyen: 9, pxmFin: 20 };
 
 // Le ciel et le soleil : ils ne tirent leurs couleurs que de la palette du jeu (js/palette.js), mélangées en continu.
 export const SOLEIL = {

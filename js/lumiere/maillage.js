@@ -1,8 +1,8 @@
 // Le maillage d'un chunk : des colonnes de hauteur en cubes (un dessus, des flancs là où le voisin est plus bas) et, au-dessus des abris, un toit d'un cube.
 // Logique pure (des tableaux de nombres) : rendu.js les téléverse tels quels. Un sommet = 8 nombres : x, y, z (mètres), ao, variation, normale (0..5), matière, « dessous » (1 sous un toit).
 // L'AO des arêtes (étape 2) est cuite ici, façon Minecraft : un sommet sombrit selon les trois colonnes qui le touchent. `opts.ao` faux : tout vaut 1.
-import { MONDE } from './config.js?v=0.111.0';
-import { MAT, ROOF_Q } from './terrain.js?v=0.111.0';
+import { MONDE } from './config.js?v=0.112.0';
+import { MAT, ROOF_Q } from './terrain.js?v=0.112.0';
 
 export const FLOATS = 8;
 const hache = (i, j) => { let h = Math.imul(i, 374761393) ^ Math.imul(j, 668265263); h = Math.imul(h ^ (h >>> 13), 1274126177); return ((h ^ (h >>> 16)) >>> 0) / 4294967296; };
@@ -54,8 +54,8 @@ export function construireChunk(M, cx, cy, { ao = true } = {}, B = creerTampons(
     // les flancs : de ce côté, la colonne est plus haute que sa voisine
     for (let d = 0; d < 4; d++) {
       const ni = i + (d === 0 ? 1 : d === 1 ? -1 : 0), nj = j + (d === 2 ? 1 : d === 3 ? -1 : 0);
-      if (ni < 0 || nj < 0 || ni >= W || nj >= H) continue;
-      const nidx = nj * W + ni, nRoof = toit[nidx], nSol = nRoof ? sol[nidx] : top[nidx];
+      const dehors = ni < 0 || nj < 0 || ni >= W || nj >= H;          // au bord de la carte : un flanc jusqu'au faux terrain qui l'entoure
+      const nidx = dehors ? 0 : nj * W + ni, nRoof = dehors ? 0 : toit[nidx], nSol = dehors ? M.bordQ : nRoof ? sol[nidx] : top[nidx];
       const sousToit = (r || nRoof) ? 1 : 0;
       // le mur de terre : du sol voisin au sol de cette colonne
       if (sg > nSol) {
@@ -70,7 +70,7 @@ export function construireChunk(M, cx, cy, { ao = true } = {}, B = creerTampons(
         quad(B.sol, a, b, c, e, nn, m2, sousToit, [hb, hb, top1, top1], vr);
       }
       // le flanc d'un toit : visible là où la voisine est plus basse que lui
-      if (r && nRoof !== r) {
+      if (r && !dehors && nRoof !== r) {
         const nt = top[nidx];
         if (nt < r) {
           const ya = Math.max(r - ROOF_Q, nt) * mq, yb = r * mq, nn = d === 0 ? 2 : d === 1 ? 3 : d === 2 ? 4 : 5;

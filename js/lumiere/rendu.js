@@ -2,11 +2,12 @@
 // Passes : 1) la scène dans un tampon (couleur + profondeur) : sol, toits, soldats, débris, fumée, pluie ;
 //          2) l'AO écran (étape 8), si demandée ;  3) la composition à l'écran : ciel, fondu avec la distance, brume au sol (étape 5), AO écran, écran partagé.
 // Chaque étape de lumière est un interrupteur de nuanceur (`cfg.etapes`), jamais une autre version du code : c'est ce qui rend « tout activé / tout désactivé » instantané.
-import { MONDE, ATMOSPHERE, CAMERA } from './config.js?v=0.111.0';
-import { MAT } from './terrain.js?v=0.111.0';
-import { FLOATS, construireChunk, creerTampons } from './maillage.js?v=0.111.0';
-import { matrices } from './camera.js?v=0.111.0';
-import { COULEURS_MATIERES, COUL } from './ciel.js?v=0.111.0';
+import { MONDE, ATMOSPHERE, CAMERA, NUAGES, HORS_CARTE } from './config.js?v=0.112.0';
+import { MAT } from './terrain.js?v=0.112.0';
+import { FLOATS, construireChunk, creerTampons } from './maillage.js?v=0.112.0';
+import { matrices } from './camera.js?v=0.112.0';
+import * as REELS from './soldats-reels.js?v=0.112.0';
+import { COULEURS_MATIERES, COUL } from './ciel.js?v=0.112.0';
 
 const GLSL_COMMUN = `#version 300 es
 precision highp float; precision highp int; precision highp sampler2D;
@@ -15,28 +16,36 @@ uniform vec3 uSunDir, uSunCol, uSkyAmb, uGroundAmb, uSkyH, uSkyZ, uCam;
 uniform vec4 uS;            // 1 directe, 2 AO, 4 propagée, 7 météo (0 ou 1)
 uniform float uWet, uExpo, uNuit;
 uniform int uFlashN; uniform vec4 uFlashA[8]; uniform vec4 uFlashB[8];
+uniform vec4 uNuage;                 // couverture, décalage x, décalage z (m), échelle (1/m)
+uniform float uNuageH, uNeige, uVent, uTemps; uniform vec3 uSnow;
+vec4 gS;                             // les interrupteurs d'étapes de CE pixel (l'écran partagé en a deux jeux)
+float h21(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+float vn(vec2 p) { vec2 i = floor(p), f = fract(p); f = f * f * (3. - 2. * f); return mix(mix(h21(i), h21(i + vec2(1, 0)), f.x), mix(h21(i + vec2(0, 1)), h21(i + vec2(1, 1)), f.x), f.y); }
+// la densité du ciel au point q (mètres) du plan des nuages : la même fonction fait les nuages du ciel et leur ombre au sol
+float nuageAt(vec2 q) { vec2 p = (q + uNuage.yz) * uNuage.w; float n = vn(p) * .55 + vn(p * 2.1 + 7.) * .3 + vn(p * 4.3 + 3.) * .15; float c = 1. - uNuage.x * 1.1; return smoothstep(c, c + .3, n); }
 vec3 ciel(vec3 d) { float t = clamp(d.y, 0., 1.); vec3 c = mix(uSkyH, uSkyZ, pow(t, .55)); c += uSunCol * pow(max(dot(d, uSunDir), 0.), 28.) * .22; return c; }
 vec3 finir(vec3 c) { c *= uExpo; c = c / (1. + c * .22); return pow(clamp(c, 0., 1.), vec3(1. / 2.2)); }
 vec3 eclairer(vec3 alb, vec3 N, vec3 P, vec4 Ld, float ao, float under, float mud, float pudFlat) {
-  float wet = uS.w > .5 ? uWet : 0.;
+  float wet = gS.w > .5 ? uWet : 0.;
+  if (gS.w > .5) alb = mix(alb, uSnow, uNeige * smoothstep(.55, .95, N.y) * .8);          // la neige blanchit ce qui regarde le ciel
   alb *= 1. - .5 * wet * mud;                                              // la boue mouillée est plus sombre
   float nl = max(dot(N, uSunDir), 0.);
   vec3 hemi = mix(uGroundAmb, uSkyAmb, N.y * .5 + .5);
-  float aoF = uS.y > .5 ? ao * (.3 + .7 * pow(Ld.g, 1.3)) : 1.;
+  float aoF = gS.y > .5 ? ao * (.3 + .7 * pow(Ld.g, 1.3)) : 1.;
   vec3 sun = vec3(0.), amb;
-  if (uS.x > .5) { sun = uSunCol * nl * Ld.r; amb = hemi * aoF; }
+  if (gS.x > .5) { sun = uSunCol * nl * Ld.r; amb = hemi * aoF; if (gS.w > .5) sun *= 1. - .72 * nuageAt(P.xz + uSunDir.xz / max(uSunDir.y, .08) * uNuageH); }      // l'ombre d'un nuage
   else amb = vec3(.62 + .38 * max(dot(N, normalize(vec3(-.4, .8, .45))), 0.)) * .8 * aoF;   // plat : seule la forme des cubes se lit
-  if (uS.z > .5 && under > .5) { float fl = Ld.b; sun = vec3(0.); amb *= fl * fl; }       // sous un toit : le soleil n'entre pas, la lumière se propage
+  if (gS.z > .5 && under > .5) { float fl = Ld.b; sun = vec3(0.); amb *= fl * fl; }       // sous un toit : le soleil n'entre pas, la lumière se propage
   vec3 col = alb * (sun + amb);
   vec3 V = normalize(uCam - P);
   if (wet > 0.) {                                                          // boue brillante, flaques qui reflètent le ciel
     float thr = 1. - .85 * wet, pud = smoothstep(thr, thr + .25, Ld.a) * pudFlat * step(.01, wet);
     vec3 H = normalize(V + uSunDir);
-    float spec = pow(max(dot(N, H), 0.), mix(10., 110., wet)) * (.12 * mud + .9 * pud) * wet * (uS.x > .5 ? Ld.r : 1.) * step(.01, nl);
+    float spec = pow(max(dot(N, H), 0.), mix(10., 110., wet)) * (.12 * mud + .9 * pud) * wet * (gS.x > .5 ? Ld.r : 1.) * step(.01, nl);
     float fres = .15 + .85 * pow(1. - max(dot(N, V), 0.), 4.);
     vec3 refl = ciel(reflect(-V, N)) * (.35 + .65 * fres);
     col = mix(col, refl * .85, pud * .8) + uSunCol * spec;
-    if (under > .5 && uS.z > .5) col = mix(col, alb * amb, pud);
+    if (under > .5 && gS.z > .5) col = mix(col, alb * amb, pud);
   }
   for (int k = 0; k < 8; k++) {                                            // les lumières temporaires (étape 6)
     if (k >= uFlashN) break;
@@ -57,6 +66,7 @@ uniform vec3 uMat[8]; uniform float uAlpha;
 in vec3 vP; flat in vec3 vN; in float vAO, vVar; flat in float vMat, vUnder;
 out vec4 o;
 void main() {
+  gS = uS;
   vec3 N = normalize(vN);
   vec3 alb = uMat[int(vMat + .5)] * (1. + (vVar - .5) * .2);
   vec2 sp = (vP.xz + N.xz * .5 * uCell) / uCell;
@@ -67,10 +77,11 @@ void main() {
 }`;
 
 const VS_SOLDATS = `${GLSL_COMMUN}
-layout(location = 0) in vec2 aXZ; layout(location = 1) in float aCamp;
+layout(location = 0) in vec2 aXZ; layout(location = 1) in float aCamp; layout(location = 2) in float aHide;
 uniform mat4 uVP; uniform sampler2D uHF; uniform float uPx17;
 out vec3 vP; flat out float vCamp; flat out float vSize;
 void main() {
+  if (aHide > .5) { gl_Position = vec4(2., 2., 2., 1.); gl_PointSize = 0.; return; }           // cet homme est dessiné avec le vrai modèle du jeu
   ivec2 c = ivec2(floor(aXZ / uCell));
   float h = texelFetch(uHF, clamp(c, ivec2(0), ivec2(uGrid) - 1), 0).r;
   vP = vec3(aXZ.x, h + .85, aXZ.y);
@@ -82,11 +93,12 @@ uniform vec3 uNous, uEux;
 in vec3 vP; flat in float vCamp; flat in float vSize;
 out vec4 o;
 void main() {
+  gS = uS;
   vec2 p = gl_PointCoord - .5;
   if (abs(p.x) > max(.15, .55 / vSize)) discard;
   vec3 alb = vCamp > .5 ? uEux : uNous;
   vec4 Ld = texture(uLight, vP.xz / uCell / uGrid);
-  vec3 c = eclairer(alb * (p.y < -.32 ? 1.25 : 1.), vec3(0, 1, 0), vP, Ld, 1., 0., 0., 0.);
+  vec3 c = eclairer(alb * (p.y < -.32 ? 0.85 : 0.62), vec3(0, 1, 0), vP, Ld, 1., 0., 0., 0.);
   o = vec4(finir(c), 1.);
 }`;
 
@@ -100,7 +112,7 @@ uniform vec3 uMat[8];
 in vec3 vP; flat in float vGenre, vAlpha, vSize;
 out vec4 o;
 void main() {
-  vec2 p = gl_PointCoord - .5; float d = length(p) * 2.;
+  gS = uS; vec2 p = gl_PointCoord - .5; float d = length(p) * 2.;
   vec4 Ld = texture(uLight, vP.xz / uCell / uGrid);
   if (vGenre < .5) {
     vec3 c = eclairer(uMat[2], vec3(0, 1, 0), vP, Ld, 1., 0., 0., 0.);
@@ -108,7 +120,7 @@ void main() {
   }
   float a = vAlpha * (1. - smoothstep(.2, 1., d)); if (a < .01 || d > 1.) discard;
   vec3 alb = vGenre < 1.5 ? vec3(.07, .065, .06) + uMat[0] * .0 : uMat[0] * .8;    // fumée sombre, poussière claire
-  vec3 c = alb * (uSunCol * .5 * (uS.x > .5 ? Ld.r : 1.) + uSkyAmb * 1.1);
+  vec3 c = alb * (uSunCol * .5 * (gS.x > .5 ? Ld.r : 1.) + uSkyAmb * 1.1);
   for (int k = 0; k < 8; k++) { if (k >= uFlashN) break; vec3 dd = uFlashA[k].xyz - vP; float dist = length(dd), f = clamp(1. - dist / uFlashA[k].w, 0., 1.); c += alb * uFlashB[k].rgb * f * f * uFlashB[k].a * .8; }
   o = vec4(finir(c), a);
 }`;
@@ -121,12 +133,25 @@ void main() {
   int id = gl_VertexID >> 1; float f = float(id), bout = float(gl_VertexID & 1);
   vec3 p = uCentre + vec3((h(f) - .5) * 120., 0., (h(f + .37) - .5) * 120.);
   float y = fract(h(f + .71) - uT * (.55 + .2 * h(f + 2.))) * 55.;
-  p.y = y + bout * 1.6; p.x += bout * .35;
+  p.y = y + bout * 1.6; p.x += bout * (.15 + .06 * uVent);
   vA = (1. - bout) * .5 + .15; gl_Position = uVP * vec4(p, 1.);
 }`;
 const FS_PLUIE = `${GLSL_COMMUN}
 in float vA; out vec4 o;
 void main() { o = vec4(finir(uSkyH * 1.3 + .1), vA * .55); }`;
+
+const VS_NEIGE = `${GLSL_COMMUN}
+uniform mat4 uVP; uniform vec3 uCentre;
+float h(float n) { return fract(sin(n * 127.1) * 43758.5453); }
+void main() {
+  float f = float(gl_VertexID);
+  vec3 p = uCentre + vec3((h(f) - .5) * 120., 0., (h(f + .37) - .5) * 120.);
+  p.y = fract(h(f + .71) - uTemps * (.03 + .015 * h(f + 2.))) * 55.;
+  p.x += sin(uTemps * .8 + f) * 1.5 + uVent * p.y * .12; p.z += cos(uTemps * .6 + f * 1.3) * 1.2;
+  gl_Position = uVP * vec4(p, 1.); gl_PointSize = 2. + 1.5 * step(.8, h(f + 5.));
+}`;
+const FS_NEIGE = `${GLSL_COMMUN}
+out vec4 o; void main() { o = vec4(finir(uSnow * 1.6 + .15), .85); }`;
 
 const VS_PLEIN = `#version 300 es
 out vec2 uv; void main() { vec2 p = vec2(gl_VertexID == 1 ? 3. : -1., gl_VertexID == 2 ? 3. : -1.); uv = p * .5 + .5; gl_Position = vec4(p, 0., 1.); }`;
@@ -163,24 +188,63 @@ void main() { float s = 0.; for (int j = -2; j < 2; j++) for (int i = -2; i < 2;
 
 const FS_COMPO = `${GLSL_COMMUN}
 in vec2 uv; out vec4 o;
-uniform sampler2D uColor, uDepth, uAOtex; uniform mat4 uInvVP;
+uniform sampler2D uColor, uDepth, uAOtex; uniform mat4 uInvVP; uniform vec3 uLuneDir, uNuageCoul; uniform vec4 uHors; uniform float uBordY, uEtoiles;
+uniform vec3 uMat[8];
 uniform float uFondu, uSplit, uAOon, uBrumeOn, uBrumeD, uBrumeK; uniform vec3 uBrumeCoul;
+// le ciel : dégradé, soleil, lune, étoiles, nuages qui dérivent (ils se lisent sur le même champ que leur ombre au sol)
+vec3 cielComplet(vec3 rd) {
+  vec3 c = ciel(rd);
+  if (rd.y > .0) {
+    c += uSunCol * smoothstep(.9994, .9998, dot(rd, uSunDir)) * 2.;                       // le disque du soleil
+    if (uEtoiles > .01) {
+      vec2 g = rd.xz / (rd.y + .25) * 70.; float hh = h21(floor(g)), dd = length(fract(g) - .5);
+      c += vec3(.8, .85, .9) * step(.985, hh) * smoothstep(.3, .05, dd) * (.55 + .45 * sin(uTemps * 3. + hh * 60.)) * uEtoiles * 1.6;
+      c += vec3(.9, .9, .82) * smoothstep(.9985, .9992, dot(rd, uLuneDir)) * 1.4 * uEtoiles;       // la lune
+    }
+    float t = (uNuageH - uCam.y) / max(rd.y, .001);
+    float d = nuageAt(uCam.xz + rd.xz * t) * smoothstep(.0, .16, rd.y);
+    c = mix(c, uNuageCoul * (1. + uSunCol * .25) , d * .88);
+  }
+  return c;
+}
+// le faux terrain : un sol qui se prolonge jusqu'à l'horizon (la carte est un plateau de la même matière) ; du bruit, des plages d'herbe, de glaise et de boue, un relief qui ne sert qu'à l'ombrage
+float relief(vec2 q) { return vn(q * .35) * .6 + vn(q * .9 + 5.) * .3 + vn(q * 2.3) * .1; }
+vec3 horsCarte(vec3 rd) {
+  float t = (uBordY - uCam.y) / rd.y; vec3 P = uCam + rd * t;
+  vec2 q = P.xz / uHors.x; float n1 = vn(q * .35), n2 = vn(q * 1.2 + 4.), n3 = vn(q * 3.1 + 9.), n4 = vn(q * 9. + 2.);
+  vec3 alb = mix(uMat[0], uMat[1], smoothstep(.42, .66, n1));
+  alb = mix(alb, uMat[3], smoothstep(.55, .85, n2) * .65);
+  alb = mix(alb, uMat[6], smoothstep(.62, .85, n3) * .45);
+  alb *= .88 + .24 * n4;                                                      // du grain
+  vec2 e = vec2(.4, 0.);
+  vec3 N = normalize(vec3(-(relief(q + e.xy) - relief(q - e.xy)) * uHors.y, 1., -(relief(q + e.yx) - relief(q - e.yx)) * uHors.y));
+  float terre = smoothstep(.5, .75, n2);
+  return eclairer(alb, N, P, vec4(1., 1., 1., 0.), 1., 0., terre, 1.);
+}
 void main() {
   bool off = uv.x < uSplit;
+  gS = off ? vec4(0.) : uS;
   float dp = texture(uDepth, uv).r;
   vec4 w = uInvVP * vec4(uv * 2. - 1., dp * 2. - 1., 1.); vec3 P = w.xyz / w.w;
   vec3 rd = normalize(P - uCam); float dist = length(P - uCam);
   vec3 hz = finir(uSkyH);
   vec3 col;
-  if (dp >= .9999) col = mix(finir(ciel(rd)), finir(uGroundAmb * .8), smoothstep(.04, -.1, rd.y));   // le ciel, et sous l'horizon le hors-carte (sombre)
-  else {
+  if (dp >= .9999) {
+    if (rd.y < -.0015) {                                                       // sous l'horizon : le faux terrain, qui se perd dans la brume
+      col = finir(horsCarte(rd));
+      float t = (uBordY - uCam.y) / rd.y;
+      col = mix(col, hz, 1. - exp(-t * uFondu * .5));
+      dist = t;
+    } else col = finir(cielComplet(rd));
+  } else {
     col = texture(uColor, uv).rgb;
     if (!off && uAOon > .5) col *= texture(uAOtex, uv).r;
     col = mix(col, hz, 1. - exp(-dist * uFondu));                         // le fondu avec la distance (toujours là)
   }
-  if (!off && uBrumeOn > .5 && dp < .9999) {                               // la brume au sol : épaisse en bas, légère en haut (intégrale exacte le long du rayon)
+  if (!off && uBrumeOn > .5) {                                              // la brume au sol : épaisse en bas, légère en haut (intégrale exacte le long du rayon)
     float k = uBrumeK, ry = abs(rd.y) < .002 ? .002 * sign(rd.y + 1e-6) : rd.y;
     float dens = uBrumeD * exp(-k * uCam.y) * (1. - exp(-k * ry * dist)) / (k * ry);
+    if (dp >= .9999 && rd.y >= -.0015) dens = uBrumeD * exp(-k * uCam.y) / k * (.12 + .5 * smoothstep(.12, .0, rd.y));        // le ciel bas : de la brume seulement près de l'horizon
     col = mix(col, finir(uBrumeCoul), 1. - exp(-dens));
   }
   o = vec4(col, 1.);
@@ -207,12 +271,12 @@ export function creerRendu(canvas) {
 
   const progs = {
     sol: programme(gl, VS_SOL, FS_SOL, 'sol'), soldats: programme(gl, VS_SOLDATS, FS_SOLDATS, 'soldats'), parts: programme(gl, VS_PARTS, FS_PARTS, 'particules'),
-    pluie: programme(gl, VS_PLUIE, FS_PLUIE, 'pluie'), ssao: programme(gl, VS_PLEIN, FS_SSAO, 'ssao'), flou: programme(gl, VS_PLEIN, FS_FLOU, 'flou'), compo: programme(gl, VS_PLEIN, FS_COMPO, 'composition'),
+    pluie: programme(gl, VS_PLUIE, FS_PLUIE, 'pluie'), neige: programme(gl, VS_NEIGE, FS_NEIGE, 'neige'), reels: programme(gl, REELS.glslVert(), REELS.glslFrag(GLSL_COMMUN), 'vrais soldats'), ssao: programme(gl, VS_PLEIN, FS_SSAO, 'ssao'), flou: programme(gl, VS_PLEIN, FS_FLOU, 'flou'), compo: programme(gl, VS_PLEIN, FS_COMPO, 'composition'),
   };
   const R = { gl, info, stats: { triangles: 0, appels: 0 }, gpu: { scene: null, ssao: null, composition: null }, largeur: 1, hauteur: 1 };
 
   // ─── les textures de données : la lumière (RGBA8) et les hauteurs (R32F), une case = un texel ───
-  let texLum = null, texHF = null, tampons = null, chunks = [], vaoS = null, vboS = null, vboC = null;
+  let texLum = null, texHF = null, tampons = null, chunks = [], vaoS = null, vboS = null, vboC = null, vboH = null, masqueSale = true;
   const reglerTex = (t, fmt, interne, type, data, filtre) => {
     gl.bindTexture(gl.TEXTURE_2D, t);
     gl.texImage2D(gl.TEXTURE_2D, 0, interne, M.W, M.H, 0, fmt, type, data);
@@ -223,18 +287,19 @@ export function creerRendu(canvas) {
   R.relier = (M2, L2, F2) => {
     for (const c of chunks) if (c) for (const k of ['sol', 'toit']) if (c[k].vao) { gl.deleteVertexArray(c[k].vao); gl.deleteBuffer(c[k].vbo); gl.deleteBuffer(c[k].ibo); }
     for (const t of [texLum, texHF]) if (t) gl.deleteTexture(t);
-    if (vaoS) { gl.deleteVertexArray(vaoS); gl.deleteBuffer(vboS); gl.deleteBuffer(vboC); }
+    if (vaoS) { gl.deleteVertexArray(vaoS); gl.deleteBuffer(vboS); gl.deleteBuffer(vboC); gl.deleteBuffer(vboH); }
     M = M2; L = L2; F = F2;
     texLum = gl.createTexture(); texHF = gl.createTexture();
     gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
     reglerTex(texLum, gl.RGBA, gl.RGBA8, gl.UNSIGNED_BYTE, L.tex, gl.LINEAR);
     reglerTex(texHF, gl.RED, gl.R32F, gl.FLOAT, L.hf, gl.NEAREST);
     tampons = creerTampons(M); chunks = new Array(M.cw * M.chh).fill(null);
-    vaoS = gl.createVertexArray(); vboS = gl.createBuffer(); vboC = gl.createBuffer();
+    vaoS = gl.createVertexArray(); vboS = gl.createBuffer(); vboC = gl.createBuffer(); vboH = gl.createBuffer();
     gl.bindVertexArray(vaoS);
     gl.bindBuffer(gl.ARRAY_BUFFER, vboS); gl.bufferData(gl.ARRAY_BUFFER, F.xy.byteLength, gl.DYNAMIC_DRAW); gl.enableVertexAttribArray(0); gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
     gl.bindBuffer(gl.ARRAY_BUFFER, vboC); gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(F.camp), gl.STATIC_DRAW); gl.enableVertexAttribArray(1); gl.vertexAttribPointer(1, 1, gl.FLOAT, false, 0, 0);
-    gl.bindVertexArray(null);
+    gl.bindBuffer(gl.ARRAY_BUFFER, vboH); gl.bufferData(gl.ARRAY_BUFFER, F.max * 4, gl.DYNAMIC_DRAW); gl.enableVertexAttribArray(2); gl.vertexAttribPointer(2, 1, gl.FLOAT, false, 0, 0);
+    gl.bindVertexArray(null); masqueSale = true;
   };
   // le téléversement d'une région seulement (le recalcul local ne renvoie jamais toute la carte)
   const sous = (tex, region, fmt, type, data, pixel) => {
@@ -275,6 +340,23 @@ export function creerRendu(canvas) {
   gl.bindVertexArray(vaoP); gl.bindBuffer(gl.ARRAY_BUFFER, vboP);
   gl.enableVertexAttribArray(0); gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 24, 0); gl.enableVertexAttribArray(1); gl.vertexAttribPointer(1, 3, gl.FLOAT, false, 24, 12); gl.bindVertexArray(null);
   const vaoVide = gl.createVertexArray();
+
+  // ─── les vrais soldats : le modèle du jeu (deux niveaux de détail), un tampon d'instances de 26 nombres par homme ───
+  const instR = gl.createBuffer(), vaoR = {}; let capR = 0;
+  const niveauR = niveau => {
+    if (vaoR[niveau]) return vaoR[niveau];
+    const Mo = REELS.modele(niveau), v = gl.createVertexArray(), P = progs.reels; gl.bindVertexArray(v);
+    for (const [nom, k, cle] of REELS.PAR_SOMMET) {
+      const loc = gl.getAttribLocation(P.p, nom); if (loc < 0) continue;
+      const b = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, b); gl.bufferData(gl.ARRAY_BUFFER, Mo[cle], gl.STATIC_DRAW); gl.enableVertexAttribArray(loc); gl.vertexAttribPointer(loc, k, gl.FLOAT, false, 0, 0);
+    }
+    gl.bindBuffer(gl.ARRAY_BUFFER, instR);
+    for (const [nom, k, off] of REELS.ATTRIBUTS) { const loc = gl.getAttribLocation(P.p, nom); if (loc < 0) continue; gl.enableVertexAttribArray(loc); gl.vertexAttribPointer(loc, k, gl.FLOAT, false, REELS.FLOATS * 4, off * 4); gl.vertexAttribDivisor(loc, 1); }
+    gl.bindVertexArray(null);
+    return (vaoR[niveau] = { v, n: Mo.triangles * 3 });
+  };
+  const paletteReels = () => { const o = {}; for (const [k, l] of Object.entries(REELS.COULEURS)) o[k] = COUL[l]; for (const [k, ls] of Object.entries(REELS.COULEURS_LISTES)) o[k] = ls.flatMap(l => COUL[l]); return o; };
+  const PAL_R = paletteReels();
 
   // ─── les tampons d'image : scène (couleur + profondeur), AO ───
   let fbo = null, texCoul = null, texProf = null, fboAO = null, texAO = null, fboAO2 = null, texAO2 = null;
@@ -320,6 +402,7 @@ export function creerRendu(canvas) {
   };
 
   const uMat = new Float32Array(COULEURS_MATIERES.flat());
+  const NEIGE_COUL = COUL.o.map((v, i) => (v * 0.78 + COUL.r[i] * 0.22) * 0.72);
   const poserCommun = (P, E, cam, m) => {
     const u = P.u, U3 = (n, v) => u[n] && gl.uniform3f(u[n], v[0], v[1], v[2]);
     if (u.uVP) gl.uniformMatrix4fv(u.uVP, false, m.vp);
@@ -328,6 +411,8 @@ export function creerRendu(canvas) {
     U3('uSunDir', E.ciel.sunDir); U3('uSunCol', E.ciel.sunCol); U3('uSkyAmb', E.ciel.skyAmb); U3('uGroundAmb', E.ciel.groundAmb); U3('uSkyH', E.ciel.skyH); U3('uSkyZ', E.ciel.skyZ); U3('uCam', m.oeil);
     u.uS && gl.uniform4f(u.uS, E.etapes[1] ? 1 : 0, E.etapes[2] ? 1 : 0, E.etapes[4] ? 1 : 0, E.etapes[7] ? 1 : 0);
     u.uWet && gl.uniform1f(u.uWet, E.ciel.humidite); u.uExpo && gl.uniform1f(u.uExpo, E.ciel.expo); u.uNuit && gl.uniform1f(u.uNuit, E.ciel.nuit);
+    u.uNuage && gl.uniform4f(u.uNuage, E.ciel.nuages.couverture, E.derive[0], E.derive[1], 1 / NUAGES.echelleM); u.uNuageH && gl.uniform1f(u.uNuageH, NUAGES.hauteurM);
+    u.uNeige && gl.uniform1f(u.uNeige, E.ciel.neige); u.uSnow && gl.uniform3f(u.uSnow, ...NEIGE_COUL); u.uVent && gl.uniform1f(u.uVent, E.ciel.vent); u.uTemps && gl.uniform1f(u.uTemps, E.temps);
     const fl = E.etapes[6] ? E.flashs.slice(0, 8) : [];
     u.uFlashN && gl.uniform1i(u.uFlashN, fl.length);
     if (fl.length && u.uFlashA) {
@@ -362,6 +447,12 @@ export function creerRendu(canvas) {
       gl.bindVertexArray(vaoS);
       gl.drawArrays(gl.POINTS, 0, F.n); R.stats.appels++;
       gl.activeTexture(gl.TEXTURE0);
+      if (E.reels && E.reels.n) {                                          // les vrais soldats du jeu, de près
+        P = progs.reels; gl.useProgram(P.p); poserCommun(P, ee, E.camera, m);
+        gl.uniform1f(P.u.uShade, 0); gl.uniform1f(P.u.uVoir, 1);
+        for (const [k, v] of Object.entries(PAL_R)) if (P.u[k]) (v.length === 3 ? gl.uniform3f(P.u[k], ...v) : gl.uniform3fv(P.u[k], v));
+        const g = niveauR(E.reels.niveau); gl.bindVertexArray(g.v); gl.drawArraysInstanced(gl.TRIANGLES, 0, g.n, E.reels.n); R.stats.appels++; R.stats.triangles += g.n / 3 * E.reels.n;
+      }
       // les débris, puis (sans écrire la profondeur) fumée, poussière, toits transparents et pluie
       const np = E.particules.n, nd = E.particules.nd;
       P = progs.parts;
@@ -377,11 +468,17 @@ export function creerRendu(canvas) {
         P = progs.pluie; gl.useProgram(P.p); poserCommun(P, ee, E.camera, m); gl.uniform1f(P.u.uT, E.temps); gl.uniform3f(P.u.uCentre, E.camera.cible[0] , 0, E.camera.cible[2]);
         gl.bindVertexArray(vaoVide); gl.drawArrays(gl.LINES, 0, Math.floor(2600 * E.ciel.pluie)); R.stats.appels++;
       }
+      if (E.etapes === ee.etapes && E.ciel.neige > 0.02 && etapes[7]) {
+        P = progs.neige; gl.useProgram(P.p); poserCommun(P, ee, E.camera, m); gl.uniform3f(P.u.uCentre, E.camera.cible[0], 0, E.camera.cible[2]);
+        gl.bindVertexArray(vaoVide); gl.drawArrays(gl.POINTS, 0, Math.floor(3000 * E.ciel.neige)); R.stats.appels++;
+      }
       gl.depthMask(true); gl.disable(gl.BLEND); gl.disable(gl.SCISSOR_TEST);
     };
     // la foule et les particules : les tampons partent une fois par image (même en écran partagé)
     gl.bindBuffer(gl.ARRAY_BUFFER, vboS); gl.bufferSubData(gl.ARRAY_BUFFER, 0, F.xy, 0, F.n * 2);
     if (E.particules.n) { gl.bindBuffer(gl.ARRAY_BUFFER, vboP); const oct = E.particules.n * 24; if (oct > capP) { capP = Math.max(oct, 24 * 2048); gl.bufferData(gl.ARRAY_BUFFER, capP, gl.DYNAMIC_DRAW); } gl.bufferSubData(gl.ARRAY_BUFFER, 0, E.particules.tampon, 0, E.particules.n * 6); }
+    if ((E.reels && E.reels.n) || masqueSale) { gl.bindBuffer(gl.ARRAY_BUFFER, vboH); gl.bufferSubData(gl.ARRAY_BUFFER, 0, E.masque, 0, F.n); masqueSale = !!(E.reels && E.reels.n); }
+    if (E.reels && E.reels.n) { gl.bindBuffer(gl.ARRAY_BUFFER, instR); const oct = E.reels.n * REELS.FLOATS * 4; if (oct > capR) { capR = oct * 2; gl.bufferData(gl.ARRAY_BUFFER, capR, gl.DYNAMIC_DRAW); } gl.bufferSubData(gl.ARRAY_BUFFER, 0, E.reels.data, 0, E.reels.n * REELS.FLOATS); }
     const tout = E.etapes, partage = E.moitie && E.split > 0;
     chrono('scene', () => {
       if (partage) {
@@ -408,9 +505,11 @@ export function creerRendu(canvas) {
       gl.activeTexture(gl.TEXTURE2); gl.bindTexture(gl.TEXTURE_2D, cSc.p); gl.uniform1i(P.u.uDepth, 2);
       gl.activeTexture(gl.TEXTURE3); gl.bindTexture(gl.TEXTURE_2D, cA2.t); gl.uniform1i(P.u.uAOtex, 3);
       gl.uniformMatrix4fv(P.u.uInvVP, false, m.invVP);
-      gl.uniform1f(P.u.uFondu, ATMOSPHERE.fondu[E.brume] || ATMOSPHERE.fondu.simple);
+      gl.uniform1f(P.u.uFondu, (ATMOSPHERE.fondu[E.brume] || ATMOSPHERE.fondu.simple) * (1 + 3.5 * (tout[7] ? E.ciel.brouillard : 0)));
       gl.uniform1f(P.u.uSplit, partage ? E.split : 0); gl.uniform1f(P.u.uAOon, ssao ? 1 : 0);
-      gl.uniform1f(P.u.uBrumeOn, tout[5] ? 1 : 0); gl.uniform1f(P.u.uBrumeD, ATMOSPHERE.brumeSol.densite * (1 + E.ciel.voile * 1.2 + E.ciel.humidite * 0.6)); gl.uniform1f(P.u.uBrumeK, ATMOSPHERE.brumeSol.chute);
+      gl.uniform1f(P.u.uBrumeOn, tout[5] || (tout[7] && E.ciel.brouillard > 0.02) ? 1 : 0);
+      gl.uniform1f(P.u.uBrumeD, (tout[5] ? ATMOSPHERE.brumeSol.densite * (1 + E.ciel.voile * 1.2 + E.ciel.humidite * 0.6) : 0) + (tout[7] ? 0.22 * E.ciel.brouillard : 0)); gl.uniform1f(P.u.uBrumeK, ATMOSPHERE.brumeSol.chute);
+      gl.uniform3f(P.u.uLuneDir, ...E.ciel.luneDir); gl.uniform3f(P.u.uNuageCoul, ...E.ciel.nuageCoul); gl.uniform4f(P.u.uHors, HORS_CARTE.echelleM, HORS_CARTE.relief, 0, 0); gl.uniform1f(P.u.uBordY, E.bordY); gl.uniform1f(P.u.uEtoiles, E.ciel.etoiles);
       gl.uniform3f(P.u.uBrumeCoul, ...E.ciel.brumeCoul);
       gl.bindVertexArray(vaoVide); gl.drawArrays(gl.TRIANGLES, 0, 3);
       gl.activeTexture(gl.TEXTURE0);
