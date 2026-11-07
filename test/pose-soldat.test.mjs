@@ -141,3 +141,27 @@ test('les os gardent leur longueur quand on plie : hanche-genou 0,4 m, genou-che
     if (!p.poussee) assert.ok(Math.abs(d('epauleD', 'coudeD') - 0.3) < 1e-6, `épaule-coude ${d('epauleD', 'coudeD')}`);      // (la poussée du nuanceur est un cisaillement : plus haut, plus en avant ; elle n'est pas rigide)
   }
 });
+
+group('poses — le fusil comme un corps');
+test('le fusil a trois rotations et trois déplacements, à son axe (0,395 m) et à la hauteur de son pivot', () => {
+  const f = articulations(poseNeutre()).fusil;
+  assert.ok(pres(f.pos, [0.395, 1.3, 0]), JSON.stringify(f.pos));
+  assert.deepEqual(f.rots.map(r => r.champ), ['fusil', 'fusilLacet', 'fusilRoulis']);
+  assert.deepEqual(f.deplace.map(d => d.champ).sort(), ['fusilH', 'fusilX', 'fusilZ']);
+});
+test('la hauteur et la poussée du fusil le déplacent, le décalage latéral aussi (en largeur d\'épaules)', () => {
+  const a = articulations(poseNeutre()).fusil.pos, b = articulations({ ...poseNeutre(), fusilH: 0.2, fusilZ: 0.3, fusilX: -0.1 }).fusil.pos;
+  assert.ok(pres(b, [a[0] - 0.1, a[1] + 0.2, a[2] + 0.3]), JSON.stringify(b));
+});
+test('le lacet et le roulis tournent autour de l\'axe du fusil : son point d\'attache ne bouge pas', () => {
+  const a = articulations(poseNeutre()).fusil.pos, b = articulations({ ...poseNeutre(), fusilLacet: 1, fusilRoulis: -0.7 }).fusil.pos;
+  assert.ok(pres(a, b));
+});
+test('les axes des trois rotations sont perpendiculaires entre eux au repos : x, y, z', () => {
+  const r = articulations(poseNeutre()).fusil.rots, d = (a, b) => Math.abs(a.axe[0] * b.axe[0] + a.axe[1] * b.axe[1] + a.axe[2] * b.axe[2]);
+  assert.ok(d(r[0], r[1]) < 1e-6 && d(r[1], r[2]) < 1e-6 && d(r[0], r[2]) < 1e-6);
+});
+test('le miroir change le sens du lacet et du roulis', () => {
+  const m = miroir({ ...poseNeutre(), fusilLacet: 0.5, fusilRoulis: -0.2, fusilH: 0.1 });
+  assert.ok(proche(m.fusilLacet, -0.5) && proche(m.fusilRoulis, 0.2) && proche(m.fusilH, 0.1));
+});

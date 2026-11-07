@@ -24,7 +24,7 @@ const GROUPES = [
   ['Jambe droite', [['hancheD', 'Hanche'], ['genouD', 'Genou'], ['chevilleD', 'Cheville']]],
   ['Bras gauche', [['epauleG', 'Épaule'], ['coudeG', 'Coude'], ['convG', 'Épaule (tour)']]],
   ['Bras droit', [['epauleD', 'Épaule'], ['coudeD', 'Coude'], ['convD', 'Épaule (tour)']]],
-  ['Fusil', [['fusil', 'Rotation'], ['fusilX', 'Côté'], ['fusilZ', 'Avant'], ['fusilY', 'Pivot (m)']]],
+  ['Fusil', [['fusil', 'Flexion'], ['fusilLacet', 'Lacet (visée)'], ['fusilRoulis', 'Roulis'], ['fusilX', 'Côté'], ['fusilH', 'Hauteur'], ['fusilZ', 'Avant'], ['fusilY', 'Pivot (m)']]],
 ];
 // Les poses du jeu qu'on peut charger comme point de départ
 const DU_JEU = [
@@ -201,7 +201,7 @@ async function demarrer() {
     n.pre = new THREE.Mesh(n.lo.geometrie, new THREE.ShaderMaterial({ uniforms: m.uniforms, vertexShader: m.vertexShader, fragmentShader: m.fragmentShader, side: m.side, colorWrite: false }));
     n.pre.frustumCulled = false; scene.add(n.pre);
   }
-  let w = 0, h = 0, dernier = performance.now();
+  let w = 0, h = 0, dernier = performance.now(), cibleLisse = null;
   // les poignées 3D (js/atelier-poignees.js) : tourner, déplacer, échelle
   const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
   const G = creerPoignees(THREE, { canvas, camera, ppm: () => S.ppm, lire: c => poseAffichee()[c], regler: reglerChamp,
@@ -211,6 +211,9 @@ async function demarrer() {
   const bAnnuler = el('button', { textContent: '↶ Annuler', title: 'Annuler (Ctrl+Z)', onclick: annuler }), bRetablir = el('button', { textContent: '↷ Rétablir', title: 'Rétablir (Ctrl+Maj+Z ou Ctrl+Y)', onclick: retablir });
   majHistorique = () => { bAnnuler.disabled = !H.pile.length; bRetablir.disabled = !H.refaire.length; };
   majHistorique(); barre.append(bAnnuler, bRetablir);
+  const viser = () => { S.focus = S.focus ? null : G.sel; };
+  const boutonViser = el('button', { textContent: 'Viser (F)', title: 'Recentre la vue sur l\'articulation choisie (touche F) : on peut zoomer très près sans la perdre', onclick: viser });
+  barre.append(boutonViser);
   barre.append(el('button', { textContent: 'Carrure ×1', title: 'Remet la carrure d\'origine (l\'échelle ne sert qu\'à l\'aperçu)', onclick: () => { S.echelle = { taille: 1, epaules: 1, ventre: 1 }; } }));
   scene3.append(barre);
   function choisirOutil(id) { G.outil = id; for (const [i, b] of boutonsOutils) b.setAttribute('aria-pressed', i === id); }
@@ -232,7 +235,8 @@ async function demarrer() {
     const c0 = A.carrure, carrure = { ...c0, taille: c0.taille * S.echelle.taille, epaules: c0.epaules * S.echelle.epaules, ventre: c0.ventre * S.echelle.ventre };
     const A2 = { ...A, carrure };
     const fantome = S.mode === 'edit';      // en édition : le soldat translucide, les os et les poignées ; en lecture : plein, les poignées à peine suggérées
-    G.maj(articulations(P, carrure), { lecture: !fantome });
+    const Jt = articulations(P, carrure);
+    G.maj(Jt, { lecture: !fantome });
     for (const { niveau, so, lo } of niveaux) {
       const J = window.__atelier.jeu;
       poserLibre(so.materiel, J ? null : P);
@@ -243,7 +247,12 @@ async function demarrer() {
     }
     ombre.scale.set(P.couche > 0.5 ? 2 : 1, P.couche > 0.5 ? 0.55 : 0.7, 1);
     if (S.auto) S.yaw += dt * 0.5;
-    const cible = new THREE.Vector3(0, P.couche > 0.5 ? 0.2 : 0.88 * carrure.taille, 0), d = h / (2 * S.ppm * TAN15);
+    // la cible de la caméra : le milieu du corps, ou (touche F) l'articulation choisie, rejointe en douceur : de près, on règle une main ou le fusil sans le perdre de vue
+    if (S.focus && !Jt[S.focus]) S.focus = null;
+    const but = S.focus ? new THREE.Vector3(...Jt[S.focus].pos) : new THREE.Vector3(0, P.couche > 0.5 ? 0.2 : 0.88 * carrure.taille, 0);
+    cibleLisse = cibleLisse ? cibleLisse.lerp(but, 1 - Math.exp(-dt * 12)) : but.clone();
+    const cible = cibleLisse, d = h / (2 * S.ppm * TAN15);
+    boutonViser.setAttribute('aria-pressed', !!S.focus);
     camera.position.set(d * Math.sin(S.yaw) * Math.cos(S.tangage), cible.y + d * Math.sin(S.tangage), d * Math.cos(S.yaw) * Math.cos(S.tangage));
     camera.lookAt(cible); camera.near = Math.max(0.02, d * 0.1); camera.far = d + 30; camera.updateProjectionMatrix();
     renderer.render(scene, camera);
@@ -255,7 +264,7 @@ async function demarrer() {
   canvas.onpointerdown = e => { canvas.setPointerCapture(e.pointerId); if (G.down(e)) { if (S.mode === 'lecture') { instantane(); entrerEdition(); } return; } glisse = { x: e.clientX, y: e.clientY }; S.auto = false; };
   canvas.onpointermove = e => { if (G.actif) { G.move(e, e.shiftKey); return; } if (!glisse) { G.move(e); canvas.style.cursor = G.survol ? 'pointer' : 'grab'; return; } S.yaw -= (e.clientX - glisse.x) * 0.01; S.tangage = Math.max(-0.2, Math.min(1.45, S.tangage + (e.clientY - glisse.y) * 0.008)); glisse = { x: e.clientX, y: e.clientY }; };
   canvas.onpointerup = canvas.onpointercancel = () => { G.up(); glisse = null; };
-  canvas.onwheel = e => { e.preventDefault(); S.ppm = Math.max(8, Math.min(120, +(S.ppm * (e.deltaY < 0 ? 1.15 : 1 / 1.15)).toFixed(1))); };
+  canvas.onwheel = e => { e.preventDefault(); S.ppm = Math.max(8, Math.min(900, +(S.ppm * (e.deltaY < 0 ? 1.15 : 1 / 1.15)).toFixed(1))); };
   document.addEventListener('keydown', e => {
     const t = document.activeElement, saisie = t?.tagName === 'TEXTAREA' || (t?.tagName === 'INPUT' && ['text', 'number'].includes(t.type));      // (dans un champ de texte, Ctrl+Z reste celui du champ)
     if ((e.ctrlKey || e.metaKey) && !saisie) {
@@ -265,7 +274,8 @@ async function demarrer() {
     }
     if (/INPUT|SELECT|TEXTAREA/.test(document.activeElement?.tagName ?? '')) return;
     const o = OUTILS.find(([, , t]) => t.toLowerCase() === e.key.toLowerCase()); if (o) choisirOutil(o[0]);
-    if (e.key === 'Escape') G.sel = null;
+    if (e.key === 'Escape') { G.sel = null; S.focus = null; }
+    if (e.key.toLowerCase() === 'f') viser();
   });
   document.addEventListener('keydown', e => { if (e.key === ' ' && !/INPUT|SELECT|BUTTON|TEXTAREA/.test(document.activeElement?.tagName ?? '')) { e.preventDefault(); boutonJouer.click(); } });
   requestAnimationFrame(image);

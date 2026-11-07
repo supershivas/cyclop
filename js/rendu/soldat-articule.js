@@ -195,7 +195,7 @@ export const VERT = `
   attribute float aPart; attribute float aOs; attribute float aShow; attribute vec3 aNor;
   attribute vec3 aPos; attribute float aCamp; attribute float aWound; attribute vec4 aCap; attribute float aGrade;
   attribute vec4 aPose; attribute vec4 aBody; attribute vec4 aLook; attribute vec4 aLook2;
-  uniform float uShade; uniform float uVoir; uniform float uLibre; uniform float uP[22];
+  uniform float uShade; uniform float uVoir; uniform float uLibre; uniform float uP[25];
   varying float vPart; varying float vCamp; varying vec2 vFace; varying float vShade; varying vec4 vLook; varying vec4 vLook2;
   float sl, st, wd, vt;
   bool voir(float code) {
@@ -222,6 +222,7 @@ export const VERT = `
   }
   vec3 mp(vec3 p, float xs, float zs) { float y = p.y <= 0.9 ? p.y * sl : 0.9 * sl + (p.y - 0.9) * st; return vec3(p.x * xs, y, p.z * zs); }
   vec3 rx(vec3 p, vec3 pv, float a) { vec3 d = p - pv; float c = cos(a), s = sin(a); return pv + vec3(d.x, d.y * c + d.z * s, d.z * c - d.y * s); }
+  vec3 rz(vec3 p, vec3 pv, float a) { vec3 d = p - pv; float c = cos(a), s = sin(a); return pv + vec3(d.x * c - d.y * s, d.x * s + d.y * c, d.z); }
   vec3 ry(vec3 p, vec3 pv, float a) { vec3 d = p - pv; float c = cos(a), s = sin(a); return pv + vec3(d.x * c + d.z * s, d.y, d.z * c - d.x * s); }
   void main() {
     // une boîte qu'il n'a pas : hors de l'écran tout de suite, sans calculer sa pose (uVoir : 0 pour les maillages d'une option, dont tous les hommes ont la boîte)
@@ -287,7 +288,14 @@ export const VERT = `
     }
     // le fusil : en bandoulière, ou à l'épaule quand il tire
     if (b > 11.5 && b < 12.5) {
-      if (libre) { p.x += uP[15] * wd; p = rx(p, mp(vec3(0.0, uP[17], 0.0), 1.0, 1.0), uP[14]); p.z += uP[16]; }
+      if (libre) {
+        vec3 fp = mp(vec3(0.0, uP[17], 0.0), 1.0, 1.0);
+        p.x += uP[15] * wd; p = rx(p, fp, uP[14]);
+        vec3 fc = vec3((0.395 + uP[15]) * wd, fp.y, 0.0);       // le centre des deux rotations de plus : l axe du fusil, décalé comme lui
+        if (abs(uP[23]) > 0.00001) p = ry(p, fc, uP[23]);
+        if (abs(uP[24]) > 0.00001) p = rz(p, fc, uP[24]);
+        p.z += uP[16]; p.y += uP[22];
+      }
       else if (melee) { p.x -= 0.3 * wd; p = rx(p, mp(vec3(0.0, 0.95, 0.0), 1.0, 1.0), -1.45); p.z += 0.5 * pouss; }       // à l'horizontale devant lui, la baïonnette vers l'adversaire, d'un demi-mètre à chaque poussée
       else if (retenu) { p.x -= 0.18 * wd; p = rx(p, mp(vec3(0.0, 0.9, 0.0), 1.0, 1.0), -1.9); }                     // baissé en travers des hanches, le canon devant
       else { p.x -= 0.28 * tir * wd; p = rx(p, mp(vec3(0.0, 1.3, 0.0), 1.0, 1.0), -1.45 * tir); }
@@ -412,7 +420,7 @@ export function creerSoldatArticule(THREE, col, { complet = false, ombrage = 0, 
         uNous: { value: col('n') }, uEux: { value: col('x') }, uOmbre: { value: col('t') }, uSel: { value: col('o') }, uJambes: { value: col('s') }, uBois: { value: col('t') }, uToile: { value: col('g') },
         uCuir: { value: col('b') }, uBotte: { value: col('t') }, uMetal: { value: col('r') }, uTrait: { value: col('s') },
         uPeau: { value: ['o', 'r', 'g'].map(col) }, uMarque: { value: ['g', 'g', 'b'].map(col) }, uCh: { value: ['t', 's', 'b', 'g', 'r'].map(col) },
-        uShade: { value: ombrage }, uVoir: { value: filtre ? 0 : 1 }, uLibre: { value: 0 }, uP: { value: new Array(22).fill(0) }, uAlpha: { value: 1 },
+        uShade: { value: ombrage }, uVoir: { value: filtre ? 0 : 1 }, uLibre: { value: 0 }, uP: { value: new Array(25).fill(0) }, uAlpha: { value: 1 },
       },
       vertexShader: VERT, fragmentShader: translucide ? `uniform float uAlpha;\n${FRAG.replace('gl_FragColor = vec4(c * vShade, 1.0);', 'gl_FragColor = vec4(c * vShade, uAlpha);')}` : FRAG, side: THREE.DoubleSide,
     });

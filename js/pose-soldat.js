@@ -76,7 +76,7 @@ export function miroir(p) {
   const r = { ...p };
   for (const c of ['hanche', 'genou', 'cheville', 'epaule', 'coude']) { r[c + 'G'] = p[c + 'D']; r[c + 'D'] = p[c + 'G']; }
   r.convG = -p.convD; r.convD = -p.convG;
-  r.fusilX = -p.fusilX;
+  r.fusilX = -p.fusilX; r.fusilLacet = -p.fusilLacet; r.fusilRoulis = -p.fusilRoulis;
   return r;
 }
 
@@ -116,6 +116,7 @@ export function marcheEnImages(vit = 1, periode = 0.8) {
 export const CARRURE_NEUTRE = { taille: 1, epaules: 1, jambes: 1, ventre: 1, tete: 1 };
 const rxp = (p, pv, a) => { const dy = p[1] - pv[1], dz = p[2] - pv[2], c = Math.cos(a), s = Math.sin(a); return [p[0], pv[1] + dy * c + dz * s, pv[2] + dz * c - dy * s]; };
 const ryp = (p, pv, a) => { const dx = p[0] - pv[0], dz = p[2] - pv[2], c = Math.cos(a), s = Math.sin(a); return [pv[0] + dx * c + dz * s, p[1], pv[2] + dz * c - dx * s]; };
+const rzp = (p, pv, a) => { const dx = p[0] - pv[0], dy = p[1] - pv[1], c = Math.cos(a), s = Math.sin(a); return [pv[0] + dx * c - dy * s, pv[1] + dx * s + dy * c, p[2]]; };
 const unitaire = v => { const n = Math.hypot(v[0], v[1], v[2]) || 1; return [v[0] / n, v[1] / n, v[2] / n]; };
 
 // Rend { id: { nom, pos: [x, y, z], rots: [{ champ, axe, signe }], deplace: [{ champ, axe, k }] } } en mètres, le soldat debout au centre, face à +z.
@@ -162,10 +163,14 @@ export function articulations(pose, car = CARRURE_NEUTRE) {
   const cou = mp([0, 1.42, 0], 1, 1);
   J.tete = { nom: 'Tête', pos: aHaut(cou), rots: [{ champ: 'tete', axe: dir(aHaut, cou, X), signe: -1 }] };
   J.crane = { nom: 'Sommet de la tête', pos: aHaut(rxp(mp([0, 1.64, 0], 1, 1), cou, P.tete)), rots: [], passif: true };
-  // le fusil : le pivot de sa rotation, déplacé de son décalage latéral et de sa poussée
-  const fp = mp([0, P.fusilY, 0], 1, 1), fpos = [fp[0] + P.fusilX * wd, fp[1], fp[2] + P.fusilZ];
-  J.fusil = { nom: 'Fusil', pos: aHaut(fpos), rots: [{ champ: 'fusil', axe: dir(aHaut, fpos, X), signe: -1 }],
-    deplace: [{ champ: 'fusilX', axe: dir(aHaut, fpos, X), k: 1 / wd }, { champ: 'fusilZ', axe: dir(aHaut, fpos, Z), k: 1 }] };
+  // le fusil, un corps à lui : sa flexion (autour de x, au pivot), puis le lacet (y) et le roulis (z) autour de son axe (à 0,395 m de l'axe du corps, décalé comme lui), puis sa poussée en avant et sa hauteur
+  const fp = mp([0, P.fusilY, 0], 1, 1), c = [(0.395 + P.fusilX) * wd, fp[1], 0], cT = [c[0], c[1] + P.fusilH, P.fusilZ];
+  const roulis = q => rzp(q, c, P.fusilRoulis);
+  J.fusil = { nom: 'Fusil', pos: aHaut(cT), rots: [
+    { champ: 'fusil', axe: dir(q => aHaut(roulis(ryp(q, c, P.fusilLacet))), cT, X), signe: -1 },
+    { champ: 'fusilLacet', axe: dir(q => aHaut(roulis(q)), cT, Y), signe: 1 },
+    { champ: 'fusilRoulis', axe: dir(aHaut, cT, Z), signe: 1 }],
+    deplace: [{ champ: 'fusilX', axe: dir(aHaut, cT, X), k: 1 / wd }, { champ: 'fusilH', axe: dir(aHaut, cT, Y), k: 1 }, { champ: 'fusilZ', axe: dir(aHaut, cT, Z), k: 1 }] };
   // la poitrine : baisser le corps, le pousser vers l'avant (la poussée agit sur ce qui est au-dessus de 0,6 m)
   const poit = mp([0, 1.15, 0], 1, 1), hPoit = Math.max(0.15, rxp(poit, hanche, P.buste)[1] - 0.6);
   J.poitrine = { nom: 'Poitrine (le corps)', pos: aHaut(poit), rots: [], deplace: [{ champ: 'descente', axe: Y, k: -1 }, { champ: 'poussee', axe: Z, k: 1 / hPoit }],

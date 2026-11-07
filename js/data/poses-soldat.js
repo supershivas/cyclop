@@ -18,6 +18,8 @@ export const CHAMPS = {
   poussee: [0, 0.4],           // le buste qui part vers l'avant (la mêlée)
   basques: [0, 1.2],           // les basques de la vareuse, qui suivent les cuisses
   couche: [0, 1],              // 0 debout, 1 couché sur le dos
+  // le fusil, en plus (v0.113.2) : sa hauteur, puis deux rotations après la flexion (le lacet : la visée à gauche ou à droite quand il est à l'horizontale ; le roulis : l'inclinaison de côté)
+  fusilH: [-0.8, 0.8], fusilLacet: [-3.2, 3.2], fusilRoulis: [-3.2, 3.2],
 };
 export const NOMS_CHAMPS = Object.keys(CHAMPS);
 

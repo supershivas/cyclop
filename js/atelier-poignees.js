@@ -50,7 +50,7 @@ export function creerPoignees(THREE, { canvas, camera, ppm, lire, regler, echell
     const ajouter = a => { a.vue.traverse(o => { o.renderOrder = 11; }); scene.add(a.vue, a.prise); E.actives.push(a); };
     if (E.outil === 'tourner' && E.sel && E.J[E.sel]) {
       for (const r of E.J[E.sel].rots) {
-        const c = r.champ.startsWith('conv') ? 'y' : 'x', pts = [];
+        const c = r.champ.startsWith('conv') || r.champ.endsWith('Lacet') ? 'y' : r.champ.endsWith('Roulis') ? 'z' : 'x', pts = [];
         for (let i = 0; i < 48; i++) pts.push(Math.cos(i / 48 * Math.PI * 2), Math.sin(i / 48 * Math.PI * 2), 0);
         const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pts, 3));
         const vue = new THREE.LineLoop(g, new THREE.LineBasicMaterial({ color: COUL[c], depthTest: false, transparent: true }));
