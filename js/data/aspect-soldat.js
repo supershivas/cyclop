@@ -3,15 +3,9 @@
 // l'aspect se retrouve du numéro de l'homme, de son camp et de la graine d'identité (comme son nom).
 // Les couleurs sont des lettres de la palette (palette.js) : aucun ton nouveau, pas même pour la peau (Jérôme, v0.102.x : la palette reste fermée).
 
-// Les coiffures (`poids` : la part des hommes, par camp). 0 : le casque de l'armée (Adrian chez nous, à pointe en face).
-export const COIFFES = [
-  { nom: 'casque', poids: [0.62, 0.6] },
-  { nom: 'képi', poids: [0.14, 0.1] },
-  { nom: 'bonnet de police', poids: [0.1, 0.16] },
-  { nom: 'tête nue', poids: [0.06, 0.06] },
-  { nom: 'béret', poids: [0.08, 0.08] },
-];
-// Les cheveux (visibles sous le casque par la nuque et les tempes, entiers tête nue). 0 : chauve.
+// La coiffe (Jérôme, 1er nov. : « le soldat doit toujours avoir un casque, sauf blessé ») : le casque de l'armée, Adrian chez nous, Stahlhelm en face. Un homme blessé à la tête l'a perdu (ses cheveux se voient, un bandeau).
+export const COIFFES = [{ nom: 'casque Adrian', nomEux: 'Stahlhelm', poids: [1, 1] }];
+// Les cheveux (visibles sous le casque par la nuque et les tempes, entiers quand le casque est tombé). 0 : chauve.
 export const CHEVEUX = [
   { nom: 'chauve', poids: 0.07 },
   { nom: 'ras', poids: 0.3 },
@@ -29,10 +23,10 @@ export const BARBES = [
   { nom: 'barbe pleine', poids: 0.12 },
   { nom: 'favoris', poids: 0.14 },
 ];
-// La peau : trois tons de la palette (os, glaise, herbe morte), du plus pâle au plus hâlé (le teint suit un peu le grade : les officiers vivent moins dehors)
-export const PEAUX = [{ nom: 'pâle', lettre: 'o' }, { nom: 'hâlée', lettre: 'g' }, { nom: 'tannée', lettre: 'h' }];
+// La peau : trois tons de la palette (os, brume, glaise), du plus pâle au plus hâlé ; l'herbe morte, trop verte, faisait des visages de noyés (le teint suit un peu le grade : les officiers vivent moins dehors)
+export const PEAUX = [{ nom: 'pâle', lettre: 'o' }, { nom: 'claire', lettre: 'r' }, { nom: 'hâlée', lettre: 'g' }];
 // Les traits du visage : trois formes chacun (la grille de 6 × 6 cases du nuanceur)
-export const YEUX = ['écartés', 'rapprochés', 'hauts'];
+export const YEUX = ['écartés', 'rapprochés', 'hauts'];       // (jamais collés : au moins deux cases entre les yeux)
 export const NEZ = ['petit', 'moyen', 'fort'];
 export const BOUCHES = ['fine', 'moyenne', 'large'];
 export const SOURCILS = ['absents', 'fins', 'épais'];
@@ -52,7 +46,7 @@ export const ACCESSOIRES = [
   { id: 'cigarette', nom: 'une cigarette', camp: null, p: 0.06 },
   { id: 'grenades', nom: 'des grenades à la ceinture', camp: null, p: 0.1, sans: [0, 1, 2] },
   { id: 'brassard', nom: 'un brassard', camp: null, p: 0.015, rang: [0.3, 0.3, 0.3, 0.1, 0.08, 0.04, 0, 0] },
-  { id: 'bandeau', nom: 'un bandeau sur la tête', camp: null, p: 0.015 },
+  { id: 'cache-nez', nom: 'un cache-nez', camp: null, p: 0.05 },
 ];
 
 // La carrure : des multiplicateurs autour de 1 (la taille de référence de 1,7 m ; ±7 % en hauteur et ±14 % en largeur depuis la v0.69.0). `force`, `endurance` (0 à 100) et l'âge y poussent.
@@ -63,3 +57,8 @@ export const CARRURE = {
   tete: { ecart: 0.07 },
   ventre: { ecart: 0.08, age: 0.05 },     // le ventre : l'âge l'arrondit
 };
+
+// Les soldats articulés en jeu (Jérôme, v0.105.0 : « j'aime le rendu, on continue »), seulement de près : dès `des` pixels par mètre, et au plus `max` hommes, les plus proches du centre de la vue
+// (le coût mesuré, rendu logiciel : environ trois fois celui du soldat équipé du jeu : `docs/domaines/rendu.md`) ; `fin` : dès ce zoom le niveau fin, avant lui l'intermédiaire (v0.105.1) ; les autres gardent le soldat équipé. `ombrage` : le relief des faces (0 : les aplats),
+// un mélange continu du ton de la palette (comme les fondus : voir la palette), qui fait lire les membres.
+export const ARTICULE = { des: 12, fin: 24, max: 250, ombrage: 0.5 };

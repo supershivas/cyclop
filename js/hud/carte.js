@@ -2,12 +2,21 @@
 // quatre lignes de chaque camp (en face au nord, en haut), chaque case en tronçons de 25 m à la couleur de celui qui les
 // tient. Une lettre choisit les régiments du secteur ; une case envoie les régiments choisis dans cette tranchée ; les
 // régiments y sont des cercles numérotés, à leur place. Le dessin seulement : les actions (choisir, ordonner) viennent de main.js.
-import { NOUS, EUX, nombreZones, lettreZone, zone, largeurZone, etendueZones, tronconsDeLigne, forcesTroncons, codeLigne } from '../bataille.js?v=0.104.2';
-import { ligneY } from '../tranchees.js?v=0.104.2';
-import { numeroDe as numeroDeB } from './lecture.js?v=0.104.2';
+import { NOUS, EUX, nombreZones, lettreZone, zone, largeurZone, etendueZones, tronconsDeLigne, forcesTroncons, codeLigne } from '../bataille.js?v=0.114.0';
+import { ligneY } from '../tranchees.js?v=0.114.0';
+import { numeroDe as numeroDeB } from './lecture.js?v=0.114.0';
 
 // `bataille()` : la bataille en cours ; `choisis()` : les régiments choisis (ids) ; `surSecteur`, `surCase`, `surRonde` : les clics
 // `moi()` : le camp qu'on joue (à deux sur le réseau, l'invité est en face : sa carte est tournée d'un demi-tour, ses lignes en bas, A à D de droite à gauche ; v0.30.0)
+// Les lignes de la carte, de haut en bas (l'autre camp en haut, le sien en bas) et ses colonnes (A à D, de droite à gauche pour l'invité) : des index de `B.lignes` et des numéros de secteur.
+// Le gros plan d'une case (hud/secteur.js) en tire ses voisines.
+export function rangees(B, M) {
+  const tourne = M === EUX, n = nombreZones(B), A_ = tourne ? NOUS : EUX, B_ = tourne ? EUX : NOUS;
+  const lignes = [[A_, 3], [A_, 2], [A_, 1], [A_, 0], [B_, 0], [B_, 1], [B_, 2], [B_, 3]].map(([camp, rang]) => B.lignes.findIndex(L => L.camp === camp && L.rang === rang)).filter(i => i >= 0);
+  const colonnes = tourne ? Array.from({ length: n }, (_, k) => n - k) : Array.from({ length: n }, (_, k) => k + 1);
+  return { lignes, colonnes };
+}
+
 export function creerCarte({ $, bataille, choisis, surSecteur, surCase, surRonde, moi = () => NOUS }) {
   const numeroDe = r => numeroDeB(bataille(), r);
   let carteCases = [], carteVue = '', carteReperes = [], rondes = new Map();
@@ -24,7 +33,7 @@ export function creerCarte({ $, bataille, choisis, surSecteur, surCase, surRonde
     const kids = [document.createElement('span')];
     for (const s of colonnes) {
       const b = document.createElement('button');
-      b.className = 'sect'; b.textContent = lettreZone(s); b.title = `Voir le secteur ${lettreZone(s)} et choisir ses régiments`; b.setAttribute('aria-label', `Voir le secteur ${lettreZone(s)} et choisir ses régiments`);
+      b.className = 'sect'; b.textContent = lettreZone(s); b.title = `Choisir les régiments de la colonne ${lettreZone(s)}`; b.setAttribute('aria-label', `Choisir les régiments de la colonne ${lettreZone(s)}`);
       b.onclick = e => surSecteur(s, e.shiftKey);
       kids.push(b);
     }
@@ -39,13 +48,13 @@ export function creerCarte({ $, bataille, choisis, surSecteur, surCase, surRonde
         kids.push(t);
       }
       carteReperes.push({ yr: ligneY(B.lignes[idx], xc), y: tourne ? Z.y0 + Z.y1 - ligneY(B.lignes[idx], xc) : ligneY(B.lignes[idx], xc), c: hautLigne(k) + CASE_H / 2 });
-      const lib = document.createElement('span'); lib.className = `lib${camp !== M ? ' eux' : ''}`; lib.textContent = codeLigne(B.lignes[idx]);
+      const lib = document.createElement('span'); lib.className = `lib${camp !== M ? ' eux' : ''}`; lib.textContent = codeLigne(B.lignes[idx], M);
       kids.push(lib);
       for (const s of colonnes) {
-        const c = document.createElement('button'), nom = `${lettreZone(s)}${codeLigne(B.lignes[idx])}${camp !== M ? ' en face' : ''}`;
+        const c = document.createElement('button'), nom = `${lettreZone(s)}${codeLigne(B.lignes[idx], M)}`;
         c.className = 'cel'; c.innerHTML = `${'<i></i>'.repeat(Math.max(1, tronconsDeLigne(B, idx, Z.x0 + (s - 1) * largeurZone(B), Z.x0 + s * largeurZone(B)).length))}<b></b>`;
-        c.title = `Envoyer les régiments choisis dans ${nom}`; c.setAttribute('aria-label', `Envoyer les régiments choisis dans ${nom}`);
-        c.onclick = () => surCase(idx, s);
+        c.title = `${nom} : le gros plan, ou l'ordre de s'y rendre si des régiments sont choisis (Alt + clic : toujours le gros plan)`; c.setAttribute('aria-label', `Secteur ${nom}`);
+        c.onclick = e => surCase(idx, s, e.altKey);
         kids.push(c); carteCases.push({ idx, s, nom, el: c, moities: c.querySelectorAll('i'), marque: c.querySelector('b') });
       }
     });
@@ -140,7 +149,7 @@ export function creerCarte({ $, bataille, choisis, surSecteur, surCase, surRonde
       let att = 0, def = 0;
       for (const k of ks) { const h = e.troncons[k]; att += f[k * 2 + 1 - h]; def += f[k * 2 + h]; }
       c.marque.textContent = att ? `${att}·${def}` : '';
-      c.el.title = `Envoyer les régiments choisis dans ${c.nom}${att ? ` : ${att} attaquants contre ${def} défenseurs` : ''}`;
+      c.el.title = `${c.nom} : le gros plan, ou l'ordre de s'y rendre si des régiments sont choisis (Alt + clic : toujours le gros plan)${att ? ` : ${att} attaquants contre ${def} défenseurs` : ''}`;
       c.el.classList.toggle('choisi', rs.some(r => choisis().has(r.id)));
     }
   }

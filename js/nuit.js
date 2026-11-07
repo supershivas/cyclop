@@ -10,13 +10,14 @@
    - (v0.38.3) Les caillebotis et le coup de main sont retirés ; (v0.77.1) réparer la tranchée, inhumer les morts et creuser des abris aussi (docs/archives/corvees-retirees.md) : quatre corvées.
    - (v0.39.0) La mêlée se joue dans la nuit (`meleeNuit`) : un tronçon où les deux camps sont face à face au soir est tranché à l'aube, et les
      régiments au contact (`contactDe`) ne reçoivent aucune corvée. */
-import { hash2 } from './lib/rng.js?v=0.104.2';
-import { modif, refusEquiper, equiper } from './camp.js?v=0.104.2';
-import { CORVEES } from './data/corvees.js?v=0.104.2';
-import { EQUIPEMENTS } from './data/batiments.js?v=0.104.2';
-import { REGIMENTS } from './data/lexique.js?v=0.104.2';
-import { ajouterSoldat, poserCaracs, lireCaracs, place } from './army.js?v=0.104.2';
-import { departCaracs } from './identite.js?v=0.104.2';
+import { hash2 } from './lib/rng.js?v=0.114.0';
+import { modif, refusEquiper, equiper } from './camp.js?v=0.114.0';
+import { CORVEES } from './data/corvees.js?v=0.114.0';
+import { EQUIPEMENTS } from './data/batiments.js?v=0.114.0';
+import { REGIMENTS } from './data/lexique.js?v=0.114.0';
+import { ajouterSoldat, poserCaracs, lireCaracs, place } from './army.js?v=0.114.0';
+import { departCaracs } from './identite.js?v=0.114.0';
+import { y0En } from './tranchees.js?v=0.114.0';
 
 export const corvee = id => CORVEES.find(c => c.id === id);
 
@@ -144,7 +145,7 @@ function meleeNuit(B, ctx, bilan) {
       const o = reg.ordre.trace;
       if (reg.camp === tient && o && o.ligne === L.camp * 10 + L.rang && o.x1 > tr.x0 && o.x0 < tr.x1) reg.moral = Math.max(0, reg.moral - R.moral.perte);
     }
-    B.evenements.push({ type: 'prise', camp: autre, troncon: t, x: (tr.x0 + tr.x1) / 2, y: L.y0 });
+    B.evenements.push({ type: 'prise', camp: autre, troncon: t, x: (tr.x0 + tr.x1) / 2, y: y0En(L, (tr.x0 + tr.x1) / 2) });
   }
 }
 

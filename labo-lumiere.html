@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Labo lumière — Cyclopéen</title>
+<link rel="icon" href="favicon-lumiere.svg" type="image/svg+xml">
+<link rel="stylesheet" href="js/lib/game.css?v=0.114.0">
+<link rel="stylesheet" href="css/labo-lumiere.css?v=0.114.0">
+</head>
+<body>
+<div class="jeu-ecran" id="ll">
+  <canvas id="ll-scene" class="jeu-canvas" aria-label="Champ de bataille en voxels"></canvas>
+
+  <header class="ll-entete">
+    <a class="ll-nom" id="ll-nom" href="./" title="Retour à l'accueil">Labo lumière — Cyclopéen</a>
+    <button class="icone ll-engrenage" id="ll-ouvrir" aria-label="Réglages" aria-expanded="false" aria-controls="ll-reglages">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10.3 4.3c.4-1.8 2.9-1.8 3.4 0a1.7 1.7 0 0 0 2.6 1.1c1.5-.9 3.3.8 2.4 2.4a1.7 1.7 0 0 0 1 2.5c1.8.5 1.8 3 0 3.4a1.7 1.7 0 0 0-1 2.6c.9 1.5-.9 3.3-2.4 2.4a1.7 1.7 0 0 0-2.6 1c-.5 1.8-3 1.8-3.4 0a1.7 1.7 0 0 0-2.5-1c-1.6.9-3.3-.9-2.4-2.4a1.7 1.7 0 0 0-1.1-2.6c-1.8-.4-1.8-2.9 0-3.4a1.7 1.7 0 0 0 1.1-2.5c-.9-1.6.8-3.3 2.4-2.4 1 .6 2.3.1 2.5-1.1z"/><circle cx="12" cy="12" r="3"/></svg>
+    </button>
+  </header>
+
+  <div class="ll-etiquettes" id="ll-etiquettes" hidden><span id="ll-gauche">Sans lumière</span><span id="ll-droite">Avec lumière</span></div>
+  <div class="ll-etat" id="ll-etat" role="status"></div>
+
+  <aside class="ll-panneau ll-mesures" id="ll-mesures" aria-label="Mesures">
+    <h2>Mesures</h2>
+    <div class="ll-rang">
+      <button class="bouton" id="ll-banc">Mesurer le coût GPU</button>
+      <button class="bouton" id="ll-export">Exporter (JSON)</button>
+    </div>
+    <div id="ll-mesures-corps"></div>
+  </aside>
+
+  <nav class="ll-barre" id="ll-barre" aria-label="Outils">
+    <div class="ll-groupe">
+      <button class="bouton" id="ll-barrage" title="B">Barrage</button>
+      <button class="bouton" id="ll-comparer" aria-pressed="false" title="C">Comparer</button>
+      <button class="bouton" id="ll-partage" aria-pressed="false" title="V">Écran partagé</button>
+    </div>
+    <div class="ll-groupe" role="group" aria-label="Caméra">
+      <button class="bouton" data-cam="large" title="Vue large">Vue large</button>
+      <button class="bouton" data-cam="tranchee" title="Vue tranchée">Vue tranchée</button>
+      <button class="bouton" data-cam="cratere" title="Vue cratère">Vue cratère</button>
+      <button class="bouton" data-cam="colline" title="Vue colline">Vue colline</button>
+    </div>
+    <label class="ll-champ">Soldats <output id="ll-unites-v"></output><input id="ll-unites" type="range" min="1000" max="50000" step="1000"></label>
+    <label class="ll-champ">Heure <output id="ll-heure-v"></output><input id="ll-heure" type="range" min="0" max="24" step="0.25"></label>
+    <label class="ll-champ">Jour de bataille <output id="ll-jour-v"></output><input id="ll-jour" type="range" min="1" max="10" step="1"></label>
+    <div class="ll-groupe" role="group" aria-label="Météo" id="ll-meteo"></div>
+    <button class="bouton" id="ll-meteo-auto" aria-pressed="false" title="Le temps change tout seul">Temps qui change</button>
+    <button class="bouton" id="ll-cycle" aria-pressed="false" title="Faire passer la journée">Cycle</button>
+  </nav>
+
+  <aside class="ll-panneau ll-reglages" id="ll-reglages" aria-label="Réglages" hidden>
+    <div class="ll-reglages-tete"><h2>Réglages</h2><button class="icone" id="ll-fermer" aria-label="Fermer les réglages"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+    <section>
+      <h3>Niveau de qualité</h3>
+      <div class="ll-groupe" id="ll-qualite" role="radiogroup" aria-label="Niveau de qualité"></div>
+      <p class="ll-note" id="ll-qualite-note"></p>
+    </section>
+    <section>
+      <h3>Étapes de lumière</h3>
+      <p class="ll-note">Chacune s'active seule. Le niveau choisit le départ ; une étape changée est marquée <b>•</b>. Touches 1 à 8.</p>
+      <div id="ll-etapes"></div>
+      <button class="bouton" id="ll-reviens">Revenir au niveau</button>
+    </section>
+    <section>
+      <h3>Image et monde</h3>
+      <label class="ll-select">Grille (cases par mètre)<select id="ll-grille"></select></label>
+      <label class="ll-select">Taille de la carte<select id="ll-taille"></select></label>
+      <label class="ll-select">Résolution de l'image<select id="ll-resolution"></select></label>
+      <label class="ll-case"><input type="checkbox" id="ll-reels"> Soldats du jeu en volume (boîte, silhouette, équipé, articulé)</label>
+      <label class="ll-case"><input type="checkbox" id="ll-toits"> Toits transparents (voir la lumière propagée)</label>
+      <label class="ll-champ">Obus d'un barrage <output id="ll-barrage-v"></output><input id="ll-barrage-n" type="range" min="10" max="200" step="10"></label>
+      <label class="ll-champ">Position du partage <output id="ll-split-v"></output><input id="ll-split" type="range" min="0.1" max="0.9" step="0.05"></label>
+    </section>
+    <section>
+      <h3>Commandes</h3>
+      <dl class="ll-commandes">
+        <dt>Clic</dt><dd>un obus</dd><dt>B</dt><dd>un barrage</dd><dt>C / V</dt><dd>comparer / écran partagé</dd>
+        <dt>Clic droit, glisser</dt><dd>tourner et incliner</dd><dt>Maj, glisser</dt><dd>déplacer la vue</dd><dt>Molette</dt><dd>zoom</dd>
+        <dt>Flèches, ZQSD</dt><dd>déplacer la vue</dd><dt>Espace</dt><dd>pause</dd><dt>1 à 8</dt><dd>activer une étape</dd>
+      </dl>
+    </section>
+    <section>
+      <h3>Version</h3>
+      <p class="ll-version" id="ll-version">v…</p>
+      <details><summary>Dernières versions</summary><div id="ll-journal"></div></details>
+    </section>
+  </aside>
+
+  <div class="ll-toast" id="ll-toast" role="status" hidden></div>
+  <p class="ll-pour-ordinateur">Cette page se joue sur un ordinateur, à la souris et au clavier, dans un navigateur qui sait faire du WebGL 2.</p>
+</div>
+<script type="module" src="js/labo-lumiere.js?v=0.114.0"></script>
+</body>
+</html>

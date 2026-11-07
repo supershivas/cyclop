@@ -1,62 +1,66 @@
 // Le cycle de vie : écran titre → bataille → nuit → fin ; pause active,
 // réglages, sauvegarde, mise à jour, debug. Les règles sont dans bataille.js
 // (pures), le dessin dans rendu3d.js (il ne modifie jamais l'état).
-import { createLoop } from './lib/loop.js?v=0.104.2';
-import { createKeys, stopTypeahead } from './lib/keys.js?v=0.104.2';
-import { createPointer, lockBrowserGestures } from './lib/pointer.js?v=0.104.2';
-import { createGamepad } from './lib/gamepad.js?v=0.104.2';
-import { createStore, autosave, pickJSONFile } from './lib/save.js?v=0.104.2';
-import { startUpdateCheck, loadVersion, loadChangelog, downloadJSON } from './lib/app-update.js?v=0.104.2';
-import { ROLES } from './palette.js?v=0.104.2';
-import { VERSION_CAMPAGNE, CLE as CLE_CAMPAGNE, cloturerDansLeStore, nouvelleCampagne, suivante, passage, bilan as bilanCampagne } from './campagne.js?v=0.104.2';
-import { CAMPAGNE } from './data/campagne.js?v=0.104.2';
-import { MISSIONS, MEMORIAL, peutDeployer, deployer, bordereau, progressionMission, progressionSecondaire, EUX, nouvelleBataille, etapesRestaurer, avancer, aube, ordonnerMarche, peutOrdonner, ordonnerBarrage, peutBarrage, arriereDe, ordonnerStance, peutStance, horloge, effectifs, tronconsTenus, moralEnMots, terrainResume, forcesTroncons, largeurZone, lettreZone, etendueZones, nomTroncon, actionDe, secteursDe, tronconsDeLigne, zone, photo, restaurer, PAS, NOUS } from './bataille.js?v=0.104.2';
-import { ligneY, etatTranchee } from './tranchees.js?v=0.104.2';
-import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.104.2';
-import { AVION, MITRAILLAGE } from './data/mitraillage.js?v=0.104.2';
-import { NIDS } from './data/nids.js?v=0.104.2';
-import { ligneDe, apercuVol, avionsPrets, avionsRestants, positionDe, balayage } from './avions.js?v=0.104.2';
-import { creerSon } from './audio.js?v=0.104.2';
-import { CHAR, CHAR_RECHARGE, CHARS, CHAR_PAR_DEFAUT } from './data/chars.js?v=0.104.2';
-import { GENIE, GENIE_DATA } from './data/genie.js?v=0.104.2';
-import { pontEn } from './eaux.js?v=0.104.2';
-import { PONTS_JEU, typePont } from './data/ponts.js?v=0.104.2';
-import { routeChar } from './chars.js?v=0.104.2';
-import { STANCES, STANCE_DEFAUT } from './data/stances.js?v=0.104.2';
-import { METEO, SAISONS, SAISON_DEFAUT } from './data/meteo.js?v=0.104.2';
-import { hash2 } from './lib/rng.js?v=0.104.2';
-import { creerRendu, CAMERA, ZOOMS } from './rendu3d.js?v=0.104.2';
-import { etatEnMots, experienceEnMots, chevrons } from './identite.js?v=0.104.2';
-import { refusCorvee } from './nuit.js?v=0.104.2';
-import { chargerContenu, appliquerSecteurs, appliquerCartes, appliquerCampagne } from './design-store.js?v=0.104.2';
-import { ordonnerChar, refusOrdreChar } from './chars.js?v=0.104.2';
-import { orienterNid, refusOrienterNid } from './nids.js?v=0.104.2';
-import { creerNidsHud } from './hud/nids.js?v=0.104.2';
-import { creerCharsHud } from './hud/chars.js?v=0.104.2';
-import { creerCampHud } from './hud/camp.js?v=0.104.2';
-import { affecterGueris, charsDispo, ordonnerChantier, refusCamp, ouverture, campDe, refusOrdre, batimentSous, emprisesCamp, emplacementCamp, etendueCamp, niveauDe, modif, rechargeDe as facteurRecharge } from './camp.js?v=0.104.2';
-import { BATIMENTS, equipeEnMots } from './data/batiments.js?v=0.104.2';
-import { creerSecteur } from './hud/secteur.js?v=0.104.2';
-import { palmares, tableau } from './hud/medailles.js?v=0.104.2';
-import * as lecture from './hud/lecture.js?v=0.104.2';
-import { creerFiche } from './hud/fiche.js?v=0.104.2';
-import { chevronsHtml } from './hud/barres.js?v=0.104.2';
-import { creerNuit, corveeDe, corveeCourte } from './hud/nuit.js?v=0.104.2';
-import { creerCampagne } from './hud/campagne.js?v=0.104.2';
-import { creerCarnet, deux } from './hud/carnet.js?v=0.104.2';
-import { creerCarte } from './hud/carte.js?v=0.104.2';
-import { creerPertes } from './hud/pertes.js?v=0.104.2';
-import { creerBarreTemps } from './hud/temps.js?v=0.104.2';
-import { creerChargement } from './hud/chargement.js?v=0.104.2';
-import { creerRetours } from './hud/retours.js?v=0.104.2';
-import { creerInfobulle } from './hud/infobulle.js?v=0.104.2';
-import { SECTEURS } from './data/secteur.js?v=0.104.2';
-import { DIFFICULTES, DIFFICULTE_DEFAUT, DUREES, DUREE_DEFAUT } from './data/difficulte.js?v=0.104.2';
-import { preparerAleatoire, ID_ALEATOIRE } from './generateur.js?v=0.104.2';
-import { creerLockstep, empreinteEtat } from './reseau/lockstep.js?v=0.104.2';
-import { nouveauCode, codeValide, publier, ecouter } from './reseau/relais.js?v=0.104.2';
-import { creerHote, creerInvite } from './reseau/lien.js?v=0.104.2';
-import { SOLEIL_JEU } from './data/soleil.js?v=0.104.2';
+import { createLoop } from './lib/loop.js?v=0.114.0';
+import { createKeys, stopTypeahead } from './lib/keys.js?v=0.114.0';
+import { createPointer, lockBrowserGestures } from './lib/pointer.js?v=0.114.0';
+import { createGamepad } from './lib/gamepad.js?v=0.114.0';
+import { createStore, autosave, pickJSONFile } from './lib/save.js?v=0.114.0';
+import { startUpdateCheck, loadVersion, loadChangelog, downloadJSON } from './lib/app-update.js?v=0.114.0';
+import { ROLES } from './palette.js?v=0.114.0';
+import { VERSION_CAMPAGNE, CLE as CLE_CAMPAGNE, cloturerDansLeStore, nouvelleCampagne, suivante, passage, bilan as bilanCampagne } from './campagne.js?v=0.114.0';
+import { CAMPAGNE } from './data/campagne.js?v=0.114.0';
+import { MISSIONS, MEMORIAL, peutDeployer, deployer, bordereau, progressionMission, progressionSecondaire, EUX, nouvelleBataille, etapesRestaurer, avancer, aube, ordonnerMarche, peutOrdonner, ordonnerBarrage, peutBarrage, arriereDe, ordonnerStance, peutStance, horloge, effectifs, tronconsTenus, moralEnMots, terrainResume, forcesTroncons, largeurZone, lettreZone, etendueZones, nomTroncon, actionDe, secteursDe, tronconsDeLigne, zone, photo, restaurer, PAS, NOUS } from './bataille.js?v=0.114.0';
+import { ligneY, y0En, etatTranchee } from './tranchees.js?v=0.114.0';
+import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.114.0';
+import { AVION, MITRAILLAGE } from './data/mitraillage.js?v=0.114.0';
+import { NIDS } from './data/nids.js?v=0.114.0';
+import { ligneDe, apercuVol, avionsPrets, avionsRestants, positionDe, balayage } from './avions.js?v=0.114.0';
+import { creerSon } from './audio.js?v=0.114.0';
+import { CHAR, CHAR_RECHARGE, CHARS, CHAR_PAR_DEFAUT } from './data/chars.js?v=0.114.0';
+import { GENIE, GENIE_DATA } from './data/genie.js?v=0.114.0';
+import { pontEn } from './eaux.js?v=0.114.0';
+import { PONTS_JEU, typePont } from './data/ponts.js?v=0.114.0';
+import { routeChar } from './chars.js?v=0.114.0';
+import { STANCES, STANCE_DEFAUT } from './data/stances.js?v=0.114.0';
+import { METEO, SAISONS, SAISON_DEFAUT } from './data/meteo.js?v=0.114.0';
+import { hash2 } from './lib/rng.js?v=0.114.0';
+import { creerRendu, CAMERA, ZOOMS, ZOOMS_CADRAGE } from './rendu3d.js?v=0.114.0';
+import { etatEnMots, experienceEnMots, chevrons, caracteristiques } from './identite.js?v=0.114.0';
+import { aspect } from './aspect-soldat.js?v=0.114.0';
+import { numeroCampagne } from './bataille.js?v=0.114.0';
+import { ARTICULE } from './data/aspect-soldat.js?v=0.114.0';
+import { refusCorvee } from './nuit.js?v=0.114.0';
+import { chargerContenu, appliquerSecteurs, appliquerCartes, appliquerCampagne } from './design-store.js?v=0.114.0';
+import { ordonnerChar, refusOrdreChar } from './chars.js?v=0.114.0';
+import { orienterNid, refusOrienterNid } from './nids.js?v=0.114.0';
+import { creerNidsHud } from './hud/nids.js?v=0.114.0';
+import { creerCharsHud } from './hud/chars.js?v=0.114.0';
+import { creerCampHud } from './hud/camp.js?v=0.114.0';
+import { affecterGueris, charsDispo, ordonnerChantier, refusCamp, ouverture, campDe, refusOrdre, batimentSous, emprisesCamp, emplacementCamp, etendueCamp, niveauDe, modif, rechargeDe as facteurRecharge } from './camp.js?v=0.114.0';
+import { BATIMENTS, equipeEnMots } from './data/batiments.js?v=0.114.0';
+import { deplacable } from './hud/deplacer.js?v=0.114.0';
+import { creerSecteur, caseDe } from './hud/secteur.js?v=0.114.0';
+import { palmares, tableau } from './hud/medailles.js?v=0.114.0';
+import * as lecture from './hud/lecture.js?v=0.114.0';
+import { creerFiche } from './hud/fiche.js?v=0.114.0';
+import { chevronsHtml } from './hud/barres.js?v=0.114.0';
+import { creerNuit, corveeDe, corveeCourte } from './hud/nuit.js?v=0.114.0';
+import { creerCampagne } from './hud/campagne.js?v=0.114.0';
+import { creerCarnet, deux } from './hud/carnet.js?v=0.114.0';
+import { creerCarte } from './hud/carte.js?v=0.114.0';
+import { creerPertes } from './hud/pertes.js?v=0.114.0';
+import { creerBarreTemps } from './hud/temps.js?v=0.114.0';
+import { creerChargement } from './hud/chargement.js?v=0.114.0';
+import { creerRetours } from './hud/retours.js?v=0.114.0';
+import { creerInfobulle } from './hud/infobulle.js?v=0.114.0';
+import { SECTEURS } from './data/secteur.js?v=0.114.0';
+import { DIFFICULTES, DIFFICULTE_DEFAUT, DUREES, DUREE_DEFAUT } from './data/difficulte.js?v=0.114.0';
+import { preparerAleatoire, ID_ALEATOIRE } from './generateur.js?v=0.114.0';
+import { creerLockstep, empreinteEtat } from './reseau/lockstep.js?v=0.114.0';
+import { nouveauCode, codeValide, publier, ecouter } from './reseau/relais.js?v=0.114.0';
+import { creerHote, creerInvite } from './reseau/lien.js?v=0.114.0';
+import { SOLEIL_JEU } from './data/soleil.js?v=0.114.0';
 
 const JEU = 'cyclopeen';
 const $ = id => document.getElementById(id);
@@ -129,14 +133,14 @@ const { noter, vider: viderCarnet } = carnet;
 const lienReg = r => ({ texte: r.nom, cible: { reg: r.id } });
 const lienTronc = t => ({ texte: nomTroncon(B, t), cible: { troncon: t } });
 const lienHomme = id => { const { qui } = quiEst(id); return { texte: `${qui.prenom} ${qui.nom}`, cible: { soldat: id } }; };
-const leDetail = creerSecteur({ $, bataille: () => B, moi: () => MOI, surSecteur: s => detailSecteur(s), surFermer: () => retourDuDetail() });
+const leDetail = creerSecteur({ $, bataille: () => B, moi: () => MOI, surSecteur: (s, idx) => detailSecteur(s, idx), surFermer: () => retourDuDetail() });
 const leCharHud = creerCharsHud({ $, bataille: () => B, moi: () => MOI, versEcran: (x, y, h) => rendu.versEcran(x, y, h), hauteurSol: (x, y) => rendu.hauteurSol(x, y), choisir: id => choisirChar(id), surBouton: act => actionChar(act) });
 const leNidHud = creerNidsHud({ $, bataille: () => B, moi: () => MOI, versEcran: (x, y, h) => rendu.versEcran(x, y, h), hauteurSol: (x, y) => rendu.hauteurSol(x, y), choisir: id => choisirNid(id), surBouton: act => actionNid(act) });
 const majPertes = creerPertes({ $, moi: () => MOI });
 const majBarreTemps = creerBarreTemps({ $, bataille: () => B });
 const laCarte = creerCarte({
   $, bataille: () => B, choisis: () => choisis,
-  surSecteur: (s, ajout) => { choisirSecteur(s, ajout); detailSecteur(s); }, surCase: (idx, s) => ordreCase(idx, s),
+  surSecteur: (s, ajout) => choisirSecteur(s, ajout), surCase: (idx, s, alt) => ordreCase(idx, s, alt),
   surRonde: (r, ajout) => r.camp === MOI ? choisirRegiment(r.id, ajout) : montrerRegiment(r.id),
   moi: () => MOI,
 });
@@ -156,6 +160,12 @@ stopTypeahead();
 chargement.progres(0.5, 'Le moteur de rendu');
 const rendu = await creerRendu($('canvas'), { mesure: MESURE, ...(DEBUG && params.has('grades') ? { grades: params.get('grades') || null } : {}) });     // ?debug=1&grades=fanion|jumelles|galons|(vide) : essayer une autre variante des grades (v0.68.0) ; par défaut `galons`, le képi et les galons (v0.69.0)
 rendu.ombresRelief = true; rendu.ombresNuages = true; rendu.soleilReglage = { ...SOLEIL_JEU };      // la lumière du jeu : ombres du relief, nuages, un soleil qui se lève et se couche (Jérôme, v0.67.3)
+// les soldats articulés de près (Jérôme, v0.105.0) : son aspect est tiré de son numéro (celui de la campagne pour nos hommes, comme son nom : un ancien garde son visage), de la graine d'identité, de son rang et de son âge
+rendu.aspectDe = (Bt, id, camp) => {
+  const { qui } = lecture.quiEst(Bt, id), nous = camp === NOUS, numero = nous ? numeroCampagne(Bt.etat, id) : id;
+  return aspect(numero, camp, nous ? Bt.etat.graineIdentite : Bt.etat.graine, qui.rang, qui.age, caracteristiques(numero, camp));
+};
+rendu.articule = ARTICULE;
 rendu.finesseDes = 4;      // le sol au demi-mètre à partir de 4 pixels par mètre (Jérôme, v0.52.3 ; au-dessous, tout dézoomé, il coûterait jusqu'à 3,4 fois plus de triangles)
 // les retours sur le champ : le fanion et la réponse des hommes d'un ordre en terrain libre, l'impact des obus en trois temps (v0.41.3)
 creerInfobulle({ $ });
@@ -224,10 +234,20 @@ function montrerDecor() {
   rendu.cameraLibre(decorVue.yaw, decorVue.tangage);
   decorObus = 0.5;
 }
+// Tout ce que la partie laisse à l'écran hors de `#hud` (des enfants de `#ecran` : cacher le HUD ne les cache pas) : la fenêtre du régiment ouvert, celle du bâtiment, la bulle, l'infobulle,
+// les repères, le cadre de sélection, les visées, les retours (Jérôme, retour du 2 nov. : « des fenêtres de HUD qui restent sur l'écran d'accueil »)
+function purgerEcran() {
+  for (const id of ['reg-ouvert', 'batiment', 'infobulle', 'equerres', 'repere', 'repere-soldat', 'cadre', 'visee', 'visee-nid', 'bulle']) { const e = $(id); if (e) e.hidden = true; }
+  etiq.clear(); retours.vider(); equerres = null; fenetreVue = -1; regimentsVus = '';
+  choisis = new Set(); rendu.choisis = choisis;
+  modeBarrage = null; departAvion = null; modeMarche = false; charChoisi = null; modeChar = null; nidChoisi = null; modeNid = null;
+  leNidHud.oublier(); leCharHud.oublier(); leCamp?.choisirCle(null); leDetail.fermer(false);
+}
 function montrerTitre() {
   if (reseau) return quitterReseau();
   loop.pause();
   montrerDecor();
+  purgerEcran();
   $('titre').hidden = false;
   $('hud').hidden = true;
   $('etiquettes').replaceChildren(); etiq.clear();         // les noms des régiments de la partie quittée ne restent pas devant le décor (Jérôme, v0.59.1)
@@ -250,6 +270,9 @@ function confirmer(texte, oui) {
 }
 // L'objectif de celui qui joue : la mission est celle des nôtres ; à deux, en face a l'objectif inverse (tenir ce qu'on attaque, prendre ce qu'on tient)
 const objectif = () => (MOI === NOUS) === (B.etat.mission === 'tenir') ? 'tenir' : 'prendre';
+// le nom et le texte de la mission du camp joué (la contre-attaque éclair a les siens : un seul ordre, dans les deux camps ; v0.108.0)
+const missionNom = () => B.etat.mission === 'contre' ? 'Contre-attaque éclair' : objectif() === 'tenir' ? 'Tenir le secteur' : 'Prendre leur première ligne';
+const missionOrdre = () => MISSIONS[B.etat.mission === 'contre' ? 'contre' : objectif()];
 function reglerCamp(camp) {
   MOI = camp;
   // l'interface parle de « nous » en bleu et « eux » en face : à l'invité, le kaki est « nous »
@@ -323,8 +346,8 @@ async function lancer(titre, etapes) {
   if (DEBUG || !B.etat.mission) return;
   loop.pause();
   const e = B.etat;
-  $('ordre-mission').textContent = MISSIONS[objectif()];
-  $('ordre-duree').textContent = `La bataille durera ${e.meteo.length} jours${e.sol?.saison && SAISONS[e.sol.saison] ? `, en ${SAISONS[e.sol.saison].nom}` : ''}.`;
+  $('ordre-mission').textContent = missionOrdre();
+  $('ordre-duree').textContent = `La bataille durera ${e.meteo.length} jour${e.meteo.length > 1 ? 's' : ''}${e.sol?.saison && SAISONS[e.sol.saison] ? `, en ${SAISONS[e.sol.saison].nom}` : ''}.`;
   $('dialogue-ordre').showModal();
 }
 // La campagne (v0.36.4) : la bataille n d'une campagne, avec ses survivants (`suivante`). Le registre est celui de `cyclopeen:campagne` ; une partie en cours est remplacée.
@@ -348,8 +371,8 @@ function demarrerCampagne(graineIdentite) {
 // le bouton de mission : la modale dit quoi faire et où on en est (pause, reprise à la fermeture)
 $('mission').onclick = () => {
   const m = progressionMission(B, MOI);
-  $('mission-nom').textContent = objectif() === 'tenir' ? 'Tenir le secteur' : 'Prendre leur première ligne';
-  $('mission-texte').textContent = MISSIONS[objectif()].replace(/^[^:]*: /, '').replace(/^./, c => c.toUpperCase());
+  $('mission-nom').textContent = missionNom();
+  $('mission-texte').textContent = missionOrdre().replace(/^[^:]*: /, '').replace(/^./, c => c.toUpperCase());
   const pct = Math.round(100 * m.p), jauge = $('mission-barre');
   jauge.setAttribute('aria-valuenow', pct); jauge.firstChild.style.width = pct + '%'; jauge.lastChild.textContent = m.label ?? pct + ' %';
   $('mission-etat').textContent = m.texte;
@@ -363,97 +386,197 @@ $('mission').onclick = () => {
   $('dialogue-mission').showModal();
 };
 $('mission-fermer').onclick = () => $('dialogue-mission').close();
+// Le « ? » de la carte et celui du plan d'un secteur (Jérôme, v0.108.0) : une modale d'explications, le temps s'arrête le temps de la lire
+for (const id of ['carte-aide', 'secteur-aide']) $(id).onclick = e => { e.currentTarget.blur(); loop.pause(); $('dialogue-aide-carte').showModal(); };
+$('aide-carte-fermer').onclick = () => $('dialogue-aide-carte').close();
+$('dialogue-aide-carte').addEventListener('close', reprendre);
 $('dialogue-mission').addEventListener('close', reprendre);
 $('ordre-compris').onclick = () => $('dialogue-ordre').close();
 $('dialogue-ordre').addEventListener('close', reprendre);
-// Le choix du secteur (v0.29.0 ; v0.37.1 : deux colonnes) : à gauche la liste des secteurs (`SECTEURS` de data/secteur.js, avec les retouches de l'atelier), à droite le secteur choisi en 3D,
-// la caméra tourne seule (`apercu-3d.js`, le même moteur que le jeu) ; le terrain montré est celui qu'on jouera (la graine est tirée ici : « Autre terrain » en tire une autre).
-// Rend { secteur, graine, saison, difficulte } ou null (annulé) ; en mode debug, celui de l'adresse (?secteur=crete) sans demander.
+// Le choix du secteur (v0.29.0 ; v0.37.1 : deux colonnes ; v0.106.0 : des cartes de papier ; v0.107.0 : une pile dont les titres font le menu ; v0.108.0 : Jérôme, 2 nov. : « et si nous avons des dizaines de cartes, ça ne
+// fonctionne plus : une liste à gauche, plus petite, l'aperçu et les options à droite, pas besoin de lire le titre des cartes qui ne sont pas au premier plan ») : à gauche la liste des secteurs (`SECTEURS` de
+// data/secteur.js, avec les retouches de l'atelier ; elle défile, « Au hasard » reste épinglée en bas), à droite UNE carte de papier (nom, vraie carte en 3D, description, saison, niveau, durée) posée sur quelques feuilles
+// qui ne sont que du décor. Un clic dans la liste : l'ancienne carte part sous les feuilles (une copie, avec une image figée de son aperçu) et la nouvelle grossit depuis la ligne cliquée ; l'aperçu 3D (UN seul moteur,
+// `apercu-3d.js`, le même que le jeu, la caméra tourne seule) ne se monte qu'une fois la carte posée (monter reconstruit un terrain : ~1 s au rendu logiciel, qui gelait le glissement). Les réglages (saison, niveau,
+// durée) sont ceux de la partie. « Au hasard » tire un autre secteur à chaque clic (la ligne, ou le dé « Une autre carte » sur la carte). Le terrain montré est celui qu'on jouera (la graine est tirée ici).
+// Rend { secteur, graine, saison, difficulte, jours } ou null (annulé) ; en mode debug, celui de l'adresse (?secteur=crete) sans demander.
+// Le papier d'une carte de secteur, sans rien de coûteux à redessiner : le bruit (grain fin, grandes taches) est dessiné UNE fois dans un canvas (noir, en transparence : le CSS le prend comme masque et le colore),
+// et le contour déchiré est un `clip-path` tiré du nom de la carte. (Un bruit SVG et un filtre de déplacement faisaient le même effet mais se recalculaient à chaque glissement : 200 à 370 ms par image.)
+let bruitsPapier = null;
+function bruitsDuPapier() {
+  if (bruitsPapier) return bruitsPapier;
+  let g = 20241102; const hasard = () => (g = (Math.imul(g, 1664525) + 1013904223) >>> 0) / 4294967296;
+  const toile = n => { const c = document.createElement('canvas'); c.width = c.height = n; return c; };
+  const c1 = toile(240), x1 = c1.getContext('2d'), im = x1.createImageData(240, 240);
+  for (let i = 0; i < im.data.length; i += 4) { const v = hasard(); im.data[i + 3] = v > 0.5 ? Math.round((v - 0.5) / 0.5 * 255) : 0; }
+  x1.putImageData(im, 0, 0);
+  const T = 480, c2 = toile(T), x2 = c2.getContext('2d');
+  for (let k = 0; k < 46; k++) {
+    const cx = hasard() * T, cy = hasard() * T, r = 24 + hasard() * 70, a = 0.25 + hasard() * 0.5;
+    for (const dx of [-T, 0, T]) for (const dy of [-T, 0, T]) { const gr = x2.createRadialGradient(cx + dx, cy + dy, 0, cx + dx, cy + dy, r); gr.addColorStop(0, `rgba(0,0,0,${a})`); gr.addColorStop(1, 'rgba(0,0,0,0)'); x2.fillStyle = gr; x2.fillRect(cx + dx - r, cy + dy - r, 2 * r, 2 * r); }
+  }
+  return bruitsPapier = [`url(${c1.toDataURL()})`, `url(${c2.toDataURL()})`];
+}
+function bordRonge(nom) {
+  let g = 2166136261; for (const c of nom) g = Math.imul(g ^ c.charCodeAt(0), 16777619) >>> 0;
+  const hasard = () => (g = (Math.imul(g, 1664525) + 1013904223) >>> 0) / 4294967296, pts = [];
+  for (let i = 0; i <= 60; i++) pts.push(`${(i / 60 * 100).toFixed(2)}% ${(hasard() * 1.1).toFixed(2)}%`);
+  for (let i = 1; i <= 30; i++) pts.push(`${(100 - hasard() * 0.5).toFixed(2)}% ${(i / 30 * 100).toFixed(2)}%`);
+  for (let i = 60; i >= 0; i--) pts.push(`${(i / 60 * 100).toFixed(2)}% ${(100 - hasard() * 1.1).toFixed(2)}%`);
+  for (let i = 29; i >= 1; i--) pts.push(`${(hasard() * 0.5).toFixed(2)}% ${(i / 30 * 100).toFixed(2)}%`);
+  return `polygon(${pts.join(',')})`;
+}
 let apercuSecteur = null;
 function demanderSecteur(avecDifficulte = true) {
   const d = $('dialogue-carte'), tirage = () => window.__seed ?? Date.now() % 100000;
   if (DEBUG) { const id = params.get('secteur'); if (id === ID_ALEATOIRE) preparerAleatoire(tirage()); return Promise.resolve({ secteur: SECTEURS[id] ? id : 'essai', graine: tirage(), saison: SAISONS[params.get('saison')] ? params.get('saison') : undefined, difficulte: DIFFICULTES[params.get('difficulte')] ? params.get('difficulte') : undefined }); }
   let graine = tirage(); preparerAleatoire(graine);                // la carte aléatoire (v0.49.0) : la dernière de la liste, tirée de la graine montrée
   // les cartes d'origine, celles qu'on a publiées, puis la carte au hasard en dernier
-  const ordre = Object.keys(SECTEURS).sort((a, b) => (a === ID_ALEATOIRE) - (b === ID_ALEATOIRE));
-  const liste = $('cartes-choix'), ids = ordre;
-  // une carte de la liste : son titre seulement (Jérôme, v0.51.0 : « pas d'aperçu du relief, uniquement les titres ») ; ce qu'elle est se lit dans la légende et se voit en 3D à droite
-  // (Jérôme, v0.60.2 : le titre de la carte en grand, sans numéro ; « Au hasard » plus petit, avec un dé)
+  const ids = Object.keys(SECTEURS).sort((a, b) => (a === ID_ALEATOIRE) - (b === ID_ALEATOIRE));
+  const liste = $('cartes-choix'), scene = $('carte-table'), hote = $('carte-3d'), grande = $('carte-grande');
   const DE = '<svg viewBox="0 0 16 16" aria-hidden="true"><rect x="2" y="2" width="12" height="12" rx="2" fill="none" stroke="currentColor" stroke-width="1.5"/><circle cx="5.5" cy="5.5" r="1.1" fill="currentColor"/><circle cx="8" cy="8" r="1.1" fill="currentColor"/><circle cx="10.5" cy="10.5" r="1.1" fill="currentColor"/></svg>';
-  const fabriquer = ([id, S]) => {
-    const b = document.createElement('button'); b.className = id === ID_ALEATOIRE ? 'carte-choix carte-hasard' : 'carte-choix'; b.dataset.id = id; b.type = 'button';
-    b.innerHTML = id === ID_ALEATOIRE ? `${DE}<b>Au hasard</b>` : `<b>${S.nom}</b>`;
-    return b;
-  };
-  // une carte du jeu est la même sur tous les ordinateurs : sa graine vient de son nom, pas de l'heure (seule la carte au hasard change, à chaque clic)
+  // une carte du jeu est la même sur tous les ordinateurs : sa graine vient de son nom, pas de l'heure (seule la carte au hasard change, à chaque tirage)
   const graineFixe = id => { let h = 2166136261; for (const c of id) h = Math.imul(h ^ c.charCodeAt(0), 16777619) >>> 0; return h % 99999 + 1; };
-  liste.replaceChildren(...ordre.map(id => fabriquer([id, SECTEURS[id]])));
+  const H = (tag, classe, html) => { const e = document.createElement(tag); if (classe) e.className = classe; if (html !== undefined) e.innerHTML = html; return e; };
+  const ICONES_SAISON = {      // un soleil, une feuille, un flocon (Jérôme, v0.60.2)
+    ete: '<svg viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><circle cx="8" cy="8" r="3"/><path d="M8 1.5V3M8 13V14.5M1.5 8H3M13 8H14.5M3.4 3.4L4.5 4.5M11.5 11.5L12.6 12.6M3.4 12.6L4.5 11.5M11.5 4.5L12.6 3.4"/></svg>',
+    automne: '<svg viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 13C3 7 7 3 13 3C13 9 9 13 3 13Z"/><path d="M3 13L9 7"/></svg>',
+    hiver: '<svg viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><path d="M8 1.5V14.5M2.4 4.8L13.6 11.2M2.4 11.2L13.6 4.8"/></svg>' };
+  const SAISONS_CHOIX = ['ete', 'automne', 'hiver'];
+  const reduit = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  { const [grain, taches] = bruitsDuPapier(); scene.style.setProperty('--bruit-grain', grain); scene.style.setProperty('--bruit-taches', taches); }
   return new Promise(ok => {
-    let choisi = ids[0], ouvert = true, saison = null, saisonHasard = false;       // saison : null tant que le joueur n'a rien touché (la saison du secteur, par défaut), puis son choix
+    let choisi = ids[0], ouvert = true, saison = null, saisonHasard = false, meteoApercu = null, sequence = 0;       // saison : null tant que le joueur n'a rien touché (la saison du secteur, par défaut), puis son choix
     const saisonDe = () => saison ?? SECTEURS[choisi].saison ?? SAISON_DEFAUT;
+    // le temps de l'aperçu (Jérôme, retour du 2 nov.) : tiré au sort parmi ceux de la saison, retiré à chaque tirage de la carte « Au hasard » et à chaque saison choisie ; il ne change pas la partie (le premier jour suit la saison)
+    const tirerMeteo = () => { const ts = Object.keys(SAISONS[saisonDe()]?.transitions ?? {}); meteoApercu = ts.length ? ts[Math.floor(Math.random() * ts.length)] : null; };
     const graineDe = () => choisi === ID_ALEATOIRE ? graine : graineFixe(choisi);
-    const resultat = () => ({ secteur: choisi, graine: graineDe(), saison: saisonDe(), difficulte: avecDifficulte ? difficulte : undefined, jours: avecDifficulte ? DUREES[duree].jours ?? undefined : undefined });
-    // le niveau (Jérôme, v0.70.0) : trois boutons sous la saison ; le dernier choisi est gardé dans les réglages (jamais en mode essai ni à deux)
+    // le niveau (Jérôme, v0.70.0) et la durée (retour du 1er nov.) : le dernier choix est gardé dans les réglages (jamais en mode essai ni à deux)
     let difficulte = DIFFICULTES[prefs.difficulte] ? prefs.difficulte : DIFFICULTE_DEFAUT;
-    const boutonsDifficulte = $('difficultes-choix');
-    boutonsDifficulte.hidden = !avecDifficulte;
-    boutonsDifficulte.replaceChildren(...Object.entries(DIFFICULTES).map(([id, D]) => { const b = document.createElement('button'); b.type = 'button'; b.className = 'carte-choix'; b.dataset.difficulte = id; b.title = D.desc; b.setAttribute('aria-label', `${D.nom} : ${D.desc}`); b.innerHTML = `<b>${D.nom}</b>`; return b; }));
-    const marquerDifficulte = () => { for (const b of boutonsDifficulte.children) b.setAttribute('aria-pressed', String(b.dataset.difficulte === difficulte)); $('difficulte-desc').textContent = avecDifficulte ? DIFFICULTES[difficulte].desc : ''; };
-    // la durée (retour du 1er nov.) : trois boutons sous le niveau, le dernier choix gardé dans les réglages
     let duree = DUREES[prefs.duree] ? prefs.duree : DUREE_DEFAUT;
-    const boutonsDuree = $('durees-choix');
-    boutonsDuree.hidden = !avecDifficulte;
-    boutonsDuree.replaceChildren(...Object.entries(DUREES).map(([id, D]) => { const b = document.createElement('button'); b.type = 'button'; b.className = 'carte-choix'; b.dataset.duree = id; b.title = D.desc; b.textContent = D.nom; return b; }));
-    const marquerDuree = () => { for (const b of boutonsDuree.children) b.setAttribute('aria-pressed', String(b.dataset.duree === duree)); };
-    boutonsDuree.onclick = e => { const b = e.target.closest('[data-duree]'); if (b) { duree = b.dataset.duree; prefs.duree = duree; store.save('prefs', prefs); marquerDuree(); } };
-    marquerDuree();
-    boutonsDifficulte.onclick = e => { const b = e.target.closest('[data-difficulte]'); if (b) { difficulte = b.dataset.difficulte; prefs.difficulte = difficulte; store.save('prefs', prefs); marquerDifficulte(); } };
-    marquerDifficulte();
-    const ICONES_SAISON = {      // un soleil, une feuille, un flocon (Jérôme, v0.60.2)
-      ete: '<svg viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><circle cx="8" cy="8" r="3"/><path d="M8 1.5V3M8 13V14.5M1.5 8H3M13 8H14.5M3.4 3.4L4.5 4.5M11.5 11.5L12.6 12.6M3.4 12.6L4.5 11.5M11.5 4.5L12.6 3.4"/></svg>',
-      automne: '<svg viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 13C3 7 7 3 13 3C13 9 9 13 3 13Z"/><path d="M3 13L9 7"/></svg>',
-      hiver: '<svg viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><path d="M8 1.5V14.5M2.4 4.8L13.6 11.2M2.4 11.2L13.6 4.8"/></svg>' };
-    const SAISONS_CHOIX = ['ete', 'automne', 'hiver'], boutonsSaison = $('saisons-choix');
-    const DE_SAISON = '<svg viewBox="0 0 16 16" aria-hidden="true"><rect x="2" y="2" width="12" height="12" rx="2" fill="none" stroke="currentColor" stroke-width="1.5"/><circle cx="5.5" cy="5.5" r="1.1" fill="currentColor"/><circle cx="10.5" cy="10.5" r="1.1" fill="currentColor"/></svg>';
-    boutonsSaison.replaceChildren(...SAISONS_CHOIX.map(id => { const b = document.createElement('button'); b.type = 'button'; b.className = 'carte-choix'; b.dataset.saison = id; b.title = SAISONS[id].nom; b.setAttribute('aria-label', `${SAISONS[id].nom} : ${SAISONS[id].desc}`); b.innerHTML = `${ICONES_SAISON[id]}<span>${SAISONS[id].nom}</span>`; return b; }), (() => { const b = document.createElement('button'); b.type = 'button'; b.className = 'carte-choix'; b.dataset.saison = 'hasard'; b.title = 'Une saison tirée au hasard'; b.setAttribute('aria-label', 'Au hasard : une saison tirée au sort'); b.innerHTML = `${DE_SAISON}<span>Au hasard</span>`; return b; })());
-    // « Au hasard » (Jérôme, retour du 1er nov.) : un clic tire une saison, montrée tout de suite sur l'aperçu et jouée telle quelle ; un autre clic en tire une autre
-    const marquerSaison = () => { for (const b of boutonsSaison.children) b.setAttribute('aria-pressed', String(saisonHasard ? b.dataset.saison === 'hasard' : b.dataset.saison === saisonDe())); };
-    boutonsSaison.onclick = e => { const b = e.target.closest('[data-saison]'); if (!b) return; if (b.dataset.saison === 'hasard') { saisonHasard = true; saison = SAISONS_CHOIX[Math.floor(Math.random() * SAISONS_CHOIX.length)]; montrer(); } else if (saisonHasard || b.dataset.saison !== saisonDe()) { saisonHasard = false; saison = b.dataset.saison; montrer(); } };
-    // un clic sur l'aperçu l'agrandit (Jérôme, v0.51.0) : la liste s'efface, la carte tient tout l'écran du dialogue et se parcourt (glisser : tourner, Maj ou bouton droit : déplacer, molette : zoomer) ; un autre clic ou Échap la réduit
-    const agrandir = oui => { d.classList.toggle('agrandi', oui); $('carte-aide').textContent = oui ? 'Glissez pour tourner, Maj ou bouton droit pour déplacer, molette pour zoomer. Cliquez ou Échap pour réduire.' : 'Cliquez sur la carte pour l\'agrandir et la parcourir.'; apercuSecteur?.redimensionner(); };
-    d.oncancel = e => { if (d.classList.contains('agrandi')) { e.preventDefault(); agrandir(false); } };
-    agrandir(false);
-    const fin = res => { agrandir(false); ouvert = false; apercuSecteur?.activer(false); d.onclose = null; if (d.open) d.close(); ok(res); };
-    // le secteur choisi, en 3D (le premier passage charge le moteur de l'aperçu ; sans WebGL, la liste reste utilisable)
-    const montrer = async () => {
-      if (choisi === ID_ALEATOIRE) preparerAleatoire(graine);        // la carte de cette graine (son nom est dans la légende)
-      for (const b of liste.children) b.setAttribute('aria-pressed', String(b.dataset.id === choisi));
-      marquerSaison();
-      $('carte-titre').textContent = SECTEURS[choisi].nom;               // le nom sur l'aperçu, la description dessous (deux lignes au plus : la fenêtre ne change plus de taille)
-      $('carte-legende').textContent = SECTEURS[choisi].resume;
-      try {
-        if (!apercuSecteur) { const { creerVue3D } = await import('./apercu-3d.js?v=0.104.2'); apercuSecteur = await creerVue3D({ R, hote: $('carte-3d'), rotation: 0.12 }); apercuSecteur.surClic = () => agrandir(!d.classList.contains('agrandi')); }
-        if (!ouvert) return;
-        apercuSecteur.monter(choisi, SECTEURS[choisi], graineDe(), { soldats: false, cadrer: true, saison: saisonDe() });
-        apercuSecteur.activer(true);
-      } catch (e) { console.warn('Aperçu 3D indisponible', e); $('carte-3d').hidden = true; }
+    const resultat = () => ({ secteur: choisi, graine: graineDe(), saison: saisonDe(), difficulte: avecDifficulte ? difficulte : undefined, jours: avecDifficulte && !SECTEURS[choisi]?.joursFixes ? DUREES[duree].jours ?? undefined : undefined });
+
+    // la liste : une ligne par secteur, petite (Jérôme, v0.51.0 : « pas d'aperçu du relief, uniquement les titres ») ; ce qu'est un secteur se lit sur sa carte
+    liste.replaceChildren(...ids.map(id => { const b = H('button', id === ID_ALEATOIRE ? 'carte-ligne hasard' : 'carte-ligne', id === ID_ALEATOIRE ? `${DE}<span>Au hasard</span>` : '<span></span>'); b.type = 'button'; b.dataset.id = id; if (id !== ID_ALEATOIRE) b.firstChild.textContent = SECTEURS[id].nom; return b; }));
+    const ligneDe = id => liste.querySelector(`[data-id="${CSS.escape(id)}"]`);
+
+    // la carte : le papier (un fond aux bords rongés, du grain, des taches, des plis par-dessus le texte), le nom, la place de l'aperçu 3D (avec la saison dessus), la description, le niveau, la durée
+    const reglage = (nom, classe, entrees) => {
+      const r = H('div', 'carte-reglage'); r.append(H('span', 'carte-reglage-nom', nom));
+      const rang = H('div', 'carte-reglage-rang'); rang.setAttribute('role', 'group'); rang.setAttribute('aria-label', nom);
+      for (const [cle, texte, info] of entrees) { const b = H('button', 'pastille'); b.type = 'button'; b.dataset[classe] = cle; b.textContent = texte; b.title = info; b.setAttribute('aria-label', `${texte} : ${info}`); rang.append(b); }
+      r.append(rang); return r;
     };
-    // « Au hasard » tire une autre carte à chaque clic, même déjà choisi (Jérôme, v0.60.2 : plus de bouton « Autre terrain »)
-    const choisir = id => { if (id === ID_ALEATOIRE) graine = Math.floor(Math.random() * 99999) + 1; else if (id === choisi && apercuSecteur) return; choisi = id; montrer(); };
-    liste.onclick = e => { const b = e.target.closest('.carte-choix'); if (b) choisir(b.dataset.id); };
-    liste.ondblclick = e => { if (e.target.closest('.carte-choix')) fin(resultat()); };
+    const carte = H('div', 'carte-papier');
+    {
+      const cadre = H('div', 'carte-cadre', '<img class="carte-img" alt="" draggable="false">');
+      const saisons = H('div', 'carte-saisons'); saisons.setAttribute('role', 'group'); saisons.setAttribute('aria-label', 'La saison');
+      for (const s of SAISONS_CHOIX) { const b = H('button', 'pastille', `${ICONES_SAISON[s]}<span>${SAISONS[s].nom}</span>`); b.type = 'button'; b.dataset.saison = s; b.title = `${SAISONS[s].nom} : ${SAISONS[s].desc}`; b.setAttribute('aria-label', `${SAISONS[s].nom} : ${SAISONS[s].desc}`); saisons.append(b); }
+      { const b = H('button', 'pastille', `${DE}<span>Hasard</span>`); b.type = 'button'; b.dataset.saison = 'hasard'; b.title = 'Une saison tirée au hasard'; b.setAttribute('aria-label', 'Au hasard : une saison tirée au sort'); saisons.append(b); }
+      const de = H('button', 'pastille carte-de', `${DE}<span>Une autre carte</span>`); de.type = 'button'; de.title = 'Tirer un autre secteur au hasard';      // (seulement sur la carte « Au hasard »)
+      cadre.append(saisons, de);
+      const corps = H('div', 'carte-corps'); corps.append(cadre, H('p', 'carte-legende'));
+      if (avecDifficulte) {            // (la description d'un niveau n'est qu'une infobulle : au survol, Jérôme, retour du 2 nov.)
+        const reglages = H('div', 'carte-reglages');
+        reglages.append(reglage('Niveau', 'difficulte', Object.entries(DIFFICULTES).map(([k, D]) => [k, D.nom, D.desc])), reglage('Durée', 'duree', Object.entries(DUREES).map(([k, D]) => [k, D.nom, D.desc])));
+        corps.append(reglages);
+      }
+      const contenu = H('div', 'papier-contenu'); contenu.append(H('h3', 'carte-nom'), corps);
+      const fond = H('div', 'papier-fond'); fond.style.clipPath = bordRonge('carte');
+      carte.append(fond, contenu, H('div', 'papier-calque grain'), H('div', 'papier-calque taches'), H('div', 'papier-calque plis'));
+    }
+    // quelques feuilles dessous, pour l'épaisseur de la pile : du décor (aucun texte à lire)
+    const feuilles = [[-7, -6, -1.4], [6, -11, 1.1], [-3, -16, -0.5]].map(([x, y, r], k) => { const f = H('div', 'carte-feuille'); f.style.clipPath = bordRonge(`feuille${k}`); f.style.transform = `translate(${x}px,${y}px) rotate(${r}deg)`; f.setAttribute('aria-hidden', 'true'); return f; });
+    scene.replaceChildren(...feuilles, carte);
+    const cadre = carte.querySelector('.carte-cadre'), img = carte.querySelector('.carte-img');
+
+    const marquer = () => {
+      for (const b of liste.children) b.setAttribute('aria-pressed', String(b.dataset.id === choisi));
+      for (const b of d.querySelectorAll('[data-saison]')) b.setAttribute('aria-pressed', String(saisonHasard ? b.dataset.saison === 'hasard' : b.dataset.saison === saisonDe()));
+      for (const b of d.querySelectorAll('[data-difficulte]')) b.setAttribute('aria-pressed', String(b.dataset.difficulte === difficulte));
+      for (const b of d.querySelectorAll('[data-duree]')) { b.setAttribute('aria-pressed', String(b.dataset.duree === duree && !SECTEURS[choisi]?.joursFixes)); b.disabled = !!SECTEURS[choisi]?.joursFixes; b.dataset.titre ??= b.title; b.title = b.disabled ? 'Cette bataille dure un jour' : b.dataset.titre; }       // (la contre-attaque éclair : une journée, quelle que soit la durée choisie)
+    };
+    // l'image de ce que l'aperçu montrait, par secteur et par saison : la carte qui part la garde, et une carte déjà vue arrive avec la sienne
+    const vues = {}, cleVue = () => `${choisi}|${saisonDe()}|${choisi === ID_ALEATOIRE ? graine : ''}`;
+    const figer = () => { try { const cv = hote.querySelector('canvas'); if (cv && apercuSecteur && hote.parentElement === cadre && hote.style.visibility !== 'hidden') { apercuSecteur.rendu.dessiner(0.033, []); vues[cleVue()] = cv.toDataURL('image/png'); img.src = vues[cleVue()]; } } catch { /* sans image figée : le fond de la carte */ } };
+    const majCarte = () => {
+      const S = SECTEURS[choisi];
+      carte.querySelector('.carte-nom').textContent = S.nom; carte.querySelector('.carte-legende').textContent = S.resume; carte.classList.toggle('hasard', choisi === ID_ALEATOIRE);
+      if (vues[cleVue()]) img.src = vues[cleVue()]; else img.removeAttribute('src');
+    };
+    const changerReglage = e => {
+      const b = e.target.closest('button'); if (!b) return;
+      if (b.classList.contains('carte-de')) { choisir(ID_ALEATOIRE); return; }
+      if (b.dataset.saison) {      // « Au hasard » (Jérôme, retour du 1er nov.) : un clic tire une saison, montrée tout de suite sur l'aperçu et jouée telle quelle ; un autre clic en tire une autre
+        if (b.dataset.saison === 'hasard') { saisonHasard = true; saison = SAISONS_CHOIX[Math.floor(Math.random() * SAISONS_CHOIX.length)]; tirerMeteo(); montrer(); }
+        else if (saisonHasard || b.dataset.saison !== saisonDe()) { saisonHasard = false; saison = b.dataset.saison; tirerMeteo(); montrer(); }
+      } else if (b.dataset.difficulte) { difficulte = b.dataset.difficulte; prefs.difficulte = difficulte; store.save('prefs', prefs); marquer(); }
+      else if (b.dataset.duree) { duree = b.dataset.duree; prefs.duree = duree; store.save('prefs', prefs); marquer(); }
+    };
+    carte.onclick = changerReglage;
+
+    // le glissement : l'ancienne carte (une copie, avec son image figée) part sous les feuilles, la nouvelle grossit depuis la ligne cliquée
+    const partir = () => {
+      const s = carte.cloneNode(true); s.classList.add('sortante'); s.inert = true; s.setAttribute('aria-hidden', 'true');
+      for (const e of s.querySelectorAll('[id]')) e.removeAttribute('id'); s.querySelector('.carte-cadre #carte-3d')?.remove();
+      scene.insertBefore(s, carte);
+      s.animate([{ transform: 'none' }, { transform: 'translate(-12px, -9px) rotate(-1.8deg)' }], { duration: 420, easing: 'ease-out', fill: 'forwards' }).finished.catch(() => {}).finally(() => s.remove());
+    };
+    const arriver = (ligne, apres) => {
+      if (reduit) { apres(); return; }
+      const r = ligne.getBoundingClientRect(), c = carte.getBoundingClientRect(), dx = r.left + r.width / 2 - (c.left + c.width / 2), dy = r.top + r.height / 2 - (c.top + c.height / 2);
+      carte.animate([{ transform: `translate(${dx}px, ${dy}px) scale(.2) rotate(-8deg)`, opacity: 0.2 }, { transform: `translate(${dx * 0.12}px, ${dy * 0.12}px) scale(1.015) rotate(0.8deg)`, opacity: 1, offset: 0.78 }, { transform: 'none', opacity: 1 }], { duration: 560, easing: 'cubic-bezier(.16,.84,.3,1)' }).finished.catch(() => {}).finally(apres);
+    };
+
+    // la carte agrandie (v0.51.0) : la liste et la carte s'effacent, l'aperçu prend la place et se parcourt (glisser : tourner, Maj ou bouton droit : déplacer, molette : zoomer) ; un autre clic ou Échap la réduit
+    const agrandir = oui => {
+      if (oui === d.classList.contains('agrandi') && apercuSecteur) return;
+      d.classList.toggle('agrandi', oui); grande.hidden = !oui;
+      if (oui) { figer(); grande.append(hote); } else cadre.prepend(hote);
+      $('carte-aide').textContent = oui ? 'Glissez pour tourner, Maj ou bouton droit pour déplacer, molette pour zoomer. Cliquez ou Échap pour réduire.' : 'Cliquez sur la carte pour l\'agrandir et la parcourir.';
+      apercuSecteur?.redimensionner();
+    };
+    d.oncancel = e => { if (d.classList.contains('agrandi')) { e.preventDefault(); agrandir(false); } };
+    const fin = res => { agrandir(false); ouvert = false; apercuSecteur?.activer(false); d.onclose = null; if (d.open) d.close(); ok(res); };
+    // le secteur choisi, en 3D, sur la carte (le premier passage charge le moteur de l'aperçu ; sans WebGL, la carte garde son cadre vide) ; `data-apercu` dit ce qui est monté (les essais le lisent)
+    const montrer = async () => {
+      marquer();
+      try {
+        if (!apercuSecteur) { const { creerVue3D } = await import('./apercu-3d.js?v=0.114.0'); apercuSecteur = await creerVue3D({ R, hote, rotation: 0.12 }); apercuSecteur.surClic = () => agrandir(!d.classList.contains('agrandi')); }
+        if (!ouvert) return;
+        apercuSecteur.monter(choisi, SECTEURS[choisi], graineDe(), { soldats: false, cadrer: true, saison: saisonDe(), meteo: meteoApercu ?? undefined });
+        hote.style.visibility = ''; d.dataset.apercu = `${choisi}:${graineDe()}:${saisonDe()}`;
+        apercuSecteur.activer(true);
+      } catch (e) { console.warn('Aperçu 3D indisponible', e); hote.hidden = true; }
+    };
+    // choisir un secteur : « Au hasard » en tire un autre à chaque fois, même déjà choisi (Jérôme, v0.60.2) ; avec la saison « Au hasard », chaque secteur choisi tire aussi une autre saison
+    const choisir = id => {
+      if (id === ID_ALEATOIRE) { graine = Math.floor(Math.random() * 99999) + 1; preparerAleatoire(graine); } else if (id === choisi && apercuSecteur) return;
+      const mon = ++sequence;
+      if (!reduit && apercuSecteur && !d.classList.contains('agrandi')) { figer(); partir(); }      // (l'image de l'ancienne carte, avant que l'état change)
+      choisi = id; if (saisonHasard) saison = SAISONS_CHOIX[Math.floor(Math.random() * SAISONS_CHOIX.length)];
+      tirerMeteo(); majCarte(); marquer();
+      apercuSecteur?.activer(false); hote.style.visibility = 'hidden';       // l'aperçu ne se redessine pas pendant que la carte arrive (chaque image du 3D coûte, le glissement saccadait) ; `montrer` le relance
+      arriver(ligneDe(id), () => { if (mon === sequence) montrer(); });
+    };
+    liste.onclick = e => { const b = e.target.closest('.carte-ligne'); if (b) choisir(b.dataset.id); };
+    liste.ondblclick = e => { if (e.target.closest('.carte-ligne')) fin(resultat()); };
     $('carte-jouer').onclick = () => fin(resultat());
     d.onkeydown = e => {
       if (e.key === 'Escape' && d.classList.contains('agrandi')) { e.preventDefault(); agrandir(false); return; }
-      const k = Number(e.key);
-      if (k >= 1 && k <= ids.length) { e.preventDefault(); choisir(ids[k - 1]); }
-      else if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { e.preventDefault(); const i = ids.indexOf(choisi) + (e.key === 'ArrowDown' ? 1 : -1); if (ids[i]) { choisir(ids[i]); liste.children[i].focus(); } }
+      const k = Number(e.key), aller = id => { choisir(id); const l = ligneDe(id); l.focus(); l.scrollIntoView({ block: 'nearest' }); };
+      if (k >= 1 && k <= Math.min(9, ids.length)) { e.preventDefault(); aller(ids[k - 1]); }
+      else if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { e.preventDefault(); const i = ids.indexOf(choisi) + (e.key === 'ArrowDown' ? 1 : -1); if (ids[i]) aller(ids[i]); }
       else if (e.key === 'Enter' && !e.target.closest('form button')) { e.preventDefault(); fin(resultat()); }
     };
     d.onclose = () => { ouvert = false; apercuSecteur?.activer(false); ok(null); };            // annulé (Échap ou le bouton)
-    $('carte-3d').hidden = false;
+    hote.hidden = false; hote.style.visibility = ''; grande.hidden = true; d.classList.remove('agrandi'); delete d.dataset.apercu;
+    $('carte-aide').textContent = 'Cliquez sur la carte pour l\'agrandir et la parcourir.';
+    cadre.prepend(hote); majCarte(); marquer();
     d.showModal();
-    liste.firstElementChild?.focus();
+    for (const l of liste.children) { const t = l.querySelector('span'); if (t && t.scrollWidth > t.clientWidth + 1) l.title = t.textContent; }       // (un nom tronqué par « … » se lit en entier au survol)
+    ligneDe(choisi).focus();
+    tirerMeteo();
     montrer();
   });
 }
@@ -540,7 +663,7 @@ function demarrerReseau({ moi, lien, graine, secteur, saison, reprise }) {
   jouer(b);
   $('depart-statut').textContent = reprise ? 'Partie reprise. La bataille repart quand les deux commandants sont prêts.' : 'La bataille commence quand les deux commandants sont prêts.';
   $('deux-pret').disabled = false; $('deux-pret').textContent = 'Prêt'; $('dialogue-depart').showModal();
-  noter(`Vous êtes le ${moi === NOUS ? 'bleu' : 'kaki'}. ${MISSIONS[objectif()]}`);
+  noter(`Vous êtes le ${moi === NOUS ? 'bleu' : 'kaki'}. ${missionOrdre()}`);
   toast(`Vous êtes le ${moi === NOUS ? 'bleu' : 'kaki'}. Espace : pause pour les deux.`);
 }
 function quitterReseau(message) {
@@ -690,7 +813,7 @@ $('pause-reglages').onclick = () => $('dialogue-reglages').showModal();
 $('ouvrir-reglages').onclick = () => $('dialogue-reglages').showModal();
 $('dialogue-reglages').addEventListener('close', reprendre);
 // Échap ferme une fenêtre, il ne reprend jamais le jeu (Jérôme, v0.100.0) : le temps reste arrêté en pause active, Espace ou « Reprendre » le relance
-for (const id of ['dialogue-pause', 'dialogue-mission', 'dialogue-ordre', 'dialogue-reglages']) {
+for (const id of ['dialogue-pause', 'dialogue-mission', 'dialogue-ordre', 'dialogue-reglages', 'dialogue-aide-carte']) {
   $(id).addEventListener('cancel', () => {
     if (!enJeu()) return;
     if (reseau) reseau.pauseParMoi = false; else pauseActive = true;
@@ -720,7 +843,7 @@ function montrerFin() {
   // elle est finie : un papier sobre, les batailles puis les noms (Jérôme : sans fanfare), au lieu de l'écran de fin
   if (campagne) { laCampagne.montrerFin(bilanCampagne(campagne), montrerTitre); return; }
   const e = B.etat, [vNous, vEux] = effectifs(B);
-  $('fin-titre').textContent = `${e.jour} jours.`;
+  $('fin-titre').textContent = `${e.jour} jour${e.jour > 1 ? 's' : ''}.`;
   $('fin-issue').textContent = reseau ? `${e.issue?.reussie ? 'Le bleu' : 'Le kaki'} l'emporte. ${e.issue?.texte || ''}` : (e.issue?.texte || '') + (e.issue?.secondaires ? ` Missions secondaires : ${e.issue.secondaires.reussies.length} réussie(s), ${e.issue.secondaires.score} points.` : '');
   $('fin-nouvelle').hidden = !!reseau;
   // jour après jour : ce qu'il a coûté, sans un mot de plus
@@ -833,20 +956,18 @@ function majRegiments() {
   pan.innerHTML = `<div class="tete"><b>${numeroDe(actif)} · ${actif.nom}</b><span>${secteursDe(B, actif)}</span><button type="button" class="aide" data-act="fiche" aria-label="Fiche du régiment" data-info="# Fiche du régiment&#10;Les hommes, le moral, les vivres, l'équipement.">?</button></div>
     <div class="compte">${debout} debout · ${bles} blessés · ${actif.pertes} tombés</div>
     <div class="ordre">${ordreEnMots(actif)}</div>${actif.equip?.length ? `<p class="discret">Équipé : ${equipeEnMots(actif)}</p>` : ''}${tampon ? `<span class="tampon">${tampon}</span>` : ''}
-    ${choisis.size > 1 ? `<p class="discret">+ ${choisis.size - 1} autre${choisis.size > 2 ? 's' : ''} choisi${choisis.size > 2 ? 's' : ''}</p>` : ''}
-    ${jour ? `<div class="actions formes" role="group" aria-label="Forme en terrain libre">${Object.entries(R.foule.formes).map(([k, f]) => `<button data-forme="${k}" class="${forme === k ? 'actif' : ''}" aria-pressed="${forme === k}">${f.nom}</button>`).join('')}</div>` : ''}
-    ${jour ? `<div class="actions postures" role="group" aria-label="Posture de tir">${Object.entries(STANCES).map(([k, st], n) => {
-      const m = peutStance(B, [...choisis], k, MOI), toutes = [...choisis].every(i => B.etat.regiments[i]?.stance === k);
-      return `<button data-stance="${k}" class="${toutes ? 'actif' : ''}${m.ok ? '' : ' refus'}" aria-pressed="${toutes}" aria-disabled="${!m.ok}" title="${(m.ok ? `${st.dit} (Maj+${n + 1})` : m.refus).replace(/"/g, '&quot;')}">${st.nom}</button>`;
-    }).join('')}</div>` : ''}
-    <div class="actions">${jour ? `<button data-act="marche" class="${modeMarche ? 'actif' : ''}" aria-pressed="${modeMarche}">Marcher</button><button data-act="depart">Regagner sa tranchée</button>` : ''}</div>`;
+    ${choisis.size > 1 ? `<p class="discret">+ ${choisis.size - 1} autre${choisis.size > 2 ? 's' : ''} choisi${choisis.size > 2 ? 's' : ''}</p>` : ''}`;
   pan.hidden = false;
   rejouerRebond();
   // le rabat se relève quand on change de régiment (v0.34.6)
   if (fenetreVue !== actif.id && !mouvementReduit) pan.animate([{ transform: 'perspective(500px) rotateX(88deg)', opacity: .4 }, { transform: 'perspective(500px) rotateX(0)', opacity: 1 }], { duration: 340, easing: 'cubic-bezier(.2,.8,.3,1)' });
+  if (fenetreVue !== actif.id) { decalageFenetre.x = 0; decalageFenetre.y = 0; }         // (une autre fenêtre revient à sa place, sur sa carte)
   fenetreVue = actif.id;
   placerFenetre();
 }
+// La fenêtre d'un régiment et la fiche d'un homme se déplacent à la main (Jérôme, v0.108.0) ; celle du régiment suit sa carte, plus le décalage, qu'un autre régiment remet à zéro
+const decalageFenetre = deplacable($('reg-ouvert'), { surDeplace: () => placerFenetre() });
+deplacable($('fiche'), { surDeplace: d => { $('fiche').style.translate = `${d.x}px ${d.y}px`; } });
 $('reg-rang').onclick = e => {
   const c = e.target.closest('.reg-carte');
   if (!c || !B) return;
@@ -859,24 +980,10 @@ $('reg-rang').onclick = e => {
 $('reg-ouvert').onclick = e => {
   const co = e.target.closest('button[data-corvee]');
   if (co && B) { co.blur(); return nuit.donner(co.dataset.corvee); }
-  const b = e.target.closest('button[data-act], button[data-forme], button[data-stance]');
+  const b = e.target.closest('button[data-act]');
   if (!b || !B) return;
   b.blur();
-  if (b.dataset.stance) return donnerStance(b.dataset.stance);
-  if (b.dataset.forme) { forme = b.dataset.forme; regimentsVus = ''; return majHud(); }
   if (b.dataset.act === 'fiche') return montrerRegiment(+$('reg-ouvert').dataset.id);
-  if (b.dataset.act === 'marche') { modeMarche = !modeMarche; if (modeMarche) modeBarrage = null; return majHud(); }
-  if (b.dataset.act === 'depart') {
-    for (const id of [...choisis]) {
-      const d = B.etat.regiments[id]?.depart;
-      if (!d) continue;
-      let x = d.x, y = d.y;
-      if (d.trace) { const L = B.lignes.find(l => l.camp * 10 + l.rang === d.trace.ligne); x = (d.trace.x0 + d.trace.x1) / 2; y = L ? ligneY(L, x) : d.y; }
-      const r = dire(lancerMarche([id], x, y));
-      if (r.ok) { marque = { x, y, t: 2 }; ordreDonne(r); }
-    }
-    sauvegarder(); majHud();
-  }
 };
 $('reg-prec').onclick = () => { regDebut = Math.max(0, regDebut - 1); regimentsVus = ''; majRegiments(); };
 $('reg-suiv').onclick = () => { regDebut += 1; regimentsVus = ''; majRegiments(); };
@@ -938,9 +1045,9 @@ function choisirSecteur(s, ajout) {
   for (const r of regs) { if (ajout && choisis.has(r.id)) choisis.delete(r.id); else choisis.add(r.id); }
   rendu.choisis = choisis; majHud();
 }
-function ordreCase(idx, s) {
-  if (B.etat.phase !== 'jour') return toast('La nuit, pas de marche : choisissez des régiments, puis une corvée.', 'refus');
-  if (!choisis.size) return detailSecteur(s);          // (sans régiment choisi, une case de la carte ouvre le détail de son secteur : v0.76.1)
+// Une case de la carte (Jérôme, v0.108.0 : un secteur est une case, B1 par exemple) : sans régiment choisi (ou avec Alt, ou la nuit) elle ouvre le gros plan de cette case seule ; avec des régiments choisis, l'ordre de s'y rendre
+function ordreCase(idx, s, alt = false) {
+  if (alt || !choisis.size || B.etat.phase !== 'jour') return detailSecteur(s, idx);
   const Z = zone(B), x = Z.x0 + (s - 0.5) * largeurZone(B), y = ligneY(B.lignes[idx], x);
   const r = dire(lancerMarche([...choisis], x, y));
   if (r.ok) { marque = { x, y, t: 2 }; sauvegarder(); ordreDonne(r); }
@@ -1010,7 +1117,7 @@ function majHud() {
   const h = horloge(B), e = B.etat;
   majBarreTemps(B);
   $('mission').hidden = !e.mission;
-  if (e.mission) $('mission').textContent = `${objectif() === 'tenir' ? 'Tenir le secteur' : 'Prendre leur première ligne'} ▸`;
+  if (e.mission) $('mission').textContent = `${missionNom()} ▸`;
   majPertes(B); majTemps(h);
   majFiche();
   $('pause-active').hidden = !pauseActive;
@@ -1117,7 +1224,7 @@ function versLeCamp() {
   const ici = Math.hypot(rendu.vue.cx - cx, rendu.vue.cz - cy) < 40;
   const but = ici && avantCamp ? avantCamp : { x: cx, y: cy };
   if (ici && avantCamp) rendu.vue.zoom = avantCamp.zoom;
-  else { avantCamp = { x: rendu.vue.cx, y: rendu.vue.cz, zoom: rendu.vue.zoom }; let z = 0; while (z + 1 < ZOOMS.length && ZOOMS[z + 1] * (x1 - x0) <= rendu.vue.vw * 0.92) z++; rendu.vue.zoom = z; }
+  else { avantCamp = { x: rendu.vue.cx, y: rendu.vue.cz, zoom: rendu.vue.zoom }; let z = 0; while (z + 1 < ZOOMS_CADRAGE && ZOOMS[z + 1] * (x1 - x0) <= rendu.vue.vw * 0.92) z++; rendu.vue.zoom = z; }
   if (ici) avantCamp = null;
   centrage = { x0: rendu.vue.cx, z0: rendu.vue.cz, x1: but.x, z1: but.y, t: mouvementReduit ? 1 : 0 };
 }
@@ -1164,16 +1271,15 @@ function rejouerRebond() {
 // glisse au milieu des hommes du secteur avec le zoom le plus fort qui en montre toute la largeur (92 % de l'image : comme `versLeCamp`) ; le reste du front sort du champ, et la caméra, bornée par le
 // moteur, ne sort jamais du terrain. Le retour (« Vue d'ensemble », Échap, un second clic sur la même lettre) rend la vue d'avant : zoom et place.
 let avantDetail = null;
-function detailSecteur(s) {
-  if (leDetail.ouvert === s) return leDetail.fermer();
+function detailSecteur(s, idx) {
+  const o = leDetail.ouvert;
+  if (o && o.s === s && o.idx === idx) return leDetail.fermer();         // la case déjà montrée : un second clic revient à la vue d'ensemble
   if (!avantDetail) avantDetail = { zoom: rendu.vue.zoom, cx: rendu.vue.cx, cz: rendu.vue.cz };
-  leDetail.montrer(s);
-  const Z = zone(B), w = largeurZone(B), x0 = Z.x0 + (s - 1) * w, A = B.armee;
-  let ym = 0, n = 0;
-  for (let i = 0; i < A.n; i++) if (A.x[i] >= x0 && A.x[i] < x0 + w) { ym += A.y[i]; n++; }
-  let z = 0; while (z + 1 < ZOOMS.length && ZOOMS[z + 1] * w <= rendu.vue.vw * 0.92) z++;
+  leDetail.montrer(s, idx);
+  const c = caseDe(B, s, idx, MOI), w = c.x1 - c.x0;
+  let z = 0; while (z + 1 < ZOOMS_CADRAGE && ZOOMS[z + 1] * w <= rendu.vue.vw * 0.92) z++;
   rendu.vue.zoom = z;
-  centrage = { x0: rendu.vue.cx, z0: rendu.vue.cz, x1: x0 + w / 2, z1: n ? ym / n : (Z.y0 + Z.y1) / 2, t: mouvementReduit ? 1 : 0 };
+  centrage = { x0: rendu.vue.cx, z0: rendu.vue.cz, x1: (c.x0 + c.x1) / 2, z1: c.yc, t: mouvementReduit ? 1 : 0 };
 }
 // la vue d'avant le gros plan (le zoom tout de suite, la place en glissant)
 function retourDuDetail() {
@@ -1189,7 +1295,7 @@ function allerA(l) {
   if (l.reg !== undefined) centrerSur(l.reg);
   else if (l.troncon !== undefined) {
     const tr = B.troncons[l.troncon];
-    if (tr) { vers((tr.x0 + tr.x1) / 2, B.lignes[tr.ligne].y0); rendu.clignoter([l.troncon]); }
+    if (tr) { vers((tr.x0 + tr.x1) / 2, y0En(B.lignes[tr.ligne], (tr.x0 + tr.x1) / 2)); rendu.clignoter([l.troncon]); }
   } else if (l.soldat !== undefined) {
     const A = B.armee; let i = -1;
     for (let k = 0; k < A.n; k++) if (A.id[k] === l.soldat) { i = k; break; }
@@ -1270,7 +1376,7 @@ function placerFenetre() {
   const carte = [...$('reg-rang').children].find(c => +c.dataset.id === +pan.dataset.id);
   if (!carte) { pan.hidden = true; return; }
   const r = carte.getBoundingClientRect(), w = pan.offsetWidth, h = pan.offsetHeight;
-  pan.style.translate = `${Math.round(Math.max(8, Math.min(r.left + r.width / 2 - w / 2, innerWidth - w - 8)))}px ${Math.round(r.top - h - 8)}px`;
+  pan.style.translate = `${Math.round(Math.max(8, Math.min(r.left + r.width / 2 - w / 2, innerWidth - w - 8))) + decalageFenetre.x}px ${Math.round(r.top - h - 8) + decalageFenetre.y}px`;
 }
 
 // Les noms de nos régiments, au-dessus d'eux : un cartouche (v0.41.3) : le numéro en carré (orange : ébranlé, rouge : en déroute), le nom et le secteur, le statut, la barre debout / blessés
@@ -1594,7 +1700,7 @@ function noterStance(ids, stance) {
   noter(regs.length > 2 ? `${regs.length} régiments : ${STANCES[stance].court}.` : regs.map(g => `${g.nom} : ${STANCES[stance].court}`).join(' ; ') + '.', { liens: regs.length > 2 ? [] : regs.map(lienReg) });
 }
 function donnerStance(stance) {
-  if (!choisis.size) return detailSecteur(s);          // (sans régiment choisi, une case de la carte ouvre le détail de son secteur : v0.76.1)
+  if (!choisis.size) return;
   const r = dire(lancerStance([...choisis], stance));
   if (r.ok && !reseau) { noterStance(r.regiments, stance); sauvegarder(); regimentsVus = ''; majHud(); }
 }
@@ -1639,6 +1745,9 @@ const keys = createKeys({
     if (!enJeu()) return;
     if (e?.shiftKey && (nom === 'b1' || nom === 'b2' || nom === 'b3')) { if (nom !== 'b3') donnerStance(STANCES_TOUCHES[Number(nom[1]) - 1]); return; }   // Maj+chiffre : la posture, jamais le barrage
     if (nom === 'menu') {
+      // Échap ferme la fenêtre ouverte, rien d'autre (v0.108.0 : la modale du « ? » fermait aussi le gros plan derrière elle) ; `keys` a retenu la touche, le navigateur ne ferme plus la fenêtre de lui-même : l'événement `cancel` y est rejoué
+      const fenetre = document.querySelector('dialog[open]');
+      if (fenetre) { fenetre.dispatchEvent(new Event('cancel', { cancelable: true })); fenetre.close(); return; }
       if (modeBarrage || modeMarche || laFiche.ouverte || choisis.size || leCamp.choisi() || leDetail.ouvert !== null || charChoisi !== null) annuler(); else pause();
     }
     else if (nom === 'pause') basculerPause();
@@ -1788,7 +1897,7 @@ const loop = createLoop({
   render() {
     const now = performance.now(), dt = Math.min(0.1, (now - derniere) / 1000);
     derniere = now;
-    if (!$('titre').hidden) { const dev = decorPas(dt); son.image(dt, { tirs: null, ecoute: { x: 0, y: 0, rayon: 100 }, meteo: null, nuit: false, titre: true, enJeu: false }); rendu.dessiner(dt, dev); return; }      // l'écran titre : le décor
+    if (!$('titre').hidden) { const dev = decorPas(dt); son.image(dt, { tirs: null, ecoute: { x: 0, y: 0, rayon: 100 }, meteo: null, nuit: false, titre: true, enJeu: false }); if (!$('dialogue-carte').open) rendu.dessiner(dt, dev); return; }      // l'écran titre : le décor (figé pendant le choix du secteur : caché derrière la fenêtre, il coûtait ~170 ms par image au rendu logiciel et le glissement des cartes saccadait)
     if (!B) return;
     pad.poll();
     if (enJeu() && !document.querySelector('dialog[open]')) {
@@ -1857,7 +1966,7 @@ startUpdateCheck({
 
 // ─── Mode debug (section 18) : chargé seulement avec ?debug=1 ──────────────
 if (DEBUG) {
-  const { installDebug, seedFromUrl } = await import('./lib/debug.js?v=0.104.2');
+  const { installDebug, seedFromUrl } = await import('./lib/debug.js?v=0.114.0');
   window.__seed = seedFromUrl() ?? undefined;
   installDebug({
     state: () => B && { ...horloge(B), effectifs: effectifs(B), pertes: B.etat.pertes, impacts: B.etat.impacts.length, enJeu: enJeu(), pause: loop.paused },

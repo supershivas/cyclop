@@ -16,7 +16,7 @@ la danse macabre, la catastrophe peinte avec calme. L'intention est dans `DESIGN
 
 - **Production** : https://supershivas.github.io/cyclop/ (le dépôt s'appelle
   `supershivas/cyclop`)
-- **Labo** : https://supershivas.github.io/cyclop/labo.html
+- **Labo** : https://supershivas.github.io/cyclop/labo.html ; **Labo lumière** (une page à part, v0.111.0) : https://supershivas.github.io/cyclop/labo-lumiere.html
 - **Genre** : stratégie et gestion, temps réel avec pause active. Boucle
   principale : la bataille de plusieurs jours (jour : ordres et barrages ; nuit :
   l'évolution du terrain en lot).
@@ -24,10 +24,10 @@ la danse macabre, la catastrophe peinte avec calme. L'intention est dans `DESIGN
   étroit (30°), plongée de 54°, tournée de 9° : les régiments lointains paraissent
   plus petits (Jérôme, v0.3.0 : c'est cela, « l'angle ») ; on la tourne (jusqu'à
   34°) et l'incline un peu, en douceur ; elle respire (un balancement de 2° en
-  23 s, seulement après 5 s sans geste sur la caméra, coupé si le système demande un mouvement réduit ; Jérôme, v0.3.1, v0.103.0) ; son point visé reste sur le terrain et la vue peut le dépasser d'un quart de sa taille (`SURPLOMB` = 0,25, Jérôme, v0.103.0), et le point visé atteint toujours 15 % du terrain depuis chaque bord (`ATTEINTE`, v0.104.1) ; tourner, incliner ou respirer ne déplace jamais le point visé (`borner(deplace)` ne le ramène dans ses bornes que s'il vient d'être déplacé, v0.104.2) ; **la caméra ne passe jamais sous le sol** (règle impérative : `borner` la relève, `GARDE_SOL`). Lumière (Jérôme, v0.68.1) : un soleil qui se lève à gauche et se couche à droite, des ombres de relief et de nuages, un temps couvert sans ombres (`SOLEIL_JEU` de data/soleil.js ; détail dans `docs/domaines/rendu.md`). Zoom par
-  facteurs entiers au point visé (1, 2, 3, 4, 6, 8, 12, 16, 24 pixels par mètre ; Jérôme, v0.9.3 : tout près des soldats ; 24 en v0.103.0) ; aux zooms
+  23 s, seulement après 5 s sans geste sur la caméra, coupé si le système demande un mouvement réduit ; Jérôme, v0.3.1, v0.103.0) ; son point visé reste sur le terrain et la vue peut le dépasser d'un quart de sa taille (`SURPLOMB` = 0,25, Jérôme, v0.103.0), et le point visé atteint toujours 15 % du terrain depuis chaque bord (`ATTEINTE`, v0.104.1) ; **la caméra ne passe jamais sous le sol** (règle impérative : `borner` la relève, `GARDE_SOL`). Lumière (Jérôme, v0.68.1) : un soleil qui se lève à gauche et se couche à droite, des ombres de relief et de nuages, un temps couvert sans ombres (`SOLEIL_JEU` de data/soleil.js ; détail dans `docs/domaines/rendu.md`). Zoom par
+  facteurs entiers au point visé (1, 2, 3, 4, 6, 8, 12, 16, 24, 32 pixels par mètre ; Jérôme, v0.9.3 : tout près des soldats ; 24 en v0.103.0, 32 en v0.104.2 : le visage d'un homme s'y lit ; les cadrages automatiques s'arrêtent à 24 : `ZOOMS_CADRAGE`) ; aux zooms
   1 et 2, chaque soldat est un point (le sol, lui, garde le même relief à tous les zooms ; Jérôme, v0.12.0) ; en face est vert kaki clair (palette `x`). Sol en cubes et soldats en boîtes (Jérôme, v0.2.0 :
-  les facettes et les sprites essayés au labo ne sont pas retenus). Profil game-system :
+  les facettes et les sprites essayés au labo ne sont pas retenus) ; **de près, dès 12 px/m, les 250 plus proches ont un squelette, un visage et un aspect à eux** (`ARTICULE`, v0.105.0 ; deux niveaux de détail : intermédiaire de 12 à 16 px/m, fin dès 24, v0.105.1). Profil game-system :
   `profils/pixel-3d-three.md`.
 - **Cible** : ordinateur uniquement (souris, sélection au cadre, raccourcis,
   pause). Pas d'interface tactile ni d'aperçu téléphone (Jérôme, v0.1.0) : sur un
@@ -52,7 +52,7 @@ Choisie par Jérôme (v0.1.0). Lettres : `t s b g h e r o` (terre, boue, glaise,
 
 ### Échelle
 
-- Une case = 1 m. Hauteurs en quarts (25 cm). Secteur du lot minimal : 400 × 300
+- Une case = 1 m. Hauteurs en quarts (25 cm). Cartes jusqu'à 800 × 500 (`plaine`, v0.110.0 : `docs/domaines/bataille.md`). Secteur du lot minimal : 400 × 300
   cases, au milieu d'un terrain de 840 × 640 (des marges de 220 et 170 m, sans
   régiments, où les ordres ne vont pas) : tout dézoomé, la vue reste sur le
   terrain (Jérôme, v0.3.0).
@@ -95,7 +95,8 @@ Souris et clavier (choisir, marcher, barrages 1-2-3, avion 4, génie 6, pause Es
 | `js/campagne.js`, `data/campagne.js` : registre, papier de campagne, reconstitution, identité portable | `docs/domaines/campagne.md` |
 | `js/eaux.js`, `generateur.js`, saisons, secteurs, ponts, `js/chars.js`, `js/avions.js`, mitraillage aérien | `docs/domaines/terrain-engins.md` |
 | `js/reseau/`, le jeu à deux, `lancerMarche`, `executerCmd` (chargé seul dans `js/reseau/`) | `docs/domaines/reseau.md` |
-| `labo.html`, `js/labo*.js`, `atelier.html`, `js/atelier*.js`, `design-store.js`, contenu publié | `docs/domaines/labo-atelier.md` |
+| `labo.html`, `js/labo*.js`, `atelier.html`, `atelier-animation.html`, `js/atelier*.js`, `js/pose-soldat.js`, `design-store.js`, contenu publié | `docs/domaines/labo-atelier.md` |
+| `labo-lumiere.html`, `js/labo-lumiere.js`, `js/lumiere/` : la lumière en voxels, ses étapes, ses mesures | `js/lumiere/README.md` (+ `labo-atelier.md`) |
 | `test/`, `outils/fumee.mjs`, `outils/rendu-empreinte.mjs`, `scripts/` : références, mesures | `docs/domaines/tests.md` |
 
 Autres : `DESIGN.md` (l'intention), `ROADMAP.md` (`docs/pistes-avancees.md` : les pistes non construites), `docs/archives/` (ce qui a été retiré), `docs/refonte-rendu3d.md`.
@@ -105,7 +106,9 @@ Autres : `DESIGN.md` (l'intention), `ROADMAP.md` (`docs/pistes-avancees.md` : le
 - Logique pure (aucun DOM, aucune horloge, aucun hasard hors de la graine ; testée dans Node) : `terrain.js` (champ de hauteurs `base` + `diff`, eau), `army.js` (la foule), `tranchees.js`, `nuit.js` (corvées), `champs.js` (coûts de marche), `bataille.js` (état, règles, ordres, sauvegarde), `formes.js` / `objets.js` / `secteur-terrain.js` (retouches de relief, objets, terrain d'un secteur), `identite.js`, `eaux.js`, `generateur.js`, `chars.js`, `avions.js`, `nids.js` (postes de mitrailleuse), `epaves.js` (la disposition d'un avion écrasé ou d'un char détruit, d'un hachage de la graine ; le dessin : `rendu/epaves.js`), `fil.js` (le fil de fer coupé par les obus), `campagne.js`, `reseau/`, `data/` (les nombres et les textes ; `data/experience.js` : seuils des chevrons, bonus, gains).
 - Rendu : `rendu3d.js` (three.js, la caméra, l'API) + `rendu/` (soldats, sol, ciel, temps, effets, ponts, chars, avions). Les ouvrages des tranchées : `rendu/tranchee-modeles.js` (trois niveaux de détail, choisis selon le zoom : `rendu.niveauTranchees` vaut `'auto'`, v0.88.1 ; échelles : `data/tranchees.js`) et `rendu/troncons.js` (le dessin d'avant, niveau 0, au labo). La barre de solidité d'une tranchée : `solidite` de `tranchees.js`. Le rendu ne modifie jamais l'état.
 - Interface : `main.js` (écran titre → bataille → nuit → fin, commandes, boucle), `hud/` (papiers, cartes, fiche, carte), `index.html`, `css/style.css`.
-- Outils de contenu : `labo.html` + `js/labo.js` + un `js/labo-*.js` par sujet (19 sujets en 6 familles, dont la fabrique de soldats : `labo-fabrique.js`, `aspect-soldat.js`, `rendu/soldat-articule.js` (v0.102.x, au labo seulement : l'aspect d'un homme, son squelette, le coût mesuré dans `docs/domaines/rendu.md`) et l'encyclopédie des règles : `labo-encyclopedie.js`, `data/encyclopedie.js`, `outils/encyclopedie.mjs` ; le tranché est archivé), `atelier.html` + `js/atelier*.js` + `design-store.js`.
+- Outils de contenu : `labo.html` + `js/labo.js` + un `js/labo-*.js` par sujet (19 sujets en 6 familles, dont la fabrique de soldats : `labo-fabrique.js`, `aspect-soldat.js`, `rendu/soldat-articule.js` (l'aspect d'un homme tiré de son numéro, son squelette ; en jeu de près depuis la v0.105.0, au labo avant ; `rendu/soldats.js` choisit les 250 plus proches ; le coût mesuré dans `docs/domaines/rendu.md`) et l'encyclopédie des règles : `labo-encyclopedie.js`, `data/encyclopedie.js`, `outils/encyclopedie.mjs` ; le tranché est archivé), `atelier.html` + `js/atelier*.js` + `design-store.js`.
+- Atelier animation (v0.113.0+, page à part) : `atelier-animation.html` + `js/atelier-animation.js` (curseurs d'articulation, poignées 3D `js/atelier-poignees.js`, images clés, lecture ; `js/pose-soldat.js` : la logique pure, `js/data/poses-soldat.js` : les nombres ; le nuanceur du soldat articulé a une pose libre) ; détail dans `docs/domaines/labo-atelier.md`.
+- Labo lumière (v0.111.0, page à part ; v0.112.0 : le faux terrain autour, le ciel et la météo qui évoluent ; v0.113.0 : les soldats du jeu à tous les niveaux de détail, des lanternes dans les tranchées, une carte de 512 × 320 m avec une colline) : `labo-lumiere.html` + `js/labo-lumiere.js` (l'écran) + `js/lumiere/` (terrain en voxels, lumière en huit étapes, foule, maillage, particules, ciel, caméra, rendu WebGL 2, mesures ; la logique est pure et prête à être reprise ; `README.md` du dossier) ; ne touche ni au jeu ni au labo principal.
 - Vérification : `test/` (règles, `fumee.json` et `rendu.json` : des références), `outils/`, `scripts/`, `lisibilite.config.mjs`.
 
 ## Mode debug et mesure
@@ -133,6 +136,7 @@ Autres : `DESIGN.md` (l'intention), `ROADMAP.md` (`docs/pistes-avancees.md` : le
 | `campagne.js`, `data/campagne.js` | `... test/campagne.test.mjs` (~46 s) |
 | `js/reseau/` | `... test/lockstep.test.mjs` (~9 s) puis `node outils/deux.mjs` |
 | le dessin | `node outils/rendu-empreinte.mjs` ; le HUD : `node outils/fumee.mjs` |
+| `js/lumiere/`, `labo-lumiere.html` | `... test/lumiere.test.mjs` (~1 s) puis `node outils/lumiere.mjs` (~1 min ; `--banc` : le coût GPU de chaque étape) |
 | avant de pousser une règle | `node outils/test-run.mjs --court` (tous) |
 
 `--court` n'imprime que les échecs et le bilan ; `rendu-empreinte` et `fumee` aussi (une ligne si tout est identique, `--detail` pour la liste).
@@ -144,6 +148,7 @@ node outils/fumee.mjs                    # le jeu dans le navigateur : un scéna
 node outils/captures.mjs --page index.html --page labo.html --page atelier.html
 node outils/audit-ecran.mjs --page index.html --page labo.html --page atelier.html
 node outils/lisibilite.mjs               # contraste, tuiles en gris
+node outils/audit-boutons.mjs            # le design system des boutons et des unités : 44 px, ombre, casse, liseré, ordre des barres (~40 s)
 node outils/deux.mjs                     # le jeu à deux : deux pages s'appairent, jouent, aucune désynchronisation (~30 s)
 node scripts/mesure.mjs                  # 8 000 soldats : simulation et rendu
 node scripts/trois-jours.mjs             # trois jours de bataille, captures chaque soir

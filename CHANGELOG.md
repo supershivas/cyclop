@@ -1,7 +1,84 @@
 # Journal des versions
 
-## 0.104.2 — 2026-11-07
-- Tout dézoomé, tourner ou incliner la caméra ne déplace plus le point visé : le « mur » qui le poussait vers le fond de la carte a disparu
+## 0.114.0 — 2026-11-07
+- La carte : une case est un secteur (B1, C6…) ; un clic en montre le plan seul, soldats à leur place, avec les cases voisines à un bouton ; lignes 1 à 4 chez nous, 5 à 8 en face
+- Un petit « ? » explique la carte (marges resserrées) ; la fenêtre d'un régiment ne garde que son « ? », et elle comme les fiches des hommes se déplacent à la main
+
+## 0.113.1 — 2026-11-07
+- La ceinture des soldats vus de près ne scintille plus (ses flancs étaient dans le même plan que ceux de la vareuse)
+- Atelier d'animation : les poses du soldat se règlent avec des poignées 3D (tourner, déplacer, échelle), on voit les os, et on peut annuler (Ctrl+Z)
+
+## 0.113.0 — 2026-11-05
+- Labo lumière : les soldats du jeu à tous les niveaux de détail (boîte, silhouette, soldat équipé, articulé), au lieu de simples colonnes
+- Des lanternes dans les tranchées et des lampes sur certains soldats, une carte quatre fois plus grande (512 × 320 m) et une colline
+
+## 0.112.0 — 2026-11-05
+- Labo lumière : les vrais soldats articulés du jeu (casque, sac, fusil, visage) sont dessinés de près, avec la lumière du labo
+- Un faux terrain prolonge la carte jusqu'à l'horizon, le ciel a des nuages qui dérivent (et leur ombre), des étoiles et une lune, et le temps (sec, pluie, boue, brouillard, neige) peut changer tout seul
+
+## 0.111.0 — 2026-11-05
+- Une nouvelle page, « Labo lumière » : un champ de bataille en voxels pour juger une lumière proche d'un GI voxel, sans raytracing, avec jusqu'à 50 000 soldats
+- Huit étapes de lumière activables une à une (ombres, AO, recalcul local, lumière propagée, brume et fumée, flash des obus, météo, AO écran), trois niveaux de qualité, mesures et comparaison
+
+## 0.110.1 — 2026-11-03
+- Boutons, casse et unités uniformes : même ombre, mêmes 44 px, mêmes barres pour régiments, chars, mitrailleuses et batteries
+- Un régiment choisi s'inverse de la même façon sur sa carte et sur le champ ; chars et mitrailleuses ont le liseré de l'armée et un survol
+
+## 0.110.0 — 2026-11-03
+- Nouvelle carte « La grande plaine » : 800 × 500 m, seize régiments par camp et un no man's land de 160 à 240 m
+- La contre-attaque éclair dure toujours un jour : les boutons de durée sont grisés pour elle
+
+## 0.109.1 — 2026-11-03
+- Les cartes de secteur n'ont plus aucun pli : le papier reste usé, grainé et taché
+
+## 0.109.0 — 2026-11-03
+- Les lignes de tranchée peuvent être courbes : « Le méandre » ondule, et son no man's land passe de 82 à 181 m
+- Nouvelle mission « contre-attaque éclair » sur « Le saillant » : un morceau de notre ligne vient de tomber, il faut le reprendre avant la nuit
+- « 1 jour » au singulier quand la bataille ne dure qu'un jour
+
+## 0.108.1 — 2026-11-02
+- Les cartes de secteur n'ont plus de pli vertical au milieu (il ne rendait pas bien) ; le pli horizontal reste
+
+## 0.108.0 — 2026-11-02
+- Nouvelle partie : une liste de secteurs à gauche, plus petite (elle défile s'il y en a des dizaines, « Au hasard » reste en bas), et à droite la carte du secteur choisi avec son aperçu et ses options, posée sur quelques feuilles
+- Un clic sur un secteur : l'ancienne carte part sous les feuilles, la nouvelle grossit depuis la ligne cliquée ; le tirage d'un autre secteur au hasard change bien l'aperçu
+
+## 0.107.1 — 2026-11-02
+- Les mitrailleuses ne tirent plus d'une tranchée à l'autre : leur portée passe de 130 à 80 m, elles couvrent le no man's land mais plus la ligne d'en face
+
+## 0.107.0 — 2026-11-02
+- Nouvelle partie : plus de liste ni de cadre, les cartes de secteur sont empilées sur la fenêtre et leurs titres servent de menu ; la carte choisie glisse sur le dessus, sans saccade
+- La carte « Au hasard » porte le nom du secteur tiré et un dé « Une autre carte » pour en tirer un autre ; le décor de l'écran titre ne se redessine plus derrière le choix du secteur
+
+## 0.106.0 — 2026-11-02
+- Nouvelle partie : les secteurs sont des cartes de papier usé posées sur une table ; la carte choisie glisse sur le dessus de la pile avec sa vraie carte en 3D, sa description, la saison, le niveau et la durée
+- La description d'un niveau n'est plus qu'une infobulle au survol, et les infobulles s'affichent au-dessus des fenêtres
+
+## 0.105.6 — 2026-11-02
+- Au labo, les cartes de secteur montrent la vraie carte du secteur (rendue par le moteur du jeu) sur un papier usé, grainé, plié, aux bords rongés, posé sur une table de toile
+
+## 0.105.5 — 2026-11-02
+- Nouvelle partie : avec la saison « Au hasard », chaque nouvelle carte cliquée dans la liste tire une autre saison et une autre météo
+
+## 0.105.4 — 2026-11-02
+- Au retour à l'écran titre, plus aucune fenêtre de la partie ne reste devant le décor (fenêtre de régiment, de bâtiment, visées, repères, bulles)
+
+## 0.105.3 — 2026-11-02
+- Nouvelle partie : la saison est sur la carte, en haut à droite ; la météo de l'aperçu est tirée au sort à chaque clic sur « Au hasard » ; la phrase du niveau est alignée sur ses boutons
+- Au labo : un test des cartes de secteur qui glissent sur une table (deux gestes à comparer)
+
+## 0.105.2 — 2026-11-02
+- De près, les soldats d'un régiment en feu retenu tiennent le fusil baissé en travers des hanches ; au corps à corps ils se fendent et poussent la baïonnette vers l'adversaire (comme les soldats de loin)
+
+## 0.105.1 — 2026-11-01
+- Les soldats de près ont deux niveaux de détail : le fin dès 24 pixels par mètre (boutons, galons, moustache, pipe, casque rond), un plus simple de 12 à 16 qui coûte moins à dessiner
+
+## 0.105.0 — 2026-11-01
+- De près (12 pixels par mètre et plus), les 250 soldats les plus proches ont un vrai corps : genoux, coudes, mains et pieds qui bougent, un visage différent pour chacun, des cheveux, une barbe, des accessoires, une carrure et une taille propres
+- Casque Adrian français en demi-sphère, Stahlhelm allemand ; vareuse sous le ceinturon, guêtres brunes françaises, bottes allemandes jusqu'aux genoux ; les officiers ont un pistolet au lieu du fusil et des barrettes blanches sur la manche (épaulettes chez les Allemands)
+
+## 0.104.2 — 2026-11-01
+- Un zoom de plus près, 32 pixels par mètre (molette ou boutons + et −) : on y lit le visage d'un soldat ; le cadrage automatique d'un camp ou d'un secteur reste à 24 au plus
 
 ## 0.104.1 — 2026-11-01
 - Tout dézoomé, on peut viser n'importe quel point du secteur : le mur qui retenait la vue au milieu du terrain a disparu

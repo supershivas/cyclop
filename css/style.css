@@ -19,6 +19,9 @@
   --e4: 16px;
   /* les hauteurs, les traits */
   --jeu-cible: 44px;        /* tout bouton du HUD : cette hauteur au moins */
+  --barre-h: 6px;           /* la barre de vie ou de tir d'une unité (carte, étiquette, char, batterie) : une seule épaisseur (v0.110.0) */
+  --barre-xp: 3px;          /* la barre d'expérience */
+  --lettres-etiquette: .08em; /* l'espacement d'une étiquette en capitales (statut, nom d'armée, sous-titre) ; les titres : --titre-lettres */
   --trait: 1px;
   --ombre-papier: 3px 3px 0 var(--jeu-fond);   /* l'ombre portée d'un cran, la seule */
   --titre-lettres: .08em;   /* l'espacement des titres */
@@ -44,7 +47,7 @@
 .discret { color: var(--jeu-accent); }
 .terrain { pointer-events: none !important; }
 .terrain[hidden] { display: grid; visibility: hidden; }   /* les deux lignes gardent leur place : le billet ne saute pas */
-.pause-active { letter-spacing: .12em; text-transform: uppercase; text-align: center; }
+.pause-active { letter-spacing: var(--lettres-etiquette); text-transform: uppercase; text-align: center; }
 
 /* Des papiers de campagne (Jérôme, v0.10.0 ; labo « Plaques et journal », variantes C et D) : l'interface est faite de ce qu'un
    officier a sur lui : une montre, des feuilles de situation, un râtelier d'obus, un carnet de bord. Du papier (l'os), de l'encre
@@ -59,8 +62,22 @@
 .papier .discret { color: var(--jeu-accent); }
 .montre-bloc { display: flex; gap: var(--pas); align-items: center; }
 .droite { display: grid; gap: var(--pas); align-content: end; justify-items: end; flex: none; }
-.carte { width: min(38ch, 30vw); }
-.carte .entete { display: flex; align-items: center; gap: var(--pas); width: 100%; font: inherit; color: inherit; background: none; border: 0; border-bottom: 1px solid var(--jeu-accent); text-align: left; cursor: pointer; letter-spacing: .14em; text-transform: uppercase; border-bottom: 1px solid var(--jeu-accent); padding-bottom: var(--e0); font-size: var(--texte-petit); margin-bottom: var(--e1); }
+.carte { width: min(38ch, 30vw); padding: var(--e1) var(--pas) var(--pas); }       /* (des marges serrées, Jérôme v0.108.0 : celles de .papier mangeaient la grille) */
+.carte-tete { display: flex; align-items: center; gap: var(--e1); border-bottom: 1px solid var(--jeu-accent); padding-bottom: var(--e1); margin-bottom: var(--e1); }
+.carte .entete { display: flex; align-items: center; gap: var(--pas); flex: 1; min-width: 0; white-space: nowrap; font: inherit; color: inherit; background: none; border: 0; padding: 0; text-align: left; cursor: pointer; letter-spacing: var(--titre-lettres); text-transform: uppercase; font-size: var(--texte-petit); }
+/* le petit « ? » d'un papier : il ouvre l'explication (la carte, le plan d'un secteur) */
+.papier .aide { flex: none; min-width: 0; min-height: 0; width: calc(var(--e4) + var(--e1)); height: calc(var(--e4) + var(--e1)); padding: 0; display: grid; place-items: center; font: inherit; font-size: var(--texte-petit); line-height: 1; color: var(--jeu-fond); background: none; border: 1px solid var(--jeu-accent); cursor: pointer; }
+@media (hover: hover) { .papier .aide:hover { background: var(--jeu-brume); } }
+.papier .aide.est-survol { background: var(--jeu-brume); }
+.papier .aide:focus-visible, .papier .aide.est-focus { outline: 2px solid var(--jeu-nous); outline-offset: 2px; }
+/* une fenêtre qu'on déplace à la main (v0.108.0) */
+#dialogue-aide-carte { max-height: calc(100dvh - 2 * var(--e4)); overflow-y: auto; }
+#dialogue-aide-carte .aide-titre { margin: var(--e4) 0 var(--pas); font-size: var(--texte-moyen); text-transform: uppercase; }
+#dialogue-aide-carte .legende { max-width: 62ch; gap: var(--pas); }
+#dialogue-aide-carte .menu { margin-top: var(--e4); }
+.deplacable { cursor: grab; touch-action: none; }
+.deplacable.tire { cursor: grabbing; user-select: none; }
+.deplacable button, .deplacable a, .deplacable .fiche-liste { cursor: pointer; }
 .carte-grille { position: relative; display: grid; gap: var(--e0); align-items: stretch; }
 .carte-grille .lib { font-size: var(--texte-petit); align-self: center; color: var(--jeu-accent); }
 .carte-grille button { font: inherit; padding: 0; border: 0; min-height: 0; cursor: pointer; }
@@ -78,7 +95,7 @@
 .carnet { width: 38ch; max-width: 36vw; font-size: var(--texte-petit); }
 .carnet[hidden] { display: none; }
 /* Le carnet (Jérôme, v0.100.0) : l'en-tête est un bouton (un clic : tout l'historique), une flèche le replie ; les noms sont des liens ; un événement important a son pictogramme et clignote une fois */
-.carnet .entete { display: flex; align-items: center; justify-content: space-between; gap: var(--pas); letter-spacing: .14em; text-transform: uppercase; border-bottom: 1px solid var(--jeu-accent); padding-bottom: var(--e0); }
+.carnet .entete { display: flex; align-items: center; justify-content: space-between; gap: var(--pas); letter-spacing: var(--titre-lettres); text-transform: uppercase; border-bottom: 1px solid var(--jeu-accent); padding-bottom: var(--e0); }
 .carnet .titre-carnet { flex: 1; text-align: left; background: none; border: 0; padding: 0; color: inherit; font: inherit; letter-spacing: inherit; text-transform: inherit; cursor: pointer; min-height: var(--jeu-cible); }
 .carnet .replier { flex: none; background: none; color: inherit; }
 .carnet .replier i { display: block; width: 0; height: 0; border: 5px solid transparent; border-top: 0; border-bottom-color: currentColor; }
@@ -152,37 +169,36 @@
 
 .infobulle { position: fixed; left: 0; top: 0; z-index: 60; max-width: 34ch; padding: var(--e1) var(--pas); background: var(--jeu-encre); color: var(--jeu-fond); font-size: var(--texte-petit); line-height: 1.4; box-shadow: 2px 2px 0 var(--jeu-fond); pointer-events: none; }
 .infobulle[hidden] { display: none; }
+.infobulle[popover] { inset: 0 auto auto 0; margin: 0; border: 0; overflow: visible; }       /* (les réglages d'office d'un popover : centré, bordé, qui défile) */
 .infobulle span { display: block; }
 .infobulle .seul { font-weight: 700; }
 .infobulle .h1 { font-size: var(--texte-moyen); font-weight: 700; line-height: 1.2; }
-.infobulle .h2 { font-size: var(--texte-petit); font-weight: 700; letter-spacing: .08em; text-transform: uppercase; margin-top: var(--e1); opacity: .8; }
+.infobulle .h2 { font-size: var(--texte-petit); font-weight: 700; letter-spacing: var(--lettres-etiquette); text-transform: uppercase; margin-top: var(--e1); opacity: .8; }
 .infobulle .p { margin-top: var(--e0); }
 .infobulle b { font-weight: 700; }
 [data-info] { pointer-events: auto; }
 .etiquettes, .retours { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
 .etiquette {
-  /* le cartouche (Jérôme, v0.41.3 ; sujet « Le nom d'un régiment » du labo, variante C) : un carré à numéro (la couleur de l'armée ; orange s'il est ébranlé, rouge s'il est en déroute),
-     le nom (le « h1 »), le statut (le « h2 ») et la barre debout / blessés au pied ; 44 px de haut au moins : une vraie cible de clic */
+  /* v0.110.0 : la même grammaire que la carte de régiment du bas (docs/design-system.md, « Les unités ») : du papier clair, le liseré de l'armée en haut, l'ombre d'un cran, numéro puis nom,
+     statut, barre ; ébranlé ou en déroute : hachuré ; choisi : inversé, un anneau à l'intérieur ; 44 px de haut au moins : une vraie cible de clic */
+  --enc: var(--jeu-fond); --pap: var(--jeu-encre);
   position: absolute; left: 0; top: 0;
-  display: grid; grid-template-columns: 34px auto; min-height: var(--jeu-cible);
-  background: var(--jeu-fond); color: var(--jeu-encre); white-space: nowrap;
+  display: grid; grid-template-columns: auto auto; align-items: center; column-gap: var(--pas); min-height: var(--jeu-cible); box-sizing: border-box; padding: var(--e1) var(--pas);
+  background: var(--pap); color: var(--enc); border-top: 3px solid var(--jeu-nous); box-shadow: var(--ombre-papier); white-space: nowrap;
   pointer-events: auto; cursor: pointer;
 }
 .etiquette[hidden] { display: none; }
-.etiquette .num { display: grid; place-items: center; background: var(--jeu-nous); color: var(--jeu-fond); font-size: var(--texte-grand); }
-.etiquette.ebranle .num { background: var(--jeu-ebranle); }
-.etiquette.deroute .num { background: var(--jeu-deroute); }
-.etiquette .cart-corps { display: grid; gap: var(--e0); align-content: center; min-width: 96px; padding: var(--e1) var(--pas); }
+.etiquette .num { font-size: var(--texte-grand); font-weight: normal; line-height: 1; }
+.etiquette .cart-corps { display: grid; gap: var(--e0); align-content: center; min-width: 96px; }
 .etiquette .nom { font-size: var(--texte-moyen); line-height: 1.15; }
-.etiquette .statut { font-size: var(--texte-petit); line-height: 1.2; color: var(--jeu-accent); }
-.etiquette.ebranle .statut, .etiquette.deroute .statut { color: inherit; letter-spacing: .08em; text-transform: uppercase; }
-.etiquette .barre { display: flex; height: 5px; box-sizing: border-box; border: 1px solid currentColor; margin-top: var(--e0); }
+.etiquette .statut { font-size: var(--texte-petit); line-height: 1.2; }
+.etiquette.ebranle .statut, .etiquette.deroute .statut { letter-spacing: var(--lettres-etiquette); text-transform: uppercase; }
+.etiquette .barre { display: flex; height: var(--barre-h); box-sizing: border-box; border: 1px solid currentColor; margin-top: var(--e0); }
 .etiquette .barre i { display: block; height: 100%; }
 .etiquette .barre .debout { background: currentColor; }
 .etiquette .barre .blesses { background: repeating-linear-gradient(135deg, currentColor 0 2px, transparent 2px 4px); }
-@media (hover: hover) { .etiquette:not(.choisi):hover { background: var(--jeu-accent); color: var(--jeu-fond); } }
-.etiquette.choisi { background: var(--jeu-encre); color: var(--jeu-fond); }
-.etiquette.choisi .statut { color: var(--jeu-fond); }
+.etiquette.ebranle:not(.choisi), .etiquette.deroute:not(.choisi) { background-image: repeating-linear-gradient(135deg, var(--jeu-encre) 0 4px, var(--jeu-brume) 4px 8px); }
+.etiquette.ebranle.choisi, .etiquette.deroute.choisi { background-image: repeating-linear-gradient(135deg, var(--jeu-fond) 0 4px, var(--jeu-ombre) 4px 8px); }
 /* Le clic sur une carte de régiment (Jérôme, v0.32.2 ; v0.33.0 : les équerres ; labo « Le clic sur un régiment ») : la caméra glisse sur lui, quatre coins d'os se
    referment sur ses hommes, la carte s'allume un instant (inversée) */
 .equerres { position: absolute; left: 0; top: 0; width: 0; height: 0; pointer-events: none; }
@@ -261,7 +277,7 @@
 .bouton {
   padding: 0 calc(var(--pas) * 2);
   background: var(--jeu-encre); color: var(--jeu-fond);
-  border: 0; border-bottom: 4px solid var(--jeu-accent);
+  border: 0; box-shadow: var(--ombre-papier);
   font-size: var(--texte-moyen);
 }
 .bouton.est-focus, .bouton:focus-visible, .icone:focus-visible, .batterie:focus-visible { outline: 2px solid var(--jeu-nous); outline-offset: 2px; }
@@ -282,7 +298,7 @@ dialog .reglage input { width: 20px; height: 20px; margin: 0; flex: none; accent
 /* Entre deux batailles de campagne (v0.36.4) : le registre, un papier posé au milieu du champ */
 .campagne { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: min(78ch, calc(100% - 2 * var(--pas))); max-height: calc(100dvh - 24px); overflow-y: auto; display: grid; gap: var(--pas); pointer-events: auto; padding: var(--e3); }
 .campagne[hidden] { display: none; }
-.campagne h2 { margin: 0; font-size: var(--texte-moyen); letter-spacing: .14em; text-transform: uppercase; border-bottom: 1px solid var(--jeu-accent); padding-bottom: var(--e0); }
+.campagne h2 { margin: 0; font-size: var(--texte-moyen); letter-spacing: var(--titre-lettres); text-transform: uppercase; border-bottom: 1px solid var(--jeu-accent); padding-bottom: var(--e0); }
 .campagne .registre { display: grid; }
 .campagne .ligne { display: grid; grid-template-columns: 13ch 44px 120px 1fr; gap: var(--pas); align-items: center; padding: var(--e1) 0; border-bottom: 1px solid var(--jeu-accent); font-size: var(--texte-petit); }
 .campagne .ligne b { font-weight: normal; font-size: var(--texte); }
@@ -329,12 +345,12 @@ dialog .reglage input { width: 20px; height: 20px; margin: 0; flex: none; accent
 #nuit-corps, #aube-bilan { overflow-y: auto; min-height: 0; }
 .nuit h2 { margin: 0 0 var(--e1); }
 .nuit p { margin: var(--e0) 0; }
-.nuit button { font: inherit; font-size: var(--texte-petit); color: var(--jeu-fond); background: none; border: 1px solid var(--jeu-fond); min-height: 36px; padding: 0 var(--pas); text-align: left; }
+.nuit button { font: inherit; font-size: var(--texte-petit); color: var(--jeu-fond); background: none; border: 1px solid var(--jeu-fond); min-height: var(--jeu-cible); padding: 0 var(--pas); text-align: left; }
 .nuit button:disabled { color: var(--jeu-accent); border-color: var(--jeu-accent); }
 .nuit button.actif, .nuit button.choisi { background: var(--jeu-fond); color: var(--jeu-encre); }
 #aube { flex: none; width: 100%; min-height: var(--jeu-cible); margin-top: var(--pas); text-align: center; background: var(--jeu-fond); color: var(--jeu-encre); }
 /* Les médailles (v0.73.1) : le palmarès du soir et de la fin */
-.medailles-bloc h4, #nuit-medailles h4, #fin-medailles h4 { margin: var(--pas) 0 var(--e1); font-size: var(--texte-petit); font-weight: bold; letter-spacing: .08em; text-transform: uppercase; }
+.medailles-bloc h4, #nuit-medailles h4, #fin-medailles h4 { margin: var(--pas) 0 var(--e1); font-size: var(--texte-petit); font-weight: bold; letter-spacing: var(--lettres-etiquette); text-transform: uppercase; }
 .medailles-bloc summary { cursor: pointer; font-weight: bold; }
 ul.medailles { margin: 0; padding-left: 0; list-style: none; font-size: var(--texte-petit); }
 ul.medailles li { margin: 2px 0; }
@@ -393,7 +409,7 @@ dialog form { margin-top: calc(var(--pas) * 2); }
   --enc: var(--jeu-fond); --pap: var(--jeu-encre);
   /* une hauteur fixe (Jérôme, v0.41.3 ; sujet « La carte d'ordre » du labo) : le nom, le statut, les chevrons, la barre ; chaque ligne a sa place, rien ne bouge d'un état à l'autre,
      le nom ne passe jamais à la ligne (coupé par « … »), le « ! » est hors du flux */
-  position: relative; display: grid; grid-template-rows: 18px 14px 8px 8px; align-content: space-between; flex: 1 1 0; min-width: 88px; max-width: 120px; height: 76px; padding: var(--e1) var(--pas) var(--pas); text-align: left; cursor: pointer;
+  position: relative; display: grid; grid-template-rows: 18px 14px 8px var(--barre-h); align-content: space-between; flex: 1 1 0; min-width: 88px; max-width: 120px; height: 76px; padding: var(--e1) var(--pas) var(--pas); text-align: left; cursor: pointer;
   font: inherit; font-size: var(--texte-petit); background: var(--pap); color: var(--enc); border: 0; border-top: 3px solid var(--jeu-nous); box-shadow: var(--ombre-papier);
 }
 .reg-carte.choisi { --enc: var(--jeu-encre); --pap: var(--jeu-fond); outline: 2px solid var(--jeu-encre); outline-offset: -5px; }
@@ -403,17 +419,17 @@ dialog form { margin-top: calc(var(--pas) * 2); }
 .reg-carte .l1 { display: block; line-height: 18px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .reg-carte.ebranle .l1, .reg-carte.deroute .l1 { padding-right: 20px; }
 .reg-carte .statut { display: block; line-height: 14px; white-space: nowrap; overflow: hidden; }
-.reg-carte.ebranle .statut, .reg-carte.deroute .statut { letter-spacing: .08em; text-transform: uppercase; }
+.reg-carte.ebranle .statut, .reg-carte.deroute .statut { letter-spacing: var(--lettres-etiquette); text-transform: uppercase; }
 .reg-carte .alerte { position: absolute; right: var(--pas); top: var(--e1); display: grid; place-items: center; min-width: 16px; height: 16px; box-sizing: border-box; padding: 0 var(--e0); font-style: normal; font-size: var(--texte-petit); line-height: 1; color: var(--jeu-fond); background: var(--jeu-ebranle); border: 1px solid var(--jeu-fond); }
 .reg-carte.deroute .alerte { background: var(--jeu-deroute); }
 .reg-carte .l1 b { font-weight: normal; font-size: var(--texte-grand); line-height: 1; margin-right: var(--e0); }
 .reg-carte .chevrons { display: flex; gap: var(--e0); height: 8px; }
-.reg-carte .xp { display: block; width: 22px; height: 3px; margin: 2px 0 0 var(--e0); border: 1px solid var(--enc); box-sizing: border-box; flex: none; }      /* l'expérience moyenne (lot E) */
+.reg-carte .xp { display: block; width: 22px; height: var(--barre-xp); margin: 2px 0 0 var(--e0); border: 1px solid var(--enc); box-sizing: border-box; flex: none; }      /* l'expérience moyenne (lot E) */
 .reg-carte .xp i { display: block; height: 100%; background: var(--enc); }
 .reg-carte .posture { margin-left: auto; font-size: var(--texte-petit); line-height: 8px; color: var(--enc); }
 .chev { width: 12px; height: 8px; fill: none; stroke: var(--enc); stroke-width: 2; stroke-linecap: square; }
 .chev.vide { stroke: var(--jeu-accent); }
-.reg-carte .barre, .reg-ouvert .barre { display: flex; height: 8px; box-sizing: border-box; border: 1px solid var(--enc); }
+.reg-carte .barre, .reg-ouvert .barre { display: flex; height: var(--barre-h); box-sizing: border-box; border: 1px solid var(--enc); }
 .reg-carte .barre i { display: block; height: 100%; }
 .reg-carte .barre .debout { background: var(--enc); }
 .reg-carte .barre .blesses { background: repeating-linear-gradient(135deg, var(--enc) 0 2px, transparent 2px 4px); }
@@ -429,11 +445,10 @@ dialog form { margin-top: calc(var(--pas) * 2); }
 .reg-ouvert .tete .aide { flex: none; min-width: 0; min-height: 0; width: calc(var(--e4) + var(--e1)); height: calc(var(--e4) + var(--e1)); padding: 0; display: grid; place-items: center; font: inherit; font-size: var(--texte-petit); line-height: 1; color: var(--jeu-fond); background: none; border: 1px solid var(--jeu-accent); cursor: pointer; }
 .reg-ouvert .tete .aide:focus-visible { outline: 2px solid var(--jeu-nous); outline-offset: 2px; }
 .reg-ouvert .tete span, .reg-ouvert .compte, .reg-ouvert .ordre { color: var(--jeu-accent); font-size: var(--texte-petit); }
-.reg-ouvert .tampon { justify-self: start; padding: 0 var(--pas); border: 3px double var(--jeu-encre); color: var(--jeu-encre); transform: rotate(-4deg); letter-spacing: .12em; text-transform: uppercase; font-size: var(--texte-petit); }
+.reg-ouvert .tampon { justify-self: start; padding: 0 var(--pas); border: 3px double var(--jeu-encre); color: var(--jeu-encre); transform: rotate(-4deg); letter-spacing: var(--lettres-etiquette); text-transform: uppercase; font-size: var(--texte-petit); }
 /* Des boutons empilés ont tous la même largeur (Jérôme, v0.38.3) : une grille de colonnes égales (deux ; quatre pour les formes, qui tiennent sur une ligne),
    jamais des rangées de boutons à la largeur de leur texte. Un mot trop long passe à la ligne dans son bouton. */
 .reg-ouvert .actions { display: grid; grid-template-columns: repeat(var(--cols, 2), 1fr); gap: var(--e1); margin-top: var(--e1); }
-.reg-ouvert .actions.formes { --cols: 4; }
 .reg-ouvert .actions button { min-width: 0; line-height: 1.2; overflow-wrap: anywhere; height: 32px; padding: 0 var(--pas); font: inherit; font-size: var(--texte-petit); color: var(--jeu-fond); background: none; border: 1px solid var(--jeu-accent); cursor: pointer; }
 .reg-ouvert .actions button.actif { background: var(--jeu-fond); color: var(--jeu-encre); border-color: var(--jeu-fond); }
 /* Le survol d'un bouton de papier (Jérôme, v0.98.0 : « revoir la lisibilité des boutons ») : la brume sous l'encre (7 : 1), jamais la glaise sous la glaise ; un bouton refusé (glaise en pointillé) devient plein et encré, sans fond : le texte ne disparaît jamais */
@@ -467,7 +482,6 @@ dialog form { margin-top: calc(var(--pas) * 2); }
 .visee.refus .anneau { stroke: var(--jeu-accent); }
 .visee.refus text { fill: var(--jeu-accent); }
 .visee.refus .encre { stroke: var(--jeu-accent); }   /* (refusé : la ligne et la croix passent à la glaise ; l'ennemi est vert, plus de rouge dans le jeu) */
-.carte-grille .lib.eux { color: var(--jeu-eux); }
 .carte-grille .lib { font-size: var(--texte-petit); text-align: center; }
 
 /* La nuit : les corvées sont au-dessus de la carte du régiment choisi, comme les actions du jour (Jérôme, v0.22.0) */
@@ -488,63 +502,83 @@ body.charge dialog { display: none; }
 .chargement[hidden] { display: none; }
 .chargement.fondu { opacity: 0; pointer-events: none; }
 .chargement .papier { width: min(34ch, 80vw); display: grid; gap: var(--pas); }
-.chargement p { margin: 0; letter-spacing: .1em; text-transform: uppercase; font-size: var(--texte); }
+.chargement p { margin: 0; letter-spacing: var(--lettres-etiquette); text-transform: uppercase; font-size: var(--texte); }
 .chargement .discret { font-size: var(--texte-petit); letter-spacing: 0; text-transform: none; min-height: 1.3em; }
 .chargement-piste { height: 10px; border: 2px solid var(--jeu-fond, #16130f); }
 .chargement-piste i { display: block; height: 100%; background: var(--jeu-fond, #16130f); transition: width .12s linear; }
 
-/* Le choix du secteur (Jérôme, v0.29.0 ; v0.37.1 : deux colonnes) : à gauche la liste des secteurs, à droite le secteur choisi en 3D, qui tourne ; le terrain montré est celui qu'on jouera */
+/* Le choix du secteur (Jérôme, v0.29.0 ; v0.37.1 : deux colonnes ; v0.106.0 : des cartes de papier ; v0.108.0 : « et si nous avons des dizaines de cartes, ça ne fonctionne plus ») : à gauche la liste des secteurs (petite, elle défile),
+   à droite UNE carte de papier posée sur quelques feuilles de décor. Aucune valeur de couleur ici : le papier est l'encre (os), le grain et les plis la terre, les taches la glaise, en transparence (`color-mix`) ;
+   le bruit est un masque dessiné par main.js (sa couleur vient des variables). */
 #dialogue-carte { width: min(94vw, 72rem); max-width: none; overflow: hidden; }       /* (pas de barre de défilement : la carte se réduit à la place qui reste, Jérôme, v0.60.2) */        /* (game.css limite un dialogue à 520 px) */
 #dialogue-carte .menu { grid-auto-flow: column; justify-content: end; }
-.carte-colonnes { display: grid; grid-template-columns: minmax(15rem, 22rem) minmax(0, 1fr); gap: calc(var(--pas) * 2); align-items: start; }
-.cartes-choix { display: grid; gap: var(--pas); }
-.carte-choix { display: grid; gap: var(--pas); align-content: start; text-align: left; font: inherit; padding: var(--pas); cursor: pointer; color: var(--jeu-fond); background: var(--jeu-encre); border: 2px solid var(--jeu-encre); }
-.carte-choix:focus-visible { border-color: var(--jeu-nous); }
-.carte-choix[aria-pressed="true"] { border-color: var(--jeu-nous); outline: 2px solid var(--jeu-nous); outline-offset: 0; }
-@media (hover: hover) { .carte-choix:hover { border-color: var(--jeu-nous); } }
-.cartes-choix .carte-choix b { font-size: var(--texte-grand); }
-.carte-hasard { display: flex; align-items: center; gap: var(--pas); background: var(--jeu-accent); border-color: var(--jeu-accent); }       /* (comme les autres cartes, d'une autre teinte) */
-.carte-hasard svg { width: 1.4rem; height: 1.4rem; flex: none; }
-.carte-choix b { font-weight: normal; font-size: var(--texte-moyen); letter-spacing: .06em; text-transform: uppercase; }
-.carte-choix p { margin: 0; font-size: var(--texte-petit); line-height: 1.35; }
-.saisons-choix { display: flex; gap: var(--pas); align-items: stretch; margin-top: var(--pas); }
-.saisons-choix .carte-choix { flex: none; display: flex; align-items: center; justify-content: center; gap: calc(var(--pas) * .6); padding: calc(var(--pas) * .5) var(--pas); text-align: center; }
-.saisons-choix .carte-choix svg { width: 1.1rem; height: 1.1rem; flex: none; }
-.saisons-choix .carte-choix span { font-size: var(--texte-petit); letter-spacing: .06em; text-transform: uppercase; line-height: 1; }
-.saisons-choix .carte-choix b { float: none; }
-.saisons-choix::before { content: 'Saison'; align-self: center; font-size: var(--texte-petit); color: var(--jeu-accent); letter-spacing: .06em; text-transform: uppercase; }
-#difficultes-choix::before { content: 'Niveau'; }
-#difficultes-choix[hidden], #difficulte-desc:empty { display: none; }
-#difficultes-choix, #durees-choix { display: inline-flex; vertical-align: top; margin-right: calc(var(--pas) * 3); }      /* le niveau et la durée sur la même ligne (la fenêtre tient à 800 px de haut) */
-#durees-choix::before { content: 'Durée'; }
-#durees-choix[hidden], #duree-desc[hidden], #duree-desc:empty { display: none; }
-#durees-choix .carte-choix { text-transform: uppercase; font-size: var(--texte-petit); letter-spacing: .06em; }
-#difficulte-desc { margin: calc(var(--pas) * .5) 0 0; font-size: var(--texte-petit); line-height: 1.4; color: var(--jeu-accent); }
-#difficultes-choix .carte-choix b { font-size: var(--texte-petit); }
-#dialogue-carte.agrandi .saisons-choix, #dialogue-carte.agrandi #difficulte-desc, #dialogue-carte.agrandi #duree-desc { display: none; }
-.carte-apercu { display: grid; gap: var(--pas); }
-.carte-3d { position: relative; height: min(44vh, 26rem); overflow: hidden; display: flex; align-items: center; justify-content: center; background: var(--jeu-ombre); border: 1px solid var(--jeu-accent); }
+.carte-colonnes { display: grid; grid-template-columns: minmax(11rem, 14rem) minmax(0, 1fr); gap: calc(var(--pas) * 2); align-items: start; }
+.carte-colonnes > * { height: clamp(24rem, calc(100dvh - 19rem), 44rem); }
+/* la liste : une ligne par secteur, petite ; elle défile s'il y en a beaucoup, « Au hasard » reste épinglée en bas */
+.cartes-liste { display: flex; flex-direction: column; gap: var(--e0); overflow-y: auto; overscroll-behavior: contain; padding-right: var(--e1); scrollbar-width: thin; scrollbar-color: var(--jeu-accent) transparent; }
+.carte-ligne { flex: none; display: flex; align-items: center; gap: var(--pas); min-height: 0; padding: var(--e1) var(--pas); font: inherit; font-size: var(--texte); line-height: 1.3; text-align: left; cursor: pointer; color: var(--jeu-fond); background: var(--jeu-encre); border: 2px solid var(--jeu-encre); }
+.carte-ligne span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.carte-ligne svg { width: 1rem; height: 1rem; flex: none; }
+.carte-ligne:focus-visible { border-color: var(--jeu-nous); }
+.carte-ligne[aria-pressed="true"] { border-color: var(--jeu-nous); outline: 2px solid var(--jeu-nous); outline-offset: -2px; }
+@media (hover: hover) { .carte-ligne:hover { border-color: var(--jeu-nous); } }
+.carte-ligne.hasard { position: sticky; bottom: 0; background: var(--jeu-accent); border-color: var(--jeu-accent); }       /* (d'une autre teinte, et toujours visible) */
+
+/* la scène : la carte au premier plan, des feuilles dessous (du décor : leur épaisseur seule compte) */
+.carte-scene { position: relative; }
+.carte-feuille, .carte-papier { position: absolute; top: 20px; bottom: 0; left: 0; right: 0; margin: 0 auto; width: min(56rem, 100%); }
+.carte-feuille { background: color-mix(in srgb, var(--jeu-encre) 62%, var(--jeu-fond)); }
+.carte-papier { color: var(--jeu-fond); z-index: 1; }
+.carte-papier.sortante { z-index: 0; }
+.papier-fond { position: absolute; inset: 0; background: var(--jeu-encre); }       /* (le contour déchiré est un `clip-path` écrit par main.js, `bordRonge` : un filtre SVG de turbulence coûtait ~200 ms à chaque glissement) */
+.papier-calque { position: absolute; inset: 4px; pointer-events: none; z-index: 3; }
+.papier-calque.grain { background: var(--jeu-fond); -webkit-mask-image: var(--bruit-grain, linear-gradient(transparent, transparent)); mask-image: var(--bruit-grain, linear-gradient(transparent, transparent)); opacity: .15; }
+.papier-calque.taches { background: var(--jeu-accent); -webkit-mask-image: var(--bruit-taches, linear-gradient(transparent, transparent)); mask-image: var(--bruit-taches, linear-gradient(transparent, transparent)); opacity: .34; }
+.papier-calque.plis { background:
+  radial-gradient(circle at 0 100%, color-mix(in srgb, var(--jeu-accent) 40%, transparent), transparent 20%), radial-gradient(circle at 100% 0, color-mix(in srgb, var(--jeu-accent) 30%, transparent), transparent 16%),
+  radial-gradient(ellipse at 50% 50%, transparent 62%, color-mix(in srgb, var(--jeu-accent) 30%, transparent)); }
+.papier-contenu { position: relative; z-index: 2; height: 100%; display: flex; flex-direction: column; gap: var(--pas); padding: var(--e1) var(--e1) var(--e3); box-sizing: border-box; }
+.carte-corps { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; gap: var(--pas); }
+.carte-nom { flex: none; margin: 0; padding: var(--e1) var(--e3); font-size: var(--texte-moyen); font-weight: normal; line-height: 1.3; letter-spacing: var(--titre-lettres); text-transform: uppercase; color: var(--jeu-encre); background: var(--jeu-fond); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* la vraie carte du secteur (l'aperçu 3D du jeu) dans son cadre, collée au papier par deux bouts d'adhésif ; la saison dessus, en haut à droite (Jérôme, retour du 2 nov.) */
+.carte-cadre { position: relative; flex: 1 1 5rem; min-height: 5rem; margin: var(--pas) var(--e3) 0; background: var(--jeu-ombre); box-shadow: 0 0 0 var(--trait) var(--jeu-fond); }
+.carte-cadre::before, .carte-cadre::after { content: ''; position: absolute; z-index: 4; top: -8px; width: 52px; height: 16px; background: color-mix(in srgb, var(--jeu-brume) 85%, transparent); box-shadow: 0 0 0 var(--trait) color-mix(in srgb, var(--jeu-accent) 50%, transparent); pointer-events: none; }
+.carte-cadre::before { left: -16px; transform: rotate(-38deg); }
+.carte-cadre::after { right: -16px; transform: rotate(36deg); }
+.carte-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; image-rendering: pixelated; }
+.carte-img:not([src]) { display: none; }
+.carte-3d { position: absolute; inset: 0; overflow: hidden; display: flex; align-items: center; justify-content: center; background: var(--jeu-ombre); cursor: zoom-in; }
 .carte-3d canvas { display: block; image-rendering: pixelated; }
-.carte-3d { cursor: zoom-in; }
+.carte-saisons { position: absolute; z-index: 3; top: var(--pas); right: var(--pas); display: flex; gap: var(--e1); padding: var(--e1); background: color-mix(in srgb, var(--jeu-fond) 60%, transparent); }
+.carte-papier .carte-de { display: none; position: absolute; z-index: 3; left: var(--pas); bottom: var(--pas); }
+.carte-papier.hasard .carte-de { display: inline-flex; }       /* (seulement sur la carte « Au hasard » ; `.pastille` donne `display: inline-flex` : l'ordre des règles compte) */
+.carte-legende { flex: none; margin: 0 var(--e3); font-size: var(--texte-petit); line-height: 1.4; min-height: 2.8em; }
+.carte-reglages { flex: none; display: grid; gap: var(--pas); margin: 0 var(--e3); }
+.carte-reglage { display: grid; grid-template-columns: 4.5rem minmax(0, 1fr); align-items: center; gap: var(--pas); }
+.carte-reglage-nom { font-size: var(--texte-petit); letter-spacing: var(--lettres-etiquette); text-transform: uppercase; color: var(--jeu-accent); }
+.carte-reglage-rang { display: flex; flex-wrap: wrap; gap: var(--e1) var(--pas); }
+/* une pastille : le contour glaise au repos, l'encre sous l'os quand elle est choisie (comme les boutons de papier du jeu) */
+.pastille { display: inline-flex; align-items: center; justify-content: center; gap: var(--e1); font: inherit; font-size: var(--texte-petit); white-space: nowrap; min-height: var(--jeu-cible); padding: 0 var(--pas); cursor: pointer; color: var(--jeu-fond); background: transparent; border: 1px solid var(--jeu-accent); }
+.pastille svg { width: 1rem; height: 1rem; flex: none; }
+.pastille:focus-visible { outline: 2px solid var(--jeu-nous); outline-offset: 1px; }
+.pastille[aria-pressed="true"] { color: var(--jeu-encre); background: var(--jeu-fond); border-color: var(--jeu-fond); }
+@media (hover: hover) { .pastille:hover { border-color: var(--jeu-fond); } }
+.carte-saisons .pastille, .carte-de { color: var(--jeu-encre); background: var(--jeu-fond); border-color: var(--jeu-fond); min-height: var(--jeu-cible); }
+.carte-saisons .pastille[aria-pressed="true"] { color: var(--jeu-fond); background: var(--jeu-encre); border-color: var(--jeu-nous); }
+@media (hover: hover) { .carte-saisons .pastille:hover, .carte-de:hover { border-color: var(--jeu-nous); } }
+.carte-aide { margin: var(--pas) 0 0; font-size: var(--texte-petit); line-height: 1.4; min-height: 1.4em; color: var(--jeu-accent); }
+/* la carte agrandie (v0.51.0) : la liste et la carte s'effacent, l'aperçu prend la place */
+.carte-grande .carte-3d { position: relative; height: calc(100dvh - 19rem); border: var(--trait) solid var(--jeu-accent); }
+#dialogue-carte.agrandi .carte-colonnes { display: none; }
 #dialogue-carte.agrandi .carte-3d { cursor: grab; }
-.carte-vue { position: relative; }
-/* le nom de la carte, sur un dégradé du noir vers le transparent au bas de l'aperçu (Jérôme, v0.64.1) ; les clics passent au 3D */
-.carte-titre { position: absolute; left: 0; right: 0; bottom: 0; padding: calc(var(--pas) * 3) var(--pas) var(--pas); font-size: var(--texte-grand); letter-spacing: .06em; text-transform: uppercase; color: var(--jeu-encre); background: linear-gradient(to top, rgba(0, 0, 0, .85), rgba(0, 0, 0, 0)); pointer-events: none; }
-/* la description et l'aide : deux lignes au plus, et toujours la place de deux lignes : la fenêtre ne change jamais de taille */
-.carte-legende, .carte-aide { margin: 0; font-size: var(--texte-petit); line-height: 1.4; height: 2.8em; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
-.carte-aide { color: var(--jeu-accent); }
-/* la carte agrandie (v0.51.0) : la liste s'efface, l'aperçu prend la place */
-#dialogue-carte.agrandi .cartes-choix { display: none; }
-#dialogue-carte.agrandi .carte-colonnes { grid-template-columns: 1fr; }
-#dialogue-carte.agrandi .carte-3d { height: calc(100dvh - 22rem); }
-@media (max-width: 760px) { .carte-colonnes { grid-template-columns: 1fr; } }
+@media (max-width: 760px) { .carte-colonnes { grid-template-columns: 1fr; } .carte-colonnes > * { height: auto; max-height: 22rem; } }
 
 /* Le haut de l'écran allégé pour un petit écran (Jérôme, v0.30.0 : 13 pouces, le champ était trop petit) : le temps à côté des réglages, les
    pertes sur une ligne par camp, la carte repliable, un billet sans montre dessinée (l'heure est dans le texte), le terrain sous la souris dans le billet. */
 .carte .entete i { margin-left: auto; width: 0; height: 0; border: 5px solid transparent; border-top-color: currentColor; border-bottom: 0; }
 .carte.replie .entete i { border-top: 5px solid transparent; border-bottom: 5px solid transparent; border-left-color: currentColor; border-right: 0; }
 .carte.replie .carte-grille { display: none; }
-.carte.replie .entete { border-bottom: 0; padding-bottom: 0; margin-bottom: 0; }
+.carte.replie .carte-tete { border-bottom: 0; padding-bottom: 0; margin-bottom: 0; }
 .haut-bloc { display: grid; gap: var(--pas); justify-items: stretch; width: max-content; max-width: 100%; }
 /* les boutons du haut ont tous la même hauteur (--jeu-cible) ; la barre du temps, dessous, a la largeur de leur rangée (contain : sa propre largeur ne compte pas) */
 .haut-bloc .boutons { align-items: stretch; }
@@ -610,7 +644,7 @@ h2 { font-weight: normal; letter-spacing: var(--titre-lettres); }
 /* Les pertes (Jérôme, v0.33.0 ; « La barre de vie », variante B) : un duel, une barre de chaque côté du jour ; la vie collée au centre, la perte vers le bord */
 .pertes { display: flex; gap: var(--pas); align-items: flex-start; width: min(560px, 42vw); }
 .pertes .armee { flex: 1; min-width: 0; display: grid; gap: 3px; }
-.pertes .nom { font-size: var(--texte-petit); letter-spacing: .12em; text-transform: uppercase; color: var(--jeu-nous); background: var(--jeu-fond); justify-self: start; padding: 0 var(--e1); }
+.pertes .nom { font-size: var(--texte-petit); letter-spacing: var(--lettres-etiquette); text-transform: uppercase; color: var(--jeu-nous); background: var(--jeu-fond); justify-self: start; padding: 0 var(--e1); }
 .pertes .eux .nom { color: var(--jeu-eux); justify-self: end; }
 .pertes .vie { display: flex; flex-direction: row-reverse; height: 20px; box-sizing: border-box; border: 2px solid var(--jeu-fond); background: var(--jeu-fond); }
 .pertes .eux .vie { flex-direction: row; }
@@ -644,7 +678,7 @@ h2 { font-weight: normal; letter-spacing: var(--titre-lettres); }
 #toast.jeu-toast[hidden] { display: none; }
 #toast.toast-refus { border-left-color: var(--jeu-accent); }
 #toast.toast-alerte { border-left-color: var(--jeu-eux); }
-#toast small { font-size: var(--texte-petit); letter-spacing: .1em; text-transform: uppercase; color: var(--jeu-ombre); }
+#toast small { font-size: var(--texte-petit); letter-spacing: var(--lettres-etiquette); text-transform: uppercase; color: var(--jeu-ombre); }
 @keyframes toast-entree { from { opacity: 0; transform: translate(-50%, -14px); } to { opacity: 1; transform: translate(-50%, 0); } }
 
 /* Le son (v0.75.0) : deux curseurs dans les réglages */
@@ -659,9 +693,9 @@ h2 { font-weight: normal; letter-spacing: var(--titre-lettres); }
 .secteur p, .secteur h3 { margin: 0; }
 .secteur .retour { justify-self: start; font: inherit; font-size: var(--texte-petit); min-height: var(--jeu-cible); padding: 0 var(--pas); background: none; border: 1px solid var(--jeu-accent); color: inherit; cursor: pointer; }
 .secteur-tete { display: flex; align-items: center; justify-content: space-between; gap: var(--pas); }
-.secteur-lettres { display: flex; gap: var(--e1); }
-.secteur-lettres .sect { min-width: var(--jeu-cible); min-height: var(--jeu-cible); font: inherit; background: none; border: 1px solid var(--jeu-accent); color: inherit; cursor: pointer; }
-.secteur-lettres .sect.ici { background: var(--jeu-fond); color: var(--jeu-encre); border-color: var(--jeu-fond); }
+.secteur-nav { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--e1); }
+.secteur-nav .sect { min-width: 0; min-height: var(--jeu-cible); padding: 0; font: inherit; font-size: var(--texte-petit); background: none; border: 1px solid var(--jeu-accent); color: inherit; cursor: pointer; }
+.secteur-nav .sect:disabled { opacity: .35; cursor: not-allowed; }
 .secteur canvas { display: block; width: 100%; height: auto; image-rendering: pixelated; background: var(--jeu-fond); }
 .secteur-lignes { display: grid; gap: var(--e0); font-size: var(--texte-petit); }
 .carte.remplacee { display: none; }
@@ -673,7 +707,6 @@ h2 { font-weight: normal; letter-spacing: var(--titre-lettres); }
 .legende i.t { width: 16px; height: 4px; box-sizing: content-box; background: var(--jeu-nous); border: 2px solid var(--jeu-encre); border-left: 0; border-right: 0; }
 .legende i.r { border-radius: 50%; width: 10px; height: 10px; background: var(--jeu-fond); border-width: 2px; }
 .legende i.p.bl { background: var(--jeu-encre); }
-.legende-carte summary { cursor: pointer; font-size: var(--texte-petit); margin-top: var(--e1); color: var(--jeu-accent); }
 .secteur-regs { list-style: none; margin: var(--e1) 0 0; padding: 0; display: grid; gap: var(--e0); font-size: var(--texte-petit); }
 .secteur-regs li { padding-left: var(--e1); border-left: 4px solid var(--jeu-nous); }
 .secteur-regs li.eux { border-left-color: var(--jeu-eux); }
@@ -688,13 +721,11 @@ h2 { font-weight: normal; letter-spacing: var(--titre-lettres); }
 .chars-cibles g.manuelle line { stroke-dasharray: none; stroke-width: 2; }
 .chars-cibles g.choisie line, .chars-cibles g.choisie circle, .chars-cibles g.choisie path { stroke: var(--jeu-nous); }
 .char-etiq[hidden] { display: none; }      /* display: grid annulait `hidden` : les étiquettes restaient à l écran hors de vue (retour du 1er nov.) */
-.char-etiq { position: absolute; left: 0; top: 0; pointer-events: auto; display: grid; gap: 2px; min-width: 70px; padding: 3px 5px; font: inherit; font-size: var(--texte-petit); line-height: 1.1; color: var(--jeu-encre); background: var(--jeu-fond); border: 1px solid var(--jeu-encre); cursor: pointer; min-height: 0; }
-.char-etiq .canon, .char-etiq .pv { display: block; height: 4px; border: 1px solid var(--jeu-encre); box-sizing: border-box; }
-.char-etiq .pv { height: 3px; }
-.char-etiq i { display: block; height: 100%; background: var(--jeu-encre); }
+.char-etiq { --enc: var(--jeu-fond); --pap: var(--jeu-encre); position: absolute; left: 0; top: 0; pointer-events: auto; display: grid; gap: var(--e0); min-width: 88px; box-sizing: border-box; padding: var(--e1) var(--pas); font: inherit; font-size: var(--texte-petit); line-height: 1.2; color: var(--enc); background: var(--pap); border: 0; border-top: 3px solid var(--jeu-nous); box-shadow: var(--ombre-papier); cursor: pointer; min-height: 0; }
+.char-etiq .canon, .char-etiq .pv { display: block; height: var(--barre-h); border: 1px solid currentColor; box-sizing: border-box; }
+.char-etiq i { display: block; height: 100%; background: currentColor; }
 .char-etiq .canon i { background: var(--jeu-accent); }
 .char-etiq.pret .canon i { background: var(--jeu-nous); }
-.char-etiq.choisi { outline: 2px solid var(--jeu-nous); }
 .char-fiche { left: auto; top: auto; right: 336px; bottom: 112px; width: 34ch; z-index: 4; transform: none; }      /* à gauche des boutons de batterie (312 px + marges), au-dessus des cartes de régiment : sur aucun des deux (v0.99.10) */
 .char-fiche .jauge { grid-template-columns: 6ch 1fr; grid-template-areas: none; align-items: center; }
 .char-fiche .jauge .piste { grid-column: 1 / -1; }
@@ -714,7 +745,7 @@ h2 { font-weight: normal; letter-spacing: var(--titre-lettres); }
 .char-fiche .barre.canon.pret i { background: var(--jeu-nous); }
 .char-fiche .barre.xp i { background: var(--jeu-nous); }
 /* lot E : l'expérience des chars et des postes — une barre fine, les chevrons, et le saut du chevron gagné (coupé si le système demande moins de mouvement) */
-.char-etiq .xp { display: block; height: 3px; border: 1px solid var(--jeu-encre); box-sizing: border-box; }
+.char-etiq .xp { display: block; height: var(--barre-xp); border: 1px solid currentColor; box-sizing: border-box; }
 .char-etiq .xp i, .char-fiche .barre.xp i { background: var(--jeu-nous); }
 .char-etiq .chevrons, .char-fiche .jauge b .chev { display: inline-flex; gap: var(--e0); height: 8px; }
 .char-etiq .chev, .char-fiche .chev { stroke: currentColor; }

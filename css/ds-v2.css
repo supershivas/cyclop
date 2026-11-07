@@ -25,7 +25,7 @@
   --e6: 32px;
   --papier-v: var(--e4);          /* le haut et le bas d'un papier, d'une fenêtre (était 8) */
   --papier-h: var(--e5);          /* les côtés (était 12) */
-  --bouton-h: 40px;               /* la hauteur d'un bouton de papier (était 32 : tassé) */
+  --bouton-h: var(--jeu-cible);   /* la hauteur d'un bouton de papier : 44 px, la cible du HUD (v0.110.0 ; 40 en v0.98.1, 32 avant) */
   --bouton-px: var(--e4);         /* son souffle de chaque côté (était 8) */
   --ecart: var(--pas);            /* entre deux boutons (était 4) */
 }
@@ -67,6 +67,9 @@ dialog .menu, dialog form.menu { gap: var(--e3); }
 .carte .entete, .secteur .entete, .carnet .entete { font-family: var(--police-titre); font-weight: var(--titre-poids); font-size: var(--titre-3); letter-spacing: var(--titre-lettres); white-space: normal; overflow: visible; min-height: var(--jeu-cible); align-items: center; }
 .entete .discret, .entete .libelle { font-family: var(--jeu-police); font-size: var(--texte-petit); letter-spacing: .02em; text-transform: none; color: var(--jeu-accent); }
 .carte .entete .libelle { margin-left: var(--pas); }
+/* l'en-tête de la carte tient sur une ligne, avec le « ? » à sa droite (v0.108.0) */
+.carte .carte-tete .entete { white-space: nowrap; overflow: hidden; }
+.carte .carte-tete .entete .libelle { overflow: hidden; text-overflow: ellipsis; margin-left: var(--e1); }
 /* l'infobulle : son titre en condensé, ses lignes en mono ; les « **gras** » y font les libellés */
 .infobulle { padding: var(--e3) var(--e4); max-width: 38ch; }
 .infobulle .h1 { font-family: var(--police-titre); font-weight: var(--titre-poids); font-size: var(--titre-3); letter-spacing: var(--titre-lettres); text-transform: uppercase; line-height: 1.1; text-wrap: balance; }
@@ -84,3 +87,17 @@ dialog .menu, dialog form.menu { gap: var(--e3); }
    --jeu-cible : 2 × 16 px de souffle + 24 px d'icône débordaient de 12 px, l'icône partait à droite ; et `button { min-height: --jeu-cible }` de game.css faisait déborder le choisi (×1) de la barre du temps, haute de 36 px dedans. */
 .icone.plaque, .haut-bloc .boutons > .icone { padding: 0; }
 .haut-bloc .temps button { min-height: 0; }
+
+/* Troisième jet (v0.110.0, audit graphique) : voir docs/design-system.md, « Les boutons » et « Les unités ».
+   1. les boutons d'action (.bouton) : du papier et l'ombre d'un cran, comme les boutons du haut, les batteries et le camp, plus de filet bas ; le survol les passe en glaise.
+   2. un « Fermer » de dialogue est un bouton comme les autres de sa fenêtre : le formulaire qui le porte s'étire comme `.menu`.
+   3. la barre du temps : ses cases remplissent sa hauteur (44 px), sans marge autour.
+   4. les unités (carte de régiment, étiquette de régiment, étiquette de char ou de poste, batterie) : le liseré de l'armée en haut, le survol en glaise, le choisi inversé avec un anneau à l'intérieur. */
+dialog form[method="dialog"] { display: grid; }
+.haut-bloc .temps { padding: 0; gap: 0; }
+.haut-bloc .temps button { min-width: var(--jeu-cible); }
+.etiquette.choisi, .char-etiq.choisi { --enc: var(--jeu-encre); --pap: var(--jeu-fond); outline: 2px solid var(--jeu-encre); outline-offset: -5px; }
+@media (hover: hover) { .etiquette:not(.choisi):hover, .char-etiq:not(.choisi):hover { --pap: var(--jeu-accent); } }
+.batterie { border-top: 3px solid var(--jeu-nous); box-sizing: border-box; min-height: var(--jeu-cible); }
+.batterie u { height: var(--barre-h); }
+.batterie.vise { box-shadow: var(--ombre-papier); outline-offset: -5px; }

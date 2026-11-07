@@ -2,10 +2,10 @@
 // Sur le champ : au-dessus de chaque char à nous, une petite étiquette (sa barre de canon qui se remplit, puis PRÊT ; ses points de vie) ; de lui à sa cible, une ligne pointillée et une croix
 // (de la cible qu'on lui a donnée : trait plein ; du carré d'ennemis qu'il a choisi : pointillé). Un clic sur l'étiquette le choisit. La fiche (`#char-fiche`) du char choisi : ses barres,
 // « Marcher » / « Cible » (le prochain clic sur le sol), « Arrêt », « Tir libre », « Fermer ». Le dessin et les boutons seulement : les ordres partent par `surOrdre(ordre)` (main.js).
-import { CHARS } from '../data/chars.js?v=0.104.2';
-import { NOUS } from '../bataille.js?v=0.104.2';
-import { chevronsDe, bonusEnMots } from '../data/experience.js?v=0.104.2';
-import { chevronsHtml } from './barres.js?v=0.104.2';
+import { CHARS } from '../data/chars.js?v=0.114.0';
+import { NOUS } from '../bataille.js?v=0.114.0';
+import { chevronsDe, bonusEnMots } from '../data/experience.js?v=0.114.0';
+import { chevronsHtml } from './barres.js?v=0.114.0';
 
 const REDUIT = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
 const NS = 'http://www.w3.org/2000/svg';
@@ -28,7 +28,7 @@ export function creerCharsHud({ $, bataille, moi = () => NOUS, versEcran, hauteu
       let e = etiq.get(c.id);
       if (!e) {
         const d = document.createElement('div'); d.className = 'char-etiq'; d.setAttribute('role', 'button'); d.tabIndex = 0; d.title = 'Choisir ce char';       // (une <div> : le rebond des boutons animait son `transform`, donc sa place)
-        d.innerHTML = '<span class="nom">Char</span><span class="chevrons"></span><span class="canon"><i></i></span><span class="pv"><i></i></span><span class="xp"><i></i></span>';
+        d.innerHTML = '<span class="nom">Char</span><span class="chevrons"></span><span class="pv"><i></i></span><span class="canon"><i></i></span><span class="xp"><i></i></span>';
         d.onclick = ev => { ev.stopPropagation(); choisir(c.id); };
         $('chars-etiq').append(d);
         etiq.set(c.id, e = { d, canonB: d.querySelector('.canon'), canon: d.querySelector('.canon i'), pv: d.querySelector('.pv i'), xp: d.querySelector('.xp i'), chev: d.querySelector('.chevrons'), nb: chevronsDe(c.exp ?? 0), nom: d.querySelector('.nom'), pret: null });

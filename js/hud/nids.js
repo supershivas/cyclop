@@ -1,11 +1,11 @@
 // Nos postes de mitrailleuse sur le champ et leur fiche (Jérôme, lot E : « on sélectionne le poste et on règle la direction du cône ; barre de vie, barre de munitions ; de l'xp »).
 // Sur le champ : au-dessus de chaque poste à nous, une étiquette (ses chevrons, sa vie, ses munitions, son expérience) ; un clic sur elle le choisit. La fiche (`#nid-fiche`) : les barres,
 // le bonus de ses chevrons, « Tourner » (le prochain clic sur le sol : la direction du cône), « Droit devant », « Fermer ». Le dessin et les boutons seulement : les ordres partent par `surBouton` (main.js).
-import { NIDS } from '../data/nids.js?v=0.104.2';
-import { bonusEnMots } from '../data/experience.js?v=0.104.2';
-import { chevronsNid, cadenceNid } from '../nids.js?v=0.104.2';
-import { chevronsHtml } from './barres.js?v=0.104.2';
-import { NOUS } from '../bataille.js?v=0.104.2';
+import { NIDS } from '../data/nids.js?v=0.114.0';
+import { bonusEnMots } from '../data/experience.js?v=0.114.0';
+import { chevronsNid, cadenceNid } from '../nids.js?v=0.114.0';
+import { chevronsHtml } from './barres.js?v=0.114.0';
+import { NOUS } from '../bataille.js?v=0.114.0';
 
 const REDUIT = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
 export function creerNidsHud({ $, bataille, moi = () => NOUS, versEcran, hauteurSol, choisir, surBouton }) {
@@ -22,7 +22,7 @@ export function creerNidsHud({ $, bataille, moi = () => NOUS, versEcran, hauteur
       let e = etiq.get(n.id);
       if (!e) {
         const d = document.createElement('div'); d.className = 'char-etiq nid-etiq'; d.setAttribute('role', 'button'); d.tabIndex = 0; d.title = 'Choisir ce poste de mitrailleuse';
-        d.innerHTML = '<span class="nom">Mitrailleuse <span class="chevrons"></span></span><span class="pv"><i></i></span><span class="canon"><i></i></span><span class="xp"><i></i></span>';
+        d.innerHTML = '<span class="nom">Mitrailleuse</span><span class="chevrons"></span><span class="pv"><i></i></span><span class="canon"><i></i></span><span class="xp"><i></i></span>';
         d.onclick = ev => { ev.stopPropagation(); choisir(n.id); };
         $('chars-etiq').append(d);
         etiq.set(n.id, e = { d, pv: d.querySelector('.pv i'), muni: d.querySelector('.canon i'), xp: d.querySelector('.xp i'), chev: d.querySelector('.chevrons'), nb: chevronsNid(n) });

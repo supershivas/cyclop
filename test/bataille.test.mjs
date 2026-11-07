@@ -1272,11 +1272,13 @@ test('un nid de mitrailleuse : un par secteur et par camp ; servi, il couche les
   for (let k = 0; k < 30 * 20; k++) { poser(B4, 1, 40, n4.x, n4.y + n4.face * 40, 30); poser(B4, 0, 1, n4.x, n4.y, 1); avancer(B4); }
   assert.ok(B4.etat.pertes[1] - a4 < morts() - avant, 'son tronçon pris, il se tait');
 });
-test('un nid tire sur la tranchée d\'en face (à 120 m) et dit pourquoi il se tait : veille, sans servant, à sec (retour du 1er nov.)', () => {
+test('un nid ne tire plus d\'une tranchée à l\'autre (120 m) mais couvre le no man\'s land (60 m), et dit pourquoi il se tait : veille, sans servant, à sec (retour du 1er nov.)', () => {
   const B = petite(), n = nidDe(B, 0);
   const pas = s => { for (let k = 0; k < s; k++) avancer(B); };
   poser(B, 0, 1, n.x, n.y, 1); poser(B, 1, 30, n.x, n.y + n.face * 120, 20);
-  pas(40); assert.ok(n.muni < NIDS.munitions, 'il a tiré sur une tranchée à 120 m'); assert.equal(n.statut, 'tire');
+  pas(40); assert.equal(n.muni, NIDS.munitions, 'la tranchée d\'en face (120 m) est hors de portée'); assert.equal(n.statut, 'veille');
+  poser(B, 1, 30, n.x, n.y + n.face * 60, 20);
+  pas(40); assert.ok(n.muni < NIDS.munitions, 'il tire sur ce qui traverse le no man\'s land (60 m)'); assert.equal(n.statut, 'tire');
   const C = petite(), c = nidDe(C, 0); poser(C, 0, 1, c.x, c.y, 1); for (let i = 0; i < C.armee.n; i++) if (C.armee.camp[i] === 1) C.armee.mort[i] = 1; for (let k = 0; k < 40; k++) avancer(C);
   assert.equal(c.statut, 'veille', 'servi mais personne à portée');
   const D = petite(), d = nidDe(D, 0); for (const i of Array.from({ length: D.armee.n }, (_, i) => i)) if (D.armee.camp[i] === 0) D.armee.mort[i] = 1;
@@ -1446,4 +1448,80 @@ test('un régiment en déroute se retire vers la caserne ; ceux qui y entrent fo
   assert.equal(e.ralliees[0].length, 0); assert.equal(e.regiments.length, regs0 + 1);
   const nv = e.regiments[e.regiments.length - 1]; assert.ok(nv.effectif >= entres); assert.equal(nv.moral, RENFORTS.moralRallies);
   assert.match(deployer(B, 0, true).refus, /rallié/);
+});
+
+// ─── Des cartes à lignes courbes (Jérôme, v0.109.0) ──────────────────────
+import { validerSecteur as validerCourbe, y0En, arcY } from '../js/tranchees.js';
+import { ticksParJour } from '../js/bataille.js';
+group('lignes courbes et no man\'s land variable');
+test('un secteur courbe est valide, son no man\'s land varie, et les hommes se tiennent sur la courbe, pas sur une rangée droite', () => {
+  const S = SECTEURS.meandres;
+  assert.deepEqual(validerCourbe(S), []);
+  const B = nouvelleBataille(3, R, { secteur: 'meandres', soldats: 200, jours: 3 }), ox = B.etat.marges.x;
+  const n = B.lignes.find(l => l.camp === 0 && l.rang === 0), e = B.lignes.find(l => l.camp === 1 && l.rang === 0);
+  let mn = Infinity, mx = 0; for (let x = 0; x <= S.largeur; x += 5) { const d = y0En(n, ox + x) - y0En(e, ox + x); mn = Math.min(mn, d); mx = Math.max(mx, d); }
+  assert.ok(mn < 100 && mx > 160, `no man's land de ${Math.round(mn)} à ${Math.round(mx)} m`);
+  assert.ok(Math.abs(y0En(n, ox) - y0En(n, ox + 100)) > 5, 'la ligne n\'est pas droite');
+  // un régiment en 1re ligne : ses hommes sont à moins de 6 m du tracé
+  const A = B.armee, A0 = B.etat.regiments.find(r => r.camp === 0 && r.ordre.trace?.rang === undefined && r.ordre.trace?.ligne === 0);
+  let max = 0, k = 0; for (let i = 0; i < A.n; i++) if (A.reg[i] === A0.id) { max = Math.max(max, Math.abs(A.y[i] - ligneY(n, A.x[i]))); k++; }
+  assert.ok(k > 0 && max < 6, `hommes à ${max.toFixed(1)} m du tracé`);
+});
+test('sans courbe, une ligne rend ce qu\'elle rendait avant (les cartes d\'avant ne bougent pas)', () => {
+  const B = nouvelleBataille(3, R, { soldats: 200, jours: 3 });
+  assert.ok(B.lignes.every(l => !l.arc));
+  assert.equal(arcY([{ amp: 10, long: 100, x0: 0 }], 25) > 9.9, true);
+});
+test('un secteur dont la courbe resserre trop le no man\'s land est refusé à voix haute', () => {
+  const S = structuredClone(SECTEURS.meandres); S.tranchees.courbe.nous[0].amp = 80;
+  assert.ok(validerCourbe(S).some(p => /no man's land/.test(p) || /se coupe/.test(p)), JSON.stringify(validerCourbe(S)));
+});
+group('la contre-attaque éclair (mission « contre »)');
+test('au départ, un morceau de notre 1re ligne est à eux (leur régiment y est, le nôtre a reculé) ; la mission le dit ; une journée seulement', () => {
+  const B = nouvelleBataille(3, R, { secteur: 'saillant', soldats: 400 }), e = B.etat;
+  assert.equal(e.mission, 'contre'); assert.equal(e.meteo.length, 1); assert.ok(e.contre.ks.length >= 2);
+  for (const k of e.contre.ks) { assert.equal(e.troncons[k], 1); assert.equal(B.lignes[B.troncons[k].ligne].camp, 0); assert.equal(B.lignes[B.troncons[k].ligne].rang, 0); }
+  assert.ok(e.regiments.some(r => r.camp === 1 && r.ordre.trace.ligne === 0), 'un régiment d\'en face tient notre 1re ligne');
+  assert.ok(e.regiments.some(r => r.camp === 0 && r.ordre.trace.ligne === 2), 'le nôtre a reculé à la 3e ligne');
+  const p = progressionMission(B); assert.equal(p.p, 0); assert.match(p.texte, /repris/);
+});
+test('reprendre tous les tronçons perdus gagne tout de suite ; à la fin du jour, sinon, la mission est perdue', () => {
+  const B = nouvelleBataille(3, R, { secteur: 'saillant', soldats: 400 }), e = B.etat;
+  for (const k of e.contre.ks) e.troncons[k] = 0; e.tickJour = 29;      // (leur régiment, encore dedans, les reprendrait aussitôt : on le suppose tombé)
+  for (let i = 0; i < B.armee.n; i++) if (B.armee.camp[i] === 1) B.armee.mort[i] = 1;
+  avancer(B); avancer(B);
+  assert.equal(e.phase, 'fin'); assert.equal(e.issue.reussie, true); assert.match(e.issue.texte, /reprise/);
+  const C = nouvelleBataille(3, R, { secteur: 'saillant', soldats: 400 }); C.etat.tickJour = ticksParJour(R) - 1; avancer(C);      // (la fin du jour)
+  assert.equal(C.etat.phase, 'fin'); assert.equal(C.etat.issue.reussie, false); assert.match(C.etat.issue.texte, /pas reprise/);
+});
+
+// ─── Les grandes cartes (Jérôme, v0.110.0 : 800 × 500) ───────────────────
+import { emplacementCamp } from '../js/camp.js';
+group('les grandes cartes');
+test('« La grande plaine » (800 × 500) : valide, seize régiments par camp aux noms différents, un poste de mitrailleuse par 100 m, le camp derrière le bord sud', () => {
+  const S = SECTEURS.plaine; assert.deepEqual(validerCourbe(S), []);
+  const B = nouvelleBataille(3, R, { secteur: 'plaine', soldats: 480, jours: 3 }), e = B.etat;
+  assert.equal(e.regiments.filter(r => r.camp === 0).length, 16); assert.equal(e.regiments.filter(r => r.camp === 1).length, 16);
+  const noms = e.regiments.filter(r => r.camp === 0).map(r => r.nom); assert.equal(new Set(noms).size, 16, 'seize noms');
+  assert.equal(e.nids.filter(n => n.camp === 0).length, 8); assert.equal(e.nids.filter(n => n.camp === 1).length, 8);
+  assert.deepEqual(e.dim, { largeur: 800, hauteur: 500 });
+  // les deux camps : le nôtre derrière notre 4e ligne, le leur derrière la leur (au-delà du bord du secteur)
+  const bas = e.marges.y + S.tranchees.lignes.nous.at(-1), haut = e.marges.y + S.tranchees.lignes.eux.at(-1);
+  assert.ok(emplacementCamp(e, 'caserne', 0).y > e.marges.y + S.hauteur, 'notre camp est derrière le bord sud');
+  assert.ok(emplacementCamp(e, 'caserne', 1).y < e.marges.y, 'le leur, derrière le bord nord');
+  assert.ok(bas > e.marges.y + 400 && haut < e.marges.y + 150);
+  // le secteur de départ : un régiment par colonne de 50 m, sur 800 m
+  const xs = e.regiments.filter(r => r.camp === 0 && r.ordre.trace.ligne === 0).map(r => r.ordre.trace.x0).sort((a, b) => a - b);
+  assert.ok(xs[0] >= e.marges.x && xs.at(-1) < e.marges.x + 800 && xs.length === 8);
+  for (let k = 0; k < 60; k++) avancer(B);
+});
+test('sur les cartes de 400 × 300, le camp est à la même place qu\'avant (le plan ne dépend de la taille que par `etat.dim`)', () => {
+  const B = nouvelleBataille(3, R, { soldats: 200, jours: 3 }), e = B.etat;
+  assert.equal(Math.round(emplacementCamp(e, 'caserne', 0).y - e.marges.y), 333); assert.equal(Math.round(emplacementCamp(e, 'caserne', 1).y - e.marges.y), -33);
+  const ancien = structuredClone(e); delete ancien.dim;
+  assert.equal(emplacementCamp(ancien, 'caserne', 0).y, emplacementCamp(e, 'caserne', 0).y);
+});
+test('la contre-attaque éclair dure un jour, quelle que soit la durée demandée au choix de la partie', () => {
+  assert.equal(nouvelleBataille(3, R, { secteur: 'saillant', soldats: 400, jours: 6 }).etat.meteo.length, 1);
+  assert.equal(nouvelleBataille(3, R, { secteur: 'essai', soldats: 200, jours: 6 }).etat.meteo.length, 6);
 });

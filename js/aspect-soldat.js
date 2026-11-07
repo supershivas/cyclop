@@ -3,8 +3,8 @@
    testée dans Node ; le jeu et la fabrique de soldats du labo lisent la même fonction, donc la fabrique montre ce que le jeu dessine.
    L'aspect ne change jamais la partie : il ne lit que des tirages de son numéro, jamais l'état (les caractéristiques qu'on lui passe viennent de `caracteristiques`,
    elles aussi tirées du numéro). */
-import { hash2 } from './lib/rng.js?v=0.104.2';
-import { COIFFES, CHEVEUX, BARBES, PEAUX, ACCESSOIRES, CARRURE, COULEURS_CHEVEUX } from './data/aspect-soldat.js?v=0.104.2';
+import { hash2 } from './lib/rng.js?v=0.114.0';
+import { COIFFES, CHEVEUX, BARBES, PEAUX, ACCESSOIRES, CARRURE, COULEURS_CHEVEUX } from './data/aspect-soldat.js?v=0.114.0';
 
 // un indice tiré d'une liste à poids (`poids` : un nombre, ou un nombre par camp)
 function tirer(liste, u, camp) {
@@ -20,9 +20,8 @@ function tirer(liste, u, camp) {
 export function aspect(id, camp, graine, rang = 6, age = 25, caracs = [50, 50, 50, 50]) {
   const h = q => hash2(id, 100 + q, (graine | 0) + camp * 7919 + 31337);
   const centre = u => 2 * u - 1;
-  // la coiffe : un officier porte plus souvent le képi, les autres le casque
-  let coiffe = tirer(COIFFES, h(1), camp);
-  if (rang <= 3 && h(2) < 0.5) coiffe = 1;
+  // la coiffe : toujours le casque de l'armée (il ne tombe qu'à la blessure à la tête : le dessin)
+  const coiffe = tirer(COIFFES, h(1), camp);
   // les cheveux : la couleur grise avec l'âge (à 45 ans, la moitié des cheveux sont gris)
   const cheveux = tirer(CHEVEUX, h(3), camp);
   let couleur = Math.floor(h(4) * 4);                                   // noir, brun, châtain, blond
@@ -31,8 +30,10 @@ export function aspect(id, camp, graine, rang = 6, age = 25, caracs = [50, 50, 5
   const chauve = cheveux === 0 || (age > 38 && h(6) < 0.25) ? 0 : cheveux;
   const barbe = tirer(BARBES, h(7), camp);
   // la peau : un tirage, un peu plus pâle chez les officiers
-  const peau = Math.max(0, Math.min(PEAUX.length - 1, Math.floor((h(8) + (rang <= 3 ? -0.12 : 0.06)) * PEAUX.length)));
-  const traits = { yeux: Math.floor(h(9) * 3), nez: Math.floor(h(10) * 3), bouche: Math.floor(h(11) * 3), sourcils: Math.floor(h(12) * 3) };
+  const u = h(8) + (rang <= 3 ? -0.12 : 0.04), peau = u < 0.45 ? 0 : u < 0.85 ? 1 : 2;      // surtout pâle ou clair, un homme sur sept hâlé
+  // les rides : le pli du nez à la bouche et les pattes d'oie avec l'âge (le front plissé à partir de 38 ans)
+  const rides = age >= 38 ? 2 : age >= 28 ? (h(18) < 0.5 ? 1 : 0) : 0;
+  const traits = { yeux: Math.floor(h(9) * 3), nez: Math.floor(h(10) * 3), bouche: Math.floor(h(11) * 3), sourcils: Math.floor(h(12) * 3), rides };
   // les accessoires : un bit par entrée de `ACCESSOIRES`
   let acc = 0;
   ACCESSOIRES.forEach((A, k) => {
@@ -48,13 +49,13 @@ export function aspect(id, camp, graine, rang = 6, age = 25, caracs = [50, 50, 5
   const jambes = 1 + CARRURE.jambes.ecart * centre(h(15));
   const tete = 1 + CARRURE.tete.ecart * centre(h(16));
   const ventre = 1 + CARRURE.ventre.ecart * centre(h(17)) * 0.5 + CARRURE.ventre.age * Math.max(0, (age - 30) / 12) - 0.03 * (endurance - 50) / 50;
-  return { coiffe, cheveux: chauve, couleur, barbe, peau, traits, acc, carrure: { taille, epaules, jambes, tete, ventre } };
+  return { rang, coiffe, cheveux: chauve, couleur, barbe, peau, traits, acc, carrure: { taille, epaules, jambes, tete, ventre } };
 }
 
 // L'aspect en mots, pour la fiche (la fabrique de soldats du labo)
-export function aspectEnMots(a) {
+export function aspectEnMots(a, camp = 0) {
   const mots = [];
-  mots.push(COIFFES[a.coiffe].nom);
+  mots.push(camp ? COIFFES[a.coiffe].nomEux : COIFFES[a.coiffe].nom);
   mots.push(a.cheveux === 0 ? 'crâne nu' : `cheveux ${CHEVEUX[a.cheveux].nom}`);
   if (a.barbe) mots.push(BARBES[a.barbe].nom);
   for (let k = 0; k < ACCESSOIRES.length; k++) if (a.acc & (1 << k)) mots.push(ACCESSOIRES[k].nom);

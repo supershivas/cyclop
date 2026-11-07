@@ -113,6 +113,11 @@ for (const m of ['pluie', 'brouillard', 'gel']) {
 await etape('retenu-z6', 3, () => { const B = __jeu.bataille(); __jeu.stance(B.etat.regiments.filter(r => r.camp === 0).map(r => r.id), 'retenu'); __jeu.zoom(4); __jeu.teleport({ x: 200, y: 215 }); });
 await etape('retenu-z8', 3, () => { __jeu.zoom(5); });
 await etape('retenu-fin', 2, () => { const B = __jeu.bataille(); __jeu.stance(B.etat.regiments.filter(r => r.camp === 0).map(r => r.id), 'volonte'); __jeu.zoom(3); });
+// les soldats articulés de près (v0.105.0) : nos hommes à 16 px/m (niveau intermédiaire), ceux d'en face à 24 px/m (niveau fin), puis un autre de nos hommes à 12 px/m, chacun avec son visage, son casque, ses galons et son ombre
+await etape('articules-z7', 3, () => { const B = __jeu.bataille(), A = B.armee, M = B.etat.marges; let i = 0; for (let k = 0; k < A.n; k++) if (A.camp[k] === 0) { i = k; break; } __jeu.zoom(7); __jeu.teleport({ x: A.x[i] - M.x, y: A.y[i] - M.y }); });
+await etape('articules-eux-z8', 3, () => { const B = __jeu.bataille(), A = B.armee, M = B.etat.marges; let i = 0; for (let k = 0; k < A.n; k++) if (A.camp[k] === 1) { i = k; break; } __jeu.zoom(8); __jeu.teleport({ x: A.x[i] - M.x, y: A.y[i] - M.y }); });
+await etape('articules-z6', 3, () => { const B = __jeu.bataille(), A = B.armee, M = B.etat.marges; let i = 0; for (let k = A.n - 1; k >= 0; k--) if (A.camp[k] === 0) { i = k; break; } __jeu.zoom(6); __jeu.teleport({ x: A.x[i] - M.x, y: A.y[i] - M.y }); });      // 12 px/m : le niveau intermédiaire (v0.105.1)
+{ const v = await page.evaluate(() => window.cyclopStats().articulesVus); if (!(v > 0)) erreurs.push(`aucun soldat articulé à 24 px/m (${v}) : le dessin de près a perdu ses hommes`); }
 
 await nav.close(); await srv.close();
 

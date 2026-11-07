@@ -1,13 +1,13 @@
 /* Les nids de mitrailleuses (Jérôme, v0.83.0) : la logique, pure. Un nid vit dans `etat.nids` (sauvegardé) : { id, camp, troncon, x, y, face, pv, etat: 'actif' | 'detruit', tire }.
    Il est posé sur le parapet de la 1re ligne de son camp. Tant qu'il est actif, que son tronçon est à son camp et qu'un de ses hommes le sert, il tire en avant sur l'autre camp ;
    un obus l'abîme, à zéro il est détruit ; le génie (genie.js) ou, en face, la nuit, le refait. Les sapeurs le refont : `reparerNid`. */
-import { NIDS } from './data/nids.js?v=0.104.2';
-import { CALIBRES } from './data/calibres.js?v=0.104.2';
-import { ligneY } from './tranchees.js?v=0.104.2';
-import { hash2 } from './lib/rng.js?v=0.104.2';
-import { GRILLE } from './army.js?v=0.104.2';
-import { BONUS, GAINS, chevronsDe } from './data/experience.js?v=0.104.2';
-import { zone as zoneDe } from './bataille.js?v=0.104.2';
+import { NIDS } from './data/nids.js?v=0.114.0';
+import { CALIBRES } from './data/calibres.js?v=0.114.0';
+import { ligneY } from './tranchees.js?v=0.114.0';
+import { hash2 } from './lib/rng.js?v=0.114.0';
+import { GRILLE } from './army.js?v=0.114.0';
+import { BONUS, GAINS, chevronsDe } from './data/experience.js?v=0.114.0';
+import { zone as zoneDe } from './bataille.js?v=0.114.0';
 
 /* Les nids du départ : un par secteur de 100 m sur la 1re ligne de chaque camp, au milieu du 2e tronçon de chaque quart de la ligne. */
 export function creerNids(B) {
@@ -15,8 +15,8 @@ export function creerNids(B) {
   for (const L of B.lignes) {
     if (L.rang !== 0) continue;
     const ts = B.troncons.map((t, k) => [t, k]).filter(([t]) => B.lignes[t.ligne] === L).sort((a, b) => a[0].x0 - b[0].x0);
-    const par = Math.max(1, Math.floor(ts.length / 4));
-    for (let s = 0; s < 4; s++) {
+    const nS = Math.max(4, Math.round(ts.length / 4)), par = Math.max(1, Math.floor(ts.length / nS));      // (v0.110.0 : un par 100 m, quatre sur les 400 m d'avant, huit sur 800 m)
+    for (let s = 0; s < nS; s++) {
       const e = ts[s * par + NIDS.tronconDuSecteur]; if (!e) continue;
       const [t, k] = e, x = (t.x0 + t.x1) / 2;
       nids.push({ id: nids.length, camp: L.camp, troncon: k, x, y: Math.round((ligneY(L, x) + L.face * (L.amp + 1.6)) * 10) / 10, face: L.face, pv: NIDS.pv, etat: 'actif', tire: 0, muni: NIDS.munitions, exp: 0, ax: 0, ay: L.face });

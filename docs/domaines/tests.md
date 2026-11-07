@@ -1,5 +1,7 @@
 # Tests, références et mesures
 
+- **Le labo lumière (v0.111.0)** : `test/lumiere.test.mjs` (l'obus 1 / 4 / 4, le monde à graine, le maillage, **le recalcul local de la lumière égal au recalcul de toute la carte** aux niveaux bas et haut, la lumière propagée sous un toit, l'ombre, l'AO, la foule, la pureté de `js/lumiere/`) ; `outils/lumiere.mjs` joue la page dans Chromium (obus, trois niveaux, 1 000 puis 50 000 soldats, comparaison, météo, nuit, export, console sans erreur) ; `--banc` ajoute le coût GPU de chaque étape. Aucune référence à rafraîchir.
+
 - **L'encyclopédie (v0.100.0)** : `test/encyclopedie.test.mjs` (la structure des 153 entrées : doublons, renvois, catégories, couverture des tables du jeu) ; `outils/encyclopedie.mjs` fait ses captures (~5 min, aucun fichier de référence : elles se relisent à l'œil).
 
 - **Le premier plan (v0.94.2)** : `test/vue-ecran.test.mjs` (`dansLEcran` : un arbre dont le pied est sous l'écran et la cime dedans reste ; le pied au-dessus ne revient pas ; la marge de côté suit le rayon) ; la sonde (jetable, voir `docs/domaines/rendu.md`, « Les éléments du premier plan disparaissaient encore ») compare, pour des vues variées, ce que l'écran montre et ce que le moteur dessine : `rendu.tronconsDessines`, `stats.arbresVus`, `stats.soldatsVus`.
@@ -31,3 +33,6 @@
   de nuit du labo n'y étaient pas : chacun a été ajouté **avant** de découper son morceau, la référence réécrite sur l'ancien code) ; régénérer la référence sans toucher le code fautif prouve le reste
   (`git stash push -- js/rendu3d.js`, `--ecrire`, `stash pop`) ; remplacer dans un fichier un texte qu'on a déjà modifié ne trouve rien (extraire le texte d'origine, le garder, puis le transformer à part).
 - `scripts/mesure-mitraillage.mjs [soldats]` (v0.57.0) : trois passes d'avion (droite sur leur ligne, le long de leur ligne, en profondeur) sur deux graines : pv restants, abattu ou non, touchés des deux camps. À rejouer après tout changement de `data/mitraillage.js`.
+
+## `outils/audit-boutons.mjs` (v0.110.1)
+Le contrôle du design system, mesuré sur le rendu réel (1280 × 800, huit états : bataille, régiment choisi, char sur le champ, fiche, barrage visé, camp, réglages, nuit) : hauteur de 44 px, plus de filet bas, aucun bouton en capitales (hors `.entete`), liseré de l'armée et ombre sur chaque unité, ordre des barres d'une étiquette de char. Échoue au moindre écart. Exceptions de hauteur déclarées en tête du fichier (cellules de la carte, « ? », flèches, liens) : une exception se discute, elle ne s'ajoute pas pour faire passer. Coût de sa naissance : à son premier passage il a trouvé les boutons de la nuit à 36 px, que l'audit à l'œil avait vus à 44. Un état que le scénario ne montre pas n'est pas contrôlé : ajouter l'étape.

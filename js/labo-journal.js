@@ -2,8 +2,23 @@
 // Une entrée par version qui touche au labo, la plus récente en haut. `ref` : « sujet-Lettre » (la lettre est celle de la variante,
 // A étant l'actuelle). À chaque changement du labo : une entrée ici, avec `depuis` sur les variantes ajoutées ou changées (labo.js).
 export const JOURNAL = [
-  { version: '0.102.2', date: '2026-11-01', items: [
-    { genre: 'nouveau', texte: 'La fabrique de soldats : un soldat articulé (genou, coude, mains, pieds), un visage, des cheveux, une barbe, des accessoires et une carrure différents pour chaque numéro, avec sa fiche (nom, grade, caractéristiques) ; zoom jusqu\'à 200 pixels par mètre', ref: 'fabrique-A' },
+  { version: '0.113.0', date: '2026-11-05', items: [
+    { genre: 'mis-a-jour', texte: 'Labo lumière : les soldats du jeu à tous les niveaux de détail (boîte, silhouette, équipé, articulé), des lanternes dans les tranchées et des lampes sur certains soldats, une carte de 512 × 320 m et une colline' },
+  ] },
+  { version: '0.112.0', date: '2026-11-05', items: [
+    { genre: 'mis-a-jour', texte: 'Labo lumière : les vrais soldats articulés du jeu de près, un faux terrain qui prolonge la carte jusqu\'à l\'horizon, des nuages (et leur ombre), des étoiles et la lune, cinq temps (brouillard et neige en plus) qui peuvent changer tout seuls' },
+  ] },
+  { version: '0.111.0', date: '2026-11-05', items: [
+    { genre: 'nouveau', texte: 'Une page à part, « Labo lumière » (labo-lumiere.html, lien dans les réglages du jeu) : le futur jeu simulé avec un terrain en voxels, jusqu\'à 50 000 soldats et huit étapes de lumière (soleil et ombres, AO par voxel, recalcul local, lumière propagée, atmosphère, flash des obus, météo, AO écran), chacune activable seule, avec panneau de mesures et comparaison' },
+  ] },
+  { version: '0.105.2', date: '2026-11-02', items: [
+    { genre: 'mis-a-jour', texte: 'La fabrique de soldats a deux poses de plus : le feu retenu (le fusil baissé en travers des hanches) et la mêlée (la fente, la baïonnette qui part par à-coups) ; elles sont aussi en jeu de près', ref: 'fabrique-A' },
+  ] },
+  { version: '0.105.1', date: '2026-11-01', items: [
+    { genre: 'mis-a-jour', texte: 'La fabrique de soldats montre les deux niveaux de détail du jeu : le fin (24 pixels par mètre et plus) et l\'intermédiaire (12 à 16), avec le nombre de triangles de chacun', ref: 'fabrique-A' },
+  ] },
+  { version: '0.104.2', date: '2026-11-01', items: [
+    { genre: 'nouveau', texte: 'La fabrique de soldats : un soldat articulé (genou, coude, mains, pieds), un visage, des cheveux, une barbe, des accessoires et une carrure différents pour chaque numéro, avec sa fiche (nom, grade, caractéristiques) ; zoom jusqu\'à 420 pixels par mètre', ref: 'fabrique-A' },
   ] },
   { version: '0.98.1', date: '2026-10-28', items: [
     { genre: 'nouveau', texte: 'Design system, deuxième jet (proposition) : les titres en condensé fin et haut, jamais coupés ; des marges plus grandes ; des boutons refusés qui se lisent impossibles', ref: 'ds-revision-A' },

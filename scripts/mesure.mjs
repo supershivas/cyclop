@@ -9,6 +9,7 @@
 //   node scripts/mesure.mjs --ombres 1 --parois 1 --zooms 3,4,5   (avec les parois qui suivent le soleil)
 //   node scripts/mesure.mjs --nuages 1 --zooms 3,4,5   (les ombres de nuages du labo)
 //   node scripts/mesure.mjs --tranchees 0 --zooms 3,4,5   (le dessin des tranchées d'avant la v0.88.1 ; 1 à 3 : un niveau fixe ; sans : selon le zoom)
+//   node scripts/mesure.mjs --articule 0 --zooms 6,7,8   (sans les soldats articulés de près, v0.105.0 : le soldat équipé partout ; 1 ou sans : le jeu ; 12, 16 et 24 px/m = indices 6, 7, 8)
 //   node scripts/mesure.mjs --finesse 2 --zooms 3,4,5   (le sol en demi-mètres ; indices de ZOOMS : 3 = 4 px/m, 4 = 6, 5 = 8)
 //
 // Le rendu est mesuré avec ?mesure=1 : chaque image attend la fin du dessin
@@ -17,7 +18,7 @@
 // barrages en cours (le sol se refait).
 import { servir, lancerChromium, options } from '../outils/navigateur.mjs';
 
-const o = options(process.argv.slice(2), { soldats: '8000', secondes: '12', largeur: '1280', hauteur: '800', finesse: 'auto', zooms: '0,3,5', arbres: '', ombres: '', parois: '', nuages: '', grades: '', tranchees: '' });
+const o = options(process.argv.slice(2), { soldats: '8000', secondes: '12', largeur: '1280', hauteur: '800', finesse: 'auto', zooms: '0,3,5', articule: '', arbres: '', ombres: '', parois: '', nuages: '', grades: '', tranchees: '' });
 const srv = await servir('.');
 const nav = await lancerChromium();
 const page = await (await nav.newContext({ viewport: { width: +o.largeur, height: +o.hauteur } })).newPage();
@@ -34,8 +35,9 @@ await page.evaluate(() => {
   __jeu.barrage('155', 200, 120, 0); __jeu.barrage('75', 120, 180, 1); __jeu.barrage('220', 280, 170, 0);
 });
 const resultats = [];
-const VUES = [['tout le champ (points)', 0, 200, 150], ['zoom 3 (boîtes)', 2, 200, 165], ['zoom 4 (boîtes)', 3, 200, 170], ['zoom 6 (silhouettes)', 4, 200, 180], ['zoom 8 (silhouettes)', 5, 200, 190]];
+const VUES = [['tout le champ (points)', 0, 200, 150], ['zoom 3 (boîtes)', 2, 200, 165], ['zoom 4 (boîtes)', 3, 200, 170], ['zoom 6 (silhouettes)', 4, 200, 180], ['zoom 8 (silhouettes)', 5, 200, 190], ['zoom 12 (articulés)', 6, 200, 190], ['zoom 16 (articulés)', 7, 200, 190], ['zoom 24 (articulés)', 8, 200, 190], ['zoom 32 (articulés)', 9, 200, 190]];
 if (o.tranchees !== '') await page.evaluate(n => { __jeu.rendu().niveauTranchees = n === 'auto' ? 'auto' : +n; }, o.tranchees);       // les niveaux de détail des tranchées (v0.88.1) : 0 le dessin d'avant, 1 à 3, auto (le jeu : selon le zoom)
+if (o.articule === '0') await page.evaluate(() => { __jeu.rendu().articule = null; });       // les soldats articulés (v0.105.0) éteints : le soldat équipé partout
 if (o.ombres) await page.evaluate(() => { __jeu.rendu().ombresRelief = true; });
 if (o.nuages) await page.evaluate(() => { __jeu.rendu().ombresNuages = true; });
 if (o.parois) await page.evaluate(() => { __jeu.rendu().soleilReglage = { parois: true }; });
@@ -46,7 +48,7 @@ for (const [nom, zoom, x, y] of VUES.filter(v => o.zooms.split(',').map(Number).
   await page.waitForTimeout(+o.secondes * 1000);
   const s = await page.evaluate(() => window.cyclopStats());
   resultats.push({ vue: nom, ...s });
-  console.log(`${nom.padEnd(24)} soldats ${s.soldats}  simulation ${s.ms.simulation} ms  rendu ${s.ms.renduFini} ms (envoi ${s.ms.rendu} ms, sol ${s.ms.sol} ms)  ${s.fps} i/s  ${s.trianglesDessines} triangles dessinés, ${s.soldatsVus} soldats vus, arbres ${Math.round(s.trianglesArbres ?? 0)} t (tri ${s.msArbres ?? 0} ms)  ${s.vue.largeur}×${s.vue.hauteur} ×${s.vue.facteur}`);
+  console.log(`${nom.padEnd(24)} soldats ${s.soldats}  simulation ${s.ms.simulation} ms  rendu ${s.ms.renduFini} ms (envoi ${s.ms.rendu} ms, sol ${s.ms.sol} ms)  ${s.fps} i/s  ${s.trianglesDessines} triangles dessinés, ${s.soldatsVus} soldats vus (${s.articulesVus ?? 0} articulés), arbres ${Math.round(s.trianglesArbres ?? 0)} t (tri ${s.msArbres ?? 0} ms)  ${s.vue.largeur}×${s.vue.hauteur} ×${s.vue.facteur}`);
 }
 // une image vide (rien à dessiner) : ce que coûte la mesure elle-même (effacer, lire un pixel, attendre)
 await page.evaluate(() => { __jeu.rendu().vide = true; });
