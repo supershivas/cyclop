@@ -1,66 +1,39 @@
 // Nos postes de mitrailleuse sur le champ et leur fiche (Jérôme, lot E : « on sélectionne le poste et on règle la direction du cône ; barre de vie, barre de munitions ; de l'xp »).
 // Sur le champ : au-dessus de chaque poste à nous, une étiquette (ses chevrons, sa vie, ses munitions, son expérience) ; un clic sur elle le choisit. La fiche (`#nid-fiche`) : les barres,
 // le bonus de ses chevrons, « Tourner » (le prochain clic sur le sol : la direction du cône), « Droit devant », « Fermer ». Le dessin et les boutons seulement : les ordres partent par `surBouton` (main.js).
-import { NIDS } from '../data/nids.js?v=0.119.0';
-import { bonusEnMots } from '../data/experience.js?v=0.119.0';
-import { chevronsNid, cadenceNid, servantNid, raisonInactif } from '../nids.js?v=0.119.0';
-import { chevronsHtml } from './barres.js?v=0.119.0';
-import { NOUS } from '../bataille.js?v=0.119.0';
+import { NIDS } from '../data/nids.js?v=0.120.0';
+import { bonusEnMots } from '../data/experience.js?v=0.120.0';
+import { chevronsNid, cadenceNid, servantNid, raisonInactif } from '../nids.js?v=0.120.0';
+import { chevronsHtml } from './barres.js?v=0.120.0';
+import { NOUS } from '../bataille.js?v=0.120.0';
 
 const REDUIT = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
-export function creerNidsHud({ $, bataille, moi = () => NOUS, versEcran, hauteurSol, choisir, surBouton }) {
-  const etiq = new Map();
+export function creerNidsHud({ $, bataille, moi = () => NOUS, versEcran, hauteurSol, choisir, surBouton, pastilles }) {
   $('nid-fiche').onclick = e => { const b = e.target.closest('[data-nid]'); if (b) surBouton(b.dataset.nid); };
   const pct = x => `${Math.max(0, Math.min(100, Math.round(x * 100)))}%`;
   // appelé à chaque image : les étiquettes, la fiche du poste choisi
   function maj(choisi, mode) {
     const B = bataille();
     if (!B) return;
-    const M = moi(), nids = B.etat.nids.filter(n => n.camp === M && n.etat === 'actif'), vus = new Set(), cv = $('canvas');
-    for (const n of nids) {
-      vus.add(n.id);
-      let e = etiq.get(n.id);
-      if (!e) {
-        const d = document.createElement('div'); d.className = 'char-etiq nid-etiq'; d.setAttribute('role', 'button'); d.tabIndex = 0; d.title = 'Choisir ce poste de mitrailleuse';
-        d.innerHTML = '<span class="nom">Mitrailleuse</span><span class="chevrons"></span><span class="pv"><i></i></span><span class="canon"><i></i></span><span class="xp"><i></i></span>';
-        d.onclick = ev => { ev.stopPropagation(); choisir(n.id); };
-        $('chars-etiq').append(d);
-        etiq.set(n.id, e = { d, pv: d.querySelector('.pv i'), muni: d.querySelector('.canon i'), xp: d.querySelector('.xp i'), chev: d.querySelector('.chevrons'), nb: chevronsNid(n) });
-        e.chev.innerHTML = chevronsHtml(e.nb);
-      }
-      const [sx, sy] = versEcran(n.x, n.y, hauteurSol(n.x, n.y) + 2.5);
-      const dedans = sx > -80 && sx < cv.clientWidth + 80 && sy > -40 && sy < cv.clientHeight + 120;
-      // La règle (Jérôme, retour du 1er nov.) : l'étiquette n'est là que si le poste a quelque chose à dire — choisi, abîmé, presque à sec, ou il vient de tirer. Sinon le champ reste net.
-      const E = NIDS.etiquette, parle = choisi === n.id || n.pv < NIDS.pv || n.muni <= NIDS.munitions * E.munBas || B.etat.temps - (n.derniere ?? -1e9) < E.apresRafale;
-      e.d.hidden = !dedans || !parle || B.etat.phase !== 'jour';       // hors de la vue, la nuit ou sans rien à dire : pas d'étiquette
-      if (!e.d.hidden) e.d.style.transform = `translate(${Math.round(sx)}px, ${Math.round(sy)}px) translate(-50%, -100%)`;
-      e.pv.style.width = pct(n.pv / NIDS.pv); e.muni.style.width = pct(n.muni / NIDS.munitions); e.xp.style.width = pct(n.exp ?? 0);
-      const nb = chevronsNid(n);
-      if (nb !== e.nb) { if (nb > e.nb && !REDUIT()) { e.chev.classList.remove('gagne'); void e.chev.offsetWidth; e.chev.classList.add('gagne'); } e.nb = nb; e.chev.innerHTML = chevronsHtml(nb); }
-      e.d.classList.toggle('choisi', choisi === n.id);
-      e.d.classList.toggle('vide', n.muni <= 0);
-    }
-    // les postes d'en face (v0.115.0) : une étiquette sans ordre, avec leur état (en état / détruit) et leur barre de vie ; on ne les clique pas
+    const M = moi(), nids = B.etat.nids.filter(n => n.camp === M && n.etat === 'actif');
+    // les pastilles (v0.120.0 : une par poste des deux camps, `hud/pastilles.js`) ; l'infobulle dit tout
     for (const n of B.etat.nids) {
-      if (n.camp === M) continue;
-      vus.add(`e${n.id}`);
-      let e = etiq.get(`e${n.id}`);
-      if (!e) {
-        const d = document.createElement('div'); d.className = 'char-etiq nid-etiq ennemi';
-        d.innerHTML = '<span class="nom"></span><span class="pv"><i></i></span>';
-        $('chars-etiq').append(d);
-        etiq.set(`e${n.id}`, e = { d, nom: d.querySelector('.nom'), pv: d.querySelector('.pv i'), mort: null });
+      const mien = n.camp === M, detruit = n.etat === 'detruit', vie = Math.max(0, n.pv) / NIDS.pv, [sx, sy] = versEcran(n.x, n.y, hauteurSol(n.x, n.y) + 2.5), nb = chevronsNid(n);
+      let etat = 'détruit', plus = [];
+      if (!detruit) {
+        const inactif = mien ? raisonInactif(B, n) : '', pris = B.etat.troncons[n.troncon] !== n.camp;
+        etat = pris ? 'se tait (tronçon pris)' : inactif ? 'inactif' : n.muni <= 0 ? 'à sec' : n.statut === 'tire' ? 'tire' : 'veille';
+        plus = mien ? [inactif || (n.statut === 'tire' ? `Tire à ${NIDS.portee} m, une rafale toutes les ${cadenceNid(n).toFixed(2).replace('.', ',')} s.` : `Cône de ${NIDS.portee} m, il tire dès qu'un ennemi y entre.`)] : [`Cône de tir vers nos lignes, portée ${NIDS.portee} m.`];
       }
-      const [sx, sy] = versEcran(n.x, n.y, hauteurSol(n.x, n.y) + 2.5), dedans = sx > -80 && sx < cv.clientWidth + 80 && sy > -40 && sy < cv.clientHeight + 120, detruit = n.etat === 'detruit';
-      e.d.hidden = !dedans;
-      if (dedans) e.d.style.transform = `translate(${Math.round(sx)}px, ${Math.round(sy)}px) translate(-50%, -100%)`;
-      const vie = Math.round(Math.max(0, n.pv) / NIDS.pv * 100);
-      e.pv.style.width = `${vie}%`;
-      if (detruit !== e.mort) { e.mort = detruit; e.d.classList.toggle('detruit', detruit); }
-      const texte = detruit ? 'Mitrailleuse ennemie · DÉTRUITE' : `Mitrailleuse ennemie · ${vie} %`;
-      if (e.nom.textContent !== texte) e.nom.textContent = texte;
+      const rs = mien && !detruit ? (sv => sv >= 0 ? B.etat.regiments[B.armee.reg[sv]] : null)(servantNid(B, n, true)) : null;
+      const par = Object.entries(n.tuesReg ?? {}).map(([r, k]) => `${B.etat.regiments[r]?.nom ?? 'régiment ' + r} ${k}`).join(', ');
+      const lignes = [`# ${mien ? 'Mitrailleuse' : 'Mitrailleuse ennemie'}`, `## ${etat}`, `Poste : **${Math.round(vie * 100)} %** (${Math.max(0, Math.round(n.pv))} / ${NIDS.pv})`, ...plus];
+      if (mien) {
+        if (!detruit) lignes.push(`Bande : ${n.muni} / ${NIDS.munitions}`, rs ? `Servi par : ${rs.nom}` : 'Servi par : personne', `Expérience : ${nb ? '▲'.repeat(nb) : 'novice'} (${Math.round((n.exp ?? 0) * 100)} %) · ${bonusEnMots('nid', nb)}`);
+        lignes.push(`Victimes : **${n.tues ?? 0}**${par ? ` (${par})` : ''} · rafales : ${n.rafales ?? 0}`, detruit ? 'Le génie peut le refaire (touche 6 puis un clic sur lui).' : 'Un clic : le choisir et tourner son cône.');
+      }
+      pastilles.poser(`n${n.id}`, { type: 'nid', camp: mien ? 'nous' : 'eux', sx, sy, vie, detruit, choisi: mien && choisi === n.id, info: lignes.join('\n'), vide: mien && !detruit && n.muni <= 0, chevrons: mien ? nb : undefined, onclick: mien && !detruit ? () => choisir(n.id) : null });
     }
-    for (const [id, e] of etiq) if (!vus.has(id)) { e.d.remove(); etiq.delete(id); }
     const n = nids.find(k => k.id === choisi), fiche = $('nid-fiche');
     fiche.hidden = !n;
     if (!n) return;
@@ -86,6 +59,6 @@ export function creerNidsHud({ $, bataille, moi = () => NOUS, versEcran, hauteur
     $('nid-fiche-bonus').textContent = `Chevrons : ${bonusEnMots('nid', nb)}.`;
     for (const b of fiche.querySelectorAll('[data-nid]')) b.classList.toggle('actif', b.dataset.nid === mode);
   }
-  function oublier() { for (const e of etiq.values()) e.d.remove(); etiq.clear(); }
+  function oublier() {}
   return { maj, oublier };
 }
