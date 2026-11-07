@@ -48,9 +48,15 @@ test('le miroir échange les côtés, deux fois il rend la pose', () => {
   assert.ok(proche(m.hancheG, p.hancheD) && proche(m.convG, -p.convD));
   assert.deepEqual(miroir(m), p);
 });
-test('borner remet les champs dans leurs bornes et les NaN à zéro', () => {
-  const b = borner({ buste: 50, genouG: -3, tete: NaN });
-  assert.equal(b.buste, CHAMPS.buste[1]); assert.equal(b.genouG, 0); assert.equal(b.tete, 0);
+test("borner ne limite rien : seuls les valeurs non numériques tombent à zéro, tous les champs existent", () => {
+  const b = borner({ buste: 50, genouG: -3, tete: NaN, fusilLacet: '2.5', coudeD: Infinity });
+  assert.equal(b.buste, 50); assert.equal(b.genouG, -3); assert.equal(b.tete, 0); assert.equal(b.fusilLacet, 2.5); assert.equal(b.coudeD, 0);
+  assert.deepEqual(Object.keys(b), NOMS_CHAMPS);
+});
+test('une pose hors de toute plage reste une pose : les articulations restent des nombres finis', () => {
+  const folle = borner({ genouG: -2, hancheD: 9, epauleG: -7, fusil: 12, fusilLacet: -20, fusilRoulis: 15, fusilX: 3, fusilH: -4, fusilZ: 5, descente: -2, poussee: 3, buste: 8 });
+  const J = articulations(folle);
+  for (const j of Object.values(J)) assert.ok(j.pos.every(Number.isFinite) && j.rots.every(r => r.axe.every(Number.isFinite)));
 });
 
 group('animations — les images clés');

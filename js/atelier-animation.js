@@ -94,7 +94,8 @@ function monterPanneau() {
     p.append(el('h3', { textContent: titre }));
     for (const [c, nom] of champs) {
       const [lo, hi] = CHAMPS[c];
-      const sortie = el('output'), curseur = el('input', { type: 'range', min: lo, max: hi, step: c === 'couche' ? 1 : 0.01 });
+      const sortie = el('input', { type: 'number', step: 0.01, title: 'Une valeur exacte, sans limite (le curseur a sa course, pas la pose)' }), curseur = el('input', { type: 'range', min: lo, max: hi, step: c === 'couche' ? 1 : 0.01 });
+      sortie.onchange = () => { if (sortie.value !== '') { geste = true; reglerChamp(c, +sortie.value); } };
       curseur.onpointerdown = curseur.onkeydown = () => { geste = true; };
       curseur.oninput = () => reglerChamp(c, +curseur.value);
       curseur.ondblclick = () => { geste = true; curseur.value = poseNeutre()[c]; curseur.oninput(); };
@@ -113,7 +114,7 @@ function entrerEdition() {
 function reglerChamp(c, v) {
   if (geste) { instantane(); geste = false; }
   entrerEdition();
-  const [lo, hi] = CHAMPS[c]; v = Math.min(hi, Math.max(lo, v));
+  if (!Number.isFinite(v)) return;      // (aucune limite : seulement des nombres)
   S.pose[c] = v; if (S.sel >= 0) S.anim.images[S.sel].pose[c] = v;
   garder(); majCurseurs();
 }
@@ -121,7 +122,7 @@ function reglerChamp(c, v) {
 function definir(pose) { instantane(); S.mode = 'edit'; S.joue = false; S.pose = { ...pose }; if (S.sel >= 0) S.anim.images[S.sel].pose = { ...pose }; garder(); majBoutons(); }
 function majCurseurs() {
   const P = poseAffichee();
-  for (const c of NOMS_CHAMPS) { const { curseur, sortie } = sliders[c]; if (document.activeElement !== curseur) curseur.value = P[c]; sortie.textContent = P[c].toFixed(2); }
+  for (const c of NOMS_CHAMPS) { const { curseur, sortie } = sliders[c]; if (document.activeElement !== curseur) curseur.value = P[c]; if (document.activeElement !== sortie) sortie.value = (+P[c].toFixed(3)); }
 }
 
 // ─── la frise ───

@@ -64,10 +64,10 @@ export function melanger(a, b, k) {
   return r;
 }
 
-// Garde chaque champ dans sa borne (l'atelier et les données importées)
+// Assainit une pose lue (l'atelier, un fichier importé) : tous les champs, des nombres finis ; AUCUNE limite (la plage de `CHAMPS` n'est que la course d'un curseur)
 export function borner(p) {
   const r = {};
-  for (const c of NOMS_CHAMPS) { const [lo, hi] = CHAMPS[c]; r[c] = Math.min(hi, Math.max(lo, Number.isFinite(p[c]) ? p[c] : 0)); }
+  for (const c of NOMS_CHAMPS) r[c] = Number.isFinite(+p[c]) ? +p[c] : 0;
   return r;
 }
 

@@ -14,7 +14,7 @@ html, body { margin: 0; height: 100%; background: var(--t); color: var(--o); fon
 .aa-panneau { overflow: auto; padding: 8px 12px; border-left: 1px solid var(--g); background: var(--t); }
 .aa-panneau h3, .aa-frise h3 { margin: 10px 0 4px; font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--h); }
 .aa-rang { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin: 6px 0; }
-.aa-champ { display: grid; grid-template-columns: 6.2em 1fr 3.8em; gap: 6px; align-items: center; min-height: 28px; }
+.aa-champ { display: grid; grid-template-columns: 6.2em 1fr 5.6em; gap: 6px; align-items: center; min-height: 28px; }
 .aa-champ input[type=range] { width: 100%; accent-color: var(--h); }
 .aa-champ output { text-align: right; color: var(--r); }
 button, select, input[type=number] { min-height: 32px; padding: 2px 10px; background: var(--b); color: var(--o); border: 1px solid var(--g); font: inherit; cursor: pointer; }
@@ -32,3 +32,4 @@ input[type=number] { width: 5.5em; cursor: text; }
 .aa-outils { position: absolute; left: 8px; top: 8px; display: flex; gap: 6px; flex-wrap: wrap; }
 button:disabled { opacity: .45; cursor: default; }
 button:disabled:hover { background: var(--b); color: var(--o); }
+.aa-champ input[type=number] { width: 100%; min-height: 28px; padding: 0 4px; text-align: right; }
