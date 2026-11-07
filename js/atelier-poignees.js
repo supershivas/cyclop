@@ -8,9 +8,22 @@ const COUL = { x: 0xe0604f, y: 0x8fd96a, z: 0x6aa5ff, choisi: 0xdde874, point: 0
 const PX = { anneau: 38, fleche: 46, point: 4, prise: 10, tube: 6 };
 export const OUTILS = [['tourner', 'Tourner', 'E'], ['deplacer', 'Déplacer', 'W'], ['echelle', 'Échelle', 'R']];
 
-export function creerPoignees(THREE, { canvas, camera, ppm, lire, regler, echelleLire, echelleRegler, avant, apres }) {
+export function creerPoignees(THREE, { canvas, camera, ppm, lire, regler, echelleLire, echelleRegler, avant, apres, os = [] }) {
   const scene = new THREE.Scene();
-  const E = { outil: 'tourner', sel: null, survol: null, drag: null, J: null, actives: [], marqueurs: new Map(), cle: '' };
+  const E = { outil: 'tourner', sel: null, survol: null, drag: null, J: null, actives: [], marqueurs: new Map(), cle: '', lecture: false, os: null };
+  // ─── les os : des losanges allongés d'une articulation à l'autre, comme un squelette de logiciel de 3D (les poignées en deviennent lisibles : on voit ce qu'on plie) ───
+  function creerOs() {
+    const g = new THREE.BufferGeometry(), r = 0.2;      // la bague au cinquième de la longueur
+    const P = [0, 0, 0, 1, 0, r, 0, 1, r, -1, 0, r, 0, -1, r, 0, 0, 1];
+    g.setAttribute('position', new THREE.Float32BufferAttribute(P.map((v, i) => i % 3 === 2 ? v : v * 1), 3));
+    g.setIndex([0, 1, 2, 0, 2, 3, 0, 3, 4, 0, 4, 1, 5, 2, 1, 5, 3, 2, 5, 4, 3, 5, 1, 4]);
+    const aretes = new THREE.EdgesGeometry(g, 1);
+    return os.map(([a, b]) => {
+      const grp = new THREE.Group(), vue = new THREE.Mesh(g, mat(0xe4dfd0, { opacity: 0.32, side: THREE.DoubleSide })), fil = new THREE.LineSegments(aretes, new THREE.LineBasicMaterial({ color: 0xe4dfd0, depthTest: false, transparent: true, opacity: 0.9 }));
+      vue.renderOrder = 9; fil.renderOrder = 10; grp.add(vue, fil); grp.matrixAutoUpdate = false; scene.add(grp);
+      return { a, b, grp };
+    });
+  }
   const ray = new THREE.Raycaster();
   const V3 = a => new THREE.Vector3(a[0], a[1], a[2]);
   const mat = (c, extra = {}) => new THREE.MeshBasicMaterial({ color: c, depthTest: false, transparent: true, ...extra });
@@ -66,19 +79,28 @@ export function creerPoignees(THREE, { canvas, camera, ppm, lire, regler, echell
   };
 
   // ─── chaque image : poser les poignées sur les articulations ───
-  function maj(J, etat) {
-    E.J = J;
+  function maj(J, etat = {}) {
+    E.J = J; E.lecture = !!etat.lecture;
+    if (!E.os) E.os = creerOs();
     const cle = `${E.outil}|${E.sel}`;
     if (cle !== E.cle) { E.cle = cle; reconstruire(); }
     const px = 1 / ppm();
+    // les os : dessinés pendant l'édition, cachés pendant la lecture (le soldat est alors plein et net)
+    for (const o of E.os) {
+      const A = J[o.a], B = J[o.b]; o.grp.visible = !E.lecture && !!A && !!B; if (!o.grp.visible) continue;
+      const d = V3(B.pos).sub(V3(A.pos)), L = d.length(); if (L < 1e-4) { o.grp.visible = false; continue; }
+      matrice(o.grp, A.pos, d.toArray(), 1); o.grp.matrix.scale(new THREE.Vector3(px * 6, px * 6, L)); o.grp.matrixWorldNeedsUpdate = true;
+    }
     for (const [id, j] of Object.entries(J)) {
       const m = marqueur(id), ok = E.outil === 'echelle' ? false : concerne(j);
       m.vue.visible = ok; m.prise.visible = ok;
-      m.vue.position.set(...j.pos); m.vue.scale.setScalar(px * PX.point * 2);
+      m.vue.material.opacity = E.lecture ? 0.3 : 1;                 // en lecture : seulement suggérées
+      m.vue.position.set(...j.pos); m.vue.scale.setScalar(px * PX.point * (E.lecture ? 1.2 : 2));
       m.prise.position.set(...j.pos); m.prise.scale.setScalar(px * PX.prise);
       m.vue.material.color.setHex(id === E.sel ? COUL.choisi : id === E.survol?.id && E.survol.type === 'marqueur' ? COUL.choisi : COUL.point);
     }
     for (const a of E.actives) {
+      a.vue.visible = !E.lecture;
       const j = J[a.id], vif = E.survol?.a === a || E.drag?.a === a;
       if (a.type === 'anneau') {
         const { u, v, z } = base(a.rot.axe); a.vue.matrix.makeBasis(u, v, z).scale(new THREE.Vector3(px * PX.anneau, px * PX.anneau, px * PX.anneau)).setPosition(V3(j.pos)); a.vue.matrixAutoUpdate = false; a.vue.matrixWorldNeedsUpdate = true;
@@ -101,7 +123,7 @@ export function creerPoignees(THREE, { canvas, camera, ppm, lire, regler, echell
   function toucher(e) {
     rayon(e);
     scene.updateMatrixWorld(true);
-    const ordre = [...E.actives.map(a => ({ obj: a.prise, a })), ...[...E.marqueurs.values()].filter(m => m.prise.visible).map(m => ({ obj: m.prise, m }))];
+    const ordre = [...(E.lecture ? [] : E.actives).map(a => ({ obj: a.prise, a })), ...[...E.marqueurs.values()].filter(m => m.prise.visible).map(m => ({ obj: m.prise, m }))];
     let meilleur = null;
     for (const o of ordre) {
       const hit = ray.intersectObject(o.obj, false)[0]; if (!hit) continue;

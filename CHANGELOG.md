@@ -1,5 +1,9 @@
 # Journal des versions
 
+## 0.113.1 — 2026-11-07
+- La ceinture des soldats vus de près ne scintille plus (ses flancs étaient dans le même plan que ceux de la vareuse)
+- Atelier d'animation : les poses du soldat se règlent avec des poignées 3D (tourner, déplacer, échelle), on voit les os, et on peut annuler (Ctrl+Z)
+
 ## 0.113.0 — 2026-11-05
 - Labo lumière : les soldats du jeu à tous les niveaux de détail (boîte, silhouette, soldat équipé, articulé), au lieu de simples colonnes
 - Des lanternes dans les tranchées et des lampes sur certains soldats, une carte quatre fois plus grande (512 × 320 m) et une colline

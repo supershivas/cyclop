@@ -5,7 +5,7 @@
 //    rejoue avant qu'on la retouche ;
 //  · une ANIMATION est { nom, boucle, images: [{ t, pose, courbe }] } : des poses clés rangées par temps (en secondes) ; `echantillon(anim, t)` rend la pose à l'instant t ;
 //  · `melanger(a, b, k)` interpole deux poses champ par champ.
-import { CHAMPS, NOMS_CHAMPS, MARCHE, TAPI, TIR, RETENU, MELEE, COUCHE, FUSIL_REPOS, COURBES } from './data/poses-soldat.js';
+import { CHAMPS, NOMS_CHAMPS, MARCHE, TAPI, TIR, RETENU, MELEE, COUCHE, FUSIL_REPOS, COURBES } from './data/poses-soldat.js?v=0.113.1';
 
 // La pose neutre : debout, bras le long du corps (le coude à peine plié, comme à l'arrêt)
 export function poseNeutre() {
@@ -141,6 +141,9 @@ export function articulations(pose, car = CARRURE_NEUTRE) {
     const kFin = rxp(kp, hp, hip), aFin = rxp(rxp(ap, kp, -kn), hp, hip);
     J['genou' + g] = { nom: `Genou ${nom}`, pos: aGen(kFin), rots: [{ champ: 'genou' + g, axe: dir(aGen, kFin, X), signe: 1 }] };
     J['cheville' + g] = { nom: `Cheville ${nom}`, pos: aGen(aFin), rots: [{ champ: 'cheville' + g, axe: dir(aGen, aFin, X), signe: -1 }] };
+    // le bout du pied : tourne avec la cheville, puis le genou, puis la hanche
+    const pied = rxp(rxp(rxp(mp([c * 0.11, 0.03, 0.18], sq, 1), ap, P['cheville' + g]), kp, -kn), hp, hip);
+    J['pied' + g] = { nom: `Pied ${nom}`, pos: aGen(pied), rots: [], passif: true };
   }
   // les bras : le coude tourne dans l'épaule (rx puis ry autour de l'épaule), puis tout le haut du corps se penche
   const aHaut = p => global(haut(p));
@@ -151,11 +154,14 @@ export function articulations(pose, car = CARRURE_NEUTRE) {
     const axeFlex = dir(q => aHaut(ryp(q, sp, conv)), sp, X), axeTour = dir(aHaut, sp, Y);
     J['epaule' + g] = { nom: `Épaule ${nom}`, pos: aHaut(sp), rots: [{ champ: 'epaule' + g, axe: axeFlex, signe: -1 }, { champ: 'conv' + g, axe: axeTour, signe: 1 }] };
     J['coude' + g] = { nom: `Coude ${nom}`, pos: aHaut(bras(ep)), rots: [{ champ: 'coude' + g, axe: axeFlex, signe: -1 }] };
+    // la main : au bout de l'avant-bras, elle tourne avec le coude puis l'épaule
+    J['main' + g] = { nom: `Main ${nom}`, pos: aHaut(bras(rxp(mp([c * 0.30, 0.76, 0], wd, 1), ep, P['coude' + g]))), rots: [], passif: true };
   }
   // le buste (pivot : la hanche) et la tête
   J.bassin = { nom: 'Buste (pivot : la hanche)', pos: global(hanche), rots: [{ champ: 'buste', axe: dir(global, hanche, X), signe: -1 }] };
   const cou = mp([0, 1.42, 0], 1, 1);
   J.tete = { nom: 'Tête', pos: aHaut(cou), rots: [{ champ: 'tete', axe: dir(aHaut, cou, X), signe: -1 }] };
+  J.crane = { nom: 'Sommet de la tête', pos: aHaut(rxp(mp([0, 1.64, 0], 1, 1), cou, P.tete)), rots: [], passif: true };
   // le fusil : le pivot de sa rotation, déplacé de son décalage latéral et de sa poussée
   const fp = mp([0, P.fusilY, 0], 1, 1), fpos = [fp[0] + P.fusilX * wd, fp[1], fp[2] + P.fusilZ];
   J.fusil = { nom: 'Fusil', pos: aHaut(fpos), rots: [{ champ: 'fusil', axe: dir(aHaut, fpos, X), signe: -1 }],
@@ -166,3 +172,10 @@ export function articulations(pose, car = CARRURE_NEUTRE) {
     echelle: [{ cle: 'epaules', axe: dir(aHaut, poit, X) }, { cle: 'taille', axe: dir(aHaut, poit, Y) }, { cle: 'ventre', axe: dir(aHaut, poit, Z) }] };
   return J;
 }
+
+// Les os, comme un squelette de logiciel de 3D : des paires d'articulations (js/atelier-poignees.js les dessine en losanges allongés)
+export const OS_ARTICULES = [
+  ['hancheG', 'genouG'], ['genouG', 'chevilleG'], ['chevilleG', 'piedG'], ['hancheD', 'genouD'], ['genouD', 'chevilleD'], ['chevilleD', 'piedD'],
+  ['hancheG', 'hancheD'], ['hancheG', 'bassin'], ['hancheD', 'bassin'], ['bassin', 'poitrine'], ['poitrine', 'epauleG'], ['poitrine', 'epauleD'], ['poitrine', 'tete'], ['tete', 'crane'],
+  ['epauleG', 'coudeG'], ['coudeG', 'mainG'], ['epauleD', 'coudeD'], ['coudeD', 'mainD'],
+];

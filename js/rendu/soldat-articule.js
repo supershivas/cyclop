@@ -1,4 +1,4 @@
-import { NOMS_CHAMPS } from '../data/poses-soldat.js?v=0.113.0';
+import { NOMS_CHAMPS } from '../data/poses-soldat.js?v=0.113.1';
 
 // Le soldat articulé (au labo seulement : « la fabrique de soldats », et la mesure de son coût ; rien n'est dans le jeu).
 // Un squelette de treize os (le tronc, la tête, deux fois bras / avant-bras, deux fois cuisse / mollet / pied, le fusil) que le nuanceur plie : le genou, le coude, la cheville
@@ -58,7 +58,7 @@ export function boites() {
   B(-0.258, 0.258, 0.62, 0.95, -0.168, 0.168, P.vareuse, basques);                    // ses basques, sous la ceinture
   B(-0.1, 0.1, 1.37, 1.42, -0.12, 0.13, P.vareuse, tronc);                             // le col droit (sous le menton)
   niv = 1; for (const y of [1.28, 1.16, 1.04]) B(-0.012, 0.012, y, y + 0.035, 0.15, 0.158, P.metal, tronc); niv = 0;      // les boutons
-  B(-0.258, 0.258, 0.88, 0.97, -0.17, 0.17, P.cuir, tronc); niv = 1; B(-0.03, 0.03, 0.89, 0.96, 0.17, 0.182, P.metal, tronc); niv = 0;   // le ceinturon et sa boucle
+  B(-0.264, 0.264, 0.88, 0.97, -0.176, 0.176, P.cuir, tronc); niv = 1; B(-0.03, 0.03, 0.89, 0.96, 0.17, 0.188, P.metal, tronc); niv = 0;   // le ceinturon (6 mm de plus que les basques de chaque côté : à 0,258 les deux flancs étaient dans le même plan et scintillaient) et sa boucle
   for (const c of [-0.17, -0.05, 0.07]) B(c, c + 0.1, 0.97, 1.1, 0.17, 0.22, P.cuir, tronc, 500);          // les trois cartouchières françaises
   for (const [a, b] of [[-0.23, -0.13], [-0.115, -0.015], [0.015, 0.115], [0.13, 0.23]]) B(a, b, 0.97, 1.09, 0.17, 0.21, P.cuir, tronc, 501);        // les quatre cartouchières allemandes
   B(-0.33, -0.25, 0.58, 0.88, -0.14, 0.0, P.toile, tronc);                              // la gourde, à la hanche
@@ -401,7 +401,8 @@ export function poserLibre(materiel, pose) {
 // ─── three.js : le matériau et les instances ───
 // `col(lettre)` : une couleur de la palette (celle de creerRendu ou de la fabrique) ; `partages` : des uniformes du jeu à partager (`uSoleil`, `uSol`, `uTaille` : l'ombre ; l'horloge de la marche passe par `h.temps` à l'écriture de chaque homme) ;
 // `ombreSeule` : le maillage des ombres au sol (le jeu), et rien d'autre
-export function creerSoldatArticule(THREE, col, { complet = false, ombrage = 0, filtre = null, partages = {}, ombreSeule = false, niveau = 'fin' } = {}) {
+// `translucide` (l'atelier d'animation) : un uniforme `uAlpha` règle l'opacité du soldat ; sans lui le nuanceur reste exactement celui du jeu (le labo lumière le porte par remplacement de texte)
+export function creerSoldatArticule(THREE, col, { complet = false, ombrage = 0, filtre = null, partages = {}, ombreSeule = false, niveau = 'fin', translucide = false } = {}) {
   const M = ombreSeule ? ombreEtModele(THREE) : modeleArticule({ complet, filtre, niveau });
   const materiel = ombreSeule
     ? new THREE.ShaderMaterial({ uniforms: { uSoleil: partages.uSoleil ?? { value: new THREE.Vector2(0.5, 0.6) }, uSol: partages.uSol ?? { value: new THREE.DataTexture(new Uint8Array([70, 66, 50, 255]), 1, 1) }, uTaille: partages.uTaille ?? { value: new THREE.Vector2(400, 300) } },
@@ -411,9 +412,9 @@ export function creerSoldatArticule(THREE, col, { complet = false, ombrage = 0, 
         uNous: { value: col('n') }, uEux: { value: col('x') }, uOmbre: { value: col('t') }, uSel: { value: col('o') }, uJambes: { value: col('s') }, uBois: { value: col('t') }, uToile: { value: col('g') },
         uCuir: { value: col('b') }, uBotte: { value: col('t') }, uMetal: { value: col('r') }, uTrait: { value: col('s') },
         uPeau: { value: ['o', 'r', 'g'].map(col) }, uMarque: { value: ['g', 'g', 'b'].map(col) }, uCh: { value: ['t', 's', 'b', 'g', 'r'].map(col) },
-        uShade: { value: ombrage }, uVoir: { value: filtre ? 0 : 1 }, uLibre: { value: 0 }, uP: { value: new Array(22).fill(0) },
+        uShade: { value: ombrage }, uVoir: { value: filtre ? 0 : 1 }, uLibre: { value: 0 }, uP: { value: new Array(22).fill(0) }, uAlpha: { value: 1 },
       },
-      vertexShader: VERT, fragmentShader: FRAG, side: THREE.DoubleSide,
+      vertexShader: VERT, fragmentShader: translucide ? `uniform float uAlpha;\n${FRAG.replace('gl_FragColor = vec4(c * vShade, 1.0);', 'gl_FragColor = vec4(c * vShade, uAlpha);')}` : FRAG, side: THREE.DoubleSide,
     });
   if (ombreSeule && !partages.uSol) materiel.uniforms.uSol.value.needsUpdate = true;
   // un lot de `n` hommes : les tampons d'instance et l'écriture d'un homme

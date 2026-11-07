@@ -95,7 +95,7 @@ test('la marche en quatre images revient à son point de départ et reste près 
 });
 
 group('poses — où sont les articulations');
-import { articulations } from '../js/pose-soldat.js';
+import { articulations, OS_ARTICULES } from '../js/pose-soldat.js';
 const pres = (a, b, e = 1e-6) => a.every((v, i) => Math.abs(v - b[i]) < e);
 test('debout : les pivots sont ceux du modèle (genou à 0,5 m, hanche à 0,9 m, épaule à 1,38 m)', () => {
   const J = articulations(poseNeutre());
@@ -127,4 +127,17 @@ test('la carrure : un homme plus grand a ses articulations plus haut', () => {
 test('une pose ne change pas quand on la lit : articulations ne modifie pas la pose reçue', () => {
   const p = poseDe({ vit: 1, phase: 1 }), copie = JSON.stringify(p);
   articulations(p); assert.equal(JSON.stringify(p), copie);
+});
+
+test('chaque os relie deux articulations qui existent, et les poignées ne portent pas les extrémités', () => {
+  const J = articulations(poseDe({ vit: 1, phase: 2 }));
+  for (const [a, b] of OS_ARTICULES) { assert.ok(J[a] && J[b], `${a} ${b}`); assert.ok(Math.hypot(...J[a].pos.map((v, i) => v - J[b].pos[i])) > 0.02, `${a}-${b} confondus`); }
+  for (const id of ['mainG', 'mainD', 'piedG', 'piedD', 'crane']) assert.ok(J[id].passif && !J[id].rots.length);
+});
+test('les os gardent leur longueur quand on plie : hanche-genou 0,4 m, genou-cheville 0,42 m, épaule-coude 0,3 m (hors poussée)', () => {
+  for (const p of [poseNeutre(), poseDe({ tapi: 1 }), poseDe({ vit: 1, phase: 1 }), poseDe({ melee: true, pouss: 1 })]) {
+    const J = articulations(p), d = (a, b) => Math.hypot(...J[a].pos.map((v, i) => v - J[b].pos[i]));
+    assert.ok(Math.abs(d('hancheG', 'genouG') - 0.4) < 1e-6 && Math.abs(d('genouG', 'chevilleG') - 0.42) < 1e-6);
+    if (!p.poussee) assert.ok(Math.abs(d('epauleD', 'coudeD') - 0.3) < 1e-6, `épaule-coude ${d('epauleD', 'coudeD')}`);      // (la poussée du nuanceur est un cisaillement : plus haut, plus en avant ; elle n'est pas rigide)
+  }
 });

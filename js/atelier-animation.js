@@ -2,14 +2,14 @@
 // On règle la pose d'un soldat articulé articulation par articulation (curseurs), on la range en images clés sur une frise, et l'interpolation (js/pose-soldat.js) rejoue le mouvement.
 // Le dessin est celui du jeu : le soldat articulé (js/rendu/soldat-articule.js) en pose libre (`poserLibre` : les angles viennent des curseurs, pas des poses calculées du nuanceur).
 // Rien n'est écrit dans une bataille ; le brouillard de l'atelier est dans ce navigateur (`cyclopeen:atelier-anim`), l'export est un fichier JSON.
-import { PALETTE } from './palette.js?v=0.113.0';
-import { loadThree } from './three-lib.js?v=0.113.0';
-import { identite, caracteristiques } from './identite.js?v=0.113.0';
-import { aspect } from './aspect-soldat.js?v=0.113.0';
-import { creerSoldatArticule, poserLibre } from './rendu/soldat-articule.js?v=0.113.0';
-import { CHAMPS, NOMS_CHAMPS, COURBES } from './data/poses-soldat.js?v=0.113.0';
-import { poseNeutre, poseDe, miroir, borner, echantillon, marcheEnImages, articulations } from './pose-soldat.js?v=0.113.0';
-import { creerPoignees, OUTILS } from './atelier-poignees.js?v=0.113.0';
+import { PALETTE } from './palette.js?v=0.113.1';
+import { loadThree } from './three-lib.js?v=0.113.1';
+import { identite, caracteristiques } from './identite.js?v=0.113.1';
+import { aspect } from './aspect-soldat.js?v=0.113.1';
+import { creerSoldatArticule, poserLibre } from './rendu/soldat-articule.js?v=0.113.1';
+import { CHAMPS, NOMS_CHAMPS, COURBES } from './data/poses-soldat.js?v=0.113.1';
+import { poseNeutre, poseDe, miroir, borner, echantillon, marcheEnImages, articulations, OS_ARTICULES } from './pose-soldat.js?v=0.113.1';
+import { creerPoignees, OUTILS } from './atelier-poignees.js?v=0.113.1';
 
 const $ = id => document.getElementById(id);
 const el = (tag, props = {}, ...kids) => { const e = Object.assign(document.createElement(tag), props); e.append(...kids); return e; };
@@ -191,14 +191,21 @@ async function demarrer() {
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: false, preserveDrawingBuffer: true }); renderer.setPixelRatio(1); renderer.outputColorSpace = THREE.LinearSRGBColorSpace;
   const scene = new THREE.Scene(); scene.background = col('s');
   const camera = new THREE.PerspectiveCamera(30, 1, 0.05, 200);
-  const niveaux = ['fin', 'moyen'].map(niveau => { const so = creerSoldatArticule(THREE, col, { complet: true, ombrage: 0.5, niveau }); const lo = so.instances(1); scene.add(lo.mesh); return { niveau, so, lo }; });
+  const niveaux = ['fin', 'moyen'].map(niveau => { const so = creerSoldatArticule(THREE, col, { complet: true, ombrage: 0.5, niveau, translucide: true }); const lo = so.instances(1); scene.add(lo.mesh); return { niveau, so, lo }; });
   const sol = new THREE.Mesh(new THREE.CircleGeometry(6, 48), new THREE.MeshBasicMaterial({ color: col('b') })); sol.rotation.x = -Math.PI / 2; sol.position.y = -0.002; scene.add(sol);
   const ombre = new THREE.Mesh(new THREE.CircleGeometry(0.42, 24), new THREE.MeshBasicMaterial({ color: col('t'), transparent: true, opacity: 0.55 })); ombre.rotation.x = -Math.PI / 2; ombre.scale.y = 0.7; ombre.position.y = 0.002; scene.add(ombre);
+  // le soldat translucide pendant l'édition (on voit les os et les poignées au travers) : un premier passage n'écrit que la profondeur, le second mélange la couleur seulement
+  // là où la surface est la plus proche ; sinon les faces de l'intérieur du corps se verraient aussi
+  for (const n of niveaux) {
+    const m = n.so.materiel;
+    n.pre = new THREE.Mesh(n.lo.geometrie, new THREE.ShaderMaterial({ uniforms: m.uniforms, vertexShader: m.vertexShader, fragmentShader: m.fragmentShader, side: m.side, colorWrite: false }));
+    n.pre.frustumCulled = false; scene.add(n.pre);
+  }
   let w = 0, h = 0, dernier = performance.now();
   // les poignées 3D (js/atelier-poignees.js) : tourner, déplacer, échelle
   const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
   const G = creerPoignees(THREE, { canvas, camera, ppm: () => S.ppm, lire: c => poseAffichee()[c], regler: reglerChamp,
-    echelleLire: cle => S.echelle[cle], echelleRegler: (cle, v) => { S.echelle[cle] = clamp(v, 0.7, 1.35); }, avant: () => { if (S.mode === 'lecture') { instantane(); entrerEdition(); } else geste = true; }, apres: () => majBoutons() });
+    echelleLire: cle => S.echelle[cle], echelleRegler: (cle, v) => { S.echelle[cle] = clamp(v, 0.7, 1.35); }, os: OS_ARTICULES, avant: () => { if (S.mode === 'lecture') { instantane(); entrerEdition(); } else geste = true; }, apres: () => majBoutons() });
   const barre = el('div', { className: 'aa-outils' });
   const boutonsOutils = OUTILS.map(([id, nom, touche]) => { const b = el('button', { textContent: `${nom} (${touche})`, title: `${nom} : touche ${touche}`, onclick: () => choisirOutil(id) }); barre.append(b); return [id, b]; });
   const bAnnuler = el('button', { textContent: '↶ Annuler', title: 'Annuler (Ctrl+Z)', onclick: annuler }), bRetablir = el('button', { textContent: '↷ Rétablir', title: 'Rétablir (Ctrl+Maj+Z ou Ctrl+Y)', onclick: retablir });
@@ -224,12 +231,15 @@ async function demarrer() {
     // la carrure de l'aperçu : celle de l'homme × l'échelle des poignées
     const c0 = A.carrure, carrure = { ...c0, taille: c0.taille * S.echelle.taille, epaules: c0.epaules * S.echelle.epaules, ventre: c0.ventre * S.echelle.ventre };
     const A2 = { ...A, carrure };
-    G.maj(articulations(P, carrure));
+    const fantome = S.mode === 'edit';      // en édition : le soldat translucide, les os et les poignées ; en lecture : plein, les poignées à peine suggérées
+    G.maj(articulations(P, carrure), { lecture: !fantome });
     for (const { niveau, so, lo } of niveaux) {
       const J = window.__atelier.jeu;
       poserLibre(so.materiel, J ? null : P);
       lo.ecrire(0, { x: 0, y: 0, z: 0, camp: S.camp, vit: 0, tir: 0, tapi: 0, couche: 0, blessure: 0, cap: 0, temps: 0, aspect: A2, ...(J ?? {}) }); lo.envoyer(1);
       lo.mesh.visible = niveau === S.niveau;
+      so.materiel.uniforms.uAlpha.value = fantome ? 0.42 : 1; so.materiel.transparent = fantome;
+      niveaux.find(n => n.niveau === niveau).pre.visible = fantome && niveau === S.niveau;
     }
     ombre.scale.set(P.couche > 0.5 ? 2 : 1, P.couche > 0.5 ? 0.55 : 0.7, 1);
     if (S.auto) S.yaw += dt * 0.5;
@@ -242,7 +252,7 @@ async function demarrer() {
     $('aa-legende').textContent = `${S.mode === 'edit' ? 'Édition' : 'Lecture'} · t = ${S.t.toFixed(2)} s${choix} · poignées : cliquer une articulation, tirer l\'anneau (Maj : par 15°) · glisser ailleurs : tourner la vue, molette : zoom`;
   }
   let glisse = null;
-  canvas.onpointerdown = e => { canvas.setPointerCapture(e.pointerId); if (G.down(e)) return; glisse = { x: e.clientX, y: e.clientY }; S.auto = false; };
+  canvas.onpointerdown = e => { canvas.setPointerCapture(e.pointerId); if (G.down(e)) { if (S.mode === 'lecture') { instantane(); entrerEdition(); } return; } glisse = { x: e.clientX, y: e.clientY }; S.auto = false; };
   canvas.onpointermove = e => { if (G.actif) { G.move(e, e.shiftKey); return; } if (!glisse) { G.move(e); canvas.style.cursor = G.survol ? 'pointer' : 'grab'; return; } S.yaw -= (e.clientX - glisse.x) * 0.01; S.tangage = Math.max(-0.2, Math.min(1.45, S.tangage + (e.clientY - glisse.y) * 0.008)); glisse = { x: e.clientX, y: e.clientY }; };
   canvas.onpointerup = canvas.onpointercancel = () => { G.up(); glisse = null; };
   canvas.onwheel = e => { e.preventDefault(); S.ppm = Math.max(8, Math.min(120, +(S.ppm * (e.deltaY < 0 ? 1.15 : 1 / 1.15)).toFixed(1))); };
