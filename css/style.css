@@ -188,6 +188,9 @@
   pointer-events: auto; cursor: pointer;
 }
 .etiquette[hidden] { display: none; }
+/* les hommes isolés d'un régiment (v0.114.1) : un cartouche réduit au numéro et au nombre, liseré pointillé */
+.etiquette.isole { border-top-style: dashed; }
+.etiquette.isole .cart-corps { min-width: 0; }
 .etiquette .num { font-size: var(--texte-grand); font-weight: normal; line-height: 1; }
 .etiquette .cart-corps { display: grid; gap: var(--e0); align-content: center; min-width: 96px; }
 .etiquette .nom { font-size: var(--texte-moyen); line-height: 1.15; }
@@ -393,6 +396,8 @@ dialog form { margin-top: calc(var(--pas) * 2); }
 .carte-grille .carte-ronde.eux { background: var(--jeu-eux); }
 .carte-grille .carte-ronde.choisi { outline: 2px solid var(--jeu-encre); outline-offset: 1px; }
 .carte-ronde[hidden] { display: none; }
+/* un amas isolé d'un régiment scindé (v0.114.1) : la même pastille, au liseré pointillé */
+.carte-grille .carte-ronde.isole { border-style: dashed; border-color: var(--jeu-encre); }
 /* les ordres sur la carte et le « ! » d'un régiment en déroute (v0.77.1) */
 .carte-ordres { position: absolute; left: 0; top: 0; pointer-events: none; overflow: visible; }
 .carte-ordres line { stroke: var(--jeu-encre); stroke-width: 1.5; stroke-dasharray: 3 3; opacity: .7; }

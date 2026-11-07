@@ -2,8 +2,9 @@
 // en trois temps) du labo) : le dessin seulement, par-dessus le moteur. Rien ici ne lit ni ne modifie la partie au-delà de lire `B.armee` pour placer le dessin ;
 // aucun tirage du générateur de la bataille, rien de sauvegardé. Un SVG (le fanion et ses fils) et un canvas 2D (la poussière, l'impact), suivis de la caméra
 // par `versEcran`. Fabrique `creerRetours({ $, rendu: () => rendu, bataille: () => B })` : le rendu et la bataille changent à chaque partie, on les lit à chaque appel.
-import { PALETTE as P } from '../palette.js?v=0.114.0';
-import { CALIBRES } from '../data/calibres.js?v=0.114.0';
+import { PALETTE as P } from '../palette.js?v=0.114.1';
+import { placeDe } from '../amas.js?v=0.114.1';
+import { CALIBRES } from '../data/calibres.js?v=0.114.1';
 
 const svgEl = (tag, attrs = {}) => { const e = document.createElementNS('http://www.w3.org/2000/svg', tag); for (const [k, v] of Object.entries(attrs)) e.setAttribute(k, v); return e; };
 const borne = (u, a = 0, b = 1) => Math.min(b, Math.max(a, u));
@@ -23,12 +24,11 @@ export function creerRetours({ $, rendu: lireRendu, bataille: lireBataille }) {
   const liste = [];
   const couleur = nom => getComputedStyle(document.documentElement).getPropertyValue(nom).trim() || P.n;
 
-  // le centre des hommes d'un régiment, à l'écran
+  // le centre du plus gros amas d'un régiment, à l'écran (amas.js : le même endroit que sa pastille et son nom)
   function centroide(id) {
-    const A = lireBataille().armee; let x = 0, y = 0, n = 0;
-    for (let i = 0; i < A.n; i++) if (A.reg[i] === id) { x += A.x[i]; y += A.y[i]; n++; }
-    if (!n) return null;
-    const [sx, sy] = S(x / n, y / n);
+    const p = placeDe(lireBataille(), id);
+    if (!p) return null;
+    const [sx, sy] = S(p.x, p.y);
     return { sx, sy };
   }
 

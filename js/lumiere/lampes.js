@@ -2,7 +2,7 @@
 // Pas de raytracing : chaque lampe éclaire les colonnes de son rayon (une courbe douce de la distance), cachée par le relief (quelques échantillons de visibilité le long du segment lampe → colonne).
 // Le résultat est une couche de la grille (un octet par colonne) que le nuanceur lit comme la texture de lumière du soleil : un homme, un flanc de tranchée, le sol y prennent la même lueur.
 // Logique pure (aucun DOM, aucune horloge) ; mesures.js chronomètre autour.
-import { LAMPES } from './config.js?v=0.114.0';
+import { LAMPES } from './config.js?v=0.114.1';
 
 // Les lanternes fixes : le long de chaque ligne de tranchée, et une par abri couvert (plus basse, plus forte : on la voit par les toits transparents)
 export function lanternesDeTranchees(M, hf) {
