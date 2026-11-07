@@ -1,66 +1,67 @@
 // Le cycle de vie : écran titre → bataille → nuit → fin ; pause active,
 // réglages, sauvegarde, mise à jour, debug. Les règles sont dans bataille.js
 // (pures), le dessin dans rendu3d.js (il ne modifie jamais l'état).
-import { createLoop } from './lib/loop.js?v=0.114.0';
-import { createKeys, stopTypeahead } from './lib/keys.js?v=0.114.0';
-import { createPointer, lockBrowserGestures } from './lib/pointer.js?v=0.114.0';
-import { createGamepad } from './lib/gamepad.js?v=0.114.0';
-import { createStore, autosave, pickJSONFile } from './lib/save.js?v=0.114.0';
-import { startUpdateCheck, loadVersion, loadChangelog, downloadJSON } from './lib/app-update.js?v=0.114.0';
-import { ROLES } from './palette.js?v=0.114.0';
-import { VERSION_CAMPAGNE, CLE as CLE_CAMPAGNE, cloturerDansLeStore, nouvelleCampagne, suivante, passage, bilan as bilanCampagne } from './campagne.js?v=0.114.0';
-import { CAMPAGNE } from './data/campagne.js?v=0.114.0';
-import { MISSIONS, MEMORIAL, peutDeployer, deployer, bordereau, progressionMission, progressionSecondaire, EUX, nouvelleBataille, etapesRestaurer, avancer, aube, ordonnerMarche, peutOrdonner, ordonnerBarrage, peutBarrage, arriereDe, ordonnerStance, peutStance, horloge, effectifs, tronconsTenus, moralEnMots, terrainResume, forcesTroncons, largeurZone, lettreZone, etendueZones, nomTroncon, actionDe, secteursDe, tronconsDeLigne, zone, photo, restaurer, PAS, NOUS } from './bataille.js?v=0.114.0';
-import { ligneY, y0En, etatTranchee } from './tranchees.js?v=0.114.0';
-import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.114.0';
-import { AVION, MITRAILLAGE } from './data/mitraillage.js?v=0.114.0';
-import { NIDS } from './data/nids.js?v=0.114.0';
-import { ligneDe, apercuVol, avionsPrets, avionsRestants, positionDe, balayage } from './avions.js?v=0.114.0';
-import { creerSon } from './audio.js?v=0.114.0';
-import { CHAR, CHAR_RECHARGE, CHARS, CHAR_PAR_DEFAUT } from './data/chars.js?v=0.114.0';
-import { GENIE, GENIE_DATA } from './data/genie.js?v=0.114.0';
-import { pontEn } from './eaux.js?v=0.114.0';
-import { PONTS_JEU, typePont } from './data/ponts.js?v=0.114.0';
-import { routeChar } from './chars.js?v=0.114.0';
-import { STANCES, STANCE_DEFAUT } from './data/stances.js?v=0.114.0';
-import { METEO, SAISONS, SAISON_DEFAUT } from './data/meteo.js?v=0.114.0';
-import { hash2 } from './lib/rng.js?v=0.114.0';
-import { creerRendu, CAMERA, ZOOMS, ZOOMS_CADRAGE } from './rendu3d.js?v=0.114.0';
-import { etatEnMots, experienceEnMots, chevrons, caracteristiques } from './identite.js?v=0.114.0';
-import { aspect } from './aspect-soldat.js?v=0.114.0';
-import { numeroCampagne } from './bataille.js?v=0.114.0';
-import { ARTICULE } from './data/aspect-soldat.js?v=0.114.0';
-import { refusCorvee } from './nuit.js?v=0.114.0';
-import { chargerContenu, appliquerSecteurs, appliquerCartes, appliquerCampagne } from './design-store.js?v=0.114.0';
-import { ordonnerChar, refusOrdreChar } from './chars.js?v=0.114.0';
-import { orienterNid, refusOrienterNid } from './nids.js?v=0.114.0';
-import { creerNidsHud } from './hud/nids.js?v=0.114.0';
-import { creerCharsHud } from './hud/chars.js?v=0.114.0';
-import { creerCampHud } from './hud/camp.js?v=0.114.0';
-import { affecterGueris, charsDispo, ordonnerChantier, refusCamp, ouverture, campDe, refusOrdre, batimentSous, emprisesCamp, emplacementCamp, etendueCamp, niveauDe, modif, rechargeDe as facteurRecharge } from './camp.js?v=0.114.0';
-import { BATIMENTS, equipeEnMots } from './data/batiments.js?v=0.114.0';
-import { deplacable } from './hud/deplacer.js?v=0.114.0';
-import { creerSecteur, caseDe } from './hud/secteur.js?v=0.114.0';
-import { palmares, tableau } from './hud/medailles.js?v=0.114.0';
-import * as lecture from './hud/lecture.js?v=0.114.0';
-import { creerFiche } from './hud/fiche.js?v=0.114.0';
-import { chevronsHtml } from './hud/barres.js?v=0.114.0';
-import { creerNuit, corveeDe, corveeCourte } from './hud/nuit.js?v=0.114.0';
-import { creerCampagne } from './hud/campagne.js?v=0.114.0';
-import { creerCarnet, deux } from './hud/carnet.js?v=0.114.0';
-import { creerCarte } from './hud/carte.js?v=0.114.0';
-import { creerPertes } from './hud/pertes.js?v=0.114.0';
-import { creerBarreTemps } from './hud/temps.js?v=0.114.0';
-import { creerChargement } from './hud/chargement.js?v=0.114.0';
-import { creerRetours } from './hud/retours.js?v=0.114.0';
-import { creerInfobulle } from './hud/infobulle.js?v=0.114.0';
-import { SECTEURS } from './data/secteur.js?v=0.114.0';
-import { DIFFICULTES, DIFFICULTE_DEFAUT, DUREES, DUREE_DEFAUT } from './data/difficulte.js?v=0.114.0';
-import { preparerAleatoire, ID_ALEATOIRE } from './generateur.js?v=0.114.0';
-import { creerLockstep, empreinteEtat } from './reseau/lockstep.js?v=0.114.0';
-import { nouveauCode, codeValide, publier, ecouter } from './reseau/relais.js?v=0.114.0';
-import { creerHote, creerInvite } from './reseau/lien.js?v=0.114.0';
-import { SOLEIL_JEU } from './data/soleil.js?v=0.114.0';
+import { createLoop } from './lib/loop.js?v=0.115.0';
+import { createKeys, stopTypeahead } from './lib/keys.js?v=0.115.0';
+import { createPointer, lockBrowserGestures } from './lib/pointer.js?v=0.115.0';
+import { createGamepad } from './lib/gamepad.js?v=0.115.0';
+import { createStore, autosave, pickJSONFile } from './lib/save.js?v=0.115.0';
+import { startUpdateCheck, loadVersion, loadChangelog, downloadJSON } from './lib/app-update.js?v=0.115.0';
+import { ROLES } from './palette.js?v=0.115.0';
+import { VERSION_CAMPAGNE, CLE as CLE_CAMPAGNE, cloturerDansLeStore, nouvelleCampagne, suivante, passage, bilan as bilanCampagne } from './campagne.js?v=0.115.0';
+import { CAMPAGNE } from './data/campagne.js?v=0.115.0';
+import { MISSIONS, MEMORIAL, scoreDuel, peutDeployer, deployer, bordereau, progressionMission, progressionSecondaire, EUX, nouvelleBataille, etapesRestaurer, avancer, aube, ordonnerMarche, peutOrdonner, ordonnerBarrage, peutBarrage, arriereDe, ordonnerStance, peutStance, horloge, effectifs, tronconsTenus, moralEnMots, terrainResume, forcesTroncons, largeurZone, lettreZone, etendueZones, nomTroncon, actionDe, secteursDe, tronconsDeLigne, zone, photo, restaurer, PAS, NOUS } from './bataille.js?v=0.115.0';
+import { ligneY, y0En, etatTranchee } from './tranchees.js?v=0.115.0';
+import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.115.0';
+import { AVION, MITRAILLAGE } from './data/mitraillage.js?v=0.115.0';
+import { NIDS } from './data/nids.js?v=0.115.0';
+import { ligneDe, apercuVol, avionsPrets, avionsRestants, positionDe, balayage } from './avions.js?v=0.115.0';
+import { creerSon } from './audio.js?v=0.115.0';
+import { CHAR, CHAR_RECHARGE, CHARS, CHAR_PAR_DEFAUT } from './data/chars.js?v=0.115.0';
+import { GENIE, GENIE_DATA } from './data/genie.js?v=0.115.0';
+import { pontEn } from './eaux.js?v=0.115.0';
+import { PONTS_JEU, typePont } from './data/ponts.js?v=0.115.0';
+import { routeChar } from './chars.js?v=0.115.0';
+import { STANCES, STANCE_DEFAUT } from './data/stances.js?v=0.115.0';
+import { METEO, SAISONS, SAISON_DEFAUT } from './data/meteo.js?v=0.115.0';
+import { hash2 } from './lib/rng.js?v=0.115.0';
+import { creerRendu, CAMERA, ZOOMS, ZOOMS_CADRAGE } from './rendu3d.js?v=0.115.0';
+import { etatEnMots, experienceEnMots, chevrons, caracteristiques } from './identite.js?v=0.115.0';
+import { aspect } from './aspect-soldat.js?v=0.115.0';
+import { numeroCampagne } from './bataille.js?v=0.115.0';
+import { ARTICULE } from './data/aspect-soldat.js?v=0.115.0';
+import { refusCorvee } from './nuit.js?v=0.115.0';
+import { chargerContenu, appliquerSecteurs, appliquerCartes, appliquerCampagne } from './design-store.js?v=0.115.0';
+import { ordonnerChar, refusOrdreChar } from './chars.js?v=0.115.0';
+import { orienterNid, refusOrienterNid } from './nids.js?v=0.115.0';
+import { creerNidsHud } from './hud/nids.js?v=0.115.0';
+import { creerCharsHud } from './hud/chars.js?v=0.115.0';
+import { creerCampHud } from './hud/camp.js?v=0.115.0';
+import { affecterGueris, charsDispo, ordonnerChantier, refusCamp, ouverture, campDe, refusOrdre, batimentSous, emprisesCamp, emplacementCamp, etendueCamp, niveauDe, modif, rechargeDe as facteurRecharge } from './camp.js?v=0.115.0';
+import { BATIMENTS, equipeEnMots } from './data/batiments.js?v=0.115.0';
+import { deplacable } from './hud/deplacer.js?v=0.115.0';
+import { creerSecteur, caseDe } from './hud/secteur.js?v=0.115.0';
+import { palmares, tableau } from './hud/medailles.js?v=0.115.0';
+import * as lecture from './hud/lecture.js?v=0.115.0';
+import { creerFiche } from './hud/fiche.js?v=0.115.0';
+import { chevronsHtml } from './hud/barres.js?v=0.115.0';
+import { creerNuit, corveeDe, corveeCourte } from './hud/nuit.js?v=0.115.0';
+import { creerCampagne } from './hud/campagne.js?v=0.115.0';
+import { creerCarnet, deux } from './hud/carnet.js?v=0.115.0';
+import { creerCarte } from './hud/carte.js?v=0.115.0';
+import { creerPertes } from './hud/pertes.js?v=0.115.0';
+import { creerBarreTemps } from './hud/temps.js?v=0.115.0';
+import { creerChargement } from './hud/chargement.js?v=0.115.0';
+import { creerRetours } from './hud/retours.js?v=0.115.0';
+import { creerInfobulle } from './hud/infobulle.js?v=0.115.0';
+import { SECTEURS } from './data/secteur.js?v=0.115.0';
+import { DIFFICULTES, DIFFICULTE_DEFAUT, DUREES, DUREE_DEFAUT } from './data/difficulte.js?v=0.115.0';
+import { DUREES_DEUX, RENFORTS_DEUX, DOTATIONS_DEUX, EFFECTIFS_DEUX, ANTICIPEE_DEUX, DEFAUTS_DEUX, optionsDeuxValides, optionsDeuxEnBataille, resumeDeux } from './data/deux.js?v=0.115.0';
+import { preparerAleatoire, ID_ALEATOIRE } from './generateur.js?v=0.115.0';
+import { creerLockstep, empreinteEtat } from './reseau/lockstep.js?v=0.115.0';
+import { nouveauCode, codeValide, publier, ecouter } from './reseau/relais.js?v=0.115.0';
+import { creerHote, creerInvite } from './reseau/lien.js?v=0.115.0';
+import { SOLEIL_JEU } from './data/soleil.js?v=0.115.0';
 
 const JEU = 'cyclopeen';
 const $ = id => document.getElementById(id);
@@ -269,9 +270,9 @@ function confirmer(texte, oui) {
   return new Promise(ok => { d.onclose = () => ok(d.returnValue === 'oui'); d.showModal(); });
 }
 // L'objectif de celui qui joue : la mission est celle des nôtres ; à deux, en face a l'objectif inverse (tenir ce qu'on attaque, prendre ce qu'on tient)
-const objectif = () => (MOI === NOUS) === (B.etat.mission === 'tenir') ? 'tenir' : 'prendre';
+const objectif = () => B.etat.mission === 'duel' ? 'duel' : (MOI === NOUS) === (B.etat.mission === 'tenir') ? 'tenir' : 'prendre';
 // le nom et le texte de la mission du camp joué (la contre-attaque éclair a les siens : un seul ordre, dans les deux camps ; v0.108.0)
-const missionNom = () => B.etat.mission === 'contre' ? 'Contre-attaque éclair' : objectif() === 'tenir' ? 'Tenir le secteur' : 'Prendre leur première ligne';
+const missionNom = () => B.etat.mission === 'contre' ? 'Contre-attaque éclair' : B.etat.mission === 'duel' ? 'Duel' : objectif() === 'tenir' ? 'Tenir le secteur' : 'Prendre leur première ligne';
 const missionOrdre = () => MISSIONS[B.etat.mission === 'contre' ? 'contre' : objectif()];
 function reglerCamp(camp) {
   MOI = camp;
@@ -303,6 +304,13 @@ function jouer(bataille) {
   else loop.resume();
 }
 function sauvegarder() { if (B && !reseau && !ESSAI) store.save('partie', photo(B)); }       // (une partie à deux ne se sauvegarde pas : l'autre machine n'y est plus)
+// Le temps s'arrête pour qui regarde une fenêtre : seul, la boucle ; à deux, la pause partagée (la boucle ne s'arrête jamais : l'autre machine attendrait)
+function arreterTemps() {
+  if (!reseau) { loop.pause(); return; }
+  if (!reseau.ls.etat.pause) { reseau.ls.commander({ t: 'pause', v: true }); reseau.pauseParMoi = true; }
+}
+// Le temps est-il arrêté ? (le champ de bataille se grise alors, v0.115.0 : à deux, la boucle ne s'arrête jamais, c'est la pause du lockstep qui compte)
+const tempsArrete = () => reseau ? reseau.ls.etat.pause : loop.paused;
 function pause() {
   if (!enJeu() || $('dialogue-pause').open || $('dialogue-depart').open) return;
   if (reseau) { if (!reseau.ls.etat.pause) { reseau.ls.commander({ t: 'pause', v: true }); reseau.pauseParMoi = true; } }      // à deux, la pause est celle des deux joueurs : le temps s'arrête pour tous
@@ -382,12 +390,12 @@ $('mission').onclick = () => {
     li.textContent = `${q.etat === 'reussie' ? '✓' : q.etat === 'echouee' ? '✗' : '○'} ${q.texte}${q.label && q.etat === 'cours' ? ' (' + q.label + ')' : ''}${q.raison ? ' — ' + q.raison : ''}`;
     ul.append(li);
   }
-  loop.pause();
+  arreterTemps();
   $('dialogue-mission').showModal();
 };
 $('mission-fermer').onclick = () => $('dialogue-mission').close();
 // Le « ? » de la carte et celui du plan d'un secteur (Jérôme, v0.108.0) : une modale d'explications, le temps s'arrête le temps de la lire
-for (const id of ['carte-aide', 'secteur-aide']) $(id).onclick = e => { e.currentTarget.blur(); loop.pause(); $('dialogue-aide-carte').showModal(); };
+for (const id of ['carte-aide', 'secteur-aide']) $(id).onclick = e => { e.currentTarget.blur(); arreterTemps(); $('dialogue-aide-carte').showModal(); };
 $('aide-carte-fermer').onclick = () => $('dialogue-aide-carte').close();
 $('dialogue-aide-carte').addEventListener('close', reprendre);
 $('dialogue-mission').addEventListener('close', reprendre);
@@ -427,9 +435,9 @@ function bordRonge(nom) {
   return `polygon(${pts.join(',')})`;
 }
 let apercuSecteur = null;
-function demanderSecteur(avecDifficulte = true) {
+function demanderSecteur(avecDifficulte = true, pourDeux = false) {
   const d = $('dialogue-carte'), tirage = () => window.__seed ?? Date.now() % 100000;
-  if (DEBUG) { const id = params.get('secteur'); if (id === ID_ALEATOIRE) preparerAleatoire(tirage()); return Promise.resolve({ secteur: SECTEURS[id] ? id : 'essai', graine: tirage(), saison: SAISONS[params.get('saison')] ? params.get('saison') : undefined, difficulte: DIFFICULTES[params.get('difficulte')] ? params.get('difficulte') : undefined }); }
+  if (DEBUG) { const id = params.get('secteur'); if (id === ID_ALEATOIRE) preparerAleatoire(tirage()); return Promise.resolve({ secteur: SECTEURS[id] ? id : 'essai', graine: tirage(), saison: SAISONS[params.get('saison')] ? params.get('saison') : undefined, difficulte: DIFFICULTES[params.get('difficulte')] ? params.get('difficulte') : undefined, options: pourDeux ? { ...DEFAUTS_DEUX } : undefined }); }
   let graine = tirage(); preparerAleatoire(graine);                // la carte aléatoire (v0.49.0) : la dernière de la liste, tirée de la graine montrée
   // les cartes d'origine, celles qu'on a publiées, puis la carte au hasard en dernier
   const ids = Object.keys(SECTEURS).sort((a, b) => (a === ID_ALEATOIRE) - (b === ID_ALEATOIRE));
@@ -454,7 +462,10 @@ function demanderSecteur(avecDifficulte = true) {
     // le niveau (Jérôme, v0.70.0) et la durée (retour du 1er nov.) : le dernier choix est gardé dans les réglages (jamais en mode essai ni à deux)
     let difficulte = DIFFICULTES[prefs.difficulte] ? prefs.difficulte : DIFFICULTE_DEFAUT;
     let duree = DUREES[prefs.duree] ? prefs.duree : DUREE_DEFAUT;
-    const resultat = () => ({ secteur: choisi, graine: graineDe(), saison: saisonDe(), difficulte: avecDifficulte ? difficulte : undefined, jours: avecDifficulte && !SECTEURS[choisi]?.joursFixes ? DUREES[duree].jours ?? undefined : undefined });
+    // le jeu à deux : cinq réglages de plus, envoyés à l'autre machine avec le secteur (data/deux.js) ; le dernier choix est gardé (`prefs.deux`)
+    const TABLES_DEUX = { dduree: ['duree', DUREES_DEUX, 'Durée'], drenforts: ['renforts', RENFORTS_DEUX, 'Renforts'], ddotation: ['dotation', DOTATIONS_DEUX, 'Dotation'], deffectifs: ['effectifs', EFFECTIFS_DEUX, 'Effectifs'], danticipee: ['anticipee', ANTICIPEE_DEUX, 'Victoire anticipée'] };
+    const optionsDeux = optionsDeuxValides(prefs.deux) ? { ...prefs.deux } : { ...DEFAUTS_DEUX };
+    const resultat = () => ({ secteur: choisi, graine: graineDe(), saison: saisonDe(), difficulte: avecDifficulte ? difficulte : undefined, jours: avecDifficulte && !SECTEURS[choisi]?.joursFixes ? DUREES[duree].jours ?? undefined : undefined, options: pourDeux ? { ...optionsDeux } : undefined });
 
     // la liste : une ligne par secteur, petite (Jérôme, v0.51.0 : « pas d'aperçu du relief, uniquement les titres ») ; ce qu'est un secteur se lit sur sa carte
     liste.replaceChildren(...ids.map(id => { const b = H('button', id === ID_ALEATOIRE ? 'carte-ligne hasard' : 'carte-ligne', id === ID_ALEATOIRE ? `${DE}<span>Au hasard</span>` : '<span></span>'); b.type = 'button'; b.dataset.id = id; if (id !== ID_ALEATOIRE) b.firstChild.textContent = SECTEURS[id].nom; return b; }));
@@ -476,7 +487,11 @@ function demanderSecteur(avecDifficulte = true) {
       const de = H('button', 'pastille carte-de', `${DE}<span>Une autre carte</span>`); de.type = 'button'; de.title = 'Tirer un autre secteur au hasard';      // (seulement sur la carte « Au hasard »)
       cadre.append(saisons, de);
       const corps = H('div', 'carte-corps'); corps.append(cadre, H('p', 'carte-legende'));
-      if (avecDifficulte) {            // (la description d'un niveau n'est qu'une infobulle : au survol, Jérôme, retour du 2 nov.)
+      if (pourDeux) {
+        const reglages = H('div', 'carte-reglages');
+        reglages.append(...Object.entries(TABLES_DEUX).map(([classe, [, T, nom]]) => reglage(nom, classe, Object.entries(T).map(([k, D]) => [k, D.nom, D.desc]))));
+        corps.append(reglages);
+      } else if (avecDifficulte) {            // (la description d'un niveau n'est qu'une infobulle : au survol, Jérôme, retour du 2 nov.)
         const reglages = H('div', 'carte-reglages');
         reglages.append(reglage('Niveau', 'difficulte', Object.entries(DIFFICULTES).map(([k, D]) => [k, D.nom, D.desc])), reglage('Durée', 'duree', Object.entries(DUREES).map(([k, D]) => [k, D.nom, D.desc])));
         corps.append(reglages);
@@ -494,6 +509,7 @@ function demanderSecteur(avecDifficulte = true) {
       for (const b of liste.children) b.setAttribute('aria-pressed', String(b.dataset.id === choisi));
       for (const b of d.querySelectorAll('[data-saison]')) b.setAttribute('aria-pressed', String(saisonHasard ? b.dataset.saison === 'hasard' : b.dataset.saison === saisonDe()));
       for (const b of d.querySelectorAll('[data-difficulte]')) b.setAttribute('aria-pressed', String(b.dataset.difficulte === difficulte));
+      for (const [classe, [cle]] of Object.entries(TABLES_DEUX)) for (const b of d.querySelectorAll(`[data-${classe}]`)) b.setAttribute('aria-pressed', String(b.dataset[classe] === optionsDeux[cle]));
       for (const b of d.querySelectorAll('[data-duree]')) { b.setAttribute('aria-pressed', String(b.dataset.duree === duree && !SECTEURS[choisi]?.joursFixes)); b.disabled = !!SECTEURS[choisi]?.joursFixes; b.dataset.titre ??= b.title; b.title = b.disabled ? 'Cette bataille dure un jour' : b.dataset.titre; }       // (la contre-attaque éclair : une journée, quelle que soit la durée choisie)
     };
     // l'image de ce que l'aperçu montrait, par secteur et par saison : la carte qui part la garde, et une carte déjà vue arrive avec la sienne
@@ -510,6 +526,8 @@ function demanderSecteur(avecDifficulte = true) {
       if (b.dataset.saison) {      // « Au hasard » (Jérôme, retour du 1er nov.) : un clic tire une saison, montrée tout de suite sur l'aperçu et jouée telle quelle ; un autre clic en tire une autre
         if (b.dataset.saison === 'hasard') { saisonHasard = true; saison = SAISONS_CHOIX[Math.floor(Math.random() * SAISONS_CHOIX.length)]; tirerMeteo(); montrer(); }
         else if (saisonHasard || b.dataset.saison !== saisonDe()) { saisonHasard = false; saison = b.dataset.saison; tirerMeteo(); montrer(); }
+      } else if (pourDeux && Object.keys(TABLES_DEUX).some(c => b.dataset[c])) {
+        const classe = Object.keys(TABLES_DEUX).find(c => b.dataset[c]); optionsDeux[TABLES_DEUX[classe][0]] = b.dataset[classe]; prefs.deux = { ...optionsDeux }; store.save('prefs', prefs); marquer();
       } else if (b.dataset.difficulte) { difficulte = b.dataset.difficulte; prefs.difficulte = difficulte; store.save('prefs', prefs); marquer(); }
       else if (b.dataset.duree) { duree = b.dataset.duree; prefs.duree = duree; store.save('prefs', prefs); marquer(); }
     };
@@ -542,7 +560,7 @@ function demanderSecteur(avecDifficulte = true) {
     const montrer = async () => {
       marquer();
       try {
-        if (!apercuSecteur) { const { creerVue3D } = await import('./apercu-3d.js?v=0.114.0'); apercuSecteur = await creerVue3D({ R, hote, rotation: 0.12 }); apercuSecteur.surClic = () => agrandir(!d.classList.contains('agrandi')); }
+        if (!apercuSecteur) { const { creerVue3D } = await import('./apercu-3d.js?v=0.115.0'); apercuSecteur = await creerVue3D({ R, hote, rotation: 0.12 }); apercuSecteur.surClic = () => agrandir(!d.classList.contains('agrandi')); }
         if (!ouvert) return;
         apercuSecteur.monter(choisi, SECTEURS[choisi], graineDe(), { soldats: false, cadrer: true, saison: saisonDe(), meteo: meteoApercu ?? undefined });
         hote.style.visibility = ''; d.dataset.apercu = `${choisi}:${graineDe()}:${saisonDe()}`;
@@ -641,11 +659,11 @@ function enregistrerDeux(h) {
 $('dialogue-depart').addEventListener('cancel', e => e.preventDefault());       // Échap ne passe pas le départ : il faut dire « Prêt »
 $('deux-pret').onclick = () => { if (!reseau) return; $('deux-pret').disabled = true; $('deux-pret').textContent = 'En attente de l\'autre commandant…'; reseau.ls.commander({ t: 'depart' }); };
 let repriseDeux = null;       // la sauvegarde qu'on veut reprendre (le bouton de l'écran titre), ou null
-function demarrerReseau({ moi, lien, graine, secteur, saison, reprise }) {
+function demarrerReseau({ moi, lien, graine, secteur, saison, options, reprise }) {
   for (const d of document.querySelectorAll('dialog[open]')) d.close();
   reseau = { moi, lien, ls: null, corvees: {}, pret: [false, false], pauseParMoi: false, departs: [false, false] };
   reglerCamp(moi);
-  const b = reprise ? restaurer(reprise.photo, R) : nouvelleBataille(graine, R, { secteur, saison, deux: true, camp: true });      // à deux aussi, chacun a son camp (v0.94.0)
+  const b = reprise ? restaurer(reprise.photo, R) : nouvelleBataille(graine, R, { secteur, saison, deux: true, camp: true, ...optionsDeuxEnBataille(options) });      // à deux aussi, chacun a son camp (v0.94.0)
   reseau.ls = creerLockstep({
     B: b, moi, surPoint: enregistrerDeux, envoyer: m => lien.envoyer(m), executer: executerCmd,
     surEcart: (cadre, a, b, sections) => { noter('Désynchronisation : les deux parties ne sont plus les mêmes.'); toast(`Désynchronisation (${sections.join(', ') || 'état'}) : les deux parties ont divergé.`, 'alerte'); console.error('désynchronisation au cadre', cadre, a, b, sections); },
@@ -661,7 +679,7 @@ function demarrerReseau({ moi, lien, graine, secteur, saison, reprise }) {
   lien.surFermeture = () => { if (reseau) quitterReseau('La connexion est perdue.'); };
   reseau.ls.etat.pause = true;                              // la bataille (neuve ou reprise) démarre en pause chez les deux, jusqu'à ce qu'ils soient prêts
   jouer(b);
-  $('depart-statut').textContent = reprise ? 'Partie reprise. La bataille repart quand les deux commandants sont prêts.' : 'La bataille commence quand les deux commandants sont prêts.';
+  $('depart-statut').textContent = reprise ? 'Partie reprise. La bataille repart quand les deux commandants sont prêts.' : `La bataille commence quand les deux commandants sont prêts. ${b.etat.meteo.length} jour${b.etat.meteo.length > 1 ? 's' : ''} · ${resumeDeux(options)}.`;
   $('deux-pret').disabled = false; $('deux-pret').textContent = 'Prêt'; $('dialogue-depart').showModal();
   noter(`Vous êtes le ${moi === NOUS ? 'bleu' : 'kaki'}. ${missionOrdre()}`);
   toast(`Vous êtes le ${moi === NOUS ? 'bleu' : 'kaki'}. Espace : pause pour les deux.`);
@@ -675,25 +693,25 @@ function quitterReseau(message) {
   loop.resume(); montrerTitre();
 }
 // la poignée de main : la version du jeu et ses réglages doivent être les mêmes (les deux machines calculent avec le même code et les mêmes nombres)
-function poigneeHote(lien, graine, secteur, saison) {
+function poigneeHote(lien, graine, secteur, saison, options) {
   const reprise = repriseDeux;
-  lien.surOuvert = () => lien.envoyer({ t: 'init', version: versionJeu, reglages: empreinteReglages(), graine, secteur, saison, reprise: reprise ? reprise.points.map(p => p.id) : null });
+  lien.surOuvert = () => lien.envoyer({ t: 'init', version: versionJeu, reglages: empreinteReglages(), graine, secteur, saison, options: options ?? null, reprise: reprise ? reprise.points.map(p => p.id) : null });
   lien.surMessage = m => {
-    if (m.t === 'ok') demarrerReseau({ moi: NOUS, lien, graine, secteur, saison, reprise: reprise ? reprise.points.find(p => p.id === m.reprise) : null });
+    if (m.t === 'ok') demarrerReseau({ moi: NOUS, lien, graine, secteur, saison, options, reprise: reprise ? reprise.points.find(p => p.id === m.reprise) : null });
     else if (m.t === 'refus') { $('deux-statut').textContent = `L'autre machine refuse : ${m.raison}`; lien.fermer(); }
   };
 }
 function poigneeInvite(lien) {
   lien.surMessage = m => {
     if (m.t !== 'init') return;
-    const raison = m.version !== versionJeu ? `elle joue la v${m.version}, vous la v${versionJeu} : rechargez la page` : m.reglages !== empreinteReglages() ? 'les réglages (l\'atelier) ne sont pas les mêmes' : !(SECTEURS[m.secteur] || m.secteur === ID_ALEATOIRE) ? 'secteur inconnu' : m.saison && !SAISONS[m.saison] ? 'saison inconnue' : null;
+    const raison = m.version !== versionJeu ? `elle joue la v${m.version}, vous la v${versionJeu} : rechargez la page` : m.reglages !== empreinteReglages() ? 'les réglages (l\'atelier) ne sont pas les mêmes' : !(SECTEURS[m.secteur] || m.secteur === ID_ALEATOIRE) ? 'secteur inconnu' : m.saison && !SAISONS[m.saison] ? 'saison inconnue' : (!m.reprise && !optionsDeuxValides(m.options)) ? 'réglages de partie inconnus' : null;
     if (raison) { lien.envoyer({ t: 'refus', raison }); $('deux-statut').textContent = `Impossible de jouer ensemble : ${raison}.`; return; }
     // la reprise d'une partie : les deux doivent la vouloir, avoir joué les mêmes camps (l'hôte le bleu) et partager un point (le plus récent des siens que l'hôte a aussi)
     const sauv = store.load('partieDeux'), point = m.reprise && sauv && sauv.version === versionJeu && sauv.moi === EUX ? m.reprise.map(id => sauv.points.find(q => q.id === id)).find(Boolean) : null;
     const refus = m.reprise && !point ? 'vous n\u2019avez pas de partie à deux à reprendre avec lui (autre camp, autre version, ou aucun point commun)' : !m.reprise && repriseDeux ? 'il lance une nouvelle partie, vous vouliez reprendre l\u2019ancienne' : '';
     if (refus) { lien.envoyer({ t: 'refus', raison: refus }); $('deux-statut').textContent = `Impossible de jouer ensemble : ${refus}.`; return; }
     lien.envoyer({ t: 'ok', reprise: point?.id ?? null });
-    demarrerReseau({ moi: EUX, lien, graine: m.graine, secteur: m.secteur, saison: m.saison, reprise: point });
+    demarrerReseau({ moi: EUX, lien, graine: m.graine, secteur: m.secteur, saison: m.saison, options: m.options, reprise: point });
   };
 }
 {
@@ -719,12 +737,12 @@ function poigneeInvite(lien) {
   };
   dlg.addEventListener('close', () => { arreterRelais?.(); arreterRelais = null; if (!reseau && lien) { lien.fermer(); lien = null; } });
   $('deux-inviter').onclick = async () => {
-    const choix = repriseDeux ? { secteur: repriseDeux.points[0].photo.secteur ?? 'essai', graine: repriseDeux.points[0].photo.graine, saison: repriseDeux.points[0].photo.sol?.saison } : await demanderSecteur(false);
+    const choix = repriseDeux ? { secteur: repriseDeux.points[0].photo.secteur ?? 'essai', graine: repriseDeux.points[0].photo.graine, saison: repriseDeux.points[0].photo.sol?.saison } : await demanderSecteur(false, true);
     if (!choix) return;
-    const { secteur, graine, saison } = choix;
+    const { secteur, graine, saison, options } = choix;
     $('deux-choix').hidden = true; $('deux-hote').hidden = false; statut('Préparation de l\'invitation…');
     try {
-      lien = creerHote(); poigneeHote(lien, graine, secteur, saison); suivreEtat(lien);
+      lien = creerHote(); poigneeHote(lien, graine, secteur, saison, options); suivreEtat(lien);
       $('deux-invitation').value = await lien.inviter();
       const code = nouveauCode(); $('deux-code').textContent = code;
       const hors = () => statut('Relais injoignable : utilisez le copier-coller ci-dessous.');
@@ -733,7 +751,7 @@ function poigneeInvite(lien) {
         try { statut('Connexion en cours…'); await lien.accepter(m.texte); } catch (e) { statut(`Réponse illisible : ${e.message}`); }
       }, hors);
       await publier(code, { t: 'invitation', texte: $('deux-invitation').value }).catch(e => { console.error(e); hors(); });
-      statut(`Secteur : ${SECTEURS[secteur].nom}${SAISONS[saison] ? `, en ${SAISONS[saison].nom}` : ''}. En attente de l'autre joueur.`);
+      statut(`Secteur : ${SECTEURS[secteur].nom}${SAISONS[saison] ? `, en ${SAISONS[saison].nom}` : ''}${options ? ` (${resumeDeux(options)})` : ''}. En attente de l'autre joueur.`);
     } catch (e) { console.error(e); statut(`Impossible : ${e.message}`); }
   };
   $('deux-connecter').onclick = async () => {
@@ -844,7 +862,7 @@ function montrerFin() {
   if (campagne) { laCampagne.montrerFin(bilanCampagne(campagne), montrerTitre); return; }
   const e = B.etat, [vNous, vEux] = effectifs(B);
   $('fin-titre').textContent = `${e.jour} jour${e.jour > 1 ? 's' : ''}.`;
-  $('fin-issue').textContent = reseau ? `${e.issue?.reussie ? 'Le bleu' : 'Le kaki'} l'emporte. ${e.issue?.texte || ''}` : (e.issue?.texte || '') + (e.issue?.secondaires ? ` Missions secondaires : ${e.issue.secondaires.reussies.length} réussie(s), ${e.issue.secondaires.score} points.` : '');
+  $('fin-issue').textContent = reseau ? (e.issue?.nul ? `Match nul. ${e.issue.texte}` : `${e.issue?.reussie ? 'Le bleu' : 'Le kaki'} l'emporte. ${e.issue?.texte || ''}`) : (e.issue?.texte || '') + (e.issue?.secondaires ? ` Missions secondaires : ${e.issue.secondaires.reussies.length} réussie(s), ${e.issue.secondaires.score} points.` : '');
   $('fin-nouvelle').hidden = !!reseau;
   // jour après jour : ce qu'il a coûté, sans un mot de plus
   $('fin-jours').replaceChildren(...e.pertesJour.slice(0, e.jour).map(([n, x], k) => Object.assign(document.createElement('li'), { textContent: `Jour ${k + 1} : ${n} des nôtres, ${x} en face.` })));
@@ -1117,7 +1135,7 @@ function majHud() {
   const h = horloge(B), e = B.etat;
   majBarreTemps(B);
   $('mission').hidden = !e.mission;
-  if (e.mission) $('mission').textContent = `${missionNom()} ▸`;
+  if (e.mission) { const sc = e.mission === 'duel' ? scoreDuel(B) : null; $('mission').textContent = sc ? `Duel ${MOI === NOUS ? sc[0] : sc[1]} – ${MOI === NOUS ? sc[1] : sc[0]} ▸` : `${missionNom()} ▸`; }
   majPertes(B); majTemps(h);
   majFiche();
   $('pause-active').hidden = !pauseActive;
@@ -1919,8 +1937,8 @@ const loop = createLoop({
     retours.evenements(ev);
     rendu.aretesPonts = modeBarrage === GENIE && B.etat.phase === 'jour';
     const vols = (B.etat.mitraillages || []).filter(v => v.etat === 'vol' || v.etat === 'chute').map(v => ({ etat: v.etat, ...(v.etat === 'vol' ? positionDe(v, B.etat.temps) : { x: v.cx, y: v.cy, h: 0 }), mitraille: v.etat === 'vol' && balayage(v, B.etat.temps).actif }));
-    son.image(dt, { tirs: loop.paused || B.etat.phase !== 'jour' ? null : B.tirs, ecoute: ecouteDe(), meteo: METEO[B.etat.meteo[B.etat.jour - 1]], nuit: B.etat.phase === 'nuit', aube: B.etat.phase === 'jour' && horloge(B).heure < 8, chars: loop.paused ? [] : B.etat.chars, avions: loop.paused ? [] : vols });
-    rendu.gele = loop.paused && B.etat.phase === 'jour';      // le temps arrêté fige tout le dessin (v0.99.5)
+    son.image(dt, { tirs: tempsArrete() || B.etat.phase !== 'jour' ? null : B.tirs, ecoute: ecouteDe(), meteo: METEO[B.etat.meteo[B.etat.jour - 1]], nuit: B.etat.phase === 'nuit', aube: B.etat.phase === 'jour' && horloge(B).heure < 8, chars: tempsArrete() ? [] : B.etat.chars, avions: tempsArrete() ? [] : vols });
+    rendu.gele = tempsArrete() && B.etat.phase === 'jour';      // le temps arrêté fige tout le dessin (v0.99.5)
     $('canvas').classList.toggle('gele', rendu.gele);
     rendu.dessiner(dt, ev);
     retours.maj(dt);
@@ -1966,7 +1984,7 @@ startUpdateCheck({
 
 // ─── Mode debug (section 18) : chargé seulement avec ?debug=1 ──────────────
 if (DEBUG) {
-  const { installDebug, seedFromUrl } = await import('./lib/debug.js?v=0.114.0');
+  const { installDebug, seedFromUrl } = await import('./lib/debug.js?v=0.115.0');
   window.__seed = seedFromUrl() ?? undefined;
   installDebug({
     state: () => B && { ...horloge(B), effectifs: effectifs(B), pertes: B.etat.pertes, impacts: B.etat.impacts.length, enJeu: enJeu(), pause: loop.paused },

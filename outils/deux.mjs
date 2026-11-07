@@ -49,7 +49,17 @@ console.log('A', JSON.stringify(a)); console.log('B', JSON.stringify(b));
 const postures = async p => p.evaluate(() => window.__jeu.bataille().etat.regiments.map(r => r.stance).join());
 const pa = await postures(A), pb = await postures(Bp);
 console.log('postures', pa);
+// la pause partagée grise le champ de bataille chez les deux (v0.115.0), et la reprise le rend aux couleurs
+const gele = async p => p.evaluate(() => document.getElementById('canvas').classList.contains('gele'));
+const avant = [await gele(A), await gele(Bp)];
+await A.evaluate(() => document.getElementById('temps-pause').click()); await A.waitForTimeout(1500);
+const pendant = [await gele(A), await gele(Bp)];
+await Bp.evaluate(() => document.getElementById('temps-pause').click()); await A.waitForTimeout(1500);
+const apres = [await gele(A), await gele(Bp)];
+console.log('gele', JSON.stringify({ avant, pendant, apres }));
+const grise = !avant.some(Boolean) && pendant.every(Boolean) && !apres.some(Boolean);
+if (!grise) { console.log('✗ le champ de bataille ne se grise pas avec la pause partagée'); process.exitCode = 1; }
 await nav.close(); await s.close();
-const ok = pa === pb && pa.includes('retenu') && errs.length === 0 && a.ecart === null && b.ecart === null && a.cadre > 300 && b.cadre > 300;
+const ok = grise && pa === pb && pa.includes('retenu') && errs.length === 0 && a.ecart === null && b.ecart === null && a.cadre > 300 && b.cadre > 300;
 console.log(ok ? '✓ deux machines, aucune désynchronisation' : `✗ ${errs.slice(0, 4).join(' | ')} écarts : ${JSON.stringify([a.ecart, b.ecart])}`);
 process.exit(ok ? 0 : 1);

@@ -1,5 +1,10 @@
 # Journal des versions
 
+## 0.115.0 — 2026-11-07
+- Le jeu à deux se règle avant le départ : durée (courte par défaut), renforts, dotation, effectifs, victoire anticipée
+- À deux, un duel aux points : tranchées d'en face tenues chaque soir et pertes qu'on leur inflige ; trop d'avance finit la bataille, égalité possible
+- La pause à deux grise le champ de bataille (« Temps arrêté »)
+
 ## 0.114.0 — 2026-11-07
 - La carte : une case est un secteur (B1, C6…) ; un clic en montre le plan seul, soldats à leur place, avec les cases voisines à un bouton ; lignes 1 à 4 chez nous, 5 à 8 en face
 - Un petit « ? » explique la carte (marges resserrées) ; la fenêtre d'un régiment ne garde que son « ? », et elle comme les fiches des hommes se déplacent à la main

@@ -211,7 +211,7 @@
 ## Missions secondaires et progression (Jérôme, v0.99.0)
 
 - `etat.secondaires` : 2 missions tirées à la graine (`hash2(graine, 47+k, 7)`) dans `data/missions.js` ; `VERSION` 20, sans migration. Réussie = points au bilan (`etat.issue.secondaires`) ; peut échouer en cours (`s.echec`, vérifié chaque soir par `majSecondaires`).
-- `progressionMission(B, camp)` et `progressionSecondaire(B, s)` : fonctions pures (p 0..1 + phrase) lues par la modale ; même seuils que `juger` (`R.mission.priseMin`, `joursDeTenue`). Le kaki (à deux) lit l'objectif inverse, mais `juger` ne juge toujours que NOUS.
+- `progressionMission(B, camp)` et `progressionSecondaire(B, s)` : fonctions pures (p 0..1 + phrase) lues par la modale ; même seuils que `juger` (`R.mission.priseMin`, `joursDeTenue`). À deux (v0.115.0), la mission est le duel aux points (`jugerDuel`, `scoreDuel`, `etat.pointsPrise`, `etat.anticipee`) : `juger` juge les deux camps, voir `reseau.md`. Hors du jeu à deux, `juger` ne juge que NOUS.
 - **Mérite et Mémorial (Jérôme, v0.99.4)** : le bordereau de fin s'appelle « Mérite » (`bordereau(B)`, barème dans `data/missions.js` : mission, secondaires, pertes contenues, régiments frais, jours d'avance). Le mérite d'une bataille est versé une fois (`etat.memorialVerse`) dans `prefs.memorial` ; la bataille suivante démarre avec `floor(mérite × taux)` points de dotation (plafond `memorial.plafond`), dépensés. Pas en debug, pas à deux. Ne pas confondre avec la dotation (la monnaie de la bataille, `camp.js`).
 
 ## Les renforts et la déroute vers la caserne (Jérôme, lot D des retours du 30 octobre ; v0.101.0)

@@ -1,15 +1,15 @@
 // Le papier de la nuit (Jérôme, v0.13.0) : un état (choix des corvées, puis le bilan de l'aube), jamais une boîte de
 // dialogue : le champ reste là, on choisit des régiments (clic, cadre, T) et on leur donne une corvée, dite sur leur carte.
-import { BATIMENTS } from '../data/batiments.js?v=0.114.0';
-import { NOUS, aube, priseEnCours } from '../bataille.js?v=0.114.0';
-import { METEO } from '../data/meteo.js?v=0.114.0';
-import { CORVEES, CONTACT } from '../data/corvees.js?v=0.114.0';
-import { EQUIPEMENT } from '../data/batiments.js?v=0.114.0';
-import { campDe, niveauDe } from '../camp.js?v=0.114.0';
-import { refusCorvee, contactDe } from '../nuit.js?v=0.114.0';
-import { palmares, tableau } from './medailles.js?v=0.114.0';
-import { pluriel, numeroDe } from './lecture.js?v=0.114.0';
-import { lune, nomPhase, couvertureNuit, cielEnMots } from '../data/lune.js?v=0.114.0';
+import { BATIMENTS } from '../data/batiments.js?v=0.115.0';
+import { NOUS, aube, priseEnCours, scoreDuel } from '../bataille.js?v=0.115.0';
+import { METEO } from '../data/meteo.js?v=0.115.0';
+import { CORVEES, CONTACT } from '../data/corvees.js?v=0.115.0';
+import { EQUIPEMENT } from '../data/batiments.js?v=0.115.0';
+import { campDe, niveauDe } from '../camp.js?v=0.115.0';
+import { refusCorvee, contactDe } from '../nuit.js?v=0.115.0';
+import { palmares, tableau } from './medailles.js?v=0.115.0';
+import { pluriel, numeroDe } from './lecture.js?v=0.115.0';
+import { lune, nomPhase, couvertureNuit, cielEnMots } from '../data/lune.js?v=0.115.0';
 
 export const corveeDe = id => [...CORVEES, CONTACT].find(c => c.id === id)?.nom || '';
 export const corveeCourte = id => [...CORVEES, CONTACT].find(c => c.id === id)?.court || '';
@@ -90,6 +90,8 @@ export function creerNuit({ $, bataille, choisis, choisir = () => {}, pauser, re
       const { tenus: [t, tot], jours } = priseEnCours(bataille());
       $('nuit-lignes').textContent += jours ? ` Leur première ligne est tenue (${t} tronçons sur ${tot}) : encore un soir et la bataille est gagnée.` : ` Leur première ligne : ${t} tronçons sur ${tot} à nous ; il en faut 75 % pendant deux soirs de suite pour gagner avant le terme.`;
     }
+    // le duel du jeu à deux : les points de chaque camp au soir, et l'avance qui finit la bataille
+    if (e.mission === 'duel') { const [pb, pk] = scoreDuel(bataille()), [mp, ep] = moi() === NOUS ? [pb, pk] : [pk, pb]; $('nuit-lignes').textContent += ` Aux points : ${mp} pour vous, ${ep} en face.`; }
     $('nuit-medailles-corps').replaceChildren(...tableau(palmares(B, moi(), 'jour')));
     $('nuit-avions').textContent = avionsEnMots(e, moi());
     $('nuit-demain').textContent = `Demain : ${METEO[e.previsions[j - 1]]?.prevision || '—'}.`;

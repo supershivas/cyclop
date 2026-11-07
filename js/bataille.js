@@ -14,38 +14,39 @@
    La sauvegarde (photo) garde la graine, la liste compacte des impacts, l'état
    de la foule et les petites couches de logique ; jamais le relief : il se
    rejoue depuis la graine et les impacts (rejouerTerrain). */
-import { createRng, hash2 } from './lib/rng.js?v=0.114.0';
-import { impact, hydroLignes, etat as etatCase, vitesseEtat, vitesseCase, ETAT } from './terrain.js?v=0.114.0';
-import { creerArmee, ajouterSoldat, construireGrille, pasArmee, tuerDans, effrayer, compacter, photoArmee, restaurerArmee, b64, deB64, DENSITE, place, poserCaracs, lireCaracs, abimerCaracs, gagner, CARACS } from './army.js?v=0.114.0';
-import { ligneSous, solidite, y0En, arcMax } from './tranchees.js?v=0.114.0';
-import { terrainDuSecteur } from './secteur-terrain.js?v=0.114.0';
-import { detruirePont, reconstruirePont, pontEn } from './eaux.js?v=0.114.0';
-import { MISSIONS_SECONDAIRES as MS } from './data/missions.js?v=0.114.0';
-import { PONT_COUPE } from './data/ponts.js?v=0.114.0';
-import { calculerCouts, creerCacheChamps, dimensionsCouts, BLOC } from './champs.js?v=0.114.0';
-import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.114.0';
-import { preparerAleatoire, ID_ALEATOIRE } from './generateur.js?v=0.114.0';
-import { AVION, MITRAILLAGE } from './data/mitraillage.js?v=0.114.0';
-import { refusAvion, lancerAvion, avancerAvions, flotteDeDepart, reparerAvions } from './avions.js?v=0.114.0';
-import { CHAR, CHAR_RECHARGE, CHAR_SORTIE } from './data/chars.js?v=0.114.0';
-import { GENIE, GENIE_DATA } from './data/genie.js?v=0.114.0';
-import { filDeDepart, degatsFil } from './fil.js?v=0.114.0';
-import { creerNids, avancerNids, degatsNids, reparerNid, aubeNids } from './nids.js?v=0.114.0';
-import { TOITS, NIDS } from './data/nids.js?v=0.114.0';
-import { BONUS, chevronsDe } from './data/experience.js?v=0.114.0';
+import { createRng, hash2 } from './lib/rng.js?v=0.115.0';
+import { impact, hydroLignes, etat as etatCase, vitesseEtat, vitesseCase, ETAT } from './terrain.js?v=0.115.0';
+import { creerArmee, ajouterSoldat, construireGrille, pasArmee, tuerDans, effrayer, compacter, photoArmee, restaurerArmee, b64, deB64, DENSITE, place, poserCaracs, lireCaracs, abimerCaracs, gagner, CARACS } from './army.js?v=0.115.0';
+import { ligneSous, solidite, y0En, arcMax } from './tranchees.js?v=0.115.0';
+import { terrainDuSecteur } from './secteur-terrain.js?v=0.115.0';
+import { detruirePont, reconstruirePont, pontEn } from './eaux.js?v=0.115.0';
+import { MISSIONS_SECONDAIRES as MS } from './data/missions.js?v=0.115.0';
+import { PONT_COUPE } from './data/ponts.js?v=0.115.0';
+import { calculerCouts, creerCacheChamps, dimensionsCouts, BLOC } from './champs.js?v=0.115.0';
+import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.115.0';
+import { preparerAleatoire, ID_ALEATOIRE } from './generateur.js?v=0.115.0';
+import { AVION, MITRAILLAGE } from './data/mitraillage.js?v=0.115.0';
+import { refusAvion, lancerAvion, avancerAvions, flotteDeDepart, reparerAvions } from './avions.js?v=0.115.0';
+import { CHAR, CHAR_RECHARGE, CHAR_SORTIE } from './data/chars.js?v=0.115.0';
+import { GENIE, GENIE_DATA } from './data/genie.js?v=0.115.0';
+import { filDeDepart, degatsFil } from './fil.js?v=0.115.0';
+import { creerNids, avancerNids, degatsNids, reparerNid, aubeNids } from './nids.js?v=0.115.0';
+import { TOITS, NIDS } from './data/nids.js?v=0.115.0';
+import { BONUS, chevronsDe } from './data/experience.js?v=0.115.0';
 const resiste = reg => 1 - BONUS.regiment.moral * (reg.chev || 0);      // les chevrons d'un régiment adoucissent ses pertes de moral (lot E)
-import { refusGenie, lancerGenie, avancerGenies, degatsGenies, sectionsDeDepart } from './genie.js?v=0.114.0';
-import { refusChar, lancerChar, degatsChars, avancerChars } from './chars.js?v=0.114.0';
-import { METEO, SAISONS, SAISON_DEFAUT, PREVISION_JUSTE, temperature, vent } from './data/meteo.js?v=0.114.0';
-import { SECTEURS } from './data/secteur.js?v=0.114.0';
-import { REGIMENTS, REGIMENTS_GRANDS } from './data/lexique.js?v=0.114.0';
-import { STANCES, STANCE_DEFAUT } from './data/stances.js?v=0.114.0';
-import { DIFFICULTES, DIFFICULTE_DEFAUT } from './data/difficulte.js?v=0.114.0';
-import { grade, departCaracs, caracEnMots } from './identite.js?v=0.114.0';
-import { corvees, creerRegiment, prendreReserve } from './nuit.js?v=0.114.0';
-import { RENFORTS } from './data/renforts.js?v=0.114.0';
-import { EQUIPEMENTS } from './data/batiments.js?v=0.114.0';
-import { campDeDepart, dotationAube, refusOrdre, refusNid, appliquerDepart, modif, rechargeDe, sortieChars, sortieCaserne, emplacementCamp } from './camp.js?v=0.114.0';
+import { refusGenie, lancerGenie, avancerGenies, degatsGenies, sectionsDeDepart } from './genie.js?v=0.115.0';
+import { refusChar, lancerChar, degatsChars, avancerChars } from './chars.js?v=0.115.0';
+import { METEO, SAISONS, SAISON_DEFAUT, PREVISION_JUSTE, temperature, vent } from './data/meteo.js?v=0.115.0';
+import { SECTEURS } from './data/secteur.js?v=0.115.0';
+import { REGIMENTS, REGIMENTS_GRANDS } from './data/lexique.js?v=0.115.0';
+import { STANCES, STANCE_DEFAUT } from './data/stances.js?v=0.115.0';
+import { DIFFICULTES, DIFFICULTE_DEFAUT } from './data/difficulte.js?v=0.115.0';
+import { DUEL } from './data/deux.js?v=0.115.0';
+import { grade, departCaracs, caracEnMots } from './identite.js?v=0.115.0';
+import { corvees, creerRegiment, prendreReserve } from './nuit.js?v=0.115.0';
+import { RENFORTS } from './data/renforts.js?v=0.115.0';
+import { EQUIPEMENTS } from './data/batiments.js?v=0.115.0';
+import { campDeDepart, dotationAube, refusOrdre, refusNid, appliquerDepart, modif, rechargeDe, sortieChars, sortieCaserne, emplacementCamp } from './camp.js?v=0.115.0';
 
 export const PAS = 1 / 30;                 // s de jeu par pas
 export const NOUS = 0, EUX = 1;
@@ -92,21 +93,21 @@ export function nouvelleBataille(graine, R, opts = {}) {
   const idSecteur = opts.secteur || 'essai';
   if (idSecteur === ID_ALEATOIRE) preparerAleatoire(graine);       // la carte aléatoire est tirée de la graine de la bataille (v0.49.0)
   const S = SECTEURS[idSecteur];
-  const parCamp = opts.soldats || S.soldats;
+  const parCamp = opts.soldats || Math.round(S.soldats * (opts.effectifsMult ?? 1));      // (effectifsMult : le jeu à deux)
   const niveau = DIFFICULTES[opts.difficulte] ?? DIFFICULTES[DIFFICULTE_DEFAUT];
   const parCampEux = opts.soldatsEux || (niveau.forces === 1 ? parCamp : Math.round(parCamp / niveau.forces));
   const rng = createRng(graine);
   const J = typeof S.jours === 'number' ? { min: S.jours, max: S.jours } : S.jours;
   const jours = (S.joursFixes ? 0 : opts.jours) || J.min + Math.floor(hash2(graine | 0, 41, 7) * (J.max - J.min + 1));
-  const mission = opts.mission || (S.missions ? S.missions[Math.floor(hash2(graine | 0, 43, 7) * S.missions.length)] : null);
+  const mission = opts.mission || (opts.deux ? 'duel' : S.missions ? S.missions[Math.floor(hash2(graine | 0, 43, 7) * S.missions.length)] : null);
   const saison = opts.saison && SAISONS[opts.saison] ? opts.saison : S.saison;
   const { chaine, previsions } = chaineMeteo(rng.fork('meteo'), jours, saison ? (SAISONS[saison]?.pluieAuMoins ?? S.pluieAuMoins) : S.pluieAuMoins, saison);
   const etat = {
     v: VERSION, graine, graineIdentite: opts.graineIdentite ?? graine, campagne: opts.campagne ?? null, secteur: idSecteur, parCamp, parCampEux,
-    secondaires: tirerSecondaires(graine, S.reserves ?? 0),   // les missions secondaires tirées à la graine
+    secondaires: opts.deux ? [] : tirerSecondaires(graine, S.reserves ?? 0),   // les missions secondaires tirées à la graine
     mission, issue: null,               // la mission (tenir, prendre, contre) et, à la fin, ce qu'il en est
     contre: mission === 'contre' && S.contre ? { ...S.contre, ks: [] } : null,   // la contre-attaque éclair (v0.108.0) : où notre 1re ligne est tombée au départ (x0, x1 du secteur) et les tronçons perdus (`ks`, rempli au départ)
-    reserves: [S.reserves ?? 0, S.reserves ?? 0],   // régiments frais en réserve, par camp (la relève, le déploiement)
+    reserves: [opts.reserves ?? S.reserves ?? 0, opts.reserves ?? S.reserves ?? 0],   // régiments frais en réserve, par camp (la relève, le déploiement)
     ralliees: [[], []],                 // les unités de fuyards ralliés à la caserne, prêtes à être déployées : { n, exp, moral } (lot D)
     arrives: [{ n: 0, exp: 0 }, { n: 0, exp: 0 }],   // les fuyards entrés à la caserne depuis la dernière aube : de quoi former une unité au matin
     camp: campDeDepart({ bride: !!opts.camp, depart: opts.campDepart ?? null }),               // la dotation de l'état-major et les bâtiments de notre camp (js/camp.js, v0.86.0)
@@ -136,6 +137,7 @@ export function nouvelleBataille(graine, R, opts = {}) {
     nuits: [],                  // ce que chaque nuit a vu : { jour, choix, bilan }
     grades: {},                 // les promus : { numéro: [rang, jour] } (le grade de départ vient du rang de création)
     batteries: Object.fromEntries(NOMS_CALIBRES.map(c => [c, 0])),   // s de jeu (depuis l'aube du jour 1) où la batterie est prête
+    anticipee: !!opts.anticipee, pointsPrise: [0, 0],   // le duel du jeu à deux (v0.115.0) : la victoire anticipée est-elle permise, les points des tranchées prises, soir après soir
     deux: !!opts.deux,                  // un second joueur commande en face (v0.30.0) : l'IA d'en face se tait, ses batteries rechargent comme les nôtres
     batteriesEux: Object.fromEntries(NOMS_CALIBRES.map(c => [c, 0])),
     barrages: [],
@@ -152,8 +154,9 @@ export function nouvelleBataille(graine, R, opts = {}) {
     temps: 0,                           // s de jeu écoulées, nuits non comptées
     rng: 0,
   };
+  if (opts.deux && opts.dotationMult) { etat.camp.dotation *= opts.dotationMult; etat.camp.mult = opts.dotationMult; }
   if (opts.camp && opts.dotationBonus) etat.camp.dotation += opts.dotationBonus;      // le Mémorial (v0.99.4)
-  if (opts.camp) { etat.campEux = campDeDepart({ bride: true, mult: niveau.dotation ?? 1 }); appliquerDepart(etat, NOUS); appliquerDepart(etat, EUX); }      // le camp d'en face : le même départ, sa dotation selon la difficulté (v0.92.0)
+  if (opts.camp) { etat.campEux = campDeDepart({ bride: true, mult: opts.deux ? (opts.dotationMult ?? 1) : (niveau.dotation ?? 1) }); if (opts.deux && opts.dotationMult) etat.campEux.dotation *= opts.dotationMult; appliquerDepart(etat, NOUS); appliquerDepart(etat, EUX); }      // le camp d'en face : le même départ, sa dotation selon la difficulté (v0.92.0)
   if (opts.camp) { /* (voir plus haut) */ }      // les effectifs de départ de la partie bridée : ceux des bâtiments de départ (v0.88.0)
   const B = monter(etat, R);
   etat.troncons = B.troncons.map(t => t.camp);
@@ -705,8 +708,17 @@ export function avancer(B) {
   if (etat.tickJour >= ticksParJour(R)) {
     for (let p = 0; p < 12; p++) hydroLignes(T, 0, T.H, METEO[etat.meteo[etat.jour - 1]], R);
     majSecondaires(B);
+    if (etat.mission === 'duel') pointerSoir(B);
     etat.phase = etat.jour >= etat.meteo.length ? 'fin' : 'nuit';
     if (etat.phase === 'fin') { etat.issue = juger(B, false); marquerSecondaires(B); }
+    // la victoire anticipée du duel (v0.115.0) : un camp qui a pris assez d'avance aux points au soir gagne
+    else if (etat.mission === 'duel') {
+      const [a, b] = scoreDuel(B);
+      if (etat.anticipee && Math.abs(a - b) >= DUEL.ecartParJour * etat.meteo.length) {
+        etat.phase = 'fin';
+        etat.issue = { ...jugerDuel(B, false), texte: `${a > b ? 'Le bleu' : 'Le kaki'} a pris trop d'avance : ${a} points contre ${b}. La bataille est gagnée avant son terme.` };
+      }
+    }
     // la victoire anticipée (v0.77.0) : prendre la 1re ligne d'en face et la tenir `R.mission.joursDeTenue` soirs de suite
     else if (etat.mission === 'prendre') {
       const [tenus, total] = premiereLigne(B);
@@ -725,6 +737,34 @@ export function avancer(B) {
   return B.evenements;
 }
 
+
+/* Le duel du jeu à deux (v0.115.0) : les points de chaque camp = ceux des tranchées d'en face qu'il tient chaque soir (`DUEL.prise` au plus, au prorata des tronçons)
+   + un point par `DUEL.pertesPour` hommes d'en face tombés. Rend [bleu, kaki]. */
+function tronconsAdverses(B, camp) {
+  const out = [0, 0];
+  B.troncons.forEach((tr, k) => { if (B.lignes[tr.ligne].camp !== camp) { out[1]++; if (B.etat.troncons[k] === camp) out[0]++; } });
+  return out;
+}
+function pointerSoir(B) {
+  for (const c of [NOUS, EUX]) { const [t, tot] = tronconsAdverses(B, c); B.etat.pointsPrise[c] += tot ? Math.round(DUEL.prise * t / tot) : 0; }
+}
+export function scoreDuel(B) {
+  const { pointsPrise, pertes } = B.etat;
+  return [pointsPrise[NOUS] + Math.floor(pertes[EUX] / DUEL.pertesPour), pointsPrise[EUX] + Math.floor(pertes[NOUS] / DUEL.pertesPour)];
+}
+/* Le duel jugé : un camp s'effondre (ses lignes sous `DUEL.effondrement`, ou plus un homme) et perd, sinon, au terme, le meilleur score gagne ; égalité : nul.
+   Rend { reussie (le bleu gagne), gagnant (0, 1 ou null), nul, texte } ou, en cours de journée, null tant que personne ne s'effondre. */
+function jugerDuel(B, enCours) {
+  const { etat } = B, [a, b] = scoreDuel(B);
+  const tombe = c => {
+    const mes = [0, 0]; B.troncons.forEach((tr, k) => { if (B.lignes[tr.ligne].camp === c) { mes[1]++; if (etat.troncons[k] === c) mes[0]++; } });
+    return !etat.regiments.some(r => r.camp === c && r.effectif > 0) || (mes[1] > 0 && mes[0] < mes[1] * DUEL.effondrement);
+  };
+  const tN = tombe(NOUS), tE = tombe(EUX), fin = (gagnant, texte) => ({ reussie: gagnant === NOUS, gagnant, nul: gagnant === null, texte });
+  if (tN || tE) return fin(tN && tE ? null : tN ? EUX : NOUS, tN && tE ? 'Les deux secteurs sont tombés : match nul.' : `Le secteur ${tN ? 'bleu' : 'kaki'} est tombé.`);
+  if (enCours) return null;
+  return fin(a === b ? null : a > b ? NOUS : EUX, a === b ? `Égalité : ${a} points partout.` : `Aux points : ${a} contre ${b}.`);
+}
 
 /* Les missions secondaires : tirées à la graine (jamais plus de `secondairesParPartie`, sans doublon), `depart` = la réserve au début. */
 function tirerSecondaires(graine, reserve) {
@@ -756,6 +796,7 @@ export function progressionSecondaire(B, s) {
 export const MEMORIAL = MS.memorial;
 export function bordereau(B) {
   const { etat } = B, lignes = [];
+  if (etat.deux) return { lignes, total: 0 };      // (le Mémorial est celui du jeu seul)
   const bm = MS.bareme, frais = etat.reserves[NOUS], avance = etat.meteo.length - etat.jour;
   if (etat.issue?.reussie) lignes.push(['Mission remplie', MS.pointsMission]);
   if (etat.issue?.reussie && etat.pertes[NOUS] < etat.pertes[EUX]) lignes.push(['Pertes contenues', bm.pertesContenues]);
@@ -793,6 +834,10 @@ export function progressionMission(B, camp = NOUS) {
     const a = etat.contre.ks.length, r = etat.contre.ks.filter(k => etat.troncons[k] === NOUS).length;
     return { objectif: camp === NOUS ? 'prendre' : 'tenir', p: a ? r / a : 0, label: `${r} / ${a}`, texte: camp === NOUS ? `${r} tronçons repris sur ${a}, avant la nuit` : `${a - r} tronçons gardés sur ${a}` };
   }
+  if (etat.mission === 'duel') {
+    const [a, b] = scoreDuel(B), ecart = DUEL.ecartParJour * n, mien = camp === NOUS ? a - b : b - a;
+    return { objectif: 'duel', p: Math.max(0, Math.min(1, 0.5 + mien / (2 * ecart))), label: `${camp === NOUS ? a : b} / ${camp === NOUS ? b : a}`, texte: `${camp === NOUS ? a : b} points contre ${camp === NOUS ? b : a}${etat.anticipee ? ` : ${ecart} points d'avance finissent la bataille` : ''}` };
+  }
   const objectif = (camp === NOUS) === (etat.mission === 'tenir') ? 'tenir' : 'prendre';
   if (objectif === 'tenir') return { objectif, p: n ? jours / n : 0, label: `${jours} / ${n}`, texte: `${jours} jours tenus sur ${n}` };
   if (camp !== NOUS) return { objectif, p: Math.min(1, jours / n), label: `${jours} / ${n}`, texte: `${jours} jours écoulés sur ${n} : leur ligne doit tomber` };
@@ -814,6 +859,7 @@ export const priseEnCours = B => ({ tenus: premiereLigne(B), jours: B.etat.prise
 function juger(B, enCours) {
   const { etat } = B;
   if (!etat.mission) return enCours ? null : { reussie: null, texte: '' };
+  if (etat.mission === 'duel') return jugerDuel(B, enCours);
   const nos = [0, 0], leur1 = premiereLigne(B);                 // [tenus, en tout]
   B.troncons.forEach((tr, k) => { if (B.lignes[tr.ligne].camp === NOUS) { nos[1]++; if (etat.troncons[k] === NOUS) nos[0]++; } });
   const vivants = etat.regiments.some(r => r.camp === NOUS && r.effectif > 0);
@@ -830,6 +876,7 @@ function juger(B, enCours) {
   return { reussie: ok, texte: ok ? `La première ligne d'en face est prise : ${leur1[0]} tronçons sur ${leur1[1]}.` : `La première ligne d'en face n'est pas prise : ${leur1[0]} tronçons sur ${leur1[1]}.` };
 }
 export const MISSIONS = {
+  duel: 'Duel : tenir plus de tranchées d\'en face et leur coûter plus d\'hommes que lui. Le meilleur score au dernier soir l\'emporte ; un camp qui s\'effondre, ou qui prend trop d\'avance, finit la bataille avant.',
   tenir: 'Tenir le secteur : à la fin, nos lignes doivent être à nous.',
   contre: 'Contre-attaque : un morceau de notre première ligne vient de tomber. Le reprendre avant la nuit, avant que leurs renforts n\'arrivent.',
   prendre: 'Prendre la première ligne d\'en face et la tenir deux soirs de suite : la bataille est gagnée avant son terme ; sinon, la tenir jusqu\'à la fin.',
@@ -1458,7 +1505,7 @@ export function* etapesRestaurer(p, R) {
   for (const reg of etat.regiments) { reg.moral ??= R.moral.depart; reg.deroute ??= false; reg.vivres ??= R.nuit.vivres; reg.stance ??= STANCE_DEFAUT; }   // (avant la v0.5.0 : pas de moral ; avant la v0.36.0 : pas de posture)
   etat.chars ??= []; etat.mitraillages ??= []; etat.pontsRompus ??= []; etat.genies ??= []; etat.pontsRepares ??= []; etat.sapeurs ??= sectionsDeDepart(); etat.nids ??= [];   // (avant la v0.46.0 : pas d'avions)
   etat.difficulte ??= DIFFICULTE_DEFAUT; etat.iaStance ??= '';
-  etat.deux ??= false; etat.batteriesEux ??= Object.fromEntries(NOMS_CALIBRES.map(c => [c, 0]));
+  etat.deux ??= false; etat.anticipee ??= false; etat.pointsPrise ??= [0, 0]; etat.batteriesEux ??= Object.fromEntries(NOMS_CALIBRES.map(c => [c, 0]));
   etat.troncons ??= []; etat.melee ??= etat.troncons.map(() => 0); etat.prises ??= etat.pertesJour.map(() => [0, 0]);   // (avant la v0.4.0 : pas de tranchées)
   yield [0.1, 'Le terrain'];
   const B = monter(etat, R);
