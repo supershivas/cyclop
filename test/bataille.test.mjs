@@ -1333,6 +1333,9 @@ test('un poste à nous tourne son cône ; un ordre impossible se refuse à voix 
   assert.match(refusOrienterNid(B, n.id, 0, n.x, n.y + 2), /Trop près/);
   assert.match(refusOrienterNid(B, n.id, 0, n.x + 50, n.y - n.face * 5), /de travers/);
   assert.match(refusOrienterNid(B, n.id, 0, -50, n.y + n.face * 20), /Hors du secteur/);
+  { const A = B.armee; for (let i = 0; i < A.n; i++) if (A.camp[i] === 0 && !A.mort[i]) { A.x[i] += 400; }       // personne près du poste : il est inactif
+    assert.match(refusOrienterNid(B, n.id, 0, n.x + 30, n.y + n.face * 30), /Aucun de nos hommes/, 'sans servant, le poste est inactif');
+    for (let i = 0; i < A.n; i++) if (A.camp[i] === 0 && !A.mort[i]) { A.x[i] -= 400; } }
   const avant = empreinte(B);
   assert.equal(orienterNid(B, n.id, 0, n.x + 30, n.y + n.face * 30).ok, true);
   assert.notEqual(empreinte(B), avant);
@@ -1525,3 +1528,55 @@ test('la contre-attaque éclair dure un jour, quelle que soit la durée demandé
   assert.equal(nouvelleBataille(3, R, { secteur: 'saillant', soldats: 400, jours: 6 }).etat.meteo.length, 1);
   assert.equal(nouvelleBataille(3, R, { secteur: 'essai', soldats: 200, jours: 6 }).etat.meteo.length, 6);
 });
+
+// ─── v0.115.0 : le génie remet un engin en état (un par jour), les chars et les postes comptent leurs victimes ───
+import { REPARE_AVION, reparationFaite } from '../js/genie.js';
+import { refusOrdreChar } from '../js/chars.js';
+import { pvAvion } from '../js/camp.js';
+group('v0.115.0 — génie, chars et postes');
+test('le génie remet un char abîmé en état, une seule fois par jour', () => {
+  const B = petite(), e = B.etat, Z = zone(B);
+  e.chars.push({ id: 0, camp: 0, modele: 'schneider', x: Z.x0 + 100, y: Z.y0 + 100, ar: undefined, dx0: Z.x0 + 100, tx: Z.x0 + 100, ty: Z.y0 + 100, chemin: null, k: 0, pv: 1000, pvMax: 4000, exp: 0, tues: 0, repar: 0, canonT: 0, cible: null, vise: null, etat: 'arrive', v: 0, hx: 0, hy: -1, cap: -1.57 });
+  e.chars.push({ id: 1, camp: 0, modele: 'schneider', x: Z.x0 + 140, y: Z.y0 + 100, dx0: Z.x0 + 140, tx: Z.x0 + 140, ty: Z.y0 + 100, chemin: null, k: 0, pv: 1000, pvMax: 4000, exp: 0, tues: 0, repar: 0, canonT: 0, cible: null, vise: null, etat: 'arrive', v: 0, hx: 0, hy: -1, cap: -1.57 });
+  const r = ordonnerBarrage(B, 'genie', Z.x0 + 100, Z.y0 + 100, 0);
+  assert.ok(r.ok, JSON.stringify(r));
+  assert.equal(reparationFaite(e, 0), true);
+  e.batteries.genie = 0;
+  assert.match(ordonnerBarrage(B, 'genie', Z.x0 + 140, Z.y0 + 100, 0).refus, /par jour/, 'une seule réparation par jour');
+  assert.match(ordonnerBarrage(B, 'genie', Z.x0 + 100, Z.y0 + 100, 0, REPARE_AVION, 0).refus, /par jour/);
+  assert.match(refusOrdreChar(B, 0, 'marche', 220, 150, 0), /répare/, 'il ne repart pas pendant les travaux');
+  for (let n = 0; n < 60000 && e.genies[0].etat !== 'travaille' && e.phase === 'jour'; n++) avancer(B);
+  assert.equal(e.genies[0].etat, 'travaille', 'la section est arrivée'); e.genies[0].travail = 0.9999;
+  avancer(B); avancer(B);
+  assert.equal(e.genies.length, 0, 'la section est rentrée'); assert.equal(e.chars[0].pv, 4000); assert.equal(e.chars[0].repar, 1); assert.equal(e.chars[1].pv, 1000);
+  // le lendemain : permis de nouveau
+  e.jour++; e.batteries.genie = 0;
+  assert.ok(!reparationFaite(e, 0));
+});
+test('le génie remet un avion abîmé en état (par l\'aérodrome), pas un avion intact', () => {
+  const B = petite(), e = B.etat, Z = zone(B), max = pvAvion(e, 0);
+  e.batteries.genie = 0;
+  assert.match(ordonnerBarrage(B, 'genie', Z.x0 + 100, Z.y0 + 100, 0, REPARE_AVION, 0).refus, /Aucun avion endommagé/);
+  e.avions[0][1] = Math.max(1, Math.floor(max / 3));
+  const r = ordonnerBarrage(B, 'genie', Z.x0 + 100, Z.y0 + 100, 0, REPARE_AVION, 0);
+  assert.ok(r.ok, JSON.stringify(r));
+  assert.equal(e.genies[0].avion, 1);
+  for (let n = 0; n < 80000 && e.genies[0].etat !== 'travaille' && e.phase === 'jour'; n++) avancer(B);
+  assert.equal(e.genies[0].etat, 'travaille'); e.genies[0].travail = 0.9999;
+  avancer(B); avancer(B);
+  assert.equal(e.genies.length, 0); assert.equal(e.avions[0][1], max); assert.equal(e.reparesAvions[0], 1);
+});
+test('un poste sert au régiment qui le manœuvre : ses victimes lui sont attribuées', () => {
+  const B = petite(), n = B.etat.nids.find(k => k.camp === 0), A = B.armee;
+  const i = A.n - 1; A.camp[i] = 1; A.mort[i] = 0; A.blessure[i] = 0; A.x[i] = n.x; A.y[i] = n.y + n.face * 30;
+  const j = [...Array(A.n).keys()].find(k => A.camp[k] === 0 && !A.mort[k]);
+  A.x[j] = n.x; A.y[j] = n.y; A.blessure[j] = 0;
+  const reg = A.reg[j], avant = B.etat.regiments[reg].tues || 0;
+  for (let k = 0; k < 600 && !A.mort[i]; k++) avancer(B);
+  assert.equal(n.servi, reg, 'le régiment du servant');
+  if (A.mort[i]) { assert.ok(n.tues >= 1); assert.equal(B.etat.regiments[reg].tues, avant + n.tues); assert.equal(n.tuesReg[reg], n.tues); }
+  // le servant s'en va : le poste est inactif
+  for (let k = 0; k < A.n; k++) if (A.camp[k] === 0) A.x[k] += 400;
+  assert.ok(raisonInactif(B, n), 'plus personne : inactif');
+});
+import { raisonInactif } from '../js/nids.js';

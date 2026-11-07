@@ -781,3 +781,13 @@ h2 { font-weight: normal; letter-spacing: var(--titre-lettres); }
 @keyframes bd-ecrit { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
 @keyframes bd-tampon { from { opacity: 0; transform: rotate(-8deg) scale(1.8); } to { opacity: 1; transform: rotate(-8deg) scale(1); } }
 @media (prefers-reduced-motion: reduce) { .bd-ligne, .bd-tampon { animation-duration: 1ms; animation-delay: 0s !important; } }
+
+/* Les engins d'en face (Jérôme, v0.115.0) : un char ou un poste de mitrailleuse ennemi porte une étiquette (son état, sa barre de vie), au liseré de leur couleur ; on ne la clique pas */
+.char-etiq.ennemi { pointer-events: none; cursor: default; min-width: 0; border-top-color: var(--jeu-eux); }
+.char-etiq.ennemi .pv i { background: var(--jeu-eux); }
+.char-etiq.ennemi.detruit { --pap: var(--jeu-fond); --enc: var(--jeu-brume); border-top-style: dashed; }
+.char-etiq.ennemi.detruit .pv i { background: transparent; }
+/* La fenêtre d'un poste sans servant est inactive : grisée, ses ordres refusés */
+.char-fiche.inactif { opacity: 0.72; }
+.char-fiche [aria-disabled="true"] { opacity: 0.5; cursor: not-allowed; }
+.char-fiche .compte b { font-weight: 700; }

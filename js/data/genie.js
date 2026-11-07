@@ -9,6 +9,7 @@ export const GENIE_DATA = {
   vitesse: 1.6,       // m/s sur le terrain (des hommes chargés d'outils et de madriers)
   route: 4,           // m/s jusqu'à l'arrière de leur camp, sur la route
   rive: 1.5,          // m : à cette distance de la rive visée, ils commencent le travail
+  reparation: { char: 2.5, avion: 2 },   // h de jeu, avec la section au complet, pour remettre un char ou un avion en état (v0.115.0) ; une seule réparation de ce genre par jour et par camp
   zone: 0.8,          // × le rayon du calibre : la zone où un obus les touche
   obus: { '75': 0.5, '155': 0.8, '220': 1 },    // × la zone du calibre : jusqu'où un homme tombe
 };

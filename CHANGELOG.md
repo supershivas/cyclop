@@ -1,5 +1,10 @@
 # Journal des versions
 
+## 0.115.0 — 2026-11-07
+- Chars : la fiche dit leurs victimes et leurs réparations ; le parc mène la vue au char et ouvre sa fiche ; les chars et mitrailleuses d'en face ont une étiquette (état, barre de vie)
+- Mitrailleuses : sans servant, la fenêtre du poste est inactive ; ce qu'il abat est attribué au régiment qui le sert
+- Génie : il remet en état un char (clic ou fiche) ou un avion (aérodrome) abîmé, une réparation par jour
+
 ## 0.114.1 — 2026-11-07
 - Tout dézoomé, tourner ou incliner la caméra ne déplace plus le point visé : le « mur » qui le poussait vers le fond de la carte a disparu
 
