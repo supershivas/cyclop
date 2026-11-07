@@ -8,7 +8,8 @@ import { identite, caracteristiques } from './identite.js?v=0.113.0';
 import { aspect } from './aspect-soldat.js?v=0.113.0';
 import { creerSoldatArticule, poserLibre } from './rendu/soldat-articule.js?v=0.113.0';
 import { CHAMPS, NOMS_CHAMPS, COURBES } from './data/poses-soldat.js?v=0.113.0';
-import { poseNeutre, poseDe, miroir, borner, echantillon, marcheEnImages } from './pose-soldat.js?v=0.113.0';
+import { poseNeutre, poseDe, miroir, borner, echantillon, marcheEnImages, articulations } from './pose-soldat.js?v=0.113.0';
+import { creerPoignees, OUTILS } from './atelier-poignees.js?v=0.113.0';
 
 const $ = id => document.getElementById(id);
 const el = (tag, props = {}, ...kids) => { const e = Object.assign(document.createElement(tag), props); e.append(...kids); return e; };
@@ -32,7 +33,7 @@ const DU_JEU = [
 ];
 
 // ─── l'état ───
-const S = { anim: marcheEnImages(1, 0.8), pose: poseNeutre(), mode: 'lecture', sel: -1, t: 0, joue: true, vitesse: 1, yaw: 0.6, tangage: 0.2, ppm: 48, auto: false, id: 1234, camp: 0, niveau: 'fin' };
+const S = { anim: marcheEnImages(1, 0.8), pose: poseNeutre(), mode: 'lecture', sel: -1, t: 0, joue: true, vitesse: 1, yaw: 0.6, tangage: 0.2, ppm: 48, auto: false, id: 1234, camp: 0, niveau: 'fin', echelle: { taille: 1, epaules: 1, ventre: 1 } };
 S.anim.nom = 'marche';
 function charger() {
   try {
@@ -76,13 +77,25 @@ function monterPanneau() {
     for (const [c, nom] of champs) {
       const [lo, hi] = CHAMPS[c];
       const sortie = el('output'), curseur = el('input', { type: 'range', min: lo, max: hi, step: c === 'couche' ? 1 : 0.01 });
-      curseur.oninput = () => { S.mode = 'edit'; S.joue = false; S.pose[c] = +curseur.value; if (S.sel >= 0) S.anim.images[S.sel].pose[c] = +curseur.value; sortie.textContent = (+curseur.value).toFixed(2); garder(); majBoutons(); };
+      curseur.oninput = () => reglerChamp(c, +curseur.value);
       curseur.ondblclick = () => { curseur.value = poseNeutre()[c]; curseur.oninput(); };
       sliders[c] = { curseur, sortie };
       p.append(el('label', { className: 'aa-champ' }, el('span', { textContent: nom }), curseur, sortie));
     }
   }
   p.append(el('p', { className: 'aa-note', textContent: 'Double-clic sur un curseur : le remettre à zéro. Angles en radians (x : fléchir ; « tour » : autour de la verticale).' }));
+}
+// passe en édition : si on lisait, la pose affichée à cet instant devient la pose à modifier (et l'image choisie est lâchée : on n'écrase pas une image clé par mégarde)
+function entrerEdition() {
+  if (S.mode === 'lecture') { S.pose = { ...echantillon(S.anim, S.t) }; S.mode = 'edit'; S.sel = -1; majBoutons(); }
+  S.joue = false;
+}
+// change un champ de la pose (un curseur, une poignée) ; l'image clé choisie le suit
+function reglerChamp(c, v) {
+  entrerEdition();
+  const [lo, hi] = CHAMPS[c]; v = Math.min(hi, Math.max(lo, v));
+  S.pose[c] = v; if (S.sel >= 0) S.anim.images[S.sel].pose[c] = v;
+  garder(); majCurseurs();
 }
 // remplace la pose courante (et celle de l'image choisie)
 function definir(pose) { S.mode = 'edit'; S.joue = false; S.pose = { ...pose }; if (S.sel >= 0) S.anim.images[S.sel].pose = { ...pose }; garder(); majBoutons(); }
@@ -95,7 +108,7 @@ function majCurseurs() {
 let piste, curseurT, boutonJouer, boutonBoucle, champDuree, champT, choixCourbe, champNom, avertir;
 function monterFrise() {
   const f = $('aa-frise');
-  boutonJouer = el('button', { textContent: '▶ Lire', onclick: () => { if (S.joue) S.joue = false; else { S.joue = true; S.mode = 'lecture'; if (!S.anim.boucle && S.t >= S.anim.duree) S.t = 0; } majBoutons(); } });
+  boutonJouer = el('button', { textContent: '▶ Lire', onclick: () => { if (S.joue) S.joue = false; else { S.joue = true; S.mode = 'lecture'; S.sel = -1; if (!S.anim.boucle && S.t >= S.anim.duree) S.t = 0; } majBoutons(); } });
   boutonBoucle = el('button', { textContent: 'Boucle', onclick: () => { S.anim.boucle = !S.anim.boucle; garder(); majBoutons(); } });
   const vit = el('select', { onchange: () => { S.vitesse = +vit.value; } }); for (const v of [0.1, 0.25, 0.5, 1, 2]) vit.append(el('option', { value: v, textContent: `×${v}`, selected: v === 1 }));
   champDuree = el('input', { type: 'number', min: 0.1, max: 20, step: 0.05, onchange: () => { S.anim.duree = Math.max(0.1, +champDuree.value || 1); garder(); majBoutons(); } });
@@ -161,7 +174,17 @@ async function demarrer() {
   const sol = new THREE.Mesh(new THREE.CircleGeometry(6, 48), new THREE.MeshBasicMaterial({ color: col('b') })); sol.rotation.x = -Math.PI / 2; sol.position.y = -0.002; scene.add(sol);
   const ombre = new THREE.Mesh(new THREE.CircleGeometry(0.42, 24), new THREE.MeshBasicMaterial({ color: col('t'), transparent: true, opacity: 0.55 })); ombre.rotation.x = -Math.PI / 2; ombre.scale.y = 0.7; ombre.position.y = 0.002; scene.add(ombre);
   let w = 0, h = 0, dernier = performance.now();
-  window.__atelier = { S, niveaux, jeu: null };       // (pour les scripts de test : `jeu` = { vit, tir, tapi, couche } fait dessiner la pose calculée du nuanceur à la place de la pose libre)
+  // les poignées 3D (js/atelier-poignees.js) : tourner, déplacer, échelle
+  const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+  const G = creerPoignees(THREE, { canvas, camera, ppm: () => S.ppm, lire: c => poseAffichee()[c], regler: reglerChamp,
+    echelleLire: cle => S.echelle[cle], echelleRegler: (cle, v) => { S.echelle[cle] = clamp(v, 0.7, 1.35); }, avant: entrerEdition, apres: () => majBoutons() });
+  const barre = el('div', { className: 'aa-outils' });
+  const boutonsOutils = OUTILS.map(([id, nom, touche]) => { const b = el('button', { textContent: `${nom} (${touche})`, title: `${nom} : touche ${touche}`, onclick: () => choisirOutil(id) }); barre.append(b); return [id, b]; });
+  barre.append(el('button', { textContent: 'Carrure ×1', title: 'Remet la carrure d\'origine (l\'échelle ne sert qu\'à l\'aperçu)', onclick: () => { S.echelle = { taille: 1, epaules: 1, ventre: 1 }; } }));
+  scene3.append(barre);
+  function choisirOutil(id) { G.outil = id; for (const [i, b] of boutonsOutils) b.setAttribute('aria-pressed', i === id); }
+  choisirOutil('tourner');
+  window.__atelier = { S, niveaux, jeu: null, G, camera };       // (pour les scripts de test : `jeu` = { vit, tir, tapi, couche } fait dessiner la pose calculée du nuanceur à la place de la pose libre)
   function image(now) {
     requestAnimationFrame(image);
     const dt = Math.min(0.1, (now - dernier) / 1000); dernier = now;
@@ -174,25 +197,36 @@ async function demarrer() {
     if (S.mode === 'lecture') majCurseurs();
     curseurT.style.left = `${100 * Math.min(1, S.t / S.anim.duree)}%`;
     const P = poseAffichee();
+    // la carrure de l'aperçu : celle de l'homme × l'échelle des poignées
+    const c0 = A.carrure, carrure = { ...c0, taille: c0.taille * S.echelle.taille, epaules: c0.epaules * S.echelle.epaules, ventre: c0.ventre * S.echelle.ventre };
+    const A2 = { ...A, carrure };
+    G.maj(articulations(P, carrure));
     for (const { niveau, so, lo } of niveaux) {
       const J = window.__atelier.jeu;
       poserLibre(so.materiel, J ? null : P);
-      lo.ecrire(0, { x: 0, y: 0, z: 0, camp: S.camp, vit: 0, tir: 0, tapi: 0, couche: 0, blessure: 0, cap: 0, temps: 0, aspect: A, ...(J ?? {}) }); lo.envoyer(1);
+      lo.ecrire(0, { x: 0, y: 0, z: 0, camp: S.camp, vit: 0, tir: 0, tapi: 0, couche: 0, blessure: 0, cap: 0, temps: 0, aspect: A2, ...(J ?? {}) }); lo.envoyer(1);
       lo.mesh.visible = niveau === S.niveau;
     }
     ombre.scale.set(P.couche > 0.5 ? 2 : 1, P.couche > 0.5 ? 0.55 : 0.7, 1);
     if (S.auto) S.yaw += dt * 0.5;
-    const cible = new THREE.Vector3(0, P.couche > 0.5 ? 0.2 : 0.88 * A.carrure.taille, 0), d = h / (2 * S.ppm * TAN15);
+    const cible = new THREE.Vector3(0, P.couche > 0.5 ? 0.2 : 0.88 * carrure.taille, 0), d = h / (2 * S.ppm * TAN15);
     camera.position.set(d * Math.sin(S.yaw) * Math.cos(S.tangage), cible.y + d * Math.sin(S.tangage), d * Math.cos(S.yaw) * Math.cos(S.tangage));
     camera.lookAt(cible); camera.near = Math.max(0.02, d * 0.1); camera.far = d + 30; camera.updateProjectionMatrix();
     renderer.render(scene, camera);
-    $('aa-legende').textContent = `${S.mode === 'edit' ? 'Édition' : 'Lecture'} · t = ${S.t.toFixed(2)} s · ${S.ppm} px/m · glisser : tourner, molette : zoomer`;
+    G.rendre(renderer);
+    const choix = G.sel ? ` · ${G.nom(G.sel)}` : '';
+    $('aa-legende').textContent = `${S.mode === 'edit' ? 'Édition' : 'Lecture'} · t = ${S.t.toFixed(2)} s${choix} · poignées : cliquer une articulation, tirer l\'anneau (Maj : par 15°) · glisser ailleurs : tourner la vue, molette : zoom`;
   }
   let glisse = null;
-  canvas.onpointerdown = e => { glisse = { x: e.clientX, y: e.clientY }; canvas.setPointerCapture(e.pointerId); S.auto = false; };
-  canvas.onpointermove = e => { if (!glisse) return; S.yaw -= (e.clientX - glisse.x) * 0.01; S.tangage = Math.max(-0.2, Math.min(1.45, S.tangage + (e.clientY - glisse.y) * 0.008)); glisse = { x: e.clientX, y: e.clientY }; };
-  canvas.onpointerup = canvas.onpointercancel = () => { glisse = null; };
+  canvas.onpointerdown = e => { canvas.setPointerCapture(e.pointerId); if (G.down(e)) return; glisse = { x: e.clientX, y: e.clientY }; S.auto = false; };
+  canvas.onpointermove = e => { if (G.actif) { G.move(e, e.shiftKey); return; } if (!glisse) { G.move(e); canvas.style.cursor = G.survol ? 'pointer' : 'grab'; return; } S.yaw -= (e.clientX - glisse.x) * 0.01; S.tangage = Math.max(-0.2, Math.min(1.45, S.tangage + (e.clientY - glisse.y) * 0.008)); glisse = { x: e.clientX, y: e.clientY }; };
+  canvas.onpointerup = canvas.onpointercancel = () => { G.up(); glisse = null; };
   canvas.onwheel = e => { e.preventDefault(); S.ppm = Math.max(8, Math.min(120, +(S.ppm * (e.deltaY < 0 ? 1.15 : 1 / 1.15)).toFixed(1))); };
+  document.addEventListener('keydown', e => {
+    if (/INPUT|SELECT|TEXTAREA/.test(document.activeElement?.tagName ?? '')) return;
+    const o = OUTILS.find(([, , t]) => t.toLowerCase() === e.key.toLowerCase()); if (o) choisirOutil(o[0]);
+    if (e.key === 'Escape') G.sel = null;
+  });
   document.addEventListener('keydown', e => { if (e.key === ' ' && !/INPUT|SELECT|BUTTON|TEXTAREA/.test(document.activeElement?.tagName ?? '')) { e.preventDefault(); boutonJouer.click(); } });
   requestAnimationFrame(image);
 }

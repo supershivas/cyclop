@@ -93,3 +93,38 @@ test('la marche en quatre images revient à son point de départ et reste près 
   const ecart = Math.max(...[0.1, 0.3, 0.5, 0.7].map(t => Math.abs(echantillon(m, t).hancheG - poseDe({ vit: 1, phase: t / 0.8 * 2 * Math.PI }).hancheG)));
   assert.ok(ecart < 0.2, `écart ${ecart}`);
 });
+
+group('poses — où sont les articulations');
+import { articulations } from '../js/pose-soldat.js';
+const pres = (a, b, e = 1e-6) => a.every((v, i) => Math.abs(v - b[i]) < e);
+test('debout : les pivots sont ceux du modèle (genou à 0,5 m, hanche à 0,9 m, épaule à 1,38 m)', () => {
+  const J = articulations(poseNeutre());
+  assert.ok(pres(J.genouG.pos, [-0.11, 0.5, 0]) && pres(J.genouD.pos, [0.11, 0.5, 0]));
+  assert.ok(pres(J.hancheG.pos, [-0.11, 0.9, 0]) && pres(J.epauleD.pos, [0.30, 1.38, 0]) && pres(J.chevilleD.pos, [0.11, 0.08, 0]));
+});
+test('la hanche fléchie de 90° : le genou part vers l\'avant (+z), à 0,4 m', () => {
+  const J = articulations({ ...poseNeutre(), hancheG: Math.PI / 2 });
+  assert.ok(pres(J.genouG.pos, [-0.11, 0.9, 0.4]), JSON.stringify(J.genouG.pos));
+});
+test('le genou plié renvoie la cheville vers l\'arrière (−z) : elle tourne autour du genou', () => {
+  const a = articulations({ ...poseNeutre(), genouD: Math.PI / 2 }).chevilleD.pos;
+  assert.ok(pres(a, [0.11, 0.5, -0.42], 1e-6), JSON.stringify(a));
+});
+test('chaque axe est unitaire, chaque articulation a son nom ; les deux jambes sont symétriques au repos', () => {
+  const J = articulations(poseDe({ tir: 1 }));
+  for (const [id, j] of Object.entries(J)) { assert.ok(j.nom && j.pos.every(Number.isFinite), id); for (const r of j.rots) assert.ok(Math.abs(Math.hypot(...r.axe) - 1) < 1e-9, id); }
+  const R = articulations(poseNeutre());
+  assert.ok(Math.abs(R.genouG.pos[0] + R.genouD.pos[0]) < 1e-9 && R.genouG.pos[1] === R.genouD.pos[1]);
+});
+test('le corps baissé descend toutes les articulations, la poussée avance la poitrine', () => {
+  const a = articulations(poseNeutre()), b = articulations({ ...poseNeutre(), descente: 0.4, poussee: 0.2 });
+  assert.ok(Math.abs(a.genouG.pos[1] - b.genouG.pos[1] - 0.4) < 1e-9 && b.poitrine.pos[2] > a.poitrine.pos[2] + 0.05 && Math.abs(b.genouG.pos[2]) < 1e-9);
+});
+test('la carrure : un homme plus grand a ses articulations plus haut', () => {
+  const a = articulations(poseNeutre()), b = articulations(poseNeutre(), { taille: 1.1, epaules: 1, jambes: 1, ventre: 1, tete: 1 });
+  assert.ok(b.epauleG.pos[1] > a.epauleG.pos[1] * 1.05);
+});
+test('une pose ne change pas quand on la lit : articulations ne modifie pas la pose reçue', () => {
+  const p = poseDe({ vit: 1, phase: 1 }), copie = JSON.stringify(p);
+  articulations(p); assert.equal(JSON.stringify(p), copie);
+});

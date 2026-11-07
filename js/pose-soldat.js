@@ -109,3 +109,60 @@ function segment(a, b, largeur, dt) {
 export function marcheEnImages(vit = 1, periode = 0.8) {
   return animation('marche', [0, 1, 2, 3].map(i => ({ t: i * periode / 4, pose: poseDe({ vit, phase: i * Math.PI / 2 }), courbe: 'doux' })), { boucle: true, duree: periode });
 }
+
+// ─── où sont les articulations ? (cinématique directe : le nuanceur plie, ici on suit les mêmes rotations pour poser les poignées de l'atelier) ───
+// Les mêmes pivots, les mêmes rotations, dans le même ordre que js/rendu/soldat-articule.js : jambe (cheville, genou, hanche), bras (coude, épaule, tour), puis le buste penché autour de la hanche, la poussée, le corps baissé, couché.
+// `rx(p, pv, a)` du nuanceur est la rotation de −a (main droite) autour de +x ; `ry` celle de +a autour de +y.
+export const CARRURE_NEUTRE = { taille: 1, epaules: 1, jambes: 1, ventre: 1, tete: 1 };
+const rxp = (p, pv, a) => { const dy = p[1] - pv[1], dz = p[2] - pv[2], c = Math.cos(a), s = Math.sin(a); return [p[0], pv[1] + dy * c + dz * s, pv[2] + dz * c - dy * s]; };
+const ryp = (p, pv, a) => { const dx = p[0] - pv[0], dz = p[2] - pv[2], c = Math.cos(a), s = Math.sin(a); return [pv[0] + dx * c + dz * s, p[1], pv[2] + dz * c - dx * s]; };
+const unitaire = v => { const n = Math.hypot(v[0], v[1], v[2]) || 1; return [v[0] / n, v[1] / n, v[2] / n]; };
+
+// Rend { id: { nom, pos: [x, y, z], rots: [{ champ, axe, signe }], deplace: [{ champ, axe, k }] } } en mètres, le soldat debout au centre, face à +z.
+//  · `rots` : tourner de φ (main droite) autour de `axe` change le champ de `signe × φ` ;
+//  · `deplace` : bouger l'articulation de d (mètres) le long de `axe` change le champ de `k × d`.
+export function articulations(pose, car = CARRURE_NEUTRE) {
+  const P = { ...poseNeutre(), ...pose };
+  const wd = car.epaules, sq = Math.sqrt(wd), sl = car.taille * car.jambes, st = car.taille * (1 + (1 - car.jambes) * 0.6);
+  const mp = (p, xs, zs) => [p[0] * xs, p[1] <= 0.9 ? p[1] * sl : 0.9 * sl + (p[1] - 0.9) * st, p[2] * zs];
+  const hanche = mp([0, 0.9, 0], 1, 1);
+  const haut = p => { const q = rxp(p, hanche, P.buste); q[2] += P.poussee * Math.max(0, q[1] - 0.6); return q; };
+  const global = p => { let q = [p[0], p[1] - P.descente, p[2]]; if (P.couche > 0.5) { q = rxp(q, [0, 0, 0], 1.5708); q[1] += 0.16; } return q; };
+  // la direction d'un vecteur après une chaîne de transformations : la différence de deux points proches
+  const dir = (f, p, v) => { const e = 0.01, a = f(p), b = f([p[0] + v[0] * e, p[1] + v[1] * e, p[2] + v[2] * e]); return unitaire([b[0] - a[0], b[1] - a[1], b[2] - a[2]]); };
+  const J = {};
+  const X = [1, 0, 0], Y = [0, 1, 0], Z = [0, 0, 1];
+  // les jambes (pas de buste : elles ne suivent que le corps baissé et couché)
+  for (const [g, c, nom] of [['G', -1, 'gauche'], ['D', 1, 'droite']]) {
+    const hp = mp([c * 0.11, 0.9, 0], sq, 1), kp = mp([c * 0.11, 0.5, 0], sq, 1), ap = mp([c * 0.11, 0.08, 0], sq, 1);
+    const hip = P['hanche' + g], kn = P['genou' + g];
+    const aGen = global;
+    J['hanche' + g] = { nom: `Hanche ${nom}`, pos: aGen(hp), rots: [{ champ: 'hanche' + g, axe: dir(aGen, hp, X), signe: -1 }] };
+    const kFin = rxp(kp, hp, hip), aFin = rxp(rxp(ap, kp, -kn), hp, hip);
+    J['genou' + g] = { nom: `Genou ${nom}`, pos: aGen(kFin), rots: [{ champ: 'genou' + g, axe: dir(aGen, kFin, X), signe: 1 }] };
+    J['cheville' + g] = { nom: `Cheville ${nom}`, pos: aGen(aFin), rots: [{ champ: 'cheville' + g, axe: dir(aGen, aFin, X), signe: -1 }] };
+  }
+  // les bras : le coude tourne dans l'épaule (rx puis ry autour de l'épaule), puis tout le haut du corps se penche
+  const aHaut = p => global(haut(p));
+  for (const [g, c, nom] of [['G', -1, 'gauche'], ['D', 1, 'droite']]) {
+    const sp = mp([c * 0.30, 1.38, 0], wd, 1), ep = mp([c * 0.30, 1.08, 0], wd, 1);
+    const sh = P['epaule' + g], conv = P['conv' + g];
+    const bras = p => ryp(rxp(p, sp, sh), sp, conv);
+    const axeFlex = dir(q => aHaut(ryp(q, sp, conv)), sp, X), axeTour = dir(aHaut, sp, Y);
+    J['epaule' + g] = { nom: `Épaule ${nom}`, pos: aHaut(sp), rots: [{ champ: 'epaule' + g, axe: axeFlex, signe: -1 }, { champ: 'conv' + g, axe: axeTour, signe: 1 }] };
+    J['coude' + g] = { nom: `Coude ${nom}`, pos: aHaut(bras(ep)), rots: [{ champ: 'coude' + g, axe: axeFlex, signe: -1 }] };
+  }
+  // le buste (pivot : la hanche) et la tête
+  J.bassin = { nom: 'Buste (pivot : la hanche)', pos: global(hanche), rots: [{ champ: 'buste', axe: dir(global, hanche, X), signe: -1 }] };
+  const cou = mp([0, 1.42, 0], 1, 1);
+  J.tete = { nom: 'Tête', pos: aHaut(cou), rots: [{ champ: 'tete', axe: dir(aHaut, cou, X), signe: -1 }] };
+  // le fusil : le pivot de sa rotation, déplacé de son décalage latéral et de sa poussée
+  const fp = mp([0, P.fusilY, 0], 1, 1), fpos = [fp[0] + P.fusilX * wd, fp[1], fp[2] + P.fusilZ];
+  J.fusil = { nom: 'Fusil', pos: aHaut(fpos), rots: [{ champ: 'fusil', axe: dir(aHaut, fpos, X), signe: -1 }],
+    deplace: [{ champ: 'fusilX', axe: dir(aHaut, fpos, X), k: 1 / wd }, { champ: 'fusilZ', axe: dir(aHaut, fpos, Z), k: 1 }] };
+  // la poitrine : baisser le corps, le pousser vers l'avant (la poussée agit sur ce qui est au-dessus de 0,6 m)
+  const poit = mp([0, 1.15, 0], 1, 1), hPoit = Math.max(0.15, rxp(poit, hanche, P.buste)[1] - 0.6);
+  J.poitrine = { nom: 'Poitrine (le corps)', pos: aHaut(poit), rots: [], deplace: [{ champ: 'descente', axe: Y, k: -1 }, { champ: 'poussee', axe: Z, k: 1 / hPoit }],
+    echelle: [{ cle: 'epaules', axe: dir(aHaut, poit, X) }, { cle: 'taille', axe: dir(aHaut, poit, Y) }, { cle: 'ventre', axe: dir(aHaut, poit, Z) }] };
+  return J;
+}
