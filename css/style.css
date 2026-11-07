@@ -791,3 +791,36 @@ h2 { font-weight: normal; letter-spacing: var(--titre-lettres); }
 .char-fiche.inactif { opacity: 0.72; }
 .char-fiche [aria-disabled="true"] { opacity: 0.5; cursor: not-allowed; }
 .char-fiche .compte b { font-weight: 700; }
+
+/* ─── La gestion des régiments de la nuit (v0.116.0) ─── */
+#dialogue-regiments { width: min(760px, 94vw); max-height: 94vh; overflow-y: auto; box-sizing: border-box; }
+#dialogue-regiments h3 { margin: calc(var(--pas) * 2) 0 var(--pas); font-size: var(--texte); text-transform: uppercase; letter-spacing: var(--lettres-etiquette); }
+.reg-quantites { display: flex; flex-wrap: wrap; gap: var(--pas); margin-bottom: calc(var(--pas) * 2); }
+.reg-quantites .bouton { min-height: var(--jeu-cible); }
+.reg-quantites .bouton.actif { background: var(--jeu-accent); color: var(--jeu-encre); outline: 2px solid var(--jeu-encre); outline-offset: -4px; }
+.reg-grille { display: grid; grid-template-columns: repeat(auto-fill, minmax(168px, 1fr)); gap: var(--pas); user-select: none; -webkit-user-select: none; }
+.reg-gestion {
+  display: grid; grid-template-columns: auto minmax(0, 1fr); column-gap: var(--pas); row-gap: var(--e0); align-items: center; min-height: calc(var(--jeu-cible) * 2); box-sizing: border-box; padding: var(--pas);
+  background: var(--jeu-encre); color: var(--jeu-fond); border-top: 3px solid var(--jeu-nous); box-shadow: var(--ombre-papier); cursor: grab; touch-action: none; font-size: var(--texte-petit);
+}
+.reg-gestion b { grid-row: 1 / 2; font-size: var(--texte-grand); font-weight: normal; }
+.reg-gestion .nom { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.reg-gestion .effectif, .reg-gestion .apres { grid-column: 1 / -1; }
+.reg-gestion .apres { color: var(--jeu-accent); }
+.reg-gestion .apres.simule { text-decoration: underline; }
+.reg-gestion:focus-visible { outline: 2px solid var(--jeu-nous); outline-offset: 2px; }
+.reg-gestion.source { background: var(--jeu-fond); color: var(--jeu-encre); outline: 2px solid var(--jeu-encre); outline-offset: -5px; }
+.reg-gestion.source .apres { color: inherit; }
+.reg-gestion.pris { opacity: .45; }                                  /* l'emplacement de départ du geste */
+.reg-gestion.vise { outline: 2px dashed var(--jeu-accent); outline-offset: -5px; }   /* l'arrivée, en pointillés */
+.reg-gestion.fantome { position: fixed; z-index: 1000; pointer-events: none; box-shadow: 6px 8px 0 var(--jeu-ombre); cursor: grabbing; }
+.reg-grille.en-glisse { cursor: grabbing; }
+.reg-prevus { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--e1); }
+.reg-prevus li { display: flex; gap: var(--pas); align-items: center; justify-content: space-between; min-height: var(--jeu-cible); }
+.reg-prevus .bouton { min-height: var(--jeu-cible); flex: none; }
+#nuit-gerer { margin-top: var(--pas); min-height: var(--jeu-cible); }
+/* les renforts de la caserne et les blessés de l'hôpital, en clair (v0.116.0) */
+.renforts, .blesses-hopital { display: grid; gap: var(--e1); padding: var(--pas); border: 1px solid currentColor; }
+.renforts .pastilles { display: flex; gap: var(--e1); }
+.renforts .pastilles i { width: 14px; height: 14px; box-sizing: border-box; border: 2px solid currentColor; background: currentColor; }
+.renforts .pastilles i.pris { background: none; }                   /* plein = disponible, vide = engagé : la forme porte l'information */

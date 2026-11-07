@@ -367,7 +367,7 @@ test('l\'hôpital compte les évacués, change la mort et le retour par niveau, 
   assert.equal(patients(e, 0).length, 40); assert.equal(patients(e, 1).length, 0); assert.equal(patients(e, 0).filter(p => p.pret).length, 0, 'le premier jour : personne n\'est guéri');
   assert.match(affecterGueris(e, 0, 99).refus, /pas le vôtre/); assert.ok(affecterGueris(e, 0, 1).ok); assert.equal(e.affectation[0], 1);
   const avant = B.armee.n; nuit(B); nuit(B);
-  assert.ok(patients(e, 0).filter(p => p.pret).length === 0, 'ceux qui revenaient sont revenus');
+  assert.ok(patients(e, 0).filter(p => p.pret && p.id >= 5000).length === 0, 'ceux qui revenaient sont revenus (les blessés entrés à l\'hôpital pendant la 2e journée attendent encore leur nuit : v0.115.0)');
   const revenus = e.evacues.filter(p => p[3] > 0);
   assert.ok(revenus.length >= 8, `une bonne part revient (${revenus.length}/40)`);
   const dans = revenus.map(p => { for (let i = 0; i < B.armee.n; i++) if (B.armee.id[i] === p[0]) return B.armee.reg[i]; return -1; });

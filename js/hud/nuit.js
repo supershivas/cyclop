@@ -5,7 +5,7 @@ import { NOUS, aube, priseEnCours } from '../bataille.js?v=0.115.0';
 import { METEO } from '../data/meteo.js?v=0.115.0';
 import { CORVEES, CONTACT } from '../data/corvees.js?v=0.115.0';
 import { EQUIPEMENT } from '../data/batiments.js?v=0.115.0';
-import { campDe, niveauDe } from '../camp.js?v=0.115.0';
+import { campDe, niveauDe, renfortsDe } from '../camp.js?v=0.115.0';
 import { refusCorvee, contactDe } from '../nuit.js?v=0.115.0';
 import { palmares, tableau } from './medailles.js?v=0.115.0';
 import { pluriel, numeroDe } from './lecture.js?v=0.115.0';
@@ -31,6 +31,7 @@ export function avionsEnMots(e, camp) {
 function bilanEnMots(B, b) {
   const pl = (n, un, des) => `${n} ${n > 1 ? des : un}`;
   const faits = [
+    b.transferes && `${pl(b.transferes, 'soldat a rejoint', 'soldats ont rejoint')} un autre régiment`,
     b.equipes && `${pl(b.equipes, 'régiment équipé', 'régiments équipés')}`,
     b.regroupes && `${pl(b.regroupes, 'égaré regroupé', 'égarés regroupés')}`,
     b.evacues && `${pl(b.evacues, 'blessé évacué', 'blessés évacués')}`,
@@ -66,6 +67,8 @@ const campEnMots = (B, d0, camp = 0) => {
   const parts = [`${d.aube} d'aube`, d.tenue ? `${d.tenue} pour des lignes tenues` : '', d.lignes ? `${d.lignes} pour une ligne d'en face prise` : ''].filter(Boolean);
   return [...fin, `Dotation de l'état-major : +${d.points} (${parts.join(', ')}) ; ${K.dotation} en caisse.`];
 };
+// « 2 sur 4 » : les régiments frais qui restent, sur tous ceux de la bataille (v0.116.0)
+export const renfortsEnMots = (e, camp) => { const r = renfortsDe(e, camp); return `${r.restants} sur ${r.total}`; };
 export function creerNuit({ $, bataille, choisis, choisir = () => {}, pauser, reprendre, sauvegarder, majHud, toast, dire, invalider, moi = () => NOUS, enReseau = () => false, surChoix = () => {}, surPret = () => {} }) {
   let etat = null;                 // 'choix' | 'aube' | null
   let corvees = {};                // la corvée de chacun de nos régiments cette nuit (id → corvée)
@@ -83,7 +86,7 @@ export function creerNuit({ $, bataille, choisis, choisir = () => {}, pauser, re
     $('nuit-chiffres').replaceChildren(
       chiffre('Nos morts', mn, 'Les hommes tombés chez nous aujourd\'hui, de leurs blessures du matin comprises'), chiffre('Leurs morts', me, 'Les hommes tombés en face aujourd\'hui'),
       ...(e.tranchees ? [chiffre('Tronçons pris', pris, 'Les tronçons de tranchée pris à l\'ennemi aujourd\'hui'), chiffre('Tronçons perdus', perdus, 'Les tronçons de tranchée que l\'ennemi nous a pris aujourd\'hui')] : []),
-      ...(e.mission ? [chiffre('En réserve', e.reserves[moi()], 'Les régiments frais qui attendent la relève')] : []));
+      ...(e.mission ? [chiffre('Régiments frais', renfortsEnMots(e, moi()), 'Les régiments frais de la caserne : ceux qui restent sur ceux de la bataille. La relève de la nuit et un renfort déployé le jour en consomment chacun un ; il n\'en arrive pas d\'autres avec les jours (seule une caserne plus grande en ajoute).')] : []));
     $('nuit-lignes').textContent = e.tranchees ? enLignes(e.prises[j - 1]) : '';
     // la victoire anticipée (v0.77.0) : où l'on en est, pour qui doit prendre leur première ligne
     if (e.tranchees && e.mission === 'prendre' && moi() === NOUS) {

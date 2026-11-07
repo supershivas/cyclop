@@ -107,6 +107,7 @@
             <h3 id="nuit-h-ordres">Ordres aux régiments</h3>
             <p class="discret" id="nuit-aide">Choisissez des régiments (un clic sur eux, un cadre, T pour tous), puis leur corvée.</p>
             <div id="nuit-ordres"></div>
+            <button class="bouton" id="nuit-gerer" type="button" hidden data-info="# Gérer les régiments&#10;Fusionner deux régiments ou passer des soldats de l'un à l'autre : 1, 10 ou tous. Ils les rejoignent au début du jour suivant.">Gérer les régiments</button>
           </section>
         </div>
         <div id="aube-bilan" hidden></div>
@@ -307,6 +308,16 @@
     <button class="bouton" id="importer">Importer une sauvegarde</button>
   </div>
   <p class="liens"><a href="labo.html">Labo</a> · <a href="labo-lumiere.html">Labo lumière</a> · <a href="atelier.html">Atelier</a></p>
+  <form method="dialog"><button class="bouton">Fermer</button></form>
+</dialog>
+
+<dialog id="dialogue-regiments" aria-label="Gérer les régiments">
+  <h2>Gérer les régiments</h2>
+  <p class="discret" id="reg-aide"></p>
+  <div class="reg-quantites" id="reg-quantites" role="group" aria-label="Quantité transférée"></div>
+  <div class="reg-grille" id="reg-grille"></div>
+  <h3>Transferts prévus</h3>
+  <ul class="reg-prevus" id="reg-prevus"></ul>
   <form method="dialog"><button class="bouton">Fermer</button></form>
 </dialog>
 

@@ -3,8 +3,8 @@
 // fenêtre d'un régiment (`.reg-ouvert` : le titre et son niveau, une ligne de ce qu'il fait, des boutons de même largeur), et le bouton « Le camp » (la dotation, et la touche B). L'amélioration tient en un clic : le
 // choix du palier EST le bouton (« Tir de réglage · 3 pts »). Le texte long est dans l'infobulle. Lecture seule de l'état : les ordres passent par les fonctions que main.js donne.
 import { BATIMENTS, EQUIPEMENT } from '../data/batiments.js?v=0.115.0';
-import { refusCamp, campDe, charsDispo, patients, NIVEAU_MAX } from '../camp.js?v=0.115.0';
-import { peutDeployer } from '../bataille.js?v=0.115.0';
+import { refusCamp, campDe, charsDispo, patients, renfortsDe, NIVEAU_MAX } from '../camp.js?v=0.115.0';
+import { peutDeployer, blessesDe } from '../bataille.js?v=0.115.0';
 import { avionsPrets, avionsRestants } from '../avions.js?v=0.115.0';
 import { avionAbime, reparationFaite } from '../genie.js?v=0.115.0';
 import { MITRAILLAGE } from '../data/mitraillage.js?v=0.115.0';
@@ -25,8 +25,17 @@ export function creerCampHud({ moi = () => 0, deployer = () => {}, bouton, papie
     papier.append(el('div', { className: 'tete' }, el('b', { textContent: Bd.nom }), el('span', { textContent: niveau ? `niveau ${niveau}` : 'à bâtir' })));
     const dit = c.chantier ? `Chantier : ${N[c.chantier.vers - 1].nom}, fini à l'aube${c.chantier.nuits > 1 ? ` (dans ${c.chantier.nuits} nuits)` : ''}.`
       : cle !== 'caserne' ? N[Math.max(0, niveau - 1)].effet
-      : `${e.reserves[moi()]} régiment${e.reserves[moi()] > 1 ? 's' : ''} frais en réserve${e.ralliees[moi()].length ? `, ${e.ralliees[moi()].map(u => u.n).join(' et ')} fuyards ralliés` : ''}. La relève${niveau >= EQUIPEMENT.niveauCaserne ? " et l'équipement se donnent" : ' se donne'} la nuit, depuis la carte du régiment ; un renfort se déploie à tout moment du jour.`;
+      : `${e.ralliees[moi()].length ? `${e.ralliees[moi()].map(u => u.n).join(' et ')} fuyards ralliés attendent. ` : ''}La relève${niveau >= EQUIPEMENT.niveauCaserne ? " et l'équipement se donnent" : ' se donne'} la nuit, depuis la carte du régiment ; un renfort se déploie à tout moment du jour.`;
     papier.append(el('div', { className: 'compte', textContent: dit }));
+    if (cle === 'caserne' && niveau) {      // les régiments frais, en clair (v0.116.0) : combien en reste, combien ont servi, et ce qui les consomme
+      const r = renfortsDe(e, moi()), pl = n => `régiment${n > 1 ? 's' : ''}`;
+      const fiche = el('div', { className: 'renforts' }, el('b', { textContent: `Régiments frais : ${r.restants} sur ${r.total}` }),
+        el('span', { className: 'pastilles', ariaHidden: 'true' }, ...Array.from({ length: r.total }, (_, k) => el('i', { className: k < r.pris ? 'pris' : '' }))),
+        el('span', { textContent: r.pris ? `${r.pris} ${pl(r.pris)} déjà engagé${r.pris > 1 ? 's' : ''} (relève ou déploiement).` : 'Aucun n\'a encore servi.' }),
+        el('span', { className: 'discret', textContent: 'Chaque relève de nuit ou renfort déployé en consomme un. Il n\'en arrive pas un nouveau chaque jour : la caserne n\'en ajoute qu\'en montant de niveau.' }));
+      fiche.title = 'Les régiments frais sont tirés de la réserve : la relève de nuit et le déploiement du jour puisent dans la même.';
+      papier.append(fiche);
+    }
     // les renforts (lot D) : le régiment frais, puis les fuyards ralliés ; le bouton dit où ils iront, ou pourquoi ils ne partent pas
     if (niveau && cle === 'caserne') {
       const liste = el('div', { className: 'actions' }); liste.style.setProperty('--cols', 1);
@@ -65,7 +74,11 @@ export function creerCampHud({ moi = () => 0, deployer = () => {}, bouton, papie
     if (niveau && cle === 'hopital') {      // les blessés évacués (v0.99.11) : combien, de quelle blessure, et où repartent les guéris
       const ps = patients(e, moi()), prets = ps.filter(p => p.pret).length, n = [0, 0, 0, 0];
       for (const p of ps) n[p.blessure]++;
-      papier.append(el('div', { className: 'compte', textContent: ps.length ? `${ps.length} blessé${ps.length > 1 ? 's' : ''} soigné${ps.length > 1 ? 's' : ''} (${n[1]} au bras, ${n[2]} à la jambe, ${n[3]} à la tête) · ${prets} guéri${prets > 1 ? 's' : ''}, prêt${prets > 1 ? 's' : ''} à repartir à l'aube` : 'Aucun blessé évacué : la nuit, la corvée « évacuer » les amène ici.' }));
+      const lieux = blessesDe(B, moi()), s = k => k > 1 ? 's' : '';
+      papier.append(el('div', { className: 'blesses-hopital' },
+        el('b', { textContent: `${ps.length} blessé${s(ps.length)} à l'hôpital` }),
+        el('span', { textContent: `${lieux.enRoute} en route · ${lieux.champ} sur le champ (à évacuer la nuit)` })));
+      papier.append(el('div', { className: 'compte', textContent: ps.length ? `${ps.length} blessé${s(ps.length)} soigné${s(ps.length)} (${n[1]} au bras, ${n[2]} à la jambe, ${n[3]} à la tête) · ${prets} guéri${s(prets)}, prêt${s(prets)} à repartir à l'aube` : 'Aucun blessé à l\'hôpital : ceux qui peuvent marcher y vont d\'eux-mêmes, les autres sont évacués la nuit (corvée « évacuer »).' }));
       const liste = el('div', { className: 'actions' }); liste.style.setProperty('--cols', 2);
       const voulu = e.affectation?.[moi()] ?? null;
       const b0 = el('button', { type: 'button', className: voulu === null ? 'actif' : '', textContent: 'Chacun au sien', onclick: () => affecter(null) }); b0.dataset.info = '# Chacun au sien\nLes guéris retrouvent le régiment qu\'ils ont quitté.'; liste.append(b0);
@@ -102,7 +115,7 @@ export function creerCampHud({ moi = () => 0, deployer = () => {}, bouton, papie
     bouton.title = `# Le camp (B)\nLa caméra y va. Un bâtiment se choisit d'un clic sur lui : on y dépense la dotation.\n## La dotation (${pts(camp.dotation)})\nElle tombe à l'aube : **+1** ; **+1** si nos lignes tiennent à 75 % ; **+2** la première fois qu'une ligne d'en face est prise.`;
     papier.hidden = !cle;
     if (!cle) { signature = ''; return; }
-    const c = camp.batiments[cle], s = [cle, c.niveau, c.chantier?.nuits ?? '', camp.dotation, e.reserves[moi()], cle === 'chars' ? e.chars.filter(k => k.camp === moi()).map(k => `${k.id}${k.etat}${Math.round(k.pv)}${k.tues ?? 0}`).join() + reste('char') + charsDispo(e, moi()) : '', cle === 'hopital' ? patients(e, moi()).map(p => p.id + (p.pret ? 'p' : '')).join() + (e.affectation?.[moi()] ?? '') : '', cle === 'aerodrome' ? e.avions[moi()].join() + reparationFaite(e, moi()) + e.genies.length + avionsPrets(e, moi()) + e.meteo[e.jour - 1] : '', cle === 'caserne' ? [e.phase, e.ralliees[moi()].map(u => u.n).join(), e.troncons.join(''), e.regiments.filter(r => r.camp === moi() && r.effectif > 0 && !r.deroute).length].join(':') : ''].join('|');
+    const c = camp.batiments[cle], s = [cle, c.niveau, c.chantier?.nuits ?? '', camp.dotation, e.reserves[moi()], renfortsDe(e, moi()).pris, cle === 'hopital' ? (() => { const l = blessesDe(B, moi()); return `${l.enRoute}/${l.champ}`; })() : '', cle === 'chars' ? e.chars.filter(k => k.camp === moi()).map(k => `${k.id}${k.etat}${Math.round(k.pv)}${k.tues ?? 0}`).join() + reste('char') + charsDispo(e, moi()) : '', cle === 'hopital' ? patients(e, moi()).map(p => p.id + (p.pret ? 'p' : '')).join() + (e.affectation?.[moi()] ?? '') : '', cle === 'aerodrome' ? e.avions[moi()].join() + reparationFaite(e, moi()) + e.genies.length + avionsPrets(e, moi()) + e.meteo[e.jour - 1] : '', cle === 'caserne' ? [e.phase, e.ralliees[moi()].map(u => u.n).join(), e.troncons.join(''), e.regiments.filter(r => r.camp === moi() && r.effectif > 0 && !r.deroute).length].join(':') : ''].join('|');
     if (s !== signature) { signature = s; dessiner(B); }
   }
   return { maj, choisi: () => cle, choisirCle(k) { cle = k; signature = ''; } };

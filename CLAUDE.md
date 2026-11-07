@@ -41,6 +41,7 @@ la danse macabre, la catastrophe peinte avec calme. L'intention est dans `DESIGN
   12 m derrière la place qu'il prend ; v0.101.0 : il se déploie aussi à tout moment du jour depuis la caserne, et la déroute se retire vers elle : `docs/domaines/bataille.md`). L'ordre de mission s'affiche au premier matin
   (pas en mode debug, que les scripts pilotent). Progression permanente prévue
   (Mémorial, état-major, trophées) : pas encore construite.
+- **Régiments de la nuit** (Jérôme, v0.115.0) : « Gérer les régiments » (transferts d'hommes entre régiments, fusion, effectifs à l'aube), les blessés qui marchent vont à l'hôpital, les régiments frais sont comptés « n sur total » ; détail dans `docs/domaines/bataille.md` et `interface.md`.
 - **Steam** : porte ouverte (section 22). Manette : seulement le menu pour
   l'instant (`gamepad.js`).
 - **Langue** : français seulement. **Son** (Jérôme, v0.75.0 ; aucun avant) : synthétisé en Web Audio (repli) et bruitages CC0 en mp3 (`assets/sons/`, v0.99.6), `js/audio.js`, détail dans `docs/domaines/interface.md`.

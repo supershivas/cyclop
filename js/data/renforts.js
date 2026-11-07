@@ -7,5 +7,6 @@ export const RENFORTS = {
   rayonCaserne: 30,      // m : un fuyard à cette distance du centre de la caserne y est rentré
   intervalle: 30,        // pas entre deux relevés des fuyards arrivés (1 s)
   espacementSortie: 0.8, // m entre deux hommes qui sortent de la caserne
+  hopitalRayon: 18,      // m : un blessé qui marche et arrive à cette distance du centre de l'hôpital y est admis (la porte est à 14 m du centre)
   derriere: 12,          // m : sans caserne dessinée (partie non bridée), le régiment frais monte à cette distance derrière la place
 };

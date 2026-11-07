@@ -231,7 +231,10 @@ export function pasArmee(A, ctx) {
     const r = regiments[reg[i]], o = r.ordre;
     // un blessé qui peut marcher (un bras, une jambe légère) quitte sa place et regagne l'arrière, droit devant lui (Jérôme, v0.35.0)
     const retrait = ctx.arriere && blessure[i] && blessure[i] <= 2 && (blessure[i] === 1 || legere(A.id[i], Sd.jambeLegere));
-    if (retrait) { pl[0] = xi; pl[1] = camp[i] === 0 ? Math.max(yi, ctx.arriere[0]) : Math.min(yi, ctx.arriere[1]); }
+    if (retrait) {
+      const h = ctx.hopital?.[camp[i]];      // l'hôpital du camp, s'il est bâti (v0.115.0) : il y marche ; sinon l'arrière, droit devant lui
+      if (h) { pl[0] = h.x; pl[1] = h.y; } else { pl[0] = xi; pl[1] = camp[i] === 0 ? Math.max(yi, ctx.arriere[0]) : Math.min(yi, ctx.arriere[1]); }
+    }
     else place(o, slot[i], pl);
     const dx = pl[0] - xi, dy = pl[1] - yi, d = Math.hypot(dx, dy);
     let gx = 0, gy = 0, voulu = 1;

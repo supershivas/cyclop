@@ -30,7 +30,8 @@ import { etatEnMots, experienceEnMots, chevrons, caracteristiques } from './iden
 import { aspect } from './aspect-soldat.js?v=0.115.0';
 import { numeroCampagne } from './bataille.js?v=0.115.0';
 import { ARTICULE } from './data/aspect-soldat.js?v=0.115.0';
-import { refusCorvee } from './nuit.js?v=0.115.0';
+import { refusCorvee, refusTransfert, planifierTransfert, annulerTransfert } from './nuit.js?v=0.115.0';
+import { creerGestion } from './hud/regiments.js?v=0.115.0';
 import { chargerContenu, appliquerSecteurs, appliquerCartes, appliquerCampagne } from './design-store.js?v=0.115.0';
 import { ordonnerChar, refusOrdreChar } from './chars.js?v=0.115.0';
 import { orienterNid, refusOrienterNid, raisonInactif } from './nids.js?v=0.115.0';
@@ -151,6 +152,15 @@ const nuit = creerNuit({
   choisir: (id, ajout) => id === 'tous' ? choisirTout() : choisirRegiment(id, ajout),
   moi: () => MOI, enReseau: () => !!reseau,
   surChoix: (reg, id) => reseau?.ls?.commander({ t: 'corvee', reg, id }), surPret: () => reseau.ls.commander({ t: 'pret' }),
+});
+// La gestion des régiments de la nuit (v0.116.0) : à deux, l'ordre part aux deux machines (executerCmd) ; seul, il s'applique tout de suite
+const gestion = creerGestion({
+  $, bataille: () => B, moi: () => MOI, actif: () => nuit.etat === 'choix', dire: r => dire(r),
+  planifier: (de, vers, n) => {
+    if (reseau) { const m = refusTransfert(B, MOI, de, vers, n); if (m) dire({ refus: m }); else reseau.ls.commander({ t: 'transfert', de, vers, n }); return; }
+    const r = dire(planifierTransfert(B, MOI, de, vers, n)); if (r.ok) sauvegarder(); majHud();
+  },
+  annuler: k => { if (reseau) { reseau.ls.commander({ t: 'transfert', annule: k }); return; } annulerTransfert(B, MOI, k); sauvegarder(); majHud(); },
 });
 const laCampagne = creerCampagne({ $ });
 const laFiche = creerFiche({ $, R, bataille: () => B });
@@ -613,6 +623,7 @@ function executerCmd(c, camp, b, st) {
   else if (c.t === 'barrage') { const r = ordonnerBarrage(b, c.cal, c.x, c.y, camp, c.x2, c.y2); if (camp === MOI && r.ok) marque = { x: c.x, y: c.y, t: 2 }; }
   else if (c.t === 'stance') { const r = ordonnerStance(b, c.ids, c.stance, camp); if (camp === MOI && r.ok) { noterStance(r.regiments, c.stance); regimentsVus = ''; majHud(); } }
   else if (c.t === 'renfort') { const r = deployer(b, camp, !!c.ralliee); if (camp === MOI) { if (r.ok) toast(`${r.mode === 'contre' ? 'Contre-attaque' : 'Renfort'} : ${r.ou}, ${r.n} hommes.`); else dire(r); majHud(); } }      // un régiment sort de la caserne (lot D)
+  else if (c.t === 'transfert') { const r = c.annule != null ? annulerTransfert(b, camp, c.annule) : planifierTransfert(b, camp, c.de, c.vers, c.n); if (camp === MOI) { if (!r.ok) dire(r); majHud(); } }      // un transfert d'hommes entre régiments, prévu la nuit (v0.116.0)
   else if (c.t === 'hop') { const r = affecterGueris(b.etat, camp, c.reg ?? null); if (camp === MOI) { if (r.ok) toast('Affectation des guéris changée.'); else dire(r); majHud(); } }
   else if (c.t === 'bat') { const r = ordonnerChantier(b.etat, c.cle, c.choix ?? null, camp); if (camp === MOI) { if (r.ok) toast(`${BATIMENTS[c.cle].nom} : chantier lancé, fini à l'aube.`); else dire(r); majHud(); } }      // un chantier du camp (v0.94.0)
   else if (c.t === 'depart') {       // le départ : la bataille attend que les deux commandants se déclarent prêts (elle commence en pause chez les deux)
@@ -1131,7 +1142,7 @@ function majHud() {
   majPertes(B); majTemps(h);
   majFiche();
   $('pause-active').hidden = !pauseActive;
-  majRegiments(); nuit.maj(); laCarte.maj(); leDetail.maj();
+  majRegiments(); nuit.maj(); gestion.maj(); laCarte.maj(); leDetail.maj();
   leCamp?.maj(B); majBoutonsBarrage();
   $('ecran').classList.toggle('vise', !!modeBarrage || modeMarche || !!modeChar);
 }

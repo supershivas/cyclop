@@ -164,6 +164,17 @@ export function sortieCaserne(etat, camp = NOUS) {
   const e = emplacementCamp(etat, 'caserne', camp), sens = camp === NOUS ? -1 : 1;
   return { x: e.x, y: e.y + sens * (e.d / 2 + 2), sens, w: e.w, cx: e.x, cy: e.y };
 }
+/* Où marchent les blessés de `camp` (v0.115.0) : devant la façade de l'hôpital, { x, y, cx, cy } ; null sans hôpital dessiné (partie non bridée, hôpital pas bâti) : ils vont alors à l'arrière comme avant */
+export function entreeHopital(etat, camp = NOUS) {
+  if (!campDe(etat, camp)?.bride || !niveauDe(etat, 'hopital', camp)) return null;
+  const e = emplacementCamp(etat, 'hopital', camp), sens = camp === NOUS ? -1 : 1;
+  return { x: e.x, y: e.y + sens * (e.d / 2 + 2), cx: e.x, cy: e.y };
+}
+/* Les régiments frais de `camp` (v0.115.0) : { restants, pris, total } ; `pris` = ceux que la relève ou un déploiement ont déjà engagés (les ralliés n'en font pas partie : ils ne viennent pas de la réserve). Aucun régiment ne s'ajoute chaque jour : le total ne bouge que si la caserne monte. */
+export function renfortsDe(etat, camp = NOUS) {
+  const restants = etat.reserves?.[camp] ?? 0, pris = etat.reservesPrises?.[camp] ?? 0;
+  return { restants, pris, total: restants + pris };
+}
 /* Où sort un char du parc de `camp` (v0.99.8 : « le char part du parc des chars ») : la place du Schneider que le parc montre, devant sa galerie ; null sans parc dessiné (partie non bridée, parc pas bâti) */
 export function sortieChars(etat, camp = NOUS) {
   const n = niveauDe(etat, 'chars', camp);

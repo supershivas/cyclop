@@ -16,7 +16,7 @@
    rejoue depuis la graine et les impacts (rejouerTerrain). */
 import { createRng, hash2 } from './lib/rng.js?v=0.115.0';
 import { impact, hydroLignes, etat as etatCase, vitesseEtat, vitesseCase, ETAT } from './terrain.js?v=0.115.0';
-import { creerArmee, ajouterSoldat, construireGrille, pasArmee, tuerDans, effrayer, compacter, photoArmee, restaurerArmee, b64, deB64, DENSITE, place, poserCaracs, lireCaracs, abimerCaracs, gagner, CARACS } from './army.js?v=0.115.0';
+import { creerArmee, legere, ajouterSoldat, construireGrille, pasArmee, tuerDans, effrayer, compacter, photoArmee, restaurerArmee, b64, deB64, DENSITE, place, poserCaracs, lireCaracs, abimerCaracs, gagner, CARACS } from './army.js?v=0.115.0';
 import { ligneSous, solidite, y0En, arcMax } from './tranchees.js?v=0.115.0';
 import { terrainDuSecteur } from './secteur-terrain.js?v=0.115.0';
 import { detruirePont, reconstruirePont, pontEn } from './eaux.js?v=0.115.0';
@@ -45,11 +45,11 @@ import { grade, departCaracs, caracEnMots } from './identite.js?v=0.115.0';
 import { corvees, creerRegiment, prendreReserve } from './nuit.js?v=0.115.0';
 import { RENFORTS } from './data/renforts.js?v=0.115.0';
 import { EQUIPEMENTS } from './data/batiments.js?v=0.115.0';
-import { campDeDepart, dotationAube, refusOrdre, refusNid, appliquerDepart, modif, rechargeDe, sortieChars, sortieCaserne, emplacementCamp } from './camp.js?v=0.115.0';
+import { campDeDepart, dotationAube, refusOrdre, refusNid, appliquerDepart, modif, rechargeDe, sortieChars, sortieCaserne, entreeHopital, emplacementCamp, patients } from './camp.js?v=0.115.0';
 
 export const PAS = 1 / 30;                 // s de jeu par pas
 export const NOUS = 0, EUX = 1;
-const VERSION = 27;   // 27 : le génie répare un engin par jour (`etat.genieJour`, `etat.reparesAvions`), les chars et les postes comptent leurs victimes (v0.115.0) ; 26 : la taille du secteur (`etat.dim`, v0.110.0) ; 25 : la contre-attaque éclair (`etat.contre`, v0.109.0) ; 24 : les postes de mitrailleuse (munitions, expérience, direction du cône) et l'expérience des chars (lot E, v0.102.0) ; 23 : les renforts (`etat.ralliees`, `etat.arrives`, `reg.versCaserne`, lot D, v0.101.0) ; 22 : l'affectation des guéris de l'hôpital (`etat.affectation`, v0.99.11) ; 21 : le stock de chars du parc (`etat.charsDispo`, v0.99.10) ; 20 : les missions secondaires (`etat.secondaires`, v0.99.0) ; 19 : le fil de fer de chaque tronçon (`etat.fil`, v0.98.0) ; 18 : le camp d'en face (`etat.campEux`, v0.92.0) ; 17 : l'équipement des régiments (`reg.equip`, v0.91.0) ; 16 : le camp (`etat.camp` : la dotation, les niveaux des bâtiments, v0.86.0) ; 15 : les nids de mitrailleuses (`etat.nids`, v0.83.0) ; 14 : la victoire anticipée (`etat.priseJours`, v0.77.0) ; 13 : les médailles (`tues`, `pris`, `debut` de chaque régiment, `etat.victDebut`, v0.73.1) ; 12 : le niveau de difficulté (`etat.difficulte`, la posture d'en face `etat.iaStance`, v0.70.0) ; 11 : les caractéristiques de chaque homme (adresse, force, endurance, calme) dans l'armée, le corps à corps (v0.69.0) ; 10 : la solidité des ponts (pv, nom, historique), la coupure en attente de ses coûts (`etat.couts.coupure`) ; 9 : le génie (les sections, les ponts refaits) ; 8 : le chemin et le cap des chars ; 7 : le rapport du jour (les sorties et les pertes d'avions) ; 6 : les avions de mitraillage (une passe tracée, des points de vie, une flotte) ; 5 : la forme des cratères (rond, lèvre jetée, éclats : les impacts rejoués changent) ; 2 : la graine d'identité ; 3 : la campagne et les relevés ; 4 : les numéros de campagne, un effectif par camp, le rythme de l'IA (campagne, lots 1 à 3)
+const VERSION = 28;   // 28 : les transferts de la nuit (`etat.transferts`) et les régiments frais déjà engagés (`etat.reservesPrises`), v0.116.0 ; 27 : le génie répare un engin par jour (`etat.genieJour`, `etat.reparesAvions`), les chars et les postes comptent leurs victimes (v0.115.0) ; 26 : la taille du secteur (`etat.dim`, v0.110.0) ; 25 : la contre-attaque éclair (`etat.contre`, v0.109.0) ; 24 : les postes de mitrailleuse (munitions, expérience, direction du cône) et l'expérience des chars (lot E, v0.102.0) ; 23 : les renforts (`etat.ralliees`, `etat.arrives`, `reg.versCaserne`, lot D, v0.101.0) ; 22 : l'affectation des guéris de l'hôpital (`etat.affectation`, v0.99.11) ; 21 : le stock de chars du parc (`etat.charsDispo`, v0.99.10) ; 20 : les missions secondaires (`etat.secondaires`, v0.99.0) ; 19 : le fil de fer de chaque tronçon (`etat.fil`, v0.98.0) ; 18 : le camp d'en face (`etat.campEux`, v0.92.0) ; 17 : l'équipement des régiments (`reg.equip`, v0.91.0) ; 16 : le camp (`etat.camp` : la dotation, les niveaux des bâtiments, v0.86.0) ; 15 : les nids de mitrailleuses (`etat.nids`, v0.83.0) ; 14 : la victoire anticipée (`etat.priseJours`, v0.77.0) ; 13 : les médailles (`tues`, `pris`, `debut` de chaque régiment, `etat.victDebut`, v0.73.1) ; 12 : le niveau de difficulté (`etat.difficulte`, la posture d'en face `etat.iaStance`, v0.70.0) ; 11 : les caractéristiques de chaque homme (adresse, force, endurance, calme) dans l'armée, le corps à corps (v0.69.0) ; 10 : la solidité des ponts (pv, nom, historique), la coupure en attente de ses coûts (`etat.couts.coupure`) ; 9 : le génie (les sections, les ponts refaits) ; 8 : le chemin et le cap des chars ; 7 : le rapport du jour (les sorties et les pertes d'avions) ; 6 : les avions de mitraillage (une passe tracée, des points de vie, une flotte) ; 5 : la forme des cratères (rond, lèvre jetée, éclats : les impacts rejoués changent) ; 2 : la graine d'identité ; 3 : la campagne et les relevés ; 4 : les numéros de campagne, un effectif par camp, le rythme de l'IA (campagne, lots 1 à 3)
 
 const ticksParHeure = R => Math.max(1, Math.round(R.jour.duree / (R.jour.heureFin - R.jour.heureDebut) / PAS));
 export const ticksParJour = R => ticksParHeure(R) * (R.jour.heureFin - R.jour.heureDebut);
@@ -130,6 +130,8 @@ export function nouvelleBataille(graine, R, opts = {}) {
     prises: [[0, 0]],           // tronçons pris par chaque camp, jour par jour
     melee: [],                  // par tronçon, les secondes où les attaquants y sont écrasants (la prise d'un tronçon défendu ; v0.15.0)
     tombes: [],                 // les morts inhumés : [x×10, y×10, camp, jour, id, jour de l'inhumation]
+    transferts: [[], []],        // les soldats à changer de régiment à l'aube, par camp : { de, vers, n } (n = -1 : tous ; v0.116.0)
+    reservesPrises: [0, 0],      // les régiments frais déjà tirés de la réserve (relève, déploiement), par camp : de quoi lire « 2 sur 4 »
     affectation: [null, null],   // le régiment où l'hôpital renvoie les guéris de chaque camp (null : chacun au sien ; v0.99.11)
     evacues: [],                // les blessés évacués : [id, jour]
     releves: [],                // les hommes d'un régiment relevé, partis vivants : [numéro, régiment, expérience, victimes] (le registre de campagne)
@@ -603,6 +605,34 @@ function rallierArrives(B) {
     }
   }
 }
+/* Les blessés qui marchent et sont arrivés à l'hôpital (v0.116.0, Jérôme : « certains blessés restent au bord de la carte, en attente ») y sont admis : comme une évacuation de la nuit, ils sortent du régiment et sont soignés
+   (ils reviennent après autant de nuits que la blessure en demande, `retours` de nuit.js). Les autres blessés (tête, jambe lourde) restent sur place jusqu'à la corvée « évacuer ». Sans hasard. */
+export function marcheBlesse(A, i, R) { return A.blessure[i] > 0 && A.blessure[i] <= 2 && (A.blessure[i] === 1 || legere(A.id[i], R.soldat.jambeLegere)); }
+function hospitaliser(B) {
+  const { etat, armee: A, R } = B, r2 = RENFORTS.hopitalRayon ** 2;
+  for (const camp of [NOUS, EUX]) {
+    const h = entreeHopital(etat, camp);
+    if (!h) continue;
+    for (let i = 0; i < A.n; i++) {
+      if (A.mort[i] || A.camp[i] !== camp || !marcheBlesse(A, i, R)) continue;
+      const dx = A.x[i] - h.cx, dy = A.y[i] - h.cy;
+      if (dx * dx + dy * dy > r2) continue;
+      const reg = etat.regiments[A.reg[i]];
+      A.mort[i] = 1; reg.effectif--;      // il entre à l'hôpital, vivant
+      etat.evacues.push([A.id[i], etat.jour, A.blessure[i], 0, reg.id, Math.round(A.exp[i] * 100) / 100, A.victimes[i], lireCaracs(A, i)]);
+    }
+  }
+}
+/* Les blessés de `camp` par endroit (v0.116.0, pour la fenêtre de l'hôpital) : { soignes: à l'hôpital, enRoute: qui marchent vers lui, champ: qui attendent sur place la nuit } */
+export function blessesDe(B, camp = NOUS) {
+  const { etat, armee: A, R } = B;
+  let enRoute = 0, champ = 0;
+  for (let i = 0; i < A.n; i++) {
+    if (A.mort[i] || A.camp[i] !== camp || !A.blessure[i]) continue;
+    if (marcheBlesse(A, i, R)) enRoute++; else champ++;
+  }
+  return { soignes: patients(etat, camp).length, enRoute, champ };
+}
 /* À l'aube, assez de fuyards arrivés (`seuilRallies`) forment une unité de renforts (moral réduit, l'expérience moyenne des hommes), au plus d'un régiment. */
 function formerRalliees(B) {
   const { etat } = B;
@@ -653,7 +683,7 @@ export function avancer(B) {
     }
   };
   const tir = (i, tx, ty) => { if (B.tirs.length < 2000) B.tirs.push(A.x[i], A.y[i], tx, ty, A.camp[i], i); };   // (le tireur en dernier : le dessin lui fait épauler son fusil
-  const ctx = { T, R, arriere: arriereDe(B), regiments: etat.regiments, rng, dt: PAS, gel, frapper, champDe: r => champDe(B, r), faces: B.faces, tir };
+  const ctx = { T, R, arriere: arriereDe(B), regiments: etat.regiments, rng, dt: PAS, gel, frapper, champDe: r => champDe(B, r), faces: B.faces, tir, hopital: [entreeHopital(etat, NOUS), entreeHopital(etat, EUX)] };
 
   ctx.obus = (x, y, cal) => tomber(B, x, y, cal, ctx, gel);          // (le canon d'un char, v0.81.0 : un obus comme les autres)
   construireGrille(A);
@@ -671,7 +701,7 @@ export function avancer(B) {
   }
   etat.barrages = etat.barrages.filter(b => b.reste > 0);
   if (etat.mitraillages.length) avancerAvions(B, ctx, rng);
-  if (etat.tickJour % RENFORTS.intervalle === 0) rallierArrives(B);
+  if (etat.tickJour % RENFORTS.intervalle === 0) { rallierArrives(B); hospitaliser(B); }
   if (etat.chars.length) avancerChars(B, ctx, rng);
   if (etat.nids.length) avancerNids(B, ctx, rng);
   if (etat.genies.length) avancerGenies(B, ctx);
@@ -1455,6 +1485,7 @@ export function* etapesRestaurer(p, R) {
   etat.blesses ??= [0, 0];
   etat.corps ??= [];          // (avant la v0.3.3, les morts ne restaient pas)
   etat.grades ??= {};
+  etat.transferts ??= [[], []]; etat.reservesPrises ??= [0, 0];
   etat.reserves ??= [0, 0]; etat.mission ??= null; etat.issue ??= null;   // (avant la v0.9.0 : ni mission ni réserves)
   etat.parRegiment ??= Math.floor(etat.parCamp / secteurDuJeu(etat).regiments);
   etat.tombes ??= []; etat.evacues ??= []; etat.nuits ??= [];   // (avant la v0.6.0 : pas de corvées)
