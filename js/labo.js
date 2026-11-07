@@ -29,7 +29,6 @@ import { JOURNAL } from './labo-journal.js?v=0.117.0';
 import { loadVersion } from './lib/app-update.js?v=0.117.0';
 import { maquetteEffets, maquetteAmbiance, maquetteEspace, maquetteBruitages } from './labo-son.js?v=0.117.0';
 import { calqueMoral } from './labo-moral.js?v=0.117.0';
-import { bilanRapport, bilanTuiles, bilanFrise } from './labo-donnees.js?v=0.117.0';
 import { calqueEnnemis } from './labo-engins-ennemis.js?v=0.117.0';
 import { maquetteTranchees, NOTES_TRANCHEES, NOMS_TRANCHEES } from './labo-tranchees.js?v=0.117.0';
 import { maquetteFabrique } from './labo-fabrique.js?v=0.117.0';

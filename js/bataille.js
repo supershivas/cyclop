@@ -35,18 +35,18 @@ import { creerNids, avancerNids, degatsNids, reparerNid, aubeNids } from './nids
 import { TOITS, NIDS } from './data/nids.js?v=0.117.0';
 import { BONUS, chevronsDe } from './data/experience.js?v=0.117.0';
 const resiste = reg => 1 - BONUS.regiment.moral * (reg.chev || 0);      // les chevrons d'un régiment adoucissent ses pertes de moral (lot E)
-import { refusGenie, lancerGenie, avancerGenies, degatsGenies, sectionsDeDepart } from './genie.js?v=0.116.1';
-import { refusChar, lancerChar, degatsChars, avancerChars } from './chars.js?v=0.116.1';
-import { METEO, SAISONS, SAISON_DEFAUT, PREVISION_JUSTE, temperature, vent } from './data/meteo.js?v=0.116.1';
-import { SECTEURS } from './data/secteur.js?v=0.116.1';
-import { REGIMENTS, REGIMENTS_GRANDS } from './data/lexique.js?v=0.116.1';
-import { STANCES, STANCE_DEFAUT } from './data/stances.js?v=0.116.1';
-import { DIFFICULTES, DIFFICULTE_DEFAUT } from './data/difficulte.js?v=0.116.1';
-import { grade, departCaracs, caracEnMots } from './identite.js?v=0.116.1';
-import { corvees, creerRegiment, prendreReserve } from './nuit.js?v=0.116.1';
-import { RENFORTS } from './data/renforts.js?v=0.116.1';
-import { EQUIPEMENTS } from './data/batiments.js?v=0.116.1';
-import { campDeDepart, dotationAube, refusOrdre, refusNid, appliquerDepart, modif, rechargeDe, sortieChars, sortieCaserne, entreeHopital, emplacementCamp, patients, renfortsDe } from './camp.js?v=0.116.1';
+import { refusGenie, lancerGenie, avancerGenies, degatsGenies, sectionsDeDepart } from './genie.js?v=0.117.0';
+import { refusChar, lancerChar, degatsChars, avancerChars } from './chars.js?v=0.117.0';
+import { METEO, SAISONS, SAISON_DEFAUT, PREVISION_JUSTE, temperature, vent } from './data/meteo.js?v=0.117.0';
+import { SECTEURS } from './data/secteur.js?v=0.117.0';
+import { REGIMENTS, REGIMENTS_GRANDS } from './data/lexique.js?v=0.117.0';
+import { STANCES, STANCE_DEFAUT } from './data/stances.js?v=0.117.0';
+import { DIFFICULTES, DIFFICULTE_DEFAUT } from './data/difficulte.js?v=0.117.0';
+import { grade, departCaracs, caracEnMots } from './identite.js?v=0.117.0';
+import { corvees, creerRegiment, prendreReserve } from './nuit.js?v=0.117.0';
+import { RENFORTS } from './data/renforts.js?v=0.117.0';
+import { EQUIPEMENTS } from './data/batiments.js?v=0.117.0';
+import { campDeDepart, dotationAube, refusOrdre, refusNid, appliquerDepart, modif, rechargeDe, sortieChars, sortieCaserne, entreeHopital, emplacementCamp, patients, renfortsDe } from './camp.js?v=0.117.0';
 
 export const PAS = 1 / 30;                 // s de jeu par pas
 export const NOUS = 0, EUX = 1;
