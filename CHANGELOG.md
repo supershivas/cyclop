@@ -1,5 +1,8 @@
 # Journal des versions
 
+## 0.104.2 — 2026-11-07
+- Tout dézoomé, tourner ou incliner la caméra ne déplace plus le point visé : le « mur » qui le poussait vers le fond de la carte a disparu
+
 ## 0.104.1 — 2026-11-01
 - Tout dézoomé, on peut viser n'importe quel point du secteur : le mur qui retenait la vue au milieu du terrain a disparu
 

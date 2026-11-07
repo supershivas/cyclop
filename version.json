@@ -1,7 +1,7 @@
 {
-  "version": "0.104.1",
-  "date": "2026-11-01",
+  "version": "0.104.2",
+  "date": "2026-11-07",
   "changes": [
-    "Tout dézoomé, on peut viser n'importe quel point du secteur : le mur qui retenait la vue au milieu du terrain a disparu"
+    "Tout dézoomé, tourner ou incliner la caméra ne déplace plus le point visé : le « mur » qui le poussait vers le fond de la carte a disparu"
   ]
 }

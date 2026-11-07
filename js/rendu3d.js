@@ -22,31 +22,31 @@
    - Les soldats : instanciés (une boîte et son ombre) ; au zoom 1 et 2, un
      point de 2 × 2 pixels (la couleur du camp sur son ombre).
    - Les corps : un homme couché (instancié) ; au zoom 1 et 2, un pixel. */
-import { loadThree } from './three-lib.js?v=0.104.1';
-import * as SH from './rendu/shaders.js?v=0.104.1';
-import { creerSoldats } from './rendu/soldats.js?v=0.104.1';
-import { creerChars } from './rendu/chars.js?v=0.104.1';
-import { creerGenies } from './rendu/genies.js?v=0.104.1';
-import { creerCamp } from './rendu/camp.js?v=0.104.1';
-import { creerAvions } from './rendu/avions.js?v=0.104.1';
-import { creerPonts } from './rendu/ponts.js?v=0.104.1';
-import { creerCiel } from './rendu/ciel.js?v=0.104.1';
-import { creerMeteo } from './rendu/meteo.js?v=0.104.1';
-import { creerTroncons } from './rendu/troncons.js?v=0.104.1';
-import { ARBRES_JEU } from './data/arbres.js?v=0.104.1';
-import { creerVegetation } from './rendu/vegetation.js?v=0.104.1';
-import { creerTemps } from './rendu/temps.js?v=0.104.1';
-import { creerEclats } from './rendu/eclats.js?v=0.104.1';
-import { creerOmbresRelief } from './rendu/ombres-relief.js?v=0.104.1';
-import { OMBRES_RELIEF as OMB, NUAGES, NUAGES_VENT } from './data/soleil.js?v=0.104.1';
-import { PALETTE, ORDRE, INDICE } from './palette.js?v=0.104.1';
-import { OMBRE, couleursLigne } from './apparence.js?v=0.104.1';
-import { MORCEAU, hauteurVueQ as hauteurQ, hauteurVueM as hauteurM } from './terrain.js?v=0.104.1';
-import { horloge, secteurDuJeu, rangDe } from './bataille.js?v=0.104.1';
-import { GRADES } from './data/grades.js?v=0.104.1';
-import { profilFleuve } from './eaux.js?v=0.104.1';
-import { ligneY } from './tranchees.js?v=0.104.1';
-import { vent as ventDuJour } from './data/meteo.js?v=0.104.1';
+import { loadThree } from './three-lib.js?v=0.104.2';
+import * as SH from './rendu/shaders.js?v=0.104.2';
+import { creerSoldats } from './rendu/soldats.js?v=0.104.2';
+import { creerChars } from './rendu/chars.js?v=0.104.2';
+import { creerGenies } from './rendu/genies.js?v=0.104.2';
+import { creerCamp } from './rendu/camp.js?v=0.104.2';
+import { creerAvions } from './rendu/avions.js?v=0.104.2';
+import { creerPonts } from './rendu/ponts.js?v=0.104.2';
+import { creerCiel } from './rendu/ciel.js?v=0.104.2';
+import { creerMeteo } from './rendu/meteo.js?v=0.104.2';
+import { creerTroncons } from './rendu/troncons.js?v=0.104.2';
+import { ARBRES_JEU } from './data/arbres.js?v=0.104.2';
+import { creerVegetation } from './rendu/vegetation.js?v=0.104.2';
+import { creerTemps } from './rendu/temps.js?v=0.104.2';
+import { creerEclats } from './rendu/eclats.js?v=0.104.2';
+import { creerOmbresRelief } from './rendu/ombres-relief.js?v=0.104.2';
+import { OMBRES_RELIEF as OMB, NUAGES, NUAGES_VENT } from './data/soleil.js?v=0.104.2';
+import { PALETTE, ORDRE, INDICE } from './palette.js?v=0.104.2';
+import { OMBRE, couleursLigne } from './apparence.js?v=0.104.2';
+import { MORCEAU, hauteurVueQ as hauteurQ, hauteurVueM as hauteurM } from './terrain.js?v=0.104.2';
+import { horloge, secteurDuJeu, rangDe } from './bataille.js?v=0.104.2';
+import { GRADES } from './data/grades.js?v=0.104.2';
+import { profilFleuve } from './eaux.js?v=0.104.2';
+import { ligneY } from './tranchees.js?v=0.104.2';
+import { vent as ventDuJour } from './data/meteo.js?v=0.104.2';
 
 export const CAMERA = { yaw: 0.15, tangage: 0.95, fov: 30 };   // au départ : tournée de 9°, plongée de 54°, angle de 30°
 // la caméra respire : un balancement très lent, 2° en 23 s (Jérôme, v0.3.1 : variante D du labo retenue)
@@ -91,6 +91,7 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
   // yaw, tangage : la caméra vue ; cible : là où elle va (elle y glisse en douceur)
   const vue = { cx: 200, cz: 150, zoom: 2, vw: 320, vh: 200, facteur: 2, fov: depart.fov, yaw: depart.yaw, tangage: depart.tangage, cible: { yaw: depart.yaw, tangage: depart.tangage } };
   // le souffle de la caméra (respiration) s'ajoute à l'angle choisi : yawVu, tangageVu servent au dessin et aux conversions
+  let zoomBorne = -1;      // le zoom de la dernière mise aux bornes du point visé (`borner`)
   const souffle = { t: 0, yaw: 0, tangage: 0, calme: 0, force: 0 };      // calme : les secondes sans geste sur la caméra ; force : 0..1, la part du balancement visible
   const yawVu = () => vue.yaw + souffle.yaw, tangageVu = () => vue.tangage + souffle.tangage;
   // la distance de la caméra au point visé : un mètre là-bas = ppm pixels
@@ -632,7 +633,7 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
     renderer.setSize(vue.vw, vue.vh, false);
     canvas.style.width = (vue.vw * vue.facteur / dpr) + 'px';
     canvas.style.height = (vue.vh * vue.facteur / dpr) + 'px';
-    borner();
+    borner(true);
   }
 
   // ─── Coordonnées ───
@@ -791,14 +792,14 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
         const apres = versTerrain(...ancre);
         vue.cx += avant[0] - apres[0]; vue.cz += avant[1] - apres[1];
       }
-      borner();
+      borner(true);
     },
-    deplacer(dx, dz) { souffle.calme = 0; vue.cx += dx; vue.cz += dz; borner(); },
+    deplacer(dx, dz) { souffle.calme = 0; vue.cx += dx; vue.cz += dz; borner(true); },
     // déplacer selon l'écran (droite, bas), en mètres
     deplacerEcran(sx, sy) {
       souffle.calme = 0;
       const c = Math.cos(vue.yaw), s = Math.sin(vue.yaw);
-      vue.cx += c * sx + s * sy; vue.cz += -s * sx + c * sy; borner();
+      vue.cx += c * sx + s * sy; vue.cz += -s * sx + c * sy; borner(true);
     },
     // tourner (rad) et incliner (k) la caméra, dans ses bornes
     tourner(dYaw, dTangage = 0) {
@@ -873,34 +874,32 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
     const c = coinsSol(zoom, yaw, tangageVu());
     return c.ok && c.x1 - c.x0 <= T.W && c.z1 - c.z0 + HAUT <= T.H;
   }
-  function borner() {
+  /* `deplace` : le point visé vient d'être déplacé (ou le zoom, ou la taille de l'écran) : on le ramène dans ses bornes. Quand seule l'orientation change (on tourne, on incline, la
+     caméra respire), le point visé ne bouge pas (Jérôme, v0.104.2 : « la visée se déplace brutalement vers le fond de la carte », « le point observé reste le point de référence de la rotation »).
+     Mesuré : à 1 px/m, la caméra inclinée sous 0,75 rad dérivait de 56 à 794 m selon le lacet, car ses bornes (la vue, ou la caméra elle-même) changent avec l'angle. */
+  function borner(deplace = false) {
     if (!T) return;
     // la caméra libre de l'écran titre passe aussi par là (Jérôme, v0.60.1 : « elle passe encore sous le sol, interdire ») : ni sous le sol, ni hors du terrain
     if (vue.ciel || vue.libre) {
       // la caméra libre du jeu : le point visé reste sur le terrain, la caméra ne passe pas sous le sol (elle se relève au besoin)
       vue.cx = Math.max(0, Math.min(T.W, vue.cx)); vue.cz = Math.max(0, Math.min(T.H, vue.cz));
       const D = distance(vue.zoom);
-      {
-        // la caméra reste au-dessus du terrain : au-delà de son bord, il n'y a que le vide
-        const v = versCamera(yawVu(), vue.tangage);
-        let x0 = Math.max(0, 8 - v[0] * D), x1 = Math.min(T.W, T.W - 8 - v[0] * D), z0 = Math.max(0, 8 - v[2] * D), z1 = Math.min(T.H, T.H - 8 - v[2] * D);
-        // Quand elle regarde le sol (la caméra assez haute), le vide est derrière elle, pas devant : c'est la vue qui ne sort pas du terrain (les coins de l'écran, `coinsSol`), pas
-        // la caméra (Jérôme, v0.96.0 : « la caméra n'intègre pas bien les nouveaux bâtiments » : à deux mètres par pixel, la caméra, à 216 m derrière son point visé, ne pouvait pas
-        // descendre au-delà de la rangée 416, et le camp est derrière la rangée 470). Le fondu : de 0 (tangage 0,5, la caméra seule) à 1 (0,75 et plus, la vue seule), sans saut.
-        const w = Math.max(0, Math.min(1, (tangageVu() - 0.5) / 0.25));
-        if (w > 0) {
-          const c = coinsSol(vue.zoom, yawVu(), tangageVu());
-          if (c.ok) {
-            // Le surplomb (v0.103.0 : « on sent comme un mur qui nous empêche de reculer ») : la vue peut dépasser le bord du terrain d'une part de sa taille (le faux terrain et le fondu du bord y sont
-            // déjà) ; sans cela, tout dézoomé la vue, plus large que le terrain, restait figée au milieu et le point visé ne pouvait plus atteindre le bord du secteur.
-            const sx = SURPLOMB * (c.x1 - c.x0), sz = SURPLOMB * (c.z1 - c.z0);
-            // Et, tout dézoomé, le point visé atteint au moins `ATTEINTE` du terrain depuis chaque bord (v0.104.1 : à 1 px/m le surplomb seul laissait le coin du secteur à 241 m du bord ; le secteur commence à 26 %)
-            const ax0 = Math.min(-c.x0 - sx, ATTEINTE * T.W), ax1 = Math.max(T.W - c.x1 + sx, (1 - ATTEINTE) * T.W), az0 = Math.min(-c.z0 - sz, ATTEINTE * T.H), az1 = Math.max(T.H - HAUT - c.z1 + sz, (1 - ATTEINTE) * T.H);
-            x0 += (ax0 - x0) * w; x1 += (ax1 - x1) * w; z0 += (az0 - z0) * w; z1 += (az1 - z1) * w;
-          }
+      if (deplace || vue.zoom !== zoomBorne) {
+        zoomBorne = vue.zoom;
+        // Ce sont les coins de l'écran (`coinsSol`) qui ne sortent pas du terrain, pas la caméra : elle peut être hors du terrain, du moment qu'elle est au-dessus du sol (la boucle plus bas la relève ; hors
+        // du terrain, le sol est le bord, et le faux terrain est plus bas). La caméra comme borne (v0.3.0 à v0.104.1, fondue sous 0,75 rad) poussait le point visé vers le fond de la carte dès qu'on tournait.
+        // Quand un coin regarde au-dessus de l'horizon (caméra rasante), aucune borne de vue : le terrain seul.
+        let x0 = 0, x1 = T.W, z0 = 0, z1 = T.H;
+        const c = coinsSol(vue.zoom, yawVu(), tangageVu());
+        if (c.ok) {
+          // Le surplomb (v0.103.0 : « on sent comme un mur qui nous empêche de reculer ») : la vue peut dépasser le bord du terrain d'une part de sa taille (le faux terrain et le fondu du bord y sont
+          // déjà) ; sans cela, tout dézoomé la vue, plus large que le terrain, restait figée au milieu et le point visé ne pouvait plus atteindre le bord du secteur.
+          const sx = SURPLOMB * (c.x1 - c.x0), sz = SURPLOMB * (c.z1 - c.z0);
+          // Et, tout dézoomé, le point visé atteint au moins `ATTEINTE` du terrain depuis chaque bord (v0.104.1 : à 1 px/m le surplomb seul laissait le coin du secteur à 241 m du bord ; le secteur commence à 26 %)
+          x0 = Math.max(0, Math.min(-c.x0 - sx, ATTEINTE * T.W)); x1 = Math.min(T.W, Math.max(T.W - c.x1 + sx, (1 - ATTEINTE) * T.W));
+          z0 = Math.max(0, Math.min(-c.z0 - sz, ATTEINTE * T.H)); z1 = Math.min(T.H, Math.max(T.H - HAUT - c.z1 + sz, (1 - ATTEINTE) * T.H));
         }
-        vue.cx = x0 > x1 ? (x0 + x1) / 2 : Math.max(x0, Math.min(x1, vue.cx));
-        vue.cz = z0 > z1 ? (z0 + z1) / 2 : Math.max(z0, Math.min(z1, vue.cz));
+        vue.cx = Math.max(x0, Math.min(x1, vue.cx)); vue.cz = Math.max(z0, Math.min(z1, vue.cz));
       }
       for (const cle of ['cible', 'vue']) {
         const o = cle === 'cible' ? vue.cible : vue;
