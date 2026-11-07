@@ -3,8 +3,8 @@
 // Six façons de les rendre visibles et lisibles (opérationnel ou détruit, plus ou moins abîmé) sans qu'ils pèsent : trois « barres fines sans texte », trois « pastilles qui grandissent au survol »,
 // et l'étiquette actuelle en référence. Posé sur le moteur en direct (les vrais hommes, le vrai sol), comme `labo-moral.js` : un calque 2D par-dessus qui lit seulement les positions (`versEcran`).
 // Rien ici ne modifie le jeu ; la scène seule est truquée (quatre postes d'en face : intact, entamé, presque détruit, détruit ; quatre chars de même). Palette du jeu seulement : le kaki d'en face, l'os, la terre, la brume.
-import { PALETTE as P } from './palette.js?v=0.116.1';
-import { NIDS } from './data/nids.js?v=0.116.1';
+import { PALETTE as P } from './palette.js?v=0.117.0';
+import { NIDS } from './data/nids.js?v=0.117.0';
 
 const el = (tag, css = '', ...kids) => { const e = document.createElement(tag); if (css) e.style.cssText = css; e.append(...kids.flat().filter(k => k != null)); return e; };
 const MONO = '11px ui-monospace,"DejaVu Sans Mono",Menlo,Consolas,monospace';

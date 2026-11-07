@@ -1,8 +1,7 @@
 {
-  "version": "0.116.1",
+  "version": "0.117.0",
   "date": "2026-11-07",
   "changes": [
-    "Un régiment scindé (des hommes bloqués chez l'ennemi) a une pastille, un nom et un chemin d'ordre pour chaque groupe : l'ordre part d'où sont les hommes",
-    "Les lignes d'ordre de la carte se lisent partout, dans le no man's land comme sur les cases"
+    "Le labo propose trois bilans du soir en graphiques (le rapport, le tableau de bord, la frise) à trancher ; rien n'a encore changé dans le jeu"
   ]
 }

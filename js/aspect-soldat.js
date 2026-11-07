@@ -3,8 +3,8 @@
    testée dans Node ; le jeu et la fabrique de soldats du labo lisent la même fonction, donc la fabrique montre ce que le jeu dessine.
    L'aspect ne change jamais la partie : il ne lit que des tirages de son numéro, jamais l'état (les caractéristiques qu'on lui passe viennent de `caracteristiques`,
    elles aussi tirées du numéro). */
-import { hash2 } from './lib/rng.js?v=0.116.1';
-import { COIFFES, CHEVEUX, BARBES, PEAUX, ACCESSOIRES, CARRURE, COULEURS_CHEVEUX } from './data/aspect-soldat.js?v=0.116.1';
+import { hash2 } from './lib/rng.js?v=0.117.0';
+import { COIFFES, CHEVEUX, BARBES, PEAUX, ACCESSOIRES, CARRURE, COULEURS_CHEVEUX } from './data/aspect-soldat.js?v=0.117.0';
 
 // un indice tiré d'une liste à poids (`poids` : un nombre, ou un nombre par camp)
 function tirer(liste, u, camp) {
