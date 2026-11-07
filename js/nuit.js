@@ -10,14 +10,15 @@
    - (v0.38.3) Les caillebotis et le coup de main sont retirés ; (v0.77.1) réparer la tranchée, inhumer les morts et creuser des abris aussi (docs/archives/corvees-retirees.md) : quatre corvées.
    - (v0.39.0) La mêlée se joue dans la nuit (`meleeNuit`) : un tronçon où les deux camps sont face à face au soir est tranché à l'aube, et les
      régiments au contact (`contactDe`) ne reçoivent aucune corvée. */
-import { hash2 } from './lib/rng.js?v=0.117.0';
-import { modif, refusEquiper, equiper } from './camp.js?v=0.117.0';
-import { CORVEES } from './data/corvees.js?v=0.117.0';
-import { EQUIPEMENTS } from './data/batiments.js?v=0.117.0';
-import { REGIMENTS } from './data/lexique.js?v=0.117.0';
-import { ajouterSoldat, poserCaracs, lireCaracs, place } from './army.js?v=0.117.0';
-import { departCaracs } from './identite.js?v=0.117.0';
-import { y0En } from './tranchees.js?v=0.117.0';
+import { hash2 } from './lib/rng.js?v=0.116.1';
+import { RENFORTS } from './data/renforts.js?v=0.116.1';
+import { modif, renfortsDe, refusEquiper, equiper } from './camp.js?v=0.116.1';
+import { CORVEES } from './data/corvees.js?v=0.116.1';
+import { EQUIPEMENTS } from './data/batiments.js?v=0.116.1';
+import { REGIMENTS } from './data/lexique.js?v=0.116.1';
+import { ajouterSoldat, poserCaracs, lireCaracs, place } from './army.js?v=0.116.1';
+import { departCaracs } from './identite.js?v=0.116.1';
+import { y0En } from './tranchees.js?v=0.116.1';
 
 export const corvee = id => CORVEES.find(c => c.id === id);
 
@@ -86,7 +87,7 @@ export function refusCorvee(B, reg, id) {
     const m = isolement(B, reg);
     if (m) return `Chez l'ennemi, ${id === 'evacuer' ? 'les blessés ne passent pas' : 'la soupe ne passe pas'} : ${m}.`;
   }
-  if (id === 'releve' && !(B.etat.reserves?.[reg.camp] > 0)) return 'Plus un régiment en réserve.';
+  if (id === 'releve' && !(renfortsDe(B.etat, reg.camp).restants > 0)) return renfortsDe(B.etat, reg.camp).pris >= RENFORTS.plafond ? `Plafond atteint : ${RENFORTS.plafond} régiments de renfort par bataille.` : 'Plus un régiment en réserve.';
   if (c.equipe) { const r = refusEquiper(B, reg, id.slice(3)); if (r) return r; }
   return null;
 }
@@ -112,7 +113,7 @@ export function choixEnFace(B) {
   }
   // la relève : le régiment le plus éprouvé (moins de la moitié de ses hommes), un par nuit, tant qu'il en reste en réserve
   const eprouves = B.etat.regiments.filter(r => r.camp === 1 && r.effectif && r.effectif < r.initial * 0.5).sort((a, b) => a.effectif / a.initial - b.effectif / b.initial || a.id - b.id);
-  if (eprouves.length && B.etat.reserves?.[1] > 0) out[eprouves[0].id] = 'releve';
+  if (eprouves.length && renfortsDe(B.etat, 1).restants > 0) out[eprouves[0].id] = 'releve';
   return out;
 }
 /* La mêlée se joue dans la nuit, avant les corvées. Chaque homme d'un tronçon disputé tombe avec la chance `nuit.meleeMort` × 2 × (leurs forces /

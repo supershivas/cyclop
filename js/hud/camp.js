@@ -32,7 +32,7 @@ export function creerCampHud({ moi = () => 0, deployer = () => {}, bouton, papie
       const fiche = el('div', { className: 'renforts' }, el('b', { textContent: `Régiments frais : ${r.restants} sur ${r.total}` }),
         el('span', { className: 'pastilles', ariaHidden: 'true' }, ...Array.from({ length: r.total }, (_, k) => el('i', { className: k < r.pris ? 'pris' : '' }))),
         el('span', { textContent: r.pris ? `${r.pris} ${pl(r.pris)} déjà engagé${r.pris > 1 ? 's' : ''} (relève ou déploiement).` : 'Aucun n\'a encore servi.' }),
-        el('span', { className: 'discret', textContent: 'Chaque relève de nuit ou renfort déployé en consomme un. Il n\'en arrive pas un nouveau chaque jour : la caserne n\'en ajoute qu\'en montant de niveau.' }));
+        el('span', { className: 'discret', textContent: `Chaque relève de nuit ou renfort déployé en consomme un, dans la limite de ${r.plafond} par bataille. Il n'en arrive pas un nouveau chaque jour.` }));
       fiche.title = 'Les régiments frais sont tirés de la réserve : la relève de nuit et le déploiement du jour puisent dans la même.';
       papier.append(fiche);
     }
@@ -45,7 +45,7 @@ export function creerCampHud({ moi = () => 0, deployer = () => {}, bouton, papie
         b.setAttribute('aria-disabled', p.ok ? 'false' : 'true');
         liste.append(b);
       };
-      if (e.reserves[moi()] > 0) un(false, `Déployer un régiment frais (${e.reserves[moi()]})`);
+      if (renfortsDe(e, moi()).restants > 0) un(false, `Déployer un régiment frais (${renfortsDe(e, moi()).restants})`);
       if (e.ralliees[moi()].length) un(true, `Déployer les ralliés (${e.ralliees[moi()][0].n})`);
       if (!liste.children.length) papier.append(el('div', { className: 'compte discret', textContent: 'Plus de renfort à déployer.' })); else papier.append(liste);
     }

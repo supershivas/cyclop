@@ -1,6 +1,6 @@
 // Gestion des régiments (v0.116.0) : les transferts de la nuit, les blessés qui vont à l'hôpital, les régiments frais comptés.
-import { nouvelleBataille, avancer, aube, photo, restaurer, deployer } from '../js/bataille.js';
-import { planifierTransfert, annulerTransfert, refusTransfert, disponibles, prendreReserve } from '../js/nuit.js';
+import { nouvelleBataille, avancer, aube, photo, restaurer, deployer, peutDeployer } from '../js/bataille.js';
+import { refusCorvee, planifierTransfert, annulerTransfert, refusTransfert, disponibles, prendreReserve } from '../js/nuit.js';
 import { entreeHopital, renfortsDe, patients } from '../js/camp.js';
 import { blessesDe, marcheBlesse } from '../js/bataille.js';
 import { REGLAGES as R } from '../js/data/reglages.js';
@@ -84,9 +84,18 @@ test('la réserve dit combien de frais restent et combien ont servi, sans en ajo
   const B = bridee(), e = B.etat, t = renfortsDe(e, 0);
   assert.equal(t.pris, 0); assert.equal(t.restants, e.reserves[0]); assert.equal(t.total, e.reserves[0]);
   prendreReserve(e, 0);
-  assert.deepEqual(renfortsDe(e, 0), { restants: t.restants - 1, pris: 1, total: t.total });
+  assert.deepEqual(renfortsDe(e, 0), { restants: t.restants - 1, pris: 1, total: t.total, plafond: 3 });
   const r = deployer(B, 0); assert.ok(r.ok || r.refus);
   const apres = renfortsDe(e, 0);
   for (let n = 0; n < 2; n++) { while (e.phase === 'jour') avancer(B); aube(B); }
   assert.equal(renfortsDe(e, 0).total, apres.total, 'deux jours passent : aucun régiment frais ne s\'ajoute');
+});
+test('au plus 3 régiments de renfort par bataille, même avec une grosse réserve (v0.117.0)', () => {
+  const B = bridee(), e = B.etat; e.reserves[0] = 6;
+  assert.deepEqual(renfortsDe(e, 0), { restants: 3, pris: 0, total: 3, plafond: 3 });
+  for (let k = 0; k < 3; k++) prendreReserve(e, 0);
+  assert.equal(renfortsDe(e, 0).restants, 0);
+  e.phase = 'nuit'; const reg = e.regiments.find(r => r.camp === 0);
+  assert.match(refusCorvee(B, reg, 'releve'), /Plafond atteint/);
+  e.phase = 'jour'; assert.match(peutDeployer(B, 0).refus, /Plafond atteint/);
 });

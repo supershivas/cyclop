@@ -86,7 +86,7 @@ export function creerNuit({ $, bataille, choisis, choisir = () => {}, pauser, re
     $('nuit-chiffres').replaceChildren(
       chiffre('Nos morts', mn, 'Les hommes tombés chez nous aujourd\'hui, de leurs blessures du matin comprises'), chiffre('Leurs morts', me, 'Les hommes tombés en face aujourd\'hui'),
       ...(e.tranchees ? [chiffre('Tronçons pris', pris, 'Les tronçons de tranchée pris à l\'ennemi aujourd\'hui'), chiffre('Tronçons perdus', perdus, 'Les tronçons de tranchée que l\'ennemi nous a pris aujourd\'hui')] : []),
-      ...(e.mission ? [chiffre('Régiments frais', renfortsEnMots(e, moi()), 'Les régiments frais de la caserne : ceux qui restent sur ceux de la bataille. La relève de la nuit et un renfort déployé le jour en consomment chacun un ; il n\'en arrive pas d\'autres avec les jours (seule une caserne plus grande en ajoute).')] : []));
+      ...(e.mission ? [chiffre('Régiments frais', renfortsEnMots(e, moi()), 'Les régiments frais de la caserne : ceux qui restent sur ceux de la bataille. La relève de la nuit et un renfort déployé le jour en consomment chacun un ; il n\'en arrive pas d\'autres avec les jours (au plus 3 par bataille).')] : []));
     $('nuit-lignes').textContent = e.tranchees ? enLignes(e.prises[j - 1]) : '';
     // la victoire anticipée (v0.77.0) : où l'on en est, pour qui doit prendre leur première ligne
     if (e.tranchees && e.mission === 'prendre' && moi() === NOUS) {
