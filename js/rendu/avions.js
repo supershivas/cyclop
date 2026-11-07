@@ -2,12 +2,12 @@
 // posé à son altitude (avions.js : `positionDe`), cabré ou piqué selon sa pente, avec son ombre sur le sol. En tirant, ses traceurs tombent devant lui et la terre gicle le long de
 // la bande ; touché, il fume, il tombe en vrille et laisse une épave qui fume. Le dessin seulement : tout vient de l'état de la bataille, rien n'y est écrit.
 // Fabrique `creerAvions({ THREE, scene, bataille, hauteur, effets })` : la bataille change à chaque partie, on la lit à chaque image. `effets` : ceux de eclats.js.
-import { atelier } from './engins.js?v=0.115.0';
-import { AVIONS_JEU } from './avions-modeles.js?v=0.115.0';
-import { positionDe, balayage } from '../avions.js?v=0.115.0';
-import { MITRAILLAGE as M } from '../data/mitraillage.js?v=0.115.0';
-import { PALETTE as P } from '../palette.js?v=0.115.0';
-import { monterEpaveAvion } from './epaves.js?v=0.115.0';
+import { atelier } from './engins.js?v=0.116.0';
+import { AVIONS_JEU } from './avions-modeles.js?v=0.116.0';
+import { positionDe, balayage } from '../avions.js?v=0.116.0';
+import { MITRAILLAGE as M } from '../data/mitraillage.js?v=0.116.0';
+import { PALETTE as P } from '../palette.js?v=0.116.0';
+import { monterEpaveAvion } from './epaves.js?v=0.116.0';
 
 const DUREE_DISPERSION = 1.8;               // s : de l'instant où la carcasse touche le sol à celui où ses pièces ont fini de rouler
 

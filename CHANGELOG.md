@@ -1,5 +1,10 @@
 # Journal des versions
 
+## 0.116.0 — 2026-11-07
+- La nuit, « Gérer les régiments » : on glisse des soldats d'un régiment à un autre (1, 10 ou tous : la fusion) ; ils les rejoignent au début du jour suivant
+- Les blessés qui marchent vont d'eux-mêmes à l'hôpital au lieu d'attendre au bord de la carte ; la fenêtre de l'hôpital dit combien sont soignés, en route ou sur le champ
+- La caserne dit « régiments frais : 2 sur 4 », combien ont déjà servi et ce qui en consomme un ; aucun ne s'ajoute chaque jour
+
 ## 0.115.0 — 2026-11-07
 - Chars : la fiche dit leurs victimes et leurs réparations ; le parc mène la vue au char et ouvre sa fiche ; les chars et mitrailleuses d'en face ont une étiquette (état, barre de vie)
 - Mitrailleuses : sans servant, la fenêtre du poste est inactive ; ce qu'il abat est attribué au régiment qui le sert

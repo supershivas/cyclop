@@ -5,11 +5,11 @@
 // couleur de celui qui les tient (en pointillé quand l'autre camp y est entré), les régiments en cercles numérotés ; dessous, les effectifs, les pertes et la liste des régiments présents. Quatre
 // boutons mènent aux cases voisines (la grille de la carte : gauche, droite, haut, bas). On en sort par « Vue d'ensemble » ou par Échap ; la vue 3D revient où elle était (main.js).
 // Lecture seule de l'état ; le dessin d'un canvas 2D, palette du jeu. Comme la carte, tourné d'un demi-tour pour l'invité d'une partie à deux.
-import { NOUS, EUX, zone, largeurZone, lettreZone, tronconsDeLigne, codeLigne } from '../bataille.js?v=0.115.0';
-import { ligneY } from '../tranchees.js?v=0.115.0';
-import { PALETTE as P } from '../palette.js?v=0.115.0';
-import { numeroDe } from './lecture.js?v=0.115.0';
-import { rangees } from './carte.js?v=0.115.0';
+import { NOUS, EUX, zone, largeurZone, lettreZone, tronconsDeLigne, codeLigne } from '../bataille.js?v=0.116.0';
+import { ligneY } from '../tranchees.js?v=0.116.0';
+import { PALETTE as P } from '../palette.js?v=0.116.0';
+import { numeroDe } from './lecture.js?v=0.116.0';
+import { rangees } from './carte.js?v=0.116.0';
 
 const L = 336, H = 192;                  // le canvas, en pixels
 

@@ -1,9 +1,9 @@
 // Le camp : la règle, sans écran (Jérôme, v0.86.0 : lot 1 de `docs/chantiers/camp-et-ameliorations.md`). Logique pure : aucun DOM, aucune horloge, aucun hasard.
 // L'état est `etat.camp` : la dotation de l'état-major, le niveau de chaque bâtiment (et son chantier d'une nuit), les lignes d'en face déjà comptées.
 // Lot 2 : les niveaux ouvrent les ordres (`refusOrdre`). Lot 3 (v0.88.0) : chaque niveau et chaque choix de palier change un chiffre (`modif`) ou un effectif (`effectifsDe`).
-import { hash2 } from './lib/rng.js?v=0.115.0';
-import { BATIMENTS, DOTATION, CAMP_PLAN, CAMP_IA, PIEDS, EQUIPEMENT, EQUIPEMENTS } from './data/batiments.js?v=0.115.0';
-import { MITRAILLAGE } from './data/mitraillage.js?v=0.115.0';
+import { hash2 } from './lib/rng.js?v=0.116.0';
+import { BATIMENTS, DOTATION, CAMP_PLAN, CAMP_IA, PIEDS, EQUIPEMENT, EQUIPEMENTS } from './data/batiments.js?v=0.116.0';
+import { MITRAILLAGE } from './data/mitraillage.js?v=0.116.0';
 
 const NOUS = 0, EUX = 1;
 /* L'état du camp de `camp` : `etat.camp` (le nôtre), `etat.campEux` (celui d'en face : v0.92.0) */
@@ -164,13 +164,13 @@ export function sortieCaserne(etat, camp = NOUS) {
   const e = emplacementCamp(etat, 'caserne', camp), sens = camp === NOUS ? -1 : 1;
   return { x: e.x, y: e.y + sens * (e.d / 2 + 2), sens, w: e.w, cx: e.x, cy: e.y };
 }
-/* Où marchent les blessés de `camp` (v0.115.0) : devant la façade de l'hôpital, { x, y, cx, cy } ; null sans hôpital dessiné (partie non bridée, hôpital pas bâti) : ils vont alors à l'arrière comme avant */
+/* Où marchent les blessés de `camp` (v0.116.0) : devant la façade de l'hôpital, { x, y, cx, cy } ; null sans hôpital dessiné (partie non bridée, hôpital pas bâti) : ils vont alors à l'arrière comme avant */
 export function entreeHopital(etat, camp = NOUS) {
   if (!campDe(etat, camp)?.bride || !niveauDe(etat, 'hopital', camp)) return null;
   const e = emplacementCamp(etat, 'hopital', camp), sens = camp === NOUS ? -1 : 1;
   return { x: e.x, y: e.y + sens * (e.d / 2 + 2), cx: e.x, cy: e.y };
 }
-/* Les régiments frais de `camp` (v0.115.0) : { restants, pris, total } ; `pris` = ceux que la relève ou un déploiement ont déjà engagés (les ralliés n'en font pas partie : ils ne viennent pas de la réserve). Aucun régiment ne s'ajoute chaque jour : le total ne bouge que si la caserne monte. */
+/* Les régiments frais de `camp` (v0.116.0) : { restants, pris, total } ; `pris` = ceux que la relève ou un déploiement ont déjà engagés (les ralliés n'en font pas partie : ils ne viennent pas de la réserve). Aucun régiment ne s'ajoute chaque jour : le total ne bouge que si la caserne monte. */
 export function renfortsDe(etat, camp = NOUS) {
   const restants = etat.reserves?.[camp] ?? 0, pris = etat.reservesPrises?.[camp] ?? 0;
   return { restants, pris, total: restants + pris };

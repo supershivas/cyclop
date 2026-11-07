@@ -1,4 +1,4 @@
-// Gestion des régiments (v0.115.0) : les transferts de la nuit, les blessés qui vont à l'hôpital, les régiments frais comptés.
+// Gestion des régiments (v0.116.0) : les transferts de la nuit, les blessés qui vont à l'hôpital, les régiments frais comptés.
 import { nouvelleBataille, avancer, aube, photo, restaurer, deployer } from '../js/bataille.js';
 import { planifierTransfert, annulerTransfert, refusTransfert, disponibles, prendreReserve } from '../js/nuit.js';
 import { entreeHopital, renfortsDe, patients } from '../js/camp.js';
@@ -9,7 +9,7 @@ const bridee = (graine = 5) => nouvelleBataille(graine, R, { soldats: 400, jours
 const effectif = (B, id) => { let n = 0; for (let i = 0; i < B.armee.n; i++) if (!B.armee.mort[i] && B.armee.reg[i] === id) n++; return n; };
 const regs = B => B.etat.regiments.filter(r => r.camp === 0 && r.effectif > 0);
 
-group('régiments — les transferts de la nuit (v0.115.0)');
+group('régiments — les transferts de la nuit (v0.116.0)');
 test('un transfert de 10 hommes se prévoit la nuit et s\'exécute à l\'aube, pas avant', () => {
   const B = bridee(), [a, b] = regs(B), na = a.effectif, nb = b.effectif;
   assert.match(planifierTransfert(B, 0, a.id, b.id, 10).refus, /la nuit/, 'le jour : refusé');
@@ -61,7 +61,7 @@ test('un régiment relevé dans la nuit perd son transfert (il n\'a plus d\'homm
   assert.equal(b.effectif, nb, 'rien n\'a été transféré');
 });
 
-group('régiments — les blessés vont à l\'hôpital (v0.115.0)');
+group('régiments — les blessés vont à l\'hôpital (v0.116.0)');
 test('un blessé qui marche entre à l\'hôpital et est compté parmi les soignés', () => {
   const B = bridee(), e = B.etat, A = B.armee, h = entreeHopital(e, 0);
   assert.ok(h, 'l\'hôpital est dessiné dans la partie bridée');
@@ -79,7 +79,7 @@ test('sans hôpital dessiné (partie non bridée), les blessés vont à l\'arri�
   assert.equal(entreeHopital(B.etat, 0), null);
 });
 
-group('régiments — les renforts comptés (v0.115.0)');
+group('régiments — les renforts comptés (v0.116.0)');
 test('la réserve dit combien de frais restent et combien ont servi, sans en ajouter chaque jour', () => {
   const B = bridee(), e = B.etat, t = renfortsDe(e, 0);
   assert.equal(t.pris, 0); assert.equal(t.restants, e.reserves[0]); assert.equal(t.total, e.reserves[0]);

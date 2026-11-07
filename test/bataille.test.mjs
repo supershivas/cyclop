@@ -1437,12 +1437,12 @@ test('un régiment en déroute se retire vers la caserne ; ceux qui y entrent fo
   reg.moral = 0.02;       // (qu\'il ne se rallie pas en route)
   for (let k = 0; k < 30 * 400 && e.arrives[0].n < RENFORTS.seuilRallies; k++) { avancer(B); reg.moral = Math.min(reg.moral, 0.05); }
   assert.ok(e.arrives[0].n >= RENFORTS.seuilRallies, 'des fuyards sont rentrés : ' + e.arrives[0].n);
-  assert.equal(reg.effectif + reg.pertes + e.arrives[0].n + e.evacues.filter(v => v[4] === reg.id).length, reg.initial, 'ils ne sont pas des morts : le compte tombe juste (les blessés entrés à l\'hôpital, v0.115.0, sont des évacués)');
+  assert.equal(reg.effectif + reg.pertes + e.arrives[0].n + e.evacues.filter(v => v[4] === reg.id).length, reg.initial, 'ils ne sont pas des morts : le compte tombe juste (les blessés entrés à l\'hôpital, v0.116.0, sont des évacués)');
   reg.moral = 0.5;
   while (e.phase === 'jour') avancer(B);
   const entres = e.arrives[0].n;
   assert.ok(aube(B).ok);
-  const regs0 = e.regiments.length;      // (après l'aube : la relève d'en face peut y ajouter un régiment, ce que les blessés à l'hôpital, v0.115.0, changent d'une graine à l'autre)
+  const regs0 = e.regiments.length;      // (après l'aube : la relève d'en face peut y ajouter un régiment, ce que les blessés à l'hôpital, v0.116.0, changent d'une graine à l'autre)
   assert.equal(e.ralliees[0].length, 1, 'une unité de ralliés se forme au matin'); assert.ok(e.ralliees[0][0].n >= entres, 'avec tous ceux qui sont rentrés'); assert.equal(e.arrives[0].n, 0);
   assert.equal(e.ralliees[0][0].moral, RENFORTS.moralRallies);
   assert.equal(e.reserves[0], 2, 'la réserve de la relève ne bouge pas');
