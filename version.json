@@ -1,5 +1,5 @@
 {
-  "version": "0.117.0",
+  "version": "0.118.0",
   "date": "2026-11-07",
   "changes": [
     "Renforts : au plus 3 régiments frais par bataille (relève de nuit et déploiement confondus) ; la caserne et la nuit disent « n sur 3 » et le refus nomme le plafond"

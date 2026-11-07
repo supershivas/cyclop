@@ -1,7 +1,10 @@
 # Journal des versions
 
-## 0.117.0 — 2026-11-07
+## 0.118.0 — 2026-11-07
 - Renforts : au plus 3 régiments frais par bataille (relève de nuit et déploiement confondus) ; la caserne et la nuit disent « n sur 3 » et le refus nomme le plafond
+
+## 0.117.0 — 2026-11-07
+- Le labo propose trois bilans du soir en graphiques (le rapport, le tableau de bord, la frise) à trancher ; rien n'a encore changé dans le jeu
 
 ## 0.116.1 — 2026-11-07
 - Un régiment scindé (des hommes bloqués dans la tranchée d'en face) a une pastille, un nom et un chemin d'ordre pour chaque groupe : l'ordre part d'où sont les hommes
