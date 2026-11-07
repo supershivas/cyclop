@@ -1,5 +1,8 @@
 # Journal des versions
 
+## 0.114.1 — 2026-11-07
+- Tout dézoomé, tourner ou incliner la caméra ne déplace plus le point visé : le « mur » qui le poussait vers le fond de la carte a disparu
+
 ## 0.114.0 — 2026-11-07
 - La carte : une case est un secteur (B1, C6…) ; un clic en montre le plan seul, soldats à leur place, avec les cases voisines à un bouton ; lignes 1 à 4 chez nous, 5 à 8 en face
 - Un petit « ? » explique la carte (marges resserrées) ; la fenêtre d'un régiment ne garde que son « ? », et elle comme les fiches des hommes se déplacent à la main

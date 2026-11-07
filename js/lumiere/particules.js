@@ -1,7 +1,7 @@
 // Les particules d'un obus : débris de terre (opaques, retombent au sol), fumée (monte et s'étale), poussière (courte). Logique pure, hasard à graine.
 // Un tampon plat que le rendu envoie tel quel au GPU : 6 nombres par particule — x, y, z, taille (m), genre (0 débris, 1 fumée, 2 poussière), opacité.
-import { createRng } from '../lib/rng.js?v=0.114.0';
-import { ATMOSPHERE } from './config.js?v=0.114.0';
+import { createRng } from '../lib/rng.js?v=0.114.1';
+import { ATMOSPHERE } from './config.js?v=0.114.1';
 
 export const GENRE = { DEBRIS: 0, FUMEE: 1, POUSSIERE: 2 };
 export function creerParticules(max = 7000, graine = 11) {

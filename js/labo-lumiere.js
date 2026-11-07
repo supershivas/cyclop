@@ -1,20 +1,20 @@
 // Labo lumière — Cyclopéen : peut-on obtenir un rendu de lumière proche d'un GI voxel, sans raytracing, avec un budget tenable dans un navigateur ?
 // Ce fichier relie les modules (terrain, lumière, foule, particules, rendu, mesures — js/lumiere/) à l'écran : réglages, boucle, souris, panneau de mesures.
 // Il ne contient aucune règle : le futur jeu reprend js/lumiere/ tel quel.
-import { ROLES } from './palette.js?v=0.114.0';
-import { startUpdateCheck, loadVersion, loadChangelog } from './lib/app-update.js?v=0.114.0';
-import { MONDE, TAILLES, COLONNES_MAX, LAMPES, ETAPES, QUALITES, RESOLUTIONS, METEOS, METEO_AUTO, NUAGES, SOLDATS_REELS, CAMERA, BARRAGE, FLASH, BUDGET_IMAGE_MS, BUDGET_RECALCUL_CHUNK_MS } from './lumiere/config.js?v=0.114.0';
-import { creerMonde, impact, chunksDe, rectDeChunks } from './lumiere/terrain.js?v=0.114.0';
-import { creerLumiere, calculerSoleil, calculerAO, calculerFlood, calculerCavite, majHauteurs, regionTotale } from './lumiere/lumiere.js?v=0.114.0';
-import { creerFoule, regler as reglerFoule, avancer as avancerFoule } from './lumiere/foule.js?v=0.114.0';
-import { aspectDe, creerSuivi, suivre, ecrire as ecrireReel, FLOATS as FLOATS_REEL, creerClasses, classer, ecrireJeu, FLOATS_JEU } from './lumiere/soldats-reels.js?v=0.114.0';
-import { creerLampes, poserFixes, refaireFixes, majMobiles, lampesDeSoldats } from './lumiere/lampes.js?v=0.114.0';
-import { creerParticules, explosion, avancer as avancerParticules, ecrire as ecrireParticules } from './lumiere/particules.js?v=0.114.0';
-import { creerCamera, rayon, toucherSol, matrices } from './lumiere/camera.js?v=0.114.0';
-import { ciel as calculerCiel, COUL } from './lumiere/ciel.js?v=0.114.0';
-import { creerRendu } from './lumiere/rendu.js?v=0.114.0';
-import { creerMesures, depassement, banc, exporter } from './lumiere/mesures.js?v=0.114.0';
-import { createRng } from './lib/rng.js?v=0.114.0';
+import { ROLES } from './palette.js?v=0.114.1';
+import { startUpdateCheck, loadVersion, loadChangelog } from './lib/app-update.js?v=0.114.1';
+import { MONDE, TAILLES, COLONNES_MAX, LAMPES, ETAPES, QUALITES, RESOLUTIONS, METEOS, METEO_AUTO, NUAGES, SOLDATS_REELS, CAMERA, BARRAGE, FLASH, BUDGET_IMAGE_MS, BUDGET_RECALCUL_CHUNK_MS } from './lumiere/config.js?v=0.114.1';
+import { creerMonde, impact, chunksDe, rectDeChunks } from './lumiere/terrain.js?v=0.114.1';
+import { creerLumiere, calculerSoleil, calculerAO, calculerFlood, calculerCavite, majHauteurs, regionTotale } from './lumiere/lumiere.js?v=0.114.1';
+import { creerFoule, regler as reglerFoule, avancer as avancerFoule } from './lumiere/foule.js?v=0.114.1';
+import { aspectDe, creerSuivi, suivre, ecrire as ecrireReel, FLOATS as FLOATS_REEL, creerClasses, classer, ecrireJeu, FLOATS_JEU } from './lumiere/soldats-reels.js?v=0.114.1';
+import { creerLampes, poserFixes, refaireFixes, majMobiles, lampesDeSoldats } from './lumiere/lampes.js?v=0.114.1';
+import { creerParticules, explosion, avancer as avancerParticules, ecrire as ecrireParticules } from './lumiere/particules.js?v=0.114.1';
+import { creerCamera, rayon, toucherSol, matrices } from './lumiere/camera.js?v=0.114.1';
+import { ciel as calculerCiel, COUL } from './lumiere/ciel.js?v=0.114.1';
+import { creerRendu } from './lumiere/rendu.js?v=0.114.1';
+import { creerMesures, depassement, banc, exporter } from './lumiere/mesures.js?v=0.114.1';
+import { createRng } from './lib/rng.js?v=0.114.1';
 
 for (const [role, couleur] of Object.entries(ROLES)) document.documentElement.style.setProperty(`--jeu-${role}`, couleur);
 const $ = id => document.getElementById(id);
