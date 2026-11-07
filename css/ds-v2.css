@@ -67,6 +67,9 @@ dialog .menu, dialog form.menu { gap: var(--e3); }
 .carte .entete, .secteur .entete, .carnet .entete { font-family: var(--police-titre); font-weight: var(--titre-poids); font-size: var(--titre-3); letter-spacing: var(--titre-lettres); white-space: normal; overflow: visible; min-height: var(--jeu-cible); align-items: center; }
 .entete .discret, .entete .libelle { font-family: var(--jeu-police); font-size: var(--texte-petit); letter-spacing: .02em; text-transform: none; color: var(--jeu-accent); }
 .carte .entete .libelle { margin-left: var(--pas); }
+/* l'en-tête de la carte tient sur une ligne, avec le « ? » à sa droite (v0.108.0) */
+.carte .carte-tete .entete { white-space: nowrap; overflow: hidden; }
+.carte .carte-tete .entete .libelle { overflow: hidden; text-overflow: ellipsis; margin-left: var(--e1); }
 /* l'infobulle : son titre en condensé, ses lignes en mono ; les « **gras** » y font les libellés */
 .infobulle { padding: var(--e3) var(--e4); max-width: 38ch; }
 .infobulle .h1 { font-family: var(--police-titre); font-weight: var(--titre-poids); font-size: var(--titre-3); letter-spacing: var(--titre-lettres); text-transform: uppercase; line-height: 1.1; text-wrap: balance; }

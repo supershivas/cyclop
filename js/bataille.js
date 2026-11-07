@@ -14,38 +14,38 @@
    La sauvegarde (photo) garde la graine, la liste compacte des impacts, l'état
    de la foule et les petites couches de logique ; jamais le relief : il se
    rejoue depuis la graine et les impacts (rejouerTerrain). */
-import { createRng, hash2 } from './lib/rng.js?v=0.113.1';
-import { impact, hydroLignes, etat as etatCase, vitesseEtat, vitesseCase, ETAT } from './terrain.js?v=0.113.1';
-import { creerArmee, ajouterSoldat, construireGrille, pasArmee, tuerDans, effrayer, compacter, photoArmee, restaurerArmee, b64, deB64, DENSITE, place, poserCaracs, lireCaracs, abimerCaracs, gagner, CARACS } from './army.js?v=0.113.1';
-import { ligneSous, solidite, y0En, arcMax } from './tranchees.js?v=0.113.1';
-import { terrainDuSecteur } from './secteur-terrain.js?v=0.113.1';
-import { detruirePont, reconstruirePont, pontEn } from './eaux.js?v=0.113.1';
-import { MISSIONS_SECONDAIRES as MS } from './data/missions.js?v=0.113.1';
-import { PONT_COUPE } from './data/ponts.js?v=0.113.1';
-import { calculerCouts, creerCacheChamps, dimensionsCouts, BLOC } from './champs.js?v=0.113.1';
-import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.113.1';
-import { preparerAleatoire, ID_ALEATOIRE } from './generateur.js?v=0.113.1';
-import { AVION, MITRAILLAGE } from './data/mitraillage.js?v=0.113.1';
-import { refusAvion, lancerAvion, avancerAvions, flotteDeDepart, reparerAvions } from './avions.js?v=0.113.1';
-import { CHAR, CHAR_RECHARGE, CHAR_SORTIE } from './data/chars.js?v=0.113.1';
-import { GENIE, GENIE_DATA } from './data/genie.js?v=0.113.1';
-import { filDeDepart, degatsFil } from './fil.js?v=0.113.1';
-import { creerNids, avancerNids, degatsNids, reparerNid, aubeNids } from './nids.js?v=0.113.1';
-import { TOITS, NIDS } from './data/nids.js?v=0.113.1';
-import { BONUS, chevronsDe } from './data/experience.js?v=0.113.1';
+import { createRng, hash2 } from './lib/rng.js?v=0.114.0';
+import { impact, hydroLignes, etat as etatCase, vitesseEtat, vitesseCase, ETAT } from './terrain.js?v=0.114.0';
+import { creerArmee, ajouterSoldat, construireGrille, pasArmee, tuerDans, effrayer, compacter, photoArmee, restaurerArmee, b64, deB64, DENSITE, place, poserCaracs, lireCaracs, abimerCaracs, gagner, CARACS } from './army.js?v=0.114.0';
+import { ligneSous, solidite, y0En, arcMax } from './tranchees.js?v=0.114.0';
+import { terrainDuSecteur } from './secteur-terrain.js?v=0.114.0';
+import { detruirePont, reconstruirePont, pontEn } from './eaux.js?v=0.114.0';
+import { MISSIONS_SECONDAIRES as MS } from './data/missions.js?v=0.114.0';
+import { PONT_COUPE } from './data/ponts.js?v=0.114.0';
+import { calculerCouts, creerCacheChamps, dimensionsCouts, BLOC } from './champs.js?v=0.114.0';
+import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.114.0';
+import { preparerAleatoire, ID_ALEATOIRE } from './generateur.js?v=0.114.0';
+import { AVION, MITRAILLAGE } from './data/mitraillage.js?v=0.114.0';
+import { refusAvion, lancerAvion, avancerAvions, flotteDeDepart, reparerAvions } from './avions.js?v=0.114.0';
+import { CHAR, CHAR_RECHARGE, CHAR_SORTIE } from './data/chars.js?v=0.114.0';
+import { GENIE, GENIE_DATA } from './data/genie.js?v=0.114.0';
+import { filDeDepart, degatsFil } from './fil.js?v=0.114.0';
+import { creerNids, avancerNids, degatsNids, reparerNid, aubeNids } from './nids.js?v=0.114.0';
+import { TOITS, NIDS } from './data/nids.js?v=0.114.0';
+import { BONUS, chevronsDe } from './data/experience.js?v=0.114.0';
 const resiste = reg => 1 - BONUS.regiment.moral * (reg.chev || 0);      // les chevrons d'un régiment adoucissent ses pertes de moral (lot E)
-import { refusGenie, lancerGenie, avancerGenies, degatsGenies, sectionsDeDepart } from './genie.js?v=0.113.1';
-import { refusChar, lancerChar, degatsChars, avancerChars } from './chars.js?v=0.113.1';
-import { METEO, SAISONS, SAISON_DEFAUT, PREVISION_JUSTE, temperature, vent } from './data/meteo.js?v=0.113.1';
-import { SECTEURS } from './data/secteur.js?v=0.113.1';
-import { REGIMENTS, REGIMENTS_GRANDS } from './data/lexique.js?v=0.113.1';
-import { STANCES, STANCE_DEFAUT } from './data/stances.js?v=0.113.1';
-import { DIFFICULTES, DIFFICULTE_DEFAUT } from './data/difficulte.js?v=0.113.1';
-import { grade, departCaracs, caracEnMots } from './identite.js?v=0.113.1';
-import { corvees, creerRegiment, prendreReserve } from './nuit.js?v=0.113.1';
-import { RENFORTS } from './data/renforts.js?v=0.113.1';
-import { EQUIPEMENTS } from './data/batiments.js?v=0.113.1';
-import { campDeDepart, dotationAube, refusOrdre, refusNid, appliquerDepart, modif, rechargeDe, sortieChars, sortieCaserne, emplacementCamp } from './camp.js?v=0.113.1';
+import { refusGenie, lancerGenie, avancerGenies, degatsGenies, sectionsDeDepart } from './genie.js?v=0.114.0';
+import { refusChar, lancerChar, degatsChars, avancerChars } from './chars.js?v=0.114.0';
+import { METEO, SAISONS, SAISON_DEFAUT, PREVISION_JUSTE, temperature, vent } from './data/meteo.js?v=0.114.0';
+import { SECTEURS } from './data/secteur.js?v=0.114.0';
+import { REGIMENTS, REGIMENTS_GRANDS } from './data/lexique.js?v=0.114.0';
+import { STANCES, STANCE_DEFAUT } from './data/stances.js?v=0.114.0';
+import { DIFFICULTES, DIFFICULTE_DEFAUT } from './data/difficulte.js?v=0.114.0';
+import { grade, departCaracs, caracEnMots } from './identite.js?v=0.114.0';
+import { corvees, creerRegiment, prendreReserve } from './nuit.js?v=0.114.0';
+import { RENFORTS } from './data/renforts.js?v=0.114.0';
+import { EQUIPEMENTS } from './data/batiments.js?v=0.114.0';
+import { campDeDepart, dotationAube, refusOrdre, refusNid, appliquerDepart, modif, rechargeDe, sortieChars, sortieCaserne, emplacementCamp } from './camp.js?v=0.114.0';
 
 export const PAS = 1 / 30;                 // s de jeu par pas
 export const NOUS = 0, EUX = 1;
@@ -1142,7 +1142,7 @@ export function nomTroncon(B, t) {
 /* ─── Les secteurs et les noms des tranchées (Jérôme, v0.14.0 ; v0.21.3 : plus simples) ───
    La logique coupe le front en colonnes de 50 m (`secteurDe`, numérotées de l'ouest à l'est). Le joueur voit quatre secteurs de 100 m,
    A à D de l'ouest à l'est (un régiment de départ en occupe un, sans chevaucher le voisin) et quatre lignes par camp, numérotées de la
-   plus avancée : une tranchée se dit « B1 » (secteur B, notre 1re ligne), « B2 en face » (leur 2e ligne). */
+   plus avancée : une tranchée se dit « B1 » (secteur B, notre 1re ligne), « B6 » (leur 2e ligne : les lignes d'en face vont de 5 à 8, v0.108.0). */
 export const nombreSecteurs = B => secteurDuJeu(B.etat).regiments;
 export const largeurSecteur = B => secteurDuJeu(B.etat).largeur / secteurDuJeu(B.etat).regiments;
 export function secteurDe(B, x) {
@@ -1168,12 +1168,13 @@ export function secteursDe(B, reg) {
   const [a, b] = etendueZones(B, reg.depart);
   return a === b ? lettreZone(a) : `${lettreZone(a)}-${lettreZone(b)}`;
 }
-export const codeLigne = L => String(L.rang + 1);
-// la tranchée d'une ligne entre deux abscisses : « B1 » (« B1–C1 » si elle court sur deux secteurs), « B1 en face » chez l'autre camp
+// Le numéro d'une ligne (Jérôme, v0.108.0 : « nommer différemment les secteurs alliés et ennemis ») : les nôtres de 1 (la plus avancée) à 4, celles d'en face de 5 (leur 1re) à 8 ;
+// la carte est une seule grille de colonnes A à D et de lignes 1 à 8, chaque case a un nom (« B1 », « C6 »), sans « en face »
+export const codeLigne = (L, moi = NOUS) => String(L.rang + 1 + (L.camp === moi ? 0 : 4));
+// la tranchée d'une ligne entre deux abscisses : « B1 » (« B1–C1 » si elle court sur deux secteurs), « B5 » pour la 1re ligne d'en face
 export function nomTranchee(B, ligne, x0, x1) {
   const L = B.lignes[ligne], a = zoneDe(B, x0 + 0.01), b = zoneDe(B, x1 - 0.01), n = codeLigne(L);
-  const nom = a === b ? `${lettreZone(a)}${n}` : `${lettreZone(a)}${n}–${lettreZone(b)}${n}`;
-  return L.camp === NOUS ? nom : `${nom} en face`;
+  return a === b ? `${lettreZone(a)}${n}` : `${lettreZone(a)}${n}–${lettreZone(b)}${n}`;
 }
 // les tronçons d'une ligne qui touchent [x0, x1]
 export function tronconsDeLigne(B, ligne, x0, x1) {

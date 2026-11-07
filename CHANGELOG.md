@@ -1,5 +1,9 @@
 # Journal des versions
 
+## 0.114.0 — 2026-11-07
+- La carte : une case est un secteur (B1, C6…) ; un clic en montre le plan seul, soldats à leur place, avec les cases voisines à un bouton ; lignes 1 à 4 chez nous, 5 à 8 en face
+- Un petit « ? » explique la carte (marges resserrées) ; la fenêtre d'un régiment ne garde que son « ? », et elle comme les fiches des hommes se déplacent à la main
+
 ## 0.113.1 — 2026-11-07
 - La ceinture des soldats vus de près ne scintille plus (ses flancs étaient dans le même plan que ceux de la vareuse)
 - Atelier d'animation : les poses du soldat se règlent avec des poignées 3D (tourner, déplacer, échelle), on voit les os, et on peut annuler (Ctrl+Z)
