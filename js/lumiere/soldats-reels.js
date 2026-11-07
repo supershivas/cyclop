@@ -1,9 +1,9 @@
 // Les vrais soldats du jeu dans le labo lumière : le modèle articulé de js/rendu/soldat-articule.js (treize os, un visage, un aspect tiré du numéro de l'homme) et ses nuanceurs,
 // portés de three.js (GLSL ES 1.0) à WebGL 2 (GLSL ES 3.0) par de simples remplacements de texte : le dessin est celui du jeu, la lumière est celle du labo (`eclairer`).
 // Logique pure (des chaînes et des tableaux) : testée dans Node ; rendu.js les envoie au GPU. Au plus `SOLDATS_REELS.max` hommes, les plus proches du point visé.
-import { modeleArticule, VERT, FRAG } from '../rendu/soldat-articule.js?v=0.118.0';
-import { aspect } from '../aspect-soldat.js?v=0.118.0';
-import { MONDE } from './config.js?v=0.118.0';
+import { modeleArticule, VERT, FRAG } from '../rendu/soldat-articule.js?v=0.119.0';
+import { aspect } from '../aspect-soldat.js?v=0.119.0';
+import { MONDE } from './config.js?v=0.119.0';
 
 export const FLOATS = 26;                      // par homme : pos 3, camp, blessure, cap 4, grade, pose 4, corps 4, aspect 4, aspect2 4
 export const ATTRIBUTS = [['aPos', 3, 0], ['aCamp', 1, 3], ['aWound', 1, 4], ['aCap', 4, 5], ['aGrade', 1, 9], ['aPose', 4, 10], ['aBody', 4, 14], ['aLook', 4, 18], ['aLook2', 4, 22]];
@@ -58,9 +58,9 @@ export function suivre(S, F, i, t) {
 
 // ─── Les soldats du jeu, de loin à près : la boîte, la silhouette allégée, le soldat équipé (rendu/geometries.js, rendu/shaders.js) ───
 // La géométrie vient du jeu : `creerGeometries` veut un THREE, on lui en donne un de pacotille qui garde les tableaux (aucun THREE n'est chargé).
-import { creerGeometries } from '../rendu/geometries.js?v=0.118.0';
-import { soldatMat } from '../rendu/shaders.js?v=0.118.0';
-import { SOLDATS_REELS } from './config.js?v=0.118.0';
+import { creerGeometries } from '../rendu/geometries.js?v=0.119.0';
+import { soldatMat } from '../rendu/shaders.js?v=0.119.0';
+import { SOLDATS_REELS } from './config.js?v=0.119.0';
 
 const FAUX_THREE = { InstancedBufferGeometry: class { setAttribute(n, a) { this[n] = a; } }, Float32BufferAttribute: class { constructor(a, k) { this.array = Float32Array.from(a); this.itemSize = k; } } };
 export const STYLES_JEU = { boite: 'boite', legere: 'legere', equipe: 'equipe-marche' };

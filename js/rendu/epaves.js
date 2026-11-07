@@ -1,9 +1,9 @@
 // Les épaves dessinées (Jérôme, 1er novembre) : un biplan écrasé se disperse (le fuselage glisse, ses ailes, sa queue, son moteur et ses roues partent chacun de leur côté, à plat, sur la tranche ou sur le dos, un peu enterrés)
 // et un char détruit gît abîmé de façon différente à chaque fois. La disposition vient de js/epaves.js (un hachage de la graine) ; ici on monte les volumes à partir des pièces (avions-modeles.js, engins.js), on les pose sur le
 // sol (`poser`), et on rejoue la dispersion de l'instant où la carcasse touche le sol (`animer`). Le dessin seulement : rien de l'état, rien de la sauvegarde.
-import { biplanPieces, AVIONS_OPTS } from './avions-modeles.js?v=0.118.0';
-import { schneiderEpave } from './engins.js?v=0.118.0';
-import { dispositionAvion, dispositionChar } from '../epaves.js?v=0.118.0';
+import { biplanPieces, AVIONS_OPTS } from './avions-modeles.js?v=0.119.0';
+import { schneiderEpave } from './engins.js?v=0.119.0';
+import { dispositionAvion, dispositionChar } from '../epaves.js?v=0.119.0';
 
 const SOL_AVION = 1.7;           // m entre le centre du modèle et le bas de ses roues (le même que rendu/avions.js)
 

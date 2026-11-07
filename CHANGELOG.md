@@ -1,5 +1,8 @@
 # Journal des versions
 
+## 0.119.0 — 2026-11-07
+- Le labo propose les fiches d'un soldat, d'un régiment, d'un char et d'une mitrailleuse en graphiques, en trois mises en page à comparer ; rien n'a encore changé dans le jeu
+
 ## 0.118.0 — 2026-11-07
 - Renforts : au plus 3 régiments frais par bataille (relève de nuit et déploiement confondus) ; la caserne et la nuit disent « n sur 3 » et le refus nomme le plafond
 
