@@ -58,6 +58,24 @@ function soldat() {
 }
 let A = soldat();
 
+// ─── l'historique (annuler / rétablir) : des photos de l'animation, de la pose et du choix, prises AVANT chaque geste ───
+const H = { pile: [], refaire: [] };
+let geste = false, majHistorique = () => {};
+const photo = () => JSON.stringify({ anim: S.anim, pose: S.pose, sel: S.sel, mode: S.mode, t: S.t });
+function instantane() {
+  const p = photo();
+  if (H.pile[H.pile.length - 1] === p) return;
+  H.pile.push(p); if (H.pile.length > 100) H.pile.shift();
+  H.refaire.length = 0; majHistorique();
+}
+function restaurer(p) {
+  const d = JSON.parse(p);
+  S.anim = d.anim; S.pose = d.pose; S.mode = d.mode; S.t = d.t; S.joue = false; S.sel = Math.min(d.sel, S.anim.images.length - 1);
+  garder(); majBoutons(); majHistorique();
+}
+function annuler() { if (!H.pile.length) return; H.refaire.push(photo()); restaurer(H.pile.pop()); }
+function retablir() { if (!H.refaire.length) return; H.pile.push(photo()); restaurer(H.refaire.pop()); }
+
 // ─── la pose affichée ───
 const poseAffichee = () => S.mode === 'edit' ? S.pose : echantillon(S.anim, S.t);
 
@@ -77,8 +95,9 @@ function monterPanneau() {
     for (const [c, nom] of champs) {
       const [lo, hi] = CHAMPS[c];
       const sortie = el('output'), curseur = el('input', { type: 'range', min: lo, max: hi, step: c === 'couche' ? 1 : 0.01 });
+      curseur.onpointerdown = curseur.onkeydown = () => { geste = true; };
       curseur.oninput = () => reglerChamp(c, +curseur.value);
-      curseur.ondblclick = () => { curseur.value = poseNeutre()[c]; curseur.oninput(); };
+      curseur.ondblclick = () => { geste = true; curseur.value = poseNeutre()[c]; curseur.oninput(); };
       sliders[c] = { curseur, sortie };
       p.append(el('label', { className: 'aa-champ' }, el('span', { textContent: nom }), curseur, sortie));
     }
@@ -92,13 +111,14 @@ function entrerEdition() {
 }
 // change un champ de la pose (un curseur, une poignée) ; l'image clé choisie le suit
 function reglerChamp(c, v) {
+  if (geste) { instantane(); geste = false; }
   entrerEdition();
   const [lo, hi] = CHAMPS[c]; v = Math.min(hi, Math.max(lo, v));
   S.pose[c] = v; if (S.sel >= 0) S.anim.images[S.sel].pose[c] = v;
   garder(); majCurseurs();
 }
 // remplace la pose courante (et celle de l'image choisie)
-function definir(pose) { S.mode = 'edit'; S.joue = false; S.pose = { ...pose }; if (S.sel >= 0) S.anim.images[S.sel].pose = { ...pose }; garder(); majBoutons(); }
+function definir(pose) { instantane(); S.mode = 'edit'; S.joue = false; S.pose = { ...pose }; if (S.sel >= 0) S.anim.images[S.sel].pose = { ...pose }; garder(); majBoutons(); }
 function majCurseurs() {
   const P = poseAffichee();
   for (const c of NOMS_CHAMPS) { const { curseur, sortie } = sliders[c]; if (document.activeElement !== curseur) curseur.value = P[c]; sortie.textContent = P[c].toFixed(2); }
@@ -111,14 +131,14 @@ function monterFrise() {
   boutonJouer = el('button', { textContent: '▶ Lire', onclick: () => { if (S.joue) S.joue = false; else { S.joue = true; S.mode = 'lecture'; S.sel = -1; if (!S.anim.boucle && S.t >= S.anim.duree) S.t = 0; } majBoutons(); } });
   boutonBoucle = el('button', { textContent: 'Boucle', onclick: () => { S.anim.boucle = !S.anim.boucle; garder(); majBoutons(); } });
   const vit = el('select', { onchange: () => { S.vitesse = +vit.value; } }); for (const v of [0.1, 0.25, 0.5, 1, 2]) vit.append(el('option', { value: v, textContent: `×${v}`, selected: v === 1 }));
-  champDuree = el('input', { type: 'number', min: 0.1, max: 20, step: 0.05, onchange: () => { S.anim.duree = Math.max(0.1, +champDuree.value || 1); garder(); majBoutons(); } });
+  champDuree = el('input', { type: 'number', min: 0.1, max: 20, step: 0.05, onchange: () => { instantane(); S.anim.duree = Math.max(0.1, +champDuree.value || 1); garder(); majBoutons(); } });
   champNom = el('input', { type: 'text', size: 14, onchange: () => { S.anim.nom = champNom.value.slice(0, 40); garder(); } });
   piste = el('div', { className: 'aa-piste' });
   curseurT = el('div', { className: 'aa-curseur' });
   piste.onpointerdown = e => { if (e.target !== piste && e.target !== curseurT) return; const r = piste.getBoundingClientRect(); S.t = Math.min(1, Math.max(0, (e.clientX - r.left) / r.width)) * S.anim.duree; S.joue = false; S.mode = 'lecture'; S.sel = -1; majBoutons(); };
-  champT = el('input', { type: 'number', min: 0, step: 0.01, onchange: () => { if (S.sel < 0) return; S.anim.images[S.sel].t = Math.max(0, +champT.value || 0); trier(); } });
-  choixCourbe = el('select', { onchange: () => { if (S.sel >= 0) { S.anim.images[S.sel].courbe = choixCourbe.value; garder(); } } }); for (const c of Object.keys(COURBES)) choixCourbe.append(el('option', { value: c, textContent: c }));
-  const fichier = el('input', { type: 'file', accept: '.json,application/json', hidden: true, onchange: async () => { try { const d = JSON.parse(await fichier.files[0].text()); S.anim = normaliser(d.anim ?? d); S.sel = -1; S.t = 0; S.mode = 'lecture'; garder(); majBoutons(); avertir('Animation chargée.'); } catch (e) { avertir(`Fichier illisible : ${e.message}`); } fichier.value = ''; } });
+  champT = el('input', { type: 'number', min: 0, step: 0.01, onchange: () => { if (S.sel < 0) return; instantane(); S.anim.images[S.sel].t = Math.max(0, +champT.value || 0); trier(); } });
+  choixCourbe = el('select', { onchange: () => { if (S.sel >= 0) { instantane(); S.anim.images[S.sel].courbe = choixCourbe.value; garder(); } } }); for (const c of Object.keys(COURBES)) choixCourbe.append(el('option', { value: c, textContent: c }));
+  const fichier = el('input', { type: 'file', accept: '.json,application/json', hidden: true, onchange: async () => { try { const d = JSON.parse(await fichier.files[0].text()); instantane(); S.anim = normaliser(d.anim ?? d); S.sel = -1; S.t = 0; S.mode = 'lecture'; garder(); majBoutons(); avertir('Animation chargée.'); } catch (e) { avertir(`Fichier illisible : ${e.message}`); } fichier.value = ''; } });
   avertir = txt => { note.textContent = txt; };
   const note = el('span', { className: 'aa-note' });
   f.append(el('h3', { textContent: 'Animation' }),
@@ -126,14 +146,15 @@ function monterFrise() {
     piste,
     el('div', { className: 'aa-rang' },
       el('button', { textContent: '+ Image ici', title: 'Ajoute une image clé à l\'instant du curseur, avec la pose affichée', onclick: ajouter }),
-      el('button', { textContent: 'Supprimer l\'image', onclick: () => { if (S.sel < 0 || S.anim.images.length < 2) return; S.anim.images.splice(S.sel, 1); S.sel = Math.min(S.sel, S.anim.images.length - 1); chargerImage(S.sel); } }),
+      el('button', { textContent: 'Supprimer l\'image', onclick: () => { if (S.sel < 0 || S.anim.images.length < 2) return; instantane(); S.anim.images.splice(S.sel, 1); S.sel = Math.min(S.sel, S.anim.images.length - 1); chargerImage(S.sel); } }),
       el('label', {}, 'Instant ', champT), el('label', {}, 'Courbe vers la suivante ', choixCourbe),
-      el('button', { textContent: 'Marche du jeu', title: 'La marche en quatre images clés', onclick: () => { S.anim = marcheEnImages(1, 0.8); S.anim.nom = 'marche'; S.sel = -1; S.t = 0; S.mode = 'lecture'; garder(); majBoutons(); } }),
+      el('button', { textContent: 'Marche du jeu', title: 'La marche en quatre images clés', onclick: () => { instantane(); S.anim = marcheEnImages(1, 0.8); S.anim.nom = 'marche'; S.sel = -1; S.t = 0; S.mode = 'lecture'; garder(); majBoutons(); } }),
       el('button', { textContent: 'Exporter (JSON)', onclick: exporter }),
       el('button', { textContent: 'Importer…', onclick: () => fichier.click() }), fichier, note));
 }
 function trier() { const cle = S.sel >= 0 ? S.anim.images[S.sel] : null; S.anim.images.sort((a, b) => a.t - b.t); if (cle) S.sel = S.anim.images.indexOf(cle); S.anim.duree = Math.max(S.anim.duree, S.anim.images[S.anim.images.length - 1].t + 0.05); garder(); majBoutons(); }
 function ajouter() {
+  instantane();
   const t = Math.min(S.anim.duree, Math.max(0, S.t));
   const pose = { ...poseAffichee() };
   S.anim.images.push({ t, pose, courbe: 'doux' }); S.anim.images.sort((a, b) => a.t - b.t);
@@ -177,9 +198,12 @@ async function demarrer() {
   // les poignées 3D (js/atelier-poignees.js) : tourner, déplacer, échelle
   const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
   const G = creerPoignees(THREE, { canvas, camera, ppm: () => S.ppm, lire: c => poseAffichee()[c], regler: reglerChamp,
-    echelleLire: cle => S.echelle[cle], echelleRegler: (cle, v) => { S.echelle[cle] = clamp(v, 0.7, 1.35); }, avant: entrerEdition, apres: () => majBoutons() });
+    echelleLire: cle => S.echelle[cle], echelleRegler: (cle, v) => { S.echelle[cle] = clamp(v, 0.7, 1.35); }, avant: () => { if (S.mode === 'lecture') { instantane(); entrerEdition(); } else geste = true; }, apres: () => majBoutons() });
   const barre = el('div', { className: 'aa-outils' });
   const boutonsOutils = OUTILS.map(([id, nom, touche]) => { const b = el('button', { textContent: `${nom} (${touche})`, title: `${nom} : touche ${touche}`, onclick: () => choisirOutil(id) }); barre.append(b); return [id, b]; });
+  const bAnnuler = el('button', { textContent: '↶ Annuler', title: 'Annuler (Ctrl+Z)', onclick: annuler }), bRetablir = el('button', { textContent: '↷ Rétablir', title: 'Rétablir (Ctrl+Maj+Z ou Ctrl+Y)', onclick: retablir });
+  majHistorique = () => { bAnnuler.disabled = !H.pile.length; bRetablir.disabled = !H.refaire.length; };
+  majHistorique(); barre.append(bAnnuler, bRetablir);
   barre.append(el('button', { textContent: 'Carrure ×1', title: 'Remet la carrure d\'origine (l\'échelle ne sert qu\'à l\'aperçu)', onclick: () => { S.echelle = { taille: 1, epaules: 1, ventre: 1 }; } }));
   scene3.append(barre);
   function choisirOutil(id) { G.outil = id; for (const [i, b] of boutonsOutils) b.setAttribute('aria-pressed', i === id); }
@@ -223,6 +247,12 @@ async function demarrer() {
   canvas.onpointerup = canvas.onpointercancel = () => { G.up(); glisse = null; };
   canvas.onwheel = e => { e.preventDefault(); S.ppm = Math.max(8, Math.min(120, +(S.ppm * (e.deltaY < 0 ? 1.15 : 1 / 1.15)).toFixed(1))); };
   document.addEventListener('keydown', e => {
+    const t = document.activeElement, saisie = t?.tagName === 'TEXTAREA' || (t?.tagName === 'INPUT' && ['text', 'number'].includes(t.type));      // (dans un champ de texte, Ctrl+Z reste celui du champ)
+    if ((e.ctrlKey || e.metaKey) && !saisie) {
+      const k = e.key.toLowerCase();
+      if (k === 'z') { e.preventDefault(); if (e.shiftKey) retablir(); else annuler(); return; }
+      if (k === 'y') { e.preventDefault(); retablir(); return; }
+    }
     if (/INPUT|SELECT|TEXTAREA/.test(document.activeElement?.tagName ?? '')) return;
     const o = OUTILS.find(([, , t]) => t.toLowerCase() === e.key.toLowerCase()); if (o) choisirOutil(o[0]);
     if (e.key === 'Escape') G.sel = null;

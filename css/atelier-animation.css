@@ -30,3 +30,5 @@ input[type=number] { width: 5.5em; cursor: text; }
 @media (max-width: 900px) { .aa-corps { grid-template-columns: 1fr; grid-template-rows: 50vh auto; } .aa-panneau { border-left: 0; } }
 
 .aa-outils { position: absolute; left: 8px; top: 8px; display: flex; gap: 6px; flex-wrap: wrap; }
+button:disabled { opacity: .45; cursor: default; }
+button:disabled:hover { background: var(--b); color: var(--o); }
