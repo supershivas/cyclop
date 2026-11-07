@@ -1,0 +1,30 @@
+/* Atelier animation : la palette du jeu (js/palette.js), rien d'autre */
+:root { --t:#16130f; --s:#2c2720; --b:#42392e; --g:#74664f; --h:#8d8a62; --o:#e4dfd0; --r:#a9a89a; --n:#8cb6ff; }
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; background: var(--t); color: var(--o); font: 13px/1.4 ui-monospace, Menlo, Consolas, monospace; }
+.aa { display: grid; grid-template-rows: auto minmax(0, 1fr) auto; height: 100%; }
+.aa-tete { display: flex; gap: 16px; align-items: center; padding: 8px 16px; background: var(--s); border-bottom: 1px solid var(--g); }
+.aa-nom { color: var(--o); text-decoration: none; font-weight: bold; }
+.aa-nom span { margin-left: 8px; padding: 1px 6px; background: var(--g); color: var(--t); font-size: 11px; letter-spacing: .08em; }
+.aa-lien { color: var(--r); }
+.aa-corps { display: grid; grid-template-columns: minmax(0, 1fr) 360px; min-height: 0; }
+.aa-scene { position: relative; min-height: 0; background: var(--s); }
+.aa-scene canvas { position: absolute; inset: 0; width: 100%; height: 100%; image-rendering: pixelated; cursor: grab; touch-action: none; }
+.aa-legende { position: absolute; left: 8px; bottom: 8px; padding: 2px 8px; background: var(--o); color: var(--t); pointer-events: none; font-size: 12px; }
+.aa-panneau { overflow: auto; padding: 8px 12px; border-left: 1px solid var(--g); background: var(--t); }
+.aa-panneau h3, .aa-frise h3 { margin: 10px 0 4px; font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--h); }
+.aa-rang { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin: 6px 0; }
+.aa-champ { display: grid; grid-template-columns: 6.2em 1fr 3.8em; gap: 6px; align-items: center; min-height: 28px; }
+.aa-champ input[type=range] { width: 100%; accent-color: var(--h); }
+.aa-champ output { text-align: right; color: var(--r); }
+button, select, input[type=number] { min-height: 32px; padding: 2px 10px; background: var(--b); color: var(--o); border: 1px solid var(--g); font: inherit; cursor: pointer; }
+button:hover { background: var(--g); color: var(--t); }
+button[aria-pressed=true], button.is-on { background: var(--o); color: var(--t); }
+input[type=number] { width: 5.5em; cursor: text; }
+.aa-frise { padding: 8px 16px 12px; border-top: 1px solid var(--g); background: var(--s); }
+.aa-piste { position: relative; height: 56px; margin: 8px 12px; background: var(--t); border: 1px solid var(--g); }
+.aa-curseur { position: absolute; top: 0; bottom: 0; width: 2px; background: var(--n); pointer-events: none; }
+.aa-cle { position: absolute; top: 14px; width: 24px; height: 28px; margin-left: -12px; padding: 0; background: var(--h); color: var(--t); border: 2px solid var(--o); font-weight: bold; }
+.aa-cle.is-on { background: var(--o); outline: 2px solid var(--n); }
+.aa-note { color: var(--r); font-size: 12px; }
+@media (max-width: 900px) { .aa-corps { grid-template-columns: 1fr; grid-template-rows: 50vh auto; } .aa-panneau { border-left: 0; } }
