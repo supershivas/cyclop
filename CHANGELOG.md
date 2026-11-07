@@ -1,5 +1,8 @@
 # Journal des versions
 
+## 0.115.0 — 2026-11-07
+- Le labo propose trois bilans du soir en graphiques (le rapport, le tableau de bord, la frise) à trancher ; rien n'a encore changé dans le jeu
+
 ## 0.114.0 — 2026-11-07
 - La carte : une case est un secteur (B1, C6…) ; un clic en montre le plan seul, soldats à leur place, avec les cases voisines à un bouton ; lignes 1 à 4 chez nous, 5 à 8 en face
 - Un petit « ? » explique la carte (marges resserrées) ; la fenêtre d'un régiment ne garde que son « ? », et elle comme les fiches des hommes se déplacent à la main
