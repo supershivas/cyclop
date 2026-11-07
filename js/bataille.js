@@ -14,38 +14,39 @@
    La sauvegarde (photo) garde la graine, la liste compacte des impacts, l'état
    de la foule et les petites couches de logique ; jamais le relief : il se
    rejoue depuis la graine et les impacts (rejouerTerrain). */
-import { createRng, hash2 } from './lib/rng.js?v=0.116.0';
-import { impact, hydroLignes, etat as etatCase, vitesseEtat, vitesseCase, ETAT } from './terrain.js?v=0.116.0';
-import { creerArmee, legere, ajouterSoldat, construireGrille, pasArmee, tuerDans, effrayer, compacter, photoArmee, restaurerArmee, b64, deB64, DENSITE, place, poserCaracs, lireCaracs, abimerCaracs, gagner, CARACS } from './army.js?v=0.116.0';
-import { ligneSous, solidite, y0En, arcMax } from './tranchees.js?v=0.116.0';
-import { terrainDuSecteur } from './secteur-terrain.js?v=0.116.0';
-import { detruirePont, reconstruirePont, pontEn } from './eaux.js?v=0.116.0';
-import { MISSIONS_SECONDAIRES as MS } from './data/missions.js?v=0.116.0';
-import { PONT_COUPE } from './data/ponts.js?v=0.116.0';
-import { calculerCouts, creerCacheChamps, dimensionsCouts, BLOC } from './champs.js?v=0.116.0';
-import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.116.0';
-import { preparerAleatoire, ID_ALEATOIRE } from './generateur.js?v=0.116.0';
-import { AVION, MITRAILLAGE } from './data/mitraillage.js?v=0.116.0';
-import { refusAvion, lancerAvion, avancerAvions, flotteDeDepart, reparerAvions } from './avions.js?v=0.116.0';
-import { CHAR, CHAR_RECHARGE, CHAR_SORTIE } from './data/chars.js?v=0.116.0';
-import { GENIE, GENIE_DATA } from './data/genie.js?v=0.116.0';
-import { filDeDepart, degatsFil } from './fil.js?v=0.116.0';
-import { creerNids, avancerNids, degatsNids, reparerNid, aubeNids } from './nids.js?v=0.116.0';
-import { TOITS, NIDS } from './data/nids.js?v=0.116.0';
-import { BONUS, chevronsDe } from './data/experience.js?v=0.116.0';
+import { createRng, hash2 } from './lib/rng.js?v=0.116.1';
+import { impact, hydroLignes, etat as etatCase, vitesseEtat, vitesseCase, ETAT } from './terrain.js?v=0.116.1';
+import { creerArmee, legere, ajouterSoldat, construireGrille, pasArmee, tuerDans, effrayer, compacter, photoArmee, restaurerArmee, b64, deB64, DENSITE, place, poserCaracs, lireCaracs, abimerCaracs, gagner, CARACS } from './army.js?v=0.116.1';
+import { ligneSous, solidite, y0En, arcMax } from './tranchees.js?v=0.116.1';
+import { terrainDuSecteur } from './secteur-terrain.js?v=0.116.1';
+import { detruirePont, reconstruirePont, pontEn } from './eaux.js?v=0.116.1';
+import { MISSIONS_SECONDAIRES as MS } from './data/missions.js?v=0.116.1';
+import { PONT_COUPE } from './data/ponts.js?v=0.116.1';
+import { amasDe, isoles } from './amas.js?v=0.116.1';
+import { calculerCouts, creerCacheChamps, dimensionsCouts, BLOC } from './champs.js?v=0.116.1';
+import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.116.1';
+import { preparerAleatoire, ID_ALEATOIRE } from './generateur.js?v=0.116.1';
+import { AVION, MITRAILLAGE } from './data/mitraillage.js?v=0.116.1';
+import { refusAvion, lancerAvion, avancerAvions, flotteDeDepart, reparerAvions } from './avions.js?v=0.116.1';
+import { CHAR, CHAR_RECHARGE, CHAR_SORTIE } from './data/chars.js?v=0.116.1';
+import { GENIE, GENIE_DATA } from './data/genie.js?v=0.116.1';
+import { filDeDepart, degatsFil } from './fil.js?v=0.116.1';
+import { creerNids, avancerNids, degatsNids, reparerNid, aubeNids } from './nids.js?v=0.116.1';
+import { TOITS, NIDS } from './data/nids.js?v=0.116.1';
+import { BONUS, chevronsDe } from './data/experience.js?v=0.116.1';
 const resiste = reg => 1 - BONUS.regiment.moral * (reg.chev || 0);      // les chevrons d'un régiment adoucissent ses pertes de moral (lot E)
-import { refusGenie, lancerGenie, avancerGenies, degatsGenies, sectionsDeDepart } from './genie.js?v=0.116.0';
-import { refusChar, lancerChar, degatsChars, avancerChars } from './chars.js?v=0.116.0';
-import { METEO, SAISONS, SAISON_DEFAUT, PREVISION_JUSTE, temperature, vent } from './data/meteo.js?v=0.116.0';
-import { SECTEURS } from './data/secteur.js?v=0.116.0';
-import { REGIMENTS, REGIMENTS_GRANDS } from './data/lexique.js?v=0.116.0';
-import { STANCES, STANCE_DEFAUT } from './data/stances.js?v=0.116.0';
-import { DIFFICULTES, DIFFICULTE_DEFAUT } from './data/difficulte.js?v=0.116.0';
-import { grade, departCaracs, caracEnMots } from './identite.js?v=0.116.0';
-import { corvees, creerRegiment, prendreReserve } from './nuit.js?v=0.116.0';
-import { RENFORTS } from './data/renforts.js?v=0.116.0';
-import { EQUIPEMENTS } from './data/batiments.js?v=0.116.0';
-import { campDeDepart, dotationAube, refusOrdre, refusNid, appliquerDepart, modif, rechargeDe, sortieChars, sortieCaserne, entreeHopital, emplacementCamp, patients } from './camp.js?v=0.116.0';
+import { refusGenie, lancerGenie, avancerGenies, degatsGenies, sectionsDeDepart } from './genie.js?v=0.116.1';
+import { refusChar, lancerChar, degatsChars, avancerChars } from './chars.js?v=0.116.1';
+import { METEO, SAISONS, SAISON_DEFAUT, PREVISION_JUSTE, temperature, vent } from './data/meteo.js?v=0.116.1';
+import { SECTEURS } from './data/secteur.js?v=0.116.1';
+import { REGIMENTS, REGIMENTS_GRANDS } from './data/lexique.js?v=0.116.1';
+import { STANCES, STANCE_DEFAUT } from './data/stances.js?v=0.116.1';
+import { DIFFICULTES, DIFFICULTE_DEFAUT } from './data/difficulte.js?v=0.116.1';
+import { grade, departCaracs, caracEnMots } from './identite.js?v=0.116.1';
+import { corvees, creerRegiment, prendreReserve } from './nuit.js?v=0.116.1';
+import { RENFORTS } from './data/renforts.js?v=0.116.1';
+import { EQUIPEMENTS } from './data/batiments.js?v=0.116.1';
+import { campDeDepart, dotationAube, refusOrdre, refusNid, appliquerDepart, modif, rechargeDe, sortieChars, sortieCaserne, entreeHopital, emplacementCamp, patients } from './camp.js?v=0.116.1';
 
 export const PAS = 1 / 30;                 // s de jeu par pas
 export const NOUS = 0, EUX = 1;
@@ -301,11 +302,12 @@ function monter(etat, R) {
 /* Les chemins vers (x, y) du centre de chacun des régiments : { reg, pts : [[x, y]…], atteint } (le champ de coûts du point visé, le même que celui des hommes ;
    rien n'est changé dans la partie : le cache des champs ne garde que ce qu'on peut recalculer). */
 export function cheminsVers(B, regs, x, y) {
-  const A = B.armee, F = B.champs.champ(B.couts, B.etat.couts.version, x, y);
+  const F = B.champs.champ(B.couts, B.etat.couts.version, x, y), amas = amasDe(B);
+  // le chemin part de l'endroit du régiment : son plus gros amas, pas la moyenne de tous ses hommes (une poche chez l'ennemi la tirerait dans le no man's land, v0.116.1) ;
+  // chaque amas isolé a le sien (`autres`), car l'ordre est le même pour tous mais ils ne partent pas du même endroit
   return regs.map(r => {
-    let n = 0, cx = 0, cy = 0;
-    for (let i = 0; i < A.n; i++) if (A.reg[i] === r.id) { n++; cx += A.x[i]; cy += A.y[i]; }
-    return { reg: r.id, ...F.chemin(n ? cx / n : r.ordre.x, n ? cy / n : r.ordre.y) };
+    const g = amas.get(r.id), p = g ? g.amas[0] : null;
+    return { reg: r.id, ...F.chemin(p ? p.x : r.ordre.x, p ? p.y : r.ordre.y), autres: g ? isoles(g).map(a => ({ n: a.n, x: a.x, y: a.y, ...F.chemin(a.x, a.y) })) : [] };
   });
 }
 // la droite de (x1, y1) à (x2, y2) coupe-t-elle de l'eau profonde ?
@@ -345,6 +347,9 @@ function planMarche(B, ids, x, y, forme = 'bloc', camp = NOUS) {
     regs = regs.filter(r => !barres.includes(r.id)); chemins = chemins.filter(c => !barres.includes(c.reg));
     if (!regs.length) return { refus: raison, chemins: cheminsVers(B, barres.map(id => etat.regiments[id]), x, y) };
   }
+  // des hommes isolés, loin du gros du régiment, que l'eau sépare du but : l'ordre part, mais on le dit (ils ne bougeront pas)
+  const coupes = chemins.flatMap(c => c.autres.filter(a => !a.atteint && traverseEau(T, a.x, a.y, x, y)).map(a => `${etat.regiments[c.reg].nom} : ${a.n} hommes isolés ne trouvent aucun passage`));
+  if (coupes.length) raison = raison ? `${raison} ; ${coupes.join(' ; ')}` : coupes.join(' ; ');
   const largeurReg = S.largeur / S.regiments;
   regs.sort((a, b) => a.ordre.x - b.ordre.x);
   const items = [];
@@ -919,13 +924,12 @@ function noyades(B) {
 /* Les régiments dont la route passait par un pont coupé : le champ de coûts neuf ne mène plus à leur place (de l'eau profonde la barre). Sans cela, leurs hommes allaient droit vers leur place
    et s'entassaient sur la rive, contre l'eau, à pousser sans fin. Le régiment s'arrête où il est (l'ordre devient une place là où est son centre) ; le carnet le dit. */
 function barrerMarches(B) {
-  const { etat, R, terrain: T, armee: A } = B, S = secteurDuJeu(etat), largeurReg = S.largeur / S.regiments, Z = zone(B);
+  const { etat, R, terrain: T } = B, S = secteurDuJeu(etat), largeurReg = S.largeur / S.regiments, Z = zone(B), amas = amasDe(B);
   for (const reg of etat.regiments) {
     if (!reg.effectif || reg.ordre.trace) continue;
-    let n = 0, cx = 0, cy = 0;
-    for (let i = 0; i < A.n; i++) if (A.reg[i] === reg.id && !A.mort[i]) { n++; cx += A.x[i]; cy += A.y[i]; }
-    if (!n) continue;
-    cx /= n; cy /= n;
+    const place = amas.get(reg.id)?.amas[0];
+    if (!place) continue;
+    const cx = place.x, cy = place.y;
     if (Math.hypot(reg.ordre.x - cx, reg.ordre.y - cy) < 6 || !traverseEau(T, cx, cy, reg.ordre.x, reg.ordre.y)) continue;
     const [{ atteint }] = cheminsVers(B, [reg], reg.ordre.x, reg.ordre.y);
     if (atteint) continue;

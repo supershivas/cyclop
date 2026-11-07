@@ -1,5 +1,5 @@
 // La caméra du labo lumière : orbitale, en perspective à angle étroit (30°, comme le jeu), qui ne passe jamais sous le sol. Maths pures (matrices de 16 nombres, colonnes d'abord, comme WebGL).
-import { CAMERA } from './config.js?v=0.116.0';
+import { CAMERA } from './config.js?v=0.116.1';
 
 export const mat4 = {
   mul(a, b) { const o = new Float32Array(16); for (let c = 0; c < 4; c++) for (let r = 0; r < 4; r++) { let s = 0; for (let k = 0; k < 4; k++) s += a[k * 4 + r] * b[c * 4 + k]; o[c * 4 + r] = s; } return o; },

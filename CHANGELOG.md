@@ -1,5 +1,10 @@
 # Journal des versions
 
+## 0.116.1 — 2026-11-07
+- Un régiment scindé (des hommes bloqués dans la tranchée d'en face) a une pastille, un nom et un chemin d'ordre pour chaque groupe : l'ordre part d'où sont les hommes
+- La pastille, le nom, la caméra, le fanion et le chemin d'un ordre disent tous le même endroit (le plus gros groupe du régiment)
+- Les lignes d'ordre de la carte se lisent partout, dans le no man's land comme sur les cases (un liseré clair, un pointillé foncé, un point d'arrivée cerclé)
+
 ## 0.116.0 — 2026-11-07
 - La nuit, « Gérer les régiments » : on glisse des soldats d'un régiment à un autre (1, 10 ou tous : la fusion) ; ils les rejoignent au début du jour suivant
 - Les blessés qui marchent vont d'eux-mêmes à l'hôpital au lieu d'attendre au bord de la carte ; la fenêtre de l'hôpital dit combien sont soignés, en route ou sur le champ
