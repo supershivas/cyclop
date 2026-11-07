@@ -9,9 +9,9 @@
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta property="og:image" content="og.png">
-<link rel="stylesheet" href="js/lib/game.css?v=0.114.0">
-<link rel="stylesheet" href="css/style.css?v=0.114.0">
-<link rel="stylesheet" href="css/ds-v2.css?v=0.114.0">
+<link rel="stylesheet" href="js/lib/game.css?v=0.115.0">
+<link rel="stylesheet" href="css/style.css?v=0.115.0">
+<link rel="stylesheet" href="css/ds-v2.css?v=0.115.0">
 </head>
 <body class="charge">
 <!-- La barre de chargement (v0.28.0) : là avant tout script ; main.js la remplit, puis la retire. `body.charge` (v0.100.0) : tout le reste de l'écran est caché tant qu'elle est là (le menu et le titre ne se voient plus derrière) -->
@@ -146,6 +146,7 @@
       <div class="jauge"><span>Bande</span><b id="nid-fiche-muni-t"></b><span class="piste barre canon"><i id="nid-fiche-muni"></i></span></div>
       <div class="jauge"><span>Expérience</span><b id="nid-fiche-xp-t"></b><span class="piste barre xp"><i id="nid-fiche-xp"></i></span></div>
       <div class="compte" id="nid-fiche-bonus"></div>
+      <div class="compte" id="nid-fiche-stats"></div>
       <div class="actions" style="--cols:2">
         <button type="button" data-nid="tourner" data-info="# Tourner\nLe prochain clic sur le sol : la direction du cône de tir (70° de chaque côté de la direction d'origine).">Tourner</button>
         <button type="button" data-nid="droit" data-info="# Droit devant\nLe cône revient face à l'ennemi.">Droit devant</button>
@@ -160,7 +161,9 @@
       <div class="jauge"><span>Expérience</span><b id="char-fiche-xp-t"></b><span class="piste barre xp"><i id="char-fiche-xp"></i></span></div>
       <div class="compte" id="char-fiche-bonus"></div>
       <div class="compte" id="char-fiche-etat"></div>
+      <div class="compte" id="char-fiche-stats"></div>
       <div class="actions" style="--cols:2">
+        <button type="button" data-char="reparer" id="char-fiche-reparer">Réparer (génie)</button>
         <button type="button" data-char="marche" data-info="# Marcher\nLe prochain clic sur le sol : où le char va.">Marcher</button>
         <button type="button" data-char="cible" data-info="# Cible\nLe prochain clic sur le sol : ce que son canon vise, tant que c'est à portée.">Cible</button>
         <button type="button" data-char="arret" data-info="# Arrêt\nIl s'arrête et continue de tirer.">Arrêt</button>
@@ -374,6 +377,6 @@
 </dialog>
 
 <div class="jeu-toast" id="toast" role="status" hidden></div>
-<script type="module" src="js/main.js?v=0.114.0"></script>
+<script type="module" src="js/main.js?v=0.115.0"></script>
 </body>
 </html>

@@ -1,11 +1,11 @@
 // Nos postes de mitrailleuse sur le champ et leur fiche (Jérôme, lot E : « on sélectionne le poste et on règle la direction du cône ; barre de vie, barre de munitions ; de l'xp »).
 // Sur le champ : au-dessus de chaque poste à nous, une étiquette (ses chevrons, sa vie, ses munitions, son expérience) ; un clic sur elle le choisit. La fiche (`#nid-fiche`) : les barres,
 // le bonus de ses chevrons, « Tourner » (le prochain clic sur le sol : la direction du cône), « Droit devant », « Fermer ». Le dessin et les boutons seulement : les ordres partent par `surBouton` (main.js).
-import { NIDS } from '../data/nids.js?v=0.114.0';
-import { bonusEnMots } from '../data/experience.js?v=0.114.0';
-import { chevronsNid, cadenceNid } from '../nids.js?v=0.114.0';
-import { chevronsHtml } from './barres.js?v=0.114.0';
-import { NOUS } from '../bataille.js?v=0.114.0';
+import { NIDS } from '../data/nids.js?v=0.115.0';
+import { bonusEnMots } from '../data/experience.js?v=0.115.0';
+import { chevronsNid, cadenceNid, servantNid, raisonInactif } from '../nids.js?v=0.115.0';
+import { chevronsHtml } from './barres.js?v=0.115.0';
+import { NOUS } from '../bataille.js?v=0.115.0';
 
 const REDUIT = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
 export function creerNidsHud({ $, bataille, moi = () => NOUS, versEcran, hauteurSol, choisir, surBouton }) {
@@ -16,7 +16,7 @@ export function creerNidsHud({ $, bataille, moi = () => NOUS, versEcran, hauteur
   function maj(choisi, mode) {
     const B = bataille();
     if (!B) return;
-    const M = moi(), nids = B.etat.nids.filter(n => n.camp === M && n.etat === 'actif'), vus = new Set();
+    const M = moi(), nids = B.etat.nids.filter(n => n.camp === M && n.etat === 'actif'), vus = new Set(), cv = $('canvas');
     for (const n of nids) {
       vus.add(n.id);
       let e = etiq.get(n.id);
@@ -29,7 +29,7 @@ export function creerNidsHud({ $, bataille, moi = () => NOUS, versEcran, hauteur
         e.chev.innerHTML = chevronsHtml(e.nb);
       }
       const [sx, sy] = versEcran(n.x, n.y, hauteurSol(n.x, n.y) + 2.5);
-      const cv = $('canvas'), dedans = sx > -80 && sx < cv.clientWidth + 80 && sy > -40 && sy < cv.clientHeight + 120;
+      const dedans = sx > -80 && sx < cv.clientWidth + 80 && sy > -40 && sy < cv.clientHeight + 120;
       // La règle (Jérôme, retour du 1er nov.) : l'étiquette n'est là que si le poste a quelque chose à dire — choisi, abîmé, presque à sec, ou il vient de tirer. Sinon le champ reste net.
       const E = NIDS.etiquette, parle = choisi === n.id || n.pv < NIDS.pv || n.muni <= NIDS.munitions * E.munBas || B.etat.temps - (n.derniere ?? -1e9) < E.apresRafale;
       e.d.hidden = !dedans || !parle || B.etat.phase !== 'jour';       // hors de la vue, la nuit ou sans rien à dire : pas d'étiquette
@@ -39,6 +39,26 @@ export function creerNidsHud({ $, bataille, moi = () => NOUS, versEcran, hauteur
       if (nb !== e.nb) { if (nb > e.nb && !REDUIT()) { e.chev.classList.remove('gagne'); void e.chev.offsetWidth; e.chev.classList.add('gagne'); } e.nb = nb; e.chev.innerHTML = chevronsHtml(nb); }
       e.d.classList.toggle('choisi', choisi === n.id);
       e.d.classList.toggle('vide', n.muni <= 0);
+    }
+    // les postes d'en face (v0.115.0) : une étiquette sans ordre, avec leur état (en état / détruit) et leur barre de vie ; on ne les clique pas
+    for (const n of B.etat.nids) {
+      if (n.camp === M) continue;
+      vus.add(`e${n.id}`);
+      let e = etiq.get(`e${n.id}`);
+      if (!e) {
+        const d = document.createElement('div'); d.className = 'char-etiq nid-etiq ennemi';
+        d.innerHTML = '<span class="nom"></span><span class="pv"><i></i></span>';
+        $('chars-etiq').append(d);
+        etiq.set(`e${n.id}`, e = { d, nom: d.querySelector('.nom'), pv: d.querySelector('.pv i'), mort: null });
+      }
+      const [sx, sy] = versEcran(n.x, n.y, hauteurSol(n.x, n.y) + 2.5), dedans = sx > -80 && sx < cv.clientWidth + 80 && sy > -40 && sy < cv.clientHeight + 120, detruit = n.etat === 'detruit';
+      e.d.hidden = !dedans;
+      if (dedans) e.d.style.transform = `translate(${Math.round(sx)}px, ${Math.round(sy)}px) translate(-50%, -100%)`;
+      const vie = Math.round(Math.max(0, n.pv) / NIDS.pv * 100);
+      e.pv.style.width = `${vie}%`;
+      if (detruit !== e.mort) { e.mort = detruit; e.d.classList.toggle('detruit', detruit); }
+      const texte = detruit ? 'Mitrailleuse ennemie · DÉTRUITE' : `Mitrailleuse ennemie · ${vie} %`;
+      if (e.nom.textContent !== texte) e.nom.textContent = texte;
     }
     for (const [id, e] of etiq) if (!vus.has(id)) { e.d.remove(); etiq.delete(id); }
     const n = nids.find(k => k.id === choisi), fiche = $('nid-fiche');
@@ -52,8 +72,14 @@ export function creerNidsHud({ $, bataille, moi = () => NOUS, versEcran, hauteur
       veille: ['veille', `Servi, mais personne à portée (${NIDS.portee} m) dans son cône : il tire dès qu'un ennemi y entre.`],
       tire: ['tire', `Tire à ${NIDS.portee} m, une rafale toutes les ${cadenceNid(n).toFixed(2).replace('.', ',')} s.`],
     }, [court, ordre] = MOTS[tait ? 'pris' : n.statut] ?? MOTS.veille;
-    $('nid-fiche-etat-court').textContent = court;
-    $('nid-fiche-ordre').textContent = ordre;
+    // sans servant (ou tronçon pris), la fenêtre est inactive : aucun ordre, les boutons grisés (v0.115.0)
+    const inactif = raisonInactif(B, n), sv = servantNid(B, n, true), rs = sv >= 0 ? B.etat.regiments[B.armee.reg[sv]] : null;
+    $('nid-fiche-etat-court').textContent = inactif ? 'inactif' : court;
+    $('nid-fiche-ordre').textContent = inactif || `${ordre}${rs ? ` Servi par le ${rs.nom}.` : ''}`;
+    fiche.classList.toggle('inactif', !!inactif);
+    for (const b of fiche.querySelectorAll('[data-nid="tourner"],[data-nid="droit"]')) b.setAttribute('aria-disabled', inactif ? 'true' : 'false');
+    const par = Object.entries(n.tuesReg ?? {}).map(([r, k]) => `${B.etat.regiments[r]?.nom ?? 'régiment ' + r} ${k}`).join(', ');
+    $('nid-fiche-stats').innerHTML = `<b>Victimes :</b> ${n.tues ?? 0}${par ? ` (${par})` : ''}<br><b>Rafales :</b> ${n.rafales ?? 0}`;
     $('nid-fiche-pv-t').textContent = `${vie} %`; $('nid-fiche-pv').style.width = `${vie}%`;
     $('nid-fiche-muni-t').textContent = `${n.muni} / ${NIDS.munitions}`; $('nid-fiche-muni').style.width = pct(n.muni / NIDS.munitions);
     $('nid-fiche-xp-t').innerHTML = nb ? chevronsHtml(nb) : 'novice'; $('nid-fiche-xp').style.width = pct(n.exp ?? 0);

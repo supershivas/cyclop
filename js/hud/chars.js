@@ -2,10 +2,10 @@
 // Sur le champ : au-dessus de chaque char à nous, une petite étiquette (sa barre de canon qui se remplit, puis PRÊT ; ses points de vie) ; de lui à sa cible, une ligne pointillée et une croix
 // (de la cible qu'on lui a donnée : trait plein ; du carré d'ennemis qu'il a choisi : pointillé). Un clic sur l'étiquette le choisit. La fiche (`#char-fiche`) du char choisi : ses barres,
 // « Marcher » / « Cible » (le prochain clic sur le sol), « Arrêt », « Tir libre », « Fermer ». Le dessin et les boutons seulement : les ordres partent par `surOrdre(ordre)` (main.js).
-import { CHARS } from '../data/chars.js?v=0.114.0';
-import { NOUS } from '../bataille.js?v=0.114.0';
-import { chevronsDe, bonusEnMots } from '../data/experience.js?v=0.114.0';
-import { chevronsHtml } from './barres.js?v=0.114.0';
+import { CHARS } from '../data/chars.js?v=0.115.0';
+import { NOUS } from '../bataille.js?v=0.115.0';
+import { chevronsDe, bonusEnMots } from '../data/experience.js?v=0.115.0';
+import { chevronsHtml } from './barres.js?v=0.115.0';
 
 const REDUIT = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
 const NS = 'http://www.w3.org/2000/svg';
@@ -52,6 +52,26 @@ export function creerCharsHud({ $, bataille, moi = () => NOUS, versEcran, hauteu
       const texte = pret ? 'Char · PRÊT' : `Char · ${secondes(B, c)} s`;
       if (e.nom.textContent !== texte) e.nom.textContent = texte;
     }
+    // les chars d'en face (v0.115.0) : une étiquette sans ordre, le nom, l'état (en état / détruit) et une barre de vie ; on les voit, on n'y touche pas
+    for (const c of B.etat.chars) {
+      if (c.camp === M) continue;
+      vus.add(c.id);
+      let e = etiq.get(c.id);
+      if (!e) {
+        const d = document.createElement('div'); d.className = 'char-etiq ennemi';
+        d.innerHTML = '<span class="nom"></span><span class="pv"><i></i></span>';
+        $('chars-etiq').append(d);
+        etiq.set(c.id, e = { d, pv: d.querySelector('.pv i'), nom: d.querySelector('.nom'), mort: null });
+      }
+      const detruit = c.etat === 'detruit', [sx, sy] = versEcran(c.x, c.y, hauteurSol(c.x, c.y) + 3.5);
+      e.d.hidden = sx < -1e4;
+      e.d.style.transform = `translate(${Math.round(sx)}px, ${Math.round(sy)}px) translate(-50%, -100%)`;
+      const vie = Math.max(0, Math.round(c.pv / (c.pvMax ?? CHARS[c.modele].pv) * 100));
+      e.pv.style.width = `${vie}%`;
+      if (detruit !== e.mort) { e.mort = detruit; e.d.classList.toggle('detruit', detruit); }
+      const texte = detruit ? 'Char ennemi · DÉTRUIT' : `Char ennemi · ${vie} %`;
+      if (e.nom.textContent !== texte) e.nom.textContent = texte;
+    }
     for (const [id, e] of etiq) if (!vus.has(id)) { e.d.remove(); etiq.delete(id); }
     // les cibles : un SVG de la taille de l'écran
     const cv = $('canvas'), w = cv.clientWidth, h = cv.clientHeight;
@@ -89,6 +109,16 @@ export function creerCharsHud({ $, bataille, moi = () => NOUS, versEcran, hauteu
     $('char-fiche-canon-b').classList.toggle('pret', f >= 1); $('char-fiche-canon-b').classList.toggle('attente', attente);
     const nbc = chevronsDe(c.exp ?? 0);
     $('char-fiche-xp-t').innerHTML = nbc ? chevronsHtml(nbc) : 'novice'; $('char-fiche-xp').style.width = `${Math.round((c.exp ?? 0) * 100)}%`;
+    // ses statistiques (v0.115.0) : ses victimes, ses réparations, ses obus
+    const sv = c.tues ?? 0;
+    $('char-fiche-stats').innerHTML = `<b>Victimes :</b> ${sv}${sv ? ` (canon ${c.tuesCanon ?? 0}, mitrailleuses ${c.tuesMitr ?? 0})` : ''}<br><b>Réparations :</b> ${c.repar ?? 0}<br><b>Obus tirés :</b> ${c.obus ?? 0}<br><b>Au front depuis :</b> jour ${c.jour ?? '?'}`;
+    const ab = c.pv < (c.pvMax ?? c.pv), rep = $('char-fiche-reparer');
+    if (rep) {
+      const g = B.etat.genies.some(k => k.char === c.id);
+      rep.textContent = g ? 'Génie au travail…' : 'Réparer (génie)';
+      rep.setAttribute('aria-disabled', g || !ab || c.etat === 'avance' ? 'true' : 'false');
+      rep.dataset.info = `# Réparer\nLe génie remet ce char en état : une réparation d'avion ou de char par jour. ${!ab ? 'Il n\'est pas abîmé.' : c.etat === 'avance' ? 'Il doit d\'abord s\'arrêter.' : ''}`;
+    }
     $('char-fiche-bonus').textContent = `Chevrons : ${bonusEnMots('char', nbc)}.`;
     $('char-fiche-etat').textContent = `Canon de ${G.calibre} : un obus tous les ${G.recharge} s, jusqu'à ${G.portee} m · ${c.vise ? (c.cible && c.vise === c.cible ? 'sur la cible donnée' : 'sur le carré le plus chargé') : 'aucune cible à portée'}`;
     for (const b of fiche.querySelectorAll('[data-char]')) { b.classList.toggle('vise', b.dataset.char === mode); b.classList.toggle('actif', b.dataset.char === mode); }
