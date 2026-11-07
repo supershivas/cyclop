@@ -1,0 +1,95 @@
+// Les poses et les animations du soldat articulé (js/pose-soldat.js) : la logique pure de l'atelier d'animation.
+import { poseNeutre, poseDe, melanger, borner, miroir, animation, echantillon, marcheEnImages } from '../js/pose-soldat.js';
+import { CHAMPS, NOMS_CHAMPS } from '../js/data/poses-soldat.js';
+
+const proche = (a, b, e = 1e-9) => Math.abs(a - b) <= e;
+
+group('poses — le format');
+test('toute pose du jeu a tous les champs, finis et dans leurs bornes', () => {
+  for (const vit of [0, 0.5, 1]) for (const phase of [0, 1, 2, 3, 4, 5, 6]) for (const tir of [0, 0.5, 1]) for (const tapi of [0, 1]) for (const pistolet of [false, true]) {
+    const p = poseDe({ vit, phase, tir, tapi, pistolet });
+    for (const c of NOMS_CHAMPS) { assert.ok(Number.isFinite(p[c]), c); assert.ok(p[c] >= CHAMPS[c][0] - 1e-9 && p[c] <= CHAMPS[c][1] + 1e-9, `${c} ${p[c]}`); }
+  }
+  for (const pose of [poseDe({ melee: true, pouss: 1 }), poseDe({ retenu: true }), poseDe({ couche: 1 })]) for (const c of NOMS_CHAMPS) assert.ok(pose[c] >= CHAMPS[c][0] - 1e-9 && pose[c] <= CHAMPS[c][1] + 1e-9, c);
+});
+test("à l'arrêt, la pose est la neutre", () => {
+  assert.deepEqual(poseDe(), poseNeutre());
+});
+test('la marche : les jambes en opposition de phase, le bras à l\'opposé de la jambe du même côté', () => {
+  const p = poseDe({ vit: 1, phase: Math.PI / 2 });
+  assert.ok(proche(p.hancheG, 0.55) && proche(p.hancheD, -0.55));
+  assert.ok(proche(p.epauleG, -0.5) && proche(p.epauleD, 0.5));
+});
+test('accroupi : le corps baisse, les genoux plient, les basques suivent', () => {
+  const p = poseDe({ tapi: 1 });
+  assert.ok(proche(p.descente, 0.44) && proche(p.genouG, 1.9) && proche(p.basques, 0.75) && proche(p.buste, 0.55));
+});
+test("le tir : le fusil tourne de −1,45 rad ; l'officier tire d'une main, sans fusil à l'épaule ni mêlée", () => {
+  assert.ok(proche(poseDe({ tir: 1 }).fusil, -1.45));
+  assert.ok(proche(poseDe({ tir: 1, pistolet: true }).epauleD, 1.2));
+  assert.deepEqual(poseDe({ melee: true, pistolet: true, tir: 0 }), poseDe({ pistolet: true }));
+});
+test('la mêlée : la poussée avance le fusil et le buste', () => {
+  const a = poseDe({ melee: true, pouss: 0 }), b = poseDe({ melee: true, pouss: 1 });
+  assert.ok(b.fusilZ > a.fusilZ && b.poussee > a.poussee && b.buste > a.buste);
+});
+
+group('poses — le mélange');
+test('mélanger : les extrémités, le milieu, un champ absent', () => {
+  const a = poseDe({ tapi: 1 }), b = poseNeutre();
+  assert.deepEqual(melanger(a, b, 0), a);
+  assert.deepEqual(melanger(a, b, 1), b);
+  assert.ok(proche(melanger(a, b, 0.5).genouG, 0.95));
+  assert.ok(proche(melanger({ buste: 1 }, { buste: 0 }, 0.5).buste, 0.5));
+});
+test('le miroir échange les côtés, deux fois il rend la pose', () => {
+  const p = poseDe({ vit: 1, phase: 1.3, tir: 0.7 });
+  const m = miroir(p);
+  assert.ok(proche(m.hancheG, p.hancheD) && proche(m.convG, -p.convD));
+  assert.deepEqual(miroir(m), p);
+});
+test('borner remet les champs dans leurs bornes et les NaN à zéro', () => {
+  const b = borner({ buste: 50, genouG: -3, tete: NaN });
+  assert.equal(b.buste, CHAMPS.buste[1]); assert.equal(b.genouG, 0); assert.equal(b.tete, 0);
+});
+
+group('animations — les images clés');
+const A = (boucle = false) => animation('essai', [
+  { t: 0, pose: { buste: 0 }, courbe: 'lineaire' },
+  { t: 1, pose: { buste: 1 }, courbe: 'lineaire' },
+  { t: 3, pose: { buste: 0.2 }, courbe: 'lineaire' },
+], { boucle });
+test('sans boucle : bornée aux extrémités, linéaire entre deux images', () => {
+  const a = A();
+  assert.ok(proche(echantillon(a, -5).buste, 0) && proche(echantillon(a, 0.5).buste, 0.5) && proche(echantillon(a, 1).buste, 1));
+  assert.ok(proche(echantillon(a, 2).buste, 0.6) && proche(echantillon(a, 99).buste, 0.2));
+});
+test("en boucle : la dernière image mène à la première, et t se replie", () => {
+  const a = A(true);
+  assert.ok(a.duree > 3);
+  assert.deepEqual(echantillon(a, 0.4), echantillon(a, 0.4 + a.duree));
+  assert.deepEqual(echantillon(a, 0.4), echantillon(a, 0.4 - 2 * a.duree));
+  const juste = echantillon(a, 3.5).buste;
+  assert.ok(juste < 0.2 && juste > 0, `${juste}`);
+});
+test("les images arrivent dans le désordre : elles sont rangées par t", () => {
+  const a = animation('x', [{ t: 1, pose: { buste: 1 } }, { t: 0, pose: { buste: 0 } }], { boucle: false });
+  assert.equal(a.images[0].t, 0);
+});
+test("une animation vide ou d'une image seule est la neutre / cette image", () => {
+  assert.deepEqual(echantillon(animation('v', []), 1), poseNeutre());
+  assert.equal(echantillon(animation('u', [{ t: 0, pose: { buste: 0.3 } }]), 4).buste, 0.3);
+});
+test('chaque courbe va de 0 à 1 sans dépasser les images clés (hors ressort)', () => {
+  for (const courbe of ['lineaire', 'doux', 'entree', 'sortie']) {
+    const a = animation('c', [{ t: 0, pose: { buste: 0 }, courbe }, { t: 1, pose: { buste: 1 } }], { boucle: false });
+    let prec = -1;
+    for (let i = 0; i <= 20; i++) { const v = echantillon(a, i / 20).buste; assert.ok(v >= prec - 1e-12 && v >= 0 && v <= 1 + 1e-12, courbe); prec = v; }
+  }
+});
+test('la marche en quatre images revient à son point de départ et reste près de la marche du jeu', () => {
+  const m = marcheEnImages(1, 0.8);
+  assert.deepEqual(echantillon(m, 0), echantillon(m, 0.8));
+  const ecart = Math.max(...[0.1, 0.3, 0.5, 0.7].map(t => Math.abs(echantillon(m, t).hancheG - poseDe({ vit: 1, phase: t / 0.8 * 2 * Math.PI }).hancheG)));
+  assert.ok(ecart < 0.2, `écart ${ecart}`);
+});
