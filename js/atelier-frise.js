@@ -5,11 +5,14 @@ import * as E from './anim-edition.js?v=0.131.0';
 import { COURBES, CANAUX, NOMS_CANAUX } from './data/poses-soldat.js?v=0.131.0';
 import { echantillon } from './pose-soldat.js?v=0.131.0';
 import { MODELES } from './anim-modeles.js?v=0.131.0';
+import { createPublisher } from './lib/gh-publish.js?v=0.131.0';
+import { fichierAnimations, FICHIER_ANIMATIONS } from './animations-store.js?v=0.131.0';
 
 const el = (tag, props = {}, ...kids) => { const e = Object.assign(document.createElement(tag), props); e.append(...kids); return e; };
 const MARGE = 18, REGLE = 24, PISTE_H = 52;                 // px : la marge à gauche de la piste, la hauteur de la règle, celle de la rangée des images
 const PAS_REGLE = [0.01, 0.02, 0.05, 0.1, 0.2, 0.5, 1, 2, 5, 10];
 export const FPS = [12, 24, 30, 60];
+const pub = createPublisher({ repo: 'supershivas/cyclop', tokenKey: 'cyclopeen:gh-token' });
 export const MODES = [['boucle', 'Boucle'], ['unefois', 'Une fois'], ['allerretour', 'Aller-retour']];
 export const COURBES_NOMS = { lineaire: 'Linéaire', doux: 'Doux', entree: 'Départ lent', sortie: 'Arrivée lente', entreesortie: 'Doux appuyé', palier: 'Palier (tenue)', ressort: 'Ressort', rebond: 'Rebond' };
 export const RACCOURCIS = [
@@ -98,6 +101,16 @@ export function creerFrise(ctx) {
       const a = el('a', { href: URL.createObjectURL(new Blob([JSON.stringify(d, null, 1)], { type: 'application/json' })), download: tout ? 'animations-soldat.json' : `animation-${S.anim.nom.replace(/[^\w-]+/g, '-') || 'sans-nom'}.json` });
       document.body.append(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 2000); ctx.avertir(tout ? 'Toutes les animations exportées.' : 'Animation exportée.');
     },
+    // publier toute la bibliothèque dans le dépôt (un commit sur main) : le jeu ne la lit pas encore ; le jeton se colle dans l'Atelier (atelier.html, onglet Publier)
+    async publier() {
+      try {
+        const fichier = fichierAnimations(S.biblio);
+        if (!pub.hasToken) { ctx.avertir('Pas de jeton GitHub : collez-le dans l\u2019Atelier (onglet Publier).'); return; }
+        boutons.publier.disabled = true; ctx.avertir('Publication…');
+        await pub.publish([{ path: FICHIER_ANIMATIONS, json: fichier }], { message: "Publie les animations de l'atelier d'animation" });
+        ctx.avertir(`${fichier.animations.length} animation(s) publiée(s).`);
+      } catch (e) { ctx.avertir(e.message); } finally { boutons.publier.disabled = false; }
+    },
     async importer(fichier) {
       try {
         const d = JSON.parse(await fichier.text()), liste = d.animations ?? [d.anim ?? d];
@@ -120,7 +133,8 @@ export function creerFrise(ctx) {
       bouton('supprimerAnim', 'Supprimer l\'animation', clips.supprimer), el('span', { className: 'aa-sep' }),
       champs.modele, bouton('ajouterModele', '+ Modèle', clips.modele, 'Ajouter l\'animation toute faite choisie'),
       el('span', { className: 'aa-sep' }),
-      bouton('exporter', 'Exporter', () => clips.exporter(false)), bouton('exporterTout', 'Exporter tout', () => clips.exporter(true)), bouton('importer', 'Importer…', () => fichier.click()), fichier));
+      bouton('exporter', 'Exporter', () => clips.exporter(false)), bouton('exporterTout', 'Exporter tout', () => clips.exporter(true)), bouton('importer', 'Importer…', () => fichier.click()), fichier,
+      bouton('publier', 'Publier', clips.publier, 'Écrire toute la bibliothèque dans le dépôt (assets/design/animations.json) ; le jeu ne la lit pas encore')));
 
     champs.vitesse = el('select', { title: 'Vitesse de lecture', onchange: () => { S.vitesse = +champs.vitesse.value; } }); for (const v of [0.1, 0.25, 0.5, 1, 2]) champs.vitesse.append(el('option', { value: v, textContent: `×${v}`, selected: v === 1 }));
     champs.mode = el('select', { title: 'Comment l\'animation se joue', onchange: () => faire(() => { S.anim.mode = champs.mode.value; }) }); for (const [v, n] of MODES) champs.mode.append(el('option', { value: v, textContent: n }));
