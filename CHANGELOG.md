@@ -1,5 +1,9 @@
 # Journal des versions
 
+## 0.122.0 — 2026-11-08
+- Vue verrouillée (style cinéma) sur un char, une mitrailleuse ou un avion : un bouton dans leur fiche ; la caméra tourne lentement autour de l'engin, deux bandes noires
+- Vue « à la personne » : la caméra est à bord, à hauteur d'œil, et regarde où l'engin regarde ; Échap, un geste sur la caméra ou le bouton libèrent la vue
+
 ## 0.121.0 — 2026-11-08
 - L'état garde un instantané de chaque soir (effectifs, blessés, moral de chaque régiment) ; le labo en tire les courbes des fiches et du bilan, et retient les tuiles et le tableau de bord ; rien n'a encore changé dans le jeu
 

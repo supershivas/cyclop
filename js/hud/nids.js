@@ -1,18 +1,18 @@
 // Nos postes de mitrailleuse sur le champ et leur fiche (Jérôme, lot E : « on sélectionne le poste et on règle la direction du cône ; barre de vie, barre de munitions ; de l'xp »).
 // Sur le champ : au-dessus de chaque poste à nous, une étiquette (ses chevrons, sa vie, ses munitions, son expérience) ; un clic sur elle le choisit. La fiche (`#nid-fiche`) : les barres,
 // le bonus de ses chevrons, « Tourner » (le prochain clic sur le sol : la direction du cône), « Droit devant », « Fermer ». Le dessin et les boutons seulement : les ordres partent par `surBouton` (main.js).
-import { NIDS } from '../data/nids.js?v=0.121.0';
-import { bonusEnMots } from '../data/experience.js?v=0.121.0';
-import { chevronsNid, cadenceNid, servantNid, raisonInactif } from '../nids.js?v=0.121.0';
-import { chevronsHtml } from './barres.js?v=0.121.0';
-import { NOUS } from '../bataille.js?v=0.121.0';
+import { NIDS } from '../data/nids.js?v=0.122.0';
+import { bonusEnMots } from '../data/experience.js?v=0.122.0';
+import { chevronsNid, cadenceNid, servantNid, raisonInactif } from '../nids.js?v=0.122.0';
+import { chevronsHtml } from './barres.js?v=0.122.0';
+import { NOUS } from '../bataille.js?v=0.122.0';
 
 const REDUIT = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
 export function creerNidsHud({ $, bataille, moi = () => NOUS, versEcran, hauteurSol, choisir, surBouton, pastilles }) {
   $('nid-fiche').onclick = e => { const b = e.target.closest('[data-nid]'); if (b) surBouton(b.dataset.nid); };
   const pct = x => `${Math.max(0, Math.min(100, Math.round(x * 100)))}%`;
   // appelé à chaque image : les étiquettes, la fiche du poste choisi
-  function maj(choisi, mode) {
+  function maj(choisi, mode, suivi = null) {
     const B = bataille();
     if (!B) return;
     const M = moi(), nids = B.etat.nids.filter(n => n.camp === M && n.etat === 'actif');
@@ -50,6 +50,7 @@ export function creerNidsHud({ $, bataille, moi = () => NOUS, versEcran, hauteur
     $('nid-fiche-etat-court').textContent = inactif ? 'inactif' : court;
     $('nid-fiche-ordre').textContent = inactif || `${ordre}${rs ? ` Servi par le ${rs.nom}.` : ''}`;
     fiche.classList.toggle('inactif', !!inactif);
+    { const sv = suivi && suivi.genre === 'nid' && suivi.id === n.id ? suivi.mode : null; $('nid-fiche-vue').textContent = sv === 'cinema' ? 'Libérer la vue' : 'Vue verrouillée'; $('nid-fiche-personne').textContent = sv === 'personne' ? 'Libérer la vue' : 'À la personne'; }
     for (const b of fiche.querySelectorAll('[data-nid="tourner"],[data-nid="droit"]')) b.setAttribute('aria-disabled', inactif ? 'true' : 'false');
     const par = Object.entries(n.tuesReg ?? {}).map(([r, k]) => `${B.etat.regiments[r]?.nom ?? 'régiment ' + r} ${k}`).join(', ');
     $('nid-fiche-stats').innerHTML = `<b>Victimes :</b> ${n.tues ?? 0}${par ? ` (${par})` : ''}<br><b>Rafales :</b> ${n.rafales ?? 0}`;

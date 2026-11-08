@@ -3,9 +3,9 @@
 // sa vie ; un poste porte un trait, un avion un triangle ; détruit, l'anneau est pointillé et barré. Au survol il grossit et l'infobulle du jeu (`data-info`) dit tout : l'état, la vie, le canon ou la bande,
 // l'expérience, les victimes. Le clic sur un des nôtres (char, poste) le choisit. Le dessin et les lignes de texte seulement : les données viennent de hud/chars.js, hud/nids.js et d'ici pour les avions.
 // Les nombres d'avions : `positionDe` (avions.js). Rien n'est écrit dans la bataille.
-import { positionDe, balayage } from '../avions.js?v=0.121.0';
-import { MITRAILLAGE } from '../data/mitraillage.js?v=0.121.0';
-import { NOUS } from '../bataille.js?v=0.121.0';
+import { positionDe, balayage } from '../avions.js?v=0.122.0';
+import { MITRAILLAGE } from '../data/mitraillage.js?v=0.122.0';
+import { NOUS } from '../bataille.js?v=0.122.0';
 
 const NS = 'http://www.w3.org/2000/svg', R_ARC = 9, CIRC = 2 * Math.PI * R_ARC;
 const REDUIT = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -47,7 +47,7 @@ export function creerPastilles({ $, bataille, moi = () => NOUS, versEcran, haute
   }
 
   /* Les avions en vol, des deux camps */
-  function avions() {
+  function avions(choisir = null, choisi = null) {
     const B = bataille(); if (!B) return;
     const M = moi();
     if (B.etat.phase !== 'jour') return;
@@ -60,7 +60,7 @@ export function creerPastilles({ $, bataille, moi = () => NOUS, versEcran, haute
         `Cellule : **${Math.round(vie * 100)} %** (${Math.max(0, Math.round(v.pv))} / ${MITRAILLAGE.pv})`,
         ...(v.etat === 'vol' ? [`Altitude : ${Math.round(p.h)} m, ${MITRAILLAGE.vitesse} m/s`, tire ? 'Ses balles tombent sur la bande tracée.' : 'Il suit sa passe tracée, puis rentre.'] : ['Il tombe : l\'épave restera sur le champ.']),
         ...(mien ? ['Les hommes d\'en face qui tirent en l\'air l\'abîment : plus il vole bas au-dessus d\'eux, plus il perd de points.'] : ['Nos hommes debout qui tirent en l\'air l\'abîment.'])].join('\n');
-      poser(`a${v.id}`, { type: 'avion', camp: mien ? 'nous' : 'eux', sx, sy, vie, detruit: v.etat === 'chute', info });
+      poser(`a${v.id}`, { type: 'avion', camp: mien ? 'nous' : 'eux', sx, sy, vie, detruit: v.etat === 'chute', choisi: mien && choisi === v.id, info: mien && choisir ? `${info}\nUn clic : sa fiche et la vue verrouillée.` : info, onclick: mien && choisir && v.etat === 'vol' ? () => choisir(v.id) : null });
     }
   }
 

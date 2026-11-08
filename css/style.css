@@ -848,3 +848,14 @@ h2 { font-weight: normal; letter-spacing: var(--titre-lettres); }
 .renforts .pastilles { display: flex; gap: var(--e1); }
 .renforts .pastilles i { width: 14px; height: 14px; box-sizing: border-box; border: 2px solid currentColor; background: currentColor; }
 .renforts .pastilles i.pris { background: none; }                   /* plein = disponible, vide = engagé : la forme porte l'information */
+
+/* La vue verrouillée (Jérôme, v0.121.0 ; hud/suivi.js) : deux bandes noires au cinéma, un petit papier qui dit ce qu'on suit et libère la vue */
+.cinema-bars { position: absolute; inset: 0; pointer-events: none; }
+.cinema-bars[hidden] { display: none; }
+.cinema-bars i { position: absolute; left: 0; right: 0; height: 9%; background: var(--jeu-fond); }
+.cinema-bars i:first-child { top: 0; }
+.cinema-bars i:last-child { bottom: 0; }
+.suivi { position: absolute; left: 50%; bottom: 120px; transform: translateX(-50%); display: flex; align-items: center; gap: var(--pas); padding: var(--e1) var(--pas); font-size: var(--texte-petit); }
+.suivi[hidden] { display: none; }
+.suivi button { min-height: 0; padding: var(--e1) var(--pas); }
+body.vue-verrouillee .char-fiche { display: none; }      /* la fiche cacherait la vue : le bandeau « Libérer la vue » suffit ; Échap aussi */

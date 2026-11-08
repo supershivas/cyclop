@@ -2,10 +2,10 @@
 // Sur le champ : au-dessus de chaque char à nous, une petite étiquette (sa barre de canon qui se remplit, puis PRÊT ; ses points de vie) ; de lui à sa cible, une ligne pointillée et une croix
 // (de la cible qu'on lui a donnée : trait plein ; du carré d'ennemis qu'il a choisi : pointillé). Un clic sur l'étiquette le choisit. La fiche (`#char-fiche`) du char choisi : ses barres,
 // « Marcher » / « Cible » (le prochain clic sur le sol), « Arrêt », « Tir libre », « Fermer ». Le dessin et les boutons seulement : les ordres partent par `surOrdre(ordre)` (main.js).
-import { CHARS } from '../data/chars.js?v=0.121.0';
-import { NOUS } from '../bataille.js?v=0.121.0';
-import { chevronsDe, bonusEnMots } from '../data/experience.js?v=0.121.0';
-import { chevronsHtml } from './barres.js?v=0.121.0';
+import { CHARS } from '../data/chars.js?v=0.122.0';
+import { NOUS } from '../bataille.js?v=0.122.0';
+import { chevronsDe, bonusEnMots } from '../data/experience.js?v=0.122.0';
+import { chevronsHtml } from './barres.js?v=0.122.0';
 
 const REDUIT = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
 const NS = 'http://www.w3.org/2000/svg';
@@ -18,7 +18,7 @@ export function creerCharsHud({ $, bataille, moi = () => NOUS, versEcran, hauteu
   $('char-fiche').onclick = e => { const b = e.target.closest('[data-char]'); if (b) surBouton(b.dataset.char); };
 
   // appelé à chaque image : les étiquettes, les cibles, la fiche du char choisi
-  function maj(choisi, mode) {
+  function maj(choisi, mode, suivi = null) {
     const B = bataille();
     if (!B) return;
     const M = moi(), vivants = B.etat.chars.filter(c => c.camp === M && c.etat !== 'detruit');
@@ -69,6 +69,7 @@ export function creerCharsHud({ $, bataille, moi = () => NOUS, versEcran, hauteu
     $('char-fiche-canon').style.width = `${(f * 100).toFixed(0)}%`;
     $('char-fiche-canon-t').textContent = attente ? 'chargé' : f >= 1 ? 'PRÊT' : `${secondes(B, c)} s`;
     $('char-fiche-canon-b').classList.toggle('pret', f >= 1); $('char-fiche-canon-b').classList.toggle('attente', attente);
+    { const sv = suivi && suivi.genre === 'char' && suivi.id === c.id ? suivi.mode : null; $('char-fiche-vue').textContent = sv === 'cinema' ? 'Libérer la vue' : 'Vue verrouillée'; $('char-fiche-personne').textContent = sv === 'personne' ? 'Libérer la vue' : 'À la personne'; }
     const nbc = chevronsDe(c.exp ?? 0);
     $('char-fiche-xp-t').innerHTML = nbc ? chevronsHtml(nbc) : 'novice'; $('char-fiche-xp').style.width = `${Math.round((c.exp ?? 0) * 100)}%`;
     // ses statistiques (v0.115.0) : ses victimes, ses réparations, ses obus

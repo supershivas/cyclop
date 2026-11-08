@@ -22,31 +22,31 @@
    - Les soldats : instanciés (une boîte et son ombre) ; au zoom 1 et 2, un
      point de 2 × 2 pixels (la couleur du camp sur son ombre).
    - Les corps : un homme couché (instancié) ; au zoom 1 et 2, un pixel. */
-import { loadThree } from './three-lib.js?v=0.121.0';
-import * as SH from './rendu/shaders.js?v=0.121.0';
-import { creerSoldats } from './rendu/soldats.js?v=0.121.0';
-import { creerChars } from './rendu/chars.js?v=0.121.0';
-import { creerGenies } from './rendu/genies.js?v=0.121.0';
-import { creerCamp } from './rendu/camp.js?v=0.121.0';
-import { creerAvions } from './rendu/avions.js?v=0.121.0';
-import { creerPonts } from './rendu/ponts.js?v=0.121.0';
-import { creerCiel } from './rendu/ciel.js?v=0.121.0';
-import { creerMeteo } from './rendu/meteo.js?v=0.121.0';
-import { creerTroncons } from './rendu/troncons.js?v=0.121.0';
-import { ARBRES_JEU } from './data/arbres.js?v=0.121.0';
-import { creerVegetation } from './rendu/vegetation.js?v=0.121.0';
-import { creerTemps } from './rendu/temps.js?v=0.121.0';
-import { creerEclats } from './rendu/eclats.js?v=0.121.0';
-import { creerOmbresRelief } from './rendu/ombres-relief.js?v=0.121.0';
-import { OMBRES_RELIEF as OMB, NUAGES, NUAGES_VENT } from './data/soleil.js?v=0.121.0';
-import { PALETTE, ORDRE, INDICE } from './palette.js?v=0.121.0';
-import { OMBRE, couleursLigne } from './apparence.js?v=0.121.0';
-import { MORCEAU, hauteurVueQ as hauteurQ, hauteurVueM as hauteurM } from './terrain.js?v=0.121.0';
-import { horloge, secteurDuJeu, rangDe } from './bataille.js?v=0.121.0';
-import { GRADES } from './data/grades.js?v=0.121.0';
-import { profilFleuve } from './eaux.js?v=0.121.0';
-import { ligneY } from './tranchees.js?v=0.121.0';
-import { vent as ventDuJour } from './data/meteo.js?v=0.121.0';
+import { loadThree } from './three-lib.js?v=0.122.0';
+import * as SH from './rendu/shaders.js?v=0.122.0';
+import { creerSoldats } from './rendu/soldats.js?v=0.122.0';
+import { creerChars } from './rendu/chars.js?v=0.122.0';
+import { creerGenies } from './rendu/genies.js?v=0.122.0';
+import { creerCamp } from './rendu/camp.js?v=0.122.0';
+import { creerAvions } from './rendu/avions.js?v=0.122.0';
+import { creerPonts } from './rendu/ponts.js?v=0.122.0';
+import { creerCiel } from './rendu/ciel.js?v=0.122.0';
+import { creerMeteo } from './rendu/meteo.js?v=0.122.0';
+import { creerTroncons } from './rendu/troncons.js?v=0.122.0';
+import { ARBRES_JEU } from './data/arbres.js?v=0.122.0';
+import { creerVegetation } from './rendu/vegetation.js?v=0.122.0';
+import { creerTemps } from './rendu/temps.js?v=0.122.0';
+import { creerEclats } from './rendu/eclats.js?v=0.122.0';
+import { creerOmbresRelief } from './rendu/ombres-relief.js?v=0.122.0';
+import { OMBRES_RELIEF as OMB, NUAGES, NUAGES_VENT } from './data/soleil.js?v=0.122.0';
+import { PALETTE, ORDRE, INDICE } from './palette.js?v=0.122.0';
+import { OMBRE, couleursLigne } from './apparence.js?v=0.122.0';
+import { MORCEAU, hauteurVueQ as hauteurQ, hauteurVueM as hauteurM } from './terrain.js?v=0.122.0';
+import { horloge, secteurDuJeu, rangDe } from './bataille.js?v=0.122.0';
+import { GRADES } from './data/grades.js?v=0.122.0';
+import { profilFleuve } from './eaux.js?v=0.122.0';
+import { ligneY } from './tranchees.js?v=0.122.0';
+import { vent as ventDuJour } from './data/meteo.js?v=0.122.0';
 
 export const CAMERA = { yaw: 0.15, tangage: 0.95, fov: 30 };   // au départ : tournée de 9°, plongée de 54°, angle de 30°
 // la caméra respire : un balancement très lent, 2° en 23 s (Jérôme, v0.3.1 : variante D du labo retenue)
@@ -90,23 +90,24 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
   const depart = { ...CAMERA, ...(camDepart || {}) };
   const camera = new THREE.PerspectiveCamera(depart.fov, 1, 1, 1000);
   // yaw, tangage : la caméra vue ; cible : là où elle va (elle y glisse en douceur)
-  const vue = { cx: 200, cz: 150, zoom: 2, vw: 320, vh: 200, facteur: 2, fov: depart.fov, yaw: depart.yaw, tangage: depart.tangage, cible: { yaw: depart.yaw, tangage: depart.tangage } };
+  const vue = { haut: 0, dist: null, portee: 0, cx: 200, cz: 150, zoom: 2, vw: 320, vh: 200, facteur: 2, fov: depart.fov, yaw: depart.yaw, tangage: depart.tangage, cible: { yaw: depart.yaw, tangage: depart.tangage } };
   // le souffle de la caméra (respiration) s'ajoute à l'angle choisi : yawVu, tangageVu servent au dessin et aux conversions
   let zoomBorne = -1;      // le zoom de la dernière mise aux bornes du point visé (`borner`)
   const souffle = { t: 0, yaw: 0, tangage: 0, calme: 0, force: 0 };      // calme : les secondes sans geste sur la caméra ; force : 0..1, la part du balancement visible
   const yawVu = () => vue.yaw + souffle.yaw, tangageVu = () => vue.tangage + souffle.tangage;
   // la distance de la caméra au point visé : un mètre là-bas = ppm pixels
-  const distance = zoom => (vue.vh / 2) / (Math.tan(vue.fov * Math.PI / 360) * ZOOMS[zoom]);
+  // `vue.dist` (m) force la distance (la vue « à la personne », v0.121.0 : la caméra est presque au point visé) ; `vue.haut` (m) monte le point visé au-dessus du niveau moyen du sol (un avion en vol, l'œil d'un équipage) ; `vue.portee` (m) : le plan lointain au moins à cette distance
+  const distance = zoom => vue.dist ?? (vue.vh / 2) / (Math.tan(vue.fov * Math.PI / 360) * ZOOMS[zoom]);
   // d'où regarde la caméra, par rapport au point visé (au sud quand yaw = 0, en hauteur)
   const versCamera = (yaw, tg) => [Math.sin(yaw) * Math.cos(tg), Math.sin(tg), Math.cos(yaw) * Math.cos(tg)];
   function projeter() {
     const p = ZOOMS[vue.zoom], D = distance(vue.zoom), o = versCamera(yawVu(), tangageVu());
     camera.fov = vue.fov; camera.aspect = vue.vw / vue.vh;
     camera.near = vue.ciel ? 0.5 : D * 0.15;      // (la caméra libre rase le sol : un plan proche à 14 m coupait le sol du bas de l'écran)
-    camera.far = D * (vue.libre || vue.ciel ? 6 : 5);       // (au ras du sol, la vue porte plus loin ; au-delà, le ciel bas)  v0.36.8 : cette ligne était restée dans le commentaire de la précédente, le plan lointain restait à 1 000 m et coupait le fond du champ, vue basse et dézoomée
+    camera.far = Math.max(vue.portee, D * (vue.libre || vue.ciel ? 6 : 5));       // (au ras du sol, la vue porte plus loin ; au-delà, le ciel bas)  v0.36.8 : cette ligne était restée dans le commentaire de la précédente, le plan lointain restait à 1 000 m et coupait le fond du champ, vue basse et dézoomée
     camera.updateProjectionMatrix();
-    camera.position.set(vue.cx + o[0] * D, SOL_Y + o[1] * D, vue.cz + o[2] * D);
-    camera.lookAt(vue.cx, SOL_Y, vue.cz);
+    camera.position.set(vue.cx + o[0] * D, SOL_Y + vue.haut + o[1] * D, vue.cz + o[2] * D);
+    camera.lookAt(vue.cx, SOL_Y + vue.haut, vue.cz);
     camera.updateMatrixWorld();
     return { cx: vue.cx, cz: vue.cz, p };
   }
@@ -866,7 +867,7 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
     for (const [a, b] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) {
       const d = [f[0] + r[0] * a * tx + u[0] * b * ty, f[1] + r[1] * a * tx + u[1] * b * ty, f[2] + r[2] * a * tx + u[2] * b * ty];
       if (d[1] >= -1e-3) { out.ok = false; continue; }                // ce coin regarde au-dessus de l'horizon
-      const t = -o[1] * D / d[1], x = o[0] * D + d[0] * t, z = o[2] * D + d[2] * t;
+      const t = -(o[1] * D + vue.haut) / d[1], x = o[0] * D + d[0] * t, z = o[2] * D + d[2] * t;
       out.pente = Math.max(out.pente, Math.hypot(d[0], d[2]) / -d[1]);       // le rayon le plus rasant : de combien un sol en hauteur le rapproche de la caméra, par mètre de hauteur
       out.x0 = Math.min(out.x0, x); out.x1 = Math.max(out.x1, x); out.z0 = Math.min(out.z0, z); out.z1 = Math.max(out.z1, z);
     }
@@ -909,7 +910,7 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
         const yaw = cle === 'cible' ? vue.cible.yaw : yawVu();
         for (let k = 0; k < 5; k++) {
           const v = versCamera(yaw, tg), h = surface(vue.cx + v[0] * D, vue.cz + v[2] * D) + GARDE_SOL;
-          const need = Math.asin(Math.max(-1, Math.min(1, (h - SOL_Y) / D)));
+          const need = Math.asin(Math.max(-1, Math.min(1, (h - SOL_Y - vue.haut) / D)));
           if (need <= tg) break;
           tg = Math.min(TG_CIEL_MAX, need);
         }
