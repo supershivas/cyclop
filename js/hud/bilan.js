@@ -2,7 +2,7 @@
 // des tuiles de papier (un titre, un chiffre, un graphique, un mot) et des graphiques en SVG dont les couleurs viennent du CSS (`.bi-nous`, `.bi-eux` : les variables `--jeu-*`, cerclées de terre comme les pastilles
 // de la carte : aucune couleur écrite ici). La forme porte l'information (plein : debout, hachuré : blessés, pointillé : évacués, contour : tombés ; ▼ perte, ▲ gain, ◆ alerte, ○ calme) ; l'orange et le rouge d'alerte
 // ne confirment que le moral. Des fonctions de DOM qui ne lisent que ce qu'on leur donne (jamais la bataille : `nuit.js` la lit pour elles).
-import { faitsMarquants } from '../donnees-jour.js?v=0.129.0';
+import { faitsMarquants } from '../donnees-jour.js?v=0.129.1';
 
 const el = (tag, cls = '', ...kids) => { const e = document.createElement(tag); if (cls) e.className = cls; e.append(...kids.flat().filter(k => k != null)); return e; };
 const svgHtml = (cls, w, h, corps, nom) => `<svg class="bi ${cls}" viewBox="0 0 ${w} ${h}" role="img" aria-label="${nom}" preserveAspectRatio="xMinYMid meet">${corps}</svg>`;
