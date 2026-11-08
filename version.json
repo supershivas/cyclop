@@ -1,9 +1,7 @@
 {
-  "version": "0.128.0",
+  "version": "0.128.1",
   "date": "2026-11-08",
   "changes": [
-    "Un réglage « Éclairage » (bas, moyen, haut) dans la roue crantée : « haut » ajoute les ombres portées, le ciel avec ses nuages éclairés, l'ombre de la fumée et les lanternes de nuit",
-    "« Moyen » est l'éclairage d'avant, gardé par défaut",
-    "Le labo lumière a un lac, avec les reflets du ciel et des berges sur l'eau"
+    "L'écran titre : le sol ne disparaît plus en bas de l'image"
   ]
 }
