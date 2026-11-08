@@ -3,6 +3,7 @@
 // Logique pure : aucun DOM, aucune horloge, aucun hasard hors de la graine.
 import { creerTerrain, hauteurQ } from './terrain.js?v=0.130.0';
 import { creuserTranchees } from './tranchees.js?v=0.130.0';
+import { terrainsDeBase } from './camp.js?v=0.130.0';
 
 // → { terrain, lignes, troncons } ; `tranchees: false` : le sol seul (une bataille d'avant la v0.4.0 se relit sans tranchées)
 export function terrainDuSecteur(S, marges, graine, R, { tranchees = true } = {}) {
@@ -13,6 +14,9 @@ export function terrainDuSecteur(S, marges, graine, R, { tranchees = true } = {}
     arbres: Math.round(S.arbres * aire), haies: Math.round((S.haies ?? 0) * aire),
     bois: Math.round((S.bois ?? 0) * aire), buissons: Math.round((S.buissons ?? 0) * aire),
   }, R);
+  // aucun arbre sur les terrains des bâtiments de la base, ni à 20 m autour (les chars sortent du parc sans buter sur un tronc)
+  const bases = terrainsDeBase({ largeur: S.largeur, hauteur: S.hauteur }, m), A = terrain.arbres;
+  for (let k = A.length - 1; k >= 0; k--) { const x = A[k].i + 0.5, y = A[k].j + 0.5; if (bases.some(b => x >= b.x0 && x <= b.x1 && y >= b.y0 && y <= b.y1)) A.splice(k, 1); }
   const { lignes, troncons } = tranchees ? creuserTranchees(terrain, S, m.x, m.y, graine) : { lignes: [], troncons: [] };
   return { terrain, lignes, troncons };
 }

@@ -4,6 +4,10 @@
 - L'eau profonde a des rides qui bougent, reflète le ciel et scintille au soleil (éclairage moyen et haut)
 - Plus de marches d'un mètre dans les fleuves : le niveau de l'eau descend en pente douce, et un lac et un fleuve qui se touchent ont le même niveau
 
+## 0.129.1 — 2026-11-08
+- Aucun arbre sur les terrains des bâtiments de la base, ni à 20 m autour : les chars sortent du parc sans buter sur un tronc
+- Le plan d'un secteur ne montre d'abord que qui tient la tranchée et le nombre d'hommes de chaque armée, sans barre de défilement ; un petit bouton « Plus d'infos » déplie les tombés et les régiments
+
 ## 0.129.0 — 2026-11-08
 - Éclairage « haut » : le ciel, les nuages, le soleil et la brume glissent en douceur d'un temps à l'autre, et les ombres s'effacent sous un ciel couvert
 - Les nuages respirent : un nuage qui passe voile un peu le soleil

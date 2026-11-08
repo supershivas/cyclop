@@ -22,7 +22,7 @@ export function caseDe(B, s, idx, M = NOUS) {
 }
 
 export function creerSecteur({ $, bataille, moi = () => NOUS, surSecteur = () => {}, surFermer = () => {} }) {
-  let ouvert = null, cle = '', cleNav = '';          // la case montrée { s, idx }, la signature du dernier dessin
+  let ouvert = null, cle = '', cleNav = '', deplie = false;          // la case montrée { s, idx }, la signature du dernier dessin
   const cv = $('secteur-plan'), g = cv.getContext('2d');
   cv.width = L; cv.height = H;
   const dedans = (c, x, y) => x >= c.x0 && x < c.x1 && y >= c.y0 && y <= c.y1;
@@ -106,8 +106,8 @@ export function creerSecteur({ $, bataille, moi = () => NOUS, surSecteur = () =>
     return [
       { titre: 'Hommes ici', graphes: [['À nous', barre(miens, plein, 'nous'), String(miens)], ['En face', barre(leurs, plein, 'eux'), String(leurs)]] },
       { titre: `Tranchée ${c.nom}`, chiffre: `${tenus} / ${ks.length}`, unite: `tronçon${s_(tenus)} à nous`, graphes: [['', bande(tenus, ks.length, { pas: 1 }), '']], mot: disputes ? `${disputes} disputé${s_(disputes)}` : '' },
-      { titre: 'Tombés ici', graphes: [['Les nôtres', barre(m, morts, 'nous'), String(m)], ['En face', barre(l, morts, 'eux'), String(l)]], mot: `Aujourd'hui : ${jm} et ${jl}` },
-      { titre: 'Régiments ici', graphes: regs, mot: regs.length ? '' : 'aucun', classe: 'regs' },
+      { plus: true, titre: 'Tombés ici', graphes: [['Les nôtres', barre(m, morts, 'nous'), String(m)], ['En face', barre(l, morts, 'eux'), String(l)]], mot: `Aujourd'hui : ${jm} et ${jl}` },
+      { plus: true, titre: 'Régiments ici', graphes: regs, mot: regs.length ? '' : 'aucun', classe: 'regs' },
     ];
   }
   // les quatre flèches autour du plan (gauche, droite, haut, bas, comme la grille de la carte) : posées une fois, mises à jour seulement quand la case change (les refaire à chaque tick perdait le clic en cours)
@@ -138,15 +138,23 @@ export function creerSecteur({ $, bataille, moi = () => NOUS, surSecteur = () =>
     $('secteur-sous').textContent = `${c.ligne.camp === M ? 'Notre' : 'Leur'} ${c.ligne.rang === 0 ? '1re' : `${c.ligne.rang + 1}e`} ligne, colonne ${lettreZone(c.s)}`;
     const cn = `${ouvert.s}:${ouvert.idx}:${M}`;
     if (cn !== cleNav) { cleNav = cn; voisines(B, c); }
-    $('secteur-tuiles').replaceChildren(...tuiles(B, c).map(b => { const t = tuileDe(b); if (b.classe) t.classList.add(b.classe); return t; }));
+    // par défaut : qui tient la tranchée, combien d'hommes de chaque armée ; le reste (tombés, régiments) se déplie (Jérôme, v0.128.0 : « pas de barre de défilement par défaut »)
+    const blocs = tuiles(B, c), faire = b => tuileDe(b);
+    $('secteur-tuiles').replaceChildren(...blocs.filter(b => !b.plus).map(faire));
+    $('secteur-plus').replaceChildren(...blocs.filter(b => b.plus).map(faire));
   }
   // le gros plan prend la place de la carte (Jérôme, v0.76.0) : elle revient quand on le ferme, et la vue 3D avec elle (`surFermer`)
-  function montrer(s, idx) { ouvert = { s, idx }; cle = ''; cleNav = ''; $('secteur').hidden = false; $('carte').classList.add('remplacee'); maj(); }
+  function montrer(s, idx) { ouvert = { s, idx }; cle = ''; cleNav = ''; deplier(false); $('secteur').hidden = false; $('carte').classList.add('remplacee'); maj(); }
   function fermer(rendre = true) {
     const etait = ouvert !== null;
     ouvert = null; cle = ''; cleNav = ''; $('secteur').hidden = true; $('carte').classList.remove('remplacee');
     if (etait && rendre) surFermer();
   }
+  function deplier(oui) {
+    deplie = oui; $('secteur-plus').hidden = !oui; $('secteur').classList.toggle('deplie', oui);
+    const b = $('secteur-plus-bouton'); b.textContent = oui ? 'Moins d\'infos' : 'Plus d\'infos'; b.setAttribute('aria-expanded', String(oui));
+  }
+  $('secteur-plus-bouton').onclick = () => deplier(!deplie);
   $('secteur-fermer').onclick = () => fermer();
   return { montrer, fermer, maj, get ouvert() { return ouvert; } };
 }

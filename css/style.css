@@ -696,6 +696,8 @@ h2 { font-weight: normal; letter-spacing: var(--titre-lettres); }
 
 /* Le gros plan d'un secteur (v0.76.0 ; v0.100.0 : le seul secteur choisi, la vue d'ensemble un clic plus loin) */
 .secteur { width: min(360px, 34vw); display: grid; gap: var(--pas); max-height: calc(100dvh - 2 * var(--pas) - 220px); overflow-y: auto; box-sizing: border-box; }
+.secteur .fiche-tuiles[hidden] { display: none; }
+.secteur #secteur-plus-bouton { justify-self: end; min-height: 0; height: 28px; padding: 0 var(--pas); font-size: var(--texte-petit); }      /* un petit bouton, pas une barre (Jérôme, v0.128.0) */
 .secteur details { margin: 0; }
 .secteur[hidden] { display: none; }
 .secteur p, .secteur h3 { margin: 0; }

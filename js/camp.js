@@ -159,6 +159,16 @@ export function emplacementCamp(etat, cle, camp = NOUS) {
   const P = planDe(etat), X = P.x + dx, Y = P.y + dy;
   return { cle, camp, x: m.x + (camp === NOUS ? X : P.largeur - X), y: m.y + (camp === NOUS ? Y : P.hauteur - Y), w: PIEDS[cle][0], d: PIEDS[cle][1], rot: camp === NOUS ? 0 : Math.PI };
 }
+/* Les terrains des bâtiments des deux camps, tous les emplacements bâtis ou non, élargis de `DEGAGE_BASE` m de chaque côté : { x0, x1, y0, y1 }[] en coordonnées du terrain.
+   Pure (sans état de partie : seulement les dimensions du secteur et ses marges) : le sol s'en sert pour n'y planter aucun arbre (Jérôme, v0.128.0 : un char sorti du parc restait bloqué par un arbre). */
+export function terrainsDeBase(dim, marges, degage = CAMP_PLAN.degage) {
+  const etat = { dim, marges }, out = [];
+  for (const camp of [NOUS, EUX]) for (const cle of Object.keys(CAMP_PLAN.ligne)) {
+    const e = emplacementCamp(etat, cle, camp);      // (tournés d'un demi-tour, les rectangles restent alignés sur les axes)
+    out.push({ x0: e.x - e.w / 2 - degage, x1: e.x + e.w / 2 + degage, y0: e.y - e.d / 2 - degage, y1: e.y + e.d / 2 + degage });
+  }
+  return out;
+}
 /* Où sortent les hommes de la caserne de `camp` (lot D) : { x, y } devant sa façade (vers l'ennemi), `sens` (-1 chez nous : les y décroissent), `w` sa largeur, `cx, cy` son centre ; null sans caserne dessinée (partie non bridée, caserne pas bâtie) */
 export function sortieCaserne(etat, camp = NOUS) {
   if (!campDe(etat, camp)?.bride || !niveauDe(etat, 'caserne', camp)) return null;
