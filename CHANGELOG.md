@@ -1,5 +1,8 @@
 # Journal des versions
 
+## 0.123.0 — 2026-11-08
+- Le bilan du soir est en tuiles : ce qu'il faut retenir, les effectifs des deux camps, les morts jour après jour, les lignes, le ciel, et nos régiments (effectif, moral, morts du jour) en graphiques
+
 ## 0.122.0 — 2026-11-08
 - Vue verrouillée (style cinéma) sur un char, une mitrailleuse ou un avion : un bouton dans leur fiche ; la caméra tourne lentement autour de l'engin, deux bandes noires
 - Vue « à la personne » : la caméra est à bord, à hauteur d'œil, et regarde où l'engin regarde ; Échap, un geste sur la caméra ou le bouton libèrent la vue

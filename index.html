@@ -9,9 +9,9 @@
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta property="og:image" content="og.png">
-<link rel="stylesheet" href="js/lib/game.css?v=0.122.0">
-<link rel="stylesheet" href="css/style.css?v=0.122.0">
-<link rel="stylesheet" href="css/ds-v2.css?v=0.122.0">
+<link rel="stylesheet" href="js/lib/game.css?v=0.123.0">
+<link rel="stylesheet" href="css/style.css?v=0.123.0">
+<link rel="stylesheet" href="css/ds-v2.css?v=0.123.0">
 </head>
 <body class="charge">
 <!-- La barre de chargement (v0.28.0) : là avant tout script ; main.js la remplit, puis la retire. `body.charge` (v0.100.0) : tout le reste de l'écran est caché tant qu'elle est là (le menu et le titre ne se voient plus derrière) -->
@@ -91,17 +91,18 @@
       <section class="papier nuit" id="nuit" hidden aria-live="polite">
         <h2 id="nuit-titre">Nuit</h2>
         <div id="nuit-corps" class="nuit-colonnes">
-          <!-- trois colonnes (Jérôme, v0.100.0) : les chiffres clés de la journée, les médailles du jour, les ordres aux régiments -->
+          <!-- trois colonnes (Jérôme, v0.100.0) : la journée, les régiments et leurs médailles, les ordres aux régiments ; le bilan est en tuiles (Jérôme, 8 nov. : le tableau de bord du labo, `hud/bilan.js`) -->
           <section class="nuit-col" aria-labelledby="nuit-h-jour">
             <h3 id="nuit-h-jour">La journée</h3>
-            <dl class="chiffres" id="nuit-chiffres"></dl>
+            <div class="bilan" id="nuit-bilan"></div>
             <p id="nuit-lignes"></p>
-            <p id="nuit-avions"></p>
             <p class="discret" id="nuit-demain"></p>
             <p class="discret" id="nuit-ciel"></p>
           </section>
           <section class="nuit-col" id="nuit-medailles" aria-labelledby="nuit-h-medailles">
-            <h3 id="nuit-h-medailles">Médailles du jour</h3>
+            <h3 id="nuit-h-medailles">Nos régiments</h3>
+            <div id="nuit-regiments"></div>
+            <h4 class="bilan-sous">Médailles du jour</h4>
             <div id="nuit-medailles-corps"></div>
           </section>
           <section class="nuit-col" aria-labelledby="nuit-h-ordres">
@@ -405,6 +406,6 @@
 </dialog>
 
 <div class="jeu-toast" id="toast" role="status" hidden></div>
-<script type="module" src="js/main.js?v=0.122.0"></script>
+<script type="module" src="js/main.js?v=0.123.0"></script>
 </body>
 </html>
