@@ -1,5 +1,9 @@
 # Journal des versions
 
+## 0.120.0 — 2026-11-07
+- Chars, mitrailleuses et avions, des deux camps : une pastille ronde à la place des étiquettes, avec un arc de vie ; au survol, l'infobulle dit tout (état, vie, canon ou bande, expérience, victimes)
+- Un clic sur la pastille d'un de nos chars ou postes le choisit ; la pastille saute quand un chevron est gagné
+
 ## 0.119.0 — 2026-11-07
 - Le labo propose les fiches d'un soldat, d'un régiment, d'un char et d'une mitrailleuse en graphiques, en trois mises en page à comparer ; rien n'a encore changé dans le jeu
 

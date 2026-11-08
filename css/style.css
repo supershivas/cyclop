@@ -790,11 +790,27 @@ h2 { font-weight: normal; letter-spacing: var(--titre-lettres); }
 @keyframes bd-tampon { from { opacity: 0; transform: rotate(-8deg) scale(1.8); } to { opacity: 1; transform: rotate(-8deg) scale(1); } }
 @media (prefers-reduced-motion: reduce) { .bd-ligne, .bd-tampon { animation-duration: 1ms; animation-delay: 0s !important; } }
 
-/* Les engins d'en face (Jérôme, v0.115.0) : un char ou un poste de mitrailleuse ennemi porte une étiquette (son état, sa barre de vie), au liseré de leur couleur ; on ne la clique pas */
-.char-etiq.ennemi { pointer-events: none; cursor: default; min-width: 0; border-top-color: var(--jeu-eux); }
-.char-etiq.ennemi .pv i { background: var(--jeu-eux); }
-.char-etiq.ennemi.detruit { --pap: var(--jeu-fond); --enc: var(--jeu-brume); border-top-style: dashed; }
-.char-etiq.ennemi.detruit .pv i { background: transparent; }
+/* Les pastilles des engins (Jérôme, v0.120.0 ; hud/pastilles.js) : un rond à la couleur du camp, ceint d'un arc de vie ; il grossit au survol, l'infobulle dit le reste. Pas `.pastille` : elle est déjà aux boutons du choix du secteur. */
+.engin-pastille { position: absolute; left: 0; top: 0; width: 24px; height: 24px; pointer-events: auto; cursor: help; --coeur: var(--jeu-nous); }
+.engin-pastille[hidden] { display: none; }
+.engin-pastille.eux { --coeur: var(--jeu-eux); }
+.engin-pastille[role="button"] { cursor: pointer; }
+.engin-pastille svg { display: block; transition: transform 120ms ease-out; }
+@media (hover: hover) { .engin-pastille:hover svg { transform: scale(1.35); } }
+.engin-pastille .halo { fill: var(--jeu-fond); }
+.engin-pastille .coeur { fill: var(--coeur); stroke: var(--jeu-fond); stroke-width: 1; }
+.engin-pastille .arc { stroke: var(--coeur); stroke-dasharray: 56.5 56.5; }
+.engin-pastille .marque { fill: var(--jeu-fond); }
+.engin-pastille .croix { display: none; fill: none; stroke: var(--jeu-brume); stroke-width: 1.6; }
+.engin-pastille.detruit .coeur { fill: var(--jeu-fond); stroke: none; }
+.engin-pastille.detruit .arc { stroke: var(--jeu-brume); stroke-dasharray: 3 3 !important; }
+.engin-pastille.detruit .marque { display: none; }
+.engin-pastille.detruit .croix { display: block; }
+.engin-pastille.choisi .halo { fill: var(--jeu-encre); }
+.engin-pastille.vide .arc { stroke-dasharray: 2 3 !important; }       /* la bande est à sec */
+.engin-pastille.gagne svg { animation: pastille-gagne 0.9s ease-out; }
+@keyframes pastille-gagne { 0% { transform: scale(1); } 25% { transform: scale(1.7); } 100% { transform: scale(1); } }
+@media (prefers-reduced-motion: reduce) { .engin-pastille.gagne svg { animation: none; } .engin-pastille svg { transition: none; } }
 /* La fenêtre d'un poste sans servant est inactive : grisée, ses ordres refusés */
 .char-fiche.inactif { opacity: 0.72; }
 .char-fiche [aria-disabled="true"] { opacity: 0.5; cursor: not-allowed; }
