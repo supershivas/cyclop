@@ -8,6 +8,8 @@ import { EQUIPEMENT } from '../data/batiments.js?v=0.123.0';
 import { campDe, niveauDe, renfortsDe } from '../camp.js?v=0.123.0';
 import { refusCorvee, contactDe } from '../nuit.js?v=0.123.0';
 import { palmares, tableau } from './medailles.js?v=0.123.0';
+import { lireJournee } from '../donnees-jour.js?v=0.123.0';
+import { tuilesDuSoir, liste } from './bilan.js?v=0.123.0';
 import { pluriel, numeroDe } from './lecture.js?v=0.123.0';
 import { lune, nomPhase, couvertureNuit, cielEnMots } from '../data/lune.js?v=0.123.0';
 
@@ -78,15 +80,13 @@ export function creerNuit({ $, bataille, choisis, choisir = () => {}, pauser, re
   function montrer() {
     const B = bataille();
     pauser(); sauvegarder();
-    const e = B.etat, j = e.jour, [nous, eux] = e.pertesJour[j - 1], avant = e.nuits.at(-1)?.choix || {};
+    const e = B.etat, j = e.jour, avant = e.nuits.at(-1)?.choix || {};
     $('nuit-titre').textContent = `Nuit du ${nomJour(j)} au ${nomJour(j + 1)} jour`;
-    // les chiffres clés de la journée (colonne de gauche) : nos morts, les leurs, les tronçons pris et perdus, la réserve
-    const [pris, perdus] = e.tranchees ? e.prises[j - 1] : [0, 0], [mn, me] = moi() === NOUS ? [nous, eux] : [eux, nous];
-    const chiffre = (nom, v, aide) => { const d = document.createElement('div'); d.title = aide; d.append(Object.assign(document.createElement('dt'), { textContent: nom }), Object.assign(document.createElement('dd'), { textContent: String(v) })); return d; };
-    $('nuit-chiffres').replaceChildren(
-      chiffre('Nos morts', mn, 'Les hommes tombés chez nous aujourd\'hui, de leurs blessures du matin comprises'), chiffre('Leurs morts', me, 'Les hommes tombés en face aujourd\'hui'),
-      ...(e.tranchees ? [chiffre('Tronçons pris', pris, 'Les tronçons de tranchée pris à l\'ennemi aujourd\'hui'), chiffre('Tronçons perdus', perdus, 'Les tronçons de tranchée que l\'ennemi nous a pris aujourd\'hui')] : []),
-      ...(e.mission ? [chiffre('Régiments frais', renfortsEnMots(e, moi()), 'Les régiments frais de la caserne : ceux qui restent sur ceux de la bataille. La relève de la nuit et un renfort déployé le jour en consomment chacun un ; il n\'en arrive pas d\'autres avec les jours (au plus 3 par bataille).')] : []));
+    // le bilan en tuiles (colonne de gauche ; Jérôme, 8 nov. : le tableau de bord du labo) : à retenir, effectifs, morts du jour, lignes, ciel ; `lireJournee` ne lit que l'état
+    const d = lireJournee(B, moi());
+    const reserve = e.mission ? renfortsEnMots(e, moi()) : null;
+    $('nuit-bilan').replaceChildren(...tuilesDuSoir(d, { reserve, avions: avionsEnMots(e, moi()) }));
+    $('nuit-regiments').replaceChildren(liste(d));
     $('nuit-lignes').textContent = e.tranchees ? enLignes(e.prises[j - 1]) : '';
     // la victoire anticipée (v0.77.0) : où l'on en est, pour qui doit prendre leur première ligne
     if (e.tranchees && e.mission === 'prendre' && moi() === NOUS) {
@@ -94,7 +94,6 @@ export function creerNuit({ $, bataille, choisis, choisir = () => {}, pauser, re
       $('nuit-lignes').textContent += jours ? ` Leur première ligne est tenue (${t} tronçons sur ${tot}) : encore un soir et la bataille est gagnée.` : ` Leur première ligne : ${t} tronçons sur ${tot} à nous ; il en faut 75 % pendant deux soirs de suite pour gagner avant le terme.`;
     }
     $('nuit-medailles-corps').replaceChildren(...tableau(palmares(B, moi(), 'jour')));
-    $('nuit-avions').textContent = avionsEnMots(e, moi());
     $('nuit-demain').textContent = `Demain : ${METEO[e.previsions[j - 1]]?.prevision || '—'}.`;
     // le ciel de cette nuit (v0.40.0) : la phase de la lune et la couverture, les mêmes que celles que le dessin montre
     const mt = e.meteo[j - 1], L = lune(j, e.graine);

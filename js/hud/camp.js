@@ -3,10 +3,9 @@
 // fenêtre d'un régiment (`.reg-ouvert` : le titre et son niveau, une ligne de ce qu'il fait, des boutons de même largeur), et le bouton « Le camp » (la dotation, et la touche B). L'amélioration tient en un clic : le
 // choix du palier EST le bouton (« Tir de réglage · 3 pts »). Le texte long est dans l'infobulle. Lecture seule de l'état : les ordres passent par les fonctions que main.js donne.
 import { BATIMENTS, EQUIPEMENT } from '../data/batiments.js?v=0.123.0';
-import { CHARS, CHAR_PAR_DEFAUT, CHAR_DEPART } from '../data/chars.js?v=0.123.0';
-import { refusCamp, campDe, charsDispo, modif, pvAvion, patients, renfortsDe, NIVEAU_MAX } from '../camp.js?v=0.123.0';
+import { refusCamp, campDe, charsDispo, patients, renfortsDe, NIVEAU_MAX } from '../camp.js?v=0.123.0';
 import { peutDeployer, blessesDe } from '../bataille.js?v=0.123.0';
-import { avionsPrets, avionsRestants, positionDe } from '../avions.js?v=0.123.0';
+import { avionsPrets, avionsRestants } from '../avions.js?v=0.123.0';
 import { avionAbime, reparationFaite } from '../genie.js?v=0.123.0';
 import { MITRAILLAGE } from '../data/mitraillage.js?v=0.123.0';
 import { METEO } from '../data/meteo.js?v=0.123.0';

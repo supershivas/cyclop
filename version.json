@@ -2,7 +2,6 @@
   "version": "0.123.0",
   "date": "2026-11-08",
   "changes": [
-    "Le parc des chars et l'aérodrome ont un bouton par char et par avion : déployé, il mène la vue jusqu'à lui et ouvre sa fiche",
-    "Un char ou un avion pas déployé (au parc, au sol, détruit, perdu) a son bouton grisé : ses chiffres et le motif s'affichent en infobulle"
+    "Le bilan du soir est en tuiles : ce qu'il faut retenir, les effectifs des deux camps, les morts jour après jour, les lignes, le ciel, et nos régiments (effectif, moral, morts du jour) en graphiques"
   ]
 }

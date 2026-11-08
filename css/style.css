@@ -859,3 +859,53 @@ h2 { font-weight: normal; letter-spacing: var(--titre-lettres); }
 .suivi[hidden] { display: none; }
 .suivi button { min-height: 0; padding: var(--e1) var(--pas); }
 body.vue-verrouillee .char-fiche { display: none; }      /* la fiche cacherait la vue : le bandeau « Libérer la vue » suffit ; Échap aussi */
+
+/* ─── Le bilan du soir en tuiles (Jérôme, 8 nov., v0.123.0 : le tableau de bord du labo ; `hud/bilan.js`) ───
+   Aucune couleur écrite ici : les variables du jeu. Sur le papier clair, chaque forme pleine d'une armée est cerclée de terre (comme les pastilles de la carte) ; la forme dit la même chose que la couleur. */
+.bilan { display: grid; gap: var(--pas); }
+.tuile { margin: 0; padding: var(--pas); border: var(--trait) solid var(--jeu-fond); display: grid; gap: var(--e1); min-width: 0; align-content: start; }
+.tuile h4, .bilan-sous { margin: 0; font-size: var(--texte-petit); font-weight: normal; letter-spacing: var(--lettres-etiquette); text-transform: uppercase; color: var(--jeu-accent); }
+.bilan-sous { margin-top: var(--pas); padding-top: var(--pas); border-top: var(--e0) solid var(--jeu-fond); }
+.tuile p { margin: 0; }
+.bi-note { font-size: var(--texte-petit); }
+.bi-boite { min-width: 0; }
+.bi { display: block; width: 100%; height: auto; overflow: visible; }
+.bi .bi-nous { fill: var(--jeu-nous); stroke: var(--jeu-fond); stroke-width: 1; }
+.bi .bi-eux { fill: var(--jeu-eux); stroke: var(--jeu-fond); stroke-width: 1; }
+.bi .bi-nous-fond { fill: var(--jeu-nous); }
+.bi .bi-eux-fond { fill: var(--jeu-eux); }
+.bi .bi-hachure { stroke: var(--jeu-fond); stroke-width: 1; }
+.bi .bi-pointille { fill: none; stroke: var(--jeu-fond); stroke-width: 1; stroke-dasharray: 2 2; }
+.bi .bi-contour { fill: none; stroke: var(--jeu-accent); stroke-width: 1; }
+.bi .bi-creux { fill: none; stroke: var(--jeu-fond); }
+.bi .bi-vide { fill: none; stroke: var(--jeu-accent); stroke-width: 1; }
+.bi .bi-base { stroke: var(--jeu-fond); stroke-width: 1; }
+.bi .bi-cadre { fill: none; stroke: var(--jeu-fond); }
+.bi .bi-niveau { fill: var(--jeu-fond); }
+.bi-ebranle .bi-niveau { fill: var(--jeu-ebranle); stroke: var(--jeu-fond); stroke-width: 1; }
+.bi-deroute .bi-niveau { fill: var(--jeu-deroute); stroke: var(--jeu-fond); stroke-width: 1; }
+.bi .bi-repere { stroke: var(--jeu-accent); stroke-width: 1.5; }
+.bi-fait { flex: none; }
+.bi-fait .bi-plein { fill: var(--jeu-fond); }
+.bi-fait .bi-nous { fill: var(--jeu-nous); stroke: var(--jeu-fond); }
+.bi-fait .bi-alerte { fill: var(--jeu-ebranle); stroke: var(--jeu-fond); stroke-width: 1.5; }
+.bi-fait .bi-alerte-p { fill: var(--jeu-fond); }
+.bi-fait .bi-anneau { fill: none; stroke: var(--jeu-accent); stroke-width: 2; }
+.bi-faits { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--e1); }
+.bi-faits li { display: flex; gap: var(--pas); align-items: flex-start; }
+.bi-faits .bi-fait { margin-top: 2px; }
+.bi-faits li span { min-width: 0; }
+.bi-chiffres { display: flex; flex-wrap: wrap; gap: var(--e1) var(--e4); }
+.bi-chiffre b { display: block; font-size: var(--texte-grand); font-weight: normal; line-height: 1; }
+.bi-chiffre span { font-size: var(--texte-petit); color: var(--jeu-accent); }
+.bi-t-nous, .bi-t-eux { --c: var(--jeu-fond); }
+.bi-t-nous { --c: var(--jeu-nous); }
+.bi-t-eux { --c: var(--jeu-eux); }
+.bi-chiffre.bi-t-nous span::before, .bi-chiffre.bi-t-eux span::before, .bi-legende span::before { content: ''; display: inline-block; width: var(--pas); height: var(--pas); margin-right: var(--e1); background: var(--c); border: var(--trait) solid var(--jeu-fond); }
+.bi-legende { display: flex; justify-content: space-between; gap: var(--pas); font-size: var(--texte-petit); }
+.bi-legende b { font-weight: normal; }
+.bi-ligne { display: grid; gap: var(--e0); }
+.bi-regs { display: grid; gap: var(--e1); }
+.bi-reg { display: grid; grid-template-columns: 4ch minmax(0, 1fr) 64px 4ch; gap: var(--pas); align-items: center; font-size: var(--texte-petit); min-height: 16px; }
+.bi-reg-tete { color: var(--jeu-accent); text-transform: uppercase; letter-spacing: var(--lettres-etiquette); }
+.bi-droite { text-align: right; }
