@@ -24,8 +24,8 @@ la danse macabre, la catastrophe peinte avec calme. L'intention est dans `DESIGN
   étroit (30°), plongée de 54°, tournée de 9° : les régiments lointains paraissent
   plus petits (Jérôme, v0.3.0 : c'est cela, « l'angle ») ; on la tourne (jusqu'à
   34°) et l'incline un peu, en douceur ; elle respire (un balancement de 2° en
-  23 s, seulement après 5 s sans geste sur la caméra, coupé si le système demande un mouvement réduit ; Jérôme, v0.3.1, v0.103.0) ; son point visé reste sur le terrain et la vue peut le dépasser d'un quart de sa taille (`SURPLOMB` = 0,25, Jérôme, v0.103.0), et le point visé atteint toujours 15 % du terrain depuis chaque bord (`ATTEINTE`, v0.104.1) ; **la caméra ne passe jamais sous le sol** (règle impérative : `borner` la relève, `GARDE_SOL`). Lumière (Jérôme, v0.68.1) : un soleil qui se lève à gauche et se couche à droite, des ombres de relief douces et de nuages, les creux et les hommes assombris, le jour qui s'éteint sous les toits, des flaques sous la pluie (v0.115.0 : la lumière du labo lumière, `js/rendu/ao-sol.js`), un temps couvert sans ombres (`SOLEIL_JEU` de data/soleil.js ; détail dans `docs/domaines/rendu.md`). Zoom par
-  facteurs entiers au point visé (1, 2, 3, 4, 6, 8, 12, 16, 24, 32 pixels par mètre ; Jérôme, v0.9.3 : tout près des soldats ; 24 en v0.103.0, 32 en v0.104.2 : le visage d'un homme s'y lit ; les cadrages automatiques s'arrêtent à 24 : `ZOOMS_CADRAGE`) ; aux zooms
+  23 s, seulement après 5 s sans geste sur la caméra, coupé si le système demande un mouvement réduit) ; son point visé reste sur le terrain et la vue peut le dépasser d'un quart de sa taille (`SURPLOMB` = 0,25, Jérôme, v0.103.0), et le point visé atteint toujours 15 % du terrain depuis chaque bord (`ATTEINTE`, v0.104.1) ; **la caméra ne passe jamais sous le sol** (règle impérative : `borner` la relève, `GARDE_SOL`). Lumière (Jérôme, v0.68.1) : un soleil qui se lève à gauche et se couche à droite, des ombres de relief douces et de nuages, les creux et les hommes assombris, le jour qui s'éteint sous les toits, des flaques sous la pluie (v0.115.0 : la lumière du labo lumière, `js/rendu/ao-sol.js`), un temps couvert sans ombres (`SOLEIL_JEU` de data/soleil.js ; détail dans `docs/domaines/rendu.md`). Zoom par
+  facteurs entiers au point visé (1, 2, 3, 4, 6, 8, 12, 16, 24, 32 pixels par mètre ; Jérôme, v0.9.3 ; 24 en v0.103.0, 32 en v0.104.2 : le visage d'un homme s'y lit ; les cadrages automatiques s'arrêtent à 24 : `ZOOMS_CADRAGE`) ; aux zooms
   1 et 2, chaque soldat est un point (le sol, lui, garde le même relief à tous les zooms ; Jérôme, v0.12.0) ; en face est vert kaki clair (palette `x`). Sol en cubes et soldats en boîtes (Jérôme, v0.2.0 :
   les facettes et les sprites essayés au labo ne sont pas retenus) ; **de près, dès 12 px/m, les 250 plus proches ont un squelette, un visage et un aspect à eux** (`ARTICULE`, v0.105.0 ; deux niveaux de détail : intermédiaire de 12 à 16 px/m, fin dès 24, v0.105.1). Profil game-system :
   `profils/pixel-3d-three.md`.
@@ -33,7 +33,7 @@ la danse macabre, la catastrophe peinte avec calme. L'intention est dans `DESIGN
   pause). Pas d'interface tactile ni d'aperçu téléphone (Jérôme, v0.1.0) : sur un
   écran tactile, l'écran titre dit que le jeu se joue sur un ordinateur.
 - **Public** : joueur averti.
-- **Difficulté** (Jérôme, v0.70.0) : trois niveaux au choix du secteur (`DIFFICULTES` de data/difficulte.js : Secteur calme, Front ordinaire, Grande offensive), qui ne changent que l'adversaire (son effectif, le rythme de son IA, sa posture `retenu`) ; « ordinaire » est la partie d'avant ; le dernier choix est gardé dans `prefs.difficulte`. Pas à deux ; la campagne n'en use pas encore (second temps : un décalage de sa courbe). Détail : `docs/domaines/bataille.md`.
+- **Difficulté** (Jérôme, v0.70.0) : trois niveaux au choix du secteur (`DIFFICULTES` de data/difficulte.js : Secteur calme, Front ordinaire, Grande offensive), qui ne changent que l'adversaire (son effectif, le rythme de son IA, sa posture `retenu`) ; « ordinaire » est la partie d'avant ; le dernier choix est gardé dans `prefs.difficulte`. Pas à deux ; la campagne n'en use pas encore. Détail : `docs/domaines/bataille.md`.
 - **Session** : un run = une bataille de 10 à 15 jours sur un secteur (Jérôme, v0.9.0 ;
   trois avant), avec une mission (`etat.mission` : tenir, prendre ; `juger` à la fin,
   ou avant si le secteur tombe ; « prendre » se gagne aussi avant : leur 1re ligne tenue à 75 % deux soirs de suite, v0.77.0 ; `etat.issue`) et une réserve de régiments frais pour
@@ -45,7 +45,7 @@ la danse macabre, la catastrophe peinte avec calme. L'intention est dans `DESIGN
 - **Steam** : porte ouverte (section 22). Manette : seulement le menu pour
   l'instant (`gamepad.js`).
 - **Interface** (Jérôme, v0.127.1) : on visualise (barres, tuiles, icônes), pas de bloc de texte ; aucun bouton nu ; un id est unique ; détail dans `docs/design-system.md`.
-- **Langue** : français seulement. **Son** (Jérôme, v0.75.0 ; aucun avant) : synthétisé en Web Audio (repli) et bruitages CC0 en mp3 (`assets/sons/`, v0.99.6), `js/audio.js`, détail dans `docs/domaines/interface.md`.
+- **Langue** : français seulement. **Son** (v0.75.0) : synthétisé en Web Audio (repli) et bruitages CC0 en mp3 (`assets/sons/`, v0.99.6), `js/audio.js`, détail dans `docs/domaines/interface.md`.
 - Jeu : pas de sous-titre (section 3 des conventions).
 
 ### Palette « Boue et ciel bas » (js/palette.js, variables --jeu-*)
@@ -127,6 +127,8 @@ Autres : `DESIGN.md` (l'intention), `ROADMAP.md` (`docs/pistes-avancees.md` : le
   `pierreStats()` de Pierre).
 
 ## Vérifier et livrer
+
+**Économe en tokens** : lis par plages (Grep, Read offset/limit), sans sous-agent ni capture inutiles.
 
 **Ne lance que ce que le changement touche** (les tests de règles durent ~5 min en tout) :
 
