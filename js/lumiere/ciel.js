@@ -13,7 +13,7 @@ export const COUL = Object.fromEntries(Object.entries(PALETTE).map(([k, h]) => [
 COUL.orange = lin(ALERTES.orange);
 
 // Les matières du terrain, dans l'ordre de MAT (terrain.js) : herbe, glaise, terre, boue, sacs, tronc, buisson, toit
-export const COULEURS_MATIERES = [COUL.h, COUL.g, mix(COUL.b, COUL.g, 0.25), mix(COUL.s, COUL.b, 0.4), mix(COUL.g, COUL.r, 0.45), mix(COUL.s, COUL.b, 0.55), COUL.w, mix(COUL.b, COUL.r, 0.3)];
+export const COULEURS_MATIERES = [COUL.h, COUL.g, mix(COUL.b, COUL.g, 0.25), mix(COUL.s, COUL.b, 0.4), mix(COUL.g, COUL.r, 0.45), mix(COUL.s, COUL.b, 0.55), COUL.w, mix(COUL.b, COUL.r, 0.3), mix(mix(COUL.e, COUL.s, 0.62), COUL.t, 0.2)];
 
 // ─── Le ciel v2 : le MÊME modèle ici (pour l'éclairage du sol) et dans le nuanceur de rendu.js (pour le ciel qu'on voit) ───
 // La couleur d'une direction `d` (unitaire, y vers le haut) : un dégradé selon l'épaisseur d'air traversée (masse d'air de Kasten-Young : 1 au zénith, ~36 à l'horizon), un reflet de

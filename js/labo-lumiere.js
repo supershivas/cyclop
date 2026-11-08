@@ -4,7 +4,7 @@
 import { ROLES } from './palette.js?v=0.116.0';
 import { startUpdateCheck, loadVersion, loadChangelog } from './lib/app-update.js?v=0.116.0';
 import { MONDE, TAILLES, COLONNES_MAX, LAMPES, ETAPES, QUALITES, RESOLUTIONS, METEOS, METEO_AUTO, NUAGES, SOLDATS_REELS, CAMERA, BARRAGE, FLASH, BUDGET_IMAGE_MS, BUDGET_RECALCUL_CHUNK_MS, REPARTITION, ENGINS } from './lumiere/config.js?v=0.116.0';
-import { creerMonde, impact, chunksDe, rectDeChunks } from './lumiere/terrain.js?v=0.116.0';
+import { creerMonde, impact, chunksDe, rectDeChunks, MAT } from './lumiere/terrain.js?v=0.116.0';
 import { creerLumiere, calculerSoleil, calculerAO, calculerFlood, calculerCavite, majHauteurs, regionTotale, bandeSuivante } from './lumiere/lumiere.js?v=0.116.0';
 import { creerFoule, regler as reglerFoule, avancer as avancerFoule } from './lumiere/foule.js?v=0.116.0';
 import { aspectDe, creerSuivi, suivre, ecrire as ecrireReel, FLOATS as FLOATS_REEL, creerClasses, classer, ecrireJeu, FLOATS_JEU } from './lumiere/soldats-reels.js?v=0.116.0';
@@ -29,7 +29,7 @@ const TOUT_OFF = Object.fromEntries(IDS.map(i => [i, false]));
 const S = {
   qualite: QUALITES[P0.qualite] ? P0.qualite : 'moyen', taille: TAILLES[P0.taille] ? P0.taille : 'grande', grille: ['auto', '1', '2'].includes(P0.grille) ? P0.grille : 'auto', resolution: RESOLUTIONS[P0.resolution] ? P0.resolution : 'jeu',
   etapes: {}, surcharges: new Set(), heure: 8, jour: 1, meteo: METEOS[P0.meteo] ? P0.meteo : 'sec', unites: MONDE.foule.defaut,
-  meteoAuto: false, reels: true, engins: true, comparer: 'normal', split: 0.5, toits: false, cycle: false, nBarrage: BARRAGE.obus, pause: false, banc: false,
+  meteoAuto: false, reels: true, engins: true, reflets: true, comparer: 'normal', split: 0.5, toits: false, cycle: false, nBarrage: BARRAGE.obus, pause: false, banc: false,
 };
 const preset = () => QUALITES[S.qualite].etapes;
 // la grille voulue, ramenée à 1 case par mètre si la carte aurait trop de colonnes (COLONNES_MAX)
@@ -172,7 +172,11 @@ function basculerEtape(id, on) {
 
 // ─── Un obus ──────────────────────────────────────────────────────────────────
 function obus(xm, zm, { silencieux = false } = {}) {
-  const imp = impact(M, xm, zm); if (!imp) return;
+  const imp = impact(M, xm, zm);
+  if (!imp) {                                                          // sur l'eau : le flash et la gerbe, aucun cratère
+    if (M.mat[Math.min(M.H - 1, Math.floor(zm * M.cpm)) * M.W + Math.min(M.W - 1, Math.floor(xm * M.cpm))] === MAT.EAU) { const y = M.lac.niveauM; flashs.push({ x: xm, y: y + 3, z: zm, t0: temps }); if (flashs.length > 20) flashs.shift(); explosion(particules, xm, y, zm, { nbDebris: Q().debris, atmosphere: !!S.etapes[5] }); }
+    return;
+  }
   // le maillage : les chunks dont une colonne a bougé (à 2 cases près : les flancs et l'AO des arêtes lisent les voisines)
   const zone = chunksDe(M, { i0: imp.i0 - 2, j0: imp.j0 - 2, i1: imp.i1 + 2, j1: imp.j1 + 2 });
   const liste = []; for (let r = zone.r0; r <= zone.r1; r++) for (let c = zone.c0; c <= zone.c1; c++) liste.push({ cx: c, cy: r });
@@ -217,6 +221,7 @@ function voirPreset(nom, direct = false) {
   if (nom === 'tranchee') { const a = M.abris.find(x => x.camp === 0 && x.niveau === 1) || M.abris[0]; cible = [a ? a.x : 128, 0, a ? a.z : 100]; }
   if (nom === 'colline') cible = [M.colline.x, 0, M.colline.z];
   if (nom === 'engins') { const c = EN && EN.chars[0] || { x: 200, z: 160 }; cible = [c.x, 0, c.z]; }
+  if (nom === 'lac') cible = [M.lac.x, 0, M.lac.z];
   if (nom === 'cratere') { const c = M.craters[M.craters.length - 1] || { x: 128, z: 80 }; cible = [c.x, 0, c.z]; }
   cible[1] = hauteurM(cible[0], cible[2]);
   const vers = { cible, distance: p.distance * (nom === 'large' ? M.largeurM / 256 : 1), tangage: p.tangage, lacet: p.lacet };
@@ -253,7 +258,12 @@ function scene(etapesForcees) {
   const { n, nd } = ecrireParticules(particules);
   const fl = flashs.map(f => { const age = (temps - f.t0) / FLASH.dureeS; return { ...f, rayon: FLASH.rayonM, coul: f.coul || [1.2, 0.8, 0.45], force: f.fixe ? FLASH.intensite : Math.max(0, 1 - age) ** 2 * FLASH.intensite }; }).filter(f => f.force > 0.01);
   const engins = S.engins && EN ? { char: { n: ecrireEngins(EN.chars, dataChar), data: dataChar }, avion: { n: ecrireEngins(EN.avions, dataAvion), data: dataAvion } } : null;
-  R.dessiner({ camera: C, ciel: c, etapes: eff, engins, ombreTaille: Q().ombreTaille || 1024, moitie: partage ? { etapes: TOUT_OFF } : null, split: partage ? S.split : 0, flashs: fl, particules: { n, nd, tampon: particules.sortie }, temps, derive, bordY: M.bordM, ...lotsSoldats(), masque: classes.masque, lueurs: lueursDe(), toitsTransparents: S.toits, ssaoEchantillons: Q().ssaoEchantillons || 10, brume: Q().brume });
+  // le lac : l'image à l'envers n'est faite que si le lac est (en partie) à l'écran
+  let lac = null;
+  if (M && M.lac) { const L = M.lac, vp = matrices(C).vp, p = (x, z) => { const w = vp[3] * x + vp[7] * L.niveauM + vp[11] * z + vp[15]; return w > 0.1 ? [(vp[0] * x + vp[4] * L.niveauM + vp[8] * z + vp[12]) / w, (vp[1] * x + vp[5] * L.niveauM + vp[9] * z + vp[13]) / w] : null; };
+    const pts = [[L.x, L.z], [L.x - L.rayonM * 1.4, L.z], [L.x + L.rayonM * 1.4, L.z], [L.x, L.z - L.rayonM], [L.x, L.z + L.rayonM]].map(a => p(a[0], a[1])).filter(Boolean);
+    lac = { niveauM: L.niveauM, miroir: S.reflets && pts.some(q => Math.abs(q[0]) < 1.1 && Math.abs(q[1]) < 1.1) }; }
+  R.dessiner({ camera: C, ciel: c, etapes: eff, engins, lac, ombreTaille: Q().ombreTaille || 1024, moitie: partage ? { etapes: TOUT_OFF } : null, split: partage ? S.split : 0, flashs: fl, particules: { n, nd, tampon: particules.sortie }, temps, derive, bordY: M.bordM, ...lotsSoldats(), masque: classes.masque, lueurs: lueursDe(), toitsTransparents: S.toits, ssaoEchantillons: Q().ssaoEchantillons || 10, brume: Q().brume });
 }
 
 // ─── La boucle ────────────────────────────────────────────────────────────────
@@ -462,6 +472,7 @@ async function demarrer() {
   $('ll-barrage').onclick = () => barrage();
   $('ll-comparer').onclick = basculerComparer; $('ll-partage').onclick = basculerPartage;
   $('ll-meteo-auto').onclick = () => { S.meteoAuto = !S.meteoAuto; majMeteoAuto(); if (S.meteoAuto) { prochainMeteo = 8; if (!S.etapes[7]) { basculerEtape(7, true); toast('La météo est l\'étape 7 : activée.'); } } };
+  $('ll-reflets').checked = S.reflets; $('ll-reflets').onchange = e => { S.reflets = e.target.checked; };
   $('ll-engins').checked = S.engins; $('ll-engins').onchange = e => { S.engins = e.target.checked; };
   $('ll-reels').checked = S.reels; $('ll-reels').onchange = e => { S.reels = e.target.checked; };
   $('ll-cycle').onclick = () => { S.cycle = !S.cycle; $('ll-cycle').setAttribute('aria-pressed', String(S.cycle)); };

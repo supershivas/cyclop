@@ -4,7 +4,7 @@
 import { createRng } from '../lib/rng.js?v=0.116.0';
 import { MONDE, MOTIF_OBUS } from './config.js?v=0.116.0';
 
-export const MAT = { HERBE: 0, GLAISE: 1, TERRE: 2, BOUE: 3, SAC: 4, TRONC: 5, BUISSON: 6, TOIT: 7 };
+export const MAT = { HERBE: 0, GLAISE: 1, TERRE: 2, BOUE: 3, SAC: 4, TRONC: 5, BUISSON: 6, TOIT: 7, EAU: 8 };
 const NIVEAU_BASE = 40;                // un sol à 10 m (en quarts de cube de 1 m : × cpm pour une grille plus fine) : les cratères et les tranchées ont de la place
 // (toutes les hauteurs écrites ici en quarts valent pour des cubes de 1 m ; `k` = cpm les ramène à la grille : un mètre de haut est le même mètre à 1 ou 2 cases par mètre)
 
@@ -37,6 +37,7 @@ export function creerMonde({ cpm = 1, graine = MONDE.graine, niveaux = MONDE.tra
     M.mat[j * W + i] = bruit(x / 9, z / 9, graine + 3) > 0.62 ? MAT.GLAISE : MAT.HERBE;
   }
   poserColline(M);
+  poserLac(M);
   tracerTranchees(M, rng);
   planterVegetation(M, rng);
   for (let i = 0; i < n; i++) M.top[i] = M.toit[i] || M.sol[i] + M.veg[i];
@@ -62,6 +63,21 @@ function poserColline(M) {
     if (d >= 1) continue;
     const u = Math.min(1, Math.max(0, (d - 0.35) / 0.65));
     M.sol[j * M.W + i] += Math.round(h * (0.5 + 0.5 * Math.cos(Math.PI * u)));
+  }
+}
+
+// Le lac (Jérôme : « ajoute un lac sur le labo pour que je voie les effets de reflets sur l'eau ») : une cuvette ovale dans le no man's land, à l'ouest, dont le fond est une nappe PLATE (la surface de l'eau, matière EAU) ;
+// les rives descendent en cosinus. Le rendu fait de l'eau un miroir : le ciel, les nuages, le soleil et, par une seconde image à l'envers, tout ce qui se tient au-dessus (arbres, soldats, fumée).
+function poserLac(M) {
+  const C = MONDE.lac, cx = C.x * M.largeurM, cz = C.z * M.profondeurM, R = C.rayonM, k = M.cpm, niveauQ = (NIVEAU_BASE - C.profondeurQ) * k;
+  M.lac = { x: cx, z: cz, rayonM: R, niveauQ, niveauM: niveauQ * M.cell / MONDE.quartsParCube };
+  const i0 = Math.max(0, Math.floor((cx - R * 1.4) * k)), i1 = Math.min(M.W - 1, Math.ceil((cx + R * 1.4) * k)), j0 = Math.max(0, Math.floor((cz - R) * k)), j1 = Math.min(M.H - 1, Math.ceil((cz + R) * k));
+  for (let j = j0; j <= j1; j++) for (let i = i0; i <= i1; i++) {
+    const idx = j * M.W + i, d = Math.hypot(((i + 0.5) / k - cx) / 1.4, ((j + 0.5) / k - cz)) / R;            // plus long d'est en ouest
+    if (d >= 1) continue;
+    const u = Math.min(1, Math.max(0, (d - 0.72) / 0.28)), f = 0.5 - 0.5 * Math.cos(Math.PI * u);           // 0 au fond plat, 1 à la crête de la rive
+    M.sol[idx] = Math.round(niveauQ + (M.sol[idx] - niveauQ) * f);
+    M.mat[idx] = d < 0.72 ? MAT.EAU : d < 0.85 ? MAT.BOUE : M.mat[idx];
   }
 }
 
@@ -125,7 +141,7 @@ function tracerTranchees(M, rng) {
 // La végétation : des souches brisées (surtout dans le no man's land), des buissons, quelques bois épargnés à l'arrière.
 function planterVegetation(M, rng) {
   const { W, H, cpm } = M, V = MONDE.vegetation, aire = M.largeurM * M.profondeurM / (256 * 160), k = cpm;
-  const libre = idx => !M.toit[idx] && M.mat[idx] !== MAT.TERRE && M.mat[idx] !== MAT.SAC;
+  const libre = idx => !M.toit[idx] && M.mat[idx] !== MAT.TERRE && M.mat[idx] !== MAT.SAC && M.mat[idx] !== MAT.EAU;
   const poser = (xm, zm, haut, mat) => {
     const i = Math.round(xm * cpm), j = Math.round(zm * cpm); if (i < 1 || j < 1 || i >= W - 1 || j >= H - 1) return;
     const idx = j * W + i; if (!libre(idx)) return;
@@ -154,6 +170,7 @@ export const metresDeQuarts = (M, q) => q * M.cell / MONDE.quartsParCube;       
 // Rend { i0, j0, i1, j1 } (les cases touchées, bornes comprises) ou null hors carte.
 export function impact(M, xm, zm, { reboucher = true } = {}) {
   const s = M.cpm, ci = Math.floor(xm), cj = Math.floor(zm);       // super-case visée
+  if (M.mat[Math.min(M.H - 1, Math.floor(zm * s)) * M.W + Math.min(M.W - 1, Math.floor(xm * s))] === MAT.EAU) return null;      // un obus dans le lac : de l'eau qui jaillit, pas de cratère (le fond est la nappe)
   const i0 = (ci - 1) * s, j0 = (cj - 1) * s, i1 = (ci + 2) * s - 1, j1 = (cj + 2) * s - 1;
   if (i1 < 0 || j1 < 0 || i0 >= M.W || j0 >= M.H) return null;
   let retire = 0;

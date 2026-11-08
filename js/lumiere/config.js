@@ -5,7 +5,8 @@
 // Les hauteurs sont des entiers en quarts de cube : un cube entier = 4, un demi-cube = 2, un quart = 1.
 export const MONDE = {
   largeurM: 512, profondeurM: 320, chunkM: 16,       // la carte par défaut (4 fois l'aire d'avant) ; `TAILLES` : les trois choix
-  colline: { x: 0.74, z: 0.5, rayonM: 46, hauteurM: 16 },     // une colline dans le no man's land (en fractions de la carte, en mètres)
+  colline: { x: 0.74, z: 0.5, rayonM: 46, hauteurM: 16 },
+  lac: { x: 0.27, z: 0.5, rayonM: 30, profondeurQ: 12 },      // un lac dans le no man's land, à l'ouest (fractions de la carte, mètres ; le fond est `profondeurQ` quarts sous le niveau moyen)     // une colline dans le no man's land (en fractions de la carte, en mètres)
   quartsParCube: 4,
   graine: 7,
   tranchees: { niveaux: 4, largeurM: 2.2, profondeurQ: 8, boyauM: 1.6, abrisParLigne: 2, abrisLongM: 11 },
@@ -87,6 +88,7 @@ export const CAMERA = {
     tranchee: { nom: 'Vue tranchée', distance: 46, tangage: 0.72, lacet: -0.45 },
     cratere: { nom: 'Vue cratère', distance: 19, tangage: 0.82, lacet: 0.3 },
     colline: { nom: 'Vue colline', distance: 150, tangage: 0.55, lacet: -0.55 },
+    lac: { nom: 'Vue lac', distance: 75, tangage: 0.22, lacet: 0.35 },
     engins: { nom: 'Vue engins', distance: 70, tangage: 0.6, lacet: 0.5 },
   },
 };

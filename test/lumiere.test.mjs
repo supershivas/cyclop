@@ -120,7 +120,7 @@ test('la carte est grande par défaut et porte une colline ; ses hauteurs ne dé
   assert.equal(g.largeurM, 512); assert.equal(g.profondeurM, 320); assert.equal(g.W, 512);
   const h = (M, x, z) => M.sol[Math.floor(z * M.cpm) * M.W + Math.floor(x * M.cpm)] * M.cell / 4;       // la hauteur du sol en mètres
   assert.ok(h(g, g.colline.x, g.colline.z) - h(g, g.colline.x + g.colline.rayonM + 12, g.colline.z) > 10, 'la colline domine la plaine de plus de 10 m');
-  assert.ok(Math.abs(h(f, 40, 20) - h(g, 40, 20)) < 1, 'un mètre de haut est le même mètre à 1 ou 2 cases par mètre (mêmes ondulations)');
+  assert.ok(Math.abs(h(f, 60, 8) - h(g, 60, 8)) < 1, 'un mètre de haut est le même mètre à 1 ou 2 cases par mètre (mêmes ondulations)');
 });
 
 let L_;
@@ -341,6 +341,15 @@ test('les flaques du jeu : un creux est marqué (canal A), le plat et la bosse n
   const A = (i, j) => ao.tex[(j * W + i) * 4 + 3];
   assert.ok(A(30, 20) > 150 && A(5, 5) === 0, `creux ${A(30, 20)}, plat ${A(5, 5)}`);
   assert.equal(ao.tex[(5 * W + 5) * 4 + 1], 255, 'les autres canaux ne sont pas touchés');
+});
+
+test('le lac : une nappe plate de matière EAU dans une cuvette, rives en pente, ni arbre ni tranchée dedans', () => {
+  const M = creerMonde({ ...PETIT }), L = M.lac; assert.ok(L && L.niveauM > 4 && L.niveauM < 9);
+  let eau = 0, hors = 0; const niveau = new Set();
+  for (let j = 0; j < M.H; j++) for (let i = 0; i < M.W; i++) { const k = j * M.W + i; if (M.mat[k] === MAT.EAU) { eau++; niveau.add(M.sol[k]); if (M.veg[k] || M.toit[k]) hors++; } }
+  assert.ok(eau > 800, `${eau} cases d'eau`); assert.equal(niveau.size, 1, 'la surface est plate'); assert.equal(hors, 0, 'ni végétation ni toit sur l\'eau');
+  const rive = M.sol[Math.round(L.z) * M.W + Math.round(L.x + L.rayonM * 1.4 * 0.95)];
+  assert.ok(rive >= [...niveau][0], 'la rive monte');
 });
 
 group('labo lumière — pureté');

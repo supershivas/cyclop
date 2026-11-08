@@ -103,6 +103,13 @@ const bascule = await J(async () => {
 });
 verifier(bascule.images >= 60 && bascule.part < 0.02, `la foule en marche : ${(bascule.part * 100).toFixed(2)} % des hommes vus changent de niveau de détail d'une image à l'autre (${bascule.total} sur ${bascule.vus} en ${bascule.images} images)`);
 rapport.clignotement = bascule;
+// Le lac : une nappe d'eau qui reflète (le ciel, le soleil et, par une seconde image à l'envers, ce qui se tient au-dessus)
+await J(() => { const L = window.__lumiere; L.S.pause = true; L.S.reflets = true; L.voirPreset('lac', true); }); await p.waitForTimeout(2500);
+const lacOui = (await p.screenshot()).toString('base64'); await image('lac');
+await J(() => { window.__lumiere.S.reflets = false; }); await p.waitForTimeout(2000);
+const lacNon = (await p.screenshot()).toString('base64'); await J(() => { window.__lumiere.S.reflets = true; });
+verifier(await J(() => !!window.__lumiere.M.lac && window.__lumiere.M.lac.niveauM > 4), 'le monde a un lac'); verifier(lacOui !== lacNon, 'les reflets changent l\'image du lac (la seconde image à l\'envers)');
+await J(() => { window.__lumiere.S.pause = false; });
 // La météo : chaque temps, puis le temps qui change tout seul
 for (const m of ['pluie', 'neige', 'brouillard', 'boue', 'sec']) { await J(mm => { const J = window.__lumiere; J.S.meteo = mm; if (!J.S.etapes[7]) J.basculerEtape(7, true); Object.assign(J.meteoNow, J.METEOS[mm]); }, m); await p.waitForTimeout(700); await image(`meteo-${m}`); }
 const avant = await J(() => window.__lumiere.S.meteo);

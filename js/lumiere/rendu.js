@@ -5,7 +5,7 @@
 import { MONDE, ATMOSPHERE, CAMERA, NUAGES, HORS_CARTE, OMBRES, CIEL } from './config.js?v=0.116.0';
 import { MAT } from './terrain.js?v=0.116.0';
 import { FLOATS, construireChunk, creerTampons } from './maillage.js?v=0.116.0';
-import { matrices } from './camera.js?v=0.116.0';
+import { matrices, mat4 } from './camera.js?v=0.116.0';
 import * as REELS from './soldats-reels.js?v=0.116.0';
 import { COULEURS_MATIERES, COUL } from './ciel.js?v=0.116.0';
 import { cadrerOmbre, rectDansOmbre } from './ombres.js?v=0.116.0';
@@ -99,7 +99,7 @@ out vec3 vP; flat out vec3 vN; out float vAO, vVar; flat out float vMat, vUnder;
 const vec3 NORM[6] = vec3[6](vec3(0, 1, 0), vec3(0, -1, 0), vec3(1, 0, 0), vec3(-1, 0, 0), vec3(0, 0, 1), vec3(0, 0, -1));
 void main() { vP = aPos; vN = NORM[int(aA.z + .5)]; vAO = aA.x; vVar = aA.y; vMat = aA.w; vUnder = aUnder; gl_Position = uVP * vec4(aPos, 1.); }`;
 const FS_SOL = `${GLSL_COMMUN}
-uniform vec3 uMat[8]; uniform float uAlpha;
+uniform vec3 uMat[9]; uniform float uAlpha; uniform float uMiroir, uMirOn; uniform vec2 uRes; uniform sampler2D uMirTex;
 in vec3 vP; flat in vec3 vN; in float vAO, vVar; flat in float vMat, vUnder;
 out vec4 o;
 void main() {
@@ -109,6 +109,30 @@ void main() {
   vec2 sp = (vP.xz + N.xz * .5 * uCell) / uCell;
   vec4 Ld = texture(uLight, sp / uGrid);
   float mud = (vMat > .5 && vMat < 3.5) ? 1. : .2;
+  if (uMiroir > .5 && vMat > 7.5) discard;                                    // dans l'image à l'envers, la nappe elle-même ne se dessine pas (elle cacherait ce qu'elle reflète)
+  if (vMat > 7.5) {                                                           // l'EAU : un miroir (Fresnel), le ciel et ses nuages, le soleil, et l'image à l'envers de ce qui se tient au-dessus
+    vec2 q = vP.xz; float t = uTemps;
+    vec2 g = vec2(sin(q.x * 1.7 + t * 1.3) + .7 * sin(q.x * .6 + q.y * .9 - t * .8) + .25 * sin((q.x + q.y) * 3.1 + t * 2.1),
+                  sin(q.y * 1.4 - t * 1.1) + .7 * sin(q.y * .7 - q.x * .5 + t * .7) + .25 * sin((q.x - q.y) * 2.7 - t * 1.9)) * .03 * (1. + 1.5 * uVent / 6.);   // la pente des rides : le vent les creuse
+    vec3 Nw = N.y > .9 ? normalize(vec3(-g.x, 1., -g.y)) : N;
+    vec3 V = normalize(uCam - vP), R = reflect(-V, Nw);
+    float fres = clamp(.04 + .96 * pow(1. - max(dot(Nw, V), 0.), 5.), 0., 1.);
+    fres = clamp(fres * 1.5 + .1, 0., 1.);
+    vec3 sky = ciel(vec3(R.x, max(R.y, .02), R.z));
+    float tt = (uNuageH - vP.y) / max(R.y, .05); float dn = nuageAt(vP.xz + R.xz * tt) * smoothstep(.0, .2, R.y);
+    sky = mix(sky, uSkyAmb * 2.4 + uSunCol * .12, dn * .7);                   // les nuages se reflètent
+    vec3 refl = sky;
+    if (uMirOn > .5) {                                                        // l'image à l'envers : les arbres, les soldats, la fumée, la colline, vus dans l'eau, un peu déformés par les rides
+      vec2 uv = gl_FragCoord.xy / uRes + g * .55 * vec2(1., -1.) * 1.0;
+      vec4 m = texture(uMirTex, clamp(uv, .001, .999));
+      float lit = step(.001, m.a);
+      refl = mix(sky, m.rgb, lit * .92);                                      // (le fond du miroir est le noir de la scène : alpha 0 au ciel)
+    }
+    float s = pow(max(dot(R, uSunDir), 0.), 260.) * 7. + pow(max(dot(R, uSunDir), 0.), 28.) * .3;
+    vec3 prof = alb * (uSkyAmb * 1.5 + .06);                                  // le fond : la couleur de l'eau, éclairée par le ciel
+    vec3 cw = mix(prof, refl, fres) + uSunCol * s * (gS.x > .5 ? Ld.r : 1.) * (.3 + .7 * fres);
+    o = vec4(finir(cw), uAlpha); return;
+  }
   vec3 c = eclairer(alb, N, vP, Ld, vAO, vUnder, mud, smoothstep(.85, .98, N.y));
   o = vec4(finir(c), uAlpha);
 }`;
@@ -144,7 +168,7 @@ uniform mat4 uVP; uniform float uPx1;
 out vec3 vP; flat out float vGenre, vAlpha, vSize;
 void main() { vP = aPos; gl_Position = uVP * vec4(aPos, 1.); vSize = max(aA.x * uPx1 / gl_Position.w, 1.5); gl_PointSize = min(vSize, 900.); vGenre = aA.y; vAlpha = aA.z * (aA.y < .5 ? 1. : clamp((gl_Position.w - 3.) / 9., 0., 1.)); }`;
 const FS_PARTS = `${GLSL_COMMUN}
-uniform vec3 uMat[8];
+uniform vec3 uMat[9];
 in vec3 vP; flat in float vGenre, vAlpha, vSize;
 out vec4 o;
 void main() {
@@ -276,7 +300,7 @@ void main() { float s = 0.; for (int j = -2; j < 2; j++) for (int i = -2; i < 2;
 const FS_COMPO = `${GLSL_COMMUN}
 in vec2 uv; out vec4 o;
 uniform sampler2D uColor, uDepth, uAOtex; uniform mat4 uInvVP; uniform vec3 uLuneDir, uNuageCoul; uniform vec4 uHors; uniform float uBordY, uEtoiles;
-uniform vec3 uMat[8];
+uniform vec3 uMat[9];
 uniform float uFocus, uFondu, uSplit, uAOon, uBrumeOn, uBrumeD, uBrumeK; uniform vec3 uBrumeCoul;
 // le ciel : dégradé physique, soleil et sa lueur, lune, étoiles, deux couches de nuages ÉCLAIRÉS (cumulus bas, cirrus hauts) qui dérivent ; ils se lisent sur le même champ que leur ombre au sol
 vec3 cielComplet(vec3 rd) {
@@ -374,7 +398,7 @@ export function creerRendu(canvas) {
     pluie: programme(gl, VS_PLUIE, FS_PLUIE, 'pluie'), neige: programme(gl, VS_NEIGE, FS_NEIGE, 'neige'), lueurs: programme(gl, VS_LUEURS, FS_LUEURS, 'lueurs'), reels: programme(gl, REELS.glslVert(), REELS.glslFrag(GLSL_COMMUN), 'soldats articulés'), jeu: programme(gl, REELS.glslVertJeu(), REELS.glslFragJeu(GLSL_COMMUN), 'soldats du jeu'), engins: programme(gl, VS_ENGINS, FS_ENGINS, 'engins'), ombSol: programme(gl, VS_OMB_SOL, FS_VIDE, 'ombre : arbres'), ombSold: programme(gl, REELS.glslVertOmbre(), FS_VIDE, 'ombre : soldats'), ombEngins: programme(gl, VS_ENGINS, FS_VIDE, 'ombre : engins'), ombFumee: programme(gl, VS_OMB_FUMEE, FS_OMB_FUMEE, 'ombre : fumée'),
     ssao: programme(gl, VS_PLEIN, FS_SSAO, 'ssao'), flou: programme(gl, VS_PLEIN, FS_FLOU, 'flou'), compo: programme(gl, VS_PLEIN, FS_COMPO, 'composition'),
   };
-  const R = { gl, info, stats: { triangles: 0, appels: 0, ombre: null }, gpu: { ombre: null, scene: null, ssao: null, composition: null }, largeur: 1, hauteur: 1 };
+  const R = { gl, info, stats: { triangles: 0, appels: 0, ombre: null }, gpu: { miroir: null, ombre: null, scene: null, ssao: null, composition: null }, largeur: 1, hauteur: 1 };
 
   // ─── les textures de données : la lumière (RGBA8) et les hauteurs (R32F), une case = un texel ───
   let texLamp = null, texLum = null, texHF = null, tampons = null, chunks = [], vaoS = null, vboS = null, vboC = null, vboH = null, masqueSale = true;
@@ -554,15 +578,15 @@ export function creerRendu(canvas) {
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
       gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.TEXTURE_2D, p, 0);
     }
-    return { f, t, p };
+    return { f, t, p, w, h };
   };
   const liberer = c => { if (!c) return; gl.deleteFramebuffer(c.f); gl.deleteTexture(c.t); if (c.p) gl.deleteTexture(c.p); };
-  let cSc = null, cA1 = null, cA2 = null;
+  let cSc = null, cA1 = null, cA2 = null, cMir = null;
   R.dimensionner = (w, h) => {
     w = Math.max(16, w | 0); h = Math.max(16, h | 0);
     canvas.width = w; canvas.height = h; R.largeur = w; R.hauteur = h;
-    liberer(cSc); liberer(cA1); liberer(cA2);
-    cSc = creerCible(w, h, true); cA1 = creerCible(w, h, false); cA2 = creerCible(w, h, false);
+    liberer(cSc); liberer(cA1); liberer(cA2); liberer(cMir);
+    cSc = creerCible(w, h, true); cA1 = creerCible(w, h, false); cA2 = creerCible(w, h, false); cMir = creerCible(Math.max(8, w >> 1), Math.max(8, h >> 1), true);       // l'image à l'envers de l'eau : la moitié de la résolution
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
   };
 
@@ -642,6 +666,9 @@ export function creerRendu(canvas) {
     u.uMat && gl.uniform3fv(u.uMat, uMat);
     if (u.uLamp) { gl.activeTexture(gl.TEXTURE4); gl.bindTexture(gl.TEXTURE_2D, texLamp); gl.uniform1i(u.uLamp, 4); gl.activeTexture(gl.TEXTURE0); }
     u.uLampOn && gl.uniform1f(u.uLampOn, E.etapes[6] ? 1 : 0); u.uLampCol && gl.uniform3f(u.uLampCol, ...LAMPE_COUL);
+    u.uMiroir && gl.uniform1f(u.uMiroir, E.miroir ? 1 : 0); u.uRes && gl.uniform2f(u.uRes, R.largeur, R.hauteur);
+    u.uMirOn && gl.uniform1f(u.uMirOn, E.lac && E.lac.miroir && !E.miroir ? 1 : 0);
+    if (u.uMirTex) { gl.activeTexture(gl.TEXTURE7); gl.bindTexture(gl.TEXTURE_2D, E.miroir ? texLum : cMir.t); gl.uniform1i(u.uMirTex, 7); gl.activeTexture(gl.TEXTURE0); }      // (dans l'image à l'envers, une autre texture : on ne lit pas ce qu'on écrit)
     const O = E.ombreC && E.etapes[9] ? E.ombreC : null;                   // la carte d'ombre (étape 9) : le cadre, ses deux textures, ses réglages
     u.uOmb && gl.uniform4f(u.uOmb, O ? 1 : 0, 1 / om.taille, O ? OMBRES.biaisTexels * O.texelM : 0, O ? 0.12 / O.profondeurM : 0);
     u.uLVP && gl.uniformMatrix4fv(u.uLVP, false, O ? O.vp : IDENTITE); u.uFumeK && gl.uniform1f(u.uFumeK, OMBRES.extinctionFumee);
@@ -664,18 +691,18 @@ export function creerRendu(canvas) {
     let O = null;
     if (E.etapes[9]) { if (om.taille !== tailleOmbre) creerOmbre(tailleOmbre); if (om.ok) O = cadrerOmbre({ cam: m, sunDir: E.ciel.sunDir, taille: tailleOmbre, monde: M, sol: solExtreme, distanceM: E.camera.distance }); }
     E = { ...E, ombreC: O };
-    const scene = (etapes, x0, x1) => {
-      const ee = { ...E, etapes };
-      gl.bindFramebuffer(gl.FRAMEBUFFER, cSc.f); gl.viewport(0, 0, W, H);
+    const scene = (etapes, x0, x1, cible = cSc, mx = m, miroir = false) => {
+      const ee = { ...E, etapes, miroir };
+      gl.bindFramebuffer(gl.FRAMEBUFFER, cible.f); gl.viewport(0, 0, cible.w, cible.h);
       if (x1 < W) { gl.enable(gl.SCISSOR_TEST); gl.scissor(x0, 0, x1 - x0, H); } else if (x0 > 0) { gl.enable(gl.SCISSOR_TEST); gl.scissor(x0, 0, W - x0, H); } else gl.disable(gl.SCISSOR_TEST);
-      gl.clearColor(0, 0, 0, 1); gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+      gl.clearColor(0, 0, 0, miroir ? 0 : 1); gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
       gl.enable(gl.DEPTH_TEST); gl.depthFunc(gl.LEQUAL); gl.disable(gl.BLEND); gl.depthMask(true);
       // le sol et les toits
-      let P = progs.sol; gl.useProgram(P.p); poserCommun(P, ee, E.camera, m); gl.uniform1f(P.u.uAlpha, 1);
+      let P = progs.sol; gl.useProgram(P.p); poserCommun(P, ee, E.camera, mx); gl.uniform1f(P.u.uAlpha, 1);
       for (const c of chunks) if (c && c.sol.ni) { gl.bindVertexArray(c.sol.vao); gl.drawElements(gl.TRIANGLES, c.sol.ni, gl.UNSIGNED_INT, 0); R.stats.triangles += c.sol.ni / 3; R.stats.appels++; }
       if (!E.toitsTransparents) for (const c of chunks) if (c && c.toit.ni) { gl.bindVertexArray(c.toit.vao); gl.drawElements(gl.TRIANGLES, c.toit.ni, gl.UNSIGNED_INT, 0); R.stats.triangles += c.toit.ni / 3; R.stats.appels++; }
       // les soldats
-      P = progs.soldats; gl.useProgram(P.p); poserCommun(P, ee, E.camera, m);
+      P = progs.soldats; gl.useProgram(P.p); poserCommun(P, ee, E.camera, mx);
       gl.activeTexture(gl.TEXTURE1); gl.bindTexture(gl.TEXTURE_2D, texHF); gl.uniform1i(P.u.uHF, 1);
       gl.uniform3f(P.u.uNous, ...COUL.n); gl.uniform3f(P.u.uEux, ...COUL.x); gl.uniform3f(P.u.uOmbre, ...COUL.t);
       gl.bindVertexArray(vaoS);
@@ -685,12 +712,12 @@ export function creerRendu(canvas) {
         P = progs.jeu; let prêt = false;
         for (const style of ['boite', 'legere', 'equipe']) {
           const L = E.jeu[style]; if (!L || !L.n) continue;
-          if (!prêt) { gl.useProgram(P.p); poserCommun(P, ee, E.camera, m); gl.uniform1f(P.u.uT, E.temps); gl.uniform1f(P.u.uBalance, 1); gl.uniform2f(P.u.uEch, 1, 1); gl.uniform2f(P.u.uSoleil, .5, .6); for (const [k, v] of Object.entries(PAL_J)) if (P.u[k]) gl.uniform3f(P.u[k], ...v); prêt = true; }
+          if (!prêt) { gl.useProgram(P.p); poserCommun(P, ee, E.camera, mx); gl.uniform1f(P.u.uT, E.temps); gl.uniform1f(P.u.uBalance, 1); gl.uniform2f(P.u.uEch, 1, 1); gl.uniform2f(P.u.uSoleil, .5, .6); for (const [k, v] of Object.entries(PAL_J)) if (P.u[k]) gl.uniform3f(P.u[k], ...v); prêt = true; }
           const g = styleJ(style); gl.bindVertexArray(g.v); gl.drawArraysInstanced(gl.TRIANGLES, 0, g.n, L.n); R.stats.appels++; R.stats.triangles += g.n / 3 * L.n;
         }
       }
       if (E.reels && E.reels.n) {                                          // les vrais soldats articulés, de près
-        P = progs.reels; gl.useProgram(P.p); poserCommun(P, ee, E.camera, m);
+        P = progs.reels; gl.useProgram(P.p); poserCommun(P, ee, E.camera, mx);
         gl.uniform1f(P.u.uShade, 0); gl.uniform1f(P.u.uVoir, 1);
         for (const [k, v] of Object.entries(PAL_R)) if (P.u[k]) (v.length === 3 ? gl.uniform3f(P.u[k], ...v) : gl.uniform3fv(P.u[k], v));
         const g = niveauR(E.reels.niveau); gl.bindVertexArray(g.v); gl.drawArraysInstanced(gl.TRIANGLES, 0, g.n, E.reels.n); R.stats.appels++; R.stats.triangles += g.n / 3 * E.reels.n;
@@ -699,7 +726,7 @@ export function creerRendu(canvas) {
         P = progs.engins; let prêt = false;
         for (const nom of ['char', 'avion']) {
           const L = E.engins[nom]; if (!L || !L.n) continue;
-          if (!prêt) { gl.useProgram(P.p); poserCommun(P, ee, E.camera, m); prêt = true; }
+          if (!prêt) { gl.useProgram(P.p); poserCommun(P, ee, E.camera, mx); prêt = true; }
           gl.uniform1f(P.u.uAir, nom === 'avion' ? 1 : 0);
           const g = typeEngin(nom); gl.bindVertexArray(g.v); gl.drawArraysInstanced(gl.TRIANGLES, 0, g.n, L.n); R.stats.appels++; R.stats.triangles += g.n / 3 * L.n;
         }
@@ -707,25 +734,25 @@ export function creerRendu(canvas) {
       // les débris, puis (sans écrire la profondeur) fumée, poussière, toits transparents et pluie
       const np = E.particules.n, nd = E.particules.nd;
       P = progs.parts;
-      if (np) { gl.useProgram(P.p); poserCommun(P, ee, E.camera, m); gl.uniform1f(P.u.uPx1, (H / 2) / Math.tan(E.camera.fov / 2)); gl.bindVertexArray(vaoP); }
+      if (np) { gl.useProgram(P.p); poserCommun(P, ee, E.camera, mx); gl.uniform1f(P.u.uPx1, (cible.h / 2) / Math.tan(E.camera.fov / 2)); gl.bindVertexArray(vaoP); }
       if (nd) { gl.drawArrays(gl.POINTS, 0, nd); R.stats.appels++; }
       gl.enable(gl.BLEND); gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA); gl.depthMask(false);
       if (np > nd) { gl.useProgram(P.p); gl.bindVertexArray(vaoP); gl.drawArrays(gl.POINTS, nd, np - nd); R.stats.appels++; }
       if (E.etapes[6] && E.lueurs && E.lueurs.n) {                          // la flamme des lanternes et des lampes : un point doux, ajouté à l'image
-        P = progs.lueurs; gl.useProgram(P.p); poserCommun(P, ee, E.camera, m); gl.uniform1f(P.u.uPx1, (H / 2) / Math.tan(E.camera.fov / 2));
+        P = progs.lueurs; gl.useProgram(P.p); poserCommun(P, ee, E.camera, mx); gl.uniform1f(P.u.uPx1, (cible.h / 2) / Math.tan(E.camera.fov / 2));
         gl.blendFunc(gl.SRC_ALPHA, gl.ONE); gl.bindVertexArray(vaoL); gl.drawArrays(gl.POINTS, 0, E.lueurs.n); R.stats.appels++;
         gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
       }
       if (E.toitsTransparents) {
-        P = progs.sol; gl.useProgram(P.p); poserCommun(P, ee, E.camera, m); gl.uniform1f(P.u.uAlpha, 0.28);
+        P = progs.sol; gl.useProgram(P.p); poserCommun(P, ee, E.camera, mx); gl.uniform1f(P.u.uAlpha, 0.28);
         for (const c of chunks) if (c && c.toit.ni) { gl.bindVertexArray(c.toit.vao); gl.drawElements(gl.TRIANGLES, c.toit.ni, gl.UNSIGNED_INT, 0); R.stats.triangles += c.toit.ni / 3; R.stats.appels++; }
       }
-      if (E.etapes === ee.etapes && E.ciel.pluie > 0 && etapes[7]) {
-        P = progs.pluie; gl.useProgram(P.p); poserCommun(P, ee, E.camera, m); gl.uniform1f(P.u.uT, E.temps); gl.uniform3f(P.u.uCentre, E.camera.cible[0] , 0, E.camera.cible[2]);
+      if (!miroir && E.etapes === ee.etapes && E.ciel.pluie > 0 && etapes[7]) {
+        P = progs.pluie; gl.useProgram(P.p); poserCommun(P, ee, E.camera, mx); gl.uniform1f(P.u.uT, E.temps); gl.uniform3f(P.u.uCentre, E.camera.cible[0] , 0, E.camera.cible[2]);
         gl.bindVertexArray(vaoVide); gl.drawArrays(gl.LINES, 0, Math.floor(2600 * E.ciel.pluie)); R.stats.appels++;
       }
-      if (E.etapes === ee.etapes && E.ciel.neige > 0.02 && etapes[7]) {
-        P = progs.neige; gl.useProgram(P.p); poserCommun(P, ee, E.camera, m); gl.uniform3f(P.u.uCentre, E.camera.cible[0], 0, E.camera.cible[2]);
+      if (!miroir && E.etapes === ee.etapes && E.ciel.neige > 0.02 && etapes[7]) {
+        P = progs.neige; gl.useProgram(P.p); poserCommun(P, ee, E.camera, mx); gl.uniform3f(P.u.uCentre, E.camera.cible[0], 0, E.camera.cible[2]);
         gl.bindVertexArray(vaoVide); gl.drawArrays(gl.POINTS, 0, Math.floor(3000 * E.ciel.neige)); R.stats.appels++;
       }
       gl.depthMask(true); gl.disable(gl.BLEND); gl.disable(gl.SCISSOR_TEST);
@@ -754,6 +781,11 @@ export function creerRendu(canvas) {
     const tout = E.etapes, partage = E.moitie && E.split > 0;
     R.stats.ombre = null;
     if (O) chrono('ombre', () => { const casteurs = passeOmbre(E, O, m); R.stats.ombre = { taille: om.taille, etendueM: O.etendue.map(v => +v.toFixed(1)), texelCm: +(O.texelM * 100).toFixed(1), casteurs: Math.round(casteurs) }; });
+    if (E.lac && E.lac.miroir && !partage) {                                // l'image à l'envers : la scène vue du dessous du plan d'eau, sans l'eau, à demi-résolution
+      const L = E.lac.niveauM, M2 = new Float32Array([1, 0, 0, 0, 0, -1, 0, 0, 0, 0, 1, 0, 0, 2 * L, 0, 1]);
+      const mm = { ...m, vp: mat4.mul(m.vp, M2), oeil: [m.oeil[0], 2 * L - m.oeil[1], m.oeil[2]] };
+      chrono('miroir', () => scene(tout, 0, W, cMir, mm, true));
+    }
     chrono('scene', () => {
       if (partage) {
         const xs = Math.round(E.split * W);
