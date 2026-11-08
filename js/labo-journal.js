@@ -2,6 +2,24 @@
 // Une entrée par version qui touche au labo, la plus récente en haut. `ref` : « sujet-Lettre » (la lettre est celle de la variante,
 // A étant l'actuelle). À chaque changement du labo : une entrée ici, avec `depuis` sur les variantes ajoutées ou changées (labo.js).
 export const JOURNAL = [
+  { version: '0.126.0', date: '2026-11-08', items: [
+    { genre: 'mis-a-jour', texte: 'Le bilan de l\'aube passe en jeu en tuiles, dans le langage du tableau de bord (ce que la nuit a fait, les morts par cause, la dotation, les effectifs au matin)', ref: 'donnees-bilan-B' },
+  ] },
+  { version: '0.125.0', date: '2026-11-08', items: [
+    { genre: 'mis-a-jour', texte: 'Les fiches en tuiles passent en jeu : le soldat, le régiment (avec son effectif et son moral soir après soir), le char et la mitrailleuse', ref: 'donnees-fiches-A' },
+  ] },
+  { version: '0.124.0', date: '2026-11-08', items: [
+    { genre: 'mis-a-jour', texte: 'Le bilan du soir « tableau de bord » passe en jeu (papier de la nuit) : à retenir, effectifs, morts du jour, lignes, ciel, et nos régiments en graphiques', ref: 'donnees-bilan-B' },
+  ] },
+  { version: '0.121.0', date: '2026-11-08', items: [
+    { genre: 'mis-a-jour', texte: 'Les données : Jérôme retient les tuiles pour les fiches et le tableau de bord pour le bilan du soir ; la fiche d\'un régiment trace son effectif et son moral soir après soir, et le bilan les blessés du jour, d\'après l\'historique que la partie garde désormais (sauvegarde 29)', ref: 'donnees-fiches-A' },
+  ] },
+  { version: '0.119.0', date: '2026-11-07', items: [
+    { genre: 'nouveau', texte: 'Les données, les fiches : un soldat, un régiment, un char et une mitrailleuse dans le langage du tableau de bord (retenu), en trois mises en page à comparer : les tuiles, le profil, la compacte', ref: 'donnees-fiches-A' },
+  ] },
+  { version: '0.117.0', date: '2026-11-07', items: [
+    { genre: 'nouveau', texte: 'Les données : trois bilans du soir (le rapport, le tableau de bord, la frise) faits d\'une bibliothèque graphique commune (barres d\'effectifs, bâtons des pertes, jauge de moral, tronçons, pictogrammes des faits), sur trois journées d\'exemple ; rien n\'est encore dans le jeu', ref: 'donnees-bilan-A' },
+  ] },
   { version: '0.113.0', date: '2026-11-05', items: [
     { genre: 'mis-a-jour', texte: 'Labo lumière : les soldats du jeu à tous les niveaux de détail (boîte, silhouette, équipé, articulé), des lanternes dans les tranchées et des lampes sur certains soldats, une carte de 512 × 320 m et une colline' },
   ] },

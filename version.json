@@ -1,8 +1,9 @@
 {
-  "version": "0.117.0",
+  "version": "0.128.0",
   "date": "2026-11-08",
   "changes": [
-    "Éclairage « haut » : la fumée projette son ombre sur le sol et les lanternes des tranchées éclairent la nuit",
+    "Un réglage « Éclairage » (bas, moyen, haut) dans la roue crantée : « haut » ajoute les ombres portées, le ciel avec ses nuages éclairés, l'ombre de la fumée et les lanternes de nuit",
+    "« Moyen » est l'éclairage d'avant, gardé par défaut",
     "Le labo lumière a un lac, avec les reflets du ciel et des berges sur l'eau"
   ]
 }

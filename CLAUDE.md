@@ -41,6 +41,7 @@ la danse macabre, la catastrophe peinte avec calme. L'intention est dans `DESIGN
   12 m derrière la place qu'il prend ; v0.101.0 : il se déploie aussi à tout moment du jour depuis la caserne, et la déroute se retire vers elle : `docs/domaines/bataille.md`). L'ordre de mission s'affiche au premier matin
   (pas en mode debug, que les scripts pilotent). Progression permanente prévue
   (Mémorial, état-major, trophées) : pas encore construite.
+- **Régiments de la nuit** (Jérôme, v0.116.0) : « Gérer les régiments » (transferts d'hommes entre régiments, fusion, effectifs à l'aube), les blessés qui marchent vont à l'hôpital, les régiments frais sont comptés « n sur total » ; détail dans `docs/domaines/bataille.md` et `interface.md`.
 - **Steam** : porte ouverte (section 22). Manette : seulement le menu pour
   l'instant (`gamepad.js`).
 - **Langue** : français seulement. **Son** (Jérôme, v0.75.0 ; aucun avant) : synthétisé en Web Audio (repli) et bruitages CC0 en mp3 (`assets/sons/`, v0.99.6), `js/audio.js`, détail dans `docs/domaines/interface.md`.
@@ -95,7 +96,7 @@ Souris et clavier (choisir, marcher, barrages 1-2-3, avion 4, génie 6, pause Es
 | `js/campagne.js`, `data/campagne.js` : registre, papier de campagne, reconstitution, identité portable | `docs/domaines/campagne.md` |
 | `js/eaux.js`, `generateur.js`, saisons, secteurs, ponts, `js/chars.js`, `js/avions.js`, mitraillage aérien | `docs/domaines/terrain-engins.md` |
 | `js/reseau/`, le jeu à deux, `lancerMarche`, `executerCmd` (chargé seul dans `js/reseau/`) | `docs/domaines/reseau.md` |
-| `labo.html`, `js/labo*.js`, `atelier.html`, `js/atelier*.js`, `design-store.js`, contenu publié | `docs/domaines/labo-atelier.md` |
+| `labo.html`, `js/labo*.js`, `atelier.html`, `atelier-animation.html`, `js/atelier*.js`, `js/pose-soldat.js`, `design-store.js`, contenu publié | `docs/domaines/labo-atelier.md` |
 | `labo-lumiere.html`, `js/labo-lumiere.js`, `js/lumiere/` : la lumière en voxels, ses étapes, ses mesures | `js/lumiere/README.md` (+ `labo-atelier.md`) |
 | `test/`, `outils/fumee.mjs`, `outils/rendu-empreinte.mjs`, `scripts/` : références, mesures | `docs/domaines/tests.md` |
 
@@ -107,6 +108,7 @@ Autres : `DESIGN.md` (l'intention), `ROADMAP.md` (`docs/pistes-avancees.md` : le
 - Rendu : `rendu3d.js` (three.js, la caméra, l'API) + `rendu/` (soldats, sol, ciel, temps, effets, ponts, chars, avions). Les ouvrages des tranchées : `rendu/tranchee-modeles.js` (trois niveaux de détail, choisis selon le zoom : `rendu.niveauTranchees` vaut `'auto'`, v0.88.1 ; échelles : `data/tranchees.js`) et `rendu/troncons.js` (le dessin d'avant, niveau 0, au labo). La barre de solidité d'une tranchée : `solidite` de `tranchees.js`. Le rendu ne modifie jamais l'état.
 - Interface : `main.js` (écran titre → bataille → nuit → fin, commandes, boucle), `hud/` (papiers, cartes, fiche, carte), `index.html`, `css/style.css`.
 - Outils de contenu : `labo.html` + `js/labo.js` + un `js/labo-*.js` par sujet (19 sujets en 6 familles, dont la fabrique de soldats : `labo-fabrique.js`, `aspect-soldat.js`, `rendu/soldat-articule.js` (l'aspect d'un homme tiré de son numéro, son squelette ; en jeu de près depuis la v0.105.0, au labo avant ; `rendu/soldats.js` choisit les 250 plus proches ; le coût mesuré dans `docs/domaines/rendu.md`) et l'encyclopédie des règles : `labo-encyclopedie.js`, `data/encyclopedie.js`, `outils/encyclopedie.mjs` ; le tranché est archivé), `atelier.html` + `js/atelier*.js` + `design-store.js`.
+- Atelier animation (v0.113.0+, page à part) : `atelier-animation.html` + `js/atelier-animation.js` (curseurs d'articulation, poignées 3D `js/atelier-poignees.js`, images clés, lecture ; `js/pose-soldat.js` : la logique pure, `js/data/poses-soldat.js` : les nombres ; le nuanceur du soldat articulé a une pose libre) ; détail dans `docs/domaines/labo-atelier.md`.
 - Labo lumière (v0.111.0, page à part ; v0.112.0 : le faux terrain autour, le ciel et la météo qui évoluent ; v0.113.0 : les soldats du jeu à tous les niveaux de détail, des lanternes dans les tranchées, une carte de 512 × 320 m avec une colline ; v0.114.0 : plus de clignotement des soldats, une carte d'ombre dynamique (étape 9), le ciel v2, l'AO global réparti sur plusieurs images, un banc fiable sous Firefox ; le plan pour brancher tout cela dans le jeu : `docs/chantiers/lumiere-vers-le-jeu.md`) : `labo-lumiere.html` + `js/labo-lumiere.js` (l'écran) + `js/lumiere/` (terrain en voxels, lumière en huit étapes, foule, maillage, particules, ciel, caméra, rendu WebGL 2, mesures ; la logique est pure et prête à être reprise ; `README.md` du dossier) ; ne touche ni au jeu ni au labo principal.
 - Vérification : `test/` (règles, `fumee.json` et `rendu.json` : des références), `outils/`, `scripts/`, `lisibilite.config.mjs`.
 

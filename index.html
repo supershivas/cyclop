@@ -9,9 +9,9 @@
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta property="og:image" content="og.png">
-<link rel="stylesheet" href="js/lib/game.css?v=0.117.0">
-<link rel="stylesheet" href="css/style.css?v=0.117.0">
-<link rel="stylesheet" href="css/ds-v2.css?v=0.117.0">
+<link rel="stylesheet" href="js/lib/game.css?v=0.128.0">
+<link rel="stylesheet" href="css/style.css?v=0.128.0">
+<link rel="stylesheet" href="css/ds-v2.css?v=0.128.0">
 </head>
 <body class="charge">
 <!-- La barre de chargement (v0.28.0) : là avant tout script ; main.js la remplit, puis la retire. `body.charge` (v0.100.0) : tout le reste de l'écran est caché tant qu'elle est là (le menu et le titre ne se voient plus derrière) -->
@@ -36,6 +36,8 @@
   <svg class="visee" id="visee" hidden aria-hidden="true"></svg>
   <svg class="visee" id="visee-nid" hidden aria-hidden="true"></svg>
   <svg class="chars-cibles" id="chars-cibles" aria-hidden="true"></svg>
+  <div class="cinema-bars" id="cinema" hidden aria-hidden="true"><i></i><i></i></div>
+  <div class="accident" id="accident" hidden aria-hidden="true"></div>
   <div class="chars-etiq" id="chars-etiq"></div>
   <div class="plaque bulle" id="bulle" hidden aria-hidden="true"></div>
 
@@ -79,7 +81,7 @@
         <h2 id="fiche-nom"></h2>
         <p class="discret" id="fiche-qui"></p>
         <button class="lien" id="fiche-regiment" hidden></button>
-        <div class="fiche-stats" id="fiche-stats" hidden><div class="fiche-corps" id="fiche-corps"></div><div class="jauges" id="fiche-barres"></div></div>
+        <div class="fiche-tuiles" id="fiche-tuiles" hidden></div>
         <ul id="fiche-etat"></ul>
         <div class="fiche-liste" id="fiche-liste"></div>
       </section>
@@ -90,26 +92,28 @@
       <section class="papier nuit" id="nuit" hidden aria-live="polite">
         <h2 id="nuit-titre">Nuit</h2>
         <div id="nuit-corps" class="nuit-colonnes">
-          <!-- trois colonnes (Jérôme, v0.100.0) : les chiffres clés de la journée, les médailles du jour, les ordres aux régiments -->
+          <!-- trois colonnes (Jérôme, v0.100.0) : la journée, les régiments et leurs médailles, les ordres aux régiments ; le bilan est en tuiles (Jérôme, 8 nov. : le tableau de bord du labo, `hud/bilan.js`) -->
           <section class="nuit-col" aria-labelledby="nuit-h-jour">
             <h3 id="nuit-h-jour">La journée</h3>
-            <dl class="chiffres" id="nuit-chiffres"></dl>
+            <div class="bilan" id="nuit-bilan"></div>
             <p id="nuit-lignes"></p>
-            <p id="nuit-avions"></p>
             <p class="discret" id="nuit-demain"></p>
             <p class="discret" id="nuit-ciel"></p>
           </section>
           <section class="nuit-col" id="nuit-medailles" aria-labelledby="nuit-h-medailles">
-            <h3 id="nuit-h-medailles">Médailles du jour</h3>
+            <h3 id="nuit-h-medailles">Nos régiments</h3>
+            <div id="nuit-regiments"></div>
+            <h4 class="bilan-sous">Médailles du jour</h4>
             <div id="nuit-medailles-corps"></div>
           </section>
           <section class="nuit-col" aria-labelledby="nuit-h-ordres">
             <h3 id="nuit-h-ordres">Ordres aux régiments</h3>
             <p class="discret" id="nuit-aide">Choisissez des régiments (un clic sur eux, un cadre, T pour tous), puis leur corvée.</p>
             <div id="nuit-ordres"></div>
+            <button class="bouton" id="nuit-gerer" type="button" hidden data-info="# Gérer les régiments&#10;Fusionner deux régiments ou passer des soldats de l'un à l'autre : 1, 10 ou tous. Ils les rejoignent au début du jour suivant.">Gérer les régiments</button>
           </section>
         </div>
-        <div id="aube-bilan" hidden></div>
+        <div class="fiche-tuiles" id="aube-bilan" hidden></div>
         <button class="bouton" id="aube" data-info="# À l'aube&#10;La nuit s'achève : les ordres donnés s'exécutent, la dotation tombe.">À l'aube</button>
       </section>
         <p class="papier pause-active" id="pause-active" hidden>Temps arrêté</p>
@@ -122,34 +126,18 @@
       <!-- En haut à droite : la carte (repliable) -->
       <div class="haut-droite">
         <section class="papier carte" id="carte" aria-label="Carte du secteur" hidden>
-          <button class="entete" id="carte-bascule" aria-expanded="true" aria-label="Replier la carte du secteur">Le secteur<span class="libelle">en face au nord</span><i aria-hidden="true"></i></button>
+          <div class="carte-tete">
+            <button class="entete" id="carte-bascule" aria-expanded="true" aria-label="Replier la carte du secteur">Le secteur<span class="libelle">en face au nord</span><i aria-hidden="true"></i></button>
+            <button type="button" class="aide" id="carte-aide" aria-label="Comment lire la carte" data-info="# Comment lire la carte&#10;Les secteurs, les lignes, les couleurs.">?</button>
+          </div>
           <div class="carte-grille" id="carte-grille"></div>
-          <details class="legende-carte">
-            <summary>Comment lire la carte</summary>
-            <ul class="legende">
-              <li><b>A à D</b> : les quatre secteurs de 100 m, de l'ouest à l'est ; un clic le met en gros plan à la place de la carte et cadre la caméra sur lui ; Échap, « Vue d'ensemble » ou un second clic sur sa lettre reviennent.</li>
-              <li><b>Lignes 1 à 4</b> : les tranchées de chaque camp, de la plus avancée (1) à la plus en arrière (4) ; en face en haut (kaki), les nôtres en bas (bleu).</li>
-              <li><b>Quatre carrés par case</b> : quatre tronçons de 25 m, bleus s'ils sont à nous, kaki s'ils sont à eux ; un clic envoie les régiments choisis occuper la case.</li>
-              <li><b>« 1·12 »</b> : 1 attaquant contre 12 défenseurs dans la case, en pleine mêlée.</li>
-              <li><b>« 135 m »</b> : la largeur du no man's land entre les deux premières lignes.</li>
-              <li><b>Cercles numérotés</b> : les régiments, à leur place (bleus à nous, kaki en face) ; le contour épais : choisi ; <b>!</b> rouge : en déroute.</li>
-              <li><b>Ligne pointillée</b> : l'ordre d'un de nos régiments, de lui à sa destination, jusqu'à son arrivée.</li>
-            </ul>
-          </details>
         </section>
         <section class="papier secteur" id="secteur" aria-label="Gros plan d'un secteur" hidden>
           <button class="retour" id="secteur-fermer" data-info="# Vue d'ensemble&#10;Retour à la carte des quatre secteurs et à la vue d'avant (Échap).">← Vue d'ensemble</button>
-          <div class="secteur-tete"><h3 id="secteur-titre">Secteur</h3><div class="secteur-lettres" id="secteur-lettres" role="group" aria-label="Les secteurs"></div></div>
+          <div class="secteur-tete"><h3 id="secteur-titre">Secteur</h3><button type="button" class="aide" id="secteur-aide" aria-label="Comment lire le plan" data-info="# Comment lire le plan&#10;Les points, les tranchées, les régiments.">?</button></div>
+          <p class="discret" id="secteur-sous"></p>
+          <div class="secteur-nav" id="secteur-nav" role="group" aria-label="Les cases voisines"></div>
           <canvas id="secteur-plan" aria-label="Plan du secteur : les hommes de chaque camp, les tombés, les tranchées"></canvas>
-          <details class="legende-carte">
-            <summary>Comment lire le plan</summary>
-            <ul class="legende">
-              <li><i class="p nous"></i> nos hommes · <i class="p eux"></i> ceux d'en face · <i class="p bl"></i> un blessé</li>
-              <li><i class="t"></i> une tranchée, à la couleur de qui la tient (pointillé : l'autre camp y est entré)</li>
-              <li><i class="r"></i> un régiment (son numéro) · les petits tirets : les tombés</li>
-              <li>Le plan est écrasé : 100 m de large, plus de 200 m de profondeur.</li>
-            </ul>
-          </details>
           <div id="secteur-lignes" class="secteur-lignes"></div>
           <ul id="secteur-regs" class="secteur-regs" aria-label="Les régiments du secteur"></ul>
         </section>
@@ -158,32 +146,42 @@
     <section class="papier reg-ouvert char-fiche" id="nid-fiche" hidden aria-label="Le poste de mitrailleuse choisi">
       <div class="tete"><b>Mitrailleuse</b><span id="nid-fiche-etat-court"></span></div>
       <div class="compte" id="nid-fiche-ordre"></div>
-      <div class="jauge"><span>Poste</span><b id="nid-fiche-pv-t"></b><span class="piste barre"><i id="nid-fiche-pv"></i></span></div>
-      <div class="jauge"><span>Bande</span><b id="nid-fiche-muni-t"></b><span class="piste barre canon"><i id="nid-fiche-muni"></i></span></div>
-      <div class="jauge"><span>Expérience</span><b id="nid-fiche-xp-t"></b><span class="piste barre xp"><i id="nid-fiche-xp"></i></span></div>
-      <div class="compte" id="nid-fiche-bonus"></div>
+      <div class="fiche-tuiles fine" id="nid-fiche-tuiles"></div>
       <div class="actions" style="--cols:2">
         <button type="button" data-nid="tourner" data-info="# Tourner\nLe prochain clic sur le sol : la direction du cône de tir (70° de chaque côté de la direction d'origine).">Tourner</button>
         <button type="button" data-nid="droit" data-info="# Droit devant\nLe cône revient face à l'ennemi.">Droit devant</button>
+        <button type="button" data-nid="vue" id="nid-fiche-vue" data-info="# Vue verrouillée\nLa caméra tourne lentement autour du poste, près du sol, comme un plan de cinéma. Échap ou le bouton la libère.">Vue verrouillée</button>
+        <button type="button" data-nid="personne" id="nid-fiche-personne" data-info="# À la personne\nLa caméra est à l'œil du servant et regarde où pointe le cône de tir. Échap ou le bouton la libère.">À la personne</button>
         <button type="button" data-nid="fermer">Fermer</button>
       </div>
     </section>
     <section class="papier reg-ouvert char-fiche" id="char-fiche" hidden aria-label="Le char choisi">
       <div class="tete"><b id="char-fiche-titre">Char</b><span id="char-fiche-etat-court"></span></div>
       <div class="compte" id="char-fiche-ordre"></div>
-      <div class="jauge"><span>Coque</span><b id="char-fiche-pv-t"></b><span class="piste barre"><i id="char-fiche-pv"></i></span></div>
-      <div class="jauge"><span>Canon</span><b id="char-fiche-canon-t"></b><span class="piste barre canon" id="char-fiche-canon-b"><i id="char-fiche-canon"></i></span></div>
-      <div class="jauge"><span>Expérience</span><b id="char-fiche-xp-t"></b><span class="piste barre xp"><i id="char-fiche-xp"></i></span></div>
-      <div class="compte" id="char-fiche-bonus"></div>
-      <div class="compte" id="char-fiche-etat"></div>
+      <div class="fiche-tuiles fine" id="char-fiche-tuiles"></div>
       <div class="actions" style="--cols:2">
+        <button type="button" data-char="reparer" id="char-fiche-reparer">Réparer (génie)</button>
         <button type="button" data-char="marche" data-info="# Marcher\nLe prochain clic sur le sol : où le char va.">Marcher</button>
         <button type="button" data-char="cible" data-info="# Cible\nLe prochain clic sur le sol : ce que son canon vise, tant que c'est à portée.">Cible</button>
         <button type="button" data-char="arret" data-info="# Arrêt\nIl s'arrête et continue de tirer.">Arrêt</button>
         <button type="button" data-char="libre" data-info="# Tir libre\nIl choisit lui-même le carré le plus chargé d'ennemis.">Tir libre</button>
+        <button type="button" data-char="vue" id="char-fiche-vue" data-info="# Vue verrouillée\nLa caméra tourne lentement autour du char, près du sol, comme un plan de cinéma. Échap ou le bouton la libère.">Vue verrouillée</button>
+        <button type="button" data-char="personne" id="char-fiche-personne" data-info="# À la personne\nLa caméra est à l'œil de l'équipage et regarde où le char va. Échap ou le bouton la libère.">À la personne</button>
         <button type="button" data-char="fermer">Fermer</button>
       </div>
     </section>
+    <section class="papier reg-ouvert char-fiche" id="avion-fiche" hidden aria-label="L'avion choisi">
+      <div class="tete"><b id="avion-fiche-titre">Avion</b><span id="avion-fiche-etat-court"></span></div>
+      <div class="compte" id="avion-fiche-ordre"></div>
+      <div class="jauge"><span>Cellule</span><b id="avion-fiche-pv-t"></b><span class="piste barre"><i id="avion-fiche-pv"></i></span></div>
+      <div class="compte" id="avion-fiche-stats"></div>
+      <div class="actions" style="--cols:2">
+        <button type="button" data-avion="vue" id="avion-fiche-vue" data-info="# Vue verrouillée\nLa caméra suit l'avion et tourne autour de lui, comme un plan de cinéma. Échap ou le bouton la libère.">Vue verrouillée</button>
+        <button type="button" data-avion="personne" id="avion-fiche-personne" data-info="# À la personne\nLa caméra est dans le cockpit et regarde droit devant lui. Échap ou le bouton la libère.">À la personne</button>
+        <button type="button" data-avion="fermer">Fermer</button>
+      </div>
+    </section>
+    <div class="papier suivi" id="suivi" hidden><span id="suivi-nom"></span><button type="button" id="suivi-liberer">Libérer la vue</button></div>
     <div class="hud-bas">
       <!-- Au centre du bas : nos régiments, une rangée de cartes ; celle qu'on a choisie s'ouvre vers le haut -->
       <div class="regiments" id="regiments" aria-label="Nos régiments">
@@ -238,6 +236,28 @@
   <div class="menu"><button class="bouton" id="ordre-compris">Compris</button></div>
 </dialog>
 
+
+<dialog id="dialogue-aide-carte" aria-label="Comment lire la carte">
+  <h2>La carte</h2>
+  <ul class="legende">
+    <li><b>A à D</b> : les quatre colonnes de 100 m, de l'ouest à l'est ; un clic sur une lettre choisit les régiments de la colonne.</li>
+    <li><b>Lignes 1 à 4</b> (en bas, bleu) : nos tranchées, de la plus avancée (1) à la plus en arrière (4). <b>Lignes 5 à 8</b> (en haut, kaki) : celles d'en face, de leur première ligne (5) à leur dernière (8).</li>
+    <li><b>Une case est un secteur</b> : sa colonne et sa ligne le nomment (B1, C6). Un clic en montre le plan en gros plan, soldats à leur place, et la caméra le cadre ; avec des régiments choisis, le clic leur ordonne de s'y rendre (Alt + clic : toujours le gros plan).</li>
+    <li><b>Quatre carrés par case</b> : quatre tronçons de 25 m, bleus s'ils sont à nous, kaki s'ils sont à eux.</li>
+    <li><b>« 1·12 »</b> : 1 attaquant contre 12 défenseurs dans la case, en pleine mêlée.</li>
+    <li><b>« 135 m »</b> : la largeur du no man's land entre les deux premières lignes.</li>
+    <li><b>Cercles numérotés</b> : les régiments, à leur place (bleus à nous, kaki en face) ; le contour épais : choisi ; <b>!</b> rouge : en déroute.</li>
+    <li><b>Ligne pointillée</b> : l'ordre d'un de nos régiments, de lui à sa destination, jusqu'à son arrivée.</li>
+  </ul>
+  <h3 class="aide-titre">Le plan d'un secteur</h3>
+  <ul class="legende">
+    <li><i class="p nous"></i> nos hommes · <i class="p eux"></i> ceux d'en face · <i class="p bl"></i> un blessé</li>
+    <li><i class="t"></i> une tranchée, à la couleur de qui la tient (pointillé : l'autre camp y est entré)</li>
+    <li><i class="r"></i> un régiment (son numéro) · les petits tirets : les tombés</li>
+    <li>Le plan est à l'échelle : 100 m de large, 57 m de profondeur. Les boutons ← → ↑ ↓ mènent aux cases voisines ; Échap ou « Vue d'ensemble » reviennent à la carte.</li>
+  </ul>
+  <div class="menu"><button class="bouton" id="aide-carte-fermer">Fermer</button></div>
+</dialog>
 
 <dialog id="dialogue-mission" aria-label="La mission">
   <h1>Mission</h1>
@@ -299,6 +319,16 @@
     <button class="bouton" id="importer">Importer une sauvegarde</button>
   </div>
   <p class="liens"><a href="labo.html">Labo</a> · <a href="labo-lumiere.html">Labo lumière</a> · <a href="atelier.html">Atelier</a></p>
+  <form method="dialog"><button class="bouton">Fermer</button></form>
+</dialog>
+
+<dialog id="dialogue-regiments" aria-label="Gérer les régiments">
+  <h2>Gérer les régiments</h2>
+  <p class="discret" id="reg-aide"></p>
+  <div class="reg-quantites" id="reg-quantites" role="group" aria-label="Quantité transférée"></div>
+  <div class="reg-grille" id="reg-grille"></div>
+  <h3>Transferts prévus</h3>
+  <ul class="reg-prevus" id="reg-prevus"></ul>
   <form method="dialog"><button class="bouton">Fermer</button></form>
 </dialog>
 
@@ -369,6 +399,6 @@
 </dialog>
 
 <div class="jeu-toast" id="toast" role="status" hidden></div>
-<script type="module" src="js/main.js?v=0.117.0"></script>
+<script type="module" src="js/main.js?v=0.128.0"></script>
 </body>
 </html>

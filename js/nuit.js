@@ -10,14 +10,15 @@
    - (v0.38.3) Les caillebotis et le coup de main sont retirés ; (v0.77.1) réparer la tranchée, inhumer les morts et creuser des abris aussi (docs/archives/corvees-retirees.md) : quatre corvées.
    - (v0.39.0) La mêlée se joue dans la nuit (`meleeNuit`) : un tronçon où les deux camps sont face à face au soir est tranché à l'aube, et les
      régiments au contact (`contactDe`) ne reçoivent aucune corvée. */
-import { hash2 } from './lib/rng.js?v=0.117.0';
-import { modif, refusEquiper, equiper } from './camp.js?v=0.117.0';
-import { CORVEES } from './data/corvees.js?v=0.117.0';
-import { EQUIPEMENTS } from './data/batiments.js?v=0.117.0';
-import { REGIMENTS } from './data/lexique.js?v=0.117.0';
-import { ajouterSoldat, poserCaracs, lireCaracs, place } from './army.js?v=0.117.0';
-import { departCaracs } from './identite.js?v=0.117.0';
-import { y0En } from './tranchees.js?v=0.117.0';
+import { hash2 } from './lib/rng.js?v=0.128.0';
+import { RENFORTS } from './data/renforts.js?v=0.128.0';
+import { modif, renfortsDe, refusEquiper, equiper } from './camp.js?v=0.128.0';
+import { CORVEES } from './data/corvees.js?v=0.128.0';
+import { EQUIPEMENTS } from './data/batiments.js?v=0.128.0';
+import { REGIMENTS } from './data/lexique.js?v=0.128.0';
+import { ajouterSoldat, poserCaracs, lireCaracs, place } from './army.js?v=0.128.0';
+import { departCaracs } from './identite.js?v=0.128.0';
+import { y0En } from './tranchees.js?v=0.128.0';
 
 export const corvee = id => CORVEES.find(c => c.id === id);
 
@@ -86,7 +87,7 @@ export function refusCorvee(B, reg, id) {
     const m = isolement(B, reg);
     if (m) return `Chez l'ennemi, ${id === 'evacuer' ? 'les blessés ne passent pas' : 'la soupe ne passe pas'} : ${m}.`;
   }
-  if (id === 'releve' && !(B.etat.reserves?.[reg.camp] > 0)) return 'Plus un régiment en réserve.';
+  if (id === 'releve' && !(renfortsDe(B.etat, reg.camp).restants > 0)) return renfortsDe(B.etat, reg.camp).pris >= RENFORTS.plafond ? `Plafond atteint : ${RENFORTS.plafond} régiments de renfort par bataille.` : 'Plus un régiment en réserve.';
   if (c.equipe) { const r = refusEquiper(B, reg, id.slice(3)); if (r) return r; }
   return null;
 }
@@ -112,7 +113,7 @@ export function choixEnFace(B) {
   }
   // la relève : le régiment le plus éprouvé (moins de la moitié de ses hommes), un par nuit, tant qu'il en reste en réserve
   const eprouves = B.etat.regiments.filter(r => r.camp === 1 && r.effectif && r.effectif < r.initial * 0.5).sort((a, b) => a.effectif / a.initial - b.effectif / b.initial || a.id - b.id);
-  if (eprouves.length && B.etat.reserves?.[1] > 0) out[eprouves[0].id] = 'releve';
+  if (eprouves.length && renfortsDe(B.etat, 1).restants > 0) out[eprouves[0].id] = 'releve';
   return out;
 }
 /* La mêlée se joue dans la nuit, avant les corvées. Chaque homme d'un tronçon disputé tombe avec la chance `nuit.meleeMort` × 2 × (leurs forces /
@@ -156,7 +157,7 @@ export function corvees(B, choix, ctx) {
   const { etat, R, armee: A } = B;
   const N = R.nuit, { rng, mourir } = ctx;
   const tous = etat.deux ? { ...choix } : { ...choixEnFace(B), ...choix };      // (à deux, chaque joueur choisit pour ses régiments ; sans choix, le repos)
-  const bilan = [0, 1].map(() => ({ evacues: 0, regroupes: 0, ravitailles: 0, mortsCorvee: 0, mortsBlesses: 0, affames: 0, retours: 0, mortsMelee: 0, prisNuit: 0, perdusNuit: 0 }));
+  const bilan = [0, 1].map(() => ({ evacues: 0, regroupes: 0, ravitailles: 0, mortsCorvee: 0, mortsBlesses: 0, affames: 0, retours: 0, mortsMelee: 0, prisNuit: 0, perdusNuit: 0, transferes: 0 }));
   const faite = {}, releves = [];
   const contact = contactDe(B);                    // (avant la mêlée : ceux qui se battent cette nuit)
   meleeNuit(B, ctx, bilan);
@@ -236,6 +237,7 @@ export function corvees(B, choix, ctx) {
   // la relève entre : un régiment frais à la place de chaque régiment relevé, qui arrive de l'arrière
   for (const { reg: vieux, unite } of releves) relever(B, vieux, rng, unite);
   retours(B, rng, bilan);
+  appliquerTransferts(B, bilan);
   etat.nuits.push({ jour: etat.jour, choix: faite, bilan });
   return bilan;
 }
@@ -285,10 +287,87 @@ function retours(B, rng, bilan) {
   }
 }
 
+/* Les transferts de la nuit (Jérôme, v0.116.0 : « fusionner deux régiments », « glisser-déposer des soldats d'un régiment vers un autre »)
+   Le joueur prépare, la nuit, des transferts { de, vers, n } (n = -1 : tous les hommes restants, donc la fusion) ; ils sont rangés dans `etat.transferts[camp]` et s'exécutent à l'aube
+   (`appliquerTransferts`, après les corvées, la relève et les retours) : les soldats changent de régiment et se retrouvent à leur nouvelle place. Logique pure, sans hasard. */
+// Les hommes d'un régiment que les transferts déjà prévus n'ont pas encore pris (-1 si l'un d'eux prend tout)
+export function disponibles(B, camp, id) {
+  const reg = B.etat.regiments[id];
+  if (!reg) return 0;
+  let reste = reg.effectif;
+  for (const t of B.etat.transferts[camp]) if (t.de === id) { if (t.n < 0) return 0; reste -= t.n; }
+  return Math.max(0, reste);
+}
+// Pourquoi on ne peut pas prévoir ce transfert, ou null
+export function refusTransfert(B, camp, de, vers, n) {
+  const { etat } = B, a = etat.regiments[de], b = etat.regiments[vers];
+  if (etat.phase !== 'nuit') return 'Les transferts se préparent la nuit.';
+  if (!a || !b || a.camp !== camp || b.camp !== camp) return 'Ce régiment n\'est pas le vôtre.';
+  if (de === vers) return 'Un régiment ne se transfère pas à lui-même.';
+  if (a.effectif <= 0 || b.effectif <= 0) return `${a.effectif <= 0 ? a.nom : b.nom} n'a plus d'hommes.`;
+  if (!(n === -1 || (Number.isInteger(n) && n > 0))) return 'Quantité invalide.';
+  if (!disponibles(B, camp, de)) return `Tous les hommes de ${a.nom} sont déjà promis à un autre régiment.`;
+  if (etat.transferts[camp].some(t => t.vers === de)) return `${a.nom} reçoit des hommes cette nuit : on ne l'en retire pas aussi.`;
+  if (etat.transferts[camp].some(t => t.de === vers)) return `${b.nom} envoie des hommes cette nuit : on ne lui en envoie pas aussi.`;
+  return null;
+}
+// Prévoit un transfert (rend { ok, n } ou { refus }) ; un deuxième vers le même couple s'ajoute au premier
+export function planifierTransfert(B, camp, de, vers, n) {
+  const refus = refusTransfert(B, camp, de, vers, n);
+  if (refus) return { refus };
+  const dispo = disponibles(B, camp, de), tout = n === -1 || n >= dispo, liste = B.etat.transferts[camp];
+  const m = tout ? dispo : n, deja = liste.find(t => t.de === de && t.vers === vers && t.n > 0);
+  if (tout) liste.push({ de, vers, n: -1 });             // « tous » : ce qui reste à l'aube, après les transferts partiels du même régiment (ils passent d'abord : `appliquerTransferts`)
+  else if (deja) deja.n += m;
+  else liste.push({ de, vers, n: m });
+  return { ok: true, n: m, tout };
+}
+// Annule le transfert d'indice `k` (rend { ok } ou { refus })
+export function annulerTransfert(B, camp, k) {
+  const liste = B.etat.transferts[camp];
+  if (B.etat.phase !== 'nuit' || !liste[k]) return { refus: 'Ce transfert n\'existe plus.' };
+  liste.splice(k, 1);
+  return { ok: true };
+}
+// À l'aube : les hommes passent d'un régiment à l'autre, des plus valides aux blessés, des derniers rangs aux premiers ; les rangs du régiment qui donne se resserrent, ceux du nouveau venu s'allongent
+function appliquerTransferts(B, bilan) {
+  const { etat, armee: A, terrain: T } = B, pl = [0, 0], vus = new Set();
+  for (const camp of [0, 1]) {
+    for (const t of [...etat.transferts[camp]].sort((x, y) => (x.n < 0) - (y.n < 0))) {
+      const a = etat.regiments[t.de], b = etat.regiments[t.vers];
+      if (!a || !b || a.effectif <= 0 || b.effectif <= 0) continue;        // relevé ou détruit dans la nuit : le transfert tombe
+      const pris = [];
+      for (let i = 0; i < A.n; i++) if (!A.mort[i] && A.reg[i] === a.id) pris.push(i);
+      pris.sort((i, j) => (A.blessure[i] ? 1 : 0) - (A.blessure[j] ? 1 : 0) || A.slot[j] - A.slot[i] || A.id[i] - A.id[j]);
+      const m = t.n < 0 ? pris.length : Math.min(t.n, pris.length);
+      let slot = 0;
+      for (let i = 0; i < A.n; i++) if (!A.mort[i] && A.reg[i] === b.id) slot = Math.max(slot, A.slot[i] + 1);
+      for (const i of pris.slice(0, m)) {
+        A.reg[i] = b.id; A.slot[i] = slot++;
+        place(b.ordre, A.slot[i], pl);
+        const ci = Math.min(T.H - 1, Math.max(0, pl[1] | 0)) * T.W + Math.min(T.W - 1, Math.max(0, pl[0] | 0));
+        if (!T.profond[ci]) { A.x[i] = pl[0]; A.y[i] = pl[1]; A.vx[i] = 0; A.vy[i] = 0; A.coince[i] = 0; }
+      }
+      a.effectif -= m; a.initial -= m; b.effectif += m; b.initial += m;
+      bilan[camp].transferes += m; vus.add(a.id);
+    }
+    etat.transferts[camp] = [];
+  }
+  for (const id of vus) {                         // les rangs de celui qui a donné se resserrent
+    const reg = etat.regiments[id];
+    if (!reg.effectif) continue;
+    const siens = [];
+    for (let i = 0; i < A.n; i++) if (!A.mort[i] && A.reg[i] === id) siens.push(i);
+    siens.sort((i, j) => A.slot[i] - A.slot[j]);
+    siens.forEach((i, k) => { A.slot[i] = k; });
+  }
+}
+
 /* Prendre une unité de la réserve : un régiment frais (null) ; `ralliee` : une unité de fuyards ralliés à la caserne ({ n, exp, moral }, `etat.ralliees[camp]`, hors de `etat.reserves`). */
 export function prendreReserve(etat, camp, ralliee = false) {
   if (ralliee) return etat.ralliees[camp].shift();
   etat.reserves[camp]--;
+  (etat.reservesPrises ??= [0, 0])[camp]++;
   return null;
 }
 

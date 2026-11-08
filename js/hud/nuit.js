@@ -1,15 +1,18 @@
 // Le papier de la nuit (Jérôme, v0.13.0) : un état (choix des corvées, puis le bilan de l'aube), jamais une boîte de
 // dialogue : le champ reste là, on choisit des régiments (clic, cadre, T) et on leur donne une corvée, dite sur leur carte.
-import { BATIMENTS } from '../data/batiments.js?v=0.117.0';
-import { NOUS, aube, priseEnCours } from '../bataille.js?v=0.117.0';
-import { METEO } from '../data/meteo.js?v=0.117.0';
-import { CORVEES, CONTACT } from '../data/corvees.js?v=0.117.0';
-import { EQUIPEMENT } from '../data/batiments.js?v=0.117.0';
-import { campDe, niveauDe } from '../camp.js?v=0.117.0';
-import { refusCorvee, contactDe } from '../nuit.js?v=0.117.0';
-import { palmares, tableau } from './medailles.js?v=0.117.0';
-import { pluriel, numeroDe } from './lecture.js?v=0.117.0';
-import { lune, nomPhase, couvertureNuit, cielEnMots } from '../data/lune.js?v=0.117.0';
+import { BATIMENTS } from '../data/batiments.js?v=0.128.0';
+import { NOUS, aube, priseEnCours } from '../bataille.js?v=0.128.0';
+import { METEO } from '../data/meteo.js?v=0.128.0';
+import { CORVEES, CONTACT } from '../data/corvees.js?v=0.128.0';
+import { EQUIPEMENT } from '../data/batiments.js?v=0.128.0';
+import { campDe, niveauDe, renfortsDe } from '../camp.js?v=0.128.0';
+import { refusCorvee, contactDe } from '../nuit.js?v=0.128.0';
+import { palmares, tableau } from './medailles.js?v=0.128.0';
+import { lireJournee } from '../donnees-jour.js?v=0.128.0';
+import { tuilesDuSoir, liste } from './bilan.js?v=0.128.0';
+import { tuilesDeLAube } from './aube.js?v=0.128.0';
+import { pluriel, numeroDe } from './lecture.js?v=0.128.0';
+import { lune, nomPhase, couvertureNuit, cielEnMots } from '../data/lune.js?v=0.128.0';
 
 export const corveeDe = id => [...CORVEES, CONTACT].find(c => c.id === id)?.nom || '';
 export const corveeCourte = id => [...CORVEES, CONTACT].find(c => c.id === id)?.court || '';
@@ -27,45 +30,20 @@ export function avionsEnMots(e, camp) {
   const jour = sorties ? `${sorties} sortie${s(sorties)}${perdus ? `, ${perdus} avion${s(perdus)} abattu${s(perdus)}` : ', tous rentrés'}` : 'aucune sortie';
   return `Avions : ${jour}. ${restent ? `Il en reste ${restent}, réparés cette nuit.` : 'Plus un seul.'}`;
 }
-// le bilan de la nuit en quelques lignes (rien de ce qui n'a pas eu lieu)
-function bilanEnMots(B, b) {
-  const pl = (n, un, des) => `${n} ${n > 1 ? des : un}`;
-  const faits = [
-    b.equipes && `${pl(b.equipes, 'régiment équipé', 'régiments équipés')}`,
-    b.regroupes && `${pl(b.regroupes, 'égaré regroupé', 'égarés regroupés')}`,
-    b.evacues && `${pl(b.evacues, 'blessé évacué', 'blessés évacués')}`,
-    b.retours && `${pl(b.retours, 'blessé guéri revenu', 'blessés guéris revenus')} au front`,
-    b.prisNuit && `${pl(b.prisNuit, 'tronçon pris', 'tronçons pris')} dans la mêlée`,
-    b.perdusNuit && `${pl(b.perdusNuit, 'tronçon perdu', 'tronçons perdus')} dans la mêlée`,
-    b.releves && `${pl(b.releves, 'régiment relevé', 'régiments relevés')}`,
-    b.ravitailles && `${pl(b.ravitailles, 'régiment ravitaillé', 'régiments ravitaillés')}`,
-  ].filter(Boolean);
-  const morts = [
-    b.mortsMelee && `${b.mortsMelee} au corps à corps`,
-    b.mortsCorvee && `${b.mortsCorvee} aux corvées`,
-    b.mortsBlesses && `${b.mortsBlesses} de leurs blessures`,
-  ].filter(Boolean);
-  const regs = B.etat.regiments;
-  return [
-    faits.length ? `Cette nuit : ${faits.join(', ')}.` : b.mortsMelee ? 'Une nuit de combat.' : 'Une nuit de repos.',
-    morts.length ? `Morts dans la nuit : ${morts.join(', ')}.` : 'Personne n\'est mort cette nuit.',
-    b.affames && `${pl(b.affames, 'régiment n\'a', 'régiments n\'ont')} plus de vivres : la faim.`,
-    ...(b.refus || []).map(id => `${regs[id].nom} refuse de monter aujourd'hui : il tiendra sa tranchée, rien de plus.`),
-  ].filter(Boolean);
-}
-
 // `bataille()` : la bataille en cours ; `choisis()` : les régiments choisis ; `invalider()` : refaire la rangée des cartes ;
 // `pauser()` / `reprendre()` : arrêter / relancer la boucle ; `dire(r)` : montrer un refus
 // À deux sur le réseau (v0.30.0) : `moi()` est le camp qu'on joue, `enReseau()` dit si l'autre est un joueur ; ses choix et son « prêt » passent par `surChoix(régiment, corvée)` et `surPret()`
 // (le lockstep les rend aux deux machines), et le bilan de l'aube vient de main.js (`apresAube`), quand les deux sont prêts.
 // le camp au matin (v0.87.0) : les chantiers finis cette nuit et la dotation tombée (seulement dans la partie bridée)
-const campEnMots = (B, d0, camp = 0) => {
+const dotationDe = (B, d0, camp = 0) => {
   const d = d0?.camps?.[camp] ?? d0, K = camp === 0 ? B.etat.camp : B.etat.campEux;
-  if (!d || !K?.bride) return [];
+  if (!d || !K?.bride) return null;
   const fin = d.finis.map(([cle, n]) => `${BATIMENTS[cle].nom} : niveau ${n}, ${BATIMENTS[cle].niveaux[n - 1].nom.toLowerCase()}.`);
   const parts = [`${d.aube} d'aube`, d.tenue ? `${d.tenue} pour des lignes tenues` : '', d.lignes ? `${d.lignes} pour une ligne d'en face prise` : ''].filter(Boolean);
-  return [...fin, `Dotation de l'état-major : +${d.points} (${parts.join(', ')}) ; ${K.dotation} en caisse.`];
+  return { fin, points: d.points, parts: parts.join(', ').replace(/^./, c => c.toUpperCase()), caisse: K.dotation };
 };
+// « 2 sur 4 » : les régiments frais qui restent, sur tous ceux de la bataille (v0.116.0)
+export const renfortsEnMots = (e, camp) => { const r = renfortsDe(e, camp); return `${r.restants} sur ${r.total}`; };
 export function creerNuit({ $, bataille, choisis, choisir = () => {}, pauser, reprendre, sauvegarder, majHud, toast, dire, invalider, moi = () => NOUS, enReseau = () => false, surChoix = () => {}, surPret = () => {} }) {
   let etat = null;                 // 'choix' | 'aube' | null
   let corvees = {};                // la corvée de chacun de nos régiments cette nuit (id → corvée)
@@ -75,15 +53,13 @@ export function creerNuit({ $, bataille, choisis, choisir = () => {}, pauser, re
   function montrer() {
     const B = bataille();
     pauser(); sauvegarder();
-    const e = B.etat, j = e.jour, [nous, eux] = e.pertesJour[j - 1], avant = e.nuits.at(-1)?.choix || {};
+    const e = B.etat, j = e.jour, avant = e.nuits.at(-1)?.choix || {};
     $('nuit-titre').textContent = `Nuit du ${nomJour(j)} au ${nomJour(j + 1)} jour`;
-    // les chiffres clés de la journée (colonne de gauche) : nos morts, les leurs, les tronçons pris et perdus, la réserve
-    const [pris, perdus] = e.tranchees ? e.prises[j - 1] : [0, 0], [mn, me] = moi() === NOUS ? [nous, eux] : [eux, nous];
-    const chiffre = (nom, v, aide) => { const d = document.createElement('div'); d.title = aide; d.append(Object.assign(document.createElement('dt'), { textContent: nom }), Object.assign(document.createElement('dd'), { textContent: String(v) })); return d; };
-    $('nuit-chiffres').replaceChildren(
-      chiffre('Nos morts', mn, 'Les hommes tombés chez nous aujourd\'hui, de leurs blessures du matin comprises'), chiffre('Leurs morts', me, 'Les hommes tombés en face aujourd\'hui'),
-      ...(e.tranchees ? [chiffre('Tronçons pris', pris, 'Les tronçons de tranchée pris à l\'ennemi aujourd\'hui'), chiffre('Tronçons perdus', perdus, 'Les tronçons de tranchée que l\'ennemi nous a pris aujourd\'hui')] : []),
-      ...(e.mission ? [chiffre('En réserve', e.reserves[moi()], 'Les régiments frais qui attendent la relève')] : []));
+    // le bilan en tuiles (colonne de gauche ; Jérôme, 8 nov. : le tableau de bord du labo) : à retenir, effectifs, morts du jour, lignes, ciel ; `lireJournee` ne lit que l'état
+    const d = lireJournee(B, moi());
+    const reserve = e.mission ? renfortsEnMots(e, moi()) : null;
+    $('nuit-bilan').replaceChildren(...tuilesDuSoir(d, { reserve, avions: avionsEnMots(e, moi()) }));
+    $('nuit-regiments').replaceChildren(liste(d));
     $('nuit-lignes').textContent = e.tranchees ? enLignes(e.prises[j - 1]) : '';
     // la victoire anticipée (v0.77.0) : où l'on en est, pour qui doit prendre leur première ligne
     if (e.tranchees && e.mission === 'prendre' && moi() === NOUS) {
@@ -91,7 +67,6 @@ export function creerNuit({ $, bataille, choisis, choisir = () => {}, pauser, re
       $('nuit-lignes').textContent += jours ? ` Leur première ligne est tenue (${t} tronçons sur ${tot}) : encore un soir et la bataille est gagnée.` : ` Leur première ligne : ${t} tronçons sur ${tot} à nous ; il en faut 75 % pendant deux soirs de suite pour gagner avant le terme.`;
     }
     $('nuit-medailles-corps').replaceChildren(...tableau(palmares(B, moi(), 'jour')));
-    $('nuit-avions').textContent = avionsEnMots(e, moi());
     $('nuit-demain').textContent = `Demain : ${METEO[e.previsions[j - 1]]?.prevision || '—'}.`;
     // le ciel de cette nuit (v0.40.0) : la phase de la lune et la couverture, les mêmes que celles que le dessin montre
     const mt = e.meteo[j - 1], L = lune(j, e.graine);
@@ -171,7 +146,9 @@ export function creerNuit({ $, bataille, choisis, choisir = () => {}, pauser, re
     etat = 'aube';
     $('nuit-titre').textContent = `L'aube du ${nomJour(B.etat.jour)} jour`;
     $('nuit-corps').hidden = true; $('nuit').classList.add('aube');
-    $('aube-bilan').replaceChildren(...[...bilanEnMots(B, r.bilan[moi()]), ...campEnMots(B, r.dotation, moi())].map(t => Object.assign(document.createElement('p'), { textContent: t })));
+    // le bilan en tuiles (Jérôme, 8 nov.) : ce que la nuit a fait, puis les effectifs au matin (`lireJournee` : le jour neuf est déjà ouvert, ses chiffres sont ceux du matin)
+    const regs = B.etat.regiments;
+    $('aube-bilan').replaceChildren(...tuilesDeLAube({ b: r.bilan[moi()], refus: (r.bilan[moi()].refus || []).map(id => regs[id].nom), dotation: dotationDe(B, r.dotation, moi()), matin: lireJournee(B, moi()) }));
     $('aube-bilan').hidden = false; $('aube').textContent = 'Le jour se lève';
     invalider();
   }

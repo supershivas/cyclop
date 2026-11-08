@@ -25,12 +25,12 @@
      (rng.js), pour que la même graine rejoue la même bataille.
 
    Logique pure : aucun DOM. Le rendu lit les tableaux (rendu3d.js). */
-import { EQUIPEMENTS } from './data/batiments.js?v=0.117.0';
-import { hauteurQ, vitesseCase } from './terrain.js?v=0.117.0';
-import { ligneY } from './tranchees.js?v=0.117.0';
-import { TOITS } from './data/nids.js?v=0.117.0';
-import { caracteristiques } from './identite.js?v=0.117.0';
-import { BONUS } from './data/experience.js?v=0.117.0';
+import { EQUIPEMENTS } from './data/batiments.js?v=0.128.0';
+import { hauteurQ, vitesseCase } from './terrain.js?v=0.128.0';
+import { ligneY } from './tranchees.js?v=0.128.0';
+import { TOITS } from './data/nids.js?v=0.128.0';
+import { caracteristiques } from './identite.js?v=0.128.0';
+import { BONUS } from './data/experience.js?v=0.128.0';
 
 export const GRILLE = 2;           // m : cases de voisinage
 export const DENSITE = 8;          // m : carrés de densité (tir)
@@ -231,7 +231,10 @@ export function pasArmee(A, ctx) {
     const r = regiments[reg[i]], o = r.ordre;
     // un blessé qui peut marcher (un bras, une jambe légère) quitte sa place et regagne l'arrière, droit devant lui (Jérôme, v0.35.0)
     const retrait = ctx.arriere && blessure[i] && blessure[i] <= 2 && (blessure[i] === 1 || legere(A.id[i], Sd.jambeLegere));
-    if (retrait) { pl[0] = xi; pl[1] = camp[i] === 0 ? Math.max(yi, ctx.arriere[0]) : Math.min(yi, ctx.arriere[1]); }
+    if (retrait) {
+      const h = ctx.hopital?.[camp[i]];      // l'hôpital du camp, s'il est bâti (v0.116.0) : il y marche ; sinon l'arrière, droit devant lui
+      if (h) { pl[0] = h.x; pl[1] = h.y; } else { pl[0] = xi; pl[1] = camp[i] === 0 ? Math.max(yi, ctx.arriere[0]) : Math.min(yi, ctx.arriere[1]); }
+    }
     else place(o, slot[i], pl);
     const dx = pl[0] - xi, dy = pl[1] - yi, d = Math.hypot(dx, dy);
     let gx = 0, gy = 0, voulu = 1;

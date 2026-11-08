@@ -6,7 +6,7 @@ export const CORVEES = [
   { id: 'repos', court: 'Repos', nom: 'Repos', dit: 'la fatigue et la peur tombent, le moral remonte un peu plus' },
   { id: 'evacuer', court: 'Évacuer', nom: 'Évacuer les blessés', dit: 'ils quittent le front, vivants ; un blessé laissé peut mourir dans la nuit' },
   { id: 'ravitailler', court: 'Vivres', nom: 'Ravitailler', dit: 'la soupe et le pain montent par les boyaux : des vivres pour trois nuits' },
-  { id: 'releve', court: 'Relève', nom: 'La relève', dit: 'un régiment frais, pris dans la réserve, prend sa place à l\'aube ; celui-ci part au repos' },
+  { id: 'releve', court: 'Relève', nom: 'La relève', dit: 'un régiment frais, pris dans la réserve (il n\'y en a pas d\'autre : un de moins pour la suite), prend sa place à l\'aube ; celui-ci part au repos' },
   // l'équipement (Jérôme, v0.91.0) : la caserne au niveau 2 ; une corvée par pièce (`eq-` + sa clé dans EQUIPEMENTS de data/batiments.js), un point de dotation ; le régiment ne se repose pas
   { id: 'eq-casque', court: 'Casques', nom: 'Casques Adrian', dit: 'on lui distribue des casques : les éclats d\'obus tuent moins (1 point de dotation, et il ne se repose pas)', equipe: true },
   { id: 'eq-grenades', court: 'Grenades', nom: 'Grenadiers', dit: 'une section de grenadiers : plus forts au corps à corps (1 point de dotation, et il ne se repose pas)', equipe: true },

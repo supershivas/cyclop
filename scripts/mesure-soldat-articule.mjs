@@ -20,13 +20,13 @@ page.on('console', m => { if (m.type() === 'error') erreurs.push(m.text()); });
 await page.goto(`${srv.base}labo.html`);
 await page.waitForTimeout(800);
 const resultats = await page.evaluate(async ({ N, zooms, images, seul, niveau, frag, vert, cote }) => {
-  const { loadThree } = await import('/js/three-lib.js?v=0.102.2');
+  const { loadThree } = await import('/js/three-lib.js');
   const THREE = await loadThree();
-  const { PALETTE } = await import('/js/palette.js?v=0.102.2');
-  const { creerGeometries } = await import('/js/rendu/geometries.js?v=0.102.2');
-  const SH = await import('/js/rendu/shaders.js?v=0.102.2');
-  const { creerSoldatArticule } = await import('/js/rendu/soldat-articule.js?v=0.102.2');
-  const { aspect } = await import('/js/aspect-soldat.js?v=0.102.2');
+  const { PALETTE } = await import('/js/palette.js');
+  const { creerGeometries } = await import('/js/rendu/geometries.js');
+  const SH = await import('/js/rendu/shaders.js');
+  const { creerSoldatArticule } = await import('/js/rendu/soldat-articule.js');
+  const { aspect } = await import('/js/aspect-soldat.js');
   const col = l => new THREE.Color(PALETTE[l]);
   const W = 640, H = 400;
   const canvas = document.createElement('canvas'); canvas.style.cssText = 'position:fixed;left:0;top:0;width:1280px;height:800px;z-index:9999';
@@ -70,7 +70,7 @@ const resultats = await page.evaluate(async ({ N, zooms, images, seul, niveau, f
     }
     // un maillage par option : le corps seul (tous les hommes), puis chaque coiffe, barbe, accessoire dans son maillage, qui ne porte que les hommes qui l'ont (comme les pansements et les grades du jeu)
     {
-      const { boites, voir } = await import('/js/rendu/soldat-articule.js?v=0.102.2');
+      const { boites, voir } = await import('/js/rendu/soldat-articule.js');
       const codes = [...new Set(boites().map(b => b[8]))].sort((a, b) => a - b);
       const sc = new THREE.Scene(); sc.background = col('s'); sc.add(fond);
       const lots = []; let tris = 0, dessines = 0;

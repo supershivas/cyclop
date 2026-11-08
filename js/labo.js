@@ -2,36 +2,39 @@
 // Chaque sujet utilise les mêmes modules que le jeu (terrain, apparence,
 // rendu three.js) : ce qu'on voit ici est ce que le jeu dessinera. Ajouter un
 // sujet ou une variante = ajouter une entrée dans GROUPES.
-import { afficherVersion } from './version-tag.js?v=0.117.0';
-import { mountLabo } from './lib/labo-shell.js?v=0.117.0';
-import { spriteCanvas, paletteToGPL, paletteToHex } from './lib/sprites.js?v=0.117.0';
-import { PALETTE, ROLES } from './palette.js?v=0.117.0';
-import { chargerContenu } from './design-store.js?v=0.117.0';
-import { tuile, ETAT } from './tuiles.js?v=0.117.0';
-import { creerTerrain, impact, hydroLignes, toucher } from './terrain.js?v=0.117.0';
-import { FORMES } from './cratere.js?v=0.117.0';
-import { CALIBRES } from './data/calibres.js?v=0.117.0';
-import { METEO } from './data/meteo.js?v=0.117.0';
-import { nouvelleBataille, avancer, ordonnerMarche, ordonnerBarrage, mourir, regarderAu, aube, horloge, ticksParJour, rangDe } from './bataille.js?v=0.117.0';
-import { AZIMUTS, COTES } from './data/soleil.js?v=0.117.0';
-import { creerRendu, ZOOMS } from './rendu3d.js?v=0.117.0';
-import { placesCommandement } from './army.js?v=0.117.0';
-import { hash2 } from './lib/rng.js?v=0.117.0';
-import { reglerVerdure } from './apparence.js?v=0.117.0';
-import { maquetteChars } from './labo-chars.js?v=0.117.0';
-import { maquetteEpaves } from './labo-epaves.js?v=0.117.0';
-import { fondations, boutons, unites, fenetres, revision } from './labo-design-system.js?v=0.117.0';
-import { cartesSecteur } from './labo-cartes.js?v=0.117.0';
-import { gainTampon, gainCachets, gainFil, gainBordereau, victoireFanion, victoireTampon, victoireChevrons, victoireAube, ficheDeuxColonnes, ficheEtages, ficheRegistre, ficheDAbord } from './labo-recompenses.js?v=0.117.0';
-import { maquetteBatiment, maquetteCamp } from './labo-batiments.js?v=0.117.0';
-import { BATIMENTS } from './data/batiments.js?v=0.117.0';
-import { JOURNAL } from './labo-journal.js?v=0.117.0';
-import { loadVersion } from './lib/app-update.js?v=0.117.0';
-import { maquetteEffets, maquetteAmbiance, maquetteEspace, maquetteBruitages } from './labo-son.js?v=0.117.0';
-import { calqueMoral } from './labo-moral.js?v=0.117.0';
-import { maquetteTranchees, NOTES_TRANCHEES, NOMS_TRANCHEES } from './labo-tranchees.js?v=0.117.0';
-import { maquetteFabrique } from './labo-fabrique.js?v=0.117.0';
-import { entrees as encEntrees, lexiqueAZ, planche as encPlanche } from './labo-encyclopedie.js?v=0.117.0';
+import { afficherVersion } from './version-tag.js?v=0.128.0';
+import { mountLabo } from './lib/labo-shell.js?v=0.128.0';
+import { spriteCanvas, paletteToGPL, paletteToHex } from './lib/sprites.js?v=0.128.0';
+import { PALETTE, ROLES } from './palette.js?v=0.128.0';
+import { chargerContenu } from './design-store.js?v=0.128.0';
+import { tuile, ETAT } from './tuiles.js?v=0.128.0';
+import { creerTerrain, impact, hydroLignes, toucher } from './terrain.js?v=0.128.0';
+import { FORMES } from './cratere.js?v=0.128.0';
+import { CALIBRES } from './data/calibres.js?v=0.128.0';
+import { METEO } from './data/meteo.js?v=0.128.0';
+import { nouvelleBataille, avancer, ordonnerMarche, ordonnerBarrage, mourir, regarderAu, aube, horloge, ticksParJour, rangDe } from './bataille.js?v=0.128.0';
+import { AZIMUTS, COTES } from './data/soleil.js?v=0.128.0';
+import { creerRendu, ZOOMS } from './rendu3d.js?v=0.128.0';
+import { placesCommandement } from './army.js?v=0.128.0';
+import { hash2 } from './lib/rng.js?v=0.128.0';
+import { reglerVerdure } from './apparence.js?v=0.128.0';
+import { maquetteChars } from './labo-chars.js?v=0.128.0';
+import { maquetteEpaves } from './labo-epaves.js?v=0.128.0';
+import { fondations, boutons, unites, fenetres, revision } from './labo-design-system.js?v=0.128.0';
+import { cartesSecteur } from './labo-cartes.js?v=0.128.0';
+import { gainTampon, gainCachets, gainFil, gainBordereau, victoireFanion, victoireTampon, victoireChevrons, victoireAube, ficheDeuxColonnes, ficheEtages, ficheRegistre, ficheDAbord } from './labo-recompenses.js?v=0.128.0';
+import { maquetteBatiment, maquetteCamp } from './labo-batiments.js?v=0.128.0';
+import { BATIMENTS } from './data/batiments.js?v=0.128.0';
+import { JOURNAL } from './labo-journal.js?v=0.128.0';
+import { loadVersion } from './lib/app-update.js?v=0.128.0';
+import { maquetteEffets, maquetteAmbiance, maquetteEspace, maquetteBruitages } from './labo-son.js?v=0.128.0';
+import { calqueMoral } from './labo-moral.js?v=0.128.0';
+import { bilanRapport, bilanTuiles, bilanFrise } from './labo-donnees.js?v=0.128.0';
+import { fichesTuiles, fichesProfil, fichesCompactes } from './labo-fiches.js?v=0.128.0';
+import { calqueEnnemis } from './labo-engins-ennemis.js?v=0.128.0';
+import { maquetteTranchees, NOTES_TRANCHEES, NOMS_TRANCHEES } from './labo-tranchees.js?v=0.128.0';
+import { maquetteFabrique } from './labo-fabrique.js?v=0.128.0';
+import { entrees as encEntrees, lexiqueAZ, planche as encPlanche } from './labo-encyclopedie.js?v=0.128.0';
 
 document.documentElement.style.setProperty('--jeu-accent', ROLES.accent);
 const NOM = document.title.replace(/^Labo — /, ''); // le nom vient de la page (une apostrophe ne casse rien)
@@ -382,6 +385,15 @@ const GROUPES = [
       { title: 'La trame', depuis: '0.67.2', note: 'Une hachure en biais sur toute l\'emprise, qui se resserre quand le régiment fléchit : espacée et orange (ébranlé), serrée et rouge avec un cadre pointillé (en déroute). C\'est la hachure de la barre de la carte, portée sur le champ. La plus lisible de loin, la plus lourde : elle couvre les hommes.', render: s => moteur(s, { zoom: 2, cz: 185, soldats: 400, calque: calqueMoral('trame') }) },
       { title: 'Les chevrons de repli', depuis: '0.67.2', note: 'L\'action plutôt que l\'état : ébranlé, un chevron orange pulse sous les hommes, vers l\'arrière ; en déroute, trois chevrons rouges coulent vers le sud. Dit où ils vont, pas ce qu\'ils sont ; invisible dès que le régiment s\'arrête.', render: s => moteur(s, { zoom: 2, cz: 185, soldats: 400, calque: calqueMoral('chevrons') }) },
     ] },
+    { id: 'engins-ennemis', title: 'Les engins d\'en face sur le champ', variants: [
+      { title: 'Aujourd\'hui : l\'étiquette complète', status: 'actuelle', depuis: '0.115.0', note: 'La référence (v0.115.0). Un papier d\'os avec le nom, le pourcentage et une barre, comme celle de nos engins : Jérôme la trouve trop prégnante pour un engin qu\'on ne commande pas. Quatre postes d\'en face (intact, entamé, presque détruit, détruit) et quatre chars, au zoom 3 px/m ; essayez les autres zooms.', render: s => moteur(s, { zoom: 2, soldats: 400, calque: calqueEnnemis('actuelle') }) },
+      { title: '1A · La barre nue', status: 'a-trancher', depuis: '0.115.0', note: 'PROPOSITION (idée 1 : une barre fine sans texte). Trois pixels de haut au-dessus de l\'engin, en kaki d\'en face, liseré de terre : l\'état se lit à sa longueur. Détruit : la barre disparaît, l\'épave parle seule. Le plus sobre ; mais un engin intact et un engin entamé à 90 % se ressemblent, et il n\'y a aucun repère pour un engin détruit hors de portée de l\'œil.', render: s => moteur(s, { zoom: 2, soldats: 400, calque: calqueEnnemis('barreNue') }) },
+      { title: '1B · La barre à crans', status: 'a-trancher', depuis: '0.115.0', note: 'PROPOSITION (idée 1). La même barre en quatre crans (plus large pour un char que pour un poste) : on lit « trois quarts », « la moitié » sans mesurer. Détruit : quatre crans creux, une trace qui reste (on sait qu\'un engin était là). Un peu plus de bruit visuel que 1A, plus d\'information.', render: s => moteur(s, { zoom: 2, soldats: 400, calque: calqueEnnemis('barreCrans') }) },
+      { title: '1C · La barre qui vient avec les dégâts', status: 'a-trancher', depuis: '0.115.0', note: 'PROPOSITION (idée 1 + 3). Rien tant que l\'engin est intact ; la barre apparaît dès qu\'il est touché, un trait de terre la souligne quand il est presque détruit. Le champ reste net au début de la bataille ; mais on ne repère plus un engin d\'en face sain, et un détruit ne se distingue que par son épave.', render: s => moteur(s, { zoom: 2, soldats: 400, calque: calqueEnnemis('barreSiEntame') }) },
+      { title: '2A · La pastille forme', status: 'a-trancher', depuis: '0.115.0', note: 'PROPOSITION (idée 2 : une pastille qui grandit au survol). Un carré pour un char, un losange pour un poste ; plein (opérationnel), à demi (abîmé), creux et barré (détruit). Au survol elle s\'ouvre en une capsule : « Char 55 % » et sa barre. La forme dit le type sans texte, mais il faut apprendre deux formes.', render: s => moteur(s, { zoom: 2, soldats: 400, calque: calqueEnnemis('pastilleForme') }) },
+      { title: '2B · La pastille jauge', status: 'a-trancher', depuis: '0.115.0', note: 'PROPOSITION (idée 2). Un rond kaki ceint d\'un arc qui se vide avec la vie (le poste porte un trait au milieu) ; détruit, un anneau pointillé barré. Au survol : il grossit et son nom s\'écrit dessous. L\'état se lit sans survol, d\'un coup d\'œil, par l\'arc ; le plus « tableau de bord » des six.', render: s => moteur(s, { zoom: 2, soldats: 400, calque: calqueEnnemis('pastilleJauge') }) },
+      { title: '2C · La pastille et l\'infobulle', status: 'a-trancher', depuis: '0.115.0', note: 'PROPOSITION (idée 2). Un repère de 8 px, plein (opérationnel) ou creux (détruit), rien d\'autre. Le détail (nom, état, pourcentage) est dans l\'infobulle du jeu, au survol seulement. La plus discrète des six ; la vie d\'un engin entamé ne se lit qu\'en le survolant.', render: s => moteur(s, { zoom: 2, soldats: 400, calque: calqueEnnemis('pastilleInfobulle') }) },
+    ] },
     { id: 'gain-point', title: 'Un point de dotation', variants: [
       { title: 'Le tampon', status: 'a-trancher', depuis: '0.98.0', note: 'PROPOSITION (Jérôme, v0.98.0 : « animation lors du gain d\'un point de dotation »). Un « +n » à double filet se plaque sur le bouton du camp, comme le tampon des papiers ; le nombre prend son rebond et le bouton s\'éclaircit une fois. Le plus bref (1,5 s), le plus proche du ton du jeu. Sans mouvement : seul le nombre change.', render: s => gainTampon(s) },
       { title: 'Les cachets', status: 'a-trancher', depuis: '0.98.0', note: 'PROPOSITION. Un petit cachet par point tombe du haut sur le bouton, l\'un après l\'autre, et le nombre monte à chaque chute : on compte les points qu\'on gagne, un par un.', render: s => gainCachets(s) },
@@ -397,6 +409,16 @@ const GROUPES = [
     { id: 'cartes-secteur', title: 'Les cartes de secteur', variants: [
       { title: 'Elle glisse depuis la liste', status: 'a-trancher', depuis: '0.105.3', note: 'PROPOSITION (Jérôme, 2 nov. : « les cartes de secteur glissent sur une table »). La liste à gauche ; au clic, la carte du secteur (titre, sa vraie carte vue de haut, description, saison, niveau, durée) glisse depuis la liste et se pose de biais sur la pile. Celles du dessous ne montrent que leur onglet. Les réglages se gardent carte par carte.', render: s => cartesSecteur(s, { geste: 'glisse', R }) },
       { title: 'Elle est tirée de la pile', status: 'a-trancher', depuis: '0.105.3', note: 'PROPOSITION. La carte choisie sort de la pile par le côté, puis revient se poser dessus : le geste d\'une carte qu\'on tire d\'un paquet. Plus long (0,8 s), plus lisible quand la carte est déjà au milieu de la pile.', render: s => cartesSecteur(s, { geste: 'tire', R }) },
+    ] },
+    { id: 'donnees-bilan', title: 'Les données : le bilan du soir', variants: [
+      { title: 'Le rapport', status: 'ancienne', depuis: '0.117.0', note: 'Non retenu (Jérôme, 8 nov.). Le duel en haut (effectifs des deux camps en barres : plein = debout, hachuré = blessés, contour = tombés), « À retenir » (les faits marquants avec leur pictogramme), les morts de chaque jour en bâtons, la liste de nos régiments (effectif, moral, pertes du jour) et les lignes. Se lit de haut en bas, comme un rapport.', render: s => { bilanRapport(s); } },
+      { title: 'Le tableau de bord', status: 'retenue', depuis: '0.117.0', note: 'EN JEU depuis la v0.124.0 (Jérôme, 8 nov. : le tableau de bord est retenu) : `hud/bilan.js`, dans le papier de la nuit. Un bandeau (le fait du jour) puis des tuiles de même poids, chacune un chiffre et un graphique : effectifs, pertes, lignes, ciel, moral, à retenir. Se lit par l\'oeil qui saute d\'une tuile à l\'autre ; le plus facile à comparer.', render: s => { bilanTuiles(s); } },
+      { title: 'La frise', status: 'ancienne', depuis: '0.117.0', note: 'Non retenu (Jérôme, 8 nov.), mais ses courbes (les effectifs de chaque jour, lus dans l\'historique des soirs) sont reprises dans les fiches. La bataille entière en une courbe (les effectifs debout des deux camps, les tronçons pris et perdus en marques) ; le jour du bilan est déplié dessous. Dit l\'évolution de la bataille, pas seulement la journée ; le moins immédiat.', render: s => { bilanFrise(s); } },
+    ] },
+    { id: 'donnees-fiches', title: 'Les données : les fiches', variants: [
+      { title: 'Les tuiles', status: 'retenue', depuis: '0.119.0', note: 'EN JEU depuis la v0.125.0 (Jérôme, 8 nov.) : `hud/tuiles.js`, `fiche.js`, `chars.js`, `nids.js` ; dans la fenêtre étroite d\'un char ou d\'un poste, deux colonnes de tuiles. Les fiches d\'un soldat, d\'un régiment, d\'un char et d\'une mitrailleuse dans le même langage : une tuile par sujet (un titre, un chiffre, un graphique, un mot). Large : pour une fiche qui s\'ouvre au milieu du champ.', render: s => { fichesTuiles(s); } },
+      { title: 'Le profil', status: 'ancienne', depuis: '0.119.0', note: 'Non retenu (Jérôme, 8 nov.). Les mêmes blocs en rangées : le titre et le gros chiffre à gauche, les graphiques étiquetés au milieu, le mot à droite. Une seule colonne, qui se lit de haut en bas et se compare d\'une fiche à l\'autre.', render: s => { fichesProfil(s); } },
+      { title: 'La compacte', status: 'ancienne', depuis: '0.119.0', note: 'Non retenu (Jérôme, 8 nov.). Les mêmes blocs à la largeur d\'une fenêtre du jeu (300 px) : une ligne titre-chiffre, le graphique dessous. La plus proche de ce que le jeu peut loger à côté du champ.', render: s => { fichesCompactes(s); } },
     ] },
     { id: 'fiche-jour', title: 'La fiche de fin de journée', variants: [
       { title: 'Deux colonnes', status: 'a-trancher', depuis: '0.98.0', note: 'PROPOSITION (Jérôme, v0.98.0 : « plus claire, toujours développée, centrée, qui donne le nom des régiments dont l\'ordre n\'a pas été modifié ; peut-être 2 colonnes »). À gauche, le jour (ce qui s\'est passé) ; à droite, la nuit (ce qu\'on décide), avec la liste des régiments qui gardent leur ordre d\'hier. Le bouton « À l\'aube » en bas.', render: s => ficheDeuxColonnes(s) },

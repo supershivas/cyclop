@@ -1,10 +1,13 @@
 // Les fiches : un homme (son nom, son âge, son grade, ce qu'il endure) ou un régiment (ses hommes, ses
 // blessés, ses morts, et leurs fiches). De près, on regarde des hommes ; de loin, des régiments (Jérôme, v0.3.2).
-import { NOUS, moralEnMots, rangDe } from '../bataille.js?v=0.117.0';
-import { experienceEnMots, chevrons, peurEnMots, fatigueEnMots, CARACTERISTIQUES, caracEnMots } from '../identite.js?v=0.117.0';
-import { majuscule, nomDe, indiceDe, premierDe, quiEst, tombe, bilan, enMots, refuseAujourdhui, actionEnMots, auFront, moyennes, prochainGrade } from './lecture.js?v=0.117.0';
-import { bonusEnMots } from '../data/experience.js?v=0.117.0';
-import { jauge, corps, chevronsHtml, REPERES } from './barres.js?v=0.117.0';
+import { NOUS, moralEnMots, rangDe } from '../bataille.js?v=0.128.0';
+import { experienceEnMots, chevrons, peurEnMots, fatigueEnMots, CARACTERISTIQUES, caracEnMots } from '../identite.js?v=0.128.0';
+import { majuscule, nomDe, indiceDe, premierDe, quiEst, tombe, bilan, enMots, refuseAujourdhui, actionEnMots, auFront, moyennes, prochainGrade, niveauMoral } from './lecture.js?v=0.128.0';
+import { bonusEnMots } from '../data/experience.js?v=0.128.0';
+import { corps, REPERES } from './barres.js?v=0.128.0';
+import { jauge as jaugeT, carac as caracT, bande, partage, fil, tuilesDe } from './tuiles.js?v=0.128.0';
+import { barreEffectif, jaugeMoral, reinitIds } from './bilan.js?v=0.128.0';
+import { historiqueDe } from '../donnees-jour.js?v=0.128.0';
 
 // `$` : l'accès aux éléments ; `R` : les réglages ; `bataille()` : la bataille en cours
 const CARAC_TITRES = {   // (elles montent à l'usage : tirer, frapper, marcher fatigué, tenir sous le feu ; elles baissent avec une blessure ou la terreur)
@@ -14,12 +17,13 @@ export function creerFiche({ $, R, bataille }) {
   let fiche = null;                 // { id, camp } : un soldat ; { reg } : un régiment
   let listeVue = '';                // ce que montre la liste du régiment (refaite seulement quand ça change)
   let statsVues = '';               // les jauges et le corps, refaits seulement quand ils changent
-  // les jauges et le corps de la fiche : refaits quand une valeur change d'un point (pas à chaque image)
-  function montrerStats(sig, jauges, corpsHtml) {
-    $('fiche-stats').hidden = !jauges;
+  // les tuiles de la fiche (Jérôme, 8 nov. : les tuiles du labo) : refaites quand une valeur change d'un point (pas à chaque image : une tuile refaite sous le pointeur perdrait sa bulle)
+  function montrerTuiles(sig, blocs) {
+    $('fiche-tuiles').hidden = !blocs;
     if (sig === statsVues) return;
     statsVues = sig;
-    $('fiche-barres').innerHTML = jauges; $('fiche-corps').innerHTML = corpsHtml;
+    reinitIds();
+    $('fiche-tuiles').replaceChildren(...(blocs ? tuilesDe(blocs) : []));
   }
 
   function montrerFiche(i) {
@@ -44,27 +48,26 @@ export function creerFiche({ $, R, bataille }) {
     $('fiche-liste').replaceChildren(); listeVue = '';
     const promu = B.etat.grades[fiche.id];
     const lignes = [promu ? `promu ${qui.grade} le jour ${promu[1]}` : ''];
-    if (i < 0) { montrerStats('', '', ''); lignes.unshift(tombe(B, fiche.id)); }
+    if (i < 0) { montrerTuiles('', null); lignes.unshift(tombe(B, fiche.id)); }
     else {
-      const exp = A.exp[i], nb = chevrons(exp), peur = A.peur[i], fj = A.fatJ[i], fb = A.fatB[i];
+      const exp = A.exp[i], nb = chevrons(exp), peur = A.peur[i], fj = A.fatJ[i], fb = A.fatB[i], bl = A.blessure[i];
       const caracs = [A.adresse[i], A.force[i], A.endurance[i], A.calme[i]], bases = [A.adresse0[i], A.force0[i], A.endurance0[i], A.calme0[i]];
-      const sig = `${fiche.id}:${A.blessure[i]}:${[peur, fj, fb, exp].map(v => Math.round(v * 100)).join(',')}:${caracs.map(Math.round).join(',')}`;
-      montrerStats(sig, [
-        jauge({ nom: 'Peur', val: peur, reperes: REPERES.peur, mot: peurEnMots(peur) }),
-        jauge({ nom: 'Jambes', val: fj, reperes: REPERES.fatigue, mot: fatigueEnMots(fj), titre: 'Fatigue des jambes (la marche, plus dans la boue)' }),
-        jauge({ nom: 'Bras', val: fb, reperes: REPERES.fatigue, mot: fatigueEnMots(fb), titre: 'Fatigue des bras (le tir)' }),
-        jauge({ nom: 'Expérience', val: exp, reperes: REPERES.exp, html: nb ? chevronsHtml(nb) : 'novice', titre: `Expérience : ${experienceEnMots(exp) || 'rien vu du feu'}` }),
-        // ses caractéristiques (v0.69.0) : elles jouent dans le tir (adresse), le corps à corps (force, endurance de l'autre), la fatigue (endurance) et la peur (calme) ; elles évoluent : une flèche dit
-        // le chemin fait depuis le début de la bataille (3 points ou plus)
-        ...CARACTERISTIQUES.map(([cle, nom], q) => {
-          const v = Math.round(caracs[q]), d = v - bases[q], fleche = d >= 3 ? ' ↑' : d <= -3 ? ' ↓' : '';
-          return jauge({ nom, val: v / 100, mot: caracEnMots(v) + fleche, titre: `${nom} : ${v} sur 100${d ? ` (${d > 0 ? '+' : ''}${d} depuis le début de la bataille)` : ''} — ${CARAC_TITRES[cle]}` });
-        }),
-      ].join(''), corps(A.blessure[i], fiche.id));
       const depuis = auFront(B, fiche.id), nuits = Math.max(0, B.etat.jour - depuis), vict = A.victimes[i], suivant = prochainGrade(A.camp[i], qui.rang);
-      lignes.unshift(majuscule(actionEnMots(B, i)), `Au front depuis le jour ${depuis}${nuits ? ` · ${nuits} nuit${nuits > 1 ? 's' : ''}` : ''}`);
-      if (vict) lignes.push(`A abattu ${vict} homme${vict > 1 ? 's' : ''}`);
-      if (suivant) lignes.push(`Prochain grade : ${suivant}, si un supérieur tombe`);
+      const sig = `${fiche.id}:${bl}:${[peur, fj, fb, exp].map(v => Math.round(v * 100)).join(',')}:${caracs.map(Math.round).join(',')}:${B.etat.jour}:${vict}`;
+      if (sig !== statsVues) montrerTuiles(sig, [
+        { titre: 'Ce qu\'il endure', graphes: [['Peur', jaugeT(peur, { reperes: REPERES.peur }), peurEnMots(peur)], ['Jambes', jaugeT(fj, { reperes: REPERES.fatigue }), fatigueEnMots(fj)], ['Bras', jaugeT(fb, { reperes: REPERES.fatigue }), fatigueEnMots(fb)]], aide: 'La peur, la fatigue des jambes (la marche, plus dans la boue) et des bras (le tir) : les repères sont les seuils des mots.' },
+        // ses caractéristiques (v0.69.0) : elles jouent dans le tir (adresse), le corps à corps (force, endurance de l'autre), la fatigue (endurance) et la peur (calme) ; elles évoluent : l'encoche dit le départ,
+        // une flèche le chemin fait depuis le début de la bataille (3 points ou plus)
+        { titre: 'Ses caractéristiques', graphes: CARACTERISTIQUES.map(([cle, nom], q) => {
+          const v = Math.round(caracs[q]), d = v - bases[q], fleche = d >= 3 ? ' ↑' : d <= -3 ? ' ↓' : '';
+          return [nom, caracT(v, bases[q]), `${v} · ${caracEnMots(v)}${fleche}`];
+        }), mot: 'L\'encoche : sa valeur au début de la bataille.', aide: CARACTERISTIQUES.map(([cle, nom]) => `${nom} : ${CARAC_TITRES[cle]}`).join('\n') },
+        { titre: 'Son corps', graphes: [['', corps(bl, fiche.id), bl ? `Blessé ${bl === 3 ? 'à la tête' : bl === 1 ? 'au bras' : 'à la jambe'}` : 'Indemne']] },
+        { titre: 'Au front', chiffre: nuits + 1, unite: nuits ? 'jours' : 'jour', mot: `depuis le jour ${depuis}` },
+        { titre: 'A abattu', chiffre: vict, unite: vict > 1 ? 'hommes' : 'homme', mot: suivant ? `Prochain grade : ${suivant}, si un supérieur tombe` : '' },
+        { titre: 'Expérience', graphes: [['', jaugeT(exp, { reperes: REPERES.exp }), '']], chevrons: nb, mot: experienceEnMots(exp) || 'rien vu du feu' },
+      ]);
+      lignes.unshift(majuscule(actionEnMots(B, i)));
     }
     $('fiche-etat').replaceChildren(...lignes.filter(Boolean).map(t => Object.assign(document.createElement('li'), { textContent: t })));
   }
@@ -73,19 +76,23 @@ export function creerFiche({ $, R, bataille }) {
     $('fiche-nom').textContent = nomDe(reg);
     $('fiche-qui').textContent = enMots(b);
     $('fiche-regiment').hidden = true;
-    const m = moyennes(B, reg.id), nb = chevrons(m.exp), vivres = reg.vivres ?? R.nuit.vivres;
-    montrerStats(`r${reg.id}:${[m.peur, m.fatJ, m.fatB, m.exp, reg.moral].map(v => Math.round(v * 100)).join(',')}:${vivres}:${reg.deroute ? 1 : 0}`, [
-      jauge({ nom: 'Peur', val: m.peur, reperes: REPERES.peur, mot: peurEnMots(m.peur), titre: 'Peur moyenne de ses hommes' }),
-      jauge({ nom: 'Jambes', val: m.fatJ, reperes: REPERES.fatigue, mot: fatigueEnMots(m.fatJ), titre: 'Fatigue moyenne des jambes' }),
-      jauge({ nom: 'Bras', val: m.fatB, reperes: REPERES.fatigue, mot: fatigueEnMots(m.fatB), titre: 'Fatigue moyenne des bras' }),
-      jauge({ nom: 'Expérience', val: m.exp, reperes: REPERES.exp, html: nb ? chevronsHtml(nb) : 'novice', titre: 'Expérience moyenne de ses hommes' }),
-      jauge({ nom: 'Moral', val: reg.moral, reperes: [R.moral.deroute, R.moral.ebranle, 0.75], mot: moralEnMots(reg, R), titre: 'Moral du régiment : sous le premier repère, la déroute' }),
-      jauge({ nom: 'Vivres', val: Math.min(1, vivres / R.nuit.vivres), mot: `${vivres} nuit${vivres > 1 ? 's' : ''}`, titre: 'Nuits de vivres restantes' }),
-    ].join(''), '');
-    $('fiche-etat').replaceChildren(...[majuscule(moralEnMots(reg, R)), refuseAujourdhui(B, reg), nb ? `Chevrons : ${bonusEnMots('regiment', nb)}` : ''].filter(Boolean).map(t => Object.assign(document.createElement('li'), { textContent: t })));
-    const sig = `${reg.id}:${b.vivants}:${b.blesses}:${b.morts}:${b.evacues}:${Object.keys(B.etat.grades).length}`;
-    if (sig === listeVue) return;
-    listeVue = sig;
+    const m = moyennes(B, reg.id), nb = chevrons(m.exp), vivres = reg.vivres ?? R.nuit.vivres, niveau = niveauMoral(reg, R), hist = historiqueDe(B.etat.histo || [], reg, B.etat.jour, b.blesses);
+    const morts = reg.pertes - (reg.debut?.pertes || 0), tues = reg.tues || 0, pris = reg.pris || 0, u = { debout: Math.max(0, b.vivants - b.blesses), blesses: b.blesses, evacues: b.evacues, morts: b.morts, initial: b.initial };
+    const sig = `r${reg.id}:${[m.peur, m.fatJ, m.fatB, m.exp, reg.moral].map(v => Math.round(v * 100)).join(',')}:${vivres}:${reg.deroute ? 1 : 0}:${b.vivants}:${b.blesses}:${b.morts}:${b.evacues}:${tues}:${pris}:${hist.length}:${B.etat.jour}`;
+    if (sig !== statsVues) montrerTuiles(sig, [
+      { titre: 'Effectifs', chiffre: u.debout, unite: `debout sur ${u.initial}`, graphes: [['', barreEffectif(u, 0, { larg: 200, haut: 14 }), '']], mot: `${u.blesses} blessés · ${u.evacues} évacués · ${u.morts} morts` },
+      { titre: 'Moral', chiffre: `${Math.round(reg.moral * 100)} %`, graphes: [['', jaugeMoral(reg.moral, niveau, { larg: 200, haut: 12 }), '']], mot: `${majuscule(moralEnMots(reg, R))} · repères : déroute, ébranlé`, aide: 'Moral du régiment : sous le premier repère, la déroute.' },
+      { titre: 'Ses hommes (en moyenne)', graphes: [['Peur', jaugeT(m.peur, { reperes: REPERES.peur }), peurEnMots(m.peur)], ['Jambes', jaugeT(m.fatJ, { reperes: REPERES.fatigue }), fatigueEnMots(m.fatJ)], ['Bras', jaugeT(m.fatB, { reperes: REPERES.fatigue }), fatigueEnMots(m.fatB)]] },
+      ...(hist.length > 1 ? [{ titre: 'Au fil des jours', graphes: [['', fil(hist, b.initial), '']], mot: 'Effectif (plein) et moral (tirets), soir après soir : le dernier point est aujourd\'hui.' }] : []),
+      { titre: 'Aujourd\'hui', chiffre: morts, unite: morts > 1 ? 'morts' : 'mort' },
+      { titre: 'Performances', graphes: [['Abattus', partage(tues, 0, { max: Math.max(30, tues) }), String(tues)], ['Tronçons', bande(pris * 10, Math.max(50, pris * 10)), String(pris)]], aide: 'Les hommes qu\'il a abattus au fusil ou à la baïonnette, les tronçons pris (avec lui).' },
+      { titre: 'Vivres', chiffre: vivres, unite: vivres > 1 ? 'nuits' : 'nuit', graphes: [['', bande(vivres * 10, R.nuit.vivres * 10), '']] },
+      { titre: 'Expérience', graphes: [['', jaugeT(m.exp, { reperes: REPERES.exp }), '']], chevrons: nb, mot: experienceEnMots(m.exp) || 'rien vu du feu' },
+    ]);
+    $('fiche-etat').replaceChildren(...[refuseAujourdhui(B, reg), nb ? `Chevrons : ${bonusEnMots('regiment', nb)}` : ''].filter(Boolean).map(t => Object.assign(document.createElement('li'), { textContent: t })));
+    const sigListe = `${reg.id}:${b.vivants}:${b.blesses}:${b.morts}:${b.evacues}:${Object.keys(B.etat.grades).length}`;
+    if (sigListe === listeVue) return;
+    listeVue = sigListe;
     // les officiers vivants, les blessés, les morts : chaque nom ouvre la fiche de l'homme
     const p0 = premierDe(B, reg.id), vivants = new Map();
     for (let i = 0; i < A.n; i++) if (A.reg[i] === reg.id) vivants.set(A.id[i], i);

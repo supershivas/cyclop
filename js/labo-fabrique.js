@@ -2,15 +2,15 @@
 // à droite ses stats, noms, armées »). Un clic tire un numéro d'homme ; son nom, son âge, son grade et ses caractéristiques sont ceux du jeu (`identite.js`, `caracteristiques`) ; son aspect
 // est celui de `aspect` (js/aspect-soldat.js), dessiné par le soldat articulé (js/rendu/soldat-articule.js). Le labo montre sans rien modifier : rien n'est écrit dans une bataille.
 // Le zoom est celui du jeu, en pixels de l'image par mètre (4 à 32 : les zooms du jeu ; 64 à 420 : plus près que le jeu ne va), l'image étant agrandie ×2 sans lissage comme à l'écran.
-import { PALETTE } from './palette.js?v=0.117.0';
-import { loadThree } from './three-lib.js?v=0.117.0';
-import { hash2 } from './lib/rng.js?v=0.117.0';
-import { identite, caracteristiques, departCaracs, CARACTERISTIQUES, caracEnMots, chevrons, experienceEnMots, etatEnMots } from './identite.js?v=0.117.0';
-import { NOMS } from './data/noms.js?v=0.117.0';
-import { aspect, aspectEnMots } from './aspect-soldat.js?v=0.117.0';
-import { COIFFES, CHEVEUX, BARBES, PEAUX, NOMS_COULEURS_CHEVEUX, YEUX, NEZ, BOUCHES, SOURCILS } from './data/aspect-soldat.js?v=0.117.0';
-import { creerSoldatArticule, trianglesVisibles } from './rendu/soldat-articule.js?v=0.117.0';
-import { ZOOMS } from './rendu3d.js?v=0.117.0';
+import { PALETTE } from './palette.js?v=0.128.0';
+import { loadThree } from './three-lib.js?v=0.128.0';
+import { hash2 } from './lib/rng.js?v=0.128.0';
+import { identite, caracteristiques, departCaracs, CARACTERISTIQUES, caracEnMots, chevrons, experienceEnMots, etatEnMots } from './identite.js?v=0.128.0';
+import { NOMS } from './data/noms.js?v=0.128.0';
+import { aspect, aspectEnMots } from './aspect-soldat.js?v=0.128.0';
+import { COIFFES, CHEVEUX, BARBES, PEAUX, NOMS_COULEURS_CHEVEUX, YEUX, NEZ, BOUCHES, SOURCILS } from './data/aspect-soldat.js?v=0.128.0';
+import { creerSoldatArticule, trianglesVisibles } from './rendu/soldat-articule.js?v=0.128.0';
+import { ZOOMS } from './rendu3d.js?v=0.128.0';
 
 const el = (tag, props = {}, ...kids) => { const e = Object.assign(document.createElement(tag), props); e.append(...kids); return e; };
 const GRAINE = 7;                         // la graine d'identité de la fabrique (n'importe laquelle : c'est le numéro qui fait l'homme)

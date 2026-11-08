@@ -1,5 +1,74 @@
 # Journal des versions
 
+## 0.128.0 — 2026-11-08
+- Un réglage « Éclairage » (bas, moyen, haut) dans la roue crantée : « haut » ajoute les ombres portées des hommes, des arbres, des chars et des avions, un soleil avec ses nuages éclairés, l'ombre de la fumée et les lanternes de nuit
+- « Moyen » est l'éclairage d'avant, gardé par défaut
+- Le labo lumière a un lac, avec les reflets du ciel et des berges sur l'eau
+
+## 0.127.0 — 2026-11-08
+- Vue à la personne de l'avion : au bout de l'hélice, penchée vers le sol pour voir les mitraillages ; abattu, on reste à bord (tonneau, écran rouge) jusqu'à l'écrasement
+- Vue à la personne du char : sous le canon, qui tremble à chaque tir puis file vers l'explosion en téléobjectif
+- La vue verrouillée suit l'avion au-delà du bord du terrain (plus de ciel noir ni d'avion qui sort de l'écran)
+
+## 0.126.0 — 2026-11-08
+- Le bilan de l'aube est en tuiles : ce que la nuit a fait, les morts par cause, la dotation de l'état-major et les effectifs au matin
+
+## 0.125.0 — 2026-11-08
+- Les fiches du soldat, du régiment, du char et de la mitrailleuse sont en tuiles : ce qu'il endure, ses caractéristiques et leur départ, l'effectif et le moral d'un régiment soir après soir, la coque et le canon d'un char, la bande d'un poste
+
+## 0.124.0 — 2026-11-08
+- Le bilan du soir est en tuiles : ce qu'il faut retenir, les effectifs des deux camps, les morts jour après jour, les lignes, le ciel, et nos régiments (effectif, moral, morts du jour) en graphiques
+
+## 0.123.0 — 2026-11-08
+- Le parc des chars et l'aérodrome ont un bouton par char et par avion : déployé, il mène la vue jusqu'à lui et ouvre sa fiche
+- Un char ou un avion pas déployé (au parc, au sol, détruit, perdu) a son bouton grisé : ses chiffres et le motif s'affichent en infobulle
+
+## 0.122.0 — 2026-11-08
+- Vue verrouillée (style cinéma) sur un char, une mitrailleuse ou un avion : un bouton dans leur fiche ; la caméra tourne lentement autour de l'engin, deux bandes noires
+- Vue « à la personne » : la caméra est à bord, à hauteur d'œil, et regarde où l'engin regarde ; Échap, un geste sur la caméra ou le bouton libèrent la vue
+
+## 0.121.0 — 2026-11-08
+- L'état garde un instantané de chaque soir (effectifs, blessés, moral de chaque régiment) ; le labo en tire les courbes des fiches et du bilan, et retient les tuiles et le tableau de bord ; rien n'a encore changé dans le jeu
+
+## 0.120.0 — 2026-11-07
+- Chars, mitrailleuses et avions, des deux camps : une pastille ronde à la place des étiquettes, avec un arc de vie ; au survol, l'infobulle dit tout (état, vie, canon ou bande, expérience, victimes)
+- Un clic sur la pastille d'un de nos chars ou postes le choisit ; la pastille saute quand un chevron est gagné
+
+## 0.119.0 — 2026-11-07
+- Le labo propose les fiches d'un soldat, d'un régiment, d'un char et d'une mitrailleuse en graphiques, en trois mises en page à comparer ; rien n'a encore changé dans le jeu
+
+## 0.118.0 — 2026-11-07
+- Renforts : au plus 3 régiments frais par bataille (relève de nuit et déploiement confondus) ; la caserne et la nuit disent « n sur 3 » et le refus nomme le plafond
+
+## 0.117.0 — 2026-11-07
+- Le labo propose trois bilans du soir en graphiques (le rapport, le tableau de bord, la frise) à trancher ; rien n'a encore changé dans le jeu
+
+## 0.116.1 — 2026-11-07
+- Un régiment scindé (des hommes bloqués dans la tranchée d'en face) a une pastille, un nom et un chemin d'ordre pour chaque groupe : l'ordre part d'où sont les hommes
+- La pastille, le nom, la caméra, le fanion et le chemin d'un ordre disent tous le même endroit (le plus gros groupe du régiment)
+- Les lignes d'ordre de la carte se lisent partout, dans le no man's land comme sur les cases (un liseré clair, un pointillé foncé, un point d'arrivée cerclé)
+
+## 0.116.0 — 2026-11-07
+- La nuit, « Gérer les régiments » : on glisse des soldats d'un régiment à un autre (1, 10 ou tous : la fusion) ; ils les rejoignent au début du jour suivant
+- Les blessés qui marchent vont d'eux-mêmes à l'hôpital au lieu d'attendre au bord de la carte ; la fenêtre de l'hôpital dit combien sont soignés, en route ou sur le champ
+- La caserne dit « régiments frais : 2 sur 4 », combien ont déjà servi et ce qui en consomme un ; aucun ne s'ajoute chaque jour
+
+## 0.115.0 — 2026-11-07
+- Chars : la fiche dit leurs victimes et leurs réparations ; le parc mène la vue au char et ouvre sa fiche ; les chars et mitrailleuses d'en face ont une étiquette (état, barre de vie)
+- Mitrailleuses : sans servant, la fenêtre du poste est inactive ; ce qu'il abat est attribué au régiment qui le sert
+- Génie : il remet en état un char (clic ou fiche) ou un avion (aérodrome) abîmé, une réparation par jour
+
+## 0.114.1 — 2026-11-07
+- Tout dézoomé, tourner ou incliner la caméra ne déplace plus le point visé : le « mur » qui le poussait vers le fond de la carte a disparu
+
+## 0.114.0 — 2026-11-07
+- La carte : une case est un secteur (B1, C6…) ; un clic en montre le plan seul, soldats à leur place, avec les cases voisines à un bouton ; lignes 1 à 4 chez nous, 5 à 8 en face
+- Un petit « ? » explique la carte (marges resserrées) ; la fenêtre d'un régiment ne garde que son « ? », et elle comme les fiches des hommes se déplacent à la main
+
+## 0.113.1 — 2026-11-07
+- La ceinture des soldats vus de près ne scintille plus (ses flancs étaient dans le même plan que ceux de la vareuse)
+- Atelier d'animation : les poses du soldat se règlent avec des poignées 3D (tourner, déplacer, échelle), on voit les os, et on peut annuler (Ctrl+Z)
+
 ## 0.117.0 — 2026-11-08
 - Éclairage « haut » : la fumée projette son ombre sur le sol et les lanternes des tranchées éclairent la nuit
 - Le labo lumière a un lac, avec les reflets du ciel et des berges sur l'eau

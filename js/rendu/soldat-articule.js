@@ -1,3 +1,5 @@
+import { NOMS_CHAMPS } from '../data/poses-soldat.js?v=0.128.0';
+
 // Le soldat articulé (au labo seulement : « la fabrique de soldats », et la mesure de son coût ; rien n'est dans le jeu).
 // Un squelette de treize os (le tronc, la tête, deux fois bras / avant-bras, deux fois cuisse / mollet / pied, le fusil) que le nuanceur plie : le genou, le coude, la cheville
 // bougent, les mains et les pieds suivent. Le visage est une grille de 6 × 6 cases que le nuanceur peint (yeux, sourcils, nez, bouche) ; la peau, les cheveux, la barbe, la coiffe, les accessoires
@@ -56,7 +58,7 @@ export function boites() {
   B(-0.258, 0.258, 0.62, 0.95, -0.168, 0.168, P.vareuse, basques);                    // ses basques, sous la ceinture
   B(-0.1, 0.1, 1.37, 1.42, -0.12, 0.13, P.vareuse, tronc);                             // le col droit (sous le menton)
   niv = 1; for (const y of [1.28, 1.16, 1.04]) B(-0.012, 0.012, y, y + 0.035, 0.15, 0.158, P.metal, tronc); niv = 0;      // les boutons
-  B(-0.258, 0.258, 0.88, 0.97, -0.17, 0.17, P.cuir, tronc); niv = 1; B(-0.03, 0.03, 0.89, 0.96, 0.17, 0.182, P.metal, tronc); niv = 0;   // le ceinturon et sa boucle
+  B(-0.264, 0.264, 0.88, 0.97, -0.176, 0.176, P.cuir, tronc); niv = 1; B(-0.03, 0.03, 0.89, 0.96, 0.17, 0.188, P.metal, tronc); niv = 0;   // le ceinturon (6 mm de plus que les basques de chaque côté : à 0,258 les deux flancs étaient dans le même plan et scintillaient) et sa boucle
   for (const c of [-0.17, -0.05, 0.07]) B(c, c + 0.1, 0.97, 1.1, 0.17, 0.22, P.cuir, tronc, 500);          // les trois cartouchières françaises
   for (const [a, b] of [[-0.23, -0.13], [-0.115, -0.015], [0.015, 0.115], [0.13, 0.23]]) B(a, b, 0.97, 1.09, 0.17, 0.21, P.cuir, tronc, 501);        // les quatre cartouchières allemandes
   B(-0.33, -0.25, 0.58, 0.88, -0.14, 0.0, P.toile, tronc);                              // la gourde, à la hanche
@@ -193,7 +195,7 @@ export const VERT = `
   attribute float aPart; attribute float aOs; attribute float aShow; attribute vec3 aNor;
   attribute vec3 aPos; attribute float aCamp; attribute float aWound; attribute vec4 aCap; attribute float aGrade;
   attribute vec4 aPose; attribute vec4 aBody; attribute vec4 aLook; attribute vec4 aLook2;
-  uniform float uShade; uniform float uVoir;
+  uniform float uShade; uniform float uVoir; uniform float uLibre; uniform float uP[25];
   varying float vPart; varying float vCamp; varying vec2 vFace; varying float vShade; varying vec4 vLook; varying vec4 vLook2; varying vec2 vMonde;
   float sl, st, wd, vt;
   bool voir(float code) {
@@ -220,6 +222,7 @@ export const VERT = `
   }
   vec3 mp(vec3 p, float xs, float zs) { float y = p.y <= 0.9 ? p.y * sl : 0.9 * sl + (p.y - 0.9) * st; return vec3(p.x * xs, y, p.z * zs); }
   vec3 rx(vec3 p, vec3 pv, float a) { vec3 d = p - pv; float c = cos(a), s = sin(a); return pv + vec3(d.x, d.y * c + d.z * s, d.z * c - d.y * s); }
+  vec3 rz(vec3 p, vec3 pv, float a) { vec3 d = p - pv; float c = cos(a), s = sin(a); return pv + vec3(d.x * c - d.y * s, d.x * s + d.y * c, d.z); }
   vec3 ry(vec3 p, vec3 pv, float a) { vec3 d = p - pv; float c = cos(a), s = sin(a); return pv + vec3(d.x * c + d.z * s, d.y, d.z * c - d.x * s); }
   void main() {
     // une boîte qu'il n'a pas : hors de l'écran tout de suite, sans calculer sa pose (uVoir : 0 pour les maillages d'une option, dont tous les hommes ont la boîte)
@@ -236,7 +239,8 @@ export const VERT = `
     if (b > 0.5 && b < 1.5) p0 = vec3(0.0, 1.42, 0.0) + (p0 - vec3(0.0, 1.42, 0.0)) * aBody.w;
     vec3 p = mp(p0, xs, zs);
     // la pose : la vitesse (aPose.x), le tir (aPose.y), l'accroupi (aPose.z), couché (aPose.w) ; la blessure (aWound : 1 bras, 2 jambe, 3 tête)
-    float vit = max(aPose.x, 0.0), v = min(1.0, vit), tapi = aPose.z, couche = aPose.w;
+    bool libre = uLibre > 0.5;      // la pose libre (l'atelier d'animation) : les angles viennent de uP (js/pose-soldat.js), dans l ordre de NOMS_CHAMPS
+    float vit = max(aPose.x, 0.0), v = min(1.0, vit), tapi = aPose.z, couche = libre ? uP[21] : aPose.w;
     // le tir (aPose.y) : de 0 à 1, l'épaule ; −1 le feu retenu (le fusil baissé) ; de 2 à 3 le corps à corps (2 + la poussée) ; un officier (le pistolet) tire d'une main dans tous les cas
     bool pistolet = aGrade < 2.5;
     float tirR = aPose.y;
@@ -247,6 +251,7 @@ export const VERT = `
     float sph = aCap.z, cph = aCap.w;      // le sinus et le cosinus de la phase de la marche : tirés une fois par homme (le processeur), pas par sommet
     bool genou = aWound > 1.5 && aWound < 2.5 && vit < 0.15;
     float lean = 0.07 * v + 0.12 * tir + 0.55 * tapi + (genou ? 0.35 : 0.0) + (melee ? 0.22 + 0.15 * pouss : 0.0) + (retenu ? 0.03 : 0.0);
+    if (libre) lean = uP[0];
     vec3 hanche = mp(vec3(0.0, 0.9, 0.0), 1.0, 1.0);
     bool gauche = (b > 1.5 && b < 3.5) || (b > 5.5 && b < 8.5);
     if (jambeOs) {
@@ -257,8 +262,10 @@ export const VERT = `
       if (melee) { hip = gauche ? 0.55 + 0.2 * pouss : -0.4; kn = gauche ? 0.5 + 0.2 * pouss : 0.35; }      // le fente : la jambe gauche devant, la droite en arrière
       if (couche > 0.5) { hip = gauche ? 0.3 : 0.0; kn = gauche ? 0.7 : 0.1; }
       if (genou) { hip = gauche ? 0.2 : 1.3; kn = gauche ? 2.0 : 1.5; }
+      float che = (kn - hip) * 0.8;
+      if (libre) { hip = gauche ? uP[2] : uP[5]; kn = gauche ? uP[3] : uP[6]; che = gauche ? uP[4] : uP[7]; }
       vec3 hp = mp(vec3(cote * 0.11, 0.9, 0.0), sqrt(wd), 1.0), kp = mp(vec3(cote * 0.11, 0.5, 0.0), sqrt(wd), 1.0), ap = mp(vec3(cote * 0.11, 0.08, 0.0), sqrt(wd), 1.0);
-      if ((b > 7.5 && b < 8.5) || b > 10.5) p = rx(p, ap, (kn - hip) * 0.8);
+      if ((b > 7.5 && b < 8.5) || b > 10.5) p = rx(p, ap, che);
       if ((b > 6.5 && b < 8.5) || b > 9.5) p = rx(p, kp, -kn);
       p = rx(p, hp, hip);
     }
@@ -273,6 +280,7 @@ export const VERT = `
       if (melee) { sh = 1.0; el = gauche ? 0.45 : 0.6; conv = gauche ? 0.55 : -0.45; }        // la mêlée : les bras tendus devant, tenant le fusil
       if (couche > 0.5) { sh = 0.0; el = 0.1; }
       if (aWound > 0.5 && aWound < 1.5 && gauche) { sh = 0.5; el = 1.9; conv = 0.6; }
+      if (libre) { sh = gauche ? uP[8] : uP[11]; el = gauche ? uP[9] : uP[12]; conv = gauche ? uP[10] : uP[13]; }
       vec3 sp = mp(vec3(cote * 0.30, 1.38, 0.0), wd, 1.0), ep = mp(vec3(cote * 0.30, 1.08, 0.0), wd, 1.0);
       if ((b > 2.5 && b < 3.5) || b > 4.5) p = rx(p, ep, el);
       p = rx(p, sp, sh);
@@ -280,19 +288,27 @@ export const VERT = `
     }
     // le fusil : en bandoulière, ou à l'épaule quand il tire
     if (b > 11.5 && b < 12.5) {
-      if (melee) { p.x -= 0.3 * wd; p = rx(p, mp(vec3(0.0, 0.95, 0.0), 1.0, 1.0), -1.45); p.z += 0.5 * pouss; }       // à l'horizontale devant lui, la baïonnette vers l'adversaire, d'un demi-mètre à chaque poussée
+      if (libre) {
+        vec3 fp = mp(vec3(0.0, uP[17], 0.0), 1.0, 1.0);
+        p.x += uP[15] * wd; p = rx(p, fp, uP[14]);
+        vec3 fc = vec3((0.395 + uP[15]) * wd, fp.y, 0.0);       // le centre des deux rotations de plus : l axe du fusil, décalé comme lui
+        if (abs(uP[23]) > 0.00001) p = ry(p, fc, uP[23]);
+        if (abs(uP[24]) > 0.00001) p = rz(p, fc, uP[24]);
+        p.z += uP[16]; p.y += uP[22];
+      }
+      else if (melee) { p.x -= 0.3 * wd; p = rx(p, mp(vec3(0.0, 0.95, 0.0), 1.0, 1.0), -1.45); p.z += 0.5 * pouss; }       // à l'horizontale devant lui, la baïonnette vers l'adversaire, d'un demi-mètre à chaque poussée
       else if (retenu) { p.x -= 0.18 * wd; p = rx(p, mp(vec3(0.0, 0.9, 0.0), 1.0, 1.0), -1.9); }                     // baissé en travers des hanches, le canon devant
       else { p.x -= 0.28 * tir * wd; p = rx(p, mp(vec3(0.0, 1.3, 0.0), 1.0, 1.0), -1.45 * tir); }
     }
     // les basques de la vareuse : elles suivent les cuisses à moitié quand l'homme s'accroupit ou s'agenouille
-    if (b > 12.5) p = rx(p, hanche, 0.75 * tapi + (genou ? 0.4 : 0.0));
+    if (b > 12.5) p = rx(p, hanche, libre ? uP[20] : 0.75 * tapi + (genou ? 0.4 : 0.0));
     // la tête penchée (blessure à la tête)
-    if (b > 0.5 && b < 1.5 && aWound > 2.5) p = rx(p, mp(vec3(0.0, 1.42, 0.0), 1.0, 1.0), 0.45);
+    if (b > 0.5 && b < 1.5 && (libre || aWound > 2.5)) p = rx(p, mp(vec3(0.0, 1.42, 0.0), 1.0, 1.0), libre ? uP[1] : 0.45);
     // le buste penché autour de la hanche (le tronc, la tête, les bras, le fusil, les basques)
     bool haut = b < 5.5 || b > 11.5;
     if (haut) p = rx(p, hanche, lean);
-    if (melee && haut && !(b > 11.5 && b < 12.5)) p.z += 0.2 * pouss * max(0.0, p.y - 0.6);      // le buste part avec la poussée
-    p.y -= 0.44 * tapi + (genou ? 0.42 : 0.0);
+    if ((melee || libre) && haut && !(b > 11.5 && b < 12.5)) p.z += (libre ? uP[19] : 0.2 * pouss) * max(0.0, p.y - 0.6);      // le buste part avec la poussée
+    p.y -= libre ? uP[18] : 0.44 * tapi + (genou ? 0.42 : 0.0);
     // couché sur le dos, la tête vers l'arrière
     if (couche > 0.5) { p = rx(p, vec3(0.0), 1.5708); p.y += 0.16; }
     // le cap
@@ -392,10 +408,18 @@ export const OMBRE_FRAG = `
   varying vec2 vXZ; varying float vLong;
   void main() { gl_FragColor = vec4(texture2D(uSol, vec2(vXZ.x / uTaille.x, (vXZ.y / uTaille.y + 1.0) * 0.5)).rgb, 0.95 - 0.6 * vLong); }`;
 
+// La pose libre (l'atelier d'animation) : `pose` est un objet de js/pose-soldat.js (un angle par champ de `NOMS_CHAMPS`), ou null pour revenir aux poses du jeu (la marche, le tir…, calculées dans le nuanceur)
+export function poserLibre(materiel, pose) {
+  const u = materiel.uniforms;
+  u.uLibre.value = pose ? 1 : 0;
+  if (pose) NOMS_CHAMPS.forEach((c, i) => { u.uP.value[i] = pose[c] ?? 0; });
+}
+
 // ─── three.js : le matériau et les instances ───
 // `col(lettre)` : une couleur de la palette (celle de creerRendu ou de la fabrique) ; `partages` : des uniformes du jeu à partager (`uSoleil`, `uSol`, `uTaille` : l'ombre ; l'horloge de la marche passe par `h.temps` à l'écriture de chaque homme) ;
 // `ombreSeule` : le maillage des ombres au sol (le jeu), et rien d'autre
-export function creerSoldatArticule(THREE, col, { complet = false, ombrage = 0, filtre = null, partages = {}, ombreSeule = false, niveau = 'fin' } = {}) {
+// `translucide` (l'atelier d'animation) : un uniforme `uAlpha` règle l'opacité du soldat ; sans lui le nuanceur reste exactement celui du jeu (le labo lumière le porte par remplacement de texte)
+export function creerSoldatArticule(THREE, col, { complet = false, ombrage = 0, filtre = null, partages = {}, ombreSeule = false, niveau = 'fin', translucide = false } = {}) {
   const M = ombreSeule ? ombreEtModele(THREE) : modeleArticule({ complet, filtre, niveau });
   const materiel = ombreSeule
     ? new THREE.ShaderMaterial({ uniforms: { uSoleil: partages.uSoleil ?? { value: new THREE.Vector2(0.5, 0.6) }, uSol: partages.uSol ?? { value: new THREE.DataTexture(new Uint8Array([70, 66, 50, 255]), 1, 1) }, uTaille: partages.uTaille ?? { value: new THREE.Vector2(400, 300) } },
@@ -405,10 +429,10 @@ export function creerSoldatArticule(THREE, col, { complet = false, ombrage = 0, 
         uNous: { value: col('n') }, uEux: { value: col('x') }, uOmbre: { value: col('t') }, uSel: { value: col('o') }, uJambes: { value: col('s') }, uBois: { value: col('t') }, uToile: { value: col('g') },
         uCuir: { value: col('b') }, uBotte: { value: col('t') }, uMetal: { value: col('r') }, uTrait: { value: col('s') },
         uPeau: { value: ['o', 'r', 'g'].map(col) }, uMarque: { value: ['g', 'g', 'b'].map(col) }, uCh: { value: ['t', 's', 'b', 'g', 'r'].map(col) },
-        uShade: { value: ombrage }, uVoir: { value: filtre ? 0 : 1 },
+        uShade: { value: ombrage }, uVoir: { value: filtre ? 0 : 1 }, uLibre: { value: 0 }, uP: { value: new Array(25).fill(0) }, uAlpha: { value: 1 },
         ...(partages.uAO ? { uAO: partages.uAO, uAOon: partages.uAOon, uSunOn: partages.uSunOn, uAbriOn: partages.uAbriOn, uTaille: partages.uTaille } : { uAO: { value: null }, uAOon: { value: 0 }, uSunOn: { value: 0 }, uAbriOn: { value: 0 }, uTaille: { value: new THREE.Vector2(1, 1) } }),
       },
-      vertexShader: VERT, fragmentShader: FRAG, side: THREE.DoubleSide,
+      vertexShader: VERT, fragmentShader: translucide ? `uniform float uAlpha;\n${FRAG.replace('gl_FragColor = vec4(c * vShade, 1.0);', 'gl_FragColor = vec4(c * vShade, uAlpha);')}` : FRAG, side: THREE.DoubleSide,
     });
   if (ombreSeule && !partages.uSol) materiel.uniforms.uSol.value.needsUpdate = true;
   // un lot de `n` hommes : les tampons d'instance et l'écriture d'un homme
