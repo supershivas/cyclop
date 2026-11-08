@@ -1,9 +1,13 @@
 # Journal des versions
 
-## 0.130.0 — 2026-11-08
+## 0.131.0 — 2026-11-08
 - Le parc et l'aérodrome ne montrent plus de faux engins : un avion par cellule de la flotte (au sol et en vie), un char par place du stock
 - Le génie répare à la base : un clic sur l'avion ou le char abîmé (ou le génie, puis l'engin cerclé d'os), ou un bouton « Réparer » par engin ; un char abîmé rentre d'abord au parc (« Rentrer au parc »)
 - Les gardes du camp font leur ronde autour des bâtiments, d'un vrai pas de marche, sans traverser un mur ; les drapeaux du camp prennent les couleurs de l'armée et flottent au vent comme ceux du front
+
+## 0.130.0 — 2026-11-08
+- L'eau profonde a des rides qui bougent, reflète le ciel et scintille au soleil (éclairage moyen et haut)
+- Plus de marches d'un mètre dans les fleuves : le niveau de l'eau descend en pente douce, et un lac et un fleuve qui se touchent ont le même niveau
 
 ## 0.129.1 — 2026-11-08
 - Aucun arbre sur les terrains des bâtiments de la base, ni à 20 m autour : les chars sortent du parc sans buter sur un tronc

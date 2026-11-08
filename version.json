@@ -1,5 +1,5 @@
 {
-  "version": "0.130.0",
+  "version": "0.131.0",
   "date": "2026-11-08",
   "changes": [
     "Le parc et l'aérodrome ne montrent plus de faux engins : un avion par cellule de la flotte (au sol et en vie), un char par place du stock",

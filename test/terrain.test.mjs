@@ -351,7 +351,7 @@ test('la lune change de phase de jour en jour, revient après une lunaison ; la 
 });
 
 group('atelier — les eaux profondes (v0.43.0)');
-test('un lac creuse à plat un niveau au mètre sous sa rive la plus basse, et rien n\'y pousse ; un fleuve suit le terrain', async () => {
+test('un lac creuse à plat un niveau au mètre sous sa rive la plus basse, et rien n\'y pousse ; un fleuve suit le terrain sans marche de plus d\'un quart de mètre', async () => {
   const { calculerCouts, dimensionsCouts } = await import('../js/champs.js');
   const { vitesseCase } = await import('../js/terrain.js');
   const S = { largeur: 120, hauteur: 100, arbres: 80, buissons: 60, objets: [{ o: 'lac', x: 60, y: 50, r: 12 }] };
@@ -372,7 +372,10 @@ test('un lac creuse à plat un niveau au mètre sous sa rive la plus basse, et r
   // un fleuve : un niveau par tranche de son cours, il descend avec la pente
   const F = creerTerrain(3, { ...S, objets: [{ o: 'fleuve', x: 5, y: 40, x2: 115, y2: 60, r: 5 }] }, R);
   const niveaux = new Set(); for (let c = 0; c < F.profond.length; c++) if (F.profond[c]) niveaux.add(F.base[c]);
-  assert.ok(niveaux.size >= 1 && [...niveaux].every(n => n % 4 === 0));
+  assert.ok(niveaux.size >= 1);
+  // pas de marches dans l'eau (Jérôme, v0.130.0) : deux cases d'eau voisines ne diffèrent jamais de plus d'un quart de mètre
+  let ecart = 0; for (let j = 0; j < F.H; j++) for (let i = 0; i < F.W; i++) { const c = j * F.W + i; if (!F.profond[c]) continue; if (i < F.W - 1 && F.profond[c + 1]) ecart = Math.max(ecart, Math.abs(F.base[c] - F.base[c + 1])); if (j < F.H - 1 && F.profond[c + F.W]) ecart = Math.max(ecart, Math.abs(F.base[c] - F.base[c + F.W])); }
+  assert.ok(ecart <= 1, `une marche d'eau de ${ecart} quart(s)`);
   assert.ok(F.profond.reduce((s, v) => s + v, 0) > 1000, 'un fleuve de 10 m sur ~110 m');
   assert.equal(creerTerrain(3, { ...S, objets: [] }, R).profond.reduce((s, v) => s + v, 0), 0, 'sans eau, rien ne change');
 });
@@ -625,4 +628,14 @@ test('un ouvrage se refait à pleine solidité et garde son histoire ; les noms 
   assert.ok(P.detruit && P.coupures === 1, 'deux obus de 155 coupent une passerelle de planches (60 points)'); assert.equal(pontEn(T, 40, 50, 1), 0, 'coupé, on le trouve encore');
   reconstruirePont(T, P);
   assert.ok(!P.detruit && P.pv === P.pvMax && P.reparations === 1 && P.coupures === 1);
+});
+
+test('les cartes générées : aucune marche de plus d\'un quart de mètre dans l\'eau d\'un fleuve, les eaux qui se touchent ont le même niveau (v0.130.0)', async () => {
+  const { genererCarte } = await import('../js/generateur.js');
+  const { terrainDuSecteur } = await import('../js/secteur-terrain.js');
+  for (const g of [2, 4, 7, 9]) {
+    const S = genererCarte(g), T = terrainDuSecteur(S, S.marges, g, R).terrain; let ecart = 0;
+    for (let j = 0; j < T.H; j++) for (let i = 0; i < T.W; i++) { const c = j * T.W + i; if (!T.profond[c] || T.pont[c]) continue; if (i < T.W - 1 && T.profond[c + 1] && !T.pont[c + 1]) ecart = Math.max(ecart, Math.abs(T.base[c] - T.base[c + 1])); if (j < T.H - 1 && T.profond[c + T.W] && !T.pont[c + T.W]) ecart = Math.max(ecart, Math.abs(T.base[c] - T.base[c + T.W])); }
+    assert.ok(ecart <= 1, `graine ${g} : une marche d'eau de ${ecart} quarts`);      // un lac contre un fleuve, deux lacs : le même niveau à la jonction
+  }
 });

@@ -3,8 +3,8 @@
 // (`soleil` : le bout de l'ombre d'un mètre de hauteur), rien n'est sauvegardé, aucun tirage.
 // Une rangée dont `T.versionLigne` a bougé est refaite avec ses voisines (l'AO lit `rayonM` autour d'une case, le soleil `porteeM` vers lui), rangée par rangée dans un budget de millisecondes par image, comme
 // `ombres-relief.js` : jamais de blocage de la boucle. Un soleil qui a assez bougé périme toutes les rangées du soleil. `tex` (RGBA, une case = un texel) est lu par le nuanceur du sol.
-import { calculerAO, calculerSoleil, calculerFlood, calculerCavite } from '../lumiere/lumiere.js?v=0.130.0';
-import { OMBRES_RELIEF as O } from '../data/soleil.js?v=0.130.0';
+import { calculerAO, calculerSoleil, calculerFlood, calculerCavite } from '../lumiere/lumiere.js?v=0.131.0';
+import { OMBRES_RELIEF as O } from '../data/soleil.js?v=0.131.0';
 
 export const AO_SOL = { rayonM: 6, directions: 8, budgetMs: 2.5 };
 // Les abris (les toits de bois, `T.toit` : 1 sur les cases couvertes) : la lumière propagée du labo (`calculerFlood`, canal B) : le jour entre par les bouts et perd 1/15 par mètre.

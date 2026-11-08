@@ -26,6 +26,7 @@ export const solMat = {
       uniform float uNuage, uTemps, uBiseau; uniform vec2 uVent;
       uniform sampler2D uAO; uniform float uAOon, uSunOn, uAbriOn, uFlaque; uniform vec3 uEauCoul;
       uniform sampler2D uCarteOmbre; uniform mat4 uLVP; uniform float uOmbOn, uSoleilF; uniform vec2 uOmbPx;
+      uniform sampler2D uEauM; uniform float uEauOn, uEauT, uEauSoleilF; uniform vec3 uEauHor, uEauHaut, uEauSoleil, uEauSoleilCoul;
       uniform sampler2D uFumOmb; uniform vec3 uFumO; uniform float uFumOn; uniform sampler2D uLamp; uniform float uLampOn; uniform vec3 uLampCoul;
       varying vec2 vUV; varying vec2 vXZ; varying float vY; varying vec3 vMur;
       float h(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
@@ -36,6 +37,20 @@ export const solMat = {
         if (uBiseau > 0.0 && vMur.z > 0.5 && vY > vMur.x - min(uBiseau, 0.4 * vMur.y)) uv.y -= 0.5;
         vec4 c = texture2D(uSol, uv);
         vec3 rgb = c.rgb;
+        // (v0.130.0, « Éclairage : moyen » et « haut ») l'EAU du labo lumière : des rides qui bougent, le reflet du ciel selon l'angle (Fresnel : à plat l'eau est un miroir, de dessus on voit le fond) et le soleil qui scintille ;
+        // un mélange continu de la palette (le ciel du jour : ciel.couleurs) ; le dessus des cases d'eau profonde seulement (le masque uEauM, js/rendu3d.js) ; gelée ou enneigée : rien
+        if (uEauOn > 0.5 && vUV.y < 0.5 && texture2D(uEauM, vXZ / uTaille).r > 0.5) {
+          vec2 q = vXZ; float t = uEauT;
+          vec2 g = vec2(sin(q.x * 1.7 + t * 1.3) + 0.7 * sin(q.x * 0.6 + q.y * 0.9 - t * 0.8) + 0.25 * sin((q.x + q.y) * 3.1 + t * 2.1),
+                        sin(q.y * 1.4 - t * 1.1) + 0.7 * sin(q.y * 0.7 - q.x * 0.5 + t * 0.7) + 0.25 * sin((q.x - q.y) * 2.7 - t * 1.9)) * 0.045;
+          vec3 Nw = normalize(vec3(-g.x, 1.0, -g.y)), V = normalize(cameraPosition - vec3(vXZ.x, vY, vXZ.y)), Rf = reflect(-V, Nw);
+          float fres = clamp(clamp(0.04 + 0.96 * pow(1.0 - max(dot(Nw, V), 0.0), 5.0), 0.0, 1.0) * 1.5 + 0.28, 0.0, 0.85);
+          vec3 sky = mix(uEauHor, uEauHaut, smoothstep(0.0, 0.7, max(Rf.y, 0.0)));
+          float sc = pow(max(dot(Rf, uEauSoleil), 0.0), 120.0) * 1.6 * uEauSoleilF;
+          vec3 fond = uEauCoul * 0.82;                                            // le fond : l'eau profonde, plus sombre que sa teinte de palette
+          float rid = (g.x * 0.9 - g.y * 0.6) * 0.8;                              // les rides : des bandes claires et sombres qui glissent
+          rgb = mix(fond, sky * 1.1 + 0.03, fres) + vec3(rid) + uEauSoleilCoul * sc;
+        }
         // (labo) l'ombre des nuages : par blocs de 2 m qui dérivent avec le vent, les cases sous un nuage prennent un mélange de leur couleur et de celle de leur paroi (la moitié basse de la texture) ; le dessus seulement, uNuage à 0 : rien
         if (uNuage > 0.0 && vUV.y < 0.5) {
           vec2 q = floor(vXZ / 2.0) * 2.0 + uVent * uTemps;
