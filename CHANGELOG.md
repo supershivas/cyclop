@@ -1,5 +1,9 @@
 # Journal des versions
 
+## 0.116.0 — 2026-11-08
+- Un réglage « Éclairage » (bas, moyen, haut) dans la roue crantée : « haut » ajoute les ombres portées des hommes, des arbres, des chars et des avions, et un soleil avec ses nuages éclairés
+- « Moyen » est l'éclairage de la version précédente, gardé par défaut
+
 ## 0.115.0 — 2026-11-05
 - La lumière du labo lumière entre dans le jeu : des ombres de relief douces, les creux, les tranchées et les hommes qui s'y trouvent plus sombres
 - Le jour s'éteint sous les toits de bois, et des flaques se forment dans les creux quand il pleut

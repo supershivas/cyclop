@@ -562,6 +562,7 @@ export const cielMat = {
         gl_Position = vec4(position.xy, 0.999, 1.0);
       }`,
   f: `uniform vec3 uHor; uniform vec3 uHaut; uniform vec3 uNuage; uniform float uCouv; uniform float uT; uniform vec2 uDer; varying vec3 vDir;
+      uniform vec3 uSoleilDir; uniform vec3 uSoleilCoul; uniform float uC2;
       float h(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
       float bruit(vec2 p) {
         vec2 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f);
@@ -574,7 +575,18 @@ export const cielMat = {
         vec2 q = d.xz / (e + 0.35) * 9.0 - uDer;
         float n = 0.5 * bruit(q) + 0.25 * bruit(q * 2.1 + 5.0) + 0.17 * bruit(q * 4.3 + 11.0) + 0.08 * bruit(q * 8.7 + 17.0);
         float nuage = smoothstep(0.56 - uCouv * 0.5, 0.74 - uCouv * 0.5, n) * smoothstep(0.0, 0.18, e);
-        gl_FragColor = vec4(mix(c, uNuage, nuage), 1.0);
+        vec3 nc = uNuage;
+        if (uC2 > 0.5) {
+          // (session 4, éteint : uC2 à 0 ; réglage « Éclairage : haut ») le ciel v2 du labo lumière : la lueur du soleil (diffusion avant), des nuages ÉCLAIRÉS : le bord tourné vers le soleil est clair (peu de nuage entre lui et le soleil), le ventre sombre
+          float mu = max(dot(d, uSoleilDir), 0.0);
+          c += uSoleilCoul * (pow(mu, 220.0) * 1.2 + pow(mu, 28.0) * 0.16 + smoothstep(0.9996, 0.99985, mu) * 1.5);
+          vec2 qs = q + uSoleilDir.xz / max(uSoleilDir.y, 0.2) * 1.2;
+          float ns = 0.5 * bruit(qs) + 0.25 * bruit(qs * 2.1 + 5.0) + 0.17 * bruit(qs * 4.3 + 11.0) + 0.08 * bruit(qs * 8.7 + 17.0);
+          float dens = smoothstep(0.56 - uCouv * 0.5, 0.74 - uCouv * 0.5, ns);
+          float lum = exp(-dens * 1.8);
+          nc = mix(uNuage * 0.55, uNuage * 1.12 + uSoleilCoul * 0.25, lum) + uSoleilCoul * pow(mu, 9.0) * (1.0 - nuage) * lum * 0.4;
+        }
+        gl_FragColor = vec4(mix(c, nc, nuage), 1.0);
       }`,
 };
 

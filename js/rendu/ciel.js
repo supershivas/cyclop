@@ -1,8 +1,8 @@
 // Le ciel du jeu : un dégradé et des nuages selon la météo (Jérôme, v0.36.8 : « léger dégradé, nuages » ; v0.36.7 : le ciel suit la météo). Un plan plein écran
 // peint avant tout le reste, que le sol et le faux terrain recouvrent ; la nuit, le voile de `temps.js` le noircit. Des mélanges continus de la palette (des fondus) :
 // `[lettre, part]`. `hor` est aussi la couleur du fond et du bout du champ. Le dessin seulement : aucun hasard, le temps est celui du dessin.
-import * as SH from './shaders.js?v=0.115.0';
-import { lune, couvertureNuit, clairDeLune } from '../data/lune.js?v=0.115.0';
+import * as SH from './shaders.js?v=0.116.0';
+import { lune, couvertureNuit, clairDeLune } from '../data/lune.js?v=0.116.0';
 
 const CIELS = {
   sec: { hor: [['e', 1]], haut: [['e', 0.75], ['t', 0.25]], nuage: [['o', 0.8], ['r', 0.2]], couv: 0.45 },
@@ -21,7 +21,7 @@ const CIELS = {
 export function creerCiel({ THREE, scene, col, camera }) {
   const u = {
     uInvProj: { value: camera.projectionMatrixInverse }, uMonde: { value: camera.matrixWorld },
-    uHor: { value: new THREE.Color() }, uHaut: { value: new THREE.Color() }, uNuage: { value: new THREE.Color() }, uCouv: { value: 0.4 }, uT: { value: 0 }, uDer: { value: new THREE.Vector2() },
+    uSoleilDir: { value: new THREE.Vector3(0, 1, 0) }, uSoleilCoul: { value: new THREE.Color() }, uC2: { value: 0 }, uHor: { value: new THREE.Color() }, uHaut: { value: new THREE.Color() }, uNuage: { value: new THREE.Color() }, uCouv: { value: 0.4 }, uT: { value: 0 }, uDer: { value: new THREE.Vector2() },
   };
   const plan = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), new THREE.ShaderMaterial({ uniforms: u, vertexShader: SH.cielMat.v, fragmentShader: SH.cielMat.f, depthTest: false, depthWrite: false }));
   plan.frustumCulled = false; plan.renderOrder = -10; plan.visible = false;
@@ -39,6 +39,8 @@ export function creerCiel({ THREE, scene, col, camera }) {
   return {
     // la couleur de l'horizon du temps qu'il fait (le fond, et le bout du champ)
     horizon(nom, c) { return melange(c, (CIELS[nom] || CIELS.sec).hor); },
+    // le ciel v2 (session 4) : le soleil, sa direction (monde) et sa couleur (os mêlé d'eau : un mélange continu de la palette), ou null pour l'éteindre
+    soleil(dir) { if (!dir) { u.uC2.value = 0; return; } u.uC2.value = 1; u.uSoleilDir.value.set(dir[0], dir[1], dir[2]); u.uSoleilCoul.value.copy(col('o')).multiplyScalar(0.55).add(col('e').multiplyScalar(0.1)); },
     montrer(oui) { plan.visible = oui; if (!oui) nuitPlan.visible = false; },
     // d : l'obscurité (0 le jour, 0,74 la nuit) ; les étoiles, la lune et les nuages de nuit paraissent avec elle
     nuit(d, t, jour, graine, meteo) {

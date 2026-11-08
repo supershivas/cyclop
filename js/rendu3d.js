@@ -22,33 +22,33 @@
    - Les soldats : instanciés (une boîte et son ombre) ; au zoom 1 et 2, un
      point de 2 × 2 pixels (la couleur du camp sur son ombre).
    - Les corps : un homme couché (instancié) ; au zoom 1 et 2, un pixel. */
-import { loadThree } from './three-lib.js?v=0.115.0';
-import * as SH from './rendu/shaders.js?v=0.115.0';
-import { creerSoldats } from './rendu/soldats.js?v=0.115.0';
-import { creerChars } from './rendu/chars.js?v=0.115.0';
-import { creerGenies } from './rendu/genies.js?v=0.115.0';
-import { creerCamp } from './rendu/camp.js?v=0.115.0';
-import { creerAvions } from './rendu/avions.js?v=0.115.0';
-import { creerPonts } from './rendu/ponts.js?v=0.115.0';
-import { creerCiel } from './rendu/ciel.js?v=0.115.0';
-import { creerMeteo } from './rendu/meteo.js?v=0.115.0';
-import { creerTroncons } from './rendu/troncons.js?v=0.115.0';
-import { ARBRES_JEU } from './data/arbres.js?v=0.115.0';
-import { creerVegetation } from './rendu/vegetation.js?v=0.115.0';
-import { creerTemps } from './rendu/temps.js?v=0.115.0';
-import { creerEclats } from './rendu/eclats.js?v=0.115.0';
-import { creerOmbresRelief } from './rendu/ombres-relief.js?v=0.115.0';
-import { creerAOSol, soleilDuJeu } from './rendu/ao-sol.js?v=0.115.0';
-import { cadrerOmbre } from './lumiere/ombres.js?v=0.115.0';
-import { OMBRES_RELIEF as OMB, NUAGES, NUAGES_VENT } from './data/soleil.js?v=0.115.0';
-import { PALETTE, ORDRE, INDICE } from './palette.js?v=0.115.0';
-import { OMBRE, couleursLigne } from './apparence.js?v=0.115.0';
-import { MORCEAU, hauteurVueQ as hauteurQ, hauteurVueM as hauteurM } from './terrain.js?v=0.115.0';
-import { horloge, secteurDuJeu, rangDe } from './bataille.js?v=0.115.0';
-import { GRADES } from './data/grades.js?v=0.115.0';
-import { profilFleuve } from './eaux.js?v=0.115.0';
-import { ligneY } from './tranchees.js?v=0.115.0';
-import { vent as ventDuJour } from './data/meteo.js?v=0.115.0';
+import { loadThree } from './three-lib.js?v=0.116.0';
+import * as SH from './rendu/shaders.js?v=0.116.0';
+import { creerSoldats } from './rendu/soldats.js?v=0.116.0';
+import { creerChars } from './rendu/chars.js?v=0.116.0';
+import { creerGenies } from './rendu/genies.js?v=0.116.0';
+import { creerCamp } from './rendu/camp.js?v=0.116.0';
+import { creerAvions } from './rendu/avions.js?v=0.116.0';
+import { creerPonts } from './rendu/ponts.js?v=0.116.0';
+import { creerCiel } from './rendu/ciel.js?v=0.116.0';
+import { creerMeteo } from './rendu/meteo.js?v=0.116.0';
+import { creerTroncons } from './rendu/troncons.js?v=0.116.0';
+import { ARBRES_JEU } from './data/arbres.js?v=0.116.0';
+import { creerVegetation } from './rendu/vegetation.js?v=0.116.0';
+import { creerTemps } from './rendu/temps.js?v=0.116.0';
+import { creerEclats } from './rendu/eclats.js?v=0.116.0';
+import { creerOmbresRelief } from './rendu/ombres-relief.js?v=0.116.0';
+import { creerAOSol, soleilDuJeu } from './rendu/ao-sol.js?v=0.116.0';
+import { cadrerOmbre } from './lumiere/ombres.js?v=0.116.0';
+import { OMBRES_RELIEF as OMB, NUAGES, NUAGES_VENT } from './data/soleil.js?v=0.116.0';
+import { PALETTE, ORDRE, INDICE } from './palette.js?v=0.116.0';
+import { OMBRE, couleursLigne } from './apparence.js?v=0.116.0';
+import { MORCEAU, hauteurVueQ as hauteurQ, hauteurVueM as hauteurM } from './terrain.js?v=0.116.0';
+import { horloge, secteurDuJeu, rangDe } from './bataille.js?v=0.116.0';
+import { GRADES } from './data/grades.js?v=0.116.0';
+import { profilFleuve } from './eaux.js?v=0.116.0';
+import { ligneY } from './tranchees.js?v=0.116.0';
+import { vent as ventDuJour } from './data/meteo.js?v=0.116.0';
 
 export const CAMERA = { yaw: 0.15, tangage: 0.95, fov: 30 };   // au départ : tournée de 9°, plongée de 54°, angle de 30°
 // la caméra respire : un balancement très lent, 2° en 23 s (Jérôme, v0.3.1 : variante D du labo retenue)
@@ -694,6 +694,7 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
     const U = solMat.uniforms, sv = soldats.soleilUniform.value;
     const actif = ombresCarte && T && Math.hypot(sv.x, sv.y) > 0.05;
     soldats.sansOmbre(actif);
+    ciel.soleil(ombresCarte && Math.hypot(sv.x, sv.y) > 0.05 ? soleilDuJeu(sv.x, sv.y).dir : null);      // le ciel v2 va avec « Éclairage : haut »
     const ombresSol = [temps.arbresOmbresMesh, ...avions.ombresSol()];            // les ombres au sol que la carte remplace : arbres, disques des avions
     if (actif || ombresSolCachees) { for (const m of ombresSol) m.visible = !actif; ombresSolCachees = actif; }      // actif : cachées à chaque image (un avion neuf a son disque) ; sinon rendues une seule fois (rien d'autre ne les touche)
     if (!actif) { U.uOmbOn.value = 0; return; }
@@ -792,6 +793,9 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
     get ombresCarteEtat() {                                          // (essais) la carte d'ombre : combien de pixels de la cible ne sont pas le fond (les hommes qui projettent)
       if (!omRT) return null; const b = new Uint8Array(1024 * 1024 * 4); renderer.readRenderTargetPixels(omRT, 0, 0, 1024, 1024, b); let n = 0; for (let i = 4; i < b.length; i += 4) if (b[i] !== b[0] || b[i + 1] !== b[1] || b[i + 2] !== b[2]) n++; return { pixels: n, fond: [b[0], b[1], b[2]] };
     },
+    // Le réglage « Éclairage » du joueur (session 4) : bas = ombres de relief douces et creux ; moyen (le jeu) = + le jour sous les toits et les flaques ; haut = + la carte d'ombre (soldats, arbres, chars, avions : coûteuse sans carte graphique)
+    get eclairage() { return ombresCarte ? 'haut' : abrisSol ? 'moyen' : 'bas'; },
+    set eclairage(v) { soleilSol = aoSol = true; abrisSol = flaquesSol = v === 'moyen' || v === 'haut'; ombresCarte = v === 'haut'; },
     get ombresCarte() { return ombresCarte; },
     set ombresCarte(v) { ombresCarte = !!v; },                        // la carte d'ombre des soldats sur le sol (session 3 ; éteinte)
     get flaquesSol() { return flaquesSol; },

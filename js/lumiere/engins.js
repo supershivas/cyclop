@@ -1,6 +1,6 @@
 // Les engins du labo lumière : des chars et des biplans en boîtes (couleurs de la palette), de quoi projeter et recevoir des ombres sans reprendre les modèles du jeu
 // (rendu/engins.js, rendu/avions-modeles.js : ils viennent à la session 3, par la même carte d'ombre). Logique pure : géométrie (tableaux) et mouvement (déterministe, aucune horloge).
-import { ENGINS } from './config.js?v=0.115.0';
+import { ENGINS } from './config.js?v=0.116.0';
 
 // Une boîte : centre, taille, lettre de palette. 24 sommets (4 par face, la normale de la face), 36 indices ; on les met à plat en triangles (la 3D est faite de faces nettes).
 const FACES = [[[1, 0, 0], [[1, -1, -1], [1, 1, -1], [1, 1, 1], [1, -1, 1]]], [[-1, 0, 0], [[-1, -1, 1], [-1, 1, 1], [-1, 1, -1], [-1, -1, -1]]],
