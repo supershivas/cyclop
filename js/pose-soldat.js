@@ -76,28 +76,34 @@ export function miroir(p) {
   const r = { ...p };
   for (const c of ['hanche', 'genou', 'cheville', 'epaule', 'coude']) { r[c + 'G'] = p[c + 'D']; r[c + 'D'] = p[c + 'G']; }
   r.convG = -p.convD; r.convD = -p.convG;
-  r.fusilX = -p.fusilX; r.fusilLacet = -p.fusilLacet; r.fusilRoulis = -p.fusilRoulis;
+  // le fusil passe de l'épaule droite à la gauche : son axe est à (0,395 + fusilX) largeurs d'épaules de celui du corps, donc fusilX' = −fusilX − 0,79
+  r.fusilX = -p.fusilX - 2 * 0.395; r.fusilLacet = -p.fusilLacet; r.fusilRoulis = -p.fusilRoulis;
   return r;
 }
 
 // Une animation : des images clés { t, pose, courbe } rangées par t croissant ; `duree` (s) ; `boucle` : revient à la première image après la dernière
-export function animation(nom, images, { boucle = true, duree = null } = {}) {
-  const tri = [...images].sort((a, b) => a.t - b.t);
+export function animation(nom, images, { boucle = true, duree = null, mode = null } = {}) {
+  const tri = [...images].sort((a, b) => a.t - b.t).map((im, n) => ({ ...im, id: im.id ?? `k${n + 1}` }));
   const fin = tri.length ? tri[tri.length - 1].t : 0;
-  return { nom, boucle, duree: duree ?? (boucle && tri.length > 1 ? fin + (fin - (tri[tri.length - 2].t)) : fin), images: tri };
+  const m = mode ?? (boucle ? 'boucle' : 'unefois');
+  return { nom, mode: m, duree: duree ?? (m === 'boucle' && tri.length > 1 ? fin + (fin - (tri[tri.length - 2].t)) : fin), images: tri };
 }
 
 // La pose de l'animation à l'instant t (secondes). Entre deux images clés : la courbe de la première. En boucle, la dernière image mène à la première.
+// Les trois façons de jouer : `boucle` (la dernière image mène à la première), `unefois` (la dernière pose est tenue), `allerretour` (à l'endroit puis à l'envers) ; l'ancien booléen `boucle` reste lu
+export const modeDe = a => a.mode ?? (a.boucle === false ? 'unefois' : 'boucle');
 export function echantillon(anim, t) {
   const I = anim.images;
   if (!I.length) return poseNeutre();
   if (I.length === 1) return { ...poseNeutre(), ...I[0].pose };
-  const D = anim.duree;
-  if (anim.boucle) t = ((t % D) + D) % D; else t = Math.min(Math.max(t, 0), D);
-  if (t <= I[0].t) return anim.boucle ? segment(I[I.length - 1], I[0], D, t + D - I[I.length - 1].t) : { ...poseNeutre(), ...I[0].pose };
+  const D = Math.max(1e-6, anim.duree), mode = modeDe(anim), boucle = mode === 'boucle';
+  if (boucle) t = ((t % D) + D) % D;
+  else if (mode === 'allerretour') { const T = 2 * D; t = ((t % T) + T) % T; if (t > D) t = T - t; }
+  else t = Math.min(Math.max(t, 0), D);
+  if (t <= I[0].t) return boucle ? segment(I[I.length - 1], I[0], D - I[I.length - 1].t, t + D - I[I.length - 1].t) : { ...poseNeutre(), ...I[0].pose };
   for (let i = 0; i < I.length - 1; i++) if (t < I[i + 1].t) return segment(I[i], I[i + 1], I[i + 1].t - I[i].t, t - I[i].t);
   const dernier = I[I.length - 1];
-  return anim.boucle ? segment(dernier, I[0], D - dernier.t, t - dernier.t) : { ...poseNeutre(), ...dernier.pose };
+  return boucle ? segment(dernier, I[0], D - dernier.t, t - dernier.t) : { ...poseNeutre(), ...dernier.pose };
 }
 
 function segment(a, b, largeur, dt) {
@@ -233,4 +239,15 @@ export function ikJambe(pose, car, g, cible) {
   const { sh, el } = plan(L1, L2, m[2] - hp[2], m[1] - hp[1], Math.sin(kn0) < 0 ? 1 : -1);      // (le genou plie vers l'arrière, jambe tendue comprise, sauf s'il est déjà retourné)
   const hip = auPlusPres(sh, hip0), kn = auPlusPres(-el, kn0);
   return { ['hanche' + g]: hip, ['genou' + g]: kn, ['cheville' + g]: P['cheville' + g] + (hip0 - kn0) - (hip - kn) };
+}
+
+// Un point de l'axe du fusil (à la hauteur `y` du modèle : la crosse vers 0,55 m, le canon vers 1,95 m), dans le monde : là où les mains se posent (la cinématique inverse des bras le vise)
+export function pointFusil(pose, car, y) {
+  const P = { ...poseNeutre(), ...pose }, { wd, mp, haut, global } = cadre(P, car);
+  const fp = mp([0, P.fusilY, 0], 1, 1), c = [(0.395 + P.fusilX) * wd, fp[1], 0];
+  let q = mp([0.395, y, 0], wd, 1);
+  q[0] += P.fusilX * wd;
+  q = rzp(ryp(rxp(q, fp, P.fusil), c, P.fusilLacet), c, P.fusilRoulis);
+  q[2] += P.fusilZ; q[1] += P.fusilH;
+  return global(haut(q));
 }

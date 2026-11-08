@@ -21,11 +21,35 @@ button, select, input[type=number] { min-height: 32px; padding: 2px 10px; backgr
 button:hover { background: var(--g); color: var(--t); }
 button[aria-pressed=true], button.is-on { background: var(--o); color: var(--t); }
 input[type=number] { width: 5.5em; cursor: text; }
-.aa-frise { padding: 8px 16px 12px; border-top: 1px solid var(--g); background: var(--s); }
-.aa-piste { position: relative; height: 56px; margin: 8px 12px; background: var(--t); border: 1px solid var(--g); }
-.aa-curseur { position: absolute; top: 0; bottom: 0; width: 2px; background: var(--n); pointer-events: none; }
-.aa-cle { position: absolute; top: 14px; width: 24px; height: 28px; margin-left: -12px; padding: 0; background: var(--h); color: var(--t); border: 2px solid var(--o); font-weight: bold; }
-.aa-cle.is-on { background: var(--o); outline: 2px solid var(--n); }
+.aa-frise { padding: 4px 12px 8px; border-top: 1px solid var(--g); background: var(--s); max-height: 46vh; overflow: auto; }
+.aa-frise h3 { margin: 6px 0 2px; }
+.aa-frise button, .aa-frise select, .aa-frise input[type=number], .aa-frise input[type=text] { min-height: 28px; padding: 0 8px; }
+.aa-frise input[type=number] { width: 4.6em; }
+.aa-frise .aa-rang { margin: 3px 0; gap: 5px; }
+.aa-rang-nom { min-width: 3.6em; color: var(--h); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; }
+.aa-sep { width: 1px; align-self: stretch; background: var(--g); margin: 0 4px; }
+.aa-tempo { margin-left: auto; color: var(--n); white-space: nowrap; }
+.aa-bascule[aria-pressed=true] { background: var(--n); color: var(--t); }
+.aa-piste { position: relative; margin: 6px 0; overflow-x: auto; overflow-y: hidden; background: var(--t); border: 1px solid var(--g); outline: none; touch-action: none; }
+.aa-piste:focus-visible { border-color: var(--o); }
+.aa-piste-in { position: relative; min-width: 100%; user-select: none; }
+.aa-regle { position: absolute; left: 0; right: 0; top: 0; background: var(--s); border-bottom: 1px solid var(--g); cursor: ew-resize; overflow: hidden; }
+.aa-grad { position: absolute; top: 0; height: 100%; padding-left: 3px; border-left: 1px solid var(--r); color: var(--r); font-size: 10px; line-height: 14px; pointer-events: none; white-space: nowrap; }
+.aa-img { position: absolute; bottom: 0; height: 5px; border-left: 1px solid var(--g); pointer-events: none; }
+.aa-rangee { position: absolute; left: 0; right: 0; background: repeating-linear-gradient(var(--t), var(--t) 25px, #1c1814 25px, #1c1814 26px); }
+.aa-cle { position: absolute; top: 12px; width: 26px; height: 26px; margin-left: -13px; transform: rotate(45deg) scale(.72); background: var(--h); border: 2px solid var(--o); cursor: grab; }
+.aa-cle span { display: block; transform: rotate(-45deg); text-align: center; font-size: 12px; line-height: 22px; font-weight: bold; color: var(--t); pointer-events: none; }
+.aa-cle.is-on { background: var(--n); }
+.aa-cle.is-prim { background: var(--o); outline: 2px solid var(--n); }
+.aa-tete-lecture { position: absolute; top: 0; width: 2px; margin-left: -1px; background: var(--n); pointer-events: none; }
+.aa-tete-lecture::before { content: ''; position: absolute; top: 0; left: -6px; border: 7px solid transparent; border-top-color: var(--n); border-bottom: 0; }
+.aa-fin { position: absolute; width: 6px; margin-left: -3px; background: var(--g); cursor: ew-resize; opacity: .8; }
+.aa-fin:hover { background: var(--o); }
+.aa-boite { position: absolute; border: 1px dashed var(--n); background: #8cb6ff22; pointer-events: none; }
+.aa-aide { padding: 8px 12px; background: var(--t); border: 1px solid var(--g); columns: 2 280px; font-size: 12px; }
+.aa-aide h4 { margin: 0 0 6px; color: var(--h); letter-spacing: .08em; text-transform: uppercase; font-size: 11px; column-span: all; }
+.aa-aide kbd { display: inline-block; min-width: 7.5em; padding: 0 5px; margin: 1px 6px 1px 0; background: var(--b); border: 1px solid var(--g); color: var(--o); font: inherit; }
+.aa-toast { position: fixed; left: 50%; bottom: 16px; transform: translateX(-50%); z-index: 20; padding: 6px 14px; background: var(--o); color: var(--t); }
 .aa-note { color: var(--r); font-size: 12px; }
 @media (max-width: 900px) { .aa-corps { grid-template-columns: 1fr; grid-template-rows: 50vh auto; } .aa-panneau { border-left: 0; } }
 

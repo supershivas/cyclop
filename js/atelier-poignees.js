@@ -198,9 +198,24 @@ export function creerPoignees(THREE, { canvas, camera, ppm, lire, regler, echell
     return true;
   }
   function up() { if (E.drag) { E.drag = null; apres?.(); } }
+  // les poses fantômes (la pelure d'oignon : les images clés voisines) : les os en traits, une couleur par pose
+  const spectres = [];
+  function fantomes(liste) {
+    while (spectres.length < liste.length) {
+      const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(new Float32Array(os.length * 6), 3));
+      const l = new THREE.LineSegments(g, new THREE.LineBasicMaterial({ depthTest: false, transparent: true, opacity: 0.8 })); l.frustumCulled = false; l.renderOrder = 8; scene.add(l); spectres.push(l);
+    }
+    spectres.forEach((l, i) => {
+      const f = liste[i]; l.visible = !!f; if (!f) return;
+      l.material.color.setHex(f.couleur);
+      const a = l.geometry.attributes.position.array;
+      os.forEach(([p, q], k) => { const P = f.J[p], Q = f.J[q]; if (P && Q) { a.set(P.pos, k * 6); a.set(Q.pos, k * 6 + 3); } });
+      l.geometry.attributes.position.needsUpdate = true;
+    });
+  }
 
   return {
-    scene, maj, down, move, up,
+    scene, maj, down, move, up, fantomes,
     get outil() { return E.outil; }, set outil(o) { E.outil = o; E.drag = null; E.survol = null; },
     get sel() { return E.sel; }, set sel(s) { E.sel = s; },
     get actif() { return !!E.drag; }, get survol() { return E.survol; },

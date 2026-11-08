@@ -1,6 +1,6 @@
 // Les poses et les animations du soldat articulé (js/pose-soldat.js) : la logique pure de l'atelier d'animation.
-import { poseNeutre, poseDe, melanger, borner, miroir, animation, echantillon, marcheEnImages } from '../js/pose-soldat.js';
-import { CHAMPS, NOMS_CHAMPS } from '../js/data/poses-soldat.js';
+import { poseNeutre, poseDe, melanger, borner, miroir, animation, echantillon, marcheEnImages, CARRURE_NEUTRE } from '../js/pose-soldat.js';
+import { CHAMPS, NOMS_CHAMPS, COURBES } from '../js/data/poses-soldat.js';
 
 const proche = (a, b, e = 1e-9) => Math.abs(a - b) <= e;
 
@@ -46,7 +46,7 @@ test('le miroir échange les côtés, deux fois il rend la pose', () => {
   const p = poseDe({ vit: 1, phase: 1.3, tir: 0.7 });
   const m = miroir(p);
   assert.ok(proche(m.hancheG, p.hancheD) && proche(m.convG, -p.convD));
-  assert.deepEqual(miroir(m), p);
+  const m2 = miroir(m); for (const c of NOMS_CHAMPS) assert.ok(Math.abs(m2[c] - p[c]) < 1e-12, c);      // (à l'arrondi près : le fusil se retourne de 0,79)
 });
 test("borner ne limite rien : seuls les valeurs non numériques tombent à zéro, tous les champs existent", () => {
   const b = borner({ buste: 50, genouG: -3, tete: NaN, fusilLacet: '2.5', coudeD: Infinity });
@@ -170,6 +170,7 @@ test('les axes des trois rotations sont perpendiculaires entre eux au repos : x,
 test('le miroir change le sens du lacet et du roulis', () => {
   const m = miroir({ ...poseNeutre(), fusilLacet: 0.5, fusilRoulis: -0.2, fusilH: 0.1 });
   assert.ok(proche(m.fusilLacet, -0.5) && proche(m.fusilRoulis, 0.2) && proche(m.fusilH, 0.1));
+  assert.ok(proche(articulations(m).fusil.pos[0], -articulations({ ...poseNeutre(), fusilLacet: 0.5, fusilRoulis: -0.2, fusilH: 0.1 }).fusil.pos[0]), 'le fusil passe de l\'autre côté du corps');
 });
 
 group('poses — la cinématique inverse');
@@ -234,4 +235,24 @@ test('une cible juste au-dessus de l\'épaule (azimut indéfini) ne donne ni NaN
 test('les mains et les chevilles ont des poignées de déplacement par cinématique inverse', () => {
   const J = articulations(poseNeutre());
   for (const id of ['mainG', 'mainD', 'chevilleG', 'chevilleD']) assert.ok(J[id].ik && J[id].deplace.length === 3 && J[id].deplace.every(d => d.ik), id);
+});
+
+group('poses — les modes de lecture et le point du fusil');
+import { pointFusil, modeDe } from '../js/pose-soldat.js';
+test('en une fois la dernière pose est tenue, en boucle la dernière image mène à la première, en aller-retour on revient', () => {
+  const mk = mode => animation('m', [{ t: 0, pose: { buste: 0 }, courbe: 'lineaire' }, { t: 1, pose: { buste: 1 }, courbe: 'lineaire' }], { mode, duree: 2 });
+  const u = mk('unefois'), b = mk('boucle'), ar = mk('allerretour');
+  assert.ok(proche(echantillon(u, 1.5).buste, 1) && proche(echantillon(u, 99).buste, 1));
+  assert.ok(proche(echantillon(b, 1.5).buste, 0.5) && proche(echantillon(b, 2.25).buste, echantillon(b, 0.25).buste));
+  assert.ok(proche(echantillon(ar, 0.5).buste, 0.5) && proche(echantillon(ar, 2.5).buste, echantillon(ar, 1.5).buste) && proche(echantillon(ar, 3.5).buste, echantillon(ar, 0.5).buste));
+  assert.equal(modeDe({ boucle: false }), 'unefois'); assert.equal(modeDe({}), 'boucle'); assert.equal(modeDe({ mode: 'allerretour', boucle: true }), 'allerretour');
+});
+test('chaque courbe va de 0 à 1 (le palier tient la pose jusqu\'au bout)', () => {
+  for (const [nom, f] of Object.entries(COURBES)) { assert.ok(proche(f(0), 0, 1e-6) && proche(f(1), 1, 1e-6), nom); }
+  assert.equal(COURBES.palier(0.99), 0);
+});
+test('le point du fusil : sur l\'axe du fusil, à la hauteur demandée ; il suit sa flexion', () => {
+  assert.ok(pres(pointFusil(poseNeutre(), CARRURE_NEUTRE, 1.3), articulations(poseNeutre()).fusil.pos));
+  const horizontal = { ...poseNeutre(), fusil: -Math.PI / 2 }, a = pointFusil(horizontal, CARRURE_NEUTRE, 0.55), b = pointFusil(horizontal, CARRURE_NEUTRE, 1.95);
+  assert.ok(b[2] - a[2] > 1.3 && Math.abs(b[1] - a[1]) < 1e-6, `à l'horizontale : ${a} → ${b}`);
 });

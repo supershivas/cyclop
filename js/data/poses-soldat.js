@@ -43,11 +43,24 @@ export const COUCHE = { hancheG: 0.3, hancheD: 0.0, genouG: 0.7, genouD: 0.1, ep
 // Le fusil en bandoulière (sans tir)
 export const FUSIL_REPOS = { angle: 0, x: 0, pivot: 1.3 };
 
-// Les courbes d'adoucissement d'une animation (t de 0 à 1)
+// Les courbes d'adoucissement d'une animation (t de 0 à 1) : l'allure du passage d'une image clé à la suivante
 export const COURBES = {
   lineaire: t => t,
   doux: t => t * t * (3 - 2 * t),
   entree: t => t * t,
   sortie: t => 1 - (1 - t) * (1 - t),
+  entreesortie: t => t * t * t * (t * (t * 6 - 15) + 10),          // plus appuyée que « doux »
+  palier: t => t >= 1 ? 1 : 0,                                          // la pose est tenue jusqu'à l'image suivante, puis saute
   ressort: t => 1 - Math.cos(t * Math.PI * 4.5) * Math.exp(-5 * t),
+  rebond: t => { const n = 7.5625, d = 2.75; return t < 1 / d ? n * t * t : t < 2 / d ? n * (t -= 1.5 / d) * t + 0.75 : t < 2.5 / d ? n * (t -= 2.25 / d) * t + 0.9375 : n * (t -= 2.625 / d) * t + 0.984375; },
 };
+// Ce que devient une courbe quand on joue le segment à l'envers
+export const COURBE_INVERSE = { entree: 'sortie', sortie: 'entree', ressort: 'doux', rebond: 'doux' };
+// Les groupes de champs (« canaux ») : copier, coller ou animer une partie du corps seulement
+export const CANAUX = {
+  corps: ['buste', 'tete', 'descente', 'poussee', 'basques', 'couche'],
+  jambeG: ['hancheG', 'genouG', 'chevilleG'], jambeD: ['hancheD', 'genouD', 'chevilleD'],
+  brasG: ['epauleG', 'coudeG', 'convG'], brasD: ['epauleD', 'coudeD', 'convD'],
+  fusil: ['fusil', 'fusilLacet', 'fusilRoulis', 'fusilX', 'fusilH', 'fusilZ', 'fusilY'],
+};
+export const NOMS_CANAUX = { corps: 'Corps', jambeG: 'Jambe gauche', jambeD: 'Jambe droite', brasG: 'Bras gauche', brasD: 'Bras droit', fusil: 'Fusil' };
