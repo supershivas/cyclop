@@ -22,33 +22,35 @@
    - Les soldats : instanciés (une boîte et son ombre) ; au zoom 1 et 2, un
      point de 2 × 2 pixels (la couleur du camp sur son ombre).
    - Les corps : un homme couché (instancié) ; au zoom 1 et 2, un pixel. */
-import { loadThree } from './three-lib.js?v=0.116.0';
-import * as SH from './rendu/shaders.js?v=0.116.0';
-import { creerSoldats } from './rendu/soldats.js?v=0.116.0';
-import { creerChars } from './rendu/chars.js?v=0.116.0';
-import { creerGenies } from './rendu/genies.js?v=0.116.0';
-import { creerCamp } from './rendu/camp.js?v=0.116.0';
-import { creerAvions } from './rendu/avions.js?v=0.116.0';
-import { creerPonts } from './rendu/ponts.js?v=0.116.0';
-import { creerCiel } from './rendu/ciel.js?v=0.116.0';
-import { creerMeteo } from './rendu/meteo.js?v=0.116.0';
-import { creerTroncons } from './rendu/troncons.js?v=0.116.0';
-import { ARBRES_JEU } from './data/arbres.js?v=0.116.0';
-import { creerVegetation } from './rendu/vegetation.js?v=0.116.0';
-import { creerTemps } from './rendu/temps.js?v=0.116.0';
-import { creerEclats } from './rendu/eclats.js?v=0.116.0';
-import { creerOmbresRelief } from './rendu/ombres-relief.js?v=0.116.0';
-import { creerAOSol, soleilDuJeu } from './rendu/ao-sol.js?v=0.116.0';
-import { cadrerOmbre } from './lumiere/ombres.js?v=0.116.0';
-import { OMBRES_RELIEF as OMB, NUAGES, NUAGES_VENT } from './data/soleil.js?v=0.116.0';
-import { PALETTE, ORDRE, INDICE } from './palette.js?v=0.116.0';
-import { OMBRE, couleursLigne } from './apparence.js?v=0.116.0';
-import { MORCEAU, hauteurVueQ as hauteurQ, hauteurVueM as hauteurM } from './terrain.js?v=0.116.0';
-import { horloge, secteurDuJeu, rangDe } from './bataille.js?v=0.116.0';
-import { GRADES } from './data/grades.js?v=0.116.0';
-import { profilFleuve } from './eaux.js?v=0.116.0';
-import { ligneY } from './tranchees.js?v=0.116.0';
-import { vent as ventDuJour } from './data/meteo.js?v=0.116.0';
+import { loadThree } from './three-lib.js?v=0.117.0';
+import * as SH from './rendu/shaders.js?v=0.117.0';
+import { creerSoldats } from './rendu/soldats.js?v=0.117.0';
+import { creerChars } from './rendu/chars.js?v=0.117.0';
+import { creerGenies } from './rendu/genies.js?v=0.117.0';
+import { creerCamp } from './rendu/camp.js?v=0.117.0';
+import { creerAvions } from './rendu/avions.js?v=0.117.0';
+import { creerPonts } from './rendu/ponts.js?v=0.117.0';
+import { creerCiel } from './rendu/ciel.js?v=0.117.0';
+import { creerMeteo } from './rendu/meteo.js?v=0.117.0';
+import { creerTroncons } from './rendu/troncons.js?v=0.117.0';
+import { ARBRES_JEU } from './data/arbres.js?v=0.117.0';
+import { creerVegetation } from './rendu/vegetation.js?v=0.117.0';
+import { creerTemps } from './rendu/temps.js?v=0.117.0';
+import { creerEclats } from './rendu/eclats.js?v=0.117.0';
+import { creerOmbresRelief } from './rendu/ombres-relief.js?v=0.117.0';
+import { creerAOSol, soleilDuJeu } from './rendu/ao-sol.js?v=0.117.0';
+import { cadrerOmbre } from './lumiere/ombres.js?v=0.117.0';
+import { semerOmbres, emballerOmbres, OMBRE_FUMEE } from './rendu/ombre-fumee.js?v=0.117.0';
+import { creerLampesSol } from './rendu/lampes-sol.js?v=0.117.0';
+import { OMBRES_RELIEF as OMB, NUAGES, NUAGES_VENT } from './data/soleil.js?v=0.117.0';
+import { PALETTE, ORDRE, INDICE } from './palette.js?v=0.117.0';
+import { OMBRE, couleursLigne } from './apparence.js?v=0.117.0';
+import { MORCEAU, hauteurVueQ as hauteurQ, hauteurVueM as hauteurM } from './terrain.js?v=0.117.0';
+import { horloge, secteurDuJeu, rangDe } from './bataille.js?v=0.117.0';
+import { GRADES } from './data/grades.js?v=0.117.0';
+import { profilFleuve } from './eaux.js?v=0.117.0';
+import { ligneY } from './tranchees.js?v=0.117.0';
+import { vent as ventDuJour } from './data/meteo.js?v=0.117.0';
 
 export const CAMERA = { yaw: 0.15, tangage: 0.95, fov: 30 };   // au départ : tournée de 9°, plongée de 54°, angle de 30°
 // la caméra respire : un balancement très lent, 2° en 23 s (Jérôme, v0.3.1 : variante D du labo retenue)
@@ -134,7 +136,7 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
   // Les ombres du relief (labo « La lumière dans le relief », éteintes dans le jeu) : une case que le soleil ne voit pas prend la couleur de sa paroi dans la texture du sol ; le soleil du labo : saisons, azimut
   let ombresRelief = false, ombresNuages = false, soleilReglage = null, ombreVu = null;
   const ombres = creerOmbresRelief({ hauteurQ });
-  let ombresCarte = false, ombresSolCachees = false, omRT = null, omCam = null, omInv = null, omInfo = null, aoSol = false, soleilSol = false, abrisSol = false, flaquesSol = false, flaque = 0, aoTex = null, aoAttente = 0, aoSale = false;      // l'ouverture au ciel du relief (éteinte : `rendu.aoSol`) ; sa texture n'est créée qu'au premier besoin (un objet de plus d'emblée décale les tirages d'identifiants de three : les images de référence)
+  let ombresCarte = false, sombreVu = 0, fum = null, lampesSol = null, ombresSolCachees = false, omRT = null, omCam = null, omInv = null, omInfo = null, aoSol = false, soleilSol = false, abrisSol = false, flaquesSol = false, flaque = 0, aoTex = null, aoAttente = 0, aoSale = false;      // l'ouverture au ciel du relief (éteinte : `rendu.aoSol`) ; sa texture n'est créée qu'au premier besoin (un objet de plus d'emblée décale les tirages d'identifiants de three : les images de référence)
   const ao = creerAOSol({ hauteurQ });
   const soleilCase = { x: 0, z: 0 }, ecriture = { ms: 0, n: 0, rangees: 0, max: 0, maxOmbre: 0 };      // mesure : la réécriture de la texture du sol
   let B = null, T = null, faux = null, fauxU = null;
@@ -150,6 +152,7 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
       uKaki: { value: new THREE.Color(0) }, uVert: { value: new THREE.Color(0) }, uGlaise: { value: new THREE.Color(0) }, uDissoudre: { value: 0 },
       uSuivre: { value: 0 }, uVersSoleil: { value: new THREE.Vector2(0, 1) },
       uAO: { value: null }, uAOon: { value: 0 }, uSunOn: { value: 0 }, uAbriOn: { value: 0 }, uFlaque: { value: 0 }, uEauCoul: { value: col('e') },
+      uFumOmb: { value: null }, uFumO: { value: new THREE.Vector3() }, uFumOn: { value: 0 }, uLamp: { value: null }, uLampOn: { value: 0 }, uLampCoul: { value: col('o').multiplyScalar(0.55).add(col('h').multiplyScalar(0.25)) },
       uCarteOmbre: { value: null }, uLVP: { value: new THREE.Matrix4() }, uOmbOn: { value: 0 }, uOmbPx: { value: new THREE.Vector2(1 / 1024, 0.0003) },      // la carte d'ombre (session 3)
       uBiseau: { value: 0 }, uNuage: { value: 0 }, uTemps: { value: 0 }, uVent: { value: new THREE.Vector2(NUAGES_VENT[0], NUAGES_VENT[1]) } },      // l'ombre des nuages (labo) : la part du sol couverte (0 : rien), l'horloge de l'image, le vent       // les parois qui suivent le soleil (labo) : 1 et la direction du soleil, vers lui      // (le bord qui se dissout dans le faux terrain : `faireFaux`)
     vertexShader: SH.solMat.v,
@@ -697,7 +700,18 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
     ciel.soleil(ombresCarte && Math.hypot(sv.x, sv.y) > 0.05 ? soleilDuJeu(sv.x, sv.y).dir : null);      // le ciel v2 va avec « Éclairage : haut »
     const ombresSol = [temps.arbresOmbresMesh, ...avions.ombresSol()];            // les ombres au sol que la carte remplace : arbres, disques des avions
     if (actif || ombresSolCachees) { for (const m of ombresSol) m.visible = !actif; ombresSolCachees = actif; }      // actif : cachées à chaque image (un avion neuf a son disque) ; sinon rendues une seule fois (rien d'autre ne les touche)
-    if (!actif) { U.uOmbOn.value = 0; return; }
+    if (!actif) { U.uOmbOn.value = 0; U.uFumOn.value = 0; U.uLampOn.value = 0; }
+    if (ombresCarte && T) {                                          // les lanternes, cachées par le relief (la nuit) ; l'ombre de la fumée (le jour, au soleil)
+      lampesSol ??= creerLampesSol({ hauteur: (x, z) => surface(x, z) });
+      if (lampesSol.largeur !== T.W || lampesSol.hauteur !== T.H) { lampesSol.attacher(T); if (U.uLamp.value) { U.uLamp.value.dispose(); U.uLamp.value = null; } }
+      const nuit = Math.max(0, Math.min(1, (sombreVu - 0.08) / 0.5));
+      if (nuit > 0.02) {
+        if (lampesSol.maj(temps.lanternesVues) || !U.uLamp.value) { if (!U.uLamp.value) { const t = new THREE.DataTexture(lampesSol.tex, T.W, T.H, THREE.RedFormat, THREE.UnsignedByteType); t.magFilter = t.minFilter = THREE.LinearFilter; t.generateMipmaps = false; U.uLamp.value = t; } U.uLamp.value.needsUpdate = true; }
+        U.uLampOn.value = U.uLamp.value ? nuit * 0.9 : 0;
+      } else U.uLampOn.value = 0;
+    }
+    if (actif && ecl && fumeeVue()) U.uFumOn.value = 1; else U.uFumOn.value = 0;
+    if (!actif) return;
     if (!omRT) {                                                   // créée au premier besoin (un objet three de plus décale les identifiants tirés de Math.random : les images de référence)
       const dt = new THREE.DepthTexture(1024, 1024); dt.minFilter = dt.magFilter = THREE.NearestFilter;
       omRT = new THREE.WebGLRenderTarget(1024, 1024, { depthTexture: dt, depthBuffer: true });
@@ -717,6 +731,17 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
     renderer.setRenderTarget(omRT); renderer.clear(); renderer.render(scene, omCam); renderer.setRenderTarget(fond);
     for (const [m, v] of vus) m.visible = v;
     U.uCarteOmbre.value = omRT.depthTexture; U.uLVP.value.fromArray(C.vp); U.uOmbOn.value = 1; U.uOmbPx.value.set(1 / 1024, 0.15 / C.profondeurM);
+  }
+  // l'ombre de la fumée : une petite grille qui suit la vue, semée des bouffées (js/rendu/ombre-fumee.js) ; faux si rien ne fume
+  const ecl = eclats.ecl;
+  function fumeeVue() {
+    const U = solMat.uniforms, sv = soldats.soleilUniform.value, s = soleilDuJeu(sv.x, sv.y); if (!s) return false;
+    const { cx, cz, p } = projeter(), cote = Math.min(500, Math.hypot(renderer.domElement.width, renderer.domElement.height) / p * 0.62 + 50), N = OMBRE_FUMEE.taille;
+    if (!fum) { fum = { grille: new Float32Array(N * N), octets: new Uint8Array(N * N), vue: { x0: 0, z0: 0, cote: 1 } }; fum.tex = new THREE.DataTexture(fum.octets, N, N, THREE.RedFormat, THREE.UnsignedByteType); fum.tex.magFilter = fum.tex.minFilter = THREE.LinearFilter; fum.tex.generateMipmaps = false; U.uFumOmb.value = fum.tex; }
+    fum.vue.x0 = cx - cote / 2; fum.vue.z0 = cz - cote / 2; fum.vue.cote = cote;
+    const n = semerOmbres(ecl, eclats.ECLATS, { dx: s.dir[0], dy: s.dir[1], dz: s.dir[2] }, fum.vue, fum.grille, SOL_Y);
+    if (!n && !fum.avait) return false;
+    fum.avait = n > 0; emballerOmbres(fum.grille, fum.octets); fum.tex.needsUpdate = true; U.uFumO.value.set(fum.vue.x0, fum.vue.z0, cote); return true;
   }
   function dessiner(dtVrai, evenements = []) {
     if (!B) return;
@@ -760,7 +785,7 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
       ciel.maj(h.meteo, tAnim);
       renderer.setClearColor(c, 1); solMat.uniforms.uBordCoul.value.copy(c); fauxU?.uBrume.value.copy(c);
     }
-    const sombre = temps.majNuit(h); temps.setTemps(tAnim);
+    const sombre = temps.majNuit(h); temps.setTemps(tAnim); sombreVu = sombre || 0;
     chars.maj(dt, sombre || 0); genies.maj(dt); camp.maj(sombre || 0, tAnim); avions.maj(dt, sombre || 0); ponts.maj(sombre || 0, aretesPonts);
     ciel.derive(vent.ciel.x, vent.ciel.z);
     ciel.nuit(sombre || 0, tAnim, h.jour, B.etat.graine, h.meteo);       // les étoiles, la lune et les nuages de la nuit (v0.40.0)

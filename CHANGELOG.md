@@ -1,5 +1,9 @@
 # Journal des versions
 
+## 0.117.0 — 2026-11-08
+- Éclairage « haut » : la fumée projette son ombre sur le sol et les lanternes des tranchées éclairent la nuit
+- Le labo lumière a un lac, avec les reflets du ciel et des berges sur l'eau
+
 ## 0.116.0 — 2026-11-08
 - Un réglage « Éclairage » (bas, moyen, haut) dans la roue crantée : « haut » ajoute les ombres portées des hommes, des arbres, des chars et des avions, et un soleil avec ses nuages éclairés
 - « Moyen » est l'éclairage de la version précédente, gardé par défaut

@@ -26,6 +26,7 @@ export const solMat = {
       uniform float uNuage, uTemps, uBiseau; uniform vec2 uVent;
       uniform sampler2D uAO; uniform float uAOon, uSunOn, uAbriOn, uFlaque; uniform vec3 uEauCoul;
       uniform sampler2D uCarteOmbre; uniform mat4 uLVP; uniform float uOmbOn; uniform vec2 uOmbPx;
+      uniform sampler2D uFumOmb; uniform vec3 uFumO; uniform float uFumOn; uniform sampler2D uLamp; uniform float uLampOn; uniform vec3 uLampCoul;
       varying vec2 vUV; varying vec2 vXZ; varying float vY; varying vec3 vMur;
       float h(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
       float vn(vec2 p) { vec2 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f); return mix(mix(h(i), h(i + vec2(1.0, 0.0)), f.x), mix(h(i + vec2(0.0, 1.0)), h(i + vec2(1.0, 1.0)), f.x), f.y); }
@@ -76,6 +77,9 @@ export const solMat = {
         // (session 2, éteint : uAbriOn à 0) la lumière propagée sous les toits de bois (canal B : 240 à ciel ouvert, moins à mesure qu'on s'enfonce sous le toit)
         // (session 2, éteint : uFlaque à 0) les flaques : le creux (canal A : de combien la case est plus basse que celles à 3 m autour) se remplit d'eau quand il pleut ; un mélange continu avec l'eau de la palette
         if (uFlaque > 0.0 && vUV.y < 0.5) { float thr = 1.0 - 0.85 * uFlaque; float pud = smoothstep(thr, thr + 0.25, texture2D(uAO, vXZ / uTaille).a); rgb = mix(rgb, uEauCoul * 0.8, pud * 0.75); }
+        // (session 3, éteint : uFumOn et uLampOn à 0 ; « Éclairage : haut ») l'ombre de la fumée (js/rendu/ombre-fumee.js) et la lumière des lanternes, cachée par le relief (js/rendu/lampes-sol.js)
+        if (uFumOn > 0.5 && vUV.y < 0.5) { vec2 fo = (vXZ - uFumO.xy) / uFumO.z; if (fo.x > 0.0 && fo.y > 0.0 && fo.x < 1.0 && fo.y < 1.0) rgb = mix(rgb, texture2D(uSol, vUV + vec2(0.0, 0.5)).rgb, texture2D(uFumOmb, fo).r * 0.7); }
+        if (uLampOn > 0.0) rgb += uLampCoul * texture2D(uLamp, vXZ / uTaille).r * uLampOn;
         if (uAbriOn > 0.5) { float f = clamp(texture2D(uAO, vXZ / uTaille).b / 0.941, 0.0, 1.0); rgb *= mix(0.25, 1.0, f * f * f); }
         if (uAOon > 0.5) rgb *= 0.5 + 0.5 * pow(texture2D(uAO, vXZ / uTaille).g, 1.3);
         gl_FragColor = vec4(rgb, 1.0);

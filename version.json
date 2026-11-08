@@ -1,8 +1,8 @@
 {
-  "version": "0.116.0",
+  "version": "0.117.0",
   "date": "2026-11-08",
   "changes": [
-    "Un réglage « Éclairage » (bas, moyen, haut) dans la roue crantée : « haut » ajoute les ombres portées des hommes, des arbres, des chars et des avions, et un soleil avec ses nuages éclairés",
-    "« Moyen » est l'éclairage de la version précédente, gardé par défaut"
+    "Éclairage « haut » : la fumée projette son ombre sur le sol et les lanternes des tranchées éclairent la nuit",
+    "Le labo lumière a un lac, avec les reflets du ciel et des berges sur l'eau"
   ]
 }

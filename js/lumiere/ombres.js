@@ -3,7 +3,7 @@
 // Pourquoi un cadrage sur le SOL vu : un objet qui projette (un homme, un arbre, un char, un avion) et l'endroit où tombe son ombre ont les mêmes coordonnées dans le plan de la lumière ;
 // il suffit donc de couvrir ce que l'on voit, plus de la profondeur du côté du soleil pour les hauts objets. Le cadre est stabilisé (étendue en progression géométrique, centre collé aux texels) :
 // sans cela l'ombre « nage » à chaque mouvement de la vue, et l'on prend cela pour du clignotement.
-import { OMBRES } from './config.js?v=0.116.0';
+import { OMBRES } from './config.js?v=0.117.0';
 
 const dot = (a, b) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
 const cross = (a, b) => [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
