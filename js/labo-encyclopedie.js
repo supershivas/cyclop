@@ -1,7 +1,7 @@
 // L'encyclopédie des règles au labo (Jérôme, v0.100.0 : « tous les termes utilisés sont définis, des captures de tous les éléments du jeu (unités, interfaces, mécaniques de jeu) »).
 // Le texte vient de `js/data/encyclopedie.js` (qui lit les calibres, météos, corvées, bâtiments… dans leurs modules : rien n'est recopié) ; les captures viennent de `outils/encyclopedie.mjs`
 // (assets/encyclopedie/*.png, listées dans index.json : une capture absente est dite « à faire », jamais une image cassée). Le labo montre, il ne modifie rien.
-import { ENTREES, CATEGORIES, PAR_ID, trier, lexique } from './data/encyclopedie.js?v=0.123.0';
+import { ENTREES, CATEGORIES, PAR_ID, trier, lexique } from './data/encyclopedie.js?v=0.124.0';
 
 const el = (tag, props = {}, ...kids) => { const e = Object.assign(document.createElement(tag), props); e.append(...kids); return e; };
 const DOSSIER = 'assets/encyclopedie';

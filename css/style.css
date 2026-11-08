@@ -860,7 +860,7 @@ h2 { font-weight: normal; letter-spacing: var(--titre-lettres); }
 .suivi button { min-height: 0; padding: var(--e1) var(--pas); }
 body.vue-verrouillee .char-fiche { display: none; }      /* la fiche cacherait la vue : le bandeau « Libérer la vue » suffit ; Échap aussi */
 
-/* ─── Le bilan du soir en tuiles (Jérôme, 8 nov., v0.123.0 : le tableau de bord du labo ; `hud/bilan.js`) ───
+/* ─── Le bilan du soir en tuiles (Jérôme, 8 nov., v0.124.0 : le tableau de bord du labo ; `hud/bilan.js`) ───
    Aucune couleur écrite ici : les variables du jeu. Sur le papier clair, chaque forme pleine d'une armée est cerclée de terre (comme les pastilles de la carte) ; la forme dit la même chose que la couleur. */
 .bilan { display: grid; gap: var(--pas); }
 .tuile { margin: 0; padding: var(--pas); border: var(--trait) solid var(--jeu-fond); display: grid; gap: var(--e1); min-width: 0; align-content: start; }

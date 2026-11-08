@@ -2,7 +2,7 @@
 // Une entrée par version qui touche au labo, la plus récente en haut. `ref` : « sujet-Lettre » (la lettre est celle de la variante,
 // A étant l'actuelle). À chaque changement du labo : une entrée ici, avec `depuis` sur les variantes ajoutées ou changées (labo.js).
 export const JOURNAL = [
-  { version: '0.123.0', date: '2026-11-08', items: [
+  { version: '0.124.0', date: '2026-11-08', items: [
     { genre: 'mis-a-jour', texte: 'Le bilan du soir « tableau de bord » passe en jeu (papier de la nuit) : à retenir, effectifs, morts du jour, lignes, ciel, et nos régiments en graphiques', ref: 'donnees-bilan-B' },
   ] },
   { version: '0.121.0', date: '2026-11-08', items: [
