@@ -1,8 +1,8 @@
 // Le sujet « Les données : les fiches » du labo (Jérôme, 7 nov. : « revoir la présentation des statistiques de chaque catégorie d'unité : soldats, régiments, chars, mitrailleuses » ; le tableau de bord (B) du bilan du soir est retenu : une tuile = un titre, un chiffre, un graphique).
 // Chaque fiche est une liste de BLOCS (`blocs…`) : { titre, chiffre?, graphe (HTML), mot? } ; trois mises en page les montrent : A les tuiles (larges), B le profil (une rangée par bloc), C la compacte (la largeur d'une fenêtre du jeu, 300 px).
 // Mêmes règles que le bilan : palette seule, la forme porte l'information (plein / hachuré / contour), l'orange et le rouge ne confirment que le moral. Données d'exemple de la forme de l'état (`A.peur`, `c.tues`, `n.rafales`…) ; rien n'est dans le jeu.
-import { PALETTE as P, ALERTES } from './palette.js?v=0.120.0';
-import { GRAPHES } from './labo-donnees.js?v=0.120.0';
+import { PALETTE as P, ALERTES } from './palette.js?v=0.121.0';
+import { GRAPHES } from './labo-donnees.js?v=0.121.0';
 
 const el = (tag, css = '', ...kids) => { const e = document.createElement(tag); if (css) e.style.cssText = css; e.append(...kids.flat().filter(k => k != null)); return e; };
 const MONO = 'font:13px/1.4 ui-monospace,"DejaVu Sans Mono",Menlo,Consolas,monospace;';
@@ -29,6 +29,14 @@ const G2 = {
     const pieces = { tete: '<rect x="16" y="2" width="12" height="12"/>', tronc: '<rect x="12" y="16" width="20" height="26"/>', bg: '<rect x="3" y="16" width="7" height="26"/>', bd: '<rect x="34" y="16" width="7" height="26"/>', jg: '<rect x="12" y="44" width="9" height="30"/>', jd: '<rect x="23" y="44" width="9" height="30"/>' };
     return `<svg viewBox="0 0 44 76" width="${haut * 44 / 76}" height="${haut}" role="img" aria-label="${partie ? `blessé : ${partie}` : 'indemne'}"><defs><pattern id="${id}" width="4" height="4" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="4" height="4" fill="${P.t}"/><rect width="2" height="4" fill="${P.o}"/></pattern></defs>` +
       Object.entries(pieces).map(([k, r]) => r.replace('/>', ` fill="${k === partie ? `url(#${id})` : col}" stroke="${P.t}" stroke-width="1"/>`)).join('') + '</svg>';
+  },
+  // l'historique d'un régiment : l'effectif (plein, bleu) et le moral (tirets) soir après soir, le dernier point cerclé ; l'effectif est ramené à son départ, le moral à 0-1
+  fil(hist, initial, { larg = 220, haut = 70, total = hist.length } = {}) {
+    const dx = larg / Math.max(1, total - 1 || 1), y = v => 4 + (1 - v) * (haut - 8), x = k => total > 1 ? 6 + k * (larg - 12) / (total - 1) : larg / 2;
+    const ligne = (vals, dash, c) => `<polyline points="${vals.map((v, k) => `${x(k).toFixed(1)},${y(v).toFixed(1)}`).join(' ')}" fill="none" stroke="${c}" stroke-width="2" ${dash ? 'stroke-dasharray="4 3"' : ''}/>`;
+    const eff = hist.map(h => Math.min(1, h.vivants / initial)), mor = hist.map(h => h.moral), dernier = hist.length - 1;
+    return `<svg viewBox="0 0 ${larg} ${haut}" width="${larg}" height="${haut}" role="img" aria-label="Effectif et moral, jour après jour" style="display:block;max-width:100%"><line x1="0" x2="${larg}" y1="${y(0.5)}" y2="${y(0.5)}" stroke="${P.b}"/>${ligne(eff, false, P.n)}${ligne(mor, true, P.r)}` +
+      hist.map((h, k) => `<circle cx="${x(k).toFixed(1)}" cy="${y(eff[k]).toFixed(1)}" r="${k === dernier ? 4.5 : 2}" fill="${k === dernier ? P.t : P.n}" stroke="${P.n}" stroke-width="2"><title>Jour ${h.jour} : ${h.vivants} hommes, moral ${Math.round(h.moral * 100)} %</title></circle>`).join('') + '</svg>';
   },
   // une valeur partagée en deux (victimes : canon / mitrailleuses) : un plein, un hachuré, sur une échelle commune
   partage(a, b, { max = a + b || 1, larg = 200, haut = 12, couleur = P.n } = {}) {
@@ -60,12 +68,15 @@ export function blocsSoldat(s = SOLDAT) {
   ];
 }
 const REG = { numero: 3, nom: 'Céruléen', initial: 94, debout: 58, blesses: 14, evacues: 6, morts: 16, mortsJour: 7, moral: 0.41, niveau: 'ebranle', vivres: 2, vivresMax: 4, peur: 0.52, fatJ: 0.48, fatB: 0.33, exp: 0.27, chevrons: 2, tues: 11, pris: 2, ordre: 'Tient B1' };
+const histoREG = Array.from({ length: 6 }, (_, k) => ({ jour: k + 1, vivants: [94, 91, 84, 76, 68, 58 + 14][k], blesses: [0, 3, 6, 9, 11, 14][k], morts: [0, 2, 6, 10, 13, 16][k], moral: [1, 0.96, 0.82, 0.68, 0.55, 0.41][k] }));
+REG.historique = histoREG;
 export function blocsRegiment(r = REG) {
   const col = r.niveau === 'deroute' ? ALERTES.rouge : r.niveau === 'ebranle' ? ALERTES.orange : P.o;
   return [
     bloc('Effectifs', { chiffre: r.debout, unite: `debout sur ${r.initial}`, graphes: [['', GRAPHES.barreEffectif(r, 0, { larg: 200, haut: 14 }), '']], mot: `${r.blesses} blessés · ${r.evacues} évacués · ${r.morts} morts` }),
     bloc('Moral', { chiffre: pct(r.moral), mot: (r.niveau === 'deroute' ? 'En déroute' : r.niveau === 'ebranle' ? 'Ébranlé' : 'Tient') + ' · repères : déroute, ébranlé', graphes: [['', GRAPHES.jaugeMoral(r.moral, r.niveau, { larg: 200, haut: 12 }), '']], couleurChiffre: col }),
     bloc('Ses hommes (en moyenne)', { graphes: [['Peur', G2.jauge(r.peur, { reperes: [0.25, 0.5, 0.75] }), mots.peur(r.peur)], ['Jambes', G2.jauge(r.fatJ, { reperes: [0.25, 0.5, 0.75] }), mots.fat(r.fatJ)], ['Bras', G2.jauge(r.fatB, { reperes: [0.25, 0.5, 0.75] }), mots.fat(r.fatB)]] }),
+    bloc('Au fil des jours', { graphes: [['', G2.fil(r.historique, r.initial), '']], mot: 'Effectif (plein) et moral (tirets), soir après soir : le dernier point est aujourd\'hui' }),
     bloc('Aujourd\'hui', { chiffre: r.mortsJour, unite: 'morts', mot: r.ordre }),
     bloc('Performances', { graphes: [['Abattus', G2.partage(r.tues, 0, { max: 30 }), String(r.tues)], ['Tronçons pris', G2.bande(r.pris * 10, 50), String(r.pris)]] }),
     bloc('Vivres', { chiffre: r.vivres, unite: r.vivres > 1 ? 'nuits' : 'nuit', graphes: [['', G2.bande(r.vivres * 10, r.vivresMax * 10), '']] }),

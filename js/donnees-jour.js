@@ -4,35 +4,42 @@
 //
 // Forme : { jour, jours, camps: [nous, eux], tronconsTenus: [nous, eux], manque: [...] }, chaque camp :
 //   { initial, debout, blesses, morts, evacues, mortsJour, mortsParJour: [..], prisParJour: [..], avions: { sorties, perdus, restent },
-//     regiments: [{ numero, nom, initial, debout, blesses, morts, evacues, mortsJour, moral, niveau: 'tient' | 'ebranle' | 'deroute' }] }
+//     effectifParJour: [..] (les hommes vivants au soir de chaque jour, le jour même compris), blessesParJour: [..] (les nouvelles blessures de chaque jour),
+//     regiments: [{ numero, nom, initial, debout, blesses, morts, evacues, mortsJour, moral, niveau: 'tient' | 'ebranle' | 'deroute',
+//                   historique: [{ jour, vivants, blesses, morts, moral }] }] }   (l'historique vient de `etat.histo`, un instantané par soir, v0.120.0)
 // `camp` : le camp du joueur (0 : nous) ; `camps[0]` est toujours le sien.
 
+// Ce que l'état ne garde toujours pas (l'historique des soirs, `etat.histo`, a comblé les effectifs et les blessés par jour, v0.120.0)
 export const MANQUE = [
-  'Les blessés de chaque journée (l\'état n\'en garde que le cumul)',
-  'L\'effectif de chaque régiment au soir de chaque jour (seuls ses chiffres d\'aujourd\'hui existent)',
+  'Un historique par soldat (sa peur, sa fatigue et ses caractéristiques jour après jour : seules les valeurs d\'aujourd\'hui et de départ existent)',
 ];
 
 const niveauMoral = (reg, R) => reg.deroute || reg.moral < R.moral.deroute ? 'deroute' : reg.moral < R.moral.ebranle ? 'ebranle' : 'tient';
 
 export function lireJournee(B, camp = 0, R = B.R) {
-  const { etat, armee: A } = B, jour = etat.jour;
+  const { etat, armee: A } = B, jour = etat.jour, H = etat.histo || [];
   const par = c => {
     const regs = etat.regiments.filter(r => r.camp === c);
     const regiments = regs.map((r, k) => {
       let blesses = 0;
       for (let i = 0; i < A.n; i++) if (A.reg[i] === r.id && A.blessure[i]) blesses++;
       const releves = r.releves || 0;
+      const historique = H.filter(h => h.jour < jour && h.regs[r.id]).map(h => ({ jour: h.jour, vivants: h.regs[r.id][0], blesses: h.regs[r.id][1], morts: h.regs[r.id][2], moral: h.regs[r.id][3] / 100 }));
+      historique.push({ jour, vivants: r.effectif, blesses, morts: r.pertes, moral: r.moral });       // le soir d'aujourd'hui : lu en direct, il n'est dans l'historique qu'à l'aube
       return {
-        numero: k + 1, nom: r.nom || null, initial: r.initial, debout: Math.max(0, r.effectif - blesses), blesses, morts: r.pertes,
+        historique, numero: k + 1, nom: r.nom || null, initial: r.initial, debout: Math.max(0, r.effectif - blesses), blesses, morts: r.pertes,
         evacues: Math.max(0, r.initial - r.effectif - r.pertes - releves), mortsJour: r.pertes - (r.debut?.pertes || 0), moral: r.moral, niveau: niveauMoral(r, R),
       };
     });
     const somme = k => regiments.reduce((s, r) => s + r[k], 0);
     const mortsParJour = etat.pertesJour.map(p => p[c]);
+    const effectifParJour = Array.from({ length: jour }, (_, k) => regiments.reduce((t, r) => t + (r.historique.find(h => h.jour === k + 1)?.vivants ?? 0), 0));
+    const cumulBlesses = [...H.filter(h => h.jour < jour).map(h => h.blesses[c]), etat.blesses[c]];
+    const blessesParJour = cumulBlesses.map((v, k) => v - (cumulBlesses[k - 1] ?? 0));
     const [sorties, perdus] = etat.avionsJour[jour - 1]?.[c] ?? [0, 0];
     return {
       initial: somme('initial'), debout: somme('debout'), blesses: somme('blesses'), morts: etat.pertes[c], evacues: somme('evacues'),
-      mortsJour: mortsParJour[jour - 1] ?? 0, mortsParJour, prisParJour: etat.prises.map(p => p[c]),
+      mortsJour: mortsParJour[jour - 1] ?? 0, mortsParJour, effectifParJour, blessesParJour, prisParJour: etat.prises.map(p => p[c]),
       avions: { sorties, perdus, restent: etat.avions?.[c]?.filter(pv => pv > 0).length ?? 0 }, regiments,
     };
   };

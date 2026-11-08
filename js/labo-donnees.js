@@ -3,8 +3,8 @@
 // (nous : bleu horizon, eux : vert kaki ; l'orange et le rouge d'alerte ne disent que le moral) ; (2) trois variantes du bilan du soir qui s'en servent.
 // RÈGLE : la forme porte l'information, jamais la couleur seule (plein = debout, hachuré = blessés, contour = tombés ; ▲ ▼ ◆ ● pour les faits).
 // Rien n'est dans le jeu. Les données ont la forme de `lireJournee` (js/donnees-jour.js, testée sur une vraie bataille) ; ici, trois journées d'exemple (une vraie bataille simulée coûte 8 s par jour).
-import { PALETTE as P, ALERTES } from './palette.js?v=0.120.0';
-import { faitsMarquants, MANQUE } from './donnees-jour.js?v=0.120.0';
+import { PALETTE as P, ALERTES } from './palette.js?v=0.121.0';
+import { faitsMarquants, MANQUE } from './donnees-jour.js?v=0.121.0';
 
 const el = (tag, css = '', ...kids) => { const e = document.createElement(tag); if (css) e.style.cssText = css; e.append(...kids.flat().filter(k => k != null)); return e; };
 const MONO = 'font:13px/1.4 ui-monospace,"DejaVu Sans Mono",Menlo,Consolas,monospace;';
@@ -31,9 +31,16 @@ export function journeeExemple(cle) {
       const moral = S.deroute && c === 0 && (k === 2 || k === 5) ? 0.12 + r() * 0.1 : Math.max(0.3, 1 - morts / ini * 0.75 - r() * 0.1 * S.dur);
       return { numero: k + 1, nom: c === 0 ? nom : null, initial: ini, debout: ini - morts - blesses - evacues, blesses, morts, evacues, mortsJour: Math.min(morts, mj), moral, niveau: moral < 0.25 ? 'deroute' : moral < 0.5 ? 'ebranle' : 'tient' };
     });
+    // l'historique des soirs (la forme de `etat.histo`) : chaque régiment glisse de son effectif de départ à celui d'aujourd'hui
+    for (const x of regiments) {
+      const fin = x.debout + x.blesses;
+      x.historique = Array.from({ length: S.jour }, (_, k) => { const t = S.jour > 1 ? k / (S.jour - 1) : 1; return { jour: k + 1, vivants: Math.round(x.initial + (fin - x.initial) * t), blesses: k === S.jour - 1 ? x.blesses : Math.round(x.blesses * t * (0.6 + r() * 0.8)), morts: Math.round(x.morts * t), moral: k === S.jour - 1 ? x.moral : Math.min(1, 1 + (x.moral - 1) * t + (r() - 0.5) * 0.08) }; });
+    }
     const sum = k => regiments.reduce((s, x) => s + x[k], 0);
+    const effectifParJour = Array.from({ length: S.jour }, (_, k) => regiments.reduce((t, x) => t + x.historique[k].vivants, 0));
+    const blessesParJour = Array.from({ length: S.jour }, (_, k) => Math.round((2 + r() * 5) * S.dur * rude));
     return {
-      initial: sum('initial'), debout: sum('debout'), blesses: sum('blesses'), morts: sum('morts'), evacues: sum('evacues'), mortsJour: mortsParJour.at(-1), mortsParJour,
+      initial: sum('initial'), debout: sum('debout'), blesses: sum('blesses'), morts: sum('morts'), evacues: sum('evacues'), mortsJour: mortsParJour.at(-1), mortsParJour, effectifParJour, blessesParJour,
       prisParJour: Array.from({ length: S.jour }, (_, k) => (k >= S.jour - 2 ? (c === 0 ? Math.max(0, S.prise - 1 - (k % 2)) : S.prise - (k % 2)) : 0)), avions: { sorties: S.dur > 0.5 ? 3 : 1, perdus: S.dur > 1 && c === 0 ? 1 : 0, restent: 3 - (S.dur > 1 && c === 0 ? 1 : 0) }, regiments,
     };
   };
@@ -142,7 +149,7 @@ export function bilanTuiles(stage) {
     return el('div', '', titre(`Soir du ${d.jour}e jour`, `Bataille de ${d.jours} jours · exemple`), bandeau,
       el('div', 'display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:10px',
         tuile('Effectifs', ...[0, 1].map(c => el('div', '', el('div', `color:${COUL[c]};font-size:12px`, `${NOM_CAMP[c]} · ${d.camps[c].debout} debout sur ${d.camps[c].initial}`), svgDansDiv('', GRAPHES.barreEffectif(d.camps[c], c, { larg: 280, haut: 14, echelle: Math.max(n.initial, e.initial) }))))),
-        tuile('Pertes du jour', el('div', 'display:flex;gap:24px', chiffre(n.mortsJour, 'les nôtres', COUL[0]), chiffre(e.mortsJour, 'les leurs', COUL[1])), svgDansDiv('', GRAPHES.bâtons(n.mortsParJour, 0, { larg: 280, haut: 40, max, total: d.jours })), svgDansDiv('', GRAPHES.bâtons(e.mortsParJour, 1, { larg: 280, haut: 40, max, total: d.jours }))),
+        tuile('Pertes du jour', el('div', 'display:flex;gap:24px', chiffre(n.mortsJour, 'les nôtres', COUL[0]), chiffre(e.mortsJour, 'les leurs', COUL[1]), chiffre(n.blessesParJour.at(-1), 'blessés chez nous', COUL[0], 'Les nouvelles blessures d\'aujourd\'hui (lues dans l\'historique des soirs)')), svgDansDiv('', GRAPHES.bâtons(n.mortsParJour, 0, { larg: 280, haut: 40, max, total: d.jours })), svgDansDiv('', GRAPHES.bâtons(e.mortsParJour, 1, { larg: 280, haut: 40, max, total: d.jours }))),
         tuile('Les lignes', el('div', 'display:flex;gap:24px', chiffre(d.tronconsTenus[0], 'tenus par nous', COUL[0]), chiffre(d.tronconsTenus[1], 'tenus par eux', COUL[1])), svgDansDiv('', GRAPHES.troncons(d.tronconsTenus, 32, { larg: 280 })), el('div', `font-size:12px;color:${P.r}`, `Aujourd'hui : ${pl(n.prisParJour.at(-1), 'pris', 'pris')}, ${pl(e.prisParJour.at(-1), 'perdu', 'perdus')}`)),
         tuile('Le ciel', el('div', 'display:flex;gap:24px', chiffre(n.avions.sorties, 'sorties'), chiffre(n.avions.perdus, 'abattus'), chiffre(n.avions.restent, 'restent')), el('div', `font-size:12px;color:${P.r}`, n.avions.perdus ? 'Réparés cette nuit, hors les abattus.' : 'Tous rentrés.')),
         tuile('Le moral', ...n.regiments.map(r => { const l = el('div', 'display:grid;grid-template-columns:24px 1fr 90px;gap:8px;align-items:center'); l.append(el('b', 'font-weight:normal', String(r.numero)), svgDansDiv('', GRAPHES.barreEffectif(r, 0, { larg: 150, haut: 10, echelle: 14 })), svgDansDiv('', GRAPHES.jaugeMoral(r.moral, r.niveau))); return l; })),
@@ -155,8 +162,8 @@ export function bilanTuiles(stage) {
 export function bilanFrise(stage) {
   return cadre(stage, d => {
     const [n, e] = d.camps, total = d.jours, larg = 960, haut = 130;
-    // l'effectif debout : initial moins les morts cumulés (jusqu'à aujourd'hui) ; sans les blessés par jour (voir « manque »)
-    const cumul = c => { let s = d.camps[c].initial; return d.camps[c].mortsParJour.map(m => (s -= m)); };
+    // les hommes vivants au soir de chaque jour : `etat.histo` (v0.120.0)
+    const cumul = c => d.camps[c].effectifParJour;
     const base = Math.max(n.initial, e.initial), dx = larg / total;
     const marques = Array.from({ length: d.jour }, (_, k) => { const pris = n.prisParJour[k] || 0, perdu = e.prisParJour[k] || 0; return pris || perdu ? `<g transform="translate(${dx * (k + 0.5) - 8},${haut - 4})">${GRAPHES.fait(perdu ? 'gain' : 'perte')}</g>` : ''; }).join('');
     const grille = Array.from({ length: total }, (_, k) => `<text x="${dx * (k + 0.5)}" y="${haut + 22}" fill="${k === d.jour - 1 ? P.o : P.g}" font-size="11" text-anchor="middle" font-family="monospace">${k + 1}</text>`).join('');

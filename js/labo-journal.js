@@ -2,6 +2,9 @@
 // Une entrée par version qui touche au labo, la plus récente en haut. `ref` : « sujet-Lettre » (la lettre est celle de la variante,
 // A étant l'actuelle). À chaque changement du labo : une entrée ici, avec `depuis` sur les variantes ajoutées ou changées (labo.js).
 export const JOURNAL = [
+  { version: '0.121.0', date: '2026-11-08', items: [
+    { genre: 'mis-a-jour', texte: 'Les données : Jérôme retient les tuiles pour les fiches et le tableau de bord pour le bilan du soir ; la fiche d\'un régiment trace son effectif et son moral soir après soir, et le bilan les blessés du jour, d\'après l\'historique que la partie garde désormais (sauvegarde 29)', ref: 'donnees-fiches-A' },
+  ] },
   { version: '0.119.0', date: '2026-11-07', items: [
     { genre: 'nouveau', texte: 'Les données, les fiches : un soldat, un régiment, un char et une mitrailleuse dans le langage du tableau de bord (retenu), en trois mises en page à comparer : les tuiles, le profil, la compacte', ref: 'donnees-fiches-A' },
   ] },

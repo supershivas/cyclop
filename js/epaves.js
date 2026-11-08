@@ -2,7 +2,7 @@
    les chars détruits ont des dégâts visibles (parties brûlées, chenilles détruites, éventrement), la destruction est différente pour chaque char »).
    La disposition d'une épave : de purs tirages d'un hachage de la graine (`hash2`, jamais `Math.random` : la même épave à chaque lancement, chez les deux joueurs), sans THREE ni état. Le dessin (rendu/epaves.js) la lit ;
    le labo (« Les épaves ») la montre douze fois de suite avec des graines différentes ; rien n'est sauvegardé, rien ne touche la partie. Repère de l'avion : l'avant à +x (le cap de la chute), la droite à +z, le haut à +y. */
-import { hash2 } from './lib/rng.js?v=0.120.0';
+import { hash2 } from './lib/rng.js?v=0.121.0';
 
 export const EPAVES = {
   // les pièces d'un biplan et la chance de chacune de se détacher de la carcasse (le fuselage ne le fait jamais), avec au moins `auMoins` pièces libres

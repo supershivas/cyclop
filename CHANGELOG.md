@@ -1,5 +1,8 @@
 # Journal des versions
 
+## 0.121.0 — 2026-11-08
+- L'état garde un instantané de chaque soir (effectifs, blessés, moral de chaque régiment) ; le labo en tire les courbes des fiches et du bilan, et retient les tuiles et le tableau de bord ; rien n'a encore changé dans le jeu
+
 ## 0.120.0 — 2026-11-07
 - Chars, mitrailleuses et avions, des deux camps : une pastille ronde à la place des étiquettes, avec un arc de vie ; au survol, l'infobulle dit tout (état, vie, canon ou bande, expérience, victimes)
 - Un clic sur la pastille d'un de nos chars ou postes le choisit ; la pastille saute quand un chevron est gagné
