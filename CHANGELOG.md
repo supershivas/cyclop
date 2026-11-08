@@ -1,5 +1,9 @@
 # Journal des versions
 
+## 0.123.0 — 2026-11-08
+- Le parc des chars et l'aérodrome ont un bouton par char et par avion : déployé, il mène la vue jusqu'à lui et ouvre sa fiche
+- Un char ou un avion pas déployé (au parc, au sol, détruit, perdu) a son bouton grisé : ses chiffres et le motif s'affichent en infobulle
+
 ## 0.122.0 — 2026-11-08
 - Vue verrouillée (style cinéma) sur un char, une mitrailleuse ou un avion : un bouton dans leur fiche ; la caméra tourne lentement autour de l'engin, deux bandes noires
 - Vue « à la personne » : la caméra est à bord, à hauteur d'œil, et regarde où l'engin regarde ; Échap, un geste sur la caméra ou le bouton libèrent la vue

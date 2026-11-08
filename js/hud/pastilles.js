@@ -3,9 +3,9 @@
 // sa vie ; un poste porte un trait, un avion un triangle ; détruit, l'anneau est pointillé et barré. Au survol il grossit et l'infobulle du jeu (`data-info`) dit tout : l'état, la vie, le canon ou la bande,
 // l'expérience, les victimes. Le clic sur un des nôtres (char, poste) le choisit. Le dessin et les lignes de texte seulement : les données viennent de hud/chars.js, hud/nids.js et d'ici pour les avions.
 // Les nombres d'avions : `positionDe` (avions.js). Rien n'est écrit dans la bataille.
-import { positionDe, balayage } from '../avions.js?v=0.122.0';
-import { MITRAILLAGE } from '../data/mitraillage.js?v=0.122.0';
-import { NOUS } from '../bataille.js?v=0.122.0';
+import { positionDe, balayage } from '../avions.js?v=0.123.0';
+import { MITRAILLAGE } from '../data/mitraillage.js?v=0.123.0';
+import { NOUS } from '../bataille.js?v=0.123.0';
 
 const NS = 'http://www.w3.org/2000/svg', R_ARC = 9, CIRC = 2 * Math.PI * R_ARC;
 const REDUIT = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
