@@ -1,5 +1,8 @@
 # Journal des versions
 
+## 0.125.0 — 2026-11-08
+- Les fiches du soldat, du régiment, du char et de la mitrailleuse sont en tuiles : ce qu'il endure, ses caractéristiques et leur départ, l'effectif et le moral d'un régiment soir après soir, la coque et le canon d'un char, la bande d'un poste
+
 ## 0.124.0 — 2026-11-08
 - Le bilan du soir est en tuiles : ce qu'il faut retenir, les effectifs des deux camps, les morts jour après jour, les lignes, le ciel, et nos régiments (effectif, moral, morts du jour) en graphiques
 

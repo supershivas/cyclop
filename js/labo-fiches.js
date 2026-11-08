@@ -1,8 +1,8 @@
 // Le sujet « Les données : les fiches » du labo (Jérôme, 7 nov. : « revoir la présentation des statistiques de chaque catégorie d'unité : soldats, régiments, chars, mitrailleuses » ; le tableau de bord (B) du bilan du soir est retenu : une tuile = un titre, un chiffre, un graphique).
 // Chaque fiche est une liste de BLOCS (`blocs…`) : { titre, chiffre?, graphe (HTML), mot? } ; trois mises en page les montrent : A les tuiles (larges), B le profil (une rangée par bloc), C la compacte (la largeur d'une fenêtre du jeu, 300 px).
 // Mêmes règles que le bilan : palette seule, la forme porte l'information (plein / hachuré / contour), l'orange et le rouge ne confirment que le moral. Données d'exemple de la forme de l'état (`A.peur`, `c.tues`, `n.rafales`…) ; rien n'est dans le jeu.
-import { PALETTE as P, ALERTES } from './palette.js?v=0.124.0';
-import { GRAPHES } from './labo-donnees.js?v=0.124.0';
+import { PALETTE as P, ALERTES } from './palette.js?v=0.125.0';
+import { GRAPHES } from './labo-donnees.js?v=0.125.0';
 
 const el = (tag, css = '', ...kids) => { const e = document.createElement(tag); if (css) e.style.cssText = css; e.append(...kids.flat().filter(k => k != null)); return e; };
 const MONO = 'font:13px/1.4 ui-monospace,"DejaVu Sans Mono",Menlo,Consolas,monospace;';

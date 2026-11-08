@@ -909,3 +909,30 @@ body.vue-verrouillee .char-fiche { display: none; }      /* la fiche cacherait l
 .bi-reg { display: grid; grid-template-columns: 4ch minmax(0, 1fr) 64px 4ch; gap: var(--pas); align-items: center; font-size: var(--texte-petit); min-height: 16px; }
 .bi-reg-tete { color: var(--jeu-accent); text-transform: uppercase; letter-spacing: var(--lettres-etiquette); }
 .bi-droite { text-align: right; }
+
+/* ─── Les fiches en tuiles (Jérôme, 8 nov. : la fiche d'un soldat, d'un régiment, d'un char, d'une mitrailleuse ; `hud/tuiles.js`) ───
+   Les mêmes tuiles que le bilan du soir. `.fiche-tuiles` : en grille sur la fiche du soldat et du régiment (large), `.fine` en une colonne dans la fenêtre étroite d'un char ou d'un poste. */
+.fiche { width: min(720px, 60vw); max-height: calc(100dvh - 370px); min-height: 200px; overflow-y: auto; box-sizing: border-box; }   /* sous le billet (haut gauche), au-dessus de la rangée des régiments : 3 colonnes de tuiles, elle défile si la place manque */
+.fiche-tuiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: var(--pas); margin-top: var(--pas); }
+.fiche-tuiles[hidden], .fiche-tuiles:empty { display: none; }
+.fiche-tuiles.fine { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--e1); margin: var(--e1) 0; }
+.fiche-tuiles.fine .tuile { padding: var(--e1) var(--pas); }
+.fiche-rang { display: grid; grid-template-columns: 10ch minmax(0, 1fr) auto; gap: var(--pas); align-items: center; font-size: var(--texte-petit); min-height: 16px; }
+.fiche-rang.sans-nom { grid-template-columns: minmax(0, 1fr) auto; }
+.fiche-nom-g { color: var(--jeu-accent); }
+.fiche-mot { text-align: right; white-space: nowrap; }
+.bi-seul { display: flex; align-items: baseline; gap: var(--pas); }
+.bi-seul b { display: block; font-size: var(--texte-grand); font-weight: normal; line-height: 1; }
+.bi-seul span { font-size: var(--texte-petit); color: var(--jeu-accent); }
+.tuile .chev { width: 12px; height: 8px; fill: none; stroke: var(--jeu-fond); stroke-width: 1.5; }
+.bi .bi-depart-o { stroke: var(--jeu-fond); stroke-width: 3; }
+.bi .bi-depart { stroke: var(--jeu-nous); stroke-width: 1.5; }
+.bi .bi-case-pleine { fill: var(--jeu-fond); stroke: var(--jeu-fond); stroke-width: 1; }
+.bi .bi-fil-eff { fill: none; stroke: var(--jeu-fond); stroke-width: 2; }
+.bi .bi-fil-moral { fill: none; stroke: var(--jeu-accent); stroke-width: 2; stroke-dasharray: 4 3; }
+.bi .bi-point { fill: var(--jeu-nous); stroke: var(--jeu-fond); stroke-width: 1; }
+.bi .bi-point-dernier { fill: var(--jeu-encre); stroke: var(--jeu-fond); stroke-width: 2; }
+.char-fiche { max-height: calc(100dvh - 176px); overflow-y: auto; box-sizing: border-box; }
+.fiche-tuiles.fine .tuile:last-child:nth-child(odd) { grid-column: 1 / -1; }
+.fiche-tuiles.fine .fiche-rang, .fiche-tuiles.fine .fiche-rang.sans-nom { grid-template-columns: minmax(0, 1fr); gap: var(--e0); }
+.fiche-tuiles.fine .fiche-mot { text-align: left; white-space: normal; }

@@ -4,7 +4,7 @@
 //  · « à la personne » : la caméra est à son bord, à hauteur d'œil (l'équipage du char, le servant du poste, le pilote), et regarde où il regarde (son cap, la direction de son cône).
 // Rien de neuf dans le moteur que trois réglages de la vue (`vue.haut`, `vue.dist`, `vue.portee`, rendu3d.js) : la caméra du jeu orbite déjà autour d'un point visé, ici ce point suit l'engin. Le dessin seulement :
 // aucune lecture n'écrit dans la bataille. La vue se libère d'un geste sur la caméra (déplacer, tourner), Échap, le clic droit, ou le bouton ; la vue d'avant revient (le point visé glisse, l'angle et le zoom sont rendus).
-import { positionDe } from '../avions.js?v=0.124.0';
+import { positionDe } from '../avions.js?v=0.125.0';
 
 const SOL_Y = 3;           // le niveau moyen du sol que vise la caméra (rendu3d.js : `SOL_Y`), pour calculer `vue.haut`
 const PORTEE = 700;        // m : le plan lointain d'une vue verrouillée (au ras du sol, la vue porte loin)

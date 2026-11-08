@@ -16,6 +16,13 @@ export const MANQUE = [
 
 const niveauMoral = (reg, R) => reg.deroute || reg.moral < R.moral.deroute ? 'deroute' : reg.moral < R.moral.ebranle ? 'ebranle' : 'tient';
 
+/* L'historique d'un régiment : un point par soir passé (`etat.histo`), puis le soir d'aujourd'hui lu en direct (il n'entre dans l'historique qu'à l'aube) ; `blesses` : ses blessés vivants maintenant */
+export function historiqueDe(H, r, jour, blesses) {
+  const h = H.filter(s => s.jour < jour && s.regs[r.id]).map(s => ({ jour: s.jour, vivants: s.regs[r.id][0], blesses: s.regs[r.id][1], morts: s.regs[r.id][2], moral: s.regs[r.id][3] / 100 }));
+  h.push({ jour, vivants: r.effectif, blesses, morts: r.pertes, moral: r.moral });
+  return h;
+}
+
 export function lireJournee(B, camp = 0, R = B.R) {
   const { etat, armee: A } = B, jour = etat.jour, H = etat.histo || [];
   const par = c => {
@@ -24,8 +31,7 @@ export function lireJournee(B, camp = 0, R = B.R) {
       let blesses = 0;
       for (let i = 0; i < A.n; i++) if (A.reg[i] === r.id && A.blessure[i]) blesses++;
       const releves = r.releves || 0;
-      const historique = H.filter(h => h.jour < jour && h.regs[r.id]).map(h => ({ jour: h.jour, vivants: h.regs[r.id][0], blesses: h.regs[r.id][1], morts: h.regs[r.id][2], moral: h.regs[r.id][3] / 100 }));
-      historique.push({ jour, vivants: r.effectif, blesses, morts: r.pertes, moral: r.moral });       // le soir d'aujourd'hui : lu en direct, il n'est dans l'historique qu'à l'aube
+      const historique = historiqueDe(H, r, jour, blesses);
       return {
         historique, numero: k + 1, nom: r.nom || null, initial: r.initial, debout: Math.max(0, r.effectif - blesses), blesses, morts: r.pertes,
         evacues: Math.max(0, r.initial - r.effectif - r.pertes - releves), mortsJour: r.pertes - (r.debut?.pertes || 0), moral: r.moral, niveau: niveauMoral(r, R),

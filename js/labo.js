@@ -2,39 +2,39 @@
 // Chaque sujet utilise les mêmes modules que le jeu (terrain, apparence,
 // rendu three.js) : ce qu'on voit ici est ce que le jeu dessinera. Ajouter un
 // sujet ou une variante = ajouter une entrée dans GROUPES.
-import { afficherVersion } from './version-tag.js?v=0.124.0';
-import { mountLabo } from './lib/labo-shell.js?v=0.124.0';
-import { spriteCanvas, paletteToGPL, paletteToHex } from './lib/sprites.js?v=0.124.0';
-import { PALETTE, ROLES } from './palette.js?v=0.124.0';
-import { chargerContenu } from './design-store.js?v=0.124.0';
-import { tuile, ETAT } from './tuiles.js?v=0.124.0';
-import { creerTerrain, impact, hydroLignes, toucher } from './terrain.js?v=0.124.0';
-import { FORMES } from './cratere.js?v=0.124.0';
-import { CALIBRES } from './data/calibres.js?v=0.124.0';
-import { METEO } from './data/meteo.js?v=0.124.0';
-import { nouvelleBataille, avancer, ordonnerMarche, ordonnerBarrage, mourir, regarderAu, aube, horloge, ticksParJour, rangDe } from './bataille.js?v=0.124.0';
-import { AZIMUTS, COTES } from './data/soleil.js?v=0.124.0';
-import { creerRendu, ZOOMS } from './rendu3d.js?v=0.124.0';
-import { placesCommandement } from './army.js?v=0.124.0';
-import { hash2 } from './lib/rng.js?v=0.124.0';
-import { reglerVerdure } from './apparence.js?v=0.124.0';
-import { maquetteChars } from './labo-chars.js?v=0.124.0';
-import { maquetteEpaves } from './labo-epaves.js?v=0.124.0';
-import { fondations, boutons, unites, fenetres, revision } from './labo-design-system.js?v=0.124.0';
-import { cartesSecteur } from './labo-cartes.js?v=0.124.0';
-import { gainTampon, gainCachets, gainFil, gainBordereau, victoireFanion, victoireTampon, victoireChevrons, victoireAube, ficheDeuxColonnes, ficheEtages, ficheRegistre, ficheDAbord } from './labo-recompenses.js?v=0.124.0';
-import { maquetteBatiment, maquetteCamp } from './labo-batiments.js?v=0.124.0';
-import { BATIMENTS } from './data/batiments.js?v=0.124.0';
-import { JOURNAL } from './labo-journal.js?v=0.124.0';
-import { loadVersion } from './lib/app-update.js?v=0.124.0';
-import { maquetteEffets, maquetteAmbiance, maquetteEspace, maquetteBruitages } from './labo-son.js?v=0.124.0';
-import { calqueMoral } from './labo-moral.js?v=0.124.0';
-import { bilanRapport, bilanTuiles, bilanFrise } from './labo-donnees.js?v=0.124.0';
-import { fichesTuiles, fichesProfil, fichesCompactes } from './labo-fiches.js?v=0.124.0';
-import { calqueEnnemis } from './labo-engins-ennemis.js?v=0.124.0';
-import { maquetteTranchees, NOTES_TRANCHEES, NOMS_TRANCHEES } from './labo-tranchees.js?v=0.124.0';
-import { maquetteFabrique } from './labo-fabrique.js?v=0.124.0';
-import { entrees as encEntrees, lexiqueAZ, planche as encPlanche } from './labo-encyclopedie.js?v=0.124.0';
+import { afficherVersion } from './version-tag.js?v=0.125.0';
+import { mountLabo } from './lib/labo-shell.js?v=0.125.0';
+import { spriteCanvas, paletteToGPL, paletteToHex } from './lib/sprites.js?v=0.125.0';
+import { PALETTE, ROLES } from './palette.js?v=0.125.0';
+import { chargerContenu } from './design-store.js?v=0.125.0';
+import { tuile, ETAT } from './tuiles.js?v=0.125.0';
+import { creerTerrain, impact, hydroLignes, toucher } from './terrain.js?v=0.125.0';
+import { FORMES } from './cratere.js?v=0.125.0';
+import { CALIBRES } from './data/calibres.js?v=0.125.0';
+import { METEO } from './data/meteo.js?v=0.125.0';
+import { nouvelleBataille, avancer, ordonnerMarche, ordonnerBarrage, mourir, regarderAu, aube, horloge, ticksParJour, rangDe } from './bataille.js?v=0.125.0';
+import { AZIMUTS, COTES } from './data/soleil.js?v=0.125.0';
+import { creerRendu, ZOOMS } from './rendu3d.js?v=0.125.0';
+import { placesCommandement } from './army.js?v=0.125.0';
+import { hash2 } from './lib/rng.js?v=0.125.0';
+import { reglerVerdure } from './apparence.js?v=0.125.0';
+import { maquetteChars } from './labo-chars.js?v=0.125.0';
+import { maquetteEpaves } from './labo-epaves.js?v=0.125.0';
+import { fondations, boutons, unites, fenetres, revision } from './labo-design-system.js?v=0.125.0';
+import { cartesSecteur } from './labo-cartes.js?v=0.125.0';
+import { gainTampon, gainCachets, gainFil, gainBordereau, victoireFanion, victoireTampon, victoireChevrons, victoireAube, ficheDeuxColonnes, ficheEtages, ficheRegistre, ficheDAbord } from './labo-recompenses.js?v=0.125.0';
+import { maquetteBatiment, maquetteCamp } from './labo-batiments.js?v=0.125.0';
+import { BATIMENTS } from './data/batiments.js?v=0.125.0';
+import { JOURNAL } from './labo-journal.js?v=0.125.0';
+import { loadVersion } from './lib/app-update.js?v=0.125.0';
+import { maquetteEffets, maquetteAmbiance, maquetteEspace, maquetteBruitages } from './labo-son.js?v=0.125.0';
+import { calqueMoral } from './labo-moral.js?v=0.125.0';
+import { bilanRapport, bilanTuiles, bilanFrise } from './labo-donnees.js?v=0.125.0';
+import { fichesTuiles, fichesProfil, fichesCompactes } from './labo-fiches.js?v=0.125.0';
+import { calqueEnnemis } from './labo-engins-ennemis.js?v=0.125.0';
+import { maquetteTranchees, NOTES_TRANCHEES, NOMS_TRANCHEES } from './labo-tranchees.js?v=0.125.0';
+import { maquetteFabrique } from './labo-fabrique.js?v=0.125.0';
+import { entrees as encEntrees, lexiqueAZ, planche as encPlanche } from './labo-encyclopedie.js?v=0.125.0';
 
 document.documentElement.style.setProperty('--jeu-accent', ROLES.accent);
 const NOM = document.title.replace(/^Labo — /, ''); // le nom vient de la page (une apostrophe ne casse rien)
@@ -416,7 +416,7 @@ const GROUPES = [
       { title: 'La frise', status: 'ancienne', depuis: '0.117.0', note: 'Non retenu (Jérôme, 8 nov.), mais ses courbes (les effectifs de chaque jour, lus dans l\'historique des soirs) sont reprises dans les fiches. La bataille entière en une courbe (les effectifs debout des deux camps, les tronçons pris et perdus en marques) ; le jour du bilan est déplié dessous. Dit l\'évolution de la bataille, pas seulement la journée ; le moins immédiat.', render: s => { bilanFrise(s); } },
     ] },
     { id: 'donnees-fiches', title: 'Les données : les fiches', variants: [
-      { title: 'Les tuiles', status: 'retenue', depuis: '0.119.0', note: 'RETENU (Jérôme, 8 nov.) : à passer en jeu. Les fiches d\'un soldat, d\'un régiment, d\'un char et d\'une mitrailleuse dans le même langage : une tuile par sujet (un titre, un chiffre, un graphique, un mot). Large : pour une fiche qui s\'ouvre au milieu du champ.', render: s => { fichesTuiles(s); } },
+      { title: 'Les tuiles', status: 'retenue', depuis: '0.119.0', note: 'EN JEU depuis la v0.125.0 (Jérôme, 8 nov.) : `hud/tuiles.js`, `fiche.js`, `chars.js`, `nids.js` ; dans la fenêtre étroite d\'un char ou d\'un poste, deux colonnes de tuiles. Les fiches d\'un soldat, d\'un régiment, d\'un char et d\'une mitrailleuse dans le même langage : une tuile par sujet (un titre, un chiffre, un graphique, un mot). Large : pour une fiche qui s\'ouvre au milieu du champ.', render: s => { fichesTuiles(s); } },
       { title: 'Le profil', status: 'ancienne', depuis: '0.119.0', note: 'Non retenu (Jérôme, 8 nov.). Les mêmes blocs en rangées : le titre et le gros chiffre à gauche, les graphiques étiquetés au milieu, le mot à droite. Une seule colonne, qui se lit de haut en bas et se compare d\'une fiche à l\'autre.', render: s => { fichesProfil(s); } },
       { title: 'La compacte', status: 'ancienne', depuis: '0.119.0', note: 'Non retenu (Jérôme, 8 nov.). Les mêmes blocs à la largeur d\'une fenêtre du jeu (300 px) : une ligne titre-chiffre, le graphique dessous. La plus proche de ce que le jeu peut loger à côté du champ.', render: s => { fichesCompactes(s); } },
     ] },
