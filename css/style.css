@@ -936,3 +936,10 @@ body.vue-verrouillee .char-fiche { display: none; }      /* la fiche cacherait l
 .fiche-tuiles.fine .tuile:last-child:nth-child(odd) { grid-column: 1 / -1; }
 .fiche-tuiles.fine .fiche-rang, .fiche-tuiles.fine .fiche-rang.sans-nom { grid-template-columns: minmax(0, 1fr); gap: var(--e0); }
 .fiche-tuiles.fine .fiche-mot { text-align: left; white-space: normal; }
+
+/* L'avion abattu, vu de l'intérieur (Jérôme, v0.124.0) : l'écran vire au rouge pendant le tonneau, puis plein rouge sur l'épave. Le rouge d'alerte de l'interface (`--jeu-deroute`), exception datée : un accident, rien d'autre. */
+.accident { position: absolute; inset: 0; pointer-events: none; background: radial-gradient(ellipse at center, transparent 25%, var(--jeu-deroute) 120%); opacity: 0.75; box-shadow: inset 0 0 160px 50px var(--jeu-deroute); animation: accident-bat 0.7s ease-in-out infinite alternate; }
+.accident[hidden] { display: none; }
+.accident.ecrase { background: var(--jeu-deroute); opacity: 0.6; animation: none; box-shadow: none; }
+@keyframes accident-bat { from { opacity: 0.45; } to { opacity: 0.85; } }
+@media (prefers-reduced-motion: reduce) { .accident { animation: none; } }

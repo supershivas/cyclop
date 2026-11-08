@@ -22,31 +22,31 @@
    - Les soldats : instanciés (une boîte et son ombre) ; au zoom 1 et 2, un
      point de 2 × 2 pixels (la couleur du camp sur son ombre).
    - Les corps : un homme couché (instancié) ; au zoom 1 et 2, un pixel. */
-import { loadThree } from './three-lib.js?v=0.126.0';
-import * as SH from './rendu/shaders.js?v=0.126.0';
-import { creerSoldats } from './rendu/soldats.js?v=0.126.0';
-import { creerChars } from './rendu/chars.js?v=0.126.0';
-import { creerGenies } from './rendu/genies.js?v=0.126.0';
-import { creerCamp } from './rendu/camp.js?v=0.126.0';
-import { creerAvions } from './rendu/avions.js?v=0.126.0';
-import { creerPonts } from './rendu/ponts.js?v=0.126.0';
-import { creerCiel } from './rendu/ciel.js?v=0.126.0';
-import { creerMeteo } from './rendu/meteo.js?v=0.126.0';
-import { creerTroncons } from './rendu/troncons.js?v=0.126.0';
-import { ARBRES_JEU } from './data/arbres.js?v=0.126.0';
-import { creerVegetation } from './rendu/vegetation.js?v=0.126.0';
-import { creerTemps } from './rendu/temps.js?v=0.126.0';
-import { creerEclats } from './rendu/eclats.js?v=0.126.0';
-import { creerOmbresRelief } from './rendu/ombres-relief.js?v=0.126.0';
-import { OMBRES_RELIEF as OMB, NUAGES, NUAGES_VENT } from './data/soleil.js?v=0.126.0';
-import { PALETTE, ORDRE, INDICE } from './palette.js?v=0.126.0';
-import { OMBRE, couleursLigne } from './apparence.js?v=0.126.0';
-import { MORCEAU, hauteurVueQ as hauteurQ, hauteurVueM as hauteurM } from './terrain.js?v=0.126.0';
-import { horloge, secteurDuJeu, rangDe } from './bataille.js?v=0.126.0';
-import { GRADES } from './data/grades.js?v=0.126.0';
-import { profilFleuve } from './eaux.js?v=0.126.0';
-import { ligneY } from './tranchees.js?v=0.126.0';
-import { vent as ventDuJour } from './data/meteo.js?v=0.126.0';
+import { loadThree } from './three-lib.js?v=0.127.0';
+import * as SH from './rendu/shaders.js?v=0.127.0';
+import { creerSoldats } from './rendu/soldats.js?v=0.127.0';
+import { creerChars } from './rendu/chars.js?v=0.127.0';
+import { creerGenies } from './rendu/genies.js?v=0.127.0';
+import { creerCamp } from './rendu/camp.js?v=0.127.0';
+import { creerAvions } from './rendu/avions.js?v=0.127.0';
+import { creerPonts } from './rendu/ponts.js?v=0.127.0';
+import { creerCiel } from './rendu/ciel.js?v=0.127.0';
+import { creerMeteo } from './rendu/meteo.js?v=0.127.0';
+import { creerTroncons } from './rendu/troncons.js?v=0.127.0';
+import { ARBRES_JEU } from './data/arbres.js?v=0.127.0';
+import { creerVegetation } from './rendu/vegetation.js?v=0.127.0';
+import { creerTemps } from './rendu/temps.js?v=0.127.0';
+import { creerEclats } from './rendu/eclats.js?v=0.127.0';
+import { creerOmbresRelief } from './rendu/ombres-relief.js?v=0.127.0';
+import { OMBRES_RELIEF as OMB, NUAGES, NUAGES_VENT } from './data/soleil.js?v=0.127.0';
+import { PALETTE, ORDRE, INDICE } from './palette.js?v=0.127.0';
+import { OMBRE, couleursLigne } from './apparence.js?v=0.127.0';
+import { MORCEAU, hauteurVueQ as hauteurQ, hauteurVueM as hauteurM } from './terrain.js?v=0.127.0';
+import { horloge, secteurDuJeu, rangDe } from './bataille.js?v=0.127.0';
+import { GRADES } from './data/grades.js?v=0.127.0';
+import { profilFleuve } from './eaux.js?v=0.127.0';
+import { ligneY } from './tranchees.js?v=0.127.0';
+import { vent as ventDuJour } from './data/meteo.js?v=0.127.0';
 
 export const CAMERA = { yaw: 0.15, tangage: 0.95, fov: 30 };   // au départ : tournée de 9°, plongée de 54°, angle de 30°
 // la caméra respire : un balancement très lent, 2° en 23 s (Jérôme, v0.3.1 : variante D du labo retenue)
@@ -90,7 +90,7 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
   const depart = { ...CAMERA, ...(camDepart || {}) };
   const camera = new THREE.PerspectiveCamera(depart.fov, 1, 1, 1000);
   // yaw, tangage : la caméra vue ; cible : là où elle va (elle y glisse en douceur)
-  const vue = { haut: 0, dist: null, portee: 0, cx: 200, cz: 150, zoom: 2, vw: 320, vh: 200, facteur: 2, fov: depart.fov, yaw: depart.yaw, tangage: depart.tangage, cible: { yaw: depart.yaw, tangage: depart.tangage } };
+  const vue = { haut: 0, dist: null, portee: 0, garde: null, hors: 0, roulis: 0, secousse: 0, cx: 200, cz: 150, zoom: 2, vw: 320, vh: 200, facteur: 2, fov: depart.fov, yaw: depart.yaw, tangage: depart.tangage, cible: { yaw: depart.yaw, tangage: depart.tangage } };
   // le souffle de la caméra (respiration) s'ajoute à l'angle choisi : yawVu, tangageVu servent au dessin et aux conversions
   let zoomBorne = -1;      // le zoom de la dernière mise aux bornes du point visé (`borner`)
   const souffle = { t: 0, yaw: 0, tangage: 0, calme: 0, force: 0 };      // calme : les secondes sans geste sur la caméra ; force : 0..1, la part du balancement visible
@@ -108,6 +108,8 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
     camera.updateProjectionMatrix();
     camera.position.set(vue.cx + o[0] * D, SOL_Y + vue.haut + o[1] * D, vue.cz + o[2] * D);
     camera.lookAt(vue.cx, SOL_Y + vue.haut, vue.cz);
+    // le tonneau (`vue.roulis`, rad) et la secousse (`vue.secousse`, rad : un tir, un choc) de la vue verrouillée ; le dessin seulement, l'horloge du navigateur (rien n'est dans la bataille)
+    if (vue.roulis || vue.secousse) { const t = performance.now() / 1000, a = vue.secousse; camera.rotateX(a * Math.sin(t * 57)); camera.rotateY(a * Math.sin(t * 43 + 1)); camera.rotateZ(vue.roulis + a * 0.6 * Math.sin(t * 37 + 2)); }
     camera.updateMatrixWorld();
     return { cx: vue.cx, cz: vue.cz, p };
   }
@@ -885,7 +887,7 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
     // la caméra libre de l'écran titre passe aussi par là (Jérôme, v0.60.1 : « elle passe encore sous le sol, interdire ») : ni sous le sol, ni hors du terrain
     if (vue.ciel || vue.libre) {
       // la caméra libre du jeu : le point visé reste sur le terrain, la caméra ne passe pas sous le sol (elle se relève au besoin)
-      vue.cx = Math.max(0, Math.min(T.W, vue.cx)); vue.cz = Math.max(0, Math.min(T.H, vue.cz));
+      vue.cx = Math.max(-vue.hors, Math.min(T.W + vue.hors, vue.cx)); vue.cz = Math.max(-vue.hors, Math.min(T.H + vue.hors, vue.cz));      // (`vue.hors` : la vue verrouillée suit un avion au-delà du bord, sur le faux terrain)
       const D = distance(vue.zoom);
       if (deplace || vue.zoom !== zoomBorne) {
         zoomBorne = vue.zoom;
@@ -909,7 +911,7 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
         let tg = Math.max(TG_CIEL_MIN, Math.min(TG_CIEL_MAX, o.tangage));
         const yaw = cle === 'cible' ? vue.cible.yaw : yawVu();
         for (let k = 0; k < 5; k++) {
-          const v = versCamera(yaw, tg), h = surface(vue.cx + v[0] * D, vue.cz + v[2] * D) + GARDE_SOL;
+          const v = versCamera(yaw, tg), h = surface(vue.cx + v[0] * D, vue.cz + v[2] * D) + (vue.garde ?? GARDE_SOL);      // (`vue.garde` : la vue à bord d'un engin se pose plus bas, sous le canon d'un char : 0,35 m au-dessus du sol)
           const need = Math.asin(Math.max(-1, Math.min(1, (h - SOL_Y - vue.haut) / D)));
           if (need <= tg) break;
           tg = Math.min(TG_CIEL_MAX, need);

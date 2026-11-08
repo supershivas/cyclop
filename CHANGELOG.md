@@ -1,5 +1,10 @@
 # Journal des versions
 
+## 0.127.0 — 2026-11-08
+- Vue à la personne de l'avion : au bout de l'hélice, penchée vers le sol pour voir les mitraillages ; abattu, on reste à bord (tonneau, écran rouge) jusqu'à l'écrasement
+- Vue à la personne du char : sous le canon, qui tremble à chaque tir puis file vers l'explosion en téléobjectif
+- La vue verrouillée suit l'avion au-delà du bord du terrain (plus de ciel noir ni d'avion qui sort de l'écran)
+
 ## 0.126.0 — 2026-11-08
 - Le bilan de l'aube est en tuiles : ce que la nuit a fait, les morts par cause, la dotation de l'état-major et les effectifs au matin
 
