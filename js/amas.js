@@ -1,7 +1,7 @@
 // Où est un régiment ? (v0.116.1) Une seule réponse pour tout le jeu : la pastille de la carte, le nom sur le champ, la caméra, le fanion, le chemin d'un ordre.
 // Un régiment dont les hommes se sont scindés a plusieurs amas ; le premier (le plus nombreux) est « son » endroit, les autres sont ses isolés.
 // Logique pure : lit `B.armee`, ne change rien (aucun DOM, aucune horloge, aucun hasard).
-import { AMAS } from './data/amas.js?v=0.127.0';
+import { AMAS } from './data/amas.js?v=0.127.1';
 
 // Les amas de chaque régiment vivant : Map(id du régiment → { amas, n, bl }). `amas` est trié du plus nombreux au moins nombreux (à égalité, le plus à l'ouest) ;
 // chaque amas : { x, y (le centre des hommes), n, bl (les blessés), ymin, x0, x1, y0, y1 (l'emprise) }. `n` et `bl` du régiment : le total de tous ses amas.

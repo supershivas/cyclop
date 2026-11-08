@@ -3,8 +3,8 @@
 // (nous : bleu horizon, eux : vert kaki ; l'orange et le rouge d'alerte ne disent que le moral) ; (2) trois variantes du bilan du soir qui s'en servent.
 // RÈGLE : la forme porte l'information, jamais la couleur seule (plein = debout, hachuré = blessés, contour = tombés ; ▲ ▼ ◆ ● pour les faits).
 // Rien n'est dans le jeu. Les données ont la forme de `lireJournee` (js/donnees-jour.js, testée sur une vraie bataille) ; ici, trois journées d'exemple (une vraie bataille simulée coûte 8 s par jour).
-import { PALETTE as P, ALERTES } from './palette.js?v=0.127.0';
-import { faitsMarquants, MANQUE } from './donnees-jour.js?v=0.127.0';
+import { PALETTE as P, ALERTES } from './palette.js?v=0.127.1';
+import { faitsMarquants, MANQUE } from './donnees-jour.js?v=0.127.1';
 
 const el = (tag, css = '', ...kids) => { const e = document.createElement(tag); if (css) e.style.cssText = css; e.append(...kids.flat().filter(k => k != null)); return e; };
 const MONO = 'font:13px/1.4 ui-monospace,"DejaVu Sans Mono",Menlo,Consolas,monospace;';

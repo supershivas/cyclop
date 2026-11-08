@@ -2,8 +2,8 @@
    Une fenêtre : une carte par régiment (effectif, blessés, ce que les transferts prévus en feront) ; on choisit la quantité (1, 10, tous), puis on glisse une carte sur une autre — ou on clique la source, puis la cible.
    Rien ne change avant l'aube : les transferts se rangent dans l'état (`etat.transferts`), se lisent et s'annulent ici. Règle de tout glisser-déposer : la carte « prise » suit le pointeur avec une ombre,
    la cible est en pointillés et montre déjà le résultat, Échap annule, un simple clic n'est jamais un glissement. Lecture seule de l'état : les ordres passent par `planifier(de, vers, n)` et `annuler(k)`. */
-import { disponibles } from '../nuit.js?v=0.127.0';
-import { numeroDe } from './lecture.js?v=0.127.0';
+import { disponibles } from '../nuit.js?v=0.127.1';
+import { numeroDe } from './lecture.js?v=0.127.1';
 
 const el = (tag, props = {}, ...kids) => { const e = Object.assign(document.createElement(tag), props); e.append(...kids); return e; };
 const SEUIL = 6;       // px : en dessous, c'est un clic

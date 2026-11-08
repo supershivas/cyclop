@@ -701,11 +701,21 @@ h2 { font-weight: normal; letter-spacing: var(--titre-lettres); }
 .secteur p, .secteur h3 { margin: 0; }
 .secteur .retour { justify-self: start; font: inherit; font-size: var(--texte-petit); min-height: var(--jeu-cible); padding: 0 var(--pas); background: none; border: 1px solid var(--jeu-accent); color: inherit; cursor: pointer; }
 .secteur-tete { display: flex; align-items: center; justify-content: space-between; gap: var(--pas); }
-.secteur-nav { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--e1); }
-.secteur-nav .sect { min-width: 0; min-height: var(--jeu-cible); padding: 0; font: inherit; font-size: var(--texte-petit); background: none; border: 1px solid var(--jeu-accent); color: inherit; cursor: pointer; }
-.secteur-nav .sect:disabled { opacity: .35; cursor: not-allowed; }
+/* Le plan entouré de ses quatre flèches (Jérôme, v0.128.0 : « leur placement autour de la carte, juste une flèche ») : les cases voisines, là où elles sont */
+.secteur-cadre { display: grid; grid-template-columns: 28px minmax(0, 1fr) 28px; grid-template-rows: 28px auto 28px; gap: var(--e0); }
+.secteur-cadre canvas { grid-column: 2; grid-row: 2; }
+.secteur-cadre .sect { display: grid; place-items: center; padding: 0; min-width: 0; min-height: 0; color: inherit; background: none; border: 1px solid var(--jeu-accent); cursor: pointer; }
+.secteur-cadre .sect.haut { grid-area: 1 / 2; } .secteur-cadre .sect.gauche { grid-area: 2 / 1; } .secteur-cadre .sect.droite { grid-area: 2 / 3; } .secteur-cadre .sect.bas { grid-area: 3 / 2; }
+.secteur-cadre .sect svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.secteur-cadre .sect:disabled { opacity: .3; cursor: not-allowed; }
+.secteur-cadre .sect:focus-visible { outline: 2px solid var(--jeu-nous); outline-offset: 2px; }
+@media (hover: hover) { .secteur-cadre .sect:not(:disabled):hover { background: var(--jeu-brume); color: var(--jeu-fond); border-color: var(--jeu-fond); } }
+.secteur .fiche-tuiles.fine { grid-template-columns: minmax(0, 1fr); margin: 0; }
+.secteur .fiche-tuiles.fine .fiche-rang { grid-template-columns: 11ch minmax(0, 1fr) 9ch; gap: var(--pas); }
+.secteur .fiche-tuiles.fine .fiche-rang.sans-nom { grid-template-columns: minmax(0, 1fr); }
+.secteur .fiche-tuiles.fine .fiche-mot { text-align: right; white-space: nowrap; }
+.secteur .tuile .bi-chiffre { display: flex; align-items: baseline; gap: var(--pas); }
 .secteur canvas { display: block; width: 100%; height: auto; image-rendering: pixelated; background: var(--jeu-fond); }
-.secteur-lignes { display: grid; gap: var(--e0); font-size: var(--texte-petit); }
 .carte.remplacee { display: none; }
 
 /* La légende de la carte et du plan de secteur (v0.78.1) */
@@ -715,9 +725,6 @@ h2 { font-weight: normal; letter-spacing: var(--titre-lettres); }
 .legende i.t { width: 16px; height: 4px; box-sizing: content-box; background: var(--jeu-nous); border: 2px solid var(--jeu-encre); border-left: 0; border-right: 0; }
 .legende i.r { border-radius: 50%; width: 10px; height: 10px; background: var(--jeu-fond); border-width: 2px; }
 .legende i.p.bl { background: var(--jeu-encre); }
-.secteur-regs { list-style: none; margin: var(--e1) 0 0; padding: 0; display: grid; gap: var(--e0); font-size: var(--texte-petit); }
-.secteur-regs li { padding-left: var(--e1); border-left: 4px solid var(--jeu-nous); }
-.secteur-regs li.eux { border-left-color: var(--jeu-eux); }
 
 /* Nos chars sur le champ et leur fiche (v0.81.0) */
 .chars-etiq, .chars-cibles { position: absolute; left: 0; top: 0; pointer-events: none; }
@@ -857,7 +864,9 @@ h2 { font-weight: normal; letter-spacing: var(--titre-lettres); }
 .cinema-bars i:last-child { bottom: 0; }
 .suivi { position: absolute; left: 50%; bottom: 120px; transform: translateX(-50%); display: flex; align-items: center; gap: var(--pas); padding: var(--e1) var(--pas); font-size: var(--texte-petit); }
 .suivi[hidden] { display: none; }
-.suivi button { min-height: 0; padding: var(--e1) var(--pas); }
+.reg-ouvert .tete .aide.vue svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.reg-ouvert .tete .aide.vue[aria-pressed="true"] { background: var(--jeu-fond); color: var(--jeu-encre); border-color: var(--jeu-fond); }       /* la vue est prise : le bouton est plein */
+.reg-ouvert .tete .aide.vue:first-of-type { margin-left: var(--e1); }
 body.vue-verrouillee .char-fiche { display: none; }      /* la fiche cacherait la vue : le bandeau « Libérer la vue » suffit ; Échap aussi */
 
 /* ─── Le bilan du soir en tuiles (Jérôme, 8 nov., v0.124.0 : le tableau de bord du labo ; `hud/bilan.js`) ───

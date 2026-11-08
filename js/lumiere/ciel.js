@@ -1,9 +1,9 @@
 // Le ciel et la lumière du jour : tout vient de l'heure, du jour de bataille et de la météo, et de la palette du jeu (js/palette.js) mélangée en continu
 // (aucune couleur nouvelle : le bleu du ciel est « l'eau qui reflète le ciel », le soleil bas tire sur l'orange d'alerte, la nuit sur la terre).
 // Les couleurs sont rendues en LINÉAIRE : le nuanceur fait la lumière en linéaire et gamma-corrige à la fin.
-import { PALETTE, ALERTES } from '../palette.js?v=0.127.0';
-import { METEOS, SOLEIL, NUAGES } from './config.js?v=0.127.0';
-import { directionSoleil } from './lumiere.js?v=0.127.0';
+import { PALETTE, ALERTES } from '../palette.js?v=0.127.1';
+import { METEOS, SOLEIL, NUAGES } from './config.js?v=0.127.1';
+import { directionSoleil } from './lumiere.js?v=0.127.1';
 
 export const lin = hex => [1, 3, 5].map(i => Math.pow(parseInt(hex.slice(i, i + 2), 16) / 255, 2.2));
 const mix = (a, b, t) => a.map((v, i) => v + (b[i] - v) * t);

@@ -2,12 +2,12 @@
 // Sur le champ : au-dessus de chaque char à nous, une petite étiquette (sa barre de canon qui se remplit, puis PRÊT ; ses points de vie) ; de lui à sa cible, une ligne pointillée et une croix
 // (de la cible qu'on lui a donnée : trait plein ; du carré d'ennemis qu'il a choisi : pointillé). Un clic sur l'étiquette le choisit. La fiche (`#char-fiche`) du char choisi : ses barres,
 // « Marcher » / « Cible » (le prochain clic sur le sol), « Arrêt », « Tir libre », « Fermer ». Le dessin et les boutons seulement : les ordres partent par `surOrdre(ordre)` (main.js).
-import { CHARS } from '../data/chars.js?v=0.127.0';
-import { NOUS } from '../bataille.js?v=0.127.0';
-import { chevronsDe, bonusEnMots } from '../data/experience.js?v=0.127.0';
-import { jauge as jaugeT, partage, tuilesDe } from './tuiles.js?v=0.127.0';
-import { reinitIds } from './bilan.js?v=0.127.0';
-import { REPERES } from './barres.js?v=0.127.0';
+import { CHARS } from '../data/chars.js?v=0.127.1';
+import { NOUS } from '../bataille.js?v=0.127.1';
+import { chevronsDe, bonusEnMots } from '../data/experience.js?v=0.127.1';
+import { jauge as jaugeT, partage, tuilesDe } from './tuiles.js?v=0.127.1';
+import { reinitIds } from './bilan.js?v=0.127.1';
+import { REPERES } from './barres.js?v=0.127.1';
 
 const REDUIT = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
 const NS = 'http://www.w3.org/2000/svg';
@@ -66,7 +66,7 @@ export function creerCharsHud({ $, bataille, moi = () => NOUS, versEcran, hauteu
       : roule ? `Roule vers l'arrière de nos lignes, puis vers son objectif (${reste} m).`
       : `Marche vers son objectif : encore ${reste} m.`;
     const attente = f >= 1 && !c.vise;
-    { const sv = suivi && suivi.genre === 'char' && suivi.id === c.id ? suivi.mode : null; $('char-fiche-vue').textContent = sv === 'cinema' ? 'Libérer la vue' : 'Vue verrouillée'; $('char-fiche-personne').textContent = sv === 'personne' ? 'Libérer la vue' : 'À la personne'; }
+    { const sv = suivi && suivi.genre === 'char' && suivi.id === c.id ? suivi.mode : null; $('char-fiche-vue').setAttribute('aria-pressed', sv === 'cinema'); $('char-fiche-personne').setAttribute('aria-pressed', sv === 'personne'); }
     // ses tuiles (Jérôme, 8 nov. : les tuiles du labo) : la coque, le canon, ses victimes, ses obus, son expérience ; refaites quand une valeur change (le canon : chaque seconde), jamais à chaque image
     const nbc = chevronsDe(c.exp ?? 0), nTues = c.tues ?? 0, canonMot = attente ? 'chargé' : f >= 1 ? 'PRÊT' : `${secondes(B, c)} s`;
     const sigFiche = [c.id, vie, canonMot, c.vise ? (c.cible && c.vise === c.cible ? 1 : 2) : 0, Math.round((c.exp ?? 0) * 100), nTues, c.tuesCanon ?? 0, c.tuesMitr ?? 0, c.repar ?? 0, c.obus ?? 0].join(':');

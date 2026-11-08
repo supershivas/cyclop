@@ -1,13 +1,13 @@
 // Nos postes de mitrailleuse sur le champ et leur fiche (Jérôme, lot E : « on sélectionne le poste et on règle la direction du cône ; barre de vie, barre de munitions ; de l'xp »).
 // Sur le champ : au-dessus de chaque poste à nous, une étiquette (ses chevrons, sa vie, ses munitions, son expérience) ; un clic sur elle le choisit. La fiche (`#nid-fiche`) : les barres,
 // le bonus de ses chevrons, « Tourner » (le prochain clic sur le sol : la direction du cône), « Droit devant », « Fermer ». Le dessin et les boutons seulement : les ordres partent par `surBouton` (main.js).
-import { NIDS } from '../data/nids.js?v=0.127.0';
-import { bonusEnMots } from '../data/experience.js?v=0.127.0';
-import { chevronsNid, cadenceNid, servantNid, raisonInactif } from '../nids.js?v=0.127.0';
-import { jauge as jaugeT, bande, tuilesDe } from './tuiles.js?v=0.127.0';
-import { reinitIds } from './bilan.js?v=0.127.0';
-import { REPERES } from './barres.js?v=0.127.0';
-import { NOUS } from '../bataille.js?v=0.127.0';
+import { NIDS } from '../data/nids.js?v=0.127.1';
+import { bonusEnMots } from '../data/experience.js?v=0.127.1';
+import { chevronsNid, cadenceNid, servantNid, raisonInactif } from '../nids.js?v=0.127.1';
+import { jauge as jaugeT, bande, tuilesDe } from './tuiles.js?v=0.127.1';
+import { reinitIds } from './bilan.js?v=0.127.1';
+import { REPERES } from './barres.js?v=0.127.1';
+import { NOUS } from '../bataille.js?v=0.127.1';
 
 const REDUIT = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
 export function creerNidsHud({ $, bataille, moi = () => NOUS, versEcran, hauteurSol, choisir, surBouton, pastilles }) {
@@ -53,7 +53,7 @@ export function creerNidsHud({ $, bataille, moi = () => NOUS, versEcran, hauteur
     $('nid-fiche-etat-court').textContent = inactif ? 'inactif' : court;
     $('nid-fiche-ordre').textContent = inactif || `${ordre}${rs ? ` Servi par le ${rs.nom}.` : ''}`;
     fiche.classList.toggle('inactif', !!inactif);
-    { const sv = suivi && suivi.genre === 'nid' && suivi.id === n.id ? suivi.mode : null; $('nid-fiche-vue').textContent = sv === 'cinema' ? 'Libérer la vue' : 'Vue verrouillée'; $('nid-fiche-personne').textContent = sv === 'personne' ? 'Libérer la vue' : 'À la personne'; }
+    { const sv = suivi && suivi.genre === 'nid' && suivi.id === n.id ? suivi.mode : null; $('nid-fiche-vue').setAttribute('aria-pressed', sv === 'cinema'); $('nid-fiche-personne').setAttribute('aria-pressed', sv === 'personne'); }
     for (const b of fiche.querySelectorAll('[data-nid="tourner"],[data-nid="droit"]')) b.setAttribute('aria-disabled', inactif ? 'true' : 'false');
     // ses tuiles (Jérôme, 8 nov. : les tuiles du labo) : le poste, sa bande, ses victimes, son expérience ; refaites seulement quand une valeur change
     const par = Object.entries(n.tuesReg ?? {}).map(([r, k]) => `${B.etat.regiments[r]?.nom ?? 'régiment ' + r} ${k}`).join(', ');

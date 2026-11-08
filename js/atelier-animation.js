@@ -2,14 +2,14 @@
 // On règle la pose d'un soldat articulé articulation par articulation (curseurs), on la range en images clés sur une frise, et l'interpolation (js/pose-soldat.js) rejoue le mouvement.
 // Le dessin est celui du jeu : le soldat articulé (js/rendu/soldat-articule.js) en pose libre (`poserLibre` : les angles viennent des curseurs, pas des poses calculées du nuanceur).
 // Rien n'est écrit dans une bataille ; le brouillard de l'atelier est dans ce navigateur (`cyclopeen:atelier-anim`), l'export est un fichier JSON.
-import { PALETTE } from './palette.js?v=0.127.0';
-import { loadThree } from './three-lib.js?v=0.127.0';
-import { identite, caracteristiques } from './identite.js?v=0.127.0';
-import { aspect } from './aspect-soldat.js?v=0.127.0';
-import { creerSoldatArticule, poserLibre } from './rendu/soldat-articule.js?v=0.127.0';
-import { CHAMPS, NOMS_CHAMPS, COURBES } from './data/poses-soldat.js?v=0.127.0';
-import { poseNeutre, poseDe, miroir, borner, echantillon, marcheEnImages, articulations, OS_ARTICULES } from './pose-soldat.js?v=0.127.0';
-import { creerPoignees, OUTILS } from './atelier-poignees.js?v=0.127.0';
+import { PALETTE } from './palette.js?v=0.127.1';
+import { loadThree } from './three-lib.js?v=0.127.1';
+import { identite, caracteristiques } from './identite.js?v=0.127.1';
+import { aspect } from './aspect-soldat.js?v=0.127.1';
+import { creerSoldatArticule, poserLibre } from './rendu/soldat-articule.js?v=0.127.1';
+import { CHAMPS, NOMS_CHAMPS, COURBES } from './data/poses-soldat.js?v=0.127.1';
+import { poseNeutre, poseDe, miroir, borner, echantillon, marcheEnImages, articulations, OS_ARTICULES } from './pose-soldat.js?v=0.127.1';
+import { creerPoignees, OUTILS } from './atelier-poignees.js?v=0.127.1';
 
 const $ = id => document.getElementById(id);
 const el = (tag, props = {}, ...kids) => { const e = Object.assign(document.createElement(tag), props); e.append(...kids); return e; };
