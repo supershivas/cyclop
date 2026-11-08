@@ -7,6 +7,7 @@ import { banc, resolutionHorloge } from '../js/lumiere/mesures.js';
 import { mat4, matrices, creerCamera } from '../js/lumiere/camera.js';
 import { bandes, bandeSuivante } from '../js/lumiere/lumiere.js';
 import { niveauDe, creerClasses as creerClasses2 } from '../js/lumiere/soldats-reels.js';
+import { creerMeteoLisse, TEMPS_LISSE, LISSE } from '../js/rendu/meteo-lisse.js';
 import { couleurCiel, masseAir } from '../js/lumiere/ciel.js';
 import { creerLumiere, calculerSoleil, calculerAO, calculerFlood, calculerCavite, regionTotale, directionSoleil } from '../js/lumiere/lumiere.js';
 import { creerFoule, regler, avancer, plusProches } from '../js/lumiere/foule.js';
@@ -350,6 +351,24 @@ test('le lac : une nappe plate de matière EAU dans une cuvette, rives en pente,
   assert.ok(eau > 800, `${eau} cases d'eau`); assert.equal(niveau.size, 1, 'la surface est plate'); assert.equal(hors, 0, 'ni végétation ni toit sur l\'eau');
   const rive = M.sol[Math.round(L.z) * M.W + Math.round(L.x + L.rayonM * 1.4 * 0.95)];
   assert.ok(rive >= [...niveau][0], 'la rive monte');
+});
+
+group('la météo continue du jeu (v0.129.0)');
+test('le temps glisse : de l\'état du jour d\'avant vers celui du jour, sans saut ni dépassement', () => {
+  const M = creerMeteoLisse(); M.maj('sec', 0.1, 0); assert.ok(M.etat.soleil > 0.9, 'le premier appel part du temps du jour');
+  let prec = M.etat.soleil, t = 0;
+  for (let k = 0; k < 400; k++) { t += 0.1; M.maj('brouillard', 0.1, t); assert.ok(Math.abs(M.etat.soleil - prec) < 0.1, 'pas de saut'); prec = M.etat.soleil; }
+  assert.ok(M.etat.soleil < 0.4 && M.etat.brume > 0.95, `le brouillard s'installe (${M.etat.soleil.toFixed(2)}, ${M.etat.brume.toFixed(2)})`);
+});
+test('la tempête : une brume à demi ; le beau temps : ni brume ni ombre effacée ; un temps inconnu vaut le sec', () => {
+  const M = creerMeteoLisse(); M.maj('tempete', 1, 0); assert.ok(Math.abs(M.etat.brume - TEMPS_LISSE.tempete.brume) < 1e-9);
+  M.oublier(); M.maj('beau', 1, 0); assert.equal(M.etat.brume, 0); assert.ok(M.etat.soleil > 0.85);
+  M.oublier(); M.maj('inconnu', 1, 0); assert.ok(M.etat.soleil > 0.85);
+});
+test('la couverture respire sans jamais dépasser son amplitude, et le soleil se voile avec elle', () => {
+  const M = creerMeteoLisse(); let max = 0, min = 1;
+  for (let t = 0; t < 120; t += 0.5) { M.maj('sec', 0.5, t); max = Math.max(max, Math.abs(M.etat.decalCouv)); min = Math.min(min, M.etat.soleil); }
+  assert.ok(max <= LISSE.respiration + 1e-9 && max > LISSE.respiration * 0.9); assert.ok(min < 0.95 && min > 0.7, `soleil min ${min}`);
 });
 
 group('labo lumière — pureté');

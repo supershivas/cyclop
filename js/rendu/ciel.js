@@ -1,8 +1,8 @@
 // Le ciel du jeu : un dégradé et des nuages selon la météo (Jérôme, v0.36.8 : « léger dégradé, nuages » ; v0.36.7 : le ciel suit la météo). Un plan plein écran
 // peint avant tout le reste, que le sol et le faux terrain recouvrent ; la nuit, le voile de `temps.js` le noircit. Des mélanges continus de la palette (des fondus) :
 // `[lettre, part]`. `hor` est aussi la couleur du fond et du bout du champ. Le dessin seulement : aucun hasard, le temps est celui du dessin.
-import * as SH from './shaders.js?v=0.128.0';
-import { lune, couvertureNuit, clairDeLune } from '../data/lune.js?v=0.128.0';
+import * as SH from './shaders.js?v=0.129.0';
+import { lune, couvertureNuit, clairDeLune } from '../data/lune.js?v=0.129.0';
 
 const CIELS = {
   sec: { hor: [['e', 1]], haut: [['e', 0.75], ['t', 0.25]], nuage: [['o', 0.8], ['r', 0.2]], couv: 0.45 },
@@ -35,12 +35,24 @@ export function creerCiel({ THREE, scene, col, camera }) {
   nuitPlan.frustumCulled = false; nuitPlan.renderOrder = 5.6; nuitPlan.visible = false;
   scene.add(nuitPlan);
   const devant = new THREE.Vector3();
+  let lis = null;      // l'état de la météo continue (`lisser`)
   const melange = (c, liste) => { c.setRGB(0, 0, 0); for (const [k, p] of liste) { const v = col(k); c.r += v.r * p; c.g += v.g * p; c.b += v.b * p; } return c; };
   return {
     // la couleur de l'horizon du temps qu'il fait (le fond, et le bout du champ)
     horizon(nom, c) { return melange(c, (CIELS[nom] || CIELS.sec).hor); },
     // le ciel v2 (session 4) : le soleil, sa direction (monde) et sa couleur (os mêlé d'eau : un mélange continu de la palette), ou null pour l'éteindre
-    soleil(dir) { if (!dir) { u.uC2.value = 0; return; } u.uC2.value = 1; u.uSoleilDir.value.set(dir[0], dir[1], dir[2]); u.uSoleilCoul.value.copy(col('o')).multiplyScalar(0.55).add(col('e').multiplyScalar(0.1)); },
+    soleil(dir, force = 1) { if (!dir) { u.uC2.value = 0; return; } u.uC2.value = 1; u.uSoleilDir.value.set(dir[0], dir[1], dir[2]); u.uSoleilCoul.value.copy(col('o')).multiplyScalar(0.55).add(col('e').multiplyScalar(0.1)).multiplyScalar(0.3 + 0.7 * force); },      // force : la météo continue, un soleil voilé sous un ciel couvert
+    // la météo continue (« Éclairage : haut ») : les couleurs du ciel et la couverture glissent vers celles du temps du jour (des fondus de la palette) ; créées à la première fois (un objet de plus d'emblée décale les identifiants de three)
+    lisser(nom, dt, t, decalCouv = 0) {
+      const C = CIELS[nom] || CIELS.sec;
+      if (!lis) { lis = { hor: new THREE.Color(), haut: new THREE.Color(), nuage: new THREE.Color(), cible: new THREE.Color(), couv: C.couv, pret: false }; }
+      const a = lis.pret ? 1 - Math.exp(-Math.max(0, dt) * 0.35) : 1;
+      for (const k of ['hor', 'haut', 'nuage']) lis[k].lerp(melange(lis.cible, C[k]), a);
+      lis.couv += (C.couv - lis.couv) * a; lis.pret = true;
+      u.uHor.value.copy(lis.hor); u.uHaut.value.copy(lis.haut); u.uNuage.value.copy(lis.nuage); u.uCouv.value = Math.max(0, Math.min(1, lis.couv + decalCouv)); u.uT.value = t;
+    },
+    horLisse(c) { return lis ? c.copy(lis.hor) : c; },
+    oublier() { if (lis) lis.pret = false; },
     montrer(oui) { plan.visible = oui; if (!oui) nuitPlan.visible = false; },
     // d : l'obscurité (0 le jour, 0,74 la nuit) ; les étoiles, la lune et les nuages de nuit paraissent avec elle
     nuit(d, t, jour, graine, meteo) {

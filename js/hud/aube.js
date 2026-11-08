@@ -1,8 +1,8 @@
 // Le bilan de l'aube en tuiles (Jérôme, 8 nov. : « passe le bilan de l'aube en jeu » ; le même langage que le bilan du soir et les fiches : `bilan.js`, `tuiles.js`) : ce que la nuit a fait, en six tuiles
 // (les faits avec leur pictogramme, les morts par cause, les soins, les régiments, l'état-major, les effectifs au matin) au lieu de paragraphes. « Rien de ce qui n'a pas eu lieu » : une tuile sans rien à dire n'existe pas.
 // Des fonctions de DOM qui ne lisent que ce qu'on leur donne : `nuit.js` rassemble les données (`b` : le bilan de la nuit du camp ; `refus` : les noms des régiments qui refusent ; `dotation` ; `matin` : `lireJournee`).
-import { fait, barreEffectif, reinitIds } from './bilan.js?v=0.128.0';
-import { jauge, tuileDe } from './tuiles.js?v=0.128.0';
+import { fait, barreEffectif, reinitIds } from './bilan.js?v=0.129.0';
+import { jauge, tuileDe } from './tuiles.js?v=0.129.0';
 
 const el = (tag, cls = '', ...kids) => { const e = document.createElement(tag); if (cls) e.className = cls; e.append(...kids.flat().filter(k => k != null)); return e; };
 const pl = (n, un, des) => `${n} ${n > 1 ? des : un}`;

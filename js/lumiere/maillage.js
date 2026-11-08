@@ -1,8 +1,8 @@
 // Le maillage d'un chunk : des colonnes de hauteur en cubes (un dessus, des flancs là où le voisin est plus bas) et, au-dessus des abris, un toit d'un cube.
 // Logique pure (des tableaux de nombres) : rendu.js les téléverse tels quels. Un sommet = 8 nombres : x, y, z (mètres), ao, variation, normale (0..5), matière, « dessous » (1 sous un toit).
 // L'AO des arêtes (étape 2) est cuite ici, façon Minecraft : un sommet sombrit selon les trois colonnes qui le touchent. `opts.ao` faux : tout vaut 1.
-import { MONDE } from './config.js?v=0.128.0';
-import { MAT } from './terrain.js?v=0.128.0';
+import { MONDE } from './config.js?v=0.129.0';
+import { MAT } from './terrain.js?v=0.129.0';
 
 export const FLOATS = 8;
 const hache = (i, j) => { let h = Math.imul(i, 374761393) ^ Math.imul(j, 668265263); h = Math.imul(h ^ (h >>> 13), 1274126177); return ((h ^ (h >>> 16)) >>> 0) / 4294967296; };
