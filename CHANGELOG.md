@@ -1,5 +1,9 @@
 # Journal des versions
 
+## 0.130.0 — 2026-11-08
+- L'eau profonde a des rides qui bougent, reflète le ciel et scintille au soleil (éclairage moyen et haut)
+- Plus de marches d'un mètre dans les fleuves : le niveau de l'eau descend en pente douce, et un lac et un fleuve qui se touchent ont le même niveau
+
 ## 0.129.0 — 2026-11-08
 - Éclairage « haut » : le ciel, les nuages, le soleil et la brume glissent en douceur d'un temps à l'autre, et les ombres s'effacent sous un ciel couvert
 - Les nuages respirent : un nuage qui passe voile un peu le soleil

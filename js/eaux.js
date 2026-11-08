@@ -1,14 +1,13 @@
 // Les eaux profondes d'un secteur (v0.43.0, l'atelier) : un lac (`{ o: 'lac', x, y, r }`, un disque) et un fleuve (`{ o: 'fleuve', x, y, x2, y2, r }`, un trait de demi-largeur r),
-// mêmes coordonnées que `formes.js` (mètres du SECTEUR). Logique pure, sans hasard. Une eau est creusée d'un coup à plat (au niveau de sa rive la plus basse moins un mètre, au mètre près : le sol se
-// dessine en marches d'un mètre) et marquée `profond` : on n'y passe pas (les champs de coûts la contournent, un homme qui s'y trouve la quitte à peine), sauf sur un pont (`ponts` : v0.44.0).
+// mêmes coordonnées que `formes.js` (mètres du SECTEUR). Logique pure, sans hasard. Une eau est creusée d'un coup à plat (au niveau de sa rive la plus basse moins un mètre ; un lac au mètre près, un fleuve au quart près, v0.130.0) et marquée `profond` : on n'y passe pas (les champs de coûts la contournent, un homme qui s'y trouve la quitte à peine), sauf sur un pont (`ponts` : v0.44.0).
 // Un fleuve suit le terrain : son niveau est celui de la rive la plus basse sur ±15 m de son cours, pas un niveau pour tout le cours.
-import { distanceForme, extremite } from './formes.js?v=0.129.0';
-import { hash2 } from './lib/rng.js?v=0.129.0';
-import { PONTS_PV, PONTS_DEGATS, NOMS_PONTS, typePont } from './data/ponts.js?v=0.129.0';
+import { distanceForme, extremite } from './formes.js?v=0.130.0';
+import { hash2 } from './lib/rng.js?v=0.130.0';
+import { PONTS_PV, PONTS_DEGATS, NOMS_PONTS, typePont } from './data/ponts.js?v=0.130.0';
 
 export const EAUX = ['lac', 'fleuve'];
 export const PONT_AU_MOINS = 4;          // quarts : le tablier est à 1 m au moins au-dessus de l'eau
-const PAS_NIVEAU = 5, VOISINS = 3;       // m : un niveau par tranche de 5 m de cours ; on regarde 3 tranches de chaque côté
+const PAS_NIVEAU = 3, VOISINS = 5, PENTE_MAX = 1;       // m : un niveau par tranche de 3 m de cours ; on regarde 5 tranches de chaque côté ; PENTE_MAX : quarts de mètre de différence au plus entre deux tranches
 
 // Des rives qui ne sont pas au compas (Jérôme, v0.50.0 : « les rivages moins géométriques, la largeur des fleuves qui varie, pas géométrique non plus ») : un bruit lissé, sans hasard (il vient de la position de l'objet),
 // bouge le bord d'un lac (±22 % du rayon, des lobes et des anses), élargit et resserre un fleuve (±35 % de sa demi-largeur, sur 35 m), le fait serpenter (jusqu'à 1,2 demi-largeur de chaque côté de son trait, sur 90 m)
@@ -49,13 +48,15 @@ export function etendueEau(O) {
 }
 
 export function poserEaux(base, profond, { W, H, ox, oy }, objets) {
+  // 1. chaque eau : ses cases (avec sa tranche de cours) et son niveau voulu, d'après le relief d'origine
+  const corps = [];
   for (const O of objets || []) {
     if (!EAUX.includes(O.o) || !(O.r > 0)) continue;
     const lac = O.o === 'lac', E = etendueEau(lac ? O : { ...O, x2: O.x2 ?? O.x, y2: O.y2 ?? O.y });
     const F = lac ? { x: O.x, y: O.y } : { x: O.x, y: O.y, x2: O.x2, y2: O.y2 }, [x2, y2] = extremite(F);
     const long = Math.hypot(x2 - F.x, y2 - F.y), g = graineDe(O), P = lac ? null : profilFleuve({ ...O, x2: O.x2 ?? O.x, y2: O.y2 ?? O.y });
     const i0 = Math.max(0, Math.floor(E.x0 + ox)), i1 = Math.min(W - 1, Math.ceil(E.x1 + ox)), j0 = Math.max(0, Math.floor(E.y0 + oy)), j1 = Math.min(H - 1, Math.ceil(E.y1 + oy));
-    const cases = [], tranches = Math.floor(long / PAS_NIVEAU) + 1, bas = new Array(tranches).fill(Infinity);
+    const cases = [], tranches = lac ? 1 : Math.floor(long / PAS_NIVEAU) + 1, bas = new Array(tranches).fill(Infinity);
     for (let j = j0; j <= j1; j++) for (let i = i0; i <= i1; i++) {
       const px = i + 0.5 - ox, py = j + 0.5 - oy;
       let s;
@@ -70,9 +71,28 @@ export function poserEaux(base, profond, { W, H, ox, oy }, objets) {
       const c = j * W + i, t = Math.min(tranches - 1, Math.floor(s / PAS_NIVEAU));
       cases.push([c, t]); if (base[c] < bas[t]) bas[t] = base[c];
     }
-    const niveau = bas.map((_, t) => { let m = Infinity; for (let k = Math.max(0, t - VOISINS); k <= Math.min(tranches - 1, t + VOISINS); k++) m = Math.min(m, bas[k]); return (Math.floor(m / 4) - 1) * 4; });
-    for (const [c, t] of cases) { base[c] = niveau[t]; profond[c] = 1; }
+    // un lac : un seul niveau, au mètre sous sa rive la plus basse. Un fleuve descend, mais l'eau ne marche pas (Jérôme, v0.130.0 : « on ne peut pas avoir de marches dans l'eau ») : d'une tranche à la suivante
+    // son niveau ne change que d'un quart de mètre au plus (`PENTE_MAX`), au quart près ; on ne fait qu'abaisser (l'eau reste au moins à un mètre sous sa rive la plus basse), jamais relever
+    const niveau = bas.map((_, t) => { let m = Infinity; for (let k = Math.max(0, t - VOISINS); k <= Math.min(tranches - 1, t + VOISINS); k++) m = Math.min(m, bas[k]); return lac ? (Math.floor(m / 4) - 1) * 4 : Math.floor(m) - 4; });
+    corps.push({ lac, cases, niveau });
   }
+  if (!corps.length) return;
+  // 2. les eaux qui se touchent (un lac contre un fleuve, deux lacs) n'en font qu'une : même niveau à la jonction ; on abaisse jusqu'à ce que tout soit d'accord (les valeurs ne font que baisser : cela termine)
+  const occ = new Map();
+  corps.forEach((C, b) => { for (const [c, t] of C.cases) { const l = occ.get(c); if (l) l.push([b, t]); else occ.set(c, [[b, t]]); } });
+  const liens = new Set();
+  corps.forEach((C, b) => { for (const [c, t] of C.cases) for (const n of [c, c - 1, c + 1, c - W, c + W]) for (const [b2, t2] of occ.get(n) || []) if (b2 !== b) liens.add(b < b2 ? `${b}:${t}|${b2}:${t2}` : `${b2}:${t2}|${b}:${t}`); } );
+  const paires = [...liens].map(k => k.split('|').map(x => x.split(':').map(Number)));
+  for (let tour = 0; tour < 200; tour++) {
+    let change = false;
+    for (const [[b, t], [b2, t2]] of paires) { const m = Math.min(corps[b].niveau[t], corps[b2].niveau[t2]); if (corps[b].niveau[t] !== m) { corps[b].niveau[t] = m; change = true; } if (corps[b2].niveau[t2] !== m) { corps[b2].niveau[t2] = m; change = true; } }
+    for (const C of corps) if (!C.lac) { const n = C.niveau;
+      for (let t = 1; t < n.length; t++) if (n[t] > n[t - 1] + PENTE_MAX) { n[t] = n[t - 1] + PENTE_MAX; change = true; }
+      for (let t = n.length - 2; t >= 0; t--) if (n[t] > n[t + 1] + PENTE_MAX) { n[t] = n[t + 1] + PENTE_MAX; change = true; } }
+    if (!change) break;
+  }
+  // 3. on creuse
+  for (const C of corps) for (const [c, t] of C.cases) { base[c] = C.niveau[t]; profond[c] = 1; }
 }
 /* Les marécages (v0.50.0 ; `{ o: 'marecage', x, y, r }`) : pas d'eau profonde, un sol détrempé. Dans le contour d'un disque aux bords rongés (±35 % du rayon), la nappe monte au-dessus du sol, par plaques (un bruit de 5 m) : là
    l'eau stagne en flaques peu profondes (de l'eau où l'on marche très lentement), ailleurs de la boue ; plus on va vers le cœur, plus c'est mouillé. La nappe tient l'eau en place (`hydroLignes` : `manque`), la pluie la fait déborder un peu.

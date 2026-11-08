@@ -1,7 +1,7 @@
 // La foule : des milliers de soldats de quelques pixels, un simple va-et-vient (marche au hasard + vagues d'assaut), aucun gameplay.
 // Logique pure et déterministe (un xorshift par soldat, semé par la graine) ; le coût ne dépend que du nombre de soldats, jamais de la lumière :
 // la hauteur du sol sous chacun est lue par le nuanceur dans la texture des hauteurs, pas ici.
-import { MONDE } from './config.js?v=0.129.0';
+import { MONDE } from './config.js?v=0.130.0';
 
 export function creerFoule(M, max = MONDE.foule.max, graine = MONDE.graine) {
   const F = {
