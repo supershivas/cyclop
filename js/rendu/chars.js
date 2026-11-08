@@ -58,5 +58,5 @@ export function creerChars({ THREE, scene, bataille, hauteur, fumer }) {
     }
     for (const [id, m] of modeles) if (!vus.has(id)) { scene.remove(m.pivot); modeles.delete(id); }
   }
-  return { maj, vider };
+  return { maj, vider, casteurs() { return [...modeles.values()].map(m => m.pivot); } };      // les chars projettent dans la carte d'ombre (session 3)
 }

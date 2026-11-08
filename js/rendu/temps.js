@@ -197,5 +197,6 @@ export function creerTemps({ THREE, scene, col, camera, vue, surface, bataille, 
     setStyleNuit(m) { const k = { trame: 0, doux: 1, halos: 2 }[m] ?? 0; nuitMat.uniforms.uMode.value = k; nuitMat.transparent = k > 0; nuitMat.needsUpdate = true; },
     // le tampon des ombres d'arbres : la végétation le remplit (les arbres qu'on voit), le soleil dit où elles tombent
     get ombres() { return { ARBRES_OMBRES, aoPos, aoGeo, soleil }; },
+    get arbresOmbresMesh() { return arbresOmbres; },                // l'ombre au sol des arbres : la carte d'ombre la remplace (session 3)
   };
 }

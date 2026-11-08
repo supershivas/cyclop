@@ -134,7 +134,7 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
   // Les ombres du relief (labo « La lumière dans le relief », éteintes dans le jeu) : une case que le soleil ne voit pas prend la couleur de sa paroi dans la texture du sol ; le soleil du labo : saisons, azimut
   let ombresRelief = false, ombresNuages = false, soleilReglage = null, ombreVu = null;
   const ombres = creerOmbresRelief({ hauteurQ });
-  let ombresCarte = false, omRT = null, omCam = null, omInv = null, omInfo = null, aoSol = false, soleilSol = false, abrisSol = false, flaquesSol = false, flaque = 0, aoTex = null, aoAttente = 0, aoSale = false;      // l'ouverture au ciel du relief (éteinte : `rendu.aoSol`) ; sa texture n'est créée qu'au premier besoin (un objet de plus d'emblée décale les tirages d'identifiants de three : les images de référence)
+  let ombresCarte = false, ombresSolCachees = false, omRT = null, omCam = null, omInv = null, omInfo = null, aoSol = false, soleilSol = false, abrisSol = false, flaquesSol = false, flaque = 0, aoTex = null, aoAttente = 0, aoSale = false;      // l'ouverture au ciel du relief (éteinte : `rendu.aoSol`) ; sa texture n'est créée qu'au premier besoin (un objet de plus d'emblée décale les tirages d'identifiants de three : les images de référence)
   const ao = creerAOSol({ hauteurQ });
   const soleilCase = { x: 0, z: 0 }, ecriture = { ms: 0, n: 0, rangees: 0, max: 0, maxOmbre: 0 };      // mesure : la réécriture de la texture du sol
   let B = null, T = null, faux = null, fauxU = null;
@@ -694,6 +694,8 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
     const U = solMat.uniforms, sv = soldats.soleilUniform.value;
     const actif = ombresCarte && T && Math.hypot(sv.x, sv.y) > 0.05;
     soldats.sansOmbre(actif);
+    const ombresSol = [temps.arbresOmbresMesh, ...avions.ombresSol()];            // les ombres au sol que la carte remplace : arbres, disques des avions
+    if (actif || ombresSolCachees) { for (const m of ombresSol) m.visible = !actif; ombresSolCachees = actif; }      // actif : cachées à chaque image (un avion neuf a son disque) ; sinon rendues une seule fois (rien d'autre ne les touche)
     if (!actif) { U.uOmbOn.value = 0; return; }
     if (!omRT) {                                                   // créée au premier besoin (un objet three de plus décale les identifiants tirés de Math.random : les images de référence)
       const dt = new THREE.DepthTexture(1024, 1024); dt.minFilter = dt.magFilter = THREE.NearestFilter;
@@ -704,11 +706,11 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
     camera.updateMatrixWorld(); omInfo.m.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse).invert();
     const s = soleilDuJeu(sv.x, sv.y);
     const C = cadrerOmbre({ cam: { oeil: [camera.position.x, camera.position.y, camera.position.z], invVP: omInfo.m.elements }, sunDir: s.dir, taille: 1024, monde: { largeurM: T.W, profondeurM: T.H },
-      sol: { bas: SOL_Y - 3, haut: hautMax() }, distanceM: Math.min(900, camera.position.y * 2 + 80), hautCasteurM: 12 });
-    if (!C) { U.uOmbOn.value = 0; soldats.sansOmbre(false); return; }
+      sol: { bas: SOL_Y - 3, haut: hautMax() }, distanceM: Math.min(900, camera.position.y * 2 + 80), hautCasteurM: 70 });
+    if (!C) { U.uOmbOn.value = 0; soldats.sansOmbre(false); for (const m of ombresSol) m.visible = true; ombresSolCachees = false; return; }
     omCam.projectionMatrix.fromArray(C.proj); omCam.projectionMatrixInverse.copy(omCam.projectionMatrix).invert();
     omCam.matrixWorldInverse.fromArray(C.vue); omCam.matrixWorld.copy(omCam.matrixWorldInverse).invert();
-    const casteurs = new Set(soldats.casteurs()), vus = [];
+    const casteurs = new Set([...soldats.casteurs(), ...vegetation.casteurs(), ...chars.casteurs(), ...avions.casteurs()]), vus = [];
     for (const m of scene.children) { vus.push([m, m.visible]); m.visible = casteurs.has(m) && m.visible; }
     const fond = renderer.getRenderTarget();
     renderer.setRenderTarget(omRT); renderer.clear(); renderer.render(scene, omCam); renderer.setRenderTarget(fond);

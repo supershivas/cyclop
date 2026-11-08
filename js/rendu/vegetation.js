@@ -441,6 +441,7 @@ export function creerVegetation({ THREE, scene, col, camera, vue, solY: SOL_Y, d
   }
 
   return {
+    casteurs() { return [...arbresMesh, ...buissonsMesh]; },      // les arbres et les buissons qu'on voit : ils projettent dans la carte d'ombre (session 3)
     preparer() { preparerArbres(); preparerBuissons(); preparerHerbe(); preparerRoseaux(); },      // une bataille est branchée
     majArbres, majBuissons, majHerbe, majRoseaux,
     setTemps(t) { tVeg = t; herbeMat.uniforms.uT.value = t; vent.uTV.value = t; if (roseauMat) roseauMat.uniforms.uT.value = t * 1.3; },                              // le vent

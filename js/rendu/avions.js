@@ -110,5 +110,5 @@ export function creerAvions({ THREE, scene, bataille, hauteur, effets }) {
     }
     for (const [id, m] of modeles) if (!vus.has(id)) { scene.remove(m.pivot); scene.remove(m.ombre); modeles.delete(id); }
   }
-  return { maj, vider };
+  return { maj, vider, casteurs() { return [...modeles.values()].map(m => m.pivot); }, ombresSol() { return [...modeles.values()].map(m => m.ombre); } };      // les avions projettent dans la carte d'ombre, qui remplace leur disque au sol (session 3)
 }
