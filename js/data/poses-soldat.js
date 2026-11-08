@@ -64,3 +64,11 @@ export const CANAUX = {
   fusil: ['fusil', 'fusilLacet', 'fusilRoulis', 'fusilX', 'fusilH', 'fusilZ', 'fusilY'],
 };
 export const NOMS_CANAUX = { corps: 'Corps', jambeG: 'Jambe gauche', jambeD: 'Jambe droite', brasG: 'Bras gauche', brasD: 'Bras droit', fusil: 'Fusil' };
+
+// Les blessures du jeu (le nuanceur de js/rendu/soldat-articule.js les posait ainsi avant la texture de poses) : un homme blessé à la jambe qui ne marche plus (vit < 0,15) met un genou à terre,
+// celui qui l'est au bras gauche le serre contre le ventre, à la tête il la baisse
+export const BLESSURE = {
+  genou: { hancheG: 0.2, genouG: 2.0, hancheD: 1.3, genouD: 1.5, cheville: 0.8, lean: 0.35, descente: 0.42, basques: 0.4 },
+  bras: { epaule: 0.5, coude: 1.9, conv: 0.6 },
+  tete: 0.45,
+};

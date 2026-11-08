@@ -17,9 +17,9 @@ export function poseNeutre() {
 }
 
 // L'état du jeu → la pose, comme le nuanceur : { vit 0..1, phase (rad), tir 0..1, tapi 0..1, couche 0|1, retenu, melee, pouss 0..1, pistolet }
-export function poseDe({ vit = 0, phase = 0, tir = 0, tapi = 0, couche = 0, retenu = false, melee = false, pouss = 0, pistolet = false } = {}) {
+export function poseDe({ vit = 0, phase = 0, sinus = null, cosinus = null, tir = 0, tapi = 0, couche = 0, retenu = false, melee = false, pouss = 0, pistolet = false } = {}) {
   const P = poseNeutre();
-  const v = Math.min(1, Math.max(0, vit)), sph = Math.sin(phase), cph = Math.cos(phase);
+  const v = Math.min(1, Math.max(0, vit)), sph = sinus ?? Math.sin(phase), cph = cosinus ?? Math.cos(phase);      // (`sinus`, `cosinus` : le jeu les a déjà, arrondis comme l'attribut d'instance)
   if (melee && pistolet) melee = false;                 // l'officier ne fait ni mêlée ni feu retenu
   if (retenu && pistolet) retenu = false;
   const t = melee ? 0 : Math.min(1, Math.max(0, tir));

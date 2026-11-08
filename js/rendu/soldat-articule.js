@@ -1,4 +1,5 @@
 import { NOMS_CHAMPS } from '../data/poses-soldat.js?v=0.131.0';
+import { poseJeu, phaseDe, TEXELS, FLOTTANTS } from './pose-jeu.js?v=0.131.0';
 
 // Le soldat articulé (au labo seulement : « la fabrique de soldats », et la mesure de son coût ; rien n'est dans le jeu).
 // Un squelette de treize os (le tronc, la tête, deux fois bras / avant-bras, deux fois cuisse / mollet / pied, le fusil) que le nuanceur plie : le genou, le coude, la cheville
@@ -195,9 +196,11 @@ export const VERT = `
   attribute float aPart; attribute float aOs; attribute float aShow; attribute vec3 aNor;
   attribute vec3 aPos; attribute float aCamp; attribute float aWound; attribute vec4 aCap; attribute float aGrade;
   attribute vec4 aPose; attribute vec4 aBody; attribute vec4 aLook; attribute vec4 aLook2;
-  uniform float uShade; uniform float uVoir; uniform float uLibre; uniform float uP[25];
+  uniform float uShade; uniform float uVoir; uniform float uLibre; uniform float uP[25]; uniform float uTex; uniform sampler2D uPoses;
   varying float vPart; varying float vCamp; varying vec2 vFace; varying float vShade; varying vec4 vLook; varying vec4 vLook2; varying vec2 vMonde;
   float sl, st, wd, vt;
+  // un angle de la pose libre : dans la texture des poses (le jeu : une ligne par homme, lue par l'indice d'instance, 4 champs par texel) ou dans uP (l'atelier)
+  float P(int i) { return uTex > 0.5 ? texelFetch(uPoses, ivec2(i >> 2, gl_InstanceID), 0)[i & 3] : uP[i]; }
   bool voir(float code) {
     float genre = floor(code / 100.0 + 0.001), v = code - genre * 100.0;
     float coiffe = aLook.x, cheveux = aLook.y, barbe = aLook.w, rang = aGrade;
@@ -239,8 +242,8 @@ export const VERT = `
     if (b > 0.5 && b < 1.5) p0 = vec3(0.0, 1.42, 0.0) + (p0 - vec3(0.0, 1.42, 0.0)) * aBody.w;
     vec3 p = mp(p0, xs, zs);
     // la pose : la vitesse (aPose.x), le tir (aPose.y), l'accroupi (aPose.z), couché (aPose.w) ; la blessure (aWound : 1 bras, 2 jambe, 3 tête)
-    bool libre = uLibre > 0.5;      // la pose libre (l'atelier d'animation) : les angles viennent de uP (js/pose-soldat.js), dans l ordre de NOMS_CHAMPS
-    float vit = max(aPose.x, 0.0), v = min(1.0, vit), tapi = aPose.z, couche = libre ? uP[21] : aPose.w;
+    bool tex = uTex > 0.5, libre = uLibre > 0.5 || tex;      // la pose libre (l'atelier d'animation) : les angles viennent de uP (js/pose-soldat.js), dans l ordre de NOMS_CHAMPS
+    float vit = max(aPose.x, 0.0), v = min(1.0, vit), tapi = aPose.z, couche = libre ? P(21) : aPose.w;
     // le tir (aPose.y) : de 0 à 1, l'épaule ; −1 le feu retenu (le fusil baissé) ; de 2 à 3 le corps à corps (2 + la poussée) ; un officier (le pistolet) tire d'une main dans tous les cas
     bool pistolet = aGrade < 2.5;
     float tirR = aPose.y;
@@ -251,7 +254,7 @@ export const VERT = `
     float sph = aCap.z, cph = aCap.w;      // le sinus et le cosinus de la phase de la marche : tirés une fois par homme (le processeur), pas par sommet
     bool genou = aWound > 1.5 && aWound < 2.5 && vit < 0.15;
     float lean = 0.07 * v + 0.12 * tir + 0.55 * tapi + (genou ? 0.35 : 0.0) + (melee ? 0.22 + 0.15 * pouss : 0.0) + (retenu ? 0.03 : 0.0);
-    if (libre) lean = uP[0];
+    if (libre) lean = P(0);
     vec3 hanche = mp(vec3(0.0, 0.9, 0.0), 1.0, 1.0);
     bool gauche = (b > 1.5 && b < 3.5) || (b > 5.5 && b < 8.5);
     if (jambeOs) {
@@ -263,7 +266,7 @@ export const VERT = `
       if (couche > 0.5) { hip = gauche ? 0.3 : 0.0; kn = gauche ? 0.7 : 0.1; }
       if (genou) { hip = gauche ? 0.2 : 1.3; kn = gauche ? 2.0 : 1.5; }
       float che = (kn - hip) * 0.8;
-      if (libre) { hip = gauche ? uP[2] : uP[5]; kn = gauche ? uP[3] : uP[6]; che = gauche ? uP[4] : uP[7]; }
+      if (libre) { hip = gauche ? P(2) : P(5); kn = gauche ? P(3) : P(6); che = gauche ? P(4) : P(7); }
       vec3 hp = mp(vec3(cote * 0.11, 0.9, 0.0), sqrt(wd), 1.0), kp = mp(vec3(cote * 0.11, 0.5, 0.0), sqrt(wd), 1.0), ap = mp(vec3(cote * 0.11, 0.08, 0.0), sqrt(wd), 1.0);
       if ((b > 7.5 && b < 8.5) || b > 10.5) p = rx(p, ap, che);
       if ((b > 6.5 && b < 8.5) || b > 9.5) p = rx(p, kp, -kn);
@@ -280,7 +283,7 @@ export const VERT = `
       if (melee) { sh = 1.0; el = gauche ? 0.45 : 0.6; conv = gauche ? 0.55 : -0.45; }        // la mêlée : les bras tendus devant, tenant le fusil
       if (couche > 0.5) { sh = 0.0; el = 0.1; }
       if (aWound > 0.5 && aWound < 1.5 && gauche) { sh = 0.5; el = 1.9; conv = 0.6; }
-      if (libre) { sh = gauche ? uP[8] : uP[11]; el = gauche ? uP[9] : uP[12]; conv = gauche ? uP[10] : uP[13]; }
+      if (libre) { sh = gauche ? P(8) : P(11); el = gauche ? P(9) : P(12); conv = gauche ? P(10) : P(13); }
       vec3 sp = mp(vec3(cote * 0.30, 1.38, 0.0), wd, 1.0), ep = mp(vec3(cote * 0.30, 1.08, 0.0), wd, 1.0);
       if ((b > 2.5 && b < 3.5) || b > 4.5) p = rx(p, ep, el);
       p = rx(p, sp, sh);
@@ -289,26 +292,26 @@ export const VERT = `
     // le fusil : en bandoulière, ou à l'épaule quand il tire
     if (b > 11.5 && b < 12.5) {
       if (libre) {
-        vec3 fp = mp(vec3(0.0, uP[17], 0.0), 1.0, 1.0);
-        p.x += uP[15] * wd; p = rx(p, fp, uP[14]);
-        vec3 fc = vec3((0.395 + uP[15]) * wd, fp.y, 0.0);       // le centre des deux rotations de plus : l axe du fusil, décalé comme lui
-        if (abs(uP[23]) > 0.00001) p = ry(p, fc, uP[23]);
-        if (abs(uP[24]) > 0.00001) p = rz(p, fc, uP[24]);
-        p.z += uP[16]; p.y += uP[22];
+        vec3 fp = mp(vec3(0.0, P(17), 0.0), 1.0, 1.0);
+        p.x += P(15) * wd; p = rx(p, fp, P(14));
+        vec3 fc = vec3((0.395 + P(15)) * wd, fp.y, 0.0);       // le centre des deux rotations de plus : l axe du fusil, décalé comme lui
+        if (abs(P(23)) > 0.00001) p = ry(p, fc, P(23));
+        if (abs(P(24)) > 0.00001) p = rz(p, fc, P(24));
+        p.z += P(16); p.y += P(22);
       }
       else if (melee) { p.x -= 0.3 * wd; p = rx(p, mp(vec3(0.0, 0.95, 0.0), 1.0, 1.0), -1.45); p.z += 0.5 * pouss; }       // à l'horizontale devant lui, la baïonnette vers l'adversaire, d'un demi-mètre à chaque poussée
       else if (retenu) { p.x -= 0.18 * wd; p = rx(p, mp(vec3(0.0, 0.9, 0.0), 1.0, 1.0), -1.9); }                     // baissé en travers des hanches, le canon devant
       else { p.x -= 0.28 * tir * wd; p = rx(p, mp(vec3(0.0, 1.3, 0.0), 1.0, 1.0), -1.45 * tir); }
     }
     // les basques de la vareuse : elles suivent les cuisses à moitié quand l'homme s'accroupit ou s'agenouille
-    if (b > 12.5) p = rx(p, hanche, libre ? uP[20] : 0.75 * tapi + (genou ? 0.4 : 0.0));
+    if (b > 12.5) p = rx(p, hanche, libre ? P(20) : 0.75 * tapi + (genou ? 0.4 : 0.0));
     // la tête penchée (blessure à la tête)
-    if (b > 0.5 && b < 1.5 && (libre || aWound > 2.5)) p = rx(p, mp(vec3(0.0, 1.42, 0.0), 1.0, 1.0), libre ? uP[1] : 0.45);
+    if (b > 0.5 && b < 1.5 && (tex ? abs(P(1)) > 0.00001 : (libre || aWound > 2.5))) p = rx(p, mp(vec3(0.0, 1.42, 0.0), 1.0, 1.0), libre ? P(1) : 0.45);
     // le buste penché autour de la hanche (le tronc, la tête, les bras, le fusil, les basques)
     bool haut = b < 5.5 || b > 11.5;
     if (haut) p = rx(p, hanche, lean);
-    if ((melee || libre) && haut && !(b > 11.5 && b < 12.5)) p.z += (libre ? uP[19] : 0.2 * pouss) * max(0.0, p.y - 0.6);      // le buste part avec la poussée
-    p.y -= libre ? uP[18] : 0.44 * tapi + (genou ? 0.42 : 0.0);
+    if ((melee || libre) && haut && !(b > 11.5 && b < 12.5)) p.z += (libre ? P(19) : 0.2 * pouss) * max(0.0, p.y - 0.6);      // le buste part avec la poussée
+    p.y -= libre ? P(18) : 0.44 * tapi + (genou ? 0.42 : 0.0);
     // couché sur le dos, la tête vers l'arrière
     if (couche > 0.5) { p = rx(p, vec3(0.0), 1.5708); p.y += 0.16; }
     // le cap
@@ -419,7 +422,7 @@ export function poserLibre(materiel, pose) {
 // `col(lettre)` : une couleur de la palette (celle de creerRendu ou de la fabrique) ; `partages` : des uniformes du jeu à partager (`uSoleil`, `uSol`, `uTaille` : l'ombre ; l'horloge de la marche passe par `h.temps` à l'écriture de chaque homme) ;
 // `ombreSeule` : le maillage des ombres au sol (le jeu), et rien d'autre
 // `translucide` (l'atelier d'animation) : un uniforme `uAlpha` règle l'opacité du soldat ; sans lui le nuanceur reste exactement celui du jeu (le labo lumière le porte par remplacement de texte)
-export function creerSoldatArticule(THREE, col, { complet = false, ombrage = 0, filtre = null, partages = {}, ombreSeule = false, niveau = 'fin', translucide = false } = {}) {
+export function creerSoldatArticule(THREE, col, { complet = false, ombrage = 0, filtre = null, partages = {}, ombreSeule = false, niveau = 'fin', translucide = false, texturePoses = false } = {}) {
   const M = ombreSeule ? ombreEtModele(THREE) : modeleArticule({ complet, filtre, niveau });
   const materiel = ombreSeule
     ? new THREE.ShaderMaterial({ uniforms: { uSoleil: partages.uSoleil ?? { value: new THREE.Vector2(0.5, 0.6) }, uSol: partages.uSol ?? { value: new THREE.DataTexture(new Uint8Array([70, 66, 50, 255]), 1, 1) }, uTaille: partages.uTaille ?? { value: new THREE.Vector2(400, 300) } },
@@ -429,7 +432,7 @@ export function creerSoldatArticule(THREE, col, { complet = false, ombrage = 0, 
         uNous: { value: col('n') }, uEux: { value: col('x') }, uOmbre: { value: col('t') }, uSel: { value: col('o') }, uJambes: { value: col('s') }, uBois: { value: col('t') }, uToile: { value: col('g') },
         uCuir: { value: col('b') }, uBotte: { value: col('t') }, uMetal: { value: col('r') }, uTrait: { value: col('s') },
         uPeau: { value: ['o', 'r', 'g'].map(col) }, uMarque: { value: ['g', 'g', 'b'].map(col) }, uCh: { value: ['t', 's', 'b', 'g', 'r'].map(col) },
-        uShade: { value: ombrage }, uVoir: { value: filtre ? 0 : 1 }, uLibre: { value: 0 }, uP: { value: new Array(25).fill(0) }, uAlpha: { value: 1 },
+        uShade: { value: ombrage }, uVoir: { value: filtre ? 0 : 1 }, uLibre: { value: 0 }, uP: { value: new Array(25).fill(0) }, uTex: { value: 0 }, uPoses: { value: null }, uAlpha: { value: 1 },
         ...(partages.uAO ? { uAO: partages.uAO, uAOon: partages.uAOon, uSunOn: partages.uSunOn, uAbriOn: partages.uAbriOn, uTaille: partages.uTaille } : { uAO: { value: null }, uAOon: { value: 0 }, uSunOn: { value: 0 }, uAbriOn: { value: 0 }, uTaille: { value: new THREE.Vector2(1, 1) } }),
       },
       vertexShader: VERT, fragmentShader: translucide ? `uniform float uAlpha;\n${FRAG.replace('gl_FragColor = vec4(c * vShade, 1.0);', 'gl_FragColor = vec4(c * vShade, uAlpha);')}` : FRAG, side: THREE.DoubleSide,
@@ -449,24 +452,34 @@ export function creerSoldatArticule(THREE, col, { complet = false, ombrage = 0, 
     const A = (nom, arr, k) => { const a = new THREE.InstancedBufferAttribute(arr, k).setUsage(THREE.DynamicDrawUsage); g.setAttribute(nom, a); return a; };
     const attrs = ombreSeule ? [A('aPos', T.pos, 3), A('aBody', T.corps, 4)]
       : [A('aPos', T.pos, 3), A('aCamp', T.camp, 1), A('aWound', T.blessure, 1), A('aCap', T.cap, 4), A('aGrade', T.grade, 1), A('aPose', T.pose, 4), A('aBody', T.corps, 4), A('aLook', T.aspect, 4), A('aLook2', T.aspect2, 4)];
+    // la texture des poses (le jeu, `texturePoses`) : 7 texels RGBA flottants de large, une ligne par homme (l'indice d'instance) ; le nuanceur n'y lit que les texels de l'os qu'il plie
+    let poses = null, texture = null;
+    if (texturePoses && !ombreSeule) {
+      poses = new Float32Array(n * FLOTTANTS);
+      texture = new THREE.DataTexture(poses, TEXELS, n, THREE.RGBAFormat, THREE.FloatType);
+      texture.minFilter = texture.magFilter = THREE.NearestFilter; texture.generateMipmaps = false; texture.needsUpdate = true;
+      materiel.uniforms.uPoses.value = texture; materiel.uniforms.uTex.value = 1;
+    }
     g.instanceCount = n;
     const mesh = new THREE.Mesh(g, materiel); mesh.frustumCulled = false;
     // h : { x, y, z, camp, vit, tir, tapi, couche, blessure, cap, aspect } (`aspect` : l'objet de js/aspect-soldat.js)
-    function ecrire(i, h) {
+    // `pose` : la pose de l'homme déjà calculée (poseJeu), si plusieurs lots écrivent le même (l'équipe du jeu) ; sinon elle est calculée ici
+    function ecrire(i, h, pose = null) {
       const a = h.aspect, c = a.carrure, t = a.traits;
       T.pos[i * 3] = h.x ?? 0; T.pos[i * 3 + 1] = h.y ?? 0; T.pos[i * 3 + 2] = h.z ?? 0;
       T.corps[i * 4] = c.taille; T.corps[i * 4 + 1] = c.epaules; T.corps[i * 4 + 2] = c.jambes; T.corps[i * 4 + 3] = c.tete;
       if (ombreSeule) return;
       T.camp[i] = h.camp ?? 0; T.blessure[i] = h.blessure ?? 0; T.grade[i] = a.rang ?? 6;
       // le cap, et la phase de la marche (la même formule qu'avant : l'horloge de l'image, la position) : le cosinus et le sinus de chacun, une fois par homme
-      const cap = h.cap ?? 0, ph = (h.temps ?? 0) * 8 + (h.x ?? 0) * 1.7 + (h.z ?? 0) * 1.3;
+      const cap = h.cap ?? 0, ph = phaseDe(h);
       T.cap[i * 4] = Math.cos(cap); T.cap[i * 4 + 1] = Math.sin(cap); T.cap[i * 4 + 2] = Math.sin(ph); T.cap[i * 4 + 3] = Math.cos(ph);
+      if (poses) poses.set(pose ?? poseJeu(h, T.cap[i * 4 + 2], T.cap[i * 4 + 3]), i * FLOTTANTS);
       T.pose[i * 4] = h.vit ?? 0; T.pose[i * 4 + 1] = h.tir ?? 0; T.pose[i * 4 + 2] = h.tapi ?? 0; T.pose[i * 4 + 3] = h.couche ?? 0;
       T.aspect[i * 4] = a.coiffe; T.aspect[i * 4 + 1] = a.cheveux; T.aspect[i * 4 + 2] = a.couleur; T.aspect[i * 4 + 3] = a.barbe;
       T.aspect2[i * 4] = a.acc; T.aspect2[i * 4 + 1] = a.peau; T.aspect2[i * 4 + 2] = t.yeux + 3 * t.nez + 9 * t.bouche + 27 * t.sourcils + 81 * (t.rides || 0); T.aspect2[i * 4 + 3] = c.ventre;
     }
     // envoyer au processeur graphique les `k` premiers hommes seulement
-    function envoyer(k) { g.instanceCount = k; for (const at of attrs) { at.clearUpdateRanges(); at.addUpdateRange(0, k * at.itemSize); at.needsUpdate = true; } }
+    function envoyer(k) { g.instanceCount = k; if (texture && k > 0) texture.needsUpdate = true; for (const at of attrs) { at.clearUpdateRanges(); at.addUpdateRange(0, k * at.itemSize); at.needsUpdate = true; } }
     return { geometrie: g, mesh, ecrire, envoyer, attrs };
   }
   return { materiel, instances, modele: M };
@@ -479,11 +492,11 @@ function ombreEtModele() {
 
 // Les hommes d'un lot, le jeu : un maillage par option (le corps seul pour tous, puis chaque casque, barbe, accessoire, galon dans le sien, avec les seuls hommes qui l'ont : le schéma des pansements
 // et des grades) et un maillage d'ombres. `capacite` : le nombre d'hommes au plus ; `ajouter(h)` écrit un homme (le même objet que `ecrire`), `fin()` envoie les tampons.
-export function creerEquipeArticulee(THREE, col, { capacite, ombrage = 0, partages = {}, niveau = 'fin' }) {
+export function creerEquipeArticulee(THREE, col, { capacite, ombrage = 0, partages = {}, niveau = 'fin', texturePoses = false }) {
   const codes = [...new Set(boites().map(b => b[8]))].sort((a, b) => a - b);
   const groupes = [];
   for (const code of codes) {
-    const S = creerSoldatArticule(THREE, col, { ombrage, filtre: b => b[8] === code, partages, niveau });
+    const S = creerSoldatArticule(THREE, col, { ombrage, filtre: b => b[8] === code, partages, niveau, texturePoses });
     if (!S.modele.triangles) continue;
     const lot = S.instances(capacite); lot.mesh.renderOrder = 2; lot.envoyer(0);
     groupes.push({ code, S, lot, n: 0 });
@@ -491,6 +504,7 @@ export function creerEquipeArticulee(THREE, col, { capacite, ombrage = 0, partag
   const O = creerSoldatArticule(THREE, col, { ombreSeule: true, partages });
   const ombres = O.instances(capacite); ombres.mesh.renderOrder = 1.9; ombres.envoyer(0);
   let nO = 0;
+  const scratch = new Float32Array(FLOTTANTS);
   const meshes = [ombres.mesh, ...groupes.map(g => g.lot.mesh)];
   return {
     meshes,
@@ -499,7 +513,9 @@ export function creerEquipeArticulee(THREE, col, { capacite, ombrage = 0, partag
       if (nO >= capacite) return false;
       ombres.ecrire(nO++, h);
       const camp = (h.camp ?? 0) & 1;
-      for (const g of groupes) if (g.n < capacite && voir(g.code, h.aspect, camp, h.blessure ?? 0)) g.lot.ecrire(g.n++, h);
+      let pose = null;      // calculée une fois pour l'homme, copiée dans la texture de chaque maillage qui le dessine
+      if (texturePoses) { const ph = phaseDe(h); pose = poseJeu(h, Math.fround(Math.sin(ph)), Math.fround(Math.cos(ph)), scratch); }
+      for (const g of groupes) if (g.n < capacite && voir(g.code, h.aspect, camp, h.blessure ?? 0)) g.lot.ecrire(g.n++, h, pose);
       return true;
     },
     fin() { ombres.envoyer(nO); for (const g of groupes) g.lot.envoyer(g.n); return nO; },
