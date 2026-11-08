@@ -1,5 +1,8 @@
 # Journal des versions
 
+## 0.115.1 — 2026-11-08
+- À deux, la victoire anticipée demande moins d'avance (3 points par jour, 20 au plus) : une déroute ne traîne plus jusqu'au terme
+
 ## 0.115.0 — 2026-11-07
 - Le jeu à deux se règle avant le départ : durée (courte par défaut), renforts, dotation, effectifs, victoire anticipée
 - À deux, un duel aux points : tranchées d'en face tenues chaque soir et pertes qu'on leur inflige ; trop d'avance finit la bataille, égalité possible

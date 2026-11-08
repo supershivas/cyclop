@@ -1,5 +1,5 @@
 // Le jeu à deux (v0.115.0) : les réglages de la partie et le duel aux points.
-import { nouvelleBataille, avancer, aube, photo, restaurer, scoreDuel, progressionMission, bordereau, ticksParJour } from '../js/bataille.js';
+import { nouvelleBataille, avancer, aube, photo, restaurer, scoreDuel, progressionMission, bordereau, ticksParJour, ecartDuel } from '../js/bataille.js';
 import { empreinteEtat } from '../js/reseau/lockstep.js';
 import { REGLAGES as R } from '../js/data/reglages.js';
 import { DEFAUTS_DEUX, DUREES_DEUX, RENFORTS_DEUX, optionsDeuxValides, optionsDeuxEnBataille, DUEL } from '../js/data/deux.js';
@@ -65,10 +65,13 @@ test('au terme, le meilleur score gagne ; l\'égalité est un match nul', () => 
   assert.equal(kaki.etat.issue.gagnant, 1); assert.equal(kaki.etat.issue.reussie, false);
 });
 test('la victoire anticipée : assez d\'avance au soir finit la bataille avant son terme, si elle est permise', () => {
-  const avec = partie({ duree: 'moyenne', anticipee: 'oui' }); avec.etat.pointsPrise = [0, DUEL.ecartParJour * 6]; jusquAuSoir(avec);
+  const avec = partie({ duree: 'moyenne', anticipee: 'oui' }); avec.etat.pointsPrise = [0, ecartDuel(6)]; jusquAuSoir(avec);
   assert.equal(avec.etat.phase, 'fin'); assert.equal(avec.etat.issue.gagnant, 1); assert.ok(avec.etat.jour < avec.etat.meteo.length);
-  const sans = partie({ duree: 'moyenne', anticipee: 'non' }); sans.etat.pointsPrise = [0, DUEL.ecartParJour * 6]; jusquAuSoir(sans);
+  const sans = partie({ duree: 'moyenne', anticipee: 'non' }); sans.etat.pointsPrise = [0, ecartDuel(6)]; jusquAuSoir(sans);
   assert.equal(sans.etat.phase, 'nuit');
+});
+test('l\'avance qui finit un duel croît avec les jours, puis plafonne', () => {
+  assert.equal(ecartDuel(3), 3 * DUEL.ecartParJour); assert.equal(ecartDuel(15), DUEL.ecartMax); assert.ok(ecartDuel(1) < ecartDuel(2));
 });
 test('un camp sans plus un homme perd aussitôt, quel que soit son camp', () => {
   for (const camp of [0, 1]) {

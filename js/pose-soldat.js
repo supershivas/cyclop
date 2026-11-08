@@ -5,7 +5,7 @@
 //    rejoue avant qu'on la retouche ;
 //  · une ANIMATION est { nom, boucle, images: [{ t, pose, courbe }] } : des poses clés rangées par temps (en secondes) ; `echantillon(anim, t)` rend la pose à l'instant t ;
 //  · `melanger(a, b, k)` interpole deux poses champ par champ.
-import { CHAMPS, NOMS_CHAMPS, MARCHE, TAPI, TIR, RETENU, MELEE, COUCHE, FUSIL_REPOS, COURBES } from './data/poses-soldat.js?v=0.115.0';
+import { CHAMPS, NOMS_CHAMPS, MARCHE, TAPI, TIR, RETENU, MELEE, COUCHE, FUSIL_REPOS, COURBES } from './data/poses-soldat.js?v=0.115.1';
 
 // La pose neutre : debout, bras le long du corps (le coude à peine plié, comme à l'arrêt)
 export function poseNeutre() {

@@ -2,7 +2,7 @@
 // Logique pure : elle remplit `L.tex`, une texture RGBA8 (une case = un texel) que le nuanceur lit :
 //   R = visibilité du soleil (étape 1)   G = ouverture au ciel (étape 2)   B = lumière propagée (étape 4)   A = creux, pour les flaques (étape 7)
 // Aucun chronomètre ici : mesures.js mesure autour de chaque appel.
-import { MONDE, SOLEIL } from './config.js?v=0.115.0';
+import { MONDE, SOLEIL } from './config.js?v=0.115.1';
 
 const NIVEAU_MAX = 240, PAS_QUART = MONDE.quartsParCube;
 

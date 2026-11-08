@@ -56,6 +56,7 @@ export const resumeDeux = o => {
 export const DUEL = {
   prise: 10,            // points par soir pour qui tient TOUTES les tranchées d'en face (au prorata des tronçons tenus)
   pertesPour: 25,       // hommes d'en face tombés pour 1 point
-  ecartParJour: 5,      // victoire anticipée : l'écart de points qui finit la bataille = ceci × le nombre de jours
+  ecartParJour: 3,      // victoire anticipée : l'écart de points qui finit la bataille = ceci × le nombre de jours, au plus `ecartMax` (mesuré : scripts/mesure-duel.mjs ; à 5 par jour, des déroutes à 24 points d'écart sur 6 jours allaient jusqu'au terme)
+  ecartMax: 20,         // (une longue bataille ne demande pas plus : l'écart reste atteignable en quelques soirs)
   effondrement: 0.4,    // un camp dont les lignes tombent sous cette part (ou sans plus un homme) perd aussitôt
 };

@@ -31,9 +31,9 @@ function partie(graine, jours, plans) {
   const cause = /avance/.test(e.issue.texte) ? 'avance' : /tombé/.test(e.issue.texte) ? 'effondrement' : 'terme';
   return { soirs, final: `${a}–${b}`, jour: e.jour, cause, gagnant: e.issue.nul ? 'nul' : e.issue.gagnant === 0 ? 'bleu' : 'kaki', pertes: e.pertes.join('/'), terme };
 }
-console.log(`DUEL : prise ${DUEL.prise}, 1 point par ${DUEL.pertesPour} hommes, avance ${DUEL.ecartParJour} × jours, effondrement ${DUEL.effondrement} ; ${soldats} hommes par camp\n`);
+console.log(`DUEL : prise ${DUEL.prise}, 1 point par ${DUEL.pertesPour} hommes, avance ${DUEL.ecartParJour} × jours (au plus ${DUEL.ecartMax}), effondrement ${DUEL.effondrement} ; ${soldats} hommes par camp\n`);
 for (const jours of durees) {
-  console.log(`== ${jours} jours : avance qui finit la bataille = ${DUEL.ecartParJour * jours} points`);
+  console.log(`== ${jours} jours : avance qui finit la bataille = ${Math.min(DUEL.ecartMax, DUEL.ecartParJour * jours)} points`);
   for (const plans of PLANS) {
     const rs = graines.map(g => partie(g, jours, plans));
     console.log(`  ${plans.join(' / ').padEnd(18)} ${rs.map(r => `[g${graines[rs.indexOf(r)]}] soirs ${r.soirs.join(' ') || '-'} → ${r.final} j${r.jour} ${r.cause} ${r.gagnant} (morts ${r.pertes})`).join('\n' + ' '.repeat(21))}`);

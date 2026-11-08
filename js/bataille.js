@@ -14,39 +14,39 @@
    La sauvegarde (photo) garde la graine, la liste compacte des impacts, l'état
    de la foule et les petites couches de logique ; jamais le relief : il se
    rejoue depuis la graine et les impacts (rejouerTerrain). */
-import { createRng, hash2 } from './lib/rng.js?v=0.115.0';
-import { impact, hydroLignes, etat as etatCase, vitesseEtat, vitesseCase, ETAT } from './terrain.js?v=0.115.0';
-import { creerArmee, ajouterSoldat, construireGrille, pasArmee, tuerDans, effrayer, compacter, photoArmee, restaurerArmee, b64, deB64, DENSITE, place, poserCaracs, lireCaracs, abimerCaracs, gagner, CARACS } from './army.js?v=0.115.0';
-import { ligneSous, solidite, y0En, arcMax } from './tranchees.js?v=0.115.0';
-import { terrainDuSecteur } from './secteur-terrain.js?v=0.115.0';
-import { detruirePont, reconstruirePont, pontEn } from './eaux.js?v=0.115.0';
-import { MISSIONS_SECONDAIRES as MS } from './data/missions.js?v=0.115.0';
-import { PONT_COUPE } from './data/ponts.js?v=0.115.0';
-import { calculerCouts, creerCacheChamps, dimensionsCouts, BLOC } from './champs.js?v=0.115.0';
-import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.115.0';
-import { preparerAleatoire, ID_ALEATOIRE } from './generateur.js?v=0.115.0';
-import { AVION, MITRAILLAGE } from './data/mitraillage.js?v=0.115.0';
-import { refusAvion, lancerAvion, avancerAvions, flotteDeDepart, reparerAvions } from './avions.js?v=0.115.0';
-import { CHAR, CHAR_RECHARGE, CHAR_SORTIE } from './data/chars.js?v=0.115.0';
-import { GENIE, GENIE_DATA } from './data/genie.js?v=0.115.0';
-import { filDeDepart, degatsFil } from './fil.js?v=0.115.0';
-import { creerNids, avancerNids, degatsNids, reparerNid, aubeNids } from './nids.js?v=0.115.0';
-import { TOITS, NIDS } from './data/nids.js?v=0.115.0';
-import { BONUS, chevronsDe } from './data/experience.js?v=0.115.0';
+import { createRng, hash2 } from './lib/rng.js?v=0.115.1';
+import { impact, hydroLignes, etat as etatCase, vitesseEtat, vitesseCase, ETAT } from './terrain.js?v=0.115.1';
+import { creerArmee, ajouterSoldat, construireGrille, pasArmee, tuerDans, effrayer, compacter, photoArmee, restaurerArmee, b64, deB64, DENSITE, place, poserCaracs, lireCaracs, abimerCaracs, gagner, CARACS } from './army.js?v=0.115.1';
+import { ligneSous, solidite, y0En, arcMax } from './tranchees.js?v=0.115.1';
+import { terrainDuSecteur } from './secteur-terrain.js?v=0.115.1';
+import { detruirePont, reconstruirePont, pontEn } from './eaux.js?v=0.115.1';
+import { MISSIONS_SECONDAIRES as MS } from './data/missions.js?v=0.115.1';
+import { PONT_COUPE } from './data/ponts.js?v=0.115.1';
+import { calculerCouts, creerCacheChamps, dimensionsCouts, BLOC } from './champs.js?v=0.115.1';
+import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.115.1';
+import { preparerAleatoire, ID_ALEATOIRE } from './generateur.js?v=0.115.1';
+import { AVION, MITRAILLAGE } from './data/mitraillage.js?v=0.115.1';
+import { refusAvion, lancerAvion, avancerAvions, flotteDeDepart, reparerAvions } from './avions.js?v=0.115.1';
+import { CHAR, CHAR_RECHARGE, CHAR_SORTIE } from './data/chars.js?v=0.115.1';
+import { GENIE, GENIE_DATA } from './data/genie.js?v=0.115.1';
+import { filDeDepart, degatsFil } from './fil.js?v=0.115.1';
+import { creerNids, avancerNids, degatsNids, reparerNid, aubeNids } from './nids.js?v=0.115.1';
+import { TOITS, NIDS } from './data/nids.js?v=0.115.1';
+import { BONUS, chevronsDe } from './data/experience.js?v=0.115.1';
 const resiste = reg => 1 - BONUS.regiment.moral * (reg.chev || 0);      // les chevrons d'un régiment adoucissent ses pertes de moral (lot E)
-import { refusGenie, lancerGenie, avancerGenies, degatsGenies, sectionsDeDepart } from './genie.js?v=0.115.0';
-import { refusChar, lancerChar, degatsChars, avancerChars } from './chars.js?v=0.115.0';
-import { METEO, SAISONS, SAISON_DEFAUT, PREVISION_JUSTE, temperature, vent } from './data/meteo.js?v=0.115.0';
-import { SECTEURS } from './data/secteur.js?v=0.115.0';
-import { REGIMENTS, REGIMENTS_GRANDS } from './data/lexique.js?v=0.115.0';
-import { STANCES, STANCE_DEFAUT } from './data/stances.js?v=0.115.0';
-import { DIFFICULTES, DIFFICULTE_DEFAUT } from './data/difficulte.js?v=0.115.0';
-import { DUEL } from './data/deux.js?v=0.115.0';
-import { grade, departCaracs, caracEnMots } from './identite.js?v=0.115.0';
-import { corvees, creerRegiment, prendreReserve } from './nuit.js?v=0.115.0';
-import { RENFORTS } from './data/renforts.js?v=0.115.0';
-import { EQUIPEMENTS } from './data/batiments.js?v=0.115.0';
-import { campDeDepart, dotationAube, refusOrdre, refusNid, appliquerDepart, modif, rechargeDe, sortieChars, sortieCaserne, emplacementCamp } from './camp.js?v=0.115.0';
+import { refusGenie, lancerGenie, avancerGenies, degatsGenies, sectionsDeDepart } from './genie.js?v=0.115.1';
+import { refusChar, lancerChar, degatsChars, avancerChars } from './chars.js?v=0.115.1';
+import { METEO, SAISONS, SAISON_DEFAUT, PREVISION_JUSTE, temperature, vent } from './data/meteo.js?v=0.115.1';
+import { SECTEURS } from './data/secteur.js?v=0.115.1';
+import { REGIMENTS, REGIMENTS_GRANDS } from './data/lexique.js?v=0.115.1';
+import { STANCES, STANCE_DEFAUT } from './data/stances.js?v=0.115.1';
+import { DIFFICULTES, DIFFICULTE_DEFAUT } from './data/difficulte.js?v=0.115.1';
+import { DUEL } from './data/deux.js?v=0.115.1';
+import { grade, departCaracs, caracEnMots } from './identite.js?v=0.115.1';
+import { corvees, creerRegiment, prendreReserve } from './nuit.js?v=0.115.1';
+import { RENFORTS } from './data/renforts.js?v=0.115.1';
+import { EQUIPEMENTS } from './data/batiments.js?v=0.115.1';
+import { campDeDepart, dotationAube, refusOrdre, refusNid, appliquerDepart, modif, rechargeDe, sortieChars, sortieCaserne, emplacementCamp } from './camp.js?v=0.115.1';
 
 export const PAS = 1 / 30;                 // s de jeu par pas
 export const NOUS = 0, EUX = 1;
@@ -714,7 +714,7 @@ export function avancer(B) {
     // la victoire anticipée du duel (v0.115.0) : un camp qui a pris assez d'avance aux points au soir gagne
     else if (etat.mission === 'duel') {
       const [a, b] = scoreDuel(B);
-      if (etat.anticipee && Math.abs(a - b) >= DUEL.ecartParJour * etat.meteo.length) {
+      if (etat.anticipee && Math.abs(a - b) >= ecartDuel(etat.meteo.length)) {
         etat.phase = 'fin';
         etat.issue = { ...jugerDuel(B, false), texte: `${a > b ? 'Le bleu' : 'Le kaki'} a pris trop d'avance : ${a} points contre ${b}. La bataille est gagnée avant son terme.` };
       }
@@ -748,6 +748,7 @@ function tronconsAdverses(B, camp) {
 function pointerSoir(B) {
   for (const c of [NOUS, EUX]) { const [t, tot] = tronconsAdverses(B, c); B.etat.pointsPrise[c] += tot ? Math.round(DUEL.prise * t / tot) : 0; }
 }
+export const ecartDuel = jours => Math.min(DUEL.ecartMax, DUEL.ecartParJour * jours);      // l'avance qui finit un duel avant son terme
 export function scoreDuel(B) {
   const { pointsPrise, pertes } = B.etat;
   return [pointsPrise[NOUS] + Math.floor(pertes[EUX] / DUEL.pertesPour), pointsPrise[EUX] + Math.floor(pertes[NOUS] / DUEL.pertesPour)];
@@ -835,7 +836,7 @@ export function progressionMission(B, camp = NOUS) {
     return { objectif: camp === NOUS ? 'prendre' : 'tenir', p: a ? r / a : 0, label: `${r} / ${a}`, texte: camp === NOUS ? `${r} tronçons repris sur ${a}, avant la nuit` : `${a - r} tronçons gardés sur ${a}` };
   }
   if (etat.mission === 'duel') {
-    const [a, b] = scoreDuel(B), ecart = DUEL.ecartParJour * n, mien = camp === NOUS ? a - b : b - a;
+    const [a, b] = scoreDuel(B), ecart = ecartDuel(n), mien = camp === NOUS ? a - b : b - a;
     return { objectif: 'duel', p: Math.max(0, Math.min(1, 0.5 + mien / (2 * ecart))), label: `${camp === NOUS ? a : b} / ${camp === NOUS ? b : a}`, texte: `${camp === NOUS ? a : b} points contre ${camp === NOUS ? b : a}${etat.anticipee ? ` : ${ecart} points d'avance finissent la bataille` : ''}` };
   }
   const objectif = (camp === NOUS) === (etat.mission === 'tenir') ? 'tenir' : 'prendre';
