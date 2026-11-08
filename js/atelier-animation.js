@@ -8,7 +8,7 @@ import { identite, caracteristiques } from './identite.js?v=0.131.0';
 import { aspect } from './aspect-soldat.js?v=0.131.0';
 import { creerSoldatArticule, poserLibre } from './rendu/soldat-articule.js?v=0.131.0';
 import { CHAMPS, NOMS_CHAMPS, COURBES } from './data/poses-soldat.js?v=0.131.0';
-import { poseNeutre, poseDe, miroir, borner, echantillon, marcheEnImages, articulations, OS_ARTICULES } from './pose-soldat.js?v=0.131.0';
+import { poseNeutre, poseDe, miroir, borner, echantillon, marcheEnImages, articulations, OS_ARTICULES, ikBras, ikJambe, CARRURE_NEUTRE } from './pose-soldat.js?v=0.131.0';
 import { creerPoignees, OUTILS } from './atelier-poignees.js?v=0.131.0';
 
 const $ = id => document.getElementById(id);
@@ -206,6 +206,12 @@ async function demarrer() {
   // les poignées 3D (js/atelier-poignees.js) : tourner, déplacer, échelle
   const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
   const G = creerPoignees(THREE, { canvas, camera, ppm: () => S.ppm, lire: c => poseAffichee()[c], regler: reglerChamp,
+    ik: (id, cible) => {      // une main ou une cheville tirée vers `cible` : les angles de l'épaule et du coude (ou de la hanche et du genou) sont recalculés
+      const P = poseAffichee(), g = id.endsWith('G') ? 'G' : 'D', car = S.carrure ?? CARRURE_NEUTRE;
+      const r = id.startsWith('main') ? ikBras(P, car, g, cible) : ikJambe(P, car, g, cible);
+      window.__atelier.dernierIk = { id, cible, r, car };      // (pour les scripts de test)
+      for (const [c, v] of Object.entries(r)) reglerChamp(c, v);
+    },
     echelleLire: cle => S.echelle[cle], echelleRegler: (cle, v) => { S.echelle[cle] = clamp(v, 0.7, 1.35); }, os: OS_ARTICULES, avant: () => { if (S.mode === 'lecture') { instantane(); entrerEdition(); } else geste = true; }, apres: () => majBoutons() });
   const barre = el('div', { className: 'aa-outils' });
   const boutonsOutils = OUTILS.map(([id, nom, touche]) => { const b = el('button', { textContent: `${nom} (${touche})`, title: `${nom} : touche ${touche}`, onclick: () => choisirOutil(id) }); barre.append(b); return [id, b]; });
@@ -234,6 +240,7 @@ async function demarrer() {
     const P = poseAffichee();
     // la carrure de l'aperçu : celle de l'homme × l'échelle des poignées
     const c0 = A.carrure, carrure = { ...c0, taille: c0.taille * S.echelle.taille, epaules: c0.epaules * S.echelle.epaules, ventre: c0.ventre * S.echelle.ventre };
+    S.carrure = carrure;
     const A2 = { ...A, carrure };
     const fantome = S.mode === 'edit';      // en édition : le soldat translucide, les os et les poignées ; en lecture : plein, les poignées à peine suggérées
     const Jt = articulations(P, carrure);
@@ -259,7 +266,7 @@ async function demarrer() {
     renderer.render(scene, camera);
     G.rendre(renderer);
     const choix = G.sel ? ` · ${G.nom(G.sel)}` : '';
-    $('aa-legende').textContent = `${S.mode === 'edit' ? 'Édition' : 'Lecture'} · t = ${S.t.toFixed(2)} s${choix} · poignées : cliquer une articulation, tirer l\'anneau (Maj : par 15°) · glisser ailleurs : tourner la vue, molette : zoom`;
+    $('aa-legende').textContent = `${S.mode === 'edit' ? 'Édition' : 'Lecture'} · t = ${S.t.toFixed(2)} s${choix} · poignées : cliquer une articulation, tirer l\'anneau (Maj : par 15°) · Déplacer : main ou cheville à tirer (cinématique inverse) · glisser ailleurs : tourner la vue, molette : zoom`;
   }
   let glisse = null;
   canvas.onpointerdown = e => { canvas.setPointerCapture(e.pointerId); if (G.down(e)) { if (S.mode === 'lecture') { instantane(); entrerEdition(); } return; } glisse = { x: e.clientX, y: e.clientY }; S.auto = false; };

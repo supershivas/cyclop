@@ -122,13 +122,22 @@ const unitaire = v => { const n = Math.hypot(v[0], v[1], v[2]) || 1; return [v[0
 // Rend { id: { nom, pos: [x, y, z], rots: [{ champ, axe, signe }], deplace: [{ champ, axe, k }] } } en mètres, le soldat debout au centre, face à +z.
 //  · `rots` : tourner de φ (main droite) autour de `axe` change le champ de `signe × φ` ;
 //  · `deplace` : bouger l'articulation de d (mètres) le long de `axe` change le champ de `k × d`.
-export function articulations(pose, car = CARRURE_NEUTRE) {
-  const P = { ...poseNeutre(), ...pose };
+// Le cadre commun de la cinématique, avec ses inverses : `mp` (la carrure), `haut` (le buste penché autour de la hanche, puis la poussée), `global` (le corps baissé, couché) ;
+// `sansHaut` et `sansGlobal` les défont, pour ramener un point du monde dans le repère du bras ou de la jambe (la cinématique inverse).
+function cadre(P, car) {
   const wd = car.epaules, sq = Math.sqrt(wd), sl = car.taille * car.jambes, st = car.taille * (1 + (1 - car.jambes) * 0.6);
   const mp = (p, xs, zs) => [p[0] * xs, p[1] <= 0.9 ? p[1] * sl : 0.9 * sl + (p[1] - 0.9) * st, p[2] * zs];
   const hanche = mp([0, 0.9, 0], 1, 1);
   const haut = p => { const q = rxp(p, hanche, P.buste); q[2] += P.poussee * Math.max(0, q[1] - 0.6); return q; };
   const global = p => { let q = [p[0], p[1] - P.descente, p[2]]; if (P.couche > 0.5) { q = rxp(q, [0, 0, 0], 1.5708); q[1] += 0.16; } return q; };
+  const sansGlobal = q => { let p = [q[0], q[1], q[2]]; if (P.couche > 0.5) { p[1] -= 0.16; p = rxp(p, [0, 0, 0], -1.5708); } return [p[0], p[1] + P.descente, p[2]]; };
+  const sansHaut = q => rxp([q[0], q[1], q[2] - P.poussee * Math.max(0, q[1] - 0.6)], hanche, -P.buste);
+  return { wd, sq, sl, st, mp, hanche, haut, global, sansGlobal, sansHaut };
+}
+
+export function articulations(pose, car = CARRURE_NEUTRE) {
+  const P = { ...poseNeutre(), ...pose };
+  const { wd, sq, mp, hanche, haut, global } = cadre(P, car);
   // la direction d'un vecteur après une chaîne de transformations : la différence de deux points proches
   const dir = (f, p, v) => { const e = 0.01, a = f(p), b = f([p[0] + v[0] * e, p[1] + v[1] * e, p[2] + v[2] * e]); return unitaire([b[0] - a[0], b[1] - a[1], b[2] - a[2]]); };
   const J = {};
@@ -141,7 +150,7 @@ export function articulations(pose, car = CARRURE_NEUTRE) {
     J['hanche' + g] = { nom: `Hanche ${nom}`, pos: aGen(hp), rots: [{ champ: 'hanche' + g, axe: dir(aGen, hp, X), signe: -1 }] };
     const kFin = rxp(kp, hp, hip), aFin = rxp(rxp(ap, kp, -kn), hp, hip);
     J['genou' + g] = { nom: `Genou ${nom}`, pos: aGen(kFin), rots: [{ champ: 'genou' + g, axe: dir(aGen, kFin, X), signe: 1 }] };
-    J['cheville' + g] = { nom: `Cheville ${nom}`, pos: aGen(aFin), rots: [{ champ: 'cheville' + g, axe: dir(aGen, aFin, X), signe: -1 }] };
+    J['cheville' + g] = { nom: `Cheville ${nom}`, pos: aGen(aFin), rots: [{ champ: 'cheville' + g, axe: dir(aGen, aFin, X), signe: -1 }], ik: 'jambe', deplace: [{ ik: true, axe: X }, { ik: true, axe: Y }, { ik: true, axe: Z }] };
     // le bout du pied : tourne avec la cheville, puis le genou, puis la hanche
     const pied = rxp(rxp(rxp(mp([c * 0.11, 0.03, 0.18], sq, 1), ap, P['cheville' + g]), kp, -kn), hp, hip);
     J['pied' + g] = { nom: `Pied ${nom}`, pos: aGen(pied), rots: [], passif: true };
@@ -156,7 +165,7 @@ export function articulations(pose, car = CARRURE_NEUTRE) {
     J['epaule' + g] = { nom: `Épaule ${nom}`, pos: aHaut(sp), rots: [{ champ: 'epaule' + g, axe: axeFlex, signe: -1 }, { champ: 'conv' + g, axe: axeTour, signe: 1 }] };
     J['coude' + g] = { nom: `Coude ${nom}`, pos: aHaut(bras(ep)), rots: [{ champ: 'coude' + g, axe: axeFlex, signe: -1 }] };
     // la main : au bout de l'avant-bras, elle tourne avec le coude puis l'épaule
-    J['main' + g] = { nom: `Main ${nom}`, pos: aHaut(bras(rxp(mp([c * 0.30, 0.76, 0], wd, 1), ep, P['coude' + g]))), rots: [], passif: true };
+    J['main' + g] = { nom: `Main ${nom}`, pos: aHaut(bras(rxp(mp([c * 0.30, 0.76, 0], wd, 1), ep, P['coude' + g]))), rots: [], passif: true, ik: 'bras', deplace: [{ ik: true, axe: [1, 0, 0] }, { ik: true, axe: [0, 1, 0] }, { ik: true, axe: [0, 0, 1] }] };
   }
   // le buste (pivot : la hanche) et la tête
   J.bassin = { nom: 'Buste (pivot : la hanche)', pos: global(hanche), rots: [{ champ: 'buste', axe: dir(global, hanche, X), signe: -1 }] };
@@ -184,3 +193,44 @@ export const OS_ARTICULES = [
   ['hancheG', 'hancheD'], ['hancheG', 'bassin'], ['hancheD', 'bassin'], ['bassin', 'poitrine'], ['poitrine', 'epauleG'], ['poitrine', 'epauleD'], ['poitrine', 'tete'], ['tete', 'crane'],
   ['epauleG', 'coudeG'], ['coudeG', 'mainG'], ['epauleD', 'coudeD'], ['coudeD', 'mainD'],
 ];
+
+// ─── la cinématique inverse : amener une main ou une cheville à un point du monde ───
+// Une chaîne à deux os (le bras : épaule, coude ; la jambe : hanche, genou) est plane : l'épaule tourne autour de la verticale (`conv`) puis le bras se plie dans ce plan, les angles
+// de l'épaule `sh` et du coude `el` mesurant l'écart à la verticale basse (le coude en avant) ; la jambe est la même chose sans le tour (le genou plie à l'envers : angle −genou).
+// Aucune limite d'angle : une cible hors de portée se rejoint le bras tendu. Le sens du pli (coude, genou) est celui de la pose actuelle ; les angles restent au plus près des actuels
+// (à un tour près), pour que le glissé ne saute pas.
+const TOUR = 2 * Math.PI;
+const auPlusPres = (v, courant) => v + TOUR * Math.round((courant - v) / TOUR);
+function plan(L1, L2, A, Y, sens) {
+  const D0 = Math.hypot(A, Y), D = Math.min(L1 + L2 - 1e-6, Math.max(Math.abs(L1 - L2) + 1e-6, D0));
+  const el = sens * Math.acos(Math.min(1, Math.max(-1, (D * D - L1 * L1 - L2 * L2) / (2 * L1 * L2))));
+  const beta = Math.atan2(L2 * Math.sin(el), L1 + L2 * Math.cos(el));
+  const alpha = D0 > 1e-9 ? Math.atan2(A, -Y) : 0;
+  return { sh: alpha - beta, el };
+}
+const dist3 = (a, b) => Math.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2]);
+
+// La main du côté g ('G' | 'D') amenée à `cible` (le monde) : rend { epauleG, convG, coudeG } (ou D)
+export function ikBras(pose, car, g, cible) {
+  const P = { ...poseNeutre(), ...pose }, C = cadre(P, car), c = g === 'G' ? -1 : 1;
+  const sp = C.mp([c * 0.30, 1.38, 0], C.wd, 1), ep = C.mp([c * 0.30, 1.08, 0], C.wd, 1), main = C.mp([c * 0.30, 0.76, 0], C.wd, 1);
+  const L1 = dist3(sp, ep), L2 = dist3(ep, main);
+  const m = C.sansHaut(C.sansGlobal(cible)), t = [m[0] - sp[0], m[1] - sp[1], m[2] - sp[2]];
+  const rho = Math.hypot(t[0], t[2]), cur = P['conv' + g];
+  // le plan du bras : l'azimut de la cible, ou son opposé (la cible passe derrière la verticale de l'épaule) : le plus proche de l'actuel
+  const c0 = rho > 1e-4 ? Math.atan2(t[0], t[2]) : cur, ecart = a => Math.abs(a - TOUR * Math.round(a / TOUR));
+  const [conv, A] = ecart(c0 - cur) <= ecart(c0 + Math.PI - cur) ? [c0, rho] : [c0 + Math.PI, -rho];
+  const { sh, el } = plan(L1, L2, rho > 1e-4 ? A : 0, t[1], Math.sin(P['coude' + g]) >= 0 ? 1 : -1);      // (le coude plie vers l'avant, sauf s'il est déjà retourné)
+  return { ['epaule' + g]: auPlusPres(sh, P['epaule' + g]), ['conv' + g]: auPlusPres(conv, cur), ['coude' + g]: auPlusPres(el, P['coude' + g]) };
+}
+
+// La cheville du côté g amenée à `cible` (le monde, sans sortir du plan de la jambe : la jambe n'a pas d'écart latéral) : rend { hancheG, genouG, chevilleG } ; le pied garde son angle dans le monde
+export function ikJambe(pose, car, g, cible) {
+  const P = { ...poseNeutre(), ...pose }, C = cadre(P, car), c = g === 'G' ? -1 : 1;
+  const hp = C.mp([c * 0.11, 0.9, 0], C.sq, 1), kp = C.mp([c * 0.11, 0.5, 0], C.sq, 1), ap = C.mp([c * 0.11, 0.08, 0], C.sq, 1);
+  const L1 = dist3(hp, kp), L2 = dist3(kp, ap);
+  const m = C.sansGlobal(cible), hip0 = P['hanche' + g], kn0 = P['genou' + g];
+  const { sh, el } = plan(L1, L2, m[2] - hp[2], m[1] - hp[1], Math.sin(kn0) < 0 ? 1 : -1);      // (le genou plie vers l'arrière, jambe tendue comprise, sauf s'il est déjà retourné)
+  const hip = auPlusPres(sh, hip0), kn = auPlusPres(-el, kn0);
+  return { ['hanche' + g]: hip, ['genou' + g]: kn, ['cheville' + g]: P['cheville' + g] + (hip0 - kn0) - (hip - kn) };
+}

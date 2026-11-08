@@ -171,3 +171,67 @@ test('le miroir change le sens du lacet et du roulis', () => {
   const m = miroir({ ...poseNeutre(), fusilLacet: 0.5, fusilRoulis: -0.2, fusilH: 0.1 });
   assert.ok(proche(m.fusilLacet, -0.5) && proche(m.fusilRoulis, 0.2) && proche(m.fusilH, 0.1));
 });
+
+group('poses — la cinématique inverse');
+import { ikBras, ikJambe } from '../js/pose-soldat.js';
+const dist = (a, b) => Math.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2]);
+const CORPS = [
+  ['debout', {}], ['penché', { buste: 0.5 }], ['poussée', { buste: 0.3, poussee: 0.2 }], ['baissé', { descente: 0.4, buste: 0.2 }], ['couché', { couche: 1 }], ['tout', { buste: -0.3, poussee: 0.15, descente: 0.3 }],
+];
+const CARR = [{ taille: 1, epaules: 1, jambes: 1, ventre: 1, tete: 1 }, { taille: 1.12, epaules: 1.15, jambes: 0.9, ventre: 1, tete: 1 }];
+test('la main rejoint toute cible atteignable : la cinématique directe la retrouve (corps penché, poussé, baissé, couché, carrures)', () => {
+  let n = 0, pire = 0;
+  for (const [nom, corps] of CORPS) for (const car of CARR) for (const g of ['G', 'D']) for (const sh of [-0.8, 0.2, 1.1, 2.4]) for (const conv of [-1, 0, 0.9]) for (const el of [0.3, 1.2, 2.3]) {
+    const but = articulations({ ...poseNeutre(), ...corps, ['epaule' + g]: sh, ['conv' + g]: conv, ['coude' + g]: el }, car)['main' + g].pos;
+    const depart = { ...poseNeutre(), ...corps };           // (la pose de départ est celle du repos : le pli du coude est vers l'avant)
+    const r = ikBras(depart, car, g, but), e = dist(articulations({ ...depart, ...r }, car)['main' + g].pos, but);
+    pire = Math.max(pire, e); n++;
+    assert.ok(e < 1e-6, `${nom} ${g} sh${sh} conv${conv} el${el} : écart ${e}`);
+  }
+  assert.ok(n > 800 && pire < 1e-6);
+});
+test('une cible hors de portée : le bras se tend vers elle, la main s\'arrête à la longueur du bras', () => {
+  for (const g of ['G', 'D']) {
+    const P = poseNeutre(), loin = [0.4, 1.6, 3];
+    const r = ikBras(P, CARR[0], g, loin), main = articulations({ ...P, ...r })['main' + g].pos, epaule = articulations({ ...P, ...r })['epaule' + g].pos;
+    assert.ok(Math.abs(dist(main, epaule) - 0.62) < 1e-3, `portée ${dist(main, epaule)}`);
+    const v = [loin[0] - epaule[0], loin[1] - epaule[1], loin[2] - epaule[2]], w = [main[0] - epaule[0], main[1] - epaule[1], main[2] - epaule[2]];
+    const cos = (v[0] * w[0] + v[1] * w[1] + v[2] * w[2]) / (Math.hypot(...v) * Math.hypot(...w));
+    assert.ok(cos > 0.9999, `direction ${cos}`);
+  }
+});
+test('la cheville rejoint toute cible atteignable, et le pied garde son angle dans le monde', () => {
+  let n = 0;
+  for (const [nom, corps] of CORPS) for (const car of CARR) for (const g of ['G', 'D']) for (const hip of [-0.6, 0.3, 1.3]) for (const kn of [0.05, 0.9, 2.2]) {
+    const arrivee = { ...poseNeutre(), ...corps, ['hanche' + g]: hip, ['genou' + g]: kn, ['cheville' + g]: 0.2 };
+    const but = articulations(arrivee, car)['cheville' + g].pos;
+    const depart = { ...poseNeutre(), ...corps, ['hanche' + g]: 0.1, ['genou' + g]: 0.4, ['cheville' + g]: 0.3 };
+    const r = ikJambe(depart, car, g, but), P = { ...depart, ...r };
+    assert.ok(dist(articulations(P, car)['cheville' + g].pos, but) < 1e-6, `${nom} ${g}`);
+    assert.ok(Math.abs((P['cheville' + g] - P['genou' + g] + P['hanche' + g]) - (depart['cheville' + g] - depart['genou' + g] + depart['hanche' + g])) < 1e-9, 'le pied tourne dans le monde');
+    n++;
+  }
+  assert.ok(n > 200);
+});
+test('le genou plie à l\'envers vers l\'arrière, le coude vers l\'avant : le sens du pli actuel est gardé', () => {
+  const depart = poseNeutre(), but = articulations({ ...depart, hancheG: 0.9, genouG: 1.3 })['chevilleG'].pos;
+  const r = ikJambe(depart, CARR[0], 'G', but);
+  assert.ok(r.genouG > 0, `genou ${r.genouG}`);
+  const b2 = ikBras(depart, CARR[0], 'D', articulations({ ...depart, epauleD: 0.5, coudeD: 1.4 }).mainD.pos);
+  assert.ok(b2.coudeD > 0, `coude ${b2.coudeD}`);
+});
+test('les angles restent proches des actuels : un bras déjà levé de plus d\'un tour ne saute pas d\'un tour', () => {
+  const P = { ...poseNeutre(), epauleD: 0.5 + 2 * Math.PI, coudeD: 1 + 2 * Math.PI, convD: 0.3 - 2 * Math.PI };
+  const but = articulations({ ...poseNeutre(), epauleD: 0.6, coudeD: 1.1, convD: 0.35 }).mainD.pos;
+  const r = ikBras(P, CARR[0], 'D', but);
+  assert.ok(Math.abs(r.epauleD - P.epauleD) < Math.PI && Math.abs(r.coudeD - P.coudeD) < Math.PI && Math.abs(r.convD - P.convD) < Math.PI, JSON.stringify(r));
+});
+test('une cible juste au-dessus de l\'épaule (azimut indéfini) ne donne ni NaN ni saut', () => {
+  const P = poseNeutre(), sp = articulations(P).epauleD.pos, r = ikBras(P, CARR[0], 'D', [sp[0], sp[1] + 0.4, sp[2]]);
+  for (const v of Object.values(r)) assert.ok(Number.isFinite(v));
+  assert.ok(dist(articulations({ ...P, ...r }).mainD.pos, [sp[0], sp[1] + 0.4, sp[2]]) < 1e-6);
+});
+test('les mains et les chevilles ont des poignées de déplacement par cinématique inverse', () => {
+  const J = articulations(poseNeutre());
+  for (const id of ['mainG', 'mainD', 'chevilleG', 'chevilleD']) assert.ok(J[id].ik && J[id].deplace.length === 3 && J[id].deplace.every(d => d.ik), id);
+});

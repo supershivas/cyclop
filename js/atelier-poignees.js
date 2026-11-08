@@ -8,7 +8,7 @@ const COUL = { x: 0xe0604f, y: 0x8fd96a, z: 0x6aa5ff, choisi: 0xdde874, point: 0
 const PX = { anneau: 38, fleche: 46, point: 4, prise: 10, tube: 6 };
 export const OUTILS = [['tourner', 'Tourner', 'E'], ['deplacer', 'Déplacer', 'W'], ['echelle', 'Échelle', 'R']];
 
-export function creerPoignees(THREE, { canvas, camera, ppm, lire, regler, echelleLire, echelleRegler, avant, apres, os = [] }) {
+export function creerPoignees(THREE, { canvas, camera, ppm, lire, regler, echelleLire, echelleRegler, avant, apres, os = [], ik }) {
   const scene = new THREE.Scene();
   const E = { outil: 'tourner', sel: null, survol: null, drag: null, J: null, actives: [], marqueurs: new Map(), cle: '', lecture: false, os: null };
   // ─── les os : des losanges allongés d'une articulation à l'autre, comme un squelette de logiciel de 3D (les poignées en deviennent lisibles : on voit ce qu'on plie) ───
@@ -58,19 +58,20 @@ export function creerPoignees(THREE, { canvas, camera, ppm, lire, regler, echell
         ajouter({ type: 'anneau', id: E.sel, rot: r, base: COUL[c], vue, prise });
       }
     } else if (E.outil === 'deplacer') {
-      for (const [id, j] of Object.entries(E.J)) for (const d of j.deplace ?? []) ajouter(fleche('fleche', id, d, COUL[dominante(d.axe)], false));
+      // les flèches de l'articulation choisie seulement (comme les anneaux) ; les autres se choisissent en cliquant leur marqueur, qui se tire aussi librement dans le plan de l'écran
+      if (E.sel && E.J[E.sel]) for (const d of E.J[E.sel].deplace ?? []) ajouter(fleche('fleche', E.sel, d, COUL[dominante(d.axe)], false));
     } else if (E.outil === 'echelle' && E.J.poitrine?.echelle) {
       for (const d of E.J.poitrine.echelle) ajouter(fleche('cube', 'poitrine', d, COUL[dominante(d.axe)], true));
     }
   }
-  // une flèche (ou un tige à cube) le long de +z local ; la prise est un cylindre épais
+  // une flèche (ou une tige à cube) le long de +z local, qui démarre à 28 % de sa longueur : l'articulation reste libre, on peut l'attraper elle-même ; la prise est un cylindre épais
   function fleche(type, id, d, couleur, cube) {
     const g = new THREE.Group();
-    const l = new THREE.BufferGeometry(); l.setAttribute('position', new THREE.Float32BufferAttribute([0, 0, 0, 0, 0, 0.85], 3));
+    const l = new THREE.BufferGeometry(); l.setAttribute('position', new THREE.Float32BufferAttribute([0, 0, 0.28, 0, 0, 0.85], 3));
     g.add(new THREE.Line(l, new THREE.LineBasicMaterial({ color: couleur, depthTest: false, transparent: true })));
     const bout = cube ? new THREE.BoxGeometry(0.2, 0.2, 0.2).translate(0, 0, 0.9) : new THREE.ConeGeometry(0.1, 0.3, 8).rotateX(Math.PI / 2).translate(0, 0, 0.88);
     g.add(new THREE.Mesh(bout, mat(couleur)));
-    const prise = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.16, 1, 6).rotateX(Math.PI / 2).translate(0, 0, 0.5), invisible());
+    const prise = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.16, 0.74, 6).rotateX(Math.PI / 2).translate(0, 0, 0.65), invisible());
     return { type, id, d, base: couleur, vue: g, prise };
   }
   const matrice = (obj, pos, axe, echelle) => {                 // l'objet : son z local sur `axe`, à `pos`, de taille `echelle`
@@ -127,7 +128,9 @@ export function creerPoignees(THREE, { canvas, camera, ppm, lire, regler, echell
     let meilleur = null;
     for (const o of ordre) {
       const hit = ray.intersectObject(o.obj, false)[0]; if (!hit) continue;
-      const poids = hit.distance - (o.a ? 1000 : 0);        // une poignée de l'outil passe avant un marqueur
+      // une poignée de l'outil passe avant un marqueur ; sauf en mode Déplacer, où une main ou une cheville à attraper passe avant les flèches (une flèche qui pointe vers la caméra se projette sur son centre)
+      const saisissable = o.m && E.outil === 'deplacer' && ik && E.J[o.m.id]?.deplace?.some(d => d.ik);
+      const poids = hit.distance - (o.a ? 1000 : 0) - (saisissable ? 2000 : 0);
       if (!meilleur || poids < meilleur.poids) meilleur = { poids, ...o };
     }
     return meilleur ? (meilleur.a ? { type: 'poignee', a: meilleur.a } : { type: 'marqueur', id: meilleur.m.id }) : null;
@@ -149,7 +152,17 @@ export function creerPoignees(THREE, { canvas, camera, ppm, lire, regler, echell
   function down(e) {
     const t = toucher(e);
     if (!t) return false;
-    if (t.type === 'marqueur') { E.sel = t.id; return true; }
+    if (t.type === 'marqueur') {
+      E.sel = t.id;
+      const j = E.J[t.id];
+      if (E.outil === 'deplacer' && ik && j.deplace?.some(d => d.ik)) {         // une main ou une cheville : on l'attrape et on la tire dans le plan de l'écran (cinématique inverse)
+        avant?.();
+        const n = camera.getWorldDirection(new THREE.Vector3()), p0 = V3(j.pos), r = rayon(e).ray, den = r.direction.dot(n);
+        const hit = den > 1e-6 ? r.origin.clone().addScaledVector(r.direction, p0.clone().sub(r.origin).dot(n) / den) : p0.clone();
+        E.drag = { plan: true, id: t.id, n, p0, dec: hit.sub(p0) };
+      }
+      return true;
+    }
     const a = t.a, J = E.J[a.id], centre = V3(J.pos);
     avant?.();
     if (a.type === 'anneau') {
@@ -157,13 +170,18 @@ export function creerPoignees(THREE, { canvas, camera, ppm, lire, regler, echell
       E.drag = { a, d, v0: lire(a.rot.champ), phi0: phi ?? 0, dernier: phi ?? 0, cumul: 0 };
     } else {
       const axe = V3(a.d.axe).normalize(), t0 = sur(e, centre, axe);
-      E.drag = { a, centre, axe, t0: t0 ?? 0, v0: a.type === 'cube' ? echelleLire(a.d.cle) : lire(a.d.champ) };
+      E.drag = { a, centre, axe, t0: t0 ?? 0, p0: centre.clone(), v0: a.d.ik ? 0 : a.type === 'cube' ? echelleLire(a.d.cle) : lire(a.d.champ) };
     }
     return true;
   }
   function move(e, shift) {
     if (!E.drag) { const t = toucher(e); E.survol = t ? (t.type === 'poignee' ? { type: 'poignee', a: t.a } : { type: 'marqueur', id: t.id }) : null; return !!t; }
     const D = E.drag, a = D.a;
+    if (D.plan) {                                   // le glissé libre d'une main ou d'une cheville : le point du plan de l'écran sous le pointeur, moins l'endroit saisi
+      const r = rayon(e).ray, den = r.direction.dot(D.n); if (Math.abs(den) < 1e-4) return true;
+      ik(D.id, r.origin.clone().addScaledVector(r.direction, D.p0.clone().sub(r.origin).dot(D.n) / den).sub(D.dec).toArray());
+      return true;
+    }
     if (a.type === 'anneau') {
       const phi = angle(e, D.d); if (phi === null) return true;
       let dp = phi - D.dernier; if (dp > Math.PI) dp -= 2 * Math.PI; if (dp < -Math.PI) dp += 2 * Math.PI;
@@ -173,7 +191,8 @@ export function creerPoignees(THREE, { canvas, camera, ppm, lire, regler, echell
       regler(a.rot.champ, v);
     } else {
       const t = sur(e, D.centre, D.axe); if (t === null) return true;
-      if (a.type === 'cube') { const f = D.t0 > 1e-3 ? Math.max(0.4, Math.min(2, t / D.t0)) : 1; echelleRegler(a.d.cle, D.v0 * f); }
+      if (a.d?.ik) ik(a.id, D.p0.clone().addScaledVector(D.axe, t - D.t0).toArray());      // une flèche d'une main ou d'une cheville : on déplace la cible le long de l'axe
+      else if (a.type === 'cube') { const f = D.t0 > 1e-3 ? Math.max(0.4, Math.min(2, t / D.t0)) : 1; echelleRegler(a.d.cle, D.v0 * f); }
       else { let v = D.v0 + a.d.k * (t - D.t0); if (shift) v = Math.round(v / 0.05) * 0.05; regler(a.d.champ, v); }
     }
     return true;
