@@ -108,7 +108,7 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
   function projeter() {
     const p = ZOOMS[vue.zoom], D = distance(vue.zoom), o = versCamera(yawVu(), tangageVu());
     camera.fov = vue.fov; camera.aspect = vue.vw / vue.vh;
-    camera.near = vue.ciel ? 0.5 : D * 0.15;      // (la caméra libre rase le sol : un plan proche à 14 m coupait le sol du bas de l'écran)
+    camera.near = vue.ciel || vue.libre ? 0.5 : D * 0.15;      // (la caméra libre rase le sol : un plan proche à 14 m coupait le sol du bas de l'écran ; l'écran titre, `cameraLibre`, met `libre` et non `ciel` : son plan proche était à ~28 m, le sol du bas de l'image disparaissait)
     camera.far = Math.max(vue.portee, D * (vue.libre || vue.ciel ? 6 : 5));       // (au ras du sol, la vue porte plus loin ; au-delà, le ciel bas)  v0.36.8 : cette ligne était restée dans le commentaire de la précédente, le plan lointain restait à 1 000 m et coupait le fond du champ, vue basse et dézoomée
     camera.updateProjectionMatrix();
     camera.position.set(vue.cx + o[0] * D, SOL_Y + vue.haut + o[1] * D, vue.cz + o[2] * D);

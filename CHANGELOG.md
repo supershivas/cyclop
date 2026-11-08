@@ -4,6 +4,9 @@
 - Éclairage « haut » : le ciel, les nuages, le soleil et la brume glissent en douceur d'un temps à l'autre, et les ombres s'effacent sous un ciel couvert
 - Les nuages respirent : un nuage qui passe voile un peu le soleil
 
+## 0.128.1 — 2026-11-08
+- L'écran titre : le sol ne disparaît plus en bas de l'image
+
 ## 0.128.0 — 2026-11-08
 - Un réglage « Éclairage » (bas, moyen, haut) dans la roue crantée : « haut » ajoute les ombres portées des hommes, des arbres, des chars et des avions, un soleil avec ses nuages éclairés, l'ombre de la fumée et les lanternes de nuit
 - « Moyen » est l'éclairage d'avant, gardé par défaut
