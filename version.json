@@ -1,7 +1,7 @@
 {
-  "version": "0.125.0",
+  "version": "0.126.0",
   "date": "2026-11-08",
   "changes": [
-    "Les fiches du soldat, du régiment, du char et de la mitrailleuse sont en tuiles : ce qu'il endure, ses caractéristiques et leur départ, l'effectif et le moral d'un régiment soir après soir, la coque et le canon d'un char, la bande d'un poste"
+    "Le bilan de l'aube est en tuiles : ce que la nuit a fait, les morts par cause, la dotation de l'état-major et les effectifs au matin"
   ]
 }

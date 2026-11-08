@@ -2,7 +2,7 @@
 // les graphiques que les quatre fiches se partagent (une jauge à repères, une caractéristique et son départ, une bande de munitions, deux valeurs partagées, l'effectif et le moral d'un régiment jour après jour)
 // et `tuileDe(bloc)`, qui pose un bloc { titre, chiffre, unite, graphes: [[nom, svg, mot]], mot, chevrons } sur le papier. Comme le bilan du soir (`bilan.js`) : aucune couleur écrite ici, les variables du jeu,
 // la forme porte l'information. Des fonctions de DOM qui ne lisent que ce qu'on leur donne : `fiche.js`, `chars.js` et `nids.js` lisent l'état.
-import { chevronsHtml } from './barres.js?v=0.125.0';
+import { chevronsHtml } from './barres.js?v=0.126.0';
 
 const el = (tag, cls = '', ...kids) => { const e = document.createElement(tag); if (cls) e.className = cls; e.append(...kids.flat().filter(k => k != null)); return e; };
 const svgHtml = (cls, w, h, corps, nom) => `<svg class="bi ${cls}" viewBox="0 0 ${w} ${h}" role="img" aria-label="${nom}" preserveAspectRatio="xMinYMid meet">${corps}</svg>`;
