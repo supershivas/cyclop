@@ -42,3 +42,35 @@ Palette (on la garde) ; matériel visé (un ordinateur de bureau récent avec ca
 
 ## Première mesure sur du vrai matériel (Jérôme, 5 novembre, v0.113.0)
 Apple M1, Firefox 156, niveau Moyen (étapes 1 à 7), carte de 512 × 320 m, 34 000 soldats, 1,27 million de triangles, 691 appels de dessin : **60 images par seconde**, 16,67 ms (la synchronisation verticale plafonne : on ne voit pas la marge). Le banc donne 4 à 5 ms par image avec **toutes** les étapes, y compris l'AO écran : aucune étape ne se distingue (moins de 1 ms chacune). **Limites de la mesure** : Firefox n'a pas de chronomètre GPU (`chronoGPU: false`) et arrondit `performance.now()` à 1 ms (le recalcul local après un obus s'y lit 0,006 ms de moyenne et 1 ms de pire : c'est de la quantification) ; le banc prend le meilleur quart de 18 images, trop peu pour une horloge à 1 ms. **À retenir** : sur un GPU intégré récent, le budget de la lumière actuelle est très large (≥ 3 fois de marge) ; ce qui dépasse est du calcul CPU unique : l'AO de toute la carte, 230 ms (budget 120) au chargement ou quand on réactive l'étape. À refaire sur une machine plus modeste (Windows, GPU Intel) avant de fixer les niveaux de qualité du jeu.
+
+## Session 1 faite (v0.114.0, 5 novembre)
+
+Tout est au labo (`js/lumiere/README.md`, « Ajouts de la v0.114.0 » : le détail, les mesures, les pièges). Ce qui est fait :
+1. **Le clignotement** : trois causes, aucune n'était l'AO écran. (a) vraie : le **masque des points** ne partait au GPU que s'il y avait des articulés ; (b) **hystérésis** par homme (niveau de détail, places limitées, marche/arrêt) ; (c) **la foule tremblait** (tirage de ±3 cm à chaque image) : flânage lent à la place. La piste « points de 2 pixels qui glissent » n'a pas été retenue (le jeu fait pareil ; la foule calme suffit).
+2. **La carte d'ombre** (étape 9, 1 024² Moyen, 2 048² Haut) : soldats, troncs et buissons, chars et biplans du labo (des boîtes : les modèles du jeu viennent en S3), fumée (épaisseur cumulée, ombre pâle sous un panache mince), combinée au relief par un minimum, cadre stabilisé. Le coût GPU est à mesurer sur du vrai matériel.
+3. **Le ciel v2** : air traversé, Mie, couchant, soleil et lueur, cumulus éclairés, cirrus ; l'ambiance du sol vient du même modèle. **Palette gardée.**
+4. **Le banc sous Firefox** : des lots d'images assez longs pour l'horloge à 1 ms, la médiane, l'incertitude affichée et exportée.
+5. **L'AO global réparti** : 3 ms par image au lieu de 230 ms d'un coup.
+
+**Ce qui reste pour vous** : relancer « Mesurer le coût GPU » puis « Exporter (JSON) » (Firefox ou autre, niveau Moyen puis Haut) et me donner le fichier : la ligne de l'étape 9 donnera le vrai coût des ombres, et l'incertitude dira si la mesure est bonne. Le conteneur n'a que le rendu logiciel.
+
+**Ce que S2 devra savoir** : (1) la carte d'ombre et `ombreCarte` s'appellent depuis `eclairer` : le jeu, qui passe par three.js, devra recevoir la matrice `uLVP`, la texture de profondeur comparée et la texture de fumée dans `solMat`/`soldatMat` (les nuanceurs du jeu sont déjà portés par remplacement de texte) ; (2) la hauteur des casteurs vient du jeu (arbres de `vegetation.js`, avions, chars) : un jeu d'instances par type, comme `engins.js` ; (3) le jeu a une ombre au sol par soldat (quadrilatère teinté) : elle disparaît en S3, quand la carte d'ombre est branchée.
+
+## Session 2 commencée (v0.114.0)
+Le scintillement vu par Jérôme existe sans la lumière (aussi en « tout désactivé ») mais **pas dans le jeu** : on laisse tomber le sujet. Première pièce posée : **l'ouverture au ciel du relief dans le jeu** (`js/rendu/ao-sol.js`, `rendu.aoSol`, éteinte, références intactes : voir `docs/domaines/rendu.md`). Suite proposée, dans l'ordre : (1) le soleil du labo à la place des ombres de relief du jeu, derrière une option ; (2) lumière propagée sous les abris (`tr.toit`) ; (3) cavité (flaques) avec la météo du jeu ; (4) la lecture par le nuanceur des soldats ; (5) bascule : l'option devient celle du jeu, `rendu.json` et `fumee.json` réécrits en regardant chaque image. La carte d'ombre (S3) vient ensuite.
+
+**Étape 1 faite** : le soleil du labo sur le sol du jeu (`rendu.soleilSol`, éteint ; voir `docs/domaines/rendu.md`). Prochaine : (2) la lumière propagée sous les abris.
+
+**Étape 2 faite** : la lumière propagée sous les toits du jeu (`rendu.abrisSol`, éteinte). Prochaine : (3) la cavité (flaques) avec la météo du jeu, puis (4) la lecture par les soldats, (5) la bascule.
+
+**Étapes 3 et 4 faites** : les flaques (`rendu.flaquesSol`) et la lecture de la lumière par les soldats (boîtes, silhouettes, équipés, gradés, articulés). Reste (5) : la bascule, c'est-à-dire décider quelles options deviennent celles du jeu, réécrire `rendu.json` et `fumee.json` en regardant chaque image, et mesurer sur 8 000 soldats (`scripts/mesure.mjs`). Les flaques sous la pluie n'ont pas encore été vues.
+
+**Étape 5 faite (v0.115.0)** : les quatre options sont celles du jeu ; références réécrites ; +1,7 à +2,8 ms CPU par image mesurés. **La session 2 est finie.** Reste la session 3 : la carte d'ombre du labo branchée sur les soldats (articulés compris), les arbres, la végétation, la fumée, les avions, les chars (l'ancienne ombre au sol en quadrilatère disparaît), puis les lanternes, fusées, feux et éclairs d'obus par la couche de lampes ; la session 4 : le ciel v2 et la météo du labo, le réglage « Éclairage bas / moyen / haut », les mesures.
+
+**Session 3, première tranche (v0.115.0, non adoptée)** : la carte d'ombre des soldats dans le jeu (`rendu.ombresCarte`, éteinte ; voir `docs/domaines/rendu.md`). Reste : arbres, chars, avions, fumée, ombre fidèle de l'articulé, lampes, puis adoption.
+
+**Session 3 faite sauf deux pièces** : la carte d'ombre du jeu porte soldats, arbres, buissons, chars et avions (`rendu.ombresCarte`, éteinte : +40 à +55 % de rendu en logiciel, voir `docs/domaines/rendu.md`). Reste : la fumée comme casteur et les lampes (lanternes, fusées, feux, éclairs d'obus). Session 4 : le réglage « Éclairage bas / moyen / haut » (la carte d'ombre n'est que dans « haut »), le ciel v2 et la météo, les mesures sur du vrai matériel.
+
+**Session 4 (v0.116.0)** : le réglage « Éclairage bas / moyen / haut » est dans la roue crantée (moyen par défaut = la v0.115.0), « haut » ajoute la carte d'ombre et le ciel v2. Reste : la météo du labo à la place de `meteo.js`, la fumée comme casteur et les lampes (S3), et **la mesure du coût GPU sur du vrai matériel** (labo : « Mesurer le coût GPU » puis « Exporter (JSON) » ; jeu : `scripts/mesure.mjs` n'a que le rendu logiciel du conteneur).
+
+**Météo du labo (v0.129.0)** : le ciel, la couverture, la force des ombres, le soleil du ciel et la brume glissent d'un temps à l'autre en « haut » (`rendu/meteo-lisse.js`). Pas fait : la pluie et la neige en fondu (particules), la météo qui change dans la journée (elle reste celle du jour : c'est une règle du jeu). Reste : la mesure du coût GPU sur du vrai matériel.

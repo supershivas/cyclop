@@ -1,8 +1,16 @@
 # Journal des versions
 
-## 0.127.2 — 2026-11-08
-- Aucun arbre sur les terrains des bâtiments de la base, ni à 20 m autour : les chars sortent du parc sans buter sur un tronc
-- Le plan d'un secteur ne montre d'abord que qui tient la tranchée et le nombre d'hommes de chaque armée, sans barre de défilement ; un petit bouton « Plus d'infos » déplie les tombés et les régiments
+## 0.129.0 — 2026-11-08
+- Éclairage « haut » : le ciel, les nuages, le soleil et la brume glissent en douceur d'un temps à l'autre, et les ombres s'effacent sous un ciel couvert
+- Les nuages respirent : un nuage qui passe voile un peu le soleil
+
+## 0.128.1 — 2026-11-08
+- L'écran titre : le sol ne disparaît plus en bas de l'image
+
+## 0.128.0 — 2026-11-08
+- Un réglage « Éclairage » (bas, moyen, haut) dans la roue crantée : « haut » ajoute les ombres portées des hommes, des arbres, des chars et des avions, un soleil avec ses nuages éclairés, l'ombre de la fumée et les lanternes de nuit
+- « Moyen » est l'éclairage d'avant, gardé par défaut
+- Le labo lumière a un lac, avec les reflets du ciel et des berges sur l'eau
 
 ## 0.127.1 — 2026-11-08
 - Les fiches du char, du poste et de l'avion : la vue verrouillée et la vue à la première personne sont deux petites icônes en haut à droite ; l'infobulle de « Marcher » ne montre plus de « \n » ; le « ? » de la carte est réparé
@@ -72,6 +80,22 @@
 ## 0.113.1 — 2026-11-07
 - La ceinture des soldats vus de près ne scintille plus (ses flancs étaient dans le même plan que ceux de la vareuse)
 - Atelier d'animation : les poses du soldat se règlent avec des poignées 3D (tourner, déplacer, échelle), on voit les os, et on peut annuler (Ctrl+Z)
+
+## 0.117.0 — 2026-11-08
+- Éclairage « haut » : la fumée projette son ombre sur le sol et les lanternes des tranchées éclairent la nuit
+- Le labo lumière a un lac, avec les reflets du ciel et des berges sur l'eau
+
+## 0.116.0 — 2026-11-08
+- Un réglage « Éclairage » (bas, moyen, haut) dans la roue crantée : « haut » ajoute les ombres portées des hommes, des arbres, des chars et des avions, et un soleil avec ses nuages éclairés
+- « Moyen » est l'éclairage de la version précédente, gardé par défaut
+
+## 0.115.0 — 2026-11-05
+- La lumière du labo lumière entre dans le jeu : des ombres de relief douces, les creux, les tranchées et les hommes qui s'y trouvent plus sombres
+- Le jour s'éteint sous les toits de bois, et des flaques se forment dans les creux quand il pleut
+
+## 0.114.0 — 2026-11-05
+- Labo lumière : les soldats ne clignotent plus, et les ombres portées sont dynamiques (soldats, arbres, chars, biplans, fumée)
+- Un ciel plus réaliste (soleil, nuages éclairés), l'AO de toute la carte réparti sur plusieurs images, un banc de mesure fiable sous Firefox
 
 ## 0.113.0 — 2026-11-05
 - Labo lumière : les soldats du jeu à tous les niveaux de détail (boîte, silhouette, soldat équipé, articulé), au lieu de simples colonnes

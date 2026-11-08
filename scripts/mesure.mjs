@@ -5,6 +5,8 @@
 //   node scripts/mesure.mjs --soldats 2000 --secondes 20
 //   node scripts/mesure.mjs --arbres '{"feuilles":true}'   (les arbres variés du labo, v0.52.6 : `{}` les formes seules, `feuilles`, `chute`, `abattus: "longs"`)
 //   node scripts/mesure.mjs --grades fanion|jumelles|galons   (les grades à l'écran, v0.68.0 ; sans : tous les soldats pareils)
+//   node scripts/mesure.mjs --lumiere 0 --zooms 3,4,5   (sans la lumière du labo lumière, v0.115.0 : soleil doux, creux, abris, flaques ; sans l'option : celle du jeu, allumée)
+//   node scripts/mesure.mjs --carte 1 --zooms 3,4,5   (la carte d'ombre : soldats, arbres, chars, avions ; session 3)
 //   node scripts/mesure.mjs --ombres 1 --zooms 3,4,5   (les ombres du relief du labo, v0.67 : éteintes dans le jeu)
 //   node scripts/mesure.mjs --ombres 1 --parois 1 --zooms 3,4,5   (avec les parois qui suivent le soleil)
 //   node scripts/mesure.mjs --nuages 1 --zooms 3,4,5   (les ombres de nuages du labo)
@@ -18,7 +20,7 @@
 // barrages en cours (le sol se refait).
 import { servir, lancerChromium, options } from '../outils/navigateur.mjs';
 
-const o = options(process.argv.slice(2), { soldats: '8000', secondes: '12', largeur: '1280', hauteur: '800', finesse: 'auto', zooms: '0,3,5', articule: '', arbres: '', ombres: '', parois: '', nuages: '', grades: '', tranchees: '' });
+const o = options(process.argv.slice(2), { soldats: '8000', secondes: '12', largeur: '1280', hauteur: '800', finesse: 'auto', zooms: '0,3,5', articule: '', arbres: '', ombres: '', lumiere: '', carte: '', parois: '', nuages: '', grades: '', tranchees: '' });
 const srv = await servir('.');
 const nav = await lancerChromium();
 const page = await (await nav.newContext({ viewport: { width: +o.largeur, height: +o.hauteur } })).newPage();
@@ -38,6 +40,8 @@ const resultats = [];
 const VUES = [['tout le champ (points)', 0, 200, 150], ['zoom 3 (boîtes)', 2, 200, 165], ['zoom 4 (boîtes)', 3, 200, 170], ['zoom 6 (silhouettes)', 4, 200, 180], ['zoom 8 (silhouettes)', 5, 200, 190], ['zoom 12 (articulés)', 6, 200, 190], ['zoom 16 (articulés)', 7, 200, 190], ['zoom 24 (articulés)', 8, 200, 190], ['zoom 32 (articulés)', 9, 200, 190]];
 if (o.tranchees !== '') await page.evaluate(n => { __jeu.rendu().niveauTranchees = n === 'auto' ? 'auto' : +n; }, o.tranchees);       // les niveaux de détail des tranchées (v0.88.1) : 0 le dessin d'avant, 1 à 3, auto (le jeu : selon le zoom)
 if (o.articule === '0') await page.evaluate(() => { __jeu.rendu().articule = null; });       // les soldats articulés (v0.105.0) éteints : le soldat équipé partout
+if (o.lumiere === '0') await page.evaluate(() => { const R = __jeu.rendu(); R.soleilSol = R.aoSol = R.abrisSol = R.flaquesSol = false; });
+if (o.carte === '1') await page.evaluate(() => { __jeu.rendu().ombresCarte = true; });
 if (o.ombres) await page.evaluate(() => { __jeu.rendu().ombresRelief = true; });
 if (o.nuages) await page.evaluate(() => { __jeu.rendu().ombresNuages = true; });
 if (o.parois) await page.evaluate(() => { __jeu.rendu().soleilReglage = { parois: true }; });

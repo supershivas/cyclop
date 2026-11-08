@@ -1,12 +1,12 @@
 // La foule : des milliers de soldats de quelques pixels, un simple va-et-vient (marche au hasard + vagues d'assaut), aucun gameplay.
 // Logique pure et déterministe (un xorshift par soldat, semé par la graine) ; le coût ne dépend que du nombre de soldats, jamais de la lumière :
 // la hauteur du sol sous chacun est lue par le nuanceur dans la texture des hauteurs, pas ici.
-import { MONDE } from './config.js?v=0.127.2';
+import { MONDE } from './config.js?v=0.129.0';
 
 export function creerFoule(M, max = MONDE.foule.max, graine = MONDE.graine) {
   const F = {
     max, n: 0, t: 0, largeurM: M.largeurM, profondeurM: M.profondeurM,
-    x: new Float32Array(max), z: new Float32Array(max),
+    x: new Float32Array(max), z: new Float32Array(max), vx: new Float32Array(max), vz: new Float32Array(max),      // vx, vz : le flânage (m/s)
     x0: new Float32Array(max), z0: new Float32Array(max), zc: new Float32Array(max),      // départ (leur tranchée) et but (le no man's land)
     camp: new Uint8Array(max), rang: new Uint8Array(max), graine: new Uint32Array(max),
     xy: new Float32Array(max * 2),                                                        // x, z entrelacés, tels que le tampon du GPU les lit
@@ -32,7 +32,10 @@ export function regler(F, n) { F.n = Math.max(0, Math.min(F.max, n | 0)); }
 const vague = u => (u <= 0 || u >= 1) ? 0 : 0.5 - 0.5 * Math.cos(Math.PI * 2 * u);
 export function avancer(F, dt) {
   F.t += dt;
-  const V = MONDE.foule.vague, n = F.n, x = F.x, z = F.z, xy = F.xy, g = F.graine, jit = 0.8 * dt, W = F.largeurM, H = F.profondeurM;
+  const V = MONDE.foule.vague, n = F.n, x = F.x, z = F.z, vx = F.vx, vz = F.vz, xy = F.xy, g = F.graine, W = F.largeurM, H = F.profondeurM, ra = Math.min(1, 2 * dt);
+  // Le flânage : une vitesse qui varie LENTEMENT (constante de temps `flanage.tauS`), au lieu d'un tremblement tiré à chaque image. Avant, la position bougeait au hasard de ±3 cm à chaque
+  // image : un homme à 12 pixels par mètre tremblait, sa vitesse mesurée et son niveau de détail aussi (le clignotement des soldats). Ici l'homme dérive doucement : même amplitude (~0,8 m/s), aucune secousse.
+  const F2 = MONDE.foule.flanage, rel = Math.min(1, dt / F2.tauS), amp = F2.vitesse * Math.sqrt(2 * rel);
   for (let i = 0; i < n; i++) {
     let s = g[i];
     s ^= s << 13; s >>>= 0; s ^= s >>> 17; s ^= s << 5; s >>>= 0;
@@ -40,12 +43,13 @@ export function avancer(F, dt) {
     s ^= s << 13; s >>>= 0; s ^= s >>> 17; s ^= s << 5; s >>>= 0;
     g[i] = s;
     const b = s / 4294967296;
+    vx[i] += -vx[i] * rel + (a - 0.5) * 3.46 * amp; vz[i] += -vz[i] * rel + (b - 0.5) * 3.46 * amp;          // 3,46 = √12 : l'écart type d'un tirage uniforme vaut 1
     // la phase de ce camp : les deux camps ne partent pas ensemble
     const u = ((F.t + (F.camp[i] ? V.periodeS / 2 : 0) - F.rang[i] * V.retardParRangS) % V.periodeS) / V.avanceS;
     const cx = F.x0[i], cz = F.z0[i] + (F.zc[i] - F.z0[i]) * (u > 0 && u < 1 ? vague(u) : 0);
-    // le soldat suit sa cible en tremblant (marche au hasard)
-    x[i] += (cx - x[i]) * Math.min(1, 2 * dt) + (a - 0.5) * jit * 4;
-    z[i] += (cz - z[i]) * Math.min(1, 2 * dt) + (b - 0.5) * jit * 4;
+    // le soldat suit sa cible en flânant
+    x[i] += (cx - x[i]) * ra + vx[i] * dt;
+    z[i] += (cz - z[i]) * ra + vz[i] * dt;
     if (x[i] < 1) x[i] = 1; else if (x[i] > W - 1) x[i] = W - 1;
     if (z[i] < 1) z[i] = 1; else if (z[i] > H - 1) z[i] = H - 1;
     xy[2 * i] = x[i]; xy[2 * i + 1] = z[i];

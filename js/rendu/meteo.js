@@ -1,7 +1,7 @@
 // La pluie (des traits qui tombent autour du centre de la vue) et le brouillard (un voile de brume continu qui s'épaissit vers le haut
 // de l'écran, le lointain ; plus de trame depuis la v0.12.1). Le dessin seulement : `afficher` lit la météo, `maj` règle les nuanceurs.
-import * as SH from './shaders.js?v=0.127.2';
-import { METEO } from '../data/meteo.js?v=0.127.2';
+import * as SH from './shaders.js?v=0.129.0';
+import { METEO } from '../data/meteo.js?v=0.129.0';
 
 const PLUIE = 5000, NEIGE = 3500;
 const BOITE_MAX = 600;      // m : la boîte de pluie autour de la vue ne dépasse pas cela (dézoomé, 1 100 m pour 1 600 gouttes : presque rien sur le champ, tout au bord de l'horizon)
@@ -64,6 +64,8 @@ export function creerMeteo({ THREE, scene, col }) {
     },
     // la pluie le jour seulement, le brouillard quand il y en a ; `vide` : rien (la vue sans bataille)
     afficher(h, vide) { if (!vide) { pluie.visible = h.meteo === 'pluie' && h.phase === 'jour'; { const nv = METEO[h.meteo]?.neige && h.phase === 'jour'; if (nv && !neige) creerNeige(); if (neige) neige.visible = !!nv; fort = !!h.tempete; } brume.visible = h.meteo === 'brouillard' || h.tempete; } },
+    // la météo continue (meteo-lisse.js, « Éclairage : haut ») : le brouillard paraît et s'efface en glissant ; f nul : le réglage d'avant (tout ou rien) ; à appeler après `afficher` et `maj`
+    brumeLisse(f, vide) { if (f == null) return; brume.visible = !vide && f > 0.02; brumeMat.uniforms.uForce.value = f; },
     // `tAnim` : le temps du dessin ; `cx`, `cz` : le centre de la vue ; `p` : les pixels par mètre ; `vue` : la taille de l'écran
     // `vx`, `vz` : le vent en m/s ; la pluie en prend un peu (elle tombe en biais), la neige davantage (des flocons que le vent roule)
     maj(tAnim, cx, cz, p, vue, vx = 0, vz = 0, dt = 0) {

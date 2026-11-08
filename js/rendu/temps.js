@@ -1,11 +1,11 @@
 // Le temps qui passe (Jérôme, v0.8.0) : le soleil (les ombres des soldats et des arbres tournent et s'allongent), le soir et la nuit (un voile de
 // terre qui monte), les lumières (lanternes des tranchées, incendies, fusées) qui le trouent. Rien hors de la palette, sauf les fondus du voile
 // (CLAUDE.md, palette). Le dessin seulement : tout se lit de l'heure (`horloge`) et de l'état.
-import * as SH from './shaders.js?v=0.127.2';
-import { ligneY } from '../tranchees.js?v=0.127.2';
-import { hash2 } from '../lib/rng.js?v=0.127.2';
-import { clairDeLune } from '../data/lune.js?v=0.127.2';
-import { SOLEIL, SOLEIL_SAISONS, SOLEIL_COTE, SOLEIL_LEVER, NUAGES } from '../data/soleil.js?v=0.127.2';
+import * as SH from './shaders.js?v=0.129.0';
+import { ligneY } from '../tranchees.js?v=0.129.0';
+import { hash2 } from '../lib/rng.js?v=0.129.0';
+import { clairDeLune } from '../data/lune.js?v=0.129.0';
+import { SOLEIL, SOLEIL_SAISONS, SOLEIL_COTE, SOLEIL_LEVER, NUAGES } from '../data/soleil.js?v=0.129.0';
 
 // `THREE`, `scene`, `col`, `camera`, `vue`, `surface(x, z)` viennent de creerRendu ; `soleilUniform` (le bout de l'ombre d'un mètre de hauteur, lu aussi par le nuanceur
 // des soldats) et `solUniforms` (`uSol`, `uTaille` : la texture du sol, que l'ombre d'un arbre reprend) sont les uniformes partagés ; `ecl` (les éclats : les fusées) et
@@ -197,5 +197,7 @@ export function creerTemps({ THREE, scene, col, camera, vue, surface, bataille, 
     setStyleNuit(m) { const k = { trame: 0, doux: 1, halos: 2 }[m] ?? 0; nuitMat.uniforms.uMode.value = k; nuitMat.transparent = k > 0; nuitMat.needsUpdate = true; },
     // le tampon des ombres d'arbres : la végétation le remplit (les arbres qu'on voit), le soleil dit où elles tombent
     get ombres() { return { ARBRES_OMBRES, aoPos, aoGeo, soleil }; },
+    get lanternesVues() { return lanternesVues; },                  // les lanternes fixes qu'on voit : [x, y, z] (la couche de lampes cachées par le relief, session 3)
+    get arbresOmbresMesh() { return arbresOmbres; },                // l'ombre au sol des arbres : la carte d'ombre la remplace (session 3)
   };
 }

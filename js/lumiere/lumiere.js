@@ -2,7 +2,7 @@
 // Logique pure : elle remplit `L.tex`, une texture RGBA8 (une case = un texel) que le nuanceur lit :
 //   R = visibilité du soleil (étape 1)   G = ouverture au ciel (étape 2)   B = lumière propagée (étape 4)   A = creux, pour les flaques (étape 7)
 // Aucun chronomètre ici : mesures.js mesure autour de chaque appel.
-import { MONDE, SOLEIL } from './config.js?v=0.127.2';
+import { MONDE, SOLEIL } from './config.js?v=0.129.0';
 
 const NIVEAU_MAX = 240, PAS_QUART = MONDE.quartsParCube;
 
@@ -146,3 +146,13 @@ export function majHauteurs(M, L, region) {
 
 export const regionTotale = M => ({ i0: 0, j0: 0, i1: M.W - 1, j1: M.H - 1 });
 export const NIVEAU_FLOOD_MAX = NIVEAU_MAX;
+
+// Une région découpée en bandes de `rangees` rangées de cases, pour répartir un calcul global sur plusieurs images (l'AO de toute la carte : 230 ms d'un coup, plus de 15 ms par image si on le coupe).
+// Chaque calcul de lumière ne lit que les hauteurs : un calcul par bandes redonne exactement celui de la région entière (test « l'AO par bandes »).
+// `bandeSuivante` donne la bande qui commence à la rangée `j` (l'écran en change la hauteur d'une image à l'autre selon ce que la précédente a coûté) ; `bandes` les donne toutes.
+export function bandeSuivante(region, j, rangees) { const n = Math.max(1, rangees | 0); return { i0: region.i0, i1: region.i1, j0: j, j1: Math.min(region.j1, j + n - 1) }; }
+export function bandes(region, rangees) {
+  const o = [];
+  for (let j = region.j0; j <= region.j1; j += Math.max(1, rangees | 0)) o.push(bandeSuivante(region, j, rangees));
+  return o;
+}

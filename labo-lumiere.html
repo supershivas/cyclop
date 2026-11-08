@@ -5,8 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Labo lumière — Cyclopéen</title>
 <link rel="icon" href="favicon-lumiere.svg" type="image/svg+xml">
-<link rel="stylesheet" href="js/lib/game.css?v=0.127.2">
-<link rel="stylesheet" href="css/labo-lumiere.css?v=0.127.2">
+<link rel="stylesheet" href="js/lib/game.css?v=0.129.0">
+<link rel="stylesheet" href="css/labo-lumiere.css?v=0.129.0">
 </head>
 <body>
 <div class="jeu-ecran" id="ll">
@@ -42,6 +42,8 @@
       <button class="bouton" data-cam="tranchee" title="Vue tranchée">Vue tranchée</button>
       <button class="bouton" data-cam="cratere" title="Vue cratère">Vue cratère</button>
       <button class="bouton" data-cam="colline" title="Vue colline">Vue colline</button>
+      <button class="bouton" data-cam="lac" title="Le lac : les reflets sur l'eau">Vue lac</button>
+      <button class="bouton" data-cam="engins" title="Un char, et les biplans qui passent au-dessus">Vue engins</button>
     </div>
     <label class="ll-champ">Soldats <output id="ll-unites-v"></output><input id="ll-unites" type="range" min="1000" max="50000" step="1000"></label>
     <label class="ll-champ">Heure <output id="ll-heure-v"></output><input id="ll-heure" type="range" min="0" max="24" step="0.25"></label>
@@ -60,7 +62,7 @@
     </section>
     <section>
       <h3>Étapes de lumière</h3>
-      <p class="ll-note">Chacune s'active seule. Le niveau choisit le départ ; une étape changée est marquée <b>•</b>. Touches 1 à 8.</p>
+      <p class="ll-note">Chacune s'active seule. Le niveau choisit le départ ; une étape changée est marquée <b>•</b>. Touches 1 à 9.</p>
       <div id="ll-etapes"></div>
       <button class="bouton" id="ll-reviens">Revenir au niveau</button>
     </section>
@@ -70,6 +72,8 @@
       <label class="ll-select">Taille de la carte<select id="ll-taille"></select></label>
       <label class="ll-select">Résolution de l'image<select id="ll-resolution"></select></label>
       <label class="ll-case"><input type="checkbox" id="ll-reels"> Soldats du jeu en volume (boîte, silhouette, équipé, articulé)</label>
+      <label class="ll-case"><input type="checkbox" id="ll-reflets"> Reflets sur le lac (une seconde image à l'envers)</label>
+      <label class="ll-case"><input type="checkbox" id="ll-engins"> Chars et biplans (pour voir leurs ombres)</label>
       <label class="ll-case"><input type="checkbox" id="ll-toits"> Toits transparents (voir la lumière propagée)</label>
       <label class="ll-champ">Obus d'un barrage <output id="ll-barrage-v"></output><input id="ll-barrage-n" type="range" min="10" max="200" step="10"></label>
       <label class="ll-champ">Position du partage <output id="ll-split-v"></output><input id="ll-split" type="range" min="0.1" max="0.9" step="0.05"></label>
@@ -79,7 +83,7 @@
       <dl class="ll-commandes">
         <dt>Clic</dt><dd>un obus</dd><dt>B</dt><dd>un barrage</dd><dt>C / V</dt><dd>comparer / écran partagé</dd>
         <dt>Clic droit, glisser</dt><dd>tourner et incliner</dd><dt>Maj, glisser</dt><dd>déplacer la vue</dd><dt>Molette</dt><dd>zoom</dd>
-        <dt>Flèches, ZQSD</dt><dd>déplacer la vue</dd><dt>Espace</dt><dd>pause</dd><dt>1 à 8</dt><dd>activer une étape</dd>
+        <dt>Flèches, ZQSD</dt><dd>déplacer la vue</dd><dt>Espace</dt><dd>pause</dd><dt>1 à 9</dt><dd>activer une étape</dd>
       </dl>
     </section>
     <section>
@@ -92,6 +96,6 @@
   <div class="ll-toast" id="ll-toast" role="status" hidden></div>
   <p class="ll-pour-ordinateur">Cette page se joue sur un ordinateur, à la souris et au clavier, dans un navigateur qui sait faire du WebGL 2.</p>
 </div>
-<script type="module" src="js/labo-lumiere.js?v=0.127.2"></script>
+<script type="module" src="js/labo-lumiere.js?v=0.129.0"></script>
 </body>
 </html>

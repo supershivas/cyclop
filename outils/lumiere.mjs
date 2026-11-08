@@ -13,7 +13,7 @@ mkdirSync(sortie, { recursive: true });
 const srv = await servir(process.cwd());
 const b = await lancerChromium({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'] });
 const p = await b.newPage({ viewport: { width: 1280, height: 800 } });
-const erreurs = [], echecs = [];
+const erreurs = [], echecs = [], rapport = { niveaux: {} };
 p.on('console', m => { if (m.type() === 'error' || (m.type() === 'warning' && /webgl|shader/i.test(m.text()) && !/GPU stall/i.test(m.text()))) erreurs.push(`${m.type()}: ${m.text()}`); });
 p.on('pageerror', e => erreurs.push(`exception: ${e.stack || e.message}`));
 const verifier = (ok, texte) => { console.log(`${ok ? 'ok  ' : 'ÉCHEC'} ${texte}`); if (!ok) echecs.push(texte); };
@@ -27,6 +27,22 @@ verifier(await J(() => document.title === 'Labo lumière — Cyclopéen'), 'le t
 verifier(await J(() => document.getElementById('ll-nom').getAttribute('href') === './'), 'le nom en haut à gauche ramène à l\'accueil');
 verifier(await J(() => !!document.querySelector('link[rel=icon]')), 'un favicon');
 await image('depart');
+// L'AO de toute la carte se répartit sur plusieurs images (v0.114.0) : aucune image ne porte plus de quelques millisecondes de ce travail
+await p.waitForFunction(() => !window.__lumiere.travail, null, { timeout: 240000 });
+const ao = await J(() => ({ total: window.__lumiere.mesures.lire('ao:total')?.dernier, maxImage: window.__lumiere.mesures.lire('ao:image')?.max, n: window.__lumiere.mesures.lire('ao:image')?.n }));
+verifier(ao.n > 8 && ao.maxImage < 20, `l'AO global est réparti : ${ao.n} images, au plus ${ao.maxImage?.toFixed(1)} ms par image (total ${ao.total?.toFixed(0)} ms ; avant : un bloc de ~230 ms)`);
+rapport.ao = ao;
+
+// Les ombres portées (étape 9) : la carte d'ombre change l'image, elle a des casteurs, et la nuit il n'y en a plus
+await J(() => { const L = window.__lumiere; L.S.pause = true; L.S.etapes[9] || L.basculerEtape(9, true); document.getElementById('ll-heure').value = 11; document.getElementById('ll-heure').dispatchEvent(new Event('input')); L.voirPreset('engins', true); Object.assign(L.C, { distance: 28, tangage: 1.0, lacet: 0.3 }); });
+await p.waitForTimeout(2500);
+const avecO = (await p.screenshot()).toString('base64'), statO = await J(() => window.__lumiere.R.stats.ombre); await image('ombres-portees');
+await J(() => window.__lumiere.basculerEtape(9, false)); await p.waitForTimeout(2000);
+const sansO = (await p.screenshot()).toString('base64'); await J(() => window.__lumiere.basculerEtape(9, true));
+verifier(!!statO && statO.casteurs > 0 && statO.texelCm < 40, `la carte d'ombre : ${JSON.stringify(statO)}`); verifier(avecO !== sansO, 'les ombres portées changent l\'image (chars, biplans, arbres, soldats)');
+await J(() => { document.getElementById('ll-heure').value = 23; document.getElementById('ll-heure').dispatchEvent(new Event('input')); }); await p.waitForTimeout(1800);
+verifier(await J(() => window.__lumiere.R.stats.ombre === null), 'la nuit : plus de carte d\'ombre (le soleil est couché)');
+await J(() => { document.getElementById('ll-heure').value = 9; document.getElementById('ll-heure').dispatchEvent(new Event('input')); window.__lumiere.S.pause = false; }); await p.waitForTimeout(800);
 
 // Un obus : un cube entier, quatre demi-cubes, quatre quarts (sur un terrain plat : on aplatit d'abord un coin)
 const motif = await J(() => {
@@ -37,11 +53,11 @@ const motif = await J(() => {
 verifier(motif === '1,2,1,4,2,2,1,2,1' || motif.split(',').map(Number).sort().join() === '1,1,1,1,2,2,2,2,4', `un obus : 1 cube entier, 4 demi-cubes, 4 quarts (${motif})`);
 
 // Les trois niveaux : chaque étape, activée seule ou toutes, sans erreur, et le recalcul local reste local
-const rapport = { niveaux: {} };
 for (const q of ['bas', 'moyen', 'haut']) {
   await J(qq => window.__lumiere.appliquerQualite(qq), q); await p.waitForTimeout(600);
+  await p.waitForFunction(() => !window.__lumiere.travail, null, { timeout: 240000 });          // l'AO réparti tourne en tâche de fond : on mesure le recalcul local après lui
   const etat = await J(() => ({ etapes: Object.entries(window.__lumiere.S.etapes).filter(([, v]) => v).map(([k]) => +k), cases: window.__lumiere.M.n }));
-  const attendu = { bas: '1,2,3', moyen: '1,2,3,4,5,6', haut: '1,2,3,4,5,6,7,8' }[q];
+  const attendu = { bas: '1,2,3', moyen: '1,2,3,4,5,6,9', haut: '1,2,3,4,5,6,7,8,9' }[q];
   verifier(etat.etapes.join() === attendu, `qualité ${q} : étapes ${etat.etapes.join(',')}`);
   // des obus au même endroit avec 1 000 puis 50 000 soldats : le recalcul ne dépend pas de la foule
   const mes = {};
@@ -71,6 +87,29 @@ await J(() => { window.__lumiere.voirPreset('colline', true); }); await p.waitFo
 const moyen = await J(() => window.__lumiere.comptes);
 verifier(moyen.art === 0 && moyen.legere + moyen.boite + moyen.equipe > 50, `vue moyenne (≈ 5 px/m) : des silhouettes allégées et des boîtes (${JSON.stringify(moyen)})`); await image('vue-moyenne');
 await J(() => { window.__lumiere.voirPreset('large', true); Object.assign(window.__lumiere.C, { distance: 140, tangage: 0.1 }); }); await p.waitForTimeout(1200); await image('faux-terrain');
+// Le clignotement des soldats (v0.114.0) : une image fixe est identique d'une image à l'autre, et, la foule en marche, les hommes ne changent pas de niveau de détail à tout bout de champ
+await J(() => { const L = window.__lumiere; L.voirPreset('colline', true); L.S.pause = true; }); await p.waitForTimeout(1500);
+const habillage = ['ll-mesures', 'll-barre', 'll-etat', 'll-toast', 'll-nom'];            // le texte des mesures change à chaque image : on ne compare que le dessin
+const cacher = v => J(([ids, v2]) => ids.forEach(i => { const e = document.getElementById(i); if (e) e.style.visibility = v2; }), [habillage, v]);
+const buffer = async () => (await p.screenshot()).toString('base64');
+await cacher('hidden'); await p.waitForTimeout(400);
+const [f1, f2, f3] = [await buffer(), await buffer(), await buffer()]; await cacher('');
+verifier(f1 === f2 && f2 === f3, 'une image fixe (temps arrêté, vue moyenne) est identique d\'une image à l\'autre : aucun scintillement du dessin');
+await J(() => { window.__lumiere.S.pause = false; }); await p.waitForTimeout(800);
+const bascule = await J(async () => {
+  const L = window.__lumiere, C = L.classes; let prev = Uint8Array.from(C.niv), total = 0, vus = 0, images = 0;
+  await new Promise(res => { const f = () => { const niv = C.niv; let ch = 0, n = 0; for (let i = 0; i < niv.length; i++) { if (niv[i] < 4 || prev[i] < 4) n++; if (niv[i] !== prev[i]) ch++; } total += ch; vus += n; images++; prev = Uint8Array.from(niv); if (images < 90) requestAnimationFrame(f); else res(); }; requestAnimationFrame(f); });
+  return { total, vus, images, part: vus ? total / vus : 0 };
+});
+verifier(bascule.images >= 60 && bascule.part < 0.02, `la foule en marche : ${(bascule.part * 100).toFixed(2)} % des hommes vus changent de niveau de détail d'une image à l'autre (${bascule.total} sur ${bascule.vus} en ${bascule.images} images)`);
+rapport.clignotement = bascule;
+// Le lac : une nappe d'eau qui reflète (le ciel, le soleil et, par une seconde image à l'envers, ce qui se tient au-dessus)
+await J(() => { const L = window.__lumiere; L.S.pause = true; L.S.reflets = true; L.voirPreset('lac', true); }); await p.waitForTimeout(2500);
+const lacOui = (await p.screenshot()).toString('base64'); await image('lac');
+await J(() => { window.__lumiere.S.reflets = false; }); await p.waitForTimeout(2000);
+const lacNon = (await p.screenshot()).toString('base64'); await J(() => { window.__lumiere.S.reflets = true; });
+verifier(await J(() => !!window.__lumiere.M.lac && window.__lumiere.M.lac.niveauM > 4), 'le monde a un lac'); verifier(lacOui !== lacNon, 'les reflets changent l\'image du lac (la seconde image à l\'envers)');
+await J(() => { window.__lumiere.S.pause = false; });
 // La météo : chaque temps, puis le temps qui change tout seul
 for (const m of ['pluie', 'neige', 'brouillard', 'boue', 'sec']) { await J(mm => { const J = window.__lumiere; J.S.meteo = mm; if (!J.S.etapes[7]) J.basculerEtape(7, true); Object.assign(J.meteoNow, J.METEOS[mm]); }, m); await p.waitForTimeout(700); await image(`meteo-${m}`); }
 const avant = await J(() => window.__lumiere.S.meteo);
