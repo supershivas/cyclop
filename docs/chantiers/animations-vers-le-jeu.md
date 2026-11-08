@@ -29,13 +29,13 @@ Pour 250 hommes, échantillonner une animation en JavaScript coûte presque rien
 5. **Les gauchers** : `gaucher = hash(numéro) < 0,1` (le même homme est toujours gaucher, rien n'est sauvegardé, les deux joueurs voient pareil) ; sa pose est **le miroir** de celle de l'animation (`miroir` de `pose-soldat.js`, côté processeur : aucun coût GPU, aucune animation en double). Le fusil passe à l'épaule gauche (`fusilX` retourné de 0,79). L'équipement porté (gourde, cartouchières) ne se retourne pas : à regarder de près.
 6. **Vérifier** : `test/` (le lecteur, le miroir, les modèles : fait pour les trois premiers), `outils/rendu-empreinte.mjs`, une mesure `scripts/mesure.mjs` à 12, 16 et 24 px/m, la fumée du HUD ne bouge pas.
 
-## Ce qui reste à décider (par Jérôme) : le soldat qui tire s'arrête-t-il ?
+## Décidé (Jérôme, 8 nov.) : le soldat tire en marchant (réponse A)
 
-Le **modèle *tir*** a les pieds plantés pendant toute la seconde ; c'est l'animation. Mais **l'homme se déplace tant que la logique le déplace** : si elle ne s'arrête pas, il glisse. Trois réponses possibles :
+**Aucun changement de règle ni d'équilibrage** : la logique du jeu (`army.js`) ne bouge pas, un homme qui tire continue d'avancer comme aujourd'hui. Ce que cela demande au dessin :
 
-- **A. Le tir est visuel seulement** : jambes de la marche, bras du tir (couches par canaux) tant qu'il avance ; pieds plantés s'il est déjà à l'arrêt. Aucun changement de règle, aucun rééquilibrage. Ce n'est pas « il n'avance plus quand il tire ».
-- **B. Il s'arrête pour tirer** (règle) : 1 s d'arrêt par coup, soit **jusqu'à ~20 % du temps d'un homme qui tire sans cesse**. Un assaut à travers le no man's land est ralenti d'autant ; **tout l'équilibrage du mouvement et de l'esquive** (`mouvement`, `tir.precision`, la durée des assauts) est à refaire par des mesures (`docs/domaines/bataille.md`). Plus réaliste (on ne tire pas debout en courant en 1914), plus lourd.
-- **C. Il s'arrête seulement s'il est à portée d'un ennemi et sans ordre de marche pressé** (un ordre de marche prime) : intermédiaire, une règle de plus.
+- **Des couches par canaux** (`CANAUX` de `data/poses-soldat.js`) : *en marche*, les jambes (et le buste) viennent de l'animation de marche, les **bras et le fusil** de l'animation de tir ; *à l'arrêt*, tout vient du tir (pieds plantés, comme le modèle de l'atelier). Le lecteur d'animations (étape 2) fait donc le mélange canal par canal, avec le fondu de 0,2 s.
+- **L'animation de tir est en deux parties à fabriquer à l'atelier** : le modèle d'aujourd'hui (*tir de 1 s, pieds plantés*) sert à l'arrêt ; pour la marche, **seuls les canaux bras et fusil comptent** (le jeu ignore ses jambes : rien à refaire, la couche le fait). À vérifier à l'écran : un fusil à l'épaule pendant que le corps oscille de la marche (le buste penché de la marche se superpose au buste du tir : choisir quel canal « corps » gagne).
+- **Le fusil à deux mains de la marche** et **le tir** doivent avoir des fusils proches l'un de l'autre pour que le fondu ne passe pas par une pose étrange (voir « Les risques »).
 
 ## Les risques
 
