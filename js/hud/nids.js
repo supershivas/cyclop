@@ -53,7 +53,7 @@ export function creerNidsHud({ $, bataille, moi = () => NOUS, versEcran, hauteur
     $('nid-fiche-etat-court').textContent = inactif ? 'inactif' : court;
     $('nid-fiche-ordre').textContent = inactif || `${ordre}${rs ? ` Servi par le ${rs.nom}.` : ''}`;
     fiche.classList.toggle('inactif', !!inactif);
-    { const sv = suivi && suivi.genre === 'nid' && suivi.id === n.id ? suivi.mode : null; $('nid-fiche-vue').textContent = sv === 'cinema' ? 'Libérer la vue' : 'Vue verrouillée'; $('nid-fiche-personne').textContent = sv === 'personne' ? 'Libérer la vue' : 'À la personne'; }
+    { const sv = suivi && suivi.genre === 'nid' && suivi.id === n.id ? suivi.mode : null; $('nid-fiche-vue').setAttribute('aria-pressed', sv === 'cinema'); $('nid-fiche-personne').setAttribute('aria-pressed', sv === 'personne'); }
     for (const b of fiche.querySelectorAll('[data-nid="tourner"],[data-nid="droit"]')) b.setAttribute('aria-disabled', inactif ? 'true' : 'false');
     // ses tuiles (Jérôme, 8 nov. : les tuiles du labo) : le poste, sa bande, ses victimes, son expérience ; refaites seulement quand une valeur change
     const par = Object.entries(n.tuesReg ?? {}).map(([r, k]) => `${B.etat.regiments[r]?.nom ?? 'régiment ' + r} ${k}`).join(', ');

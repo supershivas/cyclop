@@ -5,6 +5,11 @@
 - « Moyen » est l'éclairage d'avant, gardé par défaut
 - Le labo lumière a un lac, avec les reflets du ciel et des berges sur l'eau
 
+## 0.127.1 — 2026-11-08
+- Les fiches du char, du poste et de l'avion : la vue verrouillée et la vue à la première personne sont deux petites icônes en haut à droite ; l'infobulle de « Marcher » ne montre plus de « \n » ; le « ? » de la carte est réparé
+- Le bandeau « Libérer la vue » suit le design system (un vrai bouton du jeu)
+- Le plan d'un secteur : quatre flèches autour du plan, qui répondent au premier clic ; les chiffres sont des barres et des tuiles, plus de texte
+
 ## 0.127.0 — 2026-11-08
 - Vue à la personne de l'avion : au bout de l'hélice, penchée vers le sol pour voir les mitraillages ; abattu, on reste à bord (tonneau, écran rouge) jusqu'à l'écrasement
 - Vue à la personne du char : sous le canon, qui tremble à chaque tir puis file vers l'explosion en téléobjectif

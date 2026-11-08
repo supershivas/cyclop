@@ -7,7 +7,7 @@ const echapper = t => t.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/
 // Un titre n'existe que s'il a quelque chose à titrer (Jérôme, v0.100.0 : un énorme « Déplier le secteur de la carte » sur une simple bascule) : une bulle d'une seule ligne est
 // une ligne simple en gras (`seul`), pas un h1 ; le titre vient quand un corps le suit.
 export function lignesInfo(texte) {
-  const lignes = texte.split('\n').filter(l => l.trim());
+  const lignes = texte.split(/\\n|\n/).filter(l => l.trim());
   if (lignes.length === 1) return `<span class="seul">${echapper(lignes[0].replace(/^#{1,2} /, '')).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>')}</span>`;
   return lignes.map(l => {
     const [classe, corps] = l.startsWith('## ') ? ['h2', l.slice(3)] : l.startsWith('# ') ? ['h1', l.slice(2)] : ['p', l];
@@ -22,7 +22,7 @@ export function adopterTitres(racine = document) {
     if (t === null) return;
     e.removeAttribute('title');
     if (t && (!e.dataset.info || e.dataset.titre)) { e.dataset.info = t; e.dataset.titre = '1'; }      // (un `title` qui change met la bulle à jour)
-    if (t && !e.hasAttribute('aria-label') && !e.textContent.trim()) e.setAttribute('aria-label', t.replace(/^#+ /gm, '').split('\n')[0]);
+    if (t && !e.hasAttribute('aria-label') && !e.textContent.trim()) e.setAttribute('aria-label', t.replace(/^#+ /gm, '').split(/\\n|\n/)[0]);
   };
   if (racine instanceof Element && racine.hasAttribute('title')) faire(racine);
   racine.querySelectorAll?.('[title]').forEach(faire);

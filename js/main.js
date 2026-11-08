@@ -551,7 +551,7 @@ function demanderSecteur(avecDifficulte = true) {
       if (oui === d.classList.contains('agrandi') && apercuSecteur) return;
       d.classList.toggle('agrandi', oui); grande.hidden = !oui;
       if (oui) { figer(); grande.append(hote); } else cadre.prepend(hote);
-      $('carte-aide').textContent = oui ? 'Glissez pour tourner, Maj ou bouton droit pour déplacer, molette pour zoomer. Cliquez ou Échap pour réduire.' : 'Cliquez sur la carte pour l\'agrandir et la parcourir.';
+      $('carte-conseil').textContent = oui ? 'Glissez pour tourner, Maj ou bouton droit pour déplacer, molette pour zoomer. Cliquez ou Échap pour réduire.' : 'Cliquez sur la carte pour l\'agrandir et la parcourir.';
       apercuSecteur?.redimensionner();
     };
     d.oncancel = e => { if (d.classList.contains('agrandi')) { e.preventDefault(); agrandir(false); } };
@@ -589,7 +589,7 @@ function demanderSecteur(avecDifficulte = true) {
     };
     d.onclose = () => { ouvert = false; apercuSecteur?.activer(false); ok(null); };            // annulé (Échap ou le bouton)
     hote.hidden = false; hote.style.visibility = ''; grande.hidden = true; d.classList.remove('agrandi'); delete d.dataset.apercu;
-    $('carte-aide').textContent = 'Cliquez sur la carte pour l\'agrandir et la parcourir.';
+    $('carte-conseil').textContent = 'Cliquez sur la carte pour l\'agrandir et la parcourir.';
     cadre.prepend(hote); majCarte(); marquer();
     d.showModal();
     for (const l of liste.children) { const t = l.querySelector('span'); if (t && t.scrollWidth > t.clientWidth + 1) l.title = t.textContent; }       // (un nom tronqué par « … » se lit en entier au survol)
@@ -1057,7 +1057,7 @@ function majAvionFiche() {
   $('avion-fiche-pv-t').textContent = `${vie} %`; $('avion-fiche-pv').style.width = `${vie}%`;
   $('avion-fiche-stats').innerHTML = `<b>Altitude :</b> ${Math.round(p.h)} m<br><b>Vitesse :</b> ${MITRAILLAGE.vitesse} m/s`;
   const sv = leSuivi.actif && leSuivi.actif.genre === 'avion' && leSuivi.actif.id === v.id ? leSuivi.actif.mode : null;
-  $('avion-fiche-vue').textContent = sv === 'cinema' ? 'Libérer la vue' : 'Vue verrouillée'; $('avion-fiche-personne').textContent = sv === 'personne' ? 'Libérer la vue' : 'À la personne';
+  $('avion-fiche-vue').setAttribute('aria-pressed', sv === 'cinema'); $('avion-fiche-personne').setAttribute('aria-pressed', sv === 'personne');
 }
 function choisirChar(id) { avionChoisi = null; nidChoisi = null; modeNid = null; charChoisi = id; modeChar = null; modeBarrage = null; modeMarche = false; departAvion = null; choisis = new Set(); rendu.choisis = choisis; majHud(); }
 function actionChar(act) {

@@ -44,6 +44,7 @@ la danse macabre, la catastrophe peinte avec calme. L'intention est dans `DESIGN
 - **Régiments de la nuit** (Jérôme, v0.116.0) : « Gérer les régiments » (transferts d'hommes entre régiments, fusion, effectifs à l'aube), les blessés qui marchent vont à l'hôpital, les régiments frais sont comptés « n sur total » ; détail dans `docs/domaines/bataille.md` et `interface.md`.
 - **Steam** : porte ouverte (section 22). Manette : seulement le menu pour
   l'instant (`gamepad.js`).
+- **Interface** (Jérôme, v0.127.1) : on visualise (barres, tuiles, icônes), pas de bloc de texte ; aucun bouton nu ; un id est unique ; détail dans `docs/design-system.md`.
 - **Langue** : français seulement. **Son** (Jérôme, v0.75.0 ; aucun avant) : synthétisé en Web Audio (repli) et bruitages CC0 en mp3 (`assets/sons/`, v0.99.6), `js/audio.js`, détail dans `docs/domaines/interface.md`.
 - Jeu : pas de sous-titre (section 3 des conventions).
 

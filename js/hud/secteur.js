@@ -3,13 +3,14 @@
 // plan, avec le placement des soldats ; on peut cliquer sur les cases voisines pour avoir le même aperçu »). Un papier à la place de la carte : un plan vu de dessus de la SEULE case choisie (100 m de
 // large sur ~57 m de profondeur, à l'échelle : un mètre fait autant en x qu'en y), les hommes de chaque camp (un point par homme), les tombés (un point d'os pâle), les tranchées par tronçon à la
 // couleur de celui qui les tient (en pointillé quand l'autre camp y est entré), les régiments en cercles numérotés ; dessous, les effectifs, les pertes et la liste des régiments présents. Quatre
-// boutons mènent aux cases voisines (la grille de la carte : gauche, droite, haut, bas). On en sort par « Vue d'ensemble » ou par Échap ; la vue 3D revient où elle était (main.js).
+// flèches, autour du plan, mènent aux cases voisines (la grille de la carte : gauche, droite, haut, bas) ; les chiffres sont des tuiles (barres, bande de tronçons), jamais des phrases. On en sort par « Vue d'ensemble » ou par Échap ; la vue 3D revient où elle était (main.js).
 // Lecture seule de l'état ; le dessin d'un canvas 2D, palette du jeu. Comme la carte, tourné d'un demi-tour pour l'invité d'une partie à deux.
 import { NOUS, EUX, zone, largeurZone, lettreZone, tronconsDeLigne, codeLigne } from '../bataille.js?v=0.128.0';
 import { ligneY } from '../tranchees.js?v=0.128.0';
 import { PALETTE as P } from '../palette.js?v=0.128.0';
 import { numeroDe } from './lecture.js?v=0.128.0';
 import { rangees } from './carte.js?v=0.128.0';
+import { tuileDe, bande } from './tuiles.js?v=0.128.0';
 
 const L = 336, H = 192;                  // le canvas, en pixels
 
@@ -21,7 +22,7 @@ export function caseDe(B, s, idx, M = NOUS) {
 }
 
 export function creerSecteur({ $, bataille, moi = () => NOUS, surSecteur = () => {}, surFermer = () => {} }) {
-  let ouvert = null, cle = '';          // la case montrée { s, idx }, la signature du dernier dessin
+  let ouvert = null, cle = '', cleNav = '';          // la case montrée { s, idx }, la signature du dernier dessin
   const cv = $('secteur-plan'), g = cv.getContext('2d');
   cv.width = L; cv.height = H;
   const dedans = (c, x, y) => x >= c.x0 && x < c.x1 && y >= c.y0 && y <= c.y1;
@@ -82,46 +83,49 @@ export function creerSecteur({ $, bataille, moi = () => NOUS, surSecteur = () =>
     g.textAlign = 'right'; g.fillText(`${Math.round(w)} m × ${Math.round(c.y1 - c.y0)} m`, L - 4, H - 6);
   }
 
-  // les chiffres de la case : les hommes de chaque camp, le tronçon, les pertes
-  function resume(B, c) {
-    const A = B.armee, M = moi(), n = [0, 0], t = [0, 0, 0, 0], j = B.etat.jour;
-    for (let i = 0; i < A.n; i++) if (dedans(c, A.x[i], A.y[i])) n[A.camp[i]]++;
+  // Une barre pleine à la part des hommes d'un camp (le reste, vide) : la forme porte le nombre, jamais un paragraphe (Jérôme, v0.128.0 : « les infos sur les secteurs doivent être visualisées »)
+  const barre = (n, max, camp, larg = 200, haut = 10) => `<svg class="bi bi-barre" viewBox="0 0 ${larg} ${haut}" role="img" aria-label="${n} sur ${max}" preserveAspectRatio="xMinYMid meet"><rect class="bi-cadre" x="0.5" y="0.5" width="${larg - 1}" height="${haut - 1}"/><rect class="bi-${camp}" x="1" y="1" width="${Math.max(0, (larg - 2) * Math.min(1, n / Math.max(1, max))).toFixed(1)}" height="${haut - 2}"/></svg>`;
+  const s_ = n => (n > 1 ? 's' : '');
+  // les tuiles de la case : les hommes de chaque camp, le tronçon, les tombés, les régiments présents (leur part d'hommes ici)
+  function tuiles(B, c) {
+    const A = B.armee, M = moi(), j = B.etat.jour, n = [0, 0], t = [0, 0, 0, 0], ici = new Map(), tous = new Map();
+    for (let i = 0; i < A.n; i++) {
+      if (A.mort[i]) continue;
+      tous.set(A.reg[i], (tous.get(A.reg[i]) || 0) + 1);
+      if (dedans(c, A.x[i], A.y[i])) { n[A.camp[i]]++; ici.set(A.reg[i], (ici.get(A.reg[i]) || 0) + 1); }
+    }
     for (const [cx, cy, camp, jour] of B.etat.corps) if (dedans(c, cx / 10, cy / 10)) { t[camp]++; if (jour === j) t[2 + camp]++; }
     const ks = tronconsDeLigne(B, c.idx, c.x0, c.x1);
     const tenus = ks.filter(k => B.etat.troncons[k] === M).length, disputes = ks.filter(k => B.disputes[k]).length;
     const [miens, leurs] = M === NOUS ? n : [n[1], n[0]], [m, l, jm, jl] = M === NOUS ? t : [t[1], t[0], t[3], t[2]];
+    const plein = Math.max(miens, leurs, 1), morts = Math.max(m, l, 1);
+    const regs = [...ici].sort((a, b) => b[1] - a[1]).map(([id, k]) => {
+      const r = B.etat.regiments[id], nous = r.camp === M;
+      return [nous ? numeroDe(B, r) : `En face ${numeroDe(B, r)}`, barre(k, tous.get(id), nous ? 'nous' : 'eux'), `${k}${k < tous.get(id) ? ` / ${tous.get(id)}` : ''}${r.deroute ? ' · déroute' : ''}`];
+    });
     return [
-      `Hommes ici : ${miens} à nous, ${leurs} en face.`,
-      `Tranchée ${c.nom} : ${tenus} tronçon${tenus > 1 ? 's' : ''} à nous, ${ks.length - tenus} à eux${disputes ? `, ${disputes} disputé${disputes > 1 ? 's' : ''}` : ''}.`,
-      `Tombés ici : ${m} des nôtres, ${l} en face (aujourd'hui : ${jm} et ${jl}).`,
+      { titre: 'Hommes ici', graphes: [['À nous', barre(miens, plein, 'nous'), String(miens)], ['En face', barre(leurs, plein, 'eux'), String(leurs)]] },
+      { titre: `Tranchée ${c.nom}`, chiffre: `${tenus} / ${ks.length}`, unite: `tronçon${s_(tenus)} à nous`, graphes: [['', bande(tenus, ks.length, { pas: 1 }), '']], mot: disputes ? `${disputes} disputé${s_(disputes)}` : '' },
+      { titre: 'Tombés ici', graphes: [['Les nôtres', barre(m, morts, 'nous'), String(m)], ['En face', barre(l, morts, 'eux'), String(l)]], mot: `Aujourd'hui : ${jm} et ${jl}` },
+      { titre: 'Régiments ici', graphes: regs, mot: regs.length ? '' : 'aucun', classe: 'regs' },
     ];
   }
-  // les régiments dans la case : leur numéro, leur nom, combien d'hommes y sont (et combien en tout)
-  function regiments(B, c) {
-    const A = B.armee, M = moi(), ici = new Map(), tous = new Map();
-    for (let i = 0; i < A.n; i++) {
-      if (A.mort[i]) continue;
-      tous.set(A.reg[i], (tous.get(A.reg[i]) || 0) + 1);
-      if (dedans(c, A.x[i], A.y[i])) ici.set(A.reg[i], (ici.get(A.reg[i]) || 0) + 1);
-    }
-    return [...ici].sort((a, b) => b[1] - a[1]).map(([id, n]) => {
-      const r = B.etat.regiments[id], nous = r.camp === M;
-      return { nous, texte: `${nous ? `${numeroDe(B, r)} · ${r.nom}` : `En face : régiment ${numeroDe(B, r)}`} : ${n} homme${n > 1 ? 's' : ''} ici${n < tous.get(id) ? ` (${tous.get(id)} en tout)` : ''}${r.deroute ? ' · EN DÉROUTE' : ''}` };
-    });
-  }
-  // les quatre cases voisines, dans la grille de la carte (gauche, droite, haut, bas) : un bouton chacune, grisé s'il n'y en a pas
+  // les quatre flèches autour du plan (gauche, droite, haut, bas, comme la grille de la carte) : posées une fois, mises à jour seulement quand la case change (les refaire à chaque tick perdait le clic en cours)
+  const FLECHES = { gauche: 'à gauche', droite: 'à droite', haut: 'en haut', bas: 'en bas' };
+  let voisinesDe = null;
   function voisines(B, c) {
     const M = moi(), { lignes, colonnes } = rangees(B, M), a = colonnes.indexOf(c.s), b = lignes.indexOf(c.idx);
-    const vers = [['←', 'à gauche', colonnes[a - 1], c.idx], ['→', 'à droite', colonnes[a + 1], c.idx], ['↑', 'en haut', c.s, lignes[b - 1]], ['↓', 'en bas', c.s, lignes[b + 1]]];
-    $('secteur-nav').replaceChildren(...vers.map(([fl, dir, s, idx]) => {
-      const ok = s !== undefined && idx !== undefined, nom = ok ? `${lettreZone(s)}${codeLigne(B.lignes[idx], M)}` : '';
-      const bt = document.createElement('button');
-      bt.type = 'button'; bt.className = 'sect'; bt.textContent = ok ? `${fl} ${nom}` : fl; bt.disabled = !ok;
-      bt.setAttribute('aria-label', ok ? `Voisine ${dir} : ${nom}` : `Pas de case ${dir}`);
-      if (ok) { bt.dataset.info = `Voir ${nom}`; bt.onclick = () => surSecteur(s, idx); }
-      return bt;
-    }));
+    const vers = { gauche: [colonnes[a - 1], c.idx], droite: [colonnes[a + 1], c.idx], haut: [c.s, lignes[b - 1]], bas: [c.s, lignes[b + 1]] };
+    voisinesDe = {};
+    for (const [dir, [s, idx]] of Object.entries(vers)) {
+      const ok = s !== undefined && idx !== undefined, nom = ok ? `${lettreZone(s)}${codeLigne(B.lignes[idx], M)}` : '', bt = $(`sect-${dir}`);
+      voisinesDe[dir] = ok ? [s, idx] : null;
+      bt.disabled = !ok;
+      bt.setAttribute('aria-label', ok ? `Voisine ${FLECHES[dir]} : ${nom}` : `Pas de case ${FLECHES[dir]}`);
+      if (ok) bt.dataset.info = `Voir ${nom}`; else delete bt.dataset.info;
+    }
   }
+  for (const dir of Object.keys(FLECHES)) $(`sect-${dir}`).onclick = () => { const v = voisinesDe?.[dir]; if (v) surSecteur(v[0], v[1]); };
   function maj() {
     const B = bataille();
     if (ouvert === null || !B) return;
@@ -132,15 +136,15 @@ export function creerSecteur({ $, bataille, moi = () => NOUS, surSecteur = () =>
     dessiner(B, c);
     $('secteur-titre').textContent = `Secteur ${c.nom}`;
     $('secteur-sous').textContent = `${c.ligne.camp === M ? 'Notre' : 'Leur'} ${c.ligne.rang === 0 ? '1re' : `${c.ligne.rang + 1}e`} ligne, colonne ${lettreZone(c.s)}`;
-    voisines(B, c);
-    $('secteur-lignes').replaceChildren(...resume(B, c).map(t => Object.assign(document.createElement('p'), { textContent: t })));
-    $('secteur-regs').replaceChildren(...regiments(B, c).map(r => Object.assign(document.createElement('li'), { className: r.nous ? 'nous' : 'eux', textContent: r.texte })));
+    const cn = `${ouvert.s}:${ouvert.idx}:${M}`;
+    if (cn !== cleNav) { cleNav = cn; voisines(B, c); }
+    $('secteur-tuiles').replaceChildren(...tuiles(B, c).map(b => { const t = tuileDe(b); if (b.classe) t.classList.add(b.classe); return t; }));
   }
   // le gros plan prend la place de la carte (Jérôme, v0.76.0) : elle revient quand on le ferme, et la vue 3D avec elle (`surFermer`)
-  function montrer(s, idx) { ouvert = { s, idx }; cle = ''; $('secteur').hidden = false; $('carte').classList.add('remplacee'); maj(); }
+  function montrer(s, idx) { ouvert = { s, idx }; cle = ''; cleNav = ''; $('secteur').hidden = false; $('carte').classList.add('remplacee'); maj(); }
   function fermer(rendre = true) {
     const etait = ouvert !== null;
-    ouvert = null; cle = ''; $('secteur').hidden = true; $('carte').classList.remove('remplacee');
+    ouvert = null; cle = ''; cleNav = ''; $('secteur').hidden = true; $('carte').classList.remove('remplacee');
     if (etait && rendre) surFermer();
   }
   $('secteur-fermer').onclick = () => fermer();

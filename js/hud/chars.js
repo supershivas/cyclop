@@ -66,7 +66,7 @@ export function creerCharsHud({ $, bataille, moi = () => NOUS, versEcran, hauteu
       : roule ? `Roule vers l'arrière de nos lignes, puis vers son objectif (${reste} m).`
       : `Marche vers son objectif : encore ${reste} m.`;
     const attente = f >= 1 && !c.vise;
-    { const sv = suivi && suivi.genre === 'char' && suivi.id === c.id ? suivi.mode : null; $('char-fiche-vue').textContent = sv === 'cinema' ? 'Libérer la vue' : 'Vue verrouillée'; $('char-fiche-personne').textContent = sv === 'personne' ? 'Libérer la vue' : 'À la personne'; }
+    { const sv = suivi && suivi.genre === 'char' && suivi.id === c.id ? suivi.mode : null; $('char-fiche-vue').setAttribute('aria-pressed', sv === 'cinema'); $('char-fiche-personne').setAttribute('aria-pressed', sv === 'personne'); }
     // ses tuiles (Jérôme, 8 nov. : les tuiles du labo) : la coque, le canon, ses victimes, ses obus, son expérience ; refaites quand une valeur change (le canon : chaque seconde), jamais à chaque image
     const nbc = chevronsDe(c.exp ?? 0), nTues = c.tues ?? 0, canonMot = attente ? 'chargé' : f >= 1 ? 'PRÊT' : `${secondes(B, c)} s`;
     const sigFiche = [c.id, vie, canonMot, c.vise ? (c.cible && c.vise === c.cible ? 1 : 2) : 0, Math.round((c.exp ?? 0) * 100), nTues, c.tuesCanon ?? 0, c.tuesMitr ?? 0, c.repar ?? 0, c.obus ?? 0].join(':');
