@@ -1,5 +1,9 @@
 # Journal des versions
 
+## 0.127.2 — 2026-11-08
+- Aucun arbre sur les terrains des bâtiments de la base, ni à 20 m autour : les chars sortent du parc sans buter sur un tronc
+- Le plan d'un secteur ne montre d'abord que qui tient la tranchée et le nombre d'hommes de chaque armée, sans barre de défilement ; un petit bouton « Plus d'infos » déplie les tombés et les régiments
+
 ## 0.127.1 — 2026-11-08
 - Les fiches du char, du poste et de l'avion : la vue verrouillée et la vue à la première personne sont deux petites icônes en haut à droite ; l'infobulle de « Marcher » ne montre plus de « \n » ; le « ? » de la carte est réparé
 - Le bandeau « Libérer la vue » suit le design system (un vrai bouton du jeu)

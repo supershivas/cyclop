@@ -24,7 +24,7 @@ const erreurs = [];
 page.on('pageerror', e => erreurs.push(`exception : ${e.message}`));
 
 // Des cellules ou des repères, pas des boutons de papier (déclaré, docs/design-system.md) : hors du contrôle de hauteur
-const EXCEPTIONS_HAUTEUR = ['.carte-grille .cel', '.carte-grille .sect', '.secteur-cadre .sect', '.carte-ronde', '.aide', '.fleche', '.lien', '.fiche-liste .nom', 'summary', '.legende-carte summary', '.carte-3d *', '.titre-carnet', '.replier', 'a', 'input'];
+const EXCEPTIONS_HAUTEUR = ['.carte-grille .cel', '.carte-grille .sect', '.secteur-cadre .sect', '#secteur-plus-bouton', '.carte-ronde', '.aide', '.fleche', '.lien', '.fiche-liste .nom', 'summary', '.legende-carte summary', '.carte-3d *', '.titre-carnet', '.replier', 'a', 'input'];
 
 const MESURE = ([exceptions, nous]) => {
   const visible = el => { const s = getComputedStyle(el); if (s.display === 'none' || s.visibility === 'hidden') return false; if (el.closest('[hidden], dialog:not([open]), .jeu-cache')) return false; const r = el.getBoundingClientRect(); return r.width > 0 && r.height > 0; };
