@@ -1,8 +1,8 @@
 // Le terrain en voxels du labo lumière : une grille de colonnes de hauteur (en quarts de cube), déjà façonnée
 // (bosses, végétation, tranchées sur quelques niveaux par camp, abris couverts) et que les obus creusent.
 // Logique pure (aucun DOM, aucune horloge, aucun hasard hors de la graine) : le futur jeu peut la reprendre telle quelle.
-import { createRng } from '../lib/rng.js?v=0.129.1';
-import { MONDE, MOTIF_OBUS } from './config.js?v=0.129.1';
+import { createRng } from '../lib/rng.js?v=0.130.0';
+import { MONDE, MOTIF_OBUS } from './config.js?v=0.130.0';
 
 export const MAT = { HERBE: 0, GLAISE: 1, TERRE: 2, BOUE: 3, SAC: 4, TRONC: 5, BUISSON: 6, TOIT: 7, EAU: 8 };
 const NIVEAU_BASE = 40;                // un sol à 10 m (en quarts de cube de 1 m : × cpm pour une grille plus fine) : les cratères et les tranchées ont de la place

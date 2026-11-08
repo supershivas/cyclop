@@ -1,8 +1,9 @@
 {
-  "version": "0.129.1",
+  "version": "0.130.0",
   "date": "2026-11-08",
   "changes": [
-    "Aucun arbre sur les terrains des bâtiments de la base, ni à 20 m autour : les chars sortent du parc sans buter sur un tronc",
-    "Le plan d'un secteur ne montre d'abord que qui tient la tranchée et le nombre d'hommes de chaque armée, sans barre de défilement ; un petit bouton « Plus d'infos » déplie les tombés et les régiments"
+    "Le parc et l'aérodrome ne montrent plus de faux engins : un avion par cellule de la flotte (au sol et en vie), un char par place du stock",
+    "Le génie répare à la base : un clic sur l'avion ou le char abîmé (ou le génie, puis l'engin cerclé d'os), ou un bouton « Réparer » par engin ; un char abîmé rentre d'abord au parc (« Rentrer au parc »)",
+    "Les gardes du camp font leur ronde autour des bâtiments, d'un vrai pas de marche, sans traverser un mur ; les drapeaux du camp prennent les couleurs de l'armée et flottent au vent comme ceux du front"
   ]
 }

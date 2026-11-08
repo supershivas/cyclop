@@ -1,7 +1,7 @@
 // Les lanternes du jeu éclairent le sol, CACHÉES PAR LE RELIEF (session 3 du chantier lumière, « Éclairage : haut ») : la couche de lampes du labo lumière (`ajouterLampe` : une courbe douce de la distance, quelques échantillons de visibilité le long du segment
 // lampe → case) sur le relief dessiné du jeu. Le parapet d'une tranchée cache sa lanterne à la plaine, le fond d'un cratère reste dans le noir. Les lanternes viennent de `temps.js` (celles qu'on voit, au plus 120 : `lanternesVues`).
 // Une lanterne apparue ou disparue ajoute ou retire sa lumière ; rien n'est recalculé pour les autres. Le dessin seulement.
-import { ajouterLampe } from '../lumiere/lampes.js?v=0.129.1';
+import { ajouterLampe } from '../lumiere/lampes.js?v=0.130.0';
 
 export const LAMPES_SOL = { rayonM: 11, force: 0.6, parImage: 24, rangeesParImage: 60 };
 

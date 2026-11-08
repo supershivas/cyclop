@@ -1534,22 +1534,17 @@ import { REPARE_AVION, reparationFaite } from '../js/genie.js';
 import { refusOrdreChar } from '../js/chars.js';
 import { pvAvion } from '../js/camp.js';
 group('v0.115.0 — génie, chars et postes');
-test('le génie remet un char abîmé en état, une seule fois par jour', () => {
+test('le génie ne répare plus un char sur le champ (v0.130.0 : à la base seulement) et une seule fois par jour', () => {
   const B = petite(), e = B.etat, Z = zone(B);
-  e.chars.push({ id: 0, camp: 0, modele: 'schneider', x: Z.x0 + 100, y: Z.y0 + 100, ar: undefined, dx0: Z.x0 + 100, tx: Z.x0 + 100, ty: Z.y0 + 100, chemin: null, k: 0, pv: 1000, pvMax: 4000, exp: 0, tues: 0, repar: 0, canonT: 0, cible: null, vise: null, etat: 'arrive', v: 0, hx: 0, hy: -1, cap: -1.57 });
-  e.chars.push({ id: 1, camp: 0, modele: 'schneider', x: Z.x0 + 140, y: Z.y0 + 100, dx0: Z.x0 + 140, tx: Z.x0 + 140, ty: Z.y0 + 100, chemin: null, k: 0, pv: 1000, pvMax: 4000, exp: 0, tues: 0, repar: 0, canonT: 0, cible: null, vise: null, etat: 'arrive', v: 0, hx: 0, hy: -1, cap: -1.57 });
-  const r = ordonnerBarrage(B, 'genie', Z.x0 + 100, Z.y0 + 100, 0);
-  assert.ok(r.ok, JSON.stringify(r));
-  assert.equal(reparationFaite(e, 0), true);
+  e.chars.push({ id: 0, camp: 0, modele: 'schneider', x: Z.x0 + 100, y: Z.y0 + 100, ar: undefined, dx0: Z.x0 + 100, tx: Z.x0 + 100, ty: Z.y0 + 100, chemin: null, k: 0, pv: 1000, pvMax: 4000, exp: 0, tues: 0, repar: 0, canonT: 0, cible: null, vise: null, etat: 'arrive', v: 0, hx: 0, hy: -1, cap: 0 });
   e.batteries.genie = 0;
-  assert.match(ordonnerBarrage(B, 'genie', Z.x0 + 140, Z.y0 + 100, 0).refus, /par jour/, 'une seule réparation par jour');
-  assert.match(ordonnerBarrage(B, 'genie', Z.x0 + 100, Z.y0 + 100, 0, REPARE_AVION, 0).refus, /par jour/);
-  assert.match(refusOrdreChar(B, 0, 'marche', 220, 150, 0), /répare/, 'il ne repart pas pendant les travaux');
-  for (let n = 0; n < 60000 && e.genies[0].etat !== 'travaille' && e.phase === 'jour'; n++) avancer(B);
-  assert.equal(e.genies[0].etat, 'travaille', 'la section est arrivée'); e.genies[0].travail = 0.9999;
-  avancer(B); avancer(B);
-  assert.equal(e.genies.length, 0, 'la section est rentrée'); assert.equal(e.chars[0].pv, 4000); assert.equal(e.chars[0].repar, 1); assert.equal(e.chars[1].pv, 1000);
-  // le lendemain : permis de nouveau
+  assert.match(ordonnerBarrage(B, 'genie', Z.x0 + 100, Z.y0 + 100, 0).refus, /à la base/, 'sur le champ : refusé, à voix haute');
+  assert.match(refusOrdreChar(B, 0, 'rentrer', 220, 150, 0), /parc/, 'sans parc dessiné, il n\'y a pas où rentrer');
+  e.avions[0][0] = 1;
+  assert.ok(ordonnerBarrage(B, 'genie', Z.x0 + 100, Z.y0 + 100, 0, REPARE_AVION, 0).ok);
+  assert.equal(reparationFaite(e, 0), true);
+  e.batteries.genie = 0; e.avions[0][1] = 1;
+  assert.match(ordonnerBarrage(B, 'genie', Z.x0 + 100, Z.y0 + 100, 0, REPARE_AVION, 0).refus, /par jour/, 'une seule réparation par jour');
   e.jour++; e.batteries.genie = 0;
   assert.ok(!reparationFaite(e, 0));
 });

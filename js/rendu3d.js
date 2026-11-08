@@ -22,36 +22,36 @@
    - Les soldats : instanciés (une boîte et son ombre) ; au zoom 1 et 2, un
      point de 2 × 2 pixels (la couleur du camp sur son ombre).
    - Les corps : un homme couché (instancié) ; au zoom 1 et 2, un pixel. */
-import { loadThree } from './three-lib.js?v=0.129.1';
-import * as SH from './rendu/shaders.js?v=0.129.1';
-import { creerSoldats } from './rendu/soldats.js?v=0.129.1';
-import { creerChars } from './rendu/chars.js?v=0.129.1';
-import { creerGenies } from './rendu/genies.js?v=0.129.1';
-import { creerCamp } from './rendu/camp.js?v=0.129.1';
-import { creerAvions } from './rendu/avions.js?v=0.129.1';
-import { creerPonts } from './rendu/ponts.js?v=0.129.1';
-import { creerCiel } from './rendu/ciel.js?v=0.129.1';
-import { creerMeteoLisse } from './rendu/meteo-lisse.js?v=0.129.1';
-import { creerMeteo } from './rendu/meteo.js?v=0.129.1';
-import { creerTroncons } from './rendu/troncons.js?v=0.129.1';
-import { ARBRES_JEU } from './data/arbres.js?v=0.129.1';
-import { creerVegetation } from './rendu/vegetation.js?v=0.129.1';
-import { creerTemps } from './rendu/temps.js?v=0.129.1';
-import { creerEclats } from './rendu/eclats.js?v=0.129.1';
-import { creerOmbresRelief } from './rendu/ombres-relief.js?v=0.129.1';
-import { creerAOSol, soleilDuJeu } from './rendu/ao-sol.js?v=0.129.1';
-import { cadrerOmbre } from './lumiere/ombres.js?v=0.129.1';
-import { semerOmbres, emballerOmbres, OMBRE_FUMEE } from './rendu/ombre-fumee.js?v=0.129.1';
-import { creerLampesSol } from './rendu/lampes-sol.js?v=0.129.1';
-import { OMBRES_RELIEF as OMB, NUAGES, NUAGES_VENT } from './data/soleil.js?v=0.129.1';
-import { PALETTE, ORDRE, INDICE } from './palette.js?v=0.129.1';
-import { OMBRE, couleursLigne } from './apparence.js?v=0.129.1';
-import { MORCEAU, hauteurVueQ as hauteurQ, hauteurVueM as hauteurM } from './terrain.js?v=0.129.1';
-import { horloge, secteurDuJeu, rangDe } from './bataille.js?v=0.129.1';
-import { GRADES } from './data/grades.js?v=0.129.1';
-import { profilFleuve } from './eaux.js?v=0.129.1';
-import { ligneY } from './tranchees.js?v=0.129.1';
-import { vent as ventDuJour } from './data/meteo.js?v=0.129.1';
+import { loadThree } from './three-lib.js?v=0.130.0';
+import * as SH from './rendu/shaders.js?v=0.130.0';
+import { creerSoldats } from './rendu/soldats.js?v=0.130.0';
+import { creerChars } from './rendu/chars.js?v=0.130.0';
+import { creerGenies } from './rendu/genies.js?v=0.130.0';
+import { creerCamp } from './rendu/camp.js?v=0.130.0';
+import { creerAvions } from './rendu/avions.js?v=0.130.0';
+import { creerPonts } from './rendu/ponts.js?v=0.130.0';
+import { creerCiel } from './rendu/ciel.js?v=0.130.0';
+import { creerMeteoLisse } from './rendu/meteo-lisse.js?v=0.130.0';
+import { creerMeteo } from './rendu/meteo.js?v=0.130.0';
+import { creerTroncons } from './rendu/troncons.js?v=0.130.0';
+import { ARBRES_JEU } from './data/arbres.js?v=0.130.0';
+import { creerVegetation } from './rendu/vegetation.js?v=0.130.0';
+import { creerTemps } from './rendu/temps.js?v=0.130.0';
+import { creerEclats } from './rendu/eclats.js?v=0.130.0';
+import { creerOmbresRelief } from './rendu/ombres-relief.js?v=0.130.0';
+import { creerAOSol, soleilDuJeu } from './rendu/ao-sol.js?v=0.130.0';
+import { cadrerOmbre } from './lumiere/ombres.js?v=0.130.0';
+import { semerOmbres, emballerOmbres, OMBRE_FUMEE } from './rendu/ombre-fumee.js?v=0.130.0';
+import { creerLampesSol } from './rendu/lampes-sol.js?v=0.130.0';
+import { OMBRES_RELIEF as OMB, NUAGES, NUAGES_VENT } from './data/soleil.js?v=0.130.0';
+import { PALETTE, ORDRE, INDICE } from './palette.js?v=0.130.0';
+import { OMBRE, couleursLigne } from './apparence.js?v=0.130.0';
+import { MORCEAU, hauteurVueQ as hauteurQ, hauteurVueM as hauteurM } from './terrain.js?v=0.130.0';
+import { horloge, secteurDuJeu, rangDe } from './bataille.js?v=0.130.0';
+import { GRADES } from './data/grades.js?v=0.130.0';
+import { profilFleuve } from './eaux.js?v=0.130.0';
+import { ligneY } from './tranchees.js?v=0.130.0';
+import { vent as ventDuJour } from './data/meteo.js?v=0.130.0';
 
 export const CAMERA = { yaw: 0.15, tangage: 0.95, fov: 30 };   // au départ : tournée de 9°, plongée de 54°, angle de 30°
 // la caméra respire : un balancement très lent, 2° en 23 s (Jérôme, v0.3.1 : variante D du labo retenue)
@@ -343,7 +343,7 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
     const vn = NUAGES_V0 * (0.2 + 1.6 * f0) * dt;                         // les nuages vont avec le vent (au calme, ils dérivent à peine)
     vent.nuages.x += ux * vn; vent.nuages.z += uz * vn;
     vent.ciel.x += (ux * f0 * 0.034 + 0.004) * dt; vent.ciel.z += (uz * f0 * 0.034 + 0.0013) * dt;
-    vegetation.setVent(ux * vent.force, uz * vent.force); eclats.setVent(vent.ms.x * 0.4, vent.ms.z * 0.4); troncons.setVent(f0, Math.atan2(uz, ux));
+    vegetation.setVent(ux * vent.force, uz * vent.force); eclats.setVent(vent.ms.x * 0.4, vent.ms.z * 0.4); troncons.setVent(f0, Math.atan2(uz, ux)); camp.setVent(f0, Math.atan2(uz, ux));
   }
 
   const troncons = creerTroncons({
@@ -353,7 +353,7 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
 
   // ─── Brancher une bataille ───
   const ponts = creerPonts({ THREE, scene, bataille: () => B });
-  let aretesPonts = false;
+  let aretesPonts = false, surligneEngins = false;
   const chars = creerChars({ THREE, scene, bataille: () => B, hauteur: (x, y) => surfaceLisse(x, y), fumer: (x, z) => eclats.fumer(x, z) });
   const genies = creerGenies({ THREE, scene, bataille: () => B, hauteur: (x, y) => surfaceLisse(x, y) });
   const camp = creerCamp({ THREE, scene, bataille: () => B, hauteur: (x, y) => surfaceLisse(x, y) });      // le camp de notre armée, dans la marge arrière (v0.87.0)
@@ -793,7 +793,7 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
       renderer.setClearColor(c, 1); solMat.uniforms.uBordCoul.value.copy(c); fauxU?.uBrume.value.copy(c);
     }
     const sombre = temps.majNuit(h); temps.setTemps(tAnim); sombreVu = sombre || 0;
-    chars.maj(dt, sombre || 0); genies.maj(dt); camp.maj(sombre || 0, tAnim); avions.maj(dt, sombre || 0); ponts.maj(sombre || 0, aretesPonts);
+    chars.maj(dt, sombre || 0); genies.maj(dt); camp.maj(sombre || 0, tAnim, surligneEngins); avions.maj(dt, sombre || 0); ponts.maj(sombre || 0, aretesPonts);
     ciel.derive(vent.ciel.x, vent.ciel.z);
     ciel.nuit(sombre || 0, tAnim, h.jour, B.etat.graine, h.meteo);       // les étoiles, la lune et les nuages de la nuit (v0.40.0)
     meteo.afficher(h, vide); meteo.cielPluie(h, vide, ciel.visible());
@@ -927,6 +927,7 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
     get oeil() { const p = camera.position; return { x: p.x, y: p.y, z: p.z, sol: surface(p.x, p.z) }; },      // où est la caméra, et la hauteur du sol dessous (lecture seule : les tests de la caméra)
     // une fumée qui dérive, posée en (x, z) (l'écran titre en épaissit le champ)
     clignoter: troncons.clignoter,
+    set surligneEngins(v) { surligneEngins = !!v; },       // le génie vise ou le bâtiment est ouvert : les engins abîmés du parc sont cerclés (v0.130.0)
     set aretesPonts(v) { aretesPonts = !!v; },       // le génie vise : les ponts coupés se montrent en arêtes (v0.67.0)
     survoler(reg, troncons) { soldats.survoler(reg); survolTroncons = troncons; },
     surligner(s) { troncons.surligner(s); },

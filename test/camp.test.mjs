@@ -5,6 +5,10 @@ import { nouvelleBataille, avancer, aube, photo, restaurer, ordonnerBarrage } fr
 import { affecterGueris, patients, charsDispo, appliquerDepart, sortieChars, emplacementCamp, campDe, refusEquiper, equiper, facteurEquip, campDeDepart, modif, rechargeDe, pvAvion, refusOrdre, refusNid, emprisesCamp, batimentSous, refusCamp, ordonnerChantier, dotationAube, niveauDe, coutDe, nuitsDe, choisis } from '../js/camp.js';
 import { BATIMENTS, DOTATION, EQUIPEMENTS, EQUIPEMENT, equipeEnMots } from '../js/data/batiments.js';
 import { REGLAGES as R } from '../js/data/reglages.js';
+import { placesChars, placeAvion, parcChars } from '../js/camp.js';
+import { ordonnerChar } from '../js/chars.js';
+import { codeAvion, codeChar, REPARE_AVION } from '../js/genie.js';
+import { pointRonde, demiRonde, longueurRonde, RONDE } from '../js/ronde.js';
 
 const petite = (graine = 5) => nouvelleBataille(graine, R, { soldats: 200, jours: 6 });
 const nuit = B => { while (B.etat.phase === 'jour') avancer(B); return aube(B); };
@@ -372,4 +376,63 @@ test('l\'hôpital compte les évacués, change la mort et le retour par niveau, 
   assert.ok(revenus.length >= 8, `une bonne part revient (${revenus.length}/40)`);
   const dans = revenus.map(p => { for (let i = 0; i < B.armee.n; i++) if (B.armee.id[i] === p[0]) return B.armee.reg[i]; return -1; });
   assert.ok(dans.every(r => r === 1), 'tous au régiment choisi'); assert.ok(B.armee.n >= avant - 400);
+});
+
+group('camp — les engins du parc, le retour des chars et le génie à la base (v0.130.0)');
+test('le parc ne montre que les chars du stock ; un char lancé libère une place', () => {
+  const B = bridee(), e = B.etat, Z = zone(B), cx = (Z.x0 + Z.x1) / 2;
+  assert.equal(placesChars(e, 0).length, 2, 'deux chars au parc au niveau 1');
+  assert.equal(placesChars(e, 1).length, 2, 'et chez eux');
+  const sortie = sortieChars(e, 0), p0 = placesChars(e, 0)[0];
+  assert.ok(Math.hypot(p0.x - sortie.x, p0.y - sortie.y) < 0.01, 'la 1re place est la sortie');
+  assert.ok(ordonnerBarrage(B, 'char', cx, Z.y0 + 120, 0).ok);
+  assert.equal(placesChars(e, 0).length, 1);
+  for (let k = 0; k < 3; k++) assert.ok(placeAvion(e, 0, k), 'une cellule par avion de la flotte');
+  assert.ok(Math.abs(placeAvion(e, 1, 0).x - (emplacementCamp(e, 'aerodrome', 1).x - (-32))) < 0.01, 'tourné d\'un demi-tour chez eux');
+});
+test('un char abîmé rentre au parc avec ses dégâts, le génie le répare là et lui seul, puis il ressort', () => {
+  const B = bridee(), e = B.etat, Z = zone(B), cx = (Z.x0 + Z.x1) / 2;
+  assert.ok(ordonnerBarrage(B, 'char', cx, Z.y0 + 120, 0).ok);
+  const c = e.chars[0]; for (let n = 0; n < 300; n++) avancer(B);
+  c.pv = 30; c.exp = 0.4; c.tues = 7;
+  e.batteries.genie = 0;
+  assert.match(ordonnerBarrage(B, 'genie', c.x, c.y, 0).refus, /à la base/, 'le génie ne répare pas sur le champ');
+  assert.equal(ordonnerChar(B, c.id, 'rentrer', 0, 0, 0).ok, true);
+  for (let n = 0; n < 20000 && e.chars.length; n++) avancer(B);
+  assert.equal(e.chars.length, 0, 'le char a quitté le champ');
+  const r = parcChars(e, 0)[0]; assert.ok(r, 'il est au parc'); assert.equal(r.pv, 30); assert.equal(r.tues, 7); assert.equal(charsDispo(e, 0), 2, 'le stock a retrouvé sa place');
+  assert.equal(placesChars(e, 0).find(p => p.id === r.id) !== undefined, true, 'et il se voit à une place du parc');
+  // le génie le répare, une fois par jour
+  assert.match(ordonnerBarrage(B, 'genie', cx, Z.y0 + 100, 0, codeChar(999), 0).refus, /n'est pas au parc/);
+  const g = ordonnerBarrage(B, 'genie', cx, Z.y0 + 100, 0, codeChar(r.id), 0); assert.ok(g.ok, JSON.stringify(g));
+  assert.equal(e.genies[0].parc, r.id);
+  e.batteries.genie = 0; assert.match(ordonnerBarrage(B, 'genie', cx, Z.y0 + 100, 0, REPARE_AVION, 0).refus, /par jour/);
+  for (let n = 0; n < 80000 && e.genies[0]?.etat !== 'travaille' && e.phase === 'jour'; n++) avancer(B);
+  assert.equal(e.genies[0].etat, 'travaille'); e.genies[0].travail = 0.9999; avancer(B); avancer(B);
+  assert.equal(r.pv, r.pvMax); assert.equal(r.repar, 1); assert.equal(e.genies.length, 0);
+  // il ressort après le char neuf, avec son numéro, son expérience et ses points de vie
+  e.batteries.char = 0; assert.ok(ordonnerBarrage(B, 'char', cx, Z.y0 + 120, 0).ok);
+  assert.equal(e.chars[0].id !== r.id, true, 'le neuf d\'abord');
+  e.batteries.char = 0; assert.ok(ordonnerBarrage(B, 'char', cx + 30, Z.y0 + 120, 0).ok);
+  const re = e.chars.find(k => k.id === r.id); assert.ok(re, 'puis le rentré'); assert.equal(re.exp, 0.4); assert.equal(re.tues, 7); assert.equal(re.repar, 1);
+  assert.equal(parcChars(e, 0).length, 0);
+});
+test('le génie répare l\'avion que l\'on désigne (pas forcément le plus abîmé), pas un avion intact', () => {
+  const B = bridee(), e = B.etat, Z = zone(B), cx = (Z.x0 + Z.x1) / 2, max = pvAvion(e, 0);
+  e.batteries.genie = 0;
+  assert.match(ordonnerBarrage(B, 'genie', cx, Z.y0 + 100, 0, codeAvion(0), 0).refus, /pas abîmé/);
+  e.avions[0][0] = Math.floor(max / 2); e.avions[0][2] = Math.floor(max / 4);
+  assert.ok(ordonnerBarrage(B, 'genie', cx, Z.y0 + 100, 0, codeAvion(0), 0).ok);
+  assert.equal(e.genies[0].avion, 0, 'celui qu\'on a désigné, pas le plus abîmé');
+});
+test('la ronde des gardes reste hors de l\'emprise du bâtiment et boucle sur elle-même', () => {
+  for (const [w, d, cle] of [[34, 22, 'artillerie'], [84, 40, 'aerodrome'], [32, 30, 'chars']]) {
+    const [hx, hz] = demiRonde(w, d, cle), L = longueurRonde(hx, hz), marge = cle === 'aerodrome' ? RONDE.margeAerodrome : RONDE.marge;
+    for (let s = 0; s < L; s += 0.5) {
+      const [x, z] = pointRonde(hx, hz, s);
+      assert.ok(Math.abs(x) >= w / 2 + marge - 1e-9 || Math.abs(z) >= d / 2 + marge - 1e-9, `hors de l'emprise (${cle}, s=${s})`);
+      const [x2, z2] = pointRonde(hx, hz, s + 0.5); assert.ok(Math.hypot(x2 - x, z2 - z) <= 0.5 + 1e-9, 'jamais de saut');
+    }
+    assert.deepEqual(pointRonde(hx, hz, 0), pointRonde(hx, hz, L));
+  }
 });

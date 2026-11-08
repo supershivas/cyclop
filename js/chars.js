@@ -3,16 +3,17 @@
    ligne vers (tx, ty) à la vitesse de son modèle, ralentie par un cratère (la moitié de ce qu'il franchit), arrêtée par un cratère plus profond ou par l'eau
    profonde (`enlise` : il reste là et tire) ; il tire sur l'autre camp à portée ; un obus tombé près de lui l'abîme (`degatsChars`), jusqu'à l'épave (`detruit`).
    Les tranchées se franchissent (elles font 1,5 m : son modèle les passe). Les ordres rendent { refus } comme les barrages. */
-import { modif, charsDispo } from './camp.js?v=0.129.1';
-import { CHARS, CHAR_PAR_DEFAUT, CHAR_RECHARGE, CHAR_DEPART, CHAR_OBUS, CHAR_ROUTE } from './data/chars.js?v=0.129.1';
-import { CALIBRES } from './data/calibres.js?v=0.129.1';
-import { effrayer, DENSITE } from './army.js?v=0.129.1';
-import { BONUS, GAINS, chevronsDe } from './data/experience.js?v=0.129.1';
-import { zone as zoneDe } from './bataille.js?v=0.129.1';
-import { detruirePont } from './eaux.js?v=0.129.1';
-import { toucher } from './terrain.js?v=0.129.1';
-import { PONTS_JEU, typePont } from './data/ponts.js?v=0.129.1';
-import { charEnReparation } from './genie.js?v=0.129.1';
+import { modif, charsDispo, parcChars, prochainDuParc, sortieChars, niveauDe } from './camp.js?v=0.130.0';
+import { PARC } from './data/parc.js?v=0.130.0';
+import { CHARS, CHAR_PAR_DEFAUT, CHAR_RECHARGE, CHAR_DEPART, CHAR_OBUS, CHAR_ROUTE } from './data/chars.js?v=0.130.0';
+import { CALIBRES } from './data/calibres.js?v=0.130.0';
+import { effrayer, DENSITE } from './army.js?v=0.130.0';
+import { BONUS, GAINS, chevronsDe } from './data/experience.js?v=0.130.0';
+import { zone as zoneDe } from './bataille.js?v=0.130.0';
+import { detruirePont } from './eaux.js?v=0.130.0';
+import { toucher } from './terrain.js?v=0.130.0';
+import { PONTS_JEU, typePont } from './data/ponts.js?v=0.130.0';
+import { charEnReparation } from './genie.js?v=0.130.0';
 
 /* La route d'un char (Jérôme, v0.59.3 : « ils doivent contourner les fleuves, passer par les ponts ») : une recherche sur une grille de `CHAR_ROUTE.maille` mètres, de (x0, y0) à (tx, ty), qui évite
    l'eau profonde, les cratères qu'il ne franchit pas, les ponts qui ne le portent pas, et se détourne des cratères à demi profonds. Rend les points à suivre (le dernier est le but), ou null
@@ -69,6 +70,7 @@ export function routeChar(B, x0, y0, tx, ty, modele = CHAR_PAR_DEFAUT, franchit 
 export function refusChar(B, depart, x, y, camp = 0) {
   if (!depart) return 'Pas de route pour un char ici.';
   if (charsDispo(B.etat, camp) === 0) return 'Plus un char au parc : ceux de la bataille sont sortis (le parc en garde plus à ses niveaux supérieurs).';
+  if (charsDispo(B.etat, camp) !== null && !prochainDuParc(B.etat, camp, id => charEnReparation(B.etat, id))) return 'Le dernier char du parc est sous les mains du génie : il sort quand la réparation est finie.';
   if (Math.hypot(x - depart.x, y - (depart.ar ?? depart.y)) < CHAR_DEPART) return `Trop près de ses lignes : visez à plus de ${CHAR_DEPART} m.`;
   if (depart.ar !== undefined && !routeChar(B, depart.x, depart.ar, x, y, undefined, CHARS[CHAR_PAR_DEFAUT].franchit * modif(B.etat, camp, 'chars.franchit'))) return 'Aucun passage pour un char jusque-là : eau, cratères ou pont trop faible.';
   return '';
@@ -76,12 +78,16 @@ export function refusChar(B, depart, x, y, camp = 0) {
 
 export function lancerChar(B, camp, depart, x, y, modele = CHAR_PAR_DEFAUT) {
   const { etat } = B;
+  // le char du parc : un neuf s'il en reste, sinon un char rentré du champ, avec ses dégâts, son expérience et son numéro (v0.130.0)
+  const pris = charsDispo(etat, camp) !== null ? prochainDuParc(etat, camp, id => charEnReparation(etat, id)) : null, R = pris?.rentre ?? null;
   if (charsDispo(etat, camp) !== null) etat.charsDispo[camp]--;
+  if (R) parcChars(etat, camp).splice(parcChars(etat, camp).indexOf(R), 1);
   // `ar` : la rangée de l'arrière de son camp, où la route finit ; `chemin` : les points qu'il suit ensuite (`routeChar`), `k` celui qu'il vise
   const franchit = CHARS[modele].franchit * modif(etat, camp, 'chars.franchit'), pv = Math.round(CHARS[modele].pv * modif(etat, camp, 'chars.pv'));     // le parc des chars (v0.88.0)
   const chemin = depart.ar !== undefined ? routeChar(B, depart.x, depart.ar, x, y, modele, franchit) : null;
   const ex = chemin ? 0 : x - depart.x, ey = chemin ? depart.ar - depart.y : y - depart.y, en = Math.hypot(ex, ey) || 1, hx = ex / en, hy = ey / en;
-  etat.chars.push({ id: etat.chars.length ? etat.chars[etat.chars.length - 1].id + 1 : 0, camp, modele, x: depart.x, y: depart.y, ar: depart.ar, dx0: depart.x, tx: x, ty: y, chemin, k: 0, pv, pvMax: pv, exp: 0, tues: 0, tuesCanon: 0, tuesMitr: 0, obus: 0, repar: 0, jour: etat.jour, franchit, vit: modif(etat, camp, 'chars.vitesse'), canonMod: modif(etat, camp, 'chars.canon'), canonT: etat.temps, cible: null, vise: null, etat: 'avance', v: 0, hx, hy, cap: Math.atan2(hy, hx) });
+  const id = R ? R.id : Math.max(-1, ...etat.chars.map(c => c.id), ...(etat.parcChars ?? []).flat().map(r => r.id)) + 1;
+  etat.chars.push({ id, camp, modele, x: depart.x, y: depart.y, ar: depart.ar, dx0: depart.x, tx: x, ty: y, chemin, k: 0, pv: R ? R.pv : pv, pvMax: R ? R.pvMax : pv, exp: R?.exp ?? 0, tues: R?.tues ?? 0, tuesCanon: R?.tuesCanon ?? 0, tuesMitr: R?.tuesMitr ?? 0, obus: R?.obus ?? 0, repar: R?.repar ?? 0, jour: etat.jour, franchit, vit: modif(etat, camp, 'chars.vitesse'), canonMod: modif(etat, camp, 'chars.canon'), canonT: etat.temps, cible: null, vise: null, etat: 'avance', v: 0, hx, hy, cap: Math.atan2(hy, hx) });
 }
 export const RECHARGE_CHAR = CHAR_RECHARGE;
 
@@ -120,6 +126,13 @@ export function refusOrdreChar(B, id, ordre, x, y, camp) {
     if (x < Z.x0 || y < Z.y0 || x >= Z.x1 || y >= Z.y1) return 'Hors du secteur.';
     const roule = c.ar !== undefined && (c.camp === 0 ? c.y > c.ar : c.y < c.ar);
     if (!(roule ? routeChar(B, c.dx0, c.ar, x, y, c.modele) : routeChar(B, c.x, c.y, x, y, c.modele))) return 'Aucun passage pour un char jusque-là : eau, cratères ou pont trop faible.';
+  } else if (ordre === 'rentrer') {      // le char regagne le parc (v0.130.0) : le génie ne répare que les engins à la base
+    if (c.etat === 'enlise') return 'Ce char est enlisé : il ne repart pas.';
+    if (charEnReparation(B.etat, c.id)) return 'Le génie le répare : il ne repart pas avant la fin des travaux.';
+    const P = sortieChars(B.etat, camp), n = niveauDe(B.etat, 'chars', camp);
+    if (!P) return 'Pas de parc à chars à rejoindre.';
+    if ((charsDispo(B.etat, camp) ?? 0) >= PARC.chars.capacite[n]) return 'Le parc est plein.';
+    if (!routeChar(B, c.x, c.y, P.x, P.y, c.modele)) return 'Aucun passage pour un char jusqu\'au parc : eau, cratères ou pont trop faible.';
   } else if (ordre === 'cible') {
     const Z = zoneDe(B);
     if (x < Z.x0 || y < Z.y0 || x >= Z.x1 || y >= Z.y1) return 'Hors du secteur.';
@@ -133,8 +146,9 @@ export function ordonnerChar(B, id, ordre, x, y, camp) {
   if (ordre === 'marche') {
     const roule = c.ar !== undefined && (c.camp === 0 ? c.y > c.ar : c.y < c.ar);
     c.chemin = roule ? routeChar(B, c.dx0, c.ar, x, y, c.modele) : routeChar(B, c.x, c.y, x, y, c.modele);
-    c.tx = x; c.ty = y; c.k = 0; c.etat = 'avance';
-  } else if (ordre === 'arret') { c.tx = c.x; c.ty = c.y; c.etat = 'arrive'; c.chemin = null; }
+    c.tx = x; c.ty = y; c.k = 0; c.etat = 'avance'; c.rentre = false;
+  } else if (ordre === 'rentrer') { const P = sortieChars(B.etat, camp); c.chemin = routeChar(B, c.x, c.y, P.x, P.y, c.modele); c.tx = P.x; c.ty = P.y; c.k = 0; c.etat = 'avance'; c.rentre = true; c.cible = null; }
+  else if (ordre === 'arret') { c.rentre = false; c.tx = c.x; c.ty = c.y; c.etat = 'arrive'; c.chemin = null; }
   else if (ordre === 'cible') c.cible = [Math.round(x * 10) / 10, Math.round(y * 10) / 10];
   else if (ordre === 'libre') c.cible = null;
   return { ok: true };
@@ -166,7 +180,13 @@ export function avancerChars(B, ctx, rng) {
       c.etat = 'enlise'; c.v = 0;
     }
     if (c.etat === 'avance') {
-      const route = c.ar !== undefined && (c.camp === 0 ? c.y > c.ar : c.y < c.ar), d = Math.hypot(c.tx - c.x, c.ty - c.y);
+      const route = !c.rentre && c.ar !== undefined && (c.camp === 0 ? c.y > c.ar : c.y < c.ar), d = Math.hypot(c.tx - c.x, c.ty - c.y);
+      if (d < 1.5 && c.rentre) {      // arrivé au parc : il y reste, avec ses dégâts (le génie peut le réparer), et ressort sur un nouvel ordre
+        parcChars(etat, c.camp).push({ id: c.id, pv: c.pv, pvMax: c.pvMax ?? c.pv, exp: c.exp ?? 0, tues: c.tues ?? 0, tuesCanon: c.tuesCanon ?? 0, tuesMitr: c.tuesMitr ?? 0, obus: c.obus ?? 0, repar: c.repar ?? 0 });
+        if (etat.charsDispo[c.camp] !== null) etat.charsDispo[c.camp]++;
+        c.etat = 'rentre'; c.v = 0; B.evenements.push({ type: 'char-rentre', x: c.x, y: c.y, camp: c.camp, id: c.id });
+        continue;
+      }
       if (d < 1.5) { c.etat = 'arrive'; c.v = 0; B.evenements.push({ type: 'char-arrive', x: c.x, y: c.y, camp: c.camp }); }
       else {
         // la cible du moment : sur la route, le bout de la route ; ensuite le point suivant de son chemin (en droite ligne s'il n'en a pas)
@@ -223,4 +243,5 @@ export function avancerChars(B, ctx, rng) {
       if (cibles) c.exp = Math.min(1, (c.exp ?? 0) + GAINS.char.rafale * Math.min(cibles, 20) + GAINS.char.touche * touches);
     }
   }
+  if (etat.chars.some(c => c.etat === 'rentre')) etat.chars = etat.chars.filter(c => c.etat !== 'rentre');      // les chars rentrés au parc ne sont plus sur le champ
 }

@@ -1,4 +1,4 @@
-// Estampille les imports et les feuilles de style avec la version ().
+// Estampille les imports et les feuilles de style avec la version (?v=1.4.2).
 //
 //   node outils/stamp-version.mjs                → dossiers js/ et src/, pages *.html de la racine
 //   node outils/stamp-version.mjs --dossier lib --dossier js

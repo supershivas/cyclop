@@ -1,10 +1,11 @@
 // Le camp : la règle, sans écran (Jérôme, v0.86.0 : lot 1 de `docs/chantiers/camp-et-ameliorations.md`). Logique pure : aucun DOM, aucune horloge, aucun hasard.
 // L'état est `etat.camp` : la dotation de l'état-major, le niveau de chaque bâtiment (et son chantier d'une nuit), les lignes d'en face déjà comptées.
 // Lot 2 : les niveaux ouvrent les ordres (`refusOrdre`). Lot 3 (v0.88.0) : chaque niveau et chaque choix de palier change un chiffre (`modif`) ou un effectif (`effectifsDe`).
-import { hash2 } from './lib/rng.js?v=0.129.1';
-import { BATIMENTS, DOTATION, CAMP_PLAN, CAMP_IA, PIEDS, EQUIPEMENT, EQUIPEMENTS } from './data/batiments.js?v=0.129.1';
-import { RENFORTS } from './data/renforts.js?v=0.129.1';
-import { MITRAILLAGE } from './data/mitraillage.js?v=0.129.1';
+import { hash2 } from './lib/rng.js?v=0.130.0';
+import { BATIMENTS, DOTATION, CAMP_PLAN, CAMP_IA, PIEDS, EQUIPEMENT, EQUIPEMENTS } from './data/batiments.js?v=0.130.0';
+import { RENFORTS } from './data/renforts.js?v=0.130.0';
+import { MITRAILLAGE } from './data/mitraillage.js?v=0.130.0';
+import { PARC } from './data/parc.js?v=0.130.0';
 
 const NOUS = 0, EUX = 1;
 /* L'état du camp de `camp` : `etat.camp` (le nôtre), `etat.campEux` (celui d'en face : v0.92.0) */
@@ -193,6 +194,35 @@ export function sortieChars(etat, camp = NOUS) {
   const e = emplacementCamp(etat, 'chars', camp), s = camp === NOUS ? 1 : -1;
   return { x: e.x + s * [0, 0, 4.8, 9.6][n], y: e.y - s * 10 };
 }
+// ─── Les engins du parc (v0.130.0) ───
+/* Un point local d'un bâtiment (x, z) en coordonnées du terrain : le camp d'en face est tourné d'un demi-tour */
+const monde = (e, x, z) => ({ x: e.x + (e.rot ? -x : x), y: e.y + (e.rot ? -z : z) });
+/* Les chars rentrés au parc de `camp` : [{ id, pv, pvMax, exp, tues, tuesCanon, tuesMitr, obus, repar }] (un char qui revient du champ garde ses dégâts et son expérience) ; les autres du stock sont neufs */
+export const parcChars = (etat, camp = NOUS) => (etat.parcChars ??= [[], []])[camp];
+/* Les places des chars du parc de `camp` : { x, y, id } par place occupée (neufs d'abord, puis les rentrés : `id` = le numéro du char rentré, sinon null) ; vide sans parc dessiné */
+export function placesChars(etat, camp = NOUS) {
+  const n = niveauDe(etat, 'chars', camp), stock = charsDispo(etat, camp);
+  if (!campDe(etat, camp)?.bride || !n || !stock) return [];
+  const e = emplacementCamp(etat, 'chars', camp), rentres = parcChars(etat, camp), neufs = Math.max(0, stock - rentres.length), out = [];
+  for (let k = 0; k < Math.min(stock, PARC.chars.capacite[n]); k++) {
+    const p = monde(e, PARC.chars.depart[n] - PARC.chars.pas * k, PARC.chars.z);
+    out.push({ ...p, id: k >= neufs ? rentres[k - neufs]?.id ?? null : null });
+  }
+  return out;
+}
+/* La place de l'avion `k` de `camp` sur la piste (sa cellule) */
+export function placeAvion(etat, camp, k) {
+  const q = PARC.avions[k] ?? PARC.avions[0];
+  return monde(emplacementCamp(etat, 'aerodrome', camp), q[0], q[1]);
+}
+/* Le char à prendre au parc pour une sortie : un char neuf s'il en reste, sinon le rentré le mieux portant qui n'est pas sous le génie (`enReparation(id)`) ; { neuf: true }, { rentre } ou null */
+export function prochainDuParc(etat, camp, enReparation = () => false) {
+  const rentres = parcChars(etat, camp), neufs = (charsDispo(etat, camp) ?? 0) - rentres.length;
+  if (neufs > 0) return { neuf: true };
+  let m = null; for (const r of rentres) if (!enReparation(r.id) && (!m || r.pv > m.pv)) m = r;
+  return m ? { rentre: m } : null;
+}
+
 /* Où est chaque bâtiment qui est bâti ou en chantier */
 export function emprisesCamp(etat, camp = NOUS) {
   const K = campDe(etat, camp);

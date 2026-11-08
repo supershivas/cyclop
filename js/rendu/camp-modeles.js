@@ -1,9 +1,12 @@
 // Les bâtiments du camp dessinés en volumes (Jérôme, v0.87.0) : sortis du labo (`labo-batiments.js`) pour que le jeu les dessine aussi (`rendu/camp.js`).
 // Chaque fabrique `BATIR[clé](A, niveau)` rend { g, w, d } : le groupe centré sur son emprise (w le long de x, d le long de z), l'avant (le front) à −z ; `A` est `atelier(THREE)` (engins.js).
 // 1 unité = 1 m, la palette du jeu seulement ; le dessin seulement, rien n'y est écrit.
-import { PALETTE as P } from '../palette.js?v=0.129.1';
-import { schneider } from './engins.js?v=0.129.1';
-import { PIEDS } from '../data/batiments.js?v=0.129.1';
+import { PALETTE as P } from '../palette.js?v=0.130.0';
+import { schneider } from './engins.js?v=0.130.0';
+import { PIEDS } from '../data/batiments.js?v=0.130.0';
+import { PARC } from '../data/parc.js?v=0.130.0';
+import { drapeau } from './drapeau.js?v=0.130.0';
+import { RONDE, demiRonde, longueurRonde } from '../ronde.js?v=0.130.0';
 
 // ─── Les pièces communes ───────────────────────────────────────────────────
 export const G = A => new A.THREE.Group();
@@ -31,27 +34,44 @@ const PARTS_CAMP = {   // ce qui n'est que chez nous (cimier, visière, moustach
   1: [[-0.015, 0.015, 1.7, 1.84, -0.015, 0.015, 22], [-0.15, 0.15, 1.6, 1.64, -0.22, -0.15, 22]],
 };
 const geosSoldat = new Map();
-function geoSoldat(A, camp) {
-  if (geosSoldat.has(camp)) return geosSoldat.get(camp);
+const MEMBRES = { jambeG: [0, 2], jambeD: [1, 3], brasG: [13, 15], brasD: [14, 16] };      // les indices des boîtes de PARTS_SOLDAT qui bougent à la marche (pantalon et botte ; manche et main)
+const PIVOTS = { jambeG: [-0.115, 0.82, 0], jambeD: [0.115, 0.82, 0], brasG: [-0.295, 1.38, 0], brasD: [0.295, 1.38, 0] };      // la hanche, l'épaule
+const TOUS_MEMBRES = new Set(Object.values(MEMBRES).flat());
+// les boîtes d'un camp (celles de `garder`), décalées de −pivot : le membre tourne autour de son articulation
+function geoPartie(A, camp, garder, pivot = [0, 0, 0], cle = 'tout') {
+  const id = `${camp}|${cle}`;
+  if (geosSoldat.has(id)) return geosSoldat.get(id);
   const { THREE } = A, K = camp === 0 ? P.n : P.x;
   const couleur = { 0: K, 2: K, 3: P.g, 4: P.s, 5: P.g, 6: P.o, 7: P.b, 8: P.t, 9: P.o, 12: K, 13: P.t, 22: P.t };
   const pos = [], col = [], nor = [], c = new THREE.Color();
-  for (const [x0, x1, y0, y1, z0, z1, k] of [...PARTS_SOLDAT, ...PARTS_CAMP[camp]]) {
-    const g = new THREE.BoxGeometry(x1 - x0, y1 - y0, z1 - z0).toNonIndexed(); g.translate((x0 + x1) / 2, (y0 + y1) / 2, (z0 + z1) / 2);
+  [...PARTS_SOLDAT, ...PARTS_CAMP[camp]].forEach(([x0, x1, y0, y1, z0, z1, k], i) => {
+    if (!garder(i)) return;
+    const g = new THREE.BoxGeometry(x1 - x0, y1 - y0, z1 - z0).toNonIndexed(); g.translate((x0 + x1) / 2 - pivot[0], (y0 + y1) / 2 - pivot[1], (z0 + z1) / 2 - pivot[2]);
     const p = g.attributes.position, n = g.attributes.normal; c.set(couleur[k] ?? K);
-    for (let i = 0; i < p.count; i++) {
-      const ny = n.getY(i), nx = n.getX(i), nz = n.getZ(i), f = ny > 0.5 ? 1 : ny < -0.5 ? 0.45 : nz > 0.5 ? 0.82 : nz < -0.5 ? 0.6 : nx > 0 ? 0.7 : 0.62;
-      pos.push(p.getX(i), p.getY(i), p.getZ(i)); nor.push(nx, ny, nz); col.push(c.r * f, c.g * f, c.b * f);
+    for (let j = 0; j < p.count; j++) {
+      const ny = n.getY(j), nx = n.getX(j), nz = n.getZ(j), f = ny > 0.5 ? 1 : ny < -0.5 ? 0.45 : nz > 0.5 ? 0.82 : nz < -0.5 ? 0.6 : nx > 0 ? 0.7 : 0.62;
+      pos.push(p.getX(j), p.getY(j), p.getZ(j)); nor.push(nx, ny, nz); col.push(c.r * f, c.g * f, c.b * f);
     }
-  }
+  });
   const geo = new THREE.BufferGeometry();
   geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); geo.setAttribute('normal', new THREE.Float32BufferAttribute(nor, 3)); geo.setAttribute('color', new THREE.Float32BufferAttribute(col, 3));
-  geosSoldat.set(camp, geo); return geo;
+  geosSoldat.set(id, geo); return geo;
 }
 const matSoldat = new Map();
+const materiel = A => { if (!matSoldat.has(A.THREE)) matSoldat.set(A.THREE, new A.THREE.MeshBasicMaterial({ vertexColors: true })); return matSoldat.get(A.THREE); };
 export function soldatDetaille(A) {
-  if (!matSoldat.has(A.THREE)) matSoldat.set(A.THREE, new A.THREE.MeshBasicMaterial({ vertexColors: true }));
-  const m = new A.THREE.Mesh(geoSoldat(A, CAMP), matSoldat.get(A.THREE)); m.userData.soldat = true; return m;
+  const m = new A.THREE.Mesh(geoPartie(A, CAMP, () => true), materiel(A)); m.userData.soldat = true; return m;
+}
+/* Le garde qui marche (v0.130.0) : le même homme, mais les jambes et les bras sont des pièces à part, pivotées à la hanche et à l'épaule par `rendu/camp.js` (la marche générique : jambes et bras en opposition) */
+export function soldatMarcheur(A) {
+  const { THREE } = A, g = new THREE.Group(), mat = materiel(A), camp = CAMP, membres = {};
+  const corps = new THREE.Mesh(geoPartie(A, camp, i => !TOUS_MEMBRES.has(i), [0, 0, 0], 'corps'), mat); corps.userData.soldat = true; g.add(corps);
+  for (const nom of Object.keys(MEMBRES)) {
+    const m = new THREE.Mesh(geoPartie(A, camp, i => MEMBRES[nom].includes(i), PIVOTS[nom], nom), mat); m.userData.soldat = true;
+    m.position.set(...PIVOTS[nom]); g.add(m); membres[nom] = m;
+  }
+  g.userData.membres = membres; g.userData.corps = corps;
+  return g;
 }
 export const soldat = (A, g, x, z, ang = Math.PI) => { const m = soldatDetaille(A); m.position.set(x, 0, z); m.rotation.y = ang; g.add(m); return m; };
 const rang = (A, g, x0, z0, n, pas = 0.9, long = 10) => { for (let k = 0; k < n; k++) soldat(A, g, x0 + (k % long) * pas, z0 + Math.floor(k / long) * 1.1); };
@@ -147,8 +167,7 @@ export const BATIR = {
     barbeles(A, g, 88, 44, 0, 0);                                                          // la clôture de fil de fer
     const hangars = [-32, -19, -6].slice(0, n);
     for (const x of hangars) { A.prisme(g, arche(5), 14, P.r, [x, 0, -16]); A.b(g, [8, 3.4, 0.1], P.t, [x, 1.7, -8.97], [0, 0, 0], false); }
-    const avions = [[-32, -5, 0], [20, 4, 0.1], ...(n >= 2 ? [[-19, -5, 0]] : []), ...(n >= 3 ? [[-6, -5, 0], [34, 4, -0.1]] : [])];
-    avions.slice(0, [0, 2, 3, 5][n]).forEach(([x, z, r], k) => { const a = biplan(A); a.position.set(x, 0, z); a.rotation.y = Math.PI / 2 + r; a.userData.parque = k; g.add(a); });      // `parque` : son rang ; `rendu/camp.js` cache ceux qui sont partis (v0.99.8)
+    PARC.avions.slice(0, PARC.capaciteAvions[n]).forEach(([x, z, r], k) => { const a = biplan(A); a.position.set(x, 0, z); a.rotation.y = Math.PI / 2 + r; a.userData.parque = k; g.add(a); });      // une cellule par avion de la flotte (3, 4 ou 5 : `PARC`) ; `parque` : son numéro, `rendu/camp.js` ne montre que les avions au sol et en vie (v0.130.0 : plus d'avions de décor)
     if (n >= 2) { for (let k = 0; k < 4; k++) A.cyl(g, 0.3, 0.9, P.b, [12 + (k % 2) * 0.8, 0.55, -14 + Math.floor(k / 2) * 0.8], 'y', 8); baraque(A, g, [24, -16], 4, 6, 2, P.r, P.b); }
     if (n >= 3) { baraque(A, g, [36, -14], 4, 6, 3.4, P.h, P.b); A.b(g, [1.4, 0.4, 1.4], P.t, [36, 4.2, -14]); }
     A.cyl(g, 0.08, 7, P.s, [40, 3.5, -2], 'y', 6); A.cyl(g, 0.6, 2.6, P.o, [38.8, 6.6, -2], 'x', 8, 0.15);        // la manche à air
@@ -163,7 +182,7 @@ export const BATIR = {
       for (const s of [-1, 1]) A.b(g, [0.4, 3.3, 0.5], P.b, [x + s * 3.2, 1.65, -3.2]);        // ses poteaux
       A.b(g, [7, 0.4, 0.5], P.b, [x, 3.3, -3.2]);
     }
-    const c = schneider(A).groupe; c.position.set(baies[baies.length - 1], 0, -10); c.rotation.y = Math.PI / 2; c.userData.parc = true; g.add(c);      // `parc` : caché quand un char en sort (rendu/camp.js)
+    for (let k = 0; k < PARC.chars.capacite[n]; k++) { const c = schneider(A).groupe; c.position.set(PARC.chars.depart[n] - PARC.chars.pas * k, 0, PARC.chars.z); c.rotation.y = Math.PI / 2; c.userData.parc = k; g.add(c); }      // une place par char du stock (2, 3 ou 4) : `rendu/camp.js` ne montre que ceux qui sont vraiment au parc (v0.130.0)
     if (n >= 3) {
       for (const s of [-1, 1]) A.b(g, [0.2, 0.15, 28], P.t, [s * 0.75 - 12.6, 0.25, 0], [0, 0, 0], false);                        // la voie de service
       A.b(g, [14, 3.4, 5], P.s, [-1, 1.7, 12.4]); A.prisme(g, [[-7.3, 3.4], [7.3, 3.4], [0, 4.6]], 5.6, P.b, [-1, 0, 12.4]);        // l'atelier
@@ -199,7 +218,7 @@ export const BATIR = {
     if (n >= 3) { A.b(g, [1.6, 0.25, 0.25], P.o, [3.5, 4.6, 8], [0, 0, 0], false); A.b(g, [0.25, 1.6, 0.25], P.o, [3.5, 4.6, 8], [0, 0, 0], false); }          // la croix du poste de secours
     for (let k = 0; k < (n >= 2 ? 4 : 2); k++) A.prisme(g, [[-1.6, 0], [1.6, 0], [0, 2.2]], 3, P.r, [-17 + (k % 2) * 4, 0, -6 + Math.floor(k / 2) * 5]);          // les tentes
     if (n >= 2) { A.b(g, [3, 1.8, 2], P.s, [17, 0.9, 0]); A.cyl(g, 0.2, 2, P.t, [17.8, 2.6, 0.5], 'y', 6); }          // la cuisine roulante
-    A.cyl(g, 0.08, 8, P.o, [0, 4, 0], 'y', 6); A.b(g, [2, 1.2, 0.05], P.n, [1.1, 7.3, 0], [0, 0, 0], false);          // le mât et son fanion
+    A.cyl(g, 0.08, 8, P.o, [0, 4, 0], 'y', 6); { const f = drapeau(A.THREE, coulCamp(), 2, 1.2, 0.8); f.position.set(0, 7.92, 0); g.add(f); }          // le mât et son drapeau (celui du jeu : couleur de l'armée, plié par le vent)
     rang(A, g, -4, -19, n >= 3 ? 36 : n >= 2 ? 24 : 12, 0.9, 12);               // la cour, devant la façade (hors des baraques : plus d'hommes dans les murs)
     return { g, w: 42, d: 28 };
   },
@@ -219,18 +238,16 @@ BATIR.hopital = (A, n) => {
 };
 // La vie d'un camp (v0.99.11 : « des drapeaux qui flottent, des soldats non armés qui bougent ») : un drapeau de l'armée au coin du bâtiment, et des hommes sans arme qui font les cent pas devant ;
 // `rendu/camp.js` les anime à chaque image (`userData.drapeau`, `userData.marche`). `coul` : la couleur de l'armée (n : nous, x : en face).
-export function vie(A, w, d, niveau, coul, graine) {
+export function vie(A, w, d, niveau, coul, graine, cle = '') {
   const g = G(A), h = (a, b) => { const v = Math.sin(a * 12.9898 + b * 78.233 + graine) * 43758.5453; return v - Math.floor(v); };
   A.cyl(g, 0.09, 8, P.o, [w / 2 - 1.2, 4, d / 2 - 1.2], 'y', 6);
-  const f = G(A); f.position.set(w / 2 - 1.2, 7.3, d / 2 - 1.2);
-  const toile = G(A); toile.position.set(1.1, 0, 0); A.b(toile, [2.2, 1.4, 0.06], coul, [0, 0, 0], [0, 0, 0], false); f.add(toile);
-  f.userData.drapeau = { ph: h(1, 2) * 6 };
+  const f = drapeau(A.THREE, coul, 2.2, 1.4, h(1, 2) * 6); f.position.set(w / 2 - 1.2, 7.92, d / 2 - 1.2);      // accroché au haut du mât ; `rendu/camp.js` le tourne vers l'aval
   g.add(f);
-  for (let k = 0; k < 2 + niveau; k++) {
-    const m = G(A), x0 = -w / 2 + 3 + h(k, 3) * (w / 2 - 3), long = 4 + h(k, 4) * 6;
-    const h0 = soldatDetaille(A); m.add(h0);                                               // le même homme que dans le jeu (sans arme au bras : il flâne)
-    m.userData.marche = { x0, x1: Math.min(w / 2 - 3, x0 + long), z: -d / 2 + 1.3 + (k % 2) * 1.1, v: 0.35 + h(k, 5) * 0.3, ph: h(k, 6) * 6 };
-    m.position.set(x0, 0, m.userData.marche.z);
+  // la ronde (v0.130.0) : des gardes qui font le tour du bâtiment sur un rectangle hors de l'emprise (`ronde.js`), d'un pas de marche (jambes et bras en opposition), jamais à travers un mur
+  const [hx, hz] = demiRonde(w, d, cle), n = 2 + niveau;
+  for (let k = 0; k < n; k++) {
+    const m = soldatMarcheur(A), sens = k % 2 ? -1 : 1;
+    m.userData.ronde = { hx, hz, sens, v: RONDE.vitesse[0] + (RONDE.vitesse[1] - RONDE.vitesse[0]) * h(k, 5), s0: (k / n + h(k, 6) * 0.08) * longueurRonde(hx, hz) };
     g.add(m);
   }
   return g;

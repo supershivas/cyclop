@@ -2,12 +2,12 @@
 // Sur le champ : au-dessus de chaque char à nous, une petite étiquette (sa barre de canon qui se remplit, puis PRÊT ; ses points de vie) ; de lui à sa cible, une ligne pointillée et une croix
 // (de la cible qu'on lui a donnée : trait plein ; du carré d'ennemis qu'il a choisi : pointillé). Un clic sur l'étiquette le choisit. La fiche (`#char-fiche`) du char choisi : ses barres,
 // « Marcher » / « Cible » (le prochain clic sur le sol), « Arrêt », « Tir libre », « Fermer ». Le dessin et les boutons seulement : les ordres partent par `surOrdre(ordre)` (main.js).
-import { CHARS } from '../data/chars.js?v=0.129.1';
-import { NOUS } from '../bataille.js?v=0.129.1';
-import { chevronsDe, bonusEnMots } from '../data/experience.js?v=0.129.1';
-import { jauge as jaugeT, partage, tuilesDe } from './tuiles.js?v=0.129.1';
-import { reinitIds } from './bilan.js?v=0.129.1';
-import { REPERES } from './barres.js?v=0.129.1';
+import { CHARS } from '../data/chars.js?v=0.130.0';
+import { NOUS } from '../bataille.js?v=0.130.0';
+import { chevronsDe, bonusEnMots } from '../data/experience.js?v=0.130.0';
+import { jauge as jaugeT, partage, tuilesDe } from './tuiles.js?v=0.130.0';
+import { reinitIds } from './bilan.js?v=0.130.0';
+import { REPERES } from './barres.js?v=0.130.0';
 
 const REDUIT = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
 const NS = 'http://www.w3.org/2000/svg';
@@ -80,12 +80,12 @@ export function creerCharsHud({ $, bataille, moi = () => NOUS, versEcran, hauteu
         { titre: 'Expérience', graphes: [['', jaugeT(c.exp ?? 0, { reperes: REPERES.exp }), '']], chevrons: nbc, mot: nbc ? `Chevrons : ${bonusEnMots('char', nbc)}.` : 'Aucun bonus.' },
       ]));
     }
-    const ab = c.pv < (c.pvMax ?? c.pv), rep = $('char-fiche-reparer');
+    const ab = c.pv < (c.pvMax ?? c.pv), rep = $('char-fiche-reparer');      // v0.130.0 : le génie répare à la base ; ce bouton ramène le char au parc
     if (rep) {
-      const g = B.etat.genies.some(k => k.char === c.id);
-      rep.textContent = g ? 'Génie au travail…' : 'Réparer (génie)';
-      rep.setAttribute('aria-disabled', g || !ab || c.etat === 'avance' ? 'true' : 'false');
-      rep.dataset.info = `# Réparer\nLe génie remet ce char en état : une réparation d'avion ou de char par jour. ${!ab ? 'Il n\'est pas abîmé.' : c.etat === 'avance' ? 'Il doit d\'abord s\'arrêter.' : ''}`;
+      const g = B.etat.genies.some(k => k.char === c.id || k.parc === c.id), imp = g || c.etat === 'enlise' || !B.etat.camp?.bride;
+      rep.textContent = c.rentre ? 'Il rentre au parc…' : 'Rentrer au parc';
+      rep.setAttribute('aria-disabled', imp || c.rentre ? 'true' : 'false');
+      rep.dataset.info = `# Rentrer au parc\nLe char regagne le parc à chars : il y reste avec ses dégâts, le génie peut l'y réparer (un clic sur lui, ou « Réparer » dans la fenêtre du parc), puis il ressort sur un ordre de la batterie Char. ${c.etat === 'enlise' ? '**Enlisé : il ne repart pas.**' : !ab ? 'Il n\'est pas abîmé, mais peut rentrer quand même.' : ''}`;
     }
     for (const b of fiche.querySelectorAll('[data-char]')) { b.classList.toggle('vise', b.dataset.char === mode); b.classList.toggle('actif', b.dataset.char === mode); }
   }

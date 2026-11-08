@@ -1,13 +1,13 @@
 // Les fiches : un homme (son nom, son âge, son grade, ce qu'il endure) ou un régiment (ses hommes, ses
 // blessés, ses morts, et leurs fiches). De près, on regarde des hommes ; de loin, des régiments (Jérôme, v0.3.2).
-import { NOUS, moralEnMots, rangDe } from '../bataille.js?v=0.129.1';
-import { experienceEnMots, chevrons, peurEnMots, fatigueEnMots, CARACTERISTIQUES, caracEnMots } from '../identite.js?v=0.129.1';
-import { majuscule, nomDe, indiceDe, premierDe, quiEst, tombe, bilan, enMots, refuseAujourdhui, actionEnMots, auFront, moyennes, prochainGrade, niveauMoral } from './lecture.js?v=0.129.1';
-import { bonusEnMots } from '../data/experience.js?v=0.129.1';
-import { corps, REPERES } from './barres.js?v=0.129.1';
-import { jauge as jaugeT, carac as caracT, bande, partage, fil, tuilesDe } from './tuiles.js?v=0.129.1';
-import { barreEffectif, jaugeMoral, reinitIds } from './bilan.js?v=0.129.1';
-import { historiqueDe } from '../donnees-jour.js?v=0.129.1';
+import { NOUS, moralEnMots, rangDe } from '../bataille.js?v=0.130.0';
+import { experienceEnMots, chevrons, peurEnMots, fatigueEnMots, CARACTERISTIQUES, caracEnMots } from '../identite.js?v=0.130.0';
+import { majuscule, nomDe, indiceDe, premierDe, quiEst, tombe, bilan, enMots, refuseAujourdhui, actionEnMots, auFront, moyennes, prochainGrade, niveauMoral } from './lecture.js?v=0.130.0';
+import { bonusEnMots } from '../data/experience.js?v=0.130.0';
+import { corps, REPERES } from './barres.js?v=0.130.0';
+import { jauge as jaugeT, carac as caracT, bande, partage, fil, tuilesDe } from './tuiles.js?v=0.130.0';
+import { barreEffectif, jaugeMoral, reinitIds } from './bilan.js?v=0.130.0';
+import { historiqueDe } from '../donnees-jour.js?v=0.130.0';
 
 // `$` : l'accès aux éléments ; `R` : les réglages ; `bataille()` : la bataille en cours
 const CARAC_TITRES = {   // (elles montent à l'usage : tirer, frapper, marcher fatigué, tenir sous le feu ; elles baissent avec une blessure ou la terreur)
