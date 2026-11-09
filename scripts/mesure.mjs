@@ -41,6 +41,7 @@ const VUES = [['tout le champ (points)', 0, 200, 150], ['zoom 3 (boîtes)', 2, 2
 if (o.tranchees !== '') await page.evaluate(n => { __jeu.rendu().niveauTranchees = n === 'auto' ? 'auto' : +n; }, o.tranchees);       // les niveaux de détail des tranchées (v0.88.1) : 0 le dessin d'avant, 1 à 3, auto (le jeu : selon le zoom)
 if (o.articule === '0') await page.evaluate(() => { __jeu.rendu().articule = null; });       // les soldats articulés (v0.105.0) éteints : le soldat équipé partout
 if (o.articule === 'sans-texture') await page.evaluate(() => { const r = __jeu.rendu(); r.articule = { ...r.articule, texture: false }; });       // les poses calculées par le nuanceur (avant l'étape 3 : la texture de poses)
+if (o.articule === 'sans-animations') await page.evaluate(() => { const r = __jeu.rendu(); r.articule = { ...r.articule, animations: false }; });       // la marche, le repos et le tir recalculés comme avant l'étape 4 (poseJeu)
 if (o.lumiere === '0') await page.evaluate(() => { const R = __jeu.rendu(); R.soleilSol = R.aoSol = R.abrisSol = R.flaquesSol = false; });
 if (o.carte === '1') await page.evaluate(() => { __jeu.rendu().ombresCarte = true; });
 if (o.ombres) await page.evaluate(() => { __jeu.rendu().ombresRelief = true; });

@@ -1,5 +1,5 @@
 // Le lecteur d'animations (js/lecteur-animations.js) : couches par canaux, fondu, miroir, refus.
-import { nouvelEtat, etatAnimation, termine } from '../js/lecteur-animations.js';
+import { nouvelEtat, etatAnimation, echantillonTab, termine } from '../js/lecteur-animations.js';
 import { animationsOrigine } from '../js/animations-store.js';
 import { CANAUX, NOMS_CHAMPS } from '../js/data/poses-soldat.js';
 import { FONDU, CANAUX_TIR_EN_MARCHE } from '../js/data/lecteur-animations.js';
@@ -9,7 +9,7 @@ const animations = animationsOrigine();
 const par = n => animations.find(a => a.nom.startsWith(n));
 const MARCHE = par('marche').nom, TIR = par('tir').nom, REPOS = par('repos').nom;
 const proche = (a, b, eps = 1e-9) => Math.abs(a - b) < eps;
-const lire = (couches, t, etat = nouvelEtat(), opt = {}) => etatAnimation(etat, couches, t, { animations, ...opt });
+const lire = (couches, t, etat = nouvelEtat(), opt = {}) => ({ ...etatAnimation(etat, couches, t, { animations, ...opt }) });       // (une copie : la pose rendue est celle de l'état, réécrite à l'appel suivant)
 
 group('lecteur d\'animations — poses');
 test('les canaux couvrent exactement les champs d\'une pose', () => {
@@ -103,4 +103,16 @@ test('le gaucher est le miroir exact du droitier, et l\'état reste de droitier'
   for (const c of NOMS_CHAMPS) assert.ok(proche(g[c], att[c]), c);
   const d2 = lire(couches, 0.5, etat);
   for (const c of NOMS_CHAMPS) assert.ok(proche(d2[c], d[c]), c);
+});
+
+group('lecteur d\'animations — le cœur en tableaux');
+test('echantillonTab refait echantillon, champ par champ, à 1e-12 près (les trois modes, avant, dans et après la durée)', () => {
+  const modes = ['boucle', 'unefois', 'allerretour'];
+  for (const a of animations) for (const mode of modes) {
+    const anim = { ...a, mode };
+    for (let t = -0.7; t < 2.9; t += 0.0137) {
+      const O = echantillon(anim, t), T = echantillonTab(anim, t);
+      NOMS_CHAMPS.forEach((c, j) => assert.ok(Math.abs(O[c] - T[j]) < 1e-12, `${a.nom} ${mode} t=${t} ${c}`));
+    }
+  }
 });

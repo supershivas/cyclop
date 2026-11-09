@@ -5,6 +5,7 @@ import * as SH from './shaders.js?v=0.131.0';
 import { creerGeometries } from './geometries.js?v=0.131.0';
 import { classeDuRang } from '../data/grades.js?v=0.131.0';
 import { creerEquipeArticulee } from './soldat-articule.js?v=0.131.0';
+import { creerJeuAnimations } from './animation-jeu.js?v=0.131.0';
 
 // `THREE`, `scene`, `col`, `solUniforms` (`uSol`, `uTaille` : la texture du sol, que l'ombre d'un soldat reprend), `styleSoldat` (le style de près, comparé au labo),
 // `grades` (v0.68.0 : une variante de `GRADES`, data/grades.js, ou null : tous pareils) et `rangDe(B, id, reg)` (le rang d'un homme, bataille.js) ; `surface(x, z)` et `surfaceLisse(x, z)` (la hauteur du sol, lissée pour qui marche), `solY` (la hauteur moyenne du sol) et `POINTS_JUSQUA` (le zoom où un soldat n'est
@@ -27,8 +28,8 @@ export function creerSoldats({ THREE, scene, col, solUniforms, styleSoldat, grad
   // Les soldats articulés (Jérôme, v0.105.0 ; labo « Fabrique de soldats ») : de près (`articule.des` pixels par mètre) les `articule.max` hommes les plus proches du centre de la vue prennent le squelette, le visage, le casque
   // et les galons de `aspect` (js/aspect-soldat.js) ; ils quittent les tampons des soldats équipés (et des gradés, des pansements) : un homme n'est dessiné qu'une fois. Créés au premier besoin (un objet de plus
   // décale les tirages d'identifiants de three, donc les images de référence). `aspectDe(B, id, camp)` : l'aspect d'un homme (main.js : son numéro de campagne, la graine d'identité, son âge et son rang) ; gardé par numéro.
-  let artCfg = null, aspectDe = null, EQ = null, EQs = { moyen: null, fin: null }, artSel = null, candI = null, candD = null, artVus = 0;
-  const aspects = new Map(), hArt = { x: 0, y: 0, z: 0, camp: 0, vit: 0, tir: 0, tapi: 0, couche: 0, blessure: 0, cap: 0, temps: 0, aspect: null };
+  let artCfg = null, aspectDe = null, EQ = null, EQs = { moyen: null, fin: null }, artSel = null, candI = null, candD = null, artVus = 0, animJeu = null;
+  const aspects = new Map(), hArt = { x: 0, y: 0, z: 0, camp: 0, vit: 0, tir: 0, tapi: 0, couche: 0, blessure: 0, cap: 0, temps: 0, aspect: null, coup: 0, pose: null };
   let cap = 0, posArr = null, campArr = null, vitArr = null, tirArr = null, soldatsInst = null, soldatsDetail = null, soldatsLeger = null, soldatsPoints = null, attrsI = null, attrsP = null;
   const VARIATION = { taille: 0.07, largeur: 0.14 };      // la taille (±7 %) et la largeur (±14 %) d'un homme autour de la boîte de référence : le dessin seulement (Jérôme, v0.69.0)
   const TAPI = 0.5;                        // la peur au-delà de laquelle un homme se tapit (le dessin seulement ; on ne tire plus à 0,85)
@@ -77,7 +78,7 @@ export function creerSoldats({ THREE, scene, col, solUniforms, styleSoldat, grad
     if (lettres) { scene.remove(lettres); lettres.geometry.dispose(); lettres = null; }
     for (const k of ['moyen', 'fin']) if (EQs[k]) { for (const m of EQs[k].meshes) scene.remove(m); EQs[k].dispose(); EQs[k] = null; }
     EQ = null;
-    aspects.clear(); artSel = new Uint8Array(capacite); candI = new Int32Array(capacite); candD = new Float32Array(capacite);
+    aspects.clear(); if (animJeu) animJeu.vider(); artSel = new Uint8Array(capacite); candI = new Int32Array(capacite); candD = new Float32Array(capacite);
     cap = capacite;
     posArr = new Float32Array(cap * 3); campArr = new Float32Array(cap); vitArr = new Float32Array(cap); tirArr = new Float32Array(cap * 2);
     attrsI = [new THREE.InstancedBufferAttribute(posArr, 3), new THREE.InstancedBufferAttribute(campArr, 1), new THREE.InstancedBufferAttribute(vitArr, 1), new THREE.InstancedBufferAttribute(tirArr, 2)];
@@ -331,6 +332,7 @@ export function creerSoldats({ THREE, scene, col, solUniforms, styleSoldat, grad
       }
       EQ = EQs[niv];
       if (EQ) EQ.debut();
+      if (animJeu) animJeu.debut();
     }
     for (let i = 0; i < n; i++) {
       const x = A.x[i], y = A.y[i];
@@ -393,6 +395,7 @@ export function creerSoldats({ THREE, scene, col, solUniforms, styleSoldat, grad
         hArt.vit = v < 0 ? 0 : v; hArt.tapi = v < 0 ? 1 : 0;
         hArt.tir = tx > 0 ? Math.min(1, tx * 2.5) : tx <= -2 ? -tx : tx < -0.5 ? -1 : 0;       // (−1 le feu retenu : le fusil baissé ; de 2 à 3 la mêlée : 2 + la poussée, tourné vers l'adversaire : `aTir` du soldat équipé)
         hArt.cap = tirArr[k * 2 + 1]; hArt.blessure = blessArr[k]; hArt.aspect = c.a; hArt.temps = tAnim;
+        hArt.coup = tx > 0 ? tx : 0; hArt.pose = animJeu ? animJeu.pose(A.id[i], hArt, tAnim) : null;       // la marche, le repos et le tir viennent du lecteur d'animations (null : poseJeu)
         EQ.ajouter(hArt);
         continue;
       }
@@ -400,6 +403,7 @@ export function creerSoldats({ THREE, scene, col, solUniforms, styleSoldat, grad
     }
     // les maillages des hommes articulés : seulement de près, seulement s'il y en a
     artVus = arti && EQ ? EQ.fin() : 0;
+    if (animJeu) animJeu.fin();
     if (!vide()) for (const k of ['moyen', 'fin']) if (EQs[k]) for (const m of EQs[k].meshes) m.visible = artVus > 0 && EQs[k] === EQ;
     anGeo.setDrawRange(0, ka); anGeo.attributes.position.needsUpdate = true; anGeo.attributes.aTon.needsUpdate = true; anMat.uniforms.uTaille.value = Math.max(5, Math.round(p * 1.5));
     if (!vide()) anneaux.visible = ka > 0;
@@ -450,7 +454,7 @@ export function creerSoldats({ THREE, scene, col, solUniforms, styleSoldat, grad
     survoler(reg) { survolReg = reg; },                            // le régiment qu'un anneau à la couleur de son camp désigne
     get legere() { return legerActif; }, set legere(v) { legerActif = !!v; },     // la silhouette allégée (la mesure du coût l'éteint)
     get sansInterface() { return sansInterface; }, set sansInterface(v) { sansInterface = !!v; },      // le décor de l'écran titre : aucune lettre de capitaine, rien qui soit de l'interface (Jérôme, v0.100.0)
-    get articule() { return artCfg; }, set articule(v) { artCfg = v; },            // { des, max, ombrage } ou null : les soldats articulés de près
+    get articule() { return artCfg; }, set articule(v) { artCfg = v; animJeu = v && v.texture !== false && v.animations !== false ? creerJeuAnimations() : null; },            // { des, max, ombrage } ou null : les soldats articulés de près
     set aspectDe(f) { aspectDe = f; },
     get articulesVus() { return artVus; },
     get gradesVus() { return gradesVus; },                          // les gradés dessinés (pour les stats et le labo)

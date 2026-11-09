@@ -15,6 +15,7 @@ export function poseNeutre() {
   p.fusilY = FUSIL_REPOS.pivot;
   return p;
 }
+const NEUTRE = poseNeutre();       // lue sans copie par `melanger` (250 fois par image dans le jeu) ; jamais modifiée
 
 // L'état du jeu → la pose, comme le nuanceur : { vit 0..1, phase (rad), tir 0..1, tapi 0..1, couche 0|1, retenu, melee, pouss 0..1, pistolet }
 export function poseDe({ vit = 0, phase = 0, sinus = null, cosinus = null, tir = 0, tapi = 0, couche = 0, retenu = false, melee = false, pouss = 0, pistolet = false } = {}) {
@@ -59,7 +60,7 @@ export function poseDe({ vit = 0, phase = 0, sinus = null, cosinus = null, tir =
 
 // Deux poses mélangées : (1 − k) a + k b, champ par champ ; un champ absent d'une pose vaut celui de la neutre
 export function melanger(a, b, k) {
-  const N = poseNeutre(), r = {};
+  const N = NEUTRE, r = {};
   for (const c of NOMS_CHAMPS) { const x = a[c] ?? N[c], y = b[c] ?? N[c]; r[c] = x + (y - x) * k; }
   return r;
 }

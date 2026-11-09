@@ -514,7 +514,7 @@ export function creerEquipeArticulee(THREE, col, { capacite, ombrage = 0, partag
       ombres.ecrire(nO++, h);
       const camp = (h.camp ?? 0) & 1;
       let pose = null;      // calculée une fois pour l'homme, copiée dans la texture de chaque maillage qui le dessine
-      if (texturePoses) { const ph = phaseDe(h); pose = poseJeu(h, Math.fround(Math.sin(ph)), Math.fround(Math.cos(ph)), scratch); }
+      if (texturePoses) { if (h.pose) pose = h.pose; else { const ph = phaseDe(h); pose = poseJeu(h, Math.fround(Math.sin(ph)), Math.fround(Math.cos(ph)), scratch); } }       // `h.pose` : la pose du lecteur d'animations (animation-jeu.js), s'il en a une
       for (const g of groupes) if (g.n < capacite && voir(g.code, h.aspect, camp, h.blessure ?? 0)) g.lot.ecrire(g.n++, h, pose);
       return true;
     },
