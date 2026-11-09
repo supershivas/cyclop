@@ -28,7 +28,8 @@ export function creerSoldats({ THREE, scene, col, solUniforms, styleSoldat, grad
   // Les soldats articulés (Jérôme, v0.105.0 ; labo « Fabrique de soldats ») : de près (`articule.des` pixels par mètre) les `articule.max` hommes les plus proches du centre de la vue prennent le squelette, le visage, le casque
   // et les galons de `aspect` (js/aspect-soldat.js) ; ils quittent les tampons des soldats équipés (et des gradés, des pansements) : un homme n'est dessiné qu'une fois. Créés au premier besoin (un objet de plus
   // décale les tirages d'identifiants de three, donc les images de référence). `aspectDe(B, id, camp)` : l'aspect d'un homme (main.js : son numéro de campagne, la graine d'identité, son âge et son rang) ; gardé par numéro.
-  let artCfg = null, aspectDe = null, EQ = null, EQs = { moyen: null, fin: null }, artSel = null, candI = null, candD = null, artVus = 0, animJeu = null;
+  let artCfg = null, aspectDe = null, EQ = null, EQs = { moyen: null, fin: null }, artSel = null, candI = null, candD = null, artVus = 0, animJeu = null, listeAnim = null;
+  const refaireAnim = () => { animJeu = artCfg && artCfg.texture !== false && artCfg.animations !== false ? creerJeuAnimations(listeAnim ? { animations: listeAnim } : {}) : null; };
   const aspects = new Map(), hArt = { x: 0, y: 0, z: 0, camp: 0, vit: 0, tir: 0, tapi: 0, couche: 0, blessure: 0, cap: 0, temps: 0, aspect: null, coup: 0, pose: null };
   let cap = 0, posArr = null, campArr = null, vitArr = null, tirArr = null, soldatsInst = null, soldatsDetail = null, soldatsLeger = null, soldatsPoints = null, attrsI = null, attrsP = null;
   const VARIATION = { taille: 0.07, largeur: 0.14 };      // la taille (±7 %) et la largeur (±14 %) d'un homme autour de la boîte de référence : le dessin seulement (Jérôme, v0.69.0)
@@ -454,7 +455,8 @@ export function creerSoldats({ THREE, scene, col, solUniforms, styleSoldat, grad
     survoler(reg) { survolReg = reg; },                            // le régiment qu'un anneau à la couleur de son camp désigne
     get legere() { return legerActif; }, set legere(v) { legerActif = !!v; },     // la silhouette allégée (la mesure du coût l'éteint)
     get sansInterface() { return sansInterface; }, set sansInterface(v) { sansInterface = !!v; },      // le décor de l'écran titre : aucune lettre de capitaine, rien qui soit de l'interface (Jérôme, v0.100.0)
-    get articule() { return artCfg; }, set articule(v) { artCfg = v; animJeu = v && v.texture !== false && v.animations !== false ? creerJeuAnimations() : null; },            // { des, max, ombrage } ou null : les soldats articulés de près
+    get articule() { return artCfg; }, set articule(v) { artCfg = v; refaireAnim(); }, set animations(v) { listeAnim = v; refaireAnim(); },       // `animations` : la liste que joue le lecteur (main.js : celles d'origine remplacées par les publiées)
+                // { des, max, ombrage } ou null : les soldats articulés de près
     set aspectDe(f) { aspectDe = f; },
     get articulesVus() { return artVus; },
     get gradesVus() { return gradesVus; },                          // les gradés dessinés (pour les stats et le labo)

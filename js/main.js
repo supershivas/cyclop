@@ -33,6 +33,7 @@ import { numeroCampagne } from './bataille.js?v=0.131.0';
 import { ARTICULE } from './data/aspect-soldat.js?v=0.131.0';
 import { refusCorvee, refusTransfert, planifierTransfert, annulerTransfert } from './nuit.js?v=0.131.0';
 import { creerGestion } from './hud/regiments.js?v=0.131.0';
+import { chargerAnimationsJeu } from './animations-store.js?v=0.131.0';
 import { chargerContenu, appliquerSecteurs, appliquerCartes, appliquerCampagne } from './design-store.js?v=0.131.0';
 import { ordonnerChar, refusOrdreChar } from './chars.js?v=0.131.0';
 import { orienterNid, refusOrienterNid, raisonInactif } from './nids.js?v=0.131.0';
@@ -104,7 +105,7 @@ function replierCarte(replie) {
 }
 replierCarte(prefs.carte === false);
 $('carte-bascule').onclick = e => { const r = !$('carte').classList.contains('replie'); replierCarte(r); prefs.carte = !r; store.save('prefs', prefs); e.currentTarget.blur(); };
-const { reglages: R, secteurs: retouchesSecteurs, cartes: cartesPerso, campagne: cartesCampagne } = await chargerContenu();
+const [{ reglages: R, secteurs: retouchesSecteurs, cartes: cartesPerso, campagne: cartesCampagne }, animationsJeu] = await Promise.all([chargerContenu(), chargerAnimationsJeu()]);
 appliquerCartes(SECTEURS, cartesPerso);              // les cartes à vous (l'atelier) s'ajoutent à la liste des parties
 appliquerSecteurs(SECTEURS, retouchesSecteurs);       // les retouches de l'atelier (publiées, puis celles de ce navigateur) : le terrain de départ des secteurs
 appliquerCampagne(CAMPAGNE, SECTEURS, cartesCampagne);     // la carte de chaque bataille de la campagne (l'atelier, v0.42.0)
@@ -184,6 +185,7 @@ rendu.aspectDe = (Bt, id, camp) => {
   const { qui } = lecture.quiEst(Bt, id), nous = camp === NOUS, numero = nous ? numeroCampagne(Bt.etat, id) : id;
   return aspect(numero, camp, nous ? Bt.etat.graineIdentite : Bt.etat.graine, qui.rang, qui.age, caracteristiques(numero, camp));
 };
+rendu.animations = animationsJeu;       // les animations d'origine, remplacées nom pour nom par celles que l'atelier a publiées
 rendu.articule = ARTICULE;
 rendu.finesseDes = 4;      // le sol au demi-mètre à partir de 4 pixels par mètre (Jérôme, v0.52.3 ; au-dessous, tout dézoomé, il coûterait jusqu'à 3,4 fois plus de triangles)
 // les retours sur le champ : le fanion et la réponse des hommes d'un ordre en terrain libre, l'impact des obus en trois temps (v0.41.3)

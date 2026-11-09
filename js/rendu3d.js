@@ -944,7 +944,7 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
     survoler(reg, troncons) { soldats.survoler(reg); survolTroncons = troncons; },
     surligner(s) { troncons.surligner(s); },
     get legere() { return soldats.legere; }, set legere(v) { soldats.legere = v; },
-    get articule() { return soldats.articule; }, set articule(v) { soldats.articule = v; }, set aspectDe(f) { soldats.aspectDe = f; },      // les soldats articulés de près (v0.105.0)
+    get articule() { return soldats.articule; }, set articule(v) { soldats.articule = v; }, set animations(v) { soldats.animations = v; }, set aspectDe(f) { soldats.aspectDe = f; },      // les soldats articulés de près (v0.105.0)
     fumer(x, z) { eclats.fumer(x, z); },
     reglerBuissons(o) { vegetation.reglerBuissons(o); },        // les buissons variés (null : ceux d'avant) ; le labo
     reglerArbres(o) { vegetation.regler(o); },           // les arbres variés (null : ceux d'avant) ; le labo et la mesure

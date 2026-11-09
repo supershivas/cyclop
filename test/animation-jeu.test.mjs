@@ -105,3 +105,24 @@ test('le lecteur coûte moins d\'1 ms pour 250 hommes (V8 chaud, 3 sur 4 marchen
   console.log(`    ${ms.toFixed(3)} ms pour 250 hommes`);
   assert.ok(ms < 1, `${ms} ms`);
 });
+
+group('animations du jeu — le fichier publié');
+import { fusionAnimations, fichierAnimations, animationsOrigine } from '../js/animations-store.js';
+test('sans fichier publié (absent, illisible, vide) : les animations d\'origine', () => {
+  for (const d of [null, {}, { format: 'autre' }, { format: 'cyclopeen-animations', animations: [] }]) assert.equal(fusionAnimations(d).animations.length, ANIMATIONS.length);
+});
+test('une animation publiée remplace celle d\'origine de même nom ; les autres restent ; une nouvelle s\'ajoute', () => {
+  const o = animationsOrigine(), tir = { ...o.find(a => a.nom === ANIM_JEU.tir), duree: 2 }, neuve = { ...o[0], nom: 'accroupi' };
+  const { animations, remplacees } = fusionAnimations(fichierAnimations([tir, neuve]));
+  assert.deepEqual(remplacees, [ANIM_JEU.tir]);
+  assert.equal(animations.find(a => a.nom === ANIM_JEU.tir).duree, 2);
+  for (const nom of [ANIM_JEU.marche, ANIM_JEU.repos, 'accroupi']) assert.ok(animations.some(a => a.nom === nom), nom);
+  assert.equal(animations.length, ANIMATIONS.length + 1);
+});
+test('le jeu joue l\'animation publiée : un tir de 2 s dure 2 s', () => {
+  const o = animationsOrigine(), tir = { ...o.find(a => a.nom === ANIM_JEU.tir), duree: 2 };
+  const j = creerJeuAnimations({ animations: fusionAnimations(fichierAnimations([tir])).animations }); j.debut();
+  vers(j, 1, {}, 0); vers(j, 1, { coup: 1, tir: 1 }, 0.1);
+  vers(j, 1, {}, 1.5); assert.ok(j.hommes.get(1).tir, 'encore en cours à 1,4 s');
+  vers(j, 1, {}, 2.2); assert.equal(j.hommes.get(1).tir, null);
+});
