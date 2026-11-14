@@ -5,7 +5,8 @@
 // Forme : { jour, jours, camps: [nous, eux], tronconsTenus: [nous, eux], manque: [...] }, chaque camp :
 //   { initial, debout, blesses, morts, evacues, mortsJour, mortsParJour: [..], prisParJour: [..], avions: { sorties, perdus, restent },
 //     effectifParJour: [..] (les hommes vivants au soir de chaque jour, le jour même compris), blessesParJour: [..] (les nouvelles blessures de chaque jour),
-//     regiments: [{ numero, nom, initial, debout, blesses, morts, evacues, mortsJour, moral, niveau: 'tient' | 'ebranle' | 'deroute',
+//     mortsParNuit: [{ jour, melee, corvee, blessures }] (les morts de chaque nuit passée, par cause),
+//     regiments: [{ id, numero, nom, vivres, initial, debout, blesses, morts, evacues, mortsJour, moral, niveau: 'tient' | 'ebranle' | 'deroute',
 //                   historique: [{ jour, vivants, blesses, morts, moral }] }] }   (l'historique vient de `etat.histo`, un instantané par soir, v0.120.0)
 // `camp` : le camp du joueur (0 : nous) ; `camps[0]` est toujours le sien.
 
@@ -33,7 +34,7 @@ export function lireJournee(B, camp = 0, R = B.R) {
       const releves = r.releves || 0;
       const historique = historiqueDe(H, r, jour, blesses);
       return {
-        historique, numero: k + 1, nom: r.nom || null, initial: r.initial, debout: Math.max(0, r.effectif - blesses), blesses, morts: r.pertes,
+        historique, id: r.id, numero: k + 1, nom: r.nom || null, vivres: r.vivres ?? null, initial: r.initial, debout: Math.max(0, r.effectif - blesses), blesses, morts: r.pertes,
         evacues: Math.max(0, r.initial - r.effectif - r.pertes - releves), mortsJour: r.pertes - (r.debut?.pertes || 0), moral: r.moral, niveau: niveauMoral(r, R),
       };
     });
@@ -43,9 +44,11 @@ export function lireJournee(B, camp = 0, R = B.R) {
     const cumulBlesses = [...H.filter(h => h.jour < jour).map(h => h.blesses[c]), etat.blesses[c]];
     const blessesParJour = cumulBlesses.map((v, k) => v - (cumulBlesses[k - 1] ?? 0));
     const [sorties, perdus] = etat.avionsJour[jour - 1]?.[c] ?? [0, 0];
+    // les morts de chaque nuit passée, par cause (v0.132.0 : le survol du bilan du soir les dit) : { jour, melee, corvee, blessures }
+    const mortsParNuit = (etat.nuits || []).map(n => ({ jour: n.jour, melee: n.bilan?.[c]?.mortsMelee ?? 0, corvee: n.bilan?.[c]?.mortsCorvee ?? 0, blessures: n.bilan?.[c]?.mortsBlesses ?? 0 }));
     return {
       initial: somme('initial'), debout: somme('debout'), blesses: somme('blesses'), morts: etat.pertes[c], evacues: somme('evacues'),
-      mortsJour: mortsParJour[jour - 1] ?? 0, mortsParJour, effectifParJour, blessesParJour, prisParJour: etat.prises.map(p => p[c]),
+      mortsJour: mortsParJour[jour - 1] ?? 0, mortsParJour, mortsParNuit, effectifParJour, blessesParJour, prisParJour: etat.prises.map(p => p[c]),
       avions: { sorties, perdus, restent: etat.avions?.[c]?.filter(pv => pv > 0).length ?? 0 }, regiments,
     };
   };

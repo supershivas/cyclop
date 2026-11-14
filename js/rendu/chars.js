@@ -1,8 +1,8 @@
 // Les chars d'assaut dessinés (Jérôme, v0.47.0) : un volume par char de `B.etat.chars` (engins.js : le Schneider), posé sur le sol, incliné selon la pente sous lui,
 // tourné vers sa route ; les chenilles défilent quand il avance, une épave fume. Le dessin seulement : tout vient de l'état de la bataille, rien n'y est écrit.
 // Fabrique `creerChars({ THREE, scene, bataille: () => B, hauteur, fumer })` : la bataille change à chaque partie, on la lit à chaque image.
-import { atelier, schneider } from './engins.js?v=0.131.0';
-import { monterEpaveChar } from './epaves.js?v=0.131.0';
+import { atelier, schneider } from './engins.js?v=0.132.0';
+import { monterEpaveChar } from './epaves.js?v=0.132.0';
 
 const FABRIQUES = { schneider };
 
@@ -54,6 +54,7 @@ export function creerChars({ THREE, scene, bataille, hauteur, fumer }) {
         m.fumee -= dt; if (m.fumee <= 0) { m.fumee = 0.25; fumer(c.x, c.y); }
         continue;
       }
+      if (m.epave) { m.pivot.remove(m.epave.racine); m.epave = null; m.pivot.add(m.modele.groupe); }      // l'épave relevée par le génie (v0.132.0) : le char revient
       m.modele.maj(dt, vit);
     }
     for (const [id, m] of modeles) if (!vus.has(id)) { scene.remove(m.pivot); modeles.delete(id); }

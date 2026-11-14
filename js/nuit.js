@@ -10,15 +10,15 @@
    - (v0.38.3) Les caillebotis et le coup de main sont retirés ; (v0.77.1) réparer la tranchée, inhumer les morts et creuser des abris aussi (docs/archives/corvees-retirees.md) : quatre corvées.
    - (v0.39.0) La mêlée se joue dans la nuit (`meleeNuit`) : un tronçon où les deux camps sont face à face au soir est tranché à l'aube, et les
      régiments au contact (`contactDe`) ne reçoivent aucune corvée. */
-import { hash2 } from './lib/rng.js?v=0.131.0';
-import { RENFORTS } from './data/renforts.js?v=0.131.0';
-import { modif, renfortsDe, refusEquiper, equiper } from './camp.js?v=0.131.0';
-import { CORVEES } from './data/corvees.js?v=0.131.0';
-import { EQUIPEMENTS } from './data/batiments.js?v=0.131.0';
-import { REGIMENTS } from './data/lexique.js?v=0.131.0';
-import { ajouterSoldat, poserCaracs, lireCaracs, place } from './army.js?v=0.131.0';
-import { departCaracs } from './identite.js?v=0.131.0';
-import { y0En } from './tranchees.js?v=0.131.0';
+import { hash2 } from './lib/rng.js?v=0.132.0';
+import { RENFORTS } from './data/renforts.js?v=0.132.0';
+import { modif, renfortsDe, refusEquiper, equiper } from './camp.js?v=0.132.0';
+import { CORVEES } from './data/corvees.js?v=0.132.0';
+import { EQUIPEMENTS } from './data/batiments.js?v=0.132.0';
+import { REGIMENTS } from './data/lexique.js?v=0.132.0';
+import { ajouterSoldat, poserCaracs, lireCaracs, place } from './army.js?v=0.132.0';
+import { departCaracs } from './identite.js?v=0.132.0';
+import { y0En } from './tranchees.js?v=0.132.0';
 
 export const corvee = id => CORVEES.find(c => c.id === id);
 
@@ -289,7 +289,7 @@ function retours(B, rng, bilan) {
 
 /* Les transferts de la nuit (Jérôme, v0.116.0 : « fusionner deux régiments », « glisser-déposer des soldats d'un régiment vers un autre »)
    Le joueur prépare, la nuit, des transferts { de, vers, n } (n = -1 : tous les hommes restants, donc la fusion) ; ils sont rangés dans `etat.transferts[camp]` et s'exécutent à l'aube
-   (`appliquerTransferts`, après les corvées, la relève et les retours) : les soldats changent de régiment et se retrouvent à leur nouvelle place. Logique pure, sans hasard. */
+   (`appliquerTransferts`, après les corvées, la relève et les retours) : les soldats changent de régiment et marchent, au petit matin, jusqu'à leur nouvelle place. Logique pure, sans hasard. */
 // Les hommes d'un régiment que les transferts déjà prévus n'ont pas encore pris (-1 si l'un d'eux prend tout)
 export function disponibles(B, camp, id) {
   const reg = B.etat.regiments[id];
@@ -329,9 +329,9 @@ export function annulerTransfert(B, camp, k) {
   liste.splice(k, 1);
   return { ok: true };
 }
-// À l'aube : les hommes passent d'un régiment à l'autre, des plus valides aux blessés, des derniers rangs aux premiers ; les rangs du régiment qui donne se resserrent, ceux du nouveau venu s'allongent
+// À l'aube : les hommes passent d'un régiment à l'autre, des plus valides aux blessés, des derniers rangs aux premiers ; les rangs du régiment qui donne se resserrent, ceux du nouveau venu s'allongent ; chacun marche ensuite vers sa nouvelle place
 function appliquerTransferts(B, bilan) {
-  const { etat, armee: A, terrain: T } = B, pl = [0, 0], vus = new Set();
+  const { etat, armee: A } = B, vus = new Set();
   for (const camp of [0, 1]) {
     for (const t of [...etat.transferts[camp]].sort((x, y) => (x.n < 0) - (y.n < 0))) {
       const a = etat.regiments[t.de], b = etat.regiments[t.vers];
@@ -342,12 +342,8 @@ function appliquerTransferts(B, bilan) {
       const m = t.n < 0 ? pris.length : Math.min(t.n, pris.length);
       let slot = 0;
       for (let i = 0; i < A.n; i++) if (!A.mort[i] && A.reg[i] === b.id) slot = Math.max(slot, A.slot[i] + 1);
-      for (const i of pris.slice(0, m)) {
-        A.reg[i] = b.id; A.slot[i] = slot++;
-        place(b.ordre, A.slot[i], pl);
-        const ci = Math.min(T.H - 1, Math.max(0, pl[1] | 0)) * T.W + Math.min(T.W - 1, Math.max(0, pl[0] | 0));
-        if (!T.profond[ci]) { A.x[i] = pl[0]; A.y[i] = pl[1]; A.vx[i] = 0; A.vy[i] = 0; A.coince[i] = 0; }
-      }
+      // ils ne sont pas posés à leur nouvelle place : au petit matin, on les voit y marcher (Jérôme, v0.132.0 ; avant, ils y apparaissaient)
+      for (const i of pris.slice(0, m)) { A.reg[i] = b.id; A.slot[i] = slot++; A.coince[i] = 0; }
       a.effectif -= m; a.initial -= m; b.effectif += m; b.initial += m;
       bilan[camp].transferes += m; vus.add(a.id);
     }

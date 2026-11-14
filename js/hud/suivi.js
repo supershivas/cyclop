@@ -2,12 +2,12 @@
 // v0.124.0 : l'avion au bout de l'hélice et tourné vers le sol, l'accident vécu dans l'avion, le char sous le canon qui tremble et montre l'explosion, le suivi au-delà du bord).
 // Deux façons de coller la caméra à un engin :
 //  · « cinéma » : la caméra tourne lentement autour de lui (de l'arrière vers l'avant), près du sol, deux bandes noires en haut et en bas ; il reste au centre, qu'il roule ou qu'il vole ;
-//  · « à la personne » : la caméra est à son bord et regarde où il regarde. Char : sous son canon, qu'elle suit vers sa cible ; à chaque tir elle tremble, puis file vers l'explosion en téléobjectif.
+//  · « à la personne » : la caméra est à son bord et regarde où il regarde. Char : derrière lui, au-dessus (v0.132.0 : sous le canon, on était dans les chenilles), tournée vers sa cible ; à chaque tir elle tremble, puis file vers l'explosion en téléobjectif.
 //    Poste : à l'œil du servant, dans l'axe du cône. Avion : au bout de l'hélice (rien du fuselage au premier plan), penchée vers le sol pour voir les mitraillages ; abattu, on reste à bord : le
 //    tonneau, l'écran rouge, jusqu'à l'écrasement.
 // Rien de neuf dans le moteur que quelques réglages de la vue (`vue.haut`, `dist`, `portee`, `hors`, `roulis`, `secousse`, rendu3d.js) : la caméra du jeu orbite déjà autour d'un point visé, ici ce point
 // suit l'engin. Le dessin seulement : aucune lecture n'écrit dans la bataille. La vue se libère d'un geste sur la caméra (déplacer, tourner), Échap, le clic droit, ou le bouton ; la vue d'avant revient.
-import { positionDe } from '../avions.js?v=0.131.0';
+import { positionDe } from '../avions.js?v=0.132.0';
 
 const SOL_Y = 3;           // le niveau moyen du sol que vise la caméra (rendu3d.js : `SOL_Y`), pour calculer `vue.haut`
 const PORTEE = 700;        // m : le plan lointain d'une vue verrouillée (au ras du sol, la vue porte loin)
@@ -16,7 +16,10 @@ const HORS = 160;          // m : de combien le point visé peut dépasser le bo
 const PERSONNE = { dist: 0.6, zoom: 6, garde: 0.35 };      // garde : le sol est franchi par 0,35 m, pas les 1,5 m de la caméra libre : l'œil d'un char est bas
 const CINEMA = { tangage: [0.3, 0.1, 0.11], periode: 36 };
 const BOUT = 4.6;          // m : du centre de l'avion au-delà du disque de l'hélice : la caméra y est, le fuselage est derrière elle
-const CANON = { avant: 1.0, droite: 1.05, haut: 0.9 };      // m : le Schneider porte son 75 à droite (rendu/engins.js, [1,35 ; 1,2 ; 1,05]) ; la caméra est sous le tube, un peu en arrière de la bouche
+// m : l'œil de la vue « à la personne » d'un char (Jérôme, v0.132.0 : « elle nous met dans les chenilles, elle doit être en dehors du char ») : 8 m derrière lui, 3,6 m au-dessus du sol, penché de 0,2 rad ;
+// on voit le char entier de dos et ce qu'il vise. Essayés en captures et écartés : sous le canon (dans le flanc et les chenilles), sur le toit (la superstructure masque la moitié de l'image),
+// à l'épaule droite (le flanc remplit la gauche), au ras du flanc (rien du char, un fanion en premier plan)
+export const CANON = { avant: -8, droite: 0, haut: 3.6, tangage: 0.2 };
 const TIR = { secousse: 0.05, retombe: 5, vers: [0.18, 0.4], garde: 1.7, retour: 2.3, fin: 2.6, tele: 0.5 };      // s : la secousse, le coup d'œil vers l'explosion (l'arrivée, la tenue, le retour), le zoom du téléobjectif
 const ECRASE = 3.2;        // s qu'on reste sur l'épave avant de rendre la vue
 
@@ -31,7 +34,7 @@ function cibleDe(B, genre, id) {
     const cap = c.cap ?? Math.atan2(c.hy, c.hx), co = Math.cos(cap), si = Math.sin(cap);
     const px = c.x + co * CANON.avant - si * CANON.droite, py = c.y + si * CANON.avant + co * CANON.droite;
     const vise = c.vise && c.etat !== 'detruit' ? c.vise : null, regard = vise ? Math.atan2(vise[1] - py, vise[0] - px) : cap;
-    return { x: c.x, y: c.y, cap, regard: 1.6, zoom: 6, nom: c.etat === 'detruit' ? 'Épave de char' : 'Char', camp: c.camp, perso: { x: px, y: py, h: CANON.haut, cap: regard, tangage: 0.04 } };
+    return { x: c.x, y: c.y, cap, regard: 1.6, zoom: 6, nom: c.etat === 'detruit' ? 'Épave de char' : 'Char', camp: c.camp, perso: { x: px, y: py, h: CANON.haut, cap: regard, tangage: CANON.tangage } };
   }
   if (genre === 'nid') {
     const n = B.etat.nids.find(k => k.id === id); if (!n) return null;

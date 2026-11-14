@@ -2,14 +2,14 @@
 // sapeurs ») ; ici, la fenêtre d'un bâtiment, posée au-dessus de lui quand on le choisit (v0.96.0 : « les options apparaissent au-dessus de chaque bâtiment au clic ; simplifier au maximum »), sur le modèle de la
 // fenêtre d'un régiment (`.reg-ouvert` : le titre et son niveau, une ligne de ce qu'il fait, des boutons de même largeur), et le bouton « Le camp » (la dotation, et la touche B). L'amélioration tient en un clic : le
 // choix du palier EST le bouton (« Tir de réglage · 3 pts »). Le texte long est dans l'infobulle. Lecture seule de l'état : les ordres passent par les fonctions que main.js donne.
-import { BATIMENTS, EQUIPEMENT } from '../data/batiments.js?v=0.131.0';
-import { CHARS, CHAR_PAR_DEFAUT, CHAR_DEPART } from '../data/chars.js?v=0.131.0';
-import { parcChars, refusCamp, campDe, charsDispo, modif, pvAvion, patients, renfortsDe, NIVEAU_MAX } from '../camp.js?v=0.131.0';
-import { peutDeployer, blessesDe } from '../bataille.js?v=0.131.0';
-import { avionsPrets, avionsRestants, positionDe } from '../avions.js?v=0.131.0';
-import { avionsAbimes, reparationFaite } from '../genie.js?v=0.131.0';
-import { MITRAILLAGE } from '../data/mitraillage.js?v=0.131.0';
-import { METEO } from '../data/meteo.js?v=0.131.0';
+import { BATIMENTS, EQUIPEMENT } from '../data/batiments.js?v=0.132.0';
+import { CHARS, CHAR_PAR_DEFAUT, CHAR_DEPART } from '../data/chars.js?v=0.132.0';
+import { parcChars, refusCamp, campDe, charsDispo, modif, pvAvion, patients, renfortsDe, NIVEAU_MAX } from '../camp.js?v=0.132.0';
+import { peutDeployer, blessesDe } from '../bataille.js?v=0.132.0';
+import { avionsPrets, avionsRestants, positionDe } from '../avions.js?v=0.132.0';
+import { avionsAbimes, reparationFaite } from '../genie.js?v=0.132.0';
+import { MITRAILLAGE } from '../data/mitraillage.js?v=0.132.0';
+import { METEO } from '../data/meteo.js?v=0.132.0';
 
 const el = (tag, props = {}, ...kids) => { const e = Object.assign(document.createElement(tag), props); e.append(...kids); return e; };
 
@@ -60,9 +60,9 @@ export function creerCampHud({ moi = () => 0, deployer = () => {}, bouton, papie
       const fiche = (nom, etat, vie, c) => `# ${nom}\n## ${etat}\nCoque : **${vie}** · canon de ${M.canon.calibre}, un obus tous les ${M.canon.recharge} s, portée ${M.canon.portee} m${c ? `\nVictimes : ${c.tues ?? 0} · réparations : ${c.repar ?? 0} · obus tirés : ${c.obus ?? 0}` : ''}`;
       mes.forEach((c, k) => {
         const mort = c.etat === 'detruit', etat = mort ? 'détruit' : c.etat === 'enlise' ? 'enlisé' : c.etat === 'arrive' ? 'à l\'arrêt' : 'en route', vie = Math.max(0, Math.round(c.pv / (c.pvMax || 1) * 100));
-        const b = el('button', { type: 'button', textContent: `Char ${k + 1} · ${etat}${mort ? '' : ` · ${vie} % · ${c.tues ?? 0} victime${(c.tues ?? 0) > 1 ? 's' : ''}`}`, onclick: () => { if (mort) return; centrer(c.x, c.y); choisirChar?.(c.id); } });
-        b.dataset.info = `${fiche(`Char ${k + 1}`, etat, `${vie} % (${Math.max(0, Math.round(c.pv))} / ${c.pvMax})`, c)}\n${mort ? '**Détruit : l\'épave reste sur le champ, il ne se répare pas.**' : 'Un clic : la vue va jusqu\'à lui et sa fiche s\'ouvre.'}`;
-        b.setAttribute('aria-disabled', mort ? 'true' : 'false');
+        const b = el('button', { type: 'button', textContent: `Char ${k + 1} · ${etat}${mort ? '' : ` · ${vie} % · ${c.tues ?? 0} victime${(c.tues ?? 0) > 1 ? 's' : ''}`}`, onclick: () => { centrer(c.x, c.y); if (!mort) choisirChar?.(c.id); } });
+        b.dataset.info = `${fiche(`Char ${k + 1}`, etat, `${vie} % (${Math.max(0, Math.round(c.pv))} / ${c.pvMax})`, c)}\n${mort ? (e.genies.some(g => g.char === c.id) ? '**Le génie relève l\'épave.**' : '**Détruit : le génie peut relever l\'épave** (Génie, touche 6, puis un clic sur elle) ; il repart à moitié de sa solidité. Un clic : la vue va jusqu\'à elle.') : 'Un clic : la vue va jusqu\'à lui et sa fiche s\'ouvre.'}`;
+        b.setAttribute('aria-disabled', 'false');
         liste.append(b);
       });
       const motifParc = e.phase !== 'jour' ? 'La nuit, les ordres attendent l\'aube.' : r > 0 ? `Le prochain char n'est pas prêt : encore ${r} s.` : `Pas encore sorti : touche 5 (ou le bouton Char) puis un clic sur le terrain, à plus de ${CHAR_DEPART} m de nos lignes.`;
@@ -101,7 +101,7 @@ export function creerCampHud({ moi = () => 0, deployer = () => {}, bouton, papie
     }
     if (niveau && cle === 'aerodrome') {
       const restants = avionsRestants(e, moi()), prets = avionsPrets(e, moi()), meteo = e.meteo[e.jour - 1], cloue = MITRAILLAGE.cloue.includes(meteo);
-      papier.append(el('div', { className: 'compte', textContent: `${restants} avion${restants > 1 ? 's' : ''} (${prets} au sol, ${restants - prets} en vol) · ${e.avions[moi()].map(pv => pv > 0 ? `${pv} pv` : 'perdu').join(', ')}${cloue ? ` · ${METEO[meteo].nom} : les avions restent au sol` : ''}` }));
+      papier.append(el('div', { className: 'compte', textContent: `${restants} avion${restants > 1 ? 's' : ''} (${prets} au sol, ${restants - prets} en vol) · ${e.avions[moi()].map(pv => pv > 0 ? `${Math.round(pv)} pv` : 'perdu').join(', ')}${cloue ? ` · ${METEO[meteo].nom} : les avions restent au sol` : ''}` }));
       // un bouton par avion de l'escadrille (v0.123.0) : en vol, il mène la vue jusqu'à lui et ouvre sa fiche ; au sol ou perdu, il est muet : ses chiffres et pourquoi on ne peut pas y aller
       const liste = el('div', { className: 'actions' }); liste.style.setProperty('--cols', 1); const max = pvAvion(e, moi());
       const pris = reparationFaite(e, moi()), occupe = k => e.genies.some(g => g.camp === moi() && g.avion === k);

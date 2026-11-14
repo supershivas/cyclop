@@ -24,7 +24,7 @@ question : tranche avec une valeur par défaut raisonnable et dis-le.
 
 - Toute question pour moi passe par `AskUserQuestion` (en tête de ce fichier).
 - Version, changelog, mise à jour automatique sans perte de partie (2, 4).
-- Écran titre sans sous-titre, réglages derrière une roue crantée (3).
+- Écran de chargement jusqu'à ce que le jeu soit prêt, puis écran titre sans sous-titre, réglages derrière une roue crantée (3).
 - Palette restreinte déclarée, échelle entière pour le pixel art (5, 7).
 - Cible d'affichage déclarée, et deux URL à chaque livraison (7, 20).
 - Clavier et pointeur au minimum, toutes les actions possibles des deux (8).

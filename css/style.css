@@ -323,7 +323,8 @@ dialog .reglage input { width: 20px; height: 20px; margin: 0; flex: none; accent
    du bas ; les colonnes passent l'une sous l'autre quand la place manque, la fiche défile alors dans sa hauteur (jamais de débordement de l'écran). Le bilan de l'aube garde le papier étroit d'avant. */
 .nuit:not(.aube) { position: fixed; left: 50%; top: calc(var(--jeu-cible) + 2 * var(--pas)); transform: translateX(-50%); z-index: 20; width: min(1080px, calc(100vw - 2 * var(--e4))); max-height: calc(100dvh - var(--jeu-cible) - 2 * var(--pas) - 104px); box-sizing: border-box; }
 .nuit-colonnes[hidden] { display: none; }
-.nuit-colonnes { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr)); gap: var(--e4) var(--e5); align-items: start; }
+.nuit-colonnes { display: grid; grid-template-columns: minmax(260px, 1fr) minmax(0, 2fr); gap: var(--e4) var(--e5); align-items: start; }
+@media (max-width: 900px) { .nuit-colonnes { grid-template-columns: minmax(0, 1fr); } }
 .nuit-col { min-width: 0; display: grid; gap: var(--pas); align-content: start; }
 .nuit-col h3 { margin: 0; padding-bottom: var(--pas); border-bottom: var(--e0) solid var(--jeu-fond); }
 .nuit-col p { margin: 0; }
@@ -331,14 +332,41 @@ dialog .reglage input { width: 20px; height: 20px; margin: 0; flex: none; accent
 .chiffres > div { border: var(--trait) solid var(--jeu-accent); padding: var(--pas); display: grid; gap: var(--e1); }
 .chiffres dt { font-size: var(--texte-petit); color: var(--jeu-accent); }
 .chiffres dd { margin: 0; font-size: var(--texte-grand); line-height: 1.1; }
-.nuit-regs { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--e1); margin-bottom: var(--pas); }
-.nuit-reg { display: grid; grid-template-columns: auto minmax(0, 1fr); column-gap: var(--pas); align-items: center; text-align: left; min-height: var(--jeu-cible); box-sizing: border-box; padding: 0 var(--pas); font-size: var(--texte-petit); }
-.nuit-reg b { grid-row: 1 / 3; font-size: var(--texte-grand); font-weight: normal; }
-.nuit-reg .nom { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.nuit-reg .corvee { color: var(--jeu-accent); }
-.nuit-reg.choisi .corvee, .nuit-reg.actif .corvee { color: inherit; }
-.nuit-reg.donne .corvee::after { content: ' ✓'; }
-.nuit-reg.tous { grid-column: 1 / -1; display: block; text-align: center; }
+/* Les régiments et leurs corvées (Jérôme, v0.132.0) : une rangée par régiment, la loupe, le nom, la barre debout / blessés et le moral ; dessous ses corvées, chacune avec son pictogramme */
+.nuit-regs { display: grid; gap: var(--pas); }
+.nr { display: grid; gap: var(--e1); padding-bottom: var(--pas); border-bottom: var(--trait) solid var(--jeu-accent); }
+.nr.choisi { box-shadow: inset var(--e1) 0 0 var(--jeu-fond); padding-left: var(--pas); }
+.nr-tete { display: grid; grid-template-columns: var(--jeu-cible) minmax(10ch, 16ch) minmax(0, 1fr) 56px 4ch; gap: var(--pas); align-items: center; }
+.nr-tous .nr-tete { grid-template-columns: minmax(0, 1fr); }
+.nuit button.nr-nom { display: flex; align-items: baseline; gap: var(--pas); min-width: 0; }
+.nuit button.nr-nom.tous { justify-content: center; align-items: center; }
+.nr-nom b { font-size: var(--texte-grand); font-weight: normal; }
+.nr-nom .nom { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.nr-barre { display: grid; gap: var(--e0); min-width: 0; font-size: var(--texte-petit); }
+.nr-barre .bi-boite, .nr-moral .bi-boite { line-height: 0; }
+.nr-chiffres { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.nr-moral { display: grid; gap: var(--e0); font-size: var(--texte-petit); color: var(--jeu-accent); width: 56px; }
+.nr-moral .bi { width: 56px; height: 10px; }
+.nr-barre .bi { height: 12px; }
+.nr-jour { text-align: right; font-size: var(--texte-petit); }
+.nr-corvees { display: grid; grid-template-columns: repeat(var(--n, 4), minmax(0, 1fr)); gap: var(--e1); }
+@media (max-width: 1100px) { .nr-corvees { grid-template-columns: repeat(min(var(--n, 4), 4), minmax(0, 1fr)); } }
+.nuit button.nr-corvee { display: flex; align-items: center; justify-content: center; gap: var(--e1); padding: 0 var(--e1); min-width: 0; }
+.nr-corvee span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.nr.donne .nr-corvee.actif span::after { content: ' ✓'; }
+.nr-contact { display: flex; align-items: center; gap: var(--pas); grid-column: 1 / -1; min-height: var(--jeu-cible); font-size: var(--texte-petit); }
+.pic { flex: none; }
+.nuit button.loupe, #fin-medailles button.loupe { width: var(--jeu-cible); min-width: var(--jeu-cible); padding: 0; display: grid; place-items: center; }
+/* Les médailles en tableau (v0.132.0) : le pictogramme, le titre, le nom, ce qu'il a fait, la loupe */
+table.medailles { width: 100%; border-collapse: collapse; font-size: var(--texte-petit); }
+table.medailles td { padding: var(--e1) var(--pas) var(--e1) 0; vertical-align: middle; border-bottom: var(--trait) dotted var(--jeu-accent); }
+table.medailles tr:last-child td { border-bottom: none; }
+table.medailles .med-icone { width: 16px; line-height: 0; }
+table.medailles .med-titre { font-weight: bold; white-space: nowrap; }
+table.medailles .med-detail { color: var(--jeu-accent); }
+table.medailles .med-voir { width: var(--jeu-cible); padding-right: 0; }
+#nuit-retour { position: fixed; left: 50%; top: calc(var(--jeu-cible) + 2 * var(--pas)); transform: translateX(-50%); z-index: 20; }
+#nuit-retour[hidden] { display: none; }
 .nuit-col .actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--ecart, var(--pas)); }
 .nuit-col .actions button { min-height: var(--jeu-cible); }
 @media (max-height: 640px) { .nuit:not(.aube) { max-height: calc(100dvh - var(--jeu-cible) - 3 * var(--pas)); } }
@@ -353,7 +381,7 @@ dialog .reglage input { width: 20px; height: 20px; margin: 0; flex: none; accent
 .nuit button.actif, .nuit button.choisi { background: var(--jeu-fond); color: var(--jeu-encre); }
 #aube { flex: none; width: 100%; min-height: var(--jeu-cible); margin-top: var(--pas); text-align: center; background: var(--jeu-fond); color: var(--jeu-encre); }
 /* Les médailles (v0.73.1) : le palmarès du soir et de la fin */
-.medailles-bloc h4, #nuit-medailles h4, #fin-medailles h4 { margin: var(--pas) 0 var(--e1); font-size: var(--texte-petit); font-weight: bold; letter-spacing: var(--lettres-etiquette); text-transform: uppercase; }
+.medailles-bloc h4, .nuit-medailles h4, #fin-medailles h4 { margin: var(--pas) 0 var(--e1); font-size: var(--texte-petit); font-weight: bold; letter-spacing: var(--lettres-etiquette); text-transform: uppercase; }
 .medailles-bloc summary { cursor: pointer; font-weight: bold; }
 ul.medailles { margin: 0; padding-left: 0; list-style: none; font-size: var(--texte-petit); }
 ul.medailles li { margin: 2px 0; }

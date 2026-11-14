@@ -10,7 +10,9 @@
    valeurs de repli :
      --jeu-fond  --jeu-encre  --jeu-accent  --jeu-police  --jeu-cible (44px)
    Classes : .jeu-ecran (conteneur plein écran), .jeu-canvas, .jeu-toast,
-   .jeu-cache, .safe-top, .safe-bottom.
+   .jeu-cache, .safe-top, .safe-bottom, .jeu-chargement (écran de chargement,
+   section 3 : affiché d'emblée dans le HTML, masqué par `hidden` quand le jeu
+   est prêt ; il contient une .jeu-chargement-barre et un texte).
    ─────────────────────────────────────────────────────────────────────────── */
 
 *, *::before, *::after { box-sizing: border-box; }
@@ -102,4 +104,40 @@ dialog::backdrop { background: rgba(0, 0, 0, .6); }
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
+}
+
+/* Écran de chargement (section 3) : couvre tout jusqu'à ce que le jeu soit prêt.
+   Il est dans le HTML dès le départ, pour qu'aucun bouton ne soit visible sans action. */
+.jeu-chargement {
+  position: fixed;
+  inset: 0;
+  z-index: 900;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 16px;
+  background: var(--jeu-fond, #000);
+  color: var(--jeu-encre, #fff);
+  font-size: 14px;
+}
+.jeu-chargement[hidden] { display: none; }
+.jeu-chargement p { margin: 0; }
+.jeu-chargement-barre {
+  position: relative;
+  width: min(200px, 50vw);
+  height: 4px;
+  overflow: hidden;
+  outline: 1px solid var(--jeu-encre, #fff);
+}
+.jeu-chargement-barre::after {
+  content: '';
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 30%;
+  background: var(--jeu-encre, #fff);
+  animation: jeu-chargement 1.2s ease-in-out infinite;
+}
+@keyframes jeu-chargement { from { transform: translateX(-100%); } to { transform: translateX(340%); } }
+@media (prefers-reduced-motion: reduce) {
+  .jeu-chargement-barre::after { animation: none; width: 100%; }
 }

@@ -1,5 +1,10 @@
 # Journal des versions
 
+## 0.132.0 — 2026-11-14
+- La nuit, une rangée par régiment : ses valides et ses blessés, son moral, et ses corvées dessous, avec leurs icônes ; une loupe montre le régiment ou l'homme sur le champ ; les médailles en tableau ; le survol des chiffres raconte les jours et les nuits passés
+- Au petit matin, les soldats changés de régiment marchent jusqu'à leur nouvelle place ; le génie relève l'épave d'un char sur le champ (il repart à moitié de sa solidité)
+- La vue à la personne d'un char se place derrière lui, au-dessus ; les points de vie des avions sont arrondis
+
 ## 0.131.0 — 2026-11-08
 - Le parc et l'aérodrome ne montrent plus de faux engins : un avion par cellule de la flotte (au sol et en vie), un char par place du stock
 - Le génie répare à la base : un clic sur l'avion ou le char abîmé (ou le génie, puis l'engin cerclé d'os), ou un bouton « Réparer » par engin ; un char abîmé rentre d'abord au parc (« Rentrer au parc »)

@@ -3,17 +3,17 @@
    Elle naît hors du terrain derrière son camp, marche en droite ligne jusqu'à la rive du pont coupé (`pont` : l'indice dans `T.pontsListe`), puis le refait : `travail` va de 0 à 1,
    et gagne `n / hommes` fois plus vite que la section au complet (de 2 à 4 h de jeu avec 20 hommes : `PONTS_HEURES`). Un obus couche une part de ses hommes. `etat.sapeurs[camp]` :
    les sections au dépôt. Les ordres rendent { refus } comme les barrages. */
-import { GENIE_DATA } from './data/genie.js?v=0.131.0';
-import { CALIBRES } from './data/calibres.js?v=0.131.0';
-import { CHAR_SORTIE } from './data/chars.js?v=0.131.0';
-import { PONTS_HEURES } from './data/ponts.js?v=0.131.0';
-import { routeChar } from './chars.js?v=0.131.0';
-import { reconstruirePont } from './eaux.js?v=0.131.0';
-import { toucher } from './terrain.js?v=0.131.0';
-import { hash2 } from './lib/rng.js?v=0.131.0';
-import { NIDS } from './data/nids.js?v=0.131.0';
-import { modif, pvAvion, emplacementCamp, parcChars, placeAvion, placesChars } from './camp.js?v=0.131.0';
-import { nidDetruitVise, reparerNid } from './nids.js?v=0.131.0';
+import { GENIE_DATA } from './data/genie.js?v=0.132.0';
+import { CALIBRES } from './data/calibres.js?v=0.132.0';
+import { CHAR_SORTIE } from './data/chars.js?v=0.132.0';
+import { PONTS_HEURES } from './data/ponts.js?v=0.132.0';
+import { routeChar } from './chars.js?v=0.132.0';
+import { reconstruirePont } from './eaux.js?v=0.132.0';
+import { toucher } from './terrain.js?v=0.132.0';
+import { hash2 } from './lib/rng.js?v=0.132.0';
+import { NIDS } from './data/nids.js?v=0.132.0';
+import { modif, pvAvion, emplacementCamp, parcChars, placeAvion, placesChars } from './camp.js?v=0.132.0';
+import { nidDetruitVise, reparerNid } from './nids.js?v=0.132.0';
 
 export const sectionsDeDepart = () => [GENIE_DATA.sections, GENIE_DATA.sections];
 /* Le second point d'un ordre « Génie » qui vise l'aérodrome : réparer un avion abîmé (les avions n'ont pas de place sur le champ, on ne peut pas les cliquer) */
@@ -43,6 +43,13 @@ export function avionsAbimes(etat, camp) {
 }
 /* Le génie travaille-t-il sur ce char ? (il ne repart pas tant que la réparation dure) */
 export const charEnReparation = (etat, id) => etat.genies.some(g => g.char === id || g.parc === id);
+
+/* L'épave d'un de nos chars que vise (x, y), à moins de 8 m : son numéro, ou -1 (Jérôme, v0.132.0 : « le génie peut réparer les chars détruits sur le champ de bataille ») */
+export function charDetruitVise(B, camp, x, y) {
+  let m = -1, d0 = 64;
+  for (const c of B.etat.chars) { if (c.camp !== camp || c.etat !== 'detruit') continue; const d = (c.x - x) ** 2 + (c.y - y) ** 2; if (d < d0) { d0 = d; m = c.id; } }
+  return m;
+}
 
 // le pont coupé que vise (x, y) : son indice, ou -1 (à moins de sa demi-largeur + 3 m de son trait)
 // la rive de leur côté : le bout de l'ouvrage le plus proche de l'arrière de leur camp (nous au sud, en face au nord), dans le terrain
@@ -83,10 +90,19 @@ export function refusGenie(B, camp, x, y, ar, x2) {
   }
   const k = pontVise(B, x, y);
   if (k < 0) {
+    // l'épave d'un de nos chars (v0.132.0) : le génie la relève sur place, à moitié de sa solidité ; c'est la réparation d'engin du jour
+    const ep = charDetruitVise(B, camp, x, y);
+    if (ep >= 0) {
+      if (reparationFaite(etat, camp)) return { refus: quota };
+      if (etat.genies.some(g => g.char === ep)) return { refus: 'Le génie y travaille déjà.' };
+      const C = etat.chars.find(c => c.id === ep);
+      if (ar !== undefined && !routeChar(B, C.x, ar, C.x, C.y)) return { refus: 'Aucun passage jusqu\'à cette épave : eau profonde ou trous.' };
+      return { ok: true, char: ep, epave: true };
+    }
     // un nid de mitrailleuse détruit (v0.83.0) : le génie le refait
     const nid = nidDetruitVise(B, camp, x, y);
     if (nid < 0) {
-      return { refus: 'Visez un pont coupé ou un de nos nids de mitrailleuse détruits. Un avion ou un char abîmé se répare à la base : cliquez sur lui, ou sur « Réparer » dans la fenêtre de son bâtiment.' };
+      return { refus: 'Visez un pont coupé, un de nos nids de mitrailleuse détruits ou l\'épave d\'un de nos chars. Un avion ou un char abîmé se répare à la base : cliquez sur lui, ou sur « Réparer » dans la fenêtre de son bâtiment.' };
     }
     if (etat.genies.some(g => g.nid === nid)) return { refus: 'Le génie y travaille déjà.' };
     const N = etat.nids.find(n => n.id === nid), bx = N.x, by = N.y - N.face * 5;      // (il y arrive par l'arrière de la tranchée)
@@ -100,7 +116,7 @@ export function refusGenie(B, camp, x, y, ar, x2) {
   return { ok: true, pont: k };
 }
 
-/* Une section au travail : `cible` est le résultat de `refusGenie` : { pont } (un pont coupé), { nid } (un nid de mitrailleuse détruit), { char } (un char abîmé) ou { avion } (l'indice d'un avion abîmé) */
+/* Une section au travail : `cible` est le résultat de `refusGenie` : { pont } (un pont coupé), { nid } (un nid de mitrailleuse détruit), { char, epave } (l'épave d'un char sur le champ) ou { avion } (l'indice d'un avion abîmé) */
 export function lancerGenie(B, camp, cible, ar) {
   const { etat, terrain: T } = B, nid = cible.nid !== undefined ? etat.nids.find(n => n.id === cible.nid) : null, pont = cible.pont;
   const char = cible.char !== undefined ? etat.chars.find(c => c.id === cible.char) : null, engin = char || cible.avion !== undefined || cible.parc !== undefined;
@@ -108,7 +124,7 @@ export function lancerGenie(B, camp, cible, ar) {
   const chemin = ar !== undefined && cible.avion === undefined && cible.parc === undefined ? routeChar(B, bout[0], ar, bout[0], bout[1]) : null;
   etat.sapeurs[camp]--;
   if (engin) (etat.genieJour ??= [-1, -1])[camp] = etat.jour;      // la réparation du jour est prise, même si la section n'arrive pas
-  etat.genies.push({ id: etat.genies.length ? etat.genies[etat.genies.length - 1].id + 1 : 0, camp, ...(nid ? { nid: nid.id } : char ? { char: char.id } : cible.avion !== undefined ? { avion: cible.avion } : cible.parc !== undefined ? { parc: cible.parc } : { pont }), x: bout[0], y: camp === 0 ? T.H + CHAR_SORTIE : -CHAR_SORTIE, tx: bout[0], ty: bout[1], dx0: bout[0], ar: cible.avion !== undefined || cible.parc !== undefined ? undefined : ar, chemin, k: 0, hx: 0, hy: camp === 0 ? -1 : 1, n: Math.round(GENIE_DATA.hommes * modif(etat, camp, 'sapeurs.hommes')), vit: modif(etat, camp, 'sapeurs.vitesse'), tr: modif(etat, camp, 'sapeurs.travail'), etat: 'marche', travail: 0, p: [] });
+  etat.genies.push({ id: etat.genies.length ? etat.genies[etat.genies.length - 1].id + 1 : 0, camp, ...(nid ? { nid: nid.id } : char ? { char: char.id, ...(cible.epave ? { epave: true } : {}) } : cible.avion !== undefined ? { avion: cible.avion } : cible.parc !== undefined ? { parc: cible.parc } : { pont }), x: bout[0], y: camp === 0 ? T.H + CHAR_SORTIE : -CHAR_SORTIE, tx: bout[0], ty: bout[1], dx0: bout[0], ar: cible.avion !== undefined || cible.parc !== undefined ? undefined : ar, chemin, k: 0, hx: 0, hy: camp === 0 ? -1 : 1, n: Math.round(GENIE_DATA.hommes * modif(etat, camp, 'sapeurs.hommes')), vit: modif(etat, camp, 'sapeurs.vitesse'), tr: modif(etat, camp, 'sapeurs.travail'), etat: 'marche', travail: 0, p: [] });
   const g = etat.genies[etat.genies.length - 1], hy = camp === 0 ? -1 : 1;      // (ils partent vers le nord ou le sud)
   for (let i = 0; i < g.n; i++) { const [ox, oy] = rang(g, i, 0, hy); g.p.push(g.x + ox, g.y + oy, 0, 0); }
 }
@@ -174,7 +190,7 @@ export function avancerGenies(B, ctx) {
     const C = g.char !== undefined ? etat.chars.find(c => c.id === g.char) : null, max = g.avion !== undefined ? pvAvion(etat, g.camp) : 0, pvA = g.avion !== undefined ? etat.avions[g.camp][g.avion] : 0;
     const Rp = g.parc !== undefined ? parcChars(etat, g.camp).find(r => r.id === g.parc) : null;      // le char rentré au parc que la section répare
     // la cible a disparu : le pont refait, le nid refait en face (la nuit), le char ou l'avion détruit, le char du parc reparti
-    if (engin ? (g.parc !== undefined ? !Rp || Rp.pv >= Rp.pvMax : C ? C.etat === 'detruit' || C.pv >= (C.pvMax ?? C.pv) : pvA <= 0 || pvA >= max) : P ? !P.detruit : !N || N.etat !== 'detruit') { g.etat = 'fini'; continue; }
+    if (engin ? (g.parc !== undefined ? !Rp || Rp.pv >= Rp.pvMax : C ? (g.epave ? C.etat !== 'detruit' : C.etat === 'detruit' || C.pv >= (C.pvMax ?? C.pv)) : pvA <= 0 || pvA >= max) : P ? !P.detruit : !N || N.etat !== 'detruit') { g.etat = 'fini'; continue; }
     bande(B, g, dt);
     if (g.etat === 'marche') {
       // le centre attend ceux qui traînent (la bande ne s'étire pas) ; il suit le chemin d'un char, après la route jusqu'à l'arrière de son camp
@@ -191,9 +207,13 @@ export function avancerGenies(B, ctx) {
       g.hx = (vx - g.x) / wd; g.hy = (vy - g.y) / wd;
       g.x += g.hx * Math.min(v, wd); g.y += g.hy * Math.min(v, wd);
     } else {
-      g.travail += (g.n / GENIE_DATA.hommes) * dt / ((engin ? GENIE_DATA.reparation[C || Rp ? 'char' : 'avion'] : P ? PONTS_HEURES[P.type] ?? 3 : NIDS.travail) * secParHeure * (g.tr ?? 1));
+      g.travail += (g.n / GENIE_DATA.hommes) * dt / ((engin ? GENIE_DATA.reparation[g.epave ? 'epave' : C || Rp ? 'char' : 'avion'] : P ? PONTS_HEURES[P.type] ?? 3 : NIDS.travail) * secParHeure * (g.tr ?? 1));
       if (g.travail >= 1 && engin) {
         if (Rp) { Rp.pv = Rp.pvMax; Rp.repar = (Rp.repar ?? 0) + 1; B.evenements.push({ type: 'char-repare', x: g.tx, y: g.ty, camp: g.camp, id: Rp.id }); }
+        else if (C && g.epave) {      // l'épave relevée : elle repart à moitié de sa solidité, à l'arrêt (le parc la remettra à neuf)
+          C.pv = Math.max(1, Math.round((C.pvMax ?? 1) * GENIE_DATA.relevage)); C.etat = 'arrive'; C.v = 0; C.tx = C.x; C.ty = C.y; C.chemin = null; C.cible = null; C.vise = null; C.rentre = false;
+          C.repar = (C.repar ?? 0) + 1; B.evenements.push({ type: 'char-releve', x: C.x, y: C.y, camp: g.camp, id: C.id });
+        }
         else if (C) { C.pv = C.pvMax ?? C.pv; C.repar = (C.repar ?? 0) + 1; B.evenements.push({ type: 'char-repare', x: C.x, y: C.y, camp: g.camp, id: C.id }); }
         else {
           etat.avions[g.camp][g.avion] = max;

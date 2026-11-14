@@ -417,6 +417,22 @@ test('un char abîmé rentre au parc avec ses dégâts, le génie le répare là
   const re = e.chars.find(k => k.id === r.id); assert.ok(re, 'puis le rentré'); assert.equal(re.exp, 0.4); assert.equal(re.tues, 7); assert.equal(re.repar, 1);
   assert.equal(parcChars(e, 0).length, 0);
 });
+test('le génie relève l\'épave d\'un char sur le champ : à moitié de sa solidité, une fois par jour (v0.132.0)', () => {
+  const B = bridee(), e = B.etat, Z = zone(B), cx = (Z.x0 + Z.x1) / 2;
+  assert.ok(ordonnerBarrage(B, 'char', cx, Z.y0 + 120, 0).ok);
+  const c = e.chars[0]; for (let n = 0; n < 300; n++) avancer(B);
+  c.pv = 0; c.etat = 'detruit'; c.v = 0;
+  e.batteries.genie = 0;
+  const g = ordonnerBarrage(B, 'genie', c.x + 3, c.y, 0); assert.ok(g.ok, JSON.stringify(g));
+  assert.equal(e.genies[0].char, c.id); assert.equal(e.genies[0].epave, true);
+  e.batteries.genie = 0; assert.match(ordonnerBarrage(B, 'genie', c.x, c.y, 0).refus, /par jour/, 'c\'est la réparation d\'engin du jour');
+  for (let n = 0; n < 80000 && e.genies[0]?.etat !== 'travaille' && e.phase === 'jour'; n++) avancer(B);
+  assert.equal(e.genies[0].etat, 'travaille');
+  assert.equal(c.etat, 'detruit', 'pas avant la fin du travail');
+  e.genies[0].travail = 0.9999; avancer(B); avancer(B);
+  assert.equal(c.etat, 'arrive'); assert.equal(c.pv, Math.round(c.pvMax / 2)); assert.equal(c.repar, 1); assert.equal(e.genies.length, 0);
+  assert.equal(ordonnerChar(B, c.id, 'rentrer', 0, 0, 0).ok, true, 'relevé, il peut rentrer au parc');
+});
 test('le génie répare l\'avion que l\'on désigne (pas forcément le plus abîmé), pas un avion intact', () => {
   const B = bridee(), e = B.etat, Z = zone(B), cx = (Z.x0 + Z.x1) / 2, max = pvAvion(e, 0);
   e.batteries.genie = 0;

@@ -6,6 +6,16 @@ Suite de `.claude/conventions-jeu.md` (la source est `CONVENTIONS-DETAIL.md` dan
 
 - **Pas de sous-titre.** Jamais de sous-titre ni de baseline sous le nom du
   jeu.
+- **Écran de chargement, toujours** (Jérôme, 2026-11-14). Tant que le jeu
+  n'est pas prêt (modules, données, polices, images), un écran de chargement
+  couvre tout : l'écran titre n'apparaît qu'ensuite. Il est écrit dans le HTML,
+  affiché d'emblée (pas créé par le JS, qui n'a peut-être pas encore chargé),
+  et masqué par `hidden` au moment où l'écran titre devient utilisable. Classe
+  `.jeu-chargement` de `modules/game.css`, aux couleurs du jeu ; une barre
+  indéterminée, figée sous `prefers-reduced-motion`. Si le chargement échoue,
+  il le dit à la place du texte (jamais une page blanche ni un bouton muet).
+  Pourquoi : un bouton visible avant que le jeu soit prêt ne fait rien, et le
+  joueur croit le jeu cassé (Urban Mobility Simulator, 2 Mo de données en ligne).
 - **L'écran titre** propose, dans cet ordre : *Continuer* (s'il existe une
   partie), *Nouvelle partie* (avec confirmation si elle efface une partie), puis
   la roue crantée. Rien d'autre n'est obligatoire.

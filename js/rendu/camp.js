@@ -2,13 +2,13 @@
 // tant qu'un chantier dure, un liseré d'os autour du bâtiment choisi. Le dessin seulement : tout vient de l'état de la bataille, rien n'y est écrit ; et rien n'est dessiné hors de la partie bridée
 // (`etat.camp.bride`), donc ni le labo ni les tests n'ont de camp ; le jeu à deux en a un par joueur (v0.94.0). Les deux camps sont dessinés : celui d'en face est le nôtre tourné d'un demi-tour.
 // Fabrique `creerCamp({ THREE, scene, bataille: () => B, hauteur })`.
-import { atelier } from './engins.js?v=0.131.0';
-import { BATIR, chantier, regler_creux, regler_camp, vie } from './camp-modeles.js?v=0.131.0';
-import { emprisesCamp, emplacementCamp, sortieChars, placesChars, placeAvion, parcChars } from '../camp.js?v=0.131.0';
-import { avionsAbimes } from '../genie.js?v=0.131.0';
-import { PALETTE as P } from '../palette.js?v=0.131.0';
-import { DRAPEAU_U } from './drapeau.js?v=0.131.0';
-import { RONDE, pointRonde } from '../ronde.js?v=0.131.0';
+import { atelier } from './engins.js?v=0.132.0';
+import { BATIR, chantier, regler_creux, regler_camp, vie } from './camp-modeles.js?v=0.132.0';
+import { emprisesCamp, emplacementCamp, sortieChars, placesChars, placeAvion, parcChars } from '../camp.js?v=0.132.0';
+import { avionsAbimes } from '../genie.js?v=0.132.0';
+import { PALETTE as P } from '../palette.js?v=0.132.0';
+import { DRAPEAU_U } from './drapeau.js?v=0.132.0';
+import { RONDE, pointRonde } from '../ronde.js?v=0.132.0';
 
 const LUEUR = 0.9;      // × la couleur de la matière (mesuré à l'œil sur la partie du premier matin : sans elle, la boue est noire)
 
@@ -38,6 +38,7 @@ export function creerCamp({ THREE, scene, bataille, hauteur }) {
     if (montrer && B.etat.camp?.bride) {
       for (const k of avionsAbimes(B.etat, 0)) { const p = placeAvion(B.etat, 0, k); cibles.push([p.x, p.y, 10, 9]); }
       for (const p of placesChars(B.etat, 0)) { const r = p.id !== null && parcChars(B.etat, 0).find(q => q.id === p.id); if (r && r.pv < r.pvMax && r.pv > 0) cibles.push([p.x, p.y, 8, 6]); }
+      for (const c of B.etat.chars) if (c.camp === 0 && c.etat === 'detruit' && !B.etat.genies.some(g => g.char === c.id)) cibles.push([c.x, c.y, 8, 8]);      // les épaves de nos chars sur le champ : le génie les relève (v0.132.0)
     }
     while (anneaux.length < cibles.length) {
       const l = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(1, 0.4, 1)), new THREE.LineBasicMaterial({ color: new THREE.Color(P.o), depthTest: false }));

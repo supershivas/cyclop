@@ -4,6 +4,7 @@ import { refusCorvee, planifierTransfert, annulerTransfert, refusTransfert, disp
 import { entreeHopital, renfortsDe, patients } from '../js/camp.js';
 import { blessesDe, marcheBlesse } from '../js/bataille.js';
 import { REGLAGES as R } from '../js/data/reglages.js';
+import { place } from '../js/army.js';
 
 const bridee = (graine = 5) => nouvelleBataille(graine, R, { soldats: 400, jours: 6, camp: true });
 const effectif = (B, id) => { let n = 0; for (let i = 0; i < B.armee.n; i++) if (!B.armee.mort[i] && B.armee.reg[i] === id) n++; return n; };
@@ -22,6 +23,21 @@ test('un transfert de 10 hommes se prévoit la nuit et s\'exécute à l\'aube, p
   assert.equal(effectif(B, a.id), na - 10); assert.equal(effectif(B, b.id), nb + 10, 'les hommes de l\'armée ont changé de régiment');
   assert.equal(a.initial - a.effectif - a.pertes - (a.releves || 0), 0, 'aucun homme perdu dans le compte');
   assert.deepEqual(B.etat.transferts[0], [], 'la liste est vidée');
+});
+test('au petit matin, les hommes transférés marchent jusqu\'à leur nouvelle place (v0.132.0)', () => {
+  const B = bridee(), [a, b] = regs(B), A = B.armee;
+  B.etat.phase = 'nuit';
+  assert.ok(planifierTransfert(B, 0, a.id, b.id, 20).ok);
+  const avant = new Map();
+  for (let i = 0; i < A.n; i++) if (!A.mort[i] && A.reg[i] === a.id) avant.set(i, [A.x[i], A.y[i]]);
+  aube(B);
+  const venus = [...avant.keys()].filter(i => A.reg[i] === b.id);
+  assert.equal(venus.length, 20);
+  for (const i of venus) assert.deepEqual([A.x[i], A.y[i]], avant.get(i), 'ils ne sautent pas à leur place : ils partent d\'où ils étaient');
+  const pl = [0, 0], loin = () => venus.reduce((s, i) => { place(b.ordre, A.slot[i], pl); return s + Math.hypot(pl[0] - A.x[i], pl[1] - A.y[i]); }, 0) / venus.length;
+  const d0 = loin();
+  for (let k = 0; k < 600; k++) avancer(B);
+  assert.ok(loin() < d0 - 15, `ils se rapprochent de leur place (${d0.toFixed(1)} → ${loin().toFixed(1)} m)`);
 });
 test('« tous » fusionne : le régiment donneur est vide, l\'autre a tout', () => {
   const B = bridee(), [a, b] = regs(B), total = a.effectif + b.effectif;
