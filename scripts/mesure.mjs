@@ -12,6 +12,7 @@
 //   node scripts/mesure.mjs --nuages 1 --zooms 3,4,5   (les ombres de nuages du labo)
 //   node scripts/mesure.mjs --tranchees 0 --zooms 3,4,5   (le dessin des tranchées d'avant la v0.88.1 ; 1 à 3 : un niveau fixe ; sans : selon le zoom)
 //   node scripts/mesure.mjs --articule 0 --zooms 6,7,8   (sans les soldats articulés de près, v0.105.0 : le soldat équipé partout ; 1 ou sans : le jeu ; 12, 16 et 24 px/m = indices 6, 7, 8)
+//   node scripts/mesure.mjs --grain 2 --zooms 0,3,5   (le grain du sol du labo, v0.136.0 : une variante de data/grain-sol.js)
 //   node scripts/mesure.mjs --finesse 2 --zooms 3,4,5   (le sol en demi-mètres ; indices de ZOOMS : 3 = 4 px/m, 4 = 6, 5 = 8)
 //
 // Le rendu est mesuré avec ?mesure=1 : chaque image attend la fin du dessin
@@ -20,7 +21,7 @@
 // barrages en cours (le sol se refait).
 import { servir, lancerChromium, options } from '../outils/navigateur.mjs';
 
-const o = options(process.argv.slice(2), { soldats: '8000', secondes: '12', largeur: '1280', hauteur: '800', finesse: 'auto', zooms: '0,3,5', articule: '', arbres: '', ombres: '', lumiere: '', carte: '', parois: '', nuages: '', grades: '', tranchees: '' });
+const o = options(process.argv.slice(2), { soldats: '8000', secondes: '12', largeur: '1280', hauteur: '800', finesse: 'auto', zooms: '0,3,5', articule: '', arbres: '', ombres: '', lumiere: '', carte: '', parois: '', nuages: '', grades: '', tranchees: '', grain: '' });
 const srv = await servir('.');
 const nav = await lancerChromium();
 const page = await (await nav.newContext({ viewport: { width: +o.largeur, height: +o.hauteur } })).newPage();
@@ -43,6 +44,7 @@ if (o.articule === '0') await page.evaluate(() => { __jeu.rendu().articule = nul
 if (o.articule === 'sans-texture') await page.evaluate(() => { const r = __jeu.rendu(); r.articule = { ...r.articule, texture: false }; });       // les poses calculées par le nuanceur (avant l'étape 3 : la texture de poses)
 if (o.articule === 'sans-animations') await page.evaluate(() => { const r = __jeu.rendu(); r.articule = { ...r.articule, animations: false }; });       // la marche, le repos et le tir recalculés comme avant l'étape 4 (poseJeu)
 if (o.lumiere === '0') await page.evaluate(() => { const R = __jeu.rendu(); R.soleilSol = R.aoSol = R.abrisSol = R.flaquesSol = false; });
+if (o.grain) await page.evaluate(n => { __jeu.rendu().grainSol = +n; }, o.grain);       // le grain du sol (labo, v0.136.0 ; data/grain-sol.js : 1 à 3)
 if (o.carte === '1') await page.evaluate(() => { __jeu.rendu().ombresCarte = true; });
 if (o.ombres) await page.evaluate(() => { __jeu.rendu().ombresRelief = true; });
 if (o.nuages) await page.evaluate(() => { __jeu.rendu().ombresNuages = true; });
