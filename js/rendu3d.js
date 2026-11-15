@@ -996,6 +996,13 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
       if (vue.ciel || vue.libre) renderer.setClearColor(cielCoul(), 1);
     },
     get ppm() { return ZOOMS[vue.zoom]; },
+    // les objets que three.js parcourt à chaque image (lecture seule : la mesure du lot 0 du chantier terrain-végétation) : les visibles, et parmi eux les instanciés vides (un appel pour rien)
+    inventaire() {
+      const r = { visibles: 0, instancies: 0, vides: 0 };
+      const voir = (o) => { if (!o.visible) return; if (o.isMesh || o.isPoints || o.isLine) { r.visibles++; if (o.isInstancedMesh || o.geometry?.isInstancedBufferGeometry) { r.instancies++; if ((o.isInstancedMesh ? o.count : o.geometry.instanceCount) === 0) r.vides++; } } o.children.forEach(voir); };
+      voir(scene);
+      return r;
+    },
     get oeil() { const p = camera.position; return { x: p.x, y: p.y, z: p.z, sol: surface(p.x, p.z) }; },      // où est la caméra, et la hauteur du sol dessous (lecture seule : les tests de la caméra)
     // une fumée qui dérive, posée en (x, z) (l'écran titre en épaissit le champ)
     clignoter: troncons.clignoter,

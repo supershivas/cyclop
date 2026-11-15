@@ -5,7 +5,7 @@ import * as SH from './shaders.js?v=0.135.1';
 import { creerGeometries } from './geometries.js?v=0.135.1';
 import { hash2 } from '../lib/rng.js?v=0.135.1';
 import { BUISSONS_FORMES, BUISSONS_SAISONS, BUISSONS_TIRAGES } from '../data/buissons.js?v=0.135.1';
-import { ARBRES_FAMILLES, ARBRES_TIRAGES, ARBRES_ECHELLE, ARBRES_AUTOMNE, ARBRES_PPM_FEUILLES, ARBRES_FEUILLES, ARBRES_VARIANTES, ARBRES_COUCHE } from '../data/arbres.js?v=0.135.1';
+import { ARBRES_FAMILLES, ARBRES_TIRAGES, ARBRES_ECHELLE, ARBRES_AUTOMNE, ARBRES_PPM_FEUILLES, ARBRES_FEUILLES, ARBRES_VARIANTES, ARBRES_COUCHE, ARBRES_GROSSIER } from '../data/arbres.js?v=0.135.1';
 import { dansLEcran } from './vue-ecran.js?v=0.135.1';
 
 // `THREE`, `scene`, `col`, `camera`, `vue`, `solY` (la hauteur moyenne du sol), `distance(zoom)`, `surface(x, z)` et `petit()` (aux zooms où un soldat n'est qu'un point)
@@ -37,6 +37,13 @@ export function creerVegetation({ THREE, scene, col, camera, vue, solY: SOL_Y, d
     };
     mat.customProgramCacheKey = () => 'vent-arbre';
     return mat;
+  };
+  // n instances de m sont prêtes : seules leurs n matrices partent vers la carte graphique (sans plage, three.js renvoie tout le tampon, prévu pour tous les arbres ou buissons de la carte :
+  // ~140 maillages × 1 619 arbres × 64 octets, ~14 Mo par image, vides compris ; chantier terrain-végétation, lot 0)
+  const envoyer = (m, n) => {
+    m.count = n;
+    if (!n) return;
+    const im = m.instanceMatrix; im.clearUpdateRanges(); im.addUpdateRange(0, n * 16); im.needsUpdate = true;
   };
   const arbreMat = plierAuVent(new THREE.MeshBasicMaterial({ color: col('s'), side: THREE.DoubleSide }));
   function preparerArbres() {
@@ -82,7 +89,7 @@ export function creerVegetation({ THREE, scene, col, camera, vue, solY: SOL_Y, d
         m.setMatrixAt(n++, m4);
         if (o < ARBRES_OMBRES && !m.userData.loin) { aoPos[o * 4] = a.i + 0.5; aoPos[o * 4 + 1] = y; aoPos[o * 4 + 2] = a.j + 0.5; aoPos[o * 4 + 3] = a.abattu ? 1.2 : 6 + a.v; o++; }
       }
-      m.count = n; m.instanceMatrix.needsUpdate = true;
+      envoyer(m, n);
       trisArbres += n * m.userData.tri;
     }
     const at = aoGeo.attributes.aPos; at.clearUpdateRanges(); at.addUpdateRange(0, o * 4); at.needsUpdate = true;
@@ -93,7 +100,7 @@ export function creerVegetation({ THREE, scene, col, camera, vue, solY: SOL_Y, d
   // Un maillage de tronc par famille (et un tronc de loin, deux abattus), des maillages de feuilles par (famille, dégarni) refaits quand la saison change.
   // Famille, taille, sens et chute de chaque arbre : le hachage de sa position, tiré une fois par bataille (`infos`, parallèle à `T.arbres` : on n'écrit rien dans le terrain).
   let couronnes = [], couronneMode = null, couronneCoul = [];       // un maillage par teinte (6 au plus) : pas de couleur par instance, qui restait blanche sur certaines cartes graphiques
-  let infos = [], troncs = [], feuilles = [], loinMesh = null, abattuMesh = [null, null], modeVu = null;
+  let infos = [], troncs = [], feuilles = [], feuillesG = [], loinMesh = null, abattuMesh = [null, null], modeVu = null;
   const tire = (a, graine) => hash2(a.i, a.j, graine);
   function preparerArbresVaries(T) {
     const poids = ARBRES_FAMILLES.reduce((s, f) => s + f.poids, 0), cap = Math.max(1, T.arbres.length);
@@ -121,6 +128,7 @@ export function creerVegetation({ THREE, scene, col, camera, vue, solY: SOL_Y, d
     abattuMesh = [null, null];
     // (créés au premier besoin : un objet de plus dans la scène tire des identifiants avec `Math.random`, voir « Piège » plus haut)
     feuilles = ARBRES_FAMILLES.map(() => Array.from({ length: ARBRES_VARIANTES.n }, () => [null, null]));
+    feuillesG = ARBRES_FAMILLES.map(() => Array.from({ length: ARBRES_VARIANTES.n }, () => [null, null]));      // le feuillage grossier (ARBRES_GROSSIER)
     modeVu = null;
   }
   // les feuilles de la saison : la saison de la bataille (été, automne, hiver nu, hiver sous la neige), ou celle qu'on force (le printemps du labo)
@@ -134,15 +142,17 @@ export function creerVegetation({ THREE, scene, col, camera, vue, solY: SOL_Y, d
   function refaireFeuilles(mode) {
     modeVu = mode;
     ARBRES_FAMILLES.forEach((F, f) => Array.from({ length: ARBRES_VARIANTES.n }, (_, va) => [va, 0]).concat(Array.from({ length: ARBRES_VARIANTES.n }, (_, va) => [va, 1])).forEach(([va, d]) => {
-      const g = mode === 'nu' ? null : geometrieFeuilles(F.id, mode, d, opts.chanfrein ?? 0, !!opts.rond, va);
-      let m = feuilles[f][va][d];
-      if (!g) { if (m) m.userData.vide = true; return; }
-      if (!m) {
-        m = new THREE.InstancedMesh(g, feuilleMat, Math.max(1, terrain().arbres.length));
-        m.count = 0; m.frustumCulled = false; m.userData = { feuilles: true };
-        feuilles[f][va][d] = m; arbresMesh.push(m); scene.add(m);
-      } else { m.geometry.dispose(); m.geometry = g; }
-      m.userData.vide = false; m.userData.tri = g.attributes.position.count / 3;
+      for (const [tab, grossier] of [[feuilles, false], [feuillesG, true]]) {
+        const g = mode === 'nu' ? null : geometrieFeuilles(F.id, mode, d, opts.chanfrein ?? 0, !!opts.rond, va, grossier);
+        let m = tab[f][va][d];
+        if (!g) { if (m) m.userData.vide = true; continue; }
+        if (!m) {
+          m = new THREE.InstancedMesh(g, feuilleMat, Math.max(1, terrain().arbres.length));
+          m.count = 0; m.frustumCulled = false; m.userData = { feuilles: true };
+          tab[f][va][d] = m; arbresMesh.push(m); scene.add(m);
+        } else { m.geometry.dispose(); m.geometry = g; }
+        m.userData.vide = false; m.userData.tri = g.attributes.position.count / 3;
+      }
     }));
     gisants?.synchro();
   }
@@ -197,6 +207,8 @@ export function creerVegetation({ THREE, scene, col, camera, vue, solY: SOL_Y, d
     if (mode !== 'nu' && mode !== couronneMode) { couronneCoul = (ARBRES_FEUILLES[mode]?.dessus ?? []).map(c => c[0] === '#' ? new THREE.Color(c) : col(c)); couronneMode = mode; couronnes.forEach((m, i) => m.material.color.copy(couronneCoul[i % couronneCoul.length] ?? col('o'))); }
     for (const m of arbresMesh) m.userData.n = 0;
     const cp = camera.position, lim = Math.max(160, distance(vue.zoom) * 1.3) ** 2, pose = petit();
+    // le feuillage grossier : l'arbre fait moins de ARBRES_GROSSIER.ppm pixels par mètre (les pixels par mètre du point visé × sa distance / celle de l'arbre)
+    const limG = (pm * distance(vue.zoom) / ARBRES_GROSSIER.ppm) ** 2;
     let o = 0;
     const couronne = (k, x, y, z, inf) => {
       if (mode === 'nu' || !couronneCoul.length) return;
@@ -253,6 +265,11 @@ export function creerVegetation({ THREE, scene, col, camera, vue, solY: SOL_Y, d
       }
       if (a.abattu) { /* (dessiné ci-dessus) */ }
       else if (loin) { m4v.set(inf.sx, 0, 0, x, 0, inf.H, 0, y, 0, 0, inf.sx, z, 0, 0, 0, 1); loinMesh.setMatrixAt(loinMesh.userData.n++, m4v); couronne(k, x, y, z, inf); }
+      else if ((a.i - cp.x) ** 2 + (y - cp.y) ** 2 + (a.j - cp.z) ** 2 > limG) {        // quelques pixels : le tronc seul, les touffes grossières
+        m4v.set(inf.sx, 0, 0, x, 0, inf.H, 0, y, 0, 0, inf.sx, z, 0, 0, 0, 1); loinMesh.setMatrixAt(loinMesh.userData.n++, m4v);
+        if (!feuillu) couronne(k, x, y, z, inf);
+        else { const d = etatFeuilles(inf, mode, h), m = d < 2 ? feuillesG[inf.fam][inf.va][d] : null; if (m && !m.userData.vide) mettre(m, x, y, z, inf); }
+      }
       else {
         mettre(troncs[inf.fam], x, y, z, inf);
         if (!feuillu) couronne(k, x, y, z, inf);
@@ -261,7 +278,7 @@ export function creerVegetation({ THREE, scene, col, camera, vue, solY: SOL_Y, d
       if (o < ARBRES_OMBRES && !loin) { aoPos[o * 4] = x; aoPos[o * 4 + 1] = y; aoPos[o * 4 + 2] = z; aoPos[o * 4 + 3] = a.abattu ? 1.2 : inf.H; o++; }
     }
     trisArbres = 0; nbArbres = 0;
-    for (const m of arbresMesh) { m.count = m.userData.n; m.instanceMatrix.needsUpdate = true; trisArbres += m.count * m.userData.tri; nbArbres += m.count; }
+    for (const m of arbresMesh) { envoyer(m, m.userData.n); trisArbres += m.count * m.userData.tri; nbArbres += m.count; }
     const at = aoGeo.attributes.aPos; at.clearUpdateRanges(); at.addUpdateRange(0, o * 4); at.needsUpdate = true;
     aoGeo.instanceCount = soleil.lengthSq() > 0.01 && !pose ? o : 0;
   }
@@ -314,7 +331,7 @@ export function creerVegetation({ THREE, scene, col, camera, vue, solY: SOL_Y, d
         m4.set(c * s, 0, sn * s, b.i + 0.5, 0, s, 0, surface(b.i + 0.5, b.j + 0.5), -sn * s, 0, c * s, b.j + 0.5, 0, 0, 0, 1);
         m.setMatrixAt(m.count++, m4);
       }
-      for (const m of buissonsMesh) m.instanceMatrix.needsUpdate = true;
+      for (const m of buissonsMesh) envoyer(m, m.count);
       return;
     }
     for (const m of buissonsMesh) {
@@ -324,7 +341,7 @@ export function creerVegetation({ THREE, scene, col, camera, vue, solY: SOL_Y, d
         m4.makeTranslation(b.i + 0.5, surface(b.i + 0.5, b.j + 0.5), b.j + 0.5);
         m.setMatrixAt(n++, m4);
       }
-      m.count = n; m.instanceMatrix.needsUpdate = true;
+      envoyer(m, n);
     }
   }
 

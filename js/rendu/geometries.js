@@ -1,6 +1,6 @@
 // Les formes du rendu, construites à la main : un soldat (de la boîte à la silhouette), un arbre, un buisson. Pas d'état :
 // `THREE` et `col` (une couleur de la palette) viennent de creerRendu ; les soldats prennent aussi leurs attributs d'instance.
-import { ARBRES_FEUILLES, ARBRES_COURONNES, ARBRES_VARIANTES } from '../data/arbres.js?v=0.135.1';
+import { ARBRES_FEUILLES, ARBRES_COURONNES, ARBRES_VARIANTES, ARBRES_GROSSIER } from '../data/arbres.js?v=0.135.1';
 
 export function creerGeometries(THREE, col) {
   // les faces d'une boîte qu'on voit d'ici : le dessus, le sud, l'est et l'ouest (jamais le nord ni le dessous)
@@ -300,12 +300,14 @@ export function creerGeometries(THREE, col) {
   }
   // Une touffe ronde (Jérôme, retours du 30 octobre, v0.99.11 : « feuillage ellipsoïdal ») : un demi-ellipsoïde facetté, 6 pans de large, 3 anneaux (de la calotte au flanc, un peu sous l'équateur : le dessous n'est jamais dessiné) ;
   // 42 triangles contre 30 pour la boîte aux angles coupés. Les pans qui regardent vers le haut prennent la couleur du dessus, les autres celle du flanc : aucune couleur de plus.
-  const ANNEAUX = [90, 58, 28, -2, -30], PANS = 6;
-  function ellipsoide(w, h) {
-    const a = w / 2, b = h / 2, R = ANNEAUX.map(lat => Array.from({ length: PANS }, (_, k) => { const t = k / PANS * Math.PI * 2, r = lat === 90 ? 0 : a * Math.cos(lat * Math.PI / 180); return [Math.cos(t) * r, Math.sin(lat * Math.PI / 180) * b, Math.sin(t) * r]; })), tris = [];
+  const ANNEAUX_FINS = [90, 58, 28, -2, -30], PANS_FINS = 6;
+  // `grossier` : les anneaux et les pans de ARBRES_GROSSIER (un arbre de quelques pixels) ; une bande prend la couleur du dessus si elle part au-dessus de l'équateur et n'en descend guère (les mêmes que `r <= 2` des anneaux fins ; grossier : la calotte seule)
+  function ellipsoide(w, h, grossier = false) {
+    const ANNEAUX = grossier ? ARBRES_GROSSIER.anneaux : ANNEAUX_FINS, PANS = grossier ? ARBRES_GROSSIER.pans : PANS_FINS;
+    const a = w / 2 * (grossier ? ARBRES_GROSSIER.elargir : 1), b = h / 2, R = ANNEAUX.map(lat => Array.from({ length: PANS }, (_, k) => { const t = k / PANS * Math.PI * 2, r = lat === 90 ? 0 : a * Math.cos(lat * Math.PI / 180); return [Math.cos(t) * r, Math.sin(lat * Math.PI / 180) * b, Math.sin(t) * r]; })), tris = [];
     for (let k = 0; k < PANS; k++) tris.push({ haut: true, p: [R[0][0], R[1][(k + 1) % PANS], R[1][k]] });                // la calotte (l'anneau 0 est un point)
     for (let r = 1; r + 1 < ANNEAUX.length; r++) for (let k = 0; k < PANS; k++) {                                          // trois bandes : deux triangles par pan ; les deux d'en haut prennent la couleur du dessus
-      const A = R[r], Bn = R[r + 1], k1 = (k + 1) % PANS, haut = r <= 2;
+      const A = R[r], Bn = R[r + 1], k1 = (k + 1) % PANS, haut = ANNEAUX[r] > 0 && ANNEAUX[r + 1] > -10;
       tris.push({ haut, p: [A[k], Bn[k], A[k1]] }, { haut, p: [A[k1], Bn[k], Bn[k1]] });
     }
     return tris;
@@ -319,21 +321,21 @@ export function creerGeometries(THREE, col) {
     for (let k = 0; k < pans; k++) tris.push({ haut: k % 2 === 0, p: [[0, h, 0], base[(k + 1) % pans], base[k]] });
     return tris;
   }
-  function formeCouronne(nom, w, h, graine) {
-    if (nom === 'boule') return decaler(ellipsoide(w * 1.0, h * 1.9), h * 0.175);
-    if (nom === 'galette') return decaler(ellipsoide(w * 1.55, h * 0.85), -h * 0.09);
-    if (nom === 'colonne') return decaler(ellipsoide(w * 0.78, h * 2.7), h * 0.375);
+  function formeCouronne(nom, w, h, graine, g = false) {
+    if (nom === 'boule') return decaler(ellipsoide(w * 1.0, h * 1.9, g), h * 0.175);
+    if (nom === 'galette') return decaler(ellipsoide(w * 1.55, h * 0.85, g), -h * 0.09);
+    if (nom === 'colonne') return decaler(ellipsoide(w * 0.78, h * 2.7, g), h * 0.375);
     if (nom === 'cone') return decaler([...cone(w * 1.45, h * 1.05, 7, 0), ...decaler(cone(w * 0.95, h * 1.0, 6, 1), h * 0.7)], -h * 0.3);
     if (nom === 'irregulier') {
-      const tris = ellipsoide(w * 1.2, h * 1.5), cache = new Map();
+      const tris = ellipsoide(w * 1.2, h * 1.5, g), cache = new Map();
       const bruit = v => { const k = v.map(c => Math.round(c * 50)).join(','); if (!cache.has(k)) cache.set(k, [1 + (hash(k, graine) - 0.5) * 0.7, (hash(k, graine + 9) - 0.5) * 0.5 * h]); return cache.get(k); };
       for (const t of tris) for (const v of t.p) { const [f, dy] = bruit(v); v[0] *= f; v[2] *= f; if (v[1] > 0.01) v[1] += dy; }
       return decaler(tris, h * 0.075);
     }
-    return ellipsoide(w * 1.15, h * 1.25);                                          // dome
+    return ellipsoide(w * 1.15, h * 1.25, g);                                          // dome
   }
   const hash = (k, s) => { let x = s | 0; for (let i = 0; i < k.length; i++) x = Math.imul(x ^ k.charCodeAt(i), 0x01000193); x = Math.imul(x ^ (x >>> 15), 0x2c1b3c6d); return ((x ^ (x >>> 12)) >>> 0) / 4294967296; };
-  function geometrieFeuilles(id, mode, degarni, chanfrein = 0, rond = false, variante = 0) {
+  function geometrieFeuilles(id, mode, degarni, chanfrein = 0, rond = false, variante = 0, grossier = false) {
     const P = ARBRES_FEUILLES[mode];
     if (!P) return null;
     const F = formeArbre(id), pts = P.neige ? F.neige : F.pointes;
@@ -347,7 +349,7 @@ export function creerGeometries(THREE, col) {
       const dessus = teinte(P.dessus[n % P.dessus.length]), flanc = teinte(P.flanc[n % P.flanc.length]);
       if (rond && !P.neige) {                                                // la touffe ronde : une forme de la famille, selon la variante de l'arbre
         const formes = ARBRES_COURONNES[id] ?? ['dome'], largeur = ARBRES_VARIANTES.largeur[variante % ARBRES_VARIANTES.largeur.length];
-        for (const t of formeCouronne(formes[(k + variante) % formes.length], w * largeur, h, variante * 31 + k)) {
+        for (const t of formeCouronne(formes[(k + variante) % formes.length], w * largeur, h, variante * 31 + k, grossier)) {
           const c = t.haut ? dessus : flanc;
           for (const v of t.p) { pos.push(v[0] + p[0], v[1] + p[1], v[2] + p[2]); coul.push(c.r, c.g, c.b); }
         }

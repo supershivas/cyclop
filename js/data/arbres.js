@@ -30,6 +30,10 @@ export const ARBRES_FEUILLES = {
 // Un arbre sur trois est dégarni en automne ; la chute des feuilles (variante du labo) : la part de nus et de dégarnis au fil des jours
 export const ARBRES_AUTOMNE = { degarni: 0.12, margeChute: 0.35 };     // (0,33 avant le 1er novembre : Jérôme, « trop d'arbres n'ont pas de feuillages »)
 export const ARBRES_PPM_FEUILLES = 1;      // pixels par mètre à partir desquels on dessine les feuilles en détail (Jérôme, v0.61.0 : à tous les zooms ; 4 avant, et le cube de loin ne servait qu'en dessous)
+// Le feuillage grossier (chantier terrain-végétation, lot 0, v0.135.2) : un arbre qui fait moins de `ppm` pixels par mètre à l'écran (tout dézoomé, ou loin derrière le point visé) garde ses touffes,
+// leurs places et leurs couleurs, mais chaque touffe ronde n'a que `pans` pans et les anneaux `anneaux` (en degrés de latitude ; 15 triangles au lieu de 42) et ses branches tombent (le tronc seul) : à moins de
+// 2,5 pixels par mètre, une branche de 20 cm ne fait pas un pixel. Mesuré : `docs/chantiers/terrain-vegetation-realiste.md`.
+export const ARBRES_GROSSIER = { ppm: 2.5, anneaux: [90, 20, -30], pans: 5, elargir: 1.1 };     // elargir : un pentagone sur un anneau à 20° est plus étroit que l’hexagone fin à l’équateur (×1,1 garde la silhouette)
 
 // Ce que le jeu dessine (Jérôme, v0.53.1, après le sujet « Des arbres plus variés » du labo) : les six formes, les feuilles de la saison, les abattus longs. Pas de chute des feuilles ni de printemps (restent au labo).
 export const ARBRES_JEU = { feuilles: true, abattus: 'longs', chanfrein: 0.12, rond: true };     // chanfrein (Jérôme) : les touffes aux angles coupés, un pan de 12 % (au plus 30 cm) ; 0 : les cubes francs d'avant
