@@ -9,6 +9,10 @@ Statuts : **à l'étude** · **validé** (Jérôme a tranché) · **en cours** �
 
 ## En cours
 
+### Fluidité (Jérôme, v0.134.1 : « le jeu lag quel que soit le réglage », sur un MacBook Pro Intel 2019 et un M3 2023)
+
+**Statut** : en cours. Fait (v0.134.1) : le cache des ouvrages des tranchées, l'interpolation des soldats, le compteur `?perf=1` (mesures : `docs/domaines/rendu.md`, « Le lag sur Mac »). **À mesurer** : les chiffres de `?perf=1` sur les deux Macs (Jérôme). **Ensuite, selon ces chiffres** : (3) regrouper les morceaux du sol de loin (2 135 appels de dessin tout dézoomé) ; (4) étaler la simulation (`champs.calculer`, `construireGrille`, `pasArmee` : 23 à 40 % du JS) ; (5) ne renvoyer que les rangées changées des textures du sol, l'AO moins souvent ; (6) en dernier recours, la simulation dans un Web Worker.
+
 ### Retours de playtest du 30 octobre (Jérôme ; rien n'est construit, un lot par session)
 
 **Statut** : validé. Ordre proposé : A (visuels) → B (interface : fait, v0.100.0) → C (fait) → D (renforts, déroute) → E (xp, mitrailleuses : fait, v0.101.0) → F (sons : fait, v0.99.6). Chaque lot : lire son fichier de domaine, tests ciblés, `stamp`, version.

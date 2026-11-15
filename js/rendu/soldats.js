@@ -1,11 +1,11 @@
 // Les hommes : les soldats (une boîte et son ombre ; de près la silhouette, plus loin une silhouette allégée ; aux zooms 1 et 2 un point), les anneaux des
 // régiments choisis ou survolés, les corps (un homme couché) et les tombes (un tertre et une croix). Tout est instancié et ne reçoit que ce qu'on voit.
 // Le dessin seulement. Les formes viennent de geometries.js, le GLSL de shaders.js.
-import * as SH from './shaders.js?v=0.134.0';
-import { creerGeometries } from './geometries.js?v=0.134.0';
-import { classeDuRang } from '../data/grades.js?v=0.134.0';
-import { creerEquipeArticulee } from './soldat-articule.js?v=0.134.0';
-import { creerJeuAnimations } from './animation-jeu.js?v=0.134.0';
+import * as SH from './shaders.js?v=0.134.1';
+import { creerGeometries } from './geometries.js?v=0.134.1';
+import { classeDuRang } from '../data/grades.js?v=0.134.1';
+import { creerEquipeArticulee } from './soldat-articule.js?v=0.134.1';
+import { creerJeuAnimations } from './animation-jeu.js?v=0.134.1';
 
 // `THREE`, `scene`, `col`, `solUniforms` (`uSol`, `uTaille` : la texture du sol, que l'ombre d'un soldat reprend), `styleSoldat` (le style de près, comparé au labo),
 // `grades` (v0.68.0 : une variante de `GRADES`, data/grades.js, ou null : tous pareils) et `rangDe(B, id, reg)` (le rang d'un homme, bataille.js) ; `surface(x, z)` et `surfaceLisse(x, z)` (la hauteur du sol, lissée pour qui marche), `solY` (la hauteur moyenne du sol) et `POINTS_JUSQUA` (le zoom où un soldat n'est
@@ -298,9 +298,11 @@ export function creerSoldats({ THREE, scene, col, solUniforms, styleSoldat, grad
     tombesInst.geometry.instanceCount = k;
   }
   // les positions dans les tampons : seulement ceux qu'on voit (`x0`…`z1` : le rectangle englobant du sol vu ; `e` : la matrice écran ; `p` : les pixels par mètre)
-  function maj({ x0, x1, z0, z1, e, p, choisis, vh = 400 }) {
+  function maj({ x0, x1, z0, z1, e, p, choisis, vh = 400, pos = null }) {
     const B = bataille();
     const A = B.armee, n = A.n;
+    // (les positions dessinées : interpolées entre deux pas de la simulation, qui n'en fait que 30 par seconde, quand main.js les donne ; v0.134.1)
+    const AX = pos && pos.x.length >= n ? pos.x : A.x, AY = pos && pos.y.length >= n ? pos.y : A.y;
     let k = 0, ka = 0, kg = 0;
     BL.k = 0;
     lcN = 0;
@@ -314,7 +316,7 @@ export function creerSoldats({ THREE, scene, col, solUniforms, styleSoldat, grad
       const cxm = (x0 + x1) / 2, czm = (z0 + z1) / 2;
       let nc = 0;
       for (let i = 0; i < n; i++) {
-        const x = A.x[i], y = A.y[i];
+        const x = AX[i], y = AY[i];
         if (x < x0 || x > x1 || y < z0 || y > z1) continue;
         const hs = surfaceLisse(x, y);
         const cxp = e[0] * x + e[4] * hs + e[8] * y + e[12], cyp = e[1] * x + e[5] * hs + e[9] * y + e[13], cw = e[3] * x + e[7] * hs + e[11] * y + e[15];
@@ -336,7 +338,7 @@ export function creerSoldats({ THREE, scene, col, solUniforms, styleSoldat, grad
       if (animJeu) animJeu.debut();
     }
     for (let i = 0; i < n; i++) {
-      const x = A.x[i], y = A.y[i];
+      const x = AX[i], y = AY[i];
       if (x < x0 || x > x1 || y < z0 || y > z1) continue;
       // à sa vraie hauteur : sur une colline du premier plan, l'homme monte à l'écran, et le tester au niveau de la mer le retirait (v0.73.1)
       const hs = surfaceLisse(x, y);

@@ -1,75 +1,75 @@
 // Le cycle de vie : écran titre → bataille → nuit → fin ; pause active,
 // réglages, sauvegarde, mise à jour, debug. Les règles sont dans bataille.js
 // (pures), le dessin dans rendu3d.js (il ne modifie jamais l'état).
-import { createLoop } from './lib/loop.js?v=0.134.0';
-import { createKeys, stopTypeahead } from './lib/keys.js?v=0.134.0';
-import { createPointer, lockBrowserGestures } from './lib/pointer.js?v=0.134.0';
-import { createGamepad } from './lib/gamepad.js?v=0.134.0';
-import { createStore, autosave, pickJSONFile } from './lib/save.js?v=0.134.0';
-import { startUpdateCheck, loadVersion, loadChangelog, downloadJSON } from './lib/app-update.js?v=0.134.0';
-import { ROLES } from './palette.js?v=0.134.0';
-import { VERSION_CAMPAGNE, CLE as CLE_CAMPAGNE, cloturerDansLeStore, nouvelleCampagne, suivante, passage, bilan as bilanCampagne } from './campagne.js?v=0.134.0';
-import { CAMPAGNE } from './data/campagne.js?v=0.134.0';
-import { MISSIONS, MEMORIAL, peutDeployer, deployer, bordereau, progressionMission, progressionSecondaire, EUX, nouvelleBataille, etapesRestaurer, avancer, aube, ordonnerMarche, peutOrdonner, ordonnerBarrage, peutBarrage, arriereDe, ordonnerStance, peutStance, horloge, effectifs, tronconsTenus, moralEnMots, terrainResume, forcesTroncons, largeurZone, lettreZone, etendueZones, nomTroncon, actionDe, secteursDe, tronconsDeLigne, zone, photo, restaurer, PAS, NOUS } from './bataille.js?v=0.134.0';
-import { ligneY, y0En, etatTranchee } from './tranchees.js?v=0.134.0';
-import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.134.0';
-import { AVION, MITRAILLAGE } from './data/mitraillage.js?v=0.134.0';
-import { NIDS } from './data/nids.js?v=0.134.0';
-import { ligneDe, apercuVol, avionsPrets, avionsRestants, positionDe, balayage } from './avions.js?v=0.134.0';
-import { creerSon } from './audio.js?v=0.134.0';
-import { CHAR, CHAR_RECHARGE, CHARS, CHAR_PAR_DEFAUT } from './data/chars.js?v=0.134.0';
-import { GENIE, GENIE_DATA } from './data/genie.js?v=0.134.0';
-import { pontEn } from './eaux.js?v=0.134.0';
-import { PONTS_JEU, typePont } from './data/ponts.js?v=0.134.0';
-import { routeChar } from './chars.js?v=0.134.0';
-import { STANCES, STANCE_DEFAUT } from './data/stances.js?v=0.134.0';
-import { METEO, SAISONS, SAISON_DEFAUT } from './data/meteo.js?v=0.134.0';
-import { hash2 } from './lib/rng.js?v=0.134.0';
-import { creerRendu, CAMERA, ZOOMS, ZOOMS_CADRAGE } from './rendu3d.js?v=0.134.0';
-import { etatEnMots, experienceEnMots, chevrons, caracteristiques } from './identite.js?v=0.134.0';
-import { aspect } from './aspect-soldat.js?v=0.134.0';
-import { amasDe, placeDe, isoles } from './amas.js?v=0.134.0';
-import { numeroCampagne } from './bataille.js?v=0.134.0';
-import { ARTICULE } from './data/aspect-soldat.js?v=0.134.0';
-import { refusCorvee, refusTransfert, planifierTransfert, annulerTransfert } from './nuit.js?v=0.134.0';
-import { creerGestion } from './hud/regiments.js?v=0.134.0';
-import { chargerAnimationsJeu } from './animations-store.js?v=0.134.0';
-import { chargerContenu, appliquerSecteurs, appliquerCartes, appliquerCampagne } from './design-store.js?v=0.134.0';
-import { ordonnerChar, refusOrdreChar } from './chars.js?v=0.134.0';
-import { orienterNid, refusOrienterNid, raisonInactif } from './nids.js?v=0.134.0';
-import { REPARE_AVION, reparationFaite, codeAvion, codeChar, avionsAbimes } from './genie.js?v=0.134.0';
-import { PARC } from './data/parc.js?v=0.134.0';
-import { creerNidsHud } from './hud/nids.js?v=0.134.0';
-import { creerPastilles } from './hud/pastilles.js?v=0.134.0';
-import { creerSuivi } from './hud/suivi.js?v=0.134.0';
-import { creerCharsHud } from './hud/chars.js?v=0.134.0';
-import { creerCampHud } from './hud/camp.js?v=0.134.0';
-import { placeAvion, placesChars, parcChars, affecterGueris, charsDispo, ordonnerChantier, refusCamp, ouverture, campDe, refusOrdre, batimentSous, emprisesCamp, emplacementCamp, etendueCamp, niveauDe, modif, rechargeDe as facteurRecharge } from './camp.js?v=0.134.0';
-import { BATIMENTS, equipeEnMots } from './data/batiments.js?v=0.134.0';
-import { deplacable } from './hud/deplacer.js?v=0.134.0';
-import { creerSecteur, caseDe } from './hud/secteur.js?v=0.134.0';
-import { palmares } from './hud/medailles.js?v=0.134.0';
-import { lireBataille } from './donnees-jour.js?v=0.134.0';
-import { el as elDe, info as infoDe, graphe as grapheFin, frise as friseFin, legende as legendeFin, tableMed } from './hud/papier-nuit.js?v=0.134.0';
-import * as lecture from './hud/lecture.js?v=0.134.0';
-import { creerFiche } from './hud/fiche.js?v=0.134.0';
-import { chevronsHtml } from './hud/barres.js?v=0.134.0';
-import { creerNuit, corveeDe, corveeCourte } from './hud/nuit.js?v=0.134.0';
-import { creerCampagne } from './hud/campagne.js?v=0.134.0';
-import { creerCarnet, deux } from './hud/carnet.js?v=0.134.0';
-import { creerCarte } from './hud/carte.js?v=0.134.0';
-import { creerPertes } from './hud/pertes.js?v=0.134.0';
-import { creerBarreTemps } from './hud/temps.js?v=0.134.0';
-import { creerChargement } from './hud/chargement.js?v=0.134.0';
-import { creerRetours } from './hud/retours.js?v=0.134.0';
-import { creerInfobulle } from './hud/infobulle.js?v=0.134.0';
-import { SECTEURS } from './data/secteur.js?v=0.134.0';
-import { DIFFICULTES, DIFFICULTE_DEFAUT, DUREES, DUREE_DEFAUT } from './data/difficulte.js?v=0.134.0';
-import { preparerAleatoire, ID_ALEATOIRE } from './generateur.js?v=0.134.0';
-import { creerLockstep, empreinteEtat } from './reseau/lockstep.js?v=0.134.0';
-import { nouveauCode, codeValide, publier, ecouter } from './reseau/relais.js?v=0.134.0';
-import { creerHote, creerInvite } from './reseau/lien.js?v=0.134.0';
-import { SOLEIL_JEU } from './data/soleil.js?v=0.134.0';
+import { createLoop } from './lib/loop.js?v=0.134.1';
+import { createKeys, stopTypeahead } from './lib/keys.js?v=0.134.1';
+import { createPointer, lockBrowserGestures } from './lib/pointer.js?v=0.134.1';
+import { createGamepad } from './lib/gamepad.js?v=0.134.1';
+import { createStore, autosave, pickJSONFile } from './lib/save.js?v=0.134.1';
+import { startUpdateCheck, loadVersion, loadChangelog, downloadJSON } from './lib/app-update.js?v=0.134.1';
+import { ROLES } from './palette.js?v=0.134.1';
+import { VERSION_CAMPAGNE, CLE as CLE_CAMPAGNE, cloturerDansLeStore, nouvelleCampagne, suivante, passage, bilan as bilanCampagne } from './campagne.js?v=0.134.1';
+import { CAMPAGNE } from './data/campagne.js?v=0.134.1';
+import { MISSIONS, MEMORIAL, peutDeployer, deployer, bordereau, progressionMission, progressionSecondaire, EUX, nouvelleBataille, etapesRestaurer, avancer, aube, ordonnerMarche, peutOrdonner, ordonnerBarrage, peutBarrage, arriereDe, ordonnerStance, peutStance, horloge, effectifs, tronconsTenus, moralEnMots, terrainResume, forcesTroncons, largeurZone, lettreZone, etendueZones, nomTroncon, actionDe, secteursDe, tronconsDeLigne, zone, photo, restaurer, PAS, NOUS } from './bataille.js?v=0.134.1';
+import { ligneY, y0En, etatTranchee } from './tranchees.js?v=0.134.1';
+import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.134.1';
+import { AVION, MITRAILLAGE } from './data/mitraillage.js?v=0.134.1';
+import { NIDS } from './data/nids.js?v=0.134.1';
+import { ligneDe, apercuVol, avionsPrets, avionsRestants, positionDe, balayage } from './avions.js?v=0.134.1';
+import { creerSon } from './audio.js?v=0.134.1';
+import { CHAR, CHAR_RECHARGE, CHARS, CHAR_PAR_DEFAUT } from './data/chars.js?v=0.134.1';
+import { GENIE, GENIE_DATA } from './data/genie.js?v=0.134.1';
+import { pontEn } from './eaux.js?v=0.134.1';
+import { PONTS_JEU, typePont } from './data/ponts.js?v=0.134.1';
+import { routeChar } from './chars.js?v=0.134.1';
+import { STANCES, STANCE_DEFAUT } from './data/stances.js?v=0.134.1';
+import { METEO, SAISONS, SAISON_DEFAUT } from './data/meteo.js?v=0.134.1';
+import { hash2 } from './lib/rng.js?v=0.134.1';
+import { creerRendu, CAMERA, ZOOMS, ZOOMS_CADRAGE } from './rendu3d.js?v=0.134.1';
+import { etatEnMots, experienceEnMots, chevrons, caracteristiques } from './identite.js?v=0.134.1';
+import { aspect } from './aspect-soldat.js?v=0.134.1';
+import { amasDe, placeDe, isoles } from './amas.js?v=0.134.1';
+import { numeroCampagne } from './bataille.js?v=0.134.1';
+import { ARTICULE } from './data/aspect-soldat.js?v=0.134.1';
+import { refusCorvee, refusTransfert, planifierTransfert, annulerTransfert } from './nuit.js?v=0.134.1';
+import { creerGestion } from './hud/regiments.js?v=0.134.1';
+import { chargerAnimationsJeu } from './animations-store.js?v=0.134.1';
+import { chargerContenu, appliquerSecteurs, appliquerCartes, appliquerCampagne } from './design-store.js?v=0.134.1';
+import { ordonnerChar, refusOrdreChar } from './chars.js?v=0.134.1';
+import { orienterNid, refusOrienterNid, raisonInactif } from './nids.js?v=0.134.1';
+import { REPARE_AVION, reparationFaite, codeAvion, codeChar, avionsAbimes } from './genie.js?v=0.134.1';
+import { PARC } from './data/parc.js?v=0.134.1';
+import { creerNidsHud } from './hud/nids.js?v=0.134.1';
+import { creerPastilles } from './hud/pastilles.js?v=0.134.1';
+import { creerSuivi } from './hud/suivi.js?v=0.134.1';
+import { creerCharsHud } from './hud/chars.js?v=0.134.1';
+import { creerCampHud } from './hud/camp.js?v=0.134.1';
+import { placeAvion, placesChars, parcChars, affecterGueris, charsDispo, ordonnerChantier, refusCamp, ouverture, campDe, refusOrdre, batimentSous, emprisesCamp, emplacementCamp, etendueCamp, niveauDe, modif, rechargeDe as facteurRecharge } from './camp.js?v=0.134.1';
+import { BATIMENTS, equipeEnMots } from './data/batiments.js?v=0.134.1';
+import { deplacable } from './hud/deplacer.js?v=0.134.1';
+import { creerSecteur, caseDe } from './hud/secteur.js?v=0.134.1';
+import { palmares } from './hud/medailles.js?v=0.134.1';
+import { lireBataille } from './donnees-jour.js?v=0.134.1';
+import { el as elDe, info as infoDe, graphe as grapheFin, frise as friseFin, legende as legendeFin, tableMed } from './hud/papier-nuit.js?v=0.134.1';
+import * as lecture from './hud/lecture.js?v=0.134.1';
+import { creerFiche } from './hud/fiche.js?v=0.134.1';
+import { chevronsHtml } from './hud/barres.js?v=0.134.1';
+import { creerNuit, corveeDe, corveeCourte } from './hud/nuit.js?v=0.134.1';
+import { creerCampagne } from './hud/campagne.js?v=0.134.1';
+import { creerCarnet, deux } from './hud/carnet.js?v=0.134.1';
+import { creerCarte } from './hud/carte.js?v=0.134.1';
+import { creerPertes } from './hud/pertes.js?v=0.134.1';
+import { creerBarreTemps } from './hud/temps.js?v=0.134.1';
+import { creerChargement } from './hud/chargement.js?v=0.134.1';
+import { creerRetours } from './hud/retours.js?v=0.134.1';
+import { creerInfobulle } from './hud/infobulle.js?v=0.134.1';
+import { SECTEURS } from './data/secteur.js?v=0.134.1';
+import { DIFFICULTES, DIFFICULTE_DEFAUT, DUREES, DUREE_DEFAUT } from './data/difficulte.js?v=0.134.1';
+import { preparerAleatoire, ID_ALEATOIRE } from './generateur.js?v=0.134.1';
+import { creerLockstep, empreinteEtat } from './reseau/lockstep.js?v=0.134.1';
+import { nouveauCode, codeValide, publier, ecouter } from './reseau/relais.js?v=0.134.1';
+import { creerHote, creerInvite } from './reseau/lien.js?v=0.134.1';
+import { SOLEIL_JEU } from './data/soleil.js?v=0.134.1';
 
 const JEU = 'cyclopeen';
 const $ = id => document.getElementById(id);
@@ -566,7 +566,7 @@ function demanderSecteur(avecDifficulte = true) {
     const montrer = async () => {
       marquer();
       try {
-        if (!apercuSecteur) { const { creerVue3D } = await import('./apercu-3d.js?v=0.134.0'); apercuSecteur = await creerVue3D({ R, hote, rotation: 0.12 }); apercuSecteur.surClic = () => agrandir(!d.classList.contains('agrandi')); }
+        if (!apercuSecteur) { const { creerVue3D } = await import('./apercu-3d.js?v=0.134.1'); apercuSecteur = await creerVue3D({ R, hote, rotation: 0.12 }); apercuSecteur.surClic = () => agrandir(!d.classList.contains('agrandi')); }
         if (!ouvert) return;
         apercuSecteur.monter(choisi, SECTEURS[choisi], graineDe(), { soldats: false, cadrer: true, saison: saisonDe(), meteo: meteoApercu ?? undefined });
         hote.style.visibility = ''; d.dataset.apercu = `${choisi}:${graineDe()}:${saisonDe()}`;
@@ -1987,12 +1987,39 @@ createPointer($('canvas'), {
 });
 
 // ─── Boucle ────────────────────────────────────────────────────────────────
+// L'interpolation du dessin (v0.134.1) : la simulation ne fait que 30 pas par seconde ; sans elle, les hommes avançaient par à-coups (une image sur deux à 60 Hz,
+// une sur quatre à 120 Hz), même sur une machine qui suit. On garde leurs positions d'avant le dernier pas et on dessine entre les deux, selon le temps écoulé
+// depuis ce pas (l'`alpha` de la boucle). Le dessin seulement : les règles, les ordres et le survol lisent toujours l'armée. Un homme dont l'indice a changé
+// (les morts retirés, `compacter`) ou qui a sauté de plus de 3 m (la relève, l'aube) est dessiné où il est.
+const interp = { B: null, px: null, py: null, pid: null, pn: 0, x: null, y: null, alpha: 1 };
+function retenirPositions() {
+  const A = B.armee, n = A.n, c = A.x.length;
+  if (!interp.px || interp.px.length !== c) { interp.px = new Float32Array(c); interp.py = new Float32Array(c); interp.pid = new Uint32Array(c); interp.x = new Float32Array(c); interp.y = new Float32Array(c); }
+  interp.px.set(A.x.subarray(0, n)); interp.py.set(A.y.subarray(0, n)); interp.pid.set(A.id.subarray(0, n));
+  interp.pn = n; interp.B = B;
+}
+function positionsDessinees(alpha) {
+  const A = B?.armee;
+  if (!A || interp.B !== B || !interp.x || interp.x.length < A.n) return null;
+  const { px, py, pid, x, y, pn } = interp, n = A.n;
+  for (let i = 0; i < n; i++) {
+    const ax = A.x[i], ay = A.y[i];
+    if (i < pn && pid[i] === A.id[i]) {
+      const dx = ax - px[i], dy = ay - py[i];
+      if (dx * dx + dy * dy < 9) { x[i] = px[i] + dx * alpha; y[i] = py[i] + dy * alpha; continue; }
+    }
+    x[i] = ax; y[i] = ay;
+  }
+  return interp;
+}
 let derniere = performance.now();
+let compteur = null;          // le compteur de performances (?perf=1), chargé plus bas
 const loop = createLoop({
   step: PAS,
   update() {
     if (!B) return;
     const t0 = performance.now();
+    retenirPositions();
     let ev;
     if (reseau) {
       const joue = reseau.ls.cadre_(); ev = joue ? B.evenements : [];
@@ -2003,6 +2030,7 @@ const loop = createLoop({
     else ev = avancer(B);
     const ms = performance.now() - t0;
     perf.sim += (ms - perf.sim) * 0.05; perf.pas++;
+    compteur?.pas(ms);
     evenements.push(...ev);
     raconter(ev);
     if (ev.length) { const ec = ecouteDe(); for (const e of ev) son.evenement(e, ec); }
@@ -2013,7 +2041,13 @@ const loop = createLoop({
     }
     if (ev.some(e => e.type === 'fin')) { montrerFin(); }
   },
-  render() {
+  render(alpha) {
+    compteur?.debutImage();
+    try { rendreImage(alpha); } finally { compteur?.finImage(); }
+  },
+});
+function rendreImage(alpha) {
+  {
     const now = performance.now(), dt = Math.min(0.1, (now - derniere) / 1000);
     derniere = now;
     if (!$('titre').hidden) { const dev = decorPas(dt); son.image(dt, { tirs: null, ecoute: { x: 0, y: 0, rayon: 100 }, meteo: null, nuit: false, titre: true, enJeu: false }); if (!$('dialogue-carte').open) rendu.dessiner(dt, dev); return; }      // l'écran titre : le décor (figé pendant le choix du secteur : caché derrière la fenêtre, il coûtait ~170 ms par image au rendu logiciel et le glissement des cartes saccadait)
@@ -2045,6 +2079,8 @@ const loop = createLoop({
     const vols = (B.etat.mitraillages || []).filter(v => v.etat === 'vol' || v.etat === 'chute').map(v => ({ etat: v.etat, ...(v.etat === 'vol' ? positionDe(v, B.etat.temps) : { x: v.cx, y: v.cy, h: 0 }), mitraille: v.etat === 'vol' && balayage(v, B.etat.temps).actif }));
     son.image(dt, { tirs: loop.paused || B.etat.phase !== 'jour' ? null : B.tirs, ecoute: ecouteDe(), meteo: METEO[B.etat.meteo[B.etat.jour - 1]], nuit: B.etat.phase === 'nuit', aube: B.etat.phase === 'jour' && horloge(B).heure < 8, chars: loop.paused ? [] : B.etat.chars, avions: loop.paused ? [] : vols });
     rendu.gele = loop.paused && B.etat.phase === 'jour';      // le temps arrêté fige tout le dessin (v0.99.5)
+    if (!loop.paused) interp.alpha = Math.min(1, Math.max(0, alpha));       // (en pause, la boucle donne 0 : on garde l'image où l'on était)
+    rendu.positions = positionsDessinees(interp.alpha);
     $('canvas').classList.toggle('gele', rendu.gele);
     rendu.dessiner(dt, ev);
     retours.maj(dt);
@@ -2058,8 +2094,8 @@ const loop = createLoop({
     majVisee();
     majBulle();
     if ((hudT -= dt) <= 0) { hudT = 0.25; majHud(); }
-  },
-});
+  }
+}
 const evenements = [];
 let hudT = 0;
 loop.start();
@@ -2081,6 +2117,12 @@ window.cyclopStats = () => ({
   vue: { zoom: rendu.ppm, largeur: rendu.vue.vw, hauteur: rendu.vue.vh, facteur: rendu.vue.facteur },
 });
 
+// ─── Le compteur de performances (?perf=1, v0.134.1) : chargé seulement avec le paramètre ───
+if (params.has('perf')) {
+  const { creerCompteur } = await import('./compteur-perf.js?v=0.134.1');
+  compteur = creerCompteur({ rendu, stats: () => ({ sim: perf.sim, vitesse: loop.timeScale ?? vitesse, soldats: B?.armee.n ?? 0 }) });
+}
+
 // ─── Mise à jour automatique : jamais en pleine bataille (section 4) ───────
 startUpdateCheck({
   isBusy: () => enJeu() && !loop.paused,
@@ -2090,7 +2132,7 @@ startUpdateCheck({
 
 // ─── Mode debug (section 18) : chargé seulement avec ?debug=1 ──────────────
 if (DEBUG) {
-  const { installDebug, seedFromUrl } = await import('./lib/debug.js?v=0.134.0');
+  const { installDebug, seedFromUrl } = await import('./lib/debug.js?v=0.134.1');
   window.__seed = seedFromUrl() ?? undefined;
   installDebug({
     state: () => B && { ...horloge(B), effectifs: effectifs(B), pertes: B.etat.pertes, impacts: B.etat.impacts.length, enJeu: enJeu(), pause: loop.paused },

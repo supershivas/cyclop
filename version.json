@@ -1,8 +1,9 @@
 {
-  "version": "0.134.0",
+  "version": "0.134.1",
   "date": "2026-11-15",
   "changes": [
-    "Le papier de la nuit tient sans défiler : un régiment par ligne avec ses corvées en icônes, la journée à droite, les médailles en puces",
-    "L'écran de fin montre la bataille jour après jour, ses moments clés (lignes prises et perdues, déroutes, assauts, engins) et des médailles nouvelles"
+    "Plus de saccade toutes les demi-secondes : les ouvrages des tranchées ne sont refaits que là où ils ont changé",
+    "Les soldats avancent sans à-coups, même sur un écran à 120 Hz",
+    "?perf=1 dans l'adresse : un compteur de performances à copier"
   ]
 }

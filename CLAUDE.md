@@ -122,6 +122,7 @@ Autres : `DESIGN.md` (l'intention), `ROADMAP.md` (`docs/pistes-avancees.md` : le
   s'ajoutent dans `main.js`.
 - `?debug=1&grades=fanion` (ou `jumelles`, `galons`) : les grades à l'écran (v0.68.0, sujet du labo archivé : sans ce paramètre tous les soldats sont pareils).
 - `?soldats=8000` : une bataille de 8 000 soldats (les deux camps).
+- `?perf=1` : un compteur de performances à copier (`js/compteur-perf.js`, v0.134.1).
 - `?mesure=1` : chaque image attend la fin du dessin (lecture d'un pixel) ;
   `cyclopStats().ms.renduFini`. Sans lui, `rendu` est le temps côté jeu (comme
   `pierreStats()` de Pierre).

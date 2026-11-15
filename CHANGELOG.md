@@ -1,5 +1,10 @@
 # Journal des versions
 
+## 0.134.1 — 2026-11-15
+- Plus de saccade toutes les demi-secondes : les ouvrages des tranchées ne sont refaits que là où ils ont changé (les pics de 160 à 190 ms tombent à 40 à 60 ms, mesurés sans carte graphique)
+- Les soldats avancent sans à-coups, même sur un écran à 120 Hz : leur position est dessinée entre deux pas de la simulation
+- `?perf=1` dans l'adresse : un compteur de performances (durée des images, détail du JS, appels de dessin, carte graphique) à copier
+
 ## 0.134.0 — 2026-11-15
 - Le papier de la nuit tient sans défiler : un régiment par ligne avec ses corvées en icônes, la journée à droite, les médailles en puces
 - L'écran de fin montre la bataille jour après jour, ses moments clés (lignes prises et perdues, déroutes, assauts, engins) et des médailles nouvelles : le roc, l'inébranlable, le fuyard, le survivant, le char et le poste les plus meurtriers, le génie

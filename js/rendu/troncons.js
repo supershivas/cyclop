@@ -1,16 +1,17 @@
 // Ce que l'état des tronçons montre sur le terrain : les fanions (à la couleur de celui qui tient le tronçon, déchirés quand l'autre
 // camp y est entré), le clignotement d'un ordre et la surbrillance de la visée, les ouvrages des tranchées (traverses, sacs de terre,
 // fil de fer, bois). Le dessin seulement : tout se lit de l'état, rien n'en est sauvegardé.
-import { PALETTE } from '../palette.js?v=0.134.0';
-import { ligneY, demiLargeur } from '../tranchees.js?v=0.134.0';
-import { TOITS } from '../data/nids.js?v=0.134.0';
-import { filCoupe } from '../fil.js?v=0.134.0';
-import { primitives, ouvrageTroncon, niveauSelonZoom, couchesDe } from './tranchee-modeles.js?v=0.134.0';
+import { PALETTE } from '../palette.js?v=0.134.1';
+import { ligneY, demiLargeur } from '../tranchees.js?v=0.134.1';
+import { TOITS } from '../data/nids.js?v=0.134.1';
+import { filCoupe } from '../fil.js?v=0.134.1';
+import { MORCEAU } from '../terrain.js?v=0.134.1';
+import { primitives, ouvrageTroncon, niveauSelonZoom, couchesDe } from './tranchee-modeles.js?v=0.134.1';
 
 // `THREE`, `scene`, `col` (une couleur de la palette), `surface(x, z)` (la hauteur du sol), `projeter()` (le centre de la vue et les pixels par mètre),
 // `vue`, `zooms` viennent de creerRendu ; `bataille()`, `tAnim()` (le temps du dessin), `vide()` (rien n'est dessiné) et `survolTroncons()`
 // (les tronçons que le survol allume) sont lus à chaque image, parce qu'ils changent. L'ordre d'ajout à la scène est celui d'avant la découpe.
-export function creerTroncons({ THREE, scene, col, surface, projeter, vue, zooms, bataille, tAnim, vide, survolTroncons }) {
+export function creerTroncons({ THREE, scene, col, surface, projeter, vue, zooms, bataille, tAnim, vide, survolTroncons, finesse = () => 1 }) {
   const ventF = { force: 0, ang: 0 };       // le vent du moment (`setVent`), lu par les fanions
   // ─── Les fanions des tronçons (Jérôme, v0.9.2) : un fanion sur le parapet de chaque tronçon, à la couleur de celui qui
   // le tient. Déchiré quand l'autre camp y est entré ; quand le tronçon change de main, le nôtre descend, celui d'en
@@ -148,6 +149,17 @@ export function creerTroncons({ THREE, scene, col, surface, projeter, vue, zooms
   let zoneVue = null, zoneBatie = null;                          // le sol que l'écran voit (rendu3d.js le donne à chaque image) ; celui qu'on a garni
   const MARGE_OUVRAGES = 20;                                     // m : on garnit un peu au-delà de ce que l'écran voit
   const nDessines = [];                                          // les tronçons dont les ouvrages sont dessinés à la dernière refonte (la mesure du premier plan)
+  // Le cache des ouvrages, tronçon par tronçon (v0.134.1 : refaire tous les ouvrages vus deux fois par seconde prenait un tiers du JS du jeu à 8 px/m et faisait
+  // des pics de 100 à 190 ms, rendu logiciel) : un tronçon n'est refait que si ce qu'il dessine a changé (sa clé : le niveau, la texture, la finesse du sol, le toit,
+  // pris ou non, le fil coupé, les versions des morceaux de relief qu'il touche, les sacs projetés à côté) ; sinon on recopie ses sommets. Rien ne change à l'image.
+  const cacheOuv = new Map();                                    // t → { cle, niveau, pos, col, fil }
+  let signatureOuv = null, trouN = 0;                            // (la dernière liste des clés vues : identique, on ne renvoie rien à la carte graphique)
+  const versionsZone = (T, x0, x1, z0, z1) => {                  // la somme des versions des morceaux de relief d'un rectangle (elles ne font que croître : une somme égale dit « rien n'a bougé »)
+    let v = 0;
+    const my0 = Math.max(0, Math.floor(z0 / MORCEAU)), my1 = Math.min(T.mh - 1, Math.floor(z1 / MORCEAU)), mx0 = Math.max(0, Math.floor(x0 / MORCEAU)), mx1 = Math.min(T.mw - 1, Math.floor(x1 / MORCEAU));
+    for (let my = my0; my <= my1; my++) for (let mx = mx0; mx <= mx1; mx++) v += T.versionMorceau[my * T.mw + mx];
+    return v;
+  };
   function majOuvrages(dt) {
     const B = bataille();
     ouvT -= dt;
@@ -253,6 +265,26 @@ export function creerTroncons({ THREE, scene, col, surface, projeter, vue, zooms
     const { boite: boiteN, poutre } = primitives(quadN, couchesDe(couleursN()));
     let Lcourante = null;
     const gTr = { boite: boiteN, poutre, trait, surface, etat: x => etatDe(Lcourante, x), j: hachage, K: niveau ? couleursN() : null, prof, pris: false, coupe: false, texture: textureReglage, manque: (x, z) => trous.some(t => (x - t.x) ** 2 + (z - t.z) ** 2 < t.r * t.r) };
+    // les clés des tronçons vus (niveaux 1 à 3) : si rien n'a changé depuis la dernière refonte, on garde ce qui est dessiné
+    const cles = new Map();
+    if (niveau) {
+      const sig = [niveau, textureReglage, finesse(), p >= 4 ? 1 : 0, T.versionPonts];
+      B.troncons.forEach((tr, t) => {
+        const L = B.lignes[tr.ligne], xm = (tr.x0 + tr.x1) / 2, zc = ligneY(L, xm);
+        if (tr.x1 < zb.x0 || tr.x0 > zb.x1 || zc < zb.z0 - 4 || zc > zb.z1 + 4) return;
+        const pris = et.troncons[t] !== L.camp, coupe = pris || !!B.disputes[t] || filCoupe(B.etat, t);
+        const za = Math.min(zc, ligneY(L, tr.x0), ligneY(L, tr.x1)), zz = Math.max(zc, ligneY(L, tr.x0), ligneY(L, tr.x1)), m = (L.amp || 1.5) * 4 + 14;
+        let ts = '';
+        for (const o of trous) if (o.x + o.r > tr.x0 - 1 && o.x - o.r < tr.x1 + 1 && o.z + o.r > za - m && o.z - o.r < zz + m) ts += o.id + ',';
+        const cle = `${sig.join('|')}|${pris ? 1 : 0}${coupe ? 1 : 0}|${versionsZone(T, tr.x0 - 2, tr.x1 + 2, za - m, zz + m)}|${ts}`;
+        cles.set(t, cle);
+      });
+      let sn = `${[...cles].map(([t, c]) => `${t}:${c}`).join(';')}#`;
+      for (const n of et.nids || []) if (!(n.x < zb.x0 || n.x > zb.x1 || n.y < zb.z0 || n.y > zb.z1)) sn += `${n.id}:${n.etat}:${n.face}:${versionsZone(T, n.x - 3, n.x + 3, n.y - 3, n.y + 3)};`;
+      if (sn === signatureOuv) return;                            // rien de ce qu'on voit n'a changé : les tampons sont bons
+      signatureOuv = sn;
+      for (const [t, c] of cacheOuv) if (c.niveau !== niveau) cacheOuv.delete(t);       // (un autre niveau : on ne le reverra qu'en changeant de zoom)
+    } else signatureOuv = null;
     nDessines.length = 0;
     B.troncons.forEach((tr, t) => {
       const L = B.lignes[tr.ligne], xm = (tr.x0 + tr.x1) / 2, zc = ligneY(L, xm);
@@ -261,9 +293,18 @@ export function creerTroncons({ THREE, scene, col, surface, projeter, vue, zooms
       const pris = et.troncons[t] !== L.camp, f = L.face;
       Lcourante = L;
       if (niveau) {      // les niveaux de détail (v0.84.0) : tout le tronçon vient de tranchee-modeles.js ; le toit, lui, protège du tir : il reste celui du jeu
+        const cle = cles.get(t), c = cacheOuv.get(t);
+        if (c && c.cle === cle) {                                  // inchangé : on recopie ses sommets
+          const n = c.pos.length / 3, nfil = c.fil.length / 3;
+          if (n && grandir(nv, n)) { ouvPos.set(c.pos, nv * 3); ouvCol.set(c.col, nv * 3); nv += n; }
+          if (nfil && grandirFil(nf, nfil)) { filPos.set(c.fil, nf * 3); nf += nfil; }
+          return;
+        }
+        const v0 = nv, f0 = nf;
         gTr.pris = pris; gTr.coupe = pris || !!B.disputes[t] || filCoupe(B.etat, t);
         ouvrageTroncon(gTr, tr, L, niveau);
         if (p >= 4 && tr.toit) toit(tr, L);
+        cacheOuv.set(t, { cle, niveau, pos: ouvPos.slice(v0 * 3, nv * 3), col: ouvCol.slice(v0 * 3, nv * 3), fil: filPos.slice(f0 * 3, nf * 3) });
         return;
       }
       // les traverses : deux par tronçon, en travers de la tranchée
@@ -308,7 +349,10 @@ export function creerTroncons({ THREE, scene, col, surface, projeter, vue, zooms
       boite(n.x - 0.35, n.x + 0.35, h + 0.45, h + 0.8, n.y + f * 0.15 - 0.05, n.y + f * 0.15 + 0.05, cMadrierH, cMadrierB);        // le bouclier
       boite(n.x - 0.12, n.x + 0.12, h, h + 0.5, n.y - 0.12, n.y + 0.12, cMadrierH, cMadrierB);                                   // le trépied
     }
-    ouvGeo.attributes.position.needsUpdate = true; ouvGeo.attributes.color.needsUpdate = true; ouvGeo.setDrawRange(0, nv);
+    // (seulement ce qui est écrit : sans plage, three renvoie tout le tampon, sa capacité entière)
+    for (const a of [ouvGeo.attributes.position, ouvGeo.attributes.color]) { a.clearUpdateRanges(); a.addUpdateRange(0, Math.max(3, nv * 3)); a.needsUpdate = true; }
+    ouvGeo.setDrawRange(0, nv);
+    filGeo.attributes.position.clearUpdateRanges(); filGeo.attributes.position.addUpdateRange(0, Math.max(3, nf * 3));
     filGeo.attributes.position.needsUpdate = true; filGeo.setDrawRange(0, nf);
   }
 
@@ -356,7 +400,7 @@ export function creerTroncons({ THREE, scene, col, surface, projeter, vue, zooms
     let L = null, d = C[2];
     for (const l of B.lignes) { const e = Math.abs(ligneY(l, x) - z); if (e < d) { d = e; L = l; } }
     if (!L) return;                                                // aucune tranchée à portée : pas de sacs
-    trous.push({ x, z: ligneY(L, x) + L.face * 2, r: C[1] }); while (trous.length > 240) trous.shift();
+    trous.push({ x, z: ligneY(L, x) + L.face * 2, r: C[1], id: trouN++ }); while (trous.length > 240) trous.shift();
     if (!sacMesh) {
       sacMesh = new THREE.InstancedMesh(new THREE.BoxGeometry(0.84, 0.25, 0.44), new THREE.MeshBasicMaterial({ color: 0xffffff }), SACS_MAX);
       sacMesh.frustumCulled = false; sacMesh.renderOrder = 1; sacMesh.count = 0; scene.add(sacMesh);
@@ -394,15 +438,15 @@ export function creerTroncons({ THREE, scene, col, surface, projeter, vue, zooms
     preparer: preparerFanions,                                   // une bataille est branchée : un fanion par tronçon
     maj(dt) { majFanions(dt); majClignotants(dt); majOuvrages(dt); majSacs(dt); },
     projeterSacs,                                                // un obus tombe en (x, z) : des sacs de sable sont jetés en l'air
-    viderSacs() { sacsVol.length = 0; trous.length = 0; },       // une bataille est branchée : plus rien en l'air
+    viderSacs() { sacsVol.length = 0; trous.length = 0; cacheOuv.clear(); signatureOuv = null; },       // une bataille est branchée : plus rien en l'air
     setVent(force, ang) { ventF.force = force; ventF.ang = ang; },   // les fanions suivent le vent
     clignoter,                                                   // un ordre validé : les tronçons visés clignotent
     zone(x0, x1, z0, z1) { zoneVue = { x0, x1, z0, z1 }; },        // le rectangle de sol que l'écran voit (avec ses marges)
     get texture() { return textureReglage; },
-    set texture(v) { textureReglage = Math.max(0, Math.min(3, v | 0)); ouvT = 0; },          // la « texture » des ouvrages : 0 à 3 ; 3 dans le jeu
+    set texture(v) { textureReglage = Math.max(0, Math.min(3, v | 0)); ouvT = 0; signatureOuv = null; },          // la « texture » des ouvrages : 0 à 3 ; 3 dans le jeu
     get dessines() { return nDessines; },
     get niveau() { return niveauReglage; },
-    set niveau(v) { niveauReglage = v === 'auto' ? 'auto' : Math.max(0, Math.min(3, v | 0)); ouvT = 0; },         // le niveau de détail des tranchées : 0 (le jeu), 1 à 3, 'auto' (selon le zoom)
+    set niveau(v) { niveauReglage = v === 'auto' ? 'auto' : Math.max(0, Math.min(3, v | 0)); ouvT = 0; signatureOuv = null; },         // le niveau de détail des tranchées : 0 (le jeu), 1 à 3, 'auto' (selon le zoom)
     surligner(s) { surbrillance = s || { troncons: [], rects: [] }; },   // ce que l'ordre en cours de visée occuperait
   };
 }
