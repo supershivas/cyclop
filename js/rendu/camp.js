@@ -2,15 +2,57 @@
 // tant qu'un chantier dure, un liseré d'os autour du bâtiment choisi. Le dessin seulement : tout vient de l'état de la bataille, rien n'y est écrit ; et rien n'est dessiné hors de la partie bridée
 // (`etat.camp.bride`), donc ni le labo ni les tests n'ont de camp ; le jeu à deux en a un par joueur (v0.94.0). Les deux camps sont dessinés : celui d'en face est le nôtre tourné d'un demi-tour.
 // Fabrique `creerCamp({ THREE, scene, bataille: () => B, hauteur })`.
-import { atelier } from './engins.js?v=0.134.1';
-import { BATIR, chantier, regler_creux, regler_camp, vie } from './camp-modeles.js?v=0.134.1';
-import { emprisesCamp, emplacementCamp, sortieChars, placesChars, placeAvion, parcChars } from '../camp.js?v=0.134.1';
-import { avionsAbimes } from '../genie.js?v=0.134.1';
-import { PALETTE as P } from '../palette.js?v=0.134.1';
-import { DRAPEAU_U } from './drapeau.js?v=0.134.1';
-import { RONDE, pointRonde } from '../ronde.js?v=0.134.1';
+import { atelier } from './engins.js?v=0.134.2';
+import { BATIR, chantier, regler_creux, regler_camp, vie } from './camp-modeles.js?v=0.134.2';
+import { emprisesCamp, emplacementCamp, sortieChars, placesChars, placeAvion, parcChars } from '../camp.js?v=0.134.2';
+import { avionsAbimes } from '../genie.js?v=0.134.2';
+import { PALETTE as P } from '../palette.js?v=0.134.2';
+import { DRAPEAU_U } from './drapeau.js?v=0.134.2';
+import { RONDE, pointRonde } from '../ronde.js?v=0.134.2';
 
 const LUEUR = 0.9;      // × la couleur de la matière (mesuré à l'œil sur la partie du premier matin : sans elle, la boue est noire)
+
+// Les pièces fixes d'un bâtiment fusionnées par matière (v0.134.2, Jérôme : un M3 à 83 i/s tout dézoomé, `?perf=1` : three.js 6,3 ms et 2 174 appels de
+// dessin, dont ~1 250 pour les douze bâtiments des deux camps, faits de boîtes, de cylindres et de leurs arêtes posés un à un : jusqu'à 340 appels pour un seul).
+// Une pièce se fusionne si ni elle ni ses parents n'ont de `userData` (drapeau, ronde, membres, avion ou char garé, soldat : ce qui bouge ou se cache) et si sa
+// matière est ordinaire (pas de nuanceur retouché) ; ses sommets passent dans le repère du pivot. Mêmes triangles, mêmes matières : quelques appels par bâtiment.
+// Un avion ou un char garé (`parque`, `parc` : il ne fait que se montrer ou se cacher) est fusionné à part, dans son propre groupe.
+const CACHES = ['parque', 'parc'];
+const seulementCache = o => { const k = Object.keys(o.userData); return k.length > 0 && k.every(c => CACHES.includes(c)); };
+function fusionnerFixes(THREE, pivot, racine = pivot) {
+  if (racine === pivot) {
+    pivot.updateMatrixWorld(true);                       // (le pivot est neuf, à l'origine : `matrixWorld` est le repère du pivot)
+    const sous = []; pivot.traverse(o => { if (o !== pivot && seulementCache(o)) sous.push(o); });
+    for (const o of sous) fusionnerFixes(THREE, pivot, o);
+  }
+  const inverse = new THREE.Matrix4().copy(racine.matrixWorld).invert(), m = new THREE.Matrix4();
+  const parMatiere = new Map(), retirer = [];
+  const mobile = o => { for (let p = o; p && p !== racine; p = p.parent) if (Object.keys(p.userData).length) return true; return false; };
+  const ordinaire = m => m && !Array.isArray(m) && m.onBeforeCompile === THREE.Material.prototype.onBeforeCompile && !m.userData.soldat;
+  pivot.traverse(o => {
+    if (!(o.isMesh || o.isLineSegments) || o.isInstancedMesh || !o.visible || mobile(o) || !ordinaire(o.material)) return;
+    const cle = `${o.isMesh ? 'm' : 'l'}${o.material.id}|${o.renderOrder}`;
+    if (!parMatiere.has(cle)) parMatiere.set(cle, { exemple: o, geos: [] });
+    let g = o.geometry.index ? o.geometry.toNonIndexed() : o.geometry.clone();
+    g.applyMatrix4(m.multiplyMatrices(inverse, o.matrixWorld));
+    parMatiere.get(cle).geos.push(g); retirer.push(o);
+  });
+  for (const o of retirer) o.parent.remove(o);
+  for (const { exemple, geos } of parMatiere.values()) {
+    const noms = exemple.isMesh ? ['position', 'normal'] : ['position'];
+    let n = 0; for (const g of geos) n += g.attributes.position.count;
+    const geo = new THREE.BufferGeometry();
+    for (const nom of noms) {
+      const a = new Float32Array(n * 3); let k = 0;
+      for (const g of geos) { const s = g.attributes[nom]; if (s) a.set(s.array.subarray(0, s.count * 3), k); k += g.attributes.position.count * 3; }
+      geo.setAttribute(nom, new THREE.BufferAttribute(a, 3));
+    }
+    for (const g of geos) g.dispose();
+    const f = exemple.isMesh ? new THREE.Mesh(geo, exemple.material) : new THREE.LineSegments(geo, exemple.material);
+    f.renderOrder = exemple.renderOrder;
+    racine.add(f);
+  }
+}
 
 export function creerCamp({ THREE, scene, bataille, hauteur }) {
   let A = null, lumiere = null, liseret = null, choisi = null, choisiCamp = 0;
@@ -72,6 +114,7 @@ export function creerCamp({ THREE, scene, bataille, hauteur }) {
         if (c.niveau) { pivot.add(BATIR[e.cle](A, c.niveau).g); pivot.add(vie(A, e.w, e.d, c.niveau, e.camp === 0 ? P.n : P.x, e.x * 0.01 + e.y * 0.003, e.cle)); }
         if (c.chantier) pivot.add(chantier(A, e.w * (c.niveau ? 1.02 : 0.7), e.d * (c.niveau ? 1.02 : 0.7), c.niveau ? 5 : 4));
         pivot.traverse(o => { if (o.material?.emissive && !o.userData.soldat) matieres.add(o.material); });
+        fusionnerFixes(THREE, pivot);
         scene.add(pivot);
         m = { pivot, signature }; modeles.set(id, m);
       }

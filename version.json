@@ -1,9 +1,7 @@
 {
-  "version": "0.134.1",
+  "version": "0.134.2",
   "date": "2026-11-15",
   "changes": [
-    "Plus de saccade toutes les demi-secondes : les ouvrages des tranchées ne sont refaits que là où ils ont changé",
-    "Les soldats avancent sans à-coups, même sur un écran à 120 Hz",
-    "?perf=1 dans l'adresse : un compteur de performances à copier"
+    "Tout dézoomé, les bâtiments des deux camps se dessinent en quatre fois moins d'appels : le jeu est plus fluide de loin"
   ]
 }

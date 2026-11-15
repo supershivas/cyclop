@@ -1,5 +1,8 @@
 # Journal des versions
 
+## 0.134.2 — 2026-11-15
+- Tout dézoomé, les bâtiments des deux camps se dessinent en quatre fois moins d'appels (environ 1 300 → 340) : le jeu est plus fluide de loin
+
 ## 0.134.1 — 2026-11-15
 - Plus de saccade toutes les demi-secondes : les ouvrages des tranchées ne sont refaits que là où ils ont changé (les pics de 160 à 190 ms tombent à 40 à 60 ms, mesurés sans carte graphique)
 - Les soldats avancent sans à-coups, même sur un écran à 120 Hz : leur position est dessinée entre deux pas de la simulation

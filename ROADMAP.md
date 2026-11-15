@@ -11,7 +11,7 @@ Statuts : **à l'étude** · **validé** (Jérôme a tranché) · **en cours** �
 
 ### Fluidité (Jérôme, v0.134.1 : « le jeu lag quel que soit le réglage », sur un MacBook Pro Intel 2019 et un M3 2023)
 
-**Statut** : en cours. Fait (v0.134.1) : le cache des ouvrages des tranchées, l'interpolation des soldats, le compteur `?perf=1` (mesures : `docs/domaines/rendu.md`, « Le lag sur Mac »). **À mesurer** : les chiffres de `?perf=1` sur les deux Macs (Jérôme). **Ensuite, selon ces chiffres** : (3) regrouper les morceaux du sol de loin (2 135 appels de dessin tout dézoomé) ; (4) étaler la simulation (`champs.calculer`, `construireGrille`, `pasArmee` : 23 à 40 % du JS) ; (5) ne renvoyer que les rangées changées des textures du sol, l'AO moins souvent ; (6) en dernier recours, la simulation dans un Web Worker.
+**Statut** : en cours. Fait (v0.134.2) : les bâtiments du camp fusionnés (1 300 → 340 appels). Fait (v0.134.1) : le cache des ouvrages des tranchées, l'interpolation des soldats, le compteur `?perf=1` (mesures : `docs/domaines/rendu.md`, « Le lag sur Mac »). **À mesurer** : les chiffres de `?perf=1` sur les deux Macs (Jérôme). **Ensuite, selon ces chiffres** : (3) regrouper les morceaux du sol de loin (884 appels tout dézoomé ; M3 : three.js 6,3 ms par image avant la fusion du camp) ; (4) étaler la simulation (`champs.calculer`, `construireGrille`, `pasArmee` : 23 à 40 % du JS) ; (5) ne renvoyer que les rangées changées des textures du sol, l'AO moins souvent ; (6) en dernier recours, la simulation dans un Web Worker.
 
 ### Retours de playtest du 30 octobre (Jérôme ; rien n'est construit, un lot par session)
 
