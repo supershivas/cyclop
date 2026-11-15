@@ -1,9 +1,8 @@
 {
-  "version": "0.134.7",
+  "version": "0.134.8",
   "date": "2026-11-15",
   "changes": [
-    "L'eau des marécages, des trous inondés et des flaques reflète le ciel, et la pluie y fait des cercles",
-    "Les rides de l'eau n'ont plus de quadrillage",
-    "Éclairage « haut » : les fusées, les incendies et les éclairs d'obus éclairent le sol la nuit, cachés par le relief"
+    "Éclairage « haut » : de vrais nuages en volume, avec du relief, des bases sombres et des bords éclairés, qui suivent le temps",
+    "Éclairage « haut » : une brume au ras du sol à l'aube, qui se lève vers 9 h 30"
   ]
 }

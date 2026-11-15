@@ -1,5 +1,10 @@
 # Journal des versions
 
+## 0.134.8 — 2026-11-15
+
+- Éclairage « haut » : de vrais nuages en volume (une couche traversée par la vue, avec du relief, des bases plus sombres, des bords argentés côté soleil) : quelques petits cumulus par beau temps, un ciel chargé par temps sec, un plafond sombre sous la pluie ; rougis à l'aube et au couchant
+- Éclairage « haut » : une brume au ras du sol à l'aube, en bancs qui dérivent et plus épaisse dans les creux, qui se lève vers 9 h 30 et remonte un peu le soir ; épaisse par brouillard, presque absente par forte chaleur
+
 ## 0.134.7 — 2026-11-15
 
 - L'eau peu profonde (marécages, trous inondés, la nappe dans les creux) et les flaques ont les rides, le reflet du ciel et le scintillement du soleil de l'eau profonde ; sous la pluie, les gouttes y font des cercles

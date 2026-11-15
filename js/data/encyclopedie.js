@@ -3,20 +3,20 @@
 // formes, équipements, grades) n'est PAS recopié : il est lu dans son module, donc l'encyclopédie suit le jeu ; seuls les concepts n'ayant pas de table sont écrits ici.
 // Une entrée : { id, terme, cat, def, voir: [ids], capture: 'id-du-fichier' | null, faits: [[libellé, valeur], …] }. Les captures sont celles de `outils/encyclopedie.mjs` (assets/encyclopedie/<capture>.png).
 // Ajouter un mot = ajouter une ligne ici ; le labo (sujet « Encyclopédie ») et `test/encyclopedie.test.mjs` (aucun renvoi vers un mot absent, aucun doublon) font le reste.
-import { CALIBRES } from './calibres.js?v=0.134.7';
-import { METEO, SAISONS } from './meteo.js?v=0.134.7';
-import { CORVEES, CONTACT } from './corvees.js?v=0.134.7';
-import { BATIMENTS, ORDRE_BATIMENTS, EQUIPEMENTS, EQUIPEMENT, DOTATION } from './batiments.js?v=0.134.7';
-import { DIFFICULTES } from './difficulte.js?v=0.134.7';
-import { STANCES } from './stances.js?v=0.134.7';
-import { PONTS_JEU } from './ponts.js?v=0.134.7';
-import { RENFORTS } from './renforts.js?v=0.134.7';
-import { CHARS, CHAR_RECHARGE } from './chars.js?v=0.134.7';
-import { MITRAILLAGE } from './mitraillage.js?v=0.134.7';
-import { GENIE_DATA } from './genie.js?v=0.134.7';
-import { NIDS } from './nids.js?v=0.134.7';
-import { FIL } from './fil.js?v=0.134.7';
-import { CLASSES } from './grades.js?v=0.134.7';
+import { CALIBRES } from './calibres.js?v=0.134.8';
+import { METEO, SAISONS } from './meteo.js?v=0.134.8';
+import { CORVEES, CONTACT } from './corvees.js?v=0.134.8';
+import { BATIMENTS, ORDRE_BATIMENTS, EQUIPEMENTS, EQUIPEMENT, DOTATION } from './batiments.js?v=0.134.8';
+import { DIFFICULTES } from './difficulte.js?v=0.134.8';
+import { STANCES } from './stances.js?v=0.134.8';
+import { PONTS_JEU } from './ponts.js?v=0.134.8';
+import { RENFORTS } from './renforts.js?v=0.134.8';
+import { CHARS, CHAR_RECHARGE } from './chars.js?v=0.134.8';
+import { MITRAILLAGE } from './mitraillage.js?v=0.134.8';
+import { GENIE_DATA } from './genie.js?v=0.134.8';
+import { NIDS } from './nids.js?v=0.134.8';
+import { FIL } from './fil.js?v=0.134.8';
+import { CLASSES } from './grades.js?v=0.134.8';
 
 export const CATEGORIES = [
   { id: 'front', nom: 'Le front', dit: 'Où l\'on se bat : secteurs, lignes, tranchées.' },

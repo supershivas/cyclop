@@ -26,7 +26,7 @@ export const solMat = {
       uniform float uNuage, uTemps, uBiseau; uniform vec2 uVent;
       uniform sampler2D uAO; uniform float uAOon, uSunOn, uAbriOn, uFlaque; uniform vec3 uEauCoul;
       uniform sampler2D uCarteOmbre; uniform mat4 uLVP; uniform float uOmbOn, uSoleilF; uniform vec2 uOmbPx;
-      uniform sampler2D uEauM; uniform float uEauOn, uEauT, uEauSoleilF; uniform vec3 uEauHor, uEauHaut, uEauSoleil, uEauSoleilCoul; uniform float uPluieEau; uniform sampler2D uDyn; uniform vec4 uDynO; uniform vec3 uDynBlanc, uDynFeu;
+      uniform sampler2D uEauM; uniform float uEauOn, uEauT, uEauSoleilF; uniform vec3 uEauHor, uEauHaut, uEauSoleil, uEauSoleilCoul; uniform float uPluieEau; uniform float uMatin, uMatinT; uniform vec3 uBrumeSol; uniform sampler2D uDyn; uniform vec4 uDynO; uniform vec3 uDynBlanc, uDynFeu;
       uniform sampler2D uFumOmb; uniform vec3 uFumO; uniform float uFumOn; uniform sampler2D uLamp; uniform float uLampOn; uniform vec3 uLampCoul;
       varying vec2 vUV; varying vec2 vXZ; varying float vY; varying vec3 vMur;
       float h(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
@@ -113,6 +113,12 @@ export const solMat = {
         if (uFlaque > 0.0 && vUV.y < 0.5 && masqueEau < 0.3) { float thr = 1.0 - 0.85 * uFlaque; float pud = smoothstep(thr, thr + 0.25, texture2D(uAO, vXZ / uTaille).a); rgb = mix(rgb, uEauOn > 0.5 ? eau(vXZ, rgb * 0.62, 0.45) : uEauCoul * 0.8, pud * 0.8); }      // (v0.134.7) une flaque est de l'eau : le reflet, les rides et les gouttes, sur la boue mouillée
         // (session 3, éteint : uFumOn et uLampOn à 0 ; « Éclairage : haut ») l'ombre de la fumée (js/rendu/ombre-fumee.js) et la lumière des lanternes, cachée par le relief (js/rendu/lampes-sol.js)
         if (uFumOn > 0.5 && vUV.y < 0.5) { vec2 fo = (vXZ - uFumO.xy) / uFumO.z; if (fo.x > 0.0 && fo.y > 0.0 && fo.x < 1.0 && fo.y < 1.0) rgb = mix(rgb, texture2D(uSol, vUV + vec2(0.0, 0.5)).rgb, texture2D(uFumOmb, fo).r * 0.7 * uSoleilF); }
+        // (v0.134.7, « haut ») la brume du matin au ras du sol : elle remplit les creux (le canal A de l'ouverture : tranchées, cratères, trous), en bancs qui dérivent ; un voile léger ailleurs
+        if (uMatin > 0.0) {
+          float cr = texture2D(uAO, vXZ / uTaille).a;
+          float banc = 0.6 * vn(vXZ * 0.045 + uMatinT * vec2(0.031, 0.012)) + 0.4 * vn(vXZ * 0.12 - uMatinT * vec2(0.02, 0.035) + 7.0);
+          rgb = mix(rgb, uBrumeSol, clamp(uMatin * (0.12 + 0.6 * smoothstep(0.42, 0.72, banc) + 0.6 * smoothstep(0.12, 0.6, cr)), 0.0, 0.85));      // (le fond des tranchées est caché par leurs ouvrages : les bancs sur le champ portent l'effet)
+        }
         if (uLampOn > 0.0) rgb += uLampCoul * texture2D(uLamp, vXZ / uTaille).r * uLampOn;
         // (v0.134.7, « haut ») les fusées, les incendies et les éclairs d'obus, cachés par le relief (js/rendu/lampes-sol.js, dyn) : R le blanc, G le feu
         if (uDynO.w > 0.0) { vec2 fu = (vXZ - uDynO.xy) / uDynO.z; if (fu.x > 0.0 && fu.y > 0.0 && fu.x < 1.0 && fu.y < 1.0) { vec2 dl = texture2D(uDyn, fu).rg; rgb += (uDynBlanc * dl.r + uDynFeu * dl.g) * uDynO.w; } }
@@ -602,46 +608,72 @@ export const cielMat = {
         gl_Position = vec4(position.xy, 0.999, 1.0);
       }`,
   f: `uniform vec3 uHor; uniform vec3 uHaut; uniform vec3 uNuage; uniform float uCouv; uniform float uT; uniform vec2 uDer; varying vec3 vDir;
-      uniform vec3 uSoleilDir; uniform vec3 uSoleilCoul; uniform float uC2; uniform float uRouge; uniform vec3 uOrange; uniform vec3 uTeinteK; uniform float uVoile; uniform vec3 uTerre;
+      uniform vec3 uSoleilDir; uniform vec3 uSoleilCoul; uniform float uC2; uniform float uRouge; uniform vec3 uOrange; uniform vec3 uTeinteK; uniform float uVoile; uniform vec3 uTerre; uniform float uVol;
       float h(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
       float bruit(vec2 p) {
         vec2 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f);
         return mix(mix(h(i), h(i + vec2(1.0, 0.0)), f.x), mix(h(i + vec2(0.0, 1.0)), h(i + vec2(1.0, 1.0)), f.x), f.y);
       }
+      // (v0.134.7, « haut ») LES NUAGES EN VOLUME (Jérôme, 15 nov. : « on a toujours la même texture de nuages, peut-on avoir de vrais nuages ? » ; essai 3 sur 5 du banc) : une couche de 1,2 à 2,4 km
+      // traversée par le rayon de chaque pixel (32 pas), un bruit 3D (des bases plus plates et des sommets bourgeonnants : le profil en hauteur), la lumière vers le soleil (4 pas, Beer-Lambert),
+      // la diffusion avant (Henyey-Greenstein) qui fait le bord argenté, l'air qui voile le lointain. Le seuil suit la nébulosité du temps (uCouv) : quelques petits cumulus par beau temps, un plafond plein couvert.
+      float h3(vec3 p) { p = fract(p * 0.3183099 + 0.1); p *= 17.0; return fract(p.x * p.y * p.z * (p.x + p.y + p.z)); }
+      float vn3(vec3 x) { vec3 i = floor(x), f = fract(x); f = f * f * (3.0 - 2.0 * f);
+        return mix(mix(mix(h3(i), h3(i + vec3(1.0, 0.0, 0.0)), f.x), mix(h3(i + vec3(0.0, 1.0, 0.0)), h3(i + vec3(1.0, 1.0, 0.0)), f.x), f.y),
+                   mix(mix(h3(i + vec3(0.0, 0.0, 1.0)), h3(i + vec3(1.0, 0.0, 1.0)), f.x), mix(h3(i + vec3(0.0, 1.0, 1.0)), h3(i + vec3(1.0, 1.0, 1.0)), f.x), f.y), f.z); }
+      float fbm3(vec3 p, int n) { float a = 0.5, s = 0.0, w = 0.0; for (int k = 0; k < 5; k++) { if (k >= n) break; s += a * vn3(p); w += a; p = p * 2.02 + vec3(17.1, 9.3, 4.7); a *= 0.5; } return s / w; }
+      float densite(vec3 q, float th) {
+        float hh = (q.y - 1.2) / 1.2; if (hh < 0.0 || hh > 1.0) return 0.0;
+        float prof = smoothstep(0.0, 0.1, hh) * smoothstep(1.0, 0.35, hh);
+        vec3 w = q * 0.7 + vec3(uDer.x, 0.0, uDer.y) * 0.08;
+        float n = fbm3(w, 5) * 0.7 + fbm3(w * 0.3 + 3.1, 2) * 0.3;
+        return clamp((n - th - (1.0 - prof) * 0.25) * 8.0, 0.0, 1.0);
+      }
+      vec3 nuagesVolume(vec3 d, vec3 c) {
+        if (uCouv < 0.01) return c;
+        float e = max(d.y, 0.02), th = mix(0.74, 0.30, uCouv);
+        float t0 = 1.2 / e, t1 = min(2.4 / e, t0 + 12.0), dt = (t1 - t0) / 32.0, T = 1.0, mu = dot(d, uSoleilDir);
+        float hg = 0.25 * (1.0 - 0.36) / pow(1.36 - 1.2 * mu, 1.5);
+        vec3 acc = vec3(0.0);
+        for (int k = 0; k < 32; k++) {
+          vec3 q = d * (t0 + (float(k) + 0.5) * dt); float de = densite(q, th); if (de <= 0.001) continue;
+          float lt = 0.0; for (int j = 1; j <= 4; j++) lt += densite(q + uSoleilDir * 0.12 * float(j), th);
+          float hh = (q.y - 1.2) / 1.2; vec3 amb = mix(uNuage * 0.62, uNuage * 0.95, hh);
+          amb = mix(amb, amb * 0.7 + uOrange * 0.3, uRouge * 0.5);                       // le dessous des nuages rougit au couchant
+          vec3 col = amb + uSoleilCoul * exp(-lt * 0.9) * (0.55 + hg * 1.5);
+          float a = 1.0 - exp(-de * dt * 2.5); acc += T * a * col; T *= 1.0 - a; if (T < 0.03) break;
+        }
+        return mix(acc + T * c, c, (1.0 - exp(-t0 * 0.03)) * 0.75);
+      }
       void main() {
         vec3 d = normalize(vDir);
         float e = max(d.y, 0.0);
         vec3 c = mix(uHor, uHaut, smoothstep(0.0, 0.3, e));
-        vec2 q = d.xz / (e + 0.35) * 9.0 - uDer;
-        float n = 0.5 * bruit(q) + 0.25 * bruit(q * 2.1 + 5.0) + 0.17 * bruit(q * 4.3 + 11.0) + 0.08 * bruit(q * 8.7 + 17.0);
-        // (v0.134.6) le seuil du bruit qui laisse paraître la part uCouv du ciel (le bruit est à peu près normal, moyenne 0,5, écart 0,1 : la logistique approche sa loi) ; avant, le seuil glissait
-        // à peine (0,56 → 0,08) et même le beau temps avait un ciel à moitié pris
-        float seuil = 0.5 + 0.06 * log((1.005 - uCouv) / (uCouv + 0.005));
-        float nuage = smoothstep(seuil - 0.05, seuil + 0.05, n) * smoothstep(0.0, 0.18, e);
-        vec3 nc = uNuage;
-        if (uC2 > 0.5) {
-          // (session 4, éteint : uC2 à 0 ; réglage « Éclairage : haut ») le ciel v2 du labo lumière : la lueur du soleil (diffusion avant), des nuages ÉCLAIRÉS : le bord tourné vers le soleil est clair (peu de nuage entre lui et le soleil), le ventre sombre
+        vec3 fin;
+        if (uVol > 0.5) {
+          // (session 4 ; « Éclairage : haut ») le ciel v2 du labo lumière : la lueur du soleil (diffusion avant), seulement s'il y a un soleil (uC2) ; les nuages en volume, avec ou sans lui
           float mu = max(dot(d, uSoleilDir), 0.0);
-          c += uSoleilCoul * (pow(mu, 220.0) * 1.2 + pow(mu, 28.0) * 0.16 + smoothstep(0.9996, 0.99985, mu) * 1.5);
-          vec2 qs = q + uSoleilDir.xz / max(uSoleilDir.y, 0.2) * 1.2;
-          float ns = 0.5 * bruit(qs) + 0.25 * bruit(qs * 2.1 + 5.0) + 0.17 * bruit(qs * 4.3 + 11.0) + 0.08 * bruit(qs * 8.7 + 17.0);
-          float dens = smoothstep(seuil - 0.05, seuil + 0.05, ns);
-          float lum = exp(-dens * 1.8);
-          nc = mix(uNuage * 0.55, uNuage * 1.12 + uSoleilCoul * 0.25, lum) + uSoleilCoul * pow(mu, 9.0) * (1.0 - nuage) * lum * 0.4;
+          c += uC2 * uSoleilCoul * (pow(mu, 220.0) * 1.2 + pow(mu, 28.0) * 0.16 + smoothstep(0.9996, 0.99985, mu) * 1.5);
           if (uRouge > 0.0) {
-            // (v0.134.5) l'aube et le couchant : une bande orangée sur tout l'horizon, plus vive du côté du soleil (la caméra du jeu le voit rarement en face), le zénith qui fonce,
-            // le dessous des nuages bas qui rougit ; un mélange continu de l'os et de l'orange d'alerte, comme le soleil bas du labo lumière (js/lumiere/ciel.js)
+            // (v0.134.5) l'aube et le couchant : une bande orangée sur tout l'horizon, plus vive du côté du soleil (la caméra du jeu le voit rarement en face), le zénith qui fonce ;
+            // un mélange continu de l'os et de l'orange d'alerte, comme le soleil bas du labo lumière (js/lumiere/ciel.js)
             vec2 dh = normalize(d.xz + vec2(1e-4)), sh = normalize(uSoleilDir.xz + vec2(1e-4));
             float cote = 0.5 + 0.5 * dot(dh, sh);
             float bande = (1.0 - smoothstep(0.0, 0.32, e)) * (0.45 + 0.55 * cote * cote);
             vec3 chaud = mix(uOrange, vec3(0.894, 0.875, 0.816), 0.15);
             c = mix(c * (1.0 - 0.18 * uRouge * smoothstep(0.08, 0.6, e)), chaud, uRouge * bande * 0.92);
-            nc = mix(nc, nc * 0.6 + uOrange * 0.55, uRouge * (1.0 - smoothstep(0.0, 0.45, e)) * (0.5 + 0.5 * cote) * lum);
           }
+          fin = nuagesVolume(d, c);
+        } else {
+          // des nuages plats : un bruit sur un plan, le seuil qui laisse paraître la part uCouv du ciel (v0.134.6 : le bruit est à peu près normal, moyenne 0,5, écart 0,1)
+          vec2 q = d.xz / (e + 0.35) * 9.0 - uDer;
+          float n = 0.5 * bruit(q) + 0.25 * bruit(q * 2.1 + 5.0) + 0.17 * bruit(q * 4.3 + 11.0) + 0.08 * bruit(q * 8.7 + 17.0);
+          float seuil = 0.5 + 0.06 * log((1.005 - uCouv) / (uCouv + 0.005));
+          fin = mix(c, uNuage, smoothstep(seuil - 0.05, seuil + 0.05, n) * smoothstep(0.0, 0.18, e));
         }
         // (v0.134.5) la teinte chaude du crépuscule multiplie toute l'image (ciel.js) : le ciel la défait d'avance, il garde son bleu et sa bande orangée
         // et le voile du soir (temps.js : la terre qui monte sur tout l'écran de 16 h à 18 h) : le ciel en défait les deux tiers, il reste plus clair que la terre au crépuscule
-        vec3 fin = mix(c, nc, nuage) / uTeinteK;
+        fin /= uTeinteK;
         float v = uVoile * 0.67;
         fin = (fin - uTerre * v) / max(0.05, 1.0 - v);
         gl_FragColor = vec4(clamp(fin, 0.0, 1.0), 1.0);
