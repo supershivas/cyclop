@@ -1,8 +1,15 @@
 // Le ciel du jeu : un dégradé et des nuages selon la météo (Jérôme, v0.36.8 : « léger dégradé, nuages » ; v0.36.7 : le ciel suit la météo). Un plan plein écran
 // peint avant tout le reste, que le sol et le faux terrain recouvrent ; la nuit, le voile de `temps.js` le noircit. Des mélanges continus de la palette (des fondus) :
 // `[lettre, part]`. `hor` est aussi la couleur du fond et du bout du champ. Le dessin seulement : aucun hasard, le temps est celui du dessin.
-import * as SH from './shaders.js?v=0.134.4';
-import { lune, couvertureNuit, clairDeLune } from '../data/lune.js?v=0.134.4';
+import * as SH from './shaders.js?v=0.134.5';
+import { lune, couvertureNuit, clairDeLune } from '../data/lune.js?v=0.134.5';
+import { ALERTES } from '../palette.js?v=0.134.5';
+
+// L'aube et le couchant (v0.134.5, « Éclairage : haut ») : de 0 (le jour) à 1 (le soleil au ras de l'horizon), d'après l'heure (le jour du jeu va de 6 h à 18 h).
+// Avant, le ciel restait gris de 6 h à 18 h et rien ne disait l'heure à part la longueur des ombres (vu sur les captures du 15 novembre).
+export const CREPUSCULE = { aube: [6.0, 8.6], soir: [15.2, 17.7], teinte: [1.0, 0.8, 0.58], force: 0.42 };      // teinte : la lumière chaude du soleil bas, multipliée sur toute l'image (un fondu), à `force` au plus
+const lisse = (a, b, x) => { const t = Math.max(0, Math.min(1, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
+export function crepuscule(heure) { return Math.max(1 - lisse(CREPUSCULE.aube[0], CREPUSCULE.aube[1], heure), lisse(CREPUSCULE.soir[0], CREPUSCULE.soir[1], heure)); }
 
 const CIELS = {
   sec: { hor: [['e', 1]], haut: [['e', 0.75], ['t', 0.25]], nuage: [['o', 0.8], ['r', 0.2]], couv: 0.45 },
@@ -21,7 +28,7 @@ const CIELS = {
 export function creerCiel({ THREE, scene, col, camera }) {
   const u = {
     uInvProj: { value: camera.projectionMatrixInverse }, uMonde: { value: camera.matrixWorld },
-    uSoleilDir: { value: new THREE.Vector3(0, 1, 0) }, uSoleilCoul: { value: new THREE.Color() }, uC2: { value: 0 }, uHor: { value: new THREE.Color() }, uHaut: { value: new THREE.Color() }, uNuage: { value: new THREE.Color() }, uCouv: { value: 0.4 }, uT: { value: 0 }, uDer: { value: new THREE.Vector2() },
+    uSoleilDir: { value: new THREE.Vector3(0, 1, 0) }, uSoleilCoul: { value: new THREE.Color() }, uC2: { value: 0 }, uRouge: { value: 0 }, uVoile: { value: 0 }, uTerre: { value: col('t') }, uTeinteK: { value: new THREE.Vector3(1, 1, 1) }, uOrange: { value: new THREE.Color(ALERTES.orange) }, uHor: { value: new THREE.Color() }, uHaut: { value: new THREE.Color() }, uNuage: { value: new THREE.Color() }, uCouv: { value: 0.4 }, uT: { value: 0 }, uDer: { value: new THREE.Vector2() },
   };
   const plan = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), new THREE.ShaderMaterial({ uniforms: u, vertexShader: SH.cielMat.v, fragmentShader: SH.cielMat.f, depthTest: false, depthWrite: false }));
   plan.frustumCulled = false; plan.renderOrder = -10; plan.visible = false;
@@ -34,14 +41,35 @@ export function creerCiel({ THREE, scene, col, camera }) {
   const nuitPlan = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), new THREE.ShaderMaterial({ uniforms: n, vertexShader: SH.nuitCiel.v, fragmentShader: SH.nuitCiel.f, depthTest: true, depthWrite: false, transparent: true }));
   nuitPlan.frustumCulled = false; nuitPlan.renderOrder = 5.6; nuitPlan.visible = false;
   scene.add(nuitPlan);
+  // la lumière chaude du soleil bas sur le terrain : un plan plein écran qui MULTIPLIE l'image (après le monde, avant le voile de la nuit), créé à la première fois (un objet three de plus d'emblée décale les identifiants : les images de référence)
+  let chaudPlan = null;
+  function teinter(k) {
+    if (!chaudPlan) {
+      if (k <= 0) return;
+      chaudPlan = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), new THREE.ShaderMaterial({
+        uniforms: { uK: { value: 0 }, uTeinte: { value: new THREE.Vector3(...CREPUSCULE.teinte) } },
+        vertexShader: `void main() { gl_Position = vec4(position.xy, -1.0, 1.0); }`,
+        fragmentShader: `uniform float uK; uniform vec3 uTeinte; void main() { gl_FragColor = vec4(mix(vec3(1.0), uTeinte, uK), 1.0); }`,
+        transparent: true, premultipliedAlpha: true, blending: THREE.MultiplyBlending, depthTest: false, depthWrite: false,
+      }));
+      chaudPlan.frustumCulled = false; chaudPlan.renderOrder = 5.4;
+      scene.add(chaudPlan);
+    }
+    chaudPlan.visible = k > 0.002; chaudPlan.material.uniforms.uK.value = k;
+  }
   const devant = new THREE.Vector3();
+  const eau = { hor: new THREE.Color(), haut: new THREE.Color(), chaud: new THREE.Color() };
   let lis = null;      // l'état de la météo continue (`lisser`)
   const melange = (c, liste) => { c.setRGB(0, 0, 0); for (const [k, p] of liste) { const v = col(k); c.r += v.r * p; c.g += v.g * p; c.b += v.b * p; } return c; };
   return {
     // la couleur de l'horizon du temps qu'il fait (le fond, et le bout du champ)
     horizon(nom, c) { return melange(c, (CIELS[nom] || CIELS.sec).hor); },
     // le ciel v2 (session 4) : le soleil, sa direction (monde) et sa couleur (os mêlé d'eau : un mélange continu de la palette), ou null pour l'éteindre
-    soleil(dir, force = 1) { if (!dir) { u.uC2.value = 0; return; } u.uC2.value = 1; u.uSoleilDir.value.set(dir[0], dir[1], dir[2]); u.uSoleilCoul.value.copy(col('o')).multiplyScalar(0.55).add(col('e').multiplyScalar(0.1)).multiplyScalar(0.3 + 0.7 * force); },      // force : la météo continue, un soleil voilé sous un ciel couvert
+    // rouge : l'aube et le couchant (0 à 1, déjà atténué par un ciel couvert) : le ciel, la couleur du soleil et la teinte du terrain
+    // voile : l'obscurité du soir (temps.js), que le ciel défait en partie (« haut » seulement : 0 sinon)
+    voile(d) { u.uVoile.value = d; },
+    crepuscule(rouge) { const k = rouge * CREPUSCULE.force; u.uRouge.value = rouge; u.uTeinteK.value.set(...CREPUSCULE.teinte.map(v => 1 + (v - 1) * k)); teinter(k); },
+    soleil(dir, force = 1) { if (!dir) { u.uC2.value = 0; return; } u.uC2.value = 1; u.uSoleilDir.value.set(dir[0], dir[1], dir[2]); u.uSoleilCoul.value.copy(col('o')).multiplyScalar(0.55).add(col('e').multiplyScalar(0.1)).lerp(u.uOrange.value.clone().multiplyScalar(0.8), 0.7 * u.uRouge.value).multiplyScalar(0.3 + 0.7 * force); },      // force : la météo continue, un soleil voilé sous un ciel couvert
     // la météo continue (« Éclairage : haut ») : les couleurs du ciel et la couverture glissent vers celles du temps du jour (des fondus de la palette) ; créées à la première fois (un objet de plus d'emblée décale les identifiants de three)
     lisser(nom, dt, t, decalCouv = 0) {
       const C = CIELS[nom] || CIELS.sec;
@@ -51,7 +79,13 @@ export function creerCiel({ THREE, scene, col, camera }) {
       lis.couv += (C.couv - lis.couv) * a; lis.pret = true;
       u.uHor.value.copy(lis.hor); u.uHaut.value.copy(lis.haut); u.uNuage.value.copy(lis.nuage); u.uCouv.value = Math.max(0, Math.min(1, lis.couv + decalCouv)); u.uT.value = t;
     },
-    couleurs() { return { hor: u.uHor.value, haut: u.uHaut.value }; },      // le dégradé du ciel du moment (les mêmes objets, mis à jour à chaque image) : l'eau y reflète le ciel
+    // le dégradé du ciel du moment (les mêmes objets, mis à jour à chaque appel) : l'eau y reflète le ciel ; à l'aube et au couchant (« haut »), l'horizon orangé du nuanceur et le zénith qui fonce
+    couleurs() {
+      const r = u.uRouge.value;
+      eau.hor.copy(u.uHor.value).lerp(eau.chaud.copy(u.uOrange.value).lerp(col('o'), 0.15), r * 0.75);
+      eau.haut.copy(u.uHaut.value).multiplyScalar(1 - 0.18 * r).lerp(eau.chaud, r * 0.3);
+      return eau;
+    },
     horLisse(c) { return lis ? c.copy(lis.hor) : c; },
     oublier() { if (lis) lis.pret = false; },
     montrer(oui) { plan.visible = oui; if (!oui) nuitPlan.visible = false; },

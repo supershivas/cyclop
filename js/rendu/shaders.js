@@ -581,7 +581,7 @@ export const cielMat = {
         gl_Position = vec4(position.xy, 0.999, 1.0);
       }`,
   f: `uniform vec3 uHor; uniform vec3 uHaut; uniform vec3 uNuage; uniform float uCouv; uniform float uT; uniform vec2 uDer; varying vec3 vDir;
-      uniform vec3 uSoleilDir; uniform vec3 uSoleilCoul; uniform float uC2;
+      uniform vec3 uSoleilDir; uniform vec3 uSoleilCoul; uniform float uC2; uniform float uRouge; uniform vec3 uOrange; uniform vec3 uTeinteK; uniform float uVoile; uniform vec3 uTerre;
       float h(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
       float bruit(vec2 p) {
         vec2 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f);
@@ -604,8 +604,23 @@ export const cielMat = {
           float dens = smoothstep(0.56 - uCouv * 0.5, 0.74 - uCouv * 0.5, ns);
           float lum = exp(-dens * 1.8);
           nc = mix(uNuage * 0.55, uNuage * 1.12 + uSoleilCoul * 0.25, lum) + uSoleilCoul * pow(mu, 9.0) * (1.0 - nuage) * lum * 0.4;
+          if (uRouge > 0.0) {
+            // (v0.134.5) l'aube et le couchant : une bande orangée sur tout l'horizon, plus vive du côté du soleil (la caméra du jeu le voit rarement en face), le zénith qui fonce,
+            // le dessous des nuages bas qui rougit ; un mélange continu de l'os et de l'orange d'alerte, comme le soleil bas du labo lumière (js/lumiere/ciel.js)
+            vec2 dh = normalize(d.xz + vec2(1e-4)), sh = normalize(uSoleilDir.xz + vec2(1e-4));
+            float cote = 0.5 + 0.5 * dot(dh, sh);
+            float bande = (1.0 - smoothstep(0.0, 0.32, e)) * (0.45 + 0.55 * cote * cote);
+            vec3 chaud = mix(uOrange, vec3(0.894, 0.875, 0.816), 0.15);
+            c = mix(c * (1.0 - 0.18 * uRouge * smoothstep(0.08, 0.6, e)), chaud, uRouge * bande * 0.92);
+            nc = mix(nc, nc * 0.6 + uOrange * 0.55, uRouge * (1.0 - smoothstep(0.0, 0.45, e)) * (0.5 + 0.5 * cote) * lum);
+          }
         }
-        gl_FragColor = vec4(mix(c, nc, nuage), 1.0);
+        // (v0.134.5) la teinte chaude du crépuscule multiplie toute l'image (ciel.js) : le ciel la défait d'avance, il garde son bleu et sa bande orangée
+        // et le voile du soir (temps.js : la terre qui monte sur tout l'écran de 16 h à 18 h) : le ciel en défait les deux tiers, il reste plus clair que la terre au crépuscule
+        vec3 fin = mix(c, nc, nuage) / uTeinteK;
+        float v = uVoile * 0.67;
+        fin = (fin - uTerre * v) / max(0.05, 1.0 - v);
+        gl_FragColor = vec4(clamp(fin, 0.0, 1.0), 1.0);
       }`,
 };
 

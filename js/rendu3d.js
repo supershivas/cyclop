@@ -22,36 +22,36 @@
    - Les soldats : instanciés (une boîte et son ombre) ; au zoom 1 et 2, un
      point de 2 × 2 pixels (la couleur du camp sur son ombre).
    - Les corps : un homme couché (instancié) ; au zoom 1 et 2, un pixel. */
-import { loadThree } from './three-lib.js?v=0.134.4';
-import * as SH from './rendu/shaders.js?v=0.134.4';
-import { creerSoldats } from './rendu/soldats.js?v=0.134.4';
-import { creerChars } from './rendu/chars.js?v=0.134.4';
-import { creerGenies } from './rendu/genies.js?v=0.134.4';
-import { creerCamp } from './rendu/camp.js?v=0.134.4';
-import { creerAvions } from './rendu/avions.js?v=0.134.4';
-import { creerPonts } from './rendu/ponts.js?v=0.134.4';
-import { creerCiel } from './rendu/ciel.js?v=0.134.4';
-import { creerMeteoLisse, TEMPS_LISSE } from './rendu/meteo-lisse.js?v=0.134.4';
-import { creerMeteo } from './rendu/meteo.js?v=0.134.4';
-import { creerTroncons } from './rendu/troncons.js?v=0.134.4';
-import { ARBRES_JEU } from './data/arbres.js?v=0.134.4';
-import { creerVegetation } from './rendu/vegetation.js?v=0.134.4';
-import { creerTemps } from './rendu/temps.js?v=0.134.4';
-import { creerEclats } from './rendu/eclats.js?v=0.134.4';
-import { creerOmbresRelief } from './rendu/ombres-relief.js?v=0.134.4';
-import { creerAOSol, soleilDuJeu } from './rendu/ao-sol.js?v=0.134.4';
-import { cadrerOmbre } from './lumiere/ombres.js?v=0.134.4';
-import { semerOmbres, emballerOmbres, OMBRE_FUMEE } from './rendu/ombre-fumee.js?v=0.134.4';
-import { creerLampesSol } from './rendu/lampes-sol.js?v=0.134.4';
-import { OMBRES_RELIEF as OMB, NUAGES, NUAGES_VENT } from './data/soleil.js?v=0.134.4';
-import { PALETTE, ORDRE, INDICE } from './palette.js?v=0.134.4';
-import { OMBRE, couleursLigne } from './apparence.js?v=0.134.4';
-import { MORCEAU, hauteurVueQ as hauteurQ, hauteurVueM as hauteurM } from './terrain.js?v=0.134.4';
-import { horloge, secteurDuJeu, rangDe } from './bataille.js?v=0.134.4';
-import { GRADES } from './data/grades.js?v=0.134.4';
-import { profilFleuve } from './eaux.js?v=0.134.4';
-import { ligneY } from './tranchees.js?v=0.134.4';
-import { vent as ventDuJour } from './data/meteo.js?v=0.134.4';
+import { loadThree } from './three-lib.js?v=0.134.5';
+import * as SH from './rendu/shaders.js?v=0.134.5';
+import { creerSoldats } from './rendu/soldats.js?v=0.134.5';
+import { creerChars } from './rendu/chars.js?v=0.134.5';
+import { creerGenies } from './rendu/genies.js?v=0.134.5';
+import { creerCamp } from './rendu/camp.js?v=0.134.5';
+import { creerAvions } from './rendu/avions.js?v=0.134.5';
+import { creerPonts } from './rendu/ponts.js?v=0.134.5';
+import { creerCiel, crepuscule } from './rendu/ciel.js?v=0.134.5';
+import { creerMeteoLisse, TEMPS_LISSE } from './rendu/meteo-lisse.js?v=0.134.5';
+import { creerMeteo } from './rendu/meteo.js?v=0.134.5';
+import { creerTroncons } from './rendu/troncons.js?v=0.134.5';
+import { ARBRES_JEU } from './data/arbres.js?v=0.134.5';
+import { creerVegetation } from './rendu/vegetation.js?v=0.134.5';
+import { creerTemps } from './rendu/temps.js?v=0.134.5';
+import { creerEclats } from './rendu/eclats.js?v=0.134.5';
+import { creerOmbresRelief } from './rendu/ombres-relief.js?v=0.134.5';
+import { creerAOSol, soleilDuJeu } from './rendu/ao-sol.js?v=0.134.5';
+import { cadrerOmbre } from './lumiere/ombres.js?v=0.134.5';
+import { semerOmbres, emballerOmbres, OMBRE_FUMEE } from './rendu/ombre-fumee.js?v=0.134.5';
+import { creerLampesSol } from './rendu/lampes-sol.js?v=0.134.5';
+import { OMBRES_RELIEF as OMB, NUAGES, NUAGES_VENT } from './data/soleil.js?v=0.134.5';
+import { PALETTE, ORDRE, INDICE } from './palette.js?v=0.134.5';
+import { OMBRE, couleursLigne } from './apparence.js?v=0.134.5';
+import { MORCEAU, hauteurVueQ as hauteurQ, hauteurVueM as hauteurM } from './terrain.js?v=0.134.5';
+import { horloge, secteurDuJeu, rangDe } from './bataille.js?v=0.134.5';
+import { GRADES } from './data/grades.js?v=0.134.5';
+import { profilFleuve } from './eaux.js?v=0.134.5';
+import { ligneY } from './tranchees.js?v=0.134.5';
+import { vent as ventDuJour } from './data/meteo.js?v=0.134.5';
 
 export const CAMERA = { yaw: 0.15, tangage: 0.95, fov: 30 };   // au départ : tournée de 9°, plongée de 54°, angle de 30°
 // la caméra respire : un balancement très lent, 2° en 23 s (Jérôme, v0.3.1 : variante D du labo retenue)
@@ -711,19 +711,25 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
   let tAnim = 0, vide = false, gele = false;            // gele : le temps est arrêté (v0.99.5) ; le dessin s'arrête (nuages, pluie, fumée, herbe), la caméra reste libre ; vide : rien n'est dessiné (mesure du prix de l'attente)
   // La carte d'ombre (session 3 du chantier lumière ; éteinte : `rendu.ombresCarte`) : les hommes en boîtes, silhouettes et équipés vus du soleil dans une cible de profondeur de 1 024 × 1 024 ; le sol la lit
   // (solMat.f, `uCarteOmbre`) et ne dessine plus l'ombre au sol en quadrilatère de ces hommes. Pas de carte la nuit ni sans soleil. Cadrage : js/lumiere/ombres.js (le même que le labo, stabilisé).
+  let hPasse = null;                                                // l'heure de l'image (le crépuscule du ciel la lit)
+  const lisseClair = s => { const t = Math.max(0, Math.min(1, (s - 0.3) / 0.6)); return t * t * (3 - 2 * t); };
   function passeOmbres() {
     const U = solMat.uniforms, sv = soldats.soleilUniform.value;
     const actif = ombresCarte && T && Math.hypot(sv.x, sv.y) > 0.05;
     solMat.uniforms.uSoleilF.value = ombresCarte ? meteoLisse.etat.soleil : 1;
     soldats.sansOmbre(actif);
-    ciel.soleil(ombresCarte && Math.hypot(sv.x, sv.y) > 0.05 ? soleilDuJeu(sv.x, sv.y).dir : null, meteoLisse.etat.soleil);      // le ciel v2 va avec « Éclairage : haut »
+    const auSoleil = ombresCarte && Math.hypot(sv.x, sv.y) > 0.05;
+    // (v0.134.5) l'aube et le couchant, en « haut » : moins vifs sous un ciel couvert (meteo-lisse : 1 plein soleil, 0,3 couvert) ; rien la nuit
+    ciel.crepuscule(auSoleil && hPasse ? crepuscule(hPasse.heure + hPasse.minute / 60) * lisseClair(meteoLisse.etat.soleil) : 0);
+    ciel.voile(ombresCarte && hPasse?.phase === 'jour' ? sombreVu : 0);
+    ciel.soleil(auSoleil ? soleilDuJeu(sv.x, sv.y).dir : null, meteoLisse.etat.soleil);      // le ciel v2 va avec « Éclairage : haut »
     const ombresSol = [temps.arbresOmbresMesh, ...avions.ombresSol()];            // les ombres au sol que la carte remplace : arbres, disques des avions
     if (actif || ombresSolCachees) { for (const m of ombresSol) m.visible = !actif; ombresSolCachees = actif; }      // actif : cachées à chaque image (un avion neuf a son disque) ; sinon rendues une seule fois (rien d'autre ne les touche)
     if (!actif) { U.uOmbOn.value = 0; U.uFumOn.value = 0; U.uLampOn.value = 0; }
     if (ombresCarte && T) {                                          // les lanternes, cachées par le relief (la nuit) ; l'ombre de la fumée (le jour, au soleil)
       lampesSol ??= creerLampesSol({ hauteur: (x, z) => surface(x, z) });
       if (lampesSol.largeur !== T.W || lampesSol.hauteur !== T.H) { lampesSol.attacher(T); if (U.uLamp.value) { U.uLamp.value.dispose(); U.uLamp.value = null; } }
-      const nuit = Math.max(0, Math.min(1, (sombreVu - 0.08) / 0.5));
+      const nuit = temps.allume;                                   // (v0.134.5 : l'allumage des lanternes, plus l'obscurité seule : elles éclairaient le sol en plein jour à 17 h)
       if (nuit > 0.02) {
         if (lampesSol.maj(temps.lanternesVues) || !U.uLamp.value) { if (!U.uLamp.value) { const t = new THREE.DataTexture(lampesSol.tex, T.W, T.H, THREE.RedFormat, THREE.UnsignedByteType); t.magFilter = t.minFilter = THREE.LinearFilter; t.generateMipmaps = false; U.uLamp.value = t; } U.uLamp.value.needsUpdate = true; }
         U.uLampOn.value = U.uLamp.value ? nuit * 0.9 : 0;
@@ -802,7 +808,7 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
     const tt0 = performance.now();
     troncons.maj(dt);
     const tt1 = performance.now();
-    const h = horloge(B);
+    const h = horloge(B); hPasse = h;
     ciel.montrer(!!leBord?.meteo && !vide);
     if (leBord?.meteo && !vide) {
       let c;

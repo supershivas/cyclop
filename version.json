@@ -1,7 +1,8 @@
 {
-  "version": "0.134.4",
+  "version": "0.134.5",
   "date": "2026-11-15",
   "changes": [
-    "Les chars, sur le champ, au parc et en épave, et les avions garés à l'aérodrome portent la couleur de leur armée"
+    "Éclairage « haut » : l'aube et le couchant colorent le ciel, la lumière et les lacs",
+    "Les lanternes ne s'allument plus en plein jour : elles viennent au crépuscule, vers 17 h 15"
   ]
 }

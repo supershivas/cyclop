@@ -1,5 +1,10 @@
 # Journal des versions
 
+## 0.134.5 — 2026-11-15
+
+- Éclairage « haut » : l'aube et le couchant colorent le ciel d'orange, la lumière devient dorée sur le terrain et les lacs reflètent le ciel du soir
+- Les lanternes des tranchées et les lampes de l'arrière ne s'allument plus en plein jour : elles viennent au crépuscule (vers 17 h 15) et s'éteignent au lever du jour
+
 ## 0.134.4 — 2026-11-15
 
 - Les chars, sur le champ, au parc et en épave, et les avions garés à l'aérodrome portent la couleur de leur armée (bleu horizon chez nous, kaki en face)

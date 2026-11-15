@@ -1,11 +1,11 @@
 // Le temps qui passe (Jérôme, v0.8.0) : le soleil (les ombres des soldats et des arbres tournent et s'allongent), le soir et la nuit (un voile de
 // terre qui monte), les lumières (lanternes des tranchées, incendies, fusées) qui le trouent. Rien hors de la palette, sauf les fondus du voile
 // (CLAUDE.md, palette). Le dessin seulement : tout se lit de l'heure (`horloge`) et de l'état.
-import * as SH from './shaders.js?v=0.134.4';
-import { ligneY } from '../tranchees.js?v=0.134.4';
-import { hash2 } from '../lib/rng.js?v=0.134.4';
-import { clairDeLune } from '../data/lune.js?v=0.134.4';
-import { SOLEIL, SOLEIL_SAISONS, SOLEIL_COTE, SOLEIL_LEVER, NUAGES } from '../data/soleil.js?v=0.134.4';
+import * as SH from './shaders.js?v=0.134.5';
+import { ligneY } from '../tranchees.js?v=0.134.5';
+import { hash2 } from '../lib/rng.js?v=0.134.5';
+import { clairDeLune } from '../data/lune.js?v=0.134.5';
+import { SOLEIL, SOLEIL_SAISONS, SOLEIL_COTE, SOLEIL_LEVER, NUAGES } from '../data/soleil.js?v=0.134.5';
 
 // `THREE`, `scene`, `col`, `camera`, `vue`, `surface(x, z)` viennent de creerRendu ; `soleilUniform` (le bout de l'ombre d'un mètre de hauteur, lu aussi par le nuanceur
 // des soldats) et `solUniforms` (`uSol`, `uTaille` : la texture du sol, que l'ombre d'un arbre reprend) sont les uniformes partagés ; `ecl` (les éclats : les fusées) et
@@ -96,10 +96,15 @@ export function creerTemps({ THREE, scene, col, camera, vue, surface, bataille, 
       sortie.push([x, surface(x, z) + 0.9 + 0.07 * Math.abs(Math.sin(temps * 5 + h * 40)), z]);
     }
   }
-  function majLanternes(nuit) {
+  // l'allumage des lanternes et des lampes (0 éteintes, 1 pleines) : la nuit, et au crépuscule seulement quand il fait déjà sombre, en fondu. Avant (seuil 0,12 de l'obscurité),
+  // elles s'allumaient vers 16 h 30 en plein jour et peignaient de grandes taches claires au sol dès 17 h (vu sur les captures de l'éclairage, v0.134.5)
+  const ALLUMAGE = { debut: 0.28, plein: 0.42 };          // l'obscurité où elles s'allument (vers 17 h 15) et où elles sont pleines (vers 17 h 50) ; le matin, elles s'éteignent vers 6 h 20
+  const allumage = (d, h) => h.phase === 'nuit' ? 1 : Math.max(0, Math.min(1, (d - ALLUMAGE.debut) / (ALLUMAGE.plein - ALLUMAGE.debut)));
+  let allume = 0;
+  function majLanternes(a) {
     const B = bataille();
     lanternesVues.length = 0;
-    if (nuit < 0.12 || !B) { lnGeo.setDrawRange(0, 0); return; }
+    if (a <= 0 || !B) { lnGeo.setDrawRange(0, 0); return; }
     for (const reg of B.etat.regiments) {
       const t = reg.ordre.trace;
       if (!t || !reg.effectif) continue;
@@ -154,7 +159,7 @@ export function creerTemps({ THREE, scene, col, camera, vue, surface, bataille, 
     }
     return false;
   }
-  function lumiere(x, y, z, r) {
+  function lumiere(x, y, z, r, force = 1) {
     if (cachee(x, y, z)) return false;
     vEcran.set(x, y, z).project(camera); vBord.set(x + r, y, z).project(camera);
     if (vEcran.z > 1) return false;
@@ -166,7 +171,7 @@ export function creerTemps({ THREE, scene, col, camera, vue, surface, bataille, 
     for (let j = j0; j <= j1; j++) for (let i = i0; i <= i1; i++) {
       const d = Math.hypot(i + 0.5 - px, j + 0.5 - py) / rp;
       if (d >= 1) continue;
-      const v = d < 0.35 ? 255 : Math.round(255 * (1 - (d - 0.35) / 0.65));
+      const v = Math.round(force * (d < 0.35 ? 255 : 255 * (1 - (d - 0.35) / 0.65)));
       if (v > lumData[j * lumW + i]) lumData[j * lumW + i] = v;
     }
     return true;
@@ -176,7 +181,8 @@ export function creerTemps({ THREE, scene, col, camera, vue, surface, bataille, 
     const d = obscurite(h, h.phase === 'nuit' && B ? clairDeLune(h.jour, B.etat.graine, h.meteo) : 0);
     nuitMat.uniforms.uD.value = d;
     if (!vide()) nuitPlan.visible = d > 0;
-    majLanternes(d);
+    allume = allumage(d, h);
+    majLanternes(allume);
     if (!d) return d;
     preparerLumieres();
     nuitMat.uniforms.uTaille.value.set(vue.vw, vue.vh);
@@ -185,7 +191,7 @@ export function creerTemps({ THREE, scene, col, camera, vue, surface, bataille, 
     // les fusées (elles éclairent large), les incendies, les lanternes
     for (let s = 0; s < ECLATS && n < LUMIERES; s++) if (ecl.sorte[s] === 6 && ecl.age[s] < ecl.vie[s] && lumiere(ecl.x[s], ecl.y[s], ecl.z[s], 45)) n++;
     for (const f of feux) if (n < LUMIERES && lumiere(f.x, surface(f.x, f.z) + f.h, f.z, f.h > 2 ? 16 : 10)) n++;
-    for (const [x, y, z] of lanternesVues) if (n < LUMIERES && lumiere(x, y, z, 7)) n++;
+    for (const [x, y, z] of lanternesVues) if (n < LUMIERES && lumiere(x, y, z, 7, allume)) n++;
     lumTex.needsUpdate = true;
     return d;
   }
@@ -198,6 +204,7 @@ export function creerTemps({ THREE, scene, col, camera, vue, surface, bataille, 
     // le tampon des ombres d'arbres : la végétation le remplit (les arbres qu'on voit), le soleil dit où elles tombent
     get ombres() { return { ARBRES_OMBRES, aoPos, aoGeo, soleil }; },
     get lanternesVues() { return lanternesVues; },                  // les lanternes fixes qu'on voit : [x, y, z] (la couche de lampes cachées par le relief, session 3)
+    get allume() { return allume; },                                // l'allumage des lanternes (0 à 1) : la couche de lampes du sol le suit
     get arbresOmbresMesh() { return arbresOmbres; },                // l'ombre au sol des arbres : la carte d'ombre la remplace (session 3)
   };
 }
