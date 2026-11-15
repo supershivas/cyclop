@@ -1,5 +1,11 @@
 # Journal des versions
 
+## 0.138.0 — 2026-11-15
+
+- Le sol a du grain : des mottes et des éclats de glaise dans la boue, des fentes dans la glaise, des touffes et des cailloux dans l'herbe, et des bords effrangés entre l'herbe, la boue et la glaise (de près ; les seules couleurs de la palette)
+- Les arbres du front : peupliers d'Italie en colonnes (une gerbe dressée l'hiver), saules têtards, chênes larges, hêtres denses, bouleaux au tronc pâle ; chacun ses tons à chaque saison, des verts d'été propres à chaque essence, des couronnes en grappes de près
+- Des buissons en boules serrées, de tons mêlés ; l'hiver, des brindilles, coiffées de blanc sous la neige
+
 ## 0.137.0 — 2026-11-15
 
 - Au labo, « Des arbres réalistes » : les essences du front (peuplier d'Italie, saule têtard, chêne, hêtre, bouleau), leurs tons par saison, des couronnes en grappes et des verts d'été propres à chaque essence ; trois variantes à choisir

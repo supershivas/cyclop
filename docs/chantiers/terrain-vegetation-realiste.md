@@ -64,3 +64,18 @@ Jérôme (15 novembre) : « les formes des feuillages pourraient être plus réa
 | Arbres D (essences, grappes, verts étendus ; tout le champ 197 → 214 ms, +9 %) | 243 ms (+14 %) | 215 ms (+16 %) | arbres 34 000 → 64 000 |
 
 **Au-dessus du budget.** Le rendu logiciel paie chaque petit triangle (un brin fait moins d'un pixel de large) ; l'envoi côté jeu de l'herbe B : +4 ms (la boucle par case). Pistes, une fois la variante choisie : l'herbe dense seulement dès 8 ou 12 px/m, et plus clairsemée au loin ; des touffes de 3 brins plus larges ; la boucle par case une fois par déplacement de la vue (pas à chaque image) ; pour les arbres, les grappes seulement de près (au-dessus de 6 px/m à l'écran, comme le feuillage grossier en dessous de 2,5), et moins de touffes au peuplier. Le relevé `?perf=1` sur le M3 dira ce qu'il en est sur une vraie carte graphique.
+
+## En jeu (v0.138.0, Jérôme)
+
+Le grain C, les arbres D (grappes dès 6 px/m, verts d'été par essence admis), des buissons en boules (`BUISSONS_JEU.rond`, brindilles l'hiver, coiffes sous la neige), le peuplier d'hiver en gerbe ; l'herbe dense abandonnée (`docs/archives/labo-archive.md`).
+
+**Mesuré** (`node scripts/mesure.mjs --zooms 0,3,5,7`, 8 000 soldats, rendu logiciel) :
+
+| Vue | v0.135.1 (départ) | v0.135.2 (lot 0) | v0.138.0 |
+|---|---|---|---|
+| tout le champ | 228 ms, 245 000 tri. | 197 ms, 114 000 | 214 ms, 121 000 |
+| 4 px/m | 237 ms | 221 ms | 257 ms (+8 % sur le départ) |
+| 8 px/m | 208 ms | 188 ms | 236 ms (+14 %) |
+| 16 px/m | 240 ms | 213 ms | 243 ms (+1 %) |
+
+**Au-dessus du départ à 4 et 8 px/m** (le grain : +10 %, essences et grappes : le reste ; les arbres 34 000 → 44 000 triangles à 4 px/m). À relever sur le M3 (`?perf=1`) ; si c'est trop : écrire la matière dans l'alpha de la texture du sol (le grain sans ses comparaisons de couleur), les grappes dès 8 px/m.

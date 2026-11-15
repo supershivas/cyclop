@@ -1,7 +1,9 @@
 {
-  "version": "0.137.0",
+  "version": "0.138.0",
   "date": "2026-11-15",
   "changes": [
-    "Au labo : l'herbe dense (deux variantes) et des arbres réalistes (essences, teintes, couronnes en grappes), à choisir"
+    "Le sol a du grain : mottes, fentes, cailloux, brins, et des bords effrangés entre l'herbe et la boue",
+    "Les arbres du front : peupliers, saules têtards, chênes, hêtres, bouleaux, chacun ses tons à chaque saison",
+    "Des buissons en boules serrées, en brindilles l'hiver"
   ]
 }
