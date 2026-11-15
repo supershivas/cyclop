@@ -26,11 +26,39 @@ export const solMat = {
       uniform float uNuage, uTemps, uBiseau; uniform vec2 uVent;
       uniform sampler2D uAO; uniform float uAOon, uSunOn, uAbriOn, uFlaque; uniform vec3 uEauCoul;
       uniform sampler2D uCarteOmbre; uniform mat4 uLVP; uniform float uOmbOn, uSoleilF; uniform vec2 uOmbPx;
-      uniform sampler2D uEauM; uniform float uEauOn, uEauT, uEauSoleilF; uniform vec3 uEauHor, uEauHaut, uEauSoleil, uEauSoleilCoul;
+      uniform sampler2D uEauM; uniform float uEauOn, uEauT, uEauSoleilF; uniform vec3 uEauHor, uEauHaut, uEauSoleil, uEauSoleilCoul; uniform float uPluieEau; uniform sampler2D uDyn; uniform vec4 uDynO; uniform vec3 uDynBlanc, uDynFeu;
       uniform sampler2D uFumOmb; uniform vec3 uFumO; uniform float uFumOn; uniform sampler2D uLamp; uniform float uLampOn; uniform vec3 uLampCoul;
       varying vec2 vUV; varying vec2 vXZ; varying float vY; varying vec3 vMur;
       float h(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
       float vn(vec2 p) { vec2 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f); return mix(mix(h(i), h(i + vec2(1.0, 0.0)), f.x), mix(h(i + vec2(0.0, 1.0)), h(i + vec2(1.0, 1.0)), f.x), f.y); }
+      // L'EAU (v0.130.0 ; v0.134.7 : une fonction, pour l'eau profonde, peu profonde et les flaques) : des rides qui bougent, le reflet du ciel selon l'angle (Fresnel : à plat l'eau est un miroir,
+      // de dessus on voit le fond), le soleil qui scintille sur une houle fine et, sous la pluie, les cercles des gouttes ; un mélange continu de la palette (le ciel du jour : ciel.couleurs).
+      // Les rides viennent d'un BRUIT qui glisse (avant : quelques ondes superposées, qui dessinaient un quadrillage). fort : 1 l'eau profonde, moins une eau calme et peu profonde.
+      float bruitEau(vec2 p) { return vn(p) + 0.5 * vn(p * 2.03 + 17.0); }
+      vec3 eau(vec2 q, vec3 fond, float fort) {
+        float t = uEauT, e = 0.18;
+        vec2 p1 = q * 0.55 + t * vec2(0.23, 0.11), p2 = q * 1.7 - t * vec2(0.19, -0.27);
+        float n0 = bruitEau(p1) + 0.45 * vn(p2);
+        vec2 g = vec2(bruitEau(p1 + vec2(e, 0.0)) + 0.45 * vn(p2 + vec2(e * 3.1, 0.0)) - n0, bruitEau(p1 + vec2(0.0, e)) + 0.45 * vn(p2 + vec2(0.0, e * 3.1)) - n0) * 0.55 * fort;
+        // la pluie : des cercles qui s'élargissent, un par case de 0,7 m et par battement, à une place tirée de la case
+        if (uPluieEau > 0.0) {
+          vec2 cq = q / 0.7, id = floor(cq), f = fract(cq) - 0.5 - (vec2(h(id), h(id + 3.7)) - 0.5) * 0.5;
+          float ph = fract(t * 0.85 + h(id + 9.1)), r = ph * 0.5, d = length(f);
+          float anneau = exp(-pow((d - r) / 0.045, 2.0)) * (1.0 - ph) * uPluieEau;
+          g += f / max(d, 0.001) * anneau * 0.5;
+        }
+        vec3 Nw = normalize(vec3(-g.x, 1.0, -g.y)), V = normalize(cameraPosition - vec3(q.x, vY, q.y)), Rf = reflect(-V, Nw);
+        float fres = clamp(clamp(0.04 + 0.96 * pow(1.0 - max(dot(Nw, V), 0.0), 5.0), 0.0, 1.0) * 1.5 + 0.28 * fort, 0.0, 0.85);
+        vec3 sky = mix(uEauHor, uEauHaut, smoothstep(0.0, 0.7, max(Rf.y, 0.0)));
+        // le soleil scintille sur de PETITES rides (une houle fine), en éclats serrés : avec les grandes rides seules, l'éclat faisait de larges taches blanches floues (v0.134.6)
+        vec2 p3 = q * 2.6 + t * vec2(0.9, -0.6);
+        float m0 = vn(p3);
+        vec2 g2 = vec2(vn(p3 + vec2(0.1, 0.0)) - m0, vn(p3 + vec2(0.0, 0.1)) - m0) * 2.2;
+        vec3 Rs = reflect(-V, normalize(Nw + vec3(-g2.x, 0.0, -g2.y)));
+        float sc = pow(max(dot(Rs, uEauSoleil), 0.0), 900.0) * 2.2 * uEauSoleilF * (1.0 - 0.6 * uPluieEau);
+        float rid = (n0 - 0.97) * 0.06 * fort;                                    // des plaques claires et sombres qui glissent
+        return mix(fond, sky * 1.1 + 0.03, fres) + vec3(rid) + uEauSoleilCoul * sc;
+      }
       void main() {
         vec2 uv = vUV;
         // (labo) le liseré : le haut d'une paroi prend la couleur du dessus de la case (la moitié haute de la texture), sur au plus deux cinquièmes de la paroi : l'arête paraît adoucie, sans triangle ni couleur de plus
@@ -39,21 +67,9 @@ export const solMat = {
         vec3 rgb = c.rgb;
         // (v0.130.0, « Éclairage : moyen » et « haut ») l'EAU du labo lumière : des rides qui bougent, le reflet du ciel selon l'angle (Fresnel : à plat l'eau est un miroir, de dessus on voit le fond) et le soleil qui scintille ;
         // un mélange continu de la palette (le ciel du jour : ciel.couleurs) ; le dessus des cases d'eau profonde seulement (le masque uEauM, js/rendu3d.js) ; gelée ou enneigée : rien
-        if (uEauOn > 0.5 && vUV.y < 0.5 && texture2D(uEauM, vXZ / uTaille).r > 0.5) {
-          vec2 q = vXZ; float t = uEauT;
-          vec2 g = vec2(sin(q.x * 1.7 + t * 1.3) + 0.7 * sin(q.x * 0.6 + q.y * 0.9 - t * 0.8) + 0.25 * sin((q.x + q.y) * 3.1 + t * 2.1),
-                        sin(q.y * 1.4 - t * 1.1) + 0.7 * sin(q.y * 0.7 - q.x * 0.5 + t * 0.7) + 0.25 * sin((q.x - q.y) * 2.7 - t * 1.9)) * 0.045;
-          vec3 Nw = normalize(vec3(-g.x, 1.0, -g.y)), V = normalize(cameraPosition - vec3(vXZ.x, vY, vXZ.y)), Rf = reflect(-V, Nw);
-          float fres = clamp(clamp(0.04 + 0.96 * pow(1.0 - max(dot(Nw, V), 0.0), 5.0), 0.0, 1.0) * 1.5 + 0.28, 0.0, 0.85);
-          vec3 sky = mix(uEauHor, uEauHaut, smoothstep(0.0, 0.7, max(Rf.y, 0.0)));
-          // (v0.134.6) le soleil scintille sur de PETITES rides (une houle fine, 1,5 à 3 m), en éclats serrés : avec les grandes rides seules, l'éclat faisait de larges taches blanches floues
-          vec2 g2 = vec2(sin(q.x * 5.3 + q.y * 1.7 + t * 3.1) + sin(q.x * 8.9 - q.y * 3.3 - t * 2.3), sin(q.y * 6.1 - q.x * 2.1 + t * 2.7) + sin(q.y * 9.7 + q.x * 4.1 - t * 3.4)) * 0.06;
-          vec3 Rs = reflect(-V, normalize(Nw + vec3(-g2.x, 0.0, -g2.y)));
-          float sc = pow(max(dot(Rs, uEauSoleil), 0.0), 900.0) * 2.2 * uEauSoleilF;
-          vec3 fond = uEauCoul * 0.82;                                            // le fond : l'eau profonde, plus sombre que sa teinte de palette
-          float rid = (g.x * 0.9 - g.y * 0.6) * 0.8;                              // les rides : des bandes claires et sombres qui glissent
-          rgb = mix(fond, sky * 1.1 + 0.03, fres) + vec3(rid) + uEauSoleilCoul * sc;
-        }
+        // (v0.134.7) aussi l'eau PEU PROFONDE (le masque à 150 : marécages, trous inondés, nappe dans les creux) : plus calme, on y voit le fond
+        float masqueEau = uEauOn > 0.5 && vUV.y < 0.5 ? texture2D(uEauM, vXZ / uTaille).r : 0.0;
+        if (masqueEau > 0.3) rgb = eau(vXZ, masqueEau > 0.8 ? uEauCoul * 0.82 : rgb * 0.88, masqueEau > 0.8 ? 1.0 : 0.6);
         // (labo) l'ombre des nuages : par blocs de 2 m qui dérivent avec le vent, les cases sous un nuage prennent un mélange de leur couleur et de celle de leur paroi (la moitié basse de la texture) ; le dessus seulement, uNuage à 0 : rien
         if (uNuage > 0.0 && vUV.y < 0.5) {
           vec2 q = floor(vXZ / 2.0) * 2.0 + uVent * uTemps;
@@ -94,10 +110,12 @@ export const solMat = {
         }
         // (session 2, éteint : uAbriOn à 0) la lumière propagée sous les toits de bois (canal B : 240 à ciel ouvert, moins à mesure qu'on s'enfonce sous le toit)
         // (session 2, éteint : uFlaque à 0) les flaques : le creux (canal A : de combien la case est plus basse que celles à 3 m autour) se remplit d'eau quand il pleut ; un mélange continu avec l'eau de la palette
-        if (uFlaque > 0.0 && vUV.y < 0.5) { float thr = 1.0 - 0.85 * uFlaque; float pud = smoothstep(thr, thr + 0.25, texture2D(uAO, vXZ / uTaille).a); rgb = mix(rgb, uEauCoul * 0.8, pud * 0.75); }
+        if (uFlaque > 0.0 && vUV.y < 0.5 && masqueEau < 0.3) { float thr = 1.0 - 0.85 * uFlaque; float pud = smoothstep(thr, thr + 0.25, texture2D(uAO, vXZ / uTaille).a); rgb = mix(rgb, uEauOn > 0.5 ? eau(vXZ, rgb * 0.62, 0.45) : uEauCoul * 0.8, pud * 0.8); }      // (v0.134.7) une flaque est de l'eau : le reflet, les rides et les gouttes, sur la boue mouillée
         // (session 3, éteint : uFumOn et uLampOn à 0 ; « Éclairage : haut ») l'ombre de la fumée (js/rendu/ombre-fumee.js) et la lumière des lanternes, cachée par le relief (js/rendu/lampes-sol.js)
         if (uFumOn > 0.5 && vUV.y < 0.5) { vec2 fo = (vXZ - uFumO.xy) / uFumO.z; if (fo.x > 0.0 && fo.y > 0.0 && fo.x < 1.0 && fo.y < 1.0) rgb = mix(rgb, texture2D(uSol, vUV + vec2(0.0, 0.5)).rgb, texture2D(uFumOmb, fo).r * 0.7 * uSoleilF); }
         if (uLampOn > 0.0) rgb += uLampCoul * texture2D(uLamp, vXZ / uTaille).r * uLampOn;
+        // (v0.134.7, « haut ») les fusées, les incendies et les éclairs d'obus, cachés par le relief (js/rendu/lampes-sol.js, dyn) : R le blanc, G le feu
+        if (uDynO.w > 0.0) { vec2 fu = (vXZ - uDynO.xy) / uDynO.z; if (fu.x > 0.0 && fu.y > 0.0 && fu.x < 1.0 && fu.y < 1.0) { vec2 dl = texture2D(uDyn, fu).rg; rgb += (uDynBlanc * dl.r + uDynFeu * dl.g) * uDynO.w; } }
         if (uAbriOn > 0.5) { float f = clamp(texture2D(uAO, vXZ / uTaille).b / 0.941, 0.0, 1.0); rgb *= mix(0.25, 1.0, f * f * f); }
         if (uAOon > 0.5) rgb *= 0.5 + 0.5 * pow(texture2D(uAO, vXZ / uTaille).g, 1.3);
         gl_FragColor = vec4(rgb, 1.0);

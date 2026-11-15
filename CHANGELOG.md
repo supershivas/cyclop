@@ -1,5 +1,11 @@
 # Journal des versions
 
+## 0.134.7 — 2026-11-15
+
+- L'eau peu profonde (marécages, trous inondés, la nappe dans les creux) et les flaques ont les rides, le reflet du ciel et le scintillement du soleil de l'eau profonde ; sous la pluie, les gouttes y font des cercles
+- Les rides de l'eau viennent d'un bruit qui glisse : plus de quadrillage
+- Éclairage « haut » : la nuit, les fusées éclairantes, les incendies et les éclairs d'obus éclairent le sol, cachés par le relief (un parapet garde la tranchée dans l'ombre) ; l'éclair d'un obus perce le noir
+
 ## 0.134.6 — 2026-11-15
 
 - Les nuages suivent le temps : aucun par forte chaleur, quelques-uns par beau temps, d'autres par gel, la moitié du ciel par temps sec, un ciel plein quand il est couvert ; leur ombre au sol couvre la même part du terrain

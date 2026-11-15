@@ -1,11 +1,11 @@
 // Le temps qui passe (Jérôme, v0.8.0) : le soleil (les ombres des soldats et des arbres tournent et s'allongent), le soir et la nuit (un voile de
 // terre qui monte), les lumières (lanternes des tranchées, incendies, fusées) qui le trouent. Rien hors de la palette, sauf les fondus du voile
 // (CLAUDE.md, palette). Le dessin seulement : tout se lit de l'heure (`horloge`) et de l'état.
-import * as SH from './shaders.js?v=0.134.6';
-import { ligneY } from '../tranchees.js?v=0.134.6';
-import { hash2 } from '../lib/rng.js?v=0.134.6';
-import { clairDeLune } from '../data/lune.js?v=0.134.6';
-import { SOLEIL, SOLEIL_SAISONS, SOLEIL_COTE, SOLEIL_LEVER, NUAGES } from '../data/soleil.js?v=0.134.6';
+import * as SH from './shaders.js?v=0.134.7';
+import { ligneY } from '../tranchees.js?v=0.134.7';
+import { hash2 } from '../lib/rng.js?v=0.134.7';
+import { clairDeLune } from '../data/lune.js?v=0.134.7';
+import { SOLEIL, SOLEIL_SAISONS, SOLEIL_COTE, SOLEIL_LEVER, NUAGES } from '../data/soleil.js?v=0.134.7';
 
 // `THREE`, `scene`, `col`, `camera`, `vue`, `surface(x, z)` viennent de creerRendu ; `soleilUniform` (le bout de l'ombre d'un mètre de hauteur, lu aussi par le nuanceur
 // des soldats) et `solUniforms` (`uSol`, `uTaille` : la texture du sol, que l'ombre d'un arbre reprend) sont les uniformes partagés ; `ecl` (les éclats : les fusées) et
@@ -100,7 +100,7 @@ export function creerTemps({ THREE, scene, col, camera, vue, surface, bataille, 
   // elles s'allumaient vers 16 h 30 en plein jour et peignaient de grandes taches claires au sol dès 17 h (vu sur les captures de l'éclairage, v0.134.5)
   const ALLUMAGE = { debut: 0.28, plein: 0.42 };          // l'obscurité où elles s'allument (vers 17 h 15) et où elles sont pleines (vers 17 h 50) ; le matin, elles s'éteignent vers 6 h 20
   const allumage = (d, h) => h.phase === 'nuit' ? 1 : Math.max(0, Math.min(1, (d - ALLUMAGE.debut) / (ALLUMAGE.plein - ALLUMAGE.debut)));
-  let allume = 0;
+  let allume = 0, eclairs = false;
   function majLanternes(a) {
     const B = bataille();
     lanternesVues.length = 0;
@@ -192,6 +192,8 @@ export function creerTemps({ THREE, scene, col, camera, vue, surface, bataille, 
     for (let s = 0; s < ECLATS && n < LUMIERES; s++) if (ecl.sorte[s] === 6 && ecl.age[s] < ecl.vie[s] && lumiere(ecl.x[s], ecl.y[s], ecl.z[s], 45)) n++;
     for (const f of feux) if (n < LUMIERES && lumiere(f.x, surface(f.x, f.z) + f.h, f.z, f.h > 2 ? 16 : 10)) n++;
     for (const [x, y, z] of lanternesVues) if (n < LUMIERES && lumiere(x, y, z, 7, allume)) n++;
+    // (v0.134.7, « haut ») l'éclair d'un obus perce aussi la nuit, le temps de l'éclair (un par impact : les éclats d'éclair regroupés par 4 m)
+    if (eclairs) { const vus = new Set(); for (let s = 0; s < ECLATS && n < LUMIERES; s++) if (ecl.sorte[s] === 0 && ecl.age[s] < ecl.vie[s]) { const k = `${Math.round(ecl.x[s] / 4)},${Math.round(ecl.z[s] / 4)}`; if (vus.has(k)) continue; vus.add(k); if (lumiere(ecl.x[s], ecl.y[s], ecl.z[s], 20, 1 - ecl.age[s] / ecl.vie[s])) n++; } }
     lumTex.needsUpdate = true;
     return d;
   }
@@ -204,7 +206,8 @@ export function creerTemps({ THREE, scene, col, camera, vue, surface, bataille, 
     // le tampon des ombres d'arbres : la végétation le remplit (les arbres qu'on voit), le soleil dit où elles tombent
     get ombres() { return { ARBRES_OMBRES, aoPos, aoGeo, soleil }; },
     get lanternesVues() { return lanternesVues; },                  // les lanternes fixes qu'on voit : [x, y, z] (la couche de lampes cachées par le relief, session 3)
-    get allume() { return allume; },                                // l'allumage des lanternes (0 à 1) : la couche de lampes du sol le suit
+    get allume() { return allume; },
+    set eclairs(v) { eclairs = !!v; },                              // (v0.134.7) les éclairs d'obus percent la nuit (« haut »)                                // l'allumage des lanternes (0 à 1) : la couche de lampes du sol le suit
     get arbresOmbresMesh() { return arbresOmbres; },                // l'ombre au sol des arbres : la carte d'ombre la remplace (session 3)
   };
 }

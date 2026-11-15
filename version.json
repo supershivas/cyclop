@@ -1,9 +1,9 @@
 {
-  "version": "0.134.6",
+  "version": "0.134.7",
   "date": "2026-11-15",
   "changes": [
-    "Les nuages suivent le temps : aucun par forte chaleur, quelques-uns par beau temps, la moitié du ciel par temps sec, et leur ombre au sol aussi",
-    "Les lacs et les fleuves reflètent vraiment le ciel, et le soleil y scintille en petits éclats",
-    "L'eau sans reflet n'a plus son quadrillage de points : des rides éparses"
+    "L'eau des marécages, des trous inondés et des flaques reflète le ciel, et la pluie y fait des cercles",
+    "Les rides de l'eau n'ont plus de quadrillage",
+    "Éclairage « haut » : les fusées, les incendies et les éclairs d'obus éclairent le sol la nuit, cachés par le relief"
   ]
 }

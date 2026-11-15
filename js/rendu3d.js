@@ -22,36 +22,36 @@
    - Les soldats : instanciés (une boîte et son ombre) ; au zoom 1 et 2, un
      point de 2 × 2 pixels (la couleur du camp sur son ombre).
    - Les corps : un homme couché (instancié) ; au zoom 1 et 2, un pixel. */
-import { loadThree } from './three-lib.js?v=0.134.6';
-import * as SH from './rendu/shaders.js?v=0.134.6';
-import { creerSoldats } from './rendu/soldats.js?v=0.134.6';
-import { creerChars } from './rendu/chars.js?v=0.134.6';
-import { creerGenies } from './rendu/genies.js?v=0.134.6';
-import { creerCamp } from './rendu/camp.js?v=0.134.6';
-import { creerAvions } from './rendu/avions.js?v=0.134.6';
-import { creerPonts } from './rendu/ponts.js?v=0.134.6';
-import { creerCiel, crepuscule } from './rendu/ciel.js?v=0.134.6';
-import { creerMeteoLisse, TEMPS_LISSE } from './rendu/meteo-lisse.js?v=0.134.6';
-import { creerMeteo } from './rendu/meteo.js?v=0.134.6';
-import { creerTroncons } from './rendu/troncons.js?v=0.134.6';
-import { ARBRES_JEU } from './data/arbres.js?v=0.134.6';
-import { creerVegetation } from './rendu/vegetation.js?v=0.134.6';
-import { creerTemps } from './rendu/temps.js?v=0.134.6';
-import { creerEclats } from './rendu/eclats.js?v=0.134.6';
-import { creerOmbresRelief } from './rendu/ombres-relief.js?v=0.134.6';
-import { creerAOSol, soleilDuJeu } from './rendu/ao-sol.js?v=0.134.6';
-import { cadrerOmbre } from './lumiere/ombres.js?v=0.134.6';
-import { semerOmbres, emballerOmbres, OMBRE_FUMEE } from './rendu/ombre-fumee.js?v=0.134.6';
-import { creerLampesSol } from './rendu/lampes-sol.js?v=0.134.6';
-import { OMBRES_RELIEF as OMB, NUAGES, NUAGES_VENT } from './data/soleil.js?v=0.134.6';
-import { PALETTE, ORDRE, INDICE } from './palette.js?v=0.134.6';
-import { OMBRE, couleursLigne } from './apparence.js?v=0.134.6';
-import { MORCEAU, hauteurVueQ as hauteurQ, hauteurVueM as hauteurM } from './terrain.js?v=0.134.6';
-import { horloge, secteurDuJeu, rangDe } from './bataille.js?v=0.134.6';
-import { GRADES } from './data/grades.js?v=0.134.6';
-import { profilFleuve } from './eaux.js?v=0.134.6';
-import { ligneY } from './tranchees.js?v=0.134.6';
-import { vent as ventDuJour } from './data/meteo.js?v=0.134.6';
+import { loadThree } from './three-lib.js?v=0.134.7';
+import * as SH from './rendu/shaders.js?v=0.134.7';
+import { creerSoldats } from './rendu/soldats.js?v=0.134.7';
+import { creerChars } from './rendu/chars.js?v=0.134.7';
+import { creerGenies } from './rendu/genies.js?v=0.134.7';
+import { creerCamp } from './rendu/camp.js?v=0.134.7';
+import { creerAvions } from './rendu/avions.js?v=0.134.7';
+import { creerPonts } from './rendu/ponts.js?v=0.134.7';
+import { creerCiel, crepuscule } from './rendu/ciel.js?v=0.134.7';
+import { creerMeteoLisse, TEMPS_LISSE } from './rendu/meteo-lisse.js?v=0.134.7';
+import { creerMeteo } from './rendu/meteo.js?v=0.134.7';
+import { creerTroncons } from './rendu/troncons.js?v=0.134.7';
+import { ARBRES_JEU } from './data/arbres.js?v=0.134.7';
+import { creerVegetation } from './rendu/vegetation.js?v=0.134.7';
+import { creerTemps } from './rendu/temps.js?v=0.134.7';
+import { creerEclats } from './rendu/eclats.js?v=0.134.7';
+import { creerOmbresRelief } from './rendu/ombres-relief.js?v=0.134.7';
+import { creerAOSol, soleilDuJeu } from './rendu/ao-sol.js?v=0.134.7';
+import { cadrerOmbre } from './lumiere/ombres.js?v=0.134.7';
+import { semerOmbres, emballerOmbres, OMBRE_FUMEE } from './rendu/ombre-fumee.js?v=0.134.7';
+import { creerLampesSol } from './rendu/lampes-sol.js?v=0.134.7';
+import { OMBRES_RELIEF as OMB, NUAGES, NUAGES_VENT } from './data/soleil.js?v=0.134.7';
+import { PALETTE, ORDRE, INDICE, ALERTES } from './palette.js?v=0.134.7';
+import { OMBRE, couleursLigne } from './apparence.js?v=0.134.7';
+import { MORCEAU, hauteurVueQ as hauteurQ, hauteurVueM as hauteurM, etat as etatCase, ETAT } from './terrain.js?v=0.134.7';
+import { horloge, secteurDuJeu, rangDe } from './bataille.js?v=0.134.7';
+import { GRADES } from './data/grades.js?v=0.134.7';
+import { profilFleuve } from './eaux.js?v=0.134.7';
+import { ligneY } from './tranchees.js?v=0.134.7';
+import { vent as ventDuJour } from './data/meteo.js?v=0.134.7';
 
 export const CAMERA = { yaw: 0.15, tangage: 0.95, fov: 30 };   // au départ : tournée de 9°, plongée de 54°, angle de 30°
 // la caméra respire : un balancement très lent, 2° en 23 s (Jérôme, v0.3.1 : variante D du labo retenue)
@@ -157,7 +157,7 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
       uKaki: { value: new THREE.Color(0) }, uVert: { value: new THREE.Color(0) }, uGlaise: { value: new THREE.Color(0) }, uDissoudre: { value: 0 },
       uSuivre: { value: 0 }, uVersSoleil: { value: new THREE.Vector2(0, 1) },
       uAO: { value: null }, uAOon: { value: 0 }, uSunOn: { value: 0 }, uAbriOn: { value: 0 }, uFlaque: { value: 0 }, uEauCoul: { value: col('e') },
-      uEauM: { value: null }, uEauOn: { value: 0 }, uEauT: { value: 0 }, uEauSoleilF: { value: 0 }, uEauHor: { value: col('e') }, uEauHaut: { value: col('e') }, uEauSoleil: { value: new THREE.Vector3(0, 1, 0) }, uEauSoleilCoul: { value: col('o').multiplyScalar(0.8) },
+      uEauM: { value: null }, uEauOn: { value: 0 }, uEauT: { value: 0 }, uEauSoleilF: { value: 0 }, uEauHor: { value: col('e') }, uEauHaut: { value: col('e') }, uEauSoleil: { value: new THREE.Vector3(0, 1, 0) }, uEauSoleilCoul: { value: col('o').multiplyScalar(0.8) }, uPluieEau: { value: 0 }, uDyn: { value: null }, uDynO: { value: new THREE.Vector4() }, uDynBlanc: { value: col('o').multiplyScalar(0.75).add(col('e').multiplyScalar(0.15)) }, uDynFeu: { value: new THREE.Color(ALERTES.orange).multiplyScalar(0.8).add(col('o').multiplyScalar(0.2)) },
       uFumOmb: { value: null }, uFumO: { value: new THREE.Vector3() }, uFumOn: { value: 0 }, uSoleilF: { value: 1 }, uLamp: { value: null }, uLampOn: { value: 0 }, uLampCoul: { value: col('o').multiplyScalar(0.55).add(col('h').multiplyScalar(0.25)) },
       uCarteOmbre: { value: null }, uLVP: { value: new THREE.Matrix4() }, uOmbOn: { value: 0 }, uOmbPx: { value: new THREE.Vector2(1 / 1024, 0.0003) },      // la carte d'ombre (session 3)
       uBiseau: { value: 0 }, uNuage: { value: 0 }, uTemps: { value: 0 }, uVent: { value: new THREE.Vector2(NUAGES_VENT[0], NUAGES_VENT[1]) } },      // l'ombre des nuages (labo) : la part du sol couverte (0 : rien), l'horloge de l'image, le vent       // les parois qui suivent le soleil (labo) : 1 et la direction du soleil, vers lui      // (le bord qui se dissout dans le faux terrain : `faireFaux`)
@@ -509,6 +509,9 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
     }
     if (solSale && solAttenteOmbre <= 0) { solTex.needsUpdate = true; if (finesse === 2 && solTexFin) solTexFin.needsUpdate = true; solSale = false; solAttenteOmbre = 0.25; }
   }
+  // le masque de l'eau (le nuanceur du sol, `eau`) : 255 l'eau profonde (lacs, fleuves, sous un pont), 150 l'eau peu profonde (une case en eau : marécage, trou inondé, la nappe dans un creux), 0 ailleurs
+  let eauSale = false;
+  const masqueEau = (c, gel) => T.profond[c] || T.pontEau[c] ? 255 : etatCase(T, c, B.R, gel) === ETAT.EAU ? 150 : 0;
   // la texture du sol : les rangées dont la couleur a changé
   function majSol(tout = false, dt = 0) {
     const h = horloge(B), gel = h.enneige ? 2 : h.gel ? 1 : 0;       // 2 : la neige blanchit le sol (apparence.js)
@@ -528,7 +531,8 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
       if (eauSol && T && !h.enneige && !h.gel) {
         if (!eauTex || eauTex.image.width !== T.W || eauTex.image.height !== T.H) { eauTex?.dispose(); eauTex = new THREE.DataTexture(new Uint8Array(T.W * T.H), T.W, T.H, THREE.RedFormat, THREE.UnsignedByteType); eauTex.magFilter = eauTex.minFilter = THREE.NearestFilter; eauTex.generateMipmaps = false; eauVu = -1; }
         if (eauVu !== T.versionPonts || eauDe !== T) { eauDe = T;      // (v0.134.6) refait aussi pour un AUTRE terrain : le masque du décor de l'écran titre restait celui de la bataille (même taille, ponts à la version 0) et ses lacs ne reflétaient rien
-          const d = eauTex.image.data; for (let c = 0; c < d.length; c++) d[c] = T.profond[c] || T.pontEau[c] ? 255 : 0; eauTex.needsUpdate = true; eauVu = T.versionPonts; }
+          const d = eauTex.image.data; for (let c = 0; c < d.length; c++) d[c] = masqueEau(c, gel); eauTex.needsUpdate = true; eauVu = T.versionPonts; }
+        U.uPluieEau.value = flaquesSol ? Math.min(1, flaque / 0.85) * (h.meteo === 'pluie' ? 1 : 0) : 0;      // (v0.134.7) les gouttes sur l'eau, qui viennent avec la pluie
         const cc = ciel.couleurs(), sv = soldats.soleilUniform.value, n = Math.hypot(sv.x, sv.y);
         U.uEauM.value = eauTex; U.uEauOn.value = 1; U.uEauT.value = tAnim; U.uEauHor.value = cc.hor; U.uEauHaut.value = cc.haut;
         if (n > 0.05) { const d = soleilDuJeu(sv.x, sv.y).dir; U.uEauSoleil.value.set(d[0], d[1], d[2]); U.uEauSoleilF.value = ombresCarte ? meteoLisse.etat.soleil : (TEMPS_LISSE[h.meteo] || TEMPS_LISSE.sec).soleil; } else U.uEauSoleilF.value = 0;
@@ -547,11 +551,13 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
       // une rangée dépend aussi de sa voisine du sud (la marche entre elles)
       if (!tout && vuLigne[j] === T.versionLigne[j] && (j === T.H - 1 || vuLigne[j + 1] === T.versionLigne[j + 1])) continue;
       couleursLigne(T, j, B.R, gel, solIdx);
+      if (eauTex && eauDe === T) { const d = eauTex.image.data; for (let c = j * T.W, f = c + T.W; c < f; c++) d[c] = masqueEau(c, gel); eauSale = true; }      // (v0.134.7) l'eau peu profonde monte et baisse avec la rangée
       ombres.ligneA(j);
       ecrireRangee(j, om);
       vuLigne[j] = T.versionLigne[j]; ombreVu[j] = omV[j]; n++; changees.push(j);
     }
     if (n) solTex.needsUpdate = true;
+    if (eauSale && eauTex) { eauTex.needsUpdate = true; eauSale = false; }
     if (finesse === 2 && (n || !solTexFin || finPerimee)) { ecrireFin(changees, !solTexFin || finPerimee); finPerimee = false; }
     coutRangees = n;
     if (n) { const d = performance.now() - tEcr; ecriture.ms += d; ecriture.n++; ecriture.rangees += n; if (d > ecriture.max) ecriture.max = d; }
@@ -714,6 +720,20 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
   // (solMat.f, `uCarteOmbre`) et ne dessine plus l'ombre au sol en quadrilatère de ces hommes. Pas de carte la nuit ni sans soleil. Cadrage : js/lumiere/ombres.js (le même que le labo, stabilisé).
   // (v0.134.6) l'ombre des nuages au sol couvre la même part du sol que les nuages du ciel : le seuil du bruit du sol (deux octaves, moyenne 0,5, écart ~0,13) pour une part `c`
   const ombreNuages = c => c < 0.01 ? 0 : Math.max(0, Math.min(1, 0.5 - 0.078 * Math.log((1.005 - c) / (c + 0.005))));
+  // les lumières de la nuit qui bougent ou passent (lampes-sol.js, `dyn`) : les fusées en l'air, les incendies (qui vacillent), les éclairs d'obus (un par impact : les éclats d'éclair sont regroupés par 4 m)
+  let lampesDe = null;
+  const LUM_NUIT = { fusee: { rayon: 45, force: 0.5 }, feu: { rayon: 14, force: 0.6 }, eclair: { rayon: 24, force: 1.0 } };
+  function lumieresNuit() {
+    const out = [], vus = new Set(), E = eclats.ecl;
+    for (let s = 0; s < eclats.ECLATS && out.length < 24; s++) {
+      if (E.age[s] >= E.vie[s]) continue;
+      const so = E.sorte[s], f = 1 - E.age[s] / E.vie[s];
+      if (so === 6) out.push({ x: E.x[s], y: E.y[s], z: E.z[s], rayon: LUM_NUIT.fusee.rayon, force: LUM_NUIT.fusee.force * Math.sqrt(f), canal: 0 });
+      else if (so === 0) { const k = `${Math.round(E.x[s] / 4)},${Math.round(E.z[s] / 4)}`; if (vus.has(k)) continue; vus.add(k); out.push({ x: E.x[s], y: surface(E.x[s], E.z[s]) + 1.5, z: E.z[s], rayon: LUM_NUIT.eclair.rayon, force: LUM_NUIT.eclair.force * f, canal: 0 }); }
+    }
+    for (const fe of eclats.feux) if (out.length < 24) out.push({ x: fe.x, y: surface(fe.x, fe.z) + fe.h + 0.5, z: fe.z, rayon: LUM_NUIT.feu.rayon * (fe.h > 2 ? 1.2 : 0.8), force: LUM_NUIT.feu.force * (0.85 + 0.15 * Math.sin(tAnim * 13 + fe.x * 1.7)), canal: 1 });
+    return out;
+  }
   let hPasse = null;                                                // l'heure de l'image (le crépuscule du ciel la lit)
   const lisseClair = s => { const t = Math.max(0, Math.min(1, (s - 0.3) / 0.6)); return t * t * (3 - 2 * t); };
   function passeOmbres() {
@@ -731,12 +751,19 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
     if (!actif) { U.uOmbOn.value = 0; U.uFumOn.value = 0; U.uLampOn.value = 0; }
     if (ombresCarte && T) {                                          // les lanternes, cachées par le relief (la nuit) ; l'ombre de la fumée (le jour, au soleil)
       lampesSol ??= creerLampesSol({ hauteur: (x, z) => surface(x, z) });
-      if (lampesSol.largeur !== T.W || lampesSol.hauteur !== T.H) { lampesSol.attacher(T); if (U.uLamp.value) { U.uLamp.value.dispose(); U.uLamp.value = null; } }
+      if (lampesSol.largeur !== T.W || lampesSol.hauteur !== T.H || lampesDe !== T) { lampesDe = T; lampesSol.attacher(T); if (U.uLamp.value) { U.uLamp.value.dispose(); U.uLamp.value = null; } }
       const nuit = temps.allume;                                   // (v0.134.5 : l'allumage des lanternes, plus l'obscurité seule : elles éclairaient le sol en plein jour à 17 h)
       if (nuit > 0.02) {
         if (lampesSol.maj(temps.lanternesVues) || !U.uLamp.value) { if (!U.uLamp.value) { const t = new THREE.DataTexture(lampesSol.tex, T.W, T.H, THREE.RedFormat, THREE.UnsignedByteType); t.magFilter = t.minFilter = THREE.LinearFilter; t.generateMipmaps = false; U.uLamp.value = t; } U.uLamp.value.needsUpdate = true; }
         U.uLampOn.value = U.uLamp.value ? nuit * 0.9 : 0;
       } else U.uLampOn.value = 0;
+      // (v0.134.7) les fusées, les incendies et les éclairs d'obus éclairent le sol la nuit, cachés par le relief (une fenêtre autour de la vue, refaite à chaque image)
+      const noir = Math.max(0, Math.min(1, (sombreVu - 0.25) / 0.3));
+      const fen = noir > 0.02 ? lampesSol.dyn(lumieresNuit(), vue.cx, vue.cz) : null;
+      if (fen) {
+        if (!U.uDyn.value) { const t = new THREE.DataTexture(fen.tex, fen.taille, fen.taille, THREE.RGFormat, THREE.UnsignedByteType); t.magFilter = t.minFilter = THREE.LinearFilter; t.generateMipmaps = false; U.uDyn.value = t; }
+        U.uDyn.value.needsUpdate = true; U.uDynO.value.set(fen.x0, fen.z0, fen.taille, noir);
+      } else U.uDynO.value.w = 0;
     }
     if (actif && ecl && fumeeVue()) U.uFumOn.value = 1; else U.uFumOn.value = 0;
     if (!actif) return;
@@ -861,7 +888,7 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
     },
     // Le réglage « Éclairage » du joueur (session 4) : bas = ombres de relief douces et creux ; moyen (le jeu) = + le jour sous les toits et les flaques ; haut = + la carte d'ombre (soldats, arbres, chars, avions : coûteuse sans carte graphique)
     get eclairage() { return ombresCarte ? 'haut' : abrisSol ? 'moyen' : 'bas'; },
-    set eclairage(v) { eauSol = v !== 'bas'; soleilSol = aoSol = true; abrisSol = flaquesSol = v === 'moyen' || v === 'haut'; ombresCarte = v === 'haut'; },
+    set eclairage(v) { eauSol = v !== 'bas'; soleilSol = aoSol = true; abrisSol = flaquesSol = v === 'moyen' || v === 'haut'; ombresCarte = v === 'haut'; temps.eclairs = ombresCarte; },
     get ombresCarte() { return ombresCarte; },
     set ombresCarte(v) { ombresCarte = !!v; },                        // la carte d'ombre des soldats sur le sol (session 3 ; éteinte)
     get flaquesSol() { return flaquesSol; },
