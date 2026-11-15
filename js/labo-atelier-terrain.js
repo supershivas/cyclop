@@ -6,6 +6,7 @@ import { nouvelleBataille, avancer, regarderAu, ordonnerMarche, ordonnerBarrage 
 import { creerRendu, ZOOMS } from './rendu3d.js?v=0.136.0';
 import { METEO } from './data/meteo.js?v=0.136.0';
 import { SOLEIL_JEU } from './data/soleil.js?v=0.136.0';
+import { ARBRES_JEU } from './data/arbres.js?v=0.136.0';
 import { hash2 } from './lib/rng.js?v=0.136.0';
 
 // les crans des curseurs (l'ordre est celui du curseur, de gauche à droite)
@@ -15,8 +16,9 @@ const ECLAIRAGES = [['bas', 'Bas'], ['moyen', 'Moyen'], ['haut', 'Haut']];
 const hhmm = h => `${Math.floor(h)} h ${String(Math.round((h % 1) * 60)).padStart(2, '0')}`;
 
 // `grain` (labo « Le grain du sol », v0.136.0) : la variante du grain (data/grain-sol.js ; 0 : le jeu), une case pour l'éteindre et comparer ; `zoom` : le cran de départ
-export function atelierTerrain(stage, R, el, { grain = 0, zoom = 3 } = {}) {
-  const reglage = { heure: 9, nuit: false, saison: 2, temps: 2, eclairage: 2, zoom, tangage: 0.95, yaw: 0.15, passe: false, obus: false, sansGrain: false };
+// `arbres` (labo « Des arbres réalistes », v0.137.0) : les options des arbres variés (`reglerArbres`), une case pour revenir à ceux du jeu ; `saison` : le cran de départ
+export function atelierTerrain(stage, R, el, { grain = 0, zoom = 3, arbres = null, saison = 2, herbe = 0 } = {}) {      // `herbe` (labo « L'herbe dense ») : la variante de data/herbe.js, une case pour revenir à celle du jeu
+  const reglage = { heure: 9, nuit: false, saison, temps: 2, eclairage: 2, zoom, tangage: 0.95, yaw: 0.15, passe: false, obus: false, sansGrain: false, arbresJeu: false, herbeJeu: false };
   const boite = el('div'); boite.style.cssText = 'position:relative;width:100%;height:min(66vh,540px);overflow:hidden';
   const canvas = el('canvas'); canvas.style.cssText = 'position:absolute;left:0;top:0;image-rendering:pixelated';
   boite.append(canvas);
@@ -51,6 +53,8 @@ export function atelierTerrain(stage, R, el, { grain = 0, zoom = 3 } = {}) {
   caseACocher('passe', 'Le temps passe (un jour en une minute)');
   caseACocher('obus', 'Des obus au centre de la vue');
   if (grain) caseACocher('sansGrain', 'Sans le grain (comparer avec le jeu)');
+  if (arbres) caseACocher('arbresJeu', 'Les arbres du jeu (comparer)');
+  if (herbe) caseACocher('herbeJeu', 'L\'herbe du jeu (comparer)');
   const raz = el('button', { className: 'essai', textContent: 'Remettre la vue du jeu', onclick: () => {
     Object.assign(reglage, { zoom, tangage: 0.95, yaw: 0.15 });
     for (const k of ['zoom', 'tangage', 'yaw']) { valeurs[k].input.value = reglage[k]; valeurs[k].val.textContent = valeurs[k].texte(reglage[k]); }
@@ -72,6 +76,8 @@ export function atelierTerrain(stage, R, el, { grain = 0, zoom = 3 } = {}) {
       B.etat.sol.saison = s; rendu.attacher(B);      // la saison change la couleur de l'herbe (rendu3d.attacher) et les feuilles
     }
     if (cle === 'sansGrain' || cle === 'grain') rendu.grainSol = reglage.sansGrain ? 0 : grain;
+    if (cle === 'herbeJeu') rendu.herbeDense = reglage.herbeJeu ? 0 : herbe;
+    if (arbres && cle === 'arbresJeu') rendu.reglerArbres(reglage.arbresJeu ? ARBRES_JEU : arbres);
     if (cle === 'eclairage') rendu.eclairage = ECLAIRAGES[reglage.eclairage][0];
     if (cle === 'zoom') rendu.vue.zoom = reglage.zoom;
     if (cle === 'tangage' || cle === 'yaw') rendu.placerCamera(reglage.yaw, reglage.tangage);
@@ -85,7 +91,7 @@ export function atelierTerrain(stage, R, el, { grain = 0, zoom = 3 } = {}) {
     window.__atelier = { rendu, B, reglage };                     // (les scripts : outils et captures)
     rendu.bord = 'faux-ciel'; rendu.ombresRelief = true; rendu.ombresNuages = true; rendu.soleilReglage = { ...SOLEIL_JEU };      // la lumière du jeu (main.js)
     rendu.vue.cx = B.etat.marges.x + 200; rendu.vue.cz = B.etat.marges.y + 200;
-    for (const k of ['saison', 'eclairage', 'zoom', 'tangage', 'grain']) appliquer(k);
+    for (const k of ['saison', 'eclairage', 'zoom', 'tangage', 'grain', 'arbresJeu', 'herbeJeu']) appliquer(k);
     let t = performance.now(), tReleve = 0, tObus = 0.5, kObus = 0;
     const boucle = now => {
       const dt = Math.min(0.1, (now - t) / 1000); t = now;

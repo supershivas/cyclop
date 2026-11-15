@@ -21,7 +21,7 @@
 // barrages en cours (le sol se refait).
 import { servir, lancerChromium, options } from '../outils/navigateur.mjs';
 
-const o = options(process.argv.slice(2), { soldats: '8000', secondes: '12', largeur: '1280', hauteur: '800', finesse: 'auto', zooms: '0,3,5', articule: '', arbres: '', ombres: '', lumiere: '', carte: '', parois: '', nuages: '', grades: '', tranchees: '', grain: '' });
+const o = options(process.argv.slice(2), { soldats: '8000', secondes: '12', largeur: '1280', hauteur: '800', finesse: 'auto', zooms: '0,3,5', articule: '', arbres: '', ombres: '', lumiere: '', carte: '', parois: '', nuages: '', grades: '', tranchees: '', grain: '', herbe: '' });
 const srv = await servir('.');
 const nav = await lancerChromium();
 const page = await (await nav.newContext({ viewport: { width: +o.largeur, height: +o.hauteur } })).newPage();
@@ -45,6 +45,7 @@ if (o.articule === 'sans-texture') await page.evaluate(() => { const r = __jeu.r
 if (o.articule === 'sans-animations') await page.evaluate(() => { const r = __jeu.rendu(); r.articule = { ...r.articule, animations: false }; });       // la marche, le repos et le tir recalculés comme avant l'étape 4 (poseJeu)
 if (o.lumiere === '0') await page.evaluate(() => { const R = __jeu.rendu(); R.soleilSol = R.aoSol = R.abrisSol = R.flaquesSol = false; });
 if (o.grain) await page.evaluate(n => { __jeu.rendu().grainSol = +n; }, o.grain);       // le grain du sol (labo, v0.136.0 ; data/grain-sol.js : 1 à 3)
+if (o.herbe) await page.evaluate(n => { __jeu.rendu().herbeDense = +n; }, o.herbe);       // l'herbe dense (labo, v0.137.0 ; data/herbe.js : 1 ou 2)
 if (o.carte === '1') await page.evaluate(() => { __jeu.rendu().ombresCarte = true; });
 if (o.ombres) await page.evaluate(() => { __jeu.rendu().ombresRelief = true; });
 if (o.nuages) await page.evaluate(() => { __jeu.rendu().ombresNuages = true; });

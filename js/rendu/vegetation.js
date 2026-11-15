@@ -5,13 +5,14 @@ import * as SH from './shaders.js?v=0.136.0';
 import { creerGeometries } from './geometries.js?v=0.136.0';
 import { hash2 } from '../lib/rng.js?v=0.136.0';
 import { BUISSONS_FORMES, BUISSONS_SAISONS, BUISSONS_TIRAGES } from '../data/buissons.js?v=0.136.0';
-import { ARBRES_FAMILLES, ARBRES_TIRAGES, ARBRES_ECHELLE, ARBRES_AUTOMNE, ARBRES_PPM_FEUILLES, ARBRES_FEUILLES, ARBRES_VARIANTES, ARBRES_COUCHE, ARBRES_GROSSIER } from '../data/arbres.js?v=0.136.0';
+import { ARBRES_FAMILLES, ARBRES_ESSENCES, ARBRES_TIRAGES, ARBRES_ECHELLE, ARBRES_AUTOMNE, ARBRES_PPM_FEUILLES, ARBRES_FEUILLES, ARBRES_VARIANTES, ARBRES_COUCHE, ARBRES_GROSSIER } from '../data/arbres.js?v=0.136.0';
+import { HERBE_VARIANTES, HERBE_JEU } from '../data/herbe.js?v=0.136.0';
 import { dansLEcran } from './vue-ecran.js?v=0.136.0';
 
 // `THREE`, `scene`, `col`, `camera`, `vue`, `solY` (la hauteur moyenne du sol), `distance(zoom)`, `surface(x, z)` et `petit()` (aux zooms où un soldat n'est qu'un point)
 // viennent de creerRendu ; `terrain()`, `vide()` et `ombres()` sont lus à chaque appel (le terrain change à chaque bataille). `ombres()` rend `{ ARBRES_OMBRES, aoPos, aoGeo, soleil }` :
 // les arbres vus remplissent le tampon des ombres, qui reste à rendu3d.js avec le soleil (il passera ici avec lui).
-export function creerVegetation({ THREE, scene, col, camera, vue, solY: SOL_Y, distance, surface, petit, terrain, vide, ombres, ppm, saison, arbres: optsArbres = null, buissons: optsBuissons = null }) {
+export function creerVegetation({ THREE, scene, col, camera, vue, solY: SOL_Y, distance, surface, petit, terrain, vide, ombres, ppm, saison, arbres: optsArbres = null, buissons: optsBuissons = null, lettreSol = () => null, couleurSol = () => [0, 0, 0] }) {
   const { geometrieArbre, geometrieBuisson, geometrieBuissonVarie, geometrieTroncs, geometrieTroncLoin, geometrieFeuilles, geometrieSouche } = creerGeometries(THREE, col);
   // `arbres` : null, les arbres d'avant (un tronc, quatre branches) ; sinon (labo « Des arbres plus variés ») `{ formes, feuilles, chute, abattus }` : des familles de formes, des feuilles
   // selon la saison (`saison()` rend l'horloge de la bataille ou null), la chute des feuilles au fil des jours, les abattus longs. `ppm()` : les pixels par mètre du zoom.
@@ -100,26 +101,28 @@ export function creerVegetation({ THREE, scene, col, camera, vue, solY: SOL_Y, d
   // Un maillage de tronc par famille (et un tronc de loin, deux abattus), des maillages de feuilles par (famille, dégarni) refaits quand la saison change.
   // Famille, taille, sens et chute de chaque arbre : le hachage de sa position, tiré une fois par bataille (`infos`, parallèle à `T.arbres` : on n'écrit rien dans le terrain).
   let couronnes = [], couronneMode = null, couronneCoul = [];       // un maillage par teinte (6 au plus) : pas de couleur par instance, qui restait blanche sur certaines cartes graphiques
+  let FAMS = ARBRES_FAMILLES;      // les familles de formes, ou les essences (`opts.essences`, labo « Des arbres réalistes »)
   let infos = [], troncs = [], feuilles = [], feuillesG = [], loinMesh = null, abattuMesh = [null, null], modeVu = null;
   const tire = (a, graine) => hash2(a.i, a.j, graine);
   function preparerArbresVaries(T) {
-    const poids = ARBRES_FAMILLES.reduce((s, f) => s + f.poids, 0), cap = Math.max(1, T.arbres.length);
+    FAMS = opts.essences ? ARBRES_ESSENCES : ARBRES_FAMILLES;
+    const poids = FAMS.reduce((s, f) => s + f.poids, 0), cap = Math.max(1, T.arbres.length);
     const [h0, h1] = ARBRES_ECHELLE.hauteur, [w0, w1] = ARBRES_ECHELLE.largeur;
     vuArbre = new Uint8Array(T.arbres.length); chutes.clear(); atterri.clear(); gisants = null;
     infos = T.arbres.map(a => {
       let r = tire(a, ARBRES_TIRAGES.famille) * poids, fam = 0;
-      while (fam < ARBRES_FAMILLES.length - 1 && r >= ARBRES_FAMILLES[fam].poids) r -= ARBRES_FAMILLES[fam++].poids;
-      const F = ARBRES_FAMILLES[fam], t = tire(a, ARBRES_TIRAGES.taille), hr = (F.h + a.v * F.dh) / F.h * (h0 + (h1 - h0) * t);
+      while (fam < FAMS.length - 1 && r >= FAMS[fam].poids) r -= FAMS[fam++].poids;
+      const F = FAMS[fam], t = tire(a, ARBRES_TIRAGES.taille), hr = (F.h + a.v * F.dh) / F.h * (h0 + (h1 - h0) * t);
       const sxz = (w0 + (w1 - w0) * tire(a, ARBRES_TIRAGES.taille + 100)) * (1 + (hr - 1) * 0.5), yaw = tire(a, ARBRES_TIRAGES.sens) * Math.PI * 2;
       return { fam, sx: sxz, sy: hr, H: F.h * hr, c: Math.cos(yaw), s: Math.sin(yaw), d: tire(a, ARBRES_TIRAGES.feuilles), t: tire(a, ARBRES_TIRAGES.chute), va: Math.floor(tire(a, ARBRES_TIRAGES.variante) * ARBRES_VARIANTES.n), fb: tire(a, ARBRES_TIRAGES.brule) < ARBRES_COUCHE.brule, u: tire(a, ARBRES_TIRAGES.couche) };
     });
     feuilleMat ??= plierAuVent(new THREE.MeshBasicMaterial({ vertexColors: true, side: THREE.DoubleSide }));
     const ajouter = (geo, userData) => {
-      const m = new THREE.InstancedMesh(geo, userData.couronne ? plierAuVent(new THREE.MeshBasicMaterial()) : userData.feuilles ? feuilleMat : arbreMat, cap);
+      const m = new THREE.InstancedMesh(geo, userData.couronne ? plierAuVent(new THREE.MeshBasicMaterial()) : userData.feuilles ? feuilleMat : userData.tronc && userData.tronc !== 's' ? plierAuVent(new THREE.MeshBasicMaterial({ color: col(userData.tronc), side: THREE.DoubleSide })) : arbreMat, cap);
       m.count = 0; m.frustumCulled = false; m.userData = { ...userData, tri: geo.attributes.position.count / 3 };
       arbresMesh.push(m); scene.add(m); return m;
     };
-    troncs = ARBRES_FAMILLES.map(F => ajouter(geometrieTroncs(F.id), {}));
+    troncs = FAMS.map(F => ajouter(geometrieTroncs(F.id), { tronc: F.tronc }));
     loinMesh = ajouter(geometrieTroncLoin(), {});
     // la couronne de loin (ou en dessous de 4 pixels par mètre) : un seul cube par arbre, à la couleur de la saison (Jérôme, v0.59.3 : les feuilles se voient à tous les zooms)
     const cube = new THREE.BoxGeometry(1, 1, 1).translate(0, 0.5, 0).toNonIndexed();
@@ -127,8 +130,8 @@ export function creerVegetation({ THREE, scene, col, camera, vue, solY: SOL_Y, d
     couronneMode = null;
     abattuMesh = [null, null];
     // (créés au premier besoin : un objet de plus dans la scène tire des identifiants avec `Math.random`, voir « Piège » plus haut)
-    feuilles = ARBRES_FAMILLES.map(() => Array.from({ length: ARBRES_VARIANTES.n }, () => [null, null]));
-    feuillesG = ARBRES_FAMILLES.map(() => Array.from({ length: ARBRES_VARIANTES.n }, () => [null, null]));      // le feuillage grossier (ARBRES_GROSSIER)
+    feuilles = FAMS.map(() => Array.from({ length: ARBRES_VARIANTES.n }, () => [null, null]));
+    feuillesG = FAMS.map(() => Array.from({ length: ARBRES_VARIANTES.n }, () => [null, null]));      // le feuillage grossier (ARBRES_GROSSIER)
     modeVu = null;
   }
   // les feuilles de la saison : la saison de la bataille (été, automne, hiver nu, hiver sous la neige), ou celle qu'on force (le printemps du labo)
@@ -141,9 +144,9 @@ export function creerVegetation({ THREE, scene, col, camera, vue, solY: SOL_Y, d
   }
   function refaireFeuilles(mode) {
     modeVu = mode;
-    ARBRES_FAMILLES.forEach((F, f) => Array.from({ length: ARBRES_VARIANTES.n }, (_, va) => [va, 0]).concat(Array.from({ length: ARBRES_VARIANTES.n }, (_, va) => [va, 1])).forEach(([va, d]) => {
+    FAMS.forEach((F, f) => Array.from({ length: ARBRES_VARIANTES.n }, (_, va) => [va, 0]).concat(Array.from({ length: ARBRES_VARIANTES.n }, (_, va) => [va, 1])).forEach(([va, d]) => {
       for (const [tab, grossier] of [[feuilles, false], [feuillesG, true]]) {
-        const g = mode === 'nu' ? null : geometrieFeuilles(F.id, mode, d, opts.chanfrein ?? 0, !!opts.rond, va, grossier);
+        const g = mode === 'nu' ? null : geometrieFeuilles(F.id, mode, d, opts.chanfrein ?? 0, !!opts.rond, va, grossier, opts.essences ? { grappes: !!opts.grappes, teintes: opts.teintes ?? null } : null);
         let m = tab[f][va][d];
         if (!g) { if (m) m.userData.vide = true; continue; }
         if (!m) {
@@ -178,8 +181,8 @@ export function creerVegetation({ THREE, scene, col, camera, vue, solY: SOL_Y, d
     const fm = new THREE.MeshBasicMaterial({ vertexColors: true, side: THREE.DoubleSide }), cap = Math.max(1, terrain().arbres.length);
     const mesh = (geo, mat, extra = {}) => { const m = new THREE.InstancedMesh(geo, mat, cap); m.count = 0; m.frustumCulled = false; m.userData = { ...extra, n: 0, tri: geo.attributes.position.count / 3 }; arbresMesh.push(m); scene.add(m); return m; };
     const G = {
-      troncs: ARBRES_FAMILLES.map(F => [mesh(troncs[ARBRES_FAMILLES.indexOf(F)].geometry, clair), mesh(troncs[ARBRES_FAMILLES.indexOf(F)].geometry, noir)]),
-      feuilles: ARBRES_FAMILLES.map(() => Array.from({ length: ARBRES_VARIANTES.n }, () => [null, null])),
+      troncs: FAMS.map((F, f) => [mesh(troncs[f].geometry, clair), mesh(troncs[f].geometry, noir)]),
+      feuilles: FAMS.map(() => Array.from({ length: ARBRES_VARIANTES.n }, () => [null, null])),
       loin: [mesh(loinMesh.geometry, clair), mesh(loinMesh.geometry, noir)],
       souches: [mesh(geometrieSouche(), clair), mesh(geometrieSouche(), noir)],
       synchro() {                                      // les feuilles ont changé de saison : les couchés reprennent leurs géométries
@@ -259,7 +262,7 @@ export function creerVegetation({ THREE, scene, col, camera, vue, solY: SOL_Y, d
             const f = inf.fb ? 1 - Math.min(1, age / C.brulure) : age < C.tient ? 1 : 1 - Math.min(1, (age - C.tient) / C.fane);
             const d = etatFeuilles(inf, mode, h);
             const src = d < 2 ? feuilles[inf.fam][inf.va][d] : null, m = f > 0.04 && src && !src.userData.vide ? gisants.feuilles[inf.fam][inf.va][d] : null;
-            if (m) mettreCouche(m, x, y, z, inf, ang, bas, 0.35 + 0.65 * f * f, ARBRES_FAMILLES[inf.fam].h * 0.75);
+            if (m) mettreCouche(m, x, y, z, inf, ang, bas, 0.35 + 0.65 * f * f, FAMS[inf.fam].h * 0.75);
           }
         }
       }
@@ -382,8 +385,60 @@ export function creerVegetation({ THREE, scene, col, camera, vue, solY: SOL_Y, d
     }
     touffes = { x: Float32Array.from(xs), z: Float32Array.from(zs), c: Int32Array.from(cs) };
   }
+  // ─── L'herbe dense (labo « L'herbe dense », data/herbe.js) : un maillage à part, créé au premier besoin (l'empreinte du jeu ne bouge pas) ───
+  let herbeD = HERBE_VARIANTES[HERBE_JEU], hdGeo = null, hdMat = null, hdMesh = null, hdPos = null, hdVar = null;
+  function creerHerbeDense() {
+    const N = Math.max(...HERBE_VARIANTES.filter(Boolean).map(v => v.max));
+    hdPos = new Float32Array(N * 3); hdVar = new Float32Array(N * 3);
+    hdGeo = new THREE.InstancedBufferGeometry();
+    const p = [], h = [];
+    // sept brins : leur pied, leur pointe (décalée : ils s'écartent), leur hauteur ; un brin est un triangle
+    for (const [x, z, l, lz, ht] of [[-0.3, 0.05, -0.22, 0.04, 0.42], [-0.18, -0.08, -0.1, -0.12, 0.66], [-0.06, 0.06, -0.02, 0.1, 0.85], [0.04, -0.03, 0.05, -0.04, 0.95], [0.14, 0.07, 0.14, 0.12, 0.7], [0.25, -0.05, 0.2, -0.1, 0.55], [0.33, 0.02, 0.3, 0.05, 0.36]]) {
+      p.push(x - 0.07, 0, z, x + 0.07, 0, z, x + l, ht, z + lz); h.push(0, 0, 1);
+    }
+    hdGeo.setAttribute('position', new THREE.Float32BufferAttribute(p, 3));
+    hdGeo.setAttribute('aHaut', new THREE.Float32BufferAttribute(h, 1));
+    hdGeo.setAttribute('aPos', new THREE.InstancedBufferAttribute(hdPos, 3).setUsage(THREE.DynamicDrawUsage));
+    hdGeo.setAttribute('aVar', new THREE.InstancedBufferAttribute(hdVar, 3).setUsage(THREE.DynamicDrawUsage));
+    hdGeo.instanceCount = 0;
+    const c3 = () => ({ value: new THREE.Color() });
+    hdMat = new THREE.ShaderMaterial({ uniforms: { uT: herbeMat.uniforms.uT, uVent: vent.uVent, uSecBas: c3(), uSecHaut: c3(), uVertBas: c3(), uVertHaut: c3() }, vertexShader: SH.herbeDenseMat.v, fragmentShader: SH.herbeDenseMat.f, side: THREE.DoubleSide });
+    hdMesh = new THREE.Mesh(hdGeo, hdMat); hdMesh.frustumCulled = false; hdMesh.renderOrder = 1;
+    scene.add(hdMesh);
+  }
+  function majHerbeDense(x0, x1, z0, z1, e, masquee) {
+    const T = terrain(), V = herbeD;
+    if (masquee || ppm() < V.ppmMin) { if (hdMesh) hdMesh.visible = false; vuesHerbe = 0; return; }
+    if (!hdMesh) creerHerbeDense();
+    if (!vide()) hdMesh.visible = true;
+    const U = hdMat.uniforms, c = k => { const a = couleurSol(k); return [a[0] / 255, a[1] / 255, a[2] / 255]; };
+    U.uSecBas.value.setRGB(...c('g')); U.uSecHaut.value.setRGB(...c('h')); U.uVertBas.value.setRGB(...c('w')); U.uVertHaut.value.setRGB(...c('v'));
+    const cp = camera.position, lim = (distance(vue.zoom) * V.portee) ** 2, [t0, t1] = V.taille;
+    const i0 = Math.max(0, Math.floor(x0)), i1 = Math.min(T.W, Math.ceil(x1)), j0 = Math.max(0, Math.floor(z0)), j1 = Math.min(T.H, Math.ceil(z1));
+    let k = 0;
+    for (let j = j0; j < j1 && k < V.max; j++) for (let i = i0; i < i1 && k < V.max; i++) {
+      const cc = j * T.W + i, d = T.herbe[cc];
+      if (!d || (i - cp.x) ** 2 + (SOL_Y - cp.y) ** 2 + (j - cp.z) ** 2 > lim) continue;
+      const n = Math.min(3, Math.floor(d * V.densite + hash2(i, j, 90)));
+      if (!n) continue;
+      const l = lettreSol(cc), vert = l === 'v' || l === 'w' ? 1 : 0;
+      for (let t = 0; t < n && k < V.max; t++) {
+        const x = i + hash2(i * 4 + t, j, 91), y = j + hash2(i * 4 + t, j, 92), hs = surface(x, y);
+        const cxp = e[0] * x + e[4] * hs + e[8] * y + e[12], cyp = e[1] * x + e[5] * hs + e[9] * y + e[13], cw = e[3] * x + e[7] * hs + e[11] * y + e[15];
+        if (cxp < -1.05 * cw || cxp > 1.05 * cw || cyp < -1.1 * cw || cyp > 1.1 * cw) continue;
+        hdPos[k * 3] = x; hdPos[k * 3 + 1] = hs; hdPos[k * 3 + 2] = y;
+        hdVar[k * 3] = t0 + (t1 - t0) * hash2(i * 4 + t, j, 93); hdVar[k * 3 + 1] = hash2(i * 4 + t, j, 94) * 6.283; hdVar[k * 3 + 2] = vert;
+        k++;
+      }
+    }
+    for (const nom of ['aPos', 'aVar']) { const a = hdGeo.attributes[nom]; a.clearUpdateRanges(); a.addUpdateRange(0, k * 3); a.needsUpdate = true; }
+    hdGeo.instanceCount = k;
+    vuesHerbe = k;
+  }
   function majHerbe(x0, x1, z0, z1, e, masquee) {
     const T = terrain();
+    if (herbeD) { herbeMesh.visible = false; majHerbeDense(x0, x1, z0, z1, e, masquee); return; }
+    if (hdMesh) hdMesh.visible = false;
     if (masquee || !touffes) { herbeMesh.visible = false; vuesHerbe = 0; return; }
     if (!vide()) herbeMesh.visible = true;
     let k = 0;
@@ -468,6 +523,7 @@ export function creerVegetation({ THREE, scene, col, camera, vue, solY: SOL_Y, d
     get trianglesArbres() { return trisArbres; },                                // les triangles des arbres dessinés à cette image (pour les stats)
     get msArbres() { return msArbres; },                                         // le tri des arbres, ms par image (lissé)
     regler(o) { opts = o; if (terrain()) preparerArbres(); },
+    set herbe(v) { herbeD = HERBE_VARIANTES[v] ?? null; },                         // l'herbe dense (labo ; data/herbe.js ; 0 : celle du jeu)
     reglerBuissons(o) { optsB = o; if (terrain()) preparerBuissons(); },        // les buissons variés (null : ceux d'avant), à chaud                    // les arbres variés (null : ceux d'avant), à chaud
     forcer(mode) { forcee = mode; },                                             // les feuilles d'une saison qui n'en est pas une (le printemps du labo)                                       // les touffes dessinées (pour les stats)
   };

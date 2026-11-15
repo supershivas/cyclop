@@ -1,6 +1,6 @@
 // Les formes du rendu, construites à la main : un soldat (de la boîte à la silhouette), un arbre, un buisson. Pas d'état :
 // `THREE` et `col` (une couleur de la palette) viennent de creerRendu ; les soldats prennent aussi leurs attributs d'instance.
-import { ARBRES_FEUILLES, ARBRES_COURONNES, ARBRES_VARIANTES, ARBRES_GROSSIER } from '../data/arbres.js?v=0.136.0';
+import { ARBRES_FEUILLES, ARBRES_COURONNES, ARBRES_VARIANTES, ARBRES_GROSSIER, ARBRES_GRAPPES, ARBRES_TEINTES } from '../data/arbres.js?v=0.136.0';
 
 export function creerGeometries(THREE, col) {
   // les faces d'une boîte qu'on voit d'ici : le dessus, le sud, l'est et l'ouest (jamais le nord ni le dessous)
@@ -221,7 +221,32 @@ export function creerGeometries(THREE, col) {
     const tronc = (w, h, x, y, z, rz = 0, rx = 0) => { troncs.push({ w, h, x, y, z, rz, rx }); return bout(x, y, z, h, rz, rx); };
     // une branche sur un tronc incliné de `rzT` : sa base est sur le tronc, à la hauteur `y` ; elle part du côté `s` (±1)
     const branche = (w, y, l, rz, rx, rzT = 0) => { const bx = -y * Math.sin(rzT), by = y * Math.cos(rzT); const t = tronc(w, l, bx, by, 0, rz, rx); return t; };
-    if (id === 'droit') {
+    if (id === 'peuplier') {                                                    // le peuplier d'Italie : un fût haut et droit, des branches courtes qui montent, une colonne de feuilles
+      const H = 13; tronc(0.4, H, 0, 0, 0);
+      for (let k = 0; k < 8; k++) { const t = branche(0.12, H * (0.2 + k * 0.095), 1.0 - k * 0.06, (k % 2 ? 1 : -1) * 0.3, (k - 3.5) * 0.4); pointes.push([t[0] * 0.5, t[1], t[2] * 0.5, 2.7 - k * 0.12]); }
+      pointes.push([0, H + 0.2, 0, 1.7]);
+      neige.push(...pointes.map(p => [p[0], p[1], p[2], 0.7]));
+    } else if (id === 'saule') {                                                // le saule têtard : un moignon épais, une tête noueuse, des rejets droits en gerbe
+      const H = 2.6; tronc(0.95, H, 0, 0, 0); tronc(1.25, 0.5, 0, H - 0.3, 0);
+      for (let k = 0; k < 7; k++) { const a = k / 7 * Math.PI * 2; const t = tronc(0.1, 1.9 + (k % 3) * 0.3, Math.cos(a) * 0.4, H + 0.1, Math.sin(a) * 0.4, -Math.cos(a) * 0.35, Math.sin(a) * 0.35); if (k % 2 === 0) pointes.push([t[0], t[1] - 0.3, t[2], 1.7]); }
+      pointes.push([0, H + 1.4, 0, 2.3]);
+      neige.push([0, H + 0.25, 0, 1.3]);
+    } else if (id === 'chene') {                                                // le chêne : un fût court et large, trois maîtresses branches qui s'étalent, une couronne large en masses
+      const H = 8; tronc(0.85, H * 0.62, 0, 0, 0); tronc(0.55, H * 0.42, 0, H * 0.58, 0, 0.12);
+      for (const [y, l, rz, rx, s] of [[0.5, 3.4, 1.05, 0.5, 3.0], [0.55, 3.2, -1.0, -0.4, 3.0], [0.62, 2.9, 0.4, -1.1, 2.7], [0.66, 2.6, -0.3, 1.2, 2.6]]) { const t = branche(0.32, H * y, l, rz, rx); pointes.push([t[0], t[1] + 0.3, t[2], s]); }
+      pointes.push([0.4, H + 0.2, 0, 3.4], [-0.6, H * 0.85, 0.5, 3.0]);
+      neige.push(...pointes.map(p => [p[0], p[1], p[2], 1.3]));
+    } else if (id === 'hetre') {                                                // le hêtre : un fût lisse, une couronne dense et ovale, haute
+      const H = 9; tronc(0.6, H, 0, 0, 0);
+      for (let k = 0; k < 4; k++) { const t = branche(0.2, H * (0.42 + k * 0.12), 2.3 - k * 0.35, (k % 2 ? 1 : -1) * 0.7, (k - 1.5) * 0.5); pointes.push([t[0], t[1], t[2], 3.0 - k * 0.2]); }
+      pointes.push([0, H * 0.72, 0, 3.6], [0, H + 0.4, 0, 2.8]);
+      neige.push(...pointes.map(p => [p[0], p[1], p[2], 1.1]));
+    } else if (id === 'bouleau') {                                              // le bouleau : un fût mince et clair, un peu penché, des branches fines, un feuillage léger
+      const H = 8, r = 0.1; const top = tronc(0.3, H, 0, 0, 0, r);
+      for (let k = 0; k < 5; k++) { const t = branche(0.1, H * (0.4 + k * 0.11), 1.6 - k * 0.15, r + (k % 2 ? 0.9 : -0.9), (k - 2) * 0.55, r); pointes.push([t[0], t[1] - 0.2, t[2], 1.6 - k * 0.08]); }
+      pointes.push([top[0], top[1], top[2], 1.8]);
+      neige.push(...pointes.map(p => [p[0], p[1], p[2], 0.7]));
+    } else if (id === 'droit') {
       const H = 6; tronc(0.55, H, 0, 0, 0);
       for (let k = 0; k < 4; k++) { const t = branche(0.22, H * (0.45 + k * 0.13), 2.2 - k * 0.35, (k % 2 ? 1 : -1) * 0.85, (k - 1.5) * 0.3); pointes.push([t[0], t[1], t[2], 2.1 - k * 0.15]); }
       pointes.push([0, H + 0.4, 0, 2.9], [0, H * 0.82, 0, 2.5]);
@@ -302,9 +327,11 @@ export function creerGeometries(THREE, col) {
   // 42 triangles contre 30 pour la boîte aux angles coupés. Les pans qui regardent vers le haut prennent la couleur du dessus, les autres celle du flanc : aucune couleur de plus.
   const ANNEAUX_FINS = [90, 58, 28, -2, -30], PANS_FINS = 6;
   // `grossier` : les anneaux et les pans de ARBRES_GROSSIER (un arbre de quelques pixels) ; une bande prend la couleur du dessus si elle part au-dessus de l'équateur et n'en descend guère (les mêmes que `r <= 2` des anneaux fins ; grossier : la calotte seule)
+  // `grossier` : true (ARBRES_GROSSIER), 'moyen' (une boule des grappes : ARBRES_GRAPPES.moyen) ou false (la touffe fine)
   function ellipsoide(w, h, grossier = false) {
-    const ANNEAUX = grossier ? ARBRES_GROSSIER.anneaux : ANNEAUX_FINS, PANS = grossier ? ARBRES_GROSSIER.pans : PANS_FINS;
-    const a = w / 2 * (grossier ? ARBRES_GROSSIER.elargir : 1), b = h / 2, R = ANNEAUX.map(lat => Array.from({ length: PANS }, (_, k) => { const t = k / PANS * Math.PI * 2, r = lat === 90 ? 0 : a * Math.cos(lat * Math.PI / 180); return [Math.cos(t) * r, Math.sin(lat * Math.PI / 180) * b, Math.sin(t) * r]; })), tris = [];
+    const RES = grossier === 'moyen' ? ARBRES_GRAPPES.moyen : grossier ? ARBRES_GROSSIER : null;
+    const ANNEAUX = RES ? RES.anneaux : ANNEAUX_FINS, PANS = RES ? RES.pans : PANS_FINS;
+    const a = w / 2 * (grossier === true ? ARBRES_GROSSIER.elargir : 1), b = h / 2, R = ANNEAUX.map(lat => Array.from({ length: PANS }, (_, k) => { const t = k / PANS * Math.PI * 2, r = lat === 90 ? 0 : a * Math.cos(lat * Math.PI / 180); return [Math.cos(t) * r, Math.sin(lat * Math.PI / 180) * b, Math.sin(t) * r]; })), tris = [];
     for (let k = 0; k < PANS; k++) tris.push({ haut: true, p: [R[0][0], R[1][(k + 1) % PANS], R[1][k]] });                // la calotte (l'anneau 0 est un point)
     for (let r = 1; r + 1 < ANNEAUX.length; r++) for (let k = 0; k < PANS; k++) {                                          // trois bandes : deux triangles par pan ; les deux d'en haut prennent la couleur du dessus
       const A = R[r], Bn = R[r + 1], k1 = (k + 1) % PANS, haut = ANNEAUX[r] > 0 && ANNEAUX[r + 1] > -10;
@@ -335,8 +362,12 @@ export function creerGeometries(THREE, col) {
     return ellipsoide(w * 1.15, h * 1.25, g);                                          // dome
   }
   const hash = (k, s) => { let x = s | 0; for (let i = 0; i < k.length; i++) x = Math.imul(x ^ k.charCodeAt(i), 0x01000193); x = Math.imul(x ^ (x >>> 15), 0x2c1b3c6d); return ((x ^ (x >>> 12)) >>> 0) / 4294967296; };
-  function geometrieFeuilles(id, mode, degarni, chanfrein = 0, rond = false, variante = 0, grossier = false) {
-    const P = ARBRES_FEUILLES[mode];
+  // `essence` : `{ grappes, teintes }` (labo « Des arbres réalistes ») : les couronnes en grappes, les teintes de l'essence (ARBRES_TEINTES) décalées selon la variante
+  function geometrieFeuilles(id, mode, degarni, chanfrein = 0, rond = false, variante = 0, grossier = false, essence = null) {
+    const P0 = ARBRES_FEUILLES[mode];
+    const T = essence?.teintes && P0 && !P0.neige ? (ARBRES_TEINTES[essence.teintes]?.[mode]?.[id] ?? ARBRES_TEINTES.palette[mode]?.[id]) : null;
+    const P = T ? { ...P0, dessus: T.dessus, flanc: T.flanc } : P0;
+    const dec = T ? variante * 2 : 0;      // (le départ dans la liste des teintes : deux arbres voisins n'ont pas les mêmes tons)
     if (!P) return null;
     const F = formeArbre(id), pts = P.neige ? F.neige : F.pointes;
     if (!pts.length) return null;
@@ -346,7 +377,20 @@ export function creerGeometries(THREE, col) {
       if (Math.floor((k + 1) * garde) <= Math.floor(k * garde)) return;
       const s = p[3] * P.taille, w = P.neige ? s * 0.8 : s, h = P.neige ? 0.22 : s * 0.75;
       const teinte = k => k[0] === '#' ? new THREE.Color(k) : col(k);
-      const dessus = teinte(P.dessus[n % P.dessus.length]), flanc = teinte(P.flanc[n % P.flanc.length]);
+      const dessus = teinte(P.dessus[(n + dec) % P.dessus.length]), flanc = teinte(P.flanc[(n + dec) % P.flanc.length]);
+      if (rond && !P.neige && essence?.grappes && !grossier) {             // la touffe en grappes : n boules serrées, chacune de sa teinte, à des hauteurs un peu différentes
+        const formes = ARBRES_COURONNES[id] ?? ['dome'], largeur = ARBRES_VARIANTES.largeur[variante % ARBRES_VARIANTES.largeur.length], G = ARBRES_GRAPPES;
+        for (let g = 0; g < G.n; g++) {
+          const hg = hash(`g${k},${g}`, variante * 31 + 7), a = (g / G.n + hg * 0.3) * Math.PI * 2, e = g === 0 ? 0.15 : G.ecart;
+          const t = G.taille[0] + (G.taille[1] - G.taille[0]) * hash(`t${k},${g}`, variante + 3), ox = Math.cos(a) * e * w * largeur, oz = Math.sin(a) * e * w * largeur, oy = (g === 0 ? 0.3 : (hg - 0.6) * 0.35) * h;
+          const dg = teinte(P.dessus[(n + dec + g) % P.dessus.length]), fg = teinte(P.flanc[(n + dec + g) % P.flanc.length]);
+          for (const tr of formeCouronne(formes[(k + variante + g) % formes.length], w * largeur * t, h * t, variante * 31 + k * 5 + g, 'moyen')) {
+            const c = tr.haut ? dg : fg;
+            for (const v of tr.p) { pos.push(v[0] + p[0] + ox, v[1] + p[1] + oy, v[2] + p[2] + oz); coul.push(c.r, c.g, c.b); }
+          }
+        }
+        n++; return;
+      }
       if (rond && !P.neige) {                                                // la touffe ronde : une forme de la famille, selon la variante de l'arbre
         const formes = ARBRES_COURONNES[id] ?? ['dome'], largeur = ARBRES_VARIANTES.largeur[variante % ARBRES_VARIANTES.largeur.length];
         for (const t of formeCouronne(formes[(k + variante) % formes.length], w * largeur, h, variante * 31 + k, grossier)) {

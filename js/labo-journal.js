@@ -2,6 +2,10 @@
 // Une entrée par version qui touche au labo, la plus récente en haut. `ref` : « sujet-Lettre » (la lettre est celle de la variante,
 // A étant l'actuelle). À chaque changement du labo : une entrée ici, avec `depuis` sur les variantes ajoutées ou changées (labo.js).
 export const JOURNAL = [
+  { version: '0.137.0', date: '2026-11-15', items: [
+    { genre: 'nouveau', texte: 'L\'herbe dense (à trancher) : des touffes tirées case par case, de sept brins variés, vertes ou sèches selon le sol ; plus dense, ou une prairie', ref: 'herbe-dense-B' },
+    { genre: 'nouveau', texte: 'Des arbres réalistes (à trancher) : les essences du front (peuplier, saule têtard, chêne, hêtre, bouleau), leurs tons par saison, des couronnes en grappes, et des verts d\'été propres à chaque essence (hors palette, à admettre)', ref: 'arbres-reels-B' },
+  ] },
   { version: '0.136.0', date: '2026-11-15', items: [
     { genre: 'nouveau', texte: 'Le grain du sol (à trancher) : des mottes, des fentes, des cailloux et des brins dans chaque case, avec les seules couleurs de la palette ; trois variantes (le grain, le grain et les bords déchiquetés, le grain gros)', ref: 'grain-sol-B' },
   ] },
