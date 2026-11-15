@@ -1,5 +1,9 @@
 # Journal des versions
 
+## 0.134.9 — 2026-11-15
+
+- Au labo, « Atelier de terrain » (Terrain et engins) : le rendu du jeu sur une vraie bataille, avec des curseurs pour l'heure (ou la nuit), la saison, le temps qu'il fait, l'éclairage (bas, moyen, haut), le zoom, l'inclinaison de la caméra jusqu'à l'horizon et sa rotation ; le temps qui passe (un jour en une minute) et des obus au centre de la vue
+
 ## 0.134.8 — 2026-11-15
 
 - Éclairage « haut » : de vrais nuages en volume (une couche traversée par la vue, avec du relief, des bases plus sombres, des bords argentés côté soleil) : quelques petits cumulus par beau temps, un ciel chargé par temps sec, un plafond sombre sous la pluie ; rougis à l'aube et au couchant

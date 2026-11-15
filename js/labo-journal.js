@@ -2,6 +2,9 @@
 // Une entrée par version qui touche au labo, la plus récente en haut. `ref` : « sujet-Lettre » (la lettre est celle de la variante,
 // A étant l'actuelle). À chaque changement du labo : une entrée ici, avec `depuis` sur les variantes ajoutées ou changées (labo.js).
 export const JOURNAL = [
+  { version: '0.134.9', date: '2026-11-15', items: [
+    { genre: 'nouveau', texte: 'L\'atelier de terrain : le rendu du jeu avec des curseurs pour l\'heure, la nuit, la saison, le temps qu\'il fait, l\'éclairage, le zoom et la caméra ; le temps qui passe et des obus', ref: 'atelier-terrain-A' },
+  ] },
   { version: '0.134.0', date: '2026-11-15', items: [
     { genre: 'mis-a-jour', texte: 'Jérôme retient « Deux colonnes » pour le papier de la nuit et « Le rapport » pour la fin de partie : en jeu ; leurs morceaux viennent maintenant du jeu (hud/papier-nuit.js)', ref: 'papier-nuit-A' },
   ] },

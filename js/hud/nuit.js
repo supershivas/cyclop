@@ -1,19 +1,19 @@
 // Le papier de la nuit (Jérôme, v0.13.0) : un état (choix des corvées, puis le bilan de l'aube), jamais une boîte de
 // dialogue : le champ reste là, on choisit des régiments (clic, cadre, T) et on leur donne une corvée, dite sur leur carte.
-import { BATIMENTS } from '../data/batiments.js?v=0.134.8';
-import { NOUS, aube, priseEnCours } from '../bataille.js?v=0.134.8';
-import { METEO } from '../data/meteo.js?v=0.134.8';
-import { CORVEES, CONTACT } from '../data/corvees.js?v=0.134.8';
-import { EQUIPEMENT } from '../data/batiments.js?v=0.134.8';
-import { campDe, niveauDe, renfortsDe } from '../camp.js?v=0.134.8';
-import { refusCorvee, contactDe } from '../nuit.js?v=0.134.8';
-import { palmares } from './medailles.js?v=0.134.8';
-import { lireJournee } from '../donnees-jour.js?v=0.134.8';
-import { reinitIds } from './bilan.js?v=0.134.8';
-import { el, ordres, tuilesJour, reste, medailles, puceReleve } from './papier-nuit.js?v=0.134.8';
-import { tuilesDeLAube } from './aube.js?v=0.134.8';
-import { numeroDe } from './lecture.js?v=0.134.8';
-import { lune, nomPhase, couvertureNuit, cielEnMots } from '../data/lune.js?v=0.134.8';
+import { BATIMENTS } from '../data/batiments.js?v=0.134.9';
+import { NOUS, aube, priseEnCours } from '../bataille.js?v=0.134.9';
+import { METEO } from '../data/meteo.js?v=0.134.9';
+import { CORVEES, CONTACT } from '../data/corvees.js?v=0.134.9';
+import { EQUIPEMENT } from '../data/batiments.js?v=0.134.9';
+import { campDe, niveauDe, renfortsDe } from '../camp.js?v=0.134.9';
+import { refusCorvee, contactDe } from '../nuit.js?v=0.134.9';
+import { palmares } from './medailles.js?v=0.134.9';
+import { lireJournee } from '../donnees-jour.js?v=0.134.9';
+import { reinitIds } from './bilan.js?v=0.134.9';
+import { el, ordres, tuilesJour, reste, medailles, puceReleve } from './papier-nuit.js?v=0.134.9';
+import { tuilesDeLAube } from './aube.js?v=0.134.9';
+import { numeroDe } from './lecture.js?v=0.134.9';
+import { lune, nomPhase, couvertureNuit, cielEnMots } from '../data/lune.js?v=0.134.9';
 
 export const corveeDe = id => [...CORVEES, CONTACT].find(c => c.id === id)?.nom || '';
 export const corveeCourte = id => [...CORVEES, CONTACT].find(c => c.id === id)?.court || '';

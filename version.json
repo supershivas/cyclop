@@ -1,8 +1,7 @@
 {
-  "version": "0.134.8",
+  "version": "0.134.9",
   "date": "2026-11-15",
   "changes": [
-    "Éclairage « haut » : de vrais nuages en volume, avec du relief, des bases sombres et des bords éclairés, qui suivent le temps",
-    "Éclairage « haut » : une brume au ras du sol à l'aube, qui se lève vers 9 h 30"
+    "Au labo, l'atelier de terrain : l'heure, la nuit, la saison, le temps qu'il fait, l'éclairage et la caméra au curseur, sur le rendu du jeu"
   ]
 }

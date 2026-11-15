@@ -1,6 +1,6 @@
 // Les mesures du labo lumière : chronomètres autour de chaque calcul, moyennes glissantes, budgets, banc GPU, export JSON.
 // Le seul module du labo qui lit l'horloge (la logique du terrain, de la lumière et de la foule n'en a pas).
-import { ETAPES, BUDGET_IMAGE_MS, BUDGET_RECALCUL_CHUNK_MS, BANC } from './config.js?v=0.134.8';
+import { ETAPES, BUDGET_IMAGE_MS, BUDGET_RECALCUL_CHUNK_MS, BANC } from './config.js?v=0.134.9';
 
 const maintenant = () => performance.now();
 

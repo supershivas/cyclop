@@ -2,40 +2,41 @@
 // Chaque sujet utilise les mêmes modules que le jeu (terrain, apparence,
 // rendu three.js) : ce qu'on voit ici est ce que le jeu dessinera. Ajouter un
 // sujet ou une variante = ajouter une entrée dans GROUPES.
-import { afficherVersion } from './version-tag.js?v=0.134.8';
-import { mountLabo } from './lib/labo-shell.js?v=0.134.8';
-import { spriteCanvas, paletteToGPL, paletteToHex } from './lib/sprites.js?v=0.134.8';
-import { PALETTE, ROLES } from './palette.js?v=0.134.8';
-import { chargerContenu } from './design-store.js?v=0.134.8';
-import { tuile, ETAT } from './tuiles.js?v=0.134.8';
-import { creerTerrain, impact, hydroLignes, toucher } from './terrain.js?v=0.134.8';
-import { FORMES } from './cratere.js?v=0.134.8';
-import { CALIBRES } from './data/calibres.js?v=0.134.8';
-import { METEO } from './data/meteo.js?v=0.134.8';
-import { nouvelleBataille, avancer, ordonnerMarche, ordonnerBarrage, mourir, regarderAu, aube, horloge, ticksParJour, rangDe } from './bataille.js?v=0.134.8';
-import { AZIMUTS, COTES } from './data/soleil.js?v=0.134.8';
-import { creerRendu, ZOOMS } from './rendu3d.js?v=0.134.8';
-import { placesCommandement } from './army.js?v=0.134.8';
-import { hash2 } from './lib/rng.js?v=0.134.8';
-import { reglerVerdure } from './apparence.js?v=0.134.8';
-import { maquetteChars } from './labo-chars.js?v=0.134.8';
-import { maquetteEpaves } from './labo-epaves.js?v=0.134.8';
-import { fondations, boutons, unites, fenetres, revision } from './labo-design-system.js?v=0.134.8';
-import { cartesSecteur } from './labo-cartes.js?v=0.134.8';
-import { gainTampon, gainCachets, gainFil, gainBordereau, victoireFanion, victoireTampon, victoireChevrons, victoireAube, ficheDeuxColonnes, ficheEtages, ficheRegistre, ficheDAbord } from './labo-recompenses.js?v=0.134.8';
-import { maquetteBatiment, maquetteCamp } from './labo-batiments.js?v=0.134.8';
-import { BATIMENTS } from './data/batiments.js?v=0.134.8';
-import { JOURNAL } from './labo-journal.js?v=0.134.8';
-import { loadVersion } from './lib/app-update.js?v=0.134.8';
-import { maquetteEffets, maquetteAmbiance, maquetteEspace, maquetteBruitages } from './labo-son.js?v=0.134.8';
-import { calqueMoral } from './labo-moral.js?v=0.134.8';
-import { bilanRapport, bilanTuiles, bilanFrise } from './labo-donnees.js?v=0.134.8';
-import { papierNuit, finDePartie } from './labo-papiers.js?v=0.134.8';
-import { fichesTuiles, fichesProfil, fichesCompactes } from './labo-fiches.js?v=0.134.8';
-import { calqueEnnemis } from './labo-engins-ennemis.js?v=0.134.8';
-import { maquetteTranchees, NOTES_TRANCHEES, NOMS_TRANCHEES } from './labo-tranchees.js?v=0.134.8';
-import { maquetteFabrique } from './labo-fabrique.js?v=0.134.8';
-import { entrees as encEntrees, lexiqueAZ, planche as encPlanche } from './labo-encyclopedie.js?v=0.134.8';
+import { afficherVersion } from './version-tag.js?v=0.134.9';
+import { mountLabo } from './lib/labo-shell.js?v=0.134.9';
+import { spriteCanvas, paletteToGPL, paletteToHex } from './lib/sprites.js?v=0.134.9';
+import { PALETTE, ROLES } from './palette.js?v=0.134.9';
+import { chargerContenu } from './design-store.js?v=0.134.9';
+import { tuile, ETAT } from './tuiles.js?v=0.134.9';
+import { creerTerrain, impact, hydroLignes, toucher } from './terrain.js?v=0.134.9';
+import { FORMES } from './cratere.js?v=0.134.9';
+import { CALIBRES } from './data/calibres.js?v=0.134.9';
+import { METEO } from './data/meteo.js?v=0.134.9';
+import { nouvelleBataille, avancer, ordonnerMarche, ordonnerBarrage, mourir, regarderAu, aube, horloge, ticksParJour, rangDe } from './bataille.js?v=0.134.9';
+import { AZIMUTS, COTES } from './data/soleil.js?v=0.134.9';
+import { creerRendu, ZOOMS } from './rendu3d.js?v=0.134.9';
+import { placesCommandement } from './army.js?v=0.134.9';
+import { hash2 } from './lib/rng.js?v=0.134.9';
+import { reglerVerdure } from './apparence.js?v=0.134.9';
+import { maquetteChars } from './labo-chars.js?v=0.134.9';
+import { maquetteEpaves } from './labo-epaves.js?v=0.134.9';
+import { fondations, boutons, unites, fenetres, revision } from './labo-design-system.js?v=0.134.9';
+import { cartesSecteur } from './labo-cartes.js?v=0.134.9';
+import { gainTampon, gainCachets, gainFil, gainBordereau, victoireFanion, victoireTampon, victoireChevrons, victoireAube, ficheDeuxColonnes, ficheEtages, ficheRegistre, ficheDAbord } from './labo-recompenses.js?v=0.134.9';
+import { maquetteBatiment, maquetteCamp } from './labo-batiments.js?v=0.134.9';
+import { BATIMENTS } from './data/batiments.js?v=0.134.9';
+import { JOURNAL } from './labo-journal.js?v=0.134.9';
+import { loadVersion } from './lib/app-update.js?v=0.134.9';
+import { maquetteEffets, maquetteAmbiance, maquetteEspace, maquetteBruitages } from './labo-son.js?v=0.134.9';
+import { calqueMoral } from './labo-moral.js?v=0.134.9';
+import { bilanRapport, bilanTuiles, bilanFrise } from './labo-donnees.js?v=0.134.9';
+import { papierNuit, finDePartie } from './labo-papiers.js?v=0.134.9';
+import { fichesTuiles, fichesProfil, fichesCompactes } from './labo-fiches.js?v=0.134.9';
+import { calqueEnnemis } from './labo-engins-ennemis.js?v=0.134.9';
+import { maquetteTranchees, NOTES_TRANCHEES, NOMS_TRANCHEES } from './labo-tranchees.js?v=0.134.9';
+import { maquetteFabrique } from './labo-fabrique.js?v=0.134.9';
+import { atelierTerrain } from './labo-atelier-terrain.js?v=0.134.9';
+import { entrees as encEntrees, lexiqueAZ, planche as encPlanche } from './labo-encyclopedie.js?v=0.134.9';
 
 document.documentElement.style.setProperty('--jeu-accent', ROLES.accent);
 const NOM = document.title.replace(/^Labo — /, ''); // le nom vient de la page (une apostrophe ne casse rien)
@@ -440,6 +441,9 @@ const GROUPES = [
     ] },
   ] },
   { id: 'terrain', title: 'Terrain et engins', topics: [
+    { id: 'atelier-terrain', title: 'Atelier de terrain', variants: [
+      { title: 'Heures, saisons et météo', status: 'actuelle', depuis: '0.134.9', note: 'Le rendu du jeu sur une vraie bataille, avec des curseurs : l\'heure (de 6 h à 18 h) ou la nuit, la saison, le temps qu\'il fait, le réglage « Éclairage » (bas, moyen, haut), le zoom, l\'inclinaison de la caméra (jusqu\'à l\'horizon, pour voir le ciel) et sa rotation. Le temps peut passer (un jour en une minute) et des obus tomber au centre de la vue (les éclairs, les incendies et, la nuit, les fusées).', render: s => atelierTerrain(s, R, el) },
+    ] },
     { id: 'tranchees', title: 'Les tranchées', variants: [
       { title: NOMS_TRANCHEES.A, status: 'actuelle', depuis: '0.88.1', note: `${NOTES_TRANCHEES.A} Trois tronçons de la première ligne : intact, légèrement détruit (six 75 et deux 155), complètement détruit (quatorze 155 et six 75) ; chacun dit son état et sa solidité (la barre du coin de l'écran, v0.84.0). Le tableau dessous donne le coût de chaque niveau et le bouton « Mesurer dans la scène » le dessin entier.`, render: s => maquetteTranchees(s, R, 'A') },
       ...['B', 'C', 'D'].map(c => ({ title: NOMS_TRANCHEES[c], status: 'retenue', depuis: '0.88.1', note: `En jeu (v0.88.1) selon le zoom. ${NOTES_TRANCHEES[c]}`, render: s => maquetteTranchees(s, R, c) })),
