@@ -25,4 +25,4 @@ export const GRAIN_VARIANTES = [
   { nom: 'Le grain et les bords déchiquetés', cellule: 0.25, bords: 0.45, force: 1, ppmPlein: 4, ppmNul: 2 },
   { nom: 'Le grain gros et les bords', cellule: 0.5, bords: 0.6, force: 1.5, ppmPlein: 2, ppmNul: 1 },
 ];
-export const GRAIN_JEU = 0;
+export const GRAIN_JEU = 2;     // (Jérôme, v0.138.0, labo « Le grain du sol », C : le grain et les bords déchiquetés)

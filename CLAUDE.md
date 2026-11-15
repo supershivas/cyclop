@@ -50,7 +50,7 @@ la danse macabre, la catastrophe peinte avec calme. L'intention est dans `DESIGN
 
 ### Palette « Boue et ciel bas » (js/palette.js, variables --jeu-*)
 
-Choisie par Jérôme (v0.1.0). Lettres : `t s b g h e r o` (terre, boue, glaise, herbe morte, eau, brume, os), `n` bleu horizon (nous), `x` vert kaki clair (en face), `v w` (herbe qui reprend). **Aucune autre couleur dans le jeu**, hors les exceptions listées (alertes de l'interface, feuilles d'automne et de printemps, ciels (v0.135.1), fuselage sombre des avions, fondus continus, fond des dialogues, voile de nuit). Valeurs, rôles, exceptions datées et mesures de lisibilité : `docs/domaines/rendu.md`, « Palette ». Toute couleur nouvelle se vérifie avec `outils/lisibilite.mjs`.
+Choisie par Jérôme (v0.1.0). Lettres : `t s b g h e r o` (terre, boue, glaise, herbe morte, eau, brume, os), `n` bleu horizon (nous), `x` vert kaki clair (en face), `v w` (herbe qui reprend). **Aucune autre couleur dans le jeu**, hors les exceptions listées (alertes de l'interface, feuilles d'automne et de printemps, verts d'été par essence d'arbre (v0.138.0), ciels (v0.135.1), fuselage sombre des avions, fondus continus, fond des dialogues, voile de nuit). Valeurs, rôles, exceptions datées et mesures de lisibilité : `docs/domaines/rendu.md`, « Palette ». Toute couleur nouvelle se vérifie avec `outils/lisibilite.mjs`.
 
 ### Échelle
 
@@ -182,6 +182,7 @@ node outils/stamp.mjs                    # après chaque changement de version.j
 | Sol à facettes, soldats en sprites (labo) | 0.1.1 → 0.2.0 | non retenus par Jérôme ; facettes : +30 % de triangles sur un champ labouré, trame bruyante (`docs/archives/sol-facettes-et-soldats-sprites.md`) |
 | Les corvées « réparer », « inhumer » et « abris » (`etat.travaux`, `etat.abris`, `abriDe`) | 0.77.1 | Jérôme : « inutiles » ; un choix de plus par nuit pour presque aucun effet (`docs/archives/corvees-retirees.md`) |
 | Les corvées « caillebotis » et « coup de main » (`T.caille`, `etat.prisonniers`, `capturer`, `nuit.coup*`) | 0.38.3 | Jérôme : « il y en a trop » ; les caillebotis ne servaient qu'à faire marcher plus vite sur une case de boue de la tranchée (et doublaient « réparer ») ; le coup de main coûtait des hommes et ne rapportait que quelques prisonniers qui ne servaient à rien (`docs/archives/corvees-retirees.md`) |
+| L'herbe dense (touffes de sept brins tirées case par case, `js/data/herbe.js`) | 0.138.0 (jamais en jeu) | Jérôme : abandonnée ; +24 à +82 % de rendu logiciel à 8 000 soldats (chaque brin plus fin qu'un pixel se paie) ; le grain du sol fait les brins vus de haut (`docs/archives/labo-archive.md`) |
 | Les sujets tranchés du labo (HUD, moteur, ponts, avions, arcade : caisses, obus ratés, sapes, gaz) et leurs scripts `mesure-*-labo.mjs` | nettoyage du labo (v0.99.0) | tranchés et en jeu, ou jamais retenus ; le labo ne garde que l'ouvert et les références (`docs/archives/labo-archive.md`) |
 
 ## Pièges connus

@@ -36,7 +36,7 @@ export const ARBRES_PPM_FEUILLES = 1;      // pixels par mètre à partir desque
 export const ARBRES_GROSSIER = { ppm: 2.5, anneaux: [90, 20, -30], pans: 5, elargir: 1.1 };     // elargir : un pentagone sur un anneau à 20° est plus étroit que l’hexagone fin à l’équateur (×1,1 garde la silhouette)
 
 // Ce que le jeu dessine (Jérôme, v0.53.1, après le sujet « Des arbres plus variés » du labo) : les six formes, les feuilles de la saison, les abattus longs. Pas de chute des feuilles ni de printemps (restent au labo).
-export const ARBRES_JEU = { feuilles: true, abattus: 'longs', chanfrein: 0.12, rond: true };     // chanfrein (Jérôme) : les touffes aux angles coupés, un pan de 12 % (au plus 30 cm) ; 0 : les cubes francs d'avant
+export const ARBRES_JEU = { feuilles: true, abattus: 'longs', chanfrein: 0.12, rond: true, essences: true, grappes: true, teintes: 'etendues' };     // (Jérôme, v0.138.0, labo « Des arbres réalistes », D : les essences, les grappes de près, les verts d'été par essence)     // chanfrein (Jérôme) : les touffes aux angles coupés, un pan de 12 % (au plus 30 cm) ; 0 : les cubes francs d'avant
 
 // Les formes de couronne (Jérôme, 1er novembre : « la forme des feuillages doit être plus variée, nous n'avons que des sortes de champignons ») : par famille, les formes que prennent ses touffes
 // (`dome`, `boule`, `galette`, `colonne`, `cone`, `irregulier` : `formeCouronne` de rendu/geometries.js), tour à tour selon le rang de la touffe et la variante de l'arbre.
@@ -78,7 +78,8 @@ ARBRES_COURONNES.bouleau = ['irregulier', 'boule'];
 // Les couronnes en grappes (`{ grappes: true }`) : chaque touffe devient `n` boules plus petites (`taille` de la touffe), serrées autour de son centre
 // (`ecart` de sa largeur), à des hauteurs un peu différentes, chacune de sa teinte : la couronne se bosselle, la lumière s'y accroche. Chaque boule
 // a la résolution `moyen` (5 pans, 25 triangles ; la touffe ronde d'avant : 42) ; de loin, le feuillage grossier reste une boule par touffe.
-export const ARBRES_GRAPPES = { n: 3, taille: [0.6, 0.78], ecart: 0.34, moyen: { anneaux: [90, 45, 5, -30], pans: 5 } };
+// `ppm` : seulement un arbre qui fait au moins tant de pixels par mètre à l'écran (Jérôme, v0.138.0 : « grappes réservées au proche » ; en dessous, la touffe ronde)
+export const ARBRES_GRAPPES = { n: 3, taille: [0.6, 0.78], ecart: 0.34, moyen: { anneaux: [90, 45, 5, -30], pans: 5 }, ppm: 6 };
 
 // Les teintes par essence et par saison (`{ teintes: 'palette' | 'etendues' }`) ; sans : celles de ARBRES_FEUILLES pour tous. Une variante de l'arbre
 // (`ARBRES_VARIANTES`) décale le départ dans la liste : deux chênes voisins n'ont pas les mêmes tons.

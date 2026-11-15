@@ -2,12 +2,15 @@
 // Une entrée par version qui touche au labo, la plus récente en haut. `ref` : « sujet-Lettre » (la lettre est celle de la variante,
 // A étant l'actuelle). À chaque changement du labo : une entrée ici, avec `depuis` sur les variantes ajoutées ou changées (labo.js).
 export const JOURNAL = [
+  { version: '0.138.0', date: '2026-11-15', items: [
+    { genre: 'mis-a-jour', texte: 'Jérôme tranche : le grain du sol C (grain et bords déchiquetés) et les arbres D (essences, grappes de près, verts d\'été par essence) passent en jeu ; l\'herbe dense est abandonnée (trop chère sans carte graphique). Les trois sujets sortent du labo (docs/archives/labo-archive.md)', ref: 'atelier-terrain-A' },
+  ] },
   { version: '0.137.0', date: '2026-11-15', items: [
-    { genre: 'nouveau', texte: 'L\'herbe dense (à trancher) : des touffes tirées case par case, de sept brins variés, vertes ou sèches selon le sol ; plus dense, ou une prairie', ref: 'herbe-dense-B' },
-    { genre: 'nouveau', texte: 'Des arbres réalistes (à trancher) : les essences du front (peuplier, saule têtard, chêne, hêtre, bouleau), leurs tons par saison, des couronnes en grappes, et des verts d\'été propres à chaque essence (hors palette, à admettre)', ref: 'arbres-reels-B' },
+    { genre: 'nouveau', texte: 'L\'herbe dense (à trancher) : des touffes tirées case par case, de sept brins variés, vertes ou sèches selon le sol ; plus dense, ou une prairie' },
+    { genre: 'nouveau', texte: 'Des arbres réalistes (à trancher) : les essences du front (peuplier, saule têtard, chêne, hêtre, bouleau), leurs tons par saison, des couronnes en grappes, et des verts d\'été propres à chaque essence (hors palette, à admettre)' },
   ] },
   { version: '0.136.0', date: '2026-11-15', items: [
-    { genre: 'nouveau', texte: 'Le grain du sol (à trancher) : des mottes, des fentes, des cailloux et des brins dans chaque case, avec les seules couleurs de la palette ; trois variantes (le grain, le grain et les bords déchiquetés, le grain gros)', ref: 'grain-sol-B' },
+    { genre: 'nouveau', texte: 'Le grain du sol (à trancher) : des mottes, des fentes, des cailloux et des brins dans chaque case, avec les seules couleurs de la palette ; trois variantes (le grain, le grain et les bords déchiquetés, le grain gros)' },
   ] },
   { version: '0.135.0', date: '2026-11-15', items: [
     { genre: 'mis-a-jour', texte: 'L\'atelier de terrain a un vrai printemps (une saison du jeu) : la prairie, les feuilles neuves et les arbres en fleurs, son temps', ref: 'atelier-terrain-A' },

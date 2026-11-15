@@ -254,3 +254,20 @@ Sujets tranchés et en jeu, ou jamais retenus, retirés du labo. Les décisions 
 - **Des tirets qui tournent** [sans statut, v0.32.0] Le même cercle en tirets, qui tournent doucement : on voit tout de suite que c'est une visée, pas un tracé du terrain.
 - **Des repères au bord** [sans statut, v0.32.0] Un cercle fin, quatre repères au bord (nord, est, sud, ouest) et le rayon écrit en mètres sous le cercle : on lit la taille sans comparer aux hommes.
 - **Le carré du jeu** [ancienne, v0.32.3] Avant la v0.32.3 : le curseur en croix, puis un petit carré à l'endroit visé pendant deux secondes. Rien ne disait le rayon de l'obus. Les trois cercles de cette vue sont donc des carrés, un par calibre (75, 155, 220 mm).
+
+## Le grain du sol (`grain-sol`, v0.136.0 → v0.138.0)
+- **Aujourd'hui : la case unie** [ancienne] Chaque case du sol d'une seule lettre de la palette.
+- **B · Le grain** [sans statut] Des points de 25 cm dans chaque case (mottes, fentes, cailloux, brins), aux couleurs de la case, de sa paroi ou de la lettre claire de sa matière ; bords francs.
+- **C · Le grain et les bords déchiquetés** [actuelle, v0.138.0] Retenu (Jérôme). B, et la case lue à 45 cm au plus de chaque point : les limites herbe / boue / glaise s'effrangent. +7 à +12 % en rendu logiciel.
+- **D · Le grain gros et les bords** [sans statut] Points de 50 cm, une fois et demie plus nombreux, dès 2 px/m.
+
+## Des arbres réalistes (`arbres-reels`, v0.137.0 → v0.138.0)
+- **Aujourd'hui : les familles de formes** [ancienne] Six familles de formes (droit, penché, double, jeune, grand, mort), les mêmes teintes de saison pour tous.
+- **B · Les essences** [sans statut] Peuplier d'Italie, saule têtard, chêne, hêtre, bouleau, jeune, mort ; leurs tons par saison dans la palette (et les teintes d'automne et de printemps admises).
+- **C · Les essences en grappes** [sans statut] B, chaque touffe en trois boules serrées de tons différents.
+- **D · En grappes, verts étendus** [actuelle, v0.138.0] Retenu (Jérôme), **les grappes réservées au proche** (`ARBRES_GRAPPES.ppm` = 6) et les verts d'été par essence admis hors palette. Mesuré avant la limite : +9 à +16 % en rendu logiciel.
+
+## L'herbe dense (`herbe-dense`, v0.137.0 → abandonnée en v0.138.0)
+- **B · Plus dense** [non retenu] Des touffes de sept brins tirées case par case (≈ 8 fois plus), vertes ou sèches selon le sol. +24 à +38 % en rendu logiciel (8 000 soldats).
+- **C · Une prairie** [non retenu] B deux fois et demie plus dense. +62 à +82 %.
+- Abandonnée (Jérôme, v0.138.0) : trop chère sans carte graphique (chaque brin, plus fin qu'un pixel, se paie) ; le grain du sol fait les brins vus de haut. Code : l'historique git (`js/data/herbe.js`, `majHerbeDense`, `herbeDenseMat`, v0.137.0).

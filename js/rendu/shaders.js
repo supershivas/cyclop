@@ -503,23 +503,6 @@ export const herbeMat = {
       void main() { gl_FragColor = vec4(vHaut > 0.6 ? uHaut : uBas, 1.0); }`,
 };
 
-// L'herbe dense (labo, v0.137.0 ; data/herbe.js) : aVar = (hauteur, angle, teinte 0 sèche / 1 verte) ; le bas et la pointe de chaque brin prennent les couleurs du sol de la case
-export const herbeDenseMat = {
-  v: `
-      attribute vec3 aPos; attribute vec3 aVar; attribute float aHaut; uniform float uT; uniform vec2 uVent; varying float vHaut; varying float vTeinte;
-      void main() {
-        vHaut = aHaut; vTeinte = aVar.z;
-        float c = cos(aVar.y), s = sin(aVar.y);
-        vec3 p = vec3(c * position.x - s * position.z, position.y * aVar.x, s * position.x + c * position.z);
-        float rafale = 0.65 + 0.35 * sin(uT * 2.3 + aPos.x * 0.5 + aPos.z * 0.4);
-        p.x += sin(uT * 1.6 + aPos.x * 0.37 + aPos.z * 0.21) * 0.07 * aHaut * (1.0 + length(uVent) * 3.0);
-        p.xz += uVent * 0.45 * rafale * aHaut;
-        gl_Position = projectionMatrix * viewMatrix * vec4(p + aPos, 1.0);
-      }`,
-  f: `uniform vec3 uSecBas, uSecHaut, uVertBas, uVertHaut; varying float vHaut; varying float vTeinte;
-      void main() { vec3 b = vTeinte > 0.5 ? uVertBas : uSecBas, t = vTeinte > 0.5 ? uVertHaut : uSecHaut; gl_FragColor = vec4(vHaut > 0.6 ? t : b, 1.0); }`,
-};
-
 export const eclMat = {
   // v0.99.11 (Jérôme : « la fumée en ellipses, plus de cubes ; des volutes plus réalistes ») : une bouffée de fumée (ton > 50) est une ellipse (axes 1 : 0,6) tournée d'un angle tiré de sa position (`vRot`), plus grande d'un tiers
   // (l'ellipse ne remplit que la moitié de son carré), au bord fondu ; les bouffées d'un panache, toutes à des angles différents, se mêlent en volutes.

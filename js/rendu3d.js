@@ -313,7 +313,6 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
   const vegetation = creerVegetation({
     THREE, scene, col, camera, vue, solY: SOL_Y, distance, surface, petit,
     terrain: () => T, vide: () => vide, ombres: () => temps.ombres,
-    lettreSol: c => (solIdx ? ORDRE[solIdx[c]] : null), couleurSol: k => PAL_RGB[ORDRE.indexOf(k)],      // (l'herbe dense : la lettre du sol d'une case, et la couleur d'une lettre, l'herbe rousse de l'automne comprise)
     ppm: () => ZOOMS[vue.zoom], saison: () => (B ? horloge(B) : null), arbres, buissons,     // (les arbres variés ; null : ceux d'avant, au labo)
   });
 
@@ -954,7 +953,6 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
     set finesse(n) { reglerFinesse(n); },      // le sol se refait morceau par morceau, dans la vue d'abord (majMorceaux) : v0.52.2
     get biseau() { return biseau; },
     set biseau(v) { biseau = !!v; },
-    set herbeDense(v) { vegetation.herbe = v; },      // l'herbe dense (labo ; data/herbe.js)
     get grainSol() { return grainSol; }, set grainSol(v) { grainSol = GRAIN_VARIANTES[v] ? v : 0; },      // le grain du sol (labo ; data/grain-sol.js)
     get finesseDes() { return finesseDes; },
     set finesseDes(px) { finesseDes = px; },       // le jeu : le sol passe au demi-mètre à partir de ce nombre de pixels par mètre (v0.52.3)
