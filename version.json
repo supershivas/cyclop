@@ -1,9 +1,7 @@
 {
-  "version": "0.135.1",
+  "version": "0.135.2",
   "date": "2026-11-15",
   "changes": [
-    "Des ciels de vraies couleurs : bleu franc par beau temps, bleu pâle par gel, gris de plomb sous la pluie",
-    "Les avions et les chars garés au camp portent vraiment la couleur de leur armée (ils paraissaient blancs)",
-    "L'aérodrome ne disparaît plus quand un avion décolle"
+    "Le jeu dessine plus vite tout dézoomé : les arbres lointains ont un feuillage plus simple, à l'œil identique"
   ]
 }

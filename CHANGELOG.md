@@ -1,5 +1,9 @@
 # Journal des versions
 
+## 0.135.2 — 2026-11-15
+
+- Le jeu dessine plus vite tout dézoomé : les arbres de quelques pixels ont un feuillage plus simple (deux fois moins de triangles à l'écran), à l'œil identique
+
 ## 0.135.1 — 2026-11-15
 
 - Des ciels de vraies couleurs, hors de la palette : bleu franc par beau temps, bleu pâle et dur par gel, bleu laiteux par forte chaleur, bleu voilé par temps sec, gris de plomb sous la pluie, blanc sale sous la neige ; les lacs les reflètent
