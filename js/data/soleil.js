@@ -26,9 +26,15 @@ export const SOLEIL_LEVER = { marge: 0.25 };
 // Les parois ne suivent pas le soleil dans le jeu (`parois: false` : la règle d'avant, sud, nord et est sombres) : pas encore décidé. Le labo garde ses réglages à lui (tout éteint au départ).
 export const SOLEIL_JEU = { cote: 'lever-gauche', saisonnier: true, meteo: true, parois: false };
 
-// Les ombres de nuages (labo) : des plaques d'ombre sur le sol, de la couleur de paroi de chaque case, par blocs de 2 m (le sol en voxels) qui dérivent avec le vent (`NUAGES_VENT`, m/s). `taches` : la part du sol
-// qu'elles couvrent selon le temps (0 à 1). Un temps couvert (`couvert`) n'a ni plaques ni ombres du soleil : la lumière est la même partout, l'ombre d'un homme ou d'un parapet s'efface.
-export const NUAGES = { sec: { taches: 0.3 }, beau: { taches: 0.2 }, canicule: { taches: 0.1 }, gel: { taches: 0.28 }, couvert: { couvert: true }, pluie: { couvert: true }, brouillard: { couvert: true }, neige: { couvert: true }, tempete: { couvert: true } };
+// Les nuages selon le temps (Jérôme, 15 nov., v0.134.6 : « des nuages différents selon le temps : absents, rares, présents, très nuageux… et leur ombre au sol qui suit leur nombre ») :
+// `ciel` est LA part du ciel couverte (0 à 1), lue par le ciel (rendu/ciel.js) ET par les ombres de nuages au sol (rendu3d.js) : il n'y a qu'un chiffre par temps.
+// De 0 (forte chaleur : pas un nuage) à 0,1 (beau temps : quelques-uns), 0,25 (gel), 0,5 (temps sec : un ciel à moitié pris), jusqu'au ciel plein.
+// Les ombres au sol : des plaques de la couleur de paroi de chaque case, par blocs de 2 m qui dérivent avec le vent (`NUAGES_VENT`, m/s), sur la même part du sol que le ciel.
+// Un temps couvert (`couvert`) n'a ni plaques ni ombres du soleil : la lumière est la même partout, l'ombre d'un homme ou d'un parapet s'efface.
+export const NUAGES = {
+  canicule: { ciel: 0 }, beau: { ciel: 0.1 }, gel: { ciel: 0.25 }, sec: { ciel: 0.5 },
+  brouillard: { ciel: 0.7, couvert: true }, neige: { ciel: 0.9, couvert: true }, couvert: { ciel: 0.95, couvert: true }, pluie: { ciel: 1, couvert: true }, tempete: { ciel: 1, couvert: true },
+};
 export const NUAGES_VENT = [10, 3];
 
 

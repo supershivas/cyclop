@@ -6,10 +6,10 @@
 // `N` (le soir) : { sortes (les corvées offertes), regs: [régiment de `lireJournee` + { corvee, donne, choisi, refus: { corvée: raison } }], d (lireJournee), reserve: { restants, total } | null,
 //   ciel: { p, phase, couv, demain, prevision }, avions: { sorties, perdus, restent }, lignes (la phrase des tronçons), prise (la victoire anticipée) | null, med (palmares) }.
 // `F` (la fin) : `lireBataille` + { med (palmares 'total') }.
-import { CORVEES, CONTACT } from '../data/corvees.js?v=0.134.5';
-import { faitsMarquants } from '../donnees-jour.js?v=0.134.5';
-import { barreEffectif, batons, jaugeMoral, troncons, fait, reinitIds } from './bilan.js?v=0.134.5';
-import { iconeCorvee, iconeMedaille, iconeMoment, iconeLune, boutonLoupe } from './icones-nuit.js?v=0.134.5';
+import { CORVEES, CONTACT } from '../data/corvees.js?v=0.134.6';
+import { faitsMarquants } from '../donnees-jour.js?v=0.134.6';
+import { barreEffectif, batons, jaugeMoral, troncons, fait, reinitIds } from './bilan.js?v=0.134.6';
+import { iconeCorvee, iconeMedaille, iconeMoment, iconeLune, boutonLoupe } from './icones-nuit.js?v=0.134.6';
 
 const pl = (n, un, des) => `${n} ${n > 1 ? des : un}`;
 

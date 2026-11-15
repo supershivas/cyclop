@@ -46,7 +46,10 @@ export const solMat = {
           vec3 Nw = normalize(vec3(-g.x, 1.0, -g.y)), V = normalize(cameraPosition - vec3(vXZ.x, vY, vXZ.y)), Rf = reflect(-V, Nw);
           float fres = clamp(clamp(0.04 + 0.96 * pow(1.0 - max(dot(Nw, V), 0.0), 5.0), 0.0, 1.0) * 1.5 + 0.28, 0.0, 0.85);
           vec3 sky = mix(uEauHor, uEauHaut, smoothstep(0.0, 0.7, max(Rf.y, 0.0)));
-          float sc = pow(max(dot(Rf, uEauSoleil), 0.0), 120.0) * 1.6 * uEauSoleilF;
+          // (v0.134.6) le soleil scintille sur de PETITES rides (une houle fine, 1,5 à 3 m), en éclats serrés : avec les grandes rides seules, l'éclat faisait de larges taches blanches floues
+          vec2 g2 = vec2(sin(q.x * 5.3 + q.y * 1.7 + t * 3.1) + sin(q.x * 8.9 - q.y * 3.3 - t * 2.3), sin(q.y * 6.1 - q.x * 2.1 + t * 2.7) + sin(q.y * 9.7 + q.x * 4.1 - t * 3.4)) * 0.06;
+          vec3 Rs = reflect(-V, normalize(Nw + vec3(-g2.x, 0.0, -g2.y)));
+          float sc = pow(max(dot(Rs, uEauSoleil), 0.0), 900.0) * 2.2 * uEauSoleilF;
           vec3 fond = uEauCoul * 0.82;                                            // le fond : l'eau profonde, plus sombre que sa teinte de palette
           float rid = (g.x * 0.9 - g.y * 0.6) * 0.8;                              // les rides : des bandes claires et sombres qui glissent
           rgb = mix(fond, sky * 1.1 + 0.03, fres) + vec3(rid) + uEauSoleilCoul * sc;
@@ -593,7 +596,10 @@ export const cielMat = {
         vec3 c = mix(uHor, uHaut, smoothstep(0.0, 0.3, e));
         vec2 q = d.xz / (e + 0.35) * 9.0 - uDer;
         float n = 0.5 * bruit(q) + 0.25 * bruit(q * 2.1 + 5.0) + 0.17 * bruit(q * 4.3 + 11.0) + 0.08 * bruit(q * 8.7 + 17.0);
-        float nuage = smoothstep(0.56 - uCouv * 0.5, 0.74 - uCouv * 0.5, n) * smoothstep(0.0, 0.18, e);
+        // (v0.134.6) le seuil du bruit qui laisse paraître la part uCouv du ciel (le bruit est à peu près normal, moyenne 0,5, écart 0,1 : la logistique approche sa loi) ; avant, le seuil glissait
+        // à peine (0,56 → 0,08) et même le beau temps avait un ciel à moitié pris
+        float seuil = 0.5 + 0.06 * log((1.005 - uCouv) / (uCouv + 0.005));
+        float nuage = smoothstep(seuil - 0.05, seuil + 0.05, n) * smoothstep(0.0, 0.18, e);
         vec3 nc = uNuage;
         if (uC2 > 0.5) {
           // (session 4, éteint : uC2 à 0 ; réglage « Éclairage : haut ») le ciel v2 du labo lumière : la lueur du soleil (diffusion avant), des nuages ÉCLAIRÉS : le bord tourné vers le soleil est clair (peu de nuage entre lui et le soleil), le ventre sombre
@@ -601,7 +607,7 @@ export const cielMat = {
           c += uSoleilCoul * (pow(mu, 220.0) * 1.2 + pow(mu, 28.0) * 0.16 + smoothstep(0.9996, 0.99985, mu) * 1.5);
           vec2 qs = q + uSoleilDir.xz / max(uSoleilDir.y, 0.2) * 1.2;
           float ns = 0.5 * bruit(qs) + 0.25 * bruit(qs * 2.1 + 5.0) + 0.17 * bruit(qs * 4.3 + 11.0) + 0.08 * bruit(qs * 8.7 + 17.0);
-          float dens = smoothstep(0.56 - uCouv * 0.5, 0.74 - uCouv * 0.5, ns);
+          float dens = smoothstep(seuil - 0.05, seuil + 0.05, ns);
           float lum = exp(-dens * 1.8);
           nc = mix(uNuage * 0.55, uNuage * 1.12 + uSoleilCoul * 0.25, lum) + uSoleilCoul * pow(mu, 9.0) * (1.0 - nuage) * lum * 0.4;
           if (uRouge > 0.0) {

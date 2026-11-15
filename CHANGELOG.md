@@ -1,5 +1,11 @@
 # Journal des versions
 
+## 0.134.6 — 2026-11-15
+
+- Les nuages suivent le temps : aucun par forte chaleur, quelques-uns par beau temps, d'autres par gel, la moitié du ciel par temps sec, un ciel plein quand il est couvert ; leur ombre au sol couvre la même part du terrain
+- Les lacs et les fleuves reflètent vraiment le ciel (éclairage moyen et haut) : leur reflet ne s'affichait souvent pas, faute d'être recalculé après l'écran titre ; le soleil y scintille en petits éclats serrés au lieu de larges taches
+- L'eau sans reflet (éclairage bas, glace) a des rides éparses au lieu d'un quadrillage de points
+
 ## 0.134.5 — 2026-11-15
 
 - Éclairage « haut » : l'aube et le couchant colorent le ciel d'orange, la lumière devient dorée sur le terrain et les lacs reflètent le ciel du soir

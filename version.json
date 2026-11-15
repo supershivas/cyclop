@@ -1,8 +1,9 @@
 {
-  "version": "0.134.5",
+  "version": "0.134.6",
   "date": "2026-11-15",
   "changes": [
-    "Éclairage « haut » : l'aube et le couchant colorent le ciel, la lumière et les lacs",
-    "Les lanternes ne s'allument plus en plein jour : elles viennent au crépuscule, vers 17 h 15"
+    "Les nuages suivent le temps : aucun par forte chaleur, quelques-uns par beau temps, la moitié du ciel par temps sec, et leur ombre au sol aussi",
+    "Les lacs et les fleuves reflètent vraiment le ciel, et le soleil y scintille en petits éclats",
+    "L'eau sans reflet n'a plus son quadrillage de points : des rides éparses"
   ]
 }

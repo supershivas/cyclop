@@ -1,9 +1,11 @@
 // Le ciel du jeu : un dégradé et des nuages selon la météo (Jérôme, v0.36.8 : « léger dégradé, nuages » ; v0.36.7 : le ciel suit la météo). Un plan plein écran
 // peint avant tout le reste, que le sol et le faux terrain recouvrent ; la nuit, le voile de `temps.js` le noircit. Des mélanges continus de la palette (des fondus) :
 // `[lettre, part]`. `hor` est aussi la couleur du fond et du bout du champ. Le dessin seulement : aucun hasard, le temps est celui du dessin.
-import * as SH from './shaders.js?v=0.134.5';
-import { lune, couvertureNuit, clairDeLune } from '../data/lune.js?v=0.134.5';
-import { ALERTES } from '../palette.js?v=0.134.5';
+import * as SH from './shaders.js?v=0.134.6';
+import { lune, couvertureNuit, clairDeLune } from '../data/lune.js?v=0.134.6';
+import { ALERTES } from '../palette.js?v=0.134.6';
+import { NUAGES } from '../data/soleil.js?v=0.134.6';
+const couvDe = nom => (NUAGES[nom] ?? NUAGES.sec).ciel;          // la part du ciel couverte : une seule valeur par temps (data/soleil.js), que les ombres au sol suivent aussi
 
 // L'aube et le couchant (v0.134.5, « Éclairage : haut ») : de 0 (le jour) à 1 (le soleil au ras de l'horizon), d'après l'heure (le jour du jeu va de 6 h à 18 h).
 // Avant, le ciel restait gris de 6 h à 18 h et rien ne disait l'heure à part la longueur des ombres (vu sur les captures du 15 novembre).
@@ -12,16 +14,16 @@ const lisse = (a, b, x) => { const t = Math.max(0, Math.min(1, (x - a) / (b - a)
 export function crepuscule(heure) { return Math.max(1 - lisse(CREPUSCULE.aube[0], CREPUSCULE.aube[1], heure), lisse(CREPUSCULE.soir[0], CREPUSCULE.soir[1], heure)); }
 
 const CIELS = {
-  sec: { hor: [['e', 1]], haut: [['e', 0.75], ['t', 0.25]], nuage: [['o', 0.8], ['r', 0.2]], couv: 0.45 },
-  pluie: { hor: [['e', 0.4], ['s', 0.6]], haut: [['e', 0.28], ['s', 0.52], ['t', 0.2]], nuage: [['e', 0.7], ['s', 0.3]], couv: 0.6 },
-  brouillard: { hor: [['r', 1]], haut: [['r', 0.7], ['e', 0.3]], nuage: [['r', 0.7], ['o', 0.3]], couv: 0.3 },
-  neige: { hor: [['r', 0.8], ['o', 0.2]], haut: [['r', 0.6], ['e', 0.4]], nuage: [['r', 0.75], ['o', 0.25]], couv: 0.7 },
-  canicule: { hor: [['e', 0.55], ['o', 0.45]], haut: [['e', 0.9], ['t', 0.1]], nuage: [['o', 0.9], ['r', 0.1]], couv: 0.15 },
-  gel: { hor: [['e', 0.6], ['o', 0.4]], haut: [['e', 0.8], ['t', 0.2]], nuage: [['o', 0.85], ['r', 0.15]], couv: 0.35 },
+  sec: { hor: [['e', 1]], haut: [['e', 0.75], ['t', 0.25]], nuage: [['o', 0.8], ['r', 0.2]] },
+  pluie: { hor: [['e', 0.4], ['s', 0.6]], haut: [['e', 0.28], ['s', 0.52], ['t', 0.2]], nuage: [['e', 0.7], ['s', 0.3]] },
+  brouillard: { hor: [['r', 1]], haut: [['r', 0.7], ['e', 0.3]], nuage: [['r', 0.7], ['o', 0.3]] },
+  neige: { hor: [['r', 0.8], ['o', 0.2]], haut: [['r', 0.6], ['e', 0.4]], nuage: [['r', 0.75], ['o', 0.25]] },
+  canicule: { hor: [['e', 0.55], ['o', 0.45]], haut: [['e', 0.9], ['t', 0.1]], nuage: [['o', 0.9], ['r', 0.1]] },
+  gel: { hor: [['e', 0.6], ['o', 0.4]], haut: [['e', 0.8], ['t', 0.2]], nuage: [['o', 0.85], ['r', 0.15]] },
   // l'hiver (v0.54.0) : la tempête est presque blanche et lourde, le ciel couvert gris clair, le beau temps pâle et clair
-  tempete: { hor: [['r', 0.9], ['o', 0.1]], haut: [['r', 0.7], ['s', 0.3]], nuage: [['r', 0.8], ['o', 0.2]], couv: 0.95 },
-  couvert: { hor: [['r', 0.85], ['e', 0.15]], haut: [['r', 0.55], ['e', 0.45]], nuage: [['r', 0.7], ['o', 0.3]], couv: 0.8 },
-  beau: { hor: [['e', 0.5], ['o', 0.5]], haut: [['e', 0.85], ['t', 0.15]], nuage: [['o', 0.9], ['r', 0.1]], couv: 0.12 },
+  tempete: { hor: [['r', 0.9], ['o', 0.1]], haut: [['r', 0.7], ['s', 0.3]], nuage: [['r', 0.8], ['o', 0.2]] },
+  couvert: { hor: [['r', 0.85], ['e', 0.15]], haut: [['r', 0.55], ['e', 0.45]], nuage: [['r', 0.7], ['o', 0.3]] },
+  beau: { hor: [['e', 0.5], ['o', 0.5]], haut: [['e', 0.85], ['t', 0.15]], nuage: [['o', 0.9], ['r', 0.1]] },
 };
 
 // `THREE`, `scene`, `col` (une couleur de la palette) et `camera` viennent de creerRendu
@@ -73,13 +75,14 @@ export function creerCiel({ THREE, scene, col, camera }) {
     // la météo continue (« Éclairage : haut ») : les couleurs du ciel et la couverture glissent vers celles du temps du jour (des fondus de la palette) ; créées à la première fois (un objet de plus d'emblée décale les identifiants de three)
     lisser(nom, dt, t, decalCouv = 0) {
       const C = CIELS[nom] || CIELS.sec;
-      if (!lis) { lis = { hor: new THREE.Color(), haut: new THREE.Color(), nuage: new THREE.Color(), cible: new THREE.Color(), couv: C.couv, pret: false }; }
+      if (!lis) { lis = { hor: new THREE.Color(), haut: new THREE.Color(), nuage: new THREE.Color(), cible: new THREE.Color(), couv: couvDe(nom), pret: false }; }
       const a = lis.pret ? 1 - Math.exp(-Math.max(0, dt) * 0.35) : 1;
       for (const k of ['hor', 'haut', 'nuage']) lis[k].lerp(melange(lis.cible, C[k]), a);
-      lis.couv += (C.couv - lis.couv) * a; lis.pret = true;
-      u.uHor.value.copy(lis.hor); u.uHaut.value.copy(lis.haut); u.uNuage.value.copy(lis.nuage); u.uCouv.value = Math.max(0, Math.min(1, lis.couv + decalCouv)); u.uT.value = t;
+      lis.couv += (couvDe(nom) - lis.couv) * a; lis.pret = true;
+      u.uHor.value.copy(lis.hor); u.uHaut.value.copy(lis.haut); u.uNuage.value.copy(lis.nuage); u.uCouv.value = Math.max(0, Math.min(1, lis.couv + decalCouv * Math.min(1, lis.couv * 5)));      // (v0.134.6) la respiration est proportionnelle aux nuages : un ciel sans nuage le reste u.uT.value = t;
     },
     // le dégradé du ciel du moment (les mêmes objets, mis à jour à chaque appel) : l'eau y reflète le ciel ; à l'aube et au couchant (« haut »), l'horizon orangé du nuanceur et le zénith qui fonce
+    couverture() { return u.uCouv.value; },                         // la part du ciel couverte en ce moment (la météo continue de « haut » comprise) : les ombres au sol la suivent
     couleurs() {
       const r = u.uRouge.value;
       eau.hor.copy(u.uHor.value).lerp(eau.chaud.copy(u.uOrange.value).lerp(col('o'), 0.15), r * 0.75);
@@ -106,7 +109,7 @@ export function creerCiel({ THREE, scene, col, camera }) {
     derive(x, z) { u.uDer.value.set(x, z); },                       // la dérive des nuages, accumulée par le vent (jour et nuit)
     maj(nom, t) {
       const C = CIELS[nom] || CIELS.sec;
-      melange(u.uHor.value, C.hor); melange(u.uHaut.value, C.haut); melange(u.uNuage.value, C.nuage); u.uCouv.value = C.couv; u.uT.value = t;
+      melange(u.uHor.value, C.hor); melange(u.uHaut.value, C.haut); melange(u.uNuage.value, C.nuage); u.uCouv.value = couvDe(nom); u.uT.value = t;
     },
   };
 }
