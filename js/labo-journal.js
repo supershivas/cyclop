@@ -2,6 +2,10 @@
 // Une entrée par version qui touche au labo, la plus récente en haut. `ref` : « sujet-Lettre » (la lettre est celle de la variante,
 // A étant l'actuelle). À chaque changement du labo : une entrée ici, avec `depuis` sur les variantes ajoutées ou changées (labo.js).
 export const JOURNAL = [
+  { version: '0.133.0', date: '2026-11-15', items: [
+    { genre: 'nouveau', texte: 'Le papier de la nuit refait : quatre mises en page sans défilement (deux colonnes, les étages, le tableau croisé, le front), la décision d\'abord, un régiment par ligne et ses corvées en icônes ; la mesure du défilement à quatre tailles d\'écran sous chaque cadre', ref: 'papier-nuit-A' },
+    { genre: 'nouveau', texte: 'La fin de partie : trois mises en page (le rapport, la frise, le registre des jours) avec la bataille entière, les moments clés jour après jour et des médailles nouvelles (le roc, l\'inébranlable, le fuyard, le survivant, le char et le poste les plus meurtriers, le génie)', ref: 'fin-partie-A' },
+  ] },
   { version: '0.126.0', date: '2026-11-08', items: [
     { genre: 'mis-a-jour', texte: 'Le bilan de l\'aube passe en jeu en tuiles, dans le langage du tableau de bord (ce que la nuit a fait, les morts par cause, la dotation, les effectifs au matin)', ref: 'donnees-bilan-B' },
   ] },
