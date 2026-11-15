@@ -2,13 +2,13 @@
 // tant qu'un chantier dure, un liseré d'os autour du bâtiment choisi. Le dessin seulement : tout vient de l'état de la bataille, rien n'y est écrit ; et rien n'est dessiné hors de la partie bridée
 // (`etat.camp.bride`), donc ni le labo ni les tests n'ont de camp ; le jeu à deux en a un par joueur (v0.94.0). Les deux camps sont dessinés : celui d'en face est le nôtre tourné d'un demi-tour.
 // Fabrique `creerCamp({ THREE, scene, bataille: () => B, hauteur })`.
-import { atelier } from './engins.js?v=0.135.0';
-import { BATIR, chantier, regler_creux, regler_camp, vie } from './camp-modeles.js?v=0.135.0';
-import { emprisesCamp, emplacementCamp, sortieChars, placesChars, placeAvion, parcChars } from '../camp.js?v=0.135.0';
-import { avionsAbimes } from '../genie.js?v=0.135.0';
-import { PALETTE as P } from '../palette.js?v=0.135.0';
-import { DRAPEAU_U } from './drapeau.js?v=0.135.0';
-import { RONDE, pointRonde } from '../ronde.js?v=0.135.0';
+import { atelier } from './engins.js?v=0.135.1';
+import { BATIR, chantier, regler_creux, regler_camp, vie } from './camp-modeles.js?v=0.135.1';
+import { emprisesCamp, emplacementCamp, sortieChars, placesChars, placeAvion, parcChars } from '../camp.js?v=0.135.1';
+import { avionsAbimes } from '../genie.js?v=0.135.1';
+import { PALETTE as P } from '../palette.js?v=0.135.1';
+import { DRAPEAU_U } from './drapeau.js?v=0.135.1';
+import { RONDE, pointRonde } from '../ronde.js?v=0.135.1';
 
 const LUEUR = 0.9;      // × la couleur de la matière (mesuré à l'œil sur la partie du premier matin : sans elle, la boue est noire)
 
@@ -29,7 +29,9 @@ function fusionnerFixes(THREE, pivot, racine = pivot) {
   const parMatiere = new Map(), retirer = [];
   const mobile = o => { for (let p = o; p && p !== racine; p = p.parent) if (Object.keys(p.userData).length) return true; return false; };
   const ordinaire = m => m && !Array.isArray(m) && m.onBeforeCompile === THREE.Material.prototype.onBeforeCompile && !m.userData.soldat;
-  pivot.traverse(o => {
+  // (v0.135.1) on ne parcourt que `racine` : en parcourant tout le pivot, la fusion d'un avion garé avalait les hangars, la piste et la clôture de l'aérodrome, que l'on cachait avec lui quand il
+  // décollait (Jérôme : « quand un avion décolle, l'aérodrome disparaît » ; de même le parc des chars le temps qu'un char sorte)
+  racine.traverse(o => {
     if (!(o.isMesh || o.isLineSegments) || o.isInstancedMesh || !o.visible || mobile(o) || !ordinaire(o.material)) return;
     const cle = `${o.isMesh ? 'm' : 'l'}${o.material.id}|${o.renderOrder}`;
     if (!parMatiere.has(cle)) parMatiere.set(cle, { exemple: o, geos: [] });
@@ -150,7 +152,9 @@ export function creerCamp({ THREE, scene, bataille, hauteur }) {
     }
     for (const [id, m] of modeles) if (!vus.has(id)) { scene.remove(m.pivot); modeles.delete(id); }
     // sous la lumière commune (celle des chars et des ponts, faite pour des gris clairs), les volumes sombres de la palette (boue, glaise) tombent presque au noir : une lueur propre les relève, éteinte avec la nuit
-    for (const mat of matieres) mat.emissive.copy(mat.color).multiplyScalar(LUEUR * (1 - Math.min(1, sombre)));
+    // (v0.135.1) la lueur relève surtout les couleurs sombres : elle décroît avec la clarté de la matière (× (1 − luminance)) ; avant, elle s'ajoutait à toutes, et le bleu horizon, le kaki,
+    // l'os et la toile des hangars passaient au blanc à midi (Jérôme : « les avions et les chars sont encore d'une autre couleur que leur armée »)
+    for (const mat of matieres) { const c = mat.color, lum = 0.3 * c.r + 0.59 * c.g + 0.11 * c.b; mat.emissive.copy(c).multiplyScalar(LUEUR * (1 - lum) * (1 - Math.min(1, sombre))); }
     for (const l of lumiere.children) if (l.isLight) l.intensity = (l.isAmbientLight ? 1.6 : 1.7) * (1 - 0.75 * Math.min(1, sombre));
     // le liseré du choisi : un cadre d'os autour de l'emprise, vu à travers les volumes
     const e = choisi && emplacementCamp(B.etat, choisi, choisiCamp);

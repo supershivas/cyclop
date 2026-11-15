@@ -1,5 +1,11 @@
 # Journal des versions
 
+## 0.135.1 — 2026-11-15
+
+- Des ciels de vraies couleurs, hors de la palette : bleu franc par beau temps, bleu pâle et dur par gel, bleu laiteux par forte chaleur, bleu voilé par temps sec, gris de plomb sous la pluie, blanc sale sous la neige ; les lacs les reflètent
+- Les avions et les chars garés au camp portent vraiment la couleur de leur armée : la lueur qui relève la boue du camp les délavait jusqu'au blanc ; les ailes des avions et le dessus des chars sont aussi à la couleur de l'armée
+- L'aérodrome (hangars, piste, clôture) ne disparaît plus quand un avion décolle, ni le parc des chars quand un char en sort
+
 ## 0.135.0 — 2026-11-15
 
 - Le printemps, quatrième saison au choix du secteur : des averses (la bataille commence sous la pluie), des matins de brouillard, des éclaircies, un gel tardif parfois ; une terre gorgée d'eau où la boue vient tôt

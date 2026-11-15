@@ -1,10 +1,10 @@
 // Le ciel du jeu : un dégradé et des nuages selon la météo (Jérôme, v0.36.8 : « léger dégradé, nuages » ; v0.36.7 : le ciel suit la météo). Un plan plein écran
 // peint avant tout le reste, que le sol et le faux terrain recouvrent ; la nuit, le voile de `temps.js` le noircit. Des mélanges continus de la palette (des fondus) :
 // `[lettre, part]`. `hor` est aussi la couleur du fond et du bout du champ. Le dessin seulement : aucun hasard, le temps est celui du dessin.
-import * as SH from './shaders.js?v=0.135.0';
-import { lune, couvertureNuit, clairDeLune } from '../data/lune.js?v=0.135.0';
-import { ALERTES } from '../palette.js?v=0.135.0';
-import { NUAGES } from '../data/soleil.js?v=0.135.0';
+import * as SH from './shaders.js?v=0.135.1';
+import { lune, couvertureNuit, clairDeLune } from '../data/lune.js?v=0.135.1';
+import { ALERTES } from '../palette.js?v=0.135.1';
+import { NUAGES } from '../data/soleil.js?v=0.135.1';
 const couvDe = nom => (NUAGES[nom] ?? NUAGES.sec).ciel;          // la part du ciel couverte : une seule valeur par temps (data/soleil.js), que les ombres au sol suivent aussi
 
 // L'aube et le couchant (v0.134.5, « Éclairage : haut ») : de 0 (le jour) à 1 (le soleil au ras de l'horizon), d'après l'heure (le jour du jeu va de 6 h à 18 h).
@@ -13,17 +13,19 @@ export const CREPUSCULE = { aube: [6.0, 8.6], soir: [15.2, 17.7], teinte: [1.0, 
 const lisse = (a, b, x) => { const t = Math.max(0, Math.min(1, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
 export function crepuscule(heure) { return Math.max(1 - lisse(CREPUSCULE.aube[0], CREPUSCULE.aube[1], heure), lisse(CREPUSCULE.soir[0], CREPUSCULE.soir[1], heure)); }
 
+// (v0.135.1, Jérôme : « d'autres couleurs de ciel, bleu notamment ; on peut sortir de la palette ») : un ciel à chaque temps, en teintes libres (`#rrggbb`, hors palette, mêlées comme les lettres) :
+// le bleu franc du beau temps, le bleu pâle et dur du gel, le bleu laiteux de la chaleur, le bleu voilé du temps sec, le gris de plomb de la pluie, le blanc sale de la neige ; l'horizon toujours plus pâle
+// que le zénith (l'épaisseur d'air). `hor` est aussi la couleur du fond et du bout du champ : elle reste pâle, pour que le lointain se perde dans l'air et pas dans le bleu.
 const CIELS = {
-  sec: { hor: [['e', 1]], haut: [['e', 0.75], ['t', 0.25]], nuage: [['o', 0.8], ['r', 0.2]] },
-  pluie: { hor: [['e', 0.4], ['s', 0.6]], haut: [['e', 0.28], ['s', 0.52], ['t', 0.2]], nuage: [['e', 0.7], ['s', 0.3]] },
-  brouillard: { hor: [['r', 1]], haut: [['r', 0.7], ['e', 0.3]], nuage: [['r', 0.7], ['o', 0.3]] },
-  neige: { hor: [['r', 0.8], ['o', 0.2]], haut: [['r', 0.6], ['e', 0.4]], nuage: [['r', 0.75], ['o', 0.25]] },
-  canicule: { hor: [['e', 0.55], ['o', 0.45]], haut: [['e', 0.9], ['t', 0.1]], nuage: [['o', 0.9], ['r', 0.1]] },
-  gel: { hor: [['e', 0.6], ['o', 0.4]], haut: [['e', 0.8], ['t', 0.2]], nuage: [['o', 0.85], ['r', 0.15]] },
-  // l'hiver (v0.54.0) : la tempête est presque blanche et lourde, le ciel couvert gris clair, le beau temps pâle et clair
-  tempete: { hor: [['r', 0.9], ['o', 0.1]], haut: [['r', 0.7], ['s', 0.3]], nuage: [['r', 0.8], ['o', 0.2]] },
-  couvert: { hor: [['r', 0.85], ['e', 0.15]], haut: [['r', 0.55], ['e', 0.45]], nuage: [['r', 0.7], ['o', 0.3]] },
-  beau: { hor: [['e', 0.5], ['o', 0.5]], haut: [['e', 0.85], ['t', 0.15]], nuage: [['o', 0.9], ['r', 0.1]] },
+  beau: { hor: [['#adc6e0', 1]], haut: [['#3f72b2', 1]], nuage: [['o', 0.95], ['#ffffff', 0.05]] },
+  gel: { hor: [['#bed4e8', 1]], haut: [['#5a8bc4', 1]], nuage: [['o', 1]] },
+  canicule: { hor: [['#d4d3c6', 1]], haut: [['#6d95c2', 1]], nuage: [['o', 1]] },
+  sec: { hor: [['#b3c3cf', 1]], haut: [['#6489b0', 1]], nuage: [['o', 0.85], ['r', 0.15]] },
+  couvert: { hor: [['#b4b6b2', 1]], haut: [['#8e949a', 1]], nuage: [['r', 0.7], ['o', 0.3]] },
+  brouillard: { hor: [['r', 1]], haut: [['#a7aba6', 1]], nuage: [['r', 0.7], ['o', 0.3]] },
+  pluie: { hor: [['#7d858a', 1]], haut: [['#4e565e', 1]], nuage: [['#6a7279', 0.7], ['s', 0.3]] },
+  neige: { hor: [['#c8cacb', 1]], haut: [['#9ca3ab', 1]], nuage: [['#d2d4d4', 1]] },
+  tempete: { hor: [['#c0c3c4', 1]], haut: [['#8a9097', 1]], nuage: [['#c9cbcb', 1]] },
 };
 
 // `THREE`, `scene`, `col` (une couleur de la palette) et `camera` viennent de creerRendu
@@ -62,7 +64,8 @@ export function creerCiel({ THREE, scene, col, camera }) {
   const devant = new THREE.Vector3();
   const eau = { hor: new THREE.Color(), haut: new THREE.Color(), chaud: new THREE.Color() };
   let lis = null;      // l'état de la météo continue (`lisser`)
-  const melange = (c, liste) => { c.setRGB(0, 0, 0); for (const [k, p] of liste) { const v = col(k); c.r += v.r * p; c.g += v.g * p; c.b += v.b * p; } return c; };
+  const libre = new THREE.Color();
+  const melange = (c, liste) => { c.setRGB(0, 0, 0); for (const [k, p] of liste) { const v = k[0] === '#' ? libre.set(k) : col(k); c.r += v.r * p; c.g += v.g * p; c.b += v.b * p; } return c; };
   return {
     // la couleur de l'horizon du temps qu'il fait (le fond, et le bout du champ)
     horizon(nom, c) { return melange(c, (CIELS[nom] || CIELS.sec).hor); },

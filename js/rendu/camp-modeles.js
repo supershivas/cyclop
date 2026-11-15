@@ -1,12 +1,13 @@
 // Les bâtiments du camp dessinés en volumes (Jérôme, v0.87.0) : sortis du labo (`labo-batiments.js`) pour que le jeu les dessine aussi (`rendu/camp.js`).
 // Chaque fabrique `BATIR[clé](A, niveau)` rend { g, w, d } : le groupe centré sur son emprise (w le long de x, d le long de z), l'avant (le front) à −z ; `A` est `atelier(THREE)` (engins.js).
 // 1 unité = 1 m, la palette du jeu seulement ; le dessin seulement, rien n'y est écrit.
-import { PALETTE as P } from '../palette.js?v=0.135.0';
-import { schneider } from './engins.js?v=0.135.0';
-import { PIEDS } from '../data/batiments.js?v=0.135.0';
-import { PARC } from '../data/parc.js?v=0.135.0';
-import { drapeau } from './drapeau.js?v=0.135.0';
-import { RONDE, demiRonde, longueurRonde } from '../ronde.js?v=0.135.0';
+import { PALETTE as P } from '../palette.js?v=0.135.1';
+import { schneider } from './engins.js?v=0.135.1';
+import { AVIONS_OPTS } from './avions-modeles.js?v=0.135.1';
+import { PIEDS } from '../data/batiments.js?v=0.135.1';
+import { PARC } from '../data/parc.js?v=0.135.1';
+import { drapeau } from './drapeau.js?v=0.135.1';
+import { RONDE, demiRonde, longueurRonde } from '../ronde.js?v=0.135.1';
 
 // ─── Les pièces communes ───────────────────────────────────────────────────
 export const G = A => new A.THREE.Group();
@@ -91,8 +92,8 @@ export const regler_creux = c => { CREUX = Math.max(0, c); };
 // (Jérôme, retour du 1er nov. : « la piste est posée directement sur le sol, pas de rectangle autour ; idem pour les autres bâtiments » : plus aucun socle ; `sol` ne dessine rien, `rendu/camp.js` pose le bâtiment à mi-hauteur de son emprise)
 function sol() {}
 
-// un biplan : le nez à +x (rangé face au front par `face`) ; aux couleurs de l'avion en vol de son camp (`AVIONS_OPTS` d'avions-modeles.js : fuselage bleu horizon et ailes d'os chez nous, kaki et brume en face)
-function biplan(A, c = coulCamp(), ailes = CAMP === 0 ? P.o : P.r) {
+// un biplan : le nez à +x (rangé face au front par `face`) ; aux couleurs de l'avion en vol de son camp (`AVIONS_OPTS` d'avions-modeles.js : les ailes à la couleur de l'armée, le fuselage un ton plus sombre)
+function biplan(A, c = AVIONS_OPTS[CAMP === 0 ? 'spad' : 'albatros'].cc, ailes = AVIONS_OPTS[CAMP === 0 ? 'spad' : 'albatros'].ca) {
   const g = G(A);
   A.b(g, [5.6, 0.8, 0.7], c, [0, 1.1, 0]);
   A.b(g, [1.6, 0.08, 8.4], ailes, [0.4, 2.0, 0]); A.b(g, [1.6, 0.08, 8.4], ailes, [0.4, 0.75, 0]);

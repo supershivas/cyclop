@@ -1,6 +1,6 @@
 // Les engins en volumes du jeu (Jérôme, v0.47.0) : l'atelier de formes (boîtes, cylindres, prismes, chenilles qui défilent, croix de fer) et le Schneider CA 1,
 // sortis du labo (`labo-chars.js`, qui les reprend d'ici) pour que la bataille les dessine. Dessin seulement. 1 unité = 1 m, l'avant à +x, le haut à +y, la droite à +z.
-import { PALETTE as P } from '../palette.js?v=0.135.0';
+import { PALETTE as P } from '../palette.js?v=0.135.1';
 
 // ─── Le petit atelier de volumes ─────────────────────────────────────────────
 // Un matériau éclairé (un peu de lumière au-dessus : les faces se distinguent) et des arêtes de terre sur chaque pièce
@@ -78,7 +78,7 @@ export function schneider(A, coque = P.n) {
   A.b(g, [4.3, 0.9, 1.65], coque, [-0.5, 1.05, 0]);                       // la caisse
   A.b(g, [3.0, 0.7, 1.5], coque, [-0.8, 1.85, 0]);                        // la superstructure
   A.prisme(g, [[1.65, 0.6], [3.0, 0.5], [3.0, 0.85], [1.65, 1.5]], 1.65, coque);                       // la proue en coin
-  A.prisme(g, [[1.65, 1.5], [3.0, 0.85], [3.0, 0.95], [1.65, 1.6]], 1.4, P.g);
+  A.prisme(g, [[1.65, 1.5], [3.0, 0.85], [3.0, 0.95], [1.65, 1.6]], 1.4, coque);      // (v0.135.1 : le dessus de la proue à la couleur de l'armée, il était de glaise)
   A.b(g, [0.5, 0.18, 1.2], P.s, [3.15, 0.3, 0]);                          // l'éperon qui coupe les fils de fer
   A.prisme(g, [[0, 0], [0.55, 0.14], [0, 0.28]], 0.9, P.s, [3.1, 0.62, 0]);
   A.b(g, [1.2, 0.8, 0.45], coque, [0.4, 1.2, 0.98]);                      // le sponson du 75, à droite
@@ -89,7 +89,7 @@ export function schneider(A, coque = P.n) {
   A.cyl(g, 0.22, 0.34, P.g, [-1.6, 2.3, -0.35], 'y', 8, 0.1);
   A.b(g, [0.8, 0.08, 0.7], P.s, [-2.0, 2.24, 0.1]);                       // la trappe arrière
   for (let k = 0; k < 4; k++) A.b(g, [0.04, 0.12, 0.02], P.t, [-1.5 + k * 0.7, 1.95, 0.76], [0, 0, 0], false);       // les créneaux de vision
-  for (const s of [1, -1]) { A.b(g, [1.2, 0.05, 0.02], P.h, [-0.8, 1.9, s * 0.76], [0, 0, 0], false); A.b(g, [0.9, 0.5, 0.02], P.g, [-1.2, 1.05, s * 0.83], [0, 0, 0], false); }
+  for (const s of [1, -1]) { A.b(g, [1.2, 0.05, 0.02], P.h, [-0.8, 1.9, s * 0.76], [0, 0, 0], false); A.b(g, [0.9, 0.5, 0.02], coque, [-1.2, 1.05, s * 0.83], [0, 0, 0], false); }
   return { groupe: g, longueur: 6.0, maj: (dt, v) => { m1.d = (m1.d || 0) + v * dt; m1(m1.d); m2(m1.d); } };
 }
 

@@ -1,7 +1,7 @@
 // Les biplans en volumes (Jérôme, v0.55.0), sortis du labo (`labo-avions.js`, qui les reprend d'ici) pour que la bataille les dessine à l'échelle : 1 unité = 1 m, l'avant à +x,
 // le haut à +y, la droite à +z. Dessin seulement. Le SPAD XIII français (8,1 m d'envergure) pour nous, l'Albatros D.V allemand (9 m) pour eux ; leurs marques sont celles de la palette
 // (la cocarde française n'a pas son rond rouge hors du labo : aucune autre couleur dans le jeu).
-import { PALETTE as P } from '../palette.js?v=0.135.0';
+import { PALETTE as P } from '../palette.js?v=0.135.1';
 
 export function cocardeFr(A, g, x, y, z, r, axe, centre = P.n) { A.cyl(g, r, 0.025, P.n, [x, y, z], axe, 10); A.cyl(g, r * 0.66, 0.03, P.o, [x, y, z], axe, 10); A.cyl(g, r * 0.33, 0.035, centre, [x, y, z], axe, 10); }
 export function croixPlate(A, g, x, y, z, t) {
@@ -60,9 +60,11 @@ export function biplan(A, o) {
   return { groupe: g, helice, longueur, envergure };
 }
 
-// aux couleurs de leur camp (le bleu horizon pour nous, le vert kaki clair en face : on les lit de haut, sur n'importe quel sol)
+// aux couleurs de leur camp (le bleu horizon pour nous, le vert kaki clair en face : on les lit de haut, sur n'importe quel sol) ; (v0.135.1, Jérôme : « les avions sont encore d'une autre couleur
+// que leur armée ») les AILES, la plus grande surface vue d'en haut, sont à la couleur de l'armée (avant : os et brume, l'avion se lisait blanc ou gris) ; le fuselage, un ton plus sombre de la même couleur (hors palette)
+export const COULEUR_SOMBRE = { [P.n]: '#5f7fb4', [P.x]: '#9aa24f' };
 export const AVIONS_OPTS = {
-  spad: { L: 6.3, env: 8.1, corde: 1.4, ecart: 1.3, cc: P.n, ca: P.o },
-  albatros: { L: 7.3, env: 9.0, corde: 1.4, ecart: 1.35, cc: P.x, ca: P.r, de: true },
+  spad: { L: 6.3, env: 8.1, corde: 1.4, ecart: 1.3, cc: COULEUR_SOMBRE[P.n], ca: P.n },
+  albatros: { L: 7.3, env: 9.0, corde: 1.4, ecart: 1.35, cc: COULEUR_SOMBRE[P.x], ca: P.x, de: true },
 };
 export const AVIONS_JEU = { spad: A => biplan(A, AVIONS_OPTS.spad), albatros: A => biplan(A, AVIONS_OPTS.albatros) };

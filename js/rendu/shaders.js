@@ -648,7 +648,7 @@ export const cielMat = {
       void main() {
         vec3 d = normalize(vDir);
         float e = max(d.y, 0.0);
-        vec3 c = mix(uHor, uHaut, smoothstep(0.0, 0.3, e));
+        vec3 c = mix(uHor, uHaut, smoothstep(0.0, 0.2, e));      // (v0.135.1 : 0,3 → 0,2, le bleu du zénith monte plus vite ; on ne voit du ciel que le bas)
         vec3 fin;
         if (uVol > 0.5) {
           // (session 4 ; « Éclairage : haut ») le ciel v2 du labo lumière : la lueur du soleil (diffusion avant), seulement s'il y a un soleil (uC2) ; les nuages en volume, avec ou sans lui
