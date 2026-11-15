@@ -217,6 +217,7 @@ export const REGLAGES = {
     // les chars et l'artillerie d'en face (Jérôme, v0.99.11 : « l'IA doit attaquer les chars alliés à tous les niveaux » ; « fais utiliser les chars par l'IA au niveau élevé »)
     contreChars: { chance: 0.6, anticipe: 6, poids: { '75': 2, '155': 4, '220': 3 } },      // un barrage sur trois sur quatre, quand un de nos chars roule : visé devant lui (`anticipe` s de marche), de préférence au gros calibre
     chars: { depuis: 180, pause: 400, simultanes: 1 },                                         // niveau « Grande offensive » : son premier char après `depuis` s (un jour), puis un tous les `pause` s, au plus `simultanes` vivants
+    releve: { pause: 60 },                                                                       // s entre deux regards de l'IA sur ses épaves de chars : son génie relève la première qu'il peut atteindre (v0.133.0 ; la réparation d'engin du jour, comme pour nous)
     stance: '',           // la posture qu'en face prend dans ses tranchées (`retenu`) ; '' : aucune, il tire à volonté (v0.36.3, à décider d'après scripts/mesure-stances.mjs --ia)
   },
 };

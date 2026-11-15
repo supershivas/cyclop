@@ -1,9 +1,7 @@
 {
-  "version": "0.132.0",
-  "date": "2026-11-14",
+  "version": "0.133.0",
+  "date": "2026-11-15",
   "changes": [
-    "La nuit, une rangée par régiment : ses valides et ses blessés, son moral, et ses corvées dessous, avec leurs icônes ; une loupe montre le régiment ou l'homme sur le champ ; les médailles en tableau ; le survol des chiffres raconte les jours et les nuits passés",
-    "Au petit matin, les soldats changés de régiment marchent jusqu'à leur nouvelle place ; le génie relève l'épave d'un char sur le champ (il repart à moitié de sa solidité)",
-    "La vue à la personne d'un char se place derrière lui, au-dessus ; les points de vie des avions sont arrondis"
+    "En face aussi, le génie relève l'épave d'un char sur le champ : elle repart à moitié de sa solidité"
   ]
 }

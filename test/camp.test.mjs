@@ -433,6 +433,18 @@ test('le génie relève l\'épave d\'un char sur le champ : à moitié de sa sol
   assert.equal(c.etat, 'arrive'); assert.equal(c.pv, Math.round(c.pvMax / 2)); assert.equal(c.repar, 1); assert.equal(e.genies.length, 0);
   assert.equal(ordonnerChar(B, c.id, 'rentrer', 0, 0, 0).ok, true, 'relevé, il peut rentrer au parc');
 });
+test('en face aussi, le génie relève l\'épave d\'un de ses chars (v0.133.0)', () => {
+  const B = bridee(), e = B.etat, Z = zone(B), cx = (Z.x0 + Z.x1) / 2;
+  assert.ok(ordonnerBarrage(B, 'char', cx, Z.y0 + 150, 1).ok, 'un char d\'en face');
+  const c = e.chars.find(k => k.camp === 1); for (let n = 0; n < 300; n++) avancer(B);
+  c.pv = 0; c.etat = 'detruit'; c.v = 0; e.ia.genie = 0;
+  for (let n = 0; n < 50 && !e.genies.some(g => g.camp === 1); n++) avancer(B);
+  const g = e.genies.find(k => k.camp === 1); assert.ok(g, 'leur génie part');
+  assert.equal(g.char, c.id); assert.equal(g.epave, true);
+  for (let n = 0; n < 80000 && g.etat !== 'travaille' && e.phase === 'jour'; n++) avancer(B);
+  assert.equal(g.etat, 'travaille'); g.travail = 0.9999; avancer(B); avancer(B);
+  assert.equal(c.etat, 'arrive'); assert.equal(c.pv, Math.round(c.pvMax / 2));
+});
 test('le génie répare l\'avion que l\'on désigne (pas forcément le plus abîmé), pas un avion intact', () => {
   const B = bridee(), e = B.etat, Z = zone(B), cx = (Z.x0 + Z.x1) / 2, max = pvAvion(e, 0);
   e.batteries.genie = 0;
