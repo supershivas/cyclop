@@ -2,6 +2,9 @@
 // Une entrée par version qui touche au labo, la plus récente en haut. `ref` : « sujet-Lettre » (la lettre est celle de la variante,
 // A étant l'actuelle). À chaque changement du labo : une entrée ici, avec `depuis` sur les variantes ajoutées ou changées (labo.js).
 export const JOURNAL = [
+  { version: '0.135.0', date: '2026-11-15', items: [
+    { genre: 'mis-a-jour', texte: 'L\'atelier de terrain a un vrai printemps (une saison du jeu) : la prairie, les feuilles neuves et les arbres en fleurs, son temps', ref: 'atelier-terrain-A' },
+  ] },
   { version: '0.134.9', date: '2026-11-15', items: [
     { genre: 'nouveau', texte: 'L\'atelier de terrain : le rendu du jeu avec des curseurs pour l\'heure, la nuit, la saison, le temps qu\'il fait, l\'éclairage, le zoom et la caméra ; le temps qui passe et des obus', ref: 'atelier-terrain-A' },
   ] },

@@ -573,7 +573,8 @@ test('une saison imposée à la bataille l\'emporte sur celle du secteur : sol, 
   SECTEURS.essai.saison = 'hiver';
   try { assert.equal(nouvelleBataille(4, R, { ...base, saison: 'ete' }).etat.sol.saison, 'ete', 'l\'emporte sur celle de la carte'); assert.equal(nouvelleBataille(4, R, base).etat.sol.saison, 'hiver', 'sans choix : celle de la carte'); }
   finally { delete SECTEURS.essai.saison; }
-  assert.equal(nouvelleBataille(4, R, { ...base, saison: 'printemps' }).etat.sol.saison, undefined, 'une saison inconnue est ignorée');
+  assert.equal(nouvelleBataille(4, R, { ...base, saison: 'mousson' }).etat.sol.saison, undefined, 'une saison inconnue est ignorée');
+  assert.equal(nouvelleBataille(4, R, { ...base, saison: 'printemps' }).etat.meteo[0], 'pluie', 'le printemps commence sous les averses (v0.135.0)');
   const sec = nouvelleBataille(3, R, { ...base, saison: 'ete' }).terrain, hum = nouvelleBataille(3, R, { ...base, saison: 'automne' }).terrain; let hs = 0, hh = 0; for (let c = 0; c < sec.humid.length; c += 13) { hs += sec.humid[c]; hh += hum.humid[c]; }
   assert.ok(hs < hh * 0.6, 'le terrain est généré avec la saison choisie');
 });

@@ -40,6 +40,16 @@ export const SAISONS = {
     // la température du jour, en °C : [la plus basse, la plus haute] selon le temps (tirée de la graine et du jour : `temperature`)
     temperatures: { tempete: [-16, -9], neige: [-8, -2], gel: [-18, -8], couvert: [-6, 1], beau: [-12, 3] },
   },
+  // le printemps (Jérôme, 15 nov., v0.135.0) : des averses, des matins de brouillard, des éclaircies, un gel tardif de temps en temps ; une terre gorgée (la fonte, la nappe haute) : la boue vient tôt
+  printemps: {
+    nom: 'printemps', desc: 'Des averses et des éclaircies, des matins de brouillard, un gel tardif parfois. La terre est gorgée d\u2019eau : la boue vient tôt.', depart: 'pluie', nappe: -0.2, humidite: 1.25, pluieAuMoins: 2,
+    transitions: {
+      pluie: { pluie: 3, sec: 4, brouillard: 2, gel: 1 },
+      sec: { sec: 3, pluie: 4, brouillard: 2, gel: 1 },
+      brouillard: { brouillard: 1, sec: 3, pluie: 3 },
+      gel: { gel: 1, sec: 3, brouillard: 2, pluie: 2 },
+    },
+  },
   ete: {
     nom: 'été', desc: 'Du temps sec et des jours de forte chaleur, une pluie rare. Le sol boit : les trous ne se remplissent plus.', depart: 'canicule', nappe: 0.9, humidite: 0.35, pluieAuMoins: 0,
     transitions: {

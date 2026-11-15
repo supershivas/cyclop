@@ -4,7 +4,7 @@
 export const SOLEIL = { hauteurMax: 0.95, hauteurMin: 0.1, ombreMax: 3.5, depart: 6, fin: 18 };
 
 // Le soleil de chaque saison (`hauteurMax`, rad) : bas l'hiver (ombres longues), haut l'été. Le lever et le coucher restent ceux de l'horloge du jeu (6 h, 18 h).
-export const SOLEIL_SAISONS = { automne: 0.95, hiver: 0.5, ete: 1.2 };
+export const SOLEIL_SAISONS = { automne: 0.95, hiver: 0.5, ete: 1.2, printemps: 1.05 };
 
 // Les azimuts à essayer (rad, ajoutés à l'arc : à midi l'ombre part vers le nord, loin de la caméra, qui regarde le nord ; chaque valeur la fait tourner d'autant, vers la droite de l'écran). `nord-ouest` :
 // le soleil au nord-ouest à midi, la lumière du jeu d'avant (la paroi ouest éclairée, les autres sombres) ; `vers la caméra` : l'ombre vient vers nous à midi. (Corrigé : `vers la caméra` valait π/2, qui

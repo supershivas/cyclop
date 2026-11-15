@@ -4,11 +4,11 @@
 // La vraie carte : le moteur du jeu (`apercu-3d.js`) rend chaque secteur UNE fois, vu de haut, hors de l'écran ; l'image est collée sur la carte (un moteur WebGL pour six cartes, pas six).
 // Le papier : bords irréguliers (un filtre de déplacement), grain, taches, deux plis, coins sombres, adhésif ; la table est une toile. Le geste : la carte choisie glisse et se pose en travers, de biais,
 // sur celles déjà là (les autres ne montrent que leur onglet). `prefers-reduced-motion` : la carte est posée d'un coup, rien ne glisse.
-import { PALETTE as P } from './palette.js?v=0.134.9';
-import { SECTEURS } from './data/secteur.js?v=0.134.9';
-import { DIFFICULTES, DIFFICULTE_DEFAUT, DUREES, DUREE_DEFAUT } from './data/difficulte.js?v=0.134.9';
-import { SAISONS, SAISON_DEFAUT } from './data/meteo.js?v=0.134.9';
-import { preparerAleatoire, ID_ALEATOIRE } from './generateur.js?v=0.134.9';
+import { PALETTE as P } from './palette.js?v=0.135.0';
+import { SECTEURS } from './data/secteur.js?v=0.135.0';
+import { DIFFICULTES, DIFFICULTE_DEFAUT, DUREES, DUREE_DEFAUT } from './data/difficulte.js?v=0.135.0';
+import { SAISONS, SAISON_DEFAUT } from './data/meteo.js?v=0.135.0';
+import { preparerAleatoire, ID_ALEATOIRE } from './generateur.js?v=0.135.0';
 
 const el = (tag, css = '', ...kids) => { const e = document.createElement(tag); if (css) e.style.cssText = css; e.append(...kids.flat().filter(k => k != null)); return e; };
 const MONO = 'font:13px/1.4 ui-monospace,"DejaVu Sans Mono",Menlo,Consolas,monospace;';
@@ -27,7 +27,7 @@ const TACHES = bruit(0.011, 3, [0.455, 0.4, 0.31], [2.2, -0.75], 520);          
 const FIBRES = bruit('0.02 0.6', 2, [0.455, 0.4, 0.31], [1.2, -0.45], 300);      // les fibres du papier : étirées
 const TOILE = `repeating-linear-gradient(0deg,rgba(${GLAISE},.10) 0 1px,transparent 1px 4px),repeating-linear-gradient(90deg,rgba(${GLAISE},.08) 0 1px,transparent 1px 4px)`;
 
-const SAISONS_CHOIX = ['ete', 'automne', 'hiver'];
+const SAISONS_CHOIX = ['printemps', 'ete', 'automne', 'hiver'];
 const SUJET = id => SECTEURS[id];
 
 // `geste` : 'glisse' (la carte vient de la liste, de la gauche) ou 'tire' (elle est tirée de la pile, sort de côté, revient dessus) ; `R` : les réglages du jeu (le moteur de l'aperçu en a besoin)
@@ -51,7 +51,7 @@ export function cartesSecteur(stage, { geste = 'glisse', R } = {}) {
   let vue = null, file = Promise.resolve();
   const instantane = (id, S, graine, saison) => { const p = file.then(async () => {
     if (!vue) {
-      const { creerVue3D } = await import('./apercu-3d.js?v=0.134.9');
+      const { creerVue3D } = await import('./apercu-3d.js?v=0.135.0');
       const hote = el('div', `position:fixed;left:-9999px;top:0;width:${L - 28}px;height:${IMG}px;overflow:hidden`); document.body.append(hote);
       vue = { api: await creerVue3D({ R, hote }), hote };
     }

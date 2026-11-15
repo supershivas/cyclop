@@ -1,5 +1,11 @@
 # Journal des versions
 
+## 0.135.0 — 2026-11-15
+
+- Le printemps, quatrième saison au choix du secteur : des averses (la bataille commence sous la pluie), des matins de brouillard, des éclaircies, un gel tardif parfois ; une terre gorgée d'eau où la boue vient tôt
+- Au printemps, l'herbe est verte (une prairie), les arbres ont le vert tendre des feuilles neuves, quelques-uns en fleurs, et les buissons fleurissent
+- La carte au hasard peut tomber au printemps ; l'atelier de terrain du labo a un vrai printemps
+
 ## 0.134.9 — 2026-11-15
 
 - Au labo, « Atelier de terrain » (Terrain et engins) : le rendu du jeu sur une vraie bataille, avec des curseurs pour l'heure (ou la nuit), la saison, le temps qu'il fait, l'éclairage (bas, moyen, haut), le zoom, l'inclinaison de la caméra jusqu'à l'horizon et sa rotation ; le temps qui passe (un jour en une minute) et des obus au centre de la vue

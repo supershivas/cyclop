@@ -11,6 +11,7 @@ export const BUISSONS_FORMES = [
 ];
 // Les couleurs de la saison : le dessus, les flancs (des lettres de la palette, ou `#rrggbb` hors palette comme les arbres) ; `fruits` : de petits cubes sur le dessus (des fleurs claires l'été ; Jérôme, v0.63.0 : pas de baies l'automne)
 export const BUISSONS_SAISONS = {
+  printemps: { dessus: ['#9cbc50', '#87a944', '#b4ca64'], flanc: ['#5f7b2d', '#506b27', '#4a5a2a'], fruits: 'o' },        // (v0.135.0) les feuilles neuves et les fleurs claires de l'aubépine (hors palette, comme l'automne)
   ete: { dessus: ['v', 'w'], flanc: ['w', 's'], fruits: 'o' },
   automne: { dessus: ['#b8702c', '#a8451e', '#c48a3c'], flanc: ['#5e3a20', '#6a4524', '#5c4a26'], fruits: null },
   neige: { dessus: ['o'], flanc: ['b'], fruits: null },

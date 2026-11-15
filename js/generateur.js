@@ -2,12 +2,12 @@
 // Une carte est un secteur de `data/secteur.js` (mêmes lignes de tranchées, mêmes 400 × 300 m) dont on tire le sol : bosses et nappe, des montagnes et des chaînes, des collines et des plateaux (`retouches`, `formes.js`),
 // un fleuve en travers du no man's land avec ses ponts, un fleuve ou des lacs derrière les lignes, une côte (un grand disque d'eau d'un des quatre côtés), et ce qui pousse. Chaque tirage est contrôlé par `validerSecteur` :
 // l'eau ne touche jamais une tranchée (la même règle que l'atelier) ; sans accord après `essais` tirages, la carte n'a pas d'eau. `genererCarte(graine)` rend toujours la même carte.
-import { createRng } from './lib/rng.js?v=0.134.9';
-import { SECTEURS } from './data/secteur.js?v=0.134.9';
-import { validerSecteur } from './tranchees.js?v=0.134.9';
-import { GENERATEUR as G, ID_ALEATOIRE } from './data/generateur.js?v=0.134.9';
-import { PONTS_JEU } from './data/ponts.js?v=0.134.9';
-import { fleuveEn, VARIATION } from './eaux.js?v=0.134.9';
+import { createRng } from './lib/rng.js?v=0.135.0';
+import { SECTEURS } from './data/secteur.js?v=0.135.0';
+import { validerSecteur } from './tranchees.js?v=0.135.0';
+import { GENERATEUR as G, ID_ALEATOIRE } from './data/generateur.js?v=0.135.0';
+import { PONTS_JEU } from './data/ponts.js?v=0.135.0';
+import { fleuveEn, VARIATION } from './eaux.js?v=0.135.0';
 
 const dans = (rng, [a, b]) => a + rng() * (b - a);
 const entier = (rng, [a, b]) => Math.floor(dans(rng, [a, b + 1]));
@@ -106,7 +106,7 @@ function decrire(traits, S) {
   a('marecage', 'des marécages où l\'on s\'enlise');
   a('montagne', 'des hauteurs dominent le front');
   a('collines', 'des collines dans le secteur');
-  const saison = S.saison === 'hiver' ? 'en hiver : neige et gel' : S.saison === 'ete' ? 'en été : un sol sec, des jours de forte chaleur' : '';
+  const saison = S.saison === 'hiver' ? 'en hiver : neige et gel' : S.saison === 'ete' ? 'en été : un sol sec, des jours de forte chaleur' : S.saison === 'printemps' ? 'au printemps : des averses, une terre gorgée' : '';
   if (saison) eau.push(saison);
   const sol = S.relief.nappe < -0.6 ? 'la nappe affleure : la boue vient vite' : S.relief.bosses > 1.2 ? 'le sol est très accidenté' : 'un sol assez doux';
   const phrase = [...eau, sol].join(' ; ');

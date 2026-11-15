@@ -1,7 +1,8 @@
 {
-  "version": "0.134.9",
+  "version": "0.135.0",
   "date": "2026-11-15",
   "changes": [
-    "Au labo, l'atelier de terrain : l'heure, la nuit, la saison, le temps qu'il fait, l'éclairage et la caméra au curseur, sur le rendu du jeu"
+    "Le printemps, quatrième saison : des averses, des matins de brouillard, une terre gorgée d'eau, l'herbe verte et les arbres en feuilles neuves, parfois en fleurs",
+    "Au choix du secteur et dans l'atelier de terrain du labo"
   ]
 }

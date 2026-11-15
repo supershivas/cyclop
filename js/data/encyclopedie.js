@@ -3,20 +3,20 @@
 // formes, équipements, grades) n'est PAS recopié : il est lu dans son module, donc l'encyclopédie suit le jeu ; seuls les concepts n'ayant pas de table sont écrits ici.
 // Une entrée : { id, terme, cat, def, voir: [ids], capture: 'id-du-fichier' | null, faits: [[libellé, valeur], …] }. Les captures sont celles de `outils/encyclopedie.mjs` (assets/encyclopedie/<capture>.png).
 // Ajouter un mot = ajouter une ligne ici ; le labo (sujet « Encyclopédie ») et `test/encyclopedie.test.mjs` (aucun renvoi vers un mot absent, aucun doublon) font le reste.
-import { CALIBRES } from './calibres.js?v=0.134.9';
-import { METEO, SAISONS } from './meteo.js?v=0.134.9';
-import { CORVEES, CONTACT } from './corvees.js?v=0.134.9';
-import { BATIMENTS, ORDRE_BATIMENTS, EQUIPEMENTS, EQUIPEMENT, DOTATION } from './batiments.js?v=0.134.9';
-import { DIFFICULTES } from './difficulte.js?v=0.134.9';
-import { STANCES } from './stances.js?v=0.134.9';
-import { PONTS_JEU } from './ponts.js?v=0.134.9';
-import { RENFORTS } from './renforts.js?v=0.134.9';
-import { CHARS, CHAR_RECHARGE } from './chars.js?v=0.134.9';
-import { MITRAILLAGE } from './mitraillage.js?v=0.134.9';
-import { GENIE_DATA } from './genie.js?v=0.134.9';
-import { NIDS } from './nids.js?v=0.134.9';
-import { FIL } from './fil.js?v=0.134.9';
-import { CLASSES } from './grades.js?v=0.134.9';
+import { CALIBRES } from './calibres.js?v=0.135.0';
+import { METEO, SAISONS } from './meteo.js?v=0.135.0';
+import { CORVEES, CONTACT } from './corvees.js?v=0.135.0';
+import { BATIMENTS, ORDRE_BATIMENTS, EQUIPEMENTS, EQUIPEMENT, DOTATION } from './batiments.js?v=0.135.0';
+import { DIFFICULTES } from './difficulte.js?v=0.135.0';
+import { STANCES } from './stances.js?v=0.135.0';
+import { PONTS_JEU } from './ponts.js?v=0.135.0';
+import { RENFORTS } from './renforts.js?v=0.135.0';
+import { CHARS, CHAR_RECHARGE } from './chars.js?v=0.135.0';
+import { MITRAILLAGE } from './mitraillage.js?v=0.135.0';
+import { GENIE_DATA } from './genie.js?v=0.135.0';
+import { NIDS } from './nids.js?v=0.135.0';
+import { FIL } from './fil.js?v=0.135.0';
+import { CLASSES } from './grades.js?v=0.135.0';
 
 export const CATEGORIES = [
   { id: 'front', nom: 'Le front', dit: 'Où l\'on se bat : secteurs, lignes, tranchées.' },
@@ -119,7 +119,7 @@ const CONCEPTS = [
   E('buisson', 'Buissons', 'terrain', 'Des haies et des bosquets : sept formes, des fleurs l\'été, nus l\'hiver. Les obus les arrachent.', { voir: ['arbre'] }),
   E('meteo', 'Météo', 'terrain', 'Une chaîne de jours tirée au sort, propre à la saison ; chaque jour a son temps. La boue et le séchage en dépendent. La météo n\'est pas lue d\'avance : la prévision du lendemain est vague, juste sept fois sur dix.', { voir: ['prevision', 'saison', 'frise'], capture: 'frise' }),
   E('prevision', 'Prévision', 'terrain', 'Ce que le billet dit du lendemain (« du brouillard, dit-on »). Elle est juste sept fois sur dix ; on ne connaît jamais la météo des jours suivants.', { voir: ['meteo', 'frise'], capture: 'frise' }),
-  E('saison', 'Saison', 'terrain', 'Été, automne ou hiver, au choix du secteur. Elle donne les temps possibles, la couleur des arbres et des buissons et, l\'hiver, un sol enneigé qui porte. L\'automne est la saison par défaut.', { voir: ['meteo', 'arbre'], capture: 'hiver', faits: Object.entries(SAISONS).map(([k, v]) => [k, Object.keys(v.transitions ?? {}).map(t => METEO[t]?.nom ?? t).join(', ')]) }),
+  E('saison', 'Saison', 'terrain', 'Printemps, été, automne ou hiver, au choix du secteur. Elle donne les temps possibles, la couleur des arbres et des buissons, au printemps un sol plus vert et une terre gorgée d\'eau, l\'hiver un sol enneigé qui porte. L\'automne est la saison par défaut.', { voir: ['meteo', 'arbre'], capture: 'hiver', faits: Object.entries(SAISONS).map(([k, v]) => [k, Object.keys(v.transitions ?? {}).map(t => METEO[t]?.nom ?? t).join(', ')]) }),
   E('vent', 'Vent', 'terrain', 'Une force et un cap, en mots (calme, brise légère, vent modéré…) : il fait dériver la fumée. Le billet l\'indique.', { voir: ['meteo'] }),
   E('lune', 'Lune et ciel', 'terrain', 'La nuit, la lune a sa phase (une lunaison de trente jours) et le ciel sa couverture : une pleine lune ciel dégagé éclaire un peu plus le champ. Le papier de la nuit le dit.', { voir: ['nuit'] }),
   E('soleil', 'Soleil et ombres', 'terrain', 'Un soleil qui se lève à gauche et se couche à droite : les ombres des hommes et des arbres tournent, longues le matin et le soir, courtes à midi. Un temps couvert n\'a pas d\'ombres. De 16 h à 18 h, le soir tombe.', { voir: ['meteo', 'nuit'] }),

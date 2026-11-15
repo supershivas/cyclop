@@ -50,7 +50,7 @@ la danse macabre, la catastrophe peinte avec calme. L'intention est dans `DESIGN
 
 ### Palette « Boue et ciel bas » (js/palette.js, variables --jeu-*)
 
-Choisie par Jérôme (v0.1.0). Lettres : `t s b g h e r o` (terre, boue, glaise, herbe morte, eau, brume, os), `n` bleu horizon (nous), `x` vert kaki clair (en face), `v w` (herbe qui reprend). **Aucune autre couleur dans le jeu**, hors les exceptions listées (alertes de l'interface, feuilles d'automne, fondus continus, fond des dialogues, voile de nuit). Valeurs, rôles, exceptions datées et mesures de lisibilité : `docs/domaines/rendu.md`, « Palette ». Toute couleur nouvelle se vérifie avec `outils/lisibilite.mjs`.
+Choisie par Jérôme (v0.1.0). Lettres : `t s b g h e r o` (terre, boue, glaise, herbe morte, eau, brume, os), `n` bleu horizon (nous), `x` vert kaki clair (en face), `v w` (herbe qui reprend). **Aucune autre couleur dans le jeu**, hors les exceptions listées (alertes de l'interface, feuilles d'automne et de printemps, fondus continus, fond des dialogues, voile de nuit). Valeurs, rôles, exceptions datées et mesures de lisibilité : `docs/domaines/rendu.md`, « Palette ». Toute couleur nouvelle se vérifie avec `outils/lisibilite.mjs`.
 
 ### Échelle
 

@@ -22,36 +22,36 @@
    - Les soldats : instanciés (une boîte et son ombre) ; au zoom 1 et 2, un
      point de 2 × 2 pixels (la couleur du camp sur son ombre).
    - Les corps : un homme couché (instancié) ; au zoom 1 et 2, un pixel. */
-import { loadThree } from './three-lib.js?v=0.134.9';
-import * as SH from './rendu/shaders.js?v=0.134.9';
-import { creerSoldats } from './rendu/soldats.js?v=0.134.9';
-import { creerChars } from './rendu/chars.js?v=0.134.9';
-import { creerGenies } from './rendu/genies.js?v=0.134.9';
-import { creerCamp } from './rendu/camp.js?v=0.134.9';
-import { creerAvions } from './rendu/avions.js?v=0.134.9';
-import { creerPonts } from './rendu/ponts.js?v=0.134.9';
-import { creerCiel, crepuscule } from './rendu/ciel.js?v=0.134.9';
-import { creerMeteoLisse, TEMPS_LISSE } from './rendu/meteo-lisse.js?v=0.134.9';
-import { creerMeteo } from './rendu/meteo.js?v=0.134.9';
-import { creerTroncons } from './rendu/troncons.js?v=0.134.9';
-import { ARBRES_JEU } from './data/arbres.js?v=0.134.9';
-import { creerVegetation } from './rendu/vegetation.js?v=0.134.9';
-import { creerTemps } from './rendu/temps.js?v=0.134.9';
-import { creerEclats } from './rendu/eclats.js?v=0.134.9';
-import { creerOmbresRelief } from './rendu/ombres-relief.js?v=0.134.9';
-import { creerAOSol, soleilDuJeu } from './rendu/ao-sol.js?v=0.134.9';
-import { cadrerOmbre } from './lumiere/ombres.js?v=0.134.9';
-import { semerOmbres, emballerOmbres, OMBRE_FUMEE } from './rendu/ombre-fumee.js?v=0.134.9';
-import { creerLampesSol } from './rendu/lampes-sol.js?v=0.134.9';
-import { OMBRES_RELIEF as OMB, NUAGES, NUAGES_VENT } from './data/soleil.js?v=0.134.9';
-import { PALETTE, ORDRE, INDICE, ALERTES } from './palette.js?v=0.134.9';
-import { OMBRE, couleursLigne } from './apparence.js?v=0.134.9';
-import { MORCEAU, hauteurVueQ as hauteurQ, hauteurVueM as hauteurM, etat as etatCase, ETAT } from './terrain.js?v=0.134.9';
-import { horloge, secteurDuJeu, rangDe } from './bataille.js?v=0.134.9';
-import { GRADES } from './data/grades.js?v=0.134.9';
-import { profilFleuve } from './eaux.js?v=0.134.9';
-import { ligneY } from './tranchees.js?v=0.134.9';
-import { vent as ventDuJour } from './data/meteo.js?v=0.134.9';
+import { loadThree } from './three-lib.js?v=0.135.0';
+import * as SH from './rendu/shaders.js?v=0.135.0';
+import { creerSoldats } from './rendu/soldats.js?v=0.135.0';
+import { creerChars } from './rendu/chars.js?v=0.135.0';
+import { creerGenies } from './rendu/genies.js?v=0.135.0';
+import { creerCamp } from './rendu/camp.js?v=0.135.0';
+import { creerAvions } from './rendu/avions.js?v=0.135.0';
+import { creerPonts } from './rendu/ponts.js?v=0.135.0';
+import { creerCiel, crepuscule } from './rendu/ciel.js?v=0.135.0';
+import { creerMeteoLisse, TEMPS_LISSE } from './rendu/meteo-lisse.js?v=0.135.0';
+import { creerMeteo } from './rendu/meteo.js?v=0.135.0';
+import { creerTroncons } from './rendu/troncons.js?v=0.135.0';
+import { ARBRES_JEU } from './data/arbres.js?v=0.135.0';
+import { creerVegetation } from './rendu/vegetation.js?v=0.135.0';
+import { creerTemps } from './rendu/temps.js?v=0.135.0';
+import { creerEclats } from './rendu/eclats.js?v=0.135.0';
+import { creerOmbresRelief } from './rendu/ombres-relief.js?v=0.135.0';
+import { creerAOSol, soleilDuJeu } from './rendu/ao-sol.js?v=0.135.0';
+import { cadrerOmbre } from './lumiere/ombres.js?v=0.135.0';
+import { semerOmbres, emballerOmbres, OMBRE_FUMEE } from './rendu/ombre-fumee.js?v=0.135.0';
+import { creerLampesSol } from './rendu/lampes-sol.js?v=0.135.0';
+import { OMBRES_RELIEF as OMB, NUAGES, NUAGES_VENT } from './data/soleil.js?v=0.135.0';
+import { PALETTE, ORDRE, INDICE, ALERTES } from './palette.js?v=0.135.0';
+import { OMBRE, couleursLigne, reglerVerdure } from './apparence.js?v=0.135.0';
+import { MORCEAU, hauteurVueQ as hauteurQ, hauteurVueM as hauteurM, etat as etatCase, ETAT } from './terrain.js?v=0.135.0';
+import { horloge, secteurDuJeu, rangDe } from './bataille.js?v=0.135.0';
+import { GRADES } from './data/grades.js?v=0.135.0';
+import { profilFleuve } from './eaux.js?v=0.135.0';
+import { ligneY } from './tranchees.js?v=0.135.0';
+import { vent as ventDuJour } from './data/meteo.js?v=0.135.0';
 
 export const CAMERA = { yaw: 0.15, tangage: 0.95, fov: 30 };   // au départ : tournée de 9°, plongée de 54°, angle de 30°
 // la caméra respire : un balancement très lent, 2° en 23 s (Jérôme, v0.3.1 : variante D du labo retenue)
@@ -359,9 +359,12 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
   const genies = creerGenies({ THREE, scene, bataille: () => B, hauteur: (x, y) => surfaceLisse(x, y) });
   const camp = creerCamp({ THREE, scene, bataille: () => B, hauteur: (x, y) => surfaceLisse(x, y) });      // le camp de notre armée, dans la marge arrière (v0.87.0)
   const avions = creerAvions({ THREE, scene, bataille: () => B, hauteur: (x, y) => surfaceLisse(x, y), effets: eclats });
+  let verdurePrintemps = false;
   function attacher(bataille) {
     B = bataille; T = B.terrain;
     // l'herbe de l'automne est rousse (Jérôme, v0.59.4 : « plus orangée, marron ») : les deux verts du sol prennent des teintes de feuilles mortes, hors palette (exception déclarée dans CLAUDE.md) ; les autres saisons gardent les verts
+    // (v0.135.0) le printemps : la prairie (le plus du sec est vert, `reglerVerdure(3)`) ; les autres saisons rendent le vert du jeu, s'il venait du printemps
+    if (B.etat.sol?.saison === 'printemps') { reglerVerdure(3); verdurePrintemps = true; } else if (verdurePrintemps) { reglerVerdure(); verdurePrintemps = false; }
     const roux = (B.etat.sol?.saison ?? 'automne') === 'automne', sombre = h => rgb(h).map(v => Math.round(v * 0.7));
     for (const [k, h] of [['v', '#a86a2c'], ['w', '#8a4c1e']]) { const i = ORDRE.indexOf(k); PAL_RGB[i] = rgb(roux ? h : PALETTE[k]); PAROI_RGB[i] = roux ? sombre(h) : rgb(PALETTE[OMBRE[k]]); }
     if (finesseDes !== null) { finesse = 1; finPerimee = false; }      // une autre bataille : tout se fait d'abord au mètre, `dessiner` choisit ensuite

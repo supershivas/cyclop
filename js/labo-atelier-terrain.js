@@ -2,11 +2,11 @@
 // le vrai rendu du jeu sur une vraie bataille, et des curseurs pour l'heure (ou la nuit), la saison, le temps qu'il fait, le réglage « Éclairage »,
 // le zoom et la caméra (l'inclinaison va jusqu'à l'horizon, pour voir le ciel). Le temps peut passer (un jour de jeu en une minute) et des obus
 // tomber au centre de la vue (pour voir les éclairs, les incendies et les fusées la nuit). Le dessin seulement : aucune règle ne change.
-import { nouvelleBataille, avancer, regarderAu, ordonnerMarche, ordonnerBarrage } from './bataille.js?v=0.134.9';
-import { creerRendu, ZOOMS } from './rendu3d.js?v=0.134.9';
-import { METEO } from './data/meteo.js?v=0.134.9';
-import { SOLEIL_JEU } from './data/soleil.js?v=0.134.9';
-import { hash2 } from './lib/rng.js?v=0.134.9';
+import { nouvelleBataille, avancer, regarderAu, ordonnerMarche, ordonnerBarrage } from './bataille.js?v=0.135.0';
+import { creerRendu, ZOOMS } from './rendu3d.js?v=0.135.0';
+import { METEO } from './data/meteo.js?v=0.135.0';
+import { SOLEIL_JEU } from './data/soleil.js?v=0.135.0';
+import { hash2 } from './lib/rng.js?v=0.135.0';
 
 // les crans des curseurs (l'ordre est celui du curseur, de gauche à droite)
 const SAISONS = [['printemps', 'Printemps'], ['ete', 'Été'], ['automne', 'Automne'], ['hiver', 'Hiver']];
@@ -67,8 +67,7 @@ export function atelierTerrain(stage, R, el) {
     if (!rendu || !B) return;
     if (cle === 'saison') {
       const s = SAISONS[reglage.saison][0];
-      B.etat.sol.saison = s === 'printemps' ? 'automne' : s;
-      rendu.saisonArbres = s === 'printemps' ? 'printemps' : null;
+      B.etat.sol.saison = s; rendu.attacher(B);      // la saison change la couleur de l'herbe (rendu3d.attacher) et les feuilles
     }
     if (cle === 'eclairage') rendu.eclairage = ECLAIRAGES[reglage.eclairage][0];
     if (cle === 'zoom') rendu.vue.zoom = reglage.zoom;

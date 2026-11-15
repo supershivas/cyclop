@@ -2,41 +2,41 @@
 // Chaque sujet utilise les mêmes modules que le jeu (terrain, apparence,
 // rendu three.js) : ce qu'on voit ici est ce que le jeu dessinera. Ajouter un
 // sujet ou une variante = ajouter une entrée dans GROUPES.
-import { afficherVersion } from './version-tag.js?v=0.134.9';
-import { mountLabo } from './lib/labo-shell.js?v=0.134.9';
-import { spriteCanvas, paletteToGPL, paletteToHex } from './lib/sprites.js?v=0.134.9';
-import { PALETTE, ROLES } from './palette.js?v=0.134.9';
-import { chargerContenu } from './design-store.js?v=0.134.9';
-import { tuile, ETAT } from './tuiles.js?v=0.134.9';
-import { creerTerrain, impact, hydroLignes, toucher } from './terrain.js?v=0.134.9';
-import { FORMES } from './cratere.js?v=0.134.9';
-import { CALIBRES } from './data/calibres.js?v=0.134.9';
-import { METEO } from './data/meteo.js?v=0.134.9';
-import { nouvelleBataille, avancer, ordonnerMarche, ordonnerBarrage, mourir, regarderAu, aube, horloge, ticksParJour, rangDe } from './bataille.js?v=0.134.9';
-import { AZIMUTS, COTES } from './data/soleil.js?v=0.134.9';
-import { creerRendu, ZOOMS } from './rendu3d.js?v=0.134.9';
-import { placesCommandement } from './army.js?v=0.134.9';
-import { hash2 } from './lib/rng.js?v=0.134.9';
-import { reglerVerdure } from './apparence.js?v=0.134.9';
-import { maquetteChars } from './labo-chars.js?v=0.134.9';
-import { maquetteEpaves } from './labo-epaves.js?v=0.134.9';
-import { fondations, boutons, unites, fenetres, revision } from './labo-design-system.js?v=0.134.9';
-import { cartesSecteur } from './labo-cartes.js?v=0.134.9';
-import { gainTampon, gainCachets, gainFil, gainBordereau, victoireFanion, victoireTampon, victoireChevrons, victoireAube, ficheDeuxColonnes, ficheEtages, ficheRegistre, ficheDAbord } from './labo-recompenses.js?v=0.134.9';
-import { maquetteBatiment, maquetteCamp } from './labo-batiments.js?v=0.134.9';
-import { BATIMENTS } from './data/batiments.js?v=0.134.9';
-import { JOURNAL } from './labo-journal.js?v=0.134.9';
-import { loadVersion } from './lib/app-update.js?v=0.134.9';
-import { maquetteEffets, maquetteAmbiance, maquetteEspace, maquetteBruitages } from './labo-son.js?v=0.134.9';
-import { calqueMoral } from './labo-moral.js?v=0.134.9';
-import { bilanRapport, bilanTuiles, bilanFrise } from './labo-donnees.js?v=0.134.9';
-import { papierNuit, finDePartie } from './labo-papiers.js?v=0.134.9';
-import { fichesTuiles, fichesProfil, fichesCompactes } from './labo-fiches.js?v=0.134.9';
-import { calqueEnnemis } from './labo-engins-ennemis.js?v=0.134.9';
-import { maquetteTranchees, NOTES_TRANCHEES, NOMS_TRANCHEES } from './labo-tranchees.js?v=0.134.9';
-import { maquetteFabrique } from './labo-fabrique.js?v=0.134.9';
-import { atelierTerrain } from './labo-atelier-terrain.js?v=0.134.9';
-import { entrees as encEntrees, lexiqueAZ, planche as encPlanche } from './labo-encyclopedie.js?v=0.134.9';
+import { afficherVersion } from './version-tag.js?v=0.135.0';
+import { mountLabo } from './lib/labo-shell.js?v=0.135.0';
+import { spriteCanvas, paletteToGPL, paletteToHex } from './lib/sprites.js?v=0.135.0';
+import { PALETTE, ROLES } from './palette.js?v=0.135.0';
+import { chargerContenu } from './design-store.js?v=0.135.0';
+import { tuile, ETAT } from './tuiles.js?v=0.135.0';
+import { creerTerrain, impact, hydroLignes, toucher } from './terrain.js?v=0.135.0';
+import { FORMES } from './cratere.js?v=0.135.0';
+import { CALIBRES } from './data/calibres.js?v=0.135.0';
+import { METEO } from './data/meteo.js?v=0.135.0';
+import { nouvelleBataille, avancer, ordonnerMarche, ordonnerBarrage, mourir, regarderAu, aube, horloge, ticksParJour, rangDe } from './bataille.js?v=0.135.0';
+import { AZIMUTS, COTES } from './data/soleil.js?v=0.135.0';
+import { creerRendu, ZOOMS } from './rendu3d.js?v=0.135.0';
+import { placesCommandement } from './army.js?v=0.135.0';
+import { hash2 } from './lib/rng.js?v=0.135.0';
+import { reglerVerdure } from './apparence.js?v=0.135.0';
+import { maquetteChars } from './labo-chars.js?v=0.135.0';
+import { maquetteEpaves } from './labo-epaves.js?v=0.135.0';
+import { fondations, boutons, unites, fenetres, revision } from './labo-design-system.js?v=0.135.0';
+import { cartesSecteur } from './labo-cartes.js?v=0.135.0';
+import { gainTampon, gainCachets, gainFil, gainBordereau, victoireFanion, victoireTampon, victoireChevrons, victoireAube, ficheDeuxColonnes, ficheEtages, ficheRegistre, ficheDAbord } from './labo-recompenses.js?v=0.135.0';
+import { maquetteBatiment, maquetteCamp } from './labo-batiments.js?v=0.135.0';
+import { BATIMENTS } from './data/batiments.js?v=0.135.0';
+import { JOURNAL } from './labo-journal.js?v=0.135.0';
+import { loadVersion } from './lib/app-update.js?v=0.135.0';
+import { maquetteEffets, maquetteAmbiance, maquetteEspace, maquetteBruitages } from './labo-son.js?v=0.135.0';
+import { calqueMoral } from './labo-moral.js?v=0.135.0';
+import { bilanRapport, bilanTuiles, bilanFrise } from './labo-donnees.js?v=0.135.0';
+import { papierNuit, finDePartie } from './labo-papiers.js?v=0.135.0';
+import { fichesTuiles, fichesProfil, fichesCompactes } from './labo-fiches.js?v=0.135.0';
+import { calqueEnnemis } from './labo-engins-ennemis.js?v=0.135.0';
+import { maquetteTranchees, NOTES_TRANCHEES, NOMS_TRANCHEES } from './labo-tranchees.js?v=0.135.0';
+import { maquetteFabrique } from './labo-fabrique.js?v=0.135.0';
+import { atelierTerrain } from './labo-atelier-terrain.js?v=0.135.0';
+import { entrees as encEntrees, lexiqueAZ, planche as encPlanche } from './labo-encyclopedie.js?v=0.135.0';
 
 document.documentElement.style.setProperty('--jeu-accent', ROLES.accent);
 const NOM = document.title.replace(/^Labo — /, ''); // le nom vient de la page (une apostrophe ne casse rien)
@@ -112,7 +112,7 @@ function labourer(B, forme, cz) {
   ['75', '155', '220'].forEach((cal, k) => impact(T, dm(cx + (k - 1) * 14 + 0.37 * k), dm(cy + 0.5 * k), cal, R, 1000 + k, false, forme));
   for (let k = 0; k < 45; k++) impact(T, dm(cx - 70 + hash2(k, 1, 9) * 140), dm(cy - 40 + hash2(k, 2, 9) * 80), ['75', '155', '220'][k % 3], R, k, false, forme);
 }
-const SAISONS_ARBRES = [['ete', 'Été'], ['automne', 'Automne'], ['hiver', 'Hiver'], ['neige', 'Hiver · neige'], ['printemps', 'Printemps (une teinte, pas une saison)']];
+const SAISONS_ARBRES = [['ete', 'Été'], ['automne', 'Automne'], ['hiver', 'Hiver'], ['neige', 'Hiver · neige'], ['printemps', 'Printemps']];
 // ce que coûte une forme : les cases touchées et le temps d'un obus, par calibre (300 obus isolés sur un petit sol plat)
 const coutsCratere = {};
 function coutCratere(nom) {
@@ -252,9 +252,9 @@ function moteur(stage, { zoom = 3, pluie = false, gel = false, soldats = 600, cz
       if (mieux) { rendu.vue.cx = mieux.i + 0.5; rendu.vue.cz = mieux.j + 0.5; }
     }
     reglerSaison = cle => {
-      const S = { ete: ['ete', 'canicule'], automne: ['automne', 'sec'], hiver: ['hiver', 'gel'], neige: ['hiver', 'neige'], printemps: ['automne', 'sec'] }[cle];
+      const S = { ete: ['ete', 'canicule'], automne: ['automne', 'sec'], hiver: ['hiver', 'gel'], neige: ['hiver', 'neige'], printemps: ['printemps', 'pluie'] }[cle];
       B.etat.sol.saison = S[0]; B.etat.meteo[B.etat.jour - 1] = S[1];
-      rendu.saisonArbres = cle === 'printemps' ? 'printemps' : null;
+      rendu.saisonArbres = null;      // (le printemps est une saison du jeu depuis la v0.135.0)
     };
     if (saison) reglerSaison(saison);
     if (lumiere) {

@@ -1,10 +1,10 @@
 // Qui joue quoi pour les hommes articulés (étape 4 de docs/chantiers/animations-vers-le-jeu.md). Logique pure (le temps est un argument) : pour un homme, la pose du lecteur d'animations
 // (marche, repos, tir) écrite dans les 25 nombres de la texture de poses, ou `null` pour les états sans animation (feu retenu, accroupi, couché, mêlée, blessures, officier au pistolet),
 // que `poseJeu` (pose-jeu.js) continue de calculer. Un état de lecteur par homme (le fondu de 0,2 s en a besoin), purgé quand l'homme sort des hommes articulés (`fin`).
-import { nouvelEtat, etatAnimationTab, termine } from '../lecteur-animations.js?v=0.134.9';
-import { ANIMATIONS } from '../data/animations.js?v=0.134.9';
-import { ANIM_JEU, MARCHE_JEU, CANAUX_TIR_EN_MARCHE } from '../data/lecteur-animations.js?v=0.134.9';
-import { FLOTTANTS } from './pose-jeu.js?v=0.134.9';
+import { nouvelEtat, etatAnimationTab, termine } from '../lecteur-animations.js?v=0.135.0';
+import { ANIMATIONS } from '../data/animations.js?v=0.135.0';
+import { ANIM_JEU, MARCHE_JEU, CANAUX_TIR_EN_MARCHE } from '../data/lecteur-animations.js?v=0.135.0';
+import { FLOTTANTS } from './pose-jeu.js?v=0.135.0';
 
 
 // h : { vit, tir (comme soldats.js l'écrit : −1 feu retenu, 0..1 l'épaule, 2..3 la mêlée), coup (le `tirVal` brut : 1 au coup de feu, puis il retombe), tapi, couche, blessure, rang | aspect.rang }

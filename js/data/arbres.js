@@ -24,7 +24,7 @@ export const ARBRES_ECHELLE = { hauteur: [0.9, 1.14], largeur: [0.88, 1.2] };   
 export const ARBRES_FEUILLES = {
   ete: { dessus: ['v', 'v', 'w'], flanc: ['w', 'w', 's'], taille: 0.85, garde: 1, degarni: 1 },
   automne: { dessus: ['#ff7a14', '#e8321e', '#ffb400', '#d11a2a', '#ff9a1f', '#f05a0a'], flanc: ['#a8430c', '#8a1410', '#b87a06', '#7a0f1c', '#b8520c', '#962c06'], taille: 0.85, garde: 1, degarni: 0.75 },
-  printemps: { dessus: ['v', 'h'], flanc: ['h', 'g'], taille: 0.7, garde: 0.6, degarni: 0.4 },    // une teinte du labo : le printemps n'est pas une saison du jeu
+  printemps: { dessus: ['#9cbc50', '#87a944', '#b4ca64', '#a8c25a', '#e2dccb'], flanc: ['#5f7b2d', '#506b27', '#6c8735', '#7a7a5c'], taille: 0.82, garde: 0.95, degarni: 0.8 },    // (v0.135.0, une saison du jeu) le vert tendre des feuilles neuves, plus clair que l'herbe, et quelques touffes en fleurs ; hors palette comme l'automne
   neige: { dessus: ['o'], flanc: ['r'], neige: true, taille: 1, garde: 1, degarni: 1 },
 };
 // Un arbre sur trois est dégarni en automne ; la chute des feuilles (variante du labo) : la part de nus et de dégarnis au fil des jours
