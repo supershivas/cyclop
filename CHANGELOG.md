@@ -1,5 +1,10 @@
 # Journal des versions
 
+## 0.137.0 — 2026-11-15
+
+- Au labo, « Des arbres réalistes » : les essences du front (peuplier d'Italie, saule têtard, chêne, hêtre, bouleau), leurs tons par saison, des couronnes en grappes et des verts d'été propres à chaque essence ; trois variantes à choisir
+- Au labo, « L'herbe dense » : des touffes de sept brins tirées case par case, vertes ou sèches selon le sol ; deux variantes (le jeu ne change pas encore)
+
 ## 0.136.0 — 2026-11-15
 
 - Au labo, « Le grain du sol » : des mottes, des fentes, des cailloux et des brins dans chaque case du sol, et des bords déchiquetés entre l'herbe et la boue, avec les seules couleurs de la palette ; trois variantes à choisir (le jeu ne change pas encore)

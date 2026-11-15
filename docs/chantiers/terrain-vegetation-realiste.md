@@ -22,8 +22,8 @@ Jérôme : « Peut-on avoir une végétation et un terrain bien plus réalistes 
 |---|---|---|---|---|
 | 0 | **Mesurer, économiser** | la référence (ci-dessous) ; les maillages vides ne passent plus par three.js ; moins de maillages pour les arbres ; une silhouette pour les arbres lointains | moins de triangles, moins d'envois | **v0.135.2** : feuillage grossier, matrices par plage ; M3 : three.js 4,1 → 2,7 ms |
 | 1 | **Le grain du sol** | dans le nuanceur du sol, selon la matière de la case : mottes et ornières dans la boue, cailloux, terre jetée, brins vus de haut dans l'herbe ; des limites déchiquetées entre herbe, boue et glaise ; l'usure tirée de l'état existant (sol tassé le long des boyaux, éclats autour des cratères frais) ; trames de la palette | 0 triangle ; quelques lectures de bruit par pixel | **au labo en v0.136.0** (« Le grain du sol », B, C, D à trancher) ; l'usure pas encore |
-| 2 | **L'herbe dense** | de loin : la texture du lot 1 ; dès 6 px/m : un seul appel qui tire les touffes dans le nuanceur de sommets (`gl_InstanceID` + hachage de la case), sans tableau rempli par le JS ; un fondu au zoom de bascule | triangles bornés, JS ~0 | à faire |
-| 3 | **Les arbres de champ de bataille** | cime arrachée, branches cassées, tronc fendu, chicot ; choisis par les obus tombés près de l'arbre ; des sous-bois (broussailles, fûts couchés) | payé par le lot 0 | à faire |
+| 2 | **L'herbe dense** | de loin : la texture du lot 1 ; dès 6 px/m : un seul appel qui tire les touffes dans le nuanceur de sommets (`gl_InstanceID` + hachage de la case), sans tableau rempli par le JS ; un fondu au zoom de bascule | triangles bornés, JS ~0 | **au labo en v0.137.0** (« L'herbe dense », B, C) : **au-dessus du budget** |
+| 3 | **Les arbres de champ de bataille** | cime arrachée, branches cassées, tronc fendu, chicot ; choisis par les obus tombés près de l'arbre ; des sous-bois (broussailles, fûts couchés) | payé par le lot 0 | **au labo en v0.137.0** (« Des arbres réalistes », B, C, D) : les essences et les teintes ; **D au-dessus du budget** ; les arbres hachés pas encore |
 | 4 | **Les débris** | piquets, sacs, caisses, fil à terre : un seul appel instancié, posés par un hachage de la graine près des tranchées et des cratères | un appel | si le budget le permet |
 
 Règles de chaque lot : **labo avant jeu** (2 ou 3 variantes, Jérôme tranche) ; aucun tirage du générateur de la bataille ni de `Math.random` pour le dessin ; `rendu-empreinte` réécrite seulement après avoir regardé les images ; `fumee` ; `lisibilite` (le grain ne doit pas noyer les soldats, surtout le kaki d'en face sur l'herbe).
@@ -47,3 +47,20 @@ Deux économies : (1) **le feuillage grossier** (`ARBRES_GROSSIER` de data/arbre
 `data/grain-sol.js` (les matières, leurs lettres claires, leurs dosages ; les variantes), `solMat.f` de rendu/shaders.js (`uGrain`, éteint dans le jeu : `GRAIN_JEU` = 0, références inchangées), `grainSol` de rendu3d.js, sujet « Le grain du sol » du labo (l'atelier de terrain avec `{ grain }` et une case « Sans le grain »). La matière d'une case se reconnaît à sa couleur (`uPalSol`, refaite à chaque `attacher` : l'herbe rousse de l'automne) ; un point du grain prend la couleur de la case, de sa paroi (lettre d'ombre) ou de la lettre claire : aucune couleur nouvelle. Les bords déchiquetés lisent la case à côté, de sol à sol seulement.
 
 **Mesuré** (`node scripts/mesure.mjs --grain N --zooms 3,5`, 8 000 soldats, rendu logiciel) : sans grain 214 / 183 ms (4 / 8 px/m) ; C 235 / 205 ; D 228 / 202 : **+7 à +12 %** en rendu logiciel (le nuanceur s'exécute pour chaque pixel du sol, sans carte graphique), à peu près ce que le lot 0 a rendu. Sur carte graphique : à relever sur le M3. Piste si on le garde : écrire l'indice de la matière dans l'alpha de la texture (aujourd'hui « marche » seulement) au lieu des 7 comparaisons de couleur (14 avec les bords).
+
+## Lots 2 et 3 : l'herbe dense, les arbres réalistes (v0.137.0, au labo)
+
+Jérôme (15 novembre) : « les formes des feuillages pourraient être plus réalistes » ; « plus de variations de teintes et d'essences d'arbres ».
+
+- **L'herbe dense** : `data/herbe.js`, `majHerbeDense` de rendu/vegetation.js (un maillage à part, créé au premier besoin : l'empreinte du jeu ne bouge pas), `herbeDenseMat` ; touffes tirées par case autour de la vue (`hash2`), sept brins, vertes sur v/w, sèches ailleurs (`lettreSol`, `couleurSol` de rendu3d.js).
+- **Les essences** : `ARBRES_ESSENCES` (peuplier, saule têtard, chêne, hêtre, bouleau, jeune, mort ; le tronc à sa lettre), leurs silhouettes dans `formeArbre`, `ARBRES_TEINTES` (`palette` : les lettres l'été, les teintes d'automne et de printemps déjà admises ; `etendues` : des verts d'été par essence, **hors palette, à faire admettre**), le départ dans les teintes décalé par la variante de l'arbre ; `ARBRES_GRAPPES` : une touffe = trois boules de 25 triangles.
+
+**Mesuré** (8 000 soldats, rendu logiciel, `--zooms 3,5` ; sans : 213 / 185 ms) :
+
+| Proposition | 4 px/m | 8 px/m | Triangles en plus (4 px/m) |
+|---|---|---|---|
+| Herbe B (plus dense) | 293 ms (+38 %) | 230 ms (+24 %) | +30 000 |
+| Herbe C (prairie) | 387 ms (+82 %) | 299 ms (+62 %) | +90 000 |
+| Arbres D (essences, grappes, verts étendus ; tout le champ 197 → 214 ms, +9 %) | 243 ms (+14 %) | 215 ms (+16 %) | arbres 34 000 → 64 000 |
+
+**Au-dessus du budget.** Le rendu logiciel paie chaque petit triangle (un brin fait moins d'un pixel de large) ; l'envoi côté jeu de l'herbe B : +4 ms (la boucle par case). Pistes, une fois la variante choisie : l'herbe dense seulement dès 8 ou 12 px/m, et plus clairsemée au loin ; des touffes de 3 brins plus larges ; la boucle par case une fois par déplacement de la vue (pas à chaque image) ; pour les arbres, les grappes seulement de près (au-dessus de 6 px/m à l'écran, comme le feuillage grossier en dessous de 2,5), et moins de touffes au peuplier. Le relevé `?perf=1` sur le M3 dira ce qu'il en est sur une vraie carte graphique.
