@@ -1,5 +1,9 @@
 # Journal des versions
 
+## 0.134.4 — 2026-11-15
+
+- Les chars, sur le champ, au parc et en épave, et les avions garés à l'aérodrome portent la couleur de leur armée (bleu horizon chez nous, kaki en face)
+
 ## 0.134.3 — 2026-11-15
 - Le compteur `?perf=1` dit ce qui s'est passé pendant la pire image des 20 dernières secondes : la simulation (ses pas, ses événements) et le détail du dessin
 

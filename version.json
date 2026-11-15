@@ -1,7 +1,7 @@
 {
-  "version": "0.134.3",
+  "version": "0.134.4",
   "date": "2026-11-15",
   "changes": [
-    "Le compteur ?perf=1 dit ce qui s'est passé pendant la pire image (simulation, événements, dessin)"
+    "Les chars, sur le champ, au parc et en épave, et les avions garés à l'aérodrome portent la couleur de leur armée"
   ]
 }

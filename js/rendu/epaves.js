@@ -1,9 +1,9 @@
 // Les épaves dessinées (Jérôme, 1er novembre) : un biplan écrasé se disperse (le fuselage glisse, ses ailes, sa queue, son moteur et ses roues partent chacun de leur côté, à plat, sur la tranche ou sur le dos, un peu enterrés)
 // et un char détruit gît abîmé de façon différente à chaque fois. La disposition vient de js/epaves.js (un hachage de la graine) ; ici on monte les volumes à partir des pièces (avions-modeles.js, engins.js), on les pose sur le
 // sol (`poser`), et on rejoue la dispersion de l'instant où la carcasse touche le sol (`animer`). Le dessin seulement : rien de l'état, rien de la sauvegarde.
-import { biplanPieces, AVIONS_OPTS } from './avions-modeles.js?v=0.134.3';
-import { schneiderEpave } from './engins.js?v=0.134.3';
-import { dispositionAvion, dispositionChar } from '../epaves.js?v=0.134.3';
+import { biplanPieces, AVIONS_OPTS } from './avions-modeles.js?v=0.134.4';
+import { schneiderEpave } from './engins.js?v=0.134.4';
+import { dispositionAvion, dispositionChar } from '../epaves.js?v=0.134.4';
 
 const SOL_AVION = 1.7;           // m entre le centre du modèle et le bas de ses roues (le même que rendu/avions.js)
 
@@ -58,8 +58,8 @@ export function monterEpaveAvion(THREE, A, modele, graine) {
 }
 
 /* Un char détruit : le Schneider abîmé selon la graine. Rend { racine, poser(hauteur), D } ; `poser(f)` pose les débris (et la caisse) sur la hauteur du terrain. */
-export function monterEpaveChar(THREE, A, graine) {
-  const D = dispositionChar(graine), m = schneiderEpave(A, D), v = new THREE.Vector3();
+export function monterEpaveChar(THREE, A, graine, couleur) {
+  const D = dispositionChar(graine), m = schneiderEpave(A, D, couleur), v = new THREE.Vector3();
   function poser(hauteur) {
     m.groupe.updateWorldMatrix(true, true);
     const y0 = new THREE.Vector3().setFromMatrixPosition(m.groupe.matrixWorld).y;

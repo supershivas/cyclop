@@ -1,10 +1,12 @@
 // Les chars d'assaut dessinés (Jérôme, v0.47.0) : un volume par char de `B.etat.chars` (engins.js : le Schneider), posé sur le sol, incliné selon la pente sous lui,
 // tourné vers sa route ; les chenilles défilent quand il avance, une épave fume. Le dessin seulement : tout vient de l'état de la bataille, rien n'y est écrit.
 // Fabrique `creerChars({ THREE, scene, bataille: () => B, hauteur, fumer })` : la bataille change à chaque partie, on la lit à chaque image.
-import { atelier, schneider } from './engins.js?v=0.134.3';
-import { monterEpaveChar } from './epaves.js?v=0.134.3';
+import { atelier, schneider } from './engins.js?v=0.134.4';
+import { monterEpaveChar } from './epaves.js?v=0.134.4';
+import { PALETTE as P } from '../palette.js?v=0.134.4';
 
 const FABRIQUES = { schneider };
+const COULEUR = [P.n, P.x];      // la caisse à la couleur de son armée : nous, en face
 
 export function creerChars({ THREE, scene, bataille, hauteur, fumer }) {
   let A = null, lumiere = null;
@@ -29,7 +31,7 @@ export function creerChars({ THREE, scene, bataille, hauteur, fumer }) {
       vus.add(c.id);
       let m = modeles.get(c.id);
       if (!m) {
-        const modele = FABRIQUES[c.modele](A), pivot = new THREE.Group(); pivot.add(modele.groupe); scene.add(pivot);
+        const modele = FABRIQUES[c.modele](A, COULEUR[c.camp]), pivot = new THREE.Group(); pivot.add(modele.groupe); scene.add(pivot);
         m = { pivot, modele, fumee: 0 }; modeles.set(c.id, m);
       }
       const L = m.modele.longueur, cap = c.cap ?? (c.camp === 0 ? -Math.PI / 2 : Math.PI / 2);
@@ -47,7 +49,7 @@ export function creerChars({ THREE, scene, bataille, hauteur, fumer }) {
         // Jérôme, 1er novembre : « les chars détruits ont des dégâts visibles, la destruction est différente pour chaque char » : l'épave d'une graine (chenilles cassées, flanc ou ventre ouvert, coupole arrachée, brûlures…)
         if (!m.epave) {
           m.pivot.remove(m.modele.groupe);
-          m.epave = monterEpaveChar(THREE, A, (B.etat.graine ^ Math.imul(c.id + 1, 6151)) | 0);
+          m.epave = monterEpaveChar(THREE, A, (B.etat.graine ^ Math.imul(c.id + 1, 6151)) | 0, COULEUR[c.camp]);
           m.pivot.add(m.epave.racine); m.epave.racine.rotation.z = Math.atan2(hF - hB, 2 * L / 3);
           m.epave.poser((x, z) => hauteur(x, z));
         }

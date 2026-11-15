@@ -1,12 +1,12 @@
 // Les bâtiments du camp dessinés en volumes (Jérôme, v0.87.0) : sortis du labo (`labo-batiments.js`) pour que le jeu les dessine aussi (`rendu/camp.js`).
 // Chaque fabrique `BATIR[clé](A, niveau)` rend { g, w, d } : le groupe centré sur son emprise (w le long de x, d le long de z), l'avant (le front) à −z ; `A` est `atelier(THREE)` (engins.js).
 // 1 unité = 1 m, la palette du jeu seulement ; le dessin seulement, rien n'y est écrit.
-import { PALETTE as P } from '../palette.js?v=0.134.3';
-import { schneider } from './engins.js?v=0.134.3';
-import { PIEDS } from '../data/batiments.js?v=0.134.3';
-import { PARC } from '../data/parc.js?v=0.134.3';
-import { drapeau } from './drapeau.js?v=0.134.3';
-import { RONDE, demiRonde, longueurRonde } from '../ronde.js?v=0.134.3';
+import { PALETTE as P } from '../palette.js?v=0.134.4';
+import { schneider } from './engins.js?v=0.134.4';
+import { PIEDS } from '../data/batiments.js?v=0.134.4';
+import { PARC } from '../data/parc.js?v=0.134.4';
+import { drapeau } from './drapeau.js?v=0.134.4';
+import { RONDE, demiRonde, longueurRonde } from '../ronde.js?v=0.134.4';
 
 // ─── Les pièces communes ───────────────────────────────────────────────────
 export const G = A => new A.THREE.Group();
@@ -91,13 +91,13 @@ export const regler_creux = c => { CREUX = Math.max(0, c); };
 // (Jérôme, retour du 1er nov. : « la piste est posée directement sur le sol, pas de rectangle autour ; idem pour les autres bâtiments » : plus aucun socle ; `sol` ne dessine rien, `rendu/camp.js` pose le bâtiment à mi-hauteur de son emprise)
 function sol() {}
 
-// un biplan : le nez à +x (rangé face au front par `face`)
-function biplan(A, c = P.h) {
+// un biplan : le nez à +x (rangé face au front par `face`) ; aux couleurs de l'avion en vol de son camp (`AVIONS_OPTS` d'avions-modeles.js : fuselage bleu horizon et ailes d'os chez nous, kaki et brume en face)
+function biplan(A, c = coulCamp(), ailes = CAMP === 0 ? P.o : P.r) {
   const g = G(A);
   A.b(g, [5.6, 0.8, 0.7], c, [0, 1.1, 0]);
-  A.b(g, [1.6, 0.08, 8.4], P.r, [0.4, 2.0, 0]); A.b(g, [1.6, 0.08, 8.4], P.r, [0.4, 0.75, 0]);
+  A.b(g, [1.6, 0.08, 8.4], ailes, [0.4, 2.0, 0]); A.b(g, [1.6, 0.08, 8.4], ailes, [0.4, 0.75, 0]);
   for (const s of [-1, 1]) A.b(g, [0.06, 1.25, 0.06], P.s, [0.9, 1.4, s * 3.6], [0, 0, 0], false);
-  A.b(g, [1.2, 0.06, 3], P.r, [-2.6, 1.3, 0]); A.b(g, [0.8, 0.9, 0.06], c, [-2.7, 1.75, 0]);
+  A.b(g, [1.2, 0.06, 3], ailes, [-2.6, 1.3, 0]); A.b(g, [0.8, 0.9, 0.06], c, [-2.7, 1.75, 0]);
   A.cyl(g, 0.45, 0.1, P.s, [2.9, 1.1, 0], 'x', 8);
   for (const s of [-1, 1]) A.cyl(g, 0.35, 0.12, P.t, [0.8, 0.35, s * 0.9], 'z', 8);
   A.b(g, [0.05, 0.5, 1.8], P.s, [0.8, 0.6, 0], [0, 0, 0], false);
@@ -182,7 +182,7 @@ export const BATIR = {
       for (const s of [-1, 1]) A.b(g, [0.4, 3.3, 0.5], P.b, [x + s * 3.2, 1.65, -3.2]);        // ses poteaux
       A.b(g, [7, 0.4, 0.5], P.b, [x, 3.3, -3.2]);
     }
-    for (let k = 0; k < PARC.chars.capacite[n]; k++) { const c = schneider(A).groupe; c.position.set(PARC.chars.depart[n] - PARC.chars.pas * k, 0, PARC.chars.z); c.rotation.y = Math.PI / 2; c.userData.parc = k; g.add(c); }      // une place par char du stock (2, 3 ou 4) : `rendu/camp.js` ne montre que ceux qui sont vraiment au parc (v0.130.0)
+    for (let k = 0; k < PARC.chars.capacite[n]; k++) { const c = schneider(A, coulCamp()).groupe; c.position.set(PARC.chars.depart[n] - PARC.chars.pas * k, 0, PARC.chars.z); c.rotation.y = Math.PI / 2; c.userData.parc = k; g.add(c); }      // une place par char du stock (2, 3 ou 4) : `rendu/camp.js` ne montre que ceux qui sont vraiment au parc (v0.130.0)
     if (n >= 3) {
       for (const s of [-1, 1]) A.b(g, [0.2, 0.15, 28], P.t, [s * 0.75 - 12.6, 0.25, 0], [0, 0, 0], false);                        // la voie de service
       A.b(g, [14, 3.4, 5], P.s, [-1, 1.7, 12.4]); A.prisme(g, [[-7.3, 3.4], [7.3, 3.4], [0, 4.6]], 5.6, P.b, [-1, 0, 12.4]);        // l'atelier

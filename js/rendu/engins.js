@@ -1,6 +1,6 @@
 // Les engins en volumes du jeu (Jérôme, v0.47.0) : l'atelier de formes (boîtes, cylindres, prismes, chenilles qui défilent, croix de fer) et le Schneider CA 1,
 // sortis du labo (`labo-chars.js`, qui les reprend d'ici) pour que la bataille les dessine. Dessin seulement. 1 unité = 1 m, l'avant à +x, le haut à +y, la droite à +z.
-import { PALETTE as P } from '../palette.js?v=0.134.3';
+import { PALETTE as P } from '../palette.js?v=0.134.4';
 
 // ─── Le petit atelier de volumes ─────────────────────────────────────────────
 // Un matériau éclairé (un peu de lumière au-dessus : les faces se distinguent) et des arêtes de terre sur chaque pièce
@@ -70,8 +70,9 @@ export function atelier(THREE) {
 
 
 // Le Schneider CA 1 : une caisse trapue, un éperon, un 75 à droite
-export function schneider(A) {
-  const { THREE } = A, g = new THREE.Group(), coque = P.e;
+// `coque` : la couleur de son armée (n : nous, x : en face ; Jérôme, v0.134.4 : les chars n'avaient pas la couleur de leur camp)
+export function schneider(A, coque = P.n) {
+  const { THREE } = A, g = new THREE.Group();
   const chemin = [[-1.9, 0.2], [-1.5, 0], [1.4, 0], [2.0, 0.35], [1.7, 0.8], [-1.4, 0.8], [-2.0, 0.55]];
   const m1 = A.chenille(g, chemin, 0.42, 0.9, { trou: 0, pas: 0.3 }), m2 = A.chenille(g, chemin, 0.42, -0.9, { trou: 0, pas: 0.3 });
   A.b(g, [4.3, 0.9, 1.65], coque, [-0.5, 1.05, 0]);                       // la caisse
@@ -95,10 +96,10 @@ export function schneider(A) {
 
 // Un Schneider détruit (Jérôme, 1er novembre : « les chars détruits ont des dégâts visibles : parties brûlées, chenilles détruites, éventrement ; la destruction est différente pour chaque char ») : la disposition `D`
 // (`dispositionChar` de js/epaves.js) dit ce qui est arrivé à chaque partie ; aucune couleur nouvelle (le brûlé est la terre `t` et la boue sombre `s`). Rend le groupe, couché sur le sol, et ses débris (à plat, autour).
-export function schneiderEpave(A, D) {
+export function schneiderEpave(A, D, couleur = P.n) {
   const { THREE } = A, g = new THREE.Group(), corps = new THREE.Group(); g.add(corps);
   const noir = D.brule === 'noirci', taches = D.brule === 'taches';
-  const coque = noir ? P.s : P.e, dessus = noir ? P.t : P.g;
+  const coque = noir ? P.s : couleur, dessus = noir ? P.t : P.g;
   const chemin = [[-1.9, 0.2], [-1.5, 0], [1.4, 0], [2.0, 0.35], [1.7, 0.8], [-1.4, 0.8], [-2.0, 0.55]];
   // les chenilles : intacte (figée), cassée (l'avant en place, l'arrière pend et traîne), déroulée (à plat sur le sol, à côté, ses galets nus)
   [0, 1].forEach(k => {
