@@ -1,13 +1,15 @@
 // Les médailles (Jérôme, v0.73.1 : « un tableau des médailles à la fin de chaque journée, de chaque partie : le régiment le plus meurtrier, qui a pris le plus de secteurs, le plus inutile… idem pour les soldats »).
 // Lecture seule de l'état : `tues` et `pris` de chaque régiment (bataille.js : un coup de fusil ou de baïonnette qui tue, un tronçon pris), `debut` (leur valeur au matin) ;
 // pour un homme, `victimes` (déjà sur la fiche) et `etat.victDebut` (id → victimes au matin). Les morts ne figurent pas parmi les hommes (leur fiche s'est effacée avec eux).
-import { quiEst, nomDe, auFront } from './lecture.js?v=0.133.0';
-import { iconeMedaille, boutonLoupe } from './icones-nuit.js?v=0.133.0';
+import { quiEst, nomDe, auFront } from './lecture.js?v=0.134.0';
+import { CHARS } from '../data/chars.js?v=0.134.0';
+import { nomTroncon } from '../bataille.js?v=0.134.0';
 
 const pl = (n, un, des) => `${n} ${n > 1 ? des : un}`;
 const meilleur = (liste, f) => liste.reduce((m, x) => (f(x) > (m ? f(m) : -Infinity) ? x : m), null);
 
-/* Les médailles de `camp` : portee 'jour' (depuis le matin) ou 'total'. Rend { regiments: [{ titre, nom, detail }], soldats: [...] } */
+/* Les médailles de `camp` : portee 'jour' (depuis le matin) ou 'total'. Rend { regiments: [{ titre, cle, nom, detail, reg }], soldats: [{ …, soldat }], engins: [...] (la bataille entière seulement) } ;
+   le dessin : `medailles` et `tableMed` de papier-nuit.js (v0.134.0 : des puces le soir, un tableau à la fin) */
 export function palmares(B, camp, portee = 'jour') {
   const { etat, armee: A } = B, jour = portee === 'jour';
   const regs = etat.regiments.filter(r => r.camp === camp).map(r => ({
@@ -40,30 +42,28 @@ export function palmares(B, camp, portee = 'jour') {
   const bleus = vivants.filter(x => x.v === 0 && x !== ancien);
   const inutile = meilleur(bleus, x => (etat.jour - auFront(B, x.id)) * 1000 - A.adresse[x.i]);   // le plus ancien au front, le plus mauvais tireur
   if (inutile && vivants.length >= 3) homme('Le plus inutile', inutile, `rien abattu${etat.jour > 1 ? ` en ${pl(etat.jour, 'jour', 'jours')} de front` : ''}`, 'inutile');
-  return { regiments, soldats };
-}
-
-/* Le tableau des médailles (Jérôme, v0.132.0 : « en tableau, avec des icônes » ; avant, des lignes de texte) : une rangée par médaille (pictogramme, titre, nom, ce qu'il a fait) ;
-   `voir(lien)` (facultatif) ajoute la loupe qui montre le régiment ou l'homme sur le champ ({ reg } ou { soldat }) */
-export function tableau(p, voir = null) {
-  const bloc = (titre, liste) => {
-    const sec = document.createElement('section');
-    sec.append(Object.assign(document.createElement('h4'), { textContent: titre }));
-    if (!liste.length) { sec.append(Object.assign(document.createElement('p'), { className: 'discret', textContent: 'Personne ne s\'est distingué.' })); return sec; }
-    const t = document.createElement('table'); t.className = 'medailles';
-    for (const m of liste) {
-      const tr = t.insertRow();
-      const ic = tr.insertCell(); ic.className = 'med-icone'; ic.innerHTML = iconeMedaille(m.cle);
-      const ti = tr.insertCell(); ti.className = 'med-titre'; ti.textContent = m.titre;
-      const no = tr.insertCell(); no.className = 'med-nom'; no.textContent = m.nom;
-      const de = tr.insertCell(); de.className = 'med-detail'; de.textContent = m.detail;
-      if (voir) {
-        const lien = m.soldat !== undefined ? { soldat: m.soldat } : m.reg !== undefined ? { reg: m.reg } : null, c = tr.insertCell(); c.className = 'med-voir';
-        if (lien) c.append(boutonLoupe(`Voir ${m.nom} sur le champ`, () => voir(lien)));
-      }
-    }
-    sec.append(t);
-    return sec;
-  };
-  return [bloc('Les régiments', p.regiments), bloc('Les hommes', p.soldats)];
+  // la bataille entière (Jérôme, 15 nov., v0.134.0 : « un tableau de médailles encore plus fourni ») : le roc, l'inébranlable, le fuyard ; le survivant ; le char, le poste, le génie
+  const engins = [];
+  if (!jour) {
+    const sansDeroute = regs.filter(x => !x.r.deroutes && x.pertes > 0 && x !== sacr), roc = meilleur(sansDeroute, x => x.pertes);
+    donne('Le roc', roc, `${pl(roc?.pertes, 'mort', 'morts')}, jamais en déroute`, 'roc');
+    // le moral moyen de ses soirs (l'historique, `etat.histo`, et ce soir)
+    const H = etat.histo || [], moyen = x => { const v = [...H.map(h => h.regs[x.r.id]?.[3]).filter(m => m != null).map(m => m / 100), x.r.moral]; return v.reduce((a, b) => a + b, 0) / v.length; };
+    const ineb = H.length ? meilleur(regs.filter(x => x.r.effectif), moyen) : null;
+    donne('L\'inébranlable', ineb, `moral moyen ${Math.round(moyen(ineb ?? regs[0]) * 100)} %`, 'inebranlable');
+    const fuy = meilleur(regs, x => x.r.deroutes || 0);
+    donne('Le fuyard', fuy?.r.deroutes > 0 && fuy, pl(fuy?.r.deroutes, 'déroute', 'déroutes'), 'fuyard');
+    const surv = meilleur(vivants.filter(x => x !== tireur && x !== ancien), x => (etat.jour - auFront(B, x.id)) * 1000 + A.exp[x.i]);      // (à égalité de jours : le plus éprouvé, qui n'est ni le tireur ni l'aguerri)
+    if (surv && etat.jour > 1) homme('Le survivant', surv, `${pl(etat.jour - auFront(B, surv.id) + 1, 'jour', 'jours')} au front`, 'survivant');
+    // les engins : le char (au champ ou rentré au parc) et le poste qui ont le plus tué, le génie
+    const chars = new Map();
+    for (const c of [...(etat.chars || []), ...(etat.parcChars?.[camp] || [])]) if ((c.camp ?? camp) === camp && (c.tues ?? 0) > (chars.get(c.id)?.tues ?? -1)) chars.set(c.id, { ...c, modele: c.modele ?? chars.get(c.id)?.modele });
+    const ch = meilleur([...chars.values()], c => c.tues ?? 0);
+    if (ch?.tues > 0) engins.push({ titre: 'Le char le plus meurtrier', cle: 'char', nom: `${CHARS[ch.modele]?.nom ?? 'Char'} n° ${ch.id + 1}`, detail: pl(ch.tues, 'homme abattu', 'hommes abattus') });
+    const nid = meilleur((etat.nids || []).filter(n => n.camp === camp), n => n.tues ?? 0);
+    if (nid?.tues > 0) engins.push({ titre: 'Le poste le plus meurtrier', cle: 'poste', nom: `Poste, ${nomTroncon(B, nid.troncon)}`, detail: pl(nid.tues, 'homme abattu', 'hommes abattus') });
+    const genie = (etat.moments || []).reduce((s, m) => s + (m.genie?.[camp] ?? 0), 0);
+    if (genie) engins.push({ titre: 'Le génie', cle: 'genie', nom: 'Les sapeurs', detail: pl(genie, 'ouvrage refait ou engin réparé', 'ouvrages refaits ou engins réparés') });
+  }
+  return { regiments, soldats, engins };
 }

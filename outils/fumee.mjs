@@ -98,7 +98,7 @@ await etape('nuit');
 await page.keyboard.press('t');
 await etape('nuit-choisis');
 // un ordre de nuit aux régiments choisis : leurs cartes se grisent (`donne`, v0.38.3) ; en solo, aucune erreur (le réseau n'existe pas)
-await page.evaluate(() => document.querySelector('.nr:not(.nr-tous) [data-corvee="evacuer"]').click());
+await page.evaluate(() => document.querySelector('.pn-r:not(.pn-r-tous) [data-corvee="evacuer"]').click());
 await etape('nuit-ordre');
 await jeu('() => __jeu.fin?.()');
 await etape('fin');

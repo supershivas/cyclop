@@ -9,9 +9,9 @@
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta property="og:image" content="og.png">
-<link rel="stylesheet" href="js/lib/game.css?v=0.133.0">
-<link rel="stylesheet" href="css/style.css?v=0.133.0">
-<link rel="stylesheet" href="css/ds-v2.css?v=0.133.0">
+<link rel="stylesheet" href="js/lib/game.css?v=0.134.0">
+<link rel="stylesheet" href="css/style.css?v=0.134.0">
+<link rel="stylesheet" href="css/ds-v2.css?v=0.134.0">
 </head>
 <body class="charge">
 <!-- La barre de chargement (v0.28.0) : là avant tout script ; main.js la remplit, puis la retire. `body.charge` (v0.100.0) : tout le reste de l'écran est caché tant qu'elle est là (le menu et le titre ne se voient plus derrière) -->
@@ -89,31 +89,20 @@
       <!-- En haut au centre : les pertes des deux armées, et la nuit, le papier qui les remplace (v0.26.0) -->
       <div class="haut-centre">
       <!-- La nuit : le champ de bataille reste, ce papier s'y pose (pas de boîte de dialogue) ; on choisit des régiments, puis leur corvée -->
-      <section class="papier nuit" id="nuit" hidden aria-live="polite">
-        <h2 id="nuit-titre">Nuit</h2>
-        <div id="nuit-corps" class="nuit-colonnes">
-          <!-- deux colonnes (v0.100.0 : trois ; v0.132.0 : les régiments et leurs ordres réunis) : la journée, puis nos régiments, leurs corvées et les médailles ; le bilan est en tuiles (Jérôme, 8 nov. : le tableau de bord du labo, `hud/bilan.js`) -->
-          <section class="nuit-col" aria-labelledby="nuit-h-jour">
-            <h3 id="nuit-h-jour">La journée</h3>
-            <div class="bilan" id="nuit-bilan"></div>
-            <p id="nuit-lignes"></p>
-            <p class="discret" id="nuit-demain"></p>
-            <p class="discret" id="nuit-ciel"></p>
-          </section>
-          <!-- les régiments et leurs ordres réunis (Jérôme, v0.132.0) : une rangée par régiment (nom, effectifs, moral, la loupe) et ses corvées dessous ; puis les médailles en tableau -->
-          <section class="nuit-col nuit-large" aria-labelledby="nuit-h-regs">
-            <h3 id="nuit-h-regs">Nos régiments</h3>
-            <p class="discret" id="nuit-aide">Sous chaque régiment, sa corvée de la nuit ; les régiments choisis (leur nom, un cadre, T) la reçoivent ensemble.</p>
-            <div id="nuit-ordres"></div>
-            <button class="bouton" id="nuit-gerer" type="button" hidden data-info="# Gérer les régiments&#10;Fusionner deux régiments ou passer des soldats de l'un à l'autre : 1, 10 ou tous. Au petit matin, ils marchent jusqu'à leur nouveau régiment.">Gérer les régiments</button>
-            <section class="tuile nuit-medailles" aria-labelledby="nuit-h-medailles">
-              <h4 id="nuit-h-medailles">Médailles du jour</h4>
-              <div id="nuit-medailles-corps"></div>
-            </section>
-          </section>
-        </div>
+      <!-- Le papier de la nuit (Jérôme, 15 nov., v0.134.0 ; labo « Le papier de la nuit », variante A « Deux colonnes ») : jamais de défilement dès 1280 × 800 ; en tête ce qu'il faut décider
+           (la relève, gérer les régiments, l'aube), à gauche les ordres (une rangée par régiment, son état et ses corvées en icônes) et « À retenir », à droite la journée, le ciel et les médailles -->
+      <section class="papier nuit pn pn-va" id="nuit" hidden aria-live="polite">
+        <header class="pn-tete">
+          <h2 id="nuit-titre">Nuit</h2>
+          <div class="pn-pied" id="nuit-pied">
+            <span id="nuit-releve"></span>
+            <button class="bouton pn-gerer" id="nuit-gerer" type="button" hidden data-info="# Gérer les régiments&#10;Fusionner deux régiments ou passer des soldats de l'un à l'autre : 1, 10 ou tous. Au petit matin, ils marchent jusqu'à leur nouveau régiment.">Gérer les régiments</button>
+          </div>
+          <button class="bouton pn-aube" id="aube" type="button" data-info="# À l'aube&#10;La nuit s'achève : les ordres donnés s'exécutent, la dotation tombe.">À l'aube</button>
+        </header>
+        <section class="pn-ordres" id="nuit-ordres" aria-label="Les ordres de la nuit"></section>
+        <section class="pn-jour" id="nuit-jour" aria-label="La journée"></section>
         <div class="fiche-tuiles" id="aube-bilan" hidden></div>
-        <button class="bouton" id="aube" data-info="# À l'aube&#10;La nuit s'achève : les ordres donnés s'exécutent, la dotation tombe.">À l'aube</button>
       </section>
         <button class="bouton papier" id="nuit-retour" type="button" hidden data-info="# Le papier de la nuit&#10;La nuit continue : on n'a regardé que le champ. Échap revient aussi.">Revenir au papier de la nuit</button>
         <p class="papier pause-active" id="pause-active" hidden>Temps arrêté</p>
@@ -270,18 +259,19 @@
   <div class="menu"><button class="bouton" id="mission-fermer">Fermer</button></div>
 </dialog>
 
-<dialog id="dialogue-fin" aria-label="Fin de la bataille">
-  <h2 id="fin-titre">Fin</h2>
-  <p id="fin-issue"></p>
-  <p id="fin-pertes"></p>
-  <p id="fin-lignes"></p>
-  <div class="bordereau" id="fin-bordereau" hidden></div>
-  <ol class="fin-jours" id="fin-jours"></ol>
-  <div class="medailles-bloc" id="fin-medailles"></div>
-  <div class="menu">
-    <button class="bouton" id="fin-nouvelle">Nouvelle partie</button>
-    <button class="bouton" id="fin-titre-btn">Écran titre</button>
-  </div>
+<!-- La fin de partie (Jérôme, 15 nov., v0.134.0 ; labo « La fin de partie », variante A « Le rapport ») : l'issue, la bataille jour après jour et ses moments, les médailles -->
+<dialog id="dialogue-fin" class="papier fin pf-a" aria-label="Fin de la bataille">
+  <header class="fin-issue" id="fin-issue">
+    <div class="fin-tampon" id="fin-tampon"></div>
+    <div class="fin-titre"><h2 id="fin-titre">Fin</h2><p class="libelle" id="fin-mission"></p></div>
+    <div class="fin-cles" id="fin-cles"></div>
+    <div class="fin-boutons">
+      <button class="bouton" id="fin-nouvelle" type="button">Nouvelle partie</button>
+      <button class="bouton" id="fin-titre-btn" type="button">Écran titre</button>
+    </div>
+  </header>
+  <section class="fin-bataille" id="fin-bataille" aria-label="La bataille"></section>
+  <section class="fin-meds" id="fin-medailles" aria-label="Les médailles"></section>
 </dialog>
 
 <dialog id="dialogue-reglages" aria-label="Réglages">
@@ -399,6 +389,6 @@
 </dialog>
 
 <div class="jeu-toast" id="toast" role="status" hidden></div>
-<script type="module" src="js/main.js?v=0.133.0"></script>
+<script type="module" src="js/main.js?v=0.134.0"></script>
 </body>
 </html>

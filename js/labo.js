@@ -2,40 +2,40 @@
 // Chaque sujet utilise les mêmes modules que le jeu (terrain, apparence,
 // rendu three.js) : ce qu'on voit ici est ce que le jeu dessinera. Ajouter un
 // sujet ou une variante = ajouter une entrée dans GROUPES.
-import { afficherVersion } from './version-tag.js?v=0.133.0';
-import { mountLabo } from './lib/labo-shell.js?v=0.133.0';
-import { spriteCanvas, paletteToGPL, paletteToHex } from './lib/sprites.js?v=0.133.0';
-import { PALETTE, ROLES } from './palette.js?v=0.133.0';
-import { chargerContenu } from './design-store.js?v=0.133.0';
-import { tuile, ETAT } from './tuiles.js?v=0.133.0';
-import { creerTerrain, impact, hydroLignes, toucher } from './terrain.js?v=0.133.0';
-import { FORMES } from './cratere.js?v=0.133.0';
-import { CALIBRES } from './data/calibres.js?v=0.133.0';
-import { METEO } from './data/meteo.js?v=0.133.0';
-import { nouvelleBataille, avancer, ordonnerMarche, ordonnerBarrage, mourir, regarderAu, aube, horloge, ticksParJour, rangDe } from './bataille.js?v=0.133.0';
-import { AZIMUTS, COTES } from './data/soleil.js?v=0.133.0';
-import { creerRendu, ZOOMS } from './rendu3d.js?v=0.133.0';
-import { placesCommandement } from './army.js?v=0.133.0';
-import { hash2 } from './lib/rng.js?v=0.133.0';
-import { reglerVerdure } from './apparence.js?v=0.133.0';
-import { maquetteChars } from './labo-chars.js?v=0.133.0';
-import { maquetteEpaves } from './labo-epaves.js?v=0.133.0';
-import { fondations, boutons, unites, fenetres, revision } from './labo-design-system.js?v=0.133.0';
-import { cartesSecteur } from './labo-cartes.js?v=0.133.0';
-import { gainTampon, gainCachets, gainFil, gainBordereau, victoireFanion, victoireTampon, victoireChevrons, victoireAube, ficheDeuxColonnes, ficheEtages, ficheRegistre, ficheDAbord } from './labo-recompenses.js?v=0.133.0';
-import { maquetteBatiment, maquetteCamp } from './labo-batiments.js?v=0.133.0';
-import { BATIMENTS } from './data/batiments.js?v=0.133.0';
-import { JOURNAL } from './labo-journal.js?v=0.133.0';
-import { loadVersion } from './lib/app-update.js?v=0.133.0';
-import { maquetteEffets, maquetteAmbiance, maquetteEspace, maquetteBruitages } from './labo-son.js?v=0.133.0';
-import { calqueMoral } from './labo-moral.js?v=0.133.0';
-import { bilanRapport, bilanTuiles, bilanFrise } from './labo-donnees.js?v=0.133.0';
-import { papierNuit, finDePartie } from './labo-papiers.js?v=0.133.0';
-import { fichesTuiles, fichesProfil, fichesCompactes } from './labo-fiches.js?v=0.133.0';
-import { calqueEnnemis } from './labo-engins-ennemis.js?v=0.133.0';
-import { maquetteTranchees, NOTES_TRANCHEES, NOMS_TRANCHEES } from './labo-tranchees.js?v=0.133.0';
-import { maquetteFabrique } from './labo-fabrique.js?v=0.133.0';
-import { entrees as encEntrees, lexiqueAZ, planche as encPlanche } from './labo-encyclopedie.js?v=0.133.0';
+import { afficherVersion } from './version-tag.js?v=0.134.0';
+import { mountLabo } from './lib/labo-shell.js?v=0.134.0';
+import { spriteCanvas, paletteToGPL, paletteToHex } from './lib/sprites.js?v=0.134.0';
+import { PALETTE, ROLES } from './palette.js?v=0.134.0';
+import { chargerContenu } from './design-store.js?v=0.134.0';
+import { tuile, ETAT } from './tuiles.js?v=0.134.0';
+import { creerTerrain, impact, hydroLignes, toucher } from './terrain.js?v=0.134.0';
+import { FORMES } from './cratere.js?v=0.134.0';
+import { CALIBRES } from './data/calibres.js?v=0.134.0';
+import { METEO } from './data/meteo.js?v=0.134.0';
+import { nouvelleBataille, avancer, ordonnerMarche, ordonnerBarrage, mourir, regarderAu, aube, horloge, ticksParJour, rangDe } from './bataille.js?v=0.134.0';
+import { AZIMUTS, COTES } from './data/soleil.js?v=0.134.0';
+import { creerRendu, ZOOMS } from './rendu3d.js?v=0.134.0';
+import { placesCommandement } from './army.js?v=0.134.0';
+import { hash2 } from './lib/rng.js?v=0.134.0';
+import { reglerVerdure } from './apparence.js?v=0.134.0';
+import { maquetteChars } from './labo-chars.js?v=0.134.0';
+import { maquetteEpaves } from './labo-epaves.js?v=0.134.0';
+import { fondations, boutons, unites, fenetres, revision } from './labo-design-system.js?v=0.134.0';
+import { cartesSecteur } from './labo-cartes.js?v=0.134.0';
+import { gainTampon, gainCachets, gainFil, gainBordereau, victoireFanion, victoireTampon, victoireChevrons, victoireAube, ficheDeuxColonnes, ficheEtages, ficheRegistre, ficheDAbord } from './labo-recompenses.js?v=0.134.0';
+import { maquetteBatiment, maquetteCamp } from './labo-batiments.js?v=0.134.0';
+import { BATIMENTS } from './data/batiments.js?v=0.134.0';
+import { JOURNAL } from './labo-journal.js?v=0.134.0';
+import { loadVersion } from './lib/app-update.js?v=0.134.0';
+import { maquetteEffets, maquetteAmbiance, maquetteEspace, maquetteBruitages } from './labo-son.js?v=0.134.0';
+import { calqueMoral } from './labo-moral.js?v=0.134.0';
+import { bilanRapport, bilanTuiles, bilanFrise } from './labo-donnees.js?v=0.134.0';
+import { papierNuit, finDePartie } from './labo-papiers.js?v=0.134.0';
+import { fichesTuiles, fichesProfil, fichesCompactes } from './labo-fiches.js?v=0.134.0';
+import { calqueEnnemis } from './labo-engins-ennemis.js?v=0.134.0';
+import { maquetteTranchees, NOTES_TRANCHEES, NOMS_TRANCHEES } from './labo-tranchees.js?v=0.134.0';
+import { maquetteFabrique } from './labo-fabrique.js?v=0.134.0';
+import { entrees as encEntrees, lexiqueAZ, planche as encPlanche } from './labo-encyclopedie.js?v=0.134.0';
 
 document.documentElement.style.setProperty('--jeu-accent', ROLES.accent);
 const NOM = document.title.replace(/^Labo — /, ''); // le nom vient de la page (une apostrophe ne casse rien)
@@ -412,15 +412,15 @@ const GROUPES = [
       { title: 'Elle est tirée de la pile', status: 'a-trancher', depuis: '0.105.3', note: 'PROPOSITION. La carte choisie sort de la pile par le côté, puis revient se poser dessus : le geste d\'une carte qu\'on tire d\'un paquet. Plus long (0,8 s), plus lisible quand la carte est déjà au milieu de la pile.', render: s => cartesSecteur(s, { geste: 'tire', R }) },
     ] },
     { id: 'papier-nuit', title: 'Le papier de la nuit', variants: [
-      { title: 'Deux colonnes', status: 'a-trancher', depuis: '0.134.0', note: 'PROPOSITION (Jérôme, 15 nov. : « la carte de nuit ne va pas du tout : jamais de barre de défilement, beaucoup d\'espace perdu, la hiérarchie n\'est pas claire »). À gauche, les deux tiers : ce qu\'il faut décider (la rangée « Tous », puis un régiment par ligne : la loupe, le nom, son état en une ligne — barre debout et blessés, le nombre debout, la jauge de moral, trois crans de vivres, les morts du jour — et ses corvées en icônes de 44 px, le nom au survol), la réserve de la relève et « Gérer les régiments ». À droite : la journée en quatre tuiles serrées (morts, effectifs, lignes, à retenir), puis les médailles en puces (un clic : la loupe). Le ciel, la lune et les avions en petites puces dans l\'en-tête, à côté de « À l\'aube ». La mesure sous le cadre : le défilement aux quatre tailles.', render: s => papierNuit(s, 'colonnes') },
-      { title: 'Les étages', status: 'a-trancher', depuis: '0.134.0', note: 'PROPOSITION. Toute la largeur, du plus important au moins important : les ordres d\'abord (l\'état de chaque régiment s\'y étale, avec son mot : tient, ébranlé, déroute, et ses blessés), puis une seule bande pour la journée (à retenir, morts, effectifs, lignes, et les médailles en icônes seules, le détail au survol). Le plus net à lire de haut en bas ; les médailles n\'ont plus de nom à l\'écran.', render: s => papierNuit(s, 'etages') },
-      { title: 'Le tableau croisé', status: 'a-trancher', depuis: '0.134.0', note: 'PROPOSITION. Un registre : les corvées nommées UNE fois en tête de colonne (icône et mot), puis une case par régiment ; l\'état en colonnes de chiffres (debout, blessés, moral, vivres, morts du jour). La journée en chiffres-clés dans une colonne étroite à droite, les médailles en icônes. Le plus dense, le plus « tableur » ; les barres disparaissent au profit des nombres.', render: s => papierNuit(s, 'croise') },
-      { title: 'Le front', status: 'a-trancher', depuis: '0.134.0', note: 'PROPOSITION. Une colonne par régiment, dans l\'ordre de la rangée des cartes du bas (donc du champ, d\'ouest en est) : la loupe et le nom, l\'état, puis ses corvées en deux colonnes d\'icônes ; « Tous » en tête. La journée en bande dessous. Le papier parle comme la carte : on retrouve un régiment où il est ; mais une ligne de régiment se lit de haut en bas.', render: s => papierNuit(s, 'front') },
+      { title: 'Deux colonnes', status: 'retenue', depuis: '0.134.0', note: 'EN JEU depuis la v0.134.0 (Jérôme, 15 nov. : retenue ; `hud/papier-nuit.js`, `hud/nuit.js`). Au départ : « la carte de nuit ne va pas du tout : jamais de barre de défilement, beaucoup d\'espace perdu, la hiérarchie n\'est pas claire »). À gauche, les deux tiers : ce qu\'il faut décider (la rangée « Tous », puis un régiment par ligne : la loupe, le nom, son état en une ligne — barre debout et blessés, le nombre debout, la jauge de moral, trois crans de vivres, les morts du jour — et ses corvées en icônes de 44 px, le nom au survol), la réserve de la relève et « Gérer les régiments ». À droite : la journée en quatre tuiles serrées (morts, effectifs, lignes, à retenir), puis les médailles en puces (un clic : la loupe). Le ciel, la lune et les avions en petites puces dans l\'en-tête, à côté de « À l\'aube ». La mesure sous le cadre : le défilement aux quatre tailles.', render: s => papierNuit(s, 'colonnes') },
+      { title: 'Les étages', status: 'ancienne', depuis: '0.134.0', note: 'Non retenue (Jérôme, 15 nov.). Toute la largeur, du plus important au moins important : les ordres d\'abord (l\'état de chaque régiment s\'y étale, avec son mot : tient, ébranlé, déroute, et ses blessés), puis une seule bande pour la journée (à retenir, morts, effectifs, lignes, et les médailles en icônes seules, le détail au survol). Le plus net à lire de haut en bas ; les médailles n\'ont plus de nom à l\'écran.', render: s => papierNuit(s, 'etages') },
+      { title: 'Le tableau croisé', status: 'ancienne', depuis: '0.134.0', note: 'Non retenue (Jérôme, 15 nov.). Un registre : les corvées nommées UNE fois en tête de colonne (icône et mot), puis une case par régiment ; l\'état en colonnes de chiffres (debout, blessés, moral, vivres, morts du jour). La journée en chiffres-clés dans une colonne étroite à droite, les médailles en icônes. Le plus dense, le plus « tableur » ; les barres disparaissent au profit des nombres.', render: s => papierNuit(s, 'croise') },
+      { title: 'Le front', status: 'ancienne', depuis: '0.134.0', note: 'Non retenue (Jérôme, 15 nov.). Une colonne par régiment, dans l\'ordre de la rangée des cartes du bas (donc du champ, d\'ouest en est) : la loupe et le nom, l\'état, puis ses corvées en deux colonnes d\'icônes ; « Tous » en tête. La journée en bande dessous. Le papier parle comme la carte : on retrouve un régiment où il est ; mais une ligne de régiment se lit de haut en bas.', render: s => papierNuit(s, 'front') },
     ] },
     { id: 'fin-partie', title: 'La fin de partie', variants: [
-      { title: 'Le rapport', status: 'a-trancher', depuis: '0.134.0', note: 'PROPOSITION (Jérôme, 15 nov. : « la même logique que la nuit, sans les ordres, un tableau de médailles encore plus fourni, des moments clés »). L\'issue en tête (le tampon, la mission, les chiffres-clés, le mérite, les deux boutons). À gauche, la bataille entière sur un axe des jours : les vivants des deux camps en courbes, les morts de chaque jour en bâtons (nous au-dessus, en face dessous), les tronçons tenus le soir en bande, la journée la plus meurtrière marquée ; dessous, sur le même axe, la frise des moments (tronçons pris et perdus, déroutes, assauts, chars, avions, ponts, postes). À droite, les médailles en tableau : régiments, hommes et engins (« nouvelle » : les médailles proposées).', render: s => finDePartie(s, 'rapport') },
-      { title: 'La frise', status: 'a-trancher', depuis: '0.134.0', note: 'PROPOSITION. Un calendrier : une case par jour sur toute la largeur (le temps, les morts des deux camps en bâtons, les lignes du soir, les moments en icônes) ; les médailles en trois colonnes de puces dessous, le détail au survol. Le temps se lit d\'un coup ; les médailles perdent leur détail à l\'écran.', render: s => finDePartie(s, 'frise') },
-      { title: 'Le registre des jours', status: 'a-trancher', depuis: '0.134.0', note: 'PROPOSITION. Une ligne par jour (le temps, les morts face à face en barres, les lignes du soir, les moments en icônes), la journée la plus meurtrière soulignée ; les médailles en tableau à droite. Le plus proche d\'un registre de régiment ; pas de courbe des effectifs.', render: s => finDePartie(s, 'registre') },
+      { title: 'Le rapport', status: 'retenue', depuis: '0.134.0', note: 'EN JEU depuis la v0.134.0 (Jérôme, 15 nov. : retenue ; `hud/papier-nuit.js`, `montrerFin` de main.js ; les moments : `js/moments.js`). Au départ : « la même logique que la nuit, sans les ordres, un tableau de médailles encore plus fourni, des moments clés »). L\'issue en tête (le tampon, la mission, les chiffres-clés, le mérite, les deux boutons). À gauche, la bataille entière sur un axe des jours : les vivants des deux camps en courbes, les morts de chaque jour en bâtons (nous au-dessus, en face dessous), les tronçons tenus le soir en bande, la journée la plus meurtrière marquée ; dessous, sur le même axe, la frise des moments (tronçons pris et perdus, déroutes, assauts, chars, avions, ponts, postes). À droite, les médailles en tableau : régiments, hommes et engins (« nouvelle » : les médailles proposées).', render: s => finDePartie(s, 'rapport') },
+      { title: 'La frise', status: 'ancienne', depuis: '0.134.0', note: 'Non retenue (Jérôme, 15 nov.). Un calendrier : une case par jour sur toute la largeur (le temps, les morts des deux camps en bâtons, les lignes du soir, les moments en icônes) ; les médailles en trois colonnes de puces dessous, le détail au survol. Le temps se lit d\'un coup ; les médailles perdent leur détail à l\'écran.', render: s => finDePartie(s, 'frise') },
+      { title: 'Le registre des jours', status: 'ancienne', depuis: '0.134.0', note: 'Non retenue (Jérôme, 15 nov.). Une ligne par jour (le temps, les morts face à face en barres, les lignes du soir, les moments en icônes), la journée la plus meurtrière soulignée ; les médailles en tableau à droite. Le plus proche d\'un registre de régiment ; pas de courbe des effectifs.', render: s => finDePartie(s, 'registre') },
     ] },
     { id: 'donnees-bilan', title: 'Les données : le bilan du soir', variants: [
       { title: 'Le rapport', status: 'ancienne', depuis: '0.117.0', note: 'Non retenu (Jérôme, 8 nov.). Le duel en haut (effectifs des deux camps en barres : plein = debout, hachuré = blessés, contour = tombés), « À retenir » (les faits marquants avec leur pictogramme), les morts de chaque jour en bâtons, la liste de nos régiments (effectif, moral, pertes du jour) et les lignes. Se lit de haut en bas, comme un rapport.', render: s => { bilanRapport(s); } },
@@ -433,10 +433,10 @@ const GROUPES = [
       { title: 'La compacte', status: 'ancienne', depuis: '0.119.0', note: 'Non retenu (Jérôme, 8 nov.). Les mêmes blocs à la largeur d\'une fenêtre du jeu (300 px) : une ligne titre-chiffre, le graphique dessous. La plus proche de ce que le jeu peut loger à côté du champ.', render: s => { fichesCompactes(s); } },
     ] },
     { id: 'fiche-jour', title: 'La fiche de fin de journée', variants: [
-      { title: 'Deux colonnes', status: 'a-trancher', depuis: '0.98.0', note: 'PROPOSITION (Jérôme, v0.98.0 : « plus claire, toujours développée, centrée, qui donne le nom des régiments dont l\'ordre n\'a pas été modifié ; peut-être 2 colonnes »). À gauche, le jour (ce qui s\'est passé) ; à droite, la nuit (ce qu\'on décide), avec la liste des régiments qui gardent leur ordre d\'hier. Le bouton « À l\'aube » en bas.', render: s => ficheDeuxColonnes(s) },
-      { title: 'Trois étages', status: 'a-trancher', depuis: '0.98.0', note: 'PROPOSITION. Une colonne : le résultat en grands chiffres (morts des deux camps, tronçons), puis ce qui reste à décider (les ordres inchangés, la dotation, la réserve), puis le détail du jour en gris.', render: s => ficheEtages(s) },
-      { title: 'Le registre', status: 'a-trancher', depuis: '0.98.0', note: 'PROPOSITION. Une ligne par régiment : son rang, ses hommes, l\'ordre de la nuit ; les ordres inchangés sont en pointillé. Le résumé du jour tient sur une ligne en haut. Le plus dense : tout se voit, rien ne se choisit d\'abord.', render: s => ficheRegistre(s) },
-      { title: 'D\'abord ce qui reste à faire', status: 'a-trancher', depuis: '0.98.0', note: 'PROPOSITION. Un bandeau de terre porte la nuit, la dotation et la réserve ; en haut du papier, en grand : « 4 régiments n\'ont pas d\'ordre nouveau », leurs noms ; le coût du jour est dessous, en retrait. La hiérarchie la plus nette.', render: s => ficheDAbord(s) },
+      { title: 'Deux colonnes', status: 'ancienne', depuis: '0.98.0', note: 'Remplacée par « Le papier de la nuit » (v0.134.0). PROPOSITION (Jérôme, v0.98.0 : « plus claire, toujours développée, centrée, qui donne le nom des régiments dont l\'ordre n\'a pas été modifié ; peut-être 2 colonnes »). À gauche, le jour (ce qui s\'est passé) ; à droite, la nuit (ce qu\'on décide), avec la liste des régiments qui gardent leur ordre d\'hier. Le bouton « À l\'aube » en bas.', render: s => ficheDeuxColonnes(s) },
+      { title: 'Trois étages', status: 'ancienne', depuis: '0.98.0', note: 'Remplacée par « Le papier de la nuit » (v0.134.0). PROPOSITION. Une colonne : le résultat en grands chiffres (morts des deux camps, tronçons), puis ce qui reste à décider (les ordres inchangés, la dotation, la réserve), puis le détail du jour en gris.', render: s => ficheEtages(s) },
+      { title: 'Le registre', status: 'ancienne', depuis: '0.98.0', note: 'Remplacée par « Le papier de la nuit » (v0.134.0). PROPOSITION. Une ligne par régiment : son rang, ses hommes, l\'ordre de la nuit ; les ordres inchangés sont en pointillé. Le résumé du jour tient sur une ligne en haut. Le plus dense : tout se voit, rien ne se choisit d\'abord.', render: s => ficheRegistre(s) },
+      { title: 'D\'abord ce qui reste à faire', status: 'ancienne', depuis: '0.98.0', note: 'Remplacée par « Le papier de la nuit » (v0.134.0). PROPOSITION. Un bandeau de terre porte la nuit, la dotation et la réserve ; en haut du papier, en grand : « 4 régiments n\'ont pas d\'ordre nouveau », leurs noms ; le coût du jour est dessous, en retrait. La hiérarchie la plus nette.', render: s => ficheDAbord(s) },
     ] },
   ] },
   { id: 'terrain', title: 'Terrain et engins', topics: [

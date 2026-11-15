@@ -76,3 +76,27 @@ export function faitsMarquants(d, max = 4) {
   if (!faits.length) faits.push({ genre: 'calme', texte: 'Une journée sans fait marquant' });
   return faits.slice(0, max);
 }
+
+/* La bataille entière, pour la fin de partie (Jérôme, 15 nov., v0.134.0 : « la bataille entière, les deux camps, des moments clés ») : lecture seule de l'état.
+   Rend { jours (joués), camps: [nous, eux] (la forme de `lireJournee` : effectifParJour, mortsParJour…), tenus: [[nous, eux] au soir de chaque jour],
+          moments: [{ jour, meteo, pris, perdus, deroutes, assauts, chars, avions, postes, ponts, genie }] (nos chiffres ; `chars`, `avions`, `postes` : les nôtres perdus,
+          `abattus` : { chars, avions, postes } d'en face), pire (notre journée la plus meurtrière, 1…) } */
+export function lireBataille(B, camp = 0) {
+  const { etat } = B, d = lireJournee(B, camp), J = Math.min(etat.jour, etat.pertesJour.length || etat.jour), autre = 1 - camp;
+  const total = (etat.troncons || []).length, H = etat.histo || [];
+  const tenus = Array.from({ length: J }, (_, k) => {
+    const h = H.find(x => x.jour === k + 1);
+    const nous0 = h ? h.tronconsNous : (etat.troncons || []).filter(c => c === 0).length;
+    const nous = camp === 0 ? nous0 : total - nous0;
+    return [nous, total - nous];
+  });
+  const M = etat.moments || [];
+  const moments = Array.from({ length: J }, (_, k) => {
+    const m = M[k], c = (g, q) => m?.[g]?.[q] ?? 0;
+    return { jour: k + 1, meteo: etat.meteo[k], pris: etat.prises[k]?.[camp] ?? 0, perdus: etat.prises[k]?.[autre] ?? 0,
+      deroutes: c('deroutes', camp), assauts: c('assauts', autre), chars: c('chars', camp), avions: c('avions', camp), postes: c('postes', camp), ponts: c('ponts', 0), genie: c('genie', camp),
+      abattus: { chars: c('chars', autre), avions: c('avions', autre), postes: c('postes', autre), deroutes: c('deroutes', autre) } };
+  });
+  const morts = d.camps[0].mortsParJour.slice(0, J), pire = morts.length > 1 ? morts.indexOf(Math.max(...morts)) + 1 : 0;      // (un seul jour : pas de « plus meurtrière »)
+  return { jours: J, prevus: d.jours, camps: d.camps, tenus, total, moments, pire };
+}

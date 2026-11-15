@@ -1,5 +1,9 @@
 # Journal des versions
 
+## 0.134.0 — 2026-11-15
+- Le papier de la nuit tient sans défiler : un régiment par ligne avec ses corvées en icônes, la journée à droite, les médailles en puces
+- L'écran de fin montre la bataille jour après jour, ses moments clés (lignes prises et perdues, déroutes, assauts, engins) et des médailles nouvelles : le roc, l'inébranlable, le fuyard, le survivant, le char et le poste les plus meurtriers, le génie
+
 ## 0.133.0 — 2026-11-15
 - En face aussi, le génie relève l'épave d'un char sur le champ : elle repart à moitié de sa solidité
 
