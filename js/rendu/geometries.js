@@ -189,11 +189,33 @@ export function creerGeometries(THREE, col) {
   }
 
   // un buisson d'une forme de `BUISSONS_FORMES` dans les couleurs d'une saison de `BUISSONS_SAISONS` (`n` : quelle teinte de la liste) ; des cubes de fleurs ou de baies sur le dessus
-  function geometrieBuissonVarie(F, P, n = 0) {
+  // `rond` (Jérôme, v0.138.0 : des buissons à la façon des nouveaux arbres) : chaque boîte de la forme devient des boules serrées (la résolution `moyen` des grappes), de tons
+  // alternés de la saison ; l'hiver nu (`maigre`), des brindilles qui montent en éventail au lieu de boîtes basses
+  function geometrieBuissonVarie(F, P, n = 0, rond = false) {
     const parts = [], teinte = k => k[0] === '#' ? new THREE.Color(k) : col(k), mai = P.maigre ?? 1;
-    const boite = (w, h, d, x, y, z, dessus, flanc) => { const g = new THREE.BoxGeometry(w, h, d).toNonIndexed(); g.translate(x, y + h / 2, z); parts.push([g, dessus, flanc]); };
+    const boite = (w, h, d, x, y, z, dessus, flanc, rz = 0, rx = 0) => { const g = new THREE.BoxGeometry(w, h, d).toNonIndexed(); g.translate(0, h / 2, 0); if (rz) g.rotateZ(rz); if (rx) g.rotateX(rx); g.translate(x, y, z); parts.push([g, dessus, flanc]); };
     const dessus = teinte(P.dessus[n % P.dessus.length]), flanc = teinte(P.flanc[n % P.flanc.length]);
-    for (const [w, h, d, x, z] of F.boites) boite(w * mai, h * mai, d * mai, x, 0, z, dessus, flanc);
+    const tris = [];          // (les boules : des triangles colorés, ajoutés à la fin)
+    const enneige = P.dessus[0] === 'o';      // (la neige : des brindilles sombres coiffées de blanc, pas des boules blanches sur le blanc)
+    if (rond && (P.maigre || enneige)) {
+      F.boites.forEach(([w, h, d, x, z], b) => { const nb = Math.max(3, Math.round((w + d) * 2.5)); for (let q = 0; q < nb; q++) { const a = (q / nb + hash(`b${b},${q}`, 5) * 0.2) * Math.PI * 2, r = (hash(`r${b},${q}`, 6) * 0.5 + 0.2); boite(0.06, h * (0.7 + hash(`h${b},${q}`, 7) * 0.5), 0.06, x + Math.cos(a) * w * 0.25, 0, z + Math.sin(a) * d * 0.25, enneige ? teinte('s') : flanc, enneige ? teinte('s') : flanc, Math.cos(a) * r, -Math.sin(a) * r); }
+        if (enneige) for (const t of ellipsoide(w * 0.7, 0.3, 'moyen')) { if (t.p.every(v => v[1] < -0.01)) continue; for (const v of t.p) tris.push(v[0] + x, Math.max(0, v[1]) + h * 0.75, v[2] * (d / w) + z, dessus.r, dessus.g, dessus.b); } });
+    } else if (rond) {
+      F.boites.forEach(([w, h, d, x, z], b) => {
+        const nb = w * d > 1.2 ? 4 : w * d > 0.5 ? 3 : 2;
+        for (let q = 0; q < nb; q++) {
+          const hq = hash(`b${b},${q}`, 11), a = (q / nb + hq * 0.25) * Math.PI * 2, e = q === 0 ? 0 : 0.28;
+          const s = 0.62 + hash(`s${b},${q}`, 12) * 0.22, ox = x + Math.cos(a) * e * w, oz = z + Math.sin(a) * e * d;
+          const dq = teinte(P.dessus[(n + b + q) % P.dessus.length]), fq = teinte(P.flanc[(n + b + q) % P.flanc.length]);
+          const hb = h * (q === 0 ? 1 : 0.8) * 1.15, wb = w * s * 1.15, k = d / w;
+          for (const t of ellipsoide(wb, hb * 2, 'moyen')) {
+            if (t.p.every(v => v[1] < -0.01)) continue;
+            const c = t.haut ? dq : fq;
+            for (const v of t.p) tris.push(v[0] + ox, Math.max(0, v[1]) + 0.02, v[2] * k + oz, c.r, c.g, c.b);
+          }
+        }
+      });
+    } else for (const [w, h, d, x, z] of F.boites) boite(w * mai, h * mai, d * mai, x, 0, z, dessus, flanc);
     if (P.fruits && !F.casse) {
       const f = teinte(P.fruits);
       F.boites.forEach(([w, h, d, x, z], b) => { for (let q = 0; q < 3; q++) boite(0.2, 0.2, 0.2, x + (((q * 7 + b * 3) % 5) - 2) * w * 0.15, h * mai, z + (((q * 5 + b * 2) % 5) - 2) * d * 0.15, f, f); });
@@ -204,6 +226,7 @@ export function creerGeometries(THREE, col) {
       const nor = g.attributes.normal.array;
       for (let k = 0; k < nor.length; k += 3) { const c = nor[k + 1] > 0.5 ? dc : fc; couleurs.push(c.r, c.g, c.b); }
     }
+    for (let k = 0; k < tris.length; k += 6) { pos.push(tris[k], tris[k + 1], tris[k + 2]); couleurs.push(tris[k + 3], tris[k + 4], tris[k + 5]); }
     const out = new THREE.BufferGeometry();
     out.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
     out.setAttribute('color', new THREE.Float32BufferAttribute(couleurs, 3));
@@ -225,6 +248,8 @@ export function creerGeometries(THREE, col) {
       const H = 13; tronc(0.4, H, 0, 0, 0);
       for (let k = 0; k < 8; k++) { const t = branche(0.12, H * (0.2 + k * 0.095), 1.0 - k * 0.06, (k % 2 ? 1 : -1) * 0.3, (k - 3.5) * 0.4); pointes.push([t[0] * 0.5, t[1], t[2] * 0.5, 2.7 - k * 0.12]); }
       pointes.push([0, H + 0.2, 0, 1.7]);
+      // l'hiver, sa gerbe : des branches qui montent presque droites le long du fût, de plus en plus courtes vers la cime (la colonne se lit sans feuilles)
+      for (let k = 0; k < 12; k++) branche(0.09, H * (0.16 + k * 0.065), 3.2 - k * 0.2, (k % 2 ? 1 : -1) * (0.12 + (k % 3) * 0.04), (k % 4 - 1.5) * 0.12);
       neige.push(...pointes.map(p => [p[0], p[1], p[2], 0.7]));
     } else if (id === 'saule') {                                                // le saule têtard : un moignon épais, une tête noueuse, des rejets droits en gerbe
       const H = 2.6; tronc(0.95, H, 0, 0, 0); tronc(1.25, 0.5, 0, H - 0.3, 0);

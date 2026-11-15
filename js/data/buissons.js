@@ -18,3 +18,6 @@ export const BUISSONS_SAISONS = {
   nu: { dessus: ['b', 's'], flanc: ['s', 's'], fruits: null, maigre: 0.7 },        // les branches nues de l'hiver : plus fins et plus bas
 };
 export const BUISSONS_TIRAGES = { forme: 81, rotation: 82, taille: 83 };
+
+// Ce que le jeu dessine (Jérôme, v0.138.0 : des buissons « à la façon des nouveaux arbres ») : `rond`, des boules serrées au lieu de boîtes, des brindilles l'hiver
+export const BUISSONS_JEU = { rond: true };

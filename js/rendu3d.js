@@ -34,6 +34,7 @@ import { creerCiel, crepuscule } from './rendu/ciel.js?v=0.137.0';
 import { creerMeteoLisse, TEMPS_LISSE } from './rendu/meteo-lisse.js?v=0.137.0';
 import { creerMeteo } from './rendu/meteo.js?v=0.137.0';
 import { creerTroncons } from './rendu/troncons.js?v=0.137.0';
+import { BUISSONS_JEU } from './data/buissons.js?v=0.137.0';
 import { ARBRES_JEU } from './data/arbres.js?v=0.137.0';
 import { MATIERES, GRAIN_VARIANTES, GRAIN_JEU } from './data/grain-sol.js?v=0.137.0';
 import { creerVegetation } from './rendu/vegetation.js?v=0.137.0';
@@ -79,7 +80,7 @@ const SURPLOMB = 0.25;                        // la part de sa taille dont la vu
 const SOCLE = -8;                             // m : le bas de la coupe du terrain (bord sud)
 
 /* respiration : l'amplitude (rad) du lent balancement de la caméra (0 : immobile). */
-export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera: camDepart = null, respiration = RESPIRATION, soldat: styleSoldat = SOLDAT, cadavre = 'poses', effets = EFFETS, bord = null, arbres = ARBRES_JEU, buissons = {}, grades = 'galons' } = {}) {       // (les buissons variés : en jeu depuis la v0.63.0 ; null : ceux d'avant, au labo ; `grades` : le képi et les galons en jeu depuis la v0.69.0, Jérôme ; null : tous pareils, au labo)
+export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera: camDepart = null, respiration = RESPIRATION, soldat: styleSoldat = SOLDAT, cadavre = 'poses', effets = EFFETS, bord = null, arbres = ARBRES_JEU, buissons = BUISSONS_JEU, grades = 'galons' } = {}) {       // (les buissons variés : en jeu depuis la v0.63.0 ; null : ceux d'avant, au labo ; `grades` : le képi et les galons en jeu depuis la v0.69.0, Jérôme ; null : tous pareils, au labo)
 
   // un mouvement réduit demandé par le système : la caméra ne bouge pas d'elle-même
   if (typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches) respiration = 0;

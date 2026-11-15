@@ -324,7 +324,7 @@ export function creerVegetation({ THREE, scene, col, camera, vue, solY: SOL_Y, d
       const h = saison?.(), mode = forcee || (!h ? 'automne' : h.enneige ? 'neige' : h.saison === 'hiver' ? 'nu' : h.saison === 'ete' ? 'ete' : h.saison === 'printemps' ? 'printemps' : 'automne'), P = BUISSONS_SAISONS[mode] ?? BUISSONS_SAISONS.nu;
       if (mode !== modeB) {            // la saison a changé : les formes se refont dans ses couleurs
         modeB = mode; teintesB = P.dessus.length;
-        for (const m of buissonsMesh) { m.geometry.dispose(); m.geometry = geometrieBuissonVarie(BUISSONS_FORMES[m.userData.f], P, 0); }
+        for (const m of buissonsMesh) { m.geometry.dispose(); m.geometry = geometrieBuissonVarie(BUISSONS_FORMES[m.userData.f], P, 0, !!optsB.rond); }
       }
       for (const m of buissonsMesh) m.count = 0;
       for (let k = 0; k < T.buissons.length; k++) {
