@@ -22,36 +22,36 @@
    - Les soldats : instanciés (une boîte et son ombre) ; au zoom 1 et 2, un
      point de 2 × 2 pixels (la couleur du camp sur son ombre).
    - Les corps : un homme couché (instancié) ; au zoom 1 et 2, un pixel. */
-import { loadThree } from './three-lib.js?v=0.134.2';
-import * as SH from './rendu/shaders.js?v=0.134.2';
-import { creerSoldats } from './rendu/soldats.js?v=0.134.2';
-import { creerChars } from './rendu/chars.js?v=0.134.2';
-import { creerGenies } from './rendu/genies.js?v=0.134.2';
-import { creerCamp } from './rendu/camp.js?v=0.134.2';
-import { creerAvions } from './rendu/avions.js?v=0.134.2';
-import { creerPonts } from './rendu/ponts.js?v=0.134.2';
-import { creerCiel } from './rendu/ciel.js?v=0.134.2';
-import { creerMeteoLisse, TEMPS_LISSE } from './rendu/meteo-lisse.js?v=0.134.2';
-import { creerMeteo } from './rendu/meteo.js?v=0.134.2';
-import { creerTroncons } from './rendu/troncons.js?v=0.134.2';
-import { ARBRES_JEU } from './data/arbres.js?v=0.134.2';
-import { creerVegetation } from './rendu/vegetation.js?v=0.134.2';
-import { creerTemps } from './rendu/temps.js?v=0.134.2';
-import { creerEclats } from './rendu/eclats.js?v=0.134.2';
-import { creerOmbresRelief } from './rendu/ombres-relief.js?v=0.134.2';
-import { creerAOSol, soleilDuJeu } from './rendu/ao-sol.js?v=0.134.2';
-import { cadrerOmbre } from './lumiere/ombres.js?v=0.134.2';
-import { semerOmbres, emballerOmbres, OMBRE_FUMEE } from './rendu/ombre-fumee.js?v=0.134.2';
-import { creerLampesSol } from './rendu/lampes-sol.js?v=0.134.2';
-import { OMBRES_RELIEF as OMB, NUAGES, NUAGES_VENT } from './data/soleil.js?v=0.134.2';
-import { PALETTE, ORDRE, INDICE } from './palette.js?v=0.134.2';
-import { OMBRE, couleursLigne } from './apparence.js?v=0.134.2';
-import { MORCEAU, hauteurVueQ as hauteurQ, hauteurVueM as hauteurM } from './terrain.js?v=0.134.2';
-import { horloge, secteurDuJeu, rangDe } from './bataille.js?v=0.134.2';
-import { GRADES } from './data/grades.js?v=0.134.2';
-import { profilFleuve } from './eaux.js?v=0.134.2';
-import { ligneY } from './tranchees.js?v=0.134.2';
-import { vent as ventDuJour } from './data/meteo.js?v=0.134.2';
+import { loadThree } from './three-lib.js?v=0.134.3';
+import * as SH from './rendu/shaders.js?v=0.134.3';
+import { creerSoldats } from './rendu/soldats.js?v=0.134.3';
+import { creerChars } from './rendu/chars.js?v=0.134.3';
+import { creerGenies } from './rendu/genies.js?v=0.134.3';
+import { creerCamp } from './rendu/camp.js?v=0.134.3';
+import { creerAvions } from './rendu/avions.js?v=0.134.3';
+import { creerPonts } from './rendu/ponts.js?v=0.134.3';
+import { creerCiel } from './rendu/ciel.js?v=0.134.3';
+import { creerMeteoLisse, TEMPS_LISSE } from './rendu/meteo-lisse.js?v=0.134.3';
+import { creerMeteo } from './rendu/meteo.js?v=0.134.3';
+import { creerTroncons } from './rendu/troncons.js?v=0.134.3';
+import { ARBRES_JEU } from './data/arbres.js?v=0.134.3';
+import { creerVegetation } from './rendu/vegetation.js?v=0.134.3';
+import { creerTemps } from './rendu/temps.js?v=0.134.3';
+import { creerEclats } from './rendu/eclats.js?v=0.134.3';
+import { creerOmbresRelief } from './rendu/ombres-relief.js?v=0.134.3';
+import { creerAOSol, soleilDuJeu } from './rendu/ao-sol.js?v=0.134.3';
+import { cadrerOmbre } from './lumiere/ombres.js?v=0.134.3';
+import { semerOmbres, emballerOmbres, OMBRE_FUMEE } from './rendu/ombre-fumee.js?v=0.134.3';
+import { creerLampesSol } from './rendu/lampes-sol.js?v=0.134.3';
+import { OMBRES_RELIEF as OMB, NUAGES, NUAGES_VENT } from './data/soleil.js?v=0.134.3';
+import { PALETTE, ORDRE, INDICE } from './palette.js?v=0.134.3';
+import { OMBRE, couleursLigne } from './apparence.js?v=0.134.3';
+import { MORCEAU, hauteurVueQ as hauteurQ, hauteurVueM as hauteurM } from './terrain.js?v=0.134.3';
+import { horloge, secteurDuJeu, rangDe } from './bataille.js?v=0.134.3';
+import { GRADES } from './data/grades.js?v=0.134.3';
+import { profilFleuve } from './eaux.js?v=0.134.3';
+import { ligneY } from './tranchees.js?v=0.134.3';
+import { vent as ventDuJour } from './data/meteo.js?v=0.134.3';
 
 export const CAMERA = { yaw: 0.15, tangage: 0.95, fov: 30 };   // au départ : tournée de 9°, plongée de 54°, angle de 30°
 // la caméra respire : un balancement très lent, 2° en 23 s (Jérôme, v0.3.1 : variante D du labo retenue)
@@ -704,7 +704,8 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
   }
 
   // ─── Une image ───
-  const perf = { rendu: 0, fini: 0, sol: 0, soldats: 0, tranchees: 0, three: 0, n: 0 };      // (soldats, tranchees, three : le détail de `rendu`, pour le compteur ?perf=1, v0.134.1)
+  const perf = { rendu: 0, fini: 0, sol: 0, soldats: 0, tranchees: 0, three: 0, n: 0 };
+  const dernier = { sol: 0, soldats: 0, tranchees: 0, three: 0, rendu: 0 };      // les mêmes, de la dernière image seule (le compteur ?perf=1 garde la pire)      // (soldats, tranchees, three : le détail de `rendu`, pour le compteur ?perf=1, v0.134.1)
   const unPixel = new Uint8Array(4);
   let positions = null;      // les positions dessinées des hommes (v0.134.1) : { x, y } interpolées entre deux pas de la simulation par main.js, ou null (celles de l'armée)
   let tAnim = 0, vide = false, gele = false;            // gele : le temps est arrêté (v0.99.5) ; le dessin s'arrête (nuages, pluie, fumée, herbe), la caméra reste libre ; vide : rien n'est dessiné (mesure du prix de l'attente)
@@ -828,6 +829,7 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
     perf.sol += (t1 - t0 - perf.sol) * 0.05;
     perf.rendu += (t2 - t1 - perf.rendu) * 0.05;
     perf.fini += (t3 - t1 - perf.fini) * 0.05;
+    dernier.sol = t1 - t0; dernier.soldats = ts1 - ts0; dernier.tranchees = tt1 - tt0; dernier.three = t2 - tr0; dernier.rendu = t2 - t1;
     perf.soldats += (ts1 - ts0 - perf.soldats) * 0.05; perf.tranchees += (tt1 - tt0 - perf.tranchees) * 0.05; perf.three += (t2 - tr0 - perf.three) * 0.05;
     perf.n++;
   }
@@ -835,6 +837,7 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
   return {
     set gele(v) { gele = !!v; }, get gele() { return gele; },
     set positions(v) { positions = v; }, get positions() { return positions; },
+    get dernierDessin() { return dernier; },
     set decor(v) { soldats.sansInterface = !!v; }, get decor() { return soldats.sansInterface; },      // l'écran titre : une illustration, aucun repère d'interface (la lettre du capitaine)
     camp, attacher, dessiner, redimensionner, versTerrain, versEcran, vue, renderer, scene,
     hauteurDessinee: (x, y) => surface(x, y),       // la hauteur du cube dessiné sous ce point (les tests)

@@ -1,5 +1,8 @@
 # Journal des versions
 
+## 0.134.3 — 2026-11-15
+- Le compteur `?perf=1` dit ce qui s'est passé pendant la pire image des 20 dernières secondes : la simulation (ses pas, ses événements) et le détail du dessin
+
 ## 0.134.2 — 2026-11-15
 - Tout dézoomé, les bâtiments des deux camps se dessinent en quatre fois moins d'appels (environ 1 300 → 340) : le jeu est plus fluide de loin
 

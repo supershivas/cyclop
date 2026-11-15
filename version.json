@@ -1,7 +1,7 @@
 {
-  "version": "0.134.2",
+  "version": "0.134.3",
   "date": "2026-11-15",
   "changes": [
-    "Tout dézoomé, les bâtiments des deux camps se dessinent en quatre fois moins d'appels : le jeu est plus fluide de loin"
+    "Le compteur ?perf=1 dit ce qui s'est passé pendant la pire image (simulation, événements, dessin)"
   ]
 }

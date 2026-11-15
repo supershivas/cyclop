@@ -8,7 +8,8 @@ const N = 240;                                   // images gardées (deux second
 
 export function creerCompteur({ rendu, stats }) {
   const intervalles = new Float32Array(N), js = new Float32Array(N);
-  let k = 0, plein = false, derniere = 0, simImage = 0, debutRendu = 0, texte = '', majT = 0;
+  let k = 0, plein = false, derniere = 0, simImage = 0, pasImage = 0, evImage = new Set(), debutRendu = 0, texte = '', majT = 0;
+  let pire = null;                               // la pire image des 20 dernières secondes, et ce qui s'y est passé
   const gl = rendu.renderer.getContext();
   const ext = gl.getExtension('WEBGL_debug_renderer_info');
   const carte = ext ? gl.getParameter(ext.UNMASKED_RENDERER_WEBGL) : gl.getParameter(gl.RENDERER);
@@ -42,6 +43,7 @@ export function creerCompteur({ rendu, stats }) {
       `  soldats ${ms.soldats.toFixed(1)}  tranchées ${ms.tranchees.toFixed(1)}  sol ${ms.sol.toFixed(1)}  three ${ms.three.toFixed(1)}`,
       `appels ${s.appels}  triangles ${Math.round(s.trianglesDessines / 1000)} k  soldats ${st.soldats} (vus ${s.soldatsVus})`,
       `${rendu.vue.vw}×${rendu.vue.vh} ×${rendu.vue.facteur}  écran ×${window.devicePixelRatio}  zoom ${rendu.ppm} px/m`,
+      pire ? `pire image ${pire.iv.toFixed(0)} ms il y a ${Math.round((performance.now() - pire.t) / 1000)} s : simulation ${pire.sim.toFixed(0)} ms (${pire.pas} pas${pire.ev ? ' : ' + pire.ev : ''}), dessin ${pire.d.rendu.toFixed(0)} (soldats ${pire.d.soldats.toFixed(0)}, tranchées ${pire.d.tranchees.toFixed(0)}, sol ${pire.d.sol.toFixed(0)}, three ${pire.d.three.toFixed(0)})` : '',
       carte,
     ].join('\n');
     lignes.textContent = texte;
@@ -54,12 +56,16 @@ export function creerCompteur({ rendu, stats }) {
 
   return {
     // le temps d'un pas de la simulation (appelé par la boucle à chaque pas)
-    pas(ms) { simImage += ms; },
+    pas(ms, ev = []) { simImage += ms; pasImage++; for (const e of ev) evImage.add(e.type); },
     debutImage() { debutRendu = performance.now(); },
     finImage() {
       const t = performance.now();
-      if (derniere) { intervalles[k] = t - derniere; js[k] = simImage + (t - debutRendu); k = (k + 1) % N; if (!k) plein = true; }
-      derniere = t; simImage = 0;
+      if (derniere) {
+        const iv = t - derniere;
+        intervalles[k] = iv; js[k] = simImage + (t - debutRendu); k = (k + 1) % N; if (!k) plein = true;
+        if (!pire || iv >= pire.iv || t - pire.t > 20000) pire = { iv, t, sim: simImage, pas: pasImage, ev: [...evImage].join(', '), d: { ...rendu.dernierDessin } };
+      }
+      derniere = t; simImage = 0; pasImage = 0; evImage.clear();
       if ((majT -= 1) <= 0) { majT = 30; afficher(); }
     },
   };
