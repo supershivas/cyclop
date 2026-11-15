@@ -35,6 +35,7 @@ import { creerMeteoLisse, TEMPS_LISSE } from './rendu/meteo-lisse.js?v=0.135.2';
 import { creerMeteo } from './rendu/meteo.js?v=0.135.2';
 import { creerTroncons } from './rendu/troncons.js?v=0.135.2';
 import { ARBRES_JEU } from './data/arbres.js?v=0.135.2';
+import { MATIERES, GRAIN_VARIANTES, GRAIN_JEU } from './data/grain-sol.js?v=0.135.2';
 import { creerVegetation } from './rendu/vegetation.js?v=0.135.2';
 import { creerTemps } from './rendu/temps.js?v=0.135.2';
 import { creerEclats } from './rendu/eclats.js?v=0.135.2';
@@ -160,6 +161,8 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
       uEauM: { value: null }, uEauOn: { value: 0 }, uEauT: { value: 0 }, uEauSoleilF: { value: 0 }, uEauHor: { value: col('e') }, uEauHaut: { value: col('e') }, uEauSoleil: { value: new THREE.Vector3(0, 1, 0) }, uEauSoleilCoul: { value: col('o').multiplyScalar(0.8) }, uPluieEau: { value: 0 }, uMatin: { value: 0 }, uMatinT: { value: 0 }, uBrumeSol: { value: col('r').clone() }, uDyn: { value: null }, uDynO: { value: new THREE.Vector4() }, uDynBlanc: { value: col('o').multiplyScalar(0.75).add(col('e').multiplyScalar(0.15)) }, uDynFeu: { value: new THREE.Color(ALERTES.orange).multiplyScalar(0.8).add(col('o').multiplyScalar(0.2)) },
       uFumOmb: { value: null }, uFumO: { value: new THREE.Vector3() }, uFumOn: { value: 0 }, uSoleilF: { value: 1 }, uLamp: { value: null }, uLampOn: { value: 0 }, uLampCoul: { value: col('o').multiplyScalar(0.55).add(col('h').multiplyScalar(0.25)) },
       uCarteOmbre: { value: null }, uLVP: { value: new THREE.Matrix4() }, uOmbOn: { value: 0 }, uOmbPx: { value: new THREE.Vector2(1 / 1024, 0.0003) },      // la carte d'ombre (session 3)
+      uGrain: { value: 0 }, uGrainCell: { value: 0.25 }, uGrainBords: { value: 0 }, uPalSol: { value: MATIERES.map(() => new THREE.Vector3()) }, uClairSol: { value: MATIERES.map(() => new THREE.Vector3()) },
+      uGrainP: { value: MATIERES.map(m => new THREE.Vector4(m.motte, m.sombre, m.clairs, m.fente)) },      // le grain du sol (data/grain-sol.js ; `grainSol`, `majGrain`)
       uBiseau: { value: 0 }, uNuage: { value: 0 }, uTemps: { value: 0 }, uVent: { value: new THREE.Vector2(NUAGES_VENT[0], NUAGES_VENT[1]) } },      // l'ombre des nuages (labo) : la part du sol couverte (0 : rien), l'horloge de l'image, le vent       // les parois qui suivent le soleil (labo) : 1 et la direction du soleil, vers lui      // (le bord qui se dissout dans le faux terrain : `faireFaux`)
     vertexShader: SH.solMat.v,
     fragmentShader: SH.solMat.f,
@@ -172,7 +175,7 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
   // La finesse du sol (Jérôme, v0.52.2) : 1 = la case de 1 m ; 2 = des cubes de 0,5 m dont la hauteur suit la pente (la hauteur dessinée des quatre cases voisines, mêlée au centre du petit cube, arrondie au quart), sauf à un mur d'un mètre cinquante ou plus (tranchée, falaise) : le petit cube prend alors la hauteur de sa case, le bord reste net
   // Dans le jeu (Jérôme, v0.52.3), `finesseDes` : à partir de combien de pixels par mètre le sol passe au demi-mètre (null : le réglage fixe du labo) ; chaque morceau se souvient de la finesse où il a été fait (`userData.F`)
   // et ne se refait que s'il est dans la vue, les autres attendent qu'on les regarde
-  let finesse = 1, finesseDes = null, finPerimee = false, biseau = false;      // `biseau` (labo « Des angles adoucis ») : un liseré de la couleur du dessus au haut de chaque paroi
+  let finesse = 1, finesseDes = null, finPerimee = false, biseau = false, grainSol = GRAIN_JEU;      // `grainSol` : la variante du grain du sol (data/grain-sol.js ; 0 : rien)      // `biseau` (labo « Des angles adoucis ») : un liseré de la couleur du dessus au haut de chaque paroi
   function hauteurFine(I, J) {
     const x = (I + 0.5) / finesse, z = (J + 0.5) / finesse;
     const fx = x - 0.5, fz = z - 0.5, i = Math.floor(fx), j = Math.floor(fz), tx = fx - i, tz = fz - j;
@@ -367,6 +370,8 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
     if (B.etat.sol?.saison === 'printemps') { reglerVerdure(3); verdurePrintemps = true; } else if (verdurePrintemps) { reglerVerdure(); verdurePrintemps = false; }
     const roux = (B.etat.sol?.saison ?? 'automne') === 'automne', sombre = h => rgb(h).map(v => Math.round(v * 0.7));
     for (const [k, h] of [['v', '#a86a2c'], ['w', '#8a4c1e']]) { const i = ORDRE.indexOf(k); PAL_RGB[i] = rgb(roux ? h : PALETTE[k]); PAROI_RGB[i] = roux ? sombre(h) : rgb(PALETTE[OMBRE[k]]); }
+    // le grain : les couleurs des matières telles que la texture les écrit (l'herbe rousse de l'automne comprise), et leur lettre claire
+    MATIERES.forEach((m, k) => { const a = PAL_RGB[ORDRE.indexOf(m.lettre)], c = PAL_RGB[ORDRE.indexOf(m.clair)]; solMat.uniforms.uPalSol.value[k].set(a[0] / 255, a[1] / 255, a[2] / 255); solMat.uniforms.uClairSol.value[k].set(c[0] / 255, c[1] / 255, c[2] / 255); });
     if (finesseDes !== null) { finesse = 1; finPerimee = false; }      // une autre bataille : tout se fait d'abord au mètre, `dessiner` choisit ensuite
     if (sol) { scene.remove(sol); sol.children.forEach(m => m.userData.fin?.dispose()); solTex.dispose(); solTexFin?.dispose(); solTexFin = null; solDataFin = null; }
     ombres.attacher(T); ombreVu = new Uint32Array(T.H); ao.attacher(T); if (aoTex) { aoTex.dispose(); aoTex = null; solMat.uniforms.uAO.value = null; }
@@ -837,6 +842,9 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
     const hj = horloge(B);
     temps.majSoleil(hj, soleilReglage);
     majVent(dt, hj);
+    { const G = GRAIN_VARIANTES[grainSol], p = ZOOMS[vue.zoom], U = solMat.uniforms;      // le grain du sol : entier dès `ppmPlein` pixels par mètre, effacé sous `ppmNul` (une cellule de moins d'un pixel scintillerait)
+      U.uGrain.value = G ? G.force * Math.min(1, Math.max(0, (p - G.ppmNul) / (G.ppmPlein - G.ppmNul))) : 0;
+      if (G) { U.uGrainCell.value = G.cellule; U.uGrainBords.value = G.bords; } }
     solMat.uniforms.uBiseau.value = biseau ? 1.7 / ZOOMS[vue.zoom] : 0;      // le liseré des arêtes : un pixel d'écran de haut (1 m de hauteur s'écrase à cos(54°) ≈ 0,6 en hauteur d'écran)
     { const nu = ombresNuages ? NUAGES[hj.meteo] : null;             // l'ombre des nuages (labo) : le jour, par un temps à plaques
       solMat.uniforms.uNuage.value = nu && !nu.couvert && hj.phase === 'jour' ? ombreNuages(ciel.couverture()) : 0; solMat.uniforms.uTemps.value = 1; solMat.uniforms.uVent.value.set(-vent.nuages.x, -vent.nuages.z); }
@@ -945,6 +953,7 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
     set finesse(n) { reglerFinesse(n); },      // le sol se refait morceau par morceau, dans la vue d'abord (majMorceaux) : v0.52.2
     get biseau() { return biseau; },
     set biseau(v) { biseau = !!v; },
+    get grainSol() { return grainSol; }, set grainSol(v) { grainSol = GRAIN_VARIANTES[v] ? v : 0; },      // le grain du sol (labo ; data/grain-sol.js)
     get finesseDes() { return finesseDes; },
     set finesseDes(px) { finesseDes = px; },       // le jeu : le sol passe au demi-mètre à partir de ce nombre de pixels par mètre (v0.52.3)
     set vide(v) { vide = v; scene.children.forEach(o => { o.visible = !v; }); },

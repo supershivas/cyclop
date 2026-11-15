@@ -22,6 +22,7 @@ export const solMat = {
       }`,
   f: `
       uniform sampler2D uSol; uniform vec2 uTaille; uniform float uBord; uniform vec3 uBordCoul;
+      uniform float uGrain, uGrainCell, uGrainBords; uniform vec3 uPalSol[7], uClairSol[7]; uniform vec4 uGrainP[7];
       uniform vec3 uKaki, uVert, uGlaise; uniform float uDissoudre;
       uniform float uNuage, uTemps, uBiseau; uniform vec2 uVent;
       uniform sampler2D uAO; uniform float uAOon, uSunOn, uAbriOn, uFlaque; uniform vec3 uEauCoul;
@@ -65,6 +66,31 @@ export const solMat = {
         if (uBiseau > 0.0 && vMur.z > 0.5 && vY > vMur.x - min(uBiseau, 0.4 * vMur.y)) uv.y -= 0.5;
         vec4 c = texture2D(uSol, uv);
         vec3 rgb = c.rgb;
+        // (labo, v0.136.0 ; data/grain-sol.js) LE GRAIN DU SOL : des points de uGrainCell m dans le dessus des cases, chacun de la couleur de la case, de sa paroi
+        // (la lettre d'ombre) ou de la lettre claire de sa matière : aucune couleur nouvelle. uGrainBords : la case lue un peu à côté (un bruit), les limites
+        // se déchiquettent. uGrain : 0 éteint, jusqu'à 1 (il s'efface de loin, où une cellule ne fait plus un pixel). La matière se reconnaît à sa couleur.
+        if (uGrain > 0.0 && vUV.y < 0.5) {
+          vec2 cq = (floor(vXZ / uGrainCell) + 0.5) * uGrainCell;
+          vec2 uvq = uv; vec3 base = rgb;
+          if (uGrainBords > 0.0) {
+            vec2 xzw = cq + (vec2(vn(cq * 0.9), vn(cq * 0.9 + 31.7)) - 0.5) * 2.0 * uGrainBords;
+            vec2 uvw = vec2(xzw.x / uTaille.x, xzw.y / uTaille.y * 0.5);
+            vec3 cw = texture2D(uSol, uvw).rgb;
+            float sol0 = 0.0, sol1 = 0.0;
+            for (int k = 0; k < 7; k++) { vec3 d0 = rgb - uPalSol[k], d1 = cw - uPalSol[k]; if (dot(d0, d0) < 0.0004) sol0 = 1.0; if (dot(d1, d1) < 0.0004) sol1 = 1.0; }
+            if (sol0 > 0.5 && sol1 > 0.5) { base = cw; uvq = uvw; }      // de sol à sol seulement : l'eau, la neige et les ombres gardent leurs bords
+          }
+          vec4 P = vec4(0.0); vec3 clair = base; float trouve = 0.0;
+          for (int k = 0; k < 7; k++) { vec3 d = base - uPalSol[k]; if (dot(d, d) < 0.0004) { P = uGrainP[k]; clair = uClairSol[k]; trouve = 1.0; } }
+          if (trouve > 0.5) {
+            P *= uGrain;
+            float r1 = h(cq * 1.37 + 3.1), r2 = h(cq * 2.11 + 9.7), motte = vn(cq / (uGrainCell * 3.0) + 11.0), fente = abs(vn(cq * 0.8 + 23.0) - 0.5);
+            vec3 g = base;
+            if (motte > 1.0 - P.x || r1 < P.y || fente < P.w * 0.5) g = texture2D(uSol, uvq + vec2(0.0, 0.5)).rgb;
+            else if (r2 > 1.0 - P.z) g = clair;
+            rgb = g;
+          }
+        }
         // (v0.130.0, « Éclairage : moyen » et « haut ») l'EAU du labo lumière : des rides qui bougent, le reflet du ciel selon l'angle (Fresnel : à plat l'eau est un miroir, de dessus on voit le fond) et le soleil qui scintille ;
         // un mélange continu de la palette (le ciel du jour : ciel.couleurs) ; le dessus des cases d'eau profonde seulement (le masque uEauM, js/rendu3d.js) ; gelée ou enneigée : rien
         // (v0.134.7) aussi l'eau PEU PROFONDE (le masque à 150 : marécages, trous inondés, nappe dans les creux) : plus calme, on y voit le fond

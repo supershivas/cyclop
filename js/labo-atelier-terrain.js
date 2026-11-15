@@ -14,8 +14,9 @@ const TEMPS = ['canicule', 'beau', 'sec', 'gel', 'couvert', 'brouillard', 'pluie
 const ECLAIRAGES = [['bas', 'Bas'], ['moyen', 'Moyen'], ['haut', 'Haut']];
 const hhmm = h => `${Math.floor(h)} h ${String(Math.round((h % 1) * 60)).padStart(2, '0')}`;
 
-export function atelierTerrain(stage, R, el) {
-  const reglage = { heure: 9, nuit: false, saison: 2, temps: 2, eclairage: 2, zoom: 3, tangage: 0.95, yaw: 0.15, passe: false, obus: false };
+// `grain` (labo « Le grain du sol », v0.136.0) : la variante du grain (data/grain-sol.js ; 0 : le jeu), une case pour l'éteindre et comparer ; `zoom` : le cran de départ
+export function atelierTerrain(stage, R, el, { grain = 0, zoom = 3 } = {}) {
+  const reglage = { heure: 9, nuit: false, saison: 2, temps: 2, eclairage: 2, zoom, tangage: 0.95, yaw: 0.15, passe: false, obus: false, sansGrain: false };
   const boite = el('div'); boite.style.cssText = 'position:relative;width:100%;height:min(66vh,540px);overflow:hidden';
   const canvas = el('canvas'); canvas.style.cssText = 'position:absolute;left:0;top:0;image-rendering:pixelated';
   boite.append(canvas);
@@ -49,8 +50,9 @@ export function atelierTerrain(stage, R, el) {
   caseACocher('nuit', 'La nuit');
   caseACocher('passe', 'Le temps passe (un jour en une minute)');
   caseACocher('obus', 'Des obus au centre de la vue');
+  if (grain) caseACocher('sansGrain', 'Sans le grain (comparer avec le jeu)');
   const raz = el('button', { className: 'essai', textContent: 'Remettre la vue du jeu', onclick: () => {
-    Object.assign(reglage, { zoom: 3, tangage: 0.95, yaw: 0.15 });
+    Object.assign(reglage, { zoom, tangage: 0.95, yaw: 0.15 });
     for (const k of ['zoom', 'tangage', 'yaw']) { valeurs[k].input.value = reglage[k]; valeurs[k].val.textContent = valeurs[k].texte(reglage[k]); }
     appliquer('tangage'); appliquer('zoom');
   } });
@@ -69,6 +71,7 @@ export function atelierTerrain(stage, R, el) {
       const s = SAISONS[reglage.saison][0];
       B.etat.sol.saison = s; rendu.attacher(B);      // la saison change la couleur de l'herbe (rendu3d.attacher) et les feuilles
     }
+    if (cle === 'sansGrain' || cle === 'grain') rendu.grainSol = reglage.sansGrain ? 0 : grain;
     if (cle === 'eclairage') rendu.eclairage = ECLAIRAGES[reglage.eclairage][0];
     if (cle === 'zoom') rendu.vue.zoom = reglage.zoom;
     if (cle === 'tangage' || cle === 'yaw') rendu.placerCamera(reglage.yaw, reglage.tangage);
@@ -82,7 +85,7 @@ export function atelierTerrain(stage, R, el) {
     window.__atelier = { rendu, B, reglage };                     // (les scripts : outils et captures)
     rendu.bord = 'faux-ciel'; rendu.ombresRelief = true; rendu.ombresNuages = true; rendu.soleilReglage = { ...SOLEIL_JEU };      // la lumière du jeu (main.js)
     rendu.vue.cx = B.etat.marges.x + 200; rendu.vue.cz = B.etat.marges.y + 200;
-    for (const k of ['saison', 'eclairage', 'zoom', 'tangage']) appliquer(k);
+    for (const k of ['saison', 'eclairage', 'zoom', 'tangage', 'grain']) appliquer(k);
     let t = performance.now(), tReleve = 0, tObus = 0.5, kObus = 0;
     const boucle = now => {
       const dt = Math.min(0.1, (now - t) / 1000); t = now;
