@@ -1,5 +1,9 @@
 # Journal des versions
 
+## 0.136.0 — 2026-11-15
+
+- Au labo, « Le grain du sol » : des mottes, des fentes, des cailloux et des brins dans chaque case du sol, et des bords déchiquetés entre l'herbe et la boue, avec les seules couleurs de la palette ; trois variantes à choisir (le jeu ne change pas encore)
+
 ## 0.135.2 — 2026-11-15
 
 - Le jeu dessine plus vite tout dézoomé : les arbres de quelques pixels ont un feuillage plus simple (deux fois moins de triangles à l'écran), à l'œil identique

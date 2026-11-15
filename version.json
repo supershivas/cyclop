@@ -1,7 +1,7 @@
 {
-  "version": "0.135.2",
+  "version": "0.136.0",
   "date": "2026-11-15",
   "changes": [
-    "Le jeu dessine plus vite tout dézoomé : les arbres lointains ont un feuillage plus simple, à l'œil identique"
+    "Au labo : le grain du sol, trois variantes à choisir (mottes, fentes, cailloux, brins, bords déchiquetés ; les seules couleurs de la palette)"
   ]
 }
