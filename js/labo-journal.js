@@ -2,6 +2,9 @@
 // Une entrée par version qui touche au labo, la plus récente en haut. `ref` : « sujet-Lettre » (la lettre est celle de la variante,
 // A étant l'actuelle). À chaque changement du labo : une entrée ici, avec `depuis` sur les variantes ajoutées ou changées (labo.js).
 export const JOURNAL = [
+  { version: '0.140.6', date: '2026-11-16', items: [
+    { genre: 'mis-a-jour', texte: 'Jérôme tranche : les soldats tous différents passent en jeu, avec les hommes assis dans la tranchée ; « tous pareils » devient l\'ancienne', ref: 'variete-soldats-A' },
+  ] },
   { version: '0.140.5', date: '2026-11-16', items: [
     { genre: 'nouveau', texte: 'Des soldats tous différents (à trancher) : le ton de l\'uniforme, le regard au repos, la place dans le rang, et des hommes assis dans la tranchée', ref: 'variete-soldats-C' },
   ] },

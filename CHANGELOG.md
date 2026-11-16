@@ -1,5 +1,9 @@
 # Journal des versions
 
+## 0.140.6 — 2026-11-16
+
+- Les soldats ne sont plus tous pareils : chacun a son ton d'uniforme, son regard au repos, sa place dans le rang ; dans la tranchée, certains s'assoient, le dos au parapet, tant qu'on ne tire pas
+
 ## 0.140.5 — 2026-11-16
 
 - Au labo : des soldats tous différents, à trancher (le ton, le regard, la place dans le rang, des hommes assis dans la tranchée) ; le jeu ne change pas
