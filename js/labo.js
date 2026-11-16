@@ -2,44 +2,44 @@
 // Chaque sujet utilise les mêmes modules que le jeu (terrain, apparence,
 // rendu three.js) : ce qu'on voit ici est ce que le jeu dessinera. Ajouter un
 // sujet ou une variante = ajouter une entrée dans GROUPES.
-import { afficherVersion } from './version-tag.js?v=0.140.3';
-import { mountLabo } from './lib/labo-shell.js?v=0.140.3';
-import { spriteCanvas, paletteToGPL, paletteToHex } from './lib/sprites.js?v=0.140.3';
-import { PALETTE, ROLES } from './palette.js?v=0.140.3';
-import { chargerContenu } from './design-store.js?v=0.140.3';
-import { tuile, ETAT } from './tuiles.js?v=0.140.3';
-import { creerTerrain, impact, hydroLignes, toucher } from './terrain.js?v=0.140.3';
-import { FORMES } from './cratere.js?v=0.140.3';
-import { CALIBRES } from './data/calibres.js?v=0.140.3';
-import { METEO } from './data/meteo.js?v=0.140.3';
-import { nouvelleBataille, avancer, ordonnerMarche, ordonnerBarrage, mourir, regarderAu, aube, horloge, ticksParJour, rangDe } from './bataille.js?v=0.140.3';
-import { BOUE_SOLDATS } from './data/aspect-soldat.js?v=0.140.3';
-import { AZIMUTS, COTES } from './data/soleil.js?v=0.140.3';
-import { creerRendu, ZOOMS } from './rendu3d.js?v=0.140.3';
-import { placesCommandement } from './army.js?v=0.140.3';
-import { hash2 } from './lib/rng.js?v=0.140.3';
-import { reglerVerdure } from './apparence.js?v=0.140.3';
-import { maquetteChars } from './labo-chars.js?v=0.140.3';
-import { maquetteEpaves } from './labo-epaves.js?v=0.140.3';
-import { fondations, boutons, unites, fenetres, revision } from './labo-design-system.js?v=0.140.3';
-import { cartesSecteur } from './labo-cartes.js?v=0.140.3';
-import { calqueEcussons } from './labo-ecussons.js?v=0.140.3';
-import { plancheEcussons } from './labo-ecussons-armes.js?v=0.140.3';
-import { gainTampon, gainCachets, gainFil, gainBordereau, victoireFanion, victoireTampon, victoireChevrons, victoireAube, ficheDeuxColonnes, ficheEtages, ficheRegistre, ficheDAbord } from './labo-recompenses.js?v=0.140.3';
-import { maquetteBatiment, maquetteCamp } from './labo-batiments.js?v=0.140.3';
-import { BATIMENTS } from './data/batiments.js?v=0.140.3';
-import { JOURNAL } from './labo-journal.js?v=0.140.3';
-import { loadVersion } from './lib/app-update.js?v=0.140.3';
-import { maquetteEffets, maquetteAmbiance, maquetteEspace, maquetteBruitages } from './labo-son.js?v=0.140.3';
-import { calqueMoral } from './labo-moral.js?v=0.140.3';
-import { bilanRapport, bilanTuiles, bilanFrise } from './labo-donnees.js?v=0.140.3';
-import { papierNuit, finDePartie } from './labo-papiers.js?v=0.140.3';
-import { fichesTuiles, fichesProfil, fichesCompactes } from './labo-fiches.js?v=0.140.3';
-import { calqueEnnemis } from './labo-engins-ennemis.js?v=0.140.3';
-import { maquetteTranchees, NOTES_TRANCHEES, NOMS_TRANCHEES } from './labo-tranchees.js?v=0.140.3';
-import { maquetteFabrique } from './labo-fabrique.js?v=0.140.3';
-import { atelierTerrain } from './labo-atelier-terrain.js?v=0.140.3';
-import { entrees as encEntrees, lexiqueAZ, planche as encPlanche } from './labo-encyclopedie.js?v=0.140.3';
+import { afficherVersion } from './version-tag.js?v=0.140.4';
+import { mountLabo } from './lib/labo-shell.js?v=0.140.4';
+import { spriteCanvas, paletteToGPL, paletteToHex } from './lib/sprites.js?v=0.140.4';
+import { PALETTE, ROLES } from './palette.js?v=0.140.4';
+import { chargerContenu } from './design-store.js?v=0.140.4';
+import { tuile, ETAT } from './tuiles.js?v=0.140.4';
+import { creerTerrain, impact, hydroLignes, toucher } from './terrain.js?v=0.140.4';
+import { FORMES } from './cratere.js?v=0.140.4';
+import { CALIBRES } from './data/calibres.js?v=0.140.4';
+import { METEO } from './data/meteo.js?v=0.140.4';
+import { nouvelleBataille, avancer, ordonnerMarche, ordonnerBarrage, mourir, regarderAu, aube, horloge, ticksParJour, rangDe } from './bataille.js?v=0.140.4';
+import { BOUE_SOLDATS, SANG, VARIETE_SOLDATS } from './data/aspect-soldat.js?v=0.140.4';
+import { AZIMUTS, COTES } from './data/soleil.js?v=0.140.4';
+import { creerRendu, ZOOMS } from './rendu3d.js?v=0.140.4';
+import { placesCommandement } from './army.js?v=0.140.4';
+import { hash2 } from './lib/rng.js?v=0.140.4';
+import { reglerVerdure } from './apparence.js?v=0.140.4';
+import { maquetteChars } from './labo-chars.js?v=0.140.4';
+import { maquetteEpaves } from './labo-epaves.js?v=0.140.4';
+import { fondations, boutons, unites, fenetres, revision } from './labo-design-system.js?v=0.140.4';
+import { cartesSecteur } from './labo-cartes.js?v=0.140.4';
+import { calqueEcussons } from './labo-ecussons.js?v=0.140.4';
+import { plancheEcussons } from './labo-ecussons-armes.js?v=0.140.4';
+import { gainTampon, gainCachets, gainFil, gainBordereau, victoireFanion, victoireTampon, victoireChevrons, victoireAube, ficheDeuxColonnes, ficheEtages, ficheRegistre, ficheDAbord } from './labo-recompenses.js?v=0.140.4';
+import { maquetteBatiment, maquetteCamp } from './labo-batiments.js?v=0.140.4';
+import { BATIMENTS } from './data/batiments.js?v=0.140.4';
+import { JOURNAL } from './labo-journal.js?v=0.140.4';
+import { loadVersion } from './lib/app-update.js?v=0.140.4';
+import { maquetteEffets, maquetteAmbiance, maquetteEspace, maquetteBruitages } from './labo-son.js?v=0.140.4';
+import { calqueMoral } from './labo-moral.js?v=0.140.4';
+import { bilanRapport, bilanTuiles, bilanFrise } from './labo-donnees.js?v=0.140.4';
+import { papierNuit, finDePartie } from './labo-papiers.js?v=0.140.4';
+import { fichesTuiles, fichesProfil, fichesCompactes } from './labo-fiches.js?v=0.140.4';
+import { calqueEnnemis } from './labo-engins-ennemis.js?v=0.140.4';
+import { maquetteTranchees, NOTES_TRANCHEES, NOMS_TRANCHEES } from './labo-tranchees.js?v=0.140.4';
+import { maquetteFabrique } from './labo-fabrique.js?v=0.140.4';
+import { atelierTerrain } from './labo-atelier-terrain.js?v=0.140.4';
+import { entrees as encEntrees, lexiqueAZ, planche as encPlanche } from './labo-encyclopedie.js?v=0.140.4';
 
 document.documentElement.style.setProperty('--jeu-accent', ROLES.accent);
 const NOM = document.title.replace(/^Labo — /, ''); // le nom vient de la page (une apostrophe ne casse rien)
@@ -165,7 +165,7 @@ function poserColline(B, { dx = 0, dz = 0, r = 22, h = 9 }, cz) {
   }
 }
 
-function moteur(stage, { zoom = 3, pluie = false, gel = false, soldats = 600, cz = 185, camera = null, respiration = undefined, soldat = undefined, cadavre = undefined, morts = 0, effets = undefined, barrages = false, surLesArbres = false, vue = null, verdure = undefined, nuit = null, tombee = false, calque = null, bord = null, centre = null, finesse = 1, biseau = false, cratere = null, arbres = undefined, saison = null, jours = undefined, versLesArbres = false, buissons = undefined, versLesBuissons = false, lumiere = null, colline = null, journee = null, grades = undefined, parade = false, boue = null } = {}) {
+function moteur(stage, { zoom = 3, pluie = false, gel = false, soldats = 600, cz = 185, camera = null, respiration = undefined, soldat = undefined, cadavre = undefined, morts = 0, effets = undefined, barrages = false, surLesArbres = false, vue = null, verdure = undefined, nuit = null, tombee = false, calque = null, bord = null, centre = null, finesse = 1, biseau = false, cratere = null, arbres = undefined, saison = null, jours = undefined, versLesArbres = false, buissons = undefined, versLesBuissons = false, lumiere = null, colline = null, journee = null, grades = undefined, parade = false, boue = null, variete = undefined } = {}) {
   reglerVerdure(verdure);                                   // le sol vert (apparence.js) : avant que le sol ne se peigne
   const boite = el('div'); boite.style.cssText = 'position:relative;width:100%;height:min(70vh,560px);overflow:hidden';
   const canvas = el('canvas'); canvas.style.cssText = 'position:absolute;left:0;top:0;image-rendering:pixelated';
@@ -234,6 +234,7 @@ function moteur(stage, { zoom = 3, pluie = false, gel = false, soldats = 600, cz
     if (nuit) rendu.styleNuit = nuit;
     rendu.finesse = finesse;
     if (boue != null) rendu.boueSoldats = boue;
+    if (variete !== undefined) { rendu.varieteSoldats = variete; rendu.boueSoldats = BOUE_SOLDATS; rendu.sangSoldats = SANG.force; }      // (la variété se juge sur les soldats du jeu : sales)
     rendu.biseau = biseau;
     rendu.redimensionner();
     rendu.attacher(B);
@@ -475,6 +476,11 @@ const GROUPES = [
     ] },
   ] },
   { id: 'soldats', title: 'Soldats', topics: [
+    { id: 'variete-soldats', title: 'Des soldats tous différents', variants: [
+      { title: 'Tous pareils', status: 'actuelle', note: "Le jeu tel qu'il est : dans un régiment au repos, chaque homme a la même teinte, regarde exactement vers l'ennemi et tient sa place au centimètre ; dans la tranchée, tous debout.", render: s => moteur(s, { zoom: 4, variete: null }) },
+      { title: 'Le ton, le regard, le rang', status: 'a-trancher', depuis: '0.140.4', note: "PROPOSITION (Jérôme, 16 nov. : « variété aux zooms 4 à 8 »). Chaque homme, selon son numéro : un uniforme un peu plus clair ou plus sombre (±12 %), un regard qui s'écarte de l'ennemi au repos (±26°), une place à 25 cm près dans le rang. Le dessin seulement : aucune règle ne change, les morts gardent leur ton et leur place. Aucun triangle de plus.", render: s => moteur(s, { zoom: 4, variete: { ...VARIETE_SOLDATS, assis: 0 } }) },
+      { title: 'Et des hommes assis dans la tranchée', status: 'a-trancher', depuis: '0.140.4', note: "PROPOSITION. La même, et dans une tranchée trois hommes sur dix s'assoient, le dos au parapet, les jambes allongées, quand ils n'ont ni peur ni blessure et n'ont pas tiré depuis huit secondes ; ils se relèvent pour tirer, marcher ou se battre. De très près (12 pixels par mètre et plus) ils sont accroupis : la pose assise des soldats articulés reste à faire.", render: s => moteur(s, { zoom: 4, variete: VARIETE_SOLDATS }) },
+    ] },
     { id: 'boue-soldats', title: 'La boue sur les hommes', variants: [
       { title: 'Selon les jours et le temps', status: 'actuelle', depuis: '0.139.2', note: "En jeu (Jérôme, 16 nov., v0.139.2). La couleur du sol sous chaque homme gagne son uniforme, presque tout aux pieds, un voile au-dessus de la ceinture : légère au premier matin (30 %), elle gagne 6 % par jour de bataille jusqu'à 85 % ; sous la pluie les uniformes foncent d'un quart. Ici le premier jour ; les boutons montrent les jours suivants.", render: s => moteur(s, { zoom: 4, boue: BOUE_SOLDATS }) },
       { title: 'Des uniformes propres', status: 'ancienne', note: "Le jeu d'avant la v0.139.2 : chaque homme est un aplat de la couleur de son armée, le même au premier matin et au dixième jour, sur l'herbe comme dans la boue.", render: s => moteur(s, { zoom: 4, boue: 0 }) },

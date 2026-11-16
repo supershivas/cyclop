@@ -1,5 +1,9 @@
 # Journal des versions
 
+## 0.140.4 — 2026-11-16
+
+- Au labo : des soldats tous différents, à trancher (le ton, le regard, la place dans le rang, des hommes assis dans la tranchée) ; le jeu ne change pas
+
 ## 0.140.3 — 2026-11-16
 
 - Les morts gardent la boue et l'ombre qu'ils avaient vivants : un homme qui tombe ne redevient plus propre et clair

@@ -217,9 +217,10 @@ export const soldatMat = {
         // (v0.69.0) chaque homme a sa taille et sa largeur (aVar : le dessin seulement, tiré de son numéro)
         vec3 p = (kp > 0.5 && kp < 1.5) ? position : position * vec3(ech * aVar.x, ech * aVar.y, ech * aVar.x);
         // la peur : un homme se tapit (aVit < 0 : −1 − sa vitesse), sauf son ombre
-        bool tapi = aVit < 0.0;
-        float vit = tapi ? 0.0 : aVit;
+        bool tapi = aVit < 0.0 && aVit > -1.5, assis = aVit < -1.5;      // (labo) −2 : assis, le dos au parapet (la variété des soldats)
+        float vit = aVit < 0.0 ? 0.0 : aVit;
         if (tapi && (kp < 0.5 || kp > 1.5)) p.y *= 0.6;
+        if (assis && (kp < 0.5 || kp > 1.5)) { float y0 = p.y; if (y0 < 0.85) { p.z += (0.85 - y0) * 0.55; p.y = y0 * 0.3; } else p.y = y0 - 0.6; }      // les jambes allongées devant lui, le buste descendu de 60 cm
         // les blessés (v0.72.0 ; aBless : 1 bras, 2 jambe, 3 tête) : celui qui ne marche plus s'affaisse (un genou à terre, penché), celui qui boite se tient de travers ; la tête blessée se penche ;
         // le bras blessé se serre contre le ventre ; l'ombre ne change pas
         if (aBless > 0.5 && (kp < 0.5 || kp > 1.5)) {
@@ -313,7 +314,7 @@ export const soldatMat = {
       uniform vec3 uNous; uniform vec3 uEux; uniform vec3 uOmbre; uniform vec3 uSel;
       uniform vec3 uJambes; uniform vec3 uFusil; uniform vec3 uSac; uniform vec3 uVisage; uniform vec3 uCuir; uniform vec3 uBotte;
       uniform sampler2D uSol; uniform vec2 uTaille;
-      uniform sampler2D uAO; uniform float uAOon, uSunOn, uAbriOn; uniform float uBoue, uMouille; uniform float uSang, uSangCell; uniform vec3 uSangCoul;
+      uniform sampler2D uAO; uniform float uAOon, uSunOn, uAbriOn; uniform float uBoue, uMouille; uniform float uSang, uSangCell; uniform vec3 uSangCoul; uniform float uVarTon;
       varying float vCamp; varying float vPart; varying vec2 vXZ; varying float vLong; varying vec4 vSang;
       void main() {
         float k = floor(vPart + 0.5);
@@ -337,6 +338,7 @@ export const soldatMat = {
         else if (k == 30.0) c = uOmbre;               // les signes sombres des grades (galons, képi, baudrier)
         else if (k == 31.0) c = uSel;                 // le fanion de commandement
         else if (k == 34.0) c = camp > 0.5 ? uOmbre : uSel;     // le pansement : d'os sur le bleu de chez nous, de terre sur le kaki d'en face (l'os s'y perdait)
+        if (uVarTon > 0.0 && k < 30.0 && !(k == 2.0 && sel)) c *= 1.0 + uVarTon * (vSang.w * 2.0 - 1.0);      // (labo) le ton de chacun : un peu plus clair ou plus sombre, selon son numéro
         // (labo, éteint : uBoue vaut 0) la boue sur les hommes : la couleur du sol sous lui gagne son uniforme, presque tout aux pieds, un voile au-dessus de la ceinture (vLong : la hauteur du sommet dans le modèle) ; mouillé, il fonce. Ni le casque des choisis ni le fanion : ce sont des signes
         if (uBoue > 0.0 && k != 31.0 && !(k == 2.0 && sel)) {
           vec3 solB = texture2D(uSol, vec2(vXZ.x / uTaille.x, vXZ.y / uTaille.y * 0.5)).rgb;
@@ -440,20 +442,21 @@ export const tombePointMat = {
 export const corpsMat = {
   v: `
       attribute vec3 aPos; attribute vec2 aInfo; attribute float aPart;
-      varying float vEtat; varying float vPart; varying vec2 vMondeC;
+      varying float vEtat; varying float vPart; varying vec2 vMondeC; varying float vTonC;
       void main() {
-        vEtat = aInfo.x; vPart = aPart;
+        vEtat = floor(aInfo.x + 0.05); vTonC = (aInfo.x - vEtat) * 2.5; vPart = aPart;
         float c = cos(aInfo.y), s = sin(aInfo.y);
         vec3 p = vec3(position.x * c - position.z * s, position.y, position.x * s + position.z * c);
         vMondeC = (p + aPos).xz;
         gl_Position = projectionMatrix * viewMatrix * vec4(p + aPos, 1.0);
       }`,
   f: `
-      uniform vec3 uNous; uniform vec3 uEux; uniform vec3 uVieux; uniform vec3 uFlanc; uniform sampler2D uSol; uniform vec2 uTaille; uniform float uBoue, uMouille; uniform sampler2D uAO; uniform float uAOon, uSunOn, uAbriOn;
-      varying float vEtat; varying float vPart; varying vec2 vMondeC;
+      uniform vec3 uNous; uniform vec3 uEux; uniform vec3 uVieux; uniform vec3 uFlanc; uniform float uVarTon; uniform sampler2D uSol; uniform vec2 uTaille; uniform float uBoue, uMouille; uniform sampler2D uAO; uniform float uAOon, uSunOn, uAbriOn;
+      varying float vEtat; varying float vPart; varying vec2 vMondeC; varying float vTonC;
       void main() {
         vec3 c = vEtat > 1.5 ? uVieux : (vEtat > 0.5 ? uEux : uNous);
         if (vPart > 0.5) c = uFlanc;
+        if (uVarTon > 0.0) c *= 1.0 + uVarTon * (vTonC * 2.0 - 1.0);
         // (v0.140.3) un mort garde l'aspect qu'il avait vivant : la boue du sol sur son uniforme (la même part selon la hauteur dans le modèle debout) et la lumière du sol (soldatMat)
         if (uBoue > 0.0) {
           vec3 solB = texture2D(uSol, vec2(vMondeC.x / uTaille.x, vMondeC.y / uTaille.y * 0.5)).rgb;
@@ -477,13 +480,13 @@ export const corpsSoldatMat = {
   v: `
       attribute vec3 aPos; attribute vec2 aInfo; attribute float aCamp; attribute float aPart; attribute float aJambe; attribute float aBras;
       uniform float uPoses;
-      varying float vEtat; varying float vPart; varying float vCamp; varying vec4 vSang; varying vec2 vMondeC;
+      varying float vEtat; varying float vPart; varying float vCamp; varying vec4 vSang; varying vec2 vMondeC; varying float vTonC;
       void main() {
         float kp = aPart;
         bool cache = false;
         if (kp >= 20.0) { kp -= 20.0; cache = aCamp < 0.5; } else if (kp >= 10.0) { kp -= 10.0; cache = aCamp > 0.5; }
         if (kp > 0.5 && kp < 1.5) cache = true;                       // pas d'ombre : il est couché
-        vEtat = aInfo.x; vPart = kp; vCamp = aCamp;
+        vEtat = floor(aInfo.x + 0.05); vTonC = (aInfo.x - vEtat) * 2.5; vPart = kp; vCamp = aCamp;
         float h = fract(sin(aInfo.y * 91.7) * 43758.5453), h2 = fract(h * 7.31), h3 = fract(h * 13.17);
         vSang = vec4(position, h);      // (v0.140.2) le sang des morts : la place du point dans le modèle, un nombre par mort
         vec3 p = position;
@@ -503,12 +506,13 @@ export const corpsSoldatMat = {
         gl_Position = projectionMatrix * viewMatrix * vec4(q + aPos, 1.0);
       }`,
   f: `
-      uniform vec3 uNous; uniform vec3 uEux; uniform vec3 uVieux; uniform vec3 uJambes; uniform vec3 uFusil; uniform vec3 uSac; uniform vec3 uVisage; uniform vec3 uCuir; uniform vec3 uBotte; uniform float uSang, uSangCell; uniform vec3 uSangCoul; uniform sampler2D uSol; uniform vec2 uTaille; uniform float uBoue, uMouille; uniform sampler2D uAO; uniform float uAOon, uSunOn, uAbriOn;
-      varying float vEtat; varying float vPart; varying float vCamp; varying vec4 vSang; varying vec2 vMondeC;
+      uniform vec3 uNous; uniform vec3 uEux; uniform vec3 uVieux; uniform vec3 uJambes; uniform vec3 uFusil; uniform vec3 uSac; uniform vec3 uVisage; uniform vec3 uCuir; uniform vec3 uBotte; uniform float uSang, uSangCell; uniform vec3 uSangCoul; uniform sampler2D uSol; uniform vec2 uTaille; uniform float uBoue, uMouille; uniform sampler2D uAO; uniform float uAOon, uSunOn, uAbriOn; uniform float uVarTon;
+      varying float vEtat; varying float vPart; varying float vCamp; varying vec4 vSang; varying vec2 vMondeC; varying float vTonC;
       void main() {
         float k = floor(vPart + 0.5);
         vec3 c = vEtat > 1.5 ? uVieux : (vCamp > 0.5 ? uEux : uNous);
         if (k == 3.0) c = uJambes; else if (k == 4.0) c = uFusil; else if (k == 5.0) c = uSac; else if (k == 6.0 || k == 9.0) c = uVisage; else if (k == 7.0) c = uCuir; else if (k == 8.0) c = uBotte;
+        if (uVarTon > 0.0) c *= 1.0 + uVarTon * (vTonC * 2.0 - 1.0);
         // (v0.140.3) un mort garde l'aspect qu'il avait vivant : la boue du sol sur son uniforme (la même part selon la hauteur dans le modèle debout) et la lumière du sol (soldatMat)
         if (uBoue > 0.0) {
           vec3 solB = texture2D(uSol, vec2(vMondeC.x / uTaille.x, vMondeC.y / uTaille.y * 0.5)).rgb;

@@ -21,7 +21,7 @@
 // barrages en cours (le sol se refait).
 import { servir, lancerChromium, options } from '../outils/navigateur.mjs';
 
-const o = options(process.argv.slice(2), { soldats: '8000', secondes: '12', largeur: '1280', hauteur: '800', finesse: 'auto', zooms: '0,3,5', articule: '', arbres: '', ombres: '', lumiere: '', boue: '', carte: '', parois: '', nuages: '', grades: '', tranchees: '', grain: '' });
+const o = options(process.argv.slice(2), { soldats: '8000', secondes: '12', largeur: '1280', hauteur: '800', finesse: 'auto', zooms: '0,3,5', articule: '', arbres: '', ombres: '', lumiere: '', boue: '', variete: '', carte: '', parois: '', nuages: '', grades: '', tranchees: '', grain: '' });
 const srv = await servir('.');
 const nav = await lancerChromium();
 const page = await (await nav.newContext({ viewport: { width: +o.largeur, height: +o.hauteur } })).newPage();
@@ -44,6 +44,7 @@ if (o.articule === '0') await page.evaluate(() => { __jeu.rendu().articule = nul
 if (o.articule === 'sans-texture') await page.evaluate(() => { const r = __jeu.rendu(); r.articule = { ...r.articule, texture: false }; });       // les poses calculées par le nuanceur (avant l'étape 3 : la texture de poses)
 if (o.articule === 'sans-animations') await page.evaluate(() => { const r = __jeu.rendu(); r.articule = { ...r.articule, animations: false }; });       // la marche, le repos et le tir recalculés comme avant l'étape 4 (poseJeu)
 if (o.boue === '0') await page.evaluate(() => { __jeu.rendu().boueSoldats = 0; __jeu.rendu().sangSoldats = 0; });      // --boue 0 : sans la boue sur les hommes (v0.139.2)
+if (o.variete === '1') await page.evaluate(() => { __jeu.rendu().varieteSoldats = { ton: 0.12, cap: 0.45, rang: 0.25, assis: 0.3, calme: 8 }; });      // --variete 1 : la variété des soldats (labo)
 if (o.lumiere === '0') await page.evaluate(() => { const R = __jeu.rendu(); R.soleilSol = R.aoSol = R.abrisSol = R.flaquesSol = false; });
 if (o.grain) await page.evaluate(n => { __jeu.rendu().grainSol = +n; }, o.grain);       // le grain du sol (labo, v0.136.0 ; data/grain-sol.js : 1 à 3)
 if (o.carte === '1') await page.evaluate(() => { __jeu.rendu().ombresCarte = true; });
