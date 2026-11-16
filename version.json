@@ -1,7 +1,8 @@
 {
-  "version": "0.140.4",
+  "version": "0.141.0",
   "date": "2026-11-16",
   "changes": [
-    "Au labo : trois jeux d'écussons complets, chaque arme sa propre forme, à retenir d'un clic ; le jeu ne change pas"
+    "Chaque unité porte l'écusson de son arme : bannière numérotée pour les régiments, carré à chenille pour les chars, triangle pour les mitrailleuses, cocarde ailée pour les avions, écu rond pour le génie",
+    "En bas, les cartes des régiments deviennent des vignettes à écusson ; le nom et les chiffres sont dans l'infobulle"
   ]
 }

@@ -1,15 +1,15 @@
 // Les pastilles des engins sur le champ (Jérôme, v0.120.0 : « pastille 2B à appliquer aussi aux chars, avions et mitrailleuses alliés » ; sujet « Les engins d'en face sur le champ » du labo, variante F).
-// Chaque char, poste de mitrailleuse et avion en vol, des deux camps, est un petit rond : le cœur à la couleur de son camp (bleu horizon chez nous, kaki d'en face), ceint d'un arc qui se vide avec
-// sa vie ; un poste porte un trait, un avion un triangle ; détruit, l'anneau est pointillé et barré. Au survol il grossit et l'infobulle du jeu (`data-info`) dit tout : l'état, la vie, le canon ou la bande,
+// Chaque char, poste de mitrailleuse et avion en vol, des deux camps, porte l'écusson de son arme (v0.141.0, hud/ecussons.js ; avant, un rond ceint d'un arc de vie) :
+// à la couleur de son camp, sa barre de vie au-dessus ; détruit, il est vidé et barré. Au survol il grossit et l'infobulle du jeu (`data-info`) dit tout : l'état, la vie, le canon ou la bande,
 // l'expérience, les victimes. Le clic sur un des nôtres (char, poste) le choisit. Le dessin et les lignes de texte seulement : les données viennent de hud/chars.js, hud/nids.js et d'ici pour les avions.
 // Les nombres d'avions : `positionDe` (avions.js). Rien n'est écrit dans la bataille.
-import { positionDe, balayage } from '../avions.js?v=0.140.4';
-import { MITRAILLAGE } from '../data/mitraillage.js?v=0.140.4';
-import { NOUS } from '../bataille.js?v=0.140.4';
+import { positionDe, balayage } from '../avions.js?v=0.141.0';
+import { MITRAILLAGE } from '../data/mitraillage.js?v=0.141.0';
+import { NOUS } from '../bataille.js?v=0.141.0';
+import { ecussonHtml, reglerEcusson } from './ecussons.js?v=0.141.0';
+const NS = 'http://www.w3.org/2000/svg';
 
-const NS = 'http://www.w3.org/2000/svg', R_ARC = 9, CIRC = 2 * Math.PI * R_ARC;
 const REDUIT = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
-const MARQUES = { char: '', nid: '<rect class="marque" x="-1" y="-4" width="2" height="8"/>', avion: '<path class="marque" d="M0-5L4.5 4.5 0 2.2-4.5 4.5Z"/>', genie: '<path class="marque" d="M-1-5h2v6h-2zM-3.5 1h7v4h-7z"/>' };      // (genie : une pelle, v0.140.0)
 const NOMS_AVIONS = { 0: 'SPAD', 1: 'Albatros' };
 
 export function creerPastilles({ $, bataille, moi = () => NOUS, versEcran, hauteurSol }) {
@@ -19,8 +19,8 @@ export function creerPastilles({ $, bataille, moi = () => NOUS, versEcran, haute
   function creer(cle, d) {
     const p = document.createElement('div');
     p.className = `engin-pastille ${d.camp} ${d.type}`;
-    p.innerHTML = `<svg viewBox="-12 -12 24 24" width="24" height="24" aria-hidden="true"><circle class="halo" r="11"/><circle class="coeur" r="6"/><circle class="arc" r="${R_ARC}" fill="none" stroke-width="3" transform="rotate(-90)"/>${MARQUES[d.type]}<path class="croix" d="M-4-4L4 4M4-4L-4 4"/></svg>`;
-    const e = { p, arc: p.querySelector('.arc'), vie: -1, detruit: null, info: '', chev: d.chevrons ?? 0, choisi: null, onclick: null };
+    p.innerHTML = ecussonHtml(d.type, d.camp);      // v0.141.0 : l'écusson de son arme (hud/ecussons.js)
+    const e = { p, info: '', chev: d.chevrons ?? 0, onclick: null };
     conteneur().append(p);
     pastilles.set(cle, e);
     return e;
@@ -35,10 +35,7 @@ export function creerPastilles({ $, bataille, moi = () => NOUS, versEcran, haute
     if (cache) return;
     e.p.style.transform = `translate(${Math.round(d.sx)}px, ${Math.round(d.sy)}px) translate(-50%, -100%)`;
     const vie = Math.max(0, Math.min(1, d.vie));
-    if (Math.abs(vie - e.vie) > 0.004 || e.detruit !== !!d.detruit) { e.vie = vie; e.arc.style.strokeDasharray = `${(CIRC * vie).toFixed(1)} ${CIRC.toFixed(1)}`; }
-    if (e.detruit !== !!d.detruit) { e.detruit = !!d.detruit; e.p.classList.toggle('detruit', e.detruit); }
-    if (e.choisi !== !!d.choisi) { e.choisi = !!d.choisi; e.p.classList.toggle('choisi', e.choisi); }
-    e.p.classList.toggle('vide', !!d.vide);
+    reglerEcusson(e.p, { debout: vie, chev: d.camp === 'nous' ? d.chevrons ?? 0 : undefined, choisi: d.choisi, detruit: d.detruit, vide: d.vide });
     if (d.info !== e.info) { e.info = d.info; e.p.dataset.info = d.info; e.p.setAttribute('aria-label', d.info.split('\n')[0].replace(/^#+ /, '')); }
     if (d.onclick && !e.onclick) { e.p.setAttribute('role', 'button'); e.p.tabIndex = 0; e.p.onclick = ev => { ev.stopPropagation(); e.onclick?.(); }; }
     e.onclick = d.onclick ?? null;
