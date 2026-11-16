@@ -65,5 +65,8 @@ export const CARRURE = {
 // Le sang (Jérôme, 16 nov., v0.140.2 : « des taches de sang sur les blessés, les morts et les soldats qui combattent ou ont combattu au corps à corps ») : sa couleur (le rouge sombre des flancs
 // d'automne : aucune teinte nouvelle, un usage de plus, hors palette), la part de cette couleur dans une tache, ce qu'un homme en prend par seconde de corps à corps (0 à 1), le côté d'une tache en mètres ; le dessin seulement
 export const SANG = { couleur: '#7a0f1c', force: 0.85, parSeconde: 0.25, cellule: 0.11 };
+// La variété des soldats (Jérôme, 16 nov. : « variété aux zooms 4 à 8 » ; au labo) : `ton` (± la part dont son uniforme est plus clair ou plus sombre), `cap` (± radians autour de la direction de l'ennemi, au repos),
+// `rang` (± mètres autour de sa place), `assis` (la part des hommes qui s'assoient au repos dans une tranchée), `calme` (les secondes sans tirer avant de se rasseoir) ; tout est tiré de son numéro, le dessin seulement
+export const VARIETE_SOLDATS = { ton: 0.12, cap: 0.45, rang: 0.25, assis: 0.3, calme: 8 };
 export const BOUE_SOLDATS = { depart: 0.3, parJour: 0.06, max: 0.85 };
 export const ARTICULE = { des: 12, fin: 24, max: 250, ombrage: 0.5, texture: true, animations: true };      // `texture` : la pose des 250 hommes écrite côté processeur dans une texture, lue par le nuanceur (v0.132 ; false : le nuanceur la calcule) ; `animations` : la marche, le repos et le tir viennent du lecteur d'animations plutôt que du calcul d'avant (étape 4 ; false : l'ancien calcul, pour comparer)

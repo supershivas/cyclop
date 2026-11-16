@@ -5,6 +5,10 @@
 - Chaque unité porte l'écusson de son arme, à la couleur de son camp, sa barre au-dessus : la bannière numérotée pour un régiment, le carré à chenille pour un char, le triangle au trépied pour une mitrailleuse, la cocarde ailée à l'hirondelle pour un avion, l'écu rond aux outils croisés pour le génie ; un liseré qui marche quand un régiment fléchit
 - En bas, les cartes des régiments deviennent des vignettes : l'écusson, la posture ou la corvée de la nuit ; le nom, le statut et les chiffres sont dans l'infobulle
 
+## 0.140.5 — 2026-11-16
+
+- Au labo : des soldats tous différents, à trancher (le ton, le regard, la place dans le rang, des hommes assis dans la tranchée) ; le jeu ne change pas
+
 ## 0.140.4 — 2026-11-16
 
 - Au labo, en tête de la planche des écussons : trois jeux complets où chaque arme a sa propre forme (I · Héraldique, II · Carte d'état-major, III · Insignes et bannières), vus agrandis puis sur le champ et dans la rangée du bas ; « Retenir ce jeu » prend ses cinq écussons d'un coup ; de nouvelles formes (bannière, triangle, hexagone, coque, cocarde ailée, baraque, écu rond) ; le jeu ne change pas

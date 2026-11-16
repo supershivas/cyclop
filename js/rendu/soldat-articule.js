@@ -1,5 +1,5 @@
-import { NOMS_CHAMPS } from '../data/poses-soldat.js?v=0.140.5';
-import { poseJeu, phaseDe, TEXELS, FLOTTANTS } from './pose-jeu.js?v=0.140.5';
+import { NOMS_CHAMPS } from '../data/poses-soldat.js?v=0.141.0';
+import { poseJeu, phaseDe, TEXELS, FLOTTANTS } from './pose-jeu.js?v=0.141.0';
 
 // Le soldat articulé (au labo seulement : « la fabrique de soldats », et la mesure de son coût ; rien n'est dans le jeu).
 // Un squelette de treize os (le tronc, la tête, deux fois bras / avant-bras, deux fois cuisse / mollet / pied, le fusil) que le nuanceur plie : le genou, le coude, la cheville
@@ -329,7 +329,7 @@ export const FRAG = `
   uniform vec3 uPeau[3]; uniform vec3 uMarque[3]; uniform vec3 uCh[5];
   uniform sampler2D uAO; uniform float uAOon, uSunOn, uAbriOn; uniform vec2 uTaille;
   varying float vPart; varying float vCamp; varying vec2 vFace; varying float vShade; varying vec4 vLook; varying vec4 vLook2; varying vec2 vMonde; varying float vBas; varying vec4 vSang; varying float vSangH;
-  uniform sampler2D uSol; uniform float uBoue, uMouille; uniform float uSang, uSangCell; uniform vec3 uSangCoul;
+  uniform sampler2D uSol; uniform float uBoue, uMouille; uniform float uSang, uSangCell; uniform vec3 uSangCoul; uniform float uVarTon;
   // le visage : une grille de 12 × 12 cases (1,7 cm chacune) ; yeux (le blanc et la pupille), paupières, sourcils, nez, bouche, rides (vLook2.z : yeux + 3 nez + 9 bouche + 27 sourcils + 81 rides)
   bool dans(int iu, int a, int b) { return iu >= a && iu <= b; }
   vec3 visage(vec3 peau, vec3 marque, vec3 cheveux) {
@@ -386,6 +386,7 @@ export const FRAG = `
     else if (k == 15.0) c = uSel;
     else if (k == 17.0) c = uMetal;
     else if (k == 16.0) c = gl_FrontFacing ? visage(peau, marque, cheveux) : cheveux;
+    if (uVarTon > 0.0 && k != 15.0) c *= 1.0 + uVarTon * (vSangH * 2.0 - 1.0);      // (labo) le ton de chacun
     if (uBoue > 0.0 && k != 15.0) {      // (labo, éteint) la boue sur les hommes : voir shaders.js, soldatMat (vBas : la hauteur du point au-dessus de ses pieds, pose comprise)
       vec3 solB = texture2D(uSol, vec2(vMonde.x / uTaille.x, vMonde.y / uTaille.y * 0.5)).rgb;
       c = mix(c, solB, uBoue * (0.22 + 0.68 * (1.0 - smoothstep(0.15, 1.15, vBas))));
@@ -448,7 +449,7 @@ export function creerSoldatArticule(THREE, col, { complet = false, ombrage = 0, 
         uCuir: { value: col('b') }, uBotte: { value: col('t') }, uMetal: { value: col('r') }, uTrait: { value: col('s') },
         uPeau: { value: ['o', 'r', 'g'].map(col) }, uMarque: { value: ['g', 'g', 'b'].map(col) }, uCh: { value: ['t', 's', 'b', 'g', 'r'].map(col) },
         uShade: { value: ombrage }, uVoir: { value: filtre ? 0 : 1 }, uLibre: { value: 0 }, uP: { value: new Array(25).fill(0) }, uTex: { value: 0 }, uPoses: { value: null }, uAlpha: { value: 1 },
-        uSol: partages.uSol ?? { value: null }, uBoue: partages.uBoue ?? { value: 0 }, uMouille: partages.uMouille ?? { value: 0 }, uSang: partages.uSang ?? { value: 0 }, uSangCell: partages.uSangCell ?? { value: 0.11 }, uSangCoul: partages.uSangCoul ?? { value: new THREE.Color(0) },
+        uSol: partages.uSol ?? { value: null }, uBoue: partages.uBoue ?? { value: 0 }, uMouille: partages.uMouille ?? { value: 0 }, uSang: partages.uSang ?? { value: 0 }, uVarTon: partages.uVarTon ?? { value: 0 }, uSangCell: partages.uSangCell ?? { value: 0.11 }, uSangCoul: partages.uSangCoul ?? { value: new THREE.Color(0) },
         ...(partages.uAO ? { uAO: partages.uAO, uAOon: partages.uAOon, uSunOn: partages.uSunOn, uAbriOn: partages.uAbriOn, uTaille: partages.uTaille } : { uAO: { value: null }, uAOon: { value: 0 }, uSunOn: { value: 0 }, uAbriOn: { value: 0 }, uTaille: { value: new THREE.Vector2(1, 1) } }),
       },
       vertexShader: VERT, fragmentShader: translucide ? `uniform float uAlpha;\n${FRAG.replace('gl_FragColor = vec4(c * vShade, 1.0);', 'gl_FragColor = vec4(c * vShade, uAlpha);')}` : FRAG, side: THREE.DoubleSide,
