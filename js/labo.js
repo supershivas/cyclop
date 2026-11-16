@@ -2,42 +2,43 @@
 // Chaque sujet utilise les mêmes modules que le jeu (terrain, apparence,
 // rendu three.js) : ce qu'on voit ici est ce que le jeu dessinera. Ajouter un
 // sujet ou une variante = ajouter une entrée dans GROUPES.
-import { afficherVersion } from './version-tag.js?v=0.140.0';
-import { mountLabo } from './lib/labo-shell.js?v=0.140.0';
-import { spriteCanvas, paletteToGPL, paletteToHex } from './lib/sprites.js?v=0.140.0';
-import { PALETTE, ROLES } from './palette.js?v=0.140.0';
-import { chargerContenu } from './design-store.js?v=0.140.0';
-import { tuile, ETAT } from './tuiles.js?v=0.140.0';
-import { creerTerrain, impact, hydroLignes, toucher } from './terrain.js?v=0.140.0';
-import { FORMES } from './cratere.js?v=0.140.0';
-import { CALIBRES } from './data/calibres.js?v=0.140.0';
-import { METEO } from './data/meteo.js?v=0.140.0';
-import { nouvelleBataille, avancer, ordonnerMarche, ordonnerBarrage, mourir, regarderAu, aube, horloge, ticksParJour, rangDe } from './bataille.js?v=0.140.0';
-import { BOUE_SOLDATS } from './data/aspect-soldat.js?v=0.140.0';
-import { AZIMUTS, COTES } from './data/soleil.js?v=0.140.0';
-import { creerRendu, ZOOMS } from './rendu3d.js?v=0.140.0';
-import { placesCommandement } from './army.js?v=0.140.0';
-import { hash2 } from './lib/rng.js?v=0.140.0';
-import { reglerVerdure } from './apparence.js?v=0.140.0';
-import { maquetteChars } from './labo-chars.js?v=0.140.0';
-import { maquetteEpaves } from './labo-epaves.js?v=0.140.0';
-import { fondations, boutons, unites, fenetres, revision } from './labo-design-system.js?v=0.140.0';
-import { cartesSecteur } from './labo-cartes.js?v=0.140.0';
-import { gainTampon, gainCachets, gainFil, gainBordereau, victoireFanion, victoireTampon, victoireChevrons, victoireAube, ficheDeuxColonnes, ficheEtages, ficheRegistre, ficheDAbord } from './labo-recompenses.js?v=0.140.0';
-import { maquetteBatiment, maquetteCamp } from './labo-batiments.js?v=0.140.0';
-import { BATIMENTS } from './data/batiments.js?v=0.140.0';
-import { JOURNAL } from './labo-journal.js?v=0.140.0';
-import { loadVersion } from './lib/app-update.js?v=0.140.0';
-import { maquetteEffets, maquetteAmbiance, maquetteEspace, maquetteBruitages } from './labo-son.js?v=0.140.0';
-import { calqueMoral } from './labo-moral.js?v=0.140.0';
-import { bilanRapport, bilanTuiles, bilanFrise } from './labo-donnees.js?v=0.140.0';
-import { papierNuit, finDePartie } from './labo-papiers.js?v=0.140.0';
-import { fichesTuiles, fichesProfil, fichesCompactes } from './labo-fiches.js?v=0.140.0';
-import { calqueEnnemis } from './labo-engins-ennemis.js?v=0.140.0';
-import { maquetteTranchees, NOTES_TRANCHEES, NOMS_TRANCHEES } from './labo-tranchees.js?v=0.140.0';
-import { maquetteFabrique } from './labo-fabrique.js?v=0.140.0';
-import { atelierTerrain } from './labo-atelier-terrain.js?v=0.140.0';
-import { entrees as encEntrees, lexiqueAZ, planche as encPlanche } from './labo-encyclopedie.js?v=0.140.0';
+import { afficherVersion } from './version-tag.js?v=0.140.1';
+import { mountLabo } from './lib/labo-shell.js?v=0.140.1';
+import { spriteCanvas, paletteToGPL, paletteToHex } from './lib/sprites.js?v=0.140.1';
+import { PALETTE, ROLES } from './palette.js?v=0.140.1';
+import { chargerContenu } from './design-store.js?v=0.140.1';
+import { tuile, ETAT } from './tuiles.js?v=0.140.1';
+import { creerTerrain, impact, hydroLignes, toucher } from './terrain.js?v=0.140.1';
+import { FORMES } from './cratere.js?v=0.140.1';
+import { CALIBRES } from './data/calibres.js?v=0.140.1';
+import { METEO } from './data/meteo.js?v=0.140.1';
+import { nouvelleBataille, avancer, ordonnerMarche, ordonnerBarrage, mourir, regarderAu, aube, horloge, ticksParJour, rangDe } from './bataille.js?v=0.140.1';
+import { BOUE_SOLDATS } from './data/aspect-soldat.js?v=0.140.1';
+import { AZIMUTS, COTES } from './data/soleil.js?v=0.140.1';
+import { creerRendu, ZOOMS } from './rendu3d.js?v=0.140.1';
+import { placesCommandement } from './army.js?v=0.140.1';
+import { hash2 } from './lib/rng.js?v=0.140.1';
+import { reglerVerdure } from './apparence.js?v=0.140.1';
+import { maquetteChars } from './labo-chars.js?v=0.140.1';
+import { maquetteEpaves } from './labo-epaves.js?v=0.140.1';
+import { fondations, boutons, unites, fenetres, revision } from './labo-design-system.js?v=0.140.1';
+import { cartesSecteur } from './labo-cartes.js?v=0.140.1';
+import { calqueEcussons } from './labo-ecussons.js?v=0.140.1';
+import { gainTampon, gainCachets, gainFil, gainBordereau, victoireFanion, victoireTampon, victoireChevrons, victoireAube, ficheDeuxColonnes, ficheEtages, ficheRegistre, ficheDAbord } from './labo-recompenses.js?v=0.140.1';
+import { maquetteBatiment, maquetteCamp } from './labo-batiments.js?v=0.140.1';
+import { BATIMENTS } from './data/batiments.js?v=0.140.1';
+import { JOURNAL } from './labo-journal.js?v=0.140.1';
+import { loadVersion } from './lib/app-update.js?v=0.140.1';
+import { maquetteEffets, maquetteAmbiance, maquetteEspace, maquetteBruitages } from './labo-son.js?v=0.140.1';
+import { calqueMoral } from './labo-moral.js?v=0.140.1';
+import { bilanRapport, bilanTuiles, bilanFrise } from './labo-donnees.js?v=0.140.1';
+import { papierNuit, finDePartie } from './labo-papiers.js?v=0.140.1';
+import { fichesTuiles, fichesProfil, fichesCompactes } from './labo-fiches.js?v=0.140.1';
+import { calqueEnnemis } from './labo-engins-ennemis.js?v=0.140.1';
+import { maquetteTranchees, NOTES_TRANCHEES, NOMS_TRANCHEES } from './labo-tranchees.js?v=0.140.1';
+import { maquetteFabrique } from './labo-fabrique.js?v=0.140.1';
+import { atelierTerrain } from './labo-atelier-terrain.js?v=0.140.1';
+import { entrees as encEntrees, lexiqueAZ, planche as encPlanche } from './labo-encyclopedie.js?v=0.140.1';
 
 document.documentElement.style.setProperty('--jeu-accent', ROLES.accent);
 const NOM = document.title.replace(/^Labo — /, ''); // le nom vient de la page (une apostrophe ne casse rien)
@@ -390,6 +391,11 @@ const GROUPES = [
       { title: 'Le pennon', depuis: '0.67.2', note: 'Un mât planté au bord des hommes, toujours là : il tient droit, toile bleue déployée ; ébranlé, il penche et la toile pend à mi-mât, orange ; en déroute, il est à terre, la toile rouge en lambeaux. Reprend le fanion déchiré des tranchées. Se lit même sans couleur (droit, penché, couché), mais ajoute un objet par régiment à l\'écran.', render: s => moteur(s, { zoom: 2, cz: 185, soldats: 400, calque: calqueMoral('pennon') }) },
       { title: 'La trame', depuis: '0.67.2', note: 'Une hachure en biais sur toute l\'emprise, qui se resserre quand le régiment fléchit : espacée et orange (ébranlé), serrée et rouge avec un cadre pointillé (en déroute). C\'est la hachure de la barre de la carte, portée sur le champ. La plus lisible de loin, la plus lourde : elle couvre les hommes.', render: s => moteur(s, { zoom: 2, cz: 185, soldats: 400, calque: calqueMoral('trame') }) },
       { title: 'Les chevrons de repli', depuis: '0.67.2', note: 'L\'action plutôt que l\'état : ébranlé, un chevron orange pulse sous les hommes, vers l\'arrière ; en déroute, trois chevrons rouges coulent vers le sud. Dit où ils vont, pas ce qu\'ils sont ; invisible dès que le régiment s\'arrête.', render: s => moteur(s, { zoom: 2, cz: 185, soldats: 400, calque: calqueMoral('chevrons') }) },
+    ] },
+    { id: 'signe-unites', title: 'Les unités : un seul signe', variants: [
+      { title: 'A · L\'écusson', status: 'a-trancher', depuis: '0.140.0', note: 'PROPOSITION (Jérôme : « les engins ont un cercle avec barre de vie, les régiments sont complètement différents » ; d\'après une capture d\'un jeu de stratégie). Un bouclier au-dessus de chaque unité qu\'on commande, régiment, char ou poste : la couleur dit le camp, le dessin dit l\'arme (casque, char, mitrailleuse), une barre fine dit les hommes debout (plein), blessés (hachuré), tombés (vide), les chevrons sont à droite de la barre, le numéro du régiment dans un onglet. Ébranlé : un liseré orange qui marche ; en déroute : rouge, haché ; choisi : cerclé d\'os. En bas, la même vignette par unité, sans texte (le nom vient au survol) : 46 px de large au lieu de 118. Le plus parlant ; le plus chargé des trois quand seize régiments sont à l\'écran.', render: s => moteur(s, { zoom: 2, soldats: 400, calque: calqueEcussons('ecusson') }) },
+      { title: 'B · Le jeton', status: 'a-trancher', depuis: '0.140.0', note: 'PROPOSITION. On garde le rond des engins d\'aujourd\'hui (v0.120.0) et on le donne aux régiments : le numéro au cœur, l\'arc de vie autour (blessés en pointillé), les chevrons dessus ; c\'est aussi le rond de la carte du secteur. Aucun signe nouveau à apprendre, le plus léger ; mais un régiment et un engin ne se distinguent que par un chiffre ou un dessin de 8 px.', render: s => moteur(s, { zoom: 2, soldats: 400, calque: calqueEcussons('jeton') }) },
+      { title: 'C · Le fanion', status: 'a-trancher', depuis: '0.140.0', note: 'PROPOSITION. Un fanion planté au-dessus de l\'unité : la hampe est la barre (elle se vide de haut en bas), la toile à la couleur du camp porte le numéro ou le dessin de l\'arme ; elle pend à demi quand le régiment est ébranlé, tout à fait en déroute. Le plus « 1914 », l\'état se lit sans couleur ; une barre verticale se compare moins bien d\'un régiment à l\'autre.', render: s => moteur(s, { zoom: 2, soldats: 400, calque: calqueEcussons('fanion') }) },
     ] },
     { id: 'engins-ennemis', title: 'Les engins d\'en face sur le champ', variants: [
       { title: 'Aujourd\'hui : l\'étiquette complète', status: 'actuelle', depuis: '0.115.0', note: 'La référence (v0.115.0). Un papier d\'os avec le nom, le pourcentage et une barre, comme celle de nos engins : Jérôme la trouve trop prégnante pour un engin qu\'on ne commande pas. Quatre postes d\'en face (intact, entamé, presque détruit, détruit) et quatre chars, au zoom 3 px/m ; essayez les autres zooms.', render: s => moteur(s, { zoom: 2, soldats: 400, calque: calqueEnnemis('actuelle') }) },

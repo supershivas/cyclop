@@ -1,11 +1,11 @@
 // Le camp : la règle, sans écran (Jérôme, v0.86.0 : lot 1 de `docs/chantiers/camp-et-ameliorations.md`). Logique pure : aucun DOM, aucune horloge, aucun hasard.
 // L'état est `etat.camp` : la dotation de l'état-major, le niveau de chaque bâtiment (et son chantier d'une nuit), les lignes d'en face déjà comptées.
 // Lot 2 : les niveaux ouvrent les ordres (`refusOrdre`). Lot 3 (v0.88.0) : chaque niveau et chaque choix de palier change un chiffre (`modif`) ou un effectif (`effectifsDe`).
-import { hash2 } from './lib/rng.js?v=0.140.0';
-import { BATIMENTS, DOTATION, CAMP_PLAN, CAMP_IA, PIEDS, EQUIPEMENT, EQUIPEMENTS } from './data/batiments.js?v=0.140.0';
-import { RENFORTS } from './data/renforts.js?v=0.140.0';
-import { MITRAILLAGE } from './data/mitraillage.js?v=0.140.0';
-import { PARC } from './data/parc.js?v=0.140.0';
+import { hash2 } from './lib/rng.js?v=0.140.1';
+import { BATIMENTS, DOTATION, CAMP_PLAN, CAMP_IA, PIEDS, EQUIPEMENT, EQUIPEMENTS } from './data/batiments.js?v=0.140.1';
+import { RENFORTS } from './data/renforts.js?v=0.140.1';
+import { MITRAILLAGE } from './data/mitraillage.js?v=0.140.1';
+import { PARC } from './data/parc.js?v=0.140.1';
 
 const NOUS = 0, EUX = 1;
 /* L'état du camp de `camp` : `etat.camp` (le nôtre), `etat.campEux` (celui d'en face : v0.92.0) */
@@ -214,6 +214,15 @@ export function placesChars(etat, camp = NOUS) {
 export function placeAvion(etat, camp, k) {
   const q = PARC.avions[k] ?? PARC.avions[0];
   return monde(emplacementCamp(etat, 'aerodrome', camp), q[0], q[1]);
+}
+/* Les sections du génie qui attendent au dépôt de `camp` (Jérôme, v0.140.0 : « le génie serait un petit régiment visible ») : le centre de chaque section, en rang devant la maison des sapeurs,
+   hors de son emprise (un clic sur elles n'ouvre pas la fenêtre du bâtiment) ; vide sans camp dessiné. `PARC.genie` : le recul devant la façade, le pas entre deux sections */
+export function placesGenie(etat, camp = NOUS) {
+  const n = niveauDe(etat, 'sapeurs', camp), dep = etat.sapeurs?.[camp] ?? 0;
+  if (!campDe(etat, camp)?.bride || !n || !dep) return [];
+  const e = emplacementCamp(etat, 'sapeurs', camp), out = [];
+  for (let k = 0; k < dep; k++) out.push(monde(e, (k - (dep - 1) / 2) * PARC.genie.pas, -(e.d / 2 + PARC.genie.recul)));
+  return out;
 }
 /* Le char à prendre au parc pour une sortie : un char neuf s'il en reste, sinon le rentré le mieux portant qui n'est pas sous le génie (`enReparation(id)`) ; { neuf: true }, { rentre } ou null */
 export function prochainDuParc(etat, camp, enReparation = () => false) {

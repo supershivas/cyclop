@@ -4,5 +4,6 @@ export const PARC = {
   avions: [[-32, -5, 0], [20, 4, 0.1], [-19, -5, 0], [-6, -5, 0], [34, 4, -0.1]],      // [x, z, cap] de la cellule k de l'escadrille (3, 4 ou 5 selon le niveau de l'aérodrome)
   capaciteAvions: [0, 3, 4, 5],                                                        // par niveau (comme `avions` de BATIMENTS.aerodrome.niveaux)
   chars: { z: -10, pas: 6.4, depart: [0, 0, 4.8, 9.6], capacite: [0, 2, 3, 4] },       // la 1re place (la plus près de la sortie) puis une place tous les `pas` m ; par niveau (comme `chars`)
+  genie: { recul: 5, pas: 6.5, colonnes: 5, ecart: 0.9 },                                   // les sections du génie au dépôt : m devant la façade des sapeurs, m entre deux sections, hommes par rang, m entre deux hommes (v0.140.0)
   portee: 6,                                                                           // m : un clic à cette distance d'un engin du parc le désigne
 };

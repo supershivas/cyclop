@@ -1,8 +1,14 @@
 # Journal des versions
 
-## 0.139.3 — 2026-11-16
+## 0.140.1 — 2026-11-16
 
 - Du sang : des taches sur les blessés autour de leur plaie, sur les morts, et sur les soldats qui se battent au corps à corps, qui les gardent ensuite
+
+## 0.140.0 — 2026-11-16
+
+- Un clic sur un avion au sol, un char du parc ou une section du génie le choisit (il est cerclé d'os, sa pastille s'allume) : le clic suivant sur le champ l'envoie, sans passer par le bouton ; un second clic sur lui le rend ; les boutons et les touches restent
+- Les sections du génie attendent en rang devant la maison des sapeurs, des deux camps
+- Au labo, à trancher : un seul signe pour les régiments et les engins, sur le champ et dans la rangée du bas (l'écusson, le jeton ou le fanion) ; le jeu ne change pas
 
 ## 0.139.2 — 2026-11-16
 

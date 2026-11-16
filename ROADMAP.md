@@ -154,6 +154,11 @@ les deux machines calculent la même bataille, on n'échange que les ordres) sur
   1 tient 7 ms, les zooms 4 et 8 de 8 à 16 ms sur un champ labouré : à trancher
 - [x] Lisibilité : cratère, boue, eau, soldat distinguables en gris
 
+### La patrouille de nuit (Jérôme, 16 nov. : « une mission interlude où l'on déplace un petit groupe de soldats (30-50) d'un point A à un point B de nuit » ; accord pour une tuile sur le papier de la nuit ; pas construite)
+- [ ] Au labo d'abord : 30 à 50 hommes de A à B à travers le no man's land, caméra de près (12 à 24 px/m), les fusées éclairantes (se coucher dans un trou ou être vu d'un poste), une carte fixe, sans conséquence : vérifier que c'est amusant
+- [ ] Puis une tuile « Patrouille » sur le papier de la nuit, facultative, une ou deux fois par bataille, proposée quand la situation la justifie (régiment isolé, fil intact devant l'objectif) ; un effet lisible au matin (fil coupé, vivres portés, relève guidée) ; les hommes perdus sont ceux d'un vrai régiment
+- Garde-fou : le « coup de main » a été retiré (v0.38.3) parce qu'il coûtait des hommes pour rien, en lot ; la patrouille se joue et rapporte
+
 ## À l'étude (validé dans le principe par le prompt de départ, pas construit)
 
 - **Le camp, ses bâtiments et les améliorations** (Jérôme, 27 octobre ; maquettes au labo en v0.85.0, règle en v0.86.0, camp à l'écran en v0.87.0, choix et effectifs en v0.89.0, équipement en v0.91.0, camp d'en face et campagne en v0.92.0 ; jeu à deux en v0.94.0 : tout est construit ; reste à peser les nombres sur des batailles entières) : cinq bâtiments (artillerie, aérodrome, parc des chars, maison des sapeurs, caserne des renforts) qu'on clique pour ordonner à la place des boutons latéraux, un camp qui se construit au fil des jours dans la marge arrière du terrain (sans l'agrandir), une dotation de l'état-major à l'aube, trois niveaux avec un choix à chaque palier, l'équipement des régiments. Proposition, lots et questions ouvertes : `docs/chantiers/camp-et-ameliorations.md`. Reprend l'idée de l'abri à char (ci-dessus, « Chars »).

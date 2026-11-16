@@ -2,13 +2,13 @@
 // tant qu'un chantier dure, un liseré d'os autour du bâtiment choisi. Le dessin seulement : tout vient de l'état de la bataille, rien n'y est écrit ; et rien n'est dessiné hors de la partie bridée
 // (`etat.camp.bride`), donc ni le labo ni les tests n'ont de camp ; le jeu à deux en a un par joueur (v0.94.0). Les deux camps sont dessinés : celui d'en face est le nôtre tourné d'un demi-tour.
 // Fabrique `creerCamp({ THREE, scene, bataille: () => B, hauteur })`.
-import { atelier } from './engins.js?v=0.140.0';
-import { BATIR, chantier, regler_creux, regler_camp, vie } from './camp-modeles.js?v=0.140.0';
-import { emprisesCamp, emplacementCamp, sortieChars, placesChars, placeAvion, parcChars } from '../camp.js?v=0.140.0';
-import { avionsAbimes } from '../genie.js?v=0.140.0';
-import { PALETTE as P } from '../palette.js?v=0.140.0';
-import { DRAPEAU_U } from './drapeau.js?v=0.140.0';
-import { RONDE, pointRonde } from '../ronde.js?v=0.140.0';
+import { atelier } from './engins.js?v=0.140.1';
+import { BATIR, chantier, regler_creux, regler_camp, vie } from './camp-modeles.js?v=0.140.1';
+import { emprisesCamp, emplacementCamp, sortieChars, placesChars, placeAvion, parcChars } from '../camp.js?v=0.140.1';
+import { avionsAbimes } from '../genie.js?v=0.140.1';
+import { PALETTE as P } from '../palette.js?v=0.140.1';
+import { DRAPEAU_U } from './drapeau.js?v=0.140.1';
+import { RONDE, pointRonde } from '../ronde.js?v=0.140.1';
 
 const LUEUR = 0.9;      // × la couleur de la matière (mesuré à l'œil sur la partie du premier matin : sans elle, la boue est noire)
 
@@ -77,8 +77,8 @@ export function creerCamp({ THREE, scene, bataille, hauteur }) {
   }
   const sansLiseret = () => { if (liseret) { scene.remove(liseret); liseret = null; } };
   const anneaux = [];                     // les liserés des engins abîmés qu'on peut réparer (v0.130.0)
-  function surligner(B, t, montrer) {
-    const cibles = [];
+  function surligner(B, t, montrer, marques = null) {
+    const cibles = marques ? marques.map(q => [...q]) : [];      // les engins du parc dont l'ordre est armé (v0.140.0 : `rendu.marquesParc`, [x, y, largeur, profondeur])
     if (montrer && B.etat.camp?.bride) {
       for (const k of avionsAbimes(B.etat, 0)) { const p = placeAvion(B.etat, 0, k); cibles.push([p.x, p.y, 10, 9]); }
       for (const p of placesChars(B.etat, 0)) { const r = p.id !== null && parcChars(B.etat, 0).find(q => q.id === p.id); if (r && r.pv < r.pvMax && r.pv > 0) cibles.push([p.x, p.y, 8, 6]); }
@@ -94,7 +94,7 @@ export function creerCamp({ THREE, scene, bataille, hauteur }) {
       l.scale.set(c[2] * pulse, 1, c[3] * pulse); l.position.set(c[0], hauteur(c[0], c[1]) + 0.3, c[1]);
     });
   }
-  function maj(sombre = 0, t = 0, surligne = false) {
+  function maj(sombre = 0, t = 0, surligne = false, marques = null) {
     const B = bataille();
     if (!B || !B.etat.camp?.bride) { if (modeles.size) vider(); return; }
     A ??= atelier(THREE);
@@ -132,7 +132,7 @@ export function creerCamp({ THREE, scene, bataille, hauteur }) {
         m.pivot.traverse(o => { if (o.userData.parc !== undefined) o.visible = o.userData.parc < n && !(o.userData.parc === 0 && sorti); });
       }
     }
-    surligner(B, t, surligne);
+    surligner(B, t, surligne, marques);
     // la vie : les drapeaux suivent le vent comme ceux du front, les gardes font leur ronde (le temps du dessin : figés par la pause)
     DRAPEAU_U.uForce.value = vent.force; DRAPEAU_U.uTV.value = t;
     for (const m of modeles.values()) {

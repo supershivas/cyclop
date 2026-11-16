@@ -3,13 +3,13 @@
 // sa vie ; un poste porte un trait, un avion un triangle ; détruit, l'anneau est pointillé et barré. Au survol il grossit et l'infobulle du jeu (`data-info`) dit tout : l'état, la vie, le canon ou la bande,
 // l'expérience, les victimes. Le clic sur un des nôtres (char, poste) le choisit. Le dessin et les lignes de texte seulement : les données viennent de hud/chars.js, hud/nids.js et d'ici pour les avions.
 // Les nombres d'avions : `positionDe` (avions.js). Rien n'est écrit dans la bataille.
-import { positionDe, balayage } from '../avions.js?v=0.140.0';
-import { MITRAILLAGE } from '../data/mitraillage.js?v=0.140.0';
-import { NOUS } from '../bataille.js?v=0.140.0';
+import { positionDe, balayage } from '../avions.js?v=0.140.1';
+import { MITRAILLAGE } from '../data/mitraillage.js?v=0.140.1';
+import { NOUS } from '../bataille.js?v=0.140.1';
 
 const NS = 'http://www.w3.org/2000/svg', R_ARC = 9, CIRC = 2 * Math.PI * R_ARC;
 const REDUIT = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
-const MARQUES = { char: '', nid: '<rect class="marque" x="-1" y="-4" width="2" height="8"/>', avion: '<path class="marque" d="M0-5L4.5 4.5 0 2.2-4.5 4.5Z"/>' };
+const MARQUES = { char: '', nid: '<rect class="marque" x="-1" y="-4" width="2" height="8"/>', avion: '<path class="marque" d="M0-5L4.5 4.5 0 2.2-4.5 4.5Z"/>', genie: '<path class="marque" d="M-1-5h2v6h-2zM-3.5 1h7v4h-7z"/>' };      // (genie : une pelle, v0.140.0)
 const NOMS_AVIONS = { 0: 'SPAD', 1: 'Albatros' };
 
 export function creerPastilles({ $, bataille, moi = () => NOUS, versEcran, hauteurSol }) {

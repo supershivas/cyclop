@@ -62,7 +62,7 @@ export const CARRURE = {
 // (le coût mesuré, rendu logiciel : environ trois fois celui du soldat équipé du jeu : `docs/domaines/rendu.md`) ; `fin` : dès ce zoom le niveau fin, avant lui l'intermédiaire (v0.105.1) ; les autres gardent le soldat équipé. `ombrage` : le relief des faces (0 : les aplats),
 // un mélange continu du ton de la palette (comme les fondus : voir la palette), qui fait lire les membres.
 // La boue sur les hommes (Jérôme, 16 nov., v0.139.2 : « selon les jours et le temps ») : la part de la couleur du sol dans celle de l'uniforme, au premier matin, ce qu'elle gagne par jour de bataille, son plafond ; le dessin seulement
-// Le sang (Jérôme, 16 nov., v0.139.3 : « des taches de sang sur les blessés, les morts et les soldats qui combattent ou ont combattu au corps à corps ») : sa couleur (le rouge sombre des flancs
+// Le sang (Jérôme, 16 nov., v0.140.1 : « des taches de sang sur les blessés, les morts et les soldats qui combattent ou ont combattu au corps à corps ») : sa couleur (le rouge sombre des flancs
 // d'automne : aucune teinte nouvelle, un usage de plus, hors palette), la part de cette couleur dans une tache, ce qu'un homme en prend par seconde de corps à corps (0 à 1), le côté d'une tache en mètres ; le dessin seulement
 export const SANG = { couleur: '#7a0f1c', force: 0.85, parSeconde: 0.25, cellule: 0.11 };
 export const BOUE_SOLDATS = { depart: 0.3, parJour: 0.06, max: 0.85 };
