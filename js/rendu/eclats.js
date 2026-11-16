@@ -7,12 +7,17 @@ import { INDICE } from '../palette.js?v=0.138.0';
 import { horloge } from '../bataille.js?v=0.138.0';
 import { hash2 } from '../lib/rng.js?v=0.138.0';
 import { ARBRES_TIRAGES, ARBRES_COUCHE } from '../data/arbres.js?v=0.138.0';
+import { MOTTES, FEU } from '../data/effets.js?v=0.138.0';
+import { OMBRE } from '../apparence.js?v=0.138.0';
+import { creerMottes } from './mottes.js?v=0.138.0';
+import { creerFlammes } from './flammes.js?v=0.138.0';
 
 const ECLATS = 6000;     // (v0.24.0 ; 2 400 avant : une salve de 220 — ~200 éclats chacun, dont de la fumée de 8 à 16 s — faisait le tour du tampon et effaçait les éclats encore en vol)
 
 // `THREE`, `scene`, `col`, `palTex` et `NP` (la texture de la palette, pour la couleur d'un éclat), `effets` (ceux que le jeu garde), `surface(x, z)`, `projeter()` et `vue`
 // viennent de creerRendu ; `bataille()`, `terrain()` et `vide()` changent, donc ce sont des fonctions. L'ordre d'ajout à la scène est celui d'avant la découpe.
-export function creerEclats({ THREE, scene, col, palTex, NP, effets, surface, projeter, vue, bataille, terrain, vide }) {
+// `ppm()` : les pixels par mètre du zoom ; `echelle()` : les pixels d'un mètre à un mètre de la caméra (la taille des flammes, en perspective)
+export function creerEclats({ THREE, scene, col, palTex, NP, effets, surface, projeter, vue, bataille, terrain, vide, ppm = () => 4, echelle = () => 400 }) {
   // ─── Les éclats : l'éclair, la terre jetée, la fumée (des points) ; et les effets proposés au labo
   // (`effets` de creerRendu, éteints dans le jeu tant que Jérôme n'en a pas retenu) : la gerbe de terre,
   // l'onde au sol, l'obus qui tombe, la fumée qui dérive et reste, le feu, les fusées éclairantes, les corbeaux.
@@ -66,7 +71,14 @@ export function creerEclats({ THREE, scene, col, palTex, NP, effets, surface, pr
   const VERS_LE_HAUT = new THREE.Vector3(0, 1, 0), dirObus = new THREE.Vector3();
   let graine = 1;
   const alea = () => { graine = (graine * 16807) % 2147483647; return graine / 2147483647; };   // l'aspect seulement, jamais la logique
+  // les mottes en volume et le feu (v0.139.0 ; data/effets.js) : les grosses mottes (sorte 8, taille 2 et plus : pas les douilles) et toutes les flammes (sorte 5) passent par eux
+  const mottes = creerMottes({ THREE, scene, col, ombre: OMBRE, surface: (x, z) => (terrain() ? surface(x, z) : 0), alea });
+  const flammes = creerFlammes({ THREE, scene, alea, echelle });
+  const mottesVues = () => ppm() >= MOTTES.ppmMin;
+  const tailleMotte = () => MOTTES.taille[0] + alea() * alea() * (MOTTES.taille[1] - MOTTES.taille[0]);      // (beaucoup de petites, peu de grosses)
   function particule(sorte, x, y, z, vx, vy, vz, vie, taille = 1) {
+    if (sorte === 5) { flammes.lancer(x, y, z, vx, vy * 0.4, vz, 0.55 + taille * 0.45); return; }
+    if (sorte === 8 && taille >= 2 && mottesVues()) { mottes.lancer(x, y, z, vx, vy, vz, tailleMotte()); return; }
     // le prochain emplacement libre (un éclat fini), parmi les 24 suivants ; sinon, le plus ancien du tour prend la place
     let s = eclTete;
     for (let essai = 0; essai < 24 && ecl.age[s] <= ecl.vie[s]; essai++) s = (s + 1) % ECLATS;
@@ -115,6 +127,14 @@ export function creerEclats({ THREE, scene, col, palTex, NP, effets, surface, pr
         particule(k % 3 ? 1 : 8, x + (alea() - 0.5), h + 0.3, y + (alea() - 0.5), Math.cos(a) * v, 9 + alea() * 10 * Math.sqrt(big), Math.sin(a) * v, 1.6 + alea() * 0.8, k % 3 ? 1.5 : 2.5);
       }
     }
+    if (effets.gerbe && mottesVues()) {
+      // les grosses mottes : peu nombreuses, lourdes, jetées moins haut et plus loin ; elles roulent et restent (v0.139.0)
+      const G = MOTTES.grossesTaille;
+      for (let k = 0; k < (MOTTES.parCalibre[cal] ?? 4); k++) {
+        const a = alea() * Math.PI * 2, v = (2 + alea() * 4) * Math.sqrt(big);
+        mottes.lancer(x + (alea() - 0.5) * big, h + 0.4, y + (alea() - 0.5) * big, Math.cos(a) * v, 5 + alea() * 6 * Math.sqrt(big), Math.sin(a) * v, G[0] + alea() * (G[1] - G[0]));
+      }
+    }
     if (effets.onde) {
       // l'onde : un anneau de poussière qui court au ras du sol
       const m = 18 + 10 * big;
@@ -160,11 +180,13 @@ export function creerEclats({ THREE, scene, col, palTex, NP, effets, surface, pr
         }
       }
       const y = surface(f.x, f.z) + f.h;
-      while (f.f > 0.05) {
-        f.f -= 0.05;
+      // le feu vit : il couve au début, flambe, puis retombe en braises (la cadence et la taille des flammes suivent)
+      const vif = Math.min(1, f.t / 4) * Math.min(1, (f.fin - f.t) / 8), cad = FEU.cadence / Math.max(0.25, vif);
+      while (f.f > cad) {
+        f.f -= cad;
         const large = f.h > 2 ? 2.4 : 0.8;          // une couronne qui brûle est plus large qu'une souche
-        particule(5, f.x + (alea() - 0.5) * large, y + (alea() - 0.5) * (f.h > 2 ? 2 : 0), f.z + (alea() - 0.5) * large, (alea() - 0.5) * 0.4, 1.5 + alea() * 1.5, 0, 0.35 + alea() * 0.35, 1.5);
-        if (alea() < 0.25) fumee(f.x, y + 1, f.z, 1, true);
+        particule(5, f.x + (alea() - 0.5) * large, y + (alea() - 0.5) * (f.h > 2 ? 2 : 0) - 0.2, f.z + (alea() - 0.5) * large, (alea() - 0.5) * 0.4, 1.5 + alea() * 1.5, 0, 0.35 + alea() * 0.35, (f.h > 2 ? 1.6 : 0.9) * (0.5 + vif * 0.7));
+        if (alea() < 0.1) fumee(f.x, y + 1.5, f.z, 1, true, f.h > 2 && alea() < 0.4);
       }
     }
   }
@@ -307,7 +329,7 @@ export function creerEclats({ THREE, scene, col, palTex, NP, effets, surface, pr
       if ((a.t -= dt) <= 0) { attente.splice(k, 1); if (a.mesh) { a.mesh.visible = false; obusLibres.push(a.mesh); } eclater(a.x, a.y, a.cal); }
       else if (a.mesh) a.mesh.position.set(a.x - 16 * a.t, a.h + 160 * a.t, a.y);
     }
-    guetterFeux(); majFeux(dt); majFusees(dt);
+    guetterFeux(); majFeux(dt); majFusees(dt); mottes.maj(dt); flammes.maj(dt, vide()); mottes.visible = !vide();
     for (let s = 0; s < ECLATS; s++) {
       if (ecl.age[s] > ecl.vie[s]) { eclTon[s] = -1; continue; }
       ecl.age[s] += dt;
@@ -364,11 +386,11 @@ export function creerEclats({ THREE, scene, col, palTex, NP, effets, surface, pr
     mitraille, gerbeSol, douilles, fumeeAvion, ecraser,
     ecl, feux, ECLATS,                                           // lus par temps.js : les fusées et les incendies éclairent la nuit
     impactVu, majTirs, majEclats, majCorbeaux,
-    setVent(x, z) { ventX = x; ventZ = z; },                      // le vent en m/s
+    setVent(x, z) { ventX = x; ventZ = z; flammes.setVent(x, z); },                      // le vent en m/s
     setTaille(n) { eclMat.uniforms.uTaille.value = n; },          // la taille d'un point d'éclat, selon le zoom
     // une autre bataille : ses arbres ne brûlent pas encore, et la fumée, les balles et les obus en vol de la précédente (le décor de l'écran titre) ne passent pas dans la suivante
     reinitialiser() {
-      feux.length = 0; brules.clear(); arbresEtat = null;
+      feux.length = 0; brules.clear(); arbresEtat = null; mottes.reinitialiser(); flammes.reinitialiser();
       ecl.age.fill(99); bal.age.fill(99);
       for (const a of attente) if (a.mesh) { a.mesh.visible = false; obusLibres.push(a.mesh); }
       attente.length = 0;

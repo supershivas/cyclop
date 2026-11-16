@@ -320,6 +320,7 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
   const eclats = creerEclats({
     THREE, scene, col, palTex, NP, effets, surface, projeter, vue,
     bataille: () => B, terrain: () => T, vide: () => vide,
+    ppm: () => ZOOMS[vue.zoom], echelle: () => (vue.vh / 2) / Math.tan(vue.fov * Math.PI / 360),      // (les mottes en volume dès 3 px/m ; la taille des flammes en perspective)
   });
 
   const ciel = creerCiel({ THREE, scene, col, camera });

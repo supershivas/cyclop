@@ -506,13 +506,15 @@ export const herbeMat = {
 export const eclMat = {
   // v0.99.11 (Jérôme : « la fumée en ellipses, plus de cubes ; des volutes plus réalistes ») : une bouffée de fumée (ton > 50) est une ellipse (axes 1 : 0,6) tournée d'un angle tiré de sa position (`vRot`), plus grande d'un tiers
   // (l'ellipse ne remplit que la moitié de son carré), au bord fondu ; les bouffées d'un panache, toutes à des angles différents, se mêlent en volutes.
-  v: `attribute float aTon; attribute float aTaille; varying float vTon; varying float vRot; uniform float uTaille;
+  v: `attribute float aTon; attribute float aTaille; varying float vTon; varying float vRot; varying float vRond; uniform float uTaille;
       void main() { vTon = aTon; vRot = fract(sin(dot(position.xz, vec2(12.9898, 78.233))) * 43758.5453) * 6.2832; gl_Position = projectionMatrix * viewMatrix * vec4(position, 1.0);
-        float t = max(1.0, floor(uTaille * aTaille + 0.5)); gl_PointSize = aTon < 0.0 ? 0.0 : (aTon > 50.0 ? floor(t * 1.35 + 0.5) : t); if (aTon < 0.0) gl_Position = vec4(2.0); }`,
-  f: `uniform sampler2D uPal; uniform float uNP; varying float vTon; varying float vRot;
+        float t = max(1.0, floor(uTaille * aTaille + 0.5)); gl_PointSize = aTon < 0.0 ? 0.0 : (aTon > 50.0 ? floor(t * 1.35 + 0.5) : t); vRond = t >= 3.0 ? 1.0 : 0.0; if (aTon < 0.0) gl_Position = vec4(2.0); }`,
+  f: `uniform sampler2D uPal; uniform float uNP; varying float vTon; varying float vRot; varying float vRond;
       void main() {
         float t = floor(vTon + 0.5);
         float a = 1.0;
+        // (v0.139.0) un éclat de 3 pixels ou plus (la terre jetée, l'éclair) n'est plus un carré : une motte irrégulière, ovale et tournée
+        if (t <= 50.0 && vRond > 0.5) { vec2 q = (gl_PointCoord - 0.5) * 2.0; float c = cos(vRot), s = sin(vRot); q = vec2(c * q.x - s * q.y, s * q.x + c * q.y); if (length(vec2(q.x, q.y / 0.72)) > 1.0) discard; }
         if (t > 50.0) {                           // la fumée : une ellipse tournée, au bord fondu (v0.12.1 : fondue ; v0.99.11 : ronde)
           vec2 p = (gl_PointCoord - 0.5) * 2.0; float c = cos(vRot), s = sin(vRot);
           p = vec2(c * p.x - s * p.y, s * p.x + c * p.y);
