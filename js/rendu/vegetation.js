@@ -5,7 +5,7 @@ import * as SH from './shaders.js?v=0.141.1';
 import { creerGeometries } from './geometries.js?v=0.141.1';
 import { hash2 } from '../lib/rng.js?v=0.141.1';
 import { BUISSONS_FORMES, BUISSONS_SAISONS, BUISSONS_TIRAGES } from '../data/buissons.js?v=0.141.1';
-import { ARBRES_GRAPPES, ARBRES_FAMILLES, ARBRES_ESSENCES, ARBRES_TIRAGES, ARBRES_ECHELLE, ARBRES_AUTOMNE, ARBRES_PPM_FEUILLES, ARBRES_FEUILLES, ARBRES_VARIANTES, ARBRES_COUCHE, ARBRES_GROSSIER } from '../data/arbres.js?v=0.141.1';
+import { ARBRES_FONDU, ARBRES_GRAPPES, ARBRES_FAMILLES, ARBRES_ESSENCES, ARBRES_TIRAGES, ARBRES_ECHELLE, ARBRES_AUTOMNE, ARBRES_PPM_FEUILLES, ARBRES_FEUILLES, ARBRES_VARIANTES, ARBRES_COUCHE, ARBRES_GROSSIER } from '../data/arbres.js?v=0.141.1';
 import { dansLEcran } from './vue-ecran.js?v=0.141.1';
 
 // `THREE`, `scene`, `col`, `camera`, `vue`, `solY` (la hauteur moyenne du sol), `distance(zoom)`, `surface(x, z)` et `petit()` (aux zooms où un soldat n'est qu'un point)
@@ -36,6 +36,23 @@ export function creerVegetation({ THREE, scene, col, camera, vue, solY: SOL_Y, d
         gl_Position = projectionMatrix * mvPosition;`);
     };
     mat.customProgramCacheKey = () => 'vent-arbre';
+    return mat;
+  };
+  // les feuilles des arbres variés : le vent, et le fondu en trame entre deux niveaux de détail (ARBRES_FONDU) : `aFondu` par instance vaut 1 (toujours dessiné),
+  // f dans [0, 1[ (dessiné là où la trame de Bayer 4 × 4 est sous f) ou 2 + f (là où elle ne l'est pas) : les deux niveaux d'un même arbre se partagent les pixels
+  const plierFondu = (mat) => {
+    plierAuVent(mat);
+    const vent = mat.onBeforeCompile;
+    mat.onBeforeCompile = (sh) => {
+      vent(sh);
+      sh.vertexShader = 'attribute float aFondu; varying float vFondu;\n' + sh.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\n        vFondu = aFondu;');
+      sh.fragmentShader = sh.fragmentShader.replace('void main() {', `varying float vFondu;
+      float bayer4(vec2 p) { vec2 q = mod(floor(p), 4.0); float a = mod(q.x, 2.0), b = mod(q.y, 2.0), c = floor(q.x / 2.0), d = floor(q.y / 2.0);
+        return (4.0 * (2.0 * abs(a - b) + b) + (2.0 * abs(c - d) + d) + 0.5) / 16.0; }
+      void main() {
+        if (vFondu < 1.5) { if (bayer4(gl_FragCoord.xy) >= vFondu) discard; } else if (bayer4(gl_FragCoord.xy) < vFondu - 2.0) discard;`);
+    };
+    mat.customProgramCacheKey = () => 'vent-feuille-fondu';
     return mat;
   };
   // n instances de m sont prêtes : seules leurs n matrices partent vers la carte graphique (sans plage, three.js renvoie tout le tampon, prévu pour tous les arbres ou buissons de la carte :
@@ -115,7 +132,7 @@ export function creerVegetation({ THREE, scene, col, camera, vue, solY: SOL_Y, d
       const sxz = (w0 + (w1 - w0) * tire(a, ARBRES_TIRAGES.taille + 100)) * (1 + (hr - 1) * 0.5), yaw = tire(a, ARBRES_TIRAGES.sens) * Math.PI * 2;
       return { fam, sx: sxz, sy: hr, H: F.h * hr, c: Math.cos(yaw), s: Math.sin(yaw), d: tire(a, ARBRES_TIRAGES.feuilles), t: tire(a, ARBRES_TIRAGES.chute), va: Math.floor(tire(a, ARBRES_TIRAGES.variante) * ARBRES_VARIANTES.n), fb: tire(a, ARBRES_TIRAGES.brule) < ARBRES_COUCHE.brule, u: tire(a, ARBRES_TIRAGES.couche) };
     });
-    feuilleMat ??= plierAuVent(new THREE.MeshBasicMaterial({ vertexColors: true, side: THREE.DoubleSide }));
+    feuilleMat ??= plierFondu(new THREE.MeshBasicMaterial({ vertexColors: true, side: THREE.DoubleSide }));
     const ajouter = (geo, userData) => {
       const m = new THREE.InstancedMesh(geo, userData.couronne ? plierAuVent(new THREE.MeshBasicMaterial()) : userData.feuilles ? feuilleMat : userData.tronc && userData.tronc !== 's' ? plierAuVent(new THREE.MeshBasicMaterial({ color: col(userData.tronc), side: THREE.DoubleSide })) : arbreMat, cap);
       m.count = 0; m.frustumCulled = false; m.userData = { ...userData, tri: geo.attributes.position.count / 3 };
@@ -145,8 +162,10 @@ export function creerVegetation({ THREE, scene, col, camera, vue, solY: SOL_Y, d
   function refaireFeuilles(mode) {
     modeVu = mode;
     FAMS.forEach((F, f) => Array.from({ length: ARBRES_VARIANTES.n }, (_, va) => [va, 0]).concat(Array.from({ length: ARBRES_VARIANTES.n }, (_, va) => [va, 1])).forEach(([va, d]) => {
-      for (const [tab, grossier, grappes] of [[feuilles, false, !!opts.grappes], [feuillesG, true, false], ...(opts.grappes ? [[feuillesR, false, false]] : [])]) {
-        const g = mode === 'nu' ? null : geometrieFeuilles(F.id, mode, d, opts.chanfrein ?? 0, !!opts.rond, va, grossier, opts.essences ? { grappes, teintes: opts.teintes ?? null } : null);
+      // les feuilles de près ; les grossières (de loin) ; avec les grappes, l'intermédiaire : les mêmes grappes en boules grossières (v0.139.1)
+      for (const [tab, grossier, grappes, res] of [[feuilles, false, !!opts.grappes, 'moyen'], [feuillesG, true, false, true], ...(opts.grappes ? [[feuillesR, false, true, true]] : [])]) {
+        const g = mode === 'nu' ? null : geometrieFeuilles(F.id, mode, d, opts.chanfrein ?? 0, !!opts.rond, va, grossier, opts.essences ? { grappes, teintes: opts.teintes ?? null, res } : null);
+        if (g) g.setAttribute('aFondu', new THREE.InstancedBufferAttribute(new Float32Array(Math.max(1, terrain().arbres.length)).fill(1), 1).setUsage(THREE.DynamicDrawUsage));
         let m = tab[f][va][d];
         if (!g) { if (m) m.userData.vide = true; continue; }
         if (!m) {
@@ -210,8 +229,6 @@ export function creerVegetation({ THREE, scene, col, camera, vue, solY: SOL_Y, d
     if (mode !== 'nu' && mode !== couronneMode) { couronneCoul = (ARBRES_FEUILLES[mode]?.dessus ?? []).map(c => c[0] === '#' ? new THREE.Color(c) : col(c)); couronneMode = mode; couronnes.forEach((m, i) => m.material.color.copy(couronneCoul[i % couronneCoul.length] ?? col('o'))); }
     for (const m of arbresMesh) m.userData.n = 0;
     const cp = camera.position, lim = Math.max(160, distance(vue.zoom) * 1.3) ** 2, pose = petit();
-    // le feuillage grossier : l'arbre fait moins de ARBRES_GROSSIER.ppm pixels par mètre (les pixels par mètre du point visé × sa distance / celle de l'arbre)
-    const limG = (pm * distance(vue.zoom) / ARBRES_GROSSIER.ppm) ** 2, limR = opts.grappes ? (pm * distance(vue.zoom) / ARBRES_GRAPPES.ppm) ** 2 : Infinity;      // (les grappes : seulement au-dessus de ARBRES_GRAPPES.ppm)
     let o = 0;
     const couronne = (k, x, y, z, inf) => {
       if (mode === 'nu' || !couronneCoul.length) return;
@@ -268,19 +285,30 @@ export function creerVegetation({ THREE, scene, col, camera, vue, solY: SOL_Y, d
       }
       if (a.abattu) { /* (dessiné ci-dessus) */ }
       else if (loin) { m4v.set(inf.sx, 0, 0, x, 0, inf.H, 0, y, 0, 0, inf.sx, z, 0, 0, 0, 1); loinMesh.setMatrixAt(loinMesh.userData.n++, m4v); couronne(k, x, y, z, inf); }
-      else if ((a.i - cp.x) ** 2 + (y - cp.y) ** 2 + (a.j - cp.z) ** 2 > limG) {        // quelques pixels : le tronc seul, les touffes grossières
-        m4v.set(inf.sx, 0, 0, x, 0, inf.H, 0, y, 0, 0, inf.sx, z, 0, 0, 0, 1); loinMesh.setMatrixAt(loinMesh.userData.n++, m4v);
-        if (!feuillu) couronne(k, x, y, z, inf);
-        else { const d = etatFeuilles(inf, mode, h), m = d < 2 ? feuillesG[inf.fam][inf.va][d] : null; if (m && !m.userData.vide) mettre(m, x, y, z, inf); }
-      }
       else {
-        mettre(troncs[inf.fam], x, y, z, inf);
+        // le niveau de l'arbre selon ses pixels par mètre à l'écran (q) : grappes (près), intermédiaire, grossier (loin) ; autour de chaque seuil, les deux niveaux en trame (ARBRES_FONDU)
+        const q = pm * distance(vue.zoom) / Math.max(1e-3, Math.hypot(a.i - cp.x, y - cp.y, a.j - cp.z)), B = ARBRES_FONDU.bande;
+        if (q >= ARBRES_GROSSIER.ppm) mettre(troncs[inf.fam], x, y, z, inf);
+        else { m4v.set(inf.sx, 0, 0, x, 0, inf.H, 0, y, 0, 0, inf.sx, z, 0, 0, 0, 1); loinMesh.setMatrixAt(loinMesh.userData.n++, m4v); }        // quelques pixels : le tronc seul
         if (!feuillu) couronne(k, x, y, z, inf);
-        if (feuillu) { const d = etatFeuilles(inf, mode, h), tab = (a.i - cp.x) ** 2 + (y - cp.y) ** 2 + (a.j - cp.z) ** 2 > limR ? feuillesR : feuilles, m = d < 2 ? tab[inf.fam][inf.va][d] : null; if (m && !m.userData.vide) mettre(m, x, y, z, inf); }
+        else {
+          const d = etatFeuilles(inf, mode, h);
+          if (d < 2) {
+            const prés = feuilles, moyen = opts.grappes ? feuillesR : feuilles;
+            const poser = (tab, f) => { const m = tab[inf.fam][inf.va][d]; if (!m || m.userData.vide) return; const n = m.userData.n; mettre(m, x, y, z, inf); m.geometry.attributes.aFondu.array[n] = f; };
+            const s1 = ARBRES_GRAPPES.ppm, s0 = ARBRES_GROSSIER.ppm;
+            if (q >= s1 * (1 + B)) poser(prés, 1);
+            else if (q > s1 * (1 - B)) { const t = (q - s1 * (1 - B)) / (2 * B * s1); if (moyen === prés) poser(prés, 1); else { poser(prés, t); poser(moyen, 2 + t); } }
+            else if (q >= s0 * (1 + B)) poser(moyen, 1);
+            else if (q > s0 * (1 - B)) { const t = (q - s0 * (1 - B)) / (2 * B * s0); poser(moyen, t); poser(feuillesG, 2 + t); }
+            else poser(feuillesG, 1);
+          }
+        }
       }
       if (o < ARBRES_OMBRES && !loin) { aoPos[o * 4] = x; aoPos[o * 4 + 1] = y; aoPos[o * 4 + 2] = z; aoPos[o * 4 + 3] = a.abattu ? 1.2 : inf.H; o++; }
     }
     trisArbres = 0; nbArbres = 0;
+    for (const m of arbresMesh) { const af = m.geometry.attributes.aFondu; if (af && m.userData.n) { af.clearUpdateRanges(); af.addUpdateRange(0, m.userData.n); af.needsUpdate = true; } }
     for (const m of arbresMesh) { envoyer(m, m.userData.n); trisArbres += m.count * m.userData.tri; nbArbres += m.count; }
     const at = aoGeo.attributes.aPos; at.clearUpdateRanges(); at.addUpdateRange(0, o * 4); at.needsUpdate = true;
     aoGeo.instanceCount = soleil.lengthSq() > 0.01 && !pose ? o : 0;
