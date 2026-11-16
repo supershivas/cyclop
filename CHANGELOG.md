@@ -1,5 +1,10 @@
 # Journal des versions
 
+## 0.139.0 — 2026-11-16
+
+- Les obus jettent de vraies mottes de terre, en volume, aux couleurs de la terre : elles tournent en l'air, rebondissent une fois, restent quelques secondes au sol puis s'y enfoncent ; les gros calibres en jettent de grosses ; la terre projetée n'est plus faite de carrés
+- Le feu a de vraies flammes : des langues lumineuses qui ondulent, du cœur presque blanc au rouge sombre, qui suivent le vent et lâchent des braises ; un incendie couve, flambe, puis retombe
+
 ## 0.138.0 — 2026-11-15
 
 - Le sol a du grain : des mottes et des éclats de glaise dans la boue, des fentes dans la glaise, des touffes et des cailloux dans l'herbe, et des bords effrangés entre l'herbe, la boue et la glaise (de près ; les seules couleurs de la palette)
