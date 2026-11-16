@@ -1,8 +1,13 @@
 # Journal des versions
 
-## 0.140.6 — 2026-11-16
+## 0.141.1 — 2026-11-16
 
 - Les soldats ne sont plus tous pareils : chacun a son ton d'uniforme, son regard au repos, sa place dans le rang ; dans la tranchée, certains s'assoient, le dos au parapet, tant qu'on ne tire pas
+
+## 0.141.0 — 2026-11-16
+
+- Chaque unité porte l'écusson de son arme, à la couleur de son camp, sa barre au-dessus : la bannière numérotée pour un régiment, le carré à chenille pour un char, le triangle au trépied pour une mitrailleuse, la cocarde ailée à l'hirondelle pour un avion, l'écu rond aux outils croisés pour le génie ; un liseré qui marche quand un régiment fléchit
+- En bas, les cartes des régiments deviennent des vignettes : l'écusson, la posture ou la corvée de la nuit ; le nom, le statut et les chiffres sont dans l'infobulle
 
 ## 0.140.5 — 2026-11-16
 

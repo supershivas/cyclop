@@ -39,7 +39,9 @@ const MESURE = ([exceptions, nous]) => {
     if (parseFloat(c.borderBottomWidth) >= 3 && parseFloat(c.borderTopWidth) === 0 && c.borderBottomStyle !== 'none') ent.push(`FILET BAS ${n} : ${c.borderBottomWidth} sans contour`);
     if (c.textTransform === 'uppercase' && !b.closest('.entete')) ent.push(`CASSE ${n} : en capitales (un bouton se lit en casse de phrase)`);
   }
-  for (const u of [...document.querySelectorAll('.reg-carte, .etiquette, .char-etiq, .batterie')].filter(visible)) {
+  // v0.141.0 : un régiment sur le champ porte son écusson (hud/ecussons.js), pas un papier : ni liseré ni ombre ; il doit avoir son écusson et 44 px de haut
+  for (const u of [...document.querySelectorAll('.etiquette.reg-ecu')].filter(visible)) if (!u.querySelector('.ecusson')) ent.push(`UNITÉ ${nom(u)} : sans écusson`);
+  for (const u of [...document.querySelectorAll('.reg-carte, .etiquette:not(.reg-ecu), .char-etiq, .batterie')].filter(visible)) {
     const c = getComputedStyle(u), n = nom(u);
     if (parseFloat(c.borderTopWidth) !== 3 || c.borderTopColor !== nous) ent.push(`UNITÉ ${n} : liseré haut ${c.borderTopWidth} ${c.borderTopColor} (3 px de la couleur de l'armée attendus)`);
     if (c.boxShadow === 'none' && !u.classList.contains('muet')) ent.push(`UNITÉ ${n} : pas d'ombre d'un cran`);

@@ -2,7 +2,7 @@
 // mitrailleuses, avions, génie) : une forme d'écu et un dessin, montrés à leur taille sur le champ (26 px) et agrandis, intacts, entamés et ébranlés, choisis, et en vignette pour la rangée du bas.
 // « Retenir » garde l'idée d'une arme (dans ce navigateur seulement) ; la variante A du sujet (l'écusson sur le champ) dessine alors celles qu'on a retenues. Rien n'est dans le jeu.
 // Palette du jeu seulement : bleu horizon, kaki d'en face, os, terre, boue, glaise, et les deux alertes de l'interface. Les insignes historiques cités sont des points de départ, redessinés en quelques traits.
-import { PALETTE as P, ALERTES } from './palette.js?v=0.141.0';
+import { PALETTE as P, ALERTES } from './palette.js?v=0.141.1';
 
 const MONO = 'ui-monospace,"DejaVu Sans Mono",Menlo,Consolas,monospace';
 const el = (tag, css = '', ...kids) => { const e = document.createElement(tag); if (css) e.style.cssText = css; e.append(...kids.flat().filter(k => k != null)); return e; };
@@ -58,9 +58,10 @@ const D = {
   cocarde: g => { g.beginPath(); g.arc(0, 0, 9, 0, 7); g.fill(); g.fillStyle = P.o; g.beginPath(); g.arc(0, 0, 6, 0, 7); g.fill(); g.fillStyle = P.t; g.beginPath(); g.arc(0, 0, 3, 0, 7); g.fill(); },
   hirondelle: g => { g.beginPath(); poly(g, [0, -2, -5, -7, -11, -6, -4, 0, -2, 2, -3, 9, 0, 5, 3, 9, 2, 2, 4, 0, 11, -6, 5, -7]); g.fill(); },
   pelle: g => { g.fillRect(-1, -11, 2, 11); g.fillRect(-3, -12, 6, 2); g.beginPath(); poly(g, [-5, 0, 5, 0, 5, 6, 0, 10, -5, 6]); g.fill(); },
+  // les deux outils se croisent en leur milieu (Jérôme, v0.141.0) : chacun est centré sur l'origine avant d'être tourné ; le même dessin que hud/ecussons.js
   pellePioche: g => {
-    rot(g, 0.65, () => { g.fillRect(-1, -11, 2, 12); g.beginPath(); poly(g, [-4, 1, 4, 1, 4, 6, 0, 9, -4, 6]); g.fill(); });
-    rot(g, -0.65, () => { g.fillRect(-1, -9, 2, 20); g.beginPath(); g.moveTo(-9, -6); g.quadraticCurveTo(0, -12, 9, -6); g.lineTo(8, -5); g.quadraticCurveTo(0, -9, -8, -5); g.closePath(); g.fill(); });
+    rot(g, Math.PI / 4, () => { g.fillRect(-1, -5.5, 2, 14); g.beginPath(); poly(g, [-3, 8.5, 3, 8.5, 3, 10.3, -3, 10.3]); poly(g, [-4, -5.5, 4, -5.5, 4, -9.5, 0, -12.5, -4, -9.5]); g.fill(); });
+    rot(g, -Math.PI / 4, () => { g.fillRect(-1, -8.5, 2, 19); g.beginPath(); g.moveTo(-9.5, -6.5); g.quadraticCurveTo(0, -12.5, 9.5, -6.5); g.lineTo(8.6, -5); g.quadraticCurveTo(0, -10, -8.6, -5); g.closePath(); g.fill(); });
   },
   cuirasse: g => { g.beginPath(); poly(g, [-7, -1, -4, -3, 4, -3, 7, -1, 6, 10, -6, 10]); g.fill(); g.beginPath(); g.arc(0, -6, 4, Math.PI, 0); g.rect(-6, -6, 12, 1.6); g.rect(-0.6, -11.5, 1.2, 2); g.fill(); g.fillStyle = P.o; g.fillRect(-0.5, 0, 1, 8); },
   pont: g => { g.fillRect(-11, -3, 22, 2.6); g.lineWidth = 2.2; g.beginPath(); g.arc(0, 8, 8, Math.PI, 0); g.stroke(); g.fillRect(-11, -1, 2.4, 10); g.fillRect(8.6, -1, 2.4, 10); },
@@ -89,6 +90,7 @@ export const ARMES = [
     { nom: 'Le triangle', forme: 'triangle', dessin: 'eventail', note: 'La pointe montre où va le feu, l\'éventail dedans : un signe de carte.' },
     { nom: 'L\'hexagone', forme: 'hexagone', dessin: 'trepied', note: 'La casemate bétonnée vue de dessus : un poste ne bouge pas.' },
     { nom: 'La bande', forme: 'ecu', dessin: 'bande', note: 'La bande de cartouches : l\'arme qui mange des munitions (la barre dit la bande).' },
+    { nom: 'Triangle, trépied', forme: 'triangle', dessin: 'trepied', note: 'Retenu (Jérôme, v0.141.0) : la forme du triangle, l\'arme sur son trépied dedans.' },
   ] },
   { type: 'avion', nom: 'Les avions', idees: [
     { nom: 'Vu de dessus', forme: 'ecu', dessin: 'avionDessus', note: 'La silhouette vue du ciel, comme la caméra le voit.' },
@@ -96,6 +98,7 @@ export const ARMES = [
     { nom: 'La cocarde', forme: 'rond', dessin: 'cocarde', note: 'La cocarde des ailes, en trois anneaux de la palette (pas de bleu-blanc-rouge).' },
     { nom: 'La cocarde ailée', forme: 'rondAile', dessin: 'avionDessus', note: 'Un rond ailé, l\'avion dedans : la forme la plus reconnaissable de loin.' },
     { nom: 'L\'hirondelle', forme: 'ecu', dessin: 'hirondelle', note: 'Un oiseau stylisé, comme sur les fuselages des escadrilles.' },
+    { nom: 'Cocarde, hirondelle', forme: 'rondAile', dessin: 'hirondelle', note: 'Retenu (Jérôme, v0.141.0) : la cocarde ailée, l\'hirondelle dedans.' },
   ] },
   { type: 'genie', nom: 'Le génie', idees: [
     { nom: 'La pelle', forme: 'ecu', dessin: 'pelle', note: 'L\'outil de chaque sapeur, sur le même écu que tous.' },
@@ -111,7 +114,8 @@ export const ARMES = [
 const CLE = 'cyclopeen:labo-ecussons';
 let retenues = {};
 try { retenues = JSON.parse(localStorage.getItem(CLE) ?? '{}') ?? {}; } catch { retenues = {}; }
-export const ideeDe = type => { const A = ARMES.find(a => a.type === type); return A?.idees[retenues[type] ?? 0] ?? ARMES[0].idees[0]; };
+const RETENU = { reg: 4, char: 2, nid: 6, avion: 5, genie: 4 };      // le jeu du jeu (v0.141.0) : ce qu'on voit tant qu'on n'a rien retenu soi-même
+export const ideeDe = type => { const A = ARMES.find(a => a.type === type); return A?.idees[retenues[type] ?? RETENU[type] ?? 0] ?? ARMES[0].idees[0]; };
 function retenir(type, k) { retenues[type] = k; try { localStorage.setItem(CLE, JSON.stringify(retenues)); } catch { /* sans stockage, le choix vaut pour la page */ } }
 
 // ─── le dessin d'un écusson, la pointe en (x, y) ───
@@ -170,7 +174,7 @@ function carteIdee(A, idee, k, majTout) {
   dessinerEcusson(g, { ...base, x: vx + 21, y: vy + 49, k: 1.05, chev: 2, debout: 0.8, blesses: 0.1 });
   g.font = `10px ${MONO}`; g.fillStyle = P.r; g.textAlign = 'left'; g.textBaseline = 'alphabetic';
   g.fillText('×2,6', 4, 12); g.fillText('au champ', 112, 12); g.fillText('en bas', vx, vy - 6);
-  const choisi = (retenues[A.type] ?? 0) === k;
+  const choisi = (retenues[A.type] ?? RETENU[A.type] ?? 0) === k;
   const bouton = el('button', ''); bouton.className = 'essai'; bouton.textContent = choisi ? 'Retenu' : 'Retenir'; bouton.setAttribute('aria-pressed', String(choisi));
   bouton.onclick = () => { retenir(A.type, k); majTout(); };
   return el('figure', `margin:0;padding:8px;background:${choisi ? P.o : '#fff'};border:${choisi ? `2px solid ${P.t}` : '1px solid rgba(0,0,0,.15)'};border-radius:6px`,
@@ -201,6 +205,7 @@ function ensemble(cv, de = ideeDe) {
 // Trois jeux complets (Jérôme, v0.140.4 : « j'aime que chaque écusson ait sa propre forme, refais trois planches qu'on choisisse ») : dans chacun, cinq formes différentes, une par arme
 // (l'indice de l'idée dans `ARMES[].idees`)
 export const JEUX = [
+  { nom: 'Le jeu retenu', note: 'Retenu par Jérôme (v0.141.0), dans le jeu : la bannière du régiment, le carré à chenille, le triangle au trépied, la cocarde ailée à l\'hirondelle, l\'écu rond aux outils croisés en leur milieu.', idees: { reg: 4, char: 2, nid: 6, avion: 5, genie: 4 } },
   { nom: 'I · Héraldique', note: 'Des écus de blason : la forme dit l\'arme comme une pièce d\'armoirie (casque, blindé riveté, losange, ailes, créneaux).', idees: { reg: 3, char: 1, nid: 1, avion: 1, genie: 5 } },
   { nom: 'II · Carte d\'état-major', note: 'Des formes géométriques simples, comme les signes d\'une carte : écu, carré, triangle, rond, toit. Les plus lisibles petites.', idees: { reg: 2, char: 2, nid: 3, avion: 2, genie: 3 } },
   { nom: 'III · Insignes et bannières', note: 'Une bannière pour le régiment, des insignes pour les armes : coque de char, hexagone de casemate, cocarde ailée, écu rond du génie.', idees: { reg: 4, char: 3, nid: 4, avion: 3, genie: 4 } },
@@ -236,7 +241,7 @@ export function plancheEcussons(stage) {
   function majJeux() {
     jeux.replaceChildren(...JEUX.map(J => {
       const cv = el('canvas', 'display:block;width:100%;max-width:900px'); cv.width = 900; cv.height = 486; dessinerJeu(cv, J);
-      const pris = Object.entries(J.idees).every(([t, k]) => (retenues[t] ?? 0) === k);
+      const pris = Object.entries(J.idees).every(([t, k]) => (retenues[t] ?? RETENU[t] ?? 0) === k);
       const b = el('button', ''); b.className = 'essai'; b.textContent = pris ? 'Jeu retenu' : 'Retenir ce jeu'; b.setAttribute('aria-pressed', String(pris));
       b.onclick = () => { for (const [t, k] of Object.entries(J.idees)) retenir(t, k); majTout(); };
       return el('figure', `margin:0;padding:8px;background:#fff;border:${pris ? `2px solid ${P.t}` : '1px solid rgba(0,0,0,.15)'};border-radius:6px`, cv, el('figcaption', `font:13px/1.4 ${MONO};margin:6px 0`, J.note), b);
