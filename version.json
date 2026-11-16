@@ -1,7 +1,8 @@
 {
-  "version": "0.140.6",
+  "version": "0.141.0",
   "date": "2026-11-16",
   "changes": [
-    "Les soldats ne sont plus tous pareils : ton, regard, place dans le rang ; certains s'assoient dans la tranchée"
+    "Chaque unité porte l'écusson de son arme : bannière numérotée pour les régiments, carré à chenille pour les chars, triangle pour les mitrailleuses, cocarde ailée pour les avions, écu rond pour le génie",
+    "En bas, les cartes des régiments deviennent des vignettes à écusson ; le nom et les chiffres sont dans l'infobulle"
   ]
 }
