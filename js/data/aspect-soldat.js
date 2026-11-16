@@ -61,4 +61,6 @@ export const CARRURE = {
 // Les soldats articulés en jeu (Jérôme, v0.105.0 : « j'aime le rendu, on continue »), seulement de près : dès `des` pixels par mètre, et au plus `max` hommes, les plus proches du centre de la vue
 // (le coût mesuré, rendu logiciel : environ trois fois celui du soldat équipé du jeu : `docs/domaines/rendu.md`) ; `fin` : dès ce zoom le niveau fin, avant lui l'intermédiaire (v0.105.1) ; les autres gardent le soldat équipé. `ombrage` : le relief des faces (0 : les aplats),
 // un mélange continu du ton de la palette (comme les fondus : voir la palette), qui fait lire les membres.
+// La boue sur les hommes (Jérôme, 16 nov., v0.139.2 : « selon les jours et le temps ») : la part de la couleur du sol dans celle de l'uniforme, au premier matin, ce qu'elle gagne par jour de bataille, son plafond ; le dessin seulement
+export const BOUE_SOLDATS = { depart: 0.3, parJour: 0.06, max: 0.85 };
 export const ARTICULE = { des: 12, fin: 24, max: 250, ombrage: 0.5, texture: true, animations: true };      // `texture` : la pose des 250 hommes écrite côté processeur dans une texture, lue par le nuanceur (v0.132 ; false : le nuanceur la calcule) ; `animations` : la marche, le repos et le tir viennent du lecteur d'animations plutôt que du calcul d'avant (étape 4 ; false : l'ancien calcul, pour comparer)
