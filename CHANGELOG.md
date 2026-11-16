@@ -1,5 +1,9 @@
 # Journal des versions
 
+## 0.141.2 — 2026-11-16
+
+- Les arbres changent de niveau de détail en douceur : de loin ils gardent les mêmes grappes et les mêmes tons, et le passage d'un niveau à l'autre se fait en fondu (une trame de pixels) au lieu d'un saut
+
 ## 0.141.1 — 2026-11-16
 
 - Les soldats ne sont plus tous pareils : chacun a son ton d'uniforme, son regard au repos, sa place dans le rang ; dans la tranchée, certains s'assoient, le dos au parapet, tant qu'on ne tire pas
