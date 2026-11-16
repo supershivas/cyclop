@@ -2,7 +2,7 @@
 // mitrailleuses, avions, génie) : une forme d'écu et un dessin, montrés à leur taille sur le champ (26 px) et agrandis, intacts, entamés et ébranlés, choisis, et en vignette pour la rangée du bas.
 // « Retenir » garde l'idée d'une arme (dans ce navigateur seulement) ; la variante A du sujet (l'écusson sur le champ) dessine alors celles qu'on a retenues. Rien n'est dans le jeu.
 // Palette du jeu seulement : bleu horizon, kaki d'en face, os, terre, boue, glaise, et les deux alertes de l'interface. Les insignes historiques cités sont des points de départ, redessinés en quelques traits.
-import { PALETTE as P, ALERTES } from './palette.js?v=0.140.3';
+import { PALETTE as P, ALERTES } from './palette.js?v=0.140.4';
 
 const MONO = 'ui-monospace,"DejaVu Sans Mono",Menlo,Consolas,monospace';
 const el = (tag, css = '', ...kids) => { const e = document.createElement(tag); if (css) e.style.cssText = css; e.append(...kids.flat().filter(k => k != null)); return e; };
@@ -18,7 +18,7 @@ const FORMES = {
   tour: g => poly(g, [-13, -14, -8, -14, -8, -10, -2.5, -10, -2.5, -14, 2.5, -14, 2.5, -10, 8, -10, 8, -14, 13, -14, 13, 3, 0, 14, -13, 3]),
   casque: g => { g.moveTo(-13, 1); g.arc(0, 1, 13, Math.PI, 0); g.lineTo(13, 4); g.lineTo(0, 14); g.lineTo(-13, 4); g.closePath(); g.rect(-2, -15, 4, 4); },
   aile: g => poly(g, [-9, -14, 9, -14, 9, 4, 0, 14, -9, 4]),
-  // v0.140.2 : des formes de plus, pour que chaque arme ait la sienne dans un même jeu
+  // v0.140.4 : des formes de plus, pour que chaque arme ait la sienne dans un même jeu
   triangle: g => poly(g, [0, -16, 15, 12, -15, 12]),
   maison: g => poly(g, [-12, -4, 0, -16, 12, -4, 12, 13, -12, 13]),
   fanion: g => poly(g, [-12, -14, 12, -14, 12, 14, 0, 7, -12, 14]),
@@ -198,7 +198,7 @@ function ensemble(cv, de = ideeDe) {
   });
 }
 
-// Trois jeux complets (Jérôme, v0.140.2 : « j'aime que chaque écusson ait sa propre forme, refais trois planches qu'on choisisse ») : dans chacun, cinq formes différentes, une par arme
+// Trois jeux complets (Jérôme, v0.140.4 : « j'aime que chaque écusson ait sa propre forme, refais trois planches qu'on choisisse ») : dans chacun, cinq formes différentes, une par arme
 // (l'indice de l'idée dans `ARMES[].idees`)
 export const JEUX = [
   { nom: 'I · Héraldique', note: 'Des écus de blason : la forme dit l\'arme comme une pièce d\'armoirie (casque, blindé riveté, losange, ailes, créneaux).', idees: { reg: 3, char: 1, nid: 1, avion: 1, genie: 5 } },

@@ -1,8 +1,16 @@
 # Journal des versions
 
-## 0.140.2 — 2026-11-16
+## 0.140.4 — 2026-11-16
 
 - Au labo, en tête de la planche des écussons : trois jeux complets où chaque arme a sa propre forme (I · Héraldique, II · Carte d'état-major, III · Insignes et bannières), vus agrandis puis sur le champ et dans la rangée du bas ; « Retenir ce jeu » prend ses cinq écussons d'un coup ; de nouvelles formes (bannière, triangle, hexagone, coque, cocarde ailée, baraque, écu rond) ; le jeu ne change pas
+
+## 0.140.3 — 2026-11-16
+
+- Les morts gardent la boue et l'ombre qu'ils avaient vivants : un homme qui tombe ne redevient plus propre et clair
+
+## 0.140.2 — 2026-11-16
+
+- Du sang : des taches sur les blessés autour de leur plaie, sur les morts, et sur les soldats qui se battent au corps à corps, qui les gardent ensuite
 
 ## 0.140.1 — 2026-11-16
 
