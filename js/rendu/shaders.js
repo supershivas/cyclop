@@ -200,7 +200,7 @@ export const soldatMat = {
   v: `
       attribute vec3 aPos; attribute float aCamp; attribute float aPart; attribute float aJambe; attribute float aVit; attribute float aBras; attribute vec2 aTir; attribute float aGr; attribute float aGrade; attribute vec2 aVar; attribute float aBless; attribute float aBand;
       uniform float uT; uniform vec2 uSoleil; uniform float uBalance; uniform vec2 uEch; uniform float uSansOmbre;
-      varying float vCamp; varying float vPart; varying vec2 vXZ; varying float vLong;
+      varying float vCamp; varying float vPart; varying vec2 vXZ; varying float vLong; varying vec4 vSang;
       void main() {
         // une partie de 10 à 19 n'est dessinée que pour nous, de 20 à 29 que pour en face (casque, moustache : v0.27.0, au labo)
         float cp = aCamp > 1.5 ? aCamp - 2.0 : aCamp, kp = aPart;
@@ -212,6 +212,7 @@ export const soldatMat = {
         // les pansements (v0.72.0) : un bandeau n'existe que pour un homme blessé à cet endroit
         if (aBand > 0.5 && abs(aBand - aBless) > 0.5) cache = true;
         vCamp = aCamp; vPart = kp; vLong = position.y;
+        vSang = vec4(position.x, position.z, aBless, fract(aVar.x * 71.3 + aVar.y * 37.7));      // (v0.139.3) le sang : la place du point dans le modèle, la blessure et le niveau de sang (aBless), un nombre par homme
         float ech = aGrade > 3.5 ? uEch.y : (aGrade > 2.5 ? uEch.x : 1.0);
         // (v0.69.0) chaque homme a sa taille et sa largeur (aVar : le dessin seulement, tiré de son numéro)
         vec3 p = (kp > 0.5 && kp < 1.5) ? position : position * vec3(ech * aVar.x, ech * aVar.y, ech * aVar.x);
@@ -312,8 +313,8 @@ export const soldatMat = {
       uniform vec3 uNous; uniform vec3 uEux; uniform vec3 uOmbre; uniform vec3 uSel;
       uniform vec3 uJambes; uniform vec3 uFusil; uniform vec3 uSac; uniform vec3 uVisage; uniform vec3 uCuir; uniform vec3 uBotte;
       uniform sampler2D uSol; uniform vec2 uTaille;
-      uniform sampler2D uAO; uniform float uAOon, uSunOn, uAbriOn; uniform float uBoue, uMouille;
-      varying float vCamp; varying float vPart; varying vec2 vXZ; varying float vLong;
+      uniform sampler2D uAO; uniform float uAOon, uSunOn, uAbriOn; uniform float uBoue, uMouille; uniform float uSang, uSangCell; uniform vec3 uSangCoul;
+      varying float vCamp; varying float vPart; varying vec2 vXZ; varying float vLong; varying vec4 vSang;
       void main() {
         float k = floor(vPart + 0.5);
         // l'ombre : le sol qu'elle couvre, un ton plus sombre (la couleur de ses parois), fondue de plus en plus
@@ -341,6 +342,16 @@ export const soldatMat = {
           vec3 solB = texture2D(uSol, vec2(vXZ.x / uTaille.x, vXZ.y / uTaille.y * 0.5)).rgb;
           c = mix(c, solB, uBoue * (0.22 + 0.68 * (1.0 - smoothstep(0.15, 1.15, vLong))));
           c *= 1.0 - 0.25 * uMouille;
+        }
+        // (v0.139.3) le sang : des taches (des cases du modèle tirées d'un hachage) autour de la blessure, et sur le buste de qui s'est battu au corps à corps ; ni le fusil ni les signes
+        if (uSang > 0.0 && vSang.z > 0.05 && k < 30.0 && k != 4.0 && !(k == 2.0 && sel)) {
+          float blS = floor(vSang.z + 0.05), sgS = (vSang.z - blS) * 2.5, qS = 0.0;
+          vec3 cel = floor(vec3(vSang.x, vLong, vSang.y) / uSangCell);
+          if (blS == 1.0 && vLong > 0.92 && vLong < 1.45 && vSang.x < -0.1) qS = 0.7;                 // le bras gauche (là où est le pansement)
+          else if (blS == 2.0 && vLong > 0.2 && vLong < 0.95 && vSang.x < 0.02) qS = 0.7;             // la jambe gauche
+          else if (blS == 3.0 && vLong > 1.2) qS = vLong > 1.45 ? 0.6 : 0.35;                      // la tête, et ce qui coule sur les épaules
+          if (sgS > 0.0 && vLong > 0.55 && vLong < 1.5) qS = max(qS, 0.42 * sgS);                  // le corps à corps : le buste, les bras, le haut des cuisses
+          if (fract(sin(dot(cel, vec3(12.9898, 78.233, 37.719)) + vSang.w * 91.7) * 43758.5453) < qS) c = mix(c, uSangCoul, uSang);
         }
         // (session 2, tout éteint par défaut : les uniformes valent 0) la lumière du sol lue à la place de l'homme : le soleil du labo, l'ouverture au ciel, le jour sous les toits (js/rendu/ao-sol.js) ; un homme dans une tranchée est plus sombre qu'en plaine
         if (uSunOn + uAOon + uAbriOn > 0.5) {
@@ -451,7 +462,7 @@ export const corpsSoldatMat = {
   v: `
       attribute vec3 aPos; attribute vec2 aInfo; attribute float aCamp; attribute float aPart; attribute float aJambe; attribute float aBras;
       uniform float uPoses;
-      varying float vEtat; varying float vPart; varying float vCamp;
+      varying float vEtat; varying float vPart; varying float vCamp; varying vec4 vSang;
       void main() {
         float kp = aPart;
         bool cache = false;
@@ -459,6 +470,7 @@ export const corpsSoldatMat = {
         if (kp > 0.5 && kp < 1.5) cache = true;                       // pas d'ombre : il est couché
         vEtat = aInfo.x; vPart = kp; vCamp = aCamp;
         float h = fract(sin(aInfo.y * 91.7) * 43758.5453), h2 = fract(h * 7.31), h3 = fract(h * 13.17);
+        vSang = vec4(position, h);      // (v0.139.3) le sang des morts : la place du point dans le modèle, un nombre par mort
         vec3 p = position;
         if (uPoses > 0.5) {
           if (aJambe != 0.0) { float a = aJambe * (0.06 + 0.4 * h2); float y = p.y - 0.8; float x = p.x; p.x = x * cos(a) - y * sin(a); p.y = 0.8 + x * sin(a) + y * cos(a); }
@@ -475,12 +487,20 @@ export const corpsSoldatMat = {
         gl_Position = projectionMatrix * viewMatrix * vec4(q + aPos, 1.0);
       }`,
   f: `
-      uniform vec3 uNous; uniform vec3 uEux; uniform vec3 uVieux; uniform vec3 uJambes; uniform vec3 uFusil; uniform vec3 uSac; uniform vec3 uVisage; uniform vec3 uCuir; uniform vec3 uBotte;
-      varying float vEtat; varying float vPart; varying float vCamp;
+      uniform vec3 uNous; uniform vec3 uEux; uniform vec3 uVieux; uniform vec3 uJambes; uniform vec3 uFusil; uniform vec3 uSac; uniform vec3 uVisage; uniform vec3 uCuir; uniform vec3 uBotte; uniform float uSang, uSangCell; uniform vec3 uSangCoul;
+      varying float vEtat; varying float vPart; varying float vCamp; varying vec4 vSang;
       void main() {
         float k = floor(vPart + 0.5);
         vec3 c = vEtat > 1.5 ? uVieux : (vCamp > 0.5 ? uEux : uNous);
         if (k == 3.0) c = uJambes; else if (k == 4.0) c = uFusil; else if (k == 5.0) c = uSac; else if (k == 6.0 || k == 9.0) c = uVisage; else if (k == 7.0) c = uCuir; else if (k == 8.0) c = uBotte;
+        // (v0.139.3) le sang des morts : une plaie tirée du numéro du mort (le buste, le ventre ou la tête), des taches autour ; le lendemain (vEtat 2) il a séché : plus sombre, plus rare
+        if (uSang > 0.0 && k != 4.0) {
+          vec3 cel = floor(vSang.xyz / uSangCell);
+          float hs = fract(sin(dot(cel, vec3(12.9898, 78.233, 37.719)) + vSang.w * 91.7) * 43758.5453);
+          float cy = 0.75 + 0.85 * fract(vSang.w * 5.3), d = abs(vSang.y - cy);
+          float q = (vEtat > 1.5 ? 0.45 : 0.8) * (1.0 - smoothstep(0.12, 0.45, d));
+          if (hs < q) c = mix(c, vEtat > 1.5 ? uSangCoul * 0.5 : uSangCoul, uSang);
+        }
         gl_FragColor = vec4(c, 1.0);
       }`,
 };

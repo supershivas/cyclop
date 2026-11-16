@@ -1,11 +1,12 @@
 // Les hommes : les soldats (une boîte et son ombre ; de près la silhouette, plus loin une silhouette allégée ; aux zooms 1 et 2 un point), les anneaux des
 // régiments choisis ou survolés, les corps (un homme couché) et les tombes (un tertre et une croix). Tout est instancié et ne reçoit que ce qu'on voit.
 // Le dessin seulement. Les formes viennent de geometries.js, le GLSL de shaders.js.
-import * as SH from './shaders.js?v=0.139.2';
-import { creerGeometries } from './geometries.js?v=0.139.2';
-import { classeDuRang } from '../data/grades.js?v=0.139.2';
-import { creerEquipeArticulee } from './soldat-articule.js?v=0.139.2';
-import { creerJeuAnimations } from './animation-jeu.js?v=0.139.2';
+import * as SH from './shaders.js?v=0.139.3';
+import { creerGeometries } from './geometries.js?v=0.139.3';
+import { classeDuRang } from '../data/grades.js?v=0.139.3';
+import { creerEquipeArticulee } from './soldat-articule.js?v=0.139.3';
+import { creerJeuAnimations } from './animation-jeu.js?v=0.139.3';
+import { SANG } from '../data/aspect-soldat.js?v=0.139.3';
 
 // `THREE`, `scene`, `col`, `solUniforms` (`uSol`, `uTaille` : la texture du sol, que l'ombre d'un soldat reprend), `styleSoldat` (le style de près, comparé au labo),
 // `grades` (v0.68.0 : une variante de `GRADES`, data/grades.js, ou null : tous pareils) et `rangDe(B, id, reg)` (le rang d'un homme, bataille.js) ; `surface(x, z)` et `surfaceLisse(x, z)` (la hauteur du sol, lissée pour qui marche), `solY` (la hauteur moyenne du sol) et `POINTS_JUSQUA` (le zoom où un soldat n'est
@@ -19,6 +20,7 @@ export function creerSoldats({ THREE, scene, col, solUniforms, styleSoldat, grad
   const { geometrieSoldat: formeSoldat } = creerGeometries(THREE, col);
   const geometrieSoldat = style => formeSoldat(style, attrsI, grades);
   const { geometrieGrades: formeGrades, geometrieBandages: formeBandages } = creerGeometries(THREE, col);
+  const SANGS = new Float32Array(1 << 16); let tSang = 0;      // (v0.139.3) le sang de chaque homme (par numéro, 0 à 1) : il monte tant qu'il se bat au corps à corps et reste ; le dessin seulement, rien de sauvegardé
   const CAPS = new Float32Array(1 << 16);                    // le cap de chaque homme (par numéro : les indices bougent quand les morts sont retirés) : l'angle de son regard (NaN : pas encore vu, il part tourné vers l'ennemi)
   // Les gradés (v0.68.0) : leurs pièces (képi, fanion, galons…) sont des maillages à part, un par classe (une instance par gradé de cette classe seulement : un homme sur quatre
   // en tout, et chaque instance ne porte que les pièces de sa classe), avec les mêmes attributs que le corps ; le corps, lui, ne change que par la classe (la taille) et le fusil que
@@ -45,7 +47,8 @@ export function creerSoldats({ THREE, scene, col, solUniforms, styleSoldat, grad
       uSansOmbre: { value: 0 },
       uSol: solUniforms.uSol, uTaille: solUniforms.uTaille,
       uAO: solUniforms.uAO, uAOon: solUniforms.uAOon, uSunOn: solUniforms.uSunOn, uAbriOn: solUniforms.uAbriOn,      // la lumière du sol lue à la place de l'homme (session 2 : éteinte)
-      uBoue: solUniforms.uBoue ?? { value: 0 }, uMouille: solUniforms.uMouille ?? { value: 0 },      // la boue sur les hommes (labo : éteinte)
+      uBoue: solUniforms.uBoue ?? { value: 0 }, uMouille: solUniforms.uMouille ?? { value: 0 },
+      uSang: { value: 0 }, uSangCell: { value: SANG.cellule }, uSangCoul: { value: new THREE.Color(SANG.couleur) },      // le sang (éteint tant que `setSang` ne l'allume pas)      // la boue sur les hommes (labo : éteinte)
       uSoleil: { value: new THREE.Vector2(0.5, 0.6) } },
     vertexShader: SH.soldatMat.v,
     fragmentShader: SH.soldatMat.f,
@@ -201,7 +204,7 @@ export function creerSoldats({ THREE, scene, col, solUniforms, styleSoldat, grad
   });
   const soldatCouche = cadavre === 'planche' ? null : new THREE.ShaderMaterial({
     uniforms: { uNous: soldatMat.uniforms.uNous, uEux: soldatMat.uniforms.uEux, uVieux: { value: col('g') }, uJambes: soldatMat.uniforms.uJambes, uFusil: soldatMat.uniforms.uFusil, uSac: soldatMat.uniforms.uSac,
-      uVisage: soldatMat.uniforms.uVisage, uCuir: soldatMat.uniforms.uCuir, uBotte: soldatMat.uniforms.uBotte, uPoses: { value: cadavre === 'poses' ? 1 : 0 } },
+      uVisage: soldatMat.uniforms.uVisage, uCuir: soldatMat.uniforms.uCuir, uBotte: soldatMat.uniforms.uBotte, uSang: soldatMat.uniforms.uSang, uSangCell: soldatMat.uniforms.uSangCell, uSangCoul: soldatMat.uniforms.uSangCoul, uPoses: { value: cadavre === 'poses' ? 1 : 0 } },
     vertexShader: SH.corpsSoldatMat.v,
     fragmentShader: SH.corpsSoldatMat.f,
     side: THREE.DoubleSide,
@@ -310,6 +313,10 @@ export function creerSoldats({ THREE, scene, col, solUniforms, styleSoldat, grad
     if (grades) for (let c = 1; c <= 4; c++) GR[c].k = 0;
     const an = anGeo.attributes.position.array, anTon = anGeo.attributes.aTon.array;
     const { tirVal, tirAng, volT, volH, volD } = tirs(), regs = B.etat.regiments, tAnim = soldatMat.uniforms.uT.value;
+    // (v0.139.3) le sang du corps à corps : il monte pour tous ceux qui se battent, vus ou non (l'horloge du dessin : figée à la pause), et reste
+    { const dSang = Math.max(0, Math.min(0.1, tAnim - tSang)) * SANG.parSeconde; tSang = tAnim;
+      if (dSang > 0) for (let i = 0; i < n; i++) if (A.duel[i]) { const id = A.id[i] & 0xffff; if (SANGS[id] < 1) SANGS[id] = Math.min(1, SANGS[id] + dSang); }
+      soldatMat.uniforms.uSangCell.value = Math.max(SANG.cellule, 1.3 / p); }      // une tache fait au moins un peu plus d'un pixel : plus fine, elle scintille quand l'homme marche
     // les hommes articulés : de près, les plus proches du centre de la vue (ceux qu'on voit : le même test que plus bas)
     const arti = !!(artCfg && aspectDe && rangDe && p >= artCfg.des);
     if (arti) {
@@ -331,7 +338,7 @@ export function creerSoldats({ THREE, scene, col, solUniforms, styleSoldat, grad
       const niv = p >= (artCfg.fin ?? 24) ? 'fin' : 'moyen';
       if (nArt && !EQs[niv]) {
         EQs[niv] = creerEquipeArticulee(THREE, col, { capacite: artCfg.max + 8, ombrage: artCfg.ombrage ?? 0, niveau: niv, texturePoses: artCfg.texture !== false,
-          partages: { uSoleil: soldatMat.uniforms.uSoleil, uSol: solUniforms.uSol, uTaille: solUniforms.uTaille, uAO: solUniforms.uAO, uAOon: solUniforms.uAOon, uSunOn: solUniforms.uSunOn, uAbriOn: solUniforms.uAbriOn, uBoue: soldatMat.uniforms.uBoue, uMouille: soldatMat.uniforms.uMouille } });
+          partages: { uSoleil: soldatMat.uniforms.uSoleil, uSol: solUniforms.uSol, uTaille: solUniforms.uTaille, uAO: solUniforms.uAO, uAOon: solUniforms.uAOon, uSunOn: solUniforms.uSunOn, uAbriOn: solUniforms.uAbriOn, uBoue: soldatMat.uniforms.uBoue, uMouille: soldatMat.uniforms.uMouille, uSang: soldatMat.uniforms.uSang, uSangCell: soldatMat.uniforms.uSangCell, uSangCoul: soldatMat.uniforms.uSangCoul } });
         for (const m of EQs[niv].meshes) scene.add(m);
       }
       EQ = EQs[niv];
@@ -363,7 +370,8 @@ export function creerSoldats({ THREE, scene, col, solUniforms, styleSoldat, grad
       if (A.duel[i]) { const ph = Math.sin(tAnim * 4.6 + id * 1.7); tirArr[k * 2] = -2 - (ph > 0 ? ph * ph : 0); tirArr[k * 2 + 1] = A.duelAng[i]; }
       // sa taille et sa largeur : un hachage de son numéro (le dessin seulement, rien de sauvegardé), de ±7 % en hauteur et ±14 % en largeur ; même numéro, même homme
       const hu = (Math.imul((A.id[i] & 0xffff) + 1, 2654435761) >>> 0) / 4294967296, hv = (Math.imul((A.id[i] & 0xffff) + 977, 1597334677) >>> 0) / 4294967296;
-      blessArr[k] = A.blessure[i];                    // sa blessure : la pose et le pansement (v0.72.0)
+      const nSang = Math.round(SANGS[id] * 4);       // son niveau de sang, 0 à 4
+      blessArr[k] = A.blessure[i] + 0.1 * nSang;      // sa blessure : la pose et le pansement (v0.72.0) ; + 0,1 × le niveau de sang (les tests du nuanceur tolèrent ±0,5)
       varArr[k * 2] = 1 + VARIATION.largeur * (2 * hu - 1); varArr[k * 2 + 1] = 1 + VARIATION.taille * (2 * hv - 1);
       if (A.blessure[i] && !art && BL.k < BL.n) {
         const q = BL.k++;
@@ -398,7 +406,7 @@ export function creerSoldats({ THREE, scene, col, solUniforms, styleSoldat, grad
         hArt.x = posArr[k * 3]; hArt.y = posArr[k * 3 + 1]; hArt.z = posArr[k * 3 + 2]; hArt.camp = campArr[k];
         hArt.vit = v < 0 ? 0 : v; hArt.tapi = v < 0 ? 1 : 0;
         hArt.tir = tx > 0 ? Math.min(1, tx * 2.5) : tx <= -2 ? -tx : tx < -0.5 ? -1 : 0;       // (−1 le feu retenu : le fusil baissé ; de 2 à 3 la mêlée : 2 + la poussée, tourné vers l'adversaire : `aTir` du soldat équipé)
-        hArt.cap = tirArr[k * 2 + 1]; hArt.blessure = blessArr[k]; hArt.aspect = c.a; hArt.temps = tAnim;
+        hArt.cap = tirArr[k * 2 + 1]; hArt.blessure = A.blessure[i]; hArt.sang = nSang; hArt.aspect = c.a; hArt.temps = tAnim;
         hArt.coup = tx > 0 ? tx : 0; hArt.pose = animJeu ? animJeu.pose(A.id[i], hArt, tAnim) : null;       // la marche, le repos et le tir viennent du lecteur d'animations (null : poseJeu)
         EQ.ajouter(hArt);
         continue;
@@ -452,8 +460,9 @@ export function creerSoldats({ THREE, scene, col, solUniforms, styleSoldat, grad
     casteurs() { return [soldatsInst, soldatsDetail, soldatsLeger, ...Object.values(EQs).flatMap(E => (E ? E.meshes.slice(1) : []))].filter(Boolean); },      // (le premier maillage d'une équipe articulée est son ombre au sol : il ne projette pas)      // les maillages qui projettent dans la carte d'ombre (session 3 : les hommes en boîtes, silhouettes et équipés)
     sansOmbre(v) { soldatMat.uniforms.uSansOmbre.value = v ? 1 : 0; for (const E of Object.values(EQs)) if (E && v) E.meshes[0].visible = false; },                       // la carte d'ombre remplace l'ombre au sol en quadrilatère
     soleilUniform: soldatMat.uniforms.uSoleil,                    // le bout de l'ombre d'un mètre de hauteur (temps.js le règle, le nuanceur le lit)
-    setTemps(t) { soldatMat.uniforms.uT.value = t; },             // les jambes qui marchent
-    preparer(B) { CAPS.fill(NaN); preparerSoldats(B.armee.capacite); preparerCorps(Math.max(1024, B.etat.corps.length * 2)); preparerTombes(Math.max(256, (B.etat.tombes?.length || 0) * 2)); },
+    setTemps(t) { soldatMat.uniforms.uT.value = t; },
+    setSang(v) { soldatMat.uniforms.uSang.value = Math.max(0, Math.min(1, +v || 0)); },      // la force des taches de sang (0 : aucune)             // les jambes qui marchent
+    preparer(B) { CAPS.fill(NaN); SANGS.fill(0); tSang = 0; preparerSoldats(B.armee.capacite); preparerCorps(Math.max(1024, B.etat.corps.length * 2)); preparerTombes(Math.max(256, (B.etat.tombes?.length || 0) * 2)); },
     maj,
     survoler(reg) { survolReg = reg; },                            // le régiment qu'un anneau à la couleur de son camp désigne
     get legere() { return legerActif; }, set legere(v) { legerActif = !!v; },     // la silhouette allégée (la mesure du coût l'éteint)

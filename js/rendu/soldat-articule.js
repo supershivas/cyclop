@@ -1,5 +1,5 @@
-import { NOMS_CHAMPS } from '../data/poses-soldat.js?v=0.139.2';
-import { poseJeu, phaseDe, TEXELS, FLOTTANTS } from './pose-jeu.js?v=0.139.2';
+import { NOMS_CHAMPS } from '../data/poses-soldat.js?v=0.139.3';
+import { poseJeu, phaseDe, TEXELS, FLOTTANTS } from './pose-jeu.js?v=0.139.3';
 
 // Le soldat articulé (au labo seulement : « la fabrique de soldats », et la mesure de son coût ; rien n'est dans le jeu).
 // Un squelette de treize os (le tronc, la tête, deux fois bras / avant-bras, deux fois cuisse / mollet / pied, le fusil) que le nuanceur plie : le genou, le coude, la cheville
@@ -197,7 +197,7 @@ export const VERT = `
   attribute vec3 aPos; attribute float aCamp; attribute float aWound; attribute vec4 aCap; attribute float aGrade;
   attribute vec4 aPose; attribute vec4 aBody; attribute vec4 aLook; attribute vec4 aLook2;
   uniform float uShade; uniform float uVoir; uniform float uLibre; uniform float uP[25]; uniform float uTex; uniform sampler2D uPoses;
-  varying float vPart; varying float vCamp; varying vec2 vFace; varying float vShade; varying vec4 vLook; varying vec4 vLook2; varying vec2 vMonde; varying float vBas;
+  varying float vPart; varying float vCamp; varying vec2 vFace; varying float vShade; varying vec4 vLook; varying vec4 vLook2; varying vec2 vMonde; varying float vBas; varying vec4 vSang; varying float vSangH;
   float sl, st, wd, vt;
   // un angle de la pose libre : dans la texture des poses (le jeu : une ligne par homme, lue par l'indice d'instance, 4 champs par texel) ou dans uP (l'atelier)
   float P(int i) { return uTex > 0.5 ? texelFetch(uPoses, ivec2(i >> 2, gl_InstanceID), 0)[i & 3] : uP[i]; }
@@ -320,7 +320,7 @@ export const VERT = `
     // l'éclairage de relief (au labo et pour les hommes articulés, uShade : 0 redonne les aplats) : le dessus plus clair, les côtés plus sombres, d'après la normale de la face tournée par le cap
     vec3 nw = vec3(aNor.x * c + aNor.z * s, aNor.y, -aNor.x * s + aNor.z * c);
     vShade = mix(1.0, 0.58 + 0.42 * max(dot(nw, normalize(vec3(-0.35, 0.8, 0.5))), 0.0), uShade);
-    vMonde = (p + aPos).xz; vBas = p.y;
+    vMonde = (p + aPos).xz; vBas = p.y; vSang = vec4(position, aWound); vSangH = fract(aBody.x * 71.3 + aBody.y * 37.7 + aBody.w * 13.1);      // (v0.139.3) le sang : la place du point dans le modèle, la blessure + le niveau de sang, un nombre par homme
     gl_Position = projectionMatrix * viewMatrix * vec4(p + aPos, 1.0);
   }`;
 
@@ -328,8 +328,8 @@ export const FRAG = `
   uniform vec3 uNous; uniform vec3 uEux; uniform vec3 uOmbre; uniform vec3 uSel; uniform vec3 uJambes; uniform vec3 uBois; uniform vec3 uToile; uniform vec3 uCuir; uniform vec3 uBotte; uniform vec3 uMetal; uniform vec3 uTrait;
   uniform vec3 uPeau[3]; uniform vec3 uMarque[3]; uniform vec3 uCh[5];
   uniform sampler2D uAO; uniform float uAOon, uSunOn, uAbriOn; uniform vec2 uTaille;
-  varying float vPart; varying float vCamp; varying vec2 vFace; varying float vShade; varying vec4 vLook; varying vec4 vLook2; varying vec2 vMonde; varying float vBas;
-  uniform sampler2D uSol; uniform float uBoue, uMouille;
+  varying float vPart; varying float vCamp; varying vec2 vFace; varying float vShade; varying vec4 vLook; varying vec4 vLook2; varying vec2 vMonde; varying float vBas; varying vec4 vSang; varying float vSangH;
+  uniform sampler2D uSol; uniform float uBoue, uMouille; uniform float uSang, uSangCell; uniform vec3 uSangCoul;
   // le visage : une grille de 12 × 12 cases (1,7 cm chacune) ; yeux (le blanc et la pupille), paupières, sourcils, nez, bouche, rides (vLook2.z : yeux + 3 nez + 9 bouche + 27 sourcils + 81 rides)
   bool dans(int iu, int a, int b) { return iu >= a && iu <= b; }
   vec3 visage(vec3 peau, vec3 marque, vec3 cheveux) {
@@ -391,6 +391,15 @@ export const FRAG = `
       c = mix(c, solB, uBoue * (0.22 + 0.68 * (1.0 - smoothstep(0.15, 1.15, vBas))));
       c *= 1.0 - 0.25 * uMouille;
     }
+    if (uSang > 0.0 && vSang.w > 0.05 && k != 15.0 && k != 12.0 && k != 17.0) {      // (v0.139.3) le sang : voir shaders.js, soldatMat
+          float blS = floor(vSang.w + 0.05), sgS = (vSang.w - blS) * 2.5, qS = 0.0;
+          vec3 cel = floor(vec3(vSang.x, vSang.y, vSang.z) / uSangCell);
+          if (blS == 1.0 && vSang.y > 0.92 && vSang.y < 1.45 && vSang.x < -0.1) qS = 0.7;                 // le bras gauche (là où est le pansement)
+          else if (blS == 2.0 && vSang.y > 0.2 && vSang.y < 0.95 && vSang.x < 0.02) qS = 0.7;             // la jambe gauche
+          else if (blS == 3.0 && vSang.y > 1.2) qS = vSang.y > 1.45 ? 0.6 : 0.35;                      // la tête, et ce qui coule sur les épaules
+          if (sgS > 0.0 && vSang.y > 0.55 && vSang.y < 1.5) qS = max(qS, 0.42 * sgS);                  // le corps à corps : le buste, les bras, le haut des cuisses
+          if (fract(sin(dot(cel, vec3(12.9898, 78.233, 37.719)) + vSangH * 91.7) * 43758.5453) < qS) c = mix(c, uSangCoul, uSang);
+    }
     if (uSunOn + uAOon + uAbriOn > 0.5) {      // (session 2, éteint) la lumière du sol lue à la place de l'homme : voir shaders.js, soldatMat
       vec4 Lm = texture2D(uAO, vMonde / uTaille); float fl = 1.0;
       if (uSunOn > 0.5) fl *= 0.72 + 0.28 * Lm.r;
@@ -439,7 +448,7 @@ export function creerSoldatArticule(THREE, col, { complet = false, ombrage = 0, 
         uCuir: { value: col('b') }, uBotte: { value: col('t') }, uMetal: { value: col('r') }, uTrait: { value: col('s') },
         uPeau: { value: ['o', 'r', 'g'].map(col) }, uMarque: { value: ['g', 'g', 'b'].map(col) }, uCh: { value: ['t', 's', 'b', 'g', 'r'].map(col) },
         uShade: { value: ombrage }, uVoir: { value: filtre ? 0 : 1 }, uLibre: { value: 0 }, uP: { value: new Array(25).fill(0) }, uTex: { value: 0 }, uPoses: { value: null }, uAlpha: { value: 1 },
-        uSol: partages.uSol ?? { value: null }, uBoue: partages.uBoue ?? { value: 0 }, uMouille: partages.uMouille ?? { value: 0 },
+        uSol: partages.uSol ?? { value: null }, uBoue: partages.uBoue ?? { value: 0 }, uMouille: partages.uMouille ?? { value: 0 }, uSang: partages.uSang ?? { value: 0 }, uSangCell: partages.uSangCell ?? { value: 0.11 }, uSangCoul: partages.uSangCoul ?? { value: new THREE.Color(0) },
         ...(partages.uAO ? { uAO: partages.uAO, uAOon: partages.uAOon, uSunOn: partages.uSunOn, uAbriOn: partages.uAbriOn, uTaille: partages.uTaille } : { uAO: { value: null }, uAOon: { value: 0 }, uSunOn: { value: 0 }, uAbriOn: { value: 0 }, uTaille: { value: new THREE.Vector2(1, 1) } }),
       },
       vertexShader: VERT, fragmentShader: translucide ? `uniform float uAlpha;\n${FRAG.replace('gl_FragColor = vec4(c * vShade, 1.0);', 'gl_FragColor = vec4(c * vShade, uAlpha);')}` : FRAG, side: THREE.DoubleSide,
@@ -476,7 +485,8 @@ export function creerSoldatArticule(THREE, col, { complet = false, ombrage = 0, 
       T.pos[i * 3] = h.x ?? 0; T.pos[i * 3 + 1] = h.y ?? 0; T.pos[i * 3 + 2] = h.z ?? 0;
       T.corps[i * 4] = c.taille; T.corps[i * 4 + 1] = c.epaules; T.corps[i * 4 + 2] = c.jambes; T.corps[i * 4 + 3] = c.tete;
       if (ombreSeule) return;
-      T.camp[i] = h.camp ?? 0; T.blessure[i] = h.blessure ?? 0; T.grade[i] = a.rang ?? 6;
+      T.camp[i] = h.camp ?? 0; T.blessure[i] = (h.blessure ?? 0) + 0.1 * (h.sang ?? 0);      // (+ 0,1 × le niveau de sang, 0 à 4 : les tests de la blessure tolèrent ±0,5)
+       T.grade[i] = a.rang ?? 6;
       // le cap, et la phase de la marche (la même formule qu'avant : l'horloge de l'image, la position) : le cosinus et le sinus de chacun, une fois par homme
       const cap = h.cap ?? 0, ph = phaseDe(h);
       T.cap[i * 4] = Math.cos(cap); T.cap[i * 4 + 1] = Math.sin(cap); T.cap[i * 4 + 2] = Math.sin(ph); T.cap[i * 4 + 3] = Math.cos(ph);

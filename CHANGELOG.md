@@ -1,5 +1,9 @@
 # Journal des versions
 
+## 0.139.3 — 2026-11-16
+
+- Du sang : des taches sur les blessés autour de leur plaie, sur les morts, et sur les soldats qui se battent au corps à corps, qui les gardent ensuite
+
 ## 0.139.2 — 2026-11-16
 
 - Les soldats se salissent : la couleur du sol gagne leur uniforme par le bas, un peu au premier matin, davantage de jour en jour ; sous la pluie les uniformes foncent
