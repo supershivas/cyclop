@@ -1,5 +1,9 @@
 # Journal des versions
 
+## 0.140.2 — 2026-11-16
+
+- Au labo, en tête de la planche des écussons : trois jeux complets où chaque arme a sa propre forme (I · Héraldique, II · Carte d'état-major, III · Insignes et bannières), vus agrandis puis sur le champ et dans la rangée du bas ; « Retenir ce jeu » prend ses cinq écussons d'un coup ; de nouvelles formes (bannière, triangle, hexagone, coque, cocarde ailée, baraque, écu rond) ; le jeu ne change pas
+
 ## 0.140.1 — 2026-11-16
 
 - Au labo, sujet « Les unités : un seul signe », variante D : quatre idées d'écussons pour chacune des cinq armes (une forme d'écu et un dessin : casque, grenade, numéro, écu-casque ; profil, armet, chenille, char de face ; trépied, losange, éventail, bande ; avion vu de dessus, écu ailé, cocarde, hirondelle ; pelle, pelle et pioche, cuirasse et pot-en-tête, tour), à leur taille et agrandies ; « Retenir » en garde une par arme et la variante A les dessine sur le champ ; le jeu ne change pas
