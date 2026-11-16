@@ -1,8 +1,10 @@
 // Les sections du génie dessinées (Jérôme, v0.66.1 : « un aspect plus humain, comme les autres soldats sans fusil ») : chaque homme de `B.etat.genies[].p` est une petite silhouette (jambes qui marchent,
 // buste, tête, casque, un outil sur deux : pelle ou madrier) aux couleurs de son camp, tournée comme il va ; au travail il se penche et frappe. Le dessin seulement : tout vient de l'état de la bataille
 // (les hommes marchent en bande et se répartissent seuls, voir genie.js). Fabrique `creerGenies({ THREE, scene, bataille, hauteur })`.
-import { PALETTE } from '../palette.js?v=0.139.1';
-import { GENIE_DATA } from '../data/genie.js?v=0.139.1';
+import { PALETTE } from '../palette.js?v=0.140.0';
+import { GENIE_DATA } from '../data/genie.js?v=0.140.0';
+import { placesGenie } from '../camp.js?v=0.140.0';
+import { PARC } from '../data/parc.js?v=0.140.0';
 
 const MAX = 4 * GENIE_DATA.sections * GENIE_DATA.hommes;      // les deux camps, toutes les sections en l'air
 // les pièces : [couleur, taille, position locale (hanche en bas), tourne avec le buste ?, pivot de jambe ?]
@@ -24,7 +26,9 @@ export function creerGenies({ THREE, scene, bataille, hauteur }) {
   function maj(dt) {
     const B = bataille(); if (!B) return;
     const genies = B.etat.genies ?? [];
-    if (!genies.length) { if (meshes?.[0].visible) vider(); return; }
+    // les sections qui attendent au dépôt, des deux camps (v0.140.0) : en rang devant la maison des sapeurs, au repos (seulement dans la partie bridée : ni le labo ni les tests n'ont de camp)
+    const depot = [0, 1].flatMap(camp => placesGenie(B.etat, camp).map(p => ({ ...p, camp })));
+    if (!genies.length && !depot.length) { if (meshes?.[0].visible) vider(); return; }
     if (!meshes) {
       meshes = PIECES.map(([, taille]) => { const x = new THREE.InstancedMesh(new THREE.BoxGeometry(...taille), new THREE.MeshBasicMaterial(), MAX); x.frustumCulled = false; scene.add(x); return x; });
     }
@@ -49,6 +53,22 @@ export function creerGenies({ THREE, scene, bataille, hauteur }) {
           else m.copy(surBuste ? buste : base).multiply(tmp.makeTranslation(pos[0], pos[1], pos[2]));
           meshes[p].setMatrixAt(k, m);
           c.set(nom === 'vareuse' ? (g.camp === 0 ? PALETTE.n : PALETTE.x) : COUL[nom]); meshes[p].setColorAt(k, c);
+        });
+      }
+    }
+    const G = PARC.genie;
+    for (const d of depot) {
+      const a = d.camp === 0 ? Math.PI : 0;
+      for (let i = 0; i < GENIE_DATA.hommes && k < MAX; i++, k++) {
+        const x = d.x + (i % G.colonnes - (G.colonnes - 1) / 2) * G.ecart, y = d.y + (Math.floor(i / G.colonnes) - 1.5) * G.ecart * (d.camp === 0 ? 1 : -1);
+        base.makeRotationY(a).setPosition(x, hauteur(x, y), y);
+        PIECES.forEach(([nom, taille, pos], p) => {
+          if (nom === 'outil' && i % 2) { m.makeScale(0, 0, 0); meshes[p].setMatrixAt(k, m); return; }
+          if (nom === 'jambe') m.copy(base).multiply(tmp.makeTranslation(pos[0], 0.8 - taille[1] / 2, 0));
+          else if (nom === 'outil') m.copy(base).multiply(tmp.makeTranslation(pos[0], pos[1], pos[2] - 0.2)).multiply(tmp.makeRotationX(-1.2));      // l'outil à l'épaule
+          else m.copy(base).multiply(tmp.makeTranslation(pos[0], pos[1], pos[2]));
+          meshes[p].setMatrixAt(k, m);
+          c.set(nom === 'vareuse' ? (d.camp === 0 ? PALETTE.n : PALETTE.x) : COUL[nom]); meshes[p].setColorAt(k, c);
         });
       }
     }

@@ -1,7 +1,9 @@
 {
-  "version": "0.139.1",
+  "version": "0.140.0",
   "date": "2026-11-16",
   "changes": [
-    "Au labo : la boue sur les hommes, à trancher (le jeu ne change pas)"
+    "Un clic sur un avion au sol, un char du parc ou une section du génie le choisit : le clic suivant sur le champ l'envoie, sans passer par le bouton",
+    "Les sections du génie attendent en rang devant la maison des sapeurs",
+    "Au labo : un seul signe pour les régiments et les engins, à trancher (écusson, jeton ou fanion)"
   ]
 }

@@ -1,7 +1,7 @@
 // Les mottes de terre jetées par un obus (Jérôme, v0.139.0 ; data/effets.js, MOTTES) : de petits blocs en volume, aux couleurs de la terre (le dessus
 // d'une lettre, les flancs de sa lettre d'ombre), qui tournent en l'air, rebondissent une fois, restent un moment au sol puis s'y enfoncent.
 // Un maillage instancié par lettre ; tout dézoomé (sous MOTTES.ppmMin), on ne les lance pas : les points d'avant suffisent. Le dessin seulement.
-import { MOTTES } from '../data/effets.js?v=0.139.1';
+import { MOTTES } from '../data/effets.js?v=0.140.0';
 
 export function creerMottes({ THREE, scene, col, ombre, surface, alea }) {
   const M = MOTTES, N = M.max, L = M.terres.length;

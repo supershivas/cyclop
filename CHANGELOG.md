@@ -1,5 +1,11 @@
 # Journal des versions
 
+## 0.140.0 — 2026-11-16
+
+- Un clic sur un avion au sol, un char du parc ou une section du génie le choisit (il est cerclé d'os, sa pastille s'allume) : le clic suivant sur le champ l'envoie, sans passer par le bouton ; un second clic sur lui le rend ; les boutons et les touches restent
+- Les sections du génie attendent en rang devant la maison des sapeurs, des deux camps
+- Au labo, à trancher : un seul signe pour les régiments et les engins, sur le champ et dans la rangée du bas (l'écusson, le jeton ou le fanion) ; le jeu ne change pas
+
 ## 0.139.1 — 2026-11-16
 
 - Au labo : la boue sur les hommes, à trancher (la couleur du sol gagne les uniformes par le bas, la pluie les fonce) ; le jeu ne change pas
