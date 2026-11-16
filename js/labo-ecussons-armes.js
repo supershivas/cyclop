@@ -2,7 +2,7 @@
 // mitrailleuses, avions, génie) : une forme d'écu et un dessin, montrés à leur taille sur le champ (26 px) et agrandis, intacts, entamés et ébranlés, choisis, et en vignette pour la rangée du bas.
 // « Retenir » garde l'idée d'une arme (dans ce navigateur seulement) ; la variante A du sujet (l'écusson sur le champ) dessine alors celles qu'on a retenues. Rien n'est dans le jeu.
 // Palette du jeu seulement : bleu horizon, kaki d'en face, os, terre, boue, glaise, et les deux alertes de l'interface. Les insignes historiques cités sont des points de départ, redessinés en quelques traits.
-import { PALETTE as P, ALERTES } from './palette.js?v=0.140.4';
+import { PALETTE as P, ALERTES } from './palette.js?v=0.140.5';
 
 const MONO = 'ui-monospace,"DejaVu Sans Mono",Menlo,Consolas,monospace';
 const el = (tag, css = '', ...kids) => { const e = document.createElement(tag); if (css) e.style.cssText = css; e.append(...kids.flat().filter(k => k != null)); return e; };
@@ -18,10 +18,22 @@ const FORMES = {
   tour: g => poly(g, [-13, -14, -8, -14, -8, -10, -2.5, -10, -2.5, -14, 2.5, -14, 2.5, -10, 8, -10, 8, -14, 13, -14, 13, 3, 0, 14, -13, 3]),
   casque: g => { g.moveTo(-13, 1); g.arc(0, 1, 13, Math.PI, 0); g.lineTo(13, 4); g.lineTo(0, 14); g.lineTo(-13, 4); g.closePath(); g.rect(-2, -15, 4, 4); },
   aile: g => poly(g, [-9, -14, 9, -14, 9, 4, 0, 14, -9, 4]),
+  // v0.140.4 : des formes de plus, pour que chaque arme ait la sienne dans un même jeu
+  triangle: g => poly(g, [0, -16, 15, 12, -15, 12]),
+  maison: g => poly(g, [-12, -4, 0, -16, 12, -4, 12, 13, -12, 13]),
+  fanion: g => poly(g, [-12, -14, 12, -14, 12, 14, 0, 7, -12, 14]),
+  hexagone: g => poly(g, [0, -15, 13, -7.5, 13, 7.5, 0, 15, -13, 7.5, -13, -7.5]),
+  ecuRond: g => { g.moveTo(-13, -14); g.lineTo(13, -14); g.lineTo(13, 1); g.arc(0, 1, 13, 0, Math.PI); g.closePath(); },
+  coque: g => poly(g, [-9, -13, 9, -13, 11, -2, 15, 7, 9, 14, -9, 14, -15, 7, -11, -2]),
+  rondAile: g => g.arc(0, 0, 12, 0, 2 * Math.PI),
 };
 // ce qui se dessine derrière l'écu (les ailes de l'écu ailé) et dessus (les rivets du blindé)
-const DERRIERE = { aile: g => { for (const s of [-1, 1]) { g.beginPath(); poly(g, [8 * s, -12, 22 * s, -15, 21 * s, -10, 18 * s, -9, 17 * s, -5, 13 * s, -4, 8 * s, 2]); g.fillStyle = P.o; g.fill(); g.lineWidth = 1.5; g.strokeStyle = P.t; g.stroke(); g.beginPath(); g.moveTo(10 * s, -9); g.lineTo(19 * s, -12); g.moveTo(10 * s, -5); g.lineTo(16 * s, -7); g.lineWidth = 1; g.stroke(); } } };
+const AILES = g => { for (const s of [-1, 1]) { g.beginPath(); poly(g, [8 * s, -12, 22 * s, -15, 21 * s, -10, 18 * s, -9, 17 * s, -5, 13 * s, -4, 8 * s, 2]); g.fillStyle = P.o; g.fill(); g.lineWidth = 1.5; g.strokeStyle = P.t; g.stroke(); g.beginPath(); g.moveTo(10 * s, -9); g.lineTo(19 * s, -12); g.moveTo(10 * s, -5); g.lineTo(16 * s, -7); g.lineWidth = 1; g.stroke(); } };
+const DERRIERE = { aile: AILES, rondAile: AILES };
 const DESSUS = { blinde: g => { g.fillStyle = P.t; for (const [x, y] of [[-9, -11], [9, -11], [-10, 4], [10, 4]]) { g.beginPath(); g.arc(x, y, 1.1, 0, 7); g.fill(); } } };
+
+// le dessin dans chaque forme : [décalage x, décalage y, échelle] (une pointe en haut le pousse vers le bas, une forme étroite le réduit)
+const AJUST = { triangle: [0, 4, 0.66], maison: [0, 3, 0.85], losange: [0, 0, 0.85], hexagone: [0, 0, 0.9], rond: [0, 0, 0.92], rondAile: [0, 0, 0.8], coque: [0, 1, 0.95], fanion: [0, -2.5, 0.92], ecuRond: [0, -1, 1] };
 
 // ─── les dessins : centrés en (0, 0), de −10 à 10, à la terre (le fond est la couleur du camp) ───
 const rot = (g, a, f) => { g.save(); g.rotate(a); f(); g.restore(); };
@@ -61,29 +73,36 @@ export const ARMES = [
     { nom: 'La grenade', forme: 'ecu', dessin: 'grenade', note: 'La grenade à flamme des collets : un insigne plus qu\'une silhouette.' },
     { nom: 'Le numéro', forme: 'ecu', dessin: 'numero', note: 'Le régiment, c\'est son numéro : le chiffre en grand, rien d\'autre. Le plus lisible pour les donner les uns après les autres.' },
     { nom: 'L\'écu-casque', forme: 'casque', dessin: 'numero', note: 'La forme dit l\'arme (un casque), le dedans dit le régiment. Se distingue des engins par la seule forme, de loin.' },
+    { nom: 'La bannière', forme: 'fanion', dessin: 'numero', note: 'La bannière à queue d\'aronde du régiment, son numéro dedans : le drapeau qu\'on suit.' },
   ] },
   { type: 'char', nom: 'Les chars', idees: [
     { nom: 'Le profil', forme: 'ecu', dessin: 'charProfil', note: 'La silhouette du Schneider de profil, sur le même écu que tous.' },
     { nom: 'L\'armet', forme: 'blinde', dessin: 'armet', note: 'Le heaume sur deux canons croisés : l\'insigne de l\'Artillerie spéciale, la première arme des chars. Écu blindé et riveté.' },
     { nom: 'La chenille', forme: 'carre', dessin: 'chenille', note: 'Un maillon de chenille sur un écu carré : la forme seule dit « engin ».' },
+    { nom: 'La coque', forme: 'coque', dessin: 'charFace', note: 'La forme d\'une coque de char, évasée en bas comme ses chenilles ; le char de face dedans.' },
     { nom: 'De face', forme: 'blinde', dessin: 'charFace', note: 'Le char vu de face, la bouche du canon : plus massif, moins lisible petit.' },
   ] },
   { type: 'nid', nom: 'Les mitrailleuses', idees: [
     { nom: 'Le trépied', forme: 'ecu', dessin: 'trepied', note: 'L\'arme sur son trépied, sur le même écu que tous.' },
     { nom: 'Le losange', forme: 'losange', dessin: 'trepied', note: 'Un poste est une place fixe : le losange le dit, comme sur une carte d\'état-major.' },
     { nom: 'L\'éventail', forme: 'ecu', dessin: 'eventail', note: 'Le cône de tir, ce que le poste fait au terrain : le même dessin que sa visée.' },
+    { nom: 'Le triangle', forme: 'triangle', dessin: 'eventail', note: 'La pointe montre où va le feu, l\'éventail dedans : un signe de carte.' },
+    { nom: 'L\'hexagone', forme: 'hexagone', dessin: 'trepied', note: 'La casemate bétonnée vue de dessus : un poste ne bouge pas.' },
     { nom: 'La bande', forme: 'ecu', dessin: 'bande', note: 'La bande de cartouches : l\'arme qui mange des munitions (la barre dit la bande).' },
   ] },
   { type: 'avion', nom: 'Les avions', idees: [
     { nom: 'Vu de dessus', forme: 'ecu', dessin: 'avionDessus', note: 'La silhouette vue du ciel, comme la caméra le voit.' },
     { nom: 'L\'écu ailé', forme: 'aile', dessin: 'helice', note: 'Les ailes autour de l\'écu, l\'hélice dedans : l\'insigne des aviateurs, lisible de loin par la seule forme.' },
     { nom: 'La cocarde', forme: 'rond', dessin: 'cocarde', note: 'La cocarde des ailes, en trois anneaux de la palette (pas de bleu-blanc-rouge).' },
+    { nom: 'La cocarde ailée', forme: 'rondAile', dessin: 'avionDessus', note: 'Un rond ailé, l\'avion dedans : la forme la plus reconnaissable de loin.' },
     { nom: 'L\'hirondelle', forme: 'ecu', dessin: 'hirondelle', note: 'Un oiseau stylisé, comme sur les fuselages des escadrilles.' },
   ] },
   { type: 'genie', nom: 'Le génie', idees: [
     { nom: 'La pelle', forme: 'ecu', dessin: 'pelle', note: 'L\'outil de chaque sapeur, sur le même écu que tous.' },
     { nom: 'Pelle et pioche', forme: 'ecu', dessin: 'pellePioche', note: 'Les deux outils croisés : l\'emblème des travaux.' },
     { nom: 'Cuirasse et pot-en-tête', forme: 'ecu', dessin: 'cuirasse', note: 'L\'insigne historique du génie français : la cuirasse et le casque des sapeurs de siège.' },
+    { nom: 'La baraque', forme: 'maison', dessin: 'pelle', note: 'Un toit (le génie bâtit), la pelle dedans.' },
+    { nom: 'L\'écu rond', forme: 'ecuRond', dessin: 'pellePioche', note: 'L\'écu à bas rond des anciens corps du génie, les outils croisés.' },
     { nom: 'La tour', forme: 'tour', dessin: 'pont', note: 'Un écu crénelé (le génie bâtit), le pont dedans (ce qu\'il refait le plus souvent).' },
   ] },
 ];
@@ -108,7 +127,7 @@ export function dessinerEcusson(g, e) {
   const alerte = COULEUR_MORAL[e.moral];
   if (alerte) { trace(); g.strokeStyle = alerte; g.lineWidth = 2 / k; g.setLineDash(e.moral === 'deroute' ? [3 / k, 3 / k] : [6 / k, 3 / k]); g.lineDashOffset = -(e.t ?? 0) * 10 / k; g.stroke(); g.setLineDash([]); }
   DESSUS[idee.forme]?.(g);
-  g.fillStyle = P.t; g.strokeStyle = P.t; g.save(); g.translate(0, idee.forme === 'losange' || idee.forme === 'rond' ? 0 : -1); D[idee.dessin](g, e); g.restore();
+  g.fillStyle = P.t; g.strokeStyle = P.t; const [ax, ay, as] = AJUST[idee.forme] ?? [0, -1, 1]; g.save(); g.translate(ax, ay); g.scale(as, as); g.save(); D[idee.dessin](g, e); g.restore(); g.restore();
   g.restore();
   // le numéro dans un onglet, si le dessin ne le porte pas déjà
   if (e.num && idee.dessin !== 'numero') {
@@ -158,10 +177,9 @@ function carteIdee(A, idee, k, majTout) {
     cv, el('figcaption', `font:13px/1.4 ${MONO};margin:6px 0`, el('b', '', `${k + 1} · ${idee.nom}`), el('br'), el('span', 'opacity:.8', idee.note)), bouton);
 }
 // l'ensemble retenu : un bout de front (nos régiments et ceux d'en face, un char, un poste, un avion en l'air, une section du génie), puis la rangée du bas
-function ensemble(cv) {
+function ensemble(cv, de = ideeDe) {
   const g = cv.getContext('2d'), W = cv.width, H = cv.height; champ(g, W, H, 7);
   g.fillStyle = P.b; g.fillRect(0, 60, W, 3); g.fillRect(0, 150, W, 3);       // deux tranchées, pour situer
-  const de = t => ideeDe(t);
   [[60, 'tient', 1, 0], [150, 'ebranle', 2, 0.15], [240, 'tient', 3, 0.05], [330, 'deroute', 4, 0.2]].forEach(([x, moral, num, bl], i) =>
     dessinerEcusson(g, { idee: de('reg'), x, y: 140, num, moral, debout: 1 - bl * 3, blesses: bl, chev: i % 3, choisi: i === 0 }));
   [[90, 1], [200, 2], [300, 3]].forEach(([x, num]) => dessinerEcusson(g, { idee: de('reg'), x, y: 52, num, camp: 1, debout: 0.8 }));
@@ -180,16 +198,52 @@ function ensemble(cv) {
   });
 }
 
+// Trois jeux complets (Jérôme, v0.140.4 : « j'aime que chaque écusson ait sa propre forme, refais trois planches qu'on choisisse ») : dans chacun, cinq formes différentes, une par arme
+// (l'indice de l'idée dans `ARMES[].idees`)
+export const JEUX = [
+  { nom: 'I · Héraldique', note: 'Des écus de blason : la forme dit l\'arme comme une pièce d\'armoirie (casque, blindé riveté, losange, ailes, créneaux).', idees: { reg: 3, char: 1, nid: 1, avion: 1, genie: 5 } },
+  { nom: 'II · Carte d\'état-major', note: 'Des formes géométriques simples, comme les signes d\'une carte : écu, carré, triangle, rond, toit. Les plus lisibles petites.', idees: { reg: 2, char: 2, nid: 3, avion: 2, genie: 3 } },
+  { nom: 'III · Insignes et bannières', note: 'Une bannière pour le régiment, des insignes pour les armes : coque de char, hexagone de casemate, cocarde ailée, écu rond du génie.', idees: { reg: 4, char: 3, nid: 4, avion: 3, genie: 4 } },
+];
+const NOMS_ARMES = { reg: 'Infanterie', char: 'Chars', nid: 'Mitrailleuses', avion: 'Avions', genie: 'Génie' };
+const ideeDuJeu = J => t => ARMES.find(a => a.type === t).idees[J.idees[t]];
+/* Une planche d'un jeu, dans un canvas de 900 × 480 : les cinq écussons agrandis et leur nom, puis le jeu sur le champ, à sa taille, et la rangée du bas */
+export function dessinerJeu(cv, J) {
+  const g = cv.getContext('2d'), W = cv.width, de = ideeDuJeu(J);
+  g.fillStyle = P.o; g.fillRect(0, 0, W, cv.height);
+  g.font = `bold 18px ${MONO}`; g.fillStyle = P.t; g.textAlign = 'left'; g.textBaseline = 'alphabetic'; g.fillText(J.nom, 16, 28);
+  ['reg', 'char', 'nid', 'avion', 'genie'].forEach((t, i) => {
+    const x = 100 + i * 175, idee = de(t);
+    dessinerEcusson(g, { idee, x, y: 168, k: idee.forme === 'aile' || idee.forme === 'rondAile' ? 2.1 : 2.6, num: t === 'reg' ? 12 : undefined, chev: 2, debout: 0.8, blesses: t === 'reg' ? 0.1 : 0, barre: false });
+    g.font = `13px ${MONO}`; g.textAlign = 'center'; g.fillStyle = P.t; g.fillText(NOMS_ARMES[t], x, 192); g.fillStyle = P.r; g.fillText(idee.nom, x, 208);
+  });
+  const sous = document.createElement('canvas'); sous.width = 700; sous.height = 260; ensemble(sous, de);
+  g.fillStyle = P.t; g.fillRect((W - 700) / 2 + 3, 218 + 3, 700, 260); g.drawImage(sous, (W - 700) / 2, 218);
+}
+
 export function plancheEcussons(stage) {
-  const tete = el('p', `font:13px/1.5 ${MONO};max-width:760px`, 'Quatre idées par arme. Chaque carte montre l\'écusson agrandi (×2,6), puis à sa taille sur le champ : intact, entamé (ébranlé pour un régiment), choisi, en face ; à droite, la vignette de la rangée du bas. « Retenir » garde une idée par arme dans ce navigateur : l\'ensemble en bas de page et la variante A (sur le champ) les dessinent.');
+  const tete = el('p', `font:13px/1.5 ${MONO};max-width:760px`, 'Quatre à six idées par arme. Chaque carte montre l\'écusson agrandi (×2,6), puis à sa taille sur le champ : intact, entamé (ébranlé pour un régiment), choisi, en face ; à droite, la vignette de la rangée du bas. « Retenir » garde une idée par arme dans ce navigateur : l\'ensemble en bas de page et la variante A (sur le champ) les dessinent.');
   const corps = el('div');
   const vue = el('canvas', 'display:block;width:100%;max-width:700px;margin-top:8px;border:1px solid rgba(0,0,0,.15)'); vue.width = 700; vue.height = 260;
-  function majTout() {
+  let majTout = function () {
     corps.replaceChildren(...ARMES.map(A => el('section', 'margin:18px 0',
       el('h3', `font:600 15px ${MONO};margin:0 0 8px`, A.nom),
       el('div', 'display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px', ...A.idees.map((idee, k) => carteIdee(A, idee, k, majTout))))));
     ensemble(vue);
+  };
+  // les trois jeux, en tête : « Retenir ce jeu » retient ses cinq idées d'un coup
+  const jeux = el('div', 'display:grid;gap:16px;margin:12px 0 24px');
+  function majJeux() {
+    jeux.replaceChildren(...JEUX.map(J => {
+      const cv = el('canvas', 'display:block;width:100%;max-width:900px'); cv.width = 900; cv.height = 486; dessinerJeu(cv, J);
+      const pris = Object.entries(J.idees).every(([t, k]) => (retenues[t] ?? 0) === k);
+      const b = el('button', ''); b.className = 'essai'; b.textContent = pris ? 'Jeu retenu' : 'Retenir ce jeu'; b.setAttribute('aria-pressed', String(pris));
+      b.onclick = () => { for (const [t, k] of Object.entries(J.idees)) retenir(t, k); majTout(); };
+      return el('figure', `margin:0;padding:8px;background:#fff;border:${pris ? `2px solid ${P.t}` : '1px solid rgba(0,0,0,.15)'};border-radius:6px`, cv, el('figcaption', `font:13px/1.4 ${MONO};margin:6px 0`, J.note), b);
+    }));
   }
+  const majPieces = majTout;
+  majTout = () => { majPieces(); majJeux(); };
   majTout();
-  stage.append(tete, corps, el('h3', `font:600 15px ${MONO};margin:24px 0 0`, 'L\'ensemble retenu'), vue);
+  stage.append(el('h3', `font:600 15px ${MONO};margin:0`, 'Trois jeux : chaque arme sa forme'), jeux, el('h3', `font:600 15px ${MONO};margin:0`, 'Toutes les idées, arme par arme'), tete, corps, el('h3', `font:600 15px ${MONO};margin:24px 0 0`, 'L\'ensemble retenu'), vue);
 }

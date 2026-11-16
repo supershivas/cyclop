@@ -1,8 +1,12 @@
 # Journal des versions
 
-## 0.140.4 — 2026-11-16
+## 0.140.5 — 2026-11-16
 
 - Au labo : des soldats tous différents, à trancher (le ton, le regard, la place dans le rang, des hommes assis dans la tranchée) ; le jeu ne change pas
+
+## 0.140.4 — 2026-11-16
+
+- Au labo, en tête de la planche des écussons : trois jeux complets où chaque arme a sa propre forme (I · Héraldique, II · Carte d'état-major, III · Insignes et bannières), vus agrandis puis sur le champ et dans la rangée du bas ; « Retenir ce jeu » prend ses cinq écussons d'un coup ; de nouvelles formes (bannière, triangle, hexagone, coque, cocarde ailée, baraque, écu rond) ; le jeu ne change pas
 
 ## 0.140.3 — 2026-11-16
 
