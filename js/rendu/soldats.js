@@ -1,12 +1,12 @@
 // Les hommes : les soldats (une boîte et son ombre ; de près la silhouette, plus loin une silhouette allégée ; aux zooms 1 et 2 un point), les anneaux des
 // régiments choisis ou survolés, les corps (un homme couché) et les tombes (un tertre et une croix). Tout est instancié et ne reçoit que ce qu'on voit.
 // Le dessin seulement. Les formes viennent de geometries.js, le GLSL de shaders.js.
-import * as SH from './shaders.js?v=0.140.1';
-import { creerGeometries } from './geometries.js?v=0.140.1';
-import { classeDuRang } from '../data/grades.js?v=0.140.1';
-import { creerEquipeArticulee } from './soldat-articule.js?v=0.140.1';
-import { creerJeuAnimations } from './animation-jeu.js?v=0.140.1';
-import { SANG } from '../data/aspect-soldat.js?v=0.140.1';
+import * as SH from './shaders.js?v=0.140.2';
+import { creerGeometries } from './geometries.js?v=0.140.2';
+import { classeDuRang } from '../data/grades.js?v=0.140.2';
+import { creerEquipeArticulee } from './soldat-articule.js?v=0.140.2';
+import { creerJeuAnimations } from './animation-jeu.js?v=0.140.2';
+import { SANG } from '../data/aspect-soldat.js?v=0.140.2';
 
 // `THREE`, `scene`, `col`, `solUniforms` (`uSol`, `uTaille` : la texture du sol, que l'ombre d'un soldat reprend), `styleSoldat` (le style de près, comparé au labo),
 // `grades` (v0.68.0 : une variante de `GRADES`, data/grades.js, ou null : tous pareils) et `rangDe(B, id, reg)` (le rang d'un homme, bataille.js) ; `surface(x, z)` et `surfaceLisse(x, z)` (la hauteur du sol, lissée pour qui marche), `solY` (la hauteur moyenne du sol) et `POINTS_JUSQUA` (le zoom où un soldat n'est
@@ -20,7 +20,7 @@ export function creerSoldats({ THREE, scene, col, solUniforms, styleSoldat, grad
   const { geometrieSoldat: formeSoldat } = creerGeometries(THREE, col);
   const geometrieSoldat = style => formeSoldat(style, attrsI, grades);
   const { geometrieGrades: formeGrades, geometrieBandages: formeBandages } = creerGeometries(THREE, col);
-  const SANGS = new Float32Array(1 << 16); let tSang = 0;      // (v0.140.1) le sang de chaque homme (par numéro, 0 à 1) : il monte tant qu'il se bat au corps à corps et reste ; le dessin seulement, rien de sauvegardé
+  const SANGS = new Float32Array(1 << 16); let tSang = 0;      // (v0.140.2) le sang de chaque homme (par numéro, 0 à 1) : il monte tant qu'il se bat au corps à corps et reste ; le dessin seulement, rien de sauvegardé
   const CAPS = new Float32Array(1 << 16);                    // le cap de chaque homme (par numéro : les indices bougent quand les morts sont retirés) : l'angle de son regard (NaN : pas encore vu, il part tourné vers l'ennemi)
   // Les gradés (v0.68.0) : leurs pièces (képi, fanion, galons…) sont des maillages à part, un par classe (une instance par gradé de cette classe seulement : un homme sur quatre
   // en tout, et chaque instance ne porte que les pièces de sa classe), avec les mêmes attributs que le corps ; le corps, lui, ne change que par la classe (la taille) et le fusil que
@@ -313,7 +313,7 @@ export function creerSoldats({ THREE, scene, col, solUniforms, styleSoldat, grad
     if (grades) for (let c = 1; c <= 4; c++) GR[c].k = 0;
     const an = anGeo.attributes.position.array, anTon = anGeo.attributes.aTon.array;
     const { tirVal, tirAng, volT, volH, volD } = tirs(), regs = B.etat.regiments, tAnim = soldatMat.uniforms.uT.value;
-    // (v0.140.1) le sang du corps à corps : il monte pour tous ceux qui se battent, vus ou non (l'horloge du dessin : figée à la pause), et reste
+    // (v0.140.2) le sang du corps à corps : il monte pour tous ceux qui se battent, vus ou non (l'horloge du dessin : figée à la pause), et reste
     { const dSang = Math.max(0, Math.min(0.1, tAnim - tSang)) * SANG.parSeconde; tSang = tAnim;
       if (dSang > 0) for (let i = 0; i < n; i++) if (A.duel[i]) { const id = A.id[i] & 0xffff; if (SANGS[id] < 1) SANGS[id] = Math.min(1, SANGS[id] + dSang); }
       soldatMat.uniforms.uSangCell.value = Math.max(SANG.cellule, 1.3 / p); }      // une tache fait au moins un peu plus d'un pixel : plus fine, elle scintille quand l'homme marche

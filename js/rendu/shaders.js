@@ -212,7 +212,7 @@ export const soldatMat = {
         // les pansements (v0.72.0) : un bandeau n'existe que pour un homme blessé à cet endroit
         if (aBand > 0.5 && abs(aBand - aBless) > 0.5) cache = true;
         vCamp = aCamp; vPart = kp; vLong = position.y;
-        vSang = vec4(position.x, position.z, aBless, fract(aVar.x * 71.3 + aVar.y * 37.7));      // (v0.140.1) le sang : la place du point dans le modèle, la blessure et le niveau de sang (aBless), un nombre par homme
+        vSang = vec4(position.x, position.z, aBless, fract(aVar.x * 71.3 + aVar.y * 37.7));      // (v0.140.2) le sang : la place du point dans le modèle, la blessure et le niveau de sang (aBless), un nombre par homme
         float ech = aGrade > 3.5 ? uEch.y : (aGrade > 2.5 ? uEch.x : 1.0);
         // (v0.69.0) chaque homme a sa taille et sa largeur (aVar : le dessin seulement, tiré de son numéro)
         vec3 p = (kp > 0.5 && kp < 1.5) ? position : position * vec3(ech * aVar.x, ech * aVar.y, ech * aVar.x);
@@ -343,7 +343,7 @@ export const soldatMat = {
           c = mix(c, solB, uBoue * (0.22 + 0.68 * (1.0 - smoothstep(0.15, 1.15, vLong))));
           c *= 1.0 - 0.25 * uMouille;
         }
-        // (v0.140.1) le sang : des taches (des cases du modèle tirées d'un hachage) autour de la blessure, et sur le buste de qui s'est battu au corps à corps ; ni le fusil ni les signes
+        // (v0.140.2) le sang : des taches (des cases du modèle tirées d'un hachage) autour de la blessure, et sur le buste de qui s'est battu au corps à corps ; ni le fusil ni les signes
         if (uSang > 0.0 && vSang.z > 0.05 && k < 30.0 && k != 4.0 && !(k == 2.0 && sel)) {
           float blS = floor(vSang.z + 0.05), sgS = (vSang.z - blS) * 2.5, qS = 0.0;
           vec3 cel = floor(vec3(vSang.x, vLong, vSang.y) / uSangCell);
@@ -470,7 +470,7 @@ export const corpsSoldatMat = {
         if (kp > 0.5 && kp < 1.5) cache = true;                       // pas d'ombre : il est couché
         vEtat = aInfo.x; vPart = kp; vCamp = aCamp;
         float h = fract(sin(aInfo.y * 91.7) * 43758.5453), h2 = fract(h * 7.31), h3 = fract(h * 13.17);
-        vSang = vec4(position, h);      // (v0.140.1) le sang des morts : la place du point dans le modèle, un nombre par mort
+        vSang = vec4(position, h);      // (v0.140.2) le sang des morts : la place du point dans le modèle, un nombre par mort
         vec3 p = position;
         if (uPoses > 0.5) {
           if (aJambe != 0.0) { float a = aJambe * (0.06 + 0.4 * h2); float y = p.y - 0.8; float x = p.x; p.x = x * cos(a) - y * sin(a); p.y = 0.8 + x * sin(a) + y * cos(a); }
@@ -493,7 +493,7 @@ export const corpsSoldatMat = {
         float k = floor(vPart + 0.5);
         vec3 c = vEtat > 1.5 ? uVieux : (vCamp > 0.5 ? uEux : uNous);
         if (k == 3.0) c = uJambes; else if (k == 4.0) c = uFusil; else if (k == 5.0) c = uSac; else if (k == 6.0 || k == 9.0) c = uVisage; else if (k == 7.0) c = uCuir; else if (k == 8.0) c = uBotte;
-        // (v0.140.1) le sang des morts : une plaie tirée du numéro du mort (le buste, le ventre ou la tête), des taches autour ; le lendemain (vEtat 2) il a séché : plus sombre, plus rare
+        // (v0.140.2) le sang des morts : une plaie tirée du numéro du mort (le buste, le ventre ou la tête), des taches autour ; le lendemain (vEtat 2) il a séché : plus sombre, plus rare
         if (uSang > 0.0 && k != 4.0) {
           vec3 cel = floor(vSang.xyz / uSangCell);
           float hs = fract(sin(dot(cel, vec3(12.9898, 78.233, 37.719)) + vSang.w * 91.7) * 43758.5453);

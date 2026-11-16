@@ -1,5 +1,5 @@
-import { NOMS_CHAMPS } from '../data/poses-soldat.js?v=0.140.1';
-import { poseJeu, phaseDe, TEXELS, FLOTTANTS } from './pose-jeu.js?v=0.140.1';
+import { NOMS_CHAMPS } from '../data/poses-soldat.js?v=0.140.2';
+import { poseJeu, phaseDe, TEXELS, FLOTTANTS } from './pose-jeu.js?v=0.140.2';
 
 // Le soldat articulé (au labo seulement : « la fabrique de soldats », et la mesure de son coût ; rien n'est dans le jeu).
 // Un squelette de treize os (le tronc, la tête, deux fois bras / avant-bras, deux fois cuisse / mollet / pied, le fusil) que le nuanceur plie : le genou, le coude, la cheville
@@ -320,7 +320,7 @@ export const VERT = `
     // l'éclairage de relief (au labo et pour les hommes articulés, uShade : 0 redonne les aplats) : le dessus plus clair, les côtés plus sombres, d'après la normale de la face tournée par le cap
     vec3 nw = vec3(aNor.x * c + aNor.z * s, aNor.y, -aNor.x * s + aNor.z * c);
     vShade = mix(1.0, 0.58 + 0.42 * max(dot(nw, normalize(vec3(-0.35, 0.8, 0.5))), 0.0), uShade);
-    vMonde = (p + aPos).xz; vBas = p.y; vSang = vec4(position, aWound); vSangH = fract(aBody.x * 71.3 + aBody.y * 37.7 + aBody.w * 13.1);      // (v0.140.1) le sang : la place du point dans le modèle, la blessure + le niveau de sang, un nombre par homme
+    vMonde = (p + aPos).xz; vBas = p.y; vSang = vec4(position, aWound); vSangH = fract(aBody.x * 71.3 + aBody.y * 37.7 + aBody.w * 13.1);      // (v0.140.2) le sang : la place du point dans le modèle, la blessure + le niveau de sang, un nombre par homme
     gl_Position = projectionMatrix * viewMatrix * vec4(p + aPos, 1.0);
   }`;
 
@@ -391,7 +391,7 @@ export const FRAG = `
       c = mix(c, solB, uBoue * (0.22 + 0.68 * (1.0 - smoothstep(0.15, 1.15, vBas))));
       c *= 1.0 - 0.25 * uMouille;
     }
-    if (uSang > 0.0 && vSang.w > 0.05 && k != 15.0 && k != 12.0 && k != 17.0) {      // (v0.140.1) le sang : voir shaders.js, soldatMat
+    if (uSang > 0.0 && vSang.w > 0.05 && k != 15.0 && k != 12.0 && k != 17.0) {      // (v0.140.2) le sang : voir shaders.js, soldatMat
           float blS = floor(vSang.w + 0.05), sgS = (vSang.w - blS) * 2.5, qS = 0.0;
           vec3 cel = floor(vec3(vSang.x, vSang.y, vSang.z) / uSangCell);
           if (blS == 1.0 && vSang.y > 0.92 && vSang.y < 1.45 && vSang.x < -0.1) qS = 0.7;                 // le bras gauche (là où est le pansement)

@@ -1,8 +1,12 @@
 # Journal des versions
 
-## 0.140.1 — 2026-11-16
+## 0.140.2 — 2026-11-16
 
 - Du sang : des taches sur les blessés autour de leur plaie, sur les morts, et sur les soldats qui se battent au corps à corps, qui les gardent ensuite
+
+## 0.140.1 — 2026-11-16
+
+- Au labo, sujet « Les unités : un seul signe », variante D : quatre idées d'écussons pour chacune des cinq armes (une forme d'écu et un dessin : casque, grenade, numéro, écu-casque ; profil, armet, chenille, char de face ; trépied, losange, éventail, bande ; avion vu de dessus, écu ailé, cocarde, hirondelle ; pelle, pelle et pioche, cuirasse et pot-en-tête, tour), à leur taille et agrandies ; « Retenir » en garde une par arme et la variante A les dessine sur le champ ; le jeu ne change pas
 
 ## 0.140.0 — 2026-11-16
 
