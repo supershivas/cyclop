@@ -1,11 +1,11 @@
 // Les hommes : les soldats (une boîte et son ombre ; de près la silhouette, plus loin une silhouette allégée ; aux zooms 1 et 2 un point), les anneaux des
 // régiments choisis ou survolés, les corps (un homme couché) et les tombes (un tertre et une croix). Tout est instancié et ne reçoit que ce qu'on voit.
 // Le dessin seulement. Les formes viennent de geometries.js, le GLSL de shaders.js.
-import * as SH from './shaders.js?v=0.139.0';
-import { creerGeometries } from './geometries.js?v=0.139.0';
-import { classeDuRang } from '../data/grades.js?v=0.139.0';
-import { creerEquipeArticulee } from './soldat-articule.js?v=0.139.0';
-import { creerJeuAnimations } from './animation-jeu.js?v=0.139.0';
+import * as SH from './shaders.js?v=0.139.1';
+import { creerGeometries } from './geometries.js?v=0.139.1';
+import { classeDuRang } from '../data/grades.js?v=0.139.1';
+import { creerEquipeArticulee } from './soldat-articule.js?v=0.139.1';
+import { creerJeuAnimations } from './animation-jeu.js?v=0.139.1';
 
 // `THREE`, `scene`, `col`, `solUniforms` (`uSol`, `uTaille` : la texture du sol, que l'ombre d'un soldat reprend), `styleSoldat` (le style de près, comparé au labo),
 // `grades` (v0.68.0 : une variante de `GRADES`, data/grades.js, ou null : tous pareils) et `rangDe(B, id, reg)` (le rang d'un homme, bataille.js) ; `surface(x, z)` et `surfaceLisse(x, z)` (la hauteur du sol, lissée pour qui marche), `solY` (la hauteur moyenne du sol) et `POINTS_JUSQUA` (le zoom où un soldat n'est
@@ -45,6 +45,7 @@ export function creerSoldats({ THREE, scene, col, solUniforms, styleSoldat, grad
       uSansOmbre: { value: 0 },
       uSol: solUniforms.uSol, uTaille: solUniforms.uTaille,
       uAO: solUniforms.uAO, uAOon: solUniforms.uAOon, uSunOn: solUniforms.uSunOn, uAbriOn: solUniforms.uAbriOn,      // la lumière du sol lue à la place de l'homme (session 2 : éteinte)
+      uBoue: solUniforms.uBoue ?? { value: 0 }, uMouille: solUniforms.uMouille ?? { value: 0 },      // la boue sur les hommes (labo : éteinte)
       uSoleil: { value: new THREE.Vector2(0.5, 0.6) } },
     vertexShader: SH.soldatMat.v,
     fragmentShader: SH.soldatMat.f,
@@ -330,7 +331,7 @@ export function creerSoldats({ THREE, scene, col, solUniforms, styleSoldat, grad
       const niv = p >= (artCfg.fin ?? 24) ? 'fin' : 'moyen';
       if (nArt && !EQs[niv]) {
         EQs[niv] = creerEquipeArticulee(THREE, col, { capacite: artCfg.max + 8, ombrage: artCfg.ombrage ?? 0, niveau: niv, texturePoses: artCfg.texture !== false,
-          partages: { uSoleil: soldatMat.uniforms.uSoleil, uSol: solUniforms.uSol, uTaille: solUniforms.uTaille, uAO: solUniforms.uAO, uAOon: solUniforms.uAOon, uSunOn: solUniforms.uSunOn, uAbriOn: solUniforms.uAbriOn } });
+          partages: { uSoleil: soldatMat.uniforms.uSoleil, uSol: solUniforms.uSol, uTaille: solUniforms.uTaille, uAO: solUniforms.uAO, uAOon: solUniforms.uAOon, uSunOn: solUniforms.uSunOn, uAbriOn: solUniforms.uAbriOn, uBoue: soldatMat.uniforms.uBoue, uMouille: soldatMat.uniforms.uMouille } });
         for (const m of EQs[niv].meshes) scene.add(m);
       }
       EQ = EQs[niv];

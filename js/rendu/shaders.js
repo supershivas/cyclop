@@ -312,7 +312,7 @@ export const soldatMat = {
       uniform vec3 uNous; uniform vec3 uEux; uniform vec3 uOmbre; uniform vec3 uSel;
       uniform vec3 uJambes; uniform vec3 uFusil; uniform vec3 uSac; uniform vec3 uVisage; uniform vec3 uCuir; uniform vec3 uBotte;
       uniform sampler2D uSol; uniform vec2 uTaille;
-      uniform sampler2D uAO; uniform float uAOon, uSunOn, uAbriOn;
+      uniform sampler2D uAO; uniform float uAOon, uSunOn, uAbriOn; uniform float uBoue, uMouille;
       varying float vCamp; varying float vPart; varying vec2 vXZ; varying float vLong;
       void main() {
         float k = floor(vPart + 0.5);
@@ -336,6 +336,12 @@ export const soldatMat = {
         else if (k == 30.0) c = uOmbre;               // les signes sombres des grades (galons, képi, baudrier)
         else if (k == 31.0) c = uSel;                 // le fanion de commandement
         else if (k == 34.0) c = camp > 0.5 ? uOmbre : uSel;     // le pansement : d'os sur le bleu de chez nous, de terre sur le kaki d'en face (l'os s'y perdait)
+        // (labo, éteint : uBoue vaut 0) la boue sur les hommes : la couleur du sol sous lui gagne son uniforme, presque tout aux pieds, un voile au-dessus de la ceinture (vLong : la hauteur du sommet dans le modèle) ; mouillé, il fonce. Ni le casque des choisis ni le fanion : ce sont des signes
+        if (uBoue > 0.0 && k != 31.0 && !(k == 2.0 && sel)) {
+          vec3 solB = texture2D(uSol, vec2(vXZ.x / uTaille.x, vXZ.y / uTaille.y * 0.5)).rgb;
+          c = mix(c, solB, uBoue * (0.22 + 0.68 * (1.0 - smoothstep(0.15, 1.15, vLong))));
+          c *= 1.0 - 0.25 * uMouille;
+        }
         // (session 2, tout éteint par défaut : les uniformes valent 0) la lumière du sol lue à la place de l'homme : le soleil du labo, l'ouverture au ciel, le jour sous les toits (js/rendu/ao-sol.js) ; un homme dans une tranchée est plus sombre qu'en plaine
         if (uSunOn + uAOon + uAbriOn > 0.5) {
           vec4 Lm = texture2D(uAO, vXZ / uTaille); float fl = 1.0;

@@ -2,6 +2,9 @@
 // Une entrée par version qui touche au labo, la plus récente en haut. `ref` : « sujet-Lettre » (la lettre est celle de la variante,
 // A étant l'actuelle). À chaque changement du labo : une entrée ici, avec `depuis` sur les variantes ajoutées ou changées (labo.js).
 export const JOURNAL = [
+  { version: '0.139.1', date: '2026-11-16', items: [
+    { genre: 'nouveau', texte: 'La boue sur les hommes (à trancher) : la couleur du sol gagne les uniformes par le bas, la pluie les fonce ; propre, légère, forte, sous la pluie', ref: 'boue-soldats-B' },
+  ] },
   { version: '0.138.0', date: '2026-11-15', items: [
     { genre: 'mis-a-jour', texte: 'Jérôme tranche : le grain du sol C (grain et bords déchiquetés) et les arbres D (essences, grappes de près, verts d\'été par essence) passent en jeu ; l\'herbe dense est abandonnée (trop chère sans carte graphique). Les trois sujets sortent du labo (docs/archives/labo-archive.md)', ref: 'atelier-terrain-A' },
   ] },

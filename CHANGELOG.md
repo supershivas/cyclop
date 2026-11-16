@@ -1,5 +1,9 @@
 # Journal des versions
 
+## 0.139.1 — 2026-11-16
+
+- Au labo : la boue sur les hommes, à trancher (la couleur du sol gagne les uniformes par le bas, la pluie les fonce) ; le jeu ne change pas
+
 ## 0.139.0 — 2026-11-16
 
 - Les obus jettent de vraies mottes de terre, en volume, aux couleurs de la terre : elles tournent en l'air, rebondissent une fois, restent quelques secondes au sol puis s'y enfoncent ; les gros calibres en jettent de grosses ; la terre projetée n'est plus faite de carrés

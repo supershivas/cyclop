@@ -2,41 +2,41 @@
 // Chaque sujet utilise les mêmes modules que le jeu (terrain, apparence,
 // rendu three.js) : ce qu'on voit ici est ce que le jeu dessinera. Ajouter un
 // sujet ou une variante = ajouter une entrée dans GROUPES.
-import { afficherVersion } from './version-tag.js?v=0.139.0';
-import { mountLabo } from './lib/labo-shell.js?v=0.139.0';
-import { spriteCanvas, paletteToGPL, paletteToHex } from './lib/sprites.js?v=0.139.0';
-import { PALETTE, ROLES } from './palette.js?v=0.139.0';
-import { chargerContenu } from './design-store.js?v=0.139.0';
-import { tuile, ETAT } from './tuiles.js?v=0.139.0';
-import { creerTerrain, impact, hydroLignes, toucher } from './terrain.js?v=0.139.0';
-import { FORMES } from './cratere.js?v=0.139.0';
-import { CALIBRES } from './data/calibres.js?v=0.139.0';
-import { METEO } from './data/meteo.js?v=0.139.0';
-import { nouvelleBataille, avancer, ordonnerMarche, ordonnerBarrage, mourir, regarderAu, aube, horloge, ticksParJour, rangDe } from './bataille.js?v=0.139.0';
-import { AZIMUTS, COTES } from './data/soleil.js?v=0.139.0';
-import { creerRendu, ZOOMS } from './rendu3d.js?v=0.139.0';
-import { placesCommandement } from './army.js?v=0.139.0';
-import { hash2 } from './lib/rng.js?v=0.139.0';
-import { reglerVerdure } from './apparence.js?v=0.139.0';
-import { maquetteChars } from './labo-chars.js?v=0.139.0';
-import { maquetteEpaves } from './labo-epaves.js?v=0.139.0';
-import { fondations, boutons, unites, fenetres, revision } from './labo-design-system.js?v=0.139.0';
-import { cartesSecteur } from './labo-cartes.js?v=0.139.0';
-import { gainTampon, gainCachets, gainFil, gainBordereau, victoireFanion, victoireTampon, victoireChevrons, victoireAube, ficheDeuxColonnes, ficheEtages, ficheRegistre, ficheDAbord } from './labo-recompenses.js?v=0.139.0';
-import { maquetteBatiment, maquetteCamp } from './labo-batiments.js?v=0.139.0';
-import { BATIMENTS } from './data/batiments.js?v=0.139.0';
-import { JOURNAL } from './labo-journal.js?v=0.139.0';
-import { loadVersion } from './lib/app-update.js?v=0.139.0';
-import { maquetteEffets, maquetteAmbiance, maquetteEspace, maquetteBruitages } from './labo-son.js?v=0.139.0';
-import { calqueMoral } from './labo-moral.js?v=0.139.0';
-import { bilanRapport, bilanTuiles, bilanFrise } from './labo-donnees.js?v=0.139.0';
-import { papierNuit, finDePartie } from './labo-papiers.js?v=0.139.0';
-import { fichesTuiles, fichesProfil, fichesCompactes } from './labo-fiches.js?v=0.139.0';
-import { calqueEnnemis } from './labo-engins-ennemis.js?v=0.139.0';
-import { maquetteTranchees, NOTES_TRANCHEES, NOMS_TRANCHEES } from './labo-tranchees.js?v=0.139.0';
-import { maquetteFabrique } from './labo-fabrique.js?v=0.139.0';
-import { atelierTerrain } from './labo-atelier-terrain.js?v=0.139.0';
-import { entrees as encEntrees, lexiqueAZ, planche as encPlanche } from './labo-encyclopedie.js?v=0.139.0';
+import { afficherVersion } from './version-tag.js?v=0.139.1';
+import { mountLabo } from './lib/labo-shell.js?v=0.139.1';
+import { spriteCanvas, paletteToGPL, paletteToHex } from './lib/sprites.js?v=0.139.1';
+import { PALETTE, ROLES } from './palette.js?v=0.139.1';
+import { chargerContenu } from './design-store.js?v=0.139.1';
+import { tuile, ETAT } from './tuiles.js?v=0.139.1';
+import { creerTerrain, impact, hydroLignes, toucher } from './terrain.js?v=0.139.1';
+import { FORMES } from './cratere.js?v=0.139.1';
+import { CALIBRES } from './data/calibres.js?v=0.139.1';
+import { METEO } from './data/meteo.js?v=0.139.1';
+import { nouvelleBataille, avancer, ordonnerMarche, ordonnerBarrage, mourir, regarderAu, aube, horloge, ticksParJour, rangDe } from './bataille.js?v=0.139.1';
+import { AZIMUTS, COTES } from './data/soleil.js?v=0.139.1';
+import { creerRendu, ZOOMS } from './rendu3d.js?v=0.139.1';
+import { placesCommandement } from './army.js?v=0.139.1';
+import { hash2 } from './lib/rng.js?v=0.139.1';
+import { reglerVerdure } from './apparence.js?v=0.139.1';
+import { maquetteChars } from './labo-chars.js?v=0.139.1';
+import { maquetteEpaves } from './labo-epaves.js?v=0.139.1';
+import { fondations, boutons, unites, fenetres, revision } from './labo-design-system.js?v=0.139.1';
+import { cartesSecteur } from './labo-cartes.js?v=0.139.1';
+import { gainTampon, gainCachets, gainFil, gainBordereau, victoireFanion, victoireTampon, victoireChevrons, victoireAube, ficheDeuxColonnes, ficheEtages, ficheRegistre, ficheDAbord } from './labo-recompenses.js?v=0.139.1';
+import { maquetteBatiment, maquetteCamp } from './labo-batiments.js?v=0.139.1';
+import { BATIMENTS } from './data/batiments.js?v=0.139.1';
+import { JOURNAL } from './labo-journal.js?v=0.139.1';
+import { loadVersion } from './lib/app-update.js?v=0.139.1';
+import { maquetteEffets, maquetteAmbiance, maquetteEspace, maquetteBruitages } from './labo-son.js?v=0.139.1';
+import { calqueMoral } from './labo-moral.js?v=0.139.1';
+import { bilanRapport, bilanTuiles, bilanFrise } from './labo-donnees.js?v=0.139.1';
+import { papierNuit, finDePartie } from './labo-papiers.js?v=0.139.1';
+import { fichesTuiles, fichesProfil, fichesCompactes } from './labo-fiches.js?v=0.139.1';
+import { calqueEnnemis } from './labo-engins-ennemis.js?v=0.139.1';
+import { maquetteTranchees, NOTES_TRANCHEES, NOMS_TRANCHEES } from './labo-tranchees.js?v=0.139.1';
+import { maquetteFabrique } from './labo-fabrique.js?v=0.139.1';
+import { atelierTerrain } from './labo-atelier-terrain.js?v=0.139.1';
+import { entrees as encEntrees, lexiqueAZ, planche as encPlanche } from './labo-encyclopedie.js?v=0.139.1';
 
 document.documentElement.style.setProperty('--jeu-accent', ROLES.accent);
 const NOM = document.title.replace(/^Labo — /, ''); // le nom vient de la page (une apostrophe ne casse rien)
@@ -162,7 +162,7 @@ function poserColline(B, { dx = 0, dz = 0, r = 22, h = 9 }, cz) {
   }
 }
 
-function moteur(stage, { zoom = 3, pluie = false, gel = false, soldats = 600, cz = 185, camera = null, respiration = undefined, soldat = undefined, cadavre = undefined, morts = 0, effets = undefined, barrages = false, surLesArbres = false, vue = null, verdure = undefined, nuit = null, tombee = false, calque = null, bord = null, centre = null, finesse = 1, biseau = false, cratere = null, arbres = undefined, saison = null, jours = undefined, versLesArbres = false, buissons = undefined, versLesBuissons = false, lumiere = null, colline = null, journee = null, grades = undefined, parade = false } = {}) {
+function moteur(stage, { zoom = 3, pluie = false, gel = false, soldats = 600, cz = 185, camera = null, respiration = undefined, soldat = undefined, cadavre = undefined, morts = 0, effets = undefined, barrages = false, surLesArbres = false, vue = null, verdure = undefined, nuit = null, tombee = false, calque = null, bord = null, centre = null, finesse = 1, biseau = false, cratere = null, arbres = undefined, saison = null, jours = undefined, versLesArbres = false, buissons = undefined, versLesBuissons = false, lumiere = null, colline = null, journee = null, grades = undefined, parade = false, boue = null } = {}) {
   reglerVerdure(verdure);                                   // le sol vert (apparence.js) : avant que le sol ne se peigne
   const boite = el('div'); boite.style.cssText = 'position:relative;width:100%;height:min(70vh,560px);overflow:hidden';
   const canvas = el('canvas'); canvas.style.cssText = 'position:absolute;left:0;top:0;image-rendering:pixelated';
@@ -183,6 +183,8 @@ function moteur(stage, { zoom = 3, pluie = false, gel = false, soldats = 600, cz
   // (`journee` : la bataille tourne, un jour de jeu en `secondes` secondes ; sinon l'heure est figée)
   const depart = () => ({ ombres: !!lumiere?.ombres, heure: lumiere?.heure ?? 9, saison: 'automne', saisonnier: !!lumiere?.saisonnier, azimut: lumiere?.azimut ?? 'sud', fige: !journee, parois: !!lumiere?.parois, nuages: !!lumiere?.nuages, meteo: !!lumiere?.meteo });
   const lum = depart();
+  // la boue sur les hommes (sujet « La boue sur les hommes ») : sa force, à changer à chaud
+  if (boue != null) stage.append(el('p', {}, el('span', { textContent: 'Boue : ' }), ...[[0, 'Aucune'], [0.35, 'Légère'], [0.6, 'Moyenne'], [0.85, 'Forte']].map(([v, n]) => el('button', { className: 'essai', textContent: n, onclick: () => { if (rendu) rendu.boueSoldats = v; } }))));
   let appliquerLumiere = () => {};
   if (lumiere) {
     const bascule = (nom, ...b) => el('p', {}, el('span', { textContent: nom + ' : ' }), ...b);
@@ -228,6 +230,7 @@ function moteur(stage, { zoom = 3, pluie = false, gel = false, soldats = 600, cz
     if (fini) { rendu.detruire(); return; }
     if (nuit) rendu.styleNuit = nuit;
     rendu.finesse = finesse;
+    if (boue != null) rendu.boueSoldats = boue;
     rendu.biseau = biseau;
     rendu.redimensionner();
     rendu.attacher(B);
@@ -463,6 +466,12 @@ const GROUPES = [
     ] },
   ] },
   { id: 'soldats', title: 'Soldats', topics: [
+    { id: 'boue-soldats', title: 'La boue sur les hommes', variants: [
+      { title: 'Des uniformes propres', status: 'actuelle', note: "Le jeu tel qu'il est : chaque homme est un aplat de la couleur de son armée, le même au premier matin et au dixième jour, sur l'herbe comme dans la boue.", render: s => moteur(s, { zoom: 4, boue: 0 }) },
+      { title: 'La boue du sol, légère', status: 'a-trancher', depuis: '0.139.1', note: "PROPOSITION (Jérôme, 16 nov. : « les soldats sont les éléments les moins réalistes »). La couleur du sol sous chaque homme gagne son uniforme : presque tout aux pieds, la moitié aux genoux, un voile au-dessus de la ceinture. Un homme dans la boue est couleur de boue, un homme dans l'herbe morte à peine sali. Aucune couleur nouvelle (un fondu entre deux tons de la palette), aucun triangle de plus ; une lecture de la texture du sol par pixel de soldat.", render: s => moteur(s, { zoom: 4, boue: 0.35 }) },
+      { title: 'La boue du sol, forte', status: 'a-trancher', depuis: '0.139.1', note: "PROPOSITION. La même, plus forte : des hommes qui tiennent la ligne depuis des jours. Le bleu horizon ne reste que sur les épaules et le casque.", render: s => moteur(s, { zoom: 4, boue: 0.85 }) },
+      { title: 'Sous la pluie', status: 'a-trancher', depuis: '0.139.1', note: "PROPOSITION. La boue légère sur un champ labouré par quatre-vingt-dix obus après vingt-quatre heures de pluie : les uniformes mouillés foncent d'un quart, et le sol qu'ils prennent est de la boue et de l'eau.", render: s => moteur(s, { zoom: 4, boue: 0.35, pluie: true }) },
+    ] },
     { id: 'fabrique', title: 'Fabrique de soldats', variants: [
       { title: 'Un soldat par clic', status: 'a-trancher', depuis: '0.102.2', note: 'PROPOSITION (Jérôme, 1er nov. : « les membres qui bougent, le visage visible et différent pour chaque soldat, pilosité, accessoires, carrure et taille »). À gauche un soldat articulé (genou, coude, main, pied) au zoom qu\'on veut, de 4 à 420 pixels par mètre ; à droite sa fiche : nom, grade, caractéristiques et aspect, ceux que le jeu tirerait de ce numéro. « Générer » en tire un autre (la barre d\'espace aussi) ; la graine du bas le retrouve. Rien n\'est dans le jeu : `js/aspect-soldat.js` et `js/rendu/soldat-articule.js`.', render: s => maquetteFabrique(s) },
     ] },

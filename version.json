@@ -1,8 +1,7 @@
 {
-  "version": "0.139.0",
-  "date": "2026-11-15",
+  "version": "0.139.1",
+  "date": "2026-11-16",
   "changes": [
-    "Les obus jettent de vraies mottes de terre : elles tournent, rebondissent, restent un moment au sol",
-    "Le feu a de vraies flammes : un cœur jaune, de l'orange, du rouge sombre, des braises qui montent"
+    "Au labo : la boue sur les hommes, à trancher (le jeu ne change pas)"
   ]
 }
