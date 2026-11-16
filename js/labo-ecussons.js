@@ -3,8 +3,9 @@
 // pictogramme, une barre fine, et en bas une rangée de vignettes). Trois façons de donner le même signe à tout ce qu'on commande (régiment, char, poste, avion, génie), sur le champ ET dans la rangée
 // du bas : l'écusson, le jeton, le fanion. Posé sur le moteur en direct, comme `labo-engins-ennemis.js` : un calque 2D qui ne lit que les positions (`versEcran`). Rien ici ne modifie le jeu ; la scène
 // seule est truquée (des états de moral, des pertes, deux chars). Palette du jeu seulement : bleu horizon, kaki d'en face, os, terre, boue, brume, et les deux alertes de l'interface (ébranlé, déroute).
-import { PALETTE as P, ALERTES } from './palette.js?v=0.140.0';
-import { NIDS } from './data/nids.js?v=0.140.0';
+import { PALETTE as P, ALERTES } from './palette.js?v=0.140.1';
+import { NIDS } from './data/nids.js?v=0.140.1';
+import { dessinerEcusson, ideeDe } from './labo-ecussons-armes.js?v=0.140.1';
 
 const el = (tag, css = '', ...kids) => { const e = document.createElement(tag); if (css) e.style.cssText = css; e.append(...kids.flat().filter(k => k != null)); return e; };
 const MONO = 'ui-monospace,"DejaVu Sans Mono",Menlo,Consolas,monospace';
@@ -69,16 +70,10 @@ function etiquette(g, e, y) {                        // au survol : le nom et l'
 }
 const alerte = (g, e, t) => { const c = COULEUR_MORAL[e.moral]; if (!c) return false; g.strokeStyle = c; g.lineWidth = 2; g.setLineDash(e.moral === 'deroute' ? [3, 3] : [6, 3]); g.lineDashOffset = -t * 10; return true; };
 
-// A · l'écusson : un bouclier à la couleur du camp, le pictogramme de l'arme, la barre fine au-dessus, les chevrons à droite de la barre ; un régiment porte son numéro dans un onglet
+// A · l'écusson : un bouclier à la couleur du camp, le dessin de l'arme, la barre fine au-dessus, les chevrons à droite de la barre ; un régiment porte son numéro (v0.140.1 : la forme et le dessin
+// de chaque arme sont ceux retenus dans la planche, variante D : `labo-ecussons-armes.js`)
 function ecusson(g, e, t, s = 1) {
-  const k = s * (1 + 0.25 * e.m.surv), w = 26 * k, h = 28 * k, x = e.sx - w / 2, y = e.sy - h;
-  const forme = () => { g.beginPath(); g.moveTo(x, y); g.lineTo(x + w, y); g.lineTo(x + w, y + h * 0.6); g.lineTo(e.sx, y + h); g.lineTo(x, y + h * 0.6); g.closePath(); };
-  if (e.choisi) { g.lineWidth = 7; g.strokeStyle = P.t; forme(); g.stroke(); g.lineWidth = 4; g.strokeStyle = P.o; g.stroke(); }
-  g.lineWidth = 3; g.strokeStyle = P.t; forme(); g.stroke(); g.fillStyle = camp(e); g.fill();
-  if (alerte(g, e, t)) { forme(); g.stroke(); g.setLineDash([]); }
-  picto(g, e.type, e.sx, y + h * 0.4, k * 1.05, P.t);
-  if (e.num) { g.fillStyle = P.t; g.fillRect(x + w - 5 * k, y - 4 * k, 12 * k, 12 * k); numero(g, e.num, x + w + k, y + 2 * k, 10 * k, P.o); }
-  barre(g, x, y - 8, Math.round(w), 3, e); chevrons(g, x + w + 3, y - 9, e.chev);
+  dessinerEcusson(g, { ...e, idee: ideeDe(e.type), x: e.sx, y: e.sy, k: s * (1 + 0.25 * e.m.surv), t });
   etiquette(g, e, e.sy + 4);
 }
 // B · le jeton : le rond des engins d'aujourd'hui (cœur à la couleur du camp, arc de vie autour) étendu aux régiments : le numéro au cœur ; un engin garde son pictogramme

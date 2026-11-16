@@ -1,9 +1,7 @@
 {
-  "version": "0.140.0",
+  "version": "0.140.1",
   "date": "2026-11-16",
   "changes": [
-    "Un clic sur un avion au sol, un char du parc ou une section du génie le choisit : le clic suivant sur le champ l'envoie, sans passer par le bouton",
-    "Les sections du génie attendent en rang devant la maison des sapeurs",
-    "Au labo : un seul signe pour les régiments et les engins, à trancher (écusson, jeton ou fanion)"
+    "Au labo : quatre idées d'écussons pour chaque arme (infanterie, chars, mitrailleuses, avions, génie), à retenir une par une ; le jeu ne change pas"
   ]
 }
