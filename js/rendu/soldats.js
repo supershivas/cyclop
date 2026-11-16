@@ -1,12 +1,12 @@
 // Les hommes : les soldats (une boîte et son ombre ; de près la silhouette, plus loin une silhouette allégée ; aux zooms 1 et 2 un point), les anneaux des
 // régiments choisis ou survolés, les corps (un homme couché) et les tombes (un tertre et une croix). Tout est instancié et ne reçoit que ce qu'on voit.
 // Le dessin seulement. Les formes viennent de geometries.js, le GLSL de shaders.js.
-import * as SH from './shaders.js?v=0.140.2';
-import { creerGeometries } from './geometries.js?v=0.140.2';
-import { classeDuRang } from '../data/grades.js?v=0.140.2';
-import { creerEquipeArticulee } from './soldat-articule.js?v=0.140.2';
-import { creerJeuAnimations } from './animation-jeu.js?v=0.140.2';
-import { SANG } from '../data/aspect-soldat.js?v=0.140.2';
+import * as SH from './shaders.js?v=0.140.3';
+import { creerGeometries } from './geometries.js?v=0.140.3';
+import { classeDuRang } from '../data/grades.js?v=0.140.3';
+import { creerEquipeArticulee } from './soldat-articule.js?v=0.140.3';
+import { creerJeuAnimations } from './animation-jeu.js?v=0.140.3';
+import { SANG } from '../data/aspect-soldat.js?v=0.140.3';
 
 // `THREE`, `scene`, `col`, `solUniforms` (`uSol`, `uTaille` : la texture du sol, que l'ombre d'un soldat reprend), `styleSoldat` (le style de près, comparé au labo),
 // `grades` (v0.68.0 : une variante de `GRADES`, data/grades.js, ou null : tous pareils) et `rangDe(B, id, reg)` (le rang d'un homme, bataille.js) ; `surface(x, z)` et `surfaceLisse(x, z)` (la hauteur du sol, lissée pour qui marche), `solY` (la hauteur moyenne du sol) et `POINTS_JUSQUA` (le zoom où un soldat n'est
@@ -197,14 +197,15 @@ export function creerSoldats({ THREE, scene, col, solUniforms, styleSoldat, grad
   // 'poses' (de même, sur le dos, le ventre ou le côté, les membres écartés selon son numéro).
   let capCorps = 0, cPos = null, cInfo = null, cCamp = null, corpsInst = null, corpsLeger = null, corpsDetail = null, corpsPoints = null, attrsCI = null, attrsCP = null;
   const corpsMat = new THREE.ShaderMaterial({
-    uniforms: { uNous: { value: col('n') }, uEux: { value: col('x') }, uVieux: { value: col('g') }, uFlanc: { value: col('s') } },
+    uniforms: { uNous: { value: col('n') }, uEux: { value: col('x') }, uVieux: { value: col('g') }, uFlanc: { value: col('s') },
+      uSol: solUniforms.uSol, uTaille: solUniforms.uTaille, uBoue: soldatMat.uniforms.uBoue, uMouille: soldatMat.uniforms.uMouille, uAO: solUniforms.uAO, uAOon: solUniforms.uAOon, uSunOn: solUniforms.uSunOn, uAbriOn: solUniforms.uAbriOn },      // (v0.140.3) la boue et la lumière du sol : un mort garde l'aspect du vivant
     vertexShader: SH.corpsMat.v,
     fragmentShader: SH.corpsMat.f,
     side: THREE.DoubleSide,
   });
   const soldatCouche = cadavre === 'planche' ? null : new THREE.ShaderMaterial({
     uniforms: { uNous: soldatMat.uniforms.uNous, uEux: soldatMat.uniforms.uEux, uVieux: { value: col('g') }, uJambes: soldatMat.uniforms.uJambes, uFusil: soldatMat.uniforms.uFusil, uSac: soldatMat.uniforms.uSac,
-      uVisage: soldatMat.uniforms.uVisage, uCuir: soldatMat.uniforms.uCuir, uBotte: soldatMat.uniforms.uBotte, uSang: soldatMat.uniforms.uSang, uSangCell: soldatMat.uniforms.uSangCell, uSangCoul: soldatMat.uniforms.uSangCoul, uPoses: { value: cadavre === 'poses' ? 1 : 0 } },
+      uVisage: soldatMat.uniforms.uVisage, uCuir: soldatMat.uniforms.uCuir, uBotte: soldatMat.uniforms.uBotte, uSang: soldatMat.uniforms.uSang, uSangCell: soldatMat.uniforms.uSangCell, uSangCoul: soldatMat.uniforms.uSangCoul, uSol: solUniforms.uSol, uTaille: solUniforms.uTaille, uBoue: soldatMat.uniforms.uBoue, uMouille: soldatMat.uniforms.uMouille, uAO: solUniforms.uAO, uAOon: solUniforms.uAOon, uSunOn: solUniforms.uSunOn, uAbriOn: solUniforms.uAbriOn, uPoses: { value: cadavre === 'poses' ? 1 : 0 } },
     vertexShader: SH.corpsSoldatMat.v,
     fragmentShader: SH.corpsSoldatMat.f,
     side: THREE.DoubleSide,

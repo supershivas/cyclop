@@ -1,5 +1,9 @@
 # Journal des versions
 
+## 0.140.3 — 2026-11-16
+
+- Les morts gardent la boue et l'ombre qu'ils avaient vivants : un homme qui tombe ne redevient plus propre et clair
+
 ## 0.140.2 — 2026-11-16
 
 - Du sang : des taches sur les blessés autour de leur plaie, sur les morts, et sur les soldats qui se battent au corps à corps, qui les gardent ensuite

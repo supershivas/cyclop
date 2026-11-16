@@ -440,19 +440,34 @@ export const tombePointMat = {
 export const corpsMat = {
   v: `
       attribute vec3 aPos; attribute vec2 aInfo; attribute float aPart;
-      varying float vEtat; varying float vPart;
+      varying float vEtat; varying float vPart; varying vec2 vMondeC;
       void main() {
         vEtat = aInfo.x; vPart = aPart;
         float c = cos(aInfo.y), s = sin(aInfo.y);
         vec3 p = vec3(position.x * c - position.z * s, position.y, position.x * s + position.z * c);
+        vMondeC = (p + aPos).xz;
         gl_Position = projectionMatrix * viewMatrix * vec4(p + aPos, 1.0);
       }`,
   f: `
-      uniform vec3 uNous; uniform vec3 uEux; uniform vec3 uVieux; uniform vec3 uFlanc;
-      varying float vEtat; varying float vPart;
+      uniform vec3 uNous; uniform vec3 uEux; uniform vec3 uVieux; uniform vec3 uFlanc; uniform sampler2D uSol; uniform vec2 uTaille; uniform float uBoue, uMouille; uniform sampler2D uAO; uniform float uAOon, uSunOn, uAbriOn;
+      varying float vEtat; varying float vPart; varying vec2 vMondeC;
       void main() {
         vec3 c = vEtat > 1.5 ? uVieux : (vEtat > 0.5 ? uEux : uNous);
-        gl_FragColor = vec4(vPart > 0.5 ? uFlanc : c, 1.0);
+        if (vPart > 0.5) c = uFlanc;
+        // (v0.140.3) un mort garde l'aspect qu'il avait vivant : la boue du sol sur son uniforme (la même part selon la hauteur dans le modèle debout) et la lumière du sol (soldatMat)
+        if (uBoue > 0.0) {
+          vec3 solB = texture2D(uSol, vec2(vMondeC.x / uTaille.x, vMondeC.y / uTaille.y * 0.5)).rgb;
+          c = mix(c, solB, uBoue * (0.22 + 0.68 * (1.0 - smoothstep(0.15, 1.15, 0.75))));
+          c *= 1.0 - 0.25 * uMouille;
+        }
+        if (uSunOn + uAOon + uAbriOn > 0.5) {
+          vec4 Lm = texture2D(uAO, vMondeC / uTaille); float fl = 1.0;
+          if (uSunOn > 0.5) fl *= 0.72 + 0.28 * Lm.r;
+          if (uAOon > 0.5) fl *= 0.65 + 0.35 * pow(Lm.g, 1.3);
+          if (uAbriOn > 0.5) fl *= mix(0.4, 1.0, clamp(Lm.b / 0.941, 0.0, 1.0));
+          c *= fl;
+        }
+        gl_FragColor = vec4(c, 1.0);
       }`,
 };
 
@@ -462,7 +477,7 @@ export const corpsSoldatMat = {
   v: `
       attribute vec3 aPos; attribute vec2 aInfo; attribute float aCamp; attribute float aPart; attribute float aJambe; attribute float aBras;
       uniform float uPoses;
-      varying float vEtat; varying float vPart; varying float vCamp; varying vec4 vSang;
+      varying float vEtat; varying float vPart; varying float vCamp; varying vec4 vSang; varying vec2 vMondeC;
       void main() {
         float kp = aPart;
         bool cache = false;
@@ -484,15 +499,22 @@ export const corpsSoldatMat = {
         float c = cos(aInfo.y), s = sin(aInfo.y);
         q = vec3(q.x * c - q.z * s, q.y, q.x * s + q.z * c);
         if (cache) q = vec3(0.0);
+        vMondeC = (q + aPos).xz;
         gl_Position = projectionMatrix * viewMatrix * vec4(q + aPos, 1.0);
       }`,
   f: `
-      uniform vec3 uNous; uniform vec3 uEux; uniform vec3 uVieux; uniform vec3 uJambes; uniform vec3 uFusil; uniform vec3 uSac; uniform vec3 uVisage; uniform vec3 uCuir; uniform vec3 uBotte; uniform float uSang, uSangCell; uniform vec3 uSangCoul;
-      varying float vEtat; varying float vPart; varying float vCamp; varying vec4 vSang;
+      uniform vec3 uNous; uniform vec3 uEux; uniform vec3 uVieux; uniform vec3 uJambes; uniform vec3 uFusil; uniform vec3 uSac; uniform vec3 uVisage; uniform vec3 uCuir; uniform vec3 uBotte; uniform float uSang, uSangCell; uniform vec3 uSangCoul; uniform sampler2D uSol; uniform vec2 uTaille; uniform float uBoue, uMouille; uniform sampler2D uAO; uniform float uAOon, uSunOn, uAbriOn;
+      varying float vEtat; varying float vPart; varying float vCamp; varying vec4 vSang; varying vec2 vMondeC;
       void main() {
         float k = floor(vPart + 0.5);
         vec3 c = vEtat > 1.5 ? uVieux : (vCamp > 0.5 ? uEux : uNous);
         if (k == 3.0) c = uJambes; else if (k == 4.0) c = uFusil; else if (k == 5.0) c = uSac; else if (k == 6.0 || k == 9.0) c = uVisage; else if (k == 7.0) c = uCuir; else if (k == 8.0) c = uBotte;
+        // (v0.140.3) un mort garde l'aspect qu'il avait vivant : la boue du sol sur son uniforme (la même part selon la hauteur dans le modèle debout) et la lumière du sol (soldatMat)
+        if (uBoue > 0.0) {
+          vec3 solB = texture2D(uSol, vec2(vMondeC.x / uTaille.x, vMondeC.y / uTaille.y * 0.5)).rgb;
+          c = mix(c, solB, uBoue * (0.22 + 0.68 * (1.0 - smoothstep(0.15, 1.15, vSang.y))));
+          c *= 1.0 - 0.25 * uMouille;
+        }
         // (v0.140.2) le sang des morts : une plaie tirée du numéro du mort (le buste, le ventre ou la tête), des taches autour ; le lendemain (vEtat 2) il a séché : plus sombre, plus rare
         if (uSang > 0.0 && k != 4.0) {
           vec3 cel = floor(vSang.xyz / uSangCell);
@@ -500,6 +522,13 @@ export const corpsSoldatMat = {
           float cy = 0.75 + 0.85 * fract(vSang.w * 5.3), d = abs(vSang.y - cy);
           float q = (vEtat > 1.5 ? 0.45 : 0.8) * (1.0 - smoothstep(0.12, 0.45, d));
           if (hs < q) c = mix(c, vEtat > 1.5 ? uSangCoul * 0.5 : uSangCoul, uSang);
+        }
+        if (uSunOn + uAOon + uAbriOn > 0.5) {
+          vec4 Lm = texture2D(uAO, vMondeC / uTaille); float fl = 1.0;
+          if (uSunOn > 0.5) fl *= 0.72 + 0.28 * Lm.r;
+          if (uAOon > 0.5) fl *= 0.65 + 0.35 * pow(Lm.g, 1.3);
+          if (uAbriOn > 0.5) fl *= mix(0.4, 1.0, clamp(Lm.b / 0.941, 0.0, 1.0));
+          c *= fl;
         }
         gl_FragColor = vec4(c, 1.0);
       }`,
