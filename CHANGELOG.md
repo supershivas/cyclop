@@ -1,5 +1,9 @@
 # Journal des versions
 
+## 0.139.2 — 2026-11-16
+
+- Les soldats se salissent : la couleur du sol gagne leur uniforme par le bas, un peu au premier matin, davantage de jour en jour ; sous la pluie les uniformes foncent
+
 ## 0.139.1 — 2026-11-16
 
 - Au labo : la boue sur les hommes, à trancher (la couleur du sol gagne les uniformes par le bas, la pluie les fonce) ; le jeu ne change pas

@@ -22,38 +22,38 @@
    - Les soldats : instanciés (une boîte et son ombre) ; au zoom 1 et 2, un
      point de 2 × 2 pixels (la couleur du camp sur son ombre).
    - Les corps : un homme couché (instancié) ; au zoom 1 et 2, un pixel. */
-import { loadThree } from './three-lib.js?v=0.139.1';
-import * as SH from './rendu/shaders.js?v=0.139.1';
-import { creerSoldats } from './rendu/soldats.js?v=0.139.1';
-import { creerChars } from './rendu/chars.js?v=0.139.1';
-import { creerGenies } from './rendu/genies.js?v=0.139.1';
-import { creerCamp } from './rendu/camp.js?v=0.139.1';
-import { creerAvions } from './rendu/avions.js?v=0.139.1';
-import { creerPonts } from './rendu/ponts.js?v=0.139.1';
-import { creerCiel, crepuscule } from './rendu/ciel.js?v=0.139.1';
-import { creerMeteoLisse, TEMPS_LISSE } from './rendu/meteo-lisse.js?v=0.139.1';
-import { creerMeteo } from './rendu/meteo.js?v=0.139.1';
-import { creerTroncons } from './rendu/troncons.js?v=0.139.1';
-import { BUISSONS_JEU } from './data/buissons.js?v=0.139.1';
-import { ARBRES_JEU } from './data/arbres.js?v=0.139.1';
-import { MATIERES, GRAIN_VARIANTES, GRAIN_JEU } from './data/grain-sol.js?v=0.139.1';
-import { creerVegetation } from './rendu/vegetation.js?v=0.139.1';
-import { creerTemps } from './rendu/temps.js?v=0.139.1';
-import { creerEclats } from './rendu/eclats.js?v=0.139.1';
-import { creerOmbresRelief } from './rendu/ombres-relief.js?v=0.139.1';
-import { creerAOSol, soleilDuJeu } from './rendu/ao-sol.js?v=0.139.1';
-import { cadrerOmbre } from './lumiere/ombres.js?v=0.139.1';
-import { semerOmbres, emballerOmbres, OMBRE_FUMEE } from './rendu/ombre-fumee.js?v=0.139.1';
-import { creerLampesSol } from './rendu/lampes-sol.js?v=0.139.1';
-import { OMBRES_RELIEF as OMB, NUAGES, NUAGES_VENT } from './data/soleil.js?v=0.139.1';
-import { PALETTE, ORDRE, INDICE, ALERTES } from './palette.js?v=0.139.1';
-import { OMBRE, couleursLigne, reglerVerdure } from './apparence.js?v=0.139.1';
-import { MORCEAU, hauteurVueQ as hauteurQ, hauteurVueM as hauteurM, etat as etatCase, ETAT } from './terrain.js?v=0.139.1';
-import { horloge, secteurDuJeu, rangDe } from './bataille.js?v=0.139.1';
-import { GRADES } from './data/grades.js?v=0.139.1';
-import { profilFleuve } from './eaux.js?v=0.139.1';
-import { ligneY } from './tranchees.js?v=0.139.1';
-import { vent as ventDuJour } from './data/meteo.js?v=0.139.1';
+import { loadThree } from './three-lib.js?v=0.139.2';
+import * as SH from './rendu/shaders.js?v=0.139.2';
+import { creerSoldats } from './rendu/soldats.js?v=0.139.2';
+import { creerChars } from './rendu/chars.js?v=0.139.2';
+import { creerGenies } from './rendu/genies.js?v=0.139.2';
+import { creerCamp } from './rendu/camp.js?v=0.139.2';
+import { creerAvions } from './rendu/avions.js?v=0.139.2';
+import { creerPonts } from './rendu/ponts.js?v=0.139.2';
+import { creerCiel, crepuscule } from './rendu/ciel.js?v=0.139.2';
+import { creerMeteoLisse, TEMPS_LISSE } from './rendu/meteo-lisse.js?v=0.139.2';
+import { creerMeteo } from './rendu/meteo.js?v=0.139.2';
+import { creerTroncons } from './rendu/troncons.js?v=0.139.2';
+import { BUISSONS_JEU } from './data/buissons.js?v=0.139.2';
+import { ARBRES_JEU } from './data/arbres.js?v=0.139.2';
+import { MATIERES, GRAIN_VARIANTES, GRAIN_JEU } from './data/grain-sol.js?v=0.139.2';
+import { creerVegetation } from './rendu/vegetation.js?v=0.139.2';
+import { creerTemps } from './rendu/temps.js?v=0.139.2';
+import { creerEclats } from './rendu/eclats.js?v=0.139.2';
+import { creerOmbresRelief } from './rendu/ombres-relief.js?v=0.139.2';
+import { creerAOSol, soleilDuJeu } from './rendu/ao-sol.js?v=0.139.2';
+import { cadrerOmbre } from './lumiere/ombres.js?v=0.139.2';
+import { semerOmbres, emballerOmbres, OMBRE_FUMEE } from './rendu/ombre-fumee.js?v=0.139.2';
+import { creerLampesSol } from './rendu/lampes-sol.js?v=0.139.2';
+import { OMBRES_RELIEF as OMB, NUAGES, NUAGES_VENT } from './data/soleil.js?v=0.139.2';
+import { PALETTE, ORDRE, INDICE, ALERTES } from './palette.js?v=0.139.2';
+import { OMBRE, couleursLigne, reglerVerdure } from './apparence.js?v=0.139.2';
+import { MORCEAU, hauteurVueQ as hauteurQ, hauteurVueM as hauteurM, etat as etatCase, ETAT } from './terrain.js?v=0.139.2';
+import { horloge, secteurDuJeu, rangDe } from './bataille.js?v=0.139.2';
+import { GRADES } from './data/grades.js?v=0.139.2';
+import { profilFleuve } from './eaux.js?v=0.139.2';
+import { ligneY } from './tranchees.js?v=0.139.2';
+import { vent as ventDuJour } from './data/meteo.js?v=0.139.2';
 
 export const CAMERA = { yaw: 0.15, tangage: 0.95, fov: 30 };   // au départ : tournée de 9°, plongée de 54°, angle de 30°
 // la caméra respire : un balancement très lent, 2° en 23 s (Jérôme, v0.3.1 : variante D du labo retenue)
@@ -538,7 +538,7 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
       if (aoSale && aoAttente <= 0) { aoTex.needsUpdate = true; aoAttente = 0.25; aoSale = false; }
     }
     solMat.uniforms.uAOon.value = aoSol && aoTex ? 1 : 0; solMat.uniforms.uSunOn.value = soleilLà && aoTex ? 1 : 0; solMat.uniforms.uAbriOn.value = abrisSol && aoTex ? 1 : 0;
-    { const cible = h.meteo === 'pluie' ? 0.85 : h.meteo === 'brouillard' ? 0.3 : 0; flaque += (cible - flaque) * Math.min(1, dt * 0.25); solMat.uniforms.uFlaque.value = flaquesSol && aoTex && !h.enneige && !h.gel ? flaque : 0; solMat.uniforms.uBoue.value = boueSoldats; solMat.uniforms.uMouille.value = boueSoldats > 0 ? Math.min(1, flaque / 0.85) : 0; }      // les flaques montent sous la pluie, s'étalent lentement ; pas sur la neige ni le gel
+    { const cible = h.meteo === 'pluie' ? 0.85 : h.meteo === 'brouillard' ? 0.3 : 0; flaque += (cible - flaque) * Math.min(1, dt * 0.25); solMat.uniforms.uFlaque.value = flaquesSol && aoTex && !h.enneige && !h.gel ? flaque : 0; const boueF = typeof boueSoldats === 'object' ? Math.min(boueSoldats.max, boueSoldats.depart + boueSoldats.parJour * ((h.jour ?? 1) - 1)) : boueSoldats; solMat.uniforms.uBoue.value = boueF; solMat.uniforms.uMouille.value = boueF > 0 ? Math.min(1, flaque / 0.85) : 0; }      // les flaques montent sous la pluie, s'étalent lentement ; pas sur la neige ni le gel
     { // (v0.134.7, « haut ») la brume du matin au ras du sol (BRUME_MATIN) : épaisse à l'aube, dissipée vers 9 h 30, un voile qui remonte le soir ; selon le temps ; pas sur la neige
       const hf = h.heure + h.minute / 60, B0 = BRUME_MATIN, f = (B0.temps[h.meteo] ?? 0.5) * (h.phase === 'jour' ? Math.max(1 - lisse(B0.matin[0], B0.matin[1], hf), B0.soir * lisse(B0.matin[2], 18, hf)) : 0);
       solMat.uniforms.uMatin.value = ombresCarte && aoTex && !h.enneige ? f : 0; solMat.uniforms.uMatinT.value = tAnim;
@@ -914,7 +914,7 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
     get ombresCarte() { return ombresCarte; },
     set ombresCarte(v) { ombresCarte = !!v; },                        // la carte d'ombre des soldats sur le sol (session 3 ; éteinte)
     get boueSoldats() { return boueSoldats; },
-    set boueSoldats(v) { boueSoldats = Math.max(0, Math.min(1, +v || 0)); },      // (labo, 0 dans le jeu) la boue sur les hommes : la couleur du sol gagne leur uniforme par le bas, la pluie les fonce (soldatMat, soldat-articule.js)
+    set boueSoldats(v) { boueSoldats = v && typeof v === 'object' ? v : Math.max(0, Math.min(1, +v || 0)); },      // la boue sur les hommes : la couleur du sol gagne leur uniforme par le bas, la pluie les fonce (soldatMat, soldat-articule.js) ; un nombre de 0 à 1 (le labo), ou { depart, parJour, max } : elle monte avec les jours de la bataille (le jeu : BOUE_SOLDATS)
     get flaquesSol() { return flaquesSol; },
     set flaquesSol(v) { flaquesSol = !!v; },                          // des flaques dans les creux quand il pleut (session 2 ; éteint)
     get abrisSol() { return abrisSol; },
