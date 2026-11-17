@@ -1,9 +1,9 @@
 // Les chars d'assaut dessinés (Jérôme, v0.47.0) : un volume par char de `B.etat.chars` (engins.js : le Schneider), posé sur le sol, incliné selon la pente sous lui,
 // tourné vers sa route ; les chenilles défilent quand il avance, une épave fume. Le dessin seulement : tout vient de l'état de la bataille, rien n'y est écrit.
 // Fabrique `creerChars({ THREE, scene, bataille: () => B, hauteur, fumer })` : la bataille change à chaque partie, on la lit à chaque image.
-import { atelier, schneider } from './engins.js?v=0.146.0';
-import { monterEpaveChar } from './epaves.js?v=0.146.0';
-import { PALETTE as P } from '../palette.js?v=0.146.0';
+import { atelier, schneider } from './engins.js?v=0.146.1';
+import { monterEpaveChar } from './epaves.js?v=0.146.1';
+import { PALETTE as P } from '../palette.js?v=0.146.1';
 
 const FABRIQUES = { schneider };
 const COULEUR = [P.n, P.x];      // la caisse à la couleur de son armée : nous, en face
