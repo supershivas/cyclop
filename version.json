@@ -1,8 +1,7 @@
 {
-  "version": "0.144.1",
+  "version": "0.144.2",
   "date": "2026-11-17",
   "changes": [
-    "Des gestes d'attente dans la tranchée : le froid, la pluie, le guetteur, les petits gestes",
-    "En haut à gauche : un seul bouton de pause et la roue des réglages, une même largeur"
+    "Une bataille finie ne laisse plus de « Continuer » à l'écran titre"
   ]
 }
