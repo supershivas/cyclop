@@ -1,5 +1,9 @@
 # Journal des versions
 
+## 0.146.1 — 2026-11-17
+
+- Les soldats tués par un obus restent couchés : ils ne se relèvent plus pour tomber
+
 ## 0.146.0 — 2026-11-17
 
 - De près, un homme tué tombe, et les morts gisent dans des poses variées, le fusil lâché à côté
