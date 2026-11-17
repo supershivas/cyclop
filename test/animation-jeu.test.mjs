@@ -144,3 +144,16 @@ test('chaque homme marche à son allure ; il épaule avant son coup ; le buste t
   const vise = vers(k, 9, { vit: 1, avant: 9, coup: 1, vise: 0.6 }, 0.6), sans = vers(l, 9, { vit: 1, avant: 9, coup: 0 }, 0.6);
   assert.ok(champ(vise, 'torsion') - champ(sans, 'torsion') > 0.3, `torsion ${champ(vise, 'torsion')}`);
 });
+import { reposGeste, allure } from '../js/anim-modeles.js';
+test('les gestes d\'attente : un geste ajouté se joue au repos pour qui le porte, les autres gardent leur repos', () => {
+  const A = allures(undefined, { vivant: true }), j = creerJeuAnimations({ animations: [...ANIMATIONS, ...A.animations], allures: A });
+  const avant = vers(j, 5, { vit: 0, geste: 'guetteur' }, 2);
+  assert.equal(j.aGeste('guetteur'), false);
+  j.ajouterGeste('guetteur', [0, 1].map(n => reposGeste(allure(n), `guetteur · ${n}`, 'guetteur')));
+  assert.equal(j.aGeste('guetteur'), true);
+  let bas = 0;
+  for (let t = 2; t < 12; t += 0.25) bas = Math.max(bas, champ(vers(j, 5, { vit: 0, geste: 'guetteur' }, t), 'descente'));
+  assert.ok(bas > 0.1, `le guetteur se baisse : ${bas}`);
+  assert.ok(champ(vers(j, 6, { vit: 0 }, 2), 'descente') < 0.05, 'les autres restent debout');
+  assert.ok(Number.isFinite(champ(avant, 'buste')));
+});

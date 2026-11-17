@@ -1,11 +1,11 @@
 // Qui joue quoi pour les hommes articulés (étape 4 de docs/chantiers/animations-vers-le-jeu.md). Logique pure (le temps est un argument) : pour un homme, la pose du lecteur d'animations
 // (marche, repos, tir) écrite dans les 25 nombres de la texture de poses, ou `null` pour les états sans animation (feu retenu, accroupi, couché, mêlée, blessures, officier au pistolet),
 // que `poseJeu` (pose-jeu.js) continue de calculer. Un état de lecteur par homme (le fondu de 0,2 s en a besoin), purgé quand l'homme sort des hommes articulés (`fin`).
-import { nouvelEtat, etatAnimationTab, termine } from '../lecteur-animations.js?v=0.144.1';
-import { ANIMATIONS } from '../data/animations.js?v=0.144.1';
-import { ANIM_JEU, MARCHE_JEU, CANAUX_TIR_EN_MARCHE, ALLURES, EPAULEMENT } from '../data/lecteur-animations.js?v=0.144.1';
-import { NOMS_CHAMPS } from '../data/poses-soldat.js?v=0.144.1';
-import { FLOTTANTS } from './pose-jeu.js?v=0.144.1';
+import { nouvelEtat, etatAnimationTab, termine } from '../lecteur-animations.js?v=0.145.0';
+import { ANIMATIONS } from '../data/animations.js?v=0.145.0';
+import { ANIM_JEU, MARCHE_JEU, CANAUX_TIR_EN_MARCHE, ALLURES, EPAULEMENT } from '../data/lecteur-animations.js?v=0.145.0';
+import { NOMS_CHAMPS } from '../data/poses-soldat.js?v=0.145.0';
+import { FLOTTANTS } from './pose-jeu.js?v=0.145.0';
 
 
 const I_TORSION = NOMS_CHAMPS.indexOf('torsion'), I_BUSTE = NOMS_CHAMPS.indexOf('buste'), I_TETE = NOMS_CHAMPS.indexOf('tete');
@@ -19,7 +19,9 @@ export function avecAnimation(h) {
 
 // `allures` (v0.141.2, les démarches) : { marche: [noms], repos: [noms] } de js/anim-modeles.js (`allures`), dont les animations sont dans `animations` ; chaque homme joue celles de son numéro,
 // à sa cadence, épaule avant son coup (`h.avant` : les secondes jusqu'au prochain, Infinity s'il n'est pas au feu) et tourne le buste vers sa cible en marchant (`h.vise`, rad). Sans `allures` : le jeu d'avant.
-export function creerJeuAnimations({ animations = ANIMATIONS, allures = null, sortie = new Float32Array(FLOTTANTS) } = {}) {
+// `h.geste` (les gestes d'attente, v0.144.1) : 'froid', 'pluie', 'guetteur' ou 'gestes' joue, au repos, la boucle de ce geste quand elle a été ajoutée (`ajouterGeste`), sinon le repos de son allure
+export function creerJeuAnimations({ animations: liste = ANIMATIONS, allures = null, sortie = new Float32Array(FLOTTANTS) } = {}) {
+  let animations = liste;
   const hommes = new Map(), duree = nom => animations.find(a => a.nom === nom).duree;
   const animMarche = duree(ANIM_JEU.marche), animTir = animations.find(a => a.nom === ANIM_JEU.tir);
   const K = allures ? allures.marche.length : 0, dureesMarche = allures ? allures.marche.map(duree) : null, dureesRepos = allures ? allures.repos.map(duree) : null;
@@ -47,7 +49,7 @@ export function creerJeuAnimations({ animations = ANIMATIONS, allures = null, so
       // (les démarches) il épaule AVANT son coup : l'animation part pour que son recul (à `avance` s de son début) tombe avec le coup de feu
       if (K && !e.tir && h.avant < EPAULEMENT.avance) e.tir = { anim: nomTir, depart: t - (EPAULEMENT.avance - Math.max(0, h.avant)), canaux: marche ? CANAUX_TIR_EN_MARCHE : undefined };
       e.coup = coup;
-      const couches = [marche ? { anim: K ? allures.marche[e.k] : ANIM_JEU.marche, cle: 'marche', depart: t - e.ta } : { anim: K ? allures.repos[e.k] : ANIM_JEU.repos, cle: 'repos', depart: -e.tr }];
+      const couches = [marche ? { anim: K ? allures.marche[e.k] : ANIM_JEU.marche, cle: 'marche', depart: t - e.ta } : (K && h.geste && allures.gestes?.[h.geste] ? { anim: allures.gestes[h.geste][e.k % allures.gestes[h.geste].length], cle: 'repos:' + h.geste, depart: -e.tr } : { anim: K ? allures.repos[e.k] : ANIM_JEU.repos, cle: 'repos', depart: -e.tr })];
       if (e.tir) { e.tir.canaux = marche ? CANAUX_TIR_EN_MARCHE : undefined; couches.push(e.tir); }  // (en marche : les bras et le fusil du tir ; à l'arrêt : tout)
       sortie.set(etatAnimationTab(e.etat, couches, t, { animations }));
       if (h.courbe && marche) { sortie[I_BUSTE] += MARCHE_JEU.courbe.buste; sortie[I_TETE] += MARCHE_JEU.courbe.tete; }      // (v0.142.3) il court courbé sous le feu       // (28 flottants : les 7 texels sont pleins)
@@ -58,5 +60,8 @@ export function creerJeuAnimations({ animations = ANIMATIONS, allures = null, so
     // Retire les hommes qui n'ont pas été vus depuis `debut` (sortis des plus proches)
     fin() { for (const [id, e] of hommes) if (e.vu !== image) hommes.delete(id); },
     vider() { hommes.clear(); },
+    // un geste d'attente : ses boucles (une par allure) rejoignent les animations jouées ; les hommes gardent leur état (pas de saut)
+    ajouterGeste(geste, anims) { if (!allures) return; animations = [...animations, ...anims]; (allures.gestes ??= {})[geste] = anims.map(a => a.nom); },
+    aGeste(geste) { return !!allures?.gestes?.[geste]; },
   };
 }

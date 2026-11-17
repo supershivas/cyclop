@@ -1,9 +1,25 @@
 # Journal des versions
 
-## 0.144.1 — 2026-11-17
+## 0.145.0 — 2026-11-17
 
 - Le bouton « Voir par ses yeux » de la fiche ne faisait rien (un import perdu à la fusion des versions) : il prend de nouveau la place du soldat
 - Chaque mitrailleuse en état a un soldat posté au fond de la tranchée, à son droit : il y marche et la sert ; blessé, tué ou en déroute, il est remplacé par le plus proche homme valide (à 20 m au plus), tant que le poste tient son tronçon et n'est pas détruit ; la fiche de l'homme dit « sert la mitrailleuse »
+
+## 0.144.4 — 2026-11-17
+
+- Au labo, à trancher : des épaules et des crânes arrondis de près ; le jeu ne change pas
+
+## 0.144.3 — 2026-11-17
+- Les boutons de menu ont un liseré sombre de 1 px tout autour
+- Au labo : cinq effets de clic satisfaisant à essayer (sujet « Le clic », groupe Design system)
+
+## 0.144.2 — 2026-11-17
+- Une bataille finie ne laisse plus de « Continuer » à l'écran titre
+
+## 0.144.1 — 2026-11-17
+
+- Dans la tranchée, des gestes d'attente : par le froid ils tapent des pieds et se frottent les mains, sous la pluie ils rentrent la tête, un guetteur sur dix se redresse pour regarder puis se baisse, d'autres rajustent leur casque ou portent la main à la bouche
+- En haut à gauche, un seul bouton de pause (avec les vitesses) et la roue des réglages, qui donne aussi l'écran titre et « Quitter la partie » ; toute la colonne a la même largeur
 
 ## 0.144.0 — 2026-11-17
 

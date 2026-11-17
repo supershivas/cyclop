@@ -156,3 +156,15 @@ test('le jeu porte le dôme à 8 pans ; un dôme tourné coûte peu (8 pans) ou 
   assert.ok(compte.tour16 > compte.tour8 && compte.tour16 - ref < 260, `tour16 +${compte.tour16 - ref}`);
   assert.equal(reglerCasques('inconnu'), CASQUE_JEU);
 });
+import { reglerArrondi, ARRONDI_JEU, trianglesVisibles as triVis } from '../js/rendu/soldat-articule.js';
+import { aspect as aspectDe } from '../js/aspect-soldat.js';
+test('les épaules et le crâne arrondis : seulement au niveau fin, quelques dizaines de triangles de plus, et tout revient au réglage du jeu', () => {
+  const a = aspectDe(5, 0, 7, 6, 25), avant = [triVis(a, 0), triVis(a, 0, 0, { niveau: 'moyen' })];
+  reglerArrondi(true);
+  const apres = [triVis(a, 0), triVis(a, 0, 0, { niveau: 'moyen' })], M = modeleCasques();
+  reglerArrondi();
+  assert.equal(apres[1], avant[1], 'le niveau intermédiaire ne change pas');
+  assert.ok(apres[0] > avant[0] && apres[0] - avant[0] < 140, `+${apres[0] - avant[0]}`);
+  assert.ok(M.position.every(Number.isFinite) && M.tours > 2);
+  assert.equal(triVis(a, 0), ARRONDI_JEU ? apres[0] : avant[0]);
+});

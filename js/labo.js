@@ -2,48 +2,49 @@
 // Chaque sujet utilise les mêmes modules que le jeu (terrain, apparence,
 // rendu three.js) : ce qu'on voit ici est ce que le jeu dessinera. Ajouter un
 // sujet ou une variante = ajouter une entrée dans GROUPES.
-import { afficherVersion } from './version-tag.js?v=0.144.1';
-import { mountLabo } from './lib/labo-shell.js?v=0.144.1';
-import { spriteCanvas, paletteToGPL, paletteToHex } from './lib/sprites.js?v=0.144.1';
-import { PALETTE, ROLES } from './palette.js?v=0.144.1';
-import { chargerContenu } from './design-store.js?v=0.144.1';
-import { tuile, ETAT } from './tuiles.js?v=0.144.1';
-import { creerTerrain, impact, hydroLignes, toucher } from './terrain.js?v=0.144.1';
-import { FORMES } from './cratere.js?v=0.144.1';
-import { CALIBRES } from './data/calibres.js?v=0.144.1';
-import { METEO } from './data/meteo.js?v=0.144.1';
-import { nouvelleBataille, avancer, ordonnerMarche, ordonnerBarrage, mourir, regarderAu, aube, horloge, ticksParJour, rangDe } from './bataille.js?v=0.144.1';
-import { BOUE_SOLDATS, SANG, VARIETE_SOLDATS } from './data/aspect-soldat.js?v=0.144.1';
-import { AZIMUTS, COTES } from './data/soleil.js?v=0.144.1';
-import { creerRendu, ZOOMS } from './rendu3d.js?v=0.144.1';
-import { placesCommandement } from './army.js?v=0.144.1';
-import { hash2 } from './lib/rng.js?v=0.144.1';
-import { reglerVerdure } from './apparence.js?v=0.144.1';
-import { maquetteChars } from './labo-chars.js?v=0.144.1';
-import { maquetteEpaves } from './labo-epaves.js?v=0.144.1';
-import { maquetteCasques } from './labo-casques.js?v=0.144.1';
-import { maquetteDemarches } from './labo-demarches.js?v=0.144.1';
-import { fondations, boutons, unites, fenetres, revision } from './labo-design-system.js?v=0.144.1';
-import { cartesSecteur } from './labo-cartes.js?v=0.144.1';
-import { patrouilleLabo } from './labo-patrouille.js?v=0.144.1';
-import { EFFETS } from './rendu3d.js?v=0.144.1';
-import { calqueEcussons } from './labo-ecussons.js?v=0.144.1';
-import { plancheEcussons } from './labo-ecussons-armes.js?v=0.144.1';
-import { gainTampon, gainCachets, gainFil, gainBordereau, victoireFanion, victoireTampon, victoireChevrons, victoireAube, ficheDeuxColonnes, ficheEtages, ficheRegistre, ficheDAbord } from './labo-recompenses.js?v=0.144.1';
-import { maquetteBatiment, maquetteCamp } from './labo-batiments.js?v=0.144.1';
-import { BATIMENTS } from './data/batiments.js?v=0.144.1';
-import { JOURNAL } from './labo-journal.js?v=0.144.1';
-import { loadVersion } from './lib/app-update.js?v=0.144.1';
-import { maquetteEffets, maquetteAmbiance, maquetteEspace, maquetteBruitages } from './labo-son.js?v=0.144.1';
-import { calqueMoral } from './labo-moral.js?v=0.144.1';
-import { bilanRapport, bilanTuiles, bilanFrise } from './labo-donnees.js?v=0.144.1';
-import { papierNuit, finDePartie } from './labo-papiers.js?v=0.144.1';
-import { fichesTuiles, fichesProfil, fichesCompactes } from './labo-fiches.js?v=0.144.1';
-import { calqueEnnemis } from './labo-engins-ennemis.js?v=0.144.1';
-import { maquetteTranchees, NOTES_TRANCHEES, NOMS_TRANCHEES } from './labo-tranchees.js?v=0.144.1';
-import { maquetteFabrique } from './labo-fabrique.js?v=0.144.1';
-import { atelierTerrain } from './labo-atelier-terrain.js?v=0.144.1';
-import { entrees as encEntrees, lexiqueAZ, planche as encPlanche } from './labo-encyclopedie.js?v=0.144.1';
+import { afficherVersion } from './version-tag.js?v=0.145.0';
+import { mountLabo } from './lib/labo-shell.js?v=0.145.0';
+import { spriteCanvas, paletteToGPL, paletteToHex } from './lib/sprites.js?v=0.145.0';
+import { PALETTE, ROLES } from './palette.js?v=0.145.0';
+import { chargerContenu } from './design-store.js?v=0.145.0';
+import { tuile, ETAT } from './tuiles.js?v=0.145.0';
+import { creerTerrain, impact, hydroLignes, toucher } from './terrain.js?v=0.145.0';
+import { FORMES } from './cratere.js?v=0.145.0';
+import { CALIBRES } from './data/calibres.js?v=0.145.0';
+import { METEO } from './data/meteo.js?v=0.145.0';
+import { nouvelleBataille, avancer, ordonnerMarche, ordonnerBarrage, mourir, regarderAu, aube, horloge, ticksParJour, rangDe } from './bataille.js?v=0.145.0';
+import { BOUE_SOLDATS, SANG, VARIETE_SOLDATS } from './data/aspect-soldat.js?v=0.145.0';
+import { AZIMUTS, COTES } from './data/soleil.js?v=0.145.0';
+import { creerRendu, ZOOMS } from './rendu3d.js?v=0.145.0';
+import { placesCommandement } from './army.js?v=0.145.0';
+import { hash2 } from './lib/rng.js?v=0.145.0';
+import { reglerVerdure } from './apparence.js?v=0.145.0';
+import { maquetteChars } from './labo-chars.js?v=0.145.0';
+import { maquetteEpaves } from './labo-epaves.js?v=0.145.0';
+import { maquetteCasques } from './labo-casques.js?v=0.145.0';
+import { maquetteDemarches } from './labo-demarches.js?v=0.145.0';
+import { fondations, boutons, unites, fenetres, revision } from './labo-design-system.js?v=0.145.0';
+import { clic } from './labo-clic.js?v=0.145.0';
+import { cartesSecteur } from './labo-cartes.js?v=0.145.0';
+import { patrouilleLabo } from './labo-patrouille.js?v=0.145.0';
+import { EFFETS } from './rendu3d.js?v=0.145.0';
+import { calqueEcussons } from './labo-ecussons.js?v=0.145.0';
+import { plancheEcussons } from './labo-ecussons-armes.js?v=0.145.0';
+import { gainTampon, gainCachets, gainFil, gainBordereau, victoireFanion, victoireTampon, victoireChevrons, victoireAube, ficheDeuxColonnes, ficheEtages, ficheRegistre, ficheDAbord } from './labo-recompenses.js?v=0.145.0';
+import { maquetteBatiment, maquetteCamp } from './labo-batiments.js?v=0.145.0';
+import { BATIMENTS } from './data/batiments.js?v=0.145.0';
+import { JOURNAL } from './labo-journal.js?v=0.145.0';
+import { loadVersion } from './lib/app-update.js?v=0.145.0';
+import { maquetteEffets, maquetteAmbiance, maquetteEspace, maquetteBruitages } from './labo-son.js?v=0.145.0';
+import { calqueMoral } from './labo-moral.js?v=0.145.0';
+import { bilanRapport, bilanTuiles, bilanFrise } from './labo-donnees.js?v=0.145.0';
+import { papierNuit, finDePartie } from './labo-papiers.js?v=0.145.0';
+import { fichesTuiles, fichesProfil, fichesCompactes } from './labo-fiches.js?v=0.145.0';
+import { calqueEnnemis } from './labo-engins-ennemis.js?v=0.145.0';
+import { maquetteTranchees, NOTES_TRANCHEES, NOMS_TRANCHEES } from './labo-tranchees.js?v=0.145.0';
+import { maquetteFabrique } from './labo-fabrique.js?v=0.145.0';
+import { atelierTerrain } from './labo-atelier-terrain.js?v=0.145.0';
+import { entrees as encEntrees, lexiqueAZ, planche as encPlanche } from './labo-encyclopedie.js?v=0.145.0';
 
 document.documentElement.style.setProperty('--jeu-accent', ROLES.accent);
 const NOM = document.title.replace(/^Labo — /, ''); // le nom vient de la page (une apostrophe ne casse rien)
@@ -376,6 +377,13 @@ const GROUPES = [
     { id: 'ds-boutons', title: 'Boutons', variants: [
       { title: 'Les familles et leurs états', status: 'actuelle', depuis: '0.98.0', note: 'Repos, survol, focus clavier, choisi, refusé, refusé au survol : les vraies feuilles du jeu, états forcés par `.est-survol` et `.est-focus`.', render: s => { boutons(s); } },
     ] },
+    { id: 'ds-clic', title: 'Le clic', variants: [
+      { title: 'Le tampon', status: 'actuelle', depuis: '0.144.3', note: "A l'appui le bouton s'enfonce sur son ombre (3 px, l'ombre s'écrase), au relâchement il remonte en dépassant d'un pixel. La base des autres.", render: s => { clic(s, 'tampon'); } },
+      { title: "L'onde", status: 'actuelle', depuis: '0.144.3', note: "Le tampon, plus un anneau qui part du point du clic et s'éteint dans le bouton.", render: s => { clic(s, 'onde'); } },
+      { title: 'Les éclats', status: 'actuelle', depuis: '0.144.3', note: "Le tampon, plus huit petits cubes (os, glaise, terre) qui jaillissent du point du clic, retombent et s'éteignent.", render: s => { clic(s, 'eclats'); } },
+      { title: "L'encrier", status: 'actuelle', depuis: '0.144.3', note: "Le tampon, plus un éclair inversé (terre sous l'os, 150 ms) et une secousse de 2 px de la planche.", render: s => { clic(s, 'encrier'); } },
+      { title: 'Le tout', status: 'actuelle', depuis: '0.144.3', note: "Le tampon, l'onde, les éclats et l'éclair ensemble : le plus chargé.", render: s => { clic(s, 'tout'); } },
+    ] },
     { id: 'ds-unites', title: 'Unités', variants: [
       { title: 'Les unités', status: 'actuelle', depuis: '0.110.0', note: 'Carte et étiquette de régiment, étiquette de char et de poste, batterie : le liseré de l\'armée, le survol, le choisi, l\'ordre des barres.', render: s => { unites(s); } },
     ] },
@@ -487,10 +495,14 @@ const GROUPES = [
     { id: 'repos', title: 'Au repos dans la tranchée', variants: [
       { title: 'Le repos vivant', status: 'actuelle', depuis: '0.143.4', note: "En jeu (Jérôme, v0.143.4 ; « des mouvements simples lorsque les soldats attendent dans les tranchées : balancement du corps, de la tête, des mains qui tiennent les fusils »). Une boucle de 6 à 9 s, à phase propre à chaque homme : il respire (le buste), se balance, passe le poids d'une jambe sur l'autre, baisse et relève la tête, jette un coup d'œil d'un côté puis de l'autre (le buste tourne), rajuste sa prise (le fusil change de pente, les mains le suivent). Les amplitudes diffèrent d'un homme à l'autre. Le dessin seulement ; de près seulement (à 8 px/m ces mouvements font moins d'un pixel). Coût : celui du repos d'aujourd'hui (le même lecteur).", render: s => maquetteDemarches(s, { allures: true, repos: true, vivant: true }) },
       { title: 'La pose tenue', status: 'ancienne', note: "Le jeu d'avant la v0.143.4, de 12 px/m à 32 : au repos, chaque homme tient sa pose (le poids sur une jambe, le fusil à deux mains) sans bouger. Six hommes alignés comme au parapet, vus de trois quarts.", render: s => maquetteDemarches(s, { allures: true, repos: true, vivant: false }) },
-      { title: 'Par le froid', status: 'a-trancher', depuis: '0.143.5', note: "PROPOSITION (Jérôme, 17 nov. : « selon le temps »). Par le gel ou la neige : il tape des pieds par salves, se frotte les mains (la gauche quitte le fût pour la poignée, la droite tient le fusil), la tête rentrée, le dos rond. Dans le jeu, le temps du jour le choisirait (gel, neige) ; ici les six hommes l'ont.", render: s => maquetteDemarches(s, { allures: true, repos: true, geste: 'froid' }) },
-      { title: 'Sous la pluie', status: 'a-trancher', depuis: '0.143.5', note: "PROPOSITION (« selon le temps »). La tête baissée sous le casque, le dos rond, le repos vivant plus discret. Dans le jeu : pluie et tempête.", render: s => maquetteDemarches(s, { allures: true, repos: true, geste: 'pluie' }) },
-      { title: 'Le guetteur', status: 'a-trancher', depuis: '0.143.5', note: "PROPOSITION (« le guetteur »). Il se redresse pour regarder au loin en balayant l'horizon, puis se baisse à l'abri, les genoux pliés (la tête descend de 25 cm), et attend ; une boucle de 9 s. Dans le jeu : un homme sur dix d'une tranchée de première ligne ; ici les six.", render: s => maquetteDemarches(s, { allures: true, repos: true, geste: 'guetteur' }) },
-      { title: 'Les petits gestes', status: 'a-trancher', depuis: '0.143.5', note: "PROPOSITION (« les petits gestes »). Il rajuste son casque de la main gauche, la repose sur le fût, puis la porte à sa bouche (souffler dans ses doigts, tirer sur sa cigarette) ; une boucle de 10 s. Dans le jeu : à la place du repos vivant pour un homme sur quatre ; ici les six.", render: s => maquetteDemarches(s, { allures: true, repos: true, geste: 'gestes' }) },
+      { title: 'Par le froid', status: 'retenue', depuis: '0.144.1', note: "En jeu (Jérôme, v0.144.1 ; le froid par gel et neige, la pluie par pluie, un guetteur sur dix en première ligne, les petits gestes pour un homme sur quatre). PROPOSITION d'abord (Jérôme, 17 nov. : « selon le temps »). Par le gel ou la neige : il tape des pieds par salves, se frotte les mains (la gauche quitte le fût pour la poignée, la droite tient le fusil), la tête rentrée, le dos rond. Dans le jeu, le temps du jour le choisirait (gel, neige) ; ici les six hommes l'ont.", render: s => maquetteDemarches(s, { allures: true, repos: true, geste: 'froid' }) },
+      { title: 'Sous la pluie', status: 'retenue', depuis: '0.144.1', note: "En jeu (Jérôme, v0.144.1 ; le froid par gel et neige, la pluie par pluie, un guetteur sur dix en première ligne, les petits gestes pour un homme sur quatre). PROPOSITION d'abord (« selon le temps »). La tête baissée sous le casque, le dos rond, le repos vivant plus discret. Dans le jeu : pluie et tempête.", render: s => maquetteDemarches(s, { allures: true, repos: true, geste: 'pluie' }) },
+      { title: 'Le guetteur', status: 'retenue', depuis: '0.144.1', note: "En jeu (Jérôme, v0.144.1 ; le froid par gel et neige, la pluie par pluie, un guetteur sur dix en première ligne, les petits gestes pour un homme sur quatre). PROPOSITION d'abord (« le guetteur »). Il se redresse pour regarder au loin en balayant l'horizon, puis se baisse à l'abri, les genoux pliés (la tête descend de 25 cm), et attend ; une boucle de 9 s. Dans le jeu : un homme sur dix d'une tranchée de première ligne ; ici les six.", render: s => maquetteDemarches(s, { allures: true, repos: true, geste: 'guetteur' }) },
+      { title: 'Les petits gestes', status: 'retenue', depuis: '0.144.1', note: "En jeu (Jérôme, v0.144.1 ; le froid par gel et neige, la pluie par pluie, un guetteur sur dix en première ligne, les petits gestes pour un homme sur quatre). PROPOSITION d'abord (« les petits gestes »). Il rajuste son casque de la main gauche, la repose sur le fût, puis la porte à sa bouche (souffler dans ses doigts, tirer sur sa cigarette) ; une boucle de 10 s. Dans le jeu : à la place du repos vivant pour un homme sur quatre ; ici les six.", render: s => maquetteDemarches(s, { allures: true, repos: true, geste: 'gestes' }) },
+    ] },
+    { id: 'formes', title: 'Épaules et crânes', variants: [
+      { title: 'En boîtes', status: 'actuelle', note: "Le jeu tel qu'il est, de 24 px/m à 32 : le tronc, le haut des bras et la tête sont des boîtes ; les épaules font un angle droit, le crâne (visible quand le casque est tombé) est un cube. Quatre hommes, un sur deux blessé à la tête (sans casque : on voit le crâne).", render: s => maquetteCasques(s, { style: 'tour8', arrondi: false }) },
+      { title: 'Arrondis', status: 'a-trancher', depuis: '0.144.4', note: "PROPOSITION (Jérôme, 17 nov. : « arrondir les épaules, les crânes »). Les épaules : le haut du tronc et du bras aux coins coupés (un profil extrudé). Le crâne : un octogone au dessus bombé (un profil tourné, comme les casques), les trois faces de devant portent le visage ; les cheveux et la nuque le suivent. Au niveau fin seulement (24 px/m et plus) : environ +94 triangles par homme (+18 %), +23 500 pour 250 hommes.", render: s => maquetteCasques(s, { style: 'tour8', arrondi: true }) },
     ] },
     { id: 'casques', title: 'Les casques de près', variants: [
       { title: 'Un dôme tourné à 8 pans', status: 'actuelle', depuis: '0.143.4', note: "En jeu (Jérôme, v0.143.4). Un profil tourné autour de l'axe de la tête, comme au tour de potier : le dôme sans marches, d'une seule surface, avec le bord qui s'avance devant (la visière) et derrière (le couvre-nuque) pour l'Adrian, la jupe évasée et le long couvre-nuque pour le Stahlhelm ; huit pans à facettes, l'esprit cubique gardé. Presque gratuit : environ +16 triangles par homme (+3 %).", render: s => maquetteCasques(s, { style: 'tour8' }) },

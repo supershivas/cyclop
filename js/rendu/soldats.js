@@ -1,17 +1,17 @@
 // Les hommes : les soldats (une boîte et son ombre ; de près la silhouette, plus loin une silhouette allégée ; aux zooms 1 et 2 un point), les anneaux des
 // régiments choisis ou survolés, les corps (un homme couché) et les tombes (un tertre et une croix). Tout est instancié et ne reçoit que ce qu'on voit.
 // Le dessin seulement. Les formes viennent de geometries.js, le GLSL de shaders.js.
-import * as SH from './shaders.js?v=0.144.1';
-import { creerGeometries } from './geometries.js?v=0.144.1';
-import { classeDuRang } from '../data/grades.js?v=0.144.1';
-import { creerEquipeArticulee } from './soldat-articule.js?v=0.144.1';
-import { creerJeuAnimations } from './animation-jeu.js?v=0.144.1';
-import { allures } from '../anim-modeles.js?v=0.144.1';
-import { ANIMATIONS } from '../data/animations.js?v=0.144.1';
-import { EPAULEMENT, MARCHE_JEU } from '../data/lecteur-animations.js?v=0.144.1';
-import { SANG } from '../data/aspect-soldat.js?v=0.144.1';
-import { ligneY } from '../tranchees.js?v=0.144.1';
-import { profondeurALEcran } from './vue-ecran.js?v=0.144.1';
+import * as SH from './shaders.js?v=0.145.0';
+import { creerGeometries } from './geometries.js?v=0.145.0';
+import { classeDuRang } from '../data/grades.js?v=0.145.0';
+import { creerEquipeArticulee } from './soldat-articule.js?v=0.145.0';
+import { creerJeuAnimations } from './animation-jeu.js?v=0.145.0';
+import { allures, allure, reposGeste } from '../anim-modeles.js?v=0.145.0';
+import { ANIMATIONS } from '../data/animations.js?v=0.145.0';
+import { EPAULEMENT, MARCHE_JEU, GESTES } from '../data/lecteur-animations.js?v=0.145.0';
+import { SANG } from '../data/aspect-soldat.js?v=0.145.0';
+import { ligneY } from '../tranchees.js?v=0.145.0';
+import { profondeurALEcran } from './vue-ecran.js?v=0.145.0';
 
 // `THREE`, `scene`, `col`, `solUniforms` (`uSol`, `uTaille` : la texture du sol, que l'ombre d'un soldat reprend), `styleSoldat` (le style de près, comparé au labo),
 // `grades` (v0.68.0 : une variante de `GRADES`, data/grades.js, ou null : tous pareils) et `rangDe(B, id, reg)` (le rang d'un homme, bataille.js) ; `surface(x, z)` et `surfaceLisse(x, z)` (la hauteur du sol, lissée pour qui marche), `solY` (la hauteur moyenne du sol) et `POINTS_JUSQUA` (le zoom où un soldat n'est
@@ -29,6 +29,13 @@ export function creerSoldats({ THREE, scene, col, solUniforms, styleSoldat, grad
   let variete = null;
   const hach = (a, m) => (Math.imul(a, m) >>> 0) / 4294967296;
   const TIR_T = new Float32Array(1 << 16).fill(-1e9), FOSSE = new Int8Array(1 << 16), FX = new Float32Array(1 << 16).fill(1e9), FY = new Float32Array(1 << 16);       // son dernier coup de feu (l'horloge du dessin) ; est-il dans une tranchée (relu quand il a bougé de 0,5 m)
+  // (les gestes d'attente, v0.144.1) la ligne de tranchée où se tient un homme : son rang (0 : la première) et son camp, ou −1 ; relue quand il a bougé de 0,5 m
+  const LIGNE = new Int8Array(1 << 16).fill(-1), LX = new Float32Array(1 << 16).fill(1e9), LY = new Float32Array(1 << 16);
+  const premiereLigne = (id, x, y, camp, lignes) => {
+    if (Math.abs(LX[id] - x) + Math.abs(LY[id] - y) > 0.5) { LX[id] = x; LY[id] = y; let d = 1.1, c = -1; for (const L of lignes) { const e = Math.abs(ligneY(L, x) - y); if (e < d) { d = e; c = L.rang * 2 + L.camp; } } LIGNE[id] = c; }
+    return LIGNE[id] === camp;      // (rang 0 du camp de l'homme)
+  };
+  const gesteDe = (id, x, y, camp, lignes, temps) => hach(id + 307, 2654435761) < GESTES.jeu.guetteur && premiereLigne(id, x, y, camp, lignes) ? 'guetteur' : temps ?? (hach(id + 409, 1597334677) < GESTES.jeu.gestes ? 'gestes' : null);
   const dansTranchee = (id, x, y, lignes) => {
     if (Math.abs(FX[id] - x) + Math.abs(FY[id] - y) > 0.5) { FX[id] = x; FY[id] = y; let d = 9; for (const L of lignes) { const e = Math.abs(ligneY(L, x) - y); if (e < d) d = e; } FOSSE[id] = d < 1.1 ? 1 : 0; }
     return FOSSE[id] === 1;
@@ -339,6 +346,8 @@ export function creerSoldats({ THREE, scene, col, solUniforms, styleSoldat, grad
     if (grades) for (let c = 1; c <= 4; c++) GR[c].k = 0;
     const an = anGeo.attributes.position.array, anTon = anGeo.attributes.aTon.array;
     const { tirVal, tirAng, volT, volH, volD } = tirs(), regs = B.etat.regiments, tAnim = soldatMat.uniforms.uT.value;
+    const gesteTemps = GESTES.jeu.temps[B.etat.meteo?.[B.etat.jour - 1]] ?? null;
+    let gesteGenere = false;      // (au plus un geste généré par image : froid ~70 ms, gestes ~50 ; les hommes qui l'attendent gardent le repos vivant)      // (les gestes d'attente) le froid ou la pluie du jour
     // (v0.140.2) le sang du corps à corps : il monte pour tous ceux qui se battent, vus ou non (l'horloge du dessin : figée à la pause), et reste
     { const dSang = Math.max(0, Math.min(0.1, tAnim - tSang)) * SANG.parSeconde; tSang = tAnim;
       if (dSang > 0) for (let i = 0; i < n; i++) if (A.duel[i]) { const id = A.id[i] & 0xffff; if (SANGS[id] < 1) SANGS[id] = Math.min(1, SANGS[id] + dSang); }
@@ -462,6 +471,8 @@ export function creerSoldats({ THREE, scene, col, solUniforms, styleSoldat, grad
         hArt.couche = couches && couches[i] ? 1 : 0;       // (v0.142.0) couché : la patrouille du labo ; le jeu n'en pose pas encore
         hArt.tir = tx > 0 ? Math.min(1, tx * 2.5) : tx <= -2 ? -tx : tx < -0.5 ? -1 : 0;       // (−1 le feu retenu : le fusil baissé ; de 2 à 3 la mêlée : 2 + la poussée, tourné vers l'adversaire : `aTir` du soldat équipé)
         hArt.cap = demarches && vise ? CAPS[id] : tirArr[k * 2 + 1]; hArt.vise = demarches ? vise : 0; hArt.avant = avant; hArt.blessure = A.blessure[i]; hArt.sang = nSang; hArt.aspect = c.a; hArt.temps = tAnim;
+        hArt.geste = demarches && reposVivant && animJeu ? gesteDe(id, AX[i], AY[i], A.camp[i], B.lignes, gesteTemps) : null;
+        if (hArt.geste && !animJeu.aGeste(hArt.geste) && !gesteGenere && (gesteGenere = true)) animJeu.ajouterGeste(hArt.geste, Array.from({ length: GESTES.jeu.allures }, (_, n) => reposGeste(allure(n), `${hArt.geste} · allure ${n + 1}`, hArt.geste)));      // (généré au premier besoin)
         hArt.coup = demarches ? tv : tx > 0 ? tx : 0; hArt.pose = animJeu ? animJeu.pose(A.id[i], hArt, tAnim) : null;       // la marche, le repos et le tir viennent du lecteur d'animations (null : poseJeu)
         EQ.ajouter(hArt);
         continue;
@@ -521,7 +532,7 @@ export function creerSoldats({ THREE, scene, col, solUniforms, styleSoldat, grad
     setDemarches(v) { demarches = !!v; soldatMat.uniforms.uDemarche.value = demarches ? 1 : 0; refaireAnim(); },      // les démarches (labo ; false : celles d'avant)
     setVariete(v) { variete = v || null; soldatMat.uniforms.uVarTon.value = v ? v.ton : 0; FX.fill(1e9); },      // la variété des soldats (null : tous pareils)
     setSang(v) { soldatMat.uniforms.uSang.value = Math.max(0, Math.min(1, +v || 0)); },      // la force des taches de sang (0 : aucune)             // les jambes qui marchent
-    preparer(B) { CAPS.fill(NaN); SANGS.fill(0); tSang = 0; TIR_T.fill(-1e9); FX.fill(1e9); preparerSoldats(B.armee.capacite); preparerCorps(Math.max(1024, B.etat.corps.length * 2)); preparerTombes(Math.max(256, (B.etat.tombes?.length || 0) * 2)); },
+    preparer(B) { CAPS.fill(NaN); SANGS.fill(0); tSang = 0; TIR_T.fill(-1e9); FX.fill(1e9); LX.fill(1e9); preparerSoldats(B.armee.capacite); preparerCorps(Math.max(1024, B.etat.corps.length * 2)); preparerTombes(Math.max(256, (B.etat.tombes?.length || 0) * 2)); },
     maj,
     cacher(id) { cache = id; },                                   // l'homme qu'on ne dessine pas (le numéro de l'armée, −1 : aucun)
     survoler(reg) { survolReg = reg; },                            // le régiment qu'un anneau à la couleur de son camp désigne

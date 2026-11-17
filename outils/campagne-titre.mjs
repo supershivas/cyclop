@@ -14,7 +14,7 @@ page.on('console', m => { if (m.type() === 'error') erreurs.push(`console : ${m.
 const verifier = (ok, texte) => { console.log(`${ok ? '✓' : '✗'} ${texte}`); if (!ok) erreurs.push(texte); };
 const titre = () => page.evaluate(() => ({ continuer: document.getElementById('continuer').hidden ? null : document.getElementById('continuer').textContent, campagne: !document.getElementById('continuer-campagne').hidden, nouvelleCampagne: !document.getElementById('nouvelle-campagne').hidden, visible: !document.getElementById('titre').hidden }));
 const bataille = () => page.evaluate(() => { const e = __jeu.bataille().etat; return { n: e.campagne?.n ?? null, id: e.campagne?.id ?? null, graine: e.graine, secteur: e.secteur }; });
-const quitter = async () => { await page.click('#pause'); await page.click('#quitter'); await page.waitForTimeout(400); };
+const quitter = async () => { await page.click('#hud-reglages'); await page.click('#reglages-titre'); await page.waitForTimeout(400); };
 const confirmer = async () => { const t = await page.evaluate(() => document.getElementById('dialogue-confirmer').open ? document.getElementById('confirmer-texte').textContent : null); if (t) await page.click('#confirmer-oui'); await page.waitForTimeout(1500); return t; };
 
 await page.goto(`${srv.base}index.html?debug=1&seed=5`);
