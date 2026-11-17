@@ -1,8 +1,15 @@
 # Journal des versions
 
-## 0.144.2 — 2026-11-17
+## 0.144.4 — 2026-11-17
 
 - Au labo, à trancher : des épaules et des crânes arrondis de près ; le jeu ne change pas
+
+## 0.144.3 — 2026-11-17
+- Les boutons de menu ont un liseré sombre de 1 px tout autour
+- Au labo : cinq effets de clic satisfaisant à essayer (sujet « Le clic », groupe Design system)
+
+## 0.144.2 — 2026-11-17
+- Une bataille finie ne laisse plus de « Continuer » à l'écran titre
 
 ## 0.144.1 — 2026-11-17
 

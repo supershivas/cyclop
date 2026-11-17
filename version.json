@@ -1,8 +1,7 @@
 {
-  "version": "0.144.3",
+  "version": "0.144.4",
   "date": "2026-11-17",
   "changes": [
-    "Les boutons de menu ont un liseré sombre de 1 px tout autour",
-    "Au labo : cinq effets de clic satisfaisant à essayer"
+    "Au labo : des épaules et des crânes arrondis, à trancher (le jeu ne change pas)"
   ]
 }

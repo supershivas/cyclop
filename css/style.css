@@ -290,7 +290,7 @@
 .bouton {
   padding: 0 calc(var(--pas) * 2);
   background: var(--jeu-encre); color: var(--jeu-fond);
-  border: 0; box-shadow: var(--ombre-papier);
+  border: 1px solid var(--jeu-fond); box-shadow: var(--ombre-papier);      /* un liseré sombre de 1 px tout autour : le papier clair se distingue du fond os (Jérôme, v0.144.3) */
   font-size: var(--texte-moyen);
 }
 .bouton.est-focus, .bouton:focus-visible, .icone:focus-visible, .batterie:focus-visible { outline: 2px solid var(--jeu-nous); outline-offset: 2px; }
