@@ -1,7 +1,8 @@
 {
-  "version": "0.144.2",
+  "version": "0.144.3",
   "date": "2026-11-17",
   "changes": [
-    "Une bataille finie ne laisse plus de « Continuer » à l'écran titre"
+    "Les boutons de menu ont un liseré sombre de 1 px tout autour",
+    "Au labo : cinq effets de clic satisfaisant à essayer"
   ]
 }

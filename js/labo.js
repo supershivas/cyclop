@@ -2,48 +2,49 @@
 // Chaque sujet utilise les mêmes modules que le jeu (terrain, apparence,
 // rendu three.js) : ce qu'on voit ici est ce que le jeu dessinera. Ajouter un
 // sujet ou une variante = ajouter une entrée dans GROUPES.
-import { afficherVersion } from './version-tag.js?v=0.144.2';
-import { mountLabo } from './lib/labo-shell.js?v=0.144.2';
-import { spriteCanvas, paletteToGPL, paletteToHex } from './lib/sprites.js?v=0.144.2';
-import { PALETTE, ROLES } from './palette.js?v=0.144.2';
-import { chargerContenu } from './design-store.js?v=0.144.2';
-import { tuile, ETAT } from './tuiles.js?v=0.144.2';
-import { creerTerrain, impact, hydroLignes, toucher } from './terrain.js?v=0.144.2';
-import { FORMES } from './cratere.js?v=0.144.2';
-import { CALIBRES } from './data/calibres.js?v=0.144.2';
-import { METEO } from './data/meteo.js?v=0.144.2';
-import { nouvelleBataille, avancer, ordonnerMarche, ordonnerBarrage, mourir, regarderAu, aube, horloge, ticksParJour, rangDe } from './bataille.js?v=0.144.2';
-import { BOUE_SOLDATS, SANG, VARIETE_SOLDATS } from './data/aspect-soldat.js?v=0.144.2';
-import { AZIMUTS, COTES } from './data/soleil.js?v=0.144.2';
-import { creerRendu, ZOOMS } from './rendu3d.js?v=0.144.2';
-import { placesCommandement } from './army.js?v=0.144.2';
-import { hash2 } from './lib/rng.js?v=0.144.2';
-import { reglerVerdure } from './apparence.js?v=0.144.2';
-import { maquetteChars } from './labo-chars.js?v=0.144.2';
-import { maquetteEpaves } from './labo-epaves.js?v=0.144.2';
-import { maquetteCasques } from './labo-casques.js?v=0.144.2';
-import { maquetteDemarches } from './labo-demarches.js?v=0.144.2';
-import { fondations, boutons, unites, fenetres, revision } from './labo-design-system.js?v=0.144.2';
-import { cartesSecteur } from './labo-cartes.js?v=0.144.2';
-import { patrouilleLabo } from './labo-patrouille.js?v=0.144.2';
-import { EFFETS } from './rendu3d.js?v=0.144.2';
-import { calqueEcussons } from './labo-ecussons.js?v=0.144.2';
-import { plancheEcussons } from './labo-ecussons-armes.js?v=0.144.2';
-import { gainTampon, gainCachets, gainFil, gainBordereau, victoireFanion, victoireTampon, victoireChevrons, victoireAube, ficheDeuxColonnes, ficheEtages, ficheRegistre, ficheDAbord } from './labo-recompenses.js?v=0.144.2';
-import { maquetteBatiment, maquetteCamp } from './labo-batiments.js?v=0.144.2';
-import { BATIMENTS } from './data/batiments.js?v=0.144.2';
-import { JOURNAL } from './labo-journal.js?v=0.144.2';
-import { loadVersion } from './lib/app-update.js?v=0.144.2';
-import { maquetteEffets, maquetteAmbiance, maquetteEspace, maquetteBruitages } from './labo-son.js?v=0.144.2';
-import { calqueMoral } from './labo-moral.js?v=0.144.2';
-import { bilanRapport, bilanTuiles, bilanFrise } from './labo-donnees.js?v=0.144.2';
-import { papierNuit, finDePartie } from './labo-papiers.js?v=0.144.2';
-import { fichesTuiles, fichesProfil, fichesCompactes } from './labo-fiches.js?v=0.144.2';
-import { calqueEnnemis } from './labo-engins-ennemis.js?v=0.144.2';
-import { maquetteTranchees, NOTES_TRANCHEES, NOMS_TRANCHEES } from './labo-tranchees.js?v=0.144.2';
-import { maquetteFabrique } from './labo-fabrique.js?v=0.144.2';
-import { atelierTerrain } from './labo-atelier-terrain.js?v=0.144.2';
-import { entrees as encEntrees, lexiqueAZ, planche as encPlanche } from './labo-encyclopedie.js?v=0.144.2';
+import { afficherVersion } from './version-tag.js?v=0.144.3';
+import { mountLabo } from './lib/labo-shell.js?v=0.144.3';
+import { spriteCanvas, paletteToGPL, paletteToHex } from './lib/sprites.js?v=0.144.3';
+import { PALETTE, ROLES } from './palette.js?v=0.144.3';
+import { chargerContenu } from './design-store.js?v=0.144.3';
+import { tuile, ETAT } from './tuiles.js?v=0.144.3';
+import { creerTerrain, impact, hydroLignes, toucher } from './terrain.js?v=0.144.3';
+import { FORMES } from './cratere.js?v=0.144.3';
+import { CALIBRES } from './data/calibres.js?v=0.144.3';
+import { METEO } from './data/meteo.js?v=0.144.3';
+import { nouvelleBataille, avancer, ordonnerMarche, ordonnerBarrage, mourir, regarderAu, aube, horloge, ticksParJour, rangDe } from './bataille.js?v=0.144.3';
+import { BOUE_SOLDATS, SANG, VARIETE_SOLDATS } from './data/aspect-soldat.js?v=0.144.3';
+import { AZIMUTS, COTES } from './data/soleil.js?v=0.144.3';
+import { creerRendu, ZOOMS } from './rendu3d.js?v=0.144.3';
+import { placesCommandement } from './army.js?v=0.144.3';
+import { hash2 } from './lib/rng.js?v=0.144.3';
+import { reglerVerdure } from './apparence.js?v=0.144.3';
+import { maquetteChars } from './labo-chars.js?v=0.144.3';
+import { maquetteEpaves } from './labo-epaves.js?v=0.144.3';
+import { maquetteCasques } from './labo-casques.js?v=0.144.3';
+import { maquetteDemarches } from './labo-demarches.js?v=0.144.3';
+import { fondations, boutons, unites, fenetres, revision } from './labo-design-system.js?v=0.144.3';
+import { clic } from './labo-clic.js?v=0.144.3';
+import { cartesSecteur } from './labo-cartes.js?v=0.144.3';
+import { patrouilleLabo } from './labo-patrouille.js?v=0.144.3';
+import { EFFETS } from './rendu3d.js?v=0.144.3';
+import { calqueEcussons } from './labo-ecussons.js?v=0.144.3';
+import { plancheEcussons } from './labo-ecussons-armes.js?v=0.144.3';
+import { gainTampon, gainCachets, gainFil, gainBordereau, victoireFanion, victoireTampon, victoireChevrons, victoireAube, ficheDeuxColonnes, ficheEtages, ficheRegistre, ficheDAbord } from './labo-recompenses.js?v=0.144.3';
+import { maquetteBatiment, maquetteCamp } from './labo-batiments.js?v=0.144.3';
+import { BATIMENTS } from './data/batiments.js?v=0.144.3';
+import { JOURNAL } from './labo-journal.js?v=0.144.3';
+import { loadVersion } from './lib/app-update.js?v=0.144.3';
+import { maquetteEffets, maquetteAmbiance, maquetteEspace, maquetteBruitages } from './labo-son.js?v=0.144.3';
+import { calqueMoral } from './labo-moral.js?v=0.144.3';
+import { bilanRapport, bilanTuiles, bilanFrise } from './labo-donnees.js?v=0.144.3';
+import { papierNuit, finDePartie } from './labo-papiers.js?v=0.144.3';
+import { fichesTuiles, fichesProfil, fichesCompactes } from './labo-fiches.js?v=0.144.3';
+import { calqueEnnemis } from './labo-engins-ennemis.js?v=0.144.3';
+import { maquetteTranchees, NOTES_TRANCHEES, NOMS_TRANCHEES } from './labo-tranchees.js?v=0.144.3';
+import { maquetteFabrique } from './labo-fabrique.js?v=0.144.3';
+import { atelierTerrain } from './labo-atelier-terrain.js?v=0.144.3';
+import { entrees as encEntrees, lexiqueAZ, planche as encPlanche } from './labo-encyclopedie.js?v=0.144.3';
 
 document.documentElement.style.setProperty('--jeu-accent', ROLES.accent);
 const NOM = document.title.replace(/^Labo — /, ''); // le nom vient de la page (une apostrophe ne casse rien)
@@ -375,6 +376,13 @@ const GROUPES = [
     ] },
     { id: 'ds-boutons', title: 'Boutons', variants: [
       { title: 'Les familles et leurs états', status: 'actuelle', depuis: '0.98.0', note: 'Repos, survol, focus clavier, choisi, refusé, refusé au survol : les vraies feuilles du jeu, états forcés par `.est-survol` et `.est-focus`.', render: s => { boutons(s); } },
+    ] },
+    { id: 'ds-clic', title: 'Le clic', variants: [
+      { title: 'Le tampon', status: 'actuelle', depuis: '0.144.3', note: "A l'appui le bouton s'enfonce sur son ombre (3 px, l'ombre s'écrase), au relâchement il remonte en dépassant d'un pixel. La base des autres.", render: s => { clic(s, 'tampon'); } },
+      { title: "L'onde", status: 'actuelle', depuis: '0.144.3', note: "Le tampon, plus un anneau qui part du point du clic et s'éteint dans le bouton.", render: s => { clic(s, 'onde'); } },
+      { title: 'Les éclats', status: 'actuelle', depuis: '0.144.3', note: "Le tampon, plus huit petits cubes (os, glaise, terre) qui jaillissent du point du clic, retombent et s'éteignent.", render: s => { clic(s, 'eclats'); } },
+      { title: "L'encrier", status: 'actuelle', depuis: '0.144.3', note: "Le tampon, plus un éclair inversé (terre sous l'os, 150 ms) et une secousse de 2 px de la planche.", render: s => { clic(s, 'encrier'); } },
+      { title: 'Le tout', status: 'actuelle', depuis: '0.144.3', note: "Le tampon, l'onde, les éclats et l'éclair ensemble : le plus chargé.", render: s => { clic(s, 'tout'); } },
     ] },
     { id: 'ds-unites', title: 'Unités', variants: [
       { title: 'Les unités', status: 'actuelle', depuis: '0.110.0', note: 'Carte et étiquette de régiment, étiquette de char et de poste, batterie : le liseré de l\'armée, le survol, le choisi, l\'ordre des barres.', render: s => { unites(s); } },
