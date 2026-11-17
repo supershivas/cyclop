@@ -1,5 +1,9 @@
 # Journal des versions
 
+## 0.144.2 — 2026-11-17
+
+- Au labo, à trancher : des épaules et des crânes arrondis de près ; le jeu ne change pas
+
 ## 0.144.1 — 2026-11-17
 
 - Dans la tranchée, des gestes d'attente : par le froid ils tapent des pieds et se frottent les mains, sous la pluie ils rentrent la tête, un guetteur sur dix se redresse pour regarder puis se baisse, d'autres rajustent leur casque ou portent la main à la bouche
