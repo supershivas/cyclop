@@ -1,6 +1,7 @@
 // La bataille : déterminisme, ordres refusés à voix haute, sauvegarde qui rejoue la même partie.
 import { readFileSync } from 'node:fs';
-import { bordereau, progressionMission, progressionSecondaire, nouvelleBataille, avancer, ordonnerMarche, ordonnerBarrage, aube, photo, restaurer, effectifs, horloge, zone, tronconsTenus, rangDe, moralEnMots, terrainSous, terrainResume, peutOrdonner } from '../js/bataille.js';
+import { bordereau, progressionMission, progressionSecondaire, nouvelleBataille as nouvelleBatailleLibre, avancer, ordonnerMarche, ordonnerBarrage, aube, photo, restaurer, effectifs, horloge, zone, tronconsTenus, rangDe, moralEnMots, terrainSous, terrainResume, peutOrdonner } from '../js/bataille.js';
+const nouvelleBataille = (graine, R, opts = {}) => nouvelleBatailleLibre(graine, R, { premierFixe: true, ...opts });   // le 1er jour est tiré au hasard en jeu : les tests de règles veulent le temps de départ de la saison
 import { ligneY } from '../js/tranchees.js';
 import { calculerCouts, dimensionsCouts, BLOC } from '../js/champs.js';
 import { tronconsDe, refusCorvee, chezLEnnemi, choixEnFace, contactDe } from '../js/nuit.js';

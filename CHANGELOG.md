@@ -1,5 +1,9 @@
 # Journal des versions
 
+## 0.148.2 — 2026-11-17
+
+- Le temps du premier jour est tiré au hasard : une nouvelle partie ne commence plus toujours sous la pluie
+
 ## 0.148.1 — 2026-11-17
 
 - Le sang des blessés se limite à la blessure : autour du pansement du bras, de la cuisse ou de la tête

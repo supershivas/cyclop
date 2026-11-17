@@ -232,7 +232,7 @@ test('les formes d\'un secteur changent le sol, tranchées comprises ; la partie
   const { version } = JSON.parse(readFileSync(new URL('../version.json', import.meta.url)));
   const dedans = (await import(`../js/data/secteur.js?v=${version}`)).SECTEURS;
   dedans.essai = { ...S, retouches: formes };
-  let B; try { B = nouvelleBataille(5, R, { soldats: 100, jours: 3 }); } finally { dedans.essai = S; }
+  let B; try { B = nouvelleBataille(5, R, { premierFixe: true, soldats: 100, jours: 3 }); } finally { dedans.essai = S; }
   assert.deepEqual(B.etat.sol.retouches, formes);
   assert.equal(B.terrain.base[c], b.base[c]);
   const C = restaurer(JSON.parse(JSON.stringify(photo(B))), R);          // le secteur republié depuis n'a plus de formes : la partie a gardé les siennes
@@ -274,7 +274,7 @@ test('une partie garde ses tranchées et ses objets : republier le secteur ne le
   const { version } = JSON.parse(readFileSync(new URL('../version.json', import.meta.url)));
   const dedans = (await import(`../js/data/secteur.js?v=${version}`)).SECTEURS;
   dedans.essai = { ...S, tranchees: T, objets: [{ o: 'arbre', x: 12, y: 12 }] };
-  let B; try { B = nouvelleBataille(5, R, { soldats: 100, jours: 3 }); } finally { dedans.essai = S; }
+  let B; try { B = nouvelleBataille(5, R, { premierFixe: true, soldats: 100, jours: 3 }); } finally { dedans.essai = S; }
   const premiere = B.lignes.find(l => l.camp === 0 && l.rang === 0);
   assert.equal(premiere.y0, B.etat.marges.y + 212);
   const C = restaurer(JSON.parse(JSON.stringify(photo(B))), R);
@@ -295,7 +295,7 @@ test('chaque réglage de secteur, chaque outil et chaque champ de forme porte un
 group('atelier — la vue 3D regarde le terrain à une heure donnée');
 test('regarderAu règle l\'heure et le temps du premier jour sans toucher au reste', async () => {
   const { nouvelleBataille, regarderAu, horloge } = await import('../js/bataille.js');
-  const B = nouvelleBataille(5, R, { soldats: 100, jours: 3 }), avant = B.etat.meteo.slice(1).join();
+  const B = nouvelleBataille(5, R, { premierFixe: true, soldats: 100, jours: 3 }), avant = B.etat.meteo.slice(1).join();
   regarderAu(B, 12, 'pluie');
   const h = horloge(B);
   assert.equal(h.heure, 12); assert.equal(h.meteo, 'pluie');
@@ -517,13 +517,13 @@ test('l\'hiver tire de la neige et du gel sans pluie, l\'été du sec et de la c
   const { nouvelleBataille } = await import('../js/bataille.js');
   const { couleurCase } = await import('../js/apparence.js');
   const { INDICE: I } = await import('../js/palette.js');
-  const nb = (saison, g) => { SECTEURS.essai.saison = saison; try { return nouvelleBataille(g, R, { soldats: 20, jours: 14 }); } finally { delete SECTEURS.essai.saison; } };
+  const nb = (saison, g) => { SECTEURS.essai.saison = saison; try { return nouvelleBataille(g, R, { premierFixe: true, soldats: 20, jours: 14 }); } finally { delete SECTEURS.essai.saison; } };
   const hiver = new Set(), ete = new Set();
   for (const g of [1, 2, 3, 4]) { nb('hiver', g).etat.meteo.forEach(m => hiver.add(m)); nb('ete', g).etat.meteo.forEach(m => ete.add(m)); }
   assert.ok(hiver.has('neige') && hiver.has('gel') && !hiver.has('pluie'), `hiver : ${[...hiver]}`);
   assert.ok(ete.has('canicule') && ete.has('sec') && !ete.has('neige') && !ete.has('gel'), `été : ${[...ete]}`);
   assert.equal(nb('hiver', 5).etat.meteo[0], 'gel'); assert.equal(nb('ete', 5).etat.meteo[0], 'canicule');
-  assert.deepEqual(nb(undefined, 7).etat.meteo, nouvelleBataille(7, R, { soldats: 20, jours: 14 }).etat.meteo, 'sans saison : le temps d\'avant');
+  assert.deepEqual(nb(undefined, 7).etat.meteo, nouvelleBataille(7, R, { premierFixe: true, soldats: 20, jours: 14 }).etat.meteo, 'sans saison : le temps d\'avant');
   // la neige : de la brume sur le sol nu, plus que sans neige ; les cratères restent de terre
   const B = nb('hiver', 3), T = B.terrain;
   let blanc = 0, nu = 0; for (let j = 100; j < 160; j++) for (let i = 100; i < 160; i++) { const c = couleurCase(T, i, j, R, 2); if (c === I.r || c === I.o) blanc++; if (couleurCase(T, i, j, R, 1) === I.r || couleurCase(T, i, j, R, 1) === I.o) nu++; }
@@ -553,7 +553,7 @@ test('chaque saison a un nom et une description ; une retouche « saison » du b
   try {
     S2.essai = { ...avant, perso: true };            // (seule une carte à vous se retouche)
     appliquerSecteurs(S2, { essai: { saison: 'hiver' } });
-    const B = nouvelleBataille(4, R, { soldats: 20, jours: 8 });
+    const B = nouvelleBataille(4, R, { premierFixe: true, soldats: 20, jours: 8 });
     assert.equal(B.etat.sol.saison, 'hiver'); assert.equal(B.etat.meteo[0], 'gel'); assert.ok(!B.etat.meteo.includes('pluie'));
   } finally { S2.essai = avant; }
 });
@@ -561,7 +561,7 @@ test('chaque saison a un nom et une description ; une retouche « saison » du b
 group('la saison choisie (v0.53.0)');
 test('une saison imposée à la bataille l\'emporte sur celle du secteur : sol, temps, sauvegarde relue', async () => {
   const { nouvelleBataille, restaurer, photo } = await import('../js/bataille.js');
-  const base = { soldats: 20, jours: 8 };
+  const base = { premierFixe: true, soldats: 20, jours: 8 };
   for (const saison of ['ete', 'automne', 'hiver']) {
     const B = nouvelleBataille(4, R, { ...base, saison });
     assert.equal(B.etat.sol.saison, saison);
@@ -639,4 +639,12 @@ test('les cartes générées : aucune marche de plus d\'un quart de mètre dans 
     for (let j = 0; j < T.H; j++) for (let i = 0; i < T.W; i++) { const c = j * T.W + i; if (!T.profond[c] || T.pont[c]) continue; if (i < T.W - 1 && T.profond[c + 1] && !T.pont[c + 1]) ecart = Math.max(ecart, Math.abs(T.base[c] - T.base[c + 1])); if (j < T.H - 1 && T.profond[c + T.W] && !T.pont[c + T.W]) ecart = Math.max(ecart, Math.abs(T.base[c] - T.base[c + T.W])); }
     assert.ok(ecart <= 1, `graine ${g} : une marche d'eau de ${ecart} quarts`);      // un lac contre un fleuve, deux lacs : le même niveau à la jonction
   }
+});
+
+test('le premier jour est tiré au hasard : selon la graine, le temps de départ varie ; `premierFixe` rend celui de la saison', async () => {
+  const { nouvelleBataille } = await import('../js/bataille.js');
+  const premiers = g => nouvelleBataille(g, R, { soldats: 20, jours: 3 }).etat.meteo[0];
+  const vus = new Set([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map(premiers));
+  assert.ok(vus.size >= 2, `un seul temps le premier jour : ${[...vus]}`);
+  assert.equal(nouvelleBataille(3, R, { soldats: 20, jours: 3, premierFixe: true }).etat.meteo[0], 'sec');
 });

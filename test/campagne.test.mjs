@@ -1,6 +1,7 @@
 // La campagne, lot 1 : l'identité portable. Deux batailles d'une même campagne (graines de terrain différentes) donnent
 // les mêmes noms à nos hommes ; la graine de la bataille n'en décide plus. Hors campagne, rien ne change.
-import { nouvelleBataille, avancer, ordonnerMarche, photo, restaurer, zone, effectifs } from '../js/bataille.js';
+import { nouvelleBataille as nouvelleBatailleLibre, avancer, ordonnerMarche, photo, restaurer, zone, effectifs } from '../js/bataille.js';
+const nouvelleBataille = (graine, R, opts = {}) => nouvelleBatailleLibre(graine, R, { premierFixe: true, ...opts });   // le 1er jour est tiré au hasard en jeu : les tests de règles veulent le temps de départ de la saison
 import { quiEst } from '../js/hud/lecture.js';
 import { empreinteEtat } from '../js/reseau/lockstep.js';
 import { REGLAGES as R } from '../js/data/reglages.js';

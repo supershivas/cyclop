@@ -1,5 +1,6 @@
 // Gestion des régiments (v0.116.0) : les transferts de la nuit, les blessés qui vont à l'hôpital, les régiments frais comptés.
-import { nouvelleBataille, avancer, aube, photo, restaurer, deployer, peutDeployer } from '../js/bataille.js';
+import { nouvelleBataille as nouvelleBatailleLibre, avancer, aube, photo, restaurer, deployer, peutDeployer } from '../js/bataille.js';
+const nouvelleBataille = (graine, R, opts = {}) => nouvelleBatailleLibre(graine, R, { premierFixe: true, ...opts });   // le 1er jour est tiré au hasard en jeu : les tests de règles veulent le temps de départ de la saison
 import { refusCorvee, planifierTransfert, annulerTransfert, refusTransfert, disponibles, prendreReserve } from '../js/nuit.js';
 import { entreeHopital, renfortsDe, patients } from '../js/camp.js';
 import { blessesDe, marcheBlesse } from '../js/bataille.js';

@@ -1,6 +1,7 @@
 // Les stances (lot 1, logique) : une posture par régiment, qui change la portée, la précision et la cadence du tir.
 // La référence « sans stance » a été relevée sur le code d'avant le lot : l'ordre des tirages n'a pas bougé.
-import { nouvelleBataille, avancer, ordonnerMarche, photo, restaurer, zone, peutStance, ordonnerStance, actionDe } from '../js/bataille.js';
+import { nouvelleBataille as nouvelleBatailleLibre, avancer, ordonnerMarche, photo, restaurer, zone, peutStance, ordonnerStance, actionDe } from '../js/bataille.js';
+const nouvelleBataille = (graine, R, opts = {}) => nouvelleBatailleLibre(graine, R, { premierFixe: true, ...opts });   // le 1er jour est tiré au hasard en jeu : les tests de règles veulent le temps de départ de la saison
 import { ligneY } from '../js/tranchees.js';
 import { empreinteEtat } from '../js/reseau/lockstep.js';
 import { creerTerrain } from '../js/terrain.js';

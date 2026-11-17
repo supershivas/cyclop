@@ -1,5 +1,6 @@
 // Le fil de fer devant la 1re ligne : les obus le coupent, il se relit tel quel (v0.98.0).
-import { nouvelleBataille, avancer, photo, restaurer } from '../js/bataille.js';
+import { nouvelleBataille as nouvelleBatailleLibre, avancer, photo, restaurer } from '../js/bataille.js';
+const nouvelleBataille = (graine, R, opts = {}) => nouvelleBatailleLibre(graine, R, { premierFixe: true, ...opts });   // le 1er jour est tiré au hasard en jeu : les tests de règles veulent le temps de départ de la saison
 import { ligneY } from '../js/tranchees.js';
 import { filCoupe, degatsFil } from '../js/fil.js';
 import { FIL } from '../js/data/fil.js';

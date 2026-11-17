@@ -1,5 +1,6 @@
 // Les tranchées en trois niveaux de détail (v0.84.0) : la géométrie pure (budgets, état, déterminisme) et la solidité d'un tronçon (la barre de vie du coin de l'écran).
-import { nouvelleBataille, tronconSolidite, terrainResume } from '../js/bataille.js';
+import { nouvelleBataille as nouvelleBatailleLibre, tronconSolidite, terrainResume } from '../js/bataille.js';
+const nouvelleBataille = (graine, R, opts = {}) => nouvelleBatailleLibre(graine, R, { premierFixe: true, ...opts });   // le 1er jour est tiré au hasard en jeu : les tests de règles veulent le temps de départ de la saison
 import { impact } from '../js/terrain.js';
 import { ligneY, demiLargeur, etatTranchee, ETATS_TRANCHEE } from '../js/tranchees.js';
 import { primitives, ouvrageTroncon, mesurerNiveau, niveauSelonZoom, couchesDe, ORDRE_COUCHES, NIVEAUX_TRANCHEES } from '../js/rendu/tranchee-modeles.js';

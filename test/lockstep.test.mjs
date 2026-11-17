@@ -1,5 +1,6 @@
 // Le jeu à deux : deux machines, les mêmes ordres aux mêmes cadres, la même bataille (lockstep.js, sur un réseau factice qui retarde et mélange les arrivées entre cadres).
-import { nouvelleBataille, ordonnerMarche, ordonnerBarrage, ordonnerStance, photo, restaurer, zone } from '../js/bataille.js';
+import { nouvelleBataille as nouvelleBatailleLibre, ordonnerMarche, ordonnerBarrage, ordonnerStance, photo, restaurer, zone } from '../js/bataille.js';
+const nouvelleBataille = (graine, R, opts = {}) => nouvelleBatailleLibre(graine, R, { premierFixe: true, ...opts });   // le 1er jour est tiré au hasard en jeu : les tests de règles veulent le temps de départ de la saison
 import { creerLockstep, empreinteEtat } from '../js/reseau/lockstep.js';
 import { REGLAGES as R } from '../js/data/reglages.js';
 

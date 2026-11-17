@@ -1,5 +1,6 @@
 // La lecture des données d'une journée (js/donnees-jour.js) : une vraie bataille, les totaux justes, les faits marquants.
-import { nouvelleBataille, avancer, aube, instantane, photo, restaurer } from '../js/bataille.js';
+import { nouvelleBataille as nouvelleBatailleLibre, avancer, aube, instantane, photo, restaurer } from '../js/bataille.js';
+const nouvelleBataille = (graine, R, opts = {}) => nouvelleBatailleLibre(graine, R, { premierFixe: true, ...opts });   // le 1er jour est tiré au hasard en jeu : les tests de règles veulent le temps de départ de la saison
 import { lireJournee, faitsMarquants, lireBataille } from '../js/donnees-jour.js';
 import { noterMoments, jourVide } from '../js/moments.js';
 import { REGLAGES as R } from '../js/data/reglages.js';

@@ -1,5 +1,6 @@
 // Où est un régiment ? (v0.114.1) Un régiment scindé (une poche chez l'ennemi) a un plus gros amas, des isolés, et un chemin de départ pour chacun.
-import { nouvelleBataille, zone, cheminsVers, ordonnerMarche, avancer } from '../js/bataille.js';
+import { nouvelleBataille as nouvelleBatailleLibre, zone, cheminsVers, ordonnerMarche, avancer } from '../js/bataille.js';
+const nouvelleBataille = (graine, R, opts = {}) => nouvelleBatailleLibre(graine, R, { premierFixe: true, ...opts });   // le 1er jour est tiré au hasard en jeu : les tests de règles veulent le temps de départ de la saison
 import { amasDe, placeDe, isoles } from '../js/amas.js';
 import { AMAS } from '../js/data/amas.js';
 import { REGLAGES as R } from '../js/data/reglages.js';

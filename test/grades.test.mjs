@@ -1,5 +1,6 @@
 // Les grades à l'écran (v0.68.0) : de quel rang à quelle classe de dessin, les variantes bien formées, la place du commandement (proposée, pas encore dans le jeu).
-import { nouvelleBataille, rangDe } from '../js/bataille.js';
+import { nouvelleBataille as nouvelleBatailleLibre, rangDe } from '../js/bataille.js';
+const nouvelleBataille = (graine, R, opts = {}) => nouvelleBatailleLibre(graine, R, { premierFixe: true, ...opts });   // le 1er jour est tiré au hasard en jeu : les tests de règles veulent le temps de départ de la saison
 import { placesCommandement } from '../js/army.js';
 import { grade } from '../js/identite.js';
 import { CLASSE_DU_RANG, CLASSES, GRADES, classeDuRang } from '../js/data/grades.js';

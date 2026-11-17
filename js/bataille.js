@@ -14,41 +14,41 @@
    La sauvegarde (photo) garde la graine, la liste compacte des impacts, l'état
    de la foule et les petites couches de logique ; jamais le relief : il se
    rejoue depuis la graine et les impacts (rejouerTerrain). */
-import { noterMoments } from './moments.js?v=0.148.1';
-import { createRng, hash2 } from './lib/rng.js?v=0.148.1';
-import { impact, hydroLignes, etat as etatCase, vitesseEtat, vitesseCase, ETAT } from './terrain.js?v=0.148.1';
-import { creerArmee, legere, ajouterSoldat, construireGrille, pasArmee, tuerDans, effrayer, compacter, photoArmee, restaurerArmee, b64, deB64, DENSITE, place, poserCaracs, lireCaracs, abimerCaracs, gagner, CARACS } from './army.js?v=0.148.1';
-import { ligneSous, solidite, y0En, arcMax } from './tranchees.js?v=0.148.1';
-import { terrainDuSecteur } from './secteur-terrain.js?v=0.148.1';
-import { detruirePont, reconstruirePont, pontEn } from './eaux.js?v=0.148.1';
-import { MISSIONS_SECONDAIRES as MS } from './data/missions.js?v=0.148.1';
-import { PONT_COUPE } from './data/ponts.js?v=0.148.1';
-import { amasDe, isoles } from './amas.js?v=0.148.1';
-import { calculerCouts, creerCacheChamps, dimensionsCouts, BLOC } from './champs.js?v=0.148.1';
-import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.148.1';
-import { preparerAleatoire, ID_ALEATOIRE } from './generateur.js?v=0.148.1';
-import { AVION, MITRAILLAGE } from './data/mitraillage.js?v=0.148.1';
-import { refusAvion, lancerAvion, avancerAvions, flotteDeDepart, reparerAvions } from './avions.js?v=0.148.1';
-import { CHAR, CHAR_RECHARGE, CHAR_SORTIE } from './data/chars.js?v=0.148.1';
-import { GENIE, GENIE_DATA } from './data/genie.js?v=0.148.1';
-import { filDeDepart, degatsFil } from './fil.js?v=0.148.1';
-import { tirerJoueur } from './tir-joueur.js?v=0.148.1';
-import { creerNids, avancerNids, pourvoirNids, degatsNids, reparerNid, aubeNids } from './nids.js?v=0.148.1';
-import { TOITS, NIDS } from './data/nids.js?v=0.148.1';
-import { BONUS, chevronsDe } from './data/experience.js?v=0.148.1';
+import { noterMoments } from './moments.js?v=0.148.2';
+import { createRng, hash2 } from './lib/rng.js?v=0.148.2';
+import { impact, hydroLignes, etat as etatCase, vitesseEtat, vitesseCase, ETAT } from './terrain.js?v=0.148.2';
+import { creerArmee, legere, ajouterSoldat, construireGrille, pasArmee, tuerDans, effrayer, compacter, photoArmee, restaurerArmee, b64, deB64, DENSITE, place, poserCaracs, lireCaracs, abimerCaracs, gagner, CARACS } from './army.js?v=0.148.2';
+import { ligneSous, solidite, y0En, arcMax } from './tranchees.js?v=0.148.2';
+import { terrainDuSecteur } from './secteur-terrain.js?v=0.148.2';
+import { detruirePont, reconstruirePont, pontEn } from './eaux.js?v=0.148.2';
+import { MISSIONS_SECONDAIRES as MS } from './data/missions.js?v=0.148.2';
+import { PONT_COUPE } from './data/ponts.js?v=0.148.2';
+import { amasDe, isoles } from './amas.js?v=0.148.2';
+import { calculerCouts, creerCacheChamps, dimensionsCouts, BLOC } from './champs.js?v=0.148.2';
+import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.148.2';
+import { preparerAleatoire, ID_ALEATOIRE } from './generateur.js?v=0.148.2';
+import { AVION, MITRAILLAGE } from './data/mitraillage.js?v=0.148.2';
+import { refusAvion, lancerAvion, avancerAvions, flotteDeDepart, reparerAvions } from './avions.js?v=0.148.2';
+import { CHAR, CHAR_RECHARGE, CHAR_SORTIE } from './data/chars.js?v=0.148.2';
+import { GENIE, GENIE_DATA } from './data/genie.js?v=0.148.2';
+import { filDeDepart, degatsFil } from './fil.js?v=0.148.2';
+import { tirerJoueur } from './tir-joueur.js?v=0.148.2';
+import { creerNids, avancerNids, pourvoirNids, degatsNids, reparerNid, aubeNids } from './nids.js?v=0.148.2';
+import { TOITS, NIDS } from './data/nids.js?v=0.148.2';
+import { BONUS, chevronsDe } from './data/experience.js?v=0.148.2';
 const resiste = reg => 1 - BONUS.regiment.moral * (reg.chev || 0);      // les chevrons d'un régiment adoucissent ses pertes de moral (lot E)
-import { refusGenie, lancerGenie, avancerGenies, degatsGenies, sectionsDeDepart } from './genie.js?v=0.148.1';
-import { refusChar, lancerChar, degatsChars, avancerChars } from './chars.js?v=0.148.1';
-import { METEO, SAISONS, SAISON_DEFAUT, PREVISION_JUSTE, temperature, vent } from './data/meteo.js?v=0.148.1';
-import { SECTEURS } from './data/secteur.js?v=0.148.1';
-import { REGIMENTS, REGIMENTS_GRANDS } from './data/lexique.js?v=0.148.1';
-import { STANCES, STANCE_DEFAUT } from './data/stances.js?v=0.148.1';
-import { DIFFICULTES, DIFFICULTE_DEFAUT } from './data/difficulte.js?v=0.148.1';
-import { grade, departCaracs, caracEnMots } from './identite.js?v=0.148.1';
-import { corvees, creerRegiment, prendreReserve } from './nuit.js?v=0.148.1';
-import { RENFORTS } from './data/renforts.js?v=0.148.1';
-import { EQUIPEMENTS } from './data/batiments.js?v=0.148.1';
-import { campDeDepart, dotationAube, refusOrdre, refusNid, appliquerDepart, modif, rechargeDe, sortieChars, sortieCaserne, entreeHopital, emplacementCamp, patients, renfortsDe } from './camp.js?v=0.148.1';
+import { refusGenie, lancerGenie, avancerGenies, degatsGenies, sectionsDeDepart } from './genie.js?v=0.148.2';
+import { refusChar, lancerChar, degatsChars, avancerChars } from './chars.js?v=0.148.2';
+import { METEO, SAISONS, SAISON_DEFAUT, PREVISION_JUSTE, temperature, vent } from './data/meteo.js?v=0.148.2';
+import { SECTEURS } from './data/secteur.js?v=0.148.2';
+import { REGIMENTS, REGIMENTS_GRANDS } from './data/lexique.js?v=0.148.2';
+import { STANCES, STANCE_DEFAUT } from './data/stances.js?v=0.148.2';
+import { DIFFICULTES, DIFFICULTE_DEFAUT } from './data/difficulte.js?v=0.148.2';
+import { grade, departCaracs, caracEnMots } from './identite.js?v=0.148.2';
+import { corvees, creerRegiment, prendreReserve } from './nuit.js?v=0.148.2';
+import { RENFORTS } from './data/renforts.js?v=0.148.2';
+import { EQUIPEMENTS } from './data/batiments.js?v=0.148.2';
+import { campDeDepart, dotationAube, refusOrdre, refusNid, appliquerDepart, modif, rechargeDe, sortieChars, sortieCaserne, entreeHopital, emplacementCamp, patients, renfortsDe } from './camp.js?v=0.148.2';
 
 export const PAS = 1 / 30;                 // s de jeu par pas
 export const NOUS = 0, EUX = 1;
@@ -60,9 +60,11 @@ const PERIODE_COUTS = R => Math.max(1, Math.round(R.foule.champPeriode / PAS));
 
 // ─── Création ────────────────────────────────────────────────────────────
 
-function chaineMeteo(rng, jours, pluieAuMoins, saison = SAISON_DEFAUT) {
+function chaineMeteo(rng, jours, pluieAuMoins, saison = SAISON_DEFAUT, premierFixe = false) {
   const SA = SAISONS[saison] ?? SAISONS[SAISON_DEFAUT], TR = SA.transitions;
-  const chaine = [SA.depart];
+  // le premier jour est tiré au hasard (Jérôme) : un pas de la chaîne depuis le temps de départ de la saison (`depart`), donc les temps de la saison selon leur poids
+  // `premierFixe` : le premier jour garde le temps de départ de la saison, sans tirage (les tests de règles, qui veulent un jour connu)
+  const chaine = [premierFixe ? SA.depart : rng.weighted(Object.entries(TR[SA.depart]).map(([v, w]) => ({ v, w })))];
   for (let d = 1; d < jours; d++) {
     const tr = TR[chaine[d - 1]];
     chaine.push(rng.weighted(Object.entries(tr).map(([v, w]) => ({ v, w }))));
@@ -103,7 +105,7 @@ export function nouvelleBataille(graine, R, opts = {}) {
   const jours = (S.joursFixes ? 0 : opts.jours) || J.min + Math.floor(hash2(graine | 0, 41, 7) * (J.max - J.min + 1));
   const mission = opts.mission || (S.missions ? S.missions[Math.floor(hash2(graine | 0, 43, 7) * S.missions.length)] : null);
   const saison = opts.saison && SAISONS[opts.saison] ? opts.saison : S.saison;
-  const { chaine, previsions } = chaineMeteo(rng.fork('meteo'), jours, saison ? (SAISONS[saison]?.pluieAuMoins ?? S.pluieAuMoins) : S.pluieAuMoins, saison);
+  const { chaine, previsions } = chaineMeteo(rng.fork('meteo'), jours, saison ? (SAISONS[saison]?.pluieAuMoins ?? S.pluieAuMoins) : S.pluieAuMoins, saison, opts.premierFixe);
   const etat = {
     v: VERSION, graine, graineIdentite: opts.graineIdentite ?? graine, campagne: opts.campagne ?? null, secteur: idSecteur, parCamp, parCampEux,
     secondaires: tirerSecondaires(graine, S.reserves ?? 0),   // les missions secondaires tirées à la graine

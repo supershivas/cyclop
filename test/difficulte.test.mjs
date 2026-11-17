@@ -1,5 +1,6 @@
 // Les niveaux de difficulté d'une partie (v0.70.0) : un profil de données qui ne change que l'adversaire.
-import { nouvelleBataille, avancer, photo, restaurer, effectifs } from '../js/bataille.js';
+import { nouvelleBataille as nouvelleBatailleLibre, avancer, photo, restaurer, effectifs } from '../js/bataille.js';
+const nouvelleBataille = (graine, R, opts = {}) => nouvelleBatailleLibre(graine, R, { premierFixe: true, ...opts });   // le 1er jour est tiré au hasard en jeu : les tests de règles veulent le temps de départ de la saison
 import { empreinteEtat } from '../js/reseau/lockstep.js';
 import { DIFFICULTES, DIFFICULTE_DEFAUT } from '../js/data/difficulte.js';
 import { STANCES } from '../js/data/stances.js';
