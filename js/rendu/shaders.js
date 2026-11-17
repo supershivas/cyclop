@@ -199,7 +199,7 @@ export const fauxMat = {
 export const soldatMat = {
   v: `
       attribute vec3 aPos; attribute float aCamp; attribute float aPart; attribute float aJambe; attribute float aVit; attribute float aBras; attribute vec2 aTir; attribute float aGr; attribute float aGrade; attribute vec2 aVar; attribute float aBless; attribute float aBand;
-      uniform float uT; uniform vec2 uSoleil; uniform float uBalance; uniform vec2 uEch; uniform float uSansOmbre;
+      uniform float uT; uniform vec2 uSoleil; uniform float uBalance; uniform vec2 uEch; uniform float uSansOmbre; uniform float uDemarche;
       varying float vCamp; varying float vPart; varying vec2 vXZ; varying float vLong; varying vec4 vSang;
       void main() {
         // une partie de 10 à 19 n'est dessinée que pour nous, de 20 à 29 que pour en face (casque, moustache : v0.27.0, au labo)
@@ -250,15 +250,26 @@ export const soldatMat = {
           p = vec3(xz.x, 0.03, xz.y);
         }
         vXZ = (p + aPos).xz;
+        // (v0.141.2, les démarches : uDemarche) chacun sa cadence et sa foulée, tirées de son numéro (aVar) ; 1 et 1 sans elles
+        float hd1 = fract(aVar.x * 71.3 + aVar.y * 37.7), hd2 = fract(aVar.x * 13.7 + aVar.y * 91.3);
+        float fq = uDemarche > 0.5 ? 0.88 + 0.24 * hd1 : 1.0, am = uDemarche > 0.5 ? 0.84 + 0.32 * hd2 : 1.0;
         // les jambes qui marchent : un balancement autour de la hanche (0,8 m), selon la vitesse
         if (aJambe != 0.0 && vit > 0.15) {
-          float a = sin(uT * 8.0 + aPos.x * 1.7 + aPos.z * 1.3) * 0.5 * min(1.0, vit) * aJambe;
+          float a = sin(uT * 8.0 * fq + aPos.x * 1.7 + aPos.z * 1.3) * 0.5 * am * min(1.0, vit) * aJambe;
           float y = p.y - 0.8;
           p.z = p.z * cos(a) - y * sin(a);
           p.y = 0.8 + p.z * sin(a) + y * cos(a);
         }
+        // (les démarches) le fusil à deux mains, en travers de la poitrine : la crosse à la hanche droite, le canon vers l'épaule gauche ; les bras avancés pour le tenir (le droit à la crosse, le gauche au fût) ;
+        // pas pour l'officier (le pistolet), au feu retenu, au corps à corps, le bras blessé ; quand il tire, la pose de tir se mêle à celle-ci (plus bas)
+        bool porte = uDemarche > 0.5 && aGrade < 2.5 && aTir.x > -0.5 && !(aBless > 0.5 && aBless < 1.5) && abs(aBras) > 0.5 && !(kp > 0.5 && kp < 1.5);
+        vec3 pAvant = p;
+        if (porte) {
+          if (aBras > 1.5) { vec3 d = p - vec3(0.395 * ech * aVar.x, 1.25 * ech * aVar.y, 0.0); float a = 0.46; p = vec3(-0.05, 1.35, 0.2) + vec3(d.x * cos(a) - d.y * sin(a), d.x * sin(a) + d.y * cos(a), d.z); }
+          else { float a = aBras > 0.0 ? -0.6 : -1.0; vec3 d = p - vec3(0.0, 1.35, 0.0); p = vec3(p.x - aBras * 0.06, 1.35 + d.y * cos(a) - d.z * sin(a), d.y * sin(a) + d.z * cos(a)); }
+        }
         // les bras balancent à la marche, à l'opposé des jambes (le style equipe-marche seulement : uBalance)
-        if (uBalance > 0.5 && vit > 0.15 && abs(aBras) > 0.5 && abs(aBras) < 1.5 && aTir.x < 0.01) {
+        if (uBalance > 0.5 && !porte && vit > 0.15 && abs(aBras) > 0.5 && abs(aBras) < 1.5 && aTir.x < 0.01) {
           float b = -sin(uT * 8.0 + aPos.x * 1.7 + aPos.z * 1.3) * 0.45 * min(1.0, vit) * aBras;
           vec3 d = p - vec3(0.0, 1.35, 0.0);
           p.y = 1.35 + d.y * cos(b) - d.z * sin(b);
@@ -294,12 +305,20 @@ export const soldatMat = {
         float tir = clamp(aTir.x * 2.5, 0.0, 1.0);
         if (tir > 0.0 && !(aPart > 0.5 && aPart < 1.5)) {
           if (aBras != 0.0) {
-            if (aBras > 1.5) p.x -= 0.28 * tir;
-            float a = (aBras > 1.5 ? 1.45 : -1.45) * tir;      // les bras s'avancent vers le bas ; le fusil, lui, bascule vers l'avant par le haut : le canon devant, la crosse à l'épaule (v0.69.0 : il pointait vers l'arrière)
-            vec3 d = p - vec3(0.0, 1.3, 0.0);
-            p.y = 1.3 + d.y * cos(a) - d.z * sin(a);
-            p.z = d.y * sin(a) + d.z * cos(a);
+            vec3 q = porte ? pAvant : p; float tq = porte ? 1.0 : tir;      // (les démarches : la pose de tir entière, mêlée au port d'arme)
+            if (aBras > 1.5) q.x -= 0.28 * tq;
+            float a = (aBras > 1.5 ? 1.45 : -1.45) * tq;      // les bras s'avancent vers le bas ; le fusil, lui, bascule vers l'avant par le haut : le canon devant, la crosse à l'épaule (v0.69.0 : il pointait vers l'arrière)
+            vec3 d = q - vec3(0.0, 1.3, 0.0);
+            q.y = 1.3 + d.y * cos(a) - d.z * sin(a);
+            q.z = d.y * sin(a) + d.z * cos(a);
+            if (porte && aBras > 1.5) q.z += 0.7;      // (les démarches) la crosse à l'épaule : pivoté à 1,30 m de son pied, le fusil passait 75 cm derrière le dos
+            p = porte ? mix(p, q, tir) : q;
           }
+        }
+        // (les démarches) le buste penché en marchant, plus ou moins selon l'homme ; tout sauf les jambes et l'ombre
+        if (uDemarche > 0.5 && vit > 0.15 && aJambe == 0.0 && !(kp > 0.5 && kp < 1.5) && !melee) {
+          float a = (0.03 + 0.12 * hd2) * min(1.0, vit); vec3 d = p - vec3(0.0, 0.8, 0.0);
+          p.y = 0.8 + d.y * cos(a) - d.z * sin(a); p.z = d.y * sin(a) + d.z * cos(a);
         }
         // le cap (aTir.y) : vers sa cible quand il tire, sinon dans le sens où il marche (Jérôme, v0.47.2 : « les soldats avancent en arrière ») ; sa pose seulement
         if (abs(aTir.y) > 0.001 && !(aPart > 0.5 && aPart < 1.5)) {

@@ -3,9 +3,13 @@
 // que `poseJeu` (pose-jeu.js) continue de calculer. Un état de lecteur par homme (le fondu de 0,2 s en a besoin), purgé quand l'homme sort des hommes articulés (`fin`).
 import { nouvelEtat, etatAnimationTab, termine } from '../lecteur-animations.js?v=0.141.1';
 import { ANIMATIONS } from '../data/animations.js?v=0.141.1';
-import { ANIM_JEU, MARCHE_JEU, CANAUX_TIR_EN_MARCHE } from '../data/lecteur-animations.js?v=0.141.1';
+import { ANIM_JEU, MARCHE_JEU, CANAUX_TIR_EN_MARCHE, ALLURES, EPAULEMENT } from '../data/lecteur-animations.js?v=0.141.1';
+import { NOMS_CHAMPS } from '../data/poses-soldat.js?v=0.141.1';
 import { FLOTTANTS } from './pose-jeu.js?v=0.141.1';
 
+
+const I_TORSION = NOMS_CHAMPS.indexOf('torsion');
+const lisse = (a, b, x) => { const k = Math.min(1, Math.max(0, (x - a) / (b - a))); return k * k * (3 - 2 * k); };
 
 // h : { vit, tir (comme soldats.js l'écrit : −1 feu retenu, 0..1 l'épaule, 2..3 la mêlée), coup (le `tirVal` brut : 1 au coup de feu, puis il retombe), tapi, couche, blessure, rang | aspect.rang }
 export function avecAnimation(h) {
@@ -13,9 +17,13 @@ export function avecAnimation(h) {
   return rang >= 2.5 && !(h.tapi > 0) && !(h.couche > 0) && !(h.blessure > 0) && tir > -0.5 && tir < 1.5;
 }
 
-export function creerJeuAnimations({ animations = ANIMATIONS, sortie = new Float32Array(FLOTTANTS) } = {}) {
+// `allures` (v0.141.2, les démarches) : { marche: [noms], repos: [noms] } de js/anim-modeles.js (`allures`), dont les animations sont dans `animations` ; chaque homme joue celles de son numéro,
+// à sa cadence, épaule avant son coup (`h.avant` : les secondes jusqu'au prochain, Infinity s'il n'est pas au feu) et tourne le buste vers sa cible en marchant (`h.vise`, rad). Sans `allures` : le jeu d'avant.
+export function creerJeuAnimations({ animations = ANIMATIONS, allures = null, sortie = new Float32Array(FLOTTANTS) } = {}) {
   const hommes = new Map(), duree = nom => animations.find(a => a.nom === nom).duree;
   const animMarche = duree(ANIM_JEU.marche), animTir = animations.find(a => a.nom === ANIM_JEU.tir);
+  const K = allures ? allures.marche.length : 0, dureesMarche = allures ? allures.marche.map(duree) : null;
+  const nomTir = allures?.tir ?? ANIM_JEU.tir, animTirJoue = animations.find(a => a.nom === nomTir);       // (les démarches : le tir épaulé, la crosse à l'épaule)
   let image = 0;
   return {
     hommes,
@@ -25,17 +33,25 @@ export function creerJeuAnimations({ animations = ANIMATIONS, sortie = new Float
       if (!avecAnimation(h)) { hommes.delete(id); return null; }       // (il n'y aura pas de fondu entre un état animé et un état calculé : la pose y saute)
       let e = hommes.get(id);
       const coup = h.coup ?? 0;
-      if (!e) hommes.set(id, e = { etat: nouvelEtat(), ta: ((Math.imul(id + 1, 2654435761) >>> 0) / 4294967296) * animMarche, t: t, coup, tir: null, vu: 0 });       // (la foulée de départ : un hachage du numéro, pour que la troupe ne marche pas au pas)
+      if (!e) {
+        const u = (Math.imul(id + 1, 2654435761) >>> 0) / 4294967296, k = K ? (Math.imul(id + 7, 2246822519) >>> 0) % K : -1;      // (son allure : un autre hachage de son numéro)
+        hommes.set(id, e = { etat: nouvelEtat(), ta: u * (K ? dureesMarche[k] : animMarche), t: t, coup, tir: null, vu: 0, k,
+          cad: K ? 1 + ALLURES.cadence * (2 * ((Math.imul(id + 13, 3266489917) >>> 0) / 4294967296) - 1) : 1 });       // (la foulée de départ : un hachage du numéro, pour que la troupe ne marche pas au pas)
+      }
       e.vu = image;
       const dt = Math.min(0.25, Math.max(0, t - e.t)); e.t = t;
       const marche = (h.vit ?? 0) > MARCHE_JEU.seuil;
-      if (marche) e.ta += dt * Math.min(MARCHE_JEU.lectureMax, Math.max(MARCHE_JEU.lectureMin, h.vit / MARCHE_JEU.reference));      // la vitesse de lecture suit la vitesse ; `ta` garde la phase quand elle change
-      if (e.tir && termine(animTir, e.tir, t)) e.tir = null;                                       // le tir « qu'on laisse finir » : un coup pendant ce temps n'en relance pas un
-      if (!e.tir && coup > 0.5 && coup - e.coup >= MARCHE_JEU.saut) e.tir = { anim: ANIM_JEU.tir, depart: t, canaux: marche ? CANAUX_TIR_EN_MARCHE : undefined };
+      if (marche) e.ta += dt * e.cad * Math.min(MARCHE_JEU.lectureMax, Math.max(MARCHE_JEU.lectureMin, h.vit / MARCHE_JEU.reference));      // la vitesse de lecture suit la vitesse ; `ta` garde la phase quand elle change
+      if (e.tir && termine(animTirJoue, e.tir, t)) e.tir = null;                                       // le tir « qu'on laisse finir » : un coup pendant ce temps n'en relance pas un
+      if (!e.tir && coup > 0.5 && coup - e.coup >= MARCHE_JEU.saut) e.tir = { anim: nomTir, depart: t, canaux: marche ? CANAUX_TIR_EN_MARCHE : undefined };
+      // (les démarches) il épaule AVANT son coup : l'animation part pour que son recul (à `avance` s de son début) tombe avec le coup de feu
+      if (K && !e.tir && h.avant < EPAULEMENT.avance) e.tir = { anim: nomTir, depart: t - (EPAULEMENT.avance - Math.max(0, h.avant)), canaux: marche ? CANAUX_TIR_EN_MARCHE : undefined };
       e.coup = coup;
-      const couches = [marche ? { anim: ANIM_JEU.marche, cle: 'marche', depart: t - e.ta } : { anim: ANIM_JEU.repos, cle: 'repos', depart: 0 }];
+      const couches = [marche ? { anim: K ? allures.marche[e.k] : ANIM_JEU.marche, cle: 'marche', depart: t - e.ta } : { anim: K ? allures.repos[e.k] : ANIM_JEU.repos, cle: 'repos', depart: 0 }];
       if (e.tir) { e.tir.canaux = marche ? CANAUX_TIR_EN_MARCHE : undefined; couches.push(e.tir); }  // (en marche : les bras et le fusil du tir ; à l'arrêt : tout)
-      sortie.set(etatAnimationTab(e.etat, couches, t, { animations }));       // (les 3 derniers flottants du dernier texel ne servent pas : ils restent à zéro)
+      sortie.set(etatAnimationTab(e.etat, couches, t, { animations }));       // (28 flottants : les 7 texels sont pleins)
+      // (les démarches) il vise en marchant : le buste tourne vers sa cible pendant le tir (la torsion), le temps que le fusil se lève et jusqu'à ce qu'il redescende
+      if (K && e.tir && h.vise) { const tt = t - e.tir.depart; sortie[I_TORSION] += h.vise * lisse(0, 0.2, tt) * (1 - lisse(0.8, 1, tt)); }
       return sortie;
     },
     // Retire les hommes qui n'ont pas été vus depuis `debut` (sortis des plus proches)

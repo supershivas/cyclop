@@ -21,6 +21,7 @@ import { hash2 } from './lib/rng.js?v=0.141.1';
 import { reglerVerdure } from './apparence.js?v=0.141.1';
 import { maquetteChars } from './labo-chars.js?v=0.141.1';
 import { maquetteEpaves } from './labo-epaves.js?v=0.141.1';
+import { maquetteDemarches } from './labo-demarches.js?v=0.141.1';
 import { fondations, boutons, unites, fenetres, revision } from './labo-design-system.js?v=0.141.1';
 import { cartesSecteur } from './labo-cartes.js?v=0.141.1';
 import { calqueEcussons } from './labo-ecussons.js?v=0.141.1';
@@ -165,7 +166,7 @@ function poserColline(B, { dx = 0, dz = 0, r = 22, h = 9 }, cz) {
   }
 }
 
-function moteur(stage, { zoom = 3, pluie = false, gel = false, soldats = 600, cz = 185, camera = null, respiration = undefined, soldat = undefined, cadavre = undefined, morts = 0, effets = undefined, barrages = false, surLesArbres = false, vue = null, verdure = undefined, nuit = null, tombee = false, calque = null, bord = null, centre = null, finesse = 1, biseau = false, cratere = null, arbres = undefined, saison = null, jours = undefined, versLesArbres = false, buissons = undefined, versLesBuissons = false, lumiere = null, colline = null, journee = null, grades = undefined, parade = false, boue = null, variete = undefined } = {}) {
+function moteur(stage, { zoom = 3, pluie = false, gel = false, soldats = 600, cz = 185, camera = null, respiration = undefined, soldat = undefined, cadavre = undefined, morts = 0, effets = undefined, barrages = false, surLesArbres = false, vue = null, verdure = undefined, nuit = null, tombee = false, calque = null, bord = null, centre = null, finesse = 1, biseau = false, cratere = null, arbres = undefined, saison = null, jours = undefined, versLesArbres = false, buissons = undefined, versLesBuissons = false, lumiere = null, colline = null, journee = null, grades = undefined, parade = false, boue = null, variete = undefined, demarches = undefined, suivreMarche = false } = {}) {
   reglerVerdure(verdure);                                   // le sol vert (apparence.js) : avant que le sol ne se peigne
   const boite = el('div'); boite.style.cssText = 'position:relative;width:100%;height:min(70vh,560px);overflow:hidden';
   const canvas = el('canvas'); canvas.style.cssText = 'position:absolute;left:0;top:0;image-rendering:pixelated';
@@ -234,6 +235,7 @@ function moteur(stage, { zoom = 3, pluie = false, gel = false, soldats = 600, cz
     if (nuit) rendu.styleNuit = nuit;
     rendu.finesse = finesse;
     if (boue != null) rendu.boueSoldats = boue;
+    if (demarches !== undefined) rendu.demarches = demarches;
     if (variete !== undefined) { rendu.varieteSoldats = variete; rendu.boueSoldats = BOUE_SOLDATS; rendu.sangSoldats = SANG.force; }      // (la variété se juge sur les soldats du jeu : sales)
     rendu.biseau = biseau;
     rendu.redimensionner();
@@ -278,6 +280,7 @@ function moteur(stage, { zoom = 3, pluie = false, gel = false, soldats = 600, cz
     const boucle = now => {
       const dt = Math.min(0.1, (now - t) / 1000); t = now;
       // des obus réguliers au milieu de la vue, pour voir les effets
+      if (suivreMarche) { const A = B.armee; let n = 0, sx = 0, sy = 0; for (let i = 0; i < A.n; i++) if (A.camp[i] === 0 && A.vx[i] * A.vx[i] + A.vy[i] * A.vy[i] > 0.09) { n++; sx += A.x[i]; sy += A.y[i]; } if (n > 20) { rendu.vue.cx += (sx / n - rendu.vue.cx) * 0.2; rendu.vue.cz += (sy / n - rendu.vue.cz) * 0.2; } }      // (les démarches) la vue suit les hommes qui marchent
       if (barrages && (tBarrage -= dt) < 0) {
         tBarrage = 3.5;
         const cal = ['155', '75', '220'][kBarrage++ % 3];
@@ -476,6 +479,12 @@ const GROUPES = [
     ] },
   ] },
   { id: 'soldats', title: 'Soldats', topics: [
+    { id: 'demarches', title: 'Les démarches et le tir en marchant', variants: [
+      { title: 'De près : les démarches d\'avant', status: 'actuelle', note: "Le jeu tel qu'il est, de 12 px/m à 32 : tous les hommes ont la même marche (une foulée de quatre images, le buste raide, les épaules fixes), seul le départ de la foulée change ; quand l'un tire, il se tourne tout entier vers sa cible et lève son fusil au moment de l'éclair. Le défilé : six hommes traversent la plaine de profil, chacun tire toutes les 2,5 à 4,5 s.", render: s => maquetteDemarches(s, { allures: false }) },
+      { title: 'De près : une allure par homme, l\'épaulement', status: 'a-trancher', depuis: '0.141.2', note: "PROPOSITION (Jérôme, 17 nov. : « des démarches plus réalistes : mouvement des épaules et des hanches, appui sur une jambe plus l'autre, fusil dans les deux mains ; chaque soldat a une démarche différente en fonction de sa graine » ; « des tirs avec épaulement depuis la marche »). Vingt-quatre allures : chacune sa foulée, sa cadence, son genou, son buste plus ou moins penché, son rebond, le poids reporté sur la jambe qui porte, les épaules qui tournent contre les hanches, une jambe qui fait un plus grand pas, sa façon de tenir le fusil à deux mains ; au repos, le poids sur une jambe. Chaque homme prend celle de son numéro, et une cadence à lui. Le tir : il épaule un quart de seconde AVANT le coup (le recul tombe avec l'éclair), continue de marcher, le buste tourné vers sa cible si elle est à moins de 50° de sa marche, puis rebaisse le fusil. Le dessin seulement : aucune règle ne change.", render: s => maquetteDemarches(s, { allures: true }) },
+      { title: 'Les silhouettes d\'avant (6 px/m)', note: "Le jeu tel qu'il est, de 6 à 8 px/m : le fusil en bandoulière le long du flanc, les bras qui balancent, tous les hommes au même rythme ; quatre régiments marchent.", render: s => moteur(s, { zoom: 4, suivreMarche: true, demarches: false }) },
+      { title: 'Les silhouettes : le fusil à deux mains, chacun son pas', status: 'a-trancher', depuis: '0.141.2', note: "PROPOSITION. De 6 à 8 px/m (là où le joueur passe le plus de temps) : le fusil tenu à deux mains en travers de la poitrine, chacun sa cadence (±12 %), sa foulée et son buste penché ; au tir, il épaule avant le coup et garde son cap de marche si sa cible est à moins de 30°. Les mouvements de quelques centimètres (épaules, hanches, rebond) ne s'y voient pas : ils ne sont que de près.", render: s => moteur(s, { zoom: 4, suivreMarche: true, demarches: true }) },
+    ] },
     { id: 'variete-soldats', title: 'Des soldats tous différents', variants: [
       { title: 'Tous différents, des hommes assis dans la tranchée', status: 'actuelle', depuis: '0.141.1', note: "En jeu (Jérôme, 16 nov., v0.141.1). Chaque homme, selon son numéro : un uniforme un peu plus clair ou plus sombre, un regard qui s'écarte de l'ennemi au repos, une place à 25 cm près dans le rang ; et dans une tranchée trois hommes sur dix s'assoient, le dos au parapet, les jambes allongées, quand ils n'ont ni peur ni blessure et n'ont pas tiré depuis huit secondes ; ils se relèvent pour tirer, marcher ou se battre. De très près (12 pixels par mètre et plus) ils sont accroupis : la pose assise des soldats articulés reste à faire.", render: s => moteur(s, { zoom: 4, variete: VARIETE_SOLDATS }) },
       { title: 'Tous pareils', status: 'ancienne', note: "Le jeu d'avant la v0.141.1 : dans un régiment au repos, chaque homme a la même teinte, regarde exactement vers l'ennemi et tient sa place au centimètre ; dans la tranchée, tous debout.", render: s => moteur(s, { zoom: 4, variete: null }) },

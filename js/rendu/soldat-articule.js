@@ -196,7 +196,7 @@ export const VERT = `
   attribute float aPart; attribute float aOs; attribute float aShow; attribute vec3 aNor;
   attribute vec3 aPos; attribute float aCamp; attribute float aWound; attribute vec4 aCap; attribute float aGrade;
   attribute vec4 aPose; attribute vec4 aBody; attribute vec4 aLook; attribute vec4 aLook2;
-  uniform float uShade; uniform float uVoir; uniform float uLibre; uniform float uP[25]; uniform float uTex; uniform sampler2D uPoses;
+  uniform float uShade; uniform float uVoir; uniform float uLibre; uniform float uP[28]; uniform float uTex; uniform sampler2D uPoses;
   varying float vPart; varying float vCamp; varying vec2 vFace; varying float vShade; varying vec4 vLook; varying vec4 vLook2; varying vec2 vMonde; varying float vBas; varying vec4 vSang; varying float vSangH;
   float sl, st, wd, vt;
   // un angle de la pose libre : dans la texture des poses (le jeu : une ligne par homme, lue par l'indice d'instance, 4 champs par texel) ou dans uP (l'atelier)
@@ -311,6 +311,9 @@ export const VERT = `
     bool haut = b < 5.5 || b > 11.5;
     if (haut) p = rx(p, hanche, lean);
     if ((melee || libre) && haut && !(b > 11.5 && b < 12.5)) p.z += (libre ? P(19) : 0.2 * pouss) * max(0.0, p.y - 0.6);      // le buste part avec la poussée
+    // (v0.141.2) la démarche : le haut tourné contre les hanches, penché de côté, puis le poids reporté sur une jambe (les pieds restent, la hanche glisse) ; mêmes rotations que cadre de js/pose-soldat.js
+    if (libre && haut) { if (abs(P(25)) > 0.00001) p = ry(p, hanche, P(25)); if (abs(P(26)) > 0.00001) p = rz(p, hanche, P(26)); }
+    if (libre && abs(P(27)) > 0.00001) p.x += P(27) * clamp(p.y / hanche.y, 0.0, 1.0);
     p.y -= libre ? P(18) : 0.44 * tapi + (genou ? 0.42 : 0.0);
     // couché sur le dos, la tête vers l'arrière
     if (couche > 0.5) { p = rx(p, vec3(0.0), 1.5708); p.y += 0.16; }
@@ -448,7 +451,7 @@ export function creerSoldatArticule(THREE, col, { complet = false, ombrage = 0, 
         uNous: { value: col('n') }, uEux: { value: col('x') }, uOmbre: { value: col('t') }, uSel: { value: col('o') }, uJambes: { value: col('s') }, uBois: { value: col('t') }, uToile: { value: col('g') },
         uCuir: { value: col('b') }, uBotte: { value: col('t') }, uMetal: { value: col('r') }, uTrait: { value: col('s') },
         uPeau: { value: ['o', 'r', 'g'].map(col) }, uMarque: { value: ['g', 'g', 'b'].map(col) }, uCh: { value: ['t', 's', 'b', 'g', 'r'].map(col) },
-        uShade: { value: ombrage }, uVoir: { value: filtre ? 0 : 1 }, uLibre: { value: 0 }, uP: { value: new Array(25).fill(0) }, uTex: { value: 0 }, uPoses: { value: null }, uAlpha: { value: 1 },
+        uShade: { value: ombrage }, uVoir: { value: filtre ? 0 : 1 }, uLibre: { value: 0 }, uP: { value: new Array(28).fill(0) }, uTex: { value: 0 }, uPoses: { value: null }, uAlpha: { value: 1 },
         uSol: partages.uSol ?? { value: null }, uBoue: partages.uBoue ?? { value: 0 }, uMouille: partages.uMouille ?? { value: 0 }, uSang: partages.uSang ?? { value: 0 }, uVarTon: partages.uVarTon ?? { value: 0 }, uSangCell: partages.uSangCell ?? { value: 0.11 }, uSangCoul: partages.uSangCoul ?? { value: new THREE.Color(0) },
         ...(partages.uAO ? { uAO: partages.uAO, uAOon: partages.uAOon, uSunOn: partages.uSunOn, uAbriOn: partages.uAbriOn, uTaille: partages.uTaille } : { uAO: { value: null }, uAOon: { value: 0 }, uSunOn: { value: 0 }, uAbriOn: { value: 0 }, uTaille: { value: new THREE.Vector2(1, 1) } }),
       },

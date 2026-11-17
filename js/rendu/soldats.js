@@ -6,6 +6,9 @@ import { creerGeometries } from './geometries.js?v=0.141.1';
 import { classeDuRang } from '../data/grades.js?v=0.141.1';
 import { creerEquipeArticulee } from './soldat-articule.js?v=0.141.1';
 import { creerJeuAnimations } from './animation-jeu.js?v=0.141.1';
+import { allures } from '../anim-modeles.js?v=0.141.1';
+import { ANIMATIONS } from '../data/animations.js?v=0.141.1';
+import { EPAULEMENT } from '../data/lecteur-animations.js?v=0.141.1';
 import { SANG } from '../data/aspect-soldat.js?v=0.141.1';
 import { ligneY } from '../tranchees.js?v=0.141.1';
 
@@ -40,7 +43,14 @@ export function creerSoldats({ THREE, scene, col, solUniforms, styleSoldat, grad
   // et les galons de `aspect` (js/aspect-soldat.js) ; ils quittent les tampons des soldats équipés (et des gradés, des pansements) : un homme n'est dessiné qu'une fois. Créés au premier besoin (un objet de plus
   // décale les tirages d'identifiants de three, donc les images de référence). `aspectDe(B, id, camp)` : l'aspect d'un homme (main.js : son numéro de campagne, la graine d'identité, son âge et son rang) ; gardé par numéro.
   let artCfg = null, aspectDe = null, EQ = null, EQs = { moyen: null, fin: null }, artSel = null, candI = null, candD = null, artVus = 0, animJeu = null, listeAnim = null;
-  const refaireAnim = () => { animJeu = artCfg && artCfg.texture !== false && artCfg.animations !== false ? creerJeuAnimations(listeAnim ? { animations: listeAnim } : {}) : null; };
+  // (v0.141.2) les démarches : une allure par homme (js/anim-modeles.js, générées une fois, au premier besoin), l'épaulement avant le coup, le buste qui vise ; `uDemarche` pour les silhouettes
+  let demarches = false, lesAllures = null;
+  const refaireAnim = () => {
+    if (demarches) lesAllures ??= allures();
+    const liste = demarches ? [...(listeAnim ?? ANIMATIONS), ...lesAllures.animations] : listeAnim;
+    animJeu = artCfg && artCfg.texture !== false && artCfg.animations !== false ? creerJeuAnimations({ ...(liste ? { animations: liste } : {}), ...(demarches ? { allures: lesAllures } : {}) }) : null;
+  };
+  const lisse01 = x => { const k = x < 0 ? 0 : x > 1 ? 1 : x; return k * k * (3 - 2 * k); };
   const aspects = new Map(), hArt = { x: 0, y: 0, z: 0, camp: 0, vit: 0, tir: 0, tapi: 0, couche: 0, blessure: 0, cap: 0, temps: 0, aspect: null, coup: 0, pose: null };
   let cap = 0, posArr = null, campArr = null, vitArr = null, tirArr = null, soldatsInst = null, soldatsDetail = null, soldatsLeger = null, soldatsPoints = null, attrsI = null, attrsP = null;
   const VARIATION = { taille: 0.07, largeur: 0.14 };      // la taille (±7 %) et la largeur (±14 %) d'un homme autour de la boîte de référence : le dessin seulement (Jérôme, v0.69.0)
@@ -57,7 +67,7 @@ export function creerSoldats({ THREE, scene, col, solUniforms, styleSoldat, grad
       uSol: solUniforms.uSol, uTaille: solUniforms.uTaille,
       uAO: solUniforms.uAO, uAOon: solUniforms.uAOon, uSunOn: solUniforms.uSunOn, uAbriOn: solUniforms.uAbriOn,      // la lumière du sol lue à la place de l'homme (session 2 : éteinte)
       uBoue: solUniforms.uBoue ?? { value: 0 }, uMouille: solUniforms.uMouille ?? { value: 0 },
-      uVarTon: { value: 0 }, uSang: { value: 0 }, uSangCell: { value: SANG.cellule }, uSangCoul: { value: new THREE.Color(SANG.couleur) },      // le sang (éteint tant que `setSang` ne l'allume pas)      // la boue sur les hommes (labo : éteinte)
+      uDemarche: { value: 0 }, uVarTon: { value: 0 }, uSang: { value: 0 }, uSangCell: { value: SANG.cellule }, uSangCoul: { value: new THREE.Color(SANG.couleur) },      // le sang (éteint tant que `setSang` ne l'allume pas)      // la boue sur les hommes (labo : éteinte)
       uSoleil: { value: new THREE.Vector2(0.5, 0.6) } },
     vertexShader: SH.soldatMat.v,
     fragmentShader: SH.soldatMat.f,
@@ -388,6 +398,18 @@ export function creerSoldats({ THREE, scene, col, solUniforms, styleSoldat, grad
       let d = (marche ? Math.atan2(vx, vz) : repos) - CAPS[id]; d -= Math.round(d / (2 * Math.PI)) * 2 * Math.PI;
       CAPS[id] += d * (marche ? 0.3 : 0.1);
       tirArr[k * 2 + 1] = i < tirVal.length && tirVal[i] > 0 ? tirAng[i] : CAPS[id];
+      // (les démarches) l'épaulement : il lève le fusil AVANT son coup (le compte à rebours de l'armée, `tirT`, s'il est au feu), le tient `tenue` s, le baisse ; en marchant il garde son cap de marche
+      // si sa cible est assez près de lui (les articulés tournent le buste vers elle : `vise`) ; le dessin seulement, `tirT` n'est que lu
+      const tv = i < tirVal.length ? tirVal[i] : 0;
+      let avant = Infinity, vise = 0;
+      if (demarches && !A.duel[i] && tirArr[k * 2] >= 0) {
+        if (tv > 0) TIR_T[id] = tAnim;
+        if (tAnim - TIR_T[id] < EPAULEMENT.engage && tAnim >= TIR_T[id]) avant = A.tirT[i];
+        if (marche && tv > 0) { let dv = tirAng[i] - CAPS[id]; dv -= Math.round(dv / (2 * Math.PI)) * 2 * Math.PI; if (Math.abs(dv) <= EPAULEMENT.vise) vise = dv; if (Math.abs(dv) <= EPAULEMENT.viseSilhouette) tirArr[k * 2 + 1] = CAPS[id]; }
+        let w = tv > 0 ? 1 - lisse01(((1 - tv) / 1.6 - EPAULEMENT.tenue) / EPAULEMENT.baisse) : 0;      // (`tirVal` vaut 1 au coup et perd 1,6 par seconde : eclats.js)
+        if (avant < EPAULEMENT.avance) w = Math.max(w, lisse01(1 - avant / EPAULEMENT.avance));
+        tirArr[k * 2] = w / 2.5;
+      }
       // au corps à corps (army.js, `duel`) : face à son adversaire, la baïonnette part par à-coups (une phase par homme : les deux ne frappent pas ensemble) ; le dessin seulement
       if (A.duel[i]) { const ph = Math.sin(tAnim * 4.6 + id * 1.7); tirArr[k * 2] = -2 - (ph > 0 ? ph * ph : 0); tirArr[k * 2 + 1] = A.duelAng[i]; }
       // sa taille et sa largeur : un hachage de son numéro (le dessin seulement, rien de sauvegardé), de ±7 % en hauteur et ±14 % en largeur ; même numéro, même homme
@@ -428,8 +450,8 @@ export function creerSoldats({ THREE, scene, col, solUniforms, styleSoldat, grad
         hArt.x = posArr[k * 3]; hArt.y = posArr[k * 3 + 1]; hArt.z = posArr[k * 3 + 2]; hArt.camp = campArr[k];
         hArt.vit = v < 0 ? 0 : v; hArt.tapi = v < 0 ? 1 : 0;
         hArt.tir = tx > 0 ? Math.min(1, tx * 2.5) : tx <= -2 ? -tx : tx < -0.5 ? -1 : 0;       // (−1 le feu retenu : le fusil baissé ; de 2 à 3 la mêlée : 2 + la poussée, tourné vers l'adversaire : `aTir` du soldat équipé)
-        hArt.cap = tirArr[k * 2 + 1]; hArt.blessure = A.blessure[i]; hArt.sang = nSang; hArt.aspect = c.a; hArt.temps = tAnim;
-        hArt.coup = tx > 0 ? tx : 0; hArt.pose = animJeu ? animJeu.pose(A.id[i], hArt, tAnim) : null;       // la marche, le repos et le tir viennent du lecteur d'animations (null : poseJeu)
+        hArt.cap = demarches && vise ? CAPS[id] : tirArr[k * 2 + 1]; hArt.vise = demarches ? vise : 0; hArt.avant = avant; hArt.blessure = A.blessure[i]; hArt.sang = nSang; hArt.aspect = c.a; hArt.temps = tAnim;
+        hArt.coup = demarches ? tv : tx > 0 ? tx : 0; hArt.pose = animJeu ? animJeu.pose(A.id[i], hArt, tAnim) : null;       // la marche, le repos et le tir viennent du lecteur d'animations (null : poseJeu)
         EQ.ajouter(hArt);
         continue;
       }
@@ -483,6 +505,7 @@ export function creerSoldats({ THREE, scene, col, solUniforms, styleSoldat, grad
     sansOmbre(v) { soldatMat.uniforms.uSansOmbre.value = v ? 1 : 0; for (const E of Object.values(EQs)) if (E && v) E.meshes[0].visible = false; },                       // la carte d'ombre remplace l'ombre au sol en quadrilatère
     soleilUniform: soldatMat.uniforms.uSoleil,                    // le bout de l'ombre d'un mètre de hauteur (temps.js le règle, le nuanceur le lit)
     setTemps(t) { soldatMat.uniforms.uT.value = t; },
+    setDemarches(v) { demarches = !!v; soldatMat.uniforms.uDemarche.value = demarches ? 1 : 0; refaireAnim(); },      // les démarches (labo ; false : celles d'avant)
     setVariete(v) { variete = v || null; soldatMat.uniforms.uVarTon.value = v ? v.ton : 0; FX.fill(1e9); },      // la variété des soldats (null : tous pareils)
     setSang(v) { soldatMat.uniforms.uSang.value = Math.max(0, Math.min(1, +v || 0)); },      // la force des taches de sang (0 : aucune)             // les jambes qui marchent
     preparer(B) { CAPS.fill(NaN); SANGS.fill(0); tSang = 0; TIR_T.fill(-1e9); FX.fill(1e9); preparerSoldats(B.armee.capacite); preparerCorps(Math.max(1024, B.etat.corps.length * 2)); preparerTombes(Math.max(256, (B.etat.tombes?.length || 0) * 2)); },

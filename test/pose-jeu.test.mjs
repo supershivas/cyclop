@@ -8,10 +8,10 @@ const base = { vit: 0, tir: 0, tapi: 0, couche: 0, blessure: 0, rang: 6 };
 const proche = (a, b) => Math.abs(a - b) < 1e-5;
 
 group('pose du jeu — texture de poses');
-test('7 texels de 4 flottants, 25 champs utilisés', () => {
+test('7 texels de 4 flottants, 28 champs utilisés', () => {
   assert.equal(TEXELS * 4, FLOTTANTS);
   assert.equal(poseJeu(base, 0, 1).length, FLOTTANTS);
-  assert.equal(NOMS_CHAMPS.length, 25);
+  assert.equal(NOMS_CHAMPS.length, 28);
 });
 test('la marche, le tir, l\'accroupi, le feu retenu, la mêlée et le couché redonnent poseDe, champ par champ', () => {
   const sph = Math.sin(1.1), cph = Math.cos(1.1);

@@ -61,3 +61,28 @@ test('les modèles sont des animations valides, et leur miroir (gaucher) met le 
   assert.ok(dist(articulations(p).mainD.pos, pointFusil(p, CARRURE_NEUTRE, PORT_ARME.mainGauche)) < 0.01, 'et sa main droite sur le fût');
 });
 function NOMS_OK(p) { return Object.values(p).every(Number.isFinite); }
+
+group('modèles — les démarches (v0.141.2)');
+import { allures, allure, tirEpaule } from '../js/anim-modeles.js';
+import { ALLURES, TIR_EPAULE } from '../js/data/lecteur-animations.js';
+test('chaque allure garde les deux mains sur le fusil tout au long de la foulée et au repos (à 1 cm), les pieds sur le sol', () => {
+  const A = allures();
+  assert.equal(A.marche.length, ALLURES.nombre); assert.equal(A.repos.length, ALLURES.nombre);
+  for (const an of A.animations.filter(a => a.nom !== A.tir)) for (let k = 0; k < 24; k++) {
+    const p = echantillon(an, k * an.duree / 24), J = articulations(p);
+    for (const [g, y] of [['D', PORT_ARME.mainDroite], ['G', PORT_ARME.mainGauche]]) assert.ok(dist(J['main' + g].pos, pointFusil(p, CARRURE_NEUTRE, y)) < 0.01, `${an.nom} ${k} main ${g}`);
+    assert.ok(Math.min(J.piedG.pos[1], J.piedD.pos[1]) > -0.06, `${an.nom} ${k} : un pied sous le sol`);
+  }
+});
+test('les allures sont différentes les unes des autres (cadence, foulée, buste, la jambe d\'appui au repos), et la même pour un même rang', () => {
+  const v = Array.from({ length: ALLURES.nombre }, (_, n) => allure(n));
+  for (const c of ['periode', 'foulee', 'buste', 'torsion']) assert.ok(new Set(v.map(a => a[c].toFixed(4))).size >= ALLURES.nombre - 2, c);
+  assert.ok(v.some(a => a.repos.cote < 0) && v.some(a => a.repos.cote > 0), 'des deux jambes');
+  assert.deepEqual(allure(5), allure(5));
+});
+test('le tir épaulé : la crosse au creux de l\'épaule droite, le canon droit devant, les deux mains sur le fusil', () => {
+  const an = tirEpaule(), p = echantillon(an, 0.5), J = articulations(p), c = pointFusil(p, CARRURE_NEUTRE, 0.55), b = pointFusil(p, CARRURE_NEUTRE, 1.95);
+  assert.ok(dist(c, J.epauleD.pos) < 0.2, `crosse à ${dist(c, J.epauleD.pos)} m de l'épaule`);
+  assert.ok(b[2] - c[2] > 1.2 && Math.abs(b[0] - c[0]) < 0.05 && Math.abs(b[1] - c[1]) < 0.15, `canon ${b.map(x => x.toFixed(2))}`);
+  for (const [g, y] of [['D', TIR_EPAULE.mainDroite], ['G', TIR_EPAULE.mainGauche]]) assert.ok(dist(J['main' + g].pos, pointFusil(p, CARRURE_NEUTRE, y)) < 0.01, `main ${g}`);
+});

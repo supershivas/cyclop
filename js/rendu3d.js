@@ -143,7 +143,7 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
   // Les ombres du relief (labo « La lumière dans le relief », éteintes dans le jeu) : une case que le soleil ne voit pas prend la couleur de sa paroi dans la texture du sol ; le soleil du labo : saisons, azimut
   let ombresRelief = false, ombresNuages = false, soleilReglage = null, ombreVu = null;
   const ombres = creerOmbresRelief({ hauteurQ });
-  let boueSoldats = 0, sangSoldats = 0, varieteSoldats = null, eauSol = false, eauTex = null, eauVu = -1, eauDe = null, ombresCarte = false, sombreVu = 0, fum = null, lampesSol = null, ombresSolCachees = false, omRT = null, omCam = null, omInv = null, omInfo = null, aoSol = false, soleilSol = false, abrisSol = false, flaquesSol = false, flaque = 0, aoTex = null, aoAttente = 0, aoSale = false;      // l'ouverture au ciel du relief (éteinte : `rendu.aoSol`) ; sa texture n'est créée qu'au premier besoin (un objet de plus d'emblée décale les tirages d'identifiants de three : les images de référence)
+  let boueSoldats = 0, sangSoldats = 0, varieteSoldats = null, demarchesSoldats = false, eauSol = false, eauTex = null, eauVu = -1, eauDe = null, ombresCarte = false, sombreVu = 0, fum = null, lampesSol = null, ombresSolCachees = false, omRT = null, omCam = null, omInv = null, omInfo = null, aoSol = false, soleilSol = false, abrisSol = false, flaquesSol = false, flaque = 0, aoTex = null, aoAttente = 0, aoSale = false;      // l'ouverture au ciel du relief (éteinte : `rendu.aoSol`) ; sa texture n'est créée qu'au premier besoin (un objet de plus d'emblée décale les tirages d'identifiants de three : les images de référence)
   const ao = creerAOSol({ hauteurQ });
   const soleilCase = { x: 0, z: 0 }, ecriture = { ms: 0, n: 0, rangees: 0, max: 0, maxOmbre: 0 };      // mesure : la réécriture de la texture du sol
   let B = null, T = null, faux = null, fauxU = null;
@@ -913,6 +913,8 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
     set eclairage(v) { eauSol = v !== 'bas'; soleilSol = aoSol = true; abrisSol = flaquesSol = v === 'moyen' || v === 'haut'; ombresCarte = v === 'haut'; temps.eclairs = ombresCarte; },
     get ombresCarte() { return ombresCarte; },
     set ombresCarte(v) { ombresCarte = !!v; },                        // la carte d'ombre des soldats sur le sol (session 3 ; éteinte)
+    get demarches() { return demarchesSoldats; },
+    set demarches(v) { demarchesSoldats = !!v; soldats.setDemarches(demarchesSoldats); },      // (labo) des démarches différentes pour chaque homme, le fusil à deux mains, l'épaulement avant le coup (data/lecteur-animations.js : ALLURES, EPAULEMENT)
     get varieteSoldats() { return varieteSoldats; },
     set varieteSoldats(v) { varieteSoldats = v || null; soldats.setVariete(varieteSoldats); },      // (labo) la variété des soldats : le ton, le cap au repos, la place dans le rang, des hommes assis dans la tranchée (VARIETE_SOLDATS ; null : tous pareils)
     get sangSoldats() { return sangSoldats; },

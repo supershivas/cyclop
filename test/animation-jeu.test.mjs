@@ -126,3 +126,21 @@ test('le jeu joue l\'animation publiée : un tir de 2 s dure 2 s', () => {
   vers(j, 1, {}, 1.5); assert.ok(j.hommes.get(1).tir, 'encore en cours à 1,4 s');
   vers(j, 1, {}, 2.2); assert.equal(j.hommes.get(1).tir, null);
 });
+
+group('animations du jeu — les démarches (v0.141.2)');
+import { allures } from '../js/anim-modeles.js';
+import { EPAULEMENT } from '../js/data/lecteur-animations.js';
+test('chaque homme marche à son allure ; il épaule avant son coup ; le buste tourne vers sa cible pendant le tir', () => {
+  const A = allures(), j = creerJeuAnimations({ animations: [...ANIMATIONS, ...A.animations], allures: A });
+  const poses = [1, 2, 3, 4].map(id => vers(j, id, { vit: 1 }, 0.3));
+  assert.ok(new Set(poses.map(v => champ(v, 'hancheG').toFixed(3))).size >= 3, 'des foulées différentes');
+  assert.ok(poses.some(v => Math.abs(champ(v, 'torsion')) > 0.005), 'les épaules tournent en marchant');
+  // l'épaulement : à 0,1 s du coup, le fusil est déjà levé (le recul de l'animation tombe avec le coup)
+  const k = creerJeuAnimations({ animations: [...ANIMATIONS, ...A.animations], allures: A });
+  // (le tir part à 0,1 s, 0,16 s avant le coup ; le fondu de 0,2 s fini, à 0,35 s, le fusil est à l'épaule, alors que le coup n'est tombé qu'à 0,26 s)
+  vers(k, 9, { vit: 1, avant: 1 }, 0); vers(k, 9, { vit: 1, avant: EPAULEMENT.avance - 0.1 }, 0.1); const leve = vers(k, 9, { vit: 1, avant: 9, coup: 1 }, 0.35);
+  const l = creerJeuAnimations({ animations: [...ANIMATIONS, ...A.animations], allures: A }); vers(l, 9, { vit: 1, avant: 9 }, 0); vers(l, 9, { vit: 1, avant: 9 }, 0.1); const libre = vers(l, 9, { vit: 1, avant: 9 }, 0.35);
+  assert.ok(Math.abs(champ(leve, 'fusil') - champ(libre, 'fusil')) > 0.3, `fusil ${champ(leve, 'fusil')} contre ${champ(libre, 'fusil')}`);
+  const vise = vers(k, 9, { vit: 1, avant: 9, coup: 1, vise: 0.6 }, 0.6), sans = vers(l, 9, { vit: 1, avant: 9, coup: 0 }, 0.6);
+  assert.ok(champ(vise, 'torsion') - champ(sans, 'torsion') > 0.3, `torsion ${champ(vise, 'torsion')}`);
+});

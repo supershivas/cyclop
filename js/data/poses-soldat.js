@@ -22,6 +22,9 @@ export const CHAMPS = {
   couche: [0, 1],              // 0 debout, 1 couché sur le dos (le nuanceur lit « plus de 0,5 »)
   // le fusil, en plus (v0.113.2) : sa hauteur, puis deux rotations après la flexion (le lacet : la visée à gauche ou à droite quand il est à l'horizontale ; le roulis : l'inclinaison de côté)
   fusilH: D, fusilLacet: R, fusilRoulis: R,
+  // la démarche (v0.141.2) : le haut du corps tourné contre les hanches (autour de y, à la hanche : l'épaule droite avance quand la jambe gauche avance), penché de côté (autour de z, à la hanche),
+  // et le poids reporté sur une jambe (le corps glisse de côté, les pieds restent : 0 aux chevilles, entier à la hanche ; en mètres)
+  torsion: R, roulis: R, appui: D,
 };
 export const NOMS_CHAMPS = Object.keys(CHAMPS);
 
@@ -58,12 +61,13 @@ export const COURBES = {
 export const COURBE_INVERSE = { entree: 'sortie', sortie: 'entree', ressort: 'doux', rebond: 'doux' };
 // Les groupes de champs (« canaux ») : copier, coller ou animer une partie du corps seulement
 export const CANAUX = {
-  corps: ['buste', 'tete', 'descente', 'poussee', 'basques', 'couche'],
+  corps: ['buste', 'tete', 'descente', 'poussee', 'basques', 'couche', 'appui'],
+  epaules: ['torsion', 'roulis'],
   jambeG: ['hancheG', 'genouG', 'chevilleG'], jambeD: ['hancheD', 'genouD', 'chevilleD'],
   brasG: ['epauleG', 'coudeG', 'convG'], brasD: ['epauleD', 'coudeD', 'convD'],
   fusil: ['fusil', 'fusilLacet', 'fusilRoulis', 'fusilX', 'fusilH', 'fusilZ', 'fusilY'],
 };
-export const NOMS_CANAUX = { corps: 'Corps', jambeG: 'Jambe gauche', jambeD: 'Jambe droite', brasG: 'Bras gauche', brasD: 'Bras droit', fusil: 'Fusil' };
+export const NOMS_CANAUX = { corps: 'Corps', epaules: 'Épaules', jambeG: 'Jambe gauche', jambeD: 'Jambe droite', brasG: 'Bras gauche', brasD: 'Bras droit', fusil: 'Fusil' };
 
 // Les blessures du jeu (le nuanceur de js/rendu/soldat-articule.js les posait ainsi avant la texture de poses) : un homme blessé à la jambe qui ne marche plus (vit < 0,15) met un genou à terre,
 // celui qui l'est au bras gauche le serre contre le ventre, à la tête il la baisse
