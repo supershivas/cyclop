@@ -2,15 +2,15 @@
 // et « le feu se voit » (Jérôme, v0.9.2 : l'éclair à la bouche du fusil et le trait vers la cible de chaque tir de `B.tirs`, la pose des tireurs, le bond de ceux que
 // le souffle jette). Une seule fabrique : tous tirent dans le même générateur de l'aspect (`alea`, une suite à graine : l'ordre des tirages fait l'image) et
 // dans les mêmes tampons de particules. Le dessin seulement : jamais la logique, jamais la partie.
-import * as SH from './shaders.js?v=0.141.4';
-import { INDICE } from '../palette.js?v=0.141.4';
-import { horloge } from '../bataille.js?v=0.141.4';
-import { hash2 } from '../lib/rng.js?v=0.141.4';
-import { ARBRES_TIRAGES, ARBRES_COUCHE } from '../data/arbres.js?v=0.141.4';
-import { MOTTES, FEU } from '../data/effets.js?v=0.141.4';
-import { OMBRE } from '../apparence.js?v=0.141.4';
-import { creerMottes } from './mottes.js?v=0.141.4';
-import { creerFlammes } from './flammes.js?v=0.141.4';
+import * as SH from './shaders.js?v=0.142.0';
+import { INDICE } from '../palette.js?v=0.142.0';
+import { horloge } from '../bataille.js?v=0.142.0';
+import { hash2 } from '../lib/rng.js?v=0.142.0';
+import { ARBRES_TIRAGES, ARBRES_COUCHE } from '../data/arbres.js?v=0.142.0';
+import { MOTTES, FEU } from '../data/effets.js?v=0.142.0';
+import { OMBRE } from '../apparence.js?v=0.142.0';
+import { creerMottes } from './mottes.js?v=0.142.0';
+import { creerFlammes } from './flammes.js?v=0.142.0';
 
 const ECLATS = 6000;     // (v0.24.0 ; 2 400 avant : une salve de 220 — ~200 éclats chacun, dont de la fumée de 8 à 16 s — faisait le tour du tampon et effaçait les éclats encore en vol)
 
@@ -397,6 +397,7 @@ export function creerEclats({ THREE, scene, col, palTex, NP, effets, surface, pr
     },
     fumer(x, z) { const T = terrain(); if (T) fumee(x + (alea() - 0.5) * 3, surface(x, z) + 0.5, z + (alea() - 0.5) * 3, 2, true); },   // une colonne de fumée (l'écran titre)
     lancers(liste) { reserverSoldats(bataille().armee.n); volT.fill(0); for (const [i, duree, haut, reste] of liste) { volT[i] = reste; volD[i] = duree; volH[i] = haut; } },   // des hommes jetés : [indice, durée du bond (s), hauteur (m), temps qui reste] ; les autres retombent (le labo)
-    tirs() { return { tirVal, tirAng, volT, volH, volD }; },           // la pose des tireurs et le bond des soufflés, lus par les soldats (réservés à chaque image : relire)
+    tirs() { return { tirVal, tirAng, volT, volH, volD }; },
+    fusee(x, z) { particule(6, x, surface(x, z) + 1, z, 0, 22, 0, 14, 2.5); },      // une fusée éclairante à cet endroit (v0.142.0 : la patrouille du labo les tire elle-même, au lieu du hasard du décor)           // la pose des tireurs et le bond des soufflés, lus par les soldats (réservés à chaque image : relire)
   };
 }

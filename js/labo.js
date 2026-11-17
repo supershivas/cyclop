@@ -2,44 +2,46 @@
 // Chaque sujet utilise les mêmes modules que le jeu (terrain, apparence,
 // rendu three.js) : ce qu'on voit ici est ce que le jeu dessinera. Ajouter un
 // sujet ou une variante = ajouter une entrée dans GROUPES.
-import { afficherVersion } from './version-tag.js?v=0.141.4';
-import { mountLabo } from './lib/labo-shell.js?v=0.141.4';
-import { spriteCanvas, paletteToGPL, paletteToHex } from './lib/sprites.js?v=0.141.4';
-import { PALETTE, ROLES } from './palette.js?v=0.141.4';
-import { chargerContenu } from './design-store.js?v=0.141.4';
-import { tuile, ETAT } from './tuiles.js?v=0.141.4';
-import { creerTerrain, impact, hydroLignes, toucher } from './terrain.js?v=0.141.4';
-import { FORMES } from './cratere.js?v=0.141.4';
-import { CALIBRES } from './data/calibres.js?v=0.141.4';
-import { METEO } from './data/meteo.js?v=0.141.4';
-import { nouvelleBataille, avancer, ordonnerMarche, ordonnerBarrage, mourir, regarderAu, aube, horloge, ticksParJour, rangDe } from './bataille.js?v=0.141.4';
-import { BOUE_SOLDATS, SANG, VARIETE_SOLDATS } from './data/aspect-soldat.js?v=0.141.4';
-import { AZIMUTS, COTES } from './data/soleil.js?v=0.141.4';
-import { creerRendu, ZOOMS } from './rendu3d.js?v=0.141.4';
-import { placesCommandement } from './army.js?v=0.141.4';
-import { hash2 } from './lib/rng.js?v=0.141.4';
-import { reglerVerdure } from './apparence.js?v=0.141.4';
-import { maquetteChars } from './labo-chars.js?v=0.141.4';
-import { maquetteEpaves } from './labo-epaves.js?v=0.141.4';
-import { fondations, boutons, unites, fenetres, revision } from './labo-design-system.js?v=0.141.4';
-import { cartesSecteur } from './labo-cartes.js?v=0.141.4';
-import { calqueEcussons } from './labo-ecussons.js?v=0.141.4';
-import { plancheEcussons } from './labo-ecussons-armes.js?v=0.141.4';
-import { gainTampon, gainCachets, gainFil, gainBordereau, victoireFanion, victoireTampon, victoireChevrons, victoireAube, ficheDeuxColonnes, ficheEtages, ficheRegistre, ficheDAbord } from './labo-recompenses.js?v=0.141.4';
-import { maquetteBatiment, maquetteCamp } from './labo-batiments.js?v=0.141.4';
-import { BATIMENTS } from './data/batiments.js?v=0.141.4';
-import { JOURNAL } from './labo-journal.js?v=0.141.4';
-import { loadVersion } from './lib/app-update.js?v=0.141.4';
-import { maquetteEffets, maquetteAmbiance, maquetteEspace, maquetteBruitages } from './labo-son.js?v=0.141.4';
-import { calqueMoral } from './labo-moral.js?v=0.141.4';
-import { bilanRapport, bilanTuiles, bilanFrise } from './labo-donnees.js?v=0.141.4';
-import { papierNuit, finDePartie } from './labo-papiers.js?v=0.141.4';
-import { fichesTuiles, fichesProfil, fichesCompactes } from './labo-fiches.js?v=0.141.4';
-import { calqueEnnemis } from './labo-engins-ennemis.js?v=0.141.4';
-import { maquetteTranchees, NOTES_TRANCHEES, NOMS_TRANCHEES } from './labo-tranchees.js?v=0.141.4';
-import { maquetteFabrique } from './labo-fabrique.js?v=0.141.4';
-import { atelierTerrain } from './labo-atelier-terrain.js?v=0.141.4';
-import { entrees as encEntrees, lexiqueAZ, planche as encPlanche } from './labo-encyclopedie.js?v=0.141.4';
+import { afficherVersion } from './version-tag.js?v=0.142.0';
+import { mountLabo } from './lib/labo-shell.js?v=0.142.0';
+import { spriteCanvas, paletteToGPL, paletteToHex } from './lib/sprites.js?v=0.142.0';
+import { PALETTE, ROLES } from './palette.js?v=0.142.0';
+import { chargerContenu } from './design-store.js?v=0.142.0';
+import { tuile, ETAT } from './tuiles.js?v=0.142.0';
+import { creerTerrain, impact, hydroLignes, toucher } from './terrain.js?v=0.142.0';
+import { FORMES } from './cratere.js?v=0.142.0';
+import { CALIBRES } from './data/calibres.js?v=0.142.0';
+import { METEO } from './data/meteo.js?v=0.142.0';
+import { nouvelleBataille, avancer, ordonnerMarche, ordonnerBarrage, mourir, regarderAu, aube, horloge, ticksParJour, rangDe } from './bataille.js?v=0.142.0';
+import { BOUE_SOLDATS, SANG, VARIETE_SOLDATS } from './data/aspect-soldat.js?v=0.142.0';
+import { AZIMUTS, COTES } from './data/soleil.js?v=0.142.0';
+import { creerRendu, ZOOMS } from './rendu3d.js?v=0.142.0';
+import { placesCommandement } from './army.js?v=0.142.0';
+import { hash2 } from './lib/rng.js?v=0.142.0';
+import { reglerVerdure } from './apparence.js?v=0.142.0';
+import { maquetteChars } from './labo-chars.js?v=0.142.0';
+import { maquetteEpaves } from './labo-epaves.js?v=0.142.0';
+import { fondations, boutons, unites, fenetres, revision } from './labo-design-system.js?v=0.142.0';
+import { cartesSecteur } from './labo-cartes.js?v=0.142.0';
+import { patrouilleLabo } from './labo-patrouille.js?v=0.142.0';
+import { EFFETS } from './rendu3d.js?v=0.142.0';
+import { calqueEcussons } from './labo-ecussons.js?v=0.142.0';
+import { plancheEcussons } from './labo-ecussons-armes.js?v=0.142.0';
+import { gainTampon, gainCachets, gainFil, gainBordereau, victoireFanion, victoireTampon, victoireChevrons, victoireAube, ficheDeuxColonnes, ficheEtages, ficheRegistre, ficheDAbord } from './labo-recompenses.js?v=0.142.0';
+import { maquetteBatiment, maquetteCamp } from './labo-batiments.js?v=0.142.0';
+import { BATIMENTS } from './data/batiments.js?v=0.142.0';
+import { JOURNAL } from './labo-journal.js?v=0.142.0';
+import { loadVersion } from './lib/app-update.js?v=0.142.0';
+import { maquetteEffets, maquetteAmbiance, maquetteEspace, maquetteBruitages } from './labo-son.js?v=0.142.0';
+import { calqueMoral } from './labo-moral.js?v=0.142.0';
+import { bilanRapport, bilanTuiles, bilanFrise } from './labo-donnees.js?v=0.142.0';
+import { papierNuit, finDePartie } from './labo-papiers.js?v=0.142.0';
+import { fichesTuiles, fichesProfil, fichesCompactes } from './labo-fiches.js?v=0.142.0';
+import { calqueEnnemis } from './labo-engins-ennemis.js?v=0.142.0';
+import { maquetteTranchees, NOTES_TRANCHEES, NOMS_TRANCHEES } from './labo-tranchees.js?v=0.142.0';
+import { maquetteFabrique } from './labo-fabrique.js?v=0.142.0';
+import { atelierTerrain } from './labo-atelier-terrain.js?v=0.142.0';
+import { entrees as encEntrees, lexiqueAZ, planche as encPlanche } from './labo-encyclopedie.js?v=0.142.0';
 
 document.documentElement.style.setProperty('--jeu-accent', ROLES.accent);
 const NOM = document.title.replace(/^Labo — /, ''); // le nom vient de la page (une apostrophe ne casse rien)
@@ -165,7 +167,7 @@ function poserColline(B, { dx = 0, dz = 0, r = 22, h = 9 }, cz) {
   }
 }
 
-function moteur(stage, { zoom = 3, pluie = false, gel = false, soldats = 600, cz = 185, camera = null, respiration = undefined, soldat = undefined, cadavre = undefined, morts = 0, effets = undefined, barrages = false, surLesArbres = false, vue = null, verdure = undefined, nuit = null, tombee = false, calque = null, bord = null, centre = null, finesse = 1, biseau = false, cratere = null, arbres = undefined, saison = null, jours = undefined, versLesArbres = false, buissons = undefined, versLesBuissons = false, lumiere = null, colline = null, journee = null, grades = undefined, parade = false, boue = null, variete = undefined } = {}) {
+function moteur(stage, { zoom = 3, pluie = false, gel = false, soldats = 600, cz = 185, camera = null, respiration = undefined, soldat = undefined, cadavre = undefined, morts = 0, effets = undefined, barrages = false, surLesArbres = false, vue = null, verdure = undefined, nuit = null, tombee = false, calque = null, bord = null, centre = null, finesse = 1, biseau = false, cratere = null, arbres = undefined, saison = null, jours = undefined, versLesArbres = false, buissons = undefined, versLesBuissons = false, lumiere = null, colline = null, journee = null, grades = undefined, parade = false, boue = null, variete = undefined, pilote = null, apres = null } = {}) {
   reglerVerdure(verdure);                                   // le sol vert (apparence.js) : avant que le sol ne se peigne
   const boite = el('div'); boite.style.cssText = 'position:relative;width:100%;height:min(70vh,560px);overflow:hidden';
   const canvas = el('canvas'); canvas.style.cssText = 'position:absolute;left:0;top:0;image-rendering:pixelated';
@@ -241,7 +243,8 @@ function moteur(stage, { zoom = 3, pluie = false, gel = false, soldats = 600, cz
     if (vue) rendu.placerCamera(vue.yaw, vue.tangage);       // la caméra libre du jeu
     rendu.vue.zoom = zoom; rendu.vue.cx = centre ? centre[0] : B.etat.marges.x + 200; rendu.vue.cz = centre ? centre[1] : B.etat.marges.y + cz;   // (coordonnées du secteur, plus les marges ; `centre` : celles du terrain)
     ctx.rendu = rendu; ctx.B = B;
-    let vivant = !(grades || parade);                                      // les grades : la parade d'abord (la simulation attend), la bataille ensuite
+    apres?.(stage, ctx);
+    let vivant = !(grades || parade || pilote);                                      // les grades : la parade d'abord (la simulation attend), la bataille ensuite
     if (grades || parade) {
       [rendu.vue.cx, rendu.vue.cz] = parader(B, rendu.vue.cx, rendu.vue.cz);
       stage.append(el('p', {}, el('button', { className: 'essai', textContent: 'La parade (arrêtée)', onclick: () => { [rendu.vue.cx, rendu.vue.cz] = parader(B, B.etat.marges.x + 200, B.etat.marges.y + cz); vivant = false; } }), el('button', { className: 'essai', textContent: 'La bataille (en direct)', onclick: () => { vivant = true; } })));
@@ -295,6 +298,7 @@ function moteur(stage, { zoom = 3, pluie = false, gel = false, soldats = 600, cz
           accel = Math.min(accel, 150);
         } else ev = avancer(B);
       }
+      if (pilote) ev = pilote(ctx, dt) ?? [];      // (v0.142.0) un prototype mène la bataille lui-même (la patrouille : la simulation est arrêtée, `vivant` faux)
       if (lumiere && lum.fige) regarderAu(B, lum.heure, journee ? B.etat.meteo[B.etat.jour - 1] : 'sec');       // l'heure reste celle choisie : le soleil ne bouge pas pendant la comparaison
       rendu.dessiner(dt, ev);
       if ((tReleve -= dt) < 0) {
@@ -501,6 +505,9 @@ const GROUPES = [
     ] },
   ] },
   { id: 'a-construire', title: 'À construire', topics: [
+    { id: 'patrouille', title: 'La patrouille de nuit', variants: [
+      { title: 'Le prototype', status: 'a-trancher', depuis: '0.142.0', note: 'PROTOTYPE (Jérôme, 16 nov. : « une mission interlude où l\'on déplace un petit groupe de soldats (30-50) d\'un point A à un point B de nuit » ; au labo d\'abord, pour voir si c\'est amusant). Quarante hommes de notre première ligne vont jusqu\'au point B, à portée de voix de leur fil. Un clic : où aller ; Espace : se coucher, se relever (couchés, ils rampent). En face, des fusées s\'ouvrent au-dessus du groupe : debout dans leur lumière, on est vu (la barre se remplit) et le poste de mitrailleuse le plus proche tire ; couchés dans un trou d\'obus, on ne l\'est pas ; dans le noir, seul le bruit trahit, tout près d\'un poste. Sans conséquence : aucune bataille ne s\'en souvient. Les chiffres sont dans data/patrouille.js, à éprouver.', render: s => { const p = patrouilleLabo({ graine: 1 + Math.floor(Math.random() * 9999) }); moteur(s, { zoom: 6, soldats: 600, tombee: true, effets: { ...EFFETS, fusees: false }, pilote: p.pilote, calque: p.calque, apres: st => p.boutons(st, () => location.reload()) }); } },
+    ] },
     { id: 'camp', title: 'Le camp et ses bâtiments', variants: [
       { title: 'Le camp en ligne', status: 'retenue', depuis: '0.85.0', note: 'Retenu (Jérôme, 27 octobre) ; pas encore dans le jeu. Les cinq bâtiments le long d\'une route, derrière la 4e ligne, dans la marge arrière du terrain actuel (840 × 640 m : aucune case de plus, voir docs/chantiers/camp-et-ameliorations.md). Le curseur des jours montre le camp qui grandit (un parcours d\'exemple : un chantier dure une nuit, il s\'élève sous un échafaudage) ; un clic sur un bâtiment ouvre son papier : ses ordres, le niveau suivant, son prix en points de dotation.', render: s => maquetteCamp(s, 'ligne') },
       { title: 'Le camp autour d\'une cour', status: 'ancienne', depuis: '0.85.0', note: 'Non retenu (Jérôme, 27 octobre) : reste au labo. Les mêmes bâtiments en U autour d\'une cour, l\'aérodrome au fond : plus ramassé en largeur (visible d\'un coup au zoom 1 ou 2), plus profond (il empiète davantage sur la marge arrière).', render: s => maquetteCamp(s, 'cour') },

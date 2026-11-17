@@ -1,7 +1,7 @@
 {
-  "version": "0.141.4",
+  "version": "0.142.0",
   "date": "2026-11-17",
   "changes": [
-    "Les écussons des régiments disparaissent quand leurs hommes sortent de l'écran"
+    "Au labo : le prototype de la patrouille de nuit (quarante hommes à travers le no man's land, sous les fusées) ; le jeu ne change pas"
   ]
 }

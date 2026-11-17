@@ -1,5 +1,9 @@
 # Journal des versions
 
+## 0.142.0 — 2026-11-17
+
+- Au labo, à essayer : le prototype de la patrouille de nuit ; quarante hommes vont jusqu'à portée de voix du fil d'en face ; un clic pour aller, Espace pour se coucher ; les fusées d'en face s'ouvrent au-dessus d'eux, et debout dans leur lumière on est vu ; le jeu ne change pas
+
 ## 0.141.4 — 2026-11-17
 
 - Les écussons des régiments disparaissent quand leurs hommes sortent de l'écran (ils restaient affichés à leur dernière place)
