@@ -22,38 +22,39 @@
    - Les soldats : instanciés (une boîte et son ombre) ; au zoom 1 et 2, un
      point de 2 × 2 pixels (la couleur du camp sur son ombre).
    - Les corps : un homme couché (instancié) ; au zoom 1 et 2, un pixel. */
-import { loadThree } from './three-lib.js?v=0.146.2';
-import * as SH from './rendu/shaders.js?v=0.146.2';
-import { creerSoldats } from './rendu/soldats.js?v=0.146.2';
-import { creerChars } from './rendu/chars.js?v=0.146.2';
-import { creerGenies } from './rendu/genies.js?v=0.146.2';
-import { creerCamp } from './rendu/camp.js?v=0.146.2';
-import { creerAvions } from './rendu/avions.js?v=0.146.2';
-import { creerPonts } from './rendu/ponts.js?v=0.146.2';
-import { creerCiel, crepuscule } from './rendu/ciel.js?v=0.146.2';
-import { creerMeteoLisse, TEMPS_LISSE } from './rendu/meteo-lisse.js?v=0.146.2';
-import { creerMeteo } from './rendu/meteo.js?v=0.146.2';
-import { creerTroncons } from './rendu/troncons.js?v=0.146.2';
-import { BUISSONS_JEU } from './data/buissons.js?v=0.146.2';
-import { ARBRES_JEU } from './data/arbres.js?v=0.146.2';
-import { MATIERES, GRAIN_VARIANTES, GRAIN_JEU } from './data/grain-sol.js?v=0.146.2';
-import { creerVegetation } from './rendu/vegetation.js?v=0.146.2';
-import { creerTemps } from './rendu/temps.js?v=0.146.2';
-import { creerEclats } from './rendu/eclats.js?v=0.146.2';
-import { creerOmbresRelief } from './rendu/ombres-relief.js?v=0.146.2';
-import { creerAOSol, soleilDuJeu } from './rendu/ao-sol.js?v=0.146.2';
-import { cadrerOmbre } from './lumiere/ombres.js?v=0.146.2';
-import { semerOmbres, emballerOmbres, OMBRE_FUMEE } from './rendu/ombre-fumee.js?v=0.146.2';
-import { creerLampesSol } from './rendu/lampes-sol.js?v=0.146.2';
-import { OMBRES_RELIEF as OMB, NUAGES, NUAGES_VENT } from './data/soleil.js?v=0.146.2';
-import { PALETTE, ORDRE, INDICE, ALERTES } from './palette.js?v=0.146.2';
-import { OMBRE, couleursLigne, reglerVerdure } from './apparence.js?v=0.146.2';
-import { MORCEAU, hauteurVueQ as hauteurQ, hauteurVueM as hauteurM, etat as etatCase, ETAT } from './terrain.js?v=0.146.2';
-import { horloge, secteurDuJeu, rangDe } from './bataille.js?v=0.146.2';
-import { GRADES } from './data/grades.js?v=0.146.2';
-import { profilFleuve } from './eaux.js?v=0.146.2';
-import { ligneY } from './tranchees.js?v=0.146.2';
-import { vent as ventDuJour } from './data/meteo.js?v=0.146.2';
+import { loadThree } from './three-lib.js?v=0.147.0';
+import * as SH from './rendu/shaders.js?v=0.147.0';
+import { creerSoldats } from './rendu/soldats.js?v=0.147.0';
+import { creerFusilVue } from './rendu/fusil-vue.js?v=0.147.0';
+import { creerChars } from './rendu/chars.js?v=0.147.0';
+import { creerGenies } from './rendu/genies.js?v=0.147.0';
+import { creerCamp } from './rendu/camp.js?v=0.147.0';
+import { creerAvions } from './rendu/avions.js?v=0.147.0';
+import { creerPonts } from './rendu/ponts.js?v=0.147.0';
+import { creerCiel, crepuscule } from './rendu/ciel.js?v=0.147.0';
+import { creerMeteoLisse, TEMPS_LISSE } from './rendu/meteo-lisse.js?v=0.147.0';
+import { creerMeteo } from './rendu/meteo.js?v=0.147.0';
+import { creerTroncons } from './rendu/troncons.js?v=0.147.0';
+import { BUISSONS_JEU } from './data/buissons.js?v=0.147.0';
+import { ARBRES_JEU } from './data/arbres.js?v=0.147.0';
+import { MATIERES, GRAIN_VARIANTES, GRAIN_JEU } from './data/grain-sol.js?v=0.147.0';
+import { creerVegetation } from './rendu/vegetation.js?v=0.147.0';
+import { creerTemps } from './rendu/temps.js?v=0.147.0';
+import { creerEclats } from './rendu/eclats.js?v=0.147.0';
+import { creerOmbresRelief } from './rendu/ombres-relief.js?v=0.147.0';
+import { creerAOSol, soleilDuJeu } from './rendu/ao-sol.js?v=0.147.0';
+import { cadrerOmbre } from './lumiere/ombres.js?v=0.147.0';
+import { semerOmbres, emballerOmbres, OMBRE_FUMEE } from './rendu/ombre-fumee.js?v=0.147.0';
+import { creerLampesSol } from './rendu/lampes-sol.js?v=0.147.0';
+import { OMBRES_RELIEF as OMB, NUAGES, NUAGES_VENT } from './data/soleil.js?v=0.147.0';
+import { PALETTE, ORDRE, INDICE, ALERTES } from './palette.js?v=0.147.0';
+import { OMBRE, couleursLigne, reglerVerdure } from './apparence.js?v=0.147.0';
+import { MORCEAU, hauteurVueQ as hauteurQ, hauteurVueM as hauteurM, etat as etatCase, ETAT } from './terrain.js?v=0.147.0';
+import { horloge, secteurDuJeu, rangDe } from './bataille.js?v=0.147.0';
+import { GRADES } from './data/grades.js?v=0.147.0';
+import { profilFleuve } from './eaux.js?v=0.147.0';
+import { ligneY } from './tranchees.js?v=0.147.0';
+import { vent as ventDuJour } from './data/meteo.js?v=0.147.0';
 
 export const CAMERA = { yaw: 0.15, tangage: 0.95, fov: 30 };   // au départ : tournée de 9°, plongée de 54°, angle de 30°
 // la caméra respire : un balancement très lent, 2° en 23 s (Jérôme, v0.3.1 : variante D du labo retenue)
@@ -733,6 +734,7 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
   const dernier = { sol: 0, soldats: 0, tranchees: 0, three: 0, rendu: 0 };      // les mêmes, de la dernière image seule (le compteur ?perf=1 garde la pire)      // (soldats, tranchees, three : le détail de `rendu`, pour le compteur ?perf=1, v0.134.1)
   const unPixel = new Uint8Array(4);
   let positions = null;      // les positions dessinées des hommes (v0.134.1) : { x, y } interpolées entre deux pas de la simulation par main.js, ou null (celles de l'armée)
+  let fusilVue = null, fusilOn = false;
   let tAnim = 0, vide = false, gele = false;            // gele : le temps est arrêté (v0.99.5) ; le dessin s'arrête (nuages, pluie, fumée, herbe), la caméra reste libre ; vide : rien n'est dessiné (mesure du prix de l'attente)
   // La carte d'ombre (session 3 du chantier lumière ; éteinte : `rendu.ombresCarte`) : les hommes en boîtes, silhouettes et équipés vus du soleil dans une cible de profondeur de 1 024 × 1 024 ; le sol la lit
   // (solMat.f, `uCarteOmbre`) et ne dessine plus l'ombre au sol en quadrilatère de ces hommes. Pas de carte la nuit ni sans soleil. Cadrage : js/lumiere/ombres.js (le même que le labo, stabilisé).
@@ -880,6 +882,7 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
     passeOmbres();
     const tr0 = performance.now();
     renderer.render(scene, camera);
+    if (fusilOn && fusilVue) { fusilVue.maj(dtVrai); fusilVue.rendre(vue.vw / vue.vh); }      // le fusil de la vue d'un soldat, par-dessus (v0.147.0)
     const t2 = performance.now();
     // gl.finish() n'attend pas le rendu logiciel de Chromium : lire un pixel, si (mesure honnête)
     if (mesure) gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, unPixel);
@@ -1030,6 +1033,8 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
     // une fumée qui dérive, posée en (x, z) (l'écran titre en épaissit le champ)
     clignoter: troncons.clignoter,
     set surligneEngins(v) { surligneEngins = !!v; },       // le génie vise ou le bâtiment est ouvert : les engins abîmés du parc sont cerclés (v0.130.0)
+    set fusil(v) { fusilOn = !!v; if (fusilOn && !fusilVue) fusilVue = creerFusilVue({ THREE, renderer, PALETTE }); },      // le fusil devant nous : créé au premier besoin (un objet de plus décale les identifiants : les images de référence)
+    fusilTir() { fusilVue?.tir(); },
     cacherSoldat(id) { soldats.cacher(id); },      // l'homme que le joueur pilote ne se dessine pas : l'œil est dedans (v0.144.0)
     set marquesParc(v) { marquesParc = v && v.length ? v : null; },       // les engins du parc dont l'ordre est armé : cerclés d'os comme une sélection (v0.140.0)
     set aretesPonts(v) { aretesPonts = !!v; },       // le génie vise : les ponts coupés se montrent en arêtes (v0.67.0)

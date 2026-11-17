@@ -25,12 +25,12 @@
      (rng.js), pour que la même graine rejoue la même bataille.
 
    Logique pure : aucun DOM. Le rendu lit les tableaux (rendu3d.js). */
-import { EQUIPEMENTS } from './data/batiments.js?v=0.146.2';
-import { hauteurQ, vitesseCase } from './terrain.js?v=0.146.2';
-import { ligneY } from './tranchees.js?v=0.146.2';
-import { TOITS } from './data/nids.js?v=0.146.2';
-import { caracteristiques } from './identite.js?v=0.146.2';
-import { BONUS } from './data/experience.js?v=0.146.2';
+import { EQUIPEMENTS } from './data/batiments.js?v=0.147.0';
+import { hauteurQ, vitesseCase } from './terrain.js?v=0.147.0';
+import { ligneY } from './tranchees.js?v=0.147.0';
+import { TOITS } from './data/nids.js?v=0.147.0';
+import { caracteristiques } from './identite.js?v=0.147.0';
+import { BONUS } from './data/experience.js?v=0.147.0';
 
 export const GRILLE = 2;           // m : cases de voisinage
 export const DENSITE = 8;          // m : carrés de densité (tir)
@@ -256,7 +256,8 @@ export function pasArmee(A, ctx) {
       if (cible) { const cx = cible[0] - xi, cy = cible[1] - yi, cd = Math.hypot(cx, cy) || 1; gx = cx / cd; gy = cy / cd; voulu = 1; }
     }
     // ─ L'homme que le joueur pilote (v0.144.0, la vue à la première personne) : sa direction et sa vitesse viennent du joueur, ni ordre ni champ ; il ne s'écarte pas de ce qui le retient (mur, eau, boue, fatigue) ─
-    if (ctx.pilote && A.id[i] === ctx.pilote.id) {
+    const pilote = !!ctx.pilote && A.id[i] === ctx.pilote.id;      // son tir est celui du joueur (tir-joueur.js) : le tir automatique se tait
+    if (pilote) {
       const px = ctx.pilote.ax, py = ctx.pilote.ay, pm = Math.hypot(px, py);
       if (pm > 0.01) { gx = px / pm; gy = py / pm; voulu = Math.min(1, pm); } else { gx = 0; gy = 0; voulu = 0; }
     }
@@ -334,7 +335,7 @@ export function pasArmee(A, ctx) {
           }
         }
       }
-    } else if (tirT[i] <= 0) {
+    } else if (tirT[i] <= 0 && !pilote) {
       const ebranle = r.moral !== undefined && r.moral < R.moral.ebranle;
       tirT[i] = R.tir.periode * (0.5 + rng()) * (blessure[i] === 1 ? Sd.brasBlesse : 1) * (ebranle ? R.moral.tirEbranle : 1) * parametresStance(R, r.stance).periode;
       // la terreur, ou la déroute : on ne tire plus

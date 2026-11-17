@@ -1308,6 +1308,30 @@ test('un homme est posté à chaque nid actif : il marche à son poste, le sert,
   const C = restaurer(photo(B), R); pas(60); for (let k = 0; k < 60; k++) avancer(C);
   assert.equal(empreinte(B), empreinte(C), 'la partie relue donne les mêmes servants');
 });
+import { hauteurOeil } from '../js/tir-joueur.js';
+test('le tir du joueur (v0.147.0) : la balle suit le regard, touche le premier homme d\'en face sur le rayon, le relief l\'arrête, le fusil se recharge, rien ne part sans pilote', () => {
+  const B = petite(), A = B.armee, T = B.terrain;
+  T.base.fill(0); T.diff.fill(0);      // un sol plat : la hauteur ne joue pas
+  const i = [...Array(A.n).keys()].find(k => A.camp[k] === 0 && !A.mort[k]), j = [...Array(A.n).keys()].find(k => A.camp[k] === 1 && !A.mort[k]);
+  const place = () => { A.x[i] = 200; A.y[i] = 150; A.x[j] = 200; A.y[j] = 130; for (const k of [i, j]) { A.vx[k] = 0; A.vy[k] = 0; A.peur[k] = 0; A.blessure[k] = 0; A.mort[k] = 0; } A.tirT[i] = 0; };
+  const tire = (d, el = 0) => { place(); B.pilote = { id: A.id[i], ax: 0, ay: 0, tir: { d, el }, dernier: B.pilote?.dernier ?? null, refus: null }; avancer(B); return B.pilote; };
+  assert.equal(hauteurOeil(T, 200, 150), 1.6, 'à découvert : 1,6 m');
+  // droit devant : l'homme est dans le rayon, à 20 m ; en quarante coups au moins un but, et tous « visés »
+  let buts = 0, morts = 0;
+  for (let k = 0; k < 40; k++) { const P = tire([0, -1]); assert.ok(P.dernier.vise && Math.abs(P.dernier.t - 20) < 0.5, 'le rayon trouve l\'homme à 20 m'); if (P.dernier.touche) buts++; if (P.dernier.mort) morts++; }
+  assert.ok(buts >= 10 && buts <= 39, `la chance de toucher : ${buts}/40`); assert.ok(morts >= 1, 'une balle tue parfois');
+  // de côté ou trop haut : personne
+  assert.equal(tire([1, 0]).dernier.vise, false, 'de côté'); assert.equal(tire([0, -1], 0.5).dernier.vise, false, 'au-dessus de sa tête (30° plus haut)');
+  assert.equal(tire([0, -1], -0.2).dernier.vise, false, 'dans le sol devant lui');
+  // le relief : un mur de 3 m à 10 m arrête la balle
+  place(); for (let y = 138; y <= 141; y++) for (let x = 190; x <= 210; x++) T.base[y * T.W + x] = 12;
+  assert.equal(tire([0, -1]).dernier.vise, false, 'le relief arrête la balle'); T.base.fill(0);
+  // le rechargement : un second coup tout de suite est refusé
+  place(); B.pilote = { id: A.id[i], ax: 0, ay: 0, tir: { d: [0, -1], el: 0 }, dernier: null, refus: null }; avancer(B);
+  B.pilote.tir = { d: [0, -1], el: 0 }; avancer(B); assert.match(B.pilote.refus, /pas rechargé/);
+  // le tir automatique se tait pour l'homme piloté ; sans pilote, la simulation ne tire rien pour lui
+  const C = petite(); assert.equal(C.pilote ?? null, null); for (let k = 0; k < 30; k++) avancer(C);
+});
 test('un obus de 75 abîme un nid, un 155 sur lui le détruit ; le génie le refait ; en face, la nuit, il se refait une fois sur deux', () => {
   const B = petite(), n = nidDe(B, 0);
   degatsNids(B, n.x, n.y, '75'); assert.ok(n.pv < NIDS.pv && n.etat === 'actif');

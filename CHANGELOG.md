@@ -1,5 +1,10 @@
 # Journal des versions
 
+## 0.147.0 — 2026-11-17
+
+- Dans la vue d'un soldat (« Voir par ses yeux »), le fusil se voit devant nous : le canon vers le centre, la crosse à l'épaule, les mains et les manches bleu horizon ; il recule et jette un éclair à chaque coup ; un viseur marque le centre de l'image
+- On tire : le clic gauche envoie la balle là où l'on regarde (le sens et la hauteur) ; elle touche le premier homme d'en face sur son chemin, avec une chance qui dit l'adresse, la distance, la peur et la fatigue des bras ; le relief l'arrête ; un coup toutes les 1,6 s ; dans une tranchée on monte sur la banquette pour voir par-dessus le parapet ; le tir automatique de l'homme se tait
+
 ## 0.146.2 — 2026-11-17
 
 - Les soldats tués par un obus restent couchés : ils ne se relèvent plus pour tomber
