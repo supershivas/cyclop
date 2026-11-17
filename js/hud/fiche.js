@@ -1,19 +1,19 @@
 // Les fiches : un homme (son nom, son âge, son grade, ce qu'il endure) ou un régiment (ses hommes, ses
 // blessés, ses morts, et leurs fiches). De près, on regarde des hommes ; de loin, des régiments (Jérôme, v0.3.2).
-import { NOUS, moralEnMots, rangDe } from '../bataille.js?v=0.143.0';
-import { experienceEnMots, chevrons, peurEnMots, fatigueEnMots, CARACTERISTIQUES, caracEnMots } from '../identite.js?v=0.143.0';
-import { majuscule, nomDe, indiceDe, premierDe, quiEst, tombe, bilan, enMots, refuseAujourdhui, actionEnMots, auFront, moyennes, prochainGrade, niveauMoral } from './lecture.js?v=0.143.0';
-import { bonusEnMots } from '../data/experience.js?v=0.143.0';
-import { corps, REPERES } from './barres.js?v=0.143.0';
-import { jauge as jaugeT, carac as caracT, bande, partage, fil, tuilesDe } from './tuiles.js?v=0.143.0';
-import { barreEffectif, jaugeMoral, reinitIds } from './bilan.js?v=0.143.0';
-import { historiqueDe } from '../donnees-jour.js?v=0.143.0';
+import { NOUS, moralEnMots, rangDe } from '../bataille.js?v=0.144.0';
+import { experienceEnMots, chevrons, peurEnMots, fatigueEnMots, CARACTERISTIQUES, caracEnMots } from '../identite.js?v=0.144.0';
+import { majuscule, nomDe, indiceDe, premierDe, quiEst, tombe, bilan, enMots, refuseAujourdhui, actionEnMots, auFront, moyennes, prochainGrade, niveauMoral } from './lecture.js?v=0.144.0';
+import { bonusEnMots } from '../data/experience.js?v=0.144.0';
+import { corps, REPERES } from './barres.js?v=0.144.0';
+import { jauge as jaugeT, carac as caracT, bande, partage, fil, tuilesDe } from './tuiles.js?v=0.144.0';
+import { barreEffectif, jaugeMoral, reinitIds } from './bilan.js?v=0.144.0';
+import { historiqueDe } from '../donnees-jour.js?v=0.144.0';
 
 // `$` : l'accès aux éléments ; `R` : les réglages ; `bataille()` : la bataille en cours
 const CARAC_TITRES = {   // (elles montent à l'usage : tirer, frapper, marcher fatigué, tenir sous le feu ; elles baissent avec une blessure ou la terreur)
   adresse: 'la chance de toucher quand il tire', force: 'ses coups de baïonnette au corps à corps', endurance: 'se fatigue moins en marchant, encaisse mieux les coups de l\'ennemi au corps à corps', calme: 'la peur le gagne moins vite',
 };
-export function creerFiche({ $, R, bataille }) {
+export function creerFiche({ $, R, bataille, voir = null }) {
   let fiche = null;                 // { id, camp } : un soldat ; { reg } : un régiment
   let listeVue = '';                // ce que montre la liste du régiment (refaite seulement quand ça change)
   let statsVues = '';               // les jauges et le corps, refaits seulement quand ils changent
@@ -45,6 +45,7 @@ export function creerFiche({ $, R, bataille }) {
     $('fiche-qui').textContent = `${majuscule(qui.grade)}, ${qui.age} ans`;
     const lien = $('fiche-regiment');
     lien.hidden = !reg0; lien.textContent = nomDe(reg0); lien.onclick = () => montrerRegiment(reg0.id);
+    const oeil = $('fiche-oeil'); oeil.hidden = !(voir && i >= 0 && A.camp[i] === NOUS && !A.mort[i]); oeil.onclick = () => voir(fiche.id);      // « Voir par ses yeux » : nos hommes vivants (v0.144.0)
     $('fiche-liste').replaceChildren(); listeVue = '';
     const promu = B.etat.grades[fiche.id];
     const lignes = [promu ? `promu ${qui.grade} le jour ${promu[1]}` : ''];
@@ -75,7 +76,7 @@ export function creerFiche({ $, R, bataille }) {
     const reg = B.etat.regiments[fiche.reg], A = B.armee, b = bilan(B, reg);
     $('fiche-nom').textContent = nomDe(reg);
     $('fiche-qui').textContent = enMots(b);
-    $('fiche-regiment').hidden = true;
+    $('fiche-regiment').hidden = true; $('fiche-oeil').hidden = true;
     const m = moyennes(B, reg.id), nb = chevrons(m.exp), vivres = reg.vivres ?? R.nuit.vivres, niveau = niveauMoral(reg, R), hist = historiqueDe(B.etat.histo || [], reg, B.etat.jour, b.blesses);
     const morts = reg.pertes - (reg.debut?.pertes || 0), tues = reg.tues || 0, pris = reg.pris || 0, u = { debout: Math.max(0, b.vivants - b.blesses), blesses: b.blesses, evacues: b.evacues, morts: b.morts, initial: b.initial };
     const sig = `r${reg.id}:${[m.peur, m.fatJ, m.fatB, m.exp, reg.moral].map(v => Math.round(v * 100)).join(',')}:${vivres}:${reg.deroute ? 1 : 0}:${b.vivants}:${b.blesses}:${b.morts}:${b.evacues}:${tues}:${pris}:${hist.length}:${B.etat.jour}`;

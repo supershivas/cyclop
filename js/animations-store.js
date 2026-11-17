@@ -1,9 +1,9 @@
 // Les animations du soldat publiées dans le dépôt (assets/design/animations.json), comme les réglages (design-store.js) : l'atelier d'animation les écrit,
 // le jeu les lit au démarrage (`chargerAnimationsJeu`, main.js ; étape 4 de docs/chantiers/animations-vers-le-jeu.md). Sans fichier publié, ce sont les animations d'origine (data/animations.js).
 // Logique pure (le seul accès réseau est `chargerAnimations`) ; module à part pour ne rien ajouter au chargement du jeu.
-import { ANIMATIONS } from './data/animations.js?v=0.143.0';
-import { assainir } from './anim-edition.js?v=0.143.0';
-import { borner } from './pose-soldat.js?v=0.143.0';
+import { ANIMATIONS } from './data/animations.js?v=0.144.0';
+import { assainir } from './anim-edition.js?v=0.144.0';
+import { borner } from './pose-soldat.js?v=0.144.0';
 
 export const FICHIER_ANIMATIONS = 'assets/design/animations.json';
 export const FORMAT_ANIMATIONS = 'cyclopeen-animations';        // le même format que « Exporter tout » de l'atelier

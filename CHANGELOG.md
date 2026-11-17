@@ -1,5 +1,10 @@
 # Journal des versions
 
+## 0.144.0 — 2026-11-17
+
+- Voir par ses yeux : le bouton de la fiche d'un de nos hommes prend sa place, à 1,60 m du sol, dans un champ de 70° ; la souris regarde (en haut comme en bas), ZQSD le fait marcher dans le sens du regard (la boue, l'eau, les murs et la fatigue comptent comme pour les autres)
+- Prototype : il ne tire pas encore (il continue de tirer tout seul quand le feu l'y pousse) ; Échap, le clic droit ou le bouton rendent la vue, et l'homme regagne sa place
+
 ## 0.143.0 — 2026-11-17
 
 - Dans la vue à la personne d'un char, d'un poste de mitrailleuse ou d'un avion, la souris tourne et lève la vue : on décide de ce qu'on voit (Échap, ou le clic droit, rend la souris et la vue d'avant)
