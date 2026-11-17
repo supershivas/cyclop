@@ -141,3 +141,16 @@ test('le niveau intermédiaire dessine nettement moins que le fin, et jamais ce 
   const corps = n => boites().filter(b => b[12] === 0).length;
   assert.ok(corps() > 40);
 });
+
+group('les casques de près (labo, v0.143.3)');
+import { reglerCasques, STYLES_CASQUE, modeleArticule as modeleCasques } from '../js/rendu/soldat-articule.js';
+test('le jeu garde ses anneaux ; un dôme tourné coûte peu (8 pans) ou un cinquième (16 pans) ; tout revient aux anneaux', () => {
+  const ref = modeleCasques().triangles, compte = {};
+  for (const st of STYLES_CASQUE) { reglerCasques(st); compte[st] = modeleCasques().triangles; }
+  reglerCasques('anneaux');
+  assert.equal(modeleCasques().triangles, ref);
+  assert.equal(compte.anneaux, ref);
+  assert.ok(compte.tour8 - ref < 60, `tour8 +${compte.tour8 - ref}`);
+  assert.ok(compte.tour16 > compte.tour8 && compte.tour16 - ref < 260, `tour16 +${compte.tour16 - ref}`);
+  assert.equal(reglerCasques('inconnu'), 'anneaux');
+});

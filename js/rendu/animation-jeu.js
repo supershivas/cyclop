@@ -1,11 +1,11 @@
 // Qui joue quoi pour les hommes articulés (étape 4 de docs/chantiers/animations-vers-le-jeu.md). Logique pure (le temps est un argument) : pour un homme, la pose du lecteur d'animations
 // (marche, repos, tir) écrite dans les 25 nombres de la texture de poses, ou `null` pour les états sans animation (feu retenu, accroupi, couché, mêlée, blessures, officier au pistolet),
 // que `poseJeu` (pose-jeu.js) continue de calculer. Un état de lecteur par homme (le fondu de 0,2 s en a besoin), purgé quand l'homme sort des hommes articulés (`fin`).
-import { nouvelEtat, etatAnimationTab, termine } from '../lecteur-animations.js?v=0.143.2';
-import { ANIMATIONS } from '../data/animations.js?v=0.143.2';
-import { ANIM_JEU, MARCHE_JEU, CANAUX_TIR_EN_MARCHE, ALLURES, EPAULEMENT } from '../data/lecteur-animations.js?v=0.143.2';
-import { NOMS_CHAMPS } from '../data/poses-soldat.js?v=0.143.2';
-import { FLOTTANTS } from './pose-jeu.js?v=0.143.2';
+import { nouvelEtat, etatAnimationTab, termine } from '../lecteur-animations.js?v=0.143.3';
+import { ANIMATIONS } from '../data/animations.js?v=0.143.3';
+import { ANIM_JEU, MARCHE_JEU, CANAUX_TIR_EN_MARCHE, ALLURES, EPAULEMENT } from '../data/lecteur-animations.js?v=0.143.3';
+import { NOMS_CHAMPS } from '../data/poses-soldat.js?v=0.143.3';
+import { FLOTTANTS } from './pose-jeu.js?v=0.143.3';
 
 
 const I_TORSION = NOMS_CHAMPS.indexOf('torsion'), I_BUSTE = NOMS_CHAMPS.indexOf('buste'), I_TETE = NOMS_CHAMPS.indexOf('tete');
@@ -22,7 +22,7 @@ export function avecAnimation(h) {
 export function creerJeuAnimations({ animations = ANIMATIONS, allures = null, sortie = new Float32Array(FLOTTANTS) } = {}) {
   const hommes = new Map(), duree = nom => animations.find(a => a.nom === nom).duree;
   const animMarche = duree(ANIM_JEU.marche), animTir = animations.find(a => a.nom === ANIM_JEU.tir);
-  const K = allures ? allures.marche.length : 0, dureesMarche = allures ? allures.marche.map(duree) : null;
+  const K = allures ? allures.marche.length : 0, dureesMarche = allures ? allures.marche.map(duree) : null, dureesRepos = allures ? allures.repos.map(duree) : null;
   const nomTir = allures?.tir ?? ANIM_JEU.tir, animTirJoue = animations.find(a => a.nom === nomTir);       // (les démarches : le tir épaulé, la crosse à l'épaule)
   let image = 0;
   return {
@@ -35,7 +35,7 @@ export function creerJeuAnimations({ animations = ANIMATIONS, allures = null, so
       const coup = h.coup ?? 0;
       if (!e) {
         const u = (Math.imul(id + 1, 2654435761) >>> 0) / 4294967296, k = K ? (Math.imul(id + 7, 2246822519) >>> 0) % K : -1;      // (son allure : un autre hachage de son numéro)
-        hommes.set(id, e = { etat: nouvelEtat(), ta: u * (K ? dureesMarche[k] : animMarche), t: t, coup, tir: null, vu: 0, k,
+        hommes.set(id, e = { etat: nouvelEtat(), ta: u * (K ? dureesMarche[k] : animMarche), tr: K ? ((Math.imul(id + 29, 1597334677) >>> 0) / 4294967296) * dureesRepos[k] : 0, t: t, coup, tir: null, vu: 0, k,
           cad: K ? 1 + ALLURES.cadence * (2 * ((Math.imul(id + 13, 3266489917) >>> 0) / 4294967296) - 1) : 1 });       // (la foulée de départ : un hachage du numéro, pour que la troupe ne marche pas au pas)
       }
       e.vu = image;
@@ -47,7 +47,7 @@ export function creerJeuAnimations({ animations = ANIMATIONS, allures = null, so
       // (les démarches) il épaule AVANT son coup : l'animation part pour que son recul (à `avance` s de son début) tombe avec le coup de feu
       if (K && !e.tir && h.avant < EPAULEMENT.avance) e.tir = { anim: nomTir, depart: t - (EPAULEMENT.avance - Math.max(0, h.avant)), canaux: marche ? CANAUX_TIR_EN_MARCHE : undefined };
       e.coup = coup;
-      const couches = [marche ? { anim: K ? allures.marche[e.k] : ANIM_JEU.marche, cle: 'marche', depart: t - e.ta } : { anim: K ? allures.repos[e.k] : ANIM_JEU.repos, cle: 'repos', depart: 0 }];
+      const couches = [marche ? { anim: K ? allures.marche[e.k] : ANIM_JEU.marche, cle: 'marche', depart: t - e.ta } : { anim: K ? allures.repos[e.k] : ANIM_JEU.repos, cle: 'repos', depart: -e.tr }];
       if (e.tir) { e.tir.canaux = marche ? CANAUX_TIR_EN_MARCHE : undefined; couches.push(e.tir); }  // (en marche : les bras et le fusil du tir ; à l'arrêt : tout)
       sortie.set(etatAnimationTab(e.etat, couches, t, { animations }));
       if (h.courbe && marche) { sortie[I_BUSTE] += MARCHE_JEU.courbe.buste; sortie[I_TETE] += MARCHE_JEU.courbe.tete; }      // (v0.142.3) il court courbé sous le feu       // (28 flottants : les 7 texels sont pleins)

@@ -3,14 +3,14 @@
 // plaine, dessinés par les maillages et la texture de poses du jeu (js/rendu/soldat-articule.js) et animés par son lecteur (js/rendu/animation-jeu.js) ; `allures` : les démarches
 // de js/anim-modeles.js (une par homme, l'épaulement avant le coup, le buste qui vise) ou celles d'avant. « Feu en marchant » : chacun tire toutes les 2,5 à 4,5 s, sur une cible
 // devant lui, un peu de côté. Le labo montre sans rien modifier : il n'y a pas de bataille.
-import { PALETTE } from './palette.js?v=0.143.2';
-import { loadThree } from './three-lib.js?v=0.143.2';
-import { fabriquer } from './labo-fabrique.js?v=0.143.2';
-import { creerEquipeArticulee } from './rendu/soldat-articule.js?v=0.143.2';
-import { creerJeuAnimations } from './rendu/animation-jeu.js?v=0.143.2';
-import { allures as genererAllures } from './anim-modeles.js?v=0.143.2';
-import { ANIMATIONS } from './data/animations.js?v=0.143.2';
-import { EPAULEMENT } from './data/lecteur-animations.js?v=0.143.2';
+import { PALETTE } from './palette.js?v=0.143.3';
+import { loadThree } from './three-lib.js?v=0.143.3';
+import { fabriquer } from './labo-fabrique.js?v=0.143.3';
+import { creerEquipeArticulee } from './rendu/soldat-articule.js?v=0.143.3';
+import { creerJeuAnimations } from './rendu/animation-jeu.js?v=0.143.3';
+import { allures as genererAllures } from './anim-modeles.js?v=0.143.3';
+import { ANIMATIONS } from './data/animations.js?v=0.143.3';
+import { EPAULEMENT } from './data/lecteur-animations.js?v=0.143.3';
 
 const el = (tag, props = {}, ...kids) => { const e = Object.assign(document.createElement(tag), props); e.append(...kids); return e; };
 const FACTEUR = 2, TAN15 = Math.tan(15 * Math.PI / 180), N = 6;
@@ -18,21 +18,22 @@ const IDS = [311, 4027, 1789, 9254, 12873, 640];          // six hommes (leur nu
 const u = (n, k) => (Math.imul(n * 977 + k + 1, 2654435761) >>> 0) / 4294967296;
 const lisse01 = x => { const k = x < 0 ? 0 : x > 1 ? 1 : x; return k * k * (3 - 2 * k); };
 
-export function maquetteDemarches(stage, { allures = true } = {}) {
+// `repos` (Jérôme, 17 nov. : « des mouvements simples lorsque les soldats attendent dans les tranchées ») : six hommes alignés, immobiles, comme au parapet ; `vivant` : le repos vivant des allures
+export function maquetteDemarches(stage, { allures = true, repos = false, vivant = false } = {}) {
   let fini = false, nettoyer = () => {};
   stage.append(el('p', { textContent: 'Chargement du défilé…' }));
   (async () => {
     const THREE = await loadThree();
     if (fini) return;
     stage.replaceChildren();
-    nettoyer = monter(stage, THREE, allures);
+    nettoyer = monter(stage, THREE, allures, repos, vivant);
   })().catch(e => { stage.replaceChildren(el('pre', { textContent: `Le défilé n'a pas pu démarrer : ${e.message}` })); });
   return () => { fini = true; nettoyer(); };
 }
 
-function monter(stage, THREE, avecAllures) {
+function monter(stage, THREE, avecAllures, repos = false, vivant = false) {
   const col = l => new THREE.Color(PALETTE[l]);
-  const S = { ppm: 24, feu: true, yaw: 0, tangage: 0.22, peur: false };
+  const S = repos ? { ppm: 32, feu: false, yaw: 0.75, tangage: 0.3, peur: false } : { ppm: 24, feu: true, yaw: 0, tangage: 0.22, peur: false };
   const boite = el('div'); boite.style.cssText = 'position:relative;width:100%;height:min(62vh,520px);overflow:hidden';
   const canvas = el('canvas'); canvas.style.cssText = 'position:absolute;left:0;top:0;width:100%;height:100%;image-rendering:pixelated';
   boite.append(canvas);
@@ -49,11 +50,11 @@ function monter(stage, THREE, avecAllures) {
   const sol = new THREE.Mesh(new THREE.PlaneGeometry(80, 30), new THREE.MeshBasicMaterial({ color: col('b') })); sol.rotation.x = -Math.PI / 2; sol.position.y = -0.002; scene.add(sol);
   const equipes = { fin: creerEquipeArticulee(THREE, col, { capacite: N, ombrage: 0.5, niveau: 'fin', texturePoses: true }), moyen: creerEquipeArticulee(THREE, col, { capacite: N, ombrage: 0.5, niveau: 'moyen', texturePoses: true }) };
   for (const E of Object.values(equipes)) for (const m of E.meshes) scene.add(m);
-  const A = avecAllures ? genererAllures() : null;
+  const A = avecAllures ? genererAllures(undefined, { vivant }) : null;
   const lecteur = creerJeuAnimations(A ? { animations: [...ANIMATIONS, ...A.animations], allures: A } : {});
 
   // les hommes : leur aspect (celui du jeu), leur vitesse, leur place dans la colonne, leur compte à rebours de tir
-  const hommes = IDS.map((id, i) => ({ id, aspect: fabriquer(id, 0).aspect, vit: 1.0 + 0.4 * u(id, 1), x: -10 + 3.6 * i, z: -0.9 * (i % 2), tirT: 1 + 3 * u(id, 2), tv: 0 }));
+  const hommes = IDS.map((id, i) => ({ id, aspect: fabriquer(id, 0).aspect, vit: 1.0 + 0.4 * u(id, 1), x: repos ? -3 + 1.2 * i : -10 + 3.6 * i, z: repos ? 0 : -0.9 * (i % 2), tirT: 1 + 3 * u(id, 2), tv: 0 }));
   const h = { x: 0, y: 0, z: 0, camp: 0, vit: 0, tir: 0, tapi: 0, couche: 0, blessure: 0, cap: Math.PI / 2, temps: 0, aspect: null, coup: 0, avant: Infinity, vise: 0, pose: null };
   let dernierT = performance.now(), temps = 0, raf = 0, w = 0, ht = 0;
   function taille() {
@@ -69,14 +70,14 @@ function monter(stage, THREE, avecAllures) {
     for (const k of Object.keys(equipes)) for (const m of equipes[k].meshes) m.visible = equipes[k] === E;
     E.debut(); lecteur.debut();
     for (const H of hommes) {
-      H.x += H.vit * (S.peur ? 1.6 : 1) * dt; if (H.x > demi) H.x -= 2 * demi;
+      if (!repos) { H.x += H.vit * (S.peur ? 1.6 : 1) * dt; if (H.x > demi) H.x -= 2 * demi; }
       // le tir : un coup toutes les 2,5 à 4,5 s ; `tv` (le `tirVal` du jeu) vaut 1 au coup et perd 1,6 par seconde
       H.tv = Math.max(0, H.tv - 1.6 * dt);
       if (S.feu) { H.tirT -= dt; if (H.tirT <= 0) { H.tv = 1; H.tirT = 2.5 + 2 * u(H.id, Math.floor(temps)); } } else H.tirT = 3;
       const vise = S.feu ? 0.5 : 0;       // sa cible : devant lui, un peu loin de nous (sous le seuil d'EPAULEMENT.vise : il garde son cap de marche)
-      Object.assign(h, { x: H.x, z: H.z, vit: H.vit * (S.peur ? 1.6 : 1), courbe: S.peur ? 1 : 0, aspect: H.aspect, temps, coup: H.tv, avant: S.feu ? H.tirT : Infinity, vise: H.tv > 0 || H.tirT < EPAULEMENT.avance ? vise : 0,
+      Object.assign(h, { x: H.x, z: H.z, vit: repos ? 0 : H.vit * (S.peur ? 1.6 : 1), courbe: S.peur ? 1 : 0, aspect: H.aspect, temps, coup: H.tv, avant: S.feu ? H.tirT : Infinity, vise: H.tv > 0 || H.tirT < EPAULEMENT.avance ? vise : 0,
         tir: A ? Math.max(H.tv > 0 ? 1 - lisse01(((1 - H.tv) / 1.6 - EPAULEMENT.tenue) / EPAULEMENT.baisse) : 0, S.feu && H.tirT < EPAULEMENT.avance ? lisse01(1 - H.tirT / EPAULEMENT.avance) : 0) : Math.min(1, H.tv * 2.5),
-        cap: !A && H.tv > 0 ? Math.PI / 2 + vise : Math.PI / 2 });      // (sans les démarches : il se tourne tout entier vers sa cible, comme le jeu d'avant)
+        cap: repos ? 0 : !A && H.tv > 0 ? Math.PI / 2 + vise : Math.PI / 2 });      // (sans les démarches : il se tourne tout entier vers sa cible, comme le jeu d'avant)
       h.pose = lecteur.pose(H.id, h, temps);
       E.ajouter(h);
     }
@@ -86,7 +87,7 @@ function monter(stage, THREE, avecAllures) {
     camera.position.set(cible.x + d * Math.sin(S.yaw) * Math.cos(S.tangage), cible.y + d * Math.sin(S.tangage), cible.z + d * Math.cos(S.yaw) * Math.cos(S.tangage));
     camera.lookAt(cible); camera.near = Math.max(0.02, d * 0.1); camera.far = d + 60; camera.updateProjectionMatrix();
     renderer.render(scene, camera);
-    legende.textContent = `${S.ppm} px/m · ${avecAllures ? 'une allure par homme, épaulement avant le coup' : 'les démarches d\'avant'} · ${S.feu ? 'feu en marchant' : 'sans tirer'}${S.peur ? ' · sous le feu, courbés' : ''} · image ${w}×${ht} ×${FACTEUR}`;
+    legende.textContent = `${S.ppm} px/m · ${repos ? (vivant ? 'au repos, vivants' : 'au repos, la pose tenue') : avecAllures ? 'une allure par homme, épaulement avant le coup' : 'les démarches d\'avant'} · ${S.feu ? 'feu en marchant' : 'sans tirer'}${S.peur ? ' · sous le feu, courbés' : ''} · image ${w}×${ht} ×${FACTEUR}`;
   }
   raf = requestAnimationFrame(image);
   return () => { cancelAnimationFrame(raf); for (const E of Object.values(equipes)) E.dispose(); renderer.dispose(); };

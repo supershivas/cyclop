@@ -1,5 +1,5 @@
-import { NOMS_CHAMPS } from '../data/poses-soldat.js?v=0.143.2';
-import { poseJeu, phaseDe, TEXELS, FLOTTANTS } from './pose-jeu.js?v=0.143.2';
+import { NOMS_CHAMPS } from '../data/poses-soldat.js?v=0.143.3';
+import { poseJeu, phaseDe, TEXELS, FLOTTANTS } from './pose-jeu.js?v=0.143.3';
 
 // Le soldat articulé (au labo seulement : « la fabrique de soldats », et la mesure de son coût ; rien n'est dans le jeu).
 // Un squelette de treize os (le tronc, la tête, deux fois bras / avant-bras, deux fois cuisse / mollet / pied, le fusil) que le nuanceur plie : le genou, le coude, la cheville
@@ -47,10 +47,25 @@ const P = PARTIES;
 
 // La liste des boîtes : [x0, x1, y0, y1, z0, z1, partie, os, show, dessus, devant, rotation autour de y, niveau]
 // `niveau` (v0.105.1) : 0 les deux niveaux de détail ; 1 le niveau fin seulement (boutons, parements, pouces, galons, oreilles, anneaux octogonaux du casque, moustaches, pipe : moins d'un pixel de 12 à 16 px/m) ; 2 le niveau intermédiaire seulement (le casque simplifié)
+// Le style des casques de près (labo, Jérôme, 17 nov. : « les casques ne peuvent-ils pas avoir un rendu plus réaliste de près ? plus rond ? ») : 'anneaux' (le jeu : quatre anneaux octogonaux
+// de boîtes pour l'Adrian, trois pour le Stahlhelm), 'anneaux12' (six anneaux à douze pans), 'tour8' et 'tour16' (un profil tourné autour de l'axe de la tête, comme au tour de potier :
+// le dôme, le bord qui s'avance devant et derrière, la jupe évasée ; 8 pans à facettes, ou 16 pans lissés). Le niveau intermédiaire (12 à 16 px/m) garde ses anneaux carrés.
+export const STYLES_CASQUE = ['anneaux', 'anneaux12', 'tour8', 'tour16'];
+let styleCasque = 'anneaux';
+export function reglerCasques(style) { if (STYLES_CASQUE.includes(style)) styleCasque = style; return styleCasque; }
+// Les profils tournés : des points [rayon, hauteur, allonge devant, allonge derrière] du bord vers le sommet (l'allonge étire le rayon vers l'avant, +z, ou vers l'arrière)
+export const PROFILS_CASQUE = {
+  adrian: [[0.13, 1.582, 1.48, 1.32], [0.132, 1.6, 1, 1], [0.13, 1.632, 1, 1], [0.12, 1.664, 1, 1], [0.098, 1.694, 1, 1], [0.062, 1.717, 1, 1], [0, 1.728, 1, 1]],
+  stahlhelm: [[0.15, 1.53, 1.3, 1.55], [0.137, 1.585, 1.05, 1.1], [0.133, 1.622, 1, 1], [0.124, 1.652, 1, 1], [0.104, 1.682, 1, 1], [0.068, 1.704, 1, 1], [0, 1.714, 1, 1]],
+};
+
 export function boites() {
   const L = [];
   let niv = 0;
   const B = (x0, x1, y0, y1, z0, z1, part, os, show = 0, haut = part, avant = part, rot = 0) => L.push([x0, x1, y0, y1, z0, z1, part, os, show, haut, avant, rot, niv]);
+  // un profil tourné (`n` pans, `lisse` : une normale par sommet plutôt qu'une par facette) ; sa boîte englobante tient la place des six premiers nombres (le détecteur de faces confondues, les comptes)
+  const T = (profil, n, lisse, part, os, show = 0) => { const R = Math.max(...profil.map(p => p[0] * Math.max(p[2], p[3]))); L.push([-R, R, profil[0][1], profil[profil.length - 1][1], -R, R, part, os, show, part, part, 0, niv, { profil, n, lisse }]); };
+  const tour = styleCasque === 'tour8' || styleCasque === 'tour16', pans = styleCasque === 'tour16' ? 16 : 8;
   const x = (s, a, b) => s > 0 ? [a, b] : [-b, -a];
   const cote = f => { f(-1); f(1); };
   // ── le tronc : la vareuse descend sous le ceinturon (les basques à mi-cuisse), le pantalon est de la couleur de l'armée (français : bleu horizon ; allemand : feldgrau, veste et pantalon unis)
@@ -105,21 +120,31 @@ export function boites() {
   cote(s => B(...x(s, 0.1, 0.12), 1.45, 1.62, -0.1, 0.05, P.cheveux, tete, 203));        // longs
   B(-0.105, 0.105, 1.62, 1.68, -0.105, 0.105, P.cheveux, tete, 204); B(-0.105, 0.105, 1.56, 1.66, 0.1, 0.12, P.cheveux, tete, 204);      // frange
   // le casque Adrian (français) : une demi-sphère (quatre anneaux octogonaux qui se resserrent), le cimier, la visière, le couvre-nuque et la cocarde ; 26 cm de large, comme le vrai
-  niv = 1; for (const [y0, y1, r] of [[1.57, 1.61, 0.13], [1.61, 1.65, 0.12], [1.65, 1.69, 0.1], [1.69, 1.72, 0.065]]) { B(-r, r, y0, y1, -r, r, P.casque, tete, 1500); B(-r, r, y0, y1, -r, r, P.casque, tete, 1500, P.casque, P.casque, Math.PI / 4); }
+  niv = 1;
+  if (tour) T(PROFILS_CASQUE.adrian, pans, styleCasque === 'tour16', P.casque, tete, 1500);
+  else if (styleCasque === 'anneaux12') { for (const [y0, y1, r] of [[1.57, 1.598, 0.132], [1.598, 1.626, 0.128], [1.626, 1.654, 0.12], [1.654, 1.682, 0.106], [1.682, 1.706, 0.086], [1.706, 1.724, 0.056]]) for (const a of [0, Math.PI / 6, Math.PI / 3]) B(-r, r, y0, y1, -r, r, P.casque, tete, 1500, P.casque, P.casque, a); }
+  else for (const [y0, y1, r] of [[1.57, 1.61, 0.13], [1.61, 1.65, 0.12], [1.65, 1.69, 0.1], [1.69, 1.72, 0.065]]) { B(-r, r, y0, y1, -r, r, P.casque, tete, 1500); B(-r, r, y0, y1, -r, r, P.casque, tete, 1500, P.casque, P.casque, Math.PI / 4); }
   niv = 2; for (const [y0, y1, r] of [[1.57, 1.62, 0.13], [1.62, 1.67, 0.11], [1.67, 1.72, 0.075]]) B(-r, r, y0, y1, -r, r, P.casque, tete, 1500);       // (intermédiaire : trois anneaux carrés)
   niv = 0;
   B(-0.01, 0.01, 1.7, 1.765, -0.12, 0.12, P.casque, tete, 1500);                         // le cimier, d'avant en arrière
+  niv = tour ? 2 : 0;      // (le profil tourné porte déjà le bord : la visière et le couvre-nuque en boîtes ne restent qu'aux anneaux, et toujours au niveau intermédiaire)
   B(-0.115, 0.115, 1.585, 1.605, 0.12, 0.19, P.casque, tete, 1500);                      // la visière
   B(-0.11, 0.11, 1.575, 1.6, -0.17, -0.12, P.casque, tete, 1500);                        // le couvre-nuque
+  niv = 0;
   niv = 1; B(-0.025, 0.025, 1.62, 1.665, 0.13, 0.142, P.metal, tete, 1500); niv = 0;                        // la cocarde, l'insigne de grenade
   // le Stahlhelm (allemand, M1916) : un dôme plus bas, la jupe tout autour, le long couvre-nuque, les protège-oreilles, la visière, les cornes d'aération
-  niv = 1; for (const [y0, y1, r] of [[1.6, 1.64, 0.13], [1.64, 1.68, 0.115], [1.68, 1.71, 0.08]]) { B(-r, r, y0, y1, -r, r, P.casque, tete, 1501); B(-r, r, y0, y1, -r, r, P.casque, tete, 1501, P.casque, P.casque, Math.PI / 4); }
+  niv = 1;
+  if (tour) T(PROFILS_CASQUE.stahlhelm, pans, styleCasque === 'tour16', P.casque, tete, 1501);
+  else if (styleCasque === 'anneaux12') { for (const [y0, y1, r] of [[1.6, 1.622, 0.132], [1.622, 1.644, 0.126], [1.644, 1.666, 0.116], [1.666, 1.688, 0.1], [1.688, 1.712, 0.072]]) for (const a of [0, Math.PI / 6, Math.PI / 3]) B(-r, r, y0, y1, -r, r, P.casque, tete, 1501, P.casque, P.casque, a); }
+  else for (const [y0, y1, r] of [[1.6, 1.64, 0.13], [1.64, 1.68, 0.115], [1.68, 1.71, 0.08]]) { B(-r, r, y0, y1, -r, r, P.casque, tete, 1501); B(-r, r, y0, y1, -r, r, P.casque, tete, 1501, P.casque, P.casque, Math.PI / 4); }
   niv = 2; for (const [y0, y1, r] of [[1.6, 1.66, 0.13], [1.66, 1.71, 0.09]]) B(-r, r, y0, y1, -r, r, P.casque, tete, 1501);
   niv = 0;
+  niv = tour ? 2 : 0;      // (le profil tourné porte la jupe, le couvre-nuque et la visière : ces boîtes ne restent qu'aux anneaux et au niveau intermédiaire)
   B(-0.15, 0.15, 1.555, 1.6, -0.16, 0.145, P.casque, tete, 1501);                         // la jupe
   B(-0.14, 0.14, 1.5, 1.56, -0.23, -0.12, P.casque, tete, 1501);                          // le couvre-nuque, long
   cote(s => B(...x(s, 0.12, 0.16), 1.5, 1.58, -0.1, 0.08, P.casque, tete, 1501));         // les protège-oreilles
   B(-0.12, 0.12, 1.565, 1.6, 0.145, 0.2, P.casque, tete, 1501);                           // la visière
+  niv = 0;
   niv = 1;
   cote(s => B(...x(s, 0.145, 0.168), 1.625, 1.65, -0.015, 0.015, P.metal, tete, 1501));   // les cornes d'aération
   B(-0.012, 0.012, 1.7, 1.725, -0.04, 0.04, P.metal, tete, 1501);                          // le support de la cocarde, au sommet
@@ -169,7 +194,19 @@ export function boites() {
 export function modeleArticule({ complet = false, filtre = null, niveau = 'fin' } = {}) {
   const pos = [], part = [], os = [], show = [], nor = [];
   let nBoites = 0;
-  for (const [x0, x1, y0, y1, z0, z1, p, o, s, haut, avant, rot] of boites().filter(b => (niveau === 'moyen' ? b[12] !== 1 : b[12] !== 2) && (!filtre || filtre(b)))) {
+  for (const [x0, x1, y0, y1, z0, z1, p, o, s, haut, avant, rot, , tourne] of boites().filter(b => (niveau === 'moyen' ? b[12] !== 1 : b[12] !== 2) && (!filtre || filtre(b)))) {
+    if (tourne) {      // un profil tourné : une bande de quadrilatères par paire de points du profil, `n` pans autour de l'axe de la tête
+      const { profil: Pr, n, lisse } = tourne, pt = (k, j) => { const a = 2 * Math.PI * j / n, c = Math.cos(a), sn = Math.sin(a), [r, y, kav, kar] = Pr[k]; return [r * sn, y, r * c * (c > 0 ? kav : kar)]; };
+      const nrm = v => { const l = Math.hypot(v[0], v[1], v[2]) || 1; return [v[0] / l, v[1] / l, v[2] / l]; };
+      const yc = Pr[0][1] - 0.02, nv = v => nrm([v[0], v[1] - yc, v[2]]);      // (lissé : la normale du sommet part du centre du casque)
+      for (let k = 0; k < Pr.length - 1; k++) for (let j = 0; j < n; j++) {
+        const a = pt(k, j), b = pt(k, j + 1), cc = pt(k + 1, j + 1), d = pt(k + 1, j);
+        const fn = nrm([(b[1] - a[1]) * (d[2] - a[2]) - (b[2] - a[2]) * (d[1] - a[1]), (b[2] - a[2]) * (d[0] - a[0]) - (b[0] - a[0]) * (d[2] - a[2]), (b[0] - a[0]) * (d[1] - a[1]) - (b[1] - a[1]) * (d[0] - a[0])]);
+        const f = fn[1] < 0 && k > 0 ? fn.map(x => -x) : fn;
+        for (const v of [a, b, cc, a, cc, d]) { pos.push(...v); part.push(p); os.push(o); show.push(s); nor.push(...(lisse ? nv(v) : f)); }
+      }
+      nBoites++; continue;
+    }
     const cx = (x0 + x1) / 2, cz = (z0 + z1) / 2, c = Math.cos(rot || 0), sn = Math.sin(rot || 0);
     const r = v => rot ? [cx + (v[0] - cx) * c + (v[2] - cz) * sn, v[1], cz - (v[0] - cx) * sn + (v[2] - cz) * c] : v;      // une boîte tournée de 45° autour de y : les anneaux octogonaux des casques
     // la normale de la face (tournée avec la boîte) : l'éclairage de relief se calcule par sommet, face par face (les dérivées de l'écran faisaient du bruit à 40 pixels de haut)
@@ -187,7 +224,7 @@ export function modeleArticule({ complet = false, filtre = null, niveau = 'fin' 
 // Les triangles qu'un homme dessine vraiment (les autres sont aplatis par le nuanceur : ils coûtent leurs sommets, pas leurs pixels)
 export function trianglesVisibles(a, camp, blessure = 0, { complet = false, niveau = 'fin' } = {}) {
   let n = 0;
-  for (const b of boites()) if ((niveau === 'moyen' ? b[12] !== 1 : b[12] !== 2) && voir(b[8], a, camp, blessure)) n += complet ? 10 : 8;
+  for (const b of boites()) if ((niveau === 'moyen' ? b[12] !== 1 : b[12] !== 2) && voir(b[8], a, camp, blessure)) n += b[13] ? 2 * b[13].n * (b[13].profil.length - 1) : complet ? 10 : 8;
   return n;
 }
 

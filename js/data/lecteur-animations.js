@@ -41,6 +41,11 @@ export const ALLURES = {
   port: { flexion: [-0.76, -0.64], lacet: [0.25, 0.35], crosseY: [0.93, 0.98] },
   // au repos, le poids sur une jambe : la hanche qui glisse vers elle, l'autre genou un peu plié, les épaules qui compensent
   repos: { appui: [0.015, 0.045], hanche: [0.05, 0.15], genou: [0.12, 0.3], roulis: 0.02, torsion: 0.05 },
+  // le repos vivant (Jérôme, 17 nov. : « des mouvements simples lorsque les soldats attendent dans les tranchées : balancement du corps, de la tête, des mains qui tiennent les fusils ») :
+  // une boucle de `periode` secondes, à phase propre à chaque homme, en `images` images ; il respire (`souffle` : le buste, trois fois par boucle), se balance (`balance`, m), passe le poids
+  // d'une jambe sur l'autre (une fois par boucle), baisse et relève la tête (`tete`), jette un coup d'œil d'un côté puis de l'autre (`regard` : le buste tourne, la tête avec), rajuste sa prise
+  // (`prise` : la pente et le roulis du fusil, les mains le suivent) ; les amplitudes sont tirées dans ces plages pour chaque allure
+  vivant: { periode: [6, 9], images: 16, souffle: [0.012, 0.025], balance: [0.006, 0.016], tete: [0.04, 0.12], regard: [0.1, 0.3], prise: [0.03, 0.09] },
 };
 
 // L'épaulement (Jérôme, 17 nov. : « des tirs avec épaulement depuis la marche ») : l'homme lève son fusil AVANT le coup (le compte à rebours de l'armée, `tirT`, se lit),

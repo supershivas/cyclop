@@ -1,8 +1,8 @@
 // Des animations toutes faites du soldat articulé, point de départ de l'atelier (logique pure) : on les charge, on les retouche image par image.
 // Elles sont construites avec les poses du jeu (`poseDe`), le fusil placé comme un corps (`pointFusil`) et la cinématique inverse des bras (`ikBras` : les mains posées sur le fusil).
 // Tout est pour un tireur DROITIER ; le gaucher en est le miroir (`miroirAnimation` de js/anim-edition.js : le jeu en jouera le miroir pour environ 10 % des hommes).
-import { poseNeutre, poseDe, ikBras, pointFusil, animation, articulations, CARRURE_NEUTRE } from './pose-soldat.js?v=0.143.2';
-import { ALLURES, TIR_EPAULE } from './data/lecteur-animations.js?v=0.143.2';
+import { poseNeutre, poseDe, ikBras, pointFusil, animation, articulations, CARRURE_NEUTRE } from './pose-soldat.js?v=0.143.3';
+import { ALLURES, TIR_EPAULE } from './data/lecteur-animations.js?v=0.143.3';
 
 // Le fusil à deux mains, « à la charge » : la crosse contre la hanche droite, le canon devant et un peu à gauche ; la main droite sur la poignée, la gauche sur le fût.
 // (les valeurs viennent d'un balayage : un fusil plus horizontal ou plus avancé met la main gauche hors de portée du bras, 62 cm)
@@ -67,6 +67,7 @@ export function allure(n, A = ALLURES) {
     port: { ...PORT_ARME, flexion: entre(A.port.flexion, u(12)), lacet: entre(A.port.lacet, u(13)), crosse: [PORT_ARME.crosse[0], entre(A.port.crosseY, u(14)), PORT_ARME.crosse[2]] },
     repos: { cote: u(15) < 0.5 ? -1 : 1, appui: entre(A.repos.appui, u(16)), hanche: entre(A.repos.hanche, u(17)), genou: entre(A.repos.genou, u(18)),
       roulis: A.repos.roulis * (0.5 + u(19)), torsion: A.repos.torsion * (2 * u(20) - 1) },
+    vivant: { periode: entre(A.vivant.periode, u(21)), souffle: entre(A.vivant.souffle, u(22)), balance: entre(A.vivant.balance, u(23)), tete: entre(A.vivant.tete, u(24)), regard: entre(A.vivant.regard, u(25)), prise: entre(A.vivant.prise, u(26)) },
   };
 }
 
@@ -95,6 +96,20 @@ export function reposAllure(a, nom) {
   return animation(nom, [{ t: 0, courbe: 'doux', pose: { ...port, appui: r.cote * r.appui, roulis: -r.cote * r.roulis, torsion: r.torsion } }], { mode: 'boucle', duree: 1 });
 }
 
+// Le repos vivant d'une allure : une boucle où il respire, se balance, passe le poids d'une jambe sur l'autre, baisse et relève la tête, jette un coup d'œil de chaque côté et rajuste sa prise ;
+// à chaque image, le fusil est replacé et les mains vont dessus (`porterArme`), puis le balancement, le poids et le coup d'œil s'ajoutent d'un bloc (les mains restent)
+export function reposVivant(a, nom, { images = ALLURES.vivant.images } = {}) {
+  const r = a.repos, V = a.vivant, T = 2 * Math.PI, I = [];
+  for (let i = 0; i < images; i++) {
+    const u = i / images, s = Math.max(-1, Math.min(1, 1.6 * Math.sin(T * u) * r.cote));      // le poids : sur la jambe droite quand s > 0
+    const p = { ...poseNeutre(), buste: a.buste * 0.4 + V.souffle * Math.sin(T * 3 * u), tete: a.tete * 0.5 + V.tete * Math.sin(T * u + 2) };
+    for (const [g, f] of [['G', Math.max(0, s)], ['D', Math.max(0, -s)]]) { p['hanche' + g] = r.hanche * f; p['genou' + g] = r.genou * f; p['cheville' + g] = (r.genou - r.hanche) * f * 0.8; }
+    const port = porterArme(p, CARRURE_NEUTRE, { ...a.port, flexion: a.port.flexion + V.prise * Math.sin(T * 2 * u + 0.3), roulis: a.port.roulis + 0.7 * V.prise * Math.cos(T * 2 * u + 0.3) });
+    I.push({ t: u * V.periode, courbe: 'lineaire', pose: { ...port, appui: s * r.appui + V.balance * Math.sin(T * 2 * u + 1), roulis: -s * r.roulis, torsion: r.torsion + V.regard * Math.sin(T * u + 0.7) ** 3 } });
+  }
+  return animation(nom, I, { mode: 'boucle', duree: V.periode });
+}
+
 // Le tir épaulé (les démarches) : la crosse posée au creux de l'épaule (`porterArme` avec TIR_EPAULE : la crosse là, les mains sur le fusil), la tête baissée sur elle ;
 // le fusil se lève en 0,2 s, le coup et son recul à 0,26 s (EPAULEMENT.avance : l'homme épaule avant son coup pour que le recul tombe avec l'éclair), la visée tenue, puis le fusil revient à la charge
 export function tirEpaule({ duree = 1, nom = 'tir épaulé' } = {}) {
@@ -108,11 +123,11 @@ export function tirEpaule({ duree = 1, nom = 'tir épaulé' } = {}) {
 }
 
 // Les `nombre` allures : { animations (à ajouter à celles du jeu), marche: [noms], repos: [noms] } (le rang k d'un homme : son numéro modulo `nombre`)
-export function allures(nombre = ALLURES.nombre) {
+export function allures(nombre = ALLURES.nombre, { vivant = false } = {}) {      // (`vivant` : le repos vivant, une boucle, au lieu de la pose tenue)
   const animations = [tirEpaule()], marche = [], repos = [];
   for (let n = 0; n < nombre; n++) {
     const a = allure(n), m = `marche · allure ${n + 1}`, r = `repos · allure ${n + 1}`;
-    animations.push(marcheAllure(a, m), reposAllure(a, r)); marche.push(m); repos.push(r);
+    animations.push(marcheAllure(a, m), vivant ? reposVivant(a, r) : reposAllure(a, r)); marche.push(m); repos.push(r);
   }
   return { animations, marche, repos, tir: 'tir épaulé' };
 }

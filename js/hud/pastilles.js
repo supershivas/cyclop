@@ -3,10 +3,10 @@
 // à la couleur de son camp, sa barre de vie au-dessus ; détruit, il est vidé et barré. Au survol il grossit et l'infobulle du jeu (`data-info`) dit tout : l'état, la vie, le canon ou la bande,
 // l'expérience, les victimes. Le clic sur un des nôtres (char, poste) le choisit. Le dessin et les lignes de texte seulement : les données viennent de hud/chars.js, hud/nids.js et d'ici pour les avions.
 // Les nombres d'avions : `positionDe` (avions.js). Rien n'est écrit dans la bataille.
-import { positionDe, balayage } from '../avions.js?v=0.143.2';
-import { MITRAILLAGE } from '../data/mitraillage.js?v=0.143.2';
-import { NOUS } from '../bataille.js?v=0.143.2';
-import { ecussonHtml, reglerEcusson } from './ecussons.js?v=0.143.2';
+import { positionDe, balayage } from '../avions.js?v=0.143.3';
+import { MITRAILLAGE } from '../data/mitraillage.js?v=0.143.3';
+import { NOUS } from '../bataille.js?v=0.143.3';
+import { ecussonHtml, reglerEcusson } from './ecussons.js?v=0.143.3';
 const NS = 'http://www.w3.org/2000/svg';
 
 const REDUIT = () => matchMedia('(prefers-reduced-motion: reduce)').matches;

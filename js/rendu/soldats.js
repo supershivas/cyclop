@@ -1,17 +1,17 @@
 // Les hommes : les soldats (une boîte et son ombre ; de près la silhouette, plus loin une silhouette allégée ; aux zooms 1 et 2 un point), les anneaux des
 // régiments choisis ou survolés, les corps (un homme couché) et les tombes (un tertre et une croix). Tout est instancié et ne reçoit que ce qu'on voit.
 // Le dessin seulement. Les formes viennent de geometries.js, le GLSL de shaders.js.
-import * as SH from './shaders.js?v=0.143.2';
-import { creerGeometries } from './geometries.js?v=0.143.2';
-import { classeDuRang } from '../data/grades.js?v=0.143.2';
-import { creerEquipeArticulee } from './soldat-articule.js?v=0.143.2';
-import { creerJeuAnimations } from './animation-jeu.js?v=0.143.2';
-import { allures } from '../anim-modeles.js?v=0.143.2';
-import { ANIMATIONS } from '../data/animations.js?v=0.143.2';
-import { EPAULEMENT, MARCHE_JEU } from '../data/lecteur-animations.js?v=0.143.2';
-import { SANG } from '../data/aspect-soldat.js?v=0.143.2';
-import { ligneY } from '../tranchees.js?v=0.143.2';
-import { profondeurALEcran } from './vue-ecran.js?v=0.143.2';
+import * as SH from './shaders.js?v=0.143.3';
+import { creerGeometries } from './geometries.js?v=0.143.3';
+import { classeDuRang } from '../data/grades.js?v=0.143.3';
+import { creerEquipeArticulee } from './soldat-articule.js?v=0.143.3';
+import { creerJeuAnimations } from './animation-jeu.js?v=0.143.3';
+import { allures } from '../anim-modeles.js?v=0.143.3';
+import { ANIMATIONS } from '../data/animations.js?v=0.143.3';
+import { EPAULEMENT, MARCHE_JEU } from '../data/lecteur-animations.js?v=0.143.3';
+import { SANG } from '../data/aspect-soldat.js?v=0.143.3';
+import { ligneY } from '../tranchees.js?v=0.143.3';
+import { profondeurALEcran } from './vue-ecran.js?v=0.143.3';
 
 // `THREE`, `scene`, `col`, `solUniforms` (`uSol`, `uTaille` : la texture du sol, que l'ombre d'un soldat reprend), `styleSoldat` (le style de près, comparé au labo),
 // `grades` (v0.68.0 : une variante de `GRADES`, data/grades.js, ou null : tous pareils) et `rangDe(B, id, reg)` (le rang d'un homme, bataille.js) ; `surface(x, z)` et `surfaceLisse(x, z)` (la hauteur du sol, lissée pour qui marche), `solY` (la hauteur moyenne du sol) et `POINTS_JUSQUA` (le zoom où un soldat n'est
@@ -46,9 +46,9 @@ export function creerSoldats({ THREE, scene, col, solUniforms, styleSoldat, grad
   // décale les tirages d'identifiants de three, donc les images de référence). `aspectDe(B, id, camp)` : l'aspect d'un homme (main.js : son numéro de campagne, la graine d'identité, son âge et son rang) ; gardé par numéro.
   let artCfg = null, aspectDe = null, EQ = null, EQs = { moyen: null, fin: null }, artSel = null, candI = null, candD = null, artVus = 0, animJeu = null, listeAnim = null;
   // (v0.141.2) les démarches : une allure par homme (js/anim-modeles.js, générées une fois, au premier besoin), l'épaulement avant le coup, le buste qui vise ; `uDemarche` pour les silhouettes
-  let demarches = false, lesAllures = null;
+  let demarches = false, lesAllures = null, reposVivant = false;      // (`reposVivant` : le repos vivant des allures, labo)
   const refaireAnim = () => {
-    if (demarches) lesAllures ??= allures();
+    if (demarches) lesAllures ??= allures(undefined, { vivant: reposVivant });
     const liste = demarches ? [...(listeAnim ?? ANIMATIONS), ...lesAllures.animations] : listeAnim;
     animJeu = artCfg && artCfg.texture !== false && artCfg.animations !== false ? creerJeuAnimations({ ...(liste ? { animations: liste } : {}), ...(demarches ? { allures: lesAllures } : {}) }) : null;
   };
@@ -514,6 +514,7 @@ export function creerSoldats({ THREE, scene, col, solUniforms, styleSoldat, grad
     sansOmbre(v) { soldatMat.uniforms.uSansOmbre.value = v ? 1 : 0; for (const E of Object.values(EQs)) if (E && v) E.meshes[0].visible = false; },                       // la carte d'ombre remplace l'ombre au sol en quadrilatère
     soleilUniform: soldatMat.uniforms.uSoleil,                    // le bout de l'ombre d'un mètre de hauteur (temps.js le règle, le nuanceur le lit)
     setTemps(t) { soldatMat.uniforms.uT.value = t; },
+    setReposVivant(v) { if (reposVivant !== !!v) { reposVivant = !!v; lesAllures = null; refaireAnim(); } },      // le repos vivant (labo ; false : la pose tenue)
     setDemarches(v) { demarches = !!v; soldatMat.uniforms.uDemarche.value = demarches ? 1 : 0; refaireAnim(); },      // les démarches (labo ; false : celles d'avant)
     setVariete(v) { variete = v || null; soldatMat.uniforms.uVarTon.value = v ? v.ton : 0; FX.fill(1e9); },      // la variété des soldats (null : tous pareils)
     setSang(v) { soldatMat.uniforms.uSang.value = Math.max(0, Math.min(1, +v || 0)); },      // la force des taches de sang (0 : aucune)             // les jambes qui marchent

@@ -2,47 +2,48 @@
 // Chaque sujet utilise les mêmes modules que le jeu (terrain, apparence,
 // rendu three.js) : ce qu'on voit ici est ce que le jeu dessinera. Ajouter un
 // sujet ou une variante = ajouter une entrée dans GROUPES.
-import { afficherVersion } from './version-tag.js?v=0.143.2';
-import { mountLabo } from './lib/labo-shell.js?v=0.143.2';
-import { spriteCanvas, paletteToGPL, paletteToHex } from './lib/sprites.js?v=0.143.2';
-import { PALETTE, ROLES } from './palette.js?v=0.143.2';
-import { chargerContenu } from './design-store.js?v=0.143.2';
-import { tuile, ETAT } from './tuiles.js?v=0.143.2';
-import { creerTerrain, impact, hydroLignes, toucher } from './terrain.js?v=0.143.2';
-import { FORMES } from './cratere.js?v=0.143.2';
-import { CALIBRES } from './data/calibres.js?v=0.143.2';
-import { METEO } from './data/meteo.js?v=0.143.2';
-import { nouvelleBataille, avancer, ordonnerMarche, ordonnerBarrage, mourir, regarderAu, aube, horloge, ticksParJour, rangDe } from './bataille.js?v=0.143.2';
-import { BOUE_SOLDATS, SANG, VARIETE_SOLDATS } from './data/aspect-soldat.js?v=0.143.2';
-import { AZIMUTS, COTES } from './data/soleil.js?v=0.143.2';
-import { creerRendu, ZOOMS } from './rendu3d.js?v=0.143.2';
-import { placesCommandement } from './army.js?v=0.143.2';
-import { hash2 } from './lib/rng.js?v=0.143.2';
-import { reglerVerdure } from './apparence.js?v=0.143.2';
-import { maquetteChars } from './labo-chars.js?v=0.143.2';
-import { maquetteEpaves } from './labo-epaves.js?v=0.143.2';
-import { maquetteDemarches } from './labo-demarches.js?v=0.143.2';
-import { fondations, boutons, unites, fenetres, revision } from './labo-design-system.js?v=0.143.2';
-import { cartesSecteur } from './labo-cartes.js?v=0.143.2';
-import { patrouilleLabo } from './labo-patrouille.js?v=0.143.2';
-import { EFFETS } from './rendu3d.js?v=0.143.2';
-import { calqueEcussons } from './labo-ecussons.js?v=0.143.2';
-import { plancheEcussons } from './labo-ecussons-armes.js?v=0.143.2';
-import { gainTampon, gainCachets, gainFil, gainBordereau, victoireFanion, victoireTampon, victoireChevrons, victoireAube, ficheDeuxColonnes, ficheEtages, ficheRegistre, ficheDAbord } from './labo-recompenses.js?v=0.143.2';
-import { maquetteBatiment, maquetteCamp } from './labo-batiments.js?v=0.143.2';
-import { BATIMENTS } from './data/batiments.js?v=0.143.2';
-import { JOURNAL } from './labo-journal.js?v=0.143.2';
-import { loadVersion } from './lib/app-update.js?v=0.143.2';
-import { maquetteEffets, maquetteAmbiance, maquetteEspace, maquetteBruitages } from './labo-son.js?v=0.143.2';
-import { calqueMoral } from './labo-moral.js?v=0.143.2';
-import { bilanRapport, bilanTuiles, bilanFrise } from './labo-donnees.js?v=0.143.2';
-import { papierNuit, finDePartie } from './labo-papiers.js?v=0.143.2';
-import { fichesTuiles, fichesProfil, fichesCompactes } from './labo-fiches.js?v=0.143.2';
-import { calqueEnnemis } from './labo-engins-ennemis.js?v=0.143.2';
-import { maquetteTranchees, NOTES_TRANCHEES, NOMS_TRANCHEES } from './labo-tranchees.js?v=0.143.2';
-import { maquetteFabrique } from './labo-fabrique.js?v=0.143.2';
-import { atelierTerrain } from './labo-atelier-terrain.js?v=0.143.2';
-import { entrees as encEntrees, lexiqueAZ, planche as encPlanche } from './labo-encyclopedie.js?v=0.143.2';
+import { afficherVersion } from './version-tag.js?v=0.143.3';
+import { mountLabo } from './lib/labo-shell.js?v=0.143.3';
+import { spriteCanvas, paletteToGPL, paletteToHex } from './lib/sprites.js?v=0.143.3';
+import { PALETTE, ROLES } from './palette.js?v=0.143.3';
+import { chargerContenu } from './design-store.js?v=0.143.3';
+import { tuile, ETAT } from './tuiles.js?v=0.143.3';
+import { creerTerrain, impact, hydroLignes, toucher } from './terrain.js?v=0.143.3';
+import { FORMES } from './cratere.js?v=0.143.3';
+import { CALIBRES } from './data/calibres.js?v=0.143.3';
+import { METEO } from './data/meteo.js?v=0.143.3';
+import { nouvelleBataille, avancer, ordonnerMarche, ordonnerBarrage, mourir, regarderAu, aube, horloge, ticksParJour, rangDe } from './bataille.js?v=0.143.3';
+import { BOUE_SOLDATS, SANG, VARIETE_SOLDATS } from './data/aspect-soldat.js?v=0.143.3';
+import { AZIMUTS, COTES } from './data/soleil.js?v=0.143.3';
+import { creerRendu, ZOOMS } from './rendu3d.js?v=0.143.3';
+import { placesCommandement } from './army.js?v=0.143.3';
+import { hash2 } from './lib/rng.js?v=0.143.3';
+import { reglerVerdure } from './apparence.js?v=0.143.3';
+import { maquetteChars } from './labo-chars.js?v=0.143.3';
+import { maquetteEpaves } from './labo-epaves.js?v=0.143.3';
+import { maquetteCasques } from './labo-casques.js?v=0.143.3';
+import { maquetteDemarches } from './labo-demarches.js?v=0.143.3';
+import { fondations, boutons, unites, fenetres, revision } from './labo-design-system.js?v=0.143.3';
+import { cartesSecteur } from './labo-cartes.js?v=0.143.3';
+import { patrouilleLabo } from './labo-patrouille.js?v=0.143.3';
+import { EFFETS } from './rendu3d.js?v=0.143.3';
+import { calqueEcussons } from './labo-ecussons.js?v=0.143.3';
+import { plancheEcussons } from './labo-ecussons-armes.js?v=0.143.3';
+import { gainTampon, gainCachets, gainFil, gainBordereau, victoireFanion, victoireTampon, victoireChevrons, victoireAube, ficheDeuxColonnes, ficheEtages, ficheRegistre, ficheDAbord } from './labo-recompenses.js?v=0.143.3';
+import { maquetteBatiment, maquetteCamp } from './labo-batiments.js?v=0.143.3';
+import { BATIMENTS } from './data/batiments.js?v=0.143.3';
+import { JOURNAL } from './labo-journal.js?v=0.143.3';
+import { loadVersion } from './lib/app-update.js?v=0.143.3';
+import { maquetteEffets, maquetteAmbiance, maquetteEspace, maquetteBruitages } from './labo-son.js?v=0.143.3';
+import { calqueMoral } from './labo-moral.js?v=0.143.3';
+import { bilanRapport, bilanTuiles, bilanFrise } from './labo-donnees.js?v=0.143.3';
+import { papierNuit, finDePartie } from './labo-papiers.js?v=0.143.3';
+import { fichesTuiles, fichesProfil, fichesCompactes } from './labo-fiches.js?v=0.143.3';
+import { calqueEnnemis } from './labo-engins-ennemis.js?v=0.143.3';
+import { maquetteTranchees, NOTES_TRANCHEES, NOMS_TRANCHEES } from './labo-tranchees.js?v=0.143.3';
+import { maquetteFabrique } from './labo-fabrique.js?v=0.143.3';
+import { atelierTerrain } from './labo-atelier-terrain.js?v=0.143.3';
+import { entrees as encEntrees, lexiqueAZ, planche as encPlanche } from './labo-encyclopedie.js?v=0.143.3';
 
 document.documentElement.style.setProperty('--jeu-accent', ROLES.accent);
 const NOM = document.title.replace(/^Labo — /, ''); // le nom vient de la page (une apostrophe ne casse rien)
@@ -483,6 +484,16 @@ const GROUPES = [
     ] },
   ] },
   { id: 'soldats', title: 'Soldats', topics: [
+    { id: 'repos', title: 'Au repos dans la tranchée', variants: [
+      { title: 'La pose tenue', status: 'actuelle', note: "Le jeu tel qu'il est, de 12 px/m à 32 : au repos, chaque homme tient sa pose (le poids sur une jambe, le fusil à deux mains) sans bouger. Six hommes alignés comme au parapet, vus de trois quarts.", render: s => maquetteDemarches(s, { allures: true, repos: true, vivant: false }) },
+      { title: 'Le repos vivant', status: 'a-trancher', depuis: '0.143.3', note: "PROPOSITION (Jérôme, 17 nov. : « des mouvements simples lorsque les soldats attendent dans les tranchées : balancement du corps, de la tête, des mains qui tiennent les fusils »). Une boucle de 6 à 9 s, à phase propre à chaque homme : il respire (le buste), se balance, passe le poids d'une jambe sur l'autre, baisse et relève la tête, jette un coup d'œil d'un côté puis de l'autre (le buste tourne), rajuste sa prise (le fusil change de pente, les mains le suivent). Les amplitudes diffèrent d'un homme à l'autre. Le dessin seulement ; de près seulement (à 8 px/m ces mouvements font moins d'un pixel). Coût : celui du repos d'aujourd'hui (le même lecteur).", render: s => maquetteDemarches(s, { allures: true, repos: true, vivant: true }) },
+    ] },
+    { id: 'casques', title: 'Les casques de près', variants: [
+      { title: 'Les anneaux octogonaux', status: 'actuelle', note: "Le jeu tel qu'il est, de 24 px/m à 32 : l'Adrian est quatre anneaux octogonaux de boîtes qui se resserrent (deux boîtes par anneau, l'une tournée de 45°), le Stahlhelm trois ; des marches nettes se voient sur le dôme. Quatre hommes, deux de chaque camp ; boutons 24 à 120 px/m (au-delà de 32, plus près que le jeu).", render: s => maquetteCasques(s, { style: 'anneaux' }) },
+      { title: 'Six anneaux à douze pans', status: 'a-trancher', depuis: '0.143.3', note: "PROPOSITION (Jérôme, 17 nov. : « les casques ne peuvent-ils pas avoir un rendu plus réaliste de près ? plus rond ? qu'est-ce que cela coûterait ? »). Toujours des boîtes, mais six anneaux plus fins à douze pans (trois boîtes par anneau) : les marches deviennent un grain. Le plus cher : environ +80 triangles par homme (+15 %).", render: s => maquetteCasques(s, { style: 'anneaux12' }) },
+      { title: 'Un dôme tourné à 8 pans', status: 'a-trancher', depuis: '0.143.3', note: "PROPOSITION. Un profil tourné autour de l'axe de la tête, comme au tour de potier : le dôme sans marches, d'une seule surface, avec le bord qui s'avance devant (la visière) et derrière (le couvre-nuque) pour l'Adrian, la jupe évasée et le long couvre-nuque pour le Stahlhelm ; huit pans à facettes, l'esprit cubique gardé. Presque gratuit : environ +16 triangles par homme (+3 %).", render: s => maquetteCasques(s, { style: 'tour8' }) },
+      { title: 'Un dôme tourné à 16 pans, lissé', status: 'a-trancher', depuis: '0.143.3', note: "PROPOSITION. Le même profil, seize pans et la lumière lissée d'un pan à l'autre : rond. Environ +110 triangles par homme (+21 %). Le niveau intermédiaire (12 à 16 px/m) garde ses anneaux carrés dans tous les cas : le casque y fait 4 pixels.", render: s => maquetteCasques(s, { style: 'tour16' }) },
+    ] },
     { id: 'demarches', title: 'Les démarches et le tir en marchant', variants: [
       { title: 'De près : une allure par homme, l\'épaulement', status: 'actuelle', depuis: '0.142.2', note: "En jeu (Jérôme, v0.142.2 ; 17 nov. : « des démarches plus réalistes : mouvement des épaules et des hanches, appui sur une jambe plus l'autre, fusil dans les deux mains ; chaque soldat a une démarche différente en fonction de sa graine » ; « des tirs avec épaulement depuis la marche »). Vingt-quatre allures : chacune sa foulée, sa cadence, son genou, son buste plus ou moins penché, son rebond, le poids reporté sur la jambe qui porte, les épaules qui tournent contre les hanches, une jambe qui fait un plus grand pas, sa façon de tenir le fusil à deux mains ; au repos, le poids sur une jambe. Chaque homme prend celle de son numéro, et une cadence à lui. Le tir : il épaule un quart de seconde AVANT le coup (le recul tombe avec l'éclair), continue de marcher, le buste tourné vers sa cible si elle est à moins de 50° de sa marche, puis rebaisse le fusil. Le dessin seulement : aucune règle ne change.", render: s => maquetteDemarches(s, { allures: true }) },
       { title: 'De près : les démarches d\'avant', status: 'ancienne', note: "Le jeu d'avant la v0.142.2, de 12 px/m à 32 : tous les hommes ont la même marche (une foulée de quatre images, le buste raide, les épaules fixes), seul le départ de la foulée change ; quand l'un tire, il se tourne tout entier vers sa cible et lève son fusil au moment de l'éclair. Le défilé : six hommes traversent la plaine de profil, chacun tire toutes les 2,5 à 4,5 s.", render: s => maquetteDemarches(s, { allures: false }) },

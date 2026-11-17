@@ -1,5 +1,9 @@
 # Journal des versions
 
+## 0.143.3 — 2026-11-17
+
+- Au labo, à trancher : le repos vivant dans la tranchée (ils respirent, se balancent, passent d'une jambe sur l'autre, regardent autour d'eux, rajustent leur prise) et des casques plus ronds de près ; le jeu ne change pas
+
 ## 0.143.2 — 2026-11-17
 
 - Les soldats qui ont peur ne glissent plus sur les genoux : s'ils se déplacent, ils courent courbés ; ils ne s'accroupissent qu'à l'arrêt

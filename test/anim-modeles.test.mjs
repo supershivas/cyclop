@@ -86,3 +86,17 @@ test('le tir épaulé : la crosse au creux de l\'épaule droite, le canon droit 
   assert.ok(b[2] - c[2] > 1.2 && Math.abs(b[0] - c[0]) < 0.05 && Math.abs(b[1] - c[1]) < 0.15, `canon ${b.map(x => x.toFixed(2))}`);
   for (const [g, y] of [['D', TIR_EPAULE.mainDroite], ['G', TIR_EPAULE.mainGauche]]) assert.ok(dist(J['main' + g].pos, pointFusil(p, CARRURE_NEUTRE, y)) < 0.01, `main ${g}`);
 });
+import { reposVivant } from '../js/anim-modeles.js';
+test('le repos vivant : les mains restent sur le fusil, les pieds au sol, le poids passe d\'une jambe sur l\'autre, il regarde de chaque côté', () => {
+  const an = reposVivant(allure(3), 'r');
+  assert.ok(an.duree >= ALLURES.vivant.periode[0] && an.duree <= ALLURES.vivant.periode[1]);
+  let appuiMin = 9, appuiMax = -9, tMin = 9, tMax = -9;
+  for (let k = 0; k < 40; k++) {
+    const p = echantillon(an, k * an.duree / 40), J = articulations(p);
+    for (const [g, y] of [['D', PORT_ARME.mainDroite], ['G', PORT_ARME.mainGauche]]) assert.ok(dist(J['main' + g].pos, pointFusil(p, CARRURE_NEUTRE, y)) < 0.01, `main ${g} à ${k}`);
+    assert.ok(Math.min(J.piedG.pos[1], J.piedD.pos[1]) > -0.02, 'pied sous le sol');
+    appuiMin = Math.min(appuiMin, p.appui); appuiMax = Math.max(appuiMax, p.appui); tMin = Math.min(tMin, p.torsion); tMax = Math.max(tMax, p.torsion);
+  }
+  assert.ok(appuiMin < -0.01 && appuiMax > 0.01, `appui ${appuiMin} ${appuiMax}`);
+  assert.ok(tMax - tMin > 0.15, `torsion ${tMin} ${tMax}`);
+});

@@ -1,9 +1,7 @@
 {
-  "version": "0.143.2",
+  "version": "0.143.3",
   "date": "2026-11-17",
   "changes": [
-    "Les soldats qui ont peur ne glissent plus sur les genoux : ils courent courbés",
-    "De près, les soldats se penchent en avant au lieu d'en arrière",
-    "L'atelier d'animation s'ouvre de nouveau"
+    "Au labo : le repos vivant dans la tranchée et des casques plus ronds, à trancher (le jeu ne change pas)"
   ]
 }
