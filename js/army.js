@@ -25,12 +25,12 @@
      (rng.js), pour que la même graine rejoue la même bataille.
 
    Logique pure : aucun DOM. Le rendu lit les tableaux (rendu3d.js). */
-import { EQUIPEMENTS } from './data/batiments.js?v=0.144.0';
-import { hauteurQ, vitesseCase } from './terrain.js?v=0.144.0';
-import { ligneY } from './tranchees.js?v=0.144.0';
-import { TOITS } from './data/nids.js?v=0.144.0';
-import { caracteristiques } from './identite.js?v=0.144.0';
-import { BONUS } from './data/experience.js?v=0.144.0';
+import { EQUIPEMENTS } from './data/batiments.js?v=0.144.1';
+import { hauteurQ, vitesseCase } from './terrain.js?v=0.144.1';
+import { ligneY } from './tranchees.js?v=0.144.1';
+import { TOITS } from './data/nids.js?v=0.144.1';
+import { caracteristiques } from './identite.js?v=0.144.1';
+import { BONUS } from './data/experience.js?v=0.144.1';
 
 export const GRILLE = 2;           // m : cases de voisinage
 export const DENSITE = 8;          // m : carrés de densité (tir)
@@ -236,10 +236,12 @@ export function pasArmee(A, ctx) {
       if (h) { pl[0] = h.x; pl[1] = h.y; } else { pl[0] = xi; pl[1] = camp[i] === 0 ? Math.max(yi, ctx.arriere[0]) : Math.min(yi, ctx.arriere[1]); }
     }
     else place(o, slot[i], pl);
+    const poste = ctx.postes?.get(A.id[i]);      // l'homme posté à une mitrailleuse (v0.144.1, nids.js) : son but est son poste, pas sa place
+    if (poste && !retrait) { pl[0] = poste[0]; pl[1] = poste[1]; }
     const dx = pl[0] - xi, dy = pl[1] - yi, d = Math.hypot(dx, dy);
     let gx = 0, gy = 0, voulu = 1;
     let ch = null;
-    if (!retrait && d > F.champ) { ch = champs[reg[i]]; if (ch === undefined) ch = champs[reg[i]] = champDe(r); }
+    if (!retrait && !poste && d > F.champ) { ch = champs[reg[i]]; if (ch === undefined) ch = champs[reg[i]] = champDe(r); }
     if (ch) {
       const b = ch.dirA(xi, yi);
       if (b) { gx = b[0]; gy = b[1]; } else { gx = dx / d; gy = dy / d; }

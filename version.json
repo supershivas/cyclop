@@ -1,8 +1,8 @@
 {
-  "version": "0.144.0",
+  "version": "0.144.1",
   "date": "2026-11-17",
   "changes": [
-    "Voir par ses yeux : depuis la fiche d'un de nos hommes, on prend sa place à la première personne (ZQSD pour marcher, la souris pour regarder, Échap pour revenir)",
-    "Prototype : il marche et regarde, il ne tire pas encore"
+    "Le bouton « Voir par ses yeux » marche de nouveau",
+    "Chaque mitrailleuse en état a un soldat posté ; quand il tombe, un autre vient le remplacer"
   ]
 }

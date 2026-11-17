@@ -1,5 +1,10 @@
 # Journal des versions
 
+## 0.144.1 — 2026-11-17
+
+- Le bouton « Voir par ses yeux » de la fiche ne faisait rien (un import perdu à la fusion des versions) : il prend de nouveau la place du soldat
+- Chaque mitrailleuse en état a un soldat posté au fond de la tranchée, à son droit : il y marche et la sert ; blessé, tué ou en déroute, il est remplacé par le plus proche homme valide (à 20 m au plus), tant que le poste tient son tronçon et n'est pas détruit ; la fiche de l'homme dit « sert la mitrailleuse »
+
 ## 0.144.0 — 2026-11-17
 
 - Voir par ses yeux : le bouton de la fiche d'un de nos hommes prend sa place, à 1,60 m du sol, dans un champ de 70° ; la souris regarde (en haut comme en bas), ZQSD le fait marcher dans le sens du regard (la boue, l'eau, les murs et la fatigue comptent comme pour les autres)

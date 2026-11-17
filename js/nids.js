@@ -1,13 +1,13 @@
 /* Les nids de mitrailleuses (Jérôme, v0.83.0) : la logique, pure. Un nid vit dans `etat.nids` (sauvegardé) : { id, camp, troncon, x, y, face, pv, etat: 'actif' | 'detruit', tire }.
    Il est posé sur le parapet de la 1re ligne de son camp. Tant qu'il est actif, que son tronçon est à son camp et qu'un de ses hommes le sert, il tire en avant sur l'autre camp ;
    un obus l'abîme, à zéro il est détruit ; le génie (genie.js) ou, en face, la nuit, le refait. Les sapeurs le refont : `reparerNid`. */
-import { NIDS } from './data/nids.js?v=0.144.0';
-import { CALIBRES } from './data/calibres.js?v=0.144.0';
-import { ligneY } from './tranchees.js?v=0.144.0';
-import { hash2 } from './lib/rng.js?v=0.144.0';
-import { GRILLE } from './army.js?v=0.144.0';
-import { BONUS, GAINS, chevronsDe } from './data/experience.js?v=0.144.0';
-import { zone as zoneDe } from './bataille.js?v=0.144.0';
+import { NIDS } from './data/nids.js?v=0.144.1';
+import { CALIBRES } from './data/calibres.js?v=0.144.1';
+import { ligneY } from './tranchees.js?v=0.144.1';
+import { hash2 } from './lib/rng.js?v=0.144.1';
+import { GRILLE } from './army.js?v=0.144.1';
+import { BONUS, GAINS, chevronsDe } from './data/experience.js?v=0.144.1';
+import { zone as zoneDe } from './bataille.js?v=0.144.1';
 
 /* Les nids du départ : un par secteur de 100 m sur la 1re ligne de chaque camp, au milieu du 2e tronçon de chaque quart de la ligne. */
 export function creerNids(B) {
@@ -19,7 +19,7 @@ export function creerNids(B) {
     for (let s = 0; s < nS; s++) {
       const e = ts[s * par + NIDS.tronconDuSecteur]; if (!e) continue;
       const [t, k] = e, x = (t.x0 + t.x1) / 2;
-      nids.push({ id: nids.length, camp: L.camp, troncon: k, x, y: Math.round((ligneY(L, x) + L.face * (L.amp + 1.6)) * 10) / 10, face: L.face, pv: NIDS.pv, etat: 'actif', tire: 0, muni: NIDS.munitions, exp: 0, tues: 0, rafales: 0, servi: -1, tuesReg: {}, ax: 0, ay: L.face });
+      nids.push({ id: nids.length, camp: L.camp, troncon: k, x, y: Math.round((ligneY(L, x) + L.face * (L.amp + 1.6)) * 10) / 10, face: L.face, pv: NIDS.pv, etat: 'actif', tire: 0, muni: NIDS.munitions, exp: 0, tues: 0, rafales: 0, servi: -1, servant: -1, tuesReg: {}, ax: 0, ay: L.face });
     }
   }
   return nids;
@@ -53,11 +53,53 @@ export function nidDetruitVise(B, camp, x, y) {
   return m;
 }
 
-/* Qui sert ce poste en ce moment : l'homme de son camp, debout, valide, le plus proche à moins de `equipage` m. Rend l'indice dans l'armée, ou -1 (personne : le poste se tait et sa fenêtre est inactive).
+/* Le poste de son servant (v0.144.1) : le fond de la tranchée au droit du nid (le nid est sur le parapet, à `amp` + 1,6 m de la ligne : à portée de `equipage`). */
+export function posteDe(B, n) { return [n.x, ligneY(B.lignes[B.troncons[n.troncon].ligne], n.x)]; }
+
+/* L'indice dans l'armée du servant d'un nid, ou -1 (l'indice se retient dans `n.si` ; `compacter` les décale : on le retrouve par le numéro, un homme qui n'y est plus est mort) */
+function indiceServant(A, n) {
+  if (n.servant < 0) return -1;
+  if (n.si >= 0 && n.si < A.n && A.id[n.si] === n.servant) return n.si;
+  for (let i = 0; i < A.n; i++) if (A.id[i] === n.servant) { n.si = i; return i; }
+  return -1;
+}
+
+/* Les servants (Jérôme, v0.144.1 : « un des soldats doit être posté dans le nid de mitrailleuse s'il est actif ; s'il meurt, il est remplacé tant que la mitrailleuse est opérationnelle ») : à chaque pas, un nid actif dont le
+   tronçon est à son camp a UN homme posté (`n.servant`, son numéro, sauvegardé). Il marche à son poste (`ctx.postes`, army.js) et y reste ; blessé, mort, en déroute, ou le nid détruit ou pris : le poste est libre ; le plus proche
+   homme valide de son camp à moins de `recrute` m le remplace (une recherche par seconde et par nid vacant : rien de plus qu'un parcours de l'armée). Rend les postes à tenir : numéro de l'homme → [x, y]. Sans hasard. */
+export function pourvoirNids(B) {
+  const { etat, armee: A } = B, postes = new Map(), pris = new Set(), regs = etat.regiments;
+  const valide = i => i >= 0 && !A.mort[i] && !A.blessure[i] && !regs[A.reg[i]]?.deroute;
+  for (const n of etat.nids) {
+    n.servant ??= -1;
+    const tenu = n.etat === 'actif' && etat.troncons[n.troncon] === n.camp;
+    if (n.servant >= 0 && !(tenu && valide(indiceServant(A, n)))) { n.servant = -1; n.si = -1; }
+    if (n.servant >= 0) pris.add(n.servant);
+  }
+  for (const n of etat.nids) {
+    if (n.servant < 0 && n.etat === 'actif' && etat.troncons[n.troncon] === n.camp && etat.temps >= (n.cherche ?? 0)) {
+      const [px, py] = posteDe(B, n); let m = -1, d0 = NIDS.recrute * NIDS.recrute;
+      for (let i = 0; i < A.n; i++) {
+        if (A.camp[i] !== n.camp || !valide(i) || pris.has(A.id[i])) continue;
+        const d = (A.x[i] - px) ** 2 + (A.y[i] - py) ** 2;
+        if (d < d0) { d0 = d; m = i; }
+      }
+      if (m >= 0) { n.servant = A.id[m]; n.si = m; pris.add(n.servant); } else n.cherche = etat.temps + 1;
+    }
+    if (n.servant >= 0) postes.set(n.servant, posteDe(B, n));
+  }
+  return postes;
+}
+
+/* Qui sert ce poste en ce moment : l'homme posté (`n.servant`), s'il est arrivé à moins de `equipage` m ; sans homme posté (personne à moins de `recrute` m), l'homme de son camp, debout, valide, le plus proche à moins de `equipage` m. Rend l'indice dans l'armée, ou -1 (personne : le poste se tait et sa fenêtre est inactive).
    Le régiment de cet homme (`A.reg[i]`) est celui à qui l'on attribue ce que le poste produit à cet instant (v0.115.0). */
 export function servantNid(B, n, exact = false) {
   const A = B.armee, E = NIDS.equipage;
   let m = -1, d0 = E * E;
+  if (n.servant >= 0) {      // l'homme posté, et lui seul : tant qu'il marche vers son poste, le nid se tait
+    const i = indiceServant(A, n);
+    return i >= 0 && !A.mort[i] && !A.blessure[i] && (A.x[i] - n.x) ** 2 + (A.y[i] - n.y) ** 2 <= d0 ? i : -1;
+  }
   const voir = i => { if (A.camp[i] !== n.camp || A.mort[i] || A.blessure[i]) return; const d = (A.x[i] - n.x) ** 2 + (A.y[i] - n.y) ** 2; if (d <= d0) { d0 = d; m = i; } };
   if (!exact && A.cellStart && A.sorted) {      // (dans un pas : la grille du pas ; hors d'un pas — un ordre, la fenêtre —, on compte les hommes tels qu'ils sont)
     const g0x = Math.max(0, ((n.x - E) / GRILLE) | 0), g1x = Math.min(A.gw - 1, ((n.x + E) / GRILLE) | 0), g0y = Math.max(0, ((n.y - E) / GRILLE) | 0), g1y = Math.min(A.gh - 1, ((n.y + E) / GRILLE) | 0);

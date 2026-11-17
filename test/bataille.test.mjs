@@ -1231,7 +1231,7 @@ test('le canon relu en route donne la même partie', () => {
 
 import { toitFacteur } from '../js/army.js';
 import { TOITS, NIDS } from '../js/data/nids.js';
-import { degatsNids } from '../js/nids.js';
+import { degatsNids, servantNid, reparerNid } from '../js/nids.js';
 group('les toits et les nids de mitrailleuses');
 test('les toits : quelques tronçons des deux premières lignes, les mêmes à chaque lecture ; ils filtrent le tir tant que la tranchée est creusée', () => {
   const B = petite(), C = restaurer(photo(B), R);
@@ -1284,6 +1284,29 @@ test('un nid ne tire plus d\'une tranchée à l\'autre (120 m) mais couvre le no
   const D = petite(), d = nidDe(D, 0); for (const i of Array.from({ length: D.armee.n }, (_, i) => i)) if (D.armee.camp[i] === 0) D.armee.mort[i] = 1;
   for (let k = 0; k < 40; k++) avancer(D);
   assert.equal(d.statut, 'seul', 'personne pour le servir');
+});
+test('un homme est posté à chaque nid actif : il marche à son poste, le sert, et son remplaçant vient quand il tombe (v0.144.1)', () => {
+  const B = petite(), n = nidDe(B, 0), A = B.armee;
+  const pas = s => { for (let k = 0; k < s; k++) avancer(B); };
+  pas(2); assert.ok(n.servant >= 0, 'un servant désigné au premier pas');
+  const iOf = id => { for (let i = 0; i < A.n; i++) if (A.id[i] === id) return i; return -1; };
+  const premier = n.servant; pas(30 * 40);
+  const i1 = iOf(premier); assert.ok(i1 >= 0 && !A.mort[i1]);
+  assert.ok(Math.hypot(A.x[i1] - n.x, A.y[i1] - n.y) <= NIDS.equipage, 'il est à son poste, à portée du nid');
+  assert.equal(servantNid(B, n, true), i1, 'c\'est lui qui sert');
+  // il tombe : un autre le remplace, le nid reste actif
+  A.mort[i1] = 1; pas(30 * 3);
+  assert.ok(n.servant >= 0 && n.servant !== premier, 'un remplaçant est désigné');
+  assert.equal(B.etat.nids.filter(k => k.servant === n.servant).length, 1, 'un homme ne sert qu\'un poste');
+  // blessé, il est relevé aussi
+  const second = n.servant, i2 = iOf(second); A.blessure[i2] = 2; pas(30 * 3);
+  assert.notEqual(n.servant, second);
+  // le nid détruit : plus de servant ; refait, un homme est de nouveau posté
+  degatsNids(B, n.x, n.y, '155'); assert.equal(n.etat, 'detruit'); pas(2); assert.equal(n.servant, -1);
+  reparerNid(B, n.id); pas(3); assert.ok(n.servant >= 0);
+  // la même partie relue
+  const C = restaurer(photo(B), R); pas(60); for (let k = 0; k < 60; k++) avancer(C);
+  assert.equal(empreinte(B), empreinte(C), 'la partie relue donne les mêmes servants');
 });
 test('un obus de 75 abîme un nid, un 155 sur lui le détruit ; le génie le refait ; en face, la nuit, il se refait une fois sur deux', () => {
   const B = petite(), n = nidDe(B, 0);
