@@ -1,9 +1,9 @@
 // Les médailles (Jérôme, v0.73.1 : « un tableau des médailles à la fin de chaque journée, de chaque partie : le régiment le plus meurtrier, qui a pris le plus de secteurs, le plus inutile… idem pour les soldats »).
 // Lecture seule de l'état : `tues` et `pris` de chaque régiment (bataille.js : un coup de fusil ou de baïonnette qui tue, un tronçon pris), `debut` (leur valeur au matin) ;
-// pour un homme, `victimes` (déjà sur la fiche) et `etat.victDebut` (id → victimes au matin). Les morts ne figurent pas parmi les hommes (leur fiche s'est effacée avec eux).
-import { quiEst, nomDe, auFront } from './lecture.js?v=0.147.1';
-import { CHARS } from '../data/chars.js?v=0.147.1';
-import { nomTroncon } from '../bataille.js?v=0.147.1';
+// pour un homme, `victimes` (déjà sur la fiche) et `etat.victDebut` (id → victimes au matin). Les morts ne figurent pas parmi les vivants ; depuis la v0.148.0 leur fiche est gardée (`etat.defunts`) et l'un d'eux porte « Mort pour la patrie ».
+import { quiEst, nomDe, auFront } from './lecture.js?v=0.148.1';
+import { CHARS } from '../data/chars.js?v=0.148.1';
+import { nomTroncon } from '../bataille.js?v=0.148.1';
 
 const pl = (n, un, des) => `${n} ${n > 1 ? des : un}`;
 const meilleur = (liste, f) => liste.reduce((m, x) => (f(x) > (m ? f(m) : -Infinity) ? x : m), null);
@@ -42,6 +42,11 @@ export function palmares(B, camp, portee = 'jour') {
   const bleus = vivants.filter(x => x.v === 0 && x !== ancien);
   const inutile = meilleur(bleus, x => (etat.jour - auFront(B, x.id)) * 1000 - A.adresse[x.i]);   // le plus ancien au front, le plus mauvais tireur
   if (inutile && vivants.length >= 3) homme('Le plus inutile', inutile, `rien abattu${etat.jour > 1 ? ` en ${pl(etat.jour, 'jour', 'jours')} de front` : ''}`, 'inutile');
+  // « Mort pour la patrie » (Jérôme, v0.148.0) : la médaille d'un soldat tombé, la seule qu'un mort puisse porter (`etat.defunts` garde sa fiche) ; au mieux armé de ses camarades tombés (le plus d'hommes abattus, puis le plus aguerri) ;
+  // la journée : ceux tombés depuis le matin, la bataille entière : tous
+  const tombes = Object.entries(etat.defunts || {}).filter(([, d]) => etat.regiments[d[2]]?.camp === camp && (!jour || d[0] === etat.jour)).map(([id, d]) => ({ id: +id, v: d[4], exp: d[3], jour: d[0] }));
+  const pat = meilleur(tombes, x => x.v * 1000 + x.exp * 100);
+  if (pat) homme('Mort pour la patrie', pat, `${pat.v ? `${pl(pat.v, 'homme abattu', 'hommes abattus')} · ` : ''}tombé le jour ${pat.jour}`, 'patrie');
   // la bataille entière (Jérôme, 15 nov., v0.134.0 : « un tableau de médailles encore plus fourni ») : le roc, l'inébranlable, le fuyard ; le survivant ; le char, le poste, le génie
   const engins = [];
   if (!jour) {

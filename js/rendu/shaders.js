@@ -369,7 +369,7 @@ export const soldatMat = {
         if (uSang > 0.0 && vSang.z > 0.05 && k < 30.0 && k != 4.0 && !(k == 2.0 && sel)) {
           float blS = floor(vSang.z + 0.05), sgS = (vSang.z - blS) * 2.5, qS = 0.0;
           vec3 cel = floor(vec3(vSang.x, vLong, vSang.y) / uSangCell);
-          // (v0.147.1, Jérôme : « le sang est trop marqué sur les blessés, le limiter autour des blessures ») : autour du pansement seulement, plus dense au milieu, nul à 12 cm de son bord
+          // (v0.148.1, Jérôme : « le sang est trop marqué sur les blessés, le limiter autour des blessures ») : autour du pansement seulement, plus dense au milieu, nul à 12 cm de son bord
           if (blS == 1.0 && vSang.x < -0.17) qS = 0.5 * (1.0 - smoothstep(0.07, 0.19, abs(vLong - 1.07)));                 // le bras gauche (le pansement : 1,00 à 1,14 m)
           else if (blS == 2.0 && vSang.x < 0.03) qS = 0.5 * (1.0 - smoothstep(0.08, 0.2, abs(vLong - 0.5)));             // la cuisse gauche (0,42 à 0,58 m)
           else if (blS == 3.0) qS = 0.45 * (1.0 - smoothstep(0.06, 0.16, abs(vLong - 1.52)));                           // la tête (le bandeau : 1,47 à 1,56 m), plus rien sur les épaules

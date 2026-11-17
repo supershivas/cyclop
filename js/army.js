@@ -25,12 +25,12 @@
      (rng.js), pour que la même graine rejoue la même bataille.
 
    Logique pure : aucun DOM. Le rendu lit les tableaux (rendu3d.js). */
-import { EQUIPEMENTS } from './data/batiments.js?v=0.147.1';
-import { hauteurQ, vitesseCase } from './terrain.js?v=0.147.1';
-import { ligneY } from './tranchees.js?v=0.147.1';
-import { TOITS } from './data/nids.js?v=0.147.1';
-import { caracteristiques } from './identite.js?v=0.147.1';
-import { BONUS } from './data/experience.js?v=0.147.1';
+import { EQUIPEMENTS } from './data/batiments.js?v=0.148.1';
+import { hauteurQ, vitesseCase } from './terrain.js?v=0.148.1';
+import { ligneY } from './tranchees.js?v=0.148.1';
+import { TOITS } from './data/nids.js?v=0.148.1';
+import { caracteristiques } from './identite.js?v=0.148.1';
+import { BONUS } from './data/experience.js?v=0.148.1';
 
 export const GRILLE = 2;           // m : cases de voisinage
 export const DENSITE = 8;          // m : carrés de densité (tir)
@@ -256,9 +256,9 @@ export function pasArmee(A, ctx) {
       if (cible) { const cx = cible[0] - xi, cy = cible[1] - yi, cd = Math.hypot(cx, cy) || 1; gx = cx / cd; gy = cy / cd; voulu = 1; }
     }
     // ─ L'homme que le joueur pilote (v0.144.0, la vue à la première personne) : sa direction et sa vitesse viennent du joueur, ni ordre ni champ ; il ne s'écarte pas de ce qui le retient (mur, eau, boue, fatigue) ─
-    const pilote = !!ctx.pilote && A.id[i] === ctx.pilote.id;      // son tir est celui du joueur (tir-joueur.js) : le tir automatique se tait
+    const pil = ctx.pilotes?.get(A.id[i]), pilote = !!pil;      // son tir est celui du joueur (tir-joueur.js) : le tir automatique se tait ; un pilote par camp (v0.148.0)
     if (pilote) {
-      const px = ctx.pilote.ax, py = ctx.pilote.ay, pm = Math.hypot(px, py);
+      const px = pil.ax, py = pil.ay, pm = Math.hypot(px, py);
       if (pm > 0.01) { gx = px / pm; gy = py / pm; voulu = Math.min(1, pm); } else { gx = 0; gy = 0; voulu = 0; }
     }
     // ─ La case, la marche devant ─

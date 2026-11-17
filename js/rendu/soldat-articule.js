@@ -1,6 +1,6 @@
-import { NOMS_CHAMPS } from '../data/poses-soldat.js?v=0.147.1';
-import { ARTICULE } from '../data/aspect-soldat.js?v=0.147.1';
-import { poseJeu, phaseDe, TEXELS, FLOTTANTS } from './pose-jeu.js?v=0.147.1';
+import { NOMS_CHAMPS } from '../data/poses-soldat.js?v=0.148.1';
+import { ARTICULE } from '../data/aspect-soldat.js?v=0.148.1';
+import { poseJeu, phaseDe, TEXELS, FLOTTANTS } from './pose-jeu.js?v=0.148.1';
 
 // Le soldat articulé (au labo seulement : « la fabrique de soldats », et la mesure de son coût ; rien n'est dans le jeu).
 // Un squelette de treize os (le tronc, la tête, deux fois bras / avant-bras, deux fois cuisse / mollet / pied, le fusil) que le nuanceur plie : le genou, le coude, la cheville
@@ -476,7 +476,7 @@ export const FRAG = `
     if (uSang > 0.0 && vSang.w > 0.05 && k != 15.0 && k != 12.0 && k != 17.0) {      // (v0.140.2) le sang : voir shaders.js, soldatMat
           float blS = floor(vSang.w + 0.05), sgS = (vSang.w - blS) * 2.5, qS = 0.0;
           vec3 cel = floor(vec3(vSang.x, vSang.y, vSang.z) / uSangCell);
-          // (v0.147.1, Jérôme : « le sang est trop marqué sur les blessés, le limiter autour des blessures ») : autour du pansement seulement, plus dense au milieu, nul à 12 cm de son bord
+          // (v0.148.1, Jérôme : « le sang est trop marqué sur les blessés, le limiter autour des blessures ») : autour du pansement seulement, plus dense au milieu, nul à 12 cm de son bord
           if (blS == 1.0 && vSang.x < -0.17) qS = 0.5 * (1.0 - smoothstep(0.07, 0.19, abs(vSang.y - 1.07)));                 // le bras gauche (le pansement : 1,00 à 1,14 m)
           else if (blS == 2.0 && vSang.x < 0.03) qS = 0.5 * (1.0 - smoothstep(0.08, 0.2, abs(vSang.y - 0.5)));             // la cuisse gauche (0,42 à 0,58 m)
           else if (blS == 3.0) qS = 0.45 * (1.0 - smoothstep(0.06, 0.16, abs(vSang.y - 1.52)));                           // la tête (le bandeau : 1,47 à 1,56 m), plus rien sur les épaules

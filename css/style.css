@@ -1024,6 +1024,9 @@ h2 { font-weight: normal; letter-spacing: var(--titre-lettres); }
 /* Le viseur de la vue d'un soldat (v0.147.0) : un point et quatre traits au centre de l'image, un cerclé de terre pour se lire sur le clair comme sur le sombre ; le coup au but fait une croix d'os qui s'éteint, le mort une croix pleine */
 .viseur { position: absolute; left: 50%; top: 50%; width: 36px; height: 36px; transform: translate(-50%, -50%); pointer-events: none; fill: none; stroke: var(--jeu-encre); stroke-width: 1.6; stroke-linecap: round; paint-order: stroke; filter: drop-shadow(0 0 1px var(--jeu-fond)); }
 .viseur[hidden] { display: none; }
+/* Dans la vue d'un soldat il n'y a plus d'interface (Jérôme, v0.148.0) : tout le HUD disparaît sauf le viseur ; les messages (`#toast`) restent, ils sont hors du HUD */
+body.vue-soldat #hud > :not(#viseur), body.vue-soldat #etiquettes, body.vue-soldat #retours, body.vue-soldat #chars-etiq, body.vue-soldat #visee, body.vue-soldat #visee-nid,
+body.vue-soldat #equerres, body.vue-soldat #repere, body.vue-soldat #repere-soldat, body.vue-soldat #bulle { display: none !important; }
 .viseur .marque { opacity: 0; stroke-width: 2; }
 .viseur.touche .marque { animation: viseur-touche .45s ease-out 1; }
 .viseur.mort .marque { stroke-width: 3; animation: viseur-touche .8s ease-out 1; }

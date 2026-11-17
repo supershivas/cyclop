@@ -1,8 +1,15 @@
 # Journal des versions
 
-## 0.147.1 — 2026-11-17
+## 0.148.1 — 2026-11-17
 
 - Le sang des blessés se limite à la blessure : autour du pansement du bras, de la cuisse ou de la tête
+
+## 0.148.0 — 2026-11-17
+
+- Dans la vue d'un soldat, plus aucune interface : seuls le fusil, le viseur et les messages restent (la lettre du capitaine aussi)
+- Si l'homme qu'on dirige tombe, la vue rend la main, la caméra glisse sur lui et sa fiche s'ouvre avec tous ses chiffres ; **la fiche de chaque mort est gardée** (expérience, caractéristiques, victimes, peur, fatigue, blessure, jour et cause), de même celle d'un blessé évacué
+- Nouvelle médaille « Mort pour la patrie » : au soldat tombé qui avait abattu le plus d'hommes (de la journée au papier de la nuit, de la bataille à l'écran de fin) ; sa fiche le dit
+- Le jeu à deux : chaque commandant peut « voir par ses yeux » un de ses hommes ; la marche et le tir passent par le lockstep (les deux machines voient les mêmes hommes aux mêmes places)
 
 ## 0.147.0 — 2026-11-17
 

@@ -1,22 +1,24 @@
 // Les fiches : un homme (son nom, son âge, son grade, ce qu'il endure) ou un régiment (ses hommes, ses
 // blessés, ses morts, et leurs fiches). De près, on regarde des hommes ; de loin, des régiments (Jérôme, v0.3.2).
-import { NOUS, moralEnMots, rangDe } from '../bataille.js?v=0.147.1';
-import { experienceEnMots, chevrons, peurEnMots, fatigueEnMots, CARACTERISTIQUES, caracEnMots } from '../identite.js?v=0.147.1';
-import { majuscule, nomDe, indiceDe, premierDe, quiEst, tombe, bilan, enMots, refuseAujourdhui, actionEnMots, auFront, moyennes, prochainGrade, niveauMoral } from './lecture.js?v=0.147.1';
-import { bonusEnMots } from '../data/experience.js?v=0.147.1';
-import { corps, REPERES } from './barres.js?v=0.147.1';
-import { jauge as jaugeT, carac as caracT, bande, partage, fil, tuilesDe } from './tuiles.js?v=0.147.1';
-import { barreEffectif, jaugeMoral, reinitIds } from './bilan.js?v=0.147.1';
-import { historiqueDe } from '../donnees-jour.js?v=0.147.1';
+import { NOUS, moralEnMots, rangDe } from '../bataille.js?v=0.148.1';
+import { experienceEnMots, chevrons, peurEnMots, fatigueEnMots, CARACTERISTIQUES, caracEnMots } from '../identite.js?v=0.148.1';
+import { majuscule, nomDe, indiceDe, premierDe, quiEst, tombe, bilan, enMots, refuseAujourdhui, actionEnMots, auFront, moyennes, prochainGrade, niveauMoral } from './lecture.js?v=0.148.1';
+import { bonusEnMots } from '../data/experience.js?v=0.148.1';
+import { corps, REPERES } from './barres.js?v=0.148.1';
+import { jauge as jaugeT, carac as caracT, bande, partage, fil, tuilesDe } from './tuiles.js?v=0.148.1';
+import { barreEffectif, jaugeMoral, reinitIds } from './bilan.js?v=0.148.1';
+import { palmares } from './medailles.js?v=0.148.1';
+import { historiqueDe } from '../donnees-jour.js?v=0.148.1';
 
 // `$` : l'accès aux éléments ; `R` : les réglages ; `bataille()` : la bataille en cours
 const CARAC_TITRES = {   // (elles montent à l'usage : tirer, frapper, marcher fatigué, tenir sous le feu ; elles baissent avec une blessure ou la terreur)
   adresse: 'la chance de toucher quand il tire', force: 'ses coups de baïonnette au corps à corps', endurance: 'se fatigue moins en marchant, encaisse mieux les coups de l\'ennemi au corps à corps', calme: 'la peur le gagne moins vite',
 };
-export function creerFiche({ $, R, bataille, voir = null }) {
+export function creerFiche({ $, R, bataille, voir = null, moi = () => NOUS }) {
   let fiche = null;                 // { id, camp } : un soldat ; { reg } : un régiment
   let listeVue = '';                // ce que montre la liste du régiment (refaite seulement quand ça change)
   let statsVues = '';               // les jauges et le corps, refaits seulement quand ils changent
+  let statsMort = '', lignePatrie = '';      // la médaille d'un mort, cherchée quand sa fiche est refaite
   // les tuiles de la fiche (Jérôme, 8 nov. : les tuiles du labo) : refaites quand une valeur change d'un point (pas à chaque image : une tuile refaite sous le pointeur perdrait sa bulle)
   function montrerTuiles(sig, blocs) {
     $('fiche-tuiles').hidden = !blocs;
@@ -45,16 +47,21 @@ export function creerFiche({ $, R, bataille, voir = null }) {
     $('fiche-qui').textContent = `${majuscule(qui.grade)}, ${qui.age} ans`;
     const lien = $('fiche-regiment');
     lien.hidden = !reg0; lien.textContent = nomDe(reg0); lien.onclick = () => montrerRegiment(reg0.id);
-    const oeil = $('fiche-oeil'); oeil.hidden = !(voir && i >= 0 && A.camp[i] === NOUS && !A.mort[i]); oeil.onclick = () => voir(fiche.id);      // « Voir par ses yeux » : nos hommes vivants (v0.144.0)
+    const oeil = $('fiche-oeil'); oeil.hidden = !(voir && i >= 0 && A.camp[i] === moi() && !A.mort[i] && !B.etat.defunts?.[fiche.id]); oeil.onclick = () => voir(fiche.id);      // « Voir par ses yeux » : nos hommes vivants (v0.144.0)
     $('fiche-liste').replaceChildren(); listeVue = '';
     const promu = B.etat.grades[fiche.id];
     const lignes = [promu ? `promu ${qui.grade} le jour ${promu[1]}` : ''];
-    if (i < 0) { montrerTuiles('', null); lignes.unshift(tombe(B, fiche.id)); }
+    // Ses chiffres : ceux d'un vivant (la foule), d'un mort (sa fiche gardée, `etat.defunts`, v0.148.0), d'un évacué (`etat.evacues`) ; un relevé n'en garde pas
+    const defunt = B.etat.defunts?.[fiche.id], evac = !defunt && i < 0 ? B.etat.evacues.find(e => e[0] === fiche.id) : null;
+    let S = null;
+    if (defunt) S = { exp: defunt[3], vict: defunt[4], caracs: defunt.slice(5, 9), bases: defunt.slice(9, 13), peur: defunt[13], fj: defunt[14], fb: defunt[15], bl: defunt[16], jour: defunt[0], camp: reg0?.camp ?? NOUS };
+    else if (evac) S = { exp: evac[5], vict: evac[6], caracs: evac[7].slice(0, 4), bases: evac[7].slice(4), peur: 0, fj: 0, fb: 0, bl: evac[2], jour: evac[1], camp: reg0?.camp ?? NOUS };
+    else if (i >= 0) S = { exp: A.exp[i], vict: A.victimes[i], caracs: [A.adresse[i], A.force[i], A.endurance[i], A.calme[i]], bases: [A.adresse0[i], A.force0[i], A.endurance0[i], A.calme0[i]], peur: A.peur[i], fj: A.fatJ[i], fb: A.fatB[i], bl: A.blessure[i], jour: B.etat.jour, camp: A.camp[i] };
+    if (!S) { montrerTuiles('', null); lignes.unshift(tombe(B, fiche.id)); }
     else {
-      const exp = A.exp[i], nb = chevrons(exp), peur = A.peur[i], fj = A.fatJ[i], fb = A.fatB[i], bl = A.blessure[i];
-      const caracs = [A.adresse[i], A.force[i], A.endurance[i], A.calme[i]], bases = [A.adresse0[i], A.force0[i], A.endurance0[i], A.calme0[i]];
-      const depuis = auFront(B, fiche.id), nuits = Math.max(0, B.etat.jour - depuis), vict = A.victimes[i], suivant = prochainGrade(A.camp[i], qui.rang);
-      const sig = `${fiche.id}:${bl}:${[peur, fj, fb, exp].map(v => Math.round(v * 100)).join(',')}:${caracs.map(Math.round).join(',')}:${B.etat.jour}:${vict}`;
+      const { exp, caracs, bases, peur, fj, fb, bl, vict } = S, nb = chevrons(exp);
+      const depuis = auFront(B, fiche.id), nuits = Math.max(0, S.jour - depuis), suivant = i >= 0 && !defunt ? prochainGrade(S.camp, qui.rang) : '';
+      const sig = `${fiche.id}:${defunt ? 'm' : evac ? 'e' : 'v'}:${bl}:${[peur, fj, fb, exp].map(v => Math.round(v * 100)).join(',')}:${caracs.map(Math.round).join(',')}:${S.jour}:${vict}`;
       if (sig !== statsVues) montrerTuiles(sig, [
         { titre: 'Ce qu\'il endure', graphes: [['Peur', jaugeT(peur, { reperes: REPERES.peur }), peurEnMots(peur)], ['Jambes', jaugeT(fj, { reperes: REPERES.fatigue }), fatigueEnMots(fj)], ['Bras', jaugeT(fb, { reperes: REPERES.fatigue }), fatigueEnMots(fb)]], aide: 'La peur, la fatigue des jambes (la marche, plus dans la boue) et des bras (le tir) : les repères sont les seuils des mots.' },
         // ses caractéristiques (v0.69.0) : elles jouent dans le tir (adresse), le corps à corps (force, endurance de l'autre), la fatigue (endurance) et la peur (calme) ; elles évoluent : l'encoche dit le départ,
@@ -68,7 +75,13 @@ export function creerFiche({ $, R, bataille, voir = null }) {
         { titre: 'A abattu', chiffre: vict, unite: vict > 1 ? 'hommes' : 'homme', mot: suivant ? `Prochain grade : ${suivant}, si un supérieur tombe` : '' },
         { titre: 'Expérience', graphes: [['', jaugeT(exp, { reperes: REPERES.exp }), '']], chevrons: nb, mot: experienceEnMots(exp) || 'rien vu du feu' },
       ]);
-      lignes.unshift(majuscule(actionEnMots(B, i)));
+      if (defunt) {
+        // la médaille « Mort pour la patrie » (hud/medailles.js) : la fiche la dit si c'est lui qui la porte (cherchée quand la fiche est refaite)
+        if (sig !== statsMort) { statsMort = sig; lignePatrie = palmares(B, S.camp, 'total').soldats.some(x => x.cle === 'patrie' && x.soldat === fiche.id) ? 'Médaille : mort pour la patrie' : ''; }
+        lignes.unshift(`Tombé le jour ${defunt[0]}${defunt[1] ? ` (${defunt[1]})` : ''}.`);
+        if (lignePatrie) lignes.push(lignePatrie);
+      } else if (evac) lignes.unshift(tombe(B, fiche.id));
+      else lignes.unshift(majuscule(actionEnMots(B, i)));
     }
     $('fiche-etat').replaceChildren(...lignes.filter(Boolean).map(t => Object.assign(document.createElement('li'), { textContent: t })));
   }

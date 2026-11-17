@@ -1314,7 +1314,7 @@ test('le tir du joueur (v0.147.0) : la balle suit le regard, touche le premier h
   T.base.fill(0); T.diff.fill(0);      // un sol plat : la hauteur ne joue pas
   const i = [...Array(A.n).keys()].find(k => A.camp[k] === 0 && !A.mort[k]), j = [...Array(A.n).keys()].find(k => A.camp[k] === 1 && !A.mort[k]);
   const place = () => { A.x[i] = 200; A.y[i] = 150; A.x[j] = 200; A.y[j] = 130; for (const k of [i, j]) { A.vx[k] = 0; A.vy[k] = 0; A.peur[k] = 0; A.blessure[k] = 0; A.mort[k] = 0; } A.tirT[i] = 0; };
-  const tire = (d, el = 0) => { place(); B.pilote = { id: A.id[i], ax: 0, ay: 0, tir: { d, el }, dernier: B.pilote?.dernier ?? null, refus: null }; avancer(B); return B.pilote; };
+  const tire = (d, el = 0) => { place(); B.pilotes = [{ id: A.id[i], ax: 0, ay: 0, tir: { d, el }, dernier: B.pilotes[0]?.dernier ?? null, refus: null }, null]; avancer(B); return B.pilotes[0]; };
   assert.equal(hauteurOeil(T, 200, 150), 1.6, 'à découvert : 1,6 m');
   // droit devant : l'homme est dans le rayon, à 20 m ; en quarante coups au moins un but, et tous « visés »
   let buts = 0, morts = 0;
@@ -1327,10 +1327,42 @@ test('le tir du joueur (v0.147.0) : la balle suit le regard, touche le premier h
   place(); for (let y = 138; y <= 141; y++) for (let x = 190; x <= 210; x++) T.base[y * T.W + x] = 12;
   assert.equal(tire([0, -1]).dernier.vise, false, 'le relief arrête la balle'); T.base.fill(0);
   // le rechargement : un second coup tout de suite est refusé
-  place(); B.pilote = { id: A.id[i], ax: 0, ay: 0, tir: { d: [0, -1], el: 0 }, dernier: null, refus: null }; avancer(B);
-  B.pilote.tir = { d: [0, -1], el: 0 }; avancer(B); assert.match(B.pilote.refus, /pas rechargé/);
+  place(); B.pilotes = [{ id: A.id[i], ax: 0, ay: 0, tir: { d: [0, -1], el: 0 }, dernier: null, refus: null }, null]; avancer(B);
+  B.pilotes[0].tir = { d: [0, -1], el: 0 }; avancer(B); assert.match(B.pilotes[0].refus, /pas rechargé/);
   // le tir automatique se tait pour l'homme piloté ; sans pilote, la simulation ne tire rien pour lui
-  const C = petite(); assert.equal(C.pilote ?? null, null); for (let k = 0; k < 30; k++) avancer(C);
+  const C = petite(); assert.deepEqual(C.pilotes, [null, null]); for (let k = 0; k < 30; k++) avancer(C);
+});
+import { commanderPilote } from '../js/tir-joueur.js';
+import { mourir } from '../js/bataille.js';
+test('la vue d\'un soldat à deux (v0.148.0) : un pilote par camp, des commandes rejouées au même pas donnent la même partie, un homme d\'en face ne se pilote pas', () => {
+  const mk = () => { const B = petite(), A = B.armee; B.terrain.base.fill(0); B.terrain.diff.fill(0); return B; };
+  const prem = (B, camp) => { for (let k = 0; k < B.armee.n; k++) if (B.armee.camp[k] === camp && !B.armee.mort[k]) return B.armee.id[k]; };
+  const scenario = B => {
+    const a = prem(B, 0), b = prem(B, 1);
+    assert.match(commanderPilote(B, 0, { id: b, cap: 0, av: 1, la: 0 }), /plus à vous/, 'l\'homme d\'en face n\'est pas à nous');
+    assert.equal(commanderPilote(B, 0, { id: a, cap: -1.2, av: 1, la: 0 }), ''); assert.equal(commanderPilote(B, 1, { id: b, cap: 1.9, av: 1, la: 1 }), '');
+    for (let k = 0; k < 240; k++) { if (k === 90) { commanderPilote(B, 0, { tir: true, cap: -1.2, el: 0 }); commanderPilote(B, 1, { tir: true, cap: 1.9, el: 0 }); } if (k === 180) commanderPilote(B, 1, { fin: true }); avancer(B); }
+  };
+  const X = mk(), Y = mk(); scenario(X); scenario(Y);
+  assert.equal(empreinte(X), empreinte(Y), 'deux machines, les mêmes commandes : la même partie');
+  assert.ok(X.pilotes[0] && X.pilotes[1] === null, 'le pilote d\'un camp, rendu, ne laisse que celui de l\'autre');
+  const i = [...Array(X.armee.n).keys()].find(k => X.armee.id[k] === X.pilotes[0].id); const x0 = X.armee.x[i];
+  assert.ok(Math.hypot(X.armee.x[i] - 200, X.armee.y[i]) > 0, 'il a marché');
+  assert.ok(x0 !== undefined);
+});
+test('la fiche d\'un mort est gardée pour toujours : ses chiffres, sa médaille « Mort pour la patrie », la partie relue', () => {
+  const B = petite(), A = B.armee;
+  const i = [...Array(A.n).keys()].find(k => A.camp[k] === 0 && !A.mort[k]); const id = A.id[i];
+  A.victimes[i] = 3; A.exp[i] = 0.4; A.peur[i] = 0.5;
+  mourir(B, i, 'obus');
+  const d = B.etat.defunts[id]; assert.ok(d, 'sa fiche est gardée'); assert.equal(d[0], B.etat.jour); assert.equal(d[1], 'obus'); assert.equal(d[4], 3); assert.equal(d[3], 0.4); assert.equal(d.length, 19);
+  for (let k = 0; k < 60; k++) avancer(B);      // la foule le retire (compacter)
+  assert.equal(B.armee.id.slice(0, B.armee.n).includes(id), false, 'il n\'est plus dans la foule');
+  assert.equal(B.etat.defunts[id][4], 3, 'sa fiche reste');
+  const pj = palmares(B, 0, 'jour'), pt = palmares(B, 0, 'total');
+  assert.equal(pj.soldats.find(x => x.cle === 'patrie')?.soldat, id, 'la médaille du jour'); assert.equal(pt.soldats.find(x => x.cle === 'patrie')?.soldat, id, 'la médaille de la bataille');
+  assert.equal(palmares(B, 1, 'total').soldats.some(x => x.cle === 'patrie' && x.soldat === id), false, 'pas à l\'autre camp');
+  const C = restaurer(photo(B), R); assert.deepEqual(C.etat.defunts, B.etat.defunts, 'la partie relue garde les fiches');
 });
 test('un obus de 75 abîme un nid, un 155 sur lui le détruit ; le génie le refait ; en face, la nuit, il se refait une fois sur deux', () => {
   const B = petite(), n = nidDe(B, 0);
