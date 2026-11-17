@@ -1,5 +1,10 @@
 # Journal des versions
 
+## 0.145.0 — 2026-11-17
+
+- Le bouton « Voir par ses yeux » de la fiche ne faisait rien (un import perdu à la fusion des versions) : il prend de nouveau la place du soldat
+- Chaque mitrailleuse en état a un soldat posté au fond de la tranchée, à son droit : il y marche et la sert ; blessé, tué ou en déroute, il est remplacé par le plus proche homme valide (à 20 m au plus), tant que le poste tient son tronçon et n'est pas détruit ; la fiche de l'homme dit « sert la mitrailleuse »
+
 ## 0.144.4 — 2026-11-17
 
 - Au labo, à trancher : des épaules et des crânes arrondis de près ; le jeu ne change pas

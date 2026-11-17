@@ -2,11 +2,11 @@
 // le vrai rendu du jeu sur une vraie bataille, et des curseurs pour l'heure (ou la nuit), la saison, le temps qu'il fait, le réglage « Éclairage »,
 // le zoom et la caméra (l'inclinaison va jusqu'à l'horizon, pour voir le ciel). Le temps peut passer (un jour de jeu en une minute) et des obus
 // tomber au centre de la vue (pour voir les éclairs, les incendies et les fusées la nuit). Le dessin seulement : aucune règle ne change.
-import { nouvelleBataille, avancer, regarderAu, ordonnerMarche, ordonnerBarrage } from './bataille.js?v=0.144.4';
-import { creerRendu, ZOOMS } from './rendu3d.js?v=0.144.4';
-import { METEO } from './data/meteo.js?v=0.144.4';
-import { SOLEIL_JEU } from './data/soleil.js?v=0.144.4';
-import { hash2 } from './lib/rng.js?v=0.144.4';
+import { nouvelleBataille, avancer, regarderAu, ordonnerMarche, ordonnerBarrage } from './bataille.js?v=0.145.0';
+import { creerRendu, ZOOMS } from './rendu3d.js?v=0.145.0';
+import { METEO } from './data/meteo.js?v=0.145.0';
+import { SOLEIL_JEU } from './data/soleil.js?v=0.145.0';
+import { hash2 } from './lib/rng.js?v=0.145.0';
 
 // les crans des curseurs (l'ordre est celui du curseur, de gauche à droite)
 const SAISONS = [['printemps', 'Printemps'], ['ete', 'Été'], ['automne', 'Automne'], ['hiver', 'Hiver']];
