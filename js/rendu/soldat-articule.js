@@ -1,6 +1,6 @@
-import { NOMS_CHAMPS } from '../data/poses-soldat.js?v=0.145.2';
-import { ARTICULE } from '../data/aspect-soldat.js?v=0.145.2';
-import { poseJeu, phaseDe, TEXELS, FLOTTANTS } from './pose-jeu.js?v=0.145.2';
+import { NOMS_CHAMPS } from '../data/poses-soldat.js?v=0.146.0';
+import { ARTICULE } from '../data/aspect-soldat.js?v=0.146.0';
+import { poseJeu, phaseDe, TEXELS, FLOTTANTS } from './pose-jeu.js?v=0.146.0';
 
 // Le soldat articulé (au labo seulement : « la fabrique de soldats », et la mesure de son coût ; rien n'est dans le jeu).
 // Un squelette de treize os (le tronc, la tête, deux fois bras / avant-bras, deux fois cuisse / mollet / pied, le fusil) que le nuanceur plie : le genou, le coude, la cheville
@@ -610,7 +610,7 @@ export function creerEquipeArticulee(THREE, col, { capacite, ombrage = 0, partag
     debut() { nO = 0; for (const g of groupes) g.n = 0; },
     ajouter(h) {
       if (nO >= capacite) return false;
-      ombres.ecrire(nO++, h);
+      if (!h.sansOmbre) ombres.ecrire(nO++, h);      // (un mort n'a pas l'ombre d'un homme debout)
       const camp = (h.camp ?? 0) & 1;
       let pose = null;      // calculée une fois pour l'homme, copiée dans la texture de chaque maillage qui le dessine
       if (texturePoses) { if (h.pose) pose = h.pose; else { const ph = phaseDe(h); pose = poseJeu(h, Math.fround(Math.sin(ph)), Math.fround(Math.cos(ph)), scratch); } }       // `h.pose` : la pose du lecteur d'animations (animation-jeu.js), s'il en a une

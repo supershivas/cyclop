@@ -1,5 +1,9 @@
 # Journal des versions
 
+## 0.146.0 — 2026-11-17
+
+- De près, un homme tué tombe, et les morts gisent dans des poses variées, le fusil lâché à côté
+
 ## 0.145.2 — 2026-11-17
 
 - Au labo : la mort de près, une chute et des morts dans des poses variées, à choisir

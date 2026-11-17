@@ -88,3 +88,7 @@ export const MORTS = {
   essais: 8,
   chute: { duree: 1.0, genoux: 0.9, descente: 0.12 },
 };
+
+// Les morts dans le jeu (Jérôme, v0.146.0 : « les deux en jeu ») : de près (dès ARTICULE.des px/m), les morts du jour les plus proches sont articulés dans leur pose (ARTICULE.morts au plus,
+// en plus des vivants) ; un homme dessiné articulé et vivant il y a moins de `vu` s joue sa chute (`chute` s).
+export const MORTS_JEU = { vu: 1.0, chute: MORTS.chute.duree };
