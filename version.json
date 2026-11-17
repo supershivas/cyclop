@@ -1,7 +1,7 @@
 {
-  "version": "0.142.0",
+  "version": "0.142.1",
   "date": "2026-11-17",
   "changes": [
-    "Au labo : le prototype de la patrouille de nuit (quarante hommes à travers le no man's land, sous les fusées) ; le jeu ne change pas"
+    "Au labo : les démarches et le tir en marchant, à trancher (le jeu ne change pas)"
   ]
 }

@@ -155,7 +155,7 @@ les deux machines calculent la même bataille, on n'échange que les ordres) sur
 - [x] Lisibilité : cratère, boue, eau, soldat distinguables en gris
 
 ### La patrouille de nuit (Jérôme, 16 nov. : « une mission interlude où l'on déplace un petit groupe de soldats (30-50) d'un point A à un point B de nuit » ; accord pour une tuile sur le papier de la nuit ; pas construite)
-- [ ] Au labo d'abord : 30 à 50 hommes de A à B à travers le no man's land, caméra de près (12 à 24 px/m), les fusées éclairantes (se coucher dans un trou ou être vu d'un poste), une carte fixe, sans conséquence : vérifier que c'est amusant
+- [x] Au labo d'abord (v0.142.0, sujet « La patrouille de nuit ») : 40 hommes de A à B, les fusées, se coucher ; reste à jouer pour juger si c'est amusant, la pose qui rampe (face contre terre), la carte qui montre les trous. Avant : à travers le no man's land, caméra de près (12 à 24 px/m), les fusées éclairantes (se coucher dans un trou ou être vu d'un poste), une carte fixe, sans conséquence : vérifier que c'est amusant
 - [ ] Puis une tuile « Patrouille » sur le papier de la nuit, facultative, une ou deux fois par bataille, proposée quand la situation la justifie (régiment isolé, fil intact devant l'objectif) ; un effet lisible au matin (fil coupé, vivres portés, relève guidée) ; les hommes perdus sont ceux d'un vrai régiment
 - Garde-fou : le « coup de main » a été retiré (v0.38.3) parce qu'il coûtait des hommes pour rien, en lot ; la patrouille se joue et rapporte
 

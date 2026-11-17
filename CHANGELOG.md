@@ -1,5 +1,25 @@
 # Journal des versions
 
+## 0.142.1 — 2026-11-17
+
+- Au labo, à trancher : les démarches (une allure par soldat : les épaules, les hanches, le poids sur une jambe, le fusil à deux mains) et le tir en marchant (il épaule avant le coup, la crosse à l'épaule) ; le jeu ne change pas
+
+## 0.142.0 — 2026-11-17
+
+- Au labo, à essayer : le prototype de la patrouille de nuit ; quarante hommes vont jusqu'à portée de voix du fil d'en face ; un clic pour aller, Espace pour se coucher ; les fusées d'en face s'ouvrent au-dessus d'eux, et debout dans leur lumière on est vu ; le jeu ne change pas
+
+## 0.141.4 — 2026-11-17
+
+- Les écussons des régiments disparaissent quand leurs hommes sortent de l'écran (ils restaient affichés à leur dernière place)
+
+## 0.141.3 — 2026-11-17
+
+- Les arbres du fond ne sont plus de simples cubes : au-delà d'une certaine distance, un arbre n'était plus qu'un tronc et un bloc ; il garde maintenant ses grappes, plus simples à mesure qu'il s'éloigne, comme ceux du premier plan
+
+## 0.141.2 — 2026-11-16
+
+- Les arbres changent de niveau de détail en douceur : de loin ils gardent les mêmes grappes et les mêmes tons, et le passage d'un niveau à l'autre se fait en fondu (une trame de pixels) au lieu d'un saut
+
 ## 0.141.1 — 2026-11-16
 
 - Les soldats ne sont plus tous pareils : chacun a son ton d'uniforme, son regard au repos, sa place dans le rang ; dans la tranchée, certains s'assoient, le dos au parapet, tant qu'on ne tire pas
