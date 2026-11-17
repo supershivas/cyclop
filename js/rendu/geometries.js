@@ -1,6 +1,6 @@
 // Les formes du rendu, construites à la main : un soldat (de la boîte à la silhouette), un arbre, un buisson. Pas d'état :
 // `THREE` et `col` (une couleur de la palette) viennent de creerRendu ; les soldats prennent aussi leurs attributs d'instance.
-import { ARBRES_FEUILLES, ARBRES_COURONNES, ARBRES_VARIANTES, ARBRES_GROSSIER, ARBRES_GRAPPES, ARBRES_TEINTES } from '../data/arbres.js?v=0.141.3';
+import { ARBRES_FEUILLES, ARBRES_COURONNES, ARBRES_VARIANTES, ARBRES_GROSSIER, ARBRES_GRAPPES, ARBRES_TEINTES } from '../data/arbres.js?v=0.141.4';
 
 export function creerGeometries(THREE, col) {
   // les faces d'une boîte qu'on voit d'ici : le dessus, le sud, l'est et l'ouest (jamais le nord ni le dessous)
@@ -409,7 +409,7 @@ export function creerGeometries(THREE, col) {
           const hg = hash(`g${k},${g}`, variante * 31 + 7), a = (g / G.n + hg * 0.3) * Math.PI * 2, e = g === 0 ? 0.15 : G.ecart;
           const t = G.taille[0] + (G.taille[1] - G.taille[0]) * hash(`t${k},${g}`, variante + 3), ox = Math.cos(a) * e * w * largeur, oz = Math.sin(a) * e * w * largeur, oy = (g === 0 ? 0.3 : (hg - 0.6) * 0.35) * h;
           const dg = teinte(P.dessus[(n + dec + g) % P.dessus.length]), fg = teinte(P.flanc[(n + dec + g) % P.flanc.length]);
-          for (const tr of formeCouronne(formes[(k + variante + g) % formes.length], w * largeur * t, h * t, variante * 31 + k * 5 + g, 'moyen')) {
+          for (const tr of formeCouronne(formes[(k + variante + g) % formes.length], w * largeur * t, h * t, variante * 31 + k * 5 + g, essence.res ?? 'moyen')) {      // (`res` true : les mêmes grappes en boules grossières, le niveau intermédiaire)
             const c = tr.haut ? dg : fg;
             for (const v of tr.p) { pos.push(v[0] + p[0] + ox, v[1] + p[1] + oy, v[2] + p[2] + oz); coul.push(c.r, c.g, c.b); }
           }

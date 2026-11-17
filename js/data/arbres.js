@@ -79,7 +79,11 @@ ARBRES_COURONNES.bouleau = ['irregulier', 'boule'];
 // (`ecart` de sa largeur), à des hauteurs un peu différentes, chacune de sa teinte : la couronne se bosselle, la lumière s'y accroche. Chaque boule
 // a la résolution `moyen` (5 pans, 25 triangles ; la touffe ronde d'avant : 42) ; de loin, le feuillage grossier reste une boule par touffe.
 // `ppm` : seulement un arbre qui fait au moins tant de pixels par mètre à l'écran (Jérôme, v0.138.0 : « grappes réservées au proche » ; en dessous, la touffe ronde)
-export const ARBRES_GRAPPES = { n: 3, taille: [0.6, 0.78], ecart: 0.34, moyen: { anneaux: [90, 45, 5, -30], pans: 5 }, ppm: 6 };
+export const ARBRES_GRAPPES = { n: 3, taille: [0.6, 0.78], ecart: 0.34, moyen: { anneaux: [90, 45, 5, -30], pans: 5 }, ppm: 5 };      // (ppm : 6 avant la v0.139.1 ; 5 tombe entre deux zooms, 4 et 6 : la bande du fondu ne couvre pas toute la vue d’un zoom)
+// Le passage d'un niveau à l'autre (Jérôme, v0.139.1 : « le changement entre les premiers plans et la version simplifiée est trop choquant ») : le niveau
+// intermédiaire garde les mêmes grappes (mêmes boules, mêmes places, mêmes tons), en boules grossières (ARBRES_GROSSIER) ; et autour de chaque seuil
+// (ARBRES_GRAPPES.ppm, ARBRES_GROSSIER.ppm), sur ± `bande` de sa valeur, les deux niveaux se partagent les pixels en trame ordonnée (4 × 4) : un fondu sans transparence.
+export const ARBRES_FONDU = { bande: 0.12 };      // (0,25 au premier essai : à 6 px/m presque tous les arbres de la vue étaient en trame, un damier permanent)
 
 // Les teintes par essence et par saison (`{ teintes: 'palette' | 'etendues' }`) ; sans : celles de ARBRES_FEUILLES pour tous. Une variante de l'arbre
 // (`ARBRES_VARIANTES`) décale le départ dans la liste : deux chênes voisins n'ont pas les mêmes tons.
