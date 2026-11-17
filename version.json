@@ -1,7 +1,8 @@
 {
-  "version": "0.142.1",
+  "version": "0.142.2",
   "date": "2026-11-17",
   "changes": [
-    "Au labo : les démarches et le tir en marchant, à trancher (le jeu ne change pas)"
+    "Chaque soldat a sa démarche : sa foulée, les épaules et les hanches, le poids sur une jambe, le fusil à deux mains",
+    "Les soldats épaulent avant de tirer et continuent de marcher en tirant"
   ]
 }

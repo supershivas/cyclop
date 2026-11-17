@@ -2,6 +2,9 @@
 // Une entrée par version qui touche au labo, la plus récente en haut. `ref` : « sujet-Lettre » (la lettre est celle de la variante,
 // A étant l'actuelle). À chaque changement du labo : une entrée ici, avec `depuis` sur les variantes ajoutées ou changées (labo.js).
 export const JOURNAL = [
+  { version: '0.142.2', date: '2026-11-17', items: [
+    { genre: 'mis-a-jour', texte: 'Jérôme tranche : les démarches passent en jeu, de près et de loin (une allure par homme, le fusil à deux mains, l\'épaulement avant le coup, la crosse à l\'épaule) ; les démarches d\'avant deviennent l\'ancienne', ref: 'demarches-A' },
+  ] },
   { version: '0.142.1', date: '2026-11-17', items: [
     { genre: 'nouveau', texte: 'Les démarches et le tir en marchant (à trancher) : une allure par homme (les épaules, les hanches, le poids sur une jambe, le fusil à deux mains), l\'épaulement avant le coup, la crosse à l\'épaule ; de près en défilé, et les silhouettes à 6 px/m', ref: 'demarches-B' },
   ] },

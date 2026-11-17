@@ -1,5 +1,10 @@
 # Journal des versions
 
+## 0.142.2 — 2026-11-17
+
+- Chaque soldat a sa démarche : sa foulée et sa cadence, les épaules qui tournent contre les hanches, le poids reporté d'une jambe sur l'autre, le fusil tenu à deux mains ; au repos, le poids sur une jambe
+- Les soldats épaulent avant de tirer, la crosse au creux de l'épaule, et continuent de marcher en tirant
+
 ## 0.142.1 — 2026-11-17
 
 - Au labo, à trancher : les démarches (une allure par soldat : les épaules, les hanches, le poids sur une jambe, le fusil à deux mains) et le tir en marchant (il épaule avant le coup, la crosse à l'épaule) ; le jeu ne change pas

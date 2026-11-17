@@ -3,14 +3,14 @@
 // plaine, dessinés par les maillages et la texture de poses du jeu (js/rendu/soldat-articule.js) et animés par son lecteur (js/rendu/animation-jeu.js) ; `allures` : les démarches
 // de js/anim-modeles.js (une par homme, l'épaulement avant le coup, le buste qui vise) ou celles d'avant. « Feu en marchant » : chacun tire toutes les 2,5 à 4,5 s, sur une cible
 // devant lui, un peu de côté. Le labo montre sans rien modifier : il n'y a pas de bataille.
-import { PALETTE } from './palette.js?v=0.142.1';
-import { loadThree } from './three-lib.js?v=0.142.1';
-import { fabriquer } from './labo-fabrique.js?v=0.142.1';
-import { creerEquipeArticulee } from './rendu/soldat-articule.js?v=0.142.1';
-import { creerJeuAnimations } from './rendu/animation-jeu.js?v=0.142.1';
-import { allures as genererAllures } from './anim-modeles.js?v=0.142.1';
-import { ANIMATIONS } from './data/animations.js?v=0.142.1';
-import { EPAULEMENT } from './data/lecteur-animations.js?v=0.142.1';
+import { PALETTE } from './palette.js?v=0.142.2';
+import { loadThree } from './three-lib.js?v=0.142.2';
+import { fabriquer } from './labo-fabrique.js?v=0.142.2';
+import { creerEquipeArticulee } from './rendu/soldat-articule.js?v=0.142.2';
+import { creerJeuAnimations } from './rendu/animation-jeu.js?v=0.142.2';
+import { allures as genererAllures } from './anim-modeles.js?v=0.142.2';
+import { ANIMATIONS } from './data/animations.js?v=0.142.2';
+import { EPAULEMENT } from './data/lecteur-animations.js?v=0.142.2';
 
 const el = (tag, props = {}, ...kids) => { const e = Object.assign(document.createElement(tag), props); e.append(...kids); return e; };
 const FACTEUR = 2, TAN15 = Math.tan(15 * Math.PI / 180), N = 6;
