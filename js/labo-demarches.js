@@ -3,14 +3,14 @@
 // plaine, dessinés par les maillages et la texture de poses du jeu (js/rendu/soldat-articule.js) et animés par son lecteur (js/rendu/animation-jeu.js) ; `allures` : les démarches
 // de js/anim-modeles.js (une par homme, l'épaulement avant le coup, le buste qui vise) ou celles d'avant. « Feu en marchant » : chacun tire toutes les 2,5 à 4,5 s, sur une cible
 // devant lui, un peu de côté. Le labo montre sans rien modifier : il n'y a pas de bataille.
-import { PALETTE } from './palette.js?v=0.143.4';
-import { loadThree } from './three-lib.js?v=0.143.4';
-import { fabriquer } from './labo-fabrique.js?v=0.143.4';
-import { creerEquipeArticulee } from './rendu/soldat-articule.js?v=0.143.4';
-import { creerJeuAnimations } from './rendu/animation-jeu.js?v=0.143.4';
-import { allures as genererAllures } from './anim-modeles.js?v=0.143.4';
-import { ANIMATIONS } from './data/animations.js?v=0.143.4';
-import { EPAULEMENT } from './data/lecteur-animations.js?v=0.143.4';
+import { PALETTE } from './palette.js?v=0.143.5';
+import { loadThree } from './three-lib.js?v=0.143.5';
+import { fabriquer } from './labo-fabrique.js?v=0.143.5';
+import { creerEquipeArticulee } from './rendu/soldat-articule.js?v=0.143.5';
+import { creerJeuAnimations } from './rendu/animation-jeu.js?v=0.143.5';
+import { allures as genererAllures } from './anim-modeles.js?v=0.143.5';
+import { ANIMATIONS } from './data/animations.js?v=0.143.5';
+import { EPAULEMENT } from './data/lecteur-animations.js?v=0.143.5';
 
 const el = (tag, props = {}, ...kids) => { const e = Object.assign(document.createElement(tag), props); e.append(...kids); return e; };
 const FACTEUR = 2, TAN15 = Math.tan(15 * Math.PI / 180), N = 6;
@@ -19,19 +19,19 @@ const u = (n, k) => (Math.imul(n * 977 + k + 1, 2654435761) >>> 0) / 4294967296;
 const lisse01 = x => { const k = x < 0 ? 0 : x > 1 ? 1 : x; return k * k * (3 - 2 * k); };
 
 // `repos` (Jérôme, 17 nov. : « des mouvements simples lorsque les soldats attendent dans les tranchées ») : six hommes alignés, immobiles, comme au parapet ; `vivant` : le repos vivant des allures
-export function maquetteDemarches(stage, { allures = true, repos = false, vivant = false } = {}) {
+export function maquetteDemarches(stage, { allures = true, repos = false, vivant = false, geste = null } = {}) {
   let fini = false, nettoyer = () => {};
   stage.append(el('p', { textContent: 'Chargement du défilé…' }));
   (async () => {
     const THREE = await loadThree();
     if (fini) return;
     stage.replaceChildren();
-    nettoyer = monter(stage, THREE, allures, repos, vivant);
+    nettoyer = monter(stage, THREE, allures, repos, vivant, geste);
   })().catch(e => { stage.replaceChildren(el('pre', { textContent: `Le défilé n'a pas pu démarrer : ${e.message}` })); });
   return () => { fini = true; nettoyer(); };
 }
 
-function monter(stage, THREE, avecAllures, repos = false, vivant = false) {
+function monter(stage, THREE, avecAllures, repos = false, vivant = false, geste = null) {
   const col = l => new THREE.Color(PALETTE[l]);
   const S = repos ? { ppm: 32, feu: false, yaw: 0.75, tangage: 0.3, peur: false } : { ppm: 24, feu: true, yaw: 0, tangage: 0.22, peur: false };
   const boite = el('div'); boite.style.cssText = 'position:relative;width:100%;height:min(62vh,520px);overflow:hidden';
@@ -50,7 +50,7 @@ function monter(stage, THREE, avecAllures, repos = false, vivant = false) {
   const sol = new THREE.Mesh(new THREE.PlaneGeometry(80, 30), new THREE.MeshBasicMaterial({ color: col('b') })); sol.rotation.x = -Math.PI / 2; sol.position.y = -0.002; scene.add(sol);
   const equipes = { fin: creerEquipeArticulee(THREE, col, { capacite: N, ombrage: 0.5, niveau: 'fin', texturePoses: true }), moyen: creerEquipeArticulee(THREE, col, { capacite: N, ombrage: 0.5, niveau: 'moyen', texturePoses: true }) };
   for (const E of Object.values(equipes)) for (const m of E.meshes) scene.add(m);
-  const A = avecAllures ? genererAllures(undefined, { vivant }) : null;
+  const A = avecAllures ? genererAllures(undefined, { vivant, geste }) : null;
   const lecteur = creerJeuAnimations(A ? { animations: [...ANIMATIONS, ...A.animations], allures: A } : {});
 
   // les hommes : leur aspect (celui du jeu), leur vitesse, leur place dans la colonne, leur compte à rebours de tir
@@ -87,7 +87,7 @@ function monter(stage, THREE, avecAllures, repos = false, vivant = false) {
     camera.position.set(cible.x + d * Math.sin(S.yaw) * Math.cos(S.tangage), cible.y + d * Math.sin(S.tangage), cible.z + d * Math.cos(S.yaw) * Math.cos(S.tangage));
     camera.lookAt(cible); camera.near = Math.max(0.02, d * 0.1); camera.far = d + 60; camera.updateProjectionMatrix();
     renderer.render(scene, camera);
-    legende.textContent = `${S.ppm} px/m · ${repos ? (vivant ? 'au repos, vivants' : 'au repos, la pose tenue') : avecAllures ? 'une allure par homme, épaulement avant le coup' : 'les démarches d\'avant'} · ${S.feu ? 'feu en marchant' : 'sans tirer'}${S.peur ? ' · sous le feu, courbés' : ''} · image ${w}×${ht} ×${FACTEUR}`;
+    legende.textContent = `${S.ppm} px/m · ${repos ? (geste ? `au repos : ${geste}` : vivant ? 'au repos, vivants' : 'au repos, la pose tenue') : avecAllures ? 'une allure par homme, épaulement avant le coup' : 'les démarches d\'avant'} · ${S.feu ? 'feu en marchant' : 'sans tirer'}${S.peur ? ' · sous le feu, courbés' : ''} · image ${w}×${ht} ×${FACTEUR}`;
   }
   raf = requestAnimationFrame(image);
   return () => { cancelAnimationFrame(raf); for (const E of Object.values(equipes)) E.dispose(); renderer.dispose(); };

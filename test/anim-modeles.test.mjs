@@ -100,3 +100,20 @@ test('le repos vivant : les mains restent sur le fusil, les pieds au sol, le poi
   assert.ok(appuiMin < -0.01 && appuiMax > 0.01, `appui ${appuiMin} ${appuiMax}`);
   assert.ok(tMax - tMin > 0.15, `torsion ${tMin} ${tMax}`);
 });
+import { reposGeste } from '../js/anim-modeles.js';
+import { GESTES } from '../js/data/lecteur-animations.js';
+test('les gestes d\'attente : la main droite garde le fusil, les pieds au sol ; le guetteur se baisse, la main gauche va au casque et à la bouche', () => {
+  for (const g of ['froid', 'pluie', 'guetteur', 'gestes']) {
+    const an = reposGeste(allure(3), g, g); let cr = [9, -9], gauche = 0;
+    assert.equal(an.duree, GESTES[g].duree);
+    for (let k = 0; k < 60; k++) {
+      const p = echantillon(an, k * an.duree / 60), J = articulations(p);
+      assert.ok(dist(J.mainD.pos, pointFusil(p, CARRURE_NEUTRE, PORT_ARME.mainDroite)) < 0.01, `${g} : main droite à ${k}`);
+      assert.ok(Math.min(J.piedG.pos[1], J.piedD.pos[1]) > -0.02, `${g} : pied sous le sol`);
+      cr = [Math.min(cr[0], J.crane.pos[1]), Math.max(cr[1], J.crane.pos[1])]; gauche = Math.max(gauche, dist(J.mainG.pos, pointFusil(p, CARRURE_NEUTRE, PORT_ARME.mainGauche)));
+    }
+    if (g === 'guetteur') assert.ok(cr[1] - cr[0] > 0.15, `il se baisse : ${cr}`);
+    if (g === 'gestes') assert.ok(gauche > 0.3, `la main gauche quitte le fût : ${gauche}`);
+    if (g === 'froid') assert.ok(gauche > 0.05, 'il se frotte les mains');
+  }
+});

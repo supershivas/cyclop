@@ -58,3 +58,16 @@ export const ALLURES = {
 // (La pose de tir d'avant faisait pivoter le fusil à 1,30 m de son pied : la crosse passait 75 cm derrière le dos, ce qui se voit de profil.)
 export const TIR_EPAULE = { torsion: 0.25, crosse: [-0.13, -0.02, 0.1], flexion: -1.42, roulis: 0, mainDroite: 0.8, mainGauche: 0.95, tete: 0.14, buste: 0.12, reculFlexion: 0.12, reculZ: -0.04, reculBuste: -0.05 };
 export const EPAULEMENT = { avance: 0.26, engage: 20, vise: 0.9, viseSilhouette: 0.5, tenue: 0.45, baisse: 0.3 };
+
+// Les gestes d'attente (Jérôme, 17 nov. : « selon le temps », « le guetteur », « les petits gestes » ; au labo) : des boucles de repos, une par allure (js/anim-modeles.js, `reposGeste`), sur le repos vivant
+// adouci (`vivant` : la part de ses amplitudes). Les fenêtres sont des fractions de la boucle (début, fin) ; `rampe` : la part de boucle pour entrer et sortir d'un geste.
+// · froid : il tape des pieds par salves (`pieds` : la cadence en Hz, la hanche et le genou levés), se frotte les mains (`mains` : la main gauche quitte le fût pour la poignée, va et vient), la tête rentrée ;
+// · pluie : la tête baissée, le dos rond ; · guetteur : il se redresse pour regarder au loin (`regard` : le balayage), puis se baisse à l'abri (`baisse` : les genoux pliés, rad) ;
+// · gestes : il rajuste son casque de la main gauche, puis la porte à sa bouche (souffler dans ses doigts, tirer sur sa cigarette).
+export const GESTES = {
+  rampe: 0.05,
+  froid: { duree: 8, images: 64, vivant: 0.5, tete: 0.25, buste: 0.12, pieds: { frequence: 1.5, hanche: 0.32, genou: 0.62, fenetres: [[0.06, 0.36], [0.58, 0.84]] }, mains: { frequence: 2.5, ampleur: 0.035, fenetres: [[0.38, 0.56], [0.86, 0.99]] } },
+  pluie: { duree: 7, images: 16, vivant: 0.6, tete: 0.4, buste: 0.2 },
+  guetteur: { duree: 9, images: 36, vivant: 0.3, debout: [0.04, 0.46], regard: 0.45, baisse: 0.75, teteDebout: -0.22, teteBas: 0.15, busteBas: 0.25 },
+  gestes: { duree: 10, images: 40, vivant: 0.6, casque: [0.12, 0.32], bouche: [0.55, 0.78] },
+};

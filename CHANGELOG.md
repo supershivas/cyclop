@@ -1,5 +1,9 @@
 # Journal des versions
 
+## 0.143.5 — 2026-11-17
+
+- Au labo, à trancher : des gestes d'attente dans la tranchée (taper des pieds et se frotter les mains par le froid, le dos rond sous la pluie, le guetteur qui se redresse et se baisse, rajuster son casque, la main à la bouche) ; le jeu ne change pas
+
 ## 0.143.4 — 2026-11-17
 
 - Au repos, les soldats ne sont plus figés : ils respirent, se balancent, passent le poids d'une jambe sur l'autre, regardent autour d'eux, rajustent leur prise sur le fusil
