@@ -1,6 +1,6 @@
-import { NOMS_CHAMPS } from '../data/poses-soldat.js?v=0.145.1';
-import { ARTICULE } from '../data/aspect-soldat.js?v=0.145.1';
-import { poseJeu, phaseDe, TEXELS, FLOTTANTS } from './pose-jeu.js?v=0.145.1';
+import { NOMS_CHAMPS } from '../data/poses-soldat.js?v=0.145.2';
+import { ARTICULE } from '../data/aspect-soldat.js?v=0.145.2';
+import { poseJeu, phaseDe, TEXELS, FLOTTANTS } from './pose-jeu.js?v=0.145.2';
 
 // Le soldat articulé (au labo seulement : « la fabrique de soldats », et la mesure de son coût ; rien n'est dans le jeu).
 // Un squelette de treize os (le tronc, la tête, deux fois bras / avant-bras, deux fois cuisse / mollet / pied, le fusil) que le nuanceur plie : le genou, le coude, la cheville
@@ -388,7 +388,13 @@ export const VERT = `
     if (libre && abs(P(27)) > 0.00001) p.x += P(27) * clamp(p.y / hanche.y, 0.0, 1.0);
     p.y -= libre ? P(18) : 0.44 * tapi + (genou ? 0.42 : 0.0);
     // couché sur le dos, la tête vers l'arrière
-    if (couche > 0.5) { p = rx(p, vec3(0.0), 1.5708); p.y += 0.16; }
+    // (v0.145.2) couché = 2q + a : le corps tourne vers son côté (q : 0 le dos, 1 le ventre, 2 et 3 les flancs), bascule de a × 90° autour de ses pieds, revient, se soulève ; 1 : sur le dos, comme avant
+    if (couche > 0.001) {
+      float cq = min(3.0, floor(couche * 0.5 + 0.0001)), ca = min(1.0, couche - 2.0 * cq);
+      float phi = cq < 0.5 ? 0.0 : cq < 1.5 ? 3.14159265 : cq < 2.5 ? 1.57079633 : -1.57079633;
+      p = ry(p, vec3(0.0), phi); p = rx(p, vec3(0.0), 1.5708 * ca); p = ry(p, vec3(0.0), -phi);
+      p.y += ca * (cq < 0.5 ? 0.16 : cq < 1.5 ? 0.18 : 0.24);
+    }
     // le cap
     float c = aCap.x, s = aCap.y;
     p.xz = vec2(p.x * c + p.z * s, -p.x * s + p.z * c);

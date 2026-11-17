@@ -2,6 +2,9 @@
 // Une entrée par version qui touche au labo, la plus récente en haut. `ref` : « sujet-Lettre » (la lettre est celle de la variante,
 // A étant l'actuelle). À chaque changement du labo : une entrée ici, avec `depuis` sur les variantes ajoutées ou changées (labo.js).
 export const JOURNAL = [
+  { version: '0.145.2', date: '2026-11-17', items: [
+    { genre: 'nouveau', texte: 'La mort et les morts : la chute d\'un homme tué (une seconde, du côté tiré de son numéro) et des morts dans des poses variées, le fusil lâché à côté ; à trancher', ref: 'morts-A' },
+  ] },
   { version: '0.145.1', date: '2026-11-17', items: [
     { genre: 'mis-a-jour', texte: 'Jérôme tranche : les épaules et les crânes arrondis passent en jeu ; les boîtes deviennent l\'ancienne', ref: 'formes-A' },
   ] },

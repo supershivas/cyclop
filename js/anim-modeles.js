@@ -1,8 +1,8 @@
 // Des animations toutes faites du soldat articulé, point de départ de l'atelier (logique pure) : on les charge, on les retouche image par image.
 // Elles sont construites avec les poses du jeu (`poseDe`), le fusil placé comme un corps (`pointFusil`) et la cinématique inverse des bras (`ikBras` : les mains posées sur le fusil).
 // Tout est pour un tireur DROITIER ; le gaucher en est le miroir (`miroirAnimation` de js/anim-edition.js : le jeu en jouera le miroir pour environ 10 % des hommes).
-import { poseNeutre, poseDe, ikBras, pointFusil, animation, articulations, CARRURE_NEUTRE } from './pose-soldat.js?v=0.145.1';
-import { ALLURES, TIR_EPAULE, GESTES } from './data/lecteur-animations.js?v=0.145.1';
+import { poseNeutre, poseDe, ikBras, pointFusil, animation, articulations, melanger, CARRURE_NEUTRE } from './pose-soldat.js?v=0.145.2';
+import { ALLURES, TIR_EPAULE, GESTES, MORTS } from './data/lecteur-animations.js?v=0.145.2';
 
 // Le fusil à deux mains, « à la charge » : la crosse contre la hanche droite, le canon devant et un peu à gauche ; la main droite sur la poignée, la gauche sur le fût.
 // (les valeurs viennent d'un balayage : un fusil plus horizontal ou plus avancé met la main gauche hors de portée du bras, 62 cm)
@@ -146,6 +146,63 @@ export function reposGeste(a, nom, geste) {
     I.push({ t, courbe: 'lineaire', pose: { ...pose, appui: s * r.appui + k * V.balance * Math.sin(T * 2 * u + 1), roulis: -s * r.roulis, torsion } });
   }
   return animation(nom, I, { mode: 'boucle', duree: G.duree });
+}
+
+// ─── La mort (v0.145.2, au labo) ───
+// La pose du mort n° n : son côté, ses bras, ses jambes, sa tête, son fusil (MORTS de data/lecteur-animations.js) ; une pose qui passerait sous le sol, ou dont une main, un pied ou le fusil flotte, est tirée de nouveau
+export function poseMort(n, M = MORTS) {
+  let meilleure = null, note = Infinity;
+  for (let essai = 0; essai < M.essais; essai++) {
+    const u = k => hachage(n * 31 + essai, 100 + k);
+    const x = u(0), q = x < M.cotes[0] ? 0 : x < M.cotes[0] + M.cotes[1] ? 1 : x < M.cotes[0] + M.cotes[1] + M.cotes[2] ? 2 : 3;
+    const s = q === 1 ? -1 : 1, p = poseNeutre();
+    for (const [g, k] of [['G', 1], ['D', 2]]) {
+      // les jambes : sur le dos, le genou levé, le pied à plat (genou = 2 × hanche) ; sur le ventre, presque tendues ; sur le flanc, repliées devant
+      const J = M.jambes, h = q === 0 ? entre(J.dos.hanche, u(k)) : q === 1 ? entre(J.ventre.hanche, u(k)) : entre(J.flanc.hanche, u(k));
+      p['hanche' + g] = h; p['genou' + g] = q === 0 ? 2 * h * (0.85 + 0.15 * u(k + 2)) : entre(q === 1 ? J.ventre.genou : J.flanc.genou, u(k + 2));
+      p['cheville' + g] = 0.3 * (p['genou' + g] - p['hanche' + g]);
+      // les bras : sur le dos ou le ventre, le long du corps, en croix sur le sol, ou au-dessus de la tête ; `conv` les écarte vers l'extérieur (son signe suit le côté et le sens du bras)
+      const b = u(k + 4), sg = g === 'G' ? -1 : 1;
+      if (q >= 2) { p['epaule' + g] = entre([0.3, 1.7], u(k + 6)); p['coude' + g] = 0.9 * u(k + 8); p['conv' + g] = 0; }
+      else if (b < M.bras[0]) { p['epaule' + g] = s * (0.25 * u(k + 6) - 0.1); p['coude' + g] = 0.3 * u(k + 8); }
+      else if (b < M.bras[0] + M.bras[1]) { p['epaule' + g] = s * 1.57; p['conv' + g] = sg * s * entre(M.ecarte, u(k + 6)); p['coude' + g] = 0.4 * u(k + 8); }
+      else { p['epaule' + g] = s * 2.95; p['coude' + g] = 0.3 * u(k + 8); p['conv' + g] = sg * s * 0.3 * u(k + 6); }
+    }
+    p.tete = M.tete * (q >= 2 ? 1 : 0.4) * (2 * u(11) - 1); p.torsion = M.torsion * (2 * u(12) - 1); p.buste = M.buste * (2 * u(13) - 1);
+    // le fusil : sur le dos ou le ventre, il reste à plat en tournant dans le plan du sol (le roulis) ; sur le flanc, en tournant autour de l'épaule (la flexion)
+    const tenu = u(14) < M.tenu, ang = tenu ? 0.7 : M.fusilAngle * (2 * u(15) - 1);
+    p.fusilX = tenu ? -0.42 : (u(16) < 0.5 ? -1 : 1) * entre(M.fusilCote, u(17)) - 0.395;
+    if (q >= 2) {      // sur le flanc, le côté du corps est vertical : le fusil descend au sol (`fusilX`, vers le bas) et se pose devant ou derrière lui (`fusilZ`)
+      p.fusil = -ang; p.fusilX = -0.395 + (q === 2 ? 1 : -1) * M.fusilSol;
+      p.fusilZ = tenu ? 0.25 : (u(16) < 0.7 ? 1 : -1) * 0.6 * entre(M.fusilCote, u(17));
+    } else { p.fusil = 0; p.fusilRoulis = ang; }
+    p.couche = 2 * q + 1;
+    // sur le flanc, le bras du dessus tombe devant : la rotation qui pose sa main le plus bas
+    if (q >= 2) for (const g of ['G', 'D']) {
+      let mc = 0, my = Infinity;
+      for (let c = -1.4; c <= 1.41; c += 0.2) { p['conv' + g] = c; const y = articulations(p)['main' + g].pos[1]; if (y < my - 1e-6 && y > -0.04) { my = y; mc = c; } }
+      p['conv' + g] = mc;
+    }
+    const A = articulations(p), ys = ['mainG', 'mainD', 'piedG', 'piedD', 'crane', 'genouG', 'genouD', 'coudeG', 'coudeD'].map(j => A[j].pos[1]);
+    const f0 = pointFusil(p, CARRURE_NEUTRE, 0.55)[1], f1 = pointFusil(p, CARRURE_NEUTRE, 1.95)[1];
+    const bas = Math.min(...ys, f0 + 0.03, f1 + 0.03), haut = Math.max(A.mainG.pos[1], A.mainD.pos[1], A.piedG.pos[1], A.piedD.pos[1], f0, f1);
+    // une pose qui passe sous le sol, ou dont une main ou un pied flotte, est tirée de nouveau ; la moins mauvaise sert si aucune ne va
+    const ecart = Math.max(0, -0.06 - bas) * 10 + Math.max(0, haut - M.haut);
+    if (ecart === 0) return p;
+    if (ecart < note) { note = ecart; meilleure = p; }
+  }
+  return meilleure;
+}
+
+// La chute du mort n° n vers sa pose : les genoux cèdent, le corps bascule de son côté en accélérant, s'étend ; une animation jouée une fois (`duree` s)
+export function chute(n, nom = `chute ${n}`, M = MORTS) {
+  const fin = poseMort(n, M), q = Math.floor(fin.couche / 2), C = M.chute, debout = porterArme(poseNeutre());
+  const cede = { ...debout, hancheG: 0.45, hancheD: 0.4, genouG: C.genoux, genouD: C.genoux * 0.9, chevilleG: 0.4, chevilleD: 0.35, descente: C.descente,
+    buste: q === 1 ? 0.45 : q === 0 ? -0.15 : 0.1, tete: q === 1 ? 0.3 : -0.3, epauleG: 1.2, epauleD: 1.5, coudeG: 0.6, coudeD: 0.5, couche: 2 * q + 0.12 };
+  const milieu = { ...melanger(cede, fin, 0.5), couche: 2 * q + 0.6 }, choc = { ...fin, tete: fin.tete + 0.12, couche: 2 * q + 1 };
+  const k = (t, pose, courbe) => ({ t: t * C.duree, pose, courbe });
+  const depart = { ...debout, couche: 2 * q };      // (debout, déjà du côté où il tombera : `couche` ne passe pas par les autres côtés en glissant)
+  return animation(nom, [k(0, depart, 'entree'), k(0.22, cede, 'entree'), k(0.55, milieu, 'entree'), k(0.85, choc, 'doux'), k(1, fin, 'doux')], { mode: 'unefois', duree: C.duree });
 }
 
 // Le tir épaulé (les démarches) : la crosse posée au creux de l'épaule (`porterArme` avec TIR_EPAULE : la crosse là, les mains sur le fusil), la tête baissée sur elle ;

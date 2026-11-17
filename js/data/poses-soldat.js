@@ -19,7 +19,8 @@ export const CHAMPS = {
   descente: D,                 // le corps baissé (accroupi, genou à terre) ; négatif : le corps relevé
   poussee: D,                  // le buste qui part vers l'avant (la mêlée)
   basques: R,                  // les basques de la vareuse, qui suivent les cuisses
-  couche: [0, 1],              // 0 debout, 1 couché sur le dos (le nuanceur lit « plus de 0,5 »)
+  couche: [0, 7.999],          // couché (v0.145.2, la mort) : 2q + a, `a` de 0 (debout) à 1 (étendu) la chute autour des pieds, `q` le côté : 0 le dos, 1 le ventre, 2 et 3 les flancs ; 1 : sur le dos, comme avant
+  // (les côtés et la hauteur du corps étendu : CHUTE, plus bas)
   // le fusil, en plus (v0.113.2) : sa hauteur, puis deux rotations après la flexion (le lacet : la visée à gauche ou à droite quand il est à l'horizontale ; le roulis : l'inclinaison de côté)
   fusilH: D, fusilLacet: R, fusilRoulis: R,
   // la démarche (v0.141.2) : le haut du corps tourné contre les hanches (autour de y, à la hanche : l'épaule droite avance quand la jambe gauche avance), penché de côté (autour de z, à la hanche),
@@ -41,6 +42,8 @@ export const TIR = {
 export const RETENU = { epaule: 0.5, coudeG: 1.0, coudeD: 0.8, convG: 0.5, convD: -0.3, angle: -1.9, x: -0.18, pivot: 0.9, lean: 0.03 };
 // La mêlée (la fente, les bras tendus, le fusil à l'horizontale ; `pouss` de 0 à 1 : la poussée)
 export const MELEE = { epaule: 1.0, coudeG: 0.45, coudeD: 0.6, convG: 0.55, convD: -0.45, angle: -1.45, x: -0.3, pivot: 0.95, z: 0.5, hancheG: 0.55, hancheGp: 0.2, hancheD: -0.4, genouG: 0.5, genouGp: 0.2, genouD: 0.35, lean: 0.22, leanP: 0.15, poussee: 0.2 };
+// Le corps étendu selon son côté (`couche` = 2q + a) : la rotation autour de l'axe vertical avant de basculer (le dos, le ventre, les flancs), et de combien le corps est soulevé une fois étendu
+export const CHUTE = { cotes: [0, Math.PI, Math.PI / 2, -Math.PI / 2], leve: [0.16, 0.18, 0.24, 0.24] };
 // Couché sur le dos
 export const COUCHE = { hancheG: 0.3, hancheD: 0.0, genouG: 0.7, genouD: 0.1, epaule: 0.0, coude: 0.1 };
 // Le fusil en bandoulière (sans tir)

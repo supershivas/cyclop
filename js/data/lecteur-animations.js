@@ -74,3 +74,17 @@ export const GESTES = {
   guetteur: { duree: 9, images: 36, vivant: 0.3, debout: [0.04, 0.46], regard: 0.45, baisse: 0.75, teteDebout: -0.22, teteBas: 0.15, busteBas: 0.25 },
   gestes: { duree: 10, images: 40, vivant: 0.6, casque: [0.12, 0.32], bouche: [0.55, 0.78] },
 };
+
+// La mort (Jérôme, 17 nov. : « la mort et les morts » ; au labo) : la pose d'un mort, tirée de son numéro (js/anim-modeles.js, `poseMort`), et sa chute (`chute`).
+// `cotes` : la part des morts sur le dos, le ventre, le flanc gauche, le flanc droit ; `bras` : la part des bras le long du corps, écartés, au-dessus de la tête (le reste) ; les jambes selon le côté
+// (sur le dos le genou levé, le pied à plat ; sur le ventre le genou peu plié : sinon le pied se dresse) ; `haut` : aucune main ni aucun pied plus haut (m) ; `tenu` : la part qui serrent encore leur fusil, les autres l'ont lâché à côté d'eux (`fusilCote` : à quelle distance, en largeurs d'épaules ; sur le flanc, `fusilSol` le descend au sol) ;
+// `essais` : les tirages refaits quand une main, un pied ou la tête passerait sous le sol. La chute : `duree` s ; les genoux cèdent (`genoux`, `descente`), le corps bascule et accélère.
+export const MORTS = {
+  cotes: [0.4, 0.3, 0.15, 0.15],
+  bras: [0.4, 0.4],
+  jambes: { dos: { hanche: [0, 0.5] }, ventre: { hanche: [-0.15, 0.15], genou: [0, 0.5] }, flanc: { hanche: [0, 1.1], genou: [0.2, 1.5] } },
+  tete: 0.55, torsion: 0.45, buste: 0.2, ecarte: [1.25, 1.65], haut: 0.4,
+  tenu: 0.25, fusilCote: [0.7, 1.3], fusilAngle: 0.5, fusilSol: 0.21,
+  essais: 8,
+  chute: { duree: 1.0, genoux: 0.9, descente: 0.12 },
+};

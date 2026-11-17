@@ -1,3 +1,4 @@
+- **La mort et les morts (v0.145.2 ; sujet `morts`, à trancher)** : A la chute (six hommes tombent tour à tour), B seize morts dans des poses variées, C couchés comme avant ; `maquetteDemarches(s, { morts })`. Détail : `docs/domaines/rendu.md`, « La mort et les morts ».
 # Labo et atelier
 - **Épaules et crânes (v0.144.4 ; sujet `formes`, à trancher)** : A en boîtes (le jeu), B arrondis ; la scène des casques (`labo-casques.js`, option `arrondi`), un homme sur deux blessé à la tête. Détail : `docs/domaines/rendu.md`, « Les épaules et le crâne arrondis ».
 - **Les gestes d'attente (v0.143.5)** : sujet `repos`, variantes C « Par le froid », D « Sous la pluie », E « Le guetteur », F « Les petits gestes » (`maquetteDemarches(s, { repos: true, geste })`), à trancher. Détail : `docs/domaines/rendu.md`, « Les gestes d'attente ».

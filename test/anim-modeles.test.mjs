@@ -117,3 +117,31 @@ test('les gestes d\'attente : la main droite garde le fusil, les pieds au sol ; 
     if (g === 'froid') assert.ok(gauche > 0.05, 'il se frotte les mains');
   }
 });
+
+import { poseMort, chute } from '../js/anim-modeles.js';
+import { MORTS } from '../js/data/lecteur-animations.js';
+test('les morts : chacun sa pose, tirée de son numéro (la même deux fois), sur les quatre côtés ; rien sous le sol ni qui flotte (mains, pieds, fusil)', () => {
+  const cotes = [0, 0, 0, 0]; let echecs = 0;
+  for (let n = 0; n < 300; n++) {
+    const p = poseMort(n);
+    assert.deepEqual(p, poseMort(n));
+    const q = Math.floor(p.couche / 2); cotes[q]++;
+    assert.ok(Math.abs(p.couche - (2 * q + 1)) < 1e-9, 'étendu');
+    const A = articulations(p), ys = ['mainG', 'mainD', 'piedG', 'piedD', 'crane', 'genouG', 'genouD', 'coudeG', 'coudeD'].map(j => A[j].pos[1]);
+    const f = [0.55, 1.95].map(y => pointFusil(p, CARRURE_NEUTRE, y)[1]);
+    if (Math.min(...ys) < -0.07 || Math.min(...f) < -0.1 || Math.max(A.mainG.pos[1], A.mainD.pos[1], A.piedG.pos[1], A.piedD.pos[1], ...f) > MORTS.haut + 0.1) echecs++;
+  }
+  assert.ok(cotes.every(c => c > 30), `les quatre côtés : ${cotes}`);
+  assert.ok(echecs <= 3, `${echecs} poses sur 300 hors du sol`);
+});
+test('la chute : debout au départ, étendue dans la pose du mort à la fin, la tête descend sans remonter', () => {
+  for (const n of [3, 17, 404, 9001]) {
+    const an = chute(n), fin = poseMort(n);
+    assert.equal(an.mode, 'unefois');
+    assert.ok(articulations(echantillon(an, 0)).crane.pos[1] > 1.5);
+    const p = echantillon(an, an.duree);
+    for (const c of ['couche', 'hancheG', 'epauleD', 'fusil', 'fusilRoulis']) assert.ok(Math.abs(p[c] - fin[c]) < 1e-6, c);
+    let avant = Infinity;
+    for (let t = 0; t <= 0.85 * an.duree; t += 0.05) { const y = articulations(echantillon(an, t)).crane.pos[1]; assert.ok(y <= avant + 0.02, `t ${t.toFixed(2)}`); avant = y; }
+  }
+});

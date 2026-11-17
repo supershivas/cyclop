@@ -5,7 +5,7 @@
 //    rejoue avant qu'on la retouche ;
 //  · une ANIMATION est { nom, boucle, images: [{ t, pose, courbe }] } : des poses clés rangées par temps (en secondes) ; `echantillon(anim, t)` rend la pose à l'instant t ;
 //  · `melanger(a, b, k)` interpole deux poses champ par champ.
-import { CHAMPS, NOMS_CHAMPS, MARCHE, TAPI, TIR, RETENU, MELEE, COUCHE, FUSIL_REPOS, COURBES } from './data/poses-soldat.js?v=0.145.1';
+import { CHAMPS, NOMS_CHAMPS, MARCHE, TAPI, TIR, RETENU, MELEE, COUCHE, CHUTE, FUSIL_REPOS, COURBES } from './data/poses-soldat.js?v=0.145.2';
 
 // La pose neutre : debout, bras le long du corps (le coude à peine plié, comme à l'arrêt)
 export function poseNeutre() {
@@ -79,7 +79,8 @@ export function miroir(p) {
   r.convG = -p.convD; r.convD = -p.convG;
   // le fusil passe de l'épaule droite à la gauche : son axe est à (0,395 + fusilX) largeurs d'épaules de celui du corps, donc fusilX' = −fusilX − 0,79
   r.fusilX = -p.fusilX - 2 * 0.395; r.fusilLacet = -p.fusilLacet; r.fusilRoulis = -p.fusilRoulis;
-  r.torsion = -(p.torsion ?? 0); r.roulis = -(p.roulis ?? 0); r.appui = -(p.appui ?? 0);      // (la démarche : de côté, donc en miroir)
+  r.torsion = -(p.torsion ?? 0); r.roulis = -(p.roulis ?? 0); r.appui = -(p.appui ?? 0);
+  { const c = p.couche ?? 0, q = Math.floor(c / 2 + 1e-4); if (q >= 2 && q <= 3) r.couche = c + (q === 2 ? 2 : -2); }      // (couché sur un flanc : l'autre)      // (la démarche : de côté, donc en miroir)
   return r;
 }
 
@@ -139,8 +140,10 @@ function cadre(P, car) {
   // le haut : penché en avant (buste positif ; v0.142.3, il partait en arrière), poussé, puis tourné contre les hanches (torsion) et penché de côté (roulis) ; le tout : le poids reporté de côté (appui : 0 aux pieds, entier dès la hanche), baissé, couché
   const haut = p => { let q = rxp(p, hanche, -P.buste); q[2] += P.poussee * Math.max(0, q[1] - 0.6); if (P.torsion) q = ryp(q, hanche, P.torsion); if (P.roulis) q = rzp(q, hanche, P.roulis); return q; };
   const appuiDe = y => P.appui * Math.min(1, Math.max(0, y / hanche[1]));
-  const global = p => { let q = [p[0] + appuiDe(p[1]), p[1] - P.descente, p[2]]; if (P.couche > 0.5) { q = rxp(q, [0, 0, 0], 1.5708); q[1] += 0.16; } return q; };
-  const sansGlobal = q => { let p = [q[0], q[1], q[2]]; if (P.couche > 0.5) { p[1] -= 0.16; p = rxp(p, [0, 0, 0], -1.5708); } const y = p[1] + P.descente; return [p[0] - appuiDe(y), y, p[2]]; };
+  // couché (v0.145.2) : `couche` = 2q + a ; le corps tourne vers son côté, bascule de a × 90° autour de ses pieds, revient, se soulève (les mêmes opérations que le nuanceur)
+  const cq = Math.min(3, Math.floor(P.couche / 2 + 1e-4)), ca = Math.min(1, P.couche - 2 * cq), O = [0, 0, 0], phi = CHUTE.cotes[cq];
+  const global = p => { let q = [p[0] + appuiDe(p[1]), p[1] - P.descente, p[2]]; if (P.couche > 0.001) { q = ryp(rxp(ryp(q, O, phi), O, 1.5708 * ca), O, -phi); q[1] += ca * CHUTE.leve[cq]; } return q; };
+  const sansGlobal = q => { let p = [q[0], q[1], q[2]]; if (P.couche > 0.001) { p[1] -= ca * CHUTE.leve[cq]; p = ryp(rxp(ryp(p, O, phi), O, -1.5708 * ca), O, -phi); } const y = p[1] + P.descente; return [p[0] - appuiDe(y), y, p[2]]; };
   const sansHaut = q => { let p = [q[0], q[1], q[2]]; if (P.roulis) p = rzp(p, hanche, -P.roulis); if (P.torsion) p = ryp(p, hanche, -P.torsion); return rxp([p[0], p[1], p[2] - P.poussee * Math.max(0, p[1] - 0.6)], hanche, P.buste); };
   return { wd, sq, sl, st, mp, hanche, haut, global, sansGlobal, sansHaut };
 }

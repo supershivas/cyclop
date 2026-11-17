@@ -1,5 +1,9 @@
 # Journal des versions
 
+## 0.145.2 — 2026-11-17
+
+- Au labo : la mort de près, une chute et des morts dans des poses variées, à choisir
+
 ## 0.145.1 — 2026-11-17
 
 - De près, les soldats ont les épaules et le crâne arrondis
