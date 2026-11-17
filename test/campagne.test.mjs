@@ -65,7 +65,7 @@ function jouerJusqu_aLaFin(c, { relever = false } = {}) {
   ordonnerMarche(B, [0, 1], zone(B).x0 + 150, zone(B).y0 + 150);
   let nuits = 0;
   while (B.etat.phase !== 'fin') {
-    if (B.etat.phase === 'nuit') { const choix = nuits === 0 ? { 0: 'evacuer', ...(relever ? { 1: 'releve' } : {}) } : {}; aube(B, choix); nuits++; }
+    if (B.etat.phase === 'nuit') { const ev = Object.fromEntries(B.etat.regiments.filter(r => r.camp === 0).map(r => [r.id, 'evacuer'])), choix = nuits === 0 && relever ? { ...ev, 7: 'releve' } : ev; aube(B, choix); nuits++; }      // (v0.146.1 : tous nos régiments évacuent chaque nuit, le 8e est relevé la 1re : depuis les mitrailleurs postés, les deux qui attaquent peuvent être anéantis ou chez l'ennemi, d'où leurs blessés ne passent pas) aube(B, choix); nuits++; }
     avancer(B);
   }
   return B;
@@ -133,7 +133,7 @@ test('clore une bataille : ce qui est gardé est le survivant (numéro, rang, ex
 });
 test('les évacués en route et les hommes d\'un régiment relevé sont au registre ; les morts d\'un régiment relevé n\'y sont pas', () => {
   const { B, apres } = unePartie(), tous = apres.batailles[0].regiments.flatMap(r => r.survivants).map(s => s[0]), N = id => numeroCampagne(B.etat, id);
-  const rel = B.etat.releves;
+  const nous = new Set(B.etat.regiments.filter(r => r.camp === 0).map(r => r.id)), rel = B.etat.releves.filter(r => nous.has(r[1]));      // (en face relève aussi : ses hommes ne sont pas à notre registre)
   assert.ok(rel.length > 0, 'la relève a eu lieu');
   for (const [id] of rel) if (!B.etat.corps.some(m => m[4] === id)) assert.ok(tous.includes(N(id)), `relevé n° ${id}`);
   for (const e of B.etat.evacues) if (e.length >= 6 && e[3] === 0) assert.ok(tous.includes(N(e[0])), `évacué n° ${e[0]}`);
@@ -434,8 +434,9 @@ test('le bilan : bataille par bataille, les noms de ceux qui sont tombés et de 
   assert.equal(b.restes.length, apres.batailles[0].regiments.reduce((n, r) => n + r.survivants.length, 0));
   assert.ok(b.restes.every(r => r.prenom && r.nom && r.grade && r.regiment));
   // un homme qui manque à une bataille n'est pas « resté »
-  const manque = { ...deux, batailles: [{ ...deux.batailles[0], regiments: deux.batailles[0].regiments.map((r, k) => k ? r : { ...r, survivants: r.survivants.slice(1) }) }, deux.batailles[1]] };
-  assert.equal(bilan(manque).restes.length, b.restes.length - 1, 'le premier survivant du 1er régiment manquait à la 1re bataille');
+  const kp = deux.batailles[0].regiments.findIndex(r => r.survivants.length);      // (le premier régiment qui a des survivants : un régiment peut être anéanti)
+  const manque = { ...deux, batailles: [{ ...deux.batailles[0], regiments: deux.batailles[0].regiments.map((r, k) => k !== kp ? r : { ...r, survivants: r.survivants.slice(1) }) }, deux.batailles[1]] };
+  assert.equal(bilan(manque).restes.length, b.restes.length - 1, 'le premier survivant du premier régiment debout manquait à la 1re bataille');
   // pas de fanfare : aucun mot de victoire, de gloire ni de score
   assert.ok(!/victoire|gloire|bravo|score|record|médaille|!/i.test(JSON.stringify(TEXTES)));
   assert.equal(bilan({ ...c, statut: 'effondree', batailles: deux.batailles }).texte, TEXTES.fin.effondree);
