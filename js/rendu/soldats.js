@@ -1,17 +1,17 @@
 // Les hommes : les soldats (une boîte et son ombre ; de près la silhouette, plus loin une silhouette allégée ; aux zooms 1 et 2 un point), les anneaux des
 // régiments choisis ou survolés, les corps (un homme couché) et les tombes (un tertre et une croix). Tout est instancié et ne reçoit que ce qu'on voit.
 // Le dessin seulement. Les formes viennent de geometries.js, le GLSL de shaders.js.
-import * as SH from './shaders.js?v=0.143.1';
-import { creerGeometries } from './geometries.js?v=0.143.1';
-import { classeDuRang } from '../data/grades.js?v=0.143.1';
-import { creerEquipeArticulee } from './soldat-articule.js?v=0.143.1';
-import { creerJeuAnimations } from './animation-jeu.js?v=0.143.1';
-import { allures } from '../anim-modeles.js?v=0.143.1';
-import { ANIMATIONS } from '../data/animations.js?v=0.143.1';
-import { EPAULEMENT } from '../data/lecteur-animations.js?v=0.143.1';
-import { SANG } from '../data/aspect-soldat.js?v=0.143.1';
-import { ligneY } from '../tranchees.js?v=0.143.1';
-import { profondeurALEcran } from './vue-ecran.js?v=0.143.1';
+import * as SH from './shaders.js?v=0.143.2';
+import { creerGeometries } from './geometries.js?v=0.143.2';
+import { classeDuRang } from '../data/grades.js?v=0.143.2';
+import { creerEquipeArticulee } from './soldat-articule.js?v=0.143.2';
+import { creerJeuAnimations } from './animation-jeu.js?v=0.143.2';
+import { allures } from '../anim-modeles.js?v=0.143.2';
+import { ANIMATIONS } from '../data/animations.js?v=0.143.2';
+import { EPAULEMENT, MARCHE_JEU } from '../data/lecteur-animations.js?v=0.143.2';
+import { SANG } from '../data/aspect-soldat.js?v=0.143.2';
+import { ligneY } from '../tranchees.js?v=0.143.2';
+import { profondeurALEcran } from './vue-ecran.js?v=0.143.2';
 
 // `THREE`, `scene`, `col`, `solUniforms` (`uSol`, `uTaille` : la texture du sol, que l'ombre d'un soldat reprend), `styleSoldat` (le style de près, comparé au labo),
 // `grades` (v0.68.0 : une variante de `GRADES`, data/grades.js, ou null : tous pareils) et `rangDe(B, id, reg)` (le rang d'un homme, bataille.js) ; `surface(x, z)` et `surfaceLisse(x, z)` (la hauteur du sol, lissée pour qui marche), `solY` (la hauteur moyenne du sol) et `POINTS_JUSQUA` (le zoom où un soldat n'est
@@ -57,6 +57,7 @@ export function creerSoldats({ THREE, scene, col, solUniforms, styleSoldat, grad
   const aspects = new Map(), hArt = { x: 0, y: 0, z: 0, camp: 0, vit: 0, tir: 0, tapi: 0, couche: 0, blessure: 0, cap: 0, temps: 0, aspect: null, coup: 0, pose: null };
   let cap = 0, posArr = null, campArr = null, vitArr = null, tirArr = null, soldatsInst = null, soldatsDetail = null, soldatsLeger = null, soldatsPoints = null, attrsI = null, attrsP = null;
   const VARIATION = { taille: 0.07, largeur: 0.14 };      // la taille (±7 %) et la largeur (±14 %) d'un homme autour de la boîte de référence : le dessin seulement (Jérôme, v0.69.0)
+  const COURBE = 100;                      // (v0.142.3) la vitesse dessinée d'un homme qui court courbé : COURBE + sa vitesse (aVit du nuanceur)
   const TAPI = 0.5;                        // la peur au-delà de laquelle un homme se tapit (le dessin seulement ; on ne tire plus à 0,85)
   const LEGER_DES = 4;                     // dès 4 pixels par mètre : la silhouette allégée (corps, tête, bras, fusil : ~50 triangles au lieu de ~74 ; Jérôme, v0.17.0)
   let legerActif = true;                   // (la mesure du coût l'éteint)
@@ -386,7 +387,8 @@ export function creerSoldats({ THREE, scene, col, solUniforms, styleSoldat, grad
       const sel = choisis.has(A.reg[i]);
       campArr[k] = A.camp[i] + (sel ? 2 : 0);
       if (sel || A.reg[i] === survolReg) { an[ka * 3] = x; an[ka * 3 + 1] = posArr[k * 3 + 1]; an[ka * 3 + 2] = y; anTon[ka] = sel ? 0 : 1 + A.camp[i]; ka++; }
-      vitArr[k] = A.peur[i] >= TAPI ? -1 : Math.hypot(A.vx[i], A.vy[i]);
+      // la peur : accroupi s'il ne bouge pas (−1) ; s'il se déplace, il court courbé (COURBE + sa vitesse : le nuanceur penche le buste, les jambes marchent ; v0.142.3, avant il glissait accroupi)
+      { const vv = Math.hypot(A.vx[i], A.vy[i]); vitArr[k] = A.peur[i] < TAPI ? vv : vv > MARCHE_JEU.courbe.vitesse ? COURBE + vv : -1; }
       tirArr[k * 2] = i < tirVal.length && tirVal[i] > 0 ? tirVal[i] : regs[A.reg[i]]?.stance === 'retenu' ? -1 : 0;       // (-1 : le fusil baissé du feu retenu ; la pose de tir, quand il tire, passe devant)
       // son cap : vers sa cible quand il tire ; sinon le sens où il marche (lissé) ; à l'arrêt, il se tourne vers l'ennemi (nous : π, vers le nord ; en face : 0) ; au départ, déjà tourné vers lui (Jérôme, v0.52.2)
       const id = A.id[i] & 0xffff, vx = A.vx[i], vz = A.vy[i], ennemi = A.camp[i] === 0 ? Math.PI : 0;
@@ -453,7 +455,7 @@ export function creerSoldats({ THREE, scene, col, solUniforms, styleSoldat, grad
         if (!c || c.rang !== rg) { c = { rang: rg, a: aspectDe(B, A.id[i], A.camp[i]) }; aspects.set(A.id[i], c); }
         const v = vitArr[k], tx = tirArr[k * 2];
         hArt.x = posArr[k * 3]; hArt.y = posArr[k * 3 + 1]; hArt.z = posArr[k * 3 + 2]; hArt.camp = campArr[k];
-        hArt.vit = v < 0 ? 0 : v; hArt.tapi = v < 0 ? 1 : 0;
+        hArt.vit = v < 0 ? 0 : v > COURBE * 0.5 ? v - COURBE : v; hArt.tapi = v < 0 ? 1 : 0; hArt.courbe = v > COURBE * 0.5 ? 1 : 0;
         hArt.couche = couches && couches[i] ? 1 : 0;       // (v0.142.0) couché : la patrouille du labo ; le jeu n'en pose pas encore
         hArt.tir = tx > 0 ? Math.min(1, tx * 2.5) : tx <= -2 ? -tx : tx < -0.5 ? -1 : 0;       // (−1 le feu retenu : le fusil baissé ; de 2 à 3 la mêlée : 2 + la poussée, tourné vers l'adversaire : `aTir` du soldat équipé)
         hArt.cap = demarches && vise ? CAPS[id] : tirArr[k * 2 + 1]; hArt.vise = demarches ? vise : 0; hArt.avant = avant; hArt.blessure = A.blessure[i]; hArt.sang = nSang; hArt.aspect = c.a; hArt.temps = tAnim;

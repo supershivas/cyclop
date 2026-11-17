@@ -1,14 +1,14 @@
 // Qui joue quoi pour les hommes articulés (étape 4 de docs/chantiers/animations-vers-le-jeu.md). Logique pure (le temps est un argument) : pour un homme, la pose du lecteur d'animations
 // (marche, repos, tir) écrite dans les 25 nombres de la texture de poses, ou `null` pour les états sans animation (feu retenu, accroupi, couché, mêlée, blessures, officier au pistolet),
 // que `poseJeu` (pose-jeu.js) continue de calculer. Un état de lecteur par homme (le fondu de 0,2 s en a besoin), purgé quand l'homme sort des hommes articulés (`fin`).
-import { nouvelEtat, etatAnimationTab, termine } from '../lecteur-animations.js?v=0.143.1';
-import { ANIMATIONS } from '../data/animations.js?v=0.143.1';
-import { ANIM_JEU, MARCHE_JEU, CANAUX_TIR_EN_MARCHE, ALLURES, EPAULEMENT } from '../data/lecteur-animations.js?v=0.143.1';
-import { NOMS_CHAMPS } from '../data/poses-soldat.js?v=0.143.1';
-import { FLOTTANTS } from './pose-jeu.js?v=0.143.1';
+import { nouvelEtat, etatAnimationTab, termine } from '../lecteur-animations.js?v=0.143.2';
+import { ANIMATIONS } from '../data/animations.js?v=0.143.2';
+import { ANIM_JEU, MARCHE_JEU, CANAUX_TIR_EN_MARCHE, ALLURES, EPAULEMENT } from '../data/lecteur-animations.js?v=0.143.2';
+import { NOMS_CHAMPS } from '../data/poses-soldat.js?v=0.143.2';
+import { FLOTTANTS } from './pose-jeu.js?v=0.143.2';
 
 
-const I_TORSION = NOMS_CHAMPS.indexOf('torsion');
+const I_TORSION = NOMS_CHAMPS.indexOf('torsion'), I_BUSTE = NOMS_CHAMPS.indexOf('buste'), I_TETE = NOMS_CHAMPS.indexOf('tete');
 const lisse = (a, b, x) => { const k = Math.min(1, Math.max(0, (x - a) / (b - a))); return k * k * (3 - 2 * k); };
 
 // h : { vit, tir (comme soldats.js l'écrit : −1 feu retenu, 0..1 l'épaule, 2..3 la mêlée), coup (le `tirVal` brut : 1 au coup de feu, puis il retombe), tapi, couche, blessure, rang | aspect.rang }
@@ -49,7 +49,8 @@ export function creerJeuAnimations({ animations = ANIMATIONS, allures = null, so
       e.coup = coup;
       const couches = [marche ? { anim: K ? allures.marche[e.k] : ANIM_JEU.marche, cle: 'marche', depart: t - e.ta } : { anim: K ? allures.repos[e.k] : ANIM_JEU.repos, cle: 'repos', depart: 0 }];
       if (e.tir) { e.tir.canaux = marche ? CANAUX_TIR_EN_MARCHE : undefined; couches.push(e.tir); }  // (en marche : les bras et le fusil du tir ; à l'arrêt : tout)
-      sortie.set(etatAnimationTab(e.etat, couches, t, { animations }));       // (28 flottants : les 7 texels sont pleins)
+      sortie.set(etatAnimationTab(e.etat, couches, t, { animations }));
+      if (h.courbe && marche) { sortie[I_BUSTE] += MARCHE_JEU.courbe.buste; sortie[I_TETE] += MARCHE_JEU.courbe.tete; }      // (v0.142.3) il court courbé sous le feu       // (28 flottants : les 7 texels sont pleins)
       // (les démarches) il vise en marchant : le buste tourne vers sa cible pendant le tir (la torsion), le temps que le fusil se lève et jusqu'à ce qu'il redescende
       if (K && e.tir && h.vise) { const tt = t - e.tir.depart; sortie[I_TORSION] += h.vise * lisse(0, 0.2, tt) * (1 - lisse(0.8, 1, tt)); }
       return sortie;

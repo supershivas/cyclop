@@ -218,7 +218,8 @@ export const soldatMat = {
         vec3 p = (kp > 0.5 && kp < 1.5) ? position : position * vec3(ech * aVar.x, ech * aVar.y, ech * aVar.x);
         // la peur : un homme se tapit (aVit < 0 : −1 − sa vitesse), sauf son ombre
         bool tapi = aVit < 0.0 && aVit > -1.5, assis = aVit < -1.5;      // (labo) −2 : assis, le dos au parapet (la variété des soldats)
-        float vit = aVit < 0.0 ? 0.0 : aVit;
+        bool courbe = aVit > 50.0;      // (v0.142.3) il a peur et se déplace : il court courbé (100 + sa vitesse), le buste penché, les jambes en marche ; accroupi seulement à l'arrêt
+        float vit = courbe ? aVit - 100.0 : aVit < 0.0 ? 0.0 : aVit;
         if (tapi && (kp < 0.5 || kp > 1.5)) p.y *= 0.6;
         if (assis && (kp < 0.5 || kp > 1.5)) { float y0 = p.y; if (y0 < 0.85) { p.z += (0.85 - y0) * 0.55; p.y = y0 * 0.3; } else p.y = y0 - 0.6; }      // les jambes allongées devant lui, le buste descendu de 60 cm
         // les blessés (v0.72.0 ; aBless : 1 bras, 2 jambe, 3 tête) : celui qui ne marche plus s'affaisse (un genou à terre, penché), celui qui boite se tient de travers ; la tête blessée se penche ;
@@ -316,8 +317,8 @@ export const soldatMat = {
           }
         }
         // (les démarches) le buste penché en marchant, plus ou moins selon l'homme ; tout sauf les jambes et l'ombre
-        if (uDemarche > 0.5 && vit > 0.15 && aJambe == 0.0 && !(kp > 0.5 && kp < 1.5) && !melee) {
-          float a = (0.03 + 0.12 * hd2) * min(1.0, vit); vec3 d = p - vec3(0.0, 0.8, 0.0);
+        if ((uDemarche > 0.5 || courbe) && vit > 0.15 && aJambe == 0.0 && !(kp > 0.5 && kp < 1.5) && !melee) {
+          float a = (uDemarche > 0.5 ? (0.03 + 0.12 * hd2) * min(1.0, vit) : 0.0) + (courbe ? 0.5 : 0.0); vec3 d = p - vec3(0.0, 0.8, 0.0);
           p.y = 0.8 + d.y * cos(a) - d.z * sin(a); p.z = d.y * sin(a) + d.z * cos(a);
         }
         // le cap (aTir.y) : vers sa cible quand il tire, sinon dans le sens où il marche (Jérôme, v0.47.2 : « les soldats avancent en arrière ») ; sa pose seulement

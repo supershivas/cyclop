@@ -3,14 +3,14 @@
 // plaine, dessinés par les maillages et la texture de poses du jeu (js/rendu/soldat-articule.js) et animés par son lecteur (js/rendu/animation-jeu.js) ; `allures` : les démarches
 // de js/anim-modeles.js (une par homme, l'épaulement avant le coup, le buste qui vise) ou celles d'avant. « Feu en marchant » : chacun tire toutes les 2,5 à 4,5 s, sur une cible
 // devant lui, un peu de côté. Le labo montre sans rien modifier : il n'y a pas de bataille.
-import { PALETTE } from './palette.js?v=0.143.1';
-import { loadThree } from './three-lib.js?v=0.143.1';
-import { fabriquer } from './labo-fabrique.js?v=0.143.1';
-import { creerEquipeArticulee } from './rendu/soldat-articule.js?v=0.143.1';
-import { creerJeuAnimations } from './rendu/animation-jeu.js?v=0.143.1';
-import { allures as genererAllures } from './anim-modeles.js?v=0.143.1';
-import { ANIMATIONS } from './data/animations.js?v=0.143.1';
-import { EPAULEMENT } from './data/lecteur-animations.js?v=0.143.1';
+import { PALETTE } from './palette.js?v=0.143.2';
+import { loadThree } from './three-lib.js?v=0.143.2';
+import { fabriquer } from './labo-fabrique.js?v=0.143.2';
+import { creerEquipeArticulee } from './rendu/soldat-articule.js?v=0.143.2';
+import { creerJeuAnimations } from './rendu/animation-jeu.js?v=0.143.2';
+import { allures as genererAllures } from './anim-modeles.js?v=0.143.2';
+import { ANIMATIONS } from './data/animations.js?v=0.143.2';
+import { EPAULEMENT } from './data/lecteur-animations.js?v=0.143.2';
 
 const el = (tag, props = {}, ...kids) => { const e = Object.assign(document.createElement(tag), props); e.append(...kids); return e; };
 const FACTEUR = 2, TAN15 = Math.tan(15 * Math.PI / 180), N = 6;
@@ -32,7 +32,7 @@ export function maquetteDemarches(stage, { allures = true } = {}) {
 
 function monter(stage, THREE, avecAllures) {
   const col = l => new THREE.Color(PALETTE[l]);
-  const S = { ppm: 24, feu: true, yaw: 0, tangage: 0.22 };
+  const S = { ppm: 24, feu: true, yaw: 0, tangage: 0.22, peur: false };
   const boite = el('div'); boite.style.cssText = 'position:relative;width:100%;height:min(62vh,520px);overflow:hidden';
   const canvas = el('canvas'); canvas.style.cssText = 'position:absolute;left:0;top:0;width:100%;height:100%;image-rendering:pixelated';
   boite.append(canvas);
@@ -40,7 +40,7 @@ function monter(stage, THREE, avecAllures) {
   const bouton = (t, f) => el('button', { className: 'essai', textContent: t, onclick: f });
   stage.append(boite, legende,
     el('p', {}, ...[12, 16, 24, 32].map(z => bouton(`${z} px/m`, () => { S.ppm = z; }))),
-    el('p', {}, bouton('Feu en marchant', () => { S.feu = true; }), bouton('Sans tirer', () => { S.feu = false; }),
+    el('p', {}, bouton('Feu en marchant', () => { S.feu = true; }), bouton('Sans tirer', () => { S.feu = false; }), bouton('Sous le feu : courbés', () => { S.peur = !S.peur; }),
       bouton('De profil', () => { S.yaw = 0; S.tangage = 0.22; }), bouton('De trois quarts', () => { S.yaw = 0.6; S.tangage = 0.45; }), bouton('Vue du jeu', () => { S.yaw = 0.15; S.tangage = 0.95; })));
 
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: false, preserveDrawingBuffer: true }); renderer.setPixelRatio(1); renderer.outputColorSpace = THREE.LinearSRGBColorSpace;
@@ -69,12 +69,12 @@ function monter(stage, THREE, avecAllures) {
     for (const k of Object.keys(equipes)) for (const m of equipes[k].meshes) m.visible = equipes[k] === E;
     E.debut(); lecteur.debut();
     for (const H of hommes) {
-      H.x += H.vit * dt; if (H.x > demi) H.x -= 2 * demi;
+      H.x += H.vit * (S.peur ? 1.6 : 1) * dt; if (H.x > demi) H.x -= 2 * demi;
       // le tir : un coup toutes les 2,5 à 4,5 s ; `tv` (le `tirVal` du jeu) vaut 1 au coup et perd 1,6 par seconde
       H.tv = Math.max(0, H.tv - 1.6 * dt);
       if (S.feu) { H.tirT -= dt; if (H.tirT <= 0) { H.tv = 1; H.tirT = 2.5 + 2 * u(H.id, Math.floor(temps)); } } else H.tirT = 3;
       const vise = S.feu ? 0.5 : 0;       // sa cible : devant lui, un peu loin de nous (sous le seuil d'EPAULEMENT.vise : il garde son cap de marche)
-      Object.assign(h, { x: H.x, z: H.z, vit: H.vit, aspect: H.aspect, temps, coup: H.tv, avant: S.feu ? H.tirT : Infinity, vise: H.tv > 0 || H.tirT < EPAULEMENT.avance ? vise : 0,
+      Object.assign(h, { x: H.x, z: H.z, vit: H.vit * (S.peur ? 1.6 : 1), courbe: S.peur ? 1 : 0, aspect: H.aspect, temps, coup: H.tv, avant: S.feu ? H.tirT : Infinity, vise: H.tv > 0 || H.tirT < EPAULEMENT.avance ? vise : 0,
         tir: A ? Math.max(H.tv > 0 ? 1 - lisse01(((1 - H.tv) / 1.6 - EPAULEMENT.tenue) / EPAULEMENT.baisse) : 0, S.feu && H.tirT < EPAULEMENT.avance ? lisse01(1 - H.tirT / EPAULEMENT.avance) : 0) : Math.min(1, H.tv * 2.5),
         cap: !A && H.tv > 0 ? Math.PI / 2 + vise : Math.PI / 2 });      // (sans les démarches : il se tourne tout entier vers sa cible, comme le jeu d'avant)
       h.pose = lecteur.pose(H.id, h, temps);
@@ -86,7 +86,7 @@ function monter(stage, THREE, avecAllures) {
     camera.position.set(cible.x + d * Math.sin(S.yaw) * Math.cos(S.tangage), cible.y + d * Math.sin(S.tangage), cible.z + d * Math.cos(S.yaw) * Math.cos(S.tangage));
     camera.lookAt(cible); camera.near = Math.max(0.02, d * 0.1); camera.far = d + 60; camera.updateProjectionMatrix();
     renderer.render(scene, camera);
-    legende.textContent = `${S.ppm} px/m · ${avecAllures ? 'une allure par homme, épaulement avant le coup' : 'les démarches d\'avant'} · ${S.feu ? 'feu en marchant' : 'sans tirer'} · image ${w}×${ht} ×${FACTEUR}`;
+    legende.textContent = `${S.ppm} px/m · ${avecAllures ? 'une allure par homme, épaulement avant le coup' : 'les démarches d\'avant'} · ${S.feu ? 'feu en marchant' : 'sans tirer'}${S.peur ? ' · sous le feu, courbés' : ''} · image ${w}×${ht} ×${FACTEUR}`;
   }
   raf = requestAnimationFrame(image);
   return () => { cancelAnimationFrame(raf); for (const E of Object.values(equipes)) E.dispose(); renderer.dispose(); };

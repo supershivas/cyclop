@@ -13,6 +13,9 @@ export const MARCHE_JEU = {
   seuil: 0.05,       // m/s au-dessus duquel l'homme marche (en dessous : le repos ; évite que le bruit de la vitesse alterne marche et repos)
   reference: 1,      // m/s où la marche se lit à vitesse normale (0,8 s la foulée, comme la phase 8 rad/s d'avant)
   lectureMin: 0.5, lectureMax: 1.6,       // bornes de la vitesse de lecture (un homme lent ne fige pas, un homme qui court ne bat pas des ailes)
+  // (v0.142.3, Jérôme : « après un bombardement, les soldats avancent sur les genoux ») l'homme qui a peur et se déplace court courbé : le buste penché, la tête relevée pour voir devant ;
+  // accroupi seulement quand il ne bouge pas (avant, il glissait accroupi, les jambes immobiles)
+  courbe: { vitesse: 0.3, buste: 0.5, tete: -0.3 },
   saut: 0.3,         // une montée de `tirVal` d'au moins cela d'une image à l'autre est un nouveau coup de feu (la retombée ne fait que 0,03 par image)
 };
 
@@ -46,7 +49,7 @@ export const ALLURES = {
 // à moins de `viseSilhouette`. Les silhouettes : le fusil levé `tenue` secondes après le coup, puis baissé en `baisse` secondes.
 // Le tir épaulé : l'épaule gauche avancée (`torsion` : de face, la main gauche n'atteignait pas le fût, 30 cm trop court), la crosse au creux de l'épaule droite (`crosse` : l'écart à l'épaule, en mètres),
 // la pente du fusil (presque horizontale, le canon droit devant : le lacet défait la torsion), où se posent les mains le long du fusil (hauteur du modèle : 0,55 la crosse, 1,95 la bouche) ; `tete` : baissée sur la crosse ;
-// le recul : le canon qui monte, la crosse qui recule, le buste qui part en arrière. Trouvé par un balayage : les deux mains à moins d'un millimètre du fusil.
+// le recul : le canon qui monte, la crosse qui recule, le buste qui part en arrière. Trouvé par un balayage : les deux mains à moins d'un millimètre du fusil (refait en v0.142.3, le buste penché enfin en avant).
 // (La pose de tir d'avant faisait pivoter le fusil à 1,30 m de son pied : la crosse passait 75 cm derrière le dos, ce qui se voit de profil.)
-export const TIR_EPAULE = { torsion: 0.35, crosse: [-0.13, -0.02, 0.1], flexion: -1.66, roulis: 0, mainDroite: 0.8, mainGauche: 0.95, tete: 0.14, buste: 0.12, reculFlexion: 0.12, reculZ: -0.04, reculBuste: -0.05 };
+export const TIR_EPAULE = { torsion: 0.25, crosse: [-0.13, -0.02, 0.1], flexion: -1.42, roulis: 0, mainDroite: 0.8, mainGauche: 0.95, tete: 0.14, buste: 0.12, reculFlexion: 0.12, reculZ: -0.04, reculBuste: -0.05 };
 export const EPAULEMENT = { avance: 0.26, engage: 20, vise: 0.9, viseSilhouette: 0.5, tenue: 0.45, baisse: 0.3 };

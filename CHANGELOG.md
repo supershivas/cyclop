@@ -1,5 +1,11 @@
 # Journal des versions
 
+## 0.143.2 — 2026-11-17
+
+- Les soldats qui ont peur ne glissent plus sur les genoux : s'ils se déplacent, ils courent courbés ; ils ne s'accroupissent qu'à l'arrêt
+- De près, les soldats se penchent enfin en avant (accroupis, en marchant, en tirant, à genoux) et baissent la tête : ils se penchaient en arrière
+- L'atelier d'animation s'ouvre de nouveau
+
 ## 0.143.1 — 2026-11-17
 
 - Au premier plan, aucun soldat ne surgit plus quand la caméra bouge : un homme dont on voit le buste ou la tête reste dessiné, même si ses pieds sont sous le bord de l'écran

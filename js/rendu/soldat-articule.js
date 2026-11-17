@@ -1,5 +1,5 @@
-import { NOMS_CHAMPS } from '../data/poses-soldat.js?v=0.143.1';
-import { poseJeu, phaseDe, TEXELS, FLOTTANTS } from './pose-jeu.js?v=0.143.1';
+import { NOMS_CHAMPS } from '../data/poses-soldat.js?v=0.143.2';
+import { poseJeu, phaseDe, TEXELS, FLOTTANTS } from './pose-jeu.js?v=0.143.2';
 
 // Le soldat articulé (au labo seulement : « la fabrique de soldats », et la mesure de son coût ; rien n'est dans le jeu).
 // Un squelette de treize os (le tronc, la tête, deux fois bras / avant-bras, deux fois cuisse / mollet / pied, le fusil) que le nuanceur plie : le genou, le coude, la cheville
@@ -306,10 +306,10 @@ export const VERT = `
     // les basques de la vareuse : elles suivent les cuisses à moitié quand l'homme s'accroupit ou s'agenouille
     if (b > 12.5) p = rx(p, hanche, libre ? P(20) : 0.75 * tapi + (genou ? 0.4 : 0.0));
     // la tête penchée (blessure à la tête)
-    if (b > 0.5 && b < 1.5 && (tex ? abs(P(1)) > 0.00001 : (libre || aWound > 2.5))) p = rx(p, mp(vec3(0.0, 1.42, 0.0), 1.0, 1.0), libre ? P(1) : 0.45);
+    if (b > 0.5 && b < 1.5 && (tex ? abs(P(1)) > 0.00001 : (libre || aWound > 2.5))) p = rx(p, mp(vec3(0.0, 1.42, 0.0), 1.0, 1.0), -(libre ? P(1) : 0.45));      // (positif : la tête baissée ; v0.142.3, elle se relevait)
     // le buste penché autour de la hanche (le tronc, la tête, les bras, le fusil, les basques)
     bool haut = b < 5.5 || b > 11.5;
-    if (haut) p = rx(p, hanche, lean);
+    if (haut) p = rx(p, hanche, -lean);      // (v0.142.3 : le signe était inversé : un buste positif, censé se pencher en avant, partait en arrière ; l'accroupi s'asseyait sur ses talons)
     if ((melee || libre) && haut && !(b > 11.5 && b < 12.5)) p.z += (libre ? P(19) : 0.2 * pouss) * max(0.0, p.y - 0.6);      // le buste part avec la poussée
     // (v0.141.2) la démarche : le haut tourné contre les hanches, penché de côté, puis le poids reporté sur une jambe (les pieds restent, la hanche glisse) ; mêmes rotations que cadre de js/pose-soldat.js
     if (libre && haut) { if (abs(P(25)) > 0.00001) p = ry(p, hanche, P(25)); if (abs(P(26)) > 0.00001) p = rz(p, hanche, P(26)); }

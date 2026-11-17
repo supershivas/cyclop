@@ -1,8 +1,9 @@
 {
-  "version": "0.143.1",
+  "version": "0.143.2",
   "date": "2026-11-17",
   "changes": [
-    "Au premier plan, aucun soldat ne surgit plus quand la caméra bouge : un homme dont on voit le buste reste dessiné",
-    "De près, le détail des soldats va aux plus proches de la caméra : le premier plan ne passe plus en basse résolution"
+    "Les soldats qui ont peur ne glissent plus sur les genoux : ils courent courbés",
+    "De près, les soldats se penchent en avant au lieu d'en arrière",
+    "L'atelier d'animation s'ouvre de nouveau"
   ]
 }
