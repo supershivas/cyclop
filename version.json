@@ -1,8 +1,8 @@
 {
-  "version": "0.143.6",
+  "version": "0.144.0",
   "date": "2026-11-17",
   "changes": [
-    "Des gestes d'attente dans la tranchée : le froid, la pluie, le guetteur, les petits gestes",
-    "En haut à gauche : un seul bouton de pause et la roue des réglages, une même largeur"
+    "Voir par ses yeux : depuis la fiche d'un de nos hommes, on prend sa place à la première personne (ZQSD pour marcher, la souris pour regarder, Échap pour revenir)",
+    "Prototype : il marche et regarde, il ne tire pas encore"
   ]
 }
