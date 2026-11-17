@@ -1,7 +1,8 @@
 {
-  "version": "0.143.5",
+  "version": "0.144.0",
   "date": "2026-11-17",
   "changes": [
-    "Au labo : des gestes d'attente dans la tranchée, à trancher (le jeu ne change pas)"
+    "Voir par ses yeux : depuis la fiche d'un de nos hommes, on prend sa place à la première personne (ZQSD pour marcher, la souris pour regarder, Échap pour revenir)",
+    "Prototype : il marche et regarde, il ne tire pas encore"
   ]
 }

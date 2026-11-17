@@ -1,11 +1,11 @@
 // Qui joue quoi pour les hommes articulés (étape 4 de docs/chantiers/animations-vers-le-jeu.md). Logique pure (le temps est un argument) : pour un homme, la pose du lecteur d'animations
 // (marche, repos, tir) écrite dans les 25 nombres de la texture de poses, ou `null` pour les états sans animation (feu retenu, accroupi, couché, mêlée, blessures, officier au pistolet),
 // que `poseJeu` (pose-jeu.js) continue de calculer. Un état de lecteur par homme (le fondu de 0,2 s en a besoin), purgé quand l'homme sort des hommes articulés (`fin`).
-import { nouvelEtat, etatAnimationTab, termine } from '../lecteur-animations.js?v=0.143.5';
-import { ANIMATIONS } from '../data/animations.js?v=0.143.5';
-import { ANIM_JEU, MARCHE_JEU, CANAUX_TIR_EN_MARCHE, ALLURES, EPAULEMENT } from '../data/lecteur-animations.js?v=0.143.5';
-import { NOMS_CHAMPS } from '../data/poses-soldat.js?v=0.143.5';
-import { FLOTTANTS } from './pose-jeu.js?v=0.143.5';
+import { nouvelEtat, etatAnimationTab, termine } from '../lecteur-animations.js?v=0.144.0';
+import { ANIMATIONS } from '../data/animations.js?v=0.144.0';
+import { ANIM_JEU, MARCHE_JEU, CANAUX_TIR_EN_MARCHE, ALLURES, EPAULEMENT } from '../data/lecteur-animations.js?v=0.144.0';
+import { NOMS_CHAMPS } from '../data/poses-soldat.js?v=0.144.0';
+import { FLOTTANTS } from './pose-jeu.js?v=0.144.0';
 
 
 const I_TORSION = NOMS_CHAMPS.indexOf('torsion'), I_BUSTE = NOMS_CHAMPS.indexOf('buste'), I_TETE = NOMS_CHAMPS.indexOf('tete');

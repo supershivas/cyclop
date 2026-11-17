@@ -9,9 +9,9 @@
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta property="og:image" content="og.png">
-<link rel="stylesheet" href="js/lib/game.css?v=0.143.5">
-<link rel="stylesheet" href="css/style.css?v=0.143.5">
-<link rel="stylesheet" href="css/ds-v2.css?v=0.143.5">
+<link rel="stylesheet" href="js/lib/game.css?v=0.144.0">
+<link rel="stylesheet" href="css/style.css?v=0.144.0">
+<link rel="stylesheet" href="css/ds-v2.css?v=0.144.0">
 </head>
 <body class="charge">
 <!-- La barre de chargement (v0.28.0) : là avant tout script ; main.js la remplit, puis la retire. `body.charge` (v0.100.0) : tout le reste de l'écran est caché tant qu'elle est là (le menu et le titre ne se voient plus derrière) -->
@@ -81,6 +81,7 @@
         <h2 id="fiche-nom"></h2>
         <p class="discret" id="fiche-qui"></p>
         <button class="lien" id="fiche-regiment" hidden></button>
+        <button class="bouton" id="fiche-oeil" hidden data-info="# Voir par ses yeux&#10;ZQSD pour marcher, la souris pour regarder, Échap pour revenir">Voir par ses yeux</button>
         <div class="fiche-tuiles" id="fiche-tuiles" hidden></div>
         <ul id="fiche-etat"></ul>
         <div class="fiche-liste" id="fiche-liste"></div>
@@ -389,6 +390,6 @@
 </dialog>
 
 <div class="jeu-toast" id="toast" role="status" hidden></div>
-<script type="module" src="js/main.js?v=0.143.5"></script>
+<script type="module" src="js/main.js?v=0.144.0"></script>
 </body>
 </html>
