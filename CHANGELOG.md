@@ -1,5 +1,10 @@
 # Journal des versions
 
+## 0.143.0 — 2026-11-17
+
+- Dans la vue à la personne d'un char, d'un poste de mitrailleuse ou d'un avion, la souris tourne et lève la vue : on décide de ce qu'on voit (Échap, ou le clic droit, rend la souris et la vue d'avant)
+- Le char ne vibre plus quand il tire : plus de secousse, la vue file vers l'explosion et la montre
+
 ## 0.142.2 — 2026-11-17
 
 - Chaque soldat a sa démarche : sa foulée et sa cadence, les épaules qui tournent contre les hanches, le poids reporté d'une jambe sur l'autre, le fusil tenu à deux mains ; au repos, le poids sur une jambe

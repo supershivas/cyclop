@@ -1,8 +1,8 @@
 {
-  "version": "0.142.2",
+  "version": "0.143.0",
   "date": "2026-11-17",
   "changes": [
-    "Chaque soldat a sa démarche : sa foulée, les épaules et les hanches, le poids sur une jambe, le fusil à deux mains",
-    "Les soldats épaulent avant de tirer et continuent de marcher en tirant"
+    "Dans la vue à la personne d'un char, d'un poste ou d'un avion, la souris tourne et lève la vue (Échap rend la souris)",
+    "Le char ne vibre plus quand il tire : la vue file vers l'explosion et on la voit"
   ]
 }

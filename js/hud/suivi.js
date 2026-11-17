@@ -7,7 +7,7 @@
 //    tonneau, l'écran rouge, jusqu'à l'écrasement.
 // Rien de neuf dans le moteur que quelques réglages de la vue (`vue.haut`, `dist`, `portee`, `hors`, `roulis`, `secousse`, rendu3d.js) : la caméra du jeu orbite déjà autour d'un point visé, ici ce point
 // suit l'engin. Le dessin seulement : aucune lecture n'écrit dans la bataille. La vue se libère d'un geste sur la caméra (déplacer, tourner), Échap, le clic droit, ou le bouton ; la vue d'avant revient.
-import { positionDe } from '../avions.js?v=0.142.2';
+import { positionDe } from '../avions.js?v=0.143.0';
 
 const SOL_Y = 3;           // le niveau moyen du sol que vise la caméra (rendu3d.js : `SOL_Y`), pour calculer `vue.haut`
 const PORTEE = 700;        // m : le plan lointain d'une vue verrouillée (au ras du sol, la vue porte loin)
@@ -20,7 +20,10 @@ const BOUT = 4.6;          // m : du centre de l'avion au-delà du disque de l'h
 // on voit le char entier de dos et ce qu'il vise. Essayés en captures et écartés : sous le canon (dans le flanc et les chenilles), sur le toit (la superstructure masque la moitié de l'image),
 // à l'épaule droite (le flanc remplit la gauche), au ras du flanc (rien du char, un fanion en premier plan)
 export const CANON = { avant: -8, droite: 0, haut: 3.6, tangage: 0.2 };
-const TIR = { secousse: 0.05, retombe: 5, vers: [0.18, 0.4], garde: 1.7, retour: 2.3, fin: 2.6, tele: 0.5 };      // s : la secousse, le coup d'œil vers l'explosion (l'arrivée, la tenue, le retour), le zoom du téléobjectif
+// s : le coup d'œil vers l'explosion (l'arrivée, la tenue, le retour), le zoom du téléobjectif. Plus de secousse au tir (Jérôme, v0.143.0 : « la vue du char vibre trop et on ne voit pas le résultat du tir »)
+const TIR = { vers: [0.18, 0.4], garde: 1.7, retour: 2.3, fin: 2.6, tele: 0.5 };
+// La souris oriente la vue à la personne (Jérôme, v0.143.0 : « bouger la souris bouge la vision ») : rad par pixel, et jusqu'où on lève ou baisse les yeux (rad, par rapport au tangage de l'engin)
+const SOURIS = { lacet: 0.0022, tangage: 0.0022, haut: -1.0, bas: 0.9, pas: 120 };      // pas : px au plus par événement
 const ECRASE = 3.2;        // s qu'on reste sur l'épave avant de rendre la vue
 
 const angle = d => d - 2 * Math.PI * Math.round(d / (2 * Math.PI));
@@ -49,17 +52,33 @@ function cibleDe(B, genre, id) {
     perso: { x: p.x + co * (sol ? 0 : BOUT), y: p.y + si * (sol ? 0 : BOUT), h: p.h + 0.3, cap: p.cap, tangage: 0.6, alt: true } };
 }
 
-export function creerSuivi({ $, bataille, rendu, reduit = () => false, retour = () => {}, dire = () => {} }) {
+export function creerSuivi({ $, bataille, rendu, reduit = () => false, retour = () => {}, dire = () => {}, verrou = document.body }) {
   let s = null;          // { genre, id, mode: 'cinema' | 'personne', t, avant, tir, accident, fin }
   const badge = $('suivi'), nom = $('suivi-nom'), barres = $('cinema'), rouge = $('accident');
   $('suivi-liberer').onclick = () => liberer();
+
+  /* La souris (vue à la personne) : le pointeur est capturé (le premier Échap rend le pointeur, et la vue avec lui) ; sans capture (refusée, ou un navigateur sans elle) le mouvement de la souris sert quand même */
+  document.addEventListener('mousemove', e => {
+    if (!s || s.mode !== 'personne') return;
+    if (performance.now() < s.sourd) return;      // juste après la capture, Chrome compte le saut du pointeur vers le centre (jusqu'à 640 px mesurés : la vue partait de côté)
+    const borne = v => Math.max(-SOURIS.pas, Math.min(SOURIS.pas, v || 0));
+    s.lacet += borne(e.movementX) * SOURIS.lacet;
+    s.pitch = Math.max(SOURIS.haut, Math.min(SOURIS.bas, s.pitch + borne(e.movementY) * SOURIS.tangage));
+  });
+  document.addEventListener('pointerlockchange', () => {
+    if (!s) return;
+    if (document.pointerLockElement) { s.verrou = true; s.sourd = performance.now() + 250; } else if (s.verrou) liberer();
+  });
+  const prendreSouris = () => { try { const r = verrou.requestPointerLock?.(); r?.catch?.(() => {}); } catch { /* refusée : la souris libre sert */ } };
+  const rendreSouris = () => { try { if (document.pointerLockElement) document.exitPointerLock(); } catch { /* rien */ } };
 
   function verrouiller(genre, id, mode) {
     const B = bataille(); if (!B) return false;
     if (s && s.genre === genre && s.id === id && s.mode === mode) { liberer(); return false; }      // le même bouton : on lâche
     if (!cibleDe(B, genre, id)) { dire('Cet engin n\'est plus là.'); return false; }
     const avant = s?.avant ?? { yaw: rendu.vue.cible.yaw, tangage: rendu.vue.cible.tangage, zoom: rendu.vue.zoom, cx: rendu.vue.cx, cz: rendu.vue.cz, fov: rendu.vue.fov };
-    s = { genre, id, mode, t: 0, avant, neuf: true, tir: null, fin: 0 };
+    s = { genre, id, mode, t: 0, avant, neuf: true, tir: null, fin: 0, lacet: 0, pitch: 0, verrou: false, sourd: 0 };
+    if (mode === 'personne') { s.sourd = performance.now() + 400; prendreSouris(); } else rendreSouris();
     rendu.vue.roulis = 0; rendu.vue.secousse = 0; rendu.vue.fov = avant.fov;
     rouge.hidden = true; rouge.classList.remove('ecrase');
     badge.hidden = false; barres.hidden = mode !== 'cinema'; document.body.classList.toggle('vue-cinema', mode === 'cinema');
@@ -68,7 +87,7 @@ export function creerSuivi({ $, bataille, rendu, reduit = () => false, retour = 
   }
   function liberer() {
     if (!s) return;
-    const { avant } = s; s = null;
+    const { avant } = s; s = null; rendreSouris();
     const V = rendu.vue;
     V.haut = 0; V.dist = null; V.portee = 0; V.garde = null; V.hors = 0; V.roulis = 0; V.secousse = 0; V.fov = avant.fov;
     rendu.placerCamera(avant.yaw, avant.tangage); V.zoom = avant.zoom;
@@ -77,7 +96,7 @@ export function creerSuivi({ $, bataille, rendu, reduit = () => false, retour = 
     document.body.classList.remove('vue-cinema', 'vue-verrouillee');
   }
 
-  /* Les événements de la bataille de l'image : un tir de notre char suivi déclenche la secousse puis le coup d'œil vers l'explosion */
+  /* Les événements de la bataille de l'image : un tir de notre char suivi déclenche le coup d'œil vers l'explosion */
   function evenements(ev) {
     if (!s || s.genre !== 'char' || reduit()) return;
     for (const e of ev) if (e.type === 'char-tir' && e.id === s.id) s.tir = { t: 0, tx: e.tx, ty: e.ty };
@@ -102,26 +121,26 @@ export function creerSuivi({ $, bataille, rendu, reduit = () => false, retour = 
     const regard = perso ? P.h : c.regard, haut = sol + regard - SOL_Y;
     V.haut += (haut - V.haut) * (s.neuf || perso ? 1 : Math.min(1, dt * 6));
     V.portee = s.genre === 'avion' ? PORTEE_AVION : PORTEE; V.hors = HORS; V.zoom = perso ? PERSONNE.zoom : c.zoom; V.dist = perso ? PERSONNE.dist : null; V.garde = perso ? PERSONNE.garde : null;
-    // le tir du char : la secousse, puis la vue file vers l'explosion en téléobjectif et revient
-    let tete = perso ? P.cap : c.cap, w = 0, secousse = 0;
+    // le tir du char : la vue file vers l'explosion en téléobjectif et revient
+    let tete = perso ? P.cap : c.cap, w = 0, secousse = 0;      // (la secousse ne reste que pour l'avion abattu)
     if (s.tir) {
       const T = s.tir; T.t += dt;
       if (T.t > TIR.fin) s.tir = null;
       else {
-        secousse = TIR.secousse * Math.exp(-T.t * TIR.retombe);
         w = doux((T.t - TIR.vers[0]) / (TIR.vers[1] - TIR.vers[0])) * (1 - doux((T.t - TIR.garde) / (TIR.retour - TIR.garde)));
         if (perso) { const vers = Math.atan2(T.ty - py, T.tx - px); tete = P.cap + angle(vers - P.cap) * w; }
-        if (w > 0.5 && T.t < TIR.garde) secousse += 0.012;      // l'explosion elle-même fait trembler
       }
     }
     V.fov = s.avant.fov * (1 - TIR.tele * w);
     // l'angle : à la personne, dans la direction du regard ; au cinéma, derrière l'engin, puis un balayage lent autour de lui
-    const chasse = chasseDe(tete);
+    // la souris : le regard qu'on a choisi s'ajoute au cap de l'engin ; pendant le coup d'œil vers l'explosion la vue file d'abord vers elle (w), puis revient au regard choisi
+    const libre = perso ? 1 - w : 0;
+    const chasse = chasseDe(tete + (perso ? s.lacet * libre : 0));
     const balai = perso || r ? 0 : 0.7 + 1.7 * Math.sin(s.t * 2 * Math.PI / (CINEMA.periode * 2) - 0.6);
     const voulu = chasse + balai, d = angle(voulu - V.cible.yaw);
-    V.cible.yaw += d * (s.neuf ? 1 : perso ? Math.min(1, dt * (w > 0 || s.tir ? 14 : 8)) : Math.min(1, dt * 3)); if (s.neuf) V.yaw = V.cible.yaw;
+    V.cible.yaw += d * (s.neuf ? 1 : perso ? Math.min(1, dt * (w > 0 || s.tir ? 14 : 24)) : Math.min(1, dt * 3)); if (s.neuf) V.yaw = V.cible.yaw;
     // l'inclinaison : à plat (le char), penchée vers le sol (l'avion), qui pique quand il tombe ; au cinéma, un va-et-vient bas
-    let tg = perso ? P.tangage : CINEMA.tangage[0] + (r ? 0 : CINEMA.tangage[1] * Math.sin(s.t * 2 * Math.PI / CINEMA.periode) + CINEMA.tangage[2]);
+    let tg = perso ? P.tangage + s.pitch * libre : CINEMA.tangage[0] + (r ? 0 : CINEMA.tangage[1] * Math.sin(s.t * 2 * Math.PI / CINEMA.periode) + CINEMA.tangage[2]);
     if (perso && (chute || epave)) tg = epave ? 1.2 : Math.min(1.2, (s.pique ?? P.tangage) + dt * 0.7), s.pique = tg;
     V.cible.tangage = tg; if (s.neuf || (perso && chute)) V.tangage = tg;
     // le tonneau et l'écran rouge de l'avion abattu (la vue à la personne seulement)
