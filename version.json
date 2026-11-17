@@ -1,8 +1,8 @@
 {
-  "version": "0.147.0",
+  "version": "0.148.0",
   "date": "2026-11-17",
   "changes": [
-    "Dans la vue d'un soldat, le fusil se voit devant nous (recul et éclair à chaque coup) et un viseur marque le centre de l'image",
-    "On tire : le clic gauche envoie la balle où l'on regarde, elle touche le premier homme d'en face sur son chemin (le relief l'arrête), un coup toutes les 1,6 s"
+    "Vue d'un soldat : plus d'interface à l'écran ; s'il tombe, la caméra va sur lui et sa fiche s'ouvre ; la médaille « Mort pour la patrie »",
+    "La vue d'un soldat se joue aussi à deux : chaque commandant peut prendre la place d'un de ses hommes"
   ]
 }

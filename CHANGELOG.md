@@ -1,5 +1,12 @@
 # Journal des versions
 
+## 0.148.0 — 2026-11-17
+
+- Dans la vue d'un soldat, plus aucune interface : seuls le fusil, le viseur et les messages restent (la lettre du capitaine aussi)
+- Si l'homme qu'on dirige tombe, la vue rend la main, la caméra glisse sur lui et sa fiche s'ouvre avec tous ses chiffres ; **la fiche de chaque mort est gardée** (expérience, caractéristiques, victimes, peur, fatigue, blessure, jour et cause), de même celle d'un blessé évacué
+- Nouvelle médaille « Mort pour la patrie » : au soldat tombé qui avait abattu le plus d'hommes (de la journée au papier de la nuit, de la bataille à l'écran de fin) ; sa fiche le dit
+- Le jeu à deux : chaque commandant peut « voir par ses yeux » un de ses hommes ; la marche et le tir passent par le lockstep (les deux machines voient les mêmes hommes aux mêmes places)
+
 ## 0.147.0 — 2026-11-17
 
 - Dans la vue d'un soldat (« Voir par ses yeux »), le fusil se voit devant nous : le canon vers le centre, la crosse à l'épaule, les mains et les manches bleu horizon ; il recule et jette un éclair à chaque coup ; un viseur marque le centre de l'image

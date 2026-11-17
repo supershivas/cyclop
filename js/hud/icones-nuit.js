@@ -28,6 +28,7 @@ const MEDAILLES = {
   roc: '<path d="M2 14l3-7 3 2 2-5 4 10z"/>',                                                    // le rocher : le plus éprouvé, jamais en déroute
   inebranlable: '<path d="M8 1.5l5 2v4c0 3.5-2.2 5.8-5 7-2.8-1.2-5-3.5-5-7v-4z"/>',               // l'écu : le moral le plus haut
   fuyard: '<path d="M3 8h9M9 4.5L12.5 8 9 11.5M3 4v8"/>',                                       // la flèche du repli
+  patrie: '<path d="M8 1.5v8M5 4.5h6"/><path d="M2.5 14c2-2.5 9-2.5 11 0"/>',                 // la croix sur son tertre : le soldat tombé
   survivant: '<path d="M8 1.5v13M3 6.5h10"/><circle cx="8" cy="6.5" r="2.5"/>',                  // la croix cerclée : le plus de jours au front
   char: '<path d="M1.5 11h13l-1.5 3h-10zM3.5 11V7.5h7V11M10.5 8.5h4"/>',                        // le char et son canon
   poste: '<path d="M2 12h12M5 12l3-5 3 5M8 7V4.5h5"/>',                                          // la mitrailleuse sur son affût
