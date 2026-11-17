@@ -83,7 +83,8 @@ test('le modèle n\'a aucun nombre fou, ses os et ses parties sont connus', () =
   for (const [x0, x1, y0, y1, z0, z1] of boites()) assert.ok(x0 < x1 && y0 < y1 && z0 < z1, 'une boîte à l\'envers');
 });
 test('le modèle complet a deux triangles de plus par boîte', () => {
-  assert.equal(modeleArticule({ complet: true }).triangles - modeleArticule().triangles, modeleArticule().boites * 2);
+  const M = modeleArticule(), dos = boites().filter(b => b[13]?.prisme && b[12] !== 2).reduce((n, b) => n + b[13].prisme.length - 2, 0);      // (les profils extrudés : leur face arrière)
+  assert.equal(modeleArticule({ complet: true }).triangles - M.triangles, M.boites * 2 + dos);
 });
 test('chaque condition de visibilité sert à quelqu\'un', () => {
   const codes = new Set(boites().map(b => b[8]));
@@ -122,10 +123,10 @@ test('galons : barrettes blanches françaises, épaulettes et galon de col allem
   // et les Français n'ont ni épaulettes ni galon de col
   assert.ok(![0, 1, 2, 3, 4, 5].some(r => [1800, 1801, 1802, 2103, 2104, 2105].some(c => voir(c, fr(r), 0))));
 });
-test('un homme dessine entre 200 et 700 triangles (les autres sont aplatis)', () => {
+test('un homme dessine entre 200 et 800 triangles (les autres sont aplatis ; 800 depuis les épaules et le crâne arrondis, v0.144.5)', () => {
   let min = 1e9, max = 0, somme = 0;
   for (let id = 0; id < 1000; id++) { const n = trianglesVisibles(homme(id), 0); min = Math.min(min, n); max = Math.max(max, n); somme += n; }
-  assert.ok(min >= 200 && max <= 700, `${min} ${max}`);
+  assert.ok(min >= 200 && max <= 800, `${min} ${max}`);
   console.log(`  triangles dessinés par homme : ${min} à ${max}, moyenne ${Math.round(somme / 1000)} ; modèle entier ${modeleArticule().triangles} (${modeleArticule({ complet: true }).triangles} complet)`);
 });
 test('le niveau intermédiaire dessine nettement moins que le fin, et jamais ce qu\'il ne montre pas', () => {
@@ -159,7 +160,8 @@ test('le jeu porte le dôme à 8 pans ; un dôme tourné coûte peu (8 pans) ou 
 import { reglerArrondi, ARRONDI_JEU, trianglesVisibles as triVis } from '../js/rendu/soldat-articule.js';
 import { aspect as aspectDe } from '../js/aspect-soldat.js';
 test('les épaules et le crâne arrondis : seulement au niveau fin, quelques dizaines de triangles de plus, et tout revient au réglage du jeu', () => {
-  const a = aspectDe(5, 0, 7, 6, 25), avant = [triVis(a, 0), triVis(a, 0, 0, { niveau: 'moyen' })];
+  const a = aspectDe(5, 0, 7, 6, 25);
+  reglerArrondi(false); const avant = [triVis(a, 0), triVis(a, 0, 0, { niveau: 'moyen' })];
   reglerArrondi(true);
   const apres = [triVis(a, 0), triVis(a, 0, 0, { niveau: 'moyen' })], M = modeleCasques();
   reglerArrondi();

@@ -1,5 +1,9 @@
 # Journal des versions
 
+## 0.144.5 — 2026-11-17
+
+- De près, les soldats ont les épaules et le crâne arrondis
+
 ## 0.144.4 — 2026-11-17
 
 - Au labo, à trancher : des épaules et des crânes arrondis de près ; le jeu ne change pas
