@@ -1,12 +1,12 @@
 // Les casques de près, au labo (Jérôme, 17 nov. : « les casques ne peuvent-ils pas avoir un rendu plus réaliste de près ? plus rond ? qu'est-ce que cela coûterait ? »).
 // Quatre hommes, deux de chaque camp, au niveau de détail fin du jeu (24 px/m et plus), la caméra tourne lentement autour d'eux ; un style de casque par variante
 // (`STYLES_CASQUE` de js/rendu/soldat-articule.js : les anneaux de boîtes d'aujourd'hui, des anneaux à douze pans, un profil tourné à 8 ou 16 pans). Le relevé dit ce que coûte
-// le casque, l'homme, et 250 hommes (le plafond des articulés). Le style est remis à « anneaux » en quittant : le reste du labo et le jeu n'en voient rien.
-import { PALETTE } from './palette.js?v=0.143.3';
-import { loadThree } from './three-lib.js?v=0.143.3';
-import { fabriquer } from './labo-fabrique.js?v=0.143.3';
-import { creerEquipeArticulee, reglerCasques, boites, trianglesVisibles } from './rendu/soldat-articule.js?v=0.143.3';
-import { ARTICULE } from './data/aspect-soldat.js?v=0.143.3';
+// le casque, l'homme, et 250 hommes (le plafond des articulés), comparés aux anneaux d'avant. Le style revient à celui du jeu (`CASQUE_JEU`) dès les maillages faits.
+import { PALETTE } from './palette.js?v=0.143.4';
+import { loadThree } from './three-lib.js?v=0.143.4';
+import { fabriquer } from './labo-fabrique.js?v=0.143.4';
+import { creerEquipeArticulee, reglerCasques, boites, trianglesVisibles } from './rendu/soldat-articule.js?v=0.143.4';
+import { ARTICULE } from './data/aspect-soldat.js?v=0.143.4';
 
 const el = (tag, props = {}, ...kids) => { const e = Object.assign(document.createElement(tag), props); e.append(...kids); return e; };
 const FACTEUR = 2, TAN15 = Math.tan(15 * Math.PI / 180);
@@ -21,7 +21,7 @@ export function maquetteCasques(stage, { style = 'anneaux' } = {}) {
     stage.replaceChildren();
     nettoyer = monter(stage, THREE, style);
   })().catch(e => { stage.replaceChildren(el('pre', { textContent: `Les casques n'ont pas pu se dessiner : ${e.message}` })); });
-  return () => { fini = true; nettoyer(); reglerCasques('anneaux'); };
+  return () => { fini = true; nettoyer(); reglerCasques(); };
 }
 
 function monter(stage, THREE, style) {
@@ -53,7 +53,7 @@ function monter(stage, THREE, style) {
   const E = creerEquipeArticulee(THREE, col, { capacite: HOMMES.length, ombrage: ARTICULE.ombrage ?? 0.5, niveau: 'fin', texturePoses: true });
   for (const m of E.meshes) scene.add(m);
   const cA = casque(0), cS = casque(1);
-  reglerCasques('anneaux');      // (les maillages sont faits : le reste du labo retrouve les casques du jeu)
+  reglerCasques();      // (les maillages sont faits : le reste du labo retrouve les casques du jeu)
   const h = { x: 0, y: 0, z: 0, camp: 0, vit: 0, tir: 0, tapi: 0, couche: 0, blessure: 0, cap: 0, temps: 0, aspect: null, pose: null };
   let dernierT = performance.now(), temps = 0, raf = 0, w = 0, ht = 0;
   function taille() {

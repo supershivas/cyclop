@@ -1,5 +1,6 @@
-import { NOMS_CHAMPS } from '../data/poses-soldat.js?v=0.143.3';
-import { poseJeu, phaseDe, TEXELS, FLOTTANTS } from './pose-jeu.js?v=0.143.3';
+import { NOMS_CHAMPS } from '../data/poses-soldat.js?v=0.143.4';
+import { ARTICULE } from '../data/aspect-soldat.js?v=0.143.4';
+import { poseJeu, phaseDe, TEXELS, FLOTTANTS } from './pose-jeu.js?v=0.143.4';
 
 // Le soldat articulé (au labo seulement : « la fabrique de soldats », et la mesure de son coût ; rien n'est dans le jeu).
 // Un squelette de treize os (le tronc, la tête, deux fois bras / avant-bras, deux fois cuisse / mollet / pied, le fusil) que le nuanceur plie : le genou, le coude, la cheville
@@ -51,8 +52,10 @@ const P = PARTIES;
 // de boîtes pour l'Adrian, trois pour le Stahlhelm), 'anneaux12' (six anneaux à douze pans), 'tour8' et 'tour16' (un profil tourné autour de l'axe de la tête, comme au tour de potier :
 // le dôme, le bord qui s'avance devant et derrière, la jupe évasée ; 8 pans à facettes, ou 16 pans lissés). Le niveau intermédiaire (12 à 16 px/m) garde ses anneaux carrés.
 export const STYLES_CASQUE = ['anneaux', 'anneaux12', 'tour8', 'tour16'];
-let styleCasque = 'anneaux';
-export function reglerCasques(style) { if (STYLES_CASQUE.includes(style)) styleCasque = style; return styleCasque; }
+// (Jérôme, v0.143.4 : le dôme tourné à 8 pans, `ARTICULE.casque`) ; `reglerCasques()` sans style revient à celui du jeu
+export const CASQUE_JEU = STYLES_CASQUE.includes(ARTICULE.casque) ? ARTICULE.casque : 'anneaux';
+let styleCasque = CASQUE_JEU;
+export function reglerCasques(style = CASQUE_JEU) { styleCasque = STYLES_CASQUE.includes(style) ? style : CASQUE_JEU; return styleCasque; }
 // Les profils tournés : des points [rayon, hauteur, allonge devant, allonge derrière] du bord vers le sommet (l'allonge étire le rayon vers l'avant, +z, ou vers l'arrière)
 export const PROFILS_CASQUE = {
   adrian: [[0.13, 1.582, 1.48, 1.32], [0.132, 1.6, 1, 1], [0.13, 1.632, 1, 1], [0.12, 1.664, 1, 1], [0.098, 1.694, 1, 1], [0.062, 1.717, 1, 1], [0, 1.728, 1, 1]],
@@ -193,7 +196,7 @@ export function boites() {
 // `niveau` : 'fin' (défaut : les boîtes de niveau 0 et 1) ou 'moyen' (0 et 2 : le niveau intermédiaire, de 12 à 16 px/m)
 export function modeleArticule({ complet = false, filtre = null, niveau = 'fin' } = {}) {
   const pos = [], part = [], os = [], show = [], nor = [];
-  let nBoites = 0;
+  let nBoites = 0, nTours = 0;
   for (const [x0, x1, y0, y1, z0, z1, p, o, s, haut, avant, rot, , tourne] of boites().filter(b => (niveau === 'moyen' ? b[12] !== 1 : b[12] !== 2) && (!filtre || filtre(b)))) {
     if (tourne) {      // un profil tourné : une bande de quadrilatères par paire de points du profil, `n` pans autour de l'axe de la tête
       const { profil: Pr, n, lisse } = tourne, pt = (k, j) => { const a = 2 * Math.PI * j / n, c = Math.cos(a), sn = Math.sin(a), [r, y, kav, kar] = Pr[k]; return [r * sn, y, r * c * (c > 0 ? kav : kar)]; };
@@ -205,7 +208,7 @@ export function modeleArticule({ complet = false, filtre = null, niveau = 'fin' 
         const f = fn[1] < 0 && k > 0 ? fn.map(x => -x) : fn;
         for (const v of [a, b, cc, a, cc, d]) { pos.push(...v); part.push(p); os.push(o); show.push(s); nor.push(...(lisse ? nv(v) : f)); }
       }
-      nBoites++; continue;
+      nTours++; continue;
     }
     const cx = (x0 + x1) / 2, cz = (z0 + z1) / 2, c = Math.cos(rot || 0), sn = Math.sin(rot || 0);
     const r = v => rot ? [cx + (v[0] - cx) * c + (v[2] - cz) * sn, v[1], cz - (v[0] - cx) * sn + (v[2] - cz) * c] : v;      // une boîte tournée de 45° autour de y : les anneaux octogonaux des casques
@@ -218,7 +221,7 @@ export function modeleArticule({ complet = false, filtre = null, niveau = 'fin' 
     if (complet) q([x1, y0, z0], [x0, y0, z0], [x0, y1, z0], [x1, y1, z0], p, 0, 0, -1);
     nBoites++;
   }
-  return { position: new Float32Array(pos), part: new Float32Array(part), os: new Float32Array(os), show: new Float32Array(show), nor: new Float32Array(nor), triangles: pos.length / 9, boites: nBoites };
+  return { position: new Float32Array(pos), part: new Float32Array(part), os: new Float32Array(os), show: new Float32Array(show), nor: new Float32Array(nor), triangles: pos.length / 9, boites: nBoites, tours: nTours };
 }
 
 // Les triangles qu'un homme dessine vraiment (les autres sont aplatis par le nuanceur : ils coûtent leurs sommets, pas leurs pixels)

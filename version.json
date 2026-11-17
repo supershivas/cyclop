@@ -1,7 +1,8 @@
 {
-  "version": "0.143.3",
+  "version": "0.143.4",
   "date": "2026-11-17",
   "changes": [
-    "Au labo : le repos vivant dans la tranchée et des casques plus ronds, à trancher (le jeu ne change pas)"
+    "Au repos, les soldats respirent, se balancent, regardent autour d'eux, rajustent leur prise",
+    "De près, les casques sont des dômes"
   ]
 }

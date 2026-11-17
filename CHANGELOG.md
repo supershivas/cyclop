@@ -1,5 +1,10 @@
 # Journal des versions
 
+## 0.143.4 — 2026-11-17
+
+- Au repos, les soldats ne sont plus figés : ils respirent, se balancent, passent le poids d'une jambe sur l'autre, regardent autour d'eux, rajustent leur prise sur le fusil
+- De près, les casques sont des dômes : l'Adrian avec son bord, le Stahlhelm avec sa jupe évasée
+
 ## 0.143.3 — 2026-11-17
 
 - Au labo, à trancher : le repos vivant dans la tranchée (ils respirent, se balancent, passent d'une jambe sur l'autre, regardent autour d'eux, rajustent leur prise) et des casques plus ronds de près ; le jeu ne change pas

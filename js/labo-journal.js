@@ -2,6 +2,9 @@
 // Une entrée par version qui touche au labo, la plus récente en haut. `ref` : « sujet-Lettre » (la lettre est celle de la variante,
 // A étant l'actuelle). À chaque changement du labo : une entrée ici, avec `depuis` sur les variantes ajoutées ou changées (labo.js).
 export const JOURNAL = [
+  { version: '0.143.4', date: '2026-11-17', items: [
+    { genre: 'mis-a-jour', texte: 'Jérôme tranche : le repos vivant et le dôme tourné à 8 pans passent en jeu ; la pose tenue et les anneaux deviennent les anciennes', ref: 'casques-A' },
+  ] },
   { version: '0.143.3', date: '2026-11-17', items: [
     { genre: 'nouveau', texte: 'Au repos dans la tranchée (à trancher) : ils respirent, se balancent, passent d\'une jambe sur l\'autre, regardent autour d\'eux, rajustent leur prise', ref: 'repos-B' },
     { genre: 'nouveau', texte: 'Les casques de près (à trancher) : des anneaux plus fins, ou un vrai dôme tourné à 8 ou 16 pans, avec le coût de chacun', ref: 'casques-C' },
