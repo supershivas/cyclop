@@ -1,5 +1,10 @@
 # Journal des versions
 
+## 0.143.1 — 2026-11-17
+
+- Au premier plan, aucun soldat ne surgit plus quand la caméra bouge : un homme dont on voit le buste ou la tête reste dessiné, même si ses pieds sont sous le bord de l'écran
+- De près, le détail des soldats (squelette, visage) va aux 250 plus proches de la caméra : le premier plan ne passe plus en basse résolution quand on incline la vue
+
 ## 0.143.0 — 2026-11-17
 
 - Dans la vue à la personne d'un char, d'un poste de mitrailleuse ou d'un avion, la souris tourne et lève la vue : on décide de ce qu'on voit (Échap, ou le clic droit, rend la souris et la vue d'avant)

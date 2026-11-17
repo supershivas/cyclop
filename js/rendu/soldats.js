@@ -1,16 +1,17 @@
 // Les hommes : les soldats (une boîte et son ombre ; de près la silhouette, plus loin une silhouette allégée ; aux zooms 1 et 2 un point), les anneaux des
 // régiments choisis ou survolés, les corps (un homme couché) et les tombes (un tertre et une croix). Tout est instancié et ne reçoit que ce qu'on voit.
 // Le dessin seulement. Les formes viennent de geometries.js, le GLSL de shaders.js.
-import * as SH from './shaders.js?v=0.143.0';
-import { creerGeometries } from './geometries.js?v=0.143.0';
-import { classeDuRang } from '../data/grades.js?v=0.143.0';
-import { creerEquipeArticulee } from './soldat-articule.js?v=0.143.0';
-import { creerJeuAnimations } from './animation-jeu.js?v=0.143.0';
-import { allures } from '../anim-modeles.js?v=0.143.0';
-import { ANIMATIONS } from '../data/animations.js?v=0.143.0';
-import { EPAULEMENT } from '../data/lecteur-animations.js?v=0.143.0';
-import { SANG } from '../data/aspect-soldat.js?v=0.143.0';
-import { ligneY } from '../tranchees.js?v=0.143.0';
+import * as SH from './shaders.js?v=0.143.1';
+import { creerGeometries } from './geometries.js?v=0.143.1';
+import { classeDuRang } from '../data/grades.js?v=0.143.1';
+import { creerEquipeArticulee } from './soldat-articule.js?v=0.143.1';
+import { creerJeuAnimations } from './animation-jeu.js?v=0.143.1';
+import { allures } from '../anim-modeles.js?v=0.143.1';
+import { ANIMATIONS } from '../data/animations.js?v=0.143.1';
+import { EPAULEMENT } from '../data/lecteur-animations.js?v=0.143.1';
+import { SANG } from '../data/aspect-soldat.js?v=0.143.1';
+import { ligneY } from '../tranchees.js?v=0.143.1';
+import { profondeurALEcran } from './vue-ecran.js?v=0.143.1';
 
 // `THREE`, `scene`, `col`, `solUniforms` (`uSol`, `uTaille` : la texture du sol, que l'ombre d'un soldat reprend), `styleSoldat` (le style de près, comparé au labo),
 // `grades` (v0.68.0 : une variante de `GRADES`, data/grades.js, ou null : tous pareils) et `rangDe(B, id, reg)` (le rang d'un homme, bataille.js) ; `surface(x, z)` et `surfaceLisse(x, z)` (la hauteur du sol, lissée pour qui marche), `solY` (la hauteur moyenne du sol) et `POINTS_JUSQUA` (le zoom où un soldat n'est
@@ -33,13 +34,14 @@ export function creerSoldats({ THREE, scene, col, solUniforms, styleSoldat, grad
     return FOSSE[id] === 1;
   };
   const SANGS = new Float32Array(1 << 16); let tSang = 0;      // (v0.140.2) le sang de chaque homme (par numéro, 0 à 1) : il monte tant qu'il se bat au corps à corps et reste ; le dessin seulement, rien de sauvegardé
+  const ART_AVANT = new Uint8Array(1 << 16);                  // 1 pour un homme articulé à l'image d'avant (par numéro) : `garde` (v0.143.1)
   const CAPS = new Float32Array(1 << 16);                    // le cap de chaque homme (par numéro : les indices bougent quand les morts sont retirés) : l'angle de son regard (NaN : pas encore vu, il part tourné vers l'ennemi)
   // Les gradés (v0.68.0) : leurs pièces (képi, fanion, galons…) sont des maillages à part, un par classe (une instance par gradé de cette classe seulement : un homme sur quatre
   // en tout, et chaque instance ne porte que les pièces de sa classe), avec les mêmes attributs que le corps ; le corps, lui, ne change que par la classe (la taille) et le fusil que
   // les officiers n'ont plus. Rien d'autre à dessiner pour un soldat ordinaire. Aux zooms 1 et 2, un seul tampon de points de tous les gradés.
   const PART_CLASSE = [0, 0.2, 0.12, 0.05, 0.03];                                   // la part de la capacité de l'armée que chaque classe peut prendre (le caporal pour six hommes, le sergent pour douze…)
   let BL = null, blessArr = null, varArr = null, GR = null, gpPos = null, gpCamp = null, gpTaille = null, attrsGP = null, gPoints = null, classeArr = null, capGP = 0;
-  // Les soldats articulés (Jérôme, v0.105.0 ; labo « Fabrique de soldats ») : de près (`articule.des` pixels par mètre) les `articule.max` hommes les plus proches du centre de la vue prennent le squelette, le visage, le casque
+  // Les soldats articulés (Jérôme, v0.105.0 ; labo « Fabrique de soldats ») : de près (`articule.des` pixels par mètre) les `articule.max` hommes les plus proches de la caméra (v0.143.1 ; du centre de la vue avant) prennent le squelette, le visage, le casque
   // et les galons de `aspect` (js/aspect-soldat.js) ; ils quittent les tampons des soldats équipés (et des gradés, des pansements) : un homme n'est dessiné qu'une fois. Créés au premier besoin (un objet de plus
   // décale les tirages d'identifiants de three, donc les images de référence). `aspectDe(B, id, camp)` : l'aspect d'un homme (main.js : son numéro de campagne, la graine d'identité, son âge et son rang) ; gardé par numéro.
   let artCfg = null, aspectDe = null, EQ = null, EQs = { moyen: null, fin: null }, artSel = null, candI = null, candD = null, artVus = 0, animJeu = null, listeAnim = null;
@@ -289,8 +291,7 @@ export function creerSoldats({ THREE, scene, col, solUniforms, styleSoldat, grad
       }
       if (x < x0 || x > x1 || y < z0 || y > z1) continue;
       const hs = surface(x, y) + haut;
-      const cxp = e[0] * x + e[4] * hs + e[8] * y + e[12], cyp = e[1] * x + e[5] * hs + e[9] * y + e[13], cw = e[3] * x + e[7] * hs + e[11] * y + e[15];
-      if (cxp < -1.08 * cw || cxp > 1.08 * cw || cyp < -1.15 * cw || cyp > 1.15 * cw) continue;
+      if (profondeurALEcran(e, x, hs, y, 0.6) < 0) continue;      // couché : 60 cm de haut au plus (v0.143.1 : plus le pied seul)
       cPos[k * 3] = x; cPos[k * 3 + 1] = hs; cPos[k * 3 + 2] = y;
       { // le mort garde le ton et la place qu'il avait vivant : le même nombre que le vivant (sa largeur et sa taille, soldatMat), rangé dans l'état (+ 0,4 × le nombre)
         const iv = c[4] & 0xffff, lg = Math.fround(1 + VARIATION.largeur * (2 * hach(iv + 1, 2654435761) - 1)), ta = Math.fround(1 + VARIATION.taille * (2 * hach(iv + 977, 1597334677) - 1)), g = lg * 71.3 + ta * 37.7;
@@ -315,8 +316,7 @@ export function creerSoldats({ THREE, scene, col, solUniforms, styleSoldat, grad
       const x = c[0] / 10, y = c[1] / 10;
       if (x < x0 || x > x1 || y < z0 || y > z1) continue;
       const hs = surface(x, y);
-      const cxp = e[0] * x + e[4] * hs + e[8] * y + e[12], cyp = e[1] * x + e[5] * hs + e[9] * y + e[13], cw = e[3] * x + e[7] * hs + e[11] * y + e[15];
-      if (cxp < -1.08 * cw || cxp > 1.08 * cw || cyp < -1.15 * cw || cyp > 1.15 * cw) continue;
+      if (profondeurALEcran(e, x, hs, y, 1.2) < 0) continue;      // la croix : 1,2 m (v0.143.1)
       tbPos[k * 3] = x; tbPos[k * 3 + 1] = hs; tbPos[k * 3 + 2] = y;
       k++;
     }
@@ -341,23 +341,28 @@ export function creerSoldats({ THREE, scene, col, solUniforms, styleSoldat, grad
     { const dSang = Math.max(0, Math.min(0.1, tAnim - tSang)) * SANG.parSeconde; tSang = tAnim;
       if (dSang > 0) for (let i = 0; i < n; i++) if (A.duel[i]) { const id = A.id[i] & 0xffff; if (SANGS[id] < 1) SANGS[id] = Math.min(1, SANGS[id] + dSang); }
       soldatMat.uniforms.uSangCell.value = Math.max(SANG.cellule, 1.3 / p); }      // une tache fait au moins un peu plus d'un pixel : plus fine, elle scintille quand l'homme marche
-    // les hommes articulés : de près, les plus proches du centre de la vue (ceux qu'on voit : le même test que plus bas)
+    // les hommes articulés : de près, les plus proches DE LA CAMÉRA parmi ceux qu'on voit (le même test et la même place que plus bas). Jusqu'à la v0.142.2, les plus proches
+    // du centre du rectangle de sol vu (`x0`…`z1`) : avec sa marge du relief (30 à 400 m de tous les côtés) et une caméra inclinée, ce centre partait au fond de la vue, et quand
+    // plus de `max` hommes étaient en vue le premier plan passait au dessin simple (Jérôme, v0.143.1 : « le premier plan ne doit pas subitement devenir low rez »).
+    // `garde` : un homme déjà articulé ne cède sa place qu'à un homme nettement plus proche (sa distance comptée × `garde`), pour que la limite ne papillote pas quand la caméra bouge.
     const arti = !!(artCfg && aspectDe && rangDe && p >= artCfg.des);
     if (arti) {
       artSel.fill(0, 0, n);
-      const cxm = (x0 + x1) / 2, czm = (z0 + z1) / 2;
+      const garde = artCfg.garde ?? 1;
       let nc = 0;
       for (let i = 0; i < n; i++) {
-        const x = AX[i], y = AY[i];
+        let x = AX[i], y = AY[i];
+        const iv = A.id[i] & 0xffff;
+        if (variete) { x += variete.rang * (hach(iv + 31, 2246822519) * 2 - 1); y += variete.rang * (hach(iv + 113, 3266489917) * 2 - 1); }
         if (x < x0 || x > x1 || y < z0 || y > z1) continue;
-        const hs = surfaceLisse(x, y);
-        const cxp = e[0] * x + e[4] * hs + e[8] * y + e[12], cyp = e[1] * x + e[5] * hs + e[9] * y + e[13], cw = e[3] * x + e[7] * hs + e[11] * y + e[15];
-        if (cxp < -1.08 * cw || cxp > 1.08 * cw || cyp < -1.15 * cw || cyp > 1.15 * cw) continue;
-        candI[nc] = i; candD[nc++] = (x - cxm) * (x - cxm) + (y - czm) * (y - czm);
+        const d = profondeurALEcran(e, x, surfaceLisse(x, y), y, 2, 0.3, true);      // vraiment dans l'écran (30 cm de marge) : un homme hors de l'écran ne prend pas une place du détail
+        if (d < 0) continue;
+        candI[nc] = i; candD[nc++] = ART_AVANT[iv] ? d * garde : d;
       }
       const seuil = nc > artCfg.max ? candD.slice(0, nc).sort()[artCfg.max - 1] : Infinity;
       let nArt = 0;
-      for (let c = 0; c < nc && nArt < artCfg.max; c++) if (candD[c] <= seuil) { artSel[candI[c]] = 1; nArt++; }
+      ART_AVANT.fill(0);
+      for (let c = 0; c < nc && nArt < artCfg.max; c++) if (candD[c] <= seuil) { artSel[candI[c]] = 1; ART_AVANT[A.id[candI[c]] & 0xffff] = 1; nArt++; }
       // deux niveaux de détail (v0.105.1) : dès `fin` px/m le fin (le visage se lit, les galons, les boutons), de `des` à là l'intermédiaire (un casque simplifié, ni boutons, ni pouces, ni galons : moins d'un pixel)
       const niv = p >= (artCfg.fin ?? 24) ? 'fin' : 'moyen';
       if (nArt && !EQs[niv]) {
@@ -375,8 +380,7 @@ export function creerSoldats({ THREE, scene, col, solUniforms, styleSoldat, grad
       if (x < x0 || x > x1 || y < z0 || y > z1) continue;
       // à sa vraie hauteur : sur une colline du premier plan, l'homme monte à l'écran, et le tester au niveau de la mer le retirait (v0.73.1)
       const hs = surfaceLisse(x, y);
-      const cxp = e[0] * x + e[4] * hs + e[8] * y + e[12], cyp = e[1] * x + e[5] * hs + e[9] * y + e[13], cw = e[3] * x + e[7] * hs + e[11] * y + e[15];
-      if (cxp < -1.08 * cw || cxp > 1.08 * cw || cyp < -1.15 * cw || cyp > 1.15 * cw) continue;
+      if (profondeurALEcran(e, x, hs, y) < 0) continue;      // des pieds à la tête, pas le pied seul (v0.143.1)
       posArr[k * 3] = x; posArr[k * 3 + 1] = hs + (i < volT.length && volT[i] > 0 ? volH[i] * Math.sin(Math.PI * (1 - volT[i] / volD[i])) : 0); posArr[k * 3 + 2] = y;
       const art = arti && artSel[i] === 1;
       const sel = choisis.has(A.reg[i]);
@@ -520,6 +524,7 @@ export function creerSoldats({ THREE, scene, col, solUniforms, styleSoldat, grad
                 // { des, max, ombrage } ou null : les soldats articulés de près
     set aspectDe(f) { aspectDe = f; },
     get articulesVus() { return artVus; },
+    get articulesSel() { return artSel; },                         // (lecture seule, les sondes) 1 pour un homme articulé, par indice de l'armée
     get gradesVus() { return gradesVus; },                          // les gradés dessinés (pour les stats et le labo)
     get vus() { return vus; },                                    // les soldats dessinés (pour les stats)
   };
