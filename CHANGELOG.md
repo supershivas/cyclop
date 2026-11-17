@@ -1,8 +1,12 @@
 # Journal des versions
 
-## 0.146.1 — 2026-11-17
+## 0.146.2 — 2026-11-17
 
 - Les soldats tués par un obus restent couchés : ils ne se relèvent plus pour tomber
+
+## 0.146.1 — 2026-11-17
+
+- Vue d'un soldat (« Voir par ses yeux ») : les autres hommes gardent leur aspect de près (casque, visage, équipement), ils ne redeviennent plus des boîtes
 
 ## 0.146.0 — 2026-11-17
 

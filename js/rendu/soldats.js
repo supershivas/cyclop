@@ -1,19 +1,19 @@
 // Les hommes : les soldats (une boîte et son ombre ; de près la silhouette, plus loin une silhouette allégée ; aux zooms 1 et 2 un point), les anneaux des
 // régiments choisis ou survolés, les corps (un homme couché) et les tombes (un tertre et une croix). Tout est instancié et ne reçoit que ce qu'on voit.
 // Le dessin seulement. Les formes viennent de geometries.js, le GLSL de shaders.js.
-import * as SH from './shaders.js?v=0.146.1';
-import { creerGeometries } from './geometries.js?v=0.146.1';
-import { classeDuRang } from '../data/grades.js?v=0.146.1';
-import { creerEquipeArticulee } from './soldat-articule.js?v=0.146.1';
-import { creerJeuAnimations } from './animation-jeu.js?v=0.146.1';
-import { allures, allure, reposGeste, poseMort, chute } from '../anim-modeles.js?v=0.146.1';
-import { echantillon } from '../pose-soldat.js?v=0.146.1';
-import { NOMS_CHAMPS } from '../data/poses-soldat.js?v=0.146.1';
-import { ANIMATIONS } from '../data/animations.js?v=0.146.1';
-import { EPAULEMENT, MARCHE_JEU, GESTES, MORTS_JEU } from '../data/lecteur-animations.js?v=0.146.1';
-import { SANG } from '../data/aspect-soldat.js?v=0.146.1';
-import { ligneY } from '../tranchees.js?v=0.146.1';
-import { profondeurALEcran } from './vue-ecran.js?v=0.146.1';
+import * as SH from './shaders.js?v=0.146.2';
+import { creerGeometries } from './geometries.js?v=0.146.2';
+import { classeDuRang } from '../data/grades.js?v=0.146.2';
+import { creerEquipeArticulee } from './soldat-articule.js?v=0.146.2';
+import { creerJeuAnimations } from './animation-jeu.js?v=0.146.2';
+import { allures, allure, reposGeste, poseMort, chute } from '../anim-modeles.js?v=0.146.2';
+import { echantillon } from '../pose-soldat.js?v=0.146.2';
+import { NOMS_CHAMPS } from '../data/poses-soldat.js?v=0.146.2';
+import { ANIMATIONS } from '../data/animations.js?v=0.146.2';
+import { EPAULEMENT, MARCHE_JEU, GESTES, MORTS_JEU } from '../data/lecteur-animations.js?v=0.146.2';
+import { SANG } from '../data/aspect-soldat.js?v=0.146.2';
+import { ligneY } from '../tranchees.js?v=0.146.2';
+import { profondeurALEcran } from './vue-ecran.js?v=0.146.2';
 
 // `THREE`, `scene`, `col`, `solUniforms` (`uSol`, `uTaille` : la texture du sol, que l'ombre d'un soldat reprend), `styleSoldat` (le style de près, comparé au labo),
 // `grades` (v0.68.0 : une variante de `GRADES`, data/grades.js, ou null : tous pareils) et `rangDe(B, id, reg)` (le rang d'un homme, bataille.js) ; `surface(x, z)` et `surfaceLisse(x, z)` (la hauteur du sol, lissée pour qui marche), `solY` (la hauteur moyenne du sol) et `POINTS_JUSQUA` (le zoom où un soldat n'est
@@ -346,7 +346,7 @@ export function creerSoldats({ THREE, scene, col, solUniforms, styleSoldat, grad
     let nc = 0;
     for (let ic = 0; ic < C.length; ic++) {
       const c = C[ic];
-      if (vol && vol.has(ic)) { if (Number.isNaN(MORT_T[c[4] & 0xffff])) MORT_T[c[4] & 0xffff] = -1e9; continue; }      // (v0.146.1) projeté par un obus : il retombe déjà couché, sans chute
+      if (vol && vol.has(ic)) { if (Number.isNaN(MORT_T[c[4] & 0xffff])) MORT_T[c[4] & 0xffff] = -1e9; continue; }      // (v0.146.2) projeté par un obus : il retombe déjà couché, sans chute
       if (c[3] < jour) continue;
       let x = c[0] / 10, y = c[1] / 10;
       if (variete) { const iv = c[4] & 0xffff; x += variete.rang * (hach(iv + 31, 2246822519) * 2 - 1); y += variete.rang * (hach(iv + 113, 3266489917) * 2 - 1); }
@@ -519,7 +519,7 @@ export function creerSoldats({ THREE, scene, col, solUniforms, styleSoldat, grad
         hArt.geste = demarches && reposVivant && animJeu ? gesteDe(id, AX[i], AY[i], A.camp[i], B.lignes, gesteTemps) : null;
         if (hArt.geste && !animJeu.aGeste(hArt.geste) && !gesteGenere && (gesteGenere = true)) animJeu.ajouterGeste(hArt.geste, Array.from({ length: GESTES.jeu.allures }, (_, n) => reposGeste(allure(n), `${hArt.geste} · allure ${n + 1}`, hArt.geste)));      // (généré au premier besoin)
         hArt.coup = demarches ? tv : tx > 0 ? tx : 0; hArt.pose = animJeu ? animJeu.pose(A.id[i], hArt, tAnim) : null;       // la marche, le repos et le tir viennent du lecteur d'animations (null : poseJeu)
-        EQ.ajouter(hArt); VU_ART[id] = hArt.tapi || hArt.blessure === 2 || hArt.couche ? -1e9 : tAnim;      // (v0.146.1) seul un homme vu DEBOUT peut tomber : accroupi, assis, blessé à terre, il reste couché (Jérôme : « ils doivent juste rester couchés »)
+        EQ.ajouter(hArt); VU_ART[id] = hArt.tapi || hArt.blessure === 2 || hArt.couche ? -1e9 : tAnim;      // (v0.146.2) seul un homme vu DEBOUT peut tomber : accroupi, assis, blessé à terre, il reste couché (Jérôme : « ils doivent juste rester couchés »)
         continue;
       }
       k++;
@@ -592,7 +592,7 @@ export function creerSoldats({ THREE, scene, col, solUniforms, styleSoldat, grad
     set aspectDe(f) { aspectDe = f; },
     get articulesVus() { return artVus; },
     get articulesSel() { return artSel; },
-    get morts() { return { chutes: chutesJouees, couches: couchesVus }; },      // (lecture seule, les sondes) v0.146.1                         // (lecture seule, les sondes) 1 pour un homme articulé, par indice de l'armée
+    get morts() { return { chutes: chutesJouees, couches: couchesVus }; },      // (lecture seule, les sondes) v0.146.2                         // (lecture seule, les sondes) 1 pour un homme articulé, par indice de l'armée
     get gradesVus() { return gradesVus; },                          // les gradés dessinés (pour les stats et le labo)
     get vus() { return vus; },                                    // les soldats dessinés (pour les stats)
   };

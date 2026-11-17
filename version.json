@@ -1,5 +1,5 @@
 {
-  "version": "0.146.1",
+  "version": "0.146.2",
   "date": "2026-11-17",
   "changes": [
     "Les soldats tués par un obus restent couchés : ils ne se relèvent plus pour tomber"
