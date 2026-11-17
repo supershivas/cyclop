@@ -369,9 +369,10 @@ export const soldatMat = {
         if (uSang > 0.0 && vSang.z > 0.05 && k < 30.0 && k != 4.0 && !(k == 2.0 && sel)) {
           float blS = floor(vSang.z + 0.05), sgS = (vSang.z - blS) * 2.5, qS = 0.0;
           vec3 cel = floor(vec3(vSang.x, vLong, vSang.y) / uSangCell);
-          if (blS == 1.0 && vLong > 0.92 && vLong < 1.45 && vSang.x < -0.1) qS = 0.7;                 // le bras gauche (là où est le pansement)
-          else if (blS == 2.0 && vLong > 0.2 && vLong < 0.95 && vSang.x < 0.02) qS = 0.7;             // la jambe gauche
-          else if (blS == 3.0 && vLong > 1.2) qS = vLong > 1.45 ? 0.6 : 0.35;                      // la tête, et ce qui coule sur les épaules
+          // (v0.147.1, Jérôme : « le sang est trop marqué sur les blessés, le limiter autour des blessures ») : autour du pansement seulement, plus dense au milieu, nul à 12 cm de son bord
+          if (blS == 1.0 && vSang.x < -0.17) qS = 0.5 * (1.0 - smoothstep(0.07, 0.19, abs(vLong - 1.07)));                 // le bras gauche (le pansement : 1,00 à 1,14 m)
+          else if (blS == 2.0 && vSang.x < 0.03) qS = 0.5 * (1.0 - smoothstep(0.08, 0.2, abs(vLong - 0.5)));             // la cuisse gauche (0,42 à 0,58 m)
+          else if (blS == 3.0) qS = 0.45 * (1.0 - smoothstep(0.06, 0.16, abs(vLong - 1.52)));                           // la tête (le bandeau : 1,47 à 1,56 m), plus rien sur les épaules
           if (sgS > 0.0 && vLong > 0.55 && vLong < 1.5) qS = max(qS, 0.42 * sgS);                  // le corps à corps : le buste, les bras, le haut des cuisses
           if (fract(sin(dot(cel, vec3(12.9898, 78.233, 37.719)) + vSang.w * 91.7) * 43758.5453) < qS) c = mix(c, uSangCoul, uSang);
         }

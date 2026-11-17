@@ -1,8 +1,7 @@
 {
-  "version": "0.147.0",
+  "version": "0.147.1",
   "date": "2026-11-17",
   "changes": [
-    "Dans la vue d'un soldat, le fusil se voit devant nous (recul et éclair à chaque coup) et un viseur marque le centre de l'image",
-    "On tire : le clic gauche envoie la balle où l'on regarde, elle touche le premier homme d'en face sur son chemin (le relief l'arrête), un coup toutes les 1,6 s"
+    "Le sang des blessés se limite à la blessure : autour du pansement du bras, de la cuisse ou de la tête"
   ]
 }

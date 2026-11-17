@@ -1,5 +1,9 @@
 # Journal des versions
 
+## 0.147.1 — 2026-11-17
+
+- Le sang des blessés se limite à la blessure : autour du pansement du bras, de la cuisse ou de la tête
+
 ## 0.147.0 — 2026-11-17
 
 - Dans la vue d'un soldat (« Voir par ses yeux »), le fusil se voit devant nous : le canon vers le centre, la crosse à l'épaule, les mains et les manches bleu horizon ; il recule et jette un éclair à chaque coup ; un viseur marque le centre de l'image
