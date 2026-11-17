@@ -1,12 +1,12 @@
 // La végétation : les arbres (un tronc, quelques branches nues ; abattus, une souche), les buissons (deux ou trois boîtes basses ; arrachés, il
 // n'en reste rien) et l'herbe (des touffes de cinq brins, seulement de près, qui ondulent au vent). Seulement ce qu'on voit est dessiné : tous,
 // ils coûtaient des dizaines de milliers de triangles (docs/domaines/rendu.md, « Les arbres et les buissons dessinés partout »). Le dessin seulement.
-import * as SH from './shaders.js?v=0.141.2';
-import { creerGeometries } from './geometries.js?v=0.141.2';
-import { hash2 } from '../lib/rng.js?v=0.141.2';
-import { BUISSONS_FORMES, BUISSONS_SAISONS, BUISSONS_TIRAGES } from '../data/buissons.js?v=0.141.2';
-import { ARBRES_FONDU, ARBRES_GRAPPES, ARBRES_FAMILLES, ARBRES_ESSENCES, ARBRES_TIRAGES, ARBRES_ECHELLE, ARBRES_AUTOMNE, ARBRES_PPM_FEUILLES, ARBRES_FEUILLES, ARBRES_VARIANTES, ARBRES_COUCHE, ARBRES_GROSSIER } from '../data/arbres.js?v=0.141.2';
-import { dansLEcran } from './vue-ecran.js?v=0.141.2';
+import * as SH from './shaders.js?v=0.141.3';
+import { creerGeometries } from './geometries.js?v=0.141.3';
+import { hash2 } from '../lib/rng.js?v=0.141.3';
+import { BUISSONS_FORMES, BUISSONS_SAISONS, BUISSONS_TIRAGES } from '../data/buissons.js?v=0.141.3';
+import { ARBRES_FONDU, ARBRES_GRAPPES, ARBRES_FAMILLES, ARBRES_ESSENCES, ARBRES_TIRAGES, ARBRES_ECHELLE, ARBRES_AUTOMNE, ARBRES_PPM_FEUILLES, ARBRES_FEUILLES, ARBRES_VARIANTES, ARBRES_COUCHE, ARBRES_GROSSIER } from '../data/arbres.js?v=0.141.3';
+import { dansLEcran } from './vue-ecran.js?v=0.141.3';
 
 // `THREE`, `scene`, `col`, `camera`, `vue`, `solY` (la hauteur moyenne du sol), `distance(zoom)`, `surface(x, z)` et `petit()` (aux zooms où un soldat n'est qu'un point)
 // viennent de creerRendu ; `terrain()`, `vide()` et `ombres()` sont lus à chaque appel (le terrain change à chaque bataille). `ombres()` rend `{ ARBRES_OMBRES, aoPos, aoGeo, soleil }` :
@@ -284,7 +284,8 @@ export function creerVegetation({ THREE, scene, col, camera, vue, solY: SOL_Y, d
         }
       }
       if (a.abattu) { /* (dessiné ci-dessus) */ }
-      else if (loin) { m4v.set(inf.sx, 0, 0, x, 0, inf.H, 0, y, 0, 0, inf.sx, z, 0, 0, 0, 1); loinMesh.setMatrixAt(loinMesh.userData.n++, m4v); couronne(k, x, y, z, inf); }
+      // (v0.141.3, Jérôme : « des arbres très peu détaillés à côté d'arbres très détaillés » : un arbre debout plus loin que 1,3 fois le point visé n'était qu'un tronc et un cube ;
+      //  son niveau ne dépend plus que de ses pixels par mètre à l'écran, ci-dessous : grappes, intermédiaire, grossier)
       else {
         // le niveau de l'arbre selon ses pixels par mètre à l'écran (q) : grappes (près), intermédiaire, grossier (loin) ; autour de chaque seuil, les deux niveaux en trame (ARBRES_FONDU)
         const q = pm * distance(vue.zoom) / Math.max(1e-3, Math.hypot(a.i - cp.x, y - cp.y, a.j - cp.z)), B = ARBRES_FONDU.bande;

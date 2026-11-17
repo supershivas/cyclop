@@ -1,7 +1,7 @@
 {
-  "version": "0.141.2",
+  "version": "0.141.3",
   "date": "2026-11-16",
   "changes": [
-    "Les arbres changent de niveau de détail en douceur : les mêmes grappes de loin, et un fondu au lieu d'un saut"
+    "Les arbres du fond ne sont plus de simples cubes : ils gardent leurs grappes, comme ceux du premier plan"
   ]
 }

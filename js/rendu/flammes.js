@@ -1,7 +1,7 @@
 // Le feu (Jérôme, v0.139.0 ; data/effets.js, FEU ; une exception de palette) : des langues de flamme en lumière additive, dont la couleur va du cœur
 // presque blanc au rouge sombre selon leur chaleur (le centre de la langue, la jeunesse de la flamme), qui montent en se balançant et rétrécissent,
 // et des braises qui s'élèvent en zigzag. Une taille en mètres, à l'échelle de la vue (perspective). Le dessin seulement.
-import { FEU } from '../data/effets.js?v=0.141.2';
+import { FEU } from '../data/effets.js?v=0.141.3';
 
 const V = `
   attribute float aF; attribute float aTaille; attribute float aGraine; uniform float uEchelle; varying float vF; varying float vG; varying float vBraise;
