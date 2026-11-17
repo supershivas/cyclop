@@ -1,7 +1,8 @@
 {
-  "version": "0.143.5",
+  "version": "0.143.6",
   "date": "2026-11-17",
   "changes": [
-    "Au labo : des gestes d'attente dans la tranchée, à trancher (le jeu ne change pas)"
+    "Des gestes d'attente dans la tranchée : le froid, la pluie, le guetteur, les petits gestes",
+    "En haut à gauche : un seul bouton de pause et la roue des réglages, une même largeur"
   ]
 }

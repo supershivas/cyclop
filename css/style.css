@@ -97,7 +97,7 @@
 .carte-grille .cel.clign { animation: clign .5s steps(1) 6; }
 @keyframes clign { 0% { outline: 3px solid var(--jeu-fond); outline-offset: 1px; } 50% { outline: 3px solid transparent; } }
 @media (hover: hover) { .carte-grille .cel:hover { outline: 2px solid var(--jeu-accent); outline-offset: 1px; } }
-.carnet { width: 38ch; max-width: 36vw; font-size: var(--texte-petit); }
+.carnet { width: var(--colonne-gauche, 23rem); max-width: 36vw; box-sizing: border-box; font-size: var(--texte-petit); }
 .carnet[hidden] { display: none; }
 /* Le carnet (Jérôme, v0.100.0) : l'en-tête est un bouton (un clic : tout l'historique), une flèche le replie ; les noms sont des liens ; un événement important a son pictogramme et clignote une fois */
 .carnet .entete { display: flex; align-items: center; justify-content: space-between; gap: var(--pas); letter-spacing: var(--titre-lettres); text-transform: uppercase; border-bottom: 1px solid var(--jeu-accent); padding-bottom: var(--e0); }
@@ -723,7 +723,11 @@ body.charge dialog { display: none; }
 .carte.replie .entete i { border-top: 5px solid transparent; border-bottom: 5px solid transparent; border-left-color: currentColor; border-right: 0; }
 .carte.replie .carte-grille { display: none; }
 .carte.replie .carte-tete { border-bottom: 0; padding-bottom: 0; margin-bottom: 0; }
-.haut-bloc { display: grid; gap: var(--pas); justify-items: stretch; width: max-content; max-width: 100%; }
+/* (Jérôme, v0.143.6 : « toute cette section du HUD a la même largeur ») les réglages et le temps, le billet et le carnet de bord : une même colonne */
+.haut-gauche { --colonne-gauche: min(23rem, 36vw); }      /* (en rem : le ch dépend de la police de chaque élément, le carnet écrit plus petit restait plus étroit) */
+.haut-bloc { display: grid; gap: var(--pas); justify-items: stretch; width: var(--colonne-gauche); max-width: 100%; }
+.haut-bloc .boutons > .temps { flex: 1; }
+.haut-bloc .temps button { flex: 1; }
 /* les boutons du haut ont tous la même hauteur (--jeu-cible) ; la barre du temps, dessous, a la largeur de leur rangée (contain : sa propre largeur ne compte pas) */
 .haut-bloc .boutons { align-items: stretch; }
 .haut-bloc .boutons > * { height: var(--jeu-cible); box-sizing: border-box; }

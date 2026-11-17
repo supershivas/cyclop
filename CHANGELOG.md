@@ -1,5 +1,10 @@
 # Journal des versions
 
+## 0.143.6 — 2026-11-17
+
+- Dans la tranchée, des gestes d'attente : par le froid ils tapent des pieds et se frottent les mains, sous la pluie ils rentrent la tête, un guetteur sur dix se redresse pour regarder puis se baisse, d'autres rajustent leur casque ou portent la main à la bouche
+- En haut à gauche, un seul bouton de pause (avec les vitesses) et la roue des réglages, qui donne aussi l'écran titre et « Quitter la partie » ; toute la colonne a la même largeur
+
 ## 0.143.5 — 2026-11-17
 
 - Au labo, à trancher : des gestes d'attente dans la tranchée (taper des pieds et se frotter les mains par le froid, le dos rond sous la pluie, le guetteur qui se redresse et se baisse, rajuster son casque, la main à la bouche) ; le jeu ne change pas

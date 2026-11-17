@@ -9,9 +9,9 @@
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta property="og:image" content="og.png">
-<link rel="stylesheet" href="js/lib/game.css?v=0.143.5">
-<link rel="stylesheet" href="css/style.css?v=0.143.5">
-<link rel="stylesheet" href="css/ds-v2.css?v=0.143.5">
+<link rel="stylesheet" href="js/lib/game.css?v=0.143.6">
+<link rel="stylesheet" href="css/style.css?v=0.143.6">
+<link rel="stylesheet" href="css/ds-v2.css?v=0.143.6">
 </head>
 <body class="charge">
 <!-- La barre de chargement (v0.28.0) : là avant tout script ; main.js la remplit, puis la retire. `body.charge` (v0.100.0) : tout le reste de l'écran est caché tant qu'elle est là (le menu et le titre ne se voient plus derrière) -->
@@ -44,13 +44,10 @@
   <!-- HUD : en DOM par-dessus le canvas, dans la palette du jeu -->
   <div class="hud" id="hud" hidden>
     <div class="hud-haut">
-      <!-- En haut à gauche : le menu, les réglages, le temps, le billet, le carnet de bord (la fiche et le papier de la nuit y attendent leur place définitive) -->
+      <!-- En haut à gauche : les réglages (et, pendant une partie, l'écran titre et quitter : Jérôme, v0.143.6, plus de bouton Menu), le temps, le billet, le carnet de bord (la fiche et le papier de la nuit y attendent leur place définitive) -->
       <div class="haut-gauche">
         <div class="haut-bloc">
         <div class="boutons">
-          <button class="icone plaque" id="pause" aria-label="Menu" data-info="# Menu&#10;Reprendre, régler le jeu, quitter la partie (Échap).">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14M16 5v14"/></svg>
-          </button>
           <button class="icone plaque" id="hud-reglages" aria-label="Réglages" data-info="# Réglages&#10;Le son, l'affichage, la sauvegarde.">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10.3 4.3c.4-1.8 2.9-1.8 3.4 0a1.7 1.7 0 0 0 2.6 1.1c1.5-.9 3.3.8 2.4 2.4a1.7 1.7 0 0 0 1 2.5c1.8.5 1.8 3 0 3.4a1.7 1.7 0 0 0-1 2.6c.9 1.5-.9 3.3-2.4 2.4a1.7 1.7 0 0 0-2.6 1c-.5 1.8-3 1.8-3.4 0a1.7 1.7 0 0 0-2.5-1c-1.6.9-3.3-.9-2.4-2.4a1.7 1.7 0 0 0-1.1-2.6c-1.8-.4-1.8-2.9 0-3.4a1.7 1.7 0 0 0 1.1-2.5c-.9-1.6.8-3.3 2.4-2.4 1 .6 2.3.1 2.5-1.1z"/><circle cx="12" cy="12" r="3"/></svg>
           </button>
@@ -308,6 +305,11 @@
     <button class="bouton" id="exporter">Exporter la sauvegarde</button>
     <button class="bouton" id="importer">Importer une sauvegarde</button>
   </div>
+  <div class="menu" id="reglages-partie" hidden>
+    <button class="bouton" id="reglages-titre">Écran titre</button>
+    <button class="bouton" id="reglages-abandonner">Quitter la partie</button>
+    <button class="bouton" id="reglages-abandonner-campagne" hidden>Abandonner la campagne</button>
+  </div>
   <p class="liens"><a href="labo.html">Labo</a> · <a href="labo-lumiere.html">Labo lumière</a> · <a href="atelier.html">Atelier</a></p>
   <form method="dialog"><button class="bouton">Fermer</button></form>
 </dialog>
@@ -389,6 +391,6 @@
 </dialog>
 
 <div class="jeu-toast" id="toast" role="status" hidden></div>
-<script type="module" src="js/main.js?v=0.143.5"></script>
+<script type="module" src="js/main.js?v=0.143.6"></script>
 </body>
 </html>
