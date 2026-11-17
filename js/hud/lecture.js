@@ -1,8 +1,8 @@
 // Lire la bataille en mots : qui est un homme, ce qu'il est devenu, ce que compte un régiment. Des fonctions
 // qui prennent la bataille `B` et ne changent rien (aucun DOM) ; main.js et la fiche s'en servent.
-import { NOUS, arriereDe, numeroCampagne, moralEnMots, actionDe } from '../bataille.js?v=0.145.0';
-import { legere } from '../army.js?v=0.145.0';
-import { identite, prochainGrade } from '../identite.js?v=0.145.0';
+import { NOUS, arriereDe, numeroCampagne, moralEnMots, actionDe } from '../bataille.js?v=0.145.1';
+import { legere } from '../army.js?v=0.145.1';
+import { identite, prochainGrade } from '../identite.js?v=0.145.1';
 
 export const majuscule = s => s[0].toUpperCase() + s.slice(1);
 // Le moral d'un régiment en trois niveaux, pour l'interface (v0.41.3) : « tient » (tient, tient bon), « ebranle » (ébranlé, au bord de la déroute), « deroute »
@@ -99,6 +99,7 @@ export function actionEnMots(B, i) {
   const A = B.armee, R = B.R, reg = B.etat.regiments[A.reg[i]], b = A.blessure[i];
   if (B.etat.phase !== 'jour') return 'au repos';
   if (reg?.deroute) return 'en déroute';
+  if (B.etat.nids.some(n => n.servant === A.id[i] && n.etat === 'actif')) return 'sert la mitrailleuse';
   if (b) {
     if (b === 1 || (b === 2 && legere(A.id[i], R.soldat.jambeLegere))) {
       const ar = arriereDe(B);

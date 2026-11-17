@@ -69,5 +69,5 @@ export const SANG = { couleur: '#7a0f1c', force: 0.85, parSeconde: 0.25, cellule
 // `rang` (± mètres autour de sa place), `assis` (la part des hommes qui s'assoient au repos dans une tranchée), `calme` (les secondes sans tirer avant de se rasseoir) ; tout est tiré de son numéro, le dessin seulement
 export const VARIETE_SOLDATS = { ton: 0.12, cap: 0.45, rang: 0.25, assis: 0.3, calme: 8 };
 export const BOUE_SOLDATS = { depart: 0.3, parJour: 0.06, max: 0.85 };
-export const ARTICULE = { des: 12, fin: 24, max: 250, garde: 0.9, ombrage: 0.5, casque: 'tour8', arrondi: true,      // (arrondi : les épaules et le crâne, Jérôme, v0.144.5)
+export const ARTICULE = { des: 12, fin: 24, max: 250, garde: 0.9, ombrage: 0.5, casque: 'tour8', arrondi: true,      // (arrondi : les épaules et le crâne, Jérôme, v0.145.1)
   texture: true, animations: true };      // `texture` : la pose des 250 hommes écrite côté processeur dans une texture, lue par le nuanceur (v0.132 ; false : le nuanceur la calcule) ; `garde` : un homme déjà articulé garde sa place contre un homme moins de 10 % plus proche de la caméra (v0.143.1 : la limite ne papillote pas) ; `animations` : la marche, le repos et le tir viennent du lecteur d'animations plutôt que du calcul d'avant (étape 4 ; false : l'ancien calcul, pour comparer)

@@ -14,44 +14,44 @@
    La sauvegarde (photo) garde la graine, la liste compacte des impacts, l'état
    de la foule et les petites couches de logique ; jamais le relief : il se
    rejoue depuis la graine et les impacts (rejouerTerrain). */
-import { noterMoments } from './moments.js?v=0.145.0';
-import { createRng, hash2 } from './lib/rng.js?v=0.145.0';
-import { impact, hydroLignes, etat as etatCase, vitesseEtat, vitesseCase, ETAT } from './terrain.js?v=0.145.0';
-import { creerArmee, legere, ajouterSoldat, construireGrille, pasArmee, tuerDans, effrayer, compacter, photoArmee, restaurerArmee, b64, deB64, DENSITE, place, poserCaracs, lireCaracs, abimerCaracs, gagner, CARACS } from './army.js?v=0.145.0';
-import { ligneSous, solidite, y0En, arcMax } from './tranchees.js?v=0.145.0';
-import { terrainDuSecteur } from './secteur-terrain.js?v=0.145.0';
-import { detruirePont, reconstruirePont, pontEn } from './eaux.js?v=0.145.0';
-import { MISSIONS_SECONDAIRES as MS } from './data/missions.js?v=0.145.0';
-import { PONT_COUPE } from './data/ponts.js?v=0.145.0';
-import { amasDe, isoles } from './amas.js?v=0.145.0';
-import { calculerCouts, creerCacheChamps, dimensionsCouts, BLOC } from './champs.js?v=0.145.0';
-import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.145.0';
-import { preparerAleatoire, ID_ALEATOIRE } from './generateur.js?v=0.145.0';
-import { AVION, MITRAILLAGE } from './data/mitraillage.js?v=0.145.0';
-import { refusAvion, lancerAvion, avancerAvions, flotteDeDepart, reparerAvions } from './avions.js?v=0.145.0';
-import { CHAR, CHAR_RECHARGE, CHAR_SORTIE } from './data/chars.js?v=0.145.0';
-import { GENIE, GENIE_DATA } from './data/genie.js?v=0.145.0';
-import { filDeDepart, degatsFil } from './fil.js?v=0.145.0';
-import { creerNids, avancerNids, degatsNids, reparerNid, aubeNids } from './nids.js?v=0.145.0';
-import { TOITS, NIDS } from './data/nids.js?v=0.145.0';
-import { BONUS, chevronsDe } from './data/experience.js?v=0.145.0';
+import { noterMoments } from './moments.js?v=0.145.1';
+import { createRng, hash2 } from './lib/rng.js?v=0.145.1';
+import { impact, hydroLignes, etat as etatCase, vitesseEtat, vitesseCase, ETAT } from './terrain.js?v=0.145.1';
+import { creerArmee, legere, ajouterSoldat, construireGrille, pasArmee, tuerDans, effrayer, compacter, photoArmee, restaurerArmee, b64, deB64, DENSITE, place, poserCaracs, lireCaracs, abimerCaracs, gagner, CARACS } from './army.js?v=0.145.1';
+import { ligneSous, solidite, y0En, arcMax } from './tranchees.js?v=0.145.1';
+import { terrainDuSecteur } from './secteur-terrain.js?v=0.145.1';
+import { detruirePont, reconstruirePont, pontEn } from './eaux.js?v=0.145.1';
+import { MISSIONS_SECONDAIRES as MS } from './data/missions.js?v=0.145.1';
+import { PONT_COUPE } from './data/ponts.js?v=0.145.1';
+import { amasDe, isoles } from './amas.js?v=0.145.1';
+import { calculerCouts, creerCacheChamps, dimensionsCouts, BLOC } from './champs.js?v=0.145.1';
+import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.145.1';
+import { preparerAleatoire, ID_ALEATOIRE } from './generateur.js?v=0.145.1';
+import { AVION, MITRAILLAGE } from './data/mitraillage.js?v=0.145.1';
+import { refusAvion, lancerAvion, avancerAvions, flotteDeDepart, reparerAvions } from './avions.js?v=0.145.1';
+import { CHAR, CHAR_RECHARGE, CHAR_SORTIE } from './data/chars.js?v=0.145.1';
+import { GENIE, GENIE_DATA } from './data/genie.js?v=0.145.1';
+import { filDeDepart, degatsFil } from './fil.js?v=0.145.1';
+import { creerNids, avancerNids, pourvoirNids, degatsNids, reparerNid, aubeNids } from './nids.js?v=0.145.1';
+import { TOITS, NIDS } from './data/nids.js?v=0.145.1';
+import { BONUS, chevronsDe } from './data/experience.js?v=0.145.1';
 const resiste = reg => 1 - BONUS.regiment.moral * (reg.chev || 0);      // les chevrons d'un régiment adoucissent ses pertes de moral (lot E)
-import { refusGenie, lancerGenie, avancerGenies, degatsGenies, sectionsDeDepart } from './genie.js?v=0.145.0';
-import { refusChar, lancerChar, degatsChars, avancerChars } from './chars.js?v=0.145.0';
-import { METEO, SAISONS, SAISON_DEFAUT, PREVISION_JUSTE, temperature, vent } from './data/meteo.js?v=0.145.0';
-import { SECTEURS } from './data/secteur.js?v=0.145.0';
-import { REGIMENTS, REGIMENTS_GRANDS } from './data/lexique.js?v=0.145.0';
-import { STANCES, STANCE_DEFAUT } from './data/stances.js?v=0.145.0';
-import { DIFFICULTES, DIFFICULTE_DEFAUT } from './data/difficulte.js?v=0.145.0';
-import { grade, departCaracs, caracEnMots } from './identite.js?v=0.145.0';
-import { corvees, creerRegiment, prendreReserve } from './nuit.js?v=0.145.0';
-import { RENFORTS } from './data/renforts.js?v=0.145.0';
-import { EQUIPEMENTS } from './data/batiments.js?v=0.145.0';
-import { campDeDepart, dotationAube, refusOrdre, refusNid, appliquerDepart, modif, rechargeDe, sortieChars, sortieCaserne, entreeHopital, emplacementCamp, patients, renfortsDe } from './camp.js?v=0.145.0';
+import { refusGenie, lancerGenie, avancerGenies, degatsGenies, sectionsDeDepart } from './genie.js?v=0.145.1';
+import { refusChar, lancerChar, degatsChars, avancerChars } from './chars.js?v=0.145.1';
+import { METEO, SAISONS, SAISON_DEFAUT, PREVISION_JUSTE, temperature, vent } from './data/meteo.js?v=0.145.1';
+import { SECTEURS } from './data/secteur.js?v=0.145.1';
+import { REGIMENTS, REGIMENTS_GRANDS } from './data/lexique.js?v=0.145.1';
+import { STANCES, STANCE_DEFAUT } from './data/stances.js?v=0.145.1';
+import { DIFFICULTES, DIFFICULTE_DEFAUT } from './data/difficulte.js?v=0.145.1';
+import { grade, departCaracs, caracEnMots } from './identite.js?v=0.145.1';
+import { corvees, creerRegiment, prendreReserve } from './nuit.js?v=0.145.1';
+import { RENFORTS } from './data/renforts.js?v=0.145.1';
+import { EQUIPEMENTS } from './data/batiments.js?v=0.145.1';
+import { campDeDepart, dotationAube, refusOrdre, refusNid, appliquerDepart, modif, rechargeDe, sortieChars, sortieCaserne, entreeHopital, emplacementCamp, patients, renfortsDe } from './camp.js?v=0.145.1';
 
 export const PAS = 1 / 30;                 // s de jeu par pas
 export const NOUS = 0, EUX = 1;
-const VERSION = 31;   // 31 : les moments clés de chaque jour (`etat.moments`, `reg.deroutes`, la fin de partie, v0.134.0) ; 30 : les chars rentrés au parc avec leurs dégâts (`etat.parcChars`, v0.130.0) ; 29 : l'historique des soirs (`etat.histo`, la refonte des données, v0.120.0) ; 28 : les transferts de la nuit (`etat.transferts`) et les régiments frais déjà engagés (`etat.reservesPrises`), v0.116.0 ; 27 : le génie répare un engin par jour (`etat.genieJour`, `etat.reparesAvions`), les chars et les postes comptent leurs victimes (v0.116.0) ; 26 : la taille du secteur (`etat.dim`, v0.110.0) ; 25 : la contre-attaque éclair (`etat.contre`, v0.109.0) ; 24 : les postes de mitrailleuse (munitions, expérience, direction du cône) et l'expérience des chars (lot E, v0.102.0) ; 23 : les renforts (`etat.ralliees`, `etat.arrives`, `reg.versCaserne`, lot D, v0.101.0) ; 22 : l'affectation des guéris de l'hôpital (`etat.affectation`, v0.99.11) ; 21 : le stock de chars du parc (`etat.charsDispo`, v0.99.10) ; 20 : les missions secondaires (`etat.secondaires`, v0.99.0) ; 19 : le fil de fer de chaque tronçon (`etat.fil`, v0.98.0) ; 18 : le camp d'en face (`etat.campEux`, v0.92.0) ; 17 : l'équipement des régiments (`reg.equip`, v0.91.0) ; 16 : le camp (`etat.camp` : la dotation, les niveaux des bâtiments, v0.86.0) ; 15 : les nids de mitrailleuses (`etat.nids`, v0.83.0) ; 14 : la victoire anticipée (`etat.priseJours`, v0.77.0) ; 13 : les médailles (`tues`, `pris`, `debut` de chaque régiment, `etat.victDebut`, v0.73.1) ; 12 : le niveau de difficulté (`etat.difficulte`, la posture d'en face `etat.iaStance`, v0.70.0) ; 11 : les caractéristiques de chaque homme (adresse, force, endurance, calme) dans l'armée, le corps à corps (v0.69.0) ; 10 : la solidité des ponts (pv, nom, historique), la coupure en attente de ses coûts (`etat.couts.coupure`) ; 9 : le génie (les sections, les ponts refaits) ; 8 : le chemin et le cap des chars ; 7 : le rapport du jour (les sorties et les pertes d'avions) ; 6 : les avions de mitraillage (une passe tracée, des points de vie, une flotte) ; 5 : la forme des cratères (rond, lèvre jetée, éclats : les impacts rejoués changent) ; 2 : la graine d'identité ; 3 : la campagne et les relevés ; 4 : les numéros de campagne, un effectif par camp, le rythme de l'IA (campagne, lots 1 à 3)
+const VERSION = 32;   // 32 : l'homme posté à chaque nid de mitrailleuse (`n.servant`, v0.144.1) ; 31 : les moments clés de chaque jour (`etat.moments`, `reg.deroutes`, la fin de partie, v0.134.0) ; 30 : les chars rentrés au parc avec leurs dégâts (`etat.parcChars`, v0.130.0) ; 29 : l'historique des soirs (`etat.histo`, la refonte des données, v0.120.0) ; 28 : les transferts de la nuit (`etat.transferts`) et les régiments frais déjà engagés (`etat.reservesPrises`), v0.116.0 ; 27 : le génie répare un engin par jour (`etat.genieJour`, `etat.reparesAvions`), les chars et les postes comptent leurs victimes (v0.116.0) ; 26 : la taille du secteur (`etat.dim`, v0.110.0) ; 25 : la contre-attaque éclair (`etat.contre`, v0.109.0) ; 24 : les postes de mitrailleuse (munitions, expérience, direction du cône) et l'expérience des chars (lot E, v0.102.0) ; 23 : les renforts (`etat.ralliees`, `etat.arrives`, `reg.versCaserne`, lot D, v0.101.0) ; 22 : l'affectation des guéris de l'hôpital (`etat.affectation`, v0.99.11) ; 21 : le stock de chars du parc (`etat.charsDispo`, v0.99.10) ; 20 : les missions secondaires (`etat.secondaires`, v0.99.0) ; 19 : le fil de fer de chaque tronçon (`etat.fil`, v0.98.0) ; 18 : le camp d'en face (`etat.campEux`, v0.92.0) ; 17 : l'équipement des régiments (`reg.equip`, v0.91.0) ; 16 : le camp (`etat.camp` : la dotation, les niveaux des bâtiments, v0.86.0) ; 15 : les nids de mitrailleuses (`etat.nids`, v0.83.0) ; 14 : la victoire anticipée (`etat.priseJours`, v0.77.0) ; 13 : les médailles (`tues`, `pris`, `debut` de chaque régiment, `etat.victDebut`, v0.73.1) ; 12 : le niveau de difficulté (`etat.difficulte`, la posture d'en face `etat.iaStance`, v0.70.0) ; 11 : les caractéristiques de chaque homme (adresse, force, endurance, calme) dans l'armée, le corps à corps (v0.69.0) ; 10 : la solidité des ponts (pv, nom, historique), la coupure en attente de ses coûts (`etat.couts.coupure`) ; 9 : le génie (les sections, les ponts refaits) ; 8 : le chemin et le cap des chars ; 7 : le rapport du jour (les sorties et les pertes d'avions) ; 6 : les avions de mitraillage (une passe tracée, des points de vie, une flotte) ; 5 : la forme des cratères (rond, lèvre jetée, éclats : les impacts rejoués changent) ; 2 : la graine d'identité ; 3 : la campagne et les relevés ; 4 : les numéros de campagne, un effectif par camp, le rythme de l'IA (campagne, lots 1 à 3)
 
 const ticksParHeure = R => Math.max(1, Math.round(R.jour.duree / (R.jour.heureFin - R.jour.heureDebut) / PAS));
 export const ticksParJour = R => ticksParHeure(R) * (R.jour.heureFin - R.jour.heureDebut);
@@ -712,7 +712,7 @@ export function avancer(B) {
   if (etat.mitraillages.length) avancerAvions(B, ctx, rng);
   if (etat.tickJour % RENFORTS.intervalle === 0) { rallierArrives(B); hospitaliser(B); }
   if (etat.chars.length) avancerChars(B, ctx, rng);
-  if (etat.nids.length) avancerNids(B, ctx, rng);
+  if (etat.nids.length) { ctx.postes = pourvoirNids(B); avancerNids(B, ctx, rng); }
   if (etat.genies.length) avancerGenies(B, ctx);
   if (T.coupes.length) noyades(B);
   enFace(B, rng);
