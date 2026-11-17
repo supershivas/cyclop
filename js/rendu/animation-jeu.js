@@ -1,11 +1,11 @@
 // Qui joue quoi pour les hommes articulés (étape 4 de docs/chantiers/animations-vers-le-jeu.md). Logique pure (le temps est un argument) : pour un homme, la pose du lecteur d'animations
 // (marche, repos, tir) écrite dans les 25 nombres de la texture de poses, ou `null` pour les états sans animation (feu retenu, accroupi, couché, mêlée, blessures, officier au pistolet),
 // que `poseJeu` (pose-jeu.js) continue de calculer. Un état de lecteur par homme (le fondu de 0,2 s en a besoin), purgé quand l'homme sort des hommes articulés (`fin`).
-import { nouvelEtat, etatAnimationTab, termine } from '../lecteur-animations.js?v=0.144.0';
-import { ANIMATIONS } from '../data/animations.js?v=0.144.0';
-import { ANIM_JEU, MARCHE_JEU, CANAUX_TIR_EN_MARCHE, ALLURES, EPAULEMENT } from '../data/lecteur-animations.js?v=0.144.0';
-import { NOMS_CHAMPS } from '../data/poses-soldat.js?v=0.144.0';
-import { FLOTTANTS } from './pose-jeu.js?v=0.144.0';
+import { nouvelEtat, etatAnimationTab, termine } from '../lecteur-animations.js?v=0.144.1';
+import { ANIMATIONS } from '../data/animations.js?v=0.144.1';
+import { ANIM_JEU, MARCHE_JEU, CANAUX_TIR_EN_MARCHE, ALLURES, EPAULEMENT } from '../data/lecteur-animations.js?v=0.144.1';
+import { NOMS_CHAMPS } from '../data/poses-soldat.js?v=0.144.1';
+import { FLOTTANTS } from './pose-jeu.js?v=0.144.1';
 
 
 const I_TORSION = NOMS_CHAMPS.indexOf('torsion'), I_BUSTE = NOMS_CHAMPS.indexOf('buste'), I_TETE = NOMS_CHAMPS.indexOf('tete');
@@ -19,7 +19,7 @@ export function avecAnimation(h) {
 
 // `allures` (v0.141.2, les démarches) : { marche: [noms], repos: [noms] } de js/anim-modeles.js (`allures`), dont les animations sont dans `animations` ; chaque homme joue celles de son numéro,
 // à sa cadence, épaule avant son coup (`h.avant` : les secondes jusqu'au prochain, Infinity s'il n'est pas au feu) et tourne le buste vers sa cible en marchant (`h.vise`, rad). Sans `allures` : le jeu d'avant.
-// `h.geste` (les gestes d'attente, v0.143.6) : 'froid', 'pluie', 'guetteur' ou 'gestes' joue, au repos, la boucle de ce geste quand elle a été ajoutée (`ajouterGeste`), sinon le repos de son allure
+// `h.geste` (les gestes d'attente, v0.144.1) : 'froid', 'pluie', 'guetteur' ou 'gestes' joue, au repos, la boucle de ce geste quand elle a été ajoutée (`ajouterGeste`), sinon le repos de son allure
 export function creerJeuAnimations({ animations: liste = ANIMATIONS, allures = null, sortie = new Float32Array(FLOTTANTS) } = {}) {
   let animations = liste;
   const hommes = new Map(), duree = nom => animations.find(a => a.nom === nom).duree;

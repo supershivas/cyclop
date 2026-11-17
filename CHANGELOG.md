@@ -1,9 +1,14 @@
 # Journal des versions
 
-## 0.143.6 — 2026-11-17
+## 0.144.1 — 2026-11-17
 
 - Dans la tranchée, des gestes d'attente : par le froid ils tapent des pieds et se frottent les mains, sous la pluie ils rentrent la tête, un guetteur sur dix se redresse pour regarder puis se baisse, d'autres rajustent leur casque ou portent la main à la bouche
 - En haut à gauche, un seul bouton de pause (avec les vitesses) et la roue des réglages, qui donne aussi l'écran titre et « Quitter la partie » ; toute la colonne a la même largeur
+
+## 0.144.0 — 2026-11-17
+
+- Voir par ses yeux : le bouton de la fiche d'un de nos hommes prend sa place, à 1,60 m du sol, dans un champ de 70° ; la souris regarde (en haut comme en bas), ZQSD le fait marcher dans le sens du regard (la boue, l'eau, les murs et la fatigue comptent comme pour les autres)
+- Prototype : il ne tire pas encore (il continue de tirer tout seul quand le feu l'y pousse) ; Échap, le clic droit ou le bouton rendent la vue, et l'homme regagne sa place
 
 ## 0.143.5 — 2026-11-17
 

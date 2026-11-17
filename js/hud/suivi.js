@@ -7,7 +7,7 @@
 //    tonneau, l'écran rouge, jusqu'à l'écrasement.
 // Rien de neuf dans le moteur que quelques réglages de la vue (`vue.haut`, `dist`, `portee`, `hors`, `roulis`, `secousse`, rendu3d.js) : la caméra du jeu orbite déjà autour d'un point visé, ici ce point
 // suit l'engin. Le dessin seulement : aucune lecture n'écrit dans la bataille. La vue se libère d'un geste sur la caméra (déplacer, tourner), Échap, le clic droit, ou le bouton ; la vue d'avant revient.
-import { positionDe } from '../avions.js?v=0.144.0';
+import { positionDe } from '../avions.js?v=0.144.1';
 
 const SOL_Y = 3;           // le niveau moyen du sol que vise la caméra (rendu3d.js : `SOL_Y`), pour calculer `vue.haut`
 const PORTEE = 700;        // m : le plan lointain d'une vue verrouillée (au ras du sol, la vue porte loin)
@@ -25,13 +25,24 @@ const TIR = { vers: [0.18, 0.4], garde: 1.7, retour: 2.3, fin: 2.6, tele: 0.5 };
 // La souris oriente la vue à la personne (Jérôme, v0.143.0 : « bouger la souris bouge la vision ») : rad par pixel, et jusqu'où on lève ou baisse les yeux (rad, par rapport au tangage de l'engin)
 const SOURIS = { lacet: 0.0022, tangage: 0.0022, haut: -1.0, bas: 0.9, pas: 120 };      // pas : px au plus par événement
 const ECRASE = 3.2;        // s qu'on reste sur l'épave avant de rendre la vue
+// L'œil d'un soldat (Jérôme, v0.144.0 : « la vue FPS sur chaque soldat : on clique et on dirige le soldat, ZQSD et la souris ») : à 1,6 m du sol, un champ large (70° : la caméra du jeu est à 30°),
+// la caméra à 0,3 m derrière le point de l'œil (l'homme lui-même n'est pas dessiné : `rendu.cacherSoldat`), un plan proche de 0,12 m (les autres hommes s'approchent à bout de bras)
+const SOLDAT = { h: 1.6, fov: 70, zoom: 12, dist: 0.3, proche: 0.12, garde: 0.5, haut: -1.2, bas: 1.0 };
 
 const angle = d => d - 2 * Math.PI * Math.round(d / (2 * Math.PI));
 const chasseDe = cap => Math.atan2(-Math.cos(cap), -Math.sin(cap));      // l'angle de la caméra qui regarde dans la direction `cap`, posée « derrière » le point visé
 const doux = u => { u = Math.max(0, Math.min(1, u)); return u * u * (3 - 2 * u); };
 
 /* Ce que la vue colle : où est l'engin (x, y), où est l'œil de la vue à la personne (px, py, haut, cap, tangage), jusqu'où il regarde. Rend null s'il n'existe plus (un avion rentré). */
-function cibleDe(B, genre, id) {
+function cibleDe(B, genre, id, ctx = {}) {
+  if (genre === 'soldat') {
+    const A = B.armee, m = ctx.memo ?? {}; let i = m.indice ?? -1;
+    if (i < 0 || A.id[i] !== id) { i = indiceDe(B, id); m.indice = i; }
+    if (i < 0 || A.mort[i]) return null;
+    const P = ctx.positions, x = P && P.x.length > i ? P.x[i] : A.x[i], y = P && P.y.length > i ? P.y[i] : A.y[i];
+    const cap = A.camp[i] === 0 ? -Math.PI / 2 : Math.PI / 2;      // il regarde l'ennemi au départ (nous : le nord)
+    return { x, y, cap, regard: SOLDAT.h, zoom: SOLDAT.zoom, nom: 'Soldat', camp: A.camp[i], perso: { x, y, h: SOLDAT.h, cap, tangage: 0.0 } };
+  }
   if (genre === 'char') {
     const c = B.etat.chars.find(k => k.id === id); if (!c) return null;
     const cap = c.cap ?? Math.atan2(c.hy, c.hx), co = Math.cos(cap), si = Math.sin(cap);
@@ -52,7 +63,7 @@ function cibleDe(B, genre, id) {
     perso: { x: p.x + co * (sol ? 0 : BOUT), y: p.y + si * (sol ? 0 : BOUT), h: p.h + 0.3, cap: p.cap, tangage: 0.6, alt: true } };
 }
 
-export function creerSuivi({ $, bataille, rendu, reduit = () => false, retour = () => {}, dire = () => {}, verrou = document.body }) {
+export function creerSuivi({ $, bataille, rendu, reduit = () => false, retour = () => {}, dire = () => {}, verrou = document.body, touche = () => false }) {
   let s = null;          // { genre, id, mode: 'cinema' | 'personne', t, avant, tir, accident, fin }
   const badge = $('suivi'), nom = $('suivi-nom'), barres = $('cinema'), rouge = $('accident');
   $('suivi-liberer').onclick = () => liberer();
@@ -63,7 +74,8 @@ export function creerSuivi({ $, bataille, rendu, reduit = () => false, retour = 
     if (performance.now() < s.sourd) return;      // juste après la capture, Chrome compte le saut du pointeur vers le centre (jusqu'à 640 px mesurés : la vue partait de côté)
     const borne = v => Math.max(-SOURIS.pas, Math.min(SOURIS.pas, v || 0));
     s.lacet += borne(e.movementX) * SOURIS.lacet;
-    s.pitch = Math.max(SOURIS.haut, Math.min(SOURIS.bas, s.pitch + borne(e.movementY) * SOURIS.tangage));
+    const bas = s.genre === 'soldat' ? SOLDAT.haut : SOURIS.haut, haut = s.genre === 'soldat' ? SOLDAT.bas : SOURIS.bas;      // (de lever les yeux à baisser la tête)
+    s.pitch = Math.max(bas, Math.min(haut, s.pitch + borne(e.movementY) * SOURIS.tangage));
   });
   document.addEventListener('pointerlockchange', () => {
     if (!s) return;
@@ -75,9 +87,10 @@ export function creerSuivi({ $, bataille, rendu, reduit = () => false, retour = 
   function verrouiller(genre, id, mode) {
     const B = bataille(); if (!B) return false;
     if (s && s.genre === genre && s.id === id && s.mode === mode) { liberer(); return false; }      // le même bouton : on lâche
-    if (!cibleDe(B, genre, id)) { dire('Cet engin n\'est plus là.'); return false; }
+    if (!cibleDe(B, genre, id, { positions: rendu.positions })) { dire(genre === 'soldat' ? 'Cet homme n\'est plus là.' : 'Cet engin n\'est plus là.'); return false; }
     const avant = s?.avant ?? { yaw: rendu.vue.cible.yaw, tangage: rendu.vue.cible.tangage, zoom: rendu.vue.zoom, cx: rendu.vue.cx, cz: rendu.vue.cz, fov: rendu.vue.fov };
-    s = { genre, id, mode, t: 0, avant, neuf: true, tir: null, fin: 0, lacet: 0, pitch: 0, verrou: false, sourd: 0 };
+    s = { genre, id, mode, t: 0, avant, neuf: true, tir: null, fin: 0, lacet: 0, pitch: 0, verrou: false, sourd: 0, indice: -1 };
+    if (genre === 'soldat') rendu.cacherSoldat(id);
     if (mode === 'personne') { s.sourd = performance.now() + 400; prendreSouris(); } else rendreSouris();
     rendu.vue.roulis = 0; rendu.vue.secousse = 0; rendu.vue.fov = avant.fov;
     rouge.hidden = true; rouge.classList.remove('ecrase');
@@ -89,7 +102,8 @@ export function creerSuivi({ $, bataille, rendu, reduit = () => false, retour = 
     if (!s) return;
     const { avant } = s; s = null; rendreSouris();
     const V = rendu.vue;
-    V.haut = 0; V.dist = null; V.portee = 0; V.garde = null; V.hors = 0; V.roulis = 0; V.secousse = 0; V.fov = avant.fov;
+    rendu.cacherSoldat(-1); const Bl = bataille(); if (Bl) Bl.pilote = null; V.proche = null;
+    V.tgMin = null; V.haut = 0; V.dist = null; V.portee = 0; V.garde = null; V.hors = 0; V.roulis = 0; V.secousse = 0; V.fov = avant.fov;
     rendu.placerCamera(avant.yaw, avant.tangage); V.zoom = avant.zoom;
     retour(avant.cx, avant.cz);           // le point visé glisse jusqu'où il était
     badge.hidden = true; barres.hidden = true; rouge.hidden = true; rouge.classList.remove('ecrase');
@@ -106,8 +120,8 @@ export function creerSuivi({ $, bataille, rendu, reduit = () => false, retour = 
   function maj(dt) {
     if (!s) return;
     const B = bataille(); if (!B) { liberer(); return; }
-    const c = cibleDe(B, s.genre, s.id);
-    if (!c) { dire(s.genre === 'avion' ? 'L\'avion est rentré : la vue est libérée.' : 'La vue est libérée.'); liberer(); return; }
+    const c = cibleDe(B, s.genre, s.id, { memo: s, positions: rendu.positions });
+    if (!c) { dire(s.genre === 'avion' ? 'L\'avion est rentré : la vue est libérée.' : s.genre === 'soldat' ? 'Il est tombé : la vue est libérée.' : 'La vue est libérée.'); liberer(); return; }
     const perso = s.mode === 'personne', r = reduit(), V = rendu.vue, P = c.perso;
     s.t += dt;
     // l'avion tombé : on reste à bord ; on le quitte quelques secondes après l'écrasement
@@ -122,6 +136,8 @@ export function creerSuivi({ $, bataille, rendu, reduit = () => false, retour = 
     V.haut += (haut - V.haut) * (s.neuf || perso ? 1 : Math.min(1, dt * 6));
     V.portee = s.genre === 'avion' ? PORTEE_AVION : PORTEE; V.hors = HORS; V.zoom = perso ? PERSONNE.zoom : c.zoom; V.dist = perso ? PERSONNE.dist : null; V.garde = perso ? PERSONNE.garde : null;
     // le tir du char : la vue file vers l'explosion en téléobjectif et revient
+    const homme = s.genre === 'soldat';      // un soldat : l'œil est la vue, ZQSD le mène (v0.144.0)
+    if (homme) { V.zoom = SOLDAT.zoom; V.dist = SOLDAT.dist; V.garde = SOLDAT.garde; V.proche = SOLDAT.proche; V.tgMin = SOLDAT.haut; V.portee = PORTEE; }
     let tete = perso ? P.cap : c.cap, w = 0, secousse = 0;      // (la secousse ne reste que pour l'avion abattu)
     if (s.tir) {
       const T = s.tir; T.t += dt;
@@ -131,7 +147,7 @@ export function creerSuivi({ $, bataille, rendu, reduit = () => false, retour = 
         if (perso) { const vers = Math.atan2(T.ty - py, T.tx - px); tete = P.cap + angle(vers - P.cap) * w; }
       }
     }
-    V.fov = s.avant.fov * (1 - TIR.tele * w);
+    V.fov = homme ? SOLDAT.fov : s.avant.fov * (1 - TIR.tele * w);
     // l'angle : à la personne, dans la direction du regard ; au cinéma, derrière l'engin, puis un balayage lent autour de lui
     // la souris : le regard qu'on a choisi s'ajoute au cap de l'engin ; pendant le coup d'œil vers l'explosion la vue file d'abord vers elle (w), puis revient au regard choisi
     const libre = perso ? 1 - w : 0;
@@ -140,9 +156,16 @@ export function creerSuivi({ $, bataille, rendu, reduit = () => false, retour = 
     const voulu = chasse + balai, d = angle(voulu - V.cible.yaw);
     V.cible.yaw += d * (s.neuf ? 1 : perso ? Math.min(1, dt * (w > 0 || s.tir ? 14 : 24)) : Math.min(1, dt * 3)); if (s.neuf) V.yaw = V.cible.yaw;
     // l'inclinaison : à plat (le char), penchée vers le sol (l'avion), qui pique quand il tombe ; au cinéma, un va-et-vient bas
+    if (homme) V.cible.yaw = V.yaw = voulu;      // la souris, tout de suite : pas de retard sur le regard
     let tg = perso ? P.tangage + s.pitch * libre : CINEMA.tangage[0] + (r ? 0 : CINEMA.tangage[1] * Math.sin(s.t * 2 * Math.PI / CINEMA.periode) + CINEMA.tangage[2]);
     if (perso && (chute || epave)) tg = epave ? 1.2 : Math.min(1.2, (s.pique ?? P.tangage) + dt * 0.7), s.pique = tg;
-    V.cible.tangage = tg; if (s.neuf || (perso && chute)) V.tangage = tg;
+    if (homme) tg = s.pitch;
+    V.cible.tangage = tg; if (s.neuf || (perso && chute) || homme) V.tangage = tg;
+    // ZQSD (les touches physiques W, A, S, D : la même place en AZERTY et en QWERTY) : on marche dans le sens du regard ; la simulation lit `B.pilote` à chaque pas (army.js, `pasArmee`)
+    if (homme) {
+      const cap = P.cap + s.lacet, av = (touche('KeyW') ? 1 : 0) - (touche('KeyS') ? 1 : 0), la = (touche('KeyD') ? 1 : 0) - (touche('KeyA') ? 1 : 0);
+      B.pilote = { id: s.id, ax: av * Math.cos(cap) - la * Math.sin(cap), ay: av * Math.sin(cap) + la * Math.cos(cap) };
+    }
     // le tonneau et l'écran rouge de l'avion abattu (la vue à la personne seulement)
     if (perso && (chute || epave) && s.genre === 'avion') {
       V.roulis += (chute && !r ? 5 : 0) * dt;        // (le même tour par seconde que la vrille de la maquette : rendu/avions.js)
@@ -151,7 +174,7 @@ export function creerSuivi({ $, bataille, rendu, reduit = () => false, retour = 
     } else if (!perso || s.genre !== 'avion') V.roulis = 0;
     V.secousse = r ? 0 : secousse;
     s.neuf = false;
-    nom.textContent = `${c.nom}${c.camp !== undefined && c.camp !== (B.etat.moi ?? 0) ? ' ennemi' : ''} · ${perso ? 'à la personne' : 'vue verrouillée'} · Échap pour libérer`;
+    nom.textContent = `${c.nom}${c.camp !== undefined && c.camp !== (B.etat.moi ?? 0) ? ' ennemi' : ''} · ${homme ? 'ZQSD pour marcher, la souris pour regarder' : perso ? 'à la personne' : 'vue verrouillée'} · Échap pour libérer`;
   }
   return { verrouiller, liberer, maj, evenements, get actif() { return s; } };
 }

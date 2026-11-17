@@ -66,7 +66,7 @@ export const EPAULEMENT = { avance: 0.26, engage: 20, vise: 0.9, viseSilhouette:
 // · gestes : il rajuste son casque de la main gauche, puis la porte à sa bouche (souffler dans ses doigts, tirer sur sa cigarette).
 export const GESTES = {
   rampe: 0.05,
-  // qui joue quoi dans le jeu (Jérôme, v0.143.6 : « je retiens ta proposition ») : un guetteur sur dix d'une tranchée de première ligne, le froid et la pluie selon le temps du jour, les petits gestes
+  // qui joue quoi dans le jeu (Jérôme, v0.144.1 : « je retiens ta proposition ») : un guetteur sur dix d'une tranchée de première ligne, le froid et la pluie selon le temps du jour, les petits gestes
   // pour un homme sur quatre (dans cet ordre ; les autres : le repos vivant) ; chaque geste est généré au premier besoin pour `allures` allures (froid : ~70 ms une fois)
   jeu: { guetteur: 0.1, gestes: 0.25, allures: 8, temps: { gel: 'froid', neige: 'froid', tempete: 'froid', pluie: 'pluie' } },
   froid: { duree: 8, images: 64, vivant: 0.5, tete: 0.25, buste: 0.12, pieds: { frequence: 1.5, hanche: 0.32, genou: 0.62, fenetres: [[0.06, 0.36], [0.58, 0.84]] }, mains: { frequence: 2.5, ampleur: 0.035, fenetres: [[0.38, 0.56], [0.86, 0.99]] } },

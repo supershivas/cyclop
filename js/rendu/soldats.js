@@ -1,17 +1,17 @@
 // Les hommes : les soldats (une boîte et son ombre ; de près la silhouette, plus loin une silhouette allégée ; aux zooms 1 et 2 un point), les anneaux des
 // régiments choisis ou survolés, les corps (un homme couché) et les tombes (un tertre et une croix). Tout est instancié et ne reçoit que ce qu'on voit.
 // Le dessin seulement. Les formes viennent de geometries.js, le GLSL de shaders.js.
-import * as SH from './shaders.js?v=0.144.0';
-import { creerGeometries } from './geometries.js?v=0.144.0';
-import { classeDuRang } from '../data/grades.js?v=0.144.0';
-import { creerEquipeArticulee } from './soldat-articule.js?v=0.144.0';
-import { creerJeuAnimations } from './animation-jeu.js?v=0.144.0';
-import { allures, allure, reposGeste } from '../anim-modeles.js?v=0.144.0';
-import { ANIMATIONS } from '../data/animations.js?v=0.144.0';
-import { EPAULEMENT, MARCHE_JEU, GESTES } from '../data/lecteur-animations.js?v=0.144.0';
-import { SANG } from '../data/aspect-soldat.js?v=0.144.0';
-import { ligneY } from '../tranchees.js?v=0.144.0';
-import { profondeurALEcran } from './vue-ecran.js?v=0.144.0';
+import * as SH from './shaders.js?v=0.144.1';
+import { creerGeometries } from './geometries.js?v=0.144.1';
+import { classeDuRang } from '../data/grades.js?v=0.144.1';
+import { creerEquipeArticulee } from './soldat-articule.js?v=0.144.1';
+import { creerJeuAnimations } from './animation-jeu.js?v=0.144.1';
+import { allures, allure, reposGeste } from '../anim-modeles.js?v=0.144.1';
+import { ANIMATIONS } from '../data/animations.js?v=0.144.1';
+import { EPAULEMENT, MARCHE_JEU, GESTES } from '../data/lecteur-animations.js?v=0.144.1';
+import { SANG } from '../data/aspect-soldat.js?v=0.144.1';
+import { ligneY } from '../tranchees.js?v=0.144.1';
+import { profondeurALEcran } from './vue-ecran.js?v=0.144.1';
 
 // `THREE`, `scene`, `col`, `solUniforms` (`uSol`, `uTaille` : la texture du sol, que l'ombre d'un soldat reprend), `styleSoldat` (le style de près, comparé au labo),
 // `grades` (v0.68.0 : une variante de `GRADES`, data/grades.js, ou null : tous pareils) et `rangDe(B, id, reg)` (le rang d'un homme, bataille.js) ; `surface(x, z)` et `surfaceLisse(x, z)` (la hauteur du sol, lissée pour qui marche), `solY` (la hauteur moyenne du sol) et `POINTS_JUSQUA` (le zoom où un soldat n'est
@@ -29,7 +29,7 @@ export function creerSoldats({ THREE, scene, col, solUniforms, styleSoldat, grad
   let variete = null;
   const hach = (a, m) => (Math.imul(a, m) >>> 0) / 4294967296;
   const TIR_T = new Float32Array(1 << 16).fill(-1e9), FOSSE = new Int8Array(1 << 16), FX = new Float32Array(1 << 16).fill(1e9), FY = new Float32Array(1 << 16);       // son dernier coup de feu (l'horloge du dessin) ; est-il dans une tranchée (relu quand il a bougé de 0,5 m)
-  // (les gestes d'attente, v0.143.6) la ligne de tranchée où se tient un homme : son rang (0 : la première) et son camp, ou −1 ; relue quand il a bougé de 0,5 m
+  // (les gestes d'attente, v0.144.1) la ligne de tranchée où se tient un homme : son rang (0 : la première) et son camp, ou −1 ; relue quand il a bougé de 0,5 m
   const LIGNE = new Int8Array(1 << 16).fill(-1), LX = new Float32Array(1 << 16).fill(1e9), LY = new Float32Array(1 << 16);
   const premiereLigne = (id, x, y, camp, lignes) => {
     if (Math.abs(LX[id] - x) + Math.abs(LY[id] - y) > 0.5) { LX[id] = x; LY[id] = y; let d = 1.1, c = -1; for (const L of lignes) { const e = Math.abs(ligneY(L, x) - y); if (e < d) { d = e; c = L.rang * 2 + L.camp; } } LIGNE[id] = c; }
@@ -333,6 +333,7 @@ export function creerSoldats({ THREE, scene, col, solUniforms, styleSoldat, grad
     tombesPoints.geometry.setDrawRange(0, k);
     tombesInst.geometry.instanceCount = k;
   }
+  let cache = -1;      // le numéro de l'homme qu'on ne dessine pas (v0.144.0 : la vue d'un soldat)
   // les positions dans les tampons : seulement ceux qu'on voit (`x0`…`z1` : le rectangle englobant du sol vu ; `e` : la matrice écran ; `p` : les pixels par mètre)
   function maj({ x0, x1, z0, z1, e, p, choisis, vh = 400, pos = null }) {
     const B = bataille();
@@ -361,6 +362,7 @@ export function creerSoldats({ THREE, scene, col, solUniforms, styleSoldat, grad
       const garde = artCfg.garde ?? 1;
       let nc = 0;
       for (let i = 0; i < n; i++) {
+        if (A.id[i] === cache) continue;
         let x = AX[i], y = AY[i];
         const iv = A.id[i] & 0xffff;
         if (variete) { x += variete.rang * (hach(iv + 31, 2246822519) * 2 - 1); y += variete.rang * (hach(iv + 113, 3266489917) * 2 - 1); }
@@ -385,6 +387,7 @@ export function creerSoldats({ THREE, scene, col, solUniforms, styleSoldat, grad
       if (animJeu) animJeu.debut();
     }
     for (let i = 0; i < n; i++) {
+      if (A.id[i] === cache) continue;      // l'homme que le joueur pilote : l'œil est dedans (v0.144.0)
       let x = AX[i], y = AY[i];
       if (variete) { const iv = A.id[i] & 0xffff; x += variete.rang * (hach(iv + 31, 2246822519) * 2 - 1); y += variete.rang * (hach(iv + 113, 3266489917) * 2 - 1); }      // sa place dans le rang : un écart fixe, tiré de son numéro
       if (x < x0 || x > x1 || y < z0 || y > z1) continue;
@@ -531,6 +534,7 @@ export function creerSoldats({ THREE, scene, col, solUniforms, styleSoldat, grad
     setSang(v) { soldatMat.uniforms.uSang.value = Math.max(0, Math.min(1, +v || 0)); },      // la force des taches de sang (0 : aucune)             // les jambes qui marchent
     preparer(B) { CAPS.fill(NaN); SANGS.fill(0); tSang = 0; TIR_T.fill(-1e9); FX.fill(1e9); LX.fill(1e9); preparerSoldats(B.armee.capacite); preparerCorps(Math.max(1024, B.etat.corps.length * 2)); preparerTombes(Math.max(256, (B.etat.tombes?.length || 0) * 2)); },
     maj,
+    cacher(id) { cache = id; },                                   // l'homme qu'on ne dessine pas (le numéro de l'armée, −1 : aucun)
     survoler(reg) { survolReg = reg; },                            // le régiment qu'un anneau à la couleur de son camp désigne
     get legere() { return legerActif; }, set legere(v) { legerActif = !!v; },     // la silhouette allégée (la mesure du coût l'éteint)
     get sansInterface() { return sansInterface; }, set sansInterface(v) { sansInterface = !!v; },      // le décor de l'écran titre : aucune lettre de capitaine, rien qui soit de l'interface (Jérôme, v0.100.0)
