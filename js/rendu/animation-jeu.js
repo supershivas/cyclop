@@ -8,7 +8,7 @@ import { NOMS_CHAMPS } from '../data/poses-soldat.js?v=0.144.0';
 import { FLOTTANTS } from './pose-jeu.js?v=0.144.0';
 
 
-const I_TORSION = NOMS_CHAMPS.indexOf('torsion');
+const I_TORSION = NOMS_CHAMPS.indexOf('torsion'), I_BUSTE = NOMS_CHAMPS.indexOf('buste'), I_TETE = NOMS_CHAMPS.indexOf('tete');
 const lisse = (a, b, x) => { const k = Math.min(1, Math.max(0, (x - a) / (b - a))); return k * k * (3 - 2 * k); };
 
 // h : { vit, tir (comme soldats.js l'écrit : −1 feu retenu, 0..1 l'épaule, 2..3 la mêlée), coup (le `tirVal` brut : 1 au coup de feu, puis il retombe), tapi, couche, blessure, rang | aspect.rang }
@@ -22,7 +22,7 @@ export function avecAnimation(h) {
 export function creerJeuAnimations({ animations = ANIMATIONS, allures = null, sortie = new Float32Array(FLOTTANTS) } = {}) {
   const hommes = new Map(), duree = nom => animations.find(a => a.nom === nom).duree;
   const animMarche = duree(ANIM_JEU.marche), animTir = animations.find(a => a.nom === ANIM_JEU.tir);
-  const K = allures ? allures.marche.length : 0, dureesMarche = allures ? allures.marche.map(duree) : null;
+  const K = allures ? allures.marche.length : 0, dureesMarche = allures ? allures.marche.map(duree) : null, dureesRepos = allures ? allures.repos.map(duree) : null;
   const nomTir = allures?.tir ?? ANIM_JEU.tir, animTirJoue = animations.find(a => a.nom === nomTir);       // (les démarches : le tir épaulé, la crosse à l'épaule)
   let image = 0;
   return {
@@ -35,7 +35,7 @@ export function creerJeuAnimations({ animations = ANIMATIONS, allures = null, so
       const coup = h.coup ?? 0;
       if (!e) {
         const u = (Math.imul(id + 1, 2654435761) >>> 0) / 4294967296, k = K ? (Math.imul(id + 7, 2246822519) >>> 0) % K : -1;      // (son allure : un autre hachage de son numéro)
-        hommes.set(id, e = { etat: nouvelEtat(), ta: u * (K ? dureesMarche[k] : animMarche), t: t, coup, tir: null, vu: 0, k,
+        hommes.set(id, e = { etat: nouvelEtat(), ta: u * (K ? dureesMarche[k] : animMarche), tr: K ? ((Math.imul(id + 29, 1597334677) >>> 0) / 4294967296) * dureesRepos[k] : 0, t: t, coup, tir: null, vu: 0, k,
           cad: K ? 1 + ALLURES.cadence * (2 * ((Math.imul(id + 13, 3266489917) >>> 0) / 4294967296) - 1) : 1 });       // (la foulée de départ : un hachage du numéro, pour que la troupe ne marche pas au pas)
       }
       e.vu = image;
@@ -47,9 +47,10 @@ export function creerJeuAnimations({ animations = ANIMATIONS, allures = null, so
       // (les démarches) il épaule AVANT son coup : l'animation part pour que son recul (à `avance` s de son début) tombe avec le coup de feu
       if (K && !e.tir && h.avant < EPAULEMENT.avance) e.tir = { anim: nomTir, depart: t - (EPAULEMENT.avance - Math.max(0, h.avant)), canaux: marche ? CANAUX_TIR_EN_MARCHE : undefined };
       e.coup = coup;
-      const couches = [marche ? { anim: K ? allures.marche[e.k] : ANIM_JEU.marche, cle: 'marche', depart: t - e.ta } : { anim: K ? allures.repos[e.k] : ANIM_JEU.repos, cle: 'repos', depart: 0 }];
+      const couches = [marche ? { anim: K ? allures.marche[e.k] : ANIM_JEU.marche, cle: 'marche', depart: t - e.ta } : { anim: K ? allures.repos[e.k] : ANIM_JEU.repos, cle: 'repos', depart: -e.tr }];
       if (e.tir) { e.tir.canaux = marche ? CANAUX_TIR_EN_MARCHE : undefined; couches.push(e.tir); }  // (en marche : les bras et le fusil du tir ; à l'arrêt : tout)
-      sortie.set(etatAnimationTab(e.etat, couches, t, { animations }));       // (28 flottants : les 7 texels sont pleins)
+      sortie.set(etatAnimationTab(e.etat, couches, t, { animations }));
+      if (h.courbe && marche) { sortie[I_BUSTE] += MARCHE_JEU.courbe.buste; sortie[I_TETE] += MARCHE_JEU.courbe.tete; }      // (v0.142.3) il court courbé sous le feu       // (28 flottants : les 7 texels sont pleins)
       // (les démarches) il vise en marchant : le buste tourne vers sa cible pendant le tir (la torsion), le temps que le fusil se lève et jusqu'à ce qu'il redescende
       if (K && e.tir && h.vise) { const tt = t - e.tir.depart; sortie[I_TORSION] += h.vise * lisse(0, 0.2, tt) * (1 - lisse(0.8, 1, tt)); }
       return sortie;

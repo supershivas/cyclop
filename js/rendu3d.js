@@ -143,7 +143,7 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
   // Les ombres du relief (labo « La lumière dans le relief », éteintes dans le jeu) : une case que le soleil ne voit pas prend la couleur de sa paroi dans la texture du sol ; le soleil du labo : saisons, azimut
   let ombresRelief = false, ombresNuages = false, soleilReglage = null, ombreVu = null;
   const ombres = creerOmbresRelief({ hauteurQ });
-  let boueSoldats = 0, sangSoldats = 0, varieteSoldats = null, demarchesSoldats = false, eauSol = false, eauTex = null, eauVu = -1, eauDe = null, ombresCarte = false, sombreVu = 0, fum = null, lampesSol = null, ombresSolCachees = false, omRT = null, omCam = null, omInv = null, omInfo = null, aoSol = false, soleilSol = false, abrisSol = false, flaquesSol = false, flaque = 0, aoTex = null, aoAttente = 0, aoSale = false;      // l'ouverture au ciel du relief (éteinte : `rendu.aoSol`) ; sa texture n'est créée qu'au premier besoin (un objet de plus d'emblée décale les tirages d'identifiants de three : les images de référence)
+  let boueSoldats = 0, sangSoldats = 0, varieteSoldats = null, demarchesSoldats = false, reposVivantSoldats = false, eauSol = false, eauTex = null, eauVu = -1, eauDe = null, ombresCarte = false, sombreVu = 0, fum = null, lampesSol = null, ombresSolCachees = false, omRT = null, omCam = null, omInv = null, omInfo = null, aoSol = false, soleilSol = false, abrisSol = false, flaquesSol = false, flaque = 0, aoTex = null, aoAttente = 0, aoSale = false;      // l'ouverture au ciel du relief (éteinte : `rendu.aoSol`) ; sa texture n'est créée qu'au premier besoin (un objet de plus d'emblée décale les tirages d'identifiants de three : les images de référence)
   const ao = creerAOSol({ hauteurQ });
   const soleilCase = { x: 0, z: 0 }, ecriture = { ms: 0, n: 0, rangees: 0, max: 0, maxOmbre: 0 };      // mesure : la réécriture de la texture du sol
   let B = null, T = null, faux = null, fauxU = null;
@@ -915,6 +915,8 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
     set eclairage(v) { eauSol = v !== 'bas'; soleilSol = aoSol = true; abrisSol = flaquesSol = v === 'moyen' || v === 'haut'; ombresCarte = v === 'haut'; temps.eclairs = ombresCarte; },
     get ombresCarte() { return ombresCarte; },
     set ombresCarte(v) { ombresCarte = !!v; },                        // la carte d'ombre des soldats sur le sol (session 3 ; éteinte)
+    get reposVivant() { return reposVivantSoldats; },
+    set reposVivant(v) { reposVivantSoldats = !!v; soldats.setReposVivant(reposVivantSoldats); },      // (labo) au repos, ils respirent, se balancent, passent d'une jambe sur l'autre, regardent autour d'eux, rajustent leur prise (ALLURES.vivant)
     get demarches() { return demarchesSoldats; },
     set demarches(v) { demarchesSoldats = !!v; soldats.setDemarches(demarchesSoldats); },      // (labo) des démarches différentes pour chaque homme, le fusil à deux mains, l'épaulement avant le coup (data/lecteur-animations.js : ALLURES, EPAULEMENT)
     get varieteSoldats() { return varieteSoldats; },
@@ -1028,13 +1030,13 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
     // une fumée qui dérive, posée en (x, z) (l'écran titre en épaissit le champ)
     clignoter: troncons.clignoter,
     set surligneEngins(v) { surligneEngins = !!v; },       // le génie vise ou le bâtiment est ouvert : les engins abîmés du parc sont cerclés (v0.130.0)
+    cacherSoldat(id) { soldats.cacher(id); },      // l'homme que le joueur pilote ne se dessine pas : l'œil est dedans (v0.144.0)
     set marquesParc(v) { marquesParc = v && v.length ? v : null; },       // les engins du parc dont l'ordre est armé : cerclés d'os comme une sélection (v0.140.0)
     set aretesPonts(v) { aretesPonts = !!v; },       // le génie vise : les ponts coupés se montrent en arêtes (v0.67.0)
-    cacherSoldat(id) { soldats.cacher(id); },      // l'homme que le joueur pilote ne se dessine pas : l'œil est dedans (v0.144.0)
     survoler(reg, troncons) { soldats.survoler(reg); survolTroncons = troncons; },
     surligner(s) { troncons.surligner(s); },
     get legere() { return soldats.legere; }, set legere(v) { soldats.legere = v; },
-    get articule() { return soldats.articule; }, set articule(v) { soldats.articule = v; }, set animations(v) { soldats.animations = v; }, set aspectDe(f) { soldats.aspectDe = f; },      // les soldats articulés de près (v0.105.0)
+    get articule() { return soldats.articule; }, set articule(v) { soldats.articule = v; }, set animations(v) { soldats.animations = v; }, set aspectDe(f) { soldats.aspectDe = f; }, get articulesSel() { return soldats.articulesSel; },      // les soldats articulés de près (v0.105.0)
     fumer(x, z) { eclats.fumer(x, z); },
     reglerBuissons(o) { vegetation.reglerBuissons(o); },        // les buissons variés (null : ceux d'avant) ; le labo
     reglerArbres(o) { vegetation.regler(o); },           // les arbres variés (null : ceux d'avant) ; le labo et la mesure

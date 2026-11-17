@@ -22,7 +22,8 @@ const FACTEUR = 2;
 
 // Les groupes de curseurs : [titre, [champ, nom]]
 const GROUPES = [
-  ['Corps', [['buste', 'Buste'], ['tete', 'Tête'], ['descente', 'Baissé (m)'], ['poussee', 'Poussée (m)'], ['basques', 'Basques'], ['couche', 'Couché']]],
+  ['Corps', [['buste', 'Buste'], ['tete', 'Tête'], ['descente', 'Baissé (m)'], ['poussee', 'Poussée (m)'], ['basques', 'Basques'], ['couche', 'Couché'], ['appui', 'Appui (m)']]],
+  ['Épaules', [['torsion', 'Torsion'], ['roulis', 'Roulis']]],      // (v0.142.1 : la démarche ; sans ces curseurs l'atelier plantait au premier dessin)
   ['Jambe gauche', [['hancheG', 'Hanche'], ['genouG', 'Genou'], ['chevilleG', 'Cheville']]],
   ['Jambe droite', [['hancheD', 'Hanche'], ['genouD', 'Genou'], ['chevilleD', 'Cheville']]],
   ['Bras gauche', [['epauleG', 'Épaule'], ['coudeG', 'Coude'], ['convG', 'Épaule (tour)']]],

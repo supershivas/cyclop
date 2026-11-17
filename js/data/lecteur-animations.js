@@ -13,6 +13,9 @@ export const MARCHE_JEU = {
   seuil: 0.05,       // m/s au-dessus duquel l'homme marche (en dessous : le repos ; évite que le bruit de la vitesse alterne marche et repos)
   reference: 1,      // m/s où la marche se lit à vitesse normale (0,8 s la foulée, comme la phase 8 rad/s d'avant)
   lectureMin: 0.5, lectureMax: 1.6,       // bornes de la vitesse de lecture (un homme lent ne fige pas, un homme qui court ne bat pas des ailes)
+  // (v0.142.3, Jérôme : « après un bombardement, les soldats avancent sur les genoux ») l'homme qui a peur et se déplace court courbé : le buste penché, la tête relevée pour voir devant ;
+  // accroupi seulement quand il ne bouge pas (avant, il glissait accroupi, les jambes immobiles)
+  courbe: { vitesse: 0.3, buste: 0.5, tete: -0.3 },
   saut: 0.3,         // une montée de `tirVal` d'au moins cela d'une image à l'autre est un nouveau coup de feu (la retombée ne fait que 0,03 par image)
 };
 
@@ -38,6 +41,11 @@ export const ALLURES = {
   port: { flexion: [-0.76, -0.64], lacet: [0.25, 0.35], crosseY: [0.93, 0.98] },
   // au repos, le poids sur une jambe : la hanche qui glisse vers elle, l'autre genou un peu plié, les épaules qui compensent
   repos: { appui: [0.015, 0.045], hanche: [0.05, 0.15], genou: [0.12, 0.3], roulis: 0.02, torsion: 0.05 },
+  // le repos vivant (Jérôme, 17 nov. : « des mouvements simples lorsque les soldats attendent dans les tranchées : balancement du corps, de la tête, des mains qui tiennent les fusils ») :
+  // une boucle de `periode` secondes, à phase propre à chaque homme, en `images` images ; il respire (`souffle` : le buste, trois fois par boucle), se balance (`balance`, m), passe le poids
+  // d'une jambe sur l'autre (une fois par boucle), baisse et relève la tête (`tete`), jette un coup d'œil d'un côté puis de l'autre (`regard` : le buste tourne, la tête avec), rajuste sa prise
+  // (`prise` : la pente et le roulis du fusil, les mains le suivent) ; les amplitudes sont tirées dans ces plages pour chaque allure
+  vivant: { periode: [6, 9], images: 16, souffle: [0.012, 0.025], balance: [0.006, 0.016], tete: [0.04, 0.12], regard: [0.1, 0.3], prise: [0.03, 0.09] },
 };
 
 // L'épaulement (Jérôme, 17 nov. : « des tirs avec épaulement depuis la marche ») : l'homme lève son fusil AVANT le coup (le compte à rebours de l'armée, `tirT`, se lit),
@@ -46,7 +54,20 @@ export const ALLURES = {
 // à moins de `viseSilhouette`. Les silhouettes : le fusil levé `tenue` secondes après le coup, puis baissé en `baisse` secondes.
 // Le tir épaulé : l'épaule gauche avancée (`torsion` : de face, la main gauche n'atteignait pas le fût, 30 cm trop court), la crosse au creux de l'épaule droite (`crosse` : l'écart à l'épaule, en mètres),
 // la pente du fusil (presque horizontale, le canon droit devant : le lacet défait la torsion), où se posent les mains le long du fusil (hauteur du modèle : 0,55 la crosse, 1,95 la bouche) ; `tete` : baissée sur la crosse ;
-// le recul : le canon qui monte, la crosse qui recule, le buste qui part en arrière. Trouvé par un balayage : les deux mains à moins d'un millimètre du fusil.
+// le recul : le canon qui monte, la crosse qui recule, le buste qui part en arrière. Trouvé par un balayage : les deux mains à moins d'un millimètre du fusil (refait en v0.142.3, le buste penché enfin en avant).
 // (La pose de tir d'avant faisait pivoter le fusil à 1,30 m de son pied : la crosse passait 75 cm derrière le dos, ce qui se voit de profil.)
-export const TIR_EPAULE = { torsion: 0.35, crosse: [-0.13, -0.02, 0.1], flexion: -1.66, roulis: 0, mainDroite: 0.8, mainGauche: 0.95, tete: 0.14, buste: 0.12, reculFlexion: 0.12, reculZ: -0.04, reculBuste: -0.05 };
+export const TIR_EPAULE = { torsion: 0.25, crosse: [-0.13, -0.02, 0.1], flexion: -1.42, roulis: 0, mainDroite: 0.8, mainGauche: 0.95, tete: 0.14, buste: 0.12, reculFlexion: 0.12, reculZ: -0.04, reculBuste: -0.05 };
 export const EPAULEMENT = { avance: 0.26, engage: 20, vise: 0.9, viseSilhouette: 0.5, tenue: 0.45, baisse: 0.3 };
+
+// Les gestes d'attente (Jérôme, 17 nov. : « selon le temps », « le guetteur », « les petits gestes » ; au labo) : des boucles de repos, une par allure (js/anim-modeles.js, `reposGeste`), sur le repos vivant
+// adouci (`vivant` : la part de ses amplitudes). Les fenêtres sont des fractions de la boucle (début, fin) ; `rampe` : la part de boucle pour entrer et sortir d'un geste.
+// · froid : il tape des pieds par salves (`pieds` : la cadence en Hz, la hanche et le genou levés), se frotte les mains (`mains` : la main gauche quitte le fût pour la poignée, va et vient), la tête rentrée ;
+// · pluie : la tête baissée, le dos rond ; · guetteur : il se redresse pour regarder au loin (`regard` : le balayage), puis se baisse à l'abri (`baisse` : les genoux pliés, rad) ;
+// · gestes : il rajuste son casque de la main gauche, puis la porte à sa bouche (souffler dans ses doigts, tirer sur sa cigarette).
+export const GESTES = {
+  rampe: 0.05,
+  froid: { duree: 8, images: 64, vivant: 0.5, tete: 0.25, buste: 0.12, pieds: { frequence: 1.5, hanche: 0.32, genou: 0.62, fenetres: [[0.06, 0.36], [0.58, 0.84]] }, mains: { frequence: 2.5, ampleur: 0.035, fenetres: [[0.38, 0.56], [0.86, 0.99]] } },
+  pluie: { duree: 7, images: 16, vivant: 0.6, tete: 0.4, buste: 0.2 },
+  guetteur: { duree: 9, images: 36, vivant: 0.3, debout: [0.04, 0.46], regard: 0.45, baisse: 0.75, teteDebout: -0.22, teteBas: 0.15, busteBas: 0.25 },
+  gestes: { duree: 10, images: 40, vivant: 0.6, casque: [0.12, 0.32], bouche: [0.55, 0.78] },
+};

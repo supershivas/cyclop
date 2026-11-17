@@ -193,6 +193,7 @@ rendu.aspectDe = (Bt, id, camp) => {
 rendu.animations = animationsJeu;       // les animations d'origine, remplacées nom pour nom par celles que l'atelier a publiées
 rendu.articule = ARTICULE;
 rendu.sangSoldats = SANG.force;                    // le sang des blessés, des morts et du corps à corps (Jérôme, v0.140.2)
+rendu.reposVivant = true;                          // au repos, ils respirent, se balancent, passent d'une jambe sur l'autre, regardent autour d'eux, rajustent leur prise (Jérôme, v0.143.4 ; ALLURES.vivant)
 rendu.demarches = true;                            // les démarches : une allure par homme, le fusil à deux mains, l'épaulement avant le coup (Jérôme, v0.142.2 ; data/lecteur-animations.js : ALLURES, EPAULEMENT)
 rendu.varieteSoldats = VARIETE_SOLDATS;            // des soldats tous différents : le ton, le regard, le rang, des hommes assis dans la tranchée (Jérôme, v0.141.1)
 rendu.boueSoldats = BOUE_SOLDATS;                  // la boue sur les hommes, qui monte avec les jours (Jérôme, v0.139.2)

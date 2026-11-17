@@ -136,12 +136,12 @@ function cadre(P, car) {
   const wd = car.epaules, sq = Math.sqrt(wd), sl = car.taille * car.jambes, st = car.taille * (1 + (1 - car.jambes) * 0.6);
   const mp = (p, xs, zs) => [p[0] * xs, p[1] <= 0.9 ? p[1] * sl : 0.9 * sl + (p[1] - 0.9) * st, p[2] * zs];
   const hanche = mp([0, 0.9, 0], 1, 1);
-  // le haut : penché (buste), poussé, puis tourné contre les hanches (torsion) et penché de côté (roulis) ; le tout : le poids reporté de côté (appui : 0 aux pieds, entier dès la hanche), baissé, couché
-  const haut = p => { let q = rxp(p, hanche, P.buste); q[2] += P.poussee * Math.max(0, q[1] - 0.6); if (P.torsion) q = ryp(q, hanche, P.torsion); if (P.roulis) q = rzp(q, hanche, P.roulis); return q; };
+  // le haut : penché en avant (buste positif ; v0.142.3, il partait en arrière), poussé, puis tourné contre les hanches (torsion) et penché de côté (roulis) ; le tout : le poids reporté de côté (appui : 0 aux pieds, entier dès la hanche), baissé, couché
+  const haut = p => { let q = rxp(p, hanche, -P.buste); q[2] += P.poussee * Math.max(0, q[1] - 0.6); if (P.torsion) q = ryp(q, hanche, P.torsion); if (P.roulis) q = rzp(q, hanche, P.roulis); return q; };
   const appuiDe = y => P.appui * Math.min(1, Math.max(0, y / hanche[1]));
   const global = p => { let q = [p[0] + appuiDe(p[1]), p[1] - P.descente, p[2]]; if (P.couche > 0.5) { q = rxp(q, [0, 0, 0], 1.5708); q[1] += 0.16; } return q; };
   const sansGlobal = q => { let p = [q[0], q[1], q[2]]; if (P.couche > 0.5) { p[1] -= 0.16; p = rxp(p, [0, 0, 0], -1.5708); } const y = p[1] + P.descente; return [p[0] - appuiDe(y), y, p[2]]; };
-  const sansHaut = q => { let p = [q[0], q[1], q[2]]; if (P.roulis) p = rzp(p, hanche, -P.roulis); if (P.torsion) p = ryp(p, hanche, -P.torsion); return rxp([p[0], p[1], p[2] - P.poussee * Math.max(0, p[1] - 0.6)], hanche, -P.buste); };
+  const sansHaut = q => { let p = [q[0], q[1], q[2]]; if (P.roulis) p = rzp(p, hanche, -P.roulis); if (P.torsion) p = ryp(p, hanche, -P.torsion); return rxp([p[0], p[1], p[2] - P.poussee * Math.max(0, p[1] - 0.6)], hanche, P.buste); };
   return { wd, sq, sl, st, mp, hanche, haut, global, sansGlobal, sansHaut };
 }
 
@@ -178,10 +178,10 @@ export function articulations(pose, car = CARRURE_NEUTRE) {
     J['main' + g] = { nom: `Main ${nom}`, pos: aHaut(bras(rxp(mp([c * 0.30, 0.76, 0], wd, 1), ep, P['coude' + g]))), rots: [], passif: true, ik: 'bras', deplace: [{ ik: true, axe: [1, 0, 0] }, { ik: true, axe: [0, 1, 0] }, { ik: true, axe: [0, 0, 1] }] };
   }
   // le buste (pivot : la hanche) et la tête
-  J.bassin = { nom: 'Buste (pivot : la hanche)', pos: global(hanche), rots: [{ champ: 'buste', axe: dir(global, hanche, X), signe: -1 }, { champ: 'torsion', axe: dir(global, hanche, Y), signe: 1 }, { champ: 'roulis', axe: dir(global, hanche, Z), signe: 1 }] };
+  J.bassin = { nom: 'Buste (pivot : la hanche)', pos: global(hanche), rots: [{ champ: 'buste', axe: dir(global, hanche, X), signe: 1 }, { champ: 'torsion', axe: dir(global, hanche, Y), signe: 1 }, { champ: 'roulis', axe: dir(global, hanche, Z), signe: 1 }] };
   const cou = mp([0, 1.42, 0], 1, 1);
-  J.tete = { nom: 'Tête', pos: aHaut(cou), rots: [{ champ: 'tete', axe: dir(aHaut, cou, X), signe: -1 }] };
-  J.crane = { nom: 'Sommet de la tête', pos: aHaut(rxp(mp([0, 1.64, 0], 1, 1), cou, P.tete)), rots: [], passif: true };
+  J.tete = { nom: 'Tête', pos: aHaut(cou), rots: [{ champ: 'tete', axe: dir(aHaut, cou, X), signe: 1 }] };
+  J.crane = { nom: 'Sommet de la tête', pos: aHaut(rxp(mp([0, 1.64, 0], 1, 1), cou, -P.tete)), rots: [], passif: true };
   // le fusil, un corps à lui : sa flexion (autour de x, au pivot), puis le lacet (y) et le roulis (z) autour de son axe (à 0,395 m de l'axe du corps, décalé comme lui), puis sa poussée en avant et sa hauteur
   const fp = mp([0, P.fusilY, 0], 1, 1), c = [(0.395 + P.fusilX) * wd, fp[1], 0], cT = [c[0], c[1] + P.fusilH, P.fusilZ];
   const roulis = q => rzp(q, c, P.fusilRoulis);

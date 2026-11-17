@@ -5,6 +5,30 @@
 - Voir par ses yeux : le bouton de la fiche d'un de nos hommes prend sa place, à 1,60 m du sol, dans un champ de 70° ; la souris regarde (en haut comme en bas), ZQSD le fait marcher dans le sens du regard (la boue, l'eau, les murs et la fatigue comptent comme pour les autres)
 - Prototype : il ne tire pas encore (il continue de tirer tout seul quand le feu l'y pousse) ; Échap, le clic droit ou le bouton rendent la vue, et l'homme regagne sa place
 
+## 0.143.5 — 2026-11-17
+
+- Au labo, à trancher : des gestes d'attente dans la tranchée (taper des pieds et se frotter les mains par le froid, le dos rond sous la pluie, le guetteur qui se redresse et se baisse, rajuster son casque, la main à la bouche) ; le jeu ne change pas
+
+## 0.143.4 — 2026-11-17
+
+- Au repos, les soldats ne sont plus figés : ils respirent, se balancent, passent le poids d'une jambe sur l'autre, regardent autour d'eux, rajustent leur prise sur le fusil
+- De près, les casques sont des dômes : l'Adrian avec son bord, le Stahlhelm avec sa jupe évasée
+
+## 0.143.3 — 2026-11-17
+
+- Au labo, à trancher : le repos vivant dans la tranchée (ils respirent, se balancent, passent d'une jambe sur l'autre, regardent autour d'eux, rajustent leur prise) et des casques plus ronds de près ; le jeu ne change pas
+
+## 0.143.2 — 2026-11-17
+
+- Les soldats qui ont peur ne glissent plus sur les genoux : s'ils se déplacent, ils courent courbés ; ils ne s'accroupissent qu'à l'arrêt
+- De près, les soldats se penchent enfin en avant (accroupis, en marchant, en tirant, à genoux) et baissent la tête : ils se penchaient en arrière
+- L'atelier d'animation s'ouvre de nouveau
+
+## 0.143.1 — 2026-11-17
+
+- Au premier plan, aucun soldat ne surgit plus quand la caméra bouge : un homme dont on voit le buste ou la tête reste dessiné, même si ses pieds sont sous le bord de l'écran
+- De près, le détail des soldats (squelette, visage) va aux 250 plus proches de la caméra : le premier plan ne passe plus en basse résolution quand on incline la vue
+
 ## 0.143.0 — 2026-11-17
 
 - Dans la vue à la personne d'un char, d'un poste de mitrailleuse ou d'un avion, la souris tourne et lève la vue : on décide de ce qu'on voit (Échap, ou le clic droit, rend la souris et la vue d'avant)
