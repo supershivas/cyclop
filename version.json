@@ -1,8 +1,7 @@
 {
-  "version": "0.141.0",
-  "date": "2026-11-16",
+  "version": "0.141.1",
+  "date": "2026-11-17",
   "changes": [
-    "Chaque unité porte l'écusson de son arme : bannière numérotée pour les régiments, carré à chenille pour les chars, triangle pour les mitrailleuses, cocarde ailée pour les avions, écu rond pour le génie",
-    "En bas, les cartes des régiments deviennent des vignettes à écusson ; le nom et les chiffres sont dans l'infobulle"
+    "Les écussons des régiments disparaissent quand leurs hommes sortent de l'écran"
   ]
 }

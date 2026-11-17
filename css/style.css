@@ -3,6 +3,11 @@
    Les plaques du HUD sont opaques (une plaque, jamais une ombre portée : un
    libellé sur un fond qui bouge doit rester lisible, LECONS.md). */
 
+/* `hidden` cache, toujours (v0.141.1). Le piège a coûté trois fois : une règle `display: grid` ou `flex` posée sur une classe (`.char-etiq`, v0.101.0 ; `.etiquette.reg-ecu`, v0.141.0 :
+   les écussons des régiments restaient à l'écran quand leurs hommes en étaient sortis) a le même poids que `.x[hidden] { display: none }` et l'annule si elle vient après. Une seule règle,
+   `!important`, pour tous ; les seuls éléments qui gardent leur place en étant cachés (ils jouent sur `visibility` ou `opacity`) sont nommés ici. */
+[hidden]:not(.terrain):not(.frise-icone):not(.jeu-toast) { display: none !important; }
+
 :root {
   /* LE DESIGN SYSTEM (docs/design-system.md) : tout ce qui suit est une valeur de ces échelles, jamais un nombre au cas par cas */
   --jeu-police: ui-monospace, 'DejaVu Sans Mono', Menlo, Consolas, monospace;

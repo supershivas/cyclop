@@ -1,5 +1,9 @@
 # Journal des versions
 
+## 0.141.1 — 2026-11-17
+
+- Les écussons des régiments disparaissent quand leurs hommes sortent de l'écran (ils restaient affichés à leur dernière place)
+
 ## 0.141.0 — 2026-11-16
 
 - Chaque unité porte l'écusson de son arme, à la couleur de son camp, sa barre au-dessus : la bannière numérotée pour un régiment, le carré à chenille pour un char, le triangle au trépied pour une mitrailleuse, la cocarde ailée à l'hirondelle pour un avion, l'écu rond aux outils croisés pour le génie ; un liseré qui marche quand un régiment fléchit

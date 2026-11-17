@@ -34,7 +34,9 @@ const empreinte = ignorer => page.evaluate(ignorer => {
 }, ignorer);
 
 const etapes = {};
-async function etape(nom) { await page.waitForTimeout(250); etapes[nom] = await empreinte(ignorer); }
+// (v0.141.1) un élément `hidden` qui s'affiche est une erreur : le piège a coûté trois fois (une classe en `display: grid` annulait l'attribut ; css/style.css, en tête)
+const cachesVisibles = () => page.evaluate(() => [...document.querySelectorAll('[hidden]')].filter(e => getComputedStyle(e).display !== 'none' && !e.matches('.terrain, .frise-icone, .jeu-toast')).map(e => e.id || e.className));
+async function etape(nom) { await page.waitForTimeout(250); etapes[nom] = await empreinte(ignorer); for (const f of await cachesVisibles()) erreurs.push(`${nom} : « ${f} » est hidden mais affiché`); }
 const jeu = (f, ...a) => page.evaluate(([f, a]) => new Function('a', `return (${f})(...a)`)(a), [f, a]);
 
 await page.goto(`${srv.base}index.html?debug=1&seed=${o.graine}`);
