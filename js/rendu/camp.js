@@ -2,13 +2,13 @@
 // tant qu'un chantier dure, un liseré d'os autour du bâtiment choisi. Le dessin seulement : tout vient de l'état de la bataille, rien n'y est écrit ; et rien n'est dessiné hors de la partie bridée
 // (`etat.camp.bride`), donc ni le labo ni les tests n'ont de camp ; le jeu à deux en a un par joueur (v0.94.0). Les deux camps sont dessinés : celui d'en face est le nôtre tourné d'un demi-tour.
 // Fabrique `creerCamp({ THREE, scene, bataille: () => B, hauteur })`.
-import { atelier } from './engins.js?v=0.149.5';
-import { BATIR, chantier, regler_creux, regler_camp, vie } from './camp-modeles.js?v=0.149.5';
-import { emprisesCamp, emplacementCamp, commande, sortieChars, placesChars, placeAvion, parcChars } from '../camp.js?v=0.149.5';
-import { avionsAbimes } from '../genie.js?v=0.149.5';
-import { PALETTE as P } from '../palette.js?v=0.149.5';
-import { DRAPEAU_U } from './drapeau.js?v=0.149.5';
-import { RONDE, pointRonde } from '../ronde.js?v=0.149.5';
+import { atelier } from './engins.js?v=0.150.0';
+import { BATIR, chantier, regler_creux, regler_camp, vie } from './camp-modeles.js?v=0.150.0';
+import { emprisesCamp, emplacementCamp, sortieChars, placesChars, placeAvion, parcChars } from '../camp.js?v=0.150.0';
+import { avionsAbimes } from '../genie.js?v=0.150.0';
+import { PALETTE as P } from '../palette.js?v=0.150.0';
+import { DRAPEAU_U } from './drapeau.js?v=0.150.0';
+import { RONDE, pointRonde } from '../ronde.js?v=0.150.0';
 
 const LUEUR = 0.9;      // × la couleur de la matière (mesuré à l'œil sur la partie du premier matin : sans elle, la boue est noire)
 
@@ -107,7 +107,7 @@ export function creerCamp({ THREE, scene, bataille, hauteur }) {
       let h = -Infinity, bas = Infinity;
       for (let dx = -e.w / 2; dx <= e.w / 2 + 0.01; dx += 4) for (let dz = -e.d / 2; dz <= e.d / 2 + 0.01; dz += 4) { const v = hauteur(e.x + dx, e.y + dz); h = Math.max(h, v); bas = Math.min(bas, v); }
       const creux = Math.ceil((h - bas) * 4) / 4 + 0.5;
-      const c = (e.camp === 0 ? B.etat.camp : B.etat.campEux).batiments[e.cle], echafaud = !!(c.chantier || commande(B.etat, e.cle, e.camp)), signature = `${c.niveau}|${echafaud ? 1 : 0}|${creux}`;      // (commandé le soir : l'échafaudage est là dès la nuit, la soirée, lot 1)
+      const c = (e.camp === 0 ? B.etat.camp : B.etat.campEux).batiments[e.cle], echafaud = ((e.camp === 0 ? B.etat.camp : B.etat.campEux).achats ?? []).some(([o]) => o === e.cle), signature = `${c.niveau}|${echafaud ? 1 : 0}|${creux}`;      // (acheté ce soir : l'échafaudage est là la nuit, il tombe à l'aube qui confirme l'achat)
       let m = modeles.get(id);
       if (!m || m.signature !== signature) {
         if (m) scene.remove(m.pivot);

@@ -3,17 +3,17 @@
    Elle naît hors du terrain derrière son camp, marche en droite ligne jusqu'à la rive du pont coupé (`pont` : l'indice dans `T.pontsListe`), puis le refait : `travail` va de 0 à 1,
    et gagne `n / hommes` fois plus vite que la section au complet (de 2 à 4 h de jeu avec 20 hommes : `PONTS_HEURES`). Un obus couche une part de ses hommes. `etat.sapeurs[camp]` :
    les sections au dépôt. Les ordres rendent { refus } comme les barrages. */
-import { GENIE_DATA } from './data/genie.js?v=0.149.5';
-import { CALIBRES } from './data/calibres.js?v=0.149.5';
-import { CHAR_SORTIE } from './data/chars.js?v=0.149.5';
-import { PONTS_HEURES } from './data/ponts.js?v=0.149.5';
-import { routeChar } from './chars.js?v=0.149.5';
-import { reconstruirePont } from './eaux.js?v=0.149.5';
-import { toucher } from './terrain.js?v=0.149.5';
-import { hash2 } from './lib/rng.js?v=0.149.5';
-import { NIDS } from './data/nids.js?v=0.149.5';
-import { modif, pvAvion, emplacementCamp, parcChars, placeAvion, placesChars } from './camp.js?v=0.149.5';
-import { nidDetruitVise, reparerNid } from './nids.js?v=0.149.5';
+import { GENIE_DATA } from './data/genie.js?v=0.150.0';
+import { CALIBRES } from './data/calibres.js?v=0.150.0';
+import { CHAR_SORTIE } from './data/chars.js?v=0.150.0';
+import { PONTS_HEURES } from './data/ponts.js?v=0.150.0';
+import { routeChar } from './chars.js?v=0.150.0';
+import { reconstruirePont } from './eaux.js?v=0.150.0';
+import { toucher } from './terrain.js?v=0.150.0';
+import { hash2 } from './lib/rng.js?v=0.150.0';
+import { NIDS } from './data/nids.js?v=0.150.0';
+import { modif, pvAvion, emplacementCamp, parcChars, placeAvion, placesChars } from './camp.js?v=0.150.0';
+import { nidDetruitVise, reparerNid } from './nids.js?v=0.150.0';
 
 export const sectionsDeDepart = () => [GENIE_DATA.sections, GENIE_DATA.sections];
 /* Le second point d'un ordre « Génie » qui vise l'aérodrome : réparer un avion abîmé (les avions n'ont pas de place sur le champ, on ne peut pas les cliquer) */
@@ -25,7 +25,7 @@ export const codeChar = id => -100 - id;
 const avionDe = x2 => (x2 <= -2 && x2 > -100 ? -2 - x2 : null), charDe = x2 => (x2 <= -100 ? -100 - x2 : null);
 
 /* Les engins remis en état (Jérôme, v0.115.0) : le génie ne répare qu'UN avion ou char par jour et par camp (`etat.genieJour[camp]` : le jour de la dernière réparation lancée) */
-export const reparationFaite = (etat, camp) => etat.genieJour?.[camp] === etat.jour;
+export const reparationFaite = (etat, camp) => etat.genieJour?.[camp] === etat.jour && (etat.genieNb?.[camp] ?? 1) >= modif(etat, camp, 'sapeurs.reparations');      // (la Voie de 60 : deux par jour, troisième jet)
 const enVol = (etat, camp, k) => etat.mitraillages.some(v => v.camp === camp && v.k === k && v.etat === 'vol');
 /* L'avion le plus abîmé de `camp` qui est au sol (en vie, pas au maximum de ses points de vie), ou -1 */
 export function avionAbime(etat, camp) {
@@ -123,7 +123,7 @@ export function lancerGenie(B, camp, cible, ar) {
   const bout = nid ? [nid.x, nid.y - nid.face * 5] : char ? [char.x, char.y] : cible.avion !== undefined ? (p => [p.x, p.y + (camp === 0 ? 4 : -4)])(placeAvion(etat, camp, cible.avion)) : cible.parc !== undefined ? (p => [p.x, p.y + (camp === 0 ? 4 : -4)])(placesChars(etat, camp).find(q => q.id === cible.parc) ?? emplacementCamp(etat, 'chars', camp)) : rive(B, camp, T.pontsListe[pont]);
   const chemin = ar !== undefined && cible.avion === undefined && cible.parc === undefined ? routeChar(B, bout[0], ar, bout[0], bout[1]) : null;
   etat.sapeurs[camp]--;
-  if (engin) (etat.genieJour ??= [-1, -1])[camp] = etat.jour;      // la réparation du jour est prise, même si la section n'arrive pas
+  if (engin) { const nb = etat.genieNb ??= [0, 0]; nb[camp] = (etat.genieJour ??= [-1, -1])[camp] === etat.jour ? nb[camp] + 1 : 1; etat.genieJour[camp] = etat.jour; }      // la réparation du jour est prise, même si la section n'arrive pas
   etat.genies.push({ id: etat.genies.length ? etat.genies[etat.genies.length - 1].id + 1 : 0, camp, ...(nid ? { nid: nid.id } : char ? { char: char.id, ...(cible.epave ? { epave: true } : {}) } : cible.avion !== undefined ? { avion: cible.avion } : cible.parc !== undefined ? { parc: cible.parc } : { pont }), x: bout[0], y: camp === 0 ? T.H + CHAR_SORTIE : -CHAR_SORTIE, tx: bout[0], ty: bout[1], dx0: bout[0], ar: cible.avion !== undefined || cible.parc !== undefined ? undefined : ar, chemin, k: 0, hx: 0, hy: camp === 0 ? -1 : 1, n: Math.round(GENIE_DATA.hommes * modif(etat, camp, 'sapeurs.hommes')), vit: modif(etat, camp, 'sapeurs.vitesse'), tr: modif(etat, camp, 'sapeurs.travail'), etat: 'marche', travail: 0, p: [] });
   const g = etat.genies[etat.genies.length - 1], hy = camp === 0 ? -1 : 1;      // (ils partent vers le nord ou le sud)
   for (let i = 0; i < g.n; i++) { const [ox, oy] = rang(g, i, 0, hy); g.p.push(g.x + ox, g.y + oy, 0, 0); }
@@ -211,7 +211,7 @@ export function avancerGenies(B, ctx) {
       if (g.travail >= 1 && engin) {
         if (Rp) { Rp.pv = Rp.pvMax; Rp.repar = (Rp.repar ?? 0) + 1; B.evenements.push({ type: 'char-repare', x: g.tx, y: g.ty, camp: g.camp, id: Rp.id }); }
         else if (C && g.epave) {      // l'épave relevée : elle repart à moitié de sa solidité, à l'arrêt (le parc la remettra à neuf)
-          C.pv = Math.max(1, Math.round((C.pvMax ?? 1) * GENIE_DATA.relevage)); C.etat = 'arrive'; C.v = 0; C.tx = C.x; C.ty = C.y; C.chemin = null; C.cible = null; C.vise = null; C.rentre = false;
+          C.pv = Math.max(1, Math.round((C.pvMax ?? 1) * Math.min(1, GENIE_DATA.relevage * modif(B.etat, g.camp, 'chars.releve')))); C.etat = 'arrive'; C.v = 0; C.tx = C.x; C.ty = C.y; C.chemin = null; C.cible = null; C.vise = null; C.rentre = false;      // (la grue de dépannage : à 3/4, troisième jet)
           C.repar = (C.repar ?? 0) + 1; B.evenements.push({ type: 'char-releve', x: C.x, y: C.y, camp: g.camp, id: C.id });
         }
         else if (C) { C.pv = C.pvMax ?? C.pv; C.repar = (C.repar ?? 0) + 1; B.evenements.push({ type: 'char-repare', x: C.x, y: C.y, camp: g.camp, id: C.id }); }

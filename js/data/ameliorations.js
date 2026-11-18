@@ -1,10 +1,10 @@
-// Les arbres du camp, troisième jet (Jérôme, 18 nov. ; validé : docs/chantiers/soiree-arbres.md). PROPOSITION LUE PAR LE LABO SEULEMENT (sujet « La soirée ») : le jeu garde
-// data/batiments.js (trois niveaux, un choix aux niveaux 2 et 3) tant que les règles ne sont pas passées (lot 1 bis, camp.js).
+// Les arbres du camp, troisième jet (Jérôme, 18 nov. ; validé : docs/chantiers/soiree-arbres.md ; EN JEU depuis la v0.150.0 : js/camp.js). data/batiments.js garde les ordres,
+// le plan du camp et les effectifs du niveau I (`niveaux[0]`) ; ses niveaux 2 et 3 et leurs choix ne sont plus lus que par les anciennes variantes du labo.
 // Sept onglets : le niveau I donné, puis deux pistes de quatre rangs (II à V), plus forts et plus chers à chaque rang (PRIX) ; les deux pistes s'achètent ; un rang demande le rang
 // d'avant de sa piste et, s'il a un `lien`, un rang d'un autre onglet ([onglet, piste, rang]). `effets` : les facteurs que lirait `modif(etat, camp, clé)` (ils se multiplient) ;
 // une clé `+x` s'ajoute (avions, chars, sections, régiments frais). `chiffre` : ce que le joueur lit, court. L'Infanterie vaut pour tous nos régiments (Jérôme, 18 nov.).
 export const PRIX = [2, 3, 4, 5];               // rangs II, III, IV, V (14 par piste, 28 par onglet, 196 pour tout)
-export const DOTATION_SOIR = 2;                 // le soir rapporte +2 (Jérôme, 18 nov. : « ~12 rangs par bataille ») ; data/batiments.js garde +1 jusqu'au passage en jeu
+export const DOTATION_SOIR = 2;                 // le soir rapporte +2 (Jérôme, 18 nov. : « ~12 rangs par bataille ») : DOTATION.soir de data/batiments.js
 
 const r = (nom, chiffre, effets, lien = null) => ({ nom, chiffre, effets, lien });
 export const ARBRES = {
@@ -41,7 +41,7 @@ export const ARBRES = {
       { nom: 'Réserve', rangs: [r('Cantonnement', '+2 régiments frais', { '+reserves': 2 }), r('Camp de repos', '+2 régiments frais', { '+reserves': 2 }),
         r('Dépôt divisionnaire', '+1 régiment frais', { '+reserves': 1 }), r('Train de renfort', 'Un renfort se déploie deux fois plus vite', { 'caserne.deploiement': 0.5 })] },
       { nom: 'Ordinaire', rangs: [r('Cuisine roulante', 'Vivres pour 4 nuits', { 'caserne.vivres': 4 / 3 }), r('Foyer du soldat', 'Le repos rend +20 % de moral', { 'caserne.repos': 1.2 }),
-        r('Cantine de campagne', 'Vivres pour 5 nuits', { 'caserne.vivres': 1.25 }), r('Permissions', 'Un régiment relevé revient plein de moral', { 'caserne.releve': 1 }, ['hopital', 1, 2])] },
+        r('Cantine de campagne', 'Vivres pour 5 nuits', { 'caserne.vivres': 1.25 }), r('Permissions', 'La relève ne coûte plus de régiment frais', { '+releve': 1 }, ['hopital', 1, 2])] },
     ] },
   hopital: { nom: 'Hôpital', court: 'Hôpital', i: { nom: 'Infirmerie', chiffre: 'La moitié des évacués revient' },
     pistes: [
@@ -62,3 +62,6 @@ export const ORDRE_ARBRES = ['artillerie', 'aerodrome', 'chars', 'sapeurs', 'cas
 // le nom d'un rang par son adresse [onglet, piste, rang] (rang 0 = II … 3 = V)
 export const nomRang = ([o, p, k]) => ARBRES[o].pistes[p].rangs[k].nom;
 export const ROMAINS = ['II', 'III', 'IV', 'V'];
+// Le plan d'en face (iaBatir de camp.js) : ses pistes par ordre de préférence, rang par rang (II partout, puis III…) ; il n'a ni char ni avion à employer
+const PISTES_IA = [['artillerie', 0], ['caserne', 0], ['artillerie', 1], ['sapeurs', 0], ['infanterie', 0], ['hopital', 0], ['infanterie', 1], ['caserne', 1], ['sapeurs', 1], ['hopital', 1]];
+export const IA_PLAN = [0, 1, 2, 3].flatMap(k => PISTES_IA.map(([o, p]) => [o, p, k]));

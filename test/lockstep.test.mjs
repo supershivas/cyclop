@@ -102,36 +102,28 @@ test('un point de reprise écrit au même cadre chez les deux, relu chez les deu
 });
 
 // ─── Le camp à deux (v0.94.0, lot 6) : chaque joueur bâtit le sien, par une commande du lockstep ───
-test('à deux, chacun a son camp et les chantiers passent par le lockstep : les deux machines le même camp, la même empreinte', async () => {
-  const { commanderChantier, payerPaniers, disponible, niveauDe } = await import('../js/camp.js');
-  const executerCamp = (c, camp, B, etat) => { if (c.t === 'bat') commanderChantier(B.etat, c.cle, c.choix ?? null, camp); else executer(c, camp, B, etat); };
+test('à deux, chacun a son camp et les achats passent par le lockstep : les deux machines le même camp, la même empreinte', async () => {
+  const { acheterRang, rendreRang, annulerSoir, disponible } = await import('../js/camp.js');
+  const executerCamp = (c, camp, B, etat) => { if (c.t === 'rang') (c.a === 'annuler' ? annulerSoir(B.etat, camp) : c.a === 'rendre' ? rendreRang(B.etat, c.o, c.p, camp) : acheterRang(B.etat, c.o, c.p, camp)); else executer(c, camp, B, etat); };
   const faire = () => nouvelleBataille(7, R, { soldats: 200, jours: 3, deux: true, camp: true });
   const Bs = [faire(), faire()], files = [[], []], ls = [], ecarts = []; let tour = 0;
-  for (const B of Bs) { B.etat.camp.dotation = B.etat.campEux.dotation = 5; B.etat.phase = 'nuit'; }      // (la dotation part de 0 depuis la v0.98.0 ; on commande le soir : la soirée, lot 1)
+  for (const B of Bs) { B.etat.camp.dotation = B.etat.campEux.dotation = 5; B.etat.phase = 'nuit'; }      // (on achète le soir)
   for (const moi of [0, 1]) ls.push(creerLockstep({ B: Bs[moi], moi, delai: 6, periode: 30, executer: executerCamp, envoyer: msg => files[1 - moi].push({ arrive: tour + 2, msg }), surEcart: (f, a, b) => ecarts.push([f, a, b]) }));
   const pomper = () => { tour++; for (const moi of [0, 1]) { const f = files[moi]; while (f.length && f[0].arrive <= tour) ls[moi].recevoir(f.shift().msg); } };
   let jouees = 0;
   for (let k = 0; k < 20000 && jouees < 400; k++) {
     pomper();
-    if (ls[0].cadre === 40 && !ls[0].fait) { ls[0].fait = 1; ls[0].commander({ t: 'bat', cle: 'chars', choix: 0 }); }
-    if (ls[1].cadre === 55 && !ls[1].fait) { ls[1].fait = 1; ls[1].commander({ t: 'bat', cle: 'artillerie', choix: 1 }); ls[1].commander({ t: 'bat', cle: 'aerodrome', choix: 0 }); }
-    if (ls[0].cadre === 70 && !ls[0].fait2) { ls[0].fait2 = 1; ls[0].commander({ t: 'bat', cle: 'chars', choix: 0 }); }      // refusé chez les deux : déjà commandé
+    if (ls[0].cadre === 40 && !ls[0].fait) { ls[0].fait = 1; ls[0].commander({ t: 'rang', a: 'acheter', o: 'chars', p: 0 }); }
+    if (ls[1].cadre === 55 && !ls[1].fait) { ls[1].fait = 1; for (const o of ['artillerie', 'artillerie', 'aerodrome']) ls[1].commander({ t: 'rang', a: 'acheter', o, p: 1 }); }
+    if (ls[0].cadre === 70 && !ls[0].fait2) { ls[0].fait2 = 1; ls[0].commander({ t: 'rang', a: 'rendre', o: 'chars', p: 0 }); ls[0].commander({ t: 'rang', a: 'acheter', o: 'hopital', p: 1 }); }
     for (const l of ls) if (l.cadre_()) jouees = l.cadre;
   }
   assert.equal(ecarts.length, 0, `écarts : ${JSON.stringify(ecarts)}`);
   for (const B of Bs) {
-    assert.deepEqual(B.etat.camp.panier, [{ cle: 'chars', vers: 2, choix: 0 }], 'la commande de l\'hôte, une seule');
-    assert.equal(disponible(B.etat, 0), 2, '3 points promis par l\'hôte');
-    assert.deepEqual(B.etat.campEux.panier, [{ cle: 'artillerie', vers: 2, choix: 1 }], 'la commande de l\'invité ; l\'aérodrome (3) est refusé, il ne reste que 2');
-  }
-  assert.equal(empreinteEtat(Bs[0]), empreinteEtat(Bs[1]));
-  for (const B of Bs) {
-    payerPaniers(B.etat);
-    assert.deepEqual(B.etat.camp.batiments.chars.chantier, { vers: 2, nuits: 1, choix: 0 }, 'le chantier de l\'hôte');
-    assert.equal(B.etat.camp.dotation, 2);
-    assert.deepEqual(B.etat.campEux.batiments.artillerie.chantier, { vers: 2, nuits: 1, choix: 1 }, 'le chantier de l\'invité, avec son choix');
-    assert.equal(B.etat.campEux.dotation, 2);
-    assert.equal(niveauDe(B.etat, 'aerodrome', 1), 1);
+    assert.deepEqual(B.etat.camp.rangs.chars, [0, 0], 'l\'hôte a rendu son char'); assert.deepEqual(B.etat.camp.rangs.hopital, [0, 1]);
+    assert.equal(disponible(B.etat, 0), 3);
+    assert.deepEqual(B.etat.campEux.rangs.artillerie, [0, 2], 'l\'invité : deux rangs ; l\'aérodrome est refusé, plus un point');
+    assert.deepEqual(B.etat.campEux.rangs.aerodrome, [0, 0]); assert.equal(disponible(B.etat, 1), 0);
   }
   assert.equal(empreinteEtat(Bs[0]), empreinteEtat(Bs[1]));
 });

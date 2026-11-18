@@ -2,6 +2,9 @@
 // Une entrée par version qui touche au labo, la plus récente en haut. `ref` : « sujet-Lettre » (la lettre est celle de la variante,
 // A étant l'actuelle). À chaque changement du labo : une entrée ici, avec `depuis` sur les variantes ajoutées ou changées (labo.js).
 export const JOURNAL = [
+  { version: '0.150.0', date: '2026-11-18', items: [
+    { genre: 'mis-a-jour', texte: 'Jérôme tranche : le troisième jet de la soirée passe en jeu (retenue) ; le papier de la nuit en deux colonnes devient une ancienne', ref: 'soiree-A' },
+  ] },
   { version: '0.149.5', date: '2026-11-18', items: [
     { genre: 'nouveau', texte: 'La soirée, troisième jet (à trancher) : la carte du front (Aujourd\'hui / Depuis le début, la courbe des effectifs dessous), le décompte en registre, trois moments du jour ; le camp en cercles, sept onglets, cinq niveaux, « Annuler » ; les hommes en paquets de 10 traits qu\'on glisse d\'un régiment à l\'autre', ref: 'soiree-A' },
     { genre: 'mis-a-jour', texte: 'Le deuxième jet de la soirée devient une ancienne', ref: 'soiree-B' },

@@ -11,15 +11,7 @@ export const CORVEES = [
     lignes: [['Vivres', '**3** nuits'], ['Par', 'les boyaux']] },
   { id: 'releve', court: 'Relève', nom: 'Relève', dit: 'un régiment frais, pris dans la réserve (il n\'y en a pas d\'autre : un de moins pour la suite), prend sa place à l\'aube ; celui-ci part au repos',
     lignes: [['À l\'aube', '**un régiment frais** prend sa place'], ['Réserve', '**−1** régiment frais'], ['Celui-ci', 'part au repos']] },
-  // l'équipement (Jérôme, v0.91.0) : la caserne au niveau 2 ; une corvée par pièce (`eq-` + sa clé dans EQUIPEMENTS de data/batiments.js), un point de dotation ; le régiment ne se repose pas
-  { id: 'eq-casque', court: 'Casques', nom: 'Casques Adrian', dit: 'on lui distribue des casques : les éclats d\'obus tuent moins (1 point de dotation, et il ne se repose pas)', equipe: true,
-    lignes: [['Éclats d\'obus', '**−20 %** de tués'], ['Coût', '**1** point'], ['Repos', 'aucun']] },
-  { id: 'eq-grenades', court: 'Grenades', nom: 'Grenadiers', dit: 'une section de grenadiers : plus forts au corps à corps (1 point de dotation, et il ne se repose pas)', equipe: true,
-    lignes: [['Corps à corps', '**+25 %** de coups'], ['Coût', '**1** point'], ['Repos', 'aucun']] },
-  { id: 'eq-hotchkiss', court: 'Hotchkiss', nom: 'Mitrailleuses', dit: 'une section de Hotchkiss : son tir porte plus loin (1 point de dotation, et il ne se repose pas)', equipe: true,
-    lignes: [['Portée du tir', '**+15 %**'], ['Coût', '**1** point'], ['Repos', 'aucun']] },
-  { id: 'eq-brancards', court: 'Brancards', nom: 'Brancardiers', dit: 'des brancardiers : moins de blessés meurent au front, plus reviennent (1 point de dotation, et il ne se repose pas)', equipe: true,
-    lignes: [['Blessés morts', '**−50 %**'], ['Guéris', '**+25 %**'], ['Coût', '**1** point'], ['Repos', 'aucun']] },
+  // (l'équipement, quatre corvées `eq-…` de la v0.91.0, est devenu l'onglet « Infanterie » du camp, pour tous les régiments : la soirée, troisième jet)
 ];
 // Ce n'est pas un choix (Jérôme, v0.39.0) : un régiment au contact de l'ennemi au soir se bat toute la nuit, sans corvée ni vrai repos.
 export const CONTACT = { id: 'contact', court: 'Au contact', nom: 'Au contact de l\'ennemi', dit: 'il tient sa place toute la nuit et ne se repose pas',

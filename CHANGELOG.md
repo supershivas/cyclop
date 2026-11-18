@@ -1,5 +1,11 @@
 # Journal des versions
 
+## 0.150.0 — 2026-11-18
+
+- La soirée en trois étapes : la carte du front et le registre, le camp en arbres (achats au clic, rendus jusqu'à l'aube), les régiments en paquets d'hommes à glisser
+- L'infanterie s'améliore au camp pour tous les régiments ; un régiment vidé de ses hommes est dissous à l'aube
+- La dotation rapporte 2 points chaque soir
+
 ## 0.149.5 — 2026-11-18
 
 - Au labo, « La soirée », troisième jet : la carte du front et le registre, l'arbre du camp en cercles à cinq niveaux et sept onglets, les régiments en paquets d'hommes qu'on glisse (à trancher)

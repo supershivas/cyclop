@@ -4,12 +4,12 @@
    identité à re-dériver : un homme est son numéro, son rang, son expérience et ses victimes ; son nom vient de `graineIdentite`.
    Il est écrit à la fin de chaque bataille, avant l'écran de fin (`cloturerDansLeStore`), et `cloturer` est idempotente : relire une
    partie arrêtée à la fin, ou clore deux fois, donne le même registre. Rien n'est reporté de la fatigue, de la peur ni du moral. */
-import { hash2 } from './lib/rng.js?v=0.149.5';
-import { NOUS, rangDe, numeroCampagne } from './bataille.js?v=0.149.5';
-import { SECTEURS } from './data/secteur.js?v=0.149.5';
-import { identite, chevrons } from './identite.js?v=0.149.5';
-import { lireCaracs } from './army.js?v=0.149.5';
-import { CAMPAGNE, TEXTES } from './data/campagne.js?v=0.149.5';
+import { hash2 } from './lib/rng.js?v=0.150.0';
+import { NOUS, rangDe, numeroCampagne } from './bataille.js?v=0.150.0';
+import { SECTEURS } from './data/secteur.js?v=0.150.0';
+import { identite, chevrons } from './identite.js?v=0.150.0';
+import { lireCaracs } from './army.js?v=0.150.0';
+import { CAMPAGNE, TEXTES } from './data/campagne.js?v=0.150.0';
 
 export const CLE = 'campagne';        // l'entrée de js/lib/save.js (cyclopeen:campagne)
 export const VERSION_CAMPAGNE = 1;
@@ -107,7 +107,7 @@ export function cloturer(c, B) {
     n: ref.n, graine: etat.graine, secteur: etat.secteur, mission: etat.mission, jours: etat.jour,
     issue: etat.issue ? { reussie: etat.issue.reussie, texte: etat.issue.texte } : null,
     pertes: [...etat.pertes], regiments,
-    ...(etat.camp?.bride ? { camp: Object.fromEntries(Object.entries(etat.camp.batiments).map(([cle, c]) => [cle, { niveau: c.niveau, choix: [...c.choix] }])) } : {}),      // le camp à la fin : la bataille suivante en part (v0.92.0)
+    ...(etat.camp?.bride ? { camp: Object.fromEntries(Object.entries(etat.camp.rangs).map(([o, r]) => [o, [...r]])) } : {}),      // le camp à la fin, ses rangs par onglet : la bataille suivante en part (v0.92.0 ; les arbres, troisième jet)
     tombes: tombes(B),                         // nos morts : [numéro de campagne, jour, régiment] (les noms se refont de la graine d'identité : `memorial`)
   };
   const debout = regiments.filter(r => r.survivants.length >= (c.hommesMin ?? 1)).length;

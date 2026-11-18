@@ -41,7 +41,8 @@ const empreinte = ignorer => page.evaluate(([ignorer, sansBulles]) => {
 const etapes = {};
 // (v0.141.4) un élément `hidden` qui s'affiche est une erreur : le piège a coûté trois fois (une classe en `display: grid` annulait l'attribut ; css/style.css, en tête)
 const cachesVisibles = () => page.evaluate(() => [...document.querySelectorAll('[hidden]')].filter(e => getComputedStyle(e).display !== 'none' && !e.matches('.terrain, .frise-icone, .jeu-toast')).map(e => e.id || e.className));
-async function etape(nom) { await page.waitForTimeout(250); etapes[nom] = await empreinte(ignorer); for (const f of await cachesVisibles()) erreurs.push(`${nom} : « ${f} » est hidden mais affiché`); }
+async function etape(nom) { await page.waitForTimeout(250); await sansBulle();      // (v0.150.0 : la bulle cachée garde le texte de la dernière survolée, selon le minutage ; effacée à chaque étape, plus seulement à certaines)
+  etapes[nom] = await empreinte(ignorer); for (const f of await cachesVisibles()) erreurs.push(`${nom} : « ${f} » est hidden mais affiché`); }
 const sansBulle = () => page.evaluate(() => { document.dispatchEvent(new PointerEvent('pointerdown')); const b = document.getElementById('infobulle'); b.innerHTML = ''; delete b.dataset.texte; });      // (la bulle cachée garde le texte de la dernière survolée, qui dépendait du minutage des étapes d'avant : trois étapes instables ; v0.149.4 : de même pour les trois premières étapes de nuit)
 const jeu = (f, ...a) => page.evaluate(([f, a]) => new Function('a', `return (${f})(...a)`)(a), [f, a]);
 
@@ -106,24 +107,33 @@ await etape('nuit');
 await page.keyboard.press('t');
 await sansBulle();
 await etape('nuit-choisis');
-// un ordre de nuit aux régiments choisis : leurs cartes se grisent (`donne`, v0.38.3) ; en solo, aucune erreur (le réseau n'existe pas)
-await page.evaluate(() => document.querySelector('.pn-r:not(.pn-r-tous) [data-corvee="evacuer"]').click());
+// la soirée (troisième jet, v0.150.0) : l'étape des régiments, une corvée donnée aux choisis (leurs cartes se grisent : `donne`) ; en solo, aucune erreur (le réseau n'existe pas)
+await page.mouse.move(1276, 600);                          // (hors du papier : sinon la bulle de ce qui passe sous la souris dépend du minutage)
+const soireeEtape = k => page.evaluate(k => document.querySelectorAll('#soiree .ps-fil .ps-pas')[k].click(), k);
+await soireeEtape(2);
+await page.evaluate(() => document.querySelector('#soiree .ps3-carte [data-corvee="evacuer"]').click());
 await sansBulle();
 await etape('nuit-ordre');
-// le camp du soir (la soirée, lot 1) : la puce « Le camp » du papier range le papier et mène au camp ; le parc des chars se commande (rien n'est payé avant l'aube), s'annule, se recommande
-await page.mouse.move(1276, 600);                          // (hors du papier et de la fenêtre du bâtiment : sinon la bulle de ce qui passe sous la souris dépend du minutage)
-await sansBulle();
-await page.evaluate(() => document.querySelector('.pn-camp').click());
-await page.evaluate(() => document.querySelector('.batterie[data-cal="char"]').dispatchEvent(new MouseEvent('contextmenu', { bubbles: true, cancelable: true })));
-// (v0.149.5) le terrain survolé suit la caméra, qui respire selon l'horloge réelle : la souris quitte le champ avant l'empreinte (l'étape changeait d'un passage à l'autre)
-await page.evaluate(() => document.getElementById('canvas').dispatchEvent(new PointerEvent('pointerleave')));
+// le camp : un rang s'achète (payé au clic), se rend, se rachète
+await jeu('() => { __jeu.bataille().etat.camp.dotation = 5; }');
+await soireeEtape(1);
+await page.evaluate(() => { document.querySelector('#soiree .ps3-n.dispo').click(); document.querySelector('#soiree .ps-acheter').click(); });
+await page.evaluate(() => document.getElementById('canvas').dispatchEvent(new PointerEvent('pointerleave')));      // (v0.149.5 : le terrain survolé suit la caméra, qui respire selon l'horloge réelle)
 await sansBulle();
 await etape('nuit-camp');
-await page.evaluate(() => document.querySelector('#batiment .actions:last-child button').click());      // 3 points : au panier
+await page.evaluate(() => document.querySelector('#soiree .ps-rendre').click());
+await page.evaluate(() => document.querySelector('#soiree .ps-acheter').click());
+await sansBulle();
 await etape('nuit-commande');
-await page.evaluate(() => document.querySelector('#batiment .actions:last-child button').click());      // « Annuler la commande »
-await page.evaluate(() => document.querySelector('#batiment .actions:last-child button').click());      // et de nouveau commandé
-await page.waitForTimeout(3000);                              // les toasts durent 2,6 s d'horloge : on attend qu'ils s'effacent (sinon l'étape d'après les lit ou non, selon la machine)
+// un paquet de dix hommes passe du premier régiment au deuxième
+await soireeEtape(2);
+await page.evaluate(() => { const c = document.querySelectorAll('#soiree .ps3-carte'); c[0].querySelector('.ps3-paquet').click(); c[1].click(); });
+await sansBulle();
+await etape('nuit-paquet');
+// regarder : la médaille du jour range la soirée et mène au régiment ; « Revenir à la soirée » la rouvre
+await soireeEtape(0);
+await page.evaluate(() => document.querySelector('#soiree .ps3-moment.medaille')?.click());
+await page.waitForTimeout(3000);                              // (les toasts durent 2,6 s d'horloge : on attend qu'ils s'effacent)
 await page.evaluate(() => document.querySelector('#nuit-retour').click());
 await sansBulle();
 await etape('nuit-retour');

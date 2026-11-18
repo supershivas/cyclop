@@ -1,10 +1,12 @@
-// Le camp : la dotation du soir, le panier payé à l'aube, les chantiers d'une nuit, les refus à voix haute, la sauvegarde (lot 1 de docs/chantiers/camp-et-ameliorations.md).
+// Le camp : la dotation du soir, les arbres (le I donné, deux pistes de quatre rangs), l'achat au clic rendu jusqu'à l'aube, les refus à voix haute, la sauvegarde (la soirée, troisième jet).
 import { positionDe } from '../js/avions.js';
 import { zone } from '../js/bataille.js';
 import { nouvelleBataille as nouvelleBatailleLibre, avancer, aube, photo, restaurer, ordonnerBarrage } from '../js/bataille.js';
 const nouvelleBataille = (graine, R, opts = {}) => nouvelleBatailleLibre(graine, R, { premierFixe: true, ...opts });   // le 1er jour est tiré au hasard en jeu : les tests de règles veulent le temps de départ de la saison
-import { affecterGueris, patients, charsDispo, appliquerDepart, sortieChars, emplacementCamp, campDe, refusEquiper, equiper, facteurEquip, campDeDepart, modif, rechargeDe, pvAvion, refusOrdre, refusNid, emprisesCamp, batimentSous, refusCamp, ordonnerChantier, commanderChantier, annulerChantier, disponible, coutPanier, payerPaniers, dotationSoir, niveauDe, coutDe, nuitsDe, choisis } from '../js/camp.js';
-import { BATIMENTS, DOTATION, EQUIPEMENTS, EQUIPEMENT, equipeEnMots } from '../js/data/batiments.js';
+import { affecterGueris, patients, charsDispo, appliquerDepart, sortieChars, emplacementCamp, campDe, campDeDepart, modif, rechargeDe, pvAvion, refusOrdre, refusNid, emprisesCamp, batimentSous, niveauDe, dotationSoir, acheterRang, rendreRang, annulerSoir, refusRang, refusRendre, infanterie, renfortsDe } from '../js/camp.js';
+import { ORDRE_ARBRES } from '../js/data/ameliorations.js';
+import { CORVEES } from '../js/data/corvees.js';
+import { BATIMENTS, DOTATION } from '../js/data/batiments.js';
 import { REGLAGES as R } from '../js/data/reglages.js';
 import { placesChars, placeAvion, parcChars } from '../js/camp.js';
 import { ordonnerChar } from '../js/chars.js';
@@ -15,163 +17,100 @@ const petite = (graine = 5) => nouvelleBataille(graine, R, { soldats: 200, jours
 const nuit = B => { while (B.etat.phase === 'jour') avancer(B); return aube(B); };
 
 group('camp');
-test('le premier matin : 0 point, tous les bâtiments au niveau 1 (v0.98.0)', () => {
-  const B = petite(), c = B.etat.camp;
-  assert.equal(c.dotation, 0); assert.equal(DOTATION.depart, 0);
-  assert.deepEqual(Object.fromEntries(Object.keys(BATIMENTS).map(k => [k, niveauDe(B.etat, k)])), { artillerie: 1, aerodrome: 1, chars: 1, sapeurs: 1, caserne: 1, hopital: 1 });
+const bridee = (graine = 5) => nouvelleBataille(graine, R, { soldats: 200, jours: 6, camp: true });
+const auSoir = B => { while (B.etat.phase === 'jour') avancer(B); return B; };
+const r2 = (e, o, camp = 0) => [...campDe(e, camp).rangs[o]];
+test('le premier matin : 0 point, tous les bâtiments au niveau I, aucun rang, rien acheté', () => {
+  const B = bridee(), K = B.etat.camp;
+  assert.equal(K.dotation, DOTATION.depart);
+  for (const k of Object.keys(BATIMENTS)) assert.equal(niveauDe(B.etat, k), 1, k);
+  for (const o of ORDRE_ARBRES) assert.deepEqual(K.rangs[o], [0, 0], o);
+  assert.deepEqual(K.achats, []);
+  const a = campDeDepart(); a.rangs.chars[0] = 2; a.lignes.push(0);
+  assert.deepEqual(campDeDepart().rangs.chars, [0, 0], 'pas d\'état partagé'); assert.deepEqual(campDeDepart().lignes, []);
 });
-test('un ordre impossible se refuse à voix haute', () => {
-  const B = petite(), e = B.etat;
-  e.camp.dotation = 9;
-  assert.match(refusCamp(e, 'chars', 0), /le soir/, 'le jour, on ne dépense pas (la soirée, lot 1)');
-  e.phase = 'nuit';
-  assert.match(refusCamp(e, 'cathedrale'), /n'existe pas/);
-  e.camp.dotation = 1;
-  assert.match(refusCamp(e, 'chars'), /2 points de dotation manquent/);
-  e.camp.dotation = 0; assert.match(refusCamp(e, 'sapeurs'), /2 points de dotation manquent/);
-  e.camp.dotation = 9;
-  assert.match(refusCamp(e, 'artillerie'), /Choisissez/, 'le niveau 2 exige un choix');
-  assert.equal(refusCamp(e, 'artillerie', 1), null);
-  e.camp.batiments.caserne.niveau = 3; assert.match(refusCamp(e, 'caserne', 0), /niveau maximal/);
+test('un achat impossible se refuse à voix haute : le jour, les points, le rang d\'avant, le lien, le bout de la piste', () => {
+  const B = bridee(), e = B.etat;
+  e.camp.dotation = 50;
+  assert.match(refusRang(e, 'artillerie', 0), /le soir/);
+  auSoir(B); e.camp.dotation = 1;
+  assert.match(refusRang(e, 'artillerie', 0), /1 point de dotation manque/);
+  assert.match(refusRang(e, 'artillerie', 9), /n'existe pas/);
+  e.camp.dotation = 50;
+  e.camp.rangs.artillerie[0] = 3;
+  assert.match(refusRang(e, 'artillerie', 0), /demande d'abord « Observateurs » \(III, Aérodrome\)/, 'le lien croisé');
+  e.camp.rangs.aerodrome[1] = 2; assert.equal(refusRang(e, 'artillerie', 0), null);
+  e.camp.rangs.artillerie[0] = 4; assert.match(refusRang(e, 'artillerie', 0), /au bout/);
+  assert.match(refusRang(petite().etat, 'artillerie', 0), /Pas de camp/);
 });
-test('le chantier : payé tout de suite, fini à l\'aube, refusé pendant qu\'il dure', () => {
-  const B = petite(), e = B.etat;
-  e.camp.dotation = 5;
-  assert.deepEqual(ordonnerChantier(e, 'chars', 0), { ok: true, vers: 2, nuits: 1 });
-  assert.equal(e.camp.dotation, 5 - coutDe('chars', 2));
-  assert.equal(niveauDe(e, 'chars'), 1);
-  e.phase = 'nuit'; assert.match(refusCamp(e, 'chars', 0), /en chantier/); e.phase = 'jour';
-  assert.ok(ordonnerChantier(e, 'chars', 0).refus, 'un second ordre est refusé');
-  const dot = nuit(B).dotation;
-  assert.deepEqual(dot.finis, [['chars', 2]]);
-  assert.equal(niveauDe(e, 'chars'), 2);
-  assert.equal(e.camp.batiments.chars.chantier, null);
+test('acheter : acquis et payé au clic ; rendre le dernier de la piste, et avec lui ce qui en dépendait ; « Annuler » rend tout le soir', () => {
+  const B = auSoir(bridee()), e = B.etat; e.camp.dotation = 30;
+  assert.equal(acheterRang(e, 'artillerie', 0).ok, true);
+  assert.equal(e.camp.dotation, 28); assert.equal(modif(e, 0, 'artillerie.dispersion'), 0.9, 'l\'effet est là tout de suite');
+  acheterRang(e, 'artillerie', 0); acheterRang(e, 'aerodrome', 1); acheterRang(e, 'aerodrome', 1);
+  assert.deepEqual(r2(e, 'artillerie'), [2, 0]); assert.equal(e.camp.dotation, 30 - 2 - 3 - 2 - 3);
+  // Vol rasant (aérodrome, Observateurs V) demande Tables de tir (artillerie, Justesse III) : on monte, puis on rend Tables de tir
+  e.camp.rangs.aerodrome[1] = 3; e.camp.dotation = 30;
+  assert.equal(acheterRang(e, 'aerodrome', 1).ok, true);
+  assert.match(refusRendre(e, 'artillerie', 1), /Rien n'a été acheté ce soir/);
+  const r = rendreRang(e, 'artillerie', 0);
+  assert.equal(r.ok, true); assert.deepEqual(r.rendus.map(x => x.join(':')), ['artillerie:0:1', 'aerodrome:1:3'], 'Vol rasant suit Tables de tir');
+  assert.equal(e.camp.dotation, 30 - 5 + 3 + 5);
+  const a = annulerSoir(e);
+  assert.equal(a.ok, true); assert.deepEqual(r2(e, 'artillerie'), [0, 0]); assert.equal(e.camp.achats.length, 0);
+  assert.match(annulerSoir(e).refus, /Rien n'a été acheté/);
 });
-test('le panier du soir : commandé la nuit, rien payé avant l\'aube, annulé d\'un clic, un bâtiment par soir ; la caisse moins le panier', () => {
-  const B = petite(), e = B.etat;
-  while (e.phase === 'jour') avancer(B);
-  e.camp.dotation = 5;
-  assert.deepEqual(commanderChantier(e, 'chars', 0), { ok: true, vers: 2, cout: coutDe('chars', 2) });
-  assert.equal(e.camp.dotation, 5, 'rien n\'est payé'); assert.equal(disponible(e), 5 - coutDe('chars', 2));
-  assert.match(refusCamp(e, 'chars', 0), /déjà commandé/);
-  assert.match(refusCamp(e, 'aerodrome', 0), new RegExp(`manque.*${5 - coutDe('chars', 2)} à dépenser`), 'le panier compte');
-  assert.ok(annulerChantier(e, 'chars').ok); assert.equal(disponible(e), 5);
-  assert.ok(annulerChantier(e, 'chars').refus, 'rien à annuler');
-  e.camp.dotation = 6; commanderChantier(e, 'chars', 0); commanderChantier(e, 'aerodrome', 1);
-  assert.equal(coutPanier(e), coutDe('chars', 2) + coutDe('aerodrome', 2));
-  const r = aube(B);
-  assert.deepEqual(r.dotation.payes, ['chars', 'aerodrome']);
-  assert.deepEqual(r.dotation.finis.map(f => f[0]).sort(), ['aerodrome', 'chars'], 'commandé le soir, fini au matin');
-  assert.equal(niveauDe(e, 'chars'), 2); assert.deepEqual(e.camp.batiments.aerodrome.choix, [1]);
-  assert.equal(e.camp.dotation, 6 - coutPanier({ camp: { panier: [{ cle: 'chars', vers: 2 }, { cle: 'aerodrome', vers: 2 }] } }));
-  assert.deepEqual(e.camp.panier, []);
-  assert.ok(annulerChantier(e, 'chars').refus, 'le jour, plus de panier');
+test('l\'aube confirme les achats du soir : ils ne se rendent plus et leurs effectifs montent', () => {
+  const B = auSoir(bridee()), e = B.etat; e.camp.dotation = 30;
+  const avions = e.avions[0].length, reserves = e.reserves[0], sections = e.sapeurs[0], chars = e.charsDispo[0];
+  acheterRang(e, 'aerodrome', 0); acheterRang(e, 'caserne', 0); acheterRang(e, 'sapeurs', 0); acheterRang(e, 'chars', 0);
+  assert.equal(e.avions[0].length, avions, 'pas encore : l\'aube confirme');
+  const d = aube(B);
+  assert.equal(d.dotation.achetes.length, 4);
+  assert.equal(e.avions[0].length, avions + 1); assert.equal(e.reserves[0], reserves + 2); assert.equal(e.sapeurs[0], sections + 2); assert.equal(e.charsDispo[0], chars + 1);
+  assert.equal(niveauDe(e, 'aerodrome'), 2, 'le dessin suit les engins');
+  auSoir(B); assert.match(refusRendre(e, 'aerodrome', 0), /l'aube a confirmé/);
 });
-test('le panier payé avant les corvées : l\'équipement se paie sur ce qui reste', () => {
-  const B = bridee(), e = B.etat; e.camp.batiments.caserne.niveau = EQUIPEMENT.niveauCaserne;
-  while (e.phase === 'jour') avancer(B);
-  e.camp.dotation = coutDe('chars', 2);
-  commanderChantier(e, 'chars', 0);
-  const r = e.regiments.find(x => x.camp === 0 && x.effectif);
-  assert.match(refusEquiper(B, r, 'casque'), /manque/, 'la caisse est promise au panier');
-  e.camp.panier = []; e.camp.dotation = coutDe('chars', 2); commanderChantier(e, 'chars', 0); e.camp.dotation += EQUIPEMENT.cout;
-  assert.equal(refusEquiper(B, r, 'casque'), null);
-  const res = aube(B, { [r.id]: 'eq-casque' });
-  assert.deepEqual(res.dotation.payes, ['chars']); assert.deepEqual(r.equip, ['casque']); assert.equal(e.camp.dotation, 0);
-});
-test('un achat que la caisse ne couvre plus à l\'aube sort du panier sans rien coûter', () => {
-  const B = petite(), e = B.etat;
-  while (e.phase === 'jour') avancer(B);
-  e.camp.dotation = coutDe('chars', 2); commanderChantier(e, 'chars', 0);
-  e.camp.dotation = 0;
-  assert.deepEqual(payerPaniers(e)[0], []); assert.equal(e.camp.dotation, 0); assert.deepEqual(e.camp.panier, []); assert.equal(e.camp.batiments.chars.chantier, null);
-});
-test('le niveau 3 prend deux nuits, une seule avec « Équipe de nuit »', () => {
-  const B = petite(), e = B.etat;
-  assert.equal(nuitsDe(e, 2), 1); assert.equal(nuitsDe(e, 3), 2);
-  e.camp.batiments.sapeurs = { niveau: 3, choix: [0, 1], chantier: null };
-  assert.deepEqual(choisis(e, 'sapeurs'), ['Madriers taillés', 'Équipe de nuit']);
-  assert.equal(nuitsDe(e, 3), 1);
-});
-test('la dotation du soir : +1, +1 si nos lignes tiennent, +2 la première fois qu\'une ligne d\'en face est prise', () => {
+test('la dotation du soir : +2, +1 si nos lignes tiennent, +2 la première fois qu\'une ligne d\'en face est prise', () => {
   const B = petite(), e = B.etat, avant = e.camp.dotation;
   const d = dotationSoir(B);
-  assert.equal(d.base, 1); assert.equal(e.camp.soir.points, d.points); assert.equal(d.tenue, DOTATION.tenue.points, 'nos lignes sont toutes à nous au départ'); assert.equal(d.lignes, 0);
-  assert.equal(e.camp.dotation, avant + 2);
-  // la 1re ligne d'en face passe à nous : +2, une seule fois
+  assert.equal(d.base, 2); assert.equal(e.camp.soir.points, d.points); assert.equal(d.tenue, DOTATION.tenue.points); assert.equal(d.lignes, 0);
+  assert.equal(e.camp.dotation, avant + 3);
   B.troncons.forEach((tr, k) => { const L = B.lignes[tr.ligne]; if (L.camp !== 0 && L.rang === 0) e.troncons[k] = 0; });
   assert.equal(dotationSoir(B).lignes, DOTATION.ligne);
   assert.equal(dotationSoir(B).lignes, 0, 'la même ligne ne rapporte pas deux fois');
-  assert.deepEqual(e.camp.lignes, [0]);
-  // nos lignes tombent sous 75 % : plus de prime de tenue
   B.troncons.forEach((tr, k) => { if (B.lignes[tr.ligne].camp === 0) e.troncons[k] = 1; });
   assert.equal(dotationSoir(B).tenue, 0);
 });
-test('le soir verse la dotation (la soirée, lot 1) ; l\'aube ne verse rien et rend le détail du soir', () => {
+test('le soir verse la dotation ; l\'aube ne verse rien et rend le détail du soir', () => {
   const B = petite(), e = B.etat;
-  while (e.phase === 'jour') avancer(B);
-  assert.equal(e.phase, 'nuit'); assert.ok(e.camp.soir.points >= 1 && e.camp.soir.jour === 1);
-  assert.equal(e.camp.dotation, DOTATION.depart + e.camp.soir.points, 'versée dès le soir');
+  auSoir(B);
+  assert.ok(e.camp.soir.points >= 2 && e.camp.soir.jour === 1);
+  assert.equal(e.camp.dotation, DOTATION.depart + e.camp.soir.points);
   const r = aube(B);
-  assert.ok(r.ok); assert.equal(e.camp.dotation, DOTATION.depart + r.dotation.soir.points, 'l\'aube ne verse rien');
+  assert.equal(e.camp.dotation, DOTATION.depart + r.dotation.soir.points);
 });
-test('relue au milieu d\'un panier, la partie garde ses commandes ; relue après l\'aube elle est la même partie', () => {
-  const A = bridee(11);
-  while (A.etat.phase === 'jour') avancer(A);
-  A.etat.camp.dotation = 9; commanderChantier(A.etat, 'aerodrome', 0); commanderChantier(A.etat, 'artillerie', 1);
+test('relue au milieu d\'un soir d\'achats, la partie garde ses achats ; relue après l\'aube elle est la même partie', () => {
+  const A = auSoir(bridee(11));
+  A.etat.camp.dotation = 9; acheterRang(A.etat, 'aerodrome', 0); acheterRang(A.etat, 'artillerie', 1);
   const B = restaurer(JSON.parse(JSON.stringify(photo(A))), R);
   assert.deepEqual(B.etat.camp, A.etat.camp); assert.deepEqual(B.etat.campEux, A.etat.campEux);
-  assert.equal(B.etat.camp.panier.length, 2);
+  assert.equal(rendreRang(B.etat, 'aerodrome', 0).ok, true, 'rendable après relecture'); acheterRang(B.etat, 'aerodrome', 0);
   for (const X of [A, B]) aube(X);
   assert.deepEqual(B.etat.camp, A.etat.camp);
-  assert.equal(niveauDe(B.etat, 'aerodrome'), 2);
   for (let k = 0; k < 300; k++) { avancer(A); avancer(B); }
   assert.equal(JSON.stringify(photo(B)), JSON.stringify(photo(A)));
 });
-test('relue au milieu d\'un chantier, la partie garde son camp, et relue après une nuit elle est la même partie', () => {
-  const A = petite(7);
-  A.etat.camp.dotation = 5; ordonnerChantier(A.etat, 'aerodrome', 0);
-  const B = restaurer(JSON.parse(JSON.stringify(photo(A))), R);
-  assert.deepEqual(B.etat.camp, A.etat.camp);
-  assert.equal(B.etat.camp.batiments.aerodrome.chantier.vers, 2);
-  for (const X of [A, B]) nuit(X);
-  assert.deepEqual(B.etat.camp, A.etat.camp);
-  assert.equal(niveauDe(B.etat, 'aerodrome'), 2);
-  for (let k = 0; k < 300; k++) { avancer(A); avancer(B); }
-  assert.equal(JSON.stringify(photo(B)), JSON.stringify(photo(A)));
-});
-test('le niveau ne bride encore aucun ordre (lot 1) : un barrage de 220 part au premier matin', async () => {
-  const { ordonnerBarrage } = await import('../js/bataille.js');
-  const B = petite();
-  assert.ok(ordonnerBarrage(B, '220', 300, 450).ok === true);
-});
-test('le camp de départ est neuf à chaque bataille (pas d\'état partagé)', () => {
-  const a = campDeDepart(); a.batiments.chars.niveau = 2; a.lignes.push(0);
-  assert.equal(campDeDepart().batiments.chars.niveau, 1); assert.deepEqual(campDeDepart().lignes, []);
-});
-
-const bridee = (graine = 5) => nouvelleBataille(graine, R, { soldats: 200, jours: 6, camp: true });
-test('partie bridée : les trois calibres, l\'avion, le char et le génie sont prêts dès le premier matin (v0.98.0 ; les niveaux les améliorent)', () => {
+test('tout est prêt dès le premier matin : les calibres, l\'avion, le char et le génie ; refaire un nid demande « Chantier »', () => {
   const B = bridee();
-  assert.ok(B.etat.camp.bride);
   for (const cal of ['75', '155', '220', 'avion', 'char', 'genie']) assert.equal(refusOrdre(B.etat, 0, cal), null, cal);
   for (const cal of ['75', '155', '220']) assert.equal(ordonnerBarrage(B, cal, 300, 450).ok, true, `barrage de ${cal}`);
-});
-test('partie bridée : refaire un nid demande les sapeurs au niveau 2 ; hors partie bridée, rien n\'est bridé', () => {
-  const B = bridee();
-  B.etat.camp.batiments.sapeurs.niveau = 1;
-  assert.match(refusNid(B.etat, 0), /niveau 2/);
-  B.etat.camp.batiments.sapeurs.niveau = 2; assert.equal(refusNid(B.etat, 0), null);
-  assert.equal(refusOrdre(petite().etat, 1, 'char'), null, 'hors partie bridée, en face non plus');
-  assert.equal(refusOrdre(B.etat, 1, 'char'), null, 'en face aussi : tout est prêt au départ');
-});
-test('par défaut (tests, labo, jeu à deux) rien n\'est bridé', () => {
-  assert.equal(petite().etat.camp.bride, false);
-  assert.equal(refusOrdre(petite().etat, 0, 'char'), null);
+  assert.match(refusNid(B.etat, 0), /« Chantier » \(II, Sapeurs\)/);
+  B.etat.camp.rangs.sapeurs[0] = 1; assert.equal(refusNid(B.etat, 0), null);
+  assert.equal(petite().etat.camp.bride, false, 'par défaut (tests, labo, jeu à deux) rien n\'est bridé'); assert.equal(refusNid(petite().etat, 0), null);
 });
 test('le camp est dans la marge arrière, derrière notre 4e ligne, sans que deux bâtiments se touchent, et un point le retrouve', () => {
   const B = bridee(), e = B.etat;
-  e.camp.batiments.chars.niveau = 1; e.camp.batiments.aerodrome.chantier = { vers: 1, nuits: 1, choix: null }; e.camp.batiments.sapeurs.niveau = 1;
   const em = emprisesCamp(e);
   assert.equal(em.length, 6);
   const quatrieme = e.marges.y + 278;
@@ -179,173 +118,83 @@ test('le camp est dans la marge arrière, derrière notre 4e ligne, sans que deu
   for (const a of em) for (const b of em) if (a !== b) assert.ok(Math.abs(a.x - b.x) >= (a.w + b.w) / 2 + 4 || Math.abs(a.y - b.y) >= (a.d + b.d) / 2, `${a.cle} et ${b.cle} se chevauchent`);
   for (const b of em) { assert.equal(batimentSous(e, b.x, b.y), b.cle); assert.ok(b.x - b.w / 2 >= 0 && b.x + b.w / 2 <= 2 * e.marges.x + 400); }
   assert.equal(batimentSous(e, 10, 10), null);
-  e.camp.batiments.chars.niveau = 0;
-  assert.ok(!emprisesCamp(e).some(b => b.cle === 'chars'), 'un bâtiment à bâtir n\'a pas d\'emprise');
 });
-test('une partie bridée relue est la même partie, camp compris', () => {
-  const A = bridee(8); A.etat.camp.dotation = 5; ordonnerChantier(A.etat, 'sapeurs', 0); nuit(A);
-  const B = restaurer(JSON.parse(JSON.stringify(photo(A))), R);
-  assert.deepEqual(B.etat.camp, A.etat.camp); assert.ok(B.etat.camp.bride);
-  assert.equal(niveauDe(B.etat, 'sapeurs'), 2); assert.equal(B.etat.sapeurs[0], 4);
-});
-
-// ─── Lot 3 : ce que les niveaux et les choix changent ───
-const niveauEtChoix = (B, cle, niveau, choix = []) => { B.etat.camp.batiments[cle] = { niveau, choix, chantier: null }; };
-test('le départ de la partie bridée : 2 régiments en réserve, 2 sections de génie et 3 avions (le niveau 1; v0.99.10 : 3 avions) de chaque bâtiment)', () => {
+test('le départ de la partie bridée : 2 régiments frais, 2 sections, 2 chars et 3 avions (le niveau I)', () => {
   const B = bridee();
-  assert.deepEqual(B.etat.reserves, [2, 2]); assert.equal(B.etat.sapeurs[0], 2); assert.deepEqual(B.etat.avions[0], [100, 100, 100]);
-  assert.deepEqual(B.etat.avions[1], [100, 100, 100], 'en face part du même camp (v0.92.0)');
+  assert.deepEqual(B.etat.reserves, [2, 2]); assert.equal(B.etat.sapeurs[0], 2); assert.deepEqual(B.etat.avions[0], [100, 100, 100]); assert.equal(B.etat.charsDispo[0], 2);
+  assert.deepEqual(B.etat.avions[1], [100, 100, 100], 'en face part du même camp');
   assert.deepEqual(petite().etat.reserves, [4, 4], 'hors partie bridée, rien ne change');
 });
-test('améliorer fait venir les effectifs : l\'aérodrome 4 avions, puis 5 ; les sapeurs 4 sections ; la caserne 4 puis 6 régiments', () => {
-  const B = bridee(), e = B.etat; e.camp.dotation = 30;
-  ordonnerChantier(e, 'aerodrome', 0); ordonnerChantier(e, 'sapeurs', 0); ordonnerChantier(e, 'caserne', 0); nuit(B);
-  assert.equal(e.camp.batiments.aerodrome.niveau, 2); assert.deepEqual(e.avions[0], [100, 100, 100, 100]);
-  assert.equal(e.sapeurs[0], 4);
-  assert.equal(e.reserves[0], 4);
-  ordonnerChantier(e, 'aerodrome', 0); ordonnerChantier(e, 'caserne', 1); nuit(B); nuit(B);
-  assert.equal(e.avions[0].length, 5); assert.equal(e.reserves[0], 6);
-});
-test('le blindage du siège : les avions d\'avant et ceux d\'après tiennent 40 % de plus', () => {
-  const B = bridee(), e = B.etat; e.camp.dotation = 30;
-  ordonnerChantier(e, 'aerodrome', 1); nuit(B);
-  assert.deepEqual(e.avions[0], [140, 140, 140, 140]); assert.equal(pvAvion(e, 0), 140);
-});
-test('modif : le produit des niveaux et des choix pris, 1 pour en face et hors partie bridée', () => {
+test('modif : le produit des rangs acquis de l\'onglet, 1 pour un autre camp et hors partie bridée ; la recharge suit le parc', () => {
   const B = bridee(), e = B.etat;
-  assert.equal(modif(e, 0, 'artillerie.dispersion'), 1);
-  niveauEtChoix(B, 'artillerie', 2, [0]); assert.equal(modif(e, 0, 'artillerie.dispersion'), 0.8);
-  niveauEtChoix(B, 'artillerie', 3, [1, 0]); assert.equal(modif(e, 0, 'artillerie.recharge'), 0.85); assert.ok(Math.abs(modif(e, 0, 'artillerie.salve220') - 10 / 6) < 1e-9);
-  niveauEtChoix(B, 'chars', 3, [0, 1]); assert.ok(Math.abs(modif(e, 0, 'chars.recharge') - 0.64) < 1e-9, 'deux paliers de 0,8'); assert.equal(modif(e, 0, 'chars.canon'), 1); assert.equal(modif(e, 0, 'chars.vitesse'), 1.15);
-  assert.equal(modif(e, 1, 'chars.recharge'), 1, 'en face');
-  assert.equal(modif(petite().etat, 0, 'chars.recharge'), 1, 'hors partie bridée');
+  e.camp.rangs.artillerie = [2, 1];
+  assert.ok(Math.abs(modif(e, 0, 'artillerie.dispersion') - 0.81) < 1e-9); assert.equal(modif(e, 0, 'artillerie.recharge'), 0.9);
+  assert.equal(modif(e, 1, 'artillerie.dispersion'), 1); assert.equal(modif(petite().etat, 0, 'artillerie.dispersion'), 1);
+  assert.equal(rechargeDe(e, 0, '155'), 0.9);
+  e.camp.rangs.artillerie = [0, 3]; assert.ok(Math.abs(rechargeDe(e, 0, '220') - 0.9 * 0.9 * 0.75) < 1e-9, 'Tube neuf : le 220 seul');
 });
-test('la recharge d\'une batterie suit le parc : « Caissons doublés » raccourcit un barrage de 155', () => {
-  const B = bridee(), e = B.etat; niveauEtChoix(B, 'artillerie', 2, [1]);
-  assert.equal(ordonnerBarrage(B, '155', 300, 450).ok, true);
-  assert.ok(Math.abs(e.batteries['155'] - e.temps - 70 * 0.85) < 1e-6, `${e.batteries['155']}`);
-  assert.equal(rechargeDe(e, 0, '220'), 0.85); niveauEtChoix(B, 'artillerie', 3, [1, 1]); assert.ok(Math.abs(rechargeDe(e, 0, '220') - 0.85 * 0.75) < 1e-9);
+test('le blindage du siège : les avions d\'avant et ceux d\'après tiennent 20 % de plus', () => {
+  const B = auSoir(bridee()), e = B.etat; e.camp.dotation = 10;
+  acheterRang(e, 'aerodrome', 1); aube(B);
+  assert.deepEqual(e.avions[0], [120, 120, 120]); assert.equal(pvAvion(e, 0), 120);
 });
-test('« Salve longue » : le 220 tire 10 coups ; « Tir de réglage » resserre la dispersion', () => {
-  const B = bridee(), e = B.etat; niveauEtChoix(B, 'artillerie', 3, [0, 0]);
-  ordonnerBarrage(B, '220', 300, 450); assert.equal(e.barrages.at(-1).reste, 10);
-  const C = bridee(); niveauEtChoix(C, 'artillerie', 3, [0, 1]); ordonnerBarrage(C, '220', 300, 450); assert.equal(C.etat.barrages.at(-1).reste, 6);
-});
-test('une partie bridée relue après un chantier à choix est la même partie', () => {
-  const A = bridee(9); A.etat.camp.dotation = 20; ordonnerChantier(A.etat, 'artillerie', 1); nuit(A);
-  const B = restaurer(JSON.parse(JSON.stringify(photo(A))), R);
-  assert.deepEqual(B.etat.camp, A.etat.camp); assert.equal(modif(B.etat, 0, 'artillerie.recharge'), 0.85);
-  for (let k = 0; k < 300; k++) { avancer(A); avancer(B); }
-  assert.equal(JSON.stringify(photo(B)), JSON.stringify(photo(A)));
-});
-
-// ─── Lot 4 : l'équipement des régiments ───
-const regNous = B => B.etat.regiments.find(r => r.camp === 0);
-test('équiper demande la caserne au niveau 2, de la dotation, une place libre, une pièce qu\'il n\'a pas', () => {
-  const B = bridee(), e = B.etat, r = regNous(B);
-  assert.match(refusEquiper(B, r, 'casque'), /caserne au niveau 2/);
-  e.camp.batiments.caserne.niveau = 2; e.camp.dotation = 5;
-  assert.equal(refusEquiper(B, r, 'casque'), null);
-  e.camp.dotation = 0; assert.match(refusEquiper(B, r, 'casque'), /point de dotation/); e.camp.dotation = 5;
-  assert.match(refusEquiper(B, r, 'lance-flammes'), /Pas de telle pièce/);
-  assert.equal(equiper(B, r, 'casque'), true); assert.equal(e.camp.dotation, 4); assert.deepEqual(r.equip, ['casque']);
-  assert.match(refusEquiper(B, r, 'casque'), /a déjà/);
-  assert.equal(equiper(B, r, 'grenades'), true);
-  assert.match(refusEquiper(B, r, 'hotchkiss'), new RegExp(`${EQUIPEMENT.places} pièces`));
-  assert.equal(equiper(B, r, 'hotchkiss'), false, 'rien ne change quand c\'est refusé'); assert.equal(e.camp.dotation, 3);
-  assert.match(refusEquiper(B, B.etat.regiments.find(x => x.camp === 1), 'casque'), /caserne au niveau 2/, 'chaque camp équipe avec sa caserne (v0.94.0)');
-  { const P = petite(); assert.match(refusEquiper(P, P.etat.regiments[0], 'casque'), /Pas de caserne dans cette partie/); }
-  assert.equal(facteurEquip(r, 'casque', 'obus'), EQUIPEMENTS.casque.obus); assert.equal(facteurEquip(r, 'brancards', 'retour'), 1);
-  assert.equal(equipeEnMots(r), 'casques adrian et grenadiers');
-});
-test('la corvée de nuit équipe le régiment, coûte un point et lui ôte son repos ; sans caserne elle se refuse à voix haute', async () => {
-  const { refusCorvee } = await import('../js/nuit.js');
-  const B = bridee(), e = B.etat, r = regNous(B);
-  assert.match(refusCorvee(B, r, 'eq-casque'), /caserne au niveau 2/);
-  e.camp.batiments.caserne.niveau = 2; e.camp.dotation = 5;
-  while (e.phase === 'jour') avancer(B);
-  const avant = e.camp.dotation, autre = e.regiments.filter(x => x.camp === 0)[1];
-  const res = aube(B, { [r.id]: 'eq-brancards', [autre.id]: 'repos' });
-  assert.deepEqual(r.equip, ['brancards']); assert.equal(res.bilan[0].equipes, 1);
-  assert.equal(e.camp.dotation, avant - EQUIPEMENT.cout, 'un point payé ; la dotation est tombée le soir, avant (la soirée, lot 1)');
-  assert.equal(autre.equip, undefined);
-});
-test('la dernière pièce ne se donne pas si la caisse s\'est vidée : le régiment se repose', () => {
-  const B = bridee(), e = B.etat; e.camp.batiments.caserne.niveau = 2;
-  const [a, b] = e.regiments.filter(x => x.camp === 0);
-  while (e.phase === 'jour') avancer(B);
-  e.camp.dotation = 1;       // (après le soir, qui verse la dotation)
-  const res = aube(B, { [a.id]: 'eq-casque', [b.id]: 'eq-grenades' });
-  assert.equal(res.bilan[0].equipes, 1); assert.equal((a.equip?.length ?? 0) + (b.equip?.length ?? 0), 1);
-});
-test('les casques font moins de morts sous les obus (même graine, mêmes obus)', () => {
+test('l\'Infanterie vaut pour tous nos régiments : les casques font moins de morts sous les obus (même graine, mêmes obus)', () => {
   const morts = casques => {
     const B = bridee(11);
-    for (const r of B.etat.regiments) if (r.camp === 0 && casques) r.equip = ['casque'];
-    B.etat.camp.batiments.artillerie.niveau = 3;
-    for (let k = 0; k < 8; k++) ordonnerBarrage(B, '155', 300 + k * 6, 460, 1);
+    if (casques) B.etat.camp.rangs.infanterie = [1, 0];
     for (let k = 0; k < 900; k++) { avancer(B); if (k % 60 === 0) for (let q = 0; q < 3; q++) B.etat.barrages.push({ camp: 1, cal: '155', x: 280 + q * 30, y: 440, reste: 6, prochain: B.etat.temps }); }
     return B.etat.pertes[0];
   };
   const sans = morts(false), avec = morts(true);
   assert.ok(avec <= sans, `avec casques ${avec}, sans ${sans}`);
+  assert.equal(infanterie(bridee().etat, 0, 'obus'), 1);
+  assert.ok(!CORVEES.some(c => c.id.startsWith('eq-')), 'la corvée d\'équipement n\'existe plus');
 });
-test('une partie équipée relue est la même partie, équipement compris', () => {
-  const A = bridee(13); A.etat.camp.batiments.caserne.niveau = 2; A.etat.camp.dotation = 5; equiper(A, regNous(A), 'hotchkiss');
-  const B = restaurer(JSON.parse(JSON.stringify(photo(A))), R);
-  assert.deepEqual(regNous(B).equip, ['hotchkiss']);
-  for (let k = 0; k < 300; k++) { avancer(A); avancer(B); }
-  assert.equal(JSON.stringify(photo(B)), JSON.stringify(photo(A)));
+test('les régiments frais d\'un rang de la caserne relèvent aussi le plafond de la bataille', () => {
+  const B = auSoir(bridee()), e = B.etat; e.camp.dotation = 10;
+  const avant = renfortsDe(e, 0).plafond;
+  acheterRang(e, 'caserne', 0); aube(B);
+  assert.equal(renfortsDe(e, 0).plafond, avant + 2); assert.equal(renfortsDe(e, 0).restants, 4);
 });
-
-// ─── Lot 5 : le camp d'en face, la campagne ───
 test('en face a son camp : le même départ que nous, sa dotation selon la difficulté ; hors partie bridée, aucun', () => {
   const B = bridee(), K = B.etat.campEux;
   assert.ok(K.bride); assert.equal(K.dotation, DOTATION.depart); assert.equal(K.mult, 1);
-  assert.deepEqual(B.etat.reserves, [2, 2], 'en face part de la même réserve');
   assert.equal(petite().etat.campEux ?? null, null);
   const calme = nouvelleBataille(5, R, { soldats: 200, jours: 6, camp: true, difficulte: 'calme' }), dur = nouvelleBataille(5, R, { soldats: 200, jours: 6, camp: true, difficulte: 'offensive' });
   assert.equal(calme.etat.campEux.mult, 0.7); assert.equal(dur.etat.campEux.mult, 1.3); assert.equal(calme.etat.camp.mult, 1, 'la nôtre ne change jamais');
+  B.etat.campEux.rangs.artillerie = [1, 0];
+  assert.equal(modif(B.etat, 1, 'artillerie.dispersion'), 0.9); assert.equal(modif(B.etat, 0, 'artillerie.dispersion'), 1);
 });
-test('les choix d\'en face comptent pour elle seule : ses calibres sont prêts, son artillerie au niveau 2 resserre sa dispersion', () => {
-  const B = bridee();
-  for (const cal of ['75', '155', '220']) assert.equal(ordonnerBarrage(B, cal, 300, 200, 1).ok, true, cal);
-  B.etat.campEux.batiments.artillerie = { niveau: 2, choix: [0], chantier: null };
-  assert.equal(modif(B.etat, 1, 'artillerie.dispersion'), 0.8, 'ses choix comptent aussi');
-  assert.equal(modif(B.etat, 0, 'artillerie.dispersion'), 1, 'et ne changent rien chez nous');
-});
-test('en face commande seule le soir, payé à l\'aube : l\'artillerie, la caserne, les sapeurs, avec sa dotation, et ses effectifs suivent', () => {
+test('en face achète seul le soir : son plan, avec sa dotation ; l\'aube confirme et sa réserve grandit ; jamais de char ni d\'avion', () => {
   const B = bridee(), e = B.etat; e.campEux.dotation = 20;
-  while (e.phase === 'jour') avancer(B);       // le soir : la dotation tombe, l'IA commande les chantiers (son panier, payé à l'aube)
-  assert.ok(e.campEux.panier.length >= 2, `des commandes (${e.campEux.panier.length})`);
+  auSoir(B);
+  assert.ok(e.campEux.achats.length >= 2, `des achats (${e.campEux.achats.length})`);
+  assert.ok(e.campEux.dotation < 20 + e.campEux.soir.points);
   aube(B);
-  const en = Object.values(e.campEux.batiments).filter(c => c.chantier || c.niveau > 1).length;
-  assert.ok(en >= 2, `des chantiers ouverts ou finis (${en})`);
-  assert.ok(e.campEux.dotation < 20);
-  let pic = e.reserves[1];       // (depuis la v0.101.0 en face déploie un régiment frais de sa réserve dans la journée : on regarde le plus haut qu'elle atteint, pas où elle finit)
+  let pic = e.reserves[1];
   for (let k = 0; k < 4 && e.phase !== 'fin'; k++) { e.campEux.dotation = Math.max(e.campEux.dotation, 10); nuit(B); pic = Math.max(pic, e.reserves[1]); }
-  assert.ok(campDe(e, 1).batiments.artillerie.niveau >= 2); assert.ok(pic >= 4, `sa réserve a grandi (${pic})`);
-  assert.equal(e.campEux.batiments.chars.niveau, 1, 'elle ne bâtit pas ce qu\'elle n\'emploie pas');
+  assert.ok(e.campEux.rangs.artillerie[0] >= 1); assert.ok(pic >= 4, `sa réserve a grandi (${pic})`);
+  assert.deepEqual(e.campEux.rangs.chars, [0, 0]); assert.deepEqual(e.campEux.rangs.aerodrome, [0, 0]);
 });
 test('son camp est le nôtre tourné d\'un demi-tour, au nord ; il ne se choisit pas', () => {
-  const B = bridee(), e = B.etat; e.campEux.batiments.sapeurs.niveau = 1; e.camp.batiments.sapeurs.niveau = 1;
+  const B = bridee(), e = B.etat;
   const nous = emprisesCamp(e, 0).find(b => b.cle === 'sapeurs'), eux = emprisesCamp(e, 1).find(b => b.cle === 'sapeurs');
   assert.equal(nous.x + eux.x, 2 * e.marges.x + 400); assert.equal(nous.y + eux.y, 2 * e.marges.y + 300);
   assert.ok(eux.y < e.marges.y, 'dans la marge du nord'); assert.equal(eux.rot, Math.PI);
   assert.equal(batimentSous(e, eux.x, eux.y), null, 'un clic sur son camp ne choisit rien');
   assert.equal(batimentSous(e, eux.x, eux.y, 0, 1), 'sapeurs');
 });
-test('la campagne reporte les niveaux du camp : la bataille suivante en part, sans le chantier ni la dotation', () => {
-  const A = bridee(21); A.etat.camp.dotation = 50;
-  ordonnerChantier(A.etat, 'aerodrome', 0); ordonnerChantier(A.etat, 'artillerie', 1); ordonnerChantier(A.etat, 'sapeurs', 0); nuit(A);
-  const depart = Object.fromEntries(Object.entries(A.etat.camp.batiments).map(([k, c]) => [k, { niveau: c.niveau, choix: [...c.choix] }]));
+test('la campagne reporte les rangs du camp : la bataille suivante en part, sans la dotation', () => {
+  const A = auSoir(bridee(21)); A.etat.camp.dotation = 50;
+  acheterRang(A.etat, 'aerodrome', 0); acheterRang(A.etat, 'artillerie', 1); acheterRang(A.etat, 'sapeurs', 0); aube(A);
+  const depart = Object.fromEntries(Object.entries(A.etat.camp.rangs).map(([o, r]) => [o, [...r]]));
   const S = nouvelleBataille(22, R, { soldats: 200, jours: 6, camp: true, campDepart: depart }), e = S.etat;
-  assert.equal(e.camp.batiments.aerodrome.niveau, 2); assert.equal(e.camp.batiments.artillerie.niveau, 2); assert.deepEqual(e.camp.batiments.artillerie.choix, [1]);
-  assert.equal(e.camp.dotation, DOTATION.depart, 'la dotation repart du départ'); assert.equal(e.camp.batiments.aerodrome.chantier, null);
-  assert.equal(e.avions[0].length, 4, 'les avions de l\'aérodrome au niveau 2'); assert.equal(e.sapeurs[0], 4); assert.equal(modif(e, 0, 'artillerie.recharge'), 0.85);
-  assert.equal(e.campEux.batiments.aerodrome.niveau, 1, 'en face repart du départ');
+  assert.deepEqual(e.camp.rangs.aerodrome, [1, 0]); assert.deepEqual(e.camp.rangs.artillerie, [0, 1]);
+  assert.equal(e.camp.dotation, DOTATION.depart, 'la dotation repart du départ'); assert.deepEqual(e.camp.achats, []);
+  assert.equal(e.avions[0].length, 4); assert.equal(e.sapeurs[0], 4); assert.equal(modif(e, 0, 'artillerie.recharge'), 0.9);
+  assert.deepEqual(e.campEux.rangs.aerodrome, [0, 0], 'en face repart du départ');
 });
-test('une partie avec le camp d\'en face relue est la même partie, après une nuit où elle a bâti', () => {
+test('une partie avec le camp d\'en face relue est la même partie, après une nuit où il a acheté', () => {
   const A = bridee(23); A.etat.campEux.dotation = 12; nuit(A);
   const B = restaurer(JSON.parse(JSON.stringify(photo(A))), R);
   assert.deepEqual(B.etat.campEux, A.etat.campEux);
@@ -390,10 +239,8 @@ test('une bataille bridée a 2 chars et 3 avions au départ ; le parc et l\'aér
   assert.equal(charsDispo(e, 0), 0);
   e.batteries.char = 0; const r = ordonnerBarrage(B, 'char', cx, Z.y0 + 120, 0);
   assert.match(r.refus, /Plus un char au parc/);
-  // les niveaux supérieurs : 3 puis 4 chars, 4 puis 5 avions (les chars sortis ne reviennent pas)
-  e.camp.dotation = 20; e.camp.batiments.chars.niveau = 2; e.camp.batiments.aerodrome.niveau = 2;
-  const A = bridee(); appliquerDepart(A.etat, 0); // (un départ neuf au niveau 1)
-  A.etat.camp.batiments.chars.niveau = 3; A.etat.camp.batiments.aerodrome.niveau = 3; appliquerDepart(A.etat, 0);
+  // les rangs qui en ajoutent (les pistes « Le parc » et « Escadrille », II et IV) : 4 chars, 5 avions
+  const A = bridee(); A.etat.camp.rangs.chars = [3, 0]; A.etat.camp.rangs.aerodrome = [3, 0]; appliquerDepart(A.etat, 0);
   assert.equal(A.etat.charsDispo[0], 4); assert.equal(A.etat.avions[0].length, 5);
   assert.equal(petite().etat.charsDispo[0], null, 'sans camp bridé, pas de limite');
 });
@@ -426,9 +273,9 @@ group('camp — l\'hôpital (v0.99.11)');
 test('l\'hôpital compte les évacués, change la mort et le retour par niveau, et renvoie les guéris où l\'on veut', () => {
   const B = bridee(), e = B.etat;
   assert.equal(niveauDe(e, 'hopital'), 1); assert.equal(modif(e, 0, 'hopital.mort'), 1);
-  e.camp.batiments.hopital.niveau = 2; e.camp.batiments.hopital.choix = [0];
-  assert.equal(modif(e, 0, 'hopital.mort'), 0.75 * 0.75, 'les pavillons puis les ambulances'); assert.equal(modif(e, 0, 'hopital.retour'), 1);
-  e.camp.batiments.hopital.choix = [1]; assert.equal(modif(e, 0, 'hopital.retour'), 1.25, 'les chirurgiens');
+  e.camp.rangs.hopital = [2, 0];
+  assert.ok(Math.abs(modif(e, 0, 'hopital.mort') - 0.85 * 0.85) < 1e-9, 'l\'hôpital de campagne puis les ambulances'); assert.equal(modif(e, 0, 'hopital.retour'), 1);
+  e.camp.rangs.hopital = [0, 1]; assert.equal(modif(e, 0, 'hopital.retour'), 1.1, 'les chirurgiens');
   for (let k = 0; k < 40; k++) e.evacues.push([5000 + k, 1, 1, 0, 0, 0, 0]);
   assert.equal(patients(e, 0).length, 40); assert.equal(patients(e, 1).length, 0); assert.equal(patients(e, 0).filter(p => p.pret).length, 0, 'le premier jour : personne n\'est guéri');
   assert.match(affecterGueris(e, 0, 99).refus, /pas le vôtre/); assert.ok(affecterGueris(e, 0, 1).ok); assert.equal(e.affectation[0], 1);

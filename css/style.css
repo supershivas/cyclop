@@ -988,32 +988,6 @@ h2 { font-weight: normal; letter-spacing: var(--titre-lettres); }
 .char-fiche [aria-disabled="true"] { opacity: 0.5; cursor: not-allowed; }
 .char-fiche .compte b { font-weight: 700; }
 
-/* ─── La gestion des régiments de la nuit (v0.116.0) ─── */
-#dialogue-regiments { width: min(760px, 94vw); max-height: 94vh; overflow-y: auto; box-sizing: border-box; }
-#dialogue-regiments h3 { margin: calc(var(--pas) * 2) 0 var(--pas); font-size: var(--texte); text-transform: uppercase; letter-spacing: var(--lettres-etiquette); }
-.reg-quantites { display: flex; flex-wrap: wrap; gap: var(--pas); margin-bottom: calc(var(--pas) * 2); }
-.reg-quantites .bouton { min-height: var(--jeu-cible); }
-.reg-quantites .bouton.actif { background: var(--jeu-accent); color: var(--jeu-encre); outline: 2px solid var(--jeu-encre); outline-offset: -4px; }
-.reg-grille { display: grid; grid-template-columns: repeat(auto-fill, minmax(168px, 1fr)); gap: var(--pas); user-select: none; -webkit-user-select: none; }
-.reg-gestion {
-  display: grid; grid-template-columns: auto minmax(0, 1fr); column-gap: var(--pas); row-gap: var(--e0); align-items: center; min-height: calc(var(--jeu-cible) * 2); box-sizing: border-box; padding: var(--pas);
-  background: var(--jeu-encre); color: var(--jeu-fond); border-top: 3px solid var(--jeu-nous); box-shadow: var(--ombre-papier); cursor: grab; touch-action: none; font-size: var(--texte-petit);
-}
-.reg-gestion b { grid-row: 1 / 2; font-size: var(--texte-grand); font-weight: normal; }
-.reg-gestion .nom { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.reg-gestion .effectif, .reg-gestion .apres { grid-column: 1 / -1; }
-.reg-gestion .apres { color: var(--jeu-accent); }
-.reg-gestion .apres.simule { text-decoration: underline; }
-.reg-gestion:focus-visible { outline: 2px solid var(--jeu-nous); outline-offset: 2px; }
-.reg-gestion.source { background: var(--jeu-fond); color: var(--jeu-encre); outline: 2px solid var(--jeu-encre); outline-offset: -5px; }
-.reg-gestion.source .apres { color: inherit; }
-.reg-gestion.pris { opacity: .45; }                                  /* l'emplacement de départ du geste */
-.reg-gestion.vise { outline: 2px dashed var(--jeu-accent); outline-offset: -5px; }   /* l'arrivée, en pointillés */
-.reg-gestion.fantome { position: fixed; z-index: 1000; pointer-events: none; box-shadow: 6px 8px 0 var(--jeu-ombre); cursor: grabbing; }
-.reg-grille.en-glisse { cursor: grabbing; }
-.reg-prevus { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--e1); }
-.reg-prevus li { display: flex; gap: var(--pas); align-items: center; justify-content: space-between; min-height: var(--jeu-cible); }
-.reg-prevus .bouton { min-height: var(--jeu-cible); flex: none; }
 /* les renforts de la caserne et les blessés de l'hôpital, en clair (v0.116.0) */
 .renforts, .blesses-hopital { display: grid; gap: var(--e1); padding: var(--pas); border: 1px solid currentColor; }
 .renforts .pastilles { display: flex; gap: var(--e1); }
@@ -1127,3 +1101,282 @@ body.vue-verrouillee .char-fiche { display: none; }      /* la fiche cacherait l
 .accident.ecrase { background: var(--jeu-deroute); opacity: 0.6; animation: none; box-shadow: none; }
 @keyframes accident-bat { from { opacity: 0.45; } to { opacity: 0.85; } }
 @media (prefers-reduced-motion: reduce) { .accident { animation: none; } }
+
+/* ─── La soirée (troisième jet, v0.150.0 ; les feuilles du labo, sujet « La soirée », variante A, reprises telles quelles : tout sélecteur porte .ps-e) ─── */
+.haut-centre:has(#soiree:not([hidden])) .pertes { display: none; }
+#soiree.pn { width: min(1240px, calc(100vw - 2 * var(--e4))); max-height: none; overflow: visible; }
+
+.ps-e { --action: #7a0f1c; --action-survol: #9b1426; --action-appui: #5a0a14; --ps-h: clamp(260px, calc(100dvh - 372px), 430px);
+  grid-template-columns: minmax(0, 1fr); grid-template-areas: none; row-gap: 0; }
+.pn.ps-e { padding-top: 0; }
+.ps-e > * { grid-area: auto; min-width: 0; }
+/* l'en-tête : une bande sombre, le titre en os */
+.papier.ps-e > .ps-bande { display: flex; align-items: center; justify-content: space-between; gap: var(--e4); margin: 0 calc(-1 * var(--e5)); padding: var(--pas) var(--e5); background: var(--jeu-fond); color: var(--jeu-encre); }
+.ps-e .ps-bande h2 { color: var(--jeu-encre); white-space: nowrap; }
+.ps-e .ps-fil { display: flex; align-items: center; gap: var(--e1); }
+.ps-e .ps-fleche { color: var(--jeu-accent); }
+.papier.ps-e .ps-bande .ps-pas { display: flex; align-items: center; gap: var(--e1); min-height: var(--jeu-cible); padding: 0 var(--e3); background: transparent; color: var(--jeu-encre); border: 1px dashed var(--jeu-accent); box-shadow: none; }
+.ps-e .ps-pas kbd { font: inherit; font-size: var(--texte-petit); border: 1px solid currentColor; padding: 0 4px; }
+.papier.ps-e .ps-bande .ps-pas.fait { border: 1px solid var(--jeu-encre); }
+.papier.ps-e .ps-bande .ps-pas[aria-current="true"] { background: var(--jeu-encre); color: var(--jeu-fond); border: 1px solid var(--jeu-encre); font-weight: bold; }
+/* le corps : la même hauteur aux trois étapes */
+.ps-e .ps-corps { height: var(--ps-h); overflow: auto; padding: var(--e4) 0; box-sizing: border-box; }
+.ps-e .ps-corps > .ps-panneau { height: 100%; box-sizing: border-box; }
+/* le pied : « ← Retour » et le bouton d'action, rouge sang */
+.ps-e .ps-bas { display: flex; justify-content: space-between; align-items: center; margin: 0 calc(-1 * var(--e5)); padding: var(--e3) var(--e5) 0; border-top: 1px solid var(--jeu-accent); }
+.ps-e .ps-bas .bouton { min-height: var(--jeu-cible); }
+.ps-e .bouton.ps-action { min-width: 16rem; background: var(--action); color: var(--jeu-encre); border-color: var(--jeu-fond); font-weight: bold; font-size: var(--texte-moyen); }
+.ps-e .bouton.ps-action.est-survol { background: var(--action-survol); color: var(--jeu-encre); }
+@media (hover: hover) { .ps-e .bouton.ps-action:hover { background: var(--action-survol); color: var(--jeu-encre); } }
+.ps-e .bouton.ps-action:active { background: var(--action-appui); transform: translate(2px, 2px); box-shadow: none; }
+.ps-e .bouton.ps-action:focus-visible { outline: 3px double var(--jeu-encre); outline-offset: 3px; }
+/* 1 */
+.ps-e .ps-journee { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: var(--e5); align-content: start; }
+.ps-e .ps-decompte { display: grid; align-content: start; font-size: var(--texte-moyen); }
+.ps-e .ps-l { display: flex; justify-content: space-between; align-items: baseline; padding: var(--e1) 0; border-bottom: 1px dotted var(--jeu-accent); }
+.ps-e .ps-l b { font-size: var(--titre-3); min-width: 3ch; text-align: right; }
+.ps-e .ps-l.discret { color: #42392e; }
+.ps-e .ps-l.ps-total { border-top: 3px solid var(--jeu-fond); border-bottom: 0; margin-top: var(--e1); padding-top: var(--pas); font-weight: bold; }
+.ps-e .ps-l.ps-total b { font-size: 56px; line-height: 1; font-family: var(--police-titre); }
+.ps-e .ps-chiffres { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--pas); }
+.ps-e .ps-chiffre { display: grid; border-top: 3px solid var(--jeu-accent); padding-top: var(--e1); }
+.ps-e .ps-chiffre.nous { border-top-color: var(--jeu-nous); } .ps-e .ps-chiffre.eux { border-top-color: var(--jeu-eux); }
+.ps-e .ps-chiffre b { font-size: var(--titre-2); } .ps-e .ps-chiffre span { font-size: var(--texte-petit); color: #42392e; }
+.ps-e .ps-faits { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--pas); }
+.ps-e .ps-fait { display: grid; grid-template-columns: auto auto; grid-template-rows: auto auto auto; align-items: center; justify-content: start; gap: 2px var(--e1); padding: var(--pas); border: 1px solid var(--jeu-fond); min-height: 64px; box-sizing: border-box; }
+.ps-e .ps-fait b { font-size: var(--titre-3); }
+.ps-e .ps-fait > span:not(.ps-fait-ic) { grid-column: 1 / -1; font-size: var(--texte-petit); color: #42392e; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ps-e .ps-fait-ic { display: inline-grid; } .ps-fait-ic svg { width: 18px; height: 18px; }
+.ps-e .ps-fait-barre { grid-column: 1 / -1; display: block; height: 6px; border: 1px solid var(--jeu-fond); }
+.ps-e .ps-fait-barre i { display: block; height: 100%; background: var(--jeu-nous); }
+.ps-e .ps-lien { justify-self: start; background: none; border: 0; box-shadow: none; padding: 0; min-height: var(--jeu-cible); color: var(--jeu-fond); text-decoration: underline; text-underline-offset: 3px; }
+.ps-e .ps-histo { display: grid; grid-template-rows: auto minmax(0, 1fr); gap: var(--pas); }
+/* 2 */
+.ps-e .ps-camp3 { display: grid; grid-template-columns: minmax(0, 1fr) minmax(260px, 300px); gap: var(--e5); }
+.ps-e .ps-camp3 > .ps-col { grid-template-rows: auto minmax(0, 1fr); }
+.ps-e .ps-tabs { display: flex; gap: var(--e1); border: 0; }
+.ps-e .ps-tab { flex: 1 1 0; min-width: 0; display: grid; justify-items: center; gap: 4px; min-height: var(--jeu-cible); padding: var(--e1) var(--e1); background: var(--jeu-brume); color: var(--jeu-fond); border: 1px solid var(--jeu-fond); box-shadow: none; position: relative; font-weight: bold; font-size: var(--texte-petit); }
+.ps-e .ps-tab > span:first-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%; }
+.ps-e .ps-tab[aria-selected="true"] { background: var(--jeu-encre); border-bottom-color: var(--jeu-encre); border-width: 2px 2px 0; padding-bottom: calc(var(--e1) + 2px); margin-bottom: -2px; }
+.ps-e .ps-plus { position: absolute; top: -1px; right: -1px; width: 14px; height: 14px; display: grid; place-items: center; background: var(--jeu-fond); color: var(--jeu-encre); font: bold 12px/1 var(--jeu-police); font-style: normal; }
+.ps-e .ps-carres { display: inline-flex; gap: 3px; vertical-align: middle; }
+.ps-e .ps-carres i { width: 9px; height: 9px; border: 1.5px solid currentColor; box-sizing: border-box; }
+.ps-e .ps-carres i.plein { background: currentColor; }
+.ps-e .ps-arbre2 { display: grid; grid-template-columns: minmax(0, 0.8fr) 36px minmax(0, 1fr) 36px minmax(0, 1fr); grid-template-rows: auto auto auto; gap: var(--e4) 0; align-items: center; align-content: start; padding-top: var(--pas); border-top: 2px solid var(--jeu-fond); }
+.ps-e .ps-rang-t { font: bold var(--titre-3) var(--police-titre); letter-spacing: .1em; border-bottom: 1px solid var(--jeu-fond); }
+.ps-e .ps-lien1, .ps-e .ps-lien2 { align-self: stretch; position: relative; min-height: 0; }
+.ps-e .ps-lien1 svg, .ps-e .ps-lien2 svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.ps-e .ps-lien1 path, .ps-e .ps-lien2 path { fill: none; stroke: var(--jeu-accent); stroke-width: 2; vector-effect: non-scaling-stroke; stroke-dasharray: 4 3; }
+.ps-e .ps-lien1 path.ok, .ps-e .ps-lien2 path.ok { stroke: var(--jeu-fond); stroke-width: 3; stroke-dasharray: none; }
+.ps-e .ps-n { position: relative; display: grid; justify-items: center; align-content: center; gap: 4px; min-height: 92px; padding: var(--pas) var(--e1); text-align: center; background: var(--jeu-encre); color: var(--jeu-fond); border: 2px solid var(--jeu-fond); box-shadow: 4px 4px 0 var(--jeu-fond); font-size: var(--texte-petit); }
+.ps-e .ps-n b { line-height: 1.2; }
+.ps-e .ps-n-ic svg, .ps-e .ps-nt-ic svg { width: 26px; height: 26px; }
+.ps-e .ps-n.acquis, .ps-e .ps-n.soir { background: var(--jeu-brume); box-shadow: none; outline: 2px solid var(--jeu-fond); outline-offset: -6px; }
+.ps-e .ps-n.soir { background: repeating-linear-gradient(135deg, var(--jeu-brume) 0 6px, var(--jeu-encre) 6px 8px); }
+.ps-e .ps-n.cher { box-shadow: none; }
+.ps-e .ps-n.verrou { box-shadow: none; border-style: dashed; border-color: var(--jeu-accent); color: #42392e; }
+.ps-e .ps-n.verrou .ps-n-ic { opacity: .6; }
+.ps-e .ps-n[aria-pressed="true"] { outline: 3px solid var(--jeu-fond); outline-offset: 4px; }
+.ps-e .ps-n-coin { position: absolute; top: 4px; right: 4px; width: 16px; height: 16px; display: grid; place-items: center; }
+.ps-e .ps-n.acquis .ps-n-coin, .ps-e .ps-n.soir .ps-n-coin { background: var(--jeu-fond); color: var(--jeu-encre); }
+.ps-e .ps-cote { display: grid; grid-template-rows: auto minmax(0, 1fr); gap: var(--e4); padding-left: var(--e4); border-left: 2px solid var(--jeu-fond); }
+.ps-e .ps-caisse { display: grid; grid-template-columns: auto 1fr; grid-template-rows: auto auto; align-items: end; gap: 0 var(--pas); }
+.ps-e .ps-caisse b { grid-row: 1 / 3; font: 64px/0.85 var(--police-titre); }
+.ps-e .ps-jetons i { width: 16px; height: 16px; }
+.ps-e .ps-jetons i.depense { background: repeating-linear-gradient(135deg, currentColor 0 2px, transparent 2px 5px); }
+.ps-e .ps-noeud3 { display: grid; grid-template-rows: auto auto minmax(0, 1fr) auto; gap: var(--pas); min-height: 0; }
+.ps-e .ps-nt { display: grid; grid-template-columns: 56px minmax(0, 1fr); gap: var(--pas); align-items: center; }
+.ps-e .ps-nt-ic { display: grid; place-items: center; width: 56px; height: 56px; border: 2px solid var(--jeu-fond); box-sizing: border-box; }
+.ps-e .ps-nt h3 { font-size: var(--titre-2); line-height: 1; }
+.ps-e .ps-nt-sous { display: flex; align-items: center; gap: var(--e1); }
+.ps-effet { display: grid; gap: var(--e1); }
+.ps-effet-t { display: flex; justify-content: space-between; align-items: baseline; }
+.ps-effet-t span { font-weight: bold; }
+.ps-effet-t b { font: 36px/1 var(--police-titre); }
+.ps-e .ps-ab { display: grid; grid-template-columns: auto minmax(0, 1fr) 5ch; gap: var(--e1) var(--pas); align-items: center; font-size: var(--texte-petit); }
+.ps-e .ps-ab small { text-align: right; font-weight: bold; }
+.ps-e .ps-ab-b { display: block; height: 12px; border: 1.5px solid var(--jeu-fond); }
+.ps-e .ps-ab-b i { display: block; height: 100%; background: var(--jeu-accent); }
+.ps-e .ps-ab-b.apres i { background: var(--jeu-fond); }
+.ps-effet-txt { margin: 0; }
+.ps-e .ps-acheter { min-height: var(--jeu-cible); background: var(--jeu-fond); color: var(--jeu-encre); font-weight: bold; }
+.ps-e .ps-rendre { min-height: var(--jeu-cible); }
+.ps-e .ps-raison { margin: 0; padding: var(--pas); border: 1px dashed var(--jeu-accent); color: #42392e; text-align: center; }
+.ps-equip3 { align-content: start; gap: var(--e3); }
+.ps-e .ps-pieces3 { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--pas); padding-top: var(--pas); border-top: 2px solid var(--jeu-fond); }
+.ps-e .ps-pieces3 .ps-n { min-height: 76px; }
+.ps-e .ps-regs3 { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--e1); }
+.ps-e .ps-reg3 { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: var(--e1); min-height: var(--jeu-cible); padding: 0 var(--pas); text-align: left; }
+.ps-e .ps-reg3 span:not(.ps-places) { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ps-e .ps-reg3.choisi { background: var(--jeu-fond); color: var(--jeu-encre); }
+.ps-e .ps-reg3.plein { opacity: .55; }
+.ps-e .ps-reg3 .ps-places { display: flex; gap: 2px; }
+.ps-e .ps-reg3 .ps-places i { display: grid; place-items: center; width: 20px; height: 20px; border: 1px solid currentColor; box-sizing: border-box; }
+.ps-e .ps-reg3 .ps-places i svg { width: 14px; height: 14px; }
+.ps-e .ps-reg3 .ps-places i.soir { background: repeating-linear-gradient(135deg, transparent 0 3px, var(--jeu-brume) 3px 5px); }
+/* 3 */
+.ps-e .ps-regiments3 { display: grid; grid-template-rows: auto minmax(0, 1fr); gap: var(--pas); }
+.ps-e .ps-regs-tete { display: flex; justify-content: space-between; align-items: center; }
+.ps-e .ps-tous { display: flex; align-items: center; gap: var(--e1); font-weight: bold; }
+.ps-e .ps-cartes3 { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); grid-auto-rows: 1fr; gap: var(--pas); min-height: 0; }
+.ps-e .ps-carte3 { position: relative; display: grid; grid-template-rows: auto auto 1fr; gap: var(--e1); padding: var(--pas); border: 1px solid var(--jeu-fond); cursor: grab; min-width: 0; box-sizing: border-box; }
+.ps-e .ps-carte3.source { background: var(--jeu-brume); outline: 2px solid var(--jeu-fond); }
+.ps-e .ps-carte3.depot { outline: 3px dashed var(--jeu-fond); outline-offset: 2px; }
+.ps-e .ps-c3-tete { display: flex; align-items: center; gap: var(--e1); min-width: 0; }
+.ps-e .ps-c3-tete > span { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: bold; }
+.ps-e .ps-carte3 .pn-etat { min-width: 0; }
+.ps-e .ps-carte3 .pn-mj { display: none; }
+.ps-e .ps-poignee, .ps-e .ps-tr { min-height: 28px; min-width: 28px; padding: 0 4px; display: inline-flex; align-items: center; gap: 2px; box-shadow: none; }
+.ps-e .ps-tr { border: 1px solid var(--jeu-fond); font-size: var(--texte-petit); }
+.ps-e .ps-tr-x { font-style: normal; color: #42392e; margin-left: 2px; }
+.ps-e .ps-corvees3 { display: flex; gap: var(--e1); align-items: end; }
+.ps-e .ps-corvees3 .pn-c { width: 40px; height: 40px; min-height: 40px; }
+.ps-e .ps-corvees3 .pn-c.refus, .ps-e .ps-corvees3 .pn-c[aria-disabled="true"] { background: none; border-style: dotted; opacity: .5; }
+.ps-e .ps-contact3 { display: grid; place-items: center; width: 40px; height: 40px; border: 1px dashed var(--jeu-fond); }
+.ps-e .ps-depot { position: absolute; inset: auto 0 0 0; background: var(--jeu-encre); border-top: 2px solid var(--jeu-fond); padding: var(--e1); display: grid; gap: var(--e1); z-index: 2; }
+.ps-e .ps-depot-b { display: flex; gap: var(--e1); flex-wrap: wrap; }
+.ps-e .ps-depot-b .bouton { min-height: 32px; padding: 0 var(--pas); }
+
+.ps-e .ps-n.ps-n1 { min-height: var(--jeu-cible); grid-auto-flow: column; justify-content: start; align-items: center; gap: var(--pas); padding: 0 var(--pas); text-align: left; }
+.ps-e .ps-n.ps-n1 .ps-n-ic svg { width: 20px; height: 20px; }
+.ps-e .ps-col { display: grid; gap: var(--pas); align-content: start; min-width: 0; }
+.ps-e .ps-histo-tete { display: flex; justify-content: space-between; align-items: center; }
+.ps-e .ps-histo-corps { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr); gap: var(--e5); min-height: 0; }
+.ps-e .ps-graphe svg { width: 100%; height: auto; display: block; }
+
+/* 1 : la carte du front au centre, le registre à droite, les moments dessous */
+.ps-e .ps3-journee { display: grid; grid-template-columns: minmax(0, 1fr) minmax(220px, 260px); grid-template-rows: minmax(0, 1fr) auto; gap: var(--e3) var(--e5); }
+.ps-e .ps3-centre { grid-column: 1; grid-row: 1; display: grid; grid-template-rows: auto minmax(0, 1fr) auto auto; gap: var(--e1); min-height: 0; }
+.ps-e .ps3-tete { display: flex; justify-content: space-between; align-items: center; gap: var(--pas); }
+.ps-e .ps3-tete h3 { font-size: var(--titre-3); }
+.ps-e .ps3-bascule { display: inline-flex; border: 2px solid var(--jeu-fond); }
+.papier.ps-e .ps3-bascule .ps3-b { min-height: 32px; padding: 0 var(--e3); background: var(--jeu-encre); color: var(--jeu-fond); border: 0; box-shadow: none; font-size: var(--texte-petit); }
+.papier.ps-e .ps3-bascule .ps3-b[aria-pressed="true"] { background: var(--jeu-fond); color: var(--jeu-encre); font-weight: bold; }
+.ps-e .ps3-front { min-height: 0; display: grid; }
+.ps-e .ps3-front svg { width: 100%; height: 100%; max-height: 100%; display: block; }
+.ps-e .ps3-front .nml { fill: var(--jeu-brume); opacity: .35; }
+.ps-e .ps3-front .nml-t { font: 11px var(--jeu-police); fill: #42392e; text-anchor: middle; letter-spacing: .1em; }
+.ps-e .ps3-front .sep { stroke: var(--jeu-accent); stroke-dasharray: 3 3; }
+.ps-e .ps3-front .sur { fill: none; stroke: var(--jeu-fond); stroke-width: 2.5; }
+.ps-e .ps3-front .lettre { font: 22px var(--police-titre); fill: var(--jeu-fond); }
+.ps-e .ps3-front .ligne-t { font: 11px var(--jeu-police); fill: #42392e; text-anchor: end; }
+.ps-e .ps3-front .tr { fill: none; stroke-width: 4; stroke-linejoin: miter; }
+.ps-e .ps3-front .tr.nous { stroke: var(--jeu-nous); } .ps-e .ps3-front .tr.eux { stroke: var(--jeu-eux); }
+.ps-e .ps3-front .tr.change { stroke-width: 6; }
+.ps-e .ps3-front .tr.perdu { stroke-dasharray: 5 2; }
+.ps-e .ps3-front .marque.pris { fill: var(--jeu-nous); stroke: var(--jeu-fond); stroke-width: 1; }
+.ps-e .ps3-front .marque.perdu { fill: var(--jeu-fond); }
+.ps-e .ps3-front .croix { stroke: var(--jeu-fond); stroke-width: 1.4; }
+.ps-e .ps3-front .croix.vieux { stroke-width: 1; opacity: .55; }
+.ps-e .ps3-legende { display: flex; flex-wrap: wrap; gap: var(--e1) var(--e4); font-size: var(--texte-petit); color: #42392e; }
+.ps-e .ps3-legende span { display: inline-flex; align-items: center; gap: var(--e1); }
+.ps-e .ps3-legende .lg { display: inline-block; width: 16px; height: 4px; font-style: normal; line-height: 4px; }
+.ps-e .ps3-legende .tr-n { background: var(--jeu-nous); } .ps-e .ps3-legende .tr-e { background: var(--jeu-eux); }
+.ps-e .ps3-legende .pris, .ps-e .ps3-legende .perdu, .ps-e .ps3-legende .croix { width: auto; height: auto; line-height: 1; color: var(--jeu-fond); }
+.ps-e .ps3-legende .pris { color: var(--jeu-nous); -webkit-text-stroke: .5px var(--jeu-fond); }
+.ps-e .ps3-courbe svg { width: 100%; height: auto; max-height: 64px; display: block; }
+.ps-e .ps3-registre { display: grid; align-content: start; gap: 0; padding: var(--e3) var(--e4); border: 1px solid var(--jeu-fond); box-shadow: 4px 4px 0 var(--jeu-fond);
+  background: repeating-linear-gradient(to bottom, transparent 0 27px, rgba(116, 102, 79, .35) 27px 28px); grid-row: 1 / 2; grid-column: 2; }
+.ps-e .ps3-registre h3 { font-size: var(--titre-3); }
+.ps-e .ps3-reg-date { color: #42392e; margin-bottom: var(--pas); }
+.ps-e .ps3-reg-l { display: grid; grid-template-columns: auto minmax(8px, 1fr) auto; align-items: baseline; gap: var(--e1); min-height: 28px; }
+.ps-e .ps3-reg-l i { border-bottom: 1.5px dotted var(--jeu-accent); transform: translateY(-4px); }
+.ps-e .ps3-reg-l b { font: 22px var(--police-titre); min-width: 2.5ch; text-align: right; }
+.ps-e .ps3-reg-l.discret { color: #42392e; }
+.ps-e .ps3-reg-l.total { border-top: 3px double var(--jeu-fond); margin-top: var(--pas); padding-top: var(--e1); font-weight: bold; }
+.ps-e .ps3-reg-l.total i { border: 0; }
+.ps-e .ps3-reg-l.total b { font-size: 48px; line-height: 1; }
+.ps-e .ps3-moments { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--pas); }
+.papier.ps-e .ps3-moment { display: grid; grid-template-columns: auto minmax(0, 1fr); grid-template-rows: auto auto auto; gap: 0 var(--pas); align-items: center; text-align: left; min-height: 0; padding: var(--e1) var(--pas);
+  background: var(--jeu-encre); color: var(--jeu-fond); border: 1px solid var(--jeu-fond); box-shadow: 3px 3px 0 var(--jeu-fond); }
+.papier.ps-e .ps3-moment[aria-pressed="true"] { outline: 2px solid var(--jeu-fond); outline-offset: 2px; background: var(--jeu-brume); }
+.ps-e .ps3-moment.medaille { border-width: 2px; }
+.ps-e .ps3-m-ic { grid-row: 1 / 4; display: grid; place-items: center; width: 36px; height: 36px; border-radius: 50%; border: 2px solid var(--jeu-fond); }
+.ps-e .ps3-m-ic svg { width: 20px; height: 20px; }
+.ps-e .ps3-moment.pris .ps3-m-ic { color: var(--jeu-nous); }
+.ps-e .ps3-m-t { font-size: var(--texte-petit); color: #42392e; text-transform: uppercase; letter-spacing: .06em; }
+.ps-e .ps3-moment b, .ps-e .ps3-moment small { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ps-e .ps3-moment small { font-size: var(--texte-petit); }
+/* 2 : sept onglets, l'arbre en cercles, le panneau du nœud */
+.ps-e .ps3-camp { display: grid; grid-template-columns: minmax(0, 1fr) minmax(250px, 280px); gap: var(--e5); }
+.ps-e .ps3-gauche { grid-template-rows: auto minmax(0, 1fr); }
+.ps-e .ps3-tabs { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: var(--e1); }
+.papier.ps-e .ps3-tab { position: relative; display: grid; justify-items: center; align-content: center; gap: 3px; min-height: 52px; padding: var(--e1) 2px; background: var(--jeu-brume); color: var(--jeu-fond);
+  border: 1px solid var(--jeu-fond); box-shadow: none; font-weight: bold; font-size: var(--texte-petit); line-height: 1.15; }
+.ps-e .ps3-tab-t { text-align: center; white-space: normal; text-wrap: balance; hyphens: none; overflow-wrap: normal; }
+.papier.ps-e .ps3-tab[aria-selected="true"] { background: var(--jeu-encre); border-width: 2px 2px 0; margin-bottom: -2px; }
+.ps-e .ps3-tab .ps-carres { gap: 2px; } .ps-e .ps3-tab .ps-carres i { width: 6px; height: 6px; border-width: 1px; }
+.ps-e .ps3-arbre { display: grid; grid-template-columns: 76px 36px minmax(0, 1fr); align-items: center; padding-top: var(--e3); border-top: 2px solid var(--jeu-fond); min-height: 0; }
+.ps-e .ps3-fourche { align-self: stretch; position: relative; }
+.ps-e .ps3-fourche svg { position: absolute; left: 0; width: 100%; top: 18%; height: 64%; overflow: visible; }
+.ps-e .ps3-fourche path, .ps-e .ps3-trait { fill: none; stroke: var(--jeu-accent); stroke-width: 2; vector-effect: non-scaling-stroke; stroke-dasharray: 4 3; }
+.ps-e .ps3-fourche path.ok { stroke: var(--jeu-fond); stroke-width: 3; stroke-dasharray: none; }
+.ps-e .ps3-pistes { display: grid; gap: var(--e5); }
+.ps-e .ps3-piste { display: grid; gap: var(--pas); }
+.ps-e .ps3-piste-t { font-weight: bold; font-size: var(--texte-petit); letter-spacing: .12em; text-transform: uppercase; line-height: 1; color: #42392e; }
+.ps-e .ps3-rangs { display: grid; grid-template-columns: auto minmax(8px, 1fr) auto minmax(8px, 1fr) auto minmax(8px, 1fr) auto; align-items: start; }
+.ps-e .ps3-trait { display: block; height: 0; margin-top: 32px; border-top: 2px dashed var(--jeu-accent); }
+.ps-e .ps3-trait.ok { border-top: 3px solid var(--jeu-fond); }
+.ps-e .ps3-place { display: grid; justify-items: center; gap: 4px; }
+.papier.ps-e .ps3-n { position: relative; width: 64px; height: 64px; min-height: 64px; padding: 0; border-radius: 50%; display: grid; place-items: center;
+  background: var(--jeu-encre); color: var(--jeu-fond); border: 2px solid var(--jeu-fond); box-shadow: 3px 3px 0 var(--jeu-fond); }
+.ps-e .ps3-rond { display: grid; place-items: center; }
+.ps-e .ps3-n .ps3-rond svg { width: 28px; height: 28px; }
+.papier.ps-e .ps3-n.acquis { background: var(--jeu-fond); color: var(--jeu-encre); box-shadow: none; outline: 2px solid var(--jeu-fond); outline-offset: 2px; }
+.papier.ps-e .ps3-n.soir { background: repeating-linear-gradient(135deg, var(--jeu-brume) 0 5px, var(--jeu-encre) 5px 8px); box-shadow: none; outline: 2px solid var(--jeu-fond); outline-offset: 2px; }
+.papier.ps-e .ps3-n.cher { box-shadow: none; }
+.papier.ps-e .ps3-n.verrou { box-shadow: none; border: 2px dashed var(--jeu-accent); color: #42392e; }
+.ps-e .ps3-n.verrou .ps3-rond { opacity: .55; }
+.papier.ps-e .ps3-n[aria-pressed="true"] { outline: 3px solid var(--jeu-fond); outline-offset: 5px; }
+.ps-e .ps3-coin { position: absolute; top: -4px; right: -4px; width: 20px; height: 20px; display: grid; place-items: center; border-radius: 50%; background: var(--jeu-encre); color: var(--jeu-fond); border: 1.5px solid var(--jeu-fond); }
+.ps-e .ps3-n.acquis .ps3-coin { background: var(--jeu-encre); }
+.ps-e .ps3-place .ps-carres i { width: 7px; height: 7px; border-width: 1.2px; }
+.ps-e .ps3-cote { grid-template-rows: auto minmax(0, 1fr); }
+.ps-e .ps3-caisse-l { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: end; gap: var(--pas); }
+.ps-e .ps3-caisse-l .ps-jetons { flex-wrap: wrap; max-width: 140px; }
+.ps-e .ps3-caisse-l .ps-jetons i { width: 12px; height: 12px; }
+.papier.ps-e .ps3-annuler { min-height: var(--jeu-cible); padding: 0 var(--pas); }
+.papier.ps-e .ps3-annuler.refus { color: #42392e; border: 1px dashed var(--jeu-accent); box-shadow: none; background: repeating-linear-gradient(135deg, transparent 0 7px, rgba(116, 102, 79, .25) 7px 8px); cursor: not-allowed; }
+.ps-e .ps3-noeud { display: flex; flex-direction: column; gap: var(--pas); min-height: 0; }
+.ps-e .ps3-noeud .ps-pousse { flex: 1; }
+.ps-e .ps3-noeud .ps-nt-ic { border-radius: 50%; }
+.ps-e .ps3-noeud .ps-nt-ic svg { width: 28px; height: 28px; }
+.ps-e .ps3-chiffre { margin: 0; font: 26px/1.1 var(--police-titre); letter-spacing: .02em; text-wrap: balance; }
+.ps-e .ps3-lien { display: flex; align-items: center; gap: var(--e1); padding: var(--e1) var(--pas); border: 1px dashed var(--jeu-fond); font-size: var(--texte-petit); }
+.ps-e .ps3-lien.ok { border-style: solid; }
+/* 3 : les régiments, leurs paquets d'hommes */
+.ps-e .ps3-regiments { display: grid; grid-template-rows: auto minmax(0, 1fr); gap: var(--pas); }
+.ps-e .ps3-droite { display: flex; align-items: center; gap: var(--pas); }
+.ps-e .ps3-cartes { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); grid-auto-rows: 1fr; gap: var(--pas); min-height: 0; }
+.ps-e .ps3-carte { display: grid; grid-template-rows: auto auto auto auto 1fr; gap: 4px; padding: var(--e1) var(--pas); border: 1px solid var(--jeu-fond); min-width: 0; box-sizing: border-box; }
+.ps-e .ps3-carte.cible { cursor: copy; }
+.ps-e .ps3-carte.survol { outline: 3px dashed var(--jeu-fond); outline-offset: 2px; }
+.ps-e .ps3-carte.vide { background: var(--jeu-brume); color: #42392e; border-style: dashed; opacity: .75; }
+.ps-e .ps3-c-tete { display: flex; align-items: center; gap: var(--e1); min-width: 0; }
+.ps-e .ps3-c-tete > span { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: bold; }
+.ps-e .ps3-solde { flex: none !important; font-weight: bold; font-size: var(--texte-petit); padding: 0 4px; border: 1px solid currentColor; }
+.ps-e .ps3-etat { display: flex; align-items: center; gap: var(--e1); }
+.ps-e .ps3-etat b { font-size: var(--titre-3); line-height: 1; }
+.ps-e .ps3-etat small { font-size: var(--texte-petit); color: #42392e; min-width: 4ch; }
+.ps-e .ps3-paquets { display: flex; flex-wrap: wrap; gap: 3px; min-height: 18px; align-content: start; }
+.papier.ps-e .ps3-paquet { min-height: 0; min-width: 0; display: inline-grid; place-items: center; padding: 1px 2px; border: 1px solid transparent; cursor: grab; color: var(--jeu-fond); }
+.ps-e .ps3-paquet svg path { stroke: currentColor; stroke-width: 1.5; }
+.ps-e .ps3-paquet svg path.lien { stroke-width: 1.2; }
+.ps-e .ps3-paquet.bl svg path { stroke-dasharray: 2 1.5; }
+.ps-e .ps3-paquet.venu { border: 1px solid var(--jeu-fond); background: var(--jeu-brume); }
+.ps-e .ps3-paquet.tenu { outline: 2px solid var(--jeu-fond); background: var(--jeu-fond); color: var(--jeu-encre); }
+.ps-e .ps3-paquet:focus-visible { border-color: var(--jeu-fond); }
+@media (hover: hover) { .ps-e .ps3-paquet:hover { border-color: var(--jeu-fond); } }
+.ps-e .ps3-dissous { margin: 0; align-self: end; font: var(--titre-3) var(--police-titre); letter-spacing: .1em; text-transform: uppercase; }
+#soiree .ps3-cartes { grid-template-columns: repeat(var(--n, 4), minmax(0, 1fr)); }
+.papier.ps-e .ps3-nom { display: flex; align-items: center; gap: var(--e1); min-width: 0; min-height: 28px; padding: 0 var(--e1); flex: 1 1 auto; background: none; border: 1px solid transparent; box-shadow: none; color: var(--jeu-fond); font-weight: bold; text-align: left; }
+.ps-e .ps3-nom span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.papier.ps-e .ps3-nom.choisi { background: var(--jeu-fond); color: var(--jeu-encre); }
+.ps-e .ps3-carte.choisi { outline: 2px solid var(--jeu-fond); }
+/* (la soirée en jeu : l'état du régiment sur la ligne de son nom, la carte et le gros plan du secteur cachés derrière elle) */
+#soiree .ps3-carte { grid-template-rows: auto auto auto 1fr; }
+#soiree .ps3-c-tete { gap: var(--e1); }
+#soiree .ps3-c-tete .ps3-etat { flex: none; gap: 4px; }
+#soiree .ps3-c-tete .ps3-etat b { font-size: var(--texte); }
+#soiree .ps3-c-tete .ps3-etat small { min-width: 0; }
+body:has(#soiree:not([hidden])) #carte, body:has(#soiree:not([hidden])) #secteur { visibility: hidden; }

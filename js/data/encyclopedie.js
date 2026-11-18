@@ -3,20 +3,21 @@
 // formes, équipements, grades) n'est PAS recopié : il est lu dans son module, donc l'encyclopédie suit le jeu ; seuls les concepts n'ayant pas de table sont écrits ici.
 // Une entrée : { id, terme, cat, def, voir: [ids], capture: 'id-du-fichier' | null, faits: [[libellé, valeur], …] }. Les captures sont celles de `outils/encyclopedie.mjs` (assets/encyclopedie/<capture>.png).
 // Ajouter un mot = ajouter une ligne ici ; le labo (sujet « Encyclopédie ») et `test/encyclopedie.test.mjs` (aucun renvoi vers un mot absent, aucun doublon) font le reste.
-import { CALIBRES } from './calibres.js?v=0.149.5';
-import { METEO, SAISONS } from './meteo.js?v=0.149.5';
-import { CORVEES, CONTACT } from './corvees.js?v=0.149.5';
-import { BATIMENTS, ORDRE_BATIMENTS, EQUIPEMENTS, EQUIPEMENT, DOTATION } from './batiments.js?v=0.149.5';
-import { DIFFICULTES } from './difficulte.js?v=0.149.5';
-import { STANCES } from './stances.js?v=0.149.5';
-import { PONTS_JEU } from './ponts.js?v=0.149.5';
-import { RENFORTS } from './renforts.js?v=0.149.5';
-import { CHARS, CHAR_RECHARGE } from './chars.js?v=0.149.5';
-import { MITRAILLAGE } from './mitraillage.js?v=0.149.5';
-import { GENIE_DATA } from './genie.js?v=0.149.5';
-import { NIDS } from './nids.js?v=0.149.5';
-import { FIL } from './fil.js?v=0.149.5';
-import { CLASSES } from './grades.js?v=0.149.5';
+import { CALIBRES } from './calibres.js?v=0.150.0';
+import { METEO, SAISONS } from './meteo.js?v=0.150.0';
+import { CORVEES, CONTACT } from './corvees.js?v=0.150.0';
+import { BATIMENTS, ORDRE_BATIMENTS, DOTATION } from './batiments.js?v=0.150.0';
+import { ARBRES, PRIX, ROMAINS } from './ameliorations.js?v=0.150.0';
+import { DIFFICULTES } from './difficulte.js?v=0.150.0';
+import { STANCES } from './stances.js?v=0.150.0';
+import { PONTS_JEU } from './ponts.js?v=0.150.0';
+import { RENFORTS } from './renforts.js?v=0.150.0';
+import { CHARS, CHAR_RECHARGE } from './chars.js?v=0.150.0';
+import { MITRAILLAGE } from './mitraillage.js?v=0.150.0';
+import { GENIE_DATA } from './genie.js?v=0.150.0';
+import { NIDS } from './nids.js?v=0.150.0';
+import { FIL } from './fil.js?v=0.150.0';
+import { CLASSES } from './grades.js?v=0.150.0';
 
 export const CATEGORIES = [
   { id: 'front', nom: 'Le front', dit: 'Où l\'on se bat : secteurs, lignes, tranchées.' },
@@ -77,7 +78,7 @@ const CONCEPTS = [
   E('raccourcis', 'Raccourcis', 'ordres', 'Choisir : T (tous). Barrages : 1, 2, 3 ; avion : 4 ; char : 5 ; génie : 6. Pause : Espace. Menu : Échap (quand rien n\'est à annuler). Vue : flèches ou ZQSD, A/E tournent, R/F inclinent, C recentre, molette ou + − zooment. Le camp : B. La fiche sous le pointeur : I. Postures : Maj+1, Maj+2.', { voir: ['choisir', 'pause-active'] }),
   // le combat
   E('tir', 'Tir', 'combat', 'Chaque homme tire vers le carré d\'ennemis le plus dense de son front, à sa portée ; un creux l\'abrite. Il tire moins bien s\'il a peur ou si le régiment est ébranlé.', { voir: ['posture-volonte', 'abri', 'peur'] }),
-  E('melee', 'Mêlée, corps à corps', 'combat', 'Quand les deux camps sont dans un même tronçon : coups de baïonnette, un duel à la fois. La Force et l\'équipement (grenadiers) comptent. Elle décide d\'un tronçon disputé, et se joue aussi la nuit, dans les tronçons restés disputés.', { voir: ['dispute', 'equip-grenades', 'caracteristiques'] }),
+  E('melee', 'Mêlée, corps à corps', 'combat', 'Quand les deux camps sont dans un même tronçon : coups de baïonnette, un duel à la fois. La Force et l\'infanterie du camp (grenadiers, nettoyeurs) comptent. Elle décide d\'un tronçon disputé, et se joue aussi la nuit, dans les tronçons restés disputés.', { voir: ['dispute', 'equipement', 'caracteristiques'] }),
   E('assaut', 'Assaut', 'combat', 'Un régiment sort de ses tranchées vers celles d\'en face. En face monte à l\'assaut de la ligne la plus proche qu\'on tient encore, de préférence là où nos lignes ont faibli. Le carnet l\'annonce (« sort de ses tranchées »).', { voir: ['preparation', 'poursuite', 'carnet'], capture: 'carnet' }),
   E('preparation', 'Préparation', 'combat', 'Avant de sortir, en face prépare l\'assaut par un barrage de 220 sur le tronçon visé. Le carnet l\'annonce : c\'est le moment de renforcer le tronçon.', { voir: ['assaut', 'barrage'] }),
   E('contre-attaque', 'Contre-attaque', 'combat', 'Reprendre un tronçon perdu. Il n\'y a pas d\'ordre spécial : on envoie un régiment, par un ordre de marche, sur la tranchée prise. Un tronçon repris relève le moral.', { voir: ['troncon', 'marcher', 'moral'] }),
@@ -99,14 +100,16 @@ const CONCEPTS = [
   E('releve', 'Relève', 'nuit', 'Un régiment frais, pris dans la réserve, monte par les boyaux et prend la place d\'un régiment usé, qui part au repos. Le frais se place à 12 m derrière la place qu\'il prend. La réserve ne revient pas.', { voir: ['reserve', 'corvee-releve'] }),
   E('renfort', 'Renfort', 'nuit', `Un régiment frais sort de la caserne, à tout moment du jour, par le bouton de la caserne : il prend le premier secteur sans défenseur (ligne la plus avancée d\'abord, de l\'ouest à l\'est). Si tous ont leurs défenseurs, il contre-attaque le secteur perdu (plus de ${Math.round(RENFORTS.perdu * 100)} % de sa tranchée à l\'ennemi) le plus proche de la caserne ; sinon l\'ordre est refusé. Un régiment en déroute se retire vers la caserne : ses hommes qui y entrent, d\'au moins ${RENFORTS.seuilRallies}, forment une unité de ralliés à l\'aube, moral réduit, qu\'on déploie de même.`, { voir: ['reserve', 'releve', 'deroute'] }),
   E('reserve', 'Réserve', 'nuit', 'Les régiments frais qui attendent la relève (quatre dans les premières batailles). La caserne et le papier de la nuit en donnent le nombre ; un clic sur la caserne les déploie à tout moment du jour (voir Renfort).', { voir: ['releve', 'mission'], capture: 'billet' }),
-  E('dotation', 'Dotation', 'nuit', 'Les points de l\'état-major qui paient les améliorations du camp. Ils tombent le soir : un point par soir, un de plus si nos lignes sont tenues à 75 % au moins, et deux pour une ligne d\'en face prise. On les dépense le soir, en choisissant un bâtiment : le chantier est payé à l\'aube.', { voir: ['camp', 'aube'], faits: [['Par soir', DOTATION.soir], ['Lignes tenues (seuil)', `${DOTATION.tenue.seuil * 100} %`], ['Une ligne prise', DOTATION.ligne]], capture: 'fenetre-batiment' }),
+  E('dotation', 'Dotation', 'nuit', 'Les points de l\'état-major qui paient les améliorations du camp. Ils tombent le soir : deux points par soir, un de plus si nos lignes sont tenues à 75 % au moins, et deux pour une ligne d\'en face prise. On les dépense le soir, à l\'étape « Le camp » de la soirée : un rang est payé au clic et se rend jusqu\'à l\'aube.', { voir: ['camp', 'aube', 'soiree'], faits: [['Par soir', DOTATION.soir], ['Lignes tenues (seuil)', `${DOTATION.tenue.seuil * 100} %`], ['Une ligne prise', DOTATION.ligne]], capture: 'fenetre-batiment' }),
   E('aube', 'Aube, bilan', 'nuit', 'Le bilan de la nuit en quelques lignes : ce qui a été fait (équipés, évacués, relevés, ravitaillés), les morts de la nuit, les régiments qui ont faim ou refusent de monter, les chantiers finis et la dotation. Puis « Le jour se lève ».', { voir: ['nuit', 'refus'], capture: 'nuit' }),
   E('vivres', 'Vivres', 'nuit', 'Les provisions d\'un régiment : la soupe et le pain montent par les boyaux la nuit pour trois nuits. Sans eux, la nuit repose moins et le moral baisse (« la faim »).', { voir: ['corvee-ravitailler', 'moral'] }),
   E('faim', 'La faim', 'nuit', 'Un régiment sans vivres au matin : le bilan de l\'aube le dit, et son moral baisse.', { voir: ['vivres'] }),
   // le camp
   E('camp', 'Le camp', 'camp', 'Derrière nos lignes, dans la marge : cinq bâtiments, chacun une unité spéciale (le parc d\'artillerie, l\'aérodrome, le parc des chars, la maison des sapeurs, la caserne). Prêts au premier matin au niveau 1, ils s\'améliorent avec la dotation. Un clic sur l\'un d\'eux ouvre sa fenêtre ; B y emmène la caméra.', { voir: ['dotation', 'bat-artillerie', 'bat-aerodrome', 'bat-chars', 'bat-sapeurs', 'bat-caserne'], capture: 'fenetre-batiment' }),
-  E('niveau', 'Niveau d\'un bâtiment', 'camp', 'Chaque bâtiment a trois niveaux. Le premier est gratuit ; les suivants coûtent des points de dotation et offrent un choix entre deux améliorations (la justesse ou la cadence, par exemple). Un chantier se finit pendant la nuit.', { voir: ['camp', 'dotation'] }),
-  E('equipement', 'Équipement', 'camp', `Une pièce de plus pour un régiment, donnée la nuit comme une corvée (la caserne au niveau ${EQUIPEMENT.niveauCaserne}) : ${EQUIPEMENT.cout} point de dotation, ${EQUIPEMENT.places} places par régiment. Un régiment qui s\'équipe ne se repose pas.`, { voir: ['bat-caserne', 'corvee'] }),
+  E('niveau', 'Rangs d\'un bâtiment', 'camp', `Chaque onglet du camp (les six bâtiments et l\'infanterie) a son niveau I, donné, puis deux pistes de quatre rangs, II à V, à ${PRIX.join(', ')} points ; les deux pistes s\'achètent, une piste dans l\'ordre, et certains rangs demandent aussi un rang d\'un autre onglet. Un rang acheté le soir compte tout de suite ; « Rendre » ou « Annuler » le remboursent jusqu\'à l\'aube.`, { voir: ['camp', 'dotation', 'soiree'] }),
+  E('soiree', 'La soirée', 'nuit', 'Le papier du soir, en trois étapes : la journée (la carte du front, le registre de la dotation, les moments du jour), le camp (les arbres), les régiments (les corvées, les paquets d\'hommes à glisser d\'un régiment à l\'autre). « Continuer la bataille » lance la nuit.', { voir: ['nuit', 'niveau', 'transfert'], capture: 'nuit' }),
+  E('transfert', 'Transfert d\'hommes', 'nuit', 'La nuit, les hommes d\'un régiment se glissent par paquets de dix (le reste en un paquet) sur un autre, les blessés à part ; ils marchent à l\'aube. Un régiment vidé est dissous à l\'aube, sauf si on lui rend des hommes ou qu\'on annule.', { voir: ['soiree'], capture: 'nuit' }),
+  E('equipement', 'Infanterie', 'camp', `L\'onglet du camp qui équipe tous nos régiments d\'un coup : ${ARBRES.infanterie.pistes.map(P => `${P.nom.toLowerCase()} (${P.rangs.map(r => r.nom.toLowerCase()).join(', ')})`).join(' ; ')}.`, { voir: ['niveau', 'melee'] }),
   // terrain et météo
   E('cratere', 'Cratère', 'terrain', 'Le trou d\'un obus : rond, une lèvre de terre jetée d\'un côté, des éclats autour. Plus le calibre est gros, plus il est large et profond (plancher à −6 m). Un cratère profond abrite, arrête un char et se remplit d\'eau. Rien ne s\'efface tout seul.', { voir: ['calibre-75', 'abri', 'eau', 'boue'], capture: 'cratere' }),
   E('terre-jetee', 'Terre jetée', 'terrain', 'La lèvre d\'un cratère, ou la terre retombée dans une tranchée comblée : un relief en plus.', { voir: ['cratere'] }),
@@ -169,10 +172,10 @@ const DEPUIS_DONNEES = [
   ...Object.entries(METEO).map(([id, m]) => E(`meteo-${id}`, m.nom.replace(/^./, c => c.toUpperCase()), 'terrain',
     `Un temps possible : ${m.pluie ? 'il pleut, le sol s\'humidifie et la boue s\'installe' : m.gel ? 'le sol gèle et porte, la boue se durcit' : m.chaud ? 'la chaleur sèche tout, le sol boit et rien ne boue' : m.evaporation > 0.5 ? 'le sol sèche' : 'le sol sèche peu'}${m.neige ? ' ; la neige tombe et blanchit' : ''}${m.tempete ? ' ; la tempête cloue les avions au sol' : ''}${id === 'brouillard' ? ' ; les avions restent au sol' : ''}. Prévision : « ${m.prevision} ».`,
     { voir: ['meteo', 'boue', 'saison'], capture: ['pluie', 'brouillard', 'gel', 'neige', 'tempete', 'canicule'].includes(id) ? `meteo-${id}` : null })),
-  ...CORVEES.map(c => E(c.equipe ? `equip-${c.id.replace('eq-', '')}` : `corvee-${c.id}`, c.nom, c.equipe ? 'camp' : 'nuit', `Une corvée de la nuit : ${c.dit}.`, { voir: ['corvee', c.equipe ? 'equipement' : 'nuit'], capture: 'nuit' })),
+  ...CORVEES.map(c => E(`corvee-${c.id}`, c.nom, 'nuit', `Une corvée de la nuit : ${c.dit}.`, { voir: ['corvee', 'nuit'], capture: 'nuit' })),
   ...ORDRE_BATIMENTS.map(k => E(`bat-${k}`, BATIMENTS[k].nom, 'camp',
-    `Un bâtiment du camp : ${BATIMENTS[k].unite}. ${BATIMENTS[k].niveaux.map((n, i) => `Niveau ${i + 1} : ${n.nom}${n.cout ? ` (${n.cout} pts)` : ''}.`).join(' ')}`,
-    { voir: ['camp', 'niveau', 'dotation'], capture: `fenetre-batiment-${k}`, faits: BATIMENTS[k].niveaux.map((n, i) => [`Niveau ${i + 1}`, `${n.nom} — ${n.effet}`]) })),
+    `Un bâtiment du camp : ${BATIMENTS[k].unite}. Niveau I : ${ARBRES[k].i.nom.toLowerCase()} (${ARBRES[k].i.chiffre.toLowerCase()}) ; ses pistes : ${ARBRES[k].pistes.map(P => P.nom.toLowerCase()).join(' et ')}.`,
+    { voir: ['camp', 'niveau', 'dotation'], capture: `fenetre-batiment-${k}`, faits: ARBRES[k].pistes.flatMap(P => P.rangs.map((r, i) => [`${P.nom} ${ROMAINS[i]}`, `${r.nom} — ${r.chiffre}`])) })),
   ...Object.entries(STANCES).map(([k, p]) => E(`posture-${k}`, p.nom, 'ordres', `Une posture de tir pour les régiments choisis (Maj+${k === 'volonte' ? 1 : 2}) : ${p.dit}`, { voir: ['tir', 'fenetre-regiment'], capture: 'fenetre-regiment' })),
   E('formes', 'Formes', 'ordres', 'La forme que prend un régiment à son prochain ordre en terrain libre : bloc, ligne, par deux ou colonne. Sur une tranchée, c\'est le tracé qui décide. Quatre boutons de la fenêtre d\'ordres.', { voir: ['marcher', 'fenetre-regiment'], capture: 'fenetre-regiment' }),
   ...CLASSES.map((c, k) => E(`grade-${c}`, c.replace(/^./, x => x.toUpperCase()), 'hommes',

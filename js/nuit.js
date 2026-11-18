@@ -10,15 +10,14 @@
    - (v0.38.3) Les caillebotis et le coup de main sont retirés ; (v0.77.1) réparer la tranchée, inhumer les morts et creuser des abris aussi (docs/archives/corvees-retirees.md) : quatre corvées.
    - (v0.39.0) La mêlée se joue dans la nuit (`meleeNuit`) : un tronçon où les deux camps sont face à face au soir est tranché à l'aube, et les
      régiments au contact (`contactDe`) ne reçoivent aucune corvée. */
-import { hash2 } from './lib/rng.js?v=0.149.5';
-import { RENFORTS } from './data/renforts.js?v=0.149.5';
-import { modif, renfortsDe, refusEquiper, equiper } from './camp.js?v=0.149.5';
-import { CORVEES } from './data/corvees.js?v=0.149.5';
-import { EQUIPEMENTS } from './data/batiments.js?v=0.149.5';
-import { REGIMENTS } from './data/lexique.js?v=0.149.5';
-import { ajouterSoldat, poserCaracs, lireCaracs, place } from './army.js?v=0.149.5';
-import { departCaracs } from './identite.js?v=0.149.5';
-import { y0En } from './tranchees.js?v=0.149.5';
+import { hash2 } from './lib/rng.js?v=0.150.0';
+import { RENFORTS } from './data/renforts.js?v=0.150.0';
+import { modif, renfortsDe, infanterie, plusDe } from './camp.js?v=0.150.0';
+import { CORVEES } from './data/corvees.js?v=0.150.0';
+import { REGIMENTS } from './data/lexique.js?v=0.150.0';
+import { ajouterSoldat, poserCaracs, lireCaracs, place } from './army.js?v=0.150.0';
+import { departCaracs } from './identite.js?v=0.150.0';
+import { y0En } from './tranchees.js?v=0.150.0';
 
 export const corvee = id => CORVEES.find(c => c.id === id);
 
@@ -88,7 +87,6 @@ export function refusCorvee(B, reg, id) {
     if (m) return `Chez l'ennemi, ${id === 'evacuer' ? 'les blessés ne passent pas' : 'la soupe ne passe pas'} : ${m}.`;
   }
   if (id === 'releve' && !(renfortsDe(B.etat, reg.camp).restants > 0)) return renfortsDe(B.etat, reg.camp).pris >= RENFORTS.plafond ? `Plafond atteint : ${RENFORTS.plafond} régiments de renfort par bataille.` : 'Plus un régiment en réserve.';
-  if (c.equipe) { const r = refusEquiper(B, reg, id.slice(3)); if (r) return r; }
   return null;
 }
 
@@ -186,9 +184,7 @@ export function corvees(B, choix, ctx) {
       for (let i = 0; i < A.n; i++) if (A.reg[i] === reg.id && !A.mort[i]) { etat.releves.push([A.id[i], reg.id, A.exp[i], A.victimes[i], lireCaracs(A, i).slice(0, 4)]); A.mort[i] = 1; }
       reg.releve = etat.jour; reg.releves = reg.effectif; reg.effectif = 0;
       releves.push({ reg, unite: prendreReserve(etat, reg.camp) }); b.releves = (b.releves || 0) + 1;
-    } else if (corvee(id)?.equipe) {
-      // l'équipement (v0.91.0) : un point de dotation, et le régiment ne se repose pas ; si la caisse s'est vidée entre-temps, il se repose
-      if (equiper(B, reg, id.slice(3))) b.equipes = (b.equipes || 0) + 1; else faite[reg.id] = 'repos';
+      if (plusDe(etat, reg.camp, 'caserne', '+releve')) { etat.reserves[reg.camp]++; etat.reservesPrises[reg.camp]--; }      // les permissions (troisième jet) : le régiment relevé revient à la réserve
     } else if (id === 'evacuer') {
       for (let i = 0; i < A.n; i++) {
         if (A.reg[i] !== reg.id || A.mort[i] || !A.blessure[i]) continue;
@@ -203,7 +199,7 @@ export function corvees(B, choix, ctx) {
   // les blessés laissés au front : certains ne passent pas la nuit
   for (let i = 0; i < A.n; i++) {
     if (A.mort[i] || !A.blessure[i]) continue;
-    if (rng() < N.mortBlesse * (A.blessure[i] === 3 ? 2 : 1) * modif(etat, A.camp[i], 'hopital.mort') * (etat.regiments[A.reg[i]].equip?.includes('brancards') ? EQUIPEMENTS.brancards.mortBlesse : 1)) { mourir(i, 'blessure'); bilan[A.camp[i]].mortsBlesses++; }
+    if (rng() < N.mortBlesse * (A.blessure[i] === 3 ? 2 : 1) * modif(etat, A.camp[i], 'hopital.mort') * infanterie(etat, A.camp[i], 'mortBlesse')) { mourir(i, 'blessure'); bilan[A.camp[i]].mortsBlesses++; }
   }
   // les vivres : une nuit de moins ; qui n'en a plus a faim
   const faim = new Set();
@@ -225,7 +221,7 @@ export function corvees(B, choix, ctx) {
   for (const reg of etat.regiments) {
     if (!reg.effectif) continue;
     const plafond = 1 - R.moral.cicatrice * reg.pertes / reg.initial;
-    const part = R.moral.nuit + (faite[reg.id] === 'repos' ? N.moralRepos : 0);
+    const part = R.moral.nuit + (faite[reg.id] === 'repos' ? N.moralRepos * modif(etat, reg.camp, 'caserne.repos') : 0);      // (le foyer du soldat)
     if (reg.moral < plafond) reg.moral += (plafond - reg.moral) * part;
     const ctr = centres[reg.id];
     let n = 0;
@@ -269,11 +265,11 @@ function retours(B, rng, bilan) {
   const { etat, R, armee: A } = B, N = R.nuit;
   for (const e of etat.evacues) {
     if (e.length < 6 || e[3] !== 0) continue;                     // (avant la v0.18.0 : ni blessure ni régiment, ils ne reviennent pas)
-    if (etat.jour - e[1] < (N.retourNuits[e[2]] ?? 1)) continue;
+    if (etat.jour - e[1] < (modif(etat, etat.regiments[e[4]]?.camp ?? 1, 'hopital.delai') === 0 ? 1 : N.retourNuits[e[2]] ?? 1)) continue;      // (le grand hôpital : de retour dès l'aube suivante)
     const origine = etat.regiments[e[4]];
     // l'hôpital : le joueur peut renvoyer les guéris dans un autre régiment (v0.99.11) ; l'ancien régiment compte encore pour la chance (ses brancards)
     const voulu = etat.affectation?.[origine?.camp ?? 1], reg = voulu != null && etat.regiments[voulu]?.camp === origine?.camp && etat.regiments[voulu].effectif > 0 ? etat.regiments[voulu] : origine;
-    if (hash2(etat.graine | 0, e[0], 97 + e[1]) >= N.retourChance * modif(etat, reg?.camp ?? 1, 'caserne.retour') * modif(etat, reg?.camp ?? 1, 'hopital.retour') * (origine?.equip?.includes('brancards') ? EQUIPEMENTS.brancards.retour : 1) || !reg || reg.effectif <= 0) { e[3] = -1; continue; }
+    if (hash2(etat.graine | 0, e[0], 97 + e[1]) >= N.retourChance * modif(etat, reg?.camp ?? 1, 'hopital.retour') * infanterie(etat, origine?.camp ?? 1, 'retour') || !reg || reg.effectif <= 0) { e[3] = -1; continue; }
     // il remonte par les boyaux : à 12 m derrière la place de son régiment
     const t = reg.ordre.trace, x0 = t ? t.x0 : reg.ordre.x - 40, x1 = t ? t.x1 : reg.ordre.x + 40;
     let slot = 0;
@@ -287,40 +283,54 @@ function retours(B, rng, bilan) {
   }
 }
 
-/* Les transferts de la nuit (Jérôme, v0.116.0 : « fusionner deux régiments », « glisser-déposer des soldats d'un régiment vers un autre »)
-   Le joueur prépare, la nuit, des transferts { de, vers, n } (n = -1 : tous les hommes restants, donc la fusion) ; ils sont rangés dans `etat.transferts[camp]` et s'exécutent à l'aube
-   (`appliquerTransferts`, après les corvées, la relève et les retours) : les soldats changent de régiment et marchent, au petit matin, jusqu'à leur nouvelle place. Logique pure, sans hasard. */
-// Les hommes d'un régiment que les transferts déjà prévus n'ont pas encore pris (-1 si l'un d'eux prend tout)
-export function disponibles(B, camp, id) {
-  const reg = B.etat.regiments[id];
-  if (!reg) return 0;
-  let reste = reg.effectif;
-  for (const t of B.etat.transferts[camp]) if (t.de === id) { if (t.n < 0) return 0; reste -= t.n; }
-  return Math.max(0, reste);
+/* Les transferts de la nuit (Jérôme, v0.116.0 ; par paquets, la soirée, troisième jet, 18 nov. : « les transferts par paquets de 10, qu'on glisse d'un régiment à l'autre autant qu'on veut ;
+   les blessés sont transférés aussi, en paquets à part ; un régiment vidé devient gris et disparaît à l'aube, sauf si on lui rend des hommes ou qu'on annule »).
+   Le joueur prépare, la nuit, des transferts { de, vers, n, bl } (`bl` : des blessés, sinon des hommes debout) : `de` est toujours le régiment d'ORIGINE des hommes (un paquet reçu puis déplacé
+   ailleurs ne fait qu'un transfert, de son origine à sa dernière place). Ils sont rangés dans `etat.transferts[camp]` et s'exécutent à l'aube (`appliquerTransferts`, après les corvées, la relève
+   et les retours) : les soldats changent de régiment et marchent, au petit matin, jusqu'à leur nouvelle place ; un régiment qui n'a plus personne est dissous. Logique pure, sans hasard. */
+// Les hommes d'un régiment (debout, ou blessés si `bl`) que les transferts déjà prévus n'ont pas encore pris
+export function disponibles(B, camp, id, bl = false) {
+  const { etat, armee: A } = B, reg = etat.regiments[id];
+  if (!reg || !reg.effectif) return 0;
+  let n = 0;
+  for (let i = 0; i < A.n; i++) if (!A.mort[i] && A.reg[i] === id && !!A.blessure[i] === !!bl) n++;
+  for (const t of etat.transferts[camp]) if (t.de === id && !!t.bl === !!bl) n -= t.n;
+  return Math.max(0, n);
 }
 // Pourquoi on ne peut pas prévoir ce transfert, ou null
-export function refusTransfert(B, camp, de, vers, n) {
+export function refusTransfert(B, camp, de, vers, n, bl = false) {
   const { etat } = B, a = etat.regiments[de], b = etat.regiments[vers];
   if (etat.phase !== 'nuit') return 'Les transferts se préparent la nuit.';
   if (!a || !b || a.camp !== camp || b.camp !== camp) return 'Ce régiment n\'est pas le vôtre.';
   if (de === vers) return 'Un régiment ne se transfère pas à lui-même.';
   if (a.effectif <= 0 || b.effectif <= 0) return `${a.effectif <= 0 ? a.nom : b.nom} n'a plus d'hommes.`;
-  if (!(n === -1 || (Number.isInteger(n) && n > 0))) return 'Quantité invalide.';
-  if (!disponibles(B, camp, de)) return `Tous les hommes de ${a.nom} sont déjà promis à un autre régiment.`;
-  if (etat.transferts[camp].some(t => t.vers === de)) return `${a.nom} reçoit des hommes cette nuit : on ne l'en retire pas aussi.`;
-  if (etat.transferts[camp].some(t => t.de === vers)) return `${b.nom} envoie des hommes cette nuit : on ne lui en envoie pas aussi.`;
+  if (!(Number.isInteger(n) && n > 0)) return 'Quantité invalide.';
+  const dispo = disponibles(B, camp, de, bl);
+  if (n > dispo) return dispo ? `${a.nom} n'a plus que ${dispo} ${bl ? 'blessés' : 'hommes debout'} à donner.` : `Tous les ${bl ? 'blessés' : 'hommes debout'} de ${a.nom} sont déjà promis.`;
   return null;
 }
-// Prévoit un transfert (rend { ok, n } ou { refus }) ; un deuxième vers le même couple s'ajoute au premier
-export function planifierTransfert(B, camp, de, vers, n) {
-  const refus = refusTransfert(B, camp, de, vers, n);
+// Prévoit un transfert (rend { ok, n } ou { refus }) ; un deuxième du même régiment vers le même, de la même sorte, s'ajoute au premier
+export function planifierTransfert(B, camp, de, vers, n, bl = false) {
+  const refus = refusTransfert(B, camp, de, vers, n, bl);
   if (refus) return { refus };
-  const dispo = disponibles(B, camp, de), tout = n === -1 || n >= dispo, liste = B.etat.transferts[camp];
-  const m = tout ? dispo : n, deja = liste.find(t => t.de === de && t.vers === vers && t.n > 0);
-  if (tout) liste.push({ de, vers, n: -1 });             // « tous » : ce qui reste à l'aube, après les transferts partiels du même régiment (ils passent d'abord : `appliquerTransferts`)
-  else if (deja) deja.n += m;
-  else liste.push({ de, vers, n: m });
-  return { ok: true, n: m, tout };
+  const liste = B.etat.transferts[camp], deja = liste.find(t => t.de === de && t.vers === vers && !!t.bl === !!bl);
+  if (deja) deja.n += n; else liste.push({ de, vers, n, bl: !!bl });
+  return { ok: true, n };
+}
+// Retire `n` hommes d'un transfert prévu (un paquet qu'on rend à son régiment, ou qu'on emmène ailleurs) : rend { ok } ou { refus }
+export function retirerTransfert(B, camp, de, vers, n, bl = false) {
+  const liste = B.etat.transferts[camp], k = liste.findIndex(t => t.de === de && t.vers === vers && !!t.bl === !!bl);
+  if (B.etat.phase !== 'nuit' || k < 0 || liste[k].n < n) return { refus: 'Ce transfert n\'existe plus.' };
+  liste[k].n -= n;
+  if (!liste[k].n) liste.splice(k, 1);
+  return { ok: true };
+}
+// Annule tous les transferts de la nuit (« Annuler les transferts »)
+export function annulerTransferts(B, camp) {
+  if (B.etat.phase !== 'nuit') return { refus: 'Les transferts se défont la nuit.' };
+  if (!B.etat.transferts[camp].length) return { refus: 'Aucun transfert n\'est prévu.' };
+  B.etat.transferts[camp] = [];
+  return { ok: true };
 }
 // Annule le transfert d'indice `k` (rend { ok } ou { refus })
 export function annulerTransfert(B, camp, k) {
@@ -329,17 +339,20 @@ export function annulerTransfert(B, camp, k) {
   liste.splice(k, 1);
   return { ok: true };
 }
-// À l'aube : les hommes passent d'un régiment à l'autre, des plus valides aux blessés, des derniers rangs aux premiers ; les rangs du régiment qui donne se resserrent, ceux du nouveau venu s'allongent ; chacun marche ensuite vers sa nouvelle place
+// Les régiments qu'un transfert viderait à l'aube (tout ce qu'ils ont est promis ailleurs) : ils seront dissous
+export const vides = (B, camp) => B.etat.regiments.filter(r => r.camp === camp && r.effectif > 0 && B.etat.transferts[camp].some(t => t.de === r.id) && !disponibles(B, camp, r.id) && !disponibles(B, camp, r.id, true));
+// À l'aube : les hommes passent d'un régiment à l'autre (des derniers rangs aux premiers) ; les rangs du régiment qui donne se resserrent, ceux du nouveau venu s'allongent ; chacun marche ensuite vers sa nouvelle place.
+// Un régiment qui n'a plus personne est dissous (`reg.dissous` : le jour ; il perd son nom au front, la fin de partie s'en souvient)
 function appliquerTransferts(B, bilan) {
   const { etat, armee: A } = B, vus = new Set();
   for (const camp of [0, 1]) {
-    for (const t of [...etat.transferts[camp]].sort((x, y) => (x.n < 0) - (y.n < 0))) {
+    for (const t of etat.transferts[camp]) {
       const a = etat.regiments[t.de], b = etat.regiments[t.vers];
       if (!a || !b || a.effectif <= 0 || b.effectif <= 0) continue;        // relevé ou détruit dans la nuit : le transfert tombe
       const pris = [];
-      for (let i = 0; i < A.n; i++) if (!A.mort[i] && A.reg[i] === a.id) pris.push(i);
-      pris.sort((i, j) => (A.blessure[i] ? 1 : 0) - (A.blessure[j] ? 1 : 0) || A.slot[j] - A.slot[i] || A.id[i] - A.id[j]);
-      const m = t.n < 0 ? pris.length : Math.min(t.n, pris.length);
+      for (let i = 0; i < A.n; i++) if (!A.mort[i] && A.reg[i] === a.id && !!A.blessure[i] === !!t.bl) pris.push(i);
+      pris.sort((i, j) => A.slot[j] - A.slot[i] || A.id[i] - A.id[j]);
+      const m = Math.min(t.n, pris.length);
       let slot = 0;
       for (let i = 0; i < A.n; i++) if (!A.mort[i] && A.reg[i] === b.id) slot = Math.max(slot, A.slot[i] + 1);
       // ils ne sont pas posés à leur nouvelle place : au petit matin, on les voit y marcher (Jérôme, v0.132.0 ; avant, ils y apparaissaient)
@@ -349,9 +362,9 @@ function appliquerTransferts(B, bilan) {
     }
     etat.transferts[camp] = [];
   }
-  for (const id of vus) {                         // les rangs de celui qui a donné se resserrent
+  for (const id of vus) {                         // les rangs de celui qui a donné se resserrent ; vidé, il est dissous
     const reg = etat.regiments[id];
-    if (!reg.effectif) continue;
+    if (!reg.effectif) { reg.dissous = etat.jour; (bilan[reg.camp].dissous ??= []).push(reg.id); continue; }
     const siens = [];
     for (let i = 0; i < A.n; i++) if (!A.mort[i] && A.reg[i] === id) siens.push(i);
     siens.sort((i, j) => A.slot[i] - A.slot[j]);

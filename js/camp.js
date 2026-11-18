@@ -1,18 +1,17 @@
 // Le camp : la règle, sans écran (Jérôme, v0.86.0 : lot 1 de `docs/chantiers/camp-et-ameliorations.md`). Logique pure : aucun DOM, aucune horloge, aucun hasard.
-// L'état est `etat.camp` : la dotation de l'état-major, le niveau de chaque bâtiment (et son chantier d'une nuit), les lignes d'en face déjà comptées.
+// L'état est `etat.camp` : la dotation de l'état-major, les rangs acquis de chaque onglet (`rangs`), ceux de ce soir (`achats`), le niveau dessiné de chaque bâtiment, les lignes d'en face déjà comptées.
 // Lot 2 : les niveaux ouvrent les ordres (`refusOrdre`). Lot 3 (v0.88.0) : chaque niveau et chaque choix de palier change un chiffre (`modif`) ou un effectif (`effectifsDe`).
-// La soirée (Jérôme, 18 nov., ROADMAP « Le soir, le moment des améliorations », lot 1) : la dotation tombe le soir (`dotationSoir`), on ne dépense que la nuit,
-// dans un panier (`K.panier` : commander, annuler d'un clic) que rien ne paie avant l'aube (`payerPaniers`) ; puis les chantiers avancent (`aubeCamps`).
-import { hash2 } from './lib/rng.js?v=0.149.5';
-import { BATIMENTS, DOTATION, CAMP_PLAN, CAMP_IA, PIEDS, EQUIPEMENT, EQUIPEMENTS } from './data/batiments.js?v=0.149.5';
-import { RENFORTS } from './data/renforts.js?v=0.149.5';
-import { MITRAILLAGE } from './data/mitraillage.js?v=0.149.5';
-import { PARC } from './data/parc.js?v=0.149.5';
+// La soirée (Jérôme, 18 nov., ROADMAP « Le soir, le moment des améliorations ») : la dotation tombe le soir (`dotationSoir`, +2 le soir depuis le troisième jet), on ne dépense que la nuit ;
+// troisième jet (v0.150.0) : les arbres (le I donné, deux pistes de quatre rangs, data/ameliorations.js), l'achat au clic rendu jusqu'à l'aube, l'Infanterie pour tous nos régiments.
+import { BATIMENTS, DOTATION, CAMP_PLAN, PIEDS } from './data/batiments.js?v=0.150.0';
+import { ARBRES, ORDRE_ARBRES, PRIX, ROMAINS, IA_PLAN, nomRang } from './data/ameliorations.js?v=0.150.0';
+import { RENFORTS } from './data/renforts.js?v=0.150.0';
+import { MITRAILLAGE } from './data/mitraillage.js?v=0.150.0';
+import { PARC } from './data/parc.js?v=0.150.0';
 
 const NOUS = 0, EUX = 1;
 /* L'état du camp de `camp` : `etat.camp` (le nôtre), `etat.campEux` (celui d'en face : v0.92.0) */
 export const campDe = (etat, camp = NOUS) => camp === NOUS ? etat.camp : etat.campEux;
-export const NIVEAU_MAX = 3;
 
 /* Les blessés évacués de `camp` que l'hôpital soigne encore : [{ id, jour, blessure, regiment, pret }] (pret : assez de nuits passées pour repartir) */
 export function patients(etat, camp = NOUS, nuits = { 1: 1, 2: 2, 3: 3 }) {
@@ -38,96 +37,102 @@ export function affecterGueris(etat, camp, reg) {
 /* Les chars qui restent au parc de `camp` (null : sans limite) */
 export const charsDispo = (etat, camp = NOUS) => etat.charsDispo?.[camp] ?? null;
 
-// Le niveau qui ouvre chaque ordre de batterie (`ordonnerBarrage`) : [bâtiment, niveau]
+// Le niveau qui ouvre chaque ordre de batterie (`ordonnerBarrage`) : [bâtiment, niveau]. Depuis la v0.98.0 tout est ouvert au niveau I (donné)
 const OUVERTURE = { '75': ['artillerie', 1], '155': ['artillerie', 1], '220': ['artillerie', 1], avion: ['aerodrome', 1], char: ['chars', 1], genie: ['sapeurs', 1] };
 
 /* Le bâtiment et le niveau qui ouvrent un ordre de batterie, ou null */
 export const ouverture = cal => OUVERTURE[cal] ?? null;
 
-/* L'état du camp au premier matin : tous les bâtiments au niveau 1 (donnés : les trois artilleries, l'avion, le char, le génie et la relève sont prêts, v0.98.0) ; les niveaux suivants s'achètent avec la dotation (0 au départ) */
+// ─── Les arbres (la soirée, troisième jet, Jérôme, 18 nov. : data/ameliorations.js) ───
+// Chaque onglet (les six bâtiments et l'Infanterie) : le niveau I donné, puis deux pistes de quatre rangs (II à V). `K.rangs[onglet]` = [rangs acquis de la piste 0, de la piste 1] (0 à 4 :
+// une piste s'achète dans l'ordre). On achète au clic, le soir, payé tout de suite ; ce qui a été acheté ce soir (`K.achats`) se rend d'un clic jusqu'à l'aube, qui le confirme (les effectifs
+// montent alors : avions, chars, sections, régiments frais). `batiments[clé].niveau` (1 à 3) n'est plus qu'un dessin : la taille du bâtiment, les places du parc et de la piste.
+const rangsVides = () => Object.fromEntries(ORDRE_ARBRES.map(o => [o, [0, 0]]));
+/* L'état du camp au premier matin : tout est au niveau I ; `depart` : les rangs d'une bataille précédente de la campagne ({ onglet: [a, b] }) */
 export function campDeDepart({ bride = false, depart = null, mult = 1 } = {}) {
-  const batiments = {};
-  // `depart` : les niveaux et les choix d'une bataille précédente de la campagne ({ clé: { niveau, choix } }) ; ils ne descendent jamais sous ceux du départ
-  for (const [cle, B] of Object.entries(BATIMENTS)) {
-    const d = depart?.[cle], base = B.niveaux[0].depart ? 1 : 0;
-    batiments[cle] = { niveau: Math.max(base, d?.niveau ?? 0), choix: d?.niveau > base ? [...(d.choix ?? [])] : [], chantier: null };
-  }
-  // `bride` : les niveaux améliorent les unités (v0.98.0 ; avant, ils ouvraient les ordres : les 155 et 220, l'avion, le char, le génie) : vrai dans la partie du joueur ; faux pour les tests, le labo et le jeu à deux, où rien n'est bridé
-  return { dotation: DOTATION.depart, batiments, lignes: [], bride, mult, panier: [], soir: null };      // `mult` : le facteur de la dotation (la difficulté, pour en face)
+  const rangs = rangsVides();
+  for (const o of ORDRE_ARBRES) if (Array.isArray(depart?.[o])) rangs[o] = [0, 1].map(p => Math.max(0, Math.min(RANGS, depart[o][p] | 0)));
+  const K = { dotation: DOTATION.depart, batiments: Object.fromEntries(Object.keys(BATIMENTS).map(cle => [cle, { niveau: 1 }])), rangs, achats: [], lignes: [], bride, mult, soir: null };
+  for (const cle of Object.keys(BATIMENTS)) recaler(K, cle);
+  return K;
 }
-
+const RANGS = 4;
+/* Le niveau dessiné d'un bâtiment (1 à 3) : l'aérodrome et le parc suivent leurs engins (la piste qui en ajoute), les autres le nombre de rangs acquis */
+function recaler(K, cle) {
+  const r = K.rangs[cle] ?? [0, 0], t = r[0] + r[1];
+  K.batiments[cle].niveau = cle === 'aerodrome' || cle === 'chars' ? 1 + (r[0] >= 1) + (r[0] >= 3) : 1 + (t >= 2) + (t >= 5);
+}
 export const niveauDe = (etat, cle, camp = NOUS) => campDe(etat, camp)?.batiments[cle]?.niveau ?? 0;
-/* Le prix du niveau `vers` (1 à 3) */
-export const coutDe = (cle, vers) => BATIMENTS[cle]?.niveaux[vers - 1]?.cout ?? 0;
-/* Les choix pris aux paliers d'un bâtiment, par leur nom : la liste lue par les règles qui en dépendent (lot 3) */
-export const choisis = (etat, cle, camp = NOUS) => (campDe(etat, camp)?.batiments[cle]?.choix ?? []).map((i, k) => i == null ? null : BATIMENTS[cle].niveaux[k + 1]?.choix?.[i]?.[0] ?? null).filter(Boolean);
-/* Un chantier dure une nuit ; le niveau 3 en prend deux, sauf avec « Équipe de nuit » (maison des sapeurs, niveau 3) */
-export const nuitsDe = (etat, vers, camp = NOUS) => vers >= 3 && !choisis(etat, 'sapeurs', camp).includes('Équipe de nuit') ? 2 : 1;
-
-/* Le panier du soir de `camp` : [{ cle, choix }] (des chantiers commandés, payés à l'aube) ; sa somme ; ce qui reste à dépenser (la caisse moins le panier) */
-export const panierDe = (etat, camp = NOUS) => campDe(etat, camp)?.panier ?? [];
-const prixAchat = a => coutDe(a.cle, a.vers);
-export const coutPanier = (etat, camp = NOUS) => panierDe(etat, camp).reduce((t, a) => t + prixAchat(a), 0);
-export const disponible = (etat, camp = NOUS) => (campDe(etat, camp)?.dotation ?? 0) - coutPanier(etat, camp);
-/* Le chantier commandé ce soir pour `cle`, ou null */
-export const commande = (etat, cle, camp = NOUS) => panierDe(etat, camp).find(a => a.cle === cle) ?? null;
-
-/* Le palier suivant de `cle` peut-il se bâtir avec `caisse` points ? Une phrase, ou null (sans regarder l'heure ni le panier : le paiement de l'aube) */
-function refusPalier(etat, cle, choix, camp, caisse) {
-  const B = BATIMENTS[cle], K = campDe(etat, camp), c = K?.batiments[cle];
-  if (!B || !c) return 'Ce bâtiment n\'existe pas.';
+/* Les rangs acquis d'une piste ; le prix du rang `k` (0 = II … 3 = V) */
+export const rangDe = (etat, o, p, camp = NOUS) => campDe(etat, camp)?.rangs?.[o]?.[p] ?? 0;
+export const prixRang = k => PRIX[k] ?? Infinity;
+const acquis = (K, [o, p, k]) => (K.rangs[o]?.[p] ?? 0) > k;
+/* Ce qu'il manque pour le rang `k` de la piste : le rang d'avant, ou le rang de son lien ; null si tout est là */
+function manque(K, o, p, k) {
+  if (k > 0 && !acquis(K, [o, p, k - 1])) return [o, p, k - 1];
+  const L = ARBRES[o].pistes[p].rangs[k]?.lien;
+  return L && !acquis(K, L) ? L : null;
+}
+const dit = ([o, p, k]) => `« ${nomRang([o, p, k])} » (${ROMAINS[k]}, ${ARBRES[o].court})`;
+/* Pourquoi on ne peut pas acheter le rang suivant de la piste `p` de `o` : une phrase, ou null (un ordre impossible se refuse à voix haute) */
+export function refusRang(etat, o, p, camp = NOUS) {
+  const K = campDe(etat, camp), A = ARBRES[o];
+  if (!A || !A.pistes[p]) return 'Cette amélioration n\'existe pas.';
+  if (!K?.bride) return 'Pas de camp dans cette partie.';
   if (etat.phase === 'fin') return 'La bataille est finie.';
-  if (c.chantier) return `${B.nom} est en chantier : il sera fini à l'aube.`;
-  if (c.niveau >= NIVEAU_MAX) return `${B.nom} est déjà au niveau maximal.`;
-  const vers = c.niveau + 1, N = B.niveaux[vers - 1], manque = N.cout - caisse;
-  if (manque > 0) return `${manque} point${manque > 1 ? 's' : ''} de dotation manque${manque > 1 ? 'nt' : ''} pour ${N.nom.toLowerCase()} (${N.cout} points, ${caisse} à dépenser).`;
-  if (N.choix && !(choix === 0 || choix === 1)) return `Choisissez : ${N.choix[0][0].toLowerCase()} ou ${N.choix[1][0].toLowerCase()}.`;
+  if (etat.phase === 'jour') return `On améliore le camp le soir : ${A.nom.replace(/^./, x => x.toLowerCase())} attend la nuit.`;
+  const k = K.rangs[o][p];
+  if (k >= RANGS) return `${A.pistes[p].nom} : la piste est au bout.`;
+  const m = manque(K, o, p, k);
+  if (m) return `${A.pistes[p].rangs[k].nom} demande d'abord ${dit(m)}.`;
+  const prix = prixRang(k), caisse = K.dotation;
+  if (prix > caisse) return `${prix - caisse} point${prix - caisse > 1 ? 's' : ''} de dotation manque${prix - caisse > 1 ? 'nt' : ''} pour ${A.pistes[p].rangs[k].nom.toLowerCase()} (${prix} points, ${caisse} à dépenser).`;
   return null;
 }
-/* Pourquoi on ne peut pas commander ce soir le niveau suivant de `cle`, avec le choix `choix` (0 ou 1, exigé aux niveaux 2 et 3) : une phrase, ou null (conventions : un ordre impossible se refuse à voix haute).
-   On ne dépense que le soir (Jérôme, 18 nov.) : le jour, la fenêtre du bâtiment garde ses ordres ; le panier compte (un bâtiment par soir, la caisse moins le panier) */
-export function refusCamp(etat, cle, choix = null, camp = NOUS) {
-  const B = BATIMENTS[cle];
-  if (B && etat.phase === 'jour') return `On améliore le camp le soir : ${B.nom.replace(/^./, x => x.toLowerCase())} attend la nuit.`;
-  if (B && commande(etat, cle, camp)) return `${B.nom} est déjà commandé ce soir : le chantier part à l'aube.`;
-  return refusPalier(etat, cle, choix, camp, disponible(etat, camp));
-}
-/* Commander ce soir un chantier : il va au panier, rien n'est payé. Rend { ok, vers, cout } ou { refus } */
-export function commanderChantier(etat, cle, choix = null, camp = NOUS) {
-  const refus = refusCamp(etat, cle, choix, camp);
+/* Acheter le rang suivant : acquis et payé tout de suite ; rend { ok, k, cout } ou { refus } */
+export function acheterRang(etat, o, p, camp = NOUS) {
+  const refus = refusRang(etat, o, p, camp);
   if (refus) return { refus };
-  const K = campDe(etat, camp), vers = K.batiments[cle].niveau + 1, N = BATIMENTS[cle].niveaux[vers - 1];
-  (K.panier ??= []).push({ cle, vers, choix: N.choix ? choix : null });
-  return { ok: true, vers, cout: N.cout };
+  const K = campDe(etat, camp), k = K.rangs[o][p];
+  K.dotation -= prixRang(k); K.rangs[o][p]++; K.achats.push([o, p]);
+  if (K.batiments[o]) recaler(K, o);
+  return { ok: true, k, cout: prixRang(k) };
 }
-/* Retirer du panier le chantier commandé pour `cle` (un clic) : rend { ok } ou { refus } */
-export function annulerChantier(etat, cle, camp = NOUS) {
-  const K = campDe(etat, camp), k = (K?.panier ?? []).findIndex(a => a.cle === cle);
-  if (etat.phase !== 'nuit') return { refus: 'Le panier se défait la nuit, avant l\'aube.' };
-  if (k < 0) return { refus: 'Rien n\'est commandé pour ce bâtiment.' };
-  K.panier.splice(k, 1);
-  return { ok: true };
+/* Le dernier rang de la piste a-t-il été acheté ce soir (seul lui se rend : la piste se défait par le haut) ? */
+const deCeSoir = (K, o, p) => K.achats.some(([a, b]) => a === o && b === p);
+export function refusRendre(etat, o, p, camp = NOUS) {
+  const K = campDe(etat, camp);
+  if (!K?.bride || !ARBRES[o]?.pistes[p]) return 'Cette amélioration n\'existe pas.';
+  if (etat.phase !== 'nuit') return 'On ne rend un achat que la nuit, avant l\'aube.';
+  if (!deCeSoir(K, o, p)) return 'Rien n\'a été acheté ce soir sur cette piste : l\'aube a confirmé le reste.';
+  return null;
 }
-
-/* Ouvrir le chantier et le payer tout de suite (le paiement du panier à l'aube, les essais) : rend { ok, vers, nuits } ou { refus } */
-export function ordonnerChantier(etat, cle, choix = null, camp = NOUS) {
-  const refus = refusPalier(etat, cle, choix, camp, campDe(etat, camp)?.dotation ?? 0);
+/* Rendre le dernier rang de la piste (acheté ce soir) : remboursé ; avec lui, ce qui, acheté ce soir, en dépendait (la suite d'un lien). Rend { ok, rendus: [[o, p, k]], points } ou { refus } */
+export function rendreRang(etat, o, p, camp = NOUS) {
+  const refus = refusRendre(etat, o, p, camp);
   if (refus) return { refus };
-  const K = campDe(etat, camp), c = K.batiments[cle], vers = c.niveau + 1, N = BATIMENTS[cle].niveaux[vers - 1];
-  K.dotation -= N.cout;
-  c.chantier = { vers, nuits: nuitsDe(etat, vers, camp), choix: N.choix ? choix : null };
-  return { ok: true, vers, nuits: c.chantier.nuits };
-}
-/* L'aube paie le panier de chaque camp, dans l'ordre des commandes, avant les corvées (l'équipement se paie après, sur ce qui reste) ; un achat que la caisse ne couvre plus sort du panier sans rien coûter. Rend, par camp, les clés payées */
-export function payerPaniers(etat) {
-  const out = [];
-  for (const camp of [NOUS, EUX]) {
-    const K = campDe(etat, camp), payes = [];
-    if (K) { for (const a of K.panier ?? []) if (ordonnerChantier(etat, a.cle, a.choix, camp).ok) payes.push(a.cle); K.panier = []; }
-    out.push(payes);
+  const K = campDe(etat, camp), rendus = [];
+  const un = (a, b) => { const k = --K.rangs[a][b]; K.dotation += prixRang(k); K.achats.splice(K.achats.findLastIndex(([x, y]) => x === a && y === b), 1); if (K.batiments[a]) recaler(K, a); rendus.push([a, b, k]); };
+  un(o, p);
+  for (let encore = true; encore;) {
+    encore = false;
+    for (const [a, b] of [...K.achats].reverse()) { const k = K.rangs[a][b] - 1; if (manque(K, a, b, k)) { un(a, b); encore = true; break; } }
   }
-  return out;
+  return { ok: true, rendus, points: rendus.reduce((t, [, , k]) => t + prixRang(k), 0) };
 }
+/* « Annuler » : tout ce qui a été acheté ce soir est rendu. Rend { ok, rendus, points } ou { refus } */
+export function annulerSoir(etat, camp = NOUS) {
+  const K = campDe(etat, camp);
+  if (etat.phase !== 'nuit') return { refus: 'On ne rend un achat que la nuit, avant l\'aube.' };
+  if (!K?.achats?.length) return { refus: 'Rien n\'a été acheté ce soir.' };
+  const rendus = []; let points = 0;
+  while (K.achats.length) { const [o, p] = K.achats[K.achats.length - 1], r = rendreRang(etat, o, p, camp); rendus.push(...r.rendus); points += r.points; }
+  return { ok: true, rendus, points };
+}
+/* Ce qui a été dépensé ce soir */
+export const depenseSoir = (etat, camp = NOUS) => { const K = campDe(etat, camp), n = {}; let t = 0; for (const [o, p] of K?.achats ?? []) { const k = (K.rangs[o][p] - 1) - (n[`${o}${p}`] = (n[`${o}${p}`] ?? 0)); n[`${o}${p}`]++; t += prixRang(k); } return t; };
+/* La caisse : ce qui reste à dépenser (tout est payé au clic) */
+export const disponible = (etat, camp = NOUS) => campDe(etat, camp)?.dotation ?? 0;
 
 /* Les tronçons que `camp` tient, par ligne de l'autre camp : { rang: [tenus, en tout] }, et le total de ses lignes [tenus, en tout] */
 function lignes(B, camp) {
@@ -161,39 +166,33 @@ export function dotationSoir(B) {
   if (etat.campEux) { out.camps.push(soirDe(B, EUX)); if (!etat.deux) iaBatir(B); }
   return out;
 }
-/* L'aube d'un camp : ses chantiers avancent d'une nuit (le niveau vient à la dernière). Rend [clé, niveau] des chantiers finis */
-function chantiersDe(etat, camp) {
-  const K = campDe(etat, camp), finis = [];
-  for (const [cle, c] of Object.entries(K.batiments)) {
-    if (!c.chantier) continue;
-    if (--c.chantier.nuits > 0) continue;
-    c.niveau = c.chantier.vers;
-    if (c.chantier.choix != null) c.choix[c.niveau - 2] = c.chantier.choix;
-    if (K.bride) monter(etat, cle, c.niveau, c.chantier.choix, camp);      // les effectifs ne montent que dans la partie bridée
-    c.chantier = null; finis.push([cle, c.niveau]);
-  }
-  return finis;
+/* L'aube d'un camp : les achats du soir sont confirmés (ils ne se rendent plus) et leurs effectifs montent. Rend les rangs confirmés [[o, p, k]] */
+function confirmer(etat, camp) {
+  const K = campDe(etat, camp), out = [];
+  // les rangs achetés ce soir sur une piste sont les n derniers acquis (n : ses achats du soir)
+  for (const o of ORDRE_ARBRES) for (const p of [0, 1]) { const n = K.achats.filter(([a, b]) => a === o && b === p).length; for (let k = K.rangs[o][p] - n; k < K.rangs[o][p]; k++) out.push([o, p, k]); }
+  if (K.bride) for (const [o, p, k] of out) monterRang(etat, o, p, k, camp);
+  K.achats = [];
+  return out;
 }
-/* L'aube des deux camps : les chantiers avancent (ceux payés ce matin compris : un chantier d'une nuit commandé le soir est fini au matin).
-   Rend le détail du nôtre ({ finis, payes, soir, caisse }) et `camps` (à deux, chaque joueur lit le sien) */
-export function aubeCamps(B, payes = [[], []]) {
+/* L'aube des deux camps : ce qui a été acheté le soir est confirmé. Rend le détail du nôtre ({ achetes, soir, caisse }) et `camps` (à deux, chaque joueur lit le sien) */
+export function aubeCamps(B) {
   const { etat } = B;
   if (!etat.camp) return null;
-  const de = camp => { const K = campDe(etat, camp); return { finis: chantiersDe(etat, camp), payes: payes[camp] ?? [], soir: K.soir, caisse: K.dotation }; };
+  const de = camp => { const K = campDe(etat, camp); return { achetes: confirmer(etat, camp), soir: K.soir, caisse: K.dotation }; };
   const out = de(NOUS);
   out.camps = [out];
   if (etat.campEux) out.camps.push(de(EUX));
   return out;
 }
-/* En face commande le soir, comme nous (le panier, payé à l'aube) : tant qu'elle a de quoi payer, le premier palier du plan (`CAMP_IA.plan`) qu'elle n'a pas atteint, le choix du palier tiré d'un hachage de la graine ; un palier trop cher attend le soir suivant (elle ne passe pas au suivant : ses sous sont pour lui) */
+/* En face achète le soir, comme nous : tant qu'il a de quoi payer, le premier rang de son plan (`IA_PLAN` : des pistes, rang par rang) qui n'est pas acquis et que rien ne bloque ;
+   un rang trop cher attend le soir suivant (il ne passe pas au suivant : ses sous sont pour lui) */
 function iaBatir(B) {
   const { etat } = B, K = etat.campEux;
   if (!K?.bride) return;
-  for (let tour = 0; tour < 6; tour++) {
-    const pas = CAMP_IA.plan.find(([cle, n]) => niveauDe(etat, cle, EUX) < n && !K.batiments[cle].chantier && !commande(etat, cle, EUX));      // (un bâtiment en chantier ou commandé passe son tour : le suivant du plan se bâtit en même temps)
-    if (!pas) return;
-    const [cle] = pas, choix = hash2(etat.graine | 0, niveauDe(etat, cle, EUX), 91) < 0.5 ? 0 : 1;
-    if (!commanderChantier(etat, cle, choix, EUX).ok) return;
+  for (let tour = 0; tour < 12; tour++) {
+    const pas = IA_PLAN.find(([o, p, k]) => K.rangs[o][p] === k && !manque(K, o, p, k));
+    if (!pas || !acheterRang(etat, pas[0], pas[1], EUX).ok) return;
   }
 }
 
@@ -203,13 +202,12 @@ export function refusOrdre(etat, camp, cal) {
   if (!K?.bride || !OUVERTURE[cal]) return null;
   const [cle, n] = OUVERTURE[cal], B = BATIMENTS[cle], niveau = niveauDe(etat, cle, camp);
   if (niveau >= n) return null;
-  if (K.batiments[cle].chantier) return `${B.nom} est en chantier : fini à l'aube.`;
   return niveau === 0 ? `${B.nom} n'est pas encore bâti.` : `${B.nom} : cet ordre s'ouvre au niveau ${n} (il est au niveau ${niveau}).`;
 }
-/* Le nid de mitrailleuse refait par le génie demande la maison des sapeurs au niveau 2 */
+/* Le nid de mitrailleuse refait par le génie demande « Chantier » (maison des sapeurs, piste Sections, II) */
 export function refusNid(etat, camp) {
-  if (!campDe(etat, camp)?.bride || niveauDe(etat, 'sapeurs', camp) >= 2) return null;
-  return 'Refaire un nid de mitrailleuse demande la maison des sapeurs au niveau 2.';
+  if (!campDe(etat, camp)?.bride || rangDe(etat, 'sapeurs', 0, camp) >= 1) return null;
+  return `Refaire un nid de mitrailleuse demande ${dit(['sapeurs', 0, 0])}.`;
 }
 
 /* Le plan du camp d'un secteur (v0.110.0, les cartes plus grandes) : le milieu du front, à `CAMP_PLAN.derriere` m derrière le bord sud du secteur (33 m : 333 pour 300). `etat.dim` dit la taille du secteur ;
@@ -247,8 +245,8 @@ export function entreeHopital(etat, camp = NOUS) {
 }
 /* Les régiments frais de `camp` (v0.116.0) : { restants, pris, total } ; `pris` = ceux que la relève ou un déploiement ont déjà engagés (les ralliés n'en font pas partie : ils ne viennent pas de la réserve). Aucun régiment ne s'ajoute chaque jour : le total ne bouge que si la caserne monte. */
 export function renfortsDe(etat, camp = NOUS) {
-  const reserve = etat.reserves?.[camp] ?? 0, pris = etat.reservesPrises?.[camp] ?? 0;
-  return { restants: Math.max(0, Math.min(reserve, RENFORTS.plafond - pris)), pris, total: Math.min(reserve + pris, RENFORTS.plafond), plafond: RENFORTS.plafond };
+  const reserve = etat.reserves?.[camp] ?? 0, pris = etat.reservesPrises?.[camp] ?? 0, plafond = RENFORTS.plafond + plusDe(etat, camp, 'caserne', '+reserves');      // (chaque régiment frais d'un rang de la caserne relève aussi le plafond : troisième jet)
+  return { restants: Math.max(0, Math.min(reserve, plafond - pris)), pris, total: Math.min(reserve + pris, plafond), plafond };
 }
 /* Où sort un char du parc de `camp` (v0.99.8 : « le char part du parc des chars ») : la place du Schneider que le parc montre, devant sa galerie ; null sans parc dessiné (partie non bridée, parc pas bâti) */
 export function sortieChars(etat, camp = NOUS) {
@@ -295,10 +293,10 @@ export function prochainDuParc(etat, camp, enReparation = () => false) {
   return m ? { rentre: m } : null;
 }
 
-/* Où est chaque bâtiment qui est bâti, en chantier ou commandé */
+/* Où est chaque bâtiment (tous sont bâtis : le niveau I est donné) */
 export function emprisesCamp(etat, camp = NOUS) {
   const K = campDe(etat, camp);
-  return Object.keys(CAMP_PLAN.ligne).filter(cle => { const c = K?.batiments[cle]; return c && (c.niveau || c.chantier || commande(etat, cle, camp)); }).map(cle => emplacementCamp(etat, cle, camp));
+  return Object.keys(CAMP_PLAN.ligne).filter(cle => K?.batiments[cle]?.niveau).map(cle => emplacementCamp(etat, cle, camp));
 }
 
 /* La place de tout le camp, bâti ou non (les cinq emplacements) : { x0, x1, y0, y1 } en coordonnées du terrain ; la caméra le cadre en entier (v0.96.0) */
@@ -315,21 +313,20 @@ export function batimentSous(etat, x, y, marge = 0, camp = NOUS) {
   return emprisesCamp(etat, camp).find(e => Math.abs(x - e.x) <= e.w / 2 + marge && Math.abs(y - e.y) <= e.d / 2 + marge)?.cle ?? null;
 }
 
-// ─── Ce que les niveaux et les choix changent (lot 3) ───
-/* Le facteur d'un modificateur (`'artillerie.recharge'`, `'chars.pv'`…) pour `camp` : le produit des `effets` des niveaux atteints du bâtiment qui le porte (le préfixe) et du choix pris à chaque palier. 1 hors de la partie bridée (le camp d'en face compte depuis la v0.92.0). */
+// ─── Ce que les rangs changent ───
+/* Le facteur d'un modificateur (`'artillerie.recharge'`, `'infanterie.obus'`…) pour `camp` : le produit des `effets` des rangs acquis de l'onglet qui le porte (le préfixe).
+   1 hors de la partie bridée (le camp d'en face compte depuis la v0.92.0). Les clés `+…` (des effectifs) ne sont pas des facteurs. */
 export function modif(etat, camp, cle) {
   const K = campDe(etat, camp);
   if (!K?.bride) return 1;
-  const bat = cle.split('.')[0], c = K.batiments[bat];
-  if (!c?.niveau) return 1;
+  const o = cle.split('.')[0], A = ARBRES[o], r = K.rangs?.[o];
+  if (!A || !r) return 1;
   let f = 1;
-  BATIMENTS[bat].niveaux.slice(0, c.niveau).forEach((N, k) => {
-    if (N.effets?.[cle]) f *= N.effets[cle];
-    const i = k >= 1 ? c.choix[k - 1] : null;
-    if (i != null && N.choix?.[i]?.[2]?.[cle]) f *= N.choix[i][2][cle];
-  });
+  A.pistes.forEach((P, p) => { for (let k = 0; k < r[p]; k++) { const v = P.rangs[k].effets[cle]; if (v != null) f *= v; } });
   return f;
 }
+/* La somme des effets `+…` des rangs acquis d'un onglet (`'+avions'`…) */
+export const plusDe = (etat, camp, o, cle) => { const K = campDe(etat, camp), r = K?.rangs?.[o]; if (!r) return 0; let n = 0; ARBRES[o].pistes.forEach((P, p) => { for (let k = 0; k < r[p]; k++) n += P.rangs[k].effets[cle] ?? 0; }); return n; };
 /* Le facteur de recharge d'une batterie (`cal` : '75', '155', '220', 'avion', 'char', 'genie') */
 export function rechargeDe(etat, camp, cal) {
   if (cal === 'avion') return modif(etat, camp, 'aerodrome.recharge');
@@ -337,53 +334,29 @@ export function rechargeDe(etat, camp, cal) {
   if (cal === 'genie') return 1;
   return modif(etat, camp, 'artillerie.recharge') * (cal === '220' ? modif(etat, camp, 'artillerie.recharge220') : 1);
 }
-/* Les effectifs du départ de la partie bridée : ceux des bâtiments de départ (2 régiments en réserve à la caserne), puis ce que les niveaux déjà atteints (une campagne les reporte : `campDeDepart({ depart })`) ajoutent ; les avions et les sections du génie viennent avec leur bâtiment */
+/* Les effectifs du départ de la partie bridée : ceux du niveau I (data/batiments.js : 2 régiments frais, 2 sections, 2 chars, 3 avions), puis ce que les rangs déjà acquis (une campagne les reporte) ajoutent */
 export function appliquerDepart(etat, camp = NOUS) {
-  etat.reserves[camp] = 0;
-  etat.sapeurs[camp] = 0;
+  const I = cle => BATIMENTS[cle].niveaux[0];
+  etat.reserves[camp] = I('caserne').reserves ?? 0;
+  etat.sapeurs[camp] = I('sapeurs').sections ?? 0;
+  (etat.charsDispo ??= [null, null])[camp] = I('chars').chars ?? 0;      // les chars du parc : un stock par bataille (v0.99.10) ; `null` : pas de limite (partie non bridée)
   etat.avions[camp] = [];
-  (etat.charsDispo ??= [null, null])[camp] = 0;      // les chars du parc : un stock par bataille (v0.99.10) ; `null` : pas de limite (partie non bridée)
   const K = campDe(etat, camp);
-  for (const [cle, c] of Object.entries(K.batiments)) {
-    for (let n = 1; n <= c.niveau; n++) monter(etat, cle, n, n >= 2 ? c.choix[n - 2] ?? null : null, camp);
-  }
+  for (let k = 0; k < (I('aerodrome').avions ?? 0); k++) etat.avions[camp].push(pvAvion(etat, camp));
+  for (const o of ORDRE_ARBRES) for (const p of [0, 1]) for (let k = 0; k < K.rangs[o][p]; k++) monterRang(etat, o, p, k, camp, true);
 }
-/* Un bâtiment atteint `niveau` (avec le choix `choix` du palier) : ses effectifs montent d'autant, sauf ce que la partie a déjà perdu (les sections parties au travail, les avions abattus restent perdus) */
-function monter(etat, cle, niveau, choix, camp = NOUS) {
-  const avant = niveau > 1 ? BATIMENTS[cle].niveaux[niveau - 2] : null, N = BATIMENTS[cle].niveaux[niveau - 1];
-  const plus = champ => N[champ] != null ? N[champ] - (avant?.[champ] ?? 0) : 0;
-  if (cle === 'caserne') etat.reserves[camp] += plus('reserves');
-  if (cle === 'sapeurs') etat.sapeurs[camp] += plus('sections');
-  if (cle === 'chars') etat.charsDispo[camp] += plus('chars');
-  const eff = choix != null ? N.choix?.[choix]?.[2] : null;
-  if (eff?.['+reserves']) etat.reserves[camp] += eff['+reserves'];
-  if (cle === 'aerodrome') {
-    if (eff?.['aerodrome.pv']) etat.avions[camp] = etat.avions[camp].map(pv => pv > 0 ? Math.round(pv * eff['aerodrome.pv']) : 0);      // le blindage : les avions d'avant en profitent
-    for (let k = 0; k < plus('avions'); k++) etat.avions[camp].push(pvAvion(etat, camp));
-  }
+/* Un rang est confirmé (l'aube qui suit son achat) : ses effectifs montent ; ce que la partie a perdu reste perdu (les avions abattus, les sections anéanties). `depart` : les avions sont déjà à leurs points de vie */
+function monterRang(etat, o, p, k, camp, depart = false) {
+  const e = ARBRES[o].pistes[p].rangs[k].effets;
+  if (e['+reserves']) etat.reserves[camp] += e['+reserves'];
+  if (e['+sections']) etat.sapeurs[camp] += e['+sections'];
+  if (e['+chars']) etat.charsDispo[camp] += e['+chars'];
+  if (e['aerodrome.pv'] && !depart) etat.avions[camp] = etat.avions[camp].map(pv => pv > 0 ? Math.round(pv * e['aerodrome.pv']) : 0);      // le blindage : les avions d'avant en profitent
+  for (let n = 0; n < (e['+avions'] ?? 0); n++) etat.avions[camp].push(pvAvion(etat, camp));
 }
 /* Les points de vie d'un avion neuf ou réparé, au plus : ceux de la flotte, plus le blindage choisi */
 export const pvAvion = (etat, camp) => Math.round(MITRAILLAGE.pv * modif(etat, camp, 'aerodrome.pv'));
 
-// ─── L'équipement des régiments (lot 4) : la corvée de nuit `eq-…` (nuit.js) ───
-/* Pourquoi on ne peut pas donner cette pièce (`cle` : une clé de EQUIPEMENTS) à ce régiment : une phrase, ou null */
-export function refusEquiper(B, reg, cle) {
-  const { etat } = B, c = campDe(etat, reg.camp);
-  if (!EQUIPEMENTS[cle]) return 'Pas de telle pièce d\'équipement.';
-  if (!c?.bride) return 'Pas de caserne dans cette partie.';
-  if (niveauDe(etat, 'caserne', reg.camp) < EQUIPEMENT.niveauCaserne) return `Équiper un régiment demande la caserne au niveau ${EQUIPEMENT.niveauCaserne}.`;
-  if (reg.equip?.includes(cle)) return `${reg.nom} a déjà ${EQUIPEMENTS[cle].court.toLowerCase()}.`;
-  if ((reg.equip?.length ?? 0) >= EQUIPEMENT.places) return `${reg.nom} porte déjà tout ce qu'il peut : ${EQUIPEMENT.places} pièces.`;
-  const caisse = disponible(etat, reg.camp);      // (le panier du soir est déjà promis : il est payé à l'aube, avant les corvées)
-  if (caisse < EQUIPEMENT.cout) return `Il manque ${EQUIPEMENT.cout - caisse} point de dotation pour ${EQUIPEMENTS[cle].court.toLowerCase()}.`;
-  return null;
-}
-/* Donner la pièce, la nuit : paie un point et la note sur le régiment ; rend faux (sans rien changer) si la caisse s'est vidée depuis l'ordre */
-export function equiper(B, reg, cle) {
-  if (refusEquiper(B, reg, cle)) return false;
-  campDe(B.etat, reg.camp).dotation -= EQUIPEMENT.cout;
-  (reg.equip ??= []).push(cle);
-  return true;
-}
-/* Le facteur d'une pièce pour un régiment (1 s'il ne la porte pas) */
-export const facteurEquip = (reg, cle, champ) => reg?.equip?.includes(cle) ? EQUIPEMENTS[cle][champ] : 1;
+// ─── L'infanterie (la soirée, troisième jet) : l'onglet « Infanterie » vaut pour tous les régiments du camp (Jérôme, 18 nov.) ; la corvée d'équipement de la v0.91.0 n'existe plus ───
+/* Le facteur d'infanterie `cle` ('obus', 'melee', 'portee', 'mortBlesse', 'retour', 'tranchee', 'tir') pour les régiments de `camp` */
+export const infanterie = (etat, camp, cle) => modif(etat, camp, `infanterie.${cle}`);

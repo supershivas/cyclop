@@ -9,9 +9,9 @@
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta property="og:image" content="og.png">
-<link rel="stylesheet" href="js/lib/game.css?v=0.149.5">
-<link rel="stylesheet" href="css/style.css?v=0.149.5">
-<link rel="stylesheet" href="css/ds-v2.css?v=0.149.5">
+<link rel="stylesheet" href="js/lib/game.css?v=0.150.0">
+<link rel="stylesheet" href="css/style.css?v=0.150.0">
+<link rel="stylesheet" href="css/ds-v2.css?v=0.150.0">
 </head>
 <body class="charge">
 <!-- La barre de chargement (v0.28.0) : là avant tout script ; main.js la remplit, puis la retire. `body.charge` (v0.100.0) : tout le reste de l'écran est caché tant qu'elle est là (le menu et le titre ne se voient plus derrière) -->
@@ -89,20 +89,15 @@
       <!-- La nuit : le champ de bataille reste, ce papier s'y pose (pas de boîte de dialogue) ; on choisit des régiments, puis leur corvée -->
       <!-- Le papier de la nuit (Jérôme, 15 nov., v0.134.0 ; labo « Le papier de la nuit », variante A « Deux colonnes ») : jamais de défilement dès 1280 × 800 ; en tête ce qu'il faut décider
            (la relève, gérer les régiments, l'aube), à gauche les ordres (une rangée par régiment, son état et ses corvées en icônes) et « À retenir », à droite la journée, le ciel et les médailles -->
-      <section class="papier nuit pn pn-va" id="nuit" hidden aria-live="polite">
+      <section class="papier nuit pn aube" id="nuit" hidden aria-live="polite">
         <header class="pn-tete">
-          <h2 id="nuit-titre">Nuit</h2>
-          <div class="pn-pied" id="nuit-pied">
-            <span id="nuit-releve"></span>
-            <button class="bouton pn-gerer" id="nuit-gerer" type="button" hidden data-info="# Gérer les régiments&#10;Fusionner | deux régiments&#10;Transférer | 1, 10 ou tous les hommes&#10;Au petit matin | ils rejoignent leur nouveau régiment">Gérer les régiments</button>
-          </div>
-          <button class="bouton pn-aube" id="aube" type="button" data-info="# À l'aube&#10;Les ordres | **s'exécutent**&#10;Le camp | les commandes sont payées">À l'aube</button>
+          <h2 id="nuit-titre">L'aube</h2>
+          <button class="bouton pn-aube" id="aube" type="button" data-info="# Le jour se lève&#10;La bataille | **reprend**">Le jour se lève</button>
         </header>
-        <section class="pn-ordres" id="nuit-ordres" aria-label="Les ordres de la nuit"></section>
-        <section class="pn-jour" id="nuit-jour" aria-label="La journée"></section>
         <div class="fiche-tuiles" id="aube-bilan" hidden></div>
       </section>
-        <button class="bouton papier" id="nuit-retour" type="button" hidden data-info="# Le papier de la nuit&#10;La nuit continue : on n'a regardé que le champ. Échap revient aussi.">Revenir au papier de la nuit</button>
+      <section class="papier pn ps ps-e ps3" id="soiree" hidden aria-label="La soirée" aria-live="polite"></section>
+        <button class="bouton papier" id="nuit-retour" type="button" hidden data-info="# La soirée&#10;La nuit | **attend**&#10;Échap | revient aussi">Revenir à la soirée</button>
         <p class="papier pause-active" id="pause-active" hidden>Temps arrêté</p>
         <section class="pertes" id="pertes" aria-label="Les pertes des deux armées">
           <div class="armee nous" id="pertes-nous"></div>
@@ -316,16 +311,6 @@
   <form method="dialog"><button class="bouton">Fermer</button></form>
 </dialog>
 
-<dialog id="dialogue-regiments" aria-label="Gérer les régiments">
-  <h2>Gérer les régiments</h2>
-  <p class="discret" id="reg-aide"></p>
-  <div class="reg-quantites" id="reg-quantites" role="group" aria-label="Quantité transférée"></div>
-  <div class="reg-grille" id="reg-grille"></div>
-  <h3>Transferts prévus</h3>
-  <ul class="reg-prevus" id="reg-prevus"></ul>
-  <form method="dialog"><button class="bouton">Fermer</button></form>
-</dialog>
-
 <dialog id="dialogue-depart" aria-label="Prêt à commencer">
   <h2>Prêt ?</h2>
   <p class="discret" id="depart-statut">La bataille commence quand les deux commandants sont prêts.</p>
@@ -393,6 +378,6 @@
 </dialog>
 
 <div class="jeu-toast" id="toast" role="status" hidden></div>
-<script type="module" src="js/main.js?v=0.149.5"></script>
+<script type="module" src="js/main.js?v=0.150.0"></script>
 </body>
 </html>

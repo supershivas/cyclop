@@ -1,7 +1,7 @@
 // Gestion des régiments (v0.116.0) : les transferts de la nuit, les blessés qui vont à l'hôpital, les régiments frais comptés.
 import { nouvelleBataille as nouvelleBatailleLibre, avancer, aube, photo, restaurer, deployer, peutDeployer } from '../js/bataille.js';
 const nouvelleBataille = (graine, R, opts = {}) => nouvelleBatailleLibre(graine, R, { premierFixe: true, ...opts });   // le 1er jour est tiré au hasard en jeu : les tests de règles veulent le temps de départ de la saison
-import { refusCorvee, planifierTransfert, annulerTransfert, refusTransfert, disponibles, prendreReserve } from '../js/nuit.js';
+import { refusCorvee, planifierTransfert, retirerTransfert, annulerTransferts, refusTransfert, disponibles, vides, prendreReserve } from '../js/nuit.js';
 import { entreeHopital, renfortsDe, patients } from '../js/camp.js';
 import { blessesDe, marcheBlesse } from '../js/bataille.js';
 import { REGLAGES as R } from '../js/data/reglages.js';
@@ -40,35 +40,48 @@ test('au petit matin, les hommes transférés marchent jusqu\'à leur nouvelle p
   for (let k = 0; k < 600; k++) avancer(B);
   assert.ok(loin() < d0 - 15, `ils se rapprochent de leur place (${d0.toFixed(1)} → ${loin().toFixed(1)} m)`);
 });
-test('« tous » fusionne : le régiment donneur est vide, l\'autre a tout', () => {
+test('tous ses paquets donnés, un régiment est vidé : il est dissous à l\'aube, l\'autre a tout (la soirée, troisième jet)', () => {
   const B = bridee(), [a, b] = regs(B), total = a.effectif + b.effectif;
   B.etat.phase = 'nuit';
-  assert.ok(planifierTransfert(B, 0, a.id, b.id, -1).ok);
+  assert.ok(planifierTransfert(B, 0, a.id, b.id, disponibles(B, 0, a.id)).ok);
   assert.equal(disponibles(B, 0, a.id), 0);
   assert.match(planifierTransfert(B, 0, a.id, b.id, 1).refus, /promis/);
+  assert.deepEqual(vides(B, 0).map(r => r.id), [a.id], 'vidé : il sera dissous');
   aube(B);
-  assert.equal(a.effectif, 0); assert.equal(b.effectif, total); assert.equal(effectif(B, b.id), total);
+  assert.equal(a.effectif, 0); assert.equal(a.dissous, 1); assert.equal(b.effectif, total); assert.equal(effectif(B, b.id), total);
 });
-test('les refus se disent : même régiment, camp adverse, trop d\'hommes, transfert croisé', () => {
+test('les blessés passent aussi, en paquets à part : on ne donne que ceux qu\'on a', () => {
+  const B = bridee(), [a, b] = regs(B), A = B.armee;
+  let n = 0; for (let i = 0; i < A.n && n < 12; i++) if (A.reg[i] === a.id && !A.mort[i]) { A.blessure[i] = 1; n++; }
+  B.etat.phase = 'nuit';
+  assert.equal(disponibles(B, 0, a.id, true), 12); assert.equal(disponibles(B, 0, a.id), a.effectif - 12);
+  assert.match(refusTransfert(B, 0, a.id, b.id, 13, true), /plus que 12 blessés/);
+  assert.ok(planifierTransfert(B, 0, a.id, b.id, 10, true).ok); assert.ok(planifierTransfert(B, 0, a.id, b.id, 10).ok);
+  aube(B);
+  let bl = 0; for (let i = 0; i < A.n; i++) if (!A.mort[i] && A.reg[i] === b.id && A.blessure[i]) bl++;
+  assert.ok(bl >= 8, `les blessés sont passés (${bl} ; la nuit en tue quelques-uns)`);
+});
+test('les refus se disent : même régiment, camp adverse, quantité, trop d\'hommes ; un régiment qui reçoit peut aussi donner', () => {
   const B = bridee(), [a, b, c] = regs(B), eux = B.etat.regiments.find(r => r.camp === 1);
   B.etat.phase = 'nuit';
   assert.match(refusTransfert(B, 0, a.id, a.id, 1), /lui-même/);
   assert.match(refusTransfert(B, 0, a.id, eux.id, 1), /pas le vôtre/);
   assert.match(refusTransfert(B, 0, a.id, b.id, 0), /invalide/);
   assert.ok(planifierTransfert(B, 0, a.id, b.id, 5).ok);
-  assert.match(refusTransfert(B, 0, b.id, c.id, 5), /reçoit/, 'un régiment qui reçoit ne donne pas');
-  assert.match(refusTransfert(B, 0, c.id, a.id, 5), /envoie/, 'un régiment qui donne ne reçoit pas');
-  const trop = planifierTransfert(B, 0, a.id, b.id, 9999);
-  assert.ok(trop.ok && trop.tout, 'plus que ce qui reste : tout le reste');
+  assert.ok(planifierTransfert(B, 0, b.id, c.id, 5).ok, 'b donne ses propres hommes');
+  assert.match(refusTransfert(B, 0, a.id, b.id, 9999), /n'a plus que/);
 });
-test('annuler un transfert le retire ; il survit à la sauvegarde', () => {
-  const B = bridee(), [a, b] = regs(B);
+test('un paquet se retire ou s\'emmène ailleurs ; « Annuler les transferts » rend tout ; ils survivent à la sauvegarde', () => {
+  const B = bridee(), [a, b, c] = regs(B);
   B.etat.phase = 'nuit';
-  planifierTransfert(B, 0, a.id, b.id, 10);
+  planifierTransfert(B, 0, a.id, b.id, 20);
   const C = restaurer(photo(B), R);
-  assert.deepEqual(C.etat.transferts[0], [{ de: a.id, vers: b.id, n: 10 }]);
-  assert.ok(annulerTransfert(B, 0, 0).ok); assert.equal(disponibles(B, 0, a.id), a.effectif);
-  assert.match(annulerTransfert(B, 0, 0).refus, /n'existe plus/);
+  assert.deepEqual(C.etat.transferts[0], [{ de: a.id, vers: b.id, n: 20, bl: false }]);
+  assert.ok(retirerTransfert(B, 0, a.id, b.id, 10).ok); planifierTransfert(B, 0, a.id, c.id, 10);      // un paquet de b emmené à c : son origine reste a
+  assert.deepEqual(B.etat.transferts[0], [{ de: a.id, vers: b.id, n: 10, bl: false }, { de: a.id, vers: c.id, n: 10, bl: false }]);
+  assert.match(retirerTransfert(B, 0, a.id, b.id, 11).refus, /n'existe plus/);
+  assert.ok(annulerTransferts(B, 0).ok); assert.equal(disponibles(B, 0, a.id), a.effectif);
+  assert.match(annulerTransferts(B, 0).refus, /Aucun transfert/);
 });
 test('un régiment relevé dans la nuit perd son transfert (il n\'a plus d\'hommes)', () => {
   const B = bridee(), [a, b] = regs(B), nb = b.effectif;

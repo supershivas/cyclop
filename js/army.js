@@ -25,12 +25,11 @@
      (rng.js), pour que la même graine rejoue la même bataille.
 
    Logique pure : aucun DOM. Le rendu lit les tableaux (rendu3d.js). */
-import { EQUIPEMENTS } from './data/batiments.js?v=0.149.5';
-import { hauteurQ, vitesseCase } from './terrain.js?v=0.149.5';
-import { ligneY } from './tranchees.js?v=0.149.5';
-import { TOITS } from './data/nids.js?v=0.149.5';
-import { caracteristiques } from './identite.js?v=0.149.5';
-import { BONUS } from './data/experience.js?v=0.149.5';
+import { hauteurQ, vitesseCase } from './terrain.js?v=0.150.0';
+import { ligneY } from './tranchees.js?v=0.150.0';
+import { TOITS } from './data/nids.js?v=0.150.0';
+import { caracteristiques } from './identite.js?v=0.150.0';
+import { BONUS } from './data/experience.js?v=0.150.0';
 
 export const GRILLE = 2;           // m : cases de voisinage
 export const DENSITE = 8;          // m : carrés de densité (tir)
@@ -324,7 +323,7 @@ export function pasArmee(A, ctx) {
         tirT[i] = M.periode * (0.7 + 0.6 * rng());
         if (peur[i] < Sd.terreur) {
           const j = ennemi;
-          const chance = (r.equip?.includes('grenades') ? EQUIPEMENTS.grenades.melee : 1) * M.touche * (0.55 + M.force * A.force[i] / 100) * (1.3 - M.endurance * A.endurance[j] / 100) * (1 - 0.4 * fatB[i]) * (1 + R.experience.adresse * A.exp[i]);
+          const chance = (ctx.infanterie?.[A.camp[i]].melee ?? 1) * M.touche * (0.55 + M.force * A.force[i] / 100) * (1.3 - M.endurance * A.endurance[j] / 100) * (1 - 0.4 * fatB[i]) * (1 + R.experience.adresse * A.exp[i]);
           fatB[i] = Math.min(1, fatB[i] + M.fatigue);
           A.exp[i] = Math.min(1, A.exp[i] + R.experience.tir);
           gagner(A, i, 'force', PG.coup, PG);
@@ -340,7 +339,7 @@ export function pasArmee(A, ctx) {
       tirT[i] = R.tir.periode * (0.5 + rng()) * (blessure[i] === 1 ? Sd.brasBlesse : 1) * (ebranle ? R.moral.tirEbranle : 1) * parametresStance(R, r.stance).periode;
       // la terreur, ou la déroute : on ne tire plus
       // (sans ennemi à portée, il ne tire pas : ni fatigue ni expérience)
-      if (!retrait && peur[i] < Sd.terreur && !r.deroute && tirer(A, i, o, ctx, r.stance, r.equip?.includes('hotchkiss') ? EQUIPEMENTS.hotchkiss.portee : 1)) {
+      if (!retrait && peur[i] < Sd.terreur && !r.deroute && tirer(A, i, o, ctx, r.stance, ctx.infanterie?.[A.camp[i]].portee ?? 1)) {
         fatB[i] = Math.min(1, fatB[i] + Sd.fatigueTir);
         A.exp[i] = Math.min(1, A.exp[i] + R.experience.tir);
       }
@@ -358,7 +357,7 @@ export function toitFacteur(T, c, genre) {
   return d >= 5 ? f : d >= 3 ? (1 + f) / 2 : 1;
 }
 
-function tirer(A, i, o, ctx, stance, equip = 1) {
+function tirer(A, i, o, ctx, stance, equip = 1) {      // `equip` : le facteur de portée (la section Hotchkiss de l'Infanterie)
   const { R, rng, T, frapper } = ctx;
   const { dw, dh, dens } = A;
   const ennemi = 1 - A.camp[i], de = dens[ennemi];
@@ -380,7 +379,7 @@ function tirer(A, i, o, ctx, stance, equip = 1) {
   }
   if (best < 0) return false;
   if (ctx.tir) { const bxx = best % dw; ctx.tir(i, (bxx + 0.5) * DENSITE, ((best - bxx) / dw + 0.5) * DENSITE); }   // pour le dessin : un tir part (jamais l'état)
-  const chance = chanceTir(R, stance, bestN, A.exp[i], A.adresse[i], bestD) * (1 + BONUS.regiment.precision * (ctx.regiments[A.reg[i]].chev || 0));      // le bonus des chevrons du régiment (lot E)
+  const chance = chanceTir(R, stance, bestN, A.exp[i], A.adresse[i], bestD) * (1 + BONUS.regiment.precision * (ctx.regiments[A.reg[i]].chev || 0)) * (ctx.infanterie?.[A.camp[i]].tir ?? 1);      // le bonus des chevrons du régiment (lot E) ; les fusiliers-mitrailleurs (l'Infanterie)
   gagner(A, i, 'adresse', R.progression.tir, R.progression);
   if (rng() >= chance) return true;
   gagner(A, i, 'adresse', R.progression.toucheTir, R.progression);
