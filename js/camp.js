@@ -3,11 +3,11 @@
 // Lot 2 : les niveaux ouvrent les ordres (`refusOrdre`). Lot 3 (v0.88.0) : chaque niveau et chaque choix de palier change un chiffre (`modif`) ou un effectif (`effectifsDe`).
 // La soirée (Jérôme, 18 nov., ROADMAP « Le soir, le moment des améliorations », lot 1) : la dotation tombe le soir (`dotationSoir`), on ne dépense que la nuit,
 // dans un panier (`K.panier` : commander, annuler d'un clic) que rien ne paie avant l'aube (`payerPaniers`) ; puis les chantiers avancent (`aubeCamps`).
-import { hash2 } from './lib/rng.js?v=0.149.4';
-import { BATIMENTS, DOTATION, CAMP_PLAN, CAMP_IA, PIEDS, EQUIPEMENT, EQUIPEMENTS } from './data/batiments.js?v=0.149.4';
-import { RENFORTS } from './data/renforts.js?v=0.149.4';
-import { MITRAILLAGE } from './data/mitraillage.js?v=0.149.4';
-import { PARC } from './data/parc.js?v=0.149.4';
+import { hash2 } from './lib/rng.js?v=0.149.5';
+import { BATIMENTS, DOTATION, CAMP_PLAN, CAMP_IA, PIEDS, EQUIPEMENT, EQUIPEMENTS } from './data/batiments.js?v=0.149.5';
+import { RENFORTS } from './data/renforts.js?v=0.149.5';
+import { MITRAILLAGE } from './data/mitraillage.js?v=0.149.5';
+import { PARC } from './data/parc.js?v=0.149.5';
 
 const NOUS = 0, EUX = 1;
 /* L'état du camp de `camp` : `etat.camp` (le nôtre), `etat.campEux` (celui d'en face : v0.92.0) */

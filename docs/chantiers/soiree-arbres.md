@@ -1,4 +1,4 @@
-# La soirée, troisième jet : le contenu des arbres (PROPOSITION, à valider par Jérôme)
+# La soirée, troisième jet : le contenu des arbres (validé par Jérôme le 18 nov. ; rien n'est en jeu)
 
 ROADMAP, « Le soir, le moment des améliorations », « Troisième jet » (18 nov.) : **5 niveaux** par bâtiment,
 le I donné, puis **2 pistes × 4 rangs** (II à V), plus forts et plus chers à chaque rang, un lien croisé là où
@@ -46,7 +46,7 @@ rang d'un autre onglet.
 | II · 2 | Chantier | +2 sections ; les nids se refont (`sections`) | Madriers taillés | travail ×0,85 (`sapeurs.travail`) |
 | III · 3 | Sections de 30 | hommes ×1,5 (`sapeurs.hommes`) | Voiturettes Decauville | marche ×1,25 (`sapeurs.vitesse`) |
 | IV · 4 | Cinquième section | +1 section | Forge et grue | travail ×0,85 |
-| V · 5 | Équipe de nuit | **remplaçant à choisir** (voir plus bas) | Voie de 60 | marche ×1,20 ; deux réparations d'engin par jour (*`sapeurs.reparations`*) |
+| V · 5 | Sections de 40 | hommes ×4/3 : 40 par section (`sapeurs.hommes`) | Voie de 60 | marche ×1,20 ; deux réparations d'engin par jour (*`sapeurs.reparations`*) |
 
 ## Caserne (I : Baraquements : 2 régiments frais ; la relève et les régiments frais seulement)
 
@@ -79,13 +79,12 @@ Les clés `obus`, `melee`, `portee`, `mortBlesse`, `retour` sont celles de `EQUI
 aujourd'hui portées **par un régiment** (une corvée de nuit, 1 point) ; l'Infanterie les donnerait **à tous nos
 régiments** (question posée à Jérôme).
 
-## « Équipe de nuit » : un remplaçant
+## Les décisions de Jérôme (18 nov.)
 
-Son effet d'avant (« un chantier du camp s'achève en une nuit ») n'a plus d'objet : un achat est acquis au clic.
-Trois pistes, la première recommandée :
-1. **Les ponts et les nids refaits la nuit** : à l'aube, chaque pont ou nid détruit la veille est refait sans sortir de section (*`sapeurs.nuit`*). La nuit garde son sens (le génie y travaille), le joueur garde ses sections pour le jour.
-2. **Les tranchées remises en état la nuit** : la solidité perdue dans la journée revient d'un quart (*`tranchees.nuit`*).
-3. **Deux réparations d'avion ou de char par jour** (doublerait l'effet de la Voie de 60 : il faudrait lui en trouver un autre).
+- **Le tableau** : validé tel quel pour le troisième jet ; les chiffres se règlent au lot 4 (la mesure).
+- **« Équipe de nuit » disparaît** (son effet, un chantier en une nuit, n'a plus d'objet) : le rang V de la piste Sections devient **Sections de 40** (Jérôme : « section de 40 ? »).
+- **L'Infanterie vaut pour tous nos régiments** à l'achat (comme un bâtiment pour tous ses engins) : la corvée « équipement » de nuit disparaît au passage en jeu.
+- **Le rapport : environ 12 rangs par bataille** : les prix restent 2, 3, 4, 5 et **le soir rapporte +2 au lieu de +1** (`DOTATION.soir`), soit ~25 à 35 points par bataille tenue ; une campagne de trois batailles achète la moitié de l'arbre. À passer en jeu avec les règles (lot 1 bis), pas avant.
 
 ## Le rapport : combien de rangs par bataille
 
@@ -95,7 +94,7 @@ Mesuré (18 nov., `node scripts/mesure-camp.mjs --avec-seul --difficultes … --
 |---|---|---|---|---|
 | Secteur calme | 1 à 8 | 11 | **20** (17 à 20) | 10 soirs + 7 à 10 soirs de lignes tenues |
 | Front ordinaire | 1 à 10 | 8 à 11 | **15,5** (12 à 19) | 7 à 10 soirs + 4 à 9 lignes tenues |
-| Grande offensive | 1 à 5 | 4 à 6 (le secteur tombe) | **6,4** (6 à 7) | 3 à 5 soirs + 2 ou 3 lignes tenues |
+| Grande offensive | 1 à 10 | 4 à 6 (le secteur tombe) | **6,4** (5 à 8) | 3 à 5 soirs + 2 ou 3 lignes tenues |
 
 Un joueur qui prend des lignes ajoute jusqu'à **+8** (+2 par ligne d'en face, quatre au plus) : environ **20 à 28** sur
 une bataille tenue de 11 jours, plus sur 15 jours (2 par soir). En campagne, les niveaux du camp passent d'une

@@ -98,6 +98,7 @@ await page.evaluate(() => document.querySelector('#fiche-liste button.nom').clic
 await etape('fiche-homme');
 await page.evaluate(() => document.getElementById('fiche-fermer').click());
 await jeu('() => { const B = __jeu.bataille(); while (B.etat.phase === "jour") __jeu.avancer(300, false); }');
+await sansBulle();
 await etape('soir');
 await jeu('() => __jeu.nuit?.()');
 await sansBulle();
@@ -114,6 +115,9 @@ await page.mouse.move(1276, 600);                          // (hors du papier et
 await sansBulle();
 await page.evaluate(() => document.querySelector('.pn-camp').click());
 await page.evaluate(() => document.querySelector('.batterie[data-cal="char"]').dispatchEvent(new MouseEvent('contextmenu', { bubbles: true, cancelable: true })));
+// (v0.149.5) le terrain survolé suit la caméra, qui respire selon l'horloge réelle : la souris quitte le champ avant l'empreinte (l'étape changeait d'un passage à l'autre)
+await page.evaluate(() => document.getElementById('canvas').dispatchEvent(new PointerEvent('pointerleave')));
+await sansBulle();
 await etape('nuit-camp');
 await page.evaluate(() => document.querySelector('#batiment .actions:last-child button').click());      // 3 points : au panier
 await etape('nuit-commande');

@@ -1,5 +1,9 @@
 # Journal des versions
 
+## 0.149.5 — 2026-11-18
+
+- Au labo, « La soirée », troisième jet : la carte du front et le registre, l'arbre du camp en cercles à cinq niveaux et sept onglets, les régiments en paquets d'hommes qu'on glisse (à trancher)
+
 ## 0.149.4 — 2026-11-18
 
 - Les infobulles se lisent d'un coup d'œil : un liseré sombre, des tableaux (Vivres, Debout, Blessés…) au lieu de phrases, plus de mot coupé, la typographie française

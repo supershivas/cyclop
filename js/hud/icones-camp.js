@@ -1,6 +1,6 @@
 // Les pictogrammes du camp (Jérôme, 18 nov. : « les cases d'améliorations n'ont pas d'icônes ») : un par palier et par choix de `data/batiments.js`, rangés par leur nom ;
 // des SVG de 16 × 16 tracés en `currentColor`, comme ceux du papier de la nuit (`icones-nuit.js`). Un nom inconnu donne un point : rien ne casse si un palier change de nom.
-import { iconeCorvee } from './icones-nuit.js?v=0.149.4';
+import { iconeCorvee } from './icones-nuit.js?v=0.149.5';
 
 const svg = corps => `<svg class="pic" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">${corps}</svg>`;
 
@@ -48,8 +48,26 @@ const ICONES = {
   'Chantier': '<path d="M2 14L8 3l6 11zM5 9h6"/>', 'Forge et grue': '<path d="M3 14V3h9M12 3v4M10 7h4v2h-4zM2 14h4"/>',
   'Cantonnement': '<path d="M1.5 13.5h13M2.5 13.5V7l3-3 3 3v6.5M8.5 13.5V7l3-3 3 3v6.5"/>', 'Camp de repos': '<path d="M1.5 13.5h13M3 13.5V6h10v7.5M6 13.5v-4h4v4M3 6l5-3.5L13 6"/>',
   'Hôpital de campagne': '<rect x="2" y="5" width="12" height="9"/><path d="M8 7.5v4M6 9.5h4M5 5l3-3 3 3"/>', 'Grand hôpital': '<rect x="1.5" y="4" width="13" height="10"/><path d="M8 6.5v5M5.5 9h5M1.5 7h2M12.5 7h2"/>',
+  // le troisième jet (data/ameliorations.js, au labo) : les rangs II à V des deux pistes
+  'Tables de tir': '<rect x="2" y="2.5" width="12" height="11"/><path d="M2 6h12M2 9.5h12M6 2.5v11"/>', 'Repérage au son': '<circle cx="3" cy="8" r="1.2"/><path d="M6 5a4 4 0 0 1 0 6M9 3a7 7 0 0 1 0 10M12 1.5a9.5 9.5 0 0 1 0 13"/>',
+  'Réglage par avion': '<path d="M2 4h12M8 2v4"/><circle cx="8" cy="11" r="3"/><path d="M8 8v6M5 11h6"/>', 'Pointeurs aguerris': '<path d="M3 9l5-4 5 4M3 13l5-4 5 4"/>',
+  'Le 220 sur rails': '<path d="M1 12.5h14M1 14.5h14M3 12.5v2M7 12.5v2M11 12.5v2M3 10h9l2-6"/>',
+  'Deuxième hangar': '<path d="M1 13.5h14M1.5 13.5V9a3 3 0 0 1 6 0v4.5M8.5 13.5V9a3 3 0 0 1 6 0v4.5"/>', 'Troisième hangar': '<path d="M1 13.5h14M1.5 13.5V10a2 2 0 0 1 4 0v3.5M6 13.5V10a2 2 0 0 1 4 0v3.5M10.5 13.5V10a2 2 0 0 1 4 0v3.5"/>',
+  'Observateurs': '<circle cx="4.5" cy="10.5" r="2.5"/><circle cx="11.5" cy="10.5" r="2.5"/><path d="M4.5 8V4h2v4M11.5 8V4h-2v4M6.5 6h3"/>', 'Réservoir auto-obturant': '<path d="M8 2c3 4 4.5 6 4.5 8a4.5 4.5 0 0 1-9 0C3.5 8 5 6 8 2z"/><path d="M6 10h4"/>',
+  'Vol rasant': '<path d="M2 6h12M8 4v4M6 8h4M1 12.5l2 1 2-1 2 1 2-1 2 1 2-1 2 1"/>',
+  'Troisième abri': '<path d="M1 12.5h14M1.5 12.5V10a2 2 0 0 1 4 0v2.5M6 12.5V10a2 2 0 0 1 4 0v2.5M10.5 12.5V10a2 2 0 0 1 4 0v2.5M1 14.5h14"/>', 'Grue de dépannage': '<path d="M3 14V3l10 3M3 3l4 11M13 6v4M12 10h2v2h-2zM1.5 14h4"/>',
+  'Cinquième section': '<circle cx="3" cy="6" r="1.3"/><circle cx="8" cy="6" r="1.3"/><circle cx="13" cy="6" r="1.3"/><circle cx="5.5" cy="11" r="1.3"/><circle cx="10.5" cy="11" r="1.3"/>',
+  'Sections de 40': '<path d="M2 3.5h12M2 6.5h12M2 9.5h12M2 12.5h12"/>', 'Voie de 60': '<path d="M5 14L7 2M11 14L9 2M4.5 11h7M5.5 7.5h5M6.3 4.5h3.4"/>',
+  'Dépôt divisionnaire': '<path d="M1.5 14V6.5L8 3l6.5 3.5V14M1.5 14h13M5 14V9h6v5M5 11.5h6"/>', 'Train de renfort': '<rect x="1.5" y="5" width="8" height="6"/><path d="M9.5 7h3l2 2v2h-5M1 13.5h14"/><circle cx="4" cy="12" r="1"/><circle cx="12" cy="12" r="1"/>',
+  'Foyer du soldat': '<path d="M3 7h8v4a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3zM11 8h1.5a1.5 1.5 0 0 1 0 3H11M5.5 2.5V5M8.5 2.5V5"/>', 'Permissions': '<path d="M1.5 4.5h13V7a1.5 1.5 0 0 0 0 3v2.5h-13V10a1.5 1.5 0 0 0 0-3z"/><path d="M10 5v1.5M10 8v1.5M10 11v1"/>',
+  'Poste avancé': '<path d="M3 14.5V2M3 2.5h9v6H3"/><path d="M7.5 3.5v4M5.5 5.5h4"/>', 'Pavillons': '<path d="M1.5 14V7h6v7M8.5 14V5h6v9M1 14h14M4.5 9v3M3 10.5h3M11.5 7v3M10 8.5h3"/>',
+  'Lebel et baïonnette': '<path d="M2 14l9-9M11 5l3.5-3.5M3.5 15l-2-2M6 10.5l1.5 1.5"/>', 'Sacs à terre': '<rect x="1.5" y="10" width="6" height="3.5" rx="1.5"/><rect x="8.5" y="10" width="6" height="3.5" rx="1.5"/><rect x="5" y="6" width="6" height="3.5" rx="1.5"/>',
+  'Brancardiers aguerris': '<path d="M1 9h14M3 9v3M13 9v3M4 7h8M5 4l3-2 3 2"/>', 'Fusiliers-mitrailleurs': '<path d="M1.5 9h10l3-2M4 9v3M8 9l1 4M6.5 9V6h2"/>',
+  'Nettoyeurs de tranchée': '<path d="M2.5 13.5l7-7 3-3.5 1 1-3.5 3-7 7zM5 11l2 2"/>',
 };
 /* le pictogramme d'un palier ou d'un choix, par son nom (`data/batiments.js`) */
-export const iconeCamp = nom => svg(ICONES[nom] ?? '<circle cx="8" cy="8" r="2"/>');
+// (les pièces de l'Infanterie gardent l'icône de leur corvée d'avant, `icones-nuit.js`)
+const PIECES = { 'Casques Adrian': 'casque', 'Brancardiers': 'brancards', 'Grenadiers': 'grenades', 'Section Hotchkiss': 'hotchkiss' };
+export const iconeCamp = nom => PIECES[nom] ? iconeCorvee(`eq-${PIECES[nom]}`) : svg(ICONES[nom] ?? '<circle cx="8" cy="8" r="2"/>');
 /* une pièce d'équipement : celle des corvées d'avant (`icones-nuit.js`) */
 export const iconeEquipement = cle => iconeCorvee(`eq-${cle}`);
