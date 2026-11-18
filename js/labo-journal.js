@@ -2,6 +2,9 @@
 // Une entrée par version qui touche au labo, la plus récente en haut. `ref` : « sujet-Lettre » (la lettre est celle de la variante,
 // A étant l'actuelle). À chaque changement du labo : une entrée ici, avec `depuis` sur les variantes ajoutées ou changées (labo.js).
 export const JOURNAL = [
+  { version: '0.149.3', date: '2026-11-18', items: [
+    { genre: 'nouveau', texte: 'La soirée, deuxième jet (à trancher) : l\'en-tête sombre, la même hauteur aux trois étapes, le bouton d\'action rouge sang, l\'arbre du camp avec ses icônes et ses lignées, acquis au clic et rendu d\'un clic jusqu\'à l\'aube', ref: 'soiree-A' },
+  ] },
   { version: '0.149.2', date: '2026-11-18', items: [
     { genre: 'nouveau', texte: 'La soirée, les trois étapes (à trancher) : la journée et son décompte, le camp en arbres à sept onglets, les régiments en cartes qu\'on glisse l\'une sur l\'autre ; un seul bouton principal par étape', ref: 'soiree-A' },
     { genre: 'mis-a-jour', texte: 'Jérôme tranche : les onglets, les trois colonnes et le défilé de la v0.149.1 deviennent des anciennes', ref: 'soiree-B' },

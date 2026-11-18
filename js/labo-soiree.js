@@ -4,10 +4,10 @@
 // Trois rangements à trancher : A les onglets, B trois colonnes côte à côte, C un défilé guidé avec retour libre. Les morceaux sont ceux du jeu (`hud/papier-nuit.js`), les données celles des papiers
 // de la nuit et de la fin (`nuitExemple`, `finExemple` de labo-papiers.js, la bataille coupée au soir du 6e jour), les bâtiments et l'équipement ceux de `data/batiments.js`. Sous chaque cadre, la mesure
 // de CHAQUE vue (un onglet, une étape) aux quatre tailles d'écran : la règle de la v0.134.0, aucun défilement dès 1280 × 800.
-import { BATIMENTS, DOTATION, EQUIPEMENT, EQUIPEMENTS } from './data/batiments.js?v=0.149.2';
-import { el, html, info, bouton, ordres, tuilesJour, reste, medailles, puceReleve, graphe, frise, corvee, etat } from './hud/papier-nuit.js?v=0.149.2';
-import { iconeCorvee } from './hud/icones-nuit.js?v=0.149.2';
-import { nuitExemple, finExemple, cadre, CSS_NUIT, CSS_FIN } from './labo-papiers.js?v=0.149.2';
+import { BATIMENTS, DOTATION, EQUIPEMENT, EQUIPEMENTS } from './data/batiments.js?v=0.149.3';
+import { el, html, info, bouton, ordres, tuilesJour, reste, medailles, puceReleve, graphe, frise, corvee, etat } from './hud/papier-nuit.js?v=0.149.3';
+import { iconeCorvee } from './hud/icones-nuit.js?v=0.149.3';
+import { nuitExemple, finExemple, cadre, CSS_NUIT, CSS_FIN } from './labo-papiers.js?v=0.149.3';
 
 const pts = n => `${n} pt${n > 1 ? 's' : ''}`;
 
@@ -314,7 +314,7 @@ export const CSS_SOIREE = `
 .ps-crans i { width: 10px; height: 10px; border: 1px solid var(--jeu-fond); box-sizing: border-box; }
 .ps-crans i.plein { background: var(--jeu-fond); }
 .ps-crans i.cmd { background: repeating-linear-gradient(45deg, var(--jeu-nous) 0 2px, transparent 2px 4px); }
-.ps-choix { display: flex; justify-content: space-between; align-items: center; gap: var(--e1); min-height: var(--jeu-cible); padding: 0 var(--e2); text-align: left; font-size: var(--texte-petit); }
+.ps-choix { display: flex; justify-content: space-between; align-items: center; gap: var(--e1); min-height: var(--jeu-cible); padding: 0 var(--pas); text-align: left; font-size: var(--texte-petit); }
 .ps-choix span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .ps-choix b { white-space: nowrap; }
 .ps-choix.choisi { background: var(--jeu-fond); color: var(--jeu-encre); }
@@ -392,7 +392,7 @@ export const CSS_SOIREE = `
 .ps-rang-n { display: grid; align-content: center; font-weight: bold; } .ps-rang-n small { font-weight: normal; color: var(--jeu-accent); }
 .ps-rang:first-child .ps-noeud { grid-column: 2 / -1; }
 .ps-rang + .ps-rang::before { content: ''; position: absolute; left: calc(6ch + var(--pas)); right: 0; top: calc(-1 * var(--pas)); height: var(--pas); background: linear-gradient(var(--jeu-accent), var(--jeu-accent)) center / 2px 100% no-repeat; }
-.ps-noeud { display: grid; gap: 2px; text-align: left; min-height: 52px; padding: var(--e1) var(--e2); }
+.ps-noeud { display: grid; gap: 2px; text-align: left; min-height: 52px; padding: var(--e1) var(--pas); }
 .ps-noeud small { font-size: var(--texte-petit); }
 .ps-noeud.acquis { background: var(--jeu-fond); color: var(--jeu-encre); }
 .ps-noeud.ecarte, .ps-noeud.verrou { opacity: .45; border-style: dotted; }
@@ -409,14 +409,14 @@ export const CSS_SOIREE = `
 .ps-note { font-size: var(--texte-petit); }
 .ps-pieces2 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 .ps-regs2 { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--e1); }
-.ps-regs2 .ps-reg { grid-template-columns: minmax(0, 1fr) auto; justify-items: start; align-items: center; padding: 0 var(--e2); }
+.ps-regs2 .ps-reg { grid-template-columns: minmax(0, 1fr) auto; justify-items: start; align-items: center; padding: 0 var(--pas); }
 .ps-regs2 .ps-reg b { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%; }
 /* 3 */
 .ps-regiments { grid-template-columns: minmax(0, 1fr); }
 .ps-regs-tete { display: flex; justify-content: space-between; align-items: center; gap: var(--e4); }
 .ps-tous { display: flex; align-items: center; gap: var(--e1); }
 .ps-cartes { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--pas); }
-.ps-carte { display: grid; gap: var(--e1); align-content: start; padding: var(--e1) var(--e2); border: 1px solid var(--jeu-accent); border-top: 3px solid var(--jeu-nous); cursor: grab; position: relative; min-width: 0; }
+.ps-carte { display: grid; gap: var(--e1); align-content: start; padding: var(--e1) var(--pas); border: 1px solid var(--jeu-accent); border-top: 3px solid var(--jeu-nous); cursor: grab; position: relative; min-width: 0; }
 .ps-carte.source { outline: 3px solid var(--jeu-fond); background: var(--jeu-brume); }
 .ps-carte.depot { outline: 3px dashed var(--jeu-nous); }
 .ps-carte .pn-etat { min-width: 0; flex-wrap: wrap; }
@@ -429,7 +429,7 @@ export const CSS_SOIREE = `
 .ps-transfert { font-size: var(--texte-petit); margin: 0; text-align: left; min-height: 0; padding: 2px var(--e1); }
 .ps-depot { position: absolute; inset: auto 0 0 0; background: var(--jeu-encre); border-top: 2px solid var(--jeu-fond); padding: var(--e1); display: grid; gap: var(--e1); z-index: 2; }
 .ps-depot-b { display: flex; gap: var(--e1); flex-wrap: wrap; }
-.ps-depot-b .bouton { min-height: 32px; padding: 0 var(--e2); }
+.ps-depot-b .bouton { min-height: 32px; padding: 0 var(--pas); }
 `;
 
 export function soiree(stage, variante) { return cadre(stage, SOIREES[variante](soireeExemple()), { css: CSS_NUIT + CSS_FIN + CSS_SOIREE }); }
