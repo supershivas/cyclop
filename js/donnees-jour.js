@@ -95,8 +95,13 @@ export function lireBataille(B, camp = 0) {
     const m = M[k], c = (g, q) => m?.[g]?.[q] ?? 0;
     return { jour: k + 1, meteo: etat.meteo[k], pris: etat.prises[k]?.[camp] ?? 0, perdus: etat.prises[k]?.[autre] ?? 0,
       deroutes: c('deroutes', camp), assauts: c('assauts', autre), chars: c('chars', camp), avions: c('avions', camp), postes: c('postes', camp), ponts: c('ponts', 0), genie: c('genie', camp),
+      dissous: etat.regiments.filter(r => r.camp === camp && r.dissous === k + 1).length,
       abattus: { chars: c('chars', autre), avions: c('avions', autre), postes: c('postes', autre), deroutes: c('deroutes', autre) } };
   });
   const morts = d.camps[0].mortsParJour.slice(0, J), pire = morts.length > 1 ? morts.indexOf(Math.max(...morts)) + 1 : 0;      // (un seul jour : pas de « plus meurtrière »)
-  return { jours: J, prevus: d.jours, camps: d.camps, tenus, total, moments, pire };
+  // les régiments dissous (vidés par les transferts de la nuit, la soirée, troisième jet) : leur nom, leur jour, ce qu'ils ont fait, à qui sont allés leurs hommes
+  const regsCamp = etat.regiments.filter(r => r.camp === camp);
+  const dissous = regsCamp.filter(r => r.dissous).map(r => ({ id: r.id, numero: regsCamp.indexOf(r) + 1, nom: r.nom || null, jour: r.dissous, tues: r.tues || 0, pris: r.pris || 0, morts: r.pertes,
+    donnes: Object.entries(r.donnes ?? {}).map(([id, n]) => ({ nom: etat.regiments[id]?.nom ?? null, n })).sort((a, b) => b.n - a.n) }));
+  return { jours: J, prevus: d.jours, camps: d.camps, tenus, total, moments, pire, dissous };
 }

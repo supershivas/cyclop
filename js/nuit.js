@@ -10,14 +10,14 @@
    - (v0.38.3) Les caillebotis et le coup de main sont retirés ; (v0.77.1) réparer la tranchée, inhumer les morts et creuser des abris aussi (docs/archives/corvees-retirees.md) : quatre corvées.
    - (v0.39.0) La mêlée se joue dans la nuit (`meleeNuit`) : un tronçon où les deux camps sont face à face au soir est tranché à l'aube, et les
      régiments au contact (`contactDe`) ne reçoivent aucune corvée. */
-import { hash2 } from './lib/rng.js?v=0.150.0';
-import { RENFORTS } from './data/renforts.js?v=0.150.0';
-import { modif, renfortsDe, infanterie, plusDe } from './camp.js?v=0.150.0';
-import { CORVEES } from './data/corvees.js?v=0.150.0';
-import { REGIMENTS } from './data/lexique.js?v=0.150.0';
-import { ajouterSoldat, poserCaracs, lireCaracs, place } from './army.js?v=0.150.0';
-import { departCaracs } from './identite.js?v=0.150.0';
-import { y0En } from './tranchees.js?v=0.150.0';
+import { hash2 } from './lib/rng.js?v=0.150.1';
+import { RENFORTS } from './data/renforts.js?v=0.150.1';
+import { modif, renfortsDe, infanterie, plusDe } from './camp.js?v=0.150.1';
+import { CORVEES } from './data/corvees.js?v=0.150.1';
+import { REGIMENTS } from './data/lexique.js?v=0.150.1';
+import { ajouterSoldat, poserCaracs, lireCaracs, place } from './army.js?v=0.150.1';
+import { departCaracs } from './identite.js?v=0.150.1';
+import { y0En } from './tranchees.js?v=0.150.1';
 
 export const corvee = id => CORVEES.find(c => c.id === id);
 
@@ -358,6 +358,7 @@ function appliquerTransferts(B, bilan) {
       // ils ne sont pas posés à leur nouvelle place : au petit matin, on les voit y marcher (Jérôme, v0.132.0 ; avant, ils y apparaissaient)
       for (const i of pris.slice(0, m)) { A.reg[i] = b.id; A.slot[i] = slot++; A.coince[i] = 0; }
       a.effectif -= m; a.initial -= m; b.effectif += m; b.initial += m;
+      if (m) { const d = a.donnes ??= {}; d[b.id] = (d[b.id] ?? 0) + m; }      // (ce qu'il a donné, et à qui : la fin de partie se souvient d'un régiment dissous)
       bilan[camp].transferes += m; vus.add(a.id);
     }
     etat.transferts[camp] = [];

@@ -3,9 +3,9 @@
 // pictogramme, une barre fine, et en bas une rangée de vignettes). Trois façons de donner le même signe à tout ce qu'on commande (régiment, char, poste, avion, génie), sur le champ ET dans la rangée
 // du bas : l'écusson, le jeton, le fanion. Posé sur le moteur en direct, comme `labo-engins-ennemis.js` : un calque 2D qui ne lit que les positions (`versEcran`). Rien ici ne modifie le jeu ; la scène
 // seule est truquée (des états de moral, des pertes, deux chars). Palette du jeu seulement : bleu horizon, kaki d'en face, os, terre, boue, brume, et les deux alertes de l'interface (ébranlé, déroute).
-import { PALETTE as P, ALERTES } from './palette.js?v=0.150.0';
-import { NIDS } from './data/nids.js?v=0.150.0';
-import { dessinerEcusson, ideeDe } from './labo-ecussons-armes.js?v=0.150.0';
+import { PALETTE as P, ALERTES } from './palette.js?v=0.150.1';
+import { NIDS } from './data/nids.js?v=0.150.1';
+import { dessinerEcusson, ideeDe } from './labo-ecussons-armes.js?v=0.150.1';
 
 const el = (tag, css = '', ...kids) => { const e = document.createElement(tag); if (css) e.style.cssText = css; e.append(...kids.flat().filter(k => k != null)); return e; };
 const MONO = 'ui-monospace,"DejaVu Sans Mono",Menlo,Consolas,monospace';

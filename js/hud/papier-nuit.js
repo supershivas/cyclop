@@ -6,10 +6,10 @@
 // `N` (le soir) : { sortes (les corvées offertes), regs: [régiment de `lireJournee` + { corvee, donne, choisi, refus: { corvée: raison } }], d (lireJournee), reserve: { restants, total } | null,
 //   ciel: { p, phase, couv, demain, prevision }, avions: { sorties, perdus, restent }, lignes (la phrase des tronçons), prise (la victoire anticipée) | null, med (palmares) }.
 // `F` (la fin) : `lireBataille` + { med (palmares 'total') }.
-import { CORVEES, CONTACT } from '../data/corvees.js?v=0.150.0';
-import { faitsMarquants } from '../donnees-jour.js?v=0.150.0';
-import { barreEffectif, batons, jaugeMoral, troncons, fait, reinitIds } from './bilan.js?v=0.150.0';
-import { iconeCorvee, iconeMedaille, iconeMoment, iconeLune, boutonLoupe } from './icones-nuit.js?v=0.150.0';
+import { CORVEES, CONTACT } from '../data/corvees.js?v=0.150.1';
+import { faitsMarquants } from '../donnees-jour.js?v=0.150.1';
+import { barreEffectif, batons, jaugeMoral, troncons, fait, reinitIds } from './bilan.js?v=0.150.1';
+import { iconeCorvee, iconeMedaille, iconeMoment, iconeLune, boutonLoupe } from './icones-nuit.js?v=0.150.1';
 
 const pl = (n, un, des) => `${n} ${n > 1 ? des : un}`;
 
@@ -146,10 +146,10 @@ export function graphe(F, { larg = 520, haut = 200 } = {}) {
   const pire = !F.pire ? '' : `<rect class="fin-pire" x="${(x(F.pire - 1) - dx / 2).toFixed(1)}" y="0" width="${dx.toFixed(1)}" height="${yT + 8}"/>`;
   return `<svg class="bi fin-graphe" viewBox="0 0 ${larg} ${yT + 10}" role="img" aria-label="La bataille jour après jour">${pire}${courbe(1)}${courbe(0)}<line class="bi-base" x1="0" x2="${larg}" y1="${mid}" y2="${mid}"/>${bat}${lig}</svg>`;
 }
-export const NOMS_MOMENTS = { pris: 'tronçon pris', perdu: 'tronçon perdu', deroute: 'déroute', assaut: 'assaut d\'en face', char: 'char perdu', avion: 'avion abattu', pont: 'pont coupé', poste: 'poste détruit' };
+export const NOMS_MOMENTS = { pris: 'tronçon pris', perdu: 'tronçon perdu', deroute: 'déroute', assaut: 'assaut d\'en face', char: 'char perdu', avion: 'avion abattu', pont: 'pont coupé', poste: 'poste détruit', dissous: 'régiment dissous' };
 /* les moments d'un jour : une icône par genre, le nombre dessous s'il y en a plus d'un */
 export function momentsDuJour(m) {
-  const l = [['pris', m.pris], ['perdu', m.perdus], ['deroute', m.deroutes], ['assaut', m.assauts], ['char', m.chars], ['avion', m.avions], ['pont', m.ponts], ['poste', m.postes]].filter(x => x[1]);
+  const l = [['pris', m.pris], ['perdu', m.perdus], ['deroute', m.deroutes], ['assaut', m.assauts], ['char', m.chars], ['avion', m.avions], ['pont', m.ponts], ['poste', m.postes], ['dissous', m.dissous]].filter(x => x[1]);
   return l.map(([k, n]) => info(html('span', `fin-m fin-m-${k}`, `${iconeMoment(k)}${n > 1 ? `<small>${n}</small>` : ''}`), `# Jour ${m.jour}\n${pl(n, NOMS_MOMENTS[k], NOMS_MOMENTS[k].replace(/^(\S+)( \S+)?/, (a, b, c) => `${b}s${c ? c.replace(/(\S+)$/, '$1s') : ''}`))}`));
 }
 export function frise(F) {
@@ -169,6 +169,15 @@ export function issueLabo(F) {
 export function tableMed(p) {
   return [['Les régiments', p.regiments], ['Les hommes', p.soldats], ['Les engins', p.engins]].filter(([, l]) => l?.length).map(([g, l]) => el('section', 'fin-med', el('h4', '', g), el('table', 'medailles',
     el('tbody', '', l.map(m => el('tr', m.neuf ? 'neuf' : '', html('td', 'med-icone', iconeMedaille(m.cle)), el('td', 'med-titre', m.titre), el('td', 'med-nom', m.nom), el('td', 'med-detail', m.detail)))))));
+}
+/* Les régiments dissous (la soirée, troisième jet : vidés par les transferts de la nuit, ils perdent leur nom au front et leurs médailles) : la fin s'en souvient, une ligne chacun */
+export function tableDissous(F) {
+  if (!F.dissous?.length) return [];
+  const pl2 = (n, a, b) => `${n} ${n > 1 ? b : a}`;
+  return [el('section', 'fin-med fin-dissous', el('h4', '', 'Les régiments dissous'), el('table', 'medailles',
+    el('tbody', '', F.dissous.map(d => info(el('tr', '', html('td', 'med-icone', iconeMoment('dissous')), el('td', 'med-titre', `Le ${d.jour === 1 ? '1er' : `${d.jour}e`} jour`), html('td', 'med-nom', `<s>${d.numero} ${d.nom ?? ''}</s>`),
+      el('td', 'med-detail', d.donnes.length ? `ses hommes au ${d.donnes.map(x => x.nom).join(', au ')}` : 'plus personne')),
+      `# ${d.numero} ${d.nom ?? ''}\nDissous | le ${d.jour === 1 ? '1er' : `${d.jour}e`} jour\nAbattus | **${d.tues}**\nTronçons pris | ${d.pris}\nTombés | ${d.morts}\n${d.donnes.map(x => `Au ${x.nom} | ${pl2(x.n, 'homme', 'hommes')}`).join('\n')}${d.donnes.length ? '\n' : ''}Ses médailles | **perdues avec son nom**`)))))];
 }
 export const legende = (courbe = true) => info(html('p', 'libelle fin-legende', (courbe ? '<span><i class="lg-courbe"></i>vivants</span>' : '') + '<span><i class="lg-baton"></i>morts du jour</span><span><i class="lg-bande"></i>lignes le soir</span><span><i class="lg-pire"></i>la journée la plus meurtrière</span>'),
   '# La bataille\nLes courbes : les vivants de chaque camp, soir après soir\nLes bâtons : les morts de chaque jour, nous au-dessus, en face dessous\nLa bande : les tronçons tenus le soir\nLa colonne marquée : notre journée la plus meurtrière');

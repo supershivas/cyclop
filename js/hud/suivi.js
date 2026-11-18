@@ -7,9 +7,9 @@
 //    tonneau, l'écran rouge, jusqu'à l'écrasement.
 // Rien de neuf dans le moteur que quelques réglages de la vue (`vue.haut`, `dist`, `portee`, `hors`, `roulis`, `secousse`, rendu3d.js) : la caméra du jeu orbite déjà autour d'un point visé, ici ce point
 // suit l'engin. Le dessin seulement : aucune lecture n'écrit dans la bataille. La vue se libère d'un geste sur la caméra (déplacer, tourner), Échap, le clic droit, ou le bouton ; la vue d'avant revient.
-import { positionDe } from '../avions.js?v=0.150.0';
-import { hauteurOeil } from '../tir-joueur.js?v=0.150.0';
-import { indiceDe } from './lecture.js?v=0.150.0';
+import { positionDe } from '../avions.js?v=0.150.1';
+import { hauteurOeil } from '../tir-joueur.js?v=0.150.1';
+import { indiceDe } from './lecture.js?v=0.150.1';
 
 const SOL_Y = 3;           // le niveau moyen du sol que vise la caméra (rendu3d.js : `SOL_Y`), pour calculer `vue.haut`
 const PORTEE = 700;        // m : le plan lointain d'une vue verrouillée (au ras du sol, la vue porte loin)

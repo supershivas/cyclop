@@ -3,9 +3,9 @@
    que seules les commandes `pilote` et `tir` posent (`commanderPilote`), au même cadre chez les deux joueurs. Le rayon part de l'œil du tireur (1,6 m) ; le relief l'arrête (une case plus haute que le rayon) ; le premier homme d'en face
    qu'il traverse (largeur d'un corps, de ses pieds à sa tête) est touché avec une chance, et frappé comme par n'importe quel tir (`frapper` : un blessé ou un mort, crédité au tireur). Rend dans `B.pilotes[camp].dernier`
    ce que l'écran doit montrer : { n (le coup), touche, mort }, et dans `B.pilotes[camp].refus` pourquoi un coup n'est pas parti. Sans le hasard de la graine hors d'un coup tiré. */
-import { hauteurQ } from './terrain.js?v=0.150.0';
-import { gagner } from './army.js?v=0.150.0';
-import { TIR_JOUEUR as TJ } from './data/tir-joueur.js?v=0.150.0';
+import { hauteurQ } from './terrain.js?v=0.150.1';
+import { gagner } from './army.js?v=0.150.1';
+import { TIR_JOUEUR as TJ } from './data/tir-joueur.js?v=0.150.1';
 
 /* La hauteur de l'œil de l'homme debout en (x, y) au-dessus de ses pieds : 1,6 m, et la banquette de tir dans une tranchée (`T.diff` ≤ −2 quarts : creusée) */
 export function hauteurOeil(T, x, y) { const c = (y | 0) * T.W + (x | 0); return TJ.oeil + (T.diff[c] <= -2 ? TJ.banquette : 0); }

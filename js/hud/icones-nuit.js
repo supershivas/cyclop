@@ -36,6 +36,7 @@ const MEDAILLES = {
 };
 // un moment de la bataille (la frise de la fin de partie) et le ciel du soir (le papier de la nuit)
 const MOMENTS = {
+  dissous: '<path d="M4 2v12M4 2.5h8l-2 3 2 3H4M2.5 13.5l11-11"/>',                               // le fanion barré : un régiment dissous
   pris: '<path d="M4 15V2M4 2.5h8l-2 3 2 3H4"/>',                                               // le fanion planté
   perdu: '<path d="M4 15V8M4 8l7-5M7.5 9.5l5 2.5"/>',                                           // le fanion brisé
   deroute: '<path d="M2 8h8M7 4.5L10.5 8 7 11.5M12 3v10"/>',                                    // le repli

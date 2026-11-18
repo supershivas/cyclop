@@ -1,9 +1,9 @@
 // Les médailles (Jérôme, v0.73.1 : « un tableau des médailles à la fin de chaque journée, de chaque partie : le régiment le plus meurtrier, qui a pris le plus de secteurs, le plus inutile… idem pour les soldats »).
 // Lecture seule de l'état : `tues` et `pris` de chaque régiment (bataille.js : un coup de fusil ou de baïonnette qui tue, un tronçon pris), `debut` (leur valeur au matin) ;
 // pour un homme, `victimes` (déjà sur la fiche) et `etat.victDebut` (id → victimes au matin). Les morts ne figurent pas parmi les vivants ; depuis la v0.148.0 leur fiche est gardée (`etat.defunts`) et l'un d'eux porte « Mort pour la patrie ».
-import { quiEst, nomDe, auFront } from './lecture.js?v=0.150.0';
-import { CHARS } from '../data/chars.js?v=0.150.0';
-import { nomTroncon } from '../bataille.js?v=0.150.0';
+import { quiEst, nomDe, auFront } from './lecture.js?v=0.150.1';
+import { CHARS } from '../data/chars.js?v=0.150.1';
+import { nomTroncon } from '../bataille.js?v=0.150.1';
 
 const pl = (n, un, des) => `${n} ${n > 1 ? des : un}`;
 const meilleur = (liste, f) => liste.reduce((m, x) => (f(x) > (m ? f(m) : -Infinity) ? x : m), null);
@@ -12,7 +12,7 @@ const meilleur = (liste, f) => liste.reduce((m, x) => (f(x) > (m ? f(m) : -Infin
    le dessin : `medailles` et `tableMed` de papier-nuit.js (v0.134.0 : des puces le soir, un tableau à la fin) */
 export function palmares(B, camp, portee = 'jour') {
   const { etat, armee: A } = B, jour = portee === 'jour';
-  const regs = etat.regiments.filter(r => r.camp === camp).map(r => ({
+  const regs = etat.regiments.filter(r => r.camp === camp && !r.dissous).map(r => ({      // (un régiment dissous perd ses médailles : la fin de partie le dit à part, la soirée, troisième jet)
     r, tues: (r.tues || 0) - (jour ? r.debut?.tues || 0 : 0), pris: (r.pris || 0) - (jour ? r.debut?.pris || 0 : 0), pertes: r.pertes - (jour ? r.debut?.pertes || 0 : 0),
   }));
   const regiments = [];

@@ -5,6 +5,8 @@ import { refusCorvee, planifierTransfert, retirerTransfert, annulerTransferts, r
 import { entreeHopital, renfortsDe, patients } from '../js/camp.js';
 import { blessesDe, marcheBlesse } from '../js/bataille.js';
 import { REGLAGES as R } from '../js/data/reglages.js';
+import { lireBataille } from '../js/donnees-jour.js';
+import { palmares } from '../js/hud/medailles.js';
 import { place } from '../js/army.js';
 
 const bridee = (graine = 5) => nouvelleBataille(graine, R, { soldats: 400, jours: 6, camp: true });
@@ -41,7 +43,7 @@ test('au petit matin, les hommes transférés marchent jusqu\'à leur nouvelle p
   assert.ok(loin() < d0 - 15, `ils se rapprochent de leur place (${d0.toFixed(1)} → ${loin().toFixed(1)} m)`);
 });
 test('tous ses paquets donnés, un régiment est vidé : il est dissous à l\'aube, l\'autre a tout (la soirée, troisième jet)', () => {
-  const B = bridee(), [a, b] = regs(B), total = a.effectif + b.effectif;
+  const B = bridee(), [a, b] = regs(B), total = a.effectif + b.effectif, na = a.effectif;
   B.etat.phase = 'nuit';
   assert.ok(planifierTransfert(B, 0, a.id, b.id, disponibles(B, 0, a.id)).ok);
   assert.equal(disponibles(B, 0, a.id), 0);
@@ -49,6 +51,12 @@ test('tous ses paquets donnés, un régiment est vidé : il est dissous à l\'au
   assert.deepEqual(vides(B, 0).map(r => r.id), [a.id], 'vidé : il sera dissous');
   aube(B);
   assert.equal(a.effectif, 0); assert.equal(a.dissous, 1); assert.equal(b.effectif, total); assert.equal(effectif(B, b.id), total);
+  // la fin de partie s'en souvient : son jour, son nom, à qui sont allés ses hommes ; il perd ses médailles
+  a.tues = 999;
+  const d = lireBataille(B, 0).dissous;
+  assert.equal(d.length, 1); assert.equal(d[0].nom, a.nom); assert.equal(d[0].jour, 1); assert.equal(d[0].donnes.length, 1); assert.equal(d[0].donnes[0].nom, b.nom); assert.equal(d[0].donnes[0].n, na, 'tous ses hommes au régiment qui les a reçus');
+  assert.equal(lireBataille(B, 0).moments[0].dissous, 1, 'la frise le compte, le jour de sa dissolution');
+  assert.ok(!palmares(B, 0, 'total').regiments.some(m => m.reg === a.id), 'ses médailles sont perdues avec son nom');
 });
 test('les blessés passent aussi, en paquets à part : on ne donne que ceux qu\'on a', () => {
   const B = bridee(), [a, b] = regs(B), A = B.armee;

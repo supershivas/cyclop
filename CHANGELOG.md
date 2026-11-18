@@ -1,5 +1,9 @@
 # Journal des versions
 
+## 0.150.1 — 2026-11-18
+
+- La fin de partie dit les régiments dissous : le jour, leur nom barré, à qui sont allés leurs hommes ; ils perdent leurs médailles
+
 ## 0.150.0 — 2026-11-18
 
 - La soirée en trois étapes : la carte du front et le registre, le camp en arbres (achats au clic, rendus jusqu'à l'aube), les régiments en paquets d'hommes à glisser
