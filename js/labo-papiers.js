@@ -4,14 +4,14 @@
 // et le papier posé entre les deux. Les graphiques sont ceux du jeu (`hud/bilan.js`, `hud/icones-nuit.js`) ; les données, une journée d'exemple (`journeeExemple` de labo-donnees.js : 8 régiments,
 // les 4 corvées d'équipement en plus, des médailles pleines). Sous chaque cadre, la mesure : le défilement et le recouvrement des cartes à 1024 × 640, 1280 × 800, 1440 × 900 et 1920 × 1080.
 // La hiérarchie (le prompt du chantier) : (a) ce qu'il faut décider cette nuit, (b) l'état de chaque régiment, (c) le bilan du jour, (d) le reste (ciel, lune, avions, médailles).
-import { ROLES } from './palette.js?v=0.149.0';
-import { CORVEES, CONTACT } from './data/corvees.js?v=0.149.0';
-import { journeeExemple } from './labo-donnees.js?v=0.149.0';
-import { barreEffectif, jaugeMoral } from './hud/bilan.js?v=0.149.0';
-import { iconeCorvee, iconeMedaille, iconeMoment } from './hud/icones-nuit.js?v=0.149.0';
+import { ROLES } from './palette.js?v=0.149.1';
+import { CORVEES, CONTACT } from './data/corvees.js?v=0.149.1';
+import { journeeExemple } from './labo-donnees.js?v=0.149.1';
+import { barreEffectif, jaugeMoral } from './hud/bilan.js?v=0.149.1';
+import { iconeCorvee, iconeMedaille, iconeMoment } from './hud/icones-nuit.js?v=0.149.1';
 import { el, html, info, bouton, loupe, corvee, vivres, survolReg, etat, nomReg, corveesDe, rangeeTous, ordres, tuilesJour, reste, medailles, puceReleve,
-  graphe, frise, issueLabo, tableMed, legende, momentsDuJour } from './hud/papier-nuit.js?v=0.149.0';
-import { lignesInfo } from './hud/infobulle.js?v=0.149.0';
+  graphe, frise, issueLabo, tableMed, legende, momentsDuJour } from './hud/papier-nuit.js?v=0.149.1';
+import { lignesInfo } from './hud/infobulle.js?v=0.149.1';
 
 const roles = Object.entries(ROLES).map(([k, v]) => `--jeu-${k}:${v}`).join(';');
 const pl = (n, un, des) => `${n} ${n > 1 ? des : un}`;
@@ -212,7 +212,7 @@ const CSS_CADRE = `
   .faux-cartes i { flex: 1; max-width: 112px; border-top: 3px solid var(--jeu-nous); }
   .infobulle { position: fixed; }
 `;
-function cadre(stage, corps, { fin = false, css }) {
+export function cadre(stage, corps, { fin = false, css }) {      // (`corps.vues` : [{ nom, f }] : un papier à plusieurs vues, un onglet, une étape ; chacune est mesurée : « La soirée »)
   const zone = Object.assign(document.createElement('div'), { className: 'pn-labo' });
   const tailles = Object.assign(document.createElement('div'), { style: 'display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:0 0 8px;font:13px/1.4 ui-monospace,monospace' });
   const mesures = Object.assign(document.createElement('div'), { style: 'font:13px/1.5 ui-monospace,monospace;margin:8px 0;white-space:pre-wrap' });
@@ -233,14 +233,16 @@ function cadre(stage, corps, { fin = false, css }) {
   for (const t of TAILLES) { const b = document.createElement('button'); b.type = 'button'; b.className = 'bouton'; b.dataset.t = `${t[0]}×${t[1]}`; b.textContent = `${t[0]} × ${t[1]}`; b.onclick = () => poser(t); tailles.append(b); }
   const mesurer = () => {
     const D = f.contentDocument, p = D.querySelector('.papier');
-    const lignes = TAILLES.map(([w, h]) => {
-      f.width = w; f.height = h;
+    const vues = corps.vues ?? [null];
+    const lignes = vues.flatMap(v => TAILLES.map(([w, h]) => {
+      v?.f(); f.width = w; f.height = h;
       const r = p.getBoundingClientRect(), defile = Math.max(0, p.scrollHeight - p.clientHeight), large = Math.max(0, p.scrollWidth - p.clientWidth);
       const inner = [...p.querySelectorAll('*')].filter(x => x.scrollHeight > x.clientHeight + 1 && /auto|scroll/.test(D.defaultView.getComputedStyle(x).overflowY)).length;
       const cartes = fin ? 0 : Math.max(0, Math.round(r.bottom - (h - CARTES)));
       const ok = !defile && !large && !inner && !cartes;
-      return `${ok ? '✓' : '✗'} ${w} × ${h} : ${defile ? `défile de ${defile} px` : 'aucun défilement'}${large ? `, déborde de ${large} px en largeur` : ''}${inner ? `, ${inner} zone(s) qui défile(nt)` : ''}${fin ? '' : cartes ? `, recouvre les cartes de ${cartes} px` : `, ${Math.round(h - CARTES - r.bottom)} px au-dessus des cartes`} ; papier ${Math.round(r.width)} × ${Math.round(r.height)}`;
-    });
+      return `${ok ? '✓' : '✗'} ${w} × ${h} : ${defile ? `défile de ${defile} px` : 'aucun défilement'}${large ? `, déborde de ${large} px en largeur` : ''}${inner ? `, ${inner} zone(s) qui défile(nt)` : ''}${fin ? '' : cartes ? `, recouvre les cartes de ${cartes} px` : `, ${Math.round(h - CARTES - r.bottom)} px au-dessus des cartes`} ; papier ${Math.round(r.width)} × ${Math.round(r.height)}${v ? ` · ${v.nom}` : ''}`;
+    }));
+    vues[0]?.f();
     mesures.textContent = lignes.join('\n');
     poser(taille);
   };

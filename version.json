@@ -1,9 +1,7 @@
 {
-  "version": "0.149.0",
+  "version": "0.149.1",
   "date": "2026-11-18",
   "changes": [
-    "La dotation tombe le soir : le papier de la nuit dit ce qu'on a gagné, la puce « Le camp » y mène",
-    "On améliore le camp la nuit seulement : les commandes vont au panier, s'annulent d'un clic, et sont payées à l'aube",
-    "L'échafaudage se voit dès la nuit, le bâtiment est là au matin ; en face commande au même moment"
+    "Au labo, « La soirée » : le rapport, l'état-major et les ordres de la nuit en trois rangements (onglets, trois colonnes, défilé guidé), à trancher"
   ]
 }

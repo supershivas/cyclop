@@ -2,6 +2,9 @@
 // Une entrée par version qui touche au labo, la plus récente en haut. `ref` : « sujet-Lettre » (la lettre est celle de la variante,
 // A étant l'actuelle). À chaque changement du labo : une entrée ici, avec `depuis` sur les variantes ajoutées ou changées (labo.js).
 export const JOURNAL = [
+  { version: '0.149.1', date: '2026-11-18', items: [
+    { genre: 'nouveau', texte: 'La soirée (à trancher) : le rapport, l\'état-major et les ordres de la nuit, rangés en onglets, en trois colonnes ou en défilé guidé ; la mesure de chaque vue sous le cadre', ref: 'soiree-A' },
+  ] },
   { version: '0.146.0', date: '2026-11-17', items: [
     { genre: 'mis-a-jour', texte: 'Jérôme tranche : la chute et les poses des morts passent en jeu ; les couchés d\'avant deviennent l\'ancienne', ref: 'morts-A' },
   ] },

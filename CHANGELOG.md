@@ -1,5 +1,9 @@
 # Journal des versions
 
+## 0.149.1 — 2026-11-18
+
+- Au labo, « La soirée » : le rapport, l'état-major et les ordres de la nuit en trois rangements (onglets, trois colonnes, défilé guidé), à trancher
+
 ## 0.149.0 — 2026-11-18
 
 - La dotation tombe le soir : le papier de la nuit dit ce qu'on a gagné, la puce « Le camp » y mène
