@@ -4,14 +4,14 @@
 // et le papier posé entre les deux. Les graphiques sont ceux du jeu (`hud/bilan.js`, `hud/icones-nuit.js`) ; les données, une journée d'exemple (`journeeExemple` de labo-donnees.js : 8 régiments,
 // les 4 corvées d'équipement en plus, des médailles pleines). Sous chaque cadre, la mesure : le défilement et le recouvrement des cartes à 1024 × 640, 1280 × 800, 1440 × 900 et 1920 × 1080.
 // La hiérarchie (le prompt du chantier) : (a) ce qu'il faut décider cette nuit, (b) l'état de chaque régiment, (c) le bilan du jour, (d) le reste (ciel, lune, avions, médailles).
-import { ROLES } from './palette.js?v=0.149.1';
-import { CORVEES, CONTACT } from './data/corvees.js?v=0.149.1';
-import { journeeExemple } from './labo-donnees.js?v=0.149.1';
-import { barreEffectif, jaugeMoral } from './hud/bilan.js?v=0.149.1';
-import { iconeCorvee, iconeMedaille, iconeMoment } from './hud/icones-nuit.js?v=0.149.1';
+import { ROLES } from './palette.js?v=0.149.2';
+import { CORVEES, CONTACT } from './data/corvees.js?v=0.149.2';
+import { journeeExemple } from './labo-donnees.js?v=0.149.2';
+import { barreEffectif, jaugeMoral } from './hud/bilan.js?v=0.149.2';
+import { iconeCorvee, iconeMedaille, iconeMoment } from './hud/icones-nuit.js?v=0.149.2';
 import { el, html, info, bouton, loupe, corvee, vivres, survolReg, etat, nomReg, corveesDe, rangeeTous, ordres, tuilesJour, reste, medailles, puceReleve,
-  graphe, frise, issueLabo, tableMed, legende, momentsDuJour } from './hud/papier-nuit.js?v=0.149.1';
-import { lignesInfo } from './hud/infobulle.js?v=0.149.1';
+  graphe, frise, issueLabo, tableMed, legende, momentsDuJour } from './hud/papier-nuit.js?v=0.149.2';
+import { lignesInfo } from './hud/infobulle.js?v=0.149.2';
 
 const roles = Object.entries(ROLES).map(([k, v]) => `--jeu-${k}:${v}`).join(';');
 const pl = (n, un, des) => `${n} ${n > 1 ? des : un}`;
@@ -231,17 +231,20 @@ export function cadre(stage, corps, { fin = false, css }) {      // (`corps.vues
     for (const b of tailles.querySelectorAll('button')) b.setAttribute('aria-pressed', String(b.dataset.t === `${w}×${h}`));
   };
   for (const t of TAILLES) { const b = document.createElement('button'); b.type = 'button'; b.className = 'bouton'; b.dataset.t = `${t[0]}×${t[1]}`; b.textContent = `${t[0]} × ${t[1]}`; b.onclick = () => poser(t); tailles.append(b); }
-  const mesurer = () => {
+  // (async : une iframe ne prend sa nouvelle taille qu'à l'image suivante ; mesurée tout de suite, elle gardait la largeur d'avant, v0.149.2)
+  const image = () => new Promise(r => f.contentWindow.requestAnimationFrame(() => r()));
+  const mesurer = async () => {
     const D = f.contentDocument, p = D.querySelector('.papier');
     const vues = corps.vues ?? [null];
-    const lignes = vues.flatMap(v => TAILLES.map(([w, h]) => {
-      v?.f(); f.width = w; f.height = h;
+    const lignes = [];
+    for (const v of vues) for (const [w, h] of TAILLES) {
+      f.width = w; f.height = h; v?.f(); await image(); await image();
       const r = p.getBoundingClientRect(), defile = Math.max(0, p.scrollHeight - p.clientHeight), large = Math.max(0, p.scrollWidth - p.clientWidth);
       const inner = [...p.querySelectorAll('*')].filter(x => x.scrollHeight > x.clientHeight + 1 && /auto|scroll/.test(D.defaultView.getComputedStyle(x).overflowY)).length;
       const cartes = fin ? 0 : Math.max(0, Math.round(r.bottom - (h - CARTES)));
       const ok = !defile && !large && !inner && !cartes;
-      return `${ok ? '✓' : '✗'} ${w} × ${h} : ${defile ? `défile de ${defile} px` : 'aucun défilement'}${large ? `, déborde de ${large} px en largeur` : ''}${inner ? `, ${inner} zone(s) qui défile(nt)` : ''}${fin ? '' : cartes ? `, recouvre les cartes de ${cartes} px` : `, ${Math.round(h - CARTES - r.bottom)} px au-dessus des cartes`} ; papier ${Math.round(r.width)} × ${Math.round(r.height)}${v ? ` · ${v.nom}` : ''}`;
-    }));
+      lignes.push(`${ok ? '✓' : '✗'} ${w} × ${h} : ${defile ? `défile de ${defile} px` : 'aucun défilement'}${large ? `, déborde de ${large} px en largeur` : ''}${inner ? `, ${inner} zone(s) qui défile(nt)` : ''}${fin ? '' : cartes ? `, recouvre les cartes de ${cartes} px` : `, ${Math.round(h - CARTES - r.bottom)} px au-dessus des cartes`} ; papier ${Math.round(r.width)} × ${Math.round(r.height)}${v ? ` · ${v.nom}` : ''}`);
+    }
     vues[0]?.f();
     mesures.textContent = lignes.join('\n');
     poser(taille);

@@ -1,5 +1,9 @@
 # Journal des versions
 
+## 0.149.2 — 2026-11-18
+
+- Au labo, « La soirée » refaite en trois étapes : la journée et son décompte, le camp en arbres à sept onglets, les régiments en cartes qu'on glisse l'une sur l'autre (à trancher)
+
 ## 0.149.1 — 2026-11-18
 
 - Au labo, « La soirée » : le rapport, l'état-major et les ordres de la nuit en trois rangements (onglets, trois colonnes, défilé guidé), à trancher
