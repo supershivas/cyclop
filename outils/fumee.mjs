@@ -64,9 +64,7 @@ await etape('apres-barrages');
 await jeu('() => { __jeu.bataille().etat.camp.dotation = 5; }');                                    // (la dotation est à 0 au départ depuis la v0.98.0)
 await page.evaluate(() => document.querySelector('.batterie[data-cal="char"]').dispatchEvent(new MouseEvent('contextmenu', { bubbles: true, cancelable: true })));           // le camp : le clic droit sur le bouton Char ouvre la fenêtre du parc des chars (à améliorer)
 await etape('camp-chars');
-await page.evaluate(() => document.querySelector('#batiment .actions:last-child button').click());      // (la fenêtre suit le bâtiment, que la caméra respirante bouge : pas de clic de souris à viser)                          // 3 points : le chantier est payé
-await etape('camp-chantier');
-await page.waitForTimeout(3000);                              // le toast « chantier lancé » dure 2,6 s d'horloge : on attend qu'il s'efface (sinon l'étape d'après le lit ou non, selon la machine)
+// (le jour, le bouton d'amélioration est refusé : on ne dépense que le soir, la soirée, lot 1 ; la commande se passe la nuit, plus bas)
 await page.keyboard.press('Escape');                          // Échap ferme le papier du bâtiment
 await page.mouse.move(600, 380);
 await page.mouse.click(600, 380, { button: 'right' });     // le clic droit annule
@@ -102,7 +100,23 @@ await etape('nuit-choisis');
 // un ordre de nuit aux régiments choisis : leurs cartes se grisent (`donne`, v0.38.3) ; en solo, aucune erreur (le réseau n'existe pas)
 await page.evaluate(() => document.querySelector('.pn-r:not(.pn-r-tous) [data-corvee="evacuer"]').click());
 await etape('nuit-ordre');
+// le camp du soir (la soirée, lot 1) : la puce « Le camp » du papier range le papier et mène au camp ; le parc des chars se commande (rien n'est payé avant l'aube), s'annule, se recommande
+const sansBulle = () => page.evaluate(() => { document.dispatchEvent(new PointerEvent('pointerdown')); const b = document.getElementById('infobulle'); b.innerHTML = ''; delete b.dataset.texte; });      // (la bulle cachée garde le texte de la dernière survolée, qui dépendait du minutage des étapes d'avant : trois étapes instables)
+await page.mouse.move(1276, 600);                          // (hors du papier et de la fenêtre du bâtiment : sinon la bulle de ce qui passe sous la souris dépend du minutage)
+await sansBulle();
+await page.evaluate(() => document.querySelector('.pn-camp').click());
+await page.evaluate(() => document.querySelector('.batterie[data-cal="char"]').dispatchEvent(new MouseEvent('contextmenu', { bubbles: true, cancelable: true })));
+await etape('nuit-camp');
+await page.evaluate(() => document.querySelector('#batiment .actions:last-child button').click());      // 3 points : au panier
+await etape('nuit-commande');
+await page.evaluate(() => document.querySelector('#batiment .actions:last-child button').click());      // « Annuler la commande »
+await page.evaluate(() => document.querySelector('#batiment .actions:last-child button').click());      // et de nouveau commandé
+await page.waitForTimeout(3000);                              // les toasts durent 2,6 s d'horloge : on attend qu'ils s'effacent (sinon l'étape d'après les lit ou non, selon la machine)
+await page.evaluate(() => document.querySelector('#nuit-retour').click());
+await sansBulle();
+await etape('nuit-retour');
 await jeu('() => __jeu.fin?.()');
+await sansBulle();
 await etape('fin');
 
 await nav.close(); await srv.close();

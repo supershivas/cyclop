@@ -2,20 +2,20 @@
 // sapeurs ») ; ici, la fenêtre d'un bâtiment, posée au-dessus de lui quand on le choisit (v0.96.0 : « les options apparaissent au-dessus de chaque bâtiment au clic ; simplifier au maximum »), sur le modèle de la
 // fenêtre d'un régiment (`.reg-ouvert` : le titre et son niveau, une ligne de ce qu'il fait, des boutons de même largeur), et le bouton « Le camp » (la dotation, et la touche B). L'amélioration tient en un clic : le
 // choix du palier EST le bouton (« Tir de réglage · 3 pts »). Le texte long est dans l'infobulle. Lecture seule de l'état : les ordres passent par les fonctions que main.js donne.
-import { BATIMENTS, EQUIPEMENT } from '../data/batiments.js?v=0.148.2';
-import { CHARS, CHAR_PAR_DEFAUT, CHAR_DEPART } from '../data/chars.js?v=0.148.2';
-import { parcChars, refusCamp, campDe, charsDispo, modif, pvAvion, patients, renfortsDe, NIVEAU_MAX } from '../camp.js?v=0.148.2';
-import { peutDeployer, blessesDe } from '../bataille.js?v=0.148.2';
-import { avionsPrets, avionsRestants, positionDe } from '../avions.js?v=0.148.2';
-import { avionsAbimes, reparationFaite } from '../genie.js?v=0.148.2';
-import { MITRAILLAGE } from '../data/mitraillage.js?v=0.148.2';
-import { METEO } from '../data/meteo.js?v=0.148.2';
+import { BATIMENTS, EQUIPEMENT } from '../data/batiments.js?v=0.149.0';
+import { CHARS, CHAR_PAR_DEFAUT, CHAR_DEPART } from '../data/chars.js?v=0.149.0';
+import { parcChars, refusCamp, campDe, commande, disponible, coutPanier, charsDispo, modif, pvAvion, patients, renfortsDe, NIVEAU_MAX } from '../camp.js?v=0.149.0';
+import { peutDeployer, blessesDe } from '../bataille.js?v=0.149.0';
+import { avionsPrets, avionsRestants, positionDe } from '../avions.js?v=0.149.0';
+import { avionsAbimes, reparationFaite } from '../genie.js?v=0.149.0';
+import { MITRAILLAGE } from '../data/mitraillage.js?v=0.149.0';
+import { METEO } from '../data/meteo.js?v=0.149.0';
 
 const el = (tag, props = {}, ...kids) => { const e = Object.assign(document.createElement(tag), props); e.append(...kids); return e; };
 
 // `centrer(x, y)` : la caméra va à ce point (un clic sur un char déployé) ; `reste(cal)` : les secondes avant que la batterie soit prête
-// `bouton` : le bouton « Le camp » ; `aller()` : la caméra au camp (la touche B) ; `ameliorer(cle, choix)` : l'ordre de chantier (il dit son refus lui-même)
-export function creerCampHud({ moi = () => 0, deployer = () => {}, bouton, papier, aller, ameliorer, centrer = () => {}, choisirChar = null, choisirAvion = null, reparerAvion = null, reparerChar = null, reste = () => 0, affecter = () => {} }) {
+// `bouton` : le bouton « Le camp » ; `aller()` : la caméra au camp (la touche B) ; `ameliorer(cle, choix)` : la commande du soir, au panier (il dit son refus lui-même) ; `annuler(cle)` : la retirer du panier
+export function creerCampHud({ moi = () => 0, deployer = () => {}, bouton, papier, aller, ameliorer, annuler = () => {}, centrer = () => {}, choisirChar = null, choisirAvion = null, reparerAvion = null, reparerChar = null, reste = () => 0, affecter = () => {} }) {
   let cle = null, signature = '';
   bouton.onclick = () => aller();
   const pts = n => `${n} pt${n > 1 ? 's' : ''}`;
@@ -24,7 +24,9 @@ export function creerCampHud({ moi = () => 0, deployer = () => {}, bouton, papie
     const e = B.etat, c = campDe(e, moi()).batiments[cle], Bd = BATIMENTS[cle], niveau = c.niveau, N = Bd.niveaux;
     papier.replaceChildren();
     papier.append(el('div', { className: 'tete' }, el('b', { textContent: Bd.nom }), el('span', { textContent: niveau ? `niveau ${niveau}` : 'à bâtir' })));
-    const dit = c.chantier ? `Chantier : ${N[c.chantier.vers - 1].nom}, fini à l'aube${c.chantier.nuits > 1 ? ` (dans ${c.chantier.nuits} nuits)` : ''}.`
+    const cmd = commande(e, cle, moi());
+    const dit = cmd ? `Commandé ce soir : ${N[cmd.vers - 1].nom}${cmd.choix != null ? ` (${N[cmd.vers - 1].choix[cmd.choix][0].toLowerCase()})` : ''}, ${pts(N[cmd.vers - 1].cout)} payés à l'aube.`
+      : c.chantier ? `Chantier : ${N[c.chantier.vers - 1].nom}, fini à l'aube${c.chantier.nuits > 1 ? ` (dans ${c.chantier.nuits} nuits)` : ''}.`
       : cle !== 'caserne' ? N[Math.max(0, niveau - 1)].effet
       : `${e.ralliees[moi()].length ? `${e.ralliees[moi()].map(u => u.n).join(' et ')} fuyards ralliés attendent. ` : ''}La relève${niveau >= EQUIPEMENT.niveauCaserne ? " et l'équipement se donnent" : ' se donne'} la nuit, depuis la carte du régiment ; un renfort se déploie à tout moment du jour.`;
     papier.append(el('div', { className: 'compte', textContent: dit }));
@@ -123,7 +125,11 @@ export function creerCampHud({ moi = () => 0, deployer = () => {}, bouton, papie
       papier.append(liste);
     }
     // l'amélioration : un clic. Au niveau 1, « Bâtir » ; au palier à choix (2 et 3), deux boutons, un par amélioration ; rien au niveau maximal ni pendant un chantier
-    if (niveau < NIVEAU_MAX && !c.chantier) {
+    if (cmd) {      // la commande du soir se défait d'un clic (la soirée, lot 1 : rien n'est payé avant l'aube)
+      const b = el('button', { type: 'button', textContent: `Annuler la commande · ${pts(N[cmd.vers - 1].cout)}`, onclick: () => annuler(cle) });
+      b.dataset.info = `# Annuler la commande\n${N[cmd.vers - 1].nom} : rien n'est payé avant l'aube, les points reviennent à la caisse.`;
+      papier.append(el('div', { className: 'actions' }, b));
+    } else if (niveau < NIVEAU_MAX && !c.chantier) {
       const vers = niveau + 1, S = N[vers - 1], options = S.choix ? S.choix.map(([nom, effet], i) => ({ nom, effet, i })) : [{ nom: niveau ? 'Améliorer' : 'Bâtir', effet: S.effet, i: null }];
       const ligne = el('div', { className: 'actions' }); ligne.style.setProperty('--cols', options.length);
       for (const o of options) {
@@ -140,12 +146,12 @@ export function creerCampHud({ moi = () => 0, deployer = () => {}, bouton, papie
     const e = B.etat, camp = campDe(e, moi());
     if (!camp?.bride) { bouton.hidden = true; papier.hidden = true; return; }
     bouton.hidden = false;
-    const enChantier = Object.values(camp.batiments).filter(c => c.chantier).length;
-    bouton.textContent = `Le camp · ${pts(camp.dotation)}${enChantier ? ` · ${enChantier} chantier${enChantier > 1 ? 's' : ''}` : ''}`;
-    bouton.title = `# Le camp (B)\nLa caméra y va. Un bâtiment se choisit d'un clic sur lui : on y dépense la dotation.\n## La dotation (${pts(camp.dotation)})\nElle tombe à l'aube : **+1** ; **+1** si nos lignes tiennent à 75 % ; **+2** la première fois qu'une ligne d'en face est prise.`;
+    const enChantier = Object.values(camp.batiments).filter(c => c.chantier).length + (camp.panier?.length ?? 0), libre = disponible(e, moi());
+    bouton.textContent = `Le camp · ${pts(libre)}${enChantier ? ` · ${enChantier} chantier${enChantier > 1 ? 's' : ''}` : ''}`;
+    bouton.title = `# Le camp (B)\nLa caméra y va. Un bâtiment se choisit d'un clic sur lui : on y dépense la dotation, **le soir**.\n## La dotation (${pts(camp.dotation)}${camp.panier?.length ? `, ${pts(coutPanier(e, moi()))} commandés ce soir` : ''})\nElle tombe le soir : **+1** ; **+1** si nos lignes tiennent à 75 % ; **+2** la première fois qu'une ligne d'en face est prise. Les commandes sont payées à l'aube.`;
     papier.hidden = !cle;
     if (!cle) { signature = ''; return; }
-    const c = camp.batiments[cle], s = [cle, c.niveau, c.chantier?.nuits ?? '', camp.dotation, e.reserves[moi()], renfortsDe(e, moi()).pris, cle === 'hopital' ? (() => { const l = blessesDe(B, moi()); return `${l.enRoute}/${l.champ}`; })() : '', cle === 'chars' ? e.chars.filter(k => k.camp === moi()).map(k => `${k.id}${k.etat}${Math.round(k.pv)}${k.tues ?? 0}`).join() + reste('char') + charsDispo(e, moi()) + parcChars(e, moi()).map(r => `${r.id}:${Math.round(r.pv)}`).join() + e.phase + reparationFaite(e, moi()) + e.genies.length : '', cle === 'hopital' ? patients(e, moi()).map(p => p.id + (p.pret ? 'p' : '')).join() + (e.affectation?.[moi()] ?? '') : '', cle === 'aerodrome' ? e.avions[moi()].join() + e.mitraillages.filter(v => v.camp === moi() && v.etat === 'vol').map(v => v.id + ':' + Math.round(v.pv)).join() + e.phase + reparationFaite(e, moi()) + e.genies.length + avionsPrets(e, moi()) + e.meteo[e.jour - 1] : '', cle === 'caserne' ? [e.phase, e.ralliees[moi()].map(u => u.n).join(), e.troncons.join(''), e.regiments.filter(r => r.camp === moi() && r.effectif > 0 && !r.deroute).length].join(':') : ''].join('|');
+    const c = camp.batiments[cle], s = [cle, c.niveau, c.chantier?.nuits ?? '', camp.dotation, e.phase, JSON.stringify(camp.panier ?? []), e.reserves[moi()], renfortsDe(e, moi()).pris, cle === 'hopital' ? (() => { const l = blessesDe(B, moi()); return `${l.enRoute}/${l.champ}`; })() : '', cle === 'chars' ? e.chars.filter(k => k.camp === moi()).map(k => `${k.id}${k.etat}${Math.round(k.pv)}${k.tues ?? 0}`).join() + reste('char') + charsDispo(e, moi()) + parcChars(e, moi()).map(r => `${r.id}:${Math.round(r.pv)}`).join() + e.phase + reparationFaite(e, moi()) + e.genies.length : '', cle === 'hopital' ? patients(e, moi()).map(p => p.id + (p.pret ? 'p' : '')).join() + (e.affectation?.[moi()] ?? '') : '', cle === 'aerodrome' ? e.avions[moi()].join() + e.mitraillages.filter(v => v.camp === moi() && v.etat === 'vol').map(v => v.id + ':' + Math.round(v.pv)).join() + e.phase + reparationFaite(e, moi()) + e.genies.length + avionsPrets(e, moi()) + e.meteo[e.jour - 1] : '', cle === 'caserne' ? [e.phase, e.ralliees[moi()].map(u => u.n).join(), e.troncons.join(''), e.regiments.filter(r => r.camp === moi() && r.effectif > 0 && !r.deroute).length].join(':') : ''].join('|');
     if (s !== signature) { signature = s; dessiner(B); }
   }
   return { maj, choisi: () => cle, choisirCle(k) { cle = k; signature = ''; } };

@@ -1,5 +1,11 @@
 # Journal des versions
 
+## 0.149.0 — 2026-11-18
+
+- La dotation tombe le soir : le papier de la nuit dit ce qu'on a gagné, la puce « Le camp » y mène
+- On améliore le camp la nuit seulement : les commandes vont au panier, s'annulent d'un clic, et sont payées à l'aube
+- L'échafaudage se voit dès la nuit, le bâtiment est là au matin ; en face commande au même moment
+
 ## 0.148.2 — 2026-11-17
 
 - Le temps du premier jour est tiré au hasard : une nouvelle partie ne commence plus toujours sous la pluie

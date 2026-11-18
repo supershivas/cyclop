@@ -3,20 +3,20 @@
 // formes, équipements, grades) n'est PAS recopié : il est lu dans son module, donc l'encyclopédie suit le jeu ; seuls les concepts n'ayant pas de table sont écrits ici.
 // Une entrée : { id, terme, cat, def, voir: [ids], capture: 'id-du-fichier' | null, faits: [[libellé, valeur], …] }. Les captures sont celles de `outils/encyclopedie.mjs` (assets/encyclopedie/<capture>.png).
 // Ajouter un mot = ajouter une ligne ici ; le labo (sujet « Encyclopédie ») et `test/encyclopedie.test.mjs` (aucun renvoi vers un mot absent, aucun doublon) font le reste.
-import { CALIBRES } from './calibres.js?v=0.148.2';
-import { METEO, SAISONS } from './meteo.js?v=0.148.2';
-import { CORVEES, CONTACT } from './corvees.js?v=0.148.2';
-import { BATIMENTS, ORDRE_BATIMENTS, EQUIPEMENTS, EQUIPEMENT, DOTATION } from './batiments.js?v=0.148.2';
-import { DIFFICULTES } from './difficulte.js?v=0.148.2';
-import { STANCES } from './stances.js?v=0.148.2';
-import { PONTS_JEU } from './ponts.js?v=0.148.2';
-import { RENFORTS } from './renforts.js?v=0.148.2';
-import { CHARS, CHAR_RECHARGE } from './chars.js?v=0.148.2';
-import { MITRAILLAGE } from './mitraillage.js?v=0.148.2';
-import { GENIE_DATA } from './genie.js?v=0.148.2';
-import { NIDS } from './nids.js?v=0.148.2';
-import { FIL } from './fil.js?v=0.148.2';
-import { CLASSES } from './grades.js?v=0.148.2';
+import { CALIBRES } from './calibres.js?v=0.149.0';
+import { METEO, SAISONS } from './meteo.js?v=0.149.0';
+import { CORVEES, CONTACT } from './corvees.js?v=0.149.0';
+import { BATIMENTS, ORDRE_BATIMENTS, EQUIPEMENTS, EQUIPEMENT, DOTATION } from './batiments.js?v=0.149.0';
+import { DIFFICULTES } from './difficulte.js?v=0.149.0';
+import { STANCES } from './stances.js?v=0.149.0';
+import { PONTS_JEU } from './ponts.js?v=0.149.0';
+import { RENFORTS } from './renforts.js?v=0.149.0';
+import { CHARS, CHAR_RECHARGE } from './chars.js?v=0.149.0';
+import { MITRAILLAGE } from './mitraillage.js?v=0.149.0';
+import { GENIE_DATA } from './genie.js?v=0.149.0';
+import { NIDS } from './nids.js?v=0.149.0';
+import { FIL } from './fil.js?v=0.149.0';
+import { CLASSES } from './grades.js?v=0.149.0';
 
 export const CATEGORIES = [
   { id: 'front', nom: 'Le front', dit: 'Où l\'on se bat : secteurs, lignes, tranchées.' },
@@ -93,13 +93,13 @@ const CONCEPTS = [
   E('genie', 'Génie (sapeurs)', 'armes', 'Quatre sections de vingt hommes par camp. Elles refont un pont coupé ou un nid détruit : touche 6 puis un clic sur l\'ouvrage. Elles travaillent à découvert : l\'artillerie ennemie les gêne.', { voir: ['pont', 'bat-sapeurs'], faits: [['Sections', GENIE_DATA.sections], ['Hommes par section', GENIE_DATA.hommes], ['Recharge', sec(GENIE_DATA.recharge)]] }),
   E('pont', 'Pont', 'armes', 'Un tablier sur l\'eau qu\'on traverse à pied sec. Un obus le coupe (les hommes dessus se noient ou regagnent la rive), un char trop lourd le fait céder. Un pont coupé arrête la marche : le régiment s\'arrête et le dit. Le génie le refait.', { voir: ['genie', 'eau'], capture: 'pont' }),
   // la nuit
-  E('nuit', 'Nuit', 'nuit', 'Le jour s\'arrête, le champ reste (assombri) et le papier de la nuit apparaît : bilan du jour, médailles, ordres aux régiments. On choisit une corvée par régiment, puis « À l\'aube » : les ordres s\'exécutent, le terrain évolue en lot, la dotation tombe. Pas de marche ni de barrage la nuit.', { voir: ['corvee', 'papier-nuit', 'aube', 'dotation'], capture: 'nuit' }),
+  E('nuit', 'Nuit', 'nuit', 'Le jour s\'arrête, le champ reste (assombri) et le papier de la nuit apparaît : bilan du jour, médailles, ordres aux régiments. On choisit une corvée par régiment et ce qu\'on bâtit au camp, puis « À l\'aube » : les ordres s\'exécutent, les chantiers sont payés, le terrain évolue en lot. Pas de marche ni de barrage la nuit.', { voir: ['corvee', 'papier-nuit', 'aube', 'dotation'], capture: 'nuit' }),
   E('corvee', 'Corvée', 'nuit', 'Le travail d\'un régiment pendant la nuit : une par régiment, choisie sur le papier de la nuit. Un régiment qui travaille se repose moins. Les quatre corvées de base sont le repos, évacuer, ravitailler et la relève ; la caserne ajoute les équipements.', { voir: ['corvee-repos', 'corvee-evacuer', 'corvee-ravitailler', 'corvee-releve', 'contact'], capture: 'nuit' }),
   E('contact', 'Au contact', 'nuit', `${CONTACT.nom} : ${CONTACT.dit}. Ce n\'est pas un choix.`, { voir: ['corvee'] }),
   E('releve', 'Relève', 'nuit', 'Un régiment frais, pris dans la réserve, monte par les boyaux et prend la place d\'un régiment usé, qui part au repos. Le frais se place à 12 m derrière la place qu\'il prend. La réserve ne revient pas.', { voir: ['reserve', 'corvee-releve'] }),
   E('renfort', 'Renfort', 'nuit', `Un régiment frais sort de la caserne, à tout moment du jour, par le bouton de la caserne : il prend le premier secteur sans défenseur (ligne la plus avancée d\'abord, de l\'ouest à l\'est). Si tous ont leurs défenseurs, il contre-attaque le secteur perdu (plus de ${Math.round(RENFORTS.perdu * 100)} % de sa tranchée à l\'ennemi) le plus proche de la caserne ; sinon l\'ordre est refusé. Un régiment en déroute se retire vers la caserne : ses hommes qui y entrent, d\'au moins ${RENFORTS.seuilRallies}, forment une unité de ralliés à l\'aube, moral réduit, qu\'on déploie de même.`, { voir: ['reserve', 'releve', 'deroute'] }),
   E('reserve', 'Réserve', 'nuit', 'Les régiments frais qui attendent la relève (quatre dans les premières batailles). La caserne et le papier de la nuit en donnent le nombre ; un clic sur la caserne les déploie à tout moment du jour (voir Renfort).', { voir: ['releve', 'mission'], capture: 'billet' }),
-  E('dotation', 'Dotation', 'nuit', 'Les points de l\'état-major qui paient les améliorations du camp. Ils tombent à l\'aube : un point par aube, un de plus si nos lignes sont tenues à 75 % au moins, et deux pour une ligne d\'en face prise. On les dépense en choisissant un bâtiment.', { voir: ['camp', 'aube'], faits: [['Par aube', DOTATION.aube], ['Lignes tenues (seuil)', `${DOTATION.tenue.seuil * 100} %`], ['Une ligne prise', DOTATION.ligne]], capture: 'fenetre-batiment' }),
+  E('dotation', 'Dotation', 'nuit', 'Les points de l\'état-major qui paient les améliorations du camp. Ils tombent le soir : un point par soir, un de plus si nos lignes sont tenues à 75 % au moins, et deux pour une ligne d\'en face prise. On les dépense le soir, en choisissant un bâtiment : le chantier est payé à l\'aube.', { voir: ['camp', 'aube'], faits: [['Par soir', DOTATION.soir], ['Lignes tenues (seuil)', `${DOTATION.tenue.seuil * 100} %`], ['Une ligne prise', DOTATION.ligne]], capture: 'fenetre-batiment' }),
   E('aube', 'Aube, bilan', 'nuit', 'Le bilan de la nuit en quelques lignes : ce qui a été fait (équipés, évacués, relevés, ravitaillés), les morts de la nuit, les régiments qui ont faim ou refusent de monter, les chantiers finis et la dotation. Puis « Le jour se lève ».', { voir: ['nuit', 'refus'], capture: 'nuit' }),
   E('vivres', 'Vivres', 'nuit', 'Les provisions d\'un régiment : la soupe et le pain montent par les boyaux la nuit pour trois nuits. Sans eux, la nuit repose moins et le moral baisse (« la faim »).', { voir: ['corvee-ravitailler', 'moral'] }),
   E('faim', 'La faim', 'nuit', 'Un régiment sans vivres au matin : le bilan de l\'aube le dit, et son moral baisse.', { voir: ['vivres'] }),

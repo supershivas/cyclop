@@ -1,8 +1,8 @@
 // Le bilan de l'aube en tuiles (Jérôme, 8 nov. : « passe le bilan de l'aube en jeu » ; le même langage que le bilan du soir et les fiches : `bilan.js`, `tuiles.js`) : ce que la nuit a fait, en six tuiles
 // (les faits avec leur pictogramme, les morts par cause, les soins, les régiments, l'état-major, les effectifs au matin) au lieu de paragraphes. « Rien de ce qui n'a pas eu lieu » : une tuile sans rien à dire n'existe pas.
 // Des fonctions de DOM qui ne lisent que ce qu'on leur donne : `nuit.js` rassemble les données (`b` : le bilan de la nuit du camp ; `refus` : les noms des régiments qui refusent ; `dotation` ; `matin` : `lireJournee`).
-import { fait, barreEffectif, reinitIds } from './bilan.js?v=0.148.2';
-import { jauge, tuileDe } from './tuiles.js?v=0.148.2';
+import { fait, barreEffectif, reinitIds } from './bilan.js?v=0.149.0';
+import { jauge, tuileDe } from './tuiles.js?v=0.149.0';
 
 const el = (tag, cls = '', ...kids) => { const e = document.createElement(tag); if (cls) e.className = cls; e.append(...kids.flat().filter(k => k != null)); return e; };
 const pl = (n, un, des) => `${n} ${n > 1 ? des : un}`;
@@ -20,7 +20,7 @@ export function faitsDeLaNuit(b, refus = []) {
   return f;
 }
 
-/* Les tuiles de l'aube. `d` : { b, refus: [noms], dotation: { fin: [lignes], points, parts, caisse } ou null, matin (lireJournee) } */
+/* Les tuiles de l'aube. `d` : { b, refus: [noms], dotation: { fin: [lignes], payes, caisse } ou null, matin (lireJournee) } */
 export function tuilesDeLAube({ b, refus = [], dotation = null, matin = null }) {
   reinitIds();
   const out = [];
@@ -31,7 +31,8 @@ export function tuilesDeLAube({ b, refus = [], dotation = null, matin = null }) 
   if (soins.length) out.push(tuile('Les blessés et les égarés', chiffres(soins)));
   const regs = [[b.releves, b.releves > 1 ? 'relevés' : 'relevé'], [b.ravitailles, b.ravitailles > 1 ? 'ravitaillés' : 'ravitaillé'], [b.equipes, b.equipes > 1 ? 'équipés' : 'équipé'], [b.transferes, b.transferes > 1 ? 'soldats changés de régiment' : 'soldat changé de régiment']].filter(x => x[0]);
   if (regs.length) out.push(tuile('Les régiments', chiffres(regs)));
-  if (dotation) out.push(tuile('L\'état-major', el('div', 'bi-seul bi-chiffre', el('b', '', `+${dotation.points}`), el('span', '', dotation.points > 1 ? 'points' : 'point')), el('p', 'discret bi-note', `${dotation.parts} ; ${dotation.caisse} en caisse.`), ...dotation.fin.map(t => el('p', '', t))));
+  // l'état-major (la soirée, lot 1) : la dotation est tombée le soir ; l'aube dit ce que la nuit a fait des commandes (payées, chantiers ouverts ou finis) et la caisse ; rien à dire, pas de tuile
+  if (dotation?.fin.length) out.push(tuile('L\'état-major', el('div', 'bi-seul bi-chiffre', el('b', '', String(dotation.caisse)), el('span', '', dotation.caisse > 1 ? 'points en caisse' : 'point en caisse')), ...dotation.fin.map(t => el('p', '', t))));
   if (matin) {
     const u = matin.camps[0];
     out.push(tuile('Au matin', el('div', 'bi-seul bi-chiffre', el('b', '', String(u.debout)), el('span', '', `debout sur ${u.initial}`)), el('div', 'bi-boite', Object.assign(el('div'), { innerHTML: barreEffectif(u, 0) })), el('p', 'discret bi-note', `Blessés ${u.blesses} · évacués ${u.evacues} · tombés ${u.morts}`)));

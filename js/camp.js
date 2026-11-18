@@ -1,11 +1,13 @@
 // Le camp : la règle, sans écran (Jérôme, v0.86.0 : lot 1 de `docs/chantiers/camp-et-ameliorations.md`). Logique pure : aucun DOM, aucune horloge, aucun hasard.
 // L'état est `etat.camp` : la dotation de l'état-major, le niveau de chaque bâtiment (et son chantier d'une nuit), les lignes d'en face déjà comptées.
 // Lot 2 : les niveaux ouvrent les ordres (`refusOrdre`). Lot 3 (v0.88.0) : chaque niveau et chaque choix de palier change un chiffre (`modif`) ou un effectif (`effectifsDe`).
-import { hash2 } from './lib/rng.js?v=0.148.2';
-import { BATIMENTS, DOTATION, CAMP_PLAN, CAMP_IA, PIEDS, EQUIPEMENT, EQUIPEMENTS } from './data/batiments.js?v=0.148.2';
-import { RENFORTS } from './data/renforts.js?v=0.148.2';
-import { MITRAILLAGE } from './data/mitraillage.js?v=0.148.2';
-import { PARC } from './data/parc.js?v=0.148.2';
+// La soirée (Jérôme, 18 nov., ROADMAP « Le soir, le moment des améliorations », lot 1) : la dotation tombe le soir (`dotationSoir`), on ne dépense que la nuit,
+// dans un panier (`K.panier` : commander, annuler d'un clic) que rien ne paie avant l'aube (`payerPaniers`) ; puis les chantiers avancent (`aubeCamps`).
+import { hash2 } from './lib/rng.js?v=0.149.0';
+import { BATIMENTS, DOTATION, CAMP_PLAN, CAMP_IA, PIEDS, EQUIPEMENT, EQUIPEMENTS } from './data/batiments.js?v=0.149.0';
+import { RENFORTS } from './data/renforts.js?v=0.149.0';
+import { MITRAILLAGE } from './data/mitraillage.js?v=0.149.0';
+import { PARC } from './data/parc.js?v=0.149.0';
 
 const NOUS = 0, EUX = 1;
 /* L'état du camp de `camp` : `etat.camp` (le nôtre), `etat.campEux` (celui d'en face : v0.92.0) */
@@ -51,7 +53,7 @@ export function campDeDepart({ bride = false, depart = null, mult = 1 } = {}) {
     batiments[cle] = { niveau: Math.max(base, d?.niveau ?? 0), choix: d?.niveau > base ? [...(d.choix ?? [])] : [], chantier: null };
   }
   // `bride` : les niveaux améliorent les unités (v0.98.0 ; avant, ils ouvraient les ordres : les 155 et 220, l'avion, le char, le génie) : vrai dans la partie du joueur ; faux pour les tests, le labo et le jeu à deux, où rien n'est bridé
-  return { dotation: DOTATION.depart, batiments, lignes: [], bride, mult };      // `mult` : le facteur de la dotation (la difficulté, pour en face)
+  return { dotation: DOTATION.depart, batiments, lignes: [], bride, mult, panier: [], soir: null };      // `mult` : le facteur de la dotation (la difficulté, pour en face)
 }
 
 export const niveauDe = (etat, cle, camp = NOUS) => campDe(etat, camp)?.batiments[cle]?.niveau ?? 0;
@@ -62,27 +64,69 @@ export const choisis = (etat, cle, camp = NOUS) => (campDe(etat, camp)?.batiment
 /* Un chantier dure une nuit ; le niveau 3 en prend deux, sauf avec « Équipe de nuit » (maison des sapeurs, niveau 3) */
 export const nuitsDe = (etat, vers, camp = NOUS) => vers >= 3 && !choisis(etat, 'sapeurs', camp).includes('Équipe de nuit') ? 2 : 1;
 
-/* Pourquoi on ne peut pas bâtir ou améliorer `cle` jusqu'au niveau suivant, avec le choix `choix` (0 ou 1, exigé aux niveaux 2 et 3) : une phrase, ou null si c'est permis (conventions : un ordre impossible se refuse à voix haute) */
-export function refusCamp(etat, cle, choix = null, camp = NOUS) {
+/* Le panier du soir de `camp` : [{ cle, choix }] (des chantiers commandés, payés à l'aube) ; sa somme ; ce qui reste à dépenser (la caisse moins le panier) */
+export const panierDe = (etat, camp = NOUS) => campDe(etat, camp)?.panier ?? [];
+const prixAchat = a => coutDe(a.cle, a.vers);
+export const coutPanier = (etat, camp = NOUS) => panierDe(etat, camp).reduce((t, a) => t + prixAchat(a), 0);
+export const disponible = (etat, camp = NOUS) => (campDe(etat, camp)?.dotation ?? 0) - coutPanier(etat, camp);
+/* Le chantier commandé ce soir pour `cle`, ou null */
+export const commande = (etat, cle, camp = NOUS) => panierDe(etat, camp).find(a => a.cle === cle) ?? null;
+
+/* Le palier suivant de `cle` peut-il se bâtir avec `caisse` points ? Une phrase, ou null (sans regarder l'heure ni le panier : le paiement de l'aube) */
+function refusPalier(etat, cle, choix, camp, caisse) {
   const B = BATIMENTS[cle], K = campDe(etat, camp), c = K?.batiments[cle];
   if (!B || !c) return 'Ce bâtiment n\'existe pas.';
   if (etat.phase === 'fin') return 'La bataille est finie.';
   if (c.chantier) return `${B.nom} est en chantier : il sera fini à l'aube.`;
   if (c.niveau >= NIVEAU_MAX) return `${B.nom} est déjà au niveau maximal.`;
-  const vers = c.niveau + 1, N = B.niveaux[vers - 1], manque = N.cout - K.dotation;
-  if (manque > 0) return `${manque} point${manque > 1 ? 's' : ''} de dotation manque${manque > 1 ? 'nt' : ''} pour ${N.nom.toLowerCase()} (${N.cout} points, ${K.dotation} en caisse).`;
+  const vers = c.niveau + 1, N = B.niveaux[vers - 1], manque = N.cout - caisse;
+  if (manque > 0) return `${manque} point${manque > 1 ? 's' : ''} de dotation manque${manque > 1 ? 'nt' : ''} pour ${N.nom.toLowerCase()} (${N.cout} points, ${caisse} à dépenser).`;
   if (N.choix && !(choix === 0 || choix === 1)) return `Choisissez : ${N.choix[0][0].toLowerCase()} ou ${N.choix[1][0].toLowerCase()}.`;
   return null;
 }
-
-/* Ordonner le chantier : rend { ok, vers, nuits } ou { refus } ; la dotation est payée tout de suite, le niveau vient à l'aube */
-export function ordonnerChantier(etat, cle, choix = null, camp = NOUS) {
+/* Pourquoi on ne peut pas commander ce soir le niveau suivant de `cle`, avec le choix `choix` (0 ou 1, exigé aux niveaux 2 et 3) : une phrase, ou null (conventions : un ordre impossible se refuse à voix haute).
+   On ne dépense que le soir (Jérôme, 18 nov.) : le jour, la fenêtre du bâtiment garde ses ordres ; le panier compte (un bâtiment par soir, la caisse moins le panier) */
+export function refusCamp(etat, cle, choix = null, camp = NOUS) {
+  const B = BATIMENTS[cle];
+  if (B && etat.phase === 'jour') return `On améliore le camp le soir : ${B.nom.replace(/^./, x => x.toLowerCase())} attend la nuit.`;
+  if (B && commande(etat, cle, camp)) return `${B.nom} est déjà commandé ce soir : le chantier part à l'aube.`;
+  return refusPalier(etat, cle, choix, camp, disponible(etat, camp));
+}
+/* Commander ce soir un chantier : il va au panier, rien n'est payé. Rend { ok, vers, cout } ou { refus } */
+export function commanderChantier(etat, cle, choix = null, camp = NOUS) {
   const refus = refusCamp(etat, cle, choix, camp);
+  if (refus) return { refus };
+  const K = campDe(etat, camp), vers = K.batiments[cle].niveau + 1, N = BATIMENTS[cle].niveaux[vers - 1];
+  (K.panier ??= []).push({ cle, vers, choix: N.choix ? choix : null });
+  return { ok: true, vers, cout: N.cout };
+}
+/* Retirer du panier le chantier commandé pour `cle` (un clic) : rend { ok } ou { refus } */
+export function annulerChantier(etat, cle, camp = NOUS) {
+  const K = campDe(etat, camp), k = (K?.panier ?? []).findIndex(a => a.cle === cle);
+  if (etat.phase !== 'nuit') return { refus: 'Le panier se défait la nuit, avant l\'aube.' };
+  if (k < 0) return { refus: 'Rien n\'est commandé pour ce bâtiment.' };
+  K.panier.splice(k, 1);
+  return { ok: true };
+}
+
+/* Ouvrir le chantier et le payer tout de suite (le paiement du panier à l'aube, les essais) : rend { ok, vers, nuits } ou { refus } */
+export function ordonnerChantier(etat, cle, choix = null, camp = NOUS) {
+  const refus = refusPalier(etat, cle, choix, camp, campDe(etat, camp)?.dotation ?? 0);
   if (refus) return { refus };
   const K = campDe(etat, camp), c = K.batiments[cle], vers = c.niveau + 1, N = BATIMENTS[cle].niveaux[vers - 1];
   K.dotation -= N.cout;
   c.chantier = { vers, nuits: nuitsDe(etat, vers, camp), choix: N.choix ? choix : null };
   return { ok: true, vers, nuits: c.chantier.nuits };
+}
+/* L'aube paie le panier de chaque camp, dans l'ordre des commandes, avant les corvées (l'équipement se paie après, sur ce qui reste) ; un achat que la caisse ne couvre plus sort du panier sans rien coûter. Rend, par camp, les clés payées */
+export function payerPaniers(etat) {
+  const out = [];
+  for (const camp of [NOUS, EUX]) {
+    const K = campDe(etat, camp), payes = [];
+    if (K) { for (const a of K.panier ?? []) if (ordonnerChantier(etat, a.cle, a.choix, camp).ok) payes.push(a.cle); K.panier = []; }
+    out.push(payes);
+  }
+  return out;
 }
 
 /* Les tronçons que `camp` tient, par ligne de l'autre camp : { rang: [tenus, en tout] }, et le total de ses lignes [tenus, en tout] */
@@ -95,42 +139,61 @@ function lignes(B, camp) {
   return { eux, nos };
 }
 
-/* L'aube d'un camp : ses chantiers avancent d'une nuit (le niveau vient à la dernière), puis sa dotation tombe (× `mult`). Rend { points, aube, tenue, lignes, finis: [clé, niveau] } */
-function aubeDe(B, camp) {
-  const { etat } = B, K = campDe(etat, camp), out = { points: 0, aube: DOTATION.aube, tenue: 0, lignes: 0, finis: [] };
+/* Le décompte du soir d'un camp (× `mult`) : +1 le jour tenu, +1 nos lignes tenues à 75 %, +2 une ligne d'en face prise pour la première fois. Versé tout de suite. Rend { jour, points, base, tenue, lignes } */
+function soirDe(B, camp) {
+  const { etat } = B, K = campDe(etat, camp), out = { jour: etat.jour, points: 0, base: DOTATION.soir, tenue: 0, lignes: 0 };
+  const { eux, nos } = lignes(B, camp);
+  if (nos[1] && nos[0] >= nos[1] * DOTATION.tenue.seuil) out.tenue = DOTATION.tenue.points;
+  for (const [rang, [tenus, total]] of Object.entries(eux)) {
+    if (total && tenus >= total * DOTATION.tenue.seuil && !K.lignes.includes(+rang)) { K.lignes.push(+rang); out.lignes += DOTATION.ligne; }
+  }
+  out.points = (out.base + out.tenue + out.lignes) * (K.mult ?? 1);
+  K.dotation += out.points;
+  K.soir = { ...out };       // (une copie : `dotationSoir` ajoute `camps` au détail rendu, l’état ne doit pas boucler)
+  return out;
+}
+/* Le soir (la fin d'un jour qui ouvre une nuit) : la dotation tombe pour les deux camps (Jérôme, 18 nov. : on voit ce qu'on a gagné au moment où l'on peut le dépenser) ; en face commande seule (`iaBatir`), sauf à deux. Rend le détail du nôtre, et `camps` */
+export function dotationSoir(B) {
+  const { etat } = B;
+  if (!etat.camp) return null;
+  const out = soirDe(B, NOUS);
+  out.camps = [out];
+  if (etat.campEux) { out.camps.push(soirDe(B, EUX)); if (!etat.deux) iaBatir(B); }
+  return out;
+}
+/* L'aube d'un camp : ses chantiers avancent d'une nuit (le niveau vient à la dernière). Rend [clé, niveau] des chantiers finis */
+function chantiersDe(etat, camp) {
+  const K = campDe(etat, camp), finis = [];
   for (const [cle, c] of Object.entries(K.batiments)) {
     if (!c.chantier) continue;
     if (--c.chantier.nuits > 0) continue;
     c.niveau = c.chantier.vers;
     if (c.chantier.choix != null) c.choix[c.niveau - 2] = c.chantier.choix;
     if (K.bride) monter(etat, cle, c.niveau, c.chantier.choix, camp);      // les effectifs ne montent que dans la partie bridée
-    c.chantier = null; out.finis.push([cle, c.niveau]);
+    c.chantier = null; finis.push([cle, c.niveau]);
   }
-  const { eux, nos } = lignes(B, camp);
-  if (nos[1] && nos[0] >= nos[1] * DOTATION.tenue.seuil) out.tenue = DOTATION.tenue.points;
-  for (const [rang, [tenus, total]] of Object.entries(eux)) {
-    if (total && tenus >= total * DOTATION.tenue.seuil && !K.lignes.includes(+rang)) { K.lignes.push(+rang); out.lignes += DOTATION.ligne; }
-  }
-  out.points = (out.aube + out.tenue + out.lignes) * (K.mult ?? 1);
-  K.dotation += out.points;
-  return out;
+  return finis;
 }
-/* L'aube des deux camps : rend le détail du nôtre (le papier de la nuit) ; en face bâtit seul (`iaBatir`) sauf à deux (un joueur le commande) */
-export function dotationAube(B) {
-  const { etat } = B, out = aubeDe(B, NOUS);
+/* L'aube des deux camps : les chantiers avancent (ceux payés ce matin compris : un chantier d'une nuit commandé le soir est fini au matin).
+   Rend le détail du nôtre ({ finis, payes, soir, caisse }) et `camps` (à deux, chaque joueur lit le sien) */
+export function aubeCamps(B, payes = [[], []]) {
+  const { etat } = B;
+  if (!etat.camp) return null;
+  const de = camp => { const K = campDe(etat, camp); return { finis: chantiersDe(etat, camp), payes: payes[camp] ?? [], soir: K.soir, caisse: K.dotation }; };
+  const out = de(NOUS);
   out.camps = [out];
-  if (etat.campEux) { out.camps.push(aubeDe(B, EUX)); if (!etat.deux) iaBatir(B); }      // à deux, le détail de chaque camp : chaque joueur lit le sien
+  if (etat.campEux) out.camps.push(de(EUX));
   return out;
 }
-/* En face bâtit : tant qu'elle a de quoi payer, le premier palier du plan (`CAMP_IA.plan`) qu'elle n'a pas atteint, le choix du palier tiré d'un hachage de la graine ; un palier trop cher attend l'aube suivante (elle ne passe pas au suivant : ses sous sont pour lui) */
+/* En face commande le soir, comme nous (le panier, payé à l'aube) : tant qu'elle a de quoi payer, le premier palier du plan (`CAMP_IA.plan`) qu'elle n'a pas atteint, le choix du palier tiré d'un hachage de la graine ; un palier trop cher attend le soir suivant (elle ne passe pas au suivant : ses sous sont pour lui) */
 function iaBatir(B) {
   const { etat } = B, K = etat.campEux;
   if (!K?.bride) return;
   for (let tour = 0; tour < 6; tour++) {
-    const pas = CAMP_IA.plan.find(([cle, n]) => niveauDe(etat, cle, EUX) < n && !K.batiments[cle].chantier);      // (un bâtiment en chantier passe son tour : le suivant du plan se bâtit en même temps)
+    const pas = CAMP_IA.plan.find(([cle, n]) => niveauDe(etat, cle, EUX) < n && !K.batiments[cle].chantier && !commande(etat, cle, EUX));      // (un bâtiment en chantier ou commandé passe son tour : le suivant du plan se bâtit en même temps)
     if (!pas) return;
     const [cle] = pas, choix = hash2(etat.graine | 0, niveauDe(etat, cle, EUX), 91) < 0.5 ? 0 : 1;
-    if (!ordonnerChantier(etat, cle, choix, EUX).ok) return;
+    if (!commanderChantier(etat, cle, choix, EUX).ok) return;
   }
 }
 
@@ -232,10 +295,10 @@ export function prochainDuParc(etat, camp, enReparation = () => false) {
   return m ? { rentre: m } : null;
 }
 
-/* Où est chaque bâtiment qui est bâti ou en chantier */
+/* Où est chaque bâtiment qui est bâti, en chantier ou commandé */
 export function emprisesCamp(etat, camp = NOUS) {
   const K = campDe(etat, camp);
-  return Object.keys(CAMP_PLAN.ligne).filter(cle => { const c = K?.batiments[cle]; return c && (c.niveau || c.chantier); }).map(cle => emplacementCamp(etat, cle, camp));
+  return Object.keys(CAMP_PLAN.ligne).filter(cle => { const c = K?.batiments[cle]; return c && (c.niveau || c.chantier || commande(etat, cle, camp)); }).map(cle => emplacementCamp(etat, cle, camp));
 }
 
 /* La place de tout le camp, bâti ou non (les cinq emplacements) : { x0, x1, y0, y1 } en coordonnées du terrain ; la caméra le cadre en entier (v0.96.0) */
@@ -311,7 +374,8 @@ export function refusEquiper(B, reg, cle) {
   if (niveauDe(etat, 'caserne', reg.camp) < EQUIPEMENT.niveauCaserne) return `Équiper un régiment demande la caserne au niveau ${EQUIPEMENT.niveauCaserne}.`;
   if (reg.equip?.includes(cle)) return `${reg.nom} a déjà ${EQUIPEMENTS[cle].court.toLowerCase()}.`;
   if ((reg.equip?.length ?? 0) >= EQUIPEMENT.places) return `${reg.nom} porte déjà tout ce qu'il peut : ${EQUIPEMENT.places} pièces.`;
-  if (c.dotation < EQUIPEMENT.cout) return `Il manque ${EQUIPEMENT.cout - c.dotation} point de dotation pour ${EQUIPEMENTS[cle].court.toLowerCase()}.`;
+  const caisse = disponible(etat, reg.camp);      // (le panier du soir est déjà promis : il est payé à l'aube, avant les corvées)
+  if (caisse < EQUIPEMENT.cout) return `Il manque ${EQUIPEMENT.cout - caisse} point de dotation pour ${EQUIPEMENTS[cle].court.toLowerCase()}.`;
   return null;
 }
 /* Donner la pièce, la nuit : paie un point et la note sur le régiment ; rend faux (sans rien changer) si la caisse s'est vidée depuis l'ordre */

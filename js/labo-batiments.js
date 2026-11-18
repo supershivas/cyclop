@@ -2,12 +2,12 @@
 // Cinq bâtiments dessinés en volumes (`THREE`, 1 unité = 1 m, mêmes arêtes et mêmes couleurs que le reste du jeu), chacun en trois niveaux, puis le camp entier dans la marge arrière du terrain, qui grandit avec les jours.
 // Rien n'est dans le jeu. Un clic sur un bâtiment ouvre son papier : ses ordres (ceux des boutons latéraux d'aujourd'hui), le niveau suivant et ce qu'il coûte. Les nombres sont dans `data/batiments.js`
 // (des propositions, à mesurer) ; le raisonnement est dans `docs/chantiers/camp-et-ameliorations.md`. Caméra : glisser pour tourner, molette pour zoomer, un clic (sans glisser) choisit un bâtiment.
-import { PALETTE as P } from './palette.js?v=0.148.2';
-import { loadThree } from './three-lib.js?v=0.148.2';
-import { el, bouton, maquette } from './labo-arcade.js?v=0.148.2';
-import { atelier } from './rendu/engins.js?v=0.148.2';
-import { BATIR, PIED, G, soldat, chantier } from './rendu/camp-modeles.js?v=0.148.2';
-import { BATIMENTS, ORDRE_BATIMENTS, PARCOURS_EXEMPLE, DOTATION, CAMP_PLAN } from './data/batiments.js?v=0.148.2';
+import { PALETTE as P } from './palette.js?v=0.149.0';
+import { loadThree } from './three-lib.js?v=0.149.0';
+import { el, bouton, maquette } from './labo-arcade.js?v=0.149.0';
+import { atelier } from './rendu/engins.js?v=0.149.0';
+import { BATIR, PIED, G, soldat, chantier } from './rendu/camp-modeles.js?v=0.149.0';
+import { BATIMENTS, ORDRE_BATIMENTS, PARCOURS_EXEMPLE, DOTATION, CAMP_PLAN } from './data/batiments.js?v=0.149.0';
 
 // ─── Le visionneur : une scène THREE, une caméra qu'on tourne, un clic qui choisit ───
 function visionneur(boite, THREE, o) {
@@ -144,7 +144,7 @@ export function maquetteCamp(stage, disposition) {
         if (!n && !vers) continue;
         etat.racine.add(g); etat.groupes[cle] = g;
       }
-      let pts = DOTATION.depart + (jour - 1) * DOTATION.aube; // la dotation approximative du parcours d'exemple, sans les jalons
+      let pts = DOTATION.depart + (jour - 1) * DOTATION.soir; // la dotation approximative du parcours d'exemple, sans les jalons
       ui.info.textContent = `Jour ${jour} sur 12 · ${fait} bâtiment${fait > 1 ? 's' : ''} debout, ${Object.keys(ch).length} chantier${Object.keys(ch).length > 1 ? 's' : ''} · dotation versée jusqu'ici : ${pts} points (+ jalons) · derrière la 4e ligne, dans la marge arrière du terrain actuel`;
       jourBouton.textContent = `Jour ${jour}`;
       etat.surligner(choisi && etat.groupes[choisi] ? etat.groupes[choisi] : null);

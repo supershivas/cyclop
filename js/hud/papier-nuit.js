@@ -6,10 +6,10 @@
 // `N` (le soir) : { sortes (les corvées offertes), regs: [régiment de `lireJournee` + { corvee, donne, choisi, refus: { corvée: raison } }], d (lireJournee), reserve: { restants, total } | null,
 //   ciel: { p, phase, couv, demain, prevision }, avions: { sorties, perdus, restent }, lignes (la phrase des tronçons), prise (la victoire anticipée) | null, med (palmares) }.
 // `F` (la fin) : `lireBataille` + { med (palmares 'total') }.
-import { CORVEES, CONTACT } from '../data/corvees.js?v=0.148.2';
-import { faitsMarquants } from '../donnees-jour.js?v=0.148.2';
-import { barreEffectif, batons, jaugeMoral, troncons, fait, reinitIds } from './bilan.js?v=0.148.2';
-import { iconeCorvee, iconeMedaille, iconeMoment, iconeLune, boutonLoupe } from './icones-nuit.js?v=0.148.2';
+import { CORVEES, CONTACT } from '../data/corvees.js?v=0.149.0';
+import { faitsMarquants } from '../donnees-jour.js?v=0.149.0';
+import { barreEffectif, batons, jaugeMoral, troncons, fait, reinitIds } from './bilan.js?v=0.149.0';
+import { iconeCorvee, iconeMedaille, iconeMoment, iconeLune, boutonLoupe } from './icones-nuit.js?v=0.149.0';
 
 const pl = (n, un, des) => `${n} ${n > 1 ? des : un}`;
 
@@ -72,6 +72,15 @@ export function ordres(N, { larg = 96, mot = false, texte = false, voir = null }
 }
 /* la réserve pour la relève : « 2 sur 4 régiments frais » (v0.116.0) */
 export const puceReleve = R => info(html('span', 'pn-puce', `${iconeCorvee('releve')}<b>${R.restants}</b><span>sur ${R.total} régiments frais</span>`), `# Relève\n${R.restants ? `${pl(R.restants, 'régiment frais attend', 'régiments frais attendent')} sur ${R.total} : chacun relève un régiment à l'aube.` : 'Plus un seul régiment frais : la relève est impossible.'}`);
+
+/* L'état-major du soir (la soirée, lot 1) : la dotation tombée ce soir et ce qui reste à dépenser ; un clic mène au camp (la loupe : le papier se range), où l'on commande. `S` : { soir: { points, base, tenue, lignes }, libre, panier } */
+export function puceCamp(S, aller) {
+  const d = S.soir, parts = d ? [`**+${d.base}** pour le jour tenu`, d.tenue ? `**+${d.tenue}** nos lignes tenues à 75 %` : '', d.lignes ? `**+${d.lignes}** une ligne d'en face prise` : ''].filter(Boolean) : [];
+  const b = el('button', 'bouton pn-gerer pn-camp', `Le camp · ${d ? `+${d.points} · ` : ''}${pl(S.libre, 'pt', 'pts')}`);
+  b.type = 'button'; b.onclick = aller;
+  b.dataset.info = `# Le camp, ce soir\n${d ? `## La dotation : +${d.points}\n${parts.join(' ; ')}.\n` : ''}**${pl(S.libre, 'point', 'points')}** à dépenser${S.panier ? ` (${pl(S.panier, 'commande', 'commandes')} payées à l'aube)` : ''}.\nUn clic : la vue va au camp, un bâtiment se choisit d'un clic. « Revenir au papier » ramène ici.`;
+  return b;
+}
 
 /* le bilan du jour en tuiles serrées : les morts, les effectifs, les lignes, les faits ; chacune dit le reste au survol */
 export function tuilesJour(N, { faits = 3 } = {}) {

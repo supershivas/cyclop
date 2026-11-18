@@ -14,8 +14,8 @@ function jouer(graine, camp, difficulte) {
   while (e.phase !== 'fin') {
     while (e.phase === 'jour') avancer(B);
     if (e.phase !== 'nuit') break;
-    const r = aube(B);
-    if (camp) verses[0] += r.dotation.points;
+    if (camp) verses[0] += e.camp.soir.points;      // (la dotation tombe le soir : la soirée, lot 1)
+    aube(B);
   }
   // la dotation versée à en face : ce qui lui reste, plus ce qu'elle a payé (les niveaux atteints, hors départ)
   if (camp) verses[1] = e.campEux.dotation - 3 + Object.entries(e.campEux.batiments).reduce((t, [k, c]) => t + BATIMENTS[k].niveaux.slice(0, c.niveau).reduce((u, N) => u + N.cout, 0), 0);

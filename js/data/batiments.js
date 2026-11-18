@@ -94,7 +94,7 @@ export const equipeEnMots = reg => (reg.equip ?? []).map(k => EQUIPEMENTS[k].nom
 // La dotation de l'état-major : une seule monnaie, jamais des morts. Elle tombe à l'aube.
 export const DOTATION = {
   depart: 0,            // points au premier matin (Jérôme, v0.98.0 : « 0 au début » ; ils se gagnent)
-  aube: 1,              // à chaque aube
+  soir: 1,              // chaque soir qui ouvre une nuit (Jérôme, 18 nov. : la dotation tombe le soir, plus à l'aube)
   tenue: { seuil: 0.75, points: 1 },       // en plus, si nos lignes sont tenues à 75 % au moins
   ligne: 2,             // la première fois qu'on prend une des lignes d'en face (au plus quatre fois)
 };
