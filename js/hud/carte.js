@@ -2,10 +2,10 @@
 // quatre lignes de chaque camp (en face au nord, en haut), chaque case en tronçons de 25 m à la couleur de celui qui les
 // tient. Une lettre choisit les régiments du secteur ; une case envoie les régiments choisis dans cette tranchée ; les
 // régiments y sont des cercles numérotés, à leur place. Le dessin seulement : les actions (choisir, ordonner) viennent de main.js.
-import { NOUS, EUX, nombreZones, lettreZone, zone, largeurZone, etendueZones, tronconsDeLigne, forcesTroncons, codeLigne } from '../bataille.js?v=0.149.3';
-import { amasDe, isoles } from '../amas.js?v=0.149.3';
-import { ligneY } from '../tranchees.js?v=0.149.3';
-import { numeroDe as numeroDeB } from './lecture.js?v=0.149.3';
+import { NOUS, EUX, nombreZones, lettreZone, zone, largeurZone, etendueZones, tronconsDeLigne, forcesTroncons, codeLigne } from '../bataille.js?v=0.149.4';
+import { amasDe, isoles } from '../amas.js?v=0.149.4';
+import { ligneY } from '../tranchees.js?v=0.149.4';
+import { numeroDe as numeroDeB } from './lecture.js?v=0.149.4';
 
 // `bataille()` : la bataille en cours ; `choisis()` : les régiments choisis (ids) ; `surSecteur`, `surCase`, `surRonde` : les clics
 // `moi()` : le camp qu'on joue (à deux sur le réseau, l'invité est en face : sa carte est tournée d'un demi-tour, ses lignes en bas, A à D de droite à gauche ; v0.30.0)
@@ -54,7 +54,7 @@ export function creerCarte({ $, bataille, choisis, surSecteur, surCase, surRonde
       for (const s of colonnes) {
         const c = document.createElement('button'), nom = `${lettreZone(s)}${codeLigne(B.lignes[idx], M)}`;
         c.className = 'cel'; c.innerHTML = `${'<i></i>'.repeat(Math.max(1, tronconsDeLigne(B, idx, Z.x0 + (s - 1) * largeurZone(B), Z.x0 + s * largeurZone(B)).length))}<b></b>`;
-        c.title = `${nom} : le gros plan, ou l'ordre de s'y rendre si des régiments sont choisis (Alt + clic : toujours le gros plan)`; c.setAttribute('aria-label', `Secteur ${nom}`);
+        c.title = `# ${nom}\nUn clic | le gros plan, ou l'ordre d'y aller\nAlt + clic | le gros plan`; c.setAttribute('aria-label', `Secteur ${nom}`);
         c.onclick = e => surCase(idx, s, e.altKey);
         kids.push(c); carteCases.push({ idx, s, nom, el: c, moities: c.querySelectorAll('i'), marque: c.querySelector('b') });
       }
@@ -150,7 +150,7 @@ export function creerCarte({ $, bataille, choisis, surSecteur, surCase, surRonde
       let att = 0, def = 0;
       for (const k of ks) { const h = e.troncons[k]; att += f[k * 2 + 1 - h]; def += f[k * 2 + h]; }
       c.marque.textContent = att ? `${att}·${def}` : '';
-      c.el.title = `${c.nom} : le gros plan, ou l'ordre de s'y rendre si des régiments sont choisis (Alt + clic : toujours le gros plan)${att ? ` : ${att} attaquants contre ${def} défenseurs` : ''}`;
+      c.el.title = `# ${c.nom}\nUn clic | le gros plan, ou l'ordre d'y aller\nAlt + clic | le gros plan${att ? `\nAttaquants | **${att}**\nDéfenseurs | **${def}**` : ''}`;
       c.el.classList.toggle('choisi', rs.some(r => choisis().has(r.id)));
     }
   }

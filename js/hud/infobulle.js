@@ -3,16 +3,37 @@
 // `# titre` (h1), `## sous-titre` (h2), une ligne simple (le corps) ; `**gras**` dans une ligne. Elle remplace le `title` du navigateur (lent, parfois invisible) et le `data-tip` des segments, qui ne recevaient
 // aucun survol (le HUD ne prend pas le pointeur : `pointer-events: none`, sauf ce qui le demande). Le dessin seulement ; sans pointeur fin, rien.
 const echapper = t => t.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-// le texte de `data-info` en lignes de la bulle (h1, h2, corps) : la même bulle partout, la même hiérarchie
+// La typographie (règle commune des jeux, 18 nov.) : une espace insécable avant « : ; ! ? » et à l'intérieur des guillemets, posée AU RENDU (le texte des sources garde ses espaces
+// ordinaires) ; un deux-points collé à un mot (« Vivres: ») en reçoit une ; « 12:30 », « x2 » et les adresses ne bougent pas (il faut une lettre, une parenthèse ou un « * » avant).
+const NBSP = '\u00a0';
+export const typographie = t => t
+  .replace(/[ \t]+([:;!?»%])/g, `${NBSP}$1`)
+  .replace(/([A-Za-zÀ-ÿ)*])([:;!?])(?=\s|$)/g, `$1${NBSP}$2`)
+  .replace(/([^\s\u00a0])»/g, `$1${NBSP}»`)
+  .replace(/«[ \t]*/g, `«${NBSP}`);
+const enLigne = t => echapper(typographie(t)).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>');
+// le texte de `data-info` en lignes de la bulle : la même bulle partout, la même hiérarchie. Jamais de bloc de texte (Jérôme, 18 nov.) : `# titre` (h1), `## sous-titre` (h2), une ligne simple,
+// et **les tableaux** : une ligne qui porte « | » est une rangée (`Vivres | **2** sur 3`) ; les rangées qui se suivent font un seul tableau, la première cellule est le libellé (en gras).
 // Un titre n'existe que s'il a quelque chose à titrer (Jérôme, v0.100.0 : un énorme « Déplier le secteur de la carte » sur une simple bascule) : une bulle d'une seule ligne est
 // une ligne simple en gras (`seul`), pas un h1 ; le titre vient quand un corps le suit.
 export function lignesInfo(texte) {
   const lignes = texte.split(/\\n|\n/).filter(l => l.trim());
-  if (lignes.length === 1) return `<span class="seul">${echapper(lignes[0].replace(/^#{1,2} /, '')).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>')}</span>`;
-  return lignes.map(l => {
+  if (lignes.length === 1 && !lignes[0].includes(' | ')) return `<span class="seul">${enLigne(lignes[0].replace(/^#{1,2} /, ''))}</span>`;
+  const sortie = [];
+  let rangs = null;
+  for (const l of lignes) {
+    if (l.includes(' | ') && !/^#{1,2} /.test(l)) {
+      const [lib, ...val] = l.split(/\s+\|\s+/);
+      const tete = !rangs && val.length > 1 && val.every(v => !/[\d*]/.test(v));      // la 1re rangée d'un tableau à plusieurs colonnes, sans chiffre : l'en-tête (« Hommes | Nous | En face »)
+      (rangs ??= []).push(`<tr><th>${enLigne(lib)}</th>${val.map(v => tete ? `<th>${enLigne(v)}</th>` : `<td>${enLigne(v)}</td>`).join('')}</tr>`);
+      continue;
+    }
+    if (rangs) { sortie.push(`<table class="t">${rangs.join('')}</table>`); rangs = null; }
     const [classe, corps] = l.startsWith('## ') ? ['h2', l.slice(3)] : l.startsWith('# ') ? ['h1', l.slice(2)] : ['p', l];
-    return `<span class="${classe}">${echapper(corps).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>')}</span>`;
-  }).join('');
+    sortie.push(`<span class="${classe}">${enLigne(corps)}</span>`);
+  }
+  if (rangs) sortie.push(`<table class="t">${rangs.join('')}</table>`);
+  return sortie.join('');
 }
 // Les `title` du navigateur deviennent des `data-info` (Jérôme, v0.98.0 : « le survol de tous les éléments de l'interface donne une infobulle liée au design system ») : la bulle du jeu partout, jamais celle du système en plus.
 // Un bouton sans texte garde son nom accessible (`aria-label`). Appelé une fois sur la page, puis à chaque ajout ou changement d'un `title` (le HUD se refait souvent).

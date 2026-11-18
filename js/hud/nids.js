@@ -1,13 +1,13 @@
 // Nos postes de mitrailleuse sur le champ et leur fiche (Jérôme, lot E : « on sélectionne le poste et on règle la direction du cône ; barre de vie, barre de munitions ; de l'xp »).
 // Sur le champ : au-dessus de chaque poste à nous, une étiquette (ses chevrons, sa vie, ses munitions, son expérience) ; un clic sur elle le choisit. La fiche (`#nid-fiche`) : les barres,
 // le bonus de ses chevrons, « Tourner » (le prochain clic sur le sol : la direction du cône), « Droit devant », « Fermer ». Le dessin et les boutons seulement : les ordres partent par `surBouton` (main.js).
-import { NIDS } from '../data/nids.js?v=0.149.3';
-import { bonusEnMots } from '../data/experience.js?v=0.149.3';
-import { chevronsNid, cadenceNid, servantNid, raisonInactif } from '../nids.js?v=0.149.3';
-import { jauge as jaugeT, bande, tuilesDe } from './tuiles.js?v=0.149.3';
-import { reinitIds } from './bilan.js?v=0.149.3';
-import { REPERES } from './barres.js?v=0.149.3';
-import { NOUS } from '../bataille.js?v=0.149.3';
+import { NIDS } from '../data/nids.js?v=0.149.4';
+import { bonusEnMots } from '../data/experience.js?v=0.149.4';
+import { chevronsNid, cadenceNid, servantNid, raisonInactif } from '../nids.js?v=0.149.4';
+import { jauge as jaugeT, bande, tuilesDe } from './tuiles.js?v=0.149.4';
+import { reinitIds } from './bilan.js?v=0.149.4';
+import { REPERES } from './barres.js?v=0.149.4';
+import { NOUS } from '../bataille.js?v=0.149.4';
 
 const REDUIT = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
 export function creerNidsHud({ $, bataille, moi = () => NOUS, versEcran, hauteurSol, choisir, surBouton, pastilles }) {
@@ -30,10 +30,10 @@ export function creerNidsHud({ $, bataille, moi = () => NOUS, versEcran, hauteur
       }
       const rs = mien && !detruit ? (sv => sv >= 0 ? B.etat.regiments[B.armee.reg[sv]] : null)(servantNid(B, n, true)) : null;
       const par = Object.entries(n.tuesReg ?? {}).map(([r, k]) => `${B.etat.regiments[r]?.nom ?? 'régiment ' + r} ${k}`).join(', ');
-      const lignes = [`# ${mien ? 'Mitrailleuse' : 'Mitrailleuse ennemie'}`, `## ${etat}`, `Poste : **${Math.round(vie * 100)} %** (${Math.max(0, Math.round(n.pv))} / ${NIDS.pv})`, ...plus];
+      const lignes = [`# ${mien ? 'Mitrailleuse' : 'Mitrailleuse ennemie'}`, `## ${etat}`, `Poste | **${Math.round(vie * 100)} %** (${Math.max(0, Math.round(n.pv))} / ${NIDS.pv})`, ...plus];
       if (mien) {
-        if (!detruit) lignes.push(`Bande : ${n.muni} / ${NIDS.munitions}`, rs ? `Servi par : ${rs.nom}` : 'Servi par : personne', `Expérience : ${nb ? '▲'.repeat(nb) : 'novice'} (${Math.round((n.exp ?? 0) * 100)} %) · ${bonusEnMots('nid', nb)}`);
-        lignes.push(`Victimes : **${n.tues ?? 0}**${par ? ` (${par})` : ''} · rafales : ${n.rafales ?? 0}`, detruit ? 'Le génie peut le refaire (touche 6 puis un clic sur lui).' : 'Un clic : le choisir et tourner son cône.');
+        if (!detruit) lignes.push(`Bande | **${n.muni}** / ${NIDS.munitions}`, `Servi par | ${rs ? rs.nom : 'personne'}`, `Expérience | ${nb ? '▲'.repeat(nb) : 'novice'} (${Math.round((n.exp ?? 0) * 100)} %)`, `Bonus | ${bonusEnMots('nid', nb)}`);
+        lignes.push(`Victimes | **${n.tues ?? 0}**${par ? ` (${par})` : ''}`, `Rafales | ${n.rafales ?? 0}`, detruit ? 'Le génie peut le refaire (touche 6 puis un clic sur lui).' : 'Un clic : le choisir et tourner son cône.');
       }
       pastilles.poser(`n${n.id}`, { type: 'nid', camp: mien ? 'nous' : 'eux', sx, sy, vie, detruit, choisi: mien && choisi === n.id, info: lignes.join('\n'), vide: mien && !detruit && n.muni <= 0, chevrons: mien ? nb : undefined, onclick: mien && !detruit ? () => choisir(n.id) : null });
     }

@@ -4,6 +4,7 @@
 //
 //   node outils/fumee.mjs --ecrire    → écrit l'empreinte de référence (test/fumee.json)
 //   node outils/fumee.mjs             → compare à la référence ; code 1 au moindre écart ou à la moindre erreur
+//   node outils/fumee.mjs --sans-bulles --ref X → sans le texte des infobulles (data-info, title, aria-label) : X, une empreinte prise de même sur le code d'avant
 //
 // Sert surtout aux refontes sans changement visible (découper main.js, rendu3d.js) : l'empreinte ne
 // doit pas bouger. Une règle ou un texte qui change exprès demande de réécrire la référence.
@@ -24,19 +25,24 @@ page.on('console', m => { if (m.type() === 'error') erreurs.push(`console : ${m.
 // L'empreinte d'un instant : le HTML de chaque élément à id du HUD et des papiers (sans l'écran
 // titre, le canvas ni ce qui change à chaque image comme les étiquettes et la bulle).
 const ignorer = ['canvas', 'ecran', 'etiquettes', 'chars-etiq', 'equerres', 'repere', 'repere-soldat', 'bulle', 'visee', 'visee-nid', 'version', 'changelog'];
-const empreinte = ignorer => page.evaluate(ignorer => {
+// --sans-bulles : le texte des infobulles (data-info, title, aria-label) et la bulle elle-même sont retirés AVANT la mesure (au-delà de 4 000 caractères
+// on ne garde que la longueur) ; pour dire qu'une refonte des bulles n'a rien changé d'autre, comparer à une empreinte du code d'avant prise de même
+const sansBulles = process.argv.includes('--sans-bulles');
+const empreinte = ignorer => page.evaluate(([ignorer, sansBulles]) => {
   const sortie = {};
   for (const e of document.querySelectorAll('[id]')) {
-    if (ignorer.includes(e.id) || e.closest('dialog:not([open])')) continue;
-    sortie[e.id] = `${e.hidden ? 'H|' : ''}${e.className}|${e.innerHTML.length > 4000 ? e.innerHTML.length : e.innerHTML}`;
+    if (ignorer.includes(e.id) || e.closest('dialog:not([open])') || (sansBulles && e.id === 'infobulle')) continue;
+    const h = sansBulles ? e.innerHTML.replace(/ (data-info|title|aria-label|data-titre)="[^"]*"/g, '') : e.innerHTML;
+    sortie[e.id] = `${e.hidden ? 'H|' : ''}${e.className}|${h.length > 4000 ? h.length : h}`;
   }
   return sortie;
-}, ignorer);
+}, [ignorer, sansBulles]);
 
 const etapes = {};
 // (v0.141.4) un élément `hidden` qui s'affiche est une erreur : le piège a coûté trois fois (une classe en `display: grid` annulait l'attribut ; css/style.css, en tête)
 const cachesVisibles = () => page.evaluate(() => [...document.querySelectorAll('[hidden]')].filter(e => getComputedStyle(e).display !== 'none' && !e.matches('.terrain, .frise-icone, .jeu-toast')).map(e => e.id || e.className));
 async function etape(nom) { await page.waitForTimeout(250); etapes[nom] = await empreinte(ignorer); for (const f of await cachesVisibles()) erreurs.push(`${nom} : « ${f} » est hidden mais affiché`); }
+const sansBulle = () => page.evaluate(() => { document.dispatchEvent(new PointerEvent('pointerdown')); const b = document.getElementById('infobulle'); b.innerHTML = ''; delete b.dataset.texte; });      // (la bulle cachée garde le texte de la dernière survolée, qui dépendait du minutage des étapes d'avant : trois étapes instables ; v0.149.4 : de même pour les trois premières étapes de nuit)
 const jeu = (f, ...a) => page.evaluate(([f, a]) => new Function('a', `return (${f})(...a)`)(a), [f, a]);
 
 await page.goto(`${srv.base}index.html?debug=1&seed=${o.graine}`);
@@ -94,14 +100,16 @@ await page.evaluate(() => document.getElementById('fiche-fermer').click());
 await jeu('() => { const B = __jeu.bataille(); while (B.etat.phase === "jour") __jeu.avancer(300, false); }');
 await etape('soir');
 await jeu('() => __jeu.nuit?.()');
+await sansBulle();
 await etape('nuit');
 await page.keyboard.press('t');
+await sansBulle();
 await etape('nuit-choisis');
 // un ordre de nuit aux régiments choisis : leurs cartes se grisent (`donne`, v0.38.3) ; en solo, aucune erreur (le réseau n'existe pas)
 await page.evaluate(() => document.querySelector('.pn-r:not(.pn-r-tous) [data-corvee="evacuer"]').click());
+await sansBulle();
 await etape('nuit-ordre');
 // le camp du soir (la soirée, lot 1) : la puce « Le camp » du papier range le papier et mène au camp ; le parc des chars se commande (rien n'est payé avant l'aube), s'annule, se recommande
-const sansBulle = () => page.evaluate(() => { document.dispatchEvent(new PointerEvent('pointerdown')); const b = document.getElementById('infobulle'); b.innerHTML = ''; delete b.dataset.texte; });      // (la bulle cachée garde le texte de la dernière survolée, qui dépendait du minutage des étapes d'avant : trois étapes instables)
 await page.mouse.move(1276, 600);                          // (hors du papier et de la fenêtre du bâtiment : sinon la bulle de ce qui passe sous la souris dépend du minutage)
 await sansBulle();
 await page.evaluate(() => document.querySelector('.pn-camp').click());

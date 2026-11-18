@@ -6,10 +6,10 @@
 // `N` (le soir) : { sortes (les corvées offertes), regs: [régiment de `lireJournee` + { corvee, donne, choisi, refus: { corvée: raison } }], d (lireJournee), reserve: { restants, total } | null,
 //   ciel: { p, phase, couv, demain, prevision }, avions: { sorties, perdus, restent }, lignes (la phrase des tronçons), prise (la victoire anticipée) | null, med (palmares) }.
 // `F` (la fin) : `lireBataille` + { med (palmares 'total') }.
-import { CORVEES, CONTACT } from '../data/corvees.js?v=0.149.3';
-import { faitsMarquants } from '../donnees-jour.js?v=0.149.3';
-import { barreEffectif, batons, jaugeMoral, troncons, fait, reinitIds } from './bilan.js?v=0.149.3';
-import { iconeCorvee, iconeMedaille, iconeMoment, iconeLune, boutonLoupe } from './icones-nuit.js?v=0.149.3';
+import { CORVEES, CONTACT } from '../data/corvees.js?v=0.149.4';
+import { faitsMarquants } from '../donnees-jour.js?v=0.149.4';
+import { barreEffectif, batons, jaugeMoral, troncons, fait, reinitIds } from './bilan.js?v=0.149.4';
+import { iconeCorvee, iconeMedaille, iconeMoment, iconeLune, boutonLoupe } from './icones-nuit.js?v=0.149.4';
 
 const pl = (n, un, des) => `${n} ${n > 1 ? des : un}`;
 
@@ -19,19 +19,22 @@ export const info = (e, t) => { e.dataset.info = t; return e; };
 export const bouton = (cls, ...kids) => { const b = el('button', cls, ...kids); b.type = 'button'; return b; };
 export const loupe = (nom, voir, lien) => boutonLoupe(nom, () => voir?.(lien));
 
+/* une corvée en tableau (ses `lignes`), ou sa phrase si elle n'en a pas */
+export const tableau = c => c.lignes ? c.lignes.map(l => l.join(' | ')).join('\n') : c.dit.replace(/^./, x => x.toUpperCase()) + '.';
 /* un bouton de corvée : l'icône seule (44 × 44), son nom et ce qu'elle fait au survol */
 export function corvee(c, actif, refus, donne = false, pour = '') {
   const b = bouton(`pn-c${actif ? ' actif' : ''}${refus ? ' refus' : ''}${actif && donne ? ' donne' : ''}`);
   b.innerHTML = iconeCorvee(c.id); b.dataset.corvee = c.id; b.dataset.pour = pour;
   b.setAttribute('aria-label', c.nom); b.setAttribute('aria-pressed', String(!!actif)); if (refus) b.setAttribute('aria-disabled', 'true');
-  return info(b, `# ${c.nom}\n${refus ? `**${refus}**` : c.dit.replace(/^./, x => x.toUpperCase()) + '.'}`);
+  return info(b, `# ${c.nom}\n${refus ? `**${refus}**` : tableau(c)}`);
 }
 /* les vivres : trois crans (pleins : les nuits qui restent) */
 export const vivres = n => html('span', 'pn-vivres', Array.from({ length: 3 }, (_, k) => `<i class="${k < n ? 'plein' : ''}"></i>`).join(''));
 export const motMoral = n => n === 'deroute' ? 'déroute' : n === 'ebranle' ? 'ébranlé' : 'tient';
 export function survolReg(r) {
-  const h = r.historique?.length > 1 ? `\nSoir après soir : ${r.historique.map(x => `J${x.jour} ${x.vivants}`).join(' · ')}` : '';
-  return `# Régiment ${r.nom}\n**${r.debout}** debout · ${r.blesses} blessés · ${r.evacues} évacués · ${r.morts} tombés (${r.mortsJour} aujourd'hui), sur ${r.initial}\nMoral ${Math.round(r.moral * 100)} % (${motMoral(r.niveau)}) · vivres pour ${pl(r.vivres, 'nuit', 'nuits')}${h}`;
+  const h = r.historique?.length > 1 ? `\n## Soir après soir\n${r.historique.map(x => `J${x.jour} | ${x.vivants}`).join('\n')}` : '';
+  return [`# Régiment ${r.nom}`, `Debout | **${r.debout}** sur ${r.initial}`, `Blessés | **${r.blesses}**`, `Évacués | ${r.evacues}`, `Tombés | **${r.morts}**${r.mortsJour ? ` dont ${r.mortsJour} aujourd'hui` : ''}`,
+    `Moral | **${Math.round(r.moral * 100)} %** ${motMoral(r.niveau)}`, `Vivres | **${r.vivres}** ${r.vivres > 1 ? 'nuits' : 'nuit'}`].join('\n') + h;
 }
 /* l'état d'un régiment en une ligne : la barre (debout plein, blessés hachurés), le nombre debout, la jauge de moral, les vivres, les morts du jour */
 export function etat(r, { larg = 96, mot = false, texte = false } = {}) {
@@ -45,11 +48,11 @@ export function etat(r, { larg = 96, mot = false, texte = false } = {}) {
 export function nomReg(r) {
   const b = bouton(`pn-nom${r.choisi ? ' choisi' : ''}`, el('b', '', String(r.numero)), el('span', '', r.nom ?? ''));
   b.setAttribute('aria-pressed', String(!!r.choisi)); b.dataset.reg = r.id;
-  return info(b, `# ${r.nom}\nCette nuit : **${[...CORVEES, CONTACT].find(c => c.id === r.corvee)?.nom}**${r.donne ? ' (ordre donné)' : ''}\nUn clic le choisit (Maj : l'ajouter).`);
+  return info(b, `# ${r.nom}\nCette nuit | **${[...CORVEES, CONTACT].find(c => c.id === r.corvee)?.nom}**${r.donne ? '\nOrdre | donné' : ''}\nUn clic le choisit (Maj : l'ajouter).`);
 }
 /* les corvées d'un régiment (ou la ligne « au contact » qui les remplace) */
 export function corveesDe(N, r) {
-  if (r.corvee === 'contact') return [info(html('div', 'pn-contact', `${iconeCorvee('contact')}<span>Au contact : il se bat toute la nuit</span>`), `# ${CONTACT.nom}\n${CONTACT.dit.replace(/^./, x => x.toUpperCase())}.`)];
+  if (r.corvee === 'contact') return [info(html('div', 'pn-contact', `${iconeCorvee('contact')}<span>Au contact : il se bat toute la nuit</span>`), `# ${CONTACT.nom}\n${tableau(CONTACT)}`)];
   return N.sortes.map(c => corvee(c, r.corvee === c.id, r.refus[c.id], r.donne, r.id));
 }
 /* la rangée « Tous » : nos effectifs, et les corvées pour tous */
@@ -71,14 +74,14 @@ export function ordres(N, { larg = 96, mot = false, texte = false, voir = null }
   return g;
 }
 /* la réserve pour la relève : « 2 sur 4 régiments frais » (v0.116.0) */
-export const puceReleve = R => info(html('span', 'pn-puce', `${iconeCorvee('releve')}<b>${R.restants}</b><span>sur ${R.total} régiments frais</span>`), `# Relève\n${R.restants ? `${pl(R.restants, 'régiment frais attend', 'régiments frais attendent')} sur ${R.total} : chacun relève un régiment à l'aube.` : 'Plus un seul régiment frais : la relève est impossible.'}`);
+export const puceReleve = R => info(html('span', 'pn-puce', `${iconeCorvee('releve')}<b>${R.restants}</b><span>sur ${R.total} régiments frais</span>`), `# Relève\n${R.restants ? `Régiments frais | **${R.restants}** sur ${R.total}\nChacun | relève un régiment à l'aube` : '**Plus un seul régiment frais : la relève est impossible.**'}`);
 
 /* L'état-major du soir (la soirée, lot 1) : la dotation tombée ce soir et ce qui reste à dépenser ; un clic mène au camp (la loupe : le papier se range), où l'on commande. `S` : { soir: { points, base, tenue, lignes }, libre, panier } */
 export function puceCamp(S, aller) {
-  const d = S.soir, parts = d ? [`**+${d.base}** pour le jour tenu`, d.tenue ? `**+${d.tenue}** nos lignes tenues à 75 %` : '', d.lignes ? `**+${d.lignes}** une ligne d'en face prise` : ''].filter(Boolean) : [];
+  const d = S.soir, parts = d ? [`Le jour tenu | **+${d.base}**`, d.tenue ? `Nos lignes à 75 % | **+${d.tenue}**` : '', d.lignes ? `Ligne d'en face prise | **+${d.lignes}**` : ''].filter(Boolean) : [];
   const b = el('button', 'bouton pn-gerer pn-camp', `Le camp · ${d ? `+${d.points} · ` : ''}${pl(S.libre, 'pt', 'pts')}`);
   b.type = 'button'; b.onclick = aller;
-  b.dataset.info = `# Le camp, ce soir\n${d ? `## La dotation : +${d.points}\n${parts.join(' ; ')}.\n` : ''}**${pl(S.libre, 'point', 'points')}** à dépenser${S.panier ? ` (${pl(S.panier, 'commande', 'commandes')} payées à l'aube)` : ''}.\nUn clic : la vue va au camp, un bâtiment se choisit d'un clic. « Revenir au papier » ramène ici.`;
+  b.dataset.info = `# Le camp, ce soir\n${d ? `## La dotation : +${d.points}\n${parts.join('\n')}\n` : ''}À dépenser | **${pl(S.libre, 'point', 'points')}**${S.panier ? `\nCommandé | ${pl(S.panier, 'commande', 'commandes')}, payées à l'aube` : ''}\nUn clic | la vue va au camp\nRetour | « Revenir au papier »`;
   return b;
 }
 
@@ -90,14 +93,14 @@ export function tuilesJour(N, { faits = 3 } = {}) {
   const morts = info(t('pn-t-morts', 'Morts du jour',
     el('div', 'pn-duo', el('b', 'bi-t-nous', String(n.mortsJour)), el('span', '', 'chez nous'), el('b', 'bi-t-eux', String(e.mortsJour)), el('span', '', 'en face')),
     html('div', 'pn-graphe', batons(n.mortsParJour, 0, { max, total: d.jours, haut: 18 }) + batons(e.mortsParJour, 1, { max, total: d.jours, haut: 18 }))),
-    `# Les morts, jour après jour\n${n.mortsParJour.map((v, k) => `**Jour ${k + 1}** : ${v} chez nous, ${e.mortsParJour[k]} en face`).join('\n')}`);
+    `# Les morts, jour après jour\nMorts | Nous | En face\n${n.mortsParJour.map((v, k) => `Jour ${k + 1} | **${v}** | ${e.mortsParJour[k]}`).join('\n')}`);
   const eff = info(t('pn-t-eff', 'Effectifs', ...[0, 1].map(c => html('div', 'pn-graphe', barreEffectif(d.camps[c], c, { echelle: base, haut: 10 }))),
     el('div', 'pn-duo', el('b', 'bi-t-nous', String(n.debout)), el('span', '', `sur ${n.initial}`), el('b', 'bi-t-eux', String(e.debout)), el('span', '', `sur ${e.initial}`))),
-    `# Effectifs\nNous : **${n.debout}** debout, ${n.blesses} blessés, ${n.evacues} évacués, ${n.morts} tombés\nEn face : **${e.debout}** debout, ${e.blesses} blessés, ${e.morts} tombés`);
+    `# Effectifs\nHommes | Nous | En face\nDebout | **${n.debout}** | **${e.debout}**\nBlessés | ${n.blesses} | ${e.blesses}\nÉvacués | ${n.evacues} | \u2014\nTombés | ${n.morts} | ${e.morts}`);
   const lig = info(t('pn-t-lig', 'Lignes', html('div', 'pn-graphe', troncons(d.tronconsTenus, d.tronconsTenus[0] + d.tronconsTenus[1])),
     el('div', 'pn-duo', el('b', 'bi-t-nous', String(d.tronconsTenus[0])), el('span', '', 'à nous'), el('b', 'bi-t-eux', String(d.tronconsTenus[1])), el('span', '', 'à eux')),
     N.prise ? el('p', 'libelle', N.prise.court) : null),
-    `# Les lignes\n${N.lignes}\nTronçons tenus : ${d.tronconsTenus[0]} par nous, ${d.tronconsTenus[1]} par eux${N.prise ? `\n${N.prise.long}` : ''}`);
+    `# Les lignes\n${N.lignes}\nTenus par nous | **${d.tronconsTenus[0]}** tronçons\nTenus par eux | **${d.tronconsTenus[1]}** tronçons${N.prise ? `\n${N.prise.long}` : ''}`);
   const fl = faitsMarquants(d, faits);
   const fts = info(t('pn-t-faits', 'À retenir', el('ul', 'bi-faits', ...fl.map(f => { const li = el('li'); li.innerHTML = fait(f.genre); li.append(el('span', '', f.texte)); return li; }))), `# À retenir\n${fl.map(f => f.texte).join('\n')}`);
   return { morts, eff, lig, fts };

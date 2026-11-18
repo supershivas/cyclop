@@ -9,9 +9,9 @@
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta property="og:image" content="og.png">
-<link rel="stylesheet" href="js/lib/game.css?v=0.149.3">
-<link rel="stylesheet" href="css/style.css?v=0.149.3">
-<link rel="stylesheet" href="css/ds-v2.css?v=0.149.3">
+<link rel="stylesheet" href="js/lib/game.css?v=0.149.4">
+<link rel="stylesheet" href="css/style.css?v=0.149.4">
+<link rel="stylesheet" href="css/ds-v2.css?v=0.149.4">
 </head>
 <body class="charge">
 <!-- La barre de chargement (v0.28.0) : là avant tout script ; main.js la remplit, puis la retire. `body.charge` (v0.100.0) : tout le reste de l'écran est caché tant qu'elle est là (le menu et le titre ne se voient plus derrière) -->
@@ -94,9 +94,9 @@
           <h2 id="nuit-titre">Nuit</h2>
           <div class="pn-pied" id="nuit-pied">
             <span id="nuit-releve"></span>
-            <button class="bouton pn-gerer" id="nuit-gerer" type="button" hidden data-info="# Gérer les régiments&#10;Fusionner deux régiments ou passer des soldats de l'un à l'autre : 1, 10 ou tous. Au petit matin, ils marchent jusqu'à leur nouveau régiment.">Gérer les régiments</button>
+            <button class="bouton pn-gerer" id="nuit-gerer" type="button" hidden data-info="# Gérer les régiments&#10;Fusionner | deux régiments&#10;Transférer | 1, 10 ou tous les hommes&#10;Au petit matin | ils rejoignent leur nouveau régiment">Gérer les régiments</button>
           </div>
-          <button class="bouton pn-aube" id="aube" type="button" data-info="# À l'aube&#10;La nuit s'achève : les ordres donnés s'exécutent, les commandes du camp sont payées.">À l'aube</button>
+          <button class="bouton pn-aube" id="aube" type="button" data-info="# À l'aube&#10;Les ordres | **s'exécutent**&#10;Le camp | les commandes sont payées">À l'aube</button>
         </header>
         <section class="pn-ordres" id="nuit-ordres" aria-label="Les ordres de la nuit"></section>
         <section class="pn-jour" id="nuit-jour" aria-label="La journée"></section>
@@ -393,6 +393,6 @@
 </dialog>
 
 <div class="jeu-toast" id="toast" role="status" hidden></div>
-<script type="module" src="js/main.js?v=0.149.3"></script>
+<script type="module" src="js/main.js?v=0.149.4"></script>
 </body>
 </html>

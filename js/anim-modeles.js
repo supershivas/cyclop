@@ -1,8 +1,8 @@
 // Des animations toutes faites du soldat articulé, point de départ de l'atelier (logique pure) : on les charge, on les retouche image par image.
 // Elles sont construites avec les poses du jeu (`poseDe`), le fusil placé comme un corps (`pointFusil`) et la cinématique inverse des bras (`ikBras` : les mains posées sur le fusil).
 // Tout est pour un tireur DROITIER ; le gaucher en est le miroir (`miroirAnimation` de js/anim-edition.js : le jeu en jouera le miroir pour environ 10 % des hommes).
-import { poseNeutre, poseDe, ikBras, pointFusil, animation, articulations, melanger, CARRURE_NEUTRE } from './pose-soldat.js?v=0.149.3';
-import { ALLURES, TIR_EPAULE, GESTES, MORTS } from './data/lecteur-animations.js?v=0.149.3';
+import { poseNeutre, poseDe, ikBras, pointFusil, animation, articulations, melanger, CARRURE_NEUTRE } from './pose-soldat.js?v=0.149.4';
+import { ALLURES, TIR_EPAULE, GESTES, MORTS } from './data/lecteur-animations.js?v=0.149.4';
 
 // Le fusil à deux mains, « à la charge » : la crosse contre la hanche droite, le canon devant et un peu à gauche ; la main droite sur la poignée, la gauche sur le fût.
 // (les valeurs viennent d'un balayage : un fusil plus horizontal ou plus avancé met la main gauche hors de portée du bras, 62 cm)

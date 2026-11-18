@@ -174,8 +174,15 @@
 
 .infobulle { position: fixed; left: 0; top: 0; z-index: 60; max-width: 34ch; padding: var(--e1) var(--pas); background: var(--jeu-encre); color: var(--jeu-fond); font-size: var(--texte-petit); line-height: 1.4; box-shadow: 2px 2px 0 var(--jeu-fond); pointer-events: none; }
 .infobulle[hidden] { display: none; }
-.infobulle[popover] { inset: 0 auto auto 0; margin: 0; border: 0; overflow: visible; }       /* (les réglages d'office d'un popover : centré, bordé, qui défile) */
+.infobulle[popover] { inset: 0 auto auto 0; margin: 0; border: 2px solid var(--jeu-fond); overflow: visible; }       /* (les réglages d'office d'un popover : centré, bordé, qui défile) */
 .infobulle span { display: block; }
+/* la règle commune des infobulles (Jérôme, 18 nov.) : un liseré sombre (le bord d'un papier clair se perdait sur les papiers clairs de la nuit), jamais de césure ni de mot coupé,
+   et des tableaux plutôt qu'un bloc de texte (`Vivres | **2** sur 3` : hud/infobulle.js) ; les espaces insécables sont posées au rendu (`typographie`) */
+.infobulle { border: 2px solid var(--jeu-fond); hyphens: none; -webkit-hyphens: none; overflow-wrap: normal; word-break: normal; text-wrap: pretty; }
+.infobulle table.t { border-collapse: collapse; margin-top: var(--e1, 4px); }
+.infobulle table.t th { text-align: left; font-weight: 700; padding: 1px var(--e3, 12px) 1px 0; white-space: nowrap; vertical-align: top; }
+.infobulle table.t td { padding: 1px var(--pas) 1px 0; vertical-align: top; }
+.infobulle table.t tr + tr > * { border-top: 1px dotted var(--jeu-accent); }
 .infobulle .seul { font-weight: 700; }
 .infobulle .h1 { font-size: var(--texte-moyen); font-weight: 700; line-height: 1.2; }
 .infobulle .h2 { font-size: var(--texte-petit); font-weight: 700; letter-spacing: var(--lettres-etiquette); text-transform: uppercase; margin-top: var(--e1); opacity: .8; }

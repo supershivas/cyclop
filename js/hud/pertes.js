@@ -2,7 +2,7 @@
 // de chaque côté d'un médaillon (le jour), nous à gauche, en face à droite ; la vie reste collée au centre, ce qui est perdu se vide vers le bord. Pas un chiffre
 // à l'écran : ils viennent au survol de la barre (une infobulle : debout, blessés, tombés, régiments, tronçons tenus ; `data-info`, hud/infobulle.js). Dessous, les tronçons tenus : une graduation d'os par tronçon tenu, de
 // terre par tronçon perdu, jamais la couleur d'un camp. Le dessin seulement.
-import { effectifs, blessesActuels, tronconsTenus, horloge, NOUS } from '../bataille.js?v=0.149.3';
+import { effectifs, blessesActuels, tronconsTenus, horloge, NOUS } from '../bataille.js?v=0.149.4';
 
 export function creerPertes({ $, moi = () => NOUS }) {
   let vues = '';
@@ -16,7 +16,7 @@ export function creerPertes({ $, moi = () => NOUS }) {
       const debout = Math.max(0, eff[c] - bl[c]), tombes = e.pertes[c], total = Math.max(1, debout + bl[c] + tombes), pc = n => `${(n / total * 100).toFixed(2)}%`;
       const seg = (n, cls) => `<i class="${cls}" style="width:${pc(n)}"></i>`;
       const regs = e.regiments.filter(r => r.camp === c), vivants = regs.filter(r => r.effectif > 0).length;
-      $(id).dataset.info = [`# ${nom}`, '## Les hommes', `Debout : **${debout}**`, `Blessés : **${bl[c]}**`, `Tombés : **${tombes}**`, '## Le front', `Régiments debout : **${vivants} sur ${regs.length}**`, ...(tr ? [`Tronçons tenus : **${tr[c]} sur ${moitie}**`] : [])].join('\n');
+      $(id).dataset.info = [`# ${nom}`, '## Les hommes', `Debout | **${debout}**`, `Blessés | **${bl[c]}**`, `Tombés | **${tombes}**`, '## Le front', `Régiments debout | **${vivants}** sur ${regs.length}`, ...(tr ? [`Tronçons tenus | **${tr[c]}** sur ${moitie}`] : [])].join('\n');
       const graduations = tr ? Array.from({ length: moitie }, (_, k) => `<i${k < tr[c] ? ' class="tenu"' : ''}></i>`).join('') : '';
       $(id).innerHTML = `<span class="nom">${nom}</span>
         <span class="vie" role="img" aria-label="${nom} : ${debout} debout, ${bl[c]} blessés, ${tombes} tombés">${seg(debout, 'debout')}${seg(bl[c], 'blesses')}${seg(tombes, 'tombes')}</span>
