@@ -1,5 +1,11 @@
 # Journal des versions
 
+## 0.152.0 — 2026-11-20
+
+- Dans la vue d'un soldat : Maj pour courir (essoufflé, il ne tire pas), C pour s'accroupir, X pour se coucher, Espace pour franchir un parapet ; P met en pause
+- On sent les coups : un arc de sang du côté du tireur, le monde qui penche, la balle qui frôle
+- Un obus tout près voile l'image et étouffe le son ; la peur assombrit le bord de l'image
+
 ## 0.151.0 — 2026-11-20
 
 - Dans la vue d'un soldat, la balle part où est le guidon, qui tremble selon sa peur et sa fatigue ; elle touche la tête, la poitrine, un bras ou une jambe

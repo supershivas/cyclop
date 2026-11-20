@@ -25,11 +25,12 @@
      (rng.js), pour que la même graine rejoue la même bataille.
 
    Logique pure : aucun DOM. Le rendu lit les tableaux (rendu3d.js). */
-import { hauteurQ, vitesseCase } from './terrain.js?v=0.151.0';
-import { ligneY } from './tranchees.js?v=0.151.0';
-import { TOITS } from './data/nids.js?v=0.151.0';
-import { caracteristiques } from './identite.js?v=0.151.0';
-import { BONUS } from './data/experience.js?v=0.151.0';
+import { hauteurQ, vitesseCase } from './terrain.js?v=0.152.0';
+import { ligneY } from './tranchees.js?v=0.152.0';
+import { TOITS } from './data/nids.js?v=0.152.0';
+import { caracteristiques } from './identite.js?v=0.152.0';
+import { BONUS } from './data/experience.js?v=0.152.0';
+import { TIR_JOUEUR as TJ } from './data/tir-joueur.js?v=0.152.0';
 
 export const GRILLE = 2;           // m : cases de voisinage
 export const DENSITE = 8;          // m : carrés de densité (tir)
@@ -258,7 +259,7 @@ export function pasArmee(A, ctx) {
     const pil = ctx.pilotes?.get(A.id[i]), pilote = !!pil;      // son tir est celui du joueur (tir-joueur.js) : le tir automatique se tait ; un pilote par camp (v0.148.0)
     if (pilote) {
       const px = pil.ax, py = pil.ay, pm = Math.hypot(px, py);
-      if (pm > 0.01) { gx = px / pm; gy = py / pm; voulu = Math.min(1, pm); } else { gx = 0; gy = 0; voulu = 0; }
+      if (pm > 0.01 && !pil.saut) { gx = px / pm; gy = py / pm; voulu = Math.min(1, pm); } else { gx = 0; gy = 0; voulu = 0; }      // (il franchit un parapet : tir-joueur.js mène sa place)
     }
     // ─ La case, la marche devant ─
     const ci = xi | 0, cj = yi | 0, cc = cj * W + ci;
@@ -278,7 +279,7 @@ export function pasArmee(A, ctx) {
     }
     // les jambes lourdes ou blessées ralentissent
     const corps = (1 - Sd.effetFatigue * fatJ[i]) * (blessure[i] === 2 ? Sd.jambeBlessee : 1);
-    const vmax = V.marche * (0.88 + rnd[i] * 0.24) * terrain * corps;
+    const vmax = V.marche * (0.88 + rnd[i] * 0.24) * terrain * corps * (pilote ? pil.vit ?? 1 : 1);      // (le pilote : courir, épaulé, accroupi, couché ; v0.152.0)
     // au corps à corps il garde sa place : il ne marche plus qu'un peu (sauf un blessé qui s'en va, ou une déroute) ; il fait face à son adversaire
     const duel = ennemi >= 0 && !retrait && !blessure[i] && !r.deroute;
     A.duel[i] = duel ? 1 : 0;
@@ -397,6 +398,9 @@ function tirer(A, i, o, ctx, stance, equip = 1) {      // `equip` : le facteur d
   }
   if (!cand.length) return true;
   const v = cand[Math.floor(rng() * cand.length)];
+  // l'homme que mène le joueur (v0.152.0) : le coup se note pour l'écran (d'où il vient, s'il porte) ; accroupi ou couché, il offre moins aux balles (un tirage de plus, pour lui seul)
+  const pv = ctx.pilotes?.get(A.id[v]);
+  if (pv) { pv.coupN = (pv.coupN ?? 0) + 1; pv.coup = { n: pv.coupN, x: A.x[i], y: A.y[i], touche: false }; if (pv.posture && rng() < TJ.postures[pv.posture].abri) return true; }
   // une cible qui court est plus dure à toucher (un assaut qui traverse le no man's land, v0.17.0)
   const vit = Math.hypot(A.vx[v], A.vy[v]);
   if (vit > 0.3 && rng() < P.mouvement * Math.min(1, vit / R.vitesse.marche)) return true;
@@ -409,6 +413,7 @@ function tirer(A, i, o, ctx, stance, equip = 1) {      // `equip` : le facteur d
     if (rng() >= abri) return true;
   }
   { const f = toitFacteur(T, cv, 'tir'); if (f < 1 && rng() >= f) return true; }       // un toit de bois (v0.83.0)
+  if (pv) pv.coup.touche = true;
   frapper(v, 'tir', R.soldat.mortelTir, null, i);
   return true;
 }
@@ -434,6 +439,7 @@ export function tuerDans(A, x0, y0, rayon, ctx, letal = 1) {
       const ci = (A.y[i] | 0) * T.W + (A.x[i] | 0);
       if (T.diff[ci] <= -2) p *= R.obus.abri;
       p *= toitFacteur(T, ci, 'obus');
+      if (ctx.pilotes) { const pv = ctx.pilotes.get(A.id[i]); if (pv?.posture) p *= 1 - TJ.postures[pv.posture].obus; }      // couché, il évite des éclats (le joueur, v0.152.0)
       if (rng() < p) frapper(i, 'obus', 0.5 + 0.5 * (1 - d / rayon), { x0, y0, d, rayon });
     }
   }

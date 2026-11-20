@@ -1,9 +1,9 @@
 {
-  "version": "0.151.0",
+  "version": "0.152.0",
   "date": "2026-11-20",
   "changes": [
-    "Dans la vue d'un soldat, la balle part où est le guidon, qui tremble selon sa peur et sa fatigue ; elle touche la tête, la poitrine, un bras ou une jambe",
-    "Clic droit maintenu : épauler ; R : recharger (Lebel 8 + 1, Mauser 5), les cartouches en bas à droite",
-    "La fiche d'un mort dit où il a été touché, par quoi (balle, éclat de 155…) et par qui"
+    "Dans la vue d'un soldat : Maj pour courir (essoufflé, il ne tire pas), C pour s'accroupir, X pour se coucher, Espace pour franchir un parapet ; P met en pause",
+    "On sent les coups : un arc de sang du côté du tireur, le monde qui penche, la balle qui frôle",
+    "Un obus tout près voile l'image et étouffe le son ; la peur assombrit le bord de l'image"
   ]
 }

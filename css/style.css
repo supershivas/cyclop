@@ -1007,7 +1007,7 @@ h2 { font-weight: normal; letter-spacing: var(--titre-lettres); }
 .viseur { position: absolute; left: 50%; top: 50%; width: 36px; height: 36px; transform: translate(-50%, -50%); pointer-events: none; fill: none; stroke: var(--jeu-encre); stroke-width: 1.6; stroke-linecap: round; paint-order: stroke; filter: drop-shadow(0 0 1px var(--jeu-fond)); }
 .viseur[hidden] { display: none; }
 /* Dans la vue d'un soldat il n'y a plus d'interface (Jérôme, v0.148.0) : tout le HUD disparaît sauf le viseur ; les messages (`#toast`) restent, ils sont hors du HUD */
-body.vue-soldat #hud > :not(#viseur):not(#cartouches), body.vue-soldat #etiquettes, body.vue-soldat #retours, body.vue-soldat #chars-etiq, body.vue-soldat #visee, body.vue-soldat #visee-nid,
+body.vue-soldat #hud > :not(#viseur):not(#cartouches):not(#coup):not(#choc):not(#peur-voile), body.vue-soldat #etiquettes, body.vue-soldat #retours, body.vue-soldat #chars-etiq, body.vue-soldat #visee, body.vue-soldat #visee-nid,
 body.vue-soldat #equerres, body.vue-soldat #repere, body.vue-soldat #repere-soldat, body.vue-soldat #bulle { display: none !important; }
 .viseur .marque { opacity: 0; stroke-width: 2; }
 .viseur.touche .marque { animation: viseur-touche .45s ease-out 1; }
@@ -1020,6 +1020,17 @@ body.vue-soldat #equerres, body.vue-soldat #repere, body.vue-soldat #repere-sold
 .cartouches.recharge i.vide { animation: cartouche-recharge .5s ease-in-out infinite alternate; }
 @keyframes cartouche-recharge { to { opacity: .15; } }
 @media (prefers-reduced-motion: reduce) { .cartouches.recharge i.vide { animation: none; } }
+/* Les sensations de l'homme qu'on mène (v0.152.0) : le coup reçu, un arc couleur de sang du côté du tireur (le sang : exception datée de la v0.140.2), plus pâle quand la balle frôle ;
+   le souffle d'un obus, un voile de brume ; la peur, le bord de l'image qui s'assombrit. L'opacité du voile et de la peur vient de suivi.js. */
+.coup, .choc, .peur-voile { position: absolute; inset: 0; pointer-events: none; }
+.coup { opacity: 0; }
+.coup::before { content: ''; position: absolute; left: var(--x, 50%); top: var(--y, 6%); width: 46vmin; height: 16vmin; transform: translate(-50%, -50%) rotate(var(--angle, 0deg)); background: radial-gradient(ellipse at center, #7a0f1c 0%, transparent 70%); }
+.coup.touche { animation: coup-touche 1.2s ease-out 1; }
+.coup.frole { animation: coup-frole .5s ease-out 1; }
+@keyframes coup-touche { from { opacity: .95; } to { opacity: 0; } }
+@keyframes coup-frole { from { opacity: .4; } to { opacity: 0; } }
+.choc { background: var(--jeu-brume); opacity: 0; }
+.peur-voile { background: radial-gradient(ellipse at center, transparent 35%, var(--jeu-fond) 100%); opacity: 0; }
 @media (prefers-reduced-motion: reduce) { .viseur.touche .marque, .viseur.mort .marque { animation: none; opacity: 1; } }
 .reg-ouvert .tete .aide.vue svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 .reg-ouvert .tete .aide.vue[aria-pressed="true"] { background: var(--jeu-fond); color: var(--jeu-encre); border-color: var(--jeu-fond); }       /* la vue est prise : le bouton est plein */

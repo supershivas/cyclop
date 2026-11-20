@@ -4,7 +4,7 @@
    Les bruitages (Jérôme, v0.99.6 : la synthèse était « très mauvaise ») : des mp3 CC0 de `assets/sons/` (catalogue et choix : `data/sons.js`), décodés au premier geste du joueur ;
    une famille dont le fichier manque ou n'est pas encore décodé retombe sur la synthèse d'avant (aucune erreur, aucun silence). Variantes, hauteur et voix simultanées : tirées/limitées ici, avec le générateur local.
    Le hasard du son est un petit générateur local (la graine de la bataille n'est jamais touchée). L'espace : un son loin est plus faible et vient du côté où il est (`ecoute` : le centre de la vue, en mètres du secteur, et sa largeur). */
-import { SONS, DOSSIER_SONS, VOIX } from './data/sons.js?v=0.151.0';
+import { SONS, DOSSIER_SONS, VOIX } from './data/sons.js?v=0.152.0';
 const borne = (v, a, b) => v < a ? a : v > b ? b : v;
 const COMMUN = { effets: 0.7, musique: 0.5 };
 // ── La playlist : les fichiers de `assets/music/`. `humeur` : quand le champ la demande, on y passe en fondu (comme `lieu` dans Kingvi) ──
@@ -20,7 +20,7 @@ export const TRACKS = {
 const XFADE = 8, GAIN_PISTE = 0.75;      // le fondu enchaîné (s) ; le niveau d'un morceau avant le curseur
 
 export function creerSon(prefs = {}) {
-  let ctx = null, maitre = null, fx = null, mus = null, bruit = null, vol = { ...COMMUN, ...(prefs.son || {}) }, cache = false;
+  let ctx = null, maitre = null, fx = null, sourd = null, mus = null, bruit = null, vol = { ...COMMUN, ...(prefs.son || {}) }, cache = false;
   let graine = 12345;
   const alea = () => (graine = (Math.imul(graine, 1664525) + 1013904223) >>> 0) / 4294967296;
   const lits = {};                        // les sons en continu : vent, pluie, fusillade, char, avion, nuit
@@ -37,7 +37,7 @@ export function creerSon(prefs = {}) {
     const comp = ctx.createDynamicsCompressor();        // mille coups de fusil ne saturent pas la sortie
     maitre = ctx.createGain(); maitre.connect(ctx.destination); comp.connect(maitre);      // (le maître : coupé onglet caché, voir `cacher`)
     if (cache) maitre.gain.value = 0;
-    fx = ctx.createGain(); fx.connect(comp);
+    fx = ctx.createGain(); sourd = ctx.createBiquadFilter(); sourd.type = 'lowpass'; sourd.frequency.value = 20000; fx.connect(sourd); sourd.connect(comp);      // (`sourd` : l'obus tout près de l'homme qu'on mène, v0.152.0)
     mus = ctx.createGain(); mus.connect(comp);
     regler();
     bruit = ctx.createBuffer(1, ctx.sampleRate * 2, ctx.sampleRate);
@@ -300,6 +300,12 @@ export function creerSon(prefs = {}) {
     // à appeler dans un geste du joueur (clic, touche) : crée le contexte ou le reprend
     debloquer() { demarrer(); if (ctx && ctx.state === 'suspended' && !cache) ctx.resume(); },
     evenement, image, interface_, cacher, ecouter, charger,
+    // un obus tout près de l'homme qu'on mène (v0.152.0) : les effets s'étouffent (`force` de 0 à 1), puis reviennent en 2,5 s
+    assourdir(force) {
+      if (!ctx || !sourd) return;
+      const t = ctx.currentTime, f = sourd.frequency, bas = 20000 * Math.pow(250 / 20000, borne(force, 0, 1));
+      f.cancelScheduledValues(t); f.setValueAtTime(Math.min(f.value, 20000), t); f.exponentialRampToValueAtTime(bas, t + 0.05); f.exponentialRampToValueAtTime(20000, t + 0.05 + 2.5 * force);
+    },
     // le labo : un morceau choisi (null : la playlist) et celui qu'on entend
     piste(id) { choix = id || 'playlist'; if (ctx) lancerPiste(id || suivante()); },
     get morceau() { return courante; },

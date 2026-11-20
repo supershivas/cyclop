@@ -4,23 +4,27 @@
    qu'il traverse est touché là où la balle passe (la tête, le tronc, un bras, les jambes : v0.151.0, plus de jet de dés pour toucher, la balle part où est le guidon, `balancement`), et frappé comme par
    n'importe quel tir (`frapper` : un blessé ou un mort selon l'endroit, crédité au tireur). Un magasin par pilote (Lebel 8 + 1, Mauser 5), rechargé à la demande. Rend dans `B.pilotes[camp].dernier`
    ce que l'écran doit montrer : { n (le coup), touche, mort, zone }, et dans `B.pilotes[camp].refus` pourquoi un coup n'est pas parti. */
-import { hauteurQ } from './terrain.js?v=0.151.0';
-import { gagner } from './army.js?v=0.151.0';
-import { hash2 } from './lib/rng.js?v=0.151.0';
-import { TIR_JOUEUR as TJ } from './data/tir-joueur.js?v=0.151.0';
+import { hauteurQ } from './terrain.js?v=0.152.0';
+import { gagner } from './army.js?v=0.152.0';
+import { hash2 } from './lib/rng.js?v=0.152.0';
+import { TIR_JOUEUR as TJ } from './data/tir-joueur.js?v=0.152.0';
 
 /* La hauteur de l'œil de l'homme debout en (x, y) au-dessus de ses pieds : 1,6 m, et la banquette de tir dans une tranchée (`T.diff` ≤ −2 quarts : creusée) */
-export function hauteurOeil(T, x, y) { const c = (y | 0) * T.W + (x | 0); return TJ.oeil + (T.diff[c] <= -2 ? TJ.banquette : 0); }
+export function hauteurOeil(T, x, y, posture = 0) { const c = (y | 0) * T.W + (x | 0); return posture ? TJ.postures[posture].oeil : TJ.oeil + (T.diff[c] <= -2 ? TJ.banquette : 0); }      // (accroupi ou couché : la banquette ne sert plus)
+/* La taille qu'un homme offre aux balles : couché, accroupi (le joueur), tapi par la peur, debout */
+export function tailleDe(A, k, R, P = null) { return P?.posture ? TJ.postures[P.posture].taille : A.peur[k] >= R.soldat.terreur ? TJ.tapi : TJ.haut; }
 
 /* Le balancement du guidon (v0.151.0, la vraie visée) : [écart du cap, écart de l'élévation] en radians, pour l'homme `i` au temps de jeu `temps`. Une fonction pure, sans hasard ni trigonométrie
    (deux ondes lissées tirées par hachage du numéro de l'homme) : l'écran y pose la caméra, la simulation y fait partir la balle ; seul ou au même cadre à deux, c'est le même nombre. */
 const onde = (id, t, f, s) => { const u = t * f, k = Math.floor(u), w = u - k, a = hash2(id, k, s) * 2 - 1, b = hash2(id, k + 1, s) * 2 - 1; return a + (b - a) * w * w * (3 - 2 * w); };
-export function amplitude(A, i, epaule = false) {
-  const G = TJ.balance;
-  return G.base * (1 + G.peur * A.peur[i] + G.fatigue * A.fatB[i] + (A.blessure[i] === 1 ? G.bras : 0)) * (G.adresse0 - G.adresse * A.adresse[i] / 100) * (epaule ? G.epaule : 1);
+/* `o` : { epaule, souffle (0 à 1, l'essoufflement de la course), posture } (ou un booléen : épaulé) */
+export function amplitude(A, i, o = {}) {
+  const G = TJ.balance, { epaule = false, souffle = 0, posture = 0 } = typeof o === 'object' ? o : { epaule: !!o };
+  return G.base * (1 + G.peur * A.peur[i] + G.fatigue * A.fatB[i] + (A.blessure[i] === 1 ? G.bras : 0)) * (G.adresse0 - G.adresse * A.adresse[i] / 100) * (epaule ? G.epaule : 1)
+    * (1 + TJ.course.balance * souffle) * TJ.postures[posture].balance;
 }
-export function balancement(A, i, temps, epaule = false) {
-  const G = TJ.balance, a = amplitude(A, i, epaule), id = A.id[i], v = G.partVif;
+export function balancement(A, i, temps, o = {}) {
+  const G = TJ.balance, a = amplitude(A, i, o), id = A.id[i], v = G.partVif;
   return [a * ((1 - v) * onde(id, temps, G.lent, 11) + v * onde(id, temps, G.vif, 12)), a * 0.8 * ((1 - v) * onde(id, temps, G.lent * 0.9, 13) + v * onde(id, temps, G.vif * 1.1, 14))];
 }
 /* L'arme du camp et ce qu'il reste dans le magasin d'un pilote (un pilote neuf a le magasin plein) */
@@ -28,15 +32,27 @@ export const armeDe = camp => TJ.armes[camp] ?? TJ.armes[0];
 
 /* Les commandes du joueur dans la vue d'un soldat, les mêmes seul ou à deux (`executerCmd` de main.js les passe au lockstep) :
    { id, cap, av, la } : marcher (le cap du regard en radians, av : −1 reculer / 1 avancer, la : −1 gauche / 1 droite) ; { fin: true } : rendre l'homme ; { tir: true, cap, el } : un coup ;
-   { epaule: true | false } : épauler ou baisser le fusil ; { recharge: true } : recharger.
+   { epaule: true | false } : épauler ou baisser le fusil ; { recharge: true } : recharger ; { course: true | false } : courir ; { posture: 0 | 1 | 2 } : debout, accroupi, couché ;
+   { saut: true } : franchir le rebord devant lui (le pas suivant le dit, ou dit pourquoi non).
    Un homme qui n'est pas de ce camp, ou qui ne vit plus, ne se pilote pas. Rend '' ou la raison du refus. */
-const pas = P => { const f = P.epaule ? TJ.epaule.marche : 1, c = Math.cos(P.cap), s = Math.sin(P.cap); P.ax = f * (P.av * c - P.la * s); P.ay = f * (P.av * s + P.la * c); };
+// la direction de la marche (ax, ay : au plus 1) et le facteur de vitesse (`vit`, lu par army.js) : courir, épaulé, accroupi, couché
+const pas = P => {
+  const c = Math.cos(P.cap), s = Math.sin(P.cap); P.ax = P.av * c - P.la * s; P.ay = P.av * s + P.la * c;
+  P.vit = P.course ? TJ.course.vitesse : (P.epaule ? TJ.epaule.marche : 1) * TJ.postures[P.posture ?? 0].marche;
+};
 export function commanderPilote(B, camp, c) {
   B.pilotes ??= [null, null];
   if (c.fin) { B.pilotes[camp] = null; return ''; }
   const P = B.pilotes[camp];
   if (c.tir) { if (!P) return 'Personne à piloter.'; P.tir = { cap: c.cap, el: c.el }; return ''; }
   if (c.epaule !== undefined) { if (!P) return 'Personne à piloter.'; P.epaule = !!c.epaule; pas(P); return ''; }
+  if (c.course !== undefined) { if (!P) return 'Personne à piloter.'; P.course = !!c.course; if (P.course) P.posture = 0; pas(P); return ''; }      // courir le relève
+  if (c.posture !== undefined) {
+    if (!P) return 'Personne à piloter.';
+    const q = Math.max(0, Math.min(2, c.posture | 0)); if (q && P.course) return 'Il court : il ne peut pas se baisser.';
+    P.posture = q; pas(P); return '';
+  }
+  if (c.saut) { if (!P) return 'Personne à piloter.'; if (!P.saut) P.sautDemande = true; return ''; }
   if (c.recharge) {
     if (!P) return 'Personne à piloter.';
     if ((P.balles ?? armeDe(camp).balles) >= armeDe(camp).balles) return 'Le magasin est plein.';
@@ -46,7 +62,7 @@ export function commanderPilote(B, camp, c) {
   const A = B.armee; let i = -1;
   if (P && P.id === c.id) i = 0; else for (let k = 0; k < A.n; k++) if (A.id[k] === c.id) { i = k; break; }
   if (i < 0 || (P?.id !== c.id && (A.camp[i] !== camp || A.mort[i]))) return 'Cet homme n\'est plus à vous.';
-  const nv = P?.id === c.id ? P : (B.pilotes[camp] = { id: c.id, ax: 0, ay: 0, cap: 0, av: 0, la: 0, tir: null, dernier: null, refus: null, epaule: false, balles: armeDe(camp).balles, recharge: false, rt: 0 });
+  const nv = P?.id === c.id ? P : (B.pilotes[camp] = { id: c.id, ax: 0, ay: 0, cap: 0, av: 0, la: 0, tir: null, dernier: null, refus: null, epaule: false, balles: armeDe(camp).balles, recharge: false, rt: 0, course: false, posture: 0, souffle: 0, vit: 1, saut: null, sautDemande: false, coup: null, coupN: 0 });
   nv.cap = c.cap; nv.av = Math.max(-1, Math.min(1, c.av || 0)); nv.la = Math.max(-1, Math.min(1, c.la || 0));
   pas(nv);
   return '';
@@ -56,11 +72,44 @@ export function commanderPilote(B, camp, c) {
 export function tirerJoueur(B, ctx, rng) {
   for (const P of B.pilotes ?? []) {
     if (!P) continue;
+    corpsDe(B, ctx, P);
     if (P.recharge) recharger(B, ctx, P);
     if (P.tir) tirDe(B, ctx, rng, P);
   }
 }
 function indice(A, id) { for (let k = 0; k < A.n; k++) if (A.id[k] === id) return k; return -1; }
+/* Le corps (v0.152.0, lot 2) : l'essoufflement et la fatigue de la course ; le franchissement d'un rebord (demandé, puis joué en `saut.duree` s : sa place glisse du pied du rebord à son dessus) */
+function corpsDe(B, ctx, P) {
+  const A = B.armee, i = indice(A, P.id); if (i < 0 || A.mort[i]) return;
+  const C = TJ.course, dt = ctx.dt, court = P.course && (P.ax || P.ay) && Math.hypot(A.vx[i], A.vy[i]) > 0.3;
+  P.souffle = Math.max(0, Math.min(1, (P.souffle ?? 0) + (court ? dt / C.monte : -dt / C.retombe)));
+  if (court) A.fatJ[i] = Math.min(1, A.fatJ[i] + C.fatigue * dt);
+  if (P.sautDemande) { P.sautDemande = false; const r = franchir(B, ctx, P, i); if (r) P.refus = r; }
+  if (P.saut) {
+    const S = P.saut; S.t += dt; const f = Math.min(1, S.t / TJ.saut.duree), g = f * f * (3 - 2 * f);
+    A.x[i] = S.x0 + (S.x1 - S.x0) * g; A.y[i] = S.y0 + (S.y1 - S.y0) * g; A.vx[i] = 0; A.vy[i] = 0;
+    if (f >= 1) P.saut = null;
+  }
+}
+/* Le rebord devant lui (dans le sens du regard, `P.cap`) : de 0,5 à 2,5 m plus haut que ses pieds, à moins de `portee` m ; rend '' (le saut commence) ou la raison du refus */
+function franchir(B, ctx, P, i) {
+  const A = B.armee, T = ctx.T, S = TJ.saut, W = T.W, H = T.H;
+  if (P.saut) return '';
+  if (A.blessure[i] === 2) return 'Sa jambe est blessée : il ne peut pas franchir.';
+  const dx = Math.cos(P.cap), dy = Math.sin(P.cap), x0 = A.x[i], y0 = A.y[i], hq0 = hauteurQ(T, (y0 | 0) * W + (x0 | 0));
+  for (let s = 0.3; s <= S.portee + 1e-9; s += 0.1) {
+    const x = x0 + dx * s, y = y0 + dy * s; if (x < 0 || y < 0 || x >= W || y >= H) break;
+    const dq = hauteurQ(T, (y | 0) * W + (x | 0)) - hq0;
+    if (dq < S.marche) continue;
+    if (dq > S.max) return 'Trop haut à franchir sans échelle.';
+    const x1 = Math.max(0.1, Math.min(W - 0.1, x + dx * S.pose)), y1 = Math.max(0.1, Math.min(H - 0.1, y + dy * S.pose)), c1 = (y1 | 0) * W + (x1 | 0);
+    if (T.profond && T.profond[c1]) return 'De l\'eau profonde de l\'autre côté.';
+    P.saut = { t: 0, x0, y0, x1, y1 }; P.posture = 0; P.course = false; pas(P);
+    A.fatJ[i] = Math.min(1, A.fatJ[i] + S.fatigue);
+    return '';
+  }
+  return 'Rien à franchir devant lui.';
+}
 function recharger(B, ctx, P) {
   const A = B.armee, i = indice(A, P.id); if (i < 0) return;
   const W = armeDe(A.camp[i]); P.balles ??= W.balles; P.rt = (P.rt ?? 0) + ctx.dt;
@@ -84,17 +133,19 @@ function tirDe(B, ctx, rng, P) {
   if (A.blessure[i] === 1) { P.refus = 'Son bras est blessé : il ne peut plus épauler.'; return; }
   const arme = armeDe(A.camp[i]); P.balles ??= arme.balles;
   if (P.balles <= 0) { P.refus = 'Le magasin est vide : il recharge.'; if (!P.recharge) { P.recharge = true; P.rt = 0; } return; }
+  if (P.course) { P.refus = 'Il court : il ne peut pas épauler.'; return; }
+  if (P.saut) { P.refus = 'Il franchit le parapet.'; return; }
   if (A.tirT[i] > 0) { P.refus = 'Le fusil n\'est pas rechargé.'; return; }
   A.tirT[i] = TJ.periode; P.balles--; P.recharge = false; P.rt = 0;
   A.fatB[i] = Math.min(1, A.fatB[i] + R.soldat.fatigueTir);
   A.exp[i] = Math.min(1, A.exp[i] + R.experience.tir);
   gagner(A, i, 'adresse', R.progression.tir, R.progression);
   // la balle part où est le guidon : le regard, le balancement de l'homme à cet instant, la dispersion de l'arme
-  const [bc, be] = balancement(A, i, B.etat.temps, P.epaule);
+  const [bc, be] = balancement(A, i, B.etat.temps, { epaule: P.epaule, souffle: P.souffle ?? 0, posture: P.posture ?? 0 });
   const cap0 = demande.cap ?? Math.atan2(demande.d[1], demande.d[0]);
   const cap = cap0 + bc + (rng() * 2 - 1) * TJ.dispersion, el = demande.el + be + (rng() * 2 - 1) * TJ.dispersion;
   const dx = Math.cos(cap), dy = Math.sin(cap), tg = Math.tan(el), x0 = A.x[i], y0 = A.y[i];
-  const caseDe = (x, y) => ((y | 0) * W + (x | 0)), oeil = hauteurOeil(T, x0, y0);
+  const caseDe = (x, y) => ((y | 0) * W + (x | 0)), oeil = hauteurOeil(T, x0, y0, P.posture ?? 0);
   const hq0 = hauteurQ(T, caseDe(x0, y0));
   // le relief : la première case plus haute que le rayon
   let tFin = TJ.portee;
@@ -110,7 +161,7 @@ function tirDe(B, ctx, rng, P) {
     const rx = A.x[k] - x0, ry = A.y[k] - y0, t = rx * dx + ry * dy;
     if (t < 1 || t > tFin || t >= tj) continue;
     const lat = Math.abs(rx * dy - ry * dx); if (lat > TJ.frole) continue;
-    const sol = (hauteurQ(T, caseDe(A.x[k], A.y[k])) - hq0) * 0.25, h = oeil + t * tg, taille = A.peur[k] >= R.soldat.terreur ? TJ.tapi : TJ.haut;
+    const sol = (hauteurQ(T, caseDe(A.x[k], A.y[k])) - hq0) * 0.25, h = oeil + t * tg, taille = tailleDe(A, k, R, ctx.pilotes?.get(A.id[k]));
     const z = lat <= TJ.rayon ? zoneTouchee((h - sol) / taille, lat) : null;
     if (z) { j = k; tj = t; zj = z; }
     else if (lat < frl && h > sol - 0.5 && h < sol + taille + 1) { fr = k; frl = lat; }

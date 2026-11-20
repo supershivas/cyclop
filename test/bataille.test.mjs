@@ -1351,7 +1351,7 @@ test('le tir du joueur (v0.151.0, la vraie visée) : la balle part où est le gu
   // le tir automatique se tait pour l'homme piloté ; sans pilote, la simulation ne tire rien pour lui
   const C = petite(); assert.deepEqual(C.pilotes, [null, null]); for (let k = 0; k < 30; k++) avancer(C);
 });
-import { commanderPilote, zoneTouchee, balancement, amplitude } from '../js/tir-joueur.js';
+import { commanderPilote, zoneTouchee, balancement, amplitude, tailleDe } from '../js/tir-joueur.js';
 import { mourir } from '../js/bataille.js';
 test('la vue d\'un soldat à deux (v0.148.0) : un pilote par camp, des commandes rejouées au même pas donnent la même partie, un homme d\'en face ne se pilote pas', () => {
   const mk = () => { const B = petite(), A = B.armee; B.terrain.base.fill(0); B.terrain.diff.fill(0); return B; };
@@ -1360,7 +1360,13 @@ test('la vue d\'un soldat à deux (v0.148.0) : un pilote par camp, des commandes
     const a = prem(B, 0), b = prem(B, 1);
     assert.match(commanderPilote(B, 0, { id: b, cap: 0, av: 1, la: 0 }), /plus à vous/, 'l\'homme d\'en face n\'est pas à nous');
     assert.equal(commanderPilote(B, 0, { id: a, cap: -1.2, av: 1, la: 0 }), ''); assert.equal(commanderPilote(B, 1, { id: b, cap: 1.9, av: 1, la: 1 }), '');
-    for (let k = 0; k < 240; k++) { if (k === 90) { commanderPilote(B, 0, { tir: true, cap: -1.2, el: 0 }); commanderPilote(B, 1, { tir: true, cap: 1.9, el: 0 }); } if (k === 180) commanderPilote(B, 1, { fin: true }); avancer(B); }
+    for (let k = 0; k < 240; k++) {
+      if (k === 30) { commanderPilote(B, 0, { course: true }); commanderPilote(B, 1, { posture: 1 }); }
+      if (k === 70) { commanderPilote(B, 0, { course: false }); commanderPilote(B, 0, { epaule: true }); commanderPilote(B, 1, { saut: true }); }
+      if (k === 90) { commanderPilote(B, 0, { tir: true, cap: -1.2, el: 0 }); commanderPilote(B, 1, { tir: true, cap: 1.9, el: 0 }); }
+      if (k === 120) { commanderPilote(B, 0, { posture: 2 }); commanderPilote(B, 0, { recharge: true }); }
+      if (k === 180) commanderPilote(B, 1, { fin: true }); avancer(B);
+    }
   };
   const X = mk(), Y = mk(); scenario(X); scenario(Y);
   assert.equal(empreinte(X), empreinte(Y), 'deux machines, les mêmes commandes : la même partie');
@@ -1673,3 +1679,42 @@ test('un poste sert au régiment qui le manœuvre : ses victimes lui sont attrib
   assert.ok(raisonInactif(B, n), 'plus personne : inactif');
 });
 import { raisonInactif } from '../js/nids.js';
+
+test('le corps de l\'homme qu\'on mène (v0.152.0) : il court plus vite et s\'essouffle sans pouvoir tirer, s\'accroupit et se couche, franchit un parapet qu\'il ne monterait pas en marchant', () => {
+  const mk = () => { const B = petite(); B.terrain.base.fill(0); B.terrain.diff.fill(0); return B; };
+  const prem = B => { for (let k = 0; k < B.armee.n; k++) if (B.armee.camp[k] === 0 && !B.armee.mort[k]) return k; };
+  const marche = (course, pas = 60) => {
+    const B = mk(), A = B.armee, i = prem(B); A.x[i] = 200; A.y[i] = 150; A.vx[i] = 0; A.vy[i] = 0; A.fatJ[i] = 0;
+    commanderPilote(B, 0, { id: A.id[i], cap: 0, av: 1, la: 0 }); if (course) commanderPilote(B, 0, { course: true });
+    for (let k = 0; k < pas; k++) avancer(B);
+    const j = [...Array(A.n).keys()].find(k => A.id[k] === B.pilotes[0].id);
+    return { d: A.x[j] - 200, P: B.pilotes[0], fat: A.fatJ[j], B };
+  };
+  const pied = marche(false), cours = marche(true);
+  assert.ok(cours.d > pied.d * 1.4, `il court : ${cours.d.toFixed(1)} m contre ${pied.d.toFixed(1)} m en marchant`);
+  assert.ok(cours.P.souffle > 0.5 && cours.fat > pied.fat, `essoufflé (${cours.P.souffle.toFixed(2)}), les jambes lourdes`);
+  cours.P.tir = { cap: 0, el: 0 }; avancer(cours.B); assert.match(cours.P.refus, /court/, 'pas de tir en courant');
+  assert.ok(amplitude(cours.B.armee, prem(cours.B), { souffle: 1 }) > 2 * amplitude(cours.B.armee, prem(cours.B)), 'essoufflé, le guidon danse');
+  // accroupi, couché : plus lent, plus bas, plus petit
+  const B = mk(), A = B.armee, i = prem(B);
+  commanderPilote(B, 0, { id: A.id[i], cap: 0, av: 1, la: 0 }); commanderPilote(B, 0, { posture: 1 });
+  assert.equal(B.pilotes[0].vit, 0.5); assert.equal(hauteurOeil(B.terrain, 200, 150, 1), 1.0); assert.equal(tailleDe(A, i, B.R, B.pilotes[0]), 1.0);
+  commanderPilote(B, 0, { posture: 2 }); assert.equal(B.pilotes[0].vit, 0.2); assert.equal(hauteurOeil(B.terrain, 200, 150, 2), 0.35);
+  commanderPilote(B, 0, { course: true }); assert.equal(B.pilotes[0].posture, 0, 'courir le relève');
+  assert.match(commanderPilote(B, 0, { posture: 1 }), /court/);
+  // un parapet de 2 m (8 quarts : un mur) à 1 m devant lui, au nord : en marchant il reste au pied ; Espace le pose dessus
+  const mur = (saut) => {
+    const C = mk(), A = C.armee, T = C.terrain, i = prem(C);
+    for (let y = 100; y < 149; y++) for (let x = 180; x < 220; x++) T.base[y * T.W + x] = 8;
+    A.x[i] = 200; A.y[i] = 150; A.vx[i] = 0; A.vy[i] = 0;
+    commanderPilote(C, 0, { id: A.id[i], cap: -Math.PI / 2, av: 1, la: 0 });
+    if (saut) commanderPilote(C, 0, { saut: true });
+    for (let k = 0; k < 60; k++) avancer(C);
+    const j = [...Array(A.n).keys()].find(k => A.id[k] === C.pilotes[0].id);
+    return { y: A.y[j], P: C.pilotes[0] };
+  };
+  assert.ok(mur(false).y > 149, 'en marchant, le mur l\'arrête'); const m = mur(true);
+  assert.ok(m.y < 149, `franchi : il est à y = ${m.y.toFixed(2)}`); assert.equal(m.P.saut, null, 'le saut est fini');
+  // rien devant lui : refusé à voix haute
+  commanderPilote(B, 0, { course: false }); commanderPilote(B, 0, { saut: true }); avancer(B); assert.match(B.pilotes[0].refus, /Rien à franchir/);
+});
