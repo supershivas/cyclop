@@ -1,5 +1,10 @@
 # Journal des versions
 
+## 0.153.0 — 2026-11-20
+- Les fiches d'un soldat, d'un régiment, d'un char, d'un avion et d'une mitrailleuse sont refaites sur un même modèle : la bande noire de la soirée, quatre chiffres clés, « Maintenant » et « Son parcours »
+- Plus de fiche qui défile : elle s'ouvre en haut à gauche, et son bouton rouge fait entrer dans l'unité (voir par ses yeux, monter à bord, choisir le régiment)
+- La fiche d'un régiment rend ses postures (à volonté, feu retenu) ; l'avion en vol a enfin une vraie fiche
+
 ## 0.152.1 — 2026-11-20
 - Si la nuit tombe pendant qu'on regarde par les yeux d'un soldat (ou qu'on suit un char, un avion), la vue se libère : la soirée et ses actions s'affichent enfin
 - La courbe de la journée ne casse plus un soir sans mort

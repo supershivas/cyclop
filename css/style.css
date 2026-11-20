@@ -1399,3 +1399,66 @@ body.vue-verrouillee .char-fiche { display: none; }      /* la fiche cacherait l
 #soiree .ps3-c-tete .ps3-etat b { font-size: var(--texte); }
 #soiree .ps3-c-tete .ps3-etat small { min-width: 0; }
 body:has(#soiree:not([hidden])) #carte, body:has(#soiree:not([hidden])) #secteur { visibility: hidden; }
+
+/* ─── Les fiches, deuxième jet (Jérôme, 20 nov., v0.153.0 ; le sujet « Les données : les fiches » du labo, variante « La bande noire ») ───
+   Une charpente pour l'homme, le mort, le régiment, le char, l'avion et la mitrailleuse (hud/fiche-cadre.js) : la bande noire de la soirée, quatre chiffres clés, deux colonnes
+   de même hauteur (« Maintenant », « Son parcours »), le pied (le lien à gauche, UN bouton rouge sang à droite). Elle ne défile pas (mesuré à 1024 × 640 et au-delà). */
+.papier.fx { --action: #7a0f1c; --action-survol: #9b1426; --action-appui: #5a0a14;
+  position: fixed; left: var(--pas); top: calc(var(--jeu-cible) + 2 * var(--pas)); width: min(660px, calc(100vw - 2 * var(--pas))); max-height: none; min-height: 0; overflow: visible;
+  box-sizing: border-box; margin: 0; padding: 0 var(--e4) var(--e3); display: grid; grid-template-columns: minmax(0, 1fr); row-gap: var(--e3); color: var(--jeu-fond); z-index: 3; }
+.papier.fx[hidden] { display: none; }
+.fx-bande { display: flex; align-items: center; gap: var(--e3); margin: 0 calc(-1 * var(--e4)); padding: var(--pas) var(--e4); background: var(--jeu-fond); color: var(--jeu-encre); }
+.fx-ec .ecusson { width: 60px; } .fx-ec .ecusson svg { width: 60px; height: 42px; }
+.fx-titre { flex: 1 1 0; min-width: 0; }
+.papier.fx .fx-titre h2 { margin: 0; color: var(--jeu-encre); font-size: var(--texte-grand); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.fx-titre p { margin: 0; font-size: var(--texte-petit); letter-spacing: var(--lettres-etiquette); opacity: .8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.fx-tampon { padding: 2px var(--pas); border: 3px double var(--jeu-encre); transform: rotate(-4deg); text-transform: uppercase; letter-spacing: var(--lettres-etiquette); font-size: var(--texte-petit); font-weight: bold; white-space: nowrap; }
+.fx-tampon.orange { border-color: var(--jeu-ebranle); color: var(--jeu-ebranle); } .fx-tampon.rouge { border-color: var(--jeu-deroute); color: var(--jeu-deroute); }
+.fx-tampon.sang { background: var(--action); }
+.fx-icones { display: flex; gap: var(--e1); }
+.papier.fx .fx-icone { position: static; width: var(--jeu-cible); min-height: var(--jeu-cible); padding: 0; display: grid; place-items: center; background: transparent; color: var(--jeu-encre); border: 1px solid var(--jeu-accent); box-shadow: none; }
+.papier.fx .fx-icone svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2.2; }
+.papier.fx .fx-icone[aria-pressed="true"] { background: var(--jeu-encre); color: var(--jeu-fond); }
+.fx-cles { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); border-bottom: 1px solid var(--jeu-accent); padding-bottom: var(--e3); }
+.fx-cles:empty { display: none; }
+.fx-cle { padding: 0 var(--e3); border-left: 1px dashed var(--jeu-accent); display: grid; align-content: start; gap: var(--e1); min-width: 0; }
+.fx-cle:first-child { border-left: 0; padding-left: 0; }
+.fx-cle-c { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.fx-cle-c b { font-size: 28px; line-height: 1; } .fx-cle-c span { margin-left: var(--e1); font-size: var(--texte-petit); }
+.fx-cle small { font-size: var(--texte-petit); line-height: 1.3; }
+.fx-cle-g svg { display: block; width: 100%; height: 8px; }
+.fx-corps { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); column-gap: var(--e4); height: clamp(196px, calc(100dvh - 448px), 300px); overflow: hidden; }
+.fx-col { display: flex; flex-direction: column; gap: var(--e3); min-width: 0; min-height: 0; }
+.fx-col + .fx-col { border-left: 1px solid var(--jeu-accent); padding-left: var(--e4); }
+.papier.fx .fx-col > h3 { margin: 0; font-size: var(--texte-petit); text-transform: uppercase; letter-spacing: var(--lettres-etiquette); color: var(--jeu-accent); }
+.fx-blocs { display: flex; flex-direction: column; gap: var(--e3); }
+.papier.fx .fx-bloc h4, .papier.fx .fx-groupe h4 { margin: 0 0 var(--e1); font-size: var(--texte-petit); text-transform: uppercase; letter-spacing: var(--lettres-etiquette); }
+.fx-rang { display: grid; grid-template-columns: 7ch minmax(0, 1fr) 8ch; align-items: center; column-gap: var(--pas); min-height: 20px; font-size: var(--texte-petit); }
+.fx-rang.sans-nom { grid-template-columns: minmax(0, 1fr) auto; }
+.fx-rang .fx-g svg { display: block; width: 100%; } .fx-mot { text-align: right; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.fx-deux { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: var(--e3); }
+.fx-image .corps { width: 40px; height: 92px; } .fx-image svg { display: block; max-width: 100%; }
+.papier.fx .fx-ordre, .papier.fx .fx-gros, .papier.fx .fx-note { margin: 0; }
+.fx-gros { font-size: var(--texte-moyen); font-weight: bold; } .fx-note { font-size: var(--texte-petit); }
+.fx-chev { display: inline; } .fx-chev svg { width: 12px; height: 8px; stroke: currentColor; fill: none; stroke-width: 2; }
+.papier.fx .fx-lignes { margin: 0; padding-left: 1.1em; font-size: var(--texte-petit); }
+.papier.fx .fx-lignes:empty { display: none; }
+.papier.fx .fiche-liste { max-height: none; overflow: hidden; display: flex; flex-direction: column; gap: var(--pas); }
+.fx-puces { display: flex; flex-wrap: wrap; gap: var(--e1); align-items: center; }
+.papier.fx .fx-puce { display: inline-flex; align-items: center; width: auto; margin: 0; min-height: 28px; padding: 0 var(--pas); font-size: var(--texte-petit); border: 1px dashed var(--jeu-accent); background: transparent; box-shadow: none; }
+.papier.fx .fx-lien { min-height: var(--jeu-cible); padding: 0 var(--e3); background: transparent; border: 1px dashed var(--jeu-accent); box-shadow: none; color: inherit; text-decoration: underline; }
+.fx-bas { display: flex; justify-content: space-between; align-items: center; gap: var(--e3); margin: 0 calc(-1 * var(--e4)); padding: var(--e3) var(--e4) 0; border-top: 1px solid var(--jeu-accent); }
+.fx-bas-g { display: flex; gap: var(--pas); align-items: center; min-width: 0; }
+.papier.fx .bouton.fx-action { margin-left: auto; min-width: 14rem; min-height: var(--jeu-cible); background: var(--action); color: var(--jeu-encre); border-color: var(--jeu-fond); font-weight: bold; font-size: var(--texte-moyen); }
+@media (hover: hover) { .papier.fx .bouton.fx-action:hover { background: var(--action-survol); color: var(--jeu-encre); } }
+.papier.fx .bouton.fx-action:active { background: var(--action-appui); }
+.fx-seg { display: flex; } .papier.fx .fx-seg-b { min-height: var(--jeu-cible); padding: 0 var(--e3); box-shadow: none; }
+.papier.fx .fx-seg-b[aria-pressed="true"] { background: var(--jeu-fond); color: var(--jeu-encre); }
+.fx-ordres { display: grid; grid-template-columns: 1fr 1fr; gap: var(--e1); }
+.papier.fx .fx-o { display: flex; align-items: center; gap: var(--pas); min-height: var(--jeu-cible); padding: 0 var(--e3); }
+.papier.fx .fx-o svg { width: 18px; height: 18px; flex: none; }
+.papier.fx .fx-o[aria-pressed="true"] { background: var(--jeu-fond); color: var(--jeu-encre); }
+.papier.fx.char-fiche { right: auto; bottom: auto; transform: none; z-index: 4; }      /* (l'ancienne fenêtre d'un engin était posée à gauche des batteries) */
+.papier.fx.char-fiche.inactif .fx-o { opacity: .5; }
+.fx-passe { display: block; width: 100%; height: 40px; } .fx-passe-t { stroke: var(--jeu-accent); stroke-dasharray: 4 3; stroke-width: 2; fill: none; }
+.fx-passe-f { stroke: var(--jeu-fond); stroke-width: 3; fill: none; } .fx-passe-a { fill: var(--jeu-fond); }

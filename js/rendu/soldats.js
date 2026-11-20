@@ -1,19 +1,19 @@
 // Les hommes : les soldats (une boîte et son ombre ; de près la silhouette, plus loin une silhouette allégée ; aux zooms 1 et 2 un point), les anneaux des
 // régiments choisis ou survolés, les corps (un homme couché) et les tombes (un tertre et une croix). Tout est instancié et ne reçoit que ce qu'on voit.
 // Le dessin seulement. Les formes viennent de geometries.js, le GLSL de shaders.js.
-import * as SH from './shaders.js?v=0.152.1';
-import { creerGeometries } from './geometries.js?v=0.152.1';
-import { classeDuRang } from '../data/grades.js?v=0.152.1';
-import { creerEquipeArticulee } from './soldat-articule.js?v=0.152.1';
-import { creerJeuAnimations } from './animation-jeu.js?v=0.152.1';
-import { allures, allure, reposGeste, poseMort, chute } from '../anim-modeles.js?v=0.152.1';
-import { echantillon } from '../pose-soldat.js?v=0.152.1';
-import { NOMS_CHAMPS } from '../data/poses-soldat.js?v=0.152.1';
-import { ANIMATIONS } from '../data/animations.js?v=0.152.1';
-import { EPAULEMENT, MARCHE_JEU, GESTES, MORTS_JEU } from '../data/lecteur-animations.js?v=0.152.1';
-import { SANG } from '../data/aspect-soldat.js?v=0.152.1';
-import { ligneY } from '../tranchees.js?v=0.152.1';
-import { profondeurALEcran } from './vue-ecran.js?v=0.152.1';
+import * as SH from './shaders.js?v=0.153.0';
+import { creerGeometries } from './geometries.js?v=0.153.0';
+import { classeDuRang } from '../data/grades.js?v=0.153.0';
+import { creerEquipeArticulee } from './soldat-articule.js?v=0.153.0';
+import { creerJeuAnimations } from './animation-jeu.js?v=0.153.0';
+import { allures, allure, reposGeste, poseMort, chute } from '../anim-modeles.js?v=0.153.0';
+import { echantillon } from '../pose-soldat.js?v=0.153.0';
+import { NOMS_CHAMPS } from '../data/poses-soldat.js?v=0.153.0';
+import { ANIMATIONS } from '../data/animations.js?v=0.153.0';
+import { EPAULEMENT, MARCHE_JEU, GESTES, MORTS_JEU } from '../data/lecteur-animations.js?v=0.153.0';
+import { SANG } from '../data/aspect-soldat.js?v=0.153.0';
+import { ligneY } from '../tranchees.js?v=0.153.0';
+import { profondeurALEcran } from './vue-ecran.js?v=0.153.0';
 
 // `THREE`, `scene`, `col`, `solUniforms` (`uSol`, `uTaille` : la texture du sol, que l'ombre d'un soldat reprend), `styleSoldat` (le style de près, comparé au labo),
 // `grades` (v0.68.0 : une variante de `GRADES`, data/grades.js, ou null : tous pareils) et `rangDe(B, id, reg)` (le rang d'un homme, bataille.js) ; `surface(x, z)` et `surfaceLisse(x, z)` (la hauteur du sol, lissée pour qui marche), `solY` (la hauteur moyenne du sol) et `POINTS_JUSQUA` (le zoom où un soldat n'est
