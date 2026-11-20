@@ -200,6 +200,7 @@ export function creerSuivi({ $, bataille, rendu, reduit = () => false, retour = 
   function maj(dt) {
     if (!s) return;
     const B = bataille(); if (!B) { liberer(); return; }
+    if (B.etat.phase !== 'jour') { liberer(); return; }      // la nuit tombe (ou la bataille finit) : la vue rend la main, sinon la soirée s'ouvrait sous la vue d'un soldat, qui cache tout le HUD (v0.152.1)
     const c = cibleDe(B, s.genre, s.id, { memo: s, positions: rendu.positions, dt });
     if (!c) {
       if (s.genre === 'soldat') {

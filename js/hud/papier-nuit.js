@@ -135,8 +135,8 @@ export function medailles(p, { seules = false, loupes = true, plat = false, voir
 /* la bataille entière : les effectifs des deux camps (courbes), les morts de chaque jour (bâtons, nous au-dessus, eux dessous), les tronçons tenus le soir (une bande par jour) ; un même axe des jours */
 export function graphe(F, { larg = 520, haut = 200 } = {}) {
   const J = F.jours, dx = larg / J, x = k => dx * (k + 0.5), [n, e] = F.camps;
-  const hC = haut * 0.4, hB = haut * 0.42, y0 = hC + 6, mb = Math.max(...n.mortsParJour, ...e.mortsParJour), max = Math.max(n.initial, e.initial);
-  const min = Math.min(...n.effectifParJour, ...e.effectifParJour) * 0.9, yC = v => 4 + (1 - (v - min) / (max - min)) * (hC - 8);
+  const hC = haut * 0.4, hB = haut * 0.42, y0 = hC + 6, mb = Math.max(1, ...n.mortsParJour, ...e.mortsParJour), max = Math.max(n.initial, e.initial);
+  const min = Math.min(...n.effectifParJour, ...e.effectifParJour) * 0.9, yC = v => 4 + (1 - (v - min) / Math.max(1, max - min)) * (hC - 8);
   const courbe = c => `<polyline class="fin-courbe fin-${c ? 'eux' : 'nous'}" points="${F.camps[c].effectifParJour.map((v, k) => `${x(k).toFixed(1)},${yC(v).toFixed(1)}`).join(' ')}"/>` + F.camps[c].effectifParJour.map((v, k) => `<circle class="bi-${c ? 'eux' : 'nous'}" cx="${x(k).toFixed(1)}" cy="${yC(v).toFixed(1)}" r="2.5"><title>Jour ${k + 1} : ${v} vivants ${c ? 'en face' : 'chez nous'}</title></circle>`).join('');
   const b = Math.min(14, dx - 4), mid = y0 + hB / 2;
   const bat = n.mortsParJour.map((v, k) => { const h = v / mb * (hB / 2 - 2); return `<rect class="bi-nous" x="${(x(k) - b / 2).toFixed(1)}" y="${(mid - h).toFixed(1)}" width="${b.toFixed(1)}" height="${h.toFixed(1)}"><title>Jour ${k + 1} : ${v} morts chez nous</title></rect>`; }).join('')
