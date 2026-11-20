@@ -1,9 +1,8 @@
 {
-  "version": "0.152.0",
+  "version": "0.152.1",
   "date": "2026-11-20",
   "changes": [
-    "Dans la vue d'un soldat : Maj pour courir (essoufflé, il ne tire pas), C pour s'accroupir, X pour se coucher, Espace pour franchir un parapet ; P met en pause",
-    "On sent les coups : un arc de sang du côté du tireur, le monde qui penche, la balle qui frôle",
-    "Un obus tout près voile l'image et étouffe le son ; la peur assombrit le bord de l'image"
+    "Si la nuit tombe pendant qu'on regarde par les yeux d'un soldat (ou qu'on suit un char, un avion), la vue se libère : la soirée et ses actions s'affichent enfin",
+    "La courbe de la journée ne casse plus un soir sans mort"
   ]
 }

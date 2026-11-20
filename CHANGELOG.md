@@ -1,5 +1,9 @@
 # Journal des versions
 
+## 0.152.1 — 2026-11-20
+- Si la nuit tombe pendant qu'on regarde par les yeux d'un soldat (ou qu'on suit un char, un avion), la vue se libère : la soirée et ses actions s'affichent enfin
+- La courbe de la journée ne casse plus un soir sans mort
+
 ## 0.152.0 — 2026-11-20
 
 - Dans la vue d'un soldat : Maj pour courir (essoufflé, il ne tire pas), C pour s'accroupir, X pour se coucher, Espace pour franchir un parapet ; P met en pause
