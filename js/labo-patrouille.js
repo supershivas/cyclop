@@ -4,13 +4,13 @@
 // et le poste de mitrailleuse le plus proche tire ; couchés dans un trou d'obus, on ne l'est pas. Un clic : où aller ; Espace (ou le bouton) : se coucher, se relever.
 // La règle est pure (js/patrouille.js, chiffres : data/patrouille.js) ; ici, l'écran : le moteur (`pilote` : la règle écrit les places des hommes à chaque image), un calque 2D
 // (le but, la destination, l'alerte, les rafales, le compte), la caméra qui suit le groupe. Palette du jeu seulement.
-import { PALETTE as P } from './palette.js?v=0.153.0';
-import { ARTICULE } from './data/aspect-soldat.js?v=0.153.0';
-import { mourir, rangDe } from './bataille.js?v=0.153.0';
-import { aspect } from './aspect-soldat.js?v=0.153.0';
-import { caracteristiques } from './identite.js?v=0.153.0';
-import { creerPatrouille, pasPatrouille, allerA, coucher, vivants } from './patrouille.js?v=0.153.0';
-import { PATROUILLE } from './data/patrouille.js?v=0.153.0';
+import { PALETTE as P } from './palette.js?v=0.154.0';
+import { ARTICULE } from './data/aspect-soldat.js?v=0.154.0';
+import { mourir, rangDe } from './bataille.js?v=0.154.0';
+import { aspect } from './aspect-soldat.js?v=0.154.0';
+import { caracteristiques } from './identite.js?v=0.154.0';
+import { creerPatrouille, pasPatrouille, allerA, coucher, vivants } from './patrouille.js?v=0.154.0';
+import { PATROUILLE } from './data/patrouille.js?v=0.154.0';
 
 const el = (tag, css = '', ...kids) => { const e = document.createElement(tag); if (css) e.style.cssText = css; e.append(...kids.flat().filter(k => k != null)); return e; };
 const MONO = 'ui-monospace,"DejaVu Sans Mono",Menlo,Consolas,monospace';

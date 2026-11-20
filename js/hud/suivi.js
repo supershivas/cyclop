@@ -7,13 +7,13 @@
 //    tonneau, l'écran rouge, jusqu'à l'écrasement.
 // Rien de neuf dans le moteur que quelques réglages de la vue (`vue.haut`, `dist`, `portee`, `hors`, `roulis`, `secousse`, rendu3d.js) : la caméra du jeu orbite déjà autour d'un point visé, ici ce point
 // suit l'engin. Le dessin seulement : aucune lecture n'écrit dans la bataille. La vue se libère d'un geste sur la caméra (déplacer, tourner), Échap, le clic droit, ou le bouton ; la vue d'avant revient.
-import { positionDe } from '../avions.js?v=0.153.0';
-import { hauteurOeil, balancement, armeDe, aPortee } from '../tir-joueur.js?v=0.153.0';
-import { TIR_JOUEUR as TJ } from '../data/tir-joueur.js?v=0.153.0';
-import { CALIBRES } from '../data/calibres.js?v=0.153.0';
+import { positionDe } from '../avions.js?v=0.154.0';
+import { hauteurOeil, balancement, armeDe, aPortee } from '../tir-joueur.js?v=0.154.0';
+import { TIR_JOUEUR as TJ } from '../data/tir-joueur.js?v=0.154.0';
+import { CALIBRES } from '../data/calibres.js?v=0.154.0';
 // Les sensations de l'homme qu'on mène (v0.152.0) : le coup reçu (s), la balle qui frôle (s), le souffle d'un obus (portée en rayons du souffle, s de retour), la peur qui ferme le champ (opacité au plus)
 const SENS = { coup: 1.2, frole: 0.5, roulis: 0.07, choc: 3, chocDuree: 2.5, peur: 0.75 };
-import { indiceDe } from './lecture.js?v=0.153.0';
+import { indiceDe } from './lecture.js?v=0.154.0';
 
 const SOL_Y = 3;           // le niveau moyen du sol que vise la caméra (rendu3d.js : `SOL_Y`), pour calculer `vue.haut`
 const PORTEE = 700;        // m : le plan lointain d'une vue verrouillée (au ras du sol, la vue porte loin)
@@ -91,17 +91,17 @@ export function creerSuivi({ $, bataille, rendu, reduit = () => false, retour = 
   function tirer() {
     if (!s || s.genre !== 'soldat' || s.mort) return;
     if (enPause()) { dire('Le temps est arrêté : on ne tire pas.'); return; }
-    // un ennemi à moins de deux mètres devant lui : le clic frappe à la baïonnette (v0.153.0)
+    // un ennemi à moins de deux mètres devant lui : le clic frappe à la baïonnette (v0.154.0)
     const B = bataille(), cap = s.cap + s.lacet;
     if (B && s.indice >= 0 && aPortee(B.armee, s.indice, cap, TJ.melee.pres)) { piloter({ coup: true, cap: quart(cap) }); return; }
     piloter({ tir: true, cap: quart(s.cap + s.lacet), el: quart(-s.pitch) });      // `piloter` : seul, la commande s'applique tout de suite ; à deux, elle part aux deux machines (main.js)
   }
   /* Épauler (v0.151.0, Jérôme : « clic droit maintenu : épauler ») : le champ se resserre, le guidon tremble moins, il marche moins vite ; relâché, il baisse le fusil */
   const epauler = v => { if (!s || s.genre !== 'soldat' || s.epaule === v) return; s.epaule = v; rendu.fusilEpaule(v); piloter({ epaule: v }); };
-  /* Parer (v0.153.0) : le bouton droit quand un ennemi est tout près devant lui ; le fusil en travers, les coups de l'autre portent deux fois moins */
+  /* Parer (v0.154.0) : le bouton droit quand un ennemi est tout près devant lui ; le fusil en travers, les coups de l'autre portent deux fois moins */
   const parer = v => { if (!s || s.genre !== 'soldat' || !!s.parade === v) return; s.parade = v; rendu.fusilParade(v); piloter({ parade: v }); };
   const prochedevant = () => { const B = bataille(); return !!(B && s?.indice >= 0 && aPortee(B.armee, s.indice, s.cap + s.lacet, TJ.melee.pres * 1.25)); };
-  /* Un autre homme (Tab, v0.153.0) : le plus proche de son régiment encore debout (à défaut, de son camp), autour de l'homme qu'on mène ou de son corps */
+  /* Un autre homme (Tab, v0.154.0) : le plus proche de son régiment encore debout (à défaut, de son camp), autour de l'homme qu'on mène ou de son corps */
   function camarade() {
     const B = bataille(); if (!B || !s) return;
     const A = B.armee, d = B.etat.defunts?.[s.id], i0 = s.indice >= 0 && A.id[s.indice] === s.id ? s.indice : -1;
@@ -160,7 +160,7 @@ export function creerSuivi({ $, bataille, rendu, reduit = () => false, retour = 
       s.parade = false; s.amoi = false; s.vuFrappe = 0; rendu.fusilParade(false);
       dire('ZQSD marcher · Maj courir · C accroupi · X couché · Espace franchir · clic tirer · clic droit épauler · F baïonnette · R recharger · V à moi · Tab un autre · P pause · Échap revenir');
     }
-    if (mode === 'personne') { if (document.pointerLockElement) s.verrou = true; else { s.sourd = performance.now() + 400; s.attente = performance.now() + 2000; prendreSouris(); } } else rendreSouris();      // (Tab : la souris est déjà prise, v0.153.0)      // (sans capture au bout de 2 s : la souris libre sert)
+    if (mode === 'personne') { if (document.pointerLockElement) s.verrou = true; else { s.sourd = performance.now() + 400; s.attente = performance.now() + 2000; prendreSouris(); } } else rendreSouris();      // (Tab : la souris est déjà prise, v0.154.0)      // (sans capture au bout de 2 s : la souris libre sert)
     rendu.vue.roulis = 0; rendu.vue.secousse = 0; rendu.vue.fov = avant.fov;
     rouge.hidden = true; rouge.classList.remove('ecrase');
     badge.hidden = false; barres.hidden = mode !== 'cinema'; document.body.classList.toggle('vue-cinema', mode === 'cinema');
@@ -178,7 +178,7 @@ export function creerSuivi({ $, bataille, rendu, reduit = () => false, retour = 
     retour(avant.cx, avant.cz);           // le point visé glisse jusqu'où il était
     badge.hidden = true; barres.hidden = true; rouge.hidden = true; rouge.classList.remove('ecrase');
     document.body.classList.remove('vue-cinema', 'vue-verrouillee');
-    if (tombe) mort({ id: tombe.id, x: tombe.x, y: tombe.y });      // (l'homme qu'on menait est tombé : Échap ouvre sa fiche, la caméra glisse sur lui ; v0.153.0)
+    if (tombe) mort({ id: tombe.id, x: tombe.x, y: tombe.y });      // (l'homme qu'on menait est tombé : Échap ouvre sa fiche, la caméra glisse sur lui ; v0.154.0)
   }
 
   /* Les événements de la bataille de l'image : un tir de notre char suivi déclenche le coup d'œil vers l'explosion */
@@ -204,7 +204,7 @@ export function creerSuivi({ $, bataille, rendu, reduit = () => false, retour = 
     const c = cibleDe(B, s.genre, s.id, { memo: s, positions: rendu.positions, dt });
     if (!c) {
       if (s.genre === 'soldat') {
-        // il est tombé (sa fiche est gardée : `etat.defunts`) : on reste une seconde sur son corps, la vue tombe avec lui ; Tab prend un camarade, Échap rend la vue et ouvre sa fiche (v0.153.0)
+        // il est tombé (sa fiche est gardée : `etat.defunts`) : on reste une seconde sur son corps, la vue tombe avec lui ; Tab prend un camarade, Échap rend la vue et ouvre sa fiche (v0.154.0)
         // parti vivant (évacué, relevé) : la vue est libérée
         const d = B.etat.defunts?.[s.id];
         if (d && !s.mort) {

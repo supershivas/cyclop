@@ -2,12 +2,13 @@
 // Sur le champ : au-dessus de chaque char à nous, une petite étiquette (sa barre de canon qui se remplit, puis PRÊT ; ses points de vie) ; de lui à sa cible, une ligne pointillée et une croix
 // (de la cible qu'on lui a donnée : trait plein ; du carré d'ennemis qu'il a choisi : pointillé). Un clic sur l'étiquette le choisit. La fiche (`#char-fiche`) du char choisi : ses barres,
 // « Marcher » / « Cible » (le prochain clic sur le sol), « Arrêt », « Tir libre », « Fermer ». Le dessin et les boutons seulement : les ordres partent par `surOrdre(ordre)` (main.js).
-import { CHARS } from '../data/chars.js?v=0.153.0';
-import { NOUS } from '../bataille.js?v=0.153.0';
-import { chevronsDe, bonusEnMots } from '../data/experience.js?v=0.153.0';
-import { jauge as jaugeT, partage, tuilesDe } from './tuiles.js?v=0.153.0';
-import { reinitIds } from './bilan.js?v=0.153.0';
-import { REPERES } from './barres.js?v=0.153.0';
+import { CHARS } from '../data/chars.js?v=0.154.0';
+import { NOUS } from '../bataille.js?v=0.154.0';
+import { chevronsDe, bonusEnMots } from '../data/experience.js?v=0.154.0';
+import { jauge as jaugeT, partage, bande } from './tuiles.js?v=0.154.0';
+import { el, cle, rang, bloc, chevrons as chevronsF, poserEcusson, poserTampon } from './fiche-cadre.js?v=0.154.0';
+import { reinitIds } from './bilan.js?v=0.154.0';
+import { REPERES } from './barres.js?v=0.154.0';
 
 const REDUIT = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
 const NS = 'http://www.w3.org/2000/svg';
@@ -58,27 +59,30 @@ export function creerCharsHud({ $, bataille, moi = () => NOUS, versEcran, hauteu
     if (!c) return;
     const f = fraction(B, c), G = CHARS[c.modele].canon, vie = Math.max(0, Math.round(c.pv / (c.pvMax ?? CHARS[c.modele].pv) * 100));
     const roule = c.etat === 'avance' && c.ar !== undefined && (c.camp === 0 ? c.y > c.ar : c.y < c.ar), reste = Math.round(Math.hypot(c.tx - c.x, c.ty - c.y));
+    const nbc = chevronsDe(c.exp ?? 0), nTues = c.tues ?? 0, attente = f >= 1 && !c.vise, canonMot = attente ? 'chargé' : f >= 1 ? 'PRÊT' : `${secondes(B, c)} s`;
     $('char-fiche-titre').textContent = CHARS[c.modele].nom;
-    $('char-fiche-etat-court').textContent = c.etat === 'enlise' ? 'enlisé' : c.etat === 'arrive' ? 'à l\'arrêt' : roule ? 'sort du parc' : 'en marche';
+    $('char-fiche-qui').textContent = `Char d'assaut · au front depuis le ${c.jour === 1 ? '1er' : `${c.jour ?? '?'}e`} jour`;
+    poserTampon($('char-fiche-etat-court'), c.etat === 'enlise' ? 'Enlisé' : c.etat === 'arrive' ? 'À l\'arrêt' : roule ? 'Sort du parc' : 'En marche', c.etat === 'enlise' ? 'orange' : '');
+    poserEcusson($('char-fiche-ec'), 'char', { debout: vie / 100, chev: nbc });
     // l'ordre en cours : où il va, ce que son canon vise (v0.99.10 ; la fiche d'avant ne le disait pas)
     $('char-fiche-ordre').textContent = c.etat === 'enlise' ? 'Enlisé dans un trou ou dans l\'eau : il ne repart pas, il tire encore.'
       : c.etat === 'arrive' ? 'À l\'arrêt : il tient sa position et tire.'
       : roule ? `Roule vers l'arrière de nos lignes, puis vers son objectif (${reste} m).`
       : `Marche vers son objectif : encore ${reste} m.`;
-    const attente = f >= 1 && !c.vise;
     { const sv = suivi && suivi.genre === 'char' && suivi.id === c.id ? suivi.mode : null; $('char-fiche-vue').setAttribute('aria-pressed', sv === 'cinema'); $('char-fiche-personne').setAttribute('aria-pressed', sv === 'personne'); }
-    // ses tuiles (Jérôme, 8 nov. : les tuiles du labo) : la coque, le canon, ses victimes, ses obus, son expérience ; refaites quand une valeur change (le canon : chaque seconde), jamais à chaque image
-    const nbc = chevronsDe(c.exp ?? 0), nTues = c.tues ?? 0, canonMot = attente ? 'chargé' : f >= 1 ? 'PRÊT' : `${secondes(B, c)} s`;
+    // ses chiffres (la charpente des fiches, v0.153.0) : la coque, le canon, ses victimes, ses obus ; son parcours : les victimes par arme, l'expérience ; refaits quand une valeur change (le canon : chaque seconde)
     const sigFiche = [c.id, vie, canonMot, c.vise ? (c.cible && c.vise === c.cible ? 1 : 2) : 0, Math.round((c.exp ?? 0) * 100), nTues, c.tuesCanon ?? 0, c.tuesMitr ?? 0, c.repar ?? 0, c.obus ?? 0].join(':');
     if (sigFiche !== tuilesVues) {
       tuilesVues = sigFiche; reinitIds();
-      $('char-fiche-tuiles').replaceChildren(...tuilesDe([
-        { titre: 'Coque', chiffre: `${vie} %`, graphes: [['', jaugeT(vie / 100, { reperes: [0.25, 0.5] }), '']], mot: c.repar ? `${c.repar} réparation${c.repar > 1 ? 's' : ''} du génie` : 'jamais réparé' },
-        { titre: `Canon de ${G.calibre}`, chiffre: canonMot, graphes: [['', jaugeT(f), '']], mot: c.vise ? (c.cible && c.vise === c.cible ? 'sur la cible donnée' : 'sur le carré le plus chargé') : 'aucune cible à portée', aide: `Un obus tous les ${G.recharge} s, jusqu'à ${G.portee} m.` },
-        { titre: 'Victimes', chiffre: nTues, unite: nTues > 1 ? 'hommes' : 'homme', graphes: nTues ? [['', partage(c.tuesCanon ?? 0, c.tuesMitr ?? 0, { max: Math.max(nTues, 20) }), `canon ${c.tuesCanon ?? 0} · mitr. ${c.tuesMitr ?? 0}`]] : [], mot: nTues ? '' : 'aucune encore', aide: 'Les hommes qu\'il a abattus : du canon, des mitrailleuses.' },
-        { titre: 'Obus tirés', chiffre: c.obus ?? 0, unite: 'obus', aide: `Au front depuis le jour ${c.jour ?? '?'}` },
-        { titre: 'Expérience', graphes: [['', jaugeT(c.exp ?? 0, { reperes: REPERES.exp }), '']], chevrons: nbc, mot: nbc ? `Chevrons : ${bonusEnMots('char', nbc)}.` : 'Aucun bonus.' },
-      ]));
+      const tc = c.tuesCanon ?? 0, tm = c.tuesMitr ?? 0, max = Math.max(1, tc, tm);
+      $('char-fiche-cles').replaceChildren(
+        cle(vie, '%', `coque · ${c.repar ? `${c.repar} réparation${c.repar > 1 ? 's' : ''}` : 'jamais réparé'}`, jaugeT(vie / 100, { reperes: [0.25, 0.5], larg: 100, haut: 8 })),
+        cle(canonMot, '', `canon de ${G.calibre} · ${c.vise ? (c.cible && c.vise === c.cible ? 'la cible donnée' : 'le carré le plus chargé') : 'rien à portée'}`, jaugeT(f, { larg: 100, haut: 8 }), `# Canon de ${G.calibre}\nUn obus | tous les ${G.recharge} s\nPortée | ${G.portee} m`),
+        cle(nTues, nTues > 1 ? 'hommes' : 'homme', nTues ? `tués · ${tc} au canon, ${tm} aux mitr.` : 'aucune victime encore', nTues ? partage(tc, tm, { max: nTues, larg: 100, haut: 8 }) : ''),
+        cle(c.obus ?? 0, 'obus', 'tirés'));
+      $('char-fiche-tuiles').replaceChildren(
+        bloc('Victimes', [rang('Canon', partage(tc, 0, { max, larg: 140 }), String(tc)), rang('Mitr.', partage(0, tm, { max, larg: 140 }), String(tm))], '# Victimes\nLes hommes qu\'il a abattus | du canon, des mitrailleuses'),
+        bloc('Expérience', [rang('', jaugeT(c.exp ?? 0, { reperes: REPERES.exp }), ''), el('p', 'fx-note', chevronsF(nbc), ` ${nbc ? bonusEnMots('char', nbc) : 'novice · aucun bonus'}`)]));
     }
     const ab = c.pv < (c.pvMax ?? c.pv), rep = $('char-fiche-reparer');      // v0.130.0 : le génie répare à la base ; ce bouton ramène le char au parc
     if (rep) {
@@ -87,7 +91,7 @@ export function creerCharsHud({ $, bataille, moi = () => NOUS, versEcran, hauteu
       rep.setAttribute('aria-disabled', imp || c.rentre ? 'true' : 'false');
       rep.dataset.info = `# Rentrer au parc\nLe char regagne le parc à chars : il y reste avec ses dégâts, le génie peut l'y réparer (un clic sur lui, ou « Réparer » dans la fenêtre du parc), puis il ressort sur un ordre de la batterie Char. ${c.etat === 'enlise' ? '**Enlisé : il ne repart pas.**' : !ab ? 'Il n\'est pas abîmé, mais peut rentrer quand même.' : ''}`;
     }
-    for (const b of fiche.querySelectorAll('[data-char]')) { b.classList.toggle('vise', b.dataset.char === mode); b.classList.toggle('actif', b.dataset.char === mode); }
+    for (const b of fiche.querySelectorAll('.fx-o[data-char]')) b.setAttribute('aria-pressed', String(b.dataset.char === mode));
   }
   function oublier() { signature = ''; svg.innerHTML = ''; }
   return { maj, oublier };

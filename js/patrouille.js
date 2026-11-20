@@ -2,8 +2,8 @@
 // vient de `dt`), aucun hasard hors de la graine (`hash2`). Un groupe d'une quarantaine d'hommes va d'un point à un autre à travers le no man's land ; en face, des fusées s'ouvrent
 // au-dessus de lui ; un homme debout dans leur lumière se fait voir, couché dans un trou il ne se voit pas ; vu, le poste de mitrailleuse le plus proche tire.
 // Les chiffres : data/patrouille.js. Le terrain et les postes sont passés par le labo (`monde`) : la règle ne connaît pas la bataille.
-import { hash2 } from './lib/rng.js?v=0.153.0';
-import { PATROUILLE, FUSEES, REPERAGE, FEU_PATROUILLE } from './data/patrouille.js?v=0.153.0';
+import { hash2 } from './lib/rng.js?v=0.154.0';
+import { PATROUILLE, FUSEES, REPERAGE, FEU_PATROUILLE } from './data/patrouille.js?v=0.154.0';
 
 const entre = ([a, b], h) => a + (b - a) * h;
 

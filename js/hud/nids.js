@@ -1,13 +1,14 @@
 // Nos postes de mitrailleuse sur le champ et leur fiche (Jérôme, lot E : « on sélectionne le poste et on règle la direction du cône ; barre de vie, barre de munitions ; de l'xp »).
 // Sur le champ : au-dessus de chaque poste à nous, une étiquette (ses chevrons, sa vie, ses munitions, son expérience) ; un clic sur elle le choisit. La fiche (`#nid-fiche`) : les barres,
 // le bonus de ses chevrons, « Tourner » (le prochain clic sur le sol : la direction du cône), « Droit devant », « Fermer ». Le dessin et les boutons seulement : les ordres partent par `surBouton` (main.js).
-import { NIDS } from '../data/nids.js?v=0.153.0';
-import { bonusEnMots } from '../data/experience.js?v=0.153.0';
-import { chevronsNid, cadenceNid, servantNid, raisonInactif } from '../nids.js?v=0.153.0';
-import { jauge as jaugeT, bande, tuilesDe } from './tuiles.js?v=0.153.0';
-import { reinitIds } from './bilan.js?v=0.153.0';
-import { REPERES } from './barres.js?v=0.153.0';
-import { NOUS } from '../bataille.js?v=0.153.0';
+import { NIDS } from '../data/nids.js?v=0.154.0';
+import { bonusEnMots } from '../data/experience.js?v=0.154.0';
+import { chevronsNid, cadenceNid, servantNid, raisonInactif } from '../nids.js?v=0.154.0';
+import { jauge as jaugeT, bande } from './tuiles.js?v=0.154.0';
+import { el, cle, rang, bloc, phrase, chevrons as chevronsF, poserEcusson, poserTampon } from './fiche-cadre.js?v=0.154.0';
+import { reinitIds } from './bilan.js?v=0.154.0';
+import { REPERES } from './barres.js?v=0.154.0';
+import { NOUS } from '../bataille.js?v=0.154.0';
 
 const REDUIT = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
 export function creerNidsHud({ $, bataille, moi = () => NOUS, versEcran, hauteurSol, choisir, surBouton, pastilles }) {
@@ -50,8 +51,10 @@ export function creerNidsHud({ $, bataille, moi = () => NOUS, versEcran, hauteur
     }, [court, ordre] = MOTS[tait ? 'pris' : n.statut] ?? MOTS.veille;
     // sans servant (ou tronçon pris), la fenêtre est inactive : aucun ordre, les boutons grisés (v0.115.0)
     const inactif = raisonInactif(B, n), sv = servantNid(B, n, true), rs = sv >= 0 ? B.etat.regiments[B.armee.reg[sv]] : null;
-    $('nid-fiche-etat-court').textContent = inactif ? 'inactif' : court;
-    $('nid-fiche-ordre').textContent = inactif || `${ordre}${rs ? ` Servi par le ${rs.nom}.` : ''}`;
+    poserTampon($('nid-fiche-etat-court'), inactif ? 'Inactif' : court[0].toUpperCase() + court.slice(1), inactif || tait || n.muni <= 0 ? 'orange' : '');
+    poserEcusson($('nid-fiche-ec'), 'nid', { debout: vie / 100, chev: nb, vide: n.muni <= 0 });
+    $('nid-fiche-qui').textContent = `Poste de mitrailleuse · ${rs ? `servi par le ${rs.nom}` : 'sans servant'}`;
+    $('nid-fiche-ordre').textContent = inactif || ordre;
     fiche.classList.toggle('inactif', !!inactif);
     { const sv = suivi && suivi.genre === 'nid' && suivi.id === n.id ? suivi.mode : null; $('nid-fiche-vue').setAttribute('aria-pressed', sv === 'cinema'); $('nid-fiche-personne').setAttribute('aria-pressed', sv === 'personne'); }
     for (const b of fiche.querySelectorAll('[data-nid="tourner"],[data-nid="droit"]')) b.setAttribute('aria-disabled', inactif ? 'true' : 'false');
@@ -60,14 +63,17 @@ export function creerNidsHud({ $, bataille, moi = () => NOUS, versEcran, hauteur
     const sigFiche = [n.id, vie, n.muni, n.tues ?? 0, n.rafales ?? 0, Math.round((n.exp ?? 0) * 100), par].join(':');
     if (sigFiche !== tuilesVues) {
       tuilesVues = sigFiche; reinitIds();
-      $('nid-fiche-tuiles').replaceChildren(...tuilesDe([
-        { titre: 'Le poste', chiffre: `${vie} %`, graphes: [['', jaugeT(vie / 100, { reperes: [0.25, 0.5] }), '']] },
-        { titre: 'La bande', chiffre: n.muni, unite: `sur ${NIDS.munitions}`, graphes: [['', bande(n.muni, NIDS.munitions, { pas: 50 }), '']], mot: 'Refaite à l\'aube.' },
-        { titre: 'Victimes', chiffre: n.tues ?? 0, unite: (n.tues ?? 0) > 1 ? 'hommes' : 'homme', mot: `${n.rafales ?? 0} rafale${(n.rafales ?? 0) > 1 ? 's' : ''}${par ? ` · ${par}` : ''}` },
-        { titre: 'Expérience', graphes: [['', jaugeT(n.exp ?? 0, { reperes: REPERES.exp }), '']], chevrons: nb, mot: nb ? `Chevrons : ${bonusEnMots('nid', nb)}.` : 'Aucun bonus.' },
-      ]));
+      const tues = n.tues ?? 0, raf = n.rafales ?? 0;
+      $('nid-fiche-cles').replaceChildren(
+        cle(vie, '%', 'le poste', jaugeT(vie / 100, { reperes: [0.25, 0.5], larg: 100, haut: 8 })),
+        cle(n.muni, `sur ${NIDS.munitions}`, 'la bande · refaite à l\'aube', bande(n.muni, NIDS.munitions, { pas: 50, larg: 100, haut: 8 })),
+        cle(tues, tues > 1 ? 'hommes' : 'homme', tues > 1 ? 'abattus' : 'abattu'),
+        cle(raf, raf > 1 ? 'rafales' : 'rafale', raf > 1 ? 'tirées' : 'tirée'));
+      $('nid-fiche-tuiles').replaceChildren(
+        ...(par ? [bloc('Ses victimes', [phrase(par)], '# Ses victimes\nPar régiment d\'en face')] : []),
+        bloc('Expérience', [rang('', jaugeT(n.exp ?? 0, { reperes: REPERES.exp }), ''), el('p', 'fx-note', chevronsF(nb), ` ${nb ? bonusEnMots('nid', nb) : 'novice · aucun bonus'}`)]));
     }
-    for (const b of fiche.querySelectorAll('[data-nid]')) b.classList.toggle('actif', b.dataset.nid === mode);
+    for (const b of fiche.querySelectorAll('.fx-o[data-nid]')) b.setAttribute('aria-pressed', String(b.dataset.nid === mode));
   }
   function oublier() {}
   return { maj, oublier };

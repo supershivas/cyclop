@@ -75,7 +75,7 @@ Le cœur du travail : **un vol qui n'est plus une fonction du temps**.
 |---|---|---|---|
 | 1 | Soldat : vraie visée (balancement pur, zones du corps), épauler, magasin — **fait en v0.151.0**, avec la fiche du mort (`interface.md`, « La vraie visée ») | mineure | « le tir du joueur » étendu ; à deux : même balle |
 | 2 | Soldat : course, accroupi/ramper, parapet, sensations — **fait en v0.152.0** (`interface.md`, « Le corps de l'homme qu'on mène ») | mineure | marche et fatigue (`armee.test.mjs`) |
-| 3 | Soldat : baïonnette, charge, parade, crosse ; « À moi ! », Tab — **fait en v0.153.0** (`interface.md`, « Le corps à corps, « À moi ! », un autre homme ») | mineure | mêlée pilotée, test à deux |
+| 3 | Soldat : baïonnette, charge, parade, crosse ; « À moi ! », Tab — **fait en v0.154.0** (`interface.md`, « Le corps à corps, « À moi ! », un autre homme ») | mineure | mêlée pilotée, test à deux |
 | 4 | Char : conduite et canon à la main, bascules auto, retour au parc | mineure | `bataille.test.mjs` : conduite, enlisement inchangé, relue |
 | 5 | Avion : vol à la main, tir dans l'axe, retour et atterrissage automatiques | mineure | positions intégrées, relue en vol, `deux.mjs` |
 | 6 | Obstacles aux balles (arbres, amis, chars, servants), chute de la balle, grenades | correctif | rayon contre arbre, fratricide |

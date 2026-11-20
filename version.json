@@ -1,5 +1,5 @@
 {
-  "version": "0.153.0",
+  "version": "0.154.0",
   "date": "2026-11-20",
   "changes": [
     "Dans la vue d'un soldat : F (ou le clic quand un ennemi est à deux pas) frappe à la baïonnette ; en courant c'est une charge, sans cartouche un coup de crosse ; le clic droit pare quand l'ennemi est tout près",

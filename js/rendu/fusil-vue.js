@@ -28,7 +28,7 @@ export function creerFusilVue({ THREE, renderer, PALETTE }) {
   arme.position.set(repos.x, repos.y, repos.z); arme.rotation.set(0.1, 0.1, 0);
   sc.add(arme);
   const vise = { x: 0, y: -0.088, z: -0.2 };      // épaulé (v0.151.0) : la crosse à l'épaule, le guidon au milieu de l'image
-  let recul = 0, flash = 0, t = 0, ep = 0, epVoulu = 0, pousse = -1, pa = 0, paVoulu = 0;      // (le coup de baïonnette : `pousse` de 0 à 1 ; la parade : le fusil en travers, v0.153.0)
+  let recul = 0, flash = 0, t = 0, ep = 0, epVoulu = 0, pousse = -1, pa = 0, paVoulu = 0;      // (le coup de baïonnette : `pousse` de 0 à 1 ; la parade : le fusil en travers, v0.154.0)
   return {
     tir() { recul = 1; flash = 0.07; },
     epaule(v) { epVoulu = v ? 1 : 0; },

@@ -4,10 +4,10 @@
    qu'il traverse est touché là où la balle passe (la tête, le tronc, un bras, les jambes : v0.151.0, plus de jet de dés pour toucher, la balle part où est le guidon, `balancement`), et frappé comme par
    n'importe quel tir (`frapper` : un blessé ou un mort selon l'endroit, crédité au tireur). Un magasin par pilote (Lebel 8 + 1, Mauser 5), rechargé à la demande. Rend dans `B.pilotes[camp].dernier`
    ce que l'écran doit montrer : { n (le coup), touche, mort, zone }, et dans `B.pilotes[camp].refus` pourquoi un coup n'est pas parti. */
-import { hauteurQ } from './terrain.js?v=0.153.0';
-import { gagner } from './army.js?v=0.153.0';
-import { hash2 } from './lib/rng.js?v=0.153.0';
-import { TIR_JOUEUR as TJ } from './data/tir-joueur.js?v=0.153.0';
+import { hauteurQ } from './terrain.js?v=0.154.0';
+import { gagner } from './army.js?v=0.154.0';
+import { hash2 } from './lib/rng.js?v=0.154.0';
+import { TIR_JOUEUR as TJ } from './data/tir-joueur.js?v=0.154.0';
 
 /* La hauteur de l'œil de l'homme debout en (x, y) au-dessus de ses pieds : 1,6 m, et la banquette de tir dans une tranchée (`T.diff` ≤ −2 quarts : creusée) */
 export function hauteurOeil(T, x, y, posture = 0) { const c = (y | 0) * T.W + (x | 0); return posture ? TJ.postures[posture].oeil : TJ.oeil + (T.diff[c] <= -2 ? TJ.banquette : 0); }      // (accroupi ou couché : la banquette ne sert plus)
@@ -138,7 +138,7 @@ export function aPortee(A, i, cap, portee = TJ.melee.portee) {
   }
   return best;
 }
-/* Un coup de baïonnette (v0.153.0) ; la crosse sans cartouche ; la charge en courant. Rend dans `P.frappe` : { n, touche, mort, crosse } ; un refus dans `P.refus` */
+/* Un coup de baïonnette (v0.154.0) ; la crosse sans cartouche ; la charge en courant. Rend dans `P.frappe` : { n, touche, mort, crosse } ; un refus dans `P.refus` */
 function frapperDe(B, ctx, rng, P) {
   const demande = P.coupDemande; P.coupDemande = null;
   const A = B.armee, { R } = ctx, M = TJ.melee, MF = R.melee, PG = R.progression, i = indice(A, P.id);

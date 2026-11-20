@@ -1721,7 +1721,7 @@ test('le corps de l\'homme qu\'on mène (v0.152.0) : il court plus vite et s\'es
   commanderPilote(B, 0, { course: false }); commanderPilote(B, 0, { saut: true }); avancer(B); assert.match(B.pilotes[0].refus, /Rien à franchir/);
 });
 
-test('le corps à corps de l\'homme qu\'on mène (v0.153.0) : la baïonnette devant lui, ses refus, la crosse sans cartouche ; la foule ne frappe plus à sa place ; « À moi ! » rassemble son régiment', () => {
+test('le corps à corps de l\'homme qu\'on mène (v0.154.0) : la baïonnette devant lui, ses refus, la crosse sans cartouche ; la foule ne frappe plus à sa place ; « À moi ! » rassemble son régiment', () => {
   const mk = () => { const B = petite(); B.terrain.base.fill(0); B.terrain.diff.fill(0); return B; };
   const B = mk(), A = B.armee, i = [...Array(A.n).keys()].find(k => A.camp[k] === 0), j = [...Array(A.n).keys()].find(k => A.camp[k] === 1);
   const place = (dy = 1.2) => { A.x[i] = 200; A.y[i] = 150; A.x[j] = 200; A.y[j] = 150 - dy; for (const k of [i, j]) { A.vx[k] = 0; A.vy[k] = 0; A.mort[k] = 0; A.blessure[k] = 0; A.peur[k] = 0; A.fatB[k] = 0; } A.peur[j] = 1; };      // (l'ennemi terrifié ne frappe pas)

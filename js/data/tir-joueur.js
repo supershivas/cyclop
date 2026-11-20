@@ -36,7 +36,7 @@ export const TIR_JOUEUR = {
   ],
   // franchir : un rebord de `marche` à `max` quarts (0,5 à 2,5 m) à moins de `portee` m devant lui ; il se pose `pose` m au-delà du pied du rebord en `duree` s ; ses jambes s'y fatiguent d'autant
   saut: { marche: 2, max: 10, portee: 1.4, pose: 0.6, duree: 1.2, fatigue: 0.04 },
-  // Le corps à corps de l'homme qu'on mène (v0.153.0, lot 3) : F (ou le clic, un ennemi à moins de `pres` m devant lui) frappe dans un cône de `cone` rad (demi-angle) jusqu'à `portee` m,
+  // Le corps à corps de l'homme qu'on mène (v0.154.0, lot 3) : F (ou le clic, un ennemi à moins de `pres` m devant lui) frappe dans un cône de `cone` rad (demi-angle) jusqu'à `portee` m,
   // un coup toutes les `periode` s ; la chance : `touche` × la force contre l'endurance (comme la mêlée de la foule : reglages.js) × les bras fatigués × la justesse (`centre` au milieu du cône, `bord` au bord) ;
   // en courant (la charge) × `charge` ; sans cartouche, la crosse (moins mortelle : `crosse`, elle laisse une blessure à la tête) ; la parade (le bouton droit, un ennemi tout près) : les coups de l'adversaire × `parade`
   melee: { pres: 2, portee: 1.8, cone: 0.44, periode: 0.9, touche: 0.5, centre: 1.3, bord: 0.7, charge: 1.4, crosse: 0.15, parade: 0.5 },

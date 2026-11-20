@@ -25,12 +25,12 @@
      (rng.js), pour que la même graine rejoue la même bataille.
 
    Logique pure : aucun DOM. Le rendu lit les tableaux (rendu3d.js). */
-import { hauteurQ, vitesseCase } from './terrain.js?v=0.153.0';
-import { ligneY } from './tranchees.js?v=0.153.0';
-import { TOITS } from './data/nids.js?v=0.153.0';
-import { caracteristiques } from './identite.js?v=0.153.0';
-import { BONUS } from './data/experience.js?v=0.153.0';
-import { TIR_JOUEUR as TJ } from './data/tir-joueur.js?v=0.153.0';
+import { hauteurQ, vitesseCase } from './terrain.js?v=0.154.0';
+import { ligneY } from './tranchees.js?v=0.154.0';
+import { TOITS } from './data/nids.js?v=0.154.0';
+import { caracteristiques } from './identite.js?v=0.154.0';
+import { BONUS } from './data/experience.js?v=0.154.0';
+import { TIR_JOUEUR as TJ } from './data/tir-joueur.js?v=0.154.0';
 
 export const GRILLE = 2;           // m : cases de voisinage
 export const DENSITE = 8;          // m : carrés de densité (tir)
@@ -236,7 +236,7 @@ export function pasArmee(A, ctx) {
       if (h) { pl[0] = h.x; pl[1] = h.y; } else { pl[0] = xi; pl[1] = camp[i] === 0 ? Math.max(yi, ctx.arriere[0]) : Math.min(yi, ctx.arriere[1]); }
     }
     else place(o, slot[i], pl);
-    // « À moi ! » (v0.153.0) : le joueur appelle ; un homme de son régiment à moins de `amoi.rayon` m le rejoint (à `amoi.pres` m de lui, du côté que donne son `rnd`), en ligne droite
+    // « À moi ! » (v0.154.0) : le joueur appelle ; un homme de son régiment à moins de `amoi.rayon` m le rejoint (à `amoi.pres` m de lui, du côté que donne son `rnd`), en ligne droite
     const appel = ctx.amoi?.get(reg[i]);
     let suit = false;
     if (appel && !retrait && appel.id !== A.id[i] && !r.deroute) {
@@ -331,7 +331,7 @@ export function pasArmee(A, ctx) {
         tirT[i] = M.periode * (0.7 + 0.6 * rng());
         if (peur[i] < Sd.terreur) {
           const j = ennemi;
-          const pare = ctx.pilotes?.get(A.id[j])?.parade ? TJ.melee.parade : 1;      // l'homme qu'on mène pare (v0.153.0)
+          const pare = ctx.pilotes?.get(A.id[j])?.parade ? TJ.melee.parade : 1;      // l'homme qu'on mène pare (v0.154.0)
           const chance = pare * (ctx.infanterie?.[A.camp[i]].melee ?? 1) * M.touche * (0.55 + M.force * A.force[i] / 100) * (1.3 - M.endurance * A.endurance[j] / 100) * (1 - 0.4 * fatB[i]) * (1 + R.experience.adresse * A.exp[i]);
           fatB[i] = Math.min(1, fatB[i] + M.fatigue);
           A.exp[i] = Math.min(1, A.exp[i] + R.experience.tir);

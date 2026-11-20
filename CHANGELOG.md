@@ -1,10 +1,16 @@
 # Journal des versions
 
-## 0.153.0 — 2026-11-20
+## 0.154.0 — 2026-11-20
 
 - Dans la vue d'un soldat : F (ou le clic quand un ennemi est à deux pas) frappe à la baïonnette ; en courant c'est une charge, sans cartouche un coup de crosse ; le clic droit pare quand l'ennemi est tout près
 - V maintenue : « À moi ! », les hommes de son régiment autour de lui le rejoignent
 - Tab passe à un camarade ; quand l'homme tombe, la vue tombe avec lui, puis Tab prend un camarade et Échap ouvre sa fiche
+
+## 0.153.0 — 2026-11-20
+
+- Les fiches d'un soldat, d'un régiment, d'un char, d'un avion et d'une mitrailleuse sont refaites sur un même modèle : la bande noire de la soirée, quatre chiffres clés, « Maintenant » et « Son parcours »
+- Plus de fiche qui défile : elle s'ouvre en haut à gauche, et son bouton rouge fait entrer dans l'unité (voir par ses yeux, monter à bord, choisir le régiment)
+- La fiche d'un régiment rend ses postures (à volonté, feu retenu) ; l'avion en vol a enfin une vraie fiche
 
 ## 0.152.1 — 2026-11-20
 

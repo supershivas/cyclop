@@ -9,9 +9,9 @@
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta property="og:image" content="og.png">
-<link rel="stylesheet" href="js/lib/game.css?v=0.153.0">
-<link rel="stylesheet" href="css/style.css?v=0.153.0">
-<link rel="stylesheet" href="css/ds-v2.css?v=0.153.0">
+<link rel="stylesheet" href="js/lib/game.css?v=0.154.0">
+<link rel="stylesheet" href="css/style.css?v=0.154.0">
+<link rel="stylesheet" href="css/ds-v2.css?v=0.154.0">
 </head>
 <body class="charge">
 <!-- La barre de chargement (v0.28.0) : là avant tout script ; main.js la remplit, puis la retire. `body.charge` (v0.100.0) : tout le reste de l'écran est caché tant qu'elle est là (le menu et le titre ne se voient plus derrière) -->
@@ -71,17 +71,33 @@
           </div>
           <ol id="carnet-liste"></ol>
         </div>
-      <section class="papier fiche" id="fiche" hidden aria-live="polite">
-        <button class="icone fiche-fermer" id="fiche-fermer" aria-label="Fermer la fiche" data-info="# Fermer la fiche">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
-        </button>
-        <h2 id="fiche-nom"></h2>
-        <p class="discret" id="fiche-qui"></p>
-        <button class="lien" id="fiche-regiment" hidden></button>
-        <button class="bouton" id="fiche-oeil" hidden data-info="# Voir par ses yeux&#10;ZQSD pour marcher, la souris pour regarder, Échap pour revenir">Voir par ses yeux</button>
-        <div class="fiche-tuiles" id="fiche-tuiles" hidden></div>
-        <ul id="fiche-etat"></ul>
-        <div class="fiche-liste" id="fiche-liste"></div>
+      <section class="papier fiche fx" id="fiche" hidden aria-live="polite">
+        <header class="fx-bande">
+          <span class="fx-ec" id="fiche-ec" aria-hidden="true"></span>
+          <div class="fx-titre"><h2 id="fiche-nom"></h2><p id="fiche-qui"></p></div>
+          <span class="fx-tampon" id="fiche-tampon" hidden></span>
+          <div class="fx-icones">
+            <button class="fx-icone fiche-fermer" id="fiche-fermer" aria-label="Fermer la fiche" data-info="# Fermer la fiche&#10;Échap | aussi">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+            </button>
+          </div>
+        </header>
+        <div class="fx-cles" id="fiche-cles"></div>
+        <div class="fx-corps">
+          <div class="fx-col"><h3 id="fiche-col-g">Maintenant</h3><div class="fx-blocs" id="fiche-tuiles"></div><ul class="fx-lignes" id="fiche-etat"></ul></div>
+          <div class="fx-col"><h3 id="fiche-col-d">Son parcours</h3><div class="fx-blocs" id="fiche-parcours"></div><div class="fiche-liste" id="fiche-liste"></div></div>
+        </div>
+        <footer class="fx-bas">
+          <div class="fx-bas-g">
+            <button class="fx-lien" id="fiche-regiment" hidden></button>
+            <div class="fx-seg" id="fiche-postures" hidden role="group" aria-label="Posture">
+              <button type="button" class="fx-seg-b" data-stance="volonte" data-info="# À volonté&#10;Ils tirent dès qu'ils voient&#10;Touche | Maj+1">À volonté</button>
+              <button type="button" class="fx-seg-b" data-stance="retenu" data-info="# Feu retenu&#10;Ils ne tirent que de près&#10;Touche | Maj+2">Feu retenu</button>
+            </div>
+          </div>
+          <button class="bouton ps-action fx-action" id="fiche-oeil" hidden data-info="# Voir par ses yeux&#10;ZQSD | marcher&#10;La souris | regarder&#10;Échap | revenir">Voir par ses yeux</button>
+          <button class="bouton ps-action fx-action" id="fiche-choisir" hidden data-info="# Choisir le régiment&#10;Puis un clic sur le sol | l'ordre d'y aller">Choisir le régiment</button>
+        </footer>
       </section>
       </div>
       <!-- En haut au centre : les pertes des deux armées, et la nuit, le papier qui les remplace (v0.26.0) -->
@@ -131,37 +147,65 @@
         </section>
               </div>
     </div>
-    <section class="papier reg-ouvert char-fiche" id="nid-fiche" hidden aria-label="Le poste de mitrailleuse choisi">
-      <div class="tete"><b>Mitrailleuse</b><span id="nid-fiche-etat-court"></span><button type="button" class="aide vue" data-nid="vue" id="nid-fiche-vue" aria-label="Vue verrouillée" aria-pressed="false" data-info="# Vue verrouillée&#10;La caméra tourne lentement autour du poste, près du sol, comme un plan de cinéma. Échap ou le même bouton la libère."><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14"/><path d="M3 9h18M3 15h18"/></svg></button><button type="button" class="aide vue" data-nid="personne" id="nid-fiche-personne" aria-label="À la première personne" aria-pressed="false" data-info="# À la première personne&#10;La caméra est à l'œil du servant et regarde où pointe le cône de tir. Échap ou le même bouton la libère."><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s4-6.5 10-6.5S22 12 22 12s-4 6.5-10 6.5S2 12 2 12z"/><circle cx="12" cy="12" r="2.8"/></svg></button></div>
-      <div class="compte" id="nid-fiche-ordre"></div>
-      <div class="fiche-tuiles fine" id="nid-fiche-tuiles"></div>
-      <div class="actions" style="--cols:2">
-        <button type="button" data-nid="tourner" data-info="# Tourner&#10;Le prochain clic sur le sol : la direction du cône de tir (70° de chaque côté de la direction d'origine).">Tourner</button>
-        <button type="button" data-nid="droit" data-info="# Droit devant&#10;Le cône revient face à l'ennemi.">Droit devant</button>
-        <button type="button" data-nid="fermer">Fermer</button>
+    <section class="papier fx char-fiche" id="nid-fiche" hidden aria-label="Le poste de mitrailleuse choisi">
+      <header class="fx-bande">
+        <span class="fx-ec" id="nid-fiche-ec" aria-hidden="true"></span>
+        <div class="fx-titre"><h2 id="nid-fiche-titre">Mitrailleuse</h2><p id="nid-fiche-qui"></p></div>
+        <span class="fx-tampon" id="nid-fiche-etat-court"></span>
+        <div class="fx-icones">
+          <button type="button" class="fx-icone vue" data-nid="vue" id="nid-fiche-vue" aria-label="Vue verrouillée" aria-pressed="false" data-info="# Vue verrouillée&#10;La caméra tourne lentement autour du poste, comme un plan de cinéma&#10;Échap | la libère"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 8V3h5M16 3h5v5M21 16v5h-5M8 21H3v-5"/><circle cx="12" cy="12" r="2.5"/></svg></button>
+          <button type="button" class="fx-icone" data-nid="fermer" aria-label="Fermer la fiche" data-info="# Fermer la fiche"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+        </div>
+      </header>
+      <div class="fx-cles" id="nid-fiche-cles"></div>
+      <div class="fx-corps">
+        <div class="fx-col"><h3>Maintenant</h3><p class="fx-ordre" id="nid-fiche-ordre"></p><div class="fx-ordres"><button type="button" class="fx-o" data-nid="tourner" data-info="# Tourner&#10;Le prochain clic sur le sol | la direction du cône&#10;Jusqu'à | 70° de chaque côté"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 12a8 8 0 1 1-3-6.2M20 4v5h-5"/></svg><span>Tourner</span></button><button type="button" class="fx-o" data-nid="droit" data-info="# Droit devant&#10;Le cône revient face à l'ennemi"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21V4M5 10l7-7 7 7"/></svg><span>Droit devant</span></button></div></div>
+        <div class="fx-col"><h3>Son parcours</h3><div class="fx-blocs" id="nid-fiche-tuiles"></div></div>
       </div>
+      <footer class="fx-bas">
+        <div class="fx-bas-g"><span class="fx-note">Le cône : 70° de chaque côté de sa direction d'origine</span></div>
+        <button type="button" class="bouton ps-action fx-action" data-nid="personne" id="nid-fiche-personne" aria-pressed="false" data-info="# À la première personne&#10;La caméra est à l'œil du servant, elle regarde où pointe le cône&#10;Échap | la libère">Prendre la pièce</button>
+      </footer>
     </section>
-    <section class="papier reg-ouvert char-fiche" id="char-fiche" hidden aria-label="Le char choisi">
-      <div class="tete"><b id="char-fiche-titre">Char</b><span id="char-fiche-etat-court"></span><button type="button" class="aide vue" data-char="vue" id="char-fiche-vue" aria-label="Vue verrouillée" aria-pressed="false" data-info="# Vue verrouillée&#10;La caméra tourne lentement autour du char, près du sol, comme un plan de cinéma. Échap ou le même bouton la libère."><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14"/><path d="M3 9h18M3 15h18"/></svg></button><button type="button" class="aide vue" data-char="personne" id="char-fiche-personne" aria-label="À la première personne" aria-pressed="false" data-info="# À la première personne&#10;La caméra est à l'œil de l'équipage et regarde où le char va. Échap ou le même bouton la libère."><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s4-6.5 10-6.5S22 12 22 12s-4 6.5-10 6.5S2 12 2 12z"/><circle cx="12" cy="12" r="2.8"/></svg></button></div>
-      <div class="compte" id="char-fiche-ordre"></div>
-      <div class="fiche-tuiles fine" id="char-fiche-tuiles"></div>
-      <div class="actions" style="--cols:2">
-        <button type="button" data-char="reparer" id="char-fiche-reparer">Rentrer au parc</button>
-        <button type="button" data-char="marche" data-info="# Marcher&#10;Le prochain clic sur le sol : où le char va.">Marcher</button>
-        <button type="button" data-char="cible" data-info="# Cible&#10;Le prochain clic sur le sol : ce que son canon vise, tant que c'est à portée.">Cible</button>
-        <button type="button" data-char="arret" data-info="# Arrêt&#10;Il s'arrête et continue de tirer.">Arrêt</button>
-        <button type="button" data-char="libre" data-info="# Tir libre&#10;Il choisit lui-même le carré le plus chargé d'ennemis.">Tir libre</button>
-        <button type="button" data-char="fermer">Fermer</button>
+    <section class="papier fx char-fiche" id="char-fiche" hidden aria-label="Le char choisi">
+      <header class="fx-bande">
+        <span class="fx-ec" id="char-fiche-ec" aria-hidden="true"></span>
+        <div class="fx-titre"><h2 id="char-fiche-titre">Char</h2><p id="char-fiche-qui"></p></div>
+        <span class="fx-tampon" id="char-fiche-etat-court"></span>
+        <div class="fx-icones">
+          <button type="button" class="fx-icone vue" data-char="vue" id="char-fiche-vue" aria-label="Vue verrouillée" aria-pressed="false" data-info="# Vue verrouillée&#10;La caméra tourne lentement autour du char, comme un plan de cinéma&#10;Échap | la libère"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 8V3h5M16 3h5v5M21 16v5h-5M8 21H3v-5"/><circle cx="12" cy="12" r="2.5"/></svg></button>
+          <button type="button" class="fx-icone" data-char="fermer" aria-label="Fermer la fiche" data-info="# Fermer la fiche"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+        </div>
+      </header>
+      <div class="fx-cles" id="char-fiche-cles"></div>
+      <div class="fx-corps">
+        <div class="fx-col"><h3>Maintenant</h3><p class="fx-ordre" id="char-fiche-ordre"></p><div class="fx-ordres"><button type="button" class="fx-o" data-char="marche" data-info="# Marcher&#10;Le prochain clic sur le sol | où le char va"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20L20 4M20 4h-8M20 4v8"/></svg><span>Marcher</span></button><button type="button" class="fx-o" data-char="cible" data-info="# Cible&#10;Le prochain clic sur le sol | ce que son canon vise, tant que c'est à portée"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="8"/><path d="M12 1v6M12 17v6M1 12h6M17 12h6"/></svg><span>Cible</span></button><button type="button" class="fx-o" data-char="arret" data-info="# Arrêt&#10;Il s'arrête et continue de tirer"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2"><rect x="6" y="6" width="12" height="12"/></svg><span>Arrêt</span></button><button type="button" class="fx-o" data-char="libre" data-info="# Tir libre&#10;Il choisit lui-même le carré le plus chargé d'ennemis"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l2.5 6.5L21 12l-6.5 2.5L12 21l-2.5-6.5L3 12l6.5-2.5z"/></svg><span>Tir libre</span></button></div></div>
+        <div class="fx-col"><h3>Son parcours</h3><div class="fx-blocs" id="char-fiche-tuiles"></div></div>
       </div>
+      <footer class="fx-bas">
+        <div class="fx-bas-g"><button type="button" class="bouton fx-sec" data-char="reparer" id="char-fiche-reparer">Rentrer au parc</button></div>
+        <button type="button" class="bouton ps-action fx-action" data-char="personne" id="char-fiche-personne" aria-pressed="false" data-info="# Monter à bord&#10;La caméra est à l'œil de l'équipage, sous le canon&#10;Échap | la libère">Monter à bord</button>
+      </footer>
     </section>
-    <section class="papier reg-ouvert char-fiche" id="avion-fiche" hidden aria-label="L'avion choisi">
-      <div class="tete"><b id="avion-fiche-titre">Avion</b><span id="avion-fiche-etat-court"></span><button type="button" class="aide vue" data-avion="vue" id="avion-fiche-vue" aria-label="Vue verrouillée" aria-pressed="false" data-info="# Vue verrouillée&#10;La caméra suit l'avion et tourne autour de lui, comme un plan de cinéma. Échap ou le même bouton la libère."><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14"/><path d="M3 9h18M3 15h18"/></svg></button><button type="button" class="aide vue" data-avion="personne" id="avion-fiche-personne" aria-label="À la première personne" aria-pressed="false" data-info="# À la première personne&#10;La caméra est dans le cockpit et regarde droit devant lui. Échap ou le même bouton la libère."><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s4-6.5 10-6.5S22 12 22 12s-4 6.5-10 6.5S2 12 2 12z"/><circle cx="12" cy="12" r="2.8"/></svg></button></div>
-      <div class="compte" id="avion-fiche-ordre"></div>
-      <div class="jauge"><span>Cellule</span><b id="avion-fiche-pv-t"></b><span class="piste barre"><i id="avion-fiche-pv"></i></span></div>
-      <div class="compte" id="avion-fiche-stats"></div>
-      <div class="actions" style="--cols:2">
-        <button type="button" data-avion="fermer">Fermer</button>
+    <section class="papier fx char-fiche" id="avion-fiche" hidden aria-label="L'avion choisi">
+      <header class="fx-bande">
+        <span class="fx-ec" id="avion-fiche-ec" aria-hidden="true"></span>
+        <div class="fx-titre"><h2 id="avion-fiche-titre">Avion</h2><p id="avion-fiche-qui"></p></div>
+        <span class="fx-tampon" id="avion-fiche-etat-court"></span>
+        <div class="fx-icones">
+          <button type="button" class="fx-icone vue" data-avion="vue" id="avion-fiche-vue" aria-label="Vue verrouillée" aria-pressed="false" data-info="# Vue verrouillée&#10;La caméra suit l'avion, comme un plan de cinéma&#10;Échap | la libère"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 8V3h5M16 3h5v5M21 16v5h-5M8 21H3v-5"/><circle cx="12" cy="12" r="2.5"/></svg></button>
+          <button type="button" class="fx-icone" data-avion="fermer" aria-label="Fermer la fiche" data-info="# Fermer la fiche"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+        </div>
+      </header>
+      <div class="fx-cles" id="avion-fiche-cles"></div>
+      <div class="fx-corps">
+        <div class="fx-col"><h3>Maintenant</h3><p class="fx-ordre" id="avion-fiche-ordre"></p><div class="fx-image" id="avion-fiche-passe"></div></div>
+        <div class="fx-col"><h3>Son parcours</h3><div class="fx-blocs" id="avion-fiche-tuiles"></div></div>
       </div>
+      <footer class="fx-bas">
+        <div class="fx-bas-g"><span class="fx-note">Il rentre seul au bout de sa passe</span></div>
+        <button type="button" class="bouton ps-action fx-action" data-avion="personne" id="avion-fiche-personne" aria-pressed="false" data-info="# Monter à bord&#10;La caméra est au bout de l'hélice, penchée vers le sol&#10;Échap | la libère">Monter à bord</button>
+      </footer>
     </section>
     <div class="peur-voile" id="peur-voile" hidden aria-hidden="true"></div><div class="choc" id="choc" hidden aria-hidden="true"></div><div class="coup" id="coup" hidden aria-hidden="true"></div>
     <svg class="viseur" id="viseur" hidden viewBox="-12 -12 24 24" aria-hidden="true"><path d="M-8 0h-4M8 0h4M0 -8v-4M0 8v4M0 -0.01v0.02"/><path class="marque" d="M-6 -6l3 3M6 -6l-3 3M-6 6l3 -3M6 6l-3 -3"/></svg>
@@ -380,6 +424,6 @@
 </dialog>
 
 <div class="jeu-toast" id="toast" role="status" hidden></div>
-<script type="module" src="js/main.js?v=0.153.0"></script>
+<script type="module" src="js/main.js?v=0.154.0"></script>
 </body>
 </html>
