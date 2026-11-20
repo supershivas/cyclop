@@ -7,13 +7,14 @@
 //    tonneau, l'écran rouge, jusqu'à l'écrasement.
 // Rien de neuf dans le moteur que quelques réglages de la vue (`vue.haut`, `dist`, `portee`, `hors`, `roulis`, `secousse`, rendu3d.js) : la caméra du jeu orbite déjà autour d'un point visé, ici ce point
 // suit l'engin. Le dessin seulement : aucune lecture n'écrit dans la bataille. La vue se libère d'un geste sur la caméra (déplacer, tourner), Échap, le clic droit, ou le bouton ; la vue d'avant revient.
-import { positionDe } from '../avions.js?v=0.154.0';
-import { hauteurOeil, balancement, armeDe, aPortee } from '../tir-joueur.js?v=0.154.0';
-import { TIR_JOUEUR as TJ } from '../data/tir-joueur.js?v=0.154.0';
-import { CALIBRES } from '../data/calibres.js?v=0.154.0';
+import { positionDe } from '../avions.js?v=0.155.0';
+import { hauteurOeil, balancement, armeDe, aPortee } from '../tir-joueur.js?v=0.155.0';
+import { TIR_JOUEUR as TJ } from '../data/tir-joueur.js?v=0.155.0';
+import { CALIBRES } from '../data/calibres.js?v=0.155.0';
+import { CHARS } from '../data/chars.js?v=0.155.0';
 // Les sensations de l'homme qu'on mène (v0.152.0) : le coup reçu (s), la balle qui frôle (s), le souffle d'un obus (portée en rayons du souffle, s de retour), la peur qui ferme le champ (opacité au plus)
 const SENS = { coup: 1.2, frole: 0.5, roulis: 0.07, choc: 3, chocDuree: 2.5, peur: 0.75 };
-import { indiceDe } from './lecture.js?v=0.154.0';
+import { indiceDe } from './lecture.js?v=0.155.0';
 
 const SOL_Y = 3;           // le niveau moyen du sol que vise la caméra (rendu3d.js : `SOL_Y`), pour calculer `vue.haut`
 const PORTEE = 700;        // m : le plan lointain d'une vue verrouillée (au ras du sol, la vue porte loin)
@@ -55,7 +56,8 @@ function cibleDe(B, genre, id, ctx = {}) {
     const c = B.etat.chars.find(k => k.id === id); if (!c) return null;
     const cap = c.cap ?? Math.atan2(c.hy, c.hx), co = Math.cos(cap), si = Math.sin(cap);
     const px = c.x + co * CANON.avant - si * CANON.droite, py = c.y + si * CANON.avant + co * CANON.droite;
-    const vise = c.vise && c.etat !== 'detruit' ? c.vise : null, regard = vise ? Math.atan2(vise[1] - py, vise[0] - px) : cap;
+    // conduit à la main (v0.155.0) : on regarde devant la coque (la souris tourne le regard), le canon tire où l'on vise ; sinon vers sa cible
+    const vise = c.vise && c.etat !== 'detruit' && !ctx.memo?.conduit ? c.vise : null, regard = vise ? Math.atan2(vise[1] - py, vise[0] - px) : cap;
     return { x: c.x, y: c.y, cap, regard: 1.6, zoom: 6, nom: c.etat === 'detruit' ? 'Épave de char' : 'Char', camp: c.camp, perso: { x: px, y: py, h: CANON.haut, cap: regard, tangage: CANON.tangage } };
   }
   if (genre === 'nid') {
@@ -71,9 +73,9 @@ function cibleDe(B, genre, id, ctx = {}) {
     perso: { x: p.x + co * (sol ? 0 : BOUT), y: p.y + si * (sol ? 0 : BOUT), h: p.h + 0.3, cap: p.cap, tangage: 0.6, alt: true } };
 }
 
-export function creerSuivi({ $, bataille, rendu, reduit = () => false, retour = () => {}, dire = () => {}, verrou = document.body, touche = () => false, enPause = () => false, moi = () => 0, piloter = () => {}, mort = () => {}, assourdir = () => {} }) {
+export function creerSuivi({ $, bataille, rendu, reduit = () => false, retour = () => {}, dire = () => {}, verrou = document.body, touche = () => false, enPause = () => false, moi = () => 0, piloter = () => {}, conduire = () => {}, mort = () => {}, assourdir = () => {} }) {
   let s = null;          // { genre, id, mode: 'cinema' | 'personne', t, avant, tir, accident, fin }
-  const badge = $('suivi'), nom = $('suivi-nom'), barres = $('cinema'), rouge = $('accident'), viseur = $('viseur'), cartouches = $('cartouches'), coupEl = $('coup'), chocEl = $('choc'), peurEl = $('peur-voile');
+  const badge = $('suivi'), nom = $('suivi-nom'), barres = $('cinema'), rouge = $('accident'), viseur = $('viseur'), cartouches = $('cartouches'), coupEl = $('coup'), chocEl = $('choc'), peurEl = $('peur-voile'), canonEl = $('canon-barre');
   $('suivi-liberer').onclick = () => liberer();
 
   /* La souris (vue à la personne) : le pointeur est capturé (le premier Échap rend le pointeur, et la vue avec lui) ; sans capture (refusée, ou un navigateur sans elle) le mouvement de la souris sert quand même */
@@ -118,15 +120,34 @@ export function creerSuivi({ $, bataille, rendu, reduit = () => false, retour = 
     verrouiller('soldat', A.id[k], 'personne');
   }
   const surChamp = e => document.pointerLockElement || e.target.id === 'canvas';
+  /* Le char à la main (v0.155.0) : le clic gauche, un obus où le centre de l'image touche le sol ; le clic droit maintenu, les mitrailleuses dans le regard */
+  function tirerCanon() {
+    if (enPause()) { dire('Le temps est arrêté.'); return; }
+    const cv = $('canvas'), B = bataille(), ch = B?.etat.chars.find(k => k.id === s.id), G = ch && CHARS[ch.modele]?.canon; if (!G) return;
+    let [x, y] = rendu.versTerrain(cv.clientWidth / 2, cv.clientHeight / 2);
+    // au-delà de sa portée (ou dans le ciel : le regard au ras de l'horizon) : le pointeur règle la hausse au plus loin, dans la direction du regard
+    const az = ch.cap + s.lacet, loin = x < -1e4 || Math.hypot(x - ch.x, y - ch.y) > G.portee;
+    if (loin) { x = ch.x + Math.cos(az) * G.portee * 0.98; y = ch.y + Math.sin(az) * G.portee * 0.98; dire(`À portée maximale : ${G.portee} m.`); }
+    conduire({ tir: true, x: Math.round(x * 10) / 10, y: Math.round(y * 10) / 10 });
+  }
   document.addEventListener('mousedown', e => {
+    if (s?.conduit && surChamp(e)) { e.preventDefault(); if (e.button === 0) tirerCanon(); else if (e.button === 2 && !s.rafale) { s.rafale = true; conduire({ rafale: true }); } return; }
     if (s?.genre !== 'soldat' || !surChamp(e)) return;
     if (s.mort) return;
     if (e.button === 0) { e.preventDefault(); tirer(); } else if (e.button === 2) { e.preventDefault(); if (prochedevant()) parer(true); else epauler(true); }
   });
-  document.addEventListener('mouseup', e => { if (e.button === 2) { epauler(false); parer(false); } });
+  document.addEventListener('mouseup', e => { if (e.button === 2) { epauler(false); parer(false); if (s?.conduit && s.rafale) { s.rafale = false; conduire({ rafale: false }); } } });
   document.addEventListener('keyup', e => { if (e.code === 'KeyV' && s?.amoi) { s.amoi = false; piloter({ amoi: false }); } });
   /* R : recharger (le Lebel une cartouche à la fois, le Mauser d'une lame) ; C : s'accroupir, X : se coucher (la même touche relève) ; Espace : franchir le rebord devant lui (v0.152.0 : la pause passe à P dans cette vue) */
   document.addEventListener('keydown', e => {
+    // le char : C la conduite (à la main ou sa route), T le tir (à la main ou le sien), R rentrer au parc (v0.155.0)
+    if (s?.conduit && !e.repeat && !document.querySelector('dialog[open]') && ['KeyC', 'KeyT', 'KeyR'].includes(e.code)) {
+      e.preventDefault(); const K = bataille()?.conduites?.[moi()];
+      if (e.code === 'KeyC') { const v = !(K?.main ?? true); conduire({ main: v }); dire(v ? 'Conduite à la main : ZQSD.' : 'Conduite automatique : il suit sa route.'); }
+      else if (e.code === 'KeyT') { const v = !(K?.tirMain ?? true); conduire({ tirMain: v }); dire(v ? 'Tir à la main : clic le canon, clic droit les mitrailleuses.' : 'Tir automatique : il choisit ses cibles.'); }
+      else { conduire({ rentrer: true }); dire('Il rentre au parc.'); }
+      return;
+    }
     if (s?.genre !== 'soldat' || e.repeat || document.querySelector('dialog[open]')) return;
     if (!['KeyR', 'KeyC', 'KeyX', 'Space', 'KeyF', 'KeyV', 'Tab'].includes(e.code)) return;
     e.preventDefault();
@@ -160,6 +181,14 @@ export function creerSuivi({ $, bataille, rendu, reduit = () => false, retour = 
       s.parade = false; s.amoi = false; s.vuFrappe = 0; rendu.fusilParade(false);
       dire('ZQSD marcher · Maj courir · C accroupi · X couché · Espace franchir · clic tirer · clic droit épauler · F baïonnette · R recharger · V à moi · Tab un autre · P pause · Échap revenir');
     }
+    if (genre === 'char' && mode === 'personne') {      // notre char, à la personne : on le conduit (v0.155.0)
+      const ch = B.etat.chars.find(k => k.id === id);
+      if (ch && ch.camp === moi() && ch.etat !== 'detruit') {
+        s.conduit = true; s.rafale = false; s.lunette = false; conduire({ id });
+        viseur.toggleAttribute('hidden', false); viseur.classList.remove('touche', 'mort'); canonEl.toggleAttribute('hidden', false);
+        dire('ZQSD conduire · souris viser · clic canon · clic droit mitrailleuses · Maj lunette · C conduite auto · T tir auto · R rentrer · Échap revenir');
+      }
+    }
     if (mode === 'personne') { if (document.pointerLockElement) s.verrou = true; else { s.sourd = performance.now() + 400; s.attente = performance.now() + 2000; prendreSouris(); } } else rendreSouris();      // (Tab : la souris est déjà prise, v0.154.0)      // (sans capture au bout de 2 s : la souris libre sert)
     rendu.vue.roulis = 0; rendu.vue.secousse = 0; rendu.vue.fov = avant.fov;
     rouge.hidden = true; rouge.classList.remove('ecrase');
@@ -169,7 +198,8 @@ export function creerSuivi({ $, bataille, rendu, reduit = () => false, retour = 
   }
   function liberer() {
     if (!s) return;
-    const { avant, genre } = s, tombe = s.mort; s = null; rendreSouris();
+    const { avant, genre } = s, tombe = s.mort, conduit = s.conduit; s = null; rendreSouris();
+    if (conduit) { conduire({ fin: true }); canonEl.toggleAttribute('hidden', true); }
     rendu.fusilParade(false);
     const V = rendu.vue;
     rendu.cacherSoldat(-1); rendu.fusilEpaule(false); rendu.fusil = false; viseur.toggleAttribute('hidden', true); for (const el of [cartouches, coupEl, chocEl, peurEl]) el.toggleAttribute('hidden', true); document.body.classList.remove('vue-soldat'); if (genre === 'soldat') piloter({ fin: true }); V.proche = null;
@@ -319,6 +349,20 @@ export function creerSuivi({ $, bataille, rendu, reduit = () => false, retour = 
       chocEl.style.opacity = (s.choc * 0.7).toFixed(3);
       peurEl.style.opacity = s.indice >= 0 ? (B.armee.peur[s.indice] * SENS.peur).toFixed(3) : '0';
     }
+    // le char conduit (v0.155.0) : ZQSD envoient la conduite au changement, le regard part pour les mitrailleuses, la barre du canon se remplit, Maj la lunette
+    if (s.conduit) {
+      const av = (touche('KeyW') ? 1 : 0) - (touche('KeyS') ? 1 : 0), tr = (touche('KeyD') ? 1 : 0) - (touche('KeyA') ? 1 : 0), cle = `${av}|${tr}`;
+      if (cle !== s.cleConduite && !enPause()) { s.cleConduite = cle; conduire({ av, tr }); }
+      const regard = quart(c.cap + s.lacet * libre);
+      if (Math.abs(regard - (s.regardEnvoye ?? 1e9)) > 0.02 && s.t - (s.tRegard ?? -1) >= 0.1 && !enPause()) { s.regardEnvoye = regard; s.tRegard = s.t; conduire({ regard }); }
+      const K = B.conduites?.[moi()], ch = B.etat.chars.find(k => k.id === s.id), G = ch && CHARS[ch.modele]?.canon;
+      if (K?.refus) { dire(K.refus); K.refus = null; }
+      if (ch && G) canonEl.style.setProperty('--plein', Math.max(0, Math.min(1, (B.etat.temps - (ch.canonT ?? 0)) / (G.recharge * (ch.canonMod ?? 1)))).toFixed(3));
+      canonEl.classList.toggle('auto', !(K?.tirMain ?? true)); viseur.classList.toggle('auto', !(K?.tirMain ?? true));
+      s.lunette = touche('ShiftLeft') || touche('ShiftRight');
+      if (s.lunette && !w) V.fov = s.avant.fov * TIR.tele;
+      if (ch?.etat === 'detruit') { dire('Le char est détruit.'); liberer(); return; }
+    }
     // le tonneau et l'écran rouge de l'avion abattu (la vue à la personne seulement)
     if (perso && (chute || epave) && s.genre === 'avion') {
       V.roulis += (chute && !r ? 5 : 0) * dt;        // (le même tour par seconde que la vrille de la maquette : rendu/avions.js)
@@ -330,5 +374,5 @@ export function creerSuivi({ $, bataille, rendu, reduit = () => false, retour = 
     s.neuf = false;
     nom.textContent = `${c.nom}${c.camp !== undefined && c.camp !== (B.etat.moi ?? 0) ? ' ennemi' : ''} · ${homme ? 'ZQSD pour marcher, la souris pour regarder' : perso ? 'à la personne' : 'vue verrouillée'} · Échap pour libérer`;
   }
-  return { verrouiller, liberer, maj, evenements, tirer, get actif() { return s; } };
+  return { verrouiller, liberer, maj, evenements, tirer, get actif() { return s; }, get mene() { return !!s && (s.genre === 'soldat' || !!s.conduit); } };
 }

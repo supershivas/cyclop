@@ -3,17 +3,17 @@
    ligne vers (tx, ty) à la vitesse de son modèle, ralentie par un cratère (la moitié de ce qu'il franchit), arrêtée par un cratère plus profond ou par l'eau
    profonde (`enlise` : il reste là et tire) ; il tire sur l'autre camp à portée ; un obus tombé près de lui l'abîme (`degatsChars`), jusqu'à l'épave (`detruit`).
    Les tranchées se franchissent (elles font 1,5 m : son modèle les passe). Les ordres rendent { refus } comme les barrages. */
-import { modif, charsDispo, parcChars, prochainDuParc, sortieChars, niveauDe } from './camp.js?v=0.154.0';
-import { PARC } from './data/parc.js?v=0.154.0';
-import { CHARS, CHAR_PAR_DEFAUT, CHAR_RECHARGE, CHAR_DEPART, CHAR_OBUS, CHAR_ROUTE } from './data/chars.js?v=0.154.0';
-import { CALIBRES } from './data/calibres.js?v=0.154.0';
-import { effrayer, DENSITE } from './army.js?v=0.154.0';
-import { BONUS, GAINS, chevronsDe } from './data/experience.js?v=0.154.0';
-import { zone as zoneDe } from './bataille.js?v=0.154.0';
-import { detruirePont } from './eaux.js?v=0.154.0';
-import { toucher } from './terrain.js?v=0.154.0';
-import { PONTS_JEU, typePont } from './data/ponts.js?v=0.154.0';
-import { charEnReparation } from './genie.js?v=0.154.0';
+import { modif, charsDispo, parcChars, prochainDuParc, sortieChars, niveauDe } from './camp.js?v=0.155.0';
+import { PARC } from './data/parc.js?v=0.155.0';
+import { CHARS, CHAR_PAR_DEFAUT, CHAR_RECHARGE, CHAR_DEPART, CHAR_OBUS, CHAR_ROUTE, CHAR_MAIN } from './data/chars.js?v=0.155.0';
+import { CALIBRES } from './data/calibres.js?v=0.155.0';
+import { effrayer, DENSITE } from './army.js?v=0.155.0';
+import { BONUS, GAINS, chevronsDe } from './data/experience.js?v=0.155.0';
+import { zone as zoneDe } from './bataille.js?v=0.155.0';
+import { detruirePont } from './eaux.js?v=0.155.0';
+import { toucher } from './terrain.js?v=0.155.0';
+import { PONTS_JEU, typePont } from './data/ponts.js?v=0.155.0';
+import { charEnReparation } from './genie.js?v=0.155.0';
 
 /* La route d'un char (Jérôme, v0.59.3 : « ils doivent contourner les fleuves, passer par les ponts ») : une recherche sur une grille de `CHAR_ROUTE.maille` mètres, de (x0, y0) à (tx, ty), qui évite
    l'eau profonde, les cratères qu'il ne franchit pas, les ponts qui ne le portent pas, et se détourne des cratères à demi profonds. Rend les points à suivre (le dernier est le but), ou null
@@ -154,6 +154,70 @@ export function ordonnerChar(B, id, ordre, x, y, camp) {
   return { ok: true };
 }
 
+/* Le char à la main (v0.155.0) : un conducteur par camp, `B.conduites[camp]` (jamais sauvegardé, comme `B.pilotes`), posé par les commandes, les mêmes seul ou à deux (lockstep : `conduite`) :
+   { id } : prendre ce char ; { av: −1..1, tr: −1..1 } : avancer ou reculer, tourner ; { regard } : le cap du regard (rad), où vont les mitrailleuses ; { tir: true, x, y } : un obus où l'on vise ;
+   { rafale: true | false } : les mitrailleuses ; { main: true | false } : la conduite à la main ou sa route ; { tirMain: true | false } : le tir à la main ou le sien ; { rentrer: true } : au parc ; { fin: true } : rendre le char.
+   Rend '' ou la raison du refus ; les refus d'un pas (canon pas rechargé, hors du débattement…) vont dans `K.refus`, le dernier obus dans `K.dernier`. */
+export function commanderConduite(B, camp, c) {
+  B.conduites ??= [null, null];
+  let K = B.conduites[camp];
+  const char = id => B.etat.chars.find(k => k.id === id);
+  if (c.fin) {
+    const ch = K && char(K.id);
+    if (ch && K.main && ch.etat === 'avance' && !ch.rentre) { ch.etat = 'arrive'; ch.tx = ch.x; ch.ty = ch.y; ch.chemin = null; ch.v = 0; }      // rendu à la main : il s'arrête là
+    B.conduites[camp] = null; return '';
+  }
+  if (c.id !== undefined && K?.id !== c.id) {
+    const ch = char(c.id);
+    if (!ch || ch.camp !== camp) return 'Ce char n\'est plus à vous.';
+    if (ch.etat === 'detruit') return 'Ce char est détruit.';
+    K = B.conduites[camp] = { id: c.id, av: 0, tr: 0, regard: ch.cap ?? 0, main: true, tirMain: true, tir: null, rafale: false, refus: null, dernier: null };
+  }
+  if (!K) return 'Aucun char à conduire.';
+  const b = v => Math.max(-1, Math.min(1, v || 0));
+  if ('av' in c) K.av = b(c.av);
+  if ('tr' in c) K.tr = b(c.tr);
+  if ('regard' in c) K.regard = c.regard;
+  if (c.tir) K.tir = { x: c.x, y: c.y };
+  if (c.rafale !== undefined) K.rafale = !!c.rafale;
+  if (c.tirMain !== undefined) K.tirMain = !!c.tirMain;
+  if (c.main !== undefined) {
+    K.main = !!c.main; const ch = char(K.id);
+    if (!K.main && ch && ch.etat === 'avance' && !ch.chemin) { ch.etat = 'arrive'; ch.tx = ch.x; ch.ty = ch.y; ch.v = 0; }      // sans route, la main rendue l'arrête
+  }
+  if (c.rentrer) { const r = ordonnerChar(B, K.id, 'rentrer', 0, 0, camp); if (r.refus) return r.refus; K.main = false; }
+  return '';
+}
+const conduiteDe = (B, c) => B.conduites?.find(k => k?.id === c.id) ?? null;
+/* La conduite à la main d'un pas : la coque pivote (une rotation sans trigonométrie : le développement de cos et sin d'un petit angle), le char avance ou recule ; un trou trop profond ou l'eau l'arrêtent comme sur sa route */
+function conduire(B, c, K, M, dt) {
+  const T = B.terrain, th = K.tr * CHAR_ROUTE.virage * dt, cs = 1 - th * th / 2, sn = th - th * th * th / 6;
+  let hx = c.hx * cs - c.hy * sn, hy = c.hx * sn + c.hy * cs; const hn = Math.hypot(hx, hy) || 1; c.hx = hx / hn; c.hy = hy / hn; c.cap = Math.atan2(c.hy, c.hx);
+  const sens = K.av < 0 ? -1 : 1, cx = Math.floor(c.x + c.hx * 3 * sens), cy = Math.floor(c.y + c.hy * 3 * sens);
+  const ici = cx >= 0 && cy >= 0 && cx < T.W && cy < T.H ? cy * T.W + cx : -1;
+  const prof = ici >= 0 && !(T.troncon && T.troncon[ici] >= 0) ? -T.diff[ici] : 0, profond = ici >= 0 && T.profond && T.profond[ici];
+  const fr = c.franchit ?? M.franchit, f = ici < 0 ? 0 : profond || prof >= fr ? 0 : prof >= fr / 2 ? 0.35 : 1;
+  if (f === 0 && K.av !== 0) {
+    if (ici >= 0 && (profond || prof >= fr)) { c.etat = 'enlise'; c.v = 0; B.evenements.push({ type: 'char-enlise', x: c.x, y: c.y, camp: c.camp }); return; }
+    c.v = 0; return;      // le bord du terrain : il s'arrête
+  }
+  const cible = K.av * M.vitesse * f * (c.vit ?? 1) * (K.av < 0 ? CHAR_MAIN.recul : 1), a = CHAR_ROUTE.accel * dt;
+  c.v += Math.max(-a, Math.min(a, cible - c.v));
+  c.x = Math.max(CHAR_MAIN.bord, Math.min(T.W - CHAR_MAIN.bord, c.x + c.hx * c.v * dt)); c.y = Math.max(CHAR_MAIN.bord, Math.min(T.H - CHAR_MAIN.bord, c.y + c.hy * c.v * dt));
+  c.tx = c.x; c.ty = c.y; c.chemin = null; c.etat = 'avance';
+}
+const COS_DEB = Math.cos(CHAR_MAIN.debattement), COS_CONE = Math.cos(CHAR_MAIN.cone);
+/* L'obus demandé à la main : où l'on vise, dans le débattement, à portée, le canon rechargé ; rend la raison d'un refus ('' : il part) */
+function refusTirMain(B, c, K, G) {
+  const t = K.tir, dx = t.x - c.x, dy = t.y - c.y, d = Math.hypot(dx, dy);
+  if (c.etat === 'detruit') return 'Ce char est détruit.';
+  if (B.etat.temps - (c.canonT ?? 0) < G.recharge * (c.canonMod ?? 1)) return 'Le canon n\'est pas rechargé.';
+  if (d > G.portee) return `Trop loin pour le canon : ${Math.round(d)} m (portée ${G.portee} m).`;
+  if (d < G.minimum) return 'Trop près pour le canon.';
+  if ((dx * c.hx + dy * c.hy) / d < COS_DEB) return 'Hors du débattement du canon : tournez le char.';
+  return '';
+}
+
 /* Un obus tombé en (x, y) : les chars à portée prennent des dégâts. Rend les chars détruits à ce coup (pour le dessin). */
 export function degatsChars(B, x, y, cal) {
   const rayon = (CALIBRES[cal]?.rayon ?? 4) * CHAR_OBUS.zone, base = CHAR_OBUS.base[cal] ?? 0;
@@ -179,7 +243,9 @@ export function avancerChars(B, ctx, rng) {
       for (const P of detruirePont(T, Math.floor(c.x), Math.floor(c.y), 0)) { for (const k of P.cases) toucher(T, k % T.W, (k / T.W) | 0); B.evenements.push({ type: 'pont-rompu', x: c.x, y: c.y, camp: c.camp }); }
       c.etat = 'enlise'; c.v = 0;
     }
-    if (c.etat === 'avance') {
+    const K = conduiteDe(B, c);      // le char qu'un joueur conduit (v0.155.0)
+    if (K && K.main && c.etat !== 'enlise' && !c.rentre) conduire(B, c, K, M, dt);
+    else if (c.etat === 'avance') {
       const route = !c.rentre && c.ar !== undefined && (c.camp === 0 ? c.y > c.ar : c.y < c.ar), d = Math.hypot(c.tx - c.x, c.ty - c.y);
       if (d < 1.5 && c.rentre) {      // arrivé au parc : il y reste, avec ses dégâts (le génie peut le réparer), et ressort sur un nouvel ordre
         parcChars(etat, c.camp).push({ id: c.id, pv: c.pv, pvMax: c.pvMax ?? c.pv, exp: c.exp ?? 0, tues: c.tues ?? 0, tuesCanon: c.tuesCanon ?? 0, tuesMitr: c.tuesMitr ?? 0, obus: c.obus ?? 0, repar: c.repar ?? 0 });
@@ -217,10 +283,13 @@ export function avancerChars(B, ctx, rng) {
 
     // son canon : un obus tous les `recharge` s sur sa cible (en roulant), sans viser plus près que `minimum`
     const G = M.canon;
-    c.vise = viser(B, c, G);
-    if (G && etat.temps - (c.canonT ?? 0) >= G.recharge * (c.canonMod ?? 1) && c.vise) {
-      c.canonT = etat.temps;
-      const [tx, ty] = c.vise, a = rng() * 6.2832, d = G.dispersion * Math.sqrt(rng());
+    let main = false;      // le tir à la main : seulement l'obus demandé (le joueur a sa cible), sinon le char vise seul
+    if (K && K.tirMain) {
+      if (K.tir) { const r = refusTirMain(B, c, K, G); if (r) { K.refus = r; K.tir = null; } else { c.vise = [K.tir.x, K.tir.y]; main = true; } }
+    } else c.vise = viser(B, c, G);
+    if (G && (main || (!K?.tirMain && etat.temps - (c.canonT ?? 0) >= G.recharge * (c.canonMod ?? 1) && c.vise))) {
+      c.canonT = etat.temps; if (K) { K.dernier = { n: (K.dernier?.n ?? 0) + 1, x: c.vise[0], y: c.vise[1] }; K.tir = null; }
+      const [tx, ty] = c.vise, a = rng() * 6.2832, d = G.dispersion * (main ? CHAR_MAIN.dispersion : 1) * Math.sqrt(rng());
       B.evenements.push({ type: 'char-tir', id: c.id, camp: c.camp, x: c.x, y: c.y, tx, ty });
       c.exp = Math.min(1, (c.exp ?? 0) + GAINS.char.obus);
       const p0 = etat.pertes[1 - c.camp];
@@ -228,13 +297,16 @@ export function avancerChars(B, ctx, rng) {
       c.obus = (c.obus ?? 0) + 1; { const k = etat.pertes[1 - c.camp] - p0; c.tues = (c.tues ?? 0) + k; c.tuesCanon = (c.tuesCanon ?? 0) + k; }      // ses victimes (v0.115.0) : les hommes d'en face tombés de cet obus
     }
     // ses mitrailleuses : une rafale par `cadence`, sur les hommes de l'autre camp à portée (plus la rafale est proche, plus elle touche)
+    // à la main (v0.155.0) : seulement le bouton maintenu, et dans le regard (le cône de `CHAR_MAIN.cone`)
     c.tire = (c.tire ?? 0) + dt;
-    if (c.tire >= M.cadence) {
+    const rafaleMain = K && K.tirMain, rx = rafaleMain ? Math.cos(K.regard) : 0, ry = rafaleMain ? Math.sin(K.regard) : 0;
+    if (c.tire >= M.cadence && (!rafaleMain || K.rafale) && c.etat !== 'detruit') {
       c.tire = 0; let touches = 0, cibles = 0;
       for (let i = 0; i < A.n; i++) {
         if (A.mort[i] || A.camp[i] === c.camp) continue;
         const d = Math.hypot(A.x[i] - c.x, A.y[i] - c.y);
         if (d >= M.portee) continue;
+        if (rafaleMain && ((A.x[i] - c.x) * rx + (A.y[i] - c.y) * ry) < COS_CONE * d) continue;
         cibles++;
         if (rng() < M.touche * (1.4 - d / M.portee)) { ctx.frapper(i, 'char', M.gravite); touches++; if (A.mort[i]) { c.tues = (c.tues ?? 0) + 1; c.tuesMitr = (c.tuesMitr ?? 0) + 1; } }
         else A.peur[i] = Math.max(A.peur[i], M.peur * (1 - d / M.portee));

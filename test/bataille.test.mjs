@@ -1752,3 +1752,39 @@ test('le corps à corps de l\'homme qu\'on mène (v0.154.0) : la baïonnette dev
   const sans = rassemble(false), avec = rassemble(true);
   assert.ok(avec.n >= 5 && avec.d < sans.d - 3, `${avec.n} camarades : ${avec.d.toFixed(1)} m de lui à l\'appel, ${sans.d.toFixed(1)} m sans`);
 });
+
+import { commanderConduite } from '../js/chars.js';
+test('le char à la main (v0.155.0) : il avance, recule et pivote ; le canon tire où l\'on vise, dans son débattement et sa portée ; le tir à la main fait taire le sien ; deux machines, la même partie', () => {
+  const mk = () => {
+    const B = petite(); B.terrain.base.fill(0); B.terrain.diff.fill(0);
+    B.etat.chars.push({ id: 0, camp: 0, modele: 'schneider', x: 200, y: 200, tx: 200, ty: 200, pv: 100, pvMax: 100, etat: 'arrive', hx: 0, hy: -1, cap: -Math.PI / 2, v: 0, canonT: -100, cible: null, vise: null });
+    return B;
+  };
+  const B = mk(), c = B.etat.chars[0];
+  assert.match(commanderConduite(B, 1, { id: 0 }), /plus à vous/);
+  assert.equal(commanderConduite(B, 0, { id: 0 }), '');
+  commanderConduite(B, 0, { av: 1 }); for (let k = 0; k < 60; k++) avancer(B);
+  assert.ok(200 - c.y > 2.5 && Math.abs(c.x - 200) < 0.1, `en avant, au nord : ${(200 - c.y).toFixed(2)} m`);
+  const y1 = c.y; commanderConduite(B, 0, { av: -1 }); for (let k = 0; k < 120; k++) avancer(B); assert.ok(c.y > y1 + 0.5, `il freine puis recule : ${(c.y - y1).toFixed(2)} m`);
+  commanderConduite(B, 0, { av: 0, tr: 1 }); const cap0 = c.cap; for (let k = 0; k < 30; k++) avancer(B);
+  assert.ok(Math.abs(c.cap - cap0 - 0.9) < 0.08, `il pivote de ${(c.cap - cap0).toFixed(2)} rad en 1 s`);
+  // le canon : droit devant à 40 m, il part ; tout de suite après, pas rechargé ; derrière, hors du débattement ; trop près ; trop loin
+  commanderConduite(B, 0, { tr: 0 }); c.hx = 0; c.hy = -1; c.cap = -Math.PI / 2; c.canonT = -100;
+  const K = B.conduites[0], tire = (x, y) => { commanderConduite(B, 0, { tir: true, x, y }); K.refus = null; return avancer(B); };
+  const ev = tire(c.x, c.y - 40); assert.ok(ev.some(e => e.type === 'char-tir' && e.id === 0), 'l\'obus part'); assert.equal(K.dernier.n, 1);
+  tire(c.x, c.y - 40); assert.match(K.refus, /pas rechargé/);
+  c.canonT = -100; tire(c.x, c.y + 40); assert.match(K.refus, /débattement/);
+  tire(c.x, c.y - 5); assert.match(K.refus, /Trop près/); tire(c.x, c.y - 150); assert.match(K.refus, /Trop loin/);
+  // le tir à la main fait taire le sien : près des hommes d'en face, il ne tire rien tant qu'on ne demande rien ; rendu à lui-même, il tire
+  const tirs = main => {
+    const D = mk(), A = D.armee, ch = D.etat.chars[0], j = [...Array(A.n).keys()].find(k => A.camp[k] === 1 && !A.mort[k]);
+    ch.x = A.x[j]; ch.y = A.y[j] + 45; ch.tx = ch.x; ch.ty = ch.y; commanderConduite(D, 0, { id: 0 }); commanderConduite(D, 0, { main: false, tirMain: main });
+    let n = 0; for (let k = 0; k < 300; k++) n += avancer(D).filter(e => e.type === 'char-tir').length; return n;
+  };
+  assert.equal(tirs(true), 0, 'à la main, rien sans demande'); assert.ok(tirs(false) >= 1, 'en automatique, il tire');
+  // rendu : il s'arrête là
+  commanderConduite(B, 0, { av: 1 }); for (let k = 0; k < 10; k++) avancer(B); commanderConduite(B, 0, { fin: true }); assert.equal(c.etat, 'arrive'); assert.equal(B.conduites[0], null);
+  // deux machines, les mêmes commandes : la même partie
+  const scen = D => { commanderConduite(D, 0, { id: 0 }); for (let k = 0; k < 150; k++) { if (k === 10) commanderConduite(D, 0, { av: 1, tr: 0.5 }); if (k === 60) commanderConduite(D, 0, { tir: true, x: 230, y: 160 }); if (k === 70) commanderConduite(D, 0, { rafale: true, regard: -1.3 }); if (k === 120) commanderConduite(D, 0, { fin: true }); avancer(D); } };
+  const X = mk(), Y = mk(); scen(X); scen(Y); assert.equal(empreinte(X), empreinte(Y));
+});

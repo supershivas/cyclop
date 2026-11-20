@@ -1,5 +1,11 @@
 # Journal des versions
 
+## 0.155.0 — 2026-11-20
+
+- Un char se conduit à la main depuis sa vue à la personne : ZQSD pour avancer, reculer et pivoter, la souris pour regarder
+- Le clic tire un obus où l'on vise, dans le débattement du canon et sa portée ; le clic droit maintenu fait parler les mitrailleuses dans le regard ; Maj la lunette
+- C rend la conduite à sa route, T le tir à son choix ; R le renvoie au parc
+
 ## 0.154.0 — 2026-11-20
 
 - Dans la vue d'un soldat : F (ou le clic quand un ennemi est à deux pas) frappe à la baïonnette ; en courant c'est une charge, sans cartouche un coup de crosse ; le clic droit pare quand l'ennemi est tout près

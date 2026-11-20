@@ -1019,6 +1019,10 @@ body.vue-soldat #equerres, body.vue-soldat #repere, body.vue-soldat #repere-sold
 .cartouches i.vide { background: transparent; border-color: var(--jeu-encre); opacity: .5; }
 .cartouches.recharge i.vide { animation: cartouche-recharge .5s ease-in-out infinite alternate; }
 @keyframes cartouche-recharge { to { opacity: .15; } }
+/* Le canon du char qu'on conduit (v0.155.0) : une barre d'os sous le viseur qui se remplit pendant la recharge (`--plein`, posé par suivi.js) ; au tir automatique, la barre et le viseur pâlissent */
+.canon-barre { position: absolute; left: 50%; top: calc(50% + 28px); width: 72px; height: var(--barre-h); transform: translateX(-50%); pointer-events: none; border: 1px solid var(--jeu-fond); background: color-mix(in srgb, var(--jeu-fond) 55%, transparent); }
+.canon-barre::after { content: ''; position: absolute; inset: 0; width: calc(var(--plein, 0) * 100%); background: var(--jeu-encre); }
+.canon-barre.auto, .viseur.auto { opacity: .45; }
 @media (prefers-reduced-motion: reduce) { .cartouches.recharge i.vide { animation: none; } }
 /* Les sensations de l'homme qu'on mène (v0.152.0) : le coup reçu, un arc couleur de sang du côté du tireur (le sang : exception datée de la v0.140.2), plus pâle quand la balle frôle ;
    le souffle d'un obus, un voile de brume ; la peur, le bord de l'image qui s'assombrit. L'opacité du voile et de la peur vient de suivi.js. */
