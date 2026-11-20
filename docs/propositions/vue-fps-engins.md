@@ -82,10 +82,10 @@ Le cœur du travail : **un vol qui n'est plus une fonction du temps**.
 
 Chaque lot : `rendu-empreinte` (le fusil et la caméra), `fumee.mjs` (les boutons de fiche), le test « à deux » de `bataille.test.mjs`. Les nombres vont dans `data/tir-joueur.js`, `data/chars.js`, `data/mitraillage.js` (une section `main`).
 
-## À trancher
+## Tranché (Jérôme, 20 nov.)
 
-1. Le dé disparaît-il tout à fait (le viseur décide seul, l'adresse ne joue que sur le balancement) ?
-2. Le clic droit : épauler (et Échap seul libère) ?
-3. Espace dans la vue d'un homme : sauter (la pause passe à P) ?
-4. La mort de l'homme piloté : passer à un camarade, ou rendre la vue comme aujourd'hui ?
-5. Par où commencer : le soldat (lots 1 à 3), le char ou l'avion ?
+1. **Le viseur décide** : plus de jet de dés ; l'adresse ne joue que sur le balancement ; la tête tue, les jambes blessent.
+2. **Clic droit maintenu : épauler** ; Échap seul libère la vue ; dans la vue d'un homme, Espace saute le parapet et P met en pause.
+3. **À sa mort, un camarade** : une seconde sur le corps, puis Tab prend le plus proche de son régiment ; Échap rend la vue et ouvre la fiche du mort.
+   **Et la fiche du mort s'améliore** (Jérôme : « le corps n'est pas indemne, on doit avoir la cause, l'endroit de la balle, l'éclat responsable ; vérifier que les infos sont pertinentes ») : la silhouette de la fiche porte la blessure là où elle est (tête, tronc, bras, jambes) ; la cause dit l'arme précise (balle de Mauser, éclat de 77, de 150, mitrailleuse, baïonnette, avion, char, écrasé, noyé) et, s'il se peut, qui (le tireur, la batterie, l'avion) ; il faut donc noter dans `etat.defunts` la zone touchée et la source exacte (aujourd'hui : une cause générale), et relire chaque champ de la fiche d'un mort pour ôter ce qui n'a plus de sens (peur, fatigue, « indemne »).
+4. **On commence par le lot 1** (visée et magasin), avec la fiche du mort ci-dessus, puisque les zones du corps la nourrissent.
