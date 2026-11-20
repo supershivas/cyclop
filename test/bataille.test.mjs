@@ -1351,7 +1351,7 @@ test('le tir du joueur (v0.151.0, la vraie visée) : la balle part où est le gu
   // le tir automatique se tait pour l'homme piloté ; sans pilote, la simulation ne tire rien pour lui
   const C = petite(); assert.deepEqual(C.pilotes, [null, null]); for (let k = 0; k < 30; k++) avancer(C);
 });
-import { commanderPilote, zoneTouchee, balancement, amplitude, tailleDe } from '../js/tir-joueur.js';
+import { commanderPilote, zoneTouchee, balancement, amplitude, tailleDe, aPortee } from '../js/tir-joueur.js';
 import { mourir } from '../js/bataille.js';
 test('la vue d\'un soldat à deux (v0.148.0) : un pilote par camp, des commandes rejouées au même pas donnent la même partie, un homme d\'en face ne se pilote pas', () => {
   const mk = () => { const B = petite(), A = B.armee; B.terrain.base.fill(0); B.terrain.diff.fill(0); return B; };
@@ -1364,7 +1364,9 @@ test('la vue d\'un soldat à deux (v0.148.0) : un pilote par camp, des commandes
       if (k === 30) { commanderPilote(B, 0, { course: true }); commanderPilote(B, 1, { posture: 1 }); }
       if (k === 70) { commanderPilote(B, 0, { course: false }); commanderPilote(B, 0, { epaule: true }); commanderPilote(B, 1, { saut: true }); }
       if (k === 90) { commanderPilote(B, 0, { tir: true, cap: -1.2, el: 0 }); commanderPilote(B, 1, { tir: true, cap: 1.9, el: 0 }); }
-      if (k === 120) { commanderPilote(B, 0, { posture: 2 }); commanderPilote(B, 0, { recharge: true }); }
+      if (k === 120) { commanderPilote(B, 0, { posture: 2 }); commanderPilote(B, 0, { recharge: true }); commanderPilote(B, 0, { amoi: true }); }
+      if (k === 140) { commanderPilote(B, 0, { coup: true, cap: -1.2 }); commanderPilote(B, 0, { parade: true }); }
+      if (k === 160) { commanderPilote(B, 0, { amoi: false }); commanderPilote(B, 0, { parade: false }); }
       if (k === 180) commanderPilote(B, 1, { fin: true }); avancer(B);
     }
   };
@@ -1717,4 +1719,36 @@ test('le corps de l\'homme qu\'on mène (v0.152.0) : il court plus vite et s\'es
   assert.ok(m.y < 149, `franchi : il est à y = ${m.y.toFixed(2)}`); assert.equal(m.P.saut, null, 'le saut est fini');
   // rien devant lui : refusé à voix haute
   commanderPilote(B, 0, { course: false }); commanderPilote(B, 0, { saut: true }); avancer(B); assert.match(B.pilotes[0].refus, /Rien à franchir/);
+});
+
+test('le corps à corps de l\'homme qu\'on mène (v0.153.0) : la baïonnette devant lui, ses refus, la crosse sans cartouche ; la foule ne frappe plus à sa place ; « À moi ! » rassemble son régiment', () => {
+  const mk = () => { const B = petite(); B.terrain.base.fill(0); B.terrain.diff.fill(0); return B; };
+  const B = mk(), A = B.armee, i = [...Array(A.n).keys()].find(k => A.camp[k] === 0), j = [...Array(A.n).keys()].find(k => A.camp[k] === 1);
+  const place = (dy = 1.2) => { A.x[i] = 200; A.y[i] = 150; A.x[j] = 200; A.y[j] = 150 - dy; for (const k of [i, j]) { A.vx[k] = 0; A.vy[k] = 0; A.mort[k] = 0; A.blessure[k] = 0; A.peur[k] = 0; A.fatB[k] = 0; } A.peur[j] = 1; };      // (l'ennemi terrifié ne frappe pas)
+  commanderPilote(B, 0, { id: A.id[i], cap: -Math.PI / 2, av: 0, la: 0 });
+  place(); assert.ok(aPortee(A, i, -Math.PI / 2), 'devant lui, à 1,2 m'); assert.equal(aPortee(A, i, Math.PI / 2), null, 'pas dans son dos');
+  let touches = 0;
+  for (let k = 0; k < 40; k++) { place(); B.pilotes[0].coupT = 0; commanderPilote(B, 0, { coup: true, cap: -Math.PI / 2 }); avancer(B); if (B.pilotes[0].frappe?.touche && B.pilotes[0].frappe.n === k + 1) touches++; }
+  assert.ok(touches >= 12 && touches <= 39, `la baïonnette porte : ${touches}/40`);
+  place(); B.pilotes[0].coupT = 0; commanderPilote(B, 0, { coup: true, cap: -Math.PI / 2 }); avancer(B); commanderPilote(B, 0, { coup: true, cap: -Math.PI / 2 }); avancer(B);
+  assert.match(B.pilotes[0].refus, /reprend/, 'un coup toutes les 0,9 s');
+  place(5); B.pilotes[0].coupT = 0; commanderPilote(B, 0, { coup: true, cap: -Math.PI / 2 }); avancer(B); assert.match(B.pilotes[0].refus, /Personne à portée/);
+  place(); B.pilotes[0].coupT = 0; B.pilotes[0].balles = 0; commanderPilote(B, 0, { coup: true, cap: -Math.PI / 2 }); avancer(B); assert.equal(B.pilotes[0].frappe.crosse, true, 'sans cartouche, la crosse');
+  commanderPilote(B, 0, { parade: true }); B.pilotes[0].tir = { cap: -Math.PI / 2, el: 0 }; A.tirT[i] = 0; B.pilotes[0].balles = 9; avancer(B); assert.match(B.pilotes[0].refus, /pare/);
+  // la foule ne frappe plus à sa place : au contact d'un ennemi qui ne fuit pas, sans ordre de lui, il n'abat personne
+  const C = mk(), AC = C.armee, a = [...Array(AC.n).keys()].find(k => AC.camp[k] === 0), b = [...Array(AC.n).keys()].find(k => AC.camp[k] === 1);
+  commanderPilote(C, 0, { id: AC.id[a], cap: -Math.PI / 2, av: 0, la: 0 });
+  for (let k = 0; k < 150; k++) { AC.x[a] = 200; AC.y[a] = 150; AC.x[b] = 200; AC.y[b] = 149; AC.mort[b] = 0; AC.blessure[b] = 0; avancer(C); }
+  assert.equal(AC.victimes[a], 0, 'il ne frappe qu\'à la main');
+  // « À moi ! » : ses camarades à moins de 25 m se rapprochent de lui
+  const rassemble = appel => {
+    const D = mk(), AD = D.armee, p = [...Array(AD.n).keys()].find(k => AD.camp[k] === 0 && !AD.mort[k]);
+    AD.x[p] += 10; commanderPilote(D, 0, { id: AD.id[p], cap: 0, av: 0, la: 0 }); if (appel) commanderPilote(D, 0, { amoi: true });
+    const proches = [...Array(AD.n).keys()].filter(k => k !== p && AD.reg[k] === AD.reg[p] && Math.hypot(AD.x[k] - AD.x[p], AD.y[k] - AD.y[p]) < 25).map(k => AD.id[k]);
+    for (let k = 0; k < 120; k++) avancer(D);
+    const ou = id => [...Array(AD.n).keys()].find(k => AD.id[k] === id && !AD.mort[k]), q = ou(D.pilotes[0].id), vivants = proches.map(ou).filter(k => k !== undefined);
+    return { n: vivants.length, d: vivants.reduce((t, k) => t + Math.hypot(AD.x[k] - AD.x[q], AD.y[k] - AD.y[q]), 0) / Math.max(1, vivants.length) };
+  };
+  const sans = rassemble(false), avec = rassemble(true);
+  assert.ok(avec.n >= 5 && avec.d < sans.d - 3, `${avec.n} camarades : ${avec.d.toFixed(1)} m de lui à l\'appel, ${sans.d.toFixed(1)} m sans`);
 });

@@ -28,16 +28,20 @@ export function creerFusilVue({ THREE, renderer, PALETTE }) {
   arme.position.set(repos.x, repos.y, repos.z); arme.rotation.set(0.1, 0.1, 0);
   sc.add(arme);
   const vise = { x: 0, y: -0.088, z: -0.2 };      // épaulé (v0.151.0) : la crosse à l'épaule, le guidon au milieu de l'image
-  let recul = 0, flash = 0, t = 0, ep = 0, epVoulu = 0;
+  let recul = 0, flash = 0, t = 0, ep = 0, epVoulu = 0, pousse = -1, pa = 0, paVoulu = 0;      // (le coup de baïonnette : `pousse` de 0 à 1 ; la parade : le fusil en travers, v0.153.0)
   return {
     tir() { recul = 1; flash = 0.07; },
     epaule(v) { epVoulu = v ? 1 : 0; },
+    coup() { pousse = 0; },
+    parade(v) { paVoulu = v ? 1 : 0; },
     /* un pas du dessin : le recul retombe, le fusil respire un peu */
     maj(dt) {
       t += dt; recul *= Math.exp(-dt * 11); flash = Math.max(0, flash - dt);
       ep += (epVoulu - ep) * Math.min(1, dt * 12); const m = (a, b) => a + (b - a) * ep;
-      arme.position.set(m(repos.x, vise.x), m(repos.y, vise.y) + Math.sin(t * 1.3) * 0.003 * (1 - ep), m(repos.z, vise.z) + 0.08 * recul);
-      arme.rotation.set(m(0.1, 0.045) + 0.12 * recul, m(0.1, 0), 0);
+      pa += (paVoulu - pa) * Math.min(1, dt * 14);
+      let av = 0; if (pousse >= 0) { pousse += dt / 0.35; av = pousse < 0.35 ? pousse / 0.35 : Math.max(0, 1 - (pousse - 0.35) / 0.65); if (pousse >= 1) pousse = -1; }      // en avant vite, retour lent
+      arme.position.set(m(repos.x, vise.x) * (1 - pa), m(repos.y, vise.y) + Math.sin(t * 1.3) * 0.003 * (1 - ep) + 0.06 * pa, m(repos.z, vise.z) + 0.08 * recul - 0.32 * av);
+      arme.rotation.set(m(0.1, 0.045) + 0.12 * recul - 0.08 * av, m(0.1, 0) + 0.25 * av, 1.25 * pa);
       eclair.visible = flash > 0;
     },
     /* par-dessus l'image déjà dessinée (la profondeur est vidée : rien du monde ne le cache) */

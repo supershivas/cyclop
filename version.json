@@ -1,9 +1,9 @@
 {
-  "version": "0.152.0",
+  "version": "0.153.0",
   "date": "2026-11-20",
   "changes": [
-    "Dans la vue d'un soldat : Maj pour courir (essoufflé, il ne tire pas), C pour s'accroupir, X pour se coucher, Espace pour franchir un parapet ; P met en pause",
-    "On sent les coups : un arc de sang du côté du tireur, le monde qui penche, la balle qui frôle",
-    "Un obus tout près voile l'image et étouffe le son ; la peur assombrit le bord de l'image"
+    "Dans la vue d'un soldat : F (ou le clic quand un ennemi est à deux pas) frappe à la baïonnette ; en courant c'est une charge, sans cartouche un coup de crosse ; le clic droit pare quand l'ennemi est tout près",
+    "V maintenue : « À moi ! », les hommes de son régiment autour de lui le rejoignent",
+    "Tab passe à un camarade ; quand l'homme tombe, la vue tombe avec lui, puis Tab prend un camarade et Échap ouvre sa fiche"
   ]
 }

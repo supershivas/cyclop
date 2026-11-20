@@ -1,5 +1,11 @@
 # Journal des versions
 
+## 0.153.0 — 2026-11-20
+
+- Dans la vue d'un soldat : F (ou le clic quand un ennemi est à deux pas) frappe à la baïonnette ; en courant c'est une charge, sans cartouche un coup de crosse ; le clic droit pare quand l'ennemi est tout près
+- V maintenue : « À moi ! », les hommes de son régiment autour de lui le rejoignent
+- Tab passe à un camarade ; quand l'homme tombe, la vue tombe avec lui, puis Tab prend un camarade et Échap ouvre sa fiche
+
 ## 0.152.0 — 2026-11-20
 
 - Dans la vue d'un soldat : Maj pour courir (essoufflé, il ne tire pas), C pour s'accroupir, X pour se coucher, Espace pour franchir un parapet ; P met en pause

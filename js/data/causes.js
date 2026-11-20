@@ -8,6 +8,7 @@ export const PARTS_ZONES = {
   avion: { jambes: 0.15, bras: 0.1, tronc: 0.5, tete: 0.25 },
   obus: { jambes: 0.25, bras: 0.15, tronc: 0.4, tete: 0.2 },
   'mêlée': { jambes: 0.05, bras: 0.05, tronc: 0.8, tete: 0.1 },
+  crosse: { jambes: 0, bras: 0.1, tronc: 0.2, tete: 0.7 },
   'corvée': { jambes: 0.25, bras: 0.15, tronc: 0.4, tete: 0.2 },
 };
 export const ZONES_EN_MOTS = { tete: 'à la tête', tronc: 'à la poitrine', bras: 'au bras', jambes: 'à la jambe' };      // (la fiche n'en barre qu'une : un bras, une jambe)
@@ -16,5 +17,5 @@ export const ARMES_DE_CAMP = { tir: ['une balle de Lebel', 'une balle de Mauser'
 export function armeEnMots(cause, camp, cal) {
   if (ARMES_DE_CAMP[cause]) return ARMES_DE_CAMP[cause][camp] ?? ARMES_DE_CAMP[cause][0];
   if (cause === 'obus') return cal ? `un éclat de ${cal}` : 'un éclat d\'obus';
-  return { 'mêlée': 'un coup de baïonnette', char: 'les mitrailleuses d\'un char', avion: 'la mitrailleuse d\'un avion', noyade: 'noyé', 'corvée': 'en corvée, la nuit', blessure: 'de ses blessures' }[cause] ?? cause;
+  return { 'mêlée': 'un coup de baïonnette', crosse: 'un coup de crosse', char: 'les mitrailleuses d\'un char', avion: 'la mitrailleuse d\'un avion', noyade: 'noyé', 'corvée': 'en corvée, la nuit', blessure: 'de ses blessures' }[cause] ?? cause;
 }
