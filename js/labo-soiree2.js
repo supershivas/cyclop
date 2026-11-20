@@ -2,12 +2,12 @@
 // sur les trois étapes » ; « le titre dans un header en os sur fond sombre » ; « les cases d'améliorations n'ont pas d'icônes ; les rendre plus élégantes » ; « on peut améliorer les deux
 // branches de chaque niveau » (les choix par lignée, « si cela a une logique ») ; « les améliorations sont disponibles immédiatement » (acquises au clic, rendues d'un clic jusqu'à l'aube)).
 // Les deux règles neuves sont SIMULÉES ici (le jeu les prendra au lot suivant) : `LIGNEE` dit quel choix du niveau 2 ouvre chaque choix du niveau 3 (null : l'un ou l'autre).
-import { BATIMENTS, EQUIPEMENT, EQUIPEMENTS } from './data/batiments.js?v=0.150.1';
-import { el, html, info, bouton, tuilesJour, medailles, puceReleve, graphe, frise, corvee, etat } from './hud/papier-nuit.js?v=0.150.1';
-import { iconeCorvee } from './hud/icones-nuit.js?v=0.150.1';
-import { iconeCamp, iconeEquipement } from './hud/icones-camp.js?v=0.150.1';
-import { cadre, CSS_NUIT, CSS_FIN } from './labo-papiers.js?v=0.150.1';
-import { soireeExemple } from './labo-soiree.js?v=0.150.1';
+import { BATIMENTS, EQUIPEMENT, EQUIPEMENTS } from './data/batiments.js?v=0.151.0';
+import { el, html, info, bouton, tuilesJour, medailles, puceReleve, graphe, frise, corvee, etat } from './hud/papier-nuit.js?v=0.151.0';
+import { iconeCorvee } from './hud/icones-nuit.js?v=0.151.0';
+import { iconeCamp, iconeEquipement } from './hud/icones-camp.js?v=0.151.0';
+import { cadre, CSS_NUIT, CSS_FIN } from './labo-papiers.js?v=0.151.0';
+import { soireeExemple } from './labo-soiree.js?v=0.151.0';
 
 const TRANSFERT = '<svg class="pic" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="4" r="2"/><path d="M2 14v-4a3 3 0 0 1 6 0v4M9.5 9h5M12.5 6.5L15 9l-2.5 2.5"/></svg>';
 const pts = n => `${n} pt${n > 1 ? 's' : ''}`;

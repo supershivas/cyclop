@@ -6,14 +6,14 @@
 // 3. les régiments : « Continuer la bataille » ; les hommes en paquets de 10 traits (un paquet de 1 à 9 pour le reste), les blessés en paquets à part, en pointillé ; on glisse un paquet
 //    d'une carte à l'autre autant qu'on veut ; un régiment vidé devient gris et disparaît à l'aube, sauf si on lui rend des hommes ou qu'on annule.
 // RIEN N'EST EN JEU : les règles (deux pistes, l'achat au clic, les 5 niveaux, l'Infanterie, la dissolution) attendent que Jérôme tranche ce jet.
-import { ARBRES, ORDRE_ARBRES, PRIX, DOTATION_SOIR, ROMAINS, nomRang } from './data/ameliorations.js?v=0.150.1';
-import { el, html, info, bouton, corvee, puceReleve, vivres, motMoral, graphe } from './hud/papier-nuit.js?v=0.150.1';
-import { jaugeMoral } from './hud/bilan.js?v=0.150.1';
-import { iconeCorvee, iconeMedaille } from './hud/icones-nuit.js?v=0.150.1';
-import { iconeCamp } from './hud/icones-camp.js?v=0.150.1';
-import { cadre, CSS_NUIT, CSS_FIN } from './labo-papiers.js?v=0.150.1';
-import { soireeExemple } from './labo-soiree.js?v=0.150.1';
-import { CSS_SOIREE2 } from './labo-soiree2.js?v=0.150.1';
+import { ARBRES, ORDRE_ARBRES, PRIX, DOTATION_SOIR, ROMAINS, nomRang } from './data/ameliorations.js?v=0.151.0';
+import { el, html, info, bouton, corvee, puceReleve, vivres, motMoral, graphe } from './hud/papier-nuit.js?v=0.151.0';
+import { jaugeMoral } from './hud/bilan.js?v=0.151.0';
+import { iconeCorvee, iconeMedaille } from './hud/icones-nuit.js?v=0.151.0';
+import { iconeCamp } from './hud/icones-camp.js?v=0.151.0';
+import { cadre, CSS_NUIT, CSS_FIN } from './labo-papiers.js?v=0.151.0';
+import { soireeExemple } from './labo-soiree.js?v=0.151.0';
+import { CSS_SOIREE2 } from './labo-soiree2.js?v=0.151.0';
 
 const pts = n => `${n} pt${n > 1 ? 's' : ''}`;
 const SECTEURS = ['A', 'B', 'C', 'D'];

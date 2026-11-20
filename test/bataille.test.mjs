@@ -1374,7 +1374,7 @@ test('la fiche d\'un mort est gardée pour toujours : ses chiffres, sa médaille
   const i = [...Array(A.n).keys()].find(k => A.camp[k] === 0 && !A.mort[k]); const id = A.id[i];
   A.victimes[i] = 3; A.exp[i] = 0.4; A.peur[i] = 0.5;
   mourir(B, i, 'obus');
-  const d = B.etat.defunts[id]; assert.ok(d, 'sa fiche est gardée'); assert.equal(d[0], B.etat.jour); assert.equal(d[1], 'obus'); assert.equal(d[4], 3); assert.equal(d[3], 0.4); assert.equal(d.length, 19);
+  const d = B.etat.defunts[id]; assert.ok(d, 'sa fiche est gardée'); assert.equal(d[0], B.etat.jour); assert.equal(d[1], 'obus'); assert.equal(d[4], 3); assert.equal(d[3], 0.4); assert.equal(d.length, 22); assert.ok(d[19] && d[20].startsWith("un éclat"), `où et par quoi : ${d[19]}, ${d[20]}`);
   for (let k = 0; k < 60; k++) avancer(B);      // la foule le retire (compacter)
   assert.equal(B.armee.id.slice(0, B.armee.n).includes(id), false, 'il n\'est plus dans la foule');
   assert.equal(B.etat.defunts[id][4], 3, 'sa fiche reste');

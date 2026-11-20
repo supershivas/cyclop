@@ -1,6 +1,6 @@
 // Les pictogrammes du camp (Jérôme, 18 nov. : « les cases d'améliorations n'ont pas d'icônes ») : un par palier et par choix de `data/batiments.js`, rangés par leur nom ;
 // des SVG de 16 × 16 tracés en `currentColor`, comme ceux du papier de la nuit (`icones-nuit.js`). Un nom inconnu donne un point : rien ne casse si un palier change de nom.
-import { iconeCorvee } from './icones-nuit.js?v=0.150.1';
+import { iconeCorvee } from './icones-nuit.js?v=0.151.0';
 
 const svg = corps => `<svg class="pic" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">${corps}</svg>`;
 
