@@ -26,6 +26,7 @@ import { PONT_COUPE } from './data/ponts.js?v=0.150.1';
 import { amasDe, isoles } from './amas.js?v=0.150.1';
 import { calculerCouts, creerCacheChamps, dimensionsCouts, BLOC } from './champs.js?v=0.150.1';
 import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.150.1';
+import { PARTS_ZONES, armeEnMots } from './data/causes.js?v=0.150.1';
 import { preparerAleatoire, ID_ALEATOIRE } from './generateur.js?v=0.150.1';
 import { AVION, MITRAILLAGE } from './data/mitraillage.js?v=0.150.1';
 import { refusAvion, lancerAvion, avancerAvions, flotteDeDepart, reparerAvions } from './avions.js?v=0.150.1';
@@ -679,18 +680,20 @@ export function avancer(B) {
   // touché : il meurt (chance : gravite, ou s'il était déjà blessé), sinon il est blessé (bras, jambe, tête)
   const morts = [];
   const enTranchee = i => { const c = (A.y[i] | 0) * T.W + (A.x[i] | 0); return T.diff[c] <= -2 && (T.troncon?.[c] ?? -1) >= 0; };      // (le creux d'une tranchée, comme l'abri du tir d'army.js)
-  const frapper = (i, cause, gravite, choc = null, par = -1, reg = -1) => {
+  // `detail` (le tir du joueur, v0.151.0) : { zone, blessure } : où la balle l'a pris, la blessure qu'elle laisse s'il survit
+  const frapper = (i, cause, gravite, choc = null, par = -1, reg = -1, detail = null) => {
     if (A.mort[i]) return;
     if (cause === 'obus') gravite *= infanterie(etat, A.camp[i], 'obus') * (enTranchee(i) ? infanterie(etat, A.camp[i], 'tranchee') : 1);      // les casques Adrian, les sacs à terre (l'Infanterie, troisième jet)
     if (A.blessure[i] || rng() < gravite) {
-      mourir(B, i, cause, choc && projeter(B, i, choc));
+      const tireur = par >= 0 ? A.camp[par] : reg >= 0 ? etat.regiments[reg]?.camp ?? 1 - A.camp[i] : 1 - A.camp[i];
+      mourir(B, i, cause, choc && projeter(B, i, choc), { zone: detail?.zone, arme: armeEnMots(cause, tireur, ctx.cal), par: par >= 0 ? A.id[par] : -1 });
       morts.push(i);
       if (par >= 0 && A.victimes[par] < 65535) A.victimes[par]++;
       if (par >= 0) { const rp = etat.regiments[A.reg[par]]; rp.tues = (rp.tues || 0) + 1; }
       else if (reg >= 0) { const rp = etat.regiments[reg]; rp.tues = (rp.tues || 0) + 1; }       // (le poste de mitrailleuse : au régiment qui le servait à cet instant, v0.115.0)       // (les médailles : ce que son régiment a abattu)       // le tireur qui l'a abattu (la fiche le dit ; ni récompense ni expérience)
     } else {
       const r = rng();
-      A.blessure[i] = r < 0.4 ? 1 : r < 0.8 ? 2 : 3;
+      A.blessure[i] = detail?.blessure || (r < 0.4 ? 1 : r < 0.8 ? 2 : 3);
       abimerCaracs(A, i, A.blessure[i], R.progression);         // une blessure laisse des traces : bras (adresse, force), jambe (endurance), tête (calme)
       etat.blesses[A.camp[i]]++;
       const reg = etat.regiments[A.reg[i]];
@@ -955,7 +958,17 @@ function barrerMarches(B) {
   }
 }
 
-export function mourir(B, i, cause, ou = null) {
+/* L'endroit du corps qu'un coup sans précision a pris : un hachage de son numéro et du pas (jamais le générateur de la bataille), selon les parts de la cause ; '' si rien ne s'y lit (noyé) */
+const BLESSURE_ZONE = ['', 'bras', 'jambes', 'tete'];
+function partieTouchee(B, i, cause) {
+  if (cause === 'blessure') return BLESSURE_ZONE[B.armee.blessure[i]] || 'tronc';
+  const P = PARTS_ZONES[cause]; if (!P) return '';
+  let u = hash2(B.armee.id[i], B.etat.ticks, 31);
+  for (const [z, p] of Object.entries(P)) { if (u < p) return z; u -= p; }
+  return 'tronc';
+}
+/* `src` : { zone, arme, par } (frapper le donne ; ailleurs l'arme se dit d'après la cause) */
+export function mourir(B, i, cause, ou = null, src = null) {
   const { etat, R, armee: A } = B;
   if (A.mort[i]) return;
   A.mort[i] = 1;
@@ -968,7 +981,8 @@ export function mourir(B, i, cause, ou = null) {
   if (rang <= 5) promouvoir(B, A.reg[i], rang);
   const [x, y] = ou || [A.x[i], A.y[i]];
   etat.corps.push([Math.round(x * 10), Math.round(y * 10), A.camp[i], etat.jour, A.id[i]]);
-  etat.defunts[A.id[i]] = [etat.jour, cause, A.reg[i], Math.round(A.exp[i] * 100) / 100, A.victimes[i], ...lireCaracs(A, i), Math.round(A.peur[i] * 100) / 100, Math.round(A.fatJ[i] * 100) / 100, Math.round(A.fatB[i] * 100) / 100, A.blessure[i], Math.round(x * 10) / 10, Math.round(y * 10) / 10];      // (la foule les retire : leur fiche reste, v0.148.0)
+  etat.defunts[A.id[i]] = [etat.jour, cause, A.reg[i], Math.round(A.exp[i] * 100) / 100, A.victimes[i], ...lireCaracs(A, i), Math.round(A.peur[i] * 100) / 100, Math.round(A.fatJ[i] * 100) / 100, Math.round(A.fatB[i] * 100) / 100, A.blessure[i], Math.round(x * 10) / 10, Math.round(y * 10) / 10,
+    src?.zone || partieTouchee(B, i, cause), src?.arme ?? armeEnMots(cause, 1 - A.camp[i]), src?.par ?? -1];      // (la foule les retire : leur fiche reste, v0.148.0) ; où il a été touché, par quoi, par qui (v0.151.0)
   if (ou && cause === 'obus') B.volants.push([etat.corps.length - 1, A.x[i], A.y[i], 0]);       // le dessin le fait voler (de là où il est tombé)
   B.evenements.push({ type: 'mort', camp: A.camp[i], cause, x, y, id: A.id[i] });
 }
@@ -1275,7 +1289,7 @@ function tomber(B, x, y, cal, ctx, gel) {
   const coupes = T.versionPonts;
   const { rayon } = impact(T, x, y, cal, R, n, gel);
   if (T.versionPonts !== coupes) B.evenements.push({ type: 'pont-coupe', x, y, nom: T.coupes[T.coupes.length - 1]?.nom });      // un obus a coupé un pont (le carnet le dit)
-  tuerDans(B.armee, x, y, rayon, ctx, CALIBRES[cal].letal);
+  ctx.cal = cal; tuerDans(B.armee, x, y, rayon, ctx, CALIBRES[cal].letal); ctx.cal = null;      // (le calibre : l'éclat que dit la fiche d'un mort)
   if (etat.chars.length) degatsChars(B, x, y, cal);
   if (etat.nids.length) degatsNids(B, x, y, cal);
   degatsFil(B, x, y, cal);

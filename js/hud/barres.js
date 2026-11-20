@@ -23,20 +23,24 @@ export function jauge({ nom, val, reperes = [], mot = '', html = '', titre = '' 
 
 // Le corps entier (viewBox 40 × 92) : la tête, le tronc, deux bras, deux jambes ; la partie blessée est pleine et barrée. Le côté
 // (gauche ou droit) vient du numéro de l'homme, une fois pour toutes. `blessure` : 0 aucune, 1 bras, 2 jambe, 3 tête.
-export function corps(blessure, id, { tombe = false } = {}) {
-  const cote = (id >> 1) & 1;                  // 0 : le bras ou la jambe gauche (à droite sur le dessin, il nous fait face)
+// `fatal` (un mort, v0.151.0) : la partie où le coup l'a pris ('tete', 'tronc', 'bras', 'jambes'), pleine et barrée d'une croix épaisse ; sa blessure d'avant reste dessinée.
+const ZONE_PARTIE = { tete: 'tete', tronc: 'tronc', bras: 'bras', jambes: 'jambe' };
+export function corps(blessure, id, { tombe = false, fatal = '' } = {}) {
+  const cote = (id >> 1) & 1, coteF = (id >> 2) & 1;                  // 0 : le bras ou la jambe gauche (à droite sur le dessin, il nous fait face)
   const parties = {
     tete: '<circle cx="20" cy="9" r="7"/>',
     tronc: '<rect x="12" y="18" width="16" height="30" rx="2"/>',
     bras0: '<rect x="4" y="19" width="6" height="28" rx="2"/>', bras1: '<rect x="30" y="19" width="6" height="28" rx="2"/>',
     jambe0: '<rect x="12" y="50" width="7" height="38" rx="2"/>', jambe1: '<rect x="21" y="50" width="7" height="38" rx="2"/>',
   };
+  const boites = { tete: [13, 2, 27, 16], tronc: [13, 22, 27, 44], bras0: [4, 24, 10, 42], bras1: [30, 24, 36, 42], jambe0: [12, 56, 19, 82], jambe1: [21, 56, 28, 82] };
   const touche = blessure === 3 ? 'tete' : blessure === 1 ? `bras${cote}` : blessure === 2 ? `jambe${cote}` : '';
-  const croix = { tete: [13, 2, 27, 16], [`bras${cote}`]: [cote ? 30 : 4, 24, cote ? 36 : 10, 42], [`jambe${cote}`]: [cote ? 21 : 12, 56, cote ? 28 : 19, 82] }[touche];
+  const f = ZONE_PARTIE[fatal], mortelle = !f ? '' : f === 'bras' || f === 'jambe' ? `${f}${coteF}` : f;
   const nom = blessure ? `blessé ${blessure === 3 ? 'à la tête' : `${blessure === 1 ? 'au bras' : 'à la jambe'} ${cote ? 'droit' : 'gauche'}`}` : 'indemne';
-  return `<svg class="corps${tombe ? ' tombe' : ''}" viewBox="0 0 40 92" role="img" aria-label="${tombe ? 'tombé' : nom}">`
-    + Object.entries(parties).map(([k, f]) => f.replace('/>', ` class="${k === touche ? 'touche' : ''}"/>`)).join('')
-    + (croix ? `<path class="croix" d="M${croix[0]} ${croix[1]}L${croix[2]} ${croix[3]}M${croix[2]} ${croix[1]}L${croix[0]} ${croix[3]}"/>` : '')
+  const croix = (k, cl) => { const c = boites[k]; return c ? `<path class="${cl}" d="M${c[0]} ${c[1]}L${c[2]} ${c[3]}M${c[2]} ${c[1]}L${c[0]} ${c[3]}"/>` : ''; };
+  return `<svg class="corps${tombe ? ' tombe' : ''}" viewBox="0 0 40 92" role="img" aria-label="${tombe || mortelle ? 'tombé' : nom}">`
+    + Object.entries(parties).map(([k, d]) => d.replace('/>', ` class="${k === touche || k === mortelle ? 'touche' : ''}${k === mortelle ? ' fatal' : ''}"/>`)).join('')
+    + (touche && touche !== mortelle ? croix(touche, 'croix') : '') + (mortelle ? croix(mortelle, 'croix fatale') : '')
     + '</svg>';
 }
 export { PARTIES };

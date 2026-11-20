@@ -1309,30 +1309,49 @@ test('un homme est posté à chaque nid actif : il marche à son poste, le sert,
   assert.equal(empreinte(B), empreinte(C), 'la partie relue donne les mêmes servants');
 });
 import { hauteurOeil } from '../js/tir-joueur.js';
-test('le tir du joueur (v0.147.0) : la balle suit le regard, touche le premier homme d\'en face sur le rayon, le relief l\'arrête, le fusil se recharge, rien ne part sans pilote', () => {
+test('le tir du joueur (v0.151.0, la vraie visée) : la balle part où est le guidon et touche l\'homme là où elle passe, le relief l\'arrête, le fusil se recharge, le magasin se vide et se remplit', () => {
   const B = petite(), A = B.armee, T = B.terrain;
   T.base.fill(0); T.diff.fill(0);      // un sol plat : la hauteur ne joue pas
   const i = [...Array(A.n).keys()].find(k => A.camp[k] === 0 && !A.mort[k]), j = [...Array(A.n).keys()].find(k => A.camp[k] === 1 && !A.mort[k]);
-  const place = () => { A.x[i] = 200; A.y[i] = 150; A.x[j] = 200; A.y[j] = 130; for (const k of [i, j]) { A.vx[k] = 0; A.vy[k] = 0; A.peur[k] = 0; A.blessure[k] = 0; A.mort[k] = 0; } A.tirT[i] = 0; };
+  const place = () => { A.x[i] = 200; A.y[i] = 150; A.x[j] = 200; A.y[j] = 130; for (const k of [i, j]) { A.vx[k] = 0; A.vy[k] = 0; A.peur[k] = 0; A.blessure[k] = 0; A.mort[k] = 0; } A.tirT[i] = 0; A.fatB[i] = 0; };
   const tire = (d, el = 0) => { place(); B.pilotes = [{ id: A.id[i], ax: 0, ay: 0, tir: { d, el }, dernier: B.pilotes[0]?.dernier ?? null, refus: null }, null]; avancer(B); return B.pilotes[0]; };
   assert.equal(hauteurOeil(T, 200, 150), 1.6, 'à découvert : 1,6 m');
-  // droit devant : l'homme est dans le rayon, à 20 m ; en quarante coups au moins un but, et tous « visés »
+  // au milieu du corps à 20 m (le guidon à 1,1 m de haut) : le balancement d'un homme calme le laisse dans le tronc, chaque coup porte ; plus de dé pour toucher
+  const tronc = -Math.atan(0.5 / 20);
   let buts = 0, morts = 0;
-  for (let k = 0; k < 40; k++) { const P = tire([0, -1]); assert.ok(P.dernier.vise && Math.abs(P.dernier.t - 20) < 0.5, 'le rayon trouve l\'homme à 20 m'); if (P.dernier.touche) buts++; if (P.dernier.mort) morts++; }
-  assert.ok(buts >= 10 && buts <= 39, `la chance de toucher : ${buts}/40`); assert.ok(morts >= 1, 'une balle tue parfois');
+  for (let k = 0; k < 40; k++) { const P = tire([0, -1], tronc); assert.ok(P.dernier.vise && Math.abs(P.dernier.t - 20) < 0.5, 'le rayon trouve l\'homme à 20 m'); if (P.dernier.touche) { buts++; assert.equal(P.dernier.zone, 'tronc'); } if (P.dernier.mort) morts++; }
+  assert.equal(buts, 40, `le viseur décide : ${buts}/40`); assert.ok(morts >= 8 && morts <= 34, `au tronc, une balle tue souvent : ${morts}/40`);
+  // la fiche du mort : où, par quoi, par qui
+  const mortId = Object.keys(B.etat.defunts).map(Number).find(id => B.etat.defunts[id][21] === A.id[i]);
+  assert.ok(mortId !== undefined, 'un mort crédité au tireur'); assert.equal(B.etat.defunts[mortId][19], 'tronc'); assert.equal(B.etat.defunts[mortId][20], 'une balle de Lebel');
+  // les parties du corps
+  assert.equal(zoneTouchee(0.95, 0.05).nom, 'tete'); assert.equal(zoneTouchee(0.95, 0.2), null, 'à côté de la tête');
+  assert.equal(zoneTouchee(0.7, 0.25).nom, 'bras'); assert.equal(zoneTouchee(0.3, 0.1).nom, 'jambes'); assert.equal(zoneTouchee(0.3, 0.25), null, 'entre les jambes, à côté');
   // de côté ou trop haut : personne
   assert.equal(tire([1, 0]).dernier.vise, false, 'de côté'); assert.equal(tire([0, -1], 0.5).dernier.vise, false, 'au-dessus de sa tête (30° plus haut)');
   assert.equal(tire([0, -1], -0.2).dernier.vise, false, 'dans le sol devant lui');
   // le relief : un mur de 3 m à 10 m arrête la balle
   place(); for (let y = 138; y <= 141; y++) for (let x = 190; x <= 210; x++) T.base[y * T.W + x] = 12;
   assert.equal(tire([0, -1]).dernier.vise, false, 'le relief arrête la balle'); T.base.fill(0);
-  // le rechargement : un second coup tout de suite est refusé
+  // le verrou : un second coup tout de suite est refusé
   place(); B.pilotes = [{ id: A.id[i], ax: 0, ay: 0, tir: { d: [0, -1], el: 0 }, dernier: null, refus: null }, null]; avancer(B);
   B.pilotes[0].tir = { d: [0, -1], el: 0 }; avancer(B); assert.match(B.pilotes[0].refus, /pas rechargé/);
+  // le magasin : vide, le coup est refusé et il recharge ; le Lebel une cartouche par demi-seconde ; un coup interrompt
+  place(); B.pilotes[0].balles = 0; B.pilotes[0].tir = { d: [0, -1], el: 0 }; B.pilotes[0].refus = null; avancer(B);
+  assert.match(B.pilotes[0].refus, /vide/); assert.equal(B.pilotes[0].recharge, true);
+  for (let k = 0; k < 30; k++) avancer(B);
+  assert.ok(B.pilotes[0].balles >= 1 && B.pilotes[0].balles <= 2, `une seconde : ${B.pilotes[0].balles} cartouches`);
+  for (let k = 0; k < 150; k++) avancer(B);
+  assert.equal(B.pilotes[0].balles, 9, 'plein : 8 dans le tube, 1 dans la chambre'); assert.equal(B.pilotes[0].recharge, false);
+  assert.match(commanderPilote(B, 0, { recharge: true }), /plein/);
+  // le balancement : une fonction pure ; la peur l'élargit, épauler le resserre
+  const b1 = balancement(A, i, 12.3), b2 = balancement(A, i, 12.3); assert.deepEqual(b1, b2);
+  const a0 = amplitude(A, i), ae = amplitude(A, i, true); A.peur[i] = 1; const ap = amplitude(A, i); A.peur[i] = 0;
+  assert.ok(ae < a0 && ap > 2 * a0, `calme ${a0}, épaulé ${ae}, terrifié ${ap}`);
   // le tir automatique se tait pour l'homme piloté ; sans pilote, la simulation ne tire rien pour lui
   const C = petite(); assert.deepEqual(C.pilotes, [null, null]); for (let k = 0; k < 30; k++) avancer(C);
 });
-import { commanderPilote } from '../js/tir-joueur.js';
+import { commanderPilote, zoneTouchee, balancement, amplitude } from '../js/tir-joueur.js';
 import { mourir } from '../js/bataille.js';
 test('la vue d\'un soldat à deux (v0.148.0) : un pilote par camp, des commandes rejouées au même pas donnent la même partie, un homme d\'en face ne se pilote pas', () => {
   const mk = () => { const B = petite(), A = B.armee; B.terrain.base.fill(0); B.terrain.diff.fill(0); return B; };

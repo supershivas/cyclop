@@ -73,7 +73,7 @@ Le cœur du travail : **un vol qui n'est plus une fonction du temps**.
 
 | Lot | Contenu | Version | Tests |
 |---|---|---|---|
-| 1 | Soldat : vraie visée (balancement pur, zones du corps), épauler, magasin | mineure | « le tir du joueur » étendu ; à deux : même balle |
+| 1 | Soldat : vraie visée (balancement pur, zones du corps), épauler, magasin — **fait en v0.151.0**, avec la fiche du mort (`interface.md`, « La vraie visée ») | mineure | « le tir du joueur » étendu ; à deux : même balle |
 | 2 | Soldat : course, accroupi/ramper, parapet, sensations | correctif | marche et fatigue (`armee.test.mjs`) |
 | 3 | Soldat : baïonnette, charge, parade, crosse ; « À moi ! », Tab | mineure | mêlée pilotée, test à deux |
 | 4 | Char : conduite et canon à la main, bascules auto, retour au parc | mineure | `bataille.test.mjs` : conduite, enlisement inchangé, relue |

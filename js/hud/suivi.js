@@ -8,7 +8,8 @@
 // Rien de neuf dans le moteur que quelques réglages de la vue (`vue.haut`, `dist`, `portee`, `hors`, `roulis`, `secousse`, rendu3d.js) : la caméra du jeu orbite déjà autour d'un point visé, ici ce point
 // suit l'engin. Le dessin seulement : aucune lecture n'écrit dans la bataille. La vue se libère d'un geste sur la caméra (déplacer, tourner), Échap, le clic droit, ou le bouton ; la vue d'avant revient.
 import { positionDe } from '../avions.js?v=0.150.1';
-import { hauteurOeil } from '../tir-joueur.js?v=0.150.1';
+import { hauteurOeil, balancement, armeDe } from '../tir-joueur.js?v=0.150.1';
+import { TIR_JOUEUR as TJ } from '../data/tir-joueur.js?v=0.150.1';
 import { indiceDe } from './lecture.js?v=0.150.1';
 
 const SOL_Y = 3;           // le niveau moyen du sol que vise la caméra (rendu3d.js : `SOL_Y`), pour calculer `vue.haut`
@@ -69,7 +70,7 @@ function cibleDe(B, genre, id, ctx = {}) {
 
 export function creerSuivi({ $, bataille, rendu, reduit = () => false, retour = () => {}, dire = () => {}, verrou = document.body, touche = () => false, enPause = () => false, moi = () => 0, piloter = () => {}, mort = () => {} }) {
   let s = null;          // { genre, id, mode: 'cinema' | 'personne', t, avant, tir, accident, fin }
-  const badge = $('suivi'), nom = $('suivi-nom'), barres = $('cinema'), rouge = $('accident'), viseur = $('viseur');
+  const badge = $('suivi'), nom = $('suivi-nom'), barres = $('cinema'), rouge = $('accident'), viseur = $('viseur'), cartouches = $('cartouches');
   $('suivi-liberer').onclick = () => liberer();
 
   /* La souris (vue à la personne) : le pointeur est capturé (le premier Échap rend le pointeur, et la vue avec lui) ; sans capture (refusée, ou un navigateur sans elle) le mouvement de la souris sert quand même */
@@ -77,9 +78,10 @@ export function creerSuivi({ $, bataille, rendu, reduit = () => false, retour = 
     if (!s || s.mode !== 'personne') return;
     if (performance.now() < s.sourd || performance.now() < s.attente) return;      // (`attente` : la capture est demandée, pas encore accordée : le saut du pointeur n'est pas arrivé)      // juste après la capture, Chrome compte le saut du pointeur vers le centre (jusqu'à 640 px mesurés : la vue partait de côté)
     const borne = v => Math.max(-SOURIS.pas, Math.min(SOURIS.pas, v || 0));
-    s.lacet += borne(e.movementX) * SOURIS.lacet;
+    const fin = s.genre === 'soldat' ? (s.fov ?? SOLDAT.fov) / SOLDAT.fov : 1;      // épaulé, le champ est plus étroit : la souris tourne moins vite (v0.151.0)
+    s.lacet += borne(e.movementX) * SOURIS.lacet * fin;
     const bas = s.genre === 'soldat' ? SOLDAT.haut : SOURIS.haut, haut = s.genre === 'soldat' ? SOLDAT.bas : SOURIS.bas;      // (de lever les yeux à baisser la tête)
-    s.pitch = Math.max(bas, Math.min(haut, s.pitch + borne(e.movementY) * SOURIS.tangage));
+    s.pitch = Math.max(bas, Math.min(haut, s.pitch + borne(e.movementY) * SOURIS.tangage * fin));
   });
   /* Le tir (v0.147.0) : le clic gauche, tout de suite (pas au relâchement) ; la demande est posée dans `B.pilote.tir`, la simulation la prend au pas suivant (tir-joueur.js) */
   const quart = v => Math.round(v * 1000) / 1000;      // (les angles envoyés sont arrondis au millième : les deux machines calculent avec les mêmes nombres)
@@ -88,8 +90,19 @@ export function creerSuivi({ $, bataille, rendu, reduit = () => false, retour = 
     if (enPause()) { dire('Le temps est arrêté : on ne tire pas.'); return; }
     piloter({ tir: true, cap: quart(s.cap + s.lacet), el: quart(-s.pitch) });      // `piloter` : seul, la commande s'applique tout de suite ; à deux, elle part aux deux machines (main.js)
   }
+  /* Épauler (v0.151.0, Jérôme : « clic droit maintenu : épauler ») : le champ se resserre, le guidon tremble moins, il marche moins vite ; relâché, il baisse le fusil */
+  const epauler = v => { if (!s || s.genre !== 'soldat' || s.epaule === v) return; s.epaule = v; rendu.fusilEpaule(v); piloter({ epaule: v }); };
+  const surChamp = e => document.pointerLockElement || e.target.id === 'canvas';
   document.addEventListener('mousedown', e => {
-    if (e.button === 0 && s?.genre === 'soldat' && (document.pointerLockElement || e.target.id === 'canvas')) { e.preventDefault(); tirer(); }
+    if (s?.genre !== 'soldat' || !surChamp(e)) return;
+    if (e.button === 0) { e.preventDefault(); tirer(); } else if (e.button === 2) { e.preventDefault(); epauler(true); }
+  });
+  document.addEventListener('mouseup', e => { if (e.button === 2) epauler(false); });
+  /* R : recharger (le Lebel une cartouche à la fois, le Mauser d'une lame) */
+  document.addEventListener('keydown', e => {
+    if (s?.genre !== 'soldat' || e.code !== 'KeyR' || e.repeat || document.querySelector('dialog[open]')) return;
+    if (enPause()) { dire('Le temps est arrêté.'); return; }
+    piloter({ recharge: true });
   });
   document.addEventListener('pointerlockchange', () => {
     if (!s) return;
@@ -107,7 +120,8 @@ export function creerSuivi({ $, bataille, rendu, reduit = () => false, retour = 
     if (genre === 'soldat') {
       rendu.cacherSoldat(id); rendu.fusil = true; viseur.toggleAttribute('hidden', false);      // (un SVG n'a pas de propriété `hidden` : l'attribut)
       viseur.classList.remove('touche', 'mort'); document.body.classList.add('vue-soldat');      // plus d'interface : seuls le fusil, le viseur et les messages restent (v0.148.0)
-      dire('ZQSD marcher · souris regarder · clic gauche tirer · Échap revenir');
+      cartouches.toggleAttribute('hidden', false); s.vuBalles = ''; s.epaule = false; s.fov = SOLDAT.fov; rendu.fusilEpaule(false);
+      dire('ZQSD marcher · souris viser · clic gauche tirer · clic droit épauler · R recharger · Échap revenir');
     }
     if (mode === 'personne') { s.sourd = performance.now() + 400; s.attente = performance.now() + 2000; prendreSouris(); } else rendreSouris();      // (sans capture au bout de 2 s : la souris libre sert)
     rendu.vue.roulis = 0; rendu.vue.secousse = 0; rendu.vue.fov = avant.fov;
@@ -120,7 +134,7 @@ export function creerSuivi({ $, bataille, rendu, reduit = () => false, retour = 
     if (!s) return;
     const { avant, genre } = s; s = null; rendreSouris();
     const V = rendu.vue;
-    rendu.cacherSoldat(-1); rendu.fusil = false; viseur.toggleAttribute('hidden', true); document.body.classList.remove('vue-soldat'); if (genre === 'soldat') piloter({ fin: true }); V.proche = null;
+    rendu.cacherSoldat(-1); rendu.fusilEpaule(false); rendu.fusil = false; viseur.toggleAttribute('hidden', true); cartouches.toggleAttribute('hidden', true); document.body.classList.remove('vue-soldat'); if (genre === 'soldat') piloter({ fin: true }); V.proche = null;
     V.tgMin = null; V.haut = 0; V.dist = null; V.portee = 0; V.garde = null; V.hors = 0; V.roulis = 0; V.secousse = 0; V.fov = avant.fov;
     rendu.placerCamera(avant.yaw, avant.tangage); V.zoom = avant.zoom;
     retour(avant.cx, avant.cz);           // le point visé glisse jusqu'où il était
@@ -173,11 +187,18 @@ export function creerSuivi({ $, bataille, rendu, reduit = () => false, retour = 
         if (perso) { const vers = Math.atan2(T.ty - py, T.tx - px); tete = P.cap + angle(vers - P.cap) * w; }
       }
     }
-    V.fov = homme ? SOLDAT.fov : s.avant.fov * (1 - TIR.tele * w);
+    // l'homme : le pilote que la simulation tient (épaulé, son magasin), le balancement de son guidon (la même fonction que la balle : tir-joueur.js), le champ qui se resserre épaulé
+    const pl = homme && B.pilotes?.[moi()]?.id === s.id ? B.pilotes[moi()] : {};
+    let bc = 0, be = 0;
+    if (homme) {
+      if (s.indice >= 0) [bc, be] = balancement(B.armee, s.indice, B.etat.temps, !!pl.epaule);
+      const voulu = pl.epaule ? TJ.epaule.fov : SOLDAT.fov; s.fov += (voulu - s.fov) * (r ? 1 : Math.min(1, dt / TJ.epaule.entre * 3));
+    }
+    V.fov = homme ? s.fov : s.avant.fov * (1 - TIR.tele * w);
     // l'angle : à la personne, dans la direction du regard ; au cinéma, derrière l'engin, puis un balayage lent autour de lui
     // la souris : le regard qu'on a choisi s'ajoute au cap de l'engin ; pendant le coup d'œil vers l'explosion la vue file d'abord vers elle (w), puis revient au regard choisi
     const libre = perso ? 1 - w : 0;
-    const chasse = chasseDe(tete + (perso ? s.lacet * libre : 0));
+    const chasse = chasseDe(tete + (perso ? s.lacet * libre : 0) + bc);
     const balai = perso || r ? 0 : 0.7 + 1.7 * Math.sin(s.t * 2 * Math.PI / (CINEMA.periode * 2) - 0.6);
     const voulu = chasse + balai, d = angle(voulu - V.cible.yaw);
     V.cible.yaw += d * (s.neuf ? 1 : perso ? Math.min(1, dt * (w > 0 || s.tir ? 14 : 24)) : Math.min(1, dt * 3)); if (s.neuf) V.yaw = V.cible.yaw;
@@ -185,7 +206,7 @@ export function creerSuivi({ $, bataille, rendu, reduit = () => false, retour = 
     if (homme) V.cible.yaw = V.yaw = voulu;      // la souris, tout de suite : pas de retard sur le regard
     let tg = perso ? P.tangage + s.pitch * libre : CINEMA.tangage[0] + (r ? 0 : CINEMA.tangage[1] * Math.sin(s.t * 2 * Math.PI / CINEMA.periode) + CINEMA.tangage[2]);
     if (perso && (chute || epave)) tg = epave ? 1.2 : Math.min(1.2, (s.pique ?? P.tangage) + dt * 0.7), s.pique = tg;
-    if (homme) tg = s.pitch;
+    if (homme) tg = s.pitch - be;      // (l'élévation de la balle est −pitch : le guidon qui monte relève la vue)
     V.cible.tangage = tg; if (s.neuf || (perso && chute) || homme) V.tangage = tg;
     // ZQSD (les touches physiques W, A, S, D : la même place en AZERTY et en QWERTY) : on marche dans le sens du regard ; la simulation lit `B.pilote` à chaque pas (army.js, `pasArmee`)
     if (homme) {
@@ -197,7 +218,13 @@ export function creerSuivi({ $, bataille, rendu, reduit = () => false, retour = 
         s.cleMarche = cle; s.capEnvoye = q; s.tEnvoi = s.t;
         piloter({ id: s.id, cap: q, av, la });
       }
-      const pl = B.pilotes?.[moi()]?.id === s.id ? B.pilotes[moi()] : {};      // (ce que le dernier coup a donné : écrit par la simulation, la même chez les deux joueurs)
+      // (ce que le dernier coup a donné : écrit par la simulation, la même chez les deux joueurs)
+      // le magasin : une cartouche par trait, vide en creux ; elles clignotent pendant qu'il recharge (aucun texte : on le voit)
+      const W = armeDe(B.armee.camp[s.indice] ?? moi()), nb = pl.balles ?? W.balles, cleB = `${nb}/${W.balles}/${pl.recharge ? 1 : 0}`;
+      if (cleB !== s.vuBalles) {
+        s.vuBalles = cleB; cartouches.classList.toggle('recharge', !!pl.recharge);
+        cartouches.innerHTML = Array.from({ length: W.balles }, (_, k) => `<i${k < nb ? '' : ' class="vide"'}></i>`).join('');
+      }
       // ce que le coup a donné : le recul du fusil, le viseur (touché, tombé), le refus dit à voix haute
       if (pl.dernier && pl.dernier.n !== s.vuTir) {
         s.vuTir = pl.dernier.n; rendu.fusilTir();

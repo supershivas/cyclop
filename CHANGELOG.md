@@ -1,5 +1,11 @@
 # Journal des versions
 
+## 0.151.0 — 2026-11-20
+
+- Dans la vue d'un soldat, la balle part où est le guidon, qui tremble selon sa peur et sa fatigue ; elle touche la tête, la poitrine, un bras ou une jambe
+- Clic droit maintenu : épauler ; R : recharger (Lebel 8 + 1, Mauser 5), les cartouches en bas à droite
+- La fiche d'un mort dit où il a été touché, par quoi (balle, éclat de 155…) et par qui
+
 ## 0.150.1 — 2026-11-18
 
 - La fin de partie dit les régiments dissous : le jour, leur nom barré, à qui sont allés leurs hommes ; ils perdent leurs médailles

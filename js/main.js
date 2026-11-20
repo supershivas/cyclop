@@ -1972,6 +1972,7 @@ createPointer($('canvas'), {
     if (!enJeu()) return;
     const [x, y] = rendu.versTerrain(p.x, p.y);
     // Le clic droit annule (Jérôme, v0.21.2) : le barrage visé, « Marcher », la fiche, puis les régiments choisis ; il ne donne plus d'ordre.
+    if (p.button === 2 && leSuivi.actif?.genre === 'soldat') return;      // dans la vue d'un soldat le clic droit épaule (v0.151.0) : Échap seul rend la vue
     if (p.button === 2) return annuler();
     if (p.button !== 0) return;
     if (leSuivi.actif?.mode === 'personne') return;      // la souris est prise par le regard (v0.143.0) : le pointeur ne montre plus rien du champ
@@ -2036,7 +2037,7 @@ createPointer($('canvas'), {
     }
     majHud();
   },
-  onDragStart: p => { centrage = null; leSuivi.liberer(); glisse = { bouton: p.button, x0: p.startX, y0: p.startY, cx: rendu.vue.cx, cz: rendu.vue.cz, ddx: p.dx, ddy: p.dy }; },
+  onDragStart: p => { if (leSuivi.actif?.genre === 'soldat') return; centrage = null; leSuivi.liberer(); glisse = { bouton: p.button, x0: p.startX, y0: p.startY, cx: rendu.vue.cx, cz: rendu.vue.cz, ddx: p.dx, ddy: p.dy }; },
   onDrag: p => {
     if (!glisse) return;
     if (glisse.bouton === 1 && p.event.shiftKey) {

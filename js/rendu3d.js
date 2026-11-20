@@ -1035,6 +1035,7 @@ export async function creerRendu(canvas, { budgetMs = 4, mesure = false, camera:
     set surligneEngins(v) { surligneEngins = !!v; },       // le génie vise ou le bâtiment est ouvert : les engins abîmés du parc sont cerclés (v0.130.0)
     set fusil(v) { fusilOn = !!v; soldats.sansLettres = fusilOn; if (fusilOn && !fusilVue) fusilVue = creerFusilVue({ THREE, renderer, PALETTE }); },      // le fusil devant nous : créé au premier besoin (un objet de plus décale les identifiants : les images de référence)
     fusilTir() { fusilVue?.tir(); },
+    fusilEpaule(v) { fusilVue?.epaule(v); },      // épaulé : le fusil vient au milieu de l'image (v0.151.0)
     cacherSoldat(id) { soldats.cacher(id); },      // l'homme que le joueur pilote ne se dessine pas : l'œil est dedans (v0.144.0)
     set marquesParc(v) { marquesParc = v && v.length ? v : null; },       // les engins du parc dont l'ordre est armé : cerclés d'os comme une sélection (v0.140.0)
     set aretesPonts(v) { aretesPonts = !!v; },       // le génie vise : les ponts coupés se montrent en arêtes (v0.67.0)

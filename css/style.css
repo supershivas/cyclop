@@ -255,6 +255,7 @@
 .corps { display: block; width: 36px; height: 84px; fill: none; stroke: var(--jeu-fond); stroke-width: 1.5; }
 .corps .touche { fill: var(--jeu-fond); }
 .corps .croix { stroke: var(--jeu-encre); stroke-width: 2; stroke-linecap: square; }
+.corps .croix.fatale { stroke-width: 3.5; }      /* le coup qui l'a tué (v0.151.0) */
 .jauges { flex: 1; min-width: 0; display: grid; gap: var(--e1); }
 .jauge { display: grid; grid-template-columns: 1fr auto; grid-template-areas: "nom mot" "piste piste"; gap: var(--e0) var(--pas); font-size: var(--texte-petit); line-height: 1.2; }
 .j-nom { grid-area: nom; color: var(--jeu-accent); }
@@ -1006,12 +1007,19 @@ h2 { font-weight: normal; letter-spacing: var(--titre-lettres); }
 .viseur { position: absolute; left: 50%; top: 50%; width: 36px; height: 36px; transform: translate(-50%, -50%); pointer-events: none; fill: none; stroke: var(--jeu-encre); stroke-width: 1.6; stroke-linecap: round; paint-order: stroke; filter: drop-shadow(0 0 1px var(--jeu-fond)); }
 .viseur[hidden] { display: none; }
 /* Dans la vue d'un soldat il n'y a plus d'interface (Jérôme, v0.148.0) : tout le HUD disparaît sauf le viseur ; les messages (`#toast`) restent, ils sont hors du HUD */
-body.vue-soldat #hud > :not(#viseur), body.vue-soldat #etiquettes, body.vue-soldat #retours, body.vue-soldat #chars-etiq, body.vue-soldat #visee, body.vue-soldat #visee-nid,
+body.vue-soldat #hud > :not(#viseur):not(#cartouches), body.vue-soldat #etiquettes, body.vue-soldat #retours, body.vue-soldat #chars-etiq, body.vue-soldat #visee, body.vue-soldat #visee-nid,
 body.vue-soldat #equerres, body.vue-soldat #repere, body.vue-soldat #repere-soldat, body.vue-soldat #bulle { display: none !important; }
 .viseur .marque { opacity: 0; stroke-width: 2; }
 .viseur.touche .marque { animation: viseur-touche .45s ease-out 1; }
 .viseur.mort .marque { stroke-width: 3; animation: viseur-touche .8s ease-out 1; }
 @keyframes viseur-touche { from { opacity: 1; } to { opacity: 0; } }
+/* Le magasin de l'homme qu'on mène (v0.151.0) : une cartouche par trait d'os, la tirée en creux ; elles battent pendant qu'il recharge. Aucun texte. */
+.cartouches { position: absolute; right: var(--e4); bottom: var(--e4); display: flex; gap: var(--e1); pointer-events: none; filter: drop-shadow(0 0 1px var(--jeu-fond)); }
+.cartouches i { width: 5px; height: 18px; background: var(--jeu-encre); border: 1px solid var(--jeu-fond); border-radius: 2px 2px 0 0; }
+.cartouches i.vide { background: transparent; border-color: var(--jeu-encre); opacity: .5; }
+.cartouches.recharge i.vide { animation: cartouche-recharge .5s ease-in-out infinite alternate; }
+@keyframes cartouche-recharge { to { opacity: .15; } }
+@media (prefers-reduced-motion: reduce) { .cartouches.recharge i.vide { animation: none; } }
 @media (prefers-reduced-motion: reduce) { .viseur.touche .marque, .viseur.mort .marque { animation: none; opacity: 1; } }
 .reg-ouvert .tete .aide.vue svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 .reg-ouvert .tete .aide.vue[aria-pressed="true"] { background: var(--jeu-fond); color: var(--jeu-encre); border-color: var(--jeu-fond); }       /* la vue est prise : le bouton est plein */
