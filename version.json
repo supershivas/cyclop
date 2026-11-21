@@ -1,8 +1,8 @@
 {
-  "version": "0.160.0",
+  "version": "0.160.1",
   "date": "2026-11-21",
   "changes": [
-    "En passant à la vue d'un soldat, d'un char ou d'un avion, la caméra plonge vers lui jusqu'à l'œil ; le fusil et le viseur n'arrivent qu'à la fin",
-    "En quittant cette vue, la caméra recule jusqu'à la vue d'avant (au-dessus du corps si l'homme est tombé)"
+    "Le soldat qu'on dirigeait reste visible quand il tombe, sous tous les angles, même au fond d'une tranchée",
+    "La caméra suit son corps là où un obus l'a jeté, pas l'endroit où il a été touché"
   ]
 }

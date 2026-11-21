@@ -1,5 +1,10 @@
 # Journal des versions
 
+## 0.160.1 — 2026-11-21
+
+- Le soldat qu'on dirigeait reste visible quand il tombe, sous tous les angles, même au fond d'une tranchée
+- La caméra suit son corps là où un obus l'a jeté, pas l'endroit où il a été touché
+
 ## 0.160.0 — 2026-11-21
 
 - En passant à la vue d'un soldat, d'un char ou d'un avion, la caméra plonge vers lui jusqu'à l'œil ; le fusil et le viseur n'arrivent qu'à la fin

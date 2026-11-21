@@ -1,19 +1,19 @@
 // Les hommes : les soldats (une boîte et son ombre ; de près la silhouette, plus loin une silhouette allégée ; aux zooms 1 et 2 un point), les anneaux des
 // régiments choisis ou survolés, les corps (un homme couché) et les tombes (un tertre et une croix). Tout est instancié et ne reçoit que ce qu'on voit.
 // Le dessin seulement. Les formes viennent de geometries.js, le GLSL de shaders.js.
-import * as SH from './shaders.js?v=0.160.0';
-import { creerGeometries } from './geometries.js?v=0.160.0';
-import { classeDuRang } from '../data/grades.js?v=0.160.0';
-import { creerEquipeArticulee } from './soldat-articule.js?v=0.160.0';
-import { creerJeuAnimations } from './animation-jeu.js?v=0.160.0';
-import { allures, allure, reposGeste, poseMort, chute } from '../anim-modeles.js?v=0.160.0';
-import { echantillon } from '../pose-soldat.js?v=0.160.0';
-import { NOMS_CHAMPS } from '../data/poses-soldat.js?v=0.160.0';
-import { ANIMATIONS } from '../data/animations.js?v=0.160.0';
-import { EPAULEMENT, MARCHE_JEU, GESTES, MORTS_JEU } from '../data/lecteur-animations.js?v=0.160.0';
-import { SANG } from '../data/aspect-soldat.js?v=0.160.0';
-import { ligneY } from '../tranchees.js?v=0.160.0';
-import { profondeurALEcran } from './vue-ecran.js?v=0.160.0';
+import * as SH from './shaders.js?v=0.160.1';
+import { creerGeometries } from './geometries.js?v=0.160.1';
+import { classeDuRang } from '../data/grades.js?v=0.160.1';
+import { creerEquipeArticulee } from './soldat-articule.js?v=0.160.1';
+import { creerJeuAnimations } from './animation-jeu.js?v=0.160.1';
+import { allures, allure, reposGeste, poseMort, chute } from '../anim-modeles.js?v=0.160.1';
+import { echantillon } from '../pose-soldat.js?v=0.160.1';
+import { NOMS_CHAMPS } from '../data/poses-soldat.js?v=0.160.1';
+import { ANIMATIONS } from '../data/animations.js?v=0.160.1';
+import { EPAULEMENT, MARCHE_JEU, GESTES, MORTS_JEU } from '../data/lecteur-animations.js?v=0.160.1';
+import { SANG } from '../data/aspect-soldat.js?v=0.160.1';
+import { ligneY } from '../tranchees.js?v=0.160.1';
+import { profondeurALEcran } from './vue-ecran.js?v=0.160.1';
 
 // `THREE`, `scene`, `col`, `solUniforms` (`uSol`, `uTaille` : la texture du sol, que l'ombre d'un soldat reprend), `styleSoldat` (le style de près, comparé au labo),
 // `grades` (v0.68.0 : une variante de `GRADES`, data/grades.js, ou null : tous pareils) et `rangDe(B, id, reg)` (le rang d'un homme, bataille.js) ; `surface(x, z)` et `surfaceLisse(x, z)` (la hauteur du sol, lissée pour qui marche), `solY` (la hauteur moyenne du sol) et `POINTS_JUSQUA` (le zoom où un soldat n'est
@@ -431,7 +431,7 @@ export function creerSoldats({ THREE, scene, col, solUniforms, styleSoldat, grad
       for (let c = 0; c < nc && nArt < artCfg.max; c++) if (candD[c] <= seuil) { artSel[candI[c]] = 1; ART_AVANT[A.id[candI[c]] & 0xffff] = 1; nArt++; }
       // deux niveaux de détail (v0.105.1) : dès `fin` px/m le fin (le visage se lit, les galons, les boutons), de `des` à là l'intermédiaire (un casque simplifié, ni boutons, ni pouces, ni galons : moins d'un pixel)
       const niv = p >= (artCfg.fin ?? 24) ? 'fin' : 'moyen';
-      if (nArt && !EQs[niv]) {
+      if ((nArt || (artCfg.morts && B.etat.corps.length)) && !EQs[niv]) {      // (aussi pour les seuls morts : la vue d'un soldat tombé ne voit parfois que lui, et le corps en boîtes n'a que le dessus et la face sud de ses boîtes : vu du nord, il disparaissait, v0.160.1)
         EQs[niv] = creerEquipeArticulee(THREE, col, { capacite: artCfg.max + (artCfg.morts ?? 0) + 8, ombrage: artCfg.ombrage ?? 0, niveau: niv, texturePoses: artCfg.texture !== false,
           partages: { uSoleil: soldatMat.uniforms.uSoleil, uSol: solUniforms.uSol, uTaille: solUniforms.uTaille, uAO: solUniforms.uAO, uAOon: solUniforms.uAOon, uSunOn: solUniforms.uSunOn, uAbriOn: solUniforms.uAbriOn, uBoue: soldatMat.uniforms.uBoue, uMouille: soldatMat.uniforms.uMouille, uSang: soldatMat.uniforms.uSang, uSangCell: soldatMat.uniforms.uSangCell, uSangCoul: soldatMat.uniforms.uSangCoul, uVarTon: soldatMat.uniforms.uVarTon } });
         for (const m of EQs[niv].meshes) scene.add(m);
@@ -593,6 +593,18 @@ export function creerSoldats({ THREE, scene, col, solUniforms, styleSoldat, grad
     preparer(B) { MORT_T.fill(NaN); VU_ART.fill(-1e9); POSES_MORT.clear(); artCorps.fill(0); CAPS.fill(NaN); SANGS.fill(0); tSang = 0; TIR_T.fill(-1e9); FX.fill(1e9); LX.fill(1e9); preparerSoldats(B.armee.capacite); preparerCorps(Math.max(1024, B.etat.corps.length * 2)); preparerTombes(Math.max(256, (B.etat.tombes?.length || 0) * 2)); },
     maj,
     cacher(id) { cache = id; },
+    // où gît le corps d'un homme, tel qu'il est dessiné (son écart dans le rang, et en vol s'il est projeté : comme `majCorps`) ; null s'il n'y en a pas.
+    // La vue d'un soldat mort vise là, pas la place de sa mort (v0.160.1 : un obus jetait le corps quelques mètres plus loin, la caméra ne regardait qu'une tache)
+    placeCorps(id) {
+      const B = bataille(), C = B?.etat.corps; if (!C) return null;
+      let ic = C.length - 1; while (ic >= 0 && C[ic][4] !== id) ic--;
+      if (ic < 0) return null;
+      const c = C[ic]; let x = c[0] / 10, y = c[1] / 10;
+      if (variete) { const iv = c[4] & 0xffff; x += variete.rang * (hach(iv + 31, 2246822519) * 2 - 1); y += variete.rang * (hach(iv + 113, 3266489917) * 2 - 1); }
+      const v = B.volants.find(w => w[0] === ic);
+      if (v) { const f = Math.min(1, v[3] / B.R.obus.projection.duree); x = v[1] + (x - v[1]) * f; y = v[2] + (y - v[2]) * f; }
+      return { x, y, vole: !!v };
+    },
     set sansLettres(v) { sansLettres = !!v; },      // la lettre du capitaine est un repère d'interface : pas dans la vue d'un soldat (v0.148.0)                                   // l'homme qu'on ne dessine pas (le numéro de l'armée, −1 : aucun)
     survoler(reg) { survolReg = reg; },                            // le régiment qu'un anneau à la couleur de son camp désigne
     get legere() { return legerActif; }, set legere(v) { legerActif = !!v; },     // la silhouette allégée (la mesure du coût l'éteint)

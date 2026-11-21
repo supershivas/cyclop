@@ -1,6 +1,6 @@
-import { NOMS_CHAMPS } from '../data/poses-soldat.js?v=0.160.0';
-import { ARTICULE } from '../data/aspect-soldat.js?v=0.160.0';
-import { poseJeu, phaseDe, TEXELS, FLOTTANTS } from './pose-jeu.js?v=0.160.0';
+import { NOMS_CHAMPS } from '../data/poses-soldat.js?v=0.160.1';
+import { ARTICULE } from '../data/aspect-soldat.js?v=0.160.1';
+import { poseJeu, phaseDe, TEXELS, FLOTTANTS } from './pose-jeu.js?v=0.160.1';
 
 // Le soldat articulé (au labo seulement : « la fabrique de soldats », et la mesure de son coût ; rien n'est dans le jeu).
 // Un squelette de treize os (le tronc, la tête, deux fois bras / avant-bras, deux fois cuisse / mollet / pied, le fusil) que le nuanceur plie : le genou, le coude, la cheville
@@ -603,14 +603,15 @@ export function creerEquipeArticulee(THREE, col, { capacite, ombrage = 0, partag
   }
   const O = creerSoldatArticule(THREE, col, { ombreSeule: true, partages });
   const ombres = O.instances(capacite); ombres.mesh.renderOrder = 1.9; ombres.envoyer(0);
-  let nO = 0;
+  let nO = 0, nH = 0;      // les ombres écrites, les hommes écrits (un mort n'a pas d'ombre : compter les ombres cachait l'équipe quand on ne voyait que des morts, v0.160.1)
   const scratch = new Float32Array(FLOTTANTS);
   const meshes = [ombres.mesh, ...groupes.map(g => g.lot.mesh)];
   return {
     meshes,
-    debut() { nO = 0; for (const g of groupes) g.n = 0; },
+    debut() { nO = 0; nH = 0; for (const g of groupes) g.n = 0; },
     ajouter(h) {
-      if (nO >= capacite) return false;
+      if (nH >= capacite) return false;
+      nH++;
       if (!h.sansOmbre) ombres.ecrire(nO++, h);      // (un mort n'a pas l'ombre d'un homme debout)
       const camp = (h.camp ?? 0) & 1;
       let pose = null;      // calculée une fois pour l'homme, copiée dans la texture de chaque maillage qui le dessine
@@ -618,8 +619,8 @@ export function creerEquipeArticulee(THREE, col, { capacite, ombrage = 0, partag
       for (const g of groupes) if (g.n < capacite && voir(g.code, h.aspect, camp, h.blessure ?? 0)) g.lot.ecrire(g.n++, h, pose);
       return true;
     },
-    fin() { ombres.envoyer(nO); for (const g of groupes) g.lot.envoyer(g.n); return nO; },
-    get compte() { return nO; },
+    fin() { ombres.envoyer(nO); for (const g of groupes) g.lot.envoyer(g.n); return nH; },
+    get compte() { return nH; },
     get appels() { return groupes.length + 1; },
     dispose() { for (const m of meshes) m.geometry.dispose(); for (const g of groupes) g.S.materiel.dispose(); O.materiel.dispose(); },
   };

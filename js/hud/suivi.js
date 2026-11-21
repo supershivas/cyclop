@@ -7,20 +7,20 @@
 //    tonneau, l'écran rouge, jusqu'à l'écrasement.
 // Rien de neuf dans le moteur que quelques réglages de la vue (`vue.haut`, `dist`, `portee`, `hors`, `roulis`, `secousse`, rendu3d.js) : la caméra du jeu orbite déjà autour d'un point visé, ici ce point
 // suit l'engin. Le dessin seulement : aucune lecture n'écrit dans la bataille. La vue se libère d'un geste sur la caméra (déplacer, tourner), Échap, le clic droit, ou le bouton ; la vue d'avant revient.
-import { positionDe } from '../avions.js?v=0.160.0';
-import { hauteurOeil, balancement, armeDe, aPortee } from '../tir-joueur.js?v=0.160.0';
-import { TIR_JOUEUR as TJ } from '../data/tir-joueur.js?v=0.160.0';
-import { CALIBRES } from '../data/calibres.js?v=0.160.0';
-import { CHARS } from '../data/chars.js?v=0.160.0';
-import { AVION_MAIN } from '../data/mitraillage.js?v=0.160.0';
-import { creerAideVue } from './aide-vue.js?v=0.160.0';
+import { positionDe } from '../avions.js?v=0.160.1';
+import { hauteurOeil, balancement, armeDe, aPortee } from '../tir-joueur.js?v=0.160.1';
+import { TIR_JOUEUR as TJ } from '../data/tir-joueur.js?v=0.160.1';
+import { CALIBRES } from '../data/calibres.js?v=0.160.1';
+import { CHARS } from '../data/chars.js?v=0.160.1';
+import { AVION_MAIN } from '../data/mitraillage.js?v=0.160.1';
+import { creerAideVue } from './aide-vue.js?v=0.160.1';
 // Les sensations de l'homme qu'on mène (v0.152.0) : le coup reçu (s), la balle qui frôle (s), le souffle d'un obus (portée en rayons du souffle, s de retour), la peur qui ferme le champ (opacité au plus)
 const SENS = { coup: 1.2, frole: 0.5, roulis: 0.07, choc: 3, chocDuree: 2.5, peur: 0.75 };
-import { indiceDe, quiEst } from './lecture.js?v=0.160.0';
-import { creerTampons } from './tampons-fps.js?v=0.160.0';
-import { BLESSURES_FPS, RYTHME_TAMPONS } from '../data/tampons.js?v=0.160.0';
-import { ZONES_EN_MOTS } from '../data/causes.js?v=0.160.0';
-import { REPERES } from './barres.js?v=0.160.0';
+import { indiceDe, quiEst } from './lecture.js?v=0.160.1';
+import { creerTampons } from './tampons-fps.js?v=0.160.1';
+import { BLESSURES_FPS, RYTHME_TAMPONS } from '../data/tampons.js?v=0.160.1';
+import { ZONES_EN_MOTS } from '../data/causes.js?v=0.160.1';
+import { REPERES } from './barres.js?v=0.160.1';
 
 const SOL_Y = 3;           // le niveau moyen du sol que vise la caméra (rendu3d.js : `SOL_Y`), pour calculer `vue.haut`
 const PORTEE = 700;        // m : le plan lointain d'une vue verrouillée (au ras du sol, la vue porte loin)
@@ -39,6 +39,8 @@ const TIR = { vers: [0.18, 0.4], garde: 1.7, retour: 2.3, fin: 2.6, tele: 0.5 };
 const SOURIS = { lacet: 0.0022, tangage: 0.0022, haut: -1.0, bas: 0.9, pas: 120 };      // pas : px au plus par événement
 const ECRASE = 3.2;        // s qu'on reste sur l'épave avant de rendre la vue
 // Le plongeon vers la vue à la personne et le recul à la sortie (Jérôme, 21 nov., v0.160.0 : « quand on passe en vue FPS (avion, soldat, char), un mouvement de caméra qui plonge vers l'entité choisie ; zoom arrière lors de la désélection ») : s (l'horloge réelle, mais 100 ms au plus par image : la première image d'un char vu de près compile ses shaders et sautait tout le plongeon)
+// La vue de l'homme tombé : de combien elle recule (m) et sa plongée (rad). 3 m et 1,05 rad jusqu'à la v0.160.0 : un mort au fond d'une tranchée restait caché par les sacs et le toit, frôlés de près (v0.160.1)
+const MORT_VUE = { recul: 4.7, tangage: 1.3 };
 const PLONGEON = { entree: 1.1, sortie: 0.9, pas: 0.1 };
 // L'œil d'un soldat (Jérôme, v0.144.0 : « la vue FPS sur chaque soldat : on clique et on dirige le soldat, ZQSD et la souris ») : à 1,6 m du sol, un champ large (70° : la caméra du jeu est à 30°),
 // la caméra à 0,3 m derrière le point de l'œil (l'homme lui-même n'est pas dessiné : `rendu.cacherSoldat`), un plan proche de 0,12 m (les autres hommes s'approchent à bout de bras)
@@ -308,15 +310,16 @@ export function creerSuivi({ $, bataille, rendu, reduit = () => false, retour = 
         if (d && !s.mort) {
           s.mort = { t: 0, t0: performance.now(), id: s.id, x: d[17], y: d[18] };      // (la place du corps : les champs 17 et 18 de la fiche ; 11 et 12 sont des caractéristiques : la v0.148.0 visait là, à tort) piloter({ fin: true });
           rendu.fusil = false; rendu.lettresCachees = true; viseur.toggleAttribute('hidden', true); cartouches.toggleAttribute('hidden', true); rendu.fusilParade(false);
-          dire('Il est tombé · Tab : un camarade · Échap : sa fiche');
+          dire('Il est tombé · Tab : un camarade · Échap : sa fiche'); aide.cacher();
         }
         if (s.mort) {
           const M = s.mort, V = rendu.vue, r = reduit(); M.t = (performance.now() - M.t0) / 1000;      // (l'horloge réelle : la chute dure une seconde même si les images sont lentes)
+          { const q = rendu.placeCorps?.(M.id); if (q) { M.x = q.x; M.y = q.y; } }      // le corps tel qu'il est dessiné, pas la place de la mort : un obus le jette plus loin (v0.160.1)
           // la vue quitte ses yeux : elle vise son corps au sol, recule de 3 m et le regarde d'en haut
           const f = r ? 1 : doux(M.t / 1.0), sol = rendu.hauteurSol(Math.max(0, M.x), Math.max(0, M.y)), k = r || f >= 1 ? 1 : Math.min(1, dt * 5);
           V.cx += (M.x - V.cx) * k; V.cz += (M.y - V.cz) * k;
-          V.haut += (sol + 0.2 - SOL_Y - V.haut) * k; V.dist = SOLDAT.dist + 2.7 * f;
-          V.cible.tangage = V.tangage = s.pitch + (1.05 - s.pitch) * f; V.fov = SOLDAT.fov;
+          V.haut += (sol + 0.2 - SOL_Y - V.haut) * k; V.dist = SOLDAT.dist + MORT_VUE.recul * f;
+          V.cible.tangage = V.tangage = s.pitch + (MORT_VUE.tangage - s.pitch) * f; V.fov = SOLDAT.fov;
           V.roulis = r ? 0 : 0.12 * Math.sin(Math.PI * Math.min(1, M.t / 1.2)); V.secousse = 0;
           s.choc = Math.max(0, (s.choc ?? 0) - dt / SENS.chocDuree); chocEl.style.opacity = (s.choc * 0.7).toFixed(3); peurEl.style.opacity = (0.75 * f).toFixed(3);
           return;
