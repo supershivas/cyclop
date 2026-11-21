@@ -1,9 +1,9 @@
 {
-  "version": "0.153.0",
-  "date": "2026-11-20",
+  "version": "0.155.0",
+  "date": "2026-11-21",
   "changes": [
-    "Les fiches d'un soldat, d'un régiment, d'un char, d'un avion et d'une mitrailleuse sont refaites sur un même modèle : la bande noire de la soirée, quatre chiffres clés, « Maintenant » et « Son parcours »",
-    "Plus de fiche qui défile : elle s'ouvre en haut à gauche, et son bouton rouge fait entrer dans l'unité (voir par ses yeux, monter à bord, choisir le régiment)",
-    "La fiche d'un régiment rend ses postures (à volonté, feu retenu) ; l'avion en vol a enfin une vraie fiche"
+    "Dans la vue d'un soldat, des tampons disent ce qui arrive : un ennemi abattu ou touché (son nom, où), une blessure, la terreur, un camarade qui tombe, la déroute, une tranchée prise ou perdue, une promotion",
+    "Le fusil et les bras de la vue d'un soldat refaits : un Lebel en bois et acier, des mains qui le tiennent, des bras qui partent des mains",
+    "Un mort couché ne s'enfonce plus dans le relief (il n'en restait qu'une tache noire, son ombre)"
   ]
 }

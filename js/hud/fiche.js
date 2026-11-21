@@ -1,17 +1,17 @@
 // Les fiches : un homme (son nom, son âge, son grade, ce qu'il endure) ou un régiment (ses hommes, ses
 // blessés, ses morts, et leurs fiches). De près, on regarde des hommes ; de loin, des régiments (Jérôme, v0.3.2).
 // La charpente (Jérôme, 20 nov., v0.153.0 : les fiches, deuxième jet) : la bande noire, quatre chiffres clés, « Maintenant » et « Son parcours », le pied (hud/fiche-cadre.js).
-import { NOUS, moralEnMots, rangDe } from '../bataille.js?v=0.153.0';
-import { experienceEnMots, chevrons, peurEnMots, fatigueEnMots, CARACTERISTIQUES, caracEnMots } from '../identite.js?v=0.153.0';
-import { majuscule, nomDe, indiceDe, premierDe, quiEst, tombe, bilan, enMots, refuseAujourdhui, actionEnMots, auFront, moyennes, prochainGrade, niveauMoral, numeroDe, statutOrdre } from './lecture.js?v=0.153.0';
-import { bonusEnMots } from '../data/experience.js?v=0.153.0';
-import { corps, REPERES } from './barres.js?v=0.153.0';
-import { jauge as jaugeT, carac as caracT, bande, partage, fil } from './tuiles.js?v=0.153.0';
-import { el, cle, rang, bloc, note, phrase, chevrons as chevronsDe, deux, image, poserEcusson, poserTampon } from './fiche-cadre.js?v=0.153.0';
-import { barreEffectif, jaugeMoral, reinitIds } from './bilan.js?v=0.153.0';
-import { palmares } from './medailles.js?v=0.153.0';
-import { ZONES_EN_MOTS } from '../data/causes.js?v=0.153.0';
-import { historiqueDe } from '../donnees-jour.js?v=0.153.0';
+import { NOUS, moralEnMots, rangDe } from '../bataille.js?v=0.155.0';
+import { experienceEnMots, chevrons, peurEnMots, fatigueEnMots, CARACTERISTIQUES, caracEnMots } from '../identite.js?v=0.155.0';
+import { majuscule, nomDe, indiceDe, premierDe, quiEst, tombe, bilan, enMots, refuseAujourdhui, actionEnMots, auFront, moyennes, prochainGrade, niveauMoral, numeroDe, statutOrdre } from './lecture.js?v=0.155.0';
+import { bonusEnMots } from '../data/experience.js?v=0.155.0';
+import { corps, REPERES } from './barres.js?v=0.155.0';
+import { jauge as jaugeT, carac as caracT, bande, partage, fil } from './tuiles.js?v=0.155.0';
+import { el, cle, rang, bloc, note, phrase, chevrons as chevronsDe, deux, image, poserEcusson, poserTampon } from './fiche-cadre.js?v=0.155.0';
+import { barreEffectif, jaugeMoral, reinitIds } from './bilan.js?v=0.155.0';
+import { palmares } from './medailles.js?v=0.155.0';
+import { ZONES_EN_MOTS } from '../data/causes.js?v=0.155.0';
+import { historiqueDe } from '../donnees-jour.js?v=0.155.0';
 
 // `$` : l'accès aux éléments ; `R` : les réglages ; `bataille()` : la bataille en cours ; `voir(id)` : voir par ses yeux ; `choisir(reg)` : choisir le régiment ; `posture(reg, stance)`
 const CARAC_TITRES = {   // (elles montent à l'usage : tirer, frapper, marcher fatigué, tenir sous le feu ; elles baissent avec une blessure ou la terreur)
