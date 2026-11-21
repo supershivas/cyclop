@@ -1,5 +1,10 @@
 # Journal des versions
 
+## 0.159.0 — 2026-11-21
+
+- Un clic sur un char au parc : il sort et vous êtes à bord, aux commandes ; un clic sur un avion au sol : il décolle seul et vous laisse les commandes en l'air
+- Maj+clic garde l'ancien geste : l'engin est choisi, puis on donne son objectif sur le champ
+
 ## 0.158.0 — 2026-11-21
 
 - Dans la vue d'un soldat, la balle tombe avec la distance ; un arbre, un char ou un des nôtres l'arrêtent (et un des nôtres touché, son régiment le paie)

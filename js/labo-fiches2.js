@@ -6,12 +6,12 @@
 //   3. deux colonnes de la même hauteur : « Maintenant » (ce qui change sous nos yeux : jauges, ordre en cours) et « Son parcours » (ce qui s'accumule : courbe, expérience, victimes) ;
 //   4. le pied : à gauche le lien ou l'action secondaire, à droite UN bouton rouge sang, l'action qui fait entrer dans l'unité (voir par ses yeux, monter à bord, choisir le régiment).
 // Les pièces sont celles du jeu (écussons, jauges, caractéristiques et leur encoche, silhouette du corps, courbe soir après soir) ; l'exemple est fixe (un 6e jour).
-import { el, html, info, bouton } from './hud/papier-nuit.js?v=0.158.0';
-import { jauge, carac, bande, partage, fil } from './hud/tuiles.js?v=0.158.0';
-import { corps, chevronsHtml, REPERES } from './hud/barres.js?v=0.158.0';
-import { jaugeMoral } from './hud/bilan.js?v=0.158.0';
-import { ecussonHtml, reglerEcusson } from './hud/ecussons.js?v=0.158.0';
-import { cadre } from './labo-papiers.js?v=0.158.0';
+import { el, html, info, bouton } from './hud/papier-nuit.js?v=0.159.0';
+import { jauge, carac, bande, partage, fil } from './hud/tuiles.js?v=0.159.0';
+import { corps, chevronsHtml, REPERES } from './hud/barres.js?v=0.159.0';
+import { jaugeMoral } from './hud/bilan.js?v=0.159.0';
+import { ecussonHtml, reglerEcusson } from './hud/ecussons.js?v=0.159.0';
+import { cadre } from './labo-papiers.js?v=0.159.0';
 
 const I = {
   oeil: '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>',

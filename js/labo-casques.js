@@ -2,11 +2,11 @@
 // Quatre hommes, deux de chaque camp, au niveau de détail fin du jeu (24 px/m et plus), la caméra tourne lentement autour d'eux ; un style de casque par variante
 // (`STYLES_CASQUE` de js/rendu/soldat-articule.js : les anneaux de boîtes d'aujourd'hui, des anneaux à douze pans, un profil tourné à 8 ou 16 pans). Le relevé dit ce que coûte
 // le casque, l'homme, et 250 hommes (le plafond des articulés), comparés aux anneaux d'avant. Le style revient à celui du jeu (`CASQUE_JEU`) dès les maillages faits.
-import { PALETTE } from './palette.js?v=0.158.0';
-import { loadThree } from './three-lib.js?v=0.158.0';
-import { fabriquer } from './labo-fabrique.js?v=0.158.0';
-import { creerEquipeArticulee, reglerCasques, reglerArrondi, boites, trianglesVisibles } from './rendu/soldat-articule.js?v=0.158.0';
-import { ARTICULE } from './data/aspect-soldat.js?v=0.158.0';
+import { PALETTE } from './palette.js?v=0.159.0';
+import { loadThree } from './three-lib.js?v=0.159.0';
+import { fabriquer } from './labo-fabrique.js?v=0.159.0';
+import { creerEquipeArticulee, reglerCasques, reglerArrondi, boites, trianglesVisibles } from './rendu/soldat-articule.js?v=0.159.0';
+import { ARTICULE } from './data/aspect-soldat.js?v=0.159.0';
 
 const el = (tag, props = {}, ...kids) => { const e = Object.assign(document.createElement(tag), props); e.append(...kids); return e; };
 const FACTEUR = 2, TAN15 = Math.tan(15 * Math.PI / 180);

@@ -1,8 +1,8 @@
 // La pose d'un homme articulé du jeu, calculée côté processeur (étape 3 de docs/chantiers/animations-vers-le-jeu.md) : les 25 nombres de `NOMS_CHAMPS`, écrits dans la texture
 // que lit le nuanceur de soldat-articule.js. Logique pure (aucun DOM, aucun THREE). C'est le calcul que le nuanceur faisait pour chaque sommet : `poseDe` (js/pose-soldat.js :
 // la marche, le tir, l'accroupi, le feu retenu, la mêlée, le couché) plus ce qu'il ajoutait pour une blessure (le bras plié, le genou à terre, la tête penchée).
-import { poseDe } from '../pose-soldat.js?v=0.158.0';
-import { NOMS_CHAMPS, BLESSURE } from '../data/poses-soldat.js?v=0.158.0';
+import { poseDe } from '../pose-soldat.js?v=0.159.0';
+import { NOMS_CHAMPS, BLESSURE } from '../data/poses-soldat.js?v=0.159.0';
 
 export const TEXELS = 7;                      // 7 texels RGBA = 28 flottants par homme (25 utilisés)
 export const FLOTTANTS = TEXELS * 4;
