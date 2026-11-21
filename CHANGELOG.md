@@ -1,5 +1,10 @@
 # Journal des versions
 
+## 0.160.0 — 2026-11-21
+
+- En passant à la vue d'un soldat, d'un char ou d'un avion, la caméra plonge vers lui jusqu'à l'œil ; le fusil et le viseur n'arrivent qu'à la fin
+- En quittant cette vue, la caméra recule jusqu'à la vue d'avant (au-dessus du corps si l'homme est tombé)
+
 ## 0.159.0 — 2026-11-21
 
 - Un clic sur un char au parc : il sort et vous êtes à bord, aux commandes ; un clic sur un avion au sol : il décolle seul et vous laisse les commandes en l'air
