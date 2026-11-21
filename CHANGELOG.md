@@ -1,16 +1,21 @@
 # Journal des versions
 
-## 0.156.0 — 2026-11-20
+## 0.157.0 — 2026-11-20
 
 - Un avion se pilote depuis sa vue à la personne, une fois en l'air : Q et D l'inclinent et il vire, Z pique, S cabre ; la vue suit son roulis
 - Le clic maintenu fait tirer ses mitrailleuses dans l'axe : les balles tombent devant lui et portent d'autant mieux qu'il vole bas ; T le tir automatique
 - R, Échap ou l'essence vide : il rentre et se pose seul ; trop bas, il s'écrase
 
-## 0.155.0 — 2026-11-20
+## 0.156.0 — 2026-11-20
 
 - Un char se conduit à la main depuis sa vue à la personne : ZQSD pour avancer, reculer et pivoter, la souris pour regarder
 - Le clic tire un obus où l'on vise, dans le débattement du canon et sa portée ; le clic droit maintenu fait parler les mitrailleuses dans le regard ; Maj la lunette
 - C rend la conduite à sa route, T le tir à son choix ; R le renvoie au parc
+
+## 0.155.0 — 2026-11-21
+- Dans la vue d'un soldat, des tampons disent ce qui arrive : un ennemi abattu ou touché (son nom, où), une blessure, la terreur, un camarade qui tombe, la déroute, une tranchée prise ou perdue, une promotion
+- Le fusil et les bras de la vue d'un soldat refaits : un Lebel en bois et acier, des mains qui le tiennent, des bras qui partent des mains
+- Un mort couché ne s'enfonce plus dans le relief (il n'en restait qu'une tache noire, son ombre)
 
 ## 0.154.0 — 2026-11-20
 

@@ -1754,7 +1754,7 @@ test('le corps à corps de l\'homme qu\'on mène (v0.154.0) : la baïonnette dev
 });
 
 import { commanderConduite } from '../js/chars.js';
-test('le char à la main (v0.155.0) : il avance, recule et pivote ; le canon tire où l\'on vise, dans son débattement et sa portée ; le tir à la main fait taire le sien ; deux machines, la même partie', () => {
+test('le char à la main (v0.156.0) : il avance, recule et pivote ; le canon tire où l\'on vise, dans son débattement et sa portée ; le tir à la main fait taire le sien ; deux machines, la même partie', () => {
   const mk = () => {
     const B = petite(); B.terrain.base.fill(0); B.terrain.diff.fill(0);
     B.etat.chars.push({ id: 0, camp: 0, modele: 'schneider', x: 200, y: 200, tx: 200, ty: 200, pv: 100, pvMax: 100, etat: 'arrive', hx: 0, hy: -1, cap: -Math.PI / 2, v: 0, canonT: -100, cible: null, vise: null });
@@ -1791,7 +1791,7 @@ test('le char à la main (v0.155.0) : il avance, recule et pivote ; le canon tir
 
 import { commanderAile } from '../js/avions.js';
 import { AVION_MAIN } from '../js/data/mitraillage.js';
-test('l\'avion à la main (v0.156.0) : on le prend en l\'air, il vire comme il s\'incline, pique et cabre, tire dans l\'axe, s\'écrase trop bas, rentre seul ; deux machines, la même partie', () => {
+test('l\'avion à la main (v0.157.0) : on le prend en l\'air, il vire comme il s\'incline, pique et cabre, tire dans l\'axe, s\'écrase trop bas, rentre seul ; deux machines, la même partie', () => {
   const mk = () => { const B = petite(); const [cx, cy] = centreRegiment(B, 8); ordreAvion(B, cx - 40, cy, cx + 40, cy); avancer(B); return { B, v: B.etat.mitraillages[0], cx, cy }; };
   const { B, v } = mk();
   assert.match(commanderAile(B, 1, { id: v.id }), /plus à vous/);

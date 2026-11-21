@@ -34,7 +34,7 @@ export const MITRAILLAGE = {
   chute: { vitesse: 0.8, gravite: 14, rayon: 5, letal: 0.7, cratere: '155', eclats: 3, dispersion: 9 },   // abattu : il glisse (× sa vitesse), tombe, et écrase ceux du point de chute
   cloue: ['brouillard', 'tempete'],    // les météos où l'on ne vole pas
 };
-// L'avion à la main (Jérôme, 20 nov., v0.156.0 : « décollage et atterrissage automatiques mais vol, altitude et tirs manuels ou auto » ; lot 5 de docs/propositions/vue-fps-engins.md).
+// L'avion à la main (Jérôme, 20 nov., v0.157.0 : « décollage et atterrissage automatiques mais vol, altitude et tirs manuels ou auto » ; lot 5 de docs/propositions/vue-fps-engins.md).
 // On prend les commandes une fois en l'air (après la montée) ; Q/D inclinent (`roulis` rad au plus, `roule` rad/s), le virage suit l'inclinaison (le rayon de `rayonVirage`, rien de plus serré) ;
 // Z pique, S cabre (`pente` rad au plus, `cabre` rad/s) ; il vole à `M.vitesse` ; sous `plancher` m il touche le sol et tombe ; au plus `plafond` m. Hors du terrain de plus de `M.sortie` m, il revient seul vers le centre.
 // Ses mitrailleuses sont pointées `site` rad sous l'axe : les balles tombent où cette ligne touche le sol, sur une bande de `largeur` m qui avance avec lui ; elles portent `letal` × la chance du mitraillage

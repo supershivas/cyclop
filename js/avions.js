@@ -4,13 +4,13 @@
    L'avion entre par le prolongement de la passe, vole à `croisiere` m, descend à `passe` m sur les `descente` m qui précèdent la bande, la balaie (ses balles tombent
    `avance` m devant lui, chaque homme de la bande n'est tiré qu'une fois), remonte, et sort. Au-dessus d'hommes qui tirent, il perd des points de vie (`exposition`) ;
    à zéro, il tombe, écrase ce qui est sous lui et laisse une épave pour le reste de la bataille. Les avions de chaque camp : `etat.avions[camp]`, les points de vie de chacun (0 : perdu). */
-import { MITRAILLAGE as M, AVION_MAIN as AM } from './data/mitraillage.js?v=0.156.0';
-import { METEO } from './data/meteo.js?v=0.156.0';
-import { GRILLE, effrayer, toitFacteur } from './army.js?v=0.156.0';
-import { hash2 } from './lib/rng.js?v=0.156.0';
-import { modif, pvAvion, campDe, niveauDe, emplacementCamp } from './camp.js?v=0.156.0';
-import { impact } from './terrain.js?v=0.156.0';
-import { NOMS_CALIBRES } from './data/calibres.js?v=0.156.0';
+import { MITRAILLAGE as M, AVION_MAIN as AM } from './data/mitraillage.js?v=0.157.0';
+import { METEO } from './data/meteo.js?v=0.157.0';
+import { GRILLE, effrayer, toitFacteur } from './army.js?v=0.157.0';
+import { hash2 } from './lib/rng.js?v=0.157.0';
+import { modif, pvAvion, campDe, niveauDe, emplacementCamp } from './camp.js?v=0.157.0';
+import { impact } from './terrain.js?v=0.157.0';
+import { NOMS_CALIBRES } from './data/calibres.js?v=0.157.0';
 
 const borne = (v, a, b) => v < a ? a : v > b ? b : v;
 const lisse = f => { f = borne(f, 0, 1); return f * f * (3 - 2 * f); };
@@ -102,7 +102,7 @@ export function positionDe(v, temps) {
     const tau = Math.min(temps, v.chute.ti) - v.chute.t, d = M.vitesse * M.chute.vitesse * tau, ux = v.chute.ux ?? v.ux, uy = v.chute.uy ?? v.uy;
     return { x: v.chute.x + ux * d, y: v.chute.y + uy * d, h: Math.max(0, v.chute.h - 0.5 * M.chute.gravite * tau * tau), cap: v.chute.cap ?? cap, pente: -Math.atan2(M.chute.gravite * tau, M.vitesse * M.chute.vitesse), roulis: 0, etat: 'chute' };
   }
-  if (v.retour) return retourDe(v, temps);      // l'avion à la main (v0.156.0) : son retour, recalculé quand on rend les commandes
+  if (v.retour) return retourDe(v, temps);      // l'avion à la main (v0.157.0) : son retour, recalculé quand on rend les commandes
   if (v.main) { const m = v.main; return { x: m.x, y: m.y, h: m.h, cap: m.cap, pente: m.pente, roulis: m.roulis, etat: 'vol', s: -2, main: true }; }      // … et son vol, intégré pas à pas
   const sP = v.av?.sP ?? 0, st = (temps - v.t0) * M.vitesse;
   if (v.av && st < sP) return decollageDe(v, st);
@@ -142,7 +142,7 @@ function finaleDe(v, u) {
   return { x: F.x + F.ux * (C.approche + r), y: F.y + F.uy * (C.approche + r), h: 0, cap: F.cap, pente: 0, roulis: 0, etat: 'vol', s: -1, piste: true };
 }
 
-/* Le retour d'un avion qu'on a piloté (v0.156.0) : du point où on l'a rendu, un circuit (arc, droite, arc : `raccorder`) jusqu'à l'axe de la piste en revenant à l'altitude de croisière, puis la finale et le roulage ;
+/* Le retour d'un avion qu'on a piloté (v0.157.0) : du point où on l'a rendu, un circuit (arc, droite, arc : `raccorder`) jusqu'à l'axe de la piste en revenant à l'altitude de croisière, puis la finale et le roulage ;
    sans aérodrome, tout droit jusqu'à sortir du terrain. `q` : la distance faite depuis le retour. */
 function retourDe(v, temps) {
   const R = v.retour, q = (temps - R.t0) * M.vitesse;
@@ -163,7 +163,7 @@ const retourFini = (B, v) => {
   const p = retourDe(v, B.etat.temps); return p.x < -M.sortie || p.y < -M.sortie || p.x > T.W + M.sortie || p.y > T.H + M.sortie;
 };
 
-/* L'avion à la main (v0.156.0) : un pilote par camp, `B.ailes[camp]` (jamais sauvegardé ; le vol, lui, garde sa place dans `v.main`), posé par les commandes, les mêmes seul ou à deux (lockstep : `aile`) :
+/* L'avion à la main (v0.157.0) : un pilote par camp, `B.ailes[camp]` (jamais sauvegardé ; le vol, lui, garde sa place dans `v.main`), posé par les commandes, les mêmes seul ou à deux (lockstep : `aile`) :
    { id } : prendre les commandes (une fois en l'air, avant le retour) ; { ro: −1..1 } : incliner ; { pi: −1..1 } : cabrer (+) ou piquer (−) ; { tir: true | false } : les mitrailleuses ;
    { auto: true | false } : le tir automatique ; { rentrer: true } : rentrer ; { fin: true } : rendre les commandes (il rentre). Rend '' ou la raison du refus. */
 export function commanderAile(B, camp, c) {

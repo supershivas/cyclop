@@ -1,6 +1,6 @@
 {
-  "version": "0.156.0",
-  "date": "2026-11-20",
+  "version": "0.157.0",
+  "date": "2026-11-21",
   "changes": [
     "Un avion se pilote depuis sa vue à la personne, une fois en l'air : Q et D l'inclinent et il vire, Z pique, S cabre ; la vue suit son roulis",
     "Le clic maintenu fait tirer ses mitrailleuses dans l'axe : les balles tombent devant lui et portent d'autant mieux qu'il vole bas ; T le tir automatique",

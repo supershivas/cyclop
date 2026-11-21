@@ -76,8 +76,8 @@ Le cœur du travail : **un vol qui n'est plus une fonction du temps**.
 | 1 | Soldat : vraie visée (balancement pur, zones du corps), épauler, magasin — **fait en v0.151.0**, avec la fiche du mort (`interface.md`, « La vraie visée ») | mineure | « le tir du joueur » étendu ; à deux : même balle |
 | 2 | Soldat : course, accroupi/ramper, parapet, sensations — **fait en v0.152.0** (`interface.md`, « Le corps de l'homme qu'on mène ») | mineure | marche et fatigue (`armee.test.mjs`) |
 | 3 | Soldat : baïonnette, charge, parade, crosse ; « À moi ! », Tab — **fait en v0.154.0** (`interface.md`, « Le corps à corps, « À moi ! », un autre homme ») | mineure | mêlée pilotée, test à deux |
-| 4 | Char : conduite et canon à la main, bascules auto, retour au parc — **fait en v0.155.0** (`interface.md` et `terrain-engins.md`, « Le char à la main ») | mineure | `bataille.test.mjs` : conduite, enlisement inchangé, relue |
-| 5 | Avion : vol à la main, tir dans l'axe, retour et atterrissage automatiques — **fait en v0.156.0** (`interface.md` et `terrain-engins.md`, « L'avion à la main ») | mineure | positions intégrées, relue en vol, `deux.mjs` |
+| 4 | Char : conduite et canon à la main, bascules auto, retour au parc — **fait en v0.156.0** (`interface.md` et `terrain-engins.md`, « Le char à la main ») | mineure | `bataille.test.mjs` : conduite, enlisement inchangé, relue |
+| 5 | Avion : vol à la main, tir dans l'axe, retour et atterrissage automatiques — **fait en v0.157.0** (`interface.md` et `terrain-engins.md`, « L'avion à la main ») | mineure | positions intégrées, relue en vol, `deux.mjs` |
 | 6 | Obstacles aux balles (arbres, amis, chars, servants), chute de la balle, grenades | correctif | rayon contre arbre, fratricide |
 
 Chaque lot : `rendu-empreinte` (le fusil et la caméra), `fumee.mjs` (les boutons de fiche), le test « à deux » de `bataille.test.mjs`. Les nombres vont dans `data/tir-joueur.js`, `data/chars.js`, `data/mitraillage.js` (une section `main`).

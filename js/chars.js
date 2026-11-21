@@ -3,17 +3,17 @@
    ligne vers (tx, ty) à la vitesse de son modèle, ralentie par un cratère (la moitié de ce qu'il franchit), arrêtée par un cratère plus profond ou par l'eau
    profonde (`enlise` : il reste là et tire) ; il tire sur l'autre camp à portée ; un obus tombé près de lui l'abîme (`degatsChars`), jusqu'à l'épave (`detruit`).
    Les tranchées se franchissent (elles font 1,5 m : son modèle les passe). Les ordres rendent { refus } comme les barrages. */
-import { modif, charsDispo, parcChars, prochainDuParc, sortieChars, niveauDe } from './camp.js?v=0.156.0';
-import { PARC } from './data/parc.js?v=0.156.0';
-import { CHARS, CHAR_PAR_DEFAUT, CHAR_RECHARGE, CHAR_DEPART, CHAR_OBUS, CHAR_ROUTE, CHAR_MAIN } from './data/chars.js?v=0.156.0';
-import { CALIBRES } from './data/calibres.js?v=0.156.0';
-import { effrayer, DENSITE } from './army.js?v=0.156.0';
-import { BONUS, GAINS, chevronsDe } from './data/experience.js?v=0.156.0';
-import { zone as zoneDe } from './bataille.js?v=0.156.0';
-import { detruirePont } from './eaux.js?v=0.156.0';
-import { toucher } from './terrain.js?v=0.156.0';
-import { PONTS_JEU, typePont } from './data/ponts.js?v=0.156.0';
-import { charEnReparation } from './genie.js?v=0.156.0';
+import { modif, charsDispo, parcChars, prochainDuParc, sortieChars, niveauDe } from './camp.js?v=0.157.0';
+import { PARC } from './data/parc.js?v=0.157.0';
+import { CHARS, CHAR_PAR_DEFAUT, CHAR_RECHARGE, CHAR_DEPART, CHAR_OBUS, CHAR_ROUTE, CHAR_MAIN } from './data/chars.js?v=0.157.0';
+import { CALIBRES } from './data/calibres.js?v=0.157.0';
+import { effrayer, DENSITE } from './army.js?v=0.157.0';
+import { BONUS, GAINS, chevronsDe } from './data/experience.js?v=0.157.0';
+import { zone as zoneDe } from './bataille.js?v=0.157.0';
+import { detruirePont } from './eaux.js?v=0.157.0';
+import { toucher } from './terrain.js?v=0.157.0';
+import { PONTS_JEU, typePont } from './data/ponts.js?v=0.157.0';
+import { charEnReparation } from './genie.js?v=0.157.0';
 
 /* La route d'un char (Jérôme, v0.59.3 : « ils doivent contourner les fleuves, passer par les ponts ») : une recherche sur une grille de `CHAR_ROUTE.maille` mètres, de (x0, y0) à (tx, ty), qui évite
    l'eau profonde, les cratères qu'il ne franchit pas, les ponts qui ne le portent pas, et se détourne des cratères à demi profonds. Rend les points à suivre (le dernier est le but), ou null
@@ -154,7 +154,7 @@ export function ordonnerChar(B, id, ordre, x, y, camp) {
   return { ok: true };
 }
 
-/* Le char à la main (v0.155.0) : un conducteur par camp, `B.conduites[camp]` (jamais sauvegardé, comme `B.pilotes`), posé par les commandes, les mêmes seul ou à deux (lockstep : `conduite`) :
+/* Le char à la main (v0.156.0) : un conducteur par camp, `B.conduites[camp]` (jamais sauvegardé, comme `B.pilotes`), posé par les commandes, les mêmes seul ou à deux (lockstep : `conduite`) :
    { id } : prendre ce char ; { av: −1..1, tr: −1..1 } : avancer ou reculer, tourner ; { regard } : le cap du regard (rad), où vont les mitrailleuses ; { tir: true, x, y } : un obus où l'on vise ;
    { rafale: true | false } : les mitrailleuses ; { main: true | false } : la conduite à la main ou sa route ; { tirMain: true | false } : le tir à la main ou le sien ; { rentrer: true } : au parc ; { fin: true } : rendre le char.
    Rend '' ou la raison du refus ; les refus d'un pas (canon pas rechargé, hors du débattement…) vont dans `K.refus`, le dernier obus dans `K.dernier`. */
@@ -243,7 +243,7 @@ export function avancerChars(B, ctx, rng) {
       for (const P of detruirePont(T, Math.floor(c.x), Math.floor(c.y), 0)) { for (const k of P.cases) toucher(T, k % T.W, (k / T.W) | 0); B.evenements.push({ type: 'pont-rompu', x: c.x, y: c.y, camp: c.camp }); }
       c.etat = 'enlise'; c.v = 0;
     }
-    const K = conduiteDe(B, c);      // le char qu'un joueur conduit (v0.155.0)
+    const K = conduiteDe(B, c);      // le char qu'un joueur conduit (v0.156.0)
     if (K && K.main && c.etat !== 'enlise' && !c.rentre) conduire(B, c, K, M, dt);
     else if (c.etat === 'avance') {
       const route = !c.rentre && c.ar !== undefined && (c.camp === 0 ? c.y > c.ar : c.y < c.ar), d = Math.hypot(c.tx - c.x, c.ty - c.y);
@@ -297,7 +297,7 @@ export function avancerChars(B, ctx, rng) {
       c.obus = (c.obus ?? 0) + 1; { const k = etat.pertes[1 - c.camp] - p0; c.tues = (c.tues ?? 0) + k; c.tuesCanon = (c.tuesCanon ?? 0) + k; }      // ses victimes (v0.115.0) : les hommes d'en face tombés de cet obus
     }
     // ses mitrailleuses : une rafale par `cadence`, sur les hommes de l'autre camp à portée (plus la rafale est proche, plus elle touche)
-    // à la main (v0.155.0) : seulement le bouton maintenu, et dans le regard (le cône de `CHAR_MAIN.cone`)
+    // à la main (v0.156.0) : seulement le bouton maintenu, et dans le regard (le cône de `CHAR_MAIN.cone`)
     c.tire = (c.tire ?? 0) + dt;
     const rafaleMain = K && K.tirMain, rx = rafaleMain ? Math.cos(K.regard) : 0, ry = rafaleMain ? Math.sin(K.regard) : 0;
     if (c.tire >= M.cadence && (!rafaleMain || K.rafale) && c.etat !== 'detruit') {

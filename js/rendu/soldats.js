@@ -1,19 +1,19 @@
 // Les hommes : les soldats (une boîte et son ombre ; de près la silhouette, plus loin une silhouette allégée ; aux zooms 1 et 2 un point), les anneaux des
 // régiments choisis ou survolés, les corps (un homme couché) et les tombes (un tertre et une croix). Tout est instancié et ne reçoit que ce qu'on voit.
 // Le dessin seulement. Les formes viennent de geometries.js, le GLSL de shaders.js.
-import * as SH from './shaders.js?v=0.156.0';
-import { creerGeometries } from './geometries.js?v=0.156.0';
-import { classeDuRang } from '../data/grades.js?v=0.156.0';
-import { creerEquipeArticulee } from './soldat-articule.js?v=0.156.0';
-import { creerJeuAnimations } from './animation-jeu.js?v=0.156.0';
-import { allures, allure, reposGeste, poseMort, chute } from '../anim-modeles.js?v=0.156.0';
-import { echantillon } from '../pose-soldat.js?v=0.156.0';
-import { NOMS_CHAMPS } from '../data/poses-soldat.js?v=0.156.0';
-import { ANIMATIONS } from '../data/animations.js?v=0.156.0';
-import { EPAULEMENT, MARCHE_JEU, GESTES, MORTS_JEU } from '../data/lecteur-animations.js?v=0.156.0';
-import { SANG } from '../data/aspect-soldat.js?v=0.156.0';
-import { ligneY } from '../tranchees.js?v=0.156.0';
-import { profondeurALEcran } from './vue-ecran.js?v=0.156.0';
+import * as SH from './shaders.js?v=0.157.0';
+import { creerGeometries } from './geometries.js?v=0.157.0';
+import { classeDuRang } from '../data/grades.js?v=0.157.0';
+import { creerEquipeArticulee } from './soldat-articule.js?v=0.157.0';
+import { creerJeuAnimations } from './animation-jeu.js?v=0.157.0';
+import { allures, allure, reposGeste, poseMort, chute } from '../anim-modeles.js?v=0.157.0';
+import { echantillon } from '../pose-soldat.js?v=0.157.0';
+import { NOMS_CHAMPS } from '../data/poses-soldat.js?v=0.157.0';
+import { ANIMATIONS } from '../data/animations.js?v=0.157.0';
+import { EPAULEMENT, MARCHE_JEU, GESTES, MORTS_JEU } from '../data/lecteur-animations.js?v=0.157.0';
+import { SANG } from '../data/aspect-soldat.js?v=0.157.0';
+import { ligneY } from '../tranchees.js?v=0.157.0';
+import { profondeurALEcran } from './vue-ecran.js?v=0.157.0';
 
 // `THREE`, `scene`, `col`, `solUniforms` (`uSol`, `uTaille` : la texture du sol, que l'ombre d'un soldat reprend), `styleSoldat` (le style de près, comparé au labo),
 // `grades` (v0.68.0 : une variante de `GRADES`, data/grades.js, ou null : tous pareils) et `rangDe(B, id, reg)` (le rang d'un homme, bataille.js) ; `surface(x, z)` et `surfaceLisse(x, z)` (la hauteur du sol, lissée pour qui marche), `solY` (la hauteur moyenne du sol) et `POINTS_JUSQUA` (le zoom où un soldat n'est
@@ -286,6 +286,15 @@ export function creerSoldats({ THREE, scene, col, solUniforms, styleSoldat, grad
     scene.add(corpsInst, corpsPoints);
   }
 
+  // (v0.154.0) un homme couché fait 1,8 m : posé à la hauteur du seul cube sous son centre, la moitié de son corps entrait dans un cube voisin plus haut (une lèvre de cratère,
+  // une motte, le sol fin de 0,5 m) et disparaissait, son ombre plate restant seule sur le sol (Jérôme, 20 nov. : « un mort qui disparaît », une tache noire à sa place).
+  // Il se pose sur le plus haut du sol sous lui (le centre, puis huit points à 0,45 m et à 0,9 m), sans monter sur une paroi de tranchée (plus de 0,8 m au-dessus de son centre).
+  const DIRS_CORPS = Array.from({ length: 8 }, (_, k) => [Math.cos(k * Math.PI / 4), Math.sin(k * Math.PI / 4)]);
+  function solDuCorps(x, y) {
+    const h0 = surface(x, y); let h = h0;
+    for (const r of [0.45, 0.9]) for (const [dx, dy] of DIRS_CORPS) { const v = surface(x + dx * r, y + dy * r); if (v > h && v <= h0 + 0.8) h = v; }
+    return h;
+  }
   // les corps : ceux qu'on voit, comme les soldats (la liste ne fait que grandir)
   function majCorps(x0, x1, z0, z1, e, points, p) {
     const B = bataille();
@@ -305,7 +314,7 @@ export function creerSoldats({ THREE, scene, col, solUniforms, styleSoldat, grad
         x = v[1] + (x - v[1]) * f; y = v[2] + (y - v[2]) * f; haut = 4 * f * (1 - f) * d * P.haut;
       }
       if (x < x0 || x > x1 || y < z0 || y > z1) continue;
-      const hs = surface(x, y) + haut;
+      const hs = (p >= LEGER_DES ? solDuCorps(x, y) : surface(x, y)) + haut;      // (de loin un point ou une planche : le cube sous le centre suffit)
       if (profondeurALEcran(e, x, hs, y, 0.6) < 0) continue;      // couché : 60 cm de haut au plus (v0.143.1 : plus le pied seul)
       cPos[k * 3] = x; cPos[k * 3 + 1] = hs; cPos[k * 3 + 2] = y;
       { // le mort garde le ton et la place qu'il avait vivant : le même nombre que le vivant (sa largeur et sa taille, soldatMat), rangé dans l'état (+ 0,4 × le nombre)
@@ -351,7 +360,7 @@ export function creerSoldats({ THREE, scene, col, solUniforms, styleSoldat, grad
       let x = c[0] / 10, y = c[1] / 10;
       if (variete) { const iv = c[4] & 0xffff; x += variete.rang * (hach(iv + 31, 2246822519) * 2 - 1); y += variete.rang * (hach(iv + 113, 3266489917) * 2 - 1); }
       if (x < x0 || x > x1 || y < z0 || y > z1) continue;
-      const d = profondeurALEcran(e, x, surface(x, y), y, 0.6, 0.3, true);
+      const d = profondeurALEcran(e, x, solDuCorps(x, y), y, 0.6, 0.3, true);
       if (d < 0) continue;
       if (nc >= candI.length) break;
       candI[nc] = ic; candD[nc++] = d;
@@ -370,7 +379,7 @@ export function creerSoldats({ THREE, scene, col, solUniforms, styleSoldat, grad
       if (t >= 0 && t < MORTS_JEU.chute) { P.chute ??= chute(iv); hMort.pose = tableauPose(echantillon(P.chute, t)); } else hMort.pose = P.fin;
       let a = aspects.get(id);
       if (!a) { a = { rang: -1, a: aspectDe(B, id, c[2]) }; aspects.set(id, a); }
-      hMort.x = x; hMort.y = surface(x, y); hMort.z = y; hMort.camp = c[2]; hMort.aspect = a.a; hMort.temps = tAnim;
+      hMort.x = x; hMort.y = solDuCorps(x, y); hMort.z = y; hMort.camp = c[2]; hMort.aspect = a.a; hMort.temps = tAnim;
       hMort.cap = ((id * 2654435761) >>> 0) % 628 / 100;       // le sens où il gît : celui du corps en boîtes (majCorps)
       hMort.sang = 2 + Math.floor(hach(iv + 401, 2246822519) * 3);       // du sang sur le buste (2 à 4)
       if (!EQ.ajouter(hMort)) break;
