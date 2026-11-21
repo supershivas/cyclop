@@ -9,6 +9,15 @@ export const TIR_JOUEUR = {
   haut: 1.7,           // m : la taille d'un homme debout (tapi par la peur : `tapi` ; accroupi ou couché par le joueur : `postures`)
   tapi: 1.0,
   rayon: 0.3,          // m : la demi-largeur d'un homme, bras compris
+  // La balle (v0.158.0, lot 6) : elle tombe (`g`, à `vitesse` m/s : 26 cm à 160 m) ; la hausse la fait passer sur la ligne de visée à `hausse` m (au-dessus avant, dessous après) ;
+  // un arbre debout l'arrête (son tronc : `rayon` m de part et d'autre, jusqu'à `haut` m), un char aussi (`char`) ; un homme de chez nous est touché comme un autre, son régiment perd `ami.moral` de moral
+  balle: { vitesse: 700, g: 9.81, hausse: 200 },
+  arbre: { rayon: 0.35, haut: 6 },
+  char: { rayon: 1.6, haut: 2.4 },
+  ami: { moral: 0.02 },
+  // La grenade (G, v0.158.0) : `nombre` par homme qu'on mène ; lancée à `vitesse` m/s, `angle` rad au-dessus du regard (borné de `min` à `max` rad), elle tombe à v² sin 2θ / g (au plus `loin` m) ;
+  // elle éclate `meche` s après le lancer : un souffle de `rayon` m, `letal` × la chance d'un obus (les éclats ne choisissent pas leur camp)
+  grenade: { nombre: 2, vitesse: 14, angle: 0.35, min: 0.1, max: 1.2, loin: 22, meche: 4, rayon: 5, letal: 0.9 },
   frayeur: 0.25,       // la peur que donne une balle qui passe tout près (à moins de `frole` m) de l'homme d'en face
   frole: 1.5,
   // Les parties du corps, de bas en haut, en part de sa taille (un homme tapi est plus petit, les mêmes parts) ; `large` : la demi-largeur (m) ; `mortel` : la chance qu'un coup là tue (sinon il blesse)

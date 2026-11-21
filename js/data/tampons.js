@@ -5,7 +5,8 @@ export const TAMPONS = {
   touche: { mot: 'Touché', genre: '' },                      // la ligne : son nom, où
   blesse: { mot: 'Blessé', genre: 'sang' },
   terrifie: { mot: 'Terrifié', genre: 'alerte', ligne: 'Il tremble : le guidon aussi' },
-  camarade: { mot: 'Un camarade tombe', genre: '' },         // la ligne : son nom
+  camarade: { mot: 'Un camarade tombe', genre: '' },
+  ami: { mot: 'Un des nôtres', genre: 'sang' },               // la ligne : son nom, où (notre balle l'a touché : v0.158.0)         // la ligne : son nom
   deroute: { mot: 'En déroute', genre: 'alerte' },           // la ligne : le régiment lâche pied
   promu: { mot: 'Promu', genre: '' },                        // la ligne : son grade
   pris: { mot: 'Tranchée prise', genre: '' },

@@ -4,10 +4,10 @@
    qu'il traverse est touché là où la balle passe (la tête, le tronc, un bras, les jambes : v0.151.0, plus de jet de dés pour toucher, la balle part où est le guidon, `balancement`), et frappé comme par
    n'importe quel tir (`frapper` : un blessé ou un mort selon l'endroit, crédité au tireur). Un magasin par pilote (Lebel 8 + 1, Mauser 5), rechargé à la demande. Rend dans `B.pilotes[camp].dernier`
    ce que l'écran doit montrer : { n (le coup), touche, mort, zone }, et dans `B.pilotes[camp].refus` pourquoi un coup n'est pas parti. */
-import { hauteurQ } from './terrain.js?v=0.157.0';
-import { gagner } from './army.js?v=0.157.0';
-import { hash2 } from './lib/rng.js?v=0.157.0';
-import { TIR_JOUEUR as TJ } from './data/tir-joueur.js?v=0.157.0';
+import { hauteurQ } from './terrain.js?v=0.158.0';
+import { gagner, tuerDans } from './army.js?v=0.158.0';
+import { hash2 } from './lib/rng.js?v=0.158.0';
+import { TIR_JOUEUR as TJ } from './data/tir-joueur.js?v=0.158.0';
 
 /* La hauteur de l'œil de l'homme debout en (x, y) au-dessus de ses pieds : 1,6 m, et la banquette de tir dans une tranchée (`T.diff` ≤ −2 quarts : creusée) */
 export function hauteurOeil(T, x, y, posture = 0) { const c = (y | 0) * T.W + (x | 0); return posture ? TJ.postures[posture].oeil : TJ.oeil + (T.diff[c] <= -2 ? TJ.banquette : 0); }      // (accroupi ou couché : la banquette ne sert plus)
@@ -55,6 +55,7 @@ export function commanderPilote(B, camp, c) {
   }
   if (c.saut) { if (!P) return 'Personne à piloter.'; if (!P.saut) P.sautDemande = true; return ''; }
   if (c.coup) { if (!P) return 'Personne à piloter.'; P.coupDemande = { cap: c.cap }; return ''; }
+  if (c.grenade) { if (!P) return 'Personne à piloter.'; P.grenadeDemande = { cap: c.cap, el: c.el }; return ''; }
   if (c.parade !== undefined) { if (!P) return 'Personne à piloter.'; P.parade = !!c.parade; return ''; }
   if (c.amoi !== undefined) { if (!P) return 'Personne à piloter.'; P.amoi = !!c.amoi; return ''; }
   if (c.recharge) {
@@ -79,6 +80,7 @@ export function tirerJoueur(B, ctx, rng) {
     corpsDe(B, ctx, P);
     if (P.recharge) recharger(B, ctx, P);
     if (P.coupDemande) frapperDe(B, ctx, rng, P);
+    if (P.grenadeDemande) lancerGrenade(B, ctx, P);
     if (P.tir) tirDe(B, ctx, rng, P);
   }
 }
@@ -164,6 +166,38 @@ function frapperDe(B, ctx, rng, P) {
   }
   P.frappe = f;
 }
+/* La grenade (v0.158.0) : lancée dans le sens du regard, elle tombe à la distance que donne l'angle du lancer ; elle éclate à `meche` s (`B.grenades`, jamais sauvegardé : une partie relue les oublie) */
+function lancerGrenade(B, ctx, P) {
+  const demande = P.grenadeDemande; P.grenadeDemande = null;
+  const A = B.armee, G = TJ.grenade, i = indice(A, P.id), T = ctx.T;
+  if (i < 0 || A.mort[i]) return;
+  if (A.blessure[i] === 1) { P.refus = 'Son bras est blessé : il ne peut plus lancer.'; return; }
+  if (P.saut) { P.refus = 'Il franchit le parapet.'; return; }
+  P.grenades ??= G.nombre;
+  if (P.grenades <= 0) { P.refus = 'Plus de grenade.'; return; }
+  P.grenades--;
+  const th = Math.max(G.min, Math.min(G.max, demande.el + G.angle)), d = Math.min(G.loin, G.vitesse * G.vitesse * Math.sin(2 * th) / 9.81);
+  const x = Math.max(0.5, Math.min(T.W - 0.5, A.x[i] + Math.cos(demande.cap) * d)), y = Math.max(0.5, Math.min(T.H - 0.5, A.y[i] + Math.sin(demande.cap) * d));
+  (B.grenades ??= []).push({ x: Math.round(x * 10) / 10, y: Math.round(y * 10) / 10, t: B.etat.temps + G.meche, camp: A.camp[i] });
+  P.lance = { n: (P.lance?.n ?? 0) + 1, x, y };
+}
+/* Les grenades dont la mèche a brûlé éclatent (appelé à chaque pas par `avancer`) */
+export function exploserGrenades(B, ctx) {
+  if (!B.grenades?.length) return;
+  const G = TJ.grenade, reste = [];
+  for (const g of B.grenades) {
+    if (B.etat.temps < g.t - 1e-9) { reste.push(g); continue; }
+    ctx.cal = 'grenade'; tuerDans(B.armee, g.x, g.y, G.rayon, ctx, G.letal); ctx.cal = null;
+    B.evenements.push({ type: 'impact', x: g.x, y: g.y, cal: '75', grenade: true });      // (le dessin et le son : l'éclair et le bruit d'un 75)
+  }
+  B.grenades = reste;
+}
+/* La balle tombe (v0.158.0) : sa hauteur à `t` m devant le tireur, au-dessus de ses pieds (`oeil` : la hauteur de l'œil, `tg` : la pente de la visée) ;
+   la hausse du fusil la fait monter un peu au-dessus de la ligne de visée et la repasser à `balle.hausse` m */
+export function hauteurBalle(oeil, tg, t) {
+  const Bl = TJ.balle, hausse = 0.5 * Bl.g * Bl.hausse / (Bl.vitesse * Bl.vitesse);
+  return oeil + t * (tg + hausse) - 0.5 * Bl.g * (t / Bl.vitesse) ** 2;
+}
 /* Où le rayon traverse l'homme : `q` la hauteur en part de sa taille (0 les pieds, 1 le haut du casque), `lat` l'écart au milieu de son corps (m). Rend la zone, ou null (à côté de lui) */
 export function zoneTouchee(q, lat) {
   if (q < 0 || q > 1) return null;
@@ -194,28 +228,45 @@ function tirDe(B, ctx, rng, P) {
   const cap = cap0 + bc + (rng() * 2 - 1) * TJ.dispersion, el = demande.el + be + (rng() * 2 - 1) * TJ.dispersion;
   const dx = Math.cos(cap), dy = Math.sin(cap), tg = Math.tan(el), x0 = A.x[i], y0 = A.y[i];
   const caseDe = (x, y) => ((y | 0) * W + (x | 0)), oeil = hauteurOeil(T, x0, y0, P.posture ?? 0);
-  const hq0 = hauteurQ(T, caseDe(x0, y0));
-  // le relief : la première case plus haute que le rayon
-  let tFin = TJ.portee;
+  const hq0 = hauteurQ(T, caseDe(x0, y0)), hA = t => hauteurBalle(oeil, tg, t);
+  // le relief : la première case plus haute que la balle
+  let tFin = TJ.portee, obstacle = '';
   for (let s = 1; s <= TJ.portee; s++) {
     const x = x0 + dx * s, y = y0 + dy * s;
     if (x < 0 || y < 0 || x >= W || y >= H) { tFin = s; break; }
-    if ((hauteurQ(T, caseDe(x, y)) - hq0) * 0.25 > oeil + s * tg) { tFin = s; break; }
+    if ((hauteurQ(T, caseDe(x, y)) - hq0) * 0.25 > hA(s)) { tFin = s; obstacle = 'relief'; break; }
   }
-  // le premier homme d'en face que le rayon traverse, et où ; le plus proche du rayon qu'elle frôle (sa peur)
+  // un arbre debout (son tronc, jusqu'à `arbre.haut` m) ou un char (sa caisse) arrête la balle (v0.158.0)
+  const devant = (px, py, r) => { const rx = px - x0, ry = py - y0, t = rx * dx + ry * dy; return t > 0.5 && t < tFin && Math.abs(rx * dy - ry * dx) <= r ? t : -1; };
+  for (const a of T.arbres ?? []) {
+    if (a.abattu) continue;
+    const t = devant(a.i + 0.5, a.j + 0.5, TJ.arbre.rayon);
+    if (t > 0) { const sol = (hauteurQ(T, caseDe(a.i, a.j)) - hq0) * 0.25, h = hA(t); if (h >= sol && h <= sol + TJ.arbre.haut) { tFin = t; obstacle = 'arbre'; } }
+  }
+  for (const c of B.etat.chars) {
+    if (c.etat === 'rentre') continue;
+    const t = devant(c.x, c.y, TJ.char.rayon);
+    if (t > 0) { const sol = (hauteurQ(T, caseDe(c.x, c.y)) - hq0) * 0.25, h = hA(t); if (h >= sol && h <= sol + TJ.char.haut) { tFin = t; obstacle = 'char'; } }
+  }
+  // le premier homme que la balle traverse (d'en face, ou des nôtres : elle ne choisit pas), et où ; le plus proche d'en face qu'elle frôle (sa peur)
   let j = -1, tj = Infinity, zj = null, fr = -1, frl = TJ.frole;
   for (let k = 0; k < A.n; k++) {
-    if (A.camp[k] === A.camp[i] || A.mort[k]) continue;
+    if (k === i || A.mort[k]) continue;
     const rx = A.x[k] - x0, ry = A.y[k] - y0, t = rx * dx + ry * dy;
     if (t < 1 || t > tFin || t >= tj) continue;
     const lat = Math.abs(rx * dy - ry * dx); if (lat > TJ.frole) continue;
-    const sol = (hauteurQ(T, caseDe(A.x[k], A.y[k])) - hq0) * 0.25, h = oeil + t * tg, taille = tailleDe(A, k, R, ctx.pilotes?.get(A.id[k]));
+    const sol = (hauteurQ(T, caseDe(A.x[k], A.y[k])) - hq0) * 0.25, h = hA(t), taille = tailleDe(A, k, R, ctx.pilotes?.get(A.id[k]));
     const z = lat <= TJ.rayon ? zoneTouchee((h - sol) / taille, lat) : null;
     if (z) { j = k; tj = t; zj = z; }
-    else if (lat < frl && h > sol - 0.5 && h < sol + taille + 1) { fr = k; frl = lat; }
+    else if (A.camp[k] !== A.camp[i] && lat < frl && h > sol - 0.5 && h < sol + taille + 1) { fr = k; frl = lat; }
   }
-  const dernier = { n: (P.dernier?.n ?? 0) + 1, touche: false, mort: false, vise: j >= 0, zone: zj?.nom ?? '', t: Math.round((j >= 0 ? tj : tFin) * 10) / 10 };
-  if (j >= 0) {
+  const ami = j >= 0 && A.camp[j] === A.camp[i];
+  const dernier = { n: (P.dernier?.n ?? 0) + 1, touche: false, mort: false, vise: j >= 0 && !ami, ami, zone: zj?.nom ?? '', obstacle: j >= 0 ? '' : obstacle, t: Math.round((j >= 0 ? tj : tFin) * 10) / 10 };
+  if (j >= 0 && ami) {      // un des nôtres : touché comme un autre, sans crédit au tireur ; son régiment le paie (le moral)
+    ctx.frapper(j, 'tir', zj.mortel, null, -1, -1, { zone: zj.nom, blessure: zj.blessure, arme: 'une balle de chez nous' });
+    const reg = ctx.regiments[A.reg[j]]; if (reg) reg.moral = Math.max(0, reg.moral - TJ.ami.moral);
+    dernier.mort = !!A.mort[j]; dernier.cible = A.id[j];
+  } else if (j >= 0) {
     gagner(A, i, 'adresse', R.progression.toucheTir, R.progression);
     ctx.frapper(j, 'tir', zj.mortel, null, i, -1, { zone: zj.nom, blessure: zj.blessure });
     dernier.touche = true; dernier.mort = !!A.mort[j]; dernier.cible = A.id[j];      // (son numéro : le tampon dit son nom, v0.154.0)

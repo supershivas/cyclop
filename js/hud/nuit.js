@@ -1,13 +1,13 @@
 // La nuit (Jérôme, v0.13.0) : un état (la soirée, puis le bilan de l'aube), jamais une boîte de dialogue : le champ reste là, on choisit des régiments (clic, cadre, T)
 // et on leur donne une corvée. Depuis la v0.150.0 le soir est la soirée en trois étapes (hud/soiree.js) ; le papier `#nuit` ne garde que le bilan de l'aube.
-import { NOUS, aube } from '../bataille.js?v=0.157.0';
-import { CORVEES, CONTACT } from '../data/corvees.js?v=0.157.0';
-import { renfortsDe } from '../camp.js?v=0.157.0';
-import { ARBRES } from '../data/ameliorations.js?v=0.157.0';
-import { creerSoiree } from './soiree.js?v=0.157.0';
-import { refusCorvee, contactDe } from '../nuit.js?v=0.157.0';
-import { lireJournee } from '../donnees-jour.js?v=0.157.0';
-import { tuilesDeLAube } from './aube.js?v=0.157.0';
+import { NOUS, aube } from '../bataille.js?v=0.158.0';
+import { CORVEES, CONTACT } from '../data/corvees.js?v=0.158.0';
+import { renfortsDe } from '../camp.js?v=0.158.0';
+import { ARBRES } from '../data/ameliorations.js?v=0.158.0';
+import { creerSoiree } from './soiree.js?v=0.158.0';
+import { refusCorvee, contactDe } from '../nuit.js?v=0.158.0';
+import { lireJournee } from '../donnees-jour.js?v=0.158.0';
+import { tuilesDeLAube } from './aube.js?v=0.158.0';
 
 export const corveeDe = id => [...CORVEES, CONTACT].find(c => c.id === id)?.nom || '';
 export const corveeCourte = id => [...CORVEES, CONTACT].find(c => c.id === id)?.court || '';

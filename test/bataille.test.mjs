@@ -1351,7 +1351,7 @@ test('le tir du joueur (v0.151.0, la vraie visée) : la balle part où est le gu
   // le tir automatique se tait pour l'homme piloté ; sans pilote, la simulation ne tire rien pour lui
   const C = petite(); assert.deepEqual(C.pilotes, [null, null]); for (let k = 0; k < 30; k++) avancer(C);
 });
-import { commanderPilote, zoneTouchee, balancement, amplitude, tailleDe, aPortee } from '../js/tir-joueur.js';
+import { commanderPilote, zoneTouchee, balancement, amplitude, tailleDe, aPortee, hauteurBalle } from '../js/tir-joueur.js';
 import { mourir } from '../js/bataille.js';
 test('la vue d\'un soldat à deux (v0.148.0) : un pilote par camp, des commandes rejouées au même pas donnent la même partie, un homme d\'en face ne se pilote pas', () => {
   const mk = () => { const B = petite(), A = B.armee; B.terrain.base.fill(0); B.terrain.diff.fill(0); return B; };
@@ -1367,6 +1367,7 @@ test('la vue d\'un soldat à deux (v0.148.0) : un pilote par camp, des commandes
       if (k === 120) { commanderPilote(B, 0, { posture: 2 }); commanderPilote(B, 0, { recharge: true }); commanderPilote(B, 0, { amoi: true }); }
       if (k === 140) { commanderPilote(B, 0, { coup: true, cap: -1.2 }); commanderPilote(B, 0, { parade: true }); }
       if (k === 160) { commanderPilote(B, 0, { amoi: false }); commanderPilote(B, 0, { parade: false }); }
+      if (k === 165) { commanderPilote(B, 0, { grenade: true, cap: -1.2, el: 0.2 }); commanderPilote(B, 1, { tir: true, cap: 1.9, el: 0 }); }
       if (k === 180) commanderPilote(B, 1, { fin: true }); avancer(B);
     }
   };
@@ -1819,4 +1820,38 @@ test('l\'avion à la main (v0.157.0) : on le prend en l\'air, il vire comme il s
   // deux machines, les mêmes commandes : la même partie
   const scen = () => { const { B, v } = mk(); commanderAile(B, 0, { id: v.id }); for (let k = 0; k < 150; k++) { if (k === 10) commanderAile(B, 0, { ro: 1, pi: -0.5 }); if (k === 50) commanderAile(B, 0, { tir: true, ro: -1 }); if (k === 100) commanderAile(B, 0, { auto: true, tir: false }); if (k === 130) commanderAile(B, 0, { rentrer: true }); avancer(B); } return B; };
   assert.equal(empreinte(scen()), empreinte(scen()));
+});
+
+import { TIR_JOUEUR as TJ6 } from '../js/data/tir-joueur.js';
+test('la balle et la grenade (v0.158.0) : la balle tombe et passe la ligne de visée à la hausse ; un arbre, un char, un des nôtres l\'arrêtent ; la grenade éclate où elle tombe, deux par homme', () => {
+  // la chute : sur la ligne de visée à la hausse, au-dessus avant, dessous après
+  const h = hauteurBalle(1.6, 0, TJ6.balle.hausse); assert.ok(Math.abs(h - 1.6) < 1e-9, 'sur la ligne à la hausse');
+  assert.ok(hauteurBalle(1.6, 0, 100) > 1.6 && hauteurBalle(1.6, 0, 400) < 1.6 - 0.5, 'au-dessus à 100 m, 50 cm dessous à 400 m');
+  const mk = () => { const B = petite(); B.terrain.base.fill(0); B.terrain.diff.fill(0); B.terrain.arbres.length = 0; B.etat.chars.length = 0; return B; };
+  const coup = (B, avant) => {
+    const A = B.armee, i = [...Array(A.n).keys()].find(k => A.camp[k] === 0), j = [...Array(A.n).keys()].find(k => A.camp[k] === 1);
+    A.x[i] = 199.5; A.y[i] = 150; A.x[j] = 199.5; A.y[j] = 130; for (const k of [i, j]) { A.vx[k] = 0; A.vy[k] = 0; A.peur[k] = 0; A.mort[k] = 0; A.blessure[k] = 0; } A.tirT[i] = 0;
+    avant?.(A, i, j);
+    B.pilotes = [{ id: A.id[i], ax: 0, ay: 0, tir: { d: [0, -1], el: -Math.atan(0.5 / 20) }, dernier: null, refus: null }, null]; avancer(B); return B.pilotes[0].dernier;
+  };
+  assert.equal(coup(mk()).touche, true, 'sans obstacle, il touche');
+  { const B = mk(); B.terrain.arbres.push({ i: 199, j: 140, v: 0, abattu: 0 }); const d = coup(B); assert.equal(d.touche, false); assert.equal(d.obstacle, 'arbre', 'un tronc l\'arrête'); }
+  { const B = mk(); B.terrain.arbres.push({ i: 199, j: 140, v: 0, abattu: 1 }); assert.equal(coup(B).touche, true, 'un arbre abattu ne l\'arrête plus'); }
+  { const B = mk(); B.etat.chars.push({ id: 9, camp: 1, modele: 'schneider', x: 199.5, y: 140, pv: 100, etat: 'arrive', hx: 1, hy: 0 }); assert.equal(coup(B).obstacle, 'char', 'un char l\'arrête'); }
+  { const B = mk(); const d = coup(B, (A, i) => { const m = [...Array(A.n).keys()].find(k => k !== i && A.camp[k] === 0); A.x[m] = 199.5; A.y[m] = 140; A.vx[m] = 0; A.vy[m] = 0; A.peur[m] = 0; A.mort[m] = 0; });
+    assert.equal(d.ami, true, 'un des nôtres sur la ligne est touché'); assert.equal(d.touche, false, 'pas l\'ennemi derrière lui'); }
+  // la grenade : 18 m devant, sur un groupe d'en face ; elle éclate 4 s plus tard ; deux par homme
+  const B = mk(), A = B.armee, i = [...Array(A.n).keys()].find(k => A.camp[k] === 0);
+  A.x[i] = 200; A.y[i] = 150; const loin = [...Array(A.n).keys()].filter(k => A.camp[k] === 1).slice(0, 6);
+  commanderPilote(B, 0, { id: A.id[i], cap: -Math.PI / 2, av: 0, la: 0 });
+  const th = Math.asin(Math.min(1, 18 * 9.81 / TJ6.grenade.vitesse ** 2)) / 2, el = th - TJ6.grenade.angle;
+  const tenir = () => { A.x[i] = 200; A.y[i] = 150; loin.forEach((k, n) => { if (!A.mort[k]) { A.x[k] = 199 + n * 0.4; A.y[k] = 132; A.vx[k] = 0; A.vy[k] = 0; } }); };
+  tenir(); const avant = B.etat.pertes[1] + B.etat.blesses[1];
+  commanderPilote(B, 0, { grenade: true, cap: -Math.PI / 2, el }); avancer(B);
+  assert.equal(B.grenades.length, 1, 'elle vole'); assert.ok(Math.abs(B.grenades[0].y - 132) < 1.5, `elle tombe à ${(150 - B.grenades[0].y).toFixed(1)} m`);
+  let ev = []; for (let k = 0; k < 130; k++) { tenir(); ev.push(...avancer(B)); }
+  assert.equal(B.grenades.length, 0, 'elle a éclaté'); assert.ok(ev.some(e => e.type === 'impact' && e.grenade), 'l\'éclat se voit');
+  assert.ok(B.etat.pertes[1] + B.etat.blesses[1] > avant, 'ses éclats touchent');
+  commanderPilote(B, 0, { grenade: true, cap: 0, el: 0 }); avancer(B); commanderPilote(B, 0, { grenade: true, cap: 0, el: 0 }); B.pilotes[0].refus = null; avancer(B);
+  assert.match(B.pilotes[0].refus, /Plus de grenade/);
 });

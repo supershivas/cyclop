@@ -14,41 +14,41 @@
    La sauvegarde (photo) garde la graine, la liste compacte des impacts, l'état
    de la foule et les petites couches de logique ; jamais le relief : il se
    rejoue depuis la graine et les impacts (rejouerTerrain). */
-import { noterMoments } from './moments.js?v=0.157.0';
-import { createRng, hash2 } from './lib/rng.js?v=0.157.0';
-import { impact, hydroLignes, etat as etatCase, vitesseEtat, vitesseCase, ETAT } from './terrain.js?v=0.157.0';
-import { creerArmee, legere, ajouterSoldat, construireGrille, pasArmee, tuerDans, effrayer, compacter, photoArmee, restaurerArmee, b64, deB64, DENSITE, place, poserCaracs, lireCaracs, abimerCaracs, gagner, CARACS } from './army.js?v=0.157.0';
-import { ligneSous, solidite, y0En, arcMax } from './tranchees.js?v=0.157.0';
-import { terrainDuSecteur } from './secteur-terrain.js?v=0.157.0';
-import { detruirePont, reconstruirePont, pontEn } from './eaux.js?v=0.157.0';
-import { MISSIONS_SECONDAIRES as MS } from './data/missions.js?v=0.157.0';
-import { PONT_COUPE } from './data/ponts.js?v=0.157.0';
-import { amasDe, isoles } from './amas.js?v=0.157.0';
-import { calculerCouts, creerCacheChamps, dimensionsCouts, BLOC } from './champs.js?v=0.157.0';
-import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.157.0';
-import { PARTS_ZONES, armeEnMots } from './data/causes.js?v=0.157.0';
-import { preparerAleatoire, ID_ALEATOIRE } from './generateur.js?v=0.157.0';
-import { AVION, MITRAILLAGE } from './data/mitraillage.js?v=0.157.0';
-import { refusAvion, lancerAvion, avancerAvions, flotteDeDepart, reparerAvions } from './avions.js?v=0.157.0';
-import { CHAR, CHAR_RECHARGE, CHAR_SORTIE } from './data/chars.js?v=0.157.0';
-import { GENIE, GENIE_DATA } from './data/genie.js?v=0.157.0';
-import { filDeDepart, degatsFil } from './fil.js?v=0.157.0';
-import { tirerJoueur } from './tir-joueur.js?v=0.157.0';
-import { creerNids, avancerNids, pourvoirNids, degatsNids, reparerNid, aubeNids } from './nids.js?v=0.157.0';
-import { TOITS, NIDS } from './data/nids.js?v=0.157.0';
-import { BONUS, chevronsDe } from './data/experience.js?v=0.157.0';
+import { noterMoments } from './moments.js?v=0.158.0';
+import { createRng, hash2 } from './lib/rng.js?v=0.158.0';
+import { impact, hydroLignes, etat as etatCase, vitesseEtat, vitesseCase, ETAT } from './terrain.js?v=0.158.0';
+import { creerArmee, legere, ajouterSoldat, construireGrille, pasArmee, tuerDans, effrayer, compacter, photoArmee, restaurerArmee, b64, deB64, DENSITE, place, poserCaracs, lireCaracs, abimerCaracs, gagner, CARACS } from './army.js?v=0.158.0';
+import { ligneSous, solidite, y0En, arcMax } from './tranchees.js?v=0.158.0';
+import { terrainDuSecteur } from './secteur-terrain.js?v=0.158.0';
+import { detruirePont, reconstruirePont, pontEn } from './eaux.js?v=0.158.0';
+import { MISSIONS_SECONDAIRES as MS } from './data/missions.js?v=0.158.0';
+import { PONT_COUPE } from './data/ponts.js?v=0.158.0';
+import { amasDe, isoles } from './amas.js?v=0.158.0';
+import { calculerCouts, creerCacheChamps, dimensionsCouts, BLOC } from './champs.js?v=0.158.0';
+import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.158.0';
+import { PARTS_ZONES, armeEnMots } from './data/causes.js?v=0.158.0';
+import { preparerAleatoire, ID_ALEATOIRE } from './generateur.js?v=0.158.0';
+import { AVION, MITRAILLAGE } from './data/mitraillage.js?v=0.158.0';
+import { refusAvion, lancerAvion, avancerAvions, flotteDeDepart, reparerAvions } from './avions.js?v=0.158.0';
+import { CHAR, CHAR_RECHARGE, CHAR_SORTIE } from './data/chars.js?v=0.158.0';
+import { GENIE, GENIE_DATA } from './data/genie.js?v=0.158.0';
+import { filDeDepart, degatsFil } from './fil.js?v=0.158.0';
+import { tirerJoueur, exploserGrenades} from './tir-joueur.js?v=0.158.0';
+import { creerNids, avancerNids, pourvoirNids, degatsNids, reparerNid, aubeNids } from './nids.js?v=0.158.0';
+import { TOITS, NIDS } from './data/nids.js?v=0.158.0';
+import { BONUS, chevronsDe } from './data/experience.js?v=0.158.0';
 const resiste = reg => 1 - BONUS.regiment.moral * (reg.chev || 0);      // les chevrons d'un régiment adoucissent ses pertes de moral (lot E)
-import { refusGenie, lancerGenie, avancerGenies, degatsGenies, sectionsDeDepart } from './genie.js?v=0.157.0';
-import { refusChar, lancerChar, degatsChars, avancerChars } from './chars.js?v=0.157.0';
-import { METEO, SAISONS, SAISON_DEFAUT, PREVISION_JUSTE, temperature, vent } from './data/meteo.js?v=0.157.0';
-import { SECTEURS } from './data/secteur.js?v=0.157.0';
-import { REGIMENTS, REGIMENTS_GRANDS } from './data/lexique.js?v=0.157.0';
-import { STANCES, STANCE_DEFAUT } from './data/stances.js?v=0.157.0';
-import { DIFFICULTES, DIFFICULTE_DEFAUT } from './data/difficulte.js?v=0.157.0';
-import { grade, departCaracs, caracEnMots } from './identite.js?v=0.157.0';
-import { corvees, creerRegiment, prendreReserve } from './nuit.js?v=0.157.0';
-import { RENFORTS } from './data/renforts.js?v=0.157.0';
-import { campDeDepart, dotationSoir, aubeCamps, infanterie, refusOrdre, refusNid, appliquerDepart, modif, rechargeDe, sortieChars, sortieCaserne, entreeHopital, emplacementCamp, patients, renfortsDe } from './camp.js?v=0.157.0';
+import { refusGenie, lancerGenie, avancerGenies, degatsGenies, sectionsDeDepart } from './genie.js?v=0.158.0';
+import { refusChar, lancerChar, degatsChars, avancerChars } from './chars.js?v=0.158.0';
+import { METEO, SAISONS, SAISON_DEFAUT, PREVISION_JUSTE, temperature, vent } from './data/meteo.js?v=0.158.0';
+import { SECTEURS } from './data/secteur.js?v=0.158.0';
+import { REGIMENTS, REGIMENTS_GRANDS } from './data/lexique.js?v=0.158.0';
+import { STANCES, STANCE_DEFAUT } from './data/stances.js?v=0.158.0';
+import { DIFFICULTES, DIFFICULTE_DEFAUT } from './data/difficulte.js?v=0.158.0';
+import { grade, departCaracs, caracEnMots } from './identite.js?v=0.158.0';
+import { corvees, creerRegiment, prendreReserve } from './nuit.js?v=0.158.0';
+import { RENFORTS } from './data/renforts.js?v=0.158.0';
+import { campDeDepart, dotationSoir, aubeCamps, infanterie, refusOrdre, refusNid, appliquerDepart, modif, rechargeDe, sortieChars, sortieCaserne, entreeHopital, emplacementCamp, patients, renfortsDe } from './camp.js?v=0.158.0';
 
 export const PAS = 1 / 30;                 // s de jeu par pas
 export const NOUS = 0, EUX = 1;
@@ -688,7 +688,7 @@ export function avancer(B) {
     if (cause === 'obus') gravite *= infanterie(etat, A.camp[i], 'obus') * (enTranchee(i) ? infanterie(etat, A.camp[i], 'tranchee') : 1);      // les casques Adrian, les sacs à terre (l'Infanterie, troisième jet)
     if (A.blessure[i] || rng() < gravite) {
       const tireur = par >= 0 ? A.camp[par] : reg >= 0 ? etat.regiments[reg]?.camp ?? 1 - A.camp[i] : 1 - A.camp[i];
-      mourir(B, i, cause, choc && projeter(B, i, choc), { zone: detail?.zone, arme: armeEnMots(cause, tireur, ctx.cal), par: par >= 0 ? A.id[par] : -1 });
+      mourir(B, i, cause, choc && projeter(B, i, choc), { zone: detail?.zone, arme: detail?.arme ?? armeEnMots(cause, tireur, ctx.cal), par: par >= 0 ? A.id[par] : -1 });
       morts.push(i);
       if (par >= 0 && A.victimes[par] < 65535) A.victimes[par]++;
       if (par >= 0) { const rp = etat.regiments[A.reg[par]]; rp.tues = (rp.tues || 0) + 1; }
@@ -734,7 +734,8 @@ export function avancer(B) {
   enFace(B, rng);
   ctx.infanterie = [NOUS, EUX].map(c => ({ melee: infanterie(etat, c, 'melee'), portee: infanterie(etat, c, 'portee'), tir: infanterie(etat, c, 'tir') }));      // l'onglet « Infanterie » du camp, pour tous les régiments (troisième jet)
   pasArmee(A, ctx);
-  if (pilotes) tirerJoueur(B, ctx, rng);      // le tir du joueur dans la vue d'un soldat (v0.147.0)
+  if (pilotes) tirerJoueur(B, ctx, rng);
+  exploserGrenades(B, ctx);      // les grenades lancées par l'homme qu'on mène (v0.158.0)      // le tir du joueur dans la vue d'un soldat (v0.147.0)
   // les caractéristiques qui viennent de passer un mot : ceux de chez nous qui deviennent excellents font une ligne du carnet (`palier`, refait à chaque pas)
   for (let i = 0; i < A.n; i++) {
     const bits = A.palier[i]; if (!bits) continue;

@@ -1,5 +1,11 @@
 # Journal des versions
 
+## 0.158.0 — 2026-11-21
+
+- Dans la vue d'un soldat, la balle tombe avec la distance ; un arbre, un char ou un des nôtres l'arrêtent (et un des nôtres touché, son régiment le paie)
+- G lance une grenade dans le sens du regard : deux par homme, elle éclate quatre secondes plus tard
+- Une petite fenêtre en bas à gauche donne les commandes du soldat, du char et de l'avion : l'essentiel toujours, le reste à la touche H
+
 ## 0.157.0 — 2026-11-20
 
 - Un avion se pilote depuis sa vue à la personne, une fois en l'air : Q et D l'inclinent et il vire, Z pique, S cabre ; la vue suit son roulis

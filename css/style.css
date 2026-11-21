@@ -1007,7 +1007,7 @@ h2 { font-weight: normal; letter-spacing: var(--titre-lettres); }
 .viseur { position: absolute; left: 50%; top: 50%; width: 36px; height: 36px; transform: translate(-50%, -50%); pointer-events: none; fill: none; stroke: var(--jeu-encre); stroke-width: 1.6; stroke-linecap: round; paint-order: stroke; filter: drop-shadow(0 0 1px var(--jeu-fond)); }
 .viseur[hidden] { display: none; }
 /* Dans la vue d'un soldat il n'y a plus d'interface (Jérôme, v0.148.0) : tout le HUD disparaît sauf le viseur ; les messages (`#toast`) restent, ils sont hors du HUD */
-body.vue-soldat #hud > :not(#viseur):not(#cartouches):not(#tampon-fps):not(#coup):not(#choc):not(#peur-voile), body.vue-soldat #etiquettes, body.vue-soldat #retours, body.vue-soldat #chars-etiq, body.vue-soldat #visee, body.vue-soldat #visee-nid,
+body.vue-soldat #hud > :not(#viseur):not(#cartouches):not(#tampon-fps):not(#coup):not(#choc):not(#peur-voile):not(#aide-vue), body.vue-soldat #etiquettes, body.vue-soldat #retours, body.vue-soldat #chars-etiq, body.vue-soldat #visee, body.vue-soldat #visee-nid,
 body.vue-soldat #equerres, body.vue-soldat #repere, body.vue-soldat #repere-soldat, body.vue-soldat #bulle { display: none !important; }
 .viseur .marque { opacity: 0; stroke-width: 2; }
 .viseur.touche .marque { animation: viseur-touche .45s ease-out 1; }
@@ -1488,3 +1488,20 @@ body:has(#soiree:not([hidden])) #carte, body:has(#soiree:not([hidden])) #secteur
 .tampon-fps.frappe { animation: tampon-frappe .22s ease-out; }
 @keyframes tampon-frappe { 0% { transform: translateX(-50%) rotate(-9deg) scale(1.6); opacity: 0; } 70% { transform: translateX(-50%) rotate(-2deg) scale(.96); opacity: 1; } 100% { transform: translateX(-50%) rotate(-3deg) scale(1); } }
 @media (prefers-reduced-motion: reduce) { .tampon-fps.frappe { animation: none; } }
+
+/* Les commandes des vues à la personne (v0.158.0) : une petite fenêtre en bas à gauche, à demi transparente ; l'essentiel toujours, le reste à H ; une bascule en marche est soulignée */
+.aide-vue { position: absolute; left: var(--e4); bottom: var(--e4); max-width: 17rem; padding: var(--pas) var(--e3); font-size: var(--texte-petit); line-height: 1.35; pointer-events: none; opacity: .88; }
+body.vue-verrouillee:not(.vue-soldat) .aide-vue { bottom: calc(var(--e4) + 104px); }      /* au-dessus de la rangée des régiments */
+.aide-vue p { margin: 0; }
+.aide-vue .av-titre { font-weight: 700; letter-spacing: var(--lettres-etiquette); text-transform: uppercase; margin-bottom: var(--e1); }
+.aide-vue .av-st { margin-top: var(--pas); opacity: .7; text-transform: uppercase; letter-spacing: var(--lettres-etiquette); font-size: .9em; }
+.aide-vue ul { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--e0); }
+.aide-vue li, .aide-vue .av-pied { display: grid; grid-template-columns: 5.6rem 1fr; gap: var(--pas); align-items: center; }
+.aide-vue .n1 li { font-weight: 700; }
+.aide-vue .n2, .aide-vue .n3 { display: none; }
+.aide-vue.ouverte .n2, .aide-vue.ouverte .n3 { display: block; }
+.aide-vue .av-pied { margin-top: var(--pas); opacity: .7; }
+.aide-vue kbd { display: inline-block; min-width: 1.5em; margin-right: var(--e0); padding: 0 var(--e1); border: 1px solid currentColor; border-bottom-width: 2px; border-radius: 3px; text-align: center; font: inherit; font-weight: 700; white-space: nowrap; }
+.aide-vue li.on span:last-child { text-decoration: underline; text-underline-offset: 3px; }
+.aide-vue li.on kbd { background: var(--jeu-fond); color: var(--jeu-encre); }
+.cartouches b.gren { width: 10px; height: 12px; margin-left: var(--e1); border-radius: 50% 50% 40% 40%; background: var(--jeu-encre); border: 1px solid var(--jeu-fond); align-self: flex-end; }
