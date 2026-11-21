@@ -1007,7 +1007,7 @@ h2 { font-weight: normal; letter-spacing: var(--titre-lettres); }
 .viseur { position: absolute; left: 50%; top: 50%; width: 36px; height: 36px; transform: translate(-50%, -50%); pointer-events: none; fill: none; stroke: var(--jeu-encre); stroke-width: 1.6; stroke-linecap: round; paint-order: stroke; filter: drop-shadow(0 0 1px var(--jeu-fond)); }
 .viseur[hidden] { display: none; }
 /* Dans la vue d'un soldat il n'y a plus d'interface (Jérôme, v0.148.0) : tout le HUD disparaît sauf le viseur ; les messages (`#toast`) restent, ils sont hors du HUD */
-body.vue-soldat #hud > :not(#viseur):not(#cartouches):not(#coup):not(#choc):not(#peur-voile), body.vue-soldat #etiquettes, body.vue-soldat #retours, body.vue-soldat #chars-etiq, body.vue-soldat #visee, body.vue-soldat #visee-nid,
+body.vue-soldat #hud > :not(#viseur):not(#cartouches):not(#tampon-fps):not(#coup):not(#choc):not(#peur-voile), body.vue-soldat #etiquettes, body.vue-soldat #retours, body.vue-soldat #chars-etiq, body.vue-soldat #visee, body.vue-soldat #visee-nid,
 body.vue-soldat #equerres, body.vue-soldat #repere, body.vue-soldat #repere-soldat, body.vue-soldat #bulle { display: none !important; }
 .viseur .marque { opacity: 0; stroke-width: 2; }
 .viseur.touche .marque { animation: viseur-touche .45s ease-out 1; }
@@ -1462,3 +1462,16 @@ body:has(#soiree:not([hidden])) #carte, body:has(#soiree:not([hidden])) #secteur
 .papier.fx.char-fiche.inactif .fx-o { opacity: .5; }
 .fx-passe { display: block; width: 100%; height: 40px; } .fx-passe-t { stroke: var(--jeu-accent); stroke-dasharray: 4 3; stroke-width: 2; fill: none; }
 .fx-passe-f { stroke: var(--jeu-fond); stroke-width: 3; fill: none; } .fx-passe-a { fill: var(--jeu-fond); }
+
+/* Les tampons de la vue d'un soldat (v0.154.0 ; hud/tampons-fps.js, data/tampons.js) : le mot frappé au tiers haut de l'image, en capitales dans un double cadre, la ligne dessous.
+   L'encre claire sur un fond sombre translucide (l'image derrière bouge) ; « sang » : le rouge sang du bouton d'action ; « alerte » : l'orange du moral. */
+.tampon-fps { position: absolute; left: 50%; top: 22%; transform: translateX(-50%) rotate(-3deg); display: grid; justify-items: center; gap: var(--e1); pointer-events: none;
+  padding: var(--pas) var(--e4); background: rgba(22, 19, 15, .62); color: var(--jeu-encre); border: 4px double var(--jeu-encre); text-align: center; z-index: 6; }
+.tampon-fps b { font-family: var(--police-titre, inherit); font-size: 34px; line-height: 1; text-transform: uppercase; letter-spacing: var(--titre-lettres); }
+.tampon-fps span { font-size: var(--texte); }
+.tampon-fps span:empty { display: none; }
+.tampon-fps.sang { border-color: #9b1426; background: rgba(90, 10, 20, .7); }      /* (les rouges du bouton d'action : --action, --action-survol) */
+.tampon-fps.alerte { border-color: var(--jeu-ebranle); } .tampon-fps.alerte b { color: var(--jeu-ebranle); }
+.tampon-fps.frappe { animation: tampon-frappe .22s ease-out; }
+@keyframes tampon-frappe { 0% { transform: translateX(-50%) rotate(-9deg) scale(1.6); opacity: 0; } 70% { transform: translateX(-50%) rotate(-2deg) scale(.96); opacity: 1; } 100% { transform: translateX(-50%) rotate(-3deg) scale(1); } }
+@media (prefers-reduced-motion: reduce) { .tampon-fps.frappe { animation: none; } }

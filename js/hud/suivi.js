@@ -13,7 +13,11 @@ import { TIR_JOUEUR as TJ } from '../data/tir-joueur.js?v=0.153.0';
 import { CALIBRES } from '../data/calibres.js?v=0.153.0';
 // Les sensations de l'homme qu'on mène (v0.152.0) : le coup reçu (s), la balle qui frôle (s), le souffle d'un obus (portée en rayons du souffle, s de retour), la peur qui ferme le champ (opacité au plus)
 const SENS = { coup: 1.2, frole: 0.5, roulis: 0.07, choc: 3, chocDuree: 2.5, peur: 0.75 };
-import { indiceDe } from './lecture.js?v=0.153.0';
+import { indiceDe, quiEst } from './lecture.js?v=0.153.0';
+import { creerTampons } from './tampons-fps.js?v=0.153.0';
+import { BLESSURES_FPS, RYTHME_TAMPONS } from '../data/tampons.js?v=0.153.0';
+import { ZONES_EN_MOTS } from '../data/causes.js?v=0.153.0';
+import { REPERES } from './barres.js?v=0.153.0';
 
 const SOL_Y = 3;           // le niveau moyen du sol que vise la caméra (rendu3d.js : `SOL_Y`), pour calculer `vue.haut`
 const PORTEE = 700;        // m : le plan lointain d'une vue verrouillée (au ras du sol, la vue porte loin)
@@ -75,6 +79,8 @@ export function creerSuivi({ $, bataille, rendu, reduit = () => false, retour = 
   let s = null;          // { genre, id, mode: 'cinema' | 'personne', t, avant, tir, accident, fin }
   const badge = $('suivi'), nom = $('suivi-nom'), barres = $('cinema'), rouge = $('accident'), viseur = $('viseur'), cartouches = $('cartouches'), coupEl = $('coup'), chocEl = $('choc'), peurEl = $('peur-voile');
   $('suivi-liberer').onclick = () => liberer();
+  const tampons = creerTampons($('tampon-fps'));      // les tampons de la vue d'un soldat (v0.154.0) : ce qui lui arrive, ce qu'il fait, ce qui tombe autour de lui
+  const nomDe = (B, id) => { const { qui } = quiEst(B, id); return `${qui.prenom} ${qui.nom}`; };
 
   /* La souris (vue à la personne) : le pointeur est capturé (le premier Échap rend le pointeur, et la vue avec lui) ; sans capture (refusée, ou un navigateur sans elle) le mouvement de la souris sert quand même */
   document.addEventListener('mousemove', e => {
@@ -125,10 +131,11 @@ export function creerSuivi({ $, bataille, rendu, reduit = () => false, retour = 
     const avant = s?.avant ?? { yaw: rendu.vue.cible.yaw, tangage: rendu.vue.cible.tangage, zoom: rendu.vue.zoom, cx: rendu.vue.cx, cz: rendu.vue.cz, fov: rendu.vue.fov };
     s = { genre, id, mode, t: 0, avant, neuf: true, tir: null, fin: 0, lacet: 0, pitch: 0, verrou: false, sourd: 0, attente: 0, indice: -1 };
     if (genre === 'soldat') {
-      rendu.cacherSoldat(id); rendu.fusil = true; viseur.toggleAttribute('hidden', false);      // (un SVG n'a pas de propriété `hidden` : l'attribut)
+      rendu.cacherSoldat(id); rendu.fusil = true; rendu.fusilCamp?.(B.armee.camp[indiceDe(B, id)] ?? moi()); viseur.toggleAttribute('hidden', false);      // (un SVG n'a pas de propriété `hidden` : l'attribut)
       viseur.classList.remove('touche', 'mort'); document.body.classList.add('vue-soldat');      // plus d'interface : seuls le fusil, le viseur et les messages restent (v0.148.0)
       for (const el of [cartouches, coupEl, chocEl, peurEl]) el.toggleAttribute('hidden', false);
       s.vuBalles = ''; s.epaule = false; s.fov = SOLDAT.fov; s.course = false; s.choc = 0; s.vuCoup = 0; rendu.fusilEpaule(false);
+      s.abattus = 0; s.blessure = null; s.terreur = false; s.camaradeT = -1e9; tampons.vider();
       dire('ZQSD marcher · Maj courir · C accroupi · X couché · Espace franchir · clic gauche tirer · clic droit épauler · R recharger · P pause · Échap revenir');
     }
     if (mode === 'personne') { s.sourd = performance.now() + 400; s.attente = performance.now() + 2000; prendreSouris(); } else rendreSouris();      // (sans capture au bout de 2 s : la souris libre sert)
@@ -140,6 +147,7 @@ export function creerSuivi({ $, bataille, rendu, reduit = () => false, retour = 
   }
   function liberer() {
     if (!s) return;
+    tampons.vider();
     const { avant, genre } = s; s = null; rendreSouris();
     const V = rendu.vue;
     rendu.cacherSoldat(-1); rendu.fusilEpaule(false); rendu.fusil = false; viseur.toggleAttribute('hidden', true); for (const el of [cartouches, coupEl, chocEl, peurEl]) el.toggleAttribute('hidden', true); document.body.classList.remove('vue-soldat'); if (genre === 'soldat') piloter({ fin: true }); V.proche = null;
@@ -154,6 +162,14 @@ export function creerSuivi({ $, bataille, rendu, reduit = () => false, retour = 
   function evenements(ev) {
     if (s?.genre === 'soldat') {      // un obus tout près (v0.152.0) : l'image se voile, le son s'étouffe, la vue tremble
       const d = s.derniere; if (!d) return;
+      const B = bataille(), M = B?.armee.camp[s.indice] ?? moi(), reg = s.indice >= 0 ? B.armee.reg[s.indice] : -1, pres = (e, r) => Math.hypot(e.x - d.x, e.y - d.y) < r;
+      for (const e of ev) {      // ce qui tombe autour de lui (v0.154.0) : un camarade, son régiment en déroute, une tranchée prise ou perdue tout près, sa promotion
+        if (!B) break;
+        if (e.type === 'mort' && e.camp === M && e.id !== s.id && pres(e, RYTHME_TAMPONS.voisin) && performance.now() - s.camaradeT > RYTHME_TAMPONS.camarade * 1000) { s.camaradeT = performance.now(); tampons.poser('camarade', nomDe(B, e.id)); }
+        else if (e.type === 'deroute' && e.reg === reg) tampons.poser('deroute', `Le régiment ${B.etat.regiments[reg]?.nom ?? ''} lâche pied`);
+        else if (e.type === 'promu' && e.id === s.id) tampons.poser('promu', quiEst(B, s.id).qui.grade);
+        else if (e.type === 'prise' && pres(e, RYTHME_TAMPONS.tranchee)) tampons.poser(e.camp === M ? 'pris' : 'perdu');
+      }
       for (const e of ev) {
         if (e.type !== 'impact') continue;
         const r = (CALIBRES[e.cal]?.rayon ?? 10) * SENS.choc, f = 1 - Math.hypot(e.x - d.x, e.y - d.y) / r;
@@ -167,13 +183,14 @@ export function creerSuivi({ $, bataille, rendu, reduit = () => false, retour = 
 
   /* Un pas : à appeler à chaque image (même en pause : la vue suit ce qui bouge, ou reste là où c'est figé) */
   function maj(dt) {
+    tampons.maj();
     if (!s) return;
     const B = bataille(); if (!B) { liberer(); return; }
     if (B.etat.phase !== 'jour') { liberer(); return; }      // la nuit tombe (ou la bataille finit) : la vue rend la main, sinon la soirée s'ouvrait sous la vue d'un soldat, qui cache tout le HUD (v0.152.1)
     const c = cibleDe(B, s.genre, s.id, { memo: s, positions: rendu.positions, dt });
     if (!c) {
       if (s.genre === 'soldat') {      // il est tombé (sa fiche est gardée : `etat.defunts`) : la vue rend la main, centrée sur lui, sa carte s'ouvre (main.js) ; parti vivant (évacué, relevé) : rien de plus
-        const d = B.etat.defunts?.[s.id], id = s.id, ou = d ? { x: d[11], y: d[12] } : s.derniere;
+        const d = B.etat.defunts?.[s.id], id = s.id, ou = d ? { x: d[17], y: d[18] } : s.derniere;      // (x et y : les champs 17 et 18 de `defunts` ; v0.154.0 : 11 et 12, deux caractéristiques de départ, envoyaient la caméra dans un coin)
         liberer(); if (d) mort({ id, ...ou }); else dire('Il a quitté le front : la vue est libérée.');
         return;
       }
@@ -250,6 +267,11 @@ export function creerSuivi({ $, bataille, rendu, reduit = () => false, retour = 
       if (pl.dernier && pl.dernier.n !== s.vuTir) {
         s.vuTir = pl.dernier.n; rendu.fusilTir();
         viseur.classList.remove('touche', 'mort'); void viseur.getBoundingClientRect(); if (pl.dernier.touche) viseur.classList.add(pl.dernier.mort ? 'mort' : 'touche');
+        if (pl.dernier.touche) {      // le tampon : son nom, où la balle l'a pris ; abattu, le compte depuis qu'on le mène
+          const qui = pl.dernier.cible !== undefined ? nomDe(B, pl.dernier.cible) : '', ou = ZONES_EN_MOTS[pl.dernier.zone] ?? '';
+          if (pl.dernier.mort) { s.abattus++; tampons.poser('abattu', [qui, ou, s.abattus > 1 ? `le ${s.abattus}e` : ''].filter(Boolean).join(' · ')); }
+          else tampons.poser('touche', [qui, ou].filter(Boolean).join(' · '));
+        }
       }
       if (pl.refus) { dire(pl.refus); pl.refus = null; }
       // les sensations : d'où vient le coup (un arc couleur de sang du côté du tireur ; plus pâle quand la balle frôle), le monde qui penche un instant, le souffle d'un obus, la peur qui ferme le champ
@@ -265,6 +287,12 @@ export function creerSuivi({ $, bataille, rendu, reduit = () => false, retour = 
       s.choc = Math.max(0, (s.choc ?? 0) - dt / SENS.chocDuree);
       chocEl.style.opacity = (s.choc * 0.7).toFixed(3);
       peurEl.style.opacity = s.indice >= 0 ? (B.armee.peur[s.indice] * SENS.peur).toFixed(3) : '0';
+      if (s.indice >= 0) {      // ce qui lui arrive (v0.154.0) : une blessure neuve, la terreur (au dernier repère de la peur ; elle ne revient qu'après être redescendue)
+        const bl = B.armee.blessure[s.indice], peur = B.armee.peur[s.indice];
+        if (s.blessure !== null && bl && bl !== s.blessure) tampons.poser('blesse', BLESSURES_FPS[bl] ?? '');
+        s.blessure = bl;
+        if (!s.terreur && peur >= REPERES.peur[2]) { s.terreur = true; tampons.poser('terrifie'); } else if (s.terreur && peur < REPERES.peur[1]) s.terreur = false;
+      }
     }
     // le tonneau et l'écran rouge de l'avion abattu (la vue à la personne seulement)
     if (perso && (chute || epave) && s.genre === 'avion') {

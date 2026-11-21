@@ -170,7 +170,7 @@ function tirDe(B, ctx, rng, P) {
   if (j >= 0) {
     gagner(A, i, 'adresse', R.progression.toucheTir, R.progression);
     ctx.frapper(j, 'tir', zj.mortel, null, i, -1, { zone: zj.nom, blessure: zj.blessure });
-    dernier.touche = true; dernier.mort = !!A.mort[j];
+    dernier.touche = true; dernier.mort = !!A.mort[j]; dernier.cible = A.id[j];      // (son numéro : le tampon dit son nom, v0.154.0)
   } else if (fr >= 0) A.peur[fr] = Math.max(A.peur[fr], TJ.frayeur);
   const t = j >= 0 ? tj : tFin;
   if (ctx.tir) ctx.tir(i, x0 + dx * t, y0 + dy * t);      // pour le dessin : le trait de la balle, le bruit (jamais l'état)
