@@ -1,8 +1,8 @@
 // L'édition des images clés d'une animation du soldat (logique pure : aucun DOM, aucune horloge) : tout ce qu'un outil d'animation à images clés fait sur une frise.
 // Une animation : { nom, mode, duree, images: [{ id, t, pose, courbe }] } (js/pose-soldat.js). Les fonctions modifient l'animation reçue (l'atelier prend une photo avant chaque geste, pour annuler)
 // et rendent ce qu'elles ont créé ou changé. Les images sont toujours rangées par t croissant ; deux images ne sont jamais au même instant (à 0,1 ms près : la dernière posée l'emporte).
-import { COURBE_INVERSE, CANAUX, COURBES } from './data/poses-soldat.js?v=0.155.0';
-import { echantillon, melanger, miroir, poseNeutre } from './pose-soldat.js?v=0.155.0';
+import { COURBE_INVERSE, CANAUX, COURBES } from './data/poses-soldat.js?v=0.156.0';
+import { echantillon, melanger, miroir, poseNeutre } from './pose-soldat.js?v=0.156.0';
 
 const EPS = 1e-4;
 const ensemble = ids => ids instanceof Set ? ids : new Set(ids ?? []);

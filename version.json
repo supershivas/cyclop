@@ -1,9 +1,9 @@
 {
-  "version": "0.155.0",
+  "version": "0.156.0",
   "date": "2026-11-20",
   "changes": [
-    "Un char se conduit à la main depuis sa vue à la personne : ZQSD pour avancer, reculer et pivoter, la souris pour regarder",
-    "Le clic tire un obus où l'on vise, dans le débattement du canon et sa portée ; le clic droit maintenu fait parler les mitrailleuses dans le regard ; Maj la lunette",
-    "C rend la conduite à sa route, T le tir à son choix ; R le renvoie au parc"
+    "Un avion se pilote depuis sa vue à la personne, une fois en l'air : Q et D l'inclinent et il vire, Z pique, S cabre ; la vue suit son roulis",
+    "Le clic maintenu fait tirer ses mitrailleuses dans l'axe : les balles tombent devant lui et portent d'autant mieux qu'il vole bas ; T le tir automatique",
+    "R, Échap ou l'essence vide : il rentre et se pose seul ; trop bas, il s'écrase"
   ]
 }

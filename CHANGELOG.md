@@ -1,5 +1,11 @@
 # Journal des versions
 
+## 0.156.0 — 2026-11-20
+
+- Un avion se pilote depuis sa vue à la personne, une fois en l'air : Q et D l'inclinent et il vire, Z pique, S cabre ; la vue suit son roulis
+- Le clic maintenu fait tirer ses mitrailleuses dans l'axe : les balles tombent devant lui et portent d'autant mieux qu'il vole bas ; T le tir automatique
+- R, Échap ou l'essence vide : il rentre et se pose seul ; trop bas, il s'écrase
+
 ## 0.155.0 — 2026-11-20
 
 - Un char se conduit à la main depuis sa vue à la personne : ZQSD pour avancer, reculer et pivoter, la souris pour regarder

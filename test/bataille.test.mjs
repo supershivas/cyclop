@@ -1788,3 +1788,35 @@ test('le char à la main (v0.155.0) : il avance, recule et pivote ; le canon tir
   const scen = D => { commanderConduite(D, 0, { id: 0 }); for (let k = 0; k < 150; k++) { if (k === 10) commanderConduite(D, 0, { av: 1, tr: 0.5 }); if (k === 60) commanderConduite(D, 0, { tir: true, x: 230, y: 160 }); if (k === 70) commanderConduite(D, 0, { rafale: true, regard: -1.3 }); if (k === 120) commanderConduite(D, 0, { fin: true }); avancer(D); } };
   const X = mk(), Y = mk(); scen(X); scen(Y); assert.equal(empreinte(X), empreinte(Y));
 });
+
+import { commanderAile } from '../js/avions.js';
+import { AVION_MAIN } from '../js/data/mitraillage.js';
+test('l\'avion à la main (v0.156.0) : on le prend en l\'air, il vire comme il s\'incline, pique et cabre, tire dans l\'axe, s\'écrase trop bas, rentre seul ; deux machines, la même partie', () => {
+  const mk = () => { const B = petite(); const [cx, cy] = centreRegiment(B, 8); ordreAvion(B, cx - 40, cy, cx + 40, cy); avancer(B); return { B, v: B.etat.mitraillages[0], cx, cy }; };
+  const { B, v } = mk();
+  assert.match(commanderAile(B, 1, { id: v.id }), /plus à vous/);
+  assert.equal(commanderAile(B, 0, { id: v.id }), ''); assert.ok(v.main, 'son vol est maintenant intégré');
+  const p0 = positionDe(v, B.etat.temps); assert.ok(p0.main && Math.abs(p0.h - v.main.h) < 1e-9);
+  // il s'incline : le cap tourne (virage soutenu, le rayon de `rayonVirage`)
+  const cap0 = v.main.cap; commanderAile(B, 0, { ro: 1 }); for (let k = 0; k < 60; k++) avancer(B);
+  const dcap = v.main.cap - cap0; assert.ok(dcap > 0.25 && dcap < 0.5, `il vire de ${dcap.toFixed(2)} rad en 2 s`);
+  commanderAile(B, 0, { ro: 0, pi: -1 }); const h0 = v.main.h; for (let k = 0; k < 45; k++) avancer(B); assert.ok(v.main.h < h0 - 10, `il pique : ${h0.toFixed(0)} → ${v.main.h.toFixed(0)} m`);
+  commanderAile(B, 0, { pi: 1 }); const h1 = v.main.h; for (let k = 0; k < 45; k++) avancer(B); assert.ok(v.main.h > h1, 'il cabre');
+  // le tir dans l'axe : bas, au-dessus des hommes d'en face, les munitions baissent et des hommes tombent ; plus haut que `haut`, rien
+  const tir = (h, tire) => {
+    const { B, v, cx, cy } = mk(); commanderAile(B, 0, { id: v.id });
+    Object.assign(v.main, { x: cx - 60, y: cy, h, cap: 0, pente: 0, roulis: 0 }); commanderAile(B, 0, { tir: tire });
+    const avant = B.etat.pertes[1] + B.etat.blesses[1]; for (let k = 0; k < 75; k++) { v.main.h = h; avancer(B); }
+    return { touches: B.etat.pertes[1] + B.etat.blesses[1] - avant, mun: v.main.munitions };
+  };
+  const bas = tir(12, true), rien = tir(12, false), haut = tir(90, true);
+  assert.ok(bas.mun < AVION_MAIN.munitions - 20 && bas.touches > rien.touches, `bas : ${bas.touches} touchés contre ${rien.touches} sans tirer`);
+  assert.ok(haut.touches <= rien.touches + 2, 'trop haut, ses balles ne portent pas');
+  // trop bas : il s'écrase
+  { const { B, v } = mk(); commanderAile(B, 0, { id: v.id }); v.main.h = 5; commanderAile(B, 0, { pi: -1 }); for (let k = 0; k < 30; k++) avancer(B); assert.notEqual(v.etat, 'vol', 'au sol, il tombe'); }
+  // rendu (ou R) : il rentre seul (sans aérodrome : tout droit, hors du terrain), et l'escadrille le retrouve
+  { const { B, v } = mk(); commanderAile(B, 0, { id: v.id }); commanderAile(B, 0, { fin: true }); assert.ok(v.retour); let rentre = false; for (let k = 0; k < 900 && !rentre; k++) rentre = avancer(B).some(e => e.type === 'avion-rentre'); assert.ok(rentre, 'il est rentré'); }
+  // deux machines, les mêmes commandes : la même partie
+  const scen = () => { const { B, v } = mk(); commanderAile(B, 0, { id: v.id }); for (let k = 0; k < 150; k++) { if (k === 10) commanderAile(B, 0, { ro: 1, pi: -0.5 }); if (k === 50) commanderAile(B, 0, { tir: true, ro: -1 }); if (k === 100) commanderAile(B, 0, { auto: true, tir: false }); if (k === 130) commanderAile(B, 0, { rentrer: true }); avancer(B); } return B; };
+  assert.equal(empreinte(scen()), empreinte(scen()));
+});

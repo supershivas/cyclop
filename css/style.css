@@ -1023,6 +1023,15 @@ body.vue-soldat #equerres, body.vue-soldat #repere, body.vue-soldat #repere-sold
 .canon-barre { position: absolute; left: 50%; top: calc(50% + 28px); width: 72px; height: var(--barre-h); transform: translateX(-50%); pointer-events: none; border: 1px solid var(--jeu-fond); background: color-mix(in srgb, var(--jeu-fond) 55%, transparent); }
 .canon-barre::after { content: ''; position: absolute; inset: 0; width: calc(var(--plein, 0) * 100%); background: var(--jeu-encre); }
 .canon-barre.auto, .viseur.auto { opacity: .45; }
+/* L'avion qu'on pilote (v0.156.0) : trois jauges verticales en bas à droite, sans texte : l'altitude (une colonne pleine), l'essence (hachurée), les munitions (pointillée) ;
+   pendant le retour, elles pâlissent ; au tir automatique, la jauge des munitions aussi */
+.vol-barres { position: absolute; right: var(--e4); bottom: calc(var(--e4) * 2 + 84px); display: flex; gap: var(--pas); align-items: flex-end; pointer-events: none; filter: drop-shadow(0 0 1px var(--jeu-fond)); }
+.vol-barres i { position: relative; display: block; width: 10px; height: 96px; border: 1px solid var(--jeu-encre); background: color-mix(in srgb, var(--jeu-fond) 55%, transparent); }
+.vol-barres i::after { content: ''; position: absolute; left: 0; right: 0; bottom: 0; background: var(--jeu-encre); }
+.vol-barres .alt::after { height: calc(var(--alt, 0) * 100%); }
+.vol-barres .ess::after { height: calc(var(--ess, 1) * 100%); background: repeating-linear-gradient(0deg, var(--jeu-encre) 0 3px, transparent 3px 5px); }
+.vol-barres .mun::after { height: calc(var(--mun, 1) * 100%); background: repeating-linear-gradient(0deg, var(--jeu-encre) 0 1px, transparent 1px 3px); }
+.vol-barres.auto .mun, .vol-barres.rentre i { opacity: .45; }
 @media (prefers-reduced-motion: reduce) { .cartouches.recharge i.vide { animation: none; } }
 /* Les sensations de l'homme qu'on mène (v0.152.0) : le coup reçu, un arc couleur de sang du côté du tireur (le sang : exception datée de la v0.140.2), plus pâle quand la balle frôle ;
    le souffle d'un obus, un voile de brume ; la peur, le bord de l'image qui s'assombrit. L'opacité du voile et de la peur vient de suivi.js. */

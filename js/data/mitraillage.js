@@ -34,3 +34,10 @@ export const MITRAILLAGE = {
   chute: { vitesse: 0.8, gravite: 14, rayon: 5, letal: 0.7, cratere: '155', eclats: 3, dispersion: 9 },   // abattu : il glisse (× sa vitesse), tombe, et écrase ceux du point de chute
   cloue: ['brouillard', 'tempete'],    // les météos où l'on ne vole pas
 };
+// L'avion à la main (Jérôme, 20 nov., v0.156.0 : « décollage et atterrissage automatiques mais vol, altitude et tirs manuels ou auto » ; lot 5 de docs/propositions/vue-fps-engins.md).
+// On prend les commandes une fois en l'air (après la montée) ; Q/D inclinent (`roulis` rad au plus, `roule` rad/s), le virage suit l'inclinaison (le rayon de `rayonVirage`, rien de plus serré) ;
+// Z pique, S cabre (`pente` rad au plus, `cabre` rad/s) ; il vole à `M.vitesse` ; sous `plancher` m il touche le sol et tombe ; au plus `plafond` m. Hors du terrain de plus de `M.sortie` m, il revient seul vers le centre.
+// Ses mitrailleuses sont pointées `site` rad sous l'axe : les balles tombent où cette ligne touche le sol, sur une bande de `largeur` m qui avance avec lui ; elles portent `letal` × la chance du mitraillage
+// à `passe` m, de moins en moins jusqu'à `haut` m (au-dessus, rien) ; `cadence` cartouches par seconde, `munitions` en tout. L'essence dure `essence` s ; vide, ou sur R, il rentre seul et se pose.
+// Le tir automatique (T) : il tire seul quand il est sous `auto` m et que des hommes d'en face sont sur la bande devant lui.
+export const AVION_MAIN = { roulis: 0.7, roule: 1.6, pente: 0.35, cabre: 0.8, plancher: 2, plafond: 150, site: 0.45, largeur: 4, letal: 0.6, haut: 60, cadence: 12, munitions: 500, essence: 240, auto: 30 };

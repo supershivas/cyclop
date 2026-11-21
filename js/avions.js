@@ -4,13 +4,13 @@
    L'avion entre par le prolongement de la passe, vole à `croisiere` m, descend à `passe` m sur les `descente` m qui précèdent la bande, la balaie (ses balles tombent
    `avance` m devant lui, chaque homme de la bande n'est tiré qu'une fois), remonte, et sort. Au-dessus d'hommes qui tirent, il perd des points de vie (`exposition`) ;
    à zéro, il tombe, écrase ce qui est sous lui et laisse une épave pour le reste de la bataille. Les avions de chaque camp : `etat.avions[camp]`, les points de vie de chacun (0 : perdu). */
-import { MITRAILLAGE as M } from './data/mitraillage.js?v=0.155.0';
-import { METEO } from './data/meteo.js?v=0.155.0';
-import { GRILLE, effrayer, toitFacteur } from './army.js?v=0.155.0';
-import { hash2 } from './lib/rng.js?v=0.155.0';
-import { modif, pvAvion, campDe, niveauDe, emplacementCamp } from './camp.js?v=0.155.0';
-import { impact } from './terrain.js?v=0.155.0';
-import { NOMS_CALIBRES } from './data/calibres.js?v=0.155.0';
+import { MITRAILLAGE as M, AVION_MAIN as AM } from './data/mitraillage.js?v=0.156.0';
+import { METEO } from './data/meteo.js?v=0.156.0';
+import { GRILLE, effrayer, toitFacteur } from './army.js?v=0.156.0';
+import { hash2 } from './lib/rng.js?v=0.156.0';
+import { modif, pvAvion, campDe, niveauDe, emplacementCamp } from './camp.js?v=0.156.0';
+import { impact } from './terrain.js?v=0.156.0';
+import { NOMS_CALIBRES } from './data/calibres.js?v=0.156.0';
 
 const borne = (v, a, b) => v < a ? a : v > b ? b : v;
 const lisse = f => { f = borne(f, 0, 1); return f * f * (3 - 2 * f); };
@@ -102,6 +102,8 @@ export function positionDe(v, temps) {
     const tau = Math.min(temps, v.chute.ti) - v.chute.t, d = M.vitesse * M.chute.vitesse * tau, ux = v.chute.ux ?? v.ux, uy = v.chute.uy ?? v.uy;
     return { x: v.chute.x + ux * d, y: v.chute.y + uy * d, h: Math.max(0, v.chute.h - 0.5 * M.chute.gravite * tau * tau), cap: v.chute.cap ?? cap, pente: -Math.atan2(M.chute.gravite * tau, M.vitesse * M.chute.vitesse), roulis: 0, etat: 'chute' };
   }
+  if (v.retour) return retourDe(v, temps);      // l'avion à la main (v0.156.0) : son retour, recalculé quand on rend les commandes
+  if (v.main) { const m = v.main; return { x: m.x, y: m.y, h: m.h, cap: m.cap, pente: m.pente, roulis: m.roulis, etat: 'vol', s: -2, main: true }; }      // … et son vol, intégré pas à pas
   const sP = v.av?.sP ?? 0, st = (temps - v.t0) * M.vitesse;
   if (v.av && st < sP) return decollageDe(v, st);
   const s = borne(st - sP, 0, v.total);
@@ -125,9 +127,13 @@ function decollageDe(v, st) {
    `q` : la distance depuis la fin de la remontée. */
 function hauteurFinale(f) { return M.croisiere * (1 - lisse(f)); }
 function atterrissageDe(v, q) {
-  const a = v.av, F = a.fin, C = M.circuit;
+  const a = v.av;
   if (q < a.L3) { const P = surSegments(a.c2, q); return { x: P.x, y: P.y, h: M.croisiere, cap: P.cap, pente: 0, roulis: P.roulis, etat: 'vol', s: -1 }; }
-  const u = q - a.L3;
+  return finaleDe(v, q - a.L3);
+}
+/* La finale et le roulage (`u` : la distance depuis l'entrée dans l'axe de la piste) */
+function finaleDe(v, u) {
+  const F = v.av.fin, C = M.circuit;
   if (u < C.approche) {
     const f = u / C.approche, h = hauteurFinale(f), dh = (hauteurFinale(Math.min(1, f + 0.01)) - hauteurFinale(Math.max(0, f - 0.01))) / (0.02 * C.approche);
     return { x: F.x + F.ux * u, y: F.y + F.uy * u, h, cap: F.cap, pente: Math.atan2(dh, 1), roulis: 0, etat: 'vol', s: -1, piste: h < 15 };
@@ -136,9 +142,110 @@ function atterrissageDe(v, q) {
   return { x: F.x + F.ux * (C.approche + r), y: F.y + F.uy * (C.approche + r), h: 0, cap: F.cap, pente: 0, roulis: 0, etat: 'vol', s: -1, piste: true };
 }
 
+/* Le retour d'un avion qu'on a piloté (v0.156.0) : du point où on l'a rendu, un circuit (arc, droite, arc : `raccorder`) jusqu'à l'axe de la piste en revenant à l'altitude de croisière, puis la finale et le roulage ;
+   sans aérodrome, tout droit jusqu'à sortir du terrain. `q` : la distance faite depuis le retour. */
+function retourDe(v, temps) {
+  const R = v.retour, q = (temps - R.t0) * M.vitesse;
+  if (R.droit) return { x: R.x + Math.cos(R.cap) * q, y: R.y + Math.sin(R.cap) * q, h: R.h, cap: R.cap, pente: 0, roulis: 0, etat: 'vol', s: -1 };
+  if (q < R.L3) { const P = surSegments(R.seg, q); return { x: P.x, y: P.y, h: R.h0 + (M.croisiere - R.h0) * lisse(q / Math.min(R.L3, 300)), cap: P.cap, pente: 0, roulis: P.roulis, etat: 'vol', s: -1 }; }
+  return finaleDe(v, q - R.L3);
+}
+/* Rendre les commandes : il rentre seul (un événement le dit) */
+function rentrer(B, v) {
+  const m = v.main, t0 = B.etat.temps;
+  if (v.av) { const F = v.av.fin, c = raccorder({ x: m.x, y: m.y, cap: m.cap }, { x: F.x, y: F.y, cap: F.cap }, rayonVirage()); v.retour = { t0, h0: m.h, seg: c.seg, L3: c.len }; }
+  else v.retour = { t0, droit: true, x: m.x, y: m.y, h: m.h, cap: m.cap };
+  B.evenements.push({ type: 'avion-retour', camp: v.camp, id: v.id });
+}
+const retourFini = (B, v) => {
+  const R = v.retour, q = (B.etat.temps - R.t0) * M.vitesse, T = B.terrain;
+  if (!R.droit) return q >= R.L3 + M.circuit.approche + M.circuit.roulage;
+  const p = retourDe(v, B.etat.temps); return p.x < -M.sortie || p.y < -M.sortie || p.x > T.W + M.sortie || p.y > T.H + M.sortie;
+};
+
+/* L'avion à la main (v0.156.0) : un pilote par camp, `B.ailes[camp]` (jamais sauvegardé ; le vol, lui, garde sa place dans `v.main`), posé par les commandes, les mêmes seul ou à deux (lockstep : `aile`) :
+   { id } : prendre les commandes (une fois en l'air, avant le retour) ; { ro: −1..1 } : incliner ; { pi: −1..1 } : cabrer (+) ou piquer (−) ; { tir: true | false } : les mitrailleuses ;
+   { auto: true | false } : le tir automatique ; { rentrer: true } : rentrer ; { fin: true } : rendre les commandes (il rentre). Rend '' ou la raison du refus. */
+export function commanderAile(B, camp, c) {
+  B.ailes ??= [null, null];
+  const { etat } = B, vol = id => etat.mitraillages.find(v => v.id === id);
+  let K = B.ailes[camp];
+  if (c.fin) { const v = K && vol(K.id); if (v?.main && !v.retour && v.etat === 'vol') rentrer(B, v); B.ailes[camp] = null; return ''; }
+  if (c.id !== undefined && K?.id !== c.id) {
+    const v = vol(c.id);
+    if (!v || v.camp !== camp) return 'Cet avion n\'est plus à vous.';
+    if (v.etat !== 'vol') return 'Cet avion ne vole plus.';
+    if (v.retour) return 'Il rentre : il se pose seul.';
+    if (!v.main) {
+      const p = positionDe(v, etat.temps);
+      if (p.s < 0) return (etat.temps - v.t0) * M.vitesse < (v.av?.sP ?? 0) ? 'Il décolle encore : vous prendrez les commandes en l\'air.' : 'Il rentre déjà : il se pose seul.';
+      v.main = { x: p.x, y: p.y, h: p.h, cap: p.cap, pente: 0, roulis: 0, essence: AM.essence, munitions: AM.munitions, tirait: false, ix: p.x, iy: p.y };
+    }
+    K = B.ailes[camp] = { id: c.id, ro: 0, pi: 0, tir: false, auto: false };
+  }
+  if (!K) return 'Aucun avion à piloter.';
+  const b = v => Math.max(-1, Math.min(1, v || 0));
+  if ('ro' in c) K.ro = b(c.ro);
+  if ('pi' in c) K.pi = b(c.pi);
+  if (c.tir !== undefined) K.tir = !!c.tir;
+  if (c.auto !== undefined) K.auto = !!c.auto;
+  if (c.rentrer) { const v = vol(K.id); if (v?.main && !v.retour) rentrer(B, v); }
+  return '';
+}
+const angleProche = d => d - 2 * Math.PI * Math.round(d / (2 * Math.PI));
+/* Où tombent ses balles : la ligne des mitrailleuses (`site` sous l'axe) touche le sol devant lui ; null si elle passe au-dessus de l'horizon */
+function impactAxe(m) { const a = AM.site - m.pente; if (a < 0.05) return null; const d = m.h / Math.tan(a); return [m.x + Math.cos(m.cap) * d, m.y + Math.sin(m.cap) * d]; }
+/* Les balles d'un pas, sur la bande de (ax, ay) à (bx, by) : chaque homme d'en face (et des nôtres : on tire sur ce qu'on voit) dans `largeur` m est touché avec une chance qui baisse avec l'altitude */
+function mitrailler(B, v, ax, ay, bx, by, h, ctx, rng) {
+  const { armee: A, terrain: T, R } = B, hw = AM.largeur / 2, dx = bx - ax, dy = by - ay, L = Math.hypot(dx, dy); if (L < 0.01) return;
+  const ux = dx / L, uy = dy / L, haut = borne(1 - (h - M.passe) / (AM.haut - M.passe), 0, 1); if (haut <= 0) return;
+  parmi(A, Math.min(ax, bx) - hw, Math.min(ay, by) - hw, Math.max(ax, bx) + hw, Math.max(ay, by) + hw, i => {
+    if (A.mort[i]) return;
+    const rx = A.x[i] - ax, ry = A.y[i] - ay, l = rx * ux + ry * uy;
+    if (l < 0 || l > L || Math.abs(rx * uy - ry * ux) > hw) return;
+    let p = AM.letal * M.letal * modif(B.etat, v.camp, 'aerodrome.letal') * haut;
+    const ci = (A.y[i] | 0) * T.W + (A.x[i] | 0);
+    if (T.diff[ci] <= -2) p *= R.obus.abri;
+    p *= toitFacteur(T, ci, 'avion');
+    if (rng() < p) ctx.frapper(i, 'avion', M.gravite); else A.peur[i] = Math.max(A.peur[i], M.peur);
+  });
+  effrayer(A, (ax + bx) / 2, (ay + by) / 2, M.rayonPeur + hw, M.peurVoisins, R.experience, R.caracteristiques.calme);
+}
+/* Des hommes d'en face sur la bande, devant lui (le tir automatique) */
+function ennemisDevant(B, v, x, y) {
+  const A = B.armee; let n = 0;
+  parmi(A, x - 6, y - 6, x + 6, y + 6, i => { if (!A.mort[i] && A.camp[i] !== v.camp && (A.x[i] - x) ** 2 + (A.y[i] - y) ** 2 < 36) n++; });
+  return n > 0;
+}
+/* Un pas du vol à la main */
+function piloter(B, v, K, ctx, rng) {
+  const { etat, terrain: T } = B, m = v.main, dt = ctx.dt;
+  m.essence -= dt;
+  if (m.essence <= 0) { rentrer(B, v); return; }
+  let ro = K.ro * AM.roulis;
+  if (m.x < -M.sortie || m.y < -M.sortie || m.x > T.W + M.sortie || m.y > T.H + M.sortie) ro = Math.sign(angleProche(Math.atan2(T.H / 2 - m.y, T.W / 2 - m.x) - m.cap)) * AM.roulis;      // trop loin : il revient seul
+  m.roulis += borne(ro - m.roulis, -AM.roule * dt, AM.roule * dt);
+  m.pente += borne(K.pi * AM.pente - m.pente, -AM.cabre * dt, AM.cabre * dt);
+  m.cap = angleProche(m.cap + M.circuit.g * Math.tan(m.roulis) / M.vitesse * dt);
+  const vh = M.vitesse * Math.cos(m.pente);
+  m.x += Math.cos(m.cap) * vh * dt; m.y += Math.sin(m.cap) * vh * dt; m.h += M.vitesse * Math.sin(m.pente) * dt;
+  if (m.h > AM.plafond) { m.h = AM.plafond; m.pente = Math.min(0, m.pente); }
+  if (m.h < AM.plancher) { m.h = AM.plancher; m.tirait = false; abattre(B, v, positionDe(v, etat.temps)); return; }      // il touche le sol
+  // les mitrailleuses : à la main, ou seules sous `auto` m quand des hommes d'en face sont sur la bande
+  const pt = impactAxe(m), tire = !!pt && m.munitions > 0 && (K.tir || (K.auto && m.h < AM.auto && ennemisDevant(B, v, pt[0], pt[1])));
+  if (tire) {
+    if (m.tirait) mitrailler(B, v, m.ix, m.iy, pt[0], pt[1], m.h, ctx, rng);
+    m.munitions = Math.max(0, m.munitions - AM.cadence * dt); m.ix = pt[0]; m.iy = pt[1];
+  }
+  m.tirait = tire;
+  const mal = degatsParSeconde(B, v.camp, m.x, m.y, m.h) * dt;
+  if (mal > 0) { v.pv = Math.max(0, v.pv - mal); if (v.pv <= 0) abattre(B, v, positionDe(v, etat.temps)); }
+}
+
 /* Le balayage à ce temps : { actif, l (l'abscisse sur la bande où tombent ses balles), x, y } */
 export function balayage(v, temps) {
   if (v.etat !== 'vol') return { actif: false };
+  if (v.main || v.retour) return { actif: !!v.main?.tirait && !v.retour, l: 0, x: v.main?.ix, y: v.main?.iy };      // à la main : où tombent ses balles
   const s = (temps - v.t0) * M.vitesse - (v.av?.sP ?? 0), l = s + M.avance - v.sA;
   return { actif: l > 0 && l <= v.L, l, x: v.x1 + v.ux * l, y: v.y1 + v.uy * l };
 }
@@ -315,6 +422,13 @@ export function avancerAvions(B, ctx, rng) {
   for (const v of etat.mitraillages) {
     if (v.etat === 'epave') continue;
     if (v.etat === 'chute') { if (etat.temps >= v.chute.ti - 1e-9) ecraser(B, v, ctx, rng); continue; }
+    if (v.retour) {      // il rentre seul après avoir été piloté : on lui tire encore dessus
+      if (retourFini(B, v)) { v.etat = 'rentre'; etat.avions[v.camp][v.k] = v.pv; B.evenements.push({ type: 'avion-rentre', camp: v.camp, pv: v.pv }); continue; }
+      const p = positionDe(v, etat.temps), mal = degatsParSeconde(B, v.camp, p.x, p.y, p.h) * dt;
+      if (mal > 0) { v.pv = Math.max(0, v.pv - mal); if (v.pv <= 0) abattre(B, v, p); }
+      continue;
+    }
+    if (v.main) { const K = B.ailes?.find(k => k?.id === v.id); if (K) piloter(B, v, K, ctx, rng); else rentrer(B, v); continue; }      // personne aux commandes (une partie relue) : il rentre
     const s = (etat.temps - v.t0) * M.vitesse - (v.av?.sP ?? 0);
     if (s >= v.total) { v.etat = 'rentre'; etat.avions[v.camp][v.k] = v.pv; B.evenements.push({ type: 'avion-rentre', camp: v.camp, pv: v.pv }); continue; }
     const p = positionDe(v, etat.temps);
