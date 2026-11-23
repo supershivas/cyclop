@@ -594,7 +594,7 @@ export const eclMat = {
       void main() { vTon = aTon; vRot = fract(sin(dot(position.xz, vec2(12.9898, 78.233))) * 43758.5453) * 6.2832; gl_Position = projectionMatrix * viewMatrix * vec4(position, 1.0); vec4 mv = viewMatrix * vec4(position, 1.0);
         float d = max(-mv.z, 0.3); vPres = uF > 0.0 ? smoothstep(1.5, 4.0, d) * (aTon > 50.0 ? 1.0 - 0.75 * smoothstep(80.0, 320.0, d) : 1.0) : 1.0;
         float t = max(1.0, floor((uF > 0.0 ? min(128.0, uF * (aTon > 50.0 ? 1.2 : 0.5) * aTaille / d) : uTaille * aTaille) + 0.5)); gl_PointSize = aTon < 0.0 ? 0.0 : (aTon > 50.0 ? floor(t * 1.35 + 0.5) : t); vRond = t >= 3.0 ? 1.0 : 0.0; if (aTon < 0.0) gl_Position = vec4(2.0); }`,
-  f: `uniform sampler2D uPal; uniform float uNP; varying float vTon; varying float vRot; varying float vRond; varying float vPres;
+  f: `uniform sampler2D uPal; uniform float uNP; uniform float uF; varying float vTon; varying float vRot; varying float vRond; varying float vPres;
       void main() {
         float t = floor(vTon + 0.5);
         float a = 1.0;
@@ -604,7 +604,7 @@ export const eclMat = {
           vec2 p = (gl_PointCoord - 0.5) * 2.0; float c = cos(vRot), s = sin(vRot);
           p = vec2(c * p.x - s * p.y, s * p.x + c * p.y);
           float d = length(vec2(p.x, p.y / 0.6));
-          a = 0.62 * vPres * (1.0 - smoothstep(0.55, 1.0, d)); if (d > 1.0) discard;
+          a = 0.62 * (uF > 0.0 ? vPres : 1.0) * (1.0 - smoothstep(0.55, 1.0, d)); if (d > 1.0) discard;
           t -= 100.0;
         }
         gl_FragColor = vec4(texture2D(uPal, vec2((t + 0.5) / uNP, 0.25)).rgb, a);
