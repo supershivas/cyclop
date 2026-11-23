@@ -10,6 +10,7 @@ import { campDe, refusRang, disponible, depenseSoir } from '../camp.js?v=0.166.0
 import { zone, nombreZones, zoneDe, lettreZone } from '../bataille.js?v=0.166.0';
 import { refusCorvee, contactDe, disponibles } from '../nuit.js?v=0.166.0';
 import { lireJournee, lireBataille } from '../donnees-jour.js?v=0.166.0';
+import { y0En } from '../tranchees.js?v=0.166.0';
 import { palmares } from './medailles.js?v=0.166.0';
 import { el, html, info, bouton, corvee, puceReleve, vivres, motMoral, graphe } from './papier-nuit.js?v=0.166.0';
 import { jaugeMoral } from './bilan.js?v=0.166.0';
@@ -33,9 +34,21 @@ export function frontDe(B, moi) {
     const l = B.lignes.findIndex(L => L.camp === c && L.rang === rang);
     return l < 0 ? [] : B.troncons.flatMap((t, k) => t.ligne !== l ? [] : [{ x0: Math.min(x(t.x0), x(t.x1)), x1: Math.max(x(t.x0), x(t.x1)), soir: etat.troncons[k], hier: hier?.[k] ?? c, depart: c }]);
   });
-  const morts = [Array(nz).fill(0), Array(nz).fill(0)];
-  for (const c of etat.corps) if (c[2] === moi) { const z = Math.min(nz, Math.max(1, zoneDe(B, c[0] / 10))) - 1, s = moi ? nz - 1 - z : z; morts[1][s]++; if (c[3] === etat.jour) morts[0][s]++; }
-  return { lignes, nz, lettres: Array.from({ length: nz }, (_, k) => lettreZone(moi ? nz - k : k + 1)), morts };
+  // nos morts, chacun à sa place : fx (0 à 1 sur la largeur), fy (en « rangs de ligne » : 0 leur 2e, 1 leur 1re, 2 notre 1re, 3 notre 2e, entre les deux au prorata), le jour de sa mort
+  const L4 = [[1 - moi, 1], [1 - moi, 0], [moi, 0], [moi, 1]].map(([c, rang]) => B.lignes.find(L => L.camp === c && L.rang === rang));
+  const rangDe = (wx, wy) => {
+    if (L4.some(L => !L)) return 1.5;
+    const w = L4.map(L => y0En(L, wx));
+    let k = 0; while (k < 2 && (wy - w[k + 1]) * Math.sign(w[3] - w[0]) > 0) k++;
+    return Math.max(-0.45, Math.min(3.45, k + (wy - w[k]) / ((w[k + 1] - w[k]) || 1)));
+  };
+  const morts = [Array(nz).fill(0), Array(nz).fill(0)], croix = [];
+  for (const c of etat.corps) if (c[2] === moi) {
+    const wx = c[0] / 10, wy = c[1] / 10, z = Math.min(nz, Math.max(1, zoneDe(B, wx))) - 1, s = moi ? nz - 1 - z : z;
+    morts[1][s]++; if (c[3] === etat.jour) morts[0][s]++;
+    croix.push({ fx: Math.max(0, Math.min(1, x(wx))), fy: rangDe(wx, wy), jour: c[3] === etat.jour });
+  }
+  return { lignes, nz, lettres: Array.from({ length: nz }, (_, k) => lettreZone(moi ? nz - k : k + 1)), morts, croix };
 }
 
 // `ctx` : { $, bataille, moi, choisis, corvees(), donnees(), donner(id, ids), regarder(lien), rang({ a, o, p }), transfert({ a, de, vers, n, bl }), passer() }
@@ -102,16 +115,17 @@ export function creerSoiree(ctx) {
       if (V.moment !== null && S.moments[V.moment]?.secteur === k) parts.push(`<rect class="sur" x="${cx(k) + 2}" y="2" width="${sw - 4}" height="${H - 4}"/>`);
       parts.push(`<text class="lettre" x="${cx(k) + 8}" y="${(y[1] + y[2]) / 2 - 10}">${s}</text>`);
     });
-    F.morts[tout ? 1 : 0].forEach((m, s) => {
-      for (let i = 0; i < Math.min(m, 140); i++) {
-        const a = hache(s * 1000 + i + (tout ? 7 : 0)), b = hache(s * 3000 + i * 7 + 1), x = cx(s) + 10 + a * (sw - 20), yy = y[1] + 20 + b * (y[3] - y[1] - 18);
-        parts.push(`<path class="croix${tout ? ' vieux' : ''}" d="M${x - 2} ${yy - 2}l4 4M${x + 2} ${yy - 2}l-4 4"/>`);
-      }
+    // une croix par homme, à l'endroit où il est tombé : la même place dans les deux vues ; « Depuis le début » ajoute en pâle ceux des jours d'avant
+    const yDe = t => { const k = Math.max(0, Math.min(2, Math.floor(t))); return y[k] + (t - k) * (y[k + 1] - y[k]); };
+    const vues = F.croix.filter(c => tout || c.jour).sort((a, b) => a.jour - b.jour);
+    vues.forEach((c, i) => {
+      const x = Mg + 4 + c.fx * (W - Mg - 8) + (hache(i * 2 + 1) - 0.5) * 1.5, yy = Math.max(4, Math.min(H - 4, yDe(c.fy)));
+      parts.push(`<path class="croix${c.jour ? '' : ' vieux'}" d="M${(x - 2).toFixed(1)} ${(yy - 2).toFixed(1)}l4 4M${(x + 2).toFixed(1)} ${(yy - 2).toFixed(1)}l-4 4"/>`);
     });
     let pris = 0, perdus = 0;
     F.lignes.forEach((ligne, l) => ligne.forEach(t => {
       const x0 = Mg + t.x0 * (W - Mg) + 3, x1 = Mg + t.x1 * (W - Mg) - 3, yy = y[l], avant = tout ? t.depart : t.hier, ch = avant !== t.soir, perdu = t.soir !== M;
-      let d = `M${x0} ${yy}`; for (let x = x0, k = 0; x < x1 - 1; x += 4, k++) d += `h${Math.min(4, x1 - x)}v${k % 2 ? -4 : 4}`;
+      const d = `M${x0} ${yy}H${x1}`;      // un trait par tronçon (le créneau d'avant, en trait épais, se lisait comme deux lignes)
       parts.push(`<path class="tr ${perdu ? 'eux' : 'nous'}${ch ? ` change ${perdu ? 'perdu' : 'pris'}` : ''}" d="${d}"/>`);
       if (ch) { if (perdu) perdus++; else pris++; const xm = (x0 + x1) / 2; parts.push(`<path class="marque ${perdu ? 'perdu' : 'pris'}" d="${perdu ? `M${xm - 5} ${yy - 12}h10l-5 7z` : `M${xm - 5} ${yy - 6}h10l-5 -7z`}"/>`); }
     }));
@@ -125,7 +139,7 @@ export function creerSoiree(ctx) {
       const b = bouton('ps3-b', nom); b.setAttribute('aria-pressed', String(V.vue === k)); b.onclick = () => { V.vue = k; rendre(); }; return b;
     }));
     const legende = el('div', 'ps3-legende', html('span', '', '<i class="lg tr-n"></i>à nous'), html('span', '', '<i class="lg tr-e"></i>à eux'), html('span', '', '<i class="lg pris">▲</i>pris'), html('span', '', '<i class="lg perdu">▼</i>perdu'), html('span', '', '<i class="lg croix">×</i>un mort'));
-    const courbe = info(html('div', 'ps3-courbe', graphe(S.B, { larg: 600, haut: 64 })), '# Les effectifs\nJour après jour | les vivants, nous et en face\nLes bâtons | les morts de chaque jour');
+    const courbe = info(el('div', 'ps3-courbe', el('span', 'ps3-courbe-t', 'Les effectifs'), html('div', '', graphe(S.B, { larg: 600, haut: 64 }))), '# Les effectifs\nJour après jour | les vivants, nous et en face\nLes bâtons | les morts de chaque jour');
     const centre = el('div', 'ps3-centre', el('div', 'ps3-tete', el('h3', '', 'Le front'), bascule), carteFront(), legende, courbe);
     const rang = (nom, v, cls = '') => el('div', `ps3-reg-l ${cls}`, el('span', '', nom), el('i', ''), el('b', '', v));
     const so = S.soir, lignes = so ? [['Le jour tenu', so.base], ['Nos lignes à 75 %', so.tenue], ['Une ligne d\'en face prise', so.lignes]].filter(([, v]) => v) : [];

@@ -4,6 +4,10 @@
 
 - L'avion piloté : on prend les commandes à peine la piste quittée, il vire bien plus vite et remonte seul s'il est trop bas
 - Ses rafales labourent le sol : des gerbes de terre et de petits cratères, comme un passage automatique
+## 0.165.1 — 2026-11-23
+
+- La carte du front du soir : une seule ligne par tranchée, chaque croix à l'endroit où l'homme est tombé (les jours d'avant en pâle dans « Depuis le début »)
+- La courbe des effectifs a son propre cadre ; le bandeau d'un largage ne passe plus par-dessus la soirée
 
 ## 0.165.0 — 2026-11-23
 
