@@ -1,12 +1,12 @@
 // La frise de l'atelier d'animation : la bibliothèque d'animations, le transport, tous les outils d'images clés et la piste (règle, curseur, glisser, sélection au cadre, zoom).
 // Elle ne connaît ni le dessin ni les poignées : elle lit et change l'état de la page (`ctx.S`) par les opérations pures de js/anim-edition.js, et prévient la page (`ctx.instantane` avant chaque geste,
 // pour annuler ; `ctx.garder` après ; `ctx.chargerCle` pour passer en édition sur une image).
-import * as E from './anim-edition.js?v=0.165.1';
-import { COURBES, CANAUX, NOMS_CANAUX } from './data/poses-soldat.js?v=0.165.1';
-import { echantillon } from './pose-soldat.js?v=0.165.1';
-import { MODELES } from './anim-modeles.js?v=0.165.1';
-import { createPublisher } from './lib/gh-publish.js?v=0.165.1';
-import { fichierAnimations, FICHIER_ANIMATIONS } from './animations-store.js?v=0.165.1';
+import * as E from './anim-edition.js?v=0.165.2';
+import { COURBES, CANAUX, NOMS_CANAUX } from './data/poses-soldat.js?v=0.165.2';
+import { echantillon } from './pose-soldat.js?v=0.165.2';
+import { MODELES } from './anim-modeles.js?v=0.165.2';
+import { createPublisher } from './lib/gh-publish.js?v=0.165.2';
+import { fichierAnimations, FICHIER_ANIMATIONS } from './animations-store.js?v=0.165.2';
 
 const el = (tag, props = {}, ...kids) => { const e = Object.assign(document.createElement(tag), props); e.append(...kids); return e; };
 const MARGE = 18, REGLE = 24, PISTE_H = 52;                 // px : la marge à gauche de la piste, la hauteur de la règle, celle de la rangée des images

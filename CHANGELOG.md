@@ -1,5 +1,11 @@
 # Journal des versions
 
+## 0.165.2 — 2026-11-23
+
+- Une batterie qui recharge (ou un ordre indisponible) est nettement grisée : hachurée, au liseré pointillé
+- Les régiments se choisissent plus facilement : une zone de clic plus large autour de leur écusson sur le champ et de leur pastille sur la carte
+- La frise des jours sous la courbe des effectifs est en tons neutres
+
 ## 0.165.1 — 2026-11-23
 
 - La carte du front du soir : une seule ligne par tranchée, chaque croix à l'endroit où l'homme est tombé (les jours d'avant en pâle dans « Depuis le début »)
