@@ -1,8 +1,8 @@
 {
-  "version": "0.160.1",
-  "date": "2026-11-21",
+  "version": "0.161.0",
+  "date": "2026-11-23",
   "changes": [
-    "Le soldat qu'on dirigeait reste visible quand il tombe, sous tous les angles, même au fond d'une tranchée",
-    "La caméra suit son corps là où un obus l'a jeté, pas l'endroit où il a été touché"
+    "Au labo : quarante objets parachutés en six raretés, en 3D, qui tournent et flottent sous une flèche de leur couleur",
+    "Au labo : un avion lâche une caisse en parachute au-dessus du no man's land, un objet en sort, le premier homme arrivé le prend"
   ]
 }

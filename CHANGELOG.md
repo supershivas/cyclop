@@ -1,5 +1,10 @@
 # Journal des versions
 
+## 0.161.0 — 2026-11-23
+
+- Au labo : quarante objets parachutés en six raretés, en 3D, qui tournent et flottent sous une flèche de leur couleur
+- Au labo : un avion lâche une caisse en parachute au-dessus du no man's land, un objet en sort, le premier homme arrivé le prend
+
 ## 0.160.1 — 2026-11-21
 
 - Le soldat qu'on dirigeait reste visible quand il tombe, sous tous les angles, même au fond d'une tranchée

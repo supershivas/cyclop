@@ -222,7 +222,7 @@ vert kaki clair d'en face, plus pâles que le sol sombre.
   glorification n'est plus un interdit (Jérôme, v0.70.0).
 - Pas de gore explicite : un corps est un homme couché, d'un pixel au loin.
 - Pas de tutoriel bavard : les commandes sont dans les réglages, c'est tout.
-- Pas de loot.
+- Le loot n'est plus refusé (Jérôme, v0.161.0 : des caisses parachutées, des objets à rareté, au labo d'abord : `js/data/largages.js`) ; le compteur de morts, lui, reste hors des récompenses.
 
 ## Inspirations
 

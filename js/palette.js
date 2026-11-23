@@ -32,6 +32,17 @@ export const ALERTES = {
   rouge: '#e5533d',  // en déroute
 };
 
+// Les couleurs de rareté des objets parachutés (Jérôme, 23 nov., v0.161.0 : exception datée, « un peu passées pour aller avec le jeu »), HORS de la palette
+// du terrain comme les alertes : elles ne servent qu'à la flèche au-dessus d'un objet tombé, à son liseré et à sa fiche (data/largages.js). Mesurées sur la terre et la boue (lisibilite.config.mjs).
+export const RARETES_COULEURS = {
+  commun: '#c9c2b0',     // gris os
+  peuCommun: '#7fb356',  // vert
+  rare: '#5b93d6',       // bleu
+  epique: '#a877d6',     // violet
+  legendaire: '#e8913a', // orange
+  relique: '#e8c64a',    // or
+};
+
 // L'ordre des couleurs dans les textures d'indices (le shader lit la palette
 // dans une texture de 12 × 1) : ne jamais le changer sans refaire les textures.
 export const ORDRE = Object.keys(PALETTE);

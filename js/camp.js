@@ -3,11 +3,11 @@
 // Lot 2 : les niveaux ouvrent les ordres (`refusOrdre`). Lot 3 (v0.88.0) : chaque niveau et chaque choix de palier change un chiffre (`modif`) ou un effectif (`effectifsDe`).
 // La soirée (Jérôme, 18 nov., ROADMAP « Le soir, le moment des améliorations ») : la dotation tombe le soir (`dotationSoir`, +2 le soir depuis le troisième jet), on ne dépense que la nuit ;
 // troisième jet (v0.150.0) : les arbres (le I donné, deux pistes de quatre rangs, data/ameliorations.js), l'achat au clic rendu jusqu'à l'aube, l'Infanterie pour tous nos régiments.
-import { BATIMENTS, DOTATION, CAMP_PLAN, PIEDS } from './data/batiments.js?v=0.160.1';
-import { ARBRES, ORDRE_ARBRES, PRIX, ROMAINS, IA_PLAN, nomRang } from './data/ameliorations.js?v=0.160.1';
-import { RENFORTS } from './data/renforts.js?v=0.160.1';
-import { MITRAILLAGE } from './data/mitraillage.js?v=0.160.1';
-import { PARC } from './data/parc.js?v=0.160.1';
+import { BATIMENTS, DOTATION, CAMP_PLAN, PIEDS } from './data/batiments.js?v=0.161.0';
+import { ARBRES, ORDRE_ARBRES, PRIX, ROMAINS, IA_PLAN, nomRang } from './data/ameliorations.js?v=0.161.0';
+import { RENFORTS } from './data/renforts.js?v=0.161.0';
+import { MITRAILLAGE } from './data/mitraillage.js?v=0.161.0';
+import { PARC } from './data/parc.js?v=0.161.0';
 
 const NOUS = 0, EUX = 1;
 /* L'état du camp de `camp` : `etat.camp` (le nôtre), `etat.campEux` (celui d'en face : v0.92.0) */
