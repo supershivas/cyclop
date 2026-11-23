@@ -1,13 +1,13 @@
 // Les bâtiments du camp dessinés en volumes (Jérôme, v0.87.0) : sortis du labo (`labo-batiments.js`) pour que le jeu les dessine aussi (`rendu/camp.js`).
 // Chaque fabrique `BATIR[clé](A, niveau)` rend { g, w, d } : le groupe centré sur son emprise (w le long de x, d le long de z), l'avant (le front) à −z ; `A` est `atelier(THREE)` (engins.js).
 // 1 unité = 1 m, la palette du jeu seulement ; le dessin seulement, rien n'y est écrit.
-import { PALETTE as P } from '../palette.js?v=0.161.2';
-import { schneider } from './engins.js?v=0.161.2';
-import { AVIONS_OPTS } from './avions-modeles.js?v=0.161.2';
-import { PIEDS } from '../data/batiments.js?v=0.161.2';
-import { PARC } from '../data/parc.js?v=0.161.2';
-import { drapeau } from './drapeau.js?v=0.161.2';
-import { RONDE, demiRonde, longueurRonde } from '../ronde.js?v=0.161.2';
+import { PALETTE as P } from '../palette.js?v=0.162.0';
+import { schneider } from './engins.js?v=0.162.0';
+import { AVIONS_OPTS } from './avions-modeles.js?v=0.162.0';
+import { PIEDS } from '../data/batiments.js?v=0.162.0';
+import { PARC } from '../data/parc.js?v=0.162.0';
+import { drapeau } from './drapeau.js?v=0.162.0';
+import { RONDE, demiRonde, longueurRonde } from '../ronde.js?v=0.162.0';
 
 // ─── Les pièces communes ───────────────────────────────────────────────────
 export const G = A => new A.THREE.Group();

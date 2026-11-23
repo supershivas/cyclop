@@ -1,12 +1,14 @@
-// Les largages et leurs objets, au labo (Jérôme, 23 nov. : « par instant, des avions passent au-dessus du no man's land et larguent des objets dans des
+// Les largages et leurs objets, au labo (en jeu depuis la v0.162.0 ; les modèles sont ceux du jeu : rendu/largages-modeles.js) (Jérôme, 23 nov. : « par instant, des avions passent au-dessus du no man's land et larguent des objets dans des
 // caisses en parachute ; lorsqu'elles touchent le sol, un objet en sort ; chaque objet tourne sur lui-même avec une flèche au-dessus de lui de la couleur de
 // sa rareté ; le premier joueur qui l'atteint le gagne »). Au labo seulement (sa décision) : rien n'est branché dans le jeu.
 // Trois maquettes : la galerie des quarante objets (cliquer un objet donne sa fiche), un objet de près, et le largage (l'avion, la caisse sous son parachute,
 // l'objet qui sort, les deux camps qui courent). Les objets et les nombres sont dans data/largages.js ; ce fichier ne fait que les dessiner.
-import { PALETTE } from './palette.js?v=0.161.2';
-import { loadThree } from './three-lib.js?v=0.161.2';
-import { hash2 } from './lib/rng.js?v=0.161.2';
-import { OBJETS, RARETES, ORDRE_RARETES, LARGAGE as L, tirerObjet } from './data/largages.js?v=0.161.2';
+import { PALETTE } from './palette.js?v=0.162.0';
+import { loadThree } from './three-lib.js?v=0.162.0';
+import { hash2 } from './lib/rng.js?v=0.162.0';
+import { OBJETS, RARETES, ORDRE_RARETES, CATEGORIES, ORDRE_CATEGORIES, LARGAGE as L, tirerObjet } from './data/largages.js?v=0.162.0';
+import { positionCaisse, avionDeCaisse, dureeChute } from './largages.js?v=0.162.0';
+import { cacheModeles as cacheGeometries, construireObjet, fleche, anneau, briller, creerParachute, biplan, tourne, flotte } from './rendu/largages-modeles.js?v=0.162.0';
 
 const el = (tag, props = {}, ...kids) => { const e = Object.assign(document.createElement(tag), props); e.append(...kids); return e; };
 const bouton = (t, f) => el('button', { className: 'essai', textContent: t, onclick: f });
@@ -24,99 +26,12 @@ export function maquetteLargages(stage, mode = 'galerie') {
   return () => { fini = true; nettoyer(); };
 }
 
-// ── Les pièces communes ──
-
-// Un objet en maillages, d'après son modèle (data/largages.js) : posé sur y = 0, centré en x et z, à `taille` mètres de sa plus grande dimension
-// (null : sa taille vraie). Rend { groupe, vraie } (la plus grande dimension vraie, en mètres).
-function construireObjet(THREE, O, taille, cache) {
-  const brut = new THREE.Group();
-  const coul = c => c === '*' ? RARETES[O.rarete].couleur : PALETTE[c];
-  const brille = !!RARETES[O.rarete].brillance, brillants = [];
-  for (const P of O.modele) {
-    const g = P.f === 'b' ? cache.boite : P.f === 'c' ? cache.cylindre(P.n) : cache.cone(P.n);
-    // le liseré d'un objet qui brille a sa matière à lui (sa couleur change à chaque image) ; les autres partagent celle du cache
-    const mat = brille && P.c === '*' ? new THREE.MeshLambertMaterial({ color: new THREE.Color(coul('*')), flatShading: true }) : cache.matiere(coul(P.c));
-    if (mat !== cache.matiere(coul(P.c))) brillants.push(mat);
-    const m = new THREE.Mesh(g, mat);
-    if (P.f === 'b') m.scale.set(...P.t); else m.scale.set(P.t[0], P.t[1], P.t[0]);
-    m.position.set(...P.p);
-    if (P.r) m.rotation.set(...P.r);
-    brut.add(m);
-  }
-  const b = new THREE.Box3().setFromObject(brut), d = b.getSize(new THREE.Vector3()), c = b.getCenter(new THREE.Vector3());
-  const vraie = Math.max(d.x, d.y, d.z), k = taille ? taille / vraie : 1;
-  brut.position.set(-c.x, -b.min.y, -c.z);
-  const groupe = new THREE.Group(), echelle = new THREE.Group();
-  echelle.scale.setScalar(k); echelle.add(brut); groupe.add(echelle);
-  groupe.userData = { O, hauteur: d.y * k, vraie, brillants };
-  return { groupe, vraie };
-}
-
-function cacheGeometries(THREE) {
-  const cyl = new Map(), con = new Map(), mat = new Map();
-  return {
-    boite: new THREE.BoxGeometry(1, 1, 1),
-    cylindre: n => { if (!cyl.has(n)) cyl.set(n, new THREE.CylinderGeometry(1, 1, 1, n)); return cyl.get(n); },
-    cone: n => { if (!con.has(n)) con.set(n, new THREE.ConeGeometry(1, 1, n)); return con.get(n); },
-    matiere: hex => { if (!mat.has(hex)) mat.set(hex, new THREE.MeshLambertMaterial({ color: new THREE.Color(hex), flatShading: true })); return mat.get(hex); },
-    plat: hex => { const k = 'plat' + hex; if (!mat.has(k)) mat.set(k, new THREE.MeshBasicMaterial({ color: new THREE.Color(hex) })); return mat.get(k); },
-    liberer() { this.boite.dispose(); for (const g of [...cyl.values(), ...con.values()]) g.dispose(); for (const m of mat.values()) m.dispose(); },
-  };
-}
-
-// La flèche au-dessus d'un objet : une hampe et une pointe à quatre pans tournée vers le bas, d'une couleur plate (la lumière ne la change pas : elle se lit
-// sur tous les sols) ; et un anneau au sol de la même couleur, qui dit où est l'objet quand la flèche sort du cadre. `k` : son échelle (1 = 0,55 m de haut).
-function fleche(THREE, cache, couleur, k = 1, propre = false) {
-  const g = new THREE.Group(), m = propre ? new THREE.MeshBasicMaterial({ color: new THREE.Color(couleur) }) : cache.plat(couleur);
-  g.userData.matiere = m;
-  const hampe = new THREE.Mesh(cache.boite, m); hampe.scale.set(0.09 * k, 0.28 * k, 0.09 * k); hampe.position.y = 0.36 * k;
-  const pointe = new THREE.Mesh(cache.cone(4), m); pointe.scale.set(0.2 * k, 0.26 * k, 0.2 * k); pointe.rotation.x = Math.PI; pointe.position.y = 0.13 * k;
-  g.add(hampe, pointe);
-  return g;
-}
-function anneau(THREE, couleur, rayon) {
-  const m = new THREE.Mesh(new THREE.RingGeometry(rayon * 0.82, rayon, 16), new THREE.MeshBasicMaterial({ color: new THREE.Color(couleur), side: THREE.DoubleSide }));
-  m.rotation.x = -Math.PI / 2; m.position.y = 0.02;
-  return m;
-}
-
-// La brillance d'un mythique (`brillance` de sa rareté) : la flèche, l'anneau et le liseré vont d'une couleur à l'autre (rouge, rose) et reviennent en 4 s,
-// un éclat d'os les traverse toutes les 1,4 s, et six paillettes d'os tournent autour de l'objet en clignant. Rend une fonction `(t) => void`, ou rien.
-function briller(THREE, cache, groupe, f, a, rayon) {
-  const R = RARETES[groupe.userData.O.rarete];
-  if (!R.brillance) return null;
-  // aller et retour (avec trois couleurs, rouge, rose, cyan, le fondu direct du cyan au rouge passait par un gris)
-  const cols = [...R.brillance, ...R.brillance.slice(1, -1).reverse()].map(h => new THREE.Color(h)), os = new THREE.Color(PALETTE.o), c = new THREE.Color();
-  const mats = [f.userData.matiere, a.material, ...groupe.userData.brillants];
-  const paillettes = new THREE.Group(), pm = cache.plat(PALETTE.o);
-  for (let i = 0; i < 6; i++) { const p = new THREE.Mesh(cache.boite, pm); p.userData.i = i; paillettes.add(p); }
-  groupe.parent.add(paillettes);
-  return t => {
-    const x = (t / 4) % 1 * cols.length, i = Math.floor(x), u = x - i, s = u * u * (3 - 2 * u);
-    c.copy(cols[i]).lerp(cols[(i + 1) % cols.length], s);
-    const eclat = Math.max(0, Math.sin(t * Math.PI * 2 / 1.4)) ** 10;
-    c.lerp(os, 0.65 * eclat);
-    for (const m of mats) m.color.copy(c);
-    const h = groupe.userData.hauteur * groupe.scale.x;
-    paillettes.visible = groupe.visible;
-    for (const p of paillettes.children) {
-      const k = p.userData.i, ang = t * 1.3 + k * Math.PI / 3, clin = Math.max(0, Math.sin(t * 5 + k * 2.1)) ** 3;
-      p.position.set(Math.cos(ang) * rayon, groupe.position.y + h * (0.2 + 0.6 * ((k * 0.37) % 1)) + 0.1 * Math.sin(t * 2 + k), Math.sin(ang) * rayon);
-      p.scale.setScalar(rayon * 0.09 * clin + 1e-4); p.rotation.set(t * 3 + k, t * 2, 0);
-    }
-  };
-}
-
-// Le mouvement d'un objet tombé : un tour en `L.tour` secondes, un flottement de `L.flottement` (amplitude, période), chacun à sa phase
-const tourne = (t, phase) => (t / L.tour + phase) * Math.PI * 2;
-const flotte = (t, phase) => L.flottement[0] * Math.sin((t / L.flottement[1] + phase) * Math.PI * 2);
-
 function fiche(O, vraie) {
   const R = RARETES[O.rarete];
   const pastille = el('span'); pastille.style.cssText = `display:inline-block;width:14px;height:14px;margin-right:6px;vertical-align:-2px;background:${R.couleur};border:1px solid ${PALETTE.t}`;
   const taille = vraie < 1 ? `${Math.round(vraie * 100)} cm` : `${vraie.toFixed(1).replace('.', ',')} m`;
   return el('div', { className: 'releve' }, pastille, el('b', { textContent: O.nom }), ` · ${R.nom} (${R.poids} caisses sur 100 pour sa rareté) · ${taille} en vrai`,
-    el('br'), `En jeu (proposition) : ${O.effet}`);
+    ` · ${CATEGORIES[O.cat].nom}`, el('br'), O.effet, el('br'), `Le bandeau : ${O.court}`);
 }
 
 function legendeRaretes() {
@@ -165,25 +80,25 @@ function cadre(stage, THREE, { hauteur = 'min(62vh,520px)', fond = 's' } = {}) {
 function monter(stage, THREE, mode) {
   if (mode === 'pres') return objetDePres(stage, THREE);
   if (mode === 'largage') return largage(stage, THREE);
+  if (mode === 'ouverture') return ouverture(stage, THREE);
   return galerie(stage, THREE);
 }
 
-// ── La galerie : les quarante objets en six rangs, du mythique (devant, la plus grande à l'écran) au commun (au fond) ──
+// ── La galerie : un rang par catégorie, du plus commun au plus rare de gauche à droite ──
 function galerie(stage, THREE) {
   const cache = cacheGeometries(THREE), F = cadre(stage, THREE, { hauteur: 'min(70vh,600px)' });
   const carte = el('div', { className: 'releve', textContent: 'Cliquer un objet : sa fiche.' });
   stage.append(legendeRaretes(), carte);
-  const PAS_X = 1.55, PAS_Z = 2.1, TAILLE = 0.85;
+  const PAS_X = 1.6, PAS_Z = 1.9, TAILLE = 0.85;
   const sol = new THREE.Mesh(new THREE.PlaneGeometry(40, 30), new THREE.MeshLambertMaterial({ color: new THREE.Color(PALETTE.b) })); sol.rotation.x = -Math.PI / 2; F.scene.add(sol);
   const items = [];
-  [...ORDRE_RARETES].reverse().forEach((rk, rang) => {
-    const liste = OBJETS.filter(o => o.rarete === rk), z = 5 - rang * PAS_Z;
+  [...ORDRE_CATEGORIES].reverse().forEach((ck, rang) => {
+    const liste = OBJETS.filter(o => o.cat === ck).sort((a, b) => ORDRE_RARETES.indexOf(a.rarete) - ORDRE_RARETES.indexOf(b.rarete)), z = 6 - rang * PAS_Z;
     const bande = new THREE.Mesh(cache.boite, cache.matiere(PALETTE.s)); bande.scale.set(liste.length * PAS_X + 0.4, 0.04, 1.3); bande.position.set(0, 0.02, z); F.scene.add(bande);
     liste.forEach((O, i) => {
       const { groupe, vraie } = construireObjet(THREE, O, TAILLE, cache);
-      const x = (i - (liste.length - 1) / 2) * PAS_X;
-      const f = fleche(THREE, cache, RARETES[rk].couleur, 0.7, !!RARETES[rk].brillance);
-      const a = anneau(THREE, RARETES[rk].couleur, 0.55);
+      const x = (i - (liste.length - 1) / 2) * PAS_X, col = RARETES[O.rarete].couleur;
+      const f = fleche(THREE, cache, col, 0.7, !!RARETES[O.rarete].brillance), a = anneau(THREE, col, 0.55);
       const support = new THREE.Group(); support.position.set(x, 0, z); support.add(groupe, f, a);
       F.scene.add(support);
       items.push({ O, groupe, f, vraie, phase: hash2(i, rang, 7), base: 0.25, brille: briller(THREE, cache, groupe, f, a, 0.6) });
@@ -204,7 +119,7 @@ function galerie(stage, THREE) {
       it.f.position.y = y + it.groupe.userData.hauteur * it.groupe.scale.x + 0.25; it.f.rotation.y = -tourne(t, 0) * 0.5;
       it.brille?.(t);
     }
-    F.camera.position.set(0, 8.5, 14.5); F.camera.lookAt(0, 0, -0.6);
+    F.camera.position.set(0, 9, 15.5); F.camera.lookAt(0, 0, 0.2);
   };
   return () => { F.arreter(); cache.liberer(); };
 }
@@ -224,8 +139,9 @@ function objetDePres(stage, THREE) {
     courant = { O, groupe, f, anneau: a, support, brille: briller(THREE, cache, groupe, f, a, 0.85) };
     carte.replaceChildren(fiche(O, vraie), el('p', { className: 'releve', textContent: `${i + 1} / ${OBJETS.length}` }));
   }
-  const parRarete = ORDRE_RARETES.map(rk => bouton(RARETES[rk].nom, () => montrer(OBJETS.findIndex(o => o.rarete === rk))));
-  stage.append(el('p', {}, bouton('← Précédent', () => montrer(i - 1)), bouton('Suivant →', () => montrer(i + 1))), el('p', {}, ...parRarete), carte);
+  stage.append(el('p', {}, bouton('← Précédent', () => montrer(i - 1)), bouton('Suivant →', () => montrer(i + 1))),
+    el('p', {}, ...ORDRE_RARETES.map(rk => bouton(RARETES[rk].nom, () => montrer(OBJETS.findIndex(o => o.rarete === rk))))),
+    el('p', {}, ...ORDRE_CATEGORIES.map(ck => bouton(CATEGORIES[ck].nom, () => montrer(OBJETS.findIndex(o => o.cat === ck))))), carte);
   montrer(0);
   F.image = (dt, t) => {
     const y = 0.35 + flotte(t, 0);
@@ -237,25 +153,54 @@ function objetDePres(stage, THREE) {
   return () => { F.arreter(); cache.liberer(); };
 }
 
+// La caisse dessinée comme en jeu : l'avion, le parachute (ses quatre temps), l'objet ; `c` : { x, y, dir, t0 }, `t` le temps
+function dessinCaisse(THREE, cache, scene) {
+  const avion = biplan(THREE, cache), para = creerParachute(THREE, cache);
+  scene.add(avion, para.groupe);
+  return (c, t, auSol) => {
+    const P = positionCaisse(c, t), ta = t - c.t0, D = dureeChute();
+    avion.visible = ta > -6 && ta < 6;
+    if (avion.visible) { const p = avionDeCaisse(c, t); avion.position.set(p.x, p.h + 1.5, p.y); avion.rotation.set(0, c.dir > 0 ? 0 : Math.PI, 0); }
+    para.groupe.visible = P.phase !== 'avion' && !(ta > D + 9);
+    para.groupe.position.set(P.x, P.h, P.y);
+    para.poser({ phase: auSol || P.phase === 'sol' ? 'sol' : P.phase, tl: ta, ts: P.ts, ta: Math.max(0, ta - D), balancement: L.balancement });
+    return P;
+  };
+}
+
+// ── L'ouverture du parachute, au ralenti : la caméra de près, le temps au quart, en boucle ──
+function ouverture(stage, THREE) {
+  const cache = cacheGeometries(THREE), F = cadre(stage, THREE, { fond: 'r' });
+  let vitesse = 0.25, t = -1.5;
+  const releve = el('p', { className: 'releve' });
+  stage.append(el('p', {}, ...[[0.1, 'Au dixième'], [0.25, 'Au quart'], [1, 'Vitesse du jeu']].map(([v, n]) => bouton(n, () => { vitesse = v; }))), releve);
+  const dessiner = dessinCaisse(THREE, cache, F.scene), c = { x: 0, y: 0, dir: 1, t0: 0 };
+  F.image = dt => {
+    t += dt * vitesse;
+    if (typeof window.__tOuverture === 'number') t = window.__tOuverture;      // (les captures : un instant fixé)
+    const D = dureeChute();
+    if (t > L.chuteLibre + 4) t = -0.5;
+    const P = dessiner(c, t, false);
+    const phase = P.phase === 'libre' ? 'la chute libre, sac fermé' : P.phase === 'corolle' ? (P.ts < 0.35 ? 'l\'extraction : la voile sort en fuseau' : P.ts < 1.4 ? 'le gonflement : la coupole dépasse et revient, la caisse balance' : 'la descente : la coupole respire') : 'l\'avion';
+    releve.textContent = `${t.toFixed(2).replace('.', ',')} s · ${phase} · (au sol à ${D.toFixed(1).replace('.', ',')} s)`;
+    const y = Math.max(0, P.h) + 2.6;
+    F.camera.position.set(P.x + 9, y + 2, 13); F.camera.lookAt(P.x, y, 0);
+  };
+  return () => { F.arreter(); cache.liberer(); };
+}
+
 // ── Le largage : l'avion passe, la caisse descend sous son parachute, l'objet sort ; cinq hommes de chaque camp courent ; le premier arrivé le prend ──
 function largage(stage, THREE) {
   const cache = cacheGeometries(THREE), F = cadre(stage, THREE, { hauteur: 'min(66vh,560px)', fond: 'r' });
-  const papier = el('div', { className: 'releve' }), carte = el('div');
   F.camera.near = 1; F.camera.updateProjectionMatrix();     // (à 60 m, les plans du sol à quelques centimètres l'un de l'autre se battaient avec 5 cm)
-  let force = null;                                           // null : la rareté au hasard (les poids de data/largages.js) ; sinon une rareté imposée
+  const papier = el('div', { className: 'releve' }), carte = el('div');
+  let force = null;
   stage.append(el('p', {}, bouton('Au hasard', () => { force = null; relancer(); }), ...ORDRE_RARETES.map(rk => bouton(RARETES[rk].nom, () => { force = rk; relancer(); }))),
     el('p', {}, bouton('Rejouer', () => relancer())), papier, carte);
-
-  // le champ : la boue, le no man's land plus clair, nos tranchées devant (z > 0), les leurs au fond
   const NOUS = 22, EUX = -22;
   const sol = new THREE.Mesh(new THREE.PlaneGeometry(600, 400), cache.matiere(PALETTE.b)); sol.rotation.x = -Math.PI / 2; F.scene.add(sol);
   const nml = new THREE.Mesh(new THREE.PlaneGeometry(160, 36), cache.matiere(PALETTE.g)); nml.rotation.x = -Math.PI / 2; nml.position.y = 0.03; F.scene.add(nml);
   for (const z of [NOUS, EUX]) { const t = new THREE.Mesh(cache.boite, cache.matiere(PALETTE.t)); t.scale.set(160, 0.1, 2.4); t.position.set(0, 0.05, z); F.scene.add(t); }
-  for (let k = 0; k < 14; k++) {                              // quelques trous d'obus
-    const c = new THREE.Mesh(new THREE.CircleGeometry(1 + 2 * hash2(k, 1, 3), 8), cache.matiere(PALETTE.s)); c.rotation.x = -Math.PI / 2;
-    c.position.set((hash2(k, 2, 3) - 0.5) * 70, 0.06, (hash2(k, 3, 3) - 0.5) * 30); F.scene.add(c);
-  }
-  // les hommes : des boîtes de 0,5 × 1,7 × 0,35 m, comme dans le jeu ; ceux qui ne courent pas restent dans la tranchée
   const hommes = [];
   for (const [camp, z0] of [[0, NOUS], [1, EUX]]) for (let k = 0; k < 16; k++) {
     const m = new THREE.Mesh(cache.boite, cache.matiere(PALETTE[camp ? 'x' : 'n'])); m.scale.set(0.5, 1.7, 0.35);
@@ -263,119 +208,61 @@ function largage(stage, THREE) {
     m.position.set(x, 0.85, z0); F.scene.add(m);
     hommes.push({ m, camp, x0: x, z0 });
   }
-  // l'avion : un biplan de boîtes (le fuselage sombre, les ailes de brume)
-  const avion = new THREE.Group();
-  for (const [w, h, d, x, y, z, c] of [[7, 0.9, 0.9, 0, 0, 0, 's'], [1.6, 0.12, 9, 0.8, 0.7, 0, 'r'], [1.5, 0.12, 8, 0.9, -0.5, 0, 'r'], [0.9, 0.1, 3, -3.2, 0.1, 0, 'r'], [0.8, 1.2, 0.1, -3.2, 0.7, 0, 's'], [0.2, 2.2, 0.2, 3.6, 0, 0, 'e']]) {
-    const m = new THREE.Mesh(cache.boite, cache.matiere(PALETTE[c])); m.scale.set(w, h, d); m.position.set(x, y, z); avion.add(m);
-  }
-  F.scene.add(avion);
-  // la caisse sous sa corolle (une demi-sphère d'os à huit pans) et ses quatre suspentes
-  const caisse = new THREE.Group(), boiteCaisse = new THREE.Mesh(cache.boite, cache.matiere(PALETTE.g)); boiteCaisse.scale.set(0.9, 0.7, 0.7); boiteCaisse.position.y = 0.35;
-  const couvercle = new THREE.Mesh(cache.boite, cache.matiere(PALETTE.h)); couvercle.scale.set(0.95, 0.1, 0.75); couvercle.position.y = 0.75;
-  const sangle = new THREE.Mesh(cache.boite, cache.matiere(PALETTE.b)); sangle.scale.set(0.12, 0.72, 0.72); sangle.position.y = 0.36;
-  caisse.add(boiteCaisse, couvercle, sangle); F.scene.add(caisse);
-  const corolle = new THREE.Group(), toile = new THREE.Mesh(new THREE.SphereGeometry(2.6, 8, 3, 0, Math.PI * 2, 0, Math.PI / 2), new THREE.MeshLambertMaterial({ color: new THREE.Color(PALETTE.o), flatShading: true, side: THREE.DoubleSide }));
-  toile.scale.y = 0.55; toile.position.y = 4.2; corolle.add(toile);
-  for (const [sx, sz] of [[1, 1], [1, -1], [-1, 1], [-1, -1]]) {
-    const s = new THREE.Mesh(cache.boite, cache.matiere(PALETTE.r)); s.scale.set(0.03, 4.3, 0.03);
-    s.position.set(sx * 1.2, 2.5, sz * 1.2); s.rotation.set(sz * 0.42, 0, -sx * 0.42); corolle.add(s);
-  }
-  F.scene.add(corolle);
-
-  let S = null, ancien = null, n = 0;
+  const dessiner = dessinCaisse(THREE, cache, F.scene);
+  let S = null, n = 0, T = 0;
   function relancer() {
     n++;
     if (S) { F.scene.remove(S.support); S.anneau.geometry.dispose(); S.anneau.material.dispose(); }
     const O = force ? OBJETS.filter(o => o.rarete === force)[Math.floor(hash2(n, 1, 77) * RARETES[force].objets)] : tirerObjet(hash2(n, 2, 77), hash2(n, 3, 77));
-    const { groupe, vraie } = construireObjet(THREE, O, null, cache), c = RARETES[O.rarete].couleur;
+    const { groupe, vraie } = construireObjet(THREE, O, null, cache), col = RARETES[O.rarete].couleur;
     groupe.scale.setScalar(L.grossi);
-    const f = fleche(THREE, cache, c, 3.5, !!RARETES[O.rarete].brillance), a = anneau(THREE, c, 2.2), support = new THREE.Group();
+    const f = fleche(THREE, cache, col, 3.5, !!RARETES[O.rarete].brillance), a = anneau(THREE, col, 2.2), support = new THREE.Group();
     support.add(groupe, f, a); F.scene.add(support);
-    const brille = briller(THREE, cache, groupe, f, a, 1.6);
-    const x = (hash2(n, 4, 77) - 0.5) * 24, z = (hash2(n, 5, 77) - 0.5) * 14;   // où tombe la caisse
-    const xLache = x - L.vitesseAvion * 0.6 * L.chuteLibre;      // l'avion lâche un peu avant : la caisse garde sa vitesse le temps de la chute libre
-    const hauteurChute = L.altitude - 0.5 * 9.8 * L.chuteLibre ** 2, tSol = L.chuteLibre + hauteurChute / L.descente;
-    const tAvion = (xLache + 90) / L.vitesseAvion;              // l'avion part de x = -90
-    S = { O, groupe, f, anneau: a, support, vraie, brille, x, z, xLache, tAvion, tSol: tAvion + tSol, t: 0, gagnant: null, tPris: 0, coureurs: [] };
-    a.visible = false; f.visible = false; groupe.visible = false;
-    // les coureurs : les cinq hommes de chaque camp les plus proches, une vitesse et un temps de réaction à chacun
-    for (const camp of [0, 1]) {
-      hommes.filter(H => H.camp === camp).sort((p, q) => Math.abs(p.x0 - x) - Math.abs(q.x0 - x)).slice(0, L.coureurs).forEach((H, k) => {
-        S.coureurs.push({ H, v: 3 + 2 * hash2(n, 10 + k, camp), reaction: 0.5 + 2.5 * hash2(n, 20 + k, camp), x: H.x0, z: H.z0 });
-      });
-    }
+    const c = { x: (hash2(n, 4, 77) - 0.5) * 24, y: (hash2(n, 5, 77) - 0.5) * 14, dir: 1, t0: 3 };
+    T = 0;
+    S = { O, c, groupe, f, anneau: a, support, vraie, brille: briller(THREE, cache, groupe, f, a, 1.6), gagnant: null, tPris: 0, coureurs: [] };
+    a.visible = f.visible = groupe.visible = false;
+    for (const camp of [0, 1]) hommes.filter(H => H.camp === camp).sort((p, q) => Math.abs(p.x0 - c.x) - Math.abs(q.x0 - c.x)).slice(0, L.coureurs).forEach((H, k) => {
+      S.coureurs.push({ H, v: 3 + 2 * hash2(n, 10 + k, camp), reaction: 0.5 + 2.5 * hash2(n, 20 + k, camp), x: H.x0, z: H.z0 });
+    });
     for (const H of hommes) H.m.position.set(H.x0, 0.85, H.z0);
     papier.textContent = 'Un avion passe au-dessus du no man\'s land…';
     carte.replaceChildren(fiche(O, vraie));
-    ancien = null;
   }
   relancer();
-
-  const cible = new THREE.Vector3(0, 6, 0);
-  F.image = (dt, t) => {
-    S.t += dt; const T = S.t;
-    // l'avion : il traverse à son altitude, d'un bord à l'autre
-    avion.position.set(-90 + L.vitesseAvion * T, L.altitude, S.z - 4);
-    avion.visible = avion.position.x < 120;
-    // la caisse : avant le lâcher, sous l'avion ; puis la chute libre ; puis la descente sous la corolle ; puis au sol
-    const tc = T - S.tAvion;
-    let cy, cx = S.x;
-    if (tc < 0) { caisse.visible = corolle.visible = false; cy = L.altitude; }
-    else {
-      caisse.visible = true;
-      if (tc < L.chuteLibre) { cy = L.altitude - 0.5 * 9.8 * tc * tc; cx = S.xLache + L.vitesseAvion * 0.6 * tc; corolle.visible = false; }
-      else {
-        const ts = tc - L.chuteLibre, h0 = L.altitude - 0.5 * 9.8 * L.chuteLibre ** 2;
-        cy = Math.max(0, h0 - L.descente * ts);
-        corolle.visible = true;
-        const ouvert = Math.min(1, ts / 0.6);
-        toile.scale.set(0.2 + 0.8 * ouvert, 0.55 * (0.4 + 0.6 * ouvert), 0.2 + 0.8 * ouvert);
-        const sway = cy > 0 ? L.balancement * Math.sin(ts * 1.7) : 0;
-        caisse.rotation.z = corolle.rotation.z = sway;
-      }
-      caisse.position.set(cx, cy, S.z);
-      corolle.position.set(cx, cy, S.z);
+  const cible = new THREE.Vector3(0, 30, 0);
+  F.image = dt => {
+    T += dt;
+    const c = S.c, D = dureeChute(), ta = T - c.t0 - D;
+    const P = dessiner(c, T, ta >= 0);
+    if (ta >= 0 && !S.gagnant) {
+      const o = Math.min(1, ta / L.ouverture), y = 0.7 + (L.hauteurObjet - 0.7) * o + (o >= 1 ? flotte(ta) : 0);
+      S.groupe.visible = S.f.visible = S.anneau.visible = true;
+      S.support.position.set(c.x, 0, c.y);
+      S.groupe.position.y = y; S.groupe.rotation.y = tourne(ta);
+      S.f.position.y = y + S.groupe.userData.hauteur * L.grossi + L.flecheAu; S.f.rotation.y = -tourne(ta) * 0.5;
+      if (!S.annonce) { S.annonce = true; papier.textContent = 'La caisse touche le sol : les deux camps courent.'; }
     }
-    // au sol : la corolle s'affaisse et tombe sur le côté, le couvercle saute, l'objet monte et se met à tourner
-    const ta = T - S.tSol;
-    if (ta >= 0) {
-      if (!ancien) { ancien = true; papier.textContent = 'La caisse touche le sol : les deux camps courent.'; }
-      const k = Math.min(1, ta / 2.2);
-      corolle.rotation.z = -1.3 * k; corolle.position.y = -0.3 * k; corolle.position.x = S.x + 2.4 * k;
-      toile.scale.y = 0.55 * (1 - 0.8 * k);
-      corolle.visible = ta < 6;
-      const o = Math.min(1, ta / L.ouverture);
-      couvercle.position.set(0.6 * o, 0.75 + 1.4 * o * (1 - o) * 2, 0); couvercle.rotation.z = -1.8 * o;
-      if (!S.gagnant) {
-        const y = 0.7 + (L.hauteurObjet - 0.7) * o + (o >= 1 ? flotte(ta, 0) : 0);
-        S.groupe.visible = S.f.visible = S.anneau.visible = true;
-        S.support.position.set(S.x, 0, S.z);
-        S.groupe.position.y = y; S.groupe.rotation.y = tourne(ta, 0);
-        S.f.position.y = y + S.groupe.userData.hauteur * L.grossi + L.flecheAu; S.f.rotation.y = -tourne(ta, 0) * 0.5;
-      }
-    } else { couvercle.position.set(0, 0.75, 0); couvercle.rotation.z = 0; corolle.position.x = cx; }
     S.brille?.(T);
-    // les coureurs partent quand la caisse n'est plus qu'à `L.course` secondes du sol (chacun après son temps de réaction) ; le premier à `L.prise` mètres prend l'objet
-    const td = T - (S.tSol - L.course);
+    const td = ta + L.course;
     for (const C of S.coureurs) {
-      if (S.gagnant) { if (C !== S.gagnant) { C.z += Math.sign(C.H.z0 - C.z) * Math.min(Math.abs(C.H.z0 - C.z), 2 * dt); } }
+      if (S.gagnant) { if (C !== S.gagnant) C.z += Math.sign(C.H.z0 - C.z) * Math.min(Math.abs(C.H.z0 - C.z), 2 * dt); }
       else if (td > C.reaction) {
-        const dx = S.x - C.x, dz = S.z - C.z, d = Math.hypot(dx, dz);
-        const pas = Math.min(d, C.v * dt); if (d > 1e-6) { C.x += dx / d * pas; C.z += dz / d * pas; }
+        const dx = c.x - C.x, dz = c.y - C.z, d = Math.hypot(dx, dz), pas = Math.min(d, C.v * dt);
+        if (d > 1e-6) { C.x += dx / d * pas; C.z += dz / d * pas; }
         if (ta >= L.ouverture && d - pas <= L.prise) { S.gagnant = C; S.tPris = T; }
       }
       C.H.m.position.set(C.x, 0.85 + (S.gagnant !== C && td > C.reaction ? Math.abs(Math.sin(T * 9 + C.reaction * 5)) * 0.12 : 0), C.z);
     }
     if (S.gagnant) {
       const p = Math.min(1, (T - S.tPris) / 0.5);
-      if (p < 1) { S.groupe.scale.setScalar(L.grossi * (1 - p)); S.groupe.position.y += (1.7 - S.groupe.position.y) * p; S.support.position.x = S.x + (S.gagnant.x - S.x) * p; S.support.position.z = S.z + (S.gagnant.z - S.z) * p; }
+      if (p < 1) { S.groupe.scale.setScalar(L.grossi * (1 - p)); S.support.position.x = c.x + (S.gagnant.x - c.x) * p; S.support.position.z = c.y + (S.gagnant.z - c.y) * p; }
       S.groupe.visible = p < 1; S.f.visible = S.anneau.visible = false;
-      papier.textContent = S.gagnant.H.camp === 0 ? `Un des nôtres prend « ${S.O.nom} » (${RARETES[S.O.rarete].nom.toLowerCase()}).` : `Un homme d'en face prend « ${S.O.nom} » (${RARETES[S.O.rarete].nom.toLowerCase()}) : il est perdu pour nous.`;
+      papier.textContent = S.gagnant.H.camp === 0 ? `Un des nôtres prend « ${S.O.nom} » (${RARETES[S.O.rarete].nom.toLowerCase()}).` : `Un homme d'en face prend « ${S.O.nom} » (${RARETES[S.O.rarete].nom.toLowerCase()}) : il joue contre nous.`;
       if (T - S.tPris > 5) relancer();
     }
-    // la caméra : derrière nos lignes ; elle suit la caisse en hauteur, puis redescend sur le champ (les deux tranchées) quand elle touche le sol
-    const haut = (tc < 0 ? L.altitude : cy) * 0.8;
-    cible.x += ((tc < 0 ? avion.position.x * 0.35 : S.x) - cible.x) * Math.min(1, dt * 1.5);
+    const haut = (P.phase === 'avion' ? L.altitude : Math.max(0, P.h)) * 0.8;
+    cible.x += (c.x - cible.x) * Math.min(1, dt * 1.5);
     cible.y += (haut - cible.y) * Math.min(1, dt * 2); cible.z = 0;
     F.camera.position.set(cible.x - 6, 30 + cible.y * 0.4, 60); F.camera.lookAt(cible);
   };

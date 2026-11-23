@@ -1,5 +1,11 @@
 # Journal des versions
 
+## 0.162.0 — 2026-11-23
+
+- Des avions larguent des caisses en parachute au-dessus du no man's land : le premier homme qui atteint l'objet le prend pour son camp (35 objets, de la musette de cartouches à l'obus de 400)
+- Un bandeau dit l'objet pris, sa rareté et ce qu'il fait ; les bombardements ramenés dans la tranchée vont dans la musette : touches 7, 8, 9 puis un clic sur le champ
+- La vitrine de l'écran titre garde les objets découverts ; le parachute s'ouvre en fuseau, gonfle, dépasse et balance avant de descendre
+
 ## 0.161.2 — 2026-11-23
 
 - Au labo : chaque objet parachuté sert vraiment le camp qui le prend ; des fusées, des obus et des ruses sèment le chaos chez l'adversaire

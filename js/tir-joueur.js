@@ -4,10 +4,10 @@
    qu'il traverse est touché là où la balle passe (la tête, le tronc, un bras, les jambes : v0.151.0, plus de jet de dés pour toucher, la balle part où est le guidon, `balancement`), et frappé comme par
    n'importe quel tir (`frapper` : un blessé ou un mort selon l'endroit, crédité au tireur). Un magasin par pilote (Lebel 8 + 1, Mauser 5), rechargé à la demande. Rend dans `B.pilotes[camp].dernier`
    ce que l'écran doit montrer : { n (le coup), touche, mort, zone }, et dans `B.pilotes[camp].refus` pourquoi un coup n'est pas parti. */
-import { hauteurQ } from './terrain.js?v=0.161.2';
-import { gagner, tuerDans } from './army.js?v=0.161.2';
-import { hash2 } from './lib/rng.js?v=0.161.2';
-import { TIR_JOUEUR as TJ } from './data/tir-joueur.js?v=0.161.2';
+import { hauteurQ } from './terrain.js?v=0.162.0';
+import { gagner, tuerDans } from './army.js?v=0.162.0';
+import { hash2 } from './lib/rng.js?v=0.162.0';
+import { TIR_JOUEUR as TJ } from './data/tir-joueur.js?v=0.162.0';
 
 /* La hauteur de l'œil de l'homme debout en (x, y) au-dessus de ses pieds : 1,6 m, et la banquette de tir dans une tranchée (`T.diff` ≤ −2 quarts : creusée) */
 export function hauteurOeil(T, x, y, posture = 0) { const c = (y | 0) * T.W + (x | 0); return posture ? TJ.postures[posture].oeil : TJ.oeil + (T.diff[c] <= -2 ? TJ.banquette : 0); }      // (accroupi ou couché : la banquette ne sert plus)
@@ -218,7 +218,8 @@ function tirDe(B, ctx, rng, P) {
   if (P.saut) { P.refus = 'Il franchit le parapet.'; return; }
   if (P.parade) { P.refus = 'Il pare : il ne peut pas tirer.'; return; }
   if (A.tirT[i] > 0) { P.refus = 'Le fusil n\'est pas rechargé.'; return; }
-  A.tirT[i] = TJ.periode; P.balles--; P.recharge = false; P.rt = 0;
+  const bo = ctx.boosts?.get(A.id[i]);      // un objet parachuté (largages.js) : le tir rapide, les balles sans fin, l'obus, la balle sûre
+  A.tirT[i] = TJ.periode / (bo?.tir ?? 1); if (!bo?.infini) P.balles--; P.recharge = false; P.rt = 0;
   A.fatB[i] = Math.min(1, A.fatB[i] + R.soldat.fatigueTir);
   A.exp[i] = Math.min(1, A.exp[i] + R.experience.tir);
   gagner(A, i, 'adresse', R.progression.tir, R.progression);
@@ -268,10 +269,12 @@ function tirDe(B, ctx, rng, P) {
     dernier.mort = !!A.mort[j]; dernier.cible = A.id[j];
   } else if (j >= 0) {
     gagner(A, i, 'adresse', R.progression.toucheTir, R.progression);
-    ctx.frapper(j, 'tir', zj.mortel, null, i, -1, { zone: zj.nom, blessure: zj.blessure });
+    ctx.frapper(j, 'tir', bo?.sur ? 1 : zj.mortel, null, i, -1, { zone: zj.nom, blessure: zj.blessure });
+    if (bo?.sur && !bo.obus) ctx.boostTir?.(i, bo);
     dernier.touche = true; dernier.mort = !!A.mort[j]; dernier.cible = A.id[j];      // (son numéro : le tampon dit son nom, v0.154.0)
   } else if (fr >= 0) A.peur[fr] = Math.max(A.peur[fr], TJ.frayeur);
   const t = j >= 0 ? tj : tFin;
+  if (bo?.obus) ctx.boostTir?.(i, bo, x0 + dx * t, y0 + dy * t);
   if (ctx.tir) ctx.tir(i, x0 + dx * t, y0 + dy * t);      // pour le dessin : le trait de la balle, le bruit (jamais l'état)
   P.dernier = dernier;
 }

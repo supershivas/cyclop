@@ -2,54 +2,54 @@
 // Chaque sujet utilise les mêmes modules que le jeu (terrain, apparence,
 // rendu three.js) : ce qu'on voit ici est ce que le jeu dessinera. Ajouter un
 // sujet ou une variante = ajouter une entrée dans GROUPES.
-import { afficherVersion } from './version-tag.js?v=0.161.2';
-import { mountLabo } from './lib/labo-shell.js?v=0.161.2';
-import { spriteCanvas, paletteToGPL, paletteToHex } from './lib/sprites.js?v=0.161.2';
-import { PALETTE, ROLES } from './palette.js?v=0.161.2';
-import { chargerContenu } from './design-store.js?v=0.161.2';
-import { tuile, ETAT } from './tuiles.js?v=0.161.2';
-import { creerTerrain, impact, hydroLignes, toucher } from './terrain.js?v=0.161.2';
-import { FORMES } from './cratere.js?v=0.161.2';
-import { CALIBRES } from './data/calibres.js?v=0.161.2';
-import { METEO } from './data/meteo.js?v=0.161.2';
-import { nouvelleBataille, avancer, ordonnerMarche, ordonnerBarrage, mourir, regarderAu, aube, horloge, ticksParJour, rangDe } from './bataille.js?v=0.161.2';
-import { BOUE_SOLDATS, SANG, VARIETE_SOLDATS } from './data/aspect-soldat.js?v=0.161.2';
-import { AZIMUTS, COTES } from './data/soleil.js?v=0.161.2';
-import { creerRendu, ZOOMS } from './rendu3d.js?v=0.161.2';
-import { placesCommandement } from './army.js?v=0.161.2';
-import { hash2 } from './lib/rng.js?v=0.161.2';
-import { reglerVerdure } from './apparence.js?v=0.161.2';
-import { maquetteChars } from './labo-chars.js?v=0.161.2';
-import { maquetteEpaves } from './labo-epaves.js?v=0.161.2';
-import { maquetteLargages } from './labo-largages.js?v=0.161.2';
-import { maquetteCasques } from './labo-casques.js?v=0.161.2';
-import { maquetteDemarches } from './labo-demarches.js?v=0.161.2';
-import { fondations, boutons, unites, fenetres, revision } from './labo-design-system.js?v=0.161.2';
-import { clic } from './labo-clic.js?v=0.161.2';
-import { cartesSecteur } from './labo-cartes.js?v=0.161.2';
-import { patrouilleLabo } from './labo-patrouille.js?v=0.161.2';
-import { EFFETS } from './rendu3d.js?v=0.161.2';
-import { calqueEcussons } from './labo-ecussons.js?v=0.161.2';
-import { plancheEcussons } from './labo-ecussons-armes.js?v=0.161.2';
-import { gainTampon, gainCachets, gainFil, gainBordereau, victoireFanion, victoireTampon, victoireChevrons, victoireAube, ficheDeuxColonnes, ficheEtages, ficheRegistre, ficheDAbord } from './labo-recompenses.js?v=0.161.2';
-import { maquetteBatiment, maquetteCamp } from './labo-batiments.js?v=0.161.2';
-import { BATIMENTS } from './data/batiments.js?v=0.161.2';
-import { JOURNAL } from './labo-journal.js?v=0.161.2';
-import { loadVersion } from './lib/app-update.js?v=0.161.2';
-import { maquetteEffets, maquetteAmbiance, maquetteEspace, maquetteBruitages } from './labo-son.js?v=0.161.2';
-import { calqueMoral } from './labo-moral.js?v=0.161.2';
-import { bilanRapport, bilanTuiles, bilanFrise } from './labo-donnees.js?v=0.161.2';
-import { papierNuit, finDePartie } from './labo-papiers.js?v=0.161.2';
-import { soiree } from './labo-soiree.js?v=0.161.2';
-import { soiree2 } from './labo-soiree2.js?v=0.161.2';
-import { soiree3 } from './labo-soiree3.js?v=0.161.2';
-import { fichesTuiles, fichesProfil, fichesCompactes } from './labo-fiches.js?v=0.161.2';
-import { fiches2 } from './labo-fiches2.js?v=0.161.2';
-import { calqueEnnemis } from './labo-engins-ennemis.js?v=0.161.2';
-import { maquetteTranchees, NOTES_TRANCHEES, NOMS_TRANCHEES } from './labo-tranchees.js?v=0.161.2';
-import { maquetteFabrique } from './labo-fabrique.js?v=0.161.2';
-import { atelierTerrain } from './labo-atelier-terrain.js?v=0.161.2';
-import { entrees as encEntrees, lexiqueAZ, planche as encPlanche } from './labo-encyclopedie.js?v=0.161.2';
+import { afficherVersion } from './version-tag.js?v=0.162.0';
+import { mountLabo } from './lib/labo-shell.js?v=0.162.0';
+import { spriteCanvas, paletteToGPL, paletteToHex } from './lib/sprites.js?v=0.162.0';
+import { PALETTE, ROLES } from './palette.js?v=0.162.0';
+import { chargerContenu } from './design-store.js?v=0.162.0';
+import { tuile, ETAT } from './tuiles.js?v=0.162.0';
+import { creerTerrain, impact, hydroLignes, toucher } from './terrain.js?v=0.162.0';
+import { FORMES } from './cratere.js?v=0.162.0';
+import { CALIBRES } from './data/calibres.js?v=0.162.0';
+import { METEO } from './data/meteo.js?v=0.162.0';
+import { nouvelleBataille, avancer, ordonnerMarche, ordonnerBarrage, mourir, regarderAu, aube, horloge, ticksParJour, rangDe } from './bataille.js?v=0.162.0';
+import { BOUE_SOLDATS, SANG, VARIETE_SOLDATS } from './data/aspect-soldat.js?v=0.162.0';
+import { AZIMUTS, COTES } from './data/soleil.js?v=0.162.0';
+import { creerRendu, ZOOMS } from './rendu3d.js?v=0.162.0';
+import { placesCommandement } from './army.js?v=0.162.0';
+import { hash2 } from './lib/rng.js?v=0.162.0';
+import { reglerVerdure } from './apparence.js?v=0.162.0';
+import { maquetteChars } from './labo-chars.js?v=0.162.0';
+import { maquetteEpaves } from './labo-epaves.js?v=0.162.0';
+import { maquetteLargages } from './labo-largages.js?v=0.162.0';
+import { maquetteCasques } from './labo-casques.js?v=0.162.0';
+import { maquetteDemarches } from './labo-demarches.js?v=0.162.0';
+import { fondations, boutons, unites, fenetres, revision } from './labo-design-system.js?v=0.162.0';
+import { clic } from './labo-clic.js?v=0.162.0';
+import { cartesSecteur } from './labo-cartes.js?v=0.162.0';
+import { patrouilleLabo } from './labo-patrouille.js?v=0.162.0';
+import { EFFETS } from './rendu3d.js?v=0.162.0';
+import { calqueEcussons } from './labo-ecussons.js?v=0.162.0';
+import { plancheEcussons } from './labo-ecussons-armes.js?v=0.162.0';
+import { gainTampon, gainCachets, gainFil, gainBordereau, victoireFanion, victoireTampon, victoireChevrons, victoireAube, ficheDeuxColonnes, ficheEtages, ficheRegistre, ficheDAbord } from './labo-recompenses.js?v=0.162.0';
+import { maquetteBatiment, maquetteCamp } from './labo-batiments.js?v=0.162.0';
+import { BATIMENTS } from './data/batiments.js?v=0.162.0';
+import { JOURNAL } from './labo-journal.js?v=0.162.0';
+import { loadVersion } from './lib/app-update.js?v=0.162.0';
+import { maquetteEffets, maquetteAmbiance, maquetteEspace, maquetteBruitages } from './labo-son.js?v=0.162.0';
+import { calqueMoral } from './labo-moral.js?v=0.162.0';
+import { bilanRapport, bilanTuiles, bilanFrise } from './labo-donnees.js?v=0.162.0';
+import { papierNuit, finDePartie } from './labo-papiers.js?v=0.162.0';
+import { soiree } from './labo-soiree.js?v=0.162.0';
+import { soiree2 } from './labo-soiree2.js?v=0.162.0';
+import { soiree3 } from './labo-soiree3.js?v=0.162.0';
+import { fichesTuiles, fichesProfil, fichesCompactes } from './labo-fiches.js?v=0.162.0';
+import { fiches2 } from './labo-fiches2.js?v=0.162.0';
+import { calqueEnnemis } from './labo-engins-ennemis.js?v=0.162.0';
+import { maquetteTranchees, NOTES_TRANCHEES, NOMS_TRANCHEES } from './labo-tranchees.js?v=0.162.0';
+import { maquetteFabrique } from './labo-fabrique.js?v=0.162.0';
+import { atelierTerrain } from './labo-atelier-terrain.js?v=0.162.0';
+import { entrees as encEntrees, lexiqueAZ, planche as encPlanche } from './labo-encyclopedie.js?v=0.162.0';
 
 document.documentElement.style.setProperty('--jeu-accent', ROLES.accent);
 const NOM = document.title.replace(/^Labo — /, ''); // le nom vient de la page (une apostrophe ne casse rien)
@@ -504,6 +504,12 @@ const GROUPES = [
       { title: 'Avions écrasés (Albatros)', status: 'actuelle', depuis: '0.103.0', note: 'Les mêmes douze graines pour l\'Albatros D.V d\'en face : mêmes tirages, un autre avion (la croix sur le fuselage et sur les ailes).', render: s => maquetteEpaves(s, R, 'albatros') },
       { title: 'Chars détruits', status: 'actuelle', depuis: '0.103.0', note: 'Douze Schneider détruits : chenilles intactes, cassées (l\'arrière pend et traîne) ou déroulées à terre ; caisse entière, éventrée par un flanc (tôles ouvertes, intérieur noir) ou par le ventre ; coupole en place, ouverte ou arrachée ; canon droit, plié ou arraché ; suie, taches ou tout noirci ; des débris autour. Dans le jeu : chaque char détruit prend l\'épave de sa graine.', render: s => maquetteEpaves(s, R, 'char') },
     ] },
+    { id: 'largages', title: 'Les largages et leurs objets', variants: [
+      { title: 'Les objets', status: 'actuelle', depuis: '0.162.0', note: "En jeu (Jérôme, 23 nov. : « passe tout en jeu » ; la liste : « on oublie tous les objets qui ne sont pas un boost d'un soldat, du régiment entier, des renforts, des bombardements, un boost pour un avion, pour un char, des armes spéciales ; pas de moral, trop peu lisible ; on veut du fun ! »). Trente-cinq objets, un rang par catégorie, du plus commun au plus rare : le soldat (un par rareté, du tir ×3 au Revenant), le régiment (cartouches, clairon, grenades, le drapeau planté), les renforts (5, 10, 20, 40 hommes, un régiment frais, les taxis de la Marne : deux), les bombardements (de la salve de 75 à l'obus de 400 : quatre 220 d'un coup), les avions, les chars, les armes spéciales (cheddite, lance-flammes, crapouillot, Hotchkiss, tromblon). Six raretés (poids 50, 25, 13, 7, 4, 1 sur 100) ; le mythique brille de rouge et de rose. Un clic sur un objet donne sa fiche : ce qu'il fait, les mots du bandeau. La règle : js/largages.js ; les modèles et les nombres : js/data/largages.js.", render: s => maquetteLargages(s, 'galerie') },
+      { title: 'Un objet de près', status: 'actuelle', depuis: '0.162.0', note: "Un objet à la fois, grand, qui tourne et flotte sous sa flèche, l'anneau de sa rareté au sol (il dit où est l'objet quand la flèche sort du cadre) ; c'est aussi la vue de la vitrine de l'accueil. Précédent, suivant, la première de chaque rareté ou de chaque catégorie.", render: s => maquetteLargages(s, 'pres') },
+      { title: 'L\'ouverture du parachute', status: 'actuelle', depuis: '0.162.0', note: "En jeu (Jérôme, 23 nov. : « améliore l'ouverture du parachute »). Au ralenti (au quart, au dixième), la caméra de près : la chute libre, le sac fermé sur la caisse qui culbute ; l'extraction, la voile sort en fuseau étroit et long, les suspentes se tendent ; le gonflement, la coupole s'ouvre d'un coup, dépasse sa taille et revient (un ressort amorti), la caisse est freinée et balance fort ; la descente, la coupole respire et le balancement s'éteint. Au sol elle se dégonfle et glisse. La voile : huit fuseaux, os et brume, une cheminée au sommet. Les modèles du jeu (rendu/largages-modeles.js).", render: s => maquetteLargages(s, 'ouverture') },
+      { title: 'Le largage', status: 'actuelle', depuis: '0.162.0', note: "En jeu : deux ou trois avions par jour (le premier entre 80 et 140 s de jeu, puis toutes les 90 à 150 s), à 55 m au-dessus du milieu du no man's land ; une seconde de chute libre, la corolle, 5 m/s ; les cinq hommes valides de chaque camp les plus proches (à moins de 160 m) courent quand la caisse n'est plus qu'à trois secondes du sol ; l'objet monte et tourne, grossi deux fois et demie ; le premier homme à 1,5 m le prend. Un objet à viser (bombardements, crapouillot) doit être ramené dans une tranchée de son camp ; son porteur tué, il tombe là et une nouvelle course s'ouvre. Ici une maquette sans le jeu (des boîtes pour les hommes) ; les boutons imposent la rareté.", render: s => maquetteLargages(s, 'largage') },
+    ] },
   ] },
   { id: 'soldats', title: 'Soldats', topics: [
     { id: 'repos', title: 'Au repos dans la tranchée', variants: [
@@ -560,11 +566,6 @@ const GROUPES = [
     ] },
   ] },
   { id: 'a-construire', title: 'À construire', topics: [
-    { id: 'largages', title: 'Les largages et leurs objets', variants: [
-      { title: 'Les quarante objets', status: 'a-trancher', depuis: '0.161.0', note: "PROPOSITION (Jérôme, 23 nov. : « par instant, des avions passent au-dessus du no man's land et larguent des objets dans des caisses en parachute ; lorsqu'elles touchent le sol, un objet en sort ; chaque objet tourne sur lui-même avec une flèche au-dessus de lui de la couleur de sa rareté ; le premier joueur qui l'atteint le gagne » ; au labo seulement). Quarante objets d'époque en six raretés, le mythique devant, le commun au fond : 10 communs (gris os), 9 peu communs (vert), 8 rares (bleu), 6 épiques (violet), 4 légendaires (orange), 3 mythiques (des reliques : la Vierge penchée d'Albert, un taxi de la Marne, l'obus de 400 de Douaumont, le bombardement mythique : quatre 220 d'un coup), qui brillent (Jérôme, 23 nov. : « mythique : souvent rouge ou rose, avec effet de brillance ») : leur flèche, leur anneau et leur liseré vont du rouge au rose et reviennent en 4 s, un éclat d'os les traverse, des paillettes tournent autour ; les couleurs de rareté sont une exception datée à la palette, mesurées lisibles sur la terre et la boue. Chacun tourne sur lui-même en 2,6 s et flotte de 12 cm, sa flèche au-dessus. Un clic sur un objet donne sa fiche : sa rareté, sa taille vraie, et l'effet qu'il aurait en jeu (une proposition : aucune règle ne le lit ; chaque effet sert le camp qui le prend, et lui seul ; l'artillerie va de la salve de 75 en commun à quatre 220 en mythique, et des objets sèment le chaos chez l'adversaire). Les objets ont tous la même taille ici ; les modèles (boîtes, cylindres, cônes, en mètres) sont dans js/data/largages.js.", render: s => maquetteLargages(s, 'galerie') },
-      { title: 'Un objet de près', status: 'a-trancher', depuis: '0.161.0', note: "PROPOSITION. Un objet à la fois, grand, qui tourne et flotte sous sa flèche, l'anneau de sa rareté au sol (il dit où est l'objet quand la flèche sort du cadre). Précédent, suivant, ou la première de chaque rareté.", render: s => maquetteLargages(s, 'pres') },
-      { title: 'Le largage', status: 'a-trancher', depuis: '0.161.0', note: "PROPOSITION. Un avion passe à 55 m au-dessus du no man's land et lâche une caisse : une seconde de chute libre, puis la corolle s'ouvre et la caisse descend à 5 m/s en se balançant. Les cinq hommes de chaque camp les plus proches courent quand elle n'est plus qu'à trois secondes du sol, chacun à sa vitesse et après son temps de réaction. Au sol, la corolle s'affaisse, le couvercle saute, l'objet monte et se met à tourner, grossi deux fois et demie pour se lire de loin. Le premier homme à 1,5 m le prend : l'objet passe à lui, la flèche s'éteint. La rareté vient des poids (50, 25, 13, 7, 4, 1 sur 100), ou des boutons pour l'imposer. Rien de tout cela n'est en jeu.", render: s => maquetteLargages(s, 'largage') },
-    ] },
     { id: 'patrouille', title: 'La patrouille de nuit', variants: [
       { title: 'Le prototype', status: 'a-trancher', depuis: '0.142.0', note: 'PROTOTYPE (Jérôme, 16 nov. : « une mission interlude où l\'on déplace un petit groupe de soldats (30-50) d\'un point A à un point B de nuit » ; au labo d\'abord, pour voir si c\'est amusant). Quarante hommes de notre première ligne vont jusqu\'au point B, à portée de voix de leur fil. Un clic : où aller ; Espace : se coucher, se relever (couchés, ils rampent). En face, des fusées s\'ouvrent au-dessus du groupe : debout dans leur lumière, on est vu (la barre se remplit) et le poste de mitrailleuse le plus proche tire ; couchés dans un trou d\'obus, on ne l\'est pas ; dans le noir, seul le bruit trahit, tout près d\'un poste. Sans conséquence : aucune bataille ne s\'en souvient. Les chiffres sont dans data/patrouille.js, à éprouver.', render: s => { const p = patrouilleLabo({ graine: 1 + Math.floor(Math.random() * 9999) }); moteur(s, { zoom: 6, soldats: 600, tombee: true, effets: { ...EFFETS, fusees: false }, pilote: p.pilote, calque: p.calque, apres: st => p.boutons(st, () => location.reload()) }); } },
     ] },

@@ -25,12 +25,12 @@
      (rng.js), pour que la même graine rejoue la même bataille.
 
    Logique pure : aucun DOM. Le rendu lit les tableaux (rendu3d.js). */
-import { hauteurQ, vitesseCase } from './terrain.js?v=0.161.2';
-import { ligneY } from './tranchees.js?v=0.161.2';
-import { TOITS } from './data/nids.js?v=0.161.2';
-import { caracteristiques } from './identite.js?v=0.161.2';
-import { BONUS } from './data/experience.js?v=0.161.2';
-import { TIR_JOUEUR as TJ } from './data/tir-joueur.js?v=0.161.2';
+import { hauteurQ, vitesseCase } from './terrain.js?v=0.162.0';
+import { ligneY } from './tranchees.js?v=0.162.0';
+import { TOITS } from './data/nids.js?v=0.162.0';
+import { caracteristiques } from './identite.js?v=0.162.0';
+import { BONUS } from './data/experience.js?v=0.162.0';
+import { TIR_JOUEUR as TJ } from './data/tir-joueur.js?v=0.162.0';
 
 export const GRILLE = 2;           // m : cases de voisinage
 export const DENSITE = 8;          // m : carrés de densité (tir)
@@ -229,6 +229,7 @@ export function pasArmee(A, ctx) {
     }
     // ─ But : sa place, ou le champ de l'ordre quand elle est loin ─
     const r = regiments[reg[i]], o = r.ordre;
+    const bo = ctx.boosts?.get(A.id[i]), rbo = r.boost;      // un objet parachuté : le boost de l'homme, celui de son régiment (largages.js)
     // un blessé qui peut marcher (un bras, une jambe légère) quitte sa place et regagne l'arrière, droit devant lui (Jérôme, v0.35.0)
     const retrait = ctx.arriere && blessure[i] && blessure[i] <= 2 && (blessure[i] === 1 || legere(A.id[i], Sd.jambeLegere));
     if (retrait) {
@@ -245,10 +246,12 @@ export function pasArmee(A, ctx) {
     }
     const poste = ctx.postes?.get(A.id[i]);      // l'homme posté à une mitrailleuse (v0.144.1, nids.js) : son but est son poste, pas sa place
     if (poste && !retrait) { pl[0] = poste[0]; pl[1] = poste[1]; }
+    const course = !poste && !retrait ? ctx.cibles?.get(A.id[i]) : undefined;      // il court vers une caisse parachutée (largages.js), droit dessus
+    if (course) { pl[0] = course[0]; pl[1] = course[1]; }
     const dx = pl[0] - xi, dy = pl[1] - yi, d = Math.hypot(dx, dy);
     let gx = 0, gy = 0, voulu = 1;
     let ch = null;
-    if (!retrait && !poste && !suit && d > F.champ) { ch = champs[reg[i]]; if (ch === undefined) ch = champs[reg[i]] = champDe(r); }
+    if (!retrait && !poste && !suit && !course && d > F.champ) { ch = champs[reg[i]]; if (ch === undefined) ch = champs[reg[i]] = champDe(r); }
     if (ch) {
       const b = ch.dirA(xi, yi);
       if (b) { gx = b[0]; gy = b[1]; } else { gx = dx / d; gy = dy / d; }
@@ -285,8 +288,9 @@ export function pasArmee(A, ctx) {
       }
     }
     // les jambes lourdes ou blessées ralentissent
+    if (bo?.frais) fatJ[i] = 0;
     const corps = (1 - Sd.effetFatigue * fatJ[i]) * (blessure[i] === 2 ? Sd.jambeBlessee : 1);
-    const vmax = V.marche * (0.88 + rnd[i] * 0.24) * terrain * corps * (pilote ? pil.vit ?? 1 : 1);      // (le pilote : courir, épaulé, accroupi, couché ; v0.152.0)
+    const vmax = V.marche * (0.88 + rnd[i] * 0.24) * terrain * corps * (pilote ? pil.vit ?? 1 : 1) * (bo?.vit ?? 1) * (rbo?.vit ?? 1);      // (le pilote : courir, épaulé, accroupi, couché ; v0.152.0)
     // au corps à corps il garde sa place : il ne marche plus qu'un peu (sauf un blessé qui s'en va, ou une déroute) ; il fait face à son adversaire
     const duel = ennemi >= 0 && !retrait && !blessure[i] && !r.deroute;
     A.duel[i] = duel ? 1 : 0;
@@ -319,6 +323,7 @@ export function pasArmee(A, ctx) {
     else fatJ[i] = Math.max(0, fatJ[i] - Sd.reposJambes * dt);
     fatB[i] = Math.max(0, fatB[i] - Sd.reposBras * dt);
     peur[i] = Math.max(0, peur[i] - Sd.peurDecroit * dt);
+    if (bo?.invincible || rbo?.intrepide) peur[i] = Math.min(peur[i], Sd.terreur * 0.3);      // le clairon de la charge, le Revenant : ni peur ni terreur
     // le calme : il se forge sous le feu (de l'inquiétude à la terreur), il se perd dans la terreur et la déroute
     if (peur[i] >= Sd.terreur) perdre(A, i, 'calme', PG.terreur * dt, PG);
     else if (peur[i] > PG.seuilPeur) gagner(A, i, 'calme', PG.tient * dt, PG);
@@ -345,10 +350,10 @@ export function pasArmee(A, ctx) {
       }
     } else if (tirT[i] <= 0 && !pilote) {
       const ebranle = r.moral !== undefined && r.moral < R.moral.ebranle;
-      tirT[i] = R.tir.periode * (0.5 + rng()) * (blessure[i] === 1 ? Sd.brasBlesse : 1) * (ebranle ? R.moral.tirEbranle : 1) * parametresStance(R, r.stance).periode;
+      tirT[i] = R.tir.periode * (0.5 + rng()) * (blessure[i] === 1 ? Sd.brasBlesse : 1) * (ebranle ? R.moral.tirEbranle : 1) * parametresStance(R, r.stance).periode / ((bo?.tir ?? 1) * (rbo?.tir ?? 1));
       // la terreur, ou la déroute : on ne tire plus
       // (sans ennemi à portée, il ne tire pas : ni fatigue ni expérience)
-      if (!retrait && peur[i] < Sd.terreur && !r.deroute && tirer(A, i, o, ctx, r.stance, ctx.infanterie?.[A.camp[i]].portee ?? 1)) {
+      if (!retrait && peur[i] < Sd.terreur && !r.deroute && tirer(A, i, o, ctx, r.stance, (ctx.infanterie?.[A.camp[i]].portee ?? 1) * (bo?.portee ?? 1), bo)) {
         fatB[i] = Math.min(1, fatB[i] + Sd.fatigueTir);
         A.exp[i] = Math.min(1, A.exp[i] + R.experience.tir);
       }
@@ -366,7 +371,7 @@ export function toitFacteur(T, c, genre) {
   return d >= 5 ? f : d >= 3 ? (1 + f) / 2 : 1;
 }
 
-function tirer(A, i, o, ctx, stance, equip = 1) {      // `equip` : le facteur de portée (la section Hotchkiss de l'Infanterie)
+function tirer(A, i, o, ctx, stance, equip = 1, bo = null) {      // `bo` : le boost d'un objet parachuté (le fusil du canonnier, la lunette)      // `equip` : le facteur de portée (la section Hotchkiss de l'Infanterie)
   const { R, rng, T, frapper } = ctx;
   const { dw, dh, dens } = A;
   const ennemi = 1 - A.camp[i], de = dens[ennemi];
@@ -388,9 +393,10 @@ function tirer(A, i, o, ctx, stance, equip = 1) {      // `equip` : le facteur d
   }
   if (best < 0) return false;
   if (ctx.tir) { const bxx = best % dw; ctx.tir(i, (bxx + 0.5) * DENSITE, ((best - bxx) / dw + 0.5) * DENSITE); }   // pour le dessin : un tir part (jamais l'état)
+  if (bo?.obus) { const bxx = best % dw; ctx.boostTir(i, bo, (bxx + 0.5) * DENSITE, ((best - bxx) / dw + 0.5) * DENSITE); return true; }      // le fusil du canonnier : un obus là où va la balle
   const chance = chanceTir(R, stance, bestN, A.exp[i], A.adresse[i], bestD) * (1 + BONUS.regiment.precision * (ctx.regiments[A.reg[i]].chev || 0)) * (ctx.infanterie?.[A.camp[i]].tir ?? 1);      // le bonus des chevrons du régiment (lot E) ; les fusiliers-mitrailleurs (l'Infanterie)
   gagner(A, i, 'adresse', R.progression.tir, R.progression);
-  if (rng() >= chance) return true;
+  if (!bo?.sur && rng() >= chance) return true;      // (la lunette, le Revenant : chaque balle porte)
   gagner(A, i, 'adresse', R.progression.toucheTir, R.progression);
   // la victime : un ennemi du carré, au hasard
   const xx = best % dw, yy = (best - xx) / dw;
@@ -406,6 +412,7 @@ function tirer(A, i, o, ctx, stance, equip = 1) {      // `equip` : le facteur d
   }
   if (!cand.length) return true;
   const v = cand[Math.floor(rng() * cand.length)];
+  if (bo?.sur) { frapper(v, 'tir', 1, null, i); ctx.boostTir?.(i, bo); return true; }      // une balle qui tue à coup sûr
   // l'homme que mène le joueur (v0.152.0) : le coup se note pour l'écran (d'où il vient, s'il porte) ; accroupi ou couché, il offre moins aux balles (un tirage de plus, pour lui seul)
   const pv = ctx.pilotes?.get(A.id[v]);
   if (pv) { pv.coupN = (pv.coupN ?? 0) + 1; pv.coup = { n: pv.coupN, x: A.x[i], y: A.y[i], touche: false }; if (pv.posture && rng() < TJ.postures[pv.posture].abri) return true; }

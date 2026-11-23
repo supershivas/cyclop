@@ -2,11 +2,11 @@
 // le vrai rendu du jeu sur une vraie bataille, et des curseurs pour l'heure (ou la nuit), la saison, le temps qu'il fait, le réglage « Éclairage »,
 // le zoom et la caméra (l'inclinaison va jusqu'à l'horizon, pour voir le ciel). Le temps peut passer (un jour de jeu en une minute) et des obus
 // tomber au centre de la vue (pour voir les éclairs, les incendies et les fusées la nuit). Le dessin seulement : aucune règle ne change.
-import { nouvelleBataille, avancer, regarderAu, ordonnerMarche, ordonnerBarrage } from './bataille.js?v=0.161.2';
-import { creerRendu, ZOOMS } from './rendu3d.js?v=0.161.2';
-import { METEO } from './data/meteo.js?v=0.161.2';
-import { SOLEIL_JEU } from './data/soleil.js?v=0.161.2';
-import { hash2 } from './lib/rng.js?v=0.161.2';
+import { nouvelleBataille, avancer, regarderAu, ordonnerMarche, ordonnerBarrage } from './bataille.js?v=0.162.0';
+import { creerRendu, ZOOMS } from './rendu3d.js?v=0.162.0';
+import { METEO } from './data/meteo.js?v=0.162.0';
+import { SOLEIL_JEU } from './data/soleil.js?v=0.162.0';
+import { hash2 } from './lib/rng.js?v=0.162.0';
 
 // les crans des curseurs (l'ordre est celui du curseur, de gauche à droite)
 const SAISONS = [['printemps', 'Printemps'], ['ete', 'Été'], ['automne', 'Automne'], ['hiver', 'Hiver']];
@@ -75,7 +75,7 @@ export function atelierTerrain(stage, R, el, { zoom = 3, saison = 2 } = {}) {
     if (cle === 'tangage' || cle === 'yaw') rendu.placerCamera(reglage.yaw, reglage.tangage);
   }
   (async () => {
-    B = nouvelleBataille(5, R, { soldats: 600 });
+    B = nouvelleBataille(5, R, { soldats: 600, largages: false });
     ordonnerMarche(B, B.etat.regiments.filter(r => r.camp === 0).slice(2, 6).map(r => r.id), B.etat.marges.x + 200, B.etat.marges.y + 175);
     rendu = await creerRendu(canvas, {});
     if (fini) { rendu.detruire(); return; }

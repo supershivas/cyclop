@@ -1,6 +1,6 @@
 /* La fenêtre des commandes des vues à la personne (Jérôme, 21 nov., v0.158.0) : discrète, en bas à gauche ; l'essentiel toujours, le reste à la touche H ; les bascules en marche sont marquées.
    Les commandes sont de la donnée (data/commandes-vue.js) ; le dessin seulement. */
-import { COMMANDES_VUE, AIDE_VUE } from '../data/commandes-vue.js?v=0.161.2';
+import { COMMANDES_VUE, AIDE_VUE } from '../data/commandes-vue.js?v=0.162.0';
 
 export function creerAideVue(el) {
   let mode = null, ouverte = false, ferme = 0, vus = new Set(), etatsVus = '';

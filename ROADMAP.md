@@ -204,41 +204,9 @@ les deux machines calculent la même bataille, on n'échange que les ordres) sur
 
 ## À l'étude (validé dans le principe par le prompt de départ, pas construit)
 
-### Les largages et leurs objets (Jérôme, 23 nov., v0.161.0)
+### Les largages (Jérôme, 23 nov., v0.162.0)
 
-**Statut** : à l'étude, **au labo** (sujet « Les largages et leurs objets »), rien dans le jeu. Des avions lâchent par instant une caisse en parachute au-dessus du no man's land ; un objet en sort, qui tourne sous une flèche de la couleur de sa rareté ; le premier homme d'un camp qui l'atteint le gagne. Quarante objets, six raretés, effets proposés dans `js/data/largages.js`. À trancher : les objets et leurs effets, la fréquence des largages, ce que l'IA d'en face en fait.
-
-- **La vue à la personne, plus loin : le soldat, le char, l'avion** (Jérôme, 20 nov. : « vraie visée, course, corps à corps » ; « l'équivalent pour les chars et les avions, décollage et atterrissage automatiques, vol, altitude et tirs manuels ou auto ») : un pilote par camp de genre quelconque, la balle qui part où est le guidon (balancement pur, zones du corps), course, accroupi, baïonnette ; le char conduit et son canon pointé à la main ; l'avion dont le vol s'intègre à la main entre un décollage et un retour automatiques. Six lots, décisions du 20 nov. (le viseur décide, clic droit pour épauler, Tab vers un camarade à la mort, la fiche du mort qui dit la blessure et sa source ; le lot 1, la visée, le magasin et la fiche du mort, est fait en v0.151.0 ; le lot 2, la course, les postures, le parapet et les sensations, en v0.152.0 ; le lot 3, le corps à corps, « À moi ! » et Tab, en v0.154.0 ; le lot 4, le char à la main, en v0.156.0 ; le lot 5, l'avion à la main, en v0.157.0 ; le lot 6, la balle, la grenade et la fenêtre des commandes, en v0.158.0 : les six lots sont faits) : `docs/propositions/vue-fps-engins.md`.
-- **Le camp, ses bâtiments et les améliorations** (Jérôme, 27 octobre ; maquettes au labo en v0.85.0, règle en v0.86.0, camp à l'écran en v0.87.0, choix et effectifs en v0.89.0, équipement en v0.91.0, camp d'en face et campagne en v0.92.0 ; jeu à deux en v0.94.0 : tout est construit ; reste à peser les nombres sur des batailles entières) : cinq bâtiments (artillerie, aérodrome, parc des chars, maison des sapeurs, caserne des renforts) qu'on clique pour ordonner à la place des boutons latéraux, un camp qui se construit au fil des jours dans la marge arrière du terrain (sans l'agrandir), une dotation de l'état-major à l'aube, trois niveaux avec un choix à chaque palier, l'équipement des régiments. Proposition, lots et questions ouvertes : `docs/chantiers/camp-et-ameliorations.md`. Reprend l'idée de l'abri à char (ci-dessus, « Chars »).
-- **Des cubes de sol plus petits** (Jérôme, v0.52.1 : améliorer le visuel du terrain). Coût estimé pour des cubes de 0,5 m au lieu de 1 m (le dessin seulement, la logique garde la case de 1 m ; hauteurs interpolées par `surfaceLisse`) : triangles du sol ×4 au plus (mesuré aujourd'hui, 2 000 soldats, rendu logiciel : ~92 000 triangles tout dézoomé, ~68 000 au zoom 4, ~39 000 au zoom 8, dont l'essentiel est le sol ; donc ~350 000 tout dézoomé), texture de couleurs ×4 (537 000 → 2,1 millions de cases, ~17 Mo en RVBA pour le dessus et la paroi), refonte d'un morceau ×4 (le sol coûte 0,3 à 1,3 ms par image aujourd'hui en plein barrage, ~1,5 à 5 ms), dessin attendu 43 à 79 ms aujourd'hui, ~+100 à +250 ms tout dézoomé. Plus raisonnable : cubes plus petits seulement près du point visé (zoom 6 et plus), ou fusionner mieux. À décider avant de construire.
-- **Le pas de fin de journée** (v0.34.4 : les saccades en pleine bataille sont réglées) : il reste un pas de 300 à 500 ms quand l'écran passe à la nuit
-  (les douze heures d'eau, `hydroLignes`, sur 537 000 cases d'un coup) ; l'étaler demande de découper en rangées dans le même ordre, avec la
-  progression dans l'état et dans `etapesRejouer`. Et un pas de 100 ms quand huit régiments partent vers huit buts différents.
-- **Équilibre des obus** (v0.34.5 : le 155 et le 220 plus meurtriers que le 75) : à mesurer sur une bataille entière avant de toucher à `precision` ou à `rapport`.
-- **Ralentir plutôt que jeter** (v0.32.3) : le jeu ne ralentit personne dans l'anneau du souffle ; à décider d'après les variantes B à D du sujet « Projections » du labo.
-
-- **Carte et ordres, la suite** (v0.14.0 et 0.15.0 : secteurs, carte, mêlée) : un ordre « tenir S3·N2 » depuis la carte (reculer d'une
-  ligne), des ordres par secteur voisin, la mêlée dessinée sur le terrain (le nombre d'attaquants au-dessus du tronçon).
-
-- **Tranchées, la suite** (v0.18.0 : traverses, sacs, fil de fer, abris dessinés) : 3 lignes en secteur calme, 5 en secteur fortifié ;
-  les ouvrages au labo (variantes) ; le fil de fer qu'on coupe à la pince la nuit.
-- **La nuit, la suite** (v0.11.0 : abris, vivres, tombes ; v0.38.3 : le coup de main et ses prisonniers sont retirés, voir
-  `docs/archives/corvees-retirees.md`) : l'ambiance de la nuit (Jérôme, v0.39.0 : « ciel et lumière » ; **fait** : la mêlée de nuit, les lampes de l'arrière, les fusées plus présentes (v0.39.1), le ciel de nuit (v0.40.0 : étoiles, lune et ses phases, nuages, étoiles filantes) ;
-  **reste** : la lanterne du front à décider).
-- **Moral et expérience, la suite** (v0.11.0 : contagion, refus d'un jour,
-  poursuite) : la fuite feinte jouée par le joueur (un régiment qui recule exprès
-  pour disperser le poursuivant), l'expérience gardée d'une bataille à l'autre
-  (le Mémorial).
-- **Évacuer les blessés, la suite** (v0.18.0 : ils reviennent, une fois sur deux) : de jour, sous le feu ; la boue qui ralentit les brancardiers.
-- **Lignes de vue** (une crête cache), mêlées de tranchées rares.
-- **Hors de vue, les soldats comptés** au lieu d'être simulés un par un.
-- **Champs de coûts recalculés par morceaux** quand le terrain change (aujourd'hui :
-  le résumé du terrain est refait en entier toutes les 3 s, par bandes).
-- **Mines** de 1916-17 : un événement rare, −10 m, un champ à part (voir aussi les gaz, « Pistes avancées »).
-- **Méta** : le Mémorial, la campagne, l'état-major (doctrines), les trophées déclaratifs (voir « Pistes avancées » : Mémorial et campagne sont développés).
-- **D'autres secteurs et d'autres missions** (un seul secteur, deux missions en v0.9.0).
-- **Son**, police d'identité auto-hébergée.
-- **Soldats en sprites** (poses, atelier de dessin) : essayés en v0.1.1, non retenus pour l'instant (`docs/archives/`).
+**Statut** : **à mesurer** (livré en jeu : `js/largages.js`, `docs/domaines/bataille.md`, « Les largages »). À jouer : la fréquence (deux ou trois avions par jour), la force des objets (un Revenant, un obus de 400, les taxis), la course (cinq coureurs par camp), ce que l'IA d'en face fait de sa musette ; pas de son propre au largage.
 
 ## Pistes avancées
 

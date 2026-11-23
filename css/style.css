@@ -292,7 +292,7 @@
 .titre h1 { background: var(--jeu-fond); padding: calc(var(--pas) * 1.5) calc(var(--pas) * 3) calc(var(--pas) * 1.5) calc(var(--pas) * 3 + .3em); border: 1px solid var(--jeu-ombre); margin: 0; font-size: clamp(28px, 8vmin, 72px); font-weight: normal; letter-spacing: .3em; text-transform: uppercase; color: var(--jeu-encre); text-align: center; }
 .titre-menu, .menu { display: grid; gap: var(--pas); min-width: min(260px, 80vw); }
 .pour-ordinateur { display: none; margin: 0; padding: var(--e1) var(--pas); background: var(--jeu-fond); max-width: 30ch; text-align: center; font-size: var(--texte); color: var(--jeu-accent); }
-@media (pointer: coarse) { .pour-ordinateur { display: block; } }
+@media (pointer: coarse) { .pour-ordinateur { display: block; } #vitrine { display: none; } }      /* (la vitrine, v0.162.0 : sur un écran tactile, le menu ne doit pas pousser le message hors de l'écran) */
 .titre-reglages { background: var(--jeu-fond); border: 1px solid var(--jeu-ombre); position: absolute; top: calc(var(--pas) + env(safe-area-inset-top, 0px)); right: var(--pas); }
 
 .bouton {
@@ -1505,3 +1505,63 @@ body.vue-verrouillee:not(.vue-soldat) .aide-vue { bottom: calc(var(--e4) + 104px
 .aide-vue li.on span:last-child { text-decoration: underline; text-underline-offset: 3px; }
 .aide-vue li.on kbd { background: var(--jeu-fond); color: var(--jeu-encre); }
 .cartouches b.gren { width: 10px; height: 12px; margin-left: var(--e1); border-radius: 50% 50% 40% 40%; background: var(--jeu-encre); border: 1px solid var(--jeu-fond); align-self: flex-end; }
+
+/* Les largages (v0.162.0) : la musette au-dessus du râtelier (le gabarit des boutons de batterie, un liseré de la rareté) et le bandeau d'un objet pris.
+   `--rarete` : la couleur de la rareté (RARETES_COULEURS de palette.js, une exception datée) ; elle ne fait que confirmer le nom et le mot de la rareté. */
+.musette { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--pas); width: 312px; pointer-events: auto; }
+.musette-case { border-left: 4px solid var(--rarete, transparent); grid-template-columns: auto minmax(0, 1fr); }
+.musette-case b { font-size: var(--texte-petit); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding-right: 18px; }
+.musette-case.vide { opacity: .55; box-shadow: none; cursor: not-allowed; }
+.musette-case.vide b { font-style: italic; }
+.musette-case.vise { outline: 2px solid var(--jeu-fond); outline-offset: -2px; }
+.musette-case u { visibility: hidden; }
+.objet-icone { grid-row: 1 / 3; align-self: center; display: grid; place-items: center; width: 22px; height: 22px; font-style: normal; font-weight: bold; font-size: var(--texte-petit);
+  background: var(--rarete, var(--jeu-fond)); color: var(--jeu-fond); box-shadow: inset 0 0 0 1px var(--jeu-fond); }
+.musette-case.vide .objet-icone { background: transparent; }
+.objet-bandeau { position: fixed; top: 164px; left: 50%; transform: translateX(-50%); z-index: 30; pointer-events: none;
+  display: grid; grid-template-columns: auto minmax(0, 1fr); gap: var(--e3); align-items: center; max-width: min(46ch, 90vw);
+  padding: var(--pas) var(--e3); border-left: 8px solid var(--rarete); box-shadow: var(--ombre-papier); }
+.objet-bandeau .objet-icone { width: 36px; height: 36px; font-size: var(--texte-moyen); grid-row: auto; }
+.objet-bandeau .objet-texte { display: grid; gap: var(--e0); line-height: 1.25; }
+.objet-bandeau small { font-size: var(--texte-petit); text-transform: uppercase; letter-spacing: var(--lettres-etiquette, .06em); }
+.objet-bandeau b { font-size: var(--texte-moyen); }
+.objet-bandeau span { font-size: var(--texte-petit); }
+.objet-bandeau.eux { border-left-style: dashed; }
+.objet-bandeau.eux small::before { content: '! '; color: var(--jeu-deroute); font-weight: bold; }
+.objet-bandeau.vient { animation: bandeau-objet .5s cubic-bezier(.2, .8, .3, 1.3); }
+.objet-bandeau.mythique { animation: bandeau-mythique 1.4s ease-in-out infinite alternate; }
+@keyframes bandeau-objet { from { transform: translate(-50%, -14px) scale(.92); opacity: 0; } to { transform: translateX(-50%); opacity: 1; } }
+@keyframes bandeau-mythique { from { box-shadow: var(--ombre-papier), 0 0 0 2px var(--rarete); } to { box-shadow: var(--ombre-papier), 0 0 14px 4px var(--rarete); } }
+@media (prefers-reduced-motion: reduce) { .objet-bandeau.vient, .objet-bandeau.mythique { animation: none; } }
+
+/* La vitrine des objets parachutés (v0.162.0, hud/vitrine.js) : le total, une barre par rareté, les objets par catégorie, l'objet choisi en 3D. Sans défilement de la page :
+   la grille défile seule si l'écran est petit. */
+#dialogue-vitrine { max-width: min(1180px, 96vw); width: 96vw; max-height: calc(100dvh - 2 * var(--e4)); }
+#dialogue-vitrine[open] { display: grid; grid-template-rows: auto auto minmax(0, 1fr) auto; gap: var(--pas); }
+.vitrine-haut { display: grid; grid-template-columns: auto repeat(6, minmax(0, 1fr)); gap: var(--pas) var(--e3); align-items: center; }
+.vitrine-total { margin: 0; font-weight: bold; font-size: var(--texte-moyen); }
+.vitrine-rarete { display: grid; grid-template-columns: auto minmax(24px, 1fr) auto; gap: var(--e1); align-items: center; font-size: var(--texte-petit); }
+.vitrine-barre { display: block; height: var(--barre-h, 6px); background: var(--jeu-fond); outline: 1px solid var(--jeu-accent); }
+.vitrine-barre::before { content: ''; display: block; height: 100%; width: var(--plein); background: var(--rarete); }
+.vitrine-corps { display: grid; grid-template-columns: minmax(0, 1fr) 260px; gap: var(--e3); min-height: 0; }
+.vitrine-grille { display: grid; gap: var(--e1); align-content: start; overflow-y: auto; min-height: 0; padding-right: var(--e1); }
+.vitrine-cat { display: grid; grid-template-columns: 116px minmax(0, 1fr); gap: var(--pas); align-items: center; }
+.vitrine-cat h3 { margin: 0; font-size: var(--texte-petit); text-transform: uppercase; letter-spacing: var(--lettres-etiquette, .06em); }
+.vitrine-cases { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: var(--e1); }
+.vitrine-case { display: grid; grid-template-columns: auto minmax(0, 1fr); grid-template-rows: auto auto; column-gap: var(--pas); align-items: center; text-align: left;
+  min-height: var(--jeu-cible); padding: var(--e1) var(--pas); border: 0; border-left: 4px solid var(--rarete); background: var(--jeu-encre); color: var(--jeu-fond);
+  box-shadow: var(--ombre-papier); font: inherit; font-size: var(--texte-petit); cursor: pointer; }
+.vitrine-case .objet-icone { grid-row: 1 / 3; }
+.vitrine-case b { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; line-height: 1.15; }
+.vitrine-case { grid-template-rows: auto auto; min-height: 52px; }
+.vitrine-case span { opacity: .75; }
+.vitrine-case.inconnu { border-left-style: dashed; box-shadow: none; cursor: default; opacity: .6; }
+.vitrine-case.inconnu .objet-icone { background: var(--jeu-fond); color: var(--jeu-encre); }
+.vitrine-case.vu .objet-icone { background: transparent; color: var(--jeu-fond); box-shadow: inset 0 0 0 2px var(--rarete); }
+.vitrine-case[aria-pressed="true"] { outline: 2px solid var(--jeu-fond); outline-offset: -2px; }
+.vitrine-cote { display: grid; grid-template-rows: 220px auto; gap: var(--pas); align-content: start; }
+#vitrine-3d { width: 100%; height: 220px; image-rendering: pixelated; background: var(--jeu-fond); }
+.vitrine-fiche h3 { margin: 0; font-size: var(--texte-moyen); }
+.vitrine-fiche p { margin: var(--e1) 0 0; font-size: var(--texte-petit); }
+.vitrine-sous { text-transform: uppercase; letter-spacing: var(--lettres-etiquette, .06em); }
+@media (max-width: 900px) { .vitrine-corps { grid-template-columns: 1fr; } .vitrine-haut { grid-template-columns: repeat(3, minmax(0, 1fr)); } }

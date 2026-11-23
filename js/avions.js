@@ -4,17 +4,18 @@
    L'avion entre par le prolongement de la passe, vole à `croisiere` m, descend à `passe` m sur les `descente` m qui précèdent la bande, la balaie (ses balles tombent
    `avance` m devant lui, chaque homme de la bande n'est tiré qu'une fois), remonte, et sort. Au-dessus d'hommes qui tirent, il perd des points de vie (`exposition`) ;
    à zéro, il tombe, écrase ce qui est sous lui et laisse une épave pour le reste de la bataille. Les avions de chaque camp : `etat.avions[camp]`, les points de vie de chacun (0 : perdu). */
-import { MITRAILLAGE as M, AVION_MAIN as AM } from './data/mitraillage.js?v=0.161.2';
-import { METEO } from './data/meteo.js?v=0.161.2';
-import { GRILLE, effrayer, toitFacteur } from './army.js?v=0.161.2';
-import { hash2 } from './lib/rng.js?v=0.161.2';
-import { modif, pvAvion, campDe, niveauDe, emplacementCamp } from './camp.js?v=0.161.2';
-import { impact } from './terrain.js?v=0.161.2';
-import { NOMS_CALIBRES } from './data/calibres.js?v=0.161.2';
+import { MITRAILLAGE as M, AVION_MAIN as AM } from './data/mitraillage.js?v=0.162.0';
+import { METEO } from './data/meteo.js?v=0.162.0';
+import { GRILLE, effrayer, toitFacteur } from './army.js?v=0.162.0';
+import { hash2 } from './lib/rng.js?v=0.162.0';
+import { modif, pvAvion, campDe, niveauDe, emplacementCamp } from './camp.js?v=0.162.0';
+import { impact } from './terrain.js?v=0.162.0';
+import { NOMS_CALIBRES } from './data/calibres.js?v=0.162.0';
 
 const borne = (v, a, b) => v < a ? a : v > b ? b : v;
 const lisse = f => { f = borne(f, 0, 1); return f * f * (3 - 2 * f); };
 const arrondi = v => Math.round(v * 10) / 10;
+const incendie = (etat, camp) => etat.largages?.avions?.[camp]?.letal === etat.jour ? 2 : 1;      // les balles incendiaires (largages.js, data/largages.js : `letal`)
 
 // ─── Les virages (Jérôme, 1er novembre : « un plan de vol avec un angle de virage réaliste ») ─────────
 
@@ -203,7 +204,7 @@ function mitrailler(B, v, ax, ay, bx, by, h, ctx, rng) {
     if (A.mort[i]) return;
     const rx = A.x[i] - ax, ry = A.y[i] - ay, l = rx * ux + ry * uy;
     if (l < 0 || l > L || Math.abs(rx * uy - ry * ux) > hw) return;
-    let p = AM.letal * M.letal * modif(B.etat, v.camp, 'aerodrome.letal') * haut;
+    let p = AM.letal * M.letal * modif(B.etat, v.camp, 'aerodrome.letal') * haut * incendie(B.etat, v.camp);
     const ci = (A.y[i] | 0) * T.W + (A.x[i] | 0);
     if (T.diff[ci] <= -2) p *= R.obus.abri;
     p *= toitFacteur(T, ci, 'avion');
@@ -355,7 +356,7 @@ function balayer(B, v, lo, hi, ctx, rng) {
     if (A.mort[i]) return;
     const dx = A.x[i] - v.x1, dy = A.y[i] - v.y1, l = dx * v.ux + dy * v.uy;
     if (l <= lo || l > hi || Math.abs(dx * v.uy - dy * v.ux) > hw) return;
-    let p = M.letal * modif(B.etat, v.camp, 'aerodrome.letal');      // les mitrailleuses jumelées (v0.88.0)
+    let p = M.letal * modif(B.etat, v.camp, 'aerodrome.letal') * incendie(B.etat, v.camp);      // les mitrailleuses jumelées (v0.88.0) ; les balles incendiaires (un objet parachuté, jusqu'au soir)
     const ci = (A.y[i] | 0) * T.W + (A.x[i] | 0);
     if (T.diff[ci] <= -2) p *= R.obus.abri;
     p *= toitFacteur(T, ci, 'avion');

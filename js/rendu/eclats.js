@@ -2,15 +2,15 @@
 // et « le feu se voit » (Jérôme, v0.9.2 : l'éclair à la bouche du fusil et le trait vers la cible de chaque tir de `B.tirs`, la pose des tireurs, le bond de ceux que
 // le souffle jette). Une seule fabrique : tous tirent dans le même générateur de l'aspect (`alea`, une suite à graine : l'ordre des tirages fait l'image) et
 // dans les mêmes tampons de particules. Le dessin seulement : jamais la logique, jamais la partie.
-import * as SH from './shaders.js?v=0.161.2';
-import { INDICE } from '../palette.js?v=0.161.2';
-import { horloge } from '../bataille.js?v=0.161.2';
-import { hash2 } from '../lib/rng.js?v=0.161.2';
-import { ARBRES_TIRAGES, ARBRES_COUCHE } from '../data/arbres.js?v=0.161.2';
-import { MOTTES, FEU } from '../data/effets.js?v=0.161.2';
-import { OMBRE } from '../apparence.js?v=0.161.2';
-import { creerMottes } from './mottes.js?v=0.161.2';
-import { creerFlammes } from './flammes.js?v=0.161.2';
+import * as SH from './shaders.js?v=0.162.0';
+import { INDICE } from '../palette.js?v=0.162.0';
+import { horloge } from '../bataille.js?v=0.162.0';
+import { hash2 } from '../lib/rng.js?v=0.162.0';
+import { ARBRES_TIRAGES, ARBRES_COUCHE } from '../data/arbres.js?v=0.162.0';
+import { MOTTES, FEU } from '../data/effets.js?v=0.162.0';
+import { OMBRE } from '../apparence.js?v=0.162.0';
+import { creerMottes } from './mottes.js?v=0.162.0';
+import { creerFlammes } from './flammes.js?v=0.162.0';
 
 const ECLATS = 6000;     // (v0.24.0 ; 2 400 avant : une salve de 220 — ~200 éclats chacun, dont de la fumée de 8 à 16 s — faisait le tour du tampon et effaçait les éclats encore en vol)
 
@@ -384,6 +384,12 @@ export function creerEclats({ THREE, scene, col, palTex, NP, effets, surface, pr
   }
   return {
     mitraille, gerbeSol, douilles, fumeeAvion, ecraser,
+    // le lance-flammes d'un objet parachuté (v0.162.0) : des langues de feu de (x, z) vers (tx, tz)
+    jetFlamme(x, z, tx, tz) {
+      if (!terrain()) return;
+      const h = surface(x, z) + 1.2, dx = tx - x, dz = tz - z, l = Math.hypot(dx, dz) || 1;
+      for (let k = 0; k < 7; k++) { const v = 7 + alea() * 9; flammes.lancer(x + dx / l * 0.6, h, z + dz / l * 0.6, dx / l * v + (alea() - 0.5) * 2, 0.4 + alea(), dz / l * v + (alea() - 0.5) * 2, 0.45 + alea() * 0.4); }
+    },
     ecl, feux, ECLATS,                                           // lus par temps.js : les fusées et les incendies éclairent la nuit
     impactVu, majTirs, majEclats, majCorbeaux,
     setVent(x, z) { ventX = x; ventZ = z; flammes.setVent(x, z); },                      // le vent en m/s
