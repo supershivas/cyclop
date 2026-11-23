@@ -6,10 +6,17 @@
 - La mitrailleuse à la personne : l'arme en bas de l'image, sa bande qui défile, les douilles qui sautent, des rafales rapides vers l'ennemi, sans le cône
 - Le char : un obus rapide et tendu, ses mitrailleuses qu'on voit tirer, le tir tout près ; le soldat : la barre de la culasse entre deux coups, le guidon juste sous le viseur
 
+## 0.166.1 — 2026-11-23
+
+- Une batterie qui recharge (ou un ordre indisponible) est nettement grisée : hachurée, au liseré pointillé
+- Les régiments se choisissent plus facilement : une zone de clic plus large autour de leur écusson sur le champ et de leur pastille sur la carte
+- La frise des jours sous la courbe des effectifs est en tons neutres
+
 ## 0.166.0 — 2026-11-23
 
 - L'avion piloté : on prend les commandes à peine la piste quittée, il vire bien plus vite et remonte seul s'il est trop bas
 - Ses rafales labourent le sol : des gerbes de terre et de petits cratères, comme un passage automatique
+
 ## 0.165.1 — 2026-11-23
 
 - La carte du front du soir : une seule ligne par tranchée, chaque croix à l'endroit où l'homme est tombé (les jours d'avant en pâle dans « Depuis le début »)
