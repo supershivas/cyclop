@@ -9,7 +9,7 @@
 //   C(rayon, hauteur, x, y, z, couleur, rotation, pans)           un cylindre (debout ; la rotation le couche), 8 pans par défaut
 //   K(rayon, hauteur, x, y, z, couleur, rotation, pans)           un cône, la pointe en haut
 // `rotation` : [rx, ry, rz] en radians (ou rien).
-import { RARETES_COULEURS } from '../palette.js?v=0.161.0';
+import { RARETES_COULEURS, RARETES_BRILLANCE } from '../palette.js?v=0.161.1';
 
 const B = (w, h, d, x, y, z, c, r) => ({ f: 'b', t: [w, h, d], p: [x, y, z], c, r });
 const C = (rayon, h, x, y, z, c, r, n = 8) => ({ f: 'c', t: [rayon, h], p: [x, y, z], c, r, n });
@@ -24,7 +24,7 @@ export const RARETES = {
   rare:       { nom: 'Rare',       couleur: RARETES_COULEURS.rare,       poids: 13, objets: 8 },
   epique:     { nom: 'Épique',     couleur: RARETES_COULEURS.epique,     poids: 7,  objets: 6 },
   legendaire: { nom: 'Légendaire', couleur: RARETES_COULEURS.legendaire, poids: 4,  objets: 4 },
-  relique:    { nom: 'Relique',    couleur: RARETES_COULEURS.relique,    poids: 1,  objets: 3 },
+  relique:    { nom: 'Mythique',   couleur: RARETES_COULEURS.relique,    poids: 1,  objets: 3, brillance: RARETES_BRILLANCE.relique },   // (l'id reste `relique` : des reliques de 14-18)
 };
 export const ORDRE_RARETES = Object.keys(RARETES);
 
@@ -135,7 +135,7 @@ export const OBJETS = [
   { id: 'clairon', nom: 'Clairon de la relève', rarete: 'legendaire', effet: 'Les régiments en déroute du secteur se rallient d\'un coup.',
     modele: [C(0.012, 0.35, 0, 0.05, 0, 'h', COUCHE_X, 6), K(0.07, 0.14, 0.24, 0.05, 0, 'h', [0, 0, -Q], 10), C(0.012, 0.25, -0.02, 0.09, 0, 'h', COUCHE_X, 6), C(0.04, 0.02, 0.1, 0.07, 0, 'h', COUCHE_X, 6), B(0.012, 0.012, 0.05, -0.18, 0.06, 0, '*'), B(0.2, 0.08, 0.008, 0.05, 0.0, 0.01, '*', [0, 0, 0.1])] },
 
-  // ── Reliques : une seule par bataille, au mieux ──
+  // ── Mythiques (des reliques) : une seule par bataille, au mieux ; elles brillent ──
   { id: 'vierge', nom: 'La Vierge penchée d\'Albert', rarete: 'relique', effet: 'Tant qu\'on la tient, notre secteur ne peut pas tomber.',
     modele: [B(0.3, 0.12, 0.3, 0, 0.06, 0, 'r'), C(0.03, 0.9, 0.12, 0.5, 0, 'e', [0, 0, -0.5], 6), K(0.12, 0.5, 0.3, 0.75, 0, '*', [0, 0, -1.2], 8), C(0.05, 0.08, 0.53, 0.83, 0, '*', [0, 0, -1.2], 8), C(0.06, 0.05, 0.35, 0.95, 0, 'h', [0, 0, -1.2], 8), B(0.12, 0.03, 0.03, 0.38, 0.72, 0.06, '*', [0, 0, -1.2])] },
   { id: 'taxi', nom: 'Un taxi de la Marne', rarete: 'relique', effet: 'Un régiment frais arrive à l\'instant, sans attendre la nuit.',

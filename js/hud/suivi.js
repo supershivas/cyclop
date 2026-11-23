@@ -7,20 +7,20 @@
 //    tonneau, l'écran rouge, jusqu'à l'écrasement.
 // Rien de neuf dans le moteur que quelques réglages de la vue (`vue.haut`, `dist`, `portee`, `hors`, `roulis`, `secousse`, rendu3d.js) : la caméra du jeu orbite déjà autour d'un point visé, ici ce point
 // suit l'engin. Le dessin seulement : aucune lecture n'écrit dans la bataille. La vue se libère d'un geste sur la caméra (déplacer, tourner), Échap, le clic droit, ou le bouton ; la vue d'avant revient.
-import { positionDe } from '../avions.js?v=0.161.0';
-import { hauteurOeil, balancement, armeDe, aPortee } from '../tir-joueur.js?v=0.161.0';
-import { TIR_JOUEUR as TJ } from '../data/tir-joueur.js?v=0.161.0';
-import { CALIBRES } from '../data/calibres.js?v=0.161.0';
-import { CHARS } from '../data/chars.js?v=0.161.0';
-import { AVION_MAIN } from '../data/mitraillage.js?v=0.161.0';
-import { creerAideVue } from './aide-vue.js?v=0.161.0';
+import { positionDe } from '../avions.js?v=0.161.1';
+import { hauteurOeil, balancement, armeDe, aPortee } from '../tir-joueur.js?v=0.161.1';
+import { TIR_JOUEUR as TJ } from '../data/tir-joueur.js?v=0.161.1';
+import { CALIBRES } from '../data/calibres.js?v=0.161.1';
+import { CHARS } from '../data/chars.js?v=0.161.1';
+import { AVION_MAIN } from '../data/mitraillage.js?v=0.161.1';
+import { creerAideVue } from './aide-vue.js?v=0.161.1';
 // Les sensations de l'homme qu'on mène (v0.152.0) : le coup reçu (s), la balle qui frôle (s), le souffle d'un obus (portée en rayons du souffle, s de retour), la peur qui ferme le champ (opacité au plus)
 const SENS = { coup: 1.2, frole: 0.5, roulis: 0.07, choc: 3, chocDuree: 2.5, peur: 0.75 };
-import { indiceDe, quiEst } from './lecture.js?v=0.161.0';
-import { creerTampons } from './tampons-fps.js?v=0.161.0';
-import { BLESSURES_FPS, RYTHME_TAMPONS } from '../data/tampons.js?v=0.161.0';
-import { ZONES_EN_MOTS } from '../data/causes.js?v=0.161.0';
-import { REPERES } from './barres.js?v=0.161.0';
+import { indiceDe, quiEst } from './lecture.js?v=0.161.1';
+import { creerTampons } from './tampons-fps.js?v=0.161.1';
+import { BLESSURES_FPS, RYTHME_TAMPONS } from '../data/tampons.js?v=0.161.1';
+import { ZONES_EN_MOTS } from '../data/causes.js?v=0.161.1';
+import { REPERES } from './barres.js?v=0.161.1';
 
 const SOL_Y = 3;           // le niveau moyen du sol que vise la caméra (rendu3d.js : `SOL_Y`), pour calculer `vue.haut`
 const PORTEE = 700;        // m : le plan lointain d'une vue verrouillée (au ras du sol, la vue porte loin)

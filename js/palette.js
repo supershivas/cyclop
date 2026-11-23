@@ -40,8 +40,10 @@ export const RARETES_COULEURS = {
   rare: '#5b93d6',       // bleu
   epique: '#a877d6',     // violet
   legendaire: '#e8913a', // orange
-  relique: '#e8c64a',    // or
+  relique: '#ec5f8e',    // rose rouge : le mythique (Jérôme, 23 nov. : « mythique : souvent rouge, cyan ou rose, avec effet de brillance »), le ton de repos de sa brillance
 };
+// La brillance du mythique : la flèche, l'anneau et le liseré passent du rouge au rose puis au cyan, et un éclat d'os les traverse (labo-largages.js, `briller`)
+export const RARETES_BRILLANCE = { relique: ['#f25a4a', '#f070b0', '#4fd3e0'] };
 
 // L'ordre des couleurs dans les textures d'indices (le shader lit la palette
 // dans une texture de 12 × 1) : ne jamais le changer sans refaire les textures.

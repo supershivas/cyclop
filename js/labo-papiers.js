@@ -4,14 +4,14 @@
 // et le papier posé entre les deux. Les graphiques sont ceux du jeu (`hud/bilan.js`, `hud/icones-nuit.js`) ; les données, une journée d'exemple (`journeeExemple` de labo-donnees.js : 8 régiments,
 // les 4 corvées d'équipement en plus, des médailles pleines). Sous chaque cadre, la mesure : le défilement et le recouvrement des cartes à 1024 × 640, 1280 × 800, 1440 × 900 et 1920 × 1080.
 // La hiérarchie (le prompt du chantier) : (a) ce qu'il faut décider cette nuit, (b) l'état de chaque régiment, (c) le bilan du jour, (d) le reste (ciel, lune, avions, médailles).
-import { ROLES } from './palette.js?v=0.161.0';
-import { CORVEES, CONTACT } from './data/corvees.js?v=0.161.0';
-import { journeeExemple } from './labo-donnees.js?v=0.161.0';
-import { barreEffectif, jaugeMoral } from './hud/bilan.js?v=0.161.0';
-import { iconeCorvee, iconeMedaille, iconeMoment } from './hud/icones-nuit.js?v=0.161.0';
+import { ROLES } from './palette.js?v=0.161.1';
+import { CORVEES, CONTACT } from './data/corvees.js?v=0.161.1';
+import { journeeExemple } from './labo-donnees.js?v=0.161.1';
+import { barreEffectif, jaugeMoral } from './hud/bilan.js?v=0.161.1';
+import { iconeCorvee, iconeMedaille, iconeMoment } from './hud/icones-nuit.js?v=0.161.1';
 import { el, html, info, bouton, loupe, corvee, vivres, survolReg, etat, nomReg, corveesDe, rangeeTous, ordres, tuilesJour, reste, medailles, puceReleve,
-  graphe, frise, issueLabo, tableMed, legende, momentsDuJour } from './hud/papier-nuit.js?v=0.161.0';
-import { lignesInfo } from './hud/infobulle.js?v=0.161.0';
+  graphe, frise, issueLabo, tableMed, legende, momentsDuJour } from './hud/papier-nuit.js?v=0.161.1';
+import { lignesInfo } from './hud/infobulle.js?v=0.161.1';
 
 const roles = Object.entries(ROLES).map(([k, v]) => `--jeu-${k}:${v}`).join(';');
 const pl = (n, un, des) => `${n} ${n > 1 ? des : un}`;

@@ -1,5 +1,9 @@
 # Journal des versions
 
+## 0.161.1 — 2026-11-23
+
+- Au labo : la rareté du sommet devient Mythique ; ses objets brillent, du rouge au rose et au cyan, avec des éclats et des paillettes
+
 ## 0.161.0 — 2026-11-23
 
 - Au labo : quarante objets parachutés en six raretés, en 3D, qui tournent et flottent sous une flèche de leur couleur

@@ -2,9 +2,9 @@
 // Critère du lot minimal : après trois jours, un cratère, la boue, l'eau et un
 // soldat se distinguent. Les tuiles sont peintes par les MÊMES fonctions que le
 // jeu (js/tuiles.js) : ce qu'on mesure ici est ce que le jeu affiche.
-import { PALETTE as BASE, ALERTES, RARETES_COULEURS as RC } from './js/palette.js';
+import { PALETTE as BASE, ALERTES, RARETES_COULEURS as RC, RARETES_BRILLANCE as RB } from './js/palette.js';
 // (les deux couleurs d'alerte de l'interface, `a` orange et `d` rouge, ne sont pas dans la palette du terrain : on les ajoute pour la mesure)
-const PALETTE = { ...BASE, a: ALERTES.orange, d: ALERTES.rouge, '1': RC.commun, '2': RC.peuCommun, '3': RC.rare, '4': RC.epique, '5': RC.legendaire, '6': RC.relique };
+const PALETTE = { ...BASE, a: ALERTES.orange, d: ALERTES.rouge, '1': RC.commun, '2': RC.peuCommun, '3': RC.rare, '4': RC.epique, '5': RC.legendaire, '6': RC.relique, '7': RB.relique[0], '8': RB.relique[1], '9': RB.relique[2] };
 import { REGLAGES as R } from './js/data/reglages.js';
 import { tuile as t, ETAT } from './js/tuiles.js';
 
@@ -53,8 +53,8 @@ export default {
     { avant: 's', fond: 'o', role: 'signe', ou: 'tronc sur la neige' },
     { avant: 'o', fond: 's', role: 'signe', ou: 'neige sur une branche' },
     { avant: 'r', fond: 's', role: 'signe', ou: 'flanc de neige sur une branche' },
-    // les flèches de rareté des objets parachutés (1 commun … 6 relique ; Jérôme, v0.161.0, au labo) : sur la terre et sur la boue
-    ...['1', '2', '3', '4', '5', '6'].flatMap(k => [{ avant: k, fond: 't', role: 'signe', ou: 'flèche de rareté sur la terre' }, { avant: k, fond: 'b', role: 'signe', ou: 'flèche de rareté sur la boue' }]),
+    // les flèches de rareté des objets parachutés (1 commun … 6 mythique ; 7, 8, 9 : le rouge, le rose et le cyan de sa brillance ; Jérôme, v0.161.0, au labo) : sur la terre et sur la boue
+    ...['1', '2', '3', '4', '5', '6', '7', '8', '9'].flatMap(k => [{ avant: k, fond: 't', role: 'signe', ou: 'flèche de rareté sur la terre' }, { avant: k, fond: 'b', role: 'signe', ou: 'flèche de rareté sur la boue' }]),
     // les deux camps entre eux (en gris, ils ne se confondent pas)
     { avant: 'n', fond: 'x', seuil: 1.4, role: 'signe', ou: 'nous et en face côte à côte' },
   ],
