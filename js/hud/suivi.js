@@ -7,20 +7,20 @@
 //    tonneau, l'écran rouge, jusqu'à l'écrasement.
 // Rien de neuf dans le moteur que quelques réglages de la vue (`vue.haut`, `dist`, `portee`, `hors`, `roulis`, `secousse`, rendu3d.js) : la caméra du jeu orbite déjà autour d'un point visé, ici ce point
 // suit l'engin. Le dessin seulement : aucune lecture n'écrit dans la bataille. La vue se libère d'un geste sur la caméra (déplacer, tourner), Échap, le clic droit, ou le bouton ; la vue d'avant revient.
-import { positionDe } from '../avions.js?v=0.164.0';
-import { hauteurOeil, balancement, armeDe, aPortee } from '../tir-joueur.js?v=0.164.0';
-import { TIR_JOUEUR as TJ } from '../data/tir-joueur.js?v=0.164.0';
-import { CALIBRES } from '../data/calibres.js?v=0.164.0';
-import { CHARS } from '../data/chars.js?v=0.164.0';
-import { AVION_MAIN } from '../data/mitraillage.js?v=0.164.0';
-import { creerAideVue } from './aide-vue.js?v=0.164.0';
+import { positionDe } from '../avions.js?v=0.165.0';
+import { hauteurOeil, balancement, armeDe, aPortee } from '../tir-joueur.js?v=0.165.0';
+import { TIR_JOUEUR as TJ } from '../data/tir-joueur.js?v=0.165.0';
+import { CALIBRES } from '../data/calibres.js?v=0.165.0';
+import { CHARS } from '../data/chars.js?v=0.165.0';
+import { AVION_MAIN } from '../data/mitraillage.js?v=0.165.0';
+import { creerAideVue } from './aide-vue.js?v=0.165.0';
 // Les sensations de l'homme qu'on mène (v0.152.0) : le coup reçu (s), la balle qui frôle (s), le souffle d'un obus (portée en rayons du souffle, s de retour), la peur qui ferme le champ (opacité au plus)
 const SENS = { coup: 1.2, frole: 0.5, roulis: 0.07, choc: 3, chocDuree: 2.5, peur: 0.75 };
-import { indiceDe, quiEst, majuscule } from './lecture.js?v=0.164.0';
-import { creerTampons } from './tampons-fps.js?v=0.164.0';
-import { BLESSURES_FPS, RYTHME_TAMPONS } from '../data/tampons.js?v=0.164.0';
-import { ZONES_EN_MOTS } from '../data/causes.js?v=0.164.0';
-import { REPERES, jauge, corps } from './barres.js?v=0.164.0';
+import { indiceDe, quiEst, majuscule } from './lecture.js?v=0.165.0';
+import { creerTampons } from './tampons-fps.js?v=0.165.0';
+import { BLESSURES_FPS, RYTHME_TAMPONS } from '../data/tampons.js?v=0.165.0';
+import { ZONES_EN_MOTS } from '../data/causes.js?v=0.165.0';
+import { REPERES, jauge, corps } from './barres.js?v=0.165.0';
 
 const SOL_Y = 3;           // le niveau moyen du sol que vise la caméra (rendu3d.js : `SOL_Y`), pour calculer `vue.haut`
 const PORTEE = 700;        // m : le plan lointain d'une vue verrouillée (au ras du sol, la vue porte loin)
@@ -32,7 +32,7 @@ const CINEMA = { tangage: [0.3, 0.1, 0.11], periode: 36 };
 // on voit le char entier de dos et ce qu'il vise. Essayés en captures et écartés : sous le canon (dans le flanc et les chenilles), sur le toit (la superstructure masque la moitié de l'image),
 // à l'épaule droite (le flanc remplit la gauche), au ras du flanc (rien du char, un fanion en premier plan)
 export const CANON = { avant: -8, droite: 0, haut: 3.6, tangage: 0.2 };
-// La vue de poursuite (Jérôme, 23 nov., v0.164.0 : l'avion « doit avoir l'angle de la capture » : derrière lui et au-dessus, l'avion entier au premier plan ; le char « similaire, au-dessus, comme
+// La vue de poursuite (Jérôme, 23 nov., v0.165.0 : l'avion « doit avoir l'angle de la capture » : derrière lui et au-dessus, l'avion entier au premier plan ; le char « similaire, au-dessus, comme
 // actuellement ») : la caméra tourne autour d'un point (`avant` m devant l'engin, `haut` m au-dessus de lui) à `dist` m, penchée de `tangage` rad. L'avion : son cap suivi en douceur (`suit` 1/s),
 // une part de son roulis (`roulis`). Le char : plus aucun mouvement au tir ; le centre de l'image est le point visé, on peut regarder jusqu'au pied du char (la souris, jusqu'à `bas` rad)
 const CHASSE = { avion: { avant: 6, haut: 2, dist: 24, tangage: 0.32, fov: 55, suit: 2.5, roulis: 0.35 }, char: { avant: 2, haut: 4.5, dist: 19, tangage: 0.32, fov: 50, bas: 1.0 } };      // fov : le champ (°) ; celui du jeu, 30°, serrait l'avion à le remplir
@@ -48,7 +48,7 @@ const PLONGEON = { entree: 1.1, sortie: 0.9, pas: 0.1 };
 // L'œil d'un soldat (Jérôme, v0.144.0 : « la vue FPS sur chaque soldat : on clique et on dirige le soldat, ZQSD et la souris ») : à 1,6 m du sol, un champ large (70° : la caméra du jeu est à 30°),
 // la caméra à 0,3 m derrière le point de l'œil (l'homme lui-même n'est pas dessiné : `rendu.cacherSoldat`), un plan proche de 0,12 m (les autres hommes s'approchent à bout de bras)
 // `zoom` est un INDICE de `ZOOMS` (8 = 24 px/m : les hommes de près sont articulés, au niveau fin, comme en jeu ; 12 était hors de la liste : `ZOOMS[12]` indéfini, tous les hommes redevenaient des boîtes)
-const SOLDAT = { fov: 70, zoom: 8, dist: 0.3, proche: 0.12, garde: 0.5, haut: -1.2, bas: 1.0, lisse: 9 };      // lisse : 1/s, la vitesse à laquelle l'œil suit une marche du sol (v0.164.0)
+const SOLDAT = { fov: 70, zoom: 8, dist: 0.3, proche: 0.12, garde: 0.5, haut: -1.2, bas: 1.0, lisse: 9 };      // lisse : 1/s, la vitesse à laquelle l'œil suit une marche du sol (v0.165.0)
 
 const angle = d => d - 2 * Math.PI * Math.round(d / (2 * Math.PI));
 const chasseDe = cap => Math.atan2(-Math.cos(cap), -Math.sin(cap));      // l'angle de la caméra qui regarde dans la direction `cap`, posée « derrière » le point visé
@@ -93,7 +93,7 @@ export function creerSuivi({ $, bataille, rendu, reduit = () => false, retour = 
   let s = null, sortie = null;      // `sortie` : le recul en cours après la vue (s vaut déjà null)          // { genre, id, mode: 'cinema' | 'personne', t, avant, tir, accident, fin }
   const carteEl = $('carte-soldat'), badge = $('suivi'), nom = $('suivi-nom'), barres = $('cinema'), rouge = $('accident'), viseur = $('viseur'), cartouches = $('cartouches'), coupEl = $('coup'), chocEl = $('choc'), peurEl = $('peur-voile'), canonEl = $('canon-barre'), volEl = $('vol-barres'), aide = creerAideVue($('aide-vue'));
   $('suivi-liberer').onclick = () => liberer();
-  // l'avion piloté (v0.164.0, Jérôme : « un bouton qui permet de revenir au mode automatique et revenir à la base ») : le même effet que R
+  // l'avion piloté (v0.165.0, Jérôme : « un bouton qui permet de revenir au mode automatique et revenir à la base ») : le même effet que R
   const rentrerEl = $('suivi-rentrer');
   rentrerEl.onclick = () => { if (!s?.vole) return; if (!bataille()?.ailes?.[moi()]) { dire('Il décolle encore : vous prendrez les commandes en l\'air.'); return; } voler({ rentrer: true }); dire('Pilote automatique : il rentre à la base et se pose seul.'); };
   const tampons = creerTampons($('tampon-fps'));      // les tampons de la vue d'un soldat (v0.154.0) : ce qui lui arrive, ce qu'il fait, ce qui tombe autour de lui
@@ -106,7 +106,7 @@ export function creerSuivi({ $, bataille, rendu, reduit = () => false, retour = 
     const borne = v => Math.max(-SOURIS.pas, Math.min(SOURIS.pas, v || 0));
     const fin = s.genre === 'soldat' ? (s.fov ?? SOLDAT.fov) / SOLDAT.fov : 1;      // épaulé, le champ est plus étroit : la souris tourne moins vite (v0.151.0)
     s.lacet += borne(e.movementX) * SOURIS.lacet * fin;
-    if (s.vole) return;      // l'avion piloté : le clavier seul (v0.164.0, « un maniement classique ») ; la souris ne fait plus tourner la vue
+    if (s.vole) return;      // l'avion piloté : le clavier seul (v0.165.0, « un maniement classique ») ; la souris ne fait plus tourner la vue
     const bas = s.genre === 'soldat' ? SOLDAT.haut : SOURIS.haut, haut = s.genre === 'soldat' ? SOLDAT.bas : s.genre === 'char' ? CHASSE.char.bas : SOURIS.bas;      // (de lever les yeux à baisser la tête)
     s.pitch = Math.max(bas, Math.min(haut, s.pitch + borne(e.movementY) * SOURIS.tangage * fin));
   });
@@ -299,7 +299,7 @@ export function creerSuivi({ $, bataille, rendu, reduit = () => false, retour = 
       return;
     }
     if (!s || s.genre !== 'char' || reduit()) return;
-    if (s.mode === 'personne') return;      // à la personne, la vue ne bouge plus au tir (v0.164.0, Jérôme : « la caméra bouge bizarrement au tir ») : on voit l'obus partir et tomber
+    if (s.mode === 'personne') return;      // à la personne, la vue ne bouge plus au tir (v0.165.0, Jérôme : « la caméra bouge bizarrement au tir ») : on voit l'obus partir et tomber
     for (const e of ev) if (e.type === 'char-tir' && e.id === s.id) s.tir = { t: 0, tx: e.tx, ty: e.ty };
   }
 
@@ -348,7 +348,7 @@ export function creerSuivi({ $, bataille, rendu, reduit = () => false, retour = 
     const k = s.neuf || r || perso ? 1 : 1 - Math.exp(-dt * 9);
     V.cx += (px - V.cx) * k; V.cz += (py - V.cz) * k;
     let sol = rendu.hauteurSol(Math.max(0, px), Math.max(0, py));
-    // l'homme (v0.164.0, Jérôme : « la vue tremble, saute ») : le sol est en marches de 25 cm, l'œil les montait d'un coup à chaque case ; il les suit en douceur
+    // l'homme (v0.165.0, Jérôme : « la vue tremble, saute ») : le sol est en marches de 25 cm, l'œil les montait d'un coup à chaque case ; il les suit en douceur
     if (s.genre === 'soldat') { s.solL = s.neuf || s.solL === undefined || r ? sol : s.solL + (sol - s.solL) * (1 - Math.exp(-dt * SOLDAT.lisse)); sol = s.solL; }
     const regard = perso ? P.h : c.regard, haut = sol + regard - SOL_Y;
     V.haut += (haut - V.haut) * (s.neuf || perso ? 1 : Math.min(1, dt * 6));
@@ -369,8 +369,8 @@ export function creerSuivi({ $, bataille, rendu, reduit = () => false, retour = 
     const pl = homme && B.pilotes?.[moi()]?.id === s.id ? B.pilotes[moi()] : {};
     let bc = 0, be = 0;
     if (homme) {
-      if (s.indice >= 0 && pl.epaule) [bc, be] = balancement(B.armee, s.indice, B.etat.temps, { epaule: true, souffle: pl.souffle ?? 0, posture: pl.posture ?? 0 });      // (le guidon ne balance la vue qu'épaulé, v0.164.0 : à la hanche, sans viseur, la vue reste posée ; la balle, elle, part toujours avec le balancement)
-      viseur.toggleAttribute('hidden', !s.epaule);      // le viseur n'est là qu'épaulé (v0.164.0, Jérôme : « pas de viseur avant d'épauler »)
+      if (s.indice >= 0 && pl.epaule) [bc, be] = balancement(B.armee, s.indice, B.etat.temps, { epaule: true, souffle: pl.souffle ?? 0, posture: pl.posture ?? 0 });      // (le guidon ne balance la vue qu'épaulé, v0.165.0 : à la hanche, sans viseur, la vue reste posée ; la balle, elle, part toujours avec le balancement)
+      viseur.toggleAttribute('hidden', !s.epaule);      // le viseur n'est là qu'épaulé (v0.165.0, Jérôme : « pas de viseur avant d'épauler »)
       const voulu = pl.epaule ? TJ.epaule.fov : SOLDAT.fov; s.fov += (voulu - s.fov) * (r ? 1 : Math.min(1, dt / TJ.epaule.entre * 3));
     }
     V.fov = homme ? s.fov : perso && P.chasse ? P.chasse.fov : s.avant.fov * (1 - TIR.tele * w);
@@ -442,7 +442,7 @@ export function creerSuivi({ $, bataille, rendu, reduit = () => false, retour = 
         s.blessure = bl;
         if (!s.terreur && peur >= REPERES.peur[2]) { s.terreur = true; tampons.poser('terrifie'); } else if (s.terreur && peur < REPERES.peur[1]) s.terreur = false;
       }
-      if (s.indice >= 0) {      // sa carte (v0.164.0) : son nom, son grade, son régiment, son corps (la blessure), la peur, les jambes, les bras ; refaite seulement quand un chiffre change
+      if (s.indice >= 0) {      // sa carte (v0.165.0) : son nom, son grade, son régiment, son corps (la blessure), la peur, les jambes, les bras ; refaite seulement quand un chiffre change
         const A = B.armee, i = s.indice, q = v => Math.round(v * 20), cle = `${A.blessure[i]}|${q(A.peur[i])}|${q(A.fatJ[i])}|${q(A.fatB[i])}|${B.etat.grades[s.id]?.[0] ?? -1}`;
         if (cle !== s.vuCarte) {
           s.vuCarte = cle; const { qui, reg } = quiEst(B, s.id);
@@ -471,10 +471,10 @@ export function creerSuivi({ $, bataille, rendu, reduit = () => false, retour = 
       const v = B.etat.mitraillages.find(k => k.id === s.id), K = B.ailes?.[moi()];
       if (v && (!K || K.id !== s.id) && v.etat === 'vol' && !v.retour && (v.main || positionDe(v, B.etat.temps).s >= 0) && s.t - (s.tPrise ?? -9) > 1 && !enPause()) { s.tPrise = s.t; s.cleVol = undefined; voler({ id: s.id }); }
       if (K && K.id === s.id) {
-        const ro = (touche('KeyD') ? 1 : 0) - (touche('KeyA') ? 1 : 0), pi = (touche('KeyW') ? 1 : 0) - (touche('KeyS') ? 1 : 0), cle = `${ro}|${pi}`;      // Z monte, S descend (v0.164.0, Jérôme ; avant, comme un manche : Z piquait)
+        const ro = (touche('KeyD') ? 1 : 0) - (touche('KeyA') ? 1 : 0), pi = (touche('KeyW') ? 1 : 0) - (touche('KeyS') ? 1 : 0), cle = `${ro}|${pi}`;      // Z monte, S descend (v0.165.0, Jérôme ; avant, comme un manche : Z piquait)
         if (cle !== s.cleVol && !enPause()) { s.cleVol = cle; voler({ ro, pi }); }
       }
-      // les toasts du vol (v0.164.0) : il roule et décolle, il est à vous, il rentre, il se pose
+      // les toasts du vol (v0.165.0) : il roule et décolle, il est à vous, il rentre, il se pose
       const aMoi = !!(K && K.id === s.id), etape = v?.retour ? ((c.alt ?? 99) < 3 ? 'pose' : 'retour') : aMoi ? 'main' : v && !v.main && positionDe(v, B.etat.temps).s < 0 ? 'decolle' : '';
       if (etape && etape !== s.etapeVol) {
         if (etape === 'decolle' && !s.etapeVol) dire('Décollage : il roule et prend l\'air, vous aurez les commandes en vol.');

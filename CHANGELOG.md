@@ -1,10 +1,16 @@
 # Journal des versions
 
-## 0.164.0 — 2026-11-23
+## 0.165.0 — 2026-11-23
 
 - Le soldat : la vue ne saute plus, on tire à la hanche sans viseur (épaulé pour viser), une carte montre son nom et son état, les bras du fusil sont refaits ; plus de voile de fumée noire le soir
 - L'avion se pilote en vue de poursuite : Z monte, S descend, Q et D tournent, un bouton « Rentrer à la base »
 - Le char : une vue fixe au-dessus de lui, on voit l'obus partir puis exploser sur la cible, on peut tirer tout près
+
+## 0.164.0 — 2026-11-23
+
+- Un caprice ou un largage s'annonce quelques secondes avant : une grande carte, un appel sonore ; un clic dessus mène la vue à l'endroit
+- Des sons pour l'avion qui largue, la caisse qui touche le sol, l'objet pris et chaque caprice
+- Le char choisi montre de nouveau son chemin jusqu'au pointeur
 
 ## 0.163.0 — 2026-11-23
 

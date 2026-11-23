@@ -69,7 +69,7 @@
 - **Le retour** (`rentrer`, `retourDe`) : avec un aérodrome, un circuit (`raccorder`) de la pose du moment à l'axe de la piste (`v.av.fin`), l'altitude ramenée à celle de croisière, puis la finale et le roulage d'avant (`finaleDe`, sortie d'`atterrissageDe`) ; **sans aérodrome, tout droit** jusqu'à sortir du terrain. `v.retour` est sauvegardé ; fini (`retourFini`), il rentre (`avion-rentre`) avec ses points de vie.
 - **Test** : « l'avion à la main (v0.157.0) » (`bataille.test.mjs` : un avion d'en face se refuse ; le vol intégré ; il vire de 0,25 à 0,5 rad en 2 s ; il pique (−10 m en 1,5 s), cabre ; bas, ses balles abattent plus d'hommes que sans tirer et les munitions baissent ; à 90 m, rien ; trop bas, il tombe ; rendu, il rentre ; deux machines, la même empreinte).
 
-## L'obus du char tiré à la main vole (Jérôme, 23 nov., v0.164.0 : « on doit bien voir l'obus partir et l'explosion un instant plus tard au niveau de la cible »)
+## L'obus du char tiré à la main vole (Jérôme, 23 nov., v0.165.0 : « on doit bien voir l'obus partir et l'explosion un instant plus tard au niveau de la cible »)
 
 - `chars.js` : un obus tiré à la main n'appelle plus `ctx.obus` au départ ; il va dans `c.vol` (`{ t0, t, x0, y0, x, y }`, sauvegardé avec le char) et tombe au premier pas où `etat.temps ≥ t`, même si le char a été détruit entre-temps ; il vole à `CHAR_MAIN.obus` m/s (100 : 1 s à 100 m). Ses victimes comptent à l'arrivée. Le tir automatique tombe toujours tout de suite (les parties et les références d'avant ne changent pas). Test : « le char à la main ».
 

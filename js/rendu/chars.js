@@ -1,9 +1,9 @@
 // Les chars d'assaut dessinés (Jérôme, v0.47.0) : un volume par char de `B.etat.chars` (engins.js : le Schneider), posé sur le sol, incliné selon la pente sous lui,
 // tourné vers sa route ; les chenilles défilent quand il avance, une épave fume. Le dessin seulement : tout vient de l'état de la bataille, rien n'y est écrit.
 // Fabrique `creerChars({ THREE, scene, bataille: () => B, hauteur, fumer })` : la bataille change à chaque partie, on la lit à chaque image.
-import { atelier, schneider } from './engins.js?v=0.164.0';
-import { monterEpaveChar } from './epaves.js?v=0.164.0';
-import { PALETTE as P } from '../palette.js?v=0.164.0';
+import { atelier, schneider } from './engins.js?v=0.165.0';
+import { monterEpaveChar } from './epaves.js?v=0.165.0';
+import { PALETTE as P } from '../palette.js?v=0.165.0';
 
 const FABRIQUES = { schneider };
 const COULEUR = [P.n, P.x];      // la caisse à la couleur de son armée : nous, en face
@@ -18,7 +18,7 @@ export function creerChars({ THREE, scene, bataille, hauteur, fumer }) {
     const soleil = new THREE.DirectionalLight(0xffffff, 1.7); soleil.position.set(-6, 12, 5); lumiere.add(soleil);
     scene.add(lumiere); scene.userData.lumiere = lumiere;
   };
-  // les obus tirés à la main, en vol (v0.164.0 : « on doit bien voir l'obus partir ») : un trait clair d'os (`o`) et sa traînée de brume, sur un arc du canon à l'impact ; une réserve de quelques-uns
+  // les obus tirés à la main, en vol (v0.165.0 : « on doit bien voir l'obus partir ») : un trait clair d'os (`o`) et sa traînée de brume, sur un arc du canon à l'impact ; une réserve de quelques-uns
   const obus = [], tempsVu = { t: -1 };
   function unObus() {
     const g = new THREE.Group(), tete = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.4, 0.9), new THREE.MeshBasicMaterial({ color: new THREE.Color(P.o) }));

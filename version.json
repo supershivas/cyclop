@@ -1,5 +1,5 @@
 {
-  "version": "0.164.0",
+  "version": "0.165.0",
   "date": "2026-11-23",
   "changes": [
     "Le soldat : la vue ne saute plus, on tire à la hanche sans viseur (épaulé pour viser), une carte montre son nom et son état, les bras du fusil sont refaits ; plus de voile de fumée noire le soir",

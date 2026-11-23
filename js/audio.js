@@ -4,7 +4,7 @@
    Les bruitages (Jérôme, v0.99.6 : la synthèse était « très mauvaise ») : des mp3 CC0 de `assets/sons/` (catalogue et choix : `data/sons.js`), décodés au premier geste du joueur ;
    une famille dont le fichier manque ou n'est pas encore décodé retombe sur la synthèse d'avant (aucune erreur, aucun silence). Variantes, hauteur et voix simultanées : tirées/limitées ici, avec le générateur local.
    Le hasard du son est un petit générateur local (la graine de la bataille n'est jamais touchée). L'espace : un son loin est plus faible et vient du côté où il est (`ecoute` : le centre de la vue, en mètres du secteur, et sa largeur). */
-import { SONS, DOSSIER_SONS, VOIX } from './data/sons.js?v=0.164.0';
+import { SONS, DOSSIER_SONS, VOIX } from './data/sons.js?v=0.165.0';
 const borne = (v, a, b) => v < a ? a : v > b ? b : v;
 const COMMUN = { effets: 0.7, musique: 0.5 };
 // ── La playlist : les fichiers de `assets/music/`. `humeur` : quand le champ la demande, on y passe en fondu (comme `lieu` dans Kingvi) ──
@@ -181,6 +181,32 @@ export function creerSon(prefs = {}) {
     } else if (e.type === 'nuit') {
       ton(110, 108, 3, { type: 'triangle', gain: 0.4 });
     }
+    // ─ Les largages et les caprices (v0.164.0) : synthétisés (aucun fichier) ─
+    else if (e.type === 'largage') {      // l'avion qui passe bas : un bourdon de moteur qui monte et s'éloigne, le souffle
+      const { v, pan } = place(e.x, e.y, ecoute, 0.35);
+      ton(92, 70, 4.5, { type: 'sawtooth', gain: 0.16 * v, pan }); ton(138, 104, 4.2, { type: 'square', gain: 0.05 * v, pan });
+      eclat(3.5, { f0: 900, f1: 180, gain: 0.22 * v, pan, attaque: 1.2, q: 0.6 });
+    } else if (e.type === 'caisse-sol') {      // la caisse touche le sol, le couvercle saute : un choc de bois et un tintement
+      const { v, pan } = place(e.x, e.y, ecoute, 0.3);
+      eclat(0.25, { f0: 700, f1: 80, gain: 0.7 * v, pan, q: 1.2 }); ton(84, 50, 0.3, { gain: 0.6 * v, pan });
+      setTimeout(() => ton(1320, 1300, 0.6, { type: 'triangle', gain: 0.12 * v, pan }), 220);
+    } else if (e.type === 'objet') {      // un objet pris : un arpège, d'autant plus long que l'objet est rare (`rang` : 0 commun … 5 mythique)
+      const notes = [523, 659, 784, 988, 1175, 1319], n = 2 + (e.rang ?? 0), g = e.nous ? 0.16 : 0.08, grave = e.nous ? 1 : 0.75;
+      for (let k = 0; k < n; k++) setTimeout(() => ton(notes[k] * grave, notes[k] * grave, 0.35 + (k === n - 1 ? 0.6 : 0), { type: 'triangle', gain: g }), k * 90);
+    } else if (e.type === 'caprice') {      // le caprice du jour tombe : un coup de gong grave, puis la couleur du caprice
+      ton(73, 71, 3.2, { type: 'sine', gain: 0.5 }); ton(110, 108, 2.4, { type: 'triangle', gain: 0.18 });
+      if (e.id === 'seisme') eclat(3, { f0: 180, f1: 40, gain: 1.2, q: 0.4, attaque: 0.3 });
+      else if (e.id === 'gaz') eclat(3, { type: 'highpass', f0: 2500, f1: 1800, gain: 0.25, attaque: 0.8 });
+      else if (e.id === 'zeppelin' || e.id === 'as') { ton(62, 58, 5, { type: 'sawtooth', gain: 0.12 }); eclat(4, { f0: 500, f1: 150, gain: 0.15, attaque: 1.5 }); }
+      else if (e.id === 'eclipse') ton(55, 52, 6, { type: 'sine', gain: 0.35 });
+      else if (e.id === 'mine') eclat(2.2, { f0: 1200, f1: 35, gain: 1.4, q: 0.4 });
+    }
+  }
+  /* L'annonce d'un événement qui arrive (v0.164.0 ; hud/largages.js, quelques secondes avant) : un appel de clairon pour un largage, une cloche grave pour un caprice */
+  function annonce(genre) {
+    if (!ctx || cache || ctx.state !== 'running') return;
+    if (genre === 'largage') { ton(523, 523, 0.22, { type: 'triangle', gain: 0.2 }); setTimeout(() => ton(784, 784, 0.45, { type: 'triangle', gain: 0.2 }), 240); }
+    else { for (let k = 0; k < 3; k++) setTimeout(() => { ton(196, 194, 1.6, { type: 'sine', gain: 0.32 }); ton(392, 390, 0.9, { type: 'triangle', gain: 0.08 }); }, k * 650); }
   }
   /* Un refus ou un ordre donné (l'interface) */
   function interface_(genre) {
@@ -299,7 +325,7 @@ export function creerSon(prefs = {}) {
   return {
     // à appeler dans un geste du joueur (clic, touche) : crée le contexte ou le reprend
     debloquer() { demarrer(); if (ctx && ctx.state === 'suspended' && !cache) ctx.resume(); },
-    evenement, image, interface_, cacher, ecouter, charger,
+    evenement, image, interface_, cacher, ecouter, charger, annonce,
     // un obus tout près de l'homme qu'on mène (v0.152.0) : les effets s'étouffent (`force` de 0 à 1), puis reviennent en 2,5 s
     assourdir(force) {
       if (!ctx || !sourd) return;

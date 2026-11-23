@@ -586,7 +586,7 @@ export const herbeMat = {
 export const eclMat = {
   // v0.99.11 (Jérôme : « la fumée en ellipses, plus de cubes ; des volutes plus réalistes ») : une bouffée de fumée (ton > 50) est une ellipse (axes 1 : 0,6) tournée d'un angle tiré de sa position (`vRot`), plus grande d'un tiers
   // (l'ellipse ne remplit que la moitié de son carré), au bord fondu ; les bouffées d'un panache, toutes à des angles différents, se mêlent en volutes.
-  // v0.164.0 (Jérôme : « parfois, une sorte de voile noir en fin de journée » dans la vue d'un soldat) : la taille d'un point était celle du zoom (uTaille px pour 0,5 m) quelle que soit sa distance ;
+  // v0.165.0 (Jérôme : « parfois, une sorte de voile noir en fin de journée » dans la vue d'un soldat) : la taille d'un point était celle du zoom (uTaille px pour 0,5 m) quelle que soit sa distance ;
   // à l'œil d'un homme (24 px/m) une bouffée à 100 m était dessinée comme à bout de bras, et les fumées noires des incendies du soir couvraient l'image. Dans une vue à la personne (`uF` > 0 : la focale en
   // pixels), la taille suit la perspective, et une bouffée à moins de 4 m de l'œil s'efface (`vPres`), la fumée lointaine pâlit (vue de côté sur le ciel, elle faisait des taches),
   // et une bouffée y fait 2,4 fois sa taille du dessus (les bouffées d'un panache se fondent) ; hors de ces vues, rien ne change (uF = 0).

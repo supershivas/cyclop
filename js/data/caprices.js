@@ -6,6 +6,7 @@
 
 export const CAPRICES_JOUR = {
   debut: [50, 250],      // s du jour : le caprice tombe entre ces deux temps (avant la nuit, avec le temps de se jouer)
+  annonce: 12,           // s : l'annonce à l'écran avant qu'il ne tombe (v0.164.0)
 };
 
 export const CAPRICES = [

@@ -1314,14 +1314,14 @@ test('le tir du joueur (v0.151.0, la vraie visée) : la balle part où est le gu
   T.base.fill(0); T.diff.fill(0);      // un sol plat : la hauteur ne joue pas
   const i = [...Array(A.n).keys()].find(k => A.camp[k] === 0 && !A.mort[k]), j = [...Array(A.n).keys()].find(k => A.camp[k] === 1 && !A.mort[k]);
   const place = () => { A.x[i] = 200; A.y[i] = 150; A.x[j] = 200; A.y[j] = 130; for (const k of [i, j]) { A.vx[k] = 0; A.vy[k] = 0; A.peur[k] = 0; A.blessure[k] = 0; A.mort[k] = 0; } A.tirT[i] = 0; A.fatB[i] = 0; };
-  const tire = (d, el = 0, epaule = true) => { place(); B.pilotes = [{ id: A.id[i], ax: 0, ay: 0, tir: { d, el }, epaule, dernier: B.pilotes[0]?.dernier ?? null, refus: null }, null]; avancer(B); return B.pilotes[0]; };      // (épaulé : à la hanche la balle part large, v0.164.0)
+  const tire = (d, el = 0, epaule = true) => { place(); B.pilotes = [{ id: A.id[i], ax: 0, ay: 0, tir: { d, el }, epaule, dernier: B.pilotes[0]?.dernier ?? null, refus: null }, null]; avancer(B); return B.pilotes[0]; };      // (épaulé : à la hanche la balle part large, v0.165.0)
   assert.equal(hauteurOeil(T, 200, 150), 1.6, 'à découvert : 1,6 m');
   // au milieu du corps à 20 m (le guidon à 1,1 m de haut) : le balancement d'un homme calme le laisse dans le tronc, chaque coup porte ; plus de dé pour toucher
   const tronc = -Math.atan(0.5 / 20);
   let buts = 0, morts = 0;
   for (let k = 0; k < 40; k++) { const P = tire([0, -1], tronc); assert.ok(P.dernier.vise && Math.abs(P.dernier.t - 20) < 0.5, 'le rayon trouve l\'homme à 20 m'); if (P.dernier.touche) { buts++; assert.equal(P.dernier.zone, 'tronc'); } if (P.dernier.mort) morts++; }
   assert.equal(buts, 40, `le viseur décide : ${buts}/40`);
-  { let hanche = 0; for (let k = 0; k < 40; k++) if (tire([0, -1], tronc, false).dernier.touche) hanche++;      // à la hanche, sans viseur (v0.164.0) : la balle part large, une sur deux ou moins porte
+  { let hanche = 0; for (let k = 0; k < 40; k++) if (tire([0, -1], tronc, false).dernier.touche) hanche++;      // à la hanche, sans viseur (v0.165.0) : la balle part large, une sur deux ou moins porte
     assert.ok(hanche < 30, `à la hanche, la balle part large : ${hanche}/40`); } assert.ok(morts >= 8 && morts <= 34, `au tronc, une balle tue souvent : ${morts}/40`);
   // la fiche du mort : où, par quoi, par qui
   const mortId = Object.keys(B.etat.defunts).map(Number).find(id => B.etat.defunts[id][21] === A.id[i]);
@@ -1775,7 +1775,7 @@ test('le char à la main (v0.156.0) : il avance, recule et pivote ; le canon tir
   commanderConduite(B, 0, { tr: 0 }); c.hx = 0; c.hy = -1; c.cap = -Math.PI / 2; c.canonT = -100;
   const K = B.conduites[0], tire = (x, y) => { commanderConduite(B, 0, { tir: true, x, y }); K.refus = null; return avancer(B); };
   const ev = tire(c.x, c.y - 40); assert.ok(ev.some(e => e.type === 'char-tir' && e.id === 0), 'l\'obus part'); assert.equal(K.dernier.n, 1);
-  {      // l'obus tiré à la main vole (v0.164.0) : il tombe à son arrivée, pas au départ
+  {      // l'obus tiré à la main vole (v0.165.0) : il tombe à son arrivée, pas au départ
     assert.ok(c.vol?.length === 1 && !ev.some(e => e.type === 'impact'), 'l\'obus est en vol, pas encore tombé');
     const arrivee = c.vol[0].t; let tombe = null; for (let k = 0; k < 60 && !tombe; k++) { const e2 = avancer(B); if (e2.some(e => e.type === 'impact')) tombe = B.etat.temps; }
     assert.ok(tombe !== null && tombe >= arrivee && tombe < arrivee + 0.1, `il tombe à l'arrivée (${tombe} pour ${arrivee})`); assert.equal(c.vol, undefined, 'plus rien en vol');

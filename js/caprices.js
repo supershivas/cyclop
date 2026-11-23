@@ -5,14 +5,14 @@
    L'état : `etat.caprices` (sauvegardé) : { jour, prevu: { t, id, camp }, actif: { id, camp, t0, fin, ... }, soldats: [{ id, fin }] (les héros), histo: [[jour, id]] }.
    Branché dans `avancer` après les largages (`avancerCaprices`) : il pose aussi `ctx.cibles` (les héros chargent) et `ctx.boosts` (ils sont invincibles).
    Ce que la bataille lui prête : `ctx.obus`, `ctx.sortirChar`, `ctx.marcher` (bataille.js) ; `lacherCaisse` (largages.js). */
-import { CAPRICES, CAPRICE, CAPRICES_JOUR as CJ } from './data/caprices.js?v=0.164.0';
-import { RARETES, ORDRE_RARETES, OBJET } from './data/largages.js?v=0.164.0';
-import { hash2 } from './lib/rng.js?v=0.164.0';
-import { ligneY } from './tranchees.js?v=0.164.0';
-import { vent } from './data/meteo.js?v=0.164.0';
-import { lacherCaisse, milieu } from './largages.js?v=0.164.0';
-import { ligneDe, tracerVol, positionDe } from './avions.js?v=0.164.0';
-import { pvAvion } from './camp.js?v=0.164.0';
+import { CAPRICES, CAPRICE, CAPRICES_JOUR as CJ } from './data/caprices.js?v=0.165.0';
+import { RARETES, ORDRE_RARETES, OBJET } from './data/largages.js?v=0.165.0';
+import { hash2 } from './lib/rng.js?v=0.165.0';
+import { ligneY } from './tranchees.js?v=0.165.0';
+import { vent } from './data/meteo.js?v=0.165.0';
+import { lacherCaisse, milieu } from './largages.js?v=0.165.0';
+import { ligneDe, tracerVol, positionDe } from './avions.js?v=0.165.0';
+import { pvAvion } from './camp.js?v=0.165.0';
 
 const NOUS = 0, EUX = 1, PAS = 1 / 30;
 const r1 = v => Math.round(v * 10) / 10;
@@ -56,6 +56,34 @@ export function obscuriteCaprice(etat) {
 /* Où est le zeppelin, où est le nuage de gaz (le dessin les lit) */
 export function positionZeppelin(a, t) { return { x: a.x0 + a.dir * CAPRICE.zeppelin.vitesse * (t - a.t0), y: a.y, h: CAPRICE.zeppelin.altitude }; }
 export function positionGaz(a, t) { const d = Math.min(t, a.fin) - a.t0; return { x: a.x0 + a.vx * d, y: a.y0 + a.vy * d, r: CAPRICE.gaz.rayon * Math.min(1, 0.35 + d / 8) }; }
+
+/* Le caprice qui vient (pour l'annonce, v0.164.0) : { t, id, camp } ou null ; et le lieu où regarder, avant qu'il tombe (les mêmes hachages que `demarrer`)
+   ou pendant (sa place du moment). Lecture seule. */
+export const capricePrevu = etat => etat.phase === 'jour' && etat.caprices?.prevu && etat.caprices.jour === etat.jour ? etat.caprices.prevu : null;
+export function lieuCaprice(B, zone, p = null) {
+  const { etat } = B, a = p ? null : etat.caprices?.actif, t = etat.temps, xm = (zone.x0 + zone.x1) / 2;
+  if (a) {
+    if (a.id === 'zeppelin') { const z = positionZeppelin(a, t); return { x: Math.max(zone.x0, Math.min(zone.x1, z.x)), y: z.y }; }
+    if (a.id === 'gaz') { const g = positionGaz(a, t); return { x: g.x, y: g.y }; }
+    if (a.id === 'heros' && a.ids?.length) { const A = B.armee, i = indiceDe(A, a.ids[0]); if (i >= 0) return { x: A.x[i], y: A.y[i] }; }
+    if (a.id === 'ordreAbsurde' && a.regs?.length) { const r = etat.regiments[a.regs[0]]; if (r) return { x: r.ordre.x, y: r.ordre.y }; }
+    if (a.id === 'charsPerdus') { const c = etat.chars.filter(q => q.etat !== 'detruit').at(-1); if (c) return { x: c.x, y: c.y }; }
+    if (a.id === 'as') { const v = etat.mitraillages.filter(q => q.as === a.t0 && q.etat !== 'rentre').at(-1); if (v) { const q = positionDe(v, t); return { x: Math.max(zone.x0, Math.min(zone.x1, q.x)), y: Math.max(zone.y0, Math.min(zone.y1, q.y)) }; } }
+    if (a.x != null) return { x: a.x, y: a.y };
+    return { x: xm, y: milieu(B, xm) };
+  }
+  if (!p) return null;
+  const g = etat.graine | 0, u = k => hash2(g, etat.jour, 920 + k), xAu = k => r1(zone.x0 + 30 + u(k) * (zone.x1 - zone.x0 - 60));
+  if (p.id === 'tirCourt') { const x = xAu(1); return { x, y: premiere(B, p.camp, x) }; }
+  if (p.id === 'gaz') { const x = xAu(10); return { x, y: milieu(B, x) }; }
+  if (p.id === 'zeppelin') return { x: xm, y: premiere(B, 1 - p.camp, xm) };
+  if (p.id === 'mine') {
+    const ts = B.troncons.map((tr, k) => [tr, k]).filter(([tr, k]) => B.lignes[tr.ligne].camp === p.camp && B.lignes[tr.ligne].rang === 0 && etat.troncons[k] === p.camp);
+    if (ts.length) { const [tr] = ts[Math.floor(u(11) * ts.length)], x = (tr.x0 + tr.x1) / 2; return { x, y: ligneY(B.lignes[tr.ligne], x) }; }
+  }
+  if (p.id === 'as') return { x: xm, y: premiere(B, 1 - p.camp, xm) };
+  return { x: xm, y: milieu(B, xm) };
+}
 
 export function avancerCaprices(B, ctx, rng, zone) {
   const { etat, R } = B, C = etat.caprices;

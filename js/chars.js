@@ -3,17 +3,17 @@
    ligne vers (tx, ty) à la vitesse de son modèle, ralentie par un cratère (la moitié de ce qu'il franchit), arrêtée par un cratère plus profond ou par l'eau
    profonde (`enlise` : il reste là et tire) ; il tire sur l'autre camp à portée ; un obus tombé près de lui l'abîme (`degatsChars`), jusqu'à l'épave (`detruit`).
    Les tranchées se franchissent (elles font 1,5 m : son modèle les passe). Les ordres rendent { refus } comme les barrages. */
-import { modif, charsDispo, parcChars, prochainDuParc, sortieChars, niveauDe } from './camp.js?v=0.164.0';
-import { PARC } from './data/parc.js?v=0.164.0';
-import { CHARS, CHAR_PAR_DEFAUT, CHAR_RECHARGE, CHAR_DEPART, CHAR_OBUS, CHAR_ROUTE, CHAR_MAIN } from './data/chars.js?v=0.164.0';
-import { CALIBRES } from './data/calibres.js?v=0.164.0';
-import { effrayer, DENSITE } from './army.js?v=0.164.0';
-import { BONUS, GAINS, chevronsDe } from './data/experience.js?v=0.164.0';
-import { zone as zoneDe } from './bataille.js?v=0.164.0';
-import { detruirePont } from './eaux.js?v=0.164.0';
-import { toucher } from './terrain.js?v=0.164.0';
-import { PONTS_JEU, typePont } from './data/ponts.js?v=0.164.0';
-import { charEnReparation } from './genie.js?v=0.164.0';
+import { modif, charsDispo, parcChars, prochainDuParc, sortieChars, niveauDe } from './camp.js?v=0.165.0';
+import { PARC } from './data/parc.js?v=0.165.0';
+import { CHARS, CHAR_PAR_DEFAUT, CHAR_RECHARGE, CHAR_DEPART, CHAR_OBUS, CHAR_ROUTE, CHAR_MAIN } from './data/chars.js?v=0.165.0';
+import { CALIBRES } from './data/calibres.js?v=0.165.0';
+import { effrayer, DENSITE } from './army.js?v=0.165.0';
+import { BONUS, GAINS, chevronsDe } from './data/experience.js?v=0.165.0';
+import { zone as zoneDe } from './bataille.js?v=0.165.0';
+import { detruirePont } from './eaux.js?v=0.165.0';
+import { toucher } from './terrain.js?v=0.165.0';
+import { PONTS_JEU, typePont } from './data/ponts.js?v=0.165.0';
+import { charEnReparation } from './genie.js?v=0.165.0';
 
 /* La route d'un char (Jérôme, v0.59.3 : « ils doivent contourner les fleuves, passer par les ponts ») : une recherche sur une grille de `CHAR_ROUTE.maille` mètres, de (x0, y0) à (tx, ty), qui évite
    l'eau profonde, les cratères qu'il ne franchit pas, les ponts qui ne le portent pas, et se détourne des cratères à demi profonds. Rend les points à suivre (le dernier est le but), ou null
@@ -234,7 +234,7 @@ export function degatsChars(B, x, y, cal) {
 export function avancerChars(B, ctx, rng) {
   const { etat, terrain: T, armee: A, R } = B, dt = ctx.dt;
   for (const c of etat.chars) {
-    if (c.vol) {      // les obus tirés à la main qui arrivent (v0.164.0) : ils tombent, même si le char a été détruit depuis
+    if (c.vol) {      // les obus tirés à la main qui arrivent (v0.165.0) : ils tombent, même si le char a été détruit depuis
       const G = CHARS[c.modele]?.canon;
       for (const o of c.vol) if (etat.temps >= o.t && G) { const p0 = etat.pertes[1 - c.camp]; ctx.obus(o.x, o.y, G.calibre); const k = etat.pertes[1 - c.camp] - p0; c.tues = (c.tues ?? 0) + k; c.tuesCanon = (c.tuesCanon ?? 0) + k; }
       c.vol = c.vol.filter(o => etat.temps < o.t); if (!c.vol.length) delete c.vol;
@@ -300,7 +300,7 @@ export function avancerChars(B, ctx, rng) {
       const p0 = etat.pertes[1 - c.camp];
       const ix = Math.round((tx + Math.cos(a) * d) * 10) / 10, iy = Math.round((ty + Math.sin(a) * d) * 10) / 10;
       c.obus = (c.obus ?? 0) + 1;
-      if (main) (c.vol ??= []).push({ t0: etat.temps, t: etat.temps + Math.hypot(ix - c.x, iy - c.y) / CHAR_MAIN.obus, x0: c.x, y0: c.y, x: ix, y: iy });      // à la main : l'obus vole (v0.164.0), il tombera à son arrivée
+      if (main) (c.vol ??= []).push({ t0: etat.temps, t: etat.temps + Math.hypot(ix - c.x, iy - c.y) / CHAR_MAIN.obus, x0: c.x, y0: c.y, x: ix, y: iy });      // à la main : l'obus vole (v0.165.0), il tombera à son arrivée
       else { ctx.obus(ix, iy, G.calibre); const k = etat.pertes[1 - c.camp] - p0; c.tues = (c.tues ?? 0) + k; c.tuesCanon = (c.tuesCanon ?? 0) + k; }      // ses victimes (v0.115.0) : les hommes d'en face tombés de cet obus
     }
     // ses mitrailleuses : une rafale par `cadence`, sur les hommes de l'autre camp à portée (plus la rafale est proche, plus elle touche)

@@ -12,7 +12,7 @@
 //   C(rayon, hauteur, x, y, z, couleur, rotation, pans)           un cylindre (debout ; la rotation le couche), 8 pans par défaut
 //   K(rayon, hauteur, x, y, z, couleur, rotation, pans)           un cône, la pointe en haut
 // `rotation` : [rx, ry, rz] en radians (ou rien).
-import { RARETES_COULEURS, RARETES_BRILLANCE } from '../palette.js?v=0.164.0';
+import { RARETES_COULEURS, RARETES_BRILLANCE } from '../palette.js?v=0.165.0';
 
 const B = (w, h, d, x, y, z, c, r) => ({ f: 'b', t: [w, h, d], p: [x, y, z], c, r });
 const C = (rayon, h, x, y, z, c, r, n = 8) => ({ f: 'c', t: [rayon, h], p: [x, y, z], c, r, n });
@@ -54,6 +54,7 @@ export const LARGAGE = {
   musette: 3,          // objets à viser gardés par camp, au plus
   ia: [20, 45],        // s : l'IA d'en face vide sa musette à ce rythme
   carre: 8,            // m : un objet tombé hors du secteur est ramené dedans à cette marge
+  annonce: 10,         // s : l'annonce à l'écran avant que l'avion ne lâche (v0.164.0)
 };
 
 // Les catégories : ce que l'objet booste (l'icône de la fiche, du bandeau et de la vitrine dit la catégorie)
