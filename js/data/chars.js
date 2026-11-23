@@ -39,4 +39,6 @@ export const CHAR_ROUTE = {
 // Le char à la main (Jérôme, 20 nov., v0.156.0 : « l'équivalent pour les chars : vol, altitude et tirs manuels ou auto » ; lot 4 de docs/propositions/vue-fps-engins.md) : dans la vue à la personne,
 // Z/S avancent et reculent (`recul` × sa vitesse en arrière), Q/D font pivoter la coque (la vitesse de virage de CHAR_ROUTE) ; le canon tire où l'on vise, dans son débattement (`debattement` rad
 // de part et d'autre de l'axe : le 75 du Schneider est en casemate), avec `dispersion` × la dispersion d'un tir automatique ; les mitrailleuses tirent dans le regard (`cone` rad de part et d'autre).
-export const CHAR_MAIN = { recul: 0.5, debattement: 0.35, dispersion: 0.5, cone: 0.52, bord: 1 };
+// `obus` (v0.164.0, Jérôme : « on n'a pas la sensation de tirer : on doit voir l'obus partir et l'explosion un instant plus tard à la cible ») : l'obus tiré à la main vole à `obus` m/s (lent, pour qu'on le suive :
+// 1 s à 100 m) et tombe à son arrivée ; le tir automatique tombe toujours tout de suite
+export const CHAR_MAIN = { recul: 0.5, debattement: 0.35, dispersion: 0.5, cone: 0.52, bord: 1, obus: 100 };

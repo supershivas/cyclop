@@ -2,15 +2,15 @@
 // et « le feu se voit » (Jérôme, v0.9.2 : l'éclair à la bouche du fusil et le trait vers la cible de chaque tir de `B.tirs`, la pose des tireurs, le bond de ceux que
 // le souffle jette). Une seule fabrique : tous tirent dans le même générateur de l'aspect (`alea`, une suite à graine : l'ordre des tirages fait l'image) et
 // dans les mêmes tampons de particules. Le dessin seulement : jamais la logique, jamais la partie.
-import * as SH from './shaders.js?v=0.163.0';
-import { INDICE } from '../palette.js?v=0.163.0';
-import { horloge } from '../bataille.js?v=0.163.0';
-import { hash2 } from '../lib/rng.js?v=0.163.0';
-import { ARBRES_TIRAGES, ARBRES_COUCHE } from '../data/arbres.js?v=0.163.0';
-import { MOTTES, FEU } from '../data/effets.js?v=0.163.0';
-import { OMBRE } from '../apparence.js?v=0.163.0';
-import { creerMottes } from './mottes.js?v=0.163.0';
-import { creerFlammes } from './flammes.js?v=0.163.0';
+import * as SH from './shaders.js?v=0.164.0';
+import { INDICE } from '../palette.js?v=0.164.0';
+import { horloge } from '../bataille.js?v=0.164.0';
+import { hash2 } from '../lib/rng.js?v=0.164.0';
+import { ARBRES_TIRAGES, ARBRES_COUCHE } from '../data/arbres.js?v=0.164.0';
+import { MOTTES, FEU } from '../data/effets.js?v=0.164.0';
+import { OMBRE } from '../apparence.js?v=0.164.0';
+import { creerMottes } from './mottes.js?v=0.164.0';
+import { creerFlammes } from './flammes.js?v=0.164.0';
 
 const ECLATS = 6000;     // (v0.24.0 ; 2 400 avant : une salve de 220 — ~200 éclats chacun, dont de la fumée de 8 à 16 s — faisait le tour du tampon et effaçait les éclats encore en vol)
 
@@ -30,7 +30,7 @@ export function creerEclats({ THREE, scene, col, palTex, NP, effets, surface, pr
   eclGeo.setAttribute('aTon', new THREE.BufferAttribute(eclTon, 1).setUsage(THREE.DynamicDrawUsage));
   eclGeo.setAttribute('aTaille', new THREE.BufferAttribute(eclTaille, 1).setUsage(THREE.DynamicDrawUsage));
   const eclMat = new THREE.ShaderMaterial({
-    uniforms: { uPal: { value: palTex }, uNP: { value: NP }, uTaille: { value: 2 } },
+    uniforms: { uPal: { value: palTex }, uNP: { value: NP }, uTaille: { value: 2 }, uF: { value: 0 } },
     vertexShader: SH.eclMat.v,
     fragmentShader: SH.eclMat.f,
     depthTest: true, depthWrite: false, transparent: true,
@@ -393,7 +393,7 @@ export function creerEclats({ THREE, scene, col, palTex, NP, effets, surface, pr
     ecl, feux, ECLATS,                                           // lus par temps.js : les fusées et les incendies éclairent la nuit
     impactVu, majTirs, majEclats, majCorbeaux,
     setVent(x, z) { ventX = x; ventZ = z; flammes.setVent(x, z); },                      // le vent en m/s
-    setTaille(n) { eclMat.uniforms.uTaille.value = n; },          // la taille d'un point d'éclat, selon le zoom
+    setTaille(n, f = 0) { eclMat.uniforms.uTaille.value = n; eclMat.uniforms.uF.value = f; },      // f : la focale en pixels d'une vue à la personne (la taille suit alors la distance), 0 sinon (la taille d'un point selon le zoom)
     // une autre bataille : ses arbres ne brûlent pas encore, et la fumée, les balles et les obus en vol de la précédente (le décor de l'écran titre) ne passent pas dans la suivante
     reinitialiser() {
       feux.length = 0; brules.clear(); arbresEtat = null; mottes.reinitialiser(); flammes.reinitialiser();

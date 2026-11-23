@@ -1,5 +1,11 @@
 # Journal des versions
 
+## 0.164.0 — 2026-11-23
+
+- Le soldat : la vue ne saute plus, on tire à la hanche sans viseur (épaulé pour viser), une carte montre son nom et son état, les bras du fusil sont refaits ; plus de voile de fumée noire le soir
+- L'avion se pilote en vue de poursuite : Z monte, S descend, Q et D tournent, un bouton « Rentrer à la base »
+- Le char : une vue fixe au-dessus de lui, on voit l'obus partir puis exploser sur la cible, on peut tirer tout près
+
 ## 0.163.0 — 2026-11-23
 
 - Chaque jour, un caprice du front : un tir trop court, des obus perdus, deux héros, des chars perdus, une pluie de caisses, un ordre absurde, un zeppelin, une nappe de gaz, une mine, un as, une éclipse, un tremblement de terre

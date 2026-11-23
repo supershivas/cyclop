@@ -1007,13 +1007,24 @@ h2 { font-weight: normal; letter-spacing: var(--titre-lettres); }
 .viseur { position: absolute; left: 50%; top: 50%; width: 36px; height: 36px; transform: translate(-50%, -50%); pointer-events: none; fill: none; stroke: var(--jeu-encre); stroke-width: 1.6; stroke-linecap: round; paint-order: stroke; filter: drop-shadow(0 0 1px var(--jeu-fond)); }
 .viseur[hidden] { display: none; }
 /* Dans la vue d'un soldat il n'y a plus d'interface (Jérôme, v0.148.0) : tout le HUD disparaît sauf le viseur ; les messages (`#toast`) restent, ils sont hors du HUD */
-body.vue-soldat #hud > :not(#viseur):not(#cartouches):not(#tampon-fps):not(#coup):not(#choc):not(#peur-voile):not(#aide-vue), body.vue-soldat #etiquettes, body.vue-soldat #retours, body.vue-soldat #chars-etiq, body.vue-soldat #visee, body.vue-soldat #visee-nid,
+body.vue-soldat #hud > :not(#viseur):not(#cartouches):not(#tampon-fps):not(#coup):not(#choc):not(#peur-voile):not(#aide-vue):not(#carte-soldat), body.vue-soldat #etiquettes, body.vue-soldat #retours, body.vue-soldat #chars-etiq, body.vue-soldat #visee, body.vue-soldat #visee-nid,
 body.vue-soldat #equerres, body.vue-soldat #repere, body.vue-soldat #repere-soldat, body.vue-soldat #bulle { display: none !important; }
+/* L'avion ou le char qu'on pilote (v0.164.0 : la vue de poursuite, comme la capture de Jérôme) : l'image seule, avec la bande de la vue, ses jauges, le viseur et l'aide */
+body.vue-engin #hud > :not(#viseur):not(#vol-barres):not(#canon-barre):not(#aide-vue):not(#suivi):not(#tampon-fps), body.vue-engin #etiquettes, body.vue-engin #retours, body.vue-engin #chars-etiq,
+body.vue-engin #equerres, body.vue-engin #repere, body.vue-engin #repere-soldat, body.vue-engin #bulle { display: none !important; }
+body.vue-engin .suivi { bottom: var(--e4); }
+.suivi .bouton { white-space: nowrap; }
 .viseur .marque { opacity: 0; stroke-width: 2; }
 .viseur.touche .marque { animation: viseur-touche .45s ease-out 1; }
 .viseur.mort .marque { stroke-width: 3; animation: viseur-touche .8s ease-out 1; }
 @keyframes viseur-touche { from { opacity: 1; } to { opacity: 0; } }
 /* Le magasin de l'homme qu'on mène (v0.151.0) : une cartouche par trait d'os, la tirée en creux ; elles battent pendant qu'il recharge. Aucun texte. */
+/* La carte de l'homme qu'on mène (Jérôme, v0.164.0 : « un aperçu de son état : carte du soldat avec schéma, nom et états ») : en haut à gauche, son corps et ses jauges, sans bloc de texte */
+.carte-soldat { position: absolute; left: var(--e4); top: var(--e4); width: 15rem; display: grid; grid-template-columns: auto 1fr; gap: var(--e1) var(--e3); padding: var(--pas) var(--e3); pointer-events: none; opacity: .9; }
+.carte-soldat .cs-nom { grid-column: 1 / -1; display: grid; font-size: var(--texte-petit); line-height: 1.25; }
+.carte-soldat .cs-nom b { font-weight: bold; }
+.carte-soldat .cs-nom span { opacity: .75; }
+.carte-soldat .corps { width: 28px; height: 65px; }
 .cartouches { position: absolute; right: var(--e4); bottom: var(--e4); display: flex; gap: var(--e1); pointer-events: none; filter: drop-shadow(0 0 1px var(--jeu-fond)); }
 .cartouches i { width: 5px; height: 18px; background: var(--jeu-encre); border: 1px solid var(--jeu-fond); border-radius: 2px 2px 0 0; }
 .cartouches i.vide { background: transparent; border-color: var(--jeu-encre); opacity: .5; }
@@ -1492,6 +1503,7 @@ body:has(#soiree:not([hidden])) #carte, body:has(#soiree:not([hidden])) #secteur
 /* Les commandes des vues à la personne (v0.158.0) : une petite fenêtre en bas à gauche, à demi transparente ; l'essentiel toujours, le reste à H ; une bascule en marche est soulignée */
 .aide-vue { position: absolute; left: var(--e4); bottom: var(--e4); max-width: 17rem; padding: var(--pas) var(--e3); font-size: var(--texte-petit); line-height: 1.35; pointer-events: none; opacity: .88; }
 body.vue-verrouillee:not(.vue-soldat) .aide-vue { bottom: calc(var(--e4) + 104px); }      /* au-dessus de la rangée des régiments */
+body.vue-verrouillee.vue-engin .aide-vue { bottom: var(--e4); }      /* (la rangée des régiments est cachée quand on pilote, v0.164.0) */
 .aide-vue p { margin: 0; }
 .aide-vue .av-titre { font-weight: 700; letter-spacing: var(--lettres-etiquette); text-transform: uppercase; margin-bottom: var(--e1); }
 .aide-vue .av-st { margin-top: var(--pas); opacity: .7; text-transform: uppercase; letter-spacing: var(--lettres-etiquette); font-size: .9em; }

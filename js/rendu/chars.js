@@ -1,9 +1,9 @@
 // Les chars d'assaut dessinés (Jérôme, v0.47.0) : un volume par char de `B.etat.chars` (engins.js : le Schneider), posé sur le sol, incliné selon la pente sous lui,
 // tourné vers sa route ; les chenilles défilent quand il avance, une épave fume. Le dessin seulement : tout vient de l'état de la bataille, rien n'y est écrit.
 // Fabrique `creerChars({ THREE, scene, bataille: () => B, hauteur, fumer })` : la bataille change à chaque partie, on la lit à chaque image.
-import { atelier, schneider } from './engins.js?v=0.163.0';
-import { monterEpaveChar } from './epaves.js?v=0.163.0';
-import { PALETTE as P } from '../palette.js?v=0.163.0';
+import { atelier, schneider } from './engins.js?v=0.164.0';
+import { monterEpaveChar } from './epaves.js?v=0.164.0';
+import { PALETTE as P } from '../palette.js?v=0.164.0';
 
 const FABRIQUES = { schneider };
 const COULEUR = [P.n, P.x];      // la caisse à la couleur de son armée : nous, en face
@@ -18,9 +18,30 @@ export function creerChars({ THREE, scene, bataille, hauteur, fumer }) {
     const soleil = new THREE.DirectionalLight(0xffffff, 1.7); soleil.position.set(-6, 12, 5); lumiere.add(soleil);
     scene.add(lumiere); scene.userData.lumiere = lumiere;
   };
-  function vider() { for (const m of modeles.values()) scene.remove(m.pivot); modeles.clear(); }
+  // les obus tirés à la main, en vol (v0.164.0 : « on doit bien voir l'obus partir ») : un trait clair d'os (`o`) et sa traînée de brume, sur un arc du canon à l'impact ; une réserve de quelques-uns
+  const obus = [], tempsVu = { t: -1 };
+  function unObus() {
+    const g = new THREE.Group(), tete = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.4, 0.9), new THREE.MeshBasicMaterial({ color: new THREE.Color(P.o) }));
+    const queue = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.22, 5), new THREE.MeshBasicMaterial({ color: new THREE.Color(P.e), transparent: true, opacity: 0.6 }));
+    queue.position.z = 2.9; g.add(tete, queue); g.visible = false; scene.add(g); return g;
+  }
+  function majObus(B, dt) {
+    const T = B.etat.temps; tempsVu.t = tempsVu.t < 0 || Math.abs(tempsVu.t - T) > 0.1 ? T : Math.min(T + 1 / 30, Math.max(T - 1 / 30, tempsVu.t + dt));      // (une horloge lissée entre deux pas de la simulation)
+    let n = 0;
+    for (const c of B.etat.chars ?? []) for (const o of c.vol ?? []) {
+      const f = Math.max(0, Math.min(1, (tempsVu.t - o.t0) / Math.max(0.01, o.t - o.t0))); if (f >= 1) continue;
+      const g = obus[n] ?? (obus[n] = unObus()); n++;
+      const L = Math.hypot(o.x - o.x0, o.y - o.y0), h0 = hauteur(o.x0, o.y0) + 2.1, h1 = hauteur(o.x, o.y), bosse = L * 0.05;
+      const y = f2 => h0 + (h1 - h0) * f2 + 4 * bosse * f2 * (1 - f2);
+      const x = o.x0 + (o.x - o.x0) * f, z = o.y0 + (o.y - o.y0) * f, f2 = Math.min(1, f + 0.02);
+      g.position.set(x, y(f), z); g.lookAt(o.x0 + (o.x - o.x0) * f2, y(f2), o.y0 + (o.y - o.y0) * f2); g.rotateY(Math.PI); g.visible = true;
+    }
+    for (let k = n; k < obus.length; k++) obus[k].visible = false;
+  }
+  function vider() { for (const m of modeles.values()) scene.remove(m.pivot); modeles.clear(); for (const g of obus) g.visible = false; }
   function maj(dt, sombre = 0) {
     const B = bataille(); if (!B) return;
+    if (obus.length || B.etat.chars?.some(c => c.vol)) majObus(B, dt);
     const chars = B.etat.chars ?? [];
     if (!chars.length) { if (modeles.size) vider(); return; }
     A ??= atelier(THREE);

@@ -4,10 +4,10 @@
    qu'il traverse est touché là où la balle passe (la tête, le tronc, un bras, les jambes : v0.151.0, plus de jet de dés pour toucher, la balle part où est le guidon, `balancement`), et frappé comme par
    n'importe quel tir (`frapper` : un blessé ou un mort selon l'endroit, crédité au tireur). Un magasin par pilote (Lebel 8 + 1, Mauser 5), rechargé à la demande. Rend dans `B.pilotes[camp].dernier`
    ce que l'écran doit montrer : { n (le coup), touche, mort, zone }, et dans `B.pilotes[camp].refus` pourquoi un coup n'est pas parti. */
-import { hauteurQ } from './terrain.js?v=0.163.0';
-import { gagner, tuerDans } from './army.js?v=0.163.0';
-import { hash2 } from './lib/rng.js?v=0.163.0';
-import { TIR_JOUEUR as TJ } from './data/tir-joueur.js?v=0.163.0';
+import { hauteurQ } from './terrain.js?v=0.164.0';
+import { gagner, tuerDans } from './army.js?v=0.164.0';
+import { hash2 } from './lib/rng.js?v=0.164.0';
+import { TIR_JOUEUR as TJ } from './data/tir-joueur.js?v=0.164.0';
 
 /* La hauteur de l'œil de l'homme debout en (x, y) au-dessus de ses pieds : 1,6 m, et la banquette de tir dans une tranchée (`T.diff` ≤ −2 quarts : creusée) */
 export function hauteurOeil(T, x, y, posture = 0) { const c = (y | 0) * T.W + (x | 0); return posture ? TJ.postures[posture].oeil : TJ.oeil + (T.diff[c] <= -2 ? TJ.banquette : 0); }      // (accroupi ou couché : la banquette ne sert plus)
@@ -226,7 +226,8 @@ function tirDe(B, ctx, rng, P) {
   // la balle part où est le guidon : le regard, le balancement de l'homme à cet instant, la dispersion de l'arme
   const [bc, be] = balancement(A, i, B.etat.temps, { epaule: P.epaule, souffle: P.souffle ?? 0, posture: P.posture ?? 0 });
   const cap0 = demande.cap ?? Math.atan2(demande.d[1], demande.d[0]);
-  const cap = cap0 + bc + (rng() * 2 - 1) * TJ.dispersion, el = demande.el + be + (rng() * 2 - 1) * TJ.dispersion;
+  const dp = P.epaule ? TJ.dispersion : TJ.hanche;      // à la hanche (v0.164.0) : sans viseur, la balle part large
+  const cap = cap0 + bc + (rng() * 2 - 1) * dp, el = demande.el + be + (rng() * 2 - 1) * dp;
   const dx = Math.cos(cap), dy = Math.sin(cap), tg = Math.tan(el), x0 = A.x[i], y0 = A.y[i];
   const caseDe = (x, y) => ((y | 0) * W + (x | 0)), oeil = hauteurOeil(T, x0, y0, P.posture ?? 0);
   const hq0 = hauteurQ(T, caseDe(x0, y0)), hA = t => hauteurBalle(oeil, tg, t);

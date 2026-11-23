@@ -14,9 +14,9 @@ export const COMMANDES_VUE = {
     { niveau: 3, titre: 'Les autres', items: [[['Espace'], 'pause'], [['Échap'], 'revenir']] },
   ] },
   avion: { titre: 'Avion', groupes: [
-    { niveau: 1, items: [[['Q', 'D'], 'incliner'], [['Z'], 'piquer'], [['S'], 'cabrer'], [['clic'], 'tirer']] },
-    { niveau: 2, titre: 'À bord', items: [[['T'], 'tir automatique', 'tirAuto'], [['R'], 'rentrer, il se pose seul']] },
-    { niveau: 3, titre: 'Les autres', items: [[['souris'], 'regarder'], [['Espace'], 'pause'], [['Échap'], 'revenir']] },
+    { niveau: 1, items: [[['Q', 'D'], 'tourner'], [['Z'], 'monter'], [['S'], 'descendre'], [['clic'], 'tirer']] },
+    { niveau: 2, titre: 'À bord', items: [[['T'], 'tir automatique', 'tirAuto'], [['R'], 'rentrer à la base, il se pose seul']] },
+    { niveau: 3, titre: 'Les autres', items: [[['Espace'], 'pause'], [['Échap'], 'revenir']] },
   ] },
 };
 export const AIDE_VUE = { ouverte: 8 };      // s : la fenêtre s'ouvre en entier à la première entrée dans chaque vue, puis se replie sur l'essentiel

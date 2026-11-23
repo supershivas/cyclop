@@ -37,23 +37,27 @@ export function creerFusilVue({ THREE, renderer, PALETTE }) {
   sc.add(arme);
   // ─── les bras : un avant-bras (la manche, son parement) de la main au coude, le haut du bras du coude à l'épaule ───
   const AXE = new THREE.Vector3(0, 1, 0), tmp = new THREE.Vector3(), q = new THREE.Quaternion();
-  const membre = (r0, r1) => { const g = new THREE.Group(); const m = new THREE.Mesh(new THREE.CylinderGeometry(r1, r0, 1, 7), mat('n')); m.position.y = 0.5; g.add(m); sc.add(g); return { g, m }; };
-  const bras = { D: { avant: membre(0.04, 0.05), haut: membre(0.052, 0.06) }, G: { avant: membre(0.038, 0.05), haut: membre(0.05, 0.058) } };
-  for (const c of ['D', 'G']) { const p = new THREE.Mesh(new THREE.CylinderGeometry(0.046, 0.046, 0.035, 7), mat('b')); p.position.y = 0.06; bras[c].avant.g.add(p); bras[c].parement = p; }     // le parement de la manche, au poignet
+  // v0.164.0 (Jérôme : « le bras est trop tubulaire, bizarre ») : un prisme carré effilé (4 faces, la manche du drap qui fait des plis nets), plus un tube à sept facettes
+  const membre = (r0, r1) => { const g = new THREE.Group(); const m = new THREE.Mesh(new THREE.CylinderGeometry(r1, r0, 1, 4, 1, false, Math.PI / 4), mat('n')); m.position.y = 0.5; g.add(m); sc.add(g); return { g, m }; };
+  const bras = { D: { avant: membre(0.032, 0.058), haut: membre(0.058, 0.066) }, G: { avant: membre(0.03, 0.056), haut: membre(0.056, 0.064) } };      // (effilés : fins au poignet, larges au coude)
+  for (const c of ['D', 'G']) { const p = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 0.04, 4, 1, false, Math.PI / 4), mat('b')); p.position.y = 0.06; bras[c].avant.g.add(p); bras[c].parement = p;
+    const pli = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.056, 0.05, 4, 1, false, Math.PI / 4), mat('n')); bras[c].avant.m.add(pli); pli.position.y = 0.12; bras[c].pli = pli; }      // un pli du drap, à mi-bras (dans le repère du membre étiré : il suit sa longueur)     // le parement de la manche, au poignet
   const poser = (m, a, b) => { tmp.subVectors(b, a); const l = tmp.length(); m.g.position.copy(a); q.setFromUnitVectors(AXE, tmp.normalize()); m.g.quaternion.copy(q); m.m.scale.y = l; m.m.position.y = l / 2; };
   // les coudes et les épaules, dans le repère de la caméra : au repos le coude droit est bas et en dehors, le gauche sous le fût ; épaulé, le coude droit se lève, le gauche rentre sous l'arme
-  const COUDES = { repos: { D: [0.3, -0.56, -0.3], G: [-0.02, -0.62, -0.5] }, vise: { D: [0.3, -0.24, -0.04], G: [-0.2, -0.4, -0.26] } };      // (au repos sous les mains : les avant-bras descendent vers le bas de l'image)
+  // au repos (v0.164.0) : le coude gauche part en bas à gauche (avant, sous la main, l'avant-bras montait tout droit du bas de l'image, un tube au milieu), le droit en bas à droite contre le corps
+  const COUDES = { repos: { D: [0.3, -0.36, 0.06], G: [-0.1, -0.36, 0.04] }, vise: { D: [0.3, -0.24, -0.04], G: [-0.2, -0.4, -0.26] } };      // (au repos sous les mains : les avant-bras descendent vers le bas de l'image)
   const EPAULES = { D: [0.2, -0.24, 0.24], G: [-0.2, -0.26, 0.2] };
   const coude = new THREE.Vector3(), epaule = new THREE.Vector3(), poignet = new THREE.Vector3();
-  const repos = { x: 0.12, y: -0.17, z: -0.42 };      // au repos : l'arme en travers, la main droite dans l'image en bas à droite
-  arme.position.set(repos.x, repos.y, repos.z); arme.rotation.set(0.14, 0.16, 0);
+  // au repos : l'arme en travers, plus bas et plus couchée (v0.164.0 : avant, le canon montait vers le milieu de l'image), la main droite en bas à droite, la bouche à gauche sous l'horizon
+  const repos = { x: 0.11, y: -0.17, z: -0.4, rx: 0.0, ry: 0.36, rz: -0.22 };
+  arme.position.set(repos.x, repos.y, repos.z); arme.rotation.set(repos.rx, repos.ry, repos.rz);
   const vise = { x: 0, y: -0.088, z: -0.2 };      // épaulé (v0.151.0) : la crosse à l'épaule, le guidon au milieu de l'image
   let recul = 0, flash = 0, t = 0, ep = 0, epVoulu = 0, pousse = -1, pa = 0, paVoulu = 0;      // (le coup de baïonnette : `pousse` de 0 à 1 ; la parade : le fusil en travers, v0.154.0)
   return {
     tir() { recul = 1; flash = 0.07; },
     epaule(v) { epVoulu = v ? 1 : 0; },
     /* la manche : 'n' bleu horizon (nous), 'x' kaki (en face) */
-    manches(lettre) { for (const c of ['D', 'G']) for (const k of ['avant', 'haut']) bras[c][k].m.material = mat(lettre); },
+    manches(lettre) { for (const c of ['D', 'G']) for (const k of ['avant', 'haut']) { bras[c][k].m.material = mat(lettre); } bras.D.pli.material = bras.G.pli.material = mat(lettre); },
     coup() { pousse = 0; },
     parade(v) { paVoulu = v ? 1 : 0; },
     /* un pas du dessin : le recul retombe, le fusil respire un peu, le coup de baïonnette part et revient, la parade le met en travers ; les bras suivent les mains */
@@ -63,7 +67,7 @@ export function creerFusilVue({ THREE, renderer, PALETTE }) {
       pa += (paVoulu - pa) * Math.min(1, dt * 14);
       let av = 0; if (pousse >= 0) { pousse += dt / 0.35; av = pousse < 0.35 ? pousse / 0.35 : Math.max(0, 1 - (pousse - 0.35) / 0.65); if (pousse >= 1) pousse = -1; }      // en avant vite, retour lent
       arme.position.set(m(repos.x, vise.x) * (1 - pa), m(repos.y, vise.y) + Math.sin(t * 1.3) * 0.003 * (1 - ep) + 0.06 * pa, m(repos.z, vise.z) + 0.08 * recul - 0.32 * av);
-      arme.rotation.set(m(0.14, 0.045) + 0.12 * recul - 0.08 * av, m(0.16, 0) + 0.25 * av, 1.25 * pa);
+      arme.rotation.set(m(repos.rx, 0.045) + 0.12 * recul - 0.08 * av, m(repos.ry, 0) + 0.25 * av * ep - 0.3 * av * (1 - ep), m(repos.rz, 0) * (1 - pa) + 1.25 * pa);
       eclair.visible = flash > 0;
       arme.updateMatrixWorld(true);
       mainD.position.set(0.004 + 0.03 * ep, -0.014 - 0.022 * ep, 0.05 + 0.03 * ep);      // épaulé, le poing droit (tout près de l'œil) glisse un peu à droite et sous le poignet : il ne barre plus le bas de l'image

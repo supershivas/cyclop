@@ -32,6 +32,7 @@ export const TIR_JOUEUR = {
   // Amplitude : `base` × (1 + peur × `peur` + fatigue des bras × `fatigue` + `bras` si le bras est blessé) × (`adresse0` − `adresse` × adresse/100), × `epaule` épaulé.
   balance: { base: 0.006, peur: 2.5, fatigue: 1.5, bras: 2, adresse0: 1.35, adresse: 0.7, epaule: 0.4, lent: 0.35, vif: 1.7, partVif: 0.3 },
   dispersion: 0.0008,  // rad : l'arme elle-même (± au plus), tirée de la graine au coup
+  hanche: 0.035,       // rad : la dispersion d'un coup tiré à la hanche, sans épauler (Jérôme, v0.164.0 : « tir à la hanche sans viseur » ; ± 2° : à 50 m, ± 1,75 m, un homme sur trois ou quatre)
   epaule: { fov: 35, marche: 0.4, entre: 0.25 },
   // Le corps de l'homme qu'on mène (v0.152.0, lot 2) : courir (Maj maintenue), s'accroupir (C), ramper (X), franchir un parapet (Espace)
   // course : la vitesse (×), la fatigue des jambes par seconde de course, l'essoufflement (0 à 1) qui monte en `monte` s et retombe en `retombe` s, le balancement de plus quand il est essoufflé (× (1 + balance × souffle))
