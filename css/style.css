@@ -1518,7 +1518,7 @@ body.vue-verrouillee:not(.vue-soldat) .aide-vue { bottom: calc(var(--e4) + 104px
 .objet-icone { grid-row: 1 / 3; align-self: center; display: grid; place-items: center; width: 22px; height: 22px; font-style: normal; font-weight: bold; font-size: var(--texte-petit);
   background: var(--rarete, var(--jeu-fond)); color: var(--jeu-fond); box-shadow: inset 0 0 0 1px var(--jeu-fond); }
 .musette-case.vide .objet-icone { background: transparent; }
-.objet-bandeau { position: fixed; top: 164px; left: 50%; transform: translateX(-50%); z-index: 30; pointer-events: none;
+.objet-bandeau { position: fixed; top: 164px; left: 50%; transform: translateX(-50%); z-index: 30; pointer-events: auto; cursor: pointer;
   display: grid; grid-template-columns: auto minmax(0, 1fr); gap: var(--e3); align-items: center; max-width: min(46ch, 90vw);
   padding: var(--pas) var(--e3); border-left: 8px solid var(--rarete); box-shadow: var(--ombre-papier); }
 .objet-bandeau .objet-icone { width: 36px; height: 36px; font-size: var(--texte-moyen); grid-row: auto; }
@@ -1569,7 +1569,7 @@ body.vue-verrouillee:not(.vue-soldat) .aide-vue { bottom: calc(var(--e4) + 104px
 @media (max-width: 900px) { .vitrine-corps { grid-template-columns: 1fr; } .vitrine-haut { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 
 /* Le caprice du front en cours (v0.163.0) : une pastille au-dessus de la rangée des régiments, l'icône sur la couleur de sa rareté, le nom, le temps qui reste */
-.caprice-puce { position: fixed; bottom: 104px; left: 50%; transform: translateX(-50%); z-index: 20; display: grid; grid-template-columns: auto auto; column-gap: var(--pas); align-items: center;
+.caprice-puce { position: fixed; bottom: 104px; left: 50%; transform: translateX(-50%); z-index: 20; cursor: pointer; display: grid; grid-template-columns: auto auto; column-gap: var(--pas); align-items: center;
   padding: var(--e1) var(--pas); border-left: 6px solid var(--rarete); box-shadow: var(--ombre-papier); font-size: var(--texte-petit); pointer-events: auto; }
 .caprice-puce b { white-space: nowrap; }
 .caprice-puce u { grid-column: 1 / -1; display: block; height: 4px; margin-top: var(--e0); background: var(--jeu-fond); text-decoration: none; }
@@ -1577,3 +1577,24 @@ body.vue-verrouillee:not(.vue-soldat) .aide-vue { bottom: calc(var(--e4) + 104px
 body.vue-soldat .caprice-puce { display: none; }
 .vitrine-onglets .pastille { color: var(--jeu-encre); border-color: var(--jeu-encre); }
 .vitrine-onglets .pastille[aria-pressed="true"] { background: var(--jeu-encre); color: var(--jeu-fond); }
+
+/* L'annonce d'un événement qui arrive (v0.164.0, hud/largages.js) : une carte bien visible sous le duel, plus grande que le bandeau : ce qui arrive (titre), une phrase,
+   « dans N s » et une barre qui se vide ; un clic mène la vue au lieu. Un caprice : bordure épaisse de sa rareté ; un largage : la couleur du commun. Pas de pause. */
+.annonce { position: fixed; top: 150px; left: 50%; transform: translateX(-50%); z-index: 31; cursor: pointer; width: min(520px, calc(100vw - 2 * min(23rem, 36vw) - 48px)); box-sizing: border-box;
+  display: grid; grid-template-columns: auto minmax(0, 1fr) auto; column-gap: var(--e3); align-items: center; padding: var(--e3) var(--e4) var(--pas);
+  border: 3px solid var(--jeu-fond); border-left: 12px solid var(--rarete); box-shadow: var(--ombre-papier), 0 0 0 4px color-mix(in srgb, var(--rarete) 45%, transparent); }
+.annonce .objet-icone { width: 48px; height: 48px; font-size: 26px; grid-row: auto; }
+.annonce-texte { display: grid; gap: var(--e0); line-height: 1.2; }
+.annonce small { font-size: var(--texte-petit); text-transform: uppercase; letter-spacing: var(--lettres-etiquette, .06em); }
+.annonce b { font-family: var(--police-titre, inherit); font-size: 1.6rem; text-transform: uppercase; letter-spacing: .04em; line-height: 1.05; }
+.annonce span { font-size: var(--texte-petit); }
+.annonce em { font-style: normal; font-weight: bold; font-size: var(--texte-moyen); white-space: nowrap; align-self: start; }
+.annonce u { grid-column: 1 / -1; display: block; height: 4px; margin-top: var(--pas); background: var(--jeu-fond); text-decoration: none; }
+.annonce u s { display: block; height: 100%; background: var(--rarete); text-decoration: none; transition: width .25s linear; }
+.annonce.vient { animation: annonce-vient .45s cubic-bezier(.2, .8, .3, 1.25); }
+.annonce.caprice { animation: annonce-vient .45s cubic-bezier(.2, .8, .3, 1.25), annonce-pouls 1.2s ease-in-out .45s infinite alternate; }
+@keyframes annonce-vient { from { transform: translate(-50%, -24px) scale(.9); opacity: 0; } to { transform: translateX(-50%); opacity: 1; } }
+@keyframes annonce-pouls { to { box-shadow: var(--ombre-papier), 0 0 0 8px color-mix(in srgb, var(--rarete) 25%, transparent); } }
+@media (prefers-reduced-motion: reduce) { .annonce.vient, .annonce.caprice { animation: none; } }
+body.vue-soldat .annonce { top: 72px; }
+body:has(#annonce:not([hidden])) .objet-bandeau { top: 300px; }

@@ -1,8 +1,9 @@
 {
-  "version": "0.163.0",
+  "version": "0.164.0",
   "date": "2026-11-23",
   "changes": [
-    "Chaque jour, un caprice du front : un tir trop court, des obus perdus, deux héros, un zeppelin, une nappe de gaz, une mine, un as, une éclipse, un tremblement de terre…",
-    "Un bandeau le dit, une pastille compte le temps qu'il reste ; la vitrine a un onglet « Les caprices »"
+    "Un caprice ou un largage s'annonce quelques secondes avant : une grande carte, un appel sonore ; un clic dessus mène la vue à l'endroit",
+    "Des sons pour l'avion qui largue, la caisse qui touche le sol, l'objet pris et chaque caprice",
+    "Le char choisi montre de nouveau son chemin jusqu'au pointeur"
   ]
 }

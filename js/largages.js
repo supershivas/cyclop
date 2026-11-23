@@ -10,15 +10,15 @@
      { letal: le jour des balles incendiaires, bombes: celles qui restent pour le prochain vol } ;
    - le boost d'un régiment est sur le régiment (`reg.boost` : { o, fin, tir, vit, intrepide, pertes, tenace, aura }).
    Le calendrier ne tire rien du générateur : l'heure, l'endroit et l'objet viennent d'un hachage (graine, jour, numéro). */
-import { OBJET, LARGAGE as L, tirerObjet, musetteObjet } from './data/largages.js?v=0.163.0';
-import { CALIBRES } from './data/calibres.js?v=0.163.0';
-import { hash2 } from './lib/rng.js?v=0.163.0';
-import { ajouterSoldat, poserCaracs, effrayer, DENSITE, GRILLE, place } from './army.js?v=0.163.0';
-import { ligneY } from './tranchees.js?v=0.163.0';
-import { departCaracs } from './identite.js?v=0.163.0';
-import { positionDe } from './avions.js?v=0.163.0';
-import { pvAvion, sortieCaserne } from './camp.js?v=0.163.0';
-import { NIDS } from './data/nids.js?v=0.163.0';
+import { OBJET, LARGAGE as L, tirerObjet, musetteObjet } from './data/largages.js?v=0.164.0';
+import { CALIBRES } from './data/calibres.js?v=0.164.0';
+import { hash2 } from './lib/rng.js?v=0.164.0';
+import { ajouterSoldat, poserCaracs, effrayer, DENSITE, GRILLE, place } from './army.js?v=0.164.0';
+import { ligneY } from './tranchees.js?v=0.164.0';
+import { departCaracs } from './identite.js?v=0.164.0';
+import { positionDe } from './avions.js?v=0.164.0';
+import { pvAvion, sortieCaserne } from './camp.js?v=0.164.0';
+import { NIDS } from './data/nids.js?v=0.164.0';
 
 const NOUS = 0, EUX = 1;
 const PAS_LARGAGE = 1 / 30;
@@ -100,6 +100,16 @@ function planifier(B, zone) {
   if (etat.temps < LG.prochain || tj > L.fin || tj + dureeChute() > R.jour.duree) return;
   const n = lacherCaisse(B, zone, etat.temps + 2.5);
   LG.prochain = etat.temps + L.intervalle[0] + hash2(g, n, 606) * (L.intervalle[1] - L.intervalle[0]);
+}
+/* La prochaine caisse du calendrier, pour l'annonce à l'écran (v0.164.0) : { t (le temps où l'avion lâche), x } ou null. Lecture seule : les mêmes hachages que
+   `planifier` et `lacherCaisse`, rien n'est tiré. */
+export function prochaineCaisse(B, zone) {
+  const { etat, R } = B, LG = etat.largages;
+  if (!LG || LG.jour !== etat.jour || etat.phase !== 'jour') return null;
+  const debutJour = etat.temps - etat.tickJour * PAS_LARGAGE, tj = LG.prochain - debutJour;
+  if (LG.prochain <= etat.temps || tj > L.fin || tj + dureeChute() > R.jour.duree) return null;
+  const Z = zone, marge = 0.12 * (Z.x1 - Z.x0);
+  return { t: LG.prochain + 2.5, x: Math.round((Z.x0 + marge + hash2(etat.graine | 0, LG.n, 601) * (Z.x1 - Z.x0 - 2 * marge)) * 10) / 10 };
 }
 /* Une caisse lâchée au temps `t0` (la pluie de caisses et l'as des caprices s'en servent aussi, caprices.js) : l'endroit et l'objet du hachage de son numéro,
    sauf `force` : { o (un objet imposé), rarete (une rareté imposée), x, y (le point de chute) }. Rend son numéro. */

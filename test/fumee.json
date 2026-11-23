@@ -132,7 +132,8 @@
   "ouvrir-reglages": "icone titre-reglages|\n      <svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M10.3 4.3c.4-1.8 2.9-1.8 3.4 0a1.7 1.7 0 0 0 2.6 1.1c1.5-.9 3.3.8 2.4 2.4a1.7 1.7 0 0 0 1 2.5c1.8.5 1.8 3 0 3.4a1.7 1.7 0 0 0-1 2.6c.9 1.5-.9 3.3-2.4 2.4a1.7 1.7 0 0 0-2.6 1c-.5 1.8-3 1.8-3.4 0a1.7 1.7 0 0 0-2.5-1c-1.6.9-3.3-.9-2.4-2.4a1.7 1.7 0 0 0-1.1-2.6c-1.8-.4-1.8-2.9 0-3.4a1.7 1.7 0 0 0 1.1-2.5c-.9-1.6.8-3.3 2.4-2.4 1 .6 2.3.1 2.5-1.1z\"></path><circle cx=\"12\" cy=\"12\" r=\"3\"></circle></svg>\n    ",
   "toast": "H|jeu-toast|",
   "objet-bandeau": "H|papier objet-bandeau|",
-  "caprice": "H|papier caprice-puce|"
+  "caprice": "H|papier caprice-puce|",
+  "annonce": "H|papier annonce|"
  },
  "tous-choisis": {
   "chargement": "H|chargement fondu|\n  <div class=\"papier\">\n    <p id=\"chargement-titre\">Nouvelle partie</p>\n    <div class=\"chargement-piste\"><i id=\"chargement-barre\" style=\"width: 95%;\"></i></div>\n    <p class=\"discret\" id=\"chargement-etape\">Le champ de bataille</p>\n  </div>\n",
@@ -267,7 +268,8 @@
   "ouvrir-reglages": "icone titre-reglages|\n      <svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M10.3 4.3c.4-1.8 2.9-1.8 3.4 0a1.7 1.7 0 0 0 2.6 1.1c1.5-.9 3.3.8 2.4 2.4a1.7 1.7 0 0 0 1 2.5c1.8.5 1.8 3 0 3.4a1.7 1.7 0 0 0-1 2.6c.9 1.5-.9 3.3-2.4 2.4a1.7 1.7 0 0 0-2.6 1c-.5 1.8-3 1.8-3.4 0a1.7 1.7 0 0 0-2.5-1c-1.6.9-3.3-.9-2.4-2.4a1.7 1.7 0 0 0-1.1-2.6c-1.8-.4-1.8-2.9 0-3.4a1.7 1.7 0 0 0 1.1-2.5c-.9-1.6.8-3.3 2.4-2.4 1 .6 2.3.1 2.5-1.1z\"></path><circle cx=\"12\" cy=\"12\" r=\"3\"></circle></svg>\n    ",
   "toast": "H|jeu-toast|",
   "objet-bandeau": "H|papier objet-bandeau|",
-  "caprice": "H|papier caprice-puce|"
+  "caprice": "H|papier caprice-puce|",
+  "annonce": "H|papier annonce|"
  },
  "ordre-carte": {
   "chargement": "H|chargement fondu|\n  <div class=\"papier\">\n    <p id=\"chargement-titre\">Nouvelle partie</p>\n    <div class=\"chargement-piste\"><i id=\"chargement-barre\" style=\"width: 95%;\"></i></div>\n    <p class=\"discret\" id=\"chargement-etape\">Le champ de bataille</p>\n  </div>\n",
@@ -402,7 +404,8 @@
   "ouvrir-reglages": "icone titre-reglages|\n      <svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M10.3 4.3c.4-1.8 2.9-1.8 3.4 0a1.7 1.7 0 0 0 2.6 1.1c1.5-.9 3.3.8 2.4 2.4a1.7 1.7 0 0 0 1 2.5c1.8.5 1.8 3 0 3.4a1.7 1.7 0 0 0-1 2.6c.9 1.5-.9 3.3-2.4 2.4a1.7 1.7 0 0 0-2.6 1c-.5 1.8-3 1.8-3.4 0a1.7 1.7 0 0 0-2.5-1c-1.6.9-3.3-.9-2.4-2.4a1.7 1.7 0 0 0-1.1-2.6c-1.8-.4-1.8-2.9 0-3.4a1.7 1.7 0 0 0 1.1-2.5c-.9-1.6.8-3.3 2.4-2.4 1 .6 2.3.1 2.5-1.1z\"></path><circle cx=\"12\" cy=\"12\" r=\"3\"></circle></svg>\n    ",
   "toast": "H|jeu-toast|",
   "objet-bandeau": "H|papier objet-bandeau|",
-  "caprice": "H|papier caprice-puce|"
+  "caprice": "H|papier caprice-puce|",
+  "annonce": "H|papier annonce|"
  },
  "secteur-A": {
   "chargement": "H|chargement fondu|\n  <div class=\"papier\">\n    <p id=\"chargement-titre\">Nouvelle partie</p>\n    <div class=\"chargement-piste\"><i id=\"chargement-barre\" style=\"width: 95%;\"></i></div>\n    <p class=\"discret\" id=\"chargement-etape\">Le champ de bataille</p>\n  </div>\n",
@@ -537,7 +540,8 @@
   "ouvrir-reglages": "icone titre-reglages|\n      <svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M10.3 4.3c.4-1.8 2.9-1.8 3.4 0a1.7 1.7 0 0 0 2.6 1.1c1.5-.9 3.3.8 2.4 2.4a1.7 1.7 0 0 0 1 2.5c1.8.5 1.8 3 0 3.4a1.7 1.7 0 0 0-1 2.6c.9 1.5-.9 3.3-2.4 2.4a1.7 1.7 0 0 0-2.6 1c-.5 1.8-3 1.8-3.4 0a1.7 1.7 0 0 0-2.5-1c-1.6.9-3.3-.9-2.4-2.4a1.7 1.7 0 0 0-1.1-2.6c-1.8-.4-1.8-2.9 0-3.4a1.7 1.7 0 0 0 1.1-2.5c-.9-1.6.8-3.3 2.4-2.4 1 .6 2.3.1 2.5-1.1z\"></path><circle cx=\"12\" cy=\"12\" r=\"3\"></circle></svg>\n    ",
   "toast": "H|jeu-toast|",
   "objet-bandeau": "H|papier objet-bandeau|",
-  "caprice": "H|papier caprice-puce|"
+  "caprice": "H|papier caprice-puce|",
+  "annonce": "H|papier annonce|"
  },
  "apres-ordre": {
   "chargement": "H|chargement fondu|\n  <div class=\"papier\">\n    <p id=\"chargement-titre\">Nouvelle partie</p>\n    <div class=\"chargement-piste\"><i id=\"chargement-barre\" style=\"width: 95%;\"></i></div>\n    <p class=\"discret\" id=\"chargement-etape\">Le champ de bataille</p>\n  </div>\n",
@@ -672,7 +676,8 @@
   "ouvrir-reglages": "icone titre-reglages|\n      <svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M10.3 4.3c.4-1.8 2.9-1.8 3.4 0a1.7 1.7 0 0 0 2.6 1.1c1.5-.9 3.3.8 2.4 2.4a1.7 1.7 0 0 0 1 2.5c1.8.5 1.8 3 0 3.4a1.7 1.7 0 0 0-1 2.6c.9 1.5-.9 3.3-2.4 2.4a1.7 1.7 0 0 0-2.6 1c-.5 1.8-3 1.8-3.4 0a1.7 1.7 0 0 0-2.5-1c-1.6.9-3.3-.9-2.4-2.4a1.7 1.7 0 0 0-1.1-2.6c-1.8-.4-1.8-2.9 0-3.4a1.7 1.7 0 0 0 1.1-2.5c-.9-1.6.8-3.3 2.4-2.4 1 .6 2.3.1 2.5-1.1z\"></path><circle cx=\"12\" cy=\"12\" r=\"3\"></circle></svg>\n    ",
   "toast": "H|jeu-toast|",
   "objet-bandeau": "H|papier objet-bandeau|",
-  "caprice": "H|papier caprice-puce|"
+  "caprice": "H|papier caprice-puce|",
+  "annonce": "H|papier annonce|"
  },
  "apres-barrages": {
   "chargement": "H|chargement fondu|\n  <div class=\"papier\">\n    <p id=\"chargement-titre\">Nouvelle partie</p>\n    <div class=\"chargement-piste\"><i id=\"chargement-barre\" style=\"width: 95%;\"></i></div>\n    <p class=\"discret\" id=\"chargement-etape\">Le champ de bataille</p>\n  </div>\n",
@@ -807,7 +812,8 @@
   "ouvrir-reglages": "icone titre-reglages|\n      <svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M10.3 4.3c.4-1.8 2.9-1.8 3.4 0a1.7 1.7 0 0 0 2.6 1.1c1.5-.9 3.3.8 2.4 2.4a1.7 1.7 0 0 0 1 2.5c1.8.5 1.8 3 0 3.4a1.7 1.7 0 0 0-1 2.6c.9 1.5-.9 3.3-2.4 2.4a1.7 1.7 0 0 0-2.6 1c-.5 1.8-3 1.8-3.4 0a1.7 1.7 0 0 0-2.5-1c-1.6.9-3.3-.9-2.4-2.4a1.7 1.7 0 0 0-1.1-2.6c-1.8-.4-1.8-2.9 0-3.4a1.7 1.7 0 0 0 1.1-2.5c-.9-1.6.8-3.3 2.4-2.4 1 .6 2.3.1 2.5-1.1z\"></path><circle cx=\"12\" cy=\"12\" r=\"3\"></circle></svg>\n    ",
   "toast": "H|jeu-toast|",
   "objet-bandeau": "H|papier objet-bandeau|",
-  "caprice": "H|papier caprice-puce|"
+  "caprice": "H|papier caprice-puce|",
+  "annonce": "H|papier annonce|"
  },
  "camp-chars": {
   "chargement": "H|chargement fondu|\n  <div class=\"papier\">\n    <p id=\"chargement-titre\">Nouvelle partie</p>\n    <div class=\"chargement-piste\"><i id=\"chargement-barre\" style=\"width: 95%;\"></i></div>\n    <p class=\"discret\" id=\"chargement-etape\">Le champ de bataille</p>\n  </div>\n",
@@ -942,7 +948,8 @@
   "ouvrir-reglages": "icone titre-reglages|\n      <svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M10.3 4.3c.4-1.8 2.9-1.8 3.4 0a1.7 1.7 0 0 0 2.6 1.1c1.5-.9 3.3.8 2.4 2.4a1.7 1.7 0 0 0 1 2.5c1.8.5 1.8 3 0 3.4a1.7 1.7 0 0 0-1 2.6c.9 1.5-.9 3.3-2.4 2.4a1.7 1.7 0 0 0-2.6 1c-.5 1.8-3 1.8-3.4 0a1.7 1.7 0 0 0-2.5-1c-1.6.9-3.3-.9-2.4-2.4a1.7 1.7 0 0 0-1.1-2.6c-1.8-.4-1.8-2.9 0-3.4a1.7 1.7 0 0 0 1.1-2.5c-.9-1.6.8-3.3 2.4-2.4 1 .6 2.3.1 2.5-1.1z\"></path><circle cx=\"12\" cy=\"12\" r=\"3\"></circle></svg>\n    ",
   "toast": "H|jeu-toast|",
   "objet-bandeau": "H|papier objet-bandeau|",
-  "caprice": "H|papier caprice-puce|"
+  "caprice": "H|papier caprice-puce|",
+  "annonce": "H|papier annonce|"
  },
  "annule": {
   "chargement": "H|chargement fondu|\n  <div class=\"papier\">\n    <p id=\"chargement-titre\">Nouvelle partie</p>\n    <div class=\"chargement-piste\"><i id=\"chargement-barre\" style=\"width: 95%;\"></i></div>\n    <p class=\"discret\" id=\"chargement-etape\">Le champ de bataille</p>\n  </div>\n",
@@ -1077,7 +1084,8 @@
   "ouvrir-reglages": "icone titre-reglages|\n      <svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M10.3 4.3c.4-1.8 2.9-1.8 3.4 0a1.7 1.7 0 0 0 2.6 1.1c1.5-.9 3.3.8 2.4 2.4a1.7 1.7 0 0 0 1 2.5c1.8.5 1.8 3 0 3.4a1.7 1.7 0 0 0-1 2.6c.9 1.5-.9 3.3-2.4 2.4a1.7 1.7 0 0 0-2.6 1c-.5 1.8-3 1.8-3.4 0a1.7 1.7 0 0 0-2.5-1c-1.6.9-3.3-.9-2.4-2.4a1.7 1.7 0 0 0-1.1-2.6c-1.8-.4-1.8-2.9 0-3.4a1.7 1.7 0 0 0 1.1-2.5c-.9-1.6.8-3.3 2.4-2.4 1 .6 2.3.1 2.5-1.1z\"></path><circle cx=\"12\" cy=\"12\" r=\"3\"></circle></svg>\n    ",
   "toast": "H|jeu-toast|",
   "objet-bandeau": "H|papier objet-bandeau|",
-  "caprice": "H|papier caprice-puce|"
+  "caprice": "H|papier caprice-puce|",
+  "annonce": "H|papier annonce|"
  },
  "posture": {
   "chargement": "H|chargement fondu|\n  <div class=\"papier\">\n    <p id=\"chargement-titre\">Nouvelle partie</p>\n    <div class=\"chargement-piste\"><i id=\"chargement-barre\" style=\"width: 95%;\"></i></div>\n    <p class=\"discret\" id=\"chargement-etape\">Le champ de bataille</p>\n  </div>\n",
@@ -1212,7 +1220,8 @@
   "ouvrir-reglages": "icone titre-reglages|\n      <svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M10.3 4.3c.4-1.8 2.9-1.8 3.4 0a1.7 1.7 0 0 0 2.6 1.1c1.5-.9 3.3.8 2.4 2.4a1.7 1.7 0 0 0 1 2.5c1.8.5 1.8 3 0 3.4a1.7 1.7 0 0 0-1 2.6c.9 1.5-.9 3.3-2.4 2.4a1.7 1.7 0 0 0-2.6 1c-.5 1.8-3 1.8-3.4 0a1.7 1.7 0 0 0-2.5-1c-1.6.9-3.3-.9-2.4-2.4a1.7 1.7 0 0 0-1.1-2.6c-1.8-.4-1.8-2.9 0-3.4a1.7 1.7 0 0 0 1.1-2.5c-.9-1.6.8-3.3 2.4-2.4 1 .6 2.3.1 2.5-1.1z\"></path><circle cx=\"12\" cy=\"12\" r=\"3\"></circle></svg>\n    ",
   "toast": "H|jeu-toast|",
   "objet-bandeau": "H|papier objet-bandeau|",
-  "caprice": "H|papier caprice-puce|"
+  "caprice": "H|papier caprice-puce|",
+  "annonce": "H|papier annonce|"
  },
  "posture-marche": {
   "chargement": "H|chargement fondu|\n  <div class=\"papier\">\n    <p id=\"chargement-titre\">Nouvelle partie</p>\n    <div class=\"chargement-piste\"><i id=\"chargement-barre\" style=\"width: 95%;\"></i></div>\n    <p class=\"discret\" id=\"chargement-etape\">Le champ de bataille</p>\n  </div>\n",
@@ -1347,7 +1356,8 @@
   "ouvrir-reglages": "icone titre-reglages|\n      <svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M10.3 4.3c.4-1.8 2.9-1.8 3.4 0a1.7 1.7 0 0 0 2.6 1.1c1.5-.9 3.3.8 2.4 2.4a1.7 1.7 0 0 0 1 2.5c1.8.5 1.8 3 0 3.4a1.7 1.7 0 0 0-1 2.6c.9 1.5-.9 3.3-2.4 2.4a1.7 1.7 0 0 0-2.6 1c-.5 1.8-3 1.8-3.4 0a1.7 1.7 0 0 0-2.5-1c-1.6.9-3.3-.9-2.4-2.4a1.7 1.7 0 0 0-1.1-2.6c-1.8-.4-1.8-2.9 0-3.4a1.7 1.7 0 0 0 1.1-2.5c-.9-1.6.8-3.3 2.4-2.4 1 .6 2.3.1 2.5-1.1z\"></path><circle cx=\"12\" cy=\"12\" r=\"3\"></circle></svg>\n    ",
   "toast": "H|jeu-toast|",
   "objet-bandeau": "H|papier objet-bandeau|",
-  "caprice": "H|papier caprice-puce|"
+  "caprice": "H|papier caprice-puce|",
+  "annonce": "H|papier annonce|"
  },
  "fiche-regiment": {
   "chargement": "H|chargement fondu|\n  <div class=\"papier\">\n    <p id=\"chargement-titre\">Nouvelle partie</p>\n    <div class=\"chargement-piste\"><i id=\"chargement-barre\" style=\"width: 95%;\"></i></div>\n    <p class=\"discret\" id=\"chargement-etape\">Le champ de bataille</p>\n  </div>\n",
@@ -1483,7 +1493,8 @@
   "ouvrir-reglages": "icone titre-reglages|\n      <svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M10.3 4.3c.4-1.8 2.9-1.8 3.4 0a1.7 1.7 0 0 0 2.6 1.1c1.5-.9 3.3.8 2.4 2.4a1.7 1.7 0 0 0 1 2.5c1.8.5 1.8 3 0 3.4a1.7 1.7 0 0 0-1 2.6c.9 1.5-.9 3.3-2.4 2.4a1.7 1.7 0 0 0-2.6 1c-.5 1.8-3 1.8-3.4 0a1.7 1.7 0 0 0-2.5-1c-1.6.9-3.3-.9-2.4-2.4a1.7 1.7 0 0 0-1.1-2.6c-1.8-.4-1.8-2.9 0-3.4a1.7 1.7 0 0 0 1.1-2.5c-.9-1.6.8-3.3 2.4-2.4 1 .6 2.3.1 2.5-1.1z\"></path><circle cx=\"12\" cy=\"12\" r=\"3\"></circle></svg>\n    ",
   "toast": "H|jeu-toast|",
   "objet-bandeau": "H|papier objet-bandeau|",
-  "caprice": "H|papier caprice-puce|"
+  "caprice": "H|papier caprice-puce|",
+  "annonce": "H|papier annonce|"
  },
  "fiche-homme": {
   "chargement": "H|chargement fondu|\n  <div class=\"papier\">\n    <p id=\"chargement-titre\">Nouvelle partie</p>\n    <div class=\"chargement-piste\"><i id=\"chargement-barre\" style=\"width: 95%;\"></i></div>\n    <p class=\"discret\" id=\"chargement-etape\">Le champ de bataille</p>\n  </div>\n",
@@ -1618,7 +1629,8 @@
   "ouvrir-reglages": "icone titre-reglages|\n      <svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M10.3 4.3c.4-1.8 2.9-1.8 3.4 0a1.7 1.7 0 0 0 2.6 1.1c1.5-.9 3.3.8 2.4 2.4a1.7 1.7 0 0 0 1 2.5c1.8.5 1.8 3 0 3.4a1.7 1.7 0 0 0-1 2.6c.9 1.5-.9 3.3-2.4 2.4a1.7 1.7 0 0 0-2.6 1c-.5 1.8-3 1.8-3.4 0a1.7 1.7 0 0 0-2.5-1c-1.6.9-3.3-.9-2.4-2.4a1.7 1.7 0 0 0-1.1-2.6c-1.8-.4-1.8-2.9 0-3.4a1.7 1.7 0 0 0 1.1-2.5c-.9-1.6.8-3.3 2.4-2.4 1 .6 2.3.1 2.5-1.1z\"></path><circle cx=\"12\" cy=\"12\" r=\"3\"></circle></svg>\n    ",
   "toast": "H|jeu-toast|",
   "objet-bandeau": "H|papier objet-bandeau|",
-  "caprice": "H|papier caprice-puce|"
+  "caprice": "H|papier caprice-puce|",
+  "annonce": "H|papier annonce|"
  },
  "soir": {
   "chargement": "H|chargement fondu|\n  <div class=\"papier\">\n    <p id=\"chargement-titre\">Nouvelle partie</p>\n    <div class=\"chargement-piste\"><i id=\"chargement-barre\" style=\"width: 95%;\"></i></div>\n    <p class=\"discret\" id=\"chargement-etape\">Le champ de bataille</p>\n  </div>\n",
@@ -1753,7 +1765,8 @@
   "ouvrir-reglages": "icone titre-reglages|\n      <svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M10.3 4.3c.4-1.8 2.9-1.8 3.4 0a1.7 1.7 0 0 0 2.6 1.1c1.5-.9 3.3.8 2.4 2.4a1.7 1.7 0 0 0 1 2.5c1.8.5 1.8 3 0 3.4a1.7 1.7 0 0 0-1 2.6c.9 1.5-.9 3.3-2.4 2.4a1.7 1.7 0 0 0-2.6 1c-.5 1.8-3 1.8-3.4 0a1.7 1.7 0 0 0-2.5-1c-1.6.9-3.3-.9-2.4-2.4a1.7 1.7 0 0 0-1.1-2.6c-1.8-.4-1.8-2.9 0-3.4a1.7 1.7 0 0 0 1.1-2.5c-.9-1.6.8-3.3 2.4-2.4 1 .6 2.3.1 2.5-1.1z\"></path><circle cx=\"12\" cy=\"12\" r=\"3\"></circle></svg>\n    ",
   "toast": "H|jeu-toast|",
   "objet-bandeau": "papier objet-bandeau vient|<i class=\"objet-icone\" aria-hidden=\"true\">✹</i><div class=\"objet-texte\"><small>Commun · à ramener dans la tranchée</small><b>Fusée rouge</b><span>Salve de 75 · à viser</span></div>",
-  "caprice": "H|papier caprice-puce|<i class=\"objet-icone\" aria-hidden=\"true\">☂</i><b>La pluie de caisses</b><u><s style=\"width: 1%;\"></s></u>"
+  "caprice": "H|papier caprice-puce|<i class=\"objet-icone\" aria-hidden=\"true\">☂</i><b>La pluie de caisses</b><u><s style=\"width: 1%;\"></s></u>",
+  "annonce": "H|papier annonce caprice vient|<i class=\"objet-icone\" aria-hidden=\"true\">☂</i><div class=\"annonce-texte\"><small>Caprice du front · Peu commun</small><b>La pluie de caisses</b><span>Cinq avions larguent à la suite : cinq caisses, cinq courses</span></div><em>dans 1 s</em><u><s style=\"width: 3%;\"></s></u>"
  },
  "nuit": {
   "chargement": "H|chargement fondu|\n  <div class=\"papier\">\n    <p id=\"chargement-titre\">Nouvelle partie</p>\n    <div class=\"chargement-piste\"><i id=\"chargement-barre\" style=\"width: 95%;\"></i></div>\n    <p class=\"discret\" id=\"chargement-etape\">Le champ de bataille</p>\n  </div>\n",
@@ -1889,7 +1902,8 @@
   "ouvrir-reglages": "icone titre-reglages|\n      <svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M10.3 4.3c.4-1.8 2.9-1.8 3.4 0a1.7 1.7 0 0 0 2.6 1.1c1.5-.9 3.3.8 2.4 2.4a1.7 1.7 0 0 0 1 2.5c1.8.5 1.8 3 0 3.4a1.7 1.7 0 0 0-1 2.6c.9 1.5-.9 3.3-2.4 2.4a1.7 1.7 0 0 0-2.6 1c-.5 1.8-3 1.8-3.4 0a1.7 1.7 0 0 0-2.5-1c-1.6.9-3.3-.9-2.4-2.4a1.7 1.7 0 0 0-1.1-2.6c-1.8-.4-1.8-2.9 0-3.4a1.7 1.7 0 0 0 1.1-2.5c-.9-1.6.8-3.3 2.4-2.4 1 .6 2.3.1 2.5-1.1z\"></path><circle cx=\"12\" cy=\"12\" r=\"3\"></circle></svg>\n    ",
   "toast": "H|jeu-toast|",
   "objet-bandeau": "papier objet-bandeau vient|<i class=\"objet-icone\" aria-hidden=\"true\">✹</i><div class=\"objet-texte\"><small>Commun · à ramener dans la tranchée</small><b>Fusée rouge</b><span>Salve de 75 · à viser</span></div>",
-  "caprice": "H|papier caprice-puce|<i class=\"objet-icone\" aria-hidden=\"true\">☂</i><b>La pluie de caisses</b><u><s style=\"width: 1%;\"></s></u>"
+  "caprice": "H|papier caprice-puce|<i class=\"objet-icone\" aria-hidden=\"true\">☂</i><b>La pluie de caisses</b><u><s style=\"width: 1%;\"></s></u>",
+  "annonce": "H|papier annonce caprice vient|<i class=\"objet-icone\" aria-hidden=\"true\">☂</i><div class=\"annonce-texte\"><small>Caprice du front · Peu commun</small><b>La pluie de caisses</b><span>Cinq avions larguent à la suite : cinq caisses, cinq courses</span></div><em>dans 1 s</em><u><s style=\"width: 3%;\"></s></u>"
  },
  "nuit-choisis": {
   "chargement": "H|chargement fondu|\n  <div class=\"papier\">\n    <p id=\"chargement-titre\">Nouvelle partie</p>\n    <div class=\"chargement-piste\"><i id=\"chargement-barre\" style=\"width: 95%;\"></i></div>\n    <p class=\"discret\" id=\"chargement-etape\">Le champ de bataille</p>\n  </div>\n",
@@ -2025,7 +2039,8 @@
   "ouvrir-reglages": "icone titre-reglages|\n      <svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M10.3 4.3c.4-1.8 2.9-1.8 3.4 0a1.7 1.7 0 0 0 2.6 1.1c1.5-.9 3.3.8 2.4 2.4a1.7 1.7 0 0 0 1 2.5c1.8.5 1.8 3 0 3.4a1.7 1.7 0 0 0-1 2.6c.9 1.5-.9 3.3-2.4 2.4a1.7 1.7 0 0 0-2.6 1c-.5 1.8-3 1.8-3.4 0a1.7 1.7 0 0 0-2.5-1c-1.6.9-3.3-.9-2.4-2.4a1.7 1.7 0 0 0-1.1-2.6c-1.8-.4-1.8-2.9 0-3.4a1.7 1.7 0 0 0 1.1-2.5c-.9-1.6.8-3.3 2.4-2.4 1 .6 2.3.1 2.5-1.1z\"></path><circle cx=\"12\" cy=\"12\" r=\"3\"></circle></svg>\n    ",
   "toast": "H|jeu-toast|",
   "objet-bandeau": "papier objet-bandeau vient|<i class=\"objet-icone\" aria-hidden=\"true\">✹</i><div class=\"objet-texte\"><small>Commun · à ramener dans la tranchée</small><b>Fusée rouge</b><span>Salve de 75 · à viser</span></div>",
-  "caprice": "H|papier caprice-puce|<i class=\"objet-icone\" aria-hidden=\"true\">☂</i><b>La pluie de caisses</b><u><s style=\"width: 1%;\"></s></u>"
+  "caprice": "H|papier caprice-puce|<i class=\"objet-icone\" aria-hidden=\"true\">☂</i><b>La pluie de caisses</b><u><s style=\"width: 1%;\"></s></u>",
+  "annonce": "H|papier annonce caprice vient|<i class=\"objet-icone\" aria-hidden=\"true\">☂</i><div class=\"annonce-texte\"><small>Caprice du front · Peu commun</small><b>La pluie de caisses</b><span>Cinq avions larguent à la suite : cinq caisses, cinq courses</span></div><em>dans 1 s</em><u><s style=\"width: 3%;\"></s></u>"
  },
  "nuit-ordre": {
   "chargement": "H|chargement fondu|\n  <div class=\"papier\">\n    <p id=\"chargement-titre\">Nouvelle partie</p>\n    <div class=\"chargement-piste\"><i id=\"chargement-barre\" style=\"width: 95%;\"></i></div>\n    <p class=\"discret\" id=\"chargement-etape\">Le champ de bataille</p>\n  </div>\n",
@@ -2161,7 +2176,8 @@
   "ouvrir-reglages": "icone titre-reglages|\n      <svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M10.3 4.3c.4-1.8 2.9-1.8 3.4 0a1.7 1.7 0 0 0 2.6 1.1c1.5-.9 3.3.8 2.4 2.4a1.7 1.7 0 0 0 1 2.5c1.8.5 1.8 3 0 3.4a1.7 1.7 0 0 0-1 2.6c.9 1.5-.9 3.3-2.4 2.4a1.7 1.7 0 0 0-2.6 1c-.5 1.8-3 1.8-3.4 0a1.7 1.7 0 0 0-2.5-1c-1.6.9-3.3-.9-2.4-2.4a1.7 1.7 0 0 0-1.1-2.6c-1.8-.4-1.8-2.9 0-3.4a1.7 1.7 0 0 0 1.1-2.5c-.9-1.6.8-3.3 2.4-2.4 1 .6 2.3.1 2.5-1.1z\"></path><circle cx=\"12\" cy=\"12\" r=\"3\"></circle></svg>\n    ",
   "toast": "H|jeu-toast|",
   "objet-bandeau": "papier objet-bandeau vient|<i class=\"objet-icone\" aria-hidden=\"true\">✹</i><div class=\"objet-texte\"><small>Commun · à ramener dans la tranchée</small><b>Fusée rouge</b><span>Salve de 75 · à viser</span></div>",
-  "caprice": "H|papier caprice-puce|<i class=\"objet-icone\" aria-hidden=\"true\">☂</i><b>La pluie de caisses</b><u><s style=\"width: 1%;\"></s></u>"
+  "caprice": "H|papier caprice-puce|<i class=\"objet-icone\" aria-hidden=\"true\">☂</i><b>La pluie de caisses</b><u><s style=\"width: 1%;\"></s></u>",
+  "annonce": "H|papier annonce caprice vient|<i class=\"objet-icone\" aria-hidden=\"true\">☂</i><div class=\"annonce-texte\"><small>Caprice du front · Peu commun</small><b>La pluie de caisses</b><span>Cinq avions larguent à la suite : cinq caisses, cinq courses</span></div><em>dans 1 s</em><u><s style=\"width: 3%;\"></s></u>"
  },
  "nuit-camp": {
   "chargement": "H|chargement fondu|\n  <div class=\"papier\">\n    <p id=\"chargement-titre\">Nouvelle partie</p>\n    <div class=\"chargement-piste\"><i id=\"chargement-barre\" style=\"width: 95%;\"></i></div>\n    <p class=\"discret\" id=\"chargement-etape\">Le champ de bataille</p>\n  </div>\n",
@@ -2297,7 +2313,8 @@
   "ouvrir-reglages": "icone titre-reglages|\n      <svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M10.3 4.3c.4-1.8 2.9-1.8 3.4 0a1.7 1.7 0 0 0 2.6 1.1c1.5-.9 3.3.8 2.4 2.4a1.7 1.7 0 0 0 1 2.5c1.8.5 1.8 3 0 3.4a1.7 1.7 0 0 0-1 2.6c.9 1.5-.9 3.3-2.4 2.4a1.7 1.7 0 0 0-2.6 1c-.5 1.8-3 1.8-3.4 0a1.7 1.7 0 0 0-2.5-1c-1.6.9-3.3-.9-2.4-2.4a1.7 1.7 0 0 0-1.1-2.6c-1.8-.4-1.8-2.9 0-3.4a1.7 1.7 0 0 0 1.1-2.5c-.9-1.6.8-3.3 2.4-2.4 1 .6 2.3.1 2.5-1.1z\"></path><circle cx=\"12\" cy=\"12\" r=\"3\"></circle></svg>\n    ",
   "toast": "H|jeu-toast|",
   "objet-bandeau": "papier objet-bandeau eux vient|<i class=\"objet-icone\" aria-hidden=\"true\">†</i><div class=\"objet-texte\"><small>Légendaire · pris par ceux d'en face</small><b>Tromblon à tir rapide</b><span>Grenades à 150 m · 30 s</span></div>",
-  "caprice": "H|papier caprice-puce|<i class=\"objet-icone\" aria-hidden=\"true\">☂</i><b>La pluie de caisses</b><u><s style=\"width: 1%;\"></s></u>"
+  "caprice": "H|papier caprice-puce|<i class=\"objet-icone\" aria-hidden=\"true\">☂</i><b>La pluie de caisses</b><u><s style=\"width: 1%;\"></s></u>",
+  "annonce": "H|papier annonce caprice vient|<i class=\"objet-icone\" aria-hidden=\"true\">☂</i><div class=\"annonce-texte\"><small>Caprice du front · Peu commun</small><b>La pluie de caisses</b><span>Cinq avions larguent à la suite : cinq caisses, cinq courses</span></div><em>dans 1 s</em><u><s style=\"width: 3%;\"></s></u>"
  },
  "nuit-commande": {
   "chargement": "H|chargement fondu|\n  <div class=\"papier\">\n    <p id=\"chargement-titre\">Nouvelle partie</p>\n    <div class=\"chargement-piste\"><i id=\"chargement-barre\" style=\"width: 95%;\"></i></div>\n    <p class=\"discret\" id=\"chargement-etape\">Le champ de bataille</p>\n  </div>\n",
@@ -2433,7 +2450,8 @@
   "ouvrir-reglages": "icone titre-reglages|\n      <svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M10.3 4.3c.4-1.8 2.9-1.8 3.4 0a1.7 1.7 0 0 0 2.6 1.1c1.5-.9 3.3.8 2.4 2.4a1.7 1.7 0 0 0 1 2.5c1.8.5 1.8 3 0 3.4a1.7 1.7 0 0 0-1 2.6c.9 1.5-.9 3.3-2.4 2.4a1.7 1.7 0 0 0-2.6 1c-.5 1.8-3 1.8-3.4 0a1.7 1.7 0 0 0-2.5-1c-1.6.9-3.3-.9-2.4-2.4a1.7 1.7 0 0 0-1.1-2.6c-1.8-.4-1.8-2.9 0-3.4a1.7 1.7 0 0 0 1.1-2.5c-.9-1.6.8-3.3 2.4-2.4 1 .6 2.3.1 2.5-1.1z\"></path><circle cx=\"12\" cy=\"12\" r=\"3\"></circle></svg>\n    ",
   "toast": "H|jeu-toast|",
   "objet-bandeau": "papier objet-bandeau eux vient|<i class=\"objet-icone\" aria-hidden=\"true\">†</i><div class=\"objet-texte\"><small>Légendaire · pris par ceux d'en face</small><b>Tromblon à tir rapide</b><span>Grenades à 150 m · 30 s</span></div>",
-  "caprice": "H|papier caprice-puce|<i class=\"objet-icone\" aria-hidden=\"true\">☂</i><b>La pluie de caisses</b><u><s style=\"width: 1%;\"></s></u>"
+  "caprice": "H|papier caprice-puce|<i class=\"objet-icone\" aria-hidden=\"true\">☂</i><b>La pluie de caisses</b><u><s style=\"width: 1%;\"></s></u>",
+  "annonce": "H|papier annonce caprice vient|<i class=\"objet-icone\" aria-hidden=\"true\">☂</i><div class=\"annonce-texte\"><small>Caprice du front · Peu commun</small><b>La pluie de caisses</b><span>Cinq avions larguent à la suite : cinq caisses, cinq courses</span></div><em>dans 1 s</em><u><s style=\"width: 3%;\"></s></u>"
  },
  "nuit-paquet": {
   "chargement": "H|chargement fondu|\n  <div class=\"papier\">\n    <p id=\"chargement-titre\">Nouvelle partie</p>\n    <div class=\"chargement-piste\"><i id=\"chargement-barre\" style=\"width: 95%;\"></i></div>\n    <p class=\"discret\" id=\"chargement-etape\">Le champ de bataille</p>\n  </div>\n",
@@ -2569,7 +2587,8 @@
   "ouvrir-reglages": "icone titre-reglages|\n      <svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M10.3 4.3c.4-1.8 2.9-1.8 3.4 0a1.7 1.7 0 0 0 2.6 1.1c1.5-.9 3.3.8 2.4 2.4a1.7 1.7 0 0 0 1 2.5c1.8.5 1.8 3 0 3.4a1.7 1.7 0 0 0-1 2.6c.9 1.5-.9 3.3-2.4 2.4a1.7 1.7 0 0 0-2.6 1c-.5 1.8-3 1.8-3.4 0a1.7 1.7 0 0 0-2.5-1c-1.6.9-3.3-.9-2.4-2.4a1.7 1.7 0 0 0-1.1-2.6c-1.8-.4-1.8-2.9 0-3.4a1.7 1.7 0 0 0 1.1-2.5c-.9-1.6.8-3.3 2.4-2.4 1 .6 2.3.1 2.5-1.1z\"></path><circle cx=\"12\" cy=\"12\" r=\"3\"></circle></svg>\n    ",
   "toast": "H|jeu-toast|",
   "objet-bandeau": "papier objet-bandeau vient|<i class=\"objet-icone\" aria-hidden=\"true\">+</i><div class=\"objet-texte\"><small>Commun · pris par un des nôtres · nouvelle découverte</small><b>Escouade</b><span>+5 hommes</span></div>",
-  "caprice": "H|papier caprice-puce|<i class=\"objet-icone\" aria-hidden=\"true\">☂</i><b>La pluie de caisses</b><u><s style=\"width: 1%;\"></s></u>"
+  "caprice": "H|papier caprice-puce|<i class=\"objet-icone\" aria-hidden=\"true\">☂</i><b>La pluie de caisses</b><u><s style=\"width: 1%;\"></s></u>",
+  "annonce": "H|papier annonce caprice vient|<i class=\"objet-icone\" aria-hidden=\"true\">☂</i><div class=\"annonce-texte\"><small>Caprice du front · Peu commun</small><b>La pluie de caisses</b><span>Cinq avions larguent à la suite : cinq caisses, cinq courses</span></div><em>dans 1 s</em><u><s style=\"width: 3%;\"></s></u>"
  },
  "nuit-retour": {
   "chargement": "H|chargement fondu|\n  <div class=\"papier\">\n    <p id=\"chargement-titre\">Nouvelle partie</p>\n    <div class=\"chargement-piste\"><i id=\"chargement-barre\" style=\"width: 95%;\"></i></div>\n    <p class=\"discret\" id=\"chargement-etape\">Le champ de bataille</p>\n  </div>\n",
@@ -2705,7 +2724,8 @@
   "ouvrir-reglages": "icone titre-reglages|\n      <svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M10.3 4.3c.4-1.8 2.9-1.8 3.4 0a1.7 1.7 0 0 0 2.6 1.1c1.5-.9 3.3.8 2.4 2.4a1.7 1.7 0 0 0 1 2.5c1.8.5 1.8 3 0 3.4a1.7 1.7 0 0 0-1 2.6c.9 1.5-.9 3.3-2.4 2.4a1.7 1.7 0 0 0-2.6 1c-.5 1.8-3 1.8-3.4 0a1.7 1.7 0 0 0-2.5-1c-1.6.9-3.3-.9-2.4-2.4a1.7 1.7 0 0 0-1.1-2.6c-1.8-.4-1.8-2.9 0-3.4a1.7 1.7 0 0 0 1.1-2.5c-.9-1.6.8-3.3 2.4-2.4 1 .6 2.3.1 2.5-1.1z\"></path><circle cx=\"12\" cy=\"12\" r=\"3\"></circle></svg>\n    ",
   "toast": "H|jeu-toast|",
   "objet-bandeau": "papier objet-bandeau vient|<i class=\"objet-icone\" aria-hidden=\"true\">+</i><div class=\"objet-texte\"><small>Commun · pris par un des nôtres · nouvelle découverte</small><b>Escouade</b><span>+5 hommes</span></div>",
-  "caprice": "H|papier caprice-puce|<i class=\"objet-icone\" aria-hidden=\"true\">☂</i><b>La pluie de caisses</b><u><s style=\"width: 1%;\"></s></u>"
+  "caprice": "H|papier caprice-puce|<i class=\"objet-icone\" aria-hidden=\"true\">☂</i><b>La pluie de caisses</b><u><s style=\"width: 1%;\"></s></u>",
+  "annonce": "H|papier annonce caprice vient|<i class=\"objet-icone\" aria-hidden=\"true\">☂</i><div class=\"annonce-texte\"><small>Caprice du front · Peu commun</small><b>La pluie de caisses</b><span>Cinq avions larguent à la suite : cinq caisses, cinq courses</span></div><em>dans 1 s</em><u><s style=\"width: 3%;\"></s></u>"
  },
  "fin": {
   "chargement": "H|chargement fondu|\n  <div class=\"papier\">\n    <p id=\"chargement-titre\">Nouvelle partie</p>\n    <div class=\"chargement-piste\"><i id=\"chargement-barre\" style=\"width: 95%;\"></i></div>\n    <p class=\"discret\" id=\"chargement-etape\">Le champ de bataille</p>\n  </div>\n",
@@ -2851,6 +2871,7 @@
   "fin-medailles": "fin-meds|<h3>Les médailles</h3><section class=\"fin-med\"><h4>Les régiments</h4><table class=\"medailles\"><tbody><tr><td class=\"med-icone\"><svg class=\"pic\" viewBox=\"0 0 16 16\" width=\"16\" height=\"16\" aria-hidden=\"true\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"8\" cy=\"8\" r=\"5\"></circle><path d=\"M8 1v4M8 11v4M1 8h4M11 8h4\"></path></svg></td><td class=\"med-titre\">Le plus meurtrier</td><td class=\"med-nom\">Régiment Syzygie</td><td class=\"med-detail\">15 hommes abattus</td></tr><tr><td class=\"med-icone\"><svg class=\"pic\" viewBox=\"0 0 16 16\" width=\"16\" height=\"16\" aria-hidden=\"true\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M8 2v12M4.5 5.5h7\"></path></svg></td><td class=\"med-titre\">Le plus sacrifié</td><td class=\"med-nom\">Régiment Porphyre</td><td class=\"med-detail\">33 morts</td></tr><tr><td class=\"med-icone\"><svg class=\"pic\" viewBox=\"0 0 16 16\" width=\"16\" height=\"16\" aria-hidden=\"true\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"8\" cy=\"8\" r=\"5\" stroke-dasharray=\"2 2\"></circle></svg></td><td class=\"med-titre\">Le plus inutile</td><td class=\"med-nom\">Régiment Céruléen</td><td class=\"med-detail\">rien abattu, rien pris</td></tr><tr><td class=\"med-icone\"><svg class=\"pic\" viewBox=\"0 0 16 16\" width=\"16\" height=\"16\" aria-hidden=\"true\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M2 14l3-7 3 2 2-5 4 10z\"></path></svg></td><td class=\"med-titre\">Le roc</td><td class=\"med-nom\">Régiment Murmuration</td><td class=\"med-detail\">31 morts, jamais en déroute</td></tr></tbody></table></section><section class=\"fin-med\"><h4>Les hommes</h4><table class=\"medailles\"><tbody><tr><td class=\"med-icone\"><svg class=\"pic\" viewBox=\"0 0 16 16\" width=\"16\" height=\"16\" aria-hidden=\"true\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"8\" cy=\"8\" r=\"5\"></circle><path d=\"M8 1v4M8 11v4M1 8h4M11 8h4\"></path></svg></td><td class=\"med-titre\">Le plus meurtrier</td><td class=\"med-nom\">Félix Henry</td><td class=\"med-detail\">soldat de 2e classe · 3 hommes abattus</td></tr><tr><td class=\"med-icone\"><svg class=\"pic\" viewBox=\"0 0 16 16\" width=\"16\" height=\"16\" aria-hidden=\"true\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M3 7l5-3.5L13 7M3 11.5l5-3.5 5 3.5\"></path></svg></td><td class=\"med-titre\">Le plus aguerri</td><td class=\"med-nom\">Félix Lacroix</td><td class=\"med-detail\">sergent, Porphyre · a tout vu du feu</td></tr><tr><td class=\"med-icone\"><svg class=\"pic\" viewBox=\"0 0 16 16\" width=\"16\" height=\"16\" aria-hidden=\"true\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"8\" cy=\"8\" r=\"5\" stroke-dasharray=\"2 2\"></circle></svg></td><td class=\"med-titre\">Le plus inutile</td><td class=\"med-nom\">Paul Moreau</td><td class=\"med-detail\">capitaine, Porphyre · rien abattu</td></tr><tr><td class=\"med-icone\"><svg class=\"pic\" viewBox=\"0 0 16 16\" width=\"16\" height=\"16\" aria-hidden=\"true\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M8 1.5v8M5 4.5h6\"></path><path d=\"M2.5 14c2-2.5 9-2.5 11 0\"></path></svg></td><td class=\"med-titre\">Mort pour la patrie</td><td class=\"med-nom\">Clément Bertrand</td><td class=\"med-detail\">soldat de 2e classe, Protogyne · 2 hommes abattus · tombé le jour 1</td></tr></tbody></table></section>",
   "toast": "H|jeu-toast|",
   "objet-bandeau": "papier objet-bandeau vient|<i class=\"objet-icone\" aria-hidden=\"true\">A</i><div class=\"objet-texte\"><small>Commun · pris par un des nôtres · nouvelle découverte</small><b>Bidon d'essence</b><span>Un avion remis en état</span></div>",
-  "caprice": "H|papier caprice-puce|<i class=\"objet-icone\" aria-hidden=\"true\">☂</i><b>La pluie de caisses</b><u><s style=\"width: 1%;\"></s></u>"
+  "caprice": "H|papier caprice-puce|<i class=\"objet-icone\" aria-hidden=\"true\">☂</i><b>La pluie de caisses</b><u><s style=\"width: 1%;\"></s></u>",
+  "annonce": "H|papier annonce caprice vient|<i class=\"objet-icone\" aria-hidden=\"true\">☂</i><div class=\"annonce-texte\"><small>Caprice du front · Peu commun</small><b>La pluie de caisses</b><span>Cinq avions larguent à la suite : cinq caisses, cinq courses</span></div><em>dans 1 s</em><u><s style=\"width: 3%;\"></s></u>"
  }
 }

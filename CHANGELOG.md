@@ -1,5 +1,11 @@
 # Journal des versions
 
+## 0.164.0 — 2026-11-23
+
+- Un caprice ou un largage s'annonce quelques secondes avant : une grande carte, un appel sonore ; un clic dessus mène la vue à l'endroit
+- Des sons pour l'avion qui largue, la caisse qui touche le sol, l'objet pris et chaque caprice
+- Le char choisi montre de nouveau son chemin jusqu'au pointeur
+
 ## 0.163.0 — 2026-11-23
 
 - Chaque jour, un caprice du front : un tir trop court, des obus perdus, deux héros, des chars perdus, une pluie de caisses, un ordre absurde, un zeppelin, une nappe de gaz, une mine, un as, une éclipse, un tremblement de terre

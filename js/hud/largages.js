@@ -2,14 +2,22 @@
 // l'a pris ; « Nouvelle découverte » la première fois), la musette (trois emplacements au-dessus du râtelier, touches 7, 8, 9 : un clic arme la visée), et
 // les découvertes (la vitrine de l'accueil : `cyclopeen:decouvertes`, hud/vitrine.js). Le joueur apprend ce que fait un objet : (1) le fumigène et l'avion
 // (le carnet), (2) la flèche de sa couleur et le survol (la bulle), (3) le bandeau à la prise, (4) l'anneau sous l'homme boosté, (5) le carnet du soir.
-import { OBJET, RARETES, CATEGORIES, LARGAGE } from '../data/largages.js?v=0.163.0';
-import { CAPRICE } from '../data/caprices.js?v=0.163.0';
+import { OBJET, RARETES, CATEGORIES, LARGAGE } from '../data/largages.js?v=0.164.0';
+import { CAPRICE, CAPRICES_JOUR } from '../data/caprices.js?v=0.164.0';
+import { zone, zoneDe, lettreZone } from '../bataille.js?v=0.164.0';
+import { prochaineCaisse, milieu } from '../largages.js?v=0.164.0';
+import { capricePrevu, lieuCaprice } from '../caprices.js?v=0.164.0';
 
 const el = (tag, cls, txt) => { const e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; return e; };
 
-export function creerLargagesHud({ $, bataille, moi, viser, decouvertes, son }) {
-  const bandeau = $('objet-bandeau'), musette = $('musette'), puce = $('caprice');
-  let file = [], timer = 0;
+export function creerLargagesHud({ $, bataille, moi, viser, decouvertes, son, aller }) {
+  const bandeau = $('objet-bandeau'), musette = $('musette'), puce = $('caprice'), annonce = $('annonce');
+  let file = [], timer = 0, lieuBandeau = null, cleAnnonce = '', lieuAnnonce = null;
+  // un clic sur l'annonce, le bandeau ou la pastille du caprice mène la caméra au lieu de l'événement (Jérôme, 23 nov., v0.164.0)
+  const aLieu = l => () => { if (l()) aller?.(l().x, l().y); };
+  annonce.onclick = aLieu(() => lieuAnnonce);
+  bandeau.onclick = aLieu(() => typeof lieuBandeau === 'function' ? lieuBandeau() : lieuBandeau);
+  puce.onclick = aLieu(() => { const B = bataille(); return B && lieuCaprice(B, zone(B)); });
   // les emplacements de la musette : le même gabarit que les boutons du râtelier (design system), un liseré de la rareté
   const cases = Array.from({ length: LARGAGE.musette }, (_, k) => {
     const b = el('button', 'batterie musette-case');
@@ -21,6 +29,8 @@ export function creerLargagesHud({ $, bataille, moi, viser, decouvertes, son }) 
   musette.append(...cases);
 
   function montrer(f) {
+    lieuBandeau = f.caprice ? (() => { const B = bataille(); return B && lieuCaprice(B, zone(B)); }) : f.x != null ? { x: f.x, y: f.y } : null;
+    bandeau.dataset.info = lieuBandeau ? 'Un clic : la vue y va' : '';
     if (f.caprice) return montrerCaprice(f);
     const O = OBJET[f.o], R = RARETES[O.rarete];
     bandeau.style.setProperty('--rarete', R.couleur);
@@ -54,12 +64,12 @@ export function creerLargagesHud({ $, bataille, moi, viser, decouvertes, son }) 
   function evenements(ev) {
     const lignes = [];
     for (const e of ev) {
-      if (e.type === 'largage') { lignes.push(['Un avion passe au-dessus du no man\'s land : une caisse tombe en parachute.', null]); son?.interface_?.('largage'); }
+      if (e.type === 'largage') { lignes.push(['Un avion passe au-dessus du no man\'s land : une caisse tombe en parachute.', null]); }
       else if (e.type === 'caisse-sol') { decouvertes?.vu(e.o); }
       else if (e.type === 'objet') {
         const O = OBJET[e.o], nouveau = e.camp === moi() && !(e.musette) && decouvertes?.prendre(e.o);
         if (e.camp !== moi()) decouvertes?.vu(e.o);
-        file.push({ o: e.o, camp: e.camp, musette: e.musette, nouveau });
+        file.push({ o: e.o, camp: e.camp, musette: e.musette, nouveau, x: e.x, y: e.y });
         lignes.push([e.camp === moi() ? `${O.nom} (${RARETES[O.rarete].nom.toLowerCase()}) : ${e.musette ? 'à ramener dans notre tranchée' : O.court}.` : `Ceux d'en face prennent ${O.nom} (${RARETES[O.rarete].nom.toLowerCase()}) : ${O.court}.`, e.camp === moi() ? 'gain' : 'perte']);
       }
       else if (e.type === 'objet-livre') {
@@ -84,8 +94,41 @@ export function creerLargagesHud({ $, bataille, moi, viser, decouvertes, son }) 
   }
 
   // la musette de mon camp, à chaque image du HUD ; `vise` : l'emplacement armé (ou null)
+  // l'annonce (v0.164.0) : quelques secondes avant un caprice ou un largage, une carte bien visible en haut de l'écran : ce qui arrive, une phrase, où, dans combien
+  // de secondes ; un appel sonore une fois ; un clic mène la vue au lieu. Elle ne met pas la partie en pause. Tout se lit de l'état (rien n'est tiré).
+  function majAnnonce(B) {
+    let a = null;
+    if (B && B.etat.phase === 'jour') {
+      const Z = zone(B), p = capricePrevu(B.etat), t = B.etat.temps;
+      if (p && p.t - t <= CAPRICES_JOUR.annonce && p.t > t) {
+        const K = CAPRICE[p.id], R = RARETES[K.rarete], l = lieuCaprice(B, Z, p);
+        a = { cle: `c${p.t}`, genre: 'caprice', icone: K.icone, couleur: R.couleur, mythique: !!R.brillance, haut: `Caprice du front · ${R.nom}${K.camp ? (p.camp === moi() ? ' · chez nous' : ' · chez ceux d\'en face') : ''}`, titre: K.nom, texte: K.court, reste: p.t - t, tout: CAPRICES_JOUR.annonce, lieu: l };
+      } else {
+        const c = prochaineCaisse(B, Z);
+        if (c && c.t - t <= LARGAGE.annonce) a = { cle: `l${c.t}`, genre: 'largage', icone: '☂', couleur: RARETES.commun.couleur, haut: 'Un largage', titre: 'Un avion arrive', texte: `Une caisse tombe sur le no man's land, secteur ${lettreZone(zoneDe(B, c.x))} : le premier arrivé la prend`, reste: c.t - t, tout: LARGAGE.annonce, lieu: { x: c.x, y: null } };
+      }
+    }
+    annonce.hidden = !a;
+    if (!a) { cleAnnonce = ''; return; }
+    if (a.lieu && a.lieu.y == null) a.lieu = { x: a.lieu.x, y: milieu(B, a.lieu.x) };
+    lieuAnnonce = a.lieu;
+    if (a.cle !== cleAnnonce) {
+      cleAnnonce = a.cle;
+      annonce.style.setProperty('--rarete', a.couleur);
+      annonce.classList.toggle('mythique', !!a.mythique); annonce.classList.toggle('caprice', a.genre === 'caprice');
+      annonce.innerHTML = `<i class="objet-icone" aria-hidden="true"></i><div class="annonce-texte"><small></small><b></b><span></span></div><em></em><u><s></s></u>`;
+      annonce.querySelector('i').textContent = a.icone; annonce.querySelector('small').textContent = a.haut; annonce.querySelector('b').textContent = a.titre; annonce.querySelector('span').textContent = a.texte;
+      annonce.dataset.info = 'Un clic : la vue y va';
+      annonce.classList.remove('vient'); void annonce.offsetWidth; annonce.classList.add('vient');
+      son?.()?.annonce?.(a.genre);
+    }
+    annonce.querySelector('em').textContent = `dans ${Math.max(1, Math.ceil(a.reste))} s`;
+    annonce.querySelector('s').style.width = `${Math.round(100 * Math.max(0, a.reste) / a.tout)}%`;
+  }
+
   function maj(vise) {
     const B = bataille(), LG = B?.etat.largages;
+    majAnnonce(B);
     // la pastille du caprice en cours : son icône, son nom, le temps qui reste en barre
     const a = B?.etat.caprices?.actif;
     puce.hidden = !a || B.etat.phase !== 'jour';
@@ -110,7 +153,7 @@ export function creerLargagesHud({ $, bataille, moi, viser, decouvertes, son }) 
       b.setAttribute('aria-label', O ? `${O.nom}, touche ${7 + k}` : `Musette vide, touche ${7 + k}`);
     });
   }
-  return { evenements, maj, cacher() { file = []; bandeau.hidden = true; clearTimeout(timer); } };
+  return { evenements, maj, majAnnonce: () => majAnnonce(bataille()), cacher() { file = []; bandeau.hidden = true; annonce.hidden = true; cleAnnonce = ''; clearTimeout(timer); } };
 }
 
 /* Les découvertes (la vitrine de l'accueil) : { o: 'vu' | 'pris', n: fois pris } dans `cyclopeen:decouvertes`, la progression permanente (section 11) ; rien en mode debug */

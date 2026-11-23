@@ -5,8 +5,8 @@
 // (2) l'extraction, la voile sort en fuseau étroit et long, les suspentes se tendent ; (3) le gonflement, la coupole s'ouvre d'un coup, dépasse sa taille
 // et revient (un ressort amorti), la caisse est freinée et balance fort ; (4) la descente, la coupole respire et le balancement s'éteint lentement.
 // Au sol, la coupole se dégonfle, glisse sous le vent et s'aplatit. La voile est faite de huit fuseaux, os et brume en alternance, et d'une cheminée au sommet.
-import { PALETTE } from '../palette.js?v=0.163.0';
-import { RARETES, LARGAGE as L } from '../data/largages.js?v=0.163.0';
+import { PALETTE } from '../palette.js?v=0.164.0';
+import { RARETES, LARGAGE as L } from '../data/largages.js?v=0.164.0';
 
 export function cacheModeles(THREE) {
   const cyl = new Map(), con = new Map(), mat = new Map();

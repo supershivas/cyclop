@@ -1,8 +1,8 @@
 // La charpente commune des fiches (Jérôme, 20 nov., v0.153.0 : « les fiches, deuxième jet » du labo, passé en jeu ; la bande noire de la soirée) :
 // une bande noire (l'écusson, le nom, qui il est, un tampon d'état, les icônes), quatre chiffres clés, deux colonnes (« Maintenant », « Son parcours »), un pied (le lien à gauche,
 // UN bouton rouge à droite). Des fonctions de DOM sur des données : `fiche.js`, `chars.js`, `nids.js` et l'avion de main.js lisent l'état ; le CSS : « Les fiches » de css/style.css (`.fx`).
-import { ecussonHtml, reglerEcusson } from './ecussons.js?v=0.163.0';
-import { chevronsHtml } from './barres.js?v=0.163.0';
+import { ecussonHtml, reglerEcusson } from './ecussons.js?v=0.164.0';
+import { chevronsHtml } from './barres.js?v=0.164.0';
 
 export const el = (tag, cls = '', ...kids) => { const e = document.createElement(tag); if (cls) e.className = cls; e.append(...kids.flat().filter(k => k != null && k !== false && k !== '')); return e; };
 const svg = (cls, h) => { const d = el('div', cls); d.innerHTML = h; return d; };
