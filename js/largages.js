@@ -10,15 +10,15 @@
      { letal: le jour des balles incendiaires, bombes: celles qui restent pour le prochain vol } ;
    - le boost d'un régiment est sur le régiment (`reg.boost` : { o, fin, tir, vit, intrepide, pertes, tenace, aura }).
    Le calendrier ne tire rien du générateur : l'heure, l'endroit et l'objet viennent d'un hachage (graine, jour, numéro). */
-import { OBJET, LARGAGE as L, tirerObjet, musetteObjet } from './data/largages.js?v=0.165.0';
-import { CALIBRES } from './data/calibres.js?v=0.165.0';
-import { hash2 } from './lib/rng.js?v=0.165.0';
-import { ajouterSoldat, poserCaracs, effrayer, DENSITE, GRILLE, place } from './army.js?v=0.165.0';
-import { ligneY } from './tranchees.js?v=0.165.0';
-import { departCaracs } from './identite.js?v=0.165.0';
-import { positionDe } from './avions.js?v=0.165.0';
-import { pvAvion, sortieCaserne } from './camp.js?v=0.165.0';
-import { NIDS } from './data/nids.js?v=0.165.0';
+import { OBJET, LARGAGE as L, tirerObjet, musetteObjet } from './data/largages.js?v=0.166.0';
+import { CALIBRES } from './data/calibres.js?v=0.166.0';
+import { hash2 } from './lib/rng.js?v=0.166.0';
+import { ajouterSoldat, poserCaracs, effrayer, DENSITE, GRILLE, place } from './army.js?v=0.166.0';
+import { ligneY } from './tranchees.js?v=0.166.0';
+import { departCaracs } from './identite.js?v=0.166.0';
+import { positionDe } from './avions.js?v=0.166.0';
+import { pvAvion, sortieCaserne } from './camp.js?v=0.166.0';
+import { NIDS } from './data/nids.js?v=0.166.0';
 
 const NOUS = 0, EUX = 1;
 const PAS_LARGAGE = 1 / 30;

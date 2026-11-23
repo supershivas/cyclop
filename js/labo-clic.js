@@ -7,7 +7,7 @@
 //   C. Les éclats  : A, plus huit petits cubes (os, glaise, terre) qui jaillissent du point du clic, retombent et s'éteignent.
 //   D. L'encrier   : A, plus un éclair inversé (terre sous l'os) de 90 ms et une secousse de 2 px de la planche.
 //   E. Le tout     : A + B + C + D.
-import { ROLES } from './palette.js?v=0.165.0';
+import { ROLES } from './palette.js?v=0.166.0';
 
 const roles = Object.entries({ ...ROLES }).map(([k, v]) => `--jeu-${k}:${v}`).join(';');
 

@@ -1,5 +1,10 @@
 # Journal des versions
 
+## 0.166.0 — 2026-11-23
+
+- L'avion piloté : on prend les commandes à peine la piste quittée, il vire bien plus vite et remonte seul s'il est trop bas
+- Ses rafales labourent le sol : des gerbes de terre et de petits cratères, comme un passage automatique
+
 ## 0.165.0 — 2026-11-23
 
 - Le soldat : la vue ne saute plus, on tire à la hanche sans viseur (épaulé pour viser), une carte montre son nom et son état, les bras du fusil sont refaits ; plus de voile de fumée noire le soir

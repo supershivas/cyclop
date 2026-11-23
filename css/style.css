@@ -1013,7 +1013,7 @@ body.vue-soldat #equerres, body.vue-soldat #repere, body.vue-soldat #repere-sold
 body.vue-engin #hud > :not(#viseur):not(#vol-barres):not(#canon-barre):not(#aide-vue):not(#suivi):not(#tampon-fps), body.vue-engin #etiquettes, body.vue-engin #retours, body.vue-engin #chars-etiq,
 body.vue-engin #equerres, body.vue-engin #repere, body.vue-engin #repere-soldat, body.vue-engin #bulle { display: none !important; }
 body.vue-engin .suivi { bottom: var(--e4); }
-.suivi .bouton { white-space: nowrap; }
+.suivi .bouton { white-space: nowrap; flex: none; }
 .viseur .marque { opacity: 0; stroke-width: 2; }
 .viseur.touche .marque { animation: viseur-touche .45s ease-out 1; }
 .viseur.mort .marque { stroke-width: 3; animation: viseur-touche .8s ease-out 1; }

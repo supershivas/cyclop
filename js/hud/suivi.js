@@ -7,20 +7,20 @@
 //    tonneau, l'écran rouge, jusqu'à l'écrasement.
 // Rien de neuf dans le moteur que quelques réglages de la vue (`vue.haut`, `dist`, `portee`, `hors`, `roulis`, `secousse`, rendu3d.js) : la caméra du jeu orbite déjà autour d'un point visé, ici ce point
 // suit l'engin. Le dessin seulement : aucune lecture n'écrit dans la bataille. La vue se libère d'un geste sur la caméra (déplacer, tourner), Échap, le clic droit, ou le bouton ; la vue d'avant revient.
-import { positionDe } from '../avions.js?v=0.165.0';
-import { hauteurOeil, balancement, armeDe, aPortee } from '../tir-joueur.js?v=0.165.0';
-import { TIR_JOUEUR as TJ } from '../data/tir-joueur.js?v=0.165.0';
-import { CALIBRES } from '../data/calibres.js?v=0.165.0';
-import { CHARS } from '../data/chars.js?v=0.165.0';
-import { AVION_MAIN } from '../data/mitraillage.js?v=0.165.0';
-import { creerAideVue } from './aide-vue.js?v=0.165.0';
+import { positionDe, refusPrise } from '../avions.js?v=0.166.0';
+import { hauteurOeil, balancement, armeDe, aPortee } from '../tir-joueur.js?v=0.166.0';
+import { TIR_JOUEUR as TJ } from '../data/tir-joueur.js?v=0.166.0';
+import { CALIBRES } from '../data/calibres.js?v=0.166.0';
+import { CHARS } from '../data/chars.js?v=0.166.0';
+import { AVION_MAIN } from '../data/mitraillage.js?v=0.166.0';
+import { creerAideVue } from './aide-vue.js?v=0.166.0';
 // Les sensations de l'homme qu'on mène (v0.152.0) : le coup reçu (s), la balle qui frôle (s), le souffle d'un obus (portée en rayons du souffle, s de retour), la peur qui ferme le champ (opacité au plus)
 const SENS = { coup: 1.2, frole: 0.5, roulis: 0.07, choc: 3, chocDuree: 2.5, peur: 0.75 };
-import { indiceDe, quiEst, majuscule } from './lecture.js?v=0.165.0';
-import { creerTampons } from './tampons-fps.js?v=0.165.0';
-import { BLESSURES_FPS, RYTHME_TAMPONS } from '../data/tampons.js?v=0.165.0';
-import { ZONES_EN_MOTS } from '../data/causes.js?v=0.165.0';
-import { REPERES, jauge, corps } from './barres.js?v=0.165.0';
+import { indiceDe, quiEst, majuscule } from './lecture.js?v=0.166.0';
+import { creerTampons } from './tampons-fps.js?v=0.166.0';
+import { BLESSURES_FPS, RYTHME_TAMPONS } from '../data/tampons.js?v=0.166.0';
+import { ZONES_EN_MOTS } from '../data/causes.js?v=0.166.0';
+import { REPERES, jauge, corps } from './barres.js?v=0.166.0';
 
 const SOL_Y = 3;           // le niveau moyen du sol que vise la caméra (rendu3d.js : `SOL_Y`), pour calculer `vue.haut`
 const PORTEE = 700;        // m : le plan lointain d'une vue verrouillée (au ras du sol, la vue porte loin)
@@ -469,13 +469,13 @@ export function creerSuivi({ $, bataille, rendu, reduit = () => false, retour = 
     // l'avion piloté (v0.157.0) : on prend les commandes dès qu'il est en l'air, Q/D et Z/S partent au changement ; la vue suit son roulis ; trois jauges : altitude, essence, munitions
     if (s.vole && !chute && !epave) {
       const v = B.etat.mitraillages.find(k => k.id === s.id), K = B.ailes?.[moi()];
-      if (v && (!K || K.id !== s.id) && v.etat === 'vol' && !v.retour && (v.main || positionDe(v, B.etat.temps).s >= 0) && s.t - (s.tPrise ?? -9) > 1 && !enPause()) { s.tPrise = s.t; s.cleVol = undefined; voler({ id: s.id }); }
+      if (v && (!K || K.id !== s.id) && v.etat === 'vol' && !v.retour && (v.main || !refusPrise(v, B.etat.temps)) && s.t - (s.tPrise ?? -9) > 0.3 && !enPause()) { s.tPrise = s.t; s.cleVol = undefined; voler({ id: s.id }); }
       if (K && K.id === s.id) {
         const ro = (touche('KeyD') ? 1 : 0) - (touche('KeyA') ? 1 : 0), pi = (touche('KeyW') ? 1 : 0) - (touche('KeyS') ? 1 : 0), cle = `${ro}|${pi}`;      // Z monte, S descend (v0.165.0, Jérôme ; avant, comme un manche : Z piquait)
         if (cle !== s.cleVol && !enPause()) { s.cleVol = cle; voler({ ro, pi }); }
       }
       // les toasts du vol (v0.165.0) : il roule et décolle, il est à vous, il rentre, il se pose
-      const aMoi = !!(K && K.id === s.id), etape = v?.retour ? ((c.alt ?? 99) < 3 ? 'pose' : 'retour') : aMoi ? 'main' : v && !v.main && positionDe(v, B.etat.temps).s < 0 ? 'decolle' : '';
+      const aMoi = !!(K && K.id === s.id), etape = v?.retour ? ((c.alt ?? 99) < 3 ? 'pose' : 'retour') : aMoi ? 'main' : v && !v.main && refusPrise(v, B.etat.temps) ? 'decolle' : '';
       if (etape && etape !== s.etapeVol) {
         if (etape === 'decolle' && !s.etapeVol) dire('Décollage : il roule et prend l\'air, vous aurez les commandes en vol.');
         else if (etape === 'main') dire('En l\'air : il est à vous. Z monter · S descendre · Q D tourner · clic tirer.');

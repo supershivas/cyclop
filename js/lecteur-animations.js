@@ -6,9 +6,9 @@
 // Chaque canal prend la couche la plus haute qui le couvre. Un canal dont la source change (autre animation, ou même animation relancée : `depart` neuf)
 // fond de la pose qu'il MONTRAIT vers la nouvelle en `fondu` secondes : un fondu interrompu repart de ce qui est à l'écran, la pose ne saute jamais.
 // L'état d'un homme (`nouvelEtat()`) garde, par canal, la source, la pose montrée et l'instant du changement : il se jette avec l'homme, rien ne se sauvegarde.
-import { CANAUX, NOMS_CHAMPS, COURBES } from './data/poses-soldat.js?v=0.165.0';
-import { poseNeutre, modeDe, miroir } from './pose-soldat.js?v=0.165.0';
-import { FONDU } from './data/lecteur-animations.js?v=0.165.0';
+import { CANAUX, NOMS_CHAMPS, COURBES } from './data/poses-soldat.js?v=0.166.0';
+import { poseNeutre, modeDe, miroir } from './pose-soldat.js?v=0.166.0';
+import { FONDU } from './data/lecteur-animations.js?v=0.166.0';
 
 export const nouvelEtat = () => ({ canaux: {} });
 

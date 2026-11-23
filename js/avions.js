@@ -4,13 +4,13 @@
    L'avion entre par le prolongement de la passe, vole à `croisiere` m, descend à `passe` m sur les `descente` m qui précèdent la bande, la balaie (ses balles tombent
    `avance` m devant lui, chaque homme de la bande n'est tiré qu'une fois), remonte, et sort. Au-dessus d'hommes qui tirent, il perd des points de vie (`exposition`) ;
    à zéro, il tombe, écrase ce qui est sous lui et laisse une épave pour le reste de la bataille. Les avions de chaque camp : `etat.avions[camp]`, les points de vie de chacun (0 : perdu). */
-import { MITRAILLAGE as M, AVION_MAIN as AM } from './data/mitraillage.js?v=0.165.0';
-import { METEO } from './data/meteo.js?v=0.165.0';
-import { GRILLE, effrayer, toitFacteur } from './army.js?v=0.165.0';
-import { hash2 } from './lib/rng.js?v=0.165.0';
-import { modif, pvAvion, campDe, niveauDe, emplacementCamp } from './camp.js?v=0.165.0';
-import { impact } from './terrain.js?v=0.165.0';
-import { NOMS_CALIBRES } from './data/calibres.js?v=0.165.0';
+import { MITRAILLAGE as M, AVION_MAIN as AM } from './data/mitraillage.js?v=0.166.0';
+import { METEO } from './data/meteo.js?v=0.166.0';
+import { GRILLE, effrayer, toitFacteur } from './army.js?v=0.166.0';
+import { hash2 } from './lib/rng.js?v=0.166.0';
+import { modif, pvAvion, campDe, niveauDe, emplacementCamp } from './camp.js?v=0.166.0';
+import { impact } from './terrain.js?v=0.166.0';
+import { NOMS_CALIBRES } from './data/calibres.js?v=0.166.0';
 
 const borne = (v, a, b) => v < a ? a : v > b ? b : v;
 const lisse = f => { f = borne(f, 0, 1); return f * f * (3 - 2 * f); };
@@ -178,9 +178,9 @@ export function commanderAile(B, camp, c) {
     if (v.etat !== 'vol') return 'Cet avion ne vole plus.';
     if (v.retour) return 'Il rentre : il se pose seul.';
     if (!v.main) {
+      const r = refusPrise(v, etat.temps); if (r) return r;
       const p = positionDe(v, etat.temps);
-      if (p.s < 0) return (etat.temps - v.t0) * M.vitesse < (v.av?.sP ?? 0) ? 'Il décolle encore : vous prendrez les commandes en l\'air.' : 'Il rentre déjà : il se pose seul.';
-      v.main = { x: p.x, y: p.y, h: p.h, cap: p.cap, pente: 0, roulis: 0, essence: AM.essence, munitions: AM.munitions, tirait: false, ix: p.x, iy: p.y };
+      v.main = { x: p.x, y: p.y, h: Math.max(p.h, AM.plancher + 3), cap: p.cap, pente: p.pente ?? 0, roulis: 0, essence: AM.essence, munitions: AM.munitions, tirait: false, ix: p.x, iy: p.y, creux: 0 };      // (il garde sa montée)
     }
     K = B.ailes[camp] = { id: c.id, ro: 0, pi: 0, tir: false, auto: false };
   }
@@ -192,6 +192,12 @@ export function commanderAile(B, camp, c) {
   if (c.auto !== undefined) K.auto = !!c.auto;
   if (c.rentrer) { const v = vol(K.id); if (v?.main && !v.retour) rentrer(B, v); }
   return '';
+}
+/* Peut-on prendre les commandes ? '' ou la raison (v0.166.0 : dès qu'il a quitté la piste de `AM.prise` m, plus au début de la passe) */
+export function refusPrise(v, temps) {
+  const st = (temps - v.t0) * M.vitesse, sP = v.av?.sP ?? 0;
+  if (v.av && st < sP) return st < v.av.L1 + AM.prise ? 'Il décolle encore : vous prendrez les commandes en l\'air.' : '';
+  return positionDe(v, temps).s < 0 ? 'Il rentre déjà : il se pose seul.' : '';
 }
 const angleProche = d => d - 2 * Math.PI * Math.round(d / (2 * Math.PI));
 /* Où tombent ses balles : la ligne des mitrailleuses (`site` sous l'axe) touche le sol devant lui ; null si elle passe au-dessus de l'horizon */
@@ -226,8 +232,8 @@ function piloter(B, v, K, ctx, rng) {
   let ro = K.ro * AM.roulis;
   if (m.x < -M.sortie || m.y < -M.sortie || m.x > T.W + M.sortie || m.y > T.H + M.sortie) ro = Math.sign(angleProche(Math.atan2(T.H / 2 - m.y, T.W / 2 - m.x) - m.cap)) * AM.roulis;      // trop loin : il revient seul
   m.roulis += borne(ro - m.roulis, -AM.roule * dt, AM.roule * dt);
-  m.pente += borne(K.pi * AM.pente - m.pente, -AM.cabre * dt, AM.cabre * dt);
-  m.cap = angleProche(m.cap + M.circuit.g * Math.tan(m.roulis) / M.vitesse * dt);
+  m.pente += borne((K.pi === 0 && m.h < AM.sur ? AM.monte : K.pi * AM.pente) - m.pente, -AM.cabre * dt, AM.cabre * dt);      // (bas et sans commande, il remonte seul : v0.166.0)
+  m.cap = angleProche(m.cap + AM.vire * M.circuit.g * Math.tan(m.roulis) / M.vitesse * dt);      // (plus vite que la physique, v0.166.0)
   const vh = M.vitesse * Math.cos(m.pente);
   m.x += Math.cos(m.cap) * vh * dt; m.y += Math.sin(m.cap) * vh * dt; m.h += M.vitesse * Math.sin(m.pente) * dt;
   if (m.h > AM.plafond) { m.h = AM.plafond; m.pente = Math.min(0, m.pente); }
@@ -235,7 +241,7 @@ function piloter(B, v, K, ctx, rng) {
   // les mitrailleuses : à la main, ou seules sous `auto` m quand des hommes d'en face sont sur la bande
   const pt = impactAxe(m), tire = !!pt && m.munitions > 0 && (K.tir || (K.auto && m.h < AM.auto && ennemisDevant(B, v, pt[0], pt[1])));
   if (tire) {
-    if (m.tirait) mitrailler(B, v, m.ix, m.iy, pt[0], pt[1], m.h, ctx, rng);
+    if (m.tirait) { mitrailler(B, v, m.ix, m.iy, pt[0], pt[1], m.h, ctx, rng); labourerMain(B, m, pt[0], pt[1], ctx); }
     m.munitions = Math.max(0, m.munitions - AM.cadence * dt); m.ix = pt[0]; m.iy = pt[1];
   }
   m.tirait = tire;
@@ -375,6 +381,21 @@ function labourer(B, v, lo, hi, ctx) {
   for (let q = 0; q < n; q++) {
     const k = etat.impacts.length, l = lo + hash2(k, q, B.etat.graine) * (hi - lo), w = (hash2(k, q, B.etat.graine + 1) * 2 - 1) * hw;      // (un hachage, pas le générateur : le fil des tirages de la bataille ne bouge pas)
     const x = arrondi(v.x1 + v.ux * l - v.uy * w), y = arrondi(v.y1 + v.uy * l + v.ux * w);
+    if (x < 0 || y < 0 || x >= T.W || y >= T.H) continue;
+    etat.impacts.push([etat.jour, etat.tickJour, Math.round(x * 10), Math.round(y * 10), NOMS_CALIBRES.indexOf(M.labour.calibre)]);
+    impact(T, x, y, M.labour.calibre, R, etat.impacts.length - 1, ctx.gel);
+  }
+}
+
+/* Les balles de l'avion à la main labourent aussi (v0.166.0) : sur le segment que ses balles viennent de balayer, un creux de 75 par `AM.creux` m² de sa bande (le compte qui reste passe au pas suivant :
+   `m.creux`), placé par un hachage comme `labourer` */
+function labourerMain(B, m, bx, by, ctx) {
+  const { etat, terrain: T, R } = B, dx = bx - m.ix, dy = by - m.iy, L = Math.hypot(dx, dy); if (L < 0.01) return;
+  const ux = dx / L, uy = dy / L, hw = AM.largeur / 2;
+  m.creux = (m.creux ?? 0) + L * AM.largeur / AM.creux;
+  for (let q = 0; m.creux >= 1; q++, m.creux--) {
+    const k = etat.impacts.length, l = hash2(k, q, etat.graine) * L, w = (hash2(k, q, etat.graine + 1) * 2 - 1) * hw;
+    const x = arrondi(m.ix + ux * l - uy * w), y = arrondi(m.iy + uy * l + ux * w);
     if (x < 0 || y < 0 || x >= T.W || y >= T.H) continue;
     etat.impacts.push([etat.jour, etat.tickJour, Math.round(x * 10), Math.round(y * 10), NOMS_CALIBRES.indexOf(M.labour.calibre)]);
     impact(T, x, y, M.labour.calibre, R, etat.impacts.length - 1, ctx.gel);

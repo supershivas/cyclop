@@ -1,9 +1,8 @@
 {
-  "version": "0.165.0",
+  "version": "0.166.0",
   "date": "2026-11-23",
   "changes": [
-    "Le soldat : la vue ne saute plus, on tire à la hanche sans viseur (épaulé pour viser), une carte montre son nom et son état, les bras du fusil sont refaits ; plus de voile de fumée noire le soir",
-    "L'avion se pilote en vue de poursuite : Z monte, S descend, Q et D tournent, un bouton « Rentrer à la base »",
-    "Le char : une vue fixe au-dessus de lui, on voit l'obus partir puis exploser sur la cible, on peut tirer tout près"
+    "L'avion piloté : on prend les commandes à peine la piste quittée, il vire bien plus vite et remonte seul s'il est trop bas",
+    "Ses rafales labourent le sol : des gerbes de terre et de petits cratères, comme un passage automatique"
   ]
 }
