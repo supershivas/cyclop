@@ -1,5 +1,10 @@
 # Journal des versions
 
+## 0.165.1 — 2026-11-23
+
+- La carte du front du soir : une seule ligne par tranchée, chaque croix à l'endroit où l'homme est tombé (les jours d'avant en pâle dans « Depuis le début »)
+- La courbe des effectifs a son propre cadre ; le bandeau d'un largage ne passe plus par-dessus la soirée
+
 ## 0.165.0 — 2026-11-23
 
 - Le soldat : la vue ne saute plus, on tire à la hanche sans viseur (épaulé pour viser), une carte montre son nom et son état, les bras du fusil sont refaits ; plus de voile de fumée noire le soir

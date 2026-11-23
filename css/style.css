@@ -1317,6 +1317,8 @@ body.vue-verrouillee .char-fiche { display: none; }      /* la fiche cacherait l
 .ps-e .ps3-legende .tr-n { background: var(--jeu-nous); } .ps-e .ps3-legende .tr-e { background: var(--jeu-eux); }
 .ps-e .ps3-legende .pris, .ps-e .ps3-legende .perdu, .ps-e .ps3-legende .croix { width: auto; height: auto; line-height: 1; color: var(--jeu-fond); }
 .ps-e .ps3-legende .pris { color: var(--jeu-nous); -webkit-text-stroke: .5px var(--jeu-fond); }
+#soiree .ps3-courbe { display: grid; gap: var(--e1); margin-top: var(--e2); padding: var(--e1) var(--e3); border: 1px solid var(--jeu-fond); box-shadow: 4px 4px 0 var(--jeu-fond); }
+#soiree .ps3-courbe-t { font-size: var(--texte-petit); font-weight: bold; color: var(--jeu-fond); }
 .ps-e .ps3-courbe svg { width: 100%; height: auto; max-height: 64px; display: block; }
 .ps-e .ps3-registre { display: grid; align-content: start; gap: 0; padding: var(--e3) var(--e4); border: 1px solid var(--jeu-fond); box-shadow: 4px 4px 0 var(--jeu-fond);
   background: repeating-linear-gradient(to bottom, transparent 0 27px, rgba(116, 102, 79, .35) 27px 28px); grid-row: 1 / 2; grid-column: 2; }
@@ -1422,7 +1424,8 @@ body.vue-verrouillee .char-fiche { display: none; }      /* la fiche cacherait l
 #soiree .ps3-c-tete .ps3-etat { flex: none; gap: 4px; }
 #soiree .ps3-c-tete .ps3-etat b { font-size: var(--texte); }
 #soiree .ps3-c-tete .ps3-etat small { min-width: 0; }
-body:has(#soiree:not([hidden])) #carte, body:has(#soiree:not([hidden])) #secteur { visibility: hidden; }
+body:has(#soiree:not([hidden])) #carte, body:has(#soiree:not([hidden])) #secteur,
+body:has(#soiree:not([hidden])) #objet-bandeau, body:has(#soiree:not([hidden])) #caprice { visibility: hidden; }      /* (le bandeau d’un largage passait par-dessus la carte du front, v0.165.1) */
 
 /* ─── Les fiches, deuxième jet (Jérôme, 20 nov., v0.153.0 ; le sujet « Les données : les fiches » du labo, variante « La bande noire ») ───
    Une charpente pour l'homme, le mort, le régiment, le char, l'avion et la mitrailleuse (hud/fiche-cadre.js) : la bande noire de la soirée, quatre chiffres clés, deux colonnes
