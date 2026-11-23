@@ -204,6 +204,10 @@ les deux machines calculent la même bataille, on n'échange que les ordres) sur
 
 ## À l'étude (validé dans le principe par le prompt de départ, pas construit)
 
+### Les caprices du front (Jérôme, 23 nov., v0.163.0)
+
+**Statut** : **à mesurer** (livré : `js/caprices.js`, `docs/domaines/bataille.md`). À jouer : la force de chacun (le gaz, la mine, l'as), la place dans la journée (entre 50 et 250 s), un réglage pour les couper si une partie sans hasard est voulue.
+
 ### Les largages (Jérôme, 23 nov., v0.162.0)
 
 **Statut** : **à mesurer** (livré en jeu : `js/largages.js`, `docs/domaines/bataille.md`, « Les largages »). À jouer : la fréquence (deux ou trois avions par jour), la force des objets (un Revenant, un obus de 400, les taxis), la course (cinq coureurs par camp), ce que l'IA d'en face fait de sa musette ; pas de son propre au largage.

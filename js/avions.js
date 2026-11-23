@@ -4,13 +4,13 @@
    L'avion entre par le prolongement de la passe, vole à `croisiere` m, descend à `passe` m sur les `descente` m qui précèdent la bande, la balaie (ses balles tombent
    `avance` m devant lui, chaque homme de la bande n'est tiré qu'une fois), remonte, et sort. Au-dessus d'hommes qui tirent, il perd des points de vie (`exposition`) ;
    à zéro, il tombe, écrase ce qui est sous lui et laisse une épave pour le reste de la bataille. Les avions de chaque camp : `etat.avions[camp]`, les points de vie de chacun (0 : perdu). */
-import { MITRAILLAGE as M, AVION_MAIN as AM } from './data/mitraillage.js?v=0.162.0';
-import { METEO } from './data/meteo.js?v=0.162.0';
-import { GRILLE, effrayer, toitFacteur } from './army.js?v=0.162.0';
-import { hash2 } from './lib/rng.js?v=0.162.0';
-import { modif, pvAvion, campDe, niveauDe, emplacementCamp } from './camp.js?v=0.162.0';
-import { impact } from './terrain.js?v=0.162.0';
-import { NOMS_CALIBRES } from './data/calibres.js?v=0.162.0';
+import { MITRAILLAGE as M, AVION_MAIN as AM } from './data/mitraillage.js?v=0.163.0';
+import { METEO } from './data/meteo.js?v=0.163.0';
+import { GRILLE, effrayer, toitFacteur } from './army.js?v=0.163.0';
+import { hash2 } from './lib/rng.js?v=0.163.0';
+import { modif, pvAvion, campDe, niveauDe, emplacementCamp } from './camp.js?v=0.163.0';
+import { impact } from './terrain.js?v=0.163.0';
+import { NOMS_CALIBRES } from './data/calibres.js?v=0.163.0';
 
 const borne = (v, a, b) => v < a ? a : v > b ? b : v;
 const lisse = f => { f = borne(f, 0, 1); return f * f * (3 - 2 * f); };
@@ -383,7 +383,7 @@ function labourer(B, v, lo, hi, ctx) {
 
 function abattre(B, v, p) {
   const { etat } = B;
-  v.pv = 0; v.etat = 'chute'; etat.avions[v.camp][v.k] = 0; etat.avionsJour[etat.jour - 1][v.camp][1]++;
+  v.pv = 0; v.etat = 'chute'; if (v.k >= 0) etat.avions[v.camp][v.k] = 0; etat.avionsJour[etat.jour - 1][v.camp][1]++;
   const ti = etat.temps + Math.sqrt(2 * p.h / M.chute.gravite), d = M.vitesse * M.chute.vitesse * (ti - etat.temps);
   v.chute = { t: etat.temps, x: p.x, y: p.y, h: p.h, ti };
   if (v.av) { v.chute.ux = Math.cos(p.cap); v.chute.uy = Math.sin(p.cap); v.chute.cap = p.cap; }      // il glisse dans le sens où il virait, pas toujours sur le prolongement de la passe
@@ -424,14 +424,14 @@ export function avancerAvions(B, ctx, rng) {
     if (v.etat === 'epave') continue;
     if (v.etat === 'chute') { if (etat.temps >= v.chute.ti - 1e-9) ecraser(B, v, ctx, rng); continue; }
     if (v.retour) {      // il rentre seul après avoir été piloté : on lui tire encore dessus
-      if (retourFini(B, v)) { v.etat = 'rentre'; etat.avions[v.camp][v.k] = v.pv; B.evenements.push({ type: 'avion-rentre', camp: v.camp, pv: v.pv }); continue; }
+      if (retourFini(B, v)) { v.etat = 'rentre'; if (v.k >= 0) etat.avions[v.camp][v.k] = v.pv; B.evenements.push({ type: 'avion-rentre', camp: v.camp, pv: v.pv }); continue; }
       const p = positionDe(v, etat.temps), mal = degatsParSeconde(B, v.camp, p.x, p.y, p.h) * dt;
       if (mal > 0) { v.pv = Math.max(0, v.pv - mal); if (v.pv <= 0) abattre(B, v, p); }
       continue;
     }
     if (v.main) { const K = B.ailes?.find(k => k?.id === v.id); if (K) piloter(B, v, K, ctx, rng); else rentrer(B, v); continue; }      // personne aux commandes (une partie relue) : il rentre
     const s = (etat.temps - v.t0) * M.vitesse - (v.av?.sP ?? 0);
-    if (s >= v.total) { v.etat = 'rentre'; etat.avions[v.camp][v.k] = v.pv; B.evenements.push({ type: 'avion-rentre', camp: v.camp, pv: v.pv }); continue; }
+    if (s >= v.total) { v.etat = 'rentre'; if (v.k >= 0) etat.avions[v.camp][v.k] = v.pv; B.evenements.push({ type: 'avion-rentre', camp: v.camp, pv: v.pv }); continue; }
     const p = positionDe(v, etat.temps);
     // la bande : les balles qui tombent devant lui
     const lo = borne(s - M.vitesse * dt + M.avance - v.sA, 0, v.L), hi = borne(s + M.avance - v.sA, 0, v.L);
@@ -445,7 +445,7 @@ export function avancerAvions(B, ctx, rng) {
 
 /* L'aube : les avions reviennent au sol (ceux qui étaient en l'air) et chacun est réparé de `reparation` pv. Les épaves restent sur le champ de bataille jusqu'à la fin (Jérôme, 1er novembre). */
 export function reparerAvions(etat) {
-  for (const v of etat.mitraillages) if (v.etat === 'vol') etat.avions[v.camp][v.k] = v.pv;
+  for (const v of etat.mitraillages) if (v.etat === 'vol' && v.k >= 0) etat.avions[v.camp][v.k] = v.pv;      // (k < 0 : l'as d'un caprice, hors de la flotte)
   etat.mitraillages = etat.mitraillages.filter(v => v.etat === 'epave');
   etat.avions.forEach((flotte, camp) => { for (let k = 0; k < flotte.length; k++) if (flotte[k] > 0) flotte[k] = Math.min(pvAvion(etat, camp), flotte[k] + M.reparation); });
 }

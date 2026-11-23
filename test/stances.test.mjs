@@ -12,7 +12,7 @@ import { REGLAGES as R } from '../js/data/reglages.js';
 
 // Tous nos régiments à l'assaut de la 1re ligne d'en face, 4 500 pas (150 s) : le combat a lieu (90 à 130 morts de chez nous depuis la v0.69.0 : le corps à corps ; 60 à 80 avant)
 function assaut(graine, Rj = R, avant = null) {
-  const B = nouvelleBataille(graine, Rj, { soldats: 400, jours: 3, largages: false });      // (v0.162.0 : sans les caisses parachutées, qui passent pendant ces 150 s ; la référence mesure les postures seules)
+  const B = nouvelleBataille(graine, Rj, { soldats: 400, jours: 3, largages: false, caprices: false });      // (v0.162.0 : sans les caisses parachutées ni les caprices, qui tombent pendant ces 150 s ; la référence mesure les postures seules)
   const L = B.lignes.find(l => l.camp === 1 && l.rang === 0), Z = zone(B), x = Z.x0 + 200;
   ordonnerMarche(B, B.etat.regiments.filter(r => r.camp === 0).map(r => r.id), x, ligneY(L, x));
   if (avant) avant(B);

@@ -10,15 +10,15 @@
      { letal: le jour des balles incendiaires, bombes: celles qui restent pour le prochain vol } ;
    - le boost d'un régiment est sur le régiment (`reg.boost` : { o, fin, tir, vit, intrepide, pertes, tenace, aura }).
    Le calendrier ne tire rien du générateur : l'heure, l'endroit et l'objet viennent d'un hachage (graine, jour, numéro). */
-import { OBJET, LARGAGE as L, tirerObjet, musetteObjet } from './data/largages.js?v=0.162.0';
-import { CALIBRES } from './data/calibres.js?v=0.162.0';
-import { hash2 } from './lib/rng.js?v=0.162.0';
-import { ajouterSoldat, poserCaracs, effrayer, DENSITE, GRILLE, place } from './army.js?v=0.162.0';
-import { ligneY } from './tranchees.js?v=0.162.0';
-import { departCaracs } from './identite.js?v=0.162.0';
-import { positionDe } from './avions.js?v=0.162.0';
-import { pvAvion, sortieCaserne } from './camp.js?v=0.162.0';
-import { NIDS } from './data/nids.js?v=0.162.0';
+import { OBJET, LARGAGE as L, tirerObjet, musetteObjet } from './data/largages.js?v=0.163.0';
+import { CALIBRES } from './data/calibres.js?v=0.163.0';
+import { hash2 } from './lib/rng.js?v=0.163.0';
+import { ajouterSoldat, poserCaracs, effrayer, DENSITE, GRILLE, place } from './army.js?v=0.163.0';
+import { ligneY } from './tranchees.js?v=0.163.0';
+import { departCaracs } from './identite.js?v=0.163.0';
+import { positionDe } from './avions.js?v=0.163.0';
+import { pvAvion, sortieCaserne } from './camp.js?v=0.163.0';
+import { NIDS } from './data/nids.js?v=0.163.0';
 
 const NOUS = 0, EUX = 1;
 const PAS_LARGAGE = 1 / 30;
@@ -84,7 +84,7 @@ function cibleDense(A, x, y, camp, portee) {
 // ─── Le calendrier : un avion de temps en temps, au-dessus du no man's land ───
 
 // Le milieu du no man's land à l'abscisse x : entre nos premières lignes et les leurs (sans tranchées : entre les deux camps)
-function milieu(B, x) {
+export function milieu(B, x) {
   const n = B.lignes?.find(l => l.camp === NOUS && l.rang === 0), e = B.lignes?.find(l => l.camp === EUX && l.rang === 0);
   if (n && e) return (ligneY(n, x) + ligneY(e, x)) / 2;
   const { etat } = B, ys = [NOUS, EUX].map(c => { const r = etat.regiments.filter(q => q.camp === c && q.effectif > 0); return r.length ? r.reduce((s, q) => s + q.depart.y, 0) / r.length : null; });
@@ -98,15 +98,23 @@ function planifier(B, zone) {
     LG.prochain = etat.temps - tj + L.premier[0] + hash2(g, etat.jour, 501) * (L.premier[1] - L.premier[0]);
   }
   if (etat.temps < LG.prochain || tj > L.fin || tj + dureeChute() > R.jour.duree) return;
+  const n = lacherCaisse(B, zone, etat.temps + 2.5);
+  LG.prochain = etat.temps + L.intervalle[0] + hash2(g, n, 606) * (L.intervalle[1] - L.intervalle[0]);
+}
+/* Une caisse lâchée au temps `t0` (la pluie de caisses et l'as des caprices s'en servent aussi, caprices.js) : l'endroit et l'objet du hachage de son numéro,
+   sauf `force` : { o (un objet imposé), rarete (une rareté imposée), x, y (le point de chute) }. Rend son numéro. */
+export function lacherCaisse(B, zone, t0, force = {}) {
+  const { etat } = B, LG = etat.largages, g = etat.graine | 0;
   const n = LG.n++, u = k => hash2(g, n, 600 + k);
   const Z = zone, marge = 0.12 * (Z.x1 - Z.x0);
-  const x = Math.round((Z.x0 + marge + u(1) * (Z.x1 - Z.x0 - 2 * marge)) * 10) / 10;
-  const y = Math.round((milieu(B, x) + (u(2) - 0.5) * 14) * 10) / 10;
-  const O = tirerObjet(u(3), u(4));
-  LG.caisses.push({ id: n, o: O.id, x, y, dir: u(5) < 0.5 ? 1 : -1, t0: Math.round((etat.temps + 2.5) * 30) / 30, etat: 'chute', porteur: -1, camp: -1, coureurs: [], px: x, py: y });
-  LG.prochain = etat.temps + L.intervalle[0] + u(6) * (L.intervalle[1] - L.intervalle[0]);
+  const x = force.x ?? Math.round((Z.x0 + marge + u(1) * (Z.x1 - Z.x0 - 2 * marge)) * 10) / 10;
+  const y = force.y ?? Math.round((milieu(B, x) + (u(2) - 0.5) * 14) * 10) / 10;
+  const O = force.o ? OBJET[force.o] : force.rarete ? tirerDe(force.rarete, u(4)) : tirerObjet(u(3), u(4));
+  LG.caisses.push({ id: n, o: O.id, x, y, dir: u(5) < 0.5 ? 1 : -1, t0: Math.round(t0 * 30) / 30, etat: 'chute', porteur: -1, camp: -1, coureurs: [], px: x, py: y });
   B.evenements.push({ type: 'largage', caisse: n, o: O.id, x, y });
+  return n;
 }
+const tirerDe = (rarete, v) => { const l = Object.values(OBJET).filter(o => o.rarete === rarete); return l[Math.min(l.length - 1, Math.floor(v * l.length))]; };
 
 // Les coureurs : les `coureurs` hommes valides de chaque camp les plus proches, à moins de `rayonCourse` m (ni blessés, ni en déroute, ni à une mitrailleuse, ni pilotés)
 function choisirCoureurs(B, c, ctx) {

@@ -1,5 +1,10 @@
 # Journal des versions
 
+## 0.163.0 — 2026-11-23
+
+- Chaque jour, un caprice du front : un tir trop court, des obus perdus, deux héros, des chars perdus, une pluie de caisses, un ordre absurde, un zeppelin, une nappe de gaz, une mine, un as, une éclipse, un tremblement de terre
+- Un bandeau le dit, une pastille compte le temps qu'il reste ; la vitrine a un onglet « Les caprices »
+
 ## 0.162.0 — 2026-11-23
 
 - Des avions larguent des caisses en parachute au-dessus du no man's land : le premier homme qui atteint l'objet le prend pour son camp (35 objets, de la musette de cartouches à l'obus de 400)

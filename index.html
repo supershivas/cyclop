@@ -9,9 +9,9 @@
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta property="og:image" content="og.png">
-<link rel="stylesheet" href="js/lib/game.css?v=0.162.0">
-<link rel="stylesheet" href="css/style.css?v=0.162.0">
-<link rel="stylesheet" href="css/ds-v2.css?v=0.162.0">
+<link rel="stylesheet" href="js/lib/game.css?v=0.163.0">
+<link rel="stylesheet" href="css/style.css?v=0.163.0">
+<link rel="stylesheet" href="css/ds-v2.css?v=0.163.0">
 </head>
 <body class="charge">
 <!-- La barre de chargement (v0.28.0) : là avant tout script ; main.js la remplit, puis la retire. `body.charge` (v0.100.0) : tout le reste de l'écran est caché tant qu'elle est là (le menu et le titre ne se voient plus derrière) -->
@@ -272,10 +272,11 @@
 <!-- La vitrine des objets parachutés (v0.162.0) : hud/vitrine.js -->
 <dialog id="dialogue-vitrine" aria-label="La vitrine des objets parachutés">
   <h2>La vitrine</h2>
+  <div class="vitrine-onglets"><button class="pastille" type="button" data-onglet="objets" aria-pressed="true">Les objets</button><button class="pastille" type="button" data-onglet="caprices" aria-pressed="false">Les caprices</button></div>
   <div class="vitrine-haut" id="vitrine-haut"></div>
   <div class="vitrine-corps">
     <div class="vitrine-grille" id="vitrine-grille"></div>
-    <aside class="vitrine-cote"><canvas id="vitrine-3d" aria-hidden="true"></canvas><div class="vitrine-fiche" id="vitrine-fiche"></div></aside>
+    <aside class="vitrine-cote"><canvas id="vitrine-3d" aria-hidden="true"></canvas><div class="vitrine-grand" id="vitrine-grand" aria-hidden="true" hidden></div><div class="vitrine-fiche" id="vitrine-fiche"></div></aside>
   </div>
   <form method="dialog" class="menu"><button class="bouton" value="fermer">Fermer</button></form>
 </dialog>
@@ -438,6 +439,7 @@
 
 <div class="jeu-toast" id="toast" role="status" hidden></div>
   <div class="papier objet-bandeau" id="objet-bandeau" role="status" aria-live="polite" hidden></div>
-<script type="module" src="js/main.js?v=0.162.0"></script>
+  <div class="papier caprice-puce" id="caprice" hidden></div>
+<script type="module" src="js/main.js?v=0.163.0"></script>
 </body>
 </html>

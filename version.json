@@ -1,9 +1,8 @@
 {
-  "version": "0.162.0",
+  "version": "0.163.0",
   "date": "2026-11-23",
   "changes": [
-    "Des avions larguent des caisses en parachute au-dessus du no man's land : le premier homme qui atteint l'objet le prend pour son camp (35 objets, de la musette de cartouches à l'obus de 400)",
-    "Les bombardements ramenés dans la tranchée vont dans la musette : touches 7, 8, 9 puis un clic sur le champ",
-    "La vitrine de l'écran titre garde les objets découverts ; le parachute s'ouvre en fuseau, gonfle et balance"
+    "Chaque jour, un caprice du front : un tir trop court, des obus perdus, deux héros, un zeppelin, une nappe de gaz, une mine, un as, une éclipse, un tremblement de terre…",
+    "Un bandeau le dit, une pastille compte le temps qu'il reste ; la vitrine a un onglet « Les caprices »"
   ]
 }

@@ -2,18 +2,56 @@
 // `#dialogue-vitrine`. En haut, le total et une barre par rareté ; puis les objets par catégorie, du plus commun au plus rare : inconnu (une silhouette
 // et un « ? »), vu (tombé, ou pris par ceux d'en face : son nom et son effet), découvert (un des nôtres l'a pris : combien de fois). Un clic sur une case
 // vue ou découverte montre l'objet en 3D qui tourne sous sa flèche (les modèles du jeu, rendu/largages-modeles.js). Les découvertes : hud/largages.js.
-import { PALETTE } from '../palette.js?v=0.162.0';
-import { OBJETS, RARETES, ORDRE_RARETES, CATEGORIES, ORDRE_CATEGORIES } from '../data/largages.js?v=0.162.0';
-import { loadThree } from '../three-lib.js?v=0.162.0';
-import { cacheModeles, construireObjet, fleche, anneau, briller, tourne, flotte } from '../rendu/largages-modeles.js?v=0.162.0';
+import { PALETTE } from '../palette.js?v=0.163.0';
+import { OBJETS, RARETES, ORDRE_RARETES, CATEGORIES, ORDRE_CATEGORIES } from '../data/largages.js?v=0.163.0';
+import { loadThree } from '../three-lib.js?v=0.163.0';
+import { CAPRICES } from '../data/caprices.js?v=0.163.0';
+import { cacheModeles, construireObjet, fleche, anneau, briller, tourne, flotte } from '../rendu/largages-modeles.js?v=0.163.0';
 
 const el = (tag, cls, txt) => { const e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; return e; };
 
 export function creerVitrine({ $, decouvertes }) {
-  const d = $('dialogue-vitrine'), haut = $('vitrine-haut'), grille = $('vitrine-grille'), fiche = $('vitrine-fiche'), toile = $('vitrine-3d');
-  let scene3d = null, choisi = null;
+  const d = $('dialogue-vitrine'), haut = $('vitrine-haut'), grille = $('vitrine-grille'), fiche = $('vitrine-fiche'), toile = $('vitrine-3d'), grand = $('vitrine-grand');
+  let scene3d = null, choisi = null, onglet = 'objets';
+  // deux onglets : les objets parachutés, les caprices du front (v0.163.0)
+  for (const b of d.querySelectorAll('[data-onglet]')) b.onclick = () => { onglet = b.dataset.onglet; choisi = null; remplir(); premier(); };
+  function premier() {
+    if (onglet === 'caprices') { const K = CAPRICES.find(c => decouvertes.etat().caprices?.[c.id]); if (K) montrerCaprice(K); else { toile.hidden = true; grand.hidden = true; } return; }
+    const o = OBJETS.find(x => decouvertes.etat().objets[x.id]?.e === 'pris') ?? OBJETS.find(x => decouvertes.etat().objets[x.id]);
+    if (o) montrer(o);
+  }
+  // les caprices : une rangée par rareté ; inconnu (« ? ») ou vécu (combien de fois) ; choisi, sa grande icône et ce qu'il fait
+  function remplirCaprices() {
+    const V = decouvertes.etat().caprices ?? {}, n = CAPRICES.filter(c => V[c.id]).length;
+    haut.replaceChildren(el('p', 'vitrine-total', `${n} / ${CAPRICES.length} caprices vécus`));
+    grille.replaceChildren(...ORDRE_RARETES.filter(rk => CAPRICES.some(c => c.rarete === rk)).map(rk => {
+      const R = RARETES[rk], rang = el('section', 'vitrine-cat'), cases = el('div', 'vitrine-cases');
+      rang.append(el('h3', null, R.nom));
+      for (const K of CAPRICES.filter(c => c.rarete === rk)) {
+        const vu = V[K.id], b = el('button', `vitrine-case ${vu ? 'pris' : 'inconnu'}`);
+        b.type = 'button'; b.style.setProperty('--rarete', R.couleur); b.dataset.caprice = K.id;
+        const ic = el('i', 'objet-icone', vu ? K.icone : '?'); ic.setAttribute('aria-hidden', 'true');
+        b.append(ic, el('b', null, vu ? K.nom : '? ? ?'), el('span', null, vu ? `× ${vu}` : R.nom));
+        if (vu) { b.dataset.info = `${K.nom}\n${K.court}`; b.onclick = () => montrerCaprice(K); } else { b.setAttribute('aria-disabled', 'true'); b.dataset.info = `${R.nom} | pas encore vécu`; }
+        b.setAttribute('aria-pressed', String(choisi === K.id));
+        cases.append(b);
+      }
+      rang.append(cases);
+      return rang;
+    }));
+    if (!choisi) fiche.replaceChildren(el('p', 'vitrine-vide', n ? 'Un clic sur un caprice : ce qu\'il fait.' : 'Aucun caprice encore : il en tombe un chaque jour de bataille.'));
+  }
+  function montrerCaprice(K) {
+    choisi = K.id; scene3d?.arreter(); toile.hidden = true; grand.hidden = false;
+    grand.textContent = K.icone; grand.style.setProperty('--rarete', RARETES[K.rarete].couleur);
+    for (const b of grille.querySelectorAll('.vitrine-case')) b.setAttribute('aria-pressed', String(b.dataset.caprice === K.id));
+    fiche.replaceChildren(el('h3', null, K.nom), el('p', 'vitrine-sous', `${RARETES[K.rarete].nom} · vécu ${decouvertes.etat().caprices?.[K.id] ?? 0} fois`), el('p', null, K.effet));
+  }
 
   function remplir() {
+    for (const b of d.querySelectorAll('[data-onglet]')) b.setAttribute('aria-pressed', String(b.dataset.onglet === onglet));
+    if (onglet === 'caprices') return remplirCaprices();
+    toile.hidden = false; grand.hidden = true;
     const D = decouvertes.etat().objets, etatDe = o => D[o.id]?.e ?? 'inconnu';
     const pris = OBJETS.filter(o => etatDe(o) === 'pris').length;
     haut.replaceChildren(el('p', 'vitrine-total', `${pris} / ${OBJETS.length} découverts`), ...ORDRE_RARETES.map(rk => {
@@ -45,12 +83,12 @@ export function creerVitrine({ $, decouvertes }) {
   }
 
   function montrer(O) {
-    choisi = O.id;
+    choisi = O.id; toile.hidden = false; grand.hidden = true;
     for (const b of grille.querySelectorAll('.vitrine-case')) b.setAttribute('aria-pressed', String(b.querySelector('b').textContent === O.nom));
     const R = RARETES[O.rarete], e = decouvertes.etat().objets[O.id];
     const pastille = el('i', 'objet-icone', CATEGORIES[O.cat].icone); pastille.style.setProperty('--rarete', R.couleur);
     fiche.replaceChildren(el('h3', null, O.nom), el('p', 'vitrine-sous', `${R.nom} · ${CATEGORIES[O.cat].nom}${e?.e === 'pris' ? ` · pris ${e.n} fois` : ' · vu, jamais pris'}`), el('p', null, O.effet));
-    scene3d?.poser(O);
+    scene3d?.poser(O); scene3d?.reprendre();
   }
 
   // l'objet choisi en 3D : un rendu à part, en pixels doublés, créé à la première ouverture
@@ -74,6 +112,7 @@ export function creerVitrine({ $, decouvertes }) {
         if (!raf) boucle();
       },
       arreter() { cancelAnimationFrame(raf); raf = 0; },
+      reprendre() { if (!raf && courant) boucle(); },
     };
     function boucle() {
       raf = requestAnimationFrame(boucle);
@@ -94,10 +133,9 @@ export function creerVitrine({ $, decouvertes }) {
   d.addEventListener('close', () => scene3d?.arreter());
   return {
     async ouvrir() {
-      choisi = null; remplir(); d.showModal();
+      choisi = null; onglet = 'objets'; remplir(); d.showModal();
       try { await monter3d(); } catch (e) { console.warn('La vitrine sans 3D :', e.message); }
-      const premier = OBJETS.find(o => decouvertes.etat().objets[o.id]?.e === 'pris') ?? OBJETS.find(o => decouvertes.etat().objets[o.id]);
-      if (premier) montrer(premier);
+      premier();
     },
   };
 }

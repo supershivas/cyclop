@@ -1537,7 +1537,9 @@ body.vue-verrouillee:not(.vue-soldat) .aide-vue { bottom: calc(var(--e4) + 104px
 /* La vitrine des objets parachutés (v0.162.0, hud/vitrine.js) : le total, une barre par rareté, les objets par catégorie, l'objet choisi en 3D. Sans défilement de la page :
    la grille défile seule si l'écran est petit. */
 #dialogue-vitrine { max-width: min(1180px, 96vw); width: 96vw; max-height: calc(100dvh - 2 * var(--e4)); }
-#dialogue-vitrine[open] { display: grid; grid-template-rows: auto auto minmax(0, 1fr) auto; gap: var(--pas); }
+#dialogue-vitrine[open] { display: grid; grid-template-rows: auto auto auto minmax(0, 1fr) auto; gap: var(--pas); }
+.vitrine-onglets { display: flex; gap: var(--pas); }
+.vitrine-grand { height: 220px; display: grid; place-items: center; font-size: 120px; line-height: 1; background: var(--jeu-fond); color: var(--rarete); }
 .vitrine-haut { display: grid; grid-template-columns: auto repeat(6, minmax(0, 1fr)); gap: var(--pas) var(--e3); align-items: center; }
 .vitrine-total { margin: 0; font-weight: bold; font-size: var(--texte-moyen); }
 .vitrine-rarete { display: grid; grid-template-columns: auto minmax(24px, 1fr) auto; gap: var(--e1); align-items: center; font-size: var(--texte-petit); }
@@ -1565,3 +1567,13 @@ body.vue-verrouillee:not(.vue-soldat) .aide-vue { bottom: calc(var(--e4) + 104px
 .vitrine-fiche p { margin: var(--e1) 0 0; font-size: var(--texte-petit); }
 .vitrine-sous { text-transform: uppercase; letter-spacing: var(--lettres-etiquette, .06em); }
 @media (max-width: 900px) { .vitrine-corps { grid-template-columns: 1fr; } .vitrine-haut { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+
+/* Le caprice du front en cours (v0.163.0) : une pastille au-dessus de la rangée des régiments, l'icône sur la couleur de sa rareté, le nom, le temps qui reste */
+.caprice-puce { position: fixed; bottom: 104px; left: 50%; transform: translateX(-50%); z-index: 20; display: grid; grid-template-columns: auto auto; column-gap: var(--pas); align-items: center;
+  padding: var(--e1) var(--pas); border-left: 6px solid var(--rarete); box-shadow: var(--ombre-papier); font-size: var(--texte-petit); pointer-events: auto; }
+.caprice-puce b { white-space: nowrap; }
+.caprice-puce u { grid-column: 1 / -1; display: block; height: 4px; margin-top: var(--e0); background: var(--jeu-fond); text-decoration: none; }
+.caprice-puce u s { display: block; height: 100%; background: var(--rarete); text-decoration: none; }
+body.vue-soldat .caprice-puce { display: none; }
+.vitrine-onglets .pastille { color: var(--jeu-encre); border-color: var(--jeu-encre); }
+.vitrine-onglets .pastille[aria-pressed="true"] { background: var(--jeu-encre); color: var(--jeu-fond); }

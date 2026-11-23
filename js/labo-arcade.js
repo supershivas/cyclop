@@ -1,13 +1,13 @@
 // Le moteur des maquettes du labo (scène du jeu en direct, caméra libre, outils SVG) : partagé par les chars, les tranchées et le camp.
 // Les maquettes d'Arcade (caisses, obus ratés, sapes, gaz) sont archivées : docs/archives/labo-archive.md.
-import { PALETTE } from './palette.js?v=0.162.0';
-import { nouvelleBataille, avancer, ordonnerMarche, mourir, PAS } from './bataille.js?v=0.162.0';
-import { compacter } from './army.js?v=0.162.0';
-import { impact } from './terrain.js?v=0.162.0';
-import { creerRendu } from './rendu3d.js?v=0.162.0';
-import { loadThree } from './three-lib.js?v=0.162.0';
-import { CALIBRES } from './data/calibres.js?v=0.162.0';
-import { hash2 } from './lib/rng.js?v=0.162.0';
+import { PALETTE } from './palette.js?v=0.163.0';
+import { nouvelleBataille, avancer, ordonnerMarche, mourir, PAS } from './bataille.js?v=0.163.0';
+import { compacter } from './army.js?v=0.163.0';
+import { impact } from './terrain.js?v=0.163.0';
+import { creerRendu } from './rendu3d.js?v=0.163.0';
+import { loadThree } from './three-lib.js?v=0.163.0';
+import { CALIBRES } from './data/calibres.js?v=0.163.0';
+import { hash2 } from './lib/rng.js?v=0.163.0';
 
 export const el = (tag, props = {}, ...kids) => { const e = Object.assign(document.createElement(tag), props); e.append(...kids); return e; };
 export const svgEl = (tag, attrs = {}) => { const e = document.createElementNS('http://www.w3.org/2000/svg', tag); for (const [k, v] of Object.entries(attrs)) e.setAttribute(k, v); return e; };
@@ -31,7 +31,7 @@ export function scene(stage, R, o) {
   boite.append(canvas, svg, papier); stage.append(boite);
   let raf = 0, fini = false, rendu = null;
   (async () => {
-    const B = nouvelleBataille(5, R2, { soldats: 640, largages: false });      // (les maquettes décident de tout : pas de caisse parachutée)
+    const B = nouvelleBataille(5, R2, { soldats: 640, largages: false, caprices: false });      // (les maquettes décident de tout : pas de caisse parachutée)
     // le soir (`soir` : une heure, 17,5 par exemple) : la logique tourne encore (les obus tombent), le voile et les lampes du soir sont ceux du jeu ; l'heure est figée à chaque pas
     if (soir) { const pj = R2.jour.duree / (R2.jour.heureFin - R2.jour.heureDebut) / PAS; B.etat.tickJour = Math.round(pj * (soir - R2.jour.heureDebut)); }
     const tick0 = B.etat.tickJour;

@@ -17,5 +17,5 @@ export const ARMES_DE_CAMP = { tir: ['une balle de Lebel', 'une balle de Mauser'
 export function armeEnMots(cause, camp, cal) {
   if (ARMES_DE_CAMP[cause]) return ARMES_DE_CAMP[cause][camp] ?? ARMES_DE_CAMP[cause][0];
   if (cause === 'obus') return cal ? `un éclat de ${cal}` : 'un éclat d\'obus';
-  return { 'mêlée': 'un coup de baïonnette', crosse: 'un coup de crosse', char: 'les mitrailleuses d\'un char', avion: 'la mitrailleuse d\'un avion', noyade: 'noyé', feu: 'les flammes d\'un lance-flammes', 'corvée': 'en corvée, la nuit', blessure: 'de ses blessures' }[cause] ?? cause;
+  return { 'mêlée': 'un coup de baïonnette', crosse: 'un coup de crosse', char: 'les mitrailleuses d\'un char', avion: 'la mitrailleuse d\'un avion', noyade: 'noyé', feu: 'les flammes d\'un lance-flammes', gaz: 'le gaz', 'corvée': 'en corvée, la nuit', blessure: 'de ses blessures' }[cause] ?? cause;
 }

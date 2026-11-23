@@ -15,7 +15,7 @@ import { SECTEURS } from '../js/data/secteur.js';
 import { REGLAGES as R } from '../js/data/reglages.js';
 
 const SEED_NUIT = 4;      // la graine des nuits sans contact au soir et avec des blessés au régiment 0 (v0.52.5 : la graine 3 finissait le jour au contact ; 1er novembre : la 5, avec les nids de mitrailleuse et le lot A)
-const petite = (graine = 3) => nouvelleBataille(graine, R, { soldats: 200, jours: 3 });
+const petite = (graine = 3) => nouvelleBataille(graine, R, { soldats: 200, jours: 3, caprices: false });      // (v0.163.0 : sans le caprice du jour, qui bouscule la mécanique que chaque test mesure ; les caprices ont leurs tests, test/caprices.test.mjs)
 // (x, y) dans le secteur → dans le terrain (les marges autour)
 const M = SECTEURS.essai.marges, P = (x, y) => [x + M.x, y + M.y];
 const empreinte = B => JSON.stringify(photo(B));

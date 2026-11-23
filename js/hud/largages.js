@@ -2,12 +2,13 @@
 // l'a pris ; « Nouvelle découverte » la première fois), la musette (trois emplacements au-dessus du râtelier, touches 7, 8, 9 : un clic arme la visée), et
 // les découvertes (la vitrine de l'accueil : `cyclopeen:decouvertes`, hud/vitrine.js). Le joueur apprend ce que fait un objet : (1) le fumigène et l'avion
 // (le carnet), (2) la flèche de sa couleur et le survol (la bulle), (3) le bandeau à la prise, (4) l'anneau sous l'homme boosté, (5) le carnet du soir.
-import { OBJET, RARETES, CATEGORIES, LARGAGE } from '../data/largages.js?v=0.162.0';
+import { OBJET, RARETES, CATEGORIES, LARGAGE } from '../data/largages.js?v=0.163.0';
+import { CAPRICE } from '../data/caprices.js?v=0.163.0';
 
 const el = (tag, cls, txt) => { const e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; return e; };
 
 export function creerLargagesHud({ $, bataille, moi, viser, decouvertes, son }) {
-  const bandeau = $('objet-bandeau'), musette = $('musette');
+  const bandeau = $('objet-bandeau'), musette = $('musette'), puce = $('caprice');
   let file = [], timer = 0;
   // les emplacements de la musette : le même gabarit que les boutons du râtelier (design system), un liseré de la rareté
   const cases = Array.from({ length: LARGAGE.musette }, (_, k) => {
@@ -20,6 +21,7 @@ export function creerLargagesHud({ $, bataille, moi, viser, decouvertes, son }) 
   musette.append(...cases);
 
   function montrer(f) {
+    if (f.caprice) return montrerCaprice(f);
     const O = OBJET[f.o], R = RARETES[O.rarete];
     bandeau.style.setProperty('--rarete', R.couleur);
     bandeau.classList.toggle('mythique', !!R.brillance);
@@ -32,6 +34,19 @@ export function creerLargagesHud({ $, bataille, moi, viser, decouvertes, son }) 
     bandeau.classList.remove('vient'); void bandeau.offsetWidth; bandeau.classList.add('vient');
     clearTimeout(timer);
     timer = setTimeout(suivant, f.camp === moi() ? 5200 : 4200);
+  }
+  // le bandeau d'un caprice du front (v0.163.0) : le même papier, « Caprice du front », le nom, ce qui arrive ; le camp touché quand il y en a un
+  function montrerCaprice(f) {
+    const K = CAPRICE[f.caprice], R = RARETES[K.rarete];
+    bandeau.style.setProperty('--rarete', R.couleur);
+    bandeau.classList.toggle('mythique', !!R.brillance); bandeau.classList.remove('eux');
+    const ic = el('i', 'objet-icone', K.icone); ic.setAttribute('aria-hidden', 'true');
+    const qui = f.camp < 0 ? 'tout le front' : f.camp === moi() ? 'chez nous' : 'chez ceux d\'en face';
+    bandeau.replaceChildren(ic, el('div', 'objet-texte'));
+    bandeau.lastChild.append(el('small', null, `Caprice du front · ${R.nom} · ${qui}${f.nouveau ? ' · nouvelle découverte' : ''}`), el('b', null, K.nom), el('span', null, K.court));
+    bandeau.hidden = false;
+    bandeau.classList.remove('vient'); void bandeau.offsetWidth; bandeau.classList.add('vient');
+    clearTimeout(timer); timer = setTimeout(suivant, 6000);
   }
   function suivant() { const f = file.shift(); if (f) montrer(f); else bandeau.hidden = true; }
 
@@ -55,6 +70,13 @@ export function creerLargagesHud({ $, bataille, moi, viser, decouvertes, son }) 
       else if (e.type === 'objet-perdu') lignes.push([`${OBJET[e.o].nom} tombe avec son porteur : il reste à prendre.`, null]);
       else if (e.type === 'objet-utilise' && e.camp !== moi()) lignes.push([`Ceux d'en face tirent ${OBJET[e.o].nom}.`, 'perte']);
       else if (e.type === 'objet-repli' && e.camp === moi()) lignes.push([e.refus, null]);
+      else if (e.type === 'caprice') {
+        const K = CAPRICE[e.id], nouveau = decouvertes?.caprice(e.id);
+        file.unshift({ caprice: e.id, camp: e.camp, nouveau });      // (un caprice passe devant les objets)
+        lignes.push([`Caprice du front : ${K.nom}. ${K.court}.`, e.camp === moi() ? 'perte' : e.camp < 0 ? null : 'gain']);
+        clearTimeout(timer); bandeau.hidden = true;
+      }
+      else if (e.type === 'as-abattu') lignes.push([e.camp === moi() ? 'Notre as est abattu : une caisse légendaire tombe avec lui.' : 'Leur as est abattu : une caisse légendaire tombe avec lui.', e.camp === moi() ? 'perte' : 'gain']);
       else if (e.type === 'drapeau-arrache') lignes.push([e.camp === moi() ? 'Ceux d\'en face arrachent notre drapeau.' : 'Nous arrachons leur drapeau.', e.camp === moi() ? 'perte' : 'gain']);
     }
     if (bandeau.hidden && file.length) suivant();
@@ -64,6 +86,15 @@ export function creerLargagesHud({ $, bataille, moi, viser, decouvertes, son }) 
   // la musette de mon camp, à chaque image du HUD ; `vise` : l'emplacement armé (ou null)
   function maj(vise) {
     const B = bataille(), LG = B?.etat.largages;
+    // la pastille du caprice en cours : son icône, son nom, le temps qui reste en barre
+    const a = B?.etat.caprices?.actif;
+    puce.hidden = !a || B.etat.phase !== 'jour';
+    if (a && !puce.hidden) {
+      const K = CAPRICE[a.id], reste = Math.max(0, a.fin - B.etat.temps), tout = Math.max(1, a.fin - a.t0);
+      puce.style.setProperty('--rarete', RARETES[K.rarete].couleur);
+      if (puce.dataset.id !== a.id) { puce.dataset.id = a.id; puce.innerHTML = `<i class="objet-icone" aria-hidden="true"></i><b></b><u><s></s></u>`; puce.querySelector('i').textContent = K.icone; puce.querySelector('b').textContent = K.nom; puce.dataset.info = `${K.nom}\n${K.effet}`; }
+      puce.querySelector('s').style.width = `${Math.round(100 * reste / tout)}%`;
+    } else delete puce.dataset.id;
     musette.hidden = !LG || B.etat.phase !== 'jour';
     if (musette.hidden) return;
     const m = LG.musette[moi()];
@@ -90,6 +121,7 @@ export function creerDecouvertes(store, ecrire = true) {
     etat: () => d,
     vu(o) { if (!d.objets[o]) { d.objets[o] = { e: 'vu', n: 0 }; garder(); } },
     prendre(o) { const x = d.objets[o], nouveau = !x || x.e !== 'pris'; d.objets[o] = { e: 'pris', n: (x?.n ?? 0) + 1 }; garder(); return nouveau; },
+    caprice(id) { d.caprices ??= {}; const nouveau = !d.caprices[id]; d.caprices[id] = (d.caprices[id] ?? 0) + 1; garder(); return nouveau; },      // les caprices vécus (v0.163.0)
     remplacer(nv) { d = nv?.objets ? nv : { v: 1, objets: {} }; garder(); },
   };
 }
