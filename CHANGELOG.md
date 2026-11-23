@@ -1,5 +1,11 @@
 # Journal des versions
 
+## 0.167.0 — 2026-11-23
+
+- Toutes les vues à la personne : les commandes toujours affichées, et en bas à droite un tableau de bord nommé (Fusil Lebel, Canon de 75, Hotchkiss…) avec l'état et les munitions
+- La mitrailleuse à la personne : l'arme en bas de l'image, sa bande qui défile, les douilles qui sautent, des rafales rapides vers l'ennemi, sans le cône
+- Le char : un obus rapide et tendu, ses mitrailleuses qu'on voit tirer, le tir tout près ; le soldat : la barre de la culasse entre deux coups, le guidon juste sous le viseur
+
 ## 0.166.0 — 2026-11-23
 
 - L'avion piloté : on prend les commandes à peine la piste quittée, il vire bien plus vite et remonte seul s'il est trop bas

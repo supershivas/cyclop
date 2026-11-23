@@ -3,17 +3,17 @@
    ligne vers (tx, ty) à la vitesse de son modèle, ralentie par un cratère (la moitié de ce qu'il franchit), arrêtée par un cratère plus profond ou par l'eau
    profonde (`enlise` : il reste là et tire) ; il tire sur l'autre camp à portée ; un obus tombé près de lui l'abîme (`degatsChars`), jusqu'à l'épave (`detruit`).
    Les tranchées se franchissent (elles font 1,5 m : son modèle les passe). Les ordres rendent { refus } comme les barrages. */
-import { modif, charsDispo, parcChars, prochainDuParc, sortieChars, niveauDe } from './camp.js?v=0.166.0';
-import { PARC } from './data/parc.js?v=0.166.0';
-import { CHARS, CHAR_PAR_DEFAUT, CHAR_RECHARGE, CHAR_DEPART, CHAR_OBUS, CHAR_ROUTE, CHAR_MAIN } from './data/chars.js?v=0.166.0';
-import { CALIBRES } from './data/calibres.js?v=0.166.0';
-import { effrayer, DENSITE } from './army.js?v=0.166.0';
-import { BONUS, GAINS, chevronsDe } from './data/experience.js?v=0.166.0';
-import { zone as zoneDe } from './bataille.js?v=0.166.0';
-import { detruirePont } from './eaux.js?v=0.166.0';
-import { toucher } from './terrain.js?v=0.166.0';
-import { PONTS_JEU, typePont } from './data/ponts.js?v=0.166.0';
-import { charEnReparation } from './genie.js?v=0.166.0';
+import { modif, charsDispo, parcChars, prochainDuParc, sortieChars, niveauDe } from './camp.js?v=0.167.0';
+import { PARC } from './data/parc.js?v=0.167.0';
+import { CHARS, CHAR_PAR_DEFAUT, CHAR_RECHARGE, CHAR_DEPART, CHAR_OBUS, CHAR_ROUTE, CHAR_MAIN } from './data/chars.js?v=0.167.0';
+import { CALIBRES } from './data/calibres.js?v=0.167.0';
+import { effrayer, DENSITE } from './army.js?v=0.167.0';
+import { BONUS, GAINS, chevronsDe } from './data/experience.js?v=0.167.0';
+import { zone as zoneDe } from './bataille.js?v=0.167.0';
+import { detruirePont } from './eaux.js?v=0.167.0';
+import { toucher } from './terrain.js?v=0.167.0';
+import { PONTS_JEU, typePont } from './data/ponts.js?v=0.167.0';
+import { charEnReparation } from './genie.js?v=0.167.0';
 
 /* La route d'un char (Jérôme, v0.59.3 : « ils doivent contourner les fleuves, passer par les ponts ») : une recherche sur une grille de `CHAR_ROUTE.maille` mètres, de (x0, y0) à (tx, ty), qui évite
    l'eau profonde, les cratères qu'il ne franchit pas, les ponts qui ne le portent pas, et se détourne des cratères à demi profonds. Rend les points à suivre (le dernier est le but), ou null
@@ -213,7 +213,7 @@ function refusTirMain(B, c, K, G) {
   if (c.etat === 'detruit') return 'Ce char est détruit.';
   if (B.etat.temps - (c.canonT ?? 0) < G.recharge * (c.canonMod ?? 1)) return 'Le canon n\'est pas rechargé.';
   if (d > G.portee) return `Trop loin pour le canon : ${Math.round(d)} m (portée ${G.portee} m).`;
-  if (d < G.minimum) return 'Trop près pour le canon.';
+  if (d < CHAR_MAIN.minimum) return 'Trop près pour le canon.';      // (à la main, on tire bien plus près que lui : v0.167.0, « on peut tirer vers le bas »)
   if ((dx * c.hx + dy * c.hy) / d < COS_DEB) return 'Hors du débattement du canon : tournez le char.';
   return '';
 }

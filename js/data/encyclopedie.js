@@ -3,21 +3,21 @@
 // formes, équipements, grades) n'est PAS recopié : il est lu dans son module, donc l'encyclopédie suit le jeu ; seuls les concepts n'ayant pas de table sont écrits ici.
 // Une entrée : { id, terme, cat, def, voir: [ids], capture: 'id-du-fichier' | null, faits: [[libellé, valeur], …] }. Les captures sont celles de `outils/encyclopedie.mjs` (assets/encyclopedie/<capture>.png).
 // Ajouter un mot = ajouter une ligne ici ; le labo (sujet « Encyclopédie ») et `test/encyclopedie.test.mjs` (aucun renvoi vers un mot absent, aucun doublon) font le reste.
-import { CALIBRES } from './calibres.js?v=0.166.0';
-import { METEO, SAISONS } from './meteo.js?v=0.166.0';
-import { CORVEES, CONTACT } from './corvees.js?v=0.166.0';
-import { BATIMENTS, ORDRE_BATIMENTS, DOTATION } from './batiments.js?v=0.166.0';
-import { ARBRES, PRIX, ROMAINS } from './ameliorations.js?v=0.166.0';
-import { DIFFICULTES } from './difficulte.js?v=0.166.0';
-import { STANCES } from './stances.js?v=0.166.0';
-import { PONTS_JEU } from './ponts.js?v=0.166.0';
-import { RENFORTS } from './renforts.js?v=0.166.0';
-import { CHARS, CHAR_RECHARGE } from './chars.js?v=0.166.0';
-import { MITRAILLAGE } from './mitraillage.js?v=0.166.0';
-import { GENIE_DATA } from './genie.js?v=0.166.0';
-import { NIDS } from './nids.js?v=0.166.0';
-import { FIL } from './fil.js?v=0.166.0';
-import { CLASSES } from './grades.js?v=0.166.0';
+import { CALIBRES } from './calibres.js?v=0.167.0';
+import { METEO, SAISONS } from './meteo.js?v=0.167.0';
+import { CORVEES, CONTACT } from './corvees.js?v=0.167.0';
+import { BATIMENTS, ORDRE_BATIMENTS, DOTATION } from './batiments.js?v=0.167.0';
+import { ARBRES, PRIX, ROMAINS } from './ameliorations.js?v=0.167.0';
+import { DIFFICULTES } from './difficulte.js?v=0.167.0';
+import { STANCES } from './stances.js?v=0.167.0';
+import { PONTS_JEU } from './ponts.js?v=0.167.0';
+import { RENFORTS } from './renforts.js?v=0.167.0';
+import { CHARS, CHAR_RECHARGE } from './chars.js?v=0.167.0';
+import { MITRAILLAGE } from './mitraillage.js?v=0.167.0';
+import { GENIE_DATA } from './genie.js?v=0.167.0';
+import { NIDS } from './nids.js?v=0.167.0';
+import { FIL } from './fil.js?v=0.167.0';
+import { CLASSES } from './grades.js?v=0.167.0';
 
 export const CATEGORIES = [
   { id: 'front', nom: 'Le front', dit: 'Où l\'on se bat : secteurs, lignes, tranchées.' },

@@ -14,5 +14,6 @@ export const NIDS = {
   munitions: 400,              // rafales dans la bande (Jérôme, lot E : la barre de munitions) ; une rafale n'en use qu'une quand elle a un homme d'en face dans son cône ; rechargées à l'aube
   pivot: 70,                   // degrés : de combien le poste tourne, de chaque côté de sa direction d'origine (Jérôme, lot E : « on règle la direction du cône »)
   etiquette: { munBas: 0.25, apresRafale: 8 },   // (Jérôme, retour du 1er nov.) l'étiquette d'un poste (vie, bande) n'est sur le champ que s'il est choisi, abîmé, presque à sec, ou s'il a tiré depuis `apresRafale` s de jeu
+  armes: ['Hotchkiss', 'MG 08'],     // le nom de l'arme de chaque camp, dans le tableau de bord de la vue à la personne (v0.167.0)
   reparationEnFace: 0.5,       // en face, sans génie : la chance par nuit qu'un nid détruit soit refait
 };

@@ -51,7 +51,7 @@ export function creerFusilVue({ THREE, renderer, PALETTE }) {
   // au repos : l'arme en travers, plus bas et plus couchée (v0.165.0 : avant, le canon montait vers le milieu de l'image), la main droite en bas à droite, la bouche à gauche sous l'horizon
   const repos = { x: 0.11, y: -0.17, z: -0.4, rx: 0.0, ry: 0.36, rz: -0.22 };
   arme.position.set(repos.x, repos.y, repos.z); arme.rotation.set(repos.rx, repos.ry, repos.rz);
-  const vise = { x: 0, y: -0.088, z: -0.2 };      // épaulé (v0.151.0) : la crosse à l'épaule, le guidon au milieu de l'image
+  const vise = { x: 0, y: -0.13, z: -0.2 };      // (v0.167.0 : le guidon juste sous le viseur, plus dessus : « la cible doit être juste au-dessus du guidon »)      // épaulé (v0.151.0) : la crosse à l'épaule, le guidon au milieu de l'image
   let recul = 0, flash = 0, t = 0, ep = 0, epVoulu = 0, pousse = -1, pa = 0, paVoulu = 0;      // (le coup de baïonnette : `pousse` de 0 à 1 ; la parade : le fusil en travers, v0.154.0)
   return {
     tir() { recul = 1; flash = 0.07; },

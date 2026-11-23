@@ -1007,11 +1007,11 @@ h2 { font-weight: normal; letter-spacing: var(--titre-lettres); }
 .viseur { position: absolute; left: 50%; top: 50%; width: 36px; height: 36px; transform: translate(-50%, -50%); pointer-events: none; fill: none; stroke: var(--jeu-encre); stroke-width: 1.6; stroke-linecap: round; paint-order: stroke; filter: drop-shadow(0 0 1px var(--jeu-fond)); }
 .viseur[hidden] { display: none; }
 /* Dans la vue d'un soldat il n'y a plus d'interface (Jérôme, v0.148.0) : tout le HUD disparaît sauf le viseur ; les messages (`#toast`) restent, ils sont hors du HUD */
-body.vue-soldat #hud > :not(#viseur):not(#cartouches):not(#tampon-fps):not(#coup):not(#choc):not(#peur-voile):not(#aide-vue):not(#carte-soldat), body.vue-soldat #etiquettes, body.vue-soldat #retours, body.vue-soldat #chars-etiq, body.vue-soldat #visee, body.vue-soldat #visee-nid,
+body.vue-soldat #hud > :not(#viseur):not(#cartouches):not(#tampon-fps):not(#coup):not(#choc):not(#peur-voile):not(#aide-vue):not(#carte-soldat):not(#etat-fps):not(#canon-barre), body.vue-soldat #etiquettes, body.vue-soldat #retours, body.vue-soldat #chars-etiq, body.vue-soldat #visee, body.vue-soldat #visee-nid,
 body.vue-soldat #equerres, body.vue-soldat #repere, body.vue-soldat #repere-soldat, body.vue-soldat #bulle { display: none !important; }
 /* L'avion ou le char qu'on pilote (v0.165.0 : la vue de poursuite, comme la capture de Jérôme) : l'image seule, avec la bande de la vue, ses jauges, le viseur et l'aide */
-body.vue-engin #hud > :not(#viseur):not(#vol-barres):not(#canon-barre):not(#aide-vue):not(#suivi):not(#tampon-fps), body.vue-engin #etiquettes, body.vue-engin #retours, body.vue-engin #chars-etiq,
-body.vue-engin #equerres, body.vue-engin #repere, body.vue-engin #repere-soldat, body.vue-engin #bulle { display: none !important; }
+body.vue-engin #hud > :not(#viseur):not(#canon-barre):not(#aide-vue):not(#suivi):not(#tampon-fps):not(#etat-fps), body.vue-engin #etiquettes, body.vue-engin #retours, body.vue-engin #chars-etiq,
+body.vue-engin #equerres, body.vue-engin #repere, body.vue-engin #repere-soldat, body.vue-engin #bulle, body.vue-engin #visee-nid { display: none !important; }
 body.vue-engin .suivi { bottom: var(--e4); }
 .suivi .bouton { white-space: nowrap; flex: none; }
 .viseur .marque { opacity: 0; stroke-width: 2; }
@@ -1025,6 +1025,24 @@ body.vue-engin .suivi { bottom: var(--e4); }
 .carte-soldat .cs-nom b { font-weight: bold; }
 .carte-soldat .cs-nom span { opacity: .75; }
 .carte-soldat .corps { width: 28px; height: 65px; }
+/* Le tableau de bord des vues à la personne (v0.167.0 : « toujours l'état, toujours les munitions avec leur intitulé ») : en bas à droite, une ligne par chose qu'on surveille,
+   son nom en capitales, sa valeur à droite, dessous sa barre ou ses cartouches */
+.etat-fps { position: absolute; right: var(--e4); bottom: var(--e4); width: 15rem; display: grid; gap: var(--e1); padding: var(--pas) var(--e3); pointer-events: none; opacity: .92; font-size: var(--texte-petit); line-height: 1.2; }
+.etat-fps .ef-titre { margin: 0; font-weight: bold; letter-spacing: var(--lettres-etiquette, .06em); text-transform: uppercase; }
+.etat-fps .ef-l { display: grid; grid-template-columns: 1fr auto; gap: 2px var(--pas); align-items: center; }
+.etat-fps .ef-nom { text-transform: uppercase; letter-spacing: var(--lettres-etiquette, .06em); }
+.etat-fps .ef-val { text-align: right; font-weight: bold; font-variant-numeric: tabular-nums; }
+.etat-fps .ef-barre, .etat-fps .ef-points { grid-column: 1 / -1; }
+.etat-fps .ef-barre { display: block; height: var(--barre-h); box-sizing: border-box; border: 1px solid currentColor; }
+.etat-fps .ef-barre i { display: block; height: 100%; background: currentColor; }
+.etat-fps .ef-points { display: flex; gap: 3px; align-items: flex-end; min-height: 14px; }
+.etat-fps .ef-points i { width: 4px; height: 13px; background: currentColor; border-radius: 2px 2px 0 0; }
+.etat-fps .ef-points i.vide { background: transparent; box-shadow: inset 0 0 0 1px currentColor; opacity: .45; }
+.etat-fps .ef-points b { width: 9px; height: 11px; border-radius: 50% 50% 40% 40%; background: currentColor; }
+.etat-fps .ef-l.faible .ef-barre i, .etat-fps .ef-l.faible .ef-points i.vide { animation: ef-faible .6s ease-in-out infinite alternate; }
+.etat-fps .ef-l.att { opacity: .5; }
+@keyframes ef-faible { from { opacity: 1; } to { opacity: .35; } }
+@media (prefers-reduced-motion: reduce) { .etat-fps .ef-l.faible .ef-barre i, .etat-fps .ef-l.faible .ef-points i.vide { animation: none; } }
 .cartouches { position: absolute; right: var(--e4); bottom: var(--e4); display: flex; gap: var(--e1); pointer-events: none; filter: drop-shadow(0 0 1px var(--jeu-fond)); }
 .cartouches i { width: 5px; height: 18px; background: var(--jeu-encre); border: 1px solid var(--jeu-fond); border-radius: 2px 2px 0 0; }
 .cartouches i.vide { background: transparent; border-color: var(--jeu-encre); opacity: .5; }

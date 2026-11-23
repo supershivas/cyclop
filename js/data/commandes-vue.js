@@ -18,5 +18,9 @@ export const COMMANDES_VUE = {
     { niveau: 2, titre: 'À bord', items: [[['T'], 'tir automatique', 'tirAuto'], [['R'], 'rentrer à la base, il se pose seul']] },
     { niveau: 3, titre: 'Les autres', items: [[['Espace'], 'pause'], [['Échap'], 'revenir']] },
   ] },
+  nid: { titre: 'Mitrailleuse', groupes: [
+    { niveau: 1, items: [[['souris'], 'regarder'], [['seul'], 'il tire sur qui entre dans son cône']] },
+    { niveau: 3, titre: 'Les autres', items: [[['Espace'], 'pause'], [['Échap'], 'revenir']] },
+  ] },
 };
 export const AIDE_VUE = { ouverte: 8 };      // s : la fenêtre s'ouvre en entier à la première entrée dans chaque vue, puis se replie sur l'essentiel

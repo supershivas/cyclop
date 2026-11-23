@@ -41,4 +41,4 @@ export const CHAR_ROUTE = {
 // de part et d'autre de l'axe : le 75 du Schneider est en casemate), avec `dispersion` × la dispersion d'un tir automatique ; les mitrailleuses tirent dans le regard (`cone` rad de part et d'autre).
 // `obus` (v0.165.0, Jérôme : « on n'a pas la sensation de tirer : on doit voir l'obus partir et l'explosion un instant plus tard à la cible ») : l'obus tiré à la main vole à `obus` m/s (lent, pour qu'on le suive :
 // 1 s à 100 m) et tombe à son arrivée ; le tir automatique tombe toujours tout de suite
-export const CHAR_MAIN = { recul: 0.5, debattement: 0.35, dispersion: 0.5, cone: 0.52, bord: 1, obus: 100 };
+export const CHAR_MAIN = { recul: 0.5, debattement: 0.35, dispersion: 0.5, cone: 0.52, bord: 1, obus: 240, mitrRendu: 10, minimum: 6 };      // obus : m/s (v0.167.0 : « plus rapide et fusant », 100 avant) ; mitrRendu : coups dessinés par seconde des mitrailleuses (le dessin seulement) ; minimum : m, le plus près où l'on tire à la main (14 pour son tir à lui)
