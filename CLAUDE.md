@@ -159,6 +159,7 @@ node outils/audit-boutons.mjs            # le design system des boutons et des u
 node outils/deux.mjs                     # le jeu à deux : deux pages s'appairent, jouent, aucune désynchronisation (~30 s)
 node scripts/mesure.mjs                  # 8 000 soldats : simulation et rendu
 node scripts/trois-jours.mjs             # trois jours de bataille, captures chaque soir
+node outils/trailer.mjs --essai          # le trailer tourné dans le moteur (plans : outils/trailer-plans.mjs ; sans --essai : toutes les images puis le mp4, ffmpeg)
 node outils/stamp.mjs                    # après chaque changement de version.json (l'outil de game-system, puis les exemples des commentaires de js/lib remis sans `?v=` : la synchronisation les défait)
 ```
 
