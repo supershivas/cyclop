@@ -40,4 +40,8 @@ export const MITRAILLAGE = {
 // Ses mitrailleuses sont pointées `site` rad sous l'axe : les balles tombent où cette ligne touche le sol, sur une bande de `largeur` m qui avance avec lui ; elles portent `letal` × la chance du mitraillage
 // à `passe` m, de moins en moins jusqu'à `haut` m (au-dessus, rien) ; `cadence` cartouches par seconde, `munitions` en tout. L'essence dure `essence` s ; vide, ou sur R, il rentre seul et se pose.
 // Le tir automatique (T) : il tire seul quand il est sous `auto` m et que des hommes d'en face sont sur la bande devant lui.
-export const AVION_MAIN = { roulis: 0.7, roule: 1.6, pente: 0.35, cabre: 0.8, plancher: 2, plafond: 150, site: 0.45, largeur: 4, letal: 0.6, haut: 60, cadence: 12, munitions: 500, essence: 240, auto: 30 };
+// v0.166.0 (Jérôme, 23 nov. : « on doit prendre les commandes beaucoup plus rapidement, l'avion décolle en quelques secondes ; il tourne beaucoup plus rapidement, pas besoin de rendre l'effet réaliste ;
+// on ne voit aucun dégât quand on tire, il faut plein de petits cratères avec fumée, comme quand l'avion est géré automatiquement ») : on le prend `prise` m après avoir quitté la piste (avant : au début
+// de la passe, après toute la montée) ; il vire `vire` fois plus vite que la physique de son inclinaison (4 : un tour en 6 s environ), s'incline plus et plus vite (`roulis`, `roule`), cabre plus vite ;
+// ses balles laissent un creux de 75 par `creux` m² de sa bande (le passage automatique : un par 12 m²)
+export const AVION_MAIN = { roulis: 0.85, roule: 3.2, vire: 4, pente: 0.4, cabre: 1.6, plancher: 2, plafond: 150, site: 0.45, largeur: 4, letal: 0.6, haut: 60, cadence: 12, munitions: 500, essence: 240, auto: 30, prise: 30, creux: 6, sur: 20, monte: 0.25 };      // sur : m ; sous elle, Z et S lâchés, il remonte seul (`monte` rad : juste décollé, il ne retombe pas)

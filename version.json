@@ -1,5 +1,5 @@
 {
-  "version": "0.165.2",
+  "version": "0.166.1",
   "date": "2026-11-23",
   "changes": [
     "Une batterie qui recharge (ou un ordre indisponible) est nettement grisée : hachurée, au liseré pointillé",

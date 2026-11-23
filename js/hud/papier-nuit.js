@@ -6,10 +6,10 @@
 // `N` (le soir) : { sortes (les corvées offertes), regs: [régiment de `lireJournee` + { corvee, donne, choisi, refus: { corvée: raison } }], d (lireJournee), reserve: { restants, total } | null,
 //   ciel: { p, phase, couv, demain, prevision }, avions: { sorties, perdus, restent }, lignes (la phrase des tronçons), prise (la victoire anticipée) | null, med (palmares) }.
 // `F` (la fin) : `lireBataille` + { med (palmares 'total') }.
-import { CORVEES, CONTACT } from '../data/corvees.js?v=0.165.2';
-import { faitsMarquants } from '../donnees-jour.js?v=0.165.2';
-import { barreEffectif, batons, jaugeMoral, troncons, fait, reinitIds } from './bilan.js?v=0.165.2';
-import { iconeCorvee, iconeMedaille, iconeMoment, iconeLune, boutonLoupe } from './icones-nuit.js?v=0.165.2';
+import { CORVEES, CONTACT } from '../data/corvees.js?v=0.166.1';
+import { faitsMarquants } from '../donnees-jour.js?v=0.166.1';
+import { barreEffectif, batons, jaugeMoral, troncons, fait, reinitIds } from './bilan.js?v=0.166.1';
+import { iconeCorvee, iconeMedaille, iconeMoment, iconeLune, boutonLoupe } from './icones-nuit.js?v=0.166.1';
 
 const pl = (n, un, des) => `${n} ${n > 1 ? des : un}`;
 
@@ -142,7 +142,7 @@ export function graphe(F, { larg = 520, haut = 200 } = {}) {
   const bat = n.mortsParJour.map((v, k) => { const h = v / mb * (hB / 2 - 2); return `<rect class="bi-nous" x="${(x(k) - b / 2).toFixed(1)}" y="${(mid - h).toFixed(1)}" width="${b.toFixed(1)}" height="${h.toFixed(1)}"><title>Jour ${k + 1} : ${v} morts chez nous</title></rect>`; }).join('')
     + e.mortsParJour.map((v, k) => { const h = v / mb * (hB / 2 - 2); return `<rect class="bi-eux" x="${(x(k) - b / 2).toFixed(1)}" y="${mid.toFixed(1)}" width="${b.toFixed(1)}" height="${h.toFixed(1)}"><title>Jour ${k + 1} : ${v} morts en face</title></rect>`; }).join('');
   const yT = y0 + hB + 6, tot = Math.max(1, F.tenus[0]?.[0] + F.tenus[0]?.[1] || 1);
-  // la frise des jours (les tronçons tenus le soir) en tons neutres (Jérôme, v0.165.2) : les couleurs des armées restent aux courbes et aux bâtons
+  // la frise des jours (les tronçons tenus le soir) en tons neutres (Jérôme, v0.166.1) : les couleurs des armées restent aux courbes et aux bâtons
   const lig = F.tenus.map(([a], k) => `<rect class="tl-nous" x="${(x(k) - dx / 2 + 1).toFixed(1)}" y="${yT}" width="${(dx * a / tot - 1).toFixed(1)}" height="8"><title>Soir du jour ${k + 1} : ${a} tronçons à nous sur ${tot}</title></rect><rect class="tl-eux" x="${(x(k) - dx / 2 + dx * a / tot).toFixed(1)}" y="${yT}" width="${(dx * (1 - a / tot) - 1).toFixed(1)}" height="8"/>`).join('');
   const pire = !F.pire ? '' : `<rect class="fin-pire" x="${(x(F.pire - 1) - dx / 2).toFixed(1)}" y="0" width="${dx.toFixed(1)}" height="${yT + 8}"/>`;
   return `<svg class="bi fin-graphe" viewBox="0 0 ${larg} ${yT + 10}" role="img" aria-label="La bataille jour après jour">${pire}${courbe(1)}${courbe(0)}<line class="bi-base" x1="0" x2="${larg}" y1="${mid}" y2="${mid}"/>${bat}${lig}</svg>`;

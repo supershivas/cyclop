@@ -1,10 +1,15 @@
 # Journal des versions
 
-## 0.165.2 — 2026-11-23
+## 0.166.1 — 2026-11-23
 
 - Une batterie qui recharge (ou un ordre indisponible) est nettement grisée : hachurée, au liseré pointillé
 - Les régiments se choisissent plus facilement : une zone de clic plus large autour de leur écusson sur le champ et de leur pastille sur la carte
 - La frise des jours sous la courbe des effectifs est en tons neutres
+
+## 0.166.0 — 2026-11-23
+
+- L'avion piloté : on prend les commandes à peine la piste quittée, il vire bien plus vite et remonte seul s'il est trop bas
+- Ses rafales labourent le sol : des gerbes de terre et de petits cratères, comme un passage automatique
 
 ## 0.165.1 — 2026-11-23
 

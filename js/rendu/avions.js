@@ -2,12 +2,12 @@
 // posé à son altitude (avions.js : `positionDe`), cabré ou piqué selon sa pente, avec son ombre sur le sol. En tirant, ses traceurs tombent devant lui et la terre gicle le long de
 // la bande ; touché, il fume, il tombe en vrille et laisse une épave qui fume. Le dessin seulement : tout vient de l'état de la bataille, rien n'y est écrit.
 // Fabrique `creerAvions({ THREE, scene, bataille, hauteur, effets })` : la bataille change à chaque partie, on la lit à chaque image. `effets` : ceux de eclats.js.
-import { atelier } from './engins.js?v=0.165.2';
-import { AVIONS_JEU } from './avions-modeles.js?v=0.165.2';
-import { positionDe, balayage } from '../avions.js?v=0.165.2';
-import { MITRAILLAGE as M } from '../data/mitraillage.js?v=0.165.2';
-import { PALETTE as P } from '../palette.js?v=0.165.2';
-import { monterEpaveAvion } from './epaves.js?v=0.165.2';
+import { atelier } from './engins.js?v=0.166.1';
+import { AVIONS_JEU } from './avions-modeles.js?v=0.166.1';
+import { positionDe, balayage } from '../avions.js?v=0.166.1';
+import { MITRAILLAGE as M } from '../data/mitraillage.js?v=0.166.1';
+import { PALETTE as P } from '../palette.js?v=0.166.1';
+import { monterEpaveAvion } from './epaves.js?v=0.166.1';
 
 const DUREE_DISPERSION = 1.8;               // s : de l'instant où la carcasse touche le sol à celui où ses pièces ont fini de rouler
 
@@ -92,7 +92,16 @@ export function creerAvions({ THREE, scene, bataille, hauteur, effets }) {
       }
       // la rafale : ses traceurs tombent devant lui, la terre gicle le long de la bande
       const b = balayage(v, tAff);
-      if (b.actif) {
+      if (b.actif && v.main) {      // à la main (v0.166.0) : la même rafale, le long de la ligne que balaient ses balles (le point d'impact suit sa course, pas la bande d'une passe)
+        const co = Math.cos(p.cap), si = Math.sin(p.cap), lat = [-2.2, 2.2], px0 = m.gPrec?.[0] ?? b.x, py0 = m.gPrec?.[1] ?? b.y, L = Math.hypot(b.x - px0, b.y - py0);
+        for (const dz of lat) { const tx = b.x - si * dz, ty = b.y + co * dz; effets.mitraille(p.x + co * 2 - si * dz * 0.8, sol + p.h + SOL - 0.3, p.y + si * 2 + co * dz * 0.8, tx, hauteur(tx, ty) + 0.2, ty); }
+        if (L < 30) for (let l = 0; l < L; l += 1.2) for (const dz of lat) {
+          const f = L > 0 ? l / L : 0, k = (m.gN = (m.gN ?? 0) + 1), gx = px0 + (b.x - px0) * f - si * (dz + (((k * 7.3) % 1) - 0.5) * 2), gy = py0 + (b.y - py0) * f + co * (dz + (((k * 3.1) % 1) - 0.5) * 2);
+          effets.gerbeSol(gx, hauteur(gx, gy), gy);
+        }
+        effets.douilles(p.x, sol + p.h + SOL - 0.6, p.y, L);
+        m.gPrec = [b.x, b.y]; m.lPrec = null;
+      } else if (b.actif) {
         const bx = v.ux, by = v.uy, lat = [-2.2, 2.2], lPrec = m.lPrec ?? b.l - 0.5;
         const hb = hauteur(b.x, b.y);
         for (const dz of lat) {
@@ -106,7 +115,7 @@ export function creerAvions({ THREE, scene, bataille, hauteur, effets }) {
         effets.douilles(p.x, sol + p.h + SOL - 0.6, p.y, b.l - lPrec);
         void hb;
         m.lPrec = b.l;
-      } else m.lPrec = null;
+      } else { m.lPrec = null; m.gPrec = null; }
     }
     for (const [id, m] of modeles) if (!vus.has(id)) { scene.remove(m.pivot); scene.remove(m.ombre); modeles.delete(id); }
   }

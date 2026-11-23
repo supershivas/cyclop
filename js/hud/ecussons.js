@@ -3,7 +3,7 @@
 // (ou la coque, la cellule) : plein debout, hachuré blessés, vide tombés ; un liseré orange qui marche : ébranlé ; rouge haché : en déroute ; un halo d'os : choisi ; détruit : vidé et barré.
 // Du SVG (le texte et les clics passent par le DOM : l'infobulle du jeu, `data-info`). Le dessin seulement : les valeurs viennent de main.js et des hud/*.
 // Les couleurs : `--coeur` (le camp, posé par la classe `nous` ou `eux`), `--jeu-fond` (la terre : le trait et le dessin), `--jeu-encre` (l'os : le halo, les ailes).
-import { ECUSSONS } from '../data/ecussons.js?v=0.165.2';
+import { ECUSSONS } from '../data/ecussons.js?v=0.166.1';
 
 // les formes : un tracé de −15 à 15 (la pointe ou le bas à 14)
 const FORMES = {

@@ -73,3 +73,9 @@
 
 - `chars.js` : un obus tiré à la main n'appelle plus `ctx.obus` au départ ; il va dans `c.vol` (`{ t0, t, x0, y0, x, y }`, sauvegardé avec le char) et tombe au premier pas où `etat.temps ≥ t`, même si le char a été détruit entre-temps ; il vole à `CHAR_MAIN.obus` m/s (100 : 1 s à 100 m). Ses victimes comptent à l'arrivée. Le tir automatique tombe toujours tout de suite (les parties et les références d'avant ne changent pas). Test : « le char à la main ».
 
+## L'avion piloté, plus vif (Jérôme, 23 nov., v0.166.0 : « on doit prendre les commandes beaucoup plus rapidement, l'avion décolle en quelques secondes ; il tourne beaucoup plus rapidement, pas besoin de rendre l'effet réaliste ; on ne voit aucun dégât lorsque l'on tire »)
+
+- **La prise** (`refusPrise` de avions.js, lue par `commanderAile` et par la vue) : dès `AVION_MAIN.prise` m (30) après la piste, plus au début de la passe (avant : toute la montée en virage jusqu'à l'entrée de la bande). Mesuré : les commandes 2,6 s après le départ. Il garde sa montée ; à moins de `sur` m (20), Z et S lâchés, il vise `monte` rad (0,25) et remonte seul (pris à 5 m, il restait au ras du sol).
+- **Le virage** : `vire` (4) × le virage physique de son inclinaison, `roulis` 0,85 rad, `roule` 3,2 rad/s, `cabre` 1,6 rad/s : environ 2 rad en 2 s (0,35 avant).
+- **Les dégâts** : `labourerMain` creuse un 75 sans souffle par `creux` m² (6) le long du segment que ses balles viennent de balayer (`m.creux` garde le reste d'un pas à l'autre ; hachage, comme `labourer`) ; le dessin (`rendu/avions.js`) trace les traceurs et les gerbes de terre le long de ce segment (avant : le long de la bande d'une passe, à `l` = 0 : rien). Test : « l'avion à la main ».
+
