@@ -1,5 +1,11 @@
 # Journal des versions
 
+## 0.161.2 — 2026-11-23
+
+- Au labo : chaque objet parachuté sert vraiment le camp qui le prend ; des fusées, des obus et des ruses sèment le chaos chez l'adversaire
+- Au labo : un bombardement léger en légendaire (deux 220), le bombardement mythique de l'obus de 400 (quatre 220 d'un coup)
+- Au labo : les mythiques brillent seulement de rouge et de rose
+
 ## 0.161.1 — 2026-11-23
 
 - Au labo : la rareté du sommet devient Mythique ; ses objets brillent, du rouge au rose et au cyan, avec des éclats et des paillettes

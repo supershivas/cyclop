@@ -3,18 +3,18 @@
 //    la courbe des effectifs, le registre de la dotation, trois moments du jour (dont la médaille). 2. Le camp : sept onglets, l'arbre en cercles (le nom au survol, la description au clic),
 //    acheter, rendre, « Annuler ». 3. Les régiments : leurs corvées, les hommes en paquets de 10 qu'on glisse d'un régiment à l'autre, « Continuer la bataille ».
 // Le dessin seulement : tout ce qui change l'état passe par les rappels de main.js (`rang`, `transfert`, `donner`, `passer`), qui disent leurs refus à voix haute. Les feuilles : css/style.css, « La soirée ».
-import { ARBRES, ORDRE_ARBRES, PRIX, ROMAINS, nomRang } from '../data/ameliorations.js?v=0.161.1';
-import { CORVEES } from '../data/corvees.js?v=0.161.1';
-import { METEO } from '../data/meteo.js?v=0.161.1';
-import { campDe, refusRang, disponible, depenseSoir } from '../camp.js?v=0.161.1';
-import { zone, nombreZones, zoneDe, lettreZone } from '../bataille.js?v=0.161.1';
-import { refusCorvee, contactDe, disponibles } from '../nuit.js?v=0.161.1';
-import { lireJournee, lireBataille } from '../donnees-jour.js?v=0.161.1';
-import { palmares } from './medailles.js?v=0.161.1';
-import { el, html, info, bouton, corvee, puceReleve, vivres, motMoral, graphe } from './papier-nuit.js?v=0.161.1';
-import { jaugeMoral } from './bilan.js?v=0.161.1';
-import { iconeCorvee, iconeMedaille } from './icones-nuit.js?v=0.161.1';
-import { iconeCamp } from './icones-camp.js?v=0.161.1';
+import { ARBRES, ORDRE_ARBRES, PRIX, ROMAINS, nomRang } from '../data/ameliorations.js?v=0.161.2';
+import { CORVEES } from '../data/corvees.js?v=0.161.2';
+import { METEO } from '../data/meteo.js?v=0.161.2';
+import { campDe, refusRang, disponible, depenseSoir } from '../camp.js?v=0.161.2';
+import { zone, nombreZones, zoneDe, lettreZone } from '../bataille.js?v=0.161.2';
+import { refusCorvee, contactDe, disponibles } from '../nuit.js?v=0.161.2';
+import { lireJournee, lireBataille } from '../donnees-jour.js?v=0.161.2';
+import { palmares } from './medailles.js?v=0.161.2';
+import { el, html, info, bouton, corvee, puceReleve, vivres, motMoral, graphe } from './papier-nuit.js?v=0.161.2';
+import { jaugeMoral } from './bilan.js?v=0.161.2';
+import { iconeCorvee, iconeMedaille } from './icones-nuit.js?v=0.161.2';
+import { iconeCamp } from './icones-camp.js?v=0.161.2';
 
 const pts = n => `${n} pt${n > 1 ? 's' : ''}`;
 const hache = k => { let x = Math.imul(k ^ 0x9e3779b9, 0x85ebca6b); x ^= x >>> 13; x = Math.imul(x, 0xc2b2ae35); return ((x ^ (x >>> 16)) >>> 0) / 4294967296; };      // (les croix ne bougent pas d'un dessin à l'autre)

@@ -3,10 +3,10 @@
 // sa rareté ; le premier joueur qui l'atteint le gagne »). Au labo seulement (sa décision) : rien n'est branché dans le jeu.
 // Trois maquettes : la galerie des quarante objets (cliquer un objet donne sa fiche), un objet de près, et le largage (l'avion, la caisse sous son parachute,
 // l'objet qui sort, les deux camps qui courent). Les objets et les nombres sont dans data/largages.js ; ce fichier ne fait que les dessiner.
-import { PALETTE } from './palette.js?v=0.161.1';
-import { loadThree } from './three-lib.js?v=0.161.1';
-import { hash2 } from './lib/rng.js?v=0.161.1';
-import { OBJETS, RARETES, ORDRE_RARETES, LARGAGE as L, tirerObjet } from './data/largages.js?v=0.161.1';
+import { PALETTE } from './palette.js?v=0.161.2';
+import { loadThree } from './three-lib.js?v=0.161.2';
+import { hash2 } from './lib/rng.js?v=0.161.2';
+import { OBJETS, RARETES, ORDRE_RARETES, LARGAGE as L, tirerObjet } from './data/largages.js?v=0.161.2';
 
 const el = (tag, props = {}, ...kids) => { const e = Object.assign(document.createElement(tag), props); e.append(...kids); return e; };
 const bouton = (t, f) => el('button', { className: 'essai', textContent: t, onclick: f });
@@ -80,12 +80,12 @@ function anneau(THREE, couleur, rayon) {
   return m;
 }
 
-// La brillance d'un mythique (`brillance` de sa rareté) : la flèche, l'anneau et le liseré passent d'une couleur à l'autre (rouge, rose, cyan) en 3 s,
+// La brillance d'un mythique (`brillance` de sa rareté) : la flèche, l'anneau et le liseré vont d'une couleur à l'autre (rouge, rose) et reviennent en 4 s,
 // un éclat d'os les traverse toutes les 1,4 s, et six paillettes d'os tournent autour de l'objet en clignant. Rend une fonction `(t) => void`, ou rien.
 function briller(THREE, cache, groupe, f, a, rayon) {
   const R = RARETES[groupe.userData.O.rarete];
   if (!R.brillance) return null;
-  // aller et retour (rouge, rose, cyan, rose) : le fondu du cyan au rouge passait par un gris
+  // aller et retour (avec trois couleurs, rouge, rose, cyan, le fondu direct du cyan au rouge passait par un gris)
   const cols = [...R.brillance, ...R.brillance.slice(1, -1).reverse()].map(h => new THREE.Color(h)), os = new THREE.Color(PALETTE.o), c = new THREE.Color();
   const mats = [f.userData.matiere, a.material, ...groupe.userData.brillants];
   const paillettes = new THREE.Group(), pm = cache.plat(PALETTE.o);
