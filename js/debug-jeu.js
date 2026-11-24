@@ -1,7 +1,7 @@
 // Le mode debug du jeu (section 18 ; sorti de main.js, lot de dette du 24 nov.) : chargé seulement avec ?debug=1. `window.__jeu` pilote la
 // bataille pour les scripts, les captures et les tests (coordonnées du SECTEUR : les marges s'ajoutent ici). `j` : ce que main.js lui prête.
 export async function installerDebugJeu(j) {
-  const { horloge, effectifs, enJeu, loop, rendu, jouer, nouvelle, store, montrerTitre, son, leSuivi, choisirAvion, choisirChar, aube, nuit, avancer, evenements, raconter, majHud, choisirBatiment, montrerBatiment, commanderRang, lancerBarrage, ordonnerBarrage, lancerStance, ordonnerStance, lancerMarche, ordonnerMarche, empreinteEtat, montrerSoldat, majFiche, laFiche, $, majBulle, montrerFin, demarrerCampagne, laCampagne, CALIBRES } = j;
+  const { ouvrirSoir, horloge, effectifs, enJeu, loop, rendu, jouer, nouvelle, store, montrerTitre, son, leSuivi, choisirAvion, choisirChar, aube, nuit, avancer, evenements, raconter, majHud, choisirBatiment, montrerBatiment, commanderRang, lancerBarrage, ordonnerBarrage, lancerStance, ordonnerStance, lancerMarche, ordonnerMarche, empreinteEtat, montrerSoldat, majFiche, laFiche, $, majBulle, montrerFin, demarrerCampagne, laCampagne, CALIBRES } = j;
   const { installDebug, seedFromUrl } = await import('./lib/debug.js?v=0.169.0');
   const B = () => j.B(), reseau = () => j.reseau();
   window.__seed = seedFromUrl() ?? undefined;
@@ -43,7 +43,7 @@ export async function installerDebugJeu(j) {
       fiche: () => laFiche.ouverte && { ...laFiche.ouverte, nom: $('fiche-nom').textContent, qui: $('fiche-qui').textContent, etat: $('fiche-etat').textContent, liste: $('fiche-liste').textContent },
       survol: (x, y) => { j.poserSouris({ x, y }); majBulle(); return $('bulle').hidden ? null : $('bulle').textContent; },
       camera: (yaw, tangage) => rendu.placerCamera(yaw, tangage),
-      nuit: () => nuit.montrer(),
+      nuit: () => ouvrirSoir(),
       fin: () => montrerFin(),
       campagne: g => demarrerCampagne(g),
       papierCampagne: () => ({ ouvert: laCampagne.ouvert, texte: $('campagne').textContent }),

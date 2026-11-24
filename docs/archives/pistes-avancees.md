@@ -1,3 +1,5 @@
+> **Archivé le 24 nov.** : ces pistes (brainstorming v0.35.0) sont dépassées par le cap de la sortie sur itch.io (`DESIGN.md`, `ROADMAP.md`). Une piste qu'on reprend repasse par la roadmap.
+
 ## Pistes avancées (brainstorming v0.35.0)
 
 **Statut** : à l'étude — rien n'est construit, rien n'est tranché. Inspirations : Total War (stances, moral de position, campagne), *Hearts of Iron*

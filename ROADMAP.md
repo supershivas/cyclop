@@ -38,8 +38,8 @@ perte d'un contexte WebGL (un message clair).
 
 ## Garde-fous contre la dette technique (Jérôme, 24 nov.)
 
-La v0.169.0 compte ~34 000 lignes de JS, dont ~8 000 pour le labo et l'atelier,
-~2 200 pour le labo lumière, 2 415 pour `main.js` seul, et environ 3 300 textes
+La v0.169.0 comptait ~34 000 lignes de JS, dont ~8 000 pour le labo et l'atelier,
+~2 200 pour le labo lumière, 2 415 pour `main.js` seul (1 498 après le lot de dette), et environ 3 300 textes
 écrits dans le code. Les systèmes se sont empilés (la soirée a connu trois jets,
 les vues à la personne six versions) avant d'être joués. Règles validées :
 
@@ -58,6 +58,8 @@ les vues à la personne six versions) avant d'être joués. Règles validées :
    anciens textes au lot 6).
 6. **Une mesure par lot** : les tests ciblés, `rendu-empreinte`, `fumee` ; un
    système retiré emporte ses tests.
+
+**Le lot de dette (Jérôme, 24 nov.) : fait.** `main.js` passe de 2 415 à 1 498 lignes : douze modules en sont sortis (`hud/choix-secteur.js`, `decor-titre.js`, `fin.js`, `visees.js`, `etiquettes.js`, `rangee.js`, `recit.js`, `survol.js`, `batteries.js`, `parc.js`, `fiche-avion.js`, `reglages.js`, `reseau/partie.js`, `debug-jeu.js`) et le soir a un seul point d'entrée (`ouvrirSoir`, l'aiguillage des éditions) ; `CLAUDE.md` passe de 24,6 à 20 ko (le texte déplacé tel quel dans `docs/domaines/`) ; les pistes avancées sont archivées. Vérifié : `fumee`, `rendu-empreinte` (40 images identiques), `deux.mjs`, `lockstep`. **Pas fait** : retirer les variantes anciennes du labo (la section 16 des conventions les garde). **Repéré** : la fumée varie d'une exécution à l'autre sur `objet-bandeau` (le bandeau d'un objet parachuté, selon l'instant où une caisse tombe), avant comme après le lot : à rendre déterministe. Un outil pour la suite : `eslint` (dans `/opt/node-tools`) avec `no-undef` attrape les variables oubliées lors d'un découpage.
 
 Les sauvegardes de l'édition itch (une mise à jour relit-elle une campagne en
 cours ?) : à décider plus près de la sortie (Jérôme, 24 nov. : « on verra en temps
@@ -102,6 +104,4 @@ utile ») ; d'ici là, l'exception de `CLAUDE.md` vaut pour les deux éditions.
 
 ## Pistes avancées
 
-`docs/pistes-avancees.md` (brainstorming v0.35.0 ; rien n'est construit). À lire
-seulement quand on travaille sur l'une d'elles ; beaucoup sont dépassées par le cap
-de la sortie.
+Archivées le 24 nov. : `docs/archives/pistes-avancees.md` (brainstorming v0.35.0, dépassé par le cap de la sortie). Une piste qu'on reprend repasse par « À l'étude ».

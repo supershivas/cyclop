@@ -306,7 +306,7 @@ function jouer(bataille) {
   lesEtiquettes.construire();
   majHud();
   sauvegarder();
-  if (B.etat.phase === 'nuit') nuit.montrer();
+  if (B.etat.phase === 'nuit') ouvrirSoir();
   else if (B.etat.phase === 'fin') montrerFin();
   else loop.resume();
 }
@@ -525,6 +525,9 @@ document.addEventListener('visibilitychange', () => { son.cacher(document.hidden
 
 // ─── La nuit, la fin ───────────────────────────────────────────────────────
 const leRapport = creerFin({ $, DEBUG, prefs, store });      // le rapport de fin (hud/fin.js)
+/* Le soir : le seul point d'entrée de la soirée et de la nuit (lot de dette du 24 nov.). C'est ici que l'édition itch branchera le tirage
+   des cartes à la place de la soirée en trois étapes (ROADMAP.md, lot 0 et lot 1) ; la fin de bataille a le sien, `montrerFin`. */
+function ouvrirSoir() { nuit.montrer(); }
 function montrerFin() {
   loop.pause(); sauvegarder();
   if (reseau) store.clear('partieDeux');          // la bataille est finie : rien à reprendre
@@ -1386,7 +1389,7 @@ const loop = createLoop({
     if (ev.length) { const ec = ecouteDe(); for (const e of ev) son.evenement(e.type === 'objet' ? { ...e, rang: ORDRE_RARETES_OBJETS.indexOf(OBJET[e.o].rarete), nous: e.camp === MOI } : e, ec); }      // (un objet pris : l'arpège de sa rareté, plus grave s'il est à eux)
     if (ev.some(e => e.type === 'nuit')) {
       if (!reseau && vitesse > 1) { vitesse = 1; appliquerVitesse(); }          // la vitesse choisie dure jusqu'à la nuit (Jérôme, v0.41.2) : un assaut ou une prise ne la change plus
-      nuit.montrer();
+      ouvrirSoir();
       if (reseau) { reseau.corvees = {}; reseau.pret = [false, false]; for (const [reg, id] of Object.entries(nuit.corvees)) if (id !== 'repos') reseau.ls.commander({ t: 'corvee', reg: +reg, id }); }     // (ses choix de départ : ceux d'hier, s'ils sont encore possibles)
     }
     if (ev.some(e => e.type === 'fin')) { montrerFin(); }
@@ -1482,7 +1485,7 @@ startUpdateCheck({
 });
 
 // ─── Mode debug (section 18) : chargé seulement avec ?debug=1 ──────────────
-if (DEBUG) await (await import('./debug-jeu.js?v=0.169.0')).installerDebugJeu({ B: () => B, reseau: () => reseau, oublierBataille: () => { B = null; }, poserSouris: p => { souris = p; }, charChoisi: () => [charChoisi, modeChar, choisis.size], horloge, effectifs, enJeu, loop, rendu, jouer, nouvelle, store, montrerTitre, son, leSuivi, choisirAvion, choisirChar, aube, nuit, avancer, evenements, raconter, majHud, choisirBatiment, montrerBatiment, commanderRang, lancerBarrage, ordonnerBarrage, lancerStance, ordonnerStance, lancerMarche, ordonnerMarche, empreinteEtat, montrerSoldat, majFiche, laFiche, $, majBulle, montrerFin, demarrerCampagne, laCampagne, CALIBRES });      // le mode debug (js/debug-jeu.js)
+if (DEBUG) await (await import('./debug-jeu.js?v=0.169.0')).installerDebugJeu({ ouvrirSoir, B: () => B, reseau: () => reseau, oublierBataille: () => { B = null; }, poserSouris: p => { souris = p; }, charChoisi: () => [charChoisi, modeChar, choisis.size], horloge, effectifs, enJeu, loop, rendu, jouer, nouvelle, store, montrerTitre, son, leSuivi, choisirAvion, choisirChar, aube, nuit, avancer, evenements, raconter, majHud, choisirBatiment, montrerBatiment, commanderRang, lancerBarrage, ordonnerBarrage, lancerStance, ordonnerStance, lancerMarche, ordonnerMarche, empreinteEtat, montrerSoldat, majFiche, laFiche, $, majBulle, montrerFin, demarrerCampagne, laCampagne, CALIBRES });      // le mode debug (js/debug-jeu.js)
 
 await chargement.frame();
 montrerTitre();
