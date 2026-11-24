@@ -2783,7 +2783,7 @@
   "vitrine": "bouton|La vitrine",
   "ouvrir-reglages": "icone titre-reglages|\n      <svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M10.3 4.3c.4-1.8 2.9-1.8 3.4 0a1.7 1.7 0 0 0 2.6 1.1c1.5-.9 3.3.8 2.4 2.4a1.7 1.7 0 0 0 1 2.5c1.8.5 1.8 3 0 3.4a1.7 1.7 0 0 0-1 2.6c.9 1.5-.9 3.3-2.4 2.4a1.7 1.7 0 0 0-2.6 1c-.5 1.8-3 1.8-3.4 0a1.7 1.7 0 0 0-2.5-1c-1.6.9-3.3-.9-2.4-2.4a1.7 1.7 0 0 0-1.1-2.6c-1.8-.4-1.8-2.9 0-3.4a1.7 1.7 0 0 0 1.1-2.5c-.9-1.6.8-3.3 2.4-2.4 1 .6 2.3.1 2.5-1.1z\"></path><circle cx=\"12\" cy=\"12\" r=\"3\"></circle></svg>\n    ",
   "toast": "H|jeu-toast|",
-  "objet-bandeau": "papier objet-bandeau vient|<i class=\"objet-icone\" aria-hidden=\"true\">A</i><div class=\"objet-texte\"><small>Commun · pris par un des nôtres · nouvelle découverte</small><b>Bidon d'essence</b><span>Un avion remis en état</span></div>",
+  "objet-bandeau": "papier objet-bandeau vient|<i class=\"objet-icone\" aria-hidden=\"true\">+</i><div class=\"objet-texte\"><small>Commun · pris par un des nôtres · nouvelle découverte</small><b>Escouade</b><span>+5 hommes</span></div>",
   "caprice": "H|papier caprice-puce|<i class=\"objet-icone\" aria-hidden=\"true\">☂</i><b>La pluie de caisses</b><u><s style=\"width: 1%;\"></s></u>",
   "annonce": "H|papier annonce caprice vient|<i class=\"objet-icone\" aria-hidden=\"true\">☂</i><div class=\"annonce-texte\"><small>Caprice du front · Peu commun</small><b>La pluie de caisses</b><span>Cinq avions larguent à la suite : cinq caisses, cinq courses</span></div><em>dans 1 s</em><u><s style=\"width: 3%;\"></s></u>"
  },
