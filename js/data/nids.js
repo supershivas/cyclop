@@ -14,6 +14,10 @@ export const NIDS = {
   munitions: 400,              // rafales dans la bande (Jérôme, lot E : la barre de munitions) ; une rafale n'en use qu'une quand elle a un homme d'en face dans son cône ; rechargées à l'aube
   pivot: 70,                   // degrés : de combien le poste tourne, de chaque côté de sa direction d'origine (Jérôme, lot E : « on règle la direction du cône »)
   etiquette: { munBas: 0.25, apresRafale: 8 },   // (Jérôme, retour du 1er nov.) l'étiquette d'un poste (vie, bande) n'est sur le champ que s'il est choisi, abîmé, presque à sec, ou s'il a tiré depuis `apresRafale` s de jeu
+  // La mitrailleuse à la main (Jérôme, 24 nov., v0.168.0 : « on contrôle le tir ») : elle ne tire que tant qu'on tient le bouton, dans le regard ; une rafale tous les `periode` s
+  // sur les hommes d'en face à moins de `cone` rad du regard (la chance : `touche` × (1,4 − distance / portée)) ; la bande perd une rafale par `parBande` rafales à la main (le même débit
+  // qu'en tirant seul : une par seconde) ; le regard tourne au plus de `pivot` degrés de chaque côté de sa direction d'origine, comme le cône
+  main: { periode: 0.2, cone: 0.09, touche: 0.05, parBande: 5 },
   armes: ['Hotchkiss', 'MG 08'],     // le nom de l'arme de chaque camp, dans le tableau de bord de la vue à la personne (v0.167.0)
   reparationEnFace: 0.5,       // en face, sans génie : la chance par nuit qu'un nid détruit soit refait
 };

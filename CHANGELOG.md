@@ -1,5 +1,10 @@
 # Journal des versions
 
+## 0.168.0 — 2026-11-24
+
+- La mitrailleuse se prend en main : « Prendre le contrôle », la souris vise, le clic tenu tire (elle ne tire plus seule tant qu'on la tient)
+- En la prenant, la caméra passe au-dessus de la pièce puis descend doucement jusqu'au tireur ; l'arme monte dans l'image à la fin de la descente
+
 ## 0.167.0 — 2026-11-23
 
 - Toutes les vues à la personne : les commandes toujours affichées, et en bas à droite un tableau de bord nommé (Fusil Lebel, Canon de 75, Hotchkiss…) avec l'état et les munitions

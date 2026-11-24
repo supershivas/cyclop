@@ -7,24 +7,24 @@
 //    tonneau, l'écran rouge, jusqu'à l'écrasement.
 // Rien de neuf dans le moteur que quelques réglages de la vue (`vue.haut`, `dist`, `portee`, `hors`, `roulis`, `secousse`, rendu3d.js) : la caméra du jeu orbite déjà autour d'un point visé, ici ce point
 // suit l'engin. Le dessin seulement : aucune lecture n'écrit dans la bataille. La vue se libère d'un geste sur la caméra (déplacer, tourner), Échap, le clic droit, ou le bouton ; la vue d'avant revient.
-import { positionDe, refusPrise } from '../avions.js?v=0.167.0';
-import { hauteurOeil, balancement, armeDe, aPortee } from '../tir-joueur.js?v=0.167.0';
-import { TIR_JOUEUR as TJ } from '../data/tir-joueur.js?v=0.167.0';
-import { CALIBRES } from '../data/calibres.js?v=0.167.0';
-import { CHARS } from '../data/chars.js?v=0.167.0';
-import { AVION_MAIN } from '../data/mitraillage.js?v=0.167.0';
-import { creerAideVue } from './aide-vue.js?v=0.167.0';
-import { creerEtatFps } from './etat-fps.js?v=0.167.0';
-import { NIDS } from '../data/nids.js?v=0.167.0';
-import { MITRAILLAGE } from '../data/mitraillage.js?v=0.167.0';
+import { positionDe, refusPrise } from '../avions.js?v=0.168.0';
+import { hauteurOeil, balancement, armeDe, aPortee } from '../tir-joueur.js?v=0.168.0';
+import { TIR_JOUEUR as TJ } from '../data/tir-joueur.js?v=0.168.0';
+import { CALIBRES } from '../data/calibres.js?v=0.168.0';
+import { CHARS } from '../data/chars.js?v=0.168.0';
+import { AVION_MAIN } from '../data/mitraillage.js?v=0.168.0';
+import { creerAideVue } from './aide-vue.js?v=0.168.0';
+import { creerEtatFps } from './etat-fps.js?v=0.168.0';
+import { NIDS } from '../data/nids.js?v=0.168.0';
+import { MITRAILLAGE } from '../data/mitraillage.js?v=0.168.0';
 // Les sensations de l'homme qu'on mène (v0.152.0) : le coup reçu (s), la balle qui frôle (s), le souffle d'un obus (portée en rayons du souffle, s de retour), la peur qui ferme le champ (opacité au plus)
 const NIDS_RENDU = { coups: 9, garde: 1.6 };      // la mitrailleuse vue du poste : coups dessinés par seconde ; s depuis la dernière rafale de la règle où l'on tire encore (v0.167.0)
 const SENS = { coup: 1.2, frole: 0.5, roulis: 0.07, choc: 3, chocDuree: 2.5, peur: 0.75 };
-import { indiceDe, quiEst, majuscule } from './lecture.js?v=0.167.0';
-import { creerTampons } from './tampons-fps.js?v=0.167.0';
-import { BLESSURES_FPS, RYTHME_TAMPONS } from '../data/tampons.js?v=0.167.0';
-import { ZONES_EN_MOTS } from '../data/causes.js?v=0.167.0';
-import { REPERES, jauge, corps } from './barres.js?v=0.167.0';
+import { indiceDe, quiEst, majuscule } from './lecture.js?v=0.168.0';
+import { creerTampons } from './tampons-fps.js?v=0.168.0';
+import { BLESSURES_FPS, RYTHME_TAMPONS } from '../data/tampons.js?v=0.168.0';
+import { ZONES_EN_MOTS } from '../data/causes.js?v=0.168.0';
+import { REPERES, jauge, corps } from './barres.js?v=0.168.0';
 
 const SOL_Y = 3;           // le niveau moyen du sol que vise la caméra (rendu3d.js : `SOL_Y`), pour calculer `vue.haut`
 const PORTEE = 700;        // m : le plan lointain d'une vue verrouillée (au ras du sol, la vue porte loin)
@@ -48,7 +48,7 @@ const ECRASE = 3.2;        // s qu'on reste sur l'épave avant de rendre la vue
 // Le plongeon vers la vue à la personne et le recul à la sortie (Jérôme, 21 nov., v0.160.0 : « quand on passe en vue FPS (avion, soldat, char), un mouvement de caméra qui plonge vers l'entité choisie ; zoom arrière lors de la désélection ») : s (l'horloge réelle, mais 100 ms au plus par image : la première image d'un char vu de près compile ses shaders et sautait tout le plongeon)
 // La vue de l'homme tombé : de combien elle recule (m) et sa plongée (rad). 3 m et 1,05 rad jusqu'à la v0.160.0 : un mort au fond d'une tranchée restait caché par les sacs et le toit, frôlés de près (v0.160.1)
 const MORT_VUE = { recul: 4.7, tangage: 1.3 };
-const PLONGEON = { entree: 1.1, sortie: 0.9, pas: 0.1 };
+const PLONGEON = { entree: 1.1, sortie: 0.9, pas: 0.1, poste: 2.4, dessus: { dist: 16, tangage: 1.25, part: 0.45 } };      // poste : s, le plongeon vers une mitrailleuse en deux temps ; dessus : la pose au-dessus de la pièce (m, rad), et la part du temps pour y aller (v0.168.0)
 // L'œil d'un soldat (Jérôme, v0.144.0 : « la vue FPS sur chaque soldat : on clique et on dirige le soldat, ZQSD et la souris ») : à 1,6 m du sol, un champ large (70° : la caméra du jeu est à 30°),
 // la caméra à 0,3 m derrière le point de l'œil (l'homme lui-même n'est pas dessiné : `rendu.cacherSoldat`), un plan proche de 0,12 m (les autres hommes s'approchent à bout de bras)
 // `zoom` est un INDICE de `ZOOMS` (8 = 24 px/m : les hommes de près sont articulés, au niveau fin, comme en jeu ; 12 était hors de la liste : `ZOOMS[12]` indéfini, tous les hommes redevenaient des boîtes)
@@ -93,7 +93,7 @@ function cibleDe(B, genre, id, ctx = {}) {
     perso: { x: p.x + co * (sol ? 0 : CHASSE.avion.avant), y: p.y + si * (sol ? 0 : CHASSE.avion.avant), h: p.h + CHASSE.avion.haut, cap: p.cap, tangage: CHASSE.avion.tangage - (main ? (p.pente ?? 0) * 0.4 : 0), alt: true, chasse: CHASSE.avion } };
 }
 
-export function creerSuivi({ $, bataille, rendu, reduit = () => false, retour = () => {}, dire = () => {}, verrou = document.body, touche = () => false, enPause = () => false, moi = () => 0, piloter = () => {}, conduire = () => {}, voler = () => {}, mort = () => {}, assourdir = () => {} }) {
+export function creerSuivi({ $, bataille, rendu, reduit = () => false, retour = () => {}, dire = () => {}, verrou = document.body, touche = () => false, enPause = () => false, moi = () => 0, piloter = () => {}, conduire = () => {}, tenir = () => {}, voler = () => {}, mort = () => {}, assourdir = () => {} }) {
   let s = null, sortie = null;      // `sortie` : le recul en cours après la vue (s vaut déjà null)          // { genre, id, mode: 'cinema' | 'personne', t, avant, tir, accident, fin }
   const etatEl = $('etat-fps'), tableau = creerEtatFps(etatEl), carteEl = $('carte-soldat'), badge = $('suivi'), nom = $('suivi-nom'), barres = $('cinema'), rouge = $('accident'), viseur = $('viseur'), cartouches = $('cartouches'), coupEl = $('coup'), chocEl = $('choc'), peurEl = $('peur-voile'), canonEl = $('canon-barre'), volEl = $('vol-barres'), aide = creerAideVue($('aide-vue'));
   $('suivi-liberer').onclick = () => liberer();
@@ -158,12 +158,13 @@ export function creerSuivi({ $, bataille, rendu, reduit = () => false, retour = 
   }
   document.addEventListener('mousedown', e => {
     if (s?.vole && surChamp(e) && e.button === 0) { e.preventDefault(); if (!s.tirAile) { s.tirAile = true; voler({ tir: true }); } return; }
+    if (s?.tient && surChamp(e) && e.button === 0) { e.preventDefault(); if (enPause()) { dire('Le temps est arrêté.'); return; } if (!s.tirNid) { s.tirNid = true; tenir({ tir: true, regard: quart(s.capNid ?? 0) }); } return; }      // la mitrailleuse : le tir tant que le bouton est tenu (v0.168.0)
     if (s?.conduit && surChamp(e)) { e.preventDefault(); if (e.button === 0) tirerCanon(); else if (e.button === 2 && !s.rafale) { s.rafale = true; conduire({ rafale: true }); } return; }
     if (s?.genre !== 'soldat' || !surChamp(e)) return;
     if (s.mort) return;
     if (e.button === 0) { e.preventDefault(); tirer(); } else if (e.button === 2) { e.preventDefault(); if (prochedevant()) parer(true); else epauler(true); }
   });
-  document.addEventListener('mouseup', e => { if (e.button === 0 && s?.vole && s.tirAile) { s.tirAile = false; voler({ tir: false }); } if (e.button === 2) { epauler(false); parer(false); if (s?.conduit && s.rafale) { s.rafale = false; conduire({ rafale: false }); } } });
+  document.addEventListener('mouseup', e => { if (e.button === 0 && s?.tient && s.tirNid) { s.tirNid = false; tenir({ tir: false }); } if (e.button === 0 && s?.vole && s.tirAile) { s.tirAile = false; voler({ tir: false }); } if (e.button === 2) { epauler(false); parer(false); if (s?.conduit && s.rafale) { s.rafale = false; conduire({ rafale: false }); } } });
   document.addEventListener('keyup', e => { if (e.code === 'KeyV' && s?.amoi) { s.amoi = false; piloter({ amoi: false }); } });
   /* R : recharger (le Lebel une cartouche à la fois, le Mauser d'une lame) ; C : s'accroupir, X : se coucher (la même touche relève) ; Espace : franchir le rebord devant lui (v0.152.0 : la pause passe à P dans cette vue) */
   document.addEventListener('keydown', e => {
@@ -231,8 +232,10 @@ export function creerSuivi({ $, bataille, rendu, reduit = () => false, retour = 
       }
     }
     if (genre === 'nid' && mode === 'personne') {      // la mitrailleuse, à la personne (v0.167.0) : l'arme en bas de l'image, ses rafales, ses douilles ; le poste tire seul
-      s.nid = true; s.rafaleT = 0; s.cibleNid = null; s.cibleT = 0; rendu.mitrailleuse = true; rendu.mitrailleuseCamp?.(B.etat.nids.find(k => k.id === id)?.camp ?? moi());
-      aide.montrer('nid');
+      const n = B.etat.nids.find(k => k.id === id);
+      s.nid = true; s.rafaleT = 0; s.cibleNid = null; s.cibleT = 0; rendu.mitrailleuse = !deVue; rendu.mitrailleuseApparition?.(deVue ? 0 : 1);      // (avec le plongeon, elle n'apparaît qu'à la descente)
+      if (n && n.camp === moi() && n.etat === 'actif') { s.tient = true; s.tirNid = false; s.capNid = Math.atan2(n.ay, n.ax); tenir({ id }); viseur.toggleAttribute('hidden', false); viseur.classList.remove('touche', 'mort'); }      // la nôtre : on la tient (v0.168.0)
+      aide.montrer(s.tient ? 'nid' : 'nidSeul');
     }
     if (genre === 'char' && mode === 'personne') {      // notre char, à la personne : on le conduit (v0.156.0)
       const ch = B.etat.chars.find(k => k.id === id);
@@ -271,8 +274,9 @@ export function creerSuivi({ $, bataille, rendu, reduit = () => false, retour = 
   function liberer() {
     if (!s) { if (sortie) finirSortie(); return; }      // (un geste sur la caméra pendant le recul : il finit d'un coup)
     tampons.vider();
-    const { avant, genre } = s, tombe = s.mort, conduit = s.conduit, vole = s.vole, nid = s.nid, de = reduit() ? null : poseVue(); s = null; rendreSouris();
+    const { avant, genre } = s, tombe = s.mort, conduit = s.conduit, vole = s.vole, nid = s.nid, tient = s.tient, de = reduit() ? null : poseVue(); s = null; rendreSouris();
     if (conduit) { conduire({ fin: true }); canonEl.toggleAttribute('hidden', true); }
+    if (tient) tenir({ fin: true });
     if (vole) { if (bataille()?.ailes?.[moi()]) voler({ fin: true }); volEl.toggleAttribute('hidden', true); rentrerEl.hidden = true; }
     rendu.fusilParade(false); rendu.mitrailleuse = false; aide.cacher(); etatEl.toggleAttribute('hidden', true); tableau.vider(); canonEl.toggleAttribute('hidden', true);
     const V = rendu.vue;
@@ -510,9 +514,16 @@ export function creerSuivi({ $, bataille, rendu, reduit = () => false, retour = 
     V.secousse = r ? 0 : secousse;
     // le plongeon (v0.160.0) : la caméra part de la vue d'avant et descend jusqu'à l'œil ; le fusil n'arrive qu'à la fin, le viseur se dessine peu à peu
     if (s.entree) {
-      const f = r ? 1 : doux(temps(s.entree) / PLONGEON.entree);
-      if (f >= 1) s.entree = null; else { poser(s.entree.de, poseVue(true), f); viseur.style.opacity = String(f * f); }
+      const f = r ? 1 : doux(temps(s.entree) / (s.nid ? PLONGEON.poste : PLONGEON.entree));
+      if (f >= 1) s.entree = null;
+      else if (s.nid) {      // la mitrailleuse (v0.168.0, Jérôme : « le mouvement doit se placer au-dessus de la pièce et descendre doucement, ce qui la fait apparaître ») : d'abord au-dessus du poste, puis la descente jusqu'à l'œil
+        const vers = poseVue(true), dessus = { ...vers, dist: PLONGEON.dessus.dist, tangage: PLONGEON.dessus.tangage, fov: s.avant.fov }, m = PLONGEON.dessus.part;
+        if (f < m) poser(s.entree.de, dessus, doux(f / m)); else poser(dessus, vers, doux((f - m) / (1 - m)));
+        const a = Math.max(0, (f - m) / (1 - m)); rendu.mitrailleuse = a > 0.35; rendu.mitrailleuseApparition?.(doux((a - 0.35) / 0.65));      // l'arme monte dans l'image pendant la fin de la descente
+        viseur.style.opacity = String(Math.max(0, a) ** 2);
+      } else { poser(s.entree.de, poseVue(true), f); viseur.style.opacity = String(f * f); }
       if (homme) rendu.fusil = !s.entree;
+      if (s.nid && !s.entree) { rendu.mitrailleuse = true; rendu.mitrailleuseApparition?.(1); }
       if (!s.entree) viseur.style.opacity = '';
     }
     // la fenêtre des commandes : les bascules en marche (v0.158.0)
@@ -520,15 +531,23 @@ export function creerSuivi({ $, bataille, rendu, reduit = () => false, retour = 
     // une douille saute, trois traceurs partent vers l'homme visé (le plus proche dans le cône, relu deux fois par seconde) et la terre gicle autour de lui. Le dessin seulement.
     if (s.nid && !reduit()) {
       const n = B.etat.nids.find(k => k.id === s.id);
-      const feu = n && n.etat === 'actif' && n.statut === 'tire' && B.etat.temps - (n.derniere ?? -9) < NIDS_RENDU.garde;
+      const K = s.tient ? B.mitrailleurs?.[moi()] : null;
+      if (s.tient) {      // à la main : le regard part à la règle (au plus dix fois par seconde), son refus se dit, le viseur dit les coups au but
+        s.capNid = c.perso.cap + s.lacet;
+        const q = quart(s.capNid); if (Math.abs(q - (s.regardNid ?? 1e9)) > 0.005 && s.t - (s.tRegardNid ?? -1) >= 0.1 && !enPause()) { s.regardNid = q; s.tRegardNid = s.t; tenir({ regard: q }); }
+        if (K?.refus) { dire(K.refus); K.refus = null; }
+        if (K?.dernier && K.dernier.n !== s.vuNid) { s.vuNid = K.dernier.n; if (K.dernier.touches) { viseur.classList.remove('touche', 'mort'); void viseur.getBoundingClientRect(); viseur.classList.add('touche'); } }
+      }
+      const feu = n && n.etat === 'actif' && n.statut === 'tire' && (s.tient ? !!K?.tir : B.etat.temps - (n.derniere ?? -9) < NIDS_RENDU.garde);
       if (feu && !enPause()) {
         s.cibleT -= dt;
-        if (s.cibleT <= 0) { s.cibleT = 0.5; s.cibleNid = cibleNid(B, n); }
+        if (s.cibleT <= 0) { s.cibleT = s.tient ? 0.15 : 0.5; s.cibleNid = s.tient ? (K?.dernier ? [K.dernier.tx, K.dernier.ty] : null) : cibleNid(B, n); }      // (à la main : là où part sa dernière rafale, dans le regard)
         s.rafaleT += dt * NIDS_RENDU.coups;
         for (; s.rafaleT >= 1; s.rafaleT--) {
           rendu.mitrailleuseTir();
           const t = s.cibleNid, j = () => (Math.random() - 0.5) * 3;      // (le hasard du dessin seulement : jamais la graine)
-          const tx = t ? t[0] + j() : n.x + n.ax * 50 + j(), ty = t ? t[1] + j() : n.y + n.ay * 50 + j();
+          const ux = s.tient ? Math.cos(s.capNid) : n.ax, uy = s.tient ? Math.sin(s.capNid) : n.ay;
+          const tx = t ? t[0] + j() : n.x + ux * 50 + j(), ty = t ? t[1] + j() : n.y + uy * 50 + j();
           rendu.rafale(n.x + n.ax * 5, n.y + n.ay * 5, 1.0, tx, ty, Math.random() < 0.5);      // (les traceurs partent à 5 m : l'éclair de bouche est celui de l'arme dessinée, pas une tache devant l'œil)
         }
       } else s.rafaleT = 0;
@@ -592,7 +611,7 @@ export function creerSuivi({ $, bataille, rendu, reduit = () => false, retour = 
     }
     if (s.genre === 'nid') {
       const n = B.etat.nids.find(k => k.id === s.id); if (!n) return;
-      const MOTS = { tire: 'il tire', veille: 'il guette', seul: 'plus de servant', sec: 'bande vide', pris: 'tronçon pris' };
+      const MOTS = { main: 'à vous : clic', tire: 'il tire', veille: 'il guette', seul: 'plus de servant', sec: 'bande vide', pris: 'tronçon pris' };
       tableau.poser('Mitrailleuse', [
         { nom: 'Le poste', val: n.pv / NIDS.pv, texte: n.etat === 'detruit' ? 'détruit' : pct(n.pv / NIDS.pv), faible: n.pv / NIDS.pv < 0.25 },
         { nom: NIDS.armes[n.camp] ?? 'Mitrailleuse', val: n.muni / NIDS.munitions, texte: `${n.muni} rafales`, faible: n.muni / NIDS.munitions < 0.15 },
@@ -600,5 +619,5 @@ export function creerSuivi({ $, bataille, rendu, reduit = () => false, retour = 
       ]);
     }
   }
-  return { verrouiller, liberer, maj, evenements, tirer, get actif() { return s; }, get mene() { return !!s && (s.genre === 'soldat' || !!s.conduit || !!s.vole); } };
+  return { verrouiller, liberer, maj, evenements, tirer, get actif() { return s; }, get mene() { return !!s && (s.genre === 'soldat' || !!s.conduit || !!s.vole || !!s.tient); } };
 }

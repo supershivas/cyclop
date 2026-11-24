@@ -46,7 +46,7 @@ export function creerMitrailleuseVue({ THREE, renderer, PALETTE }) {
   sc.add(arme);
   const repos = { x: 0.02, y: -0.24, z: -0.5 };
   arme.position.set(repos.x, repos.y, repos.z); arme.rotation.set(0.04, 0, 0);
-  let recul = 0, flash = 0, t = 0, avance = 0, prochaine = 0;
+  let recul = 0, flash = 0, t = 0, avance = 0, prochaine = 0, monte = 1;      // monte : 0 l'arme sous l'image, 1 en place (v0.168.0)
   const tmp = new THREE.Vector3();
   return {
     /* un coup : le recul, l'éclair, la bande avance d'une cartouche, une douille saute */
@@ -57,10 +57,11 @@ export function creerMitrailleuseVue({ THREE, renderer, PALETTE }) {
       d.m.position.copy(tmp); d.m.visible = true; d.t = 0;
       d.v.set(0.6 + alea() * 0.8, 0.5 + alea() * 0.9, 0.1 + (alea() - 0.5) * 0.5); d.w.set((alea() - 0.5) * 30, (alea() - 0.5) * 30, (alea() - 0.5) * 30);
     },
+    apparition(v) { monte = Math.max(0, Math.min(1, v)); },
     manches(lettre) { for (const m of mains) m.material = mat(lettre === 'x' ? 'o' : 'o'); },      // (les mains nues : le même ton pour les deux camps)
     maj(dt) {
       t += dt; recul *= Math.exp(-dt * 25); flash = Math.max(0, flash - dt);
-      arme.position.set(repos.x + Math.sin(t * 60) * 0.002 * recul, repos.y + 0.004 * recul, repos.z + 0.025 * recul);
+      arme.position.set(repos.x + Math.sin(t * 60) * 0.002 * recul, repos.y + 0.004 * recul - 0.45 * (1 - monte), repos.z + 0.025 * recul);
       arme.rotation.x = 0.04 + 0.03 * recul;
       eclair.visible = flash > 0; eclair.rotation.z = t * 37;
       // la bande glisse vers la culasse : chaque coup l'avance d'un pas, en douceur ; la cartouche qui y entre disparaît et revient au bout (la bande défile)

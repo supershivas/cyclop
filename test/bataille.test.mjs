@@ -1285,6 +1285,24 @@ test('un nid ne tire plus d\'une tranchée à l\'autre (120 m) mais couvre le no
   for (let k = 0; k < 40; k++) avancer(D);
   assert.equal(d.statut, 'seul', 'personne pour le servir');
 });
+import { commanderMitrailleur } from '../js/nids.js';
+test('la mitrailleuse à la main (v0.168.0) : elle ne tire que le bouton tenu, dans le regard ; la bande s\'use au même débit ; de travers elle refuse ; deux machines, la même partie', () => {
+  const mk = () => { const B = petite(), n = nidDe(B, 0); poser(B, 0, 1, n.x, n.y, 1); poser(B, 1, 30, n.x + 15, n.y + n.face * 40, 6); return { B, n }; };
+  const pas = (B, s) => { for (let k = 0; k < s; k++) avancer(B); };
+  const pertes = B => B.etat.pertes[1] + B.etat.blesses[1];
+  { const { B, n } = mk(); assert.equal(commanderMitrailleur(B, 0, { id: n.id }), ''); assert.match(commanderMitrailleur(B, 1, { id: n.id }), /plus à vous/);
+    const p0 = pertes(B), m0 = n.muni; pas(B, 60); assert.equal(n.muni, m0, 'tenue, sans le bouton, elle ne tire pas seule'); assert.equal(pertes(B), p0); assert.equal(n.statut, 'main');
+    // dans le regard : vers le groupe (40 m devant, 15 m de côté)
+    commanderMitrailleur(B, 0, { tir: true, regard: Math.round(Math.atan2(n.face * 40, 15) * 1000) / 1000 }); pas(B, 150);
+    assert.ok(pertes(B) > p0, `dans le regard, elle porte : ${pertes(B) - p0} touchés`); assert.ok(m0 - n.muni >= 4 && m0 - n.muni <= 6, `une rafale de bande par seconde : ${m0 - n.muni} en 5 s`);
+    // à côté du groupe : rien
+    const p1 = pertes(B); commanderMitrailleur(B, 0, { regard: Math.round(Math.atan2(n.face * 40, -25) * 1000) / 1000 }); pas(B, 90); assert.equal(pertes(B), p1, 'hors du regard, personne n\'est touché');
+    // de travers : refusé une fois, à voix haute
+    const K = B.mitrailleurs[0]; K.refus = null; commanderMitrailleur(B, 0, { regard: n.face > 0 ? 0 : Math.PI }); avancer(B); assert.match(K.refus ?? '', /Trop de travers/);
+    commanderMitrailleur(B, 0, { fin: true }); assert.equal(B.mitrailleurs[0], null); }
+  const scen = () => { const { B, n } = mk(); commanderMitrailleur(B, 0, { id: n.id }); for (let k = 0; k < 120; k++) { if (k === 10) commanderMitrailleur(B, 0, { tir: true, regard: Math.round(Math.atan2(n.face * 40, 15) * 1000) / 1000 }); if (k === 80) commanderMitrailleur(B, 0, { tir: false }); avancer(B); } return B; };
+  assert.equal(empreinte(scen()), empreinte(scen()));
+});
 test('un homme est posté à chaque nid actif : il marche à son poste, le sert, et son remplaçant vient quand il tombe (v0.144.1)', () => {
   const B = petite(), n = nidDe(B, 0), A = B.armee;
   const pas = s => { for (let k = 0; k < s; k++) avancer(B); };

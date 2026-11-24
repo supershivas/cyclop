@@ -12,7 +12,7 @@
 //   C(rayon, hauteur, x, y, z, couleur, rotation, pans)           un cylindre (debout ; la rotation le couche), 8 pans par défaut
 //   K(rayon, hauteur, x, y, z, couleur, rotation, pans)           un cône, la pointe en haut
 // `rotation` : [rx, ry, rz] en radians (ou rien).
-import { RARETES_COULEURS, RARETES_BRILLANCE } from '../palette.js?v=0.167.0';
+import { RARETES_COULEURS, RARETES_BRILLANCE } from '../palette.js?v=0.168.0';
 
 const B = (w, h, d, x, y, z, c, r) => ({ f: 'b', t: [w, h, d], p: [x, y, z], c, r });
 const C = (rayon, h, x, y, z, c, r, n = 8) => ({ f: 'c', t: [rayon, h], p: [x, y, z], c, r, n });

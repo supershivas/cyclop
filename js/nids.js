@@ -1,13 +1,13 @@
 /* Les nids de mitrailleuses (Jérôme, v0.83.0) : la logique, pure. Un nid vit dans `etat.nids` (sauvegardé) : { id, camp, troncon, x, y, face, pv, etat: 'actif' | 'detruit', tire }.
    Il est posé sur le parapet de la 1re ligne de son camp. Tant qu'il est actif, que son tronçon est à son camp et qu'un de ses hommes le sert, il tire en avant sur l'autre camp ;
    un obus l'abîme, à zéro il est détruit ; le génie (genie.js) ou, en face, la nuit, le refait. Les sapeurs le refont : `reparerNid`. */
-import { NIDS } from './data/nids.js?v=0.167.0';
-import { CALIBRES } from './data/calibres.js?v=0.167.0';
-import { ligneY } from './tranchees.js?v=0.167.0';
-import { hash2 } from './lib/rng.js?v=0.167.0';
-import { GRILLE } from './army.js?v=0.167.0';
-import { BONUS, GAINS, chevronsDe } from './data/experience.js?v=0.167.0';
-import { zone as zoneDe } from './bataille.js?v=0.167.0';
+import { NIDS } from './data/nids.js?v=0.168.0';
+import { CALIBRES } from './data/calibres.js?v=0.168.0';
+import { ligneY } from './tranchees.js?v=0.168.0';
+import { hash2 } from './lib/rng.js?v=0.168.0';
+import { GRILLE } from './army.js?v=0.168.0';
+import { BONUS, GAINS, chevronsDe } from './data/experience.js?v=0.168.0';
+import { zone as zoneDe } from './bataille.js?v=0.168.0';
 
 /* Les nids du départ : un par secteur de 100 m sur la 1re ligne de chaque camp, au milieu du 2e tronçon de chaque quart de la ligne. */
 export function creerNids(B) {
@@ -147,12 +147,59 @@ export function aubeNids(B) {
 export const chevronsNid = n => chevronsDe(n.exp ?? 0);
 export const cadenceNid = n => NIDS.cadence * (1 - BONUS.nid.cadence * chevronsNid(n));
 
+/* La mitrailleuse à la main (Jérôme, 24 nov., v0.168.0 : « on contrôle le tir ») : un mitrailleur par camp, `B.mitrailleurs[camp]` (jamais sauvegardé), posé par des commandes, les mêmes seul
+   ou à deux (lockstep : `mitrailleur`) : { id } : prendre le poste ; { tir: true | false } : le bouton tenu ; { regard: rad } : où il pointe ; { fin: true } : le rendre (il retire seul).
+   Rend '' ou la raison du refus. */
+export function commanderMitrailleur(B, camp, c) {
+  B.mitrailleurs ??= [null, null];
+  let K = B.mitrailleurs[camp];
+  if (c.fin) { B.mitrailleurs[camp] = null; return ''; }
+  if (c.id !== undefined && K?.id !== c.id) {
+    const n = B.etat.nids.find(k => k.id === c.id);
+    if (!n || n.camp !== camp) return 'Ce poste de mitrailleuse n\'est plus à vous.';
+    if (n.etat === 'detruit') return 'Ce poste est détruit : le génie doit le refaire.';
+    K = B.mitrailleurs[camp] = { id: c.id, tir: false, regard: Math.round(Math.atan2(n.ay, n.ax) * 1000) / 1000, refus: null, dit: '', coups: 0, dernier: null };
+  }
+  if (!K) return 'Aucun poste en main.';
+  if (c.tir !== undefined) { K.tir = !!c.tir; if (!K.tir) K.dit = ''; }
+  if (c.regard !== undefined) K.regard = c.regard;
+  return '';
+}
+/* Une rafale à la main : dans le regard, seulement le bouton tenu (le refus est dit une fois par appui) */
+function tirMain(B, ctx, rng, n, K) {
+  const { etat, armee: A } = B, dt = ctx.dt, Mn = NIDS.main;
+  n.tire = (n.tire ?? 0) + dt;
+  if (!K.tir) { n.statut = 'main'; return; }
+  const dire = r => { if (K.dit !== r) { K.dit = r; K.refus = r; } };
+  if (n.muni <= 0) { n.statut = 'sec'; dire('La bande est vide : elle se refait à l\'aube.'); return; }
+  const sv = servantNid(B, n);
+  if (sv < 0) { n.statut = 'seul'; dire(`Aucun de nos hommes à moins de ${NIDS.equipage} m pour la servir.`); return; }
+  const rx = Math.cos(K.regard), ry = Math.sin(K.regard);
+  if (ry * n.face < Math.cos(NIDS.pivot * Math.PI / 180)) { n.statut = 'main'; dire(`Trop de travers : elle ne tourne que de ${NIDS.pivot}° de chaque côté.`); return; }
+  if (n.tire < Mn.periode * cadenceNid(n) / NIDS.cadence) return;
+  n.tire = 0; n.servi = A.reg[sv]; n.statut = 'tire'; n.derniere = etat.temps;
+  const c2 = Math.cos(Mn.cone); let touches = 0, vise = 0, tx = n.x + rx * 40, ty = n.y + ry * 40;
+  for (let i = 0; i < A.n; i++) {
+    if (A.mort[i] || A.camp[i] === n.camp) continue;
+    const dx = A.x[i] - n.x, dy = A.y[i] - n.y, d = Math.hypot(dx, dy);
+    if (d >= NIDS.portee || d < 2 || (dx * rx + dy * ry) / d < c2) continue;
+    vise++; tx = A.x[i]; ty = A.y[i];
+    if (rng() < Mn.touche * (1.4 - d / NIDS.portee)) { ctx.frapper(i, 'nid', NIDS.gravite, null, -1, n.servi); touches++; if (A.mort[i]) { n.tues = (n.tues ?? 0) + 1; n.tuesReg ??= {}; n.tuesReg[n.servi] = (n.tuesReg[n.servi] ?? 0) + 1; } }
+    else A.peur[i] = Math.max(A.peur[i], NIDS.peur * (1 - d / NIDS.portee));
+  }
+  if (++K.coups >= Mn.parBande) { K.coups = 0; n.muni--; n.rafales = (n.rafales ?? 0) + 1; }
+  if (vise) n.exp = Math.min(1, (n.exp ?? 0) + GAINS.nid.touche * touches);
+  K.dernier = { n: (K.dernier?.n ?? 0) + 1, touches, tx, ty };
+  if (B.tirs.length < 2000) B.tirs.push(n.x, n.y, tx, ty, n.camp, -1);
+}
+
 /* Un pas de chaque nid. `ctx` : celui de `avancer` (frapper, tir…). */
 export function avancerNids(B, ctx, rng) {
   const { etat, armee: A, R } = B, dt = ctx.dt, c2 = Math.cos(NIDS.demiCone);
   for (const n of etat.nids) {
     if (n.etat !== 'actif') continue;
     if (etat.troncons[n.troncon] !== n.camp) { n.statut = 'pris'; continue; }  // son tronçon est pris : plus personne pour le servir
+    { const K = B.mitrailleurs?.[n.camp]; if (K && K.id === n.id) { tirMain(B, ctx, rng, n, K); continue; } }      // tenue à la main (v0.168.0) : elle ne tire plus seule
     n.tire = (n.tire ?? 0) + dt;
     if (n.tire < cadenceNid(n)) continue;
     if (n.muni <= 0) { n.statut = 'sec'; continue; }                      // la bande est vide jusqu'à l'aube

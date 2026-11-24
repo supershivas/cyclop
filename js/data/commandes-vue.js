@@ -19,6 +19,10 @@ export const COMMANDES_VUE = {
     { niveau: 3, titre: 'Les autres', items: [[['Espace'], 'pause'], [['Échap'], 'revenir']] },
   ] },
   nid: { titre: 'Mitrailleuse', groupes: [
+    { niveau: 1, items: [[['souris'], 'viser'], [['clic'], 'tirer, tant qu\'il est tenu']] },
+    { niveau: 3, titre: 'Les autres', items: [[['Espace'], 'pause'], [['Échap'], 'revenir']] },
+  ] },
+  nidSeul: { titre: 'Mitrailleuse', groupes: [
     { niveau: 1, items: [[['souris'], 'regarder'], [['seul'], 'il tire sur qui entre dans son cône']] },
     { niveau: 3, titre: 'Les autres', items: [[['Espace'], 'pause'], [['Échap'], 'revenir']] },
   ] },
