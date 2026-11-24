@@ -59,8 +59,9 @@ les vues à la personne six versions) avant d'être joués. Règles validées :
 6. **Une mesure par lot** : les tests ciblés, `rendu-empreinte`, `fumee` ; un
    système retiré emporte ses tests.
 
-À trancher : les sauvegardes de l'édition itch (quand une mise à jour doit-elle
-relire une campagne en cours).
+Les sauvegardes de l'édition itch (une mise à jour relit-elle une campagne en
+cours ?) : à décider plus près de la sortie (Jérôme, 24 nov. : « on verra en temps
+utile ») ; d'ici là, l'exception de `CLAUDE.md` vaut pour les deux éditions.
 
 ## En cours
 
