@@ -65,6 +65,9 @@ import { jauge as jaugeTuile } from './hud/tuiles.js?v=0.169.0';
 import { chevronsHtml } from './hud/barres.js?v=0.169.0';
 import { creerNuit, corveeDe, corveeCourte } from './hud/nuit.js?v=0.169.0';
 import { creerCampagne } from './hud/campagne.js?v=0.169.0';
+import { creerChoixSecteur } from './hud/choix-secteur.js?v=0.169.0';
+import { creerDecor } from './hud/decor-titre.js?v=0.169.0';
+import { creerJeuADeux } from './reseau/partie.js?v=0.169.0';
 import { creerCarnet, deux } from './hud/carnet.js?v=0.169.0';
 import { creerCarte } from './hud/carte.js?v=0.169.0';
 import { creerPertes } from './hud/pertes.js?v=0.169.0';
@@ -249,63 +252,7 @@ addEventListener('resize', () => rendu.redimensionner());
 // ─── Écrans ────────────────────────────────────────────────────────────────
 const enJeu = () => !!B && $('titre').hidden;
 
-/* Derrière l'écran titre, le moteur du jeu (Jérôme, v0.8.1) : une bataille de décor, jamais sauvegardée. Un
-   no man's land labouré et gorgé de pluie, des morts, l'heure arrêtée au coucher du soleil (ombres longues, le
-   soir qui tombe), des obus au loin et une fumée dense. La caméra au ras du sol, et une image différente à
-   chaque lancement : la graine, le lieu, la direction, l'heure (Jérôme, v0.8.2). L'aspect seulement : le
-   hasard d'ici n'entre dans aucune règle. */
-let D = null, decorT = 0, decorObus = 0, decorVue = null;
-function decor() {
-  if (D) return D;
-  const hasard = Math.random;
-  // un champ neuf (ni cratères ni morts : les obus qui tombent le creusent peu à peu), la saison, le temps et l'heure tirés au hasard (Jérôme, v0.59.1)
-  const saison = ['printemps', 'ete', 'automne', 'hiver'][Math.floor(hasard() * 4)], temps = Object.keys(SAISONS[saison].transitions);
-  D = nouvelleBataille(Math.floor(hasard() * 100000), R, { soldats: 240, saison, largages: false, caprices: false });      // (une illustration : pas de caisse parachutée ; son heure figée ferait tomber un avion à chaque image)
-  const m = D.etat.marges;
-  // le lieu (dans le secteur), la direction (n'importe laquelle), la hauteur (quelques mètres), l'heure (de 7 h à 17 h 45)
-  decorVue = {
-    cx: m.x + 80 + hasard() * 240, cz: m.y + 70 + hasard() * 160,
-    yaw: hasard() * Math.PI * 2, tangage: 0.045 + hasard() * 0.04,
-    sens: hasard() < 0.5 ? -1 : 1, heure: 7 + hasard() * 10.75,
-  };
-  D.etat.meteo[0] = temps[Math.floor(hasard() * temps.length)];
-  return D;
-}
-// l'heure du décor, arrêtée
-const tickDecor = h => Math.round(R.jour.duree / PAS * (h - R.jour.heureDebut) / (R.jour.heureFin - R.jour.heureDebut));
-function decorPas(dt) {
-  const d = decor(), v = decorVue;
-  decorT += dt;
-  d.etat.tickJour = tickDecor(v.heure);
-  // des obus, devant la caméra, au loin
-  if ((decorObus -= dt) < 0) {
-    decorObus = 0.6 + Math.random() * 1.4;
-    const loin = 60 + Math.random() * 160, cote = (Math.random() - 0.5) * 140;
-    const fx = -Math.sin(v.yaw), fz = -Math.cos(v.yaw);
-    ordonnerBarrage(d, NOMS_CALIBRES[Math.floor(Math.random() * 3)], rendu.vue.cx + fx * loin - fz * cote, rendu.vue.cz + fz * loin + fx * cote, 1);
-  }
-  const ev = avancer(d);
-  // la fumée dense : des colonnes qui montent de quelques trous et dérivent avec le vent
-  for (let k = 0; k < 10; k++) {
-    if (Math.random() > 0.35) continue;
-    rendu.fumer(v.cx - 140 + hash2(k, 11, 3) * 280, v.cz - 140 + hash2(k, 12, 3) * 280);
-  }
-  // la vue glisse lentement de côté, et revient
-  const g = Math.sin(decorT * 0.03) * 40 * v.sens;
-  rendu.vue.cx = v.cx + Math.cos(v.yaw) * g;
-  rendu.vue.cz = v.cz - Math.sin(v.yaw) * g;
-  return ev;
-}
-function montrerDecor() {
-  decor();
-  rendu.decor = true;                              // une illustration : aucun repère d'interface (la lettre du capitaine), et aucun son hors la musique (Jérôme, v0.100.0)
-  rendu.survoler(-1, []); rendu.choisis = new Set();
-  rendu.bord = null;                               // l'écran titre garde le ciel de brume
-  rendu.attacher(D);
-  rendu.vue.zoom = 4;
-  rendu.cameraLibre(decorVue.yaw, decorVue.tangage);
-  decorObus = 0.5;
-}
+const leDecor = creerDecor({ R, rendu });      // le décor de l'écran titre (hud/decor-titre.js)
 // Tout ce que la partie laisse à l'écran hors de `#hud` (des enfants de `#ecran` : cacher le HUD ne les cache pas) : la fenêtre du régiment ouvert, celle du bâtiment, la bulle, l'infobulle,
 // les repères, le cadre de sélection, les visées, les retours (Jérôme, retour du 2 nov. : « des fenêtres de HUD qui restent sur l'écran d'accueil »)
 function purgerEcran() {
@@ -319,7 +266,7 @@ function montrerTitre() {
   if (reseau) return quitterReseau();
   loop.pause();
   if (B?.etat.phase === 'fin' && !ESSAI) store.clear('partie');      // la bataille est finie : rien à continuer (le registre de la campagne, lui, reste)
-  montrerDecor();
+  leDecor.montrer();
   purgerEcran();
   $('titre').hidden = false;
   $('hud').hidden = true;
@@ -466,200 +413,7 @@ $('dialogue-aide-carte').addEventListener('close', reprendre);
 $('dialogue-mission').addEventListener('close', reprendre);
 $('ordre-compris').onclick = () => $('dialogue-ordre').close();
 $('dialogue-ordre').addEventListener('close', reprendre);
-// Le choix du secteur (v0.29.0 ; v0.37.1 : deux colonnes ; v0.106.0 : des cartes de papier ; v0.107.0 : une pile dont les titres font le menu ; v0.108.0 : Jérôme, 2 nov. : « et si nous avons des dizaines de cartes, ça ne
-// fonctionne plus : une liste à gauche, plus petite, l'aperçu et les options à droite, pas besoin de lire le titre des cartes qui ne sont pas au premier plan ») : à gauche la liste des secteurs (`SECTEURS` de
-// data/secteur.js, avec les retouches de l'atelier ; elle défile, « Au hasard » reste épinglée en bas), à droite UNE carte de papier (nom, vraie carte en 3D, description, saison, niveau, durée) posée sur quelques feuilles
-// qui ne sont que du décor. Un clic dans la liste : l'ancienne carte part sous les feuilles (une copie, avec une image figée de son aperçu) et la nouvelle grossit depuis la ligne cliquée ; l'aperçu 3D (UN seul moteur,
-// `apercu-3d.js`, le même que le jeu, la caméra tourne seule) ne se monte qu'une fois la carte posée (monter reconstruit un terrain : ~1 s au rendu logiciel, qui gelait le glissement). Les réglages (saison, niveau,
-// durée) sont ceux de la partie. « Au hasard » tire un autre secteur à chaque clic (la ligne, ou le dé « Une autre carte » sur la carte). Le terrain montré est celui qu'on jouera (la graine est tirée ici).
-// Rend { secteur, graine, saison, difficulte, jours } ou null (annulé) ; en mode debug, celui de l'adresse (?secteur=crete) sans demander.
-// Le papier d'une carte de secteur, sans rien de coûteux à redessiner : le bruit (grain fin, grandes taches) est dessiné UNE fois dans un canvas (noir, en transparence : le CSS le prend comme masque et le colore),
-// et le contour déchiré est un `clip-path` tiré du nom de la carte. (Un bruit SVG et un filtre de déplacement faisaient le même effet mais se recalculaient à chaque glissement : 200 à 370 ms par image.)
-let bruitsPapier = null;
-function bruitsDuPapier() {
-  if (bruitsPapier) return bruitsPapier;
-  let g = 20241102; const hasard = () => (g = (Math.imul(g, 1664525) + 1013904223) >>> 0) / 4294967296;
-  const toile = n => { const c = document.createElement('canvas'); c.width = c.height = n; return c; };
-  const c1 = toile(240), x1 = c1.getContext('2d'), im = x1.createImageData(240, 240);
-  for (let i = 0; i < im.data.length; i += 4) { const v = hasard(); im.data[i + 3] = v > 0.5 ? Math.round((v - 0.5) / 0.5 * 255) : 0; }
-  x1.putImageData(im, 0, 0);
-  const T = 480, c2 = toile(T), x2 = c2.getContext('2d');
-  for (let k = 0; k < 46; k++) {
-    const cx = hasard() * T, cy = hasard() * T, r = 24 + hasard() * 70, a = 0.25 + hasard() * 0.5;
-    for (const dx of [-T, 0, T]) for (const dy of [-T, 0, T]) { const gr = x2.createRadialGradient(cx + dx, cy + dy, 0, cx + dx, cy + dy, r); gr.addColorStop(0, `rgba(0,0,0,${a})`); gr.addColorStop(1, 'rgba(0,0,0,0)'); x2.fillStyle = gr; x2.fillRect(cx + dx - r, cy + dy - r, 2 * r, 2 * r); }
-  }
-  return bruitsPapier = [`url(${c1.toDataURL()})`, `url(${c2.toDataURL()})`];
-}
-function bordRonge(nom) {
-  let g = 2166136261; for (const c of nom) g = Math.imul(g ^ c.charCodeAt(0), 16777619) >>> 0;
-  const hasard = () => (g = (Math.imul(g, 1664525) + 1013904223) >>> 0) / 4294967296, pts = [];
-  for (let i = 0; i <= 60; i++) pts.push(`${(i / 60 * 100).toFixed(2)}% ${(hasard() * 1.1).toFixed(2)}%`);
-  for (let i = 1; i <= 30; i++) pts.push(`${(100 - hasard() * 0.5).toFixed(2)}% ${(i / 30 * 100).toFixed(2)}%`);
-  for (let i = 60; i >= 0; i--) pts.push(`${(i / 60 * 100).toFixed(2)}% ${(100 - hasard() * 1.1).toFixed(2)}%`);
-  for (let i = 29; i >= 1; i--) pts.push(`${(hasard() * 0.5).toFixed(2)}% ${(i / 30 * 100).toFixed(2)}%`);
-  return `polygon(${pts.join(',')})`;
-}
-let apercuSecteur = null;
-function demanderSecteur(avecDifficulte = true) {
-  const d = $('dialogue-carte'), tirage = () => window.__seed ?? Date.now() % 100000;
-  if (DEBUG) { const id = params.get('secteur'); if (id === ID_ALEATOIRE) preparerAleatoire(tirage()); return Promise.resolve({ secteur: SECTEURS[id] ? id : 'essai', graine: tirage(), saison: SAISONS[params.get('saison')] ? params.get('saison') : undefined, difficulte: DIFFICULTES[params.get('difficulte')] ? params.get('difficulte') : undefined }); }
-  let graine = tirage(); preparerAleatoire(graine);                // la carte aléatoire (v0.49.0) : la dernière de la liste, tirée de la graine montrée
-  // les cartes d'origine, celles qu'on a publiées, puis la carte au hasard en dernier
-  const ids = Object.keys(SECTEURS).sort((a, b) => (a === ID_ALEATOIRE) - (b === ID_ALEATOIRE));
-  const liste = $('cartes-choix'), scene = $('carte-table'), hote = $('carte-3d'), grande = $('carte-grande');
-  const DE = '<svg viewBox="0 0 16 16" aria-hidden="true"><rect x="2" y="2" width="12" height="12" rx="2" fill="none" stroke="currentColor" stroke-width="1.5"/><circle cx="5.5" cy="5.5" r="1.1" fill="currentColor"/><circle cx="8" cy="8" r="1.1" fill="currentColor"/><circle cx="10.5" cy="10.5" r="1.1" fill="currentColor"/></svg>';
-  // une carte du jeu est la même sur tous les ordinateurs : sa graine vient de son nom, pas de l'heure (seule la carte au hasard change, à chaque tirage)
-  const graineFixe = id => { let h = 2166136261; for (const c of id) h = Math.imul(h ^ c.charCodeAt(0), 16777619) >>> 0; return h % 99999 + 1; };
-  const H = (tag, classe, html) => { const e = document.createElement(tag); if (classe) e.className = classe; if (html !== undefined) e.innerHTML = html; return e; };
-  const ICONES_SAISON = {      // un soleil, une feuille, un flocon (Jérôme, v0.60.2)
-    ete: '<svg viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><circle cx="8" cy="8" r="3"/><path d="M8 1.5V3M8 13V14.5M1.5 8H3M13 8H14.5M3.4 3.4L4.5 4.5M11.5 11.5L12.6 12.6M3.4 12.6L4.5 11.5M11.5 4.5L12.6 3.4"/></svg>',
-    automne: '<svg viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 13C3 7 7 3 13 3C13 9 9 13 3 13Z"/><path d="M3 13L9 7"/></svg>',
-    hiver: '<svg viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><path d="M8 1.5V14.5M2.4 4.8L13.6 11.2M2.4 11.2L13.6 4.8"/></svg>',
-    printemps: '<svg viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M8 14.5V7"/><path d="M8 9C8 6 6 4 3 4C3 7 5 9 8 9Z"/><path d="M8 7.5C8 4.5 10 2.5 13 2.5C13 5.5 11 7.5 8 7.5Z"/></svg>' };      // (v0.135.0 : une pousse, le printemps)
-  const SAISONS_CHOIX = ['printemps', 'ete', 'automne', 'hiver'];
-  const reduit = matchMedia('(prefers-reduced-motion: reduce)').matches;
-  { const [grain, taches] = bruitsDuPapier(); scene.style.setProperty('--bruit-grain', grain); scene.style.setProperty('--bruit-taches', taches); }
-  return new Promise(ok => {
-    let choisi = ids[0], ouvert = true, saison = null, saisonHasard = false, meteoApercu = null, sequence = 0;       // saison : null tant que le joueur n'a rien touché (la saison du secteur, par défaut), puis son choix
-    const saisonDe = () => saison ?? SECTEURS[choisi].saison ?? SAISON_DEFAUT;
-    // le temps de l'aperçu (Jérôme, retour du 2 nov.) : tiré au sort parmi ceux de la saison, retiré à chaque tirage de la carte « Au hasard » et à chaque saison choisie ; il ne change pas la partie (le premier jour suit la saison)
-    const tirerMeteo = () => { const ts = Object.keys(SAISONS[saisonDe()]?.transitions ?? {}); meteoApercu = ts.length ? ts[Math.floor(Math.random() * ts.length)] : null; };
-    const graineDe = () => choisi === ID_ALEATOIRE ? graine : graineFixe(choisi);
-    // le niveau (Jérôme, v0.70.0) et la durée (retour du 1er nov.) : le dernier choix est gardé dans les réglages (jamais en mode essai ni à deux)
-    let difficulte = DIFFICULTES[prefs.difficulte] ? prefs.difficulte : DIFFICULTE_DEFAUT;
-    let duree = DUREES[prefs.duree] ? prefs.duree : DUREE_DEFAUT;
-    const resultat = () => ({ secteur: choisi, graine: graineDe(), saison: saisonDe(), difficulte: avecDifficulte ? difficulte : undefined, jours: avecDifficulte && !SECTEURS[choisi]?.joursFixes ? DUREES[duree].jours ?? undefined : undefined });
-
-    // la liste : une ligne par secteur, petite (Jérôme, v0.51.0 : « pas d'aperçu du relief, uniquement les titres ») ; ce qu'est un secteur se lit sur sa carte
-    liste.replaceChildren(...ids.map(id => { const b = H('button', id === ID_ALEATOIRE ? 'carte-ligne hasard' : 'carte-ligne', id === ID_ALEATOIRE ? `${DE}<span>Au hasard</span>` : '<span></span>'); b.type = 'button'; b.dataset.id = id; if (id !== ID_ALEATOIRE) b.firstChild.textContent = SECTEURS[id].nom; return b; }));
-    const ligneDe = id => liste.querySelector(`[data-id="${CSS.escape(id)}"]`);
-
-    // la carte : le papier (un fond aux bords rongés, du grain, des taches, des plis par-dessus le texte), le nom, la place de l'aperçu 3D (avec la saison dessus), la description, le niveau, la durée
-    const reglage = (nom, classe, entrees) => {
-      const r = H('div', 'carte-reglage'); r.append(H('span', 'carte-reglage-nom', nom));
-      const rang = H('div', 'carte-reglage-rang'); rang.setAttribute('role', 'group'); rang.setAttribute('aria-label', nom);
-      for (const [cle, texte, info] of entrees) { const b = H('button', 'pastille'); b.type = 'button'; b.dataset[classe] = cle; b.textContent = texte; b.title = info; b.setAttribute('aria-label', `${texte} : ${info}`); rang.append(b); }
-      r.append(rang); return r;
-    };
-    const carte = H('div', 'carte-papier');
-    {
-      const cadre = H('div', 'carte-cadre', '<img class="carte-img" alt="" draggable="false">');
-      const saisons = H('div', 'carte-saisons'); saisons.setAttribute('role', 'group'); saisons.setAttribute('aria-label', 'La saison');
-      for (const s of SAISONS_CHOIX) { const b = H('button', 'pastille', `${ICONES_SAISON[s]}<span>${SAISONS[s].nom}</span>`); b.type = 'button'; b.dataset.saison = s; b.title = `${SAISONS[s].nom} : ${SAISONS[s].desc}`; b.setAttribute('aria-label', `${SAISONS[s].nom} : ${SAISONS[s].desc}`); saisons.append(b); }
-      { const b = H('button', 'pastille', `${DE}<span>Hasard</span>`); b.type = 'button'; b.dataset.saison = 'hasard'; b.title = 'Une saison tirée au hasard'; b.setAttribute('aria-label', 'Au hasard : une saison tirée au sort'); saisons.append(b); }
-      const de = H('button', 'pastille carte-de', `${DE}<span>Une autre carte</span>`); de.type = 'button'; de.title = 'Tirer un autre secteur au hasard';      // (seulement sur la carte « Au hasard »)
-      cadre.append(saisons, de);
-      const corps = H('div', 'carte-corps'); corps.append(cadre, H('p', 'carte-legende'));
-      if (avecDifficulte) {            // (la description d'un niveau n'est qu'une infobulle : au survol, Jérôme, retour du 2 nov.)
-        const reglages = H('div', 'carte-reglages');
-        reglages.append(reglage('Niveau', 'difficulte', Object.entries(DIFFICULTES).map(([k, D]) => [k, D.nom, D.desc])), reglage('Durée', 'duree', Object.entries(DUREES).map(([k, D]) => [k, D.nom, D.desc])));
-        corps.append(reglages);
-      }
-      const contenu = H('div', 'papier-contenu'); contenu.append(H('h3', 'carte-nom'), corps);
-      const fond = H('div', 'papier-fond'); fond.style.clipPath = bordRonge('carte');
-      carte.append(fond, contenu, H('div', 'papier-calque grain'), H('div', 'papier-calque taches'), H('div', 'papier-calque plis'));
-    }
-    // quelques feuilles dessous, pour l'épaisseur de la pile : du décor (aucun texte à lire)
-    const feuilles = [[-7, -6, -1.4], [6, -11, 1.1], [-3, -16, -0.5]].map(([x, y, r], k) => { const f = H('div', 'carte-feuille'); f.style.clipPath = bordRonge(`feuille${k}`); f.style.transform = `translate(${x}px,${y}px) rotate(${r}deg)`; f.setAttribute('aria-hidden', 'true'); return f; });
-    scene.replaceChildren(...feuilles, carte);
-    const cadre = carte.querySelector('.carte-cadre'), img = carte.querySelector('.carte-img');
-
-    const marquer = () => {
-      for (const b of liste.children) b.setAttribute('aria-pressed', String(b.dataset.id === choisi));
-      for (const b of d.querySelectorAll('[data-saison]')) b.setAttribute('aria-pressed', String(saisonHasard ? b.dataset.saison === 'hasard' : b.dataset.saison === saisonDe()));
-      for (const b of d.querySelectorAll('[data-difficulte]')) b.setAttribute('aria-pressed', String(b.dataset.difficulte === difficulte));
-      for (const b of d.querySelectorAll('[data-duree]')) { b.setAttribute('aria-pressed', String(b.dataset.duree === duree && !SECTEURS[choisi]?.joursFixes)); b.disabled = !!SECTEURS[choisi]?.joursFixes; b.dataset.titre ??= b.title; b.title = b.disabled ? 'Cette bataille dure un jour' : b.dataset.titre; }       // (la contre-attaque éclair : une journée, quelle que soit la durée choisie)
-    };
-    // l'image de ce que l'aperçu montrait, par secteur et par saison : la carte qui part la garde, et une carte déjà vue arrive avec la sienne
-    const vues = {}, cleVue = () => `${choisi}|${saisonDe()}|${choisi === ID_ALEATOIRE ? graine : ''}`;
-    const figer = () => { try { const cv = hote.querySelector('canvas'); if (cv && apercuSecteur && hote.parentElement === cadre && hote.style.visibility !== 'hidden') { apercuSecteur.rendu.dessiner(0.033, []); vues[cleVue()] = cv.toDataURL('image/png'); img.src = vues[cleVue()]; } } catch { /* sans image figée : le fond de la carte */ } };
-    const majCarte = () => {
-      const S = SECTEURS[choisi];
-      carte.querySelector('.carte-nom').textContent = S.nom; carte.querySelector('.carte-legende').textContent = S.resume; carte.classList.toggle('hasard', choisi === ID_ALEATOIRE);
-      if (vues[cleVue()]) img.src = vues[cleVue()]; else img.removeAttribute('src');
-    };
-    const changerReglage = e => {
-      const b = e.target.closest('button'); if (!b) return;
-      if (b.classList.contains('carte-de')) { choisir(ID_ALEATOIRE); return; }
-      if (b.dataset.saison) {      // « Au hasard » (Jérôme, retour du 1er nov.) : un clic tire une saison, montrée tout de suite sur l'aperçu et jouée telle quelle ; un autre clic en tire une autre
-        if (b.dataset.saison === 'hasard') { saisonHasard = true; saison = SAISONS_CHOIX[Math.floor(Math.random() * SAISONS_CHOIX.length)]; tirerMeteo(); montrer(); }
-        else if (saisonHasard || b.dataset.saison !== saisonDe()) { saisonHasard = false; saison = b.dataset.saison; tirerMeteo(); montrer(); }
-      } else if (b.dataset.difficulte) { difficulte = b.dataset.difficulte; prefs.difficulte = difficulte; store.save('prefs', prefs); marquer(); }
-      else if (b.dataset.duree) { duree = b.dataset.duree; prefs.duree = duree; store.save('prefs', prefs); marquer(); }
-    };
-    carte.onclick = changerReglage;
-
-    // le glissement : l'ancienne carte (une copie, avec son image figée) part sous les feuilles, la nouvelle grossit depuis la ligne cliquée
-    const partir = () => {
-      const s = carte.cloneNode(true); s.classList.add('sortante'); s.inert = true; s.setAttribute('aria-hidden', 'true');
-      for (const e of s.querySelectorAll('[id]')) e.removeAttribute('id'); s.querySelector('.carte-cadre #carte-3d')?.remove();
-      scene.insertBefore(s, carte);
-      s.animate([{ transform: 'none' }, { transform: 'translate(-12px, -9px) rotate(-1.8deg)' }], { duration: 420, easing: 'ease-out', fill: 'forwards' }).finished.catch(() => {}).finally(() => s.remove());
-    };
-    const arriver = (ligne, apres) => {
-      if (reduit) { apres(); return; }
-      const r = ligne.getBoundingClientRect(), c = carte.getBoundingClientRect(), dx = r.left + r.width / 2 - (c.left + c.width / 2), dy = r.top + r.height / 2 - (c.top + c.height / 2);
-      carte.animate([{ transform: `translate(${dx}px, ${dy}px) scale(.2) rotate(-8deg)`, opacity: 0.2 }, { transform: `translate(${dx * 0.12}px, ${dy * 0.12}px) scale(1.015) rotate(0.8deg)`, opacity: 1, offset: 0.78 }, { transform: 'none', opacity: 1 }], { duration: 560, easing: 'cubic-bezier(.16,.84,.3,1)' }).finished.catch(() => {}).finally(apres);
-    };
-
-    // la carte agrandie (v0.51.0) : la liste et la carte s'effacent, l'aperçu prend la place et se parcourt (glisser : tourner, Maj ou bouton droit : déplacer, molette : zoomer) ; un autre clic ou Échap la réduit
-    const agrandir = oui => {
-      if (oui === d.classList.contains('agrandi') && apercuSecteur) return;
-      d.classList.toggle('agrandi', oui); grande.hidden = !oui;
-      if (oui) { figer(); grande.append(hote); } else cadre.prepend(hote);
-      $('carte-conseil').textContent = oui ? 'Glissez pour tourner, Maj ou bouton droit pour déplacer, molette pour zoomer. Cliquez ou Échap pour réduire.' : 'Cliquez sur la carte pour l\'agrandir et la parcourir.';
-      apercuSecteur?.redimensionner();
-    };
-    d.oncancel = e => { if (d.classList.contains('agrandi')) { e.preventDefault(); agrandir(false); } };
-    const fin = res => { agrandir(false); ouvert = false; apercuSecteur?.activer(false); d.onclose = null; if (d.open) d.close(); ok(res); };
-    // le secteur choisi, en 3D, sur la carte (le premier passage charge le moteur de l'aperçu ; sans WebGL, la carte garde son cadre vide) ; `data-apercu` dit ce qui est monté (les essais le lisent)
-    const montrer = async () => {
-      marquer();
-      try {
-        if (!apercuSecteur) { const { creerVue3D } = await import('./apercu-3d.js?v=0.169.0'); apercuSecteur = await creerVue3D({ R, hote, rotation: 0.12 }); apercuSecteur.surClic = () => agrandir(!d.classList.contains('agrandi')); }
-        if (!ouvert) return;
-        apercuSecteur.monter(choisi, SECTEURS[choisi], graineDe(), { soldats: false, cadrer: true, saison: saisonDe(), meteo: meteoApercu ?? undefined });
-        hote.style.visibility = ''; d.dataset.apercu = `${choisi}:${graineDe()}:${saisonDe()}`;
-        apercuSecteur.activer(true);
-      } catch (e) { console.warn('Aperçu 3D indisponible', e); hote.hidden = true; }
-    };
-    // choisir un secteur : « Au hasard » en tire un autre à chaque fois, même déjà choisi (Jérôme, v0.60.2) ; avec la saison « Au hasard », chaque secteur choisi tire aussi une autre saison
-    const choisir = id => {
-      if (id === ID_ALEATOIRE) { graine = Math.floor(Math.random() * 99999) + 1; preparerAleatoire(graine); } else if (id === choisi && apercuSecteur) return;
-      const mon = ++sequence;
-      if (!reduit && apercuSecteur && !d.classList.contains('agrandi')) { figer(); partir(); }      // (l'image de l'ancienne carte, avant que l'état change)
-      choisi = id; if (saisonHasard) saison = SAISONS_CHOIX[Math.floor(Math.random() * SAISONS_CHOIX.length)];
-      tirerMeteo(); majCarte(); marquer();
-      apercuSecteur?.activer(false); hote.style.visibility = 'hidden';       // l'aperçu ne se redessine pas pendant que la carte arrive (chaque image du 3D coûte, le glissement saccadait) ; `montrer` le relance
-      arriver(ligneDe(id), () => { if (mon === sequence) montrer(); });
-    };
-    liste.onclick = e => { const b = e.target.closest('.carte-ligne'); if (b) choisir(b.dataset.id); };
-    liste.ondblclick = e => { if (e.target.closest('.carte-ligne')) fin(resultat()); };
-    $('carte-jouer').onclick = () => fin(resultat());
-    d.onkeydown = e => {
-      if (e.key === 'Escape' && d.classList.contains('agrandi')) { e.preventDefault(); agrandir(false); return; }
-      const k = Number(e.key), aller = id => { choisir(id); const l = ligneDe(id); l.focus(); l.scrollIntoView({ block: 'nearest' }); };
-      if (k >= 1 && k <= Math.min(9, ids.length)) { e.preventDefault(); aller(ids[k - 1]); }
-      else if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { e.preventDefault(); const i = ids.indexOf(choisi) + (e.key === 'ArrowDown' ? 1 : -1); if (ids[i]) aller(ids[i]); }
-      else if (e.key === 'Enter' && !e.target.closest('form button')) { e.preventDefault(); fin(resultat()); }
-    };
-    d.onclose = () => { ouvert = false; apercuSecteur?.activer(false); ok(null); };            // annulé (Échap ou le bouton)
-    hote.hidden = false; hote.style.visibility = ''; grande.hidden = true; d.classList.remove('agrandi'); delete d.dataset.apercu;
-    $('carte-conseil').textContent = 'Cliquez sur la carte pour l\'agrandir et la parcourir.';
-    cadre.prepend(hote); majCarte(); marquer();
-    d.showModal();
-    for (const l of liste.children) { const t = l.querySelector('span'); if (t && t.scrollWidth > t.clientWidth + 1) l.title = t.textContent; }       // (un nom tronqué par « … » se lit en entier au survol)
-    ligneDe(choisi).focus();
-    tirerMeteo();
-    montrer();
-  });
-}
-// ─── Le jeu à deux, sur le réseau (Jérôme, v0.30.0) ───────────────────────────────────────────────────────────────
-// Deux machines, la même bataille (lockstep : reseau/lockstep.js) ; on n'échange que les ordres, sur un canal WebRTC appairé à la main (reseau/lien.js). L'hôte joue le bleu, l'invité le kaki.
-// Chaque ordre part pour les deux machines, et s'exécute au même cadre chez les deux ; le refus, lui, se dit tout de suite (l'ordre à sec).
-let versionJeu = '';
-loadVersion().then(v => { versionJeu = v || ''; });
-const empreinteReglages = () => { const t = JSON.stringify([R, retouchesSecteurs, cartesPerso]); let h = 2166136261; for (let i = 0; i < t.length; i++) { h ^= t.charCodeAt(i); h = Math.imul(h, 16777619) >>> 0; } return h.toString(16); };
+const demanderSecteur = creerChoixSecteur({ $, DEBUG, params, prefs, store, R });      // le choix du secteur (hud/choix-secteur.js)
 function lancerMarche(ids, x, y) {
   if (!reseau) return ordonnerMarche(B, ids, x, y, forme);
   const p = peutOrdonner(B, ids, x, y, forme, MOI);
@@ -711,143 +465,9 @@ function executerCmd(c, camp, b, st) {
     }
   }
 }
-// Un point de reprise d'une partie à deux, tous les 60 s : les deux machines l'écrivent au même cadre, avec le même nom (l'empreinte de l'état) ; on garde les deux derniers,
-// car une machine coupée entre deux points n'a peut-être pas le plus récent. Rien n'est écrit en mode essai, ni quand la bataille est finie.
-function enregistrerDeux(h) {
-  if (!reseau || ESSAI || B.etat.phase === 'fin') return;
-  const avant = store.load('partieDeux')?.points ?? [];
-  try { store.save('partieDeux', { moi: reseau.moi, version: versionJeu, points: [{ id: h, photo: photo(B) }, ...avant.slice(0, 1)] }); } catch (e) { console.error(e); }
-}
-$('dialogue-depart').addEventListener('cancel', e => e.preventDefault());       // Échap ne passe pas le départ : il faut dire « Prêt »
-$('deux-pret').onclick = () => { if (!reseau) return; $('deux-pret').disabled = true; $('deux-pret').textContent = 'En attente de l\'autre commandant…'; reseau.ls.commander({ t: 'depart' }); };
-let repriseDeux = null;       // la sauvegarde qu'on veut reprendre (le bouton de l'écran titre), ou null
-function demarrerReseau({ moi, lien, graine, secteur, saison, reprise }) {
-  for (const d of document.querySelectorAll('dialog[open]')) d.close();
-  reseau = { moi, lien, ls: null, corvees: {}, pret: [false, false], pauseParMoi: false, departs: [false, false] };
-  reglerCamp(moi);
-  const b = reprise ? restaurer(reprise.photo, R) : nouvelleBataille(graine, R, { secteur, saison, deux: true, camp: true });      // à deux aussi, chacun a son camp (v0.94.0)
-  reseau.ls = creerLockstep({
-    B: b, moi, surPoint: enregistrerDeux, envoyer: m => lien.envoyer(m), executer: executerCmd,
-    surEcart: (cadre, a, b, sections) => { noter('Désynchronisation : les deux parties ne sont plus les mêmes.'); toast(`Désynchronisation (${sections.join(', ') || 'état'}) : les deux parties ont divergé.`, 'alerte'); console.error('désynchronisation au cadre', cadre, a, b, sections); },
-  });
-  // le pouls : un message toutes les 2 s même quand rien ne se joue (un onglet caché, une machine qui attend) ; 90 s de silence : l'autre n'est plus là
-  reseau.vu = performance.now(); reseau.attendu = false;
-  reseau.pouls = setInterval(() => {
-    if (!reseau) return;
-    lien.envoyer({ t: 'ping' });
-    if (performance.now() - reseau.vu > 90000) quitterReseau('L\'autre machine ne répond plus : la connexion est perdue.');
-  }, 2000);
-  lien.surMessage = m => { if (!reseau) return; reseau.vu = performance.now(); if (m.t === 'cmds' || m.t === 'hash') reseau.ls.recevoir(m); else if (m.t === 'quitte') quitterReseau('L\'autre commandant a quitté la partie.'); };
-  lien.surFermeture = () => { if (reseau) quitterReseau('La connexion est perdue.'); };
-  reseau.ls.etat.pause = true;                              // la bataille (neuve ou reprise) démarre en pause chez les deux, jusqu'à ce qu'ils soient prêts
-  jouer(b);
-  $('depart-statut').textContent = reprise ? 'Partie reprise. La bataille repart quand les deux commandants sont prêts.' : 'La bataille commence quand les deux commandants sont prêts.';
-  $('deux-pret').disabled = false; $('deux-pret').textContent = 'Prêt'; $('dialogue-depart').showModal();
-  noter(`Vous êtes le ${moi === NOUS ? 'bleu' : 'kaki'}. ${missionOrdre()}`);
-  toast(`Vous êtes le ${moi === NOUS ? 'bleu' : 'kaki'}. Espace : pause pour les deux.`);
-}
-function quitterReseau(message) {
-  const r = reseau; if (!r) return;
-  clearInterval(r.pouls); $('dialogue-depart').close();
-  reseau = null; reglerCamp(NOUS);
-  try { r.lien.envoyer({ t: 'quitte' }); r.lien.fermer(); } catch { /* déjà fermé */ }
-  if (message) toast(message);
-  loop.resume(); montrerTitre();
-}
-// la poignée de main : la version du jeu et ses réglages doivent être les mêmes (les deux machines calculent avec le même code et les mêmes nombres)
-function poigneeHote(lien, graine, secteur, saison) {
-  const reprise = repriseDeux;
-  lien.surOuvert = () => lien.envoyer({ t: 'init', version: versionJeu, reglages: empreinteReglages(), graine, secteur, saison, reprise: reprise ? reprise.points.map(p => p.id) : null });
-  lien.surMessage = m => {
-    if (m.t === 'ok') demarrerReseau({ moi: NOUS, lien, graine, secteur, saison, reprise: reprise ? reprise.points.find(p => p.id === m.reprise) : null });
-    else if (m.t === 'refus') { $('deux-statut').textContent = `L'autre machine refuse : ${m.raison}`; lien.fermer(); }
-  };
-}
-function poigneeInvite(lien) {
-  lien.surMessage = m => {
-    if (m.t !== 'init') return;
-    const raison = m.version !== versionJeu ? `elle joue la v${m.version}, vous la v${versionJeu} : rechargez la page` : m.reglages !== empreinteReglages() ? 'les réglages (l\'atelier) ne sont pas les mêmes' : !(SECTEURS[m.secteur] || m.secteur === ID_ALEATOIRE) ? 'secteur inconnu' : m.saison && !SAISONS[m.saison] ? 'saison inconnue' : null;
-    if (raison) { lien.envoyer({ t: 'refus', raison }); $('deux-statut').textContent = `Impossible de jouer ensemble : ${raison}.`; return; }
-    // la reprise d'une partie : les deux doivent la vouloir, avoir joué les mêmes camps (l'hôte le bleu) et partager un point (le plus récent des siens que l'hôte a aussi)
-    const sauv = store.load('partieDeux'), point = m.reprise && sauv && sauv.version === versionJeu && sauv.moi === EUX ? m.reprise.map(id => sauv.points.find(q => q.id === id)).find(Boolean) : null;
-    const refus = m.reprise && !point ? 'vous n\u2019avez pas de partie à deux à reprendre avec lui (autre camp, autre version, ou aucun point commun)' : !m.reprise && repriseDeux ? 'il lance une nouvelle partie, vous vouliez reprendre l\u2019ancienne' : '';
-    if (refus) { lien.envoyer({ t: 'refus', raison: refus }); $('deux-statut').textContent = `Impossible de jouer ensemble : ${refus}.`; return; }
-    lien.envoyer({ t: 'ok', reprise: point?.id ?? null });
-    demarrerReseau({ moi: EUX, lien, graine: m.graine, secteur: m.secteur, saison: m.saison, reprise: point });
-  };
-}
-{
-  const dlg = $('dialogue-deux'), statut = t => { $('deux-statut').textContent = t; };
-  const copier = async id => { const a = $(id); a.select(); try { await navigator.clipboard.writeText(a.value); statut('Copié.'); } catch { statut('Sélectionné : copiez-le à la main.'); } };
-  let lien = null, arreterRelais = null;
-  // dit à voix haute où en est la connexion, et pourquoi elle échoue
-  const suivreEtat = l => {
-    l.surEtat = e => {
-      if (reseau) return;
-      if (e === 'connecting') statut('Connexion en cours…');
-      else if (e === 'failed') statut('La connexion a échoué : les deux machines ne se voient pas (même réseau ? pare-feu, Wi-Fi « invité » ou VPN qui isolent les appareils). Recommencez avec une nouvelle invitation.' + (/firefox/i.test(navigator.userAgent) ? ' Firefox pose problème : essayez Chrome sur les deux machines.' : ''));
-    };
-  };
-  $('jouer-deux').onclick = () => { repriseDeux = null; ouvrirDeux(); };
   $('vitrine').onclick = () => laVitrine.ouvrir();      // la vitrine des objets parachutés (v0.162.0)
-  // reprendre : le bleu invite, le kaki rejoint, chacun avec sa sauvegarde (v0.60.0)
-  $('reprendre-deux').onclick = () => { repriseDeux = store.load('partieDeux'); if (!repriseDeux) return; ouvrirDeux(repriseDeux.moi === NOUS ? 'Reprise : vous étiez le bleu, vous invitez.' : 'Reprise : vous étiez le kaki, vous rejoignez avec le code du bleu.'); };
-  const ouvrirDeux = (mot = '') => {
-    $('deux-choix').hidden = false; $('deux-hote').hidden = true; $('deux-invite').hidden = true; statut('');
-    for (const id of ['deux-invitation', 'deux-reponse', 'deux-invitation-recue', 'deux-ma-reponse']) $(id).value = '';
-    $('deux-inviter').hidden = !!repriseDeux && repriseDeux.moi !== NOUS; $('deux-rejoindre').hidden = !!repriseDeux && repriseDeux.moi === NOUS; statut(mot);
-    dlg.showModal();
-  };
-  dlg.addEventListener('close', () => { arreterRelais?.(); arreterRelais = null; if (!reseau && lien) { lien.fermer(); lien = null; } });
-  $('deux-inviter').onclick = async () => {
-    const choix = repriseDeux ? { secteur: repriseDeux.points[0].photo.secteur ?? 'essai', graine: repriseDeux.points[0].photo.graine, saison: repriseDeux.points[0].photo.sol?.saison } : await demanderSecteur(false);
-    if (!choix) return;
-    const { secteur, graine, saison } = choix;
-    $('deux-choix').hidden = true; $('deux-hote').hidden = false; statut('Préparation de l\'invitation…');
-    try {
-      lien = creerHote(); poigneeHote(lien, graine, secteur, saison); suivreEtat(lien);
-      $('deux-invitation').value = await lien.inviter();
-      const code = nouveauCode(); $('deux-code').textContent = code;
-      const hors = () => statut('Relais injoignable : utilisez le copier-coller ci-dessous.');
-      arreterRelais = ecouter(code, async m => {
-        if (m.t !== 'reponse' || !lien || lien.pc.remoteDescription) return;
-        try { statut('Connexion en cours…'); await lien.accepter(m.texte); } catch (e) { statut(`Réponse illisible : ${e.message}`); }
-      }, hors);
-      await publier(code, { t: 'invitation', texte: $('deux-invitation').value }).catch(e => { console.error(e); hors(); });
-      statut(`Secteur : ${SECTEURS[secteur].nom}${SAISONS[saison] ? `, en ${SAISONS[saison].nom}` : ''}. En attente de l'autre joueur.`);
-    } catch (e) { console.error(e); statut(`Impossible : ${e.message}`); }
-  };
-  $('deux-connecter').onclick = async () => {
-    try { statut('Connexion…'); await lien.accepter($('deux-reponse').value); statut('Connexion en cours… (les deux machines doivent être sur le même réseau)'); }
-    catch (e) { statut(`Réponse illisible : ${e.message}`); }
-  };
-  $('deux-rejoindre').onclick = () => { $('deux-choix').hidden = true; $('deux-invite').hidden = false; statut(''); };
-  $('deux-repondre').onclick = async () => {
-    try {
-      statut('Préparation de la réponse…');
-      lien = creerInvite(); poigneeInvite(lien); suivreEtat(lien);
-      $('deux-ma-reponse').value = await lien.repondre($('deux-invitation-recue').value);
-      statut('Renvoyez ce texte à celui qui vous invite : la partie commence quand il l\'aura collé.');
-    } catch (e) { console.error(e); statut(`Invitation illisible : ${e.message}`); }
-  };
-  $('deux-rejoindre-code').onclick = () => {
-    const code = $('deux-code-saisi').value;
-    if (!codeValide(code)) return statut('Le code a 6 signes (lettres et chiffres).');
-    arreterRelais?.(); statut('Recherche de l\'invitation…');
-    let repondu = false;
-    arreterRelais = ecouter(code, async m => {
-      if (m.t !== 'invitation' || repondu) return;
-      repondu = true;
-      try {
-        lien = creerInvite(); poigneeInvite(lien); suivreEtat(lien);
-        await publier(code, { t: 'reponse', texte: await lien.repondre(m.texte) });
-        statut('Réponse envoyée : la partie commence dans un instant…');
-      } catch (e) { console.error(e); repondu = false; statut(`Impossible : ${e.message}`); }
-    }, () => statut('Relais injoignable : utilisez le copier-coller ci-dessous.'));
-  };
-  $('deux-copier-invitation').onclick = () => copier('deux-invitation');
-  $('deux-copier-reponse').onclick = () => copier('deux-ma-reponse');
-}
+const leJeuADeux = creerJeuADeux({ $, R, store, ESSAI, retouchesSecteurs, cartesPerso, lire: () => reseau, poser: v => { reseau = v; }, bataille: () => B, reglerCamp, executerCmd, noter, toast, jouer, missionOrdre, loop: () => loop, montrerTitre, demanderSecteur });      // le jeu à deux (reseau/partie.js)
+const quitterReseau = m => leJeuADeux.quitter(m);
 $('nouvelle').onclick = async () => {
   if (store.has('partie')) {
     const deCampagne = !!store.load('partie')?.campagne;
@@ -2270,7 +1890,7 @@ function rendreImage(alpha) {
   {
     const now = performance.now(), dt = Math.min(0.1, (now - derniere) / 1000);
     derniere = now;
-    if (!$('titre').hidden) { const dev = decorPas(dt); son.image(dt, { tirs: null, ecoute: { x: 0, y: 0, rayon: 100 }, meteo: null, nuit: false, titre: true, enJeu: false }); if (!$('dialogue-carte').open) rendu.dessiner(dt, dev); return; }      // l'écran titre : le décor (figé pendant le choix du secteur : caché derrière la fenêtre, il coûtait ~170 ms par image au rendu logiciel et le glissement des cartes saccadait)
+    if (!$('titre').hidden) { const dev = leDecor.pas(dt); son.image(dt, { tirs: null, ecoute: { x: 0, y: 0, rayon: 100 }, meteo: null, nuit: false, titre: true, enJeu: false }); if (!$('dialogue-carte').open) rendu.dessiner(dt, dev); return; }      // l'écran titre : le décor (figé pendant le choix du secteur : caché derrière la fenêtre, il coûtait ~170 ms par image au rendu logiciel et le glissement des cartes saccadait)
     if (!B) return;
     if (secousse > 0) { secousse = Math.max(0, secousse - dt); if (!leSuivi.actif) rendu.vue.secousse = mouvementReduit ? 0 : 0.035 * Math.min(1, secousse / 1.2); } else if (!leSuivi.actif && rendu.vue.secousse) rendu.vue.secousse = 0;      // le tremblement de terre (un caprice, v0.163.0)
     pad.poll();
