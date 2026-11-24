@@ -2,11 +2,11 @@
 // `#dialogue-vitrine`. En haut, le total et une barre par rareté ; puis les objets par catégorie, du plus commun au plus rare : inconnu (une silhouette
 // et un « ? »), vu (tombé, ou pris par ceux d'en face : son nom et son effet), découvert (un des nôtres l'a pris : combien de fois). Un clic sur une case
 // vue ou découverte montre l'objet en 3D qui tourne sous sa flèche (les modèles du jeu, rendu/largages-modeles.js). Les découvertes : hud/largages.js.
-import { PALETTE } from '../palette.js?v=0.168.0';
-import { OBJETS, RARETES, ORDRE_RARETES, CATEGORIES, ORDRE_CATEGORIES } from '../data/largages.js?v=0.168.0';
-import { loadThree } from '../three-lib.js?v=0.168.0';
-import { CAPRICES } from '../data/caprices.js?v=0.168.0';
-import { cacheModeles, construireObjet, fleche, anneau, briller, tourne, flotte } from '../rendu/largages-modeles.js?v=0.168.0';
+import { PALETTE } from '../palette.js?v=0.169.0';
+import { OBJETS, RARETES, ORDRE_RARETES, CATEGORIES, ORDRE_CATEGORIES } from '../data/largages.js?v=0.169.0';
+import { loadThree } from '../three-lib.js?v=0.169.0';
+import { CAPRICES } from '../data/caprices.js?v=0.169.0';
+import { cacheModeles, construireObjet, fleche, anneau, briller, tourne, flotte } from '../rendu/largages-modeles.js?v=0.169.0';
 
 const el = (tag, cls, txt) => { const e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; return e; };
 

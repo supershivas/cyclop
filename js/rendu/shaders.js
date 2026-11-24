@@ -593,7 +593,7 @@ export const eclMat = {
   v: `attribute float aTon; attribute float aTaille; varying float vTon; varying float vRot; varying float vRond; varying float vPres; uniform float uTaille; uniform float uF;
       void main() { vTon = aTon; vRot = fract(sin(dot(position.xz, vec2(12.9898, 78.233))) * 43758.5453) * 6.2832; gl_Position = projectionMatrix * viewMatrix * vec4(position, 1.0); vec4 mv = viewMatrix * vec4(position, 1.0);
         float d = max(-mv.z, 0.3); vPres = uF > 0.0 ? smoothstep(1.5, 4.0, d) * (aTon > 50.0 ? 1.0 - 0.75 * smoothstep(80.0, 320.0, d) : 1.0) : 1.0;
-        float t = max(1.0, floor((uF > 0.0 ? min(128.0, uF * (aTon > 50.0 ? 1.2 : 0.5) * aTaille / d) : uTaille * aTaille) + 0.5)); gl_PointSize = aTon < 0.0 ? 0.0 : (aTon > 50.0 ? floor(t * 1.35 + 0.5) : t); vRond = t >= 3.0 ? 1.0 : 0.0; if (aTon < 0.0) gl_Position = vec4(2.0); }`,
+        float t = max(1.0, floor((uF > 0.0 ? min(128.0, uF * (aTon > 50.0 ? mix(0.5, 1.2, smoothstep(6.0, 25.0, d)) : 0.5) * aTaille / d) : uTaille * aTaille) + 0.5)); gl_PointSize = aTon < 0.0 ? 0.0 : (aTon > 50.0 ? floor(t * 1.35 + 0.5) : t); vRond = t >= 3.0 ? 1.0 : 0.0; if (aTon < 0.0) gl_Position = vec4(2.0); }`,
   f: `uniform sampler2D uPal; uniform float uNP; uniform float uF; varying float vTon; varying float vRot; varying float vRond; varying float vPres;
       void main() {
         float t = floor(vTon + 0.5);

@@ -1,13 +1,14 @@
 /* Les nids de mitrailleuses (Jérôme, v0.83.0) : la logique, pure. Un nid vit dans `etat.nids` (sauvegardé) : { id, camp, troncon, x, y, face, pv, etat: 'actif' | 'detruit', tire }.
    Il est posé sur le parapet de la 1re ligne de son camp. Tant qu'il est actif, que son tronçon est à son camp et qu'un de ses hommes le sert, il tire en avant sur l'autre camp ;
    un obus l'abîme, à zéro il est détruit ; le génie (genie.js) ou, en face, la nuit, le refait. Les sapeurs le refont : `reparerNid`. */
-import { NIDS } from './data/nids.js?v=0.168.0';
-import { CALIBRES } from './data/calibres.js?v=0.168.0';
-import { ligneY } from './tranchees.js?v=0.168.0';
-import { hash2 } from './lib/rng.js?v=0.168.0';
-import { GRILLE } from './army.js?v=0.168.0';
-import { BONUS, GAINS, chevronsDe } from './data/experience.js?v=0.168.0';
-import { zone as zoneDe } from './bataille.js?v=0.168.0';
+import { NIDS } from './data/nids.js?v=0.169.0';
+import { CALIBRES } from './data/calibres.js?v=0.169.0';
+import { ligneY } from './tranchees.js?v=0.169.0';
+import { hauteurM, trouBalle, toucher } from './terrain.js?v=0.169.0';
+import { hash2 } from './lib/rng.js?v=0.169.0';
+import { GRILLE } from './army.js?v=0.169.0';
+import { BONUS, GAINS, chevronsDe } from './data/experience.js?v=0.169.0';
+import { zone as zoneDe } from './bataille.js?v=0.169.0';
 
 /* Les nids du départ : un par secteur de 100 m sur la 1re ligne de chaque camp, au milieu du 2e tronçon de chaque quart de la ligne. */
 export function creerNids(B) {
@@ -158,16 +159,20 @@ export function commanderMitrailleur(B, camp, c) {
     const n = B.etat.nids.find(k => k.id === c.id);
     if (!n || n.camp !== camp) return 'Ce poste de mitrailleuse n\'est plus à vous.';
     if (n.etat === 'detruit') return 'Ce poste est détruit : le génie doit le refaire.';
-    K = B.mitrailleurs[camp] = { id: c.id, tir: false, regard: Math.round(Math.atan2(n.ay, n.ax) * 1000) / 1000, refus: null, dit: '', coups: 0, dernier: null };
+    K = B.mitrailleurs[camp] = { id: c.id, tir: false, regard: Math.round(Math.atan2(n.ay, n.ax) * 1000) / 1000, el: 0, creux: 0, refus: null, dit: '', coups: 0, dernier: null };
   }
   if (!K) return 'Aucun poste en main.';
   if (c.tir !== undefined) { K.tir = !!c.tir; if (!K.tir) K.dit = ''; }
   if (c.regard !== undefined) K.regard = c.regard;
+  if (c.el !== undefined) K.el = Math.max(-1.2, Math.min(1.2, c.el));      // (la hauteur du tir, rad : − vers le sol ; v0.169.0)
   return '';
 }
-/* Une rafale à la main : dans le regard, seulement le bouton tenu (le refus est dit une fois par appui) */
+/* Une rafale à la main : seulement le bouton tenu, dans le regard (cap et hauteur : `regard`, `el`), limitée par le pivot du poste (jamais vers nos tranchées) ; le refus est dit une fois par appui.
+   La gerbe (v0.169.0) part de la bouche (`bouche` m au-dessus du sol du poste) et avance mètre par mètre : elle s'arrête au premier relief plus haut qu'elle (un parapet aussi), au premier arbre
+   qu'elle traverse (il reçoit la rafale : à `arbre` rafales il tombe), sinon à la portée ; au sol elle creuse de petits trous (`trouBalle`, rejoués) ; un homme d'en face n'est touché que si elle passe
+   à hauteur de son corps, avant ce qui l'arrête. */
 function tirMain(B, ctx, rng, n, K) {
-  const { etat, armee: A } = B, dt = ctx.dt, Mn = NIDS.main;
+  const { etat, armee: A, terrain: T, R } = B, dt = ctx.dt, Mn = NIDS.main;
   n.tire = (n.tire ?? 0) + dt;
   if (!K.tir) { n.statut = 'main'; return; }
   const dire = r => { if (K.dit !== r) { K.dit = r; K.refus = r; } };
@@ -178,18 +183,48 @@ function tirMain(B, ctx, rng, n, K) {
   if (ry * n.face < Math.cos(NIDS.pivot * Math.PI / 180)) { n.statut = 'main'; dire(`Trop de travers : elle ne tourne que de ${NIDS.pivot}° de chaque côté.`); return; }
   if (n.tire < Mn.periode * cadenceNid(n) / NIDS.cadence) return;
   n.tire = 0; n.servi = A.reg[sv]; n.statut = 'tire'; n.derniere = etat.temps;
-  const c2 = Math.cos(Mn.cone); let touches = 0, vise = 0, tx = n.x + rx * 40, ty = n.y + ry * 40;
+  // la gerbe : sa hauteur absolue au fil de la distance, le premier obstacle
+  const sol = (x, y) => { const i = Math.floor(x), j = Math.floor(y); return i < 0 || j < 0 || i >= T.W || j >= T.H ? -1e9 : hauteurM(T, j * T.W + i); };
+  const z0 = sol(n.x, n.y) + Mn.bouche, tg = Math.tan(K.el ?? 0), zA = d => z0 + d * tg;
+  let fin = NIDS.portee, auSol = false;
+  for (let d = 1; d <= NIDS.portee; d++) if (zA(d) < sol(n.x + rx * d, n.y + ry * d)) { fin = d; auSol = true; break; }
+  let arbre = -1;
+  for (let k = 0; k < T.arbres.length; k++) {
+    const a = T.arbres[k]; if (a.abattu) continue;
+    const dx = a.i + 0.5 - n.x, dy = a.j + 0.5 - n.y, d = dx * rx + dy * ry; if (d < 1 || d >= fin) continue;
+    const lat = Math.abs(dx * ry - dy * rx), h = zA(d) - sol(a.i + 0.5, a.j + 0.5);
+    if (h < 0 || h > Mn.cime || lat > (h < Mn.tronc ? Mn.large : Mn.couronne)) continue;
+    fin = d; auSol = false; arbre = k;
+  }
+  const c2 = Math.cos(Mn.cone); let touches = 0, vise = 0;
   for (let i = 0; i < A.n; i++) {
     if (A.mort[i] || A.camp[i] === n.camp) continue;
     const dx = A.x[i] - n.x, dy = A.y[i] - n.y, d = Math.hypot(dx, dy);
-    if (d >= NIDS.portee || d < 2 || (dx * rx + dy * ry) / d < c2) continue;
-    vise++; tx = A.x[i]; ty = A.y[i];
+    if (d >= fin || d < 2 || (dx * rx + dy * ry) / d < c2) continue;
+    const h = zA(d) - sol(A.x[i], A.y[i]); if (h < 0 || h > Mn.taille) continue;      // au-dessus de sa tête (ou dans le sol devant lui) : la gerbe le manque
+    vise++;
     if (rng() < Mn.touche * (1.4 - d / NIDS.portee)) { ctx.frapper(i, 'nid', NIDS.gravite, null, -1, n.servi); touches++; if (A.mort[i]) { n.tues = (n.tues ?? 0) + 1; n.tuesReg ??= {}; n.tuesReg[n.servi] = (n.tuesReg[n.servi] ?? 0) + 1; } }
     else A.peur[i] = Math.max(A.peur[i], NIDS.peur * (1 - d / NIDS.portee));
   }
+  const tx = n.x + rx * fin, ty = n.y + ry * fin;
+  if (auSol) {      // les petits trous, autour du point de chute (un hachage du nombre d'impacts : pas le générateur)
+    K.creux = (K.creux ?? 0) + Mn.trous;
+    for (let q = 0; K.creux >= 1; q++, K.creux--) {
+      const k = etat.impacts.length, x = Math.round((tx + (hash2(k, q, etat.graine + 71) - 0.5) * 2.4) * 10) / 10, y = Math.round((ty + (hash2(k, q, etat.graine + 72) - 0.5) * 2.4) * 10) / 10;
+      if (x < 0 || y < 0 || x >= T.W || y >= T.H) continue;
+      etat.impacts.push([etat.jour, etat.tickJour, Math.round(x * 10), Math.round(y * 10), -1]);
+      trouBalle(T, x, y, R);
+    }
+  }
+  if (arbre >= 0) {      // l'arbre reçoit la rafale ; à `arbre` rafales il tombe (rejoué avec les impacts)
+    etat.arbresTouches ??= {}; const nb = (etat.arbresTouches[arbre] ?? 0) + 1; etat.arbresTouches[arbre] = nb;
+    const a = T.arbres[arbre];
+    B.evenements.push({ type: 'arbre-touche', x: a.i + 0.5, y: a.j + 0.5, h: zA(fin) - sol(a.i + 0.5, a.j + 0.5), camp: n.camp });
+    if (nb >= Mn.arbre) { a.abattu = 1; toucher(T, a.i, a.j); (etat.arbresTombes ??= []).push([arbre, etat.jour, etat.tickJour]); delete etat.arbresTouches[arbre]; B.evenements.push({ type: 'arbre-tombe', x: a.i + 0.5, y: a.j + 0.5, camp: n.camp }); }
+  }
   if (++K.coups >= Mn.parBande) { K.coups = 0; n.muni--; n.rafales = (n.rafales ?? 0) + 1; }
   if (vise) n.exp = Math.min(1, (n.exp ?? 0) + GAINS.nid.touche * touches);
-  K.dernier = { n: (K.dernier?.n ?? 0) + 1, touches, tx, ty };
+  K.dernier = { n: (K.dernier?.n ?? 0) + 1, touches, tx, ty, h: Math.max(0, zA(fin) - sol(tx, ty)), arbre: arbre >= 0, sol: auSol };
   if (B.tirs.length < 2000) B.tirs.push(n.x, n.y, tx, ty, n.camp, -1);
 }
 

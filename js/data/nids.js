@@ -17,7 +17,12 @@ export const NIDS = {
   // La mitrailleuse à la main (Jérôme, 24 nov., v0.168.0 : « on contrôle le tir ») : elle ne tire que tant qu'on tient le bouton, dans le regard ; une rafale tous les `periode` s
   // sur les hommes d'en face à moins de `cone` rad du regard (la chance : `touche` × (1,4 − distance / portée)) ; la bande perd une rafale par `parBande` rafales à la main (le même débit
   // qu'en tirant seul : une par seconde) ; le regard tourne au plus de `pivot` degrés de chaque côté de sa direction d'origine, comme le cône
-  main: { periode: 0.2, cone: 0.09, touche: 0.05, parBande: 5 },
+  main: { periode: 0.2, cone: 0.09, touche: 0.05, parBande: 5,
+    // v0.169.0 (Jérôme, 24 nov. : « elle peut tirer dans toutes les directions (haut et bas), limitée seulement par son cône ; ses tirs font des petits trous dans le sol et déchiquètent les arbres,
+    // qui finissent par tomber ») : la bouche à `bouche` m au-dessus du sol du poste (la hauteur de l'œil de la vue : le viseur et la gerbe vont au même point) ; la gerbe suit le regard en hauteur (`el`) et s'arrête au premier relief, au premier arbre (son tronc
+    // jusqu'à `tronc` m de haut, à `large` m de part et d'autre ; la couronne jusqu'à `cime` m, à `couronne` m), sinon à la portée ; au sol elle laisse `trous` trous d'un quart par rafale
+    // (en moyenne) ; un arbre tombe à `arbre` rafales reçues (~3 s de feu) ; un homme n'est touché que si la gerbe passe à hauteur de son corps (`taille` m)
+    bouche: 1.9, tronc: 2.5, large: 0.4, cime: 8, couronne: 1.6, trous: 0.7, arbre: 15, taille: 1.7 },
   armes: ['Hotchkiss', 'MG 08'],     // le nom de l'arme de chaque camp, dans le tableau de bord de la vue à la personne (v0.167.0)
   reparationEnFace: 0.5,       // en face, sans génie : la chance par nuit qu'un nid détruit soit refait
 };

@@ -7,24 +7,24 @@
 //    tonneau, l'écran rouge, jusqu'à l'écrasement.
 // Rien de neuf dans le moteur que quelques réglages de la vue (`vue.haut`, `dist`, `portee`, `hors`, `roulis`, `secousse`, rendu3d.js) : la caméra du jeu orbite déjà autour d'un point visé, ici ce point
 // suit l'engin. Le dessin seulement : aucune lecture n'écrit dans la bataille. La vue se libère d'un geste sur la caméra (déplacer, tourner), Échap, le clic droit, ou le bouton ; la vue d'avant revient.
-import { positionDe, refusPrise } from '../avions.js?v=0.168.0';
-import { hauteurOeil, balancement, armeDe, aPortee } from '../tir-joueur.js?v=0.168.0';
-import { TIR_JOUEUR as TJ } from '../data/tir-joueur.js?v=0.168.0';
-import { CALIBRES } from '../data/calibres.js?v=0.168.0';
-import { CHARS } from '../data/chars.js?v=0.168.0';
-import { AVION_MAIN } from '../data/mitraillage.js?v=0.168.0';
-import { creerAideVue } from './aide-vue.js?v=0.168.0';
-import { creerEtatFps } from './etat-fps.js?v=0.168.0';
-import { NIDS } from '../data/nids.js?v=0.168.0';
-import { MITRAILLAGE } from '../data/mitraillage.js?v=0.168.0';
+import { positionDe, refusPrise } from '../avions.js?v=0.169.0';
+import { hauteurOeil, balancement, armeDe, aPortee } from '../tir-joueur.js?v=0.169.0';
+import { TIR_JOUEUR as TJ } from '../data/tir-joueur.js?v=0.169.0';
+import { CALIBRES } from '../data/calibres.js?v=0.169.0';
+import { CHARS } from '../data/chars.js?v=0.169.0';
+import { AVION_MAIN } from '../data/mitraillage.js?v=0.169.0';
+import { creerAideVue } from './aide-vue.js?v=0.169.0';
+import { creerEtatFps } from './etat-fps.js?v=0.169.0';
+import { NIDS } from '../data/nids.js?v=0.169.0';
+import { MITRAILLAGE } from '../data/mitraillage.js?v=0.169.0';
 // Les sensations de l'homme qu'on mène (v0.152.0) : le coup reçu (s), la balle qui frôle (s), le souffle d'un obus (portée en rayons du souffle, s de retour), la peur qui ferme le champ (opacité au plus)
 const NIDS_RENDU = { coups: 9, garde: 1.6 };      // la mitrailleuse vue du poste : coups dessinés par seconde ; s depuis la dernière rafale de la règle où l'on tire encore (v0.167.0)
 const SENS = { coup: 1.2, frole: 0.5, roulis: 0.07, choc: 3, chocDuree: 2.5, peur: 0.75 };
-import { indiceDe, quiEst, majuscule } from './lecture.js?v=0.168.0';
-import { creerTampons } from './tampons-fps.js?v=0.168.0';
-import { BLESSURES_FPS, RYTHME_TAMPONS } from '../data/tampons.js?v=0.168.0';
-import { ZONES_EN_MOTS } from '../data/causes.js?v=0.168.0';
-import { REPERES, jauge, corps } from './barres.js?v=0.168.0';
+import { indiceDe, quiEst, majuscule } from './lecture.js?v=0.169.0';
+import { creerTampons } from './tampons-fps.js?v=0.169.0';
+import { BLESSURES_FPS, RYTHME_TAMPONS } from '../data/tampons.js?v=0.169.0';
+import { ZONES_EN_MOTS } from '../data/causes.js?v=0.169.0';
+import { REPERES, jauge, corps } from './barres.js?v=0.169.0';
 
 const SOL_Y = 3;           // le niveau moyen du sol que vise la caméra (rendu3d.js : `SOL_Y`), pour calculer `vue.haut`
 const PORTEE = 700;        // m : le plan lointain d'une vue verrouillée (au ras du sol, la vue porte loin)
@@ -158,7 +158,7 @@ export function creerSuivi({ $, bataille, rendu, reduit = () => false, retour = 
   }
   document.addEventListener('mousedown', e => {
     if (s?.vole && surChamp(e) && e.button === 0) { e.preventDefault(); if (!s.tirAile) { s.tirAile = true; voler({ tir: true }); } return; }
-    if (s?.tient && surChamp(e) && e.button === 0) { e.preventDefault(); if (enPause()) { dire('Le temps est arrêté.'); return; } if (!s.tirNid) { s.tirNid = true; tenir({ tir: true, regard: quart(s.capNid ?? 0) }); } return; }      // la mitrailleuse : le tir tant que le bouton est tenu (v0.168.0)
+    if (s?.tient && surChamp(e) && e.button === 0) { e.preventDefault(); if (enPause()) { dire('Le temps est arrêté.'); return; } if (!s.tirNid) { s.tirNid = true; tenir({ tir: true, regard: quart(s.capNid ?? 0), el: quart(s.elNid ?? 0) }); } return; }      // la mitrailleuse : le tir tant que le bouton est tenu (v0.168.0)
     if (s?.conduit && surChamp(e)) { e.preventDefault(); if (e.button === 0) tirerCanon(); else if (e.button === 2 && !s.rafale) { s.rafale = true; conduire({ rafale: true }); } return; }
     if (s?.genre !== 'soldat' || !surChamp(e)) return;
     if (s.mort) return;
@@ -523,9 +523,10 @@ export function creerSuivi({ $, bataille, rendu, reduit = () => false, retour = 
         viseur.style.opacity = String(Math.max(0, a) ** 2);
       } else { poser(s.entree.de, poseVue(true), f); viseur.style.opacity = String(f * f); }
       if (homme) rendu.fusil = !s.entree;
-      if (s.nid && !s.entree) { rendu.mitrailleuse = true; rendu.mitrailleuseApparition?.(1); }
+
       if (!s.entree) viseur.style.opacity = '';
     }
+    if (s.nid && !s.entree && !s.mgPosee) { s.mgPosee = true; rendu.mitrailleuse = true; rendu.mitrailleuseApparition?.(1); }      // (le plongeon fini, ou sauté : l'arme est en place)
     // la fenêtre des commandes : les bascules en marche (v0.158.0)
     // la mitrailleuse du poste (v0.167.0) : tant que la règle dit qu'elle tire (une rafale par seconde, `n.statut`), l'écran tire NID_RENDU coups par seconde : l'arme recule, la bande avance,
     // une douille saute, trois traceurs partent vers l'homme visé (le plus proche dans le cône, relu deux fois par seconde) et la terre gicle autour de lui. Le dessin seulement.
@@ -534,21 +535,23 @@ export function creerSuivi({ $, bataille, rendu, reduit = () => false, retour = 
       const K = s.tient ? B.mitrailleurs?.[moi()] : null;
       if (s.tient) {      // à la main : le regard part à la règle (au plus dix fois par seconde), son refus se dit, le viseur dit les coups au but
         s.capNid = c.perso.cap + s.lacet;
-        const q = quart(s.capNid); if (Math.abs(q - (s.regardNid ?? 1e9)) > 0.005 && s.t - (s.tRegardNid ?? -1) >= 0.1 && !enPause()) { s.regardNid = q; s.tRegardNid = s.t; tenir({ regard: q }); }
+        s.elNid = -(c.perso.tangage + s.pitch);      // la hauteur du tir : le regard levé ou baissé (v0.169.0 : « dans toutes les directions, haut et bas »)
+        const q = quart(s.capNid), qe = quart(s.elNid); if ((Math.abs(q - (s.regardNid ?? 1e9)) > 0.005 || Math.abs(qe - (s.elEnvoye ?? 1e9)) > 0.005) && s.t - (s.tRegardNid ?? -1) >= 0.1 && !enPause()) { s.regardNid = q; s.elEnvoye = qe; s.tRegardNid = s.t; tenir({ regard: q, el: qe }); }
         if (K?.refus) { dire(K.refus); K.refus = null; }
         if (K?.dernier && K.dernier.n !== s.vuNid) { s.vuNid = K.dernier.n; if (K.dernier.touches) { viseur.classList.remove('touche', 'mort'); void viseur.getBoundingClientRect(); viseur.classList.add('touche'); } }
       }
       const feu = n && n.etat === 'actif' && n.statut === 'tire' && (s.tient ? !!K?.tir : B.etat.temps - (n.derniere ?? -9) < NIDS_RENDU.garde);
       if (feu && !enPause()) {
         s.cibleT -= dt;
-        if (s.cibleT <= 0) { s.cibleT = s.tient ? 0.15 : 0.5; s.cibleNid = s.tient ? (K?.dernier ? [K.dernier.tx, K.dernier.ty] : null) : cibleNid(B, n); }      // (à la main : là où part sa dernière rafale, dans le regard)
+        if (s.cibleT <= 0) { s.cibleT = s.tient ? 0.15 : 0.5; s.cibleNid = s.tient ? (K?.dernier ? [K.dernier.tx, K.dernier.ty, K.dernier.h, K.dernier.sol] : null) : cibleNid(B, n); }      // (à la main : là où part sa dernière rafale, dans le regard)
         s.rafaleT += dt * NIDS_RENDU.coups;
         for (; s.rafaleT >= 1; s.rafaleT--) {
           rendu.mitrailleuseTir();
           const t = s.cibleNid, j = () => (Math.random() - 0.5) * 3;      // (le hasard du dessin seulement : jamais la graine)
           const ux = s.tient ? Math.cos(s.capNid) : n.ax, uy = s.tient ? Math.sin(s.capNid) : n.ay;
           const tx = t ? t[0] + j() : n.x + ux * 50 + j(), ty = t ? t[1] + j() : n.y + uy * 50 + j();
-          rendu.rafale(n.x + n.ax * 5, n.y + n.ay * 5, 1.0, tx, ty, Math.random() < 0.5);      // (les traceurs partent à 5 m : l'éclair de bouche est celui de l'arme dessinée, pas une tache devant l'œil)
+          const th = t && t.length > 2 ? t[2] : 0.6;      // (à la main : la hauteur où la gerbe s'arrête, au sol ou dans un arbre)
+          rendu.rafale(n.x + ux * 5, n.y + uy * 5, 1.0, tx, ty, (!t || t.length < 4 || t[3]) && Math.random() < 0.5, th);      // (les traceurs partent à 5 m : l'éclair de bouche est celui de l'arme dessinée, pas une tache devant l'œil)
         }
       } else s.rafaleT = 0;
     }

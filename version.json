@@ -1,8 +1,8 @@
 {
-  "version": "0.168.0",
+  "version": "0.169.0",
   "date": "2026-11-24",
   "changes": [
-    "La mitrailleuse se prend en main : « Prendre le contrôle », la souris vise, le clic tenu tire (elle ne tire plus seule tant qu'on la tient)",
-    "En la prenant, la caméra passe au-dessus de la pièce puis descend doucement jusqu'au tireur ; l'arme monte dans l'image à la fin de la descente"
+    "La mitrailleuse en main tire aussi haut et bas : vers le sol elle creuse de petits trous, elle déchiquette les arbres qui finissent par tomber, trop haut elle passe au-dessus des têtes",
+    "Plus d'erreur au chargement du jeu (un fichier d'animations manquait)"
   ]
 }

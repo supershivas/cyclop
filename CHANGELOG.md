@@ -1,5 +1,10 @@
 # Journal des versions
 
+## 0.169.0 — 2026-11-24
+
+- La mitrailleuse en main tire aussi haut et bas : vers le sol elle creuse de petits trous, elle déchiquette les arbres qui finissent par tomber, trop haut elle passe au-dessus des têtes
+- Plus d'erreur au chargement du jeu (un fichier d'animations manquait)
+
 ## 0.168.0 — 2026-11-24
 
 - La mitrailleuse se prend en main : « Prendre le contrôle », la souris vise, le clic tenu tire (elle ne tire plus seule tant qu'on la tient)

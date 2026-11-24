@@ -1286,6 +1286,9 @@ test('un nid ne tire plus d\'une tranchée à l\'autre (120 m) mais couvre le no
   assert.equal(d.statut, 'seul', 'personne pour le servir');
 });
 import { commanderMitrailleur } from '../js/nids.js';
+import { hauteurM as hauteurM6 } from '../js/terrain.js';
+/* la hauteur de tir (rad) qui mène la gerbe d'un poste au buste (1 m) d'un homme en (x, y) */
+const elVers = (B, n, x, y) => { const T = B.terrain, h = (a, b) => hauteurM6(T, Math.floor(b) * T.W + Math.floor(a)); return Math.round(Math.atan2(h(x, y) + 1 - h(n.x, n.y) - NIDS.main.bouche, Math.hypot(x - n.x, y - n.y)) * 1000) / 1000; };
 test('la mitrailleuse à la main (v0.168.0) : elle ne tire que le bouton tenu, dans le regard ; la bande s\'use au même débit ; de travers elle refuse ; deux machines, la même partie', () => {
   const mk = () => { const B = petite(), n = nidDe(B, 0); poser(B, 0, 1, n.x, n.y, 1); poser(B, 1, 30, n.x + 15, n.y + n.face * 40, 6); return { B, n }; };
   const pas = (B, s) => { for (let k = 0; k < s; k++) avancer(B); };
@@ -1293,15 +1296,41 @@ test('la mitrailleuse à la main (v0.168.0) : elle ne tire que le bouton tenu, d
   { const { B, n } = mk(); assert.equal(commanderMitrailleur(B, 0, { id: n.id }), ''); assert.match(commanderMitrailleur(B, 1, { id: n.id }), /plus à vous/);
     const p0 = pertes(B), m0 = n.muni; pas(B, 60); assert.equal(n.muni, m0, 'tenue, sans le bouton, elle ne tire pas seule'); assert.equal(pertes(B), p0); assert.equal(n.statut, 'main');
     // dans le regard : vers le groupe (40 m devant, 15 m de côté)
-    commanderMitrailleur(B, 0, { tir: true, regard: Math.round(Math.atan2(n.face * 40, 15) * 1000) / 1000 }); pas(B, 150);
+    commanderMitrailleur(B, 0, { tir: true, regard: Math.round(Math.atan2(n.face * 40, 15) * 1000) / 1000, el: elVers(B, n, n.x + 15, n.y + n.face * 40) }); pas(B, 150);
     assert.ok(pertes(B) > p0, `dans le regard, elle porte : ${pertes(B) - p0} touchés`); assert.ok(m0 - n.muni >= 4 && m0 - n.muni <= 6, `une rafale de bande par seconde : ${m0 - n.muni} en 5 s`);
     // à côté du groupe : rien
     const p1 = pertes(B); commanderMitrailleur(B, 0, { regard: Math.round(Math.atan2(n.face * 40, -25) * 1000) / 1000 }); pas(B, 90); assert.equal(pertes(B), p1, 'hors du regard, personne n\'est touché');
     // de travers : refusé une fois, à voix haute
     const K = B.mitrailleurs[0]; K.refus = null; commanderMitrailleur(B, 0, { regard: n.face > 0 ? 0 : Math.PI }); avancer(B); assert.match(K.refus ?? '', /Trop de travers/);
     commanderMitrailleur(B, 0, { fin: true }); assert.equal(B.mitrailleurs[0], null); }
-  const scen = () => { const { B, n } = mk(); commanderMitrailleur(B, 0, { id: n.id }); for (let k = 0; k < 120; k++) { if (k === 10) commanderMitrailleur(B, 0, { tir: true, regard: Math.round(Math.atan2(n.face * 40, 15) * 1000) / 1000 }); if (k === 80) commanderMitrailleur(B, 0, { tir: false }); avancer(B); } return B; };
+  const scen = () => { const { B, n } = mk(); commanderMitrailleur(B, 0, { id: n.id }); for (let k = 0; k < 120; k++) { if (k === 10) commanderMitrailleur(B, 0, { tir: true, regard: Math.round(Math.atan2(n.face * 40, 15) * 1000) / 1000, el: elVers(B, n, n.x + 15, n.y + n.face * 40) }); if (k === 80) commanderMitrailleur(B, 0, { tir: false }); avancer(B); } return B; };
   assert.equal(empreinte(scen()), empreinte(scen()));
+});
+test('la gerbe de la mitrailleuse à la main (v0.169.0) : vers le sol elle creuse, trop haut elle passe au-dessus des têtes, un arbre visé tombe ; la partie relue les garde', () => {
+  const mk = () => { const B = petite(), n = nidDe(B, 0); poser(B, 0, 1, n.x, n.y, 1); return { B, n }; };
+  const pas = (B, s) => { for (let k = 0; k < s; k++) avancer(B); };
+  const vers = (n, dx, dy) => Math.round(Math.atan2(dy, dx) * 1000) / 1000;
+  // vers le sol, à ~15 m devant : des trous d'un quart (calibre −1 dans les impacts)
+  { const { B, n } = mk(); for (let i = 0; i < B.armee.n; i++) if (B.armee.camp[i] === 1) B.armee.mort[i] = 1;
+    commanderMitrailleur(B, 0, { id: n.id }); const i0 = B.etat.impacts.length;
+    commanderMitrailleur(B, 0, { tir: true, regard: vers(n, 0, n.face), el: -0.07 }); pas(B, 60);
+    const trous = B.etat.impacts.slice(i0).filter(m => m[4] === -1);
+    assert.ok(trous.length >= 5, `des trous de balle : ${trous.length} en 2 s`); assert.ok(B.mitrailleurs[0].dernier.sol, 'la gerbe s\'arrête au sol');
+    const C = restaurer(photo(B), R); assert.equal(empreinte(C), empreinte(B), 'la partie relue rejoue les trous');
+    const c = trous[0], k = (c[3] / 10 | 0) * B.terrain.W + (c[2] / 10 | 0); assert.equal(C.terrain.diff[k], B.terrain.diff[k], 'le même relief'); }
+  // trop haut : au-dessus des têtes
+  { const { B, n } = mk(); poser(B, 1, 30, n.x, n.y + n.face * 40, 6); commanderMitrailleur(B, 0, { id: n.id }); const p0 = B.etat.pertes[1] + B.etat.blesses[1];
+    commanderMitrailleur(B, 0, { tir: true, regard: vers(n, 0, n.face), el: 0.3 }); pas(B, 90); assert.equal(B.etat.pertes[1] + B.etat.blesses[1], p0, 'la gerbe passe au-dessus d\'eux'); }
+  // un arbre visé : il reçoit les rafales et tombe ; relue, il reste tombé
+  { const B = petite(), T = B.terrain; for (let i = 0; i < B.armee.n; i++) if (B.armee.camp[i] === 1) B.armee.mort[i] = 1;
+    // un vrai arbre du terrain (la partie relue regénère les arbres de la graine), devant un de nos postes, à 8-60 m, dans son pivot
+    let n = null, k = -1;
+    for (const m of B.etat.nids) { if (m.camp !== 0) continue; k = T.arbres.findIndex(a => { const dx = a.i + 0.5 - m.x, dy = a.j + 0.5 - m.y, d = Math.hypot(dx, dy); return !a.abattu && d > 8 && d < 60 && dy * m.face / d > Math.cos(NIDS.pivot * Math.PI / 180); }); if (k >= 0) { n = m; break; } }
+    assert.ok(n, 'un arbre devant un poste'); poser(B, 0, 1, n.x, n.y, 1); const a = T.arbres[k];
+    commanderMitrailleur(B, 0, { id: n.id }); commanderMitrailleur(B, 0, { tir: true, regard: vers(n, a.i + 0.5 - n.x, a.j + 0.5 - n.y), el: 0.02 });
+    let tombe = false; for (let q = 0; q < 300 && !tombe; q++) tombe = avancer(B).some(e => e.type === 'arbre-tombe');
+    assert.ok(tombe && a.abattu, 'l\'arbre tombe'); assert.deepEqual(B.etat.arbresTombes.map(t => t[0]), [k]);
+    const C = restaurer(photo(B), R); assert.equal(C.terrain.arbres[k]?.abattu, 1, 'relu, il est toujours tombé'); }
 });
 test('un homme est posté à chaque nid actif : il marche à son poste, le sert, et son remplaçant vient quand il tombe (v0.144.1)', () => {
   const B = petite(), n = nidDe(B, 0), A = B.armee;
