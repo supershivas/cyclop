@@ -3,231 +3,249 @@
 Document de référence. Il décrit **l'intention** : ce que le jeu est et veut
 être. La technique est dans `CLAUDE.md`. Les décisions de Jérôme sont datées par
 version (« Jérôme, v0.1.0 ») ; les propositions pas encore tranchées portent
-`[À VALIDER]`.
+`[À VALIDER]`. Ce qui est décidé mais pas construit le dit (« pas construit »).
 
 ## Intention
 
-On commande un secteur du front, en 1914-18, pendant une bataille de dix à
-quinze jours. On ne voit pas des combats séparés : on voit un terrain qui se
-transforme. Les obus creusent, la pluie fait la boue, l'eau monte dans les trous,
-les abris tombent et se refont la nuit. Des milliers d'hommes, chacun un point ou
-une petite boîte, et au-dessus de tout un compteur de morts, sobre, qui est le
-prix de chaque ordre. Le ton est celui de la danse macabre : la mort mène la
-ronde et rend tout le monde égal ; la catastrophe est peinte avec calme, comme
-chez Brosio ; la gravité ne se joue pas à la légère (Nussbaum). Référence : la
-masse et le commandement de régiments de Total War, sans la micro-gestion ; le
-moteur de foule de « Pierre et les rats ».
+On commande un secteur du front, en 1914-18 : des milliers d'hommes, un terrain
+qui se transforme. Les obus creusent, la pluie fait la boue, l'eau monte dans les
+trous, les arbres tombent. À tout moment, on **saute dans un homme**, un char,
+un avion ou une mitrailleuse, et l'on voit la bataille à hauteur d'œil. Et le
+front devient absurde : un zeppelin à soi, une mine qu'on fait sauter quand on
+veut, un fusil dont chaque balle est un obus.
 
-## Piliers
+**La promesse (Jérôme, 24 nov., v0.169.0) : destruction, folie, immersion.**
+Ce qui plaît : la destruction, les vues à la personne, les améliorations WTF.
+Ce qui ne plaît pas : l'interface complexe, les statistiques trop nombreuses, les
+résumés de fin de journée. Le ton reste celui de la danse macabre (la mort mène la
+ronde, la catastrophe peinte avec calme, Brosio, Nussbaum), mais le jeu peut être
+épique et drôle.
+
+Le public : les joueurs d'itch.io, en navigateur ou en téléchargement, qui doivent
+comprendre en cinq minutes, sans manuel.
+
+## Deux éditions, un seul code (Jérôme, 24 nov., v0.169.0 ; pas construit)
+
+- **L'édition itch.io** : tout ce que décrit ce document comme « cible » (les
+  cartes du soir, la campagne en arbre, le premier jour guidé, l'écran allégé),
+  sans jeu à deux. C'est elle qui sort.
+- **Le jeu actuel** : la soirée en trois étapes, les arbres du camp, la campagne
+  fixe, **le jeu à deux tel qu'il est** (Jérôme).
+
+On choisit l'édition sur l'écran d'accueil (ou par l'adresse `/itch/`). Le moteur
+(terrain, foule, tranchées, rendu, vues à la personne, largages, caprices) est
+commun : une correction vaut pour les deux. Pas de branche git ni de copie du code
+(deux moteurs divergeraient : chaque correction à fusionner, `main.js` en
+conflit). Règles : `ROADMAP.md`, « Garde-fous ».
+
+## Piliers (Jérôme, 24 nov., v0.169.0)
 
 1. **Le terrain est le récit.** Ce qui s'est passé se lit dans le sol : cratères,
    boue, eau, arbres abattus. Rien ne s'efface tout seul.
-2. **Les pertes sont la monnaie.** Chaque ordre a un prix en vies, compté et
-   affiché, jamais glorieux.
-3. **La foule est un personnage** (les frères de Witt) : on commande des
+2. **La destruction est un spectacle.** Chaque obus, chaque mine, chaque engin
+   laisse une trace qu'on a envie de regarder.
+3. **On saute dans un homme.** La vue à la personne est au centre du jeu, pas un
+   bonus caché : une touche, un bouton, dès la première partie.
+4. **Le front est fou.** Les cartes du soir, les largages et les caprices rendent
+   chaque run différent et racontable.
+5. **Lisible d'un coup d'œil.** On visualise (barres, tuiles, icônes) ; peu de
+   chiffres à l'écran, aucun bloc de texte, pas de résumé à lire.
+6. **La foule est un personnage** (les frères de Witt) : on commande des
    régiments, on regarde des milliers d'hommes.
-4. **Le temps est un ennemi lent** : la pluie de demain, la boue d'après-demain.
-5. **On ne revient pas en arrière** (brûler ses vaisseaux) : une ligne prise
-   donne ses tronçons, à l'envers ; un mort est mort.
 
-## La boucle de jeu
+Abandonnés (Jérôme, 24 nov. : « pas importants, peuvent être changés ») : « les
+pertes sont la monnaie » (le compteur reste, il n'est plus le cœur du jeu) et
+« pas de tutoriel ».
 
-- **Seconde** : choisir un régiment, l'envoyer quelque part, viser un barrage ;
-  arrêter le temps pour réfléchir (pause active).
-- **Minute** : un jour dure 5 à 8 minutes (6 en v0.1.0) : offensives, barrages,
-  contre-attaques. On regarde la boue gagner.
-- **Partie** : 10 à 15 jours sur un secteur, une mission ; chaque nuit, le terrain
-  évolue en lot, et chaque régiment fait sa corvée (v0.6.0), ou est relevé (v0.9.0).
-- **Entre deux parties** : le Mémorial (chaque unité perdue garde un nom), l'état-
-  major (doctrines débloquées, chacune avec un coût), les trophées déclaratifs,
-  sobres (« tenir un secteur sans offensive », « gagner un mètre pour moins de
-  100 hommes »). `[À VALIDER : rien de cela n'est construit]`
+## La boucle de jeu (cible, Jérôme, 24 nov. ; pas construite)
 
-## Le lot minimal (v0.1.0)
+- **Seconde** : choisir un régiment, l'envoyer, viser un barrage, sauter dans un
+  homme ; arrêter le temps (pause active).
+- **Jour** (5 à 8 minutes) : offensives, barrages, largages, le caprice du jour.
+- **Soir** : **3 cartes tirées, on en garde une** (« Les cartes du soir »). Plus de
+  résumé, plus de moments du jour, plus d'arbres ni de paquets d'hommes.
+- **Partie** : **1 à 5 jours** sur un secteur, une mission (réglage fin plus tard).
+- **Campagne** : **3 à 5 parties** enchaînées sur un arbre de progression tiré à
+  la création (« La campagne »).
+- **D'une campagne à l'autre** : des cartes nouvelles débloquées pour de bon, la
+  vitrine qui se remplit, des niveaux de galons (difficulté).
 
-La tranche verticale du terrain, et seulement elle (Jérôme, v0.1.0) :
+Aujourd'hui (v0.169.0) : une bataille dure 10 à 15 jours, la soirée a trois
+étapes (`hud/soiree.js`), la campagne enchaîne trois secteurs fixes
+(`data/campagne.js`).
 
-1. Un champ de 400 × 300 cases de 1 m généré depuis une graine (bosses, quelques
-   arbres).
-2. 2 000 soldats en deux camps (huit régiments chacun ; six depuis la v0.7.0, Jérôme), par `army.js`.
-3. Des obus qui creusent des cratères : 75 (3 × 3), 155 (5 × 5), 220 (7 × 7),
-   dureté croissante, plancher à −6 m, lèvre de terre jetée.
-4. Pluie et boue sur trois jours simulés : l'humidité monte dans les creux, la
-   nappe remplit les trous profonds, la vitesse des soldats baisse dans la boue.
-5. Un compteur de pertes.
+## Apprendre à jouer (Jérôme, 24 nov. ; pas construit)
 
-Rien d'autre : ni tranchées, ni moral, ni méta (les tranchées sont venues ensuite, lot 1, v0.4.0).
+Le **premier jour de la première partie est guidé** : quatre ou cinq consignes
+d'une ligne, au moment où elles servent (choisir, marcher, barrage, sauter dans un
+homme), qui s'effacent seules et se coupent dans les réglages. Les systèmes
+arrivent un par un (la partie 1 n'a ni chars, ni avions, ni gaz).
 
-**Critère de validation** : 8 000 soldats (4 000 par camp), simulation et rendu
-chacun sous 8 ms dans Chromium sans carte graphique (`node scripts/mesure.mjs`) ;
-une bataille de trois jours lisible, cratère, boue, eau et soldat distinguables
-(`node outils/lisibilite.mjs`, captures de `node scripts/trois-jours.mjs`).
+## L'écran (Jérôme, 24 nov. ; pas construit)
 
-## Les systèmes
+Dans l'édition itch, à l'écran pendant la bataille : l'**objectif**, les
+**effectifs**, la **musette**. Le moral, l'expérience, le détail d'un tronçon
+passent au survol. Pas de jeu à deux dans cette édition (il reste dans le jeu
+actuel).
 
-### La bataille entière
+## La campagne (Jérôme, 24 nov. ; pas construite)
 
-Une bataille dure de dix à quinze jours (tirés de la graine) et porte une mission,
-donnée en un ordre sobre au premier matin : tenir le secteur (nos lignes doivent
-être à nous à la fin), ou prendre la première ligne d'en face et la tenir. Elle est
-jugée à la fin, en une phrase, suivie des morts de chaque jour : rien d'autre. Le
-secteur peut tomber avant (nos lignes à moins de 40 %, ou plus un homme) : la
-bataille finit là. Quatre régiments frais attendent en réserve : la nuit, la relève
-en fait monter un par les boyaux, à la place d'un régiment usé qui part au repos ;
-la réserve ne revient pas. En face fait de même, prépare ses assauts au 220 et ne
-sort que là où nos lignes ont faibli. (Jérôme, v0.9.0)
+À la création, la graine tire, **sans le montrer** : le **général adverse** (un
+nom, une doctrine : artilleur, sapeur, gazeur, cavalier, prudent), le **boss**,
+l'**ordre d'apparition des mécaniques** (chars, avions, gaz, mines, nuit, eau),
+**une particularité par partie** et les **branches** entre les parties.
+
+- **Au départ** : on choisit **1 doctrine parmi 3** (« Artilleur : un 155 de plus,
+  un régiment de moins ») ; on voit **le boss**, annoncé dès le début, pour préparer
+  ses cartes contre lui.
+- **Entre deux parties** : 2 ou 3 secteurs au choix ; on voit leur terrain et leur
+  récompense ; la particularité, l'élite et la mécanique nouvelle restent cachées
+  jusqu'au premier matin.
+- **Le général adverse apprend** : à chaque partie, il contre ce qu'on a le plus
+  utilisé (beaucoup d'artillerie : il creuse plus profond).
+- **Ce qui passe d'une partie à l'autre** : les cartes ; les régiments survivants,
+  leurs vétérans et leurs pertes (un régiment décimé revient faible, ou on le
+  change pour un frais mais novice).
+
+| Partie | Taille | Ce qui revient | Ce qui change d'un run à l'autre |
+|---|---|---|---|
+| 1. L'arrivée | 2 régiments contre 2, petite carte (~250 × 180), été ou couvert, 1-2 jours, l'infanterie et le 75 | la forme, le guidage | **une particularité** parmi une douzaine : un village, une rivière et son pont, un char abandonné, un as qui passe, la pleine lune, un cimetière, une ferme fortifiée, un dépôt à prendre, un brouillard du matin |
+| 2. Le front | 3 contre 3, carte moyenne, 2-3 jours | un choix de 2 branches | **2 axes** : terrain (crête, marais, méandre), météo (pluie, brouillard), mission (tenir, prendre, raid, escorte d'un char) ; **la 1re mécanique** de l'ordre tiré |
+| 3. L'élite | 4 contre 4, 3 jours | un adversaire spécial | **3 axes** et l'élite : troupes d'assaut, nid fortifié, lance-flammes, train blindé ; **la 2e mécanique** |
+| 4. Le carrefour | variable | une partie étrange | nuit permanente, hiver, ville en ruines, inondation, deux fronts ; les cartes maudites pèsent |
+| 5. Le boss | grande carte, 4-5 jours | le boss annoncé | la Grosse Bertha (un canon caché à trouver), le Fort (à prendre), l'Offensive du printemps (une vague énorme), le Gaz (une nappe qui avance chaque jour) |
+
+Une campagne de 3 parties joue 1, 2 et 5. Le sel d'un run est la **combinaison** :
+la doctrine de départ, le général adverse, l'ordre des mécaniques, la piste de
+cartes suivie, le boss. Emprunts : Slay the Spire (la carte à branches, le boss
+connu, le choix de départ, les reliques et les malédictions, les niveaux de
+difficulté, le défi du jour) ; Total War (des unités qu'on garde et qui
+s'aguerrissent, un général adverse qui a un nom). Refusés : la carte stratégique
+et l'économie de Total War, les événements en texte de FTL (trop de lecture).
+
+**Plus tard** (Jérôme, 24 nov.) : un **défi du jour** (la même graine pour tous,
+une tentative, un classement en ligne : un service à choisir).
+
+## Les cartes du soir (Jérôme, 24 nov. ; pas construites)
+
+Le soir, 3 cartes tirées, on en garde une jusqu'à la fin de la campagne ; une carte
+déjà tenue passe au niveau II. Une carte **change ce qu'on voit**, jamais un
+pourcentage, et **ne s'appuie que sur ce qui existe en jeu** (Jérôme, 24 nov.) :
+c'est un objet parachuté qui revient (une salve de 75 chaque matin, le fusil du
+canonnier pour l'homme qu'on incarne) ou un caprice qu'on déclenche soi-même
+(notre zeppelin, la mine sous la tranchée choisie). Une carte qui demanderait une
+mécanique nouvelle attend que la mécanique existe. Des cartes **maudites** : un
+gros bonus, un défaut visible. Les raretés sont celles des largages. Des **pistes**
+se dessinent (la musette, à la personne, les caprices en poche, les engins) : un run
+qui en suit une devient un style de jeu. Chaque campagne finie ajoute pour de bon
+des cartes plus folles au paquet. La liste proposée (35 cartes, à trier) :
+`docs/chantiers/cartes-wtf.md`.
+
+Différence avec les largages : un objet parachuté sert une fois, le jour ; une
+carte dure toute la campagne.
+
+## La sortie (Jérôme, 24 nov.)
+
+- **L'édition itch.io** sur **itch.io**, en navigateur **et** en téléchargement (Windows, Mac, Linux).
+  **Pas de Steam**, sauf grosse surprise.
+- **Prix libre à partir de 0 €, 3 € suggérés** ; un lien discret « Soutenir » dans
+  le jeu.
+- **Langues** : le français, puis **l'anglais d'abord** (préparé par Claude) ; le
+  jeu démarre dans la langue du navigateur. Titre : **Cyclopéen** en français,
+  **Cyclopean** en anglais.
+- **Faire connaître** : des GIF et des vidéos courtes de destruction et de vue à la
+  personne (`outils/trailer.mjs`) ; le jeu envoyé à des streamers francophones.
+
+## Les systèmes (ce qui existe, v0.169.0)
+
+### La bataille
+
+Une mission, donnée au premier matin : tenir le secteur, ou prendre la première
+ligne d'en face et la tenir. Jugée à la fin, ou avant si le secteur tombe. Des
+régiments frais attendent à la caserne et se déploient à tout moment du jour ; la
+déroute se retire vers elle. En face prépare ses assauts au 220 et sort là où nos
+lignes ont faibli. Trois difficultés (Secteur calme, Front ordinaire, Grande
+offensive) ne changent que l'adversaire. (Jérôme, v0.9.0, v0.70.0, v0.101.0)
 
 ### Le temps qui passe
 
-Le soleil se lève à l'est et se couche à l'ouest : les ombres des hommes et des
-arbres tournent avec lui, longues le matin et le soir, courtes à midi. De 16 h à
-18 h, le soir tombe (une trame de terre qui monte) ; la nuit, le champ n'est plus
-éclairé que par les lanternes des tranchées, les incendies et les fusées, et, à l'arrière, les lampes que portent les hommes (une pour dix, des deux camps ; Jérôme, v0.39.0). Quand on lève la tête, le ciel de la nuit change d'un soir à l'autre : la lune a sa phase (une lunaison de trente jours, une pleine lune éclaire un peu plus le champ), les nuages couvrent plus ou moins, des étoiles filent (Jérôme, v0.40.0 ; le papier de la nuit le dit en une ligne). Un tronçon où les deux camps se font face au soir ne s'apaise pas : la mêlée se joue pendant la nuit, et ceux qui y sont ne font ni corvée ni vrai repos (Jérôme, v0.39.0 ; en 14-18, un combat engagé ne s'arrêtait pas au coucher du soleil et la tranchée prise était contre-attaquée dans la nuit). Les
-obus tombent du ciel, soulèvent une gerbe de terre, laissent une fumée qui
-dérive ; un arbre touché brûle et le feu gagne ses voisins ; des corbeaux
-tournent au-dessus des morts. (Jérôme, v0.8.0)
+Le soleil se lève à gauche et se couche à droite : les ombres tournent avec lui. Le
+soir tombe ; la nuit, le champ n'est éclairé que par les lanternes, les incendies,
+les fusées et les lampes des hommes. Le ciel de la nuit change d'un soir à l'autre
+(la lune, les nuages, les étoiles filantes). Un tronçon où les deux camps se font
+face au soir se bat toute la nuit. Les obus soulèvent une gerbe de terre ; un arbre
+touché brûle et le feu gagne ses voisins ; des corbeaux tournent au-dessus des
+morts. (Jérôme, v0.8.0, v0.39.0, v0.40.0)
 
-### Le terrain
+### Le terrain, l'eau et la météo
 
-De l'herbe par plaques, des buissons en haies et en bosquets, des arbres : le
-champ est vivant au premier matin. Les obus soufflent l'herbe et arrachent les
-buissons, la boue tue l'herbe heure après heure : au fil des jours, le vert
-disparaît. (Jérôme, v0.7.0)
-
-
-Un champ de hauteurs (pas de voxels pleins), cube de 1 m, quantifié au quart. Un
-octet par case : la différence avec le sol généré. La sauvegarde garde la graine
-et la liste des impacts, jamais d'image du sol. Mines (−10 m, champ à part) : plus
-tard.
-
-### L'eau et le temps
-
+De l'herbe, des buissons, des arbres par essence et par saison : le champ est
+vivant au premier matin, et le vert disparaît au fil des jours. Un champ de
+hauteurs en cubes de 1 m, au quart ; la sauvegarde garde la graine et les impacts.
 Une chaîne de jours tirée au sort (sec, pluie, brouillard, gel), une prévision
-vague du lendemain, juste sept fois sur dix. La boue ralentit (×0,38), l'eau plus
-encore, et l'obus s'y enfouit (il tue moins loin). Le gel durcit la boue.
+juste sept fois sur dix. La boue ralentit, l'eau plus encore, l'obus s'y enfouit.
+(Jérôme, v0.7.0, v0.53.1, v0.138.0)
 
-### La foule
+### La foule, les tranchées, le moral
 
-Chaque soldat a une place dans la formation de son régiment ; loin d'elle, il suit
-un champ de coûts qui contourne la boue et les marches de deux mètres. Il tire
-vers le carré d'ennemis le plus dense de son front ; un creux l'abrite.
+Chaque soldat a une place dans la formation de son régiment et suit un champ de
+coûts qui contourne la boue. Quatre lignes de tranchées par camp, en tronçons de
+25 m qui changent de main ; une tranchée prise sert à l'envers. Chaque régiment a
+un moral : ébranlé, il refuse de sortir ; trop bas, il part en déroute, qui gagne
+les voisins. Chaque homme s'aguerrit au feu ; quand un gradé tombe, le suivant
+prend sa place. (Jérôme, v0.4.0, v0.5.0, v0.11.0)
 
-### Les tranchées
+### La nuit
 
-Quatre lignes par camp, parallèles au front, en créneaux (des baies et des
-pare-éclats), à 20 m l'une de l'autre ; des boyaux en zigzag les relient ; 130 m
-de no man's land entre les premières. Au départ, la moitié des régiments tient la
-première ligne, l'autre moitié la deuxième. Chaque ligne est coupée en tronçons de
-25 m : un tronçon que l'autre camp occupe sans qu'un seul défenseur y reste change
-de main. Le parapet protège du tir qui vient de devant ; le parados, beaucoup
-moins, de celui qui vient de derrière : une tranchée prise sert à l'envers. Les
-obus la comblent comme le reste du sol (leur terre retombe dedans), la pluie la
-remplit de boue. On l'occupe d'un clic droit dessus. En face monte à l'assaut de
-notre ligne la plus proche qu'on tient encore ; un régiment trop éprouvé retourne
-dans sa tranchée. (Jérôme, v0.4.0 : le lot 1)
+Chaque régiment reçoit une corvée : le repos, évacuer les blessés, ravitailler, la
+relève (Jérôme, v0.6.0 ; quatre depuis la v0.77.1). Les morts inhumés ont une tombe.
+Aujourd'hui, la soirée en trois étapes (la journée, le camp et ses arbres, les
+régiments) précède la nuit (v0.150.0) ; **elle sera remplacée par les cartes du
+soir**.
 
-### La nuit et ses corvées
+### Le camp, les engins, les largages, les caprices
 
-La nuit, chaque régiment reçoit une corvée : le repos (la fatigue et la peur
-tombent, le moral remonte un peu plus), réparer sa tranchée (les tronçons comblés
-par les obus sont recreusés), inhumer les morts autour de lui (ils partent en terre, leur fiche le dit ; au-delà
-de nos lignes, des hommes y restent), évacuer ses blessés (ils quittent le front,
-vivants). Un régiment qui travaille se repose moins. Un blessé laissé au front peut
-mourir dans la nuit ; les corps laissés autour d'un régiment pèsent sur son moral au
-matin. En face fait ses corvées lui aussi. À l'aube, le bilan de la nuit, en deux
-lignes. (Jérôme, v0.6.0)
+Derrière nos lignes, cinq bâtiments (artillerie, aérodrome, chars, sapeurs,
+caserne) donnent les ordres spéciaux : barrages 75, 155, 220, mitraillage, char,
+génie. Deux ou trois avions par jour lâchent une caisse au-dessus du no man's
+land : le premier homme qui l'atteint prend l'objet pour son camp (35 objets,
+six raretés, v0.162.0). Un caprice par jour (douze : tir trop court, zeppelin,
+nappe de gaz, mine, as, éclipse…, v0.163.0). Les uns et les autres sont gardés
+(Jérôme, 24 nov.).
 
-Puis (v0.11.0) : creuser des abris profonds sous sa tranchée (une nuit par niveau,
-trois niveaux : les obus y tuent de moins en moins ; un 220 tombé dans le tronçon en
-crève un ; un tronçon pris garde ses abris, pour l'autre camp) ; ravitailler (des
-vivres pour trois nuits : sans eux, la nuit repose moins et le moral baisse). En face fait tout
-cela aussi. (v0.38.3 : sept corvées au total ; les caillebotis et le coup de main sont retirés, voir
-`docs/archives/corvees-retirees.md`.) Les morts inhumés ont une tombe là où ils sont tombés : un tertre de
-glaise et une croix pâle, qui restent jusqu'à la fin.
+### Les vues à la personne
 
-### Le camp
-
-Derrière nos lignes, dans la marge du terrain, un camp de cinq bâtiments : le parc d'artillerie, l'aérodrome, le parc des chars, la maison des sapeurs, la caserne des renforts. Chacun est une unité spéciale ; les ordres se donnent en le choisissant. Le camp est prêt au premier matin (les trois artilleries, l'aviation, les chars, le génie, la relève : niveau 1) et **s'améliore** au fil des jours : une dotation de l'état-major (0 au début) tombe à chaque aube (jamais des morts : ce n'est pas une récompense), un chantier dure une nuit, trois niveaux par bâtiment. On ne peut pas tout prendre. Le fil de fer devant la première ligne se coupe sous les obus. (Jérôme, v0.87.0 ; les améliorations à choisir (v0.89.0) et l'équipement des régiments (v0.91.0 : casques, grenadiers, mitrailleuses, brancardiers, donnés la nuit) sont construits ; le camp d'en face se bâtit seul avec la même dotation (v0.92.0), et une campagne reporte les niveaux du camp ; à deux, chaque joueur a son camp (v0.94.0) : `docs/chantiers/camp-et-ameliorations.md`.)
-
-### Le moral et l'expérience
-
-Chaque régiment a un moral. Les morts le font baisser (un officier plus encore),
-la peur de ses hommes aussi ; au calme il remonte, plus vite s'il a encore ses
-officiers et des hommes aguerris ; un tronçon pris le relève, un tronçon perdu
-l'abat. La nuit en rend une part, jamais tout : les pertes laissent leur marque.
-Ébranlé, un régiment tire moins et refuse de sortir vers l'ennemi ; trop bas, il
-part en déroute : il ne tire plus, reflue vers sa tranchée de départ et n'obéit
-plus, jusqu'à ce qu'il se rallie. On le refuse à voix haute (« Céruléen est
-ébranlé : il ne sortira pas »). En face obéit aux mêmes règles : ses assauts se
-brisent sur le moral avant de se briser sur les pertes.
-
-Puis (v0.11.0) : une déroute gagne les voisins (le moral des régiments du même
-camp autour de lui tombe, d'autant plus qu'ils sont près). Un régiment brisé le soir
-(moral au plus bas, plus d'un tiers de ses hommes perdus) peut refuser de monter de
-toute la journée suivante : il tient sa tranchée, rien de plus — le Discours de la
-servitude volontaire : il suffit de ne plus servir. En face, après une prise, un
-régiment encore frais poursuit sur notre ligne suivante : c'est la leçon des Horaces
-et des Curiaces à l'envers (la fuite qui disperse le poursuivant reste à faire).
-
-Chaque homme prend de l'expérience à survivre au feu : un obus, un camarade qui
-tombe à côté, ses tirs, un tronçon pris, une nuit au front. Aguerri, il a moins
-peur et tire mieux. Quand un gradé tombe, le plus proche en dessous de lui (le plus
-aguerri à rang égal) prend sa place, et ainsi de suite jusqu'aux caporaux ; un
-nouveau capitaine s'annonce. (Jérôme, v0.5.0)
+On prend la place d'un soldat, d'un char, d'un avion ou d'une mitrailleuse : on
+vise, on tire, le sol se creuse, les arbres tombent (v0.144.0 à v0.169.0).
 
 ### Les hommes
 
-Chacun a un nom, un âge, un grade, et ce qu'il endure : des jambes lourdes
-d'avoir marché dans la boue, des bras las d'avoir tiré, une blessure, la peur
-des obus et de ceux qui tombent à côté. On clique un homme : sa fiche dit qui
-il est et ce qu'il endure, sobrement. Mort, sa fiche le dit (le Mémorial, plus
-tard, les gardera tous). (Jérôme, v0.3.0)
-
-Les morts restent où ils sont tombés : un homme couché, de la couleur de son camp
-le jour où il tombe, de la couleur de la glaise dès le lendemain ; au loin, un
-pixel. Survolé, il a encore un nom. (Jérôme, v0.3.3)
-
-De près, on regarde des hommes : le survol dit qui il est. De loin, on regarde
-des régiments : le survol dit combien ils sont encore, combien sont blessés,
-combien sont morts ; un clic ouvre la fiche du régiment, d'où l'on va à celle de
-chaque officier, de chaque blessé, de chaque mort. (Jérôme, v0.3.2)
-
-Un blessé qui peut encore marcher (un bras, ou une jambe légère) ne reste pas dans
-la tranchée : il regagne l'arrière, sans tirer ; les autres restent à terre
-jusqu'à la nuit. (Jérôme, v0.35.0) Sa fiche montre sa peur, la fatigue de ses
-jambes et de ses bras, son expérience, son corps avec la blessure, ses jours au
-front, ce qu'il fait, son prochain grade, et les hommes qu'il a abattus (Jérôme,
-v0.35.0 : un fait de sa fiche, ni une récompense ni de l'expérience ; il ne
-compte que les coups de fusil, pas les obus). Un régiment montre les mêmes
-jauges, en moyenne.
-
-Plus tard, certains prendront de l'expérience (`[À VALIDER]` : voir `ROADMAP.md`).
-
-### En face
-
-Des barrages sur nos hommes les plus serrés, des avances de temps en temps ; un
-régiment trop éprouvé retourne à son départ.
+Chacun a un nom, un âge, un grade, ce qu'il endure ; de près, un visage, un
+squelette, une allure. Les morts restent où ils sont tombés. Un clic ouvre sa
+fiche. (Jérôme, v0.3.0, v0.35.0, v0.105.0)
 
 ## Palette et échelle
 
 Voir `CLAUDE.md`. « Boue et ciel bas » : la terre, la boue, la glaise, l'herbe
 morte, l'eau qui reflète le ciel bas, la brume, l'os ; le bleu horizon et le
-vert kaki clair d'en face, plus pâles que le sol sombre.
+vert kaki clair d'en face. Les cartes du soir restent dans la palette.
 
 ## Ce que le jeu refuse
 
-- Le compteur de morts n'est jamais une récompense
-  de jeu (ni expérience, ni avantage) : le nombre d'hommes qu'un soldat a abattus est un fait
-  de sa fiche et de ses marques (Jérôme, v0.35.0). Le jeu peut être épique : la
-  glorification n'est plus un interdit (Jérôme, v0.70.0).
-- Pas de gore explicite : un corps est un homme couché, d'un pixel au loin.
-- Pas de tutoriel bavard : les commandes sont dans les réglages, c'est tout.
-- Le loot n'est plus refusé (Jérôme, v0.161.0 ; en jeu en v0.162.0 : des caisses parachutées, des objets à rareté qui boostent un homme, un régiment, des engins, ou bombardent ; jamais le moral : trop peu lisible) ; le compteur de morts, lui, reste hors des récompenses.
+- Les blocs de texte, les résumés à lire, les tableaux de statistiques (Jérôme,
+  24 nov.) : on visualise.
+- Un tutoriel bavard : le premier jour guide en quatre ou cinq lignes, pas plus.
+- Les améliorations en pourcentages (« +5 % ») : une carte se voit en jeu.
+- Le compteur de morts comme récompense (ni expérience, ni avantage) : le nombre
+  d'hommes qu'un soldat a abattus est un fait de sa fiche (v0.35.0).
+- Le gore explicite : du sang sur les blessés et les morts (v0.140.2), pas plus.
+- Le loot n'est plus refusé (v0.161.0) ; la glorification non plus (v0.70.0).
 
 ## Inspirations
 
-La danse macabre et Felix Nussbaum ; Brûler ses vaisseaux ; la foule comme
-personnage (les frères de Witt) ; les Horaces et les Curiaces (la fuite feinte,
-plus tard) ; le Discours de la servitude volontaire (le moral, plus tard) ; John
-Brosio ; le lexique rare pour nommer unités, lieux et trophées (nos régiments :
-Porphyre, Protogyne, Céruléen, Viride, Syzygie, Murmuration, Hapax, Sinople).
+La danse macabre et Felix Nussbaum ; John Brosio ; Brûler ses vaisseaux ; la foule
+comme personnage (les frères de Witt) ; les Horaces et les Curiaces ; le Discours de
+la servitude volontaire ; Slay the Spire (la campagne) ; Total War (la masse, les
+unités qu'on garde) ; le lexique rare pour nommer unités, lieux et trophées (nos
+régiments : Porphyre, Protogyne, Céruléen, Viride, Syzygie, Murmuration, Hapax,
+Sinople).
