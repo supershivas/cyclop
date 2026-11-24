@@ -5,30 +5,28 @@ import { createLoop } from './lib/loop.js?v=0.169.0';
 import { createKeys, stopTypeahead } from './lib/keys.js?v=0.169.0';
 import { createPointer, lockBrowserGestures } from './lib/pointer.js?v=0.169.0';
 import { createGamepad } from './lib/gamepad.js?v=0.169.0';
-import { createStore, autosave, pickJSONFile } from './lib/save.js?v=0.169.0';
-import { startUpdateCheck, loadVersion, loadChangelog, downloadJSON } from './lib/app-update.js?v=0.169.0';
+import { createStore, autosave } from './lib/save.js?v=0.169.0';
+import { startUpdateCheck } from './lib/app-update.js?v=0.169.0';
 import { ROLES } from './palette.js?v=0.169.0';
 import { VERSION_CAMPAGNE, CLE as CLE_CAMPAGNE, cloturerDansLeStore, nouvelleCampagne, suivante, passage, bilan as bilanCampagne } from './campagne.js?v=0.169.0';
 import { CAMPAGNE } from './data/campagne.js?v=0.169.0';
-import { MISSIONS, MEMORIAL, peutDeployer, deployer, bordereau, progressionMission, progressionSecondaire, EUX, nouvelleBataille, etapesRestaurer, avancer, aube, ordonnerMarche, peutOrdonner, ordonnerBarrage, peutBarrage, arriereDe, ordonnerStance, peutStance, horloge, effectifs, tronconsTenus, moralEnMots, terrainResume, forcesTroncons, largeurZone, lettreZone, etendueZones, nomTroncon, actionDe, secteursDe, tronconsDeLigne, zone, photo, restaurer, PAS, NOUS } from './bataille.js?v=0.169.0';
-import { ligneY, y0En, etatTranchee } from './tranchees.js?v=0.169.0';
+import { MISSIONS, MEMORIAL, peutDeployer, deployer, progressionMission, progressionSecondaire, EUX, nouvelleBataille, etapesRestaurer, avancer, aube, ordonnerMarche, peutOrdonner, ordonnerBarrage, peutBarrage, ordonnerStance, peutStance, horloge, effectifs, moralEnMots, largeurZone, etendueZones, actionDe, tronconsDeLigne, zone, photo, PAS, NOUS } from './bataille.js?v=0.169.0';
+import { ligneY, y0En } from './tranchees.js?v=0.169.0';
 import { CALIBRES, NOMS_CALIBRES } from './data/calibres.js?v=0.169.0';
 import { AVION, MITRAILLAGE } from './data/mitraillage.js?v=0.169.0';
 import { NIDS } from './data/nids.js?v=0.169.0';
-import { ligneDe, apercuVol, avionsPrets, avionsRestants, positionDe, balayage, commanderAile } from './avions.js?v=0.169.0';
+import { avionsRestants, positionDe, balayage, commanderAile } from './avions.js?v=0.169.0';
 import { creerSon } from './audio.js?v=0.169.0';
-import { CHAR, CHAR_RECHARGE, CHARS, CHAR_PAR_DEFAUT } from './data/chars.js?v=0.169.0';
-import { GENIE, GENIE_DATA } from './data/genie.js?v=0.169.0';
+import { CHAR } from './data/chars.js?v=0.169.0';
+import { GENIE } from './data/genie.js?v=0.169.0';
 import { pontEn } from './eaux.js?v=0.169.0';
 import { PONTS_JEU, typePont } from './data/ponts.js?v=0.169.0';
-import { routeChar } from './chars.js?v=0.169.0';
-import { STANCES, STANCE_DEFAUT } from './data/stances.js?v=0.169.0';
-import { METEO, SAISONS, SAISON_DEFAUT } from './data/meteo.js?v=0.169.0';
-import { hash2 } from './lib/rng.js?v=0.169.0';
+import { STANCES } from './data/stances.js?v=0.169.0';
+import { METEO, SAISONS } from './data/meteo.js?v=0.169.0';
 import { creerRendu, CAMERA, ZOOMS, ZOOMS_CADRAGE } from './rendu3d.js?v=0.169.0';
-import { etatEnMots, experienceEnMots, chevrons, caracteristiques } from './identite.js?v=0.169.0';
+import { etatEnMots, experienceEnMots, caracteristiques } from './identite.js?v=0.169.0';
 import { aspect } from './aspect-soldat.js?v=0.169.0';
-import { amasDe, placeDe, isoles } from './amas.js?v=0.169.0';
+import { placeDe } from './amas.js?v=0.169.0';
 import { numeroCampagne } from './bataille.js?v=0.169.0';
 import { peutUtiliserObjet, utiliserObjet } from './largages.js?v=0.169.0';
 import { OBJET, RARETES as RARETES_OBJETS, CATEGORIES as CATEGORIES_OBJETS, ORDRE_RARETES as ORDRE_RARETES_OBJETS } from './data/largages.js?v=0.169.0';
@@ -40,30 +38,19 @@ import { chargerAnimationsJeu } from './animations-store.js?v=0.169.0';
 import { chargerContenu, appliquerSecteurs, appliquerCartes, appliquerCampagne } from './design-store.js?v=0.169.0';
 import { ordonnerChar, refusOrdreChar, commanderConduite } from './chars.js?v=0.169.0';
 import { orienterNid, refusOrienterNid, raisonInactif, commanderMitrailleur } from './nids.js?v=0.169.0';
-import { REPARE_AVION, reparationFaite, codeAvion, codeChar, avionsAbimes } from './genie.js?v=0.169.0';
-import { PARC } from './data/parc.js?v=0.169.0';
+import { REPARE_AVION, reparationFaite, codeAvion, codeChar } from './genie.js?v=0.169.0';
 import { creerNidsHud } from './hud/nids.js?v=0.169.0';
-import { ecussonHtml, reglerEcusson } from './hud/ecussons.js?v=0.169.0';
-import { iconeCorvee } from './hud/icones-nuit.js?v=0.169.0';
 import { creerPastilles } from './hud/pastilles.js?v=0.169.0';
 import { creerSuivi } from './hud/suivi.js?v=0.169.0';
 import { creerCharsHud } from './hud/chars.js?v=0.169.0';
 import { creerCampHud } from './hud/camp.js?v=0.169.0';
-import { placeAvion, placesChars, placesGenie, parcChars, sortieChars, affecterGueris, charsDispo, acheterRang, rendreRang, annulerSoir, refusRang, refusRendre, ouverture, campDe, refusOrdre, batimentSous, emprisesCamp, emplacementCamp, etendueCamp, niveauDe, modif, rechargeDe as facteurRecharge } from './camp.js?v=0.169.0';
-import { BATIMENTS } from './data/batiments.js?v=0.169.0';
-import { ARBRES } from './data/ameliorations.js?v=0.169.0';
+import { sortieChars, affecterGueris, acheterRang, rendreRang, annulerSoir, refusRang, refusRendre, campDe, refusOrdre, batimentSous, emplacementCamp, etendueCamp } from './camp.js?v=0.169.0';
 import { deplacable } from './hud/deplacer.js?v=0.169.0';
 import { creerSecteur, caseDe } from './hud/secteur.js?v=0.169.0';
-import { palmares } from './hud/medailles.js?v=0.169.0';
-import { lireBataille } from './donnees-jour.js?v=0.169.0';
-import { el as elDe, info as infoDe, graphe as grapheFin, frise as friseFin, legende as legendeFin, tableMed, tableDissous } from './hud/papier-nuit.js?v=0.169.0';
 import * as lecture from './hud/lecture.js?v=0.169.0';
 import { commanderPilote } from './tir-joueur.js?v=0.169.0';
 import { creerFiche } from './hud/fiche.js?v=0.169.0';
-import { cle as cleF, bloc as blocF, phrase as phraseF, poserEcusson, poserTampon } from './hud/fiche-cadre.js?v=0.169.0';
-import { jauge as jaugeTuile } from './hud/tuiles.js?v=0.169.0';
-import { chevronsHtml } from './hud/barres.js?v=0.169.0';
-import { creerNuit, corveeDe, corveeCourte } from './hud/nuit.js?v=0.169.0';
+import { creerNuit } from './hud/nuit.js?v=0.169.0';
 import { creerCampagne } from './hud/campagne.js?v=0.169.0';
 import { creerChoixSecteur } from './hud/choix-secteur.js?v=0.169.0';
 import { creerDecor } from './hud/decor-titre.js?v=0.169.0';
@@ -75,7 +62,10 @@ import { creerRangee } from './hud/rangee.js?v=0.169.0';
 import { creerRecit } from './hud/recit.js?v=0.169.0';
 import { creerSurvol } from './hud/survol.js?v=0.169.0';
 import { creerBatteries } from './hud/batteries.js?v=0.169.0';
-import { creerCarnet, deux } from './hud/carnet.js?v=0.169.0';
+import { creerParc } from './hud/parc.js?v=0.169.0';
+import { brancherReglages } from './hud/reglages.js?v=0.169.0';
+import { creerFicheAvion } from './hud/fiche-avion.js?v=0.169.0';
+import { creerCarnet } from './hud/carnet.js?v=0.169.0';
 import { creerCarte } from './hud/carte.js?v=0.169.0';
 import { creerPertes } from './hud/pertes.js?v=0.169.0';
 import { creerBarreTemps } from './hud/temps.js?v=0.169.0';
@@ -83,11 +73,7 @@ import { creerChargement } from './hud/chargement.js?v=0.169.0';
 import { creerRetours } from './hud/retours.js?v=0.169.0';
 import { creerInfobulle } from './hud/infobulle.js?v=0.169.0';
 import { SECTEURS } from './data/secteur.js?v=0.169.0';
-import { DIFFICULTES, DIFFICULTE_DEFAUT, DUREES, DUREE_DEFAUT } from './data/difficulte.js?v=0.169.0';
-import { preparerAleatoire, ID_ALEATOIRE } from './generateur.js?v=0.169.0';
-import { creerLockstep, empreinteEtat } from './reseau/lockstep.js?v=0.169.0';
-import { nouveauCode, codeValide, publier, ecouter } from './reseau/relais.js?v=0.169.0';
-import { creerHote, creerInvite } from './reseau/lien.js?v=0.169.0';
+import { empreinteEtat } from './reseau/lockstep.js?v=0.169.0';
 import { SOLEIL_JEU } from './data/soleil.js?v=0.169.0';
 
 const JEU = 'cyclopeen';
@@ -151,10 +137,9 @@ let choisis = new Set();      // les régiments choisis (ids)
 const perf = { sim: 0, pas: 0 };
 
 // Lire la bataille en mots (hud/lecture.js) et les fiches (hud/fiche.js) : la bataille en cours leur est donnée à chaque appel
-const { majuscule, nomDe, enMots, pluriel } = lecture;
-const indiceDe = id => lecture.indiceDe(B, id), quiEst = id => lecture.quiEst(B, id), tombe = id => lecture.tombe(B, id);
+const { majuscule, nomDe, enMots } = lecture;
+const quiEst = id => lecture.quiEst(B, id), tombe = id => lecture.tombe(B, id);
 const corpsSous = (x, y, r) => lecture.corpsSous(B, x, y, r);
-const numeroDe = r => lecture.numeroDe(B, r);     // le numéro d'ordre : « 3 · Viride »
 const bilan = reg => lecture.bilan(B, reg), refuseAujourdhui = reg => lecture.refuseAujourdhui(B, reg);
 const carnet = creerCarnet({ $, bataille: () => B, surLien: l => allerA(l), replie: prefs.carnet === false, surReplie: oui => { prefs.carnet = !oui; store.save('prefs', prefs); } });
 const { noter, vider: viderCarnet } = carnet;
@@ -556,30 +541,7 @@ $('fin-nouvelle').onclick = async () => { $('dialogue-fin').close(); const choix
 $('fin-titre-btn').onclick = () => { $('dialogue-fin').close(); montrerTitre(); };
 
 // ─── Réglages ──────────────────────────────────────────────────────────────
-for (const q of ['effets', 'musique']) {
-  const champ = $(`son-${q}`);
-  champ.value = Math.round(son.volumes[q] * 100);
-  champ.oninput = () => { son.volume(q, champ.value / 100); prefs.son = son.volumes; store.save('prefs', prefs); if (q === 'effets') son.interface_('pret'); };
-}
-$('eclairage').value = rendu.eclairage;
-$('eclairage').onchange = () => { rendu.eclairage = $('eclairage').value; prefs.eclairage = rendu.eclairage; store.save('prefs', prefs); };      // Bas / Moyen / Haut (v0.116.0)
-$('exporter').onclick = () => { sauvegarder(); downloadJSON(store.exportAll(), `${JEU}-sauvegarde.json`); };
-$('importer').onclick = async () => {
-  try {
-    const n = store.importAll(await pickJSONFile());
-    toast(`${n} élément(s) importé(s)`);
-    setTimeout(() => location.reload(), 800);
-  } catch (e) { toast(e.message, 'alerte'); }
-};
-loadVersion().then(v => { $('version').textContent = v ? `v${v}` : ''; });
-loadChangelog().then(entrees => {
-  $('changelog').replaceChildren(...entrees.flatMap(e => {
-    const h = document.createElement('h3'); h.textContent = `v${e.version} — ${e.date}`;
-    const ul = document.createElement('ul');
-    for (const c of e.changes) { const li = document.createElement('li'); li.textContent = c; ul.append(li); }
-    return [h, ul];
-  }));
-});
+brancherReglages({ $, JEU, son, rendu, prefs, store, sauvegarder: () => sauvegarder(), toast: (t, g) => toast(t, g) });      // la boîte des réglages (hud/reglages.js)
 
 // Un message à l'écran (v0.41.3, sujet « Les toasts » du labo, variante B) : une languette sous les pertes, au centre, qui ne recouvre plus la rangée des régiments ;
 // le genre (information, refus d'un ordre, alerte) donne le liseré et le petit mot du haut
@@ -648,42 +610,6 @@ function ordreNid(x, y) {
   if (dire(orienterNid(B, nidChoisi, MOI, x, y)).ok) { marque = { x, y, t: 2 }; sauvegarder(); nidChoisi = null; modeNid = null; }
 }
 const nidSous = (x, y) => { let k = -1, md = 16; for (const n of B.etat.nids) if (n.camp === MOI && n.etat === 'actif') { const d = (n.x - x) ** 2 + (n.y - y) ** 2; if (d < md) { md = d; k = n.id; } } return k; };
-// Le génie répare à la base (v0.130.0) : un avion de l'escadrille au sol ou un char rentré au parc. Ils sont dans la marge arrière, hors du secteur d'ordres : l'ordre les désigne par un code (genie.js) et
-// non par des coordonnées. `enginSous` : l'engin abîmé du parc sous un point du terrain (un clic), ou null.
-function enginSous(x, y) {
-  if (!campDe(B.etat, MOI)?.bride) return null;
-  const r2 = PARC.portee ** 2, pres = p => (p.x - x) ** 2 + (p.y - y) ** 2 <= r2;
-  for (const k of avionsAbimes(B.etat, MOI)) if (pres(placeAvion(B.etat, MOI, k))) return codeAvion(k);
-  for (const p of placesChars(B.etat, MOI)) { const r = p.id !== null && parcChars(B.etat, MOI).find(q => q.id === p.id); if (r && r.pv < r.pvMax && r.pv > 0 && pres(p)) return codeChar(p.id); }
-  return null;
-}
-// Choisir un engin là où il attend (Jérôme, v0.140.0 : « sélectionner un char directement depuis le camp des chars et l'envoyer sans passer par le bouton, idem pour un avion, idem pour le génie,
-// un petit régiment visible »). Chaque avion au sol, chaque char du parc et chaque section du génie au dépôt a sa pastille et se clique sur le champ : le clic arme son ordre comme le ferait son
-// bouton (`viser` : mêmes refus à voix haute), le clic suivant sur le terrain l'envoie. Un engin abîmé qu'on peut réparer aujourd'hui : le clic envoie le génie, comme depuis la v0.130.0.
-function enginsParc() {
-  const out = [];
-  if (!B || !campDe(B.etat, MOI)?.bride || B.etat.phase !== 'jour') return out;
-  const E = B.etat, repar = !reparationFaite(E, MOI) && E.sapeurs[MOI] > 0, abimes = new Set(avionsAbimes(E, MOI));
-  (E.avions?.[MOI] ?? []).forEach((pv, k) => {
-    if (!(pv > 0) || k >= PARC.avions.length || (E.mitraillages ?? []).some(v => v.camp === MOI && v.k === k && v.etat === 'vol')) return;
-    const p = placeAvion(E, MOI, k), ab = abimes.has(k);
-    out.push({ cle: `pa${k}`, type: 'avion', cal: AVION, x: p.x, y: p.y, h: 3.5, vie: pv / MITRAILLAGE.pv, code: ab ? codeAvion(k) : null, emprise: [10, 9],
-      info: `# Avion au sol\n## ${ab ? 'abîmé' : 'prêt'}\nCellule : **${Math.round(pv / MITRAILLAGE.pv * 100)} %**\n${ab && repar ? 'Un clic : le génie le remet en état.' : 'Un clic : il décolle, vous prenez les commandes en l\'air.\nMaj+clic : il est choisi, puis deux clics sur le champ : sa passe.'}` });
-  });
-  placesChars(E, MOI).forEach((p, i) => {
-    const r = p.id !== null ? parcChars(E, MOI).find(q => q.id === p.id) : null, vie = r ? Math.max(0, r.pv / r.pvMax) : 1, ab = !!r && r.pv < r.pvMax && r.pv > 0;
-    out.push({ cle: `pc${i}`, type: 'char', cal: CHAR, x: p.x, y: p.y, h: 4, vie, code: ab ? codeChar(p.id) : null, emprise: [8, 6], premier: i === 0,
-      info: `# Char au parc\n## ${ab ? 'abîmé' : 'prêt'}\nCoque : **${Math.round(vie * 100)} %**\n${ab && repar ? 'Un clic : le génie le remet en état.' : 'Un clic : il sort, vous êtes à bord.\nMaj+clic : il est choisi, puis un clic sur le champ : son objectif. Les chars sortent dans l\'ordre des places.'}` });
-  });
-  placesGenie(E, MOI).forEach((p, i) => out.push({ cle: `pg${i}`, type: 'genie', cal: GENIE, x: p.x, y: p.y, h: 3, vie: 1, code: null, emprise: [6, 5],
-    info: `# Section du génie\n## au dépôt\n${GENIE_DATA.hommes} hommes sans arme.\nUn clic : elle est choisie. Puis un clic sur un pont coupé, un nid détruit, l'épave d'un char ou un engin abîmé du parc.` }));
-  return out;
-}
-function parcSous(x, y) {
-  let m = null, md = PARC.portee ** 2;
-  for (const e of enginsParc()) { const d = (e.x - x) ** 2 + (e.y - y) ** 2; if (d <= md) { md = d; m = e; } }
-  return m;
-}
 /* Prendre en main un engin du dépôt (Jérôme, 21 nov., v0.159.0 : « on peut cliquer sur un char ou un avion au dépôt et en prendre le contrôle immédiatement ; un avion décolle seul puis nous laisse les manettes ») :
    le char sort vers le milieu du secteur et l'on est à bord, conduite à la main ; l'avion part sur une passe par défaut au milieu du secteur, décolle seul, et les commandes viennent une fois en l'air (hud/suivi.js).
    L'ordre passe comme celui du bouton (lockstep à deux) ; la vue se pose sur l'engin dès qu'il existe (`prise`, lu à chaque image : à deux, l'ordre arrive au cadre suivant). Maj+clic : l'ancien geste (armer son ordre). */
@@ -734,40 +660,16 @@ function reparerEngin(code) {
   if (ok) { toast('Le génie part remettre l\'engin en état.'); sauvegarder(); }
   majHud(); return ok;
 }
+const leParc = creerParc({ bataille: () => B, moi: () => MOI });      // le parc de nos engins (hud/parc.js)
+const { enginSous, enginsParc, parcSous } = leParc;
+const laFicheAvion = creerFicheAvion({ $, bataille: () => B, moi: () => MOI, suivi: () => leSuivi });      // la fiche de l'avion choisi (hud/fiche-avion.js)
+function majAvionFiche() { if (!laFicheAvion(avionChoisi)) avionChoisi = null; }
 function choisirAvion(id) { avionChoisi = id; nidChoisi = null; modeNid = null; charChoisi = null; modeChar = null; modeBarrage = null; modeMarche = false; departAvion = null; choisis = new Set(); rendu.choisis = choisis; majHud(); }
 function actionAvion(act) {
   if (act === 'fermer') { avionChoisi = null; return majHud(); }
   if (act === 'vue' || act === 'personne') { leSuivi.verrouiller('avion', avionChoisi, act === 'vue' ? 'cinema' : 'personne'); majHud(); }
 }
-let avionVu = '';
 $('avion-fiche').onclick = e => { const b = e.target.closest('[data-avion]'); if (b) actionAvion(b.dataset.avion); };
-// la fiche de l'avion choisi (v0.121.0) : sa cellule, son état ; elle se ferme quand l'avion rentre ou tombe
-function majAvionFiche() {
-  const f = $('avion-fiche'), v = avionChoisi === null ? null : (B.etat.mitraillages ?? []).find(k => k.id === avionChoisi && k.camp === MOI && k.etat === 'vol');
-  if (avionChoisi !== null && !v) avionChoisi = null;
-  f.hidden = !v;
-  if (!v) return;
-  const vie = Math.max(0, Math.round(v.pv / MITRAILLAGE.pv * 100)), p = positionDe(v, B.etat.temps), tire = balayage(v, B.etat.temps).actif;
-  const passe = balayage(v, B.etat.temps), fait = Math.max(0, Math.min(1, (passe.l ?? 0) / Math.max(1, v.L)));
-  $('avion-fiche-titre').textContent = 'Avion de mitraillage';
-  $('avion-fiche-qui').textContent = `Aérodrome · ${tire ? 'au-dessus de leurs lignes' : 'sur sa passe'}`;
-  poserTampon($('avion-fiche-etat-court'), tire ? 'Mitraille' : 'En vol');
-  poserEcusson($('avion-fiche-ec'), 'avion', { debout: vie / 100 });
-  $('avion-fiche-ordre').textContent = tire ? 'Ses balles tombent sur la bande tracée.' : 'Il suit sa passe tracée, puis rentre à l\'aérodrome.';
-  // la charpente des fiches (v0.153.0) : quatre chiffres, la passe en trait (le fait plein, le reste en tirets) ; refaite quand un chiffre change
-  const sigA = `${v.id}:${vie}:${Math.round(p.h)}:${Math.round(fait * 20)}`;
-  if (sigA !== avionVu) {
-    avionVu = sigA;
-    $('avion-fiche-cles').replaceChildren(cleF(vie, '%', 'cellule', jaugeTuile(vie / 100, { reperes: [0.25, 0.5], larg: 100, haut: 8 })), cleF(Math.round(p.h), 'm', 'd\'altitude'),
-      cleF(Math.round(fait * 100), '%', 'de la passe faite', jaugeTuile(fait, { larg: 100, haut: 8 })), cleF(MITRAILLAGE.vitesse, 'm/s', 'de vitesse'));
-    const x = 10 + fait * 240;
-    $('avion-fiche-passe').innerHTML = `<svg class="fx-passe" viewBox="0 0 260 40" role="img" aria-label="La passe : ${Math.round(fait * 100)} %"><path class="fx-passe-t" d="M10 20H250"/><path class="fx-passe-f" d="M10 20H${x.toFixed(0)}"/><path class="fx-passe-a" d="M${x.toFixed(0)} 20l-8 -5v10z"/></svg>`;
-    const sol = (B.etat.avions?.[MOI] ?? []).length;
-    $('avion-fiche-tuiles').replaceChildren(blocF('L\'aérodrome', [phraseF(`${sol} ${sol > 1 ? 'avions' : 'avion'} encore au sol`)]));
-  }
-  const sv = leSuivi.actif && leSuivi.actif.genre === 'avion' && leSuivi.actif.id === v.id ? leSuivi.actif.mode : null;
-  $('avion-fiche-vue').setAttribute('aria-pressed', sv === 'cinema'); $('avion-fiche-personne').setAttribute('aria-pressed', sv === 'personne');
-}
 function choisirChar(id) { avionChoisi = null; nidChoisi = null; modeNid = null; charChoisi = id; modeChar = null; modeBarrage = null; modeMarche = false; departAvion = null; choisis = new Set(); rendu.choisis = choisis; majHud(); }
 function actionChar(act) {
   if (act === 'fermer') { charChoisi = null; modeChar = null; return majHud(); }
@@ -1580,57 +1482,7 @@ startUpdateCheck({
 });
 
 // ─── Mode debug (section 18) : chargé seulement avec ?debug=1 ──────────────
-if (DEBUG) {
-  const { installDebug, seedFromUrl } = await import('./lib/debug.js?v=0.169.0');
-  window.__seed = seedFromUrl() ?? undefined;
-  installDebug({
-    state: () => B && { ...horloge(B), effectifs: effectifs(B), pertes: B.etat.pertes, impacts: B.etat.impacts.length, enJeu: enJeu(), pause: loop.paused },
-    places: { centre: { x: 200, y: 150 }, nous: { x: 200, y: 230 }, eux: { x: 200, y: 70 } },
-    // le mode debug parle en coordonnées du SECTEUR (0..400, 0..300) : les marges s'ajoutent ici
-    teleport: ({ x, y }) => { rendu.vue.cx = x + B.etat.marges.x; rendu.vue.cz = y + B.etat.marges.y; },
-    setTimeScale: s => loop.setTimeScale(s),
-    setSeed: n => jouer(nouvelle(n)),
-    reset: () => { store.clear('partie'); B = null; montrerTitre(); },
-    extra: {
-      stats: () => window.cyclopStats(),
-      son, suivi: leSuivi, charChoisi: () => [charChoisi, modeChar, choisis.size],
-      choisirAvion: id => choisirAvion(id),      // la fiche d'un de nos avions en vol (les captures : sa pastille est souvent hors de l'écran)
-      choisirChar: id => choisirChar(id),        // la fiche d'un de nos chars (v0.164.0 : l'essai de la visée de son chemin)
-      // avance de n pas tout de suite (les nuits passent d'elles-mêmes)
-      avancer(n = 30, passerNuits = true) {
-        for (let k = 0; k < n && B.etat.phase !== 'fin'; k++) {
-          if (B.etat.phase === 'nuit') {
-            if (!passerNuits) break;
-            aube(B, nuit.etat === 'choix' ? nuit.corvees : {}); nuit.fermer();
-          }
-          const ev = avancer(B);
-          evenements.push(...ev); raconter(ev);
-        }
-        majHud();
-        return horloge(B);
-      },
-      raconter: ev => { raconter(ev); majHud(); },      // le carnet de bord : des événements de la bataille racontés tels quels (les scripts, les captures)
-      batiment: cle => { choisirBatiment(cle); montrerBatiment(cle); },      // la fenêtre d'un bâtiment (les scripts)
-      rang: (o, p, a = 'acheter') => commanderRang({ a, o, p }),      // un rang du camp, la nuit (à deux : par le lockstep)
-      barrage: (cal, x, y, camp = 0, x2, y2) => { const m = B.etat.marges, X2 = x2 === undefined ? undefined : x2 + m.x, Y2 = y2 === undefined ? undefined : y2 + m.y; return reseau ? lancerBarrage(cal, x + m.x, y + m.y, X2, Y2) : ordonnerBarrage(B, cal, x + m.x, y + m.y, camp, X2, Y2); },
-      stance: (ids, stance, camp = 0) => reseau ? lancerStance(ids, stance) : ordonnerStance(B, ids, stance, camp),
-      marche: (ids, x, y) => reseau ? lancerMarche(ids, x + B.etat.marges.x, y + B.etat.marges.y) : ordonnerMarche(B, ids, x + B.etat.marges.x, y + B.etat.marges.y),
-      reseau: () => reseau ? { moi: reseau.moi, cadre: reseau.ls.cadre, pause: reseau.ls.etat.pause, vitesse: reseau.ls.etat.vitesse, ecart: reseau.ls.ecart, empreinte: empreinteEtat(B), ticks: B.etat.ticks } : null,
-      zoom: z => { rendu.vue.zoom = z; },
-      ouvrirFiche: id => { montrerSoldat(id); majFiche(B); },      // la fiche d'un homme par son numéro (les captures)
-      fiche: () => laFiche.ouverte && { ...laFiche.ouverte, nom: $('fiche-nom').textContent, qui: $('fiche-qui').textContent, etat: $('fiche-etat').textContent, liste: $('fiche-liste').textContent },
-      survol: (x, y) => { souris = { x, y }; majBulle(); return $('bulle').hidden ? null : $('bulle').textContent; },
-      camera: (yaw, tangage) => rendu.placerCamera(yaw, tangage),
-      nuit: () => nuit.montrer(),
-      fin: () => montrerFin(),
-      campagne: g => demarrerCampagne(g),
-      papierCampagne: () => ({ ouvert: laCampagne.ouvert, texte: $('campagne').textContent }),
-      bataille: () => B,
-      rendu: () => rendu,
-      CALIBRES,
-    },
-  });
-}
+if (DEBUG) await (await import('./debug-jeu.js?v=0.169.0')).installerDebugJeu({ B: () => B, reseau: () => reseau, oublierBataille: () => { B = null; }, poserSouris: p => { souris = p; }, charChoisi: () => [charChoisi, modeChar, choisis.size], horloge, effectifs, enJeu, loop, rendu, jouer, nouvelle, store, montrerTitre, son, leSuivi, choisirAvion, choisirChar, aube, nuit, avancer, evenements, raconter, majHud, choisirBatiment, montrerBatiment, commanderRang, lancerBarrage, ordonnerBarrage, lancerStance, ordonnerStance, lancerMarche, ordonnerMarche, empreinteEtat, montrerSoldat, majFiche, laFiche, $, majBulle, montrerFin, demarrerCampagne, laCampagne, CALIBRES });      // le mode debug (js/debug-jeu.js)
 
 await chargement.frame();
 montrerTitre();
