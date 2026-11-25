@@ -1,5 +1,10 @@
 # Journal des versions
 
+## 0.170.0 — 2026-11-25
+
+- Un bouton « Édition itch.io » sur l'écran titre : l'édition en préparation pour itch.io, avec ses propres parties et réglages, sans le jeu à deux
+- « Le jeu actuel » y ramène ; l'adresse /itch/ ouvre directement l'édition itch.io
+
 ## 0.169.0 — 2026-11-24
 
 - La mitrailleuse en main tire aussi haut et bas : vers le sol elle creuse de petits trous, elle déchiquette les arbres qui finissent par tomber, trop haut elle passe au-dessus des têtes
