@@ -15,7 +15,7 @@ Décidé (Jérôme, 24 nov., v0.169.0) : le soir, **3 cartes tirées, on en gard
 | Carte | Niveau I : ce qu'on voit | Niveau II | Niveau III | S'appuie sur | Rareté |
 |---|---|---|---|---|---|
 | Le dépôt | Chaque matin, une <ins>salve de 75</ins> (24 obus) arrive dans la <ins>musette</ins> | Une salve le matin, une autre à midi | Le matin, un <ins>barrage de 155</ins> à la place de la salve | `fuseeRouge`, `fuseeVerte` | C |
-| La musette profonde | La <ins>musette</ins> garde 5 objets au lieu de 3 | 7 objets | — | `LARGAGE.musette` | PC |
+| La musette profonde | La <ins>musette</ins> garde 5 objets au lieu de 3 (touches 7, 8, 9, 0 et une cinquième : Jérôme, 25 nov.) | 7 objets | — | `LARGAGE.musette` | PC |
 | Le train de munitions | Chaque matin, un <ins>barrage de 220</ins> (6 gros obus qui crèvent les tranchées) dans la <ins>musette</ins> | Le matin et à midi | — | `obus220` | R |
 | Le barrage roulant | Chaque midi, un <ins>barrage roulant</ins> dans la <ins>musette</ins> : trois salves de 75 qui avancent de 30 m en 30 m vers eux, toutes les 8 s ; on fait marcher un régiment derrière | Le matin et à midi | — | `barrageRoulant` | É |
 | Le cuirassé | Une fois par partie, l'<ins>obus de 400</ins> dans la <ins>musette</ins> : quatre barrages de 220 au même endroit (24 obus) | Deux fois par partie | — | `obus400` | M |
@@ -25,8 +25,8 @@ Décidé (Jérôme, 24 nov., v0.169.0) : le soir, **3 cartes tirées, on en gard
 | Carte | Niveau I : ce qu'on voit | Niveau II | Niveau III | S'appuie sur | Rareté |
 |---|---|---|---|---|---|
 | Les coureurs | Quand une <ins>caisse</ins> descend, nos 5 <ins>coureurs</ins> courent deux fois plus vite que les leurs | Nos coureurs sont 10 au lieu de 5 | Ils partent de deux fois plus loin (320 m au lieu de 160) | `brodequins`, `LARGAGE.coureurs`, `LARGAGE.rayonCourse` | C |
-| Le pilote ami | Un <ins>avion de largage</ins> de plus chaque jour ; sa <ins>caisse</ins> tombe du côté de nos lignes (à décider : voir plus bas) | Deux avions de plus | — | `LARGAGE.intervalle` | PC |
-| La bonne étoile | Les objets des <ins>caisses</ins> montent d'une <ins>rareté</ins> (un commun devient peu commun, un épique légendaire) | Deux raretés | — | `RARETES` | É |
+| Le pilote ami | Un <ins>avion de largage</ins> de plus chaque jour ; sa <ins>caisse</ins> tombe du côté de nos lignes (Jérôme, 25 nov.) | Deux avions de plus | — | `LARGAGE.intervalle` | PC |
+| La bonne étoile | Chaque jour, une <ins>caisse</ins> tombe du côté de nos lignes (Jérôme, 25 nov.) ; les objets des caisses montent d'une <ins>rareté</ins> (un commun devient peu commun, un épique légendaire) | Deux raretés | — | `RARETES` | É |
 | La pluie de caisses en poche | Une fois par partie, quand on veut (dans la <ins>musette</ins>) : la <ins>pluie de caisses</ins>, cinq avions qui larguent cinq caisses le long du front | Deux fois par partie | Une fois par jour | caprice `pluieCaisses` | L |
 
 ## Les caprices en poche (on les déclenche, pour nous)
@@ -146,17 +146,21 @@ Possible, mais pas partout :
 - **Le compte** : une bataille de 10 à 15 soirs, 3 cartes par soir, un paquet de ~20 cartes au départ. Tirer une carte trois fois et la garder trois fois n'arrive qu'à celui qui suit une piste : c'est une récompense, pas la règle. Le niveau III ne pèse donc pas sur l'équilibre ordinaire.
 - **Là où il marche** : quand le jeu a déjà une marche visible au-dessus (les renforts : demi-section, section, compagnie ; le dépôt : 75 puis 155 ; la cheddite : un puis deux régiments ; les coureurs : plus vite, plus nombreux, plus loin). Le joueur voit le saut.
 - **Là où il casse** : un « une fois par partie » mythique passé à trois (trois obus de 400, trois tremblements) devient le jeu entier ; un « deux fois plus » passé à « quatre fois plus » redevient un pourcentage. Ces cartes s'arrêtent au niveau II.
-- **Proposé** : niveau II pour toutes (sauf les taxis), niveau III pour sept cartes (le dépôt, les coureurs, la pluie de caisses, les héros, le lance-flammes, les renforts du soir, la cheddite). Une carte au plus haut niveau ne revient plus dans les tirages.
+- **Décidé (Jérôme, 25 nov.)** : niveau II pour toutes (sauf les taxis), niveau III pour sept cartes (le dépôt, les coureurs, la pluie de caisses, les héros, le lance-flammes, les renforts du soir, la cheddite). Une carte au plus haut niveau ne revient plus dans les tirages.
 
 ## Retirées de la première liste (elles demandaient une mécanique absente)
 
 Les obus rebondissants, l'entonnoir, le dépôt qui saute, la mine de Messines en trois nuits (le joueur ne voit pas le résultat : remplacée par « La mine », le caprice), le barrage qui marche, le tremblement sur commande (remplacé par le caprice), les taupes, la forêt de Birnam, les cyclistes, la roulante, les pigeons, les chiens, les éléphants (les canons n'ont pas de place sur le terrain), la cavalerie, le char-tortue, le train blindé, l'écluse, le gel, l'as aveugle, le cinéaste, le faiseur de pluie, l'œil du tireur (le ralenti). Certaines pourront revenir **le jour où leur mécanique existe** (une particularité de campagne, un boss) : on ajoute alors la mécanique d'abord, la carte ensuite.
 
+## Décidé le 25 nov. (Jérôme)
+
+- Le niveau III : sur les sept cartes proposées seulement.
+- Les caisses du pilote ami et de la bonne étoile tombent du côté de nos lignes (un réglage du largage).
+- La musette profonde : des touches à la suite de 7, 8, 9 (0, puis une cinquième).
+
 ## Ce qui reste à décider
 
 - Le tri de la liste et le paquet de départ (proposé : ~20 cartes ; les autres se débloquent par les campagnes finies).
-- Le niveau III (proposé : sept cartes, voir plus haut).
-- Les caisses du pilote ami et de la bonne étoile (point 4).
-- La cinquième touche de la musette profonde (point 5), et l'objet du matin quand la musette est pleine (point 9).
+- La cinquième touche de la musette profonde (7, 8, 9, 0, puis laquelle ?), et l'objet du matin quand la musette est pleine (point 9).
 - La règle du « premier assaut du jour » (point 1).
 - Le bouton qui déclenche un caprice en poche (la musette, touches 7-8-9, est l'endroit naturel).
