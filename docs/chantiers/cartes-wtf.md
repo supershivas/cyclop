@@ -1,75 +1,152 @@
-# Les cartes du soir (proposition, 24 nov. ; rien n'est construit)
+# Les cartes du soir (proposition, 24 nov. ; relue le 25 nov. ; rien n'est construit)
 
-Décidé (Jérôme, 24 nov., v0.169.0) : le soir, **3 cartes tirées, on en garde une**, jusqu'à la fin de la campagne ; une carte déjà tenue, tirée de nouveau, passe au **niveau II** (deux fois plus souvent, ou deux fois plus fort). Une carte change ce qu'on voit en jeu, jamais « +5 % ». Raretés : celles des largages (`RARETES` de `data/largages.js`) : C commun, PC peu commun, R rare, É épique, L légendaire, M mythique. Les cartes **maudites** donnent un gros bonus contre un défaut visible.
+Décidé (Jérôme, 24 nov., v0.169.0) : le soir, **3 cartes tirées, on en garde une**, jusqu'à la fin de la campagne ; une carte déjà tenue, tirée de nouveau, monte d'un **niveau**. Une carte change ce qu'on voit en jeu, jamais « +5 % ». Raretés : celles des largages (`RARETES` de `data/largages.js`) : C commun, PC peu commun, R rare, É épique, L légendaire, M mythique. Les cartes **maudites** donnent un gros bonus contre un défaut visible.
 
-**Règle de la liste (Jérôme, 24 nov.)** : une carte ne s'appuie **que sur ce qui existe en jeu** : les effets des objets parachutés (`e` de `OBJETS`, `data/largages.js` : tir, vitesse, portée, balles sûres, invincible, sans peur, grenades, pertes, hommes, régiments, `tirs` de la musette, avions, chars, fil, flammes, nid, tromblon) et les caprices (`data/caprices.js`). Une carte est donc **un objet qui revient** (chaque matin, à chaque vol, au premier assaut) ou **un caprice qu'on déclenche soi-même** (une fois par jour ou par partie, dans la musette). Rien qui demande une mécanique nouvelle (première liste retirée : voir en bas).
+**Règle de la liste (Jérôme, 24 nov.)** : une carte ne s'appuie **que sur ce qui existe en jeu** : les effets des objets parachutés (`e` de `OBJETS`, `data/largages.js`) et les caprices (`data/caprices.js`). Une carte est donc **un objet qui revient** (chaque matin, à chaque vol, au premier assaut) ou **un caprice qu'on déclenche soi-même** (une fois par jour ou par partie, dans la musette). Rien qui demande une mécanique nouvelle (première liste retirée : voir en bas).
+
+**Le survol (Jérôme, 25 nov.)** : comme dans Slay the Spire, les termes propres au jeu sont **soulignés** sur la carte ; le survol d'un terme ouvre une petite bulle qui l'explique (le glossaire est plus bas : une ligne par terme, des chiffres plutôt que des phrases). Dans ce document, un terme souligné est écrit <ins>ainsi</ins>.
+
+**Les durées** sont en heures de l'horloge du jeu (une journée de 12 h fait 360 s : **1 h = 30 s** à vitesse normale). Les chiffres viennent des objets et des caprices tels qu'ils sont dans `data/`.
+
+**Les niveaux** : le niveau I est l'effet de base ; II, la carte tirée une deuxième fois ; III, une troisième. Un niveau III n'existe que là où le jeu a déjà une marche visible au-dessus (« — » sinon : la carte s'arrête au niveau II, et tirée de nouveau elle est remplacée par une autre). Voir « Le niveau III » plus bas.
 
 ## La musette et l'artillerie
 
-| Carte | Effet | S'appuie sur | Rareté |
-|---|---|---|---|
-| Le dépôt | chaque matin, une salve de 75 dans la musette | `fuseeRouge` | C |
-| La musette profonde | la musette garde 5 objets au lieu de 3 | `LARGAGE.musette` | PC |
-| Le train de munitions | chaque matin, un barrage de 220 dans la musette | `obus220` | R |
-| Le barrage roulant | chaque midi, un barrage roulant dans la musette | `barrageRoulant` | É |
-| Le cuirassé | une fois par partie, l'obus de 400 dans la musette | `obus400` | M |
+| Carte | Niveau I : ce qu'on voit | Niveau II | Niveau III | S'appuie sur | Rareté |
+|---|---|---|---|---|---|
+| Le dépôt | Chaque matin, une <ins>salve de 75</ins> (24 obus) arrive dans la <ins>musette</ins> | Une salve le matin, une autre à midi | Le matin, un <ins>barrage de 155</ins> à la place de la salve | `fuseeRouge`, `fuseeVerte` | C |
+| La musette profonde | La <ins>musette</ins> garde 5 objets au lieu de 3 | 7 objets | — | `LARGAGE.musette` | PC |
+| Le train de munitions | Chaque matin, un <ins>barrage de 220</ins> (6 gros obus qui crèvent les tranchées) dans la <ins>musette</ins> | Le matin et à midi | — | `obus220` | R |
+| Le barrage roulant | Chaque midi, un <ins>barrage roulant</ins> dans la <ins>musette</ins> : trois salves de 75 qui avancent de 30 m en 30 m vers eux, toutes les 8 s ; on fait marcher un régiment derrière | Le matin et à midi | — | `barrageRoulant` | É |
+| Le cuirassé | Une fois par partie, l'<ins>obus de 400</ins> dans la <ins>musette</ins> : quatre barrages de 220 au même endroit (24 obus) | Deux fois par partie | — | `obus400` | M |
 
 ## Les largages
 
-| Carte | Effet | S'appuie sur | Rareté |
-|---|---|---|---|
-| Les coureurs | nos coureurs vers les caisses vont deux fois plus vite | `brodequins`, `LARGAGE.coureurs` | C |
-| Le pilote ami | un avion de largage de plus chaque jour | `LARGAGE.intervalle` | PC |
-| La bonne étoile | la rareté de nos caisses monte d'un cran | `RARETES` | É |
-| La pluie de caisses en poche | une fois par partie, on déclenche la pluie de caisses quand on veut | caprice `pluieCaisses` | L |
+| Carte | Niveau I : ce qu'on voit | Niveau II | Niveau III | S'appuie sur | Rareté |
+|---|---|---|---|---|---|
+| Les coureurs | Quand une <ins>caisse</ins> descend, nos 5 <ins>coureurs</ins> courent deux fois plus vite que les leurs | Nos coureurs sont 10 au lieu de 5 | Ils partent de deux fois plus loin (320 m au lieu de 160) | `brodequins`, `LARGAGE.coureurs`, `LARGAGE.rayonCourse` | C |
+| Le pilote ami | Un <ins>avion de largage</ins> de plus chaque jour ; sa <ins>caisse</ins> tombe du côté de nos lignes (à décider : voir plus bas) | Deux avions de plus | — | `LARGAGE.intervalle` | PC |
+| La bonne étoile | Les objets des <ins>caisses</ins> montent d'une <ins>rareté</ins> (un commun devient peu commun, un épique légendaire) | Deux raretés | — | `RARETES` | É |
+| La pluie de caisses en poche | Une fois par partie, quand on veut (dans la <ins>musette</ins>) : la <ins>pluie de caisses</ins>, cinq avions qui larguent cinq caisses le long du front | Deux fois par partie | Une fois par jour | caprice `pluieCaisses` | L |
 
 ## Les caprices en poche (on les déclenche, pour nous)
 
-| Carte | Effet | S'appuie sur | Rareté |
-|---|---|---|---|
-| Les héros | chaque matin, un de nos hommes devient invincible et charge seul (eux n'en ont pas) | caprice `heros` | PC |
-| Notre zeppelin | une fois par jour, on envoie le zeppelin sur leurs lignes | caprice `zeppelin` | É |
-| Notre as | une fois par jour, l'as mitraille leurs lignes | caprice `as` | É |
-| L'éclipse | une fois par partie, la nuit tombe en plein jour quand on veut | caprice `eclipse` | R |
-| La mine | une fois par partie, on choisit la tranchée sous laquelle elle saute | caprice `mine` | L |
-| Le tremblement de terre | une fois par partie, quand on veut | caprice `seisme` | M |
+Un caprice en poche est un objet de la <ins>musette</ins> : il se déclenche avec les touches 7-8-9 comme un barrage.
+
+| Carte | Niveau I : ce qu'on voit | Niveau II | Niveau III | S'appuie sur | Rareté |
+|---|---|---|---|---|---|
+| Les héros | Chaque matin, un de nos hommes de <ins>première ligne</ins> devient <ins>invincible</ins> pendant 3 h et charge seul leur tranchée, avec des <ins>balles sûres</ins>. Eux n'ont pas de héros (le <ins>caprice</ins> ordinaire en donne un à chaque camp) | Deux héros chaque matin | Trois héros, qui chargent ensemble | caprice `heros` | PC |
+| Notre zeppelin | Une fois par jour, on envoie le <ins>zeppelin</ins> : il traverse lentement le front, bas, et lâche une bombe (comme un obus de 155) toutes les 3 s sur leurs tranchées | Deux fois par jour | — | caprice `zeppelin` | É |
+| Notre as | Une fois par jour, on envoie l'<ins>as</ins> : il passe trois fois au-dessus de leurs lignes en mitraillant ; son avion est six fois plus solide qu'un autre ; abattu, il tombe avec une <ins>caisse</ins> légendaire | Six passages au lieu de trois | — | caprice `as` | É |
+| L'éclipse | Une fois par partie, quand on veut : la nuit tombe en plein jour pendant 1 h 30 ; leurs régiments s'arrêtent, les nôtres obéissent toujours | Deux fois par partie | — | caprice `eclipse` | R |
+| La mine | Une fois par partie, on clique une de leurs tranchées : elle saute (un <ins>cratère</ins> géant, un tronçon rasé, une brèche ouverte) | Deux mines | — | caprice `mine` | L |
+| Le tremblement de terre | Une fois par partie, quand on veut : le front tremble, des tranchées **des deux camps** s'effondrent au hasard et ensevelissent leurs hommes ; l'avantage, c'est de choisir le moment (eux en pleine marche, nous à l'abri) | Seules **leurs** tranchées s'effondrent | — | caprice `seisme` | M |
 
 ## Les hommes et la vue à la personne
 
-| Carte | Effet | S'appuie sur | Rareté |
-|---|---|---|---|
-| Le porte-bonheur | l'homme qu'on incarne court deux fois plus vite et tire trois fois plus vite | `brodequins`, `cartouches` | C |
-| Le Lebel à lunette | l'homme qu'on incarne a vingt balles sûres à 400 m chaque jour | `lunette` | R |
-| Le fusil du canonnier | l'homme qu'on incarne : chaque balle est un 75, douze par jour | `canonnier` | L |
-| Le clairon | chaque matin, le premier régiment qui sort a le clairon (vitesse, sans peur) | `clairon` | PC |
-| Les grenadiers | au premier assaut du jour, le régiment lance ses grenades | `citrons` | R |
-| Le lance-flammes | au premier assaut du jour, un homme du régiment porte le Schilt | `lanceflammes` | É |
-| Le drapeau | une fois par partie, un drapeau à planter où l'on veut | `drapeau` | L |
-| Les renforts du soir | chaque soir, dix hommes rejoignent le régiment le plus éprouvé | `demiSection` | C |
-| Les taxis de la Marne | une fois par partie, deux régiments frais, tout de suite | `taxi` | M |
+| Carte | Niveau I : ce qu'on voit | Niveau II | Niveau III | S'appuie sur | Rareté |
+|---|---|---|---|---|---|
+| Le porte-bonheur | L'homme qu'on prend <ins>à la personne</ins> court deux fois plus vite sans se fatiguer et tire trois fois plus vite, tant qu'on est dans ses yeux | Ses dix premières balles de chaque jour sont des <ins>balles sûres</ins> | — | `brodequins`, `cartouches`, `lunette` | C |
+| Le Lebel à lunette | L'homme qu'on prend <ins>à la personne</ins> a chaque jour vingt <ins>balles sûres</ins> qui portent jusqu'à 400 m | Quarante balles | — | `lunette` | R |
+| Le fusil du canonnier | L'homme qu'on prend <ins>à la personne</ins> a chaque jour douze coups où chaque balle est un obus de 75 qui tombe là où elle va | Vingt-quatre coups | — | `canonnier` | L |
+| Le clairon | Chaque matin, le premier régiment à qui l'on donne un ordre a le <ins>clairon</ins> pendant 4 h : il court une fois et demie plus vite et il est <ins>sans peur</ins> | Les deux premiers régiments | — | `clairon` | PC |
+| Les grenadiers | Au <ins>premier assaut du jour</ins>, chaque homme du régiment lance trois grenades sur ceux d'en face à moins de 30 m | Aux deux premiers assauts | — | `citrons` | R |
+| Le lance-flammes | Au <ins>premier assaut du jour</ins>, un homme du régiment reçoit un <ins>lance-flammes</ins> pendant 1 h : il crache le feu à 15 m devant lui, ceux d'en face y brûlent ou s'enfuient | Deux hommes du régiment | Aux deux premiers assauts, deux hommes chaque fois | `lanceflammes` | É |
+| Le drapeau | Une fois par partie, un <ins>drapeau</ins> dans la <ins>musette</ins>, à planter où l'on veut : pendant 6 h, le régiment perd quatre fois moins d'hommes, ne part plus en <ins>déroute</ins> et tire une fois et demie plus vite, nos régiments à 50 m aussi ; à la fin, ses blessés se relèvent. Un homme d'en face qui l'atteint l'arrache | Deux drapeaux par partie | — | `drapeau` | L |
+| Les renforts du soir | Chaque soir, dix hommes (une <ins>demi-section</ins>) rejoignent notre régiment qui a le moins d'hommes | Vingt hommes (une section) | Quarante hommes (une compagnie) | `demiSection`, `section`, `compagnie` | C |
+| Les taxis de la Marne | Une fois par partie, quand on veut : deux <ins>régiments frais</ins> se déploient tout de suite, sans rien prendre à la <ins>réserve</ins> | — | — | `taxi` | M |
 
 ## Les engins et les armes
 
-| Carte | Effet | S'appuie sur | Rareté |
-|---|---|---|---|
-| Le mécanicien | chaque matin, nos chars sont réparés | `outils` | C |
-| Le blindage | nos chars ont deux fois plus de points de vie, toute la campagne | `blindage` | R |
-| Les balles incendiaires | nos avions tuent deux fois plus, toute la campagne | `incendiaires` | PC |
-| Les bombes Aasen | à chaque vol de nos avions, quatre bombes | `aasen` | R |
-| L'escadrille | deux avions de plus, toute la campagne | `escadrille` | É |
-| La cheddite | chaque matin, leur fil saute sur 60 m devant notre régiment le plus avancé | `cheddite` | C |
-| Le nid du matin | chaque matin, un nid de mitrailleuse posé sur notre première ligne | `hotchkiss` | R |
+| Carte | Niveau I : ce qu'on voit | Niveau II | Niveau III | S'appuie sur | Rareté |
+|---|---|---|---|---|---|
+| Le mécanicien | Chaque matin, nos <ins>chars</ins>, sur le champ et au <ins>parc</ins>, sont réparés | Le matin et à midi | — | `outils` | C |
+| Le blindage | Nos <ins>chars</ins> ont deux fois plus de points de vie, toute la campagne | Trois fois plus | — | `blindage` | R |
+| Les balles incendiaires | Les mitrailleuses de nos avions tuent deux fois plus, toute la campagne | Trois fois plus | — | `incendiaires` | PC |
+| Les bombes Aasen | À chaque vol de nos avions, quatre <ins>bombes Aasen</ins> (comme des obus de 155) tombent sur leur passage | Huit bombes | — | `aasen` | R |
+| L'escadrille | Deux avions de plus à l'<ins>aérodrome</ins>, toute la campagne | Quatre avions de plus | — | `escadrille` | É |
+| La cheddite | Chaque matin, leur <ins>fil de fer</ins> saute sur 60 m devant notre régiment le plus avancé (une brèche pour passer) | 120 m | Devant nos deux régiments les plus avancés | `cheddite` | C |
+| Le nid du matin | Chaque matin, un <ins>nid de mitrailleuse</ins> est posé sur notre <ins>première ligne</ins>, devant notre régiment le plus avancé | Deux nids | — | `hotchkiss` | R |
 
 ## Maudites (un gros bonus, un défaut visible)
 
-| Carte | Effet | S'appuie sur | Rareté |
-|---|---|---|---|
-| Les artilleurs ivres | chaque matin, deux barrages de 155 dans la musette ; chaque jour, un tir trop court sur nos lignes | `fuseeVerte`, caprice `tirCourt` | C |
-| Le vent qui tourne | une fois par jour, on lâche la nappe de gaz depuis nos lignes ; le vent est tiré au hasard | caprice `gaz` | PC |
-| Le général à cheval | nos régiments n'ont jamais peur ; chaque jour, l'un d'eux sort tout seul (l'ordre absurde, chez nous seulement) | `intrepide`, caprice `ordreAbsurde` | R |
-| Les chars fous | un char de plus chaque matin, qui sort tout seul et fonce sans ordre | `neuf`, caprice `charsPerdus` | R |
+| Carte | Niveau I : ce qu'on voit | Niveau II | Niveau III | S'appuie sur | Rareté |
+|---|---|---|---|---|---|
+| Les artilleurs ivres | Chaque matin, deux <ins>barrages de 155</ins> dans la <ins>musette</ins> ; **mais** chaque jour, un <ins>tir trop court</ins> : un barrage de 155 tombe sur notre <ins>première ligne</ins>, sans prévenir | Trois barrages le matin ; toujours un seul tir court | — | `fuseeVerte`, caprice `tirCourt` | C |
+| Le vent qui tourne | Une fois par jour, on lâche la <ins>nappe de gaz</ins> depuis nos lignes ; **mais** le vent est tiré au hasard : elle peut revenir sur nous | Deux fois par jour | — | caprice `gaz` | PC |
+| Le général à cheval | Nos régiments sont <ins>sans peur</ins>, toute la campagne ; **mais** chaque jour, un de nos régiments reçoit un <ins>ordre absurde</ins> : il sort seul à l'assaut et l'on ne peut ni l'arrêter ni le commander pendant 2 h | Le régiment qui sort a le <ins>clairon</ins> | — | `intrepide`, caprice `ordreAbsurde` | R |
+| Les chars fous | Chaque matin, un <ins>char</ins> neuf de plus ; **mais** il sort tout seul et fonce droit sur leur première ligne, sans ordre | Deux chars chaque matin | — | `ft`, caprice `charsPerdus` | R |
 
 35 cartes. Les **pistes** d'un run : **la musette** (le dépôt, le train de munitions, la musette profonde, les artilleurs ivres), **à la personne** (le porte-bonheur, le Lebel à lunette, le fusil du canonnier), **les caprices en poche** (le zeppelin, l'as, la mine, l'éclipse), **les engins** (le blindage, l'escadrille, les bombes Aasen, le mécanicien).
+
+## Le glossaire du survol
+
+Ce que dit la bulle quand on survole un terme souligné. Une ligne, des chiffres ; une icône quand le jeu en a déjà une (celles des catégories de `CATEGORIES` et des caprices).
+
+| Terme | La bulle |
+|---|---|
+| <ins>musette</ins> | Ce que vous gardez pour plus tard : 3 objets au plus, lancés avec les touches 7, 8, 9 puis un clic sur le terrain |
+| <ins>salve de 75</ins> | 24 petits obus en quelques secondes, là où l'on clique ; tue les hommes à découvert, abîme peu les tranchées |
+| <ins>barrage de 155</ins> | 12 obus moyens ; creuse le sol, abîme les tranchées |
+| <ins>barrage de 220</ins> | 6 gros obus ; chacun crève une tranchée et laisse un cratère |
+| <ins>barrage roulant</ins> | Trois salves de 75 qui avancent de 30 m toutes les 8 s ; une troupe qui marche juste derrière arrive sur des tranchées sonnées |
+| <ins>obus de 400</ins> | L'obus mythique : quatre barrages de 220 au même endroit |
+| <ins>caisse</ins> | Un avion la largue au-dessus du no man's land ; le premier homme, d'un camp ou de l'autre, qui l'atteint prend l'objet |
+| <ins>coureurs</ins> | Les 5 hommes de chaque camp, à moins de 160 m, qui courent vers une caisse qui descend |
+| <ins>avion de largage</ins> | L'avion qui lâche les caisses : un toutes les 3 à 5 heures du jour |
+| <ins>rareté</ins> | Commun, peu commun, rare, épique, légendaire, mythique : la couleur de la flèche au-dessus de l'objet |
+| <ins>pluie de caisses</ins> | Cinq avions à la suite, cinq caisses le long du front, cinq courses en même temps |
+| <ins>caprice</ins> | Un événement par jour, annoncé 12 s avant ; d'habitude il tombe au hasard sur un camp |
+| <ins>première ligne</ins> | La tranchée la plus proche de l'ennemi |
+| <ins>invincible</ins> | Les balles et les obus ne le blessent pas |
+| <ins>balles sûres</ins> | Chaque balle tue celui qu'elle vise |
+| <ins>zeppelin</ins> | Un dirigeable lent et bas qui traverse le front en lâchant ses bombes (comme des 155) ; on peut l'abattre |
+| <ins>as</ins> | Un pilote d'élite : trois passages de mitrailleuse, un avion six fois plus solide |
+| <ins>cratère</ins> | Un trou d'obus ; un grand cratère ouvre un passage dans la tranchée, et l'eau y monte s'il pleut |
+| <ins>à la personne</ins> | Le bouton « À la personne » de la fiche d'un homme : on voit par ses yeux, on le fait marcher, viser et tirer soi-même |
+| <ins>clairon</ins> | Le régiment court une fois et demie plus vite et n'a plus peur |
+| <ins>sans peur</ins> | Le régiment ne recule jamais sous le feu et ne part pas en déroute |
+| <ins>déroute</ins> | Un régiment brisé fuit vers l'arrière et n'obéit plus jusqu'à ce qu'il se reforme |
+| <ins>premier assaut du jour</ins> | Le premier régiment envoyé, ce jour-là, au-delà de notre première ligne (dans le no man's land ou chez eux) |
+| <ins>lance-flammes</ins> | Le lance-flammes Schilt, l'arme française de 1915 : un jet de feu à 15 m, deux fois par seconde |
+| <ins>drapeau</ins> | Planté, il tient le régiment autour de lui ; si un homme d'en face l'atteint, il l'arrache |
+| <ins>demi-section</ins> | Dix hommes ; une section en fait vingt, une compagnie quarante |
+| <ins>régiments frais</ins> | Des régiments complets, reposés, qui n'ont pas encore combattu |
+| <ins>réserve</ins> | Les régiments frais qui attendent à la caserne ; on les envoie pour relever un régiment épuisé |
+| <ins>chars</ins> | Nos chars FT : on les envoie depuis le parc vers leurs lignes ; ils tirent au canon |
+| <ins>parc</ins> | Le bâtiment du camp où attendent et se réparent les chars |
+| <ins>bombes Aasen</ins> | Des bombes à main lâchées par nos aviateurs |
+| <ins>aérodrome</ins> | Le bâtiment du camp d'où partent nos avions |
+| <ins>fil de fer</ins> | Les barbelés devant leurs tranchées : un homme qui les traverse va au pas, à découvert |
+| <ins>nid de mitrailleuse</ins> | Une mitrailleuse Hotchkiss dans un abri : elle balaie le no man's land devant elle |
+| <ins>tir trop court</ins> | Notre artillerie se trompe de réglage : un barrage tombe sur nos propres hommes |
+| <ins>nappe de gaz</ins> | Un nuage de chlore qui dérive avec le vent 2 h ; ceux qui sont dedans ne tirent plus, fuient ou tombent |
+| <ins>ordre absurde</ins> | L'état-major envoie un régiment à l'assaut, tout de suite ; pendant 2 h, on ne peut plus lui donner d'ordre |
+
+Le survol se construit une fois pour toutes (un module : le terme, sa bulle), et sert aussi aux fiches des objets et aux bandeaux des caprices.
+
+## Ce qu'un joueur neuf ne comprend pas (relecture du 25 nov.)
+
+En lisant les cartes comme quelqu'un qui découvre le jeu :
+
+1. **« Au premier assaut du jour, un homme du régiment porte le Schilt »** : trois inconnues. « Schilt » est le nom d'un lance-flammes français de 1915 : la carte dit maintenant « lance-flammes » et le nom passe dans la bulle. « Le premier assaut du jour » n'existe pas en jeu : il faut une règle (proposée : le premier régiment envoyé au-delà de notre première ligne ce jour-là). « Porte » ne dit pas l'effet : la carte dit maintenant 1 h, 15 m, brûlent ou fuient. Même chose pour « Les grenadiers ».
+2. **« L'homme qu'on incarne »** : le joueur ne sait pas qu'on peut voir par les yeux d'un homme. Le terme devient « à la personne », le nom du bouton de la fiche, souligné. Et la carte doit dire ce qui se passe si on n'y va jamais : rien (c'est une piste de jeu, pas un bonus pour tous).
+3. **Les calibres (75, 155, 220, 400)** ne parlent à personne : la carte donne le nombre d'obus, la bulle dit ce que fait chacun (tue / creuse / crève une tranchée).
+4. **Les caisses sont à tout le monde** : « Le pilote ami » et « La bonne étoile » donnent aussi des caisses (et de meilleures) à l'ennemi, s'il court plus vite. Écrit tel quel, le joueur croit que les caisses sont les siennes. À trancher : la caisse du pilote ami tombe du côté de nos lignes (un paramètre de largage, pas une mécanique), ou la carte dit franchement « pour le premier qui y court ».
+5. **« La musette profonde »** : 5 objets, mais la musette n'a que trois touches (7, 8, 9). Il faut une touche de plus (0 ?) ou que la musette fasse défiler ses objets.
+6. **« Le tremblement de terre »** frappe les deux camps : sans le dire, le joueur ne voit pas pourquoi le prendre. La carte le dit ; le niveau II le rend à nous seuls (le caprice tire déjà ses tranchées : il suffit de filtrer le camp).
+7. **« Les héros (eux n'en ont pas) »** : la parenthèse supposait qu'on connaisse le caprice ordinaire. Dit en clair.
+8. **Les noms qui ne disent pas l'effet** : « Le porte-bonheur » (on attend de la chance, c'est de la vitesse) et « Le cuirassé » (on attend un navire, c'est l'obus de 400). Proposé : « Les brodequins » et « Le 400 de Douaumont ».
+9. **« Chaque matin, dans la musette »** quand la musette est pleine : l'objet est-il perdu ? Le joueur ne le saura pas. À dire sur la carte, ou l'objet attend qu'une place se libère.
+
+## Le niveau III
+
+Possible, mais pas partout :
+
+- **Le compte** : une bataille de 10 à 15 soirs, 3 cartes par soir, un paquet de ~20 cartes au départ. Tirer une carte trois fois et la garder trois fois n'arrive qu'à celui qui suit une piste : c'est une récompense, pas la règle. Le niveau III ne pèse donc pas sur l'équilibre ordinaire.
+- **Là où il marche** : quand le jeu a déjà une marche visible au-dessus (les renforts : demi-section, section, compagnie ; le dépôt : 75 puis 155 ; la cheddite : un puis deux régiments ; les coureurs : plus vite, plus nombreux, plus loin). Le joueur voit le saut.
+- **Là où il casse** : un « une fois par partie » mythique passé à trois (trois obus de 400, trois tremblements) devient le jeu entier ; un « deux fois plus » passé à « quatre fois plus » redevient un pourcentage. Ces cartes s'arrêtent au niveau II.
+- **Proposé** : niveau II pour toutes (sauf les taxis), niveau III pour sept cartes (le dépôt, les coureurs, la pluie de caisses, les héros, le lance-flammes, les renforts du soir, la cheddite). Une carte au plus haut niveau ne revient plus dans les tirages.
 
 ## Retirées de la première liste (elles demandaient une mécanique absente)
 
@@ -78,5 +155,8 @@ Les obus rebondissants, l'entonnoir, le dépôt qui saute, la mine de Messines e
 ## Ce qui reste à décider
 
 - Le tri de la liste et le paquet de départ (proposé : ~20 cartes ; les autres se débloquent par les campagnes finies).
-- Le niveau II de chaque carte (deux fois plus souvent, ou plus fort).
+- Le niveau III (proposé : sept cartes, voir plus haut).
+- Les caisses du pilote ami et de la bonne étoile (point 4).
+- La cinquième touche de la musette profonde (point 5), et l'objet du matin quand la musette est pleine (point 9).
+- La règle du « premier assaut du jour » (point 1).
 - Le bouton qui déclenche un caprice en poche (la musette, touches 7-8-9, est l'endroit naturel).
