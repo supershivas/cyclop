@@ -122,7 +122,7 @@ Ce que dit la bulle quand on survole un terme souligné. Une ligne, des chiffres
 | <ins>fil de fer</ins> | Les barbelés devant leurs tranchées : un homme qui les traverse va au pas, à découvert | Le jeu, zoom 8 : les barbelés devant leur tranchée, avec une brèche ouverte par la cheddite |
 | <ins>nid de mitrailleuse</ins> | Une mitrailleuse Hotchkiss dans un abri : elle balaie le no man's land devant elle | Le jeu, zoom 8 : un nid Hotchkiss sur notre tranchée, son cône de tir ; à côté, sa fiche |
 | <ins>tir trop court</ins> | Notre artillerie se trompe de réglage : un barrage tombe sur nos propres hommes | Le jeu, zoom 4 : un barrage qui tombe sur notre propre tranchée, l'annonce du caprice à côté |
-| <ins>nappe de gaz</ins> | Un nuage de chlore qui dérive avec le vent 2 h ; ceux qui sont dedans ne tirent plus, fuient ou tombent | Le jeu, zoom 2 : le nuage vert-jaune qui dérive, une flèche pour le vent |
+| <ins>nappe de gaz</ins> | Un nuage de chlore qui dérive avec le vent 2 h ; ceux qui sont dedans ne tirent plus, fuient ou tombent | Le jeu, zoom 2 : le nuage de gaz qui dérive, une flèche pour le vent |
 | <ins>ordre absurde</ins> | L'état-major envoie un régiment à l'assaut, tout de suite ; pendant 2 h, on ne peut plus lui donner d'ordre | Le jeu, zoom 4 : un de nos régiments qui sort seul ; sa carte de régiment marquée verrouillée (cadenas, 2 h) |
 
 Le survol se construit une fois pour toutes (un module : le terme, sa bulle), et sert aussi aux fiches des objets et aux bandeaux des caprices.
