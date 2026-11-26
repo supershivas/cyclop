@@ -159,6 +159,14 @@ Les obus rebondissants, l'entonnoir, le dépôt qui saute, la mine de Messines e
 
 ## Décidé le 26 nov. (Jérôme)
 
+- **Six familles, trois tirées chaque soir** : la musette, les largages, les caprices en poche, les hommes, les engins, les maudites (les sections de ce document).
+- **Les paquets** : 70 mats, 25 brillants, 5 roses sur 100.
+- **Les raretés dans un paquet** : mat, celles des caisses (50, 25, 13, 7, 4, 1 sur 100) ; brillant, au moins une carte rare ou mieux ; rose, une carte mythique, les autres aux chances des caisses.
+- **Une carte mythique déjà tenue** n'est plus proposée : une autre carte de la même famille la remplace au tirage.
+- **Le premier assaut du jour** : le premier régiment envoyé ce jour-là au-delà de notre première ligne.
+- **L'objet du matin, musette pleine** : il attend qu'une place se libère (une petite pile à côté de la musette) ; rien n'est perdu.
+- **La musette profonde** : touches 7, 8, 9, 0 et le tiret.
+- **La suite** : les données (`data/cartes.js`) et la règle (`js/cartes.js` : tirage à graine, carte gardée, effets, tests, sauvegarde), avant l'écran.
 - Les paquets (trois à choisir, 3 à 5 cartes, mat / brillant / rose), les six raretés de carte et leurs matières, l'ouverture qu'on déchire : voir « Le modèle » en tête.
 - La rareté remplace les niveaux II et III : une carte tirée de nouveau prend la rareté au-dessus.
 - Le dessin de carte : l'étiquette.
@@ -171,9 +179,5 @@ Les obus rebondissants, l'entonnoir, le dépôt qui saute, la mine de Messines e
 
 ## Ce qui reste à décider
 
-- Les familles de paquets (trois, ou plus et trois tirées chaque soir) ; les chances d'un paquet mat, brillant, rose ; les chances des raretés dans un paquet (proposé : celles des caisses, 50, 25, 13, 7, 4, 1 sur 100).
-- Une carte mythique tirée de nouveau (elle ne peut plus monter) : remplacée par une autre, ou un bonus.
 - Le tri de la liste et le paquet de départ (proposé : ~20 cartes ; les autres se débloquent par les campagnes finies).
-- La cinquième touche de la musette profonde (7, 8, 9, 0, puis laquelle ?), et l'objet du matin quand la musette est pleine (point 9).
-- La règle du « premier assaut du jour » (point 1).
 - Le bouton qui déclenche un caprice en poche (la musette, touches 7-8-9, est l'endroit naturel).
