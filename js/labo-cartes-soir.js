@@ -6,6 +6,7 @@
 // (l'exception des objets parachutés, RARETES_COULEURS) et la brillance du mythique. `prefers-reduced-motion` : tout est posé d'un coup.
 import { PALETTE as P, RARETES_COULEURS as RC, RARETES_BRILLANCE } from './palette.js?v=0.170.6';
 import { RARETES } from './data/largages.js?v=0.170.6';
+import { CARTES as CARTES_JEU, GLOSSAIRE_CARTES } from './data/cartes.js?v=0.170.6';
 
 const reduit = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
 const el = (tag, cls = '', ...kids) => { const e = document.createElement(tag); if (cls) e.className = cls; e.append(...kids.flat().filter(k => k != null)); return e; };
@@ -26,90 +27,10 @@ export const FAMILLES = {
 // `[[terme]]` : un terme du glossaire, souligné, expliqué au survol. `image` : ce que montrera l'image de la carte (une place vide pour l'instant).
 // `r` : la description à chaque rareté (les six des largages) ; la valeur est dans la phrase (Jérôme, 26 nov. : « les gros chiffres ne sont pas clairs »).
 // `[[terme|texte]]` : le texte montré, si ce n'est pas le terme lui-même.
-export const CARTES = {
-  depot: { image: "une caisse d'obus de 75, couvercle ouvert", nom: 'Le dépôt', famille: 'musette', r: {
-    commun:     'Chaque matin, une [[salve de 75]] dans la [[musette]]',
-    peuCommun:  'Chaque matin, deux [[salve de 75|salves de 75]] dans la [[musette]]',
-    rare:       'Chaque matin, un [[barrage de 155]] dans la [[musette]]',
-    epique:     'Chaque matin, un [[barrage de 220]] dans la [[musette]]',
-    legendaire: 'Le matin et à midi, un [[barrage de 155]] dans la [[musette]]',
-    relique:    'Le matin et à midi, un [[barrage de 220]] dans la [[musette]]' } },
-  roulant: { image: "une ligne d'explosions qui avance sur le no man's land", nom: 'Le barrage roulant', famille: 'musette', r: {
-    commun:     'Chaque midi, un [[barrage roulant]] de trois salves',
-    peuCommun:  'Chaque midi, un [[barrage roulant]] de quatre salves',
-    rare:       'Chaque midi, un [[barrage roulant]] de cinq salves',
-    epique:     'Chaque midi, un [[barrage roulant]] de cinq salves de 155',
-    legendaire: 'Le matin et à midi, un [[barrage roulant]] de cinq salves',
-    relique:    'Le matin et à midi, un [[barrage roulant]] de cinq salves de 155' } },
-  quatreCents: { image: "l'obus de 400 debout, plus grand qu'un homme", nom: 'Le 400 de Douaumont', famille: 'musette', r: {
-    commun:     'Une fois par partie, un [[barrage de 220]] dans la [[musette]]',
-    peuCommun:  'Une fois par partie, deux barrages de 220 au même endroit',
-    rare:       'Une fois par partie, trois barrages de 220 au même endroit',
-    epique:     'Une fois par partie, l\'[[obus de 400]]',
-    legendaire: 'Deux fois par partie, l\'[[obus de 400]]',
-    relique:    'Trois fois par partie, l\'[[obus de 400]]' } },
-  renforts: { image: "des hommes qui montent en ligne, le barda sur le dos", nom: 'Les renforts du soir', famille: 'hommes', r: {
-    commun:     'Chaque soir, une [[demi-section]] (10 hommes) rejoint notre régiment le plus éprouvé',
-    peuCommun:  'Chaque soir, 15 hommes rejoignent notre régiment le plus éprouvé',
-    rare:       'Chaque soir, une section (20 hommes) rejoint notre régiment le plus éprouvé',
-    epique:     'Chaque soir, 30 hommes rejoignent notre régiment le plus éprouvé',
-    legendaire: 'Chaque soir, une compagnie (40 hommes) rejoint notre régiment le plus éprouvé',
-    relique:    'Chaque soir, une compagnie rejoint chacun de nos deux régiments les plus éprouvés' } },
-  clairon: { image: "le clairon de la charge, son fanion", nom: 'Le clairon', famille: 'hommes', r: {
-    commun:     'Chaque matin, le premier régiment qui reçoit un ordre a le [[clairon]] pendant 1 h',
-    peuCommun:  'Chaque matin, le premier régiment qui reçoit un ordre a le [[clairon]] pendant 2 h',
-    rare:       'Chaque matin, le premier régiment qui reçoit un ordre a le [[clairon]] pendant 4 h',
-    epique:     'Chaque matin, les deux premiers régiments ont le [[clairon]] pendant 4 h',
-    legendaire: 'Chaque matin, les trois premiers régiments ont le [[clairon]] pendant 4 h',
-    relique:    'Toute la journée, tous nos régiments ont le [[clairon]]' } },
-  flammes: { image: "le lance-flammes Schilt, ses deux réservoirs", nom: 'Le lance-flammes', famille: 'hommes', r: {
-    commun:     'Au [[premier assaut du jour]], un homme reçoit un [[lance-flammes]] pendant 1 h',
-    peuCommun:  'Au [[premier assaut du jour]], un homme reçoit un [[lance-flammes]] pendant 2 h',
-    rare:       'Au [[premier assaut du jour]], deux hommes reçoivent un [[lance-flammes]]',
-    epique:     'Au [[premier assaut du jour]], trois hommes reçoivent un [[lance-flammes]]',
-    legendaire: 'Aux deux premiers assauts du jour, deux hommes reçoivent un [[lance-flammes]]',
-    relique:    'À chaque assaut, trois hommes reçoivent un [[lance-flammes]]' } },
-  cheddite: { image: "des pétards de cheddite glissés sous les barbelés", nom: 'La cheddite', famille: 'engins', r: {
-    commun:     'Chaque matin, leur [[fil de fer]] saute sur 60 m devant notre régiment le plus avancé',
-    peuCommun:  'Chaque matin, leur [[fil de fer]] saute sur 90 m devant notre régiment le plus avancé',
-    rare:       'Chaque matin, leur [[fil de fer]] saute sur 120 m devant notre régiment le plus avancé',
-    epique:     'Chaque matin, leur [[fil de fer]] saute sur 180 m devant notre régiment le plus avancé',
-    legendaire: 'Chaque matin, leur [[fil de fer]] saute devant nos deux régiments les plus avancés',
-    relique:    'Chaque matin, leur [[fil de fer]] saute devant toute notre [[première ligne]]' } },
-  mecano: { image: "une caisse d'outils devant un char FT", nom: 'Le mécanicien', famille: 'engins', r: {
-    commun:     'Chaque matin, un de nos [[chars]] est réparé',
-    peuCommun:  'Chaque matin, deux de nos [[chars]] sont réparés',
-    rare:       'Chaque matin, tous nos [[chars]] sont réparés',
-    epique:     'Le matin et à midi, tous nos [[chars]] sont réparés',
-    legendaire: 'Chaque matin, tous nos [[chars]] sont réparés, et un char détruit revient au parc',
-    relique:    'Le matin et à midi, tous nos [[chars]] sont réparés, et un char détruit revient au parc' } },
-  aasen: { image: "une bombe Aasen à ailettes", nom: 'Les bombes Aasen', famille: 'engins', r: {
-    commun:     'À chaque vol de nos avions, deux [[bombes Aasen]]',
-    peuCommun:  'À chaque vol de nos avions, trois [[bombes Aasen]]',
-    rare:       'À chaque vol de nos avions, quatre [[bombes Aasen]]',
-    epique:     'À chaque vol de nos avions, six [[bombes Aasen]]',
-    legendaire: 'À chaque vol de nos avions, huit [[bombes Aasen]]',
-    relique:    'À chaque vol de nos avions, douze [[bombes Aasen]]' } },
-};
+export const CARTES = CARTES_JEU;      // les cartes du jeu (data/cartes.js) : une seule source
 
 // La bulle de chaque terme et la description de son image (docs/chantiers/cartes-wtf.md, « Le glossaire du survol »)
-export const GLOSSAIRE = {
-  'musette': ['Ce que vous gardez pour plus tard : 3 objets au plus, lancés avec les touches 7, 8, 9 puis un clic sur le terrain', 'les trois emplacements de la musette au-dessus du râtelier'],
-  'salve de 75': ['24 petits obus en quelques secondes, là où l\'on clique ; tue les hommes à découvert, abîme peu les tranchées', 'zoom 4 : une salve sur des hommes à découvert'],
-  'barrage de 155': ['12 obus moyens ; creuse le sol, abîme les tranchées', 'zoom 4 : des cratères moyens dans le parapet'],
-  'barrage de 220': ['6 gros obus ; chacun crève une tranchée et laisse un cratère', 'zoom 4 : une tranchée coupée par un grand cratère'],
-  'barrage roulant': ['Des salves de 75 qui avancent de 30 m toutes les 8 s ; une troupe qui marche juste derrière arrive sur des tranchées sonnées', 'zoom 2 : trois lignes d\'explosions, un régiment derrière'],
-  'obus de 400': ['L\'obus mythique : quatre barrages de 220 au même endroit', 'zoom 2 : un trou béant au milieu des lignes'],
-  'demi-section': ['Dix hommes ; une section en fait vingt, une compagnie quarante', 'planche : 10, 20, 40 silhouettes en rang'],
-  'clairon': ['Le régiment court une fois et demie plus vite et n\'a plus peur', 'zoom 4 : un régiment qui charge, l\'icône du clairon'],
-  'sans peur': ['Le régiment ne recule jamais sous le feu et ne part pas en déroute', 'la barre de moral d\'un régiment, verrouillée'],
-  'premier assaut du jour': ['Le premier régiment envoyé, ce jour-là, au-delà de notre première ligne', 'schéma : la flèche d\'un régiment qui franchit notre ligne'],
-  'lance-flammes': ['Le lance-flammes Schilt, l\'arme française de 1915 : un jet de feu à 15 m ; ceux d\'en face brûlent ou fuient', 'zoom 8 : un homme qui crache le feu dans une tranchée'],
-  'fil de fer': ['Les barbelés devant leurs tranchées : un homme qui les traverse va au pas, à découvert', 'zoom 8 : les barbelés, une brèche ouverte'],
-  'première ligne': ['La tranchée la plus proche de l\'ennemi', 'zoom 2 : notre tranchée la plus avancée, entourée'],
-  'chars': ['Nos chars FT : on les envoie depuis le parc vers leurs lignes ; ils tirent au canon', 'zoom 8 : un char FT qui avance'],
-  'bombes Aasen': ['Des bombes à main lâchées par nos aviateurs (comme des obus de 155)', 'zoom 4 : un avion qui lâche ses bombes'],
-};
+export const GLOSSAIRE = GLOSSAIRE_CARTES;
 
 // Les trois paquets d'un tirage, et le contenu de chacun (exemple fixe : 3, 4 et 5 cartes ; en jeu, tiré de la graine).
 // La rareté du paquet (Jérôme, 26 nov.) : commun (mat), brillant, rose (brillant, et toujours une carte mythique dedans).
