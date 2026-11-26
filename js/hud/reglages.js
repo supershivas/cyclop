@@ -1,7 +1,7 @@
 // La boîte des réglages (sorti de main.js, lot de dette du 24 nov.) : les volumes, l'éclairage, l'export et l'import des sauvegardes,
 // la version et le journal des versions. `brancherReglages(ctx)` pose les gestes une fois.
-import { pickJSONFile } from '../lib/save.js?v=0.170.1';
-import { loadVersion, loadChangelog, downloadJSON } from '../lib/app-update.js?v=0.170.1';
+import { pickJSONFile } from '../lib/save.js?v=0.170.2';
+import { loadVersion, loadChangelog, downloadJSON } from '../lib/app-update.js?v=0.170.2';
 
 export function brancherReglages({ $, JEU, son, rendu, prefs, store, sauvegarder, toast }) {
   for (const q of ['effets', 'musique']) {

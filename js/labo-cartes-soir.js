@@ -4,8 +4,8 @@
 // s'expliquent au survol (la bulle et la place de son image : le glossaire du document).
 // Trois façons de dessiner le paquet, trois ouvertures, trois façons de dessiner la carte. Couleurs : la palette du jeu, plus celles des raretés
 // (l'exception des objets parachutés, RARETES_COULEURS) et la brillance du mythique. `prefers-reduced-motion` : tout est posé d'un coup.
-import { PALETTE as P, RARETES_COULEURS as RC, RARETES_BRILLANCE } from './palette.js?v=0.170.1';
-import { RARETES } from './data/largages.js?v=0.170.1';
+import { PALETTE as P, RARETES_COULEURS as RC, RARETES_BRILLANCE } from './palette.js?v=0.170.2';
+import { RARETES } from './data/largages.js?v=0.170.2';
 
 const reduit = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
 const el = (tag, cls = '', ...kids) => { const e = document.createElement(tag); if (cls) e.className = cls; e.append(...kids.flat().filter(k => k != null)); return e; };
@@ -86,11 +86,84 @@ export const GLOSSAIRE = {
 export const TIRAGE = [
   { famille: 'musette', cartes: [['depot', 'commun'], ['roulant', 'rare'], ['depot', 'commun']] },
   { famille: 'hommes', cartes: [['renforts', 'commun'], ['clairon', 'commun'], ['flammes', 'rare'], ['renforts', 'relique']] },
-  { famille: 'engins', cartes: [['cheddite', 'commun'], ['mecano', 'commun'], ['aasen', 'rare'], ['cheddite', 'rare'], ['mecano', 'commun']] },
+  { famille: 'engins', cartes: [['cheddite', 'commun'], ['mecano', 'commun'], ['aasen', 'rare'], ['cheddite', 'rare'], ['aasen', 'relique']] },
 ];
+
+// ─── L'inclinaison au survol : l'objet penche vers le curseur, un reflet suit (--mx, --my) ─────────
+// Le cadre est mesuré à l'entrée du curseur (avant l'inclinaison) : sinon il bouge avec elle et l'objet tremble.
+export function inclinable(e, max = 16) {
+  let r = null;
+  e.classList.add('cs-incl');
+  const poser = ev => {
+    if (e.dataset.fige || reduit()) return;
+    r ??= e.getBoundingClientRect();
+    const x = Math.min(1, Math.max(0, (ev.clientX - r.left) / r.width)), y = Math.min(1, Math.max(0, (ev.clientY - r.top) / r.height));
+    e.style.transform = `perspective(800px) rotateX(${((0.5 - y) * max).toFixed(2)}deg) rotateY(${((x - 0.5) * max).toFixed(2)}deg) scale(1.05)`;
+    e.style.setProperty('--mx', `${(x * 100).toFixed(1)}%`); e.style.setProperty('--my', `${(y * 100).toFixed(1)}%`);
+    e.classList.add('is-survol');
+  };
+  e.addEventListener('pointerenter', ev => { r = null; poser(ev); });
+  e.addEventListener('pointermove', poser);
+  e.addEventListener('pointerleave', () => { r = null; if (e.dataset.fige) return; e.style.transform = ''; e.classList.remove('is-survol'); });
+  return e;
+}
+const rgba = (hex, a) => { const n = parseInt(hex.slice(1), 16); return `rgba(${(n >> 16) & 255},${(n >> 8) & 255},${n & 255},${a})`; };
 
 // ─── Le style (une feuille pour tout le sujet) ─────────────────────────────────────────────────────
 const [M0, M1] = RARETES_BRILLANCE.relique;
+// Le booster : brillant (des bandes de reflet aux tons de la palette, un éclat d'os qui suit le curseur), dentelé en haut et en bas, la bande du haut se déchire.
+// Le foil du mythique : des bandes rouge et rose (la brillance du mythique, RARETES_BRILLANCE) et des paillettes d'os, qui glissent avec le curseur.
+const W_BO = 184, H_BO = 292, H_HAUT = 34;
+const dents = (n, h, enHaut) => {     // un bord dentelé (clip-path) : n dents de h px, en haut ou en bas
+  const pts = [];
+  for (let i = 0; i <= n * 2; i++) { const x = (i / (n * 2) * 100).toFixed(2); pts.push(enHaut ? `${x}% ${i % 2 ? 0 : h}px` : `${x}% calc(100% - ${i % 2 ? 0 : h}px)`); }
+  return enHaut ? `polygon(${pts.join(',')},100% 100%,0 100%)` : `polygon(0 0,100% 0,${pts.reverse().join(',')})`;
+};
+const CSS_BOOSTER = `
+.cs-incl{transition:transform .14s ease-out;will-change:transform;transform-origin:50% 50%}
+.cs-reflet{position:absolute;inset:0;pointer-events:none;z-index:4;opacity:0;transition:opacity .2s;
+  background:radial-gradient(circle at var(--mx,50%) var(--my,50%),${rgba(P.o, .5)},transparent 55%);mix-blend-mode:soft-light}
+.is-survol>.cs-reflet{opacity:1}
+.cs-foil{position:absolute;inset:0;pointer-events:none;z-index:3;mix-blend-mode:hard-light;opacity:.42;
+  background:repeating-linear-gradient(115deg,transparent 0 6%,${rgba(M0, .75)} 9%,${rgba(P.o, .85)} 12%,${rgba(M1, .75)} 15%,transparent 19% 26%),
+    radial-gradient(circle,${rgba(P.o, .95)} 0 .8px,transparent 1.4px) 0 0/7px 7px;
+  background-size:300% 300%,7px 7px;background-position:var(--mx,50%) var(--my,50%),0 0;animation:cs-foil 7s linear infinite alternate}
+.is-survol>.cs-foil{animation:none;opacity:.6}
+@keyframes cs-foil{from{background-position:0% 30%,0 0}to{background-position:100% 70%,0 0}}
+.bo{all:unset;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:10px}
+.bo:focus-visible .bo-corps{outline:2px solid ${P.n};outline-offset:6px}
+.bo .cs-nom{font-weight:600}.bo .cs-nb{color:${P.r};font-size:12px}
+.bo.is-on .cs-nom{color:${P.n}}
+.bo-corps{position:relative;width:${W_BO}px;height:${H_BO}px;filter:drop-shadow(0 8px 6px rgba(0,0,0,.5))}
+.bo-metal{background:linear-gradient(160deg,var(--fam) 0%,${P.s} 38%,${P.b} 55%,var(--fam) 78%,${P.s} 100%)}
+.bo-metal::after{content:"";position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(115deg,transparent 30%,${rgba(P.o, .28)} 44%,transparent 52%,${rgba(P.o, .12)} 60%,transparent 68%);
+  background-size:260% 100%;background-position:var(--mx,30%) 0;animation:bo-lustre 5s ease-in-out infinite alternate}
+.bo.is-survol .bo-metal::after,.bo-corps.is-survol .bo-metal::after{animation:none}
+@keyframes bo-lustre{from{background-position:0% 0}to{background-position:100% 0}}
+.bo-haut{position:absolute;left:0;right:0;top:0;height:${H_HAUT}px;z-index:3;clip-path:${dents(18, 5, true)};transform-origin:100% 100%}
+.bo-haut::before{content:"";position:absolute;inset:0;background:repeating-linear-gradient(90deg,${rgba(P.t, .28)} 0 2px,transparent 2px 5px)}
+.bo-haut span{position:absolute;left:8px;bottom:3px;font-size:9px;letter-spacing:.1em;color:${P.o};opacity:.8;z-index:1}
+.bo-face{position:absolute;left:0;right:0;top:${H_HAUT}px;bottom:0;z-index:2;clip-path:${dents(18, 5, false)};overflow:hidden}
+.bo-face::before{content:"";position:absolute;left:0;right:0;bottom:0;height:26px;background:repeating-linear-gradient(90deg,${rgba(P.t, .28)} 0 2px,transparent 2px 5px)}
+.bo-pointilles{position:absolute;left:0;right:0;top:${H_HAUT - 1}px;height:0;border-top:2px dashed ${rgba(P.o, .45)};z-index:4;pointer-events:none}
+.bo-logo{position:absolute;top:12px;left:0;right:0;text-align:center;font-weight:800;letter-spacing:.22em;font-size:15px;color:${P.o};text-shadow:0 2px 0 ${P.t};z-index:1}
+.bo-medaillon{position:absolute;left:50%;top:48px;width:118px;height:118px;margin-left:-59px;border-radius:50%;display:grid;place-items:center;z-index:1;
+  background:repeating-conic-gradient(${rgba(P.o, .16)} 0 6deg,transparent 6deg 15deg),radial-gradient(circle,var(--fam) 0 48%,${P.s} 49% 52%,transparent 53%);
+  box-shadow:inset 0 0 0 3px ${rgba(P.o, .35)}}
+.bo-medaillon i{font-style:normal;font-size:52px;line-height:1;color:${P.t};text-shadow:0 1px 0 ${rgba(P.o, .5)}}
+.bo-bandeau{position:absolute;left:-6px;right:-6px;top:176px;background:${P.o};color:${P.t};text-align:center;font-weight:800;letter-spacing:.12em;font-size:13px;padding:5px 0;z-index:1;
+  transform:rotate(-4deg);box-shadow:0 3px 0 ${P.t}}
+.bo-info{position:absolute;left:0;right:0;bottom:32px;text-align:center;font-size:10px;color:${P.o};letter-spacing:.08em;z-index:1}
+.bo-cartes{position:absolute;inset:0;z-index:1}
+.bo-cartes .cs-carte{position:absolute;left:${(W_BO - 150) / 2}px;top:${H_HAUT + 14}px}
+.bo-dechirure{position:absolute;left:0;top:${H_HAUT - 2}px;height:3px;width:0;background:${P.t};z-index:5;pointer-events:none}
+.bo-table{position:relative;height:580px;overflow:hidden}
+.bo-table>.bo{position:absolute;left:50%;top:276px;margin-left:-${W_BO / 2}px}
+.bo-place{position:absolute;left:0;top:0}
+.cs-eclat{z-index:6}
+@media (prefers-reduced-motion: reduce){.cs-foil,.bo-metal::after{animation:none}.cs-incl{transition:none}}
+`;
 const CSS = `
 .cs{font:13px/1.4 ui-monospace,"DejaVu Sans Mono",Menlo,Consolas,monospace;color:${P.o};background:${P.s};padding:20px;min-height:100%;box-sizing:border-box;position:relative}
 .cs h3{margin:0 0 4px;font-size:15px;font-weight:600;letter-spacing:.04em}
@@ -183,6 +256,7 @@ const CSS = `
 .cs-tourne>.cs-verso.cs-dos{border-radius:7px}
 .cs-eclat{position:absolute;left:50%;top:50%;width:20px;height:20px;margin:-10px;border-radius:50%;border:3px solid ${M1};pointer-events:none}
 @media (prefers-reduced-motion: reduce){.cs-carte.is-myth{animation:none}.cs-paquet{transition:none}}
+${CSS_BOOSTER}
 `;
 
 // ─── Le survol : la bulle d'un terme (une seule par sujet) ─────────────────────────────────────────
@@ -232,7 +306,9 @@ export function carte(id, tier, style = 'a') {
       el('div', 'cs-scene', el('i', '', F.icone), el('b', '', v.chiffre), el('span', '', v.unite)),
       el('div', 'cs-corps', el('div', 'cs-titre', C.nom), el('div', 'cs-effet', texte(v.effet))));
   }
-  return c;
+  c.append(el('div', 'cs-reflet'));
+  if (tier === 'relique') c.append(el('div', 'cs-foil'));
+  return inclinable(c);
 }
 
 // ─── Le paquet, en trois dessins ────────────────────────────────────────────────────────────────────
@@ -321,6 +397,7 @@ export function ouverture(stage, style) {
       const tournes = p.cartes.map(([id, t], i) => {
         const tour = el('div', 'cs-tourne', el('div', 'cs-verso cs-dos'), carte(id, t, 'a'));
         tour.lastChild.classList.add('cs-face');
+        tour.lastChild.dataset.fige = '1';
         tour.lastChild.style.transform = 'rotateY(180deg)';
         tour.firstChild.style.transform = 'none';
         const place = el('div', 'cs-place', tour);
@@ -361,4 +438,113 @@ export function ouverture(stage, style) {
   };
   jouer();
   r.append(el('div', 'cs-pied', bouton('Rejouer', jouer)), table, dit);
+}
+
+// ─── Le booster (Jérôme, 26 nov. : « un paquet style Pokémon, même si pas historique ; effet 3D au survol ») ─────────────────
+const COULEUR_FAMILLE = { musette: P.g, hommes: P.n, engins: P.h };
+export function booster(p, { nb = true } = {}) {
+  const F = FAMILLES[p.famille];
+  const b = el('button', 'bo'); b.type = 'button';
+  b.setAttribute('aria-label', `Paquet : ${F.nom}, 3 à 5 cartes`);
+  const corps = el('div', 'bo-corps',
+    el('div', 'bo-cartes'),
+    el('div', 'bo-face bo-metal', el('div', 'bo-logo', 'CYCLOPÉEN'), el('div', 'bo-medaillon', el('i', '', F.icone)),
+      el('div', 'bo-bandeau', F.nom.toUpperCase()), el('div', 'bo-info', '3 À 5 CARTES · 1914-1918')),
+    el('div', 'bo-haut bo-metal', el('span', '', '◂ DÉCHIRER ICI ▸')),
+    el('div', 'bo-pointilles'), el('div', 'cs-reflet'));
+  corps.style.setProperty('--fam', COULEUR_FAMILLE[p.famille]);
+  inclinable(corps, 22);
+  b.append(...[corps, el('span', 'cs-nom', F.nom), nb ? el('span', 'cs-nb', `${F.dit} · 3 à 5 cartes`) : null].filter(Boolean));
+  return b;
+}
+
+export function choixBoosters(stage) {
+  const r = cadre(stage, 'Le soir : choisissez un paquet', 'Trois familles ; chaque paquet tient 3 à 5 cartes, tirées au hasard. Survolez un paquet : il penche vers le curseur.');
+  const rang = el('div', 'cs-rang'), dit = el('p', 'cs-legende', 'Aucun paquet choisi');
+  rang.style.gap = '40px';
+  TIRAGE.forEach(p => {
+    const b = booster(p);
+    b.onclick = () => { rang.querySelectorAll('.bo').forEach(x => x.classList.toggle('is-on', x === b)); dit.textContent = `Choisi : ${FAMILLES[p.famille].nom} (dans cet exemple, ${p.cartes.length} cartes)`; };
+    rang.append(b);
+  });
+  r.append(rang, dit);
+}
+
+// ─── L'ouverture : on déchire le haut du paquet, les cartes sortent par le haut, une à une, de face, de la plus commune à la plus rare ───
+export function dechirer(stage) {
+  const p = TIRAGE[2];   // les engins : 5 cartes
+  const r = cadre(stage, 'L\'ouverture : on déchire le paquet', 'Tirez la bande du haut de gauche à droite (ou cliquez-la) ; les cartes sortent une à une, la plus rare en dernier. Cliquez ensuite celle à garder.');
+  const table = el('div', 'bo-table'), dit = el('p', 'cs-legende', ' ');
+  let jeton = 0;
+  const jouer = () => {
+    const ce = ++jeton, vivant = () => ce === jeton;
+    table.replaceChildren(); dit.textContent = ' ';
+    // la plus rare en dernier : les cartes du paquet sont rangées dans l'ordre de sortie
+    const cartes = p.cartes.map(([id, t], i) => ({ id, t, i })).sort((a, b) => CRANS[a.t] - CRANS[b.t] || a.i - b.i);
+    const b = booster({ ...p, cartes: cartes.map(c => [c.id, c.t]) }, { nb: false });
+    const corps = b.querySelector('.bo-corps'), haut = b.querySelector('.bo-haut'), trait = el('div', 'bo-dechirure');
+    corps.append(trait);
+    table.append(b);
+    let ouvert = false, depart = null;
+    const progres = q => { haut.style.transform = `translateY(${(-q * 5).toFixed(1)}px) rotate(${(q * 9).toFixed(1)}deg)`; trait.style.width = `${(q * 100).toFixed(0)}%`; };
+    const ouvrir = async () => {
+      if (ouvert) return; ouvert = true;
+      corps.dataset.fige = '1'; corps.style.transform = ''; corps.classList.remove('is-survol'); b.style.cursor = 'default';
+      progres(1);
+      await anim(haut, [{ transform: haut.style.transform, opacity: 1 }, { transform: 'translate(140px,-120px) rotate(48deg)', opacity: 0 }], { duration: 520, easing: 'ease-in' }).finished;
+      trait.remove(); b.querySelector('.bo-pointilles').remove();
+      await attendre(250);
+      const xs = places(cartes.length), boite = table.getBoundingClientRect();
+      for (const [k, c] of cartes.entries()) {
+        if (!vivant()) return;
+        const myth = c.t === 'relique', carteEl = carte(c.id, c.t, 'a');
+        carteEl.dataset.fige = '1';
+        corps.querySelector('.bo-cartes').append(carteEl);
+        // 1. elle monte hors du paquet, de face, avec un peu de jeu (le paquet la retient un instant)
+        if (myth) await attendre(450);
+        anim(corps, [{ transform: 'translateY(0)' }, { transform: 'translateY(4px)' }, { transform: 'translateY(0)' }], { duration: 260 });
+        await anim(carteEl, [
+          { transform: 'translateY(0) rotate(0)' },
+          { transform: `translateY(-60px) rotate(${myth ? 0 : (k % 2 ? 1.5 : -1.5)}deg)`, offset: .35 },
+          { transform: `translateY(-${H_HAUT + 14 + 232 + 16}px) rotate(0)` }], { duration: myth ? 1300 : 650, easing: 'cubic-bezier(.3,.1,.3,1)' }).finished;
+        if (!vivant()) return;
+        // 2. elle quitte le paquet et va se poser à sa place dans le rang (rangé de la plus commune à la plus rare)
+        const rc = carteEl.getBoundingClientRect(), place = el('div', 'bo-place');
+        place.style.left = `${rc.left - boite.left}px`; place.style.top = `${rc.top - boite.top}px`;
+        carteEl.getAnimations().forEach(a => a.cancel());
+        carteEl.style.position = 'static';
+        place.append(carteEl); table.append(place);
+        const cx = boite.width / 2 + xs[k] - 75 - (rc.left - boite.left), cy = 24 - (rc.top - boite.top);
+        anim(place, [{ transform: 'translate(0,0)' }, { transform: `translate(${cx}px,${cy}px)` }], { duration: 480 });
+        if (myth) {
+          const e = el('div', 'cs-eclat'); place.append(e);
+          anim(e, [{ transform: 'scale(1)', opacity: 1 }, { transform: 'scale(16)', opacity: 0 }], { duration: 800, easing: 'ease-out' });
+        }
+        await attendre(myth ? 500 : 320);
+      }
+      if (!vivant()) return;
+      anim(b, [{ transform: 'translateY(0)', opacity: 1 }, { transform: 'translateY(120px)', opacity: 0 }], { duration: 500, easing: 'ease-in' });
+      // on en garde une : chaque carte penche au survol
+      dit.textContent = 'Cliquez la carte à garder';
+      const faces = [...table.querySelectorAll('.bo-place .cs-carte')];
+      faces.forEach((f, i) => {
+        delete f.dataset.fige; f.style.cursor = 'pointer'; f.tabIndex = 0; f.setAttribute('role', 'button');
+        const garder = () => {
+          faces.forEach((x, j) => { x.classList.toggle('is-garde', j === i); x.classList.toggle('is-ecartee', j !== i); });
+          dit.textContent = `Gardée : ${CARTES[cartes[i].id].nom} (${NOM_TIER(cartes[i].t)})`;
+        };
+        f.onclick = e => { if (!e.target.closest('.cs-terme')) garder(); };
+        f.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); garder(); } };
+      });
+    };
+    // la bande du haut se tire de gauche à droite ; un simple clic (ou Entrée) la déchire d'un coup
+    haut.style.cursor = 'grab';
+    haut.addEventListener('pointerdown', e => { if (ouvert) return; depart = e.clientX; haut.setPointerCapture(e.pointerId); e.preventDefault(); });
+    haut.addEventListener('pointermove', e => { if (depart == null || ouvert) return; const q = Math.max(0, Math.min(1, (e.clientX - depart) / W_BO)); progres(q); if (q > 0.8) ouvrir(); });
+    haut.addEventListener('pointerup', e => { if (depart == null) return; const dx = e.clientX - depart; depart = null; if (dx < 6) ouvrir(); else if (!ouvert) progres(0); });
+    b.onclick = e => { if (e.detail === 0) ouvrir(); };   // le clavier (Entrée, Espace)
+  };
+  jouer();
+  r.append(el('div', 'cs-pied', bouton('Rejouer', jouer)), table, dit);
+  return () => { jeton++; };
 }

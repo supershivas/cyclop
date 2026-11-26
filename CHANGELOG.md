@@ -1,5 +1,9 @@
 # Journal des versions
 
+## 0.170.2 — 2026-11-26
+- Au labo : le paquet de cartes devient un booster brillant qui penche vers le curseur ; on le déchire, les cartes sortent une à une par le haut, de la plus commune à la plus rare
+- Les cartes penchent au survol ; les mythiques ont un foil
+
 ## 0.170.1 — 2026-11-26
 - Au labo : les cartes du soir, trois paquets, trois ouvertures et trois dessins de carte (commun, rare, mythique), les termes expliqués au survol
 

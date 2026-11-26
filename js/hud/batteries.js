@@ -1,14 +1,14 @@
 // Les boutons des ordres de batterie (sorti de main.js, lot de dette du 24 nov.) : les trois barrages, l'avion, le char, le génie ; leur état
 // (PRÊT, les secondes, « Niv. 2 »), la jauge de recharge, l'infobulle. `creerBatteries(ctx)` rend { maj, reste, nom }.
-import { NOUS } from '../bataille.js?v=0.170.1';
-import { CALIBRES } from '../data/calibres.js?v=0.170.1';
-import { AVION, MITRAILLAGE } from '../data/mitraillage.js?v=0.170.1';
-import { CHAR, CHAR_RECHARGE } from '../data/chars.js?v=0.170.1';
-import { GENIE, GENIE_DATA } from '../data/genie.js?v=0.170.1';
-import { METEO } from '../data/meteo.js?v=0.170.1';
-import { avionsPrets, avionsRestants } from '../avions.js?v=0.170.1';
-import { reparationFaite } from '../genie.js?v=0.170.1';
-import { charsDispo, refusOrdre, ouverture, rechargeDe as facteurRecharge } from '../camp.js?v=0.170.1';
+import { NOUS } from '../bataille.js?v=0.170.2';
+import { CALIBRES } from '../data/calibres.js?v=0.170.2';
+import { AVION, MITRAILLAGE } from '../data/mitraillage.js?v=0.170.2';
+import { CHAR, CHAR_RECHARGE } from '../data/chars.js?v=0.170.2';
+import { GENIE, GENIE_DATA } from '../data/genie.js?v=0.170.2';
+import { METEO } from '../data/meteo.js?v=0.170.2';
+import { avionsPrets, avionsRestants } from '../avions.js?v=0.170.2';
+import { reparationFaite } from '../genie.js?v=0.170.2';
+import { charsDispo, refusOrdre, ouverture, rechargeDe as facteurRecharge } from '../camp.js?v=0.170.2';
 
 let $, bataille, moi, vise, nuit, BATTERIES, viser, ouvrirBatiment, boutonsBarrage = null;
 export function creerBatteries(ctx) {
