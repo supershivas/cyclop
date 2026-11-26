@@ -1,5 +1,9 @@
 # Journal des versions
 
+## 0.170.4 — 2026-11-26
+- Au labo : les cartes du soir en six raretés, chacune sa matière (foils bleu, argent, doré, rose ; halos et étincelles pour les plus rares), les noms dans la police des titres
+- Les cartes sortent du paquet plus vite et se posent en léger éventail
+
 ## 0.170.3 — 2026-11-26
 - Au labo : le paquet de cartes se déchire au clic, de travers, avec des éclats de papier ; il ne porte que le nom du set, et existe en mat, brillant et rose (toujours une carte mythique)
 - Les cartes n'ont plus de gros chiffre : le nom, une image, la description, la rareté

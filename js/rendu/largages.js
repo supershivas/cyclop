@@ -3,10 +3,10 @@
 // les drapeaux plantés ; un anneau sous chaque homme boosté. Le dessin seulement : tout vient de `B.etat.largages` (largages.js), rien n'y est écrit.
 // Fabrique `creerLargages({ THREE, scene, bataille, hauteur })` ; tout est créé au premier largage (une scène sans largage reste telle qu'elle était, au pixel près :
 // un objet three de plus décale les identifiants tirés de `Math.random`, voir docs/domaines/rendu.md). La lumière est celle des engins (`scene.userData.lumiere`).
-import { PALETTE } from '../palette.js?v=0.170.3';
-import { OBJET, RARETES, LARGAGE as L } from '../data/largages.js?v=0.170.3';
-import { positionCaisse, avionDeCaisse, dureeChute } from '../largages.js?v=0.170.3';
-import { cacheModeles, construireObjet, fleche, anneau, briller, creerParachute, biplan, tourne, flotte } from './largages-modeles.js?v=0.170.3';
+import { PALETTE } from '../palette.js?v=0.170.4';
+import { OBJET, RARETES, LARGAGE as L } from '../data/largages.js?v=0.170.4';
+import { positionCaisse, avionDeCaisse, dureeChute } from '../largages.js?v=0.170.4';
+import { cacheModeles, construireObjet, fleche, anneau, briller, creerParachute, biplan, tourne, flotte } from './largages-modeles.js?v=0.170.4';
 
 export function creerLargages({ THREE, scene, bataille, hauteur }) {
   let cache = null, lumiere = null;

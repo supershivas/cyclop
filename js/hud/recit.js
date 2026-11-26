@@ -1,7 +1,7 @@
 // Le récit de la bataille dans le carnet (sorti de main.js, lot de dette du 24 nov.) : chaque événement de la simulation devient une ligne,
 // avec ses liens cliquables (un régiment, un tronçon, un homme). `creerRecit(ctx)` rend { raconter, lienReg, lienTronc, lienHomme }.
-import { nomTroncon } from '../bataille.js?v=0.170.3';
-import * as lecture from './lecture.js?v=0.170.3';
+import { nomTroncon } from '../bataille.js?v=0.170.4';
+import * as lecture from './lecture.js?v=0.170.4';
 
 let bataille, moi, noter, largages, surSeisme;
 export function creerRecit(ctx) {

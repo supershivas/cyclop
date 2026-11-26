@@ -1,6 +1,6 @@
 // Les tampons de la vue d'un soldat (v0.154.0) : un mot frappé au tiers haut de l'image (« Abattu », « Blessé », « Un camarade tombe »…) et une ligne dessous, un à la fois, en file.
 // Le dessin seulement : hud/suivi.js dit quoi (les clés de data/tampons.js) ; l'horloge est celle du navigateur (le tampon est un retour d'écran, jamais l'état).
-import { TAMPONS, RYTHME_TAMPONS as R } from '../data/tampons.js?v=0.170.3';
+import { TAMPONS, RYTHME_TAMPONS as R } from '../data/tampons.js?v=0.170.4';
 
 export function creerTampons(el) {
   const file = [];

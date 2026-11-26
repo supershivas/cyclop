@@ -1,14 +1,14 @@
 // Le jeu à deux : l'appairage, la poignée de main, le départ, le pouls, la reprise (sorti de main.js, lot de dette du 24 nov.).
 // `reseau` (l'état de la partie à deux, ou null) reste à main.js, qui le lit partout : ce module le lit par `lire()` et le pose par `poser(v)`.
 // L'exécution des ordres (`executerCmd`) et les ordres à sec (`lancerMarche`…) restent à main.js : ils servent aussi à la partie seule.
-import { loadVersion } from '../lib/app-update.js?v=0.170.3';
-import { nouvelleBataille, restaurer, photo, NOUS, EUX } from '../bataille.js?v=0.170.3';
-import { SECTEURS } from '../data/secteur.js?v=0.170.3';
-import { SAISONS } from '../data/meteo.js?v=0.170.3';
-import { ID_ALEATOIRE } from '../generateur.js?v=0.170.3';
-import { creerLockstep } from './lockstep.js?v=0.170.3';
-import { nouveauCode, codeValide, publier, ecouter } from './relais.js?v=0.170.3';
-import { creerHote, creerInvite } from './lien.js?v=0.170.3';
+import { loadVersion } from '../lib/app-update.js?v=0.170.4';
+import { nouvelleBataille, restaurer, photo, NOUS, EUX } from '../bataille.js?v=0.170.4';
+import { SECTEURS } from '../data/secteur.js?v=0.170.4';
+import { SAISONS } from '../data/meteo.js?v=0.170.4';
+import { ID_ALEATOIRE } from '../generateur.js?v=0.170.4';
+import { creerLockstep } from './lockstep.js?v=0.170.4';
+import { nouveauCode, codeValide, publier, ecouter } from './relais.js?v=0.170.4';
+import { creerHote, creerInvite } from './lien.js?v=0.170.4';
 
 let $, R, store, ESSAI, retouchesSecteurs, cartesPerso, lire, poser, bataille, reglerCamp, executerCmd, noter, toast, jouer, missionOrdre, loop, montrerTitre, demanderSecteur;
 export function creerJeuADeux(ctx) {
