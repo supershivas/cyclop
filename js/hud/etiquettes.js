@@ -1,11 +1,11 @@
 // Les étiquettes des régiments sur le champ (sorti de main.js, lot de dette du 24 nov.) : la bannière de chaque régiment au-dessus de lui,
 // le petit nom de ses isolés, le repère du soldat dont la fiche est ouverte et celui du dernier ordre. Le clic sur une étiquette reste à main.js
 // (il change la sélection). `creerEtiquettes(ctx)` rend { construire, maj, vider, oublier, centres } (`centres` : le centre du gros de chaque régiment).
-import { secteursDe } from '../bataille.js?v=0.170.4';
-import { amasDe, isoles } from '../amas.js?v=0.170.4';
-import { ecussonHtml, reglerEcusson } from './ecussons.js?v=0.170.4';
-import { corveeCourte } from './nuit.js?v=0.170.4';
-import * as lecture from './lecture.js?v=0.170.4';
+import { secteursDe } from '../bataille.js?v=0.170.5';
+import { amasDe, isoles } from '../amas.js?v=0.170.5';
+import { ecussonHtml, reglerEcusson } from './ecussons.js?v=0.170.5';
+import { corveeCourte } from './nuit.js?v=0.170.5';
+import * as lecture from './lecture.js?v=0.170.5';
 
 let $, rendu, R, bataille, moi, choisis, nuit, chevronsVus, fiche, marque;
 export function creerEtiquettes(ctx) {

@@ -1,9 +1,9 @@
 // La fiche de l'avion choisi, en vol (sorti de main.js, lot de dette du 24 nov.) : sa cellule, son altitude, sa passe. `creerFicheAvion(ctx)`
 // rend `maj(avionChoisi)`, qui dit si l'avion choisi est toujours en vol (sinon main.js l'oublie).
-import { MITRAILLAGE } from '../data/mitraillage.js?v=0.170.4';
-import { positionDe, balayage } from '../avions.js?v=0.170.4';
-import { cle as cleF, bloc as blocF, phrase as phraseF, poserEcusson, poserTampon } from './fiche-cadre.js?v=0.170.4';
-import { jauge as jaugeTuile } from './tuiles.js?v=0.170.4';
+import { MITRAILLAGE } from '../data/mitraillage.js?v=0.170.5';
+import { positionDe, balayage } from '../avions.js?v=0.170.5';
+import { cle as cleF, bloc as blocF, phrase as phraseF, poserEcusson, poserTampon } from './fiche-cadre.js?v=0.170.5';
+import { jauge as jaugeTuile } from './tuiles.js?v=0.170.5';
 
 let $, bataille, moi, suivi, avionVu = '';
 export function creerFicheAvion(ctx) {

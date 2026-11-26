@@ -1,9 +1,9 @@
 // Le choix du secteur, avant une nouvelle partie (sorti de main.js, lot de dette du 24 nov.) : la liste des secteurs, la carte de papier,
 // l'aperçu 3D, la saison, le niveau et la durée. `creerChoixSecteur(ctx)` rend `demanderSecteur(avecDifficulte)`.
-import { SECTEURS } from '../data/secteur.js?v=0.170.4';
-import { SAISONS, SAISON_DEFAUT } from '../data/meteo.js?v=0.170.4';
-import { DIFFICULTES, DIFFICULTE_DEFAUT, DUREES, DUREE_DEFAUT } from '../data/difficulte.js?v=0.170.4';
-import { preparerAleatoire, ID_ALEATOIRE } from '../generateur.js?v=0.170.4';
+import { SECTEURS } from '../data/secteur.js?v=0.170.5';
+import { SAISONS, SAISON_DEFAUT } from '../data/meteo.js?v=0.170.5';
+import { DIFFICULTES, DIFFICULTE_DEFAUT, DUREES, DUREE_DEFAUT } from '../data/difficulte.js?v=0.170.5';
+import { preparerAleatoire, ID_ALEATOIRE } from '../generateur.js?v=0.170.5';
 
 let $, DEBUG, params, prefs, store, R;     // donnés par main.js (`prefs` est l'objet des réglages, partagé : un choix gardé l'est pour tout le jeu)
 export function creerChoixSecteur(ctx) {
@@ -161,7 +161,7 @@ function demanderSecteur(avecDifficulte = true) {
     const montrer = async () => {
       marquer();
       try {
-        if (!apercuSecteur) { const { creerVue3D } = await import('../apercu-3d.js?v=0.170.4'); apercuSecteur = await creerVue3D({ R, hote, rotation: 0.12 }); apercuSecteur.surClic = () => agrandir(!d.classList.contains('agrandi')); }
+        if (!apercuSecteur) { const { creerVue3D } = await import('../apercu-3d.js?v=0.170.5'); apercuSecteur = await creerVue3D({ R, hote, rotation: 0.12 }); apercuSecteur.surClic = () => agrandir(!d.classList.contains('agrandi')); }
         if (!ouvert) return;
         apercuSecteur.monter(choisi, SECTEURS[choisi], graineDe(), { soldats: false, cadrer: true, saison: saisonDe(), meteo: meteoApercu ?? undefined });
         hote.style.visibility = ''; d.dataset.apercu = `${choisi}:${graineDe()}:${saisonDe()}`;

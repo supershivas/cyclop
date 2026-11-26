@@ -4,10 +4,10 @@
 // Trois rangements à trancher : A les onglets, B trois colonnes côte à côte, C un défilé guidé avec retour libre. Les morceaux sont ceux du jeu (`hud/papier-nuit.js`), les données celles des papiers
 // de la nuit et de la fin (`nuitExemple`, `finExemple` de labo-papiers.js, la bataille coupée au soir du 6e jour), les bâtiments et l'équipement ceux de `data/batiments.js`. Sous chaque cadre, la mesure
 // de CHAQUE vue (un onglet, une étape) aux quatre tailles d'écran : la règle de la v0.134.0, aucun défilement dès 1280 × 800.
-import { BATIMENTS, DOTATION, EQUIPEMENT, EQUIPEMENTS } from './data/batiments.js?v=0.170.4';
-import { el, html, info, bouton, ordres, tuilesJour, reste, medailles, puceReleve, graphe, frise, corvee, etat } from './hud/papier-nuit.js?v=0.170.4';
-import { iconeCorvee } from './hud/icones-nuit.js?v=0.170.4';
-import { nuitExemple, finExemple, cadre, CSS_NUIT, CSS_FIN } from './labo-papiers.js?v=0.170.4';
+import { BATIMENTS, DOTATION, EQUIPEMENT, EQUIPEMENTS } from './data/batiments.js?v=0.170.5';
+import { el, html, info, bouton, ordres, tuilesJour, reste, medailles, puceReleve, graphe, frise, corvee, etat } from './hud/papier-nuit.js?v=0.170.5';
+import { iconeCorvee } from './hud/icones-nuit.js?v=0.170.5';
+import { nuitExemple, finExemple, cadre, CSS_NUIT, CSS_FIN } from './labo-papiers.js?v=0.170.5';
 
 const pts = n => `${n} pt${n > 1 ? 's' : ''}`;
 

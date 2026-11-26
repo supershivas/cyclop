@@ -4,8 +4,8 @@
 // s'expliquent au survol (la bulle et la place de son image : le glossaire du document).
 // Trois façons de dessiner le paquet, trois ouvertures, trois façons de dessiner la carte. Couleurs : la palette du jeu, plus celles des raretés
 // (l'exception des objets parachutés, RARETES_COULEURS) et la brillance du mythique. `prefers-reduced-motion` : tout est posé d'un coup.
-import { PALETTE as P, RARETES_COULEURS as RC, RARETES_BRILLANCE } from './palette.js?v=0.170.4';
-import { RARETES } from './data/largages.js?v=0.170.4';
+import { PALETTE as P, RARETES_COULEURS as RC, RARETES_BRILLANCE } from './palette.js?v=0.170.5';
+import { RARETES } from './data/largages.js?v=0.170.5';
 
 const reduit = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
 const el = (tag, cls = '', ...kids) => { const e = document.createElement(tag); if (cls) e.className = cls; e.append(...kids.flat().filter(k => k != null)); return e; };
@@ -280,6 +280,10 @@ const CSS = `
 .cs-carte>.cs-lustre{z-index:3;background:linear-gradient(105deg,transparent 42%,${rgba(P.o, .22)} 50%,transparent 58%) 0 0/300% 100%;animation:cs-lustre 4.5s linear infinite}
 .t-relique>.cs-lustre{background-image:linear-gradient(105deg,transparent 38%,${rgba(P.o, .55)} 48%,${rgba(M1, .3)} 52%,transparent 62%);animation-duration:2.4s}
 @keyframes cs-lustre{from{background-position:150% 0}to{background-position:-50% 0}}
+/* épique : un halo d'argent, la carte qui flotte à peine (Jérôme, 26 nov. : « un peu trop neutre ») */
+.t-epique{animation:cs-halo-argent 3s ease-in-out infinite,cs-flotte-leger 3.8s ease-in-out infinite}
+@keyframes cs-halo-argent{0%,100%{box-shadow:0 0 5px 1px ${rgba(P.r, .4)}}50%{box-shadow:0 0 14px 3px ${rgba(P.o, .6)}}}
+@keyframes cs-flotte-leger{0%,100%{translate:0 0}50%{translate:0 -3px}}
 /* légendaire : le halo doré, la carte qui flotte */
 .t-legendaire{animation:cs-halo-or 2.6s ease-in-out infinite,cs-flotte 3.2s ease-in-out infinite}
 @keyframes cs-halo-or{0%,100%{box-shadow:0 0 6px 1px ${rgba(RC.legendaire, .5)}}50%{box-shadow:0 0 18px 4px ${rgba(RC.legendaire, .8)}}}
@@ -311,7 +315,7 @@ const CSS = `
 .cs-tourne>.cs-verso{position:absolute;inset:0;transform:rotateY(180deg)}
 .cs-tourne>.cs-verso.cs-dos{border-radius:7px}
 .cs-eclat{position:absolute;left:50%;top:50%;width:20px;height:20px;margin:-10px;border-radius:50%;border:3px solid ${M1};pointer-events:none}
-@media (prefers-reduced-motion: reduce){.cs-carte.t-relique,.cs-carte.t-legendaire,.t-relique>.cs-tex,.cs-lustre,.cs-anneau,.cs-etinc::before{animation:none}.cs-paquet{transition:none}}
+@media (prefers-reduced-motion: reduce){.cs-carte.t-relique,.cs-carte.t-legendaire,.cs-carte.t-epique,.t-relique>.cs-tex,.cs-lustre,.cs-anneau,.cs-etinc::before{animation:none}.cs-paquet{transition:none}}
 @font-face{font-family:'Antonio';font-weight:300;font-style:normal;src:url(vendor/fonts/Antonio-300.ttf) format('truetype')}
 ${CSS_BOOSTER}
 `;

@@ -3,16 +3,16 @@
 // plaine, dessinés par les maillages et la texture de poses du jeu (js/rendu/soldat-articule.js) et animés par son lecteur (js/rendu/animation-jeu.js) ; `allures` : les démarches
 // de js/anim-modeles.js (une par homme, l'épaulement avant le coup, le buste qui vise) ou celles d'avant. « Feu en marchant » : chacun tire toutes les 2,5 à 4,5 s, sur une cible
 // devant lui, un peu de côté. Le labo montre sans rien modifier : il n'y a pas de bataille.
-import { PALETTE } from './palette.js?v=0.170.4';
-import { loadThree } from './three-lib.js?v=0.170.4';
-import { fabriquer } from './labo-fabrique.js?v=0.170.4';
-import { creerEquipeArticulee } from './rendu/soldat-articule.js?v=0.170.4';
-import { creerJeuAnimations } from './rendu/animation-jeu.js?v=0.170.4';
-import { allures as genererAllures, poseMort, chute } from './anim-modeles.js?v=0.170.4';
-import { echantillon, poseNeutre } from './pose-soldat.js?v=0.170.4';
-import { ANIMATIONS } from './data/animations.js?v=0.170.4';
-import { EPAULEMENT } from './data/lecteur-animations.js?v=0.170.4';
-import { NOMS_CHAMPS } from './data/poses-soldat.js?v=0.170.4';
+import { PALETTE } from './palette.js?v=0.170.5';
+import { loadThree } from './three-lib.js?v=0.170.5';
+import { fabriquer } from './labo-fabrique.js?v=0.170.5';
+import { creerEquipeArticulee } from './rendu/soldat-articule.js?v=0.170.5';
+import { creerJeuAnimations } from './rendu/animation-jeu.js?v=0.170.5';
+import { allures as genererAllures, poseMort, chute } from './anim-modeles.js?v=0.170.5';
+import { echantillon, poseNeutre } from './pose-soldat.js?v=0.170.5';
+import { ANIMATIONS } from './data/animations.js?v=0.170.5';
+import { EPAULEMENT } from './data/lecteur-animations.js?v=0.170.5';
+import { NOMS_CHAMPS } from './data/poses-soldat.js?v=0.170.5';
 const tableau = p => Float32Array.from(NOMS_CHAMPS, c => p[c] ?? 0);      // la texture de poses lit un tableau dans l'ordre des champs
 
 const el = (tag, props = {}, ...kids) => { const e = Object.assign(document.createElement(tag), props); e.append(...kids); return e; };

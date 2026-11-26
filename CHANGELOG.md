@@ -1,5 +1,8 @@
 # Journal des versions
 
+## 0.170.5 — 2026-11-26
+- Au labo : les cartes épiques ont un halo d'argent et flottent légèrement
+
 ## 0.170.4 — 2026-11-26
 - Au labo : les cartes du soir en six raretés, chacune sa matière (foils bleu, argent, doré, rose ; halos et étincelles pour les plus rares), les noms dans la police des titres
 - Les cartes sortent du paquet plus vite et se posent en léger éventail
