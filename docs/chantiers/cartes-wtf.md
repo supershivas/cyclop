@@ -83,45 +83,47 @@ Un caprice en poche est un objet de la <ins>musette</ins> : il se déclenche ave
 
 Ce que dit la bulle quand on survole un terme souligné. Une ligne, des chiffres ; une icône quand le jeu en a déjà une (celles des catégories de `CATEGORIES` et des caprices).
 
-| Terme | La bulle |
-|---|---|
-| <ins>musette</ins> | Ce que vous gardez pour plus tard : 3 objets au plus, lancés avec les touches 7, 8, 9 puis un clic sur le terrain |
-| <ins>salve de 75</ins> | 24 petits obus en quelques secondes, là où l'on clique ; tue les hommes à découvert, abîme peu les tranchées |
-| <ins>barrage de 155</ins> | 12 obus moyens ; creuse le sol, abîme les tranchées |
-| <ins>barrage de 220</ins> | 6 gros obus ; chacun crève une tranchée et laisse un cratère |
-| <ins>barrage roulant</ins> | Trois salves de 75 qui avancent de 30 m toutes les 8 s ; une troupe qui marche juste derrière arrive sur des tranchées sonnées |
-| <ins>obus de 400</ins> | L'obus mythique : quatre barrages de 220 au même endroit |
-| <ins>caisse</ins> | Un avion la largue au-dessus du no man's land ; le premier homme, d'un camp ou de l'autre, qui l'atteint prend l'objet |
-| <ins>coureurs</ins> | Les 5 hommes de chaque camp, à moins de 160 m, qui courent vers une caisse qui descend |
-| <ins>avion de largage</ins> | L'avion qui lâche les caisses : un toutes les 3 à 5 heures du jour |
-| <ins>rareté</ins> | Commun, peu commun, rare, épique, légendaire, mythique : la couleur de la flèche au-dessus de l'objet |
-| <ins>pluie de caisses</ins> | Cinq avions à la suite, cinq caisses le long du front, cinq courses en même temps |
-| <ins>caprice</ins> | Un événement par jour, annoncé 12 s avant ; d'habitude il tombe au hasard sur un camp |
-| <ins>première ligne</ins> | La tranchée la plus proche de l'ennemi |
-| <ins>invincible</ins> | Les balles et les obus ne le blessent pas |
-| <ins>balles sûres</ins> | Chaque balle tue celui qu'elle vise |
-| <ins>zeppelin</ins> | Un dirigeable lent et bas qui traverse le front en lâchant ses bombes (comme des 155) ; on peut l'abattre |
-| <ins>as</ins> | Un pilote d'élite : trois passages de mitrailleuse, un avion six fois plus solide |
-| <ins>cratère</ins> | Un trou d'obus ; un grand cratère ouvre un passage dans la tranchée, et l'eau y monte s'il pleut |
-| <ins>à la personne</ins> | Le bouton « À la personne » de la fiche d'un homme : on voit par ses yeux, on le fait marcher, viser et tirer soi-même |
-| <ins>clairon</ins> | Le régiment court une fois et demie plus vite et n'a plus peur |
-| <ins>sans peur</ins> | Le régiment ne recule jamais sous le feu et ne part pas en déroute |
-| <ins>déroute</ins> | Un régiment brisé fuit vers l'arrière et n'obéit plus jusqu'à ce qu'il se reforme |
-| <ins>premier assaut du jour</ins> | Le premier régiment envoyé, ce jour-là, au-delà de notre première ligne (dans le no man's land ou chez eux) |
-| <ins>lance-flammes</ins> | Le lance-flammes Schilt, l'arme française de 1915 : un jet de feu à 15 m, deux fois par seconde |
-| <ins>drapeau</ins> | Planté, il tient le régiment autour de lui ; si un homme d'en face l'atteint, il l'arrache |
-| <ins>demi-section</ins> | Dix hommes ; une section en fait vingt, une compagnie quarante |
-| <ins>régiments frais</ins> | Des régiments complets, reposés, qui n'ont pas encore combattu |
-| <ins>réserve</ins> | Les régiments frais qui attendent à la caserne ; on les envoie pour relever un régiment épuisé |
-| <ins>chars</ins> | Nos chars FT : on les envoie depuis le parc vers leurs lignes ; ils tirent au canon |
-| <ins>parc</ins> | Le bâtiment du camp où attendent et se réparent les chars |
-| <ins>bombes Aasen</ins> | Des bombes à main lâchées par nos aviateurs |
-| <ins>aérodrome</ins> | Le bâtiment du camp d'où partent nos avions |
-| <ins>fil de fer</ins> | Les barbelés devant leurs tranchées : un homme qui les traverse va au pas, à découvert |
-| <ins>nid de mitrailleuse</ins> | Une mitrailleuse Hotchkiss dans un abri : elle balaie le no man's land devant elle |
-| <ins>tir trop court</ins> | Notre artillerie se trompe de réglage : un barrage tombe sur nos propres hommes |
-| <ins>nappe de gaz</ins> | Un nuage de chlore qui dérive avec le vent 2 h ; ceux qui sont dedans ne tirent plus, fuient ou tombent |
-| <ins>ordre absurde</ins> | L'état-major envoie un régiment à l'assaut, tout de suite ; pendant 2 h, on ne peut plus lui donner d'ordre |
+**L'image (Jérôme, 26 nov.)** : en production, chaque bulle montre une image au-dessus de sa ligne : une capture de l'interface (un bouton, une barre, une fenêtre) ou une capture du jeu (le zoom est indiqué) qui montre la chose telle que le joueur la verra. Les images se tirent du jeu lui-même, à graine fixe (un script de captures, comme `outils/captures.mjs`), pour être refaites quand l'écran change ; elles sont en basse résolution, à la palette du jeu.
+
+| Terme | La bulle | L'image de la bulle |
+|---|---|---|
+| <ins>musette</ins> | Ce que vous gardez pour plus tard : 3 objets au plus, lancés avec les touches 7, 8, 9 puis un clic sur le terrain | Capture de l'interface : les trois emplacements de la musette au-dessus du râtelier, un objet dans chacun (liseré de rareté), les chiffres 7, 8, 9 |
+| <ins>salve de 75</ins> | 24 petits obus en quelques secondes, là où l'on clique ; tue les hommes à découvert, abîme peu les tranchées | Le jeu, zoom 4 : une salve de 75 qui tombe sur des hommes à découvert, petites gerbes serrées |
+| <ins>barrage de 155</ins> | 12 obus moyens ; creuse le sol, abîme les tranchées | Le jeu, zoom 4 : un barrage de 155 sur une tranchée, des cratères moyens dans le parapet |
+| <ins>barrage de 220</ins> | 6 gros obus ; chacun crève une tranchée et laisse un cratère | Le jeu, zoom 4 : la même tranchée après un 220, coupée par un grand cratère |
+| <ins>barrage roulant</ins> | Trois salves de 75 qui avancent de 30 m toutes les 8 s ; une troupe qui marche juste derrière arrive sur des tranchées sonnées | Le jeu, zoom 2 : trois lignes d'explosions qui avancent, un régiment qui marche derrière (une flèche montre le sens) |
+| <ins>obus de 400</ins> | L'obus mythique : quatre barrages de 220 au même endroit | Le jeu, zoom 2 : le champ après l'obus de 400, un trou béant au milieu des lignes |
+| <ins>caisse</ins> | Un avion la largue au-dessus du no man's land ; le premier homme, d'un camp ou de l'autre, qui l'atteint prend l'objet | Le jeu, zoom 8 : une caisse sous son parachute, puis l'objet qui flotte sous sa flèche de couleur |
+| <ins>coureurs</ins> | Les 5 hommes de chaque camp, à moins de 160 m, qui courent vers une caisse qui descend | Le jeu, zoom 4 : des hommes des deux camps qui courent vers une caisse qui descend |
+| <ins>avion de largage</ins> | L'avion qui lâche les caisses : un toutes les 3 à 5 heures du jour | Le jeu, zoom 4 : l'avion de largage au-dessus du no man's land, la caisse qui se détache ; à côté, l'annonce à l'écran |
+| <ins>rareté</ins> | Commun, peu commun, rare, épique, légendaire, mythique : la couleur de la flèche au-dessus de l'objet | Planche : les six flèches de rareté côte à côte, de commun à mythique, avec leur nom |
+| <ins>pluie de caisses</ins> | Cinq avions à la suite, cinq caisses le long du front, cinq courses en même temps | Le jeu, dézoomé : cinq parachutes le long du front ; à côté, le bandeau du caprice |
+| <ins>caprice</ins> | Un événement par jour, annoncé 12 s avant ; d'habitude il tombe au hasard sur un camp | Capture de l'interface : l'annonce d'un caprice (icône, nom, compte à rebours de 12 s) |
+| <ins>première ligne</ins> | La tranchée la plus proche de l'ennemi | Le jeu, zoom 2 : nos tranchées, la plus proche de l'ennemi entourée |
+| <ins>invincible</ins> | Les balles et les obus ne le blessent pas | Le jeu, zoom 8 : un héros qui court sous les balles, l'icône du boost au-dessus de lui |
+| <ins>balles sûres</ins> | Chaque balle tue celui qu'elle vise | Capture de l'interface : la fiche d'un homme avec le Lebel à lunette et le compte des balles qui restent |
+| <ins>zeppelin</ins> | Un dirigeable lent et bas qui traverse le front en lâchant ses bombes (comme des 155) ; on peut l'abattre | Le jeu, zoom 4 : le zeppelin bas au-dessus des tranchées, des bombes qui tombent |
+| <ins>as</ins> | Un pilote d'élite : trois passages de mitrailleuse, un avion six fois plus solide | Le jeu, zoom 4 : l'avion de l'as en rase-mottes, la traînée de ses rafales au sol |
+| <ins>cratère</ins> | Un trou d'obus ; un grand cratère ouvre un passage dans la tranchée, et l'eau y monte s'il pleut | Le jeu, zoom 8 : un grand cratère qui coupe une tranchée, de l'eau au fond |
+| <ins>à la personne</ins> | Le bouton « À la personne » de la fiche d'un homme : on voit par ses yeux, on le fait marcher, viser et tirer soi-même | Deux captures côte à côte : le bouton « À la personne » de la fiche d'un homme, puis la vue par ses yeux |
+| <ins>clairon</ins> | Le régiment court une fois et demie plus vite et n'a plus peur | Le jeu, zoom 4 : un régiment qui charge, l'icône du clairon au-dessus ; sa barre dans la rangée des régiments |
+| <ins>sans peur</ins> | Le régiment ne recule jamais sous le feu et ne part pas en déroute | Capture de l'interface : la barre de moral d'un régiment, marquée sans peur (pleine, verrouillée) |
+| <ins>déroute</ins> | Un régiment brisé fuit vers l'arrière et n'obéit plus jusqu'à ce qu'il se reforme | Le jeu, zoom 4 : un régiment en déroute qui reflue vers l'arrière ; sa carte de régiment marquée « en déroute » |
+| <ins>premier assaut du jour</ins> | Le premier régiment envoyé, ce jour-là, au-delà de notre première ligne (dans le no man's land ou chez eux) | Schéma sur une capture dézoomée : notre première ligne en trait, la flèche d'un régiment qui la franchit |
+| <ins>lance-flammes</ins> | Le lance-flammes Schilt, l'arme française de 1915 : un jet de feu à 15 m, deux fois par seconde | Le jeu, zoom 8 : un homme qui crache le feu dans une tranchée ennemie |
+| <ins>drapeau</ins> | Planté, il tient le régiment autour de lui ; si un homme d'en face l'atteint, il l'arrache | Le jeu, zoom 8 : le drapeau planté, le cercle de 50 m autour, les régiments qu'il touche |
+| <ins>demi-section</ins> | Dix hommes ; une section en fait vingt, une compagnie quarante | Planche : 10, 20, 40 silhouettes en rang, sous les mots demi-section, section, compagnie |
+| <ins>régiments frais</ins> | Des régiments complets, reposés, qui n'ont pas encore combattu | Le jeu, zoom 4 : un régiment frais qui sort de la caserne, sa carte de régiment pleine |
+| <ins>réserve</ins> | Les régiments frais qui attendent à la caserne ; on les envoie pour relever un régiment épuisé | Capture de l'interface : la caserne ouverte, la liste des régiments en réserve |
+| <ins>chars</ins> | Nos chars FT : on les envoie depuis le parc vers leurs lignes ; ils tirent au canon | Le jeu, zoom 8 : un char FT de notre camp qui avance vers leurs lignes |
+| <ins>parc</ins> | Le bâtiment du camp où attendent et se réparent les chars | Capture de l'interface : la fenêtre du parc, la liste des chars (déployés, au parc, détruits) |
+| <ins>bombes Aasen</ins> | Des bombes à main lâchées par nos aviateurs | Le jeu, zoom 4 : un de nos avions qui lâche ses bombes, les explosions sur son passage |
+| <ins>aérodrome</ins> | Le bâtiment du camp d'où partent nos avions | Capture de l'interface : la fenêtre de l'aérodrome, la liste de nos avions |
+| <ins>fil de fer</ins> | Les barbelés devant leurs tranchées : un homme qui les traverse va au pas, à découvert | Le jeu, zoom 8 : les barbelés devant leur tranchée, avec une brèche ouverte par la cheddite |
+| <ins>nid de mitrailleuse</ins> | Une mitrailleuse Hotchkiss dans un abri : elle balaie le no man's land devant elle | Le jeu, zoom 8 : un nid Hotchkiss sur notre tranchée, son cône de tir ; à côté, sa fiche |
+| <ins>tir trop court</ins> | Notre artillerie se trompe de réglage : un barrage tombe sur nos propres hommes | Le jeu, zoom 4 : un barrage qui tombe sur notre propre tranchée, l'annonce du caprice à côté |
+| <ins>nappe de gaz</ins> | Un nuage de chlore qui dérive avec le vent 2 h ; ceux qui sont dedans ne tirent plus, fuient ou tombent | Le jeu, zoom 2 : le nuage vert-jaune qui dérive, une flèche pour le vent |
+| <ins>ordre absurde</ins> | L'état-major envoie un régiment à l'assaut, tout de suite ; pendant 2 h, on ne peut plus lui donner d'ordre | Le jeu, zoom 4 : un de nos régiments qui sort seul ; sa carte de régiment marquée verrouillée (cadenas, 2 h) |
 
 Le survol se construit une fois pour toutes (un module : le terme, sa bulle), et sert aussi aux fiches des objets et aux bandeaux des caprices.
 
