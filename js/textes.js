@@ -1,6 +1,6 @@
 // Les textes affichés, par langue (ROADMAP.md, lot 0) : `t('cle', { nom })` rend le texte de la langue choisie, ou le français s'il y
 // manque, ou la clé elle-même (un texte oublié se voit à l'écran). Une langue est un fichier de data/textes/ ; seul le français existe.
-import { TEXTES as FR } from './data/textes/fr.js?v=0.170.2';
+import { TEXTES as FR } from './data/textes/fr.js?v=0.170.3';
 
 const LANGUES = { fr: FR };
 export const LANGUE_DEFAUT = 'fr';

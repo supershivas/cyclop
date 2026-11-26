@@ -2,6 +2,10 @@
 // Une entrée par version qui touche au labo, la plus récente en haut. `ref` : « sujet-Lettre » (la lettre est celle de la variante,
 // A étant l'actuelle). À chaque changement du labo : une entrée ici, avec `depuis` sur les variantes ajoutées ou changées (labo.js).
 export const JOURNAL = [
+  { version: '0.170.3', date: '2026-11-26', items: [
+    { genre: 'mis-a-jour', texte: 'Les cartes du soir : la déchirure au clic, irrégulière, avec des éclats de papier ; le paquet ne porte que le nom du set et se décline en commun (mat), brillant et rose (toujours un mythique)', ref: 'cartes-soir-B' },
+    { genre: 'mis-a-jour', texte: 'Les cartes : le nom, une place pour l\'image, la description et la rareté ; plus de gros chiffre', ref: 'cartes-soir-C' },
+  ] },
   { version: '0.170.2', date: '2026-11-26', items: [
     { genre: 'nouveau', texte: 'Les cartes du soir : le booster brillant qui penche vers le curseur, et son ouverture (on déchire le haut, les cartes sortent une à une par ordre de rareté)', ref: 'cartes-soir-A' },
     { genre: 'mis-a-jour', texte: 'Les cartes penchent au survol ; les mythiques ont un foil ; les paquets et ouvertures d\'avant deviennent des anciennes', ref: 'cartes-soir-C' },

@@ -1,5 +1,9 @@
 # Journal des versions
 
+## 0.170.3 — 2026-11-26
+- Au labo : le paquet de cartes se déchire au clic, de travers, avec des éclats de papier ; il ne porte que le nom du set, et existe en mat, brillant et rose (toujours une carte mythique)
+- Les cartes n'ont plus de gros chiffre : le nom, une image, la description, la rareté
+
 ## 0.170.2 — 2026-11-26
 - Au labo : le paquet de cartes devient un booster brillant qui penche vers le curseur ; on le déchire, les cartes sortent une à une par le haut, de la plus commune à la plus rare
 - Les cartes penchent au survol ; les mythiques ont un foil
