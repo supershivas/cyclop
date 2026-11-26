@@ -128,8 +128,11 @@ une tentative, un classement en ligne : un service à choisir).
 
 ## Les cartes du soir (Jérôme, 24 nov. ; pas construites)
 
-Le soir, 3 cartes tirées, on en garde une jusqu'à la fin de la campagne ; une carte
-déjà tenue passe au niveau II. Une carte **change ce qu'on voit**, jamais un
+Le soir, on choisit un paquet parmi trois (trois familles de cartes), on le déchire,
+3 à 5 cartes en sortent, on en garde une jusqu'à la fin de la campagne (Jérôme, 26 nov.).
+Une carte a l'une des six raretés des largages ; tirée de nouveau, elle prend la rareté
+au-dessus (la rareté remplace les niveaux). Un paquet est mat, brillant ou rose (le rose
+contient toujours une carte mythique). Une carte **change ce qu'on voit**, jamais un
 pourcentage, et **ne s'appuie que sur ce qui existe en jeu** (Jérôme, 24 nov.) :
 c'est un objet parachuté qui revient (une salve de 75 chaque matin, le fusil du
 canonnier pour l'homme qu'on incarne) ou un caprice qu'on déclenche soi-même

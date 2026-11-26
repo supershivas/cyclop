@@ -7,24 +7,24 @@
 //    tonneau, l'écran rouge, jusqu'à l'écrasement.
 // Rien de neuf dans le moteur que quelques réglages de la vue (`vue.haut`, `dist`, `portee`, `hors`, `roulis`, `secousse`, rendu3d.js) : la caméra du jeu orbite déjà autour d'un point visé, ici ce point
 // suit l'engin. Le dessin seulement : aucune lecture n'écrit dans la bataille. La vue se libère d'un geste sur la caméra (déplacer, tourner), Échap, le clic droit, ou le bouton ; la vue d'avant revient.
-import { positionDe, refusPrise } from '../avions.js?v=0.170.5';
-import { hauteurOeil, balancement, armeDe, aPortee } from '../tir-joueur.js?v=0.170.5';
-import { TIR_JOUEUR as TJ } from '../data/tir-joueur.js?v=0.170.5';
-import { CALIBRES } from '../data/calibres.js?v=0.170.5';
-import { CHARS } from '../data/chars.js?v=0.170.5';
-import { AVION_MAIN } from '../data/mitraillage.js?v=0.170.5';
-import { creerAideVue } from './aide-vue.js?v=0.170.5';
-import { creerEtatFps } from './etat-fps.js?v=0.170.5';
-import { NIDS } from '../data/nids.js?v=0.170.5';
-import { MITRAILLAGE } from '../data/mitraillage.js?v=0.170.5';
+import { positionDe, refusPrise } from '../avions.js?v=0.170.6';
+import { hauteurOeil, balancement, armeDe, aPortee } from '../tir-joueur.js?v=0.170.6';
+import { TIR_JOUEUR as TJ } from '../data/tir-joueur.js?v=0.170.6';
+import { CALIBRES } from '../data/calibres.js?v=0.170.6';
+import { CHARS } from '../data/chars.js?v=0.170.6';
+import { AVION_MAIN } from '../data/mitraillage.js?v=0.170.6';
+import { creerAideVue } from './aide-vue.js?v=0.170.6';
+import { creerEtatFps } from './etat-fps.js?v=0.170.6';
+import { NIDS } from '../data/nids.js?v=0.170.6';
+import { MITRAILLAGE } from '../data/mitraillage.js?v=0.170.6';
 // Les sensations de l'homme qu'on mène (v0.152.0) : le coup reçu (s), la balle qui frôle (s), le souffle d'un obus (portée en rayons du souffle, s de retour), la peur qui ferme le champ (opacité au plus)
 const NIDS_RENDU = { coups: 9, garde: 1.6 };      // la mitrailleuse vue du poste : coups dessinés par seconde ; s depuis la dernière rafale de la règle où l'on tire encore (v0.167.0)
 const SENS = { coup: 1.2, frole: 0.5, roulis: 0.07, choc: 3, chocDuree: 2.5, peur: 0.75 };
-import { indiceDe, quiEst, majuscule } from './lecture.js?v=0.170.5';
-import { creerTampons } from './tampons-fps.js?v=0.170.5';
-import { BLESSURES_FPS, RYTHME_TAMPONS } from '../data/tampons.js?v=0.170.5';
-import { ZONES_EN_MOTS } from '../data/causes.js?v=0.170.5';
-import { REPERES, jauge, corps } from './barres.js?v=0.170.5';
+import { indiceDe, quiEst, majuscule } from './lecture.js?v=0.170.6';
+import { creerTampons } from './tampons-fps.js?v=0.170.6';
+import { BLESSURES_FPS, RYTHME_TAMPONS } from '../data/tampons.js?v=0.170.6';
+import { ZONES_EN_MOTS } from '../data/causes.js?v=0.170.6';
+import { REPERES, jauge, corps } from './barres.js?v=0.170.6';
 
 const SOL_Y = 3;           // le niveau moyen du sol que vise la caméra (rendu3d.js : `SOL_Y`), pour calculer `vue.haut`
 const PORTEE = 700;        // m : le plan lointain d'une vue verrouillée (au ras du sol, la vue porte loin)

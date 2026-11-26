@@ -1,5 +1,8 @@
 # Journal des versions
 
+## 0.170.6 — 2026-11-26
+- Au labo : les cartes qui sortent du paquet prennent le dessin retenu, l'étiquette
+
 ## 0.170.5 — 2026-11-26
 - Au labo : les cartes épiques ont un halo d'argent et flottent légèrement
 

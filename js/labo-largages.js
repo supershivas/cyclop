@@ -3,12 +3,12 @@
 // sa rareté ; le premier joueur qui l'atteint le gagne »). Au labo seulement (sa décision) : rien n'est branché dans le jeu.
 // Trois maquettes : la galerie des quarante objets (cliquer un objet donne sa fiche), un objet de près, et le largage (l'avion, la caisse sous son parachute,
 // l'objet qui sort, les deux camps qui courent). Les objets et les nombres sont dans data/largages.js ; ce fichier ne fait que les dessiner.
-import { PALETTE } from './palette.js?v=0.170.5';
-import { loadThree } from './three-lib.js?v=0.170.5';
-import { hash2 } from './lib/rng.js?v=0.170.5';
-import { OBJETS, RARETES, ORDRE_RARETES, CATEGORIES, ORDRE_CATEGORIES, LARGAGE as L, tirerObjet } from './data/largages.js?v=0.170.5';
-import { positionCaisse, avionDeCaisse, dureeChute } from './largages.js?v=0.170.5';
-import { cacheModeles as cacheGeometries, construireObjet, fleche, anneau, briller, creerParachute, biplan, tourne, flotte } from './rendu/largages-modeles.js?v=0.170.5';
+import { PALETTE } from './palette.js?v=0.170.6';
+import { loadThree } from './three-lib.js?v=0.170.6';
+import { hash2 } from './lib/rng.js?v=0.170.6';
+import { OBJETS, RARETES, ORDRE_RARETES, CATEGORIES, ORDRE_CATEGORIES, LARGAGE as L, tirerObjet } from './data/largages.js?v=0.170.6';
+import { positionCaisse, avionDeCaisse, dureeChute } from './largages.js?v=0.170.6';
+import { cacheModeles as cacheGeometries, construireObjet, fleche, anneau, briller, creerParachute, biplan, tourne, flotte } from './rendu/largages-modeles.js?v=0.170.6';
 
 const el = (tag, props = {}, ...kids) => { const e = Object.assign(document.createElement(tag), props); e.append(...kids); return e; };
 const bouton = (t, f) => el('button', { className: 'essai', textContent: t, onclick: f });

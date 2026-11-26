@@ -1,11 +1,11 @@
 // Le parc de nos engins, lu sur le champ (sorti de main.js, lot de dette du 24 nov.) : les avions au sol, les chars du parc, les sections du
 // génie au dépôt, leurs pastilles et ce qu'un clic en fait. `creerParc(ctx)` rend { enginSous, enginsParc, parcSous }.
-import { placeAvion, placesChars, placesGenie, parcChars, campDe } from '../camp.js?v=0.170.5';
-import { avionsAbimes, codeAvion, codeChar, reparationFaite } from '../genie.js?v=0.170.5';
-import { PARC } from '../data/parc.js?v=0.170.5';
-import { AVION, MITRAILLAGE } from '../data/mitraillage.js?v=0.170.5';
-import { CHAR } from '../data/chars.js?v=0.170.5';
-import { GENIE, GENIE_DATA } from '../data/genie.js?v=0.170.5';
+import { placeAvion, placesChars, placesGenie, parcChars, campDe } from '../camp.js?v=0.170.6';
+import { avionsAbimes, codeAvion, codeChar, reparationFaite } from '../genie.js?v=0.170.6';
+import { PARC } from '../data/parc.js?v=0.170.6';
+import { AVION, MITRAILLAGE } from '../data/mitraillage.js?v=0.170.6';
+import { CHAR } from '../data/chars.js?v=0.170.6';
+import { GENIE, GENIE_DATA } from '../data/genie.js?v=0.170.6';
 
 let bataille, moi;
 export function creerParc(ctx) {

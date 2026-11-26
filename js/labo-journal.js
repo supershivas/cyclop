@@ -2,8 +2,12 @@
 // Une entrée par version qui touche au labo, la plus récente en haut. `ref` : « sujet-Lettre » (la lettre est celle de la variante,
 // A étant l'actuelle). À chaque changement du labo : une entrée ici, avec `depuis` sur les variantes ajoutées ou changées (labo.js).
 export const JOURNAL = [
+  { version: '0.170.6', date: '2026-11-26', items: [
+    { genre: 'mis-a-jour', texte: 'L\'ouverture montre les cartes au dessin retenu, l\'étiquette', ref: 'cartes-soir-B' },
+  ] },
   { version: '0.170.5', date: '2026-11-26', items: [
     { genre: 'mis-a-jour', texte: 'Les cartes épiques : un halo d\'argent et une légère lévitation', ref: 'cartes-soir-C' },
+    { genre: 'mis-a-jour', texte: 'Jérôme retient l\'étiquette pour le dessin des cartes ; le liseré et le tampon deviennent des anciennes', ref: 'cartes-soir-C' },
   ] },
   { version: '0.170.4', date: '2026-11-26', items: [
     { genre: 'mis-a-jour', texte: 'Les cartes du soir : six raretés, chacune sa matière (lignes, foils bleu, argent, doré, rose en nuages ; halos, étincelles, lévitation) ; les noms en Antonio', ref: 'cartes-soir-C' },

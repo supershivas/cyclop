@@ -4,8 +4,8 @@
 // s'expliquent au survol (la bulle et la place de son image : le glossaire du document).
 // Trois façons de dessiner le paquet, trois ouvertures, trois façons de dessiner la carte. Couleurs : la palette du jeu, plus celles des raretés
 // (l'exception des objets parachutés, RARETES_COULEURS) et la brillance du mythique. `prefers-reduced-motion` : tout est posé d'un coup.
-import { PALETTE as P, RARETES_COULEURS as RC, RARETES_BRILLANCE } from './palette.js?v=0.170.5';
-import { RARETES } from './data/largages.js?v=0.170.5';
+import { PALETTE as P, RARETES_COULEURS as RC, RARETES_BRILLANCE } from './palette.js?v=0.170.6';
+import { RARETES } from './data/largages.js?v=0.170.6';
 
 const reduit = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
 const el = (tag, cls = '', ...kids) => { const e = document.createElement(tag); if (cls) e.className = cls; e.append(...kids.flat().filter(k => k != null)); return e; };
@@ -616,7 +616,7 @@ export function dechirer(stage) {
       const eventail = k => { const d = k - (n - 1) / 2; return { x: d * 104, y: d * d * 7, a: d * 5 }; };
       for (const [k, c] of cartes.entries()) {
         if (!vivant()) return;
-        const myth = c.t === 'relique', carteEl = carte(c.id, c.t, 'a');
+        const myth = c.t === 'relique', carteEl = carte(c.id, c.t, 'c');   // l'étiquette, le dessin retenu (Jérôme, 26 nov.)
         carteEl.dataset.fige = '1';
         corps.querySelector('.bo-cartes').append(carteEl);
         if (myth) await attendre(260);

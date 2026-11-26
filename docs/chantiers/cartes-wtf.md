@@ -1,6 +1,9 @@
-# Les cartes du soir (proposition, 24 nov. ; relue le 25 nov. ; rien n'est construit)
+# Les cartes du soir (proposition, 24 nov. ; relue le 25 nov. ; le modèle des paquets, 26 nov. ; rien n'est en jeu)
 
-Décidé (Jérôme, 24 nov., v0.169.0) : le soir, **3 cartes tirées, on en garde une**, jusqu'à la fin de la campagne ; une carte déjà tenue, tirée de nouveau, monte d'un **niveau**. Une carte change ce qu'on voit en jeu, jamais « +5 % ». Raretés : celles des largages (`RARETES` de `data/largages.js`) : C commun, PC peu commun, R rare, É épique, L légendaire, M mythique. Les cartes **maudites** donnent un gros bonus contre un défaut visible.
+**Le modèle (Jérôme, 26 nov. ; maquette au labo, sujet « Les cartes du soir »)** : le soir, on choisit **un paquet parmi trois** (trois familles de cartes : la musette, les hommes, les engins…) ; un paquet tient **3 à 5 cartes** (hasard) ; on l'ouvre (on le déchire), puis on **garde une carte**. Un paquet a sa rareté : **mat** (commun), **brillant**, **rose** (brillant, et toujours une carte mythique dedans). Une carte existe dans les **six raretés** des largages ; sa rareté change sa description (sa valeur) et sa matière (peu commun : lignes ; rare : foil bleu ; épique : foil d'argent et halo ; légendaire : foil doré, halo, lévitation ; mythique : rose, foil en nuages, étincelles). Une carte ne montre que **son nom** (en Antonio, la police des titres), **son image**, **sa description**, **sa rareté** : le dessin « l'étiquette » est retenu (le bandeau de rareté en haut, l'image en grand, le texte dessous). **La rareté remplace les niveaux** : une carte déjà tenue, tirée de nouveau, prend la rareté au-dessus de la sienne. Les tableaux plus bas (niveaux I, II, III) datent d'avant ce modèle : ils restent comme réserve d'effets, à reverser dans les six raretés de chaque carte (les neuf cartes de la maquette le sont déjà, `CARTES` de `js/labo-cartes-soir.js`).
+
+
+Décidé (Jérôme, 24 nov., v0.169.0 ; remplacé par le modèle des paquets, ci-dessus) : le soir, 3 cartes tirées, on en garde une, jusqu'à la fin de la campagne ; une carte déjà tenue, tirée de nouveau, monte d'un niveau. Une carte change ce qu'on voit en jeu, jamais « +5 % ». Raretés : celles des largages (`RARETES` de `data/largages.js`) : C commun, PC peu commun, R rare, É épique, L légendaire, M mythique. Les cartes **maudites** donnent un gros bonus contre un défaut visible.
 
 **Règle de la liste (Jérôme, 24 nov.)** : une carte ne s'appuie **que sur ce qui existe en jeu** : les effets des objets parachutés (`e` de `OBJETS`, `data/largages.js`) et les caprices (`data/caprices.js`). Une carte est donc **un objet qui revient** (chaque matin, à chaque vol, au premier assaut) ou **un caprice qu'on déclenche soi-même** (une fois par jour ou par partie, dans la musette). Rien qui demande une mécanique nouvelle (première liste retirée : voir en bas).
 
@@ -154,14 +157,22 @@ Possible, mais pas partout :
 
 Les obus rebondissants, l'entonnoir, le dépôt qui saute, la mine de Messines en trois nuits (le joueur ne voit pas le résultat : remplacée par « La mine », le caprice), le barrage qui marche, le tremblement sur commande (remplacé par le caprice), les taupes, la forêt de Birnam, les cyclistes, la roulante, les pigeons, les chiens, les éléphants (les canons n'ont pas de place sur le terrain), la cavalerie, le char-tortue, le train blindé, l'écluse, le gel, l'as aveugle, le cinéaste, le faiseur de pluie, l'œil du tireur (le ralenti). Certaines pourront revenir **le jour où leur mécanique existe** (une particularité de campagne, un boss) : on ajoute alors la mécanique d'abord, la carte ensuite.
 
+## Décidé le 26 nov. (Jérôme)
+
+- Les paquets (trois à choisir, 3 à 5 cartes, mat / brillant / rose), les six raretés de carte et leurs matières, l'ouverture qu'on déchire : voir « Le modèle » en tête.
+- La rareté remplace les niveaux II et III : une carte tirée de nouveau prend la rareté au-dessus.
+- Le dessin de carte : l'étiquette.
+
 ## Décidé le 25 nov. (Jérôme)
 
-- Le niveau III : sur les sept cartes proposées seulement.
+- Le niveau III : sur les sept cartes proposées seulement (remplacé le 26 nov. par la rareté).
 - Les caisses du pilote ami et de la bonne étoile tombent du côté de nos lignes (un réglage du largage).
 - La musette profonde : des touches à la suite de 7, 8, 9 (0, puis une cinquième).
 
 ## Ce qui reste à décider
 
+- Les familles de paquets (trois, ou plus et trois tirées chaque soir) ; les chances d'un paquet mat, brillant, rose ; les chances des raretés dans un paquet (proposé : celles des caisses, 50, 25, 13, 7, 4, 1 sur 100).
+- Une carte mythique tirée de nouveau (elle ne peut plus monter) : remplacée par une autre, ou un bonus.
 - Le tri de la liste et le paquet de départ (proposé : ~20 cartes ; les autres se débloquent par les campagnes finies).
 - La cinquième touche de la musette profonde (7, 8, 9, 0, puis laquelle ?), et l'objet du matin quand la musette est pleine (point 9).
 - La règle du « premier assaut du jour » (point 1).

@@ -1,9 +1,9 @@
 // Le décor de l'écran titre (sorti de main.js, lot de dette du 24 nov.) : une bataille d'illustration, jamais sauvegardée.
 // `creerDecor({ R, rendu })` rend { pas(dt), montrer() } ; `Math.random` est permis ici : rien de ce hasard n'entre dans une règle.
-import { nouvelleBataille, avancer, ordonnerBarrage, PAS } from '../bataille.js?v=0.170.5';
-import { NOMS_CALIBRES } from '../data/calibres.js?v=0.170.5';
-import { SAISONS } from '../data/meteo.js?v=0.170.5';
-import { hash2 } from '../lib/rng.js?v=0.170.5';
+import { nouvelleBataille, avancer, ordonnerBarrage, PAS } from '../bataille.js?v=0.170.6';
+import { NOMS_CALIBRES } from '../data/calibres.js?v=0.170.6';
+import { SAISONS } from '../data/meteo.js?v=0.170.6';
+import { hash2 } from '../lib/rng.js?v=0.170.6';
 
 let R, rendu;
 export function creerDecor(ctx) {
