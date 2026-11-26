@@ -1,14 +1,14 @@
 // La rangée de nos régiments et la fenêtre du régiment choisi (sorti de main.js, lot de dette du 24 nov.) : les vignettes, le défilement,
 // le rabat au-dessus de la carte choisie. Les clics restent à main.js (ils changent la sélection). `creerRangee(ctx)` rend
 // { maj, invalider, oublier, placerFenetre, defiler, avecClic }.
-import { actionDe, moralEnMots, secteursDe } from '../bataille.js?v=0.170.0';
-import { chevrons } from '../identite.js?v=0.170.0';
-import { STANCES, STANCE_DEFAUT } from '../data/stances.js?v=0.170.0';
-import { ecussonHtml, reglerEcusson } from './ecussons.js?v=0.170.0';
-import { iconeCorvee } from './icones-nuit.js?v=0.170.0';
-import { corveeDe, corveeCourte } from './nuit.js?v=0.170.0';
-import { deplacable } from './deplacer.js?v=0.170.0';
-import * as lecture from './lecture.js?v=0.170.0';
+import { actionDe, moralEnMots, secteursDe } from '../bataille.js?v=0.170.1';
+import { chevrons } from '../identite.js?v=0.170.1';
+import { STANCES, STANCE_DEFAUT } from '../data/stances.js?v=0.170.1';
+import { ecussonHtml, reglerEcusson } from './ecussons.js?v=0.170.1';
+import { iconeCorvee } from './icones-nuit.js?v=0.170.1';
+import { corveeDe, corveeCourte } from './nuit.js?v=0.170.1';
+import { deplacable } from './deplacer.js?v=0.170.1';
+import * as lecture from './lecture.js?v=0.170.1';
 
 let $, R, bataille, moi, choisi, marche, formeOrdre, nuit, chevronsVus, reduit, rejouerRebond, decalageFenetre;
 export function creerRangee(ctx) {

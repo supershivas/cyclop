@@ -2,54 +2,55 @@
 // Chaque sujet utilise les mêmes modules que le jeu (terrain, apparence,
 // rendu three.js) : ce qu'on voit ici est ce que le jeu dessinera. Ajouter un
 // sujet ou une variante = ajouter une entrée dans GROUPES.
-import { afficherVersion } from './version-tag.js?v=0.170.0';
-import { mountLabo } from './lib/labo-shell.js?v=0.170.0';
-import { spriteCanvas, paletteToGPL, paletteToHex } from './lib/sprites.js?v=0.170.0';
-import { PALETTE, ROLES } from './palette.js?v=0.170.0';
-import { chargerContenu } from './design-store.js?v=0.170.0';
-import { tuile, ETAT } from './tuiles.js?v=0.170.0';
-import { creerTerrain, impact, hydroLignes, toucher } from './terrain.js?v=0.170.0';
-import { FORMES } from './cratere.js?v=0.170.0';
-import { CALIBRES } from './data/calibres.js?v=0.170.0';
-import { METEO } from './data/meteo.js?v=0.170.0';
-import { nouvelleBataille, avancer, ordonnerMarche, ordonnerBarrage, mourir, regarderAu, aube, horloge, ticksParJour, rangDe } from './bataille.js?v=0.170.0';
-import { BOUE_SOLDATS, SANG, VARIETE_SOLDATS } from './data/aspect-soldat.js?v=0.170.0';
-import { AZIMUTS, COTES } from './data/soleil.js?v=0.170.0';
-import { creerRendu, ZOOMS } from './rendu3d.js?v=0.170.0';
-import { placesCommandement } from './army.js?v=0.170.0';
-import { hash2 } from './lib/rng.js?v=0.170.0';
-import { reglerVerdure } from './apparence.js?v=0.170.0';
-import { maquetteChars } from './labo-chars.js?v=0.170.0';
-import { maquetteEpaves } from './labo-epaves.js?v=0.170.0';
-import { maquetteLargages } from './labo-largages.js?v=0.170.0';
-import { maquetteCasques } from './labo-casques.js?v=0.170.0';
-import { maquetteDemarches } from './labo-demarches.js?v=0.170.0';
-import { fondations, boutons, unites, fenetres, revision } from './labo-design-system.js?v=0.170.0';
-import { clic } from './labo-clic.js?v=0.170.0';
-import { cartesSecteur } from './labo-cartes.js?v=0.170.0';
-import { patrouilleLabo } from './labo-patrouille.js?v=0.170.0';
-import { EFFETS } from './rendu3d.js?v=0.170.0';
-import { calqueEcussons } from './labo-ecussons.js?v=0.170.0';
-import { plancheEcussons } from './labo-ecussons-armes.js?v=0.170.0';
-import { gainTampon, gainCachets, gainFil, gainBordereau, victoireFanion, victoireTampon, victoireChevrons, victoireAube, ficheDeuxColonnes, ficheEtages, ficheRegistre, ficheDAbord } from './labo-recompenses.js?v=0.170.0';
-import { maquetteBatiment, maquetteCamp } from './labo-batiments.js?v=0.170.0';
-import { BATIMENTS } from './data/batiments.js?v=0.170.0';
-import { JOURNAL } from './labo-journal.js?v=0.170.0';
-import { loadVersion } from './lib/app-update.js?v=0.170.0';
-import { maquetteEffets, maquetteAmbiance, maquetteEspace, maquetteBruitages } from './labo-son.js?v=0.170.0';
-import { calqueMoral } from './labo-moral.js?v=0.170.0';
-import { bilanRapport, bilanTuiles, bilanFrise } from './labo-donnees.js?v=0.170.0';
-import { papierNuit, finDePartie } from './labo-papiers.js?v=0.170.0';
-import { soiree } from './labo-soiree.js?v=0.170.0';
-import { soiree2 } from './labo-soiree2.js?v=0.170.0';
-import { soiree3 } from './labo-soiree3.js?v=0.170.0';
-import { fichesTuiles, fichesProfil, fichesCompactes } from './labo-fiches.js?v=0.170.0';
-import { fiches2 } from './labo-fiches2.js?v=0.170.0';
-import { calqueEnnemis } from './labo-engins-ennemis.js?v=0.170.0';
-import { maquetteTranchees, NOTES_TRANCHEES, NOMS_TRANCHEES } from './labo-tranchees.js?v=0.170.0';
-import { maquetteFabrique } from './labo-fabrique.js?v=0.170.0';
-import { atelierTerrain } from './labo-atelier-terrain.js?v=0.170.0';
-import { entrees as encEntrees, lexiqueAZ, planche as encPlanche } from './labo-encyclopedie.js?v=0.170.0';
+import { afficherVersion } from './version-tag.js?v=0.170.1';
+import { mountLabo } from './lib/labo-shell.js?v=0.170.1';
+import { spriteCanvas, paletteToGPL, paletteToHex } from './lib/sprites.js?v=0.170.1';
+import { PALETTE, ROLES } from './palette.js?v=0.170.1';
+import { chargerContenu } from './design-store.js?v=0.170.1';
+import { tuile, ETAT } from './tuiles.js?v=0.170.1';
+import { creerTerrain, impact, hydroLignes, toucher } from './terrain.js?v=0.170.1';
+import { FORMES } from './cratere.js?v=0.170.1';
+import { CALIBRES } from './data/calibres.js?v=0.170.1';
+import { METEO } from './data/meteo.js?v=0.170.1';
+import { nouvelleBataille, avancer, ordonnerMarche, ordonnerBarrage, mourir, regarderAu, aube, horloge, ticksParJour, rangDe } from './bataille.js?v=0.170.1';
+import { BOUE_SOLDATS, SANG, VARIETE_SOLDATS } from './data/aspect-soldat.js?v=0.170.1';
+import { AZIMUTS, COTES } from './data/soleil.js?v=0.170.1';
+import { creerRendu, ZOOMS } from './rendu3d.js?v=0.170.1';
+import { placesCommandement } from './army.js?v=0.170.1';
+import { hash2 } from './lib/rng.js?v=0.170.1';
+import { reglerVerdure } from './apparence.js?v=0.170.1';
+import { maquetteChars } from './labo-chars.js?v=0.170.1';
+import { maquetteEpaves } from './labo-epaves.js?v=0.170.1';
+import { maquetteLargages } from './labo-largages.js?v=0.170.1';
+import { maquetteCasques } from './labo-casques.js?v=0.170.1';
+import { maquetteDemarches } from './labo-demarches.js?v=0.170.1';
+import { fondations, boutons, unites, fenetres, revision } from './labo-design-system.js?v=0.170.1';
+import { clic } from './labo-clic.js?v=0.170.1';
+import { cartesSecteur } from './labo-cartes.js?v=0.170.1';
+import { choixPaquets, ouverture, cartesRaretes } from './labo-cartes-soir.js?v=0.170.1';
+import { patrouilleLabo } from './labo-patrouille.js?v=0.170.1';
+import { EFFETS } from './rendu3d.js?v=0.170.1';
+import { calqueEcussons } from './labo-ecussons.js?v=0.170.1';
+import { plancheEcussons } from './labo-ecussons-armes.js?v=0.170.1';
+import { gainTampon, gainCachets, gainFil, gainBordereau, victoireFanion, victoireTampon, victoireChevrons, victoireAube, ficheDeuxColonnes, ficheEtages, ficheRegistre, ficheDAbord } from './labo-recompenses.js?v=0.170.1';
+import { maquetteBatiment, maquetteCamp } from './labo-batiments.js?v=0.170.1';
+import { BATIMENTS } from './data/batiments.js?v=0.170.1';
+import { JOURNAL } from './labo-journal.js?v=0.170.1';
+import { loadVersion } from './lib/app-update.js?v=0.170.1';
+import { maquetteEffets, maquetteAmbiance, maquetteEspace, maquetteBruitages } from './labo-son.js?v=0.170.1';
+import { calqueMoral } from './labo-moral.js?v=0.170.1';
+import { bilanRapport, bilanTuiles, bilanFrise } from './labo-donnees.js?v=0.170.1';
+import { papierNuit, finDePartie } from './labo-papiers.js?v=0.170.1';
+import { soiree } from './labo-soiree.js?v=0.170.1';
+import { soiree2 } from './labo-soiree2.js?v=0.170.1';
+import { soiree3 } from './labo-soiree3.js?v=0.170.1';
+import { fichesTuiles, fichesProfil, fichesCompactes } from './labo-fiches.js?v=0.170.1';
+import { fiches2 } from './labo-fiches2.js?v=0.170.1';
+import { calqueEnnemis } from './labo-engins-ennemis.js?v=0.170.1';
+import { maquetteTranchees, NOTES_TRANCHEES, NOMS_TRANCHEES } from './labo-tranchees.js?v=0.170.1';
+import { maquetteFabrique } from './labo-fabrique.js?v=0.170.1';
+import { atelierTerrain } from './labo-atelier-terrain.js?v=0.170.1';
+import { entrees as encEntrees, lexiqueAZ, planche as encPlanche } from './labo-encyclopedie.js?v=0.170.1';
 
 document.documentElement.style.setProperty('--jeu-accent', ROLES.accent);
 const NOM = document.title.replace(/^Labo — /, ''); // le nom vient de la page (une apostrophe ne casse rien)
@@ -566,6 +567,17 @@ const GROUPES = [
     ] },
   ] },
   { id: 'a-construire', title: 'À construire', topics: [
+    { id: 'cartes-soir', title: 'Les cartes du soir', variants: [
+      { title: 'Paquet · le paquet ficelé', status: 'a-trancher', depuis: '0.170.1', note: 'PROPOSITION (Jérôme, 26 nov. : « à chaque tirage, le choix entre 3 paquets, trois types de cartes ; dans chaque paquet, 3 à 5 cartes ; chaque carte a plusieurs raretés » ; docs/chantiers/cartes-wtf.md). Une pile de cartes de dos, ficelée, une étiquette (l\'icône et la famille) ; une tranche par carte : l\'épaisseur laisse deviner 3, 4 ou 5 cartes sans le dire.', render: s => choixPaquets(s, 'a') },
+      { title: 'Paquet · l\'enveloppe', status: 'a-trancher', depuis: '0.170.1', note: 'PROPOSITION. Un pli militaire fermé d\'un cachet de cire à l\'icône de la famille ; ses tranches dépassent dessous. Le plus « papier », dans la suite des papiers du soir.', render: s => choixPaquets(s, 'b') },
+      { title: 'Paquet · la caisse', status: 'a-trancher', depuis: '0.170.1', note: 'PROPOSITION. La caisse des largages, le nom de la famille au pochoir : le lien avec les objets parachutés (mêmes raretés). Le nombre de cartes ne se devine pas.', render: s => choixPaquets(s, 'c') },
+      { title: 'Ouverture · le ruban coupé', status: 'a-trancher', depuis: '0.170.1', note: 'PROPOSITION. La ficelle saute, les cartes s\'étalent en éventail, face cachée, puis se retournent une à une, de la plus commune à la plus rare ; le mythique attend un temps et éclate. On en garde une au clic. ~2,5 s.', render: s => ouverture(s, 'a') },
+      { title: 'Ouverture · le cachet brisé', status: 'a-trancher', depuis: '0.170.1', note: 'PROPOSITION. Le cachet se fend et tombe, le rabat s\'ouvre, les cartes sortent de l\'enveloppe et se rangent ; même retournement. ~3 s.', render: s => ouverture(s, 'b') },
+      { title: 'Ouverture · le couvercle', status: 'a-trancher', depuis: '0.170.1', note: 'PROPOSITION. Le couvercle de la caisse saute (comme à l\'ouverture d\'une caisse parachutée), les cartes montent en gerbe et retombent en rang ; même retournement. La plus vive. ~3 s.', render: s => ouverture(s, 'c') },
+      { title: 'Carte · le liseré', status: 'a-trancher', depuis: '0.170.1', note: 'PROPOSITION. Papier d\'os, le liseré à la couleur de la rareté (plus épais à chaque cran), le chiffre qui change en gros au milieu, la rareté en bandeau. Les termes soulignés s\'expliquent au survol (et au clavier), la place de l\'image en tête de la bulle. Trois cartes au choix, chacune en commun, rare, mythique (qui brille).', render: s => cartesRaretes(s, 'a') },
+      { title: 'Carte · le tampon', status: 'a-trancher', depuis: '0.170.1', note: 'PROPOSITION. Une carte de boue, un papier inséré ; la rareté est un tampon à l\'icône de la famille et trois crans en chevrons (ceux des cartes de régiment) : elle se lit aussi sans la couleur.', render: s => cartesRaretes(s, 'b') },
+      { title: 'Carte · l\'étiquette', status: 'a-trancher', depuis: '0.170.1', note: 'PROPOSITION. Le bandeau de rareté en haut, une scène (l\'icône en grand, à remplacer par une image) avec le chiffre posé dessus, le texte dessous : la plus visuelle, la plus proche d\'une carte de jeu de cartes.', render: s => cartesRaretes(s, 'c') },
+    ] },
     { id: 'patrouille', title: 'La patrouille de nuit', variants: [
       { title: 'Le prototype', status: 'a-trancher', depuis: '0.142.0', note: 'PROTOTYPE (Jérôme, 16 nov. : « une mission interlude où l\'on déplace un petit groupe de soldats (30-50) d\'un point A à un point B de nuit » ; au labo d\'abord, pour voir si c\'est amusant). Quarante hommes de notre première ligne vont jusqu\'au point B, à portée de voix de leur fil. Un clic : où aller ; Espace : se coucher, se relever (couchés, ils rampent). En face, des fusées s\'ouvrent au-dessus du groupe : debout dans leur lumière, on est vu (la barre se remplit) et le poste de mitrailleuse le plus proche tire ; couchés dans un trou d\'obus, on ne l\'est pas ; dans le noir, seul le bruit trahit, tout près d\'un poste. Sans conséquence : aucune bataille ne s\'en souvient. Les chiffres sont dans data/patrouille.js, à éprouver.', render: s => { const p = patrouilleLabo({ graine: 1 + Math.floor(Math.random() * 9999) }); moteur(s, { zoom: 6, soldats: 600, tombee: true, effets: { ...EFFETS, fusees: false }, pilote: p.pilote, calque: p.calque, apres: st => p.boutons(st, () => location.reload()) }); } },
     ] },

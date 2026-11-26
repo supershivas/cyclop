@@ -5,14 +5,14 @@
    L'état : `etat.caprices` (sauvegardé) : { jour, prevu: { t, id, camp }, actif: { id, camp, t0, fin, ... }, soldats: [{ id, fin }] (les héros), histo: [[jour, id]] }.
    Branché dans `avancer` après les largages (`avancerCaprices`) : il pose aussi `ctx.cibles` (les héros chargent) et `ctx.boosts` (ils sont invincibles).
    Ce que la bataille lui prête : `ctx.obus`, `ctx.sortirChar`, `ctx.marcher` (bataille.js) ; `lacherCaisse` (largages.js). */
-import { CAPRICES, CAPRICE, CAPRICES_JOUR as CJ } from './data/caprices.js?v=0.170.0';
-import { RARETES, ORDRE_RARETES, OBJET } from './data/largages.js?v=0.170.0';
-import { hash2 } from './lib/rng.js?v=0.170.0';
-import { ligneY } from './tranchees.js?v=0.170.0';
-import { vent } from './data/meteo.js?v=0.170.0';
-import { lacherCaisse, milieu } from './largages.js?v=0.170.0';
-import { ligneDe, tracerVol, positionDe } from './avions.js?v=0.170.0';
-import { pvAvion } from './camp.js?v=0.170.0';
+import { CAPRICES, CAPRICE, CAPRICES_JOUR as CJ } from './data/caprices.js?v=0.170.1';
+import { RARETES, ORDRE_RARETES, OBJET } from './data/largages.js?v=0.170.1';
+import { hash2 } from './lib/rng.js?v=0.170.1';
+import { ligneY } from './tranchees.js?v=0.170.1';
+import { vent } from './data/meteo.js?v=0.170.1';
+import { lacherCaisse, milieu } from './largages.js?v=0.170.1';
+import { ligneDe, tracerVol, positionDe } from './avions.js?v=0.170.1';
+import { pvAvion } from './camp.js?v=0.170.1';
 
 const NOUS = 0, EUX = 1, PAS = 1 / 30;
 const r1 = v => Math.round(v * 10) / 10;

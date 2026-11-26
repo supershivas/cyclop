@@ -1,5 +1,8 @@
 # Journal des versions
 
+## 0.170.1 — 2026-11-26
+- Au labo : les cartes du soir, trois paquets, trois ouvertures et trois dessins de carte (commun, rare, mythique), les termes expliqués au survol
+
 ## 0.170.0 — 2026-11-25
 
 - Un bouton « Édition itch.io » sur l'écran titre : l'édition en préparation pour itch.io, avec ses propres parties et réglages, sans le jeu à deux

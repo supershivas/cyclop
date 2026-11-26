@@ -1,8 +1,7 @@
 {
-  "version": "0.170.0",
-  "date": "2026-11-25",
+  "version": "0.170.1",
+  "date": "2026-11-26",
   "changes": [
-    "Un bouton « Édition itch.io » sur l'écran titre : l'édition en préparation pour itch.io, avec ses propres parties et réglages, sans le jeu à deux",
-    "« Le jeu actuel » y ramène ; l'adresse /itch/ ouvre directement l'édition itch.io"
+    "Au labo : les cartes du soir, trois paquets, trois ouvertures et trois dessins de carte (commun, rare, mythique), les termes expliqués au survol"
   ]
 }

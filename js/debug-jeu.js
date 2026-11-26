@@ -2,7 +2,7 @@
 // bataille pour les scripts, les captures et les tests (coordonnées du SECTEUR : les marges s'ajoutent ici). `j` : ce que main.js lui prête.
 export async function installerDebugJeu(j) {
   const { ouvrirSoir, horloge, effectifs, enJeu, loop, rendu, jouer, nouvelle, store, montrerTitre, son, leSuivi, choisirAvion, choisirChar, aube, nuit, avancer, evenements, raconter, majHud, choisirBatiment, montrerBatiment, commanderRang, lancerBarrage, ordonnerBarrage, lancerStance, ordonnerStance, lancerMarche, ordonnerMarche, empreinteEtat, montrerSoldat, majFiche, laFiche, $, majBulle, montrerFin, demarrerCampagne, laCampagne, CALIBRES } = j;
-  const { installDebug, seedFromUrl } = await import('./lib/debug.js?v=0.170.0');
+  const { installDebug, seedFromUrl } = await import('./lib/debug.js?v=0.170.1');
   const B = () => j.B(), reseau = () => j.reseau();
   window.__seed = seedFromUrl() ?? undefined;
   installDebug({

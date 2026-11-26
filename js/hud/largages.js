@@ -2,11 +2,11 @@
 // l'a pris ; « Nouvelle découverte » la première fois), la musette (trois emplacements au-dessus du râtelier, touches 7, 8, 9 : un clic arme la visée), et
 // les découvertes (la vitrine de l'accueil : `cyclopeen:decouvertes`, hud/vitrine.js). Le joueur apprend ce que fait un objet : (1) le fumigène et l'avion
 // (le carnet), (2) la flèche de sa couleur et le survol (la bulle), (3) le bandeau à la prise, (4) l'anneau sous l'homme boosté, (5) le carnet du soir.
-import { OBJET, RARETES, CATEGORIES, LARGAGE } from '../data/largages.js?v=0.170.0';
-import { CAPRICE, CAPRICES_JOUR } from '../data/caprices.js?v=0.170.0';
-import { zone, zoneDe, lettreZone } from '../bataille.js?v=0.170.0';
-import { prochaineCaisse, milieu } from '../largages.js?v=0.170.0';
-import { capricePrevu, lieuCaprice } from '../caprices.js?v=0.170.0';
+import { OBJET, RARETES, CATEGORIES, LARGAGE } from '../data/largages.js?v=0.170.1';
+import { CAPRICE, CAPRICES_JOUR } from '../data/caprices.js?v=0.170.1';
+import { zone, zoneDe, lettreZone } from '../bataille.js?v=0.170.1';
+import { prochaineCaisse, milieu } from '../largages.js?v=0.170.1';
+import { capricePrevu, lieuCaprice } from '../caprices.js?v=0.170.1';
 
 const el = (tag, cls, txt) => { const e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; return e; };
 

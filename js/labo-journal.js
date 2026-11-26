@@ -2,6 +2,9 @@
 // Une entrée par version qui touche au labo, la plus récente en haut. `ref` : « sujet-Lettre » (la lettre est celle de la variante,
 // A étant l'actuelle). À chaque changement du labo : une entrée ici, avec `depuis` sur les variantes ajoutées ou changées (labo.js).
 export const JOURNAL = [
+  { version: '0.170.1', date: '2026-11-26', items: [
+    { genre: 'nouveau', texte: 'Les cartes du soir (à trancher) : le choix entre trois paquets (ficelé, enveloppe, caisse), trois ouvertures, trois dessins de carte en commun, rare et mythique, avec les termes expliqués au survol', ref: 'cartes-soir-A' },
+  ] },
   { version: '0.150.0', date: '2026-11-18', items: [
     { genre: 'mis-a-jour', texte: 'Jérôme tranche : le troisième jet de la soirée passe en jeu (retenue) ; le papier de la nuit en deux colonnes devient une ancienne', ref: 'soiree-A' },
   ] },
