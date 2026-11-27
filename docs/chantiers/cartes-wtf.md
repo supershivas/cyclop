@@ -82,6 +82,72 @@ Un caprice en poche est un objet de la <ins>musette</ins> : il se déclenche ave
 
 35 cartes. Les **pistes** d'un run : **la musette** (le dépôt, le train de munitions, la musette profonde, les artilleurs ivres), **à la personne** (le porte-bonheur, le Lebel à lunette, le fusil du canonnier), **les caprices en poche** (le zeppelin, l'as, la mine, l'éclipse), **les engins** (le blindage, l'escadrille, les bombes Aasen, le mécanicien).
 
+## L'audit des 22 cartes (27 nov. : « des cartes ont peu d'utilité, on peut les garder en stock mais pas en jeu »)
+
+La question pour chaque carte : **change-t-elle ce que le joueur fait ou voit sur le champ de bataille ?** Les vrais problèmes d'une bataille : prendre une tranchée (l'assaut), tenir sous la contre-attaque, l'artillerie d'en face, la peur et la déroute, l'usure sur 10 à 15 jours. ★★★ décisive ou spectaculaire et voulue ; ★★ utile, sentie ; ★ presque invisible ou sans décision.
+
+| Carte | Note | Pourquoi |
+|---|---|---|
+| Le dépôt | ★★★ | des barrages en plus chaque matin, sans recharge : sert tous les jours, on choisit où |
+| Le barrage roulant | ★★★ | l'outil de l'assaut : il décide **quand** on attaque, et fait marcher un régiment derrière |
+| Le 400 de Douaumont | ★★ | un grand moment par partie ; mais en commun, un seul 220 par partie : rien. Revoir les basses raretés |
+| La musette profonde | ★ | du rangement : ne compte que si la musette déborde, rien ne se voit |
+| Les coureurs | ★ | deux ou trois caisses par jour, cinq hommes : la vitesse des coureurs ne se remarque pas |
+| Le pilote ami | ★★ | plus d'objets, mais au hasard ; fait doublon avec la bonne étoile |
+| La bonne étoile | ★★ | idem ; les deux tiennent en une seule carte |
+| Les héros | ★★ | peu de morts en face, mais la danse macabre même : un homme qui traverse seul le no man's land |
+| Notre zeppelin | ★★★ | spectaculaire, une ligne entière bombardée, on choisit le moment |
+| Notre as | ★★★ | idem, et il peut tomber (une caisse légendaire) |
+| La mine | ★★★ | on choisit la tranchée : une brèche à prendre, la meilleure ouverture d'un assaut |
+| Les renforts du soir | ★★ | invisible sur le moment, mais l'usure de 10 à 15 jours est le vrai ennemi ; dans l'édition itch (sans les paquets de 10 de la soirée), le seul moyen de remplir un régiment |
+| Le clairon | ★★ | vitesse et sans peur pour une sortie : bon avec le barrage roulant |
+| Le lance-flammes | ★★★ | vide une tranchée, se voit de loin |
+| Les grenadiers | ★★★ | idem, au corps à corps du premier assaut |
+| La cheddite | ★ | les obus coupent déjà le fil (v0.98.0) : couper du fil le matin ne change presque rien |
+| Le mécanicien | ★ | nos chars sont peu nombreux et meurent vite ; réparer au parc ne se voit pas |
+| Les bombes Aasen | ★ | quelques bombes sous un avion qu'on ne vise pas : pas de décision |
+| Le blindage | ★ | ne compte que si on joue les chars, et ne se voit pas |
+| Les artilleurs ivres | ★★★ | la bonne maudite : un gros bonus, et la peur du tir court chaque jour |
+| Le vent qui tourne | ★★ | le chaos, voulu ; la décision : lâcher ou non selon le vent |
+| Le général à cheval | ★★ | sans peur toute la journée est fort ; l'ordre absurde coûte un régiment, c'est lisible |
+| Les chars fous | ★★ | un char de plus, mais sans ordre : drôle, pas toujours utile |
+
+**En stock (gardées dans les données, plus tirées)** : la musette profonde, les coureurs, le pilote ami (fondu dans la bonne étoile), la cheddite, le mécanicien, les bombes Aasen, le blindage. La famille des engins perd ses quatre cartes, celle des largages en garde une : il faut deux séries pour les remplacer.
+
+## Les nouvelles séries proposées (27 nov. ; toutes sur des objets et des caprices qui existent)
+
+**1. La percée (remplace les engins)** : des engins qu'on commande et qui ouvrent un assaut.
+- **Le FT du matin** (`ft`) : chaque matin, un char neuf sous nos ordres (les chars fous sans la malédiction) ; plus haut : deux chars, puis blindés.
+- **Le moteur gonflé** (`moteur`) : au premier assaut du jour, nos chars vont deux fois plus vite pendant 2 h ; plus haut, à chaque assaut.
+- **Le crapouillot** (`crapouillot`) : chaque matin, un tir de mortier dans la musette (un 155 court qui coupe aussi le fil, sur une tranchée proche) ; plus haut, deux, puis matin et midi.
+- **Le nid du matin** (`hotchkiss`) : chaque matin, un nid de mitrailleuse posé sur notre première ligne, là où l'on clique ; plus haut, deux.
+- **L'escadrille** (`escadrille`, `incendiaires`) : deux avions de plus ; plus haut, leurs balles incendiaires (ils tuent deux fois plus).
+
+**2. La main (à la personne)** : des armes pour l'homme qu'on incarne (bouton « À la personne » de sa fiche) ; le pilier « immersion », et le lot 3 met cette vue au centre.
+- **Le Revenant** (`revenant`) : l'homme qu'on incarne est invincible et tire huit fois plus vite pendant 2 h, une fois par jour.
+- **Le Chauchat sans enrayage** (`chauchat`) : il porte un fusil-mitrailleur qui ne s'enraye jamais, chaque jour.
+- **Le tromblon** (`vb`) : il lance une grenade par seconde pendant 1 h.
+- **Le Lebel à lunette** (`lunette`) et **le fusil du canonnier** (`canonnier`) : déjà dans la liste d'origine, à rendre à cette série.
+
+**3. Le drapeau (tenir)** : contre la contre-attaque et la déroute, rejoint la famille des hommes.
+- **Le drapeau du matin** (`drapeau`) : chaque matin, un drapeau dans la musette, à planter où l'on veut (quatre fois moins de pertes, plus de déroute autour) ; plus haut, deux.
+- **La caisse de cartouches** (`caisseCartouches`) : chaque matin, notre régiment le plus engagé tire une fois et demie plus vite pendant 4 h.
+- **La relève** (`releve`) : tous les trois jours, un régiment frais qui ne coûte rien à la réserve ; plus haut, tous les deux jours.
+- **Les taxis de la Marne** (`taxi`) : une fois par partie, deux régiments frais tout de suite.
+
+**4. Le chaos en poche (complète les caprices, reprend la bonne étoile)** : des caprices qu'on déclenche quand on veut.
+- **L'éclipse** (`eclipse`) : la nuit tombe en plein jour, eux s'arrêtent ; le moment idéal d'un assaut.
+- **Les obus perdus** (`obusPerdus`) : une heure d'obus au hasard, mais seulement sur leur moitié du champ.
+- **La pluie de caisses** (`pluieCaisses`) : cinq caisses, toutes de notre côté.
+- **La bonne étoile** (fondue avec le pilote ami) : des caisses de notre côté, des raretés en plus.
+- **Le tremblement de terre** (`seisme`) : seules leurs tranchées s'effondrent.
+
+**5. Deux maudites de plus** :
+- **Les obus de tout le monde** (`obusPerdus`, `obus220`) : chaque matin, un barrage de 220 dans la musette ; mais chaque jour, une heure d'obus perdus sur tout le champ, nous compris.
+- **La foire aux caisses** (`pluieCaisses`) : chaque jour, une pluie de caisses ; mais elles tombent au milieu, et eux courent aussi.
+
+**Les familles qui en sortent** (six, trois tirées chaque soir) : la musette (le dépôt, le barrage roulant, le 400, le crapouillot), les caprices (le zeppelin, l'as, la mine, les héros, l'éclipse, les obus perdus, la pluie de caisses, la bonne étoile, le tremblement), les hommes (les renforts, le clairon, le lance-flammes, les grenadiers, le drapeau, la caisse de cartouches, la relève, les taxis), la percée (le FT du matin, le moteur gonflé, le nid, l'escadrille), la main (le Revenant, le Chauchat, le tromblon, le Lebel, le canonnier), les maudites (les artilleurs ivres, le vent qui tourne, le général à cheval, les chars fous, les obus de tout le monde, la foire aux caisses). Environ 36 cartes, dont un paquet de départ de ~20.
+
 ## Le glossaire du survol
 
 Ce que dit la bulle quand on survole un terme souligné. Une ligne, des chiffres ; une icône quand le jeu en a déjà une (celles des catégories de `CATEGORIES` et des caprices).
