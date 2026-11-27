@@ -2,6 +2,9 @@
 // Une entrée par version qui touche au labo, la plus récente en haut. `ref` : « sujet-Lettre » (la lettre est celle de la variante,
 // A étant l'actuelle). À chaque changement du labo : une entrée ici, avec `depuis` sur les variantes ajoutées ou changées (labo.js).
 export const JOURNAL = [
+  { version: '0.170.7', date: '2026-11-27', items: [
+    { genre: 'mis-a-jour', texte: 'Les cartes du soir : le labo lit les cartes du jeu ; le paquet rose de l\'exemple devient « La percée » (le nid, le crapouillot, le moteur gonflé, le FT du matin, l\'escadrille)', ref: 'cartes-soir-B' },
+  ] },
   { version: '0.170.6', date: '2026-11-26', items: [
     { genre: 'mis-a-jour', texte: 'L\'ouverture montre les cartes au dessin retenu, l\'étiquette', ref: 'cartes-soir-B' },
   ] },

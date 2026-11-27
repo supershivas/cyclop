@@ -1,8 +1,8 @@
 // Le survol du champ (sorti de main.js, lot de dette du 24 nov.) : l'homme sous le pointeur, le terrain sous la souris (le coin du bas),
 // le cône d'un nid de mitrailleuse. Du dessin et de la lecture seulement. `creerSurvol(ctx)` rend { hommeSous, majTerrain, majViseeNid }.
-import { terrainResume, forcesTroncons } from '../bataille.js?v=0.170.6';
-import { etatTranchee } from '../tranchees.js?v=0.170.6';
-import { NIDS } from '../data/nids.js?v=0.170.6';
+import { terrainResume, forcesTroncons } from '../bataille.js?v=0.170.7';
+import { etatTranchee } from '../tranchees.js?v=0.170.7';
+import { NIDS } from '../data/nids.js?v=0.170.7';
 
 let $, rendu, bataille, moi, nidChoisiDe;
 export function creerSurvol(ctx) {

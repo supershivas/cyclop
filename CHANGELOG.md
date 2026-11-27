@@ -1,5 +1,8 @@
 # Journal des versions
 
+## 0.170.7 — 2026-11-27
+- Au labo : les cartes du soir montrent la nouvelle série « La percée » (le crapouillot, le nid du matin, le moteur gonflé, le FT du matin, l'escadrille)
+
 ## 0.170.6 — 2026-11-26
 - Au labo : les cartes qui sortent du paquet prennent le dessin retenu, l'étiquette
 

@@ -1,9 +1,9 @@
 // Le rapport de fin de bataille (sorti de main.js, lot de dette du 24 nov.) : l'issue et ses chiffres-clés, la bataille jour après jour,
 // les médailles ; le mérite versé au Mémorial. `creerFin(ctx)` rend `montrer(B, MOI, aDeux)`.
-import { MISSIONS, bordereau } from '../bataille.js?v=0.170.6';
-import { lireBataille } from '../donnees-jour.js?v=0.170.6';
-import { el as elDe, info as infoDe, graphe as grapheFin, frise as friseFin, legende as legendeFin, tableMed, tableDissous } from './papier-nuit.js?v=0.170.6';
-import { palmares } from './medailles.js?v=0.170.6';
+import { MISSIONS, bordereau } from '../bataille.js?v=0.170.7';
+import { lireBataille } from '../donnees-jour.js?v=0.170.7';
+import { el as elDe, info as infoDe, graphe as grapheFin, frise as friseFin, legende as legendeFin, tableMed, tableDissous } from './papier-nuit.js?v=0.170.7';
+import { palmares } from './medailles.js?v=0.170.7';
 
 let $, DEBUG, prefs, store;
 export function creerFin(ctx) {

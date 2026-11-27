@@ -18,6 +18,7 @@ test('les données : chaque carte a une famille connue, un nom, une image et ses
     }
   }
   for (const f of ORDRE_FAMILLES) assert.ok(cartesProposables(f, {}).length >= 3, f);
+  assert.equal(ORDRE_FAMILLES.length, 6);
 });
 
 test('le tirage est pur (même graine, même soir : même offre) et suit les règles : trois familles distinctes, 3 à 5 cartes, brillant et rose', () => {
@@ -39,6 +40,12 @@ test('le tirage est pur (même graine, même soir : même offre) et suit les rè
   // 6 000 paquets : environ 70 / 25 / 5 sur 100
   assert.ok(n.commun > 3900 && n.commun < 4500 && n.rose > 200 && n.rose < 420, JSON.stringify(n));
   assert.ok(rar.commun > rar.peuCommun && rar.peuCommun > rar.rare && rar.rare > rar.epique);
+});
+
+test('une carte en stock n\'est jamais tirée (Jérôme, 27 nov.)', () => {
+  const stock = new Set(Object.values(CARTES).filter(C => C.stock).map(C => C.id));
+  assert.ok(stock.has('cheddite') && stock.has('coureurs'));
+  for (let s = 1; s <= 1000; s++) for (const p of tirerOffre(9, s).paquets) for (const [id] of p.cartes) assert.ok(!stock.has(id), id);
 });
 
 test('on ouvre un paquet, on garde une carte ; les refus sont dits à voix haute', () => {

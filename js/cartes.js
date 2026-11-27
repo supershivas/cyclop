@@ -10,9 +10,9 @@
    - `tenues` : id → rareté (la plus haute) ; `histo` : [soir, id, rareté] de chaque carte gardée ;
    - `offre` : le tirage du soir en cours { soir, paquets: [{ famille, rarete, cartes: [[id, rareté]] }], ouvert: indice | -1 }, ou null.
    Les effets en jeu ne sont pas encore branchés (ils viendront famille par famille). */
-import { CARTES, FAMILLES_CARTES, ORDRE_FAMILLES, PAQUETS, SOIR_CARTES } from './data/cartes.js?v=0.170.6';
-import { RARETES, ORDRE_RARETES } from './data/largages.js?v=0.170.6';
-import { hash2 } from './lib/rng.js?v=0.170.6';
+import { CARTES, FAMILLES_CARTES, ORDRE_FAMILLES, PAQUETS, SOIR_CARTES } from './data/cartes.js?v=0.170.7';
+import { RARETES, ORDRE_RARETES } from './data/largages.js?v=0.170.7';
+import { hash2 } from './lib/rng.js?v=0.170.7';
 
 const MYTHIQUE = 'relique', RANG = Object.fromEntries(ORDRE_RARETES.map((r, k) => [r, k]));
 const SEL = 1700;      // le sel du hachage des cartes (les largages et les caprices ont le leur)
@@ -30,8 +30,8 @@ const rareteCaisse = u => pondere(u, ORDRE_RARETES.map(r => [r, RARETES[r].poids
 const monter = (r, n = 1) => ORDRE_RARETES[Math.min(ORDRE_RARETES.length - 1, RANG[r] + n)];
 const auMoins = (r, min) => (RANG[r] >= RANG[min] ? r : min);
 
-// Les cartes qu'une famille peut encore proposer (une carte tenue mythique ne revient plus)
-export const cartesProposables = (famille, tenues) => Object.values(CARTES).filter(C => C.famille === famille && tenues[C.id] !== MYTHIQUE);
+// Les cartes qu'une famille peut encore proposer (une carte en stock n'est jamais tirée ; une carte tenue mythique ne revient plus)
+export const cartesProposables = (famille, tenues) => Object.values(CARTES).filter(C => C.famille === famille && !C.stock && tenues[C.id] !== MYTHIQUE);
 
 // La rareté sous laquelle une carte se montre : celle du tirage, ou la rareté au-dessus de celle qu'on tient si elle est plus haute
 export const rareteProposee = (id, tiree, tenues) => (tenues[id] ? auMoins(tiree, monter(tenues[id])) : tiree);

@@ -1,11 +1,11 @@
 // Les visées dessinées sur le champ (sorti de main.js, lot de dette du 24 nov.) : le cercle d'un obus, la passe d'un avion, la route d'un char.
 // Du dessin seul (un SVG en texte), à partir de la bataille et du point visé ; `creerVisees({ $, rendu })` rend { obus, avion, char }.
-import { arriereDe } from '../bataille.js?v=0.170.6';
-import { ligneDe, apercuVol } from '../avions.js?v=0.170.6';
-import { routeChar } from '../chars.js?v=0.170.6';
-import { MITRAILLAGE } from '../data/mitraillage.js?v=0.170.6';
-import { CHARS, CHAR_PAR_DEFAUT } from '../data/chars.js?v=0.170.6';
-import { modif } from '../camp.js?v=0.170.6';
+import { arriereDe } from '../bataille.js?v=0.170.7';
+import { ligneDe, apercuVol } from '../avions.js?v=0.170.7';
+import { routeChar } from '../chars.js?v=0.170.7';
+import { MITRAILLAGE } from '../data/mitraillage.js?v=0.170.7';
+import { CHARS, CHAR_PAR_DEFAUT } from '../data/chars.js?v=0.170.7';
+import { modif } from '../camp.js?v=0.170.7';
 
 let $, rendu;
 export function creerVisees(ctx) {

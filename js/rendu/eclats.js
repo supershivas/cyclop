@@ -2,15 +2,15 @@
 // et « le feu se voit » (Jérôme, v0.9.2 : l'éclair à la bouche du fusil et le trait vers la cible de chaque tir de `B.tirs`, la pose des tireurs, le bond de ceux que
 // le souffle jette). Une seule fabrique : tous tirent dans le même générateur de l'aspect (`alea`, une suite à graine : l'ordre des tirages fait l'image) et
 // dans les mêmes tampons de particules. Le dessin seulement : jamais la logique, jamais la partie.
-import * as SH from './shaders.js?v=0.170.6';
-import { INDICE } from '../palette.js?v=0.170.6';
-import { horloge } from '../bataille.js?v=0.170.6';
-import { hash2 } from '../lib/rng.js?v=0.170.6';
-import { ARBRES_TIRAGES, ARBRES_COUCHE } from '../data/arbres.js?v=0.170.6';
-import { MOTTES, FEU } from '../data/effets.js?v=0.170.6';
-import { OMBRE } from '../apparence.js?v=0.170.6';
-import { creerMottes } from './mottes.js?v=0.170.6';
-import { creerFlammes } from './flammes.js?v=0.170.6';
+import * as SH from './shaders.js?v=0.170.7';
+import { INDICE } from '../palette.js?v=0.170.7';
+import { horloge } from '../bataille.js?v=0.170.7';
+import { hash2 } from '../lib/rng.js?v=0.170.7';
+import { ARBRES_TIRAGES, ARBRES_COUCHE } from '../data/arbres.js?v=0.170.7';
+import { MOTTES, FEU } from '../data/effets.js?v=0.170.7';
+import { OMBRE } from '../apparence.js?v=0.170.7';
+import { creerMottes } from './mottes.js?v=0.170.7';
+import { creerFlammes } from './flammes.js?v=0.170.7';
 
 const ECLATS = 6000;     // (v0.24.0 ; 2 400 avant : une salve de 220 — ~200 éclats chacun, dont de la fumée de 8 à 16 s — faisait le tour du tampon et effaçait les éclats encore en vol)
 

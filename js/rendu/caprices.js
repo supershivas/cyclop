@@ -2,8 +2,8 @@
 // nappe de gaz (des bouffées translucides de vert kaki clair, la couleur d'en face, qui roulent au ras du sol et dérivent avec le vent). L'éclipse est dans
 // rendu/temps.js (l'obscurité de la nuit), le tremblement de terre dans main.js (la secousse de la vue). Le dessin seulement : tout vient de `etat.caprices.actif`.
 // Fabrique `creerCaprices({ THREE, scene, bataille, hauteur })` ; tout est créé au premier caprice qui se voit (une scène sans caprice reste la même au pixel).
-import { PALETTE } from '../palette.js?v=0.170.6';
-import { capriceActif, positionZeppelin, positionGaz } from '../caprices.js?v=0.170.6';
+import { PALETTE } from '../palette.js?v=0.170.7';
+import { capriceActif, positionZeppelin, positionGaz } from '../caprices.js?v=0.170.7';
 
 const BOUFFEES = 18;
 

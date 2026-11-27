@@ -148,6 +148,8 @@ La question pour chaque carte : **change-t-elle ce que le joueur fait ou voit su
 
 **Les familles qui en sortent** (six, trois tirées chaque soir) : la musette (le dépôt, le barrage roulant, le 400, le crapouillot), les caprices (le zeppelin, l'as, la mine, les héros, l'éclipse, les obus perdus, la pluie de caisses, la bonne étoile, le tremblement), les hommes (les renforts, le clairon, le lance-flammes, les grenadiers, le drapeau, la caisse de cartouches, la relève, les taxis), la percée (le FT du matin, le moteur gonflé, le nid, l'escadrille), la main (le Revenant, le Chauchat, le tromblon, le Lebel, le canonnier), les maudites (les artilleurs ivres, le vent qui tourne, le général à cheval, les chars fous, les obus de tout le monde, la foire aux caisses). Environ 36 cartes, dont un paquet de départ de ~20.
 
+**Décidé (Jérôme, 27 nov.)** : les sept cartes ★ en stock (la musette profonde, les coureurs, le pilote ami, la cheddite, le mécanicien, les bombes Aasen, le blindage) ; la percée et la main écrites en six raretés et ajoutées ; les deux maudites nouvelles aussi ; la bonne étoile rejoint les caprices. Le drapeau et le chaos en poche restent des propositions. En données : 35 cartes, 28 tirées (`js/data/cartes.js`).
+
 ## Le glossaire du survol
 
 Ce que dit la bulle quand on survole un terme souligné. Une ligne, des chiffres ; une icône quand le jeu en a déjà une (celles des catégories de `CATEGORIES` et des caprices).

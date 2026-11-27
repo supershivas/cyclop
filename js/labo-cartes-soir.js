@@ -4,9 +4,9 @@
 // s'expliquent au survol (la bulle et la place de son image : le glossaire du document).
 // Trois façons de dessiner le paquet, trois ouvertures, trois façons de dessiner la carte. Couleurs : la palette du jeu, plus celles des raretés
 // (l'exception des objets parachutés, RARETES_COULEURS) et la brillance du mythique. `prefers-reduced-motion` : tout est posé d'un coup.
-import { PALETTE as P, RARETES_COULEURS as RC, RARETES_BRILLANCE } from './palette.js?v=0.170.6';
-import { RARETES } from './data/largages.js?v=0.170.6';
-import { CARTES as CARTES_JEU, GLOSSAIRE_CARTES } from './data/cartes.js?v=0.170.6';
+import { PALETTE as P, RARETES_COULEURS as RC, RARETES_BRILLANCE } from './palette.js?v=0.170.7';
+import { RARETES } from './data/largages.js?v=0.170.7';
+import { CARTES as CARTES_JEU, GLOSSAIRE_CARTES } from './data/cartes.js?v=0.170.7';
 
 const reduit = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
 const el = (tag, cls = '', ...kids) => { const e = document.createElement(tag); if (cls) e.className = cls; e.append(...kids.flat().filter(k => k != null)); return e; };
@@ -21,7 +21,7 @@ const CRANS = { commun: 1, peuCommun: 2, rare: 3, epique: 4, legendaire: 5, reli
 export const FAMILLES = {
   musette: { nom: 'La musette', icone: '✹', dit: 'des obus à viser' },
   hommes:  { nom: 'Les hommes', icone: 'R', dit: 'nos régiments' },
-  engins:  { nom: 'Les engins', icone: 'C', dit: 'chars, avions, armes' },
+  percee:  { nom: 'La percée', icone: 'C', dit: 'des engins qui ouvrent un assaut' },
 };
 
 // `[[terme]]` : un terme du glossaire, souligné, expliqué au survol. `image` : ce que montrera l'image de la carte (une place vide pour l'instant).
@@ -37,7 +37,7 @@ export const GLOSSAIRE = GLOSSAIRE_CARTES;
 export const TIRAGE = [
   { famille: 'musette', rarete: 'commun', cartes: [['depot', 'commun'], ['roulant', 'peuCommun'], ['quatreCents', 'commun']] },
   { famille: 'hommes', rarete: 'brillant', cartes: [['renforts', 'commun'], ['clairon', 'peuCommun'], ['flammes', 'rare'], ['renforts', 'epique']] },
-  { famille: 'engins', rarete: 'rose', cartes: [['cheddite', 'commun'], ['mecano', 'peuCommun'], ['aasen', 'rare'], ['cheddite', 'legendaire'], ['aasen', 'relique']] },
+  { famille: 'percee', rarete: 'rose', cartes: [['nidMatin', 'commun'], ['crapouillot', 'peuCommun'], ['moteur', 'rare'], ['ftMatin', 'legendaire'], ['escadrille', 'relique']] },
 ];
 
 // ─── L'inclinaison au survol : l'objet penche vers le curseur, un reflet suit (--mx, --my) ─────────
@@ -64,7 +64,7 @@ const rgba = (hex, a) => { const n = parseInt(hex.slice(1), 16); return `rgba(${
 const [M0, M1] = RARETES_BRILLANCE.relique;
 // Le booster : brillant (des bandes de reflet aux tons de la palette, un éclat d'os qui suit le curseur), dentelé en haut et en bas, la bande du haut se déchire.
 // Le foil du mythique : des bandes rouge et rose (la brillance du mythique, RARETES_BRILLANCE) et des paillettes d'os, qui glissent avec le curseur.
-const W_BO = 184, H_BO = 292, H_HAUT = 34;
+const W_BO = 184, H_BO = 312, H_HAUT = 34, H_CARTE = 248;
 const CSS_BOOSTER = `
 .cs-incl{transition:transform .14s ease-out;will-change:transform;transform-origin:50% 50%}
 .cs-reflet{position:absolute;inset:0;pointer-events:none;z-index:4;opacity:0;transition:opacity .2s;
@@ -155,7 +155,7 @@ const CSS = `
 .cs-pochoir{position:absolute;left:0;right:0;top:50%;transform:translateY(-50%);text-align:center;color:${P.o};font-weight:700;letter-spacing:.1em;z-index:2;text-shadow:0 1px 0 ${P.t}}
 .cs-pochoir i{font-style:normal;display:block;font-size:24px}
 /* la carte : face commune (la variante d'ouverture prend la A) */
-.cs-carte{position:relative;width:150px;height:232px;border-radius:7px;box-sizing:border-box;display:flex;flex-direction:column;flex:none;--ligne:${rgba(P.t, .11)}}
+.cs-carte{position:relative;width:150px;height:${H_CARTE}px;border-radius:7px;box-sizing:border-box;display:flex;flex-direction:column;flex:none;--ligne:${rgba(P.t, .11)}}
 .cs-carte>*{position:relative;z-index:2}
 .cs-carte .cs-titre{font-family:'Antonio','Arial Narrow',sans-serif;font-weight:300;font-size:19px;line-height:1.05;letter-spacing:.1em;text-transform:uppercase}
 .cs-carte .cs-effet{font-size:11.5px;line-height:1.35}
@@ -177,9 +177,10 @@ const CSS = `
 /* C · l'étiquette : le bandeau de rareté en haut, l'image en grand */
 .cs-c{background:${P.s};color:${P.o};border:2px solid var(--rc);--ligne:${rgba(P.o, .09)}}
 .cs-c .cs-bande{border-radius:4px 4px 0 0;background:var(--rc);color:${P.t};font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;text-align:center;padding:3px 0}
-.cs-c .cs-image{height:104px;margin:0;border:0;border-bottom:1px solid ${P.t};border-radius:0;background:${P.b}}
+.cs-c .cs-image{height:84px;margin:0;border:0;border-bottom:1px solid ${P.t};border-radius:0;background:${P.b}}
 .cs-c .cs-image i{color:${P.g}}
-.cs-c .cs-corps{padding:8px 9px;display:flex;flex-direction:column;gap:6px}
+.cs-c .cs-corps{padding:7px 8px;display:flex;flex-direction:column;gap:5px}
+.cs-c .cs-effet{font-size:10.5px;line-height:1.3}
 .cs-c .cs-corps,.cs-b>.cs-titre{text-shadow:0 1px 1px ${P.t},0 0 3px ${P.t}}
 .t-relique .cs-corps,.t-relique>.cs-titre{text-shadow:none}
 /* les matières de chaque rareté : la texture et le foil sous le texte (.cs-tex), le reflet qui passe par-dessus (.cs-lustre) */
@@ -232,7 +233,7 @@ const CSS = `
 .cs-volet{position:absolute;inset:0;pointer-events:none}
 .cs-volet .cs-place{position:absolute;left:50%;top:50%;pointer-events:auto;perspective:800px}
 .cs-face,.cs-verso{backface-visibility:hidden}
-.cs-tourne{position:relative;transform-style:preserve-3d;width:150px;height:232px}
+.cs-tourne{position:relative;transform-style:preserve-3d;width:150px;height:${H_CARTE}px}
 .cs-tourne>.cs-verso{position:absolute;inset:0;transform:rotateY(180deg)}
 .cs-tourne>.cs-verso.cs-dos{border-radius:7px}
 .cs-eclat{position:absolute;left:50%;top:50%;width:20px;height:20px;margin:-10px;border-radius:50%;border:3px solid ${M1};pointer-events:none}
@@ -344,7 +345,7 @@ export function choixPaquets(stage, style) {
 // ─── Les variantes : la carte, la même en trois raretés ───────────────────────────────────────────
 export function cartesRaretes(stage, style) {
   const r = cadre(stage, 'Une carte, six raretés', 'La même carte : sa rareté change sa description et sa matière. Survolez une carte, puis un terme souligné.');
-  const ids = ['depot', 'renforts', 'cheddite'];
+  const ids = ['depot', 'renforts', 'crapouillot'];
   let k = 0;
   const rang = el('div', 'cs-rang cs-six'), pied = el('div', 'cs-pied');
   const dessiner = () => {
@@ -393,7 +394,7 @@ export function ouverture(stage, style) {
         tour.lastChild.style.transform = 'rotateY(180deg)';
         tour.firstChild.style.transform = 'none';
         const place = el('div', 'cs-place', tour);
-        place.style.margin = '-116px 0 0 -75px';
+        place.style.margin = '-124px 0 0 -75px';
         volet.append(place);
         const depart = style === 'a' ? 'translate(0,0) rotate(0)' : style === 'b' ? 'translate(0,-10px) scale(.6)' : 'translate(0,20px) scale(.5)';
         const milieu = style === 'c' ? { transform: `translate(${xs[i] * .5}px,-150px) rotate(${(i - 1.5) * 8}deg)`, offset: .55 } : null;
@@ -435,7 +436,7 @@ export function ouverture(stage, style) {
 // ─── Le booster (Jérôme, 26 nov. : « un paquet style Pokémon, même si pas historique ; effet 3D au survol » ; puis « seulement le nom du set, et en
 // petit le nom du jeu ; trois raretés : les communs ne sont pas brillants, les moyens sont brillants, les rares sont brillants, roses, et ont toujours
 // une carte rose ») ─────────────────────────────────────────────────────────────────────────────────────────────────────────
-const COULEUR_FAMILLE = { musette: P.g, hommes: P.n, engins: P.h };
+const COULEUR_FAMILLE = { musette: P.g, hommes: P.n, percee: P.h };
 export const RARETES_PAQUET = { commun: 'Paquet commun (mat)', brillant: 'Paquet brillant', rose: 'Paquet rose (toujours un mythique)' };
 // un petit hasard à graine (le labo dessine la même déchirure à chaque graine)
 const alea = graine => { let x = graine >>> 0 || 1; return () => { x ^= x << 13; x ^= x >>> 17; x ^= x << 5; return (x >>> 0) / 4294967296; }; };
@@ -545,7 +546,7 @@ export function dechirer(stage) {
         await anim(carteEl, [
           { transform: 'translateY(0) rotate(0)' },
           { transform: `translateY(-60px) rotate(${myth ? 0 : (k % 2 ? 1.5 : -1.5)}deg)`, offset: .35 },
-          { transform: `translateY(-${H_HAUT + 14 + 232 + 16}px) rotate(0)` }], { duration: myth ? 760 : 360, easing: 'cubic-bezier(.3,.1,.3,1)' }).finished;
+          { transform: `translateY(-${H_HAUT + 18 + H_CARTE + 16}px) rotate(0)` }], { duration: myth ? 760 : 360, easing: 'cubic-bezier(.3,.1,.3,1)' }).finished;
         if (!vivant()) return;
         const rc = carteEl.getBoundingClientRect(), place = el('div', 'bo-place');
         place.style.left = `${rc.left - boite.left}px`; place.style.top = `${rc.top - boite.top}px`;

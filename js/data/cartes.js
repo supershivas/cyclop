@@ -5,18 +5,22 @@
 // (Jérôme, 24 nov.). La règle est dans js/cartes.js ; le dessin (l'étiquette, retenue le 26 nov.) au labo, pas encore en jeu.
 //   r     : la description à chaque rareté ; `[[terme]]` s'explique au survol (GLOSSAIRE_CARTES), `[[terme|texte]]` montre le texte
 //   image : ce que montrera l'image de la carte (une place vide pour l'instant)
+//   stock : la carte reste dans les données mais n'est plus tirée (Jérôme, 27 nov., après l'audit de docs/chantiers/cartes-wtf.md)
 // Les effets (ce que la carte fait en jeu) ne sont pas encore branchés : ils viendront rareté par rareté, famille par famille.
 
-// Les six familles (Jérôme, 26 nov. : « six, trois tirées chaque soir »)
+// Les six familles (Jérôme, 26 nov. : « six, trois tirées chaque soir » ; 27 nov. : la percée et la main remplacent les engins et les largages)
 export const FAMILLES_CARTES = {
   musette:  { nom: 'La musette', icone: '✹', dit: 'des obus à viser' },
-  largages: { nom: 'Les largages', icone: '⊕', dit: 'les caisses parachutées' },
   caprices: { nom: 'Les caprices', icone: '❖', dit: 'des caprices en poche' },
   hommes:   { nom: 'Les hommes', icone: 'R', dit: 'nos régiments' },
-  engins:   { nom: 'Les engins', icone: 'C', dit: 'chars, avions, armes' },
+  percee:   { nom: 'La percée', icone: 'C', dit: 'des engins qui ouvrent un assaut' },
+  main:     { nom: 'La main', icone: '⌖', dit: 'des armes pour l\'homme qu\'on incarne' },
   maudites: { nom: 'Les maudites', icone: '☠', dit: 'un gros bonus, un défaut' },
+  // en stock (Jérôme, 27 nov. : « peu d'utilité, gardées en stock mais pas en jeu ») : leurs cartes restent dans les données, jamais tirées
+  largages: { nom: 'Les largages', icone: '⊕', dit: 'les caisses parachutées', stock: true },
+  engins:   { nom: 'Les engins', icone: 'C', dit: 'chars, avions, armes', stock: true },
 };
-export const ORDRE_FAMILLES = Object.keys(FAMILLES_CARTES);
+export const ORDRE_FAMILLES = Object.keys(FAMILLES_CARTES).filter(f => !FAMILLES_CARTES[f].stock);
 
 // Les paquets (Jérôme, 26 nov.) : leurs chances sur 100 ; le mat suit les chances des caisses, le brillant a au moins une carte rare,
 // le rose a toujours une carte mythique
@@ -55,7 +59,7 @@ export const CARTES = {
     'Une fois par partie, l\'[[obus de 400]]',
     'Deux fois par partie, l\'[[obus de 400]]',
     'Trois fois par partie, l\'[[obus de 400]]') },
-  musetteProfonde: { famille: 'musette', nom: 'La musette profonde', image: "une musette de toile qui déborde", r: R6(
+  musetteProfonde: { stock: true, famille: 'musette', nom: 'La musette profonde', image: "une musette de toile qui déborde", r: R6(
     'La [[musette]] garde 4 objets (touche 0)',
     'La [[musette]] garde 4 objets ; chaque matin, une [[salve de 75]]',
     'La [[musette]] garde 5 objets (touches 0 et tiret)',
@@ -63,21 +67,21 @@ export const CARTES = {
     'La [[musette]] garde 5 objets ; chaque matin, un [[barrage de 155]]',
     'La [[musette]] garde 5 objets ; chaque matin, un [[barrage de 220]]') },
   // ─── Les largages ───
-  coureurs: { famille: 'largages', nom: 'Les coureurs', image: "des brodequins de chasseur, lacets défaits", r: R6(
+  coureurs: { stock: true, famille: 'largages', nom: 'Les coureurs', image: "des brodequins de chasseur, lacets défaits", r: R6(
     'Quand une [[caisse]] descend, nos [[coureurs]] courent une fois et demie plus vite',
     'Quand une [[caisse]] descend, nos [[coureurs]] courent deux fois plus vite',
     'Nos [[coureurs]] courent deux fois plus vite, et ils sont 8 au lieu de 5',
     'Nos [[coureurs]] courent deux fois plus vite, et ils sont 10',
     'Nos 10 [[coureurs]] courent deux fois plus vite et partent de 240 m',
     'Nos 10 [[coureurs]] courent deux fois plus vite et partent de 320 m') },
-  piloteAmi: { famille: 'largages', nom: 'Le pilote ami', image: "un biplan qui bat des ailes au-dessus de nos lignes", r: R6(
+  piloteAmi: { stock: true, famille: 'largages', nom: 'Le pilote ami', image: "un biplan qui bat des ailes au-dessus de nos lignes", r: R6(
     'Un jour sur deux, un [[avion de largage]] de plus ; sa [[caisse]] tombe de notre côté',
     'Chaque jour, un [[avion de largage]] de plus ; sa [[caisse]] tombe de notre côté',
     'Chaque jour, un [[avion de largage]] de plus ; sa [[caisse]] est au moins peu commune',
     'Chaque jour, deux [[avion de largage|avions de largage]] de plus ; leurs [[caisse|caisses]] tombent de notre côté',
     'Chaque jour, deux avions de plus ; leurs [[caisse|caisses]] sont au moins rares',
     'Chaque jour, trois avions de plus ; leurs [[caisse|caisses]] sont au moins épiques') },
-  bonneEtoile: { famille: 'largages', nom: 'La bonne étoile', image: "une étoile filante au-dessus du no man's land", r: R6(
+  bonneEtoile: { famille: 'caprices', nom: 'La bonne étoile', image: "une étoile filante au-dessus du no man's land", r: R6(
     'Chaque jour, une [[caisse]] tombe de notre côté',
     'Chaque jour, une [[caisse]] tombe de notre côté ; son objet monte d\'une [[rareté]]',
     'Chaque jour, deux [[caisse|caisses]] tombent de notre côté ; leurs objets montent d\'une [[rareté]]',
@@ -143,28 +147,28 @@ export const CARTES = {
     'À chaque assaut, chaque homme du régiment lance trois grenades',
     'À chaque assaut, chaque homme lance trois grenades, jusqu\'à 45 m') },
   // ─── Les engins ───
-  cheddite: { famille: 'engins', nom: 'La cheddite', image: "des pétards de cheddite glissés sous les barbelés", r: R6(
+  cheddite: { stock: true, famille: 'engins', nom: 'La cheddite', image: "des pétards de cheddite glissés sous les barbelés", r: R6(
     'Chaque matin, leur [[fil de fer]] saute sur 60 m devant notre régiment le plus avancé',
     'Chaque matin, leur [[fil de fer]] saute sur 90 m devant notre régiment le plus avancé',
     'Chaque matin, leur [[fil de fer]] saute sur 120 m devant notre régiment le plus avancé',
     'Chaque matin, leur [[fil de fer]] saute sur 180 m devant notre régiment le plus avancé',
     'Chaque matin, leur [[fil de fer]] saute devant nos deux régiments les plus avancés',
     'Chaque matin, leur [[fil de fer]] saute devant toute notre [[première ligne]]') },
-  mecano: { famille: 'engins', nom: 'Le mécanicien', image: "une caisse d'outils devant un char FT", r: R6(
+  mecano: { stock: true, famille: 'engins', nom: 'Le mécanicien', image: "une caisse d'outils devant un char FT", r: R6(
     'Chaque matin, un de nos [[chars]] est réparé',
     'Chaque matin, deux de nos [[chars]] sont réparés',
     'Chaque matin, tous nos [[chars]] sont réparés',
     'Le matin et à midi, tous nos [[chars]] sont réparés',
     'Chaque matin, tous nos [[chars]] sont réparés, et un char détruit revient au parc',
     'Le matin et à midi, tous nos [[chars]] sont réparés, et un char détruit revient au parc') },
-  aasen: { famille: 'engins', nom: 'Les bombes Aasen', image: "une bombe Aasen à ailettes", r: R6(
+  aasen: { stock: true, famille: 'engins', nom: 'Les bombes Aasen', image: "une bombe Aasen à ailettes", r: R6(
     'À chaque vol de nos avions, deux [[bombes Aasen]]',
     'À chaque vol de nos avions, trois [[bombes Aasen]]',
     'À chaque vol de nos avions, quatre [[bombes Aasen]]',
     'À chaque vol de nos avions, six [[bombes Aasen]]',
     'À chaque vol de nos avions, huit [[bombes Aasen]]',
     'À chaque vol de nos avions, douze [[bombes Aasen]]') },
-  blindage: { famille: 'engins', nom: 'Le blindage', image: "des plaques de blindage rivetées", r: R6(
+  blindage: { stock: true, famille: 'engins', nom: 'Le blindage', image: "des plaques de blindage rivetées", r: R6(
     'Nos [[chars]] ont une fois et demie plus de points de vie',
     'Nos [[chars]] ont deux fois plus de points de vie',
     'Nos [[chars]] ont deux fois plus de points de vie ; un char détruit revient au parc chaque soir',
@@ -200,6 +204,93 @@ export const CARTES = {
     'Chaque matin, deux [[chars]] neufs de plus ; mais ils foncent sans ordre',
     'Chaque matin, deux [[chars]] neufs et blindés de plus ; mais ils foncent sans ordre',
     'Chaque matin, trois [[chars]] neufs et blindés de plus ; mais ils foncent sans ordre') },
+  // ─── La percée (Jérôme, 27 nov. : remplace les engins, qu'on mettait en stock) ───
+  ftMatin: { famille: 'percee', nom: 'Le FT du matin', image: "un char FT tout neuf qui sort du parc", r: R6(
+    'Un matin sur deux, un [[chars|char]] neuf sort du parc, sous nos ordres',
+    'Chaque matin, un [[chars|char]] neuf sort du parc, sous nos ordres',
+    'Chaque matin, un [[chars|char]] neuf et blindé (deux fois plus de points de vie)',
+    'Chaque matin, deux [[chars]] neufs sous nos ordres',
+    'Chaque matin, deux [[chars]] neufs et blindés',
+    'Chaque matin, trois [[chars]] neufs et blindés') },
+  moteur: { famille: 'percee', nom: 'Le moteur gonflé', image: "un moteur de char, capot ouvert, qui fume", r: R6(
+    'Au [[premier assaut du jour]], nos [[chars]] vont deux fois plus vite pendant 1 h',
+    'Au [[premier assaut du jour]], nos [[chars]] vont deux fois plus vite pendant 2 h',
+    'Au [[premier assaut du jour]], nos [[chars]] vont deux fois plus vite pendant 4 h',
+    'Aux deux premiers assauts du jour, nos [[chars]] vont deux fois plus vite pendant 4 h',
+    'À chaque assaut, nos [[chars]] vont deux fois plus vite pendant 4 h',
+    'Toute la journée, nos [[chars]] vont deux fois plus vite') },
+  crapouillot: { famille: 'percee', nom: 'Le crapouillot', image: "un crapouillot de 58 dans sa sape, l'obus en l'air", r: R6(
+    'Chaque matin, un tir de [[crapouillot]] dans la [[musette]]',
+    'Chaque matin, deux tirs de [[crapouillot]] dans la [[musette]]',
+    'Le matin et à midi, un tir de [[crapouillot]] dans la [[musette]]',
+    'Le matin et à midi, deux tirs de [[crapouillot]] dans la [[musette]]',
+    'Le matin et à midi, trois tirs de [[crapouillot]] dans la [[musette]]',
+    'Le matin, à midi et le soir, trois tirs de [[crapouillot]] dans la [[musette]]') },
+  nidMatin: { famille: 'percee', nom: 'Le nid du matin', image: "une mitrailleuse Hotchkiss dans un abri de sacs", r: R6(
+    'Un matin sur deux, un [[nid de mitrailleuse]] sur notre [[première ligne]], là où l\'on clique',
+    'Chaque matin, un [[nid de mitrailleuse]] sur notre [[première ligne]], là où l\'on clique',
+    'Chaque matin, un [[nid de mitrailleuse]], et à midi un autre',
+    'Chaque matin, deux [[nid de mitrailleuse|nids de mitrailleuse]]',
+    'Chaque matin, deux [[nid de mitrailleuse|nids de mitrailleuse]], et à midi un autre',
+    'Chaque matin, trois [[nid de mitrailleuse|nids de mitrailleuse]], et à midi un autre') },
+  escadrille: { famille: 'percee', nom: 'L\'escadrille', image: "trois biplans alignés devant un hangar de toile", r: R6(
+    'Un avion de plus à l\'[[aérodrome]], toute la bataille',
+    'Deux avions de plus à l\'[[aérodrome]], toute la bataille',
+    'Deux avions de plus ; toute la flotte est réparée chaque matin',
+    'Deux avions de plus ; leurs [[balles incendiaires]] tuent deux fois plus',
+    'Trois avions de plus, avec leurs [[balles incendiaires]]',
+    'Quatre avions de plus, avec leurs [[balles incendiaires]] ; la flotte réparée chaque matin') },
+  // ─── La main : des armes pour l'homme qu'on incarne (Jérôme, 27 nov.) ───
+  revenant: { famille: 'main', nom: 'Le Revenant', image: "un poilu couvert de boue, debout dans la fumée", r: R6(
+    'Une fois par partie, l\'homme qu\'on prend [[à la personne]] devient [[invincible]] et tire huit fois plus vite pendant 2 h',
+    'Deux fois par partie, l\'homme qu\'on prend [[à la personne]] devient [[invincible]] pendant 2 h',
+    'Un jour sur deux, l\'homme qu\'on prend [[à la personne]] devient [[invincible]] pendant 2 h',
+    'Chaque jour, l\'homme qu\'on prend [[à la personne]] devient [[invincible]] pendant 2 h',
+    'Chaque jour, l\'homme qu\'on prend [[à la personne]] devient [[invincible]] pendant 4 h',
+    'Chaque jour, pendant 4 h, l\'homme qu\'on prend [[à la personne]] est [[invincible]] et court deux fois plus vite') },
+  chauchat: { famille: 'main', nom: 'Le Chauchat', image: "un fusil-mitrailleur Chauchat, son chargeur en demi-lune", r: R6(
+    'Chaque jour, l\'homme qu\'on prend [[à la personne]] porte un [[Chauchat]] qui ne s\'enraye pas, pendant 1 h',
+    'Chaque jour, l\'homme qu\'on prend [[à la personne]] porte un [[Chauchat]] pendant 2 h',
+    'Chaque jour, l\'homme qu\'on prend [[à la personne]] porte un [[Chauchat]] pendant 4 h',
+    'Toute la journée, l\'homme qu\'on prend [[à la personne]] porte un [[Chauchat]]',
+    'Toute la journée, un [[Chauchat]] dont les rafales sont des [[balles sûres]] à moins de 100 m',
+    'Toute la journée, un [[Chauchat]] à [[balles sûres]], et l\'homme ne se fatigue jamais') },
+  tromblon: { famille: 'main', nom: 'Le tromblon', image: "un homme qui tire une grenade au fusil", r: R6(
+    'Chaque jour, l\'homme qu\'on prend [[à la personne]] a un [[tromblon]] pendant 1 h',
+    'Chaque jour, l\'homme qu\'on prend [[à la personne]] a un [[tromblon]] pendant 2 h',
+    'Chaque jour, l\'homme qu\'on prend [[à la personne]] a un [[tromblon]] pendant 4 h',
+    'Toute la journée, l\'homme qu\'on prend [[à la personne]] a un [[tromblon]]',
+    'Toute la journée, un [[tromblon]] pour lui, et pour un autre homme de son régiment',
+    'Toute la journée, un [[tromblon]] pour lui, et pour deux autres hommes de son régiment') },
+  lunette: { famille: 'main', nom: 'Le Lebel à lunette', image: "un Lebel à lunette posé sur un sac de sable", r: R6(
+    'Chaque jour, l\'homme qu\'on prend [[à la personne]] a dix [[balles sûres]] qui portent à 400 m',
+    'Chaque jour, vingt [[balles sûres]] qui portent à 400 m',
+    'Chaque jour, quarante [[balles sûres]] qui portent à 400 m',
+    'Chaque jour, soixante [[balles sûres]] qui portent à 400 m',
+    'Chaque jour, cent [[balles sûres]] qui portent à 400 m',
+    'Toute la journée, chacune de ses balles est sûre et porte à 400 m') },
+  canonnier: { famille: 'main', nom: 'Le fusil du canonnier', image: "un Lebel dont le canon fume comme une pièce d'artillerie", r: R6(
+    'Chaque jour, l\'homme qu\'on prend [[à la personne]] a six coups : chaque balle est un obus de 75',
+    'Chaque jour, douze coups : chaque balle est un obus de 75',
+    'Chaque jour, vingt-quatre coups : chaque balle est un obus de 75',
+    'Chaque jour, douze coups : chaque balle est un obus de 155',
+    'Chaque jour, vingt-quatre coups : chaque balle est un obus de 155',
+    'Chaque jour, douze coups : chaque balle est un obus de 220') },
+  // ─── Deux maudites de plus (Jérôme, 27 nov.) ───
+  obusDeTous: { famille: 'maudites', nom: 'Les obus de tout le monde', image: "un artilleur qui charge une pièce, les yeux bandés", r: R6(
+    'Chaque matin, un [[barrage de 220]] dans la [[musette]] ; mais chaque jour, une heure d\'[[obus perdus]] sur tout le champ',
+    'Chaque matin, un [[barrage de 220]] et une [[salve de 75]] ; mais chaque jour, une heure d\'[[obus perdus]]',
+    'Chaque matin, deux [[barrage de 220|barrages de 220]] ; mais chaque jour, une heure d\'[[obus perdus]]',
+    'Le matin et à midi, un [[barrage de 220]] ; mais chaque jour, une heure d\'[[obus perdus]]',
+    'Le matin et à midi, deux [[barrage de 220|barrages de 220]] ; mais chaque jour, une heure d\'[[obus perdus]]',
+    'Le matin et à midi, deux [[barrage de 220|barrages de 220]] ; les [[obus perdus]] ne tombent plus qu\'une demi-heure') },
+  foireCaisses: { famille: 'maudites', nom: 'La foire aux caisses', image: "cinq parachutes au-dessus du no man's land", r: R6(
+    'Un jour sur deux, une [[pluie de caisses]] ; mais au milieu du no man\'s land, et eux courent aussi',
+    'Chaque jour, une [[pluie de caisses]] ; mais au milieu, et eux courent aussi',
+    'Chaque jour, une [[pluie de caisses]] ; nos [[coureurs]] partent les premiers, mais eux courent aussi',
+    'Chaque jour, une [[pluie de caisses]] dont les objets montent d\'une [[rareté]] ; mais eux courent aussi',
+    'Deux [[pluie de caisses|pluies de caisses]] par jour ; mais eux courent aussi',
+    'Deux [[pluie de caisses|pluies de caisses]] par jour, les objets d\'une [[rareté]] de plus ; mais eux courent aussi') },
 };
 for (const [id, C] of Object.entries(CARTES)) C.id = id;
 
@@ -229,5 +320,15 @@ export const GLOSSAIRE_CARTES = {
   'bombes Aasen': ['Des bombes à main lâchées par nos aviateurs (comme des obus de 155)', 'zoom 4 : un avion qui lâche ses bombes'],
   'tir trop court': ['Notre artillerie se trompe de réglage : un barrage tombe sur nos propres hommes', 'zoom 4 : un barrage sur notre propre tranchée'],
   'nappe de gaz': ['Un nuage de chlore qui dérive avec le vent 2 h ; ceux qui sont dedans ne tirent plus, fuient ou tombent', 'zoom 2 : le nuage de gaz qui dérive'],
+  'à la personne': ['Le bouton « À la personne » de la fiche d\'un homme : on voit par ses yeux, on le fait marcher, viser et tirer soi-même', 'deux captures : le bouton, puis la vue par ses yeux'],
+  'crapouillot': ['Un mortier de tranchée de 58 : trois obus comme des 155, à courte portée, qui coupent aussi le fil sur 15 m', 'zoom 4 : un crapouillot dans sa sape, l\'obus en l\'air'],
+  'nid de mitrailleuse': ['Une mitrailleuse Hotchkiss dans un abri : elle balaie le no man\'s land devant elle', 'zoom 8 : un nid sur notre tranchée, son cône de tir'],
+  'aérodrome': ['Le bâtiment du camp d\'où partent nos avions', 'la fenêtre de l\'aérodrome, la liste de nos avions'],
+  'balles incendiaires': ['Les mitrailleuses de nos avions tuent deux fois plus quand ils mitraillent', 'zoom 4 : la traînée d\'une rafale au sol'],
+  'Chauchat': ['Le fusil-mitrailleur français : il tire en rafales, huit fois plus vite qu\'un Lebel', 'zoom 8 : un homme qui tire au Chauchat, couché'],
+  'tromblon': ['Le tromblon VB : une grenade lancée au fusil, une par seconde, à 30 m', 'zoom 8 : un homme qui tire une grenade au fusil'],
+  'balles sûres': ['Chaque balle tue celui qu\'elle vise', 'la fiche d\'un homme et le compte des balles qui restent'],
+  'obus perdus': ['L\'artillerie du secteur voisin tire à l\'aveugle : des 75 et des 155 tombent au hasard sur tout le champ', 'zoom 2 : des explosions éparses sur tout le champ'],
+  'pluie de caisses': ['Cinq avions à la suite, cinq caisses le long du front, cinq courses en même temps', 'zoom 1 : cinq parachutes le long du front'],
   'ordre absurde': ['L\'état-major envoie un régiment à l\'assaut, tout de suite ; pendant 2 h, on ne peut plus lui donner d\'ordre', 'zoom 4 : un régiment qui sort seul'],
 };
